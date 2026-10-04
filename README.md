@@ -128,7 +128,7 @@ Commence avec les clés de **test** : tout le parcours se teste avec la carte `4
 5. **Settings → Networking → Custom Domain** : ajoute ton domaine et crée chez ton registrar l'enregistrement DNS que Railway t'indique. Le HTTPS est automatique.
 6. Vérifie : `https://<ton-domaine>/healthz` doit répondre `{"ok":true}`, et `https://<ton-domaine>/` doit afficher la page de vente.
 
-Chaque push sur `main` redéploie automatiquement.
+Chaque push sur la branche par défaut du dépôt redéploie automatiquement.
 
 ### 3.4 Remplir la page de vente
 
@@ -136,8 +136,10 @@ Tout se règle dans l'objet `CONFIG` en bas de `site/src/page.html` (et de `site
 
 ```js
 const CONFIG = {
-  checkoutUrl: "/buy",       // ne pas toucher : le serveur s'en occupe
-  accountUrl: "/login",      // ne pas toucher
+  accountBase: "",           // vide si tout est sur Railway (voir 3.5 pour Netlify)
+  checkoutPath: "/buy",      // ne pas toucher : le serveur s'en occupe
+  loginPath: "/login",       // ne pas toucher
+  signupPath: "/signup",     // ne pas toucher
   freeDownloadUrl: "downloads/rago-optimizer-v5.2.bat",
   discord: "https://discord.gg/tonInvite",
   price: "$14.99",
@@ -148,6 +150,22 @@ const CONFIG = {
 ```
 
 Le prix affiché doit être le même que celui du `price_...` Stripe.
+
+### 3.5 Variante : le site sur Netlify, le serveur sur Railway
+
+Le chemin ci-dessus (tout sur Railway) reste le plus simple. Si tu préfères héberger la page de vente sur Netlify, c'est possible, mais **Netlify ne peut pas faire tourner le serveur de licences** : il lui faut un disque persistant pour sa base de données. Netlify sert donc uniquement la page, et le serveur reste sur Railway, sur un sous-domaine.
+
+Exemple : la page sur `ragohub.com` (Netlify), le serveur sur `account.ragohub.com` (Railway).
+
+1. **Netlify** : le `netlify.toml` à la racine publie déjà le dossier `site/`. Branche ton domaine `ragohub.com` sur Netlify.
+2. **DNS** : chez ton registrar, ajoute un enregistrement `CNAME` nommé `account` qui pointe vers l'adresse que Railway t'indique (Railway → Settings → Networking → Custom Domain → `account.ragohub.com`).
+3. **Railway**, en plus des étapes 3.3 :
+   - `PUBLIC_URL=https://account.ragohub.com`
+   - `SITE_URL=https://ragohub.com`
+   - `SITE_DIR=` (vide), pour que le serveur ne serve pas la page lui-même. L'adresse `https://account.ragohub.com/` renverra alors vers `https://ragohub.com`.
+   - Le webhook Stripe devient `https://account.ragohub.com/webhooks/stripe`.
+4. **Page de vente** : dans `CONFIG`, mets `accountBase: "https://account.ragohub.com"`. Les boutons Premium, Sign in et Create account iront alors sur le serveur.
+5. **App** (étape 4) : `RAGO_API_BASE=https://account.ragohub.com/api/v1` et `SITE_URL=https://account.ragohub.com`. Dans ce cas, `SITE_URL` désigne bien le serveur et pas Netlify : c'est lui qui sert les pages de création de compte et de mot de passe oublié que l'app ouvre.
 
 ---
 

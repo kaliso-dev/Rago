@@ -596,7 +596,7 @@ footer.foot p{max-width:80ch}
   <div class="band">
     <div class="row">
       <svg viewBox="0 1.6 79.8 19.4" style="height:16px;width:auto;color:var(--t1)"><use href="#i-word"/></svg>
-      <nav aria-label="Footer"><a href="#features">Features</a><a href="#pricing">Pricing</a><a href="#faq">FAQ</a><a class="js-account" href="#pricing">Sign in</a><a class="js-discord" href="#reviews">Discord</a></nav>
+      <nav aria-label="Footer"><a href="#features">Features</a><a href="#pricing">Pricing</a><a href="#faq">FAQ</a><a class="js-account" href="/login">Sign in</a><a class="js-signup" href="/signup">Create account</a><a class="js-discord" href="#reviews">Discord</a></nav>
     </div>
     <p>Rago Optimizer changes Windows settings. Results depend on your hardware and connection. Create a restore point before use. Minecraft is a trademark of Mojang Studios; Rago Optimizer isn't affiliated with Mojang or Microsoft. © 2026 Rago Optimizer, by Rago and Straight.</p>
   </div>
@@ -611,8 +611,10 @@ footer.foot p{max-width:80ch}
 <script>
 /* ---- Fill these in ---- */
 const CONFIG = {
-  checkoutUrl: "/buy",                              // licensing server: creates the Stripe Checkout session, 303 redirect
-  accountUrl: "/login",                             // licensing server sign-in page
+  accountBase: "",                                  // licensing server URL, no trailing slash, e.g. "https://account.ragohub.com". Empty = same domain as this site
+  checkoutPath: "/buy",                             // creates the Stripe Checkout session, 303 redirect
+  loginPath: "/login",
+  signupPath: "/signup",
   freeDownloadUrl: "downloads/rago-optimizer-v5.2.bat",
   discord: "",                                      // e.g. "https://discord.gg/yourInvite"
   price: null,                                      // e.g. "$14.99"
@@ -632,8 +634,10 @@ const wire = (sel, url, msg, ext = true) => $$(sel).forEach(a => {
   if (url) { a.href = url; if (ext) { a.target = "_blank"; a.rel = "noopener"; } }
   else a.addEventListener("click", e => { e.preventDefault(); toast(msg); });
 });
-wire(".js-checkout", CONFIG.checkoutUrl, "Stripe checkout opens here once it's connected", false);
-wire(".js-account", CONFIG.accountUrl, "Account page coming with checkout", false);
+const acct = path => CONFIG.accountBase.replace(/\/+$/, "") + path;
+wire(".js-checkout", acct(CONFIG.checkoutPath), "", false);
+wire(".js-account", acct(CONFIG.loginPath), "", false);
+wire(".js-signup", acct(CONFIG.signupPath), "", false);
 wire(".js-discord", CONFIG.discord, "Discord invite link to be added");
 $$(".js-free").forEach(a => a.href = CONFIG.freeDownloadUrl);
 

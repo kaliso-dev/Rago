@@ -28,7 +28,9 @@ Il faut : un compte Stripe, un nom de domaine, un hébergeur Node avec disque pe
 2. **Clés** : `npm run keys` donne `LICENSE_SIGNING_KEY`, `SESSION_SECRET` et la clé publique à donner au thread de l'app pour qu'il la compile dans Rago Hub. Ne jamais partager la clé privée.
 3. **Variables** : copier `.env.example`, remplir, déclarer chez l'hébergeur. Monter un volume sur `/data` (base SQLite et installeur).
 4. **Installeur** : déposer `RagoHub-Setup.exe` dans `/data` (`INSTALLER_PATH`), mettre à jour `INSTALLER_VERSION` à chaque version.
-5. Option : `SITE_DIR` sert aussi la page de vente depuis le même serveur, un seul déploiement pour tout.
+5. Deux façons d'héberger le site :
+   - **Tout sur un domaine** : `SITE_DIR` sert la page de vente depuis ce serveur, `PUBLIC_URL` = `SITE_URL`.
+   - **Site séparé (ex. Netlify)** : ce serveur sur un sous-domaine, par exemple `PUBLIC_URL=https://account.ragohub.com` et `SITE_URL=https://ragohub.com`, sans `SITE_DIR`. Le site préfixe ses liens `/buy`, `/login`, `/signup` avec `https://account.ragohub.com`. Pas de CORS à régler : ce sont de simples liens, et les cookies de session vivent sur le sous-domaine du compte.
 
 Tester avant d'ouvrir : clés Stripe de test (`sk_test_...`), carte `4242 4242 4242 4242`, et `stripe listen --forward-to localhost:8787/webhooks/stripe` en local.
 

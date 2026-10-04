@@ -248,6 +248,18 @@ test('SITE_DIR serves the marketing site without the strict CSP', async () => {
   assert.match((await t.app.request('/login')).headers.get('content-security-policy'), /script-src 'self'/);
 });
 
+test('site hosted on another origin: checkout and links point back to it', async () => {
+  const t = setup({ PUBLIC_URL: 'https://account.rago.test', SITE_URL: 'https://rago.test' });
+  assert.equal((await t.app.request('/')).headers.get('location'), 'https://rago.test/');
+  let params;
+  const create = async (p) => { params = p; return { url: 'https://checkout.stripe.com/x' }; };
+  const { createCheckout } = await import('../src/billing.js');
+  await createCheckout({ checkout: { sessions: { create } } }, t.cfg, null);
+  assert.equal(params.cancel_url, 'https://rago.test/#pricing');
+  assert.equal(params.success_url, 'https://account.rago.test/checkout/success?session_id={CHECKOUT_SESSION_ID}');
+  assert.match(await (await t.app.request('/login')).text(), /href="https:\/\/rago\.test\/"/);
+});
+
 test('webhook rejects bad signatures; cross-site form posts are refused', async () => {
   const t = setup();
   const r = await t.app.request('/webhooks/stripe', { method: 'POST', headers: { 'stripe-signature': 't=1,v1=bad' }, body: '{}' });

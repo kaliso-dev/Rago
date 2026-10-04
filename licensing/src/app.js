@@ -432,6 +432,8 @@ export function createApp({ cfg, db, keys, stripe, mailer, log = console }) {
   app.route('/api/v1', api);
 
   // Optional: serve the marketing site from the same server (SITE_DIR), so /buy and the site share a domain.
+  // Without it (site hosted elsewhere, e.g. Netlify), the bare domain sends visitors to the site.
+  if (!cfg.siteDir && cfg.siteUrl !== cfg.publicUrl) app.get('/', (c) => c.redirect(`${cfg.siteUrl}/`, 302));
   if (cfg.siteDir) {
     const siteRoot = relative(process.cwd(), cfg.siteDir) || '.';
     app.use('/*', serveStatic({ root: siteRoot }));
