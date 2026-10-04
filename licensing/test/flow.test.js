@@ -315,6 +315,17 @@ test('keys generated once and kept in the database; public key served as PEM', a
   assert.match(pem, /^-----BEGIN PUBLIC KEY-----/);
 });
 
+test('config accepts a bare host for PUBLIC_URL and flags example values', () => {
+  const cfg = loadConfig({ NODE_ENV: 'production', PUBLIC_URL: 'rago-production.up.railway.app', SITE_URL: 'https://rago.netlify.app/',
+    DATABASE_URL: 'postgres://x', STRIPE_SECRET_KEY: 'sk_test_x', STRIPE_PRICE_ID: 'price_x', STRIPE_WEBHOOK_SECRET: 'whsec_a_remplir_a_l_etape_6',
+    SUPABASE_URL: 'https://abcd.supabase.co', RESEND_API_KEY: 're_...' });
+  assert.equal(cfg.publicUrl, 'https://rago-production.up.railway.app');
+  assert.equal(cfg.siteUrl, 'https://rago.netlify.app');
+  assert.equal(cfg.cancelUrl, 'https://rago.netlify.app/#pricing');
+  assert.equal(cfg.resendApiKey, '');
+  assert.equal(cfg.warnings.length, 3);
+});
+
 test('webhook rejects bad signatures; cross-site form posts are refused', async () => {
   const t = await setup();
   const r = await t.app.request('/webhooks/stripe', { method: 'POST', headers: { 'stripe-signature': 't=1,v1=bad' }, body: '{}' });

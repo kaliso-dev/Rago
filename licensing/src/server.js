@@ -7,6 +7,7 @@ import { createMailer } from './mailer.js';
 import { createApp } from './app.js';
 
 const cfg = loadConfig();
+for (const w of cfg.warnings) console.warn(`[warn] ${w}`);
 const db = cfg.databaseUrl ? await openDb(cfg.databaseUrl) : await openMemoryDb();
 await ensureKeys(db, cfg);
 const keys = loadKeys(cfg.signingKeyPem);

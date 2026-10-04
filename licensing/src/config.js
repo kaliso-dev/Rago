@@ -1,4 +1,6 @@
 const trimSlash = (s) => s.replace(/\/+$/, '');
+// Accepts "rago.up.railway.app" as well as "https://rago.up.railway.app/".
+const asUrl = (s) => (s ? trimSlash(/^https?:\/\//i.test(s.trim()) ? s.trim() : `https://${s.trim()}`) : '');
 
 // LICENSE_SIGNING_KEY holds the Ed25519 private key, either as PEM or as base64 of the PEM
 // (easier to paste into a hosting dashboard). Generate one with `npm run keys`.
@@ -11,14 +13,14 @@ function readPem(value) {
 
 export function loadConfig(env = process.env) {
   const prod = env.NODE_ENV === 'production';
-  const publicUrl = trimSlash(env.PUBLIC_URL || `http://localhost:${env.PORT || 8787}`);
+  const publicUrl = asUrl(env.PUBLIC_URL) || `http://localhost:${env.PORT || 8787}`;
   const cfg = {
     prod,
     port: Number(env.PORT || 8787),
     publicUrl,
-    siteUrl: trimSlash(env.SITE_URL || publicUrl),
+    siteUrl: asUrl(env.SITE_URL) || publicUrl,
     databaseUrl: env.DATABASE_URL || '', // empty = in-memory Postgres (dev only, lost on restart)
-    supabaseUrl: trimSlash(env.SUPABASE_URL || ''),
+    supabaseUrl: asUrl(env.SUPABASE_URL),
     supabaseServiceKey: env.SUPABASE_SERVICE_ROLE_KEY || '',
     installerObject: env.INSTALLER_OBJECT || 'downloads/RagoHub-Setup.exe', // <bucket>/<path> in Supabase Storage
     trustProxy: env.TRUST_PROXY === '1' || env.TRUST_PROXY === 'true',
@@ -34,7 +36,7 @@ export function loadConfig(env = process.env) {
     mailFrom: env.MAIL_FROM || 'Rago <noreply@example.com>',
     supportUrl: env.SUPPORT_URL || '',
 
-    cancelUrl: env.CHECKOUT_CANCEL_URL || `${trimSlash(env.SITE_URL || publicUrl)}/#pricing`,
+    cancelUrl: env.CHECKOUT_CANCEL_URL || `${asUrl(env.SITE_URL) || publicUrl}/#pricing`,
     selfServiceResetDays: Number(env.SELF_SERVICE_RESET_DAYS || 0), // 0 = support only
 
     siteDir: env.SITE_DIR || '',
@@ -52,6 +54,16 @@ export function loadConfig(env = process.env) {
     }
     if (!publicUrl.startsWith('https://')) missing.push('PUBLIC_URL (https)');
     if (missing.length) throw new Error(`Missing production config: ${missing.join(', ')}`);
+  }
+
+  // Values still set to the examples from .env.example: the server runs, but say what won't work.
+  cfg.warnings = [];
+  const placeholder = (v) => /\.\.\.|abcd|a_remplir|xxxx/i.test(v || '');
+  if (placeholder(cfg.supabaseUrl)) cfg.warnings.push('SUPABASE_URL is still the example: Download Rago Hub will fail. Use https://<project-ref>.supabase.co');
+  if (placeholder(cfg.stripeWebhookSecret)) cfg.warnings.push('STRIPE_WEBHOOK_SECRET is still the example: Stripe webhooks will be rejected (step 6).');
+  if (placeholder(cfg.resendApiKey)) {
+    cfg.warnings.push('RESEND_API_KEY is still the example: emails are printed to the logs instead of sent.');
+    cfg.resendApiKey = '';
   }
 
   // LICENSE_SIGNING_KEY and SESSION_SECRET are optional: when absent, the server generates them once
