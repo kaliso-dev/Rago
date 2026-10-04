@@ -165,7 +165,7 @@ L'app Windows ne peut être compilée que sur Windows. GitHub le fait pour toi, 
    - **Actions → app-windows → Run workflow** ;
    - ou pousse un tag de version : `git tag app-v1.0.0 && git push origin app-v1.0.0`.
 
-   Elle se lance aussi d'elle-même sur chaque pull request qui touche `app/`, pour vérifier que l'app compile toujours.
+   Elle se lance aussi d'elle-même à chaque push ou pull request qui touche `app/`.
 3. Compte environ 15 à 20 minutes la première fois. À la fin :
    - l'exe est dans l'onglet du run, section **Artifacts** (`rago-hub-setup`) ;
    - avec un tag, il est aussi joint à un **brouillon de release** dans **Releases**.

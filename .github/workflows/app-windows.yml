@@ -5,7 +5,9 @@ name: app-windows
 on:
   workflow_dispatch:
   push:
+    branches: ["**"]
     tags: ["app-v*"]
+    paths: ["app/**", ".github/workflows/app-windows.yml"]
   pull_request:
     paths: ["app/**", ".github/workflows/app-windows.yml"]
 
