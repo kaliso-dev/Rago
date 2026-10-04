@@ -171,13 +171,14 @@ Stockage : Windows Credential Manager (`CredWriteW`, cible `RagoHub/license`) ou
 ## Clés et compte de test
 
 - Clé publique de test : `docs/test/test-public-key.pem`. La clé privée correspondante est dans `docs/test/test.env` : **test uniquement**, la clé de production sera générée avec `npm run keys` au déploiement et ne quittera jamais le serveur.
-- Lancer le serveur en local avec cette clé et créer un compte Premium de test :
+- Lancer le serveur en local avec cette clé et un compte Premium de test (base en mémoire, rien à installer) :
 
 ```bash
 cd /mnt/project-files/licensing && npm ci
-export $(grep -v '^#' docs/test/test.env | xargs) DATABASE_PATH=data/test.db
-npm run admin -- create-user test@rago.dev password123
-npm run admin -- grant test@rago.dev
-npm start          # http://localhost:8787/api/v1
-npm run admin -- reset-device test@rago.dev   # pour rejouer l'activation
+export $(grep -v '^#' docs/test/test.env | xargs)
+DEV_SEED=test@rago.dev:password123 npm start     # http://localhost:8787/api/v1
 ```
+
+Pour rejouer l'activation, redémarrer le serveur (la base en mémoire repart de zéro).
+
+- En production, la clé publique à compiler dans l'app se lit sur `https://<domaine-du-serveur>/api/v1/public-key?format=pem`.

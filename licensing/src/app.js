@@ -47,7 +47,7 @@ function rateLimiter() {
 /**
  * @param deps { cfg, db, keys, stripe, mailer, log }
  */
-export function createApp({ cfg, db, keys, stripe, mailer, log = console }) {
+export function createApp({ cfg, db, keys, stripe, mailer, log = console, fetchImpl = fetch }) {
   const app = new Hono();
   const allow = rateLimiter();
   const publicDir = relative(process.cwd(), fileURLToPath(new URL('../public', import.meta.url))) || '.';
@@ -96,23 +96,23 @@ export function createApp({ cfg, db, keys, stripe, mailer, log = console }) {
   app.get('/healthz', (c) => c.json({ ok: true }));
 
   // ---------- helpers ----------
-  const currentUser = (c) => L.userForWebSession(db, getCookie(c, 'rg_session'));
-  const signIn = (c, user) => setCookie(c, 'rg_session', L.createWebSession(db, user.id), { ...cookieBase, maxAge: L.SESSION_TTL / 1000 });
+  const currentUser = async (c) => await L.userForWebSession(db, getCookie(c, 'rg_session'));
+  const signIn = async (c, user) => setCookie(c, 'rg_session', await L.createWebSession(db, user.id), { ...cookieBase, maxAge: L.SESSION_TTL / 1000 });
   const claimCookie = (c) => unsignValue(getCookie(c, 'rg_claim'), cfg.sessionSecret);
   const setClaim = (c, licenseId) => setCookie(c, 'rg_claim', signValue(licenseId, cfg.sessionSecret), { ...cookieBase, maxAge: 7 * 86400 });
-  const pendingClaim = (c) => {
+  const pendingClaim = async (c) => {
     const id = claimCookie(c);
-    const lic = id && L.getLicense(db, id);
+    const lic = id && await L.getLicense(db, id);
     return lic && !lic.user_id ? lic : null;
   };
 
   /** Attaches a pending purchase to the user. Returns a notice code for the dashboard. */
-  function settleClaim(c, user) {
-    const lic = pendingClaim(c);
+  async function settleClaim(c, user) {
+    const lic = await pendingClaim(c);
     deleteCookie(c, 'rg_claim', { path: '/' });
     if (!lic) return null;
     try {
-      L.claimLicense(db, lic.id, user.id);
+      await L.claimLicense(db, lic.id, user.id);
       return 'claimed';
     } catch (err) {
       if (err.code === 'already_has_license') return 'duplicate';
@@ -121,7 +121,7 @@ export function createApp({ cfg, db, keys, stripe, mailer, log = console }) {
   }
 
   const requireUser = async (c, next) => {
-    const user = currentUser(c);
+    const user = await currentUser(c);
     if (!user) return c.redirect('/login', 303);
     c.set('user', user);
     await next();
@@ -140,8 +140,8 @@ export function createApp({ cfg, db, keys, stripe, mailer, log = console }) {
 
   // ---------- checkout ----------
   app.get('/buy', async (c) => {
-    const user = currentUser(c);
-    if (user && L.licenseForUser(db, user.id)?.status === 'active') return c.redirect('/account?n=owned', 303);
+    const user = await currentUser(c);
+    if (user && (await L.licenseForUser(db, user.id))?.status === 'active') return c.redirect('/account?n=owned', 303);
     if (!stripe || !cfg.stripePriceId) {
       return c.html(V.messagePage(cfg, { title: 'Checkout is not open yet.', text: 'Payments are being set up. Come back soon.' }), 503);
     }
@@ -159,42 +159,42 @@ export function createApp({ cfg, db, keys, stripe, mailer, log = console }) {
       return c.html(V.messagePage(cfg, { title: "We couldn't find that payment.", text: 'If you were charged, sign in or contact support on Discord with your receipt.', action: { href: '/login', label: 'Sign in' } }), 404);
     }
     // The webhook may not have arrived yet: fulfilling here too is safe (idempotent).
-    const out = L.fulfillCheckoutSession(db, session);
+    const out = await L.fulfillCheckoutSession(db, session);
     if (!out.license) {
       return c.html(V.messagePage(cfg, { title: 'Payment processing.', text: "Your bank is still confirming the payment. We'll email you a link to create your account as soon as it's done.", step: 0 }));
     }
     if (out.created) await sendClaimEmail(out.license, out.claimToken);
 
-    const user = currentUser(c);
+    const user = await currentUser(c);
     if (out.license.user_id) return c.redirect(user ? '/account?n=claimed' : '/login', 303);
     setClaim(c, out.license.id);
     if (user) {
-      const n = settleClaim(c, user);
+      const n = await settleClaim(c, user);
       return c.redirect(`/account?n=${n || 'claimed'}`, 303);
     }
-    if (L.findUserByEmail(db, out.license.email)) {
+    if (await L.findUserByEmail(db, out.license.email)) {
       return c.html(V.loginPage(cfg, { email: out.license.email, purchased: true }));
     }
     return c.html(V.signupPage(cfg, { purchased: true, claimEmail: out.license.email }));
   });
 
   // Link from the purchase email, for buyers who closed the tab before creating their account.
-  app.get('/claim/:token', (c) => {
-    const lic = L.licenseByClaimToken(db, c.req.param('token'));
+  app.get('/claim/:token', async (c) => {
+    const lic = await L.licenseByClaimToken(db, c.req.param('token'));
     if (!lic) {
       return c.html(V.messagePage(cfg, { title: 'This link was already used.', text: 'Your license is already on an account. Sign in to see it.', action: { href: '/login', label: 'Sign in' } }), 410);
     }
     setClaim(c, lic.id);
-    const user = currentUser(c);
-    if (user) return c.redirect(`/account?n=${settleClaim(c, user) || 'claimed'}`, 303);
-    if (L.findUserByEmail(db, lic.email)) return c.html(V.loginPage(cfg, { email: lic.email, purchased: true }));
+    const user = await currentUser(c);
+    if (user) return c.redirect(`/account?n=${await settleClaim(c, user) || 'claimed'}`, 303);
+    if (await L.findUserByEmail(db, lic.email)) return c.html(V.loginPage(cfg, { email: lic.email, purchased: true }));
     return c.html(V.signupPage(cfg, { purchased: true, claimEmail: lic.email }));
   });
 
   // ---------- accounts ----------
-  app.get('/signup', (c) => {
-    if (currentUser(c)) return c.redirect('/account', 303);
-    const lic = pendingClaim(c);
+  app.get('/signup', async (c) => {
+    if (await currentUser(c)) return c.redirect('/account', 303);
+    const lic = await pendingClaim(c);
     return c.html(V.signupPage(cfg, { purchased: !!lic, claimEmail: lic?.email }));
   });
 
@@ -202,42 +202,42 @@ export function createApp({ cfg, db, keys, stripe, mailer, log = console }) {
     const body = await c.req.parseBody();
     const email = String(body.email || '').trim().toLowerCase();
     const password = String(body.password || '');
-    const purchased = !!pendingClaim(c);
+    const purchased = !!(await pendingClaim(c));
     const fail = (error) => c.html(V.signupPage(cfg, { email, error, purchased }), 400);
     if (!allow(`signup:${ip(c)}`, 10, 60 * 60 * 1000)) return c.html(V.signupPage(cfg, { email, error: API_ERRORS.rate_limited[1], purchased }), 429);
     if (!EMAIL.test(email) || email.length > 254) return fail('Enter a valid email address.');
     if (password.length < 8 || password.length > 200) return fail('Use at least 8 characters for your password.');
-    if (L.findUserByEmail(db, email)) return fail('An account with this email already exists. Sign in instead.');
+    if (await L.findUserByEmail(db, email)) return fail('An account with this email already exists. Sign in instead.');
     const user = await L.createUser(db, email, password);
-    signIn(c, user);
-    const n = settleClaim(c, user);
+    await signIn(c, user);
+    const n = await settleClaim(c, user);
     return c.redirect(`/account${n ? `?n=${n}` : ''}`, 303);
   });
 
-  app.get('/login', (c) => {
-    if (currentUser(c)) return c.redirect('/account', 303);
+  app.get('/login', async (c) => {
+    if (await currentUser(c)) return c.redirect('/account', 303);
     const n = c.req.query('n');
-    return c.html(V.loginPage(cfg, { purchased: !!pendingClaim(c), notice: n === 'reset' ? 'Password saved. Sign in with your new password.' : null }));
+    return c.html(V.loginPage(cfg, { purchased: !!(await pendingClaim(c)), notice: n === 'reset' ? 'Password saved. Sign in with your new password.' : null }));
   });
 
   app.post('/login', async (c) => {
     const body = await c.req.parseBody();
     const email = String(body.email || '').trim().toLowerCase();
     const password = String(body.password || '');
-    const purchased = !!pendingClaim(c);
+    const purchased = !!(await pendingClaim(c));
     if (!allow(`login:${ip(c)}:${email}`, 10, 15 * 60 * 1000) || !allow(`login:${ip(c)}`, 50, 15 * 60 * 1000)) {
       return c.html(V.loginPage(cfg, { email, purchased, error: API_ERRORS.rate_limited[1] }), 429);
     }
-    const user = L.findUserByEmail(db, email);
+    const user = await L.findUserByEmail(db, email);
     const ok = await verifyPassword(password, user ? user.password_hash : DUMMY_HASH);
     if (!user || !ok) return c.html(V.loginPage(cfg, { email, purchased, error: API_ERRORS.invalid_credentials[1] }), 401);
-    signIn(c, user);
-    const n = settleClaim(c, user);
+    await signIn(c, user);
+    const n = await settleClaim(c, user);
     return c.redirect(`/account${n ? `?n=${n}` : ''}`, 303);
   });
 
-  app.post('/logout', (c) => {
-    L.deleteWebSession(db, getCookie(c, 'rg_session'));
+  app.post('/logout', async (c) => {
+    await L.deleteWebSession(db, getCookie(c, 'rg_session'));
     deleteCookie(c, 'rg_session', { path: '/' });
     return c.redirect('/login', 303);
   });
@@ -247,9 +247,9 @@ export function createApp({ cfg, db, keys, stripe, mailer, log = console }) {
     const body = await c.req.parseBody();
     const email = String(body.email || '').trim().toLowerCase();
     if (allow(`forgot:${ip(c)}`, 5, 60 * 60 * 1000) && allow(`forgot:${email}`, 3, 60 * 60 * 1000)) {
-      const user = L.findUserByEmail(db, email);
+      const user = await L.findUserByEmail(db, email);
       if (user) {
-        const token = L.createPasswordReset(db, user.id);
+        const token = await L.createPasswordReset(db, user.id);
         try { await mailer.passwordReset(user.email, `${cfg.publicUrl}/reset/${token}`); } catch (err) { log.error('[mail] reset failed', err); }
       }
     }
@@ -261,7 +261,7 @@ export function createApp({ cfg, db, keys, stripe, mailer, log = console }) {
     const token = c.req.param('token');
     const password = String((await c.req.parseBody()).password || '');
     if (password.length < 8 || password.length > 200) return c.html(V.resetPage(cfg, { token, error: 'Use at least 8 characters for your password.' }), 400);
-    const userId = L.consumePasswordReset(db, token);
+    const userId = await L.consumePasswordReset(db, token);
     if (!userId) return c.html(V.messagePage(cfg, { title: 'This link expired.', text: 'Reset links work once, for 1 hour. Ask for a new one.', action: { href: '/forgot', label: 'Send a new link' } }), 410);
     await L.setPassword(db, userId, password);
     return c.redirect('/login?n=reset', 303);
@@ -282,10 +282,10 @@ export function createApp({ cfg, db, keys, stripe, mailer, log = console }) {
     return { canReset: next <= Date.now(), nextResetAt: next > Date.now() ? next : null };
   }
 
-  app.get('/account', requireUser, (c) => {
+  app.get('/account', requireUser, async (c) => {
     const user = c.get('user');
-    const license = L.licenseForUser(db, user.id);
-    const device = license && L.getDevice(db, license.id);
+    const license = await L.licenseForUser(db, user.id);
+    const device = license && await L.getDevice(db, license.id);
     const [kind, text] = NOTICES[c.req.query('n')] || [];
     return c.html(V.dashboardPage(cfg, {
       user, license, device,
@@ -294,12 +294,31 @@ export function createApp({ cfg, db, keys, stripe, mailer, log = console }) {
     }));
   });
 
-  app.get('/account/download', requireUser, (c) => {
-    const license = L.licenseForUser(db, c.get('user').id);
+  app.get('/account/download', requireUser, async (c) => {
+    const license = await L.licenseForUser(db, c.get('user').id);
     if (license?.status !== 'active') return c.redirect('/account', 303);
+    // Supabase Storage (private bucket): redirect to a signed link valid 5 minutes.
+    if (cfg.supabaseUrl && cfg.supabaseServiceKey) {
+      const res = await fetchImpl(`${cfg.supabaseUrl}/storage/v1/object/sign/${cfg.installerObject}`, {
+        method: 'POST',
+        // Legacy service_role keys are JWTs and also go in Authorization; new sb_secret_ keys only in apikey.
+        headers: {
+          apikey: cfg.supabaseServiceKey,
+          ...(cfg.supabaseServiceKey.startsWith('eyJ') ? { Authorization: `Bearer ${cfg.supabaseServiceKey}` } : {}),
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ expiresIn: 300 }),
+      }).catch(() => null);
+      const signed = res?.ok ? (await res.json()).signedURL : null;
+      if (!signed) return c.redirect('/account?n=nofile', 303);
+      await audit(db, 'download', { licenseId: license.id, userId: license.user_id });
+      const sep = signed.includes('?') ? '&' : '?';
+      return c.redirect(`${cfg.supabaseUrl}/storage/v1${signed}${sep}download=${encodeURIComponent(cfg.installerFileName)}`, 302);
+    }
+    // Or a file on the server's disk.
     let size;
     try { size = statSync(cfg.installerPath).size; } catch { return c.redirect('/account?n=nofile', 303); }
-    audit(db, 'download', { licenseId: license.id, userId: license.user_id });
+    await audit(db, 'download', { licenseId: license.id, userId: license.user_id });
     return new Response(Readable.toWeb(createReadStream(cfg.installerPath)), {
       headers: {
         'Content-Type': 'application/vnd.microsoft.portable-executable',
@@ -310,11 +329,11 @@ export function createApp({ cfg, db, keys, stripe, mailer, log = console }) {
     });
   });
 
-  app.post('/account/reset-device', requireUser, (c) => {
-    const license = L.licenseForUser(db, c.get('user').id);
-    const device = license && L.getDevice(db, license.id);
+  app.post('/account/reset-device', requireUser, async (c) => {
+    const license = await L.licenseForUser(db, c.get('user').id);
+    const device = license && await L.getDevice(db, license.id);
     if (!license || !resetWindow(license, device).canReset) return c.redirect('/account', 303);
-    L.resetDevice(db, license.id, 'self');
+    await L.resetDevice(db, license.id, 'self');
     return c.redirect('/account?n=reset', 303);
   });
 
@@ -362,7 +381,10 @@ export function createApp({ cfg, db, keys, stripe, mailer, log = console }) {
     return { status: 'active', license_token: token, expires_at: new Date((now() + cfg.licenseTokenDays * 86400) * 1000).toISOString(), account: { email: user.email }, license: licenseInfo(license, device) };
   };
 
-  api.get('/public-key', (c) => c.json({ alg: 'EdDSA', crv: 'Ed25519', kid: keys.kid, public_key_pem: keys.publicPem }));
+  // ?format=pem returns the bare key, ready to paste into the app's build secret.
+  api.get('/public-key', (c) => (c.req.query('format') === 'pem'
+    ? c.text(keys.publicPem)
+    : c.json({ alg: 'EdDSA', crv: 'Ed25519', kid: keys.kid, public_key_pem: keys.publicPem })));
 
   api.post('/auth/login', async (c) => {
     const body = await readJson(c);
@@ -372,18 +394,18 @@ export function createApp({ cfg, db, keys, stripe, mailer, log = console }) {
     const email = body.email.trim().toLowerCase();
     if (!allow(`api-login:${ip(c)}:${email}`, 10, 15 * 60 * 1000) || !allow(`api-login:${ip(c)}`, 50, 15 * 60 * 1000)) return fail(c, 'rate_limited');
 
-    const user = L.findUserByEmail(db, email);
+    const user = await L.findUserByEmail(db, email);
     const ok = await verifyPassword(body.password, user ? user.password_hash : DUMMY_HASH);
     if (!user || !ok) return fail(c, 'invalid_credentials');
-    const license = L.licenseForUser(db, user.id);
+    const license = await L.licenseForUser(db, user.id);
     if (!license) return fail(c, 'no_license', { buy_url: `${cfg.publicUrl}/buy` });
     let state;
-    try { ({ state } = L.deviceState(db, license, device)); } catch (err) {
-      if (err.code === 'bound_to_other_device') audit(db, 'device.blocked', { licenseId: license.id, userId: user.id, detail: { name: device.name, ip: ip(c) } });
+    try { ({ state } = await L.deviceState(db, license, device)); } catch (err) {
+      if (err.code === 'bound_to_other_device') await audit(db, 'device.blocked', { licenseId: license.id, userId: user.id, detail: { name: device.name, ip: ip(c) } });
       return fail(c, err.code);
     }
     if (state === 'here') {
-      const out = L.activate(db, license.id, device, ip(c));
+      const out = await L.activate(db, license.id, device, ip(c));
       return c.json(tokenReply(user, out.license, out.device));
     }
     const iat = now();
@@ -398,11 +420,11 @@ export function createApp({ cfg, db, keys, stripe, mailer, log = console }) {
     const body = await readJson(c);
     let device;
     try { device = parseDevice(body?.device); } catch (e) { return fail(c, 'invalid_request', { detail: e.message }); }
-    const user = L.getUser(db, claims.sub);
-    const license = user && L.getLicense(db, claims.lic);
+    const user = await L.getUser(db, claims.sub);
+    const license = user && await L.getLicense(db, claims.lic);
     if (!license || license.user_id !== user.id) return fail(c, 'invalid_token');
     try {
-      const out = L.activate(db, license.id, device, ip(c));
+      const out = await L.activate(db, license.id, device, ip(c));
       return c.json(tokenReply(user, out.license, out.device));
     } catch (err) {
       if (err instanceof L.LicenseError) return fail(c, err.code);
@@ -417,15 +439,15 @@ export function createApp({ cfg, db, keys, stripe, mailer, log = console }) {
     let device;
     try { device = parseDevice(body.device); } catch (e) { return fail(c, 'invalid_request', { detail: e.message }); }
     if (!allow(`refresh:${claims.lic}`, 30, 60 * 60 * 1000)) return fail(c, 'rate_limited');
-    const license = L.getLicense(db, claims.lic);
-    const user = license && L.getUser(db, claims.sub);
+    const license = await L.getLicense(db, claims.lic);
+    const user = license && await L.getUser(db, claims.sub);
     if (!license || !user || license.user_id !== user.id) return fail(c, 'invalid_token');
     if (license.status !== 'active') return fail(c, 'revoked');
-    const bound = L.getDevice(db, license.id);
+    const bound = await L.getDevice(db, license.id);
     if (bound && !sameDevice(bound, device.fp)) return fail(c, 'bound_to_other_device');
     // Device freed or re-bound since this token was issued: the app must sign in again.
     if (!bound || bound.id !== claims.did || claims.tv !== license.token_version) return fail(c, 'invalid_token');
-    const out = L.activate(db, license.id, device, ip(c));
+    const out = await L.activate(db, license.id, device, ip(c));
     return c.json(tokenReply(user, out.license, out.device));
   });
 

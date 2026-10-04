@@ -6,9 +6,9 @@ Tout le code de Rago dans un seul dépôt :
 |---|---|---|
 | `app/` | **Rago Hub Premium**, l'app Windows payante (189 tweaks, 12 modules) | Tauri 2, React + TypeScript, Rust |
 | `site/` | La page de vente publique (anglais), avec **Rago Free** (le .bat) en téléchargement libre | HTML statique, sans framework |
-| `licensing/` | Le serveur : paiement Stripe, comptes, clés de licence, verrou sur un PC | Node 22, Hono, SQLite |
+| `licensing/` | Le serveur : paiement Stripe, comptes, clés de licence, verrou sur un PC | Node 22, Hono, Supabase (Postgres + Storage) |
 | `.github/workflows/app-windows.yml` | Fabrique le `setup.exe` de l'app sur un Windows de GitHub | GitHub Actions |
-| `Dockerfile` (racine) | Met en ligne le serveur **et** le site sur un même domaine | Docker |
+| `netlify.toml` / `Dockerfile` (racine) | Publication du site sur Netlify / variante qui sert site + serveur ensemble | Netlify / Docker |
 
 Chaque dossier a son propre README avec le détail technique. Ce guide-ci explique comment les trois s'emboîtent et comment tout lancer, dans l'ordre.
 
@@ -20,13 +20,15 @@ Chaque dossier a son propre README avec le détail technique. Ce guide-ci expliq
    Joueur
      │
      ▼
- ┌──────────────────────────── ton domaine (ex. ragohub.com) ────────────────────────────┐
- │                                                                                         │
+ ┌──────────────────────────── ragohub.com  (Netlify) ─────────────────────────────────────┐
  │  /                 Page de vente (site/)                                                │
  │   ├─ « Download free »  → /downloads/rago-optimizer-v5.2.bat   (Rago Free, sans compte) │
- │   └─ « Get Premium »    → /buy ──► Stripe Checkout (paiement unique)                    │
- │                                       │                                                 │
- │                                       ▼  webhook Stripe → /webhooks/stripe              │
+ │   └─ « Get Premium »    → account.ragohub.com/buy ──► Stripe Checkout (paiement unique) │
+ └─────────────────────────────────────────────────────────────────────────────────────────┘
+                                       │  webhook Stripe → /webhooks/stripe
+                                       ▼
+ ┌──────────────────────── account.ragohub.com  (Railway) ─────────────────────────────────┐
+ │                         base de données et fichier de l'app dans Supabase               │
  │  /checkout/success  « Payment confirmed. Create your account to get your license. »    │
  │  /account           Tableau de bord : clé de licence, « Download Rago Hub », PC activé  │
  │  /login /forgot     Connexion, mot de passe oublié                                      │
@@ -50,7 +52,7 @@ Le parcours d'un acheteur, de bout en bout :
 
 Les deux seuls liens à régler entre l'app et le serveur, au moment de fabriquer l'exe :
 
-- `RAGO_API_BASE` : l'adresse de l'API, ex. `https://ragohub.com/api/v1`.
+- `RAGO_API_BASE` : l'adresse de l'API, ex. `https://account.ragohub.com/api/v1`.
 - `RAGO_LICENSE_PUBKEY` : la clé **publique** du serveur. L'app ne fait confiance qu'aux jetons signés par la clé privée correspondante, que seul le serveur possède.
 
 Le contrat précis entre les deux (requêtes, réponses, codes d'erreur) est dans `licensing/docs/API.md`.
@@ -63,109 +65,47 @@ Le contrat précis entre les deux (requêtes, réponses, codes d'erreur) est dan
 |---|---|---|
 | Compte **Stripe** | Encaisser les paiements | Commission par vente |
 | Un **nom de domaine** | Adresse du site et de l'API, compilée dans l'app | ~10 €/an |
-| Compte **Railway** (ou Render, Fly.io) | Héberger le serveur + le site | ~5 $/mois |
+| Compte **Supabase** | Base de données et fichier d'installation de l'app | Gratuit au départ |
+| Compte **Railway** | Héberger le serveur de licences | ~5 $/mois |
+| Compte **Netlify** | Héberger la page de vente | Gratuit |
 | Compte **Resend** | Emails d'achat et de mot de passe oublié | Gratuit jusqu'à 3 000/mois |
 | Lien d'invitation **Discord** | Lien support affiché partout | Gratuit |
 | Certificat de signature de code (optionnel au début) | Sans lui, Windows SmartScreen affiche « Windows a protégé votre ordinateur » au premier lancement | 200 à 400 €/an |
 
-Sur ton PC : [Node 22](https://nodejs.org) pour lancer les commandes ci-dessous.
+Rien à installer sur ton PC pour la mise en ligne : tout se fait dans les interfaces web.
 
 ---
 
 ## 3. Mettre le serveur et le site en ligne
 
-### 3.1 Générer les clés (une seule fois)
+Le pas-à-pas qui fait foi est **[`licensing/docs/MISE-EN-LIGNE.md`](licensing/docs/MISE-EN-LIGNE.md)** : domaine, Supabase, Stripe, Resend, Railway (Root Directory = `licensing`), webhook Stripe, Netlify, puis l'exe et le test complet. Suis-le dans l'ordre.
 
-```bash
-cd licensing
-npm ci
-npm run keys
-```
+À retenir :
 
-Ça affiche trois choses :
+- **Aucune clé à générer sur ton PC.** Le serveur crée sa paire de clés de licence au premier démarrage et la garde dans Supabase. La clé publique, à donner à l'app, se lit sur `https://account.<ton-domaine>/api/v1/public-key?format=pem`.
+- **Pas de volume Railway** : la base est Supabase Postgres (`DATABASE_URL`) et l'installeur est dans un bucket Storage privé.
+- **Page de vente** : en plus de `accountBase`, tout se règle dans l'objet `CONFIG` en bas de `site/src/page.html` (et de `site/index.html`, la version déployée) :
 
-- `LICENSE_SIGNING_KEY` : la clé **privée**. Elle va uniquement chez l'hébergeur. Ne la colle jamais dans Discord, dans le code ou dans un message.
-- `SESSION_SECRET` : pour les sessions du site, hébergeur uniquement.
-- La **clé publique** (bloc `-----BEGIN PUBLIC KEY-----`) : elle ira dans les secrets GitHub pour l'app (étape 4).
+  ```js
+  const CONFIG = {
+    accountBase: "https://account.ragohub.com",   // le serveur de licences, sans / à la fin
+    checkoutPath: "/buy",      // ne pas toucher
+    loginPath: "/login",       // ne pas toucher
+    signupPath: "/signup",     // ne pas toucher
+    freeDownloadUrl: "downloads/rago-optimizer-v5.2.bat",
+    discord: "https://discord.gg/tonInvite",
+    price: "$14.99",
+    priceNote: "one-time payment",
+    stats: [{ value: "4,200", label: "members on Discord" }],
+    reviews: [{ text: "…", author: "Pseudo", detail: "Ranked BedWars" }]   // de vrais avis uniquement
+  };
+  ```
 
-Garde une copie des trois dans un gestionnaire de mots de passe. Si tu perds la clé privée, il faudra recompiler l'app et tous les joueurs devront se reconnecter.
+  Le prix affiché doit être le même que celui du `price_...` Stripe.
 
-### 3.2 Stripe
+### Variante : site et serveur sur un seul domaine
 
-1. **Produits → Ajouter un produit** : « Rago Hub Premium », prix en **paiement unique**. Note l'identifiant `price_...`.
-2. **Développeurs → Clés API** : note la clé secrète `sk_live_...` (ou `sk_test_...` pour tester d'abord).
-3. **Développeurs → Webhooks → Ajouter un endpoint** : `https://<ton-domaine>/webhooks/stripe`, avec les événements
-   `checkout.session.completed`, `checkout.session.async_payment_succeeded`, `charge.refunded`, `charge.dispute.created`.
-   Note le secret `whsec_...`.
-
-Commence avec les clés de **test** : tout le parcours se teste avec la carte `4242 4242 4242 4242`, date future, n'importe quel CVC.
-
-### 3.3 Railway
-
-1. Sur [railway.app](https://railway.app) : **New Project → Deploy from GitHub repo → kaliso-dev/Rago**.
-2. Laisse le dossier racine du service vide : Railway trouve le `Dockerfile` à la racine, qui embarque le serveur **et** le site.
-3. **Add Volume**, monté sur `/data`. C'est là que vivent la base de données et l'installeur. Sans volume, tout est effacé à chaque redéploiement.
-4. **Variables**, en partant de `licensing/.env.example` :
-
-   ```
-   NODE_ENV=production
-   PUBLIC_URL=https://ragohub.com
-   SITE_URL=https://ragohub.com
-   STRIPE_SECRET_KEY=sk_test_...
-   STRIPE_WEBHOOK_SECRET=whsec_...
-   STRIPE_PRICE_ID=price_...
-   LICENSE_SIGNING_KEY=...            (étape 3.1)
-   SESSION_SECRET=...                 (étape 3.1)
-   INSTALLER_PATH=/data/RagoHub-Setup.exe
-   INSTALLER_VERSION=1.0.0
-   SUPPORT_URL=https://discord.gg/...
-   RESEND_API_KEY=re_...
-   MAIL_FROM=Rago <hello@ragohub.com>
-   TRUST_PROXY=1
-   ```
-
-   `DATABASE_PATH` et `SITE_DIR` sont déjà réglés par le `Dockerfile`.
-5. **Settings → Networking → Custom Domain** : ajoute ton domaine et crée chez ton registrar l'enregistrement DNS que Railway t'indique. Le HTTPS est automatique.
-6. Vérifie : `https://<ton-domaine>/healthz` doit répondre `{"ok":true}`, et `https://<ton-domaine>/` doit afficher la page de vente.
-
-Chaque push sur la branche par défaut du dépôt redéploie automatiquement.
-
-### 3.4 Remplir la page de vente
-
-Tout se règle dans l'objet `CONFIG` en bas de `site/src/page.html` (et de `site/index.html`, la version déployée) :
-
-```js
-const CONFIG = {
-  accountBase: "",           // vide si tout est sur Railway (voir 3.5 pour Netlify)
-  checkoutPath: "/buy",      // ne pas toucher : le serveur s'en occupe
-  loginPath: "/login",       // ne pas toucher
-  signupPath: "/signup",     // ne pas toucher
-  freeDownloadUrl: "downloads/rago-optimizer-v5.2.bat",
-  discord: "https://discord.gg/tonInvite",
-  price: "$14.99",
-  priceNote: "one-time payment",
-  stats: [{ value: "4,200", label: "members on Discord" }],
-  reviews: [{ text: "…", author: "Pseudo", detail: "Ranked BedWars" }]   // de vrais avis uniquement
-};
-```
-
-Le prix affiché doit être le même que celui du `price_...` Stripe.
-
-### 3.5 Variante : le site sur Netlify, le serveur sur Railway
-
-Le chemin ci-dessus (tout sur Railway) reste le plus simple. Si tu préfères héberger la page de vente sur Netlify, c'est possible, mais **Netlify ne peut pas faire tourner le serveur de licences** : il lui faut un disque persistant pour sa base de données. Netlify sert donc uniquement la page, et le serveur reste sur Railway, sur un sous-domaine.
-
-Exemple : la page sur `ragohub.com` (Netlify), le serveur sur `account.ragohub.com` (Railway).
-
-1. **Netlify** : le `netlify.toml` à la racine publie déjà le dossier `site/`. Branche ton domaine `ragohub.com` sur Netlify.
-2. **DNS** : chez ton registrar, ajoute un enregistrement `CNAME` nommé `account` qui pointe vers l'adresse que Railway t'indique (Railway → Settings → Networking → Custom Domain → `account.ragohub.com`).
-3. **Railway**, en plus des étapes 3.3 :
-   - `PUBLIC_URL=https://account.ragohub.com`
-   - `SITE_URL=https://ragohub.com`
-   - `SITE_DIR=` (vide), pour que le serveur ne serve pas la page lui-même. L'adresse `https://account.ragohub.com/` renverra alors vers `https://ragohub.com`.
-   - Le webhook Stripe devient `https://account.ragohub.com/webhooks/stripe`.
-4. **Page de vente** : dans `CONFIG`, mets `accountBase: "https://account.ragohub.com"`. Les boutons Premium, Sign in et Create account iront alors sur le serveur.
-5. **App** (étape 4) : `RAGO_API_BASE=https://account.ragohub.com/api/v1` et `SITE_URL=https://account.ragohub.com`. Dans ce cas, `SITE_URL` désigne bien le serveur et pas Netlify : c'est lui qui sert les pages de création de compte et de mot de passe oublié que l'app ouvre.
+Le `Dockerfile` à la racine sert la page de vente **et** le serveur depuis Railway, sans Netlify ni sous-domaine. Pour l'utiliser : Root Directory vide sur Railway, mêmes variables que dans `MISE-EN-LIGNE.md` (dont `DATABASE_URL`), `PUBLIC_URL` et `SITE_URL` sur le même domaine, et `accountBase: ""` dans le `CONFIG` du site. Ce n'est pas le chemin recommandé.
 
 ---
 
@@ -175,10 +115,10 @@ L'app Windows ne peut être compilée que sur Windows. GitHub le fait pour toi, 
 
 1. Sur GitHub : **Settings → Secrets and variables → Actions**.
    - Onglet **Secrets**, **New repository secret** :
-     - `RAGO_API_BASE` = `https://<ton-domaine>/api/v1`
-     - `RAGO_LICENSE_PUBKEY` = la clé publique de l'étape 3.1, bloc complet avec les lignes `BEGIN` et `END`
+     - `RAGO_API_BASE` = `https://account.<ton-domaine>/api/v1`
+     - `RAGO_LICENSE_PUBKEY` = le bloc affiché par `https://account.<ton-domaine>/api/v1/public-key?format=pem`, lignes `BEGIN` et `END` comprises
    - Onglet **Variables**, **New repository variable** :
-     - `SITE_URL` = `https://<ton-domaine>`
+     - `SITE_URL` = `https://account.<ton-domaine>` (le serveur, qui sert les pages de compte que l'app ouvre)
 2. Lance la fabrication, au choix :
    - **Actions → app-windows → Run workflow** ;
    - ou pousse un tag de version : `git tag app-v1.0.0 && git push origin app-v1.0.0`.
@@ -192,28 +132,15 @@ Sans les deux secrets, l'exe sort quand même, mais **sans écran de connexion**
 
 ### 4.1 Mettre l'exe à disposition des acheteurs
 
-Le bouton « Download Rago Hub » du tableau de bord sert le fichier `/data/RagoHub-Setup.exe` du serveur. Pour l'y déposer :
+Le bouton « Download Rago Hub » du tableau de bord sert le fichier `RagoHub-Setup.exe` du bucket privé `downloads` de Supabase, par un lien temporaire réservé aux comptes payés. Le dépôt du fichier et la mise à jour de `INSTALLER_VERSION` sont décrits à l'étape 8 de [`licensing/docs/MISE-EN-LIGNE.md`](licensing/docs/MISE-EN-LIGNE.md).
 
-1. Publie la release (ou récupère l'artefact) et copie le lien de téléchargement de l'exe.
-2. Installe la [CLI Railway](https://docs.railway.com/guides/cli), puis :
-
-   ```bash
-   railway link              # choisir le projet Rago
-   railway ssh
-   wget -O /data/RagoHub-Setup.exe "<lien de l'exe>"
-   exit
-   ```
-3. Mets `INSTALLER_VERSION` à jour dans les variables Railway.
-
-Que l'exe soit téléchargeable publiquement n'est pas grave : sans compte payé, l'app ne passe pas l'écran de connexion.
-
-Pour chaque nouvelle version : monte `version` dans `app/src-tauri/tauri.conf.json` et `app/package.json`, pousse un tag `app-vX.Y.Z`, remplace le fichier dans `/data`, mets à jour `INSTALLER_VERSION`.
+Pour chaque nouvelle version : monte `version` dans `app/src-tauri/tauri.conf.json` et `app/package.json`, relance la fabrication, remplace le fichier dans le bucket, mets à jour `INSTALLER_VERSION`.
 
 ---
 
 ## 5. Tester tout le parcours avant d'ouvrir
 
-Avec les clés Stripe de **test** :
+Le test complet est l'étape 9 de `licensing/docs/MISE-EN-LIGNE.md`. En résumé, avec les clés Stripe de **test** :
 
 1. Ouvre ton site, clique **Get Rago Hub Premium**, paie avec `4242 4242 4242 4242`.
 2. Crée ton compte, vérifie que le tableau de bord montre la clé et que l'exe se télécharge.
@@ -228,7 +155,7 @@ Quand tout est bon : remplace `sk_test_`, `whsec_` et `price_` par leurs version
 
 ## 6. Le support au quotidien
 
-Depuis Railway (`railway ssh`, puis `cd /app`) ou en local avec les mêmes variables :
+Depuis Railway (`railway ssh`, puis `cd /app`) ou en local avec le même `DATABASE_URL` :
 
 ```bash
 npm run admin -- show <email>            # compte, licence, PC, derniers événements
@@ -245,7 +172,7 @@ Changement de PC en libre-service (une fois tous les 30 jours depuis le tableau 
 ## 7. Développer en local
 
 ```bash
-# Serveur + site, sur http://localhost:8787
+# Serveur + site, sur http://localhost:8787 (sans DATABASE_URL : base en mémoire, effacée à l'arrêt)
 cd licensing && npm ci && SITE_DIR=../site npm run dev
 npm test                                  # parcours complet
 
@@ -258,7 +185,7 @@ cd app && npm ci && npm run tauri dev
 
 ## 8. Ce qui manque encore
 
-- **Choix à faire** : prix, nom de domaine, comptes Stripe, Railway, Resend, invitation Discord.
+- **Choix à faire** : prix, nom de domaine, comptes Stripe, Supabase, Railway, Netlify, Resend, invitation Discord.
 - **`LowLatency.pow` et `smartctl.exe`** : utilisés par le .bat mais pas fournis. À déposer dans `app/src-tauri/resources/` ; sans eux le tweak « plan d'alimentation » reste grisé.
 - **Certificat de signature de code** : sans lui, avertissement SmartScreen au premier lancement.
 - **Avis et chiffres réels** pour la page de vente (`CONFIG.reviews`, `CONFIG.stats`).

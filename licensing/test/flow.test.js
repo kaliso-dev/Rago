@@ -7,7 +7,8 @@ import { join } from 'node:path';
 import Stripe from 'stripe';
 
 import { loadConfig } from '../src/config.js';
-import { openDb } from '../src/db.js';
+import { ensureKeys, openDb, openMemoryDb } from '../src/db.js';
+import pg from 'pg';
 import { loadKeys, verifyToken } from '../src/tokens.js';
 import { createApp } from '../src/app.js';
 import * as L from '../src/licensing.js';
@@ -16,9 +17,26 @@ const WHSEC = 'whsec_test_secret';
 const installer = join(mkdtempSync(join(tmpdir(), 'rago-')), 'RagoHub-Setup.exe');
 writeFileSync(installer, 'MZ fake installer');
 
-function setup(env = {}) {
+// Runs on in-memory Postgres (PGlite) by default; set TEST_DATABASE_URL to run on a real Postgres.
+const opened = [];
+async function testDb() {
+  const url = process.env.TEST_DATABASE_URL;
+  if (!url) return openMemoryDb();
+  const admin = new pg.Client({ connectionString: url });
+  await admin.connect();
+  await admin.query('DROP SCHEMA public CASCADE; CREATE SCHEMA public;');
+  await admin.end();
+  for (const d of opened.splice(0)) await d.close();
+  const db = await openDb(url);
+  opened.push(db);
+  return db;
+}
+test.after(async () => { for (const d of opened) await d.close(); });
+
+async function setup(env = {}, extra = {}) {
   const cfg = loadConfig({ PUBLIC_URL: 'http://localhost', STRIPE_PRICE_ID: 'price_123', STRIPE_WEBHOOK_SECRET: WHSEC, INSTALLER_PATH: installer, ...env });
-  const db = openDb(':memory:');
+  const db = await testDb();
+  await ensureKeys(db, cfg);
   const keys = loadKeys(cfg.signingKeyPem);
   const stripe = new Stripe('sk_test_fake');
   const sessions = {};
@@ -26,7 +44,7 @@ function setup(env = {}) {
   stripe.checkout.sessions.create = async (params) => ({ id: 'cs_new', url: 'https://checkout.stripe.com/c/pay/cs_new', params });
   const mails = [];
   const mailer = { purchase: async (to, url) => mails.push({ to, url }), passwordReset: async (to, url) => mails.push({ to, url }) };
-  const app = createApp({ cfg, db, keys, stripe, mailer, log: { info() {}, error: console.error } });
+  const app = createApp({ cfg, db, keys, stripe, mailer, log: { info() {}, error: console.error }, ...extra });
 
   // Minimal browser: keeps cookies, sends same-origin form posts.
   const jar = new Map();
@@ -68,7 +86,7 @@ const device = (guid, uuid = 'UUID-A', board = 'BOARD-A', name = 'GAMING-PC') =>
 });
 
 test('purchase -> webhook -> success page -> create account -> dashboard -> download', async () => {
-  const t = setup();
+  const t = await setup();
   const s = t.paidSession('cs_test_1', 'Player@Example.com');
   const wh = await t.webhook('checkout.session.completed', s);
   assert.equal(wh.status, 200);
@@ -77,7 +95,7 @@ test('purchase -> webhook -> success page -> create account -> dashboard -> down
 
   // Replaying the same purchase does nothing new.
   await t.webhook('checkout.session.completed', s);
-  assert.equal(t.db.prepare('SELECT COUNT(*) n FROM licenses').get().n, 1);
+  assert.equal((await t.db.get('SELECT COUNT(*)::int AS n FROM licenses')).n, 1);
 
   const page = await t.browse('/checkout/success?session_id=cs_test_1');
   const html = await page.text();
@@ -99,16 +117,16 @@ test('purchase -> webhook -> success page -> create account -> dashboard -> down
 });
 
 test('success page before the webhook still creates exactly one license', async () => {
-  const t = setup();
+  const t = await setup();
   const s = t.paidSession('cs_test_2', 'a@b.co');
   await t.browse('/checkout/success?session_id=cs_test_2');
   await t.webhook('checkout.session.completed', s);
-  assert.equal(t.db.prepare('SELECT COUNT(*) n FROM licenses').get().n, 1);
+  assert.equal((await t.db.get('SELECT COUNT(*)::int AS n FROM licenses')).n, 1);
   assert.equal(t.mails.length, 1);
 });
 
 test('claim link from the email works after the tab was closed, and only once', async () => {
-  const t = setup();
+  const t = await setup();
   await t.webhook('checkout.session.completed', t.paidSession('cs_test_3', 'late@example.com'));
   const path = new URL(t.mails[0].url).pathname;
   assert.match(await (await t.browse(path)).text(), /Create account/);
@@ -119,12 +137,12 @@ test('claim link from the email works after the tab was closed, and only once', 
 });
 
 test('signed-in buyer gets the license directly; second purchase is flagged', async () => {
-  const t = setup();
+  const t = await setup();
   await t.browse('/signup', { form: { email: 'me@x.io', password: 'password123' } });
   const buy = await t.browse('/buy');
   assert.equal(buy.status, 303);
   assert.match(buy.headers.get('location'), /checkout\.stripe\.com/);
-  const user = L.findUserByEmail(t.db, 'me@x.io');
+  const user = await L.findUserByEmail(t.db, 'me@x.io');
   t.paidSession('cs_test_4', 'me@x.io', { client_reference_id: user.id });
   const r = await t.browse('/checkout/success?session_id=cs_test_4');
   assert.equal(r.headers.get('location'), '/account?n=claimed');
@@ -140,7 +158,7 @@ test('signed-in buyer gets the license directly; second purchase is flagged', as
 });
 
 test('app: login, activate, one device only, reinstall tolerated, refresh, refund', async () => {
-  const t = setup();
+  const t = await setup();
   await t.webhook('checkout.session.completed', t.paidSession('cs_app', 'pro@rago.gg'));
   await t.browse('/checkout/success?session_id=cs_app');
   await t.browse('/signup', { form: { email: 'pro@rago.gg', password: 'correct horse' } });
@@ -194,14 +212,14 @@ test('app: login, activate, one device only, reinstall tolerated, refresh, refun
 });
 
 test('support reset frees the device; old tokens stop refreshing', async () => {
-  const t = setup();
+  const t = await setup();
   const user = await L.createUser(t.db, 'r@r.io', 'password123');
-  const { license } = L.grantLicense(t.db, 'r@r.io', 'test');
+  const { license } = await L.grantLicense(t.db, 'r@r.io', 'test');
   assert.equal(license.user_id, user.id);
   let j = await (await t.api('/auth/login', { email: 'r@r.io', password: 'password123', device: device('A') })).json();
   j = await (await t.api('/licenses/activate', { device: device('A') }, { authorization: `Bearer ${j.access_token}` })).json();
   const oldToken = j.license_token;
-  L.resetDevice(t.db, license.id, 'support');
+  await L.resetDevice(t.db, license.id, 'support');
   let r = await t.api('/licenses/refresh', { license_token: oldToken, device: device('A') });
   assert.equal((await r.json()).error.code, 'invalid_token');
   j = await (await t.api('/auth/login', { email: 'r@r.io', password: 'password123', device: device('B', 'U2', 'B2') })).json();
@@ -209,25 +227,25 @@ test('support reset frees the device; old tokens stop refreshing', async () => {
 });
 
 test('self-service reset is off by default and limited when on', async () => {
-  const t = setup({ SELF_SERVICE_RESET_DAYS: '30' });
+  const t = await setup({ SELF_SERVICE_RESET_DAYS: '30' });
   await t.browse('/signup', { form: { email: 's@s.io', password: 'password123' } });
-  const { license } = L.grantLicense(t.db, 's@s.io');
-  L.activate(t.db, license.id, { fp: { machine_guid: 'a'.repeat(64), smbios_uuid: 'b'.repeat(64), board_serial: null }, name: 'PC', os: '', appVersion: '' });
+  const { license } = await L.grantLicense(t.db, 's@s.io');
+  await L.activate(t.db, license.id, { fp: { machine_guid: 'a'.repeat(64), smbios_uuid: 'b'.repeat(64), board_serial: null }, name: 'PC', os: '', appVersion: '' });
   assert.match(await (await t.browse('/account')).text(), /Use on another PC/);
   await t.browse('/account/reset-device', { form: {} });
-  assert.equal(L.getDevice(t.db, license.id), undefined);
-  L.activate(t.db, license.id, { fp: { machine_guid: 'c'.repeat(64), smbios_uuid: null, board_serial: null }, name: 'PC2', os: '', appVersion: '' });
+  assert.equal(await L.getDevice(t.db, license.id), null);
+  await L.activate(t.db, license.id, { fp: { machine_guid: 'c'.repeat(64), smbios_uuid: null, board_serial: null }, name: 'PC2', os: '', appVersion: '' });
   assert.match(await (await t.browse('/account')).text(), /You can free it yourself from/);
 
-  const off = setup();
+  const off = await setup();
   await off.browse('/signup', { form: { email: 's@s.io', password: 'password123' } });
-  const l2 = L.grantLicense(off.db, 's@s.io').license;
-  L.activate(off.db, l2.id, { fp: { machine_guid: 'a'.repeat(64), smbios_uuid: null, board_serial: null }, name: 'PC', os: '', appVersion: '' });
+  const l2 = (await L.grantLicense(off.db, 's@s.io')).license;
+  await L.activate(off.db, l2.id, { fp: { machine_guid: 'a'.repeat(64), smbios_uuid: null, board_serial: null }, name: 'PC', os: '', appVersion: '' });
   assert.doesNotMatch(await (await off.browse('/account')).text(), /Use on another PC/);
 });
 
 test('account without a license sees the offer', async () => {
-  const t = setup();
+  const t = await setup();
   await t.browse('/signup', { form: { email: 'free@x.io', password: 'password123' } });
   const r = await t.browse('/account');
   assert.equal(r.status, 200);
@@ -240,7 +258,7 @@ test('account without a license sees the offer', async () => {
 test('SITE_DIR serves the marketing site without the strict CSP', async () => {
   const dir = mkdtempSync(join(tmpdir(), 'site-'));
   writeFileSync(join(dir, 'index.html'), '<style>body{}</style><a href="/buy">Get Rago Hub Premium</a>');
-  const t = setup({ SITE_DIR: dir });
+  const t = await setup({ SITE_DIR: dir });
   const home = await t.app.request('/');
   assert.equal(home.status, 200);
   assert.match(await home.text(), /Get Rago Hub Premium/);
@@ -249,7 +267,7 @@ test('SITE_DIR serves the marketing site without the strict CSP', async () => {
 });
 
 test('site hosted on another origin: checkout and links point back to it', async () => {
-  const t = setup({ PUBLIC_URL: 'https://account.rago.test', SITE_URL: 'https://rago.test' });
+  const t = await setup({ PUBLIC_URL: 'https://account.rago.test', SITE_URL: 'https://rago.test' });
   assert.equal((await t.app.request('/')).headers.get('location'), 'https://rago.test/');
   let params;
   const create = async (p) => { params = p; return { url: 'https://checkout.stripe.com/x' }; };
@@ -260,8 +278,45 @@ test('site hosted on another origin: checkout and links point back to it', async
   assert.match(await (await t.app.request('/login')).text(), /href="https:\/\/rago\.test\/"/);
 });
 
+test('installer from Supabase Storage: signed link for paying accounts only', async () => {
+  const calls = [];
+  const t = await setup({ SUPABASE_URL: 'https://abc.supabase.co', SUPABASE_SERVICE_ROLE_KEY: 'eyJservice-key' }, {
+    fetchImpl: async (url, init) => { calls.push({ url, init }); return new Response(JSON.stringify({ signedURL: '/object/sign/downloads/RagoHub-Setup.exe?token=t0k' })); },
+  });
+  await t.browse('/signup', { form: { email: 'st@x.io', password: 'password123' } });
+  assert.equal((await t.browse('/account/download')).headers.get('location'), '/account');
+  assert.equal(calls.length, 0);
+  await L.grantLicense(t.db, 'st@x.io');
+  const r = await t.browse('/account/download');
+  assert.equal(r.headers.get('location'), 'https://abc.supabase.co/storage/v1/object/sign/downloads/RagoHub-Setup.exe?token=t0k&download=RagoHub-Setup.exe');
+  assert.equal(calls[0].url, 'https://abc.supabase.co/storage/v1/object/sign/downloads/RagoHub-Setup.exe');
+  assert.equal(calls[0].init.headers.Authorization, 'Bearer eyJservice-key');
+  assert.equal(calls[0].init.headers.apikey, 'eyJservice-key');
+});
+
+test('concurrent activations from two PCs: exactly one wins', async () => {
+  const t = await setup();
+  await L.createUser(t.db, 'race@x.io', 'password123');
+  const { license } = await L.grantLicense(t.db, 'race@x.io');
+  const dev = (g) => ({ fp: { machine_guid: g.repeat(64), smbios_uuid: g.repeat(64), board_serial: null }, name: g, os: '', appVersion: '' });
+  const results = await Promise.allSettled([L.activate(t.db, license.id, dev('a')), L.activate(t.db, license.id, dev('b'))]);
+  assert.equal(results.filter((r) => r.status === 'fulfilled').length, 1);
+  assert.equal(results.find((r) => r.status === 'rejected').reason.code, 'bound_to_other_device');
+});
+
+test('keys generated once and kept in the database; public key served as PEM', async () => {
+  const db = await testDb();
+  const a = loadConfig({}); await ensureKeys(db, a);
+  const b = loadConfig({}); await ensureKeys(db, b);
+  assert.equal(a.signingKeyPem, b.signingKeyPem);
+  assert.equal(a.sessionSecret, b.sessionSecret);
+  const t = await setup();
+  const pem = await (await t.app.request('/api/v1/public-key?format=pem')).text();
+  assert.match(pem, /^-----BEGIN PUBLIC KEY-----/);
+});
+
 test('webhook rejects bad signatures; cross-site form posts are refused', async () => {
-  const t = setup();
+  const t = await setup();
   const r = await t.app.request('/webhooks/stripe', { method: 'POST', headers: { 'stripe-signature': 't=1,v1=bad' }, body: '{}' });
   assert.equal(r.status, 400);
   const x = await t.app.request('/login', { method: 'POST', headers: { origin: 'https://evil.example', 'content-type': 'application/x-www-form-urlencoded' }, body: 'email=a&password=b' });

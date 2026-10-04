@@ -1,40 +1,30 @@
-# Rago — paiement, comptes et licences
+# Rago : paiement, comptes et licences
 
 Serveur Node.js qui gère tout ce qui se passe après le clic sur « Get Rago Hub Premium » : paiement Stripe, création de compte, tableau de bord avec le téléchargement de Rago Hub, clé de licence et verrou sur un seul PC.
 
+**Mettre en ligne : suivre [docs/MISE-EN-LIGNE.md](docs/MISE-EN-LIGNE.md), étape par étape.**
+
 ## Le parcours de l'acheteur
 
-1. Bouton Premium du site → `https://<domaine>/buy` → page de paiement Stripe Checkout.
-2. Paiement accepté → retour sur `/checkout/success` : « Payment confirmed. Create your account to get your license. » Il choisit son mot de passe, la licence est rattachée à son compte.
-3. Il reçoit aussi un email avec un lien de création de compte, au cas où il ferme l'onglet.
-4. Tableau de bord `/account` : bouton « Download Rago Hub », clé de licence, appareil activé.
-5. Dans Rago Hub, il se connecte avec le même email et mot de passe, clique **Activate** : la licence est verrouillée sur ce PC. Sur un autre PC, la connexion est refusée.
+1. Bouton Premium du site → `https://account.<domaine>/buy` → page de paiement Stripe Checkout.
+2. Paiement accepté → `/checkout/success` : « Payment confirmed. Create your account to get your license. » Il choisit son mot de passe, la licence est rattachée à son compte. Un email lui envoie aussi un lien de création de compte, au cas où il ferme l'onglet.
+3. Tableau de bord `/account` : bouton « Download Rago Hub », clé de licence, PC activé.
+4. Dans Rago Hub, il se connecte avec le même email et mot de passe, clique **Activate** : la licence est verrouillée sur ce PC. Sur un autre PC, la connexion est refusée.
 
-Remboursement total ou litige Stripe : la licence est révoquée automatiquement, Rago Hub s'arrête à sa prochaine vérification.
+Remboursement total ou litige Stripe : la licence est révoquée automatiquement.
 
 ## Choix faits
 
 - **Paiement unique** (licence à vie), pas d'abonnement. Le prix vient du `STRIPE_PRICE_ID`.
-- **Un seul PC par licence.** Le site reste accessible depuis n'importe quel navigateur ; c'est l'app qui est verrouillée.
-- **Réinstaller Windows ne bloque pas le joueur** : l'empreinte combine 3 identifiants et en tolère un qui change (détails dans `docs/API.md`).
-- **Changement de PC : par le support**, avec `npm run admin -- reset-device <email>`. Pour l'ouvrir en libre-service limité, mettre `SELF_SERVICE_RESET_DAYS=30` (un changement par mois depuis le tableau de bord).
-- Le téléchargement de Rago Hub est réservé aux comptes avec une licence active. Rago Free (le .bat) reste en téléchargement libre sur le site.
-
-## Mise en ligne
-
-Il faut : un compte Stripe, un nom de domaine, un hébergeur Node avec disque persistant (Railway, Render ou Fly.io ; le `Dockerfile` marche sur les trois), et un compte Resend pour les emails (gratuit jusqu'à 3 000 emails par mois).
-
-1. **Stripe** : créer le produit « Rago Hub Premium » avec un prix en paiement unique, noter son `price_...`. Dans Développeurs → Webhooks, ajouter l'endpoint `https://<domaine>/webhooks/stripe` avec les événements `checkout.session.completed`, `checkout.session.async_payment_succeeded`, `charge.refunded`, `charge.dispute.created`, et noter le `whsec_...`.
-2. **Clés** : `npm run keys` donne `LICENSE_SIGNING_KEY`, `SESSION_SECRET` et la clé publique à donner au thread de l'app pour qu'il la compile dans Rago Hub. Ne jamais partager la clé privée.
-3. **Variables** : copier `.env.example`, remplir, déclarer chez l'hébergeur. Monter un volume sur `/data` (base SQLite et installeur).
-4. **Installeur** : déposer `RagoHub-Setup.exe` dans `/data` (`INSTALLER_PATH`), mettre à jour `INSTALLER_VERSION` à chaque version.
-5. Deux façons d'héberger le site :
-   - **Tout sur un domaine** : `SITE_DIR` sert la page de vente depuis ce serveur, `PUBLIC_URL` = `SITE_URL`.
-   - **Site séparé (ex. Netlify)** : ce serveur sur un sous-domaine, par exemple `PUBLIC_URL=https://account.ragohub.com` et `SITE_URL=https://ragohub.com`, sans `SITE_DIR`. Le site préfixe ses liens `/buy`, `/login`, `/signup` avec `https://account.ragohub.com`. Pas de CORS à régler : ce sont de simples liens, et les cookies de session vivent sur le sous-domaine du compte.
-
-Tester avant d'ouvrir : clés Stripe de test (`sk_test_...`), carte `4242 4242 4242 4242`, et `stripe listen --forward-to localhost:8787/webhooks/stripe` en local.
+- **Un seul PC par licence.** Le site reste accessible depuis n'importe quel navigateur ; c'est l'app qui est verrouillée. Réinstaller Windows ne bloque pas le joueur (l'empreinte combine 3 identifiants et en tolère un qui change, voir `docs/API.md`).
+- **Changement de PC par le support** (`npm run admin -- reset-device <email>`). `SELF_SERVICE_RESET_DAYS=30` l'ouvre en libre-service une fois par mois.
+- **Supabase** : la base Postgres (tables dans `supabase/schema.sql`, créées automatiquement au démarrage, accès public bloqué par RLS) et l'installeur dans un bucket Storage privé, servi par lien signé de 5 minutes aux seuls comptes Premium. Le serveur n'a donc besoin d'aucun disque.
+- **Clés de licence** : sans `LICENSE_SIGNING_KEY`, le serveur génère sa paire Ed25519 au premier démarrage et la garde dans la base. La clé publique à compiler dans l'app se lit sur `/api/v1/public-key?format=pem`.
+- Rago Free (le .bat) reste en téléchargement libre sur le site, sans compte.
 
 ## Support
+
+Avec `DATABASE_URL` réglé sur la base Supabase :
 
 ```bash
 npm run admin -- show <email>            # compte, licence, appareil, derniers événements
@@ -50,8 +40,9 @@ npm run admin -- grant <email> [note]    # licence offerte, ex. anciens acheteur
 
 ```bash
 npm ci
-npm test         # parcours complet : paiement, compte, téléchargement, activation, refus 2e PC, remboursement
-npm run dev      # http://localhost:8787 (sans Stripe : /buy affiche « Checkout is not open yet »)
+npm test                                   # 14 tests, base Postgres en mémoire (PGlite)
+TEST_DATABASE_URL=postgres://... npm test  # les mêmes sur un vrai Postgres
+DEV_SEED=test@rago.dev:password123 npm run dev   # http://localhost:8787, compte Premium de test
 ```
 
-Node 22 ou plus (SQLite intégré à Node, aucune dépendance native). Code : `src/app.js` (routes), `src/licensing.js` (comptes, licences, verrou), `src/billing.js` (Stripe), `src/views.js` + `public/` (pages), `docs/API.md` (contrat avec l'app).
+Node 22 ou plus. Code : `src/app.js` (routes), `src/licensing.js` (comptes, licences, verrou), `src/db.js` (Postgres), `src/billing.js` (Stripe), `src/views.js` + `public/` (pages), `docs/API.md` (contrat avec l'app).

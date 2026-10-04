@@ -5,7 +5,7 @@ RUN npm ci --omit=dev
 COPY src ./src
 COPY public ./public
 COPY scripts ./scripts
-ENV NODE_ENV=production DATABASE_PATH=/data/rago.db PORT=8787
-VOLUME /data
+COPY supabase ./supabase
+ENV NODE_ENV=production PORT=8787
 EXPOSE 8787
 CMD ["npm", "start"]

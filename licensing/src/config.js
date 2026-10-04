@@ -1,5 +1,3 @@
-import { generateKeyPairSync, randomBytes } from 'node:crypto';
-
 const trimSlash = (s) => s.replace(/\/+$/, '');
 
 // LICENSE_SIGNING_KEY holds the Ed25519 private key, either as PEM or as base64 of the PEM
@@ -19,7 +17,10 @@ export function loadConfig(env = process.env) {
     port: Number(env.PORT || 8787),
     publicUrl,
     siteUrl: trimSlash(env.SITE_URL || publicUrl),
-    dbPath: env.DATABASE_PATH || './data/rago.db',
+    databaseUrl: env.DATABASE_URL || '', // empty = in-memory Postgres (dev only, lost on restart)
+    supabaseUrl: trimSlash(env.SUPABASE_URL || ''),
+    supabaseServiceKey: env.SUPABASE_SERVICE_ROLE_KEY || '',
+    installerObject: env.INSTALLER_OBJECT || 'downloads/RagoHub-Setup.exe', // <bucket>/<path> in Supabase Storage
     trustProxy: env.TRUST_PROXY === '1' || env.TRUST_PROXY === 'true',
 
     stripeSecretKey: env.STRIPE_SECRET_KEY || '',
@@ -46,19 +47,14 @@ export function loadConfig(env = process.env) {
 
   const missing = [];
   if (prod) {
-    for (const k of ['stripeSecretKey', 'stripeWebhookSecret', 'stripePriceId', 'signingKeyPem', 'sessionSecret']) {
+    for (const k of ['databaseUrl', 'stripeSecretKey', 'stripeWebhookSecret', 'stripePriceId']) {
       if (!cfg[k]) missing.push(k);
     }
     if (!publicUrl.startsWith('https://')) missing.push('PUBLIC_URL (https)');
     if (missing.length) throw new Error(`Missing production config: ${missing.join(', ')}`);
   }
 
-  // Development fallbacks: ephemeral keys so the server boots without any setup.
-  if (!cfg.signingKeyPem) {
-    const { privateKey } = generateKeyPairSync('ed25519');
-    cfg.signingKeyPem = privateKey.export({ type: 'pkcs8', format: 'pem' });
-    cfg.ephemeralSigningKey = true;
-  }
-  if (!cfg.sessionSecret) cfg.sessionSecret = randomBytes(32).toString('hex');
+  // LICENSE_SIGNING_KEY and SESSION_SECRET are optional: when absent, the server generates them once
+  // and keeps them in the database (see ensureKeys in db.js).
   return cfg;
 }
