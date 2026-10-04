@@ -1,0 +1,22 @@
+{
+  "name": "rago-licensing",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Rago Hub Premium: Stripe checkout, accounts, license keys and one-device activation.",
+  "type": "module",
+  "engines": {
+    "node": ">=22.5"
+  },
+  "scripts": {
+    "start": "node --disable-warning=ExperimentalWarning src/server.js",
+    "dev": "node --disable-warning=ExperimentalWarning --watch src/server.js",
+    "test": "node --disable-warning=ExperimentalWarning --test test/*.test.js",
+    "keys": "node scripts/keys.js",
+    "admin": "node --disable-warning=ExperimentalWarning scripts/admin.js"
+  },
+  "dependencies": {
+    "@hono/node-server": "^2.1.3",
+    "hono": "^4.13.13",
+    "stripe": "^23.0.0"
+  }
+}

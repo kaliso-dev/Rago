@@ -1,0 +1,7 @@
+fn main() {
+    // Le manifeste demande les droits administrateur au lancement : la quasi-totalité des
+    // réglages écrivent dans HKLM, les services ou le BCD.
+    let windows = tauri_build::WindowsAttributes::new().app_manifest(include_str!("app.manifest"));
+    tauri_build::try_build(tauri_build::Attributes::new().windows_attributes(windows))
+        .expect("failed to run tauri-build");
+}

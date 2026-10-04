@@ -1,0 +1,4852 @@
+{
+ "version": 1,
+ "modules": [
+  {
+   "id": "network",
+   "icon": "network",
+   "name": {
+    "fr": "Réseau",
+    "en": "Network"
+   },
+   "tagline": {
+    "fr": "Ping, stabilité et enregistrement des coups.",
+    "en": "Ping, stability and hit registration."
+   },
+   "sections": [
+    {
+     "id": "profiles",
+     "name": {
+      "fr": "Profil de jeu",
+      "en": "Game profile"
+     },
+     "tweaks": [
+      {
+       "id": "net_profile",
+       "name": {
+        "fr": "Profil réseau",
+        "en": "Network profile"
+       },
+       "desc": {
+        "fr": "Règle la pile TCP pour ton style de jeu. Hitreg coupe les offloads et passe le MTU à 1400, Knockback active CTCP, ECN et un RTO de 300 ms, QoS donne la priorité au trafic Minecraft (port 25565). Essaie-les et garde celui que tu préfères.",
+        "en": "Tunes the TCP stack for your play style. Hitreg disables offloads and sets MTU 1400, Knockback enables CTCP, ECN and a 300 ms RTO, QoS prioritises Minecraft traffic (port 25565)."
+       },
+       "risk": "safe",
+       "reboot": false,
+       "kind": "tweak",
+       "variants": [
+        {
+         "id": "hitreg",
+         "label": {
+          "fr": "Hitreg",
+          "en": "Hitreg"
+         }
+        },
+        {
+         "id": "knockback",
+         "label": {
+          "fr": "Knockback",
+          "en": "Knockback"
+         }
+        },
+        {
+         "id": "qos",
+         "label": {
+          "fr": "QoS Minecraft",
+          "en": "QoS Minecraft"
+         }
+        }
+       ],
+       "requires": [],
+       "defaultVariant": "qos",
+       "legacy": [
+        "Hitreg1@530",
+        "Kbc3@409",
+        "QOS2@482"
+       ],
+       "lines": 136
+      }
+     ]
+    },
+    {
+     "id": "presets",
+     "name": {
+      "fr": "Préréglages complets",
+      "en": "Full presets"
+     },
+     "tweaks": [
+      {
+       "id": "net_server",
+       "name": {
+        "fr": "Préréglage réseau complet",
+        "en": "Full network preset"
+       },
+       "desc": {
+        "fr": "Quatre combinaisons complètes (TCP, Nagle, carte réseau, priorités DNS, timers). Applique-en un, mesure ton ping, compare. Les préréglages 1 et 2 réinitialisent aussi Winsock et les règles du pare-feu Windows.",
+        "en": "Four complete combinations (TCP, Nagle, NIC, DNS priority, timers). Presets 1 and 2 also reset Winsock and the Windows Firewall rules."
+       },
+       "risk": "advanced",
+       "reboot": true,
+       "kind": "tweak",
+       "variants": [
+        {
+         "id": "s1",
+         "label": {
+          "fr": "Préréglage 1",
+          "en": "Preset 1"
+         }
+        },
+        {
+         "id": "s2",
+         "label": {
+          "fr": "Préréglage 2",
+          "en": "Preset 2"
+         }
+        },
+        {
+         "id": "s3",
+         "label": {
+          "fr": "Préréglage 3",
+          "en": "Preset 3"
+         }
+        },
+        {
+         "id": "s4",
+         "label": {
+          "fr": "Préréglage 4",
+          "en": "Preset 4"
+         }
+        }
+       ],
+       "requires": [
+        "wmic"
+       ],
+       "defaultVariant": "s3",
+       "legacy": [
+        "SERVERA@677",
+        "SERVERB@772",
+        "SERVERC@1034",
+        "SERVERY@1113"
+       ],
+       "lines": 468
+      }
+     ]
+    },
+    {
+     "id": "manual",
+     "name": {
+      "fr": "Réglages un par un",
+      "en": "Individual settings"
+     },
+     "tweaks": [
+      {
+       "id": "net_nagle",
+       "name": {
+        "fr": "Désactiver l'algorithme de Nagle",
+        "en": "Disable Nagle's algorithm"
+       },
+       "desc": {
+        "fr": "Envoie chaque paquet tout de suite au lieu de les regrouper (TCPNoDelay, TcpAckFrequency).",
+        "en": "Sends each packet immediately instead of batching them (TCPNoDelay, TcpAckFrequency)."
+       },
+       "risk": "safe",
+       "reboot": true,
+       "kind": "tweak",
+       "requires": [
+        "wmic"
+       ],
+       "legacy": [
+        "nigel@1754"
+       ],
+       "lines": 12
+      },
+      {
+       "id": "net_throttle",
+       "name": {
+        "fr": "Retirer la limitation multimédia du réseau",
+        "en": "Remove network throttling"
+       },
+       "desc": {
+        "fr": "Windows bride le débit réseau quand un son ou une vidéo joue. Ce réglage lève la bride (NetworkThrottlingIndex).",
+        "en": "Windows throttles network throughput while media plays. This lifts it (NetworkThrottlingIndex)."
+       },
+       "risk": "safe",
+       "reboot": true,
+       "kind": "tweak",
+       "requires": [],
+       "legacy": [
+        "NetworkThrottlingIndex@1643"
+       ],
+       "lines": 1
+      },
+      {
+       "id": "net_powersave",
+       "name": {
+        "fr": "Couper l'économie d'énergie de la carte réseau",
+        "en": "Disable NIC power saving"
+       },
+       "desc": {
+        "fr": "Désactive Green Ethernet, EEE, le Wake-on-LAN et la mise en veille de la carte réseau, qui ajoutent de la latence au réveil.",
+        "en": "Disables Green Ethernet, EEE, Wake-on-LAN and NIC sleep, which add wake-up latency."
+       },
+       "risk": "safe",
+       "reboot": true,
+       "kind": "tweak",
+       "requires": [],
+       "legacy": [
+        "save@1857"
+       ],
+       "lines": 37
+      },
+      {
+       "id": "net_adapter",
+       "name": {
+        "fr": "Optimiser la carte réseau",
+        "en": "Optimise network adapter"
+       },
+       "desc": {
+        "fr": "Tampons d'émission et de réception, offloads coupés, RSS activé, contrôle de flux et délais d'interruption retirés.",
+        "en": "Transmit/receive buffers, offloads off, RSS on, flow control and interrupt delays removed."
+       },
+       "risk": "safe",
+       "reboot": true,
+       "kind": "tweak",
+       "requires": [],
+       "legacy": [
+        "netsettings@1919"
+       ],
+       "lines": 59
+      },
+      {
+       "id": "net_registry",
+       "name": {
+        "fr": "Paramètres TCP/IP du registre",
+        "en": "TCP/IP registry settings"
+       },
+       "desc": {
+        "fr": "Fenêtres TCP, TTL, accusés de réception retardés et tampons AFD réglés pour la latence plutôt que le débit.",
+        "en": "TCP windows, TTL, delayed ACKs and AFD buffers tuned for latency over throughput."
+       },
+       "risk": "safe",
+       "reboot": true,
+       "kind": "tweak",
+       "requires": [],
+       "legacy": [
+        "netreg@2020"
+       ],
+       "lines": 37
+      },
+      {
+       "id": "net_advanced",
+       "name": {
+        "fr": "Réglages TCP avancés",
+        "en": "Advanced TCP settings"
+       },
+       "desc": {
+        "fr": "Autotuning, ECN, RSC, horodatage TCP, RTO initial, CTCP, Teredo et ISATAP. Touche à beaucoup de paramètres d'un coup.",
+        "en": "Autotuning, ECN, RSC, TCP timestamps, initial RTO, CTCP, Teredo and ISATAP."
+       },
+       "risk": "advanced",
+       "reboot": false,
+       "kind": "tweak",
+       "requires": [],
+       "legacy": [
+        "n15n@1476"
+       ],
+       "lines": 67
+      },
+      {
+       "id": "net_dnsprio",
+       "name": {
+        "fr": "Priorité de résolution DNS",
+        "en": "DNS resolution priority"
+       },
+       "desc": {
+        "fr": "Résout les noms via le cache local et le fichier hosts avant d'interroger le DNS.",
+        "en": "Resolves names through the local cache and hosts file before querying DNS."
+       },
+       "risk": "safe",
+       "reboot": true,
+       "kind": "tweak",
+       "requires": [],
+       "legacy": [
+        "dnsprio@1716"
+       ],
+       "lines": 4
+      },
+      {
+       "id": "net_dca",
+       "name": {
+        "fr": "Activer le Direct Cache Access",
+        "en": "Enable Direct Cache Access"
+       },
+       "desc": {
+        "fr": "Laisse la carte réseau écrire directement dans le cache du processeur.",
+        "en": "Lets the NIC write straight into the CPU cache."
+       },
+       "risk": "safe",
+       "reboot": false,
+       "kind": "tweak",
+       "requires": [],
+       "legacy": [
+        "dirl@1677"
+       ],
+       "lines": 1
+      },
+      {
+       "id": "net_offload",
+       "name": {
+        "fr": "Utiliser le processeur de la carte réseau",
+        "en": "Use the NIC processor"
+       },
+       "desc": {
+        "fr": "Réactive le déchargement des tâches vers la carte réseau.",
+        "en": "Re-enables task offloading to the network adapter."
+       },
+       "risk": "safe",
+       "reboot": true,
+       "kind": "tweak",
+       "requires": [],
+       "legacy": [
+        "onboard@1736"
+       ],
+       "lines": 3
+      },
+      {
+       "id": "net_msi",
+       "name": {
+        "fr": "Mode MSI sur la carte réseau",
+        "en": "MSI mode on network adapter"
+       },
+       "desc": {
+        "fr": "Passe la carte réseau en interruptions MSI, plus rapides que les interruptions classiques.",
+        "en": "Switches the NIC to message-signaled interrupts."
+       },
+       "risk": "safe",
+       "reboot": true,
+       "kind": "tweak",
+       "requires": [
+        "wmic"
+       ],
+       "legacy": [
+        "nmsi@1693"
+       ],
+       "lines": 6
+      },
+      {
+       "id": "net_affinity",
+       "name": {
+        "fr": "Affinité processeur de la carte réseau",
+        "en": "Network adapter CPU affinity"
+       },
+       "desc": {
+        "fr": "Fixe les interruptions de la carte réseau sur un cœur dédié.",
+        "en": "Pins the NIC's interrupts to a dedicated core."
+       },
+       "risk": "advanced",
+       "reboot": true,
+       "kind": "tweak",
+       "requires": [
+        "wmic"
+       ],
+       "legacy": [
+        "n14@2087"
+       ],
+       "lines": 6
+      },
+      {
+       "id": "net_netbios",
+       "name": {
+        "fr": "Désactiver NetBIOS sur TCP/IP",
+        "en": "Disable NetBIOS over TCP/IP"
+       },
+       "desc": {
+        "fr": "Coupe un vieux protocole de partage réseau qui envoie du trafic inutile.",
+        "en": "Turns off a legacy sharing protocol that sends unnecessary traffic."
+       },
+       "risk": "safe",
+       "reboot": true,
+       "kind": "tweak",
+       "requires": [],
+       "legacy": [
+        "netbios@1658"
+       ],
+       "lines": 2
+      },
+      {
+       "id": "net_ipv6",
+       "name": {
+        "fr": "Désactiver IPv6",
+        "en": "Disable IPv6"
+       },
+       "desc": {
+        "fr": "Force la connexion en IPv4. À éviter si ta box ou ton FAI n'utilise que l'IPv6.",
+        "en": "Forces IPv4. Avoid if your ISP is IPv6-only."
+       },
+       "risk": "advanced",
+       "reboot": false,
+       "kind": "tweak",
+       "requires": [],
+       "legacy": [
+        "n12@1442"
+       ],
+       "lines": 3
+      },
+      {
+       "id": "net_lanman",
+       "name": {
+        "fr": "Optimiser le partage de fichiers (SMB)",
+        "en": "Optimise file sharing (SMB)"
+       },
+       "desc": {
+        "fr": "Ajuste le serveur de partage de Windows : pas de déconnexion automatique, verrous opportunistes coupés.",
+        "en": "Tunes Windows' file server: no auto-disconnect, oplocks off."
+       },
+       "risk": "safe",
+       "reboot": true,
+       "kind": "tweak",
+       "requires": [],
+       "legacy": [
+        "n13@1603"
+       ],
+       "lines": 16
+      },
+      {
+       "id": "net_limit",
+       "name": {
+        "fr": "Bloquer la limitation réseau",
+        "en": "Block network limiting"
+       },
+       "desc": {
+        "fr": "Désactive l'heuristique TCP de Windows et ajoute une règle de pare-feu qui bloque le trafic entrant de deux plages d'adresses Google (173.194.55.0/24 et 206.111.0.0/16). La règle peut gêner YouTube ou d'autres services Google.",
+        "en": "Disables Windows TCP heuristics and adds a firewall rule blocking inbound traffic from two Google ranges. May affect Google services."
+       },
+       "risk": "advanced",
+       "reboot": false,
+       "kind": "tweak",
+       "requires": [],
+       "legacy": [
+        "limit@1833"
+       ],
+       "lines": 4
+      }
+     ]
+    },
+    {
+     "id": "tools",
+     "name": {
+      "fr": "Outils",
+      "en": "Tools"
+     },
+     "tweaks": [
+      {
+       "id": "net_restart",
+       "name": {
+        "fr": "Redémarrer la carte réseau",
+        "en": "Restart network adapter"
+       },
+       "desc": {
+        "fr": "Applique les réglages réseau sans redémarrer le PC. Ta connexion coupe quelques secondes.",
+        "en": "Applies network settings without rebooting. Your connection drops for a few seconds."
+       },
+       "risk": "safe",
+       "reboot": false,
+       "kind": "action",
+       "requires": [],
+       "legacy": [
+        "restartY@14164"
+       ],
+       "lines": 9
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "id": "latency",
+   "icon": "gauge",
+   "name": {
+    "fr": "Latence",
+    "en": "Latency"
+   },
+   "tagline": {
+    "fr": "Timers, priorités, processeur, mémoire et alimentation.",
+    "en": "Timers, priorities, CPU, memory and power."
+   },
+   "sections": [
+    {
+     "id": "general",
+     "name": {
+      "fr": "Général",
+      "en": "General"
+     },
+     "tweaks": [
+      {
+       "id": "lat_general",
+       "name": {
+        "fr": "Optimisations générales de latence",
+        "en": "General latency optimisations"
+       },
+       "desc": {
+        "fr": "Le socle : priorités multimédia (MMCSS) pour les jeux, timers du noyau, NTFS, délais de fermeture des applis et d'affichage des menus.",
+        "en": "The baseline: MMCSS game priorities, kernel timers, NTFS, app-kill and menu delays."
+       },
+       "risk": "safe",
+       "reboot": true,
+       "kind": "tweak",
+       "requires": [],
+       "legacy": [
+        "general@8375"
+       ],
+       "lines": 106
+      },
+      {
+       "id": "lat_directx",
+       "name": {
+        "fr": "Réglages DirectX",
+        "en": "DirectX settings"
+       },
+       "desc": {
+        "fr": "Désactive les modes de débogage et d'émulation de DirectX et Direct3D.",
+        "en": "Disables DirectX/Direct3D debug and emulation modes."
+       },
+       "risk": "safe",
+       "reboot": true,
+       "kind": "tweak",
+       "requires": [],
+       "legacy": [
+        "6@2195"
+       ],
+       "lines": 54
+      }
+     ]
+    },
+    {
+     "id": "priority",
+     "name": {
+      "fr": "Priorités",
+      "en": "Priorities"
+     },
+     "tweaks": [
+      {
+       "id": "pri_game",
+       "name": {
+        "fr": "Priorité avancée par jeu",
+        "en": "Per-game advanced priority"
+       },
+       "desc": {
+        "fr": "Donne au jeu choisi la priorité processeur, GPU et entrées-sorties, et marque son trafic réseau en priorité (QoS).",
+        "en": "Gives the chosen game CPU, GPU and I/O priority and marks its network traffic (QoS)."
+       },
+       "risk": "safe",
+       "reboot": true,
+       "kind": "tweak",
+       "variants": [
+        {
+         "id": "minecraft",
+         "label": {
+          "fr": "Minecraft",
+          "en": "Minecraft"
+         }
+        },
+        {
+         "id": "fortnite",
+         "label": {
+          "fr": "Fortnite",
+          "en": "Fortnite"
+         }
+        },
+        {
+         "id": "valorant",
+         "label": {
+          "fr": "Valorant",
+          "en": "Valorant"
+         }
+        },
+        {
+         "id": "cs2",
+         "label": {
+          "fr": "CS2",
+          "en": "CS2"
+         }
+        },
+        {
+         "id": "apex",
+         "label": {
+          "fr": "Apex",
+          "en": "Apex"
+         }
+        },
+        {
+         "id": "gta",
+         "label": {
+          "fr": "GTA V",
+          "en": "GTA V"
+         }
+        }
+       ],
+       "requires": [],
+       "defaultVariant": "minecraft",
+       "legacy": [
+        "fivem@3768",
+        "fn@4191",
+        "val@4334",
+        "cs2@3909",
+        "apex@4050",
+        "gta@3627"
+       ],
+       "lines": 750
+      },
+      {
+       "id": "pri_mmcss",
+       "name": {
+        "fr": "Planificateur multimédia (MMCSS)",
+        "en": "Multimedia scheduler (MMCSS)"
+       },
+       "desc": {
+        "fr": "Réserve davantage de temps processeur et GPU aux tâches marquées « Jeux » et « Basse latence ».",
+        "en": "Reserves more CPU/GPU time for tasks tagged Games and Low Latency."
+       },
+       "risk": "safe",
+       "reboot": true,
+       "kind": "tweak",
+       "requires": [],
+       "legacy": [
+        "game@4475"
+       ],
+       "lines": 20
+      },
+      {
+       "id": "pri_w32",
+       "name": {
+        "fr": "Séparation des priorités Win32",
+        "en": "Win32 priority separation"
+       },
+       "desc": {
+        "fr": "Donne des tranches de temps plus courtes et plus fréquentes à la fenêtre au premier plan.",
+        "en": "Shorter, more frequent time slices for the foreground window."
+       },
+       "risk": "safe",
+       "reboot": true,
+       "kind": "tweak",
+       "requires": [],
+       "legacy": [
+        "w32prio@3560"
+       ],
+       "lines": 2
+      },
+      {
+       "id": "pri_sysresp",
+       "name": {
+        "fr": "Réactivité système à 0 %",
+        "en": "System responsiveness 0%"
+       },
+       "desc": {
+        "fr": "Windows ne réserve plus 20 % du processeur aux tâches de fond pendant le jeu.",
+        "en": "Windows stops reserving 20% CPU for background tasks."
+       },
+       "risk": "safe",
+       "reboot": true,
+       "kind": "tweak",
+       "requires": [],
+       "legacy": [
+        "sysrep@4619"
+       ],
+       "lines": 1
+      },
+      {
+       "id": "pri_thread",
+       "name": {
+        "fr": "Priorité des threads graphiques",
+        "en": "Graphics thread priority"
+       },
+       "desc": {
+        "fr": "Monte la priorité des threads du noyau graphique et du pilote NVIDIA.",
+        "en": "Raises graphics kernel and NVIDIA driver thread priority."
+       },
+       "risk": "safe",
+       "reboot": true,
+       "kind": "tweak",
+       "requires": [],
+       "legacy": [
+        "thrprio@4603"
+       ],
+       "lines": 2
+      },
+      {
+       "id": "pri_irq8",
+       "name": {
+        "fr": "Priorité de l'horloge système (IRQ8)",
+        "en": "System clock priority (IRQ8)"
+       },
+       "desc": {
+        "fr": "Donne la priorité à l'interruption de l'horloge temps réel.",
+        "en": "Prioritises the real-time clock interrupt."
+       },
+       "risk": "safe",
+       "reboot": true,
+       "kind": "tweak",
+       "requires": [],
+       "legacy": [
+        "irq8@4549"
+       ],
+       "lines": 2
+      },
+      {
+       "id": "pri_irq16",
+       "name": {
+        "fr": "Priorité IRQ16",
+        "en": "IRQ16 priority"
+       },
+       "desc": {
+        "fr": "Donne la priorité à l'IRQ16, souvent partagée avec l'USB ou le GPU.",
+        "en": "Prioritises IRQ16, often shared with USB or GPU."
+       },
+       "risk": "safe",
+       "reboot": true,
+       "kind": "tweak",
+       "requires": [],
+       "legacy": [
+        "irq16@4565"
+       ],
+       "lines": 2
+      },
+      {
+       "id": "pri_csrss",
+       "name": {
+        "fr": "Priorité de csrss",
+        "en": "csrss priority"
+       },
+       "desc": {
+        "fr": "Monte la priorité du processus qui gère les entrées clavier et souris.",
+        "en": "Raises priority of the process handling keyboard and mouse input."
+       },
+       "risk": "safe",
+       "reboot": true,
+       "kind": "tweak",
+       "requires": [],
+       "legacy": [
+        "crss@4533"
+       ],
+       "lines": 2
+      },
+      {
+       "id": "pri_dwm",
+       "name": {
+        "fr": "Priorité du gestionnaire de fenêtres",
+        "en": "Window manager priority"
+       },
+       "desc": {
+        "fr": "Ajuste la planification MMCSS du gestionnaire de fenêtres (DWM).",
+        "en": "Tunes MMCSS scheduling for the window manager (DWM)."
+       },
+       "risk": "safe",
+       "reboot": true,
+       "kind": "tweak",
+       "requires": [],
+       "legacy": [
+        "wmngr@4513"
+       ],
+       "lines": 6
+      },
+      {
+       "id": "pri_svc",
+       "name": {
+        "fr": "Baisser la priorité des services",
+        "en": "Lower service priority"
+       },
+       "desc": {
+        "fr": "Passe svchost (les services Windows) en priorité basse pour laisser la place au jeu.",
+        "en": "Sets svchost (Windows services) to low priority."
+       },
+       "risk": "safe",
+       "reboot": true,
+       "kind": "tweak",
+       "requires": [],
+       "legacy": [
+        "SvcPriority@4583"
+       ],
+       "lines": 2
+      },
+      {
+       "id": "pri_policy",
+       "name": {
+        "fr": "Politique de ressources avancée",
+        "en": "Advanced resource policy"
+       },
+       "desc": {
+        "fr": "Retire les plafonds processeur appliqués par Windows aux applis en arrière-plan.",
+        "en": "Removes the CPU caps Windows applies to background apps."
+       },
+       "risk": "advanced",
+       "reboot": true,
+       "kind": "tweak",
+       "requires": [],
+       "legacy": [
+        "pr12@3455"
+       ],
+       "lines": 86
+      }
+     ]
+    },
+    {
+     "id": "input",
+     "name": {
+      "fr": "Souris et clavier",
+      "en": "Mouse and keyboard"
+     },
+     "tweaks": [
+      {
+       "id": "kbm_accel",
+       "name": {
+        "fr": "Désactiver l'accélération de la souris",
+        "en": "Disable mouse acceleration"
+       },
+       "desc": {
+        "fr": "Le curseur bouge de la même distance quelle que soit la vitesse de ton geste.",
+        "en": "The cursor moves the same distance regardless of hand speed."
+       },
+       "risk": "safe",
+       "reboot": true,
+       "kind": "tweak",
+       "requires": [],
+       "legacy": [
+        "mouaccel@12500"
+       ],
+       "lines": 7
+      },
+      {
+       "id": "kbm_1to1",
+       "name": {
+        "fr": "Mouvement 1:1 sans lissage",
+        "en": "1:1 movement, no smoothing"
+       },
+       "desc": {
+        "fr": "Sensibilité Windows au cran 6/11 et courbes de lissage remises à plat.",
+        "en": "Windows sensitivity at 6/11 and flat smoothing curves."
+       },
+       "risk": "safe",
+       "reboot": true,
+       "kind": "tweak",
+       "requires": [],
+       "legacy": [
+        "1to1@12522"
+       ],
+       "lines": 5
+      },
+      {
+       "id": "kbm_queue",
+       "name": {
+        "fr": "File d'attente souris et clavier",
+        "en": "Mouse and keyboard data queue"
+       },
+       "desc": {
+        "fr": "Réduit le tampon d'entrées du pilote. Plus bas réagit plus vite, trop bas peut faire sauter des entrées : commence à 20.",
+        "en": "Shrinks the driver input buffer. Lower reacts faster, too low can drop inputs."
+       },
+       "risk": "safe",
+       "reboot": true,
+       "kind": "tweak",
+       "variants": [
+        {
+         "id": "q13",
+         "label": {
+          "fr": "13",
+          "en": "13"
+         }
+        },
+        {
+         "id": "q15",
+         "label": {
+          "fr": "15",
+          "en": "15"
+         }
+        },
+        {
+         "id": "q17",
+         "label": {
+          "fr": "17",
+          "en": "17"
+         }
+        },
+        {
+         "id": "q20",
+         "label": {
+          "fr": "20",
+          "en": "20"
+         }
+        },
+        {
+         "id": "q25",
+         "label": {
+          "fr": "25",
+          "en": "25"
+         }
+        },
+        {
+         "id": "q30",
+         "label": {
+          "fr": "30",
+          "en": "30"
+         }
+        }
+       ],
+       "requires": [],
+       "defaultVariant": "q20",
+       "legacy": [
+        "Md13@12709",
+        "Md15@12726",
+        "Md17@12744",
+        "Md20@12762",
+        "Md25@12780",
+        "Md30@12798"
+       ],
+       "lines": 12
+      },
+      {
+       "id": "kbm_thread",
+       "name": {
+        "fr": "Priorité des pilotes souris et clavier",
+        "en": "Input driver priority"
+       },
+       "desc": {
+        "fr": "Passe les threads des pilotes souris et clavier en priorité maximale.",
+        "en": "Sets mouse and keyboard driver threads to maximum priority."
+       },
+       "risk": "safe",
+       "reboot": true,
+       "kind": "tweak",
+       "requires": [],
+       "legacy": [
+        "thread@12543"
+       ],
+       "lines": 3
+      },
+      {
+       "id": "kbm_csrss",
+       "name": {
+        "fr": "csrss en temps réel",
+        "en": "csrss realtime"
+       },
+       "desc": {
+        "fr": "Passe csrss, qui transmet tes clics, en priorité temps réel.",
+        "en": "Sets csrss, which forwards your clicks, to realtime priority."
+       },
+       "risk": "advanced",
+       "reboot": true,
+       "kind": "tweak",
+       "requires": [],
+       "legacy": [
+        "crss@12584"
+       ],
+       "lines": 5
+      },
+      {
+       "id": "kbm_repeat",
+       "name": {
+        "fr": "Répétition clavier instantanée",
+        "en": "Instant key repeat"
+       },
+       "desc": {
+        "fr": "Délai de répétition au minimum et vitesse de répétition au maximum.",
+        "en": "Minimum repeat delay, maximum repeat rate."
+       },
+       "risk": "safe",
+       "reboot": true,
+       "kind": "tweak",
+       "requires": [],
+       "legacy": [
+        "repeat@12563"
+       ],
+       "lines": 4
+      },
+      {
+       "id": "kbm_panel",
+       "name": {
+        "fr": "Réglages souris du panneau de configuration",
+        "en": "Control Panel mouse settings"
+       },
+       "desc": {
+        "fr": "Survol, double-clic, sons et traînées réglés pour la réactivité.",
+        "en": "Hover, double-click, sounds and trails tuned for responsiveness."
+       },
+       "risk": "safe",
+       "reboot": true,
+       "kind": "tweak",
+       "requires": [],
+       "legacy": [
+        "mousecntrl@12606"
+       ],
+       "lines": 31
+      },
+      {
+       "id": "kbm_filter",
+       "name": {
+        "fr": "Désactiver les touches rémanentes et filtres",
+        "en": "Disable sticky and filter keys"
+       },
+       "desc": {
+        "fr": "Plus de fenêtre « touches rémanentes » quand tu spammes Maj en plein combat.",
+        "en": "No more Sticky Keys popup when you spam Shift."
+       },
+       "risk": "safe",
+       "reboot": true,
+       "kind": "tweak",
+       "requires": [],
+       "legacy": [
+        "filter@12473"
+       ],
+       "lines": 8
+      }
+     ]
+    },
+    {
+     "id": "cpu",
+     "name": {
+      "fr": "Processeur",
+      "en": "CPU"
+     },
+     "tweaks": [
+      {
+       "id": "cpu_registry",
+       "name": {
+        "fr": "Réglages processeur du registre",
+        "en": "CPU registry settings"
+       },
+       "desc": {
+        "fr": "Désactive les états d'économie du processeur et le parking des cœurs au niveau du registre.",
+        "en": "Disables CPU power-saving states and core parking in the registry."
+       },
+       "risk": "safe",
+       "reboot": true,
+       "kind": "tweak",
+       "requires": [],
+       "legacy": [
+        "c1@7932"
+       ],
+       "lines": 60
+      },
+      {
+       "id": "cpu_vendor",
+       "name": {
+        "fr": "Réglages spécifiques au processeur",
+        "en": "Vendor-specific CPU settings"
+       },
+       "desc": {
+        "fr": "Parking des cœurs, timers et C-states selon ton processeur. La bonne marque est choisie automatiquement.",
+        "en": "Core parking, timers and C-states for your CPU brand, picked automatically."
+       },
+       "risk": "advanced",
+       "reboot": true,
+       "kind": "tweak",
+       "variants": [
+        {
+         "id": "intel",
+         "label": {
+          "fr": "Intel",
+          "en": "Intel"
+         },
+         "auto": "cpu:intel"
+        },
+        {
+         "id": "amd",
+         "label": {
+          "fr": "AMD",
+          "en": "AMD"
+         },
+         "auto": "cpu:amd"
+        }
+       ],
+       "requires": [],
+       "legacy": [
+        "c17@7522",
+        "c18@7601"
+       ],
+       "lines": 77
+      },
+      {
+       "id": "cpu_parking",
+       "name": {
+        "fr": "Désactiver le parking des cœurs",
+        "en": "Disable core parking"
+       },
+       "desc": {
+        "fr": "Garde tous les cœurs éveillés au lieu d'en endormir une partie.",
+        "en": "Keeps every core awake."
+       },
+       "risk": "safe",
+       "reboot": false,
+       "kind": "tweak",
+       "requires": [],
+       "legacy": [
+        "c11@7766"
+       ],
+       "lines": 3
+      },
+      {
+       "id": "cpu_cstates_cfg",
+       "name": {
+        "fr": "Configurer les C-states",
+        "en": "Configure C-states"
+       },
+       "desc": {
+        "fr": "Rend le processeur plus lent à entrer en veille profonde.",
+        "en": "Makes the CPU slower to enter deep idle."
+       },
+       "risk": "safe",
+       "reboot": false,
+       "kind": "tweak",
+       "requires": [],
+       "legacy": [
+        "c2@7838"
+       ],
+       "lines": 5
+      },
+      {
+       "id": "cpu_cstates_off",
+       "name": {
+        "fr": "Désactiver la veille et le minimum processeur",
+        "en": "Disable sleep and CPU minimum"
+       },
+       "desc": {
+        "fr": "Coupe la veille hybride et force le processeur à 100 % minimum sur secteur.",
+        "en": "Disables hybrid sleep and forces 100% minimum CPU on AC."
+       },
+       "risk": "safe",
+       "reboot": false,
+       "kind": "tweak",
+       "requires": [],
+       "legacy": [
+        "c3@7910"
+       ],
+       "lines": 6
+      },
+      {
+       "id": "cpu_idle",
+       "name": {
+        "fr": "Gestion du repos processeur",
+        "en": "CPU idle management"
+       },
+       "desc": {
+        "fr": "Ajuste la façon dont le processeur gère ses périodes de repos.",
+        "en": "Tunes how the CPU handles idle periods."
+       },
+       "risk": "safe",
+       "reboot": true,
+       "kind": "tweak",
+       "requires": [],
+       "legacy": [
+        "c4@8007"
+       ],
+       "lines": 44
+      },
+      {
+       "id": "cpu_device_idle",
+       "name": {
+        "fr": "Politique de repos des périphériques : performance",
+        "en": "Device idle policy: performance"
+       },
+       "desc": {
+        "fr": "Les périphériques restent actifs au lieu de passer en économie.",
+        "en": "Devices stay active instead of power-saving."
+       },
+       "risk": "safe",
+       "reboot": false,
+       "kind": "tweak",
+       "requires": [],
+       "legacy": [
+        "c5@7820"
+       ],
+       "lines": 3
+      },
+      {
+       "id": "cpu_pstates",
+       "name": {
+        "fr": "P-states adaptés aux C-states",
+        "en": "P-states follow C-states"
+       },
+       "desc": {
+        "fr": "Le processeur monte en fréquence plus vite en sortie de repos.",
+        "en": "CPU ramps frequency faster when leaving idle."
+       },
+       "risk": "safe",
+       "reboot": false,
+       "kind": "tweak",
+       "requires": [],
+       "legacy": [
+        "c6@7857"
+       ],
+       "lines": 3
+      },
+      {
+       "id": "cpu_ppm",
+       "name": {
+        "fr": "Fréquence d'origine du processeur",
+        "en": "CPU stock frequency"
+       },
+       "desc": {
+        "fr": "Remet les pilotes de gestion d'énergie Intel et AMD en démarrage normal.",
+        "en": "Restores Intel and AMD power drivers to normal start."
+       },
+       "risk": "safe",
+       "reboot": true,
+       "kind": "tweak",
+       "requires": [],
+       "legacy": [
+        "c7@7784"
+       ],
+       "lines": 3
+      },
+      {
+       "id": "cpu_boost_epp",
+       "name": {
+        "fr": "Ne pas brider le boost",
+        "en": "Don't restrict boost"
+       },
+       "desc": {
+        "fr": "Préférence énergétique du processeur à 0 : performance d'abord.",
+        "en": "CPU energy preference at 0: performance first."
+       },
+       "risk": "safe",
+       "reboot": false,
+       "kind": "tweak",
+       "requires": [],
+       "legacy": [
+        "c8@7875"
+       ],
+       "lines": 3
+      },
+      {
+       "id": "cpu_throttle",
+       "name": {
+        "fr": "Désactiver les états de bridage",
+        "en": "Disable throttle states"
+       },
+       "desc": {
+        "fr": "Empêche Windows de brider le processeur pour économiser de l'énergie.",
+        "en": "Stops Windows throttling the CPU to save power."
+       },
+       "risk": "safe",
+       "reboot": false,
+       "kind": "tweak",
+       "requires": [],
+       "legacy": [
+        "c9@7802"
+       ],
+       "lines": 3
+      },
+      {
+       "id": "cpu_turbo",
+       "name": {
+        "fr": "Activer le Turbo Boost",
+        "en": "Enable Turbo Boost"
+       },
+       "desc": {
+        "fr": "Autorise le processeur à monter au-delà de sa fréquence de base.",
+        "en": "Lets the CPU boost above base clock."
+       },
+       "risk": "safe",
+       "reboot": false,
+       "kind": "tweak",
+       "requires": [],
+       "legacy": [
+        "c10@7892"
+       ],
+       "lines": 4
+      },
+      {
+       "id": "cpu_cooling",
+       "name": {
+        "fr": "Refroidissement actif",
+        "en": "Active cooling"
+       },
+       "desc": {
+        "fr": "Les ventilateurs montent avant que le processeur ne ralentisse.",
+        "en": "Fans spin up before the CPU slows down."
+       },
+       "risk": "safe",
+       "reboot": false,
+       "kind": "tweak",
+       "requires": [],
+       "legacy": [
+        "c12@7709"
+       ],
+       "lines": 4
+      },
+      {
+       "id": "cpu_ac",
+       "name": {
+        "fr": "Processeur à 100 % sur secteur",
+        "en": "CPU 100% on AC"
+       },
+       "desc": {
+        "fr": "Fréquence minimale et maximale à 100 % quand le PC est branché.",
+        "en": "Min and max frequency at 100% when plugged in."
+       },
+       "risk": "safe",
+       "reboot": false,
+       "kind": "tweak",
+       "requires": [],
+       "legacy": [
+        "c13@7747"
+       ],
+       "lines": 5
+      },
+      {
+       "id": "cpu_dc",
+       "name": {
+        "fr": "Processeur sur batterie",
+        "en": "CPU on battery"
+       },
+       "desc": {
+        "fr": "Sur batterie : maximum à 100 %, minimum à 50 %.",
+        "en": "On battery: max 100%, min 50%."
+       },
+       "risk": "safe",
+       "reboot": false,
+       "kind": "tweak",
+       "requires": [],
+       "legacy": [
+        "c14@7727"
+       ],
+       "lines": 5
+      },
+      {
+       "id": "cpu_numproc",
+       "name": {
+        "fr": "Démarrer avec tous les cœurs",
+        "en": "Boot with all cores"
+       },
+       "desc": {
+        "fr": "Indique au démarrage d'utiliser tous les processeurs logiques.",
+        "en": "Tells the bootloader to use every logical processor."
+       },
+       "risk": "advanced",
+       "reboot": true,
+       "kind": "tweak",
+       "requires": [],
+       "legacy": [
+        "c15@7693"
+       ],
+       "lines": 2
+      },
+      {
+       "id": "cpu_away",
+       "name": {
+        "fr": "Désactiver le mode absence",
+        "en": "Disable away mode"
+       },
+       "desc": {
+        "fr": "Empêche le PC de simuler une veille en gardant le processeur actif.",
+        "en": "Stops the PC faking sleep."
+       },
+       "risk": "safe",
+       "reboot": false,
+       "kind": "tweak",
+       "requires": [],
+       "legacy": [
+        "c16@7673"
+       ],
+       "lines": 5
+      }
+     ]
+    },
+    {
+     "id": "memory",
+     "name": {
+      "fr": "Mémoire",
+      "en": "Memory"
+     },
+     "tweaks": [
+      {
+       "id": "mem_profile",
+       "name": {
+        "fr": "Profil mémoire selon ta RAM",
+        "en": "Memory profile for your RAM"
+       },
+       "desc": {
+        "fr": "Compression mémoire, cache système, prefetch et seuil svchost réglés selon ta quantité de RAM. La bonne taille est choisie automatiquement.",
+        "en": "Memory compression, system cache, prefetch and svchost threshold set for your RAM size, picked automatically."
+       },
+       "risk": "safe",
+       "reboot": true,
+       "kind": "tweak",
+       "variants": [
+        {
+         "id": "4",
+         "label": {
+          "fr": "4 Go",
+          "en": "4 GB"
+         },
+         "auto": "ram:4"
+        },
+        {
+         "id": "8",
+         "label": {
+          "fr": "8 Go",
+          "en": "8 GB"
+         },
+         "auto": "ram:8"
+        },
+        {
+         "id": "12",
+         "label": {
+          "fr": "12 Go",
+          "en": "12 GB"
+         },
+         "auto": "ram:12"
+        },
+        {
+         "id": "16",
+         "label": {
+          "fr": "16 Go",
+          "en": "16 GB"
+         },
+         "auto": "ram:16"
+        },
+        {
+         "id": "24",
+         "label": {
+          "fr": "24 Go",
+          "en": "24 GB"
+         },
+         "auto": "ram:24"
+        },
+        {
+         "id": "32",
+         "label": {
+          "fr": "32 Go",
+          "en": "32 GB"
+         },
+         "auto": "ram:32"
+        },
+        {
+         "id": "48",
+         "label": {
+          "fr": "48 Go",
+          "en": "48 GB"
+         },
+         "auto": "ram:48"
+        },
+        {
+         "id": "64",
+         "label": {
+          "fr": "64 Go",
+          "en": "64 GB"
+         },
+         "auto": "ram:64"
+        },
+        {
+         "id": "128",
+         "label": {
+          "fr": "128 Go",
+          "en": "128 GB"
+         },
+         "auto": "ram:128"
+        }
+       ],
+       "requires": [],
+       "legacy": [
+        "4GB@9546",
+        "8GB@9560",
+        "12GB@9574",
+        "16GB@9588",
+        "24GB@9603",
+        "32GB@9617",
+        "48GB@9631",
+        "64GB@9645",
+        "128GB@9659"
+       ],
+       "lines": 288
+      },
+      {
+       "id": "mem_svchost",
+       "name": {
+        "fr": "Regrouper les services (svchost)",
+        "en": "Group services (svchost)"
+       },
+       "desc": {
+        "fr": "Calcule le seuil de découpage de svchost d'après ta RAM pour lancer moins de processus.",
+        "en": "Sets the svchost split threshold from your RAM to run fewer processes."
+       },
+       "risk": "safe",
+       "reboot": true,
+       "kind": "tweak",
+       "requires": [
+        "wmic"
+       ],
+       "legacy": [
+        "svc@9425"
+       ],
+       "lines": 2
+      },
+      {
+       "id": "mem_registry",
+       "name": {
+        "fr": "Gestion mémoire du noyau",
+        "en": "Kernel memory management"
+       },
+       "desc": {
+        "fr": "Garde le noyau en RAM au lieu du fichier d'échange et ajuste les pools mémoire.",
+        "en": "Keeps the kernel in RAM rather than the pagefile and tunes memory pools."
+       },
+       "risk": "safe",
+       "reboot": true,
+       "kind": "tweak",
+       "requires": [],
+       "legacy": [
+        "reged@9442"
+       ],
+       "lines": 29
+      },
+      {
+       "id": "mem_compression",
+       "name": {
+        "fr": "Désactiver la compression mémoire",
+        "en": "Disable memory compression"
+       },
+       "desc": {
+        "fr": "Utile à partir de 16 Go. En dessous, laisse-la active.",
+        "en": "Useful from 16 GB up. Keep it below that."
+       },
+       "risk": "safe",
+       "reboot": false,
+       "kind": "tweak",
+       "requires": [],
+       "legacy": [
+        "memski@9371"
+       ],
+       "lines": 1
+      },
+      {
+       "id": "mem_combining",
+       "name": {
+        "fr": "Désactiver la fusion de pages",
+        "en": "Disable page combining"
+       },
+       "desc": {
+        "fr": "Windows arrête de chercher les pages mémoire identiques à fusionner.",
+        "en": "Windows stops scanning for identical memory pages."
+       },
+       "risk": "safe",
+       "reboot": false,
+       "kind": "tweak",
+       "requires": [],
+       "legacy": [
+        "memsk@9389"
+       ],
+       "lines": 1
+      },
+      {
+       "id": "mem_prefetch",
+       "name": {
+        "fr": "Désactiver Prefetch",
+        "en": "Disable Prefetch"
+       },
+       "desc": {
+        "fr": "Coupe le préchargement des applis au démarrage. Inutile sur un SSD.",
+        "en": "Disables app preloading at boot. Not needed on SSD."
+       },
+       "risk": "safe",
+       "reboot": true,
+       "kind": "tweak",
+       "requires": [],
+       "legacy": [
+        "preftch@9407"
+       ],
+       "lines": 2
+      },
+      {
+       "id": "mem_superfetch",
+       "name": {
+        "fr": "Désactiver SysMain (Superfetch)",
+        "en": "Disable SysMain (Superfetch)"
+       },
+       "desc": {
+        "fr": "Coupe le préchargement des applis en mémoire.",
+        "en": "Disables app preloading into memory."
+       },
+       "risk": "safe",
+       "reboot": true,
+       "kind": "tweak",
+       "requires": [],
+       "legacy": [
+        "Superfetch@9355"
+       ],
+       "lines": 1
+      }
+     ]
+    },
+    {
+     "id": "power",
+     "name": {
+      "fr": "Alimentation",
+      "en": "Power"
+     },
+     "tweaks": [
+      {
+       "id": "pow_plan",
+       "name": {
+        "fr": "Plan d'alimentation Rago Low Latency",
+        "en": "Rago Low Latency power plan"
+       },
+       "desc": {
+        "fr": "Importe le plan d'alimentation Rago et affiche les options cachées de Windows. Active-le ensuite dans la fenêtre qui s'ouvre.",
+        "en": "Imports the Rago power plan and unhides hidden options."
+       },
+       "risk": "safe",
+       "reboot": false,
+       "kind": "tweak",
+       "requires": [
+        "res:LowLatency.pow"
+       ],
+       "legacy": [
+        "plan@9205"
+       ],
+       "lines": 31
+      },
+      {
+       "id": "pow_extra",
+       "name": {
+        "fr": "Réglages d'alimentation complémentaires",
+        "en": "Additional power settings"
+       },
+       "desc": {
+        "fr": "Coupe l'estimation d'énergie et le bridage d'alimentation, réveille tous les cœurs.",
+        "en": "Disables energy estimation and power throttling, unparks all cores."
+       },
+       "risk": "safe",
+       "reboot": true,
+       "kind": "tweak",
+       "requires": [],
+       "legacy": [
+        "twk@8914"
+       ],
+       "lines": 10
+      },
+      {
+       "id": "pow_windows",
+       "name": {
+        "fr": "Réglages d'alimentation Windows",
+        "en": "Windows power settings"
+       },
+       "desc": {
+        "fr": "Désactive le mode absence, l'hibernation et le démarrage rapide.",
+        "en": "Disables away mode, hibernation and fast startup."
+       },
+       "risk": "safe",
+       "reboot": true,
+       "kind": "tweak",
+       "requires": [],
+       "legacy": [
+        "wpower@8939"
+       ],
+       "lines": 23
+      },
+      {
+       "id": "pow_throttling",
+       "name": {
+        "fr": "Désactiver le Power Throttling",
+        "en": "Disable Power Throttling"
+       },
+       "desc": {
+        "fr": "Windows ne ralentit plus les applis qu'il juge en arrière-plan.",
+        "en": "Windows stops slowing apps it deems backgrounded."
+       },
+       "risk": "safe",
+       "reboot": true,
+       "kind": "tweak",
+       "requires": [],
+       "legacy": [
+        "Throttoling@9022"
+       ],
+       "lines": 7
+      },
+      {
+       "id": "pow_hwp",
+       "name": {
+        "fr": "P-states matériels",
+        "en": "Hardware P-states"
+       },
+       "desc": {
+        "fr": "Le processeur gère lui-même ses fréquences, plus vite que Windows.",
+        "en": "The CPU manages its own frequencies, faster than Windows."
+       },
+       "risk": "safe",
+       "reboot": false,
+       "kind": "tweak",
+       "requires": [],
+       "legacy": [
+        "pst@8998"
+       ],
+       "lines": 7
+      },
+      {
+       "id": "pow_timer",
+       "name": {
+        "fr": "Désactiver le regroupement des timers",
+        "en": "Disable timer coalescing"
+       },
+       "desc": {
+        "fr": "Windows n'attend plus pour regrouper les réveils du processeur.",
+        "en": "Windows stops batching CPU wake-ups."
+       },
+       "risk": "safe",
+       "reboot": true,
+       "kind": "tweak",
+       "requires": [],
+       "legacy": [
+        "p12@9045"
+       ],
+       "lines": 15
+      },
+      {
+       "id": "pow_mmcss",
+       "name": {
+        "fr": "Réglages d'alimentation MMCSS",
+        "en": "MMCSS power settings"
+       },
+       "desc": {
+        "fr": "Priorité multimédia renforcée côté alimentation.",
+        "en": "Multimedia priority reinforced on the power side."
+       },
+       "risk": "safe",
+       "reboot": true,
+       "kind": "tweak",
+       "requires": [],
+       "legacy": [
+        "p13@9077"
+       ],
+       "lines": 12
+      },
+      {
+       "id": "pow_idle",
+       "name": {
+        "fr": "Désactiver l'économie d'énergie des pilotes",
+        "en": "Disable driver idle power"
+       },
+       "desc": {
+        "fr": "Les pilotes ne mettent plus leurs périphériques en veille.",
+        "en": "Drivers stop idling their devices."
+       },
+       "risk": "safe",
+       "reboot": true,
+       "kind": "tweak",
+       "requires": [],
+       "legacy": [
+        "idlepwr@9182"
+       ],
+       "lines": 2
+      },
+      {
+       "id": "pow_link",
+       "name": {
+        "fr": "Désactiver l'économie des liens SATA",
+        "en": "Disable SATA link power saving"
+       },
+       "desc": {
+        "fr": "Les disques SATA restent pleinement actifs (HIPM/DIPM coupés).",
+        "en": "SATA drives stay fully active (HIPM/DIPM off)."
+       },
+       "risk": "safe",
+       "reboot": true,
+       "kind": "tweak",
+       "requires": [],
+       "legacy": [
+        "linkpwr@9157"
+       ],
+       "lines": 9
+      },
+      {
+       "id": "pow_devices",
+       "name": {
+        "fr": "Économie d'énergie des périphériques",
+        "en": "Device power saving"
+       },
+       "desc": {
+        "fr": "Décoche « autoriser l'ordinateur à éteindre ce périphérique » partout.",
+        "en": "Unticks 'allow the computer to turn off this device' everywhere."
+       },
+       "risk": "safe",
+       "reboot": false,
+       "kind": "tweak",
+       "requires": [],
+       "legacy": [
+        "p11@8849"
+       ],
+       "lines": 2
+      },
+      {
+       "id": "pow_gpuenergy",
+       "name": {
+        "fr": "Désactiver le pilote d'énergie GPU",
+        "en": "Disable GPU energy driver"
+       },
+       "desc": {
+        "fr": "Coupe le suivi de consommation du GPU par Windows.",
+        "en": "Disables Windows' GPU energy tracking."
+       },
+       "risk": "safe",
+       "reboot": true,
+       "kind": "tweak",
+       "requires": [],
+       "legacy": [
+        "gpuenrg@8871"
+       ],
+       "lines": 3
+      },
+      {
+       "id": "pow_storage",
+       "name": {
+        "fr": "Économie d'énergie du stockage",
+        "en": "Storage power saving"
+       },
+       "desc": {
+        "fr": "Les SSD NVMe ne descendent plus dans leurs états de veille.",
+        "en": "NVMe SSDs no longer enter idle states."
+       },
+       "risk": "safe",
+       "reboot": true,
+       "kind": "tweak",
+       "requires": [],
+       "legacy": [
+        "p17@8794"
+       ],
+       "lines": 17
+      },
+      {
+       "id": "pow_storage_apm",
+       "name": {
+        "fr": "Gestion d'énergie des disques",
+        "en": "Disk power management"
+       },
+       "desc": {
+        "fr": "Coupe l'économie d'énergie des disques, et l'APM/AAM si smartctl est présent.",
+        "en": "Disables disk power saving, and APM/AAM when smartctl is present."
+       },
+       "risk": "safe",
+       "reboot": true,
+       "kind": "tweak",
+       "requires": [
+        "res:smartctl.exe"
+       ],
+       "legacy": [
+        "dpower@8890"
+       ],
+       "lines": 8
+      },
+      {
+       "id": "pow_hibernate",
+       "name": {
+        "fr": "Désactiver l'hibernation et Sleep Study",
+        "en": "Disable hibernation and Sleep Study"
+       },
+       "desc": {
+        "fr": "Libère l'espace du fichier d'hibernation et coupe le démarrage rapide.",
+        "en": "Frees hiberfil space and disables fast startup."
+       },
+       "risk": "safe",
+       "reboot": true,
+       "kind": "tweak",
+       "requires": [],
+       "legacy": [
+        "p15@9125"
+       ],
+       "lines": 11
+      },
+      {
+       "id": "pow_telemetry",
+       "name": {
+        "fr": "Désactiver l'estimation d'énergie",
+        "en": "Disable energy estimation"
+       },
+       "desc": {
+        "fr": "Coupe la télémétrie de consommation par application.",
+        "en": "Disables per-app energy telemetry."
+       },
+       "risk": "safe",
+       "reboot": true,
+       "kind": "tweak",
+       "requires": [],
+       "legacy": [
+        "p16@9105"
+       ],
+       "lines": 5
+      },
+      {
+       "id": "pow_delete_plans",
+       "name": {
+        "fr": "Supprimer les plans par défaut",
+        "en": "Delete default power plans"
+       },
+       "desc": {
+        "fr": "Supprime Équilibré, Performances élevées et Économie d'énergie. Garde-le pour la fin, une fois ton plan Rago actif.",
+        "en": "Deletes Balanced, High performance and Power saver."
+       },
+       "risk": "advanced",
+       "reboot": false,
+       "kind": "tweak",
+       "requires": [],
+       "legacy": [
+        "p14@8829"
+       ],
+       "lines": 4
+      }
+     ]
+    },
+    {
+     "id": "storage",
+     "name": {
+      "fr": "Stockage",
+      "en": "Storage"
+     },
+     "tweaks": [
+      {
+       "id": "sto_fsutil",
+       "name": {
+        "fr": "Réglages NTFS selon ton disque",
+        "en": "NTFS settings for your drive"
+       },
+       "desc": {
+        "fr": "Horodatage du dernier accès et noms courts 8.3 réglés pour un SSD ou un disque dur.",
+        "en": "Last-access timestamps and 8.3 names set for SSD or HDD."
+       },
+       "risk": "safe",
+       "reboot": false,
+       "kind": "tweak",
+       "variants": [
+        {
+         "id": "ssd",
+         "label": {
+          "fr": "SSD",
+          "en": "SSD"
+         }
+        },
+        {
+         "id": "hdd",
+         "label": {
+          "fr": "Disque dur",
+          "en": "HDD"
+         }
+        }
+       ],
+       "requires": [],
+       "defaultVariant": "ssd",
+       "legacy": [
+        "ssd@5306",
+        "hdd@5288"
+       ],
+       "lines": 4
+      },
+      {
+       "id": "sto_writecache",
+       "name": {
+        "fr": "Activer le cache d'écriture",
+        "en": "Enable write cache"
+       },
+       "desc": {
+        "fr": "Active le cache d'écriture des disques. À éviter sans onduleur sur un PC fixe.",
+        "en": "Enables disk write caching."
+       },
+       "risk": "safe",
+       "reboot": true,
+       "kind": "tweak",
+       "requires": [],
+       "legacy": [
+        "s2@5375"
+       ],
+       "lines": 5
+      },
+      {
+       "id": "sto_cacheprot",
+       "name": {
+        "fr": "Cache protégé contre les coupures",
+        "en": "Power-protected cache"
+       },
+       "desc": {
+        "fr": "Indique à Windows que le cache du disque est protégé, pour éviter les vidages forcés.",
+        "en": "Tells Windows the disk cache is power-protected."
+       },
+       "risk": "safe",
+       "reboot": true,
+       "kind": "tweak",
+       "requires": [],
+       "legacy": [
+        "cppt@5203"
+       ],
+       "lines": 3
+      },
+      {
+       "id": "sto_ssdpower",
+       "name": {
+        "fr": "Économie d'énergie des SSD",
+        "en": "SSD power saving"
+       },
+       "desc": {
+        "fr": "Les SSD NVMe restent dans leur état le plus rapide.",
+        "en": "NVMe SSDs stay in their fastest state."
+       },
+       "risk": "safe",
+       "reboot": true,
+       "kind": "tweak",
+       "requires": [],
+       "legacy": [
+        "s3@5326"
+       ],
+       "lines": 17
+      },
+      {
+       "id": "sto_trim",
+       "name": {
+        "fr": "TRIM du disque système",
+        "en": "TRIM system drive"
+       },
+       "desc": {
+        "fr": "Lance un TRIM sur C: pour libérer les blocs inutilisés du SSD.",
+        "en": "Runs TRIM on C:."
+       },
+       "risk": "safe",
+       "reboot": false,
+       "kind": "action",
+       "requires": [],
+       "legacy": [
+        "dssd@5222"
+       ],
+       "lines": 2
+      },
+      {
+       "id": "sto_defrag",
+       "name": {
+        "fr": "Ouvrir l'optimiseur de disques",
+        "en": "Open drive optimiser"
+       },
+       "desc": {
+        "fr": "Ouvre l'outil Windows de défragmentation et de TRIM.",
+        "en": "Opens Windows' defrag/TRIM tool."
+       },
+       "risk": "safe",
+       "reboot": false,
+       "kind": "action",
+       "requires": [],
+       "legacy": [
+        "s1@5358"
+       ],
+       "lines": 1
+      }
+     ]
+    },
+    {
+     "id": "usb",
+     "name": {
+      "fr": "USB",
+      "en": "USB"
+     },
+     "tweaks": [
+      {
+       "id": "usb_priority",
+       "name": {
+        "fr": "Priorité des pilotes USB",
+        "en": "USB driver priority"
+       },
+       "desc": {
+        "fr": "Monte la priorité des threads des contrôleurs USB (souris, clavier, casque).",
+        "en": "Raises USB controller thread priority."
+       },
+       "risk": "safe",
+       "reboot": true,
+       "kind": "tweak",
+       "requires": [],
+       "legacy": [
+        "twkusb@12213"
+       ],
+       "lines": 6
+      },
+      {
+       "id": "usb_power",
+       "name": {
+        "fr": "Désactiver la mise en veille USB",
+        "en": "Disable USB suspend"
+       },
+       "desc": {
+        "fr": "Coupe la suspension sélective et l'économie d'énergie de chaque port USB.",
+        "en": "Disables selective suspend and power saving on each USB port."
+       },
+       "risk": "safe",
+       "reboot": true,
+       "kind": "tweak",
+       "requires": [
+        "wmic"
+       ],
+       "legacy": [
+        "savingp@12157"
+       ],
+       "lines": 44
+      },
+      {
+       "id": "usb_hidden",
+       "name": {
+        "fr": "Économies USB cachées",
+        "en": "Hidden USB power saving"
+       },
+       "desc": {
+        "fr": "Coupe les économies d'énergie USB non visibles dans les paramètres.",
+        "en": "Disables USB power saving not shown in Settings."
+       },
+       "risk": "safe",
+       "reboot": true,
+       "kind": "tweak",
+       "requires": [],
+       "legacy": [
+        "usb2@12098"
+       ],
+       "lines": 15
+      },
+      {
+       "id": "usb_controller",
+       "name": {
+        "fr": "Priorité des contrôleurs SATA",
+        "en": "SATA controller priority"
+       },
+       "desc": {
+        "fr": "Retire la priorité fixe des contrôleurs de stockage.",
+        "en": "Removes fixed priority from storage controllers."
+       },
+       "risk": "safe",
+       "reboot": true,
+       "kind": "tweak",
+       "requires": [
+        "wmic"
+       ],
+       "legacy": [
+        "usb1@12125"
+       ],
+       "lines": 4
+      },
+      {
+       "id": "usb_msi",
+       "name": {
+        "fr": "Mode MSI sur les contrôleurs USB",
+        "en": "MSI mode on USB controllers"
+       },
+       "desc": {
+        "fr": "Passe les contrôleurs USB en interruptions MSI.",
+        "en": "Switches USB controllers to MSI interrupts."
+       },
+       "risk": "safe",
+       "reboot": true,
+       "kind": "tweak",
+       "requires": [
+        "wmic"
+       ],
+       "legacy": [
+        "umsi@12140"
+       ],
+       "lines": 6
+      },
+      {
+       "id": "usb_advanced",
+       "name": {
+        "fr": "Optimisation USB avancée",
+        "en": "Advanced USB optimisation"
+       },
+       "desc": {
+        "fr": "Les trois réglages ci-dessus plus la désactivation globale de la suspension USB.",
+        "en": "All of the above plus global USB suspend off."
+       },
+       "risk": "safe",
+       "reboot": true,
+       "kind": "tweak",
+       "requires": [
+        "wmic"
+       ],
+       "legacy": [
+        "USad@12297"
+       ],
+       "lines": 24
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "id": "gpu",
+   "icon": "gpu",
+   "name": {
+    "fr": "Carte graphique",
+    "en": "Graphics card"
+   },
+   "tagline": {
+    "fr": "NVIDIA, AMD et Intel, chacun ses réglages.",
+    "en": "NVIDIA, AMD and Intel, each with its own settings."
+   },
+   "sections": [
+    {
+     "id": "general",
+     "name": {
+      "fr": "Toutes cartes",
+      "en": "All GPUs"
+     },
+     "tweaks": [
+      {
+       "id": "gpu_general",
+       "name": {
+        "fr": "Optimisation GPU générale",
+        "en": "General GPU optimisation"
+       },
+       "desc": {
+        "fr": "Mise à l'échelle GPU coupée, MMCSS pour l'affichage, préemption désactivée, délais du planificateur réduits.",
+        "en": "GPU scaling off, MMCSS for display, preemption disabled."
+       },
+       "risk": "safe",
+       "reboot": true,
+       "kind": "tweak",
+       "requires": [
+        "wmic"
+       ],
+       "legacy": [
+        "gengpu@8127"
+       ],
+       "lines": 141
+      }
+     ]
+    },
+    {
+     "id": "nvidia",
+     "name": {
+      "fr": "NVIDIA",
+      "en": "NVIDIA"
+     },
+     "requires": "gpu:nvidia",
+     "tweaks": [
+      {
+       "id": "nv_general",
+       "name": {
+        "fr": "Optimisation NVIDIA complète",
+        "en": "Full NVIDIA optimisation"
+       },
+       "desc": {
+        "fr": "Importe le profil Rago dans le pilote (Profile Inspector), active le mode MSI, coupe la préemption et le HDCP.",
+        "en": "Imports the Rago driver profile (Profile Inspector), enables MSI, disables preemption and HDCP."
+       },
+       "risk": "safe",
+       "reboot": true,
+       "kind": "tweak",
+       "requires": [
+        "gpu:nvidia",
+        "res:nvidiaProfileInspector.exe",
+        "wmic"
+       ],
+       "legacy": [
+        "NVGEN689U@10580"
+       ],
+       "lines": 81
+      },
+      {
+       "id": "nv_profile",
+       "name": {
+        "fr": "Profil pilote Rago (Profile Inspector)",
+        "en": "Rago driver profile (Profile Inspector)"
+       },
+       "desc": {
+        "fr": "Applique le profil « extreme latency low » au pilote : limiteur de FPS, Low Latency, préréglages de rendu.",
+        "en": "Applies the 'extreme latency low' profile to the driver."
+       },
+       "risk": "safe",
+       "reboot": false,
+       "kind": "tweak",
+       "requires": [
+        "gpu:nvidia",
+        "res:nvidiaProfileInspector.exe"
+       ],
+       "native": "nvidia_profile",
+       "legacy": [],
+       "lines": 0
+      },
+      {
+       "id": "nv_telemetry",
+       "name": {
+        "fr": "Supprimer la télémétrie NVIDIA",
+        "en": "Remove NVIDIA telemetry"
+       },
+       "desc": {
+        "fr": "Désactive les rapports de plantage et la collecte de données du pilote.",
+        "en": "Disables crash reports and driver data collection."
+       },
+       "risk": "safe",
+       "reboot": true,
+       "kind": "tweak",
+       "requires": [
+        "gpu:nvidia"
+       ],
+       "legacy": [
+        "nv1@10312"
+       ],
+       "lines": 11
+      },
+      {
+       "id": "nv_power",
+       "name": {
+        "fr": "Économies d'énergie cachées NVIDIA",
+        "en": "Hidden NVIDIA power saving"
+       },
+       "desc": {
+        "fr": "Coupe les économies d'énergie de l'affichage et du pilote.",
+        "en": "Disables display and driver power saving."
+       },
+       "risk": "safe",
+       "reboot": true,
+       "kind": "tweak",
+       "requires": [
+        "gpu:nvidia"
+       ],
+       "legacy": [
+        "nv2@10392"
+       ],
+       "lines": 11
+      },
+      {
+       "id": "nv_pstates",
+       "name": {
+        "fr": "Forcer les P-states hauts",
+        "en": "Force high P-states"
+       },
+       "desc": {
+        "fr": "Empêche le GPU de baisser dynamiquement sa fréquence.",
+        "en": "Stops the GPU dropping clocks dynamically."
+       },
+       "risk": "safe",
+       "reboot": true,
+       "kind": "tweak",
+       "requires": [
+        "gpu:nvidia",
+        "wmic"
+       ],
+       "legacy": [
+        "nv4@10355"
+       ],
+       "lines": 7
+      },
+      {
+       "id": "nv_msi",
+       "name": {
+        "fr": "Mode MSI sur le GPU",
+        "en": "MSI mode on GPU"
+       },
+       "desc": {
+        "fr": "Passe la carte graphique en interruptions MSI.",
+        "en": "Switches the GPU to MSI interrupts."
+       },
+       "risk": "safe",
+       "reboot": true,
+       "kind": "tweak",
+       "requires": [
+        "gpu:nvidia",
+        "wmic"
+       ],
+       "legacy": [
+        "nv5@10334"
+       ],
+       "lines": 8
+      },
+      {
+       "id": "nv_tdr",
+       "name": {
+        "fr": "Désactiver le TDR",
+        "en": "Disable TDR"
+       },
+       "desc": {
+        "fr": "Windows ne redémarre plus le pilote quand le GPU ne répond pas. Si ton jeu fige, il faudra redémarrer le PC.",
+        "en": "Windows no longer resets a hung driver. A freeze will need a reboot."
+       },
+       "risk": "advanced",
+       "reboot": true,
+       "kind": "tweak",
+       "requires": [],
+       "legacy": [
+        "nv6@10267"
+       ],
+       "lines": 7
+      },
+      {
+       "id": "nv_hdcp",
+       "name": {
+        "fr": "Désactiver le HDCP",
+        "en": "Disable HDCP"
+       },
+       "desc": {
+        "fr": "Coupe la protection anticopie. Netflix et certains lecteurs peuvent refuser la lecture en HD.",
+        "en": "Disables copy protection. Some streaming may refuse HD."
+       },
+       "risk": "safe",
+       "reboot": true,
+       "kind": "tweak",
+       "requires": [
+        "gpu:nvidia",
+        "wmic"
+       ],
+       "legacy": [
+        "nv7@10374"
+       ],
+       "lines": 7
+      },
+      {
+       "id": "nv_preemption",
+       "name": {
+        "fr": "Désactiver la préemption",
+        "en": "Disable preemption"
+       },
+       "desc": {
+        "fr": "Le GPU termine son travail en cours avant de passer à une autre tâche.",
+        "en": "The GPU finishes current work before switching tasks."
+       },
+       "risk": "advanced",
+       "reboot": true,
+       "kind": "tweak",
+       "requires": [],
+       "legacy": [
+        "nv8@10511"
+       ],
+       "lines": 57
+      },
+      {
+       "id": "nv_dpc",
+       "name": {
+        "fr": "DPC sur chaque cœur",
+        "en": "DPCs on every core"
+       },
+       "desc": {
+        "fr": "Répartit le traitement des interruptions du pilote sur tous les cœurs.",
+        "en": "Spreads the driver's interrupt work over all cores."
+       },
+       "risk": "safe",
+       "reboot": true,
+       "kind": "tweak",
+       "requires": [
+        "gpu:nvidia"
+       ],
+       "legacy": [
+        "nv9@10239"
+       ],
+       "lines": 5
+      },
+      {
+       "id": "nv_writecomb",
+       "name": {
+        "fr": "Désactiver le write combining",
+        "en": "Disable write combining"
+       },
+       "desc": {
+        "fr": "Change la manière dont le pilote regroupe ses écritures mémoire.",
+        "en": "Changes how the driver batches memory writes."
+       },
+       "risk": "safe",
+       "reboot": true,
+       "kind": "tweak",
+       "requires": [
+        "gpu:nvidia"
+       ],
+       "legacy": [
+        "nv10@10255"
+       ],
+       "lines": 1
+      },
+      {
+       "id": "nv_accel",
+       "name": {
+        "fr": "Accélération du pilote",
+        "en": "Driver acceleration"
+       },
+       "desc": {
+        "fr": "Règle le niveau d'accélération matérielle du pilote.",
+        "en": "Sets driver hardware acceleration level."
+       },
+       "risk": "safe",
+       "reboot": true,
+       "kind": "tweak",
+       "requires": [
+        "gpu:nvidia"
+       ],
+       "legacy": [
+        "nv11@10215"
+       ],
+       "lines": 1
+      },
+      {
+       "id": "nv_contig",
+       "name": {
+        "fr": "Mémoire contiguë",
+        "en": "Contiguous memory"
+       },
+       "desc": {
+        "fr": "Force l'allocation de mémoire système contiguë pour le GPU.",
+        "en": "Forces contiguous system memory for the GPU."
+       },
+       "risk": "safe",
+       "reboot": true,
+       "kind": "tweak",
+       "requires": [
+        "gpu:nvidia"
+       ],
+       "legacy": [
+        "nv12@10227"
+       ],
+       "lines": 1
+      },
+      {
+       "id": "nv_debloat",
+       "name": {
+        "fr": "Nettoyer les restes d'installation NVIDIA",
+        "en": "Clean NVIDIA installer leftovers"
+       },
+       "desc": {
+        "fr": "Supprime les dossiers d'extraction du pilote dans C:\\NVIDIA. N'affecte pas le pilote installé.",
+        "en": "Deletes driver extraction folders in C:\\NVIDIA."
+       },
+       "risk": "safe",
+       "reboot": false,
+       "kind": "tweak",
+       "requires": [
+        "gpu:nvidia"
+       ],
+       "legacy": [
+        "nv13@10148"
+       ],
+       "lines": 28
+      },
+      {
+       "id": "nv_advanced",
+       "name": {
+        "fr": "Réglages NVIDIA avancés",
+        "en": "Advanced NVIDIA settings"
+       },
+       "desc": {
+        "fr": "Télémétrie, Miracast, overlay et une série de clés internes du pilote.",
+        "en": "Telemetry, Miracast, overlay and internal driver keys."
+       },
+       "risk": "advanced",
+       "reboot": true,
+       "kind": "tweak",
+       "requires": [],
+       "legacy": [
+        "nv14@10417"
+       ],
+       "lines": 51
+      },
+      {
+       "id": "nv_powermizer",
+       "name": {
+        "fr": "PowerMizer en performance",
+        "en": "PowerMizer to performance"
+       },
+       "desc": {
+        "fr": "Garde le GPU à son niveau de performance maximal.",
+        "en": "Keeps the GPU at max performance level."
+       },
+       "risk": "safe",
+       "reboot": true,
+       "kind": "tweak",
+       "requires": [
+        "gpu:nvidia"
+       ],
+       "legacy": [
+        "nv15@10285"
+       ],
+       "lines": 4
+      },
+      {
+       "id": "nv_latency",
+       "name": {
+        "fr": "Tolérance de latence NVIDIA",
+        "en": "NVIDIA latency tolerance"
+       },
+       "desc": {
+        "fr": "Réduit les délais internes du pilote avant les changements d'état.",
+        "en": "Lowers internal driver delays before state changes."
+       },
+       "risk": "safe",
+       "reboot": true,
+       "kind": "tweak",
+       "requires": [
+        "gpu:nvidia"
+       ],
+       "legacy": [
+        "nv16@10480"
+       ],
+       "lines": 19
+      },
+      {
+       "id": "nv_kboost",
+       "name": {
+        "fr": "Activer KBoost",
+        "en": "Enable KBoost"
+       },
+       "desc": {
+        "fr": "Bloque le GPU à sa fréquence maximale, même au bureau. Plus de chaleur et de bruit.",
+        "en": "Locks the GPU at max clock, even on desktop. More heat and noise."
+       },
+       "risk": "advanced",
+       "reboot": true,
+       "kind": "tweak",
+       "requires": [],
+       "legacy": [
+        "kbst@8977"
+       ],
+       "lines": 5
+      }
+     ]
+    },
+    {
+     "id": "amd",
+     "name": {
+      "fr": "AMD",
+      "en": "AMD"
+     },
+     "requires": "gpu:amd",
+     "tweaks": [
+      {
+       "id": "amd_general",
+       "name": {
+        "fr": "Réglages AMD généraux",
+        "en": "General AMD settings"
+       },
+       "desc": {
+        "fr": "Préemption, file d'images, mode stutter, overlay et filtres coupés.",
+        "en": "Preemption, flip queue, stutter mode, overlay and filters off."
+       },
+       "risk": "safe",
+       "reboot": true,
+       "kind": "tweak",
+       "requires": [
+        "gpu:amd"
+       ],
+       "legacy": [
+        "am1@11267"
+       ],
+       "lines": 54
+      },
+      {
+       "id": "amd_power",
+       "name": {
+        "fr": "Économies d'énergie AMD",
+        "en": "AMD power saving"
+       },
+       "desc": {
+        "fr": "Power gating, clock gating, ASPM et ULPS désactivés.",
+        "en": "Power gating, clock gating, ASPM and ULPS disabled."
+       },
+       "risk": "safe",
+       "reboot": true,
+       "kind": "tweak",
+       "requires": [
+        "gpu:amd"
+       ],
+       "legacy": [
+        "am2@11349"
+       ],
+       "lines": 19
+      },
+      {
+       "id": "amd_hdcp",
+       "name": {
+        "fr": "Désactiver le HDCP",
+        "en": "Disable HDCP"
+       },
+       "desc": {
+        "fr": "Coupe la protection anticopie.",
+        "en": "Disables copy protection."
+       },
+       "risk": "safe",
+       "reboot": true,
+       "kind": "tweak",
+       "requires": [
+        "gpu:amd"
+       ],
+       "legacy": [
+        "am3@11429"
+       ],
+       "lines": 3
+      },
+      {
+       "id": "amd_memsleep",
+       "name": {
+        "fr": "Veille de la mémoire GPU",
+        "en": "GPU memory sleep"
+       },
+       "desc": {
+        "fr": "La mémoire vidéo ne descend plus en veille profonde.",
+        "en": "Video memory no longer enters deep sleep."
+       },
+       "risk": "safe",
+       "reboot": true,
+       "kind": "tweak",
+       "requires": [
+        "gpu:amd"
+       ],
+       "legacy": [
+        "am4@11399"
+       ],
+       "lines": 3
+      },
+      {
+       "id": "amd_thermal",
+       "name": {
+        "fr": "Désactiver le bridage thermique",
+        "en": "Disable thermal throttling"
+       },
+       "desc": {
+        "fr": "Le GPU ne ralentit plus en chauffant. Surveille tes températures.",
+        "en": "The GPU no longer slows when hot. Watch temperatures."
+       },
+       "risk": "advanced",
+       "reboot": true,
+       "kind": "tweak",
+       "requires": [],
+       "legacy": [
+        "am5@11414"
+       ],
+       "lines": 3
+      },
+      {
+       "id": "amd_delag",
+       "name": {
+        "fr": "Activer De-Lag",
+        "en": "Enable De-Lag"
+       },
+       "desc": {
+        "fr": "Active l'anti-lag du pilote.",
+        "en": "Enables the driver's anti-lag."
+       },
+       "risk": "safe",
+       "reboot": true,
+       "kind": "tweak",
+       "requires": [
+        "gpu:amd"
+       ],
+       "legacy": [
+        "am6@11384"
+       ],
+       "lines": 3
+      },
+      {
+       "id": "amd_logging",
+       "name": {
+        "fr": "Désactiver les journaux AMD",
+        "en": "Disable AMD logging"
+       },
+       "desc": {
+        "fr": "Coupe le service de journalisation du pilote.",
+        "en": "Disables the driver logging service."
+       },
+       "risk": "safe",
+       "reboot": true,
+       "kind": "tweak",
+       "requires": [
+        "gpu:amd"
+       ],
+       "legacy": [
+        "am7@11444"
+       ],
+       "lines": 3
+      },
+      {
+       "id": "amd_advanced",
+       "name": {
+        "fr": "Réglages AMD avancés",
+        "en": "Advanced AMD settings"
+       },
+       "desc": {
+        "fr": "Plus de 300 clés internes du pilote (DPM forcé, Chill coupé, gating).",
+        "en": "300+ internal driver keys (forced DPM, Chill off, gating)."
+       },
+       "risk": "advanced",
+       "reboot": true,
+       "kind": "tweak",
+       "requires": [
+        "wmic"
+       ],
+       "legacy": [
+        "am8@11460"
+       ],
+       "lines": 357
+      }
+     ]
+    },
+    {
+     "id": "intel",
+     "name": {
+      "fr": "Intel",
+      "en": "Intel"
+     },
+     "requires": "gpu:intel",
+     "tweaks": [
+      {
+       "id": "intel_gpu",
+       "name": {
+        "fr": "Réglages GPU Intel",
+        "en": "Intel GPU settings"
+       },
+       "desc": {
+        "fr": "Adaptive Vsync coupé, segment mémoire dédié agrandi, politique d'énergie réglée.",
+        "en": "Adaptive Vsync off, larger dedicated segment, power policy."
+       },
+       "risk": "safe",
+       "reboot": true,
+       "kind": "tweak",
+       "requires": [
+        "gpu:intel"
+       ],
+       "legacy": [
+        "g3@8291"
+       ],
+       "lines": 12
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "id": "windows",
+   "icon": "windows",
+   "name": {
+    "fr": "Windows",
+    "en": "Windows"
+   },
+   "tagline": {
+    "fr": "Ce qui tourne pour rien en arrière-plan.",
+    "en": "What runs for nothing in the background."
+   },
+   "sections": [
+    {
+     "id": "system",
+     "name": {
+      "fr": "Système",
+      "en": "System"
+     },
+     "tweaks": [
+      {
+       "id": "win_gamemode",
+       "name": {
+        "fr": "Mode Jeu de Windows",
+        "en": "Windows Game Mode"
+       },
+       "desc": {
+        "fr": "Le Mode Jeu donne la priorité au jeu au premier plan. Il aide sur la plupart des PC.",
+        "en": "Game Mode prioritises the foreground game."
+       },
+       "risk": "safe",
+       "reboot": false,
+       "kind": "tweak",
+       "variants": [
+        {
+         "id": "on",
+         "label": {
+          "fr": "Activé",
+          "en": "On"
+         }
+        },
+        {
+         "id": "off",
+         "label": {
+          "fr": "Désactivé",
+          "en": "Off"
+         }
+        }
+       ],
+       "requires": [],
+       "defaultVariant": "on",
+       "legacy": [
+        "gmodeON@5942",
+        "gmodeOFF@5960"
+       ],
+       "lines": 6
+      },
+      {
+       "id": "win_fse",
+       "name": {
+        "fr": "Plein écran exclusif",
+        "en": "Fullscreen exclusive"
+       },
+       "desc": {
+        "fr": "Désactive les optimisations plein écran de Windows pour un vrai plein écran. Ta version est choisie automatiquement.",
+        "en": "Disables fullscreen optimisations for true exclusive fullscreen."
+       },
+       "risk": "safe",
+       "reboot": true,
+       "kind": "tweak",
+       "variants": [
+        {
+         "id": "w10",
+         "label": {
+          "fr": "Windows 10",
+          "en": "Windows 10"
+         },
+         "auto": "os:10"
+        },
+        {
+         "id": "w11",
+         "label": {
+          "fr": "Windows 11",
+          "en": "Windows 11"
+         },
+         "auto": "os:11"
+        }
+       ],
+       "requires": [],
+       "legacy": [
+        "windows10@4746",
+        "windows11@4770"
+       ],
+       "lines": 18
+      },
+      {
+       "id": "win_background",
+       "name": {
+        "fr": "Désactiver les applis en arrière-plan",
+        "en": "Disable background apps"
+       },
+       "desc": {
+        "fr": "Les applis du Store ne tournent plus quand elles sont fermées.",
+        "en": "Store apps stop running when closed."
+       },
+       "risk": "safe",
+       "reboot": true,
+       "kind": "tweak",
+       "requires": [],
+       "legacy": [
+        "w10@5860"
+       ],
+       "lines": 5
+      },
+      {
+       "id": "win_transparency",
+       "name": {
+        "fr": "Désactiver la transparence",
+        "en": "Disable transparency"
+       },
+       "desc": {
+        "fr": "Retire l'effet verre de la barre des tâches et des menus.",
+        "en": "Removes the glass effect."
+       },
+       "risk": "safe",
+       "reboot": false,
+       "kind": "tweak",
+       "requires": [],
+       "legacy": [
+        "w1@5882"
+       ],
+       "lines": 2
+      },
+      {
+       "id": "win_animations",
+       "name": {
+        "fr": "Effets visuels",
+        "en": "Visual effects"
+       },
+       "desc": {
+        "fr": "Ouvre le panneau Windows des effets visuels : choisis « Ajuster afin d'obtenir les meilleures performances ».",
+        "en": "Opens Windows' visual effects panel."
+       },
+       "risk": "safe",
+       "reboot": false,
+       "kind": "action",
+       "requires": [],
+       "legacy": [
+        "w3@7117"
+       ],
+       "lines": 1
+      },
+      {
+       "id": "win_notifications",
+       "name": {
+        "fr": "Désactiver les notifications",
+        "en": "Disable notifications"
+       },
+       "desc": {
+        "fr": "Plus de bannières ni de sons de notification pendant tes parties.",
+        "en": "No banners or notification sounds."
+       },
+       "risk": "safe",
+       "reboot": true,
+       "kind": "tweak",
+       "requires": [],
+       "legacy": [
+        "w2@7018"
+       ],
+       "lines": 12
+      },
+      {
+       "id": "win_popups",
+       "name": {
+        "fr": "Désactiver les bulles et suggestions",
+        "en": "Disable balloons and tips"
+       },
+       "desc": {
+        "fr": "Coupe les bulles d'aide, le secouage de fenêtre et l'identifiant publicitaire.",
+        "en": "Disables balloon tips, window shake and advertising ID."
+       },
+       "risk": "safe",
+       "reboot": true,
+       "kind": "tweak",
+       "requires": [],
+       "legacy": [
+        "w15@7213"
+       ],
+       "lines": 6
+      },
+      {
+       "id": "win_search",
+       "name": {
+        "fr": "Recherche Windows sans le web",
+        "en": "Search without web"
+       },
+       "desc": {
+        "fr": "La recherche du menu Démarrer ne passe plus par Bing ni Cortana.",
+        "en": "Start menu search stops using Bing or Cortana."
+       },
+       "risk": "safe",
+       "reboot": true,
+       "kind": "tweak",
+       "requires": [],
+       "legacy": [
+        "w4@5474"
+       ],
+       "lines": 23
+      },
+      {
+       "id": "win_bluetooth",
+       "name": {
+        "fr": "Désactiver le Bluetooth",
+        "en": "Disable Bluetooth"
+       },
+       "desc": {
+        "fr": "Coupe les services Bluetooth. Ne l'active pas si tu as un casque ou une manette sans fil.",
+        "en": "Disables Bluetooth services. Skip if you use wireless gear."
+       },
+       "risk": "advanced",
+       "reboot": true,
+       "kind": "tweak",
+       "requires": [],
+       "legacy": [
+        "w5@6971"
+       ],
+       "lines": 5
+      },
+      {
+       "id": "win_errors",
+       "name": {
+        "fr": "Désactiver le rapport d'erreurs",
+        "en": "Disable error reporting"
+       },
+       "desc": {
+        "fr": "Windows n'envoie plus les rapports de plantage à Microsoft.",
+        "en": "Windows stops sending crash reports."
+       },
+       "risk": "safe",
+       "reboot": true,
+       "kind": "tweak",
+       "requires": [],
+       "legacy": [
+        "w7@6928"
+       ],
+       "lines": 6
+      },
+      {
+       "id": "win_sync",
+       "name": {
+        "fr": "Désactiver la synchronisation des paramètres",
+        "en": "Disable settings sync"
+       },
+       "desc": {
+        "fr": "Tes thèmes et préférences ne sont plus synchronisés avec ton compte Microsoft.",
+        "en": "Themes and preferences stop syncing."
+       },
+       "risk": "safe",
+       "reboot": true,
+       "kind": "tweak",
+       "requires": [],
+       "legacy": [
+        "w8@6881"
+       ],
+       "lines": 31
+      },
+      {
+       "id": "win_diag",
+       "name": {
+        "fr": "Désactiver les services de diagnostic",
+        "en": "Disable diagnostic services"
+       },
+       "desc": {
+        "fr": "Arrête DiagTrack et les collecteurs de diagnostic.",
+        "en": "Stops DiagTrack and diagnostic collectors."
+       },
+       "risk": "safe",
+       "reboot": false,
+       "kind": "tweak",
+       "requires": [],
+       "legacy": [
+        "w9@6949"
+       ],
+       "lines": 7
+      },
+      {
+       "id": "win_tracking",
+       "name": {
+        "fr": "Désactiver le suivi d'activité",
+        "en": "Disable activity tracking"
+       },
+       "desc": {
+        "fr": "Coupe l'historique d'activité et plusieurs tâches de diagnostic planifiées.",
+        "en": "Disables activity history and diagnostic tasks."
+       },
+       "risk": "safe",
+       "reboot": true,
+       "kind": "tweak",
+       "requires": [],
+       "legacy": [
+        "w14@5978"
+       ],
+       "lines": 17
+      },
+      {
+       "id": "win_feed",
+       "name": {
+        "fr": "Désactiver Actualités et centres d'intérêt",
+        "en": "Disable news and interests"
+       },
+       "desc": {
+        "fr": "Retire le widget météo et actualités de la barre des tâches.",
+        "en": "Removes the news and weather widget."
+       },
+       "risk": "safe",
+       "reboot": true,
+       "kind": "tweak",
+       "requires": [],
+       "legacy": [
+        "w16@7191"
+       ],
+       "lines": 7
+      },
+      {
+       "id": "win_experiments",
+       "name": {
+        "fr": "Désactiver les expérimentations",
+        "en": "Disable experiments"
+       },
+       "desc": {
+        "fr": "Microsoft ne teste plus de fonctions sur ton PC.",
+        "en": "Microsoft stops testing features on your PC."
+       },
+       "risk": "safe",
+       "reboot": true,
+       "kind": "tweak",
+       "requires": [],
+       "legacy": [
+        "w11@7235"
+       ],
+       "lines": 3
+      },
+      {
+       "id": "win_maintenance",
+       "name": {
+        "fr": "Désactiver la maintenance automatique",
+        "en": "Disable automatic maintenance"
+       },
+       "desc": {
+        "fr": "Plus de maintenance qui se lance en pleine partie. Pense à faire tes mises à jour à la main.",
+        "en": "No maintenance mid-game. Update manually."
+       },
+       "risk": "safe",
+       "reboot": true,
+       "kind": "tweak",
+       "requires": [],
+       "legacy": [
+        "w13@7174"
+       ],
+       "lines": 2
+      },
+      {
+       "id": "win_smartscreen",
+       "name": {
+        "fr": "Désactiver SmartScreen",
+        "en": "Disable SmartScreen"
+       },
+       "desc": {
+        "fr": "Coupe le filtre qui vérifie les fichiers téléchargés. Tu perds une protection contre les logiciels malveillants.",
+        "en": "Disables the download filter. You lose a malware protection."
+       },
+       "risk": "advanced",
+       "reboot": true,
+       "kind": "tweak",
+       "requires": [],
+       "legacy": [
+        "w17@5820"
+       ],
+       "lines": 4
+      },
+      {
+       "id": "win_reinstall",
+       "name": {
+        "fr": "Bloquer la réinstallation des applis",
+        "en": "Block app reinstall"
+       },
+       "desc": {
+        "fr": "Windows ne réinstalle plus Candy Crush et compagnie.",
+        "en": "Windows stops reinstalling promoted apps."
+       },
+       "risk": "safe",
+       "reboot": true,
+       "kind": "tweak",
+       "requires": [],
+       "legacy": [
+        "w18@5837"
+       ],
+       "lines": 7
+      },
+      {
+       "id": "win_shared",
+       "name": {
+        "fr": "Désactiver les expériences partagées",
+        "en": "Disable shared experiences"
+       },
+       "desc": {
+        "fr": "Coupe le partage de proximité entre appareils.",
+        "en": "Disables nearby sharing."
+       },
+       "risk": "safe",
+       "reboot": true,
+       "kind": "tweak",
+       "requires": [],
+       "legacy": [
+        "w19@5804"
+       ],
+       "lines": 3
+      },
+      {
+       "id": "win_audit",
+       "name": {
+        "fr": "Journaliser seulement les échecs importants",
+        "en": "Log only important failures"
+       },
+       "desc": {
+        "fr": "Réduit l'audit de sécurité et les journaux de diagnostic.",
+        "en": "Reduces security auditing and diagnostic logs."
+       },
+       "risk": "safe",
+       "reboot": true,
+       "kind": "tweak",
+       "requires": [],
+       "legacy": [
+        "w20@5511"
+       ],
+       "lines": 14
+      }
+     ]
+    },
+    {
+     "id": "debloat",
+     "name": {
+      "fr": "Débloat",
+      "en": "Debloat"
+     },
+     "tweaks": [
+      {
+       "id": "dbl_gamedvr",
+       "name": {
+        "fr": "Désactiver Game DVR",
+        "en": "Disable Game DVR"
+       },
+       "desc": {
+        "fr": "Coupe l'enregistrement en arrière-plan de la Xbox Game Bar.",
+        "en": "Disables Game Bar background recording."
+       },
+       "risk": "safe",
+       "reboot": true,
+       "kind": "tweak",
+       "requires": [],
+       "legacy": [
+        "d1@6993"
+       ],
+       "lines": 9
+      },
+      {
+       "id": "dbl_telemetry",
+       "name": {
+        "fr": "Désactiver la télémétrie",
+        "en": "Disable telemetry"
+       },
+       "desc": {
+        "fr": "Désactive les tâches planifiées et clés de collecte de données de Windows.",
+        "en": "Disables Windows' data collection tasks and keys."
+       },
+       "risk": "safe",
+       "reboot": true,
+       "kind": "tweak",
+       "requires": [],
+       "legacy": [
+        "d2@6313"
+       ],
+       "lines": 116
+      },
+      {
+       "id": "dbl_xbox",
+       "name": {
+        "fr": "Désactiver les services Xbox",
+        "en": "Disable Xbox services"
+       },
+       "desc": {
+        "fr": "Coupe les services Xbox Live. Les jeux du Game Pass ne fonctionneront plus.",
+        "en": "Disables Xbox Live services. Game Pass games will stop working."
+       },
+       "risk": "safe",
+       "reboot": false,
+       "kind": "tweak",
+       "requires": [],
+       "legacy": [
+        "d3@7046"
+       ],
+       "lines": 6
+      },
+      {
+       "id": "dbl_hyperv",
+       "name": {
+        "fr": "Désactiver les services Hyper-V",
+        "en": "Disable Hyper-V services"
+       },
+       "desc": {
+        "fr": "Coupe les services d'intégration Hyper-V. Les machines virtuelles et WSL ne marcheront plus.",
+        "en": "Disables Hyper-V integration services. VMs and WSL will stop working."
+       },
+       "risk": "advanced",
+       "reboot": true,
+       "kind": "tweak",
+       "requires": [],
+       "legacy": [
+        "d4@6289"
+       ],
+       "lines": 10
+      },
+      {
+       "id": "dbl_office",
+       "name": {
+        "fr": "Désactiver la télémétrie Office",
+        "en": "Disable Office telemetry"
+       },
+       "desc": {
+        "fr": "Coupe la collecte de données de Microsoft Office.",
+        "en": "Disables Microsoft Office data collection."
+       },
+       "risk": "safe",
+       "reboot": true,
+       "kind": "tweak",
+       "requires": [],
+       "legacy": [
+        "d5@6806"
+       ],
+       "lines": 31
+      },
+      {
+       "id": "dbl_print",
+       "name": {
+        "fr": "Désactiver l'impression et les cartes",
+        "en": "Disable printing and maps"
+       },
+       "desc": {
+        "fr": "Coupe le spouleur d'impression et le service Cartes. Tu ne pourras plus imprimer.",
+        "en": "Disables the print spooler and Maps. You won't be able to print."
+       },
+       "risk": "advanced",
+       "reboot": true,
+       "kind": "tweak",
+       "requires": [],
+       "legacy": [
+        "d6@6786"
+       ],
+       "lines": 4
+      },
+      {
+       "id": "dbl_cortana",
+       "name": {
+        "fr": "Désinstaller Cortana",
+        "en": "Uninstall Cortana"
+       },
+       "desc": {
+        "fr": "Désactive Cortana et supprime l'appli.",
+        "en": "Disables Cortana and removes the app."
+       },
+       "risk": "safe",
+       "reboot": false,
+       "kind": "tweak",
+       "requires": [],
+       "legacy": [
+        "d7@7068"
+       ],
+       "lines": 9
+      },
+      {
+       "id": "dbl_edge",
+       "name": {
+        "fr": "Désinstaller Microsoft Edge",
+        "en": "Uninstall Microsoft Edge"
+       },
+       "desc": {
+        "fr": "Supprime Edge et ses dossiers. Certaines applis Windows qui affichent des pages web peuvent en souffrir.",
+        "en": "Removes Edge and its folders. Some Windows apps relying on it may suffer."
+       },
+       "risk": "advanced",
+       "reboot": false,
+       "kind": "tweak",
+       "requires": [],
+       "confirm": {
+        "fr": "Edge sera supprimé de ce PC. Continuer ?",
+        "en": "Edge will be removed. Continue?"
+       },
+       "legacy": [
+        "d8@6853"
+       ],
+       "lines": 11
+      },
+      {
+       "id": "dbl_autologgers",
+       "name": {
+        "fr": "Désactiver les journaux automatiques",
+        "en": "Disable autologgers"
+       },
+       "desc": {
+        "fr": "Coupe une quarantaine de traces système qui écrivent en continu sur le disque.",
+        "en": "Disables ~40 system traces writing to disk."
+       },
+       "risk": "safe",
+       "reboot": true,
+       "kind": "tweak",
+       "requires": [],
+       "legacy": [
+        "d9@6446"
+       ],
+       "lines": 41
+      },
+      {
+       "id": "dbl_ceip",
+       "name": {
+        "fr": "Programme d'amélioration de l'expérience",
+        "en": "Customer Experience Program"
+       },
+       "desc": {
+        "fr": "Quitte le programme d'amélioration et désactive ses tâches.",
+        "en": "Leaves the CEIP and disables its tasks."
+       },
+       "risk": "safe",
+       "reboot": true,
+       "kind": "tweak",
+       "requires": [],
+       "legacy": [
+        "d10@7135"
+       ],
+       "lines": 23
+      },
+      {
+       "id": "dbl_biometrics",
+       "name": {
+        "fr": "Désactiver la biométrie",
+        "en": "Disable biometrics"
+       },
+       "desc": {
+        "fr": "Coupe Windows Hello (empreinte, visage).",
+        "en": "Disables Windows Hello."
+       },
+       "risk": "advanced",
+       "reboot": true,
+       "kind": "tweak",
+       "requires": [],
+       "legacy": [
+        "d12@6142"
+       ],
+       "lines": 3
+      },
+      {
+       "id": "dbl_onedrive",
+       "name": {
+        "fr": "Désinstaller OneDrive",
+        "en": "Uninstall OneDrive"
+       },
+       "desc": {
+        "fr": "Désinstalle OneDrive et supprime ses dossiers locaux. Vérifie d'abord que tes fichiers sont bien en ligne.",
+        "en": "Uninstalls OneDrive and deletes its local folders."
+       },
+       "risk": "advanced",
+       "reboot": false,
+       "kind": "tweak",
+       "requires": [],
+       "confirm": {
+        "fr": "OneDrive et ses dossiers locaux seront supprimés. Tes fichiers sont bien sauvegardés en ligne ?",
+        "en": "OneDrive and its local folders will be deleted. Are your files backed up?"
+       },
+       "legacy": [
+        "OneDrive@3028"
+       ],
+       "lines": 11
+      }
+     ]
+    },
+    {
+     "id": "apps",
+     "name": {
+      "fr": "Applications",
+      "en": "Apps"
+     },
+     "tweaks": [
+      {
+       "id": "app_remove",
+       "name": {
+        "fr": "Supprimer les applis préinstallées",
+        "en": "Remove preinstalled apps"
+       },
+       "desc": {
+        "fr": "Désinstalle une trentaine d'applis du Store (Météo, Astuces, 3D Viewer, Solitaire...).",
+        "en": "Uninstalls ~30 Store apps."
+       },
+       "risk": "safe",
+       "reboot": false,
+       "kind": "tweak",
+       "requires": [],
+       "legacy": [
+        "U1@4859"
+       ],
+       "lines": 101
+      },
+      {
+       "id": "app_settings",
+       "name": {
+        "fr": "Ouvrir Applications et fonctionnalités",
+        "en": "Open Apps & features"
+       },
+       "desc": {
+        "fr": "Ouvre les paramètres Windows pour désinstaller le reste à la main.",
+        "en": "Opens Settings to uninstall the rest manually."
+       },
+       "risk": "safe",
+       "reboot": false,
+       "kind": "action",
+       "requires": [],
+       "legacy": [
+        "U2@4846"
+       ],
+       "lines": 1
+      }
+     ]
+    },
+    {
+     "id": "clean",
+     "name": {
+      "fr": "Nettoyage",
+      "en": "Cleanup"
+     },
+     "tweaks": [
+      {
+       "id": "cln_temp",
+       "name": {
+        "fr": "Vider les fichiers temporaires",
+        "en": "Clear temp files"
+       },
+       "desc": {
+        "fr": "Supprime le contenu des dossiers Temp de Windows et de ton compte.",
+        "en": "Deletes the contents of Windows and user Temp folders."
+       },
+       "risk": "safe",
+       "reboot": false,
+       "kind": "action",
+       "requires": [],
+       "legacy": [
+        "Performance@13768:temp"
+       ],
+       "lines": 12
+      },
+      {
+       "id": "cln_devices",
+       "name": {
+        "fr": "Retirer les périphériques fantômes",
+        "en": "Remove ghost devices"
+       },
+       "desc": {
+        "fr": "Supprime les périphériques débranchés qui restent déclarés dans Windows.",
+        "en": "Removes disconnected devices still registered in Windows."
+       },
+       "risk": "safe",
+       "reboot": false,
+       "kind": "action",
+       "requires": [],
+       "legacy": [
+        "c1@12923"
+       ],
+       "lines": 4
+      },
+      {
+       "id": "cln_disk",
+       "name": {
+        "fr": "Nettoyage de disque Windows",
+        "en": "Windows Disk Cleanup"
+       },
+       "desc": {
+        "fr": "Ouvre l'outil de nettoyage de disque.",
+        "en": "Opens Disk Cleanup."
+       },
+       "risk": "safe",
+       "reboot": false,
+       "kind": "action",
+       "requires": [],
+       "legacy": [
+        "c2@12945"
+       ],
+       "lines": 1
+      },
+      {
+       "id": "cln_repair",
+       "name": {
+        "fr": "Réparer les fichiers système",
+        "en": "Repair system files"
+       },
+       "desc": {
+        "fr": "Lance DISM pour vérifier et réparer l'image Windows. Compte plusieurs minutes.",
+        "en": "Runs DISM to check and repair the Windows image. Takes several minutes."
+       },
+       "risk": "safe",
+       "reboot": false,
+       "kind": "action",
+       "requires": [],
+       "legacy": [
+        "f1@6053"
+       ],
+       "lines": 4
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "id": "hitreg",
+   "icon": "crosshair",
+   "name": {
+    "fr": "Hitreg",
+    "en": "Hitreg"
+   },
+   "tagline": {
+    "fr": "La suite avancée pour que tes coups passent.",
+    "en": "The advanced suite so your hits land."
+   },
+   "sections": [
+    {
+     "id": "suite",
+     "name": {
+      "fr": "Suite Hitreg",
+      "en": "Hitreg suite"
+     },
+     "tweaks": [
+      {
+       "id": "hitreg_suite",
+       "name": {
+        "fr": "Suite Hitreg avancée",
+        "en": "Advanced hitreg suite"
+       },
+       "desc": {
+        "fr": "Modération d'interruptions de la carte réseau, priorité Win32 adaptée à ton PC, et plus de 400 réglages de télémétrie, stockage et entrées. Sans les modules Réseau et Latence, l'effet est faible. Pas de retour arrière automatique : crée un point de restauration avant.",
+        "en": "NIC interrupt moderation, Win32 priority for your PC class, and 400+ telemetry, storage and input settings. No automatic undo: create a restore point first."
+       },
+       "risk": "advanced",
+       "reboot": true,
+       "kind": "tweak",
+       "variants": [
+        {
+         "id": "good",
+         "label": {
+          "fr": "PC puissant",
+          "en": "High-end PC"
+         }
+        },
+        {
+         "id": "medium",
+         "label": {
+          "fr": "PC moyen",
+          "en": "Mid-range PC"
+         }
+        },
+        {
+         "id": "low",
+         "label": {
+          "fr": "PC modeste",
+          "en": "Low-end PC"
+         }
+        },
+        {
+         "id": "laptop",
+         "label": {
+          "fr": "PC portable",
+          "en": "Laptop"
+         }
+        }
+       ],
+       "requires": [
+        "wmic"
+       ],
+       "defaultVariant": "medium",
+       "legacy": [
+        "ggpc1@13108",
+        "mdpc1@13113",
+        "lwpc1@13118",
+        "ltpc1@13123"
+       ],
+       "lines": 1984
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "id": "minecraft",
+   "icon": "cube",
+   "name": {
+    "fr": "Minecraft",
+    "en": "Minecraft"
+   },
+   "tagline": {
+    "fr": "OptiFine, priorité de javaw et trafic du jeu.",
+    "en": "OptiFine, javaw priority and game traffic."
+   },
+   "sections": [
+    {
+     "id": "client",
+     "name": {
+      "fr": "Jeu",
+      "en": "Game"
+     },
+     "tweaks": [
+      {
+       "id": "mc_optifine",
+       "name": {
+        "fr": "Préréglage OptiFine",
+        "en": "OptiFine preset"
+       },
+       "desc": {
+        "fr": "Réécrit optionsof.txt. Performance coupe animations, particules et ciel pour le maximum de FPS, Qualité garde les effets visuels. Une copie de ton fichier actuel est gardée.",
+        "en": "Rewrites optionsof.txt. Performance strips animations, particles and sky; Quality keeps visuals. Your current file is backed up."
+       },
+       "risk": "safe",
+       "reboot": false,
+       "kind": "tweak",
+       "variants": [
+        {
+         "id": "performance",
+         "label": {
+          "fr": "Performance",
+          "en": "Performance"
+         }
+        },
+        {
+         "id": "quality",
+         "label": {
+          "fr": "Qualité",
+          "en": "Quality"
+         }
+        }
+       ],
+       "requires": [],
+       "defaultVariant": "performance",
+       "native": "minecraft_optifine",
+       "optifine": {
+        "performance": {
+         "ofFogType": "3",
+         "ofFogStart": "0.6",
+         "ofMipmapType": "0",
+         "ofOcclusionFancy": "false",
+         "ofSmoothFps": "false",
+         "ofSmoothWorld": "false",
+         "ofAoLevel": "0.0",
+         "ofClouds": "3",
+         "ofCloudsHeight": "0.0",
+         "ofTrees": "1",
+         "ofDroppedItems": "1",
+         "ofRain": "3",
+         "ofAnimatedWater": "0",
+         "ofAnimatedLava": "0",
+         "ofAnimatedFire": "false",
+         "ofAnimatedPortal": "false",
+         "ofAnimatedRedstone": "false",
+         "ofAnimatedExplosion": "false",
+         "ofAnimatedFlame": "false",
+         "ofAnimatedSmoke": "false",
+         "ofVoidParticles": "false",
+         "ofWaterParticles": "false",
+         "ofPortalParticles": "false",
+         "ofPotionParticles": "false",
+         "ofFireworkParticles": "false",
+         "ofDrippingWaterLava": "false",
+         "ofAnimatedTerrain": "false",
+         "ofAnimatedTextures": "false",
+         "ofRainSplash": "false",
+         "ofLagometer": "false",
+         "ofShowFps": "true",
+         "ofAutoSaveTicks": "28800",
+         "ofBetterGrass": "3",
+         "ofConnectedTextures": "3",
+         "ofWeather": "false",
+         "ofSky": "false",
+         "ofStars": "false",
+         "ofSunMoon": "true",
+         "ofVignette": "1",
+         "ofChunkUpdates": "1",
+         "ofChunkUpdatesDynamic": "false",
+         "ofTime": "0",
+         "ofClearWater": "false",
+         "ofAaLevel": "0",
+         "ofAfLevel": "1",
+         "ofProfiler": "false",
+         "ofBetterSnow": "false",
+         "ofSwampColors": "false",
+         "ofRandomEntities": "false",
+         "ofSmoothBiomes": "false",
+         "ofCustomFonts": "false",
+         "ofCustomColors": "false",
+         "ofCustomItems": "false",
+         "ofCustomSky": "false",
+         "ofShowCapes": "true",
+         "ofNaturalTextures": "false",
+         "ofEmissiveTextures": "false",
+         "ofLazyChunkLoading": "true",
+         "ofRenderRegions": "true",
+         "ofSmartAnimations": "true",
+         "ofDynamicFov": "false",
+         "ofAlternateBlocks": "false",
+         "ofDynamicLights": "3",
+         "ofScreenshotSize": "1",
+         "ofCustomEntityModels": "false",
+         "ofCustomGuis": "false",
+         "ofShowGlErrors": "false",
+         "ofFullscreenMode": "Default",
+         "ofFastMath": "true",
+         "ofFastRender": "true",
+         "ofTranslucentBlocks": "1",
+         "key_of.key.zoom": "29"
+        },
+        "quality": {
+         "ofFogType": "3",
+         "ofFogStart": "0.6",
+         "ofMipmapType": "0",
+         "ofOcclusionFancy": "false",
+         "ofSmoothFps": "false",
+         "ofSmoothWorld": "false",
+         "ofAoLevel": "1.0",
+         "ofClouds": "3",
+         "ofCloudsHeight": "0.0",
+         "ofTrees": "1",
+         "ofDroppedItems": "1",
+         "ofRain": "3",
+         "ofAnimatedWater": "0",
+         "ofAnimatedLava": "0",
+         "ofAnimatedFire": "true",
+         "ofAnimatedPortal": "true",
+         "ofAnimatedRedstone": "true",
+         "ofAnimatedExplosion": "false",
+         "ofAnimatedFlame": "true",
+         "ofAnimatedSmoke": "false",
+         "ofVoidParticles": "true",
+         "ofWaterParticles": "true",
+         "ofPortalParticles": "true",
+         "ofPotionParticles": "true",
+         "ofFireworkParticles": "true",
+         "ofDrippingWaterLava": "true",
+         "ofAnimatedTerrain": "true",
+         "ofAnimatedTextures": "true",
+         "ofRainSplash": "true",
+         "ofLagometer": "false",
+         "ofShowFps": "false",
+         "ofAutoSaveTicks": "28800",
+         "ofBetterGrass": "3",
+         "ofConnectedTextures": "3",
+         "ofWeather": "false",
+         "ofSky": "true",
+         "ofStars": "false",
+         "ofSunMoon": "false",
+         "ofVignette": "1",
+         "ofChunkUpdates": "1",
+         "ofChunkUpdatesDynamic": "false",
+         "ofTime": "0",
+         "ofClearWater": "false",
+         "ofAaLevel": "0",
+         "ofAfLevel": "1",
+         "ofProfiler": "false",
+         "ofBetterSnow": "false",
+         "ofSwampColors": "false",
+         "ofRandomEntities": "false",
+         "ofSmoothBiomes": "false",
+         "ofCustomFonts": "false",
+         "ofCustomColors": "false",
+         "ofCustomItems": "false",
+         "ofCustomSky": "true",
+         "ofShowCapes": "false",
+         "ofNaturalTextures": "false",
+         "ofEmissiveTextures": "false",
+         "ofLazyChunkLoading": "false",
+         "ofRenderRegions": "false",
+         "ofSmartAnimations": "false",
+         "ofDynamicFov": "false",
+         "ofAlternateBlocks": "false",
+         "ofDynamicLights": "3",
+         "ofScreenshotSize": "1",
+         "ofCustomEntityModels": "false",
+         "ofCustomGuis": "false",
+         "ofShowGlErrors": "false",
+         "ofFullscreenMode": "Default",
+         "ofFastMath": "false",
+         "ofFastRender": "false",
+         "ofTranslucentBlocks": "1",
+         "key_of.key.zoom": "29"
+        }
+       },
+       "legacy": [
+        "Performance@13768",
+        "Quality@13875"
+       ],
+       "lines": 166
+      },
+      {
+       "ref": "pri_game"
+      },
+      {
+       "ref": "net_profile"
+      },
+      {
+       "ref": "cln_temp"
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "id": "rbw",
+   "icon": "shield",
+   "name": {
+    "fr": "RBW Mod",
+    "en": "RBW Mod"
+   },
+   "tagline": {
+    "fr": "Prêt pour un screenshare Ranked BedWars.",
+    "en": "Ready for a Ranked BedWars screenshare."
+   },
+   "sections": [
+    {
+     "id": "rbw",
+     "name": {
+      "fr": "Services",
+      "en": "Services"
+     },
+     "tweaks": [
+      {
+       "id": "rbw_mode",
+       "name": {
+        "fr": "RBW Mod",
+        "en": "RBW Mod"
+       },
+       "desc": {
+        "fr": "Activé remet en route et en automatique les services que les outils de screenshare vérifient (journal d'événements, SysMain, PCA, Planificateur). Désactivé les repasse en manuel et arrête SysMain après ta session.",
+        "en": "On restarts and sets to automatic the services screenshare tools check (Event Log, SysMain, PCA, Scheduler). Off sets them back to manual after your session."
+       },
+       "risk": "safe",
+       "reboot": false,
+       "kind": "tweak",
+       "variants": [
+        {
+         "id": "on",
+         "label": {
+          "fr": "Activé",
+          "en": "On"
+         }
+        },
+        {
+         "id": "off",
+         "label": {
+          "fr": "Désactivé",
+          "en": "Off"
+         }
+        }
+       ],
+       "requires": [],
+       "defaultVariant": "on",
+       "legacy": [
+        "On@14039",
+        "off@14077"
+       ],
+       "lines": 27
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "id": "gamemode",
+   "icon": "bolt",
+   "name": {
+    "fr": "Mode jeu",
+    "en": "Game mode"
+   },
+   "tagline": {
+    "fr": "Active avant de jouer, désactive après.",
+    "en": "Turn on before playing, off after."
+   },
+   "sections": [
+    {
+     "id": "gamemode",
+     "name": {
+      "fr": "Mode jeu Rago",
+      "en": "Rago game mode"
+     },
+     "tweaks": [
+      {
+       "id": "game_mode",
+       "name": {
+        "fr": "Mode jeu Rago",
+        "en": "Rago game mode"
+       },
+       "desc": {
+        "fr": "Activé vide les fichiers temporaires et le Prefetch, arrête l'impression, coupe les animations de Windows et relance l'explorateur. Désactivé remet les animations et l'impression.",
+        "en": "On clears temp and Prefetch, stops printing, disables Windows animations and restarts Explorer. Off restores animations and printing."
+       },
+       "risk": "safe",
+       "reboot": false,
+       "kind": "tweak",
+       "variants": [
+        {
+         "id": "on",
+         "label": {
+          "fr": "Activé",
+          "en": "On"
+         }
+        },
+        {
+         "id": "off",
+         "label": {
+          "fr": "Désactivé",
+          "en": "Off"
+         }
+        }
+       ],
+       "requires": [],
+       "defaultVariant": "on",
+       "legacy": [
+        "ENABLE8@14250",
+        "DISABLE8@14304"
+       ],
+       "lines": 49
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "id": "expert",
+   "icon": "flask",
+   "name": {
+    "fr": "Mode expert",
+    "en": "Expert mode"
+   },
+   "tagline": {
+    "fr": "Le God Mode du .bat. Puissant, et à manier en connaissance de cause.",
+    "en": "The .bat's God Mode. Powerful, use knowingly."
+   },
+   "sections": [
+    {
+     "id": "kernel",
+     "name": {
+      "fr": "Noyau et timers",
+      "en": "Kernel and timers"
+     },
+     "tweaks": [
+      {
+       "id": "exp_io",
+       "name": {
+        "fr": "Priorité des entrées-sorties",
+        "en": "I/O priority"
+       },
+       "desc": {
+        "fr": "Ajuste la priorité processeur et disque de plusieurs processus système.",
+        "en": "Tunes CPU and disk priority of system processes."
+       },
+       "risk": "safe",
+       "reboot": true,
+       "kind": "tweak",
+       "requires": [],
+       "legacy": [
+        "io@3202"
+       ],
+       "lines": 32
+      },
+      {
+       "id": "exp_iolatency",
+       "name": {
+        "fr": "Retirer le plafond de latence disque",
+        "en": "Remove disk latency cap"
+       },
+       "desc": {
+        "fr": "Supprime la limite de latence des pilotes de stockage.",
+        "en": "Removes storage driver latency caps."
+       },
+       "risk": "safe",
+       "reboot": true,
+       "kind": "tweak",
+       "requires": [],
+       "legacy": [
+        "latency@3281"
+       ],
+       "lines": 9
+      },
+      {
+       "id": "exp_kernel",
+       "name": {
+        "fr": "Réglages du noyau",
+        "en": "Kernel settings"
+       },
+       "desc": {
+        "fr": "Watchdog DPC, routage des interruptions et tolérance de latence de l'écran.",
+        "en": "DPC watchdog, interrupt steering and monitor latency tolerance."
+       },
+       "risk": "advanced",
+       "reboot": true,
+       "kind": "tweak",
+       "requires": [],
+       "legacy": [
+        "kernel@3250"
+       ],
+       "lines": 12
+      },
+      {
+       "id": "exp_misc",
+       "name": {
+        "fr": "Réglages complémentaires",
+        "en": "Additional settings"
+       },
+       "desc": {
+        "fr": "Timers répartis, latence NVMe, compteurs de performance reconstruits.",
+        "en": "Distributed timers, NVMe latency, performance counters rebuilt."
+       },
+       "risk": "safe",
+       "reboot": true,
+       "kind": "tweak",
+       "requires": [],
+       "legacy": [
+        "random@3305"
+       ],
+       "lines": 14
+      },
+      {
+       "id": "exp_nolazy",
+       "name": {
+        "fr": "Désactiver le mode paresseux MMCSS",
+        "en": "Disable MMCSS lazy mode"
+       },
+       "desc": {
+        "fr": "Le planificateur multimédia reste toujours actif.",
+        "en": "The multimedia scheduler stays always on."
+       },
+       "risk": "safe",
+       "reboot": true,
+       "kind": "tweak",
+       "requires": [],
+       "legacy": [
+        "nolazy@2924"
+       ],
+       "lines": 2
+      },
+      {
+       "id": "exp_lattol",
+       "name": {
+        "fr": "Tolérance de latence du GPU",
+        "en": "GPU latency tolerance"
+       },
+       "desc": {
+        "fr": "Mêmes réglages que dans Carte graphique, appliqués au premier GPU.",
+        "en": "Same as in Graphics card, applied to the first GPU."
+       },
+       "risk": "safe",
+       "reboot": true,
+       "kind": "tweak",
+       "requires": [],
+       "legacy": [
+        "latencytolernace@2783"
+       ],
+       "lines": 19
+      },
+      {
+       "id": "exp_monitorlat",
+       "name": {
+        "fr": "Tolérance de latence de l'écran",
+        "en": "Monitor latency tolerance"
+       },
+       "desc": {
+        "fr": "Le noyau graphique ne tolère plus de délai côté écran.",
+        "en": "The graphics kernel tolerates no monitor delay."
+       },
+       "risk": "safe",
+       "reboot": true,
+       "kind": "tweak",
+       "requires": [],
+       "legacy": [
+        "god24@2360"
+       ],
+       "lines": 2
+      },
+      {
+       "id": "exp_hz",
+       "name": {
+        "fr": "Forcer la fréquence de l'écran",
+        "en": "Force monitor refresh rate"
+       },
+       "desc": {
+        "fr": "Force DirectDraw à ta fréquence d'écran. Choisis exactement celle de ton moniteur.",
+        "en": "Forces DirectDraw to your monitor's refresh rate."
+       },
+       "risk": "safe",
+       "reboot": true,
+       "kind": "tweak",
+       "variants": [
+        {
+         "id": "60",
+         "label": {
+          "fr": "60 Hz",
+          "en": "60 Hz"
+         }
+        },
+        {
+         "id": "75",
+         "label": {
+          "fr": "75 Hz",
+          "en": "75 Hz"
+         }
+        },
+        {
+         "id": "120",
+         "label": {
+          "fr": "120 Hz",
+          "en": "120 Hz"
+         }
+        },
+        {
+         "id": "144",
+         "label": {
+          "fr": "144 Hz",
+          "en": "144 Hz"
+         }
+        },
+        {
+         "id": "160",
+         "label": {
+          "fr": "160 Hz",
+          "en": "160 Hz"
+         }
+        },
+        {
+         "id": "165",
+         "label": {
+          "fr": "165 Hz",
+          "en": "165 Hz"
+         }
+        },
+        {
+         "id": "240",
+         "label": {
+          "fr": "240 Hz",
+          "en": "240 Hz"
+         }
+        },
+        {
+         "id": "280",
+         "label": {
+          "fr": "280 Hz",
+          "en": "280 Hz"
+         }
+        },
+        {
+         "id": "360",
+         "label": {
+          "fr": "360 Hz",
+          "en": "360 Hz"
+         }
+        }
+       ],
+       "requires": [],
+       "defaultVariant": "144",
+       "legacy": [
+        "60h@2432",
+        "75h@2448",
+        "120h@2464",
+        "144h@2480",
+        "160h@2496",
+        "165h@2512",
+        "240h@2528",
+        "280h@2544",
+        "360h@2560"
+       ],
+       "lines": 18
+      },
+      {
+       "id": "exp_multimedia",
+       "name": {
+        "fr": "Réglages multimédia Microsoft",
+        "en": "Microsoft multimedia settings"
+       },
+       "desc": {
+        "fr": "Profil « Jeux » du planificateur multimédia : fluidité prioritaire.",
+        "en": "MMCSS Games profile: fluidity first."
+       },
+       "risk": "safe",
+       "reboot": true,
+       "kind": "tweak",
+       "requires": [],
+       "legacy": [
+        "Multi@2615"
+       ],
+       "lines": 5
+      },
+      {
+       "id": "exp_policy",
+       "name": {
+        "fr": "Politique de ressources",
+        "en": "Resource policy"
+       },
+       "desc": {
+        "fr": "Retire les plafonds processeur des applis en arrière-plan.",
+        "en": "Removes background CPU caps."
+       },
+       "risk": "safe",
+       "reboot": true,
+       "kind": "tweak",
+       "requires": [],
+       "legacy": [
+        "RPolicy@3056"
+       ],
+       "lines": 43
+      },
+      {
+       "id": "exp_ntfs",
+       "name": {
+        "fr": "Réglages NTFS",
+        "en": "NTFS settings"
+       },
+       "desc": {
+        "fr": "Cache NTFS agrandi et horodatage d'accès coupé.",
+        "en": "Larger NTFS cache, access timestamps off."
+       },
+       "risk": "safe",
+       "reboot": true,
+       "kind": "tweak",
+       "requires": [],
+       "legacy": [
+        "NFTS@2852"
+       ],
+       "lines": 5
+      },
+      {
+       "id": "exp_startup",
+       "name": {
+        "fr": "Accélérer le démarrage",
+        "en": "Faster startup"
+       },
+       "desc": {
+        "fr": "Supprime le délai de lancement des applis au démarrage.",
+        "en": "Removes the startup app delay."
+       },
+       "risk": "safe",
+       "reboot": true,
+       "kind": "tweak",
+       "requires": [],
+       "legacy": [
+        "god22@2578"
+       ],
+       "lines": 2
+      }
+     ]
+    },
+    {
+     "id": "system",
+     "name": {
+      "fr": "Système",
+      "en": "System"
+     },
+     "tweaks": [
+      {
+       "ref": "dbl_onedrive"
+      },
+      {
+       "id": "exp_insider",
+       "name": {
+        "fr": "Désactiver Windows Insider",
+        "en": "Disable Windows Insider"
+       },
+       "desc": {
+        "fr": "Coupe les expérimentations Insider.",
+        "en": "Disables Insider experiments."
+       },
+       "risk": "safe",
+       "reboot": true,
+       "kind": "tweak",
+       "requires": [],
+       "legacy": [
+        "insd@3011"
+       ],
+       "lines": 2
+      },
+      {
+       "id": "exp_autologgers",
+       "name": {
+        "fr": "Désactiver les journaux automatiques",
+        "en": "Disable autologgers"
+       },
+       "desc": {
+        "fr": "Même réglage que dans Débloat, avec quelques clés en plus.",
+        "en": "Same as in Debloat, plus a few keys."
+       },
+       "risk": "safe",
+       "reboot": true,
+       "kind": "tweak",
+       "requires": [],
+       "legacy": [
+        "Autolog@2957"
+       ],
+       "lines": 40
+      },
+      {
+       "id": "exp_maintenance",
+       "name": {
+        "fr": "Désactiver la maintenance",
+        "en": "Disable maintenance"
+       },
+       "desc": {
+        "fr": "Plus de maintenance automatique.",
+        "en": "No automatic maintenance."
+       },
+       "risk": "safe",
+       "reboot": true,
+       "kind": "tweak",
+       "requires": [],
+       "legacy": [
+        "10ski@2940"
+       ],
+       "lines": 1
+      },
+      {
+       "id": "exp_search",
+       "name": {
+        "fr": "Optimiser la recherche",
+        "en": "Optimise search"
+       },
+       "desc": {
+        "fr": "La recherche ne passe plus par Bing ni Cortana.",
+        "en": "Search stops using Bing or Cortana."
+       },
+       "risk": "safe",
+       "reboot": true,
+       "kind": "tweak",
+       "requires": [],
+       "legacy": [
+        "searchopt@2816"
+       ],
+       "lines": 22
+      },
+      {
+       "id": "exp_gamedvr",
+       "name": {
+        "fr": "Désactiver Game DVR et Xbox",
+        "en": "Disable Game DVR and Xbox"
+       },
+       "desc": {
+        "fr": "Game DVR et services Xbox coupés. Les jeux du Game Pass ne fonctionneront plus.",
+        "en": "Game DVR and Xbox services off. Game Pass games will stop working."
+       },
+       "risk": "safe",
+       "reboot": true,
+       "kind": "tweak",
+       "requires": [],
+       "legacy": [
+        "GameDVR@2756"
+       ],
+       "lines": 13
+      },
+      {
+       "id": "exp_hyperv",
+       "name": {
+        "fr": "Désactiver Hyper-V",
+        "en": "Disable Hyper-V"
+       },
+       "desc": {
+        "fr": "Désinstalle la fonctionnalité Hyper-V. WSL2, Docker et les machines virtuelles ne marcheront plus.",
+        "en": "Removes the Hyper-V feature. WSL2, Docker and VMs will stop working."
+       },
+       "risk": "advanced",
+       "reboot": true,
+       "kind": "tweak",
+       "requires": [],
+       "legacy": [
+        "god12@2909"
+       ],
+       "lines": 1
+      }
+     ]
+    },
+    {
+     "id": "security",
+     "name": {
+      "fr": "Sécurité et démarrage",
+      "en": "Security and boot"
+     },
+     "tweaks": [
+      {
+       "id": "exp_mitigations",
+       "name": {
+        "fr": "Atténuations Spectre, Meltdown et compagnie",
+        "en": "Spectre, Meltdown and other mitigations"
+       },
+       "desc": {
+        "fr": "Désactivé retire les protections du processeur et de la mémoire (Spectre, Meltdown, CFG, SEHOP, VBS). Gain de performance réel sur les vieux processeurs, mais ton PC devient plus vulnérable. Activé les remet.",
+        "en": "Off removes CPU and memory protections (Spectre, Meltdown, CFG, SEHOP, VBS). Real gain on older CPUs, but your PC is more exposed. On restores them."
+       },
+       "risk": "advanced",
+       "reboot": true,
+       "kind": "tweak",
+       "variants": [
+        {
+         "id": "off",
+         "label": {
+          "fr": "Désactivées",
+          "en": "Off"
+         }
+        },
+        {
+         "id": "full",
+         "label": {
+          "fr": "Désactivées + process",
+          "en": "Off + process"
+         }
+        },
+        {
+         "id": "on",
+         "label": {
+          "fr": "Activées",
+          "en": "On"
+         }
+        }
+       ],
+       "requires": [],
+       "defaultVariant": "off",
+       "legacy": [
+        "mitioff@6199",
+        "mitigation@3116",
+        "mition@6234"
+       ],
+       "lines": 87
+      },
+      {
+       "id": "exp_bios",
+       "name": {
+        "fr": "Réglages de démarrage (BCD)",
+        "en": "Boot settings (BCD)"
+       },
+       "desc": {
+        "fr": "Modifie le gestionnaire de démarrage : horloge TSC, Hyper-V et VBS coupés, x2APIC. Si Windows ne démarre plus, il faudra passer par la restauration.",
+        "en": "Changes the boot manager: TSC clock, Hyper-V and VBS off, x2APIC."
+       },
+       "risk": "advanced",
+       "reboot": true,
+       "kind": "tweak",
+       "requires": [],
+       "legacy": [
+        "bios5@4636"
+       ],
+       "lines": 31
+      },
+      {
+       "id": "exp_pcie",
+       "name": {
+        "fr": "Mappage mémoire PCI-E",
+        "en": "PCI-E memory mapping"
+       },
+       "desc": {
+        "fr": "Change la façon dont le démarrage configure les périphériques PCI-E.",
+        "en": "Changes how boot configures PCI-E devices."
+       },
+       "risk": "advanced",
+       "reboot": true,
+       "kind": "tweak",
+       "requires": [],
+       "legacy": [
+        "firm@2660"
+       ],
+       "lines": 5
+      },
+      {
+       "id": "exp_dma",
+       "name": {
+        "fr": "Désactiver le remappage DMA",
+        "en": "Disable DMA remapping"
+       },
+       "desc": {
+        "fr": "Retire une protection contre les attaques par périphérique (Thunderbolt, PCIe).",
+        "en": "Removes a protection against device attacks."
+       },
+       "risk": "advanced",
+       "reboot": true,
+       "kind": "tweak",
+       "requires": [],
+       "legacy": [
+        "god21@2596"
+       ],
+       "lines": 4
+      },
+      {
+       "id": "exp_harden",
+       "name": {
+        "fr": "Renforcer la sécurité",
+        "en": "Harden security"
+       },
+       "desc": {
+        "fr": "Bloque les accès anonymes et protège lsass. Coupe aussi NetBIOS et le client de partage : tu ne pourras plus ouvrir les dossiers partagés du réseau.",
+        "en": "Blocks anonymous access and protects lsass. Also disables NetBIOS and the file sharing client."
+       },
+       "risk": "advanced",
+       "reboot": true,
+       "kind": "tweak",
+       "requires": [],
+       "legacy": [
+        "reinforce@2680"
+       ],
+       "lines": 22
+      },
+      {
+       "id": "exp_smb",
+       "name": {
+        "fr": "Renforcer SMB",
+        "en": "Harden SMB"
+       },
+       "desc": {
+        "fr": "Désactive SMB1 et exige la signature et le chiffrement SMB. Peut prendre plusieurs minutes.",
+        "en": "Disables SMB1 and requires SMB signing and encryption."
+       },
+       "risk": "safe",
+       "reboot": true,
+       "kind": "tweak",
+       "requires": [],
+       "legacy": [
+        "SMB@2635"
+       ],
+       "lines": 8
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "id": "restore",
+   "icon": "undo",
+   "name": {
+    "fr": "Restaurer",
+    "en": "Restore"
+   },
+   "tagline": {
+    "fr": "Toujours une porte de sortie.",
+    "en": "Always a way back."
+   },
+   "sections": [
+    {
+     "id": "restore",
+     "name": {
+      "fr": "Retour arrière",
+      "en": "Undo"
+     },
+     "tweaks": [
+      {
+       "id": "rst_point",
+       "name": {
+        "fr": "Créer un point de restauration",
+        "en": "Create a restore point"
+       },
+       "desc": {
+        "fr": "Photographie l'état de Windows pour pouvoir revenir en arrière.",
+        "en": "Snapshots Windows so you can roll back."
+       },
+       "risk": "safe",
+       "reboot": false,
+       "kind": "action",
+       "requires": [],
+       "native": "restore_point",
+       "legacy": [
+        "RP@205"
+       ],
+       "lines": 2
+      },
+      {
+       "id": "rst_open",
+       "name": {
+        "fr": "Ouvrir la restauration du système",
+        "en": "Open System Restore"
+       },
+       "desc": {
+        "fr": "Ouvre l'outil Windows pour revenir à un point de restauration.",
+        "en": "Opens the Windows tool to roll back."
+       },
+       "risk": "safe",
+       "reboot": false,
+       "kind": "action",
+       "requires": [],
+       "legacy": [
+        "restore@230"
+       ],
+       "lines": 1
+      },
+      {
+       "id": "rst_network",
+       "name": {
+        "fr": "Réinitialiser le réseau",
+        "en": "Reset network"
+       },
+       "desc": {
+        "fr": "Remet la pile réseau de Windows (TCP/IP, Winsock) à zéro et renouvelle ton adresse IP.",
+        "en": "Resets the Windows network stack and renews your IP."
+       },
+       "risk": "advanced",
+       "reboot": true,
+       "kind": "action",
+       "requires": [],
+       "legacy": [
+        "RevzertNt@14395"
+       ],
+       "lines": 9
+      },
+      {
+       "id": "rst_queue",
+       "name": {
+        "fr": "File souris et clavier par défaut",
+        "en": "Default input queue"
+       },
+       "desc": {
+        "fr": "Remet la file d'attente des pilotes souris et clavier à 100.",
+        "en": "Restores the input driver queue to 100."
+       },
+       "risk": "safe",
+       "reboot": true,
+       "kind": "action",
+       "requires": [],
+       "legacy": [
+        "Mdrevert@12817"
+       ],
+       "lines": 2
+      },
+      {
+       "ref": "exp_mitigations"
+      },
+      {
+       "ref": "game_mode"
+      }
+     ]
+    }
+   ]
+  }
+ ],
+ "presets": [
+  {
+   "id": "mc_pvp",
+   "name": {
+    "fr": "Minecraft PvP",
+    "en": "Minecraft PvP"
+   },
+   "desc": {
+    "fr": "Réseau QoS, priorité de javaw, souris brute et latence générale.",
+    "en": "QoS network, javaw priority, raw mouse and general latency."
+   },
+   "tweaks": [
+    "lat_general",
+    "pri_game:minecraft",
+    "pri_mmcss",
+    "net_profile:qos",
+    "net_nagle",
+    "net_throttle",
+    "kbm_accel",
+    "kbm_1to1",
+    "kbm_filter",
+    "kbm_repeat",
+    "win_gamemode:on",
+    "dbl_gamedvr",
+    "pow_throttling",
+    "pow_extra",
+    "mc_optifine:performance"
+   ]
+  },
+  {
+   "id": "esport",
+   "name": {
+    "fr": "Compétitif",
+    "en": "Competitive"
+   },
+   "desc": {
+    "fr": "Le socle pour tous les jeux compétitifs.",
+    "en": "The baseline for every competitive game."
+   },
+   "tweaks": [
+    "lat_general",
+    "pri_mmcss",
+    "pri_w32",
+    "pri_sysresp",
+    "net_nagle",
+    "net_throttle",
+    "net_powersave",
+    "kbm_accel",
+    "kbm_1to1",
+    "kbm_filter",
+    "win_gamemode:on",
+    "dbl_gamedvr",
+    "win_fse",
+    "pow_throttling",
+    "pow_timer",
+    "cpu_parking"
+   ]
+  },
+  {
+   "id": "laptop",
+   "name": {
+    "fr": "PC portable",
+    "en": "Laptop"
+   },
+   "desc": {
+    "fr": "Gains sans toucher à la batterie ni à la chauffe.",
+    "en": "Gains without hurting battery or heat."
+   },
+   "tweaks": [
+    "pri_mmcss",
+    "net_nagle",
+    "net_throttle",
+    "kbm_accel",
+    "kbm_1to1",
+    "kbm_filter",
+    "win_gamemode:on",
+    "dbl_gamedvr",
+    "win_background",
+    "win_notifications"
+   ]
+  },
+  {
+   "id": "privacy",
+   "name": {
+    "fr": "Vie privée",
+    "en": "Privacy"
+   },
+   "desc": {
+    "fr": "Télémétrie, suivi et diagnostics coupés.",
+    "en": "Telemetry, tracking and diagnostics off."
+   },
+   "tweaks": [
+    "dbl_telemetry",
+    "win_tracking",
+    "win_diag",
+    "dbl_ceip",
+    "dbl_office",
+    "win_experiments",
+    "win_errors",
+    "win_feed",
+    "win_popups"
+   ]
+  }
+ ]
+}

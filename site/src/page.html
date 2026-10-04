@@ -1,0 +1,757 @@
+<title>Rago Optimizer</title>
+<meta name="description" content="Every millisecond counts. Rago tunes Windows, your network and Minecraft for lower ping, steadier FPS and cleaner hitreg. 189 tweaks, undoable in one click.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600;700&family=Geist+Mono:wght@400;500&display=swap">
+<style>
+/* Layout: full-bleed bands on ink with fluid gutters; content grids stretch to the screen. One chamfered element per screen, one red pixel as the signature. */
+:root{
+  /* Rago brand guide v1.0 (/mnt/project-files/brand/tokens/tokens.css) */
+  --ink-0:#070708; --ink:#0A0A0B; --ink-2:#111113; --ink-3:#17171A; --ink-4:#1F1F23; --ink-5:#2A2A30;
+  --t1:#F5F5F6; --t2:#A1A1AA; --t3:#7C7C86;
+  --l1:rgba(255,255,255,.06); --l2:rgba(255,255,255,.10); --l3:rgba(255,255,255,.16);
+  --red:#FF3347; --red-hover:#FF5A6B; --red-press:#E01F34; --red-a12:rgba(255,51,71,.12); --red-a24:rgba(255,51,71,.24);
+  --heat:linear-gradient(100deg,#FF3347 0%,#FF5A2E 55%,#FF8A1F 100%);
+  --ok:#3DDC97; --warn:#FFB020;
+  --sans:"Geist","Segoe UI Variable","Segoe UI",system-ui,-apple-system,sans-serif;
+  --mono:"Geist Mono","Cascadia Mono",ui-monospace,Consolas,monospace;
+  --out:cubic-bezier(.16,1,.3,1); --spring:cubic-bezier(.34,1.56,.64,1);
+  --g:clamp(16px,4.5vw,88px);   /* fluid gutter: content follows screen width */
+  color-scheme:dark;
+}
+*{box-sizing:border-box}
+html{scroll-behavior:smooth}
+body{margin:0;background:var(--ink);color:var(--t1);font:400 16px/1.6 var(--sans);-webkit-font-smoothing:antialiased;overflow-x:hidden}
+a{color:inherit}
+h1,h2,h3,p{margin:0}
+h1,h2,h3{font-weight:600;letter-spacing:-.035em;line-height:1.02;text-wrap:balance}
+.band{padding-inline:var(--g)}
+.ov{font:500 12px/1 var(--mono);letter-spacing:.14em;text-transform:uppercase;color:var(--t3);display:inline-flex;align-items:center;gap:10px}
+.ov::before{content:"";width:7px;height:7px;background:var(--red);flex:none}
+.mono{font-family:var(--mono);font-variant-numeric:tabular-nums}
+:focus-visible{outline:2px solid var(--red);outline-offset:3px;border-radius:4px}
+
+/* Buttons */
+.btn{--h:52px;position:relative;display:inline-flex;align-items:center;justify-content:center;gap:10px;height:var(--h);padding-inline:26px;border-radius:6px;font:600 15px/1 var(--sans);text-decoration:none;border:0;cursor:pointer;white-space:nowrap;transition:transform .09s var(--out),background .16s var(--out),box-shadow .16s var(--out);will-change:transform}
+.btn svg{width:18px;height:18px;flex:none}
+.btn-red{background:var(--red);color:var(--ink);box-shadow:0 0 0 0 var(--red-a24)}
+.btn-red:hover{background:var(--red-hover);box-shadow:0 0 0 6px var(--red-a12),0 12px 40px -8px rgba(255,51,71,.55)}
+.btn-red:active{background:var(--red-press)}
+.btn-ghost{background:rgba(255,255,255,.02);color:var(--t1);box-shadow:inset 0 0 0 1px var(--l2)}
+.btn-ghost:hover{box-shadow:inset 0 0 0 1px var(--l3);background:rgba(255,255,255,.05)}
+.btn-sm{--h:38px;padding-inline:16px;font-size:14px}
+
+/* Header */
+.top{position:sticky;top:env(safe-area-inset-top,0px);z-index:50;transition:background .24s var(--out),border-color .24s var(--out);border-bottom:1px solid transparent}
+.top.scrolled{background:rgba(10,10,11,.78);backdrop-filter:blur(14px) saturate(140%);-webkit-backdrop-filter:blur(14px) saturate(140%);border-bottom-color:var(--l1)}
+.top .band{display:flex;align-items:center;gap:24px;height:68px}
+.logo{display:flex;align-items:center;gap:10px;text-decoration:none;color:var(--t1)}
+.logo svg{height:18px;width:auto}
+.nav{display:flex;gap:4px;margin-left:auto;font-size:14px}
+.nav a{text-decoration:none;color:var(--t2);padding:8px 12px;border-radius:6px;transition:color .16s,background .16s}
+.nav a:hover{color:var(--t1);background:var(--l1)}
+.top-cta{display:flex;gap:8px;align-items:center}
+
+/* Hero */
+.hero{position:relative;padding-block:clamp(48px,7vw,104px) clamp(56px,7vw,96px);overflow:hidden;isolation:isolate}
+#field{position:absolute;inset:0;width:100%;height:100%;z-index:-1;opacity:.9;mask-image:radial-gradient(ellipse 80% 70% at 70% 40%,#000 30%,transparent 80%);-webkit-mask-image:radial-gradient(ellipse 80% 70% at 70% 40%,#000 30%,transparent 80%)}
+.hero::after{content:"";position:absolute;z-index:-1;width:60vw;height:60vw;max-width:1000px;max-height:1000px;right:-12vw;top:-22vw;background:radial-gradient(closest-side,rgba(255,51,71,.20),rgba(255,90,46,.06) 55%,transparent);pointer-events:none}
+.hero .band{display:grid;grid-template-columns:minmax(0,.95fr) minmax(0,1.15fr);gap:clamp(32px,5vw,96px);align-items:center}
+.hero h1{font-size:clamp(44px,6.4vw,112px);margin-block:22px 26px;letter-spacing:-.045em}
+.hero h1 .ln{display:block;overflow:hidden;padding-bottom:.06em}
+.hero h1 .ln > span{display:inline-block;animation:rise .9s var(--out) both}
+.hero h1 .ln:nth-child(2) > span{animation-delay:.08s}
+.hero h1 .ln:nth-child(3) > span{animation-delay:.16s}
+.heat-text{background:var(--heat);-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;color:var(--red)}
+@keyframes rise{from{transform:translateY(105%)}to{transform:none}}
+.fade{animation:fadeUp .8s var(--out) both}
+.d1{animation-delay:.25s}.d2{animation-delay:.35s}.d3{animation-delay:.45s}.d4{animation-delay:.3s}
+@keyframes fadeUp{from{transform:translateY(16px);opacity:.001}to{transform:none;opacity:1}}
+.lede{font-size:clamp(17px,1.35vw,21px);color:var(--t2);max-width:34em}
+.cta-row{display:flex;flex-wrap:wrap;gap:12px;margin-top:36px}
+.assure{display:flex;flex-wrap:wrap;gap:10px 22px;margin-top:24px;font-size:13.5px;color:var(--t3)}
+.assure span{display:inline-flex;align-items:center;gap:8px}
+.assure svg{width:14px;height:14px;color:var(--ok)}
+
+/* App preview: mirrors the real Rago Hub UI (/mnt/project-files/app/rago-hub) */
+.hub{position:relative;border-radius:14px;border:1px solid var(--l2);background:var(--ink-0);box-shadow:0 1px 0 rgba(255,255,255,.06) inset,0 60px 120px -40px rgba(0,0,0,.9),0 0 0 1px rgba(0,0,0,.6);overflow:hidden;transform:perspective(1800px) rotateY(-7deg) rotateX(3deg);transform-origin:left center;transition:transform .6s var(--out);min-width:0}
+.hub:hover{transform:perspective(1800px) rotateY(-2deg) rotateX(1deg)}
+.tb{display:grid;grid-template-columns:190px minmax(0,1fr) auto;align-items:center;height:40px;font-size:13px}
+.tb-brand{display:flex;align-items:center;gap:9px;padding-left:16px;font-weight:560;letter-spacing:-.01em;white-space:nowrap}
+.tb-brand svg{width:16px;height:16px}
+.tb-search{justify-self:center;display:flex;align-items:center;gap:8px;width:min(340px,100%);height:28px;padding:0 6px 0 10px;border-radius:6px;background:var(--ink-2);border:1px solid var(--l1);color:var(--t3);font-size:12.5px}
+.tb-search svg{width:13px;height:13px;fill:none;stroke:currentColor;stroke-width:1.8}
+.tb-search span:not(.kbd){flex:1}
+.kbd{font:400 10.5px/1.5 var(--mono);color:var(--t3);background:var(--ink-4);border:1px solid var(--l1);border-radius:4px;padding:0 5px}
+.tb-ctl{display:flex;height:100%}
+.tb-ctl i{width:42px;display:grid;place-items:center;color:var(--t3)}
+.tb-ctl i svg{width:10px;height:10px;fill:none;stroke:currentColor;stroke-width:1.2}
+.hb{position:relative;display:grid;grid-template-columns:190px minmax(0,1fr);height:500px}
+.side{display:flex;flex-direction:column;gap:1px;padding:4px 10px 12px;overflow:hidden}
+.ngl{padding:12px 10px 6px;font:500 10px/1 var(--mono);letter-spacing:.12em;text-transform:uppercase;color:var(--t3)}
+.nv{display:flex;align-items:center;gap:10px;height:32px;padding:0 10px;border-radius:6px;font-size:13px;color:var(--t2);user-select:none}
+.nv svg{width:16px;height:16px;fill:none;stroke:currentColor;stroke-width:1.75;flex:none}
+.nv.on{background:var(--ink-3);color:var(--t1)}
+.nv.on svg{color:var(--red)}
+.nv .cnt{margin-left:auto;font:500 11px/1 var(--mono);color:var(--ink);background:var(--red);border-radius:4px;padding:3px 5px;transform:scale(0);transition:transform .22s var(--spring)}
+.nv .cnt.show{transform:none}
+.side .sp{flex:1}
+.side .ft{display:flex;align-items:center;gap:6px;white-space:nowrap;padding:10px 10px 0;font-size:11.5px;color:var(--t3);border-top:1px solid var(--l1);margin-top:6px}
+.dot{width:7px;height:7px;border-radius:50%;background:var(--ok);flex:none;box-shadow:0 0 8px rgba(61,220,151,.6)}
+.side .ft .mono{margin-left:auto;font-size:10px;white-space:nowrap}
+.main{position:relative;background:var(--ink);border-top-left-radius:14px;border-top:1px solid var(--l1);border-left:1px solid var(--l1);padding:22px 22px 90px;display:flex;flex-direction:column;gap:14px;min-width:0;overflow:hidden}
+.mhead{display:flex;align-items:flex-end;justify-content:space-between;gap:12px}
+.mhead .ovl{font:500 10px/1 var(--mono);letter-spacing:.12em;text-transform:uppercase;color:var(--t3)}
+.mhead h3{font-size:26px;margin-top:8px;letter-spacing:-.03em}
+.mhead p{font-size:12.5px;color:var(--t3);margin-top:4px}
+.mini{font:500 12px/1 var(--sans);color:var(--t2);background:var(--ink-2);border:1px solid var(--l1);border-radius:6px;padding:8px 10px;cursor:pointer}
+.mini:hover{color:var(--t1);border-color:var(--l2)}
+.ping{border:1px solid var(--l1);border-radius:10px;background:var(--ink-2);padding:12px 14px 10px;display:grid;gap:8px}
+.ping-h{display:flex;align-items:center;justify-content:space-between;gap:10px;font-size:12.5px}
+.ping-h b{font-weight:560}
+.ping-h .mono{font-size:11px;color:var(--t3);margin-left:8px}
+.chip{font:500 10.5px/1 var(--mono);letter-spacing:.06em;text-transform:uppercase;padding:5px 7px;border-radius:4px;background:var(--ink-4);color:var(--t3);transition:color .3s,background .3s}
+.chip.ok{color:var(--ok);background:rgba(61,220,151,.1)}
+canvas.trace{width:100%;height:64px;display:block}
+.tlist{border:1px solid var(--l1);border-radius:14px;background:var(--ink-2);overflow:hidden}
+.tw{position:relative;display:flex;align-items:center;gap:18px;padding:13px 16px;cursor:pointer;transition:background .09s}
+.tw + .tw{border-top:1px solid var(--l1)}
+.tw::before{content:"";position:absolute;left:0;top:12px;bottom:12px;width:2px;border-radius:2px;background:var(--red);transform:scaleY(0);transition:transform .16s var(--out)}
+.tw.on::before{transform:none}
+.tw:hover{background:var(--ink-3)}
+.tw-m{flex:1;min-width:0}
+.tw-t{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.tw-t span{font-size:13.5px;font-weight:500}
+.tw p{font-size:12px;color:var(--t3);margin-top:3px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.bdg{display:inline-flex;align-items:center;gap:4px;height:18px;padding:0 6px;border-radius:4px;font-size:10.5px;font-weight:500;white-space:nowrap;background:var(--ink-4);color:var(--t2)}
+.bdg svg{width:10px;height:10px;fill:none;stroke:currentColor;stroke-width:2}
+.bdg.warn{color:var(--warn);background:rgba(255,176,32,.1)}
+.bdg.ok{color:var(--ok);background:rgba(61,220,151,.1)}
+.sw{width:36px;height:20px;border-radius:10px;background:var(--ink-5);position:relative;flex:none;transition:background .16s var(--out)}
+.sw::after{content:"";position:absolute;top:2px;left:2px;width:16px;height:16px;border-radius:50%;background:var(--t1);transition:transform .22s var(--spring)}
+.tw.on .sw{background:var(--red)}
+.tw.on .sw::after{transform:translateX(16px);background:var(--ink)}
+.abar{position:absolute;left:calc(190px + 50%);bottom:18px;transform:translate(-50%,90px);opacity:0;display:flex;align-items:center;gap:22px;padding:8px 8px 8px 16px;border-radius:20px;background:rgba(23,23,26,.86);backdrop-filter:blur(18px) saturate(1.4);-webkit-backdrop-filter:blur(18px) saturate(1.4);border:1px solid var(--l2);box-shadow:0 20px 40px -12px rgba(0,0,0,.7);transition:transform .45s var(--spring),opacity .2s;white-space:nowrap;z-index:3}
+.abar.show{transform:translate(-50%,0);opacity:1}
+.abar .n{font:600 24px/1 var(--mono);min-width:1.2em}
+.abar .l{font-size:13px;font-weight:540}
+.abar .s{font-size:11.5px;color:var(--t3)}
+.abar .acts{display:flex;gap:6px}
+.abar .clr{font:500 13px/1 var(--sans);color:var(--t2);background:none;border:0;padding:0 10px;cursor:pointer}
+.abar .go{--h:38px;padding-inline:16px;font-size:13.5px}
+.runov{position:absolute;inset:0;left:190px;display:grid;place-items:center;background:rgba(10,10,11,.82);backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px);opacity:0;pointer-events:none;transition:opacity .24s var(--out);z-index:4}
+.runov.show{opacity:1;pointer-events:auto}
+.run-card{width:min(320px,86%);display:grid;gap:14px;justify-items:center;text-align:center}
+.run-card b{font-size:17px;font-weight:600;letter-spacing:-.02em}
+.run-card small{font-size:12.5px;color:var(--t3)}
+.pulse{position:relative;width:16px;height:16px}
+.pulse i{position:absolute;inset:0;background:var(--red)}
+.pulse u{position:absolute;inset:0;border:1.5px solid var(--red);animation:wave 1.6s var(--out) infinite}
+.pulse u:nth-of-type(2){animation-delay:.53s}.pulse u:nth-of-type(3){animation-delay:1.06s}
+@keyframes wave{0%{transform:scale(.8);opacity:.9}100%{transform:scale(4.2);opacity:0}}
+.runov.done .pulse u{animation:none;opacity:0}
+.runov.done .pulse i{background:var(--ok)}
+.prog{width:100%;height:4px;background:var(--ink-4);border-radius:2px;overflow:hidden}
+.prog i{display:block;height:100%;width:0;background:var(--heat);transition:width .45s var(--out)}
+.hub-note{font:400 11px/1.4 var(--mono);color:var(--t3);padding:10px 16px;border-top:1px solid var(--l1);background:var(--ink-0)}
+
+/* Marquee */
+.marquee{border-block:1px solid var(--l1);overflow:hidden;padding-block:20px;mask-image:linear-gradient(90deg,transparent,#000 8%,#000 92%,transparent);-webkit-mask-image:linear-gradient(90deg,transparent,#000 8%,#000 92%,transparent)}
+.mq-track{display:flex;width:max-content;gap:48px;animation:mq 42s linear infinite;font:500 14px/1 var(--mono);color:var(--t3);letter-spacing:.04em;text-transform:uppercase}
+.marquee:hover .mq-track{animation-play-state:paused}
+.mq-track span{display:inline-flex;align-items:center;gap:48px;white-space:nowrap}
+.mq-track span::after{content:"";width:6px;height:6px;background:var(--ink-5)}
+.mq-track b{color:var(--t1);font-weight:500}
+@keyframes mq{to{transform:translateX(-50%)}}
+
+/* Sections */
+.sec{padding-block:clamp(80px,9vw,150px)}
+.head{display:grid;gap:18px;max-width:900px;margin-bottom:clamp(40px,4.5vw,72px)}
+.head h2{font-size:clamp(34px,4.4vw,72px);letter-spacing:-.04em}
+.head p{color:var(--t2);font-size:clamp(16px,1.2vw,19px);max-width:44em}
+.head.split{max-width:none;grid-template-columns:minmax(0,1fr) minmax(0,.8fr);align-items:end;gap:24px 64px}
+
+/* Latency path */
+.path{position:relative;border:1px solid var(--l1);border-radius:20px;background:var(--ink-2);padding:clamp(24px,3vw,48px)}
+.hops{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:12px;position:relative}
+.hop{position:relative;display:grid;gap:10px;align-content:start;padding:20px;border-radius:14px;border:1px solid var(--l1);background:var(--ink);min-width:0}
+.hop.fix{border-color:rgba(255,51,71,.30);background:linear-gradient(180deg,rgba(255,51,71,.07),var(--ink) 70%)}
+.hop.no{border-style:dashed}
+.hop .ico{width:36px;height:36px;border-radius:10px;display:grid;place-items:center;background:var(--ink-3);border:1px solid var(--l1)}
+.hop .ico svg{width:18px;height:18px;fill:none;stroke:currentColor;stroke-width:1.6}
+.hop.fix .ico{color:var(--red)}
+.hop h3{font-size:18px;letter-spacing:-.02em}
+.hop p{font-size:14px;color:var(--t3)}
+.hop .st{font:500 11px/1 var(--mono);letter-spacing:.08em;text-transform:uppercase}
+.hop.fix .st{color:var(--red)}
+.hop.no .st{color:var(--t3)}
+.wire{position:relative;height:2px;margin:28px 0 8px;background:repeating-linear-gradient(90deg,var(--ink-5) 0 6px,transparent 6px 12px)}
+.packet{position:absolute;top:-5px;left:0;width:12px;height:12px;background:var(--red);box-shadow:0 0 16px 2px rgba(255,51,71,.6);animation:travel 4.2s var(--out) infinite}
+@keyframes travel{0%{left:0;opacity:0}6%{opacity:1}55%{left:calc(80% - 12px)}75%{left:calc(80% - 12px)}100%{left:calc(100% - 12px);opacity:.25}}
+.wire-legend{display:flex;justify-content:space-between;gap:12px;font:400 12px/1.3 var(--mono);color:var(--t3)}
+.truth{margin-top:24px;display:flex;gap:14px;align-items:flex-start;color:var(--t2);font-size:15px;max-width:62em}
+.truth svg{width:20px;height:20px;flex:none;color:var(--t3);margin-top:2px}
+
+/* Modules bento */
+.mods{display:grid;grid-template-columns:repeat(12,minmax(0,1fr));gap:14px}
+.mod{--mx:50%;--my:0%;grid-column:span 4;position:relative;border-radius:14px;border:1px solid var(--l1);background:var(--ink-2);padding:clamp(22px,2vw,32px);display:flex;flex-direction:column;gap:12px;min-width:0;overflow:hidden;transition:border-color .24s var(--out),transform .24s var(--out)}
+.mod::before{content:"";position:absolute;inset:0;background:radial-gradient(420px circle at var(--mx) var(--my),rgba(255,51,71,.10),transparent 60%);opacity:0;transition:opacity .24s;pointer-events:none}
+.mod:hover{border-color:var(--l2);transform:translateY(-3px)}
+.mod:hover::before{opacity:1}
+.mod.w6{grid-column:span 6}
+.mod.w3{grid-column:span 3}
+.mod .k{font:500 12px/1 var(--mono);color:var(--t3);display:flex;justify-content:space-between;gap:10px;text-transform:uppercase;letter-spacing:.08em}
+.mod .k b{color:var(--red);font-weight:500;text-transform:none;letter-spacing:0}
+.mod h3{font-size:clamp(22px,1.7vw,28px);letter-spacing:-.03em}
+.mod p{color:var(--t2);font-size:15px;max-width:40em}
+.mod ul{list-style:none;padding:0;margin:auto 0 0;display:flex;flex-wrap:wrap;gap:6px;padding-top:8px}
+.mod li{font:400 12px/1 var(--mono);padding:7px 9px;border:1px solid var(--l2);border-radius:4px;color:var(--t2)}
+.tiers{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px;margin-top:auto;padding-top:8px}
+.tiers div{border:1px solid var(--l1);border-radius:10px;padding:12px;display:grid;gap:8px;background:var(--ink)}
+.tiers span{font:400 11px/1 var(--mono);color:var(--t3);text-transform:uppercase;letter-spacing:.06em}
+.tiers i{display:block;height:4px;border-radius:2px;background:var(--ink-5);overflow:hidden}
+.tiers i::after{content:"";display:block;height:100%;width:var(--w);background:var(--heat)}
+.big-n{font:500 clamp(48px,5vw,84px)/1 var(--mono);letter-spacing:-.05em;margin-top:auto}
+.big-n small{font-size:.32em;color:var(--t3);letter-spacing:0;margin-left:8px}
+
+/* Steps */
+.steps{position:relative;display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:14px}
+.rail{position:absolute;left:0;right:0;top:0;height:2px;background:var(--ink-4);border-radius:1px;overflow:hidden}
+.rail i{display:block;height:100%;width:var(--p,0%);background:var(--heat);transition:width .12s linear}
+.step{padding:34px 6px 0 0;display:grid;gap:12px;align-content:start}
+.step .n{font:500 13px/1 var(--mono);color:var(--t3);display:flex;align-items:center;gap:10px}
+.step .n::before{content:"";width:10px;height:10px;background:var(--ink-5);transition:background .3s,box-shadow .3s}
+.step.lit .n::before{background:var(--red);box-shadow:0 0 12px rgba(255,51,71,.7)}
+.step h3{font-size:clamp(20px,1.6vw,26px);letter-spacing:-.025em}
+.step p{color:var(--t2);font-size:15px}
+
+/* Safety */
+.safe{display:grid;grid-template-columns:minmax(0,.9fr) minmax(0,1.1fr);gap:clamp(32px,5vw,96px);align-items:start}
+.safe .head{margin-bottom:0;position:sticky;top:120px}
+.safe-list{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+.safe-list div{border:1px solid var(--l1);border-radius:14px;background:var(--ink);padding:24px;display:grid;gap:10px;align-content:start}
+.safe-list svg{width:22px;height:22px;color:var(--ok);fill:none;stroke:currentColor;stroke-width:1.7}
+.safe-list b{font-weight:600;font-size:17px;letter-spacing:-.01em}
+.safe-list span{color:var(--t2);font-size:14.5px}
+
+/* Pricing */
+.plans{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.2fr);gap:18px;align-items:stretch}
+.plan{border:1px solid var(--l1);border-radius:20px;background:var(--ink-2);padding:clamp(28px,3vw,44px);display:flex;flex-direction:column;gap:20px;min-width:0}
+.plan h3{font-size:clamp(24px,2vw,32px)}
+.plan .sub{color:var(--t2);font-size:15px;margin-top:-8px}
+.price{font:500 clamp(44px,4vw,64px)/1 var(--mono);letter-spacing:-.04em;display:flex;align-items:baseline;gap:10px;flex-wrap:wrap}
+.price small{font:400 14px/1.3 var(--sans);color:var(--t3);letter-spacing:0}
+.plan ul{list-style:none;padding:0;margin:0;display:grid;gap:12px;font-size:15px}
+.plan li{display:grid;grid-template-columns:18px 1fr;gap:12px;color:var(--t2)}
+.plan li svg{width:16px;height:16px;margin-top:4px;color:var(--t3)}
+.plan .btn{width:100%;margin-top:auto}
+.micro{font-size:12.5px;color:var(--t3);text-align:center}
+.pro-wrap{position:relative;padding:1px;clip-path:polygon(0 0,calc(100% - 28px) 0,100% 28px,100% 100%,0 100%);background:conic-gradient(from var(--a,0deg),rgba(255,51,71,.15),#FF3347,#FF8A1F,rgba(255,51,71,.15) 40%,rgba(255,51,71,.15));animation:spin 6s linear infinite;border-radius:20px 0 20px 20px}
+.pro-wrap .plan{border:0;clip-path:polygon(0 0,calc(100% - 27.6px) 0,100% 27.6px,100% 100%,0 100%);border-radius:19px 0 19px 19px;background:radial-gradient(120% 70% at 100% 0%,rgba(255,51,71,.14),transparent 60%),var(--ink-2);height:100%}
+@property --a{syntax:"<angle>";inherits:false;initial-value:0deg}
+@keyframes spin{to{--a:360deg}}
+.plan .flag{font:500 11px/1 var(--mono);letter-spacing:.12em;text-transform:uppercase;color:var(--red);display:flex;align-items:center;gap:8px}
+.lic{display:flex;gap:12px;align-items:flex-start;padding:14px 16px;border-radius:10px;background:var(--ink);border:1px solid var(--l1);font-size:14px;color:var(--t2)}
+.lic svg{width:18px;height:18px;flex:none;color:var(--t1);fill:none;stroke:currentColor;stroke-width:1.6;margin-top:2px}
+
+/* Proof */
+.stats{display:flex;flex-wrap:wrap;gap:clamp(28px,5vw,80px);margin-bottom:40px}
+.stats div{display:grid;gap:6px}
+.stats b{font:500 clamp(40px,4vw,64px)/1 var(--mono);letter-spacing:-.04em}
+.stats span{color:var(--t3);font-size:14px}
+.proof{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:14px}
+.quote{border:1px solid var(--l1);border-radius:14px;background:var(--ink-2);padding:26px;display:grid;gap:16px;align-content:space-between;margin:0}
+.quote p{font-size:16.5px}
+.quote footer{font:400 13px/1.3 var(--mono);color:var(--t3)}
+.proof-empty{border:1px dashed var(--l2);border-radius:14px;padding:clamp(24px,3vw,40px);display:flex;flex-wrap:wrap;gap:20px;align-items:center;justify-content:space-between}
+.proof-empty p{color:var(--t2);max-width:560px;font-size:16px}
+
+/* FAQ */
+.faq-grid{display:grid;grid-template-columns:minmax(0,.7fr) minmax(0,1.3fr);gap:clamp(32px,5vw,96px);align-items:start}
+.faq-grid .head{margin-bottom:0}
+.faq{border-top:1px solid var(--l1)}
+.faq details{border-bottom:1px solid var(--l1)}
+.faq summary{cursor:pointer;list-style:none;padding:24px 48px 24px 0;font:500 clamp(16px,1.25vw,19px)/1.4 var(--sans);position:relative;transition:color .16s}
+.faq summary:hover{color:#fff}
+.faq summary::-webkit-details-marker{display:none}
+.faq summary::after{content:"";position:absolute;right:8px;top:50%;width:14px;height:14px;margin-top:-7px;background:linear-gradient(var(--t1),var(--t1)) center/14px 1.5px no-repeat,linear-gradient(var(--t1),var(--t1)) center/1.5px 14px no-repeat;transition:transform .24s var(--out)}
+.faq details[open] summary::after{transform:rotate(45deg)}
+.faq .ans{padding:0 0 24px;color:var(--t2);max-width:65ch;font-size:15.5px}
+
+/* Final */
+.final{position:relative;overflow:hidden;border-top:1px solid var(--l1);padding-block:clamp(96px,11vw,180px);isolation:isolate}
+.final::before{content:"";position:absolute;z-index:-1;left:50%;top:100%;width:120vw;height:70vw;transform:translate(-50%,-55%);background:radial-gradient(closest-side,rgba(255,51,71,.22),rgba(255,138,31,.07) 50%,transparent)}
+.final .band{display:grid;gap:28px;justify-items:center;text-align:center}
+.final h2{font-size:clamp(40px,6.4vw,112px);letter-spacing:-.045em;max-width:14ch}
+.final p{color:var(--t2);font-size:clamp(16px,1.3vw,20px);max-width:36em}
+.final .cta-row{justify-content:center;margin-top:8px}
+
+footer.foot{border-top:1px solid var(--l1);padding-block:40px 120px;font-size:13px;color:var(--t3)}
+footer.foot .band{display:grid;gap:20px}
+footer.foot .row{display:flex;flex-wrap:wrap;justify-content:space-between;gap:16px;align-items:center}
+footer.foot nav{display:flex;flex-wrap:wrap;gap:20px}
+footer.foot nav a{text-decoration:none;color:var(--t2)}
+footer.foot nav a:hover{color:var(--t1)}
+footer.foot p{max-width:80ch}
+
+/* Mobile dock */
+.dock{position:fixed;left:0;right:0;bottom:0;z-index:60;padding:10px 16px calc(10px + env(safe-area-inset-bottom,0px));background:rgba(10,10,11,.9);backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);border-top:1px solid var(--l1);display:none;gap:8px;transform:translateY(110%);transition:transform .3s var(--out)}
+.dock.show{transform:none}
+.dock .btn{flex:1;--h:46px;padding-inline:12px}
+
+.toast{position:fixed;left:50%;bottom:92px;transform:translate(-50%,16px);background:var(--t1);color:var(--ink);padding:12px 16px;border-radius:6px;font-size:14px;font-weight:500;opacity:0;pointer-events:none;transition:all .24s var(--out);z-index:70;max-width:calc(100% - 32px);text-align:center}
+.toast.show{opacity:1;transform:translate(-50%,0)}
+
+/* Scroll reveal: always visible, only slides */
+.rv{transition:transform .7s var(--out)}
+.js .rv.pre{transform:translateY(28px)}
+
+@media (min-width:1600px){ .mod.w3x{grid-column:span 3} }
+@media (max-width:1180px){
+  .hero .band{grid-template-columns:1fr}
+  .hub{transform:none}.hub:hover{transform:none}
+  .hops{grid-template-columns:repeat(2,minmax(0,1fr))}
+  .hops .hop.no{grid-column:span 2}
+  .mod,.mod.w6,.mod.w3{grid-column:span 6}
+  .steps{grid-template-columns:repeat(2,minmax(0,1fr));row-gap:40px}
+  .rail{display:none}
+  .step{border-top:2px solid var(--ink-4)}
+  .step.lit{border-top-color:var(--red)}
+  .safe,.faq-grid,.head.split{grid-template-columns:1fr}
+  .safe .head{position:static}
+  .plans{grid-template-columns:1fr}
+  .nav{display:none}
+}
+@media (max-width:700px){
+  .tb{grid-template-columns:1fr auto}.tb-search{display:none}
+  .hb{grid-template-columns:1fr;height:auto}
+  .side{display:none}
+  .main{border-radius:0;border-left:0;padding:18px 16px 84px}
+  .abar{left:50%;gap:12px;padding-left:12px}.abar .s,.abar .clr{display:none}
+  .runov{left:0}
+  .tw p{white-space:normal}
+  .hops{grid-template-columns:1fr}.hops .hop.no{grid-column:auto}
+  .mod,.mod.w6,.mod.w3{grid-column:span 12}
+  .tiers{grid-template-columns:1fr 1fr}
+  .steps{grid-template-columns:1fr}
+  .safe-list{grid-template-columns:1fr}
+  .top-cta .login{display:none}
+  .top-cta .btn-red{display:none}
+  .dock{display:flex}
+  .cta-row .btn{flex:1 1 100%}
+  .wire-legend span:nth-child(2){display:none}
+}
+@media (prefers-reduced-motion:reduce){
+  *,*::before,*::after{animation:none!important;transition:none!important;scroll-behavior:auto!important}
+  .js .rv.pre{transform:none}
+  .hub{transform:none}
+}
+</style>
+
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <symbol id="i-check" viewBox="0 0 16 16"><path fill="none" stroke="currentColor" stroke-width="2" d="M2.5 8.5l3.5 3.5 7.5-8"/></symbol>
+  <symbol id="i-down" viewBox="0 0 20 20"><path fill="none" stroke="currentColor" stroke-width="1.8" d="M10 3v10M5.5 8.5L10 13l4.5-4.5M3.5 17h13"/></symbol>
+  <symbol id="i-bolt" viewBox="0 0 20 20"><path fill="currentColor" d="M11.5 1.5L3.5 11.5h5l-1 7 8-10h-5z"/></symbol>
+  <symbol id="i-discord" viewBox="0 0 24 24"><path fill="currentColor" d="M19.3 5.3A16.6 16.6 0 0 0 15.2 4l-.5 1a15.4 15.4 0 0 0-5.4 0l-.5-1a16.5 16.5 0 0 0-4.1 1.3C2.1 9.2 1.4 13 1.8 16.7a16.7 16.7 0 0 0 5 2.6l1.1-1.7c-.6-.2-1.2-.5-1.7-.9l.4-.3a11.9 11.9 0 0 0 10.8 0l.4.3c-.5.4-1.1.7-1.7.9l1.1 1.7a16.6 16.6 0 0 0 5-2.6c.5-4.3-.7-8-2.9-11.4ZM8.7 14.5c-1 0-1.8-.9-1.8-2s.8-2 1.8-2 1.8.9 1.8 2-.8 2-1.8 2Zm6.6 0c-1 0-1.8-.9-1.8-2s.8-2 1.8-2 1.8.9 1.8 2-.8 2-1.8 2Z"/></symbol>
+  <symbol id="i-info" viewBox="0 0 20 20"><circle cx="10" cy="10" r="8" fill="none" stroke="currentColor" stroke-width="1.6"/><path stroke="currentColor" stroke-width="1.8" d="M10 9v5M10 6v1.5"/></symbol>
+  <symbol id="i-word" viewBox="0 1.6 79.8 19.4"><g fill="currentColor"><path fill-rule="evenodd" d="M0 3H11L16 8V11.5L12.8 14.7L17 21H11.6L8.1 15.5H5.4V21H0ZM5.4 7.6V11.1H10.6V7.6Z"/><path fill-rule="evenodd" d="M19.6 21V8L24.6 3H31.6L36.6 8V21H31.2V16.4H25V21ZM25 8.4V11H31.2V8.4Z"/><path fill-rule="evenodd" d="M39.2 8L44.2 3H56.2V8.4H44.6V15.6H50.8V14.4H48.2V10.2H56.2V21H44.2L39.2 16Z"/><path fill-rule="evenodd" d="M63.8 3H70.8L75.8 8V16L70.8 21H63.8L58.8 16V8ZM64.2 8.4V15.6H70.4V8.4Z"/></g><path d="M77 1.6h2.8v2.8h-2.8z" fill="#FF3347"/></symbol>
+</svg>
+
+<header class="top" id="top">
+  <div class="band">
+    <a class="logo" href="#home" aria-label="Rago Optimizer home"><svg viewBox="0 1.6 79.8 19.4"><use href="#i-word"/></svg></a>
+    <nav class="nav" aria-label="Sections">
+      <a href="#features">Features</a>
+      <a href="#how">How it works</a>
+      <a href="#safety">Safety</a>
+      <a href="#pricing">Pricing</a>
+      <a href="#faq">FAQ</a>
+    </nav>
+    <div class="top-cta">
+      <a class="btn btn-ghost btn-sm login js-account" href="#pricing">Sign in</a>
+      <a class="btn btn-red btn-sm" href="#pricing">Get Rago Hub Premium</a>
+    </div>
+  </div>
+</header>
+
+<main id="home">
+  <section class="hero">
+    <canvas id="field" aria-hidden="true"></canvas>
+    <div class="band">
+      <div>
+        <span class="ov fade">Minecraft PvP optimizer for Windows 10 and 11</span>
+        <h1><span class="ln"><span>Every</span></span><span class="ln"><span>millisecond</span></span><span class="ln"><span class="heat-text">counts.</span></span></h1>
+        <p class="lede fade d1">Rago tunes Windows, your network and Minecraft for lower ping, steadier FPS and cleaner hitreg. 189 tweaks, measured on your PC, undoable in one click.</p>
+        <div class="cta-row fade d2">
+          <a class="btn btn-red js-checkout" href="#pricing"><svg><use href="#i-bolt"/></svg>Get Rago Hub Premium</a>
+          <a class="btn btn-ghost js-free" href="downloads/rago-optimizer-v5.2.bat" download><svg><use href="#i-down"/></svg>Download Rago Free</a>
+        </div>
+        <div class="assure fade d3">
+          <span><svg><use href="#i-check"/></svg>Restore point before any change</span>
+          <span><svg><use href="#i-check"/></svg>One-click restore</span>
+          <span><svg><use href="#i-check"/></svg>Updated every week</span>
+        </div>
+      </div>
+
+      <div class="hub fade d4" id="hub" aria-label="Interactive preview of the Rago Hub app">
+        <div class="tb" aria-hidden="true">
+          <div class="tb-brand"><svg viewBox="0 0 24 24"><path fill-rule="evenodd" d="M4 3H15L20 8V11.5L16.8 14.7L21 21H15.6L12.1 15.5H9.4V21H4ZM9.4 7.6V11.1H14.6V7.6Z" fill="#F5F5F6"/><path d="M19.6 1.6H22.4V4.4H19.6Z" fill="#FF3347"/></svg>Rago Hub</div>
+          <div class="tb-search"><svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="M20 20l-3.5-3.5"/></svg><span>Search 189 tweaks</span><span class="kbd">Ctrl K</span></div>
+          <div class="tb-ctl"><i><svg viewBox="0 0 10 10"><path d="M1 5h8"/></svg></i><i><svg viewBox="0 0 10 10"><rect x="1.5" y="1.5" width="7" height="7"/></svg></i><i><svg viewBox="0 0 10 10"><path d="M1.5 1.5l7 7M8.5 1.5l-7 7"/></svg></i></div>
+        </div>
+        <div class="hb">
+          <nav class="side" aria-hidden="true">
+            <div class="nv"><svg viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/></svg>Dashboard</div>
+            <div class="ngl">Optimize</div>
+            <div class="nv on"><svg viewBox="0 0 24 24"><path d="M2 9a15 15 0 0 1 20 0M5 12.5a10 10 0 0 1 14 0M8.5 16a5 5 0 0 1 7 0"/><circle cx="12" cy="19.5" r="1"/></svg>Network<span class="cnt mono" id="navcnt">0</span></div><div class="nv"><svg viewBox="0 0 24 24"><circle cx="12" cy="13" r="8"/><path d="M12 9v4l2.5 2.5M10 2h4"/></svg>Latency</div><div class="nv"><svg viewBox="0 0 24 24"><rect x="2" y="6" width="20" height="12" rx="2"/><circle cx="14" cy="12" r="3"/><path d="M6 18v2M10 18v2"/></svg>Graphics card</div><div class="nv"><svg viewBox="0 0 24 24"><rect x="3" y="3" width="8" height="8" rx="1"/><rect x="13" y="3" width="8" height="8" rx="1"/><rect x="3" y="13" width="8" height="8" rx="1"/><rect x="13" y="13" width="8" height="8" rx="1"/></svg>Windows</div>
+            <div class="ngl">In game</div>
+            <div class="nv"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="8"/><circle cx="12" cy="12" r="3"/><path d="M12 1v4M12 19v4M1 12h4M19 12h4"/></svg>Hitreg</div><div class="nv"><svg viewBox="0 0 24 24"><path d="M12 2l9 5v10l-9 5-9-5V7z"/><path d="M3 7l9 5 9-5M12 12v10"/></svg>Minecraft</div><div class="nv"><svg viewBox="0 0 24 24"><path d="M4 21V9l8-6 8 6v12z"/><path d="M9 21v-6h6v6"/></svg>RBW Mod</div><div class="nv"><svg viewBox="0 0 24 24"><rect x="2" y="7" width="20" height="11" rx="4"/><path d="M7 11v3M5.5 12.5h3"/><circle cx="16" cy="11.5" r=".8"/><circle cx="18" cy="13.5" r=".8"/></svg>Game mode</div>
+            <div class="ngl">Advanced</div>
+            <div class="nv"><svg viewBox="0 0 24 24"><path d="M14.7 6.3a4 4 0 0 0-5.4 5.4L3 18l3 3 6.3-6.3a4 4 0 0 0 5.4-5.4l-2.6 2.6-2.4-.6-.6-2.4z"/></svg>Expert mode</div><div class="nv"><svg viewBox="0 0 24 24"><path d="M3 12a9 9 0 1 0 3-6.7L3 8"/><path d="M3 3v5h5"/></svg>Restore</div>
+            <div class="sp"></div>
+            <div class="nv"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1.1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1z"/></svg>Settings</div>
+            <div class="ft"><span class="dot"></span>Administrator<span class="mono">GAMING-PC</span></div>
+          </nav>
+          <div class="main">
+            <div class="mhead"><div><span class="ovl">Optimize</span><h3>Network</h3><p>18 tweaks</p></div><button class="mini" type="button" id="selall">Select all</button></div>
+            <div class="ping">
+              <div class="ping-h"><span><b>Server ping</b><span class="mono">port 25565</span></span><span class="chip" id="chip">Unsteady</span></div>
+              <canvas class="trace" id="trace" role="img" aria-label="Ping line that becomes steady after the tweaks are applied"></canvas>
+            </div>
+            <div class="tlist" id="tweaks">
+              <div class="tw" role="switch" aria-checked="false" tabindex="0"><div class="tw-m"><div class="tw-t"><span>Disable Nagle's algorithm</span><span class="bdg"><svg viewBox="0 0 12 12"><path d="M2 6a4 4 0 1 0 1.3-3L2 4.2M2 1.5v2.7h2.7"/></svg>Restart</span></div><p>Sends each packet immediately instead of batching them.</p></div><i class="sw" aria-hidden="true"></i></div>
+              <div class="tw" role="switch" aria-checked="false" tabindex="0"><div class="tw-m"><div class="tw-t"><span>Remove network throttling</span><span class="bdg"><svg viewBox="0 0 12 12"><path d="M2 6a4 4 0 1 0 1.3-3L2 4.2M2 1.5v2.7h2.7"/></svg>Restart</span></div><p>Windows throttles network throughput while media plays. This lifts it.</p></div><i class="sw" aria-hidden="true"></i></div>
+              <div class="tw" role="switch" aria-checked="false" tabindex="0"><div class="tw-m"><div class="tw-t"><span>Disable NIC power saving</span><span class="bdg"><svg viewBox="0 0 12 12"><path d="M2 6a4 4 0 1 0 1.3-3L2 4.2M2 1.5v2.7h2.7"/></svg>Restart</span></div><p>Disables Green Ethernet, EEE, Wake-on-LAN and NIC sleep, which add wake-up latency.</p></div><i class="sw" aria-hidden="true"></i></div>
+              <div class="tw" role="switch" aria-checked="false" tabindex="0"><div class="tw-m"><div class="tw-t"><span>Advanced TCP settings</span><span class="bdg warn">Advanced</span></div><p>Autotuning, ECN, RSC, TCP timestamps, initial RTO, CTCP, Teredo and ISATAP.</p></div><i class="sw" aria-hidden="true"></i></div>
+            </div>
+          </div>
+          <div class="abar" id="abar"><span class="n" id="abn">0</span><div><div class="l" id="abl">tweaks selected</div><div class="s" id="abs"></div></div><div class="acts"><button class="clr" type="button" id="abclr">Clear</button><button class="btn btn-red go" type="button" id="apply">Apply</button></div></div>
+          <div class="runov" id="runov" role="status"><div class="run-card"><span class="pulse"><i></i><u></u><u></u><u></u></span><b id="runt">Optimizing…</b><div class="prog"><i id="prog"></i></div><small id="runs">Restore point created. You can undo everything.</small></div></div>
+        </div>
+        <p class="hub-note">Interactive preview of Rago Hub. The ping line is an illustration, not a measurement of your PC.</p>
+      </div>
+    </div>
+  </section>
+
+  <div class="marquee" aria-label="Game modes and games covered">
+    <div class="mq-track">
+      <span><b>Built for Minecraft PvP</b></span><span>BedWars</span><span>Ranked BedWars</span><span>Boxing</span><span>Sumo</span><span>Bridge</span><span>OptiFine presets</span><span>Per-game priority</span><span>Fortnite</span><span>Valorant</span><span>CS2</span><span>Apex Legends</span><span>GTA V</span>
+      <span aria-hidden="true"><b>Built for Minecraft PvP</b></span><span aria-hidden="true">BedWars</span><span aria-hidden="true">Ranked BedWars</span><span aria-hidden="true">Boxing</span><span aria-hidden="true">Sumo</span><span aria-hidden="true">Bridge</span><span aria-hidden="true">OptiFine presets</span><span aria-hidden="true">Per-game priority</span><span aria-hidden="true">Fortnite</span><span aria-hidden="true">Valorant</span><span aria-hidden="true">CS2</span><span aria-hidden="true">Apex Legends</span><span aria-hidden="true">GTA V</span>
+    </div>
+  </div>
+
+  <section class="sec band" id="why">
+    <div class="head split rv">
+      <div style="display:grid;gap:18px"><span class="ov">Why your hits don't register</span><h2>Ping is only part of the delay.</h2></div>
+      <p>Between your click and the server, Windows, your network card and your game each add their own wait. Out of the box they're set to save power, not to win fights.</p>
+    </div>
+    <div class="path rv">
+      <div class="hops">
+        <div class="hop fix"><span class="ico"><svg viewBox="0 0 24 24"><rect x="6" y="2" width="12" height="20" rx="6"/><path d="M12 6v4"/></svg></span><span class="st">Rago tunes this</span><h3>Your input</h3><p>Mouse acceleration, USB power saving and keyboard delay slow your click before it leaves the desk.</p></div>
+        <div class="hop fix"><span class="ico"><svg viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="12" rx="2"/><path d="M8 20h8M12 16v4"/></svg></span><span class="st">Rago tunes this</span><h3>Windows</h3><p>Background services, telemetry and CPU power states make your game wait its turn.</p></div>
+        <div class="hop fix"><span class="ico"><svg viewBox="0 0 24 24"><rect x="3" y="7" width="18" height="10" rx="2"/><path d="M7 17v3M12 17v3M17 17v3M7 11h4"/></svg></span><span class="st">Rago tunes this</span><h3>Network card</h3><p>Nagle's algorithm, offloads and throttling batch your packets to save bandwidth.</p></div>
+        <div class="hop fix"><span class="ico"><svg viewBox="0 0 24 24"><path d="M12 2l9 5v10l-9 5-9-5V7z"/><path d="M3 7l9 5 9-5M12 12v10"/></svg></span><span class="st">Rago tunes this</span><h3>Minecraft</h3><p>Particles, animated textures and clouds cost frames right when you need them steady.</p></div>
+        <div class="hop no"><span class="ico"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3a14 14 0 0 1 0 18M12 3a14 14 0 0 0 0 18"/></svg></span><span class="st">No tweak fixes this</span><h3>Distance to server</h3><p>The physical trip to the server. If your ping comes from distance, no software can shorten it.</p></div>
+      </div>
+      <div class="wire" aria-hidden="true"><span class="packet"></span></div>
+      <div class="wire-legend" aria-hidden="true"><span>Click</span><span>Everything on your side: Rago's job</span><span>Server</span></div>
+    </div>
+    <p class="truth rv"><svg><use href="#i-info"/></svg><span>What we don't promise: Rago can't lower ping that comes from distance. It works on everything else, and in most cases it makes your connection noticeably steadier.</span></p>
+  </section>
+
+  <section class="sec band" id="features" style="padding-top:0">
+    <div class="head split rv">
+      <div style="display:grid;gap:18px"><span class="ov">Everything Rago does</span><h2>189 tweaks. Twelve sections. One app.</h2></div>
+      <p>Every tweak is separate, with a one-line explanation and a Safe or Advanced label. Find any of them with Ctrl+K, start from a preset, or pick only what you want.</p>
+    </div>
+    <div class="mods">
+      <article class="mod w6 rv"><div class="k">Hitreg<b>The core of Rago</b></div><h3>Hitreg</h3><p>Advanced hit registration tweaks, tuned to the PC you actually have.</p>
+        <div class="tiers"><div><span>High-end</span><i style="--w:100%"></i></div><div><span>Mid-range</span><i style="--w:72%"></i></div><div><span>Low-end</span><i style="--w:48%"></i></div><div><span>Laptop</span><i style="--w:36%"></i></div></div></article>
+      <article class="mod w6 rv"><div class="k">Network<b>Plus 4 ping profiles</b></div><h3>Network</h3><p>Hitreg, knockback and QoS settings, four ping profiles and a full network reset.</p><ul><li>Nagle off</li><li>MSI mode</li><li>DNS priority</li><li>Adapter power saving</li><li>Throttling index</li></ul></article>
+      <article class="mod w4 rv"><div class="k">Latency<b>CPU to mouse</b></div><h3>Latency</h3><p>CPU power states, RAM, USB, storage, mouse and keyboard, plus first call on the CPU for your game.</p><ul><li>Core parking</li><li>1:1 mouse</li><li>USB priority</li><li>Per-game priority</li></ul></article>
+      <article class="mod w4 rv"><div class="k">Graphics card<b>NVIDIA · AMD · Intel</b></div><h3>Graphics card</h3><p>Driver and power tweaks for your GPU brand, including a low-latency NVIDIA profile.</p><ul><li>GPU P-states</li><li>MSI mode</li><li>Telemetry off</li><li>Low-latency profile</li></ul></article>
+      <article class="mod w4 rv"><div class="k">Windows<b>Less in the background</b></div><h3>Windows</h3><p>Turns off telemetry, Game DVR, notifications and background apps, and removes apps you don't use.</p><ul><li>Debloat</li><li>Game DVR off</li><li>Background apps</li></ul></article>
+      <article class="mod w3 rv"><div class="k">Minecraft<b>2 presets</b></div><h3>Minecraft</h3><p>Writes your OptiFine options in one click: Performance for frames, or Quality.</p></article>
+      <article class="mod w3 rv"><div class="k">RBW Mod<b>On / off</b></div><h3>RBW Mod</h3><p>Pauses the Windows services that eat resources during ranked games, then brings them back.</p></article>
+      <article class="mod w3 rv"><div class="k">Game mode<b>Before you play</b></div><h3>Game mode</h3><p>Clears temp files and switches off Windows visual effects. On before a session, off after.</p></article>
+      <article class="mod w3 rv"><div class="k">Expert mode<b>Advanced</b></div><h3>Expert mode</h3><p>Kernel, timer and IRQ tweaks, mitigations and a forced monitor refresh rate, for players who know what they're changing.</p></article>
+      <article class="mod w6 rv"><div class="k">Dashboard<b>Presets and ping</b></div><h3>Dashboard</h3><p>Pick a preset (Minecraft PvP, Competitive, Laptop or Privacy) or build your own list. Measure your ping to a Minecraft server before and after.</p><div class="big-n">189<small>tweaks in 12 sections</small></div></article>
+      <article class="mod w6 rv"><div class="k">Restore<b>Always there</b></div><h3>Restore</h3><p>A restore point is created before any change. Undo a module's tweaks or roll your PC back to how it was in one click.</p></article>
+    </div>
+  </section>
+
+  <section class="sec band" id="how" style="padding-top:0">
+    <div class="head rv">
+      <span class="ov">How it works</span>
+      <h2>From checkout to your first match.</h2>
+    </div>
+    <div class="steps" id="steps">
+      <div class="rail" aria-hidden="true"><i id="rail"></i></div>
+      <div class="step"><span class="n">01</span><h3>Pay securely</h3><p>Checkout runs on Stripe, so your card details never reach us.</p></div>
+      <div class="step"><span class="n">02</span><h3>Create your account</h3><p>Right after payment you set up your Rago account. It holds your license and your downloads.</p></div>
+      <div class="step"><span class="n">03</span><h3>Download Rago Hub</h3><p>Grab the installer from your account page. It offers a restore point before touching anything.</p></div>
+      <div class="step"><span class="n">04</span><h3>Sign in and activate</h3><p>Sign in inside the app to activate your license on this PC. Apply your tweaks, restart, play.</p></div>
+    </div>
+  </section>
+
+  <section class="sec band" id="safety" style="background:var(--ink-2);border-block:1px solid var(--l1)">
+    <div class="safe">
+      <div class="head rv">
+        <span class="ov">Safety</span>
+        <h2>You stay in control of your PC.</h2>
+        <p>Rago doesn't touch your game client. It changes Windows settings, your network adapter and your options file. Everything can be undone.</p>
+      </div>
+      <div class="safe-list">
+        <div class="rv"><svg viewBox="0 0 20 20"><path d="M10 2l6.5 2.5v5c0 4-2.8 7-6.5 8.5C6.3 16.5 3.5 13.5 3.5 9.5v-5L10 2z"/><path d="M7 10l2 2 4-4"/></svg><b>Restore point first</b><span>Offered at launch, it brings your PC back to how it was in one click.</span></div>
+        <div class="rv"><svg viewBox="0 0 20 20"><path d="M7 5L3 9l4 4"/><path d="M3.5 9H12a5 5 0 0 1 0 10H8"/></svg><b>Restore anytime</b><span>The Restore section undoes your tweaks without reinstalling anything.</span></div>
+        <div class="rv"><svg viewBox="0 0 20 20"><path d="M1.5 10S4.5 4 10 4s8.5 6 8.5 6-3 6-8.5 6-8.5-6-8.5-6z"/><circle cx="10" cy="10" r="2.5"/></svg><b>Nothing injected</b><span>No client mods, no hidden files in your game. System settings only.</span></div>
+        <div class="rv"><svg viewBox="0 0 20 20"><path d="M16.5 10a6.5 6.5 0 1 1-2-4.7"/><path d="M15 2v4h-4"/></svg><b>Weekly updates</b><span>Tweaks follow Windows updates, and the Premium channel on Discord answers your questions.</span></div>
+      </div>
+    </div>
+  </section>
+
+  <section class="sec band" id="pricing">
+    <div class="head split rv">
+      <div style="display:grid;gap:18px"><span class="ov">Pricing</span><h2>Start free. Go Premium for the full app.</h2></div>
+      <p>The original Rago script stays free, no account needed. Rago Hub Premium is the Windows app: all 12 sections, a clean interface, measurements and weekly updates.</p>
+    </div>
+    <div class="plans">
+      <div class="plan rv">
+        <h3>Rago Free</h3>
+        <p class="sub">The original .bat. Free, no account.</p>
+        <div class="price">$0<small>free download</small></div>
+        <ul>
+          <li><svg><use href="#i-check"/></svg>The Rago v5.2 script with console menus</li>
+          <li><svg><use href="#i-check"/></svg>Network, latency, Hitreg and Minecraft tweaks</li>
+          <li><svg><use href="#i-check"/></svg>Restore point and undo menu</li>
+          <li><svg><use href="#i-check"/></svg>Community help on Discord</li>
+        </ul>
+        <a class="btn btn-ghost js-free" href="downloads/rago-optimizer-v5.2.bat" download><svg><use href="#i-down"/></svg>Download Rago Free</a>
+        <p class="micro">Windows 10 and 11 · Run as administrator</p>
+      </div>
+      <div class="pro-wrap rv">
+        <div class="plan">
+          <span class="flag">Full app</span>
+          <h3>Rago Hub Premium</h3>
+          <p class="sub">The Windows app, with your license key</p>
+          <div class="price" id="price"><span style="font-size:.5em;letter-spacing:-.02em">Price at checkout</span></div>
+          <ul>
+            <li><svg><use href="#i-check"/></svg>All 12 sections and 189 tweaks in one app</li>
+            <li><svg><use href="#i-check"/></svg>One-line explanation and a risk label on every tweak</li>
+            <li><svg><use href="#i-check"/></svg>Hitreg tuning matched to your PC</li>
+            <li><svg><use href="#i-check"/></svg>4 presets: Minecraft PvP, Competitive, Laptop, Privacy</li><li><svg><use href="#i-check"/></svg>Ping measured before and after, to a Minecraft server</li><li><svg><use href="#i-check"/></svg>One-click restore</li>
+            <li><svg><use href="#i-check"/></svg>Weekly updates and the Premium Discord channel</li>
+          </ul>
+          <div class="lic"><svg viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="12" rx="2"/><path d="M8 20h8M12 16v4"/></svg><span>One license, one PC. Once you activate it, your account can't be signed in on another device.</span></div>
+          <a class="btn btn-red js-checkout" href="#pricing"><svg><use href="#i-bolt"/></svg>Get Rago Hub Premium</a>
+          <p class="micro">Secure checkout with Stripe · Create your account right after payment</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="sec band" id="reviews" style="padding-top:0">
+    <div class="head rv">
+      <span class="ov">From players</span>
+      <h2>Read what players say on our Discord.</h2>
+    </div>
+    <div class="stats" id="stats" hidden></div>
+    <div class="proof" id="proof" hidden></div>
+    <div class="proof-empty rv" id="proof-empty">
+      <p>Buyers post their results in the feedback channel of our server. Have a read before you buy.</p>
+      <a class="btn btn-ghost js-discord" href="#reviews"><svg><use href="#i-discord"/></svg>Read the feedback</a>
+    </div>
+  </section>
+
+  <section class="sec band" id="faq" style="padding-top:0">
+    <div class="faq-grid">
+      <div class="head rv"><span class="ov">Questions</span><h2>Before you buy.</h2></div>
+      <div class="faq rv">
+        <details><summary>Can I get banned for using Rago?</summary><div class="ans">Rago doesn't modify Minecraft and injects nothing into the game. It changes Windows settings, your network adapter and your OptiFine options file, the same things you could change by hand. These are system settings, not a cheat.</div></details>
+        <details><summary>Will it lower my ping?</summary><div class="ans">It depends where your ping comes from. If you're far from the server, distance can't be fixed. Rago cuts the delay your PC and network add, and makes your ping steadier, which is what matters most for hit registration.</div></details>
+        <details><summary>What's the difference between Rago Free and Rago Hub Premium?</summary><div class="ans">Rago Free is the original .bat script with console menus, free and with no account. Rago Hub Premium is the Windows app: all 12 sections in a clean interface, an explanation and risk label on every tweak, before and after measurements, weekly updates and the Premium channel.</div></details>
+        <details><summary>Can I use my license on more than one PC?</summary><div class="ans">No. Rago Hub works on one device per license. Once you activate it, your account can't be signed in on another PC. If you change PCs, contact support on Discord.</div></details>
+        <details><summary>What if I don't like a change?</summary><div class="ans">A restore point is created before any change, and the Restore section undoes your tweaks. You can go back to how your PC was whenever you want.</div></details>
+        <details><summary>Will it work on my PC?</summary><div class="ans">Rago runs on Windows 10 and 11. It has dedicated tweaks for Intel and AMD CPUs, NVIDIA, AMD and Intel GPUs, and a laptop mode.</div></details>
+        <details><summary>My antivirus flagged Rago. Why?</summary><div class="ans">Rago changes system and network settings, which is exactly what antivirus tools watch for, so some flag it. Only download Rago from this site. Don't disable your antivirus: allow the file if you trust it, or ask us on Discord.</div></details>
+        <details><summary>Why does it ask for administrator rights?</summary><div class="ans">Windows doesn't let any app change network and system settings without them. Without admin rights, part of the tweaks wouldn't apply.</div></details>
+      </div>
+    </div>
+  </section>
+
+  <section class="final">
+    <div class="band rv">
+      <span class="ov">Next match</span>
+      <h2>Tune your PC once. Feel it <span class="heat-text">on the first combo.</span></h2>
+      <p>Get Rago Hub Premium, create your account, and apply your tweaks before your next session. Or start with Rago Free.</p>
+      <div class="cta-row">
+        <a class="btn btn-red js-checkout" href="#pricing"><svg><use href="#i-bolt"/></svg>Get Rago Hub Premium</a>
+        <a class="btn btn-ghost js-free" href="downloads/rago-optimizer-v5.2.bat" download><svg><use href="#i-down"/></svg>Download Rago Free</a>
+      </div>
+    </div>
+  </section>
+</main>
+
+<footer class="foot">
+  <div class="band">
+    <div class="row">
+      <svg viewBox="0 1.6 79.8 19.4" style="height:16px;width:auto;color:var(--t1)"><use href="#i-word"/></svg>
+      <nav aria-label="Footer"><a href="#features">Features</a><a href="#pricing">Pricing</a><a href="#faq">FAQ</a><a class="js-account" href="#pricing">Sign in</a><a class="js-discord" href="#reviews">Discord</a></nav>
+    </div>
+    <p>Rago Optimizer changes Windows settings. Results depend on your hardware and connection. Create a restore point before use. Minecraft is a trademark of Mojang Studios; Rago Optimizer isn't affiliated with Mojang or Microsoft. © 2026 Rago Optimizer, by Rago and Straight.</p>
+  </div>
+</footer>
+
+<div class="dock" id="dock">
+  <a class="btn btn-ghost js-free" href="downloads/rago-optimizer-v5.2.bat" download>Rago Free</a>
+  <a class="btn btn-red js-checkout" href="#pricing">Get Premium</a>
+</div>
+<div class="toast" id="toast" role="status"></div>
+
+<script>
+/* ---- Fill these in ---- */
+const CONFIG = {
+  checkoutUrl: "/buy",                              // licensing server: creates the Stripe Checkout session, 303 redirect
+  accountUrl: "/login",                             // licensing server sign-in page
+  freeDownloadUrl: "downloads/rago-optimizer-v5.2.bat",
+  discord: "",                                      // e.g. "https://discord.gg/yourInvite"
+  price: null,                                      // e.g. "$14.99"
+  priceNote: "one-time payment",
+  stats: [],                                        // e.g. [{ value: "4,200", label: "members on Discord" }]
+  reviews: []                                       // e.g. [{ text: "…", author: "Name", detail: "Ranked BedWars" }] — real reviews only
+};
+/* ----------------------- */
+
+document.documentElement.classList.add("js");
+const $ = (s, r = document) => r.querySelector(s);
+const $$ = (s, r = document) => [...r.querySelectorAll(s)];
+const reduce = matchMedia("(prefers-reduced-motion: reduce)").matches;
+const toast = m => { const t = $("#toast"); t.textContent = m; t.classList.add("show"); clearTimeout(t._h); t._h = setTimeout(() => t.classList.remove("show"), 2800); };
+const esc = s => String(s).replace(/[&<>"]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
+const wire = (sel, url, msg, ext = true) => $$(sel).forEach(a => {
+  if (url) { a.href = url; if (ext) { a.target = "_blank"; a.rel = "noopener"; } }
+  else a.addEventListener("click", e => { e.preventDefault(); toast(msg); });
+});
+wire(".js-checkout", CONFIG.checkoutUrl, "Stripe checkout opens here once it's connected", false);
+wire(".js-account", CONFIG.accountUrl, "Account page coming with checkout", false);
+wire(".js-discord", CONFIG.discord, "Discord invite link to be added");
+$$(".js-free").forEach(a => a.href = CONFIG.freeDownloadUrl);
+
+if (CONFIG.price) $("#price").innerHTML = `${esc(CONFIG.price)}<small>${esc(CONFIG.priceNote)}</small>`;
+if (CONFIG.stats.length) { const s = $("#stats"); s.innerHTML = CONFIG.stats.map(c => `<div><b>${esc(c.value)}</b><span>${esc(c.label)}</span></div>`).join(""); s.hidden = false; }
+if (CONFIG.reviews.length) {
+  const p = $("#proof"); p.innerHTML = CONFIG.reviews.slice(0, 6).map(r => `<blockquote class="quote"><p>“${esc(r.text)}”</p><footer>${esc(r.author)}${r.detail ? " · " + esc(r.detail) : ""}</footer></blockquote>`).join("");
+  p.hidden = false; $("#reviews h2").textContent = "What players say."; $("#proof-empty p").textContent = "More results in the feedback channel on Discord.";
+}
+
+/* Header state + mobile dock */
+const header = $("#top"), dock = $("#dock");
+const onScroll = () => {
+  header.classList.toggle("scrolled", scrollY > 8);
+  dock.classList.toggle("show", scrollY > 600 && innerHeight + scrollY < document.body.scrollHeight - 300);
+  steps();
+};
+addEventListener("scroll", onScroll, { passive: true });
+
+/* Scroll reveal (content is visible at rest; only off-screen items slide in) */
+if ("IntersectionObserver" in window && !reduce) {
+  const io = new IntersectionObserver(es => es.forEach(e => { if (e.isIntersecting) { e.target.classList.remove("pre"); io.unobserve(e.target); } }), { rootMargin: "0px 0px -6% 0px" });
+  $$(".rv").forEach((el, i) => { if (el.getBoundingClientRect().top > innerHeight) { el.classList.add("pre"); el.style.transitionDelay = (i % 3) * 60 + "ms"; io.observe(el); } });
+}
+
+/* Cursor spotlight on module cards */
+$$(".mod").forEach(m => m.addEventListener("pointermove", e => { const r = m.getBoundingClientRect(); m.style.setProperty("--mx", e.clientX - r.left + "px"); m.style.setProperty("--my", e.clientY - r.top + "px"); }));
+
+/* Magnetic primary buttons (fine pointers only) */
+if (matchMedia("(pointer:fine)").matches && !reduce) $$(".btn-red:not(.apply)").forEach(b => {
+  b.addEventListener("pointermove", e => { const r = b.getBoundingClientRect(); b.style.transform = `translate(${(e.clientX - r.left - r.width / 2) * .12}px,${(e.clientY - r.top - r.height / 2) * .2}px)`; });
+  b.addEventListener("pointerleave", () => b.style.transform = "");
+});
+
+/* Steps rail fills with scroll */
+function steps() {
+  const s = $("#steps"); if (!s) return;
+  const r = s.getBoundingClientRect(), vh = innerHeight;
+  const p = Math.min(1, Math.max(0, (vh * .85 - r.top) / (vh * .6)));
+  $("#rail").style.setProperty("--p", p * 100 + "%");
+  $$(".step", s).forEach((el, i) => el.classList.toggle("lit", p >= i / 4 + .05 || reduce));
+}
+
+/* Hero pixel field: a block grid that glows near the cursor and twinkles */
+(() => {
+  const c = $("#field"), ctx = c.getContext("2d"); let W, H, dpr, cols, rows, S = 28, cells = [], mx = -999, my = -999;
+  const size = () => { dpr = Math.min(devicePixelRatio || 1, 2); W = c.clientWidth; H = c.clientHeight; c.width = W * dpr; c.height = H * dpr; ctx.setTransform(dpr, 0, 0, dpr, 0, 0); cols = Math.ceil(W / S); rows = Math.ceil(H / S); cells = new Float32Array(cols * rows); };
+  const draw = () => {
+    ctx.clearRect(0, 0, W, H);
+    for (let y = 0; y < rows; y++) for (let x = 0; x < cols; x++) {
+      const i = y * cols + x, cx = x * S + S / 2, cy = y * S + S / 2;
+      const d = Math.hypot(cx - mx, cy - my), near = Math.max(0, 1 - d / 180);
+      if (!reduce && Math.random() < .0009) cells[i] = 1;
+      cells[i] *= .965; const v = Math.max(near * .9, cells[i]);
+      ctx.fillStyle = v > .02 ? `rgba(255,${51 + v * 40 | 0},71,${.08 + v * .55})` : "rgba(255,255,255,.035)";
+      const s = 2 + v * 4; ctx.fillRect(cx - s / 2, cy - s / 2, s, s);
+    }
+  };
+  size(); draw(); addEventListener("resize", () => { size(); draw(); });
+  const hero = $(".hero");
+  hero.addEventListener("pointermove", e => { const r = c.getBoundingClientRect(); mx = e.clientX - r.left; my = e.clientY - r.top; });
+  hero.addEventListener("pointerleave", () => { mx = my = -999; });
+  if (!reduce) { let vis = true; new IntersectionObserver(([e]) => vis = e.isIntersecting).observe(hero); const loop = () => { if (vis) draw(); requestAnimationFrame(loop); }; requestAnimationFrame(loop); }
+})();
+
+/* Hub preview: mirrors Rago Hub's select → Apply flow */
+(() => {
+  const c = $("#trace"), ctx = c.getContext("2d"), chip = $("#chip");
+  const rows = $$("#tweaks .tw"), abar = $("#abar"), go = $("#apply"), ov = $("#runov"), prog = $("#prog"), navcnt = $("#navcnt");
+  let W, H, dpr, N = 110, pts = [], amp = 1, target = 1, t = 0, running = false, touched = false;
+  const size = () => { dpr = Math.min(devicePixelRatio || 1, 2); W = c.clientWidth; H = c.clientHeight; c.width = W * dpr; c.height = H * dpr; ctx.setTransform(dpr, 0, 0, dpr, 0, 0); };
+  const sample = () => (Math.sin(t * .3) * .1 + (Math.random() - .5) * .5) * amp + (Math.random() < .07 * amp ? (Math.random() * .6 + .3) * amp : 0);
+  for (let i = 0; i < N; i++) { t++; pts.push(sample()); }
+  const draw = () => {
+    ctx.clearRect(0, 0, W, H);
+    const mid = H * .58, sc = H * .44, step = W / (N - 1), good = amp < .35, col = good ? "61,220,151" : "255,51,71";
+    const g = ctx.createLinearGradient(0, 0, 0, H); g.addColorStop(0, `rgba(${col},.22)`); g.addColorStop(1, `rgba(${col},0)`);
+    const path = () => pts.forEach((v, i) => { const x = i * step, y = mid - v * sc; i ? ctx.lineTo(x, y) : ctx.moveTo(x, y); });
+    ctx.beginPath(); path(); ctx.lineTo(W, H); ctx.lineTo(0, H); ctx.closePath(); ctx.fillStyle = g; ctx.fill();
+    ctx.beginPath(); path(); ctx.strokeStyle = `rgb(${col})`; ctx.lineWidth = 1.5; ctx.lineJoin = "round"; ctx.stroke();
+    const ly = mid - pts[N - 1] * sc; ctx.fillStyle = `rgb(${col})`; ctx.fillRect(W - 6, ly - 3, 6, 6);
+  };
+  const tick = () => { amp += (target - amp) * .05; t++; pts.shift(); pts.push(sample()); const ok = amp < .35; chip.textContent = ok ? "Steady" : "Unsteady"; chip.classList.toggle("ok", ok); draw(); };
+  const sel = () => rows.filter(r => r.classList.contains("on") && !r.dataset.applied);
+  const sync = () => {
+    const n = sel().length, reb = sel().filter(r => r.querySelector(".bdg:not(.warn)")).length;
+    $("#abn").textContent = n; $("#abl").textContent = n === 1 ? "tweak selected" : "tweaks selected";
+    $("#abs").textContent = reb ? `${reb} need${reb === 1 ? "s" : ""} a restart` : "";
+    go.textContent = `Apply ${n} tweak${n === 1 ? "" : "s"}`;
+    abar.classList.toggle("show", n > 0 && !running);
+    navcnt.textContent = n; navcnt.classList.toggle("show", n > 0);
+  };
+  const set = (r, on) => { r.classList.toggle("on", on); r.setAttribute("aria-checked", on); if (!on) delete r.dataset.applied; };
+  const userToggle = r => { if (running) return; touched = true; const on = !r.classList.contains("on"); set(r, on); if (!on && !rows.some(x => x.dataset.applied)) target = 1; sync(); };
+  rows.forEach(r => { r.addEventListener("click", () => userToggle(r)); r.addEventListener("keydown", e => { if (e.key === " " || e.key === "Enter") { e.preventDefault(); userToggle(r); } }); });
+  $("#selall").addEventListener("click", () => { if (running) return; touched = true; rows.forEach(r => { if (!r.classList.contains("on")) set(r, true); }); sync(); });
+  $("#abclr").addEventListener("click", () => { sel().forEach(r => set(r, false)); sync(); });
+  const wait = ms => new Promise(r => setTimeout(r, reduce ? 0 : ms));
+  const run = async () => {
+    const todo = sel(); if (running || !todo.length) return;
+    running = true; sync(); ov.classList.remove("done"); $("#runt").textContent = "Optimizing…"; $("#runs").textContent = "Restore point created. You can undo everything."; prog.style.width = "0"; ov.classList.add("show");
+    for (let i = 0; i < todo.length; i++) { await wait(560); prog.style.width = (i + 1) / todo.length * 100 + "%"; todo[i].dataset.applied = 1; }
+    target = .1; if (reduce) { amp = target; tick(); }
+    await wait(350); ov.classList.add("done"); $("#runt").textContent = `Applied ${todo.length} tweak${todo.length === 1 ? "" : "s"}.`; $("#runs").textContent = "Restart your PC to finish.";
+    await wait(1700); ov.classList.remove("show"); running = false; sync();
+  };
+  go.addEventListener("click", run);
+  size(); draw(); addEventListener("resize", () => { size(); draw(); });
+  if (!reduce) { let last = 0; const loop = ts => { if (ts - last > 60) { tick(); last = ts; } requestAnimationFrame(loop); }; requestAnimationFrame(loop); }
+  // First view: select the tweaks one by one, then apply, so the payoff shows without a click
+  let played = false;
+  new IntersectionObserver(async ([e]) => {
+    if (!e.isIntersecting || played) return; played = true;
+    await wait(1200);
+    for (const r of rows.slice(0, 3)) { if (touched) return; set(r, true); sync(); await wait(450); }
+    await wait(700); if (!touched) run();
+  }, { threshold: .4 }).observe($("#hub"));
+})();
+
+onScroll();
+</script>
