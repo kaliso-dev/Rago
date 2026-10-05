@@ -27,6 +27,9 @@ export function loadConfig(env = process.env) {
 
     stripeSecretKey: env.STRIPE_SECRET_KEY || '',
     stripeWebhookSecret: env.STRIPE_WEBHOOK_SECRET || '',
+    // Subscription prices (recurring). STRIPE_PRICE_ID alone = the old one-time price, sold as a lifetime license.
+    stripePriceMonthly: env.STRIPE_PRICE_MONTHLY || '',
+    stripePriceYearly: env.STRIPE_PRICE_YEARLY || '',
     stripePriceId: env.STRIPE_PRICE_ID || '',
 
     signingKeyPem: readPem(env.LICENSE_SIGNING_KEY),
@@ -45,11 +48,17 @@ export function loadConfig(env = process.env) {
     installerFileName: env.INSTALLER_FILENAME || 'RagoHub-Setup.exe',
 
     licenseTokenDays: Number(env.LICENSE_TOKEN_DAYS || 30),
+    // Days a subscriber keeps working offline past the paid period (renewal retries, clock drift).
+    subscriptionGraceDays: Number(env.SUBSCRIPTION_GRACE_DAYS || 3),
+
+    affiliateGoal: Number(env.AFFILIATE_GOAL || 3),
+    affiliateHoldDays: Number(env.AFFILIATE_HOLD_DAYS || 14), // a referral counts once it's this old and not refunded
   };
+  cfg.subscriptions = !!(cfg.stripePriceMonthly || cfg.stripePriceYearly);
 
   const missing = [];
   if (prod) {
-    for (const k of ['databaseUrl', 'stripeSecretKey', 'stripeWebhookSecret', 'stripePriceId']) {
+    for (const k of ['databaseUrl', 'stripeSecretKey', 'stripeWebhookSecret']) {
       if (!cfg[k]) missing.push(k);
     }
     if (!publicUrl.startsWith('https://')) missing.push('PUBLIC_URL (https)');
@@ -61,6 +70,8 @@ export function loadConfig(env = process.env) {
   const placeholder = (v) => /\.\.\.|abcd|a_remplir|xxxx/i.test(v || '');
   if (placeholder(cfg.supabaseUrl)) cfg.warnings.push('SUPABASE_URL is still the example: Download Rago Hub will fail. Use https://<project-ref>.supabase.co');
   if (placeholder(cfg.stripeWebhookSecret)) cfg.warnings.push('STRIPE_WEBHOOK_SECRET is still the example: Stripe webhooks will be rejected (step 6).');
+  if (!cfg.subscriptions && !cfg.stripePriceId) cfg.warnings.push('No Stripe price: set STRIPE_PRICE_MONTHLY and STRIPE_PRICE_YEARLY. Until then /buy shows "Checkout is not open yet."');
+  if (!cfg.subscriptions && cfg.stripePriceId) cfg.warnings.push('Only STRIPE_PRICE_ID is set: Premium is sold as a one-time lifetime license. Set STRIPE_PRICE_MONTHLY and STRIPE_PRICE_YEARLY for the subscription.');
   if (placeholder(cfg.resendApiKey)) {
     cfg.warnings.push('RESEND_API_KEY is still the example: emails are printed to the logs instead of sent.');
     cfg.resendApiKey = '';

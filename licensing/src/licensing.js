@@ -81,15 +81,31 @@ const activeLicenseForUser = (db, userId) =>
 async function insertLicense(db, fields) {
   const id = newId('lic');
   const claimToken = randomToken();
-  await db.run(`INSERT INTO licenses (id, key, user_id, email, source, stripe_session_id, stripe_payment_intent,
-      stripe_customer_id, amount, currency, claim_token_hash, created_at, claimed_at)
-    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`, [
-    id, newLicenseKey(), fields.userId ?? null, normEmail(fields.email), fields.source,
+  await db.run(`INSERT INTO licenses (id, key, user_id, email, source, plan, stripe_session_id, stripe_payment_intent,
+      stripe_customer_id, stripe_subscription_id, current_period_end, amount, currency, claim_token_hash, created_at, claimed_at)
+    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`, [
+    id, newLicenseKey(), fields.userId ?? null, normEmail(fields.email), fields.source, fields.plan ?? 'lifetime',
     fields.sessionId ?? null, fields.paymentIntent ?? null, fields.customerId ?? null,
+    fields.subscriptionId ?? null, fields.periodEnd ?? null,
     fields.amount ?? null, fields.currency ?? null, sha256(claimToken), Date.now(),
     fields.userId ? Date.now() : null,
   ]);
   return { license: await getLicense(db, id), claimToken };
+}
+
+const idOf = (v) => (typeof v === 'string' ? v : v?.id ?? null);
+
+/** Billing facts from a Stripe Subscription (the period end moved to the items in recent API versions). */
+export function subscriptionFacts(sub) {
+  const item = sub?.items?.data?.[0];
+  const end = sub?.current_period_end ?? item?.current_period_end;
+  return {
+    plan: item?.price?.recurring?.interval === 'year' ? 'year' : 'month',
+    periodEnd: end ? end * 1000 : null,
+    cancelAtPeriodEnd: !!(sub?.cancel_at_period_end || sub?.cancel_at),
+    // past_due keeps working while Stripe retries the card; it ends as unpaid or canceled.
+    active: ['active', 'trialing', 'past_due'].includes(sub?.status),
+  };
 }
 
 const UNIQUE_VIOLATION = '23505';
@@ -98,7 +114,7 @@ const UNIQUE_VIOLATION = '23505';
  * Idempotent: creates the license for a paid Stripe Checkout Session, once.
  * Returns { license, created, claimToken } (claimToken only when just created and unclaimed).
  */
-export async function fulfillCheckoutSession(db, session) {
+export async function fulfillCheckoutSession(db, session, subscription = null) {
   const paid = session.payment_status === 'paid' || session.payment_status === 'no_payment_required';
   if (!paid) return { license: null, created: false };
   const existing = () => db.get('SELECT * FROM licenses WHERE stripe_session_id = ?', [session.id]);
@@ -114,10 +130,13 @@ export async function fulfillCheckoutSession(db, session) {
       const ref = session.client_reference_id;
       if (ref && (await getUser(t, ref)) && !(await activeLicenseForUser(t, ref))) userId = ref;
 
+      const sub = subscription || (typeof session.subscription === 'object' ? session.subscription : null);
+      const facts = session.mode === 'subscription' ? subscriptionFacts(sub) : null;
       const { license, claimToken } = await insertLicense(t, {
         email, userId, source: 'stripe', sessionId: session.id,
-        paymentIntent: typeof session.payment_intent === 'string' ? session.payment_intent : session.payment_intent?.id,
-        customerId: typeof session.customer === 'string' ? session.customer : session.customer?.id,
+        plan: facts ? (sub ? facts.plan : session.metadata?.interval === 'year' ? 'year' : 'month') : 'lifetime',
+        subscriptionId: idOf(session.subscription), periodEnd: facts?.periodEnd,
+        paymentIntent: idOf(session.payment_intent), customerId: idOf(session.customer),
         amount: session.amount_total, currency: session.currency,
       });
       await audit(t, 'license.created', { licenseId: license.id, userId, detail: { session: session.id } });
@@ -164,10 +183,53 @@ export async function setLicenseStatus(db, licenseId, status, reason) {
   await audit(db, `license.${status}`, { licenseId, detail: { reason } });
 }
 
-export async function revokeByPaymentIntent(db, paymentIntent, reason) {
-  const rows = await db.all("SELECT id FROM licenses WHERE stripe_payment_intent = ? AND status = 'active'", [paymentIntent]);
+/**
+ * Full refund or dispute. One-time purchases match on the payment intent; subscriptions on the customer
+ * (their invoices carry their own payment intents). Returns the revoked licenses.
+ */
+export async function revokeForCharge(db, { paymentIntent, customer }, reason) {
+  const rows = await db.all(`SELECT * FROM licenses WHERE status = 'active' AND source <> 'affiliate'
+    AND (stripe_payment_intent = ? OR (stripe_subscription_id IS NOT NULL AND plan <> 'lifetime' AND stripe_customer_id = ?))`,
+  [paymentIntent ?? '', customer ?? '']);
   for (const r of rows) await setLicenseStatus(db, r.id, 'revoked', reason);
-  return rows.length;
+  return rows;
+}
+
+/** Applies the current state of a Stripe Subscription to its license. Lifetime licenses ignore it. */
+export function syncSubscription(db, sub) {
+  return db.tx(async (t) => {
+    const lic = await t.get('SELECT * FROM licenses WHERE stripe_subscription_id = ? FOR UPDATE', [sub.id]);
+    if (!lic || lic.plan === 'lifetime') return lic ? 'lifetime' : 'unknown';
+    const f = subscriptionFacts(sub);
+    await t.run('UPDATE licenses SET plan = ?, current_period_end = ?, cancel_at_period_end = ? WHERE id = ?',
+      [f.plan, f.periodEnd ?? lic.current_period_end, f.cancelAtPeriodEnd, lic.id]);
+    if (lic.status === 'active' && !f.active) {
+      await setLicenseStatus(t, lic.id, 'revoked', 'subscription_ended');
+      return 'ended';
+    }
+    // Only a lapse brings it back (card fixed after unpaid). Refunds, disputes and manual revokes stay revoked.
+    if (lic.status === 'revoked' && f.active && lic.status_reason === 'subscription_ended') {
+      await setLicenseStatus(t, lic.id, 'active', null);
+      return 'resumed';
+    }
+    return 'updated';
+  });
+}
+
+/** Gives the account Premium for life: turns its active license into a lifetime one, or creates one. */
+export function makeLifetime(db, userId, source) {
+  return db.tx(async (t) => {
+    const user = await getUser(t, userId);
+    const current = await t.get("SELECT * FROM licenses WHERE user_id = ? AND status = 'active' FOR UPDATE", [userId]);
+    if (current) {
+      await t.run("UPDATE licenses SET plan = 'lifetime', cancel_at_period_end = false WHERE id = ?", [current.id]);
+      await audit(t, 'license.lifetime', { licenseId: current.id, userId, detail: { source } });
+      return { license: await getLicense(t, current.id), subscriptionToCancel: current.plan !== 'lifetime' ? current.stripe_subscription_id : null };
+    }
+    const { license } = await insertLicense(t, { email: user.email, userId, source, plan: 'lifetime' });
+    await audit(t, 'license.granted', { licenseId: license.id, userId, detail: { source } });
+    return { license, subscriptionToCancel: null };
+  });
 }
 
 /** Frees the device slot so the license can be activated on another PC. */
@@ -208,6 +270,10 @@ export async function activate(db, licenseId, device, ip) {
           licenseId, newId('dev'), device.fp.machine_guid, device.fp.smbios_uuid, device.fp.board_serial,
           device.name, device.os, device.appVersion, now, now, ip ?? null]);
         await audit(t, 'device.bound', { licenseId, userId: license.user_id, detail: { name: device.name, ip } });
+        // A referred buyer's first PC, compared with the affiliate's own PCs before the referral counts.
+        await t.run(`UPDATE referrals SET machine_guid = ?, smbios_uuid = ?, board_serial = ?
+          WHERE license_id = ? AND machine_guid IS NULL AND status = 'pending'`,
+        [device.fp.machine_guid, device.fp.smbios_uuid, device.fp.board_serial, licenseId]);
       } else {
         // Same PC: only fill in missing identifiers, so the device can't drift to another PC one part at a time.
         await t.run(`UPDATE devices SET machine_guid = COALESCE(machine_guid, ?), smbios_uuid = COALESCE(smbios_uuid, ?),

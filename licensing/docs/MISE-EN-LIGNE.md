@@ -1,6 +1,6 @@
 # Mettre Rago en ligne, étape par étape
 
-À la fin, voici ce qui marche en vrai : le joueur clique sur « Get Rago Hub Premium » sur ton site, paie sur Stripe, crée son compte, arrive sur son tableau de bord avec sa clé de licence et le bouton de téléchargement, installe Rago Hub, se connecte et active sa licence sur son PC.
+À la fin, voici ce qui marche en vrai : le joueur choisit mensuel ou annuel sur ton site, s'abonne sur Stripe, crée son compte (avec le code d'un affilié s'il en a un), arrive sur son tableau de bord avec sa clé de licence et le bouton de téléchargement, installe Rago Hub, se connecte et active sa licence sur son PC.
 
 **Comment c'est organisé :**
 
@@ -42,13 +42,18 @@ Commence tout en **mode test** Stripe : rien n'est vraiment débité tant que tu
 ## Étape 3 : Stripe (paiement)
 
 1. Crée un compte sur [stripe.com](https://stripe.com). En haut à droite, active le **mode test**.
-2. **Catalogue de produits → Ajouter un produit** :
+2. **Catalogue de produits → Ajouter un produit**, un seul produit avec **deux prix** :
    - Nom : `Rago Hub Premium`. Description : `Rago Hub for Windows, one PC per license.`
-   - Prix : **Paiement unique**, ton montant, en EUR ou USD.
-   - Enregistre, ouvre le prix et copie son identifiant `price_...` : **c'est `STRIPE_PRICE_ID`.**
+   - Prix 1 : **Récurrent**, période **Mensuelle**, ton prix par mois (ex. 4,99).
+   - **Ajouter un autre prix** → Prix 2 : **Récurrent**, période **Annuelle**, ton prix par an. Par défaut on part sur 10 fois le mensuel (2 mois offerts, ex. 49,90), comme l'annonce le site.
+   - Enregistre. Ouvre chaque prix et copie son identifiant `price_...` : le mensuel **c'est `STRIPE_PRICE_MONTHLY`**, l'annuel **c'est `STRIPE_PRICE_YEARLY`**.
 3. **Développeurs → Clés API** : copie la **clé secrète** `sk_test_...` : **c'est `STRIPE_SECRET_KEY`.**
-4. **Paramètres → Image de marque** : logo `brand/logo/png/rago-icon-512.png`, couleur `#FF3347`. La page de paiement aura l'air de la tienne.
-5. **Paramètres → E-mails clients** : coche les reçus pour les paiements réussis.
+4. **Paramètres → Facturation → Portail client** : clique **Activer le lien de test** (ou Enregistrer), coche « Annuler les abonnements » (à la fin de la période), « Changer de formule » avec tes deux prix, et « Mettre à jour le moyen de paiement ». C'est la page qu'ouvre le bouton **Manage subscription** du tableau de bord.
+5. **Paramètres → Facturation → Abonnements et e-mails** : coche les relances automatiques en cas d'échec de paiement (Smart Retries) et, à la fin des relances, **Annuler l'abonnement**. Pendant les relances le joueur garde Rago Hub ; à l'annulation la licence s'arrête toute seule.
+6. **Paramètres → Image de marque** : logo `brand/logo/png/rago-icon-512.png`, couleur `#FF3B30`. La page de paiement aura l'air de la tienne.
+7. **Paramètres → E-mails clients** : coche les reçus pour les paiements réussis et les factures.
+
+Tu avais déjà créé un prix « Paiement unique » ? Laisse-le, il ne sert plus : le serveur prend les deux prix récurrents dès que `STRIPE_PRICE_MONTHLY` et `STRIPE_PRICE_YEARLY` sont renseignés. Sans eux, il vend encore l'ancien prix unique comme licence à vie.
 
 Le webhook se fait à l'étape 6, une fois le serveur en ligne.
 
@@ -78,7 +83,8 @@ Sans Resend, tout marche sauf les emails : pas de lien de secours après achat, 
    INSTALLER_OBJECT=downloads/RagoHub-Setup.exe
    INSTALLER_VERSION=1.0.0
    STRIPE_SECRET_KEY=sk_test_...
-   STRIPE_PRICE_ID=price_...
+   STRIPE_PRICE_MONTHLY=price_...
+   STRIPE_PRICE_YEARLY=price_...
    STRIPE_WEBHOOK_SECRET=whsec_a_remplir_a_l_etape_6
    RESEND_API_KEY=re_...
    MAIL_FROM=Rago <hello@ragohub.com>
@@ -99,7 +105,8 @@ C'est ce qui prévient le serveur qu'un paiement est passé.
 
 1. Stripe (mode test) → **Développeurs → Webhooks → Ajouter une destination**.
 2. Événements à cocher :
-   `checkout.session.completed`, `checkout.session.async_payment_succeeded`, `charge.refunded`, `charge.dispute.created`.
+   `checkout.session.completed`, `checkout.session.async_payment_succeeded`, `customer.subscription.created`, `customer.subscription.updated`, `customer.subscription.deleted`, `customer.subscription.paused`, `customer.subscription.resumed`, `invoice.paid`, `charge.refunded`, `charge.dispute.created`.
+   Si ton webhook existe déjà, ouvre-le → **Modifier la destination** → ajoute les six nouveaux événements. Le secret `whsec_...` ne change pas.
 3. URL : `https://account.ragohub.com/webhooks/stripe`.
 4. Copie le **secret de signature** `whsec_...` → Railway → Variables → remplace `STRIPE_WEBHOOK_SECRET`. Railway redéploie tout seul.
 
@@ -132,15 +139,17 @@ Fais-le de bout en bout, comme un vrai client, dans une fenêtre de navigation p
 5. Installe, ouvre Rago Hub, connecte-toi avec le même email et mot de passe, clique **Activate** → « License active. Rago Hub is ready. »
 6. Recharge le tableau de bord : la carte **Device** montre ton PC.
 7. Sur un 2e PC (celui de ton pote) : la connexion doit être refusée avec « This license is already active on another PC. »
-8. Dans Stripe, rembourse ce paiement test : la licence passe en « Refunded » sur le tableau de bord, et Rago Hub s'arrête à sa prochaine vérification.
+8. Tableau de bord → **Manage subscription** : le portail Stripe s'ouvre. Annule : la carte Subscription affiche « Canceled. Rago Hub keeps working until … ».
+9. Dans Stripe, rembourse ce paiement test : la licence passe en « Refunded » sur le tableau de bord, l'abonnement est annulé, et Rago Hub s'arrête à sa prochaine vérification.
+10. Affiliation : avec un 2e compte, va sur `/affiliate` → **Get my referral code**. Fais un achat test avec un autre email et tape ce code à la création du compte : il apparaît dans la liste « Players who used your code », compté 14 jours après l'achat si le joueur a activé Rago Hub sur son PC.
 
 Si une étape coince, envoie-moi une capture et l'heure : je trouve la cause.
 
 ## Étape 10 : passer en vrai
 
 1. Stripe → **Activer les paiements** : informations sur toi ou ta société, et ton IBAN. Stripe demande une pièce d'identité.
-2. Repasse en **mode live**, puis refais en live les étapes 3.2, 3.3 et 6 : nouveau `price_...`, nouvelle clé `sk_live_...`, nouveau webhook `whsec_...`.
-3. Remplace ces trois variables dans Railway.
+2. Repasse en **mode live**, puis refais en live les étapes 3.2 à 3.5 et 6 : deux nouveaux `price_...`, nouvelle clé `sk_live_...`, portail client, nouveau webhook `whsec_...`.
+3. Remplace ces quatre variables dans Railway.
 4. Fais un vrai achat avec ta carte, puis rembourse-le depuis Stripe : la boucle complète est vérifiée.
 
 ---
@@ -151,7 +160,7 @@ Si une étape coince, envoie-moi une capture et l'heure : je trouve la cause.
 |---|---|
 | Ton **nom de domaine** | Pour régler `accountBase` du site et vérifier les adresses |
 | Ton **lien d'invitation Discord** | Lien support des pages compte et de l'app |
-| Le **prix** affiché (ex. 14,99 €) | Pour que le site affiche le même prix que Stripe |
+| Tes **deux prix** (mensuel et annuel) | Pour que le site affiche les mêmes prix que Stripe |
 | « Étape 6 faite » | Je vérifie que ton serveur répond bien depuis l'extérieur |
 | Une capture si quelque chose coince | Pour trouver la cause |
 
@@ -163,7 +172,7 @@ Si une étape coince, envoie-moi une capture et l'heure : je trouve la cause.
 |---|---|
 | `DATABASE_URL` | Supabase → Connect → Session pooler (étape 2.2) |
 | `SUPABASE_URL`, `SUPABASE_SERVICE_ROLE_KEY` | Supabase → Project Settings → API Keys (étape 2.5) |
-| `STRIPE_PRICE_ID`, `STRIPE_SECRET_KEY` | Stripe (étapes 3.2 et 3.3) |
+| `STRIPE_PRICE_MONTHLY`, `STRIPE_PRICE_YEARLY`, `STRIPE_SECRET_KEY` | Stripe (étapes 3.2 et 3.3) |
 | `STRIPE_WEBHOOK_SECRET` | Stripe → Webhooks (étape 6) |
 | `RESEND_API_KEY`, `MAIL_FROM` | Resend (étape 4) |
 | `PUBLIC_URL`, `SITE_URL` | Ton domaine (étape 1) |
@@ -179,7 +188,17 @@ npm ci
 export DATABASE_URL="la même que dans Railway"
 npm run admin -- show joueur@mail.com           # sa licence, son PC, ce qui s'est passé
 npm run admin -- reset-device joueur@mail.com   # il a changé de PC : libère l'ancien
-npm run admin -- grant ami@mail.com             # licence offerte (ex. anciens acheteurs du .bat)
+npm run admin -- grant ami@mail.com             # licence à vie offerte (ex. anciens acheteurs du .bat)
+npm run admin -- affiliate affilie@mail.com     # son code, ses filleuls et pourquoi chacun compte ou non
 ```
+
+### Programme d'affiliation, ce qui est vérifié
+
+- Le code se tape **uniquement** à la création du compte, juste après le paiement. Un client = un code, pour toujours.
+- Refusé tout de suite : code inexistant, ou code de l'affilié lui-même (même email que le compte affilié ou que l'email de paiement).
+- Un filleul compte **14 jours après son achat** (`AFFILIATE_HOLD_DAYS`), s'il n'a été ni remboursé ni contesté, et s'il a **activé Rago Hub sur un PC** qui n'est ni celui de l'affilié ni celui d'un autre filleul déjà compté. Même client Stripe que l'affilié : refusé aussi.
+- À 3 filleuls comptés (`AFFILIATE_GOAL`), l'affilié reçoit Rago Hub Premium **à vie**, verrouillé sur un PC comme les autres. S'il était abonné, c'est sa licence actuelle qui devient à vie (même clé, même PC) et Stripe arrête de le prélever à la fin de la période.
+- Le calcul se fait quand l'affilié ouvre son compte ou se connecte dans l'app, et toutes les heures sur le serveur.
+- Limite connue : quelqu'un qui paie 3 abonnements avec 3 emails, 3 cartes et 3 PC différents passera. Ça lui coûte 3 mois d'abonnement minimum ; si tu veux plus strict, monte `AFFILIATE_HOLD_DAYS` à 30 ou 45.
 
 Tu peux aussi voir les tables directement dans Supabase → **Table Editor**.

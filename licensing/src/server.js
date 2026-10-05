@@ -20,7 +20,19 @@ if (!cfg.databaseUrl && process.env.DEV_SEED) {
   console.log(`[dev] Premium account ${email} created`);
 }
 
-const app = createApp({ cfg, db, keys, stripe: createStripe(cfg), mailer: createMailer(cfg) });
+const stripe = createStripe(cfg);
+const app = createApp({ cfg, db, keys, stripe, mailer: createMailer(cfg) });
+
+// Hourly: referrals that cleared the hold period count, and affiliates at the goal get their reward
+// even if they don't open their account page.
+const { affiliatesToEvaluate, settleAffiliate } = await import('./affiliates.js');
+const sweep = async () => {
+  try {
+    for (const id of await affiliatesToEvaluate(db, cfg)) await settleAffiliate(db, cfg, stripe, console, id);
+  } catch (err) { console.error('[affiliate] sweep failed', err); }
+};
+setInterval(sweep, 60 * 60 * 1000).unref();
+setTimeout(sweep, 30 * 1000).unref();
 
 if (!cfg.databaseUrl) console.warn('[warn] DATABASE_URL not set: in-memory database and keys, everything is lost on restart.');
 if (!cfg.stripeSecretKey) console.warn('[warn] STRIPE_SECRET_KEY not set: /buy and the webhook are disabled.');

@@ -5,7 +5,7 @@ const esc = (s) => String(s).replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&l
 function layout(title, bodyHtml) {
   return `<!doctype html><html><body style="margin:0;background:#0A0A0B;color:#F5F5F6;font:15px/1.6 -apple-system,'Segoe UI',sans-serif">
 <div style="max-width:520px;margin:0 auto;padding:40px 24px">
-<div style="font:600 20px/1 'Segoe UI',sans-serif;letter-spacing:-.02em">RAGO<span style="display:inline-block;width:6px;height:6px;background:#FF3347;vertical-align:top;margin-left:2px"></span></div>
+<div style="font:600 20px/1 'Segoe UI',sans-serif;letter-spacing:-.02em">RAGO<span style="display:inline-block;width:6px;height:6px;background:#FF3B30;vertical-align:top;margin-left:2px"></span></div>
 <h1 style="font-size:22px;letter-spacing:-.02em;margin:32px 0 12px">${esc(title)}</h1>
 ${bodyHtml}
 <p style="color:#7C7C86;font-size:12px;margin-top:40px">Rago Hub Premium. Every millisecond counts.</p>
@@ -13,7 +13,7 @@ ${bodyHtml}
 }
 
 const button = (href, label) =>
-  `<p style="margin:28px 0"><a href="${esc(href)}" style="background:#FF3347;color:#0A0A0B;text-decoration:none;font-weight:600;padding:12px 20px;border-radius:6px;display:inline-block">${esc(label)}</a></p>`;
+  `<p style="margin:28px 0"><a href="${esc(href)}" style="background:#FF3B30;color:#0A0A0B;text-decoration:none;font-weight:600;padding:13px 24px;border-radius:999px;display:inline-block">${esc(label)}</a></p>`;
 
 export function createMailer(cfg, { log = console.log } = {}) {
   async function send(to, subject, html, text) {

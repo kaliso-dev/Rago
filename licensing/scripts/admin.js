@@ -5,9 +5,11 @@
 //   restore <email>              re-enable a revoked license
 //   grant <email> [note]         create a license by hand (e.g. Discord buyers of the .bat Premium)
 //   create-user <email> <pass>   create an account (testing)
+//   affiliate <email>            affiliate code, referrals and why each counts or not
 import { loadConfig } from '../src/config.js';
 import { openDb } from '../src/db.js';
 import * as L from '../src/licensing.js';
+import * as A from '../src/affiliates.js';
 
 const cfg = loadConfig({ ...process.env, NODE_ENV: 'development' });
 if (!cfg.databaseUrl) { console.error('Set DATABASE_URL (Supabase connection string) first.'); process.exit(1); }
@@ -28,7 +30,8 @@ switch (cmd) {
     const { user, lic } = await licenseOf(email);
     const dev = await L.getDevice(db, lic.id);
     console.log({ account: user ? { id: user.id, email: user.email, created: fmt(user.created_at) } : 'none (unclaimed)',
-      license: { id: lic.id, key: lic.key, status: lic.status, reason: lic.status_reason, source: lic.source, created: fmt(lic.created_at), payment_intent: lic.stripe_payment_intent },
+      license: { id: lic.id, key: lic.key, status: lic.status, reason: lic.status_reason, source: lic.source, plan: lic.plan, paid_until: fmt(lic.current_period_end), cancel_at_period_end: lic.cancel_at_period_end,
+        subscription: lic.stripe_subscription_id, created: fmt(lic.created_at), payment_intent: lic.stripe_payment_intent },
       device: dev ? { name: dev.name, os: dev.os, bound: fmt(dev.bound_at), last_seen: fmt(dev.last_seen_at), ip: dev.last_ip } : 'not activated' });
     for (const e of await db.all('SELECT * FROM audit WHERE license_id = ? ORDER BY id DESC LIMIT 15', [lic.id])) console.log(fmt(e.at), e.type, e.detail || '');
     break;
@@ -42,8 +45,21 @@ switch (cmd) {
     console.log(claimToken ? `Send this link so they create their account: ${cfg.publicUrl}/claim/${claimToken}` : 'Added to their existing account.');
     break;
   }
+  case 'affiliate': {
+    const user = await L.findUserByEmail(db, email);
+    if (!user) { console.error(`No account for ${email}`); process.exit(1); }
+    await A.evaluateAffiliate(db, cfg, user.id);
+    const sum = await A.affiliateSummary(db, cfg, user.id);
+    if (!sum) { console.log('Not in the affiliate program.'); break; }
+    console.log({ code: sum.code, counted: `${sum.counted}/${sum.goal}`, rewarded: sum.rewarded });
+    for (const r of await db.all(`SELECT r.status, r.void_reason, r.created_at, r.machine_guid IS NOT NULL AS activated, l.email
+      FROM referrals r JOIN licenses l ON l.id = r.license_id WHERE r.affiliate_user_id = ? ORDER BY r.created_at`, [user.id])) {
+      console.log(fmt(r.created_at), r.email, r.status, r.void_reason || '', r.activated ? 'activated' : 'not activated');
+    }
+    break;
+  }
   case 'create-user': await L.createUser(db, email, rest[0]); console.log('User created.'); break;
   default:
-    console.log('Commands: show, reset-device, revoke, restore, grant, create-user (see scripts/admin.js)');
+    console.log('Commands: show, reset-device, revoke, restore, grant, affiliate, create-user (see scripts/admin.js)');
 }
 await db.close();

@@ -41,7 +41,15 @@ async function setup(env = {}, extra = {}) {
   const stripe = new Stripe('sk_test_fake');
   const sessions = {};
   stripe.checkout.sessions.retrieve = async (id) => { if (!sessions[id]) throw new Error('No such session'); return sessions[id]; };
-  stripe.checkout.sessions.create = async (params) => ({ id: 'cs_new', url: 'https://checkout.stripe.com/c/pay/cs_new', params });
+  const created = [];
+  stripe.checkout.sessions.create = async (params) => { created.push(params); return { id: 'cs_new', url: 'https://checkout.stripe.com/c/pay/cs_new', params }; };
+  // Subscriptions live here; tests change them and send the matching event.
+  const subs = {};
+  const stripeCalls = [];
+  stripe.subscriptions.retrieve = async (id) => { if (!subs[id]) throw new Error('No such subscription'); return subs[id]; };
+  stripe.subscriptions.cancel = async (id) => { stripeCalls.push(['cancel', id]); subs[id] = { ...subs[id], status: 'canceled' }; return subs[id]; };
+  stripe.subscriptions.update = async (id, p) => { stripeCalls.push(['update', id, p]); subs[id] = { ...subs[id], ...p }; return subs[id]; };
+  stripe.billingPortal.sessions.create = async (p) => { stripeCalls.push(['portal', p.customer]); return { url: 'https://billing.stripe.com/p/session/x' }; };
   const mails = [];
   const mailer = { purchase: async (to, url) => mails.push({ to, url }), passwordReset: async (to, url) => mails.push({ to, url }) };
   const app = createApp({ cfg, db, keys, stripe, mailer, log: { info() {}, error: console.error }, ...extra });
@@ -76,7 +84,17 @@ async function setup(env = {}, extra = {}) {
     id, object: 'checkout.session', payment_status: 'paid', customer_details: { email }, payment_intent: `pi_${id}`,
     customer: `cus_${id}`, amount_total: 1499, currency: 'eur', ...extra,
   });
-  return { cfg, db, keys, app, browse, api, webhook, paidSession, mails, jar, sessions };
+  const DAYS = 86400;
+  const subscription = (id, interval, { status = 'active', periodDays = interval === 'year' ? 365 : 30, ...rest } = {}) => (subs[id] = {
+    id, object: 'subscription', status, cancel_at_period_end: false,
+    items: { data: [{ price: { id: `price_${interval}`, recurring: { interval } }, current_period_end: Math.floor(Date.now() / 1000) + periodDays * DAYS }] }, ...rest,
+  });
+  /** A paid subscription checkout, returned expanded like the success page asks for. */
+  const paidSubscription = (id, email, interval = 'month', extra = {}) => {
+    const sub = subscription(`sub_${id}`, interval);
+    return paidSession(id, email, { mode: 'subscription', payment_intent: null, subscription: sub, metadata: { interval }, ...extra });
+  };
+  return { cfg, db, keys, app, browse, api, webhook, paidSession, paidSubscription, subscription, subs, stripeCalls, created, mails, jar, sessions };
 }
 
 const h = (name, v) => createHash('sha256').update(`rago-fp-v1|${name}|${v}`).digest('hex');
@@ -317,13 +335,24 @@ test('keys generated once and kept in the database; public key served as PEM', a
 
 test('config accepts a bare host for PUBLIC_URL and flags example values', () => {
   const cfg = loadConfig({ NODE_ENV: 'production', PUBLIC_URL: 'rago-production.up.railway.app', SITE_URL: 'https://rago.netlify.app/',
-    DATABASE_URL: 'postgres://x', STRIPE_SECRET_KEY: 'sk_test_x', STRIPE_PRICE_ID: 'price_x', STRIPE_WEBHOOK_SECRET: 'whsec_a_remplir_a_l_etape_6',
+    DATABASE_URL: 'postgres://x', STRIPE_SECRET_KEY: 'sk_test_x', STRIPE_PRICE_MONTHLY: 'price_m', STRIPE_PRICE_YEARLY: 'price_y', STRIPE_WEBHOOK_SECRET: 'whsec_a_remplir_a_l_etape_6',
     SUPABASE_URL: 'https://abcd.supabase.co', RESEND_API_KEY: 're_...' });
   assert.equal(cfg.publicUrl, 'https://rago-production.up.railway.app');
   assert.equal(cfg.siteUrl, 'https://rago.netlify.app');
   assert.equal(cfg.cancelUrl, 'https://rago.netlify.app/#pricing');
   assert.equal(cfg.resendApiKey, '');
   assert.equal(cfg.warnings.length, 3);
+  assert.equal(cfg.subscriptions, true);
+  // No price at all: the server still starts, says so in the logs, and /buy explains checkout isn't open.
+  const noPrice = loadConfig({ NODE_ENV: 'production', PUBLIC_URL: 'x.app', DATABASE_URL: 'postgres://x', STRIPE_SECRET_KEY: 'sk', STRIPE_WEBHOOK_SECRET: 'whsec' });
+  assert.match(noPrice.warnings.join(' '), /STRIPE_PRICE_MONTHLY/);
+});
+
+test('no Stripe price yet: /buy says checkout is not open', async () => {
+  const t = await setup({ STRIPE_PRICE_ID: '' });
+  const r = await t.browse('/buy?interval=year');
+  assert.equal(r.status, 503);
+  assert.match(await r.text(), /Checkout is not open yet/);
 });
 
 test('webhook rejects bad signatures; cross-site form posts are refused', async () => {
@@ -332,4 +361,212 @@ test('webhook rejects bad signatures; cross-site form posts are refused', async 
   assert.equal(r.status, 400);
   const x = await t.app.request('/login', { method: 'POST', headers: { origin: 'https://evil.example', 'content-type': 'application/x-www-form-urlencoded' }, body: 'email=a&password=b' });
   assert.equal(x.status, 403);
+});
+
+const SUBS = { STRIPE_PRICE_MONTHLY: 'price_month', STRIPE_PRICE_YEARLY: 'price_year', SITE_URL: 'https://rago.test' };
+const DAY_MS = 86400000;
+
+test('subscription: monthly or yearly checkout, renewal date, cancel, lapse and resume', async () => {
+  const t = await setup(SUBS);
+  // /buy picks the price from ?interval, yearly by default (the plan the site highlights).
+  await t.browse('/buy?interval=month');
+  await t.browse('/buy');
+  assert.equal(t.created[0].mode, 'subscription');
+  assert.deepEqual(t.created[0].line_items, [{ price: 'price_month', quantity: 1 }]);
+  assert.equal(t.created[1].line_items[0].price, 'price_year');
+  assert.equal(t.created[0].customer_creation, undefined);
+
+  const s = t.paidSubscription('cs_sub', 'sub@rago.gg', 'year');
+  await t.browse('/checkout/success?session_id=cs_sub');
+  await t.browse('/signup', { form: { email: 'sub@rago.gg', password: 'password123' } });
+  let dash = await (await t.browse('/account')).text();
+  assert.match(dash, /Rago Hub Premium · Yearly/);
+  assert.match(dash, /Renews on/);
+  assert.match(dash, /Manage subscription/);
+  const portal = await t.browse('/account/billing', { form: {} });
+  assert.equal(portal.headers.get('location'), 'https://billing.stripe.com/p/session/x');
+  assert.deepEqual(t.stripeCalls.at(-1), ['portal', 'cus_cs_sub']);
+
+  // The webhook for the same checkout re-reads the subscription and doesn't create a second license.
+  await t.webhook('checkout.session.completed', { ...s, subscription: 'sub_cs_sub' });
+  assert.equal((await t.db.get('SELECT COUNT(*)::int AS n FROM licenses')).n, 1);
+
+  // App: the token never outlives the paid period by more than the grace days.
+  t.subscription('sub_cs_sub', 'year', { periodDays: 2 });
+  await t.webhook('customer.subscription.updated', { id: 'sub_cs_sub', object: 'subscription' });
+  let j = await (await t.api('/auth/login', { email: 'sub@rago.gg', password: 'password123', device: device('S1') })).json();
+  j = await (await t.api('/licenses/activate', { device: device('S1') }, { authorization: `Bearer ${j.access_token}` })).json();
+  assert.equal(j.license.billing.interval, 'year');
+  assert.ok(j.license.billing.renews_at);
+  const days = (Date.parse(j.expires_at) - Date.now()) / DAY_MS;
+  assert.ok(days > 4.9 && days < 5.1, `token lasts ${days} days`);
+  assert.equal(verifyToken(j.license_token, t.keys, { typ: 'license' }).plan, 'premium');
+
+  // Canceled at period end: still works, dashboard says until when.
+  t.subscription('sub_cs_sub', 'year', { cancel_at_period_end: true });
+  await t.webhook('customer.subscription.updated', { id: 'sub_cs_sub', object: 'subscription' });
+  assert.match(await (await t.browse('/account')).text(), /Canceled\. Rago Hub keeps working until/);
+
+  // Unpaid: the license stops; card fixed: it comes back, same PC, no new activation.
+  t.subscription('sub_cs_sub', 'year', { status: 'unpaid' });
+  await t.webhook('customer.subscription.updated', { id: 'sub_cs_sub', object: 'subscription' });
+  let r = await t.api('/licenses/refresh', { license_token: j.license_token, device: device('S1') });
+  let err = (await r.json()).error;
+  assert.equal(err.code, 'revoked');
+  assert.equal(err.reason, 'subscription_ended');
+  assert.equal(err.buy_url, 'https://rago.test/#pricing');
+  assert.match(err.message, /subscription ended/);
+  dash = await (await t.browse('/account')).text();
+  assert.match(dash, /Renew Rago Hub Premium/);
+  assert.match(dash, /Ended/);
+
+  t.subscription('sub_cs_sub', 'year');
+  // An old event replayed late can't override: the handler reads the current subscription from Stripe.
+  await t.webhook('customer.subscription.updated', { id: 'sub_cs_sub', object: 'subscription', status: 'canceled' });
+  j = await (await t.api('/auth/login', { email: 'sub@rago.gg', password: 'password123', device: device('S1') })).json();
+  assert.equal(j.status, 'active');
+
+  // Deleted for good.
+  t.subscription('sub_cs_sub', 'year', { status: 'canceled' });
+  await t.webhook('customer.subscription.deleted', { id: 'sub_cs_sub', object: 'subscription' });
+  r = await t.api('/auth/login', { email: 'sub@rago.gg', password: 'password123', device: device('S1') });
+  assert.equal((await r.json()).error.reason, 'subscription_ended');
+
+  // Renewing: a new checkout with the same Stripe customer.
+  await t.browse('/buy?interval=month');
+  assert.equal(t.created.at(-1).customer, 'cus_cs_sub');
+  assert.equal(t.created.at(-1).customer_email, undefined);
+});
+
+test('subscription refund or dispute revokes and stops renewals', async () => {
+  const t = await setup(SUBS);
+  t.paidSubscription('cs_r', 'r@rago.gg');
+  await t.browse('/checkout/success?session_id=cs_r');
+  await t.browse('/signup', { form: { email: 'r@rago.gg', password: 'password123' } });
+  // Subscription invoices have their own payment intent: matched on the customer.
+  await t.webhook('charge.refunded', { id: 'ch_9', object: 'charge', refunded: true, payment_intent: 'pi_invoice_1', customer: 'cus_cs_r' });
+  assert.match(await (await t.browse('/account')).text(), /Refunded/);
+  assert.deepEqual(t.stripeCalls.at(-1), ['cancel', 'sub_cs_r']);
+  // The cancellation event that follows doesn't turn "refunded" into "ended".
+  await t.webhook('customer.subscription.deleted', { id: 'sub_cs_r', object: 'subscription' });
+  assert.equal((await t.db.get('SELECT status_reason FROM licenses')).status_reason, 'refunded');
+});
+
+test('affiliate: join, code at sign-up only, 3 real players = lifetime license', async () => {
+  const t = await setup(SUBS);
+  // The affiliate subscribes first, then joins the program.
+  t.paidSubscription('cs_aff', 'aff@rago.gg');
+  await t.browse('/checkout/success?session_id=cs_aff');
+  await t.browse('/signup', { form: { email: 'aff@rago.gg', password: 'password123' } });
+  const aff = await L.findUserByEmail(t.db, 'aff@rago.gg');
+  const affLic = await L.licenseForUser(t.db, aff.id);
+  await L.activate(t.db, affLic.id, { fp: { machine_guid: 'a'.repeat(64), smbios_uuid: 'b'.repeat(64), board_serial: null }, name: 'AFF-PC', os: '', appVersion: '' });
+  assert.match(await (await t.browse('/affiliate')).text(), /Get my referral code/);
+  assert.equal((await t.browse('/affiliate/join', { form: {} })).headers.get('location'), '/affiliate?n=joined');
+  const { code } = await t.db.get('SELECT code FROM affiliates WHERE user_id = ?', [aff.id]);
+  assert.match(code, /^[A-Z2-9]{6}$/);
+  let page = await (await t.browse('/affiliate')).text();
+  assert.match(page, new RegExp(code));
+  assert.match(page, /3 more to go/);
+  const affJar = new Map(t.jar);
+
+  // The code field only exists right after a purchase.
+  t.jar.clear();
+  assert.doesNotMatch(await (await t.browse('/signup')).text(), /Referral code/);
+
+  async function buyer(n, { codeTyped = code, fp, email = `p${n}@x.io`, payer = email } = {}) {
+    t.jar.clear();
+    t.paidSubscription(`cs_p${n}`, payer);
+    let html = await (await t.browse(`/checkout/success?session_id=cs_p${n}`)).text();
+    if (payer !== email) html = await (await t.browse('/signup')).text(); // payer's email has an account: they're offered sign-in first
+    assert.match(html, /Referral code/);
+    const res = await t.browse('/signup', { form: { email, password: 'password123', code: codeTyped } });
+    if (res.status !== 303) return { error: await res.text() };
+    const user = await L.findUserByEmail(t.db, email);
+    const lic = await L.licenseForUser(t.db, user.id);
+    if (fp) await L.activate(t.db, lic.id, { fp, name: `P${n}`, os: '', appVersion: '' });
+    return { user, lic };
+  }
+  const fp = (c) => ({ machine_guid: c.repeat(64), smbios_uuid: null, board_serial: null });
+
+  // Wrong code or own code: refused before the account exists.
+  assert.match((await buyer(0, { codeTyped: 'NOPE42' })).error, /referral code doesn&#39;t exist/);
+  assert.match((await buyer(9, { email: 'p9@x.io', payer: 'aff@rago.gg' })).error, /can&#39;t use your own referral code/);
+  assert.equal(await L.findUserByEmail(t.db, 'p9@x.io'), null);
+
+  // Shared link pre-fills the code after payment.
+  t.jar.clear();
+  await t.browse(`/buy?interval=month&ref=${code.toLowerCase()}`);
+  t.paidSubscription('cs_link', 'link@x.io');
+  assert.match(await (await t.browse('/checkout/success?session_id=cs_link')).text(), new RegExp(`value="${code}"`));
+
+  await buyer(1, { fp: fp('1') });
+  await buyer(2, { fp: fp('2') });
+  await buyer(3, { fp: fp('a') });         // activated on the affiliate's own PC
+  const refunded = await buyer(4, { fp: fp('4') });
+  await buyer(5);                           // never activated
+  await t.webhook('charge.refunded', { id: 'ch_4', object: 'charge', refunded: true, customer: refunded.lic.stripe_customer_id });
+
+  // Before the hold period nothing counts.
+  t.jar.clear(); for (const [k, v] of affJar) t.jar.set(k, v);
+  page = await (await t.browse('/affiliate')).text();
+  assert.match(page, /Counts on/);
+  assert.match(page, /Not activated yet/);
+  assert.match(page, /Refunded/);
+  assert.doesNotMatch(page, /pa•/); // emails are masked: p1@x.io -> p1••@x.io
+  assert.match(page, /p1••@x\.io/);
+
+  await t.db.run('UPDATE licenses SET created_at = created_at - ?', [15 * DAY_MS]);
+  page = await (await t.browse('/affiliate')).text();
+  assert.match(page, /Same PC as yours/);
+  assert.match(page, /1 more to go/);
+
+  await buyer(6, { fp: fp('6') });
+  await t.db.run('UPDATE licenses SET created_at = created_at - ? WHERE email = ?', [15 * DAY_MS, 'p6@x.io']);
+  t.jar.clear(); for (const [k, v] of affJar) t.jar.set(k, v);
+  page = await (await t.browse('/affiliate')).text();
+  assert.match(page, /Rago Hub is yours for life/);
+
+  // Their subscription license became lifetime: same key, same PC, renewals stopped.
+  const now = await L.licenseForUser(t.db, aff.id);
+  assert.equal(now.id, affLic.id);
+  assert.equal(now.plan, 'lifetime');
+  assert.deepEqual(t.stripeCalls.find((c) => c[0] === 'update'), ['update', 'sub_cs_aff', { cancel_at_period_end: true }]);
+  t.subscription('sub_cs_aff', 'month', { status: 'canceled' });
+  await t.webhook('customer.subscription.deleted', { id: 'sub_cs_aff', object: 'subscription' });
+  const j = await (await t.api('/auth/login', { email: 'aff@rago.gg', password: 'password123', device: device('X', null, null) })).json();
+  assert.equal(j.error.code, 'bound_to_other_device'); // still locked to AFF-PC
+  assert.match(await (await t.browse('/account')).text(), /Rago Hub Premium for life/);
+
+  // Granted once, even if evaluated again.
+  await t.browse('/affiliate');
+  assert.equal((await t.db.get("SELECT COUNT(*)::int AS n FROM audit WHERE type = 'affiliate.rewarded'")).n, 1);
+});
+
+test('affiliate without a license gets a new lifetime license', async () => {
+  const t = await setup(SUBS);
+  await t.browse('/signup?next=/affiliate');
+  const r = await t.browse('/signup', { form: { email: 'free@aff.io', password: 'password123', next: '/affiliate' } });
+  assert.equal(r.headers.get('location'), '/affiliate');
+  await t.browse('/affiliate/join', { form: {} });
+  const aff = await L.findUserByEmail(t.db, 'free@aff.io');
+  const { code } = await t.db.get('SELECT code FROM affiliates');
+  const A = await import('../src/affiliates.js');
+  for (const n of [1, 2, 3]) {
+    const user = await L.createUser(t.db, `b${n}@x.io`, 'password123');
+    const { license } = await L.grantLicense(t.db, `b${n}@x.io`);
+    await A.recordReferral(t.db, await A.affiliateByCode(t.db, code), user.id, license);
+    await L.activate(t.db, license.id, { fp: { machine_guid: String(n).repeat(64), smbios_uuid: null, board_serial: null }, name: 'P', os: '', appVersion: '' });
+  }
+  await t.db.run('UPDATE licenses SET created_at = created_at - ?', [15 * DAY_MS]);
+  assert.deepEqual(await A.affiliatesToEvaluate(t.db, t.cfg), [aff.id]);
+  // The app's sign-in also settles it, so the affiliate doesn't need to open the site.
+  const j = await (await t.api('/auth/login', { email: 'free@aff.io', password: 'password123', device: device('F') })).json();
+  assert.equal(j.status, 'activation_required');
+  const lic = await L.licenseForUser(t.db, aff.id);
+  assert.equal(lic.plan, 'lifetime');
+  assert.equal(lic.source, 'affiliate');
+  // Refunds of other people's payments never touch it.
+  await t.webhook('charge.refunded', { id: 'ch_x', object: 'charge', refunded: true, customer: null, payment_intent: null });
+  assert.equal((await L.licenseForUser(t.db, aff.id)).status, 'active');
 });

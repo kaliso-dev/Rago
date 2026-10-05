@@ -24,17 +24,19 @@ document.addEventListener('click', (e) => {
   if (copy && navigator.clipboard) {
     navigator.clipboard.writeText(copy.dataset.copy).then(() => {
       const label = copy.querySelector('span');
+      copy.dataset.label ||= label.textContent;
       label.textContent = 'Copied';
-      setTimeout(() => (label.textContent = 'Copy'), 1600);
+      copy.classList.remove('copied'); void copy.offsetWidth; copy.classList.add('copied');
+      setTimeout(() => (label.textContent = copy.dataset.label), 1600);
     });
   }
 
   const dl = e.target.closest('[data-download]');
   if (dl) {
-    const ring = document.createElement('span');
-    ring.className = 'ring';
-    dl.append(ring);
-    setTimeout(() => ring.remove(), 700);
+    const ripple = document.createElement('span');
+    ripple.className = 'ripple';
+    dl.append(ripple);
+    setTimeout(() => ripple.remove(), 750);
     dl.querySelector('span').textContent = 'Downloading…';
     setTimeout(() => (dl.querySelector('span').textContent = 'Download Rago Hub'), 4000);
   }
@@ -50,3 +52,28 @@ document.addEventListener('submit', (e) => {
     btn.textContent = form.dataset.busy;
   }
 });
+
+// Numbers count up when the page opens (affiliate progress)
+if (!matchMedia('(prefers-reduced-motion: reduce)').matches) {
+  for (const el of document.querySelectorAll('[data-count]')) {
+    const to = Number(el.dataset.count);
+    if (!to) continue;
+    const t0 = performance.now() + 300;
+    const tick = (now) => {
+      const p = Math.min(1, Math.max(0, (now - t0) / 1400));
+      el.textContent = String(Math.round(to * (1 - Math.pow(1 - p, 4))));
+      if (p < 1) requestAnimationFrame(tick);
+    };
+    el.textContent = '0';
+    requestAnimationFrame(tick);
+  }
+}
+
+// Referral code field: uppercase as you type
+for (const input of document.querySelectorAll('input[name=code]')) {
+  input.addEventListener('input', () => {
+    const pos = input.selectionStart;
+    input.value = input.value.toUpperCase().replace(/[^A-Z0-9]/g, '');
+    input.setSelectionRange(pos, pos);
+  });
+}

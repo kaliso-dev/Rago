@@ -1,4 +1,4 @@
-/* Rago — design tokens v1.0 (source de vérité : /mnt/project-files/brand/tokens/tokens.json)
+/* Rago — design tokens v1.1 (05/10/2026 : rouge #FF3B30, plus d'orange, arrondis partout) (source de vérité : /mnt/project-files/brand/tokens/tokens.json)
    Polices : Geist + Geist Mono (OFL, Google Fonts / npm "geist"). Thème sombre par défaut. */
 :root {
   /* Encre (fonds, du plus profond au plus élevé) */
@@ -21,22 +21,22 @@
   --rg-line-3: rgba(255,255,255,.16);
 
   /* Rouge Rago (accent unique) */
-  --rg-red-300: #FF8A96;
-  --rg-red-400: #FF5A6B;  /* hover */
-  --rg-red-500: #FF3347;  /* ACCENT. Texte posé dessus = --rg-ink-1 (5.5:1), jamais blanc (3.3:1) */
-  --rg-red-600: #E01F34;  /* pressed */
-  --rg-red-700: #B5172A;
-  --rg-red-a12: rgba(255,51,71,.12); /* fond teinté */
-  --rg-red-a24: rgba(255,51,71,.24); /* focus ring / glow */
+  --rg-red-300: #FF8A82;
+  --rg-red-400: #FF5E55;  /* hover */
+  --rg-red-500: #FF3B30;  /* ACCENT. Texte posé dessus = --rg-ink-1 (5,6:1), jamais blanc (3,5:1) */
+  --rg-red-600: #F2352B;  /* pressed */
+  --rg-red-700: #C9221A;  /* rouge profond ; texte blanc OK dessus (5,6:1) */
+  --rg-red-a12: rgba(255,59,48,.12); /* fond teinté */
+  --rg-red-a24: rgba(255,59,48,.24); /* focus ring / glow */
 
-  /* Chaleur (dégradé signature — héros, barres de progression, CTA du site uniquement) */
-  --rg-heat: linear-gradient(100deg, #FF3347 0%, #FF5A2E 55%, #FF8A1F 100%);
+  /* Dégradé rouge (aucun orange). Héros, barre de progression, CTA d'achat uniquement */
+  --rg-red-gradient: linear-gradient(100deg, #C9221A 0%, #FF3B30 55%, #FF5E55 100%);
 
   /* Sémantique */
   --rg-success: #3DDC97;  /* gains : ms en moins, FPS en plus */
-  --rg-warning: #FFB020;
+  --rg-warning: #FFD60A;  /* jaune, pas d'orange */
   --rg-info:    #5AB8FF;
-  --rg-danger:  #FF3347;  /* = accent ; toujours accompagné d'une icône + texte */
+  --rg-danger:  #FF3B30;  /* = accent ; toujours accompagné d'une icône + texte */
 
   /* Typo */
   --rg-font-sans: "Geist", "Inter", "Segoe UI Variable", "Segoe UI", system-ui, sans-serif;
@@ -56,20 +56,21 @@
   --rg-space-5: 20px; --rg-space-6: 24px; --rg-space-8: 32px; --rg-space-10: 40px;
   --rg-space-12: 48px; --rg-space-16: 64px; --rg-space-24: 96px;
 
-  /* Rayons */
-  --rg-radius-xs: 4px;  /* badges, kbd */
-  --rg-radius-sm: 6px;  /* boutons compacts, inputs */
-  --rg-radius-md: 10px; /* boutons, champs */
-  --rg-radius-lg: 14px; /* cartes */
-  --rg-radius-xl: 20px; /* modales, fenêtres */
-  --rg-radius-full: 999px;
-  --rg-chamfer: 6px;    /* coin coupé signature (clip-path), à utiliser avec parcimonie */
+  /* Rayons : arrondis partout, aucun angle vif ni coin coupé */
+  --rg-radius-xs: 8px;    /* badges, tags, kbd */
+  --rg-radius-sm: 12px;   /* inputs, petits boutons, items de menu */
+  --rg-radius-md: 16px;   /* boutons, champs, tuiles */
+  --rg-radius-lg: 24px;   /* cartes, panneaux */
+  --rg-radius-xl: 32px;   /* modales, sections du site, carte pricing */
+  --rg-radius-2xl: 40px;  /* blocs héros, fenêtre de l'app sur le site */
+  --rg-radius-full: 999px; /* boutons principaux (pilule), toggles, avatars, chips */
+  /* Règle d'imbrication : rayon intérieur = rayon extérieur − padding (ex. carte 24 / padding 8 → enfant 16) */
 
   /* Ombres (le relief vient surtout de l'échelle d'encre) */
   --rg-shadow-1: 0 1px 0 rgba(255,255,255,.04) inset, 0 1px 2px rgba(0,0,0,.4);
   --rg-shadow-2: 0 1px 0 rgba(255,255,255,.05) inset, 0 8px 24px -8px rgba(0,0,0,.6);
   --rg-shadow-3: 0 1px 0 rgba(255,255,255,.06) inset, 0 24px 64px -16px rgba(0,0,0,.75);
-  --rg-glow:     0 0 0 1px rgba(255,51,71,.4), 0 8px 32px -6px rgba(255,51,71,.45);
+  --rg-glow:     0 0 0 1px rgba(255,59,48,.4), 0 8px 32px -6px rgba(255,59,48,.45);
   --rg-focus:    0 0 0 2px var(--rg-ink-1), 0 0 0 4px var(--rg-red-500);
 
   /* Mouvement */
@@ -93,12 +94,11 @@
   --rg-ink-4: #E8E8EB; --rg-ink-5: #DCDCE1;
   --rg-text-1: #0A0A0B; --rg-text-2: #52525B; --rg-text-3: #6E6E78; --rg-text-inverse: #F5F5F6;
   --rg-line-1: rgba(10,10,11,.06); --rg-line-2: rgba(10,10,11,.10); --rg-line-3: rgba(10,10,11,.16);
-  --rg-red-500: #D4162B; --rg-red-400: #E8192F; --rg-red-600: #B01024;
-  --rg-success: #0E9F6E; --rg-warning: #B76E00; --rg-info: #1F7FD1; --rg-danger: #D4162B;
+  --rg-red-500: #D70015; --rg-red-400: #FF3B30; --rg-red-600: #B5000F;
+  --rg-success: #0E9F6E; --rg-warning: #7A6200; --rg-info: #1F7FD1; --rg-danger: #D70015;
 }
 
 /* Signatures réutilisables */
-.rg-chamfer { clip-path: polygon(var(--rg-chamfer) 0, 100% 0, 100% calc(100% - var(--rg-chamfer)), calc(100% - var(--rg-chamfer)) 100%, 0 100%, 0 var(--rg-chamfer)); }
 .rg-metric { font-family: var(--rg-font-mono); font-variant-numeric: tabular-nums; letter-spacing: -0.02em; }
 .rg-overline { font-family: var(--rg-font-mono); font-size: var(--rg-fs-overline); letter-spacing: var(--rg-ls-overline); text-transform: uppercase; color: var(--rg-text-3); }
 @keyframes rg-pulse { 0% { transform: scale(.6); opacity: .9 } 100% { transform: scale(2.6); opacity: 0 } }

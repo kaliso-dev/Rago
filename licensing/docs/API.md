@@ -25,9 +25,9 @@ Ce document fait foi entre le serveur de licences (`/mnt/project-files/licensing
 | `invalid_request` | 400 | Corps ou empreinte mal formés (`detail` précise) | Bug côté app, journaliser |
 | `invalid_credentials` | 401 | Email ou mot de passe faux | Rester sur l'écran de connexion |
 | `invalid_token` | 401 | Token d'accès expiré, ou license token plus valable (appareil libéré, licence ré-activée ailleurs puis revenue) | Effacer le token, retour à la connexion |
-| `no_license` | 403 | Compte sans Premium. Contient `buy_url` | Bouton vers `buy_url` |
+| `no_license` | 403 | Compte sans Premium. Contient `buy_url` (la section prix du site, où l'on choisit mensuel ou annuel) | Bouton vers `buy_url` |
 | `bound_to_other_device` | 403 | Licence déjà active sur un autre PC | Effacer le token, afficher le message, lien support |
-| `revoked` | 403 | Remboursé, litige ou désactivé par le support | Effacer le token, afficher le message |
+| `revoked` | 403 | Remboursé, litige, désactivé par le support, ou abonnement terminé. Dans ce dernier cas : `reason: "subscription_ended"`, `buy_url`, et un `message` dédié | Effacer le token, afficher le message (et un bouton vers `buy_url` s'il est là) |
 | `rate_limited` | 429 | Trop d'essais (10 logins / 15 min par email et IP) | Afficher le message, réessayer plus tard |
 | `server_error` | 500 | Panne serveur | Garder le token existant, mode hors ligne |
 
@@ -139,6 +139,14 @@ Accepte un token expiré tant que sa signature est bonne et que l'appareil n'a p
 
 Quand l'appeler : au démarrage de l'app si le réseau répond, puis une fois par jour si elle reste ouverte. Au minimum quand il reste moins de 7 jours.
 
+## Abonnement (ajouté le 2026-10-05, rien d'obligatoire côté app)
+
+Premium est désormais un abonnement mensuel ou annuel ; les licences offertes et celles gagnées par l'affiliation sont à vie. Le contrat ne change pas, trois ajouts seulement :
+
+- `license.billing` dans les réponses `activation_required` et `active` : `{ "interval": "month" | "year" | "lifetime", "renews_at": ISO ou null, "ends_at": ISO ou null }`. L'app peut l'afficher (« Renews on … » dans Settings), sinon l'ignorer.
+- Pour un abonné, `exp` (et `expires_at`) ne dépasse pas la fin de la période payée + 3 jours, et vaut au moins 24 h. Il peut donc être plus court que 30 jours : l'app rafraîchit déjà quand il reste moins de 7 jours, rien à changer. Le renouvellement Stripe repousse la date au refresh suivant.
+- `revoked` avec `reason: "subscription_ended"` : message « Your Rago Hub Premium subscription ended. Renew it on the website, then sign in again. » et `buy_url`.
+
 ## License token
 
 JWT compact, `alg: EdDSA` (Ed25519), en-tête `{"alg":"EdDSA","typ":"JWT","kid":"..."}`. Crate Rust conseillée : `jsonwebtoken` (algorithme `EdDSA`) ou `ed25519-dalek` directement.
@@ -162,7 +170,7 @@ JWT compact, `alg: EdDSA` (Ed25519), en-tête `{"alg":"EdDSA","typ":"JWT","kid":
 Vérification hors ligne au démarrage, dans cet ordre :
 
 1. Signature valide avec la clé publique embarquée, et `typ == "license"`.
-2. `exp` dans le futur (30 jours après émission). Au-delà, l'app exige le réseau : appel à `/licenses/refresh`, sinon écran de connexion.
+2. `exp` dans le futur (30 jours après émission au plus, moins pour un abonné proche de son renouvellement). Au-delà, l'app exige le réseau : appel à `/licenses/refresh`, sinon écran de connexion.
 3. L'empreinte calculée maintenant passe la règle « même PC » contre `fp`. Sinon : token copié depuis un autre PC, on l'efface.
 4. `plan == "premium"` débloque les modules Premium.
 
