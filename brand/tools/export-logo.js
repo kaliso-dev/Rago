@@ -13,7 +13,8 @@ jobs.push({ src: 'rago-mark.svg', out: 'png/rago-mark-512.png', w: 466, h: 512 }
   { src: 'rago-mark-white.svg', out: 'png/rago-mark-white-512.png', w: 466, h: 512 },
   { src: 'rago-wordmark-white.svg', out: 'png/rago-wordmark-white-1200.png', w: 1200, h: Math.round(1200 * 180 / 1124) },
   { src: 'rago-wordmark-ink.svg', out: 'png/rago-wordmark-ink-1200.png', w: 1200, h: Math.round(1200 * 180 / 1124) },
-  { src: 'rago-app-icon.svg', out: 'web/apple-touch-icon.png', w: 180, h: 180 },
+  { src: 'rago-app-tile.svg', out: 'web/apple-touch-icon.png', w: 180, h: 180 },
+  { src: 'rago-app-tile.svg', out: 'png/rago-tile-512.png', w: 512, h: 512 },
   { src: 'rago-favicon.svg', out: 'web/favicon-32.png', w: 32, h: 32 });
 const font = "font-family:Geist,'Segoe UI',Arial,sans-serif;color:#F5F5F6";
 const html = [

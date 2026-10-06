@@ -9,9 +9,11 @@ Charte complète : `charte.html` (ouvrir dans un navigateur). Ce fichier est le 
 - Installeur NSIS : `logo/installer/sidebar.bmp` (164 × 314) et `header.bmp` (150 × 57), BMP 24 bits.
 - Site : `logo/web/favicon.ico` (16/32/48), `favicon.svg`, `favicon-32.png`, `apple-touch-icon.png` (180), `og-image.png` (1200 × 630).
 - Logo principal « Rago Optimizer » (texte vectorisé en Geist) : `logo/rago-wordmark-white.svg` (fond sombre) ou `logo/rago-wordmark-ink.svg` (fond clair).
-- Symbole (icône d'app, favicon, sidebar, avatar Discord) : `logo/rago-mark.svg` (rouge), `logo/rago-app-icon.svg` (tuile sombre).
+- Icône d'app (barre des tâches, .exe, .ico, PNG `png/rago-icon-*`) : `logo/rago-app-icon.svg`, **R rouge sur fond transparent, sans tuile** (demande de Sofiene, 6 oct.).
+- Tuile sombre conservée pour les endroits qui exigent un fond opaque : `logo/rago-app-tile.svg` → `web/apple-touch-icon.png`, `png/rago-tile-512.png` (avatar Discord, réseaux).
+- Symbole seul : `logo/rago-mark.svg` (rouge), `-white`, `-mono`.
 - Windows : `logo/rago.ico` (16, 20, 24, 32, 40, 48, 64, 128, 256 px). PNG 16 → 1024 dans `logo/png/`.
-- Sous 32 px : `logo/rago-favicon.svg` (R agrandi, sans liseré).
+- Sous 32 px et favicon : `logo/rago-favicon.svg` (R presque plein cadre, transparent).
 - Le R est toujours rouge #FF3B30 (blanc ou monochrome seulement sur fond rouge ou photo). Ne pas pivoter, déformer, mettre en contour, en dégradé ou en néon.
 
 ## Couleurs (thème sombre par défaut)

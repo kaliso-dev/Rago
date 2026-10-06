@@ -7,8 +7,10 @@
 <meta property="og:title" content="Rago Optimizer">
 <meta property="og:description" content="Every millisecond counts. The Minecraft PvP optimizer for Windows: 226 tweaks, undoable in one click.">
 <meta property="og:type" content="website">
-<meta property="og:image" content="og-image.png">
+<meta property="og:url" content="https://rago-optimiser.netlify.app/">
+<meta property="og:image" content="https://rago-optimiser.netlify.app/og-image.png">
 <meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:image" content="https://rago-optimiser.netlify.app/og-image.png">
 <link rel="icon" href="favicon.svg" type="image/svg+xml">
 <link rel="icon" href="favicon.ico" sizes="any">
 <link rel="apple-touch-icon" href="apple-touch-icon.png">
@@ -58,13 +60,25 @@ h1,h2,h3{font-weight:600;letter-spacing:-.035em;line-height:1.05;text-wrap:balan
 /* Header: floating pill */
 .top{position:fixed;left:0;right:0;top:env(safe-area-inset-top,0px);z-index:50;padding:14px var(--g) 0;pointer-events:none}
 .top-in{pointer-events:auto;display:flex;align-items:center;gap:20px;height:60px;padding:0 10px 0 22px;border-radius:var(--r-full);border:1px solid transparent;transition:background .3s var(--out),border-color .3s,backdrop-filter .3s;max-width:1400px;margin-inline:auto}
-.top.scrolled .top-in{background:rgba(17,17,19,.72);border-color:var(--l1);backdrop-filter:blur(16px) saturate(150%);-webkit-backdrop-filter:blur(16px) saturate(150%)}
+.top.scrolled .top-in,.top.menu-open .top-in{background:rgba(17,17,19,.72);border-color:var(--l1);backdrop-filter:blur(16px) saturate(150%);-webkit-backdrop-filter:blur(16px) saturate(150%)}
 .logo{display:flex;align-items:center;text-decoration:none;color:var(--t1)}
 .logo svg{height:24px;width:auto}
 .nav{display:flex;gap:2px;margin-left:auto;font-size:13.5px}
 .nav a{text-decoration:none;color:var(--t2);padding:8px 14px;border-radius:var(--r-full);transition:color .16s,background .16s}
 .nav a:hover{color:var(--t1);background:var(--l1)}
 .top-cta{display:flex;gap:8px;align-items:center}
+.menu-btn{display:none;width:40px;height:40px;border-radius:var(--r-full);border:0;background:rgba(255,255,255,.05);box-shadow:inset 0 0 0 1px var(--l2);cursor:pointer;flex-direction:column;align-items:center;justify-content:center;gap:5px;padding:0}
+.menu-btn i{display:block;width:16px;height:1.6px;border-radius:2px;background:var(--t1);transition:transform .3s var(--out)}
+.menu-btn[aria-expanded="true"] i:first-child{transform:translateY(3.3px) rotate(45deg)}
+.menu-btn[aria-expanded="true"] i:last-child{transform:translateY(-3.3px) rotate(-45deg)}
+.menu{pointer-events:auto;max-width:1400px;margin:8px auto 0;padding:10px;border-radius:24px;background:rgba(17,17,19,.94);border:1px solid var(--l2);backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px);box-shadow:0 30px 60px -20px rgba(0,0,0,.8);animation:menuIn .32s var(--out)}
+.menu[hidden]{display:none}
+.menu nav{display:grid}
+.menu nav a{text-decoration:none;color:var(--t1);font-size:15px;padding:13px 16px;border-radius:16px}
+.menu nav a:hover{background:var(--l1)}
+.menu-cta{display:grid;grid-template-columns:1fr 1fr;gap:8px;padding:8px 6px 4px;border-top:1px solid var(--l1);margin-top:6px}
+@keyframes menuIn{from{opacity:0;transform:translateY(-8px)}}
+section[id],main[id]{scroll-margin-top:92px}
 
 /* Hero */
 .hero{position:relative;min-height:min(980px,100svh);display:flex;align-items:center;padding-block:140px 90px;overflow:hidden;isolation:isolate}
@@ -142,12 +156,14 @@ h1,h2,h3{font-weight:600;letter-spacing:-.035em;line-height:1.05;text-wrap:balan
 .sw::after{content:"";position:absolute;top:2px;left:2px;width:16px;height:16px;border-radius:50%;background:var(--t1);transition:transform .26s var(--spring)}
 .tw.on .sw{background:var(--red)}
 .tw.on .sw::after{transform:translateX(16px);background:var(--ink)}
-.abar{position:absolute;left:calc(190px + 50%);bottom:18px;transform:translate(-50%,100px);opacity:0;display:flex;align-items:center;gap:22px;padding:8px 8px 8px 18px;border-radius:var(--r-full);background:rgba(23,23,26,.86);backdrop-filter:blur(18px) saturate(1.4);-webkit-backdrop-filter:blur(18px) saturate(1.4);border:1px solid var(--l2);box-shadow:0 20px 40px -12px rgba(0,0,0,.7);transition:transform .5s var(--spring),opacity .2s;white-space:nowrap;z-index:3}
+.abar{position:absolute;left:calc(50% + 95px);bottom:18px;max-width:calc(100% - 214px);transform:translate(-50%,100px);opacity:0;display:flex;align-items:center;gap:14px;padding:8px 8px 8px 18px;border-radius:var(--r-full);background:rgba(23,23,26,.86);backdrop-filter:blur(18px) saturate(1.4);-webkit-backdrop-filter:blur(18px) saturate(1.4);border:1px solid var(--l2);box-shadow:0 20px 40px -12px rgba(0,0,0,.7);transition:transform .5s var(--spring),opacity .2s;white-space:nowrap;z-index:3}
 .abar.show{transform:translate(-50%,0);opacity:1}
 .abar .n{font:600 22px/1 var(--mono);min-width:1.2em}
 .abar .l{font-size:13px;font-weight:540}
 .abar .s{font-size:11.5px;color:var(--t3)}
-.abar .acts{display:flex;gap:4px}
+.abar .acts{display:flex;gap:4px;margin-left:auto}
+.main > *{flex-shrink:0}
+.main::after{content:"";position:absolute;left:0;right:0;bottom:0;height:110px;background:linear-gradient(transparent,var(--ink) 70%);pointer-events:none;z-index:1}
 .abar .clr{font:500 13px/1 var(--sans);color:var(--t2);background:none;border:0;padding:0 12px;cursor:pointer;border-radius:var(--r-full)}
 .abar .go{--h:38px;padding-inline:16px;font-size:13.5px}
 .run{position:absolute;inset:0;left:190px;display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:22px;align-items:center;padding:28px;background:rgba(10,10,11,.9);backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);opacity:0;pointer-events:none;transition:opacity .24s var(--out);z-index:4;border-top-left-radius:var(--r-lg)}
@@ -188,7 +204,7 @@ h1,h2,h3{font-weight:600;letter-spacing:-.035em;line-height:1.05;text-wrap:balan
 @keyframes mq{to{transform:translateX(-50%)}}
 
 /* Sections */
-.sec{padding-block:clamp(110px,13vw,220px)}
+.sec{padding-block:clamp(100px,11vw,190px)}
 .head{display:grid;gap:16px;justify-items:center;text-align:center;max-width:720px;margin:0 auto clamp(48px,6vw,96px)}
 .head h2{font-size:clamp(30px,3.4vw,52px);letter-spacing:-.045em}
 .head p{color:var(--t2);font-size:clamp(15px,1.1vw,17px);max-width:34em}
@@ -304,7 +320,7 @@ h1,h2,h3{font-weight:600;letter-spacing:-.035em;line-height:1.05;text-wrap:balan
 .how{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px;position:relative;max-width:1300px;margin-inline:auto}
 .how-line{position:absolute;left:12%;right:12%;top:31px;height:2px;border-radius:2px;background:var(--ink-4);overflow:hidden}
 .how-line i{display:block;height:100%;width:var(--p,0%);background:var(--red);border-radius:2px;transition:width .2s linear}
-.hs{position:relative;display:grid;gap:12px;justify-items:center;text-align:center;padding:0 10px}
+.hs{position:relative;display:grid;align-content:start;gap:12px;justify-items:center;text-align:center;padding:0 10px}
 .hs .ic{width:64px;height:64px;border-radius:50%;display:grid;place-items:center;background:var(--ink-2);border:1px solid var(--l2);color:var(--t2);transition:all .5s var(--out);z-index:1}
 .hs .ic svg{width:24px;height:24px;fill:none;stroke:currentColor;stroke-width:1.7}
 .hs.lit .ic{background:var(--red);border-color:var(--red);color:var(--ink);box-shadow:0 0 0 8px var(--red-a14);transform:scale(1.05)}
@@ -445,8 +461,10 @@ footer.foot p{max-width:80ch}
   .plans{grid-template-columns:1fr;max-width:620px}
   .pro{order:-1}
   .aff{grid-template-columns:1fr}
-  .nav{display:none} .top-cta{margin-left:auto}
   .xp{grid-template-columns:1fr} .xp-tabs{display:flex;overflow-x:auto;scrollbar-width:none;border-radius:var(--r-full);padding:6px} .xp-tabs::-webkit-scrollbar{display:none} .xt{flex:none;height:40px;border-radius:var(--r-full)} .xt .bar{bottom:4px}
+}
+@media (max-width:1020px){
+  .nav{display:none} .top-cta{margin-left:auto} .menu-btn{display:flex}
 }
 @media (max-width:760px){
   .cmp{min-width:0;font-size:12.5px} .cmp th,.cmp td{padding:12px 12px}
@@ -457,7 +475,7 @@ footer.foot p{max-width:80ch}
   .hb{grid-template-columns:1fr;height:auto;min-height:520px}
   .side{display:none}
   .main{border-radius:0;border-left:0;padding:20px 16px 90px}
-  .abar{left:50%;gap:12px;padding-left:14px}.abar .s,.abar .clr{display:none}
+  .abar{left:50%;max-width:calc(100% - 24px);gap:12px;padding-left:14px}.abar .s,.abar .clr{display:none}
   .run{left:0;grid-template-columns:1fr;border-radius:0;align-content:center}
   .run-list{display:none}
   .tw p{white-space:normal}
@@ -468,6 +486,10 @@ footer.foot p{max-width:80ch}
   .cta-row .btn{flex:1 1 100%}
   .ln-h em{display:none}
   .xr{padding:14px} .xr p{font-size:12.5px}
+}
+@media (max-width:400px){
+  .top-in{gap:10px;padding-left:16px;padding-right:8px} .logo svg{height:20px}
+  .top-cta{gap:6px} .top-cta .btn-red{padding-inline:14px}
 }
 @media (prefers-reduced-motion:reduce){
   *,*::before,*::after{animation:none!important;transition:none!important;scroll-behavior:auto!important}
@@ -501,7 +523,14 @@ footer.foot p{max-width:80ch}
     <div class="top-cta">
       <a class="btn btn-ghost btn-sm js-account" href="/login">Sign in</a>
       <a class="btn btn-red btn-sm" href="#pricing">Get Premium</a>
+      <button class="menu-btn" type="button" id="menu-btn" aria-label="Menu" aria-expanded="false" aria-controls="menu"><i></i><i></i></button>
     </div>
+  </div>
+  <div class="menu" id="menu" hidden>
+    <nav aria-label="Menu">
+      <a href="#why">Why Rago</a><a href="#features">Features</a><a href="#reviews">Reviews</a><a href="#pricing">Pricing</a><a href="#faq">FAQ</a><a class="js-affiliate" href="/affiliate">Affiliate program</a>
+    </nav>
+    <div class="menu-cta"><a class="btn btn-ghost js-account" href="/login">Sign in</a><a class="btn btn-ghost js-signup" href="/signup">Create account</a></div>
   </div>
 </header>
 
@@ -519,13 +548,13 @@ footer.foot p{max-width:80ch}
           <a class="btn btn-ghost js-free-app" href="#pricing"><svg><use href="#i-down"/></svg>Download free</a>
         </div>
         <div class="ticks fade d3">
+          <span><svg><use href="#i-check"/></svg>Free to start</span>
           <span><svg><use href="#i-check"/></svg>Restore point first</span>
           <span><svg><use href="#i-check"/></svg>One-click restore</span>
-          <span><svg><use href="#i-check"/></svg>Weekly updates</span>
         </div>
       </div>
 
-      <div class="hub fade d4" id="hub" aria-label="Interactive preview of the Rago Optimizer app">
+      <div class="hub fade d4" id="hub" role="region" aria-label="Interactive preview of the Rago Optimizer app">
         <div class="tb" aria-hidden="true">
           <div class="tb-brand"><svg viewBox="0 0 164 180"><use href="#i-mark"/></svg>Rago Optimizer</div>
           <div class="tb-search"><svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="M20 20l-3.5-3.5"/></svg><span class="q">Search 226 tweaks</span><span class="kbd">Ctrl K</span></div>
@@ -540,7 +569,7 @@ footer.foot p{max-width:80ch}
             </div>
             <div class="stitle"><span>Mouse and keyboard</span><span class="mono">7</span></div>
             <div class="tlist" id="tl1"></div>
-            <div class="stitle"><span>Power</span><span class="mono">9</span></div>
+            <div class="stitle"><span>Power</span><span class="mono">16</span></div>
             <div class="tlist" id="tl2"></div>
           </div>
           <div class="abar" id="abar"><span class="n" id="abn">0</span><div><div class="l" id="abl">tweaks selected</div><div class="s" id="abs"></div></div><div class="acts"><button class="clr" type="button" id="abclr">Clear</button><button class="btn btn-red go" type="button" id="apply">Apply</button></div></div>
@@ -628,10 +657,10 @@ footer.foot p{max-width:80ch}
     </div>
     <div class="how" id="howwrap">
       <div class="how-line" aria-hidden="true"><i id="howline"></i></div>
-      <div class="hs"><span class="ic"><svg viewBox="0 0 24 24"><rect x="2" y="5" width="20" height="14" rx="3"/><path d="M2 10h20M6 15h4"/></svg></span><h3>Pick your plan</h3><p>Free, or Premium through Stripe.</p></div>
-      <div class="hs"><span class="ic"><svg viewBox="0 0 24 24"><circle cx="12" cy="8" r="4"/><path d="M4 21a8 8 0 0 1 16 0"/></svg></span><h3>Create your account</h3><p>It holds your license.</p></div>
-      <div class="hs"><span class="ic"><svg viewBox="0 0 24 24"><path d="M12 3v12M7 10l5 5 5-5M4 20h16"/></svg></span><h3>Download Rago Optimizer</h3><p>Windows 10 and 11.</p></div>
-      <div class="hs"><span class="ic"><svg viewBox="0 0 24 24"><path d="M13 2L4 14h7l-1 8 9-12h-7z"/></svg></span><h3>Sign in and apply</h3><p>Restart, then play.</p></div>
+      <div class="hs"><span class="ic"><svg viewBox="0 0 24 24"><path d="M12 3v12M7 10l5 5 5-5M4 20h16"/></svg></span><h3>Download free</h3><p>Windows 10 and 11. No account needed.</p></div>
+      <div class="hs"><span class="ic"><svg viewBox="0 0 24 24"><rect x="5" y="10" width="14" height="10" rx="3"/><path d="M8 10V7a4 4 0 0 1 8 0v3"/></svg></span><h3>Try the free tweaks</h3><p>9 tweaks open, the rest shown with a lock.</p></div>
+      <div class="hs"><span class="ic"><svg viewBox="0 0 24 24"><rect x="2" y="5" width="20" height="14" rx="3"/><path d="M2 10h20M6 15h4"/></svg></span><h3>Go Premium</h3><p>Pay with Stripe, then create your account.</p></div>
+      <div class="hs"><span class="ic"><svg viewBox="0 0 24 24"><path d="M13 2L4 14h7l-1 8 9-12h-7z"/></svg></span><h3>Sign in and unlock</h3><p>All 226 tweaks. Apply, restart, play.</p></div>
     </div>
   </section>
 
@@ -681,9 +710,10 @@ footer.foot p{max-width:80ch}
           <div class="price-note" id="p-note"></div>
           <ul>
             <li><svg><use href="#i-check"/></svg>All 226 tweaks unlocked</li>
-            <li><svg><use href="#i-check"/></svg>Presets, search and risk labels</li>
+            <li><svg><use href="#i-check"/></svg>5 one-click presets</li>
+            <li><svg><use href="#i-check"/></svg>Minecraft, RBW Mod, Game mode and Expert</li>
             <li><svg><use href="#i-check"/></svg>Ping measured before and after</li>
-            <li><svg><use href="#i-check"/></svg>Weekly updates, Premium channel</li>
+            <li><svg><use href="#i-check"/></svg>Weekly updates and the Premium channel</li>
           </ul>
           <div class="lic"><svg viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="12" rx="3"/><path d="M8 20h8M12 16v4"/></svg>One license, one PC.</div>
           <a class="btn btn-red js-checkout" href="/buy?interval=year">Get Premium<svg><use href="#i-arrow"/></svg></a>
@@ -789,9 +819,23 @@ const wire = (sel, url, msg, ext) => $$(sel).forEach(a => {
 wire(".js-account", acct(CONFIG.loginPath), "", false);
 wire(".js-signup", acct(CONFIG.signupPath), "", false);
 wire(".js-affiliate", acct(CONFIG.affiliatePath), "", false);
-wire(".js-discord", CONFIG.discord, "Discord invite link to be added", true);
+if (CONFIG.discord) wire(".js-discord", CONFIG.discord, "", true); else $$(".js-discord").forEach(a => a.remove());
 $$(".js-free").forEach(a => a.href = CONFIG.freeDownloadUrl);
 $$(".js-free-app").forEach(a => a.href = acct(CONFIG.freeAppPath));
+/* Rago only runs on Windows: phones and Macs get a note instead of an installer they can't open */
+const onWindows = /Windows/i.test(navigator.userAgent) || /Win/i.test(navigator.userAgentData?.platform || "");
+$$(".js-free-app, .js-free").forEach(a => a.addEventListener("click", e => { if (!onWindows) { e.preventDefault(); toast("Rago Optimizer runs on Windows 10 and 11. Open this page on your PC to download it."); } }));
+
+/* Menu (tablets and phones) */
+(() => {
+  const b = $("#menu-btn"), m = $("#menu");
+  const set = o => { b.setAttribute("aria-expanded", o); m.hidden = !o; $("#top").classList.toggle("menu-open", o); };
+  b.addEventListener("click", () => set(m.hidden));
+  $$("a", m).forEach(a => a.addEventListener("click", () => set(false)));
+  addEventListener("keydown", e => { if (e.key === "Escape" && !m.hidden) { set(false); b.focus(); } });
+  document.addEventListener("click", e => { if (!m.hidden && !e.target.closest(".top")) set(false); });
+  matchMedia("(max-width:1020px)").addEventListener("change", e => { if (!e.matches) set(false); });
+})();
 
 /* Headline: words blur in one by one */
 (() => { const h = $("#h1"); const walk = (n, acc) => { [...n.childNodes].forEach(c => { if (c.nodeType === 3) { const f = document.createDocumentFragment(); c.textContent.split(/(\s+)/).forEach(w => { if (!w) return; if (/^\s+$/.test(w)) { f.append(w); return; } const s = document.createElement("span"); s.className = "w"; s.textContent = w; s.style.animationDelay = (acc.i++ * 0.09) + "s"; f.append(s); }); c.replaceWith(f); } else walk(c, acc); }); }; walk(h, { i: 0 }); })();
@@ -952,9 +996,11 @@ const MODS = [
   const seg = (wrap, cb) => {
     const btns = $$("button", wrap), th = $(".thumb", wrap);
     const place = () => { const b = btns.find(x => x.classList.contains("on")); th.style.left = b.offsetLeft + "px"; th.style.width = b.offsetWidth + "px"; };
-    btns.forEach(b => b.addEventListener("click", () => { btns.forEach(x => x.classList.toggle("on", x === b)); place(); cb(b.dataset.v); }));
+    const mark = () => btns.forEach(x => x.setAttribute("aria-pressed", x.classList.contains("on")));
+    btns.forEach(b => b.addEventListener("click", () => { btns.forEach(x => x.classList.toggle("on", x === b)); mark(); place(); cb(b.dataset.v); }));
     addEventListener("resize", place); requestAnimationFrame(place); document.fonts && document.fonts.ready.then(place);
-    return v => { btns.forEach(x => x.classList.toggle("on", x.dataset.v === v)); place(); };
+    mark();
+    return v => { btns.forEach(x => x.classList.toggle("on", x.dataset.v === v)); mark(); place(); };
   };
   const setBA = seg($("#ba"), v => { forced = v; render(); });
   const sts = $$("#steps .st");
@@ -983,7 +1029,7 @@ const MODS = [
     restore: [["Create a restore point","Snapshots Windows so you can roll back.","safe"],["Open System Restore","Opens the Windows tool to roll back.","safe"],["Reset network","Resets the Windows network stack and renews your IP.","advanced"]]
   };
   const tabs = $("#xtabs"), panel = $("#xpanel");
-  tabs.innerHTML = MODS.map(([id, name], i) => `<button type="button" class="xt" role="tab" data-i="${i}"><svg viewBox="0 0 24 24">${ICON[id]}</svg>${name}<i class="bar"></i></button>`).join("");
+  tabs.innerHTML = MODS.map(([id, name], i) => `<button type="button" class="xt" role="tab" aria-controls="xpanel" data-i="${i}"><svg viewBox="0 0 24 24">${ICON[id]}</svg>${name}<i class="bar"></i></button>`).join("");
   const btns = $$(".xt", tabs);
   let cur = -1, auto = true, timer;
   const show = i => {
@@ -993,11 +1039,13 @@ const MODS = [
     const [id, name, tag] = MODS[i];
     panel.innerHTML = `<div><span class="ovl">${String(i + 1).padStart(2, "0")} / ${name}</span><h3>${name}</h3><p class="tg">${tag}</p></div><div class="xp-list">${EX[id].map(([n, d, r], k) => `<div class="xr" style="animation-delay:${k * 90}ms"><div class="m"><div class="t">${esc(n)}<span class="bdg ${r}">${r === "safe" ? "Safe" : "Advanced"}</span></div><p>${esc(d)}</p></div><i class="sw"></i></div>`).join("")}</div>`;
     $$(".xr", panel).forEach((r, k) => setTimeout(() => r.classList.add("on"), reduce ? 0 : 600 + k * 250));
+    const h = panel.offsetHeight; if (h > (panel._mh || 0)) { panel._mh = h; panel.style.minHeight = h + "px"; } // never shrink: the page below stays still
     if (tabs.scrollWidth > tabs.clientWidth) tabs.scrollTo({ left: btns[i].offsetLeft - 16, behavior: reduce ? "auto" : "smooth" });
   };
   const tick = () => { clearTimeout(timer); if (auto && !reduce) timer = setTimeout(() => { show((cur + 1) % MODS.length); tick(); }, 4200); };
   btns.forEach((b, i) => b.addEventListener("click", () => { auto = false; clearTimeout(timer); show(i); }));
   show(1);
+  let lw = innerWidth; addEventListener("resize", () => { if (innerWidth !== lw) { lw = innerWidth; panel._mh = 0; panel.style.minHeight = ""; } });
   onView(panel, tick, .3);
 })();
 
@@ -1036,7 +1084,6 @@ function howFill() {
   const A = [
     ["shadows","+700 fps and my hitreg is sooo much better!"],
     ["pinqk","I enjoyed the product. Went from spiking to 120 ms to having a stable 90-100 with very little spikes on hypixel unless the server is dying."],
-    ["Agargod","Hitreg improved so much! I no longer have random moments where I can't hit people and can hold 8-10 hit combos without hitreg for being only 10 dollars it is so worth it Also @Rago is great if you have any problems and is always right there to help i defiantly recommend it"],
     ["Troller","good tweaks. -15ms on hypixel and hitreg improved so much"],
     ["Modae","stays around 40 ping which is the same as before, more stable now though"],
     ["band","Ping got a little lower and hit reg is alot better, helped me improve alot."],
@@ -1105,12 +1152,14 @@ const REF = (() => {
   const F = [
     ["Can I get banned for using Rago?", "Rago doesn't modify Minecraft and injects nothing into the game. It changes Windows and network settings, the same ones you could change by hand. Some servers screenshare players and check Windows logs. A few Advanced tweaks turn off Windows services staff look at, and each one says so. Turn on RBW Mod before a screenshare: it brings those services back."],
     ["Will it lower my ping?", "It depends where your ping comes from. Distance to the server can't be fixed by any software. Rago cuts the delay your PC adds and makes your timing steadier, which is what matters most for hits."],
-    ["What's the difference between Free and Premium?", "Both are the same Rago Optimizer app. Free opens 9 tweaks, Restore included,, and shows everything else with a lock. Premium unlocks all 226 tweaks, presets, ping measured before and after, and weekly updates."],
+    ["What's the difference between Free and Premium?", "Both are the same Rago Optimizer app. Free opens 9 tweaks, Restore included, and shows everything else with a lock. Premium unlocks all 226 tweaks, presets, ping measured before and after, and weekly updates."],
+    ["Does it work on laptops?", "Yes. Rago runs on any Windows 10 or 11 PC, desktop or laptop. Premium includes a Laptop preset: gains without hurting battery life or heat."],
+    ["Does it work on Mac or Linux?", "No. Rago Optimizer tunes Windows, so it only runs on Windows 10 and 11."],
     ["Monthly or yearly?", "Same app either way. Yearly costs 10 months of the monthly price, so you get 2 months free. You can cancel anytime."],
     ["Can I use my license on more than one PC?", "No. Premium works on one device per license. If you change PCs, contact support on Discord."],
     ["What if I don't like a change?", "A restore point is created before any change, and the Restore section undoes your tweaks. You can go back to how your PC was whenever you want."],
     ["My antivirus flagged Rago. Why?", "Rago changes system settings, which is what antivirus tools watch for. Only download Rago from this site. Don't disable your antivirus: allow the file if you trust it, or ask us on Discord."],
-    ["How does the affiliate program work?", "Join to get your code. When 3 friends buy Premium and enter your code while creating their account, your Premium access becomes permanent."]
+    ["How does the affiliate program work?", "Join to get your code. When 3 friends buy Premium and enter your code while creating their account, your Premium access becomes permanent. A friend counts once they have activated the app and 14 days have passed since their payment."]
   ];
   $("#faqs").innerHTML = F.map(([q, a], i) => `<div class="fq"><button type="button" aria-expanded="false" aria-controls="fa${i}" id="fb${i}">${esc(q)}<span class="pm" aria-hidden="true"></span></button><div class="ans" id="fa${i}" role="region" aria-labelledby="fb${i}"><div><p>${esc(a)}</p></div></div></div>`).join("");
   $$("#faqs .fq").forEach(f => $("button", f).addEventListener("click", () => {
