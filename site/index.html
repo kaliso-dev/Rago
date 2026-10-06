@@ -7,7 +7,11 @@
 <meta property="og:title" content="Rago Optimizer">
 <meta property="og:description" content="Every millisecond counts. The Minecraft PvP optimizer for Windows: 189 tweaks, undoable in one click.">
 <meta property="og:type" content="website">
+<meta property="og:image" content="og-image.png">
+<meta name="twitter:card" content="summary_large_image">
 <link rel="icon" href="favicon.svg" type="image/svg+xml">
+<link rel="icon" href="favicon.ico" sizes="any">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
 <title>Rago Optimizer</title>
 <meta name="description" content="Every millisecond counts. Rago tunes Windows, your network and Minecraft for steadier ping, smoother frames and less input lag. Undoable in one click.">
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -56,7 +60,7 @@ h1,h2,h3{font-weight:600;letter-spacing:-.035em;line-height:1.05;text-wrap:balan
 .top-in{pointer-events:auto;display:flex;align-items:center;gap:20px;height:60px;padding:0 10px 0 22px;border-radius:var(--r-full);border:1px solid transparent;transition:background .3s var(--out),border-color .3s,backdrop-filter .3s;max-width:1400px;margin-inline:auto}
 .top.scrolled .top-in{background:rgba(17,17,19,.72);border-color:var(--l1);backdrop-filter:blur(16px) saturate(150%);-webkit-backdrop-filter:blur(16px) saturate(150%)}
 .logo{display:flex;align-items:center;text-decoration:none;color:var(--t1)}
-.logo svg{height:17px;width:auto}
+.logo svg{height:24px;width:auto}
 .nav{display:flex;gap:2px;margin-left:auto;font-size:13.5px}
 .nav a{text-decoration:none;color:var(--t2);padding:8px 14px;border-radius:var(--r-full);transition:color .16s,background .16s}
 .nav a:hover{color:var(--t1);background:var(--l1)}
@@ -83,7 +87,7 @@ h1,h2,h3{font-weight:600;letter-spacing:-.035em;line-height:1.05;text-wrap:balan
 .ticks span{display:inline-flex;align-items:center;gap:7px;padding:6px 12px;border-radius:var(--r-full);background:var(--ink-2);border:1px solid var(--l1);font-size:12.5px;color:var(--t2)}
 .ticks svg{width:13px;height:13px;color:var(--ok)}
 
-/* App preview: mirrors Rago Hub (app/rago-hub/src) */
+/* App preview: mirrors the Rago Optimizer app (app/rago-hub/src) */
 .hub{position:relative;border-radius:var(--r-xl);border:1px solid var(--l2);background:var(--ink-0);box-shadow:0 1px 0 rgba(255,255,255,.06) inset,0 80px 140px -50px rgba(0,0,0,.95),0 0 0 1px rgba(0,0,0,.6),0 0 120px -40px rgba(255,59,48,.35);overflow:hidden;min-width:0;transform:perspective(2000px) rotateY(-8deg) rotateX(4deg) translateZ(0);transform-origin:left center;transition:transform .8s var(--out)}
 .hub:hover{transform:perspective(2000px) rotateY(-2deg) rotateX(1deg)}
 .tb{display:grid;grid-template-columns:190px minmax(0,1fr) auto;align-items:center;height:40px;font-size:13px}
@@ -202,31 +206,61 @@ h1,h2,h3{font-weight:600;letter-spacing:-.035em;line-height:1.05;text-wrap:balan
 .seg-toggle button{position:relative;z-index:1;border:0;background:none;color:var(--t2);font:500 12.5px/1 var(--sans);padding:8px 14px;border-radius:var(--r-full);cursor:pointer;transition:color .2s}
 .seg-toggle button.on{color:var(--ink)}
 .seg-toggle .thumb{position:absolute;top:4px;bottom:4px;border-radius:var(--r-full);background:var(--t1);transition:left .4s var(--out),width .4s var(--out)}
-/* journey bar */
-.journey{display:grid;gap:10px}
-.jbar{display:flex;gap:4px;height:46px}
-.jseg{position:relative;border-radius:var(--r-sm);display:flex;align-items:center;justify-content:center;font-size:11.5px;font-weight:500;color:var(--t1);background:var(--ink-4);transition:flex-grow .9s var(--out),background .4s,box-shadow .4s;overflow:hidden;white-space:nowrap;min-width:0}
-.jseg span{overflow:hidden;text-overflow:ellipsis;padding-inline:6px}
-.jseg.mine{background:rgba(255,59,48,.18);box-shadow:inset 0 0 0 1px var(--red-a30)}
-.jseg.focus{background:rgba(255,59,48,.38);box-shadow:inset 0 0 0 1px var(--red),0 0 30px -6px var(--red)}
-.jseg.far{background:repeating-linear-gradient(135deg,var(--ink-4) 0 8px,var(--ink-3) 8px 16px);color:var(--t2)}
-.jseg .wob{position:absolute;inset:0;background:linear-gradient(90deg,transparent,rgba(255,255,255,.18),transparent);transform:translateX(-100%);animation:shimmer 2.4s linear infinite}
-.jlegend{display:flex;justify-content:space-between;font:400 11.5px/1 var(--mono);color:var(--t3)}
-/* tick ruler */
-.ruler{position:relative;height:120px;border-radius:var(--r-md);background:var(--ink);border:1px solid var(--l1);overflow:hidden}
-.tick{position:absolute;top:0;bottom:0;width:1px;background:var(--l2)}
-.tick.win{width:auto;background:rgba(61,220,151,.06);border-inline:1px dashed rgba(61,220,151,.35)}
-.tick-lbl{position:absolute;bottom:8px;font:400 10.5px/1 var(--mono);color:var(--t3);transform:translateX(-50%);white-space:nowrap}
-.hitdot{position:absolute;width:12px;height:12px;border-radius:50%;margin:-6px 0 0 -6px;transition:left 1s var(--out),top 1s var(--out),background .4s,box-shadow .4s}
-.hitdot.ok{background:var(--ok);box-shadow:0 0 12px rgba(61,220,151,.7)}
-.hitdot.late{background:var(--red);box-shadow:0 0 12px rgba(255,59,48,.7)}
-.verdict{display:flex;gap:14px;flex-wrap:wrap}
-.vbox{flex:1 1 140px;border-radius:var(--r-md);background:var(--ink);border:1px solid var(--l1);padding:14px 16px;display:grid;gap:6px}
-.vbox span{font-size:12px;color:var(--t3)}
-.vbox b{font:500 22px/1 var(--mono);letter-spacing:-.02em;transition:color .4s}
-.vbox b.good{color:var(--ok)} .vbox b.bad{color:var(--red)}
+/* lanes: one bar per delay, shrinking as you scroll */
+.lanes{display:grid;gap:18px}
+.lane{display:grid;gap:8px}
+.ln-h{display:flex;justify-content:space-between;align-items:baseline;gap:12px;font-size:14px;font-weight:500}
+.ln-h em{font-style:normal;font-size:12px;font-weight:400;color:var(--t3)}
+.ln-t{position:relative;height:16px;border-radius:var(--r-full);background:var(--ink);overflow:hidden}
+.ln-t .ghost{position:absolute;inset:0 auto 0 0;border-radius:var(--r-full);background:rgba(61,220,151,.12);box-shadow:inset 0 0 0 1px rgba(61,220,151,.35);opacity:0;transition:opacity .5s}
+.ln-t .fill{position:absolute;inset:0 auto 0 0;border-radius:var(--r-full);background:var(--red);transition:width 1s var(--out),background .4s}
+.lane.cut .ghost{opacity:1}
+.lane.cut .fill{background:var(--ok)}
+.lane.focus .ln-h span{color:var(--red)}
+.lane.cut.focus .ln-h span{color:var(--ok)}
+.lane.far .fill{background:repeating-linear-gradient(135deg,var(--ink-5) 0 8px,var(--ink-4) 8px 16px)}
+.lane.far .ln-h span{color:var(--t2)}
+.gain{position:absolute;top:50%;transform:translateY(-50%);font:600 10.5px/1 var(--sans);color:var(--ok);opacity:0;transition:opacity .4s .4s,left 1s var(--out);white-space:nowrap}
+.lane.cut .gain{opacity:1}
+.trip{display:grid;gap:10px;padding-top:22px;border-top:1px solid var(--l1)}
+.trip-h{display:flex;justify-content:space-between;align-items:baseline;font-size:13px;color:var(--t2)}
+.trip-h b{font:600 13px/1 var(--sans);color:var(--ok);opacity:0;transition:opacity .4s}
+.trip-h b.on{opacity:1}
+.trip-bar{position:relative;height:30px;border-radius:var(--r-full);border:1px dashed var(--l3);padding:3px}
+.trip-in{display:flex;gap:3px;height:100%;transition:width 1s var(--out)}
+.trip-in i{border-radius:var(--r-full);background:var(--red);transition:flex-grow 1s var(--out),background .4s;min-width:6px}
+.trip-in i.d{background:repeating-linear-gradient(135deg,var(--ink-5) 0 8px,var(--ink-4) 8px 16px)}
+.trip-in i.ok{background:var(--ok)}
+.trip-lg{display:flex;justify-content:space-between;font:400 11.5px/1 var(--mono);color:var(--t3)}
 .stage-note{font-size:12px;color:var(--t3)}
 @keyframes shimmer{to{transform:translateX(100%)}}
+
+/* Inside the app: module explorer */
+.xp{display:grid;grid-template-columns:minmax(220px,300px) minmax(0,1fr);gap:12px;max-width:1300px;margin-inline:auto;align-items:stretch}
+.xp-tabs{display:grid;gap:4px;padding:8px;border-radius:var(--r-xl);background:var(--ink-2);border:1px solid var(--l1);align-content:start}
+.xt{display:flex;align-items:center;gap:12px;height:46px;padding:0 14px;border:0;border-radius:var(--r-lg);background:none;color:var(--t2);font:500 14px/1 var(--sans);cursor:pointer;text-align:left;position:relative;overflow:hidden;transition:background .2s,color .2s}
+.xt svg{width:18px;height:18px;fill:none;stroke:currentColor;stroke-width:1.7;flex:none}
+.xt:hover{color:var(--t1);background:var(--ink-3)}
+.xt.on{color:var(--t1);background:var(--ink-4)}
+.xt.on svg{color:var(--red)}
+.xt .bar{position:absolute;left:14px;right:14px;bottom:6px;height:2px;border-radius:2px;background:var(--red);transform:scaleX(0);transform-origin:left}
+.xt.on.auto .bar{animation:xbar 4.2s linear forwards}
+@keyframes xbar{to{transform:scaleX(1)}}
+.xp-panel{border-radius:var(--r-xl);background:radial-gradient(90% 80% at 100% 0%,rgba(255,59,48,.07),transparent 60%),var(--ink-2);border:1px solid var(--l1);padding:clamp(24px,3vw,44px);display:grid;gap:22px;align-content:start;min-width:0}
+.xp-panel .ovl{font:500 11px/1 var(--mono);letter-spacing:.12em;text-transform:uppercase;color:var(--t3)}
+.xp-panel h3{font-size:clamp(26px,2.4vw,38px);letter-spacing:-.035em;margin-top:10px}
+.xp-panel .tg{color:var(--t2);font-size:15px;margin-top:6px}
+.xp-list{display:grid;gap:10px}
+.xr{display:flex;align-items:center;gap:16px;padding:16px 18px;border-radius:var(--r-lg);background:var(--ink);border:1px solid var(--l1);opacity:0;transform:translateY(10px);animation:xin .5s var(--out) forwards}
+.xr .m{flex:1;min-width:0}
+.xr .t{display:flex;align-items:center;gap:8px;flex-wrap:wrap;font-size:14.5px;font-weight:500}
+.xr p{font-size:13px;color:var(--t3);margin-top:4px}
+.xr .sw{width:36px;height:20px;border-radius:var(--r-full);background:var(--ink-5);position:relative;flex:none;transition:background .3s}
+.xr .sw::after{content:"";position:absolute;top:3px;left:3px;width:14px;height:14px;border-radius:50%;background:var(--t1);transition:transform .35s var(--spring)}
+.xr.on .sw{background:var(--red)}
+.xr.on .sw::after{transform:translateX(16px);background:var(--ink)}
+.bdg.safe{color:var(--ok);background:rgba(61,220,151,.1)}
+@keyframes xin{to{opacity:1;transform:none}}
 
 /* Sections grid */
 .secs{display:grid;grid-template-columns:repeat(auto-fill,minmax(230px,1fr));gap:12px;max-width:1500px;margin-inline:auto}
@@ -240,7 +274,7 @@ h1,h2,h3{font-weight:600;letter-spacing:-.035em;line-height:1.05;text-wrap:balan
 .sc h3{font-size:17px;letter-spacing:-.02em}
 .sc p{font-size:13.5px;color:var(--t3)}
 .sc .n{position:absolute;top:22px;right:22px;font:400 11.5px/1 var(--mono);color:var(--t3)}
-.feat{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px;max-width:1500px;margin:12px auto 0}
+.feat{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px;max-width:1300px;margin:12px auto 0}
 .fc{border-radius:var(--r-lg);background:var(--ink-2);border:1px solid var(--l1);padding:26px;display:grid;gap:18px;align-content:start;min-width:0}
 .fc h3{font-size:19px}
 .fc p{font-size:13.5px;color:var(--t3)}
@@ -328,6 +362,12 @@ h1,h2,h3{font-weight:600;letter-spacing:-.035em;line-height:1.05;text-wrap:balan
 .yes svg,.no svg{width:12px;height:12px;fill:none;stroke:currentColor;stroke-width:2.4}
 .cmp .txt{font-size:12.5px;color:var(--t2)}
 
+.lk{display:inline-grid;place-items:center;width:26px;height:26px;border-radius:50%;background:var(--ink-4);color:var(--t3)}
+.lk svg{width:13px;height:13px}
+.plan li.locked{color:var(--t3)}
+.plan li.locked svg{color:var(--t3)}
+.micro a{color:var(--t2);text-decoration:underline;text-underline-offset:3px}
+.micro a:hover{color:var(--t1)}
 /* FAQ: animated accordion */
 .faq{max-width:820px;margin-inline:auto;display:grid;gap:10px}
 .fq{border-radius:var(--r-lg);background:var(--ink-2);border:1px solid var(--l1);transition:border-color .3s,background .3s}
@@ -395,13 +435,16 @@ footer.foot p{max-width:80ch}
   .hero .band{grid-template-columns:1fr}
   .hub{transform:none}.hub:hover{transform:none}
   .story{grid-template-columns:1fr}
-  .stage{top:84px;z-index:2}
-  .st{min-height:auto;padding-block:46px}
+  .stage{top:84px;z-index:2;order:-1;gap:16px;padding:18px 18px 16px;box-shadow:0 20px 40px -10px rgba(0,0,0,.8)}
+  .stage .lanes{gap:10px} .ln-h{font-size:13px} .ln-t{height:12px}
+  .stage-note,.trip-lg{display:none} .trip{padding-top:14px;gap:8px}
+  .st{min-height:75vh;justify-content:flex-end;padding-block:0 170px}
   .feat{grid-template-columns:1fr}
   .plans{grid-template-columns:1fr;max-width:620px}
   .pro{order:-1}
   .aff{grid-template-columns:1fr}
   .nav{display:none} .top-cta{margin-left:auto}
+  .xp{grid-template-columns:1fr} .xp-tabs{display:flex;overflow-x:auto;scrollbar-width:none;border-radius:var(--r-full);padding:6px} .xp-tabs::-webkit-scrollbar{display:none} .xt{flex:none;height:40px;border-radius:var(--r-full)} .xt .bar{bottom:4px}
 }
 @media (max-width:760px){
   .cmp{min-width:0;font-size:12.5px} .cmp th,.cmp td{padding:12px 12px}
@@ -421,8 +464,8 @@ footer.foot p{max-width:80ch}
   .rq{width:280px}.rq.wide{width:320px}
   .dock{display:flex}
   .cta-row .btn{flex:1 1 100%}
-  .ruler{height:100px} .tick-lbl{font-size:9.5px}
-  .secs,#secs{grid-template-columns:1fr 1fr!important;gap:10px} .sc{padding:16px;gap:10px} .sc p{display:none} .sc .n{top:16px;right:16px;font-size:10.5px} .sc h3{font-size:15px}
+  .ln-h em{display:none}
+  .xr{padding:14px} .xr p{font-size:12.5px}
 }
 @media (prefers-reduced-motion:reduce){
   *,*::before,*::after{animation:none!important;transition:none!important;scroll-behavior:auto!important}
@@ -436,15 +479,16 @@ footer.foot p{max-width:80ch}
 <svg width="0" height="0" style="position:absolute" aria-hidden="true">
   <symbol id="i-check" viewBox="0 0 16 16"><path fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" d="M3 8.5l3 3 7-7.5"/></symbol>
   <symbol id="i-x" viewBox="0 0 16 16"><path d="M4.5 8h7"/></symbol>
+  <symbol id="i-lock" viewBox="0 0 16 16"><g fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="7" width="10" height="7" rx="2"/><path d="M5.5 7V5a2.5 2.5 0 0 1 5 0v2"/></g></symbol>
   <symbol id="i-down" viewBox="0 0 20 20"><path fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" d="M10 3v10M5.5 8.5L10 13l4.5-4.5M4 17h12"/></symbol>
   <symbol id="i-arrow" viewBox="0 0 20 20"><path fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" d="M4 10h12M11 5l5 5-5 5"/></symbol>
-  <symbol id="i-word" viewBox="0 1.6 79.8 19.4"><g fill="currentColor"><path fill-rule="evenodd" d="M0 3H11L16 8V11.5L12.8 14.7L17 21H11.6L8.1 15.5H5.4V21H0ZM5.4 7.6V11.1H10.6V7.6Z"/><path fill-rule="evenodd" d="M19.6 21V8L24.6 3H31.6L36.6 8V21H31.2V16.4H25V21ZM25 8.4V11H31.2V8.4Z"/><path fill-rule="evenodd" d="M39.2 8L44.2 3H56.2V8.4H44.6V15.6H50.8V14.4H48.2V10.2H56.2V21H44.2L39.2 16Z"/><path fill-rule="evenodd" d="M63.8 3H70.8L75.8 8V16L70.8 21H63.8L58.8 16V8ZM64.2 8.4V15.6H70.4V8.4Z"/></g><path d="M77 1.6h2.8v2.8h-2.8z" fill="#FF3B30"/></symbol>
-  <symbol id="i-mark" viewBox="0 0 24 24"><path fill-rule="evenodd" d="M4 3H15L20 8V11.5L16.8 14.7L21 21H15.6L12.1 15.5H9.4V21H4ZM9.4 7.6V11.1H14.6V7.6Z" fill="#F5F5F6"/><path d="M19.6 1.6H22.4V4.4H19.6Z" fill="#FF3B30"/></symbol>
+  <symbol id="i-word" viewBox="0 0 1124 180"><path d="M0 0H160V46L93.83 101.42L164 180H114L65.17 125.42L0 180V132L112.24 38H39V78.34L0 111Z" fill="#FF3B30"/><path d="M217.38028169014083 45.0H256.80281690140845Q266.5633802816901 45.0 273.91549295774644 48.29577464788733Q281.2676056338028 51.591549295774655 285.19718309859155 57.676056338028175Q289.1267605633803 63.760563380281695 289.1267605633803 71.87323943661971Q289.1267605633803 79.85915492957747 284.7535211267606 85.69014084507043Q280.38028169014086 91.52112676056339 273.15492957746477 93.67605633802816Q286.59154929577466 95.57746478873239 287.7323943661972 109.14084507042253L290.01408450704224 135.0H270.3661971830986L268.71830985915494 112.1830985915493Q268.3380281690141 106.85915492957747 265.4225352112676 104.45070422535211Q262.50704225352115 102.04225352112675 255.7887323943662 102.04225352112675H236.64788732394365V135.0H217.38028169014083ZM269.3521126760563 73.52112676056339Q269.3521126760563 67.56338028169014 265.4225352112676 64.3943661971831Q261.49295774647885 61.22535211267606 254.01408450704224 61.22535211267606H236.64788732394365V85.94366197183098H254.64788732394368Q261.61971830985914 85.94366197183098 265.4859154929577 82.64788732394365Q269.3521126760563 79.35211267605634 269.3521126760563 73.52112676056339ZM298.76056338028167 118.01408450704226Q298.76056338028167 109.26760563380282 304.2112676056338 104.2605633802817Q309.6619718309859 99.25352112676057 321.07042253521126 96.97183098591549L343.0 92.66197183098592Q343.0 79.35211267605634 331.3380281690141 79.35211267605634Q320.8169014084507 79.35211267605634 318.91549295774644 89.11267605633803L299.9014084507042 88.22535211267606Q301.80281690140845 77.07042253521126 309.91549295774644 71.30281690140845Q318.0281690140845 65.53521126760563 331.3380281690141 65.53521126760563Q346.5492957746479 65.53521126760563 354.28169014084506 72.7605633802817Q362.01408450704224 79.98591549295774 362.01408450704224 93.92957746478874V117.12676056338029Q362.01408450704224 119.91549295774648 362.90140845070425 120.92957746478874Q363.7887323943662 121.94366197183099 365.8169014084507 121.94366197183099H367.71830985915494V135.0Q365.1830985915493 135.7605633802817 360.8732394366197 135.7605633802817Q348.19718309859155 135.7605633802817 346.0422535211267 124.73239436619718Q343.3802816901408 130.1830985915493 337.2323943661971 133.35211267605635Q331.0845070422535 136.5211267605634 322.59154929577466 136.5211267605634Q311.8169014084507 136.5211267605634 305.2887323943662 131.5774647887324Q298.76056338028167 126.63380281690141 298.76056338028167 118.01408450704226ZM343.0 107.87323943661971V104.5774647887324L327.53521126760563 107.87323943661971Q318.28169014084506 109.77464788732394 318.28169014084506 116.2394366197183Q318.28169014084506 119.66197183098592 320.5633802816901 121.56338028169014Q322.8450704225352 123.46478873239437 327.15492957746477 123.46478873239437Q334.3802816901408 123.46478873239437 338.6901408450704 119.28169014084507Q343.0 115.09859154929578 343.0 107.87323943661971ZM375.7042253521127 136.5211267605634 395.22535211267603 135.1267605633803Q396.3661971830986 138.67605633802816 399.21830985915494 140.45070422535213Q402.07042253521126 142.22535211267606 407.77464788732397 142.22535211267606Q421.84507042253523 142.22535211267606 421.84507042253523 128.66197183098592V121.43661971830986Q419.3098591549296 126.25352112676056 414.04929577464793 129.04225352112675Q408.7887323943662 131.83098591549296 402.19718309859155 131.83098591549296Q393.830985915493 131.83098591549296 387.3661971830986 127.77464788732394Q380.90140845070425 123.71830985915493 377.2887323943662 116.17605633802816Q373.67605633802816 108.63380281690141 373.67605633802816 98.74647887323944Q373.67605633802816 89.11267605633803 377.2887323943662 81.57042253521126Q380.90140845070425 74.02816901408451 387.3028169014085 69.78169014084507Q393.7042253521127 65.53521126760563 401.943661971831 65.53521126760563Q409.169014084507 65.53521126760563 414.36619718309856 68.76760563380282Q419.5633802816901 72.0 422.3521126760563 77.57746478873239V67.05633802816901H440.98591549295776V128.28169014084506Q440.98591549295776 141.59154929577466 431.98591549295776 148.56338028169014Q422.98591549295776 155.53521126760563 407.77464788732397 155.53521126760563Q393.830985915493 155.53521126760563 385.9718309859155 150.46478873239437Q378.11267605633805 145.3943661971831 375.7042253521127 136.5211267605634ZM421.9718309859155 98.2394366197183Q421.9718309859155 89.61971830985915 418.0422535211268 84.54929577464789Q414.11267605633805 79.47887323943662 407.6478873239437 79.47887323943662Q400.92957746478874 79.47887323943662 397.0633802816901 84.67605633802816Q393.19718309859155 89.87323943661971 393.19718309859155 98.61971830985915Q393.19718309859155 107.36619718309859 397.1267605633803 112.56338028169014Q401.056338028169 117.7605633802817 407.6478873239437 117.7605633802817Q414.23943661971833 117.7605633802817 418.1056338028169 112.56338028169014Q421.9718309859155 107.36619718309859 421.9718309859155 98.2394366197183ZM451.6338028169014 101.02816901408451Q451.6338028169014 90.38028169014085 455.9436619718309 82.33098591549296Q460.2535211267605 74.28169014084507 468.0492957746478 69.90845070422534Q475.8450704225352 65.53521126760563 486.112676056338 65.53521126760563Q496.3802816901408 65.53521126760563 504.17605633802816 69.90845070422534Q511.97183098591546 74.28169014084507 516.2816901408451 82.33098591549296Q520.5915492957746 90.38028169014085 520.5915492957746 101.02816901408451Q520.5915492957746 111.67605633802816 516.3450704225352 119.72535211267605Q512.0985915492957 127.77464788732394 504.2394366197183 132.14788732394368Q496.3802816901408 136.5211267605634 486.112676056338 136.5211267605634Q475.8450704225352 136.5211267605634 467.9859154929577 132.14788732394368Q460.1267605633803 127.77464788732394 455.8802816901408 119.72535211267605Q451.6338028169014 111.67605633802816 451.6338028169014 101.02816901408451ZM500.943661971831 101.02816901408451Q500.943661971831 91.14084507042253 497.0774647887324 85.62676056338029Q493.2112676056338 80.11267605633803 486.112676056338 80.11267605633803Q479.01408450704224 80.11267605633803 475.0845070422535 85.62676056338029Q471.15492957746477 91.14084507042253 471.15492957746477 101.02816901408451Q471.15492957746477 110.91549295774648 475.0845070422535 116.42957746478874Q479.01408450704224 121.94366197183099 486.112676056338 121.94366197183099Q493.2112676056338 121.94366197183099 497.0774647887324 116.42957746478874Q500.943661971831 110.91549295774648 500.943661971831 101.02816901408451Z" fill="#F5F5F6"/><path d="M562.169014084507 90.12676056338029Q562.169014084507 75.67605633802816 567.1126760563379 65.02816901408451Q572.056338028169 54.38028169014085 581.3098591549295 48.67605633802817Q590.5633802816901 42.97183098591549 603.2394366197183 42.97183098591549Q616.0422535211268 42.97183098591549 625.2957746478874 48.67605633802817Q634.5492957746478 54.38028169014085 639.4929577464789 65.02816901408451Q644.4366197183099 75.67605633802816 644.4366197183099 90.12676056338029Q644.4366197183099 104.5774647887324 639.4929577464789 115.16197183098592Q634.5492957746478 125.74647887323944 625.2957746478874 131.38732394366198Q616.0422535211268 137.0281690140845 603.2394366197183 137.0281690140845Q590.5633802816901 137.0281690140845 581.3098591549295 131.38732394366198Q572.056338028169 125.74647887323944 567.1126760563379 115.16197183098592Q562.169014084507 104.5774647887324 562.169014084507 90.12676056338029ZM633.0281690140845 90.12676056338029Q633.0281690140845 73.01408450704226 625.1056338028169 63.316901408450704Q617.1830985915493 53.61971830985915 603.2394366197183 53.61971830985915Q589.2957746478874 53.61971830985915 581.4366197183099 63.316901408450704Q573.5774647887324 73.01408450704226 573.5774647887324 90.12676056338029Q573.5774647887324 107.2394366197183 581.4366197183099 116.80985915492957Q589.2957746478874 126.38028169014085 603.2394366197183 126.38028169014085Q617.1830985915493 126.38028169014085 625.1056338028169 116.80985915492957Q633.0281690140845 107.2394366197183 633.0281690140845 90.12676056338029ZM658.887323943662 67.8169014084507H668.7746478873239L668.9014084507043 78.08450704225352Q671.9436619718309 72.38028169014085 677.2676056338028 69.33802816901408Q682.5915492957746 66.29577464788733 689.5633802816901 66.29577464788733Q699.1971830985915 66.29577464788733 705.7253521126761 71.04929577464789Q712.2535211267606 75.80281690140845 715.4225352112676 83.78873239436619Q718.5915492957746 91.77464788732394 718.5915492957746 101.40845070422534Q718.5915492957746 111.04225352112675 715.4225352112676 119.02816901408451Q712.2535211267606 127.01408450704226 705.7253521126761 131.76760563380282Q699.1971830985915 136.5211267605634 689.5633802816901 136.5211267605634Q682.9718309859155 136.5211267605634 677.5845070422536 133.73239436619718Q672.1971830985915 130.94366197183098 669.5352112676056 126.12676056338029V154.01408450704224H658.887323943662ZM707.4366197183099 101.40845070422534Q707.4366197183099 89.61971830985915 702.3661971830986 83.02816901408451Q697.2957746478874 76.43661971830986 688.5492957746478 76.43661971830986Q679.6760563380282 76.43661971830986 674.6056338028169 82.83802816901408Q669.5352112676056 89.2394366197183 669.5352112676056 101.40845070422534Q669.5352112676056 113.5774647887324 674.5422535211268 119.97887323943662Q679.5492957746479 126.38028169014085 688.5492957746478 126.38028169014085Q697.2957746478874 126.38028169014085 702.3661971830986 119.7887323943662Q707.4366197183099 113.19718309859155 707.4366197183099 101.40845070422534ZM739.5070422535211 117.7605633802817V77.19718309859155H729.6197183098592V67.8169014084507H739.5070422535211V52.098591549295776H750.1549295774648V67.8169014084507H768.0281690140845V77.19718309859155H750.1549295774648V117.50704225352112Q750.1549295774648 121.94366197183099 752.1197183098592 123.78169014084507Q754.0845070422536 125.61971830985915 758.3943661971831 125.61971830985915H768.0281690140845V135.0H757.3802816901409Q748.2535211267606 135.0 743.8802816901409 130.8169014084507Q739.5070422535211 126.63380281690141 739.5070422535211 117.7605633802817ZM780.9577464788732 67.8169014084507H791.6056338028169V135.0H780.9577464788732ZM780.7042253521126 44.87323943661973H791.8591549295775V57.29577464788733H780.7042253521126ZM809.9859154929577 67.8169014084507H819.7464788732394L820.0 79.6056338028169Q822.5352112676056 73.3943661971831 827.4788732394366 69.84507042253522Q832.4225352112676 66.29577464788733 838.887323943662 66.29577464788733Q846.4929577464789 66.29577464788733 851.6901408450703 69.97183098591549Q856.887323943662 73.64788732394366 859.0422535211267 80.36619718309859Q861.1971830985915 73.52112676056339 866.2676056338028 69.90845070422536Q871.338028169014 66.29577464788733 878.6901408450703 66.29577464788733Q889.338028169014 66.29577464788733 895.1056338028168 72.95070422535211Q900.8732394366197 79.6056338028169 900.8732394366197 91.77464788732394V135.0H890.225352112676V94.05633802816902Q890.225352112676 84.92957746478874 886.676056338028 80.30281690140845Q883.1267605633802 75.67605633802816 876.1549295774647 75.67605633802816Q869.056338028169 75.67605633802816 864.8732394366197 80.74647887323943Q860.6901408450703 85.8169014084507 860.6901408450703 94.8169014084507V135.0H850.0422535211267V94.8169014084507Q850.0422535211267 75.67605633802816 836.225352112676 75.67605633802816Q829.1267605633802 75.67605633802816 824.8802816901408 80.80985915492957Q820.6338028169014 85.94366197183098 820.6338028169014 94.8169014084507V135.0H809.9859154929577ZM919.2535211267605 67.8169014084507H929.9014084507041V135.0H919.2535211267605ZM918.9999999999999 44.87323943661973H930.1549295774647V57.29577464788733H918.9999999999999ZM945.3661971830985 124.35211267605634 987.8309859154929 77.19718309859155H946.6338028169013V67.8169014084507H999.4929577464787V78.46478873239437L957.0281690140844 125.61971830985915H1000.507042253521V135.0H945.3661971830985ZM1011.7887323943661 101.40845070422534Q1011.7887323943661 90.88732394366198 1015.5281690140844 82.90140845070422Q1019.2676056338028 74.91549295774648 1026.112676056338 70.6056338028169Q1032.957746478873 66.29577464788733 1042.0845070422533 66.29577464788733Q1050.8309859154929 66.29577464788733 1057.5492957746478 70.41549295774648Q1064.2676056338028 74.53521126760563 1068.007042253521 82.52112676056338Q1071.7464788732393 90.50704225352112 1071.7464788732393 101.53521126760563V104.70422535211267H1022.9436619718309Q1023.4507042253521 115.35211267605634 1028.5845070422536 120.86619718309859Q1033.718309859155 126.38028169014085 1042.5915492957745 126.38028169014085Q1049.056338028169 126.38028169014085 1053.3028169014083 123.40140845070422Q1057.5492957746478 120.4225352112676 1059.3239436619717 115.09859154929578L1070.732394366197 115.98591549295774Q1068.0704225352113 125.2394366197183 1060.5281690140846 130.88028169014086Q1052.9859154929577 136.5211267605634 1042.5915492957745 136.5211267605634Q1033.2112676056338 136.5211267605634 1026.2394366197182 132.2112676056338Q1019.2676056338028 127.90140845070422 1015.5281690140844 119.97887323943662Q1011.7887323943661 112.05633802816902 1011.7887323943661 101.40845070422534ZM1042.0845070422533 76.43661971830986Q1034.2253521126759 76.43661971830986 1029.218309859155 81.25352112676056Q1024.2112676056338 86.07042253521126 1022.9436619718309 95.32394366197184H1060.0845070422533Q1059.3239436619717 85.94366197183098 1054.570422535211 81.19014084507042Q1049.8169014084506 76.43661971830986 1042.0845070422533 76.43661971830986ZM1085.9436619718308 67.8169014084507H1095.3239436619717L1095.7042253521124 80.2394366197183Q1099.2535211267605 67.8169014084507 1111.676056338028 67.8169014084507H1118.2676056338028V77.95774647887325H1111.8028169014083Q1096.5915492957745 77.95774647887325 1096.5915492957745 94.43661971830986V135.0H1085.9436619718308Z" fill="#F5F5F6"/></symbol>
+  <symbol id="i-mark" viewBox="0 0 164 180"><path d="M0 0H160V46L93.83 101.42L164 180H114L65.17 125.42L0 180V132L112.24 38H39V78.34L0 111Z" fill="#FF3B30"/></symbol>
 </svg>
 
 <header class="top" id="top">
   <div class="top-in">
-    <a class="logo" href="#home" aria-label="Rago Optimizer home"><svg viewBox="0 1.6 79.8 19.4"><use href="#i-word"/></svg></a>
+    <a class="logo" href="#home" aria-label="Rago Optimizer home"><svg viewBox="0 0 1124 180"><use href="#i-word"/></svg></a>
     <nav class="nav" aria-label="Sections">
       <a href="#why">Why Rago</a>
       <a href="#features">Features</a>
@@ -469,8 +513,8 @@ footer.foot p{max-width:80ch}
         <h1 id="h1">Every millisecond <span class="red">counts.</span></h1>
         <p class="lede fade d1">Steadier ping, smoother frames, less input lag. Rago tunes Windows, your network and Minecraft in one click, and undoes it in one click.</p>
         <div class="cta-row fade d2">
-          <a class="btn btn-red" href="#pricing">Get Rago Hub Premium<svg><use href="#i-arrow"/></svg></a>
-          <a class="btn btn-ghost js-free" href="downloads/rago-optimizer-v5.2.bat" download><svg><use href="#i-down"/></svg>Download Rago Free</a>
+          <a class="btn btn-red" href="#pricing">Get Premium<svg><use href="#i-arrow"/></svg></a>
+          <a class="btn btn-ghost js-free-app" href="#pricing"><svg><use href="#i-down"/></svg>Download free</a>
         </div>
         <div class="ticks fade d3">
           <span><svg><use href="#i-check"/></svg>Restore point first</span>
@@ -479,9 +523,9 @@ footer.foot p{max-width:80ch}
         </div>
       </div>
 
-      <div class="hub fade d4" id="hub" aria-label="Interactive preview of the Rago Hub app">
+      <div class="hub fade d4" id="hub" aria-label="Interactive preview of the Rago Optimizer app">
         <div class="tb" aria-hidden="true">
-          <div class="tb-brand"><svg viewBox="0 0 24 24"><use href="#i-mark"/></svg>Rago Hub</div>
+          <div class="tb-brand"><svg viewBox="0 0 164 180"><use href="#i-mark"/></svg>Rago Optimizer</div>
           <div class="tb-search"><svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="M20 20l-3.5-3.5"/></svg><span class="q">Search 189 tweaks</span><span class="kbd">Ctrl K</span></div>
           <div class="tb-ctl"><i><svg viewBox="0 0 10 10"><path d="M1 5h8"/></svg></i><i><svg viewBox="0 0 10 10"><rect x="1.5" y="1.5" width="7" height="7" rx="1"/></svg></i><i><svg viewBox="0 0 10 10"><path d="M1.5 1.5l7 7M8.5 1.5l-7 7"/></svg></i></div>
         </div>
@@ -509,7 +553,7 @@ footer.foot p{max-width:80ch}
             <div class="run-list" id="run-list"></div>
           </div>
         </div>
-        <p class="hub-note">Interactive preview of Rago Hub. Click the tweaks, then Apply.</p>
+        <p class="hub-note">Interactive preview of Rago Optimizer. Click the tweaks, then Apply.</p>
       </div>
     </div>
   </section>
@@ -532,35 +576,35 @@ footer.foot p{max-width:80ch}
         <div class="st" data-step="3"><span class="k">04 · Ping jitter</span><h3>Your timing gets consistent.</h3><p>The distance to the server doesn't change. What changes is how much your timing jumps around, so more hits land in the beat they were meant for.</p></div>
       </div>
       <div class="stage rv" id="stage" aria-live="polite">
-        <div class="stage-h"><span class="lbl" id="stage-lbl">Click to server, 8 hits</span>
+        <div class="stage-h"><span class="lbl" id="stage-lbl">What delays your hit</span>
           <div class="seg-toggle" id="ba"><span class="thumb"></span><button type="button" data-v="before" class="on">Before</button><button type="button" data-v="after">With Rago</button></div>
         </div>
-        <div class="journey">
-          <div class="jbar" id="jbar">
-            <div class="jseg mine" data-k="input"><span>Input</span></div>
-            <div class="jseg mine" data-k="frame"><span>Frame</span></div>
-            <div class="jseg mine" data-k="net"><span>Network jitter</span></div>
-            <div class="jseg far" data-k="dist"><span>Distance</span></div>
-          </div>
-          <div class="jlegend"><span>Your click</span><span>Server</span></div>
+        <div class="lanes">
+          <div class="lane" data-k="input"><div class="ln-h"><span>Input lag</span><em>Your mouse and PC</em></div><div class="ln-t"><i class="ghost"></i><i class="fill"></i><b class="gain">Shorter</b></div></div>
+          <div class="lane" data-k="frame"><div class="ln-h"><span>Frame time</span><em>Your CPU and GPU</em></div><div class="ln-t"><i class="ghost"></i><i class="fill"></i><b class="gain">Steadier</b></div></div>
+          <div class="lane" data-k="net"><div class="ln-h"><span>Ping jitter</span><em>Your connection</em></div><div class="ln-t"><i class="ghost"></i><i class="fill"></i><b class="gain">Steadier</b></div></div>
+          <div class="lane far" data-k="dist"><div class="ln-h"><span>Distance to the server</span><em>Rago can't change this</em></div><div class="ln-t"><i class="fill"></i></div></div>
         </div>
-        <div class="ruler" id="ruler" aria-hidden="true"></div>
-        <div class="verdict">
-          <div class="vbox"><span>Hits in the right tick</span><b class="mono" id="v-ok">5 / 8</b></div>
-          <div class="vbox"><span>Timing spread</span><b class="mono" id="v-spread">±28 ms</b></div>
+        <div class="trip">
+          <div class="trip-h"><span>The whole trip</span><b id="trip-gain">Your part got shorter</b></div>
+          <div class="trip-bar"><div class="trip-in" id="trip"><i data-k="input"></i><i data-k="frame"></i><i data-k="net"></i><i class="d" data-k="dist"></i></div></div>
+          <div class="trip-lg"><span>Your click</span><span>Server</span></div>
         </div>
-        <p class="stage-note">Illustration of how timing works, not a measurement. Rago can't change the server or the distance to it.</p>
+        <p class="stage-note">An illustration of where delay comes from, not a measurement.</p>
       </div>
     </div>
   </section>
 
   <section class="sec band" id="features" style="padding-top:0">
     <div class="head rv">
-      <span class="eyebrow">Inside Rago Hub</span>
+      <span class="eyebrow">Inside the app</span>
       <h2>189 tweaks. One clear app.</h2>
-      <p>Every tweak says what it does, with a Safe or Advanced label.</p>
+      <p>Pick a section to see what it changes. Every tweak says what it does.</p>
     </div>
-    <div class="secs" id="secs"></div>
+    <div class="xp rv">
+      <div class="xp-tabs" id="xtabs" role="tablist" aria-label="Rago Optimizer sections"></div>
+      <div class="xp-panel" id="xpanel" role="tabpanel" aria-live="polite"></div>
+    </div>
     <div class="feat">
       <div class="fc rv"><h3>Find any tweak</h3><p>Press Ctrl+K and type.</p>
         <div class="demo-search"><svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="M20 20l-3.5-3.5"/></svg><span id="typed"></span><span class="caret"></span></div>
@@ -582,9 +626,9 @@ footer.foot p{max-width:80ch}
     </div>
     <div class="how" id="howwrap">
       <div class="how-line" aria-hidden="true"><i id="howline"></i></div>
-      <div class="hs"><span class="ic"><svg viewBox="0 0 24 24"><rect x="2" y="5" width="20" height="14" rx="3"/><path d="M2 10h20M6 15h4"/></svg></span><h3>Pay securely</h3><p>Checkout runs on Stripe.</p></div>
+      <div class="hs"><span class="ic"><svg viewBox="0 0 24 24"><rect x="2" y="5" width="20" height="14" rx="3"/><path d="M2 10h20M6 15h4"/></svg></span><h3>Pick your plan</h3><p>Free, or Premium through Stripe.</p></div>
       <div class="hs"><span class="ic"><svg viewBox="0 0 24 24"><circle cx="12" cy="8" r="4"/><path d="M4 21a8 8 0 0 1 16 0"/></svg></span><h3>Create your account</h3><p>It holds your license.</p></div>
-      <div class="hs"><span class="ic"><svg viewBox="0 0 24 24"><path d="M12 3v12M7 10l5 5 5-5M4 20h16"/></svg></span><h3>Download Rago Hub</h3><p>Windows 10 and 11.</p></div>
+      <div class="hs"><span class="ic"><svg viewBox="0 0 24 24"><path d="M12 3v12M7 10l5 5 5-5M4 20h16"/></svg></span><h3>Download Rago Optimizer</h3><p>Windows 10 and 11.</p></div>
       <div class="hs"><span class="ic"><svg viewBox="0 0 24 24"><path d="M13 2L4 14h7l-1 8 9-12h-7z"/></svg></span><h3>Sign in and apply</h3><p>Restart, then play.</p></div>
     </div>
   </section>
@@ -605,7 +649,7 @@ footer.foot p{max-width:80ch}
   <section class="sec band" id="pricing">
     <div class="head rv">
       <span class="eyebrow">Pricing</span>
-      <h2>Start free. Go Premium for the full app.</h2>
+      <h2>Start free. Unlock everything with Premium.</h2>
     </div>
     <div class="bill rv">
       <div class="seg-toggle" id="billing"><span class="thumb"></span><button type="button" data-v="month">Monthly</button><button type="button" data-v="year" class="on">Yearly</button></div>
@@ -613,33 +657,34 @@ footer.foot p{max-width:80ch}
     </div>
     <div class="plans">
       <div class="plan rv">
-        <h3>Rago Free</h3>
-        <p class="sub">The original .bat. No account.</p>
+        <h3>Free</h3>
+        <p class="sub">The app, with the essentials open.</p>
         <div class="price"><b>$0</b><small>forever</small></div>
-        <div class="price-note">Free download</div>
-        <ul>
-          <li><svg><use href="#i-check"/></svg>The Rago v5.2 script, console menus</li>
-          <li><svg><use href="#i-check"/></svg>Network, latency and Minecraft tweaks</li>
-          <li><svg><use href="#i-check"/></svg>Restore point before changes</li>
+        <div class="price-note">No license needed</div>
+        <ul id="free-list">
+          <li><svg><use href="#i-check"/></svg>The full Rago Optimizer app</li>
+          <li><svg><use href="#i-check"/></svg>10 of 189 tweaks: mouse acceleration off, Windows Game Mode, Game DVR off, notifications, transparency, temp file cleanup</li>
+          <li><svg><use href="#i-check"/></svg>The whole Restore section</li>
+          <li class="locked"><svg><use href="#i-lock"/></svg>Everything else, presets included, locked</li>
         </ul>
-        <a class="btn btn-ghost js-free" href="downloads/rago-optimizer-v5.2.bat" download><svg><use href="#i-down"/></svg>Download Rago Free</a>
-        <p class="micro">Windows 10 and 11 · Run as administrator</p>
+        <a class="btn btn-ghost js-free-app" href="/download"><svg><use href="#i-down"/></svg>Download free</a>
+        <p class="micro">Windows 10 and 11 · <a class="js-free" href="downloads/rago-optimizer-v5.2.bat" download>Prefer the classic .bat?</a></p>
       </div>
       <div class="pro rv">
         <span class="rec">Recommended</span>
         <div class="plan">
-          <h3>Rago Hub Premium</h3>
-          <p class="sub">The full Windows app</p>
+          <h3>Premium</h3>
+          <p class="sub">Every tweak unlocked</p>
           <div class="price"><b id="p-amt">$0</b><small id="p-per">/ month</small></div>
           <div class="price-note" id="p-note"></div>
           <ul>
-            <li><svg><use href="#i-check"/></svg>All 189 tweaks in a clean app</li>
+            <li><svg><use href="#i-check"/></svg>All 189 tweaks unlocked</li>
             <li><svg><use href="#i-check"/></svg>Presets, search and risk labels</li>
             <li><svg><use href="#i-check"/></svg>Ping measured before and after</li>
             <li><svg><use href="#i-check"/></svg>Weekly updates, Premium channel</li>
           </ul>
           <div class="lic"><svg viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="12" rx="3"/><path d="M8 20h8M12 16v4"/></svg>One license, one PC.</div>
-          <a class="btn btn-red js-checkout" href="/buy?interval=year">Get Rago Hub Premium<svg><use href="#i-arrow"/></svg></a>
+          <a class="btn btn-red js-checkout" href="/buy?interval=year">Get Premium<svg><use href="#i-arrow"/></svg></a>
           <p class="micro">Secure checkout with Stripe · Cancel anytime</p>
         </div>
       </div>
@@ -661,7 +706,7 @@ footer.foot p{max-width:80ch}
     <div class="aff rv">
       <div>
         <span class="eyebrow">Affiliate program</span>
-        <h2>Bring 3 players. Keep Rago Hub for life.</h2>
+        <h2>Bring 3 players. Keep Premium for life.</h2>
         <p>Get your own code and share it. When 3 friends pay and enter your code as they create their account, your access becomes permanent.</p>
         <div class="aff-steps">
           <span><i>1</i>Join and get your code</span>
@@ -686,10 +731,10 @@ footer.foot p{max-width:80ch}
     <div class="band rv">
       <span class="eyebrow">Your next match</span>
       <h2>Tune your PC once. Feel it on the first combo.</h2>
-      <p>Get Premium, or start with Rago Free.</p>
+      <p>Start free, unlock everything with Premium.</p>
       <div class="cta-row">
-        <a class="btn btn-red" href="#pricing">Get Rago Hub Premium<svg><use href="#i-arrow"/></svg></a>
-        <a class="btn btn-ghost js-free" href="downloads/rago-optimizer-v5.2.bat" download><svg><use href="#i-down"/></svg>Download Rago Free</a>
+        <a class="btn btn-red" href="#pricing">Get Premium<svg><use href="#i-arrow"/></svg></a>
+        <a class="btn btn-ghost js-free-app" href="#pricing"><svg><use href="#i-down"/></svg>Download free</a>
       </div>
     </div>
   </section>
@@ -698,7 +743,7 @@ footer.foot p{max-width:80ch}
 <footer class="foot">
   <div class="band">
     <div class="row">
-      <svg viewBox="0 1.6 79.8 19.4" style="height:15px;width:auto;color:var(--t1)"><use href="#i-word"/></svg>
+      <svg viewBox="0 0 1124 180" style="height:22px;width:auto;color:var(--t1)"><use href="#i-word"/></svg>
       <nav aria-label="Footer"><a href="#features">Features</a><a href="#pricing">Pricing</a><a href="#faq">FAQ</a><a class="js-affiliate" href="/affiliate">Affiliate program</a><a class="js-account" href="/login">Sign in</a><a class="js-signup" href="/signup">Create account</a><a class="js-discord" href="#reviews">Discord</a></nav>
     </div>
     <p>Rago Optimizer changes Windows settings. Results depend on your hardware and connection. A restore point is created before any change. Minecraft is a trademark of Mojang Studios; Rago Optimizer isn't affiliated with Mojang or Microsoft. © 2026 Rago Optimizer, by Rago and Straight.</p>
@@ -706,7 +751,7 @@ footer.foot p{max-width:80ch}
 </footer>
 
 <div class="dock" id="dock">
-  <a class="btn btn-ghost js-free" href="downloads/rago-optimizer-v5.2.bat" download>Rago Free</a>
+  <a class="btn btn-ghost js-free-app" href="#pricing">Free</a>
   <a class="btn btn-red" href="#pricing">Get Premium</a>
 </div>
 <div class="toast" id="toast" role="status"></div>
@@ -719,7 +764,8 @@ const CONFIG = {
   loginPath: "/login",
   signupPath: "/signup",
   affiliatePath: "/affiliate",
-  freeDownloadUrl: "downloads/rago-optimizer-v5.2.bat",
+  freeDownloadUrl: "downloads/rago-optimizer-v5.2.bat", // the classic .bat, still offered
+  freeAppPath: "/download",                         // Free plan: public installer link on the account server, no license needed
   discord: "",                                      // e.g. "https://discord.gg/yourInvite"
   currency: "$",
   priceMonth: 4.99,                                 // PLACEHOLDER: set to the real monthly Stripe price
@@ -743,6 +789,7 @@ wire(".js-signup", acct(CONFIG.signupPath), "", false);
 wire(".js-affiliate", acct(CONFIG.affiliatePath), "", false);
 wire(".js-discord", CONFIG.discord, "Discord invite link to be added", true);
 $$(".js-free").forEach(a => a.href = CONFIG.freeDownloadUrl);
+$$(".js-free-app").forEach(a => a.href = acct(CONFIG.freeAppPath));
 
 /* Headline: words blur in one by one */
 (() => { const h = $("#h1"); const walk = (n, acc) => { [...n.childNodes].forEach(c => { if (c.nodeType === 3) { const f = document.createDocumentFragment(); c.textContent.split(/(\s+)/).forEach(w => { if (!w) return; if (/^\s+$/.test(w)) { f.append(w); return; } const s = document.createElement("span"); s.className = "w"; s.textContent = w; s.style.animationDelay = (acc.i++ * 0.09) + "s"; f.append(s); }); c.replaceWith(f); } else walk(c, acc); }); }; walk(h, { i: 0 }); })();
@@ -783,7 +830,7 @@ const onView = (el, fn, th = .4) => { if (!("IntersectionObserver" in window)) r
   if (!reduce) { let vis = true; new IntersectionObserver(([e]) => vis = e.isIntersecting).observe(hero); const loop = () => { if (vis) draw(); requestAnimationFrame(loop); }; requestAnimationFrame(loop); }
 })();
 
-/* App preview: sidebar and rows mirror Rago Hub */
+/* App preview: sidebar and rows mirror the app */
 const ICON = {
   dashboard:'<rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/>',
   network:'<path d="M2 9a15 15 0 0 1 20 0M5 12.5a10 10 0 0 1 14 0M8.5 16a5 5 0 0 1 7 0"/><circle cx="12" cy="19.5" r="1"/>',
@@ -875,45 +922,30 @@ const MODS = [
   $("#mq").innerHTML = one + one.replace(/class="pill"/g, 'class="pill" aria-hidden="true"');
 })();
 
-/* Why: pinned story with a hit-timing simulation */
+/* Why: pinned story, one delay shrinks per step */
 (() => {
-  const STEPS = [
-    { lbl: "Click to server, 8 hits", input: 18, frame: 22, net: 26, after: false },
-    { lbl: "Input lag removed", input: 8, frame: 22, net: 26, focus: "input", after: false },
-    { lbl: "Frames even out", input: 8, frame: 12, net: 26, focus: "frame", after: false },
-    { lbl: "Timing gets consistent", input: 8, frame: 12, net: 12, focus: "net", after: true }
-  ];
-  const DIST = 34;
-  const bar = $$("#jbar .jseg"), ruler = $("#ruler"), N = 8;
-  let mode = "before", step = 0, seeds = Array.from({ length: N }, () => Math.random() * 2 - 1);
-  // tick ruler: 5 ticks of 50 ms, a green window around each tick target
-  const TICKS = 5;
-  let html = "";
-  for (let i = 0; i <= TICKS; i++) html += `<span class="tick" style="left:${i / TICKS * 100}%"></span><span class="tick-lbl" style="left:${Math.min(97, Math.max(3, i / TICKS * 100))}%">${i * 50} ms</span>`;
-  html += `<span class="tick win" id="win" style="left:40%;right:40%"></span>`;
-  for (let i = 0; i < N; i++) html += `<span class="hitdot" data-i="${i}" style="left:50%;top:${18 + i * 9}%"></span>`;
-  ruler.innerHTML = html;
-  const dots = $$(".hitdot", ruler);
+  const BEFORE = { input: 18, frame: 22, net: 26, dist: 34 }, AFTER = { input: 8, frame: 12, net: 12, dist: 34 };
+  const ORDER = ["input", "frame", "net"], MAX = 40;
+  const LBL = ["What delays your hit", "Input lag removed", "Frames even out", "Timing gets consistent"];
+  const lanes = $$("#stage .lane"), trip = $$("#trip i");
+  let mode = "before", step = 0, forced = null; // forced: the visitor clicked Before or With Rago
   const render = () => {
-    const s = STEPS[step], useAfter = mode === "after" || s.after;
-    const S = useAfter ? STEPS[3] : s;
-    bar[0].style.flexGrow = S.input; bar[1].style.flexGrow = S.frame; bar[2].style.flexGrow = S.net; bar[3].style.flexGrow = DIST;
-    bar.forEach(b => b.classList.toggle("focus", b.dataset.k === s.focus));
-    const spread = (S.input * .3 + S.frame * .45 + S.net * .75); // ms of jitter, illustrative
-    let ok = 0;
-    dots.forEach((d, i) => {
-      const off = seeds[i] * spread;            // ms away from the intended tick
-      const inWin = Math.abs(off) <= 10;
-      if (inWin) ok++;
-      d.style.left = (50 + off / 250 * 100) + "%";
-      d.className = "hitdot " + (inWin ? "ok" : "late");
+    const cut = k => forced ? forced === "after" : mode === "after" || ORDER.indexOf(k) > -1 && ORDER.indexOf(k) < step;
+    let total = 0;
+    lanes.forEach(l => {
+      const k = l.dataset.k, v = cut(k) ? AFTER[k] : BEFORE[k];
+      total += v;
+      $(".fill", l).style.width = v / MAX * 100 + "%";
+      const g = $(".ghost", l); if (g) g.style.width = BEFORE[k] / MAX * 100 + "%";
+      const gain = $(".gain", l); if (gain) gain.style.left = `calc(${v / MAX * 100}% + 10px)`;
+      l.classList.toggle("cut", k !== "dist" && cut(k));
+      l.classList.toggle("focus", ORDER[step - 1] === k);
     });
-    $("#v-ok").textContent = `${ok} / ${N}`; $("#v-ok").className = "mono " + (ok >= 7 ? "good" : ok <= 5 ? "bad" : "");
-    $("#v-spread").textContent = `±${Math.round(spread)} ms`; $("#v-spread").className = "mono " + (spread < 14 ? "good" : "bad");
-    $("#stage-lbl").textContent = mode === "after" && step === 0 ? "With Rago" : s.lbl;
+    trip.forEach(i => { const k = i.dataset.k, c = k !== "dist" && cut(k); i.style.flexGrow = c ? AFTER[k] : BEFORE[k]; i.classList.toggle("ok", c); });
+    $("#trip").style.width = total + "%";
+    $("#trip-gain").classList.toggle("on", total < 100);
+    $("#stage-lbl").textContent = forced ? (forced === "after" ? "With Rago" : "Before Rago") : LBL[step];
   };
-  // ensure the "before" spread misses a few hits and "after" lands nearly all
-  seeds = [-.95, -.55, -.3, -.1, .15, .4, .7, 1];
   const seg = (wrap, cb) => {
     const btns = $$("button", wrap), th = $(".thumb", wrap);
     const place = () => { const b = btns.find(x => x.classList.contains("on")); th.style.left = b.offsetLeft + "px"; th.style.width = b.offsetWidth + "px"; };
@@ -921,21 +953,49 @@ const MODS = [
     addEventListener("resize", place); requestAnimationFrame(place); document.fonts && document.fonts.ready.then(place);
     return v => { btns.forEach(x => x.classList.toggle("on", x.dataset.v === v)); place(); };
   };
-  const setBA = seg($("#ba"), v => { mode = v; render(); });
+  const setBA = seg($("#ba"), v => { forced = v; render(); });
   const sts = $$("#steps .st");
-  const activate = i => { step = i; sts.forEach((el, k) => el.classList.toggle("on", k === i)); mode = STEPS[i].after ? "after" : "before"; setBA(mode); render(); };
+  const activate = i => { if (i === step) return; step = i; forced = null; sts.forEach((el, k) => el.classList.toggle("on", k === i)); mode = i === 3 ? "after" : "before"; setBA(mode); render(); };
   if ("IntersectionObserver" in window) {
-    const io = new IntersectionObserver(es => es.forEach(e => { if (e.isIntersecting) activate(+e.target.dataset.step); }), { rootMargin: "-45% 0px -45% 0px" });
+    const narrow = matchMedia("(max-width:1180px)").matches; // stage pinned on top: read steps lower on screen
+    const io = new IntersectionObserver(es => es.forEach(e => { if (e.isIntersecting) activate(+e.target.dataset.step); }), { rootMargin: narrow ? "-72% 0px -18% 0px" : "-45% 0px -45% 0px" });
     sts.forEach(s => io.observe(s));
   }
-  activate(0);
+  step = -1; activate(0);
   window.__seg = seg;
 })();
 
-/* Twelve sections grid */
+/* Inside the app: click a section, see real tweaks from it */
 (() => {
-  $("#secs").innerHTML = MODS.map(([id, name, tag, n]) => `<div class="sc rv"><span class="n">${n} tweak${n > 1 ? "s" : ""}</span><span class="ic"><svg viewBox="0 0 24 24">${ICON[id]}</svg></span><h3>${name}</h3><p>${tag}</p></div>`).join("");
-  $$("#secs .sc").forEach((el, i) => { el.style.transitionDelay = (i % 5) * 50 + "ms"; window.__watch(el); el.addEventListener("pointermove", e => { const r = el.getBoundingClientRect(); el.style.setProperty("--mx", e.clientX - r.left + "px"); el.style.setProperty("--my", e.clientY - r.top + "px"); }); });
+  const EX = {
+    network: [["Disable Nagle's algorithm","Sends each packet right away instead of batching them.","safe"],["Disable NIC power saving","Turns off Green Ethernet and NIC sleep, which add wake-up delay.","safe"],["Network profile","Tunes the TCP stack for your play style.","safe"]],
+    latency: [["Disable mouse acceleration","The cursor moves the same distance regardless of hand speed.","safe"],["Multimedia scheduler (MMCSS)","Reserves more CPU and GPU time for games.","safe"],["System responsiveness 0%","Windows stops reserving 20% of your CPU for background tasks.","safe"]],
+    gpu: [["Rago driver profile","Applies the Rago low latency profile to your NVIDIA driver.","safe"],["Force high P-states","Stops the GPU dropping its clocks mid-fight.","safe"],["Remove NVIDIA telemetry","Turns off crash reports and driver data collection.","safe"]],
+    windows: [["Windows Game Mode","Puts the game in front of everything else.","safe"],["Disable background apps","Store apps stop running once you close them.","safe"],["Disable notifications","No banners or sounds while you play.","safe"]],
+    hitreg: [["Advanced hitreg suite","NIC interrupt moderation and priority settings for your PC class.","advanced"]],
+    minecraft: [["OptiFine preset","Performance strips particles and sky. Quality keeps the visuals.","safe"]],
+    rbw: [["RBW Mod","Brings back the Windows services staff check during a Ranked BedWars screenshare.","safe"]],
+    gamemode: [["Game mode","Turn it on before you play and off after.","advanced"]],
+    expert: [["Expert mode","The .bat's God Mode, for players who know what each setting does.","advanced"]],
+    restore: [["Restore point","Created automatically before every Apply.","safe"],["Restore a section","Puts a section back the way Windows had it.","safe"]]
+  };
+  const tabs = $("#xtabs"), panel = $("#xpanel");
+  tabs.innerHTML = MODS.map(([id, name], i) => `<button type="button" class="xt" role="tab" data-i="${i}"><svg viewBox="0 0 24 24">${ICON[id]}</svg>${name}<i class="bar"></i></button>`).join("");
+  const btns = $$(".xt", tabs);
+  let cur = -1, auto = true, timer;
+  const show = i => {
+    cur = i;
+    btns.forEach((b, k) => { b.classList.toggle("on", k === i); b.setAttribute("aria-selected", k === i); b.classList.remove("auto"); });
+    if (auto) { void btns[i].offsetWidth; btns[i].classList.add("auto"); }
+    const [id, name, tag] = MODS[i];
+    panel.innerHTML = `<div><span class="ovl">${String(i + 1).padStart(2, "0")} / ${name}</span><h3>${name}</h3><p class="tg">${tag}</p></div><div class="xp-list">${EX[id].map(([n, d, r], k) => `<div class="xr" style="animation-delay:${k * 90}ms"><div class="m"><div class="t">${esc(n)}<span class="bdg ${r}">${r === "safe" ? "Safe" : "Advanced"}</span></div><p>${esc(d)}</p></div><i class="sw"></i></div>`).join("")}</div>`;
+    $$(".xr", panel).forEach((r, k) => setTimeout(() => r.classList.add("on"), reduce ? 0 : 600 + k * 250));
+    if (tabs.scrollWidth > tabs.clientWidth) tabs.scrollTo({ left: btns[i].offsetLeft - 16, behavior: reduce ? "auto" : "smooth" });
+  };
+  const tick = () => { clearTimeout(timer); if (auto && !reduce) timer = setTimeout(() => { show((cur + 1) % MODS.length); tick(); }, 4200); };
+  btns.forEach((b, i) => b.addEventListener("click", () => { auto = false; clearTimeout(timer); show(i); }));
+  show(1);
+  onView(panel, tick, .3);
 })();
 
 /* Feature demos: typing search, cycling presets, restore ring */
@@ -1021,20 +1081,18 @@ const REF = (() => {
     const amt = $("#p-amt"); amt.animate && !reduce && amt.animate([{ transform: "translateY(8px)", opacity: 0 }, { transform: "none", opacity: 1 }], { duration: 400, easing: "cubic-bezier(.16,1,.3,1)" });
   };
   window.__seg($("#billing"), setBill); setBill("year");
-  const Y = '<span class="yes"><svg viewBox="0 0 16 16"><use href="#i-check"/></svg></span>', N = '<span class="no"><svg viewBox="0 0 16 16"><path d="M4.5 8h7"/></svg></span>';
+  const Y = '<span class="yes"><svg viewBox="0 0 16 16"><use href="#i-check"/></svg></span>', N = '<span class="no"><svg viewBox="0 0 16 16"><path d="M4.5 8h7"/></svg></span>', L = '<span class="lk" title="Locked in Free"><svg viewBox="0 0 16 16"><use href="#i-lock"/></svg></span>';
   const rows = [
-    ["Network, latency and Minecraft tweaks", Y, Y],
+    ["Rago Optimizer app and interface", Y, Y],
+    ['Tweaks unlocked', '<span class="txt">10 of 189</span>', '<span class="txt">All 189</span>'],
     ["Restore point before changes", Y, Y],
-    ["All 189 tweaks, fixed and maintained", N, Y],
-    ["Windows app with a clean interface", '<span class="txt">Console menus</span>', Y],
-    ["Explanation and Safe / Advanced label on each tweak", N, Y],
-    ["Presets: Minecraft PvP, Competitive, Laptop, Privacy", N, Y],
-    ["Search any tweak with Ctrl+K", N, Y],
-    ["Ping measured before and after", N, Y],
-    ["One-click Restore with history", N, Y],
+    ["Network, latency and graphics card tweaks", L, Y],
+    ["Presets: Minecraft PvP, Competitive, Laptop, Privacy", L, Y],
+    ["Ping measured before and after", L, Y],
+    ["Expert mode and RBW Mod", L, Y],
     ["Weekly updates", N, Y],
     ["Premium Discord channel", N, Y],
-    ["Account", '<span class="txt">Not needed</span>', '<span class="txt">1 PC per license</span>']
+    ["License", '<span class="txt">Not needed</span>', '<span class="txt">1 PC per license</span>']
   ];
   $("#cmp").innerHTML = rows.map(([a, b, p]) => `<tr><td>${a}</td><td>${b}</td><td class="pcol">${p}</td></tr>`).join("");
 })();
@@ -1044,12 +1102,12 @@ const REF = (() => {
   const F = [
     ["Can I get banned for using Rago?", "Rago doesn't modify Minecraft and injects nothing into the game. It changes Windows, network and OptiFine settings, the same ones you could change by hand. Some servers screenshare players and check Windows logs, so turn on RBW Mod before a screenshare: it brings back the services staff look at."],
     ["Will it lower my ping?", "It depends where your ping comes from. Distance to the server can't be fixed by any software. Rago cuts the delay your PC adds and makes your timing steadier, which is what matters most for hits."],
-    ["What's the difference between Free and Premium?", "Rago Free is the original .bat with console menus, free and with no account. Premium is Rago Hub, the Windows app: all 189 tweaks with explanations and risk labels, presets, search, ping measured before and after, and weekly updates."],
+    ["What's the difference between Free and Premium?", "Both are the same Rago Optimizer app. Free opens 10 tweaks and the Restore section, and shows everything else with a lock. Premium unlocks all 189 tweaks, presets, ping measured before and after, and weekly updates."],
     ["Monthly or yearly?", "Same app either way. Yearly costs 10 months of the monthly price, so you get 2 months free. You can cancel anytime."],
-    ["Can I use my license on more than one PC?", "No. Rago Hub works on one device per license. If you change PCs, contact support on Discord."],
+    ["Can I use my license on more than one PC?", "No. Premium works on one device per license. If you change PCs, contact support on Discord."],
     ["What if I don't like a change?", "A restore point is created before any change, and the Restore section undoes your tweaks. You can go back to how your PC was whenever you want."],
     ["My antivirus flagged Rago. Why?", "Rago changes system settings, which is what antivirus tools watch for. Only download Rago from this site. Don't disable your antivirus: allow the file if you trust it, or ask us on Discord."],
-    ["How does the affiliate program work?", "Join to get your code. When 3 friends buy Premium and enter your code while creating their account, your Rago Hub access becomes permanent."]
+    ["How does the affiliate program work?", "Join to get your code. When 3 friends buy Premium and enter your code while creating their account, your Premium access becomes permanent."]
   ];
   $("#faqs").innerHTML = F.map(([q, a], i) => `<div class="fq"><button type="button" aria-expanded="false" aria-controls="fa${i}" id="fb${i}">${esc(q)}<span class="pm" aria-hidden="true"></span></button><div class="ans" id="fa${i}" role="region" aria-labelledby="fb${i}"><div><p>${esc(a)}</p></div></div></div>`).join("");
   $$("#faqs .fq").forEach(f => $("button", f).addEventListener("click", () => {
