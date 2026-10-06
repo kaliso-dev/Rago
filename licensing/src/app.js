@@ -1,6 +1,7 @@
 import { Hono } from 'hono';
 import { getCookie, setCookie, deleteCookie } from 'hono/cookie';
 import { secureHeaders } from 'hono/secure-headers';
+import { bodyLimit } from 'hono/body-limit';
 import { serveStatic } from '@hono/node-server/serve-static';
 import { createReadStream } from 'node:fs';
 import { Readable } from 'node:stream';
@@ -10,7 +11,7 @@ import { relative } from 'node:path';
 import { DUMMY_HASH, maskLicenseKey, signValue, unsignValue, verifyPassword } from './crypto.js';
 import { DeviceError, parseDevice, sameDevice } from './fingerprint.js';
 import { signToken, verifyToken } from './tokens.js';
-import { billingPortal, createCheckout, handleStripeEvent } from './billing.js';
+import { billingPortal, createCheckout, handleStripeEvent, isRagoCheckout } from './billing.js';
 import * as A from './affiliates.js';
 import { createInstaller } from './installer.js';
 import * as L from './licensing.js';
@@ -59,8 +60,12 @@ export function createApp({ cfg, db, keys, stripe, mailer, log = console, fetchI
 
   const ipOf = (c) => {
     if (cfg.trustProxy) {
+      // Railway's edge sets X-Real-IP to the visitor's address. Otherwise take the last
+      // X-Forwarded-For hop, the one our proxy appended: earlier ones are written by the client.
+      const real = c.req.header('x-real-ip');
+      if (real) return real.trim();
       const xff = c.req.header('x-forwarded-for');
-      if (xff) return xff.split(',')[0].trim();
+      if (xff) return xff.split(',').pop().trim();
     }
     return c.env?.incoming?.socket?.remoteAddress || 'unknown';
   };
@@ -75,7 +80,7 @@ export function createApp({ cfg, db, keys, stripe, mailer, log = console, fetchI
       fontSrc: ["'self'", 'https://fonts.gstatic.com'],
       imgSrc: ["'self'", 'data:'],
       scriptSrc: ["'self'"],
-      formAction: ["'self'", 'https://checkout.stripe.com'],
+      formAction: ["'self'", 'https://checkout.stripe.com', 'https://billing.stripe.com'],
       frameAncestors: ["'none'"],
     },
     crossOriginEmbedderPolicy: false,
@@ -96,6 +101,12 @@ export function createApp({ cfg, db, keys, stripe, mailer, log = console, fetchI
     await next();
   });
 
+  // Forms and API calls are tiny; Stripe events can be larger.
+  const tooLarge = (c) => c.text('Payload too large', 413);
+  app.use('/webhooks/*', bodyLimit({ maxSize: 1024 * 1024, onError: tooLarge }));
+  app.use('*', async (c, next) => (c.req.method === 'POST' && !c.req.path.startsWith('/webhooks/')
+    ? bodyLimit({ maxSize: 64 * 1024, onError: tooLarge })(c, next) : next()));
+
   app.use('/assets/*', serveStatic({ root: publicDir, rewriteRequestPath: (p) => p.replace(/^\/assets/, '') }));
   app.get('/healthz', (c) => c.json({ ok: true }));
 
@@ -103,7 +114,7 @@ export function createApp({ cfg, db, keys, stripe, mailer, log = console, fetchI
   const currentUser = async (c) => await L.userForWebSession(db, getCookie(c, 'rg_session'));
   const signIn = async (c, user) => setCookie(c, 'rg_session', await L.createWebSession(db, user.id), { ...cookieBase, maxAge: L.SESSION_TTL / 1000 });
   const claimCookie = (c) => unsignValue(getCookie(c, 'rg_claim'), cfg.sessionSecret);
-  const setClaim = (c, licenseId) => setCookie(c, 'rg_claim', signValue(licenseId, cfg.sessionSecret), { ...cookieBase, maxAge: 7 * 86400 });
+  const setClaim = (c, licenseId) => setCookie(c, 'rg_claim', signValue(licenseId, cfg.sessionSecret), { ...cookieBase, maxAge: 2 * 86400 });
   const pendingClaim = async (c) => {
     const id = claimCookie(c);
     const lic = id && await L.getLicense(db, id);
@@ -119,8 +130,37 @@ export function createApp({ cfg, db, keys, stripe, mailer, log = console, fetchI
       await L.claimLicense(db, lic.id, user.id);
       return 'claimed';
     } catch (err) {
-      if (err.code === 'already_has_license') return 'duplicate';
-      throw err;
+      if (err.code !== 'already_has_license') throw err;
+      // A second purchase on an account that already has Premium: stop the extra subscription so it
+      // doesn't renew. The first payment is refunded by support (the notice says so).
+      if (stripe && lic.stripe_subscription_id) {
+        try { await stripe.subscriptions.cancel(lic.stripe_subscription_id); } catch (e) { log.error('[stripe] cancel duplicate failed', e.message); }
+      }
+      await audit(db, 'license.duplicate', { licenseId: lic.id, userId: user.id });
+      return 'duplicate';
+    }
+  }
+
+  /** Records the referral code typed right after a purchase, once the license is on the account. */
+  async function settleReferral(user, affiliate) {
+    if (!affiliate) return;
+    const license = await L.licenseForUser(db, user.id);
+    if (!license || license.user_id !== user.id || Date.now() - (license.claimed_at || 0) > 60 * 60 * 1000) return;
+    await A.recordReferral(db, affiliate, user.id, license).catch((err) => {
+      if (!(err instanceof L.LicenseError)) throw err; // self-referral caught late: the account works, the code doesn't count
+    });
+  }
+
+  /** Checks a referral code against the account email and the purchase email. Returns { affiliate } or { error }. */
+  async function checkReferral(code, email, pending) {
+    if (!code) return {};
+    try {
+      const affiliate = await A.checkCode(db, code, email);
+      if (pending.email !== email) await A.checkCode(db, code, pending.email);
+      return { affiliate };
+    } catch (err) {
+      if (err.code === 'self_referral') return { error: "You can't use your own referral code." };
+      return { error: "That referral code doesn't exist. Check it, or leave the field empty." };
     }
   }
 
@@ -161,7 +201,7 @@ export function createApp({ cfg, db, keys, stripe, mailer, log = console, fetchI
     // A returning subscriber pays with their existing Stripe customer, so invoices stay together.
     const previous = user && await db.get('SELECT stripe_customer_id FROM licenses WHERE user_id = ? AND stripe_customer_id IS NOT NULL ORDER BY created_at DESC LIMIT 1', [user.id]);
     const interval = c.req.query('interval') === 'year' ? 'year' : c.req.query('interval') === 'month' ? 'month' : undefined;
-    const session = await createCheckout(stripe, cfg, user, { interval, customerId: previous?.stripe_customer_id });
+    const session = await createCheckout(stripe, cfg, user, { interval, customerId: previous?.stripe_customer_id }, log);
     return c.redirect(session.url, 303);
   });
 
@@ -174,6 +214,7 @@ export function createApp({ cfg, db, keys, stripe, mailer, log = console, fetchI
     } catch {
       return c.html(V.messagePage(cfg, { title: "We couldn't find that payment.", text: 'If you were charged, sign in or contact support on Discord with your receipt.', action: { href: '/login', label: 'Sign in' } }), 404);
     }
+    if (!isRagoCheckout(session)) return c.redirect('/login', 303);
     // The webhook may not have arrived yet: fulfilling here too is safe (idempotent).
     const out = await L.fulfillCheckoutSession(db, session);
     if (!out.license) {
@@ -228,51 +269,55 @@ export function createApp({ cfg, db, keys, stripe, mailer, log = console, fetchI
     if (!allow(`signup:${ip(c)}`, 10, 60 * 60 * 1000)) return fail(API_ERRORS.rate_limited[1], 429);
     if (!EMAIL.test(email) || email.length > 254) return fail('Enter a valid email address.');
     if (password.length < 8 || password.length > 200) return fail('Use at least 8 characters for your password.');
-    if (await L.findUserByEmail(db, email)) return fail('An account with this email already exists. Sign in instead.');
-    let affiliate = null;
-    if (code) {
-      try {
-        affiliate = await A.checkCode(db, code, email);
-        if (pending.email !== email) await A.checkCode(db, code, pending.email);
-      } catch (err) {
-        if (err.code === 'self_referral') return fail("You can't use your own referral code.");
-        return fail("That referral code doesn't exist. Check it, or leave the field empty.");
-      }
+    const exists = () => fail('An account with this email already exists. Sign in instead.');
+    if (await L.findUserByEmail(db, email)) return exists();
+    const { affiliate, error } = await checkReferral(code, email, pending);
+    if (error) return fail(error);
+    let user;
+    try {
+      user = await L.createUser(db, email, password);
+    } catch (err) {
+      if (err.code === '23505') return exists(); // the form was sent twice
+      throw err;
     }
-    const user = await L.createUser(db, email, password);
     await signIn(c, user);
     const n = await settleClaim(c, user);
     deleteCookie(c, 'rg_ref', { path: '/' });
-    if (affiliate && n === 'claimed') {
-      const license = await L.licenseForUser(db, user.id);
-      await A.recordReferral(db, affiliate, user.id, license).catch((err) => {
-        if (!(err instanceof L.LicenseError)) throw err; // self-referral caught late: the account works, the code doesn't count
-      });
-    }
+    if (n === 'claimed') await settleReferral(user, affiliate);
     if (next && !n) return c.redirect(next, 303);
     return c.redirect(`/account${n ? `?n=${n}` : ''}`, 303);
   });
 
   app.get('/login', async (c) => {
-    if (await currentUser(c)) return c.redirect('/account', 303);
+    const next = nextPath(c.req.query('next'));
+    if (await currentUser(c)) return c.redirect(next || '/account', 303);
     const n = c.req.query('n');
-    return c.html(V.loginPage(cfg, { purchased: !!(await pendingClaim(c)), next: nextPath(c.req.query('next')), notice: n === 'reset' ? 'Password saved. Sign in with your new password.' : null }));
+    const purchased = !!(await pendingClaim(c));
+    return c.html(V.loginPage(cfg, { purchased, next, code: purchased ? refCode(c) : '', notice: n === 'reset' ? 'Password saved. Sign in with your new password.' : null }));
   });
 
   app.post('/login', async (c) => {
     const body = await c.req.parseBody();
     const email = String(body.email || '').trim().toLowerCase();
     const password = String(body.password || '');
-    const purchased = !!(await pendingClaim(c));
+    const pending = await pendingClaim(c);
+    const purchased = !!pending;
     const next = nextPath(body.next);
-    if (!allow(`login:${ip(c)}:${email}`, 10, 15 * 60 * 1000) || !allow(`login:${ip(c)}`, 50, 15 * 60 * 1000)) {
-      return c.html(V.loginPage(cfg, { email, purchased, next, error: API_ERRORS.rate_limited[1] }), 429);
+    // Buyers whose email already has an account get the code field here instead of on sign-up.
+    const code = purchased ? A.normalizeCode(body.code) : '';
+    const fail = (error, status) => c.html(V.loginPage(cfg, { email, purchased, next, code, error }), status);
+    if (!allow(`login:${ip(c)}:${email}`, 10, 15 * 60 * 1000) || !allow(`login:${ip(c)}`, 50, 15 * 60 * 1000) || !allow(`login-email:${email}`, 20, 15 * 60 * 1000)) {
+      return fail(API_ERRORS.rate_limited[1], 429);
     }
     const user = await L.findUserByEmail(db, email);
     const ok = await verifyPassword(password, user ? user.password_hash : DUMMY_HASH);
-    if (!user || !ok) return c.html(V.loginPage(cfg, { email, purchased, next, error: API_ERRORS.invalid_credentials[1] }), 401);
+    if (!user || !ok) return fail(API_ERRORS.invalid_credentials[1], 401);
+    const { affiliate, error } = await checkReferral(code, email, pending || {});
+    if (error) return fail(error, 400);
     await signIn(c, user);
     const n = await settleClaim(c, user);
+    deleteCookie(c, 'rg_ref', { path: '/' });
+    if (n === 'claimed') await settleReferral(user, affiliate);
     if (next && !n) return c.redirect(next, 303);
     return c.redirect(`/account${n ? `?n=${n}` : ''}`, 303);
   });
@@ -297,13 +342,17 @@ export function createApp({ cfg, db, keys, stripe, mailer, log = console, fetchI
     return c.html(V.forgotPage(cfg, { sent: true }));
   });
 
-  app.get('/reset/:token', (c) => c.html(V.resetPage(cfg, { token: c.req.param('token') })));
+  const expiredReset = (c) => c.html(V.messagePage(cfg, { title: 'This link expired.', text: 'Reset links work once, for 1 hour. Ask for a new one.', action: { href: '/forgot', label: 'Send a new link' } }), 410);
+  app.get('/reset/:token', async (c) => {
+    const token = c.req.param('token');
+    return (await L.passwordResetValid(db, token)) ? c.html(V.resetPage(cfg, { token })) : expiredReset(c);
+  });
   app.post('/reset/:token', async (c) => {
     const token = c.req.param('token');
     const password = String((await c.req.parseBody()).password || '');
     if (password.length < 8 || password.length > 200) return c.html(V.resetPage(cfg, { token, error: 'Use at least 8 characters for your password.' }), 400);
     const userId = await L.consumePasswordReset(db, token);
-    if (!userId) return c.html(V.messagePage(cfg, { title: 'This link expired.', text: 'Reset links work once, for 1 hour. Ask for a new one.', action: { href: '/forgot', label: 'Send a new link' } }), 410);
+    if (!userId) return expiredReset(c);
     await L.setPassword(db, userId, password);
     return c.redirect('/login?n=reset', 303);
   });
@@ -314,6 +363,7 @@ export function createApp({ cfg, db, keys, stripe, mailer, log = console, fetchI
     owned: ['notice', 'You already have Rago Optimizer Premium. No need to buy it twice.'],
     reset: ['notice', 'Device freed. Sign in to Rago Optimizer on your new PC to activate it.'],
     duplicate: ['error', 'This account already has a license, so the new purchase was not added. Contact support on Discord for a refund of the extra payment.'],
+    password: ['notice', 'Password changed. Other browsers were signed out.'],
     nofile: ['error', "The installer isn't available yet. Try again in a moment."],
     nobilling: ['error', "Billing isn't available right now. Try again in a moment, or contact support on Discord."],
   };
@@ -336,6 +386,20 @@ export function createApp({ cfg, db, keys, stripe, mailer, log = console, fetchI
       ...(license ? resetWindow(license, device) : {}),
       affiliate: await A.affiliateSummary(db, cfg, user.id),
     }));
+  });
+
+  app.get('/account/password', requireUser, (c) => c.html(V.passwordPage(cfg, { user: c.get('user') })));
+  app.post('/account/password', requireUser, async (c) => {
+    const user = c.get('user');
+    const body = await c.req.parseBody();
+    const password = String(body.password || '');
+    const fail = (error, status = 400) => c.html(V.passwordPage(cfg, { user, error }), status);
+    if (!allow(`password:${user.id}`, 10, 15 * 60 * 1000)) return fail(API_ERRORS.rate_limited[1], 429);
+    if (!(await verifyPassword(String(body.current || ''), user.password_hash))) return fail('Your current password is wrong.', 401);
+    if (password.length < 8 || password.length > 200) return fail('Use at least 8 characters for your new password.');
+    await L.setPassword(db, user.id, password); // signs out every session, this one included
+    await signIn(c, user);
+    return c.redirect('/account?n=password', 303);
   });
 
   // Stripe's customer portal: change plan, update the card, invoices, cancel.
@@ -483,7 +547,7 @@ export function createApp({ cfg, db, keys, stripe, mailer, log = console, fetchI
     let device;
     try { device = parseDevice(body.device); } catch (e) { return fail(c, 'invalid_request', { detail: e instanceof DeviceError ? e.message : undefined }); }
     const email = body.email.trim().toLowerCase();
-    if (!allow(`api-login:${ip(c)}:${email}`, 10, 15 * 60 * 1000) || !allow(`api-login:${ip(c)}`, 50, 15 * 60 * 1000)) return fail(c, 'rate_limited');
+    if (!allow(`api-login:${ip(c)}:${email}`, 10, 15 * 60 * 1000) || !allow(`api-login:${ip(c)}`, 50, 15 * 60 * 1000) || !allow(`login-email:${email}`, 20, 15 * 60 * 1000)) return fail(c, 'rate_limited');
 
     const user = await L.findUserByEmail(db, email);
     const ok = await verifyPassword(body.password, user ? user.password_hash : DUMMY_HASH);
@@ -553,7 +617,10 @@ export function createApp({ cfg, db, keys, stripe, mailer, log = console, fetchI
     app.use('/*', serveStatic({ root: siteRoot }));
   }
 
-  app.notFound((c) => c.html(V.messagePage(cfg, { title: 'Page not found.', text: "This page doesn't exist.", action: { href: '/account', label: 'Go to your account' } }), 404));
+  app.notFound(async (c) => {
+    const user = await currentUser(c).catch(() => null);
+    return c.html(V.messagePage(cfg, { user, title: 'Page not found.', text: "This page doesn't exist.", action: user ? { href: '/account', label: 'Go to your account' } : { href: '/login', label: 'Sign in' } }), 404);
+  });
   app.onError((err, c) => {
     log.error(err);
     if (c.req.path.startsWith('/api/')) return c.json({ error: { code: 'server_error', message: "Couldn't reach the license server. Check your connection and try again." } }, 500);

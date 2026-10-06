@@ -1,4 +1,21 @@
 // Small progressive enhancements. Every page works without this file.
+
+// Clipboard, with a fallback for browsers that block the async API.
+function copyText(text) {
+  if (navigator.clipboard && window.isSecureContext) return navigator.clipboard.writeText(text);
+  const ta = Object.assign(document.createElement('textarea'), { value: text, readOnly: true });
+  ta.className = 'sr-only';
+  document.body.append(ta); ta.select();
+  const ok = document.execCommand('copy'); ta.remove();
+  return ok ? Promise.resolve() : Promise.reject(new Error('copy failed'));
+}
+
+// Screen readers hear "Copied" without moving focus.
+function announce(text) {
+  let live = document.getElementById('live');
+  if (!live) { live = Object.assign(document.createElement('div'), { id: 'live', className: 'sr-only' }); live.setAttribute('aria-live', 'polite'); document.body.append(live); }
+  live.textContent = ''; setTimeout(() => (live.textContent = text), 50);
+}
 // Show / hide password
 document.addEventListener('click', (e) => {
   const eye = e.target.closest('[data-reveal]');
@@ -9,11 +26,12 @@ document.addEventListener('click', (e) => {
     input.toggleAttribute('data-revealed', show);
     eye.textContent = show ? 'Hide' : 'Show';
     eye.setAttribute('aria-label', show ? 'Hide password' : 'Show password');
+    eye.setAttribute('aria-pressed', String(show));
   }
 
   const reveal = e.target.closest('[data-reveal-key]');
   if (reveal) {
-    const code = reveal.parentElement.querySelector('code');
+    const code = reveal.closest('.key').querySelector('code');
     const showing = code.textContent === code.dataset.key;
     code.classList.add('flip');
     setTimeout(() => { code.textContent = showing ? code.dataset.masked : code.dataset.key; code.classList.remove('flip'); }, 120);
@@ -21,8 +39,9 @@ document.addEventListener('click', (e) => {
   }
 
   const copy = e.target.closest('[data-copy]');
-  if (copy && navigator.clipboard) {
-    navigator.clipboard.writeText(copy.dataset.copy).then(() => {
+  if (copy) {
+    copyText(copy.dataset.copy).then(() => {
+      announce('Copied');
       const label = copy.querySelector('span');
       copy.dataset.label ||= label.textContent;
       label.textContent = 'Copied';

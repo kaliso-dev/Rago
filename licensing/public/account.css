@@ -43,7 +43,7 @@ p{margin:0}
 .top-email{font:400 12px var(--rg-font-mono);color:var(--rg-text-3);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:28vw}
 .top form{margin:0}
 .foot{display:flex;justify-content:space-between;align-items:center;gap:16px;flex-wrap:wrap;padding:28px clamp(16px,4vw,56px);color:var(--rg-text-3);font-size:12px;margin-top:auto}
-.foot-links{display:flex;gap:20px}
+.foot-links{display:flex;flex-wrap:wrap;gap:8px 20px}
 .foot a{color:var(--rg-text-2);text-decoration:none}
 .foot a:hover{color:var(--rg-text-1)}
 
@@ -194,8 +194,8 @@ p{margin:0}
 .ring-bar{stroke:var(--rg-red-500);filter:drop-shadow(0 0 6px rgba(255,59,48,.45));animation:ring-fill 1400ms var(--rg-ease-out) 300ms both}
 .ring-full .ring-bar{stroke:var(--rg-success);filter:drop-shadow(0 0 6px rgba(61,220,151,.45))}
 @keyframes ring-fill{from{stroke-dashoffset:263.89}}
-.ring-pend{stroke:var(--rg-red-500);opacity:.32;animation:ring-fill 1400ms var(--rg-ease-out) 300ms both,ring-wait 2.4s var(--rg-ease-in-out) 1.7s infinite}
-@keyframes ring-wait{50%{opacity:.14}}
+.ring-pend{stroke:var(--rg-red-500);opacity:.45;animation:ring-fill 1400ms var(--rg-ease-out) 300ms both,ring-wait 2.4s var(--rg-ease-in-out) 1.7s infinite}
+@keyframes ring-wait{50%{opacity:.25}}
 .ring-num{display:flex;align-items:baseline;gap:2px}
 .ring-num b{font-size:40px;font-weight:500;letter-spacing:-.03em}
 .ring-num small{font-size:15px;color:var(--rg-text-3)}
@@ -251,6 +251,12 @@ p{margin:0}
   *,*::before,*::after{animation:none !important;transition:none !important}
   .pulse i{display:none}
 }
-@media (max-width:720px){.tabs{display:none}}
+
 @media (max-width:560px){.top-email{display:none}.steps li + li::before{width:14px;margin:0 8px}.steps li span:last-child{display:none}.steps li.now span:last-child{display:inline}.meta{grid-template-columns:1fr}
   .key{padding:12px}.key code{flex-basis:100%}.code-big{padding:14px 14px 14px 18px}}
+/* Account settings line under the dashboard */
+.dash-foot{margin:28px 0 0;text-align:center}
+.dash-foot a{color:var(--rg-text-2)}
+/* Phones: the Account / Affiliate tabs move to their own full-width row instead of disappearing */
+@media (max-width:720px){.top{flex-wrap:wrap;row-gap:12px}.tabs{display:flex;order:3;width:100%}.tabs a{flex:1;text-align:center}}
+.sr-only{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0}

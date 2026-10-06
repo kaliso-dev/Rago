@@ -52,6 +52,8 @@ Commence tout en **mode test** Stripe : rien n'est vraiment débité tant que tu
 5. **Paramètres → Facturation → Abonnements et e-mails** : coche les relances automatiques en cas d'échec de paiement (Smart Retries) et, à la fin des relances, **Annuler l'abonnement**. Pendant les relances le joueur garde Rago Optimizer ; à l'annulation la licence s'arrête toute seule.
 6. **Paramètres → Image de marque** : logo `brand/logo/png/rago-icon-512.png`, couleur `#FF3B30`. La page de paiement aura l'air de la tienne.
 7. **Paramètres → E-mails clients** : coche les reçus pour les paiements réussis et les factures.
+8. **Paramètres → Informations publiques** (Public details) : renseigne **Conditions d'utilisation** = `https://<ton site>/terms.html` et **Politique de confidentialité** = `https://<ton site>/privacy.html`. Sans l'URL des conditions, Stripe refuse la case « J'accepte les conditions et je renonce à mon droit de rétractation de 14 jours » : la page de paiement s'ouvre quand même, sans la case, et les logs Railway affichent `[stripe] Terms checkbox refused`. Avec la case, la renonciation au délai de rétractation est valable dans l'UE.
+9. Dans le **Portail client** (point 4), ajoute aussi les liens **Conditions** et **Confidentialité** vers ces deux mêmes pages.
 
 Tu avais déjà créé un prix « Paiement unique » ? Laisse-le, il ne sert plus : le serveur prend les deux prix récurrents dès que `STRIPE_PRICE_MONTHLY` et `STRIPE_PRICE_YEARLY` sont renseignés. Sans eux, il vend encore l'ancien prix unique comme licence à vie.
 
@@ -195,11 +197,14 @@ npm run admin -- grant ami@mail.com             # licence à vie offerte (ex. an
 npm run admin -- affiliate affilie@mail.com     # son code, ses filleuls et pourquoi chacun compte ou non
 ```
 
+- **Un joueur qui a déjà Premium paie une deuxième fois** (souvent déconnecté du site) : son compte garde sa licence, l'abonnement en trop est annulé automatiquement et son tableau de bord lui dit de te contacter. Rembourse ce deuxième paiement dans Stripe → Paiements.
+- **Mot de passe** : le joueur le change lui-même depuis son compte (lien « Change password » en bas du tableau de bord), ou avec « Forgot your password? » s'il l'a oublié.
+
 ### Programme d'affiliation, ce qui est vérifié
 
-- Le code se tape **uniquement** à la création du compte, juste après le paiement. Un client = un code, pour toujours.
+- Le code se tape **uniquement** juste après le paiement : à la création du compte, ou à la connexion si l'email du paiement a déjà un compte. Un client = un code, pour toujours.
 - Refusé tout de suite : code inexistant, ou code de l'affilié lui-même (même email que le compte affilié ou que l'email de paiement).
-- Un filleul compte **14 jours après son achat** (`AFFILIATE_HOLD_DAYS`), s'il n'a été ni remboursé ni contesté, et s'il a **activé Rago Optimizer sur un PC** qui n'est ni celui de l'affilié ni celui d'un autre filleul déjà compté. Même client Stripe que l'affilié : refusé aussi.
+- Un filleul compte **14 jours après son achat** (`AFFILIATE_HOLD_DAYS`), si sa licence marche encore à ce moment-là (ni remboursée, ni contestée, ni abonnement déjà terminé), et s'il a **activé Rago Optimizer sur un PC** qui n'est ni celui de l'affilié ni celui d'un autre filleul déjà compté. Même client Stripe que l'affilié : refusé aussi.
 - À 3 filleuls comptés (`AFFILIATE_GOAL`), l'affilié reçoit Rago Optimizer Premium **à vie**, verrouillé sur un PC comme les autres. S'il était abonné, c'est sa licence actuelle qui devient à vie (même clé, même PC) et Stripe arrête de le prélever à la fin de la période.
 - Le calcul se fait quand l'affilié ouvre son compte ou se connecte dans l'app, et toutes les heures sur le serveur.
 - Limite connue : quelqu'un qui paie 3 abonnements avec 3 emails, 3 cartes et 3 PC différents passera. Ça lui coûte 3 mois d'abonnement minimum ; si tu veux plus strict, monte `AFFILIATE_HOLD_DAYS` à 30 ou 45.

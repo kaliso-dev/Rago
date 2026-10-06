@@ -20,9 +20,27 @@ export function priceFor(cfg, interval) {
  * @param user the signed-in account, if any
  * @param customerId a Stripe customer from an earlier license of this account (resubscribing)
  */
-export async function createCheckout(stripe, cfg, user, { interval, customerId } = {}) {
+// EU law: immediate access only waives the 14-day withdrawal right if the buyer asks for it explicitly.
+const termsText = (cfg) => `I agree to the [Terms of Sale](${cfg.siteUrl}/terms.html) and ask for immediate access to Premium. I understand I lose my 14-day right of withdrawal once the license is delivered.`;
+
+/**
+ * Creates the Checkout Session with the required terms checkbox. Stripe refuses that checkbox until
+ * the Terms URL is set in its dashboard (Settings > Public details): in that case we log it loudly
+ * and still open the checkout, so sales don't stop while the setting is missing.
+ */
+export async function createCheckout(stripe, cfg, user, opts = {}, log = console) {
+  try {
+    return await buildCheckout(stripe, cfg, user, { ...opts, terms: true });
+  } catch (err) {
+    if (!/terms of service|terms_of_service/i.test(err.message || '')) throw err;
+    log.error?.('[stripe] Terms checkbox refused: set the Terms of Service URL in Stripe (Settings > Public details).', err.message);
+    return buildCheckout(stripe, cfg, user, { ...opts, terms: false });
+  }
+}
+
+async function buildCheckout(stripe, cfg, user, { interval, customerId, terms } = {}) {
   const choice = priceFor(cfg, interval);
-  const metadata = { product: 'rago-hub-premium', ...(choice.interval ? { interval: choice.interval } : {}) };
+  const metadata = { product: RAGO_PRODUCT, ...(choice.interval ? { interval: choice.interval } : {}) };
   const common = {
     line_items: [{ price: choice.price, quantity: 1 }],
     success_url: `${cfg.publicUrl}/checkout/success?session_id={CHECKOUT_SESSION_ID}`,
@@ -31,21 +49,23 @@ export async function createCheckout(stripe, cfg, user, { interval, customerId }
     client_reference_id: user?.id,
     allow_promotion_codes: true,
     metadata,
+    ...(terms ? { consent_collection: { terms_of_service: 'required' } } : {}),
   };
+  const custom = (submit) => ({ submit: { message: submit }, ...(terms ? { terms_of_service_acceptance: { message: termsText(cfg) } } : {}) });
   if (!choice.interval) {
     return stripe.checkout.sessions.create({
       ...common,
       mode: 'payment',
       ...(customerId ? {} : { customer_creation: 'always' }),
       payment_intent_data: { metadata },
-      custom_text: { submit: { message: 'Rago Optimizer Premium works on one Windows PC per license. You create your account right after paying.' } },
+      custom_text: custom('Rago Optimizer Premium works on one Windows PC per license. You create your account right after paying.'),
     });
   }
   return stripe.checkout.sessions.create({
     ...common,
     mode: 'subscription',
     subscription_data: { metadata },
-    custom_text: { submit: { message: 'Rago Optimizer Premium works on one Windows PC. Cancel anytime from your account. You create your account right after paying.' } },
+    custom_text: custom('Rago Optimizer Premium works on one Windows PC. Cancel anytime from your account. You create your account right after paying.'),
   });
 }
 
@@ -53,6 +73,9 @@ export async function createCheckout(stripe, cfg, user, { interval, customerId }
 export function billingPortal(stripe, cfg, customerId) {
   return stripe.billingPortal.sessions.create({ customer: customerId, return_url: `${cfg.publicUrl}/account` });
 }
+
+export const RAGO_PRODUCT = 'rago-hub-premium';
+export const isRagoCheckout = (session) => session?.metadata?.product === RAGO_PRODUCT;
 
 const idOf = (v) => (typeof v === 'string' ? v : v?.id ?? null);
 
@@ -78,6 +101,8 @@ export async function handleStripeEvent(db, event, { stripe, onLicense, log } = 
   switch (event.type) {
     case 'checkout.session.completed':
     case 'checkout.session.async_payment_succeeded': {
+      // Only our own checkouts (/buy sets this). Other products or Payment Links on the account are ignored.
+      if (!isRagoCheckout(obj)) { label = 'not_rago'; break; }
       const sub = obj.mode === 'subscription' && obj.subscription && stripe
         ? await stripe.subscriptions.retrieve(idOf(obj.subscription)) : null;
       const out = await fulfillCheckoutSession(db, obj, sub);

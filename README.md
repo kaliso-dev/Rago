@@ -23,8 +23,9 @@ Chaque dossier a son propre README avec le détail technique. Ce guide-ci expliq
      ▼
  ┌──────────────────────────── ragohub.com  (Netlify) ─────────────────────────────────────┐
  │  /                 Page de vente (site/)                                                │
- │   ├─ « Download free »  → /downloads/rago-optimizer-v5.2.bat   (Rago Free, sans compte) │
- │   └─ « Get Premium »    → account.ragohub.com/buy ──► Stripe Checkout (paiement unique) │
+ │   ├─ « Download free »  → account.ragohub.com/download  (app, plan gratuit, sans compte)│
+ │   ├─ Rago Free (.bat)   → /downloads/rago-optimizer-free-v5.2.zip                       │
+ │   └─ « Get Premium »    → account.ragohub.com/buy ──► Stripe Checkout                   │
  └─────────────────────────────────────────────────────────────────────────────────────────┘
                                        │  webhook Stripe → /webhooks/stripe
                                        ▼
@@ -84,6 +85,7 @@ Le pas-à-pas qui fait foi est **[`licensing/docs/MISE-EN-LIGNE.md`](licensing/d
 À retenir :
 
 - **Aucune clé à générer sur ton PC.** Le serveur crée sa paire de clés de licence au premier démarrage et la garde dans Supabase. La clé publique, à donner à l'app, se lit sur `https://account.<ton-domaine>/api/v1/public-key?format=pem`.
+- **Stripe → Paramètres → Informations publiques** : renseigne les URL de `terms.html` et `privacy.html` du site. Sans l'URL des conditions, la case « J'accepte les conditions et je renonce à mon droit de rétractation » n'apparaît pas sur la page de paiement (étape 3 de `MISE-EN-LIGNE.md`).
 - **Pas de volume Railway** : la base est Supabase Postgres (`DATABASE_URL`) et l'installeur est dans un bucket Storage privé.
 - **Page de vente** : en plus de `accountBase`, tout se règle dans l'objet `CONFIG` en bas de `site/src/page.html` (et de `site/index.html`, la version déployée) :
 

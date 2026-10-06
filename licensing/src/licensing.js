@@ -58,6 +58,11 @@ export async function createPasswordReset(db, userId) {
   return token;
 }
 
+/** True while a reset link can still be used (checked before showing the form). */
+export async function passwordResetValid(db, token) {
+  return !!(await db.get('SELECT 1 FROM password_resets WHERE token_hash = ? AND used_at IS NULL AND expires_at > ?', [sha256(String(token)), Date.now()]));
+}
+
 export async function consumePasswordReset(db, token) {
   const row = await db.get(`UPDATE password_resets SET used_at = ?
     WHERE token_hash = ? AND used_at IS NULL AND expires_at > ? RETURNING user_id`,

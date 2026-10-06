@@ -89,7 +89,7 @@ export async function evaluateAffiliate(db, cfg, userId) {
       const seen = await t.all("SELECT * FROM referrals WHERE affiliate_user_id = ? AND status = 'counted'", [userId]);
       for (const r of pending) {
         let voidReason = null;
-        if (r.lic_status !== 'active' && r.lic_reason !== 'subscription_ended') voidReason = r.lic_reason || 'revoked';
+        if (r.lic_status !== 'active') voidReason = r.lic_reason || 'revoked';
         else if (own.some((d) => anyMatch(d, r)) || seen.some((s) => anyMatch(s, r))) voidReason = 'same_device';
         else if (r.lic_customer && ownCustomers.has(r.lic_customer)) voidReason = 'same_payer';
         if (voidReason) {

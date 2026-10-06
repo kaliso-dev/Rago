@@ -83,6 +83,7 @@ async function setup(env = {}, extra = {}) {
   const paidSession = (id, email, extra = {}) => (sessions[id] = {
     id, object: 'checkout.session', payment_status: 'paid', customer_details: { email }, payment_intent: `pi_${id}`,
     customer: `cus_${id}`, amount_total: 1499, currency: 'eur', ...extra,
+    metadata: { product: 'rago-hub-premium', ...extra.metadata },
   });
   const DAYS = 86400;
   const subscription = (id, interval, { status = 'active', periodDays = interval === 'year' ? 365 : 30, ...rest } = {}) => (subs[id] = {
@@ -602,4 +603,58 @@ test('affiliate without a license gets a new lifetime license', async () => {
   // Refunds of other people's payments never touch it.
   await t.webhook('charge.refunded', { id: 'ch_x', object: 'charge', refunded: true, customer: null, payment_intent: null });
   assert.equal((await L.licenseForUser(t.db, aff.id)).status, 'active');
+});
+
+test('account pages: change password, foreign checkouts ignored, code typed at sign-in after a purchase, expired reset link', async () => {
+  const t = await setup();
+  // Change password while signed in: wrong current password refused, then the new one works.
+  await t.browse('/signup', { form: { email: 'pw@x.io', password: 'password123' } });
+  assert.equal((await t.browse('/account/password', { form: { current: 'nope-nope', password: 'newpassword1' } })).status, 401);
+  const ok = await t.browse('/account/password', { form: { current: 'password123', password: 'newpassword1' } });
+  assert.equal(ok.headers.get('location'), '/account?n=password');
+  assert.match(await (await t.browse('/account?n=password')).text(), /Password changed/);
+  t.jar.clear();
+  assert.equal((await t.browse('/login', { form: { email: 'pw@x.io', password: 'newpassword1' } })).status, 303);
+
+  // A Checkout for another product on the same Stripe account creates nothing.
+  await t.webhook('checkout.session.completed', t.paidSession('cs_other', 'other@x.io', { metadata: { product: 'something-else' } }));
+  assert.equal((await t.db.get('SELECT COUNT(*)::int AS n FROM licenses')).n, 0);
+
+  // pw@x.io becomes an affiliate; a buyer who already has an account types the code when signing in.
+  await t.browse('/affiliate/join', { form: {} });
+  const code = (await t.db.get('SELECT code FROM affiliates')).code;
+  t.jar.clear();
+  await t.browse('/signup', { form: { email: 'buyer@x.io', password: 'password123' } });
+  t.jar.clear();
+  await t.webhook('checkout.session.completed', t.paidSession('cs_buy', 'buyer@x.io'));
+  const page = await (await t.browse('/checkout/success?session_id=cs_buy')).text();
+  assert.match(page, /name="code"/);
+  const res = await t.browse('/login', { form: { email: 'buyer@x.io', password: 'password123', code: code.toLowerCase() } });
+  assert.equal(res.headers.get('location'), '/account?n=claimed');
+  assert.equal((await t.db.get('SELECT COUNT(*)::int AS n FROM referrals')).n, 1);
+
+  // A dead reset link says so before asking for a password.
+  assert.equal((await t.browse('/reset/not-a-real-token')).status, 410);
+});
+
+test('checkout asks to accept the terms, and still opens if Stripe has no Terms URL yet', async () => {
+  const t = await setup();
+  await t.browse('/buy');
+  const p = t.created.at(-1);
+  assert.equal(p.consent_collection.terms_of_service, 'required');
+  assert.match(p.custom_text.terms_of_service_acceptance.message, /terms\.html.*14-day right of withdrawal/);
+
+  // Stripe refuses the checkbox while no Terms URL is set in its dashboard: retry without it, log loudly.
+  const errors = [];
+  let calls = 0;
+  const create = async (params) => {
+    calls++;
+    if (params.consent_collection) throw new Error('You cannot collect consent to your terms of service unless a URL is set in the Stripe Dashboard.');
+    return { url: 'https://checkout.stripe.com/c/pay/cs_x' };
+  };
+  const { createCheckout } = await import('../src/billing.js');
+  const s = await createCheckout({ checkout: { sessions: { create } } }, t.cfg, null, {}, { error: (...a) => errors.push(a.join(' ')) });
+  assert.equal(s.url, 'https://checkout.stripe.com/c/pay/cs_x');
+  assert.equal(calls, 2);
+  assert.match(errors.join('\n'), /Terms of Service URL/);
 });
