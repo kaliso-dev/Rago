@@ -37,8 +37,10 @@ document.addEventListener('click', (e) => {
     ripple.className = 'ripple';
     dl.append(ripple);
     setTimeout(() => ripple.remove(), 750);
-    dl.querySelector('span').textContent = 'Downloading…';
-    setTimeout(() => (dl.querySelector('span').textContent = 'Download Rago Hub'), 4000);
+    const label = dl.querySelector('span');
+    dl.dataset.label ||= label.textContent;
+    label.textContent = 'Downloading…';
+    setTimeout(() => (label.textContent = dl.dataset.label), 4000);
   }
 });
 

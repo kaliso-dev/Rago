@@ -1,6 +1,6 @@
 # Mettre Rago en ligne, étape par étape
 
-À la fin, voici ce qui marche en vrai : le joueur choisit mensuel ou annuel sur ton site, s'abonne sur Stripe, crée son compte (avec le code d'un affilié s'il en a un), arrive sur son tableau de bord avec sa clé de licence et le bouton de téléchargement, installe Rago Hub, se connecte et active sa licence sur son PC.
+À la fin, voici ce qui marche en vrai : le joueur choisit mensuel ou annuel sur ton site, s'abonne sur Stripe, crée son compte (avec le code d'un affilié s'il en a un), arrive sur son tableau de bord avec sa clé de licence et le bouton de téléchargement, installe Rago Optimizer, se connecte et active sa licence sur son PC.
 
 **Comment c'est organisé :**
 
@@ -43,13 +43,13 @@ Commence tout en **mode test** Stripe : rien n'est vraiment débité tant que tu
 
 1. Crée un compte sur [stripe.com](https://stripe.com). En haut à droite, active le **mode test**.
 2. **Catalogue de produits → Ajouter un produit**, un seul produit avec **deux prix** :
-   - Nom : `Rago Hub Premium`. Description : `Rago Hub for Windows, one PC per license.`
+   - Nom : `Rago Optimizer Premium`. Description : `Rago Optimizer for Windows, one PC per license.`
    - Prix 1 : **Récurrent**, période **Mensuelle**, ton prix par mois (ex. 4,99).
    - **Ajouter un autre prix** → Prix 2 : **Récurrent**, période **Annuelle**, ton prix par an. Par défaut on part sur 10 fois le mensuel (2 mois offerts, ex. 49,90), comme l'annonce le site.
    - Enregistre. Ouvre chaque prix et copie son identifiant `price_...` : le mensuel **c'est `STRIPE_PRICE_MONTHLY`**, l'annuel **c'est `STRIPE_PRICE_YEARLY`**.
 3. **Développeurs → Clés API** : copie la **clé secrète** `sk_test_...` : **c'est `STRIPE_SECRET_KEY`.**
 4. **Paramètres → Facturation → Portail client** : clique **Activer le lien de test** (ou Enregistrer), coche « Annuler les abonnements » (à la fin de la période), « Changer de formule » avec tes deux prix, et « Mettre à jour le moyen de paiement ». C'est la page qu'ouvre le bouton **Manage subscription** du tableau de bord.
-5. **Paramètres → Facturation → Abonnements et e-mails** : coche les relances automatiques en cas d'échec de paiement (Smart Retries) et, à la fin des relances, **Annuler l'abonnement**. Pendant les relances le joueur garde Rago Hub ; à l'annulation la licence s'arrête toute seule.
+5. **Paramètres → Facturation → Abonnements et e-mails** : coche les relances automatiques en cas d'échec de paiement (Smart Retries) et, à la fin des relances, **Annuler l'abonnement**. Pendant les relances le joueur garde Rago Optimizer ; à l'annulation la licence s'arrête toute seule.
 6. **Paramètres → Image de marque** : logo `brand/logo/png/rago-icon-512.png`, couleur `#FF3B30`. La page de paiement aura l'air de la tienne.
 7. **Paramètres → E-mails clients** : coche les reçus pour les paiements réussis et les factures.
 
@@ -114,7 +114,7 @@ C'est ce qui prévient le serveur qu'un paiement est passé.
 
 1. Sur [netlify.com](https://netlify.com) : **Add new site → Import from GitHub → kaliso-dev/Rago**. Le `netlify.toml` du dépôt publie déjà le dossier `site/`.
 2. **Domain management → Add a domain** : `ragohub.com`, puis ajoute chez ton registrar les enregistrements DNS que Netlify indique.
-3. Dans `site/index.html`, l'objet `CONFIG` doit contenir `accountBase: "https://account.ragohub.com"`. **Donne-moi ton domaine et je le fais régler.** Les boutons « Get Rago Hub Premium », « Sign in » et « Create account » pointeront alors vers ton serveur.
+3. Dans `site/index.html`, l'objet `CONFIG` doit contenir `accountBase: "https://account.ragohub.com"`. **Donne-moi ton domaine et je le fais régler.** Les boutons « Get Rago Optimizer Premium », « Sign in » et « Create account » pointeront alors vers ton serveur.
 4. Vérifie : sur `https://ragohub.com`, le bouton Premium t'emmène sur la page de paiement Stripe (mode test).
 
 ## Étape 8 : l'app Windows et son fichier d'installation
@@ -125,23 +125,26 @@ C'est ce qui prévient le serveur qu'un paiement est passé.
    - Secret `RAGO_LICENSE_PUBKEY` = le bloc copié ci-dessus
    - Variable `SITE_URL` = `https://account.ragohub.com`
 3. **Actions → app-windows → Run workflow**. À la fin, télécharge l'artefact `rago-hub-setup` et décompresse-le.
-4. Supabase → **Storage → downloads → Upload file** : dépose l'exe, renommé exactement `RagoHub-Setup.exe`.
-5. À chaque nouvelle version : remplace le fichier dans le bucket et mets à jour `INSTALLER_VERSION` dans Railway.
+4. Supabase → **Storage → downloads → Upload file** : dépose le fichier `.exe` qui est **dans** le zip (pas le zip lui-même). Son nom n'a pas d'importance : le serveur prend le `.exe` le plus récent du bucket.
+5. **Vérifie** : ouvre `https://account.ragohub.com/download/status`. Tu dois voir `"ok":true` et le nom de ton fichier. Sinon la ligne `error` dit quoi corriger (clé Supabase refusée, bucket vide, mauvais nom de bucket).
+6. À chaque nouvelle version : dépose le nouvel exe (tu peux supprimer l'ancien) et mets à jour `INSTALLER_VERSION` dans Railway.
+
+Le bouton **Download** marche pour tous les comptes, avec ou sans Premium : sans licence, l'app tourne en version gratuite. Le lien public `https://account.ragohub.com/download` sert au bouton gratuit du site.
 
 ## Étape 9 : le test complet (toujours en mode test)
 
 Fais-le de bout en bout, comme un vrai client, dans une fenêtre de navigation privée :
 
-1. `https://ragohub.com` → **Get Rago Hub Premium**.
+1. `https://ragohub.com` → **Get Rago Optimizer Premium**.
 2. Sur Stripe, paie avec la carte `4242 4242 4242 4242`, une date future, n'importe quel CVC.
 3. Tu arrives sur « Payment confirmed. » → crée ton compte.
-4. Tableau de bord : la clé de licence s'affiche, le bouton **Download Rago Hub** télécharge l'exe.
-5. Installe, ouvre Rago Hub, connecte-toi avec le même email et mot de passe, clique **Activate** → « License active. Rago Hub is ready. »
+4. Tableau de bord : la clé de licence s'affiche, le bouton **Download Rago Optimizer** télécharge l'exe.
+5. Installe, ouvre Rago Optimizer, connecte-toi avec le même email et mot de passe, clique **Activate** → « License active. Rago Optimizer is ready. »
 6. Recharge le tableau de bord : la carte **Device** montre ton PC.
 7. Sur un 2e PC (celui de ton pote) : la connexion doit être refusée avec « This license is already active on another PC. »
-8. Tableau de bord → **Manage subscription** : le portail Stripe s'ouvre. Annule : la carte Subscription affiche « Canceled. Rago Hub keeps working until … ».
-9. Dans Stripe, rembourse ce paiement test : la licence passe en « Refunded » sur le tableau de bord, l'abonnement est annulé, et Rago Hub s'arrête à sa prochaine vérification.
-10. Affiliation : avec un 2e compte, va sur `/affiliate` → **Get my referral code**. Fais un achat test avec un autre email et tape ce code à la création du compte : il apparaît dans la liste « Players who used your code », compté 14 jours après l'achat si le joueur a activé Rago Hub sur son PC.
+8. Tableau de bord → **Manage subscription** : le portail Stripe s'ouvre. Annule : la carte Subscription affiche « Canceled. Rago Optimizer keeps working until … ».
+9. Dans Stripe, rembourse ce paiement test : la licence passe en « Refunded » sur le tableau de bord, l'abonnement est annulé, et Rago Optimizer s'arrête à sa prochaine vérification.
+10. Affiliation : avec un 2e compte, va sur `/affiliate` → **Get my referral code**. Fais un achat test avec un autre email et tape ce code à la création du compte : il apparaît dans la liste « Players who used your code », compté 14 jours après l'achat si le joueur a activé Rago Optimizer sur son PC.
 
 Si une étape coince, envoie-moi une capture et l'heure : je trouve la cause.
 
@@ -177,7 +180,7 @@ Si une étape coince, envoie-moi une capture et l'heure : je trouve la cause.
 | `RESEND_API_KEY`, `MAIL_FROM` | Resend (étape 4) |
 | `PUBLIC_URL`, `SITE_URL` | Ton domaine (étape 1) |
 | `SUPPORT_URL` | Ton invitation Discord |
-| `INSTALLER_OBJECT`, `INSTALLER_VERSION` | Fixes : `downloads/RagoHub-Setup.exe`, version de l'exe |
+| `INSTALLER_OBJECT`, `INSTALLER_VERSION` | Fixes : `downloads/RagoHub-Setup.exe` (si ce nom n'existe pas, le `.exe` le plus récent du bucket est pris), version de l'exe |
 
 ## Au quotidien (support)
 
@@ -196,8 +199,8 @@ npm run admin -- affiliate affilie@mail.com     # son code, ses filleuls et pour
 
 - Le code se tape **uniquement** à la création du compte, juste après le paiement. Un client = un code, pour toujours.
 - Refusé tout de suite : code inexistant, ou code de l'affilié lui-même (même email que le compte affilié ou que l'email de paiement).
-- Un filleul compte **14 jours après son achat** (`AFFILIATE_HOLD_DAYS`), s'il n'a été ni remboursé ni contesté, et s'il a **activé Rago Hub sur un PC** qui n'est ni celui de l'affilié ni celui d'un autre filleul déjà compté. Même client Stripe que l'affilié : refusé aussi.
-- À 3 filleuls comptés (`AFFILIATE_GOAL`), l'affilié reçoit Rago Hub Premium **à vie**, verrouillé sur un PC comme les autres. S'il était abonné, c'est sa licence actuelle qui devient à vie (même clé, même PC) et Stripe arrête de le prélever à la fin de la période.
+- Un filleul compte **14 jours après son achat** (`AFFILIATE_HOLD_DAYS`), s'il n'a été ni remboursé ni contesté, et s'il a **activé Rago Optimizer sur un PC** qui n'est ni celui de l'affilié ni celui d'un autre filleul déjà compté. Même client Stripe que l'affilié : refusé aussi.
+- À 3 filleuls comptés (`AFFILIATE_GOAL`), l'affilié reçoit Rago Optimizer Premium **à vie**, verrouillé sur un PC comme les autres. S'il était abonné, c'est sa licence actuelle qui devient à vie (même clé, même PC) et Stripe arrête de le prélever à la fin de la période.
 - Le calcul se fait quand l'affilié ouvre son compte ou se connecte dans l'app, et toutes les heures sur le serveur.
 - Limite connue : quelqu'un qui paie 3 abonnements avec 3 emails, 3 cartes et 3 PC différents passera. Ça lui coûte 3 mois d'abonnement minimum ; si tu veux plus strict, monte `AFFILIATE_HOLD_DAYS` à 30 ou 45.
 

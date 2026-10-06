@@ -45,7 +45,8 @@ export function loadConfig(env = process.env) {
     siteDir: env.SITE_DIR || '',
     installerPath: env.INSTALLER_PATH || '',
     installerVersion: env.INSTALLER_VERSION || '',
-    installerFileName: env.INSTALLER_FILENAME || 'RagoHub-Setup.exe',
+    installerFileName: env.INSTALLER_FILENAME || 'RagoOptimizer-Setup.exe',
+    installerUrl: env.INSTALLER_URL || '', // optional public link to the .exe, used instead of Storage
 
     licenseTokenDays: Number(env.LICENSE_TOKEN_DAYS || 30),
     // Days a subscriber keeps working offline past the paid period (renewal retries, clock drift).

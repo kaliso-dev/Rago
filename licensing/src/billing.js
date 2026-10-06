@@ -38,14 +38,14 @@ export async function createCheckout(stripe, cfg, user, { interval, customerId }
       mode: 'payment',
       ...(customerId ? {} : { customer_creation: 'always' }),
       payment_intent_data: { metadata },
-      custom_text: { submit: { message: 'Rago Hub Premium works on one Windows PC per license. You create your account right after paying.' } },
+      custom_text: { submit: { message: 'Rago Optimizer Premium works on one Windows PC per license. You create your account right after paying.' } },
     });
   }
   return stripe.checkout.sessions.create({
     ...common,
     mode: 'subscription',
     subscription_data: { metadata },
-    custom_text: { submit: { message: 'Rago Hub Premium works on one Windows PC. Cancel anytime from your account. You create your account right after paying.' } },
+    custom_text: { submit: { message: 'Rago Optimizer Premium works on one Windows PC. Cancel anytime from your account. You create your account right after paying.' } },
   });
 }
 

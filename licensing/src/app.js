@@ -2,7 +2,7 @@ import { Hono } from 'hono';
 import { getCookie, setCookie, deleteCookie } from 'hono/cookie';
 import { secureHeaders } from 'hono/secure-headers';
 import { serveStatic } from '@hono/node-server/serve-static';
-import { createReadStream, statSync } from 'node:fs';
+import { createReadStream } from 'node:fs';
 import { Readable } from 'node:stream';
 import { fileURLToPath } from 'node:url';
 import { relative } from 'node:path';
@@ -12,6 +12,7 @@ import { DeviceError, parseDevice, sameDevice } from './fingerprint.js';
 import { signToken, verifyToken } from './tokens.js';
 import { billingPortal, createCheckout, handleStripeEvent } from './billing.js';
 import * as A from './affiliates.js';
+import { createInstaller } from './installer.js';
 import * as L from './licensing.js';
 import * as V from './views.js';
 import { audit } from './db.js';
@@ -21,13 +22,13 @@ const EMAIL = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
 // Messages from /brand/voice-en.md. The app may show `message` as is.
 const API_ERRORS = {
-  invalid_request: [400, 'Something in the request is missing or malformed. Update Rago Hub and try again.'],
+  invalid_request: [400, 'Something in the request is missing or malformed. Update Rago Optimizer and try again.'],
   invalid_credentials: [401, "That email and password don't match. Try again or reset your password."],
   invalid_token: [401, 'Your session expired. Sign in again.'],
-  no_license: [403, "This account doesn't have Rago Hub Premium yet. Get it on the website, then sign in again."],
-  bound_to_other_device: [403, 'This license is already active on another PC. Rago Hub works on one device per license. Contact support on Discord if you changed PCs.'],
+  no_license: [403, "This account doesn't have Rago Optimizer Premium yet. Get it on the website, then sign in again."],
+  bound_to_other_device: [403, 'This license is already active on another PC. Rago Optimizer works on one device per license. Contact support on Discord if you changed PCs.'],
   revoked: [403, 'This license is no longer active. Contact support on Discord if you think that\'s a mistake.'],
-  subscription_ended: [403, 'Your Rago Hub Premium subscription ended. Renew it on the website, then sign in again.'],
+  subscription_ended: [403, 'Your Rago Optimizer Premium subscription ended. Renew it on the website, then sign in again.'],
   rate_limited: [429, 'Too many attempts. Wait a few minutes and try again.'],
 };
 
@@ -51,6 +52,7 @@ function rateLimiter() {
  */
 export function createApp({ cfg, db, keys, stripe, mailer, log = console, fetchImpl = fetch }) {
   const app = new Hono();
+  const installer = createInstaller(cfg, { fetchImpl, log });
   const allow = rateLimiter();
   const publicDir = relative(process.cwd(), fileURLToPath(new URL('../public', import.meta.url))) || '.';
   const cookieBase = { httpOnly: true, secure: cfg.prod, sameSite: 'Lax', path: '/' };
@@ -65,7 +67,7 @@ export function createApp({ cfg, db, keys, stripe, mailer, log = console, fetchI
 
   // Strict CSP on our own pages. The marketing site (SITE_DIR) uses inline styles and scripts,
   // so it gets the other security headers without a CSP.
-  const OWN = /^\/(assets|buy|checkout|claim|signup|login|logout|forgot|reset|account|affiliate|webhooks|api|healthz)(\/|$)/;
+  const OWN = /^\/(assets|download|buy|checkout|claim|signup|login|logout|forgot|reset|account|affiliate|webhooks|api|healthz)(\/|$)/;
   const strictHeaders = secureHeaders({
     contentSecurityPolicy: {
       defaultSrc: ["'self'"],
@@ -308,9 +310,9 @@ export function createApp({ cfg, db, keys, stripe, mailer, log = console, fetchI
 
   // ---------- dashboard ----------
   const NOTICES = {
-    claimed: ['notice', 'License added to your account. Download Rago Hub below.'],
-    owned: ['notice', 'You already have Rago Hub Premium. No need to buy it twice.'],
-    reset: ['notice', 'Device freed. Sign in to Rago Hub on your new PC to activate it.'],
+    claimed: ['notice', 'License added to your account. Download Rago Optimizer below.'],
+    owned: ['notice', 'You already have Rago Optimizer Premium. No need to buy it twice.'],
+    reset: ['notice', 'Device freed. Sign in to Rago Optimizer on your new PC to activate it.'],
     duplicate: ['error', 'This account already has a license, so the new purchase was not added. Contact support on Discord for a refund of the extra payment.'],
     nofile: ['error', "The installer isn't available yet. Try again in a moment."],
     nobilling: ['error', "Billing isn't available right now. Try again in a moment, or contact support on Discord."],
@@ -362,39 +364,38 @@ export function createApp({ cfg, db, keys, stripe, mailer, log = console, fetchI
     return c.redirect('/affiliate?n=joined', 303);
   });
 
-  app.get('/account/download', requireUser, async (c) => {
-    const license = await L.licenseForUser(db, c.get('user').id);
-    if (license?.status !== 'active') return c.redirect('/account', 303);
-    // Supabase Storage (private bucket): redirect to a signed link valid 5 minutes.
-    if (cfg.supabaseUrl && cfg.supabaseServiceKey) {
-      const res = await fetchImpl(`${cfg.supabaseUrl}/storage/v1/object/sign/${cfg.installerObject}`, {
-        method: 'POST',
-        // Legacy service_role keys are JWTs and also go in Authorization; new sb_secret_ keys only in apikey.
-        headers: {
-          apikey: cfg.supabaseServiceKey,
-          ...(cfg.supabaseServiceKey.startsWith('eyJ') ? { Authorization: `Bearer ${cfg.supabaseServiceKey}` } : {}),
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ expiresIn: 300 }),
-      }).catch(() => null);
-      const signed = res?.ok ? (await res.json()).signedURL : null;
-      if (!signed) return c.redirect('/account?n=nofile', 303);
-      await audit(db, 'download', { licenseId: license.id, userId: license.user_id });
-      const sep = signed.includes('?') ? '&' : '?';
-      return c.redirect(`${cfg.supabaseUrl}/storage/v1${signed}${sep}download=${encodeURIComponent(cfg.installerFileName)}`, 302);
-    }
-    // Or a file on the server's disk.
-    let size;
-    try { size = statSync(cfg.installerPath).size; } catch { return c.redirect('/account?n=nofile', 303); }
-    await audit(db, 'download', { licenseId: license.id, userId: license.user_id });
-    return new Response(Readable.toWeb(createReadStream(cfg.installerPath)), {
+  // Download: Premium accounts, and free users too (the free plan is the app with Premium tweaks locked).
+  async function sendInstaller(c, who) {
+    const out = await installer.resolve();
+    if (out.error) return null;
+    await audit(db, 'download', { licenseId: who?.licenseId, userId: who?.userId, detail: { source: out.source } });
+    if (out.url) return c.redirect(out.url, 302);
+    return new Response(Readable.toWeb(createReadStream(out.file)), {
       headers: {
         'Content-Type': 'application/vnd.microsoft.portable-executable',
-        'Content-Length': String(size),
+        'Content-Length': String(out.size),
         'Content-Disposition': `attachment; filename="${cfg.installerFileName}"`,
         'Cache-Control': 'private, no-store',
       },
     });
+  }
+
+  app.get('/account/download', requireUser, async (c) => {
+    const user = c.get('user');
+    const license = await L.licenseForUser(db, user.id);
+    return (await sendInstaller(c, { userId: user.id, licenseId: license?.id })) || c.redirect('/account?n=nofile', 303);
+  });
+
+  // Public link for the site's free download button.
+  app.get('/download', async (c) => {
+    if (!allow(`download:${ip(c)}`, 30, 60 * 60 * 1000)) return c.html(V.messagePage(cfg, { title: 'Too many downloads.', text: API_ERRORS.rate_limited[1] }), 429);
+    return (await sendInstaller(c, null)) || c.html(V.messagePage(cfg, { title: "The download isn't available yet.", text: 'Try again in a moment. If it keeps happening, contact support on Discord.' }), 503);
+  });
+
+  // For the launch guide: says whether the installer is found, without exposing anything secret.
+  app.get('/download/status', async (c) => {
+    const out = await installer.resolve();
+    return c.json(out.error ? { ok: false, error: out.error } : { ok: true, source: out.source, file: out.file || null }, out.error ? 503 : 200);
   });
 
   app.post('/account/reset-device', requireUser, async (c) => {
@@ -420,7 +421,7 @@ export function createApp({ cfg, db, keys, stripe, mailer, log = console, fetchI
     return c.json({ received: true });
   });
 
-  // ---------- App API (Rago Hub) ----------
+  // ---------- App API (Rago Optimizer) ----------
   const api = new Hono();
   const fail = (c, code, extra) => {
     const [status, message] = API_ERRORS[code];

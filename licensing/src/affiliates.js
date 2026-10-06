@@ -1,7 +1,7 @@
 // Affiliate program: each affiliate gets a code; a buyer enters it once, when creating their account
 // after paying. A referral counts after the hold period if the buyer wasn't refunded, didn't dispute
-// and activated Rago Hub on a PC that isn't the affiliate's. At the goal (3), the affiliate gets
-// Rago Hub Premium for life, locked to one PC like any license.
+// and activated Rago Optimizer on a PC that isn't the affiliate's. At the goal (3), the affiliate gets
+// Rago Optimizer Premium for life, locked to one PC like any license.
 import { randomBytes } from 'node:crypto';
 import { audit } from './db.js';
 import { newId } from './crypto.js';

@@ -4,7 +4,8 @@ Tout le code de Rago dans un seul dépôt :
 
 | Dossier | Quoi | Techno |
 |---|---|---|
-| `app/` | **Rago Hub Premium**, l'app Windows payante (189 tweaks, 12 modules) | Tauri 2, React + TypeScript, Rust |
+| `app/` | **Rago Optimizer**, l'app Windows payante (189 tweaks, 12 modules) | Tauri 2, React + TypeScript, Rust |
+| `brand/` | Logo, tailles d'icônes, `.ico`, images d'installeur, favicons, couleurs et voix de la marque | SVG, PNG |
 | `site/` | La page de vente publique (anglais), avec **Rago Free** (le .bat) en téléchargement libre | HTML statique, sans framework |
 | `licensing/` | Le serveur : paiement Stripe, comptes, clés de licence, verrou sur un PC | Node 22, Hono, Supabase (Postgres + Storage) |
 | `.github/workflows/app-windows.yml` | Fabrique le `setup.exe` de l'app sur un Windows de GitHub | GitHub Actions |
@@ -30,19 +31,19 @@ Chaque dossier a son propre README avec le détail technique. Ce guide-ci expliq
  ┌──────────────────────── account.ragohub.com  (Railway) ─────────────────────────────────┐
  │                         base de données et fichier de l'app dans Supabase               │
  │  /checkout/success  « Payment confirmed. Create your account to get your license. »    │
- │  /account           Tableau de bord : clé de licence, « Download Rago Hub », PC activé  │
+ │  /account           Tableau de bord : licence, « Download Rago Optimizer », PC activé   │
  │  /login /forgot     Connexion, mot de passe oublié                                      │
  │                                                                                         │
  │  /api/v1/...        API utilisée UNIQUEMENT par l'app                                   │
  └─────────────────────────────────────────────────────────────────────────────────────────┘
                                        ▲
                                        │  HTTPS
-                          Rago Hub Premium (app/) sur le PC du joueur
+                          Rago Optimizer (app/) sur le PC du joueur
 ```
 
 Le parcours d'un acheteur, de bout en bout :
 
-1. Sur le site, il clique **Get Rago Hub Premium**. Le lien pointe vers `/buy`, que le serveur transforme en page de paiement Stripe.
+1. Sur le site, il clique **Get Rago Optimizer Premium**. Le lien pointe vers `/buy`, que le serveur transforme en page de paiement Stripe.
 2. Il paie. Stripe prévient le serveur (webhook), qui crée la licence. Le joueur revient sur `/checkout/success`, choisit un mot de passe : son compte est créé. Il reçoit aussi un email avec le lien, au cas où il ferme l'onglet.
 3. Sur son tableau de bord `/account`, il voit sa clé de licence et télécharge `RagoHub-Setup.exe`. Le téléchargement est réservé aux comptes qui ont payé.
 4. Il installe l'app, se connecte avec **le même email et mot de passe**, clique **Activate**. La licence est verrouillée sur ce PC.
@@ -125,14 +126,14 @@ L'app Windows ne peut être compilée que sur Windows. GitHub le fait pour toi, 
 
    Elle se lance aussi d'elle-même à chaque push ou pull request qui touche `app/`.
 3. Compte environ 15 à 20 minutes la première fois. À la fin :
-   - l'exe est dans l'onglet du run, section **Artifacts** (`rago-hub-setup`) ;
+   - l'exe est dans l'onglet du run, section **Artifacts** (`rago-optimizer-setup`) ;
    - avec un tag, il est aussi joint à un **brouillon de release** dans **Releases**.
 
 Sans les deux secrets, l'exe sort quand même, mais **sans écran de connexion** : n'importe qui pourrait s'en servir sans payer. Ne distribue jamais un exe fabriqué sans eux.
 
 ### 4.1 Mettre l'exe à disposition des acheteurs
 
-Le bouton « Download Rago Hub » du tableau de bord sert le fichier `RagoHub-Setup.exe` du bucket privé `downloads` de Supabase, par un lien temporaire réservé aux comptes payés. Le dépôt du fichier et la mise à jour de `INSTALLER_VERSION` sont décrits à l'étape 8 de [`licensing/docs/MISE-EN-LIGNE.md`](licensing/docs/MISE-EN-LIGNE.md).
+Le bouton « Download Rago Optimizer » du tableau de bord sert le fichier d'installation déposé dans le bucket privé `downloads` de Supabase, par un lien temporaire réservé aux comptes payés. Le dépôt du fichier et la mise à jour de `INSTALLER_VERSION` sont décrits à l'étape 8 de [`licensing/docs/MISE-EN-LIGNE.md`](licensing/docs/MISE-EN-LIGNE.md).
 
 Pour chaque nouvelle version : monte `version` dans `app/src-tauri/tauri.conf.json` et `app/package.json`, relance la fabrication, remplace le fichier dans le bucket, mets à jour `INSTALLER_VERSION`.
 
@@ -142,7 +143,7 @@ Pour chaque nouvelle version : monte `version` dans `app/src-tauri/tauri.conf.js
 
 Le test complet est l'étape 9 de `licensing/docs/MISE-EN-LIGNE.md`. En résumé, avec les clés Stripe de **test** :
 
-1. Ouvre ton site, clique **Get Rago Hub Premium**, paie avec `4242 4242 4242 4242`.
+1. Ouvre ton site, clique **Get Rago Optimizer Premium**, paie avec `4242 4242 4242 4242`.
 2. Crée ton compte, vérifie que le tableau de bord montre la clé et que l'exe se télécharge.
 3. Installe l'app, connecte-toi, clique **Activate**.
 4. Sur un deuxième PC (ou une machine virtuelle), connecte-toi avec le même compte : ça doit être refusé.

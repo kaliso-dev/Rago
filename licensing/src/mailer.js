@@ -8,7 +8,7 @@ function layout(title, bodyHtml) {
 <div style="font:600 20px/1 'Segoe UI',sans-serif;letter-spacing:-.02em">RAGO<span style="display:inline-block;width:6px;height:6px;background:#FF3B30;vertical-align:top;margin-left:2px"></span></div>
 <h1 style="font-size:22px;letter-spacing:-.02em;margin:32px 0 12px">${esc(title)}</h1>
 ${bodyHtml}
-<p style="color:#7C7C86;font-size:12px;margin-top:40px">Rago Hub Premium. Every millisecond counts.</p>
+<p style="color:#7C7C86;font-size:12px;margin-top:40px">Rago Optimizer Premium. Every millisecond counts.</p>
 </div></body></html>`;
 }
 
@@ -32,8 +32,8 @@ export function createMailer(cfg, { log = console.log } = {}) {
   return {
     send,
     purchase(to, claimUrl) {
-      return send(to, 'Your Rago Hub Premium license',
-        layout('Payment confirmed', `<p style="color:#A1A1AA">Create your account to get your license and download Rago Hub for Windows. If you already created it, just sign in.</p>${button(claimUrl, 'Create your account')}<p style="color:#7C7C86;font-size:13px">This link only works for your purchase. Keep it private.</p>`),
+      return send(to, 'Your Rago Optimizer Premium license',
+        layout('Payment confirmed', `<p style="color:#A1A1AA">Create your account to get your license and download Rago Optimizer for Windows. If you already created it, just sign in.</p>${button(claimUrl, 'Create your account')}<p style="color:#7C7C86;font-size:13px">This link only works for your purchase. Keep it private.</p>`),
         `Payment confirmed. Create your account to get your license: ${claimUrl}`);
     },
     passwordReset(to, url) {

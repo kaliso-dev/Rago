@@ -1,10 +1,10 @@
-# Contrat d'activation Rago Hub v1
+# Contrat d'activation Rago Optimizer v1
 
 Ce document fait foi entre le serveur de licences (`/mnt/project-files/licensing/`) et l'app Windows (`/mnt/project-files/app/`). Toute évolution passe par une nouvelle version (`/api/v2`), jamais par un changement silencieux de `/api/v1`.
 
 ## Principe
 
-1. L'acheteur paie sur Stripe, crée son compte sur le site, télécharge Rago Hub depuis son tableau de bord.
+1. L'acheteur paie sur Stripe, crée son compte sur le site, télécharge Rago Optimizer depuis son tableau de bord.
 2. Dans l'app, il se connecte avec l'email et le mot de passe de ce compte.
 3. Au premier login, l'app lui demande d'activer : la licence est alors verrouillée sur ce PC.
 4. Le serveur renvoie un **license token** signé Ed25519. L'app le vérifie hors ligne au démarrage avec la clé publique embarquée, et le rafraîchit quand elle a du réseau.
@@ -106,7 +106,7 @@ Réponse 200, PC pas encore activé :
 }
 ```
 
-L'app affiche alors : « Activate Rago Hub on this PC? Your license will be locked to this device. » avec le bouton **Activate**.
+L'app affiche alors : « Activate Rago Optimizer on this PC? Your license will be locked to this device. » avec le bouton **Activate**.
 
 Réponse 200, ce PC est déjà celui de la licence (réinstallation de l'app, nouveau login) : directement la réponse `active` décrite sous `/licenses/activate`, sans étape d'activation.
 
@@ -127,7 +127,7 @@ En-tête `Authorization: Bearer <access_token>` (valable 15 min), corps `{ "devi
 }
 ```
 
-L'app affiche « License active. Rago Hub is ready. » Erreurs : `invalid_token`, `invalid_request`, `bound_to_other_device` (un autre PC a activé entre-temps), `revoked`.
+L'app affiche « License active. Rago Optimizer is ready. » Erreurs : `invalid_token`, `invalid_request`, `bound_to_other_device` (un autre PC a activé entre-temps), `revoked`.
 
 ### `POST /licenses/refresh`
 
@@ -145,7 +145,12 @@ Premium est désormais un abonnement mensuel ou annuel ; les licences offertes e
 
 - `license.billing` dans les réponses `activation_required` et `active` : `{ "interval": "month" | "year" | "lifetime", "renews_at": ISO ou null, "ends_at": ISO ou null }`. L'app peut l'afficher (« Renews on … » dans Settings), sinon l'ignorer.
 - Pour un abonné, `exp` (et `expires_at`) ne dépasse pas la fin de la période payée + 3 jours, et vaut au moins 24 h. Il peut donc être plus court que 30 jours : l'app rafraîchit déjà quand il reste moins de 7 jours, rien à changer. Le renouvellement Stripe repousse la date au refresh suivant.
-- `revoked` avec `reason: "subscription_ended"` : message « Your Rago Hub Premium subscription ended. Renew it on the website, then sign in again. » et `buy_url`.
+- `revoked` avec `reason: "subscription_ended"` : message « Your Rago Optimizer Premium subscription ended. Renew it on the website, then sign in again. » et `buy_url`.
+
+## Affiliation et version gratuite (2026-10-06)
+
+- **Confirmation d'activation pour l'affiliation** : rien de nouveau à appeler. La première réponse `"status": "active"` de `POST /licenses/activate` (ou de `/auth/login` sur le PC déjà lié) enregistre le PC du joueur, et c'est ce qui fait compter son parrainage. L'app affiche alors « License active. Rago Optimizer is ready. » avec `license.device.name` et `license.device.activated_at`.
+- **Version gratuite** : un compte sans Premium reçoit `no_license` à la connexion. L'app ne bloque pas : elle passe en mode gratuit (tweaks Premium verrouillés, bouton vers `buy_url`). L'app sans compte fonctionne aussi en gratuit.
 
 ## License token
 

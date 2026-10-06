@@ -1,0 +1,105 @@
+/* Rago — design tokens v1.1 (05/10/2026 : rouge #FF3B30, plus d'orange, arrondis partout) (source de vérité : /mnt/project-files/brand/tokens/tokens.json)
+   Polices : Geist + Geist Mono (OFL, Google Fonts / npm "geist"). Thème sombre par défaut. */
+:root {
+  /* Encre (fonds, du plus profond au plus élevé) */
+  --rg-ink-0: #070708;   /* fenêtre / canvas */
+  --rg-ink-1: #0A0A0B;   /* fond principal */
+  --rg-ink-2: #111113;   /* surface (cartes, sidebar) */
+  --rg-ink-3: #17171A;   /* surface élevée, hover */
+  --rg-ink-4: #1F1F23;   /* overlay, menus, inputs */
+  --rg-ink-5: #2A2A30;   /* état actif / séparateur fort */
+
+  /* Texte */
+  --rg-text-1: #F5F5F6;  /* principal */
+  --rg-text-2: #A1A1AA;  /* secondaire */
+  --rg-text-3: #7C7C86;  /* tertiaire, légendes */
+  --rg-text-inverse: #0A0A0B;
+
+  /* Bordures */
+  --rg-line-1: rgba(255,255,255,.06);
+  --rg-line-2: rgba(255,255,255,.10);
+  --rg-line-3: rgba(255,255,255,.16);
+
+  /* Rouge Rago (accent unique) */
+  --rg-red-300: #FF8A82;
+  --rg-red-400: #FF5E55;  /* hover */
+  --rg-red-500: #FF3B30;  /* ACCENT. Texte posé dessus = --rg-ink-1 (5,6:1), jamais blanc (3,5:1) */
+  --rg-red-600: #F2352B;  /* pressed */
+  --rg-red-700: #C9221A;  /* rouge profond ; texte blanc OK dessus (5,6:1) */
+  --rg-red-a12: rgba(255,59,48,.12); /* fond teinté */
+  --rg-red-a24: rgba(255,59,48,.24); /* focus ring / glow */
+
+  /* Dégradé rouge (aucun orange). Héros, barre de progression, CTA d'achat uniquement */
+  --rg-red-gradient: linear-gradient(100deg, #C9221A 0%, #FF3B30 55%, #FF5E55 100%);
+
+  /* Sémantique */
+  --rg-success: #3DDC97;  /* gains : ms en moins, FPS en plus */
+  --rg-warning: #FFD60A;  /* jaune, pas d'orange */
+  --rg-info:    #5AB8FF;
+  --rg-danger:  #FF3B30;  /* = accent ; toujours accompagné d'une icône + texte */
+
+  /* Typo */
+  --rg-font-sans: "Geist", "Inter", "Segoe UI Variable", "Segoe UI", system-ui, sans-serif;
+  --rg-font-mono: "Geist Mono", "JetBrains Mono", "Cascadia Mono", ui-monospace, monospace;
+  --rg-fs-display: 56px; --rg-lh-display: 1.02; --rg-ls-display: -0.035em;
+  --rg-fs-h1: 36px;      --rg-lh-h1: 1.1;       --rg-ls-h1: -0.025em;
+  --rg-fs-h2: 24px;      --rg-lh-h2: 1.2;       --rg-ls-h2: -0.02em;
+  --rg-fs-h3: 18px;      --rg-lh-h3: 1.3;       --rg-ls-h3: -0.01em;
+  --rg-fs-body: 14px;    --rg-lh-body: 1.55;
+  --rg-fs-small: 13px;
+  --rg-fs-caption: 12px; --rg-ls-caption: 0.02em;
+  --rg-fs-overline: 11px; --rg-ls-overline: 0.12em; /* MAJUSCULES, mono */
+  --rg-fs-metric: 40px;  /* chiffres de perf, mono, tabular-nums */
+
+  /* Espacement (base 4) */
+  --rg-space-1: 4px;  --rg-space-2: 8px;  --rg-space-3: 12px; --rg-space-4: 16px;
+  --rg-space-5: 20px; --rg-space-6: 24px; --rg-space-8: 32px; --rg-space-10: 40px;
+  --rg-space-12: 48px; --rg-space-16: 64px; --rg-space-24: 96px;
+
+  /* Rayons : arrondis partout, aucun angle vif ni coin coupé */
+  --rg-radius-xs: 8px;    /* badges, tags, kbd */
+  --rg-radius-sm: 12px;   /* inputs, petits boutons, items de menu */
+  --rg-radius-md: 16px;   /* boutons, champs, tuiles */
+  --rg-radius-lg: 24px;   /* cartes, panneaux */
+  --rg-radius-xl: 32px;   /* modales, sections du site, carte pricing */
+  --rg-radius-2xl: 40px;  /* blocs héros, fenêtre de l'app sur le site */
+  --rg-radius-full: 999px; /* boutons principaux (pilule), toggles, avatars, chips */
+  /* Règle d'imbrication : rayon intérieur = rayon extérieur − padding (ex. carte 24 / padding 8 → enfant 16) */
+
+  /* Ombres (le relief vient surtout de l'échelle d'encre) */
+  --rg-shadow-1: 0 1px 0 rgba(255,255,255,.04) inset, 0 1px 2px rgba(0,0,0,.4);
+  --rg-shadow-2: 0 1px 0 rgba(255,255,255,.05) inset, 0 8px 24px -8px rgba(0,0,0,.6);
+  --rg-shadow-3: 0 1px 0 rgba(255,255,255,.06) inset, 0 24px 64px -16px rgba(0,0,0,.75);
+  --rg-glow:     0 0 0 1px rgba(255,59,48,.4), 0 8px 32px -6px rgba(255,59,48,.45);
+  --rg-focus:    0 0 0 2px var(--rg-ink-1), 0 0 0 4px var(--rg-red-500);
+
+  /* Mouvement */
+  --rg-ease-out: cubic-bezier(.16, 1, .3, 1);     /* entrées, la plupart des transitions */
+  --rg-ease-in-out: cubic-bezier(.65, 0, .35, 1); /* déplacements de layout */
+  --rg-ease-spring: cubic-bezier(.34, 1.56, .64, 1); /* toggles, petites confirmations */
+  --rg-dur-instant: 90ms;  /* hover, press */
+  --rg-dur-fast: 160ms;    /* toggles, tooltips */
+  --rg-dur-base: 240ms;    /* panneaux, onglets */
+  --rg-dur-slow: 420ms;    /* écrans, héros */
+  --rg-dur-pulse: 1600ms;  /* onde « Pulse » pendant une optimisation */
+}
+
+@media (prefers-reduced-motion: reduce) {
+  :root { --rg-dur-instant: 0ms; --rg-dur-fast: 0ms; --rg-dur-base: 0ms; --rg-dur-slow: 0ms; }
+}
+
+/* Thème clair (site uniquement si besoin, l'app reste sombre) */
+[data-theme="light"] {
+  --rg-ink-0: #EDEDEF; --rg-ink-1: #F7F7F8; --rg-ink-2: #FFFFFF; --rg-ink-3: #F1F1F3;
+  --rg-ink-4: #E8E8EB; --rg-ink-5: #DCDCE1;
+  --rg-text-1: #0A0A0B; --rg-text-2: #52525B; --rg-text-3: #6E6E78; --rg-text-inverse: #F5F5F6;
+  --rg-line-1: rgba(10,10,11,.06); --rg-line-2: rgba(10,10,11,.10); --rg-line-3: rgba(10,10,11,.16);
+  --rg-red-500: #D70015; --rg-red-400: #FF3B30; --rg-red-600: #B5000F;
+  --rg-success: #0E9F6E; --rg-warning: #7A6200; --rg-info: #1F7FD1; --rg-danger: #D70015;
+}
+
+/* Signatures réutilisables */
+.rg-metric { font-family: var(--rg-font-mono); font-variant-numeric: tabular-nums; letter-spacing: -0.02em; }
+.rg-overline { font-family: var(--rg-font-mono); font-size: var(--rg-fs-overline); letter-spacing: var(--rg-ls-overline); text-transform: uppercase; color: var(--rg-text-3); }
+@keyframes rg-pulse { 0% { transform: scale(.6); opacity: .9 } 100% { transform: scale(2.6); opacity: 0 } }
+@keyframes rg-pixel-blink { 0%, 60%, 100% { opacity: 1 } 70%, 90% { opacity: .25 } }

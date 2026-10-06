@@ -130,7 +130,7 @@ test('purchase -> webhook -> success page -> create account -> dashboard -> down
 
   const dl = await t.browse('/account/download');
   assert.equal(dl.status, 200);
-  assert.match(dl.headers.get('content-disposition'), /RagoHub-Setup\.exe/);
+  assert.match(dl.headers.get('content-disposition'), /RagoOptimizer-Setup\.exe/);
   assert.equal(await dl.text(), 'MZ fake installer');
 });
 
@@ -267,8 +267,9 @@ test('account without a license sees the offer', async () => {
   await t.browse('/signup', { form: { email: 'free@x.io', password: 'password123' } });
   const r = await t.browse('/account');
   assert.equal(r.status, 200);
-  assert.match(await r.text(), /Get Rago Hub Premium/);
-  assert.equal((await t.browse('/account/download')).headers.get('location'), '/account');
+  assert.match(await r.text(), /Get Rago Optimizer Premium/);
+  // The free plan is the app too: free accounts can download it.
+  assert.equal((await t.browse('/account/download')).status, 200);
   const j = await (await t.api('/auth/login', { email: 'free@x.io', password: 'password123', device: device('Z') })).json();
   assert.equal(j.error.code, 'no_license');
 });
@@ -296,20 +297,52 @@ test('site hosted on another origin: checkout and links point back to it', async
   assert.match(await (await t.app.request('/login')).text(), /href="https:\/\/rago\.test\/"/);
 });
 
-test('installer from Supabase Storage: signed link for paying accounts only', async () => {
+test('installer from Supabase Storage: signed link, any file name, clear reason when missing', async () => {
   const calls = [];
-  const t = await setup({ SUPABASE_URL: 'https://abc.supabase.co', SUPABASE_SERVICE_ROLE_KEY: 'eyJservice-key' }, {
-    fetchImpl: async (url, init) => { calls.push({ url, init }); return new Response(JSON.stringify({ signedURL: '/object/sign/downloads/RagoHub-Setup.exe?token=t0k' })); },
-  });
+  // The bucket holds the file under the name Tauri gives it, not the configured one.
+  const storage = { 'downloads/Rago Optimizer_1.0.0_x64-setup.exe': true };
+  let keyOk = true;
+  const fetchImpl = async (url, init) => {
+    calls.push({ url, init });
+    if (!keyOk) return new Response('{"error":"Unauthorized"}', { status: 403 });
+    const m = url.match(/\/object\/sign\/(.+)$/);
+    if (m) {
+      const path = decodeURIComponent(m[1]);
+      return storage[path] ? new Response(JSON.stringify({ signedURL: `/object/sign/${m[1]}?token=t0k` })) : new Response('{"error":"not_found"}', { status: 400 });
+    }
+    if (url.endsWith('/object/list/downloads')) {
+      return new Response(JSON.stringify([
+        { name: '.emptyFolderPlaceholder', id: 'p', created_at: '2026-10-01' },
+        { name: 'old_0.9.exe', id: 'a', created_at: '2026-10-01T00:00:00Z' },
+        { name: 'Rago Optimizer_1.0.0_x64-setup.exe', id: 'b', created_at: '2026-10-06T00:00:00Z' },
+      ]));
+    }
+    return new Response('?', { status: 404 });
+  };
+  const t = await setup({ SUPABASE_URL: 'https://abc.supabase.co', SUPABASE_SERVICE_ROLE_KEY: 'eyJservice-key' }, { fetchImpl });
+  const signed = 'https://abc.supabase.co/storage/v1/object/sign/downloads/Rago%20Optimizer_1.0.0_x64-setup.exe?token=t0k&download=RagoOptimizer-Setup.exe';
+
+  // Free accounts download too (the free plan is the app with Premium tweaks locked).
   await t.browse('/signup', { form: { email: 'st@x.io', password: 'password123' } });
-  assert.equal((await t.browse('/account/download')).headers.get('location'), '/account');
-  assert.equal(calls.length, 0);
-  await L.grantLicense(t.db, 'st@x.io');
-  const r = await t.browse('/account/download');
-  assert.equal(r.headers.get('location'), 'https://abc.supabase.co/storage/v1/object/sign/downloads/RagoHub-Setup.exe?token=t0k&download=RagoHub-Setup.exe');
-  assert.equal(calls[0].url, 'https://abc.supabase.co/storage/v1/object/sign/downloads/RagoHub-Setup.exe');
+  assert.equal((await t.browse('/account/download')).headers.get('location'), signed);
+  assert.match(calls[0].url, /object\/sign\/downloads\/RagoHub-Setup\.exe$/);
   assert.equal(calls[0].init.headers.Authorization, 'Bearer eyJservice-key');
   assert.equal(calls[0].init.headers.apikey, 'eyJservice-key');
+  await L.grantLicense(t.db, 'st@x.io');
+  assert.equal((await t.browse('/account/download')).headers.get('location'), signed);
+  // Public link for the site's free button, and the status check for the launch guide.
+  assert.equal((await t.app.request('/download')).headers.get('location'), signed);
+  assert.deepEqual(await (await t.app.request('/download/status')).json(), { ok: true, source: 'supabase', file: 'downloads/Rago Optimizer_1.0.0_x64-setup.exe' });
+
+  // Wrong key or empty bucket: the dashboard says so, and the status says why.
+  keyOk = false;
+  const t2 = await setup({ SUPABASE_URL: 'https://abc.supabase.co', SUPABASE_SERVICE_ROLE_KEY: 'sb_secret_x' }, { fetchImpl, log: { info() {}, error() {} } });
+  const st = await (await t2.app.request('/download/status')).json();
+  assert.equal(st.ok, false);
+  assert.match(st.error, /refused the key/);
+  assert.equal(calls.at(-1).init.headers.Authorization, undefined);
+  await t2.browse('/signup', { form: { email: 'k@x.io', password: 'password123' } });
+  assert.equal((await t2.browse('/account/download')).headers.get('location'), '/account?n=nofile');
 });
 
 test('concurrent activations from two PCs: exactly one wins', async () => {
@@ -380,7 +413,7 @@ test('subscription: monthly or yearly checkout, renewal date, cancel, lapse and 
   await t.browse('/checkout/success?session_id=cs_sub');
   await t.browse('/signup', { form: { email: 'sub@rago.gg', password: 'password123' } });
   let dash = await (await t.browse('/account')).text();
-  assert.match(dash, /Rago Hub Premium · Yearly/);
+  assert.match(dash, /Rago Optimizer Premium · Yearly/);
   assert.match(dash, /Renews on/);
   assert.match(dash, /Manage subscription/);
   const portal = await t.browse('/account/billing', { form: {} });
@@ -405,7 +438,7 @@ test('subscription: monthly or yearly checkout, renewal date, cancel, lapse and 
   // Canceled at period end: still works, dashboard says until when.
   t.subscription('sub_cs_sub', 'year', { cancel_at_period_end: true });
   await t.webhook('customer.subscription.updated', { id: 'sub_cs_sub', object: 'subscription' });
-  assert.match(await (await t.browse('/account')).text(), /Canceled\. Rago Hub keeps working until/);
+  assert.match(await (await t.browse('/account')).text(), /Canceled\. Rago Optimizer keeps working until/);
 
   // Unpaid: the license stops; card fixed: it comes back, same PC, no new activation.
   t.subscription('sub_cs_sub', 'year', { status: 'unpaid' });
@@ -417,7 +450,7 @@ test('subscription: monthly or yearly checkout, renewal date, cancel, lapse and 
   assert.equal(err.buy_url, 'https://rago.test/#pricing');
   assert.match(err.message, /subscription ended/);
   dash = await (await t.browse('/account')).text();
-  assert.match(dash, /Renew Rago Hub Premium/);
+  assert.match(dash, /Renew Rago Optimizer Premium/);
   assert.match(dash, /Ended/);
 
   t.subscription('sub_cs_sub', 'year');
@@ -525,7 +558,7 @@ test('affiliate: join, code at sign-up only, 3 real players = lifetime license',
   await t.db.run('UPDATE licenses SET created_at = created_at - ? WHERE email = ?', [15 * DAY_MS, 'p6@x.io']);
   t.jar.clear(); for (const [k, v] of affJar) t.jar.set(k, v);
   page = await (await t.browse('/affiliate')).text();
-  assert.match(page, /Rago Hub is yours for life/);
+  assert.match(page, /Rago Optimizer is yours for life/);
 
   // Their subscription license became lifetime: same key, same PC, renewals stopped.
   const now = await L.licenseForUser(t.db, aff.id);
@@ -536,7 +569,7 @@ test('affiliate: join, code at sign-up only, 3 real players = lifetime license',
   await t.webhook('customer.subscription.deleted', { id: 'sub_cs_aff', object: 'subscription' });
   const j = await (await t.api('/auth/login', { email: 'aff@rago.gg', password: 'password123', device: device('X', null, null) })).json();
   assert.equal(j.error.code, 'bound_to_other_device'); // still locked to AFF-PC
-  assert.match(await (await t.browse('/account')).text(), /Rago Hub Premium for life/);
+  assert.match(await (await t.browse('/account')).text(), /Rago Optimizer Premium for life/);
 
   // Granted once, even if evaluated again.
   await t.browse('/affiliate');

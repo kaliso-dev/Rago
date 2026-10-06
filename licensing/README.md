@@ -1,6 +1,6 @@
 # Rago : paiement, comptes et licences
 
-Serveur Node.js qui gère tout ce qui se passe après le clic sur « Get Rago Hub Premium » : paiement Stripe, création de compte, tableau de bord avec le téléchargement de Rago Hub, clé de licence et verrou sur un seul PC.
+Serveur Node.js qui gère tout ce qui se passe après le clic sur « Get Rago Optimizer Premium » : paiement Stripe, création de compte, tableau de bord avec le téléchargement de Rago Optimizer, clé de licence et verrou sur un seul PC.
 
 **Mettre en ligne : suivre [docs/MISE-EN-LIGNE.md](docs/MISE-EN-LIGNE.md), étape par étape.**
 
@@ -8,12 +8,12 @@ Serveur Node.js qui gère tout ce qui se passe après le clic sur « Get Rago Hu
 
 1. Bouton Premium du site → `https://account.<domaine>/buy?interval=month|year` → abonnement Stripe Checkout.
 2. Paiement accepté → `/checkout/success` : « Payment confirmed. Create your account to get your license. » Il choisit son mot de passe, tape le code d'un affilié s'il en a un, la licence est rattachée à son compte. Un email lui envoie aussi un lien de création de compte, au cas où il ferme l'onglet.
-3. Tableau de bord `/account` : bouton « Download Rago Hub », clé de licence, PC activé, abonnement (date de renouvellement, « Manage subscription » vers le portail Stripe).
-4. Dans Rago Hub, il se connecte avec le même email et mot de passe, clique **Activate** : la licence est verrouillée sur ce PC. Sur un autre PC, la connexion est refusée.
+3. Tableau de bord `/account` : bouton « Download Rago Optimizer », clé de licence, PC activé, abonnement (date de renouvellement, « Manage subscription » vers le portail Stripe).
+4. Dans Rago Optimizer, il se connecte avec le même email et mot de passe, clique **Activate** : la licence est verrouillée sur ce PC. Sur un autre PC, la connexion est refusée.
 
 Remboursement total ou litige Stripe : la licence est révoquée et l'abonnement annulé automatiquement. Abonnement terminé ou impayé : la licence s'arrête, et revient si le paiement repasse.
 
-Programme d'affiliation `/affiliate` : chaque compte peut avoir un code ; 3 acheteurs comptés = Rago Hub Premium à vie (règles anti-triche dans `docs/MISE-EN-LIGNE.md`, fin du document).
+Programme d'affiliation `/affiliate` : chaque compte peut avoir un code ; 3 acheteurs comptés = Rago Optimizer Premium à vie (règles anti-triche dans `docs/MISE-EN-LIGNE.md`, fin du document).
 
 ## Choix faits
 
