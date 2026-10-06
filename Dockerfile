@@ -9,8 +9,7 @@ COPY licensing/src ./src
 COPY licensing/public ./public
 COPY licensing/scripts ./scripts
 COPY licensing/supabase ./supabase
-COPY site/index.html site/favicon.svg ./site/
-COPY site/downloads ./site/downloads
+COPY site ./site
 ENV NODE_ENV=production PORT=8787 SITE_DIR=/app/site
 EXPOSE 8787
 CMD ["npm", "start"]
