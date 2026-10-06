@@ -53,10 +53,10 @@ Le logo affiché dans l'interface (marque, wordmark) vit dans `src/components/lo
 
 ## Catalogue (depuis le 2026-10-06)
 
-Les réglages viennent des trois .bat de Sofiene, rangés dans `legacy/v6/` (Ping, Hitreg & input lag, FPS) :
+Le catalogue combine l'ancien programme (`legacy/Premium v5.2 - Rago Hub.bat`, via `tools/build_catalog.py`) et les trois .bat de Sofiene (`legacy/v6/`) :
 
 ```
-python3 tools/build_catalog_v6.py   # régénère src/data/catalog.json et src-tauri/scripts/scripts.json
+python3 tools/build_catalog_v6.py   # lance build_catalog.py, ajoute les réglages v6, dédoublonne
 ```
 
-Noms, modules, variantes et niveaux de risque sont déclarés dans ce script. Il corrige au passage le rechercher/remplacer « Disable » → « Disabling », le `USER_SID` jamais défini et le chemin du profil `.nip`. `tools/build_catalog.py` (ancien .bat v5.2) n'est plus utilisé. Les réglages ouverts en plan gratuit sont listés dans `src/data/free.json`.
+Les réglages v6 rejoignent les modules existants (Network, Latency, Graphics card, Windows, Hitreg). Les doublons de l'ancien programme sont listés dans `REPLACED`. Le script corrige aussi « Disable » → « Disabling », le `USER_SID` jamais défini et le chemin du profil `.nip`. Les réglages du plan gratuit sont dans `src/data/free.json`.

@@ -60,7 +60,7 @@ mod tests {
 
     #[test]
     fn every_script_is_non_empty_and_non_interactive() {
-        assert!(SCRIPTS.len() > 50);
+        assert!(SCRIPTS.len() > 200);
         for (id, variants) in SCRIPTS.iter() {
             for (v, s) in variants {
                 assert!(!s.trim().is_empty(), "{id}:{v} est vide");
@@ -107,6 +107,22 @@ mod tests {
             }
         }
         assert!(SCRIPTS.values().flat_map(|v| v.values()).all(|s| !s.contains("USER_SID")));
+    }
+
+    /// Garde-fous de l'audit du 2026-10-05 sur l'ancien programme : ces lignes ne doivent pas revenir.
+    #[test]
+    fn dangerous_lines_stay_out() {
+        let lines = |id: &str| -> Vec<String> {
+            SCRIPTS[id].values().flat_map(|s| s.lines().map(str::to_lowercase).collect::<Vec<_>>()).collect()
+        };
+        assert!(!lines("dbl_edge").iter().any(|l| l.contains("edgewebview") || l.contains("edgeupdate")));
+        for id in ["mem_profile", "mem_registry", "hitreg_suite"] {
+            assert!(!lines(id).iter().any(|l| l.contains("featuresettingsoverride")), "{id}");
+        }
+        assert!(!lines("game_mode").iter().any(|l| l.contains("\\prefetch\\")));
+        for id in ["win_background", "hitreg_suite"] {
+            assert!(!lines(id).iter().any(|l| l.contains("services\\bam\"")), "{id}");
+        }
     }
 
     #[test]

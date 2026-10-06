@@ -1,4 +1,5 @@
-"""Catalogue de Rago Optimizer à partir des trois .bat de Sofiene (legacy/v6, 2026-10-06).
+"""Catalogue de Rago Optimizer : l'ancien programme (v5.2, tools/build_catalog.py) plus les trois .bat
+de Sofiene (legacy/v6, 2026-10-06), dédoublonnés.
 
 Chaque bloc « :: Titre » des .bat devient un réglage ; les variantes (Hypixel, ON/OFF, niveaux) sont
 déclarées dans SECTIONS. Le module Restore (outils de l'app) est repris de l'ancien catalogue.
@@ -8,6 +9,8 @@ déclarées dans SECTIONS. Le module Restore (outils de l'app) est repris de l'a
 import json
 import os
 import re
+import subprocess
+import sys
 
 ROOT = os.path.join(os.path.dirname(__file__), '..')
 V6 = os.path.join(ROOT, 'legacy', 'v6')
@@ -150,7 +153,7 @@ MODULES = [
             T('fps', 1920, 'pow_main', 'Power optimization', 'Optimisation de l\'alimentation',
               'Turns off power saving that slows your CPU and devices.',
               'Coupe les économies d\'énergie qui ralentissent ton CPU et tes périphériques.'),
-            T('fps', 1969, 'pow_plan', 'Ultimate power plan', 'Plan Performances optimales',
+            T('fps', 1969, 'pow_ultimate', 'Ultimate power plan', 'Plan Performances optimales',
               'Adds the Ultimate Performance plan and removes the default plans.',
               'Ajoute le plan Performances optimales et supprime les plans par défaut.', risk='advanced'),
             T('fps', 1770, 'pow_saving', 'Storage power saving', 'Économies d\'énergie du stockage',
@@ -159,7 +162,7 @@ MODULES = [
               'NTFS, disk cache and storage driver settings.', 'NTFS, cache disque et pilotes de stockage.'),
             T('fps', 1789, 'sto_ntfs', 'NTFS tweaks', 'Réglages NTFS', 'File system settings for faster access.',
               'Réglages du système de fichiers pour un accès plus rapide.'),
-            T('fps', 1797, 'sto_fsutil', 'FSUTIL settings', 'Réglages FSUTIL', 'Disables last-access and 8.3 names.',
+            T('fps', 1797, 'sto_fsutil_v6', 'FSUTIL settings', 'Réglages FSUTIL', 'Disables last-access and 8.3 names.',
               'Coupe la date de dernier accès et les noms 8.3.'),
             T('fps', 1886, 'sto_fsutil2', 'FSUTIL memory usage', 'FSUTIL mémoire', 'NTFS memory usage settings.',
               'Réglages mémoire de NTFS.'),
@@ -235,6 +238,14 @@ PRESETS = [
      ['in_driver', 'in_adapter', 'in_windows', 'in_frames:lowest', 'in_mouse', 'in_keyboard', 'in_queue:ultra', 'sys_latency',
       'sys_csrss', 'sys_time', 'gpu_directx']),
 ]
+# où vont les modules v6 dans l'ancien catalogue
+INTO = {'network': 'network', 'hitreg': 'hitreg', 'gpu': 'gpu', 'system': 'latency', 'windows': 'windows'}
+# réglages de l'ancien programme remplacés par leur équivalent v6 (même id ou même effet)
+REPLACED = {'win_diag', 'win_bluetooth', 'win_smartscreen', 'win_gamemode', 'gpu_general', 'sto_defrag',
+            'dbl_gamedvr', 'exp_gamedvr', 'exp_mitigations', 'dbl_hyperv', 'exp_hyperv', 'win_animations', 'win_fse',
+            'kbm_queue'}
+RENAMED = {'dbl_gamedvr': 'win_gamedvr', 'exp_gamedvr': 'win_gamedvr', 'kbm_queue': 'in_queue', 'win_fse': 'win_fullscreen',
+           'win_animations': 'win_visual'}
 QUEUE_VARIANTS = {'Ultra Low': ('ultra', 'Ultra low', 'Ultra basse'), 'Low': ('low', 'Low', 'Basse'),
                   'Balanced': ('balanced', 'Balanced', 'Équilibrée'), 'Default': ('default', 'Default', 'Par défaut')}
 
@@ -327,22 +338,39 @@ def main():
             if (k, s['line']) not in used:
                 assert not clean(s['body']).strip() or s['title'] in QUEUE_VARIANTS, (k, s['line'], s['title'])
 
+    # l'ancien programme, avec ses corrections, tel que le génère tools/build_catalog.py
+    subprocess.run([sys.executable, os.path.join(ROOT, 'tools', 'build_catalog.py')], check=True)
     old = json.load(open(os.path.join(ROOT, 'src', 'data', 'catalog.json'), encoding='utf-8'))
     old_scripts = json.load(open(os.path.join(ROOT, 'src-tauri', 'scripts', 'scripts.json'), encoding='utf-8'))
-    restore = next(m for m in old['modules'] if m['id'] == 'restore')
-    for s in restore['sections']:
-        s['tweaks'] = [t for t in s['tweaks'] if 'ref' not in t]
-        for t in s['tweaks']:
-            if t['id'] in old_scripts:
-                scripts[t['id']] = old_scripts[t['id']]
-    restore['sections'] = [s for s in restore['sections'] if s['tweaks']]
-    modules.append(restore)
+    assert not (set(old_scripts) & set(scripts)) - REPLACED, set(old_scripts) & set(scripts) - REPLACED
+    for k, v in old_scripts.items():
+        if k not in REPLACED:
+            scripts[k] = v
+    keep = lambda t: t.get('ref', t.get('id')) not in REPLACED
+    merged = []
+    for m in old['modules']:
+        for sec in m['sections']:
+            sec['tweaks'] = [t for t in sec['tweaks'] if keep(t)]
+        m['sections'] = [sec for sec in m['sections'] if sec['tweaks']]
+        for nm in modules:
+            if INTO[nm['id']] == m['id']:
+                m['sections'] = [{**sec, 'id': 'v6_' + sec['id']} for sec in nm['sections']] + m['sections']
+        merged.append(m)
+    modules = merged
 
     presets = [{'id': p, 'name': n, 'desc': d, 'tweaks': ts} for p, n, d, ts in PRESETS]
-    catalog = {'version': 6, 'modules': modules, 'presets': presets}
+    for p in old['presets']:
+        if p['id'] in ('laptop', 'privacy'):
+            p['tweaks'] = [RENAMED.get(e.split(':')[0], e) if e.split(':')[0] in REPLACED else e for e in p['tweaks']]
+            presets.append(p)
+    ids = {t['id'] for m in modules for sec in m['sections'] for t in sec['tweaks'] if 'id' in t}
+    for p in presets:
+        for e in p['tweaks']:
+            assert e.split(':')[0] in ids, (p['id'], e)
+    catalog = {'version': 7, 'modules': modules, 'presets': presets}
     json.dump(catalog, open(os.path.join(ROOT, 'src', 'data', 'catalog.json'), 'w', encoding='utf-8'), ensure_ascii=False, indent=1)
     json.dump(scripts, open(os.path.join(ROOT, 'src-tauri', 'scripts', 'scripts.json'), 'w', encoding='utf-8'), ensure_ascii=False)
-    n = sum(len(s['tweaks']) for m in modules for s in m['sections'])
+    n = sum(1 for m in modules for s in m['sections'] for t in s['tweaks'] if 'id' in t)
     print(f'{n} réglages, {len(scripts)} scripts')
 
 

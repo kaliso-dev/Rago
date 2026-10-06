@@ -8,9 +8,9 @@ import type { Key } from "../lib/i18n";
 
 const GROUPS: { label: Key | null; ids: string[] }[] = [
   { label: null, ids: ["dashboard"] },
-  { label: "nav.play", ids: ["network", "hitreg"] },
-  { label: "nav.optimize", ids: ["gpu", "system", "windows"] },
-  { label: "nav.advanced", ids: ["restore"] },
+  { label: "nav.optimize", ids: ["network", "latency", "gpu", "windows"] },
+  { label: "nav.play", ids: ["hitreg", "minecraft", "rbw", "gamemode"] },
+  { label: "nav.advanced", ids: ["expert", "restore"] },
 ];
 
 export function Sidebar() {

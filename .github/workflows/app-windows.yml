@@ -5,6 +5,8 @@ name: app-windows
 on:
   workflow_dispatch:
   push:
+    # chaque modification de l'app refabrique l'exe ; les tags app-v* publient une release
+    # (GitHub n'applique pas le filtre paths aux tags)
     branches: ["**"]
     tags: ["app-v*"]
     paths: ["app/**", ".github/workflows/app-windows.yml"]
