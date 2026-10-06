@@ -1,0 +1,102 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="theme-color" content="#0A0A0B">
+<meta name="robots" content="noindex">
+<title>Privacy Policy · Rago Optimizer</title>
+<link rel="icon" href="favicon.svg" type="image/svg+xml">
+<link rel="icon" href="favicon.ico" sizes="any">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600;700&family=Geist+Mono:wght@400;500&display=swap">
+<style>
+:root{--ink:#0A0A0B;--ink-2:#111113;--l1:rgba(255,255,255,.07);--l2:rgba(255,255,255,.12);--t1:#F5F5F7;--t2:#A1A1AA;--t3:#71717A;--red:#FF3B30;--warn:#FFD60A}
+*{box-sizing:border-box;margin:0}
+html{background:var(--ink);color-scheme:dark}
+body{background:var(--ink);color:var(--t1);font:400 15px/1.7 Geist,system-ui,sans-serif;-webkit-font-smoothing:antialiased;padding:0 16px}
+.wrap{max-width:760px;margin:0 auto;padding:40px 0 100px}
+.top{display:flex;align-items:center;justify-content:space-between;gap:16px;margin-bottom:56px}
+.top a.logo{display:flex;align-items:center;gap:10px;color:var(--t1);text-decoration:none;font-weight:600;letter-spacing:-.02em}
+.top a.logo img{height:22px}
+.top a.back{color:var(--t2);text-decoration:none;font-size:13.5px;padding:8px 14px;border-radius:999px;box-shadow:inset 0 0 0 1px var(--l2)}
+.top a.back:hover{color:var(--t1)}
+.draft{background:rgba(255,214,10,.08);border:1px solid rgba(255,214,10,.35);color:#FFE680;border-radius:24px;padding:16px 20px;font-size:13.5px;margin-bottom:40px}
+h1{font-size:clamp(30px,5vw,44px);letter-spacing:-.04em;line-height:1.1}
+.upd{color:var(--t3);font:400 12.5px/1 "Geist Mono",monospace;margin:14px 0 40px}
+h2{font-size:19px;letter-spacing:-.02em;margin:44px 0 12px}
+p,li{color:var(--t2)}
+p+p{margin-top:12px}
+ul{padding-left:20px;margin-top:10px} ul+p{margin-top:14px} li+li{margin-top:6px}
+strong{color:var(--t1);font-weight:560}
+a{color:var(--t1)}
+mark.f{background:rgba(255,214,10,.16);color:var(--warn);padding:1px 6px;border-radius:6px;font-weight:500}
+table{width:100%;border-collapse:collapse;margin-top:12px;font-size:13.5px}
+th,td{text-align:left;padding:10px 12px;border-bottom:1px solid var(--l1);color:var(--t2);vertical-align:top}
+th{color:var(--t1);font-weight:560}
+.tbl{overflow-x:auto;border:1px solid var(--l1);border-radius:24px;padding:4px 8px;background:var(--ink-2);margin-top:12px}
+.tbl table{margin:0} .tbl tr:last-child td{border-bottom:0}
+.foot{margin-top:64px;padding-top:24px;border-top:1px solid var(--l1);display:flex;flex-wrap:wrap;gap:6px 18px;font-size:13px}
+.foot a{color:var(--t2);text-decoration:none} .foot a:hover{color:var(--t1)}
+</style>
+</head>
+<body>
+<div class="wrap">
+<div class="top"><a class="logo" href="./"><img src="rago-wordmark.svg" alt="Rago Optimizer"></a><a class="back" href="./">Back to the site</a></div>
+<div class="draft"><strong style="color:#FFE680">Draft.</strong> Fill in every yellow field and have these pages checked before taking live payments. Then delete this notice.</div>
+<h1>Privacy Policy</h1>
+<p class="upd">Last updated: October 6, 2026</p>
+
+<h2>Who is responsible</h2>
+<p><mark class="f">[Seller legal name or company]</mark>, <mark class="f">[Postal address]</mark>, <mark class="f">[Country]</mark>, is responsible for your data. Contact: <mark class="f">[Contact email]</mark>.</p>
+
+<h2>What we collect, and why</h2>
+<div class="tbl"><table>
+<tr><th>Data</th><th>Why</th></tr>
+<tr><td>Email and password (stored hashed, never readable)</td><td>Your account and sign-in</td></tr>
+<tr><td>Payment references from Stripe: customer and payment IDs, amount, currency, subscription status</td><td>Selling and renewing Premium, refunds, accounting</td></tr>
+<tr><td>Hashed identifiers of your PC (from the Windows machine ID, motherboard UUID and serial number), PC name, Windows version, app version, activation dates and last IP address</td><td>Linking your license to one PC and preventing license sharing</td></tr>
+<tr><td>Affiliate code, which accounts used it, and hashed identifiers of the buyer's first PC</td><td>Running the affiliate program and blocking self-referrals</td></tr>
+<tr><td>A log of license events (purchase, activation, refund, blocked activation with IP address)</td><td>Security and support</td></tr>
+<tr><td>IP address, kept briefly in memory</td><td>Limiting sign-in and download attempts</td></tr>
+</table></div>
+<p>The free mode of the app sends nothing to us. The app contacts our server only when you sign in, activate Premium or refresh your license. Your card number goes to Stripe, never to us.</p>
+
+<h2>Legal basis</h2>
+<p>We use your data to perform our contract with you (account, license, payment), for our legitimate interest in preventing fraud and license sharing, and to meet legal obligations such as keeping accounting records.</p>
+
+<h2>Cookies and local storage</h2>
+<ul>
+<li><strong>rg_session</strong>: keeps you signed in to your account. Necessary.</li>
+<li><strong>rg_claim</strong>: links a purchase to the account you create right after it, for 7 days. Necessary.</li>
+<li><strong>rg_ref</strong> and <strong>rago_ref</strong> (browser storage): remember an affiliate code from a share link for 30 days.</li>
+</ul>
+<p>We don't use advertising or analytics cookies. The site loads its fonts from Google Fonts, which receives your IP address.</p>
+
+<h2>Who processes it for us</h2>
+<ul>
+<li><strong>Stripe</strong>: payments and subscriptions</li>
+<li><strong>Supabase</strong>: database and download storage</li>
+<li><strong>Railway</strong>: account and license server</li>
+<li><strong>Netlify</strong>: website hosting</li>
+<li><strong>Resend</strong>: account emails (password reset)</li>
+</ul>
+<p>Some of these providers are in the United States. Transfers rely on the European Commission's standard contractual clauses or an equivalent safeguard.</p>
+
+<h2>How long we keep it</h2>
+<ul>
+<li>Account and license data: while your account exists, then deleted within <mark class="f">[30]</mark> days of your deletion request.</li>
+<li>Payment and invoicing records: as long as accounting law requires, <mark class="f">[10]</mark> years.</li>
+<li>Security log: <mark class="f">[12]</mark> months.</li>
+</ul>
+
+<h2>Your rights</h2>
+<p>You can ask to access, correct, export or delete your data, or object to its use, by writing to <mark class="f">[Contact email]</mark> from the email of your account. You can also complain to your data protection authority<mark class="f">[e.g. the CNIL in France]</mark>.</p>
+
+<h2>Changes</h2>
+<p>If we change this policy in a way that matters, we'll update the date above and tell account holders by email.</p>
+<div class="foot"><a href="terms.html">Terms of Sale</a><a href="privacy.html">Privacy Policy</a><a href="refunds.html">Refunds and Cancellation</a><a href="./">Rago Optimizer</a></div>
+</div>
+</body>
+</html>
