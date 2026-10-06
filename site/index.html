@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="theme-color" content="#0A0A0B">
 <meta property="og:title" content="Rago Optimizer">
-<meta property="og:description" content="Every millisecond counts. The Minecraft PvP optimizer for Windows: 189 tweaks, undoable in one click.">
+<meta property="og:description" content="Every millisecond counts. The Minecraft PvP optimizer for Windows: 55 tweaks, undoable in one click.">
 <meta property="og:type" content="website">
 <meta property="og:image" content="og-image.png">
 <meta name="twitter:card" content="summary_large_image">
@@ -103,10 +103,11 @@ h1,h2,h3{font-weight:600;letter-spacing:-.035em;line-height:1.05;text-wrap:balan
 .hb{position:relative;display:grid;grid-template-columns:190px minmax(0,1fr);height:520px}
 .side{display:flex;flex-direction:column;gap:1px;padding:4px 10px 12px;overflow:hidden}
 .ngl{padding:12px 10px 6px;font:500 10px/1 var(--mono);letter-spacing:.12em;text-transform:uppercase;color:var(--t3)}
-.nv{position:relative;display:flex;align-items:center;gap:10px;height:32px;padding:0 10px;border-radius:var(--r-sm);font-size:13px;color:var(--t2);user-select:none}
+.nv{position:relative;display:flex;align-items:center;gap:10px;height:32px;padding:0 10px;border-radius:var(--r-sm);font-size:13px;white-space:nowrap;overflow:hidden;color:var(--t2);user-select:none}
 .nv svg{width:16px;height:16px;fill:none;stroke:currentColor;stroke-width:1.75;flex:none}
 .nv.on{background:var(--ink-3);color:var(--t1)}
 .nv.on svg{color:var(--red)}
+.nv .nl{min-width:0;overflow:hidden;text-overflow:ellipsis}
 .nv .cnt{margin-left:auto;font:500 11px/1 var(--mono);color:var(--ink);background:var(--red);border-radius:var(--r-full);padding:3px 7px;transform:scale(0);transition:transform .26s var(--spring)}
 .nv .cnt.show{transform:none}
 .side .sp{flex:1}
@@ -166,6 +167,7 @@ h1,h2,h3{font-weight:600;letter-spacing:-.035em;line-height:1.05;text-wrap:balan
 .prog i{display:block;height:100%;width:0;border-radius:var(--r-full);background:var(--red);transition:width .45s var(--out)}
 .run-cur{font-size:12.5px;color:var(--t2);min-height:2.6em}
 .run-acts{display:flex;gap:6px}
+.run-acts[hidden]{display:none}
 .run-list{display:grid;gap:6px}
 .rr{display:flex;align-items:center;gap:10px;padding:10px 12px;border-radius:var(--r-sm);background:var(--ink-2);border:1px solid var(--l1);font-size:12.5px;color:var(--t3);transition:color .2s,border-color .2s}
 .rr i{width:16px;height:16px;border-radius:50%;border:1.5px solid var(--ink-5);flex:none;display:grid;place-items:center;transition:all .2s}
@@ -526,15 +528,15 @@ footer.foot p{max-width:80ch}
       <div class="hub fade d4" id="hub" aria-label="Interactive preview of the Rago Optimizer app">
         <div class="tb" aria-hidden="true">
           <div class="tb-brand"><svg viewBox="0 0 164 180"><use href="#i-mark"/></svg>Rago Optimizer</div>
-          <div class="tb-search"><svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="M20 20l-3.5-3.5"/></svg><span class="q">Search 189 tweaks</span><span class="kbd">Ctrl K</span></div>
+          <div class="tb-search"><svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="M20 20l-3.5-3.5"/></svg><span class="q">Search 55 tweaks</span><span class="kbd">Ctrl K</span></div>
           <div class="tb-ctl"><i><svg viewBox="0 0 10 10"><path d="M1 5h8"/></svg></i><i><svg viewBox="0 0 10 10"><rect x="1.5" y="1.5" width="7" height="7" rx="1"/></svg></i><i><svg viewBox="0 0 10 10"><path d="M1.5 1.5l7 7M8.5 1.5l-7 7"/></svg></i></div>
         </div>
         <div class="hb">
           <nav class="side" aria-hidden="true" id="side"></nav>
           <div class="main">
             <div class="mhead">
-              <div><span class="ovl">02 / Latency</span><h3>Latency</h3><p>Timers, priorities, CPU, memory and power.</p></div>
-              <div class="mtools"><span class="mono" id="msel">0 of 73 selected</span><button class="mini" type="button" id="selall">Select safe tweaks</button></div>
+              <div><span class="ovl">02 / Hitreg &amp; input lag</span><h3>Hitreg &amp; input lag</h3><p>What you click is what lands.</p></div>
+              <div class="mtools"><span class="mono" id="msel">0 of 8 selected</span><button class="mini" type="button" id="selall">Select safe tweaks</button></div>
             </div>
             <div class="stitle"><span>Mouse and keyboard</span><span class="mono">7</span></div>
             <div class="tlist" id="tl1"></div>
@@ -598,7 +600,7 @@ footer.foot p{max-width:80ch}
   <section class="sec band" id="features" style="padding-top:0">
     <div class="head rv">
       <span class="eyebrow">Inside the app</span>
-      <h2>189 tweaks. One clear app.</h2>
+      <h2>55 tweaks. One clear app.</h2>
       <p>Pick a section to see what it changes. Every tweak says what it does.</p>
     </div>
     <div class="xp rv">
@@ -608,10 +610,10 @@ footer.foot p{max-width:80ch}
     <div class="feat">
       <div class="fc rv"><h3>Find any tweak</h3><p>Press Ctrl+K and type.</p>
         <div class="demo-search"><svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="M20 20l-3.5-3.5"/></svg><span id="typed"></span><span class="caret"></span></div>
-        <div class="demo-res" id="dres"><div><span>Disable mouse acceleration</span><span>Latency</span></div><div><span>Disable core parking</span><span>Latency</span></div><div><span>Disable NIC power saving</span><span>Network</span></div></div>
+        <div class="demo-res" id="dres"><div><span>Mouse optimization</span><span>Hitreg &amp; input lag</span></div><div><span>Disable Game DVR and Xbox</span><span>Windows</span></div><div><span>Power optimization</span><span>CPU &amp; system</span></div></div>
       </div>
       <div class="fc rv"><h3>Start from a preset</h3><p>One click selects a tested set.</p>
-        <div class="presets" id="presets"><span>Minecraft PvP</span><span>Competitive</span><span>Laptop</span><span>Privacy</span></div>
+        <div class="presets" id="presets"><span>Minecraft PvP</span><span>Max FPS</span><span>Low latency</span></div>
       </div>
       <div class="fc rv"><h3>Always a way back</h3><p>A restore point comes first, every time.</p>
         <div class="restore-demo"><svg class="ring" id="ring" viewBox="0 0 64 64"><circle class="bg" cx="32" cy="32" r="28"/><circle class="fg" cx="32" cy="32" r="28"/></svg><div><b>Restore point created</b><span>You can undo everything.</span></div></div>
@@ -663,7 +665,7 @@ footer.foot p{max-width:80ch}
         <div class="price-note">No license needed</div>
         <ul id="free-list">
           <li><svg><use href="#i-check"/></svg>The full Rago Optimizer app</li>
-          <li><svg><use href="#i-check"/></svg>10 of 189 tweaks: mouse acceleration off, Windows Game Mode, Game DVR off, notifications, transparency, temp file cleanup</li>
+          <li><svg><use href="#i-check"/></svg>9 of 55 tweaks: mouse, Windows Game Mode, Game DVR off, visual effects, fullscreen</li>
           <li><svg><use href="#i-check"/></svg>The whole Restore section</li>
           <li class="locked"><svg><use href="#i-lock"/></svg>Everything else, presets included, locked</li>
         </ul>
@@ -678,7 +680,7 @@ footer.foot p{max-width:80ch}
           <div class="price"><b id="p-amt">$0</b><small id="p-per">/ month</small></div>
           <div class="price-note" id="p-note"></div>
           <ul>
-            <li><svg><use href="#i-check"/></svg>All 189 tweaks unlocked</li>
+            <li><svg><use href="#i-check"/></svg>All 55 tweaks unlocked</li>
             <li><svg><use href="#i-check"/></svg>Presets, search and risk labels</li>
             <li><svg><use href="#i-check"/></svg>Ping measured before and after</li>
             <li><svg><use href="#i-check"/></svg>Weekly updates, Premium channel</li>
@@ -842,27 +844,26 @@ const ICON = {
   rbw:'<path d="M4 21V9l8-6 8 6v12z"/><path d="M9 21v-6h6v6"/>',
   gamemode:'<rect x="2" y="7" width="20" height="11" rx="4"/><path d="M7 11v3M5.5 12.5h3"/><circle cx="16" cy="11.5" r=".8"/><circle cx="18" cy="13.5" r=".8"/>',
   expert:'<path d="M14.7 6.3a4 4 0 0 0-5.4 5.4L3 18l3 3 6.3-6.3a4 4 0 0 0 5.4-5.4l-2.6 2.6-2.4-.6-.6-2.4z"/>',
+  system:'<path d="M4 18a9 9 0 1 1 16 0"/><path d="M12 14l4-5"/><circle cx="12" cy="14" r="1.5"/>',
   restore:'<path d="M3 12a9 9 0 1 0 3-6.7L3 8"/><path d="M3 3v5h5"/>',
   settings:'<circle cx="12" cy="12" r="3"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3M4.9 4.9l2.1 2.1M17 17l2.1 2.1M4.9 19.1L7 17M17 7l2.1-2.1"/>'
 };
 const MODS = [
-  ["network","Network","Ping, stability and hit registration.",18],["latency","Latency","Timers, priorities, CPU, memory and power.",73],
-  ["gpu","Graphics card","NVIDIA, AMD and Intel, each with its own settings.",28],["windows","Windows","What runs for nothing in the background.",38],
-  ["hitreg","Hitreg","The advanced suite so your hits land.",1],["minecraft","Minecraft","OptiFine, javaw priority and game traffic.",1],
-  ["rbw","RBW Mod","Ready for a Ranked BedWars screenshare.",1],["gamemode","Game mode","Turn on before playing, off after.",1],
-  ["expert","Expert mode","The .bat's God Mode. Powerful, use knowingly.",24],["restore","Restore","Always a way back.",4]
+  ["network","Ping","Lower ping, cleaner packets.",4],["hitreg","Hitreg & input lag","What you click is what lands.",8],
+  ["gpu","Graphics card","More frames, less wait.",5],["system","CPU & system","Every core working for your game.",19],
+  ["windows","Windows","A lighter Windows, built for games.",15],["restore","Restore","Always a way back.",4]
 ];
 (() => {
-  const nv = (id, label, on, cnt) => `<div class="nv${on ? " on" : ""}"><svg viewBox="0 0 24 24">${ICON[id]}</svg>${label}${cnt ? '<span class="cnt mono" id="navcnt">0</span>' : ""}</div>`;
+  const nv = (id, label, on, cnt) => `<div class="nv${on ? " on" : ""}"><svg viewBox="0 0 24 24">${ICON[id]}</svg><span class="nl">${label}</span>${cnt ? '<span class="cnt mono" id="navcnt">0</span>' : ""}</div>`;
   const m = Object.fromEntries(MODS.map(x => [x[0], x[1]]));
-  $("#side").innerHTML = nv("dashboard","Dashboard") + '<div class="ngl">Optimize</div>' + ["network","latency","gpu","windows"].map(i => nv(i, m[i], i === "latency", i === "latency")).join("")
-    + '<div class="ngl">In game</div>' + ["hitreg","minecraft","rbw","gamemode"].map(i => nv(i, m[i])).join("")
-    + '<div class="ngl">Advanced</div>' + ["expert","restore"].map(i => nv(i, m[i])).join("")
+  $("#side").innerHTML = nv("dashboard","Dashboard") + '<div class="ngl">In game</div>' + ["network","hitreg"].map(i => nv(i, m[i], i === "hitreg", i === "hitreg")).join("")
+    + '<div class="ngl">Optimize</div>' + ["gpu","system","windows"].map(i => nv(i, m[i])).join("")
+    + '<div class="ngl">Advanced</div>' + ["restore"].map(i => nv(i, m[i])).join("")
     + '<div class="sp"></div>' + nv("settings","Settings") + '<div class="ft"><span class="dot"></span>Administrator<span class="mono">GAMING-PC</span></div>';
   const RST = '<span class="bdg"><svg viewBox="0 0 12 12"><path d="M2 6a4 4 0 1 0 1.3-3L2 4.2M2 1.5v2.7h2.7"/></svg>Restart</span>';
   const row = (n, d, b) => `<div class="tw" role="switch" aria-checked="false" tabindex="0" data-name="${esc(n)}"><div class="tw-m"><div class="tw-t"><span>${esc(n)}</span>${b}</div><p>${esc(d)}</p></div><i class="sw" aria-hidden="true"></i></div>`;
-  $("#tl1").innerHTML = row("Disable mouse acceleration","The cursor moves the same distance regardless of hand speed.",RST) + row("1:1 movement, no smoothing","Windows sensitivity at 6/11 and flat smoothing curves.",RST);
-  $("#tl2").innerHTML = row("Disable Power Throttling","Windows stops slowing apps it deems backgrounded.",RST) + row("Rago Low Latency power plan","Imports the Rago power plan and unhides hidden options.","");
+  $("#tl1").innerHTML = row("Mouse optimization","Raw 1:1 mouse movement, no acceleration, faster mouse driver.","") + row("Keyboard optimization","Instant key repeat and a faster keyboard driver.","");
+  $("#tl2").innerHTML = row("Frame latency","How many frames Windows and DirectX queue before showing them.",RST) + row("Driver latency","Lowers latency tolerance in graphics and power drivers.",RST);
 })();
 
 (() => {
@@ -876,7 +877,7 @@ const MODS = [
     go.textContent = `Apply ${n} tweak${n === 1 ? "" : "s"}`;
     abar.classList.toggle("show", n > 0 && !running);
     navcnt.textContent = n; navcnt.classList.toggle("show", n > 0);
-    $("#msel").textContent = `${n} of 73 selected`;
+    $("#msel").textContent = `${n} of 8 selected`;
     $("#selall").textContent = n ? "Clear selection" : "Select safe tweaks";
   };
   const set = (r, on) => { r.classList.toggle("on", on); r.setAttribute("aria-checked", on); };
@@ -917,7 +918,7 @@ const MODS = [
 
 /* Game marquee */
 (() => {
-  const items = ["<b>Built for Minecraft PvP</b>","BedWars","Ranked BedWars","Boxing","Sumo","Bridge","OptiFine presets","Per-game priority","Fortnite","Valorant","CS2","Apex Legends","GTA V"];
+  const items = ["<b>Built for Minecraft PvP</b>","BedWars","Ranked BedWars","Boxing","Sumo","Bridge","Max FPS preset","Low latency preset","Fortnite","Valorant","CS2","Apex Legends","GTA V"];
   const one = items.map(i => `<span class="pill">${i}</span>`).join("");
   $("#mq").innerHTML = one + one.replace(/class="pill"/g, 'class="pill" aria-hidden="true"');
 })();
@@ -968,16 +969,12 @@ const MODS = [
 /* Inside the app: click a section, see real tweaks from it */
 (() => {
   const EX = {
-    network: [["Disable Nagle's algorithm","Sends each packet right away instead of batching them.","safe"],["Disable NIC power saving","Turns off Green Ethernet and NIC sleep, which add wake-up delay.","safe"],["Network profile","Tunes the TCP stack for your play style.","safe"]],
-    latency: [["Disable mouse acceleration","The cursor moves the same distance regardless of hand speed.","safe"],["Multimedia scheduler (MMCSS)","Reserves more CPU and GPU time for games.","safe"],["System responsiveness 0%","Windows stops reserving 20% of your CPU for background tasks.","safe"]],
-    gpu: [["Rago driver profile","Applies the Rago low latency profile to your NVIDIA driver.","safe"],["Force high P-states","Stops the GPU dropping its clocks mid-fight.","safe"],["Remove NVIDIA telemetry","Turns off crash reports and driver data collection.","safe"]],
-    windows: [["Windows Game Mode","Puts the game in front of everything else.","safe"],["Disable background apps","Store apps stop running once you close them.","safe"],["Disable notifications","No banners or sounds while you play.","safe"]],
-    hitreg: [["Advanced hitreg suite","NIC interrupt moderation and priority settings for your PC class.","advanced"]],
-    minecraft: [["OptiFine preset","Performance strips particles and sky. Quality keeps the visuals.","safe"]],
-    rbw: [["RBW Mod","Brings back the Windows services staff check during a Ranked BedWars screenshare.","safe"]],
-    gamemode: [["Game mode","Turn it on before you play and off after.","advanced"]],
-    expert: [["Expert mode","The .bat's God Mode, for players who know what each setting does.","advanced"]],
-    restore: [["Restore point","Created automatically before every Apply.","safe"],["Restore a section","Puts a section back the way Windows had it.","safe"]]
+    network: [["Hitreg profile","TTL, TCP auto-tuning and receive coalescing, tuned for hitreg or for Hypixel.","safe"],["Ping optimization","Tunes your network adapter and the Windows TCP/IP stack for low ping.","safe"],["Packet optimization","Offloads, RSS, MTU 1400 and TCP timers for steadier packets.","safe"]],
+    hitreg: [["Mouse optimization","Raw 1:1 mouse movement, no acceleration, faster mouse driver.","safe"],["Frame latency","How many frames Windows and DirectX queue before showing them.","safe"],["Input queue size","How many mouse and keyboard events the drivers buffer. Lower reacts faster.","safe"]],
+    gpu: [["NVIDIA optimization","Driver settings, power states and the Rago driver profile.","safe"],["AMD optimization","Driver settings, power saving and latency features.","safe"],["General GPU","Hardware scheduling, GPU priority and power settings for any card.","safe"]],
+    system: [["Power optimization","Turns off power saving that slows your CPU and devices.","safe"],["Priority optimization","Gives games and input more CPU priority.","safe"],["USB optimization","Turns off USB power saving and selective suspend.","safe"]],
+    windows: [["Windows Game Mode","Turns Windows Game Mode on or off.","safe"],["Disable Game DVR and Xbox","Turns off background recording and Xbox services.","safe"],["Fullscreen optimization","Fullscreen exclusive settings for Windows 10 and 11.","safe"]],
+    restore: [["Create a restore point","Snapshots Windows so you can roll back.","safe"],["Open System Restore","Opens the Windows tool to roll back.","safe"],["Default input queue","Puts the input driver queue back to 100.","safe"]]
   };
   const tabs = $("#xtabs"), panel = $("#xpanel");
   tabs.innerHTML = MODS.map(([id, name], i) => `<button type="button" class="xt" role="tab" data-i="${i}"><svg viewBox="0 0 24 24">${ICON[id]}</svg>${name}<i class="bar"></i></button>`).join("");
@@ -1000,7 +997,7 @@ const MODS = [
 
 /* Feature demos: typing search, cycling presets, restore ring */
 (() => {
-  const words = ["mouse", "core park", "power sav"];
+  const words = ["mouse", "game dvr", "power"];
   const typed = $("#typed"), res = $$("#dres div");
   const type = async () => {
     for (let k = 0; ; k = (k + 1) % words.length) {
@@ -1084,12 +1081,11 @@ const REF = (() => {
   const Y = '<span class="yes"><svg viewBox="0 0 16 16"><use href="#i-check"/></svg></span>', N = '<span class="no"><svg viewBox="0 0 16 16"><path d="M4.5 8h7"/></svg></span>', L = '<span class="lk" title="Locked in Free"><svg viewBox="0 0 16 16"><use href="#i-lock"/></svg></span>';
   const rows = [
     ["Rago Optimizer app and interface", Y, Y],
-    ['Tweaks unlocked', '<span class="txt">10 of 189</span>', '<span class="txt">All 189</span>'],
+    ['Tweaks unlocked', '<span class="txt">9 of 55</span>', '<span class="txt">All 55</span>'],
     ["Restore point before changes", Y, Y],
-    ["Network, latency and graphics card tweaks", L, Y],
-    ["Presets: Minecraft PvP, Competitive, Laptop, Privacy", L, Y],
+    ["Ping, hitreg, graphics card and CPU tweaks", L, Y],
+    ["Presets: Minecraft PvP, Max FPS, Low latency", L, Y],
     ["Ping measured before and after", L, Y],
-    ["Expert mode and RBW Mod", L, Y],
     ["Weekly updates", N, Y],
     ["Premium Discord channel", N, Y],
     ["License", '<span class="txt">Not needed</span>', '<span class="txt">1 PC per license</span>']
@@ -1100,9 +1096,9 @@ const REF = (() => {
 /* FAQ: animated accordion */
 (() => {
   const F = [
-    ["Can I get banned for using Rago?", "Rago doesn't modify Minecraft and injects nothing into the game. It changes Windows, network and OptiFine settings, the same ones you could change by hand. Some servers screenshare players and check Windows logs, so turn on RBW Mod before a screenshare: it brings back the services staff look at."],
+    ["Can I get banned for using Rago?", "Rago doesn't modify Minecraft and injects nothing into the game. It changes Windows and network settings, the same ones you could change by hand. Some servers screenshare players and check Windows logs. A few Advanced tweaks turn off Windows services staff look at, and each one says so, so skip them if you get screenshared."],
     ["Will it lower my ping?", "It depends where your ping comes from. Distance to the server can't be fixed by any software. Rago cuts the delay your PC adds and makes your timing steadier, which is what matters most for hits."],
-    ["What's the difference between Free and Premium?", "Both are the same Rago Optimizer app. Free opens 10 tweaks and the Restore section, and shows everything else with a lock. Premium unlocks all 189 tweaks, presets, ping measured before and after, and weekly updates."],
+    ["What's the difference between Free and Premium?", "Both are the same Rago Optimizer app. Free opens 9 tweaks, Restore included,, and shows everything else with a lock. Premium unlocks all 55 tweaks, presets, ping measured before and after, and weekly updates."],
     ["Monthly or yearly?", "Same app either way. Yearly costs 10 months of the monthly price, so you get 2 months free. You can cancel anytime."],
     ["Can I use my license on more than one PC?", "No. Premium works on one device per license. If you change PCs, contact support on Discord."],
     ["What if I don't like a change?", "A restore point is created before any change, and the Restore section undoes your tweaks. You can go back to how your PC was whenever you want."],
