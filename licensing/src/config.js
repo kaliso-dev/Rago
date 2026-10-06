@@ -69,7 +69,7 @@ export function loadConfig(env = process.env) {
   // Values still set to the examples from .env.example: the server runs, but say what won't work.
   cfg.warnings = [];
   const placeholder = (v) => /\.\.\.|abcd|a_remplir|xxxx/i.test(v || '');
-  if (placeholder(cfg.supabaseUrl)) cfg.warnings.push('SUPABASE_URL is still the example: Download Rago Hub will fail. Use https://<project-ref>.supabase.co');
+  if (placeholder(cfg.supabaseUrl)) cfg.warnings.push('SUPABASE_URL is still the example: Download Rago Optimizer will fail. Use https://<project-ref>.supabase.co');
   if (placeholder(cfg.stripeWebhookSecret)) cfg.warnings.push('STRIPE_WEBHOOK_SECRET is still the example: Stripe webhooks will be rejected (step 6).');
   if (!cfg.subscriptions && !cfg.stripePriceId) cfg.warnings.push('No Stripe price: set STRIPE_PRICE_MONTHLY and STRIPE_PRICE_YEARLY. Until then /buy shows "Checkout is not open yet."');
   if (!cfg.subscriptions && cfg.stripePriceId) cfg.warnings.push('Only STRIPE_PRICE_ID is set: Premium is sold as a one-time lifetime license. Set STRIPE_PRICE_MONTHLY and STRIPE_PRICE_YEARLY for the subscription.');

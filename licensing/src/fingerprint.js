@@ -1,4 +1,4 @@
-// Device fingerprint: three hashed hardware/OS identifiers sent by Rago Hub.
+// Device fingerprint: three hashed hardware/OS identifiers sent by Rago Optimizer.
 // The app computes each one as hex(SHA-256("rago-fp-v1|" + name + "|" + normalized value)),
 // see docs/API.md. The server never sees the raw identifiers.
 export const COMPONENTS = ['machine_guid', 'smbios_uuid', 'board_serial'];

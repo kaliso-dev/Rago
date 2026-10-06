@@ -1,4 +1,4 @@
-// Compact JWTs signed with Ed25519 (alg "EdDSA"), verifiable offline by Rago Hub with the public key.
+// Compact JWTs signed with Ed25519 (alg "EdDSA"), verifiable offline by Rago Optimizer with the public key.
 import { createPrivateKey, createPublicKey, createHash, sign, verify } from 'node:crypto';
 
 const b64 = (obj) => Buffer.from(JSON.stringify(obj)).toString('base64url');

@@ -6,7 +6,7 @@ const escape = (v) => String(v).replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<':
 const render = (v) => (v == null || v === false ? '' : v instanceof Raw ? v.s : Array.isArray(v) ? v.map(render).join('') : escape(v));
 export const html = (strings, ...vals) => new Raw(strings.reduce((out, s, i) => out + s + (i < vals.length ? render(vals[i]) : ''), ''));
 
-const WORDMARK = html`<svg class="wordmark" viewBox="0 1.6 79.8 19.4" fill="currentColor" role="img" aria-label="Rago"><path fill-rule="evenodd" d="M0 3H11L16 8V11.5L12.8 14.7L17 21H11.6L8.1 15.5H5.4V21H0ZM5.4 7.6V11.1H10.6V7.6Z"/><path fill-rule="evenodd" d="M19.6 21V8L24.6 3H31.6L36.6 8V21H31.2V16.4H25V21ZM25 8.4V11H31.2V8.4Z"/><path fill-rule="evenodd" d="M39.2 8L44.2 3H56.2V8.4H44.6V15.6H50.8V14.4H48.2V10.2H56.2V21H44.2L39.2 16Z"/><path fill-rule="evenodd" d="M63.8 3H70.8L75.8 8V16L70.8 21H63.8L58.8 16V8ZM64.2 8.4V15.6H70.4V8.4Z"/><path class="wordmark-pixel" d="M77 1.6h2.8v2.8h-2.8z"/></svg>`;
+const WORDMARK = html`<img class="wordmark" src="/assets/wordmark.svg" alt="Rago Optimizer" width="150" height="24">`;
 
 const svg = (d, w = 1.6) => html`<svg viewBox="0 0 16 16" aria-hidden="true"><path d="${d}" fill="none" stroke="currentColor" stroke-width="${w}" stroke-linecap="round" stroke-linejoin="round"/></svg>`;
 const ICON = {
@@ -18,6 +18,7 @@ const ICON = {
   arrow: svg('M3 8h10m0 0L9 4m4 4l-4 4'),
   card: svg('M2.5 4h11a1 1 0 0 1 1 1v6a1 1 0 0 1-1 1h-11a1 1 0 0 1-1-1V5a1 1 0 0 1 1-1zM1.5 6.8h13', 1.4),
   users: svg('M6 7.5a2.3 2.3 0 1 0 0-4.6 2.3 2.3 0 0 0 0 4.6zM1.8 13.5c.4-2.3 2.1-3.6 4.2-3.6s3.8 1.3 4.2 3.6M10.6 3a2.2 2.2 0 0 1 0 4.4M12.2 9.9c1.2.4 1.9 1.6 2.1 3.6', 1.4),
+  clock: svg('M8 14.5a6.5 6.5 0 1 0 0-13 6.5 6.5 0 0 0 0 13zM8 4.5V8l2.5 1.5', 1.4),
   infinity: svg('M8 8c-1.4-2-2.6-3-4-3a3 3 0 0 0 0 6c1.4 0 2.6-1 4-3zm0 0c1.4 2 2.6 3 4 3a3 3 0 0 0 0-6c-1.4 0-2.6 1-4 3z', 1.4),
 };
 
@@ -40,7 +41,10 @@ function page({ title, body, user, cfg, bodyClass = '', nav = '' }) {
 <meta name="theme-color" content="#0A0A0B">
 <meta name="robots" content="noindex">
 <title>${escape(title)} · Rago</title>
+<link rel="icon" href="/assets/favicon.ico" sizes="any">
 <link rel="icon" href="/assets/favicon.svg" type="image/svg+xml">
+<link rel="icon" href="/assets/favicon-32.png" type="image/png" sizes="32x32">
+<link rel="apple-touch-icon" href="/assets/apple-touch-icon.png">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600&family=Geist+Mono:wght@400;500&display=swap">
@@ -51,7 +55,7 @@ function page({ title, body, user, cfg, bodyClass = '', nav = '' }) {
 <body class="${escape(bodyClass)}">
 <div class="bg" aria-hidden="true"><span></span><span></span></div>
 <header class="top">
-  <a class="brand" href="${escape(cfg.siteUrl)}/" aria-label="Rago home">${render(WORDMARK)}</a>
+  <a class="brand" href="${escape(cfg.siteUrl)}/" aria-label="Rago Optimizer home">${render(WORDMARK)}</a>
   ${user ? render(html`<nav class="tabs" aria-label="Account">
       <a href="/account" ${nav === 'account' ? html`aria-current="page"` : ''}>Account</a>
       <a href="/affiliate" ${nav === 'affiliate' ? html`aria-current="page"` : ''}>Affiliate</a>
@@ -188,18 +192,27 @@ const PLAN = { month: 'Monthly', year: 'Yearly', lifetime: 'Lifetime' };
 const pricingUrl = (cfg) => (cfg.subscriptions ? `${cfg.siteUrl}/#pricing` : '/buy');
 
 /** Circular progress (x / goal). The arc length is an SVG attribute, so the strict CSP allows it. */
-function ring(value, goal, size = 'lg') {
+/**
+ * Circular progress: counted players in solid red, players who used the code but don't count yet
+ * (hold period, not activated) in a pulsing lighter arc, so a new referral shows right away.
+ * Arc lengths are SVG attributes, so the strict CSP allows them.
+ */
+function ring(value, goal, size = 'lg', pending = 0) {
   const c = 2 * Math.PI * 42;
-  const done = Math.min(value, goal) / goal;
-  return html`<div class="ring ring-${size}${value >= goal ? ' ring-full' : ''}" role="img" aria-label="${value} of ${goal}">
+  const shown = Math.min(value, goal);
+  const reach = Math.min(value + pending, goal);
+  return html`<div class="ring ring-${size}${value >= goal ? ' ring-full' : ''}" role="img" aria-label="${shown} of ${goal} counted${pending ? `, ${pending} waiting` : ''}">
     <svg viewBox="0 0 100 100" aria-hidden="true"><circle class="ring-track" cx="50" cy="50" r="42"/>
-      <circle class="ring-bar" cx="50" cy="50" r="42" stroke-dasharray="${c.toFixed(2)}" stroke-dashoffset="${(c * (1 - done)).toFixed(2)}"/></svg>
-    <span class="ring-num mono"><b data-count="${Math.min(value, goal)}">${Math.min(value, goal)}</b><small>/${goal}</small></span>
+      ${reach > shown ? html`<circle class="ring-pend" cx="50" cy="50" r="42" stroke-dasharray="${c.toFixed(2)}" stroke-dashoffset="${(c * (1 - reach / goal)).toFixed(2)}"/>` : ''}
+      ${shown ? html`<circle class="ring-bar" cx="50" cy="50" r="42" stroke-dasharray="${c.toFixed(2)}" stroke-dashoffset="${(c * (1 - shown / goal)).toFixed(2)}"/>` : ''}</svg>
+    <span class="ring-num mono"><b data-count="${shown}">${shown}</b><small>/${goal}</small></span>
   </div>`;
 }
 
-function slots(value, goal) {
-  return html`<ol class="slots" aria-hidden="true">${Array.from({ length: goal }, (_, i) => html`<li class="${i < value ? 'on' : ''}">${i < value ? ICON.check : String(i + 1)}</li>`)}</ol>`;
+function slots(value, goal, pending = 0) {
+  return html`<ol class="slots" aria-hidden="true">${Array.from({ length: goal }, (_, i) => (i < value
+    ? html`<li class="on">${ICON.check}</li>`
+    : i < value + pending ? html`<li class="wait">${ICON.clock}</li>` : html`<li>${String(i + 1)}</li>`))}</ol>`;
 }
 
 export function dashboardPage(cfg, { user, license, device, notice, error, canReset, nextResetAt, affiliate }) {
@@ -283,9 +296,9 @@ export function dashboardPage(cfg, { user, license, device, notice, error, canRe
   };
 
   const affiliateCard = (cls) => html`<article class="card card-aff rise ${cls}">
-      <div class="card-head"><p class="overline">Affiliate program</p>${affiliate ? html`<span class="mono small muted">${affiliate.counted} / ${affiliate.goal}</span>` : ''}</div>
+      <div class="card-head"><p class="overline">Affiliate program</p>${affiliate ? html`<span class="mono small muted">${affiliate.counted} / ${affiliate.goal}${affiliate.pending ? ` · ${affiliate.pending} waiting` : ''}</span>` : ''}</div>
       ${affiliate
-        ? html`<div class="aff-mini">${ring(affiliate.counted, affiliate.goal, 'sm')}<div class="aff-text">
+        ? html`<div class="aff-mini">${ring(affiliate.counted, affiliate.goal, 'sm', affiliate.pending)}<div class="aff-text">
             <p class="small muted">Your code</p><p class="code-sm mono">${affiliate.code}</p>
             <p class="small muted">${affiliate.rewarded ? 'Goal reached. Rago Optimizer Premium is yours for life.' : `${affiliate.goal - Math.min(affiliate.counted, affiliate.goal)} more player${affiliate.goal - affiliate.counted === 1 ? '' : 's'} to get Rago Optimizer for life.`}</p></div></div>
           <a class="link-arrow" href="/affiliate">Open affiliate program ${ICON.arrow}</a>`
@@ -384,11 +397,11 @@ export function affiliatePage(cfg, { user, summary, joined }) {
       </article>
       <article class="card card-progress rise d2">
         <div class="card-head"><p class="overline">Progress</p>${summary.rewarded ? html`<span class="badge badge-red"><i></i>Lifetime</span>` : ''}</div>
-        <div class="progress">${ring(summary.counted, goal)}
-          <div class="progress-text">${slots(summary.counted, goal)}
+        <div class="progress">${ring(summary.counted, goal, 'lg', summary.pending)}
+          <div class="progress-text">${slots(summary.counted, goal, summary.pending)}
             <p class="small">${summary.rewarded
               ? 'Goal reached. Your Rago Optimizer Premium license is now lifetime, on one PC.'
-              : html`<strong>${summary.counted} of ${goal}</strong> players counted.${summary.pending ? ` ${summary.pending} waiting.` : ''}`}</p>
+              : html`<strong>${summary.counted} of ${goal}</strong> players counted.${summary.pending ? ` ${summary.pending} waiting: a player counts once they've activated Rago Optimizer and ${cfg.affiliateHoldDays} days have passed since their payment.` : ''}`}</p>
             ${summary.rewarded ? html`<a class="link-arrow" href="/account">See your license ${ICON.arrow}</a>` : ''}</div>
         </div>
       </article>
