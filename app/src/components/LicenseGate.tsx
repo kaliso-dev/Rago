@@ -7,14 +7,25 @@ import { useStore } from "../lib/store";
 import { Pulse, Wordmark } from "./Logo";
 import { Button } from "./ui";
 
-/** Site de vente : comptes, mot de passe oublié. Fixé au build par VITE_SITE_URL. */
-export const SITE_URL: string = import.meta.env.VITE_SITE_URL ?? "https://ragohub.com";
+// Une variable de CI non renseignée arrive vide, d'où || plutôt que ??.
+const trim = (u: string | undefined) => (u ?? "").trim().replace(/\/+$/, "");
+const origin = (u: string) => {
+  try {
+    return new URL(u).origin;
+  } catch {
+    return "";
+  }
+};
+/** Serveur de comptes (/forgot, /signup…) : origine de RAGO_API_BASE, passée au build en VITE_ACCOUNT_URL. */
+export const ACCOUNT_URL: string = origin(trim(import.meta.env.VITE_ACCOUNT_URL)) || "http://localhost:8787";
+/** Site de vente (VITE_SITE_URL). Vide : le serveur de comptes, dont la racine redirige vers le site en gardant #pricing. */
+export const SITE_URL: string = trim(import.meta.env.VITE_SITE_URL) || ACCOUNT_URL;
 
 type Step = { kind: "signin" } | { kind: "confirm"; email: string; keyHint: string | null } | { kind: "success" };
 
 const ease = [0.16, 1, 0.3, 1] as const;
 
-export function LicenseGate() {
+export function LicenseGate({ embedded = false, onDone }: { embedded?: boolean; onDone?: () => void }) {
   const { t, license, setLicense, lang, setLang, sys } = useStore();
   const [email, setEmail] = useState(license?.email ?? "");
   const [password, setPassword] = useState("");
@@ -35,7 +46,10 @@ export function LicenseGate() {
 
   const done = (st: Awaited<ReturnType<typeof api.licenseActivate>>) => {
     setStep({ kind: "success" });
-    setTimeout(() => setLicense(st), 1100);
+    setTimeout(() => {
+      setLicense(st);
+      onDone?.();
+    }, 1100);
   };
 
   const run = async (fn: () => Promise<void>) => {
@@ -80,12 +94,11 @@ export function LicenseGate() {
     </AnimatePresence>
   );
 
-  return (
-    <div className="gate" data-tauri-drag-region>
+  const card = (
       <motion.div className="gate-card" initial={{ opacity: 0, y: 14 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.42, ease }}>
         <div className="gate-brand">
           <Pulse size={44} active={busy || step.kind === "success"} />
-          <Wordmark height={16} />
+          <Wordmark height={16} mark={false} />
           <span className="gate-premium rg-overline">Premium</span>
         </div>
 
@@ -163,10 +176,10 @@ export function LicenseGate() {
                 <Lock size={12} /> {t("license.lock")}
               </p>
               <div className="gate-links">
-                <button type="button" className="link" onClick={() => api.openUrl(`${SITE_URL}/signup`)}>
+                <button type="button" className="link" onClick={() => api.openUrl(`${SITE_URL}/#pricing`)}>
                   {t("license.create")}
                 </button>
-                <button type="button" className="link" onClick={() => api.openUrl(`${SITE_URL}/forgot`)}>
+                <button type="button" className="link" onClick={() => api.openUrl(`${ACCOUNT_URL}/forgot`)}>
                   {t("license.forgot")}
                 </button>
               </div>
@@ -174,6 +187,11 @@ export function LicenseGate() {
           )}
         </AnimatePresence>
       </motion.div>
+  );
+  if (embedded) return card;
+  return (
+    <div className="gate" data-tauri-drag-region>
+      {card}
       <button type="button" className="gate-lang link" onClick={() => setLang(lang === "en" ? "fr" : "en")}>
         {lang === "en" ? "Français" : "English"}
       </button>

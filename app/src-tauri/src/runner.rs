@@ -1,7 +1,7 @@
 //! Exécution des réglages : un lot à la fois, dans un thread, avec le journal envoyé à
 //! l'interface ligne par ligne.
 //!
-//! Chaque script batch est écrit dans %TEMP%\RagoHub puis lancé par `cmd.exe /d /c`, sans
+//! Chaque script batch est écrit dans %TEMP%\RagoOptimizer puis lancé par `cmd.exe /d /c`, sans
 //! fenêtre, entrée standard fermée (un `pause` oublié ne bloque donc jamais).
 
 use serde::{Deserialize, Serialize};
@@ -282,7 +282,7 @@ fn cp850(b: u8) -> char {
 const PREAMBLE: &str = "@echo off\r\nchcp 65001 >nul\r\nsetlocal EnableExtensions EnableDelayedExpansion\r\n";
 
 fn write_script(id: &str, variant: Option<&str>, body: &str) -> Result<PathBuf, String> {
-    let dir = std::env::temp_dir().join("RagoHub");
+    let dir = std::env::temp_dir().join("RagoOptimizer");
     fs::create_dir_all(&dir).map_err(|e| e.to_string())?;
     let name = format!("{}{}-{}.cmd", id, variant.map(|v| format!("-{v}")).unwrap_or_default(), now_ms());
     let path = dir.join(sanitize(&name));
@@ -299,8 +299,8 @@ fn sanitize(s: &str) -> String {
 const RESTORE_POINT_PS: &str = r#"$ErrorActionPreference = 'Stop'
 try { Enable-ComputerRestore -Drive "$env:SystemDrive\" } catch { Write-Output "- Restauration déjà active ou non modifiable" }
 New-ItemProperty -Path 'HKLM:\SOFTWARE\Microsoft\Windows NT\CurrentVersion\SystemRestore' -Name 'SystemRestorePointCreationFrequency' -Value 0 -PropertyType DWord -Force | Out-Null
-Write-Output "- Création du point de restauration Rago Hub"
-Checkpoint-Computer -Description 'Rago Hub' -RestorePointType 'MODIFY_SETTINGS'
+Write-Output "- Création du point de restauration Rago Optimizer"
+Checkpoint-Computer -Description 'Rago Optimizer' -RestorePointType 'MODIFY_SETTINGS'
 Write-Output "- Point de restauration créé"
 "#;
 

@@ -2,7 +2,8 @@ import { ExternalLink, FolderOpen, LogOut } from "lucide-react";
 import { formatDate } from "../lib/i18n";
 import { api, isTauri } from "../lib/api";
 import { totalTweaks } from "../lib/catalog";
-import { useStore } from "../lib/store";
+import { FREE, useStore } from "../lib/store";
+import { SITE_URL } from "../components/LicenseGate";
 import { Button, Card, Segmented } from "../components/ui";
 import { Wordmark } from "../components/Logo";
 
@@ -16,7 +17,7 @@ const LICENCES = [
 ];
 
 export function Settings() {
-  const { t, lang, setLang, motion, setMotion, license, signOut } = useStore();
+  const { t, lang, setLang, motion, setMotion, license, signOut, setUpsell } = useStore();
   return (
     <div className="page settings">
       <header className="page-head">
@@ -38,7 +39,7 @@ export function Settings() {
               <div className="setting">
                 <span>{t("account.plan")}</span>
                 <span className="rg-metric">
-                  Rago Hub {license.plan === "premium" ? "Premium" : license.plan}
+                  Rago Optimizer {license.plan === "premium" ? "Premium" : license.plan}
                   {license.expiresAt && <span className="muted"> · {t("account.renews", { date: formatDate(lang, license.expiresAt) })}</span>}
                 </span>
               </div>
@@ -54,7 +55,17 @@ export function Settings() {
               </div>
             </>
           ) : (
-            <p className="muted small">{t("account.unconfigured")}</p>
+            <>
+              <p className="muted small">{t("account.free", { n: FREE.size, total: totalTweaks })}</p>
+              <div className="setting-actions">
+                <Button size="sm" variant="primary" onClick={() => void api.openUrl(`${SITE_URL}/#pricing`)}>
+                  {t("free.upgrade")}
+                </Button>
+                <Button size="sm" variant="ghost" onClick={() => setUpsell("signin")}>
+                  {t("free.signIn")}
+                </Button>
+              </div>
+            </>
           )}
         </Card>
         <Card>

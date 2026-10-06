@@ -1,8 +1,10 @@
 {
   "$schema": "../gen/schemas/desktop-schema.json",
   "identifier": "default",
-  "description": "Fenêtre principale de Rago Hub",
-  "windows": ["main"],
+  "description": "Fenêtre principale de Rago Optimizer",
+  "windows": [
+    "main"
+  ],
   "permissions": [
     "core:default",
     "core:window:allow-minimize",
@@ -12,6 +14,16 @@
     "core:window:allow-start-dragging",
     "dialog:allow-open",
     "dialog:allow-ask",
-    "opener:allow-open-url"
+    {
+      "identifier": "opener:allow-open-url",
+      "allow": [
+        {
+          "url": "https://*"
+        },
+        {
+          "url": "http://localhost:*"
+        }
+      ]
+    }
   ]
 }

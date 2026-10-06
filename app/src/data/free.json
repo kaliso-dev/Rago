@@ -1,0 +1,14 @@
+{
+  "_comment": "Réglages ouverts sans licence (plan gratuit). Lu par l'interface et vérifié par le moteur Rust avant chaque lancement.",
+  "tweaks": [
+    "in_mouse",
+    "win_gamemode",
+    "win_gamedvr",
+    "win_visual",
+    "win_fullscreen",
+    "rst_point",
+    "rst_open",
+    "rst_queue",
+    "rst_network"
+  ]
+}

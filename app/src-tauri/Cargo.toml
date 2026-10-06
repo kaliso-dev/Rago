@@ -1,7 +1,7 @@
 [package]
 name = "rago-hub"
 version = "1.0.0"
-description = "Rago Hub, l'optimiseur Windows pour Minecraft PvP et les jeux compétitifs"
+description = "Rago Optimizer, l'optimiseur Windows pour Minecraft PvP et les jeux compétitifs"
 authors = ["Rago"]
 edition = "2021"
 rust-version = "1.80"

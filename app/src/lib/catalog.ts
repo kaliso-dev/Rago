@@ -103,6 +103,7 @@ export function availability(t: Tweak, sys: SystemInfo | null): Availability {
       const vendor = r.slice(4);
       if (!sys.gpus.some((g) => g.vendor === vendor)) return { ok: false, block: `noGpu.${vendor}` };
     }
+    if (r.startsWith("cpu:") && sys.cpuVendor !== r.slice(4)) return { ok: false, block: `noCpu.${r.slice(4)}` };
     if (r.startsWith("res:")) {
       const file = r.slice(4);
       if (!sys.resources.includes(file)) {

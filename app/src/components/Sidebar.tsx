@@ -1,18 +1,20 @@
 import { motion } from "motion/react";
+import { Lock, Sparkles } from "lucide-react";
 import { catalog } from "../lib/catalog";
-import { useStore } from "../lib/store";
+import { FREE, useStore } from "../lib/store";
+import { totalTweaks } from "../lib/catalog";
 import { MODULE_ICONS } from "./icons";
 import type { Key } from "../lib/i18n";
 
 const GROUPS: { label: Key | null; ids: string[] }[] = [
   { label: null, ids: ["dashboard"] },
-  { label: "nav.optimize", ids: ["network", "latency", "gpu", "windows"] },
-  { label: "nav.play", ids: ["hitreg", "minecraft", "rbw", "gamemode"] },
-  { label: "nav.advanced", ids: ["expert", "restore"] },
+  { label: "nav.play", ids: ["network", "hitreg"] },
+  { label: "nav.optimize", ids: ["gpu", "system", "windows"] },
+  { label: "nav.advanced", ids: ["restore"] },
 ];
 
 export function Sidebar() {
-  const { t, lang, page, goTo, selected, sys } = useStore();
+  const { t, lang, page, goTo, selected, sys, license, premium, setUpsell } = useStore();
   const modules = new Map(catalog.modules.map((m) => [m.id, m]));
 
   const countIn = (id: string) => {
@@ -21,6 +23,12 @@ export function Sidebar() {
     let n = 0;
     for (const s of m.sections) for (const tw of s.tweaks) if (!("ref" in tw) && selected.has(tw.id)) n++;
     return n;
+  };
+  // module sans aucun réglage ouvert en plan gratuit
+  const lockedModule = (id: string) => {
+    const m = modules.get(id);
+    if (premium || !m) return false;
+    return !m.sections.some((s) => s.tweaks.some((tw) => !("ref" in tw) && FREE.has(tw.id)));
   };
 
   const item = (id: string, label: string, icon: string) => {
@@ -33,6 +41,7 @@ export function Sidebar() {
         <Icon size={16} strokeWidth={1.75} />
         <span className="nav-label">{label}</span>
         {n > 0 && <span className="nav-count rg-metric">{n}</span>}
+        {n === 0 && lockedModule(id) && <Lock size={12} className="nav-lock" />}
       </button>
     );
   };
@@ -48,6 +57,16 @@ export function Sidebar() {
         </div>
       ))}
       <div className="nav-spacer" />
+      {license && !premium && (
+        <button type="button" className="nav-upgrade" onClick={() => setUpsell("tweak")}>
+          <span className="nav-upgrade-top">
+            <Sparkles size={13} />
+            {t("free.plan")}
+          </span>
+          <span className="nav-upgrade-sub rg-metric">{t("free.status", { n: FREE.size, total: totalTweaks })}</span>
+          <span className="nav-upgrade-cta">{t("free.upgrade")}</span>
+        </button>
+      )}
       {item("settings", t("nav.settings"), "settings")}
       <div className="nav-foot">
         <span className={`dot ${sys?.isAdmin ? "dot-ok" : "dot-warn"}`} />

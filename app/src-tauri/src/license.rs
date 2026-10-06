@@ -1,4 +1,4 @@
-//! Licence Rago Hub Premium, d'après le contrat /api/v1 du serveur de licences
+//! Licence Rago Optimizer Premium, d'après le contrat /api/v1 du serveur de licences
 //! (licensing/docs/API.md) : connexion, activation liée au PC, jeton Ed25519 vérifié hors ligne.
 
 use base64::engine::general_purpose::{STANDARD, URL_SAFE_NO_PAD};

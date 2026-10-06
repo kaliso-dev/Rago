@@ -561,8 +561,8 @@ MODULES = [
                  T('dbl_cortana', 'd7@7068', 'Désinstaller Cortana', 'Uninstall Cortana',
                    "Désactive Cortana et supprime l'appli.", 'Disables Cortana and removes the app.', reboot=False),
                  T('dbl_edge', 'd8@6853', 'Désinstaller Microsoft Edge', 'Uninstall Microsoft Edge',
-                   "Supprime Edge et ses dossiers. Certaines applis Windows qui affichent des pages web peuvent en souffrir.",
-                   'Removes Edge and its folders. Some Windows apps relying on it may suffer.',
+                   "Supprime le navigateur Edge. WebView2 et Edge Update restent en place : Rago Hub et d'autres applis Windows en ont besoin pour s'afficher.",
+                   'Removes the Edge browser. WebView2 and Edge Update stay installed, because Rago Hub and other Windows apps need them to run.',
                    risk='advanced', reboot=False, confirm=dict(fr="Edge sera supprimé de ce PC. Continuer ?", en='Edge will be removed. Continue?')),
                  T('dbl_autologgers', 'd9@6446', 'Désactiver les journaux automatiques', 'Disable autologgers',
                    "Coupe une quarantaine de traces système qui écrivent en continu sur le disque.",
@@ -653,8 +653,8 @@ MODULES = [
          sections=[
              dict(id='gamemode', name=dict(fr='Mode jeu Rago', en='Rago game mode'), tweaks=[
                  T('game_mode', None, 'Mode jeu Rago', 'Rago game mode',
-                   "Activé vide les fichiers temporaires et le Prefetch, arrête l'impression, coupe les animations de Windows et relance l'explorateur. Désactivé remet les animations et l'impression.",
-                   'On clears temp and Prefetch, stops printing, disables Windows animations and restarts Explorer. Off restores animations and printing.',
+                   "Activé vide les fichiers temporaires, arrête l'impression, coupe les animations de Windows et relance l'explorateur. Désactivé remet les animations et l'impression. Le Prefetch n'est plus vidé : un screenshare le lirait comme des traces effacées.",
+                   "On clears temp files, stops printing, disables Windows animations and restarts Explorer. Off restores animations and printing. Prefetch is no longer cleared, since a screenshare would read that as wiped traces.",
                    reboot=False, default_variant='on', variants=[
                        V('on', 'ENABLE8@14250', 'Activé', 'On'),
                        V('off', 'DISABLE8@14304', 'Désactivé', 'Off'),

@@ -1,5 +1,5 @@
 import { AnimatePresence, motion } from "motion/react";
-import { ChevronDown, Play, RotateCcw, TriangleAlert } from "lucide-react";
+import { ChevronDown, Lock, Play, RotateCcw, TriangleAlert } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import { autoVariant, availability, type Tweak } from "../lib/catalog";
 import { formatDate, type Key } from "../lib/i18n";
@@ -7,7 +7,7 @@ import { useStore } from "../lib/store";
 import { Badge, Button, Segmented, Switch } from "./ui";
 
 export function TweakRow({ tweak }: { tweak: Tweak }) {
-  const { t, lang, sys, selected, toggle, variantOf, setVariant, lastRun, requestApply, focusTweak, setFocusTweak } = useStore();
+  const { t, lang, sys, selected, toggle, variantOf, setVariant, lastRun, requestApply, focusTweak, setFocusTweak, isLocked, premium, setUpsell } = useStore();
   const [open, setOpen] = useState(false);
   const ref = useRef<HTMLDivElement>(null);
   const av = availability(tweak, sys);
@@ -17,6 +17,7 @@ export function TweakRow({ tweak }: { tweak: Tweak }) {
   const auto = autoVariant(tweak, sys);
   const isAction = tweak.kind === "action";
   const focused = focusTweak === tweak.id;
+  const locked = isLocked(tweak.id);
 
   useEffect(() => {
     if (!focused || !ref.current) return;
@@ -26,6 +27,7 @@ export function TweakRow({ tweak }: { tweak: Tweak }) {
   }, [focused, setFocusTweak]);
 
   const onRowClick = () => {
+    if (locked) return setUpsell("tweak");
     if (!av.ok) return;
     if (isAction) setOpen((o) => !o);
     else toggle(tweak.id);
@@ -34,12 +36,13 @@ export function TweakRow({ tweak }: { tweak: Tweak }) {
   return (
     <div
       ref={ref}
-      className={`tweak${isOn ? " on" : ""}${!av.ok ? " blocked" : ""}${focused ? " focused" : ""}`}
+      className={`tweak${isOn ? " on" : ""}${!av.ok ? " blocked" : ""}${locked ? " locked" : ""}${focused ? " focused" : ""}`}
       onClick={onRowClick}
     >
       <div className="tweak-main">
         <div className="tweak-title">
           <span className="tweak-name">{tweak.name[lang]}</span>
+          {!premium && !locked && <Badge tone="ok">{t("free.badge")}</Badge>}
           {tweak.risk === "advanced" && <Badge tone="warn">{t("badge.advanced")}</Badge>}
           {tweak.reboot && (
             <Badge>
@@ -107,7 +110,19 @@ export function TweakRow({ tweak }: { tweak: Tweak }) {
       </div>
 
       <div className="tweak-side">
-        {isAction ? (
+        {locked ? (
+          <Button
+            size="sm"
+            className="tweak-lock"
+            icon={<Lock size={12} />}
+            onClick={(e) => {
+              e.stopPropagation();
+              setUpsell("tweak");
+            }}
+          >
+            {t("free.lock")}
+          </Button>
+        ) : isAction ? (
           <Button
             size="sm"
             icon={<Play size={12} />}

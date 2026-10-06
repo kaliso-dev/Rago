@@ -1,8 +1,8 @@
 {
   "$schema": "https://schema.tauri.app/config/2",
-  "productName": "Rago Hub",
+  "productName": "Rago Optimizer",
   "version": "1.0.0",
-  "identifier": "gg.rago.hub",
+  "identifier": "gg.rago.optimizer",
   "build": {
     "beforeDevCommand": "npm run dev",
     "devUrl": "http://localhost:1420",
@@ -14,7 +14,7 @@
     "windows": [
       {
         "label": "main",
-        "title": "Rago Hub",
+        "title": "Rago Optimizer",
         "width": 1280,
         "height": 820,
         "minWidth": 1080,
@@ -38,7 +38,7 @@
     "copyright": "© Rago",
     "category": "Utility",
     "shortDescription": "Optimiseur Windows pour Minecraft PvP et les jeux compétitifs",
-    "longDescription": "Rago Hub règle le réseau, la latence, le hitreg et Windows pour les joueurs Minecraft PvP et les jeux compétitifs, avec un retour arrière toujours possible.",
+    "longDescription": "Rago Optimizer règle le réseau, la latence, le hitreg et Windows pour les joueurs Minecraft PvP et les jeux compétitifs, avec un retour arrière toujours possible.",
     "icon": [
       "icons/32x32.png",
       "icons/128x128.png",

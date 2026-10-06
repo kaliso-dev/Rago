@@ -1,5 +1,5 @@
 import { motion } from "motion/react";
-import { FolderOpen, RotateCcw, Trash2 } from "lucide-react";
+import { FolderOpen, RotateCcw, Trash2, Lock } from "lucide-react";
 import { useCallback, useEffect, useState } from "react";
 import { api, type MinecraftStatus } from "../lib/api";
 import { availability, catalog, sectionTweaks, tweaks } from "../lib/catalog";
@@ -116,12 +116,12 @@ function HistoryList() {
 }
 
 export function ModulePage({ id }: { id: string }) {
-  const { t, lang, sys, selected, selectMany, unselectMany } = useStore();
+  const { t, lang, sys, selected, selectMany, unselectMany, isLocked, premium, setUpsell } = useStore();
   const index = catalog.modules.findIndex((m) => m.id === id);
   const mod = catalog.modules[index];
   const own = mod.sections.flatMap((s) => sectionTweaks(s)).filter((tw) => tw.kind === "tweak");
   const nSel = own.filter((tw) => selected.has(tw.id)).length;
-  const safe = own.filter((tw) => tw.risk === "safe" && availability(tw, sys).ok && !tw.confirm).map((tw) => tw.id);
+  const safe = own.filter((tw) => tw.risk === "safe" && availability(tw, sys).ok && !tw.confirm && !isLocked(tw.id)).map((tw) => tw.id);
 
   return (
     <div className="page module">
@@ -144,6 +144,10 @@ export function ModulePage({ id }: { id: string }) {
             {nSel > 0 ? (
               <Button size="sm" variant="ghost" onClick={() => unselectMany(own.map((tw) => tw.id))}>
                 {t("module.clear")}
+              </Button>
+            ) : !premium && safe.length === 0 ? (
+              <Button size="sm" icon={<Lock size={12} />} onClick={() => setUpsell("tweak")}>
+                {t("free.lock")}
               </Button>
             ) : (
               safe.length > 0 && (

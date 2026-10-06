@@ -1,7 +1,7 @@
 # Corrections apportées au .bat Premium v5.2
 
 Généré par `tools/build_catalog.py`. Rago Hub reprend les 231 scripts du .bat
-(6954 lignes de commandes) pour 189 réglages, en corrigeant ce qui ne marchait pas.
+(6908 lignes de commandes) pour 189 réglages, en corrigeant ce qui ne marchait pas.
 
 | Problème | Lignes corrigées |
 |---|---|

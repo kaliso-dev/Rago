@@ -4,7 +4,7 @@ import { ApplyBar } from "./components/ApplyBar";
 import { ConfirmDialog } from "./components/ConfirmDialog";
 import { RunOverlay } from "./components/RunOverlay";
 import { SearchPalette } from "./components/SearchPalette";
-import { LicenseGate } from "./components/LicenseGate";
+import { Upsell } from "./components/Upsell";
 import { Sidebar } from "./components/Sidebar";
 import { TitleBar } from "./components/TitleBar";
 import { useStore } from "./lib/store";
@@ -13,8 +13,7 @@ import { ModulePage } from "./pages/ModulePage";
 import { Settings } from "./pages/Settings";
 
 export function App() {
-  const { page, motion: motionPref, lang, license } = useStore();
-  const locked = !!license && license.state !== "active" && license.state !== "unconfigured";
+  const { page, motion: motionPref, lang } = useStore();
   const scroller = useRef<HTMLElement>(null);
 
   useEffect(() => {
@@ -37,9 +36,6 @@ export function App() {
     <MotionConfig reducedMotion={motionPref === "reduced" ? "always" : "user"}>
       <div className={`app${motionPref === "reduced" ? " reduced" : ""}`}>
         <TitleBar />
-        {locked ? (
-          <LicenseGate />
-        ) : (
         <div className="body">
           <Sidebar />
           <main className="main" ref={scroller}>
@@ -58,9 +54,9 @@ export function App() {
           <ApplyBar />
           <RunOverlay />
         </div>
-        )}
-        {!locked && <ConfirmDialog />}
-        {!locked && <SearchPalette />}
+        <ConfirmDialog />
+        <SearchPalette />
+        <Upsell />
       </div>
     </MotionConfig>
   );

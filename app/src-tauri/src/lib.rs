@@ -55,6 +55,10 @@ fn run_tweaks(app: AppHandle, state: State<'_, AppState>, items: Vec<RunItem>) -
     if items.is_empty() {
         return Err("Aucun réglage sélectionné".into());
     }
+    let premium = state.license.status().state == "active";
+    if let Some(it) = items.iter().find(|it| !catalog::allowed(&it.id, premium)) {
+        return Err(format!("premium_required:{}", it.id));
+    }
     let adapter = state.system(false).adapter;
     let ctx = Context {
         app,
@@ -114,7 +118,7 @@ fn minecraft_restore(dir: Option<String>) -> Result<String, String> {
 #[tauri::command]
 fn restart_pc() -> Result<(), String> {
     shell::hidden("shutdown.exe")
-        .args(["/r", "/t", "5", "/c", "Rago Hub : redémarrage pour appliquer les réglages"])
+        .args(["/r", "/t", "5", "/c", "Rago Optimizer : redémarrage pour appliquer les réglages"])
         .spawn()
         .map(|_| ())
         .map_err(|e| e.to_string())
@@ -178,7 +182,7 @@ pub fn run() {
                 .resource_dir()
                 .map(|d| d.join("resources"))
                 .unwrap_or_else(|_| PathBuf::from("resources"));
-            let data_dir = app.path().app_data_dir().unwrap_or_else(|_| std::env::temp_dir().join("RagoHub"));
+            let data_dir = app.path().app_data_dir().unwrap_or_else(|_| std::env::temp_dir().join("RagoOptimizer"));
             runner::ensure_dir(&data_dir);
             app.manage(AppState {
                 runner: Arc::new(Runner::default()),
@@ -209,5 +213,5 @@ pub fn run() {
             license_sign_out,
         ])
         .run(tauri::generate_context!())
-        .expect("erreur au lancement de Rago Hub");
+        .expect("erreur au lancement de Rago Optimizer");
 }

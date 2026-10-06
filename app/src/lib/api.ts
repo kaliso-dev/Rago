@@ -273,7 +273,7 @@ const mockApi: Api = {
       }
       mockRunning = false;
       if (!mockCancel) mockTuned++;
-      emit<DoneEvent>("run:done", { runId, ok, failed, cancelled: mockCancel, logFile: "C:\\Users\\demo\\AppData\\Roaming\\gg.rago.hub\\logs\\demo.log" });
+      emit<DoneEvent>("run:done", { runId, ok, failed, cancelled: mockCancel, logFile: "C:\\Users\\demo\\AppData\\Roaming\\gg.rago.optimizer\\logs\\demo.log" });
     })();
     return runId;
   },
@@ -325,11 +325,11 @@ const mockApi: Api = {
     if (email.toLowerCase().startsWith("other"))
       throw {
         code: "bound_to_other_device",
-        message: "This license is already active on another PC. Rago Hub works on one device per license. Contact support on Discord if you changed PCs.",
+        message: "This license is already active on another PC. Rago Optimizer works on one device per license. Contact support on Discord if you changed PCs.",
         buyUrl: null,
       };
     if (email.toLowerCase().startsWith("free"))
-      throw { code: "no_license", message: "This account doesn't have Rago Hub Premium yet.", buyUrl: "https://ragohub.com/#pricing" };
+      throw { code: "no_license", message: "This account doesn't have Rago Optimizer Premium yet.", buyUrl: "https://ragohub.com/#pricing" };
     demoPending = email;
     return { kind: "activationRequired", email, keyHint: "RAGO-9EGJN-•••••-•••••-VKXDS" };
   },

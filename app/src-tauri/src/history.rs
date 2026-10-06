@@ -1,4 +1,4 @@
-//! Historique des réglages appliqués, gardé dans %APPDATA%\gg.rago.hub\history.json.
+//! Historique des réglages appliqués, gardé dans %APPDATA%\gg.rago.optimizer\history.json.
 
 use serde::{Deserialize, Serialize};
 use std::fs;

@@ -99,9 +99,31 @@ def tidy(script):
     return '\n'.join(out).rstrip()
 
 
+# Lignes retirées pour la sécurité du joueur (audit du 2026-10-05, audit/avis-tweaks.md).
+SAFETY_DROPS = [
+    # WebView2 fait tourner Rago Hub lui-même ; Edge Update le tient à jour.
+    (('dbl_edge',), r'Microsoft\\(EdgeWebView|EdgeUpdate|EdgeCore|Temp)"'),
+    # Spectre/Meltdown coupés sans le dire, sous une étiquette Safe.
+    (('mem_profile', 'mem_registry', 'hitreg_suite'), r'FeatureSettingsOverride'),
+    # Prefetch vidé et BAM coupé ressemblent à des traces effacées lors d'un screenshare.
+    (('game_mode',), r'\\Prefetch\\'),
+    (('win_background', 'hitreg_suite'), r'Services\\bam"'),
+]
+
+
+def harden(script, tid):
+    # USER_SID n'était défini nulle part dans le .bat : le moteur tourne sous le compte du joueur.
+    script = script.replace('HKU\\!USER_SID!\\', 'HKCU\\')
+    for ids, pattern in SAFETY_DROPS:
+        if tid in ids:
+            kept = [l for l in script.split('\n') if not re.search(pattern, l, re.I)]
+            script = '\n'.join(kept)
+    return script
+
+
 def resolve_src(src, tid, vid=None):
     script = _resolve_src(src, tid, vid)
-    return tidy(script) if script is not None else None
+    return harden(tidy(script), tid) if script is not None else None
 
 
 def _resolve_src(src, tid, vid=None):

@@ -1,5 +1,5 @@
 import { motion } from "motion/react";
-import { Check, Cpu, Gpu, HardDrive, MemoryStick, Network, Plus, RefreshCw } from "lucide-react";
+import { Check, Cpu, Gpu, HardDrive, MemoryStick, Network, Plus, RefreshCw, Lock } from "lucide-react";
 import { catalog, totalTweaks, tweaks } from "../lib/catalog";
 import { useStore } from "../lib/store";
 import { PingCard } from "../components/PingCard";
@@ -23,7 +23,7 @@ function Spec({ icon, label, value, sub }: { icon: ReactNode; label: string; val
 }
 
 export function Dashboard() {
-  const { t, lang, sys, sysLoading, refreshSys, selected, selectMany, history, lastRun, requestApply } = useStore();
+  const { t, lang, sys, sysLoading, refreshSys, selected, selectMany, history, lastRun, requestApply, premium, setUpsell } = useStore();
   const applied = new Set(history.filter((h) => h.ok && tweaks.has(h.id)).map((h) => h.id)).size;
   const restore = lastRun.get("rst_point");
 
@@ -112,10 +112,10 @@ export function Dashboard() {
               <motion.button
                 key={p.id}
                 type="button"
-                className={`preset${all ? " on" : ""}`}
+                className={`preset${all ? " on" : ""}${premium ? "" : " locked"}`}
                 whileHover={{ y: -2 }}
                 whileTap={{ scale: 0.985 }}
-                onClick={() => selectMany(p.tweaks)}
+                onClick={() => (premium ? selectMany(p.tweaks) : setUpsell("preset"))}
               >
                 <span className="preset-index rg-metric">{String(i + 1).padStart(2, "0")}</span>
                 <span className="preset-name">{p.name[lang]}</span>
@@ -123,8 +123,8 @@ export function Dashboard() {
                 <span className="preset-foot">
                   <span className="rg-metric">{t("dash.preset.count", { n: ids.length })}</span>
                   <span className="preset-cta">
-                    {all ? <Check size={13} /> : <Plus size={13} />}
-                    {all ? t("dash.preset.added") : t("dash.preset.add")}
+                    {!premium ? <Lock size={12} /> : all ? <Check size={13} /> : <Plus size={13} />}
+                    {!premium ? t("free.lock") : all ? t("dash.preset.added") : t("dash.preset.add")}
                   </span>
                 </span>
               </motion.button>
