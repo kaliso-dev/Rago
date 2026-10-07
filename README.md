@@ -31,7 +31,6 @@ Dans ce guide, `ragohub.com` et `account.ragohub.com` sont des exemples : rempla
  ┌──────────────────────────── ragohub.com  (Netlify) ─────────────────────────────────────┐
  │  /                 Page de vente (site/)                                                │
  │   ├─ « Download free »  → account.ragohub.com/download  (l'app, plan gratuit, sans compte)
- │   ├─ .bat classique     → /downloads/rago-optimizer-free-v5.2.zip  (lien secondaire)    │
  │   ├─ « Get Premium »    → account.ragohub.com/buy?interval=month|year ──► Stripe        │
  │   └─ Affiliation        → account.ragohub.com/affiliate                                 │
  └─────────────────────────────────────────────────────────────────────────────────────────┘
@@ -56,7 +55,7 @@ Dans ce guide, `ragohub.com` et `account.ragohub.com` sont des exemples : rempla
 
 - **Gratuit** : l'app elle-même, sans compte ni licence. 9 réglages sont ouverts (souris, Game Mode, Game DVR, effets visuels, plein écran et les 4 réglages de Restore, liste dans `app/src/data/free.json`). Tout le reste est sous cadenas, presets compris ; un clic sur un cadenas propose « Unlock », qui ouvre la section Pricing du site. Le moteur Rust refuse aussi les réglages verrouillés : on ne contourne pas le cadenas en bricolant l'interface.
 - **Premium** : abonnement Stripe **mensuel ou annuel** (l'annuel vaut 10 mois). Tout est débloqué tant que l'abonnement est payé.
-- **Le .bat classique** reste téléchargeable gratuitement sur le site, en lien secondaire.
+- **L'ancien .bat n'est plus proposé** : la seule offre gratuite, c'est l'app. Les anciens liens `/downloads/...` renvoient vers l'accueil du site.
 - **Affiliation** : chaque affilié a un code. Un client le tape une seule fois, à la création de son compte après le paiement. À 3 clients valides, l'affilié reçoit Premium à vie (sur un PC). Un client compte 14 jours après son achat, s'il a activé l'app sur son PC et n'a été ni remboursé ni contesté. Le détail des règles est à la fin de [`licensing/docs/MISE-EN-LIGNE.md`](licensing/docs/MISE-EN-LIGNE.md).
 
 ### Le parcours d'un acheteur, de bout en bout
@@ -117,7 +116,6 @@ const CONFIG = {
   loginPath: "/login",                  // ne pas toucher
   signupPath: "/signup",                // ne pas toucher
   affiliatePath: "/affiliate",          // ne pas toucher
-  freeDownloadUrl: "downloads/rago-optimizer-free-v5.2.zip", // le .bat classique
   freeAppPath: "/download",             // l'app gratuite, servie par le serveur de comptes
   discord: "",                          // ton invitation, ex. "https://discord.gg/tonInvite"
   currency: "$",

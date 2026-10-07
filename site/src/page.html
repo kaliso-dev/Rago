@@ -764,7 +764,7 @@ footer.foot p{max-width:80ch}
           <li class="locked"><svg><use href="#i-lock"/></svg>Everything else, presets included, locked</li>
         </ul>
         <a class="btn btn-ghost js-free-app" href="/download"><svg><use href="#i-down"/></svg>Download free</a>
-        <p class="micro">Windows 10 and 11 · <a class="js-free" href="downloads/rago-optimizer-free-v5.2.zip" download>Prefer the classic .bat?</a></p>
+        <p class="micro">Windows 10 and 11</p>
       </div>
       <div class="pro rv">
         <span class="rec">Recommended</span>
@@ -883,7 +883,6 @@ const CONFIG = {
   loginPath: "/login",
   signupPath: "/signup",
   affiliatePath: "/affiliate",
-  freeDownloadUrl: "downloads/rago-optimizer-free-v5.2.zip", // the classic .bat (zip: .bat + NVIDIA profile files)
   freeAppPath: "/download",                         // Free plan: public installer link on the account server, no license needed
   discord: "",                                      // e.g. "https://discord.gg/yourInvite"
   currency: "$",
@@ -908,11 +907,10 @@ wire(".js-account", acct(CONFIG.loginPath), "", false);
 wire(".js-signup", acct(CONFIG.signupPath), "", false);
 wire(".js-affiliate", acct(CONFIG.affiliatePath), "", false);
 if (CONFIG.discord) wire(".js-discord", CONFIG.discord, "", true); else $$(".js-discord").forEach(a => a.remove());
-$$(".js-free").forEach(a => a.href = CONFIG.freeDownloadUrl);
 $$(".js-free-app").forEach(a => a.href = acct(CONFIG.freeAppPath));
 /* Rago only runs on Windows: phones and Macs get a note instead of an installer they can't open */
 const onWindows = /Windows/i.test(navigator.userAgent) || /Win/i.test(navigator.userAgentData?.platform || "");
-$$(".js-free-app, .js-free").forEach(a => a.addEventListener("click", e => { if (!onWindows) { e.preventDefault(); openSend(); } }));
+$$(".js-free-app").forEach(a => a.addEventListener("click", e => { if (!onWindows) { e.preventDefault(); openSend(); } }));
 /* Keep Tab inside an open dialog */
 function trap(d) {
   d.addEventListener("keydown", e => {
@@ -1249,7 +1247,6 @@ function howFill() {
     ["_Agic","20ms lower and more stable ping as well as improved hitreg"],
     ["sam","My ping combined with exit lag is way bettter now after the tweaks, my hit reg seems to be more consistent and people arent flying out of combos"],
     ["fabian","good service, my hitreg has improved much and my ping is low now. recommended!"],
-    ["baconsizzle","These tweaks greatly improved my hitreg, fps, stabilized my ping, everything. This was the best and most worth money i've ever spent in my life, and people have started to think im cheating because of my smoother/reduced kb"]
   ];
   const card = ([n, t]) => `<figure class="rq${t.length > 160 ? " wide" : ""}"><p>“${esc(t)}”</p><footer><span class="av">${esc(n.replace(/[^a-z0-9]/i, "").charAt(0).toUpperCase() || "?")}</span>${esc(n)}<small>Discord</small></footer></figure>`;
   const fill = (el, list) => { const h = list.map(card).join(""); el.innerHTML = h + h.replace(/<figure /g, '<figure aria-hidden="true" '); };

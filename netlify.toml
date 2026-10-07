@@ -43,3 +43,10 @@
   from = "/account/*"
   to = "https://rago-production.up.railway.app/account/:splat"
   status = 302
+
+# L'ancien .bat gratuit n'est plus proposé : les anciens liens partagés renvoient vers l'accueil.
+[[redirects]]
+  from = "/downloads/*"
+  to = "/"
+  status = 301
+  force = true
