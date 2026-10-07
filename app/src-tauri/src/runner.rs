@@ -60,6 +60,9 @@ struct DoneEvent<'a> {
     run_id: &'a str,
     ok: usize,
     failed: usize,
+    /// pas lancés : le point de restauration n'a pas pu être créé
+    skipped: usize,
+    restore_failed: bool,
     cancelled: bool,
     log_file: String,
 }
@@ -125,6 +128,9 @@ impl Runner {
         let sys = Sys::new(ctx.backup_dir.clone());
         // réglages jumeaux (même script) cochés ensemble : le script tourne une fois, le résultat vaut pour tous
         let mut twins_done: HashMap<String, TwinRun> = HashMap::new();
+        // point de restauration obligatoire (choix de Sofiene, 2026-10-07) : s'il échoue, rien n'est appliqué.
+        // Les annulations tournent quand même : elles remettent l'état d'avant, c'est le sens sûr.
+        let (mut restore_failed, mut skipped) = (false, 0);
         for (index, item) in items.iter().enumerate() {
             if self.cancel.load(Ordering::SeqCst) {
                 break;
@@ -136,10 +142,16 @@ impl Runner {
                     ItemEvent { run_id, index, id: &item.id, variant, status, code, duration_ms: duration, message },
                 );
             };
-            emit_item("running", None, None, None);
             let applied = ctx.ledger.lock().unwrap().tweaks.contains_key(&item.id);
             // décoché, ou variante de retour arrière d'un réglage appliqué : retour à l'état d'avant
             let undo = item.undo || (applied && catalog::is_revert(&item.id, variant));
+            if restore_failed && !undo && changes_windows(&item.id) {
+                write_log(&format!("==== skipped {} (no restore point)", item.id));
+                emit_item("skipped", None, None, None);
+                skipped += 1;
+                continue;
+            }
+            emit_item("running", None, None, None);
             write_log(&format!(
                 "==== {}{}{}",
                 if undo { "undo " } else { "" },
@@ -232,13 +244,17 @@ impl Runner {
             if success {
                 ok += 1
             } else {
-                failed += 1
+                failed += 1;
+                if item.id == "rst_point" {
+                    restore_failed = true;
+                    write_log("! No restore point: the tweaks after it are not run");
+                }
             }
         }
         let cancelled = self.cancel.load(Ordering::SeqCst);
         let _ = ctx.app.emit(
             "run:done",
-            DoneEvent { run_id, ok, failed, cancelled, log_file: log_path.to_string_lossy().to_string() },
+            DoneEvent { run_id, ok, failed, skipped, restore_failed, cancelled, log_file: log_path.to_string_lossy().to_string() },
         );
     }
 
@@ -520,6 +536,12 @@ Write-Output "- Creating the Rago Optimizer restore point"
 Checkpoint-Computer -Description 'Rago Optimizer' -RestorePointType 'MODIFY_SETTINGS'
 Write-Output "- Restore point created"
 "#;
+
+/// Ce qui modifie Windows ou les fichiers, donc passe après le point de restauration (tout sauf le point lui-même
+/// et les deux actions qui ouvrent une fenêtre de Windows).
+pub fn changes_windows(id: &str) -> bool {
+    !matches!(id, "rst_point" | "rst_open" | "app_settings")
+}
 
 /// Réglages lancés par le moteur lui-même, sans script.
 pub fn is_native(id: &str) -> bool {

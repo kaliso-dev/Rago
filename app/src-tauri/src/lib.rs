@@ -68,6 +68,10 @@ fn run_tweaks(app: AppHandle, state: State<'_, AppState>, items: Vec<RunItem>) -
     if items.is_empty() {
         return Err("No tweak selected".into());
     }
+    // point de restauration obligatoire avant tout changement, en tête de liste (l'interface l'ajoute toujours)
+    if items.iter().any(|it| runner::changes_windows(&it.id)) && items.first().map(|it| it.id.as_str()) != Some("rst_point") {
+        return Err("restore_point_required".into());
+    }
     let premium = state.license.status().state == "active";
     // remettre l'état d'avant reste possible sans licence
     let applying = || items.iter().filter(|it| !it.undo);

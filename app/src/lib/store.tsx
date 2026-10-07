@@ -38,6 +38,9 @@ export function itemName(id: string, lang: Lang): string {
   return DUP_NAMES[lang].has(tw.name[lang]) && mod ? `${tw.name[lang]} · ${mod.name[lang]}` : tw.name[lang];
 }
 
+/** Actions qui ne changent rien (elles ouvrent une fenêtre de Windows) : pas de point de restauration avant. */
+const NO_CHANGE = new Set(["rst_point", "rst_open", "app_settings"]);
+
 export interface RunRow {
   id: string;
   variant: string | null;
@@ -359,20 +362,27 @@ function useStoreValue() {
       ),
       api.onDone((e) => {
         setRun((r) => (r ? { ...r, done: e, endedAt: Date.now() } : r));
+        // pas de point de restauration : rien n'a été appliqué, la sélection revient pour réessayer
+        const skipped = (runRef.current?.rows ?? []).filter((r) => !r.undo && tweaks.get(r.id)?.kind === "tweak").map((r) => r.id);
+        if (e.restoreFailed && skipped.length) setSelection((s) => [...s, ...skipped.filter((id) => !s.includes(id))]);
         void refreshHistory();
         void refreshApplied();
       }),
     ];
     return () => subs.forEach((p) => void p.then((un) => un()));
-  }, [refreshHistory, refreshApplied]);
+  }, [refreshHistory, refreshApplied, setSelection]);
 
   const startRun = useCallback(
     async (
       ids: string[],
-      opts: { restorePoint: boolean; wmic: boolean; clearSelection: boolean; undo?: string[]; note?: string | null },
+      opts: { wmic: boolean; clearSelection: boolean; undo?: string[]; note?: string | null },
     ) => {
       const items: RunItem[] = [];
-      if (opts.restorePoint && !ids.includes("rst_point")) items.push({ id: "rst_point" });
+      // point de restauration obligatoire avant tout changement (choix de Sofiene, 2026-10-07), toujours en tête :
+      // le moteur refuse une liste qui change Windows sans lui
+      if (ids.includes("rst_point") || [...ids, ...(opts.undo ?? [])].some((id) => !NO_CHANGE.has(id)) || opts.wmic)
+        items.push({ id: "rst_point" });
+      ids = ids.filter((id) => id !== "rst_point");
       if (opts.wmic) items.push({ id: "__wmic" });
       let reboot = false;
       // d'abord les annulations : un réglage réappliqué juste après repart de l'état d'avant
@@ -432,7 +442,7 @@ function useStoreValue() {
     const ids = premiumApplied;
     endedRef.current = true;
     if (ids.length)
-      await startRun([], { restorePoint: false, wmic: false, clearSelection: true, undo: ids, note: translate(lang, "run.signOutNote", { n: ids.length }) });
+      await startRun([], { wmic: false, clearSelection: true, undo: ids, note: translate(lang, "run.signOutNote", { n: ids.length }) });
     await signOut();
   }, [premiumApplied, startRun, signOut, lang]);
 
@@ -444,7 +454,6 @@ function useStoreValue() {
     if (license.state !== "none" || !premiumApplied.length) return;
     endedRef.current = true;
     void startRun([], {
-      restorePoint: false,
       wmic: false,
       clearSelection: true,
       undo: premiumApplied,

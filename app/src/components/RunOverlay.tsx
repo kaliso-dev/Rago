@@ -1,5 +1,5 @@
 import { AnimatePresence, motion } from "motion/react";
-import { Activity, ArrowRight, Check, FolderOpen, LoaderCircle, Power, Sparkles, Square, X } from "lucide-react";
+import { Activity, ArrowRight, Check, FolderOpen, LoaderCircle, Minus, Power, Sparkles, Square, X } from "lucide-react";
 import { useEffect, useRef } from "react";
 import { api } from "../lib/api";
 import { formatNumber } from "../lib/i18n";
@@ -25,11 +25,16 @@ export function RunOverlay() {
   }, [runningIndex]);
 
   const total = run?.rows.length ?? 0;
-  const finished = run?.rows.filter((r) => r.status === "ok" || r.status === "error").length ?? 0;
+  const finished = run?.rows.filter((r) => r.status === "ok" || r.status === "error" || r.status === "skipped").length ?? 0;
+  const skipped = run?.rows.filter((r) => r.status === "skipped").length ?? 0;
   const failed = run?.rows.filter((r) => r.status === "error").length ?? 0;
   const current = run?.rows.find((r) => r.status === "running");
   const isDone = !!run && (!!run.done || !!run.error);
   const cancelled = run?.done?.cancelled;
+  const restoreFailed = !!run?.done?.restoreFailed;
+  // quelque chose a vraiment été changé (pas seulement un point de restauration raté)
+  const changed = finished - failed - skipped > 0;
+  const reboot = !!run?.reboot && !cancelled && changed;
   const seconds = run ? ((run.endedAt ?? Date.now()) - run.startedAt) / 1000 : 0;
   const pct = total ? (finished / total) * 100 : 0;
 
@@ -58,9 +63,13 @@ export function RunOverlay() {
                   <span className="error-text">{run.error}</span>
                 ) : (
                   <>
-                    {t("run.summary", { ok: finished - failed, total, s: formatNumber(lang, seconds) })}
-                    {failed > 0 && <div className="error-text">{t("run.failed", { n: failed })}</div>}
-                    {run.reboot && !cancelled && <div className="muted">{t("run.rebootNeeded")}</div>}
+                    {t("run.summary", { ok: finished - failed - skipped, total, s: formatNumber(lang, seconds) })}
+                    {restoreFailed ? (
+                      <div className="error-text run-restore-failed">{t(skipped ? "run.restoreFailed" : "run.restoreFailedUndo", { n: skipped })}</div>
+                    ) : (
+                      failed > 0 && <div className="error-text">{t("run.failed", { n: failed })}</div>
+                    )}
+                    {reboot && <div className="muted">{t("run.rebootNeeded")}</div>}
                     {license && !premium && !cancelled && (
                       <button
                         type="button"
@@ -88,22 +97,24 @@ export function RunOverlay() {
                 </Button>
               ) : (
                 <>
-                  {run.reboot && !cancelled && (
+                  {reboot && (
                     <Button variant="primary" icon={<Power size={14} />} onClick={() => api.restartPc()}>
                       {t("run.reboot")}
                     </Button>
                   )}
-                  <Button
-                    variant={run.reboot ? "secondary" : "primary"}
-                    icon={<Activity size={14} />}
-                    onClick={() => {
-                      close();
-                      goTo("dashboard");
-                      requestPing();
-                    }}
-                  >
-                    {t("run.ping")}
-                  </Button>
+                  {changed && (
+                    <Button
+                      variant={reboot ? "secondary" : "primary"}
+                      icon={<Activity size={14} />}
+                      onClick={() => {
+                        close();
+                        goTo("dashboard");
+                        requestPing();
+                      }}
+                    >
+                      {t("run.ping")}
+                    </Button>
+                  )}
                   <Button variant="ghost" onClick={close}>
                     {t("run.close")}
                   </Button>
@@ -121,6 +132,7 @@ export function RunOverlay() {
                     {r.status === "ok" && <Check size={14} />}
                     {r.status === "error" && <X size={14} />}
                     {r.status === "pending" && <span className="run-dot" />}
+                    {r.status === "skipped" && <Minus size={14} />}
                   </span>
                   <span className="run-name">{r.undo ? t("run.undoName", { name: itemName(r.id, lang) }) : itemName(r.id, lang)}</span>
                   {r.durationMs != null && <span className="rg-metric run-ms">{formatNumber(lang, r.durationMs / 1000)} s</span>}

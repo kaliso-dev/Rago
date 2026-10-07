@@ -2076,3 +2076,33 @@ svg {
     padding: 6px 10px 4px;
   }
 }
+.confirm-restore {
+  display: flex;
+  gap: 10px;
+  align-items: flex-start;
+  margin: 0;
+  font-size: 13.5px;
+}
+.confirm-restore > svg {
+  flex: none;
+  margin-top: 2px;
+  color: var(--rg-success);
+}
+.confirm-restore span {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+.confirm-restore small {
+  color: var(--rg-text-3);
+  font-size: 12px;
+}
+.run-row.skipped {
+  color: var(--rg-text-3);
+  text-decoration: line-through;
+}
+.run-restore-failed {
+  max-width: 380px;
+  margin: 6px auto 0;
+  line-height: 1.45;
+}

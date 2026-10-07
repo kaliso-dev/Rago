@@ -107,7 +107,7 @@ export function asLicenseError(err: unknown): LicenseError {
   return { code: e.code ?? "server_error", message: e.message ?? null, buyUrl: e.buyUrl ?? null };
 }
 
-export type ItemStatus = "pending" | "running" | "ok" | "error";
+export type ItemStatus = "pending" | "running" | "ok" | "error" | "skipped";
 
 export interface ItemEvent {
   runId: string;
@@ -128,6 +128,9 @@ export interface DoneEvent {
   runId: string;
   ok: number;
   failed: number;
+  /** pas lancés : le point de restauration n'a pas pu être créé */
+  skipped: number;
+  restoreFailed: boolean;
   cancelled: boolean;
   logFile: string;
 }
@@ -292,10 +295,33 @@ const mockApi: Api = {
     void (async () => {
       let ok = 0;
       let failed = 0;
+      let skipped = 0;
+      let restoreFailed = false;
+      // démo : localStorage « rago.demoRestoreFail » = 1 simule un point de restauration impossible
+      const failRestore = (() => {
+        try {
+          return localStorage.getItem("rago.demoRestoreFail") === "1";
+        } catch {
+          return false;
+        }
+      })();
       for (const [index, it] of items.entries()) {
         if (mockCancel) break;
         const base = { runId, index, id: it.id, variant: it.variant ?? null, code: null, durationMs: null, message: null };
+        if (restoreFailed && !it.undo && !["rst_open", "app_settings"].includes(it.id)) {
+          skipped++;
+          emit<ItemEvent>("run:item", { ...base, status: "skipped" });
+          continue;
+        }
         emit<ItemEvent>("run:item", { ...base, status: "running" });
+        if (it.id === "rst_point" && failRestore) {
+          await sleep(400);
+          failed++;
+          restoreFailed = true;
+          emit<LogEvent>("run:log", { runId, id: it.id, line: "Checkpoint-Computer : System Restore is turned off for this drive." });
+          emit<ItemEvent>("run:item", { ...base, status: "error", code: 1 });
+          continue;
+        }
         const t0 = performance.now();
         const n = 2 + Math.floor(Math.random() * 4);
         for (let i = 0; i < n && !mockCancel; i++) {
@@ -315,7 +341,7 @@ const mockApi: Api = {
       }
       mockRunning = false;
       if (!mockCancel) mockTuned++;
-      emit<DoneEvent>("run:done", { runId, ok, failed, cancelled: mockCancel, logFile: "C:\\Users\\demo\\AppData\\Roaming\\gg.rago.optimizer\\logs\\demo.log" });
+      emit<DoneEvent>("run:done", { runId, ok, failed, skipped, restoreFailed, cancelled: mockCancel, logFile: "C:\\Users\\demo\\AppData\\Roaming\\gg.rago.optimizer\\logs\\demo.log" });
     })();
     return runId;
   },

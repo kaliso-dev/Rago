@@ -332,9 +332,7 @@
          "lines": 103
         }
        ],
-       "requires": [
-        "wmic"
-       ],
+       "requires": [],
        "defaultVariant": "s3",
        "legacy": [
         "SERVERA@677",
@@ -370,9 +368,7 @@
        "risk": "safe",
        "reboot": true,
        "kind": "tweak",
-       "requires": [
-        "wmic"
-       ],
+       "requires": [],
        "legacy": [
         "nigel@1754"
        ],
@@ -543,9 +539,7 @@
        "risk": "safe",
        "reboot": true,
        "kind": "tweak",
-       "requires": [
-        "wmic"
-       ],
+       "requires": [],
        "legacy": [
         "nmsi@1693"
        ],
@@ -564,9 +558,7 @@
        "risk": "advanced",
        "reboot": true,
        "kind": "tweak",
-       "requires": [
-        "wmic"
-       ],
+       "requires": [],
        "legacy": [
         "n14@2087"
        ],
@@ -1894,9 +1886,7 @@
        "risk": "safe",
        "reboot": true,
        "kind": "tweak",
-       "requires": [
-        "wmic"
-       ],
+       "requires": [],
        "legacy": [
         "svc@9425"
        ],
@@ -2713,9 +2703,7 @@
        "risk": "safe",
        "reboot": true,
        "kind": "tweak",
-       "requires": [
-        "wmic"
-       ],
+       "requires": [],
        "legacy": [
         "savingp@12157"
        ],
@@ -2753,9 +2741,7 @@
        "risk": "safe",
        "reboot": true,
        "kind": "action",
-       "requires": [
-        "wmic"
-       ],
+       "requires": [],
        "legacy": [
         "usb1@12125"
        ],
@@ -2774,9 +2760,7 @@
        "risk": "safe",
        "reboot": true,
        "kind": "tweak",
-       "requires": [
-        "wmic"
-       ],
+       "requires": [],
        "legacy": [
         "umsi@12140"
        ],
@@ -2795,9 +2779,7 @@
        "risk": "safe",
        "reboot": true,
        "kind": "tweak",
-       "requires": [
-        "wmic"
-       ],
+       "requires": [],
        "legacy": [
         "USad@12297"
        ],
@@ -2962,8 +2944,7 @@
        "kind": "tweak",
        "requires": [
         "gpu:nvidia",
-        "res:nvidiaProfileInspector.exe",
-        "wmic"
+        "res:nvidiaProfileInspector.exe"
        ],
        "legacy": [
         "NVGEN689U@10580"
@@ -3047,8 +3028,7 @@
        "reboot": true,
        "kind": "tweak",
        "requires": [
-        "gpu:nvidia",
-        "wmic"
+        "gpu:nvidia"
        ],
        "legacy": [
         "nv4@10355"
@@ -3069,8 +3049,7 @@
        "reboot": true,
        "kind": "tweak",
        "requires": [
-        "gpu:nvidia",
-        "wmic"
+        "gpu:nvidia"
        ],
        "legacy": [
         "nv5@10334"
@@ -3110,8 +3089,7 @@
        "reboot": true,
        "kind": "tweak",
        "requires": [
-        "gpu:nvidia",
-        "wmic"
+        "gpu:nvidia"
        ],
        "legacy": [
         "nv7@10374"
@@ -3495,9 +3473,7 @@
        "risk": "advanced",
        "reboot": true,
        "kind": "tweak",
-       "requires": [
-        "wmic"
-       ],
+       "requires": [],
        "legacy": [
         "am8@11460"
        ],
@@ -4889,9 +4865,7 @@
          "lines": 404
         }
        ],
-       "requires": [
-        "wmic"
-       ],
+       "requires": [],
        "defaultVariant": "medium",
        "legacy": [
         "ggpc1@13108",

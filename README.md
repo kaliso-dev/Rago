@@ -149,7 +149,7 @@ L'app Windows ne peut être compilée que sur Windows. GitHub le fait pour toi, 
      - `SITE_URL` = l'adresse du **site de vente** : `https://rago-optimiser.netlify.app` aujourd'hui, `https://<ton-domaine>` ensuite (le bouton Premium de l'app ouvre `SITE_URL/#pricing`). C'est la même adresse que la variable `SITE_URL` de Railway. Aujourd'hui la variable GitHub vaut encore l'adresse Railway : ça marche (le serveur renvoie vers le site), mais passe-la sur l'adresse Netlify puis relance une fabrication.
      - `SUPPORT_URL` (optionnelle) = ton lien d'invitation Discord, affiché comme lien support dans l'app
 2. La fabrication se lance d'elle-même à chaque push qui touche `app/`. Tu peux aussi la lancer à la main : **Actions → app-windows → Run workflow**.
-3. Compte environ 5 minutes (15 à 20 la première fois). À la fin, connecté avec le compte kaliso-dev : ouvre le run, section **Artifacts**, télécharge `rago-optimizer-setup`. C'est un zip qui contient `Rago Optimizer_<version>_x64-setup.exe` (aujourd'hui `Rago Optimizer_1.1.6_x64-setup.exe`, version 1.1.6). L'artefact est effacé au bout de 90 jours.
+3. Compte environ 5 minutes (15 à 20 la première fois). À la fin, connecté avec le compte kaliso-dev : ouvre le run, section **Artifacts**, télécharge `rago-optimizer-setup`. C'est un zip qui contient `Rago Optimizer_<version>_x64-setup.exe` (aujourd'hui `Rago Optimizer_1.1.7_x64-setup.exe`, version 1.1.7). L'artefact est effacé au bout de 90 jours.
 
 **Sans les deux secrets, la fabrication s'arrête en erreur** (étape « Vérifier les secrets »). C'est voulu : un exe fabriqué sans eux ne peut jamais passer en Premium et ses boutons de compte ouvrent `localhost`. Ne distribue jamais un tel exe.
 

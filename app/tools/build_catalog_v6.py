@@ -541,8 +541,9 @@ def postprocess(modules, scripts):
     for tid, t in tweaks.items():
         body = '\n'.join(scripts.get(tid, {}).values())
         lines = [l for l in body.replace('\r\n', '\n').split('\n') if not re.match(r'\s*(rem |::)', l, re.I)]
-        if 'wmic' in body.lower() and 'wmic' not in t.get('requires', []):
-            t['requires'] = t.get('requires', []) + ['wmic']
+        # wmic remplacé par PowerShell (WMIC_SUBS) : plus de « Installer WMIC d'abord »
+        t['requires'] = [r for r in t.get('requires', []) if r != 'wmic']
+        assert 'wmic ' not in body.lower(), tid
         hits = [(en, fr) for pat, en, fr in WARNINGS if any(re.search(pat, l, re.I) for l in lines)]
         if hits:
             if not tid.startswith('rst_'):

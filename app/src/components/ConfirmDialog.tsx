@@ -1,7 +1,7 @@
 import { RotateCcw, ShieldCheck, TriangleAlert } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import { availability, needsReboot, tweaks } from "../lib/catalog";
-import { SESSION_TOGGLES, itemName, useStore } from "../lib/store";
+import { itemName, useStore } from "../lib/store";
 import { Modal } from "./Modal";
 import { Button, Badge } from "./ui";
 
@@ -19,16 +19,11 @@ export function ConfirmDialog() {
   const reboot = list.some((tw) => needsReboot(tw, variantOf(tw))) || undoList.some((tw) => needsReboot(tw, applied.get(tw.id)?.variant ?? null));
   const mcBlocked = list.some((tw) => tw.native === "minecraft_optifine") && !mcDir;
 
-  const [restorePoint, setRestorePoint] = useState(true);
+  // point de restauration obligatoire avant tout changement (choix de Sofiene, 2026-10-07) : plus de case
+  const opensOnly = [...ids, ...undoIds].every((id) => id === "rst_open" || id === "app_settings");
   const [wmic, setWmic] = useState(true);
   const footRef = useRef<HTMLElement>(null);
   useEffect(() => {
-    // un simple bouton « Lancer » sur une action sûre ne propose pas le point de restauration par défaut
-    // ni pour un mode à allumer et éteindre à chaque session (mode jeu, RBW Mod)
-    const session = !!confirm?.single && list.every((tw) => SESSION_TOGGLES.has(tw.id));
-    const risky = list.some((tw) => tw.kind === "tweak" || tw.risk === "advanced");
-    // annuler seulement : on revient à l'état d'avant, pas besoin de point de restauration
-    setRestorePoint(!onlyRestore && risky && !session && list.length > 0);
     setWmic(true);
     // le bouton principal prend le focus sans faire défiler la fenêtre : le titre reste visible
     if (confirm) requestAnimationFrame(() => footRef.current?.querySelector<HTMLButtonElement>(".btn-primary")?.focus({ preventScroll: true }));
@@ -37,7 +32,7 @@ export function ConfirmDialog() {
 
   const close = () => setConfirm(null);
   const go = () =>
-    startRun(ids, { restorePoint: restorePoint && !onlyRestore, wmic: wmic && needsWmic > 0, clearSelection: !confirm?.single, undo: undoIds });
+    startRun(ids, { wmic: wmic && needsWmic > 0, clearSelection: !confirm?.single, undo: undoIds });
 
   const title =
     confirm?.single && list.length === 1
@@ -93,14 +88,14 @@ export function ConfirmDialog() {
       )}
 
       <div className="confirm-options">
-        {!onlyRestore && !onlyUndo && (
-          <label className="check">
-            <input type="checkbox" checked={restorePoint} onChange={(e) => setRestorePoint(e.target.checked)} />
+        {!onlyRestore && !opensOnly && (
+          <p className="confirm-restore">
+            <ShieldCheck size={14} />
             <span>
-              <ShieldCheck size={14} /> {t("confirm.restore")}
+              {t("confirm.restore")}
               <small>{t("confirm.restoreHint")}</small>
             </span>
-          </label>
+          </p>
         )}
         {needsWmic > 0 && (
           <label className="check">
