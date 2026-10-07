@@ -55,8 +55,6 @@ export function loadConfig(env = process.env) {
     installerVersion: env.INSTALLER_VERSION || '',
     installerFileName: env.INSTALLER_FILENAME || 'RagoOptimizer-Setup.exe',
     installerUrl: env.INSTALLER_URL || '', // optional public link to the .exe, used instead of Storage
-    // The old .bat, free on the site: offered when the app can't be downloaded.
-    freeBatUrl: env.FREE_BAT_URL || `${asUrl(env.SITE_URL) || publicUrl}/downloads/rago-optimizer-free-v5.2.zip`,
 
     licenseTokenDays: Number(env.LICENSE_TOKEN_DAYS || 30),
     // Days a subscriber keeps working offline past the paid period (renewal retries, clock drift).
@@ -79,7 +77,7 @@ export function loadConfig(env = process.env) {
   // Values still set to the examples from .env.example: the server runs, but say what won't work.
   cfg.warnings = [];
   const placeholder = (v) => /\.\.\.|abcd|a_remplir|xxxx/i.test(v || '');
-  if (!env.SITE_URL) cfg.warnings.push('SITE_URL is not set: links to the site (pricing, terms, the free .bat) point to this server and open a 404. Set it to the Netlify address.');
+  if (!env.SITE_URL) cfg.warnings.push('SITE_URL is not set: links to the site (pricing, terms) point to this server and open a 404. Set it to the Netlify address.');
   else if (/ragohub\.com|example\.com/i.test(cfg.siteUrl)) cfg.warnings.push(`SITE_URL is still the example (${cfg.siteUrl}): use the real site address.`);
   if (placeholder(cfg.supabaseUrl)) cfg.warnings.push('SUPABASE_URL is still the example: Download Rago Optimizer will fail. Use https://<project-ref>.supabase.co');
   if (placeholder(cfg.stripeWebhookSecret)) cfg.warnings.push('STRIPE_WEBHOOK_SECRET is still the example: Stripe webhooks will be rejected (step 6).');

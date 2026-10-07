@@ -4,3 +4,4 @@ app
 .git
 site/src
 site/*.md
+site/tools

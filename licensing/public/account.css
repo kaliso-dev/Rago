@@ -268,7 +268,8 @@ p{margin:0}
   .btn,.btn:hover{transform:none !important}
   .btn-primary::after,.btn-buy::after{display:none}
   .btn .ripple{display:none}
-  .slots li.on,.slots li.wait,.steps .done .steps-dot,.copied{animation-name:fade}
+  .slots li.on,.steps .done .steps-dot,.copied{animation-name:fade}
+  .slots li.wait{animation-name:fade,ring-wait}
   .alert-error{animation:none}
 }
 @keyframes fade{from{opacity:0}}
@@ -304,3 +305,12 @@ p{margin:0}
 
 /* iOS Safari zooms into fields under 16px */
 @media (max-width:760px){.field input{font-size:16px}}
+/* iPhone SE and other 320 px screens: the step bar stays on one line, long buttons wrap instead of overflowing. */
+@media (max-width:360px){.steps li + li::before{width:10px;margin:0 6px}.steps li{gap:6px}
+  .btn-lg[data-download]{white-space:normal;text-align:center;line-height:1.25}}
+/* Right after paying on a small phone (iPhone SE): the form's button must fit on the first screen. */
+@media (max-width:360px),(max-width:560px) and (max-height:600px){
+  .is-purchase .split{padding-top:12px;gap:12px}.is-purchase .split-aside .display{font-size:26px}
+  .is-purchase .panel{padding-top:16px;padding-bottom:16px}.is-purchase .form{gap:12px}
+  .is-purchase .panel > .h2{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
+  .is-purchase .panel > .h2 + .form,.is-purchase .panel > .h2 + p{margin-top:0}}

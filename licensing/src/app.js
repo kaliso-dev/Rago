@@ -438,7 +438,7 @@ export function createApp({ cfg, db, keys, stripe, mailer, log = console, fetchI
     reset: ['notice', 'Device freed. Sign in to Rago Optimizer on your new PC to activate it.'],
     duplicate: ['error', V.html`This account already has Premium, so the new purchase was not added and its subscription was stopped. ${V.supportLink(cfg, 'Contact support on Discord')} for a refund of the extra payment.`],
     password: ['notice', 'Password changed. Other browsers were signed out.'],
-    nofile: ['error', V.html`The Windows app can't be downloaded right now. Meanwhile, <a href="${cfg.freeBatUrl}">get the free .bat</a>, or ${V.supportLink(cfg, 'ask on Discord')}.`],
+    nofile: ['error', V.html`The Windows app can't be downloaded right now. Try again a bit later, or ${V.supportLink(cfg, 'ask on Discord')} and we'll tell you when it's back.`],
     nobilling: ['error', V.html`Billing isn't available right now. Try again in a moment, or ${V.supportLink(cfg, 'contact support on Discord')}.`],
   };
 
@@ -528,8 +528,7 @@ export function createApp({ cfg, db, keys, stripe, mailer, log = console, fetchI
   app.get('/download', async (c) => {
     if (!allow(`download:${ip(c)}`, 30, 60 * 60 * 1000)) return c.html(V.messagePage(cfg, { overline: 'Free download', title: 'Too many downloads.', text: API_ERRORS.rate_limited[1] }), 429);
     return (await sendInstaller(c, null)) || c.html(V.messagePage(cfg, { overline: 'Free download', title: 'The Windows app is on its way.',
-      text: 'Rago Optimizer can’t be downloaded right now. Meanwhile, the free .bat works the same way it always has.',
-      action: { href: cfg.freeBatUrl, label: 'Get the free .bat' } }), 503);
+      text: 'Rago Optimizer can’t be downloaded right now. Ask on Discord and we’ll tell you as soon as it’s back.' }), 503);
   });
 
   // For the launch guide: says whether the installer is found, without exposing anything secret.

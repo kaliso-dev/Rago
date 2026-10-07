@@ -446,6 +446,44 @@ def postprocess(modules, scripts):
         for sec in m['sections']:
             if (m['id'], sec['id']) in SECTION_NAMES:
                 sec['name'] = SECTION_NAMES[(m['id'], sec['id'])]
+    twins(modules, scripts)
+
+
+def twins(modules, scripts):
+    """Réglages au script identique (hors echo et commentaires), gardés dans chaque module (« tout garder ») :
+    même niveau de risque, une phrase qui le dit, et `twin` pour que l'app ne lance le script qu'une fois."""
+    where = [(t, m) for m in modules for sec in m['sections'] for t in sec['tweaks'] if 'id' in t]
+
+    def key(tid):
+        if tid not in scripts:
+            return None
+        norm = []
+        for v in sorted(scripts[tid]):
+            body = [l.strip().lower() for l in scripts[tid][v].replace('\r\n', '\n').split('\n')]
+            norm.append(v + '=' + '\n'.join(l for l in body if l and not re.match(r'(echo\b|rem |::|@echo)', l)))
+        return '\x00'.join(norm)
+
+    groups = {}
+    for t, m in where:
+        k = key(t['id'])
+        if k:
+            groups.setdefault(k, []).append((t, m))
+    for group in groups.values():
+        if len(group) < 2:
+            continue
+        first = group[0][0]['id']
+        risk = 'advanced' if any(t['risk'] == 'advanced' for t, _ in group) else 'safe'
+        confirm = next((t['confirm'] for t, _ in group if t.get('confirm')), None)
+        reboot = any(t['reboot'] for t, _ in group)
+        for t, _ in group:
+            t['risk'], t['reboot'], t['twin'] = risk, reboot, first
+            if confirm:
+                t['confirm'] = confirm
+            others = [(o, om) for o, om in group if o is not t]
+            en = ', '.join(f"{o['name']['en']} ({om['name']['en']})" for o, om in others)
+            fr = ', '.join(f"{o['name']['fr']} ({om['name']['fr']})" for o, om in others)
+            t['desc'] = I(t['desc']['en'].rstrip() + f' Same commands as {en}: selecting both runs them once.',
+                          t['desc']['fr'].rstrip() + f' Mêmes commandes que {fr} : cochés ensemble, ils ne s\'appliquent qu\'une fois.')
 
 
 def sections_of(name):

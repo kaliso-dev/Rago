@@ -217,6 +217,9 @@ const fr = {
   "tweak.details": "{n} commande Windows.|{n} commandes Windows.",
   "tweak.undoRestore": "Pour revenir en arrière, utilise le point de restauration que Rago Optimizer crée avant d'appliquer, si tu laisses l'option cochée.",
   "tweak.undoSession": "Se change avec Activer et Désactiver, sans point de restauration.",
+  "tweak.native.nvidia_profile": "Importe le profil Rago dans le pilote NVIDIA avec Profile Inspector.",
+  "tweak.native.minecraft_optifine": "Écrit les valeurs choisies dans optionsof.txt, après une sauvegarde du fichier.",
+  "tweak.native.restore_point": "Crée un point de restauration Windows.",
   "session.turnOn": "Activer",
   "session.turnOff": "Désactiver",
   "session.onSince": "Activé depuis {time}",
@@ -429,6 +432,9 @@ const en: Record<Key, string> = {
   "tweak.details": "{n} Windows command.|{n} Windows commands.",
   "tweak.undoRestore": "To undo, use the restore point Rago Optimizer creates before applying, if you keep that option checked.",
   "tweak.undoSession": "Switch it with Turn on and Turn off, no restore point needed.",
+  "tweak.native.nvidia_profile": "Imports the Rago profile into the NVIDIA driver with Profile Inspector.",
+  "tweak.native.minecraft_optifine": "Writes the chosen values to optionsof.txt, after backing the file up.",
+  "tweak.native.restore_point": "Creates a Windows restore point.",
   "session.turnOn": "Turn on",
   "session.turnOff": "Turn off",
   "session.onSince": "On since {time}",
@@ -443,7 +449,9 @@ export function translate(lang: Lang, key: Key, vars: Record<string, string | nu
   let s = dicts[lang][key] ?? key;
   if (s.includes("|")) {
     const [one, many] = s.split("|");
-    s = Number(vars.n ?? 0) > 1 ? many : one;
+    const n = Number(vars.n ?? 0);
+    // français : 0 et 1 au singulier ; anglais : singulier pour 1 seulement
+    s = (lang === "fr" ? n > 1 : n !== 1) ? many : one;
   }
   return s.replace(/\{(\w+)\}/g, (_, k) => String(vars[k] ?? ""));
 }

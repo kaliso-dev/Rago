@@ -207,6 +207,18 @@ mod tests {
         let on = rbw["variants"].as_array().unwrap().iter().find(|v| v["id"] == "on").unwrap();
         let off = rbw["variants"].as_array().unwrap().iter().find(|v| v["id"] == "off").unwrap();
         assert_eq!((on["reboot"].as_bool(), off["reboot"].as_bool()), (Some(true), Some(false)));
+        // scripts identiques sous deux noms : même niveau de risque, sinon la copie « safe » contourne l'avertissement
+        let all: Vec<&serde_json::Value> = cat["modules"].as_array().unwrap().iter()
+            .flat_map(|m| m["sections"].as_array().unwrap())
+            .flat_map(|s| s["tweaks"].as_array().unwrap())
+            .filter(|t| t.get("id").is_some()).collect();
+        let twins: Vec<_> = all.iter().filter(|t| t.get("twin").is_some()).collect();
+        assert!(twins.len() >= 20, "{} réglages jumeaux", twins.len());
+        for t in &twins {
+            let first = all.iter().find(|o| o["id"] == t["twin"]).unwrap();
+            assert_eq!(t["risk"], first["risk"], "{}", t["id"]);
+            assert_eq!(SCRIPTS[t["id"].as_str().unwrap()].len(), SCRIPTS[first["id"].as_str().unwrap()].len());
+        }
     }
 
     #[test]

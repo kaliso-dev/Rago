@@ -257,7 +257,7 @@ section[id],main[id]{scroll-margin-top:92px}
 .xr.on .sw::after{transform:translateX(16px);background:var(--ink)}
 .xrun{display:inline-flex;align-items:center;gap:6px;height:30px;padding:0 13px;border-radius:var(--r-full);background:var(--ink-3);box-shadow:inset 0 0 0 1px var(--l2);font-size:12.5px;font-weight:500;color:var(--t1);flex:none}
 .xrun svg{width:11px;height:11px;fill:currentColor;stroke:none}
-.xrun svg.st{width:12px;height:12px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round}
+.xrun svg.ico{width:12px;height:12px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round}
 .xses{display:flex;gap:6px;flex:none;flex-wrap:wrap;justify-content:flex-end}
 .xd{padding:16px 18px;border-radius:var(--r-lg);border:1px dashed var(--l2);display:grid;gap:10px}
 .xd ul{list-style:none;padding:0;display:flex;flex-wrap:wrap;gap:6px}
@@ -395,6 +395,7 @@ section[id],main[id]{scroll-margin-top:92px}
 .fq.open .ans{grid-template-rows:1fr}
 .fq .ans > div{overflow:hidden}
 .fq .ans p{padding:0 22px 22px;color:var(--t2);font-size:14px;max-width:62ch;opacity:0;transform:translateY(-6px);transition:opacity .35s,transform .45s var(--out)}
+.fq .ans a{color:var(--t1);text-decoration:underline;text-underline-offset:3px}
 .fq.open .ans p{opacity:1;transform:none;transition-delay:.1s}
 
 /* Affiliate */
@@ -508,6 +509,7 @@ footer.foot p{max-width:80ch}
   /* touch targets */
   .seg-toggle button{padding:0 16px;min-height:44px}
   .mini{padding:0 16px;min-height:44px}
+  .xr:has(.xses){flex-wrap:wrap} .xr .xses{flex:1 1 100%;justify-content:flex-start}
   footer.foot nav a{padding:11px 12px}
   .micro a{display:inline-block;padding:10px 0}
   .top.docked .top-cta .btn-red{display:none}
@@ -732,7 +734,7 @@ footer.foot p{max-width:80ch}
     <div class="head rv">
       <span class="eyebrow">Reviews</span>
       <h2>Players feel the difference.</h2>
-      <p>Straight from our Discord.</p>
+      <p>Straight from our <span class="js-dword">Discord</span>.</p>
     </div>
   </section>
   <div class="rev" id="rev">
@@ -1172,7 +1174,7 @@ const MODS = [
   let cur = -1, auto = true, timer;
   const phone = () => matchMedia("(hover:none), (max-width:760px)").matches; // phones: no auto-rotation, no height lock
   const badge = f => (f.includes("a") ? '<span class="bdg warn">Advanced</span>' : "") + (f.includes("r") ? `<span class="bdg">${svg(ICO.restart)}Restart</span>` : "");
-  const ctl = f => f.includes("s") ? `<span class="xses"><span class="xrun">${svg(ICO.power, "st")}Turn on</span><span class="xrun">${svg(ICO.poweroff, "st")}Turn off</span></span>` : f.includes("x") ? `<span class="xrun">${svg(ICO.play)}Run</span>` : '<i class="sw"></i>';
+  const ctl = f => f.includes("s") ? `<span class="xses"><span class="xrun">${svg(ICO.power, "ico")}Turn on</span><span class="xrun">${svg(ICO.poweroff, "ico")}Turn off</span></span>` : f.includes("x") ? `<span class="xrun">${svg(ICO.play)}Run</span>` : '<i class="sw"></i>';
   const show = (i, focus) => {
     cur = i;
     btns.forEach((b, k) => { const on = k === i; b.classList.toggle("on", on); b.setAttribute("aria-selected", on); b.tabIndex = on ? 0 : -1; b.classList.remove("auto"); });
@@ -1300,6 +1302,10 @@ const REF = (() => {
   $("#cmp").innerHTML = rows.map(([a, b, p]) => `<tr><td>${a}</td><td>${b}</td><td class="pcol">${p}</td></tr>`).join("");
 })();
 
+/* Mentions of the Discord become links once CONFIG.discord is set */
+const dlink = h => CONFIG.discord ? h.replace(/\bDiscord\b/g, `<a href="${esc(CONFIG.discord)}" target="_blank" rel="noopener">Discord</a>`) : h;
+$$(".js-dword").forEach(e => { e.outerHTML = dlink("Discord"); });
+
 /* FAQ: animated accordion */
 (() => {
   const F = [
@@ -1317,7 +1323,7 @@ const REF = (() => {
     ["My antivirus flagged Rago. Why?", "Rago changes system settings, which is what antivirus tools watch for. Only download Rago from this site. Don't disable your antivirus: allow the file if you trust it, or ask us on Discord."],
     ["How does the affiliate program work?", "Join to get your code. When 3 friends buy Premium and enter your code while creating their account, your Premium access becomes permanent. A friend counts once they have activated the app and 14 days have passed since their payment."]
   ];
-  $("#faqs").innerHTML = F.map(([q, a], i) => `<div class="fq"><button type="button" aria-expanded="false" aria-controls="fa${i}" id="fb${i}">${esc(q)}<span class="pm" aria-hidden="true"></span></button><div class="ans" id="fa${i}" role="region" aria-labelledby="fb${i}" inert><div><p>${esc(a)}</p></div></div></div>`).join("");
+  $("#faqs").innerHTML = F.map(([q, a], i) => `<div class="fq"><button type="button" aria-expanded="false" aria-controls="fa${i}" id="fb${i}">${esc(q)}<span class="pm" aria-hidden="true"></span></button><div class="ans" id="fa${i}" role="region" aria-labelledby="fb${i}" inert><div><p>${dlink(esc(a))}</p></div></div></div>`).join("");
   $$("#faqs .fq").forEach(f => $("button", f).addEventListener("click", () => {
     const open = !f.classList.contains("open");
     $$("#faqs .fq.open").forEach(o => { if (o !== f) { o.classList.remove("open"); $("button", o).setAttribute("aria-expanded", "false"); $(".ans", o).inert = true; } });

@@ -31,6 +31,8 @@ export interface Tweak {
   legacy: string[];
   lines: number;
   optifine?: Record<string, Record<string, string>>;
+  /** même script qu'un autre réglage (id du premier) : lancé une seule fois par exécution */
+  twin?: string;
 }
 
 /** Le redémarrage peut dépendre de la variante : RBW Mod « On » remet BAM et le Prefetcher, « Off » non. */

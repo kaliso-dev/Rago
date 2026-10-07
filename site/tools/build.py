@@ -38,7 +38,9 @@ try:
     faq = json.loads(subprocess.run(['node', '-e', f'const MONTHS_FREE = {FREE};' + s[a:b] + ';process.stdout.write(JSON.stringify(F))'],
                                     capture_output=True, text=True, check=True).stdout)
     esc = lambda t: t.replace('&', '&amp;').replace('<', '&lt;').replace('>', '&gt;')
-    static = ''.join(f'<details class="fq-s"><summary>{esc(q)}</summary><p>{esc(x)}</p></details>' for q, x in faq)
+    DISCORD = cfg('discord')
+    dlink = lambda h: re.sub(r'\bDiscord\b', f'<a href="{DISCORD}" rel="noopener">Discord</a>', h) if DISCORD else h
+    static = ''.join(f'<details class="fq-s"><summary>{esc(q)}</summary><p>{dlink(esc(x))}</p></details>' for q, x in faq)
     s = s.replace('<div class="faq rv" id="faqs"></div>', '<div class="faq rv" id="faqs"></div>\n    <noscript><div class="faq">' + static + '</div></noscript>', 1)
 except (OSError, subprocess.CalledProcessError) as e:
     print('warning: static FAQ skipped (node not available):', e)
@@ -73,5 +75,17 @@ head = '''<!doctype html>
 <link rel="apple-touch-icon" href="apple-touch-icon.png">
 <script type="application/ld+json">{LD}</script>
 '''.replace('{SITE}', SITE).replace('{LD}', LD)
-open(os.path.join(ROOT, 'index.html'), 'w').write(head + s[:i] + '\n</head>\n<body>\n' + s[i:].lstrip('\n') + '\n</body>\n</html>\n')
+OUT = os.path.join(ROOT, 'index.html')
+page = head + s[:i] + '\n</head>\n<body>\n' + s[i:].lstrip('\n') + '\n</body>\n</html>\n'
+open(OUT, 'w').write(page)
+
+# Without JavaScript: bake the reviews, comparison table, game strip and app previews into the HTML (the JS rewrites them on load)
+try:
+    baked = json.loads(subprocess.run(['node', os.path.join(ROOT, 'tools', 'prerender.js'), OUT], capture_output=True, text=True, check=True).stdout)
+    for k, v in baked.items():
+        page, n = re.subn(r'(<[a-z]+ [^>]*id="' + k + r'"[^>]*>)(</[a-z]+>)', lambda m: m.group(1) + v + m.group(2), page, count=1)
+        assert n == 1, k
+    open(OUT, 'w').write(page)
+except (OSError, subprocess.CalledProcessError) as e:
+    print('warning: no-JS sections not baked (node + playwright needed):', getattr(e, 'stderr', e))
 print('index.html built')

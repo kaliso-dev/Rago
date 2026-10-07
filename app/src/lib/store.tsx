@@ -291,10 +291,17 @@ function useStoreValue() {
       if (opts.restorePoint && !ids.includes("rst_point")) items.push({ id: "rst_point" });
       if (opts.wmic) items.push({ id: "__wmic" });
       let reboot = false;
+      const twins = new Set<string>();
       for (const id of ids) {
         const tw = tweaks.get(id);
         if (!tw) continue;
         const variant = variantOf(tw);
+        if (tw.twin) {
+          // deux réglages au même script cochés ensemble : une seule exécution
+          const k = `${tw.twin}:${variant ?? ""}`;
+          if (twins.has(k)) continue;
+          twins.add(k);
+        }
         reboot ||= needsReboot(tw, variant);
         const item: RunItem = { id, variant };
         if (tw.native === "minecraft_optifine") item.params = { dir: mcDir, values: tw.optifine?.[variant ?? ""] ?? {} };

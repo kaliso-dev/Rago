@@ -6,7 +6,7 @@
 
 | Quoi | Où | Adresse (exemple avec `ragohub.com`) |
 |---|---|---|
-| Page de vente (et l'ancien .bat gratuit) | Netlify | `https://ragohub.com` |
+| Page de vente | Netlify | `https://ragohub.com` |
 | Paiement, comptes, tableau de bord, API de l'app | Railway | `https://account.ragohub.com` |
 | Base de données + fichier d'installation de l'app | Supabase | (privé, seul le serveur y accède) |
 | Paiements | Stripe | page de paiement hébergée par Stripe |
@@ -29,7 +29,7 @@ Dans tout le guide, remplace `ragohub.com` par ton vrai domaine.
 >
 > Sans Resend, les emails ne partent pas : les pages le savent et disent au joueur de te demander sur Discord (mot de passe oublié, lien d'achat).
 >
-> **Le jour où tu as un domaine** : Railway Custom Domain puis `PUBLIC_URL` et `SITE_URL` ; nouvelle URL du webhook Stripe ; Netlify domaine ; `CONFIG.accountBase`, `og:url` et `SITE` de `site/tools/build.py` (dis-le-moi, je le fais) ; secrets GitHub `RAGO_API_BASE` et variable `SITE_URL`, puis une nouvelle version de l'app. **Garde l'adresse `rago-production.up.railway.app` active** : les apps déjà installées l'ont en dur et l'utilisent pour renouveler leurs licences. Le serveur accepte les deux adresses : connexion, inscription et « Forgot » marchent sur l'une comme sur l'autre (les anciens liens d'achat aussi). Chaque adresse a ses propres cookies, donc un joueur connecté sur l'une devra se reconnecter sur l'autre.
+> **Le jour où tu as un domaine** : Railway Custom Domain puis `PUBLIC_URL` et `SITE_URL` ; nouvelle URL du webhook Stripe ; Netlify domaine ; `CONFIG.accountBase`, `og:url` et `SITE` de `site/tools/build.py`, `site/robots.txt` et `site/sitemap.xml` (ils contiennent l'adresse netlify.app), et les 7 redirections de `netlify.toml` vers `rago-production.up.railway.app`, dont `/downloads/*` vers l'accueil (dis-le-moi, je le fais) ; secrets GitHub `RAGO_API_BASE` et variable `SITE_URL`, puis une nouvelle version de l'app. **Garde l'adresse `rago-production.up.railway.app` active** : les apps déjà installées l'ont en dur et l'utilisent pour renouveler leurs licences. Le serveur accepte les deux adresses : connexion, inscription et « Forgot » marchent sur l'une comme sur l'autre (les anciens liens d'achat aussi). Chaque adresse a ses propres cookies, donc un joueur connecté sur l'une devra se reconnecter sur l'autre.
 
 **Règle d'or : tu ne m'envoies aucune clé secrète.** Tu les colles directement dans Railway (étape 5). Ce que tu me donnes est listé à la fin.
 
@@ -95,7 +95,7 @@ Sans Resend, tout marche sauf les emails : pas de lien de secours après achat, 
 1. Crée un compte sur [railway.com](https://railway.com) avec ton GitHub. Le plan Hobby coûte environ 5 $ par mois.
 2. **New Project → Deploy from GitHub repo → kaliso-dev/Rago**.
 3. Clique sur le service créé → **Settings → Source → Root Directory** : `licensing`. Railway utilise alors `licensing/Dockerfile`. Pas besoin de volume : tout est dans Supabase.
-   Toujours dans **Settings** : **Watch Paths** = `licensing/**` (un push qui ne touche que l'app ou le site ne redéploie pas le serveur), et active **Wait for CI** (Railway attend que les vérifications GitHub soient vertes avant de déployer).
+   Toujours dans **Settings** : **Watch Paths** = `licensing/**` (un push qui ne touche que l'app ou le site ne redéploie pas le serveur), et active **Wait for CI** (Railway attend que les vérifications GitHub du commit, dont `licensing-tests`, soient vertes avant de déployer). Dans **Deploy**, mets **Healthcheck Path** = `/healthz` : un nouveau déploiement qui ne répond pas (par exemple base injoignable) ne remplace pas celui qui marche.
 4. **Variables → Raw Editor**, colle ceci en remplaçant les valeurs :
 
    ```
@@ -106,7 +106,7 @@ Sans Resend, tout marche sauf les emails : pas de lien de secours après achat, 
    DATABASE_URL=postgresql://postgres.abcd:TON_MOT_DE_PASSE@aws-0-eu-west-3.pooler.supabase.com:5432/postgres
    SUPABASE_URL=https://abcd.supabase.co
    SUPABASE_SERVICE_ROLE_KEY=...
-   INSTALLER_VERSION=1.1.1
+   INSTALLER_VERSION=1.1.3
    STRIPE_SECRET_KEY=sk_test_...
    STRIPE_PRICE_MONTHLY=price_...
    STRIPE_PRICE_YEARLY=price_...
@@ -214,7 +214,7 @@ Si une étape coince, envoie-moi une capture et l'heure : je trouve la cause.
 | `STRIPE_PORTAL_LOGIN_URL` | Stripe → Portail client → lien de connexion (étape 3.4) |
 | `PRICE_LABEL` | Le prix affiché aux comptes gratuits, ex. `$4.99 a month or $49.90 a year`, dans la même devise que Stripe et le site |
 | `LICENSE_SIGNING_KEY`, `SESSION_SECRET` | `npm run admin -- export-keys` (étape 5.7) |
-| `INSTALLER_VERSION` | La version de l'exe déposé (ex. `1.1.1`). `INSTALLER_OBJECT` est facultatif (il donne le bucket et le dossier) : le `.exe` le plus récent du dossier est toujours servi |
+| `INSTALLER_VERSION` | La version de l'exe déposé (ex. `1.1.3`). `INSTALLER_OBJECT` est facultatif (il donne le bucket et le dossier) : le `.exe` le plus récent du dossier est toujours servi |
 
 À retirer s'il est encore là : `STRIPE_PRICE_ID` (ancien prix unique, plus vendu).
 

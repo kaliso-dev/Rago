@@ -116,7 +116,7 @@ function HistoryList() {
 }
 
 export function ModulePage({ id }: { id: string }) {
-  const { t, lang, sys, selected, selectMany, unselectMany, isLocked, undoOnly, premium, setUpsell } = useStore();
+  const { t, lang, sys, selected, selectMany, unselectMany, isLocked, undoOnly, premium, setUpsell, focusTweak } = useStore();
   const index = catalog.modules.findIndex((m) => m.id === id);
   const mod = catalog.modules[index];
   const own = mod.sections.flatMap((s) => sectionTweaks(s)).filter((tw) => tw.kind === "tweak");
@@ -126,6 +126,12 @@ export function ModulePage({ id }: { id: string }) {
   const long = own.length > 30 && mod.sections.length > 1;
   const [folded, setFolded] = useState<Set<string>>(() => new Set());
   useEffect(() => setFolded(new Set()), [id]);
+  // recherche (Ctrl+K) vers un réglage d'une section repliée : on la déplie pour que la ligne puisse se montrer
+  useEffect(() => {
+    if (!focusTweak) return;
+    const sec = mod.sections.find((s) => sectionTweaks(s).some((tw) => tw.id === focusTweak));
+    if (sec) setFolded((f) => (f.has(sec.id) ? new Set([...f].filter((x) => x !== sec.id)) : f));
+  }, [focusTweak, mod]);
   const fold = (sid: string) =>
     setFolded((f) => {
       const n = new Set(f);

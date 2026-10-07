@@ -2009,8 +2009,8 @@
         "fr": "Veille des disques"
        },
        "desc": {
-        "en": "Keeps your drives out of idle power states.",
-        "fr": "Empêche tes disques de passer en veille."
+        "en": "Keeps your drives out of idle power states. Same commands as NVMe idle states (Latency), SSD power saving (Latency): selecting both runs them once.",
+        "fr": "Empêche tes disques de passer en veille. Mêmes commandes que États de veille NVMe (Latence), Économie d'énergie des SSD (Latence) : cochés ensemble, ils ne s'appliquent qu'une fois."
        },
        "risk": "safe",
        "reboot": true,
@@ -2019,7 +2019,8 @@
        "legacy": [
         "RAGO APP FPS.bat@1770"
        ],
-       "lines": 16
+       "lines": 16,
+       "twin": "pow_saving"
       },
       {
        "id": "sys_time",
@@ -2281,8 +2282,8 @@
         "fr": "États de veille NVMe"
        },
        "desc": {
-        "fr": "Les SSD NVMe ne descendent plus dans leurs états de veille.",
-        "en": "NVMe SSDs no longer enter idle states."
+        "en": "NVMe SSDs no longer enter idle states. Same commands as Drive idle power (Latency), SSD power saving (Latency): selecting both runs them once.",
+        "fr": "Les SSD NVMe ne descendent plus dans leurs états de veille. Mêmes commandes que Veille des disques (Latence), Économie d'énergie des SSD (Latence) : cochés ensemble, ils ne s'appliquent qu'une fois."
        },
        "risk": "safe",
        "reboot": true,
@@ -2291,7 +2292,8 @@
        "legacy": [
         "p17@8794"
        ],
-       "lines": 17
+       "lines": 17,
+       "twin": "pow_saving"
       },
       {
        "id": "pow_storage_apm",
@@ -2429,8 +2431,8 @@
         "fr": "Réglages FSUTIL"
        },
        "desc": {
-        "en": "Disables last-access and 8.3 names.",
-        "fr": "Coupe la date de dernier accès et les noms 8.3."
+        "en": "Disables last-access and 8.3 names. Same commands as FSUTIL memory usage (Latency): selecting both runs them once.",
+        "fr": "Coupe la date de dernier accès et les noms 8.3. Mêmes commandes que FSUTIL mémoire (Latence) : cochés ensemble, ils ne s'appliquent qu'une fois."
        },
        "risk": "safe",
        "reboot": true,
@@ -2439,7 +2441,8 @@
        "legacy": [
         "RAGO APP FPS.bat@1797"
        ],
-       "lines": 3
+       "lines": 3,
+       "twin": "sto_fsutil_v6"
       },
       {
        "id": "sto_fsutil2",
@@ -2448,8 +2451,8 @@
         "fr": "FSUTIL mémoire"
        },
        "desc": {
-        "en": "NTFS memory usage settings.",
-        "fr": "Réglages mémoire de NTFS."
+        "en": "NTFS memory usage settings. Same commands as FSUTIL settings (Latency): selecting both runs them once.",
+        "fr": "Réglages mémoire de NTFS. Mêmes commandes que Réglages FSUTIL (Latence) : cochés ensemble, ils ne s'appliquent qu'une fois."
        },
        "risk": "safe",
        "reboot": true,
@@ -2458,7 +2461,8 @@
        "legacy": [
         "RAGO APP FPS.bat@1886"
        ],
-       "lines": 2
+       "lines": 2,
+       "twin": "sto_fsutil_v6"
       },
       {
        "id": "sto_defrag",
@@ -2467,8 +2471,8 @@
         "fr": "Optimiser le disque"
        },
        "desc": {
-        "en": "Runs a drive optimization.",
-        "fr": "Lance une optimisation du disque."
+        "en": "Runs a drive optimization. Same commands as TRIM system drive (Latency): selecting both runs them once.",
+        "fr": "Lance une optimisation du disque. Mêmes commandes que TRIM du disque système (Latence) : cochés ensemble, ils ne s'appliquent qu'une fois."
        },
        "risk": "safe",
        "reboot": false,
@@ -2477,7 +2481,8 @@
        "legacy": [
         "RAGO APP FPS.bat@1802"
        ],
-       "lines": 1
+       "lines": 1,
+       "twin": "sto_defrag"
       },
       {
        "id": "sto_fsutil",
@@ -2561,8 +2566,8 @@
         "en": "SSD power saving"
        },
        "desc": {
-        "fr": "Les SSD NVMe restent dans leur état le plus rapide.",
-        "en": "NVMe SSDs stay in their fastest state."
+        "en": "NVMe SSDs stay in their fastest state. Same commands as Drive idle power (Latency), NVMe idle states (Latency): selecting both runs them once.",
+        "fr": "Les SSD NVMe restent dans leur état le plus rapide. Mêmes commandes que Veille des disques (Latence), États de veille NVMe (Latence) : cochés ensemble, ils ne s'appliquent qu'une fois."
        },
        "risk": "safe",
        "reboot": true,
@@ -2571,7 +2576,8 @@
        "legacy": [
         "s3@5326"
        ],
-       "lines": 17
+       "lines": 17,
+       "twin": "pow_saving"
       },
       {
        "id": "sto_trim",
@@ -2580,8 +2586,8 @@
         "en": "TRIM system drive"
        },
        "desc": {
-        "fr": "Lance un TRIM sur C: pour libérer les blocs inutilisés du SSD.",
-        "en": "Runs TRIM on C:."
+        "en": "Runs TRIM on C:. Same commands as Optimize drive (Latency): selecting both runs them once.",
+        "fr": "Lance un TRIM sur C: pour libérer les blocs inutilisés du SSD. Mêmes commandes que Optimiser le disque (Latence) : cochés ensemble, ils ne s'appliquent qu'une fois."
        },
        "risk": "safe",
        "reboot": false,
@@ -2590,7 +2596,8 @@
        "legacy": [
         "dssd@5222"
        ],
-       "lines": 2
+       "lines": 2,
+       "twin": "sto_defrag"
       }
      ]
     },
@@ -2816,8 +2823,8 @@
         "fr": "Graphique Intel"
        },
        "desc": {
-        "en": "Intel GPU driver settings.",
-        "fr": "Réglages du pilote graphique Intel."
+        "en": "Intel GPU driver settings. Same commands as Intel GPU settings (Graphics card): selecting both runs them once.",
+        "fr": "Réglages du pilote graphique Intel. Mêmes commandes que Réglages GPU Intel (Carte graphique) : cochés ensemble, ils ne s'appliquent qu'une fois."
        },
        "risk": "safe",
        "reboot": true,
@@ -2828,7 +2835,8 @@
        "legacy": [
         "RAGO APP FPS.bat@1395"
        ],
-       "lines": 11
+       "lines": 11,
+       "twin": "gpu_intel"
       }
      ]
     },
@@ -3231,8 +3239,8 @@
         "en": "NVIDIA latency tolerance"
        },
        "desc": {
-        "fr": "Réduit les délais internes du pilote avant les changements d'état.",
-        "en": "Lowers internal driver delays before state changes."
+        "en": "Lowers internal driver delays before state changes. Same commands as GPU latency tolerance (Expert mode): selecting both runs them once.",
+        "fr": "Réduit les délais internes du pilote avant les changements d'état. Mêmes commandes que Tolérance de latence du GPU (Mode expert) : cochés ensemble, ils ne s'appliquent qu'une fois."
        },
        "risk": "safe",
        "reboot": true,
@@ -3243,7 +3251,8 @@
        "legacy": [
         "nv16@10480"
        ],
-       "lines": 19
+       "lines": 19,
+       "twin": "nv_latency"
       },
       {
        "id": "nv_kboost",
@@ -3457,8 +3466,8 @@
         "en": "Intel GPU settings"
        },
        "desc": {
-        "fr": "Adaptive Vsync coupé, segment mémoire dédié agrandi, politique d'énergie réglée.",
-        "en": "Adaptive Vsync off, larger dedicated segment, power policy."
+        "en": "Adaptive Vsync off, larger dedicated segment, power policy. Same commands as Intel graphics (Graphics card): selecting both runs them once.",
+        "fr": "Adaptive Vsync coupé, segment mémoire dédié agrandi, politique d'énergie réglée. Mêmes commandes que Graphique Intel (Carte graphique) : cochés ensemble, ils ne s'appliquent qu'une fois."
        },
        "risk": "safe",
        "reboot": true,
@@ -3469,7 +3478,8 @@
        "legacy": [
         "g3@8291"
        ],
-       "lines": 12
+       "lines": 12,
+       "twin": "gpu_intel"
       }
      ]
     }
@@ -3819,8 +3829,8 @@
         "en": "Search without web"
        },
        "desc": {
-        "fr": "La recherche du menu Démarrer ne passe plus par Bing ni Cortana.",
-        "en": "Start menu search stops using Bing or Cortana."
+        "en": "Start menu search stops using Bing or Cortana. Same commands as Optimize search (Expert mode): selecting both runs them once.",
+        "fr": "La recherche du menu Démarrer ne passe plus par Bing ni Cortana. Mêmes commandes que Optimiser la recherche (Mode expert) : cochés ensemble, ils ne s'appliquent qu'une fois."
        },
        "risk": "safe",
        "reboot": true,
@@ -3829,7 +3839,8 @@
        "legacy": [
         "w4@5474"
        ],
-       "lines": 23
+       "lines": 23,
+       "twin": "win_search"
       },
       {
        "id": "win_errors",
@@ -3914,8 +3925,8 @@
         "en": "Disable experiments"
        },
        "desc": {
-        "fr": "Microsoft ne teste plus de fonctions sur ton PC.",
-        "en": "Microsoft stops testing features on your PC."
+        "en": "Microsoft stops testing features on your PC. Same commands as Disable Windows Insider (Expert mode): selecting both runs them once.",
+        "fr": "Microsoft ne teste plus de fonctions sur ton PC. Mêmes commandes que Désactiver Windows Insider (Mode expert) : cochés ensemble, ils ne s'appliquent qu'une fois."
        },
        "risk": "safe",
        "reboot": true,
@@ -3924,7 +3935,8 @@
        "legacy": [
         "w11@7235"
        ],
-       "lines": 3
+       "lines": 3,
+       "twin": "win_experiments"
       },
       {
        "id": "win_maintenance",
@@ -3933,8 +3945,8 @@
         "en": "Disable automatic maintenance"
        },
        "desc": {
-        "fr": "Plus de maintenance qui se lance en pleine partie. Pense à faire tes mises à jour à la main.",
-        "en": "No maintenance mid-game. Update manually."
+        "en": "No maintenance mid-game. Update manually. Same commands as Disable maintenance (Expert mode): selecting both runs them once.",
+        "fr": "Plus de maintenance qui se lance en pleine partie. Pense à faire tes mises à jour à la main. Mêmes commandes que Désactiver la maintenance (Mode expert) : cochés ensemble, ils ne s'appliquent qu'une fois."
        },
        "risk": "safe",
        "reboot": true,
@@ -3943,7 +3955,8 @@
        "legacy": [
         "w13@7174"
        ],
-       "lines": 2
+       "lines": 2,
+       "twin": "win_maintenance"
       },
       {
        "id": "win_reinstall",
@@ -4136,8 +4149,8 @@
         "en": "Disable autologgers"
        },
        "desc": {
-        "fr": "Coupe une quarantaine de traces système qui écrivent en continu sur le disque.",
-        "en": "Disables ~40 system traces writing to disk."
+        "en": "Disables ~40 system traces writing to disk. Same commands as Disable autologgers (extended) (Expert mode): selecting both runs them once.",
+        "fr": "Coupe une quarantaine de traces système qui écrivent en continu sur le disque. Mêmes commandes que Couper les autologgers (étendu) (Mode expert) : cochés ensemble, ils ne s'appliquent qu'une fois."
        },
        "risk": "safe",
        "reboot": true,
@@ -4146,7 +4159,8 @@
        "legacy": [
         "d9@6446"
        ],
-       "lines": 41
+       "lines": 41,
+       "twin": "dbl_autologgers"
       },
       {
        "id": "dbl_ceip",
@@ -4225,17 +4239,18 @@
         "en": "Remove preinstalled apps"
        },
        "desc": {
-        "fr": "Désinstalle une trentaine d'applis du Store (Météo, Astuces, 3D Viewer, Solitaire...).",
-        "en": "Uninstalls ~30 Store apps."
+        "en": "Uninstalls ~30 Store apps. Same commands as Remove useless apps (Windows): selecting both runs them once.",
+        "fr": "Désinstalle une trentaine d'applis du Store (Météo, Astuces, 3D Viewer, Solitaire...). Mêmes commandes que Supprimer les applis inutiles (Windows) : cochés ensemble, ils ne s'appliquent qu'une fois."
        },
-       "risk": "safe",
-       "reboot": false,
+       "risk": "advanced",
+       "reboot": true,
        "kind": "tweak",
        "requires": [],
        "legacy": [
         "U1@4859"
        ],
-       "lines": 101
+       "lines": 101,
+       "twin": "app_remove"
       },
       {
        "id": "app_settings",
@@ -4352,8 +4367,8 @@
         "fr": "Supprimer les applis inutiles"
        },
        "desc": {
-        "en": "Uninstalls preinstalled Windows apps.",
-        "fr": "Désinstalle des applis Windows préinstallées."
+        "en": "Uninstalls preinstalled Windows apps. Same commands as Remove preinstalled apps (Windows): selecting both runs them once.",
+        "fr": "Désinstalle des applis Windows préinstallées. Mêmes commandes que Supprimer les applis préinstallées (Windows) : cochés ensemble, ils ne s'appliquent qu'une fois."
        },
        "risk": "advanced",
        "reboot": true,
@@ -4362,7 +4377,8 @@
        "legacy": [
         "RAGO APP FPS.bat@3175"
        ],
-       "lines": 34
+       "lines": 34,
+       "twin": "app_remove"
       },
       {
        "id": "win_store",
@@ -5247,8 +5263,8 @@
         "en": "GPU latency tolerance"
        },
        "desc": {
-        "fr": "Mêmes réglages que dans Carte graphique, appliqués au premier GPU.",
-        "en": "Same as in Graphics card, applied to the first GPU."
+        "en": "Same as in Graphics card, applied to the first GPU. Same commands as NVIDIA latency tolerance (Graphics card): selecting both runs them once.",
+        "fr": "Mêmes réglages que dans Carte graphique, appliqués au premier GPU. Mêmes commandes que Tolérance de latence NVIDIA (Carte graphique) : cochés ensemble, ils ne s'appliquent qu'une fois."
        },
        "risk": "safe",
        "reboot": true,
@@ -5257,7 +5273,8 @@
        "legacy": [
         "latencytolernace@2783"
        ],
-       "lines": 19
+       "lines": 19,
+       "twin": "nv_latency"
       },
       {
        "id": "exp_monitorlat",
@@ -5466,8 +5483,8 @@
         "en": "Disable Windows Insider"
        },
        "desc": {
-        "fr": "Coupe les expérimentations Insider.",
-        "en": "Disables Insider experiments."
+        "en": "Disables Insider experiments. Same commands as Disable experiments (Windows): selecting both runs them once.",
+        "fr": "Coupe les expérimentations Insider. Mêmes commandes que Désactiver les expérimentations (Windows) : cochés ensemble, ils ne s'appliquent qu'une fois."
        },
        "risk": "safe",
        "reboot": true,
@@ -5476,7 +5493,8 @@
        "legacy": [
         "insd@3011"
        ],
-       "lines": 2
+       "lines": 2,
+       "twin": "win_experiments"
       },
       {
        "id": "exp_autologgers",
@@ -5485,8 +5503,8 @@
         "fr": "Couper les autologgers (étendu)"
        },
        "desc": {
-        "fr": "Même réglage que dans Débloat, avec quelques clés en plus.",
-        "en": "Same as in Debloat, plus a few keys."
+        "en": "Same as in Debloat, plus a few keys. Same commands as Disable autologgers (Windows): selecting both runs them once.",
+        "fr": "Même réglage que dans Débloat, avec quelques clés en plus. Mêmes commandes que Désactiver les journaux automatiques (Windows) : cochés ensemble, ils ne s'appliquent qu'une fois."
        },
        "risk": "safe",
        "reboot": true,
@@ -5495,7 +5513,8 @@
        "legacy": [
         "Autolog@2957"
        ],
-       "lines": 40
+       "lines": 40,
+       "twin": "dbl_autologgers"
       },
       {
        "id": "exp_maintenance",
@@ -5504,8 +5523,8 @@
         "en": "Disable maintenance"
        },
        "desc": {
-        "fr": "Plus de maintenance automatique.",
-        "en": "No automatic maintenance."
+        "en": "No automatic maintenance. Same commands as Disable automatic maintenance (Windows): selecting both runs them once.",
+        "fr": "Plus de maintenance automatique. Mêmes commandes que Désactiver la maintenance automatique (Windows) : cochés ensemble, ils ne s'appliquent qu'une fois."
        },
        "risk": "safe",
        "reboot": true,
@@ -5514,7 +5533,8 @@
        "legacy": [
         "10ski@2940"
        ],
-       "lines": 1
+       "lines": 1,
+       "twin": "win_maintenance"
       },
       {
        "id": "exp_search",
@@ -5523,8 +5543,8 @@
         "en": "Optimize search"
        },
        "desc": {
-        "fr": "La recherche ne passe plus par Bing ni Cortana.",
-        "en": "Search stops using Bing or Cortana."
+        "en": "Search stops using Bing or Cortana. Same commands as Search without web (Windows): selecting both runs them once.",
+        "fr": "La recherche ne passe plus par Bing ni Cortana. Mêmes commandes que Recherche Windows sans le web (Windows) : cochés ensemble, ils ne s'appliquent qu'une fois."
        },
        "risk": "safe",
        "reboot": true,
@@ -5533,7 +5553,8 @@
        "legacy": [
         "searchopt@2816"
        ],
-       "lines": 22
+       "lines": 22,
+       "twin": "win_search"
       }
      ]
     },

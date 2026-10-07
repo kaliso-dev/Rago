@@ -48,7 +48,7 @@ Contrat de référence : `licensing/docs/API.md` (thread « Comptes, licences et
 Le thread charte livre le logo dans `brand/logo/` (PNG 16 à 1024, `rago.ico`, images NSIS). Pour les reprendre dans l'app :
 
 ```
-sh tools/sync_icons.sh            # copie vers src-tauri/icons, src-tauri/installer et public/favicon.svg
+sh tools/sync_icons.sh            # depuis app/ : prend ../brand/logo, copie vers src-tauri/icons, src-tauri/installer et public/favicon.svg
 ```
 
 Le logo affiché dans l'interface (marque, wordmark) vit dans `src/components/logoPaths.ts`.

@@ -72,7 +72,8 @@ export function createMailer(cfg, { log = console.log, fetchImpl = fetch } = {})
 ${lines.map(([k, v]) => `<tr><td style="padding:10px 16px;color:#8E8E98;font-size:13px;width:90px">${esc(k)}</td><td style="padding:10px 16px;color:#F5F5F6;font-size:14px">${esc(v)}</td></tr>`).join('\n')}</table>`;
       const waiver = 'You asked for immediate access to Premium and agreed that your 14-day right of withdrawal ends once the license is delivered.';
       const sub = license.plan === 'month' || license.plan === 'year';
-      const cancelText = sub ? ` Cancel anytime from your account (Cancel or manage subscription)${cfg.portalLoginUrl ? `, or with your email here: ${cfg.portalLoginUrl}` : ''}.` : '';
+      // Text version: the portal link alone at the end of its line, no punctuation glued to it.
+      const cancelText = sub ? ` Cancel anytime from your account (Cancel or manage subscription)${cfg.portalLoginUrl ? `, or cancel with your email at:\n${cfg.portalLoginUrl}` : '.'}` : '';
       const cancelHtml = sub ? ` Cancel anytime from your account (Cancel or manage subscription)${cfg.portalLoginUrl ? `, or <a href="${esc(cfg.portalLoginUrl)}" style="${LINK}">with your email here</a>` : ''}.` : '';
       const intro = claimUrl
         ? 'Thanks for getting Rago Optimizer Premium. Create your account to get your license and download Rago Optimizer for Windows. If you already have an account with this email, just sign in.'

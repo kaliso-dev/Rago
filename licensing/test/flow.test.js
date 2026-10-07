@@ -353,11 +353,14 @@ test('installer from Supabase Storage: signed link, any file name, clear reason 
   assert.equal(calls.at(-1).init.headers.Authorization, undefined);
   await t2.browse('/signup', { form: { email: 'k@x.io', password: 'password123' } });
   assert.equal((await t2.browse('/account/download')).headers.get('location'), '/account?n=nofile');
-  // Both say so and offer the free .bat from the site.
-  assert.match(await (await t2.browse('/account?n=nofile')).text(), /href="http:\/\/localhost\/downloads\/rago-optimizer-free-v5\.2\.zip">get the free \.bat/);
+  // Both say so, with a way to ask; nothing points to the old free .bat (removed from the site).
+  const nofile = await (await t2.browse('/account?n=nofile')).text();
+  assert.match(nofile, /can.t be downloaded right now/);
   const off = await t2.app.request('/download');
   assert.equal(off.status, 503);
-  assert.match(await off.text(), /href="http:\/\/localhost\/downloads\/rago-optimizer-free-v5\.2\.zip"[^>]*>Get the free \.bat/);
+  const offText = await off.text();
+  assert.match(offText, /Ask on Discord/);
+  assert.doesNotMatch(nofile + offText, /\.bat|rago-optimizer-free/);
 });
 
 test('concurrent activations from two PCs: exactly one wins', async () => {

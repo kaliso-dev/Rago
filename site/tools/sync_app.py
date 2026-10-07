@@ -1,9 +1,11 @@
-"""Re-sync the app preview in src/page.html with app/rago-hub (catalog.json and i18n.ts are the truth). Run after the app changes its texts, then build.py."""
+"""Re-sync the app preview in src/page.html with the app (app/ in the repo, app/rago-hub/ in the project folder) (catalog.json and i18n.ts are the truth). Run after the app changes its texts, then build.py."""
 import json, os, re
 HERE = os.path.dirname(os.path.abspath(__file__))
+# the app lives in app/ in the GitHub repo and in app/rago-hub/ in the project folder
+APP = next(d for d in (os.path.join(HERE, '..', '..', 'app', 'src'), os.path.join(HERE, '..', '..', 'app', 'rago-hub', 'src')) if os.path.isfile(os.path.join(d, 'data', 'catalog.json')))
 p = os.path.join(HERE, '..', 'src', 'page.html')
 s = open(p).read()
-cat = json.load(open(os.path.join(HERE, '..', '..', 'app', 'rago-hub', 'src', 'data', 'catalog.json')))
+cat = json.load(open(os.path.join(APP, 'data', 'catalog.json')))
 SESSION = {"game_mode", "rbw_mode", "win_gamemode"}  # store.tsx SESSION_TOGGLES
 T, MOD, SEC = {}, {}, {}
 for m in cat['modules']:
@@ -41,7 +43,7 @@ def hero_row(m):
     return f'row({json.dumps(n)},{json.dumps(t["desc"]["en"], ensure_ascii=False)},'
 s = re.sub(r'row\("([^"]+)","(?:[^"\\]|\\.)*",', hero_row, s)
 # end-of-run sentence: same as the app (i18n.ts run.rebootNeeded)
-i18n = open(os.path.join(HERE, '..', '..', 'app', 'rago-hub', 'src', 'lib', 'i18n.ts')).read(); i18n = i18n[i18n.index('const en'):]
+i18n = open(os.path.join(APP, 'lib', 'i18n.ts')).read(); i18n = i18n[i18n.index('const en'):]
 reboot = re.search(r'"run\.rebootNeeded":\s*"([^"]+)"', i18n).group(1)
 s = re.sub(r'<br>(?:Restart|Redémarre)[^`]*`', lambda m: '<br>' + reboot + '`', s)
 open(p, 'w').write(s)

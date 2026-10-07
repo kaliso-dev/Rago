@@ -54,4 +54,4 @@ convert png/rago-icon-{16,32,48}.png web/favicon.ico
 cp rago-favicon.svg web/favicon.svg
 for n in sidebar header; do convert installer/$n.png -alpha off -type TrueColor BMP3:installer/$n.bmp; done
 ```
-Ensuite, copier `logo/installer/*.bmp` dans `app/rago-hub/src-tauri/installer/`.
+Ensuite, copier `brand/logo/installer/*.bmp` dans `app/src-tauri/installer/` (chemins depuis la racine du dépôt).
