@@ -174,6 +174,7 @@ Un certificat ne fait pas disparaître l'alerte du jour au lendemain : un certif
 
 Le test complet est l'étape 9 de `licensing/docs/MISE-EN-LIGNE.md`. En résumé, avec les clés Stripe de **test**, dans une fenêtre de navigation privée :
 
+0. Si tu avais installé l'ancienne version de test **« Rago Hub »**, désinstalle-la d'abord : Paramètres Windows → **Applications → Applications installées** → Rago Hub → **Désinstaller**. Elle a un autre identifiant que Rago Optimizer, donc les deux s'installeraient côte à côte.
 1. Sur le site, **Download free** : l'app s'installe et tourne en gratuit, 9 réglages ouverts.
 2. **Get Premium** (mensuel), paie avec `4242 4242 4242 4242`.
 3. Crée ton compte, vérifie que le tableau de bord montre la licence et que l'exe se télécharge.
