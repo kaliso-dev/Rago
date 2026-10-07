@@ -29,6 +29,31 @@ function wrap(conn, txRunner) {
   return db;
 }
 
+/**
+ * Replays schema.sql at boot. Its ALTER TABLEs need a short exclusive lock: if something holds the table
+ * (a long query, a migration in the Supabase editor), give up after 5 s on the database side too, so
+ * nothing stays queued behind the lock, then try again a few times before stopping the server.
+ */
+export async function applySchema(pg, url, local, { tries = 6, log = console } = {}) {
+  for (let attempt = 1; ; attempt++) {
+    const client = new pg.Client({ connectionString: url, ssl: local ? false : { rejectUnauthorized: false }, connectionTimeoutMillis: 10000 });
+    client.on('error', () => {}); // reported by the failing query below
+    try {
+      await client.connect();
+      await client.query("SET lock_timeout = '5s'; SET statement_timeout = '60s'");
+      await client.query(SCHEMA);
+      return;
+    } catch (err) {
+      if (attempt >= tries) throw err;
+      const wait = Math.min(30, 2 ** attempt) * 1000;
+      log.error(`[db] schema not applied (attempt ${attempt}/${tries}: ${err.message}), retrying in ${wait / 1000} s`);
+      await new Promise((r) => setTimeout(r, wait));
+    } finally {
+      await client.end().catch(() => {});
+    }
+  }
+}
+
 export async function openDb(url) {
   if (!url) throw new Error('DATABASE_URL is required (Supabase: Project Settings > Database > Connection string)');
   const pg = (await import('pg')).default;
@@ -67,7 +92,7 @@ export async function openDb(url) {
       client.release(lost || undefined); // a broken client is closed, not reused
     }
   });
-  await pool.query(SCHEMA);
+  await applySchema(pg, url, local);
   db.close = () => pool.end();
   return db;
 }

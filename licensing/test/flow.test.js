@@ -7,7 +7,7 @@ import { join } from 'node:path';
 import Stripe from 'stripe';
 
 import { loadConfig } from '../src/config.js';
-import { ensureKeys, openDb, openMemoryDb } from '../src/db.js';
+import { applySchema, ensureKeys, openDb, openMemoryDb } from '../src/db.js';
 import pg from 'pg';
 import { loadKeys, verifyToken } from '../src/tokens.js';
 import { createApp } from '../src/app.js';
@@ -806,4 +806,25 @@ test('real Postgres: a connection closed by the database, idle or mid-transactio
   }));
   await new Promise((r) => setTimeout(r, 200));
   assert.equal((await db.get('SELECT 1 AS ok')).ok, 1);
+});
+
+test('real Postgres: a table locked at boot delays the schema replay instead of stopping the server', { skip: !process.env.TEST_DATABASE_URL }, async () => {
+  await testDb(); // tables exist
+  const url = process.env.TEST_DATABASE_URL;
+  const holder = new pg.Client({ connectionString: url });
+  await holder.connect();
+  await holder.query('BEGIN; LOCK TABLE licenses IN ACCESS EXCLUSIVE MODE');
+  const errors = [];
+  const started = Date.now();
+  const replay = applySchema(pg, url, true, { log: { error: (m) => errors.push(m) } });
+  // Held past the 5 s lock_timeout: the first attempt gives up (nothing left waiting on the database), the next one passes.
+  await new Promise((r) => setTimeout(r, 6500));
+  const waiting = await holder.query("SELECT count(*)::int AS n FROM pg_stat_activity WHERE wait_event_type = 'Lock' AND datname = current_database()");
+  assert.equal(waiting.rows[0].n, 0);
+  await holder.query('ROLLBACK');
+  await holder.end();
+  await replay;
+  assert.equal(errors.length, 1);
+  assert.match(errors[0], /attempt 1\/6/);
+  assert.ok(Date.now() - started >= 6500);
 });
