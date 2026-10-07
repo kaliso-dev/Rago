@@ -152,7 +152,9 @@ test('claim link from the email works after the tab was closed, and only once', 
   await t.browse('/signup', { form: { email: 'late@example.com', password: 'password123' } });
   assert.match(await (await t.browse('/account')).text(), /RAGO-/);
   t.jar.clear();
-  assert.equal((await t.browse(path)).status, 410);
+  const used = await t.browse(path);
+  assert.equal(used.status, 410);
+  assert.match(await used.text(), /work anymore[\s\S]*Sign in/);
 });
 
 test('signed-in buyer gets the license directly; second purchase is flagged', async () => {
@@ -165,6 +167,8 @@ test('signed-in buyer gets the license directly; second purchase is flagged', as
   t.paidSession('cs_test_4', 'me@x.io', { client_reference_id: user.id });
   const r = await t.browse('/checkout/success?session_id=cs_test_4');
   assert.equal(r.headers.get('location'), '/account?n=claimed');
+  // A receipt still goes out (order and withdrawal waiver), without a claim link.
+  assert.deepEqual(t.mails, [{ to: 'me@x.io', url: null }]);
   assert.equal((await t.browse('/buy')).headers.get('location'), '/account?n=owned');
 
   // Paid again from a signed-out tab with another email, then claimed into the same account.
@@ -390,6 +394,11 @@ test('config accepts a bare host for PUBLIC_URL and flags example values', () =>
   // No price at all: the server still starts, says so in the logs, and /buy explains checkout isn't open.
   const noPrice = loadConfig({ NODE_ENV: 'production', PUBLIC_URL: 'x.app', DATABASE_URL: 'postgres://x', STRIPE_SECRET_KEY: 'sk', STRIPE_WEBHOOK_SECRET: 'whsec' });
   assert.match(noPrice.warnings.join(' '), /STRIPE_PRICE_MONTHLY/);
+  assert.match(noPrice.warnings.join(' '), /SITE_URL is not set/);
+  // The example sender from .env.example would be refused by Resend: emails stay off.
+  const exampleFrom = loadConfig({ RESEND_API_KEY: 're_real', MAIL_FROM: 'Rago Optimizer <hello@your-domain.com>', SITE_URL: 'https://ragohub.com' });
+  assert.equal(exampleFrom.mailEnabled, false);
+  assert.match(exampleFrom.warnings.join(' '), /MAIL_FROM.*example[\s\S]*SITE_URL is still the example|SITE_URL is still the example[\s\S]*MAIL_FROM/);
 });
 
 test('no Stripe price yet: /buy says checkout is not open', async () => {

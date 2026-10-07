@@ -1,3 +1,4 @@
+import { Lock } from "lucide-react";
 import { motion } from "motion/react";
 import type { ButtonHTMLAttributes, ReactNode } from "react";
 
@@ -38,7 +39,7 @@ export function Segmented<T extends string>({
   disabled,
 }: {
   value: T;
-  options: { id: T; label: string; hint?: string }[];
+  options: { id: T; label: string; hint?: string; locked?: boolean }[];
   onChange: (v: T) => void;
   layoutId: string;
   disabled?: boolean;
@@ -52,7 +53,7 @@ export function Segmented<T extends string>({
           role="radio"
           aria-checked={o.id === value}
           disabled={disabled}
-          className={o.id === value ? "active" : undefined}
+          className={[o.id === value ? "active" : "", o.locked ? "locked" : ""].join(" ").trim() || undefined}
           onClick={(e) => {
             e.stopPropagation();
             onChange(o.id);
@@ -62,6 +63,7 @@ export function Segmented<T extends string>({
             <motion.span layoutId={layoutId} className="segmented-pill" transition={{ type: "spring", stiffness: 500, damping: 40 }} />
           )}
           <span className="segmented-label">
+            {o.locked && <Lock size={10} aria-hidden />}
             {o.label}
             {o.hint && <span className="segmented-hint">{o.hint}</span>}
           </span>

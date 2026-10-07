@@ -116,3 +116,12 @@ for (const input of document.querySelectorAll('input[name=code]')) {
     input.setSelectionRange(pos, pos);
   });
 }
+
+// One-time notices (?n=claimed, ?n=out…): drop them from the address so a reload doesn't show them again.
+{
+  const url = new URL(location.href);
+  if (url.searchParams.has('n')) {
+    url.searchParams.delete('n');
+    history.replaceState(null, '', url.pathname + url.search + url.hash);
+  }
+}

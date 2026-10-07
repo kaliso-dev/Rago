@@ -159,12 +159,12 @@ export function loginPage(cfg, { email = '', error, notice, purchased = false, n
 
 export function forgotPage(cfg, { sent = false, email = '' } = {}) {
   const noMail = html`<p class="muted">Emails aren't switched on yet. ${supportLink(cfg, 'Ask on Discord')} and we'll reset it for you.</p>`;
-  const form = sent
+  const form = sent && cfg.mailEnabled
     ? html`<h2 class="h2">Check your inbox</h2>
       ${cfg.mailEnabled
         ? html`<p class="muted">If an account exists for ${email ? html`<strong>${email}</strong>` : 'that email'}, a reset link is on its way. It works for 1 hour.</p>
           <p class="muted small">Nothing after 5 minutes? Check your spam folder, or ${supportLink(cfg, 'ask on Discord')}.</p>`
-        : noMail}
+        : ''}
       <p class="small"><a href="/login">Back to sign in</a></p>`
     : !cfg.mailEnabled
       ? html`<h2 class="h2">Reset your password</h2>${noMail}<p class="muted small"><a href="/login">Back to sign in</a></p>`
@@ -177,7 +177,7 @@ export function forgotPage(cfg, { sent = false, email = '' } = {}) {
     ? html`<p class="overline rise">Rago Optimizer account</p><h1 class="display rise d1">Check your inbox.</h1>
       <p class="lede rise d2">Open the link in the email to choose a new password.</p>`
     : html`<p class="overline rise">Rago Optimizer account</p><h1 class="display rise d1">Forgot your password?</h1>
-      <p class="lede rise d2">Enter the email of your account and we'll send you a link to choose a new one.</p>`;
+      <p class="lede rise d2">${cfg.mailEnabled ? "Enter the email of your account and we'll send you a link to choose a new one." : 'We reset it for you on Discord, from the email of your account.'}</p>`;
   return page({ title: 'Reset password', cfg, body: split({ aside, form }) });
 }
 
@@ -213,7 +213,7 @@ export function messagePage(cfg, { title, text, action, user, step, overline = '
     <div class="row rise d3">
       ${action ? html`<a class="btn btn-primary" href="${action.href}">${action.label}</a>` : ''}
       <a class="btn btn-ghost" href="${cfg.siteUrl}/">Back to Rago Optimizer</a>
-      ${cfg.supportUrl ? html`<a class="btn btn-ghost" href="${cfg.supportUrl}" rel="noopener">Ask on Discord</a>` : ''}
+      <a class="btn btn-ghost" href="${cfg.supportUrl || `${cfg.siteUrl}/#faq`}" rel="noopener">Ask on Discord</a>
     </div>`;
   return page({ title, cfg, user, body: html`<main class="split split-solo"><section class="split-aside">
     ${pulse}${aside}${step == null ? '' : html`<div class="rise d4">${steps(step)}</div>`}</section></main>` });
@@ -265,7 +265,7 @@ export function dashboardPage(cfg, { user, license, device, notice, error, canRe
   const subscription = license && (license.plan === 'month' || license.plan === 'year');
   const canceling = active && subscription && license.cancel_at_period_end;
   // The 4 steps only make sense for a working license; a free or ended account gets no stepper.
-  const stepIndex = active ? (device ? 4 : 2) : null;
+  const stepIndex = active && license.source === 'stripe' ? (device ? 4 : 2) : null;
   const support = supportLink(cfg);
   const buyUrl = pricingUrl(cfg);
   const unlocks = `Premium unlocks all ${cfg.premiumTweaks} tweaks and every preset. The free version keeps ${cfg.freeTweaks}.`;
@@ -416,7 +416,7 @@ export function dashboardPage(cfg, { user, license, device, notice, error, canRe
       <p class="muted">${cfg.freeTweaks} tweaks unlocked. ${unlocks.split('. ')[0]}.${cfg.priceLabel ? html` <strong class="price">${cfg.priceLabel}</strong>.` : ''}</p>
       <div class="row"><a class="btn btn-buy btn-lg" href="${buyUrl}">Get Premium ${ICON.arrow}</a>
         <a class="btn btn-ghost btn-lg" href="/account/download" data-download>${ICON.download}<span>Download the free version</span></a></div>
-      <p class="muted small">${cfg.subscriptions ? 'Monthly or yearly. Secure checkout with Stripe. Cancel anytime.' : 'Secure checkout with Stripe.'} Already paid? Sign in with the email you paid with, or open the link in your purchase email. Still not here? ${supportLink(cfg, 'Ask on Discord')} with your payment email and we'll add it to this account.</p>
+      <p class="muted small">${cfg.subscriptions ? 'Monthly or yearly. Secure checkout with Stripe. Cancel anytime.' : 'Secure checkout with Stripe.'} Already paid? Sign in with the email you paid with${cfg.mailEnabled ? ', or open the link in your purchase email' : ''}. Still not here? ${supportLink(cfg, 'Ask on Discord')} with your payment email and we'll add it to this account.</p>
     </article>`;
 
   const title = !license ? 'Welcome to Rago Optimizer'
@@ -440,7 +440,7 @@ const RULES = (cfg) => [
   `A player counts once they've paid, created their account with your code and activated Rago Optimizer on their PC.`,
   `Each purchase counts ${cfg.affiliateHoldDays} days after payment. Refunds and chargebacks don't count.`,
   'Players enter your code once, right after paying, when they create their account or sign in. It can’t be added later.',
-  "Your own purchases don't count, even with another email or on your own PC.",
+  "Your own purchases don't count: a player activated on one of your PCs, or paid with your account email, is left out. Rewards gained by cheating can be taken back.",
   'Your lifetime license works on one PC, like every Rago Optimizer license.',
 ];
 

@@ -173,6 +173,7 @@ mod tests {
                     assert!(!(t.contains("/v \"devicepriority\" /f") && t.starts_with("reg")) || t.starts_with("reg delete"), "{id}:{v} {l}");
                     assert!(!t.starts_with('/'), "{id}:{v} ligne orpheline : {l}");
                     assert!(!t.contains("c:\\users\\") || t.contains("%username%"), "{id}:{v} chemin de l'auteur : {l}");
+                    assert!(!t.contains("{nic-id}") && !t.contains("c4accd00-2ba5") && !t.contains("122afb68-2ba4"), "{id}:{v} carte réseau de l'auteur : {l}");
                 }
                 assert!(!low.contains("messagebox") && !low.contains("risxn") && !low.contains("excusesfn"), "{id}:{v}");
                 // une boîte ou un programme fenêtré bloque le script tant qu'on ne le ferme pas
@@ -203,7 +204,9 @@ mod tests {
             .flat_map(|m| m["sections"].as_array().unwrap())
             .flat_map(|s| s["tweaks"].as_array().unwrap())
             .find(|t| t["id"] == "rbw_mode").expect("rbw_mode absent");
-        assert_eq!(rbw["reboot"], true);
+        let on = rbw["variants"].as_array().unwrap().iter().find(|v| v["id"] == "on").unwrap();
+        let off = rbw["variants"].as_array().unwrap().iter().find(|v| v["id"] == "off").unwrap();
+        assert_eq!((on["reboot"].as_bool(), off["reboot"].as_bool()), (Some(true), Some(false)));
     }
 
     #[test]

@@ -240,7 +240,10 @@ export function createApp({ cfg, db, keys, stripe, mailer, log = console, fetchI
   async function sendClaimEmail(license, claimToken) {
     // Bought while signed in: attached already. Apply the referral code that came with the purchase.
     if (license.user_id) {
-      if (license.referral_code) await applyReferral(await L.getUser(db, license.user_id), license, license.referral_code);
+      const user = await L.getUser(db, license.user_id);
+      if (license.referral_code) await applyReferral(user, license, license.referral_code);
+      // Still a receipt with the order and the waiver, without a claim link.
+      try { await mailer.purchase(user.email, null, license); } catch (err) { log.error('[mail] purchase email failed', err); }
       return;
     }
     if (!claimToken) return;
@@ -308,7 +311,7 @@ export function createApp({ cfg, db, keys, stripe, mailer, log = console, fetchI
     const lic = await L.licenseByClaimToken(db, c.req.param('token'));
     if (!lic) {
       const user = await currentUser(c);
-      return c.html(V.messagePage(cfg, { user, overline: 'Your purchase', title: 'This link was already used.', text: 'Your license is already on an account. Sign in to see it.', action: user ? { href: '/account', label: 'Go to your account' } : { href: '/login', label: 'Sign in' } }), 410);
+      return c.html(V.messagePage(cfg, { user, overline: 'Your purchase', title: "This link doesn't work anymore.", text: 'It was already used, or a newer link replaced it. Sign in with the email you paid with to see your license, or open the latest link we sent you.', action: user ? { href: '/account', label: 'Go to your account' } : { href: '/login', label: 'Sign in' } }), 410);
     }
     const user = await currentUser(c);
     // Signed in (e.g. the account was created on another device): attach it right away.
@@ -362,9 +365,8 @@ export function createApp({ cfg, db, keys, stripe, mailer, log = console, fetchI
     const next = nextPath(c.req.query('next'));
     if (await currentUser(c)) return c.redirect(next || '/account', 303);
     const n = c.req.query('n');
-    const purchased = !!(await pendingClaim(c));
     const pending = await pendingClaim(c);
-    return c.html(V.loginPage(cfg, { purchased: !!pending, email: pending?.email || '', next, code: pending ? purchaseCode(c, pending) : '', notice: n === 'reset' ? 'Password saved. Sign in with your new password.' : null }));
+    return c.html(V.loginPage(cfg, { purchased: !!pending, email: pending?.email || '', next, code: pending ? purchaseCode(c, pending) : '', notice: { reset: 'Password saved. Sign in with your new password.', out: "You're signed out." }[n] || null }));
   });
 
   app.post('/login', async (c) => {
@@ -395,7 +397,7 @@ export function createApp({ cfg, db, keys, stripe, mailer, log = console, fetchI
   app.post('/logout', async (c) => {
     await L.deleteWebSession(db, getCookie(c, 'rg_session'));
     deleteCookie(c, 'rg_session', { path: '/' });
-    return c.redirect('/login', 303);
+    return c.redirect('/login?n=out', 303);
   });
 
   app.get('/forgot', (c) => c.html(V.forgotPage(cfg)));
@@ -532,7 +534,8 @@ export function createApp({ cfg, db, keys, stripe, mailer, log = console, fetchI
 
   // For the launch guide: says whether the installer is found, without exposing anything secret.
   app.get('/download/status', async (c) => {
-    const out = await installer.resolve();
+    if (!allow(`download-status:${ip(c)}`, 30, 60 * 60 * 1000)) return c.json({ ok: false, error: 'Too many checks. Wait a few minutes.' }, 429);
+    const out = await installer.resolve({ fresh: true });
     return c.json(out.error ? { ok: false, error: out.error } : { ok: true, source: out.source, file: out.file || null }, out.error ? 503 : 200);
   });
 

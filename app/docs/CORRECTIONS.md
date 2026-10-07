@@ -379,3 +379,34 @@ Retirés de l'app :
   → `reg delete "HKLM\System\CurrentControlSet\Enum\%%i\Device Parameters\Interrupt Management\Affinity Policy" /v "DevicePriority" /f >nul 2>&1`
 - L14286: `reg add "HKEY_CURRENT_USER\Control Panel\Desktop" /v UserPreferencesMask /t REG_BINARY /d 90 00 00 00 /f`
   → `reg add "HKEY_CURRENT_USER\Control Panel\Desktop" /v UserPreferencesMask /t REG_BINARY /d 9012038010000000 /f`
+
+
+# Corrections apportées aux .bat v6 (Ping Optimization Final, HITREG INPUTLAG, FPS)
+
+Ajouté par `tools/build_catalog_v6.py` après la section v5.2 ci-dessus. Les trois .bat de Sofiene
+(`legacy/v6/`, 2026-10-06) rejoignent l'ancien programme : 226 réglages au total.
+
+Défauts de la v5.2 revenus dans les .bat v6, corrigés de la même façon (`repair`, `clean`) :
+- `reg add ... /v DevicePriority|MessageNumberLimit /f` sans valeur → `reg delete` ;
+- boucles `for ... do set "str=%%i" (` détachées de leur corps → `& (` et bloc refermé ;
+- GUID de carte réseau du PC de l'auteur, ou clé littérale `Interfaces\{NIC-ID}` (net_server) → boucle sur toutes les cartes ;
+- « Disabling » / « Enabling » remis en « Disable » / « Enable » hors echo, `USER_SID` jamais défini → `HKCU`, chemin du profil .nip sur le bureau de l'auteur ;
+- `/f%` en fin de ligne (copier-coller).
+
+Corrections ciblées (`SCRIPT_FIXES`, `DROP_LINES`) :
+- in_windows : import d'un plan d'alimentation `C:\ExcusesFN` (fichier de l'auteur) retiré, dossier Temp de « justin » → `%LOCALAPPDATA%\Temp`, ligne `/s /f /q` sans son `del` ;
+- in_advanced : point de restauration « Risxn » renommé « Rago Optimizer restore point » ;
+- win_visual, win_apps : fenêtres MessageBox et SystemPropertiesPerformance.exe qui bloquaient le script, retirées ;
+- sys_bcdedit : faute `useplatformclockJ` ;
+- sto_general : `PROFILES_DIR` lu non développé, la boucle sur les profils ne tournait jamais ;
+- rst_queue et in_queue « Default » : 80 et 32 → 100, la valeur de Windows ;
+- game_mode : faute « Optimimizing ».
+
+Profils exclusifs découpés en variantes (ils s'exécutaient tous à la suite) : ping_hitreg (6 profils dont Default),
+ping_packets (Hitreg, QoS, Knockback), ping_main (Config 1 à 4), sys_ram (selon la RAM).
+
+RBW Mod « On » remet aussi BAM, DAM et le Prefetcher (actifs après redémarrage, demandé par l'app pour cette variante).
+
+Les actions lourdes ne sont pas retirées (choix de Sofiene, « tout garder ») : `WARNINGS` les détecte dans chaque
+script (Spectre, Defender, SmartScreen, UAC, pare-feu, IFEO, BAM, Prefetch…), écrit l'avertissement « Read this first »
+et passe le réglage en Advanced.

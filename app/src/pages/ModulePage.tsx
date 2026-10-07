@@ -1,5 +1,5 @@
 import { motion } from "motion/react";
-import { FolderOpen, RotateCcw, Trash2, Lock } from "lucide-react";
+import { ChevronDown, FolderOpen, RotateCcw, Trash2, Lock } from "lucide-react";
 import { useCallback, useEffect, useState } from "react";
 import { api, type MinecraftStatus } from "../lib/api";
 import { availability, catalog, sectionTweaks, tweaks } from "../lib/catalog";
@@ -116,12 +116,27 @@ function HistoryList() {
 }
 
 export function ModulePage({ id }: { id: string }) {
-  const { t, lang, sys, selected, selectMany, unselectMany, isLocked, premium, setUpsell } = useStore();
+  const { t, lang, sys, selected, selectMany, unselectMany, isLocked, undoOnly, premium, setUpsell } = useStore();
   const index = catalog.modules.findIndex((m) => m.id === id);
   const mod = catalog.modules[index];
   const own = mod.sections.flatMap((s) => sectionTweaks(s)).filter((tw) => tw.kind === "tweak");
   const nSel = own.filter((tw) => selected.has(tw.id)).length;
-  const safe = own.filter((tw) => tw.risk === "safe" && availability(tw, sys).ok && !tw.confirm && !isLocked(tw.id)).map((tw) => tw.id);
+  const safe = own.filter((tw) => tw.risk === "safe" && availability(tw, sys).ok && !tw.confirm && !isLocked(tw.id) && !undoOnly(tw.id)).map((tw) => tw.id);
+  // modules longs (Latency, Windows…) : sommaire des sections et sections repliables
+  const long = own.length > 30 && mod.sections.length > 1;
+  const [folded, setFolded] = useState<Set<string>>(() => new Set());
+  useEffect(() => setFolded(new Set()), [id]);
+  const fold = (sid: string) =>
+    setFolded((f) => {
+      const n = new Set(f);
+      if (n.has(sid)) n.delete(sid);
+      else n.add(sid);
+      return n;
+    });
+  const jump = (sid: string) => {
+    setFolded((f) => (f.has(sid) ? new Set([...f].filter((x) => x !== sid)) : f));
+    requestAnimationFrame(() => document.getElementById(`sec-${sid}`)?.scrollIntoView({ block: "start", behavior: "smooth" }));
+  };
 
   return (
     <div className="page module">
@@ -162,6 +177,20 @@ export function ModulePage({ id }: { id: string }) {
 
       {id === "minecraft" && <MinecraftFolder />}
 
+      {long && (
+        <nav className="section-index" aria-label={t("module.sections")}>
+          {mod.sections.map((s) => {
+            const n = sectionTweaks(s).length;
+            return n ? (
+              <button key={s.id} type="button" className="section-chip" onClick={() => jump(s.id)}>
+                {s.name[lang]}
+                <span className="rg-metric">{n}</span>
+              </button>
+            ) : null;
+          })}
+        </nav>
+      )}
+
       {mod.sections.map((s, si) => {
         const list = sectionTweaks(s);
         if (!list.length) return null;
@@ -169,22 +198,34 @@ export function ModulePage({ id }: { id: string }) {
         return (
           <motion.section
             key={s.id}
+            id={`sec-${s.id}`}
             className="tweak-section"
             initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.36, delay: Math.min(si * 0.05, 0.3), ease: [0.16, 1, 0.3, 1] }}
           >
-            {showTitle && (
-              <h2 className="section-title">
-                <span>{s.name[lang]}</span>
-                <span className="rg-metric muted">{list.length}</span>
-              </h2>
-            )}
-            <div className="tweak-list">
-              {list.map((tw) => (
-                <TweakRow key={tw.id} tweak={tw} />
+            {showTitle &&
+              (long ? (
+                <h2 className="section-title">
+                  <button type="button" className="section-fold" aria-expanded={!folded.has(s.id)} onClick={() => fold(s.id)}>
+                    <ChevronDown size={16} className={folded.has(s.id) ? "folded" : undefined} />
+                    <span>{s.name[lang]}</span>
+                    <span className="rg-metric muted">{list.length}</span>
+                  </button>
+                </h2>
+              ) : (
+                <h2 className="section-title">
+                  <span>{s.name[lang]}</span>
+                  <span className="rg-metric muted">{list.length}</span>
+                </h2>
               ))}
-            </div>
+            {!folded.has(s.id) && (
+              <div className="tweak-list">
+                {list.map((tw) => (
+                  <TweakRow key={tw.id} tweak={tw} />
+                ))}
+              </div>
+            )}
           </motion.section>
         );
       })}

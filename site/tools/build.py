@@ -25,8 +25,23 @@ PM, PY = float(cfg('priceMonth')), float(cfg('priceYear'))
 ISO = {'$': 'USD', '€': 'EUR', '£': 'GBP'}.get(CUR, 'USD')
 for path in ('/login', '/signup', '/affiliate', '/download', '/buy?interval=year'):
     s = s.replace(f'href="{path}"', f'href="{BASE}{path}"')
-s = re.sub(r'<b id="p-amt">[^<]*</b>', f'<b id="p-amt">{CUR}{PY / 12:.2f}</b>', s)
-s = re.sub(r'<div class="price-note" id="p-note">[^<]*</div>', f'<div class="price-note" id="p-note">Billed {CUR}{PY:.2f} yearly.</div>', s)
+import math, subprocess
+jsround = lambda n: math.floor(n * 100 + 0.5) / 100  # same rounding as the page's JS (Math.round)
+FREE = math.floor(1e-9 + 12 - PY / PM)                  # same as MONTHS_FREE in the page
+free_txt = f"{FREE} month{'' if FREE == 1 else 's'} free"
+s = re.sub(r'<b id="p-amt">[^<]*</b>', f'<b id="p-amt">{CUR}{jsround(PY / 12):.2f}</b>', s)
+s = re.sub(r'<div class="price-note" id="p-note">[^<]*</div>', f'<div class="price-note" id="p-note">Billed {CUR}{jsround(PY):.2f} yearly.{" " + free_txt + "." if FREE >= 1 else ""}</div>', s)
+s = re.sub(r'<span class="save" id="save"( hidden)?>[^<]*</span>', f'<span class="save" id="save"{"" if FREE >= 1 else " hidden"}>{free_txt} yearly</span>', s)
+# FAQ without JavaScript: the same questions, rendered once here into a <noscript> block
+a = s.index('  const F = ['); b = s.index('\n  ];', a) + len('\n  ];')
+try:
+    faq = json.loads(subprocess.run(['node', '-e', f'const MONTHS_FREE = {FREE};' + s[a:b] + ';process.stdout.write(JSON.stringify(F))'],
+                                    capture_output=True, text=True, check=True).stdout)
+    esc = lambda t: t.replace('&', '&amp;').replace('<', '&lt;').replace('>', '&gt;')
+    static = ''.join(f'<details class="fq-s"><summary>{esc(q)}</summary><p>{esc(x)}</p></details>' for q, x in faq)
+    s = s.replace('<div class="faq rv" id="faqs"></div>', '<div class="faq rv" id="faqs"></div>\n    <noscript><div class="faq">' + static + '</div></noscript>', 1)
+except (OSError, subprocess.CalledProcessError) as e:
+    print('warning: static FAQ skipped (node not available):', e)
 LD = json.dumps({"@context": "https://schema.org", "@type": "SoftwareApplication", "name": "Rago Optimizer",
   "operatingSystem": "Windows 10, Windows 11", "applicationCategory": "UtilitiesApplication", "url": SITE + "/",
   "image": SITE + "/og-image.png", "description": "The Minecraft PvP optimizer for Windows: steadier ping, smoother frames, less input lag.",

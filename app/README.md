@@ -19,7 +19,7 @@ Sur un PC Windows 10/11 :
 3. Avec la licence branchée : définir `RAGO_API_BASE` (ex. `https://rago-production.up.railway.app/api/v1`, puis l'adresse du domaine définitif), `RAGO_LICENSE_PUBKEY` (clé publique Ed25519, PEM) `VITE_SITE_URL` et, si le lien Discord existe, `VITE_SUPPORT_URL`. Un build release refuse la clé publique de test (`src-tauri/build.rs`).
 4. `npm run tauri build` → `src-tauri/target/release/bundle/nsis/Rago Optimizer_<version>_x64-setup.exe`
 
-Sans ces variables, l'app se lance sans écran de connexion (build de développement).
+Sans ces variables, un build de développement se connecte au serveur local (`http://localhost:8787/api/v1`) avec la clé de test ; un build release sans elles n'a pas de serveur et le bouton Sign in répond « This build isn't connected to the license server ». Le plan gratuit marche dans tous les cas.
 
 Nouvelle version : `npm run bump 1.2.0` (met à jour `package.json`, lu par `tauri.conf.json` et affiché dans Settings, et `src-tauri/Cargo.toml`, envoyé au serveur de licences), puis push.
 
@@ -35,7 +35,7 @@ Contrat de référence : `licensing/docs/API.md` (thread « Comptes, licences et
 - Activation `POST /licenses/activate` (Bearer access_token 15 min), rafraîchissement `POST /licenses/refresh` au démarrage puis chaque jour.
 - Empreinte : 3 hashes SHA-256 `rago-fp-v1|<nom>|<VALEUR>` (MachineGuid, UUID SMBIOS, n° de série carte mère), règle « même PC » 2 sur 3, appliquée aussi hors ligne contre le champ `fp` du jeton.
 - Jeton EdDSA vérifié hors ligne avec la clé publique compilée, stocké chiffré DPAPI dans `%LOCALAPPDATA%\Rago\license.bin`.
-- En debug : serveur `http://localhost:8787/api/v1` et clé de test `src-tauri/keys/test-public-key.pem` par défaut. En release : `RAGO_API_BASE` et `RAGO_LICENSE_PUBKEY` (PEM) obligatoires, sinon pas d'écran de connexion.
+- En debug : serveur `http://localhost:8787/api/v1` et clé de test `src-tauri/keys/test-public-key.pem` par défaut. En release : `RAGO_API_BASE` et `RAGO_LICENSE_PUBKEY` (PEM) obligatoires ; sans elles, l'écran de connexion s'affiche mais refuse toute connexion (licence « unconfigured »).
 - Test de bout en bout contre le serveur local : `cargo test --manifest-path src-tauri/Cargo.toml live_flow -- --ignored`.
 
 ## Tests
@@ -61,7 +61,7 @@ Le catalogue combine l'ancien programme (`legacy/Premium v5.2 - Rago Hub.bat`, v
 python3 tools/build_catalog_v6.py   # lance build_catalog.py, ajoute les réglages v6, dédoublonne
 ```
 
-Les réglages v6 rejoignent les modules existants (Network, Latency, Graphics card, Windows, Hitreg). Les doublons de l'ancien programme sont listés dans `REPLACED`. Le script corrige aussi « Disable » → « Disabling », le `USER_SID` jamais défini et le chemin du profil `.nip`. Les réglages du plan gratuit sont dans `src/data/free.json`.
+Les réglages v6 rejoignent les modules existants (Network, Latency, Graphics card, Windows, Hitreg). Les doublons de l'ancien programme sont listés dans `REPLACED`. Le script corrige aussi le rechercher/remplacer cassé de l'ancien .bat (« Disabling » remis en « Disable »), le `USER_SID` jamais défini et le chemin du profil `.nip`. Le détail est dans `docs/CORRECTIONS.md` (sections v5.2 et v6). Les réglages du plan gratuit sont dans `src/data/free.json`.
 
 Depuis la vérification du 2026-10-07, `build_catalog_v6.py` :
 - découpe les profils exclusifs en variantes (`ping_hitreg` 6 profils dont Default, `ping_packets` Hitreg/QoS/Knockback, `ping_main` Config 1 à 4, `sys_ram` selon la RAM) ;

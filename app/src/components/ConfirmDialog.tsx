@@ -1,6 +1,6 @@
 import { RotateCcw, ShieldCheck, TriangleAlert } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
-import { availability, tweaks } from "../lib/catalog";
+import { availability, needsReboot, tweaks } from "../lib/catalog";
 import { SESSION_TOGGLES, useStore } from "../lib/store";
 import { Modal } from "./Modal";
 import { Button, Badge } from "./ui";
@@ -12,7 +12,7 @@ export function ConfirmDialog() {
   const onlyRestore = ids.length === 1 && ids[0] === "rst_point";
   const needsWmic = list.filter((tw) => availability(tw, sys).warn === "needsWmic").length;
   const warnings = list.filter((tw) => tw.confirm);
-  const reboot = list.some((tw) => tw.reboot);
+  const reboot = list.some((tw) => needsReboot(tw, variantOf(tw)));
   const mcBlocked = list.some((tw) => tw.native === "minecraft_optifine") && !mcDir;
 
   const [restorePoint, setRestorePoint] = useState(true);
@@ -48,7 +48,7 @@ export function ConfirmDialog() {
               <li key={tw.id}>
                 <span>{tw.name[lang]}</span>
                 {vLabel && <span className="confirm-variant">{vLabel}</span>}
-                {tw.reboot && <RotateCcw size={12} className="muted" />}
+                {needsReboot(tw, variantOf(tw)) && <RotateCcw size={12} className="muted" />}
                 {tw.risk === "advanced" && <Badge tone="warn">{t("badge.advanced")}</Badge>}
               </li>
             );

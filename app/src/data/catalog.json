@@ -1703,8 +1703,8 @@
        "defaultVariant": "16",
        "lines": 352,
        "confirm": {
-        "en": "Turns off the Spectre and Meltdown protections. Stops Prefetch from filling. On a screenshare that can look like erased traces: turn on RBW Mod before one.",
-        "fr": "Coupe les protections Spectre et Meltdown. Le Prefetch ne se remplit plus. Sur un screenshare, ça peut ressembler à des traces effacées : active le RBW Mod avant."
+        "en": "Turns off the Spectre and Meltdown protections. Stops Prefetch from filling. On a screenshare that can look like erased traces: turn on RBW Mod and restart your PC before one.",
+        "fr": "Coupe les protections Spectre et Meltdown. Le Prefetch ne se remplit plus. Sur un screenshare, ça peut ressembler à des traces effacées : active le RBW Mod et redémarre ton PC avant."
        }
       },
       {
@@ -1726,8 +1726,8 @@
        ],
        "lines": 205,
        "confirm": {
-        "en": "Removes the protection against attacks through Thunderbolt and PCIe devices (DMA). Turns off BAM, which logs the programs you ran. On a screenshare that can look like erased traces: turn on RBW Mod before one.",
-        "fr": "Retire la protection contre les attaques par périphériques Thunderbolt et PCIe (DMA). Coupe BAM, qui garde la trace des programmes lancés. Sur un screenshare, ça peut ressembler à des traces effacées : active le RBW Mod avant."
+        "en": "Removes the protection against attacks through Thunderbolt and PCIe devices (DMA). Turns off BAM, which logs the programs you ran. On a screenshare that can look like erased traces: turn on RBW Mod and restart your PC before one.",
+        "fr": "Retire la protection contre les attaques par périphériques Thunderbolt et PCIe (DMA). Coupe BAM, qui garde la trace des programmes lancés. Sur un screenshare, ça peut ressembler à des traces effacées : active le RBW Mod et redémarre ton PC avant."
        }
       },
       {
@@ -1831,8 +1831,8 @@
        ],
        "lines": 270,
        "confirm": {
-        "en": "Stops Prefetch from filling. On a screenshare that can look like erased traces: turn on RBW Mod before one.",
-        "fr": "Le Prefetch ne se remplit plus. Sur un screenshare, ça peut ressembler à des traces effacées : active le RBW Mod avant."
+        "en": "Stops Prefetch from filling. On a screenshare that can look like erased traces: turn on RBW Mod and restart your PC before one.",
+        "fr": "Le Prefetch ne se remplit plus. Sur un screenshare, ça peut ressembler à des traces effacées : active le RBW Mod et redémarre ton PC avant."
        }
       },
       {
@@ -1932,8 +1932,8 @@
        ],
        "lines": 2,
        "confirm": {
-        "en": "Stops Prefetch from filling. On a screenshare that can look like erased traces: turn on RBW Mod before one.",
-        "fr": "Le Prefetch ne se remplit plus. Sur un screenshare, ça peut ressembler à des traces effacées : active le RBW Mod avant."
+        "en": "Stops Prefetch from filling. On a screenshare that can look like erased traces: turn on RBW Mod and restart your PC before one.",
+        "fr": "Le Prefetch ne se remplit plus. Sur un screenshare, ça peut ressembler à des traces effacées : active le RBW Mod et redémarre ton PC avant."
        }
       },
       {
@@ -4609,8 +4609,8 @@
        ],
        "lines": 534,
        "confirm": {
-        "en": "Turns off the Spectre and Meltdown protections. Turns off Hyper-V and virtualization-based security (VBS). Turns off the early-launch anti-malware drivers. Turns off Microsoft Defender real-time protection. Turns off SmartScreen, which checks the files you download. Turns off UAC, the admin permission prompts. Stops Prefetch from filling. On a screenshare that can look like erased traces: turn on RBW Mod before one.",
-        "fr": "Coupe les protections Spectre et Meltdown. Coupe Hyper-V et la sécurité basée sur la virtualisation (VBS). Coupe les pilotes anti-malware lancés au démarrage. Coupe la protection en temps réel de Microsoft Defender. Coupe SmartScreen, qui vérifie les fichiers téléchargés. Coupe l'UAC, les demandes d'autorisation administrateur. Le Prefetch ne se remplit plus. Sur un screenshare, ça peut ressembler à des traces effacées : active le RBW Mod avant."
+        "en": "Turns off the Spectre and Meltdown protections. Turns off Hyper-V and virtualization-based security (VBS). Turns off the early-launch anti-malware drivers. Turns off Microsoft Defender real-time protection. Turns off SmartScreen, which checks the files you download. Turns off UAC, the admin permission prompts. Stops Prefetch from filling. On a screenshare that can look like erased traces: turn on RBW Mod and restart your PC before one.",
+        "fr": "Coupe les protections Spectre et Meltdown. Coupe Hyper-V et la sécurité basée sur la virtualisation (VBS). Coupe les pilotes anti-malware lancés au démarrage. Coupe la protection en temps réel de Microsoft Defender. Coupe SmartScreen, qui vérifie les fichiers téléchargés. Coupe l'UAC, les demandes d'autorisation administrateur. Le Prefetch ne se remplit plus. Sur un screenshare, ça peut ressembler à des traces effacées : active le RBW Mod et redémarre ton PC avant."
        }
       }
      ]
@@ -4774,8 +4774,8 @@
        ],
        "lines": 1964,
        "confirm": {
-        "en": "Stops Prefetch from filling. On a screenshare that can look like erased traces: turn on RBW Mod before one.",
-        "fr": "Le Prefetch ne se remplit plus. Sur un screenshare, ça peut ressembler à des traces effacées : active le RBW Mod avant."
+        "en": "Stops Prefetch from filling. On a screenshare that can look like erased traces: turn on RBW Mod and restart your PC before one.",
+        "fr": "Le Prefetch ne se remplit plus. Sur un screenshare, ça peut ressembler à des traces effacées : active le RBW Mod et redémarre ton PC avant."
        }
       }
      ]
@@ -5032,7 +5032,7 @@
         "fr": "Activé relance les services que vérifient les outils de screenshare (journal d'événements, SysMain, PCA, Planificateur) et remet BAM et le Prefetch après un redémarrage. Désactivé repasse les services en manuel après ta session."
        },
        "risk": "safe",
-       "reboot": true,
+       "reboot": false,
        "kind": "tweak",
        "variants": [
         {
@@ -5041,14 +5041,16 @@
           "fr": "Activé",
           "en": "On"
          },
-         "revert": true
+         "revert": true,
+         "reboot": true
         },
         {
          "id": "off",
          "label": {
           "fr": "Désactivé",
           "en": "Off"
-         }
+         },
+         "reboot": false
         }
        ],
        "requires": [],

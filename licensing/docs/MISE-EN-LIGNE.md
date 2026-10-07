@@ -6,7 +6,7 @@
 
 | Quoi | Où | Adresse (exemple avec `ragohub.com`) |
 |---|---|---|
-| Page de vente + Rago Free | Netlify | `https://ragohub.com` |
+| Page de vente (et l'ancien .bat gratuit) | Netlify | `https://ragohub.com` |
 | Paiement, comptes, tableau de bord, API de l'app | Railway | `https://account.ragohub.com` |
 | Base de données + fichier d'installation de l'app | Supabase | (privé, seul le serveur y accède) |
 | Paiements | Stripe | page de paiement hébergée par Stripe |
@@ -74,6 +74,7 @@ Commence tout en **mode test** Stripe : rien n'est vraiment débité tant que tu
 6. **Paramètres → Image de marque** : logo `brand/logo/png/rago-icon-512.png`, couleur `#FF3B30`. La page de paiement aura l'air de la tienne.
 7. **Paramètres → E-mails clients** : coche les reçus pour les paiements réussis et les factures.
 8. **Paramètres → Informations publiques** (Public details) : renseigne **Conditions d'utilisation** = `https://<ton site>/terms.html` et **Politique de confidentialité** = `https://<ton site>/privacy.html`. Sans l'URL des conditions, Stripe refuse la case « J'accepte les conditions et je renonce à mon droit de rétractation de 14 jours » : la page de paiement s'ouvre quand même, sans la case, et les logs Railway affichent `[stripe] Terms checkbox refused`. Avec la case, la renonciation au délai de rétractation est valable dans l'UE.
+   Sur la même page : **Libellé de relevé bancaire** (statement descriptor) = `RAGO OPTIMIZER` (c'est ce que le joueur lit sur son relevé ; un libellé qu'il ne reconnaît pas finit en contestation), et **E-mail du service client** = une adresse que tu lis vraiment (elle apparaît sur les reçus Stripe).
 9. Dans le **Portail client** (point 4), ajoute aussi les liens **Conditions** et **Confidentialité** vers ces deux mêmes pages.
 
 Tu avais déjà créé un prix « Paiement unique » (`STRIPE_PRICE_ID`) ? Il ne sert plus : **retire `STRIPE_PRICE_ID` de Railway**. Premium se vend uniquement en abonnement : tant que `STRIPE_PRICE_MONTHLY` et `STRIPE_PRICE_YEARLY` ne sont pas renseignés, le bouton d'achat affiche « Checkout opens soon » et rien n'est vendu (avant, il vendait l'ancien prix unique comme licence à vie, contrairement au site).
@@ -94,6 +95,7 @@ Sans Resend, tout marche sauf les emails : pas de lien de secours après achat, 
 1. Crée un compte sur [railway.com](https://railway.com) avec ton GitHub. Le plan Hobby coûte environ 5 $ par mois.
 2. **New Project → Deploy from GitHub repo → kaliso-dev/Rago**.
 3. Clique sur le service créé → **Settings → Source → Root Directory** : `licensing`. Railway utilise alors `licensing/Dockerfile`. Pas besoin de volume : tout est dans Supabase.
+   Toujours dans **Settings** : **Watch Paths** = `licensing/**` (un push qui ne touche que l'app ou le site ne redéploie pas le serveur), et active **Wait for CI** (Railway attend que les vérifications GitHub soient vertes avant de déployer).
 4. **Variables → Raw Editor**, colle ceci en remplaçant les valeurs :
 
    ```
@@ -104,7 +106,7 @@ Sans Resend, tout marche sauf les emails : pas de lien de secours après achat, 
    DATABASE_URL=postgresql://postgres.abcd:TON_MOT_DE_PASSE@aws-0-eu-west-3.pooler.supabase.com:5432/postgres
    SUPABASE_URL=https://abcd.supabase.co
    SUPABASE_SERVICE_ROLE_KEY=...
-   INSTALLER_VERSION=1.0.0
+   INSTALLER_VERSION=1.1.1
    STRIPE_SECRET_KEY=sk_test_...
    STRIPE_PRICE_MONTHLY=price_...
    STRIPE_PRICE_YEARLY=price_...
@@ -113,7 +115,7 @@ Sans Resend, tout marche sauf les emails : pas de lien de secours après achat, 
    RESEND_API_KEY=re_...
    MAIL_FROM=Rago Optimizer <hello@ragohub.com>
    SUPPORT_URL=https://discord.gg/ton-invitation
-   PRICE_LABEL=€4.99 a month or €49.90 a year
+   PRICE_LABEL=$4.99 a month or $49.90 a year
    ```
 
    `PRICE_LABEL` est le prix affiché aux comptes gratuits sur leur tableau de bord (mêmes montants et devise que Stripe et le site ; laisse vide pour ne rien afficher).
@@ -123,7 +125,7 @@ Sans Resend, tout marche sauf les emails : pas de lien de secours après achat, 
    - `https://account.ragohub.com/healthz` affiche `{"ok":true}` ;
    - `https://account.ragohub.com/signup` affiche la page « Create your account » aux couleurs de Rago.
 
-   Si le déploiement échoue, l'onglet **Deployments → View logs** dit quelle variable manque. Les lignes `[config]` au démarrage listent aussi ce qui ne marchera pas encore (emails, prix…).
+   Si le déploiement échoue, l'onglet **Deployments → View logs** dit quelle variable manque. Les lignes `[warn]` au démarrage listent aussi ce qui ne marchera pas encore (emails, prix…).
 7. **Sauvegarde la clé des licences** (une seule fois, depuis ton PC, voir « Au quotidien ») : `npm run admin -- export-keys`. Copie les deux lignes `LICENSE_SIGNING_KEY=…` et `SESSION_SECRET=…` dans ton gestionnaire de mots de passe, **et** colle-les dans les variables Railway : le serveur ne dépendra plus de la base pour sa clé.
 8. **Surveillance** : crée un moniteur gratuit (UptimeRobot, Better Stack) sur `https://account.ragohub.com/healthz`. Il répond `{"ok":true}` seulement si la base répond aussi ; sinon il t'envoie une alerte.
 9. **Sauvegarde de la base** : l'offre gratuite de Supabase n'a pas de sauvegarde automatique. Dès les premiers revenus, passe Supabase en **Pro** (sauvegardes quotidiennes) ; d'ici là, fais une fois par semaine **Database → Backups** ou `pg_dump "$DATABASE_URL" > rago-AAAA-MM-JJ.sql` depuis ton PC.
@@ -156,7 +158,7 @@ C'est ce qui prévient le serveur qu'un paiement est passé.
 3. **Actions → app-windows → Run workflow**. Ouvre ensuite **le run le plus récent avec une coche verte** → **Artifacts** → `rago-optimizer-setup` → décompresse : le fichier est `Rago Optimizer_<version>_x64-setup.exe`. Les anciens artefacts `rago-hub-setup` contiennent l'ancienne app « Rago Hub » : supprime-les (icône corbeille dans chaque ancien run) pour ne pas te tromper.
 4. Supabase → **Storage → downloads → Upload file** : dépose le fichier `.exe` qui est **dans** le zip (pas le zip lui-même). Son nom n'a pas d'importance : le serveur sert toujours le `.exe` le plus récent du bucket.
 5. **Vérifie** : ouvre `https://account.ragohub.com/download/status`. Tu dois voir `"ok":true` et le nom de ton fichier. Sinon la ligne `error` dit quoi corriger (clé Supabase refusée, bucket vide, mauvais nom de bucket).
-6. À chaque nouvelle version : dépose le nouvel exe (tu peux supprimer l'ancien) et mets à jour `INSTALLER_VERSION` dans Railway. Vérifie sur `/download/status` que `file` donne bien le nouveau nom.
+6. À chaque nouvelle version : dépose le nouvel exe (tu peux supprimer l'ancien) et mets à jour `INSTALLER_VERSION` dans Railway. Vérifie sur `/download/status` que `file` donne bien le nouveau nom (cette page relit le bucket à chaque fois ; le bouton de téléchargement suit dans la minute).
 
 Le bouton **Download** marche pour tous les comptes, avec ou sans Premium : sans licence, l'app tourne en version gratuite. Le lien public `https://account.ragohub.com/download` sert au bouton gratuit du site.
 
@@ -210,9 +212,9 @@ Si une étape coince, envoie-moi une capture et l'heure : je trouve la cause.
 | `PUBLIC_URL`, `SITE_URL` | Ton domaine (étape 1) |
 | `SUPPORT_URL` | Ton invitation Discord |
 | `STRIPE_PORTAL_LOGIN_URL` | Stripe → Portail client → lien de connexion (étape 3.4) |
-| `PRICE_LABEL` | Le prix affiché aux comptes gratuits, ex. `€4.99 a month or €49.90 a year` |
+| `PRICE_LABEL` | Le prix affiché aux comptes gratuits, ex. `$4.99 a month or $49.90 a year`, dans la même devise que Stripe et le site |
 | `LICENSE_SIGNING_KEY`, `SESSION_SECRET` | `npm run admin -- export-keys` (étape 5.7) |
-| `INSTALLER_VERSION` | La version de l'exe (ex. `1.0.0`). `INSTALLER_OBJECT` est facultatif (il donne le bucket et le dossier) : le `.exe` le plus récent du dossier est toujours servi |
+| `INSTALLER_VERSION` | La version de l'exe déposé (ex. `1.1.1`). `INSTALLER_OBJECT` est facultatif (il donne le bucket et le dossier) : le `.exe` le plus récent du dossier est toujours servi |
 
 À retirer s'il est encore là : `STRIPE_PRICE_ID` (ancien prix unique, plus vendu).
 

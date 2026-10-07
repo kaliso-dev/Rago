@@ -393,6 +393,55 @@ kbd {
 .section-title .rg-metric {
   font-size: 12px;
 }
+.section-fold {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 10px;
+  font: inherit;
+  letter-spacing: inherit;
+  color: inherit;
+}
+.section-fold svg {
+  align-self: center;
+  color: var(--rg-text-3);
+  transition: transform var(--rg-dur-fast) var(--rg-ease-out);
+}
+.section-fold svg.folded {
+  transform: rotate(-90deg);
+}
+.section-fold:hover svg {
+  color: var(--rg-text-1);
+}
+.section-index {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin: 0 0 28px;
+}
+.section-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  height: 30px;
+  padding: 0 14px;
+  border-radius: 999px;
+  border: 1px solid var(--rg-line-2);
+  background: var(--rg-ink-2);
+  font-size: 12.5px;
+  color: var(--rg-text-2);
+  transition: color var(--rg-dur-instant), border-color var(--rg-dur-instant);
+}
+.section-chip:hover {
+  color: var(--rg-text-1);
+  border-color: var(--rg-line-3, var(--rg-line-2));
+}
+.section-chip .rg-metric {
+  font-size: 11px;
+  color: var(--rg-text-3);
+}
+.tweak-section {
+  scroll-margin-top: 16px;
+}
 
 .card {
   background: var(--rg-ink-2);
@@ -564,6 +613,9 @@ kbd {
 .segmented button.active {
   color: var(--rg-text-1);
 }
+.segmented button.locked:not(.active) {
+  color: var(--rg-text-3);
+}
 .segmented-pill {
   position: absolute;
   inset: 0;
@@ -639,7 +691,7 @@ kbd {
   position: relative;
   display: flex;
   gap: 24px;
-  padding: 16px 20px;
+  padding: 14px 20px;
   cursor: pointer;
   transition: background var(--rg-dur-instant);
 }
@@ -729,7 +781,7 @@ kbd {
   display: inline-flex;
   align-items: center;
   gap: 4px;
-  margin-top: 8px;
+  margin-left: auto;
   font-size: 11.5px;
   color: var(--rg-text-3);
   opacity: 0;
@@ -1882,6 +1934,8 @@ svg {
   font-size: var(--rg-fs-h2);
   letter-spacing: var(--rg-ls-h2);
   font-weight: 640;
+  line-height: 1.2;
+  text-wrap: balance;
 }
 .upsell > p {
   margin-top: 8px;

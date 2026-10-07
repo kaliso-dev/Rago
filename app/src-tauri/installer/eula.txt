@@ -9,7 +9,7 @@ Rago Optimizer changes Windows settings: registry values, services, power plans,
 You choose which tweaks to apply. Before applying, Rago Optimizer offers to create a Windows restore point; keep it on. Results depend on your hardware, drivers and games, and no specific gain in FPS, ping or input lag is guaranteed.
 
 3. Anti-cheat and screenshares
-Rago Optimizer does not modify any game. Some tweaks turn off Windows services that screenshare tools look at. Turn on RBW Mod before a screenshare to bring them back. Server rules are set by each server, not by Rago.
+Rago Optimizer does not modify any game. Some tweaks turn off Windows services that screenshare tools look at. Turn on RBW Mod and restart your PC before a screenshare to bring them back. Server rules are set by each server, not by Rago.
 
 4. License
 The free plan opens a limited set of tweaks. Premium is a personal subscription tied to one PC. You may not resell, share or redistribute the app or its scripts.

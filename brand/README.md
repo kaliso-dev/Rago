@@ -46,8 +46,8 @@ Le site, les pages compte et l'app sont en anglais : la référence est **`voice
 
 ## Régénérer les fichiers du logo
 ```
-cd /mnt/project-files/brand
-NODE_PATH=/opt/node22/lib/node_modules node tools/export-logo.js   # PNG, favicon-32, apple-touch, og-image, installeur .png (Geist embarqué)
+cd brand   # depuis la racine du dépôt
+node tools/export-logo.js   # playwright requis ; PNG, favicon-32, apple-touch, og-image, installeur .png (Geist embarqué)
 cd logo
 convert png/rago-icon-{16,20,24,32,40,48,64,128,256}.png rago.ico
 convert png/rago-icon-{16,32,48}.png web/favicon.ico

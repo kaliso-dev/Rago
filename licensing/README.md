@@ -7,7 +7,7 @@ Serveur Node.js qui gère tout ce qui se passe après le clic sur « Get Premium
 ## Le parcours de l'acheteur
 
 1. Bouton Premium du site → `https://account.<domaine>/buy?interval=month|year` → abonnement Stripe Checkout.
-2. Paiement accepté → `/checkout/success` : « Payment confirmed. Create your account to get your license. » Il choisit son mot de passe, tape le code d'un affilié s'il en a un, la licence est rattachée à son compte. Un email lui envoie aussi un lien de création de compte, au cas où il ferme l'onglet.
+2. Paiement accepté → `/checkout/success` : « Payment confirmed. Create your account to get your license. » Il choisit son mot de passe, tape le code d'un affilié s'il en a un, la licence est rattachée à son compte. Une fois Resend configuré, un email lui envoie aussi un lien de création de compte, au cas où il ferme l'onglet (sans Resend, le support le rattache avec `npm run admin -- attach`).
 3. Tableau de bord `/account` : bouton « Download Rago Optimizer », clé de licence, PC activé, abonnement (date de renouvellement, « Cancel or manage subscription » vers le portail Stripe).
 4. Dans Rago Optimizer, il se connecte avec le même email et mot de passe, clique **Activate** : la licence est verrouillée sur ce PC. Sur un autre PC, la connexion est refusée.
 

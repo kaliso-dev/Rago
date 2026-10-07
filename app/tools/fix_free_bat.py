@@ -29,12 +29,13 @@ SRC = os.path.join(ROOT, 'legacy', 'Premium v5.2 - Rago Hub.bat')
 OUT = sys.argv[1] if len(sys.argv) > 1 else os.path.join(ROOT, '..', 'free', 'rago-free-v5.2.bat')
 NIP = (r'if exist "%~dp0nvidiaProfileInspector.exe" ( "%~dp0nvidiaProfileInspector.exe" "%~dp0extremelatencylow.nip" -silentImport )'
        r' else ( echo [skip] nvidiaProfileInspector.exe or extremelatencylow.nip not found next to the .bat )')
-MTU = (r'for /f "tokens=4,*" %%x in (\'netsh interface ipv4 show interfaces ^| findstr /i /c:" connected" ^| findstr /v /i "Loopback"\')'
+MTU = (r'''for /f "tokens=4,*" %%x in ('netsh interface ipv4 show interfaces ^| findstr /i /c:" connected" ^| findstr /v /i "Loopback"')'''
        r' do netsh interface ipv4 set subinterface "%%y" mtu=1500 store=persistent')
-CDP = r'for /f "tokens=2" %%s in (\'sc query state^= all ^| findstr /r /c:"SERVICE_NAME: CDPUserSvc_"\') do sc {cmd} %%s{rest}'
+CDP = r'''for /f "tokens=2" %%s in ('sc query state^= all ^| findstr /r /c:"SERVICE_NAME: CDPUserSvc_"') do sc {cmd} %%s{rest}'''
 
 text = open(SRC, 'rb').read().decode('latin-1')
 lines = text.split('\r\n')
+orig_lines = set(lines)
 counts = {k: 0 for k in ('disable', 'delete', 'binary', 'sid', 'path', 'header', 'edge', 'prefetch', 'firewall', 'spectre',
                          'chatgpt', 'mtu', 'nip', 'cdp', 'loop')}
 EDGE = re.compile(r'^\s*rd\s+/s\s+/q\s+"C:\\Program Files \(x86\)\\Microsoft\\(EdgeWebView|EdgeUpdate|EdgeCore|Temp)"\s*$', re.I)
@@ -139,6 +140,9 @@ ASK = [
 at = lines.index(':: Warning')
 lines[at:at] = ASK
 
+# un antislash avant l'apostrophe fait lire à for /f une liste de fichiers au lieu d'une commande
+bad = [n + 1 for n, l in enumerate(lines) if "(\\'" in l and l not in orig_lines]
+assert not bad, f"for /f mal formé (antislash avant l'apostrophe) aux lignes {bad}"
 os.makedirs(os.path.dirname(os.path.abspath(OUT)), exist_ok=True)
 open(OUT, 'wb').write('\r\n'.join(lines).encode('latin-1'))
 print(OUT, counts)

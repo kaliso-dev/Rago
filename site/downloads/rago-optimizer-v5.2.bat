@@ -1528,7 +1528,7 @@ timeout /t 1 /nobreak > NUL
 
 :: Set MTU Size to 1500
 echo %w%- Setting MTU Size %b%
-for /f "tokens=4,*" %%x in (\'netsh interface ipv4 show interfaces ^| findstr /i /c:" connected" ^| findstr /v /i "Loopback"\') do netsh interface ipv4 set subinterface "%%y" mtu=1500 store=persistent
+for /f "tokens=4,*" %%x in ('netsh interface ipv4 show interfaces ^| findstr /i /c:" connected" ^| findstr /v /i "Loopback"') do netsh interface ipv4 set subinterface "%%y" mtu=1500 store=persistent
 timeout /t 1 /nobreak > NUL
 
 :: Disable NonSackRTTresiliency
@@ -14061,7 +14061,7 @@ if /i %input% == 2 goto Off
 :On
 cls
 sc config Appinfo start= auto
-for /f "tokens=2" %%s in (\'sc query state^= all ^| findstr /r /c:"SERVICE_NAME: CDPUserSvc_"\') do sc config %%s start= auto
+for /f "tokens=2" %%s in ('sc query state^= all ^| findstr /r /c:"SERVICE_NAME: CDPUserSvc_"') do sc config %%s start= auto
 sc config DPS start= auto
 sc config DsmSvc start= auto
 sc config EventLog start= auto
@@ -14070,7 +14070,7 @@ sc config Schedule start= auto
 sc config SysMain start= auto
 
 sc start Appinfo
-for /f "tokens=2" %%s in (\'sc query state^= all ^| findstr /r /c:"SERVICE_NAME: CDPUserSvc_"\') do sc start %%s
+for /f "tokens=2" %%s in ('sc query state^= all ^| findstr /r /c:"SERVICE_NAME: CDPUserSvc_"') do sc start %%s
 sc start DPS
 sc start DsmSvc
 sc start EventLog
@@ -14099,7 +14099,7 @@ goto menu
 :off 
 cls
 sc config Appinfo start= demand
-for /f "tokens=2" %%s in (\'sc query state^= all ^| findstr /r /c:"SERVICE_NAME: CDPUserSvc_"\') do sc config %%s start= demand
+for /f "tokens=2" %%s in ('sc query state^= all ^| findstr /r /c:"SERVICE_NAME: CDPUserSvc_"') do sc config %%s start= demand
 sc config DPS start= demand
 sc config DsmSvc start= demand
 sc config EventLog start= demand

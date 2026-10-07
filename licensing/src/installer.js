@@ -18,7 +18,7 @@ export function createInstaller(cfg, { fetchImpl = fetch, log = console } = {}) 
   const [bucket, ...rest] = cfg.installerObject.split('/');
   const configuredPath = rest.join('/');
   const folder = configuredPath.includes('/') ? configuredPath.slice(0, configuredPath.lastIndexOf('/')) : '';
-  let found = null; // { path, at } cached a few minutes
+  let found = null; // { path, at } cached a minute, so downloads don't list the bucket each time
 
   async function sign(path) {
     const res = await fetchImpl(`${cfg.supabaseUrl}/storage/v1/object/sign/${bucket}/${encodePath(path)}`, {
@@ -40,12 +40,12 @@ export function createInstaller(cfg, { fetchImpl = fetch, log = console } = {}) 
   }
 
   /** { url } to redirect to, { file } to stream from disk, or { error } with a reason for the logs. */
-  async function resolve() {
+  async function resolve(fresh) {
     if (cfg.installerUrl) return { url: cfg.installerUrl, source: 'INSTALLER_URL' };
     if (cfg.supabaseUrl && cfg.supabaseServiceKey) {
       try {
         let last;
-        if (found && Date.now() - found.at < 5 * 60 * 1000) {
+        if (!fresh && found && Date.now() - found.at < 60 * 1000) {
           last = await sign(found.path);
           if (last.url) return link(found.path, last.url);
         }
@@ -82,8 +82,9 @@ export function createInstaller(cfg, { fetchImpl = fetch, log = console } = {}) 
   }
 
   return {
-    async resolve() {
-      const out = await resolve();
+    /** fresh: list the bucket again (the status page, checked right after an upload). */
+    async resolve({ fresh = false } = {}) {
+      const out = await resolve(fresh);
       if (out.error) log.error(`[download] ${out.error}`);
       return out;
     },

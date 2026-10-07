@@ -176,11 +176,11 @@ impl Runner {
                     .and_then(|d| d.as_str())
                     .map(PathBuf::from)
                     .or_else(|| std::env::var("APPDATA").ok().map(|a| PathBuf::from(a).join(".minecraft")))
-                    .ok_or("Dossier Minecraft inconnu")?;
+                    .ok_or("Minecraft folder not set")?;
                 let values: BTreeMap<String, String> = params
                     .get("values")
                     .and_then(|v| serde_json::from_value(v.clone()).ok())
-                    .ok_or("Valeurs OptiFine manquantes")?;
+                    .ok_or("Missing OptiFine values")?;
                 emit(format!("- Folder: {}", dir.display()));
                 let msg = minecraft::apply(&dir, &values, now_ms())?;
                 emit(format!("- {msg}"));
@@ -192,7 +192,7 @@ impl Runner {
                 if !exe.exists() || !nip.exists() {
                     return Err("NVIDIA Profile Inspector or the .nip profile is missing from the app folder".into());
                 }
-                emit("- Import du profil extremelatencylow.nip dans le pilote NVIDIA".into());
+                emit("- Importing the extremelatencylow.nip profile into the NVIDIA driver".into());
                 let mut cmd = shell::hidden(&exe.to_string_lossy());
                 cmd.arg(&nip).arg("-silentImport");
                 self.stream(cmd, emit)

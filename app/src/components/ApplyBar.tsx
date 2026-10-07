@@ -1,13 +1,16 @@
 import { AnimatePresence, motion } from "motion/react";
 import { ArrowRight } from "lucide-react";
-import { tweaks } from "../lib/catalog";
+import { needsReboot, tweaks } from "../lib/catalog";
 import { useStore } from "../lib/store";
 import { Button } from "./ui";
 
 export function ApplyBar() {
-  const { t, selection, unselectMany, requestApply, run } = useStore();
+  const { t, selection, unselectMany, requestApply, run, variantOf } = useStore();
   const n = selection.length;
-  const reboot = selection.filter((id) => tweaks.get(id)?.reboot).length;
+  const reboot = selection.filter((id) => {
+    const tw = tweaks.get(id);
+    return tw && needsReboot(tw, variantOf(tw));
+  }).length;
   return (
     <div className="applybar-wrap">
       <AnimatePresence>

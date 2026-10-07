@@ -307,7 +307,7 @@ const mockApi: Api = {
     };
   },
   minecraftStatus: async () => ({ dirExists: true, optifineFile: true, backups: 1 }),
-  minecraftRestore: async () => "optionsof.txt restauré (démo)",
+  minecraftRestore: async () => "optionsof.txt restored (demo)",
   restartPc: async () => {},
   openFolder: async () => {},
   pickFolder: async () => "C:\\Users\\demo\\AppData\\Roaming\\.minecraft",

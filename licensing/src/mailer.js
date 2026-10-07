@@ -62,24 +62,37 @@ export function createMailer(cfg, { log = console.log, fetchImpl = fetch } = {})
 
   return {
     send,
-    /** Sent right after payment: order summary, withdrawal waiver (durable medium) and the link to create the account. */
+    /**
+     * Sent right after payment: order summary, withdrawal waiver (durable medium), and the link to create
+     * the account. claimUrl null: bought while signed in, the license is already on the account.
+     */
     purchase(to, claimUrl, license = {}) {
       const lines = orderLines(license);
       const table = `<table role="presentation" cellspacing="0" cellpadding="0" border="0" width="100%" style="margin:8px 0 20px;border:1px solid #26262B;border-radius:16px">
 ${lines.map(([k, v]) => `<tr><td style="padding:10px 16px;color:#8E8E98;font-size:13px;width:90px">${esc(k)}</td><td style="padding:10px 16px;color:#F5F5F6;font-size:14px">${esc(v)}</td></tr>`).join('\n')}</table>`;
       const waiver = 'You asked for immediate access to Premium and agreed that your 14-day right of withdrawal ends once the license is delivered.';
-      const cancel = license.plan === 'month' || license.plan === 'year' ? ' Cancel anytime from your account (Cancel or manage subscription).' : '';
-      const html = `<p style="${P}">Thanks for getting Rago Optimizer Premium. Create your account to get your license and download Rago Optimizer for Windows. If you already have an account with this email, just sign in.</p>
-${table}${button(claimUrl, 'Create your account')}
-<p style="${SMALL}">This link only works for your purchase. Keep it private.</p>
-<p style="${SMALL}">${esc(waiver)}${esc(cancel)} <a href="${esc(cfg.siteUrl)}/terms.html" style="${LINK}">Terms of Sale</a> &middot; <a href="${esc(cfg.siteUrl)}/refunds.html" style="${LINK}">Refunds and cancellation</a></p>
-${cfg.supportUrl ? `<p style="${SMALL}">Premium players get the Premium role on our Discord: once your account is created, open your account page and follow <strong style="color:#C7C7CE">Premium channel</strong>.</p>` : ''}`;
+      const sub = license.plan === 'month' || license.plan === 'year';
+      const cancelText = sub ? ` Cancel anytime from your account (Cancel or manage subscription)${cfg.portalLoginUrl ? `, or with your email here: ${cfg.portalLoginUrl}` : ''}.` : '';
+      const cancelHtml = sub ? ` Cancel anytime from your account (Cancel or manage subscription)${cfg.portalLoginUrl ? `, or <a href="${esc(cfg.portalLoginUrl)}" style="${LINK}">with your email here</a>` : ''}.` : '';
+      const intro = claimUrl
+        ? 'Thanks for getting Rago Optimizer Premium. Create your account to get your license and download Rago Optimizer for Windows. If you already have an account with this email, just sign in.'
+        : 'Thanks for getting Rago Optimizer Premium. Your license is on your account: download Rago Optimizer for Windows, sign in with the same email and click Activate.';
+      const href = claimUrl || `${cfg.publicUrl}/account`;
+      const discord = cfg.supportUrl
+        ? 'Premium players get the Premium role on our Discord: join the server, open a ticket and give the email of your Rago Optimizer account. Staff check your license and add the role.'
+        : '';
+      const html = `<p style="${P}">${esc(intro)}</p>
+${table}${button(href, claimUrl ? 'Create your account' : 'Open your account')}
+${claimUrl ? `<p style="${SMALL}">This link only works for your purchase. Keep it private.</p>` : ''}
+<p style="${SMALL}">${esc(waiver)}${cancelHtml} <a href="${esc(cfg.siteUrl)}/terms.html" style="${LINK}">Terms of Sale</a> &middot; <a href="${esc(cfg.siteUrl)}/refunds.html" style="${LINK}">Refunds and cancellation</a></p>
+${discord ? `<p style="${SMALL}">${esc(discord)} <a href="${esc(cfg.supportUrl)}" style="${LINK}">Join the Discord</a></p>` : ''}`;
       const text = [
-        'Payment confirmed. Thanks for getting Rago Optimizer Premium.',
+        `Payment confirmed. ${intro}`,
         ...lines.map(([k, v]) => `${k}: ${v}`),
-        `Create your account to get your license: ${claimUrl}`,
-        `${waiver}${cancel}`,
+        `${claimUrl ? 'Create your account' : 'Your account'}: ${href}`,
+        `${waiver}${cancelText}`,
         `Terms: ${cfg.siteUrl}/terms.html  Refunds: ${cfg.siteUrl}/refunds.html`,
+        ...(discord ? [`${discord} ${cfg.supportUrl}`] : []),
       ].join('\n');
       return send(to, 'Your Rago Optimizer Premium license', layout(cfg, 'Payment confirmed', html), text);
     },

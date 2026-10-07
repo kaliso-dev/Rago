@@ -12,6 +12,8 @@ export interface Variant {
   auto?: string;
   /** remet Windows comme avant : ouverte en gratuit */
   revert?: boolean;
+  /** redémarrage propre à cette variante (sinon celui du réglage) */
+  reboot?: boolean;
 }
 
 export interface Tweak {
@@ -29,6 +31,12 @@ export interface Tweak {
   legacy: string[];
   lines: number;
   optifine?: Record<string, Record<string, string>>;
+}
+
+/** Le redémarrage peut dépendre de la variante : RBW Mod « On » remet BAM et le Prefetcher, « Off » non. */
+export function needsReboot(tw: Tweak, variant?: string | null): boolean {
+  const v = variant ? tw.variants?.find((x) => x.id === variant) : undefined;
+  return v?.reboot ?? tw.reboot;
 }
 
 export interface Section {

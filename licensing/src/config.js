@@ -54,9 +54,9 @@ export function loadConfig(env = process.env) {
     installerPath: env.INSTALLER_PATH || '',
     installerVersion: env.INSTALLER_VERSION || '',
     installerFileName: env.INSTALLER_FILENAME || 'RagoOptimizer-Setup.exe',
-    installerUrl: env.INSTALLER_URL || '',
+    installerUrl: env.INSTALLER_URL || '', // optional public link to the .exe, used instead of Storage
     // The old .bat, free on the site: offered when the app can't be downloaded.
-    freeBatUrl: env.FREE_BAT_URL || `${asUrl(env.SITE_URL) || publicUrl}/downloads/rago-optimizer-free-v5.2.zip`, // optional public link to the .exe, used instead of Storage
+    freeBatUrl: env.FREE_BAT_URL || `${asUrl(env.SITE_URL) || publicUrl}/downloads/rago-optimizer-free-v5.2.zip`,
 
     licenseTokenDays: Number(env.LICENSE_TOKEN_DAYS || 30),
     // Days a subscriber keeps working offline past the paid period (renewal retries, clock drift).
@@ -79,6 +79,8 @@ export function loadConfig(env = process.env) {
   // Values still set to the examples from .env.example: the server runs, but say what won't work.
   cfg.warnings = [];
   const placeholder = (v) => /\.\.\.|abcd|a_remplir|xxxx/i.test(v || '');
+  if (!env.SITE_URL) cfg.warnings.push('SITE_URL is not set: links to the site (pricing, terms, the free .bat) point to this server and open a 404. Set it to the Netlify address.');
+  else if (/ragohub\.com|example\.com/i.test(cfg.siteUrl)) cfg.warnings.push(`SITE_URL is still the example (${cfg.siteUrl}): use the real site address.`);
   if (placeholder(cfg.supabaseUrl)) cfg.warnings.push('SUPABASE_URL is still the example: Download Rago Optimizer will fail. Use https://<project-ref>.supabase.co');
   if (placeholder(cfg.stripeWebhookSecret)) cfg.warnings.push('STRIPE_WEBHOOK_SECRET is still the example: Stripe webhooks will be rejected (step 6).');
   if (!cfg.subscriptions) cfg.warnings.push(`No subscription price: set STRIPE_PRICE_MONTHLY and STRIPE_PRICE_YEARLY. Until then /buy shows "Checkout opens soon" and nothing is sold${cfg.stripePriceId ? ' (the old one-time STRIPE_PRICE_ID is no longer sold: remove it)' : ''}.`);
@@ -88,8 +90,9 @@ export function loadConfig(env = process.env) {
   } else if (!cfg.resendApiKey) {
     cfg.warnings.push('No RESEND_API_KEY: purchase and password emails are printed to the logs instead of sent. The pages tell players to ask on Discord instead (step 4).');
   }
-  if (cfg.resendApiKey && /example\.com/i.test(cfg.mailFrom)) {
-    cfg.warnings.push('MAIL_FROM is not set: Resend refuses example.com. Use "Rago Optimizer <hello@your-domain>" with a domain verified in Resend (step 4).');
+  const exampleFrom = /example\.com|your-domain|ragohub\.com/i.test(cfg.mailFrom);
+  if (cfg.resendApiKey && exampleFrom) {
+    cfg.warnings.push('MAIL_FROM is not set or still the example: Resend refuses it. Use "Rago Optimizer <hello@your-domain>" with a domain verified in Resend (step 4).');
   }
   for (const k of ['supportUrl', 'portalLoginUrl']) {
     if (placeholder(cfg[k])) {
@@ -98,7 +101,7 @@ export function loadConfig(env = process.env) {
     }
   }
   // Emails really go out: pages may promise one.
-  cfg.mailEnabled = !!cfg.resendApiKey && !/example\.com/i.test(cfg.mailFrom);
+  cfg.mailEnabled = !!cfg.resendApiKey && !exampleFrom;
 
   // LICENSE_SIGNING_KEY and SESSION_SECRET are optional: when absent, the server generates them once
   // and keeps them in the database (see ensureKeys in db.js).

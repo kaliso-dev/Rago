@@ -103,7 +103,7 @@ async fn ping(host: String, port: Option<u16>, count: Option<u32>) -> Result<pin
 fn minecraft_dir(dir: Option<String>) -> Result<PathBuf, String> {
     dir.map(PathBuf::from)
         .or_else(|| std::env::var("APPDATA").ok().map(|a| PathBuf::from(a).join(".minecraft")))
-        .ok_or_else(|| "Dossier Minecraft inconnu".to_string())
+        .ok_or_else(|| "Minecraft folder not set".to_string())
 }
 
 #[tauri::command]

@@ -1,4 +1,4 @@
-/* Rago — design tokens v1.2 (07/10/2026 : inchangés depuis la v1.1 du 05/10/2026 : rouge #FF3B30, plus d'orange, arrondis partout) (source de vérité : /mnt/project-files/brand/tokens/tokens.json)
+/* Rago — design tokens v1.2 (07/10/2026 : inchangés depuis la v1.1 du 05/10/2026 : rouge #FF3B30, plus d'orange, arrondis partout) (source de vérité : tokens.json, même dossier)
    Polices : Geist + Geist Mono (OFL, Google Fonts / npm "geist"). Thème sombre par défaut. */
 :root {
   /* Encre (fonds, du plus profond au plus élevé) */
@@ -35,6 +35,9 @@
   /* Sémantique */
   --rg-success: #3DDC97;  /* gains : ms en moins, FPS en plus */
   --rg-warning: #FFD60A;  /* jaune, pas d'orange */
+  --rg-warning-a06: rgba(255,214,10,.06); /* fond d'encart d'avertissement */
+  --rg-warning-a10: rgba(255,214,10,.10); /* fond de badge « Advanced » */
+  --rg-warning-a18: rgba(255,214,10,.18); /* bordure d'encart d'avertissement */
   --rg-info:    #5AB8FF;
   --rg-danger:  #FF3B30;  /* = accent ; toujours accompagné d'une icône + texte */
 

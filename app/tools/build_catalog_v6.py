@@ -322,10 +322,10 @@ WARNINGS = [
     (r'Image File Execution Options\\\*', 'Deletes every Image File Execution Options entry (per-program debugger and protection settings).',
      'Supprime toutes les entrées Image File Execution Options (débogueur et protections par programme).'),
     (r'Services\\bam"?\s+/v\s+"?Start"?\s+/t\s+REG_DWORD\s+/d\s+"?4',
-     'Turns off BAM, which logs the programs you ran. On a screenshare that can look like erased traces: turn on RBW Mod before one.',
-     'Coupe BAM, qui garde la trace des programmes lancés. Sur un screenshare, ça peut ressembler à des traces effacées : active le RBW Mod avant.'),
-    (r'EnablePrefetcher"?\s+/t\s+REG_DWORD\s+/d\s+"?0', 'Stops Prefetch from filling. On a screenshare that can look like erased traces: turn on RBW Mod before one.',
-     'Le Prefetch ne se remplit plus. Sur un screenshare, ça peut ressembler à des traces effacées : active le RBW Mod avant.'),
+     'Turns off BAM, which logs the programs you ran. On a screenshare that can look like erased traces: turn on RBW Mod and restart your PC before one.',
+     'Coupe BAM, qui garde la trace des programmes lancés. Sur un screenshare, ça peut ressembler à des traces effacées : active le RBW Mod et redémarre ton PC avant.'),
+    (r'EnablePrefetcher"?\s+/t\s+REG_DWORD\s+/d\s+"?0', 'Stops Prefetch from filling. On a screenshare that can look like erased traces: turn on RBW Mod and restart your PC before one.',
+     'Le Prefetch ne se remplit plus. Sur un screenshare, ça peut ressembler à des traces effacées : active le RBW Mod et redémarre ton PC avant.'),
     (r'^(?!\s*echo).*(del|forfiles|rd)\b.*\\prefetch', 'Clears the Prefetch folder, which a screenshare can read as wiped traces.',
      'Vide le dossier Prefetch, ce qu\'un screenshare peut lire comme des traces effacées.'),
     (r'Clear-RecycleBin', 'Empties the Recycle Bin.', 'Vide la Corbeille.'),
@@ -359,6 +359,19 @@ UK_US = [('Optimise', 'Optimize'), ('optimise', 'optimize'), ('Optimisation', 'O
 
 
 def postprocess(modules, scripts):
+    # GUID de l'auteur ou clé « {NIC-ID} » laissée telle quelle (net_server, ancien programme) : toutes les cartes
+    for tid, variants in scripts.items():
+        for v, body in variants.items():
+            sep = '\r\n' if '\r\n' in body else '\n'
+            out = []
+            for l in body.split(sep):
+                if IFACE_GUID.match(l):
+                    l = repair(l)
+                l = re.sub(r'(/f)%$', r'\1', l)  # « /f% » : reste d'un copier-coller
+                if out and l == out[-1] and l.lstrip().lower().startswith('for '):
+                    continue
+                out.append(l)
+            variants[v] = sep.join(out)
     for key, fixes in SCRIPT_FIXES.items():
         tid, _, vid = key.partition(':')
         for v in ([vid] if vid else list(scripts[tid])):
@@ -408,7 +421,10 @@ def postprocess(modules, scripts):
         'Activé relance les services que vérifient les outils de screenshare (journal d\'événements, SysMain, PCA, Planificateur) '
         'et remet BAM et le Prefetch après un redémarrage. Désactivé repasse les services en manuel après ta session.')
     # BAM est un pilote et le Prefetcher se relit au démarrage : sans redémarrage, « On » ne remet rien de visible.
-    tweaks['rbw_mode']['reboot'] = True
+    # « Off » ne fait que repasser des services en manuel : pas de redémarrage.
+    tweaks['rbw_mode']['reboot'] = False
+    for v in tweaks['rbw_mode']['variants']:
+        v['reboot'] = v['id'] == 'on'
     tweaks['rst_queue']['desc'] = I('Puts the mouse and keyboard queues back to 100, the Windows default.',
                                     'Remet les files souris et clavier à 100, la valeur de Windows.')
 
@@ -446,7 +462,7 @@ def sections_of(name):
 
 DEVPRIO = re.compile(r'^(\s*)reg(?:\.exe)?\s+add\s+("[^"]+")\s+/v\s+"?(DevicePriority|MessageNumberLimit)"?\s+/f\s*$', re.I)
 IFACE_GUID = re.compile(r'^\s*reg(?:\.exe)?\s+add\s+"HKEY_LOCAL_MACHINE\\SYSTEM\\CurrentControlSet\\Services\\Tcpip\\Parameters'
-                        r'\\Interfaces\\\{?[0-9A-F]{8}-[0-9A-F-]{27}\}?"(.*)$', re.I)
+                        r'\\Interfaces\\(?:\{?[0-9A-F]{8}-[0-9A-F-]{27}\}?|\{NIC-ID\})"(.*)$', re.I)
 
 
 def repair(l):
@@ -497,6 +513,40 @@ def split_variants(body, spec, prefix=False):
         end = order[n + 1][1] if n + 1 < len(order) else len(body)
         res[vid] = clean(head + body[start + 1:end])
     return res
+
+
+V6_NOTES = '''
+
+# Corrections apportées aux .bat v6 (Ping Optimization Final, HITREG INPUTLAG, FPS)
+
+Ajouté par `tools/build_catalog_v6.py` après la section v5.2 ci-dessus. Les trois .bat de Sofiene
+(`legacy/v6/`, 2026-10-06) rejoignent l'ancien programme : 226 réglages au total.
+
+Défauts de la v5.2 revenus dans les .bat v6, corrigés de la même façon (`repair`, `clean`) :
+- `reg add ... /v DevicePriority|MessageNumberLimit /f` sans valeur → `reg delete` ;
+- boucles `for ... do set "str=%%i" (` détachées de leur corps → `& (` et bloc refermé ;
+- GUID de carte réseau du PC de l'auteur, ou clé littérale `Interfaces\\{NIC-ID}` (net_server) → boucle sur toutes les cartes ;
+- « Disabling » / « Enabling » remis en « Disable » / « Enable » hors echo, `USER_SID` jamais défini → `HKCU`, chemin du profil .nip sur le bureau de l'auteur ;
+- `/f%` en fin de ligne (copier-coller).
+
+Corrections ciblées (`SCRIPT_FIXES`, `DROP_LINES`) :
+- in_windows : import d'un plan d'alimentation `C:\\ExcusesFN` (fichier de l'auteur) retiré, dossier Temp de « justin » → `%LOCALAPPDATA%\\Temp`, ligne `/s /f /q` sans son `del` ;
+- in_advanced : point de restauration « Risxn » renommé « Rago Optimizer restore point » ;
+- win_visual, win_apps : fenêtres MessageBox et SystemPropertiesPerformance.exe qui bloquaient le script, retirées ;
+- sys_bcdedit : faute `useplatformclockJ` ;
+- sto_general : `PROFILES_DIR` lu non développé, la boucle sur les profils ne tournait jamais ;
+- rst_queue et in_queue « Default » : 80 et 32 → 100, la valeur de Windows ;
+- game_mode : faute « Optimimizing ».
+
+Profils exclusifs découpés en variantes (ils s'exécutaient tous à la suite) : ping_hitreg (6 profils dont Default),
+ping_packets (Hitreg, QoS, Knockback), ping_main (Config 1 à 4), sys_ram (selon la RAM).
+
+RBW Mod « On » remet aussi BAM, DAM et le Prefetcher (actifs après redémarrage, demandé par l'app pour cette variante).
+
+Les actions lourdes ne sont pas retirées (choix de Sofiene, « tout garder ») : `WARNINGS` les détecte dans chaque
+script (Spectre, Defender, SmartScreen, UAC, pare-feu, IFEO, BAM, Prefetch…), écrit l'avertissement « Read this first »
+et passe le réglage en Advanced.
+'''
 
 
 def main():
@@ -583,6 +633,8 @@ def main():
     json.dump(catalog, open(os.path.join(ROOT, 'src', 'data', 'catalog.json'), 'w', encoding='utf-8'), ensure_ascii=False, indent=1)
     json.dump(scripts, open(os.path.join(ROOT, 'src-tauri', 'scripts', 'scripts.json'), 'w', encoding='utf-8'), ensure_ascii=False)
     n = sum(1 for m in modules for s in m['sections'] for t in s['tweaks'] if 'id' in t)
+    with open(os.path.join(ROOT, 'docs', 'CORRECTIONS.md'), 'a', encoding='utf-8') as f:
+        f.write(V6_NOTES)
     print(f'{n} réglages, {len(scripts)} scripts')
 
 

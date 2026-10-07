@@ -1,9 +1,9 @@
-import { ArrowRight, RefreshCw, TriangleAlert, X } from "lucide-react";
+import { ArrowRight, LifeBuoy, RefreshCw, TriangleAlert, X } from "lucide-react";
 import { useState } from "react";
 import { api } from "../lib/api";
 import { type Key } from "../lib/i18n";
 import { useStore } from "../lib/store";
-import { SITE_URL } from "./LicenseGate";
+import { SITE_URL, SUPPORT_URL } from "./LicenseGate";
 import { Button } from "./ui";
 
 /**
@@ -52,6 +52,12 @@ export function LicenseNotice() {
       ) : (
         <Button size="sm" variant="primary" onClick={() => void api.openUrl(`${SITE_URL}/#pricing`)}>
           {t("free.upgrade")}
+        </Button>
+      )}
+      {/* remboursement, révocation, autre PC : le message renvoie vers le support, le bouton aussi */}
+      {SUPPORT_URL && ((n.code === "revoked" && !n.buyUrl) || n.code === "bound_to_other_device" || n.code === "invalid_request") && (
+        <Button size="sm" icon={<LifeBuoy size={12} />} onClick={() => void api.openUrl(SUPPORT_URL)}>
+          {t("account.help")}
         </Button>
       )}
       <button type="button" className="icon-btn" aria-label={t("notice.dismiss")} onClick={() => setLicenseNotice(null)}>

@@ -7,7 +7,7 @@ import { SESSION_TOGGLES, useStore } from "../lib/store";
 import { Badge, Button, Segmented, Switch } from "./ui";
 
 export function TweakRow({ tweak }: { tweak: Tweak }) {
-  const { t, lang, sys, selected, toggle, variantOf, setVariant, lastRun, requestApply, focusTweak, setFocusTweak, isLocked, variantLocked, premium, setUpsell } = useStore();
+  const { t, lang, sys, selected, toggle, variantOf, setVariant, lastRun, requestApply, focusTweak, setFocusTweak, isLocked, variantLocked, undoOnly, premium, setUpsell } = useStore();
   const [open, setOpen] = useState(false);
   const ref = useRef<HTMLDivElement>(null);
   const av = availability(tweak, sys);
@@ -50,7 +50,7 @@ export function TweakRow({ tweak }: { tweak: Tweak }) {
       <div className="tweak-main">
         <div className="tweak-title">
           <span className="tweak-name">{tweak.name[lang]}</span>
-          {!premium && !locked && <Badge tone="ok">{t("free.badge")}</Badge>}
+          {!premium && !locked && <Badge tone="ok">{t(undoOnly(tweak.id) ? "free.undoBadge" : "free.badge")}</Badge>}
           {tweak.risk === "advanced" && <Badge tone="warn">{t("badge.advanced")}</Badge>}
           {tweak.reboot && (
             <Badge>
@@ -65,6 +65,19 @@ export function TweakRow({ tweak }: { tweak: Tweak }) {
           ) : (
             last && <Badge tone={last.ok ? "ok" : "red"}>{t(last.ok ? "badge.applied" : "badge.failed", { date: formatDate(lang, last.ts) })}</Badge>
           )}
+          {!locked && (
+            <button
+              type="button"
+              className={`tweak-more${open ? " open" : ""}`}
+              onClick={(e) => {
+                e.stopPropagation();
+                setOpen((o) => !o);
+              }}
+            >
+              {t("tweak.more")}
+              <ChevronDown size={12} />
+            </button>
+          )}
         </div>
         <p className="tweak-desc">{tweak.desc[lang]}</p>
 
@@ -78,6 +91,7 @@ export function TweakRow({ tweak }: { tweak: Tweak }) {
                 id: v.id,
                 label: v.label[lang],
                 hint: v.auto && v.id === auto ? t("badge.auto") : undefined,
+                locked: variantLocked(tweak.id, v.id),
               }))}
             />
           </div>
@@ -91,17 +105,6 @@ export function TweakRow({ tweak }: { tweak: Tweak }) {
           </p>
         )}
 
-        {!locked && <button
-          type="button"
-          className={`tweak-more${open ? " open" : ""}`}
-          onClick={(e) => {
-            e.stopPropagation();
-            setOpen((o) => !o);
-          }}
-        >
-          {t("tweak.more")}
-          <ChevronDown size={12} />
-        </button>}
         <AnimatePresence initial={false}>
           {open && (
             <motion.div
@@ -111,7 +114,10 @@ export function TweakRow({ tweak }: { tweak: Tweak }) {
               exit={{ height: 0, opacity: 0 }}
               transition={{ duration: 0.2, ease: [0.16, 1, 0.3, 1] }}
             >
-              <p className="muted small">{t("tweak.details", { lines: tweak.lines })}</p>
+              <p className="muted small">
+                {t("tweak.details", { n: tweak.lines })}
+                {!isAction && <> {t(session ? "tweak.undoSession" : "tweak.undoRestore")}</>}
+              </p>
               {tweak.confirm && (
                 <p className="tweak-note warn">
                   <TriangleAlert size={12} />
@@ -143,7 +149,7 @@ export function TweakRow({ tweak }: { tweak: Tweak }) {
                 key={v.id}
                 size="sm"
                 variant={sessionState === v.id ? "primary" : "secondary"}
-                icon={v.id === "off" ? <PowerOff size={12} /> : <Power size={12} />}
+                icon={variantLocked(tweak.id, v.id) ? <Lock size={12} /> : v.id === "off" ? <PowerOff size={12} /> : <Power size={12} />}
                 onClick={(e) => {
                   e.stopPropagation();
                   runVariant(v.id);

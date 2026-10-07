@@ -1,6 +1,6 @@
 import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import { api, asLicenseError, type DoneEvent, type HistoryEntry, type ItemStatus, type LicenseError, type LicenseStatus, type RunItem, type SystemInfo } from "./api";
-import { autoVariant, availability, catalog, tweaks, type Lang, type Tweak } from "./catalog";
+import { autoVariant, availability, catalog, tweaks, type Lang, type Tweak, needsReboot } from "./catalog";
 import { translate, type Key } from "./i18n";
 import free from "../data/free.json";
 
@@ -108,6 +108,8 @@ function useStoreValue() {
   /** En gratuit, seule la variante de retour arrière d'un réglage Premium est ouverte. */
   const variantLocked = useCallback((id: string, v: string) => !premium && !FREE.has(id) && REVERTS.get(id) !== v, [premium]);
   const openInFree = useCallback((id: string) => premium || FREE.has(id) || REVERTS.has(id), [premium]);
+  /** Réglage Premium dont seul le retour arrière est gratuit : ni badge « Free », ni « Select safe tweaks ». */
+  const undoOnly = useCallback((id: string) => !premium && !FREE.has(id) && REVERTS.has(id), [premium]);
 
   // Plan gratuit : une sélection faite avant la déconnexion ne garde que les réglages ouverts.
   useEffect(() => {
@@ -292,8 +294,8 @@ function useStoreValue() {
       for (const id of ids) {
         const tw = tweaks.get(id);
         if (!tw) continue;
-        reboot ||= tw.reboot;
         const variant = variantOf(tw);
+        reboot ||= needsReboot(tw, variant);
         const item: RunItem = { id, variant };
         if (tw.native === "minecraft_optifine") item.params = { dir: mcDir, values: tw.optifine?.[variant ?? ""] ?? {} };
         items.push(item);
@@ -340,7 +342,7 @@ function useStoreValue() {
     focusTweak, setFocusTweak,
     pingRequest, requestPing: () => setPingRequest((n) => n + 1),
     license, setLicense, signOut, activated, activatedAt, licenseNotice, setLicenseNotice,
-    premium, isLocked, variantLocked, upsell, upsellTweak, setUpsell,
+    premium, isLocked, variantLocked, undoOnly, upsell, upsellTweak, setUpsell,
   };
 }
 

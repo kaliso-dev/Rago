@@ -1,5 +1,5 @@
 // Exporte toutes les déclinaisons raster depuis les SVG de brand/logo/ (SVG injecté inline : pas de file:// qui rend une image cassée).
-// Usage : NODE_PATH=/opt/node22/lib/node_modules node brand/tools/export-logo.js   (puis les commandes ImageMagick de la section « Régénérer les fichiers du logo » du README)
+// Usage : node brand/tools/export-logo.js (playwright requis)   (puis les commandes ImageMagick de la section « Régénérer les fichiers du logo » du README)
 const { chromium } = require('playwright');
 const fs = require('fs');
 const D = __dirname + '/../logo/';
