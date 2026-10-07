@@ -1,0 +1,33 @@
+# Lance les tests du serveur de licences (dossier licensing/) avant que Railway ne le redéploie.
+name: licensing-tests
+
+on:
+  workflow_dispatch:
+  push:
+    paths: ["licensing/**", ".github/workflows/licensing-tests.yml"]
+  pull_request:
+    paths: ["licensing/**", ".github/workflows/licensing-tests.yml"]
+
+concurrency:
+  group: licensing-tests-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+defaults:
+  run:
+    working-directory: licensing
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: licensing/package-lock.json
+      - run: npm ci
+      - run: npm test

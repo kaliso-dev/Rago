@@ -1,2 +1,45 @@
+# Site de vente (dossier site/). Le serveur de comptes est sur Railway (dossier licensing/).
 [build]
   publish = "site"
+  # Les sources et notes internes de site/ ne doivent pas être publiées.
+  command = "rm -rf site/src site/tools && rm -f site/*.md"
+
+[[headers]]
+  for = "/*"
+  [headers.values]
+    X-Frame-Options = "DENY"
+    X-Content-Type-Options = "nosniff"
+    Referrer-Policy = "strict-origin-when-cross-origin"
+    Permissions-Policy = "camera=(), microphone=(), geolocation=(), payment=()"
+
+# Les pages de compte vivent sur le serveur de comptes. Le site réécrit déjà ces liens en JavaScript ;
+# ces redirections couvrent les navigateurs sans JavaScript et les anciens liens partagés.
+# À changer en même temps que CONFIG.accountBase quand le domaine sera là.
+[[redirects]]
+  from = "/buy"
+  to = "https://rago-production.up.railway.app/buy"
+  status = 302
+[[redirects]]
+  from = "/login"
+  to = "https://rago-production.up.railway.app/login"
+  status = 302
+[[redirects]]
+  from = "/signup"
+  to = "https://rago-production.up.railway.app/signup"
+  status = 302
+[[redirects]]
+  from = "/affiliate"
+  to = "https://rago-production.up.railway.app/affiliate"
+  status = 302
+[[redirects]]
+  from = "/download"
+  to = "https://rago-production.up.railway.app/download"
+  status = 302
+[[redirects]]
+  from = "/account"
+  to = "https://rago-production.up.railway.app/account"
+  status = 302
+[[redirects]]
+  from = "/account/*"
+  to = "https://rago-production.up.railway.app/account/:splat"
+  status = 302
