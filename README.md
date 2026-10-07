@@ -147,8 +147,9 @@ L'app Windows ne peut être compilée que sur Windows. GitHub le fait pour toi, 
      - `RAGO_LICENSE_PUBKEY` = le bloc affiché par `https://account.<ton-domaine>/api/v1/public-key?format=pem`, lignes `BEGIN` et `END` comprises
    - Onglet **Variables**, **New repository variable** :
      - `SITE_URL` = `https://account.<ton-domaine>` (le bouton Premium de l'app ouvre `SITE_URL/#pricing`, et le serveur renvoie vers le site)
+     - `SUPPORT_URL` (optionnelle) = ton lien d'invitation Discord, affiché comme lien support dans l'app
 2. La fabrication se lance d'elle-même à chaque push qui touche `app/`. Tu peux aussi la lancer à la main : **Actions → app-windows → Run workflow**.
-3. Compte environ 5 minutes (15 à 20 la première fois). À la fin, connecté avec le compte kaliso-dev : ouvre le run, section **Artifacts**, télécharge `rago-optimizer-setup`. C'est un zip qui contient `Rago Optimizer_<version>_x64-setup.exe`. L'artefact est effacé au bout de 90 jours.
+3. Compte environ 5 minutes (15 à 20 la première fois). À la fin, connecté avec le compte kaliso-dev : ouvre le run, section **Artifacts**, télécharge `rago-optimizer-setup`. C'est un zip qui contient `Rago Optimizer_<version>_x64-setup.exe` (aujourd'hui `Rago Optimizer_1.1.0_x64-setup.exe`, version 1.1.0). L'artefact est effacé au bout de 90 jours.
 
 **Sans les deux secrets, la fabrication s'arrête en erreur** (étape « Vérifier les secrets »). C'est voulu : un exe fabriqué sans eux ne peut jamais passer en Premium et ses boutons de compte ouvrent `localhost`. Ne distribue jamais un tel exe.
 
@@ -224,7 +225,7 @@ cd app && npm ci && npm run tauri dev
 - **L'exe dans le bucket** `downloads` de Supabase, vérifié sur `/download/status` (section 4.1).
 - **Désactiver GitHub Pages** : Settings → Pages → Source « None » (ou « Unpublish site »). Rien du dépôt n'y est plus publié, mais Pages n'a aucune utilité ici.
 - **Le nom de domaine**, puis `accountBase` du site, `PUBLIC_URL` et `SITE_URL` dans Railway, `RAGO_API_BASE` et `SITE_URL` sur GitHub, et une nouvelle fabrication de l'exe.
-- **Le lien d'invitation Discord** et la **clé Resend**.
+- **Le lien d'invitation Discord** (dans `CONFIG.discord` du site, `SUPPORT_URL` sur Railway et la variable `SUPPORT_URL` sur GitHub) et la **clé Resend**.
 - **`LowLatency.pow` et `smartctl.exe`** : utilisés par le .bat mais pas fournis. Sans eux, le réglage « plan d'alimentation » reste grisé.
 - **Protéger la branche de production** : Settings → Branches → règle sur la branche par défaut qui interdit le force-push et la suppression.
 - **Certificat de signature de code** (section 4.2).
