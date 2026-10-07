@@ -197,6 +197,13 @@ mod tests {
         let rbw = SCRIPTS["rbw_mode"]["on"].to_lowercase();
         assert!(rbw.contains("services\\bam\" /v \"start\" /t reg_dword /d \"1\""));
         assert!(rbw.contains("enableprefetcher\" /t reg_dword /d \"3\""));
+        // BAM et le Prefetcher ne reviennent qu'au démarrage : l'app doit le demander
+        let cat: serde_json::Value = serde_json::from_str(catalog).unwrap();
+        let rbw = cat["modules"].as_array().unwrap().iter()
+            .flat_map(|m| m["sections"].as_array().unwrap())
+            .flat_map(|s| s["tweaks"].as_array().unwrap())
+            .find(|t| t["id"] == "rbw_mode").expect("rbw_mode absent");
+        assert_eq!(rbw["reboot"], true);
     }
 
     #[test]

@@ -1274,7 +1274,7 @@ Reg.exe add "%%n" /v "FatChannelIntolerant" /t REG_SZ /d "0" /f
 cls
 
 :: Network Limit Windows Disable
-Reg.exe Add "HKLM\Software\Policies &#8203;:contentReference[oaicite:0]{index=0}&#8203;
+rem (invalid line removed)
 
 cls
 
@@ -1528,7 +1528,7 @@ timeout /t 1 /nobreak > NUL
 
 :: Set MTU Size to 1500
 echo %w%- Setting MTU Size %b%
-netsh interface ipv4 set subinterface “Ethernet” mtu=1500 store=persistent
+for /f "tokens=4,*" %%x in (\'netsh interface ipv4 show interfaces ^| findstr /i /c:" connected" ^| findstr /v /i "Loopback"\') do netsh interface ipv4 set subinterface "%%y" mtu=1500 store=persistent
 timeout /t 1 /nobreak > NUL
 
 :: Disable NonSackRTTresiliency
@@ -9899,7 +9899,7 @@ schtasks /change /disable /tn "NvTmRep_CrashReport4_{B2FE1952-0186-46C3-BAEC-A80
 schtasks /change /disable /tn "NvDriverUpdateCheckDaily_{B2FE1952-0186-46C3-BAEC-A80AA35AC5B8}"
 schtasks /change /disable /tn "NVIDIA GeForce Experience SelfUpdate_{B2FE1952-0186-46C3-BAEC-A80AA35AC5B8}"
 schtasks /change /disable /tn "NvTmMon_{B2FE1952-0186-46C3-BAEC-A80AA35AC5B8}"
-for /f %%i in ('wmic path Win32_VideoController get PNPDeviceID') do set "str=%%i" (
+for /f %%i in ('wmic path Win32_VideoController get PNPDeviceID') do set "str=%%i" & (
 echo %w%- Del GPU Device Priority %b%
 reg delete "HKLM\System\CurrentControlSet\Enum\%%i\Device Parameters\Interrupt Management\Affinity Policy" /v "DevicePriority" /f >nul 2>&1
 timeout /t 1 /nobreak > NUL
@@ -9907,6 +9907,7 @@ echo %w%- Remove GPU Limits %b%
 reg delete "HKLM\SYSTEM\CurrentControlSet\Enum\%%i\Device Parameters\Interrupt Management\MessageSignaledInterruptProperties" /v "MessageNumberLimit" /f >nul 2>&1
 echo %w%- Enable MSI Mode on GPU if supported %b%
 Reg.exe add "HKLM\System\CurrentControlSet\Enum\%%i\Device Parameters\Interrupt Management\MessageSignaledInterruptProperties" /v "MSISupported" /t REG_DWORD /d "1" /f
+)
 for /f %%f in ('wmic path Win32_VideoController get PNPDeviceID^| findstr /L "PCI\VEN_"') do (
 	for /f "tokens=3" %%b in ('reg query "HKLM\SYSTEM\ControlSet001\Enum\%%f" /v "Driver"') do (
 		for /f %%f in ('echo %w%- %%b ^| findstr "{"') do (
@@ -10061,7 +10062,7 @@ Reg.exe add "HKLM\SYSTEM\CurrentControlSet\Control\Class\{4d36e968-e325-11ce-bfc
 Reg.exe add "HKLM\SYSTEM\CurrentControlSet\Control\Class\{4d36e968-e325-11ce-bfc1-08002be10318}\0000" /v "DisableCudaContextPreemption" /t REG_DWORD /d "1" /f
 Reg.exe add "HKLM\SYSTEM\CurrentControlSet\Control\Class\{4d36e968-e325-11ce-bfc1-08002be10318}\0000" /v "DisablePreemptionOnS3S4" /t REG_DWORD /d "1" /f
 echo %w% - Applying Nvidia Profile Inspector Profile (optimizes nvidia control panel 3D settings and much more) %b%
-if exist "%~dp0extremelatencylow.nip" ( start "" /wait "%~dp0extremelatencylow.nip" ) else ( echo [skip] extremelatencylow.nip introuvable a cote du .bat )
+if exist "%~dp0nvidiaProfileInspector.exe" ( "%~dp0nvidiaProfileInspector.exe" "%~dp0extremelatencylow.nip" -silentImport ) else ( echo [skip] nvidiaProfileInspector.exe or extremelatencylow.nip not found next to the .bat )
 
 echo %w% - Forcing Contigous Memory Allocation %b%
 Reg.exe add "HKLM\SYSTEM\CurrentControlSet\Control\Class\{4d36e968-e325-11ce-bfc1-08002be10318}\0000" /v "PreferSystemMemoryContiguous" /t REG_DWORD /d "1" /f
@@ -10069,9 +10070,10 @@ Reg.exe add "HKLM\SYSTEM\CurrentControlSet\Control\Class\{4d36e968-e325-11ce-bfc
 echo %w% - Disabling Write Combining %b%
 Reg.exe add "HKLM\SYSTEM\CurrentControlSet\Control\GraphicsDrivers\Scheduler" /v "DisableWriteCombining" /t REG_DWORD /d "1" /f
 
-for /f %%i in ('wmic path Win32_VideoController get PNPDeviceID') do set "str=%%i" (
+for /f %%i in ('wmic path Win32_VideoController get PNPDeviceID') do set "str=%%i" & (
 echo %w%- Deleting GPU Device Priority %b%
 reg delete "HKLM\System\CurrentControlSet\Enum\%%i\Device Parameters\Interrupt Management\Affinity Policy" /v "DevicePriority" /f >nul 2>&1
+)
 
 echo %w%- Removing Msi GPU Limits %b%
 reg delete "HKLM\SYSTEM\CurrentControlSet\Enum\%%i\Device Parameters\Interrupt Management\MessageSignaledInterruptProperties" /v "MessageNumberLimit" /f >nul 2>&1
@@ -10348,7 +10350,7 @@ cls
 goto :nv
 
 :nv5
-for /f %%i in ('wmic path Win32_VideoController get PNPDeviceID') do set "str=%%i" (
+for /f %%i in ('wmic path Win32_VideoController get PNPDeviceID') do set "str=%%i" & (
 echo %w%- Del GPU Device Priority %b%
 reg delete "HKLM\System\CurrentControlSet\Enum\%%i\Device Parameters\Interrupt Management\Affinity Policy" /v "DevicePriority" /f >nul 2>&1
 timeout /t 1 /nobreak > NUL
@@ -10357,6 +10359,7 @@ reg delete "HKLM\SYSTEM\CurrentControlSet\Enum\%%i\Device Parameters\Interrupt M
 timeout /t 1 /nobreak > NUL
 echo %w%- Enable MSI Mode on GPU if supported %b%
 Reg.exe add "HKLM\System\CurrentControlSet\Enum\%%i\Device Parameters\Interrupt Management\MessageSignaledInterruptProperties" /v "MSISupported" /t REG_DWORD /d "1" /f
+)
 timeout /t 1 /nobreak > NUL
 echo.
 echo.
@@ -10595,7 +10598,7 @@ goto :nv
 
 :NVGEN689U
 echo %w% - Applying Nvidia Profile Inspector Profile (optimizes nvidia control panel 3D settings and much more) %b%
-if exist "%~dp0extremelatencylow.nip" ( start "" /wait "%~dp0extremelatencylow.nip" ) else ( echo [skip] extremelatencylow.nip introuvable a cote du .bat )
+if exist "%~dp0nvidiaProfileInspector.exe" ( "%~dp0nvidiaProfileInspector.exe" "%~dp0extremelatencylow.nip" -silentImport ) else ( echo [skip] nvidiaProfileInspector.exe or extremelatencylow.nip not found next to the .bat )
 
 echo %w% - Forcing Contigous Memory Allocation %b%
 Reg.exe add "HKLM\SYSTEM\CurrentControlSet\Control\Class\{4d36e968-e325-11ce-bfc1-08002be10318}\0000" /v "PreferSystemMemoryContiguous" /t REG_DWORD /d "1" /f
@@ -10603,9 +10606,10 @@ Reg.exe add "HKLM\SYSTEM\CurrentControlSet\Control\Class\{4d36e968-e325-11ce-bfc
 echo %w% - Disabling Write Combining %b%
 Reg.exe add "HKLM\SYSTEM\CurrentControlSet\Control\GraphicsDrivers\Scheduler" /v "DisableWriteCombining" /t REG_DWORD /d "1" /f
 
-for /f %%i in ('wmic path Win32_VideoController get PNPDeviceID') do set "str=%%i" (
+for /f %%i in ('wmic path Win32_VideoController get PNPDeviceID') do set "str=%%i" & (
 echo %w%- Deleting GPU Device Priority %b%
 reg delete "HKLM\System\CurrentControlSet\Enum\%%i\Device Parameters\Interrupt Management\Affinity Policy" /v "DevicePriority" /f >nul 2>&1
+)
 
 echo %w%- Removing Msi GPU Limits %b%
 reg delete "HKLM\SYSTEM\CurrentControlSet\Enum\%%i\Device Parameters\Interrupt Management\MessageSignaledInterruptProperties" /v "MessageNumberLimit" /f >nul 2>&1
@@ -11049,9 +11053,10 @@ Reg.exe add "HKLM\SYSTEM\CurrentControlSet\Control\Class\{4d36e968-e325-11ce-bfc
 Reg.exe add "HKLM\SYSTEM\CurrentControlSet\Control\Class\{4d36e968-e325-11ce-bfc1-08002be10318}\0000\UMD" /v "HighQualityAF" /t REG_BINARY /d "3300" /f
 Reg.exe add "HKLM\SYSTEM\CurrentControlSet\Control\Class\{4d36e968-e325-11ce-bfc1-08002be10318}\0000\UMD" /v "ShaderCache" /t REG_BINARY /d "3200" /f
 Reg.exe add "HKLM\SYSTEM\ControlSet001\Control\Class\{4d36e968-e325-11ce-bfc1-08002be10318}\0000" /v "EnableUlps" /t REG_DWORD /d "0" /f
-for /f %%i in ('wmic path Win32_VideoController get PNPDeviceID') do set "str=%%i" (
+for /f %%i in ('wmic path Win32_VideoController get PNPDeviceID') do set "str=%%i" & (
 echo %w%- Deleting GPU Device Priority %b%
 reg delete "HKLM\System\CurrentControlSet\Enum\%%i\Device Parameters\Interrupt Management\Affinity Policy" /v "DevicePriority" /f >nul 2>&1
+)
 
 echo %w%- Removing Msi GPU Limits %b%
 reg delete "HKLM\SYSTEM\CurrentControlSet\Enum\%%i\Device Parameters\Interrupt Management\MessageSignaledInterruptProperties" /v "MessageNumberLimit" /f >nul 2>&1
@@ -11652,9 +11657,10 @@ Reg.exe add "HKLM\SYSTEM\CurrentControlSet\Control\Class\{4d36e968-e325-11ce-bfc
 Reg.exe add "HKLM\SYSTEM\CurrentControlSet\Control\Class\{4d36e968-e325-11ce-bfc1-08002be10318}\0000\UMD" /v "HighQualityAF" /t REG_BINARY /d "3300" /f
 Reg.exe add "HKLM\SYSTEM\CurrentControlSet\Control\Class\{4d36e968-e325-11ce-bfc1-08002be10318}\0000\UMD" /v "ShaderCache" /t REG_BINARY /d "3200" /f
 Reg.exe add "HKLM\SYSTEM\ControlSet001\Control\Class\{4d36e968-e325-11ce-bfc1-08002be10318}\0000" /v "EnableUlps" /t REG_DWORD /d "0" /f
-for /f %%i in ('wmic path Win32_VideoController get PNPDeviceID') do set "str=%%i" (
+for /f %%i in ('wmic path Win32_VideoController get PNPDeviceID') do set "str=%%i" & (
 echo %w%- Deleting GPU Device Priority %b%
 reg delete "HKLM\System\CurrentControlSet\Enum\%%i\Device Parameters\Interrupt Management\Affinity Policy" /v "DevicePriority" /f >nul 2>&1
+)
 
 echo %w%- Removing Msi GPU Limits %b%
 reg delete "HKLM\SYSTEM\CurrentControlSet\Enum\%%i\Device Parameters\Interrupt Management\MessageSignaledInterruptProperties" /v "MessageNumberLimit" /f >nul 2>&1
@@ -14055,7 +14061,7 @@ if /i %input% == 2 goto Off
 :On
 cls
 sc config Appinfo start= auto
-sc config CDPUserSvc_5d3cf start= auto
+for /f "tokens=2" %%s in (\'sc query state^= all ^| findstr /r /c:"SERVICE_NAME: CDPUserSvc_"\') do sc config %%s start= auto
 sc config DPS start= auto
 sc config DsmSvc start= auto
 sc config EventLog start= auto
@@ -14064,7 +14070,7 @@ sc config Schedule start= auto
 sc config SysMain start= auto
 
 sc start Appinfo
-sc start CDPUserSvc_5d3cf
+for /f "tokens=2" %%s in (\'sc query state^= all ^| findstr /r /c:"SERVICE_NAME: CDPUserSvc_"\') do sc start %%s
 sc start DPS
 sc start DsmSvc
 sc start EventLog
@@ -14093,7 +14099,7 @@ goto menu
 :off 
 cls
 sc config Appinfo start= demand
-sc config CDPUserSvc_5d3cf start= demand
+for /f "tokens=2" %%s in (\'sc query state^= all ^| findstr /r /c:"SERVICE_NAME: CDPUserSvc_"\') do sc config %%s start= demand
 sc config DPS start= demand
 sc config DsmSvc start= demand
 sc config EventLog start= demand

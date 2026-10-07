@@ -751,10 +751,10 @@ MODULES = [
              dict(id='restore', name=dict(fr='Retour arrière', en='Undo'), tweaks=[
                  T('rst_point', 'RP@205', 'Créer un point de restauration', 'Create a restore point',
                    "Photographie l'état de Windows pour pouvoir revenir en arrière.",
-                   'Snapshots Windows so you can roll back.', kind='action', reboot=False, native='restore_point'),
+                   'Saves the current state of Windows so you can restore it later.', kind='action', reboot=False, native='restore_point'),
                  T('rst_open', 'restore@230', 'Ouvrir la restauration du système', 'Open System Restore',
                    "Ouvre l'outil Windows pour revenir à un point de restauration.",
-                   'Opens the Windows tool to roll back.', kind='action', reboot=False),
+                   'Opens the Windows tool to go back to a restore point.', kind='action', reboot=False),
                  T('rst_network', 'RevzertNt@14395', 'Réinitialiser le réseau', 'Reset network',
                    "Remet la pile réseau de Windows (TCP/IP, Winsock) à zéro et renouvelle ton adresse IP.",
                    'Resets the Windows network stack and renews your IP.', kind='action', risk='advanced'),

@@ -271,7 +271,7 @@ const en: Record<Key, string> = {
   "run.console": "Log",
   "run.summary": "{ok} of {total} applied in {s} s",
   "run.failed": "{n} failed. The log has the details.|{n} failed. The log has the details.",
-  "run.rebootNeeded": "Restart your PC to finish applying these tweaks.",
+  "run.rebootNeeded": "Restart your PC to finish applying your changes.",
   "run.reboot": "Restart now",
   "run.ping": "Measure my ping",
   "run.close": "Close",

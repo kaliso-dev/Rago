@@ -5032,7 +5032,7 @@
         "fr": "Activé relance les services que vérifient les outils de screenshare (journal d'événements, SysMain, PCA, Planificateur) et remet BAM et le Prefetch après un redémarrage. Désactivé repasse les services en manuel après ta session."
        },
        "risk": "safe",
-       "reboot": false,
+       "reboot": true,
        "kind": "tweak",
        "variants": [
         {
@@ -5676,7 +5676,7 @@
        },
        "desc": {
         "fr": "Photographie l'état de Windows pour pouvoir revenir en arrière.",
-        "en": "Snapshots Windows so you can roll back."
+        "en": "Saves the current state of Windows so you can restore it later."
        },
        "risk": "safe",
        "reboot": false,
@@ -5696,7 +5696,7 @@
        },
        "desc": {
         "fr": "Ouvre l'outil Windows pour revenir à un point de restauration.",
-        "en": "Opens the Windows tool to roll back."
+        "en": "Opens the Windows tool to go back to a restore point."
        },
        "risk": "safe",
        "reboot": false,

@@ -1,5 +1,5 @@
-<title>Rago Optimizer</title>
-<meta name="description" content="Every millisecond counts. Rago tunes Windows, your network and Minecraft for steadier ping, smoother frames and less input lag, with a Windows restore point before every change.">
+<title>Rago Optimizer: Minecraft PvP optimizer for Windows</title>
+<meta name="description" content="Every millisecond counts. Rago tunes Windows, your network and Minecraft for steadier ping, smoother frames and less input lag. A Windows restore point is offered before changes, on by default.">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600;700&family=Geist+Mono:wght@400;500&display=swap">
@@ -57,6 +57,7 @@ h1,h2,h3{font-weight:600;letter-spacing:-.035em;line-height:1.05;text-wrap:balan
 .menu-btn[aria-expanded="true"] i:last-child{transform:translateY(-3.3px) rotate(-45deg)}
 .menu{pointer-events:auto;max-width:1400px;margin:8px auto 0;padding:10px;border-radius:24px;background:rgba(17,17,19,.94);border:1px solid var(--l2);backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px);box-shadow:0 30px 60px -20px rgba(0,0,0,.8);animation:menuIn .32s var(--out)}
 .menu[hidden]{display:none}
+[hidden]{display:none!important}
 .menu nav{display:grid}
 .menu nav a{text-decoration:none;color:var(--t1);font-size:15px;padding:13px 16px;border-radius:16px}
 .menu nav a:hover{background:var(--l1)}
@@ -117,7 +118,7 @@ section[id],main[id]{scroll-margin-top:92px}
 .main{position:relative;background:var(--ink);border-top-left-radius:var(--r-lg);border-top:1px solid var(--l1);border-left:1px solid var(--l1);padding:24px 24px 96px;display:flex;flex-direction:column;gap:16px;min-width:0;overflow:hidden}
 .mhead{display:flex;align-items:flex-end;justify-content:space-between;gap:14px;flex-wrap:wrap}
 .mhead .ovl{font:500 10px/1 var(--mono);letter-spacing:.12em;text-transform:uppercase;color:var(--t3)}
-.mhead h3{font-size:26px;margin-top:8px;letter-spacing:-.03em}
+.mhead .mh{font-size:26px;font-weight:600;line-height:1.1;margin-top:8px;letter-spacing:-.03em;color:var(--t1)}
 .mhead p{font-size:12.5px;color:var(--t3);margin-top:4px}
 .mtools{display:flex;align-items:center;gap:10px;font-size:11.5px;color:var(--t3)}
 .mini{font:500 12px/1 var(--sans);color:var(--t1);background:var(--ink-3);border:1px solid var(--l2);border-radius:var(--r-full);padding:8px 12px;cursor:pointer;transition:background .16s}
@@ -612,7 +613,7 @@ footer.foot p{max-width:80ch}
       <div>
         <span class="eyebrow fade">Minecraft PvP optimizer for Windows</span>
         <h1 id="h1">Every millisecond <span class="red">counts.</span></h1>
-        <p class="lede fade d1">Steadier ping, smoother frames, less input lag. Rago tunes Windows, your network and Minecraft, and makes a restore point before every change.</p>
+        <p class="lede fade d1">Steadier ping, smoother frames, less input lag. Rago tunes Windows, your network and Minecraft, and offers a restore point before changes, on by default.</p>
         <div class="cta-row fade d2">
           <a class="btn btn-red" href="#pricing">Get Premium<svg><use href="#i-arrow"/></svg></a>
           <a class="btn btn-ghost js-free-app" href="#pricing"><svg><use href="#i-down"/></svg>Download free</a>
@@ -634,7 +635,7 @@ footer.foot p{max-width:80ch}
           <nav class="side" aria-hidden="true" id="side"></nav>
           <div class="main">
             <div class="mhead">
-              <div><span class="ovl">02 / Latency</span><h3>Latency</h3><p>Timers, priorities, CPU, memory and power.</p></div>
+              <div><span class="ovl">02 / Latency</span><div class="mh">Latency</div><p>Timers, priorities, CPU, memory and power.</p></div>
               <div class="mtools"><span class="mono" id="msel">0 of 89 selected</span><button class="mini" type="button" id="selall">Select safe tweaks</button></div>
             </div>
             <div class="stitle"><span>Mouse and keyboard</span><span class="mono">7</span></div>
@@ -672,7 +673,7 @@ footer.foot p{max-width:80ch}
     <div class="story">
       <div class="steps-txt" id="steps">
         <div class="st" data-step="0"><span class="k">01 · The journey</span><h3>Every hit takes a trip.</h3><p>Your click goes through your mouse, your PC, your network, then the server. The server checks hits on a fixed beat, 20 times a second.</p></div>
-        <div class="st" data-step="1"><span class="k">02 · Input lag</span><h3>Your click leaves faster.</h3><p>Mouse acceleration, USB power saving and input queues add delay before your PC even sees the click. Rago removes them.</p></div>
+        <div class="st" data-step="1"><span class="k">02 · Input lag</span><h3>Your click leaves faster.</h3><p>Mouse acceleration makes your aim inconsistent. USB power saving and input queues add delay before your PC even sees the click. Rago turns them off.</p></div>
         <div class="st" data-step="2"><span class="k">03 · Frame time</span><h3>Your frames stop stuttering.</h3><p>CPU power states and core parking cause uneven frames. Rago keeps the CPU awake so each frame takes the same time.</p></div>
         <div class="st" data-step="3"><span class="k">04 · Ping jitter</span><h3>Your timing gets consistent.</h3><p>The distance to the server doesn't change. What changes is how much your timing jumps around, so more hits land in the beat they were meant for.</p></div>
       </div>
@@ -715,7 +716,7 @@ footer.foot p{max-width:80ch}
         <div class="presets" id="presets"><span>Minecraft PvP</span><span>Max FPS</span><span>Low latency</span><span>Laptop</span><span>Privacy</span></div>
       </div>
       <div class="fc rv"><h3>Always a way back</h3><p>A restore point comes first, every time.</p>
-        <div class="restore-demo"><svg class="ring" id="ring" viewBox="0 0 64 64"><circle class="bg" cx="32" cy="32" r="28"/><circle class="fg" cx="32" cy="32" r="28"/></svg><div><b>Restore point created</b><span>Roll back with System Restore.</span></div></div>
+        <div class="restore-demo"><svg class="ring" id="ring" viewBox="0 0 64 64"><circle class="bg" cx="32" cy="32" r="28"/><circle class="fg" cx="32" cy="32" r="28"/></svg><div><b>Restore point created</b><span>Restore Windows with System Restore.</span></div></div>
       </div>
     </div>
   </section>
@@ -777,12 +778,12 @@ footer.foot p{max-width:80ch}
         <div class="plan">
           <h3>Premium</h3>
           <p class="sub">Every tweak unlocked</p>
-          <div class="price"><b id="p-amt">$0</b><small id="p-per">/ month</small></div>
-          <div class="price-note" id="p-note"></div>
+          <div class="price"><b id="p-amt">$4.16</b><small id="p-per">/ month</small></div>
+          <div class="price-note" id="p-note">Billed $49.90 yearly.</div>
           <ul>
             <li><svg><use href="#i-check"/></svg>All 226 tweaks unlocked</li>
             <li><svg><use href="#i-check"/></svg>5 one-click presets</li>
-            <li><svg><use href="#i-check"/></svg>Minecraft, RBW Mod, Game mode and Expert</li>
+            <li><svg><use href="#i-check"/></svg>Minecraft, RBW Mod, Game mode and Expert mode</li>
             <li><svg><use href="#i-check"/></svg>New tweaks and fixes included</li>
             <li><svg><use href="#i-check"/></svg>The Premium channel on Discord, after purchase</li>
           </ul>
@@ -849,7 +850,7 @@ footer.foot p{max-width:80ch}
       <svg viewBox="0 0 1124 180" style="height:22px;width:auto;color:var(--t1)"><use href="#i-word"/></svg>
       <nav aria-label="Footer"><a href="#features">Features</a><a href="#pricing">Pricing</a><a href="#faq">FAQ</a><a class="js-affiliate" href="/affiliate">Affiliate program</a><a class="js-account" href="/login">Sign in</a><a class="js-signup" href="/signup">Create account</a><a class="js-discord" href="#reviews">Discord</a><a href="terms.html">Terms</a><a href="privacy.html">Privacy</a><a href="refunds.html">Refunds</a></nav>
     </div>
-    <p>Rago Optimizer changes Windows settings. Results depend on your hardware and connection. A restore point is created before any change. Minecraft is a trademark of Mojang Studios; Rago Optimizer isn't affiliated with Mojang or Microsoft. © 2026 Rago Optimizer, by Rago and Straight.</p>
+    <p>Rago Optimizer changes Windows settings. Results depend on your hardware and connection. A restore point is offered before changes, on by default. Minecraft is a trademark of Mojang Studios; Rago Optimizer isn't affiliated with Mojang or Microsoft. © 2026 Rago Optimizer, by Rago and Straight.</p>
   </div>
 </footer>
 
@@ -904,7 +905,7 @@ const $$ = (s, r = document) => [...r.querySelectorAll(s)];
 const reduce = matchMedia("(prefers-reduced-motion: reduce)").matches;
 const esc = s => String(s).replace(/[&<>"]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
 const toast = m => { const t = $("#toast"); t.textContent = m; t.classList.add("show"); clearTimeout(t._h); t._h = setTimeout(() => t.classList.remove("show"), 2800); };
-const MONTHS_FREE = Math.round(12 - CONFIG.priceYear / CONFIG.priceMonth); // yearly discount, from the real prices
+const MONTHS_FREE = Math.floor(1e-9 + 12 - CONFIG.priceYear / CONFIG.priceMonth); // yearly discount, from the real prices
 const acct = p => CONFIG.accountBase.replace(/\/+$/, "") + p;
 const wire = (sel, url, msg, ext) => $$(sel).forEach(a => {
   if (url) { a.href = url; if (ext) { a.target = "_blank"; a.rel = "noopener"; } }
@@ -919,23 +920,38 @@ $$(".js-free-app").forEach(a => a.href = acct(CONFIG.freeAppPath));
 /* Rago only runs on Windows: phones and Macs get a note instead of an installer they can't open */
 const onWindows = /Windows/i.test(navigator.userAgent) || /Win/i.test(navigator.userAgentData?.platform || "");
 $$(".js-free-app, .js-free").forEach(a => a.addEventListener("click", e => { if (!onWindows) { e.preventDefault(); openSend(); } }));
-function openSend() {
-  const d = $("#send"); d.hidden = false; setTimeout(() => $("#send-share").focus(), 30);
+/* Keep Tab inside an open dialog */
+function trap(d) {
+  d.addEventListener("keydown", e => {
+    if (e.key !== "Tab") return;
+    const f = $$("a[href],button:not([disabled])", d).filter(x => !x.hidden && x.offsetParent !== null);
+    if (!f.length) return;
+    const a = f[0], z = f[f.length - 1];
+    if (e.shiftKey && (document.activeElement === a || !d.contains(document.activeElement))) { e.preventDefault(); z.focus(); }
+    else if (!e.shiftKey && document.activeElement === z) { e.preventDefault(); a.focus(); }
+  });
 }
+let sendBack = null;
+function openSend() {
+  const d = $("#send"); sendBack = document.activeElement; d.hidden = false;
+  $("#send-url").textContent = sendUrl().replace(/^https?:\/\//, "");
+  setTimeout(() => (navigator.share ? $("#send-share") : $("#send-copy")).focus(), 30);
+}
+/* The link sent to the PC keeps the affiliate code the visitor came with (REF is read at click time) */
+const sendUrl = () => location.origin + location.pathname.replace(/index\.html$/, "") + (typeof REF === "string" && REF ? "?ref=" + encodeURIComponent(REF) : "");
 (() => {
-  const d = $("#send"), url = location.origin + location.pathname.replace(/index\.html$/, "");
-  $("#send-url").textContent = url.replace(/^https?:\/\//, "");
+  const d = $("#send"); trap(d);
   if (!navigator.share) $("#send-share").hidden = true;
-  $("#send-share").addEventListener("click", () => navigator.share({ title: "Rago Optimizer", text: "Rago Optimizer for my PC", url }).catch(() => {}));
-  $("#send-copy").addEventListener("click", async () => { try { await navigator.clipboard.writeText(url); $("#send-copy").textContent = "Link copied"; } catch (e) { toast(url); } });
-  const close = () => { d.hidden = true; $("#send-copy").textContent = "Copy link"; };
+  $("#send-share").addEventListener("click", () => { if (navigator.share) navigator.share({ title: "Rago Optimizer", text: "Rago Optimizer for my PC", url: sendUrl() }).catch(() => {}); });
+  $("#send-copy").addEventListener("click", async () => { const url = sendUrl(); try { await navigator.clipboard.writeText(url); $("#send-copy").textContent = "Link copied"; } catch (e) { toast(url); } });
+  const close = () => { d.hidden = true; $("#send-copy").textContent = "Copy link"; sendBack && sendBack.focus && sendBack.focus(); };
   $("#send-x").addEventListener("click", close); d.addEventListener("click", e => { if (e.target === d) close(); });
   addEventListener("keydown", e => { if (e.key === "Escape" && !d.hidden) close(); });
   if (!onWindows) $$(".dock .js-free-app").forEach(a => a.textContent = "Send to my PC");
 })();
 /* After Download free: what to expect, SmartScreen included (the installer isn't code-signed yet) */
 (() => {
-  const d = $("#dlg"); let back = null;
+  const d = $("#dlg"); let back = null; trap(d);
   const close = () => { d.hidden = true; back && back.focus && back.focus(); };
   $$(".js-free-app").forEach(a => a.addEventListener("click", () => { if (!onWindows || a.id === "dlg-retry") return; back = a; d.hidden = false; setTimeout(() => $("#dlg-ok").focus(), 30); }));
   $("#dlg-ok").addEventListener("click", close); $("#dlg-pro").addEventListener("click", () => { d.hidden = true; });
@@ -1029,10 +1045,10 @@ const ICO = { // small Lucide glyphs used in rows and buttons
 const svg = (d, c = "") => `<svg viewBox="0 0 24 24"${c ? ` class="${c}"` : ""} aria-hidden="true">${d}</svg>`;
 const MODS = [
   ["network","Network","Ping, stability and hit registration.",22],["latency","Latency","Timers, priorities, CPU, memory and power.",89],
-  ["gpu","Graphics card","NVIDIA, AMD and Intel, each with its own settings.",32],["windows","Windows","What runs for nothing in the background.",45],
+  ["gpu","Graphics card","NVIDIA, AMD and Intel, each with its own settings.",32],["windows","Windows","Background apps and services you don't need.",45],
   ["hitreg","Hitreg","The advanced suite so your hits land.",9],["minecraft","Minecraft","OptiFine, javaw priority and game traffic.",1],
   ["rbw","RBW Mod","Ready for a Ranked BedWars screenshare.",1],["gamemode","Game mode","Turn on before playing, off after.",1],
-  ["expert","Expert mode","The .bat's God Mode. Powerful, use knowingly.",21],["restore","Restore","Always a way back.",4]
+  ["expert","Expert mode","Everything from the classic .bat, for experienced users.",21],["restore","Restore","Always a way back.",4]
 ];
 (() => {
   const nv = (id, label, on, cnt) => `<div class="nv${on ? " on" : ""}"><svg viewBox="0 0 24 24">${ICON[id]}</svg><span class="nl">${label}</span>${cnt ? '<span class="cnt mono" id="navcnt">0</span>' : ""}</div>`;
@@ -1090,7 +1106,7 @@ const MODS = [
       $("#run-count").innerHTML = `${pad(i + 1)}<small>/${pad(tot)}</small>`; prog.style.width = (i + 1) / tot * 100 + "%";
     }
     run.classList.add("done"); $("#run-state").textContent = "Done";
-    $("#run-cur").innerHTML = `${tot} of ${tot} applied.<br>Restart your PC to finish applying these tweaks.`;
+    $("#run-cur").innerHTML = `${tot} of ${tot} applied.<br>Restart your PC to finish applying ${tot === 1 ? "this tweak" : "these tweaks"}.`;
     $("#run-acts").hidden = false;
     if (!touched) { await wait(3200); if (run.classList.contains("show") && !run.contains(document.activeElement)) closeRun(); }
   };
@@ -1157,7 +1173,7 @@ const MODS = [
 
 /* Inside the app: click a section, see real tweaks from it */
 (() => {
-  const EX = {"network": [["Hitreg profile", "TTL, TCP auto-tuning and receive coalescing, tuned for better hitreg or for Hypixel.", ""], ["Disable Nagle's algorithm", "Sends each packet immediately instead of batching them (TCPNoDelay, TcpAckFrequency).", "r"], ["Disable NIC power saving", "Disables Green Ethernet, EEE, Wake-on-LAN and NIC sleep, which add wake-up latency.", "r"], ["Restart network adapter", "Applies network settings without rebooting. Your connection drops for a few seconds.", "x"]], "latency": [["Disable mouse acceleration", "The cursor moves the same distance regardless of hand speed.", "r"], ["Disable core parking", "Keeps every core awake.", ""], ["Multimedia scheduler (MMCSS)", "Reserves more CPU/GPU time for tasks tagged Games and Low Latency.", "r"]], "gpu": [["NVIDIA optimization", "NVIDIA driver settings, preemption, power states and the Rago driver profile.", "r"], ["AMD power saving", "Power gating, clock gating, ASPM and ULPS disabled.", "r"], ["General GPU", "Hardware scheduling, GPU priority and power settings for any card.", "r"]], "windows": [["Windows Game Mode", "Turns Windows Game Mode on or off.", ""], ["Disable Game DVR and Xbox", "Turns off background recording and Xbox services.", "r"], ["Clear temp files", "Deletes the contents of Windows and user Temp folders.", "x"]], "hitreg": [["Mouse optimization", "Raw 1:1 mouse movement, no acceleration, faster mouse driver.", ""], ["Input queue size", "How many mouse and keyboard events the drivers buffer. Lower reacts faster.", "r"], ["Advanced hitreg suite", "NIC interrupt moderation, Win32 priority for your PC class, and 400+ telemetry, storage and input settings.", "ar"]], "minecraft": [["OptiFine preset", "Rewrites optionsof.txt.", ""], ["Per-game advanced priority", "Gives the chosen game CPU, GPU and I/O priority and marks its network traffic (QoS).", "r"], ["Network profile", "Tunes the TCP stack for your play style.", ""], ["Clear temp files", "Deletes the contents of Windows and user Temp folders.", "x"]], "rbw": [["RBW Mod", "On restarts and sets to automatic the services screenshare tools check (Event Log, SysMain, PCA, Scheduler).", ""]], "gamemode": [["Rago game mode", "On clears temp files, stops printing, disables Windows animations and restarts Explorer.", ""]], "expert": [["I/O priority", "Tunes CPU and disk priority of system processes.", "r"], ["Kernel settings", "DPC watchdog, interrupt steering and monitor latency tolerance.", "ar"], ["Boot settings (BCD)", "Changes the boot manager: TSC clock, Hyper-V and VBS off, x2APIC.", "ar"]], "restore": [["Create a restore point", "Snapshots Windows so you can roll back.", "x"], ["Open System Restore", "Opens the Windows tool to roll back.", "x"], ["Reset network", "Resets the Windows network stack and renews your IP.", "arx"], ["Default input queue", "Restores the input driver queue to 100.", "rx"]]};
+  const EX = {"network": [["Hitreg profile", "TTL, TCP auto-tuning and receive coalescing, tuned for better hitreg or for Hypixel.", ""], ["Disable Nagle's algorithm", "Sends each packet immediately instead of batching them (TCPNoDelay, TcpAckFrequency).", "r"], ["Disable NIC power saving", "Disables Green Ethernet, EEE, Wake-on-LAN and NIC sleep, which add wake-up latency.", "r"], ["Restart network adapter", "Applies network settings without rebooting. Your connection drops for a few seconds.", "x"]], "latency": [["Disable mouse acceleration", "The cursor moves the same distance regardless of hand speed.", "r"], ["Disable core parking", "Keeps every core awake.", ""], ["Multimedia scheduler (MMCSS)", "Reserves more CPU/GPU time for tasks tagged Games and Low Latency.", "r"]], "gpu": [["NVIDIA optimization", "NVIDIA driver settings, preemption, power states and the Rago driver profile.", "r"], ["AMD power saving", "Power gating, clock gating, ASPM and ULPS disabled.", "r"], ["General GPU", "Hardware scheduling, GPU priority and power settings for any card.", "r"]], "windows": [["Windows Game Mode", "Turns Windows Game Mode on or off.", ""], ["Disable Game DVR and Xbox", "Turns off background recording and Xbox services.", "r"], ["Clear temp files", "Deletes the contents of Windows and user Temp folders.", "x"]], "hitreg": [["Mouse optimization", "Raw 1:1 mouse movement, no acceleration, faster mouse driver.", ""], ["Input queue size", "How many mouse and keyboard events the drivers buffer. Lower reacts faster.", "r"], ["Advanced hitreg suite", "NIC interrupt moderation, Win32 priority for your PC class, and 400+ telemetry, storage and input settings.", "ar"]], "minecraft": [["OptiFine preset", "Rewrites optionsof.txt.", ""], ["Per-game advanced priority", "Gives the chosen game CPU, GPU and I/O priority and marks its network traffic (QoS).", "r"], ["Network profile", "Tunes the TCP stack for your play style.", ""], ["Clear temp files", "Deletes the contents of Windows and user Temp folders.", "x"]], "rbw": [["RBW Mod", "On restarts and sets to automatic the services screenshare tools check (Event Log, SysMain, PCA, Scheduler).", ""]], "gamemode": [["Rago game mode", "On clears temp files, stops printing, disables Windows animations and restarts Explorer.", ""]], "expert": [["I/O priority", "Tunes CPU and disk priority of system processes.", "r"], ["Kernel settings", "DPC watchdog, interrupt steering and monitor latency tolerance.", "ar"], ["Boot settings (BCD)", "Changes the boot manager: TSC clock, Hyper-V and VBS off, x2APIC.", "ar"]], "restore": [["Create a restore point", "Snapshots Windows so you can restore it later.", "x"], ["Open System Restore", "Opens the Windows tool to restore an earlier point.", "x"], ["Reset network", "Resets the Windows network stack and renews your IP.", "arx"], ["Default input queue", "Restores the input driver queue to 100.", "rx"]]};
   const DETAIL = {
     rbw: ["Event Log", "SysMain", "Program Compatibility Assistant", "Task Scheduler"],
     gamemode: ["Clears temp files", "Stops printing", "Turns off Windows animations", "Restarts Explorer"]
@@ -1167,6 +1183,7 @@ const MODS = [
   tabs.innerHTML = MODS.map(([id, name], i) => `<button type="button" class="xt" role="tab" id="xt${i}" aria-controls="xpanel" aria-selected="false" tabindex="-1" data-i="${i}">${svg(ICON[id])}${name}<i class="bar"></i></button>`).join("");
   const btns = $$(".xt", tabs);
   let cur = -1, auto = true, timer;
+  const phone = () => matchMedia("(hover:none), (max-width:760px)").matches; // phones: no auto-rotation, no height lock
   const badge = f => (f.includes("a") ? '<span class="bdg warn">Advanced</span>' : "") + (f.includes("r") ? `<span class="bdg">${svg(ICO.restart)}Restart</span>` : "");
   const ctl = f => f.includes("x") ? `<span class="xrun">${svg(ICO.play)}Run</span>` : '<i class="sw"></i>';
   const show = (i, focus) => {
@@ -1178,11 +1195,11 @@ const MODS = [
     panel.setAttribute("aria-labelledby", "xt" + i);
     panel.innerHTML = `<div><span class="ovl">${String(i + 1).padStart(2, "0")} / ${name}</span><h3>${name}</h3><p class="tg">${tag}</p></div><div class="xp-list">${EX[id].map(([n, d, f], k) => `<div class="xr${f.includes("x") ? " act" : ""}" style="animation-delay:${k * 90}ms"><div class="m"><div class="t">${esc(n)}${badge(f)}</div><p>${esc(d)}</p></div>${ctl(f)}</div>`).join("")}${det}</div>`;
     $$(".xr:not(.act)", panel).forEach((r, k) => setTimeout(() => r.classList.add("on"), reduce ? 0 : 600 + k * 250));
-    const h = panel.offsetHeight; if (h > (panel._mh || 0)) { panel._mh = h; panel.style.minHeight = h + "px"; } // never shrink: the page below stays still
+    const h = panel.offsetHeight; if (!phone() && h > (panel._mh || 0)) { panel._mh = h; panel.style.minHeight = h + "px"; } // never shrink: the page below stays still
     if (tabs.scrollWidth > tabs.clientWidth) tabs.scrollTo({ left: btns[i].offsetLeft - 16, behavior: reduce ? "auto" : "smooth" });
   };
   const bar = () => { const b = btns[cur]; b.classList.remove("auto"); if (auto && !reduce) { void b.offsetWidth; b.classList.add("auto"); } };
-  const tick = () => { clearTimeout(timer); if (!auto || reduce) return; panel.setAttribute("aria-live", "off"); bar(); timer = setTimeout(() => { show((cur + 1) % MODS.length); tick(); }, 4200); };
+  const tick = () => { clearTimeout(timer); if (!auto || reduce || phone()) return; panel.setAttribute("aria-live", "off"); bar(); timer = setTimeout(() => { show((cur + 1) % MODS.length); tick(); }, 4200); };
   const stop = () => { auto = false; clearTimeout(timer); panel.setAttribute("aria-live", "polite"); };
   btns.forEach((b, i) => b.addEventListener("click", () => { stop(); show(i); }));
   tabs.addEventListener("keydown", e => {
@@ -1300,7 +1317,7 @@ const REF = (() => {
 /* FAQ: animated accordion */
 (() => {
   const F = [
-    ["Can I get banned for using Rago?", "Rago doesn't modify Minecraft and injects nothing into the game. It changes Windows and network settings, the same ones you could change by hand. Some servers screenshare players and check Windows logs. A few Advanced tweaks turn off Windows services staff look at, and each one says so. Turn on RBW Mod before a screenshare: it brings those services back."],
+    ["Can I get banned for using Rago?", "Rago doesn't modify Minecraft and injects nothing into the game. It changes Windows and network settings, the same ones you could change by hand. Some servers screenshare players and check Windows logs. A few Advanced tweaks turn off Windows services staff look at, and each one says so. Turn on RBW Mod and restart your PC before a screenshare: it brings those services back."],
     ["Will it lower my ping?", "It depends where your ping comes from. Distance to the server can't be fixed by any software. Rago cuts the delay your PC adds and makes your timing steadier, which is what matters most for hits."],
     ["What's the difference between Free and Premium?", "Both are the same Rago Optimizer app. Free opens 9 tweaks, Restore included, and shows everything else with a lock. Both measure your ping before and after. Premium unlocks all 226 tweaks, the 5 presets and new tweaks as they're added."],
     ["Does it work on laptops?", "Yes. Rago runs on any Windows 10 or 11 PC, desktop or laptop. Premium includes a Laptop preset: gains without hurting battery life or heat."],
@@ -1308,9 +1325,9 @@ const REF = (() => {
     ["Monthly or yearly?", MONTHS_FREE >= 1 ? `Same app either way. Yearly costs ${12 - MONTHS_FREE} months of the monthly price, so you get ${MONTHS_FREE} month${MONTHS_FREE === 1 ? "" : "s"} free. You can cancel anytime from your account.` : "Same app either way. You can cancel anytime from your account."],
     ["How do I join the Premium channel on Discord?", "After you buy, open a ticket on our Discord with the email of your Rago account. Our staff checks your purchase and gives you the Premium role. It isn't automatic, so it can take a little while."],
     ["Can I use my license on more than one PC?", "No. Premium works on one device per license. If you change PCs, contact support on Discord."],
-    ["What if I don't like a change?", "Rago creates a Windows restore point before applying anything. To go back, open Restore in the app and pick Open System Restore: Windows rolls your PC back to that point after a restart. Restore also has quick resets for the network and the input queue."],
+    ["What if I don't like a change?", "Before applying anything, Rago offers to create a Windows restore point, ticked by default. To go back, open Restore in the app and pick Open System Restore: Windows returns to that point after a restart. Restore also has quick resets for the network and the input queue."],
     ["Windows says \u201cWindows protected your PC\u201d. Is it safe?", "Windows shows this for apps that don't have a paid code-signing certificate yet, which is our case. Click More info, then Run anyway. Only do it for the installer you downloaded from this site. Rago then asks for administrator rights, because it changes system settings."],
-    ["How do I uninstall Rago?", "If you want your old settings back, roll back with Open System Restore first. Then uninstall Rago Optimizer from Windows Settings, Apps, like any other app."],
+    ["How do I uninstall Rago?", "If you want your old settings back, use Open System Restore first. Then uninstall Rago Optimizer from Windows Settings, Apps, like any other app."],
     ["My antivirus flagged Rago. Why?", "Rago changes system settings, which is what antivirus tools watch for. Only download Rago from this site. Don't disable your antivirus: allow the file if you trust it, or ask us on Discord."],
     ["How does the affiliate program work?", "Join to get your code. When 3 friends buy Premium and enter your code while creating their account, your Premium access becomes permanent. A friend counts once they have activated the app and 14 days have passed since their payment."]
   ];

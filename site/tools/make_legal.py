@@ -16,7 +16,7 @@ HEAD='''<!doctype html>
 <style>
 @font-face{{font-family:"Geist";src:url("fonts/Geist-Variable.woff2") format("woff2");font-weight:100 900;font-display:swap}}
 @font-face{{font-family:"Geist Mono";src:url("fonts/GeistMono-Variable.woff2") format("woff2");font-weight:100 900;font-display:swap}}
-:root{{--ink:#0A0A0B;--ink-2:#111113;--l1:rgba(255,255,255,.07);--l2:rgba(255,255,255,.12);--t1:#F5F5F7;--t2:#A1A1AA;--t3:#71717A;--red:#FF3B30;--warn:#FFD60A}}
+:root{{--ink:#0A0A0B;--ink-2:#111113;--l1:rgba(255,255,255,.07);--l2:rgba(255,255,255,.12);--t1:#F5F5F7;--t2:#A1A1AA;--t3:#7C7C86;--red:#FF3B30;--warn:#FFD60A}}
 *{{box-sizing:border-box;margin:0}}
 html{{background:var(--ink);color-scheme:dark}}
 body{{background:var(--ink);color:var(--t1);font:400 15px/1.7 Geist,system-ui,sans-serif;-webkit-font-smoothing:antialiased;padding:0 16px}}
@@ -88,7 +88,7 @@ page('terms.html','Terms of Sale',f'''
 <p>Premium is digital content supplied right after payment. By completing checkout, you ask for immediate access and acknowledge that you lose your 14-day right of withdrawal once the license is delivered. Our <a href="refunds.html">Refunds and Cancellation</a> policy explains when we refund anyway.</p>
 
 <h2>6. Using the app safely</h2>
-<p>Rago creates a Windows restore point before applying changes and lets you undo them from the Restore section. Some tweaks are marked <strong>Advanced</strong>: they turn off Windows protections or services and ask for confirmation. You choose which tweaks to apply, and you are responsible for that choice.</p>
+<p>Before applying changes, Rago offers to create a Windows restore point (on by default), and its Restore section opens System Restore so you can go back to it. Some tweaks are marked <strong>Advanced</strong>: they turn off Windows protections or services and ask for confirmation. You choose which tweaks to apply, and you are responsible for that choice.</p>
 <p>Rago doesn't modify Minecraft or inject anything into games. Server rules are set by each server: check them before you play. We aren't responsible for decisions a server's staff makes about your account.</p>
 
 <h2>7. Affiliate program</h2>
@@ -152,7 +152,7 @@ page('privacy.html','Privacy Policy',f'''
 <ul>
 <li><strong>rg_session</strong>: keeps you signed in to your account. Necessary.</li>
 <li><strong>rg_claim</strong>: links a purchase to the account you create right after it, for 7 days. Necessary.</li>
-<li><strong>rg_ref</strong> and <strong>rago_ref</strong> (browser storage): remember an affiliate code from a share link for 30 days.</li>
+<li><strong>rg_ref</strong> (cookie on the account server) and <strong>rago_ref</strong> (browser storage on this site): remember an affiliate code from a share link for 30 days.</li>
 </ul>
 <p>We don't use advertising or analytics cookies, and the site loads no third-party fonts or trackers.</p>
 
@@ -162,7 +162,7 @@ page('privacy.html','Privacy Policy',f'''
 <li><strong>Supabase</strong>: database and download storage</li>
 <li><strong>Railway</strong>: account and license server</li>
 <li><strong>Netlify</strong>: website hosting</li>
-<li><strong>Resend</strong>: account emails (password reset)</li>
+<li><strong>Resend</strong>: account emails (purchase confirmation, password reset)</li>
 </ul>
 <p>Some of these providers are in the United States. Transfers rely on the European Commission's standard contractual clauses or an equivalent safeguard.</p>
 

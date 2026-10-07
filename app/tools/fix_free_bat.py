@@ -11,7 +11,11 @@ Reprend les corrections mécaniques de tools/extract_bat.py, sans toucher au con
        (WebView2 fait tourner Rago Optimizer), comme SAFETY_DROPS de build_catalog.py ;
      - le vidage de C:\Windows\Prefetch est retiré (lu comme des traces effacées en screenshare) ;
      - la réinitialisation du pare-feu et la coupure de Spectre/Meltdown (FeatureSettingsOverride=3)
-       ne s'appliquent que si l'utilisateur les accepte, à une question posée une fois au lancement.
+       ne s'appliquent que si l'utilisateur les accepte, à une question posée une fois au lancement ;
+  8. commandes cassées : artefact ChatGPT (« contentReference ») retiré, MTU sur la carte « Ethernet » en
+     guillemets typographiques → boucle sur les cartes connectées, .nip importé par nvidiaProfileInspector.exe
+     (et non par association de fichier), service CDPUserSvc_5d3cf propre au PC de l'auteur → boucle sur
+     CDPUserSvc_*, boucles `do set "str=%%i" (` détachées rattachées à leur corps (comme l'app).
 Les octets d'origine (y compris l'en-tête FF FE) sont conservés.
 
     python3 tools/fix_free_bat.py [sortie]
@@ -23,11 +27,16 @@ import sys
 ROOT = os.path.join(os.path.dirname(__file__), '..')
 SRC = os.path.join(ROOT, 'legacy', 'Premium v5.2 - Rago Hub.bat')
 OUT = sys.argv[1] if len(sys.argv) > 1 else os.path.join(ROOT, '..', 'free', 'rago-free-v5.2.bat')
-NIP = r'if exist "%~dp0extremelatencylow.nip" ( start "" /wait "%~dp0extremelatencylow.nip" ) else ( echo [skip] extremelatencylow.nip introuvable a cote du .bat )'
+NIP = (r'if exist "%~dp0nvidiaProfileInspector.exe" ( "%~dp0nvidiaProfileInspector.exe" "%~dp0extremelatencylow.nip" -silentImport )'
+       r' else ( echo [skip] nvidiaProfileInspector.exe or extremelatencylow.nip not found next to the .bat )')
+MTU = (r'for /f "tokens=4,*" %%x in (\'netsh interface ipv4 show interfaces ^| findstr /i /c:" connected" ^| findstr /v /i "Loopback"\')'
+       r' do netsh interface ipv4 set subinterface "%%y" mtu=1500 store=persistent')
+CDP = r'for /f "tokens=2" %%s in (\'sc query state^= all ^| findstr /r /c:"SERVICE_NAME: CDPUserSvc_"\') do sc {cmd} %%s{rest}'
 
 text = open(SRC, 'rb').read().decode('latin-1')
 lines = text.split('\r\n')
-counts = {k: 0 for k in ('disable', 'delete', 'binary', 'sid', 'path', 'header', 'edge', 'prefetch', 'firewall', 'spectre')}
+counts = {k: 0 for k in ('disable', 'delete', 'binary', 'sid', 'path', 'header', 'edge', 'prefetch', 'firewall', 'spectre',
+                         'chatgpt', 'mtu', 'nip', 'cdp', 'loop')}
 EDGE = re.compile(r'^\s*rd\s+/s\s+/q\s+"C:\\Program Files \(x86\)\\Microsoft\\(EdgeWebView|EdgeUpdate|EdgeCore|Temp)"\s*$', re.I)
 SPECTRE = re.compile(r'^\s*reg(?:\.exe)?\s+add\s.*Memory Management"?\s+/v\s+"?FeatureSettings(Override|OverrideMask)?"?\s+/t\s+REG_DWORD\s+/d\s+"?[13]"?', re.I)
 for i, l in enumerate(lines):
@@ -62,6 +71,19 @@ for i, l in enumerate(lines):
     elif SPECTRE.match(l):
         l = 'if "%RAGO_SPECTRE%"=="1" ' + l.strip()
         counts['spectre'] += 1
+    if 'contentReference[oaicite' in l:
+        l = 'rem (invalid line removed)'
+        counts['chatgpt'] += 1
+    elif re.match(r'^\s*netsh interface ipv4 set subinterface \S+Ethernet\S+ mtu=1500', l):
+        l = MTU
+        counts['mtu'] += 1
+    elif re.search(r'start\s+""\s+/wait\s+"%~dp0extremelatencylow\.nip"', l):
+        l = NIP
+        counts['nip'] += 1
+    m = re.match(r'^(\s*)sc (config|start) CDPUserSvc_5d3cf(.*)$', l)
+    if m:
+        l = m.group(1) + CDP.format(cmd=m.group(2), rest=m.group(3))
+        counts['cdp'] += 1
     if 'Thanks for your Purchase !' in l:
         l = l.replace('Thanks for your Purchase !', 'Thanks for downloading Rago Free !')
         counts['header'] += 1
@@ -69,6 +91,32 @@ for i, l in enumerate(lines):
         l = l.replace('Premium Version V5', 'Rago Free V5.2')
         counts['header'] += 1
     lines[i] = l
+
+# Boucles détachées : `for ... do set "str=%%i" (` exécute le set dans la boucle puis le bloc une seule fois,
+# avec %%i littéral. On rattache le bloc (« & ( ») et on le ferme après les lignes qui utilisent %%i.
+out, k = [], 0
+while k < len(lines):
+    l = lines[k]
+    if re.search(r'do set "str=%%i" \($', l):
+        out.append(l[:-1] + '& (')
+        k += 1
+        body = []
+        while k < len(lines) and not lines[k].lstrip().lower().startswith('for ') and (
+                '%%i' in lines[k] or lines[k].strip().lower().startswith(('echo', 'timeout'))):
+            body.append(lines[k])
+            k += 1
+        # le bloc s'arrête à la dernière ligne qui utilise %%i : le message de fin reste hors de la boucle
+        last = max(j for j, b in enumerate(body) if '%%i' in b)
+        out.extend(body[:last + 1])
+        out.append(')')
+        out.extend(body[last + 1:])
+        if k < len(lines) and lines[k].strip() == ')':
+            k += 1
+        counts['loop'] += 1
+        continue
+    out.append(l)
+    k += 1
+lines = out
 
 ASK = [
     '',

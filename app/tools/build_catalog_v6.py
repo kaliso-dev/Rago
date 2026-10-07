@@ -407,6 +407,8 @@ def postprocess(modules, scripts):
         'after a restart. Off sets the services back to manual after your session.',
         'Activé relance les services que vérifient les outils de screenshare (journal d\'événements, SysMain, PCA, Planificateur) '
         'et remet BAM et le Prefetch après un redémarrage. Désactivé repasse les services en manuel après ta session.')
+    # BAM est un pilote et le Prefetcher se relit au démarrage : sans redémarrage, « On » ne remet rien de visible.
+    tweaks['rbw_mode']['reboot'] = True
     tweaks['rst_queue']['desc'] = I('Puts the mouse and keyboard queues back to 100, the Windows default.',
                                     'Remet les files souris et clavier à 100, la valeur de Windows.')
 

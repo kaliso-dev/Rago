@@ -54,7 +54,9 @@ export function loadConfig(env = process.env) {
     installerPath: env.INSTALLER_PATH || '',
     installerVersion: env.INSTALLER_VERSION || '',
     installerFileName: env.INSTALLER_FILENAME || 'RagoOptimizer-Setup.exe',
-    installerUrl: env.INSTALLER_URL || '', // optional public link to the .exe, used instead of Storage
+    installerUrl: env.INSTALLER_URL || '',
+    // The old .bat, free on the site: offered when the app can't be downloaded.
+    freeBatUrl: env.FREE_BAT_URL || `${asUrl(env.SITE_URL) || publicUrl}/downloads/rago-optimizer-free-v5.2.zip`, // optional public link to the .exe, used instead of Storage
 
     licenseTokenDays: Number(env.LICENSE_TOKEN_DAYS || 30),
     // Days a subscriber keeps working offline past the paid period (renewal retries, clock drift).
