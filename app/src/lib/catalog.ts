@@ -14,6 +14,8 @@ export interface Variant {
   revert?: boolean;
   /** redémarrage propre à cette variante (sinon celui du réglage) */
   reboot?: boolean;
+  /** commandes lancées par cette variante (sans echo ni commentaires) */
+  lines?: number;
 }
 
 export interface Tweak {

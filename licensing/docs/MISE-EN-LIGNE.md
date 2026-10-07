@@ -106,7 +106,7 @@ Sans Resend, tout marche sauf les emails : pas de lien de secours après achat, 
    DATABASE_URL=postgresql://postgres.abcd:TON_MOT_DE_PASSE@aws-0-eu-west-3.pooler.supabase.com:5432/postgres
    SUPABASE_URL=https://abcd.supabase.co
    SUPABASE_SERVICE_ROLE_KEY=...
-   INSTALLER_VERSION=1.1.4
+   INSTALLER_VERSION=1.1.5
    STRIPE_SECRET_KEY=sk_test_...
    STRIPE_PRICE_MONTHLY=price_...
    STRIPE_PRICE_YEARLY=price_...
@@ -158,7 +158,7 @@ C'est ce qui prévient le serveur qu'un paiement est passé.
 3. **Actions → app-windows → Run workflow**. Ouvre ensuite **le run le plus récent avec une coche verte** → **Artifacts** → `rago-optimizer-setup` → décompresse : le fichier est `Rago Optimizer_<version>_x64-setup.exe`. Les anciens artefacts `rago-hub-setup` contiennent l'ancienne app « Rago Hub » : supprime-les (icône corbeille dans chaque ancien run) pour ne pas te tromper.
 4. Supabase → **Storage → downloads → Upload file** : dépose le fichier `.exe` qui est **dans** le zip (pas le zip lui-même). Son nom n'a pas d'importance : le serveur sert toujours le `.exe` le plus récent du bucket.
 5. **Vérifie** : ouvre `https://account.ragohub.com/download/status`. Tu dois voir `"ok":true` et le nom de ton fichier. Sinon la ligne `error` dit quoi corriger (clé Supabase refusée, bucket vide, mauvais nom de bucket).
-6. À chaque nouvelle version : dépose le nouvel exe (tu peux supprimer l'ancien) et mets à jour `INSTALLER_VERSION` dans Railway. Vérifie sur `/download/status` que `file` donne bien le nouveau nom (cette page relit le bucket à chaque fois ; le bouton de téléchargement suit dans la minute).
+6. À chaque nouvelle version : dépose le nouvel exe (tu peux supprimer l'ancien) et mets dans `INSTALLER_VERSION` (Railway) le numéro de son nom. Vérifie sur `/download/status` que `file` donne bien le nouveau nom (cette page relit le bucket à chaque fois ; le bouton de téléchargement suit dans la minute).
 
 Le bouton **Download** marche pour tous les comptes, avec ou sans Premium : sans licence, l'app tourne en version gratuite. Le lien public `https://account.ragohub.com/download` sert au bouton gratuit du site.
 
@@ -214,7 +214,7 @@ Si une étape coince, envoie-moi une capture et l'heure : je trouve la cause.
 | `STRIPE_PORTAL_LOGIN_URL` | Stripe → Portail client → lien de connexion (étape 3.4) |
 | `PRICE_LABEL` | Le prix affiché aux comptes gratuits, ex. `$4.99 a month or $49.90 a year`, dans la même devise que Stripe et le site |
 | `LICENSE_SIGNING_KEY`, `SESSION_SECRET` | `npm run admin -- export-keys` (étape 5.7) |
-| `INSTALLER_VERSION` | La version de l'exe déposé (ex. `1.1.4`). `INSTALLER_OBJECT` est facultatif (il donne le bucket et le dossier) : le `.exe` le plus récent du dossier est toujours servi |
+| `INSTALLER_VERSION` | Le numéro de l'exe déposé dans le bucket, lu dans son nom `Rago Optimizer_<numéro>_x64-setup.exe` (ex. `1.1.5`). Affiché à côté du bouton de téléchargement. `INSTALLER_OBJECT` est facultatif (il donne le bucket et le dossier) : le `.exe` le plus récent du dossier est toujours servi |
 
 À retirer s'il est encore là : `STRIPE_PRICE_ID` (ancien prix unique, plus vendu).
 

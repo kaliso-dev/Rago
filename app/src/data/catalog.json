@@ -43,35 +43,40 @@
          "label": {
           "en": "Better hitreg",
           "fr": "Meilleur hitreg"
-         }
+         },
+         "lines": 3
         },
         {
          "id": "besthitreg",
          "label": {
           "en": "Best hitreg",
           "fr": "Hitreg maximal"
-         }
+         },
+         "lines": 3
         },
         {
          "id": "balanced",
          "label": {
           "en": "Balanced",
           "fr": "Équilibré"
-         }
+         },
+         "lines": 3
         },
         {
          "id": "hypixel",
          "label": {
           "en": "Hypixel",
           "fr": "Hypixel"
-         }
+         },
+         "lines": 3
         },
         {
          "id": "slowlest",
          "label": {
           "en": "Slowest",
           "fr": "Le plus lent"
-         }
+         },
+         "lines": 3
         },
         {
          "id": "default",
@@ -79,11 +84,12 @@
           "en": "Default",
           "fr": "Par défaut"
          },
-         "revert": true
+         "revert": true,
+         "lines": 3
         }
        ],
        "defaultVariant": "better",
-       "lines": 18
+       "lines": 3
       },
       {
        "id": "ping_packets",
@@ -108,25 +114,28 @@
          "label": {
           "en": "Hitreg",
           "fr": "Hitreg"
-         }
+         },
+         "lines": 60
         },
         {
          "id": "qos",
          "label": {
           "en": "QoS",
           "fr": "QoS"
-         }
+         },
+         "lines": 26
         },
         {
          "id": "knockback",
          "label": {
           "en": "Knockback",
           "fr": "Knockback"
-         }
+         },
+         "lines": 48
         }
        ],
        "defaultVariant": "hitreg",
-       "lines": 134
+       "lines": 60
       }
      ]
     },
@@ -162,32 +171,36 @@
          "label": {
           "en": "Config 1",
           "fr": "Config 1"
-         }
+         },
+         "lines": 36
         },
         {
          "id": "config2",
          "label": {
           "en": "Config 2",
           "fr": "Config 2"
-         }
+         },
+         "lines": 117
         },
         {
          "id": "config3",
          "label": {
           "en": "Config 3",
           "fr": "Config 3"
-         }
+         },
+         "lines": 42
         },
         {
          "id": "config4",
          "label": {
           "en": "Config 4",
           "fr": "Config 4"
-         }
+         },
+         "lines": 158
         }
        ],
        "defaultVariant": "config1",
-       "lines": 353
+       "lines": 158
       },
       {
        "id": "ping_advanced",
@@ -238,21 +251,24 @@
          "label": {
           "fr": "Hitreg",
           "en": "Hitreg"
-         }
+         },
+         "lines": 50
         },
         {
          "id": "knockback",
          "label": {
           "fr": "Knockback",
           "en": "Knockback"
-         }
+         },
+         "lines": 52
         },
         {
          "id": "qos",
          "label": {
           "fr": "QoS Minecraft",
           "en": "QoS Minecraft"
-         }
+         },
+         "lines": 28
         }
        ],
        "requires": [],
@@ -262,7 +278,7 @@
         "Kbc3@409",
         "QOS2@482"
        ],
-       "lines": 130
+       "lines": 52
       }
      ]
     },
@@ -292,28 +308,32 @@
          "label": {
           "fr": "Préréglage 1",
           "en": "Preset 1"
-         }
+         },
+         "lines": 61
         },
         {
          "id": "s2",
          "label": {
           "fr": "Préréglage 2",
           "en": "Preset 2"
-         }
+         },
+         "lines": 162
         },
         {
          "id": "s3",
          "label": {
           "fr": "Préréglage 3",
           "en": "Preset 3"
-         }
+         },
+         "lines": 36
         },
         {
          "id": "s4",
          "label": {
           "fr": "Préréglage 4",
           "en": "Preset 4"
-         }
+         },
+         "lines": 117
         }
        ],
        "requires": [
@@ -326,7 +346,7 @@
         "SERVERC@1034",
         "SERVERY@1113"
        ],
-       "lines": 376,
+       "lines": 162,
        "confirm": {
         "en": "Resets the Windows Firewall: your custom rules are deleted. Resets Winsock and the network settings.",
         "fr": "Réinitialise le pare-feu Windows : tes règles personnalisées sont supprimées. Réinitialise Winsock et les réglages réseau."
@@ -787,42 +807,48 @@
          "label": {
           "fr": "Minecraft",
           "en": "Minecraft"
-         }
+         },
+         "lines": 125
         },
         {
          "id": "fortnite",
          "label": {
           "fr": "Fortnite",
           "en": "Fortnite"
-         }
+         },
+         "lines": 125
         },
         {
          "id": "valorant",
          "label": {
           "fr": "Valorant",
           "en": "Valorant"
-         }
+         },
+         "lines": 125
         },
         {
          "id": "cs2",
          "label": {
           "fr": "CS2",
           "en": "CS2"
-         }
+         },
+         "lines": 125
         },
         {
          "id": "apex",
          "label": {
           "fr": "Apex",
           "en": "Apex"
-         }
+         },
+         "lines": 125
         },
         {
          "id": "gta",
          "label": {
           "fr": "GTA V",
           "en": "GTA V"
-         }
+         },
+         "lines": 125
         }
        ],
        "requires": [],
@@ -835,7 +861,7 @@
         "apex@4050",
         "gta@3627"
        ],
-       "lines": 750
+       "lines": 125
       },
       {
        "id": "pri_mmcss",
@@ -1297,7 +1323,8 @@
           "fr": "Intel",
           "en": "Intel"
          },
-         "auto": "cpu:intel"
+         "auto": "cpu:intel",
+         "lines": 30
         },
         {
          "id": "amd",
@@ -1305,7 +1332,8 @@
           "fr": "AMD",
           "en": "AMD"
          },
-         "auto": "cpu:amd"
+         "auto": "cpu:amd",
+         "lines": 28
         }
        ],
        "requires": [],
@@ -1313,7 +1341,7 @@
         "c17@7522",
         "c18@7601"
        ],
-       "lines": 58
+       "lines": 30
       },
       {
        "id": "cpu_parking",
@@ -1633,7 +1661,8 @@
           "en": "4 GB",
           "fr": "4 Go"
          },
-         "auto": "ram:4"
+         "auto": "ram:4",
+         "lines": 39
         },
         {
          "id": "8",
@@ -1641,7 +1670,8 @@
           "en": "8 GB",
           "fr": "8 Go"
          },
-         "auto": "ram:8"
+         "auto": "ram:8",
+         "lines": 39
         },
         {
          "id": "12",
@@ -1649,7 +1679,8 @@
           "en": "12 GB",
           "fr": "12 Go"
          },
-         "auto": "ram:12"
+         "auto": "ram:12",
+         "lines": 39
         },
         {
          "id": "16",
@@ -1657,7 +1688,8 @@
           "en": "16 GB",
           "fr": "16 Go"
          },
-         "auto": "ram:16"
+         "auto": "ram:16",
+         "lines": 39
         },
         {
          "id": "24",
@@ -1665,7 +1697,8 @@
           "en": "24 GB",
           "fr": "24 Go"
          },
-         "auto": "ram:24"
+         "auto": "ram:24",
+         "lines": 39
         },
         {
          "id": "32",
@@ -1673,7 +1706,8 @@
           "en": "32 GB",
           "fr": "32 Go"
          },
-         "auto": "ram:32"
+         "auto": "ram:32",
+         "lines": 39
         },
         {
          "id": "48",
@@ -1681,7 +1715,8 @@
           "en": "48 GB",
           "fr": "48 Go"
          },
-         "auto": "ram:48"
+         "auto": "ram:48",
+         "lines": 39
         },
         {
          "id": "64",
@@ -1689,7 +1724,8 @@
           "en": "64 GB",
           "fr": "64 Go"
          },
-         "auto": "ram:64"
+         "auto": "ram:64",
+         "lines": 39
         },
         {
          "id": "128",
@@ -1697,11 +1733,12 @@
           "en": "128 GB",
           "fr": "128 Go"
          },
-         "auto": "ram:128"
+         "auto": "ram:128",
+         "lines": 39
         }
        ],
        "defaultVariant": "16",
-       "lines": 351,
+       "lines": 39,
        "confirm": {
         "en": "Turns off the Spectre and Meltdown protections. Stops Prefetch from filling. On a screenshare that can look like erased traces: turn on RBW Mod and restart your PC before one.",
         "fr": "Coupe les protections Spectre et Meltdown. Le Prefetch ne se remplit plus. Sur un screenshare, ça peut ressembler à des traces effacées : active le RBW Mod et redémarre ton PC avant."
@@ -1750,7 +1787,8 @@
           "fr": "4 Go",
           "en": "4 GB"
          },
-         "auto": "ram:4"
+         "auto": "ram:4",
+         "lines": 23
         },
         {
          "id": "8",
@@ -1758,7 +1796,8 @@
           "fr": "8 Go",
           "en": "8 GB"
          },
-         "auto": "ram:8"
+         "auto": "ram:8",
+         "lines": 23
         },
         {
          "id": "12",
@@ -1766,7 +1805,8 @@
           "fr": "12 Go",
           "en": "12 GB"
          },
-         "auto": "ram:12"
+         "auto": "ram:12",
+         "lines": 23
         },
         {
          "id": "16",
@@ -1774,7 +1814,8 @@
           "fr": "16 Go",
           "en": "16 GB"
          },
-         "auto": "ram:16"
+         "auto": "ram:16",
+         "lines": 23
         },
         {
          "id": "24",
@@ -1782,7 +1823,8 @@
           "fr": "24 Go",
           "en": "24 GB"
          },
-         "auto": "ram:24"
+         "auto": "ram:24",
+         "lines": 23
         },
         {
          "id": "32",
@@ -1790,7 +1832,8 @@
           "fr": "32 Go",
           "en": "32 GB"
          },
-         "auto": "ram:32"
+         "auto": "ram:32",
+         "lines": 23
         },
         {
          "id": "48",
@@ -1798,7 +1841,8 @@
           "fr": "48 Go",
           "en": "48 GB"
          },
-         "auto": "ram:48"
+         "auto": "ram:48",
+         "lines": 23
         },
         {
          "id": "64",
@@ -1806,7 +1850,8 @@
           "fr": "64 Go",
           "en": "64 GB"
          },
-         "auto": "ram:64"
+         "auto": "ram:64",
+         "lines": 23
         },
         {
          "id": "128",
@@ -1814,7 +1859,8 @@
           "fr": "128 Go",
           "en": "128 GB"
          },
-         "auto": "ram:128"
+         "auto": "ram:128",
+         "lines": 23
         }
        ],
        "requires": [],
@@ -1829,7 +1875,7 @@
         "64GB@9645",
         "128GB@9659"
        ],
-       "lines": 207,
+       "lines": 23,
        "confirm": {
         "en": "Stops Prefetch from filling. On a screenshare that can look like erased traces: turn on RBW Mod and restart your PC before one.",
         "fr": "Le Prefetch ne se remplit plus. Sur un screenshare, ça peut ressembler à des traces effacées : active le RBW Mod et redémarre ton PC avant."
@@ -2025,12 +2071,12 @@
       {
        "id": "sys_time",
        "name": {
-        "en": "Time behavior",
-        "fr": "Gestion du temps"
+        "en": "File timestamps",
+        "fr": "Horodatage des fichiers"
        },
        "desc": {
-        "en": "Timer and clock settings.",
-        "fr": "Réglages des minuteurs et de l'horloge."
+        "en": "Turns off last-access timestamps (Windows stops recording when each file was last opened) and short 8.3 file names. Same commands as “FSUTIL settings” (Latency) and “FSUTIL file settings” (Latency). Checked together, they run once.",
+        "fr": "Coupe l'horodatage du dernier accès (Windows ne note plus quand chaque fichier a été ouvert) et les noms de fichiers courts 8.3. Mêmes commandes que « Réglages FSUTIL » (Latence) et « Réglages de fichiers FSUTIL » (Latence). Cochés ensemble, ils ne s'appliquent qu'une fois."
        },
        "risk": "safe",
        "reboot": true,
@@ -2039,7 +2085,8 @@
        "legacy": [
         "RAGO APP FPS.bat@1893"
        ],
-       "lines": 2
+       "lines": 2,
+       "twin": "sys_time"
       },
       {
        "id": "sys_bcdedit",
@@ -2412,8 +2459,8 @@
         "fr": "Réglages NTFS"
        },
        "desc": {
-        "en": "File system settings for faster access.",
-        "fr": "Réglages du système de fichiers pour un accès plus rapide."
+        "en": "Enlarges the NTFS memory cache and the MFT zone, turns off last-access timestamps and page file encryption, keeps TRIM on.",
+        "fr": "Agrandit le cache mémoire de NTFS et la zone MFT, coupe l'horodatage du dernier accès et le chiffrement du fichier d'échange, garde le TRIM actif."
        },
        "risk": "safe",
        "reboot": true,
@@ -2422,7 +2469,7 @@
        "legacy": [
         "RAGO APP FPS.bat@1789"
        ],
-       "lines": 5
+       "lines": 4
       },
       {
        "id": "sto_fsutil_v6",
@@ -2431,8 +2478,8 @@
         "fr": "Réglages FSUTIL"
        },
        "desc": {
-        "en": "Disables last-access and 8.3 names. Same commands as “FSUTIL memory usage” (Latency). Checked together, they run once.",
-        "fr": "Coupe la date de dernier accès et les noms 8.3. Mêmes commandes que « FSUTIL mémoire » (Latence). Cochés ensemble, ils ne s'appliquent qu'une fois."
+        "en": "Turns off last-access timestamps (Windows stops recording when each file was last opened) and short 8.3 file names. Same commands as “File timestamps” (Latency) and “FSUTIL file settings” (Latency). Checked together, they run once.",
+        "fr": "Coupe l'horodatage du dernier accès (Windows ne note plus quand chaque fichier a été ouvert) et les noms de fichiers courts 8.3. Mêmes commandes que « Horodatage des fichiers » (Latence) et « Réglages de fichiers FSUTIL » (Latence). Cochés ensemble, ils ne s'appliquent qu'une fois."
        },
        "risk": "safe",
        "reboot": true,
@@ -2442,17 +2489,17 @@
         "RAGO APP FPS.bat@1797"
        ],
        "lines": 2,
-       "twin": "sto_fsutil_v6"
+       "twin": "sys_time"
       },
       {
        "id": "sto_fsutil2",
        "name": {
-        "en": "FSUTIL memory usage",
-        "fr": "FSUTIL mémoire"
+        "en": "FSUTIL file settings",
+        "fr": "Réglages de fichiers FSUTIL"
        },
        "desc": {
-        "en": "NTFS memory usage settings. Same commands as “FSUTIL settings” (Latency). Checked together, they run once.",
-        "fr": "Réglages mémoire de NTFS. Mêmes commandes que « Réglages FSUTIL » (Latence). Cochés ensemble, ils ne s'appliquent qu'une fois."
+        "en": "Turns off last-access timestamps (Windows stops recording when each file was last opened) and short 8.3 file names. Same commands as “File timestamps” (Latency) and “FSUTIL settings” (Latency). Checked together, they run once.",
+        "fr": "Coupe l'horodatage du dernier accès (Windows ne note plus quand chaque fichier a été ouvert) et les noms de fichiers courts 8.3. Mêmes commandes que « Horodatage des fichiers » (Latence) et « Réglages FSUTIL » (Latence). Cochés ensemble, ils ne s'appliquent qu'une fois."
        },
        "risk": "safe",
        "reboot": true,
@@ -2462,7 +2509,7 @@
         "RAGO APP FPS.bat@1886"
        ],
        "lines": 2,
-       "twin": "sto_fsutil_v6"
+       "twin": "sys_time"
       },
       {
        "id": "sto_defrag",
@@ -2491,8 +2538,8 @@
         "en": "NTFS settings for your drive"
        },
        "desc": {
-        "fr": "Horodatage du dernier accès et noms courts 8.3 réglés pour un SSD ou un disque dur.",
-        "en": "Last-access timestamps and 8.3 names set for SSD or HDD."
+        "en": "SSD: turns last-access timestamps and short 8.3 names off. HDD: lets Windows manage last-access timestamps and turns 8.3 names on.",
+        "fr": "SSD : coupe l'horodatage du dernier accès et les noms courts 8.3. Disque dur : laisse Windows gérer l'horodatage du dernier accès et active les noms 8.3."
        },
        "risk": "safe",
        "reboot": false,
@@ -2503,14 +2550,16 @@
          "label": {
           "fr": "SSD",
           "en": "SSD"
-         }
+         },
+         "lines": 2
         },
         {
          "id": "hdd",
          "label": {
           "fr": "Disque dur",
           "en": "HDD"
-         }
+         },
+         "lines": 2
         }
        ],
        "requires": [],
@@ -2519,7 +2568,7 @@
         "ssd@5306",
         "hdd@5288"
        ],
-       "lines": 4
+       "lines": 2
       },
       {
        "id": "sto_writecache",
@@ -2779,8 +2828,8 @@
         "fr": "Optimisation NVIDIA"
        },
        "desc": {
-        "en": "NVIDIA driver settings, preemption, power states and the Rago driver profile.",
-        "fr": "Réglages du pilote NVIDIA, préemption, états d'alimentation et profil pilote Rago."
+        "en": "NVIDIA driver settings, preemption, power states and the Rago driver profile. Also enlarges the NTFS memory cache (fsutil memoryusage 2).",
+        "fr": "Réglages du pilote NVIDIA, préemption, états d'alimentation et profil pilote Rago. Agrandit aussi le cache mémoire de NTFS (fsutil memoryusage 2)."
        },
        "risk": "safe",
        "reboot": true,
@@ -2801,8 +2850,8 @@
         "fr": "Optimisation AMD"
        },
        "desc": {
-        "en": "AMD driver settings, power saving and latency features.",
-        "fr": "Réglages du pilote AMD, économies d'énergie et options de latence."
+        "en": "AMD driver settings, power saving and latency features. Also enlarges the NTFS memory cache (fsutil memoryusage 2).",
+        "fr": "Réglages du pilote AMD, économies d'énergie et options de latence. Agrandit aussi le cache mémoire de NTFS (fsutil memoryusage 2)."
        },
        "risk": "safe",
        "reboot": true,
@@ -2854,8 +2903,8 @@
         "fr": "GPU général"
        },
        "desc": {
-        "en": "Hardware scheduling, GPU priority and power settings for any card.",
-        "fr": "Planification matérielle, priorité et alimentation du GPU, pour toutes les cartes."
+        "en": "Hardware scheduling, GPU priority and power settings for any card. Also enlarges the NTFS memory cache (fsutil memoryusage 2).",
+        "fr": "Planification matérielle, priorité et alimentation du GPU, pour toutes les cartes. Agrandit aussi le cache mémoire de NTFS (fsutil memoryusage 2)."
        },
        "risk": "safe",
        "reboot": true,
@@ -2904,8 +2953,8 @@
         "en": "Full NVIDIA optimization"
        },
        "desc": {
-        "fr": "Importe le profil Rago dans le pilote (Profile Inspector), active le mode MSI, coupe la préemption et le HDCP.",
-        "en": "Imports the Rago driver profile (Profile Inspector), enables MSI, disables preemption and HDCP."
+        "en": "Imports the Rago driver profile (Profile Inspector), enables MSI, disables preemption and HDCP. Also enlarges the NTFS memory cache (fsutil memoryusage 2).",
+        "fr": "Importe le profil Rago dans le pilote (Profile Inspector), active le mode MSI, coupe la préemption et le HDCP. Agrandit aussi le cache mémoire de NTFS (fsutil memoryusage 2)."
        },
        "risk": "safe",
        "reboot": true,
@@ -3435,8 +3484,8 @@
         "en": "Advanced AMD settings"
        },
        "desc": {
-        "fr": "Plus de 300 clés internes du pilote (DPM forcé, Chill coupé, gating).",
-        "en": "300+ internal driver keys (forced DPM, Chill off, gating)."
+        "en": "300+ internal driver keys (forced DPM, Chill off, gating). Also enlarges the NTFS memory cache (fsutil memoryusage 2).",
+        "fr": "Plus de 300 clés internes du pilote (DPM forcé, Chill coupé, gating). Agrandit aussi le cache mémoire de NTFS (fsutil memoryusage 2)."
        },
        "risk": "advanced",
        "reboot": true,
@@ -3546,17 +3595,19 @@
          "label": {
           "en": "On",
           "fr": "Activé"
-         }
+         },
+         "lines": 2
         },
         {
          "id": "off",
          "label": {
           "en": "Off",
           "fr": "Désactivé"
-         }
+         },
+         "lines": 2
         }
        ],
-       "lines": 4
+       "lines": 2
       },
       {
        "id": "win_gamedvr",
@@ -3629,17 +3680,19 @@
           "en": "On",
           "fr": "Activé"
          },
-         "revert": true
+         "revert": true,
+         "lines": 2
         },
         {
          "id": "off",
          "label": {
           "en": "Off",
           "fr": "Désactivé"
-         }
+         },
+         "lines": 2
         }
        ],
-       "lines": 4,
+       "lines": 2,
        "confirm": {
         "en": "Off turns off memory integrity (core isolation).",
         "fr": "Désactivé coupe l'intégrité de la mémoire (isolation du noyau)."
@@ -4557,7 +4610,7 @@
        "legacy": [
         "RAGO APP HITREG INPUTLAG.bat@76"
        ],
-       "lines": 86,
+       "lines": 85,
        "confirm": {
         "en": "Turns off the Spectre and Meltdown protections. Turns off the system-wide exploit protections. Turns off Hyper-V and virtualization-based security (VBS). Weakens Data Execution Prevention (DEP). Deletes every Image File Execution Options entry (per-program debugger and protection settings). Clears the Prefetch folder, which a screenshare can read as wiped traces.",
         "fr": "Coupe les protections Spectre et Meltdown. Coupe les protections contre les exploits de tout le système. Coupe Hyper-V et la sécurité basée sur la virtualisation (VBS). Affaiblit la prévention de l'exécution des données (DEP). Supprime toutes les entrées Image File Execution Options (débogueur et protections par programme). Vide le dossier Prefetch, ce qu'un screenshare peut lire comme des traces effacées."
@@ -4586,14 +4639,16 @@
          "label": {
           "en": "Lowest",
           "fr": "Minimale"
-         }
+         },
+         "lines": 10
         },
         {
          "id": "balanced",
          "label": {
           "en": "Balanced",
           "fr": "Équilibrée"
-         }
+         },
+         "lines": 10
         },
         {
          "id": "default",
@@ -4601,10 +4656,11 @@
           "en": "Default",
           "fr": "Par défaut"
          },
-         "revert": true
+         "revert": true,
+         "lines": 10
         }
        ],
-       "lines": 30
+       "lines": 10
       },
       {
        "id": "in_advanced",
@@ -4699,21 +4755,24 @@
          "label": {
           "en": "Ultra low",
           "fr": "Ultra basse"
-         }
+         },
+         "lines": 2
         },
         {
          "id": "low",
          "label": {
           "en": "Low",
           "fr": "Basse"
-         }
+         },
+         "lines": 2
         },
         {
          "id": "balanced",
          "label": {
           "en": "Balanced",
           "fr": "Équilibrée"
-         }
+         },
+         "lines": 2
         },
         {
          "id": "default",
@@ -4721,10 +4780,11 @@
           "en": "Default",
           "fr": "Par défaut"
          },
-         "revert": true
+         "revert": true,
+         "lines": 2
         }
        ],
-       "lines": 8
+       "lines": 2
       }
      ]
     },
@@ -4742,8 +4802,8 @@
         "en": "Advanced hitreg suite"
        },
        "desc": {
-        "fr": "Modération d'interruptions de la carte réseau, priorité Win32 adaptée à ton PC, et plus de 400 réglages de télémétrie, stockage et entrées. Sans les modules Réseau et Latence, l'effet est faible. Pas de retour arrière automatique : crée un point de restauration avant.",
-        "en": "NIC interrupt moderation, Win32 priority for your PC class, and 400+ telemetry, storage and input settings. No automatic undo: create a restore point first."
+        "en": "NIC interrupt moderation, Win32 priority for your PC class, and 400+ telemetry, storage and input settings. Also turns off NTFS compression. No automatic undo: create a restore point first.",
+        "fr": "Modération d'interruptions de la carte réseau, priorité Win32 adaptée à ton PC, et plus de 400 réglages de télémétrie, stockage et entrées. Sans les modules Réseau et Latence, l'effet est faible. Coupe aussi la compression NTFS. Pas de retour arrière automatique : crée un point de restauration avant."
        },
        "risk": "advanced",
        "reboot": true,
@@ -4754,28 +4814,32 @@
          "label": {
           "fr": "PC puissant",
           "en": "High-end PC"
-         }
+         },
+         "lines": 418
         },
         {
          "id": "medium",
          "label": {
           "fr": "PC moyen",
           "en": "Mid-range PC"
-         }
+         },
+         "lines": 418
         },
         {
          "id": "low",
          "label": {
           "fr": "PC modeste",
           "en": "Low-end PC"
-         }
+         },
+         "lines": 418
         },
         {
          "id": "laptop",
          "label": {
           "fr": "PC portable",
           "en": "Laptop"
-         }
+         },
+         "lines": 418
         }
        ],
        "requires": [
@@ -4788,7 +4852,7 @@
         "lwpc1@13118",
         "ltpc1@13123"
        ],
-       "lines": 1672,
+       "lines": 418,
        "confirm": {
         "en": "Stops Prefetch from filling. On a screenshare that can look like erased traces: turn on RBW Mod and restart your PC before one.",
         "fr": "Le Prefetch ne se remplit plus. Sur un screenshare, ça peut ressembler à des traces effacées : active le RBW Mod et redémarre ton PC avant."
@@ -4836,14 +4900,16 @@
          "label": {
           "fr": "Performance",
           "en": "Performance"
-         }
+         },
+         "lines": 11
         },
         {
          "id": "quality",
          "label": {
           "fr": "Qualité",
           "en": "Quality"
-         }
+         },
+         "lines": 11
         }
        ],
        "requires": [],
@@ -5003,7 +5069,7 @@
         "Performance@13768",
         "Quality@13875"
        ],
-       "lines": 22
+       "lines": 11
       },
       {
        "ref": "pri_game"
@@ -5058,7 +5124,8 @@
           "en": "On"
          },
          "revert": true,
-         "reboot": true
+         "reboot": true,
+         "lines": 21
         },
         {
          "id": "off",
@@ -5066,7 +5133,8 @@
           "fr": "Désactivé",
           "en": "Off"
          },
-         "reboot": false
+         "reboot": false,
+         "lines": 10
         }
        ],
        "requires": [],
@@ -5075,7 +5143,7 @@
         "On@14039",
         "off@14077"
        ],
-       "lines": 31
+       "lines": 21
       }
      ]
     }
@@ -5119,7 +5187,8 @@
          "label": {
           "fr": "Activé",
           "en": "On"
-         }
+         },
+         "lines": 14
         },
         {
          "id": "off",
@@ -5127,7 +5196,8 @@
           "fr": "Désactivé",
           "en": "Off"
          },
-         "revert": true
+         "revert": true,
+         "lines": 9
         }
        ],
        "requires": [],
@@ -5136,7 +5206,7 @@
         "ENABLE8@14250",
         "DISABLE8@14304"
        ],
-       "lines": 23
+       "lines": 14
       }
      ]
     }
@@ -5225,8 +5295,8 @@
         "en": "Additional settings"
        },
        "desc": {
-        "fr": "Timers répartis, latence NVMe, compteurs de performance reconstruits.",
-        "en": "Distributed timers, NVMe latency, performance counters rebuilt."
+        "en": "Distributed timers, NVMe latency tolerance, low-latency scaling, performance counters rebuilt, Sleep hidden from the power menu, last-access timestamps off.",
+        "fr": "Timers répartis, tolérance de latence NVMe, mise à l'échelle basse latence, compteurs de performance reconstruits, Veille masquée du menu d'alimentation, horodatage du dernier accès coupé."
        },
        "risk": "safe",
        "reboot": true,
@@ -5314,63 +5384,72 @@
          "label": {
           "fr": "60 Hz",
           "en": "60 Hz"
-         }
+         },
+         "lines": 2
         },
         {
          "id": "75",
          "label": {
           "fr": "75 Hz",
           "en": "75 Hz"
-         }
+         },
+         "lines": 2
         },
         {
          "id": "120",
          "label": {
           "fr": "120 Hz",
           "en": "120 Hz"
-         }
+         },
+         "lines": 2
         },
         {
          "id": "144",
          "label": {
           "fr": "144 Hz",
           "en": "144 Hz"
-         }
+         },
+         "lines": 2
         },
         {
          "id": "160",
          "label": {
           "fr": "160 Hz",
           "en": "160 Hz"
-         }
+         },
+         "lines": 2
         },
         {
          "id": "165",
          "label": {
           "fr": "165 Hz",
           "en": "165 Hz"
-         }
+         },
+         "lines": 2
         },
         {
          "id": "240",
          "label": {
           "fr": "240 Hz",
           "en": "240 Hz"
-         }
+         },
+         "lines": 2
         },
         {
          "id": "280",
          "label": {
           "fr": "280 Hz",
           "en": "280 Hz"
-         }
+         },
+         "lines": 2
         },
         {
          "id": "360",
          "label": {
           "fr": "360 Hz",
           "en": "360 Hz"
-         }
+         },
+         "lines": 2
         }
        ],
        "requires": [],
@@ -5386,7 +5465,7 @@
         "280h@2544",
         "360h@2560"
        ],
-       "lines": 18
+       "lines": 2
       },
       {
        "id": "exp_multimedia",
@@ -5433,8 +5512,8 @@
         "en": "NTFS settings"
        },
        "desc": {
-        "fr": "Cache NTFS agrandi et horodatage d'accès coupé.",
-        "en": "Larger NTFS cache, access timestamps off."
+        "en": "Enlarges the NTFS memory cache and the MFT zone, turns off last-access timestamps and page file encryption, keeps TRIM on.",
+        "fr": "Agrandit le cache mémoire de NTFS et la zone MFT, coupe l'horodatage du dernier accès et le chiffrement du fichier d'échange, garde le TRIM actif."
        },
        "risk": "safe",
        "reboot": true,

@@ -115,7 +115,7 @@ export function TweakRow({ tweak }: { tweak: Tweak }) {
               transition={{ duration: 0.2, ease: [0.16, 1, 0.3, 1] }}
             >
               <p className="muted small">
-                {tweak.native ? t(`tweak.native.${tweak.native}` as Key) : t("tweak.details", { n: tweak.lines })}
+                {tweak.native ? t(`tweak.native.${tweak.native}` as Key) : t("tweak.details", { n: tweak.variants?.find((v) => v.id === variant)?.lines ?? tweak.lines })}
                 {!isAction && <> {t(session ? "tweak.undoSession" : "tweak.undoRestore")}</>}
               </p>
               {tweak.confirm && (

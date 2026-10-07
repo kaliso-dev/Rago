@@ -1,6 +1,6 @@
 import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import { api, asLicenseError, type DoneEvent, type HistoryEntry, type ItemStatus, type LicenseError, type LicenseStatus, type RunItem, type SystemInfo } from "./api";
-import { autoVariant, availability, catalog, tweaks, type Lang, type Tweak, needsReboot } from "./catalog";
+import { autoVariant, availability, catalog, tweakModule, tweaks, type Lang, type Tweak, needsReboot } from "./catalog";
 import { translate, type Key } from "./i18n";
 import free from "../data/free.json";
 
@@ -21,8 +21,21 @@ export const BUILTIN_NAMES: Record<string, { fr: string; en: string }> = {
   __wmic: { fr: "Installer WMIC", en: "Install WMIC" },
 };
 
+// noms portés par plusieurs réglages (Disable autologgers, Disable HDCP…) : on ajoute le module pour les distinguer
+const DUP_NAMES: Record<Lang, Set<string>> = { fr: new Set(), en: new Set() };
+for (const lang of ["fr", "en"] as const) {
+  const seen = new Set<string>();
+  for (const tw of tweaks.values()) {
+    if (seen.has(tw.name[lang])) DUP_NAMES[lang].add(tw.name[lang]);
+    seen.add(tw.name[lang]);
+  }
+}
+
 export function itemName(id: string, lang: Lang): string {
-  return tweaks.get(id)?.name[lang] ?? BUILTIN_NAMES[id]?.[lang] ?? id;
+  const tw = tweaks.get(id);
+  if (!tw) return BUILTIN_NAMES[id]?.[lang] ?? id;
+  const mod = catalog.modules.find((m) => m.id === tweakModule.get(id));
+  return DUP_NAMES[lang].has(tw.name[lang]) && mod ? `${tw.name[lang]} · ${mod.name[lang]}` : tw.name[lang];
 }
 
 export interface RunRow {

@@ -115,7 +115,8 @@ impl Runner {
         };
         let (mut ok, mut failed) = (0, 0);
         // réglages jumeaux (même script) cochés ensemble : le script tourne une fois, le résultat vaut pour tous
-        let mut twins_done: HashMap<String, (bool, Option<i32>, String)> = HashMap::new();
+        // clé jumeau:variante → (réussite, code, message d'erreur, id du réglage lancé)
+        let mut twins_done: HashMap<String, (bool, Option<i32>, Option<String>, String)> = HashMap::new();
         for (index, item) in items.iter().enumerate() {
             if self.cancel.load(Ordering::SeqCst) {
                 break;
@@ -136,9 +137,14 @@ impl Runner {
             };
             let twin_key = catalog::twin_of(&item.id).map(|t| format!("{t}:{}", variant.unwrap_or("")));
             let (success, code, message) = match twin_key.as_ref().and_then(|k| twins_done.get(k)) {
-                Some((s, c, first)) => {
-                    emit_line(format!("- Same commands as {first}, already applied in this run"));
-                    (*s, *c, None)
+                Some((s, c, msg, first)) => {
+                    let name = catalog::name_of(first);
+                    emit_line(if *s {
+                        format!("- Same commands as {name}, applied above: not run again")
+                    } else {
+                        format!("- Same commands as {name}, which failed above: not run again")
+                    });
+                    (*s, *c, msg.clone())
                 }
                 None => {
                     let result = self.run_item(ctx, item, &emit_line);
@@ -148,7 +154,7 @@ impl Runner {
                         Err(e) => (false, None, Some(e)),
                     };
                     if let Some(k) = twin_key {
-                        twins_done.insert(k, (r.0, r.1, item.id.clone()));
+                        twins_done.insert(k, (r.0, r.1, r.2.clone(), item.id.clone()));
                     }
                     r
                 }

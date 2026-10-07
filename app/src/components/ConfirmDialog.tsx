@@ -1,7 +1,7 @@
 import { RotateCcw, ShieldCheck, TriangleAlert } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import { availability, needsReboot, tweaks } from "../lib/catalog";
-import { SESSION_TOGGLES, useStore } from "../lib/store";
+import { SESSION_TOGGLES, itemName, useStore } from "../lib/store";
 import { Modal } from "./Modal";
 import { Button, Badge } from "./ui";
 
@@ -46,7 +46,7 @@ export function ConfirmDialog() {
             const vLabel = tw.variants?.find((x) => x.id === v)?.label[lang];
             return (
               <li key={tw.id}>
-                <span>{tw.name[lang]}</span>
+                <span>{itemName(tw.id, lang)}</span>
                 {vLabel && <span className="confirm-variant">{vLabel}</span>}
                 {needsReboot(tw, variantOf(tw)) && <RotateCcw size={12} className="muted" />}
                 {tw.risk === "advanced" && <Badge tone="warn">{t("badge.advanced")}</Badge>}
@@ -63,7 +63,7 @@ export function ConfirmDialog() {
             <p key={tw.id}>
               <TriangleAlert size={13} />
               <span>
-                <b>{tw.name[lang]}.</b> {tw.confirm![lang]}
+                <b>{itemName(tw.id, lang)}.</b> {tw.confirm![lang]}
               </span>
             </p>
           ))}

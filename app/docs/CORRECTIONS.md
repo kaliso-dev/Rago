@@ -401,6 +401,13 @@ Corrections ciblées (`SCRIPT_FIXES`, `DROP_LINES`) :
 - sto_general : `PROFILES_DIR` lu non développé, la boucle sur les profils ne tournait jamais ;
 - rst_queue et in_queue « Default » : 80 et 32 → 100, la valeur de Windows ;
 - game_mode : faute « Optimimizing ».
+- in_windows, sto_ntfs : `fsutil behavior set DisableDeleteNotify 1` retiré. Cette ligne coupait le TRIM du SSD
+  (qui le garde rapide et en bonne santé) sans le dire ; choix de Sofiene du 2026-10-07 : TRIM laissé actif. Le motif reste
+  dans `WARNINGS` et le test `dangerous_lines_stay_out` vérifie qu'aucun script ne le contient plus ;
+- sto_fsutil_v6, sto_fsutil2, sys_time, sto_fsutil (variante SSD) : `disableLastAccess 0` → `1` (`SUB_LINES`). Le .bat
+  ACTIVAIT la date de dernier accès alors que l'app disait la couper ; choix de Sofiene du 2026-10-07 : la couper vraiment.
+  La variante disque dur (valeur 2, gérée par Windows) ne change pas ;
+- sys_time renommé « File timestamps » / « Horodatage des fichiers » (il règle l'horodatage des fichiers, pas l'horloge).
 
 Profils exclusifs découpés en variantes (ils s'exécutaient tous à la suite) : ping_hitreg (6 profils dont Default),
 ping_packets (Hitreg, QoS, Knockback), ping_main (Config 1 à 4), sys_ram (selon la RAM).

@@ -283,6 +283,14 @@ SCRIPT_FIXES = {
 DROP_LINES = [
     (('win_visual', 'win_apps'), r'MessageBox\]::Show'),
     (('win_visual',), r'^\s*%windir%\\system32\\SystemPropertiesPerformance\.exe\s*$'),
+    # TRIM gardé actif (choix de Sofiene, 2026-10-07) : WARNINGS garde le motif si une future version du .bat le remet ailleurs
+    (('in_windows', 'sto_ntfs'), r'^\s*fsutil\s+behavior\s+set\s+DisableDeleteNotify\s+(NTFS\s+)?1\b'),
+]
+# lignes réécrites (ids ou « id:variant », motif, remplacement)
+SUB_LINES = [
+    # date de dernier accès vraiment coupée, comme l'app l'annonce (choix de Sofiene, 2026-10-07) ; la variante hdd (2) ne change pas
+    (('sto_fsutil_v6', 'sto_fsutil2', 'sys_time', 'sto_fsutil:ssd'),
+     r'(?i)^(\s*fsutil\s+behavior\s+set\s+disableLastAccess\s+)0\b', r'\g<1>1'),
 ]
 RBW_ON_EXTRA = '\n'.join([
     'echo - BAM, DAM and Prefetch back on (active after a restart)',
@@ -328,9 +336,39 @@ WARNINGS = [
      'Le Prefetch ne se remplit plus. Sur un screenshare, ça peut ressembler à des traces effacées : active le RBW Mod et redémarre ton PC avant.'),
     (r'^(?!\s*echo).*(del|forfiles|rd)\b.*\\prefetch', 'Clears the Prefetch folder, which a screenshare can read as wiped traces.',
      'Vide le dossier Prefetch, ce qu\'un screenshare peut lire comme des traces effacées.'),
+    (r'DisableDeleteNotify\s+(NTFS\s+)?1\b', 'Turns off TRIM on your SSD, which keeps it fast and healthy over time.',
+     'Coupe le TRIM du SSD, qui le garde rapide et en bonne santé dans le temps.'),
     (r'Clear-RecycleBin', 'Empties the Recycle Bin.', 'Vide la Corbeille.'),
     (r'RunMRU|TypedPaths|OpenSavePidlMRU', 'Clears your recent files and Run history.', 'Efface tes fichiers récents et l\'historique Exécuter.'),
 ]
+# descriptions qui disent ce que font les commandes (vérification du 2026-10-07, fsutil)
+LASTACCESS_OFF = ('Turns off last-access timestamps (Windows stops recording when each file was last opened) and short 8.3 file names.',
+                  'Coupe l\'horodatage du dernier accès (Windows ne note plus quand chaque fichier a été ouvert) et les noms de fichiers courts 8.3.')
+DESC_FIX = {
+    'sto_fsutil_v6': LASTACCESS_OFF,
+    'sto_fsutil2': LASTACCESS_OFF,
+    'sys_time': LASTACCESS_OFF,
+    'sto_ntfs': ('Enlarges the NTFS memory cache and the MFT zone, turns off last-access timestamps and page file encryption, '
+                 'keeps TRIM on.',
+                 'Agrandit le cache mémoire de NTFS et la zone MFT, coupe l\'horodatage du dernier accès et le chiffrement du fichier '
+                 'd\'échange, garde le TRIM actif.'),
+    'exp_ntfs': ('Enlarges the NTFS memory cache and the MFT zone, turns off last-access timestamps and page file encryption, keeps TRIM on.',
+                 'Agrandit le cache mémoire de NTFS et la zone MFT, coupe l\'horodatage du dernier accès et le chiffrement du fichier '
+                 'd\'échange, garde le TRIM actif.'),
+    'exp_misc': ('Distributed timers, NVMe latency tolerance, low-latency scaling, performance counters rebuilt, Sleep hidden from the '
+                 'power menu, last-access timestamps off.',
+                 'Timers répartis, tolérance de latence NVMe, mise à l\'échelle basse latence, compteurs de performance reconstruits, '
+                 'Veille masquée du menu d\'alimentation, horodatage du dernier accès coupé.'),
+    'sto_fsutil': ('SSD: turns last-access timestamps and short 8.3 names off. HDD: lets Windows manage last-access timestamps '
+                   'and turns 8.3 names on.',
+                   'SSD : coupe l\'horodatage du dernier accès et les noms courts 8.3. Disque dur : laisse Windows gérer '
+                   'l\'horodatage du dernier accès et active les noms 8.3.'),
+}
+# lancent aussi « fsutil behavior set memoryusage 2 » sans le dire
+MEMORYUSAGE = ['gpu_nvidia', 'gpu_amd', 'gpu_general', 'nv_general', 'amd_advanced']
+# « FSUTIL memory usage » ne touche pas à memoryusage
+NAME_FIX = {'sto_fsutil2': ('FSUTIL file settings', 'Réglages de fichiers FSUTIL'),
+            'sys_time': ('File timestamps', 'Horodatage des fichiers')}
 # avertissements écrits à la main, gardés devant ceux du script
 KEEP_CONFIRM = {'win_bluetooth', 'dbl_edge', 'dbl_onedrive'}
 
@@ -389,6 +427,16 @@ def postprocess(modules, scripts):
                 kept = [l for l in body.split(sep) if not re.search(pat, l, re.I)]
                 assert len(kept) < len(body.split(sep)), (tid, pat)
                 scripts[tid][v] = sep.join(kept)
+    for keys, pat, rep in SUB_LINES:
+        for key in keys:
+            tid, _, only = key.partition(':')
+            for v, body in scripts[tid].items():
+                if only and v != only:
+                    continue
+                sep = '\r\n' if '\r\n' in body else '\n'
+                new = [re.sub(pat, rep, l) for l in body.split(sep)]
+                assert new != body.split(sep), (key, pat)
+                scripts[tid][v] = sep.join(new)
     sep = '\r\n' if '\r\n' in scripts['rbw_mode']['on'] else '\n'
     scripts['rbw_mode']['on'] += sep + RBW_ON_EXTRA.replace('\n', sep)
 
@@ -425,6 +473,17 @@ def postprocess(modules, scripts):
     tweaks['rbw_mode']['reboot'] = False
     for v in tweaks['rbw_mode']['variants']:
         v['reboot'] = v['id'] == 'on'
+    for tid, (en, fr) in DESC_FIX.items():
+        tweaks[tid]['desc'] = I(en, fr)
+    hs = tweaks['hitreg_suite']['desc']
+    tweaks['hitreg_suite']['desc'] = I(hs['en'].replace(' No automatic undo', ' Also turns off NTFS compression. No automatic undo', 1),
+                                      hs['fr'].replace(' Pas de retour arrière', ' Coupe aussi la compression NTFS. Pas de retour arrière', 1))
+    assert 'NTFS compression' in tweaks['hitreg_suite']['desc']['en'] and 'compression NTFS' in tweaks['hitreg_suite']['desc']['fr']
+    for tid in MEMORYUSAGE:
+        tweaks[tid]['desc'] = I(tweaks[tid]['desc']['en'].rstrip() + ' Also enlarges the NTFS memory cache (fsutil memoryusage 2).',
+                                tweaks[tid]['desc']['fr'].rstrip() + ' Agrandit aussi le cache mémoire de NTFS (fsutil memoryusage 2).')
+    for tid, (en, fr) in NAME_FIX.items():
+        tweaks[tid]['name'] = I(en, fr)
     # mêmes commandes que dbl_autologgers (Débloat) : plus de « quelques clés en plus »
     tweaks['exp_autologgers']['desc'] = dict(tweaks['dbl_autologgers']['desc'])
     tweaks['rst_queue']['desc'] = I('Puts the mouse and keyboard queues back to 100, the Windows default.',
@@ -463,6 +522,8 @@ def twins(modules, scripts):
         norm = []
         for v in sorted(scripts[tid]):
             body = [l.strip().lower() for l in scripts[tid][v].replace('\r\n', '\n').split('\n')]
+            body = [re.sub(r'\s*(>\s*nul|2>&1|2>\s*nul)\s*', ' ', l).strip() for l in body]
+            body = [re.sub(r'\s+', ' ', l) for l in body]
             norm.append(v + '=' + '\n'.join(l for l in body if l and not re.match(r'(echo\b|rem |::|@echo)', l)))
         return '\x00'.join(norm)
 
@@ -506,8 +567,14 @@ def count_commands(modules, scripts):
         for sec in m['sections']:
             for t in sec['tweaks']:
                 if t.get('id') in scripts:
-                    t['lines'] = sum(1 for body in scripts[t['id']].values() for l in body.replace('\r\n', '\n').split('\n')
-                                     if l.strip() and not re.match(r'\s*(@?echo\b|rem\b|::)', l, re.I))
+                    n = {v: sum(1 for l in body.replace('\r\n', '\n').split('\n')
+                                if l.strip() and not re.match(r'\s*(@?echo\b|rem\b|::)', l, re.I))
+                         for v, body in scripts[t['id']].items()}
+                    # un lancement n'exécute qu'une variante : chaque variante porte son nombre, le réglage le plus grand
+                    t['lines'] = max(n.values())
+                    for v in t.get('variants') or []:
+                        if v['id'] in n:
+                            v['lines'] = n[v['id']]
 
 
 def sections_of(name):
@@ -599,6 +666,13 @@ Corrections ciblées (`SCRIPT_FIXES`, `DROP_LINES`) :
 - sto_general : `PROFILES_DIR` lu non développé, la boucle sur les profils ne tournait jamais ;
 - rst_queue et in_queue « Default » : 80 et 32 → 100, la valeur de Windows ;
 - game_mode : faute « Optimimizing ».
+- in_windows, sto_ntfs : `fsutil behavior set DisableDeleteNotify 1` retiré. Cette ligne coupait le TRIM du SSD
+  (qui le garde rapide et en bonne santé) sans le dire ; choix de Sofiene du 2026-10-07 : TRIM laissé actif. Le motif reste
+  dans `WARNINGS` et le test `dangerous_lines_stay_out` vérifie qu'aucun script ne le contient plus ;
+- sto_fsutil_v6, sto_fsutil2, sys_time, sto_fsutil (variante SSD) : `disableLastAccess 0` → `1` (`SUB_LINES`). Le .bat
+  ACTIVAIT la date de dernier accès alors que l'app disait la couper ; choix de Sofiene du 2026-10-07 : la couper vraiment.
+  La variante disque dur (valeur 2, gérée par Windows) ne change pas ;
+- sys_time renommé « File timestamps » / « Horodatage des fichiers » (il règle l'horodatage des fichiers, pas l'horloge).
 
 Profils exclusifs découpés en variantes (ils s'exécutaient tous à la suite) : ping_hitreg (6 profils dont Default),
 ping_packets (Hitreg, QoS, Knockback), ping_main (Config 1 à 4), sys_ram (selon la RAM).

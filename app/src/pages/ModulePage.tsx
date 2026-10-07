@@ -116,7 +116,7 @@ function HistoryList() {
 }
 
 export function ModulePage({ id }: { id: string }) {
-  const { t, lang, sys, selected, selectMany, unselectMany, isLocked, undoOnly, premium, setUpsell, focusTweak, focusSeq } = useStore();
+  const { t, lang, sys, selected, selectMany, unselectMany, isLocked, undoOnly, premium, setUpsell, focusTweak, setFocusTweak, focusSeq } = useStore();
   const index = catalog.modules.findIndex((m) => m.id === id);
   const mod = catalog.modules[index];
   const own = mod.sections.flatMap((s) => sectionTweaks(s)).filter((tw) => tw.kind === "tweak");
@@ -132,13 +132,17 @@ export function ModulePage({ id }: { id: string }) {
     const sec = mod.sections.find((s) => sectionTweaks(s).some((tw) => tw.id === focusTweak));
     if (sec) setFolded((f) => (f.has(sec.id) ? new Set([...f].filter((x) => x !== sec.id)) : f));
   }, [focusTweak, focusSeq, mod]);
-  const fold = (sid: string) =>
+  const fold = (sid: string) => {
+    // replier la section du réglage cherché annule la recherche : pas de saut surprise au prochain dépliage
+    const sec = mod.sections.find((s) => s.id === sid);
+    if (focusTweak && sec && !folded.has(sid) && sectionTweaks(sec).some((tw) => tw.id === focusTweak)) setFocusTweak(null);
     setFolded((f) => {
       const n = new Set(f);
       if (n.has(sid)) n.delete(sid);
       else n.add(sid);
       return n;
     });
+  };
   const jump = (sid: string) => {
     setFolded((f) => (f.has(sid) ? new Set([...f].filter((x) => x !== sid)) : f));
     requestAnimationFrame(() => document.getElementById(`sec-${sid}`)?.scrollIntoView({ block: "start", behavior: "smooth" }));
@@ -228,7 +232,8 @@ export function ModulePage({ id }: { id: string }) {
             {!folded.has(s.id) && (
               <div className="tweak-list">
                 {list.map((tw) => (
-                  <TweakRow key={tw.id} tweak={tw} />
+                  // nouvelle clé à chaque recherche vers ce réglage : la mise en valeur rejoue
+                  <TweakRow key={focusTweak === tw.id ? `${tw.id}-${focusSeq}` : tw.id} tweak={tw} />
                 ))}
               </div>
             )}

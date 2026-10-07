@@ -56,6 +56,28 @@ static TWINS: LazyLock<HashMap<String, String>> = LazyLock::new(|| {
     out
 });
 
+/// Nom anglais des réglages, pour les lignes du journal.
+static NAMES_EN: LazyLock<HashMap<String, String>> = LazyLock::new(|| {
+    let catalog: serde_json::Value =
+        serde_json::from_str(include_str!("../../src/data/catalog.json")).expect("catalog.json invalide");
+    let mut out = HashMap::new();
+    for m in catalog["modules"].as_array().into_iter().flatten() {
+        for s in m["sections"].as_array().into_iter().flatten() {
+            for t in s["tweaks"].as_array().into_iter().flatten() {
+                if let (Some(id), Some(name)) = (t["id"].as_str(), t["name"]["en"].as_str()) {
+                    out.insert(id.to_string(), name.to_string());
+                }
+            }
+        }
+    }
+    out
+});
+
+/// Nom affiché d'un réglage (anglais), ou son identifiant s'il n'est pas au catalogue.
+pub fn name_of(id: &str) -> &str {
+    NAMES_EN.get(id).map(String::as_str).unwrap_or(id)
+}
+
 /// Premier réglage du groupe dont `id` partage exactement le script, s'il y en a un.
 pub fn twin_of(id: &str) -> Option<&'static str> {
     TWINS.get(id).map(String::as_str)
@@ -154,6 +176,8 @@ mod tests {
                         || l.contains("disablerealtimemonitoring")
                         || l.contains("advfirewall reset")
                         || l.contains("clear-recyclebin")
+                        || l.contains("disabledeletenotify 1")
+                        || l.contains("disabledeletenotify ntfs 1")
                         || l.contains("\"enablesmartscreen\" /t reg_dword /d \"0\"")
                         || l.contains("\"noautoupdate\" /t reg_dword /d \"1\"")
                         || (l.contains("\\prefetch") && (l.starts_with("del ") || l.starts_with("forfiles")));
@@ -180,6 +204,19 @@ mod tests {
         for id in ["win_background", "hitreg_suite"] {
             assert!(!lines(id).iter().any(|l| l.contains("services\\bam\"")), "{id}");
         }
+        // date de dernier accès coupée, comme annoncé (choix de Sofiene, 2026-10-07) ; la variante hdd laisse Windows gérer (2)
+        for (id, v) in [("sto_fsutil_v6", "_"), ("sto_fsutil2", "_"), ("sys_time", "_"), ("sto_fsutil", "ssd")] {
+            let low = SCRIPTS[id][v].to_lowercase();
+            assert!(low.contains("disablelastaccess 1") && !low.contains("disablelastaccess 0"), "{id}:{v}");
+        }
+        assert!(SCRIPTS["sto_fsutil"]["hdd"].to_lowercase().contains("disablelastaccess 2"));
+        // TRIM laissé actif (choix de Sofiene, 2026-10-07)
+        for (id, variants) in SCRIPTS.iter() {
+            for (v, s) in variants {
+                let low = s.to_lowercase();
+                assert!(!low.contains("disabledeletenotify 1") && !low.contains("disabledeletenotify ntfs 1"), "{id}:{v} coupe le TRIM");
+            }
+        }
     }
 
     /// Défauts relevés par la vérification du 2026-10-07 dans les scripts v6 : ils ne doivent pas revenir.
@@ -202,9 +239,12 @@ mod tests {
                 assert!(!low.contains("systempropertiesperformance.exe"), "{id}:{v}");
             }
             if SCRIPTS[id].values().any(|s| s.to_lowercase().contains("wmic")) && !id.starts_with("__") {
-                let at = catalog.find(&format!("\"id\": \"{id}\"")).unwrap_or_else(|| panic!("{id} absent"));
-                let end = catalog[at..].find("\"lines\"").map(|e| at + e).unwrap_or(catalog.len());
-                assert!(catalog[at..end].contains("\"wmic\""), "{id} utilise WMIC sans le demander");
+                let cat: serde_json::Value = serde_json::from_str(catalog).unwrap();
+                let tw = cat["modules"].as_array().unwrap().iter()
+                    .flat_map(|m| m["sections"].as_array().unwrap())
+                    .flat_map(|s| s["tweaks"].as_array().unwrap())
+                    .find(|t| t["id"] == id.as_str()).unwrap_or_else(|| panic!("{id} absent"));
+                assert!(tw["requires"].as_array().is_some_and(|r| r.iter().any(|x| x == "wmic")), "{id} utilise WMIC sans le demander");
             }
         }
         // profils exclusifs : une seule valeur par variante
@@ -237,6 +277,8 @@ mod tests {
         let twins: Vec<_> = all.iter().filter(|t| t.get("twin").is_some()).collect();
         assert_eq!(twin_of("pow_storage"), Some("pow_saving"));
         assert_eq!(twin_of("in_mouse"), None);
+        assert_eq!(name_of("pow_saving"), "Drive idle power");
+        assert_eq!(name_of("__unknown"), "__unknown");
         assert!(twins.len() >= 20, "{} réglages jumeaux", twins.len());
         for t in &twins {
             let first = all.iter().find(|o| o["id"] == t["twin"]).unwrap();
