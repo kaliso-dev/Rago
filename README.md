@@ -8,7 +8,7 @@ Tout le code de Rago dans un seul dépôt :
 | `brand/` | Logo, tailles d'icônes, `.ico`, images d'installeur, favicons, couleurs et voix de la marque | SVG, PNG |
 | `site/` | La page de vente publique (anglais) et les pages légales | HTML statique, sans framework |
 | `licensing/` | Le serveur : abonnements Stripe, comptes, licences, verrou sur un PC, affiliation, téléchargement de l'app | Node 22, Hono, Supabase (Postgres + Storage) |
-| `.github/workflows/` | `app-windows.yml` fabrique le `setup.exe` sur un Windows de GitHub ; `licensing-tests.yml` lance les tests du serveur | GitHub Actions |
+| `.github/workflows/` | `app-windows.yml` fabrique le `setup.exe` sur un Windows de GitHub ; `licensing-tests.yml` lance les tests du serveur ; `site-check.yml` vérifie que `site/index.html` a été régénérée | GitHub Actions |
 | `netlify.toml` / `Dockerfile` (racine) | Publication du site sur Netlify / variante qui sert site + serveur ensemble | Netlify / Docker |
 
 Chaque dossier a son propre README avec le détail technique. Ce guide-ci explique comment les trois s'emboîtent et comment tout lancer, dans l'ordre.
@@ -63,7 +63,7 @@ Dans ce guide, `ragohub.com` et `account.ragohub.com` sont des exemples : rempla
 
 1. Sur le site, il choisit mensuel ou annuel et clique **Get Premium**. Le lien pointe vers `/buy?interval=month` ou `year` (avec `&ref=CODE` s'il est arrivé par le lien d'un affilié) ; le serveur le transforme en page de paiement Stripe.
 2. Il paie. Stripe prévient le serveur (webhook), qui crée la licence. Le joueur revient sur `/checkout/success`, choisit un mot de passe (et tape le code d'un affilié s'il en a un) : son compte est créé. Il reçoit aussi un email avec le lien, au cas où il ferme l'onglet.
-3. Sur son tableau de bord `/account`, il voit sa licence, son renouvellement, le bouton **Manage subscription** (portail Stripe) et télécharge `RagoOptimizer-Setup.exe`. S'il avait déjà installé l'app gratuite, il n'a rien à retélécharger.
+3. Sur son tableau de bord `/account`, il voit sa licence, son renouvellement, le bouton **Cancel or manage subscription** (portail Stripe) et télécharge `RagoOptimizer-Setup.exe`. S'il avait déjà installé l'app gratuite, il n'a rien à retélécharger.
 4. Dans l'app, il se connecte avec **le même email et mot de passe**, clique **Activate**. La licence est verrouillée sur ce PC.
 5. Le serveur renvoie à l'app un **jeton de licence signé**, valable 30 jours. L'app le vérifie toute seule, sans réseau, avec la clé publique compilée dedans, et le renouvelle quand il y a du réseau. Pas de connexion internet pendant une partie ? Ça marche quand même.
 6. S'il essaie de se connecter depuis un autre PC : refusé (« This license is already active on another PC »). Changer de PC passe par toi sur Discord : `npm run admin -- reset-device <email>`. Réinstaller Windows ne le bloque pas : l'empreinte du PC combine 3 identifiants et en tolère un qui change.
@@ -146,7 +146,7 @@ L'app Windows ne peut être compilée que sur Windows. GitHub le fait pour toi, 
      - `RAGO_API_BASE` = `https://account.<ton-domaine>/api/v1`
      - `RAGO_LICENSE_PUBKEY` = le bloc affiché par `https://account.<ton-domaine>/api/v1/public-key?format=pem`, lignes `BEGIN` et `END` comprises
    - Onglet **Variables**, **New repository variable** :
-     - `SITE_URL` = `https://account.<ton-domaine>` (le bouton Premium de l'app ouvre `SITE_URL/#pricing`, et le serveur renvoie vers le site)
+     - `SITE_URL` = l'adresse du **site de vente** : `https://rago-optimiser.netlify.app` aujourd'hui, `https://<ton-domaine>` ensuite (le bouton Premium de l'app ouvre `SITE_URL/#pricing`). C'est la même adresse que la variable `SITE_URL` de Railway. Aujourd'hui la variable GitHub vaut encore l'adresse Railway : ça marche (le serveur renvoie vers le site), mais passe-la sur l'adresse Netlify puis relance une fabrication.
      - `SUPPORT_URL` (optionnelle) = ton lien d'invitation Discord, affiché comme lien support dans l'app
 2. La fabrication se lance d'elle-même à chaque push qui touche `app/`. Tu peux aussi la lancer à la main : **Actions → app-windows → Run workflow**.
 3. Compte environ 5 minutes (15 à 20 la première fois). À la fin, connecté avec le compte kaliso-dev : ouvre le run, section **Artifacts**, télécharge `rago-optimizer-setup`. C'est un zip qui contient `Rago Optimizer_<version>_x64-setup.exe` (aujourd'hui `Rago Optimizer_1.1.1_x64-setup.exe`, version 1.1.1). L'artefact est effacé au bout de 90 jours.
@@ -160,7 +160,7 @@ Le bouton « Download free » du site et le bouton « Download Rago Optimizer »
 1. Décompresse l'artefact et dépose le **`.exe`** (pas le zip) dans Supabase → **Storage → downloads**. Le serveur prend le `.exe` le plus récent du bucket.
 2. Vérifie sur `https://account.<ton-domaine>/download/status` : tu dois voir `"ok":true` et le nom de ton fichier.
 
-Pour chaque nouvelle version : monte `version` dans `app/src-tauri/tauri.conf.json` et `app/package.json`, laisse la fabrication tourner, dépose le nouvel exe et mets à jour `INSTALLER_VERSION` dans Railway. Le détail est à l'étape 8 de [`licensing/docs/MISE-EN-LIGNE.md`](licensing/docs/MISE-EN-LIGNE.md).
+Pour chaque nouvelle version : dans `app/`, lance `npm run bump 1.2.0` (avec le nouveau numéro ; il met à jour `package.json` et `Cargo.toml`, ne modifie pas `tauri.conf.json` à la main), pousse, laisse la fabrication tourner, dépose le nouvel exe et mets à jour `INSTALLER_VERSION` dans Railway. Le détail est à l'étape 8 de [`licensing/docs/MISE-EN-LIGNE.md`](licensing/docs/MISE-EN-LIGNE.md).
 
 ### 4.2 L'alerte SmartScreen
 
@@ -179,7 +179,7 @@ Le test complet est l'étape 9 de `licensing/docs/MISE-EN-LIGNE.md`. En résumé
 3. Crée ton compte, vérifie que le tableau de bord montre la licence et que l'exe se télécharge.
 4. Dans l'app, connecte-toi, clique **Activate** : tout se débloque.
 5. Sur un deuxième PC (ou une machine virtuelle), connecte-toi avec le même compte : ça doit être refusé.
-6. Tableau de bord → **Manage subscription** : le portail Stripe s'ouvre.
+6. Tableau de bord → **Cancel or manage subscription** : le portail Stripe s'ouvre.
 7. Dans Stripe, rembourse le paiement : l'app repasse en gratuit à sa prochaine vérification.
 8. `npm run admin -- reset-device <email>` puis reconnecte-toi depuis le deuxième PC : ça doit passer.
 9. Affiliation : avec un 2e compte, `/affiliate` → **Get my referral code**, puis un achat test avec un autre email qui tape ce code.
@@ -224,10 +224,17 @@ cd app && npm ci && npm run tauri dev
 - **Le prix de Premium** (mensuel ; l'annuel vaut 10 mois) et sa **devise**. Ensuite, dans Stripe : les deux prix récurrents, le portail client, les événements du webhook, puis `STRIPE_PRICE_MONTHLY` et `STRIPE_PRICE_YEARLY` dans Railway. Le site affiche des prix provisoires d'ici là.
 - **L'exe dans le bucket** `downloads` de Supabase, vérifié sur `/download/status` (section 4.1).
 - **Désactiver GitHub Pages** : Settings → Pages → Source « None » (ou « Unpublish site »). Rien du dépôt n'y est plus publié, mais Pages n'a aucune utilité ici.
-- **Le nom de domaine**, puis `accountBase` du site, `PUBLIC_URL` et `SITE_URL` dans Railway, `RAGO_API_BASE` et `SITE_URL` sur GitHub, et une nouvelle fabrication de l'exe.
+- **Le nom de domaine.** Le jour où il marche, il faut changer l'adresse partout où elle est écrite :
+  - Railway : `PUBLIC_URL` (adresse du serveur de comptes, sert aussi à vérifier l'origine des formulaires) et `SITE_URL` (adresse du site) ;
+  - GitHub : le secret `RAGO_API_BASE` et la variable `SITE_URL` (adresse du site), puis une nouvelle fabrication de l'exe ;
+  - site : `accountBase` dans le `CONFIG` de `site/src/page.html`, la constante `SITE` de `site/tools/build.py`, `site/robots.txt` et `site/sitemap.xml` (qui contiennent l'adresse netlify.app), puis régénérer `index.html` ;
+  - `netlify.toml` : les 7 redirections vers `rago-production.up.railway.app` ;
+  - Stripe : les URL des conditions et de la confidentialité (Informations publiques) et l'adresse du webhook.
 - **Le lien d'invitation Discord** (dans `CONFIG.discord` du site, `SUPPORT_URL` sur Railway et la variable `SUPPORT_URL` sur GitHub) et la **clé Resend**.
 - **`LowLatency.pow` et `smartctl.exe`** : utilisés par le .bat mais pas fournis. Sans eux, le réglage « plan d'alimentation » reste grisé.
+- **La variable GitHub `SITE_URL`** : la passer sur `https://rago-optimiser.netlify.app` (section 4), puis relancer une fabrication.
 - **Protéger la branche de production** : Settings → Branches → règle sur la branche par défaut qui interdit le force-push et la suppression.
+- **Railway, attendre les tests** : dans le service → **Settings**, active **Wait for CI** (Railway attend que `licensing-tests` soit vert avant de redéployer) et mets **Watch Paths** = `licensing/**` (un changement du site ou de l'app ne redéploie plus le serveur).
 - **Les pages légales** (`terms.html`, `privacy.html`, `refunds.html`) sont des brouillons avec un bandeau « Draft » et des champs en jaune. Il faut ton identité de vendeur (nom ou société, adresse, pays, email de contact, numéro d'immatriculation et TVA s'il y en a) : donne-les sur le projet et elles sont remplies dans `site/tools/make_legal.py`, puis régénérées sans le bandeau. Vérifie ensuite que « Draft » a disparu des trois pages. **À faire avant d'ouvrir les paiements** : Stripe fait accepter ces conditions au client.
 - **Certificat de signature de code** (section 4.2).
 

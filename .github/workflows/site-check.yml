@@ -1,0 +1,30 @@
+# Vérifie que site/index.html (la page publiée par Netlify) a bien été régénérée depuis site/src/page.html.
+name: site-check
+
+on:
+  workflow_dispatch:
+  push:
+    paths: ["site/**", ".github/workflows/site-check.yml"]
+  pull_request:
+    paths: ["site/**", ".github/workflows/site-check.yml"]
+
+concurrency:
+  group: site-check-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  index-html:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Régénérer index.html
+        run: python3 site/tools/build.py
+      - name: Comparer avec la version poussée
+        run: |
+          if ! git diff --exit-code -- site/index.html; then
+            echo "::error::site/index.html n'est pas à jour : lance python3 site/tools/build.py et pousse le résultat"
+            exit 1
+          fi

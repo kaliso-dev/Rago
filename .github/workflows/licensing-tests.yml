@@ -1,4 +1,4 @@
-# Lance les tests du serveur de licences (dossier licensing/) avant que Railway ne le redéploie.
+# Lance les tests du serveur de licences (dossier licensing/) à chaque push. Railway attend ce résultat avant de redéployer si « Wait for CI » est activé.
 name: licensing-tests
 
 on:
