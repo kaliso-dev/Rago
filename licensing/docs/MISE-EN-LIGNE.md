@@ -152,10 +152,17 @@ C'est ce qui prévient le serveur qu'un paiement est passé.
 
 ## Étape 8 : l'app Windows et son fichier d'installation
 
+**Depuis la 1.1.6, les commandes Premium sont chiffrées dans l'exe** : sans licence active, personne ne peut les lire ni les lancer. Le serveur donne la clé de déchiffrement à l'app seulement quand la licence est active sur ce PC. Une seule fois :
+
+- Génère **une** valeur longue et aléatoire, par exemple sur [1password.com/password-generator](https://1password.com/password-generator) (64 caractères, lettres et chiffres) ou `openssl rand -hex 32`.
+- Mets-la dans Railway → Variables → `SCRIPTS_SECRET`, **et** dans GitHub → Secrets → `RAGO_SCRIPTS_SECRET` (la même, au caractère près).
+- **Déploie le serveur avant de distribuer la 1.1.6** : sinon l'app affiche « Premium scripts unavailable, update needed » aux joueurs Premium. Ne change jamais cette valeur ensuite : les versions déjà installées ne déverrouilleraient plus leurs commandes Premium.
+
 1. Ouvre `https://account.ragohub.com/api/v1/public-key?format=pem` et copie tout le bloc, lignes `BEGIN` et `END` comprises. C'est la **clé publique** que l'app embarque pour vérifier les licences.
 2. GitHub → **kaliso-dev/Rago → Settings → Secrets and variables → Actions** :
    - Secret `RAGO_API_BASE` = `https://account.ragohub.com/api/v1`
    - Secret `RAGO_LICENSE_PUBKEY` = le bloc copié ci-dessus
+   - Secret `RAGO_SCRIPTS_SECRET` = la même valeur que `SCRIPTS_SECRET` dans Railway (voir ci-dessous)
    - Variable `SITE_URL` = `https://ragohub.com`
 3. **Actions → app-windows → Run workflow**. Ouvre ensuite **le run le plus récent avec une coche verte** → **Artifacts** → `rago-optimizer-setup` → décompresse : le fichier est `Rago Optimizer_<version>_x64-setup.exe`. Les anciens artefacts `rago-hub-setup` contiennent l'ancienne app « Rago Hub » : supprime-les (icône corbeille dans chaque ancien run) pour ne pas te tromper.
 4. Supabase → **Storage → downloads → Upload file** : dépose le fichier `.exe` qui est **dans** le zip (pas le zip lui-même). Son nom n'a pas d'importance : le serveur sert toujours le `.exe` le plus récent du bucket.
@@ -244,6 +251,7 @@ Railway redéploie tout seul. Paie ensuite avec `4242 4242 4242 4242`, une date 
 | `STRIPE_PORTAL_LOGIN_URL` | Stripe → Portail client → lien de connexion (étape 3.5) |
 | `PRICE_LABEL` | Le prix affiché aux comptes gratuits : `$5.99 a month or $29.99 a year`, mêmes montants que Stripe et le site |
 | `LICENSE_SIGNING_KEY`, `SESSION_SECRET` | `npm run admin -- export-keys` (étape 5.7) |
+| `SCRIPTS_SECRET` | Une valeur aléatoire que tu génères une fois (étape 8), identique au secret GitHub `RAGO_SCRIPTS_SECRET`. Ne la change jamais |
 | `INSTALLER_VERSION` | Le numéro de l'exe déposé dans le bucket, lu dans son nom `Rago Optimizer_<numéro>_x64-setup.exe` (ex. `1.1.5`). Affiché à côté du bouton de téléchargement. `INSTALLER_OBJECT` est facultatif (il donne le bucket et le dossier) : le `.exe` le plus récent du dossier est toujours servi |
 
 À retirer s'il est encore là : `STRIPE_PRICE_ID` (ancien prix unique, plus vendu).

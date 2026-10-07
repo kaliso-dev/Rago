@@ -7,6 +7,7 @@ import { createReadStream } from 'node:fs';
 import { Readable } from 'node:stream';
 import { fileURLToPath } from 'node:url';
 import { relative } from 'node:path';
+import { createHmac } from 'node:crypto';
 
 import { DUMMY_HASH, maskLicenseKey, signValue, unsignValue, verifyPassword } from './crypto.js';
 import { DeviceError, parseDevice, sameDevice } from './fingerprint.js';
@@ -636,9 +637,14 @@ export function createApp({ cfg, db, keys, stripe, mailer, log = console, fetchI
     },
     device: device ? { name: device.name, activated_at: new Date(device.bound_at).toISOString() } : null,
   });
-  const tokenReply = (user, license, device) => {
+  // Key for the Premium scripts encrypted in this app version (1.1.6+). Only in "active" replies, so only
+  // for a working license on its own PC. No key without SCRIPTS_SECRET or without an app version.
+  const scriptsKey = (appVersion) => (cfg.scriptsSecret && appVersion
+    ? createHmac('sha256', Buffer.from(cfg.scriptsSecret, 'utf8')).update(`rago-scripts-v1|${appVersion}`).digest('base64') : null);
+  const tokenReply = (user, license, device, appVersion) => {
     const { token, exp } = licenseToken(user, license, device);
-    return { status: 'active', license_token: token, expires_at: new Date(exp * 1000).toISOString(), account: { email: user.email }, license: licenseInfo(license, device) };
+    const key = scriptsKey(appVersion);
+    return { status: 'active', license_token: token, expires_at: new Date(exp * 1000).toISOString(), account: { email: user.email }, license: licenseInfo(license, device), ...(key ? { scripts_key: key } : {}) };
   };
   // With a subscription, the player picks monthly or yearly on the site.
   const buyUrl = () => (cfg.subscriptions ? `${cfg.siteUrl}/#pricing` : `${cfg.publicUrl}/buy`);
@@ -675,7 +681,7 @@ export function createApp({ cfg, db, keys, stripe, mailer, log = console, fetchI
     if (state === 'here') {
       const out = await L.activate(db, license.id, device, ip(c));
       await settleReferrer(license.id);
-      return c.json(tokenReply(user, out.license, out.device));
+      return c.json(tokenReply(user, out.license, out.device, device.appVersion));
     }
     const iat = now();
     const access = signToken({ typ: 'access', sub: user.id, lic: license.id, iat, exp: iat + 900 }, keys);
@@ -695,7 +701,7 @@ export function createApp({ cfg, db, keys, stripe, mailer, log = console, fetchI
     try {
       const out = await L.activate(db, license.id, device, ip(c));
       await settleReferrer(license.id);
-      return c.json(tokenReply(user, out.license, out.device));
+      return c.json(tokenReply(user, out.license, out.device, device.appVersion));
     } catch (err) {
       if (err instanceof L.LicenseError) return failLicense(c, license, err.code);
       throw err;
@@ -724,7 +730,7 @@ export function createApp({ cfg, db, keys, stripe, mailer, log = console, fetchI
     // Device freed or re-bound since this token was issued: the app must sign in again.
     if (!bound || bound.id !== claims.did || (!replaced && claims.tv !== license.token_version)) return fail(c, 'invalid_token');
     const out = await L.activate(db, license.id, device, ip(c));
-    return c.json(tokenReply(user, out.license, out.device));
+    return c.json(tokenReply(user, out.license, out.device, device.appVersion));
   });
 
   app.route('/api/v1', api);

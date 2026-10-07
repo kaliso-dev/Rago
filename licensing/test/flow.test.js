@@ -1,6 +1,6 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { createHash, createPublicKey } from 'node:crypto';
+import { createHash, createHmac, createPublicKey } from 'node:crypto';
 import { mkdtempSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
@@ -261,6 +261,46 @@ test('app: login, activate, one device only, reinstall tolerated, refresh, refun
   assert.match(await (await t.browse('/account')).text(), /Refunded/);
 });
 
+test('scripts_key: only in "active" replies, HMAC of the app version, never for a revoked license', async () => {
+  const expected = (secret, v) => createHmac('sha256', Buffer.from(secret, 'utf8')).update(`rago-scripts-v1|${v}`).digest('base64');
+  const t = await setup({ SCRIPTS_SECRET: 'a'.repeat(64) });
+  await t.webhook('checkout.session.completed', t.paidSession('cs_keys', 'keys@rago.gg'));
+  await t.browse('/checkout/success?session_id=cs_keys');
+  await t.browse('/signup', { form: { email: 'keys@rago.gg', password: 'password123' } });
+  const dev = { ...device('K1'), app_version: '1.1.6' };
+  let j = await (await t.api('/auth/login', { email: 'keys@rago.gg', password: 'password123', device: dev })).json();
+  assert.equal(j.status, 'activation_required');
+  assert.equal(j.scripts_key, undefined);
+  j = await (await t.api('/licenses/activate', { device: dev }, { authorization: `Bearer ${j.access_token}` })).json();
+  assert.equal(j.status, 'active');
+  assert.equal(j.scripts_key, expected('a'.repeat(64), '1.1.6'));
+  assert.match(j.scripts_key, /^[A-Za-z0-9+/]{43}=$/); // standard base64 with padding, 32 bytes
+  // Same PC signing in again, and refresh: the key follows the version the app sends.
+  const again = await (await t.api('/auth/login', { email: 'keys@rago.gg', password: 'password123', device: { ...dev, app_version: '1.1.7' } })).json();
+  assert.equal(again.status, 'active');
+  assert.equal(again.scripts_key, expected('a'.repeat(64), '1.1.7'));
+  const r = await (await t.api('/licenses/refresh', { license_token: again.license_token, device: dev })).json();
+  assert.equal(r.scripts_key, expected('a'.repeat(64), '1.1.6'));
+  // No version sent (older app): no key.
+  const none = await (await t.api('/auth/login', { email: 'keys@rago.gg', password: 'password123', device: { ...dev, app_version: '' } })).json();
+  assert.equal(none.status, 'active');
+  assert.equal(none.scripts_key, undefined);
+  // Refunded: the reply is an error, without a key.
+  const lic = await t.db.get("SELECT stripe_customer_id, stripe_payment_intent FROM licenses WHERE email = 'keys@rago.gg'");
+  await t.webhook('charge.refunded', { id: 'ch_k', object: 'charge', refunded: true, payment_intent: lic.stripe_payment_intent, customer: lic.stripe_customer_id });
+  const off = await (await t.api('/licenses/refresh', { license_token: r.license_token, device: dev })).json();
+  assert.equal(off.error.code, 'revoked');
+  assert.equal(off.scripts_key, undefined);
+  assert.doesNotMatch(JSON.stringify(off), /scripts_key/);
+
+  // Development without SCRIPTS_SECRET: the test value. Production without it: no key, and a warning.
+  const dev2 = await setup();
+  assert.equal(dev2.cfg.scriptsSecret, 'rago-test-scripts-secret');
+  const prod = loadConfig({ NODE_ENV: 'production', PUBLIC_URL: 'https://x.test', DATABASE_URL: 'postgres://x', STRIPE_SECRET_KEY: 'sk_test_x', STRIPE_WEBHOOK_SECRET: 'whsec_x', SESSION_SECRET: 's'.repeat(32) });
+  assert.equal(prod.scriptsSecret, '');
+  assert.ok(prod.warnings.some((w) => /SCRIPTS_SECRET/.test(w)));
+});
+
 test('support reset frees the device; old tokens stop refreshing', async () => {
   const t = await setup();
   const user = await L.createUser(t.db, 'r@r.io', 'password123');
@@ -419,7 +459,8 @@ test('config accepts a bare host for PUBLIC_URL and flags example values', () =>
   assert.equal(cfg.siteUrl, 'https://rago.netlify.app');
   assert.equal(cfg.cancelUrl, 'https://rago.netlify.app/#pricing');
   assert.equal(cfg.resendApiKey, '');
-  assert.equal(cfg.warnings.length, 3);
+  assert.equal(cfg.warnings.length, 4);
+  assert.match(cfg.warnings.join(' '), /SCRIPTS_SECRET is not set/);
   assert.equal(cfg.subscriptions, true);
   // No price at all: the server still starts, says so in the logs, and /buy explains checkout isn't open.
   const noPrice = loadConfig({ NODE_ENV: 'production', PUBLIC_URL: 'x.app', DATABASE_URL: 'postgres://x', STRIPE_SECRET_KEY: 'sk', STRIPE_WEBHOOK_SECRET: 'whsec' });

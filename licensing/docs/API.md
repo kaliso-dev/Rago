@@ -148,6 +148,18 @@ Premium est désormais un abonnement mensuel ou annuel ; les licences offertes e
 - Pour un abonné, `exp` (et `expires_at`) ne dépasse pas la fin de la période payée + 3 jours, et vaut au moins 24 h. Il peut donc être plus court que 30 jours : l'app rafraîchit déjà quand il reste moins de 7 jours, rien à changer. Le renouvellement Stripe repousse la date au refresh suivant.
 - `revoked` avec `reason: "subscription_ended"` : message « Your Rago Optimizer Premium subscription ended. Renew it on the website, then sign in again. » et `buy_url`.
 
+## Clé des scripts Premium (2026-10-07, app 1.1.6)
+
+Les réponses `"status": "active"` (`POST /auth/login` sur le PC déjà lié, `POST /licenses/activate`, `POST /licenses/refresh`) contiennent en plus :
+
+```json
+"scripts_key": "base64 standard avec padding (44 caractères)"
+```
+
+- Valeur : HMAC-SHA256, clé = `SCRIPTS_SECRET` en UTF-8, message = `"rago-scripts-v1|" + device.app_version`. `app_version` est pris tel que l'app l'envoie, espaces de début et de fin retirés, 32 caractères au plus. L'app doit donc envoyer exactement le numéro avec lequel ses scripts ont été chiffrés.
+- Absent : dans `activation_required` et dans toute erreur (licence révoquée, absente, autre PC), quand `app_version` est vide, et en production sans `SCRIPTS_SECRET`. L'app affiche alors « Premium scripts unavailable, update needed ». En développement, sans la variable, le secret vaut `rago-test-scripts-secret`.
+- Pour les commandes Premium hors ligne, l'app garde la clé avec le token (même stockage DPAPI) et la remplace à chaque réponse `active`. Les anciennes versions de l'app ignorent ce champ.
+
 ## Récompense d'affiliation (2026-10-07, rien d'obligatoire côté app)
 
 L'affiliation donne 6 mois de Premium (une fois, un code sert à 3 joueurs) au lieu d'une licence à vie. Un seul ajout :

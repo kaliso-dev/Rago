@@ -35,6 +35,9 @@ export function loadConfig(env = process.env) {
 
     signingKeyPem: readPem(env.LICENSE_SIGNING_KEY),
     sessionSecret: env.SESSION_SECRET || '',
+    // Key the app's Premium scripts are encrypted with (same value as the GitHub secret RAGO_SCRIPTS_SECRET).
+    // Development falls back to the test value; production without it sends no scripts_key.
+    scriptsSecret: env.SCRIPTS_SECRET || (prod ? '' : 'rago-test-scripts-secret'),
 
     resendApiKey: env.RESEND_API_KEY || '',
     mailFrom: env.MAIL_FROM || 'Rago Optimizer <noreply@example.com>',
@@ -88,6 +91,7 @@ export function loadConfig(env = process.env) {
   // Values still set to the examples from .env.example: the server runs, but say what won't work.
   cfg.warnings = [];
   const placeholder = (v) => /\.\.\.|abcd|a_remplir|xxxx/i.test(v || '');
+  if (prod && !cfg.scriptsSecret) cfg.warnings.push('SCRIPTS_SECRET is not set: Rago Optimizer 1.1.6 and later can\'t unlock the Premium tweaks ("Premium scripts unavailable"). Use the same value as the GitHub secret RAGO_SCRIPTS_SECRET.');
   if (!env.SITE_URL) cfg.warnings.push('SITE_URL is not set: links to the site (pricing, terms) point to this server and open a 404. Set it to the Netlify address.');
   else if (/ragohub\.com|example\.com/i.test(cfg.siteUrl)) cfg.warnings.push(`SITE_URL is still the example (${cfg.siteUrl}): use the real site address.`);
   if (placeholder(cfg.supabaseUrl)) cfg.warnings.push('SUPABASE_URL is still the example: Download Rago Optimizer will fail. Use https://<project-ref>.supabase.co');
