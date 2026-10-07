@@ -62,14 +62,16 @@ Commence tout en **mode test** Stripe : rien n'est vraiment débité tant que tu
 1. Crée un compte sur [stripe.com](https://stripe.com). En haut à droite, active le **mode test**.
 2. **Catalogue de produits → Ajouter un produit**, un seul produit avec **deux prix** :
    - Nom : `Rago Optimizer Premium`. Description : `Rago Optimizer for Windows, one PC per license.`
-   - **Devise** : choisis-la une fois pour toutes (EUR si tes joueurs sont surtout en Europe, USD si le site affiche des $). Les deux prix doivent avoir la même devise que celle affichée sur le site ; Stripe ne convertit pas.
-   - Prix 1 : **Récurrent**, période **Mensuelle**, ton prix par mois (ex. 4,99).
-   - **Ajouter un autre prix** → Prix 2 : **Récurrent**, période **Annuelle**, ton prix par an. Par défaut on part sur 10 fois le mensuel (2 mois offerts, ex. 49,90), comme l'annonce le site.
+   - **Devise : USD** (choix du 7 octobre 2026, le site affiche des $). Les deux prix doivent être en USD ; Stripe ne convertit pas.
+   - Prix 1 : **Récurrent**, période **Mensuelle**, **5,99 $**.
+   - **Ajouter un autre prix** → Prix 2 : **Récurrent**, période **Annuelle**, **29,99 $** (5 mois payés au lieu de 12, comme l'annonce le site).
+   - Fais-le une fois en mode test, puis une fois en live (étape 10) : chaque mode a ses propres `price_...`.
    - Enregistre. Ouvre chaque prix et copie son identifiant `price_...` : le mensuel **c'est `STRIPE_PRICE_MONTHLY`**, l'annuel **c'est `STRIPE_PRICE_YEARLY`**.
 3. **Développeurs → Clés API** : copie la **clé secrète** `sk_test_...` : **c'est `STRIPE_SECRET_KEY`.**
-4. **Paramètres → Facturation → Portail client** : clique **Activer le lien de test** (ou Enregistrer), coche « Annuler les abonnements » (à la fin de la période), « Changer de formule » avec tes deux prix, et « Mettre à jour le moyen de paiement ». C'est la page qu'ouvre le bouton **Cancel or manage subscription** du tableau de bord.
+4. **PayPal** (beaucoup de jeunes joueurs n'ont pas de carte) : **Paramètres → Moyens de paiement** → active **PayPal**. Pour les abonnements, Stripe doit d'abord valider ton compte pour le paiement récurrent PayPal (demande depuis la même page). Rien à changer côté serveur : la page de paiement propose tout seul les moyens activés.
+5. **Paramètres → Facturation → Portail client** : clique **Activer le lien de test** (ou Enregistrer), coche « Annuler les abonnements » (à la fin de la période), « Changer de formule » avec tes deux prix, et « Mettre à jour le moyen de paiement ». C'est la page qu'ouvre le bouton **Cancel or manage subscription** du tableau de bord.
    Sur la même page, copie le **lien de connexion au portail** (`https://billing.stripe.com/p/login/...`) : **c'est `STRIPE_PORTAL_LOGIN_URL`**. Il permet de résilier avec son seul email, même sans compte Rago Optimizer (obligatoire en France : résiliation « en trois clics »). Il apparaît en bas de toutes les pages compte (« Cancel subscription ») ; donne-le aussi au thread site pour le pied de page et la page Refunds.
-5. **Paramètres → Facturation → Abonnements et e-mails** : coche les relances automatiques en cas d'échec de paiement (Smart Retries) et, à la fin des relances, **Annuler l'abonnement**. Pendant les relances le joueur garde Premium ; à l'annulation la licence s'arrête toute seule.
+6. **Paramètres → Facturation → Abonnements et e-mails** : coche les relances automatiques en cas d'échec de paiement (Smart Retries) et, à la fin des relances, **Annuler l'abonnement**. Pendant les relances le joueur garde Premium ; à l'annulation la licence s'arrête toute seule.
    Sur la même page, active **l'e-mail de renouvellement à venir** (« Envoyer un rappel avant le renouvellement », 7 jours avant au moins) pour les abonnements **annuels** : la loi l'impose dans plusieurs pays de l'UE et ça évite les contestations bancaires au renouvellement.
 6. **Paramètres → Image de marque** : logo `brand/logo/png/rago-icon-512.png`, couleur `#FF3B30`. La page de paiement aura l'air de la tienne.
 7. **Paramètres → E-mails clients** : coche les reçus pour les paiements réussis et les factures.
@@ -115,7 +117,7 @@ Sans Resend, tout marche sauf les emails : pas de lien de secours après achat, 
    RESEND_API_KEY=re_...
    MAIL_FROM=Rago Optimizer <hello@ragohub.com>
    SUPPORT_URL=https://discord.gg/ton-invitation
-   PRICE_LABEL=$4.99 a month or $49.90 a year
+   PRICE_LABEL=$5.99 a month or $29.99 a year
    ```
 
    `PRICE_LABEL` est le prix affiché aux comptes gratuits sur leur tableau de bord (mêmes montants et devise que Stripe et le site ; laisse vide pour ne rien afficher).
@@ -183,7 +185,7 @@ Si une étape coince, envoie-moi une capture et l'heure : je trouve la cause.
 ## Étape 10 : passer en vrai
 
 1. Stripe → **Activer les paiements** : informations sur toi ou ta société, et ton IBAN. Stripe demande une pièce d'identité.
-2. Repasse en **mode live**, puis refais en live les étapes 3.2 à 3.5 et 6 : deux nouveaux `price_...`, nouvelle clé `sk_live_...`, portail client, nouveau webhook `whsec_...`.
+2. Repasse en **mode live**, puis refais en live les étapes 3.2 à 3.6 et 6 : deux nouveaux `price_...`, nouvelle clé `sk_live_...`, portail client, nouveau webhook `whsec_...`.
 3. Remplace ces quatre variables dans Railway (et `STRIPE_PORTAL_LOGIN_URL`, le lien du portail live).
 4. Recrée `RAGO15` en live (voir « Codes promo »). Les codes d'affiliation, eux, sont recréés en live tout seuls dans l'heure qui suit (ou dès que l'affilié ouvre `/affiliate`).
 5. Fais un vrai achat avec ta carte, puis rembourse-le depuis Stripe : la boucle complète est vérifiée.
@@ -239,8 +241,8 @@ Railway redéploie tout seul. Paie ensuite avec `4242 4242 4242 4242`, une date 
 | `RESEND_API_KEY`, `MAIL_FROM` | Resend (étape 4) |
 | `PUBLIC_URL`, `SITE_URL` | Ton domaine (étape 1) |
 | `SUPPORT_URL` | Ton invitation Discord |
-| `STRIPE_PORTAL_LOGIN_URL` | Stripe → Portail client → lien de connexion (étape 3.4) |
-| `PRICE_LABEL` | Le prix affiché aux comptes gratuits, ex. `$4.99 a month or $49.90 a year`, dans la même devise que Stripe et le site |
+| `STRIPE_PORTAL_LOGIN_URL` | Stripe → Portail client → lien de connexion (étape 3.5) |
+| `PRICE_LABEL` | Le prix affiché aux comptes gratuits : `$5.99 a month or $29.99 a year`, mêmes montants que Stripe et le site |
 | `LICENSE_SIGNING_KEY`, `SESSION_SECRET` | `npm run admin -- export-keys` (étape 5.7) |
 | `INSTALLER_VERSION` | Le numéro de l'exe déposé dans le bucket, lu dans son nom `Rago Optimizer_<numéro>_x64-setup.exe` (ex. `1.1.5`). Affiché à côté du bouton de téléchargement. `INSTALLER_OBJECT` est facultatif (il donne le bucket et le dossier) : le `.exe` le plus récent du dossier est toujours servi |
 

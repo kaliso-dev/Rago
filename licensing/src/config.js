@@ -42,7 +42,7 @@ export function loadConfig(env = process.env) {
     // Stripe customer portal login link (Settings > Billing > Customer portal): lets a buyer cancel by
     // email, without a Rago account. Shown as "Cancel subscription" in the footer when set.
     portalLoginUrl: env.STRIPE_PORTAL_LOGIN_URL || '',
-    // Price shown on the free dashboard, e.g. "$4.99 a month or $49.90 a year" (same currency as Stripe and the site). Empty = no price shown.
+    // Price shown on the free dashboard: "$5.99 a month or $29.99 a year" (same amounts as Stripe and the site). Empty = no price shown.
     priceLabel: env.PRICE_LABEL || '',
     freeTweaks: Number(env.FREE_TWEAKS || 9),
     premiumTweaks: Number(env.PREMIUM_TWEAKS || 226),

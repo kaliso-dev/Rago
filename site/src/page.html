@@ -762,7 +762,7 @@ footer.foot p{max-width:80ch}
     </div>
     <div class="bill rv" id="pricing">
       <div class="seg-toggle" id="billing"><span class="thumb"></span><button type="button" data-v="month">Monthly</button><button type="button" data-v="year" class="on">Yearly</button></div>
-      <span class="save" id="save">2 months free yearly</span>
+      <span class="save" id="save">6 months free yearly</span>
     </div>
     <div class="plans">
       <div class="plan rv">
@@ -785,8 +785,8 @@ footer.foot p{max-width:80ch}
         <div class="plan">
           <h3>Premium</h3>
           <p class="sub">Every tweak unlocked</p>
-          <div class="price"><b id="p-amt">$4.16</b><small id="p-per">/ month</small></div>
-          <div class="price-note" id="p-note">Billed $49.90 yearly.</div>
+          <div class="price"><b id="p-amt">$2.50</b><small id="p-per">/ month</small></div>
+          <div class="price-note" id="p-note">Billed $29.99 yearly. 6 months free.</div>
           <ul>
             <li><svg><use href="#i-check"/></svg>All 226 tweaks unlocked</li>
             <li><svg><use href="#i-check"/></svg>5 one-click presets</li>
@@ -912,8 +912,8 @@ const CONFIG = {
   promoCode: "RAGO15",                              // pop-up code (Stripe promotion code). Empty = no pop-up
   promoPercent: 15,
   currency: "$",
-  priceMonth: 4.99,                                 // PLACEHOLDER: set to the real monthly Stripe price
-  priceYear: 49.90                                  // PLACEHOLDER: real yearly Stripe price (here 10 × monthly = 2 months free)
+  priceMonth: 5.99,                                 // monthly Stripe price (USD)
+  priceYear: 29.99                                  // yearly Stripe price (USD); "months free" is computed from both
 };
 /* ----------------------- */
 
@@ -1377,7 +1377,7 @@ $$(".js-dword").forEach(e => { e.outerHTML = dlink("Discord"); });
     ["What's the difference between Free and Premium?", "Both are the same Rago Optimizer app. Free opens 9 tweaks, Restore included, and shows everything else with a lock. Both measure your ping before and after. Premium unlocks all 226 tweaks, the 5 presets and new tweaks as they're added."],
     ["Does it work on laptops?", "Yes. Rago runs on any Windows 10 or 11 PC, desktop or laptop. Premium includes a Laptop preset: gains without hurting battery life or heat."],
     ["Does it work on Mac or Linux?", "No. Rago Optimizer tunes Windows, so it only runs on Windows 10 and 11."],
-    ["Monthly or yearly?", MONTHS_FREE >= 1 ? `Same app either way. Yearly costs ${12 - MONTHS_FREE} months of the monthly price, so you get ${MONTHS_FREE} month${MONTHS_FREE === 1 ? "" : "s"} free. You can cancel anytime from your account.` : "Same app either way. You can cancel anytime from your account."],
+    ["Monthly or yearly?", MONTHS_FREE >= 1 ? `Same app either way. Paying yearly works out to ${MONTHS_FREE} month${MONTHS_FREE === 1 ? "" : "s"} free compared with paying monthly. You can cancel anytime from your account.` : "Same app either way. You can cancel anytime from your account."],
     ["How do I join the Premium channel on Discord?", "After you buy, your account page links to our Discord. Open a ticket there with the email of your Rago account. Our staff checks your purchase and gives you the Premium role. It isn't automatic, so it can take a little while."],
     ["Can I use my license on more than one PC?", "No. Premium works on one device per license. If you change PCs, open a ticket on our Discord (linked from your account page) and support moves your license."],
     ["What if I don't like a change?", "Before applying anything, Rago offers to create a Windows restore point, ticked by default. To go back, open Restore in the app and pick Open System Restore: Windows returns to that point after a restart. Restore also has quick resets for the network and the input queue."],

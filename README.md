@@ -54,7 +54,7 @@ Dans ce guide, `ragohub.com` et `account.ragohub.com` sont des exemples : rempla
 ### L'offre
 
 - **Gratuit** : l'app elle-même, sans compte ni licence. 9 réglages sont ouverts (souris, Game Mode, Game DVR, effets visuels, plein écran et les 4 réglages de Restore, liste dans `app/src/data/free.json`). Tout le reste est sous cadenas, presets compris ; un clic sur un cadenas propose « Unlock », qui ouvre la section Pricing du site. Le moteur Rust refuse aussi les réglages verrouillés : on ne contourne pas le cadenas en bricolant l'interface.
-- **Premium** : abonnement Stripe **mensuel ou annuel** (l'annuel vaut 10 mois). Tout est débloqué tant que l'abonnement est payé.
+- **Premium** : abonnement Stripe **5,99 $ par mois ou 29,99 $ par an** (prix choisis le 7 octobre 2026). Tout est débloqué tant que l'abonnement est payé.
 - **L'ancien .bat n'est plus proposé** : la seule offre gratuite, c'est l'app. Les anciens liens `/downloads/...` renvoient vers l'accueil du site.
 - **Affiliation** : chaque affilié a un code, qui donne aussi −5 % au client sur son premier paiement Stripe (lien de l'affilié, ou code tapé dans **Add promotion code**). Un client n'utilise qu'un code, pour toujours. À 3 clients valides, l'affilié reçoit 6 mois de Premium, une seule fois, pour 3 filleuls (3 filleuls au maximum par affilié). Un client compte dès qu'il active l'app sur son PC (pas celui de l'affilié), tant qu'il n'est ni remboursé ni contesté.
 - **Code promo du site** : le pop-up de la page de vente propose `RAGO15`, −15 % sur le premier paiement (à créer dans Stripe, section 8). Le détail des règles est à la fin de [`licensing/docs/MISE-EN-LIGNE.md`](licensing/docs/MISE-EN-LIGNE.md).
@@ -120,8 +120,8 @@ const CONFIG = {
   freeAppPath: "/download",             // l'app gratuite, servie par le serveur de comptes
   discord: "",                          // ton invitation, ex. "https://discord.gg/tonInvite"
   currency: "$",
-  priceMonth: 4.99,                     // PROVISOIRE : ton vrai prix mensuel Stripe
-  priceYear: 49.90                      // PROVISOIRE : ton vrai prix annuel Stripe
+  priceMonth: 5.99,                     // prix mensuel Stripe
+  priceYear: 29.99                      // prix annuel Stripe
 };
 ```
 
@@ -225,7 +225,7 @@ cd app && npm ci && npm run tauri dev
 
 ## 8. Ce qui manque encore
 
-- **Le prix de Premium** (mensuel ; l'annuel vaut 10 mois) et sa **devise**. Ensuite, dans Stripe : les deux prix récurrents, le portail client, les événements du webhook, puis `STRIPE_PRICE_MONTHLY` et `STRIPE_PRICE_YEARLY` dans Railway. Le site affiche des prix provisoires d'ici là.
+- **Les prix de Premium dans Stripe** : 5,99 $ par mois et 29,99 $ par an, en dollars comme le site. Crée dans Stripe les deux prix récurrents, le portail client et les événements du webhook, puis mets `STRIPE_PRICE_MONTHLY` et `STRIPE_PRICE_YEARLY` dans Railway (et `PRICE_LABEL`, par exemple `$5.99 a month`).
 - **Affiliation et code promo** : dans Railway → Variables, supprime `AFFILIATE_HOLD_DAYS` (l'ancienne valeur 14 ; sans elle, un filleul compte dès l'activation), puis crée le code du pop-up avec `npm run admin -- create-promo RAGO15 15`, une fois avec la clé Stripe test et une fois avec la clé live.
 - **L'exe dans le bucket** `downloads` de Supabase, vérifié sur `/download/status` (section 4.1).
 - **Désactiver GitHub Pages** : Settings → Pages → Source « None » (ou « Unpublish site »). Rien du dépôt n'y est plus publié, mais Pages n'a aucune utilité ici.
