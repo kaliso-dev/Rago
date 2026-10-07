@@ -202,6 +202,8 @@ npm run admin -- affiliate <email>       # son code, ses filleuls et pourquoi ch
 
 Changement de PC en libre-service (une fois tous les 30 jours depuis le tableau de bord) : mets `SELF_SERVICE_RESET_DAYS=30` dans Railway.
 
+**Rôle Premium sur Discord** : après l'achat, le tableau de bord et l'email d'achat disent au joueur d'ouvrir un ticket sur ton Discord avec l'email de son compte. Vérifie avec `npm run admin -- show <son email>` : si la licence est `active`, donne-lui le rôle Premium. Si elle s'arrête (fin d'abonnement, remboursement, litige), retire le rôle. Le détail est dans [`licensing/docs/MISE-EN-LIGNE.md`](licensing/docs/MISE-EN-LIGNE.md), section « Au quotidien ».
+
 ---
 
 ## 7. Développer en local
@@ -228,12 +230,12 @@ cd app && npm ci && npm run tauri dev
   - GitHub : le secret `RAGO_API_BASE` et la variable `SITE_URL` (adresse du site), puis une nouvelle fabrication de l'exe ;
   - site : `accountBase` dans le `CONFIG` de `site/src/page.html`, la constante `SITE` de `site/tools/build.py`, `site/robots.txt` et `site/sitemap.xml` (qui contiennent l'adresse netlify.app), puis régénérer `index.html` ;
   - `netlify.toml` : les 7 redirections vers `rago-production.up.railway.app` ;
-  - Stripe : les URL des conditions et de la confidentialité (Informations publiques) et l'adresse du webhook.
+  - Stripe : les URL des conditions et de la confidentialité (Informations publiques **et** liens du portail client) et l'adresse du webhook.
 - **Le lien d'invitation Discord** (dans `CONFIG.discord` du site, `SUPPORT_URL` sur Railway et la variable `SUPPORT_URL` sur GitHub) et la **clé Resend**.
 - **`LowLatency.pow` et `smartctl.exe`** : utilisés par le .bat mais pas fournis. Sans eux, le réglage « plan d'alimentation » reste grisé.
 - **La variable GitHub `SITE_URL`** : la passer sur `https://rago-optimiser.netlify.app` (section 4), puis relancer une fabrication.
 - **Protéger la branche de production** : Settings → Branches → règle sur la branche par défaut qui interdit le force-push et la suppression.
-- **Railway, attendre les tests** : dans le service → **Settings**, active **Wait for CI** (Railway attend que `licensing-tests` soit vert avant de redéployer) et mets **Watch Paths** = `licensing/**` (un changement du site ou de l'app ne redéploie plus le serveur).
+- **Railway, attendre les tests** : dans le service → **Settings**, active **Wait for CI** (Railway attend que les vérifications GitHub du commit, dont `licensing-tests`, soient vertes avant de redéployer), mets **Watch Paths** = `licensing/**` (un changement du site ou de l'app ne redéploie plus le serveur) et, dans **Deploy**, **Healthcheck Path** = `/healthz` (un nouveau déploiement qui ne répond pas, par exemple parce que la base est injoignable, ne remplace pas celui qui marche).
 - **Les pages légales** (`terms.html`, `privacy.html`, `refunds.html`) sont des brouillons avec un bandeau « Draft » et des champs en jaune. Il faut ton identité de vendeur (nom ou société, adresse, pays, email de contact, numéro d'immatriculation et TVA s'il y en a) : donne-les sur le projet et elles sont remplies dans `site/tools/make_legal.py`, puis régénérées sans le bandeau. Vérifie ensuite que « Draft » a disparu des trois pages. **À faire avant d'ouvrir les paiements** : Stripe fait accepter ces conditions au client.
 - **Certificat de signature de code** (section 4.2).
 
