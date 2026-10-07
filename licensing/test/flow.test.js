@@ -22,6 +22,11 @@ const opened = [];
 async function testDb() {
   const url = process.env.TEST_DATABASE_URL;
   if (!url) return openMemoryDb();
+  // Every test starts by wiping the database (DROP SCHEMA public CASCADE). Never on a real one.
+  const { hostname, pathname } = new URL(url);
+  if (!['localhost', '127.0.0.1', '::1', '[::1]', 'postgres'].includes(hostname) && !/test/i.test(pathname)) {
+    throw new Error(`TEST_DATABASE_URL must be a throwaway database (localhost, or a database name containing "test"): the tests erase it. Refused: ${hostname}${pathname}`);
+  }
   const admin = new pg.Client({ connectionString: url });
   await admin.connect();
   await admin.query('DROP SCHEMA public CASCADE; CREATE SCHEMA public;');
@@ -778,7 +783,7 @@ test('account security: lockout by strangers, old reset links, Origin by host, A
   await assert.rejects(L.newClaimToken(t.db, loose.id), /already_claimed/);
 });
 
-test('real Postgres: a connection closed by the database does not stop the server', { skip: !process.env.TEST_DATABASE_URL }, async () => {
+test('real Postgres: a connection closed by the database, idle or mid-transaction, does not stop the server', { skip: !process.env.TEST_DATABASE_URL }, async () => {
   const db = await testDb();
   await db.get('SELECT 1');
   const admin = new pg.Client({ connectionString: process.env.TEST_DATABASE_URL });
@@ -786,5 +791,19 @@ test('real Postgres: a connection closed by the database does not stop the serve
   await admin.query('SELECT pg_terminate_backend(pid) FROM pg_stat_activity WHERE pid <> pg_backend_pid() AND datname = current_database()');
   await admin.end();
   await new Promise((r) => setTimeout(r, 300));
+  assert.equal((await db.get('SELECT 1 AS ok')).ok, 1);
+
+  // Cut in the middle of a transaction (e.g. a database restart during an activation): that request
+  // fails, the server keeps running and the next query works.
+  await assert.rejects(db.tx(async (t) => {
+    const { pid } = await t.get('SELECT pg_backend_pid() AS pid');
+    const killer = new pg.Client({ connectionString: process.env.TEST_DATABASE_URL });
+    await killer.connect();
+    await killer.query('SELECT pg_terminate_backend($1)', [pid]);
+    await killer.end();
+    await new Promise((r) => setTimeout(r, 200));
+    await t.get('SELECT 1');
+  }));
+  await new Promise((r) => setTimeout(r, 200));
   assert.equal((await db.get('SELECT 1 AS ok')).ok, 1);
 });

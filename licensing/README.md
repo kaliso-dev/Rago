@@ -43,8 +43,10 @@ npm run admin -- grant <email> [note]    # licence offerte, ex. anciens acheteur
 ```bash
 npm ci
 npm test                                   # base Postgres en mémoire (PGlite)
-TEST_DATABASE_URL=postgres://... npm test  # les mêmes sur un vrai Postgres
+TEST_DATABASE_URL=postgres://postgres@localhost:5432/postgres npm test  # les mêmes sur un Postgres local JETABLE (voir ci-dessous)
 DEV_SEED=test@rago.dev:password123 npm run dev   # http://localhost:8787, compte Premium de test
 ```
+
+> **Attention : `TEST_DATABASE_URL` efface toute la base visée** à chaque test (tables, comptes, licences, et la clé de signature de `server_secrets`). Ne mets **jamais** l'adresse Supabase de production : les tests refusent d'ailleurs de tourner si l'adresse n'est pas `localhost` (ou une base dont le nom contient « test »). Utilise un Postgres local créé pour l'occasion.
 
 Node 22 ou plus. Code : `src/app.js` (routes), `src/licensing.js` (comptes, licences, verrou), `src/db.js` (Postgres), `src/billing.js` (Stripe), `src/affiliates.js` (affiliation), `src/views.js` + `public/` (pages), `docs/API.md` (contrat avec l'app).

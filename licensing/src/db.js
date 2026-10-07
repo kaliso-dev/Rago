@@ -38,22 +38,33 @@ export async function openDb(url) {
     connectionString: url,
     max: 5,
     ssl: local ? false : { rejectUnauthorized: false },
+    // A database that stops answering gives an error in seconds (/healthz says 503) instead of a wait
+    // with no end: 5 s to open a connection, 10 s per query.
+    connectionTimeoutMillis: 5000,
+    query_timeout: 10000,
   });
   // Supabase may close an idle connection (restart, maintenance). Without this listener the error
   // would crash the server; the pool drops that client and the next query opens a new one.
   pool.on('error', (err) => console.error('[db] idle connection lost:', err.message));
   const db = wrap(pool, async (fn) => {
     const client = await pool.connect();
+    // While the transaction holds this client, the pool's listener doesn't cover it: a connection cut
+    // here must fail the request (500), not stop the server.
+    let lost = null;
+    const onError = (err) => { lost = err; console.error('[db] connection lost during a transaction:', err.message); };
+    client.on('error', onError);
     try {
       await client.query('BEGIN');
       const out = await fn(wrap(client));
       await client.query('COMMIT');
       return out;
     } catch (err) {
-      await client.query('ROLLBACK').catch(() => {});
+      // A failed ROLLBACK means the connection itself is gone.
+      if (!lost) await client.query('ROLLBACK').catch((e) => { lost = e; });
       throw err;
     } finally {
-      client.release();
+      client.off('error', onError);
+      client.release(lost || undefined); // a broken client is closed, not reused
     }
   });
   await pool.query(SCHEMA);

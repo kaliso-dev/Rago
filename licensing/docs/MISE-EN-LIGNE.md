@@ -106,7 +106,7 @@ Sans Resend, tout marche sauf les emails : pas de lien de secours après achat, 
    DATABASE_URL=postgresql://postgres.abcd:TON_MOT_DE_PASSE@aws-0-eu-west-3.pooler.supabase.com:5432/postgres
    SUPABASE_URL=https://abcd.supabase.co
    SUPABASE_SERVICE_ROLE_KEY=...
-   INSTALLER_VERSION=1.1.3
+   INSTALLER_VERSION=1.1.4
    STRIPE_SECRET_KEY=sk_test_...
    STRIPE_PRICE_MONTHLY=price_...
    STRIPE_PRICE_YEARLY=price_...
@@ -214,7 +214,7 @@ Si une étape coince, envoie-moi une capture et l'heure : je trouve la cause.
 | `STRIPE_PORTAL_LOGIN_URL` | Stripe → Portail client → lien de connexion (étape 3.4) |
 | `PRICE_LABEL` | Le prix affiché aux comptes gratuits, ex. `$4.99 a month or $49.90 a year`, dans la même devise que Stripe et le site |
 | `LICENSE_SIGNING_KEY`, `SESSION_SECRET` | `npm run admin -- export-keys` (étape 5.7) |
-| `INSTALLER_VERSION` | La version de l'exe déposé (ex. `1.1.3`). `INSTALLER_OBJECT` est facultatif (il donne le bucket et le dossier) : le `.exe` le plus récent du dossier est toujours servi |
+| `INSTALLER_VERSION` | La version de l'exe déposé (ex. `1.1.4`). `INSTALLER_OBJECT` est facultatif (il donne le bucket et le dossier) : le `.exe` le plus récent du dossier est toujours servi |
 
 À retirer s'il est encore là : `STRIPE_PRICE_ID` (ancien prix unique, plus vendu).
 

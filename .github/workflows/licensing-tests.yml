@@ -22,6 +22,15 @@ defaults:
 jobs:
   test:
     runs-on: ubuntu-latest
+    # vraie base Postgres 16 pour le test « real Postgres » (actif seulement avec TEST_DATABASE_URL)
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_PASSWORD: postgres
+        ports: ['5432:5432']
+        options: >-
+          --health-cmd pg_isready --health-interval 5s --health-timeout 5s --health-retries 10
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
@@ -30,4 +39,9 @@ jobs:
           cache: npm
           cache-dependency-path: licensing/package-lock.json
       - run: npm ci
-      - run: npm test
+      - name: Tests (base en mémoire, PGlite)
+        run: npm test
+      - name: Tests (vraie base Postgres 16)
+        run: npm test
+        env:
+          TEST_DATABASE_URL: postgres://postgres:postgres@localhost:5432/postgres
