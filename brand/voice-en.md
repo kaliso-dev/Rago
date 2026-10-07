@@ -18,10 +18,10 @@ An experienced competitive player who also knows Windows inside out. We talk to 
 ## Product vocabulary (use exactly)
 | Concept | Term |
 |---|---|
-| The app (since 2026-10-06) | **Rago Optimizer**. Never "Rago Optimizer" anymore. |
-| The free plan | **Free**: the same app, most tweaks locked with a padlock and an upgrade prompt. Say "Unlock with Pro" on locked items, not "Premium only". |
-| Paid plans | Use the plan names shown on the pricing section of the site. |
-| App sections (12) | Dashboard, Network, Latency, Graphics card, Windows, Hitreg, Minecraft, RBW Mod, Game mode, Expert mode, Restore, Settings. 189 tweaks in total. |
+| The app (since 2026-10-06) | **Rago Optimizer**. Never "Rago Hub" anymore. |
+| The free plan | **Free**: the same app, most tweaks locked with a padlock and an upgrade prompt. Say "Unlock with Premium" on locked items, and "Get Premium" on the upgrade button. |
+| Paid plan | **Premium** (never "Pro"). Monthly or yearly, as shown on the pricing section of the site. |
+| App sections (12) | Dashboard, Network, Latency, Graphics card, Windows, Hitreg, Minecraft, RBW Mod, Game mode, Expert mode, Restore, Settings. 226 tweaks in total. |
 | A single setting | a **tweak** (not "hack", "boost", "cheat") |
 | Applying settings | **Apply** (button), "Applied" (toast) |
 | Going back | **Restore** / "restore point" (not "revert", "rollback") |
@@ -41,15 +41,15 @@ An experienced competitive player who also knows Windows inside out. We talk to 
 | Restore point created. You can undo everything. | Zero risk, trust us. |
 | This tweak needs a restart. | RESTART YOUR PC NOW!!! |
 | Your antivirus may flag Rago Optimizer. Here's why. | Disable your antivirus. |
-| Get Rago Optimizer Pro | Buy now before it's too late |
+| Get Premium | Buy now before it's too late |
 | Download Rago Optimizer | Download (unlabeled) |
 
 ## Key copy by surface (starting points, adapt freely)
 
 **Website**
 - Hero: "Every millisecond counts." / sub: "Rago tunes Windows, your network and Minecraft for lower ping, steadier FPS and cleaner hitreg. Measured on your PC, undoable in one click."
-- Free CTA: "Download for free" + caption "Free plan included. Upgrade anytime."
-- Premium CTA: "Get Rago Optimizer Pro" + caption "Secure checkout with Stripe."
+- Free CTA: "Download free" + caption "Free plan included. Upgrade anytime."
+- Premium CTA: "Get Premium" + caption "Secure checkout with Stripe."
 
 **After payment / account**
 - Success: "Payment confirmed. Create your account to get your license."

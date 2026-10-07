@@ -1,8 +1,9 @@
 import { AnimatePresence, motion } from "motion/react";
-import { ArrowRight, Lock, Monitor, TriangleAlert } from "lucide-react";
+import { ArrowRight, Check, Lock, Monitor, TriangleAlert } from "lucide-react";
 import { useState } from "react";
 import { api, asLicenseError, type LicenseError } from "../lib/api";
-import { translate, type Key } from "../lib/i18n";
+import { totalTweaks } from "../lib/catalog";
+import { formatDate, translate, type Key } from "../lib/i18n";
 import { useStore } from "../lib/store";
 import { Pulse, Wordmark } from "./Logo";
 import { Button } from "./ui";
@@ -20,13 +21,15 @@ const origin = (u: string) => {
 export const ACCOUNT_URL: string = origin(trim(import.meta.env.VITE_ACCOUNT_URL)) || "http://localhost:8787";
 /** Site de vente (VITE_SITE_URL). Vide : le serveur de comptes, dont la racine redirige vers le site en gardant #pricing. */
 export const SITE_URL: string = trim(import.meta.env.VITE_SITE_URL) || ACCOUNT_URL;
+/** Support (invitation Discord, VITE_SUPPORT_URL). Vide : aucun bouton d'aide n'est affiché. */
+export const SUPPORT_URL: string = trim(import.meta.env.VITE_SUPPORT_URL);
 
 type Step = { kind: "signin" } | { kind: "confirm"; email: string; keyHint: string | null } | { kind: "success" };
 
 const ease = [0.16, 1, 0.3, 1] as const;
 
 export function LicenseGate({ embedded = false, onDone }: { embedded?: boolean; onDone?: () => void }) {
-  const { t, license, setLicense, lang, setLang, sys } = useStore();
+  const { t, license, activated, activatedAt, lang, setLang, sys } = useStore();
   const [email, setEmail] = useState(license?.email ?? "");
   const [password, setPassword] = useState("");
   const [busy, setBusy] = useState(false);
@@ -44,12 +47,10 @@ export function LicenseGate({ embedded = false, onDone }: { embedded?: boolean; 
     return txt === key ? (e.message ?? t("license.err.server_error")) : txt;
   };
 
-  const done = (st: Awaited<ReturnType<typeof api.licenseActivate>>) => {
+  // l'écran de succès reste affiché jusqu'au clic : c'est la confirmation d'activation que voit le joueur
+  const done = (st: Awaited<ReturnType<typeof api.licenseActivate>>, fresh: boolean) => {
+    activated(st, fresh);
     setStep({ kind: "success" });
-    setTimeout(() => {
-      setLicense(st);
-      onDone?.();
-    }, 1100);
   };
 
   const run = async (fn: () => Promise<void>) => {
@@ -70,11 +71,11 @@ export function LicenseGate({ embedded = false, onDone }: { embedded?: boolean; 
     run(async () => {
       const r = await api.licenseLogin(email.trim(), password);
       setPassword("");
-      if (r.kind === "active") done(r.status);
+      if (r.kind === "active") done(r.status, false);
       else setStep({ kind: "confirm", email: r.email, keyHint: r.keyHint });
     });
 
-  const activate = () => run(async () => done(await api.licenseActivate()));
+  const activate = () => run(async () => done(await api.licenseActivate(), true));
 
   const errorBox = (
     <AnimatePresence>
@@ -88,6 +89,16 @@ export function LicenseGate({ embedded = false, onDone }: { embedded?: boolean; 
                 {t("license.buy")} <ArrowRight size={12} />
               </button>
             )}
+            {error.code === "bound_to_other_device" && (
+              <button type="button" className="link gate-buy" onClick={() => api.openUrl(`${ACCOUNT_URL}/account`)}>
+                {t("account.manage")} <ArrowRight size={12} />
+              </button>
+            )}
+            {SUPPORT_URL && (error.code === "revoked" || error.code === "invalid_request" || error.code === "bound_to_other_device") && (
+              <button type="button" className="link gate-buy" onClick={() => api.openUrl(SUPPORT_URL)}>
+                {t("account.help")} <ArrowRight size={12} />
+              </button>
+            )}
           </span>
         </motion.div>
       )}
@@ -97,15 +108,34 @@ export function LicenseGate({ embedded = false, onDone }: { embedded?: boolean; 
   const card = (
       <motion.div className="gate-card" initial={{ opacity: 0, y: 14 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.42, ease }}>
         <div className="gate-brand">
-          <Pulse size={44} active={busy || step.kind === "success"} />
-          <Wordmark height={16} mark={false} />
+          <Pulse size={40} active={busy || step.kind === "success"} />
+          <Wordmark height={26} mark={false} />
           <span className="gate-premium rg-overline">Premium</span>
         </div>
 
         <AnimatePresence mode="wait" initial={false}>
           {step.kind === "success" && (
             <motion.div key="ok" className="gate-success" initial={{ opacity: 0, y: 6 }} animate={{ opacity: 1, y: 0 }}>
+              <motion.span
+                className="gate-check"
+                initial={{ scale: 0.6, opacity: 0 }}
+                animate={{ scale: 1, opacity: 1 }}
+                transition={{ type: "spring", stiffness: 420, damping: 22, delay: 0.08 }}
+              >
+                <Check size={26} strokeWidth={2.5} />
+              </motion.span>
               <h1>{t("license.success")}</h1>
+              <p className="gate-lead">{t("license.successLead", { total: totalTweaks })}</p>
+              <div className="gate-device">
+                <Monitor size={16} />
+                <div>
+                  <div>{t("license.successDevice", { device: sys?.hostname ?? license?.deviceName ?? "", date: formatDate(lang, activatedAt ?? Date.now()) })}</div>
+                  {license?.keyHint && <div className="muted small rg-metric">{license.keyHint}</div>}
+                </div>
+              </div>
+              <Button variant="primary" size="lg" className="gate-submit" autoFocus onClick={() => onDone?.()}>
+                {t("license.continue")} <ArrowRight size={16} />
+              </Button>
             </motion.div>
           )}
 

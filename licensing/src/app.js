@@ -76,8 +76,8 @@ export function createApp({ cfg, db, keys, stripe, mailer, log = console, fetchI
   const strictHeaders = secureHeaders({
     contentSecurityPolicy: {
       defaultSrc: ["'self'"],
-      styleSrc: ["'self'", 'https://fonts.googleapis.com'],
-      fontSrc: ["'self'", 'https://fonts.gstatic.com'],
+      styleSrc: ["'self'"],
+      fontSrc: ["'self'"],
       imgSrc: ["'self'", 'data:'],
       scriptSrc: ["'self'"],
       formAction: ["'self'", 'https://checkout.stripe.com', 'https://billing.stripe.com'],
@@ -88,7 +88,10 @@ export function createApp({ cfg, db, keys, stripe, mailer, log = console, fetchI
     referrerPolicy: 'same-origin',
   });
   const siteHeaders = secureHeaders({ crossOriginEmbedderPolicy: false, referrerPolicy: 'strict-origin-when-cross-origin' });
-  app.use('*', (c, next) => (OWN.test(c.req.path) || !cfg.siteDir ? strictHeaders(c, next) : siteHeaders(c, next)));
+  // Images shown in emails load from the mail client, not from our pages.
+  const emailAssetHeaders = secureHeaders({ crossOriginResourcePolicy: 'cross-origin' });
+  app.use('*', (c, next) => (c.req.path.startsWith('/assets/email-') ? emailAssetHeaders(c, next)
+    : OWN.test(c.req.path) || !cfg.siteDir ? strictHeaders(c, next) : siteHeaders(c, next)));
 
   // Same-origin check for browser form posts (the API and the webhook are exempt).
   app.use('*', async (c, next) => {
@@ -108,7 +111,15 @@ export function createApp({ cfg, db, keys, stripe, mailer, log = console, fetchI
     ? bodyLimit({ maxSize: 64 * 1024, onError: tooLarge })(c, next) : next()));
 
   app.use('/assets/*', serveStatic({ root: publicDir, rewriteRequestPath: (p) => p.replace(/^\/assets/, '') }));
-  app.get('/healthz', (c) => c.json({ ok: true }));
+  // Checks the database too, so an uptime monitor notices when Supabase is down.
+  app.get('/healthz', async (c) => {
+    try {
+      await db.get('SELECT 1 AS ok');
+      return c.json({ ok: true });
+    } catch {
+      return c.json({ ok: false, error: 'database unreachable' }, 503);
+    }
+  });
 
   // ---------- helpers ----------
   const currentUser = async (c) => await L.userForWebSession(db, getCookie(c, 'rg_session'));
@@ -121,9 +132,13 @@ export function createApp({ cfg, db, keys, stripe, mailer, log = console, fetchI
     return lic && !lic.user_id ? lic : null;
   };
 
-  /** Attaches a pending purchase to the user. Returns a notice code for the dashboard. */
-  async function settleClaim(c, user) {
-    const lic = await pendingClaim(c);
+  /**
+   * Attaches a pending purchase to the user. Returns a notice code for the dashboard, or null.
+   * `known` is the license when the caller already has it (a cookie set on this response isn't
+   * readable from this request yet).
+   */
+  async function settleClaim(c, user, known = null) {
+    const lic = known && !known.user_id ? known : await pendingClaim(c);
     deleteCookie(c, 'rg_claim', { path: '/' });
     if (!lic) return null;
     try {
@@ -136,6 +151,7 @@ export function createApp({ cfg, db, keys, stripe, mailer, log = console, fetchI
       if (stripe && lic.stripe_subscription_id) {
         try { await stripe.subscriptions.cancel(lic.stripe_subscription_id); } catch (e) { log.error('[stripe] cancel duplicate failed', e.message); }
       }
+      await L.setLicenseStatus(db, lic.id, 'revoked', 'duplicate');
       await audit(db, 'license.duplicate', { licenseId: lic.id, userId: user.id });
       return 'duplicate';
     }
@@ -143,13 +159,24 @@ export function createApp({ cfg, db, keys, stripe, mailer, log = console, fetchI
 
   /** Records the referral code typed right after a purchase, once the license is on the account. */
   async function settleReferral(user, affiliate) {
-    if (!affiliate) return;
+    if (!affiliate) return null;
     const license = await L.licenseForUser(db, user.id);
-    if (!license || license.user_id !== user.id || Date.now() - (license.claimed_at || 0) > 60 * 60 * 1000) return;
-    await A.recordReferral(db, affiliate, user.id, license).catch((err) => {
+    if (!license || license.user_id !== user.id || Date.now() - (license.claimed_at || 0) > 60 * 60 * 1000) return null;
+    return A.recordReferral(db, affiliate, user.id, license).catch((err) => {
       if (!(err instanceof L.LicenseError)) throw err; // self-referral caught late: the account works, the code doesn't count
+      return null;
     });
   }
+
+  /** Signed-in buyer: no form to type the code, so use the one that came with the purchase (or the link cookie). */
+  async function applyReferral(user, license, code) {
+    if (!user || !code) return false;
+    const { affiliate } = await checkReferral(code, user.email, license);
+    return !!(await settleReferral(user, affiliate));
+  }
+
+  /** The code to pre-fill after a purchase: the one stored with it, else the affiliate link cookie. */
+  const purchaseCode = (c, lic) => lic?.referral_code || refCode(c);
 
   /** Checks a referral code against the account email and the purchase email. Returns { affiliate } or { error }. */
   async function checkReferral(code, email, pending) {
@@ -177,13 +204,31 @@ export function createApp({ cfg, db, keys, stripe, mailer, log = console, fetchI
   const nextPath = (v) => (NEXT.has(String(v || '')) ? String(v) : null);
 
   const settleAffiliate = (userId) => A.settleAffiliate(db, cfg, stripe, log, userId);
+  const dashWith = (n) => (n ? `/account?n=${n}` : '/account');
+  async function claimSignedIn(c, user, lic) {
+    const n = await settleClaim(c, user, lic);
+    if (n !== 'claimed') return n;
+    const applied = await applyReferral(user, await L.getLicense(db, lic.id), purchaseCode(c, lic));
+    deleteCookie(c, 'rg_ref', { path: '/' });
+    return applied ? 'claimedref' : n;
+  }
   // An affiliate's link (/buy?ref=CODE) pre-fills the code field the buyer sees after paying.
   const refCode = (c) => A.normalizeCode(getCookie(c, 'rg_ref'));
 
   async function sendClaimEmail(license, claimToken) {
+    // Bought while signed in: attached already. Apply the referral code that came with the purchase.
+    if (license.user_id) {
+      if (license.referral_code) await applyReferral(await L.getUser(db, license.user_id), license, license.referral_code);
+      return;
+    }
     if (!claimToken) return;
+    const owner = await L.findUserByEmail(db, license.email);
+    if (owner && (await L.licenseForUser(db, owner.id))?.status === 'active') {
+      log.info?.(`[mail] no purchase email: ${license.email} already has Premium (second purchase, refund it in Stripe)`);
+      return;
+    }
     try {
-      await mailer.purchase(license.email, `${cfg.publicUrl}/claim/${claimToken}`);
+      await mailer.purchase(license.email, `${cfg.publicUrl}/claim/${claimToken}`, license);
     } catch (err) {
       log.error('[mail] purchase email failed', err);
     }
@@ -193,15 +238,15 @@ export function createApp({ cfg, db, keys, stripe, mailer, log = console, fetchI
   app.get('/buy', async (c) => {
     const user = await currentUser(c);
     if (user && (await L.licenseForUser(db, user.id))?.status === 'active') return c.redirect('/account?n=owned', 303);
-    if (!stripe || !(cfg.subscriptions || cfg.stripePriceId)) {
-      return c.html(V.messagePage(cfg, { title: 'Checkout is not open yet.', text: 'Payments are being set up. Come back soon.' }), 503);
+    if (!stripe || !cfg.subscriptions) {
+      return c.html(V.messagePage(cfg, { user, overline: 'Checkout', title: 'Checkout opens soon.', text: 'Payments are being set up. Meanwhile, the free version of Rago Optimizer is ready to download.', action: { href: user ? '/account/download' : '/download', label: 'Download the free version' } }), 503);
     }
-    const ref = A.normalizeCode(c.req.query('ref'));
+    const ref = A.normalizeCode(c.req.query('ref')) || refCode(c);
     if (ref) setCookie(c, 'rg_ref', ref, { ...cookieBase, maxAge: 30 * 86400 });
     // A returning subscriber pays with their existing Stripe customer, so invoices stay together.
     const previous = user && await db.get('SELECT stripe_customer_id FROM licenses WHERE user_id = ? AND stripe_customer_id IS NOT NULL ORDER BY created_at DESC LIMIT 1', [user.id]);
     const interval = c.req.query('interval') === 'year' ? 'year' : c.req.query('interval') === 'month' ? 'month' : undefined;
-    const session = await createCheckout(stripe, cfg, user, { interval, customerId: previous?.stripe_customer_id }, log);
+    const session = await createCheckout(stripe, cfg, user, { interval, customerId: previous?.stripe_customer_id, ref }, log);
     return c.redirect(session.url, 303);
   });
 
@@ -212,40 +257,43 @@ export function createApp({ cfg, db, keys, stripe, mailer, log = console, fetchI
     try {
       session = await stripe.checkout.sessions.retrieve(id, { expand: ['subscription'] });
     } catch {
-      return c.html(V.messagePage(cfg, { title: "We couldn't find that payment.", text: 'If you were charged, sign in or contact support on Discord with your receipt.', action: { href: '/login', label: 'Sign in' } }), 404);
+      return c.html(V.messagePage(cfg, { overline: 'Checkout', title: "We couldn't find that payment.", text: 'If you were charged, sign in or contact support on Discord with your receipt.', action: { href: '/login', label: 'Sign in' } }), 404);
     }
     if (!isRagoCheckout(session)) return c.redirect('/login', 303);
     // The webhook may not have arrived yet: fulfilling here too is safe (idempotent).
     const out = await L.fulfillCheckoutSession(db, session);
     if (!out.license) {
-      return c.html(V.messagePage(cfg, { title: 'Payment processing.', text: "Your bank is still confirming the payment. We'll email you a link to create your account as soon as it's done.", step: 0 }));
+      return c.html(V.messagePage(cfg, { overline: 'Checkout', title: 'Payment processing.', step: 0,
+        text: cfg.mailEnabled
+          ? "Your bank is still confirming the payment. We'll email you a link to create your account as soon as it's done."
+          : 'Your bank is still confirming the payment. Refresh this page in a few minutes to create your account, or ask on Discord with your receipt.',
+        action: { href: c.req.url, label: 'Refresh' } }));
     }
     if (out.created) await sendClaimEmail(out.license, out.claimToken);
 
     const user = await currentUser(c);
     if (out.license.user_id) return c.redirect(user ? '/account?n=claimed' : '/login', 303);
     setClaim(c, out.license.id);
-    if (user) {
-      const n = await settleClaim(c, user);
-      return c.redirect(`/account?n=${n || 'claimed'}`, 303);
-    }
+    if (user) return c.redirect(dashWith(await claimSignedIn(c, user, out.license)), 303);
     if (await L.findUserByEmail(db, out.license.email)) {
-      return c.html(V.loginPage(cfg, { email: out.license.email, purchased: true }));
+      return c.html(V.loginPage(cfg, { email: out.license.email, purchased: true, code: purchaseCode(c, out.license) }));
     }
-    return c.html(V.signupPage(cfg, { purchased: true, claimEmail: out.license.email, code: refCode(c) }));
+    return c.html(V.signupPage(cfg, { purchased: true, claimEmail: out.license.email, code: purchaseCode(c, out.license) }));
   });
 
   // Link from the purchase email, for buyers who closed the tab before creating their account.
   app.get('/claim/:token', async (c) => {
     const lic = await L.licenseByClaimToken(db, c.req.param('token'));
     if (!lic) {
-      return c.html(V.messagePage(cfg, { title: 'This link was already used.', text: 'Your license is already on an account. Sign in to see it.', action: { href: '/login', label: 'Sign in' } }), 410);
+      const user = await currentUser(c);
+      return c.html(V.messagePage(cfg, { user, overline: 'Your purchase', title: 'This link was already used.', text: 'Your license is already on an account. Sign in to see it.', action: user ? { href: '/account', label: 'Go to your account' } : { href: '/login', label: 'Sign in' } }), 410);
     }
-    setClaim(c, lic.id);
     const user = await currentUser(c);
-    if (user) return c.redirect(`/account?n=${await settleClaim(c, user) || 'claimed'}`, 303);
-    if (await L.findUserByEmail(db, lic.email)) return c.html(V.loginPage(cfg, { email: lic.email, purchased: true }));
-    return c.html(V.signupPage(cfg, { purchased: true, claimEmail: lic.email, code: refCode(c) }));
+    // Signed in (e.g. the account was created on another device): attach it right away.
+    if (user) return c.redirect(dashWith(await claimSignedIn(c, user, lic)), 303);
+    setClaim(c, lic.id);
+    if (await L.findUserByEmail(db, lic.email)) return c.html(V.loginPage(cfg, { email: lic.email, purchased: true, code: purchaseCode(c, lic) }));
+    return c.html(V.signupPage(cfg, { purchased: true, claimEmail: lic.email, code: purchaseCode(c, lic) }));
   });
 
   // ---------- accounts ----------
@@ -253,7 +301,7 @@ export function createApp({ cfg, db, keys, stripe, mailer, log = console, fetchI
     const next = nextPath(c.req.query('next'));
     if (await currentUser(c)) return c.redirect(next || '/account', 303);
     const lic = await pendingClaim(c);
-    return c.html(V.signupPage(cfg, { purchased: !!lic, claimEmail: lic?.email, next, code: refCode(c) }));
+    return c.html(V.signupPage(cfg, { purchased: !!lic, claimEmail: lic?.email, next, code: lic ? purchaseCode(c, lic) : '' }));
   });
 
   app.post('/signup', async (c) => {
@@ -269,7 +317,7 @@ export function createApp({ cfg, db, keys, stripe, mailer, log = console, fetchI
     if (!allow(`signup:${ip(c)}`, 10, 60 * 60 * 1000)) return fail(API_ERRORS.rate_limited[1], 429);
     if (!EMAIL.test(email) || email.length > 254) return fail('Enter a valid email address.');
     if (password.length < 8 || password.length > 200) return fail('Use at least 8 characters for your password.');
-    const exists = () => fail('An account with this email already exists. Sign in instead.');
+    const exists = () => fail(V.html`An account with this email already exists. <a href="/login${next ? `?next=${encodeURIComponent(next)}` : ''}">Sign in instead</a>.`);
     if (await L.findUserByEmail(db, email)) return exists();
     const { affiliate, error } = await checkReferral(code, email, pending);
     if (error) return fail(error);
@@ -293,7 +341,8 @@ export function createApp({ cfg, db, keys, stripe, mailer, log = console, fetchI
     if (await currentUser(c)) return c.redirect(next || '/account', 303);
     const n = c.req.query('n');
     const purchased = !!(await pendingClaim(c));
-    return c.html(V.loginPage(cfg, { purchased, next, code: purchased ? refCode(c) : '', notice: n === 'reset' ? 'Password saved. Sign in with your new password.' : null }));
+    const pending = await pendingClaim(c);
+    return c.html(V.loginPage(cfg, { purchased: !!pending, email: pending?.email || '', next, code: pending ? purchaseCode(c, pending) : '', notice: n === 'reset' ? 'Password saved. Sign in with your new password.' : null }));
   });
 
   app.post('/login', async (c) => {
@@ -339,13 +388,14 @@ export function createApp({ cfg, db, keys, stripe, mailer, log = console, fetchI
         try { await mailer.passwordReset(user.email, `${cfg.publicUrl}/reset/${token}`); } catch (err) { log.error('[mail] reset failed', err); }
       }
     }
-    return c.html(V.forgotPage(cfg, { sent: true }));
+    return c.html(V.forgotPage(cfg, { sent: true, email }));
   });
 
-  const expiredReset = (c) => c.html(V.messagePage(cfg, { title: 'This link expired.', text: 'Reset links work once, for 1 hour. Ask for a new one.', action: { href: '/forgot', label: 'Send a new link' } }), 410);
+  const expiredReset = (c) => c.html(V.messagePage(cfg, { overline: 'Password', title: 'This link expired.', text: 'Reset links work once, for 1 hour. Ask for a new one.', action: { href: '/forgot', label: 'Send a new link' } }), 410);
   app.get('/reset/:token', async (c) => {
     const token = c.req.param('token');
-    return (await L.passwordResetValid(db, token)) ? c.html(V.resetPage(cfg, { token })) : expiredReset(c);
+    const email = await L.passwordResetEmail(db, token);
+    return email ? c.html(V.resetPage(cfg, { token, email })) : expiredReset(c);
   });
   app.post('/reset/:token', async (c) => {
     const token = c.req.param('token');
@@ -360,12 +410,13 @@ export function createApp({ cfg, db, keys, stripe, mailer, log = console, fetchI
   // ---------- dashboard ----------
   const NOTICES = {
     claimed: ['notice', 'License added to your account. Download Rago Optimizer below.'],
+    claimedref: ['notice', 'License added to your account, and your referral code was applied. Download Rago Optimizer below.'],
     owned: ['notice', 'You already have Rago Optimizer Premium. No need to buy it twice.'],
     reset: ['notice', 'Device freed. Sign in to Rago Optimizer on your new PC to activate it.'],
-    duplicate: ['error', 'This account already has a license, so the new purchase was not added. Contact support on Discord for a refund of the extra payment.'],
+    duplicate: ['error', V.html`This account already has Premium, so the new purchase was not added and its subscription was stopped. ${V.supportLink(cfg, 'Contact support on Discord')} for a refund of the extra payment.`],
     password: ['notice', 'Password changed. Other browsers were signed out.'],
-    nofile: ['error', "The installer isn't available yet. Try again in a moment."],
-    nobilling: ['error', "Billing isn't available right now. Try again in a moment, or contact support on Discord."],
+    nofile: ['error', V.html`The installer is being updated and can't be downloaded right now. Check back later today, or ${V.supportLink(cfg, 'ask on Discord')}.`],
+    nobilling: ['error', V.html`Billing isn't available right now. Try again in a moment, or ${V.supportLink(cfg, 'contact support on Discord')}.`],
   };
 
   function resetWindow(license, device) {
@@ -452,8 +503,9 @@ export function createApp({ cfg, db, keys, stripe, mailer, log = console, fetchI
 
   // Public link for the site's free download button.
   app.get('/download', async (c) => {
-    if (!allow(`download:${ip(c)}`, 30, 60 * 60 * 1000)) return c.html(V.messagePage(cfg, { title: 'Too many downloads.', text: API_ERRORS.rate_limited[1] }), 429);
-    return (await sendInstaller(c, null)) || c.html(V.messagePage(cfg, { title: "The download isn't available yet.", text: 'Try again in a moment. If it keeps happening, contact support on Discord.' }), 503);
+    if (!allow(`download:${ip(c)}`, 30, 60 * 60 * 1000)) return c.html(V.messagePage(cfg, { overline: 'Free download', title: 'Too many downloads.', text: API_ERRORS.rate_limited[1] }), 429);
+    return (await sendInstaller(c, null)) || c.html(V.messagePage(cfg, { overline: 'Free download', title: 'The download is being updated.',
+      text: 'Rago Optimizer can’t be downloaded right now. Check back later today, or ask on Discord and we’ll tell you when it’s back.' }), 503);
   });
 
   // For the launch guide: says whether the installer is found, without exposing anything secret.
@@ -552,6 +604,7 @@ export function createApp({ cfg, db, keys, stripe, mailer, log = console, fetchI
     const user = await L.findUserByEmail(db, email);
     const ok = await verifyPassword(body.password, user ? user.password_hash : DUMMY_HASH);
     if (!user || !ok) return fail(c, 'invalid_credentials');
+    await A.rememberDevice(db, user.id, device);
     await settleAffiliate(user.id);
     const license = await L.licenseForUser(db, user.id);
     if (!license) return fail(c, 'no_license', { buy_url: buyUrl() });
@@ -619,12 +672,12 @@ export function createApp({ cfg, db, keys, stripe, mailer, log = console, fetchI
 
   app.notFound(async (c) => {
     const user = await currentUser(c).catch(() => null);
-    return c.html(V.messagePage(cfg, { user, title: 'Page not found.', text: "This page doesn't exist.", action: user ? { href: '/account', label: 'Go to your account' } : { href: '/login', label: 'Sign in' } }), 404);
+    return c.html(V.messagePage(cfg, { user, overline: 'Error 404', title: 'Page not found.', text: "This page doesn't exist, or it moved.", action: user ? { href: '/account', label: 'Go to your account' } : null }), 404);
   });
   app.onError((err, c) => {
     log.error(err);
     if (c.req.path.startsWith('/api/')) return c.json({ error: { code: 'server_error', message: "Couldn't reach the license server. Check your connection and try again." } }, 500);
-    return c.html(V.messagePage(cfg, { title: 'Something went wrong.', text: 'Try again in a moment. If it keeps happening, contact support on Discord.' }), 500);
+    return c.html(V.messagePage(cfg, { overline: 'Error', title: 'Something went wrong.', text: 'Try again in a moment. If it keeps happening, ask on Discord.', action: c.req.method === 'GET' ? { href: c.req.url, label: 'Try again' } : null }), 500);
   });
 
   return app;

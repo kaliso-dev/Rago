@@ -19,9 +19,33 @@ static FREE: LazyLock<Vec<String>> = LazyLock::new(|| {
     serde_json::from_str::<Free>(include_str!("../../src/data/free.json")).expect("free.json invalide").tweaks
 });
 
-/// Sans licence active, seuls les réglages du plan gratuit (et l'installation de WMIC) peuvent tourner.
-pub fn allowed(id: &str, premium: bool) -> bool {
-    premium || id == "__wmic" || FREE.iter().any(|f| f == id)
+/// Variantes « retour arrière » (« id:variante ») marquées `revert` dans le catalogue : un joueur sans
+/// licence, ou dont l'abonnement a pris fin, doit pouvoir remettre Windows comme avant.
+static REVERTS: LazyLock<Vec<String>> = LazyLock::new(|| {
+    let catalog: serde_json::Value =
+        serde_json::from_str(include_str!("../../src/data/catalog.json")).expect("catalog.json invalide");
+    let mut out = Vec::new();
+    for m in catalog["modules"].as_array().into_iter().flatten() {
+        for s in m["sections"].as_array().into_iter().flatten() {
+            for t in s["tweaks"].as_array().into_iter().flatten() {
+                for v in t["variants"].as_array().into_iter().flatten() {
+                    if v["revert"] == true {
+                        out.push(format!("{}:{}", t["id"].as_str().unwrap_or(""), v["id"].as_str().unwrap_or("")));
+                    }
+                }
+            }
+        }
+    }
+    out
+});
+
+/// Sans licence active, seuls les réglages du plan gratuit, les variantes de retour arrière et
+/// l'installation de WMIC peuvent tourner.
+pub fn allowed(id: &str, variant: Option<&str>, premium: bool) -> bool {
+    premium
+        || id == "__wmic"
+        || FREE.iter().any(|f| f == id)
+        || variant.is_some_and(|v| REVERTS.iter().any(|r| *r == format!("{id}:{v}")))
 }
 
 /// Scripts internes à l'app, qui ne viennent pas du .bat.
@@ -29,7 +53,7 @@ fn builtin(id: &str) -> Option<&'static str> {
     match id {
         // WMIC a été retiré de Windows 11 24H2 ; une partie des réglages du .bat s'en sert.
         "__wmic" => Some(
-            "echo - Installation de WMIC (fonctionnalité Windows à la demande)\r\n\
+            "echo - Installing WMIC (Windows feature on demand)\r\n\
              DISM /Online /Add-Capability /CapabilityName:WMIC~~~~0.0.1.0 /NoRestart",
         ),
         _ => None,
@@ -99,8 +123,19 @@ mod tests {
             for s in variants.values() {
                 let low = s.to_lowercase();
                 assert!(!low.contains("edgewebview"), "{id} touche à WebView2");
-                for l in low.lines().filter(|l| !l.trim_start().starts_with("rem ")) {
-                    if l.contains("featuresettingsoverride") || l.contains("services\\bam\"") {
+                for l in low.lines().filter(|l| !l.trim_start().starts_with("rem ") && !l.trim_start().starts_with("echo")) {
+                    let heavy = l.contains("featuresettingsoverride")
+                        || (l.contains("services\\bam\"") && l.contains("/d \"4\""))
+                        || l.contains("set-processmitigation -system -disable")
+                        || l.contains("image file execution options\\*")
+                        || l.contains("hypervisorlaunchtype off")
+                        || l.contains("disablerealtimemonitoring")
+                        || l.contains("advfirewall reset")
+                        || l.contains("clear-recyclebin")
+                        || l.contains("\"enablesmartscreen\" /t reg_dword /d \"0\"")
+                        || l.contains("\"noautoupdate\" /t reg_dword /d \"1\"")
+                        || (l.contains("\\prefetch") && (l.starts_with("del ") || l.starts_with("forfiles")));
+                    if heavy {
                         assert!(flagged.contains(id.as_str()), "{id} doit être Advanced avec avertissement : {l}");
                     }
                 }
@@ -125,11 +160,54 @@ mod tests {
         }
     }
 
+    /// Défauts relevés par la vérification du 2026-10-07 dans les scripts v6 : ils ne doivent pas revenir.
+    #[test]
+    fn v6_scripts_are_repaired() {
+        let catalog = include_str!("../../src/data/catalog.json");
+        for (id, variants) in SCRIPTS.iter() {
+            for (v, s) in variants {
+                let low = s.to_lowercase();
+                for l in low.lines() {
+                    let t = l.trim();
+                    assert!(!t.ends_with("do set \"str=%%i\" ("), "{id}:{v} boucle détachée : {l}");
+                    assert!(!(t.contains("/v \"devicepriority\" /f") && t.starts_with("reg")) || t.starts_with("reg delete"), "{id}:{v} {l}");
+                    assert!(!t.starts_with('/'), "{id}:{v} ligne orpheline : {l}");
+                    assert!(!t.contains("c:\\users\\") || t.contains("%username%"), "{id}:{v} chemin de l'auteur : {l}");
+                }
+                assert!(!low.contains("messagebox") && !low.contains("risxn") && !low.contains("excusesfn"), "{id}:{v}");
+                // une boîte ou un programme fenêtré bloque le script tant qu'on ne le ferme pas
+                assert!(!low.contains("systempropertiesperformance.exe"), "{id}:{v}");
+            }
+            if SCRIPTS[id].values().any(|s| s.to_lowercase().contains("wmic")) && !id.starts_with("__") {
+                let at = catalog.find(&format!("\"id\": \"{id}\"")).unwrap_or_else(|| panic!("{id} absent"));
+                let end = catalog[at..].find("\"lines\"").map(|e| at + e).unwrap_or(catalog.len());
+                assert!(catalog[at..end].contains("\"wmic\""), "{id} utilise WMIC sans le demander");
+            }
+        }
+        // profils exclusifs : une seule valeur par variante
+        for (v, s) in &SCRIPTS["sys_ram"] {
+            assert_eq!(s.to_lowercase().matches("svchostsplitthresholdinkb").count(), 1, "sys_ram:{v}");
+        }
+        for (v, s) in &SCRIPTS["ping_packets"] {
+            assert!(s.to_lowercase().matches("mtu=").count() <= 1, "ping_packets:{v}");
+        }
+        assert_eq!(SCRIPTS["ping_hitreg"].len(), 6);
+        assert_eq!(SCRIPTS["ping_main"].len(), 4);
+        // le RBW Mod remet ce que d'autres réglages coupent avant un screenshare
+        let rbw = SCRIPTS["rbw_mode"]["on"].to_lowercase();
+        assert!(rbw.contains("services\\bam\" /v \"start\" /t reg_dword /d \"1\""));
+        assert!(rbw.contains("enableprefetcher\" /t reg_dword /d \"3\""));
+    }
+
     #[test]
     fn free_plan() {
-        assert!(allowed("in_mouse", false) && allowed("rst_point", false) && allowed("__wmic", false));
-        assert!(!allowed("gpu_nvidia", false) && !allowed("in_advanced", false));
-        assert!(allowed("gpu_nvidia", true));
+        assert!(allowed("in_mouse", None, false) && allowed("rst_point", None, false) && allowed("__wmic", None, false));
+        assert!(!allowed("gpu_nvidia", None, false) && !allowed("in_advanced", None, false));
+        assert!(allowed("gpu_nvidia", None, true));
+        // retours arrière ouverts en gratuit, pas les autres variantes
+        assert!(allowed("game_mode", Some("off"), false) && !allowed("game_mode", Some("on"), false));
+        assert!(allowed("ping_hitreg", Some("default"), false) && !allowed("ping_hitreg", Some("hypixel"), false));
+        assert!(allowed("rbw_mode", Some("on"), false) && allowed("in_queue", Some("default"), false));
         let catalog = include_str!("../../src/data/catalog.json");
         for id in FREE.iter() {
             assert!(catalog.contains(&format!("\"id\": \"{id}\"")), "{id} absent du catalogue");

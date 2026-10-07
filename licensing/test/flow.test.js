@@ -156,7 +156,7 @@ test('claim link from the email works after the tab was closed, and only once', 
 });
 
 test('signed-in buyer gets the license directly; second purchase is flagged', async () => {
-  const t = await setup();
+  const t = await setup(SUBS);
   await t.browse('/signup', { form: { email: 'me@x.io', password: 'password123' } });
   const buy = await t.browse('/buy');
   assert.equal(buy.status, 303);
@@ -268,7 +268,7 @@ test('account without a license sees the offer', async () => {
   await t.browse('/signup', { form: { email: 'free@x.io', password: 'password123' } });
   const r = await t.browse('/account');
   assert.equal(r.status, 200);
-  assert.match(await r.text(), /Get Rago Optimizer Premium/);
+  assert.match(await r.text(), /You're on Free[\s\S]*Get Premium/);
   // The free plan is the app too: free accounts can download it.
   assert.equal((await t.browse('/account/download')).status, 200);
   const j = await (await t.api('/auth/login', { email: 'free@x.io', password: 'password123', device: device('Z') })).json();
@@ -287,7 +287,7 @@ test('SITE_DIR serves the marketing site without the strict CSP', async () => {
 });
 
 test('site hosted on another origin: checkout and links point back to it', async () => {
-  const t = await setup({ PUBLIC_URL: 'https://account.rago.test', SITE_URL: 'https://rago.test' });
+  const t = await setup({ ...SUBS, PUBLIC_URL: 'https://account.rago.test', SITE_URL: 'https://rago.test' });
   assert.equal((await t.app.request('/')).headers.get('location'), 'https://rago.test/');
   let params;
   const create = async (p) => { params = p; return { url: 'https://checkout.stripe.com/x' }; };
@@ -326,7 +326,7 @@ test('installer from Supabase Storage: signed link, any file name, clear reason 
   // Free accounts download too (the free plan is the app with Premium tweaks locked).
   await t.browse('/signup', { form: { email: 'st@x.io', password: 'password123' } });
   assert.equal((await t.browse('/account/download')).headers.get('location'), signed);
-  assert.match(calls[0].url, /object\/sign\/downloads\/RagoHub-Setup\.exe$/);
+  assert.match(calls[0].url, /object\/sign\/downloads\/RagoOptimizer-Setup\.exe$/);
   assert.equal(calls[0].init.headers.Authorization, 'Bearer eyJservice-key');
   assert.equal(calls[0].init.headers.apikey, 'eyJservice-key');
   await L.grantLicense(t.db, 'st@x.io');
@@ -386,7 +386,11 @@ test('no Stripe price yet: /buy says checkout is not open', async () => {
   const t = await setup({ STRIPE_PRICE_ID: '' });
   const r = await t.browse('/buy?interval=year');
   assert.equal(r.status, 503);
-  assert.match(await r.text(), /Checkout is not open yet/);
+  assert.match(await r.text(), /Checkout opens soon/);
+  // Only the old one-time price: not sold any more (the site sells a subscription).
+  const old = await setup();
+  assert.equal((await old.browse('/buy?interval=month')).status, 503);
+  assert.equal(old.created.length, 0);
 });
 
 test('webhook rejects bad signatures; cross-site form posts are refused', async () => {
@@ -395,6 +399,9 @@ test('webhook rejects bad signatures; cross-site form posts are refused', async 
   assert.equal(r.status, 400);
   const x = await t.app.request('/login', { method: 'POST', headers: { origin: 'https://evil.example', 'content-type': 'application/x-www-form-urlencoded' }, body: 'email=a&password=b' });
   assert.equal(x.status, 403);
+  // The email logo must load inside mail clients; page assets stay same-origin.
+  assert.equal((await t.app.request('/assets/email-wordmark.png')).headers.get('cross-origin-resource-policy'), 'cross-origin');
+  assert.equal((await t.app.request('/assets/account.css')).headers.get('cross-origin-resource-policy'), 'same-origin');
 });
 
 const SUBS = { STRIPE_PRICE_MONTHLY: 'price_month', STRIPE_PRICE_YEARLY: 'price_year', SITE_URL: 'https://rago.test' };
@@ -416,7 +423,7 @@ test('subscription: monthly or yearly checkout, renewal date, cancel, lapse and 
   let dash = await (await t.browse('/account')).text();
   assert.match(dash, /Rago Optimizer Premium · Yearly/);
   assert.match(dash, /Renews on/);
-  assert.match(dash, /Manage subscription/);
+  assert.match(dash, /Cancel or manage subscription/);
   const portal = await t.browse('/account/billing', { form: {} });
   assert.equal(portal.headers.get('location'), 'https://billing.stripe.com/p/session/x');
   assert.deepEqual(t.stripeCalls.at(-1), ['portal', 'cus_cs_sub']);
@@ -439,7 +446,7 @@ test('subscription: monthly or yearly checkout, renewal date, cancel, lapse and 
   // Canceled at period end: still works, dashboard says until when.
   t.subscription('sub_cs_sub', 'year', { cancel_at_period_end: true });
   await t.webhook('customer.subscription.updated', { id: 'sub_cs_sub', object: 'subscription' });
-  assert.match(await (await t.browse('/account')).text(), /Canceled\. Rago Optimizer keeps working until/);
+  assert.match(await (await t.browse('/account')).text(), /Canceled\. Premium keeps working until/);
 
   // Unpaid: the license stops; card fixed: it comes back, same PC, no new activation.
   t.subscription('sub_cs_sub', 'year', { status: 'unpaid' });
@@ -451,7 +458,7 @@ test('subscription: monthly or yearly checkout, renewal date, cancel, lapse and 
   assert.equal(err.buy_url, 'https://rago.test/#pricing');
   assert.match(err.message, /subscription ended/);
   dash = await (await t.browse('/account')).text();
-  assert.match(dash, /Renew Rago Optimizer Premium/);
+  assert.match(dash, /Renew Premium/);
   assert.match(dash, /Ended/);
 
   t.subscription('sub_cs_sub', 'year');
@@ -638,7 +645,7 @@ test('account pages: change password, foreign checkouts ignored, code typed at s
 });
 
 test('checkout asks to accept the terms, and still opens if Stripe has no Terms URL yet', async () => {
-  const t = await setup();
+  const t = await setup(SUBS);
   await t.browse('/buy');
   const p = t.created.at(-1);
   assert.equal(p.consent_collection.terms_of_service, 'required');
@@ -657,4 +664,46 @@ test('checkout asks to accept the terms, and still opens if Stripe has no Terms 
   assert.equal(s.url, 'https://checkout.stripe.com/c/pay/cs_x');
   assert.equal(calls, 2);
   assert.match(errors.join('\n'), /Terms of Service URL/);
+});
+
+test('purchase link opened while signed in attaches the license; the code from the affiliate link follows the purchase', async () => {
+  const t = await setup(SUBS);
+  // Affiliate A.
+  await t.browse('/signup', { form: { email: 'aff@x.io', password: 'password123' } });
+  await t.browse('/affiliate/join', { form: {} });
+  const { code } = await t.db.get('SELECT code FROM affiliates');
+  t.jar.clear();
+
+  // Buyer pays from the affiliate link on a phone, without creating the account there.
+  await t.browse(`/buy?interval=month&ref=${code}`);
+  assert.equal(t.created.at(-1).metadata.ref, code);
+  const s = t.paidSession('cs_ref', 'buyer@x.io', { metadata: { product: 'rago-hub-premium', ref: code } });
+  await t.webhook('checkout.session.completed', s);
+  const claimPath = new URL(t.mails.at(-1).url).pathname;
+
+  // Later, on the PC: account created first (other browser, no cookie), then the email link.
+  t.jar.clear();
+  await t.browse('/signup', { form: { email: 'buyer@x.io', password: 'password123' } });
+  const r = await t.browse(claimPath);
+  assert.equal(r.headers.get('location'), '/account?n=claimedref');
+  const buyer = await L.findUserByEmail(t.db, 'buyer@x.io');
+  assert.equal((await L.licenseForUser(t.db, buyer.id)).user_id, buyer.id);
+  assert.equal((await t.db.get('SELECT COUNT(*)::int AS n FROM referrals')).n, 1);
+  assert.match(await (await t.browse('/account?n=claimedref')).text(), /referral code was applied/);
+});
+
+test('a second purchase on an email that has Premium: no purchase email, duplicate license revoked', async () => {
+  const t = await setup(SUBS);
+  await t.browse('/signup', { form: { email: 'dup@x.io', password: 'password123' } });
+  await t.webhook('checkout.session.completed', t.paidSession('cs_d1', 'dup@x.io', { client_reference_id: (await L.findUserByEmail(t.db, 'dup@x.io')).id }));
+  const mailsBefore = t.mails.length;
+  t.jar.clear();
+  await t.webhook('checkout.session.completed', t.paidSession('cs_d2', 'dup@x.io'));
+  assert.equal(t.mails.length, mailsBefore);
+  await t.browse('/checkout/success?session_id=cs_d2');
+  const res = await t.browse('/login', { form: { email: 'dup@x.io', password: 'password123' } });
+  assert.equal(res.headers.get('location'), '/account?n=duplicate');
+  const dup = await t.db.get("SELECT status, status_reason FROM licenses WHERE stripe_session_id = 'cs_d2'");
+  assert.deepEqual([dup.status, dup.status_reason], ['revoked', 'duplicate']);
+  assert.match(await (await t.browse('/account?n=duplicate')).text(), /<a href="[^"]+"[^>]*>Contact support on Discord<\/a>/);
 });

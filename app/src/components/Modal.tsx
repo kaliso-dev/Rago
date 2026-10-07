@@ -1,13 +1,27 @@
 import { AnimatePresence, motion } from "motion/react";
-import { useEffect, type ReactNode } from "react";
+import { useEffect, useId, type ReactNode } from "react";
+
+/** Fenêtres ouvertes, de la plus ancienne à celle du dessus : Échap ne ferme que celle du dessus. */
+const stack: string[] = [];
 
 export function Modal({ open, onClose, children, className }: { open: boolean; onClose: () => void; children: ReactNode; className?: string }) {
+  const id = useId();
   useEffect(() => {
     if (!open) return;
-    const h = (e: KeyboardEvent) => e.key === "Escape" && onClose();
+    stack.push(id);
+    const h = (e: KeyboardEvent) => {
+      if (e.key === "Escape" && stack[stack.length - 1] === id) {
+        e.stopImmediatePropagation();
+        onClose();
+      }
+    };
     window.addEventListener("keydown", h);
-    return () => window.removeEventListener("keydown", h);
-  }, [open, onClose]);
+    return () => {
+      window.removeEventListener("keydown", h);
+      const i = stack.lastIndexOf(id);
+      if (i >= 0) stack.splice(i, 1);
+    };
+  }, [open, onClose, id]);
   return (
     <AnimatePresence>
       {open && (

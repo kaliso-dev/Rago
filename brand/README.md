@@ -1,6 +1,6 @@
-# Rago — kit de marque v1.1 (5 octobre 2026)
+# Rago — kit de marque v1.2 (7 octobre 2026)
 
-> **v1.1 :** rouge `#FF3B30` à la place de `#FF3347`, plus aucun orange (dégradé rouge→orange supprimé, alerte en jaune), fin des formes carrées et coins coupés : arrondis partout (échelle ci-dessous). Le logo sera remplacé par celui de Sofiene, mêmes noms de fichiers.
+> **v1.1 :** rouge `#FF3B30` à la place de `#FF3347`, plus aucun orange (dégradé rouge→orange supprimé, alerte en jaune), fin des formes carrées et coins coupés : arrondis partout (échelle ci-dessous).
 
 Charte complète : `charte.html` (ouvrir dans un navigateur). Ce fichier est le résumé à appliquer pour l'app Windows (Rago Optimizer) et le site de vente.
 
@@ -33,13 +33,25 @@ Geist (UI, titres en 600, interlettrage négatif) + Geist Mono (ping, FPS, versi
 ## Formes, mouvement
 - Arrondis partout, aucun angle vif ni coin coupé. Rayons : xs 8 (tags) · sm 12 (inputs, items de menu) · md 16 (boutons secondaires, tuiles) · lg 24 (cartes) · xl 32 (modales, sections, carte pricing) · 2xl 40 (héros) · full 999 (boutons principaux en pilule, toggles, chips). Imbrication : rayon enfant = rayon parent − padding.
 - Relief par paliers d'encre, peu d'ombres.
-- Durées 90 / 160 / 240 / 420 ms, `cubic-bezier(.16,1,.3,1)` par défaut, ressort pour les interrupteurs. Signature « Pulse » (le pixel émet des ondes carrées) pendant une optimisation. Tout se coupe avec `prefers-reduced-motion` / l'option Windows « Effets d'animation ».
+- Durées 90 / 160 / 240 / 420 ms, `cubic-bezier(.16,1,.3,1)` par défaut, ressort pour les interrupteurs. Signature « Pulse » pendant une optimisation : des ondes rondes rouges partent du R et s'effacent (1600 ms, en boucle). Tout se coupe avec `prefers-reduced-motion` / l'option Windows « Effets d'animation ».
 
 ## Interface Rago Optimizer (direction)
-Sidebar (12 modules, 189 tweaks) : Dashboard, Network, Latency, Graphics card, Windows, Hitreg, Minecraft, RBW Mod, Game mode, Expert mode, puis Restore et Settings. Chaque réglage : titre, une ligne d'explication, badge de risque (Safe / Advanced), interrupteur. Chiffres avant/après en Geist Mono avec delta vert. Bouton principal rouge à texte encre (« Apply 6 tweaks »). Maquette dans la section 07 de la charte.
+Sidebar (12 modules, 226 tweaks) : Dashboard, Network, Latency, Graphics card, Windows, Hitreg, Minecraft, RBW Mod, Game mode, Expert mode, puis Restore et Settings. Chaque réglage : titre, une ligne d'explication, badge de risque (Safe / Advanced), interrupteur. Chiffres avant/après en Geist Mono avec delta vert. Bouton principal rouge à texte encre (« Apply 6 tweaks »). Maquette dans la section 07 de la charte.
 
 ## Voice (English)
 Le site, les pages compte et l'app sont en anglais : la référence est **`voice-en.md`** (ton, vocabulaire produit, copy clé, licence 1 appareil). Résumé : "you" + contractions, sentence case, US English, chiffres mesurés, pas d'emoji ni de capitales hurlées. Tagline : *Every millisecond counts.*
 
 ## Tokens
 `tokens/tokens.css` (variables `--rg-*`, importer tel quel) et `tokens/tokens.json` (mêmes valeurs, pour générer un thème WPF/WinUI/Tailwind).
+
+## Régénérer les fichiers du logo
+```
+cd /mnt/project-files/brand
+NODE_PATH=/opt/node22/lib/node_modules node tools/export-logo.js   # PNG, favicon-32, apple-touch, og-image, installeur .png (Geist embarqué)
+cd logo
+convert png/rago-icon-{16,20,24,32,40,48,64,128,256}.png rago.ico
+convert png/rago-icon-{16,32,48}.png web/favicon.ico
+cp rago-favicon.svg web/favicon.svg
+for n in sidebar header; do convert installer/$n.png -alpha off -type TrueColor BMP3:installer/$n.bmp; done
+```
+Ensuite, copier `logo/installer/*.bmp` dans `app/rago-hub/src-tauri/installer/`.

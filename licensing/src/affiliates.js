@@ -59,6 +59,16 @@ export async function recordReferral(db, aff, referredUserId, license) {
   return row;
 }
 
+/** Remembers a PC an account signed in from in the app (fingerprint hashes only). */
+export async function rememberDevice(db, userId, parsed) {
+  const device = parsed.fp || parsed;
+  const fp = COMPONENTS.map((k) => device[k] || '').join('|');
+  if (!fp.replace(/\|/g, '')) return;
+  await db.run(`INSERT INTO account_devices (user_id, fp, machine_guid, smbios_uuid, board_serial, seen_at) VALUES (?, ?, ?, ?, ?, ?)
+    ON CONFLICT (user_id, fp) DO UPDATE SET seen_at = excluded.seen_at`,
+  [userId, fp, device.machine_guid || null, device.smbios_uuid || null, device.board_serial || null, Date.now()]);
+}
+
 export async function voidReferrals(db, licenseIds, reason) {
   for (const id of licenseIds) {
     await db.run("UPDATE referrals SET status = 'void', void_reason = ? WHERE license_id = ? AND status <> 'void'", [reason, id]);
@@ -84,7 +94,11 @@ export async function evaluateAffiliate(db, cfg, userId) {
       WHERE r.affiliate_user_id = ? AND r.status = 'pending' AND l.created_at <= ? AND r.machine_guid IS NOT NULL
       ORDER BY r.created_at`, [userId, due]);
     if (pending.length) {
-      const own = await t.all('SELECT d.* FROM devices d JOIN licenses l ON l.id = d.license_id WHERE l.user_id = ?', [userId]);
+      // The affiliate's PCs: those of their licenses, and any PC they signed in from in the app (free too).
+      const own = [
+        ...await t.all('SELECT d.* FROM devices d JOIN licenses l ON l.id = d.license_id WHERE l.user_id = ?', [userId]),
+        ...await t.all('SELECT * FROM account_devices WHERE user_id = ?', [userId]),
+      ];
       const ownCustomers = new Set((await t.all('SELECT stripe_customer_id FROM licenses WHERE user_id = ? AND stripe_customer_id IS NOT NULL', [userId])).map((r) => r.stripe_customer_id));
       const seen = await t.all("SELECT * FROM referrals WHERE affiliate_user_id = ? AND status = 'counted'", [userId]);
       for (const r of pending) {

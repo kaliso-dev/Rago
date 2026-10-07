@@ -1,13 +1,13 @@
 import { AnimatePresence, motion } from "motion/react";
-import { ChevronDown, Lock, Play, RotateCcw, TriangleAlert } from "lucide-react";
+import { ChevronDown, Lock, Play, Power, PowerOff, RotateCcw, TriangleAlert } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import { autoVariant, availability, type Tweak } from "../lib/catalog";
-import { formatDate, type Key } from "../lib/i18n";
-import { useStore } from "../lib/store";
+import { formatDate, formatTime, type Key } from "../lib/i18n";
+import { SESSION_TOGGLES, useStore } from "../lib/store";
 import { Badge, Button, Segmented, Switch } from "./ui";
 
 export function TweakRow({ tweak }: { tweak: Tweak }) {
-  const { t, lang, sys, selected, toggle, variantOf, setVariant, lastRun, requestApply, focusTweak, setFocusTweak, isLocked, premium, setUpsell } = useStore();
+  const { t, lang, sys, selected, toggle, variantOf, setVariant, lastRun, requestApply, focusTweak, setFocusTweak, isLocked, variantLocked, premium, setUpsell } = useStore();
   const [open, setOpen] = useState(false);
   const ref = useRef<HTMLDivElement>(null);
   const av = availability(tweak, sys);
@@ -18,6 +18,14 @@ export function TweakRow({ tweak }: { tweak: Tweak }) {
   const isAction = tweak.kind === "action";
   const focused = focusTweak === tweak.id;
   const locked = isLocked(tweak.id);
+  // mode jeu, RBW Mod, mode jeu Windows : on les allume et on les éteint, l'état connu vient de l'historique
+  const session = SESSION_TOGGLES.has(tweak.id) && !!tweak.variants?.length && av.ok;
+  const sessionState = session && last?.ok && last.variant ? last.variant : null;
+  const runVariant = (v: string) => {
+    if (variantLocked(tweak.id, v)) return setUpsell("tweak", tweak.id);
+    setVariant(tweak.id, v);
+    requestApply([tweak.id]);
+  };
 
   useEffect(() => {
     if (!focused || !ref.current) return;
@@ -27,9 +35,9 @@ export function TweakRow({ tweak }: { tweak: Tweak }) {
   }, [focused, setFocusTweak]);
 
   const onRowClick = () => {
-    if (locked) return setUpsell("tweak");
+    if (locked) return setUpsell("tweak", tweak.id);
     if (!av.ok) return;
-    if (isAction) setOpen((o) => !o);
+    if (isAction || session) setOpen((o) => !o);
     else toggle(tweak.id);
   };
 
@@ -50,11 +58,17 @@ export function TweakRow({ tweak }: { tweak: Tweak }) {
               {t("badge.reboot")}
             </Badge>
           )}
-          {last && <Badge tone={last.ok ? "ok" : "red"}>{t(last.ok ? "badge.applied" : "badge.failed", { date: formatDate(lang, last.ts) })}</Badge>}
+          {sessionState ? (
+            <Badge tone={sessionState === "on" ? "ok" : undefined}>
+              {t(sessionState === "on" ? "session.onSince" : "session.offSince", { time: formatTime(lang, last!.ts) })}
+            </Badge>
+          ) : (
+            last && <Badge tone={last.ok ? "ok" : "red"}>{t(last.ok ? "badge.applied" : "badge.failed", { date: formatDate(lang, last.ts) })}</Badge>
+          )}
         </div>
         <p className="tweak-desc">{tweak.desc[lang]}</p>
 
-        {tweak.variants && tweak.variants.length > 1 && av.ok && (
+        {tweak.variants && tweak.variants.length > 1 && av.ok && !session && (
           <div className="tweak-variants">
             <Segmented
               layoutId={`seg-${tweak.id}`}
@@ -77,7 +91,7 @@ export function TweakRow({ tweak }: { tweak: Tweak }) {
           </p>
         )}
 
-        <button
+        {!locked && <button
           type="button"
           className={`tweak-more${open ? " open" : ""}`}
           onClick={(e) => {
@@ -87,7 +101,7 @@ export function TweakRow({ tweak }: { tweak: Tweak }) {
         >
           {t("tweak.more")}
           <ChevronDown size={12} />
-        </button>
+        </button>}
         <AnimatePresence initial={false}>
           {open && (
             <motion.div
@@ -97,7 +111,7 @@ export function TweakRow({ tweak }: { tweak: Tweak }) {
               exit={{ height: 0, opacity: 0 }}
               transition={{ duration: 0.2, ease: [0.16, 1, 0.3, 1] }}
             >
-              <div className="rg-metric tweak-legacy">{t("tweak.legacy", { refs: tweak.legacy.join(", "), lines: tweak.lines })}</div>
+              <p className="muted small">{t("tweak.details", { lines: tweak.lines })}</p>
               {tweak.confirm && (
                 <p className="tweak-note warn">
                   <TriangleAlert size={12} />
@@ -117,11 +131,28 @@ export function TweakRow({ tweak }: { tweak: Tweak }) {
             icon={<Lock size={12} />}
             onClick={(e) => {
               e.stopPropagation();
-              setUpsell("tweak");
+              setUpsell("tweak", tweak.id);
             }}
           >
             {t("free.lock")}
           </Button>
+        ) : session ? (
+          <div className="tweak-session">
+            {tweak.variants!.map((v) => (
+              <Button
+                key={v.id}
+                size="sm"
+                variant={sessionState === v.id ? "primary" : "secondary"}
+                icon={v.id === "off" ? <PowerOff size={12} /> : <Power size={12} />}
+                onClick={(e) => {
+                  e.stopPropagation();
+                  runVariant(v.id);
+                }}
+              >
+                {t(v.id === "off" ? "session.turnOff" : "session.turnOn")}
+              </Button>
+            ))}
+          </div>
         ) : isAction ? (
           <Button
             size="sm"

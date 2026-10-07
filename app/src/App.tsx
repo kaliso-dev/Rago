@@ -2,6 +2,7 @@ import { AnimatePresence, MotionConfig, motion } from "motion/react";
 import { useEffect, useRef } from "react";
 import { ApplyBar } from "./components/ApplyBar";
 import { ConfirmDialog } from "./components/ConfirmDialog";
+import { LicenseNotice } from "./components/LicenseNotice";
 import { RunOverlay } from "./components/RunOverlay";
 import { SearchPalette } from "./components/SearchPalette";
 import { Upsell } from "./components/Upsell";
@@ -39,6 +40,7 @@ export function App() {
         <div className="body">
           <Sidebar />
           <main className="main" ref={scroller}>
+            <LicenseNotice />
             <AnimatePresence mode="wait" initial={false}>
               <motion.div
                 key={page}

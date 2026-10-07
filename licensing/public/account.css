@@ -1,3 +1,6 @@
+/* Geist, served from this server (no request to Google). SIL Open Font License, see fonts/OFL.txt. */
+@font-face{font-family:"Geist";src:url(/assets/fonts/Geist-Variable.woff2) format("woff2");font-weight:100 900;font-style:normal;font-display:swap}
+@font-face{font-family:"Geist Mono";src:url(/assets/fonts/GeistMono-Variable.woff2) format("woff2");font-weight:100 900;font-style:normal;font-display:swap}
 /* Rago account pages. Tokens come from tokens.css (brand kit v1.1: red #FF3B30, no orange, rounded everywhere). */
 *{box-sizing:border-box}
 html{color-scheme:dark;-webkit-text-size-adjust:100%}
@@ -56,11 +59,11 @@ p{margin:0}
 .btn:active{transform:scale(.97)}
 .btn-primary,.btn-buy{color:var(--rg-text-inverse)}
 .btn-primary{background:var(--rg-red-500)}
-.btn-buy{background:var(--rg-red-gradient);background-size:160% 100%;background-position:0 0;transition:background-position var(--rg-dur-slow) var(--rg-ease-out),box-shadow var(--rg-dur-base),transform var(--rg-dur-base) var(--rg-ease-spring)}
+.btn-buy{background:var(--rg-red-500);transition:background var(--rg-dur-base),box-shadow var(--rg-dur-base),transform var(--rg-dur-base) var(--rg-ease-spring)}
 .btn-primary::after,.btn-buy::after{content:"";position:absolute;inset:0;z-index:-1;background:linear-gradient(110deg,transparent 30%,rgba(255,255,255,.28) 50%,transparent 70%);transform:translateX(-120%);transition:transform 700ms var(--rg-ease-out)}
 .btn-primary:hover,.btn-buy:hover{box-shadow:var(--rg-glow);transform:translateY(-2px)}
 .btn-primary:hover{background:var(--rg-red-400)}
-.btn-buy:hover{background-position:100% 0}
+.btn-buy:hover{background:#FF5E55}
 .btn-primary:hover::after,.btn-buy:hover::after{transform:translateX(120%)}
 .btn-primary:active{background:var(--rg-red-600);transform:translateY(0) scale(.97)}
 .btn-ghost{background:var(--rg-ink-2);color:var(--rg-text-1);border-color:var(--rg-line-2)}
@@ -157,7 +160,7 @@ p{margin:0}
 .grid > .card-aff.side{grid-column:span 5}
 @media (max-width:1000px){.grid > .card,.grid > .card-hero,.grid > .card-plan,.grid > .card-aff,.grid > .card-aff.side{grid-column:1 / -1;grid-row:auto}}
 .card-head{display:flex;justify-content:space-between;align-items:center;gap:12px}
-.howto{list-style:none;margin:auto 0 0;padding:22px 0 0;border-top:1px solid var(--rg-line-1);display:grid;gap:14px;color:var(--rg-text-2);font-size:var(--rg-fs-small)}
+.howto{list-style:none;margin:8px 0 0;padding:22px 0 0;border-top:1px solid var(--rg-line-1);display:grid;gap:14px;color:var(--rg-text-2);font-size:var(--rg-fs-small)}
 .howto li{display:flex;gap:12px;align-items:flex-start}
 .howto-n{display:inline-grid;place-items:center;flex:none;width:22px;height:22px;border-radius:var(--rg-radius-full);background:var(--rg-red-a12);color:var(--rg-red-400);font-size:11px}
 .key{display:flex;align-items:center;gap:10px;flex-wrap:wrap;padding:8px 8px 8px 18px;background:var(--rg-ink-1);border:1px solid var(--rg-line-1);border-radius:var(--rg-radius-md)}
@@ -193,11 +196,17 @@ p{margin:0}
 .ring-track{stroke:var(--rg-ink-4)}
 .ring-bar{stroke:var(--rg-red-500);filter:drop-shadow(0 0 6px rgba(255,59,48,.45));animation:ring-fill 1400ms var(--rg-ease-out) 300ms both}
 .ring-full .ring-bar{stroke:var(--rg-success);filter:drop-shadow(0 0 6px rgba(61,220,151,.45))}
+/* 0 / goal: a ghost arc sweeps to the first slot and back, and slot 1 breathes */
+.ring-ghost{stroke:var(--rg-red-500);opacity:.35;animation:ring-ghost 3.2s var(--rg-ease-in-out) 600ms infinite}
+@keyframes ring-ghost{0%,15%{stroke-dashoffset:263.89}50%,60%{stroke-dashoffset:175.93}100%{stroke-dashoffset:263.89}}
+.slots-full li.on{background:var(--rg-success);box-shadow:0 6px 18px -6px rgba(61,220,151,.7)}
+.slots-idle li:first-child{border-color:var(--rg-red-a24);color:var(--rg-red-400);animation:ring-wait 2.4s var(--rg-ease-in-out) 600ms infinite}
 @keyframes ring-fill{from{stroke-dashoffset:263.89}}
-.ring-pend{stroke:var(--rg-red-500);opacity:.45;animation:ring-fill 1400ms var(--rg-ease-out) 300ms both,ring-wait 2.4s var(--rg-ease-in-out) 1.7s infinite}
-@keyframes ring-wait{50%{opacity:.25}}
+.ring-pend{stroke:var(--rg-red-300);opacity:.9;animation:ring-fill 1400ms var(--rg-ease-out) 300ms both,ring-wait 2.4s var(--rg-ease-in-out) 1.7s infinite}
+@keyframes ring-wait{50%{opacity:.5}}
 .ring-num{display:flex;align-items:baseline;gap:2px}
-.ring-num b{font-size:40px;font-weight:500;letter-spacing:-.03em}
+.ring-num{font-variant-numeric:tabular-nums}
+.ring-num b{font-size:40px;font-weight:600;letter-spacing:-.03em}
 .ring-num small{font-size:15px;color:var(--rg-text-3)}
 .ring-sm .ring-num b{font-size:20px}
 .ring-sm .ring-num small{font-size:11px}
@@ -213,13 +222,14 @@ p{margin:0}
 .code-big code{font-size:clamp(26px,3.4vw,40px);letter-spacing:.18em;font-weight:500}
 .share{display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap;padding:6px 6px 6px 18px;border-radius:var(--rg-radius-full);background:var(--rg-ink-3);border:1px solid var(--rg-line-1)}
 .share .mono{color:var(--rg-text-2);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;min-width:0;flex:1}
+.share .share-url{direction:rtl;text-align:left}
 .progress{display:flex;gap:28px;align-items:center;flex-wrap:wrap}
 .progress > .progress-text{display:flex;flex-direction:column;gap:14px;flex:1;min-width:180px}
 .slots{list-style:none;margin:0;padding:0;display:flex;gap:10px}
 .slots li{display:grid;place-items:center;width:40px;height:40px;border-radius:var(--rg-radius-full);border:1.5px dashed var(--rg-line-3);color:var(--rg-text-3);font:500 12px var(--rg-font-mono)}
 .slots li svg{width:16px;height:16px}
 .slots li.on{border:0;background:var(--rg-red-500);color:var(--rg-text-inverse);box-shadow:0 6px 18px -6px rgba(255,59,48,.7);animation:pop var(--rg-dur-slow) var(--rg-ease-spring) both}
-.slots li.wait{border:1.5px solid var(--rg-red-a24);background:var(--rg-red-a12);color:var(--rg-red-400);animation:pop var(--rg-dur-slow) var(--rg-ease-spring) both,ring-wait 2.4s var(--rg-ease-in-out) 1s infinite}
+.slots li.wait{border:1.5px solid var(--rg-red-300);background:var(--rg-red-a12);color:var(--rg-red-300);animation:pop var(--rg-dur-slow) var(--rg-ease-spring) both,ring-wait 2.4s var(--rg-ease-in-out) 1s infinite}
 .slots li.wait svg{width:16px;height:16px}
 .slots li.on:nth-child(2){animation-delay:120ms}.slots li.on:nth-child(3){animation-delay:240ms}
 .refs{list-style:none;margin:0;padding:0;display:flex;flex-direction:column}
@@ -247,9 +257,20 @@ p{margin:0}
 @keyframes ripple{from{opacity:1;transform:scale(1)}to{opacity:0;transform:scale(1.15,1.6)}}
 .copied{animation:pop var(--rg-dur-base) var(--rg-ease-spring)}
 
+/* Reduced motion (Windows "Animation effects" off, which Rago Optimizer's visual tweak can switch off):
+   keep fades, colors and the ring filling, drop what moves across the screen. */
 @media (prefers-reduced-motion:reduce){
-  *,*::before,*::after{animation:none !important;transition:none !important}
+  .bg span,.card-hero::before{animation:none}
   .pulse i{display:none}
+  .rise{animation-name:fade}
+  .alert,.alert-ok{animation-name:fade}
+  .btn,.btn:hover{transform:none !important}
+  .btn-primary::after,.btn-buy::after{display:none}
+  .btn .ripple{display:none}
+  .slots li.on,.slots li.wait,.steps .done .steps-dot,.copied{animation-name:fade}
+  .alert-error{animation:none}
+}
+@keyframes fade{from{opacity:0}}
 }
 
 @media (max-width:560px){.top-email{display:none}.steps li + li::before{width:14px;margin:0 8px}.steps li span:last-child{display:none}.steps li.now span:last-child{display:inline}.meta{grid-template-columns:1fr}
@@ -260,3 +281,25 @@ p{margin:0}
 /* Phones: the Account / Affiliate tabs move to their own full-width row instead of disappearing */
 @media (max-width:720px){.top{flex-wrap:wrap;row-gap:12px}.tabs{display:flex;order:3;width:100%}.tabs a{flex:1;text-align:center}}
 .sr-only{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0}
+
+/* Header: Pricing and Get Premium for visitors and free accounts */
+.top-link{font-size:var(--rg-fs-small);font-weight:500;color:var(--rg-text-2);text-decoration:none;padding:6px 4px}
+.top-link:hover{color:var(--rg-text-1)}
+@media (max-width:560px){.top-link{display:none}.top .top-buy{padding-inline:12px}}
+.foot{flex-direction:column;align-items:flex-start}
+.foot-legal{margin:0;color:var(--rg-text-3);font-size:12px;max-width:72ch}
+/* Keyboard focus on the current tab */
+.tabs a[aria-current]:focus-visible{box-shadow:var(--rg-focus),var(--rg-shadow-1)}
+/* Premium channel block inside the download card */
+.discord{display:flex;gap:14px;align-items:flex-start;margin-top:auto;padding:18px;border-radius:var(--rg-radius-lg);background:var(--rg-ink-3);border:1px solid var(--rg-line-1)}
+.discord p{margin:4px 0 8px}
+.price{color:var(--rg-text-1)}
+/* Referral rows on small phones: badge under the email */
+@media (max-width:420px){.refs li{flex-wrap:wrap}.refs .badge{margin-left:50px}.refs .mono{overflow-wrap:anywhere}.refs p{white-space:nowrap}}
+/* Right after paying, on phones: short story, form in view */
+@media (max-width:900px){.is-purchase .split-aside .lede,.is-purchase .split-aside .pulse{display:none}.is-purchase .split-aside .display{font-size:32px}.is-purchase .split{gap:16px}}
+/* Download on a phone or Mac: explain instead of downloading a Windows file */
+.notwin{margin:0;padding:12px 16px;border-radius:var(--rg-radius-md);background:var(--rg-ink-3);border:1px solid var(--rg-line-2);color:var(--rg-text-2);font-size:var(--rg-fs-small)}
+
+/* iOS Safari zooms into fields under 16px */
+@media (max-width:760px){.field input{font-size:16px}}

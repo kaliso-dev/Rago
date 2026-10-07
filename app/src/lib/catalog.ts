@@ -10,6 +10,8 @@ export interface Variant {
   label: I18n;
   /** sélection automatique d'après le PC : "ram:16", "cpu:intel", "os:11" */
   auto?: string;
+  /** remet Windows comme avant : ouverte en gratuit */
+  revert?: boolean;
 }
 
 export interface Tweak {

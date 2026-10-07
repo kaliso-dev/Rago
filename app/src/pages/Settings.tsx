@@ -1,9 +1,11 @@
-import { ExternalLink, FolderOpen, LogOut } from "lucide-react";
+import { useState } from "react";
+import { ExternalLink, FolderOpen, LifeBuoy, LogOut, UserRound } from "lucide-react";
 import { formatDate } from "../lib/i18n";
 import { api, isTauri } from "../lib/api";
 import { totalTweaks } from "../lib/catalog";
 import { FREE, useStore } from "../lib/store";
-import { SITE_URL } from "../components/LicenseGate";
+import { ACCOUNT_URL, SITE_URL, SUPPORT_URL } from "../components/LicenseGate";
+import { Modal } from "../components/Modal";
 import { Button, Card, Segmented } from "../components/ui";
 import { Wordmark } from "../components/Logo";
 
@@ -17,7 +19,9 @@ const LICENCES = [
 ];
 
 export function Settings() {
-  const { t, lang, setLang, motion, setMotion, license, signOut, setUpsell } = useStore();
+  const { t, lang, setLang, motion, setMotion, license, signOut, setUpsell, activatedAt, sys } = useStore();
+  const [confirmOut, setConfirmOut] = useState(false);
+  const device = license?.deviceName ?? sys?.hostname ?? "";
   return (
     <div className="page settings">
       <header className="page-head">
@@ -25,14 +29,20 @@ export function Settings() {
       </header>
       <div className="settings-grid">
         <Card title={t("account.title")}>
-          {license?.state === "active" ? (
+          {license?.state === "active" || license?.state === "expired" ? (
             <>
               <div className="setting">
                 <div>
                   <div>{license.email}</div>
-                  <div className="muted small">{t("account.device")}</div>
+                  <div className="muted small">
+                    {license.state === "expired"
+                      ? t("account.pending")
+                      : activatedAt
+                        ? `${t("account.device")} ${t("account.activated", { date: formatDate(lang, activatedAt) })}.`
+                        : t("account.device")}
+                  </div>
                 </div>
-                <Button size="sm" variant="ghost" icon={<LogOut size={13} />} onClick={() => void signOut()}>
+                <Button size="sm" variant="ghost" icon={<LogOut size={13} />} onClick={() => setConfirmOut(true)}>
                   {t("account.signOut")}
                 </Button>
               </div>
@@ -53,6 +63,16 @@ export function Settings() {
                 <span>{t("account.machine")}</span>
                 <span className="rg-metric muted">{license.deviceName}</span>
               </div>
+              <div className="setting-actions">
+                <Button size="sm" icon={<UserRound size={13} />} onClick={() => void api.openUrl(`${ACCOUNT_URL}/account`)}>
+                  {t("account.manage")}
+                </Button>
+                {SUPPORT_URL && (
+                  <Button size="sm" variant="ghost" icon={<LifeBuoy size={13} />} onClick={() => void api.openUrl(SUPPORT_URL)}>
+                    {t("account.help")}
+                  </Button>
+                )}
+              </div>
             </>
           ) : (
             <>
@@ -64,6 +84,11 @@ export function Settings() {
                 <Button size="sm" variant="ghost" onClick={() => setUpsell("signin")}>
                   {t("free.signIn")}
                 </Button>
+                {SUPPORT_URL && (
+                  <Button size="sm" variant="ghost" icon={<LifeBuoy size={13} />} onClick={() => void api.openUrl(SUPPORT_URL)}>
+                    {t("account.help")}
+                  </Button>
+                )}
               </div>
             </>
           )}
@@ -97,9 +122,9 @@ export function Settings() {
           ))}
         </Card>
         <Card title={t("settings.about")} className="about">
-          <Wordmark height={18} />
+          <Wordmark height={20} />
           <p className="rg-metric muted">
-            {t("settings.version", { v: "1.0.0" })} · {totalTweaks} {lang === "fr" ? "réglages" : "tweaks"}
+            {t("settings.version", { v: __APP_VERSION__ })} · {totalTweaks} {lang === "fr" ? "réglages" : "tweaks"}
           </p>
           {!isTauri && <p className="muted small">{t("settings.demo")}</p>}
           <div className="rg-overline" style={{ marginTop: 16 }}>
@@ -117,6 +142,26 @@ export function Settings() {
           </ul>
         </Card>
       </div>
+      <Modal open={confirmOut} onClose={() => setConfirmOut(false)} className="confirm signout">
+        <h2>{t("signout.title")}</h2>
+        <p className="muted">{t("signout.lead", { device })}</p>
+        <div className="modal-actions">
+          <Button variant="ghost" className="push-left" onClick={() => void api.openUrl(`${ACCOUNT_URL}/account`)}>
+            {t("account.manage")}
+          </Button>
+          <Button onClick={() => setConfirmOut(false)}>{t("signout.cancel")}</Button>
+          <Button
+            variant="primary"
+            icon={<LogOut size={14} />}
+            onClick={() => {
+              setConfirmOut(false);
+              void signOut();
+            }}
+          >
+            {t("account.signOut")}
+          </Button>
+        </div>
+      </Modal>
     </div>
   );
 }

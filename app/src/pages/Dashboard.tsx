@@ -24,7 +24,7 @@ function Spec({ icon, label, value, sub }: { icon: ReactNode; label: string; val
 
 export function Dashboard() {
   const { t, lang, sys, sysLoading, refreshSys, selected, selectMany, history, lastRun, requestApply, premium, setUpsell } = useStore();
-  const applied = new Set(history.filter((h) => h.ok && tweaks.has(h.id)).map((h) => h.id)).size;
+  const applied = new Set(history.filter((h) => h.ok && tweaks.get(h.id)?.kind === "tweak").map((h) => h.id)).size;
   const restore = lastRun.get("rst_point");
 
   const health: { label: string; ok: boolean; value: string; action?: ReactNode }[] = sys
@@ -39,7 +39,7 @@ export function Dashboard() {
         {
           label: t("dash.health.restore"),
           ok: !!restore?.ok,
-          value: restore?.ok ? new Date(restore.ts).toLocaleString(lang === "fr" ? "fr-FR" : "en-GB", { dateStyle: "short", timeStyle: "short" }) : t("dash.health.restoreNone"),
+          value: restore?.ok ? new Date(restore.ts).toLocaleString(lang === "fr" ? "fr-FR" : "en-US", { dateStyle: "short", timeStyle: "short" }) : t("dash.health.restoreNone"),
           action: !restore?.ok ? (
             <Button size="sm" onClick={() => requestApply(["rst_point"])}>
               {t("dash.createRestore")}

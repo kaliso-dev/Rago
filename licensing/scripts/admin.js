@@ -1,15 +1,19 @@
 // Support tools. Usage: npm run admin -- <command> [args]
 //   show <email>                 account, license, device and recent events
 //   reset-device <email>         free the device so the license can be activated on another PC
-//   revoke <email> [reason]      disable the license (Rago Hub stops at its next check)
+//   revoke <email> [reason]      disable the license (Rago Optimizer goes back to free at its next check)
 //   restore <email>              re-enable a revoked license
 //   grant <email> [note]         create a license by hand (e.g. Discord buyers of the .bat Premium)
 //   create-user <email> <pass>   create an account (testing)
 //   affiliate <email>            affiliate code, referrals and why each counts or not
+//   delete-user <email>          GDPR erasure: cancel the subscription, delete the account, PC and
+//                                sessions, anonymize the license kept for accounting
+//   export-keys                  print LICENSE_SIGNING_KEY and SESSION_SECRET to save outside the database
 import { loadConfig } from '../src/config.js';
 import { openDb } from '../src/db.js';
 import * as L from '../src/licensing.js';
 import * as A from '../src/affiliates.js';
+import Stripe from 'stripe';
 
 const cfg = loadConfig({ ...process.env, NODE_ENV: 'development' });
 if (!cfg.databaseUrl) { console.error('Set DATABASE_URL (Supabase connection string) first.'); process.exit(1); }
@@ -59,7 +63,47 @@ switch (cmd) {
     break;
   }
   case 'create-user': await L.createUser(db, email, rest[0]); console.log('User created.'); break;
+  case 'delete-user': {
+    const target = String(email || '').toLowerCase();
+    const user = await L.findUserByEmail(db, target);
+    const lics = await db.all('SELECT * FROM licenses WHERE email = ? OR (user_id IS NOT NULL AND user_id = ?)', [target, user?.id ?? '']);
+    if (!user && !lics.length) { console.error(`Nothing stored for ${target}`); process.exit(1); }
+    const stripe = cfg.stripeSecretKey ? new Stripe(cfg.stripeSecretKey) : null;
+    for (const l of lics) {
+      if (l.stripe_subscription_id && l.status === 'active') {
+        if (!stripe) { console.error('Active subscription: set STRIPE_SECRET_KEY so it can be canceled first.'); process.exit(1); }
+        try { await stripe.subscriptions.cancel(l.stripe_subscription_id); console.log(`Subscription ${l.stripe_subscription_id} canceled.`); }
+        catch (err) { if (!/No such subscription|canceled/i.test(err.message)) throw err; }
+      }
+    }
+    await db.tx(async (t) => {
+      for (const l of lics) {
+        await t.run('DELETE FROM devices WHERE license_id = ?', [l.id]);
+        // Kept for accounting (amount, Stripe ids), without the person.
+        await t.run(`UPDATE licenses SET user_id = NULL, email = ?, claim_token_hash = NULL, status = 'revoked', status_reason = 'deleted' WHERE id = ?`,
+          [`deleted-${l.id}@deleted.invalid`, l.id]);
+        await t.run('UPDATE audit SET detail = NULL WHERE license_id = ?', [l.id]);
+      }
+      if (user) {
+        await t.run('UPDATE audit SET detail = NULL WHERE user_id = ?', [user.id]);
+        await t.run('DELETE FROM users WHERE id = ?', [user.id]); // sessions, resets, affiliate, referrals follow
+      }
+    });
+    console.log(`Deleted ${target}: account ${user ? 'removed' : 'none'}, ${lics.length} license(s) anonymized.`);
+    break;
+  }
+  case 'export-keys': {
+    // The signing key's public half is compiled into every Rago Optimizer build: lose it and every
+    // installed app rejects new licenses. Keep these two values in a password manager.
+    const rows = await db.all("SELECT name, value FROM server_secrets WHERE name IN ('license_signing_key', 'session_secret')");
+    const get = (n) => rows.find((r) => r.name === n)?.value;
+    if (process.env.LICENSE_SIGNING_KEY) console.log('LICENSE_SIGNING_KEY is set in the environment: that is the key in use, keep that value.');
+    else if (get('license_signing_key')) console.log(`LICENSE_SIGNING_KEY=${Buffer.from(get('license_signing_key')).toString('base64')}`);
+    if (process.env.SESSION_SECRET) console.log('SESSION_SECRET is set in the environment: that is the one in use.');
+    else if (get('session_secret')) console.log(`SESSION_SECRET=${get('session_secret')}`);
+    break;
+  }
   default:
-    console.log('Commands: show, reset-device, revoke, restore, grant, affiliate, create-user (see scripts/admin.js)');
+    console.log('Commands: show, reset-device, revoke, restore, grant, affiliate, create-user, delete-user, export-keys (see scripts/admin.js)');
 }
 await db.close();

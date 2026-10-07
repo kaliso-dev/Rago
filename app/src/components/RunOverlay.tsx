@@ -1,14 +1,15 @@
 import { AnimatePresence, motion } from "motion/react";
-import { Activity, Check, FolderOpen, LoaderCircle, Power, Square, X } from "lucide-react";
+import { Activity, ArrowRight, Check, FolderOpen, LoaderCircle, Power, Sparkles, Square, X } from "lucide-react";
 import { useEffect, useRef } from "react";
 import { api } from "../lib/api";
 import { formatNumber } from "../lib/i18n";
-import { itemName, useStore } from "../lib/store";
+import { totalTweaks } from "../lib/catalog";
+import { FREE, itemName, useStore } from "../lib/store";
 import { Pulse } from "./Logo";
 import { Button } from "./ui";
 
 export function RunOverlay() {
-  const { t, lang, run, setRun, goTo, requestPing } = useStore();
+  const { t, lang, run, setRun, goTo, requestPing, premium, license, setUpsell } = useStore();
   const consoleRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -59,6 +60,20 @@ export function RunOverlay() {
                     {t("run.summary", { ok: finished - failed, total, s: formatNumber(lang, seconds) })}
                     {failed > 0 && <div className="error-text">{t("run.failed", { n: failed })}</div>}
                     {run.reboot && !cancelled && <div className="muted">{t("run.rebootNeeded")}</div>}
+                    {license && !premium && !cancelled && (
+                      <button
+                        type="button"
+                        className="run-upsell"
+                        onClick={() => {
+                          close();
+                          setUpsell("plan");
+                        }}
+                      >
+                        <Sparkles size={13} />
+                        <span>{t("done.upsell", { n: totalTweaks - FREE.size })}</span>
+                        <ArrowRight size={13} />
+                      </button>
+                    )}
                   </>
                 )
               ) : (

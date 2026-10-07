@@ -133,7 +133,7 @@ export function ModulePage({ id }: { id: string }) {
       >
         <div>
           <div className="rg-overline">
-            {String(index + 1).padStart(2, "0")} / {mod.name.en.toUpperCase()}
+            {String(index + 1).padStart(2, "0")} / {mod.name[lang].toUpperCase()}
           </div>
           <h1>{mod.name[lang]}</h1>
           <p className="lead">{mod.tagline[lang]}</p>
@@ -146,7 +146,7 @@ export function ModulePage({ id }: { id: string }) {
                 {t("module.clear")}
               </Button>
             ) : !premium && safe.length === 0 ? (
-              <Button size="sm" icon={<Lock size={12} />} onClick={() => setUpsell("tweak")}>
+              <Button size="sm" icon={<Lock size={12} />} onClick={() => setUpsell("plan")}>
                 {t("free.lock")}
               </Button>
             ) : (

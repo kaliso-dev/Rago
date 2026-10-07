@@ -179,7 +179,7 @@ Vérification hors ligne au démarrage, dans cet ordre :
 3. L'empreinte calculée maintenant passe la règle « même PC » contre `fp`. Sinon : token copié depuis un autre PC, on l'efface.
 4. `plan == "premium"` débloque les modules Premium.
 
-Stockage : Windows Credential Manager (`CredWriteW`, cible `RagoHub/license`) ou fichier chiffré DPAPI dans `%LOCALAPPDATA%\Rago`. Jamais le mot de passe.
+Stockage : fichier chiffré DPAPI `%LOCALAPPDATA%\Rago\license.bin`. Jamais le mot de passe.
 
 ## Clés et compte de test
 

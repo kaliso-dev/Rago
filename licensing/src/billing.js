@@ -9,7 +9,9 @@ export function createStripe(cfg) {
 
 /** The price for ?interval=month|year, falling back to whichever is configured. */
 export function priceFor(cfg, interval) {
-  if (!cfg.subscriptions) return cfg.stripePriceId ? { price: cfg.stripePriceId, interval: null } : null;
+  // Premium is sold as a subscription only (decision of Oct 6, 2026). Without the recurring prices
+  // nothing is sold: the old one-time STRIPE_PRICE_ID would sell a lifetime license the site doesn't offer.
+  if (!cfg.subscriptions) return null;
   if (interval === 'year' && cfg.stripePriceYearly) return { price: cfg.stripePriceYearly, interval: 'year' };
   if (interval === 'month' && cfg.stripePriceMonthly) return { price: cfg.stripePriceMonthly, interval: 'month' };
   // No choice given: yearly, the plan the site highlights.
@@ -38,9 +40,9 @@ export async function createCheckout(stripe, cfg, user, opts = {}, log = console
   }
 }
 
-async function buildCheckout(stripe, cfg, user, { interval, customerId, terms } = {}) {
+async function buildCheckout(stripe, cfg, user, { interval, customerId, terms, ref } = {}) {
   const choice = priceFor(cfg, interval);
-  const metadata = { product: RAGO_PRODUCT, ...(choice.interval ? { interval: choice.interval } : {}) };
+  const metadata = { product: RAGO_PRODUCT, ...(choice.interval ? { interval: choice.interval } : {}), ...(ref ? { ref } : {}) };
   const common = {
     line_items: [{ price: choice.price, quantity: 1 }],
     success_url: `${cfg.publicUrl}/checkout/success?session_id={CHECKOUT_SESSION_ID}`,

@@ -53,10 +53,10 @@ async fn get_system_info(state: State<'_, AppState>, refresh: Option<bool>) -> R
 #[tauri::command]
 fn run_tweaks(app: AppHandle, state: State<'_, AppState>, items: Vec<RunItem>) -> Result<String, String> {
     if items.is_empty() {
-        return Err("Aucun réglage sélectionné".into());
+        return Err("No tweak selected".into());
     }
     let premium = state.license.status().state == "active";
-    if let Some(it) = items.iter().find(|it| !catalog::allowed(&it.id, premium)) {
+    if let Some(it) = items.iter().find(|it| !catalog::allowed(&it.id, it.variant.as_deref(), premium)) {
         return Err(format!("premium_required:{}", it.id));
     }
     let adapter = state.system(false).adapter;
@@ -65,6 +65,7 @@ fn run_tweaks(app: AppHandle, state: State<'_, AppState>, items: Vec<RunItem>) -
         history: Arc::clone(&state.history),
         resource_dir: state.resource_dir.clone(),
         logs_dir: state.data_dir.join("logs"),
+        run_dir: state.data_dir.join("run"),
         adapter,
     };
     state.runner.start(ctx, items)
@@ -118,7 +119,7 @@ fn minecraft_restore(dir: Option<String>) -> Result<String, String> {
 #[tauri::command]
 fn restart_pc() -> Result<(), String> {
     shell::hidden("shutdown.exe")
-        .args(["/r", "/t", "5", "/c", "Rago Optimizer : redémarrage pour appliquer les réglages"])
+        .args(["/r", "/t", "5", "/c", "Rago Optimizer: restarting to apply your tweaks"])
         .spawn()
         .map(|_| ())
         .map_err(|e| e.to_string())

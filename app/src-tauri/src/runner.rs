@@ -1,7 +1,8 @@
 //! Exécution des réglages : un lot à la fois, dans un thread, avec le journal envoyé à
 //! l'interface ligne par ligne.
 //!
-//! Chaque script batch est écrit dans %TEMP%\RagoOptimizer puis lancé par `cmd.exe /d /c`, sans
+//! Chaque script batch est écrit dans le dossier de données de l'app (sous-dossier run, hors de
+//! %TEMP% : beaucoup de réglages vident %TEMP% et tuaient leur propre script) puis lancé par `cmd.exe /d /c`, sans
 //! fenêtre, entrée standard fermée (un `pause` oublié ne bloque donc jamais).
 
 use serde::{Deserialize, Serialize};
@@ -71,6 +72,7 @@ pub struct Context {
     pub history: Arc<History>,
     pub resource_dir: PathBuf,
     pub logs_dir: PathBuf,
+    pub run_dir: PathBuf,
     pub adapter: Option<String>,
 }
 
@@ -89,7 +91,7 @@ impl Runner {
     /// Lance le lot dans un thread. Renvoie l'identifiant du lot.
     pub fn start(self: &Arc<Self>, ctx: Context, items: Vec<RunItem>) -> Result<String, String> {
         if self.running.swap(true, Ordering::SeqCst) {
-            return Err("Une optimisation est déjà en cours".into());
+            return Err("An optimization is already running".into());
         }
         self.cancel.store(false, Ordering::SeqCst);
         let run_id = format!("run-{}", now_ms());
@@ -168,7 +170,7 @@ impl Runner {
     fn run_item(&self, ctx: &Context, item: &RunItem, emit: &dyn Fn(String)) -> Result<(i32, Option<String>), String> {
         match item.id.as_str() {
             "mc_optifine" => {
-                let params = item.params.as_ref().ok_or("Paramètres OptiFine manquants")?;
+                let params = item.params.as_ref().ok_or("Missing OptiFine settings")?;
                 let dir = params
                     .get("dir")
                     .and_then(|d| d.as_str())
@@ -179,7 +181,7 @@ impl Runner {
                     .get("values")
                     .and_then(|v| serde_json::from_value(v.clone()).ok())
                     .ok_or("Valeurs OptiFine manquantes")?;
-                emit(format!("- Dossier : {}", dir.display()));
+                emit(format!("- Folder: {}", dir.display()));
                 let msg = minecraft::apply(&dir, &values, now_ms())?;
                 emit(format!("- {msg}"));
                 Ok((0, None))
@@ -188,7 +190,7 @@ impl Runner {
                 let exe = ctx.resource_dir.join("nvidiaProfileInspector.exe");
                 let nip = ctx.resource_dir.join("extremelatencylow.nip");
                 if !exe.exists() || !nip.exists() {
-                    return Err("NVIDIA Profile Inspector ou le profil .nip est absent du dossier de l'app".into());
+                    return Err("NVIDIA Profile Inspector or the .nip profile is missing from the app folder".into());
                 }
                 emit("- Import du profil extremelatencylow.nip dans le pilote NVIDIA".into());
                 let mut cmd = shell::hidden(&exe.to_string_lossy());
@@ -196,20 +198,20 @@ impl Runner {
                 self.stream(cmd, emit)
             }
             "rst_point" => {
-                emit("- Activation de la restauration système sur le disque Windows".into());
+                emit("- Turning on System Restore for the Windows drive".into());
                 let mut cmd = shell::hidden("powershell.exe");
                 cmd.args(["-NoProfile", "-NonInteractive", "-ExecutionPolicy", "Bypass", "-Command", RESTORE_POINT_PS]);
                 self.stream(cmd, emit)
             }
             id => {
                 let script = catalog::script(id, item.variant.as_deref())
-                    .ok_or_else(|| format!("Réglage inconnu : {id}"))?;
-                let path = write_script(id, item.variant.as_deref(), &script)?;
+                    .ok_or_else(|| format!("Unknown tweak: {id}"))?;
+                let path = write_script(&ctx.run_dir, id, item.variant.as_deref(), &script)?;
                 let mut cmd = shell::hidden("cmd.exe");
                 cmd.args(["/d", "/c"]).arg(&path);
                 cmd.env("RAGO_RES", &ctx.resource_dir);
                 cmd.env("adapter_name", ctx.adapter.clone().unwrap_or_default());
-                cmd.current_dir(std::env::temp_dir());
+                cmd.current_dir(&ctx.run_dir);
                 let res = self.stream(cmd, emit);
                 let _ = fs::remove_file(&path);
                 res
@@ -220,7 +222,7 @@ impl Runner {
     /// Lance la commande, relaie stdout et stderr ligne par ligne, attend la fin.
     fn stream(&self, mut cmd: Command, emit: &dyn Fn(String)) -> Result<(i32, Option<String>), String> {
         cmd.stdout(Stdio::piped()).stderr(Stdio::piped());
-        let mut child: Child = cmd.spawn().map_err(|e| format!("Lancement impossible : {e}"))?;
+        let mut child: Child = cmd.spawn().map_err(|e| format!("Couldn't start: {e}"))?;
         *self.child.lock().unwrap() = Some(child.id());
         let stderr = child.stderr.take();
         let (tx, rx) = std::sync::mpsc::channel::<String>();
@@ -281,14 +283,13 @@ fn cp850(b: u8) -> char {
 
 const PREAMBLE: &str = "@echo off\r\nchcp 65001 >nul\r\nsetlocal EnableExtensions EnableDelayedExpansion\r\n";
 
-fn write_script(id: &str, variant: Option<&str>, body: &str) -> Result<PathBuf, String> {
-    let dir = std::env::temp_dir().join("RagoOptimizer");
-    fs::create_dir_all(&dir).map_err(|e| e.to_string())?;
+fn write_script(dir: &Path, id: &str, variant: Option<&str>, body: &str) -> Result<PathBuf, String> {
+    fs::create_dir_all(dir).map_err(|e| e.to_string())?;
     let name = format!("{}{}-{}.cmd", id, variant.map(|v| format!("-{v}")).unwrap_or_default(), now_ms());
     let path = dir.join(sanitize(&name));
     let body = body.replace("\r\n", "\n").replace('\n', "\r\n");
     let content = format!("{PREAMBLE}{body}\r\nexit /b 0\r\n");
-    fs::write(&path, content).map_err(|e| format!("Écriture du script impossible : {e}"))?;
+    fs::write(&path, content).map_err(|e| format!("Couldn't write the script: {e}"))?;
     Ok(path)
 }
 
@@ -297,11 +298,11 @@ fn sanitize(s: &str) -> String {
 }
 
 const RESTORE_POINT_PS: &str = r#"$ErrorActionPreference = 'Stop'
-try { Enable-ComputerRestore -Drive "$env:SystemDrive\" } catch { Write-Output "- Restauration déjà active ou non modifiable" }
+try { Enable-ComputerRestore -Drive "$env:SystemDrive\" } catch { Write-Output "- System Restore already on or locked" }
 New-ItemProperty -Path 'HKLM:\SOFTWARE\Microsoft\Windows NT\CurrentVersion\SystemRestore' -Name 'SystemRestorePointCreationFrequency' -Value 0 -PropertyType DWord -Force | Out-Null
-Write-Output "- Création du point de restauration Rago Optimizer"
+Write-Output "- Creating the Rago Optimizer restore point"
 Checkpoint-Computer -Description 'Rago Optimizer' -RestorePointType 'MODIFY_SETTINGS'
-Write-Output "- Point de restauration créé"
+Write-Output "- Restore point created"
 "#;
 
 pub fn ensure_dir(p: &Path) {
@@ -320,7 +321,8 @@ mod tests {
 
     #[test]
     fn script_file_uses_crlf_and_preamble() {
-        let p = write_script("test", Some("a b"), "echo 1\necho 2").unwrap();
+        let dir = std::env::temp_dir().join("rago-test-run");
+        let p = write_script(&dir, "test", Some("a b"), "echo 1\necho 2").unwrap();
         let s = fs::read_to_string(&p).unwrap();
         assert!(s.starts_with("@echo off\r\n"));
         assert!(s.contains("echo 1\r\necho 2\r\nexit /b 0\r\n"));

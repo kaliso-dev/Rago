@@ -14,7 +14,7 @@ const GROUPS: { label: Key | null; ids: string[] }[] = [
 ];
 
 export function Sidebar() {
-  const { t, lang, page, goTo, selected, sys, license, premium, setUpsell } = useStore();
+  const { t, lang, page, goTo, selected, sys, license, premium, setUpsell, isLocked } = useStore();
   const modules = new Map(catalog.modules.map((m) => [m.id, m]));
 
   const countIn = (id: string) => {
@@ -28,7 +28,7 @@ export function Sidebar() {
   const lockedModule = (id: string) => {
     const m = modules.get(id);
     if (premium || !m) return false;
-    return !m.sections.some((s) => s.tweaks.some((tw) => !("ref" in tw) && FREE.has(tw.id)));
+    return !m.sections.some((s) => s.tweaks.some((tw) => !("ref" in tw) && !isLocked(tw.id)));
   };
 
   const item = (id: string, label: string, icon: string) => {
@@ -58,7 +58,7 @@ export function Sidebar() {
       ))}
       <div className="nav-spacer" />
       {license && !premium && (
-        <button type="button" className="nav-upgrade" onClick={() => setUpsell("tweak")}>
+        <button type="button" className="nav-upgrade" onClick={() => setUpsell("plan")}>
           <span className="nav-upgrade-top">
             <Sparkles size={13} />
             {t("free.plan")}

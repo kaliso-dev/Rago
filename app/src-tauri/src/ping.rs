@@ -43,13 +43,13 @@ pub fn tcp_ping(host: &str, port: u16, count: u32, timeout_ms: u64) -> PingResul
             match all.iter().find(|a| a.is_ipv4()).or(all.first()) {
                 Some(a) => *a,
                 None => {
-                    res.error = Some("Adresse introuvable".into());
+                    res.error = Some("Address not found".into());
                     return res;
                 }
             }
         }
         Err(e) => {
-            res.error = Some(format!("Résolution DNS impossible : {e}"));
+            res.error = Some(format!("DNS lookup failed: {e}"));
             return res;
         }
     };
@@ -72,7 +72,7 @@ pub fn tcp_ping(host: &str, port: u16, count: u32, timeout_ms: u64) -> PingResul
     }
     res.loss = (failures as f64 / count.max(1) as f64 * 1000.0).round() / 10.0;
     if res.samples.is_empty() {
-        res.error = Some("Le serveur ne répond pas".into());
+        res.error = Some("The server isn't answering".into());
         return res;
     }
     let s = &res.samples;

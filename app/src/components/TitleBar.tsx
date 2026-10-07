@@ -26,13 +26,13 @@ export function TitleBar() {
             {t("free.signIn")}
           </button>
         ))}
-        <button type="button" aria-label="Réduire" onClick={() => api.window.minimize()}>
+        <button type="button" aria-label={t("window.minimize")} onClick={() => api.window.minimize()}>
           <Minus size={14} />
         </button>
-        <button type="button" aria-label="Agrandir" onClick={() => api.window.toggleMaximize()}>
+        <button type="button" aria-label={t("window.maximize")} onClick={() => api.window.toggleMaximize()}>
           <Square size={11} />
         </button>
-        <button type="button" aria-label="Fermer" className="close" onClick={() => api.window.close()}>
+        <button type="button" aria-label={t("window.close")} className="close" onClick={() => api.window.close()}>
           <X size={15} />
         </button>
       </div>

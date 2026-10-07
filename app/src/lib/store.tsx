@@ -1,12 +1,21 @@
 import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState, type ReactNode } from "react";
-import { api, type DoneEvent, type HistoryEntry, type ItemStatus, type LicenseStatus, type RunItem, type SystemInfo } from "./api";
+import { api, asLicenseError, type DoneEvent, type HistoryEntry, type ItemStatus, type LicenseError, type LicenseStatus, type RunItem, type SystemInfo } from "./api";
 import { autoVariant, availability, catalog, tweaks, type Lang, type Tweak } from "./catalog";
 import { translate, type Key } from "./i18n";
 import free from "../data/free.json";
 
 /** Réglages ouverts sans licence. Le moteur Rust applique la même liste. */
 export const FREE = new Set<string>(free.tweaks);
-export type Upsell = "tweak" | "preset" | "signin" | null;
+/** Variante « retour arrière » de chaque réglage qui en a une : ouverte en gratuit, pour remettre Windows comme avant. */
+export const REVERTS = new Map<string, string>();
+for (const tw of tweaks.values()) {
+  const v = tw.variants?.find((x) => x.revert);
+  if (v) REVERTS.set(tw.id, v.id);
+}
+/** Modes qu'on allume avant de jouer et qu'on éteint après : deux boutons au lieu d'un interrupteur. */
+export const SESSION_TOGGLES = new Set(["game_mode", "rbw_mode", "win_gamemode"]);
+/** « plan » : la carte Free plan ou le bouton Premium d'un module, sans réglage précis. */
+export type Upsell = "tweak" | "plan" | "preset" | "signin" | null;
 
 export const BUILTIN_NAMES: Record<string, { fr: string; en: string }> = {
   __wmic: { fr: "Installer WMIC", en: "Install WMIC" },
@@ -84,24 +93,48 @@ function useStoreValue() {
   const [focusTweak, setFocusTweak] = useState<string | null>(null);
   const [pingRequest, setPingRequest] = useState(0);
   const [license, setLicense] = useState<LicenseStatus | null>(null);
-  const [upsell, setUpsell] = useState<Upsell>(null);
+  const [upsell, setUpsellKind] = useState<Upsell>(null);
+  const [upsellTweak, setUpsellTweak] = useState<string | null>(null);
+  const setUpsell = useCallback((u: Upsell, tweakId?: string) => {
+    setUpsellKind(u);
+    if (u !== "signin") setUpsellTweak(tweakId ?? null);
+  }, []);
+  /** Licence perdue au rafraîchissement (abonnement terminé, remboursement…) ou plus vérifiable hors ligne. */
+  const [licenseNotice, setLicenseNotice] = useState<LicenseError | null>(null);
+  const [activatedAt, setActivatedAt] = usePersisted<number | null>("activatedAt", null);
   const premium = license?.state === "active";
-  const isLocked = useCallback((id: string) => !premium && !FREE.has(id), [premium]);
+  /** Verrouillé en gratuit : tout sauf la liste gratuite et les réglages qui ont une variante de retour arrière. */
+  const isLocked = useCallback((id: string) => !premium && !FREE.has(id) && !REVERTS.has(id), [premium]);
+  /** En gratuit, seule la variante de retour arrière d'un réglage Premium est ouverte. */
+  const variantLocked = useCallback((id: string, v: string) => !premium && !FREE.has(id) && REVERTS.get(id) !== v, [premium]);
+  const openInFree = useCallback((id: string) => premium || FREE.has(id) || REVERTS.has(id), [premium]);
 
   // Plan gratuit : une sélection faite avant la déconnexion ne garde que les réglages ouverts.
   useEffect(() => {
-    if (license && !premium) setSelection((s) => (s.every((id) => FREE.has(id)) ? s : s.filter((id) => FREE.has(id))));
-  }, [license, premium, setSelection]);
+    if (license && !premium) setSelection((s) => (s.every(openInFree) ? s : s.filter(openInFree)));
+  }, [license, premium, setSelection, openInFree]);
 
   useEffect(() => {
     // Au démarrage puis une fois par jour : rafraîchit le jeton si le serveur répond.
     // Sans réseau, le jeton reste valable jusqu'à son expiration ; une révocation renvoie à la connexion.
     const refresh = (st: LicenseStatus) => {
       if (st.state !== "active" && st.state !== "expired") return;
-      void api.licenseRefresh().then(setLicense, async (e) => {
-        const code = (e as { code?: string })?.code;
-        if (code === "invalid_token" || code === "bound_to_other_device" || code === "revoked") setLicense(await api.licenseStatus());
-      });
+      void api.licenseRefresh().then(
+        (next) => {
+          setLicense(next);
+          setLicenseNotice(next.state === "expired" ? { code: "expired", message: null, buyUrl: null } : null);
+        },
+        async (e) => {
+          const err = asLicenseError(e);
+          if (err.code === "invalid_token" || err.code === "bound_to_other_device" || err.code === "revoked") {
+            setLicenseNotice(err);
+            setLicense(await api.licenseStatus());
+          } else if (st.state === "expired") {
+            // pas de réseau : le joueur paie peut-être encore, on le lui dit au lieu d'afficher le plan gratuit
+            setLicenseNotice({ code: "expired", message: null, buyUrl: null });
+          }
+        },
+      );
     };
     void api.licenseStatus().then((st) => {
       setLicense(st);
@@ -113,8 +146,20 @@ function useStoreValue() {
 
   const signOut = useCallback(async () => {
     await api.licenseSignOut();
+    setLicenseNotice(null);
+    setActivatedAt(null);
     setLicense(await api.licenseStatus());
-  }, []);
+  }, [setActivatedAt]);
+
+  /** Licence activée dans l'app (connexion ou Activate). */
+  const activated = useCallback(
+    (st: LicenseStatus, fresh: boolean) => {
+      setLicense(st);
+      setLicenseNotice(null);
+      if (fresh || activatedAt == null) setActivatedAt(Date.now());
+    },
+    [activatedAt, setActivatedAt],
+  );
 
   const t = useCallback((key: Key, vars?: Record<string, string | number>) => translate(lang, key, vars), [lang]);
 
@@ -148,14 +193,18 @@ function useStoreValue() {
   const mcDir = mcDirOverride ?? sys?.minecraftDir ?? null;
 
   const variantOf = useCallback(
-    (tw: Tweak) => (tw.variants?.length ? variants[tw.id] ?? autoVariant(tw, sys) ?? null : null),
-    [variants, sys],
+    (tw: Tweak) => {
+      if (!tw.variants?.length) return null;
+      if (!premium && !FREE.has(tw.id) && REVERTS.has(tw.id)) return REVERTS.get(tw.id)!;
+      return variants[tw.id] ?? autoVariant(tw, sys) ?? null;
+    },
+    [variants, sys, premium],
   );
 
   const toggle = useCallback(
     (id: string, on?: boolean) => {
       if (isLocked(id)) {
-        setUpsell("tweak");
+        setUpsell("tweak", id);
         return;
       }
       setSelection((s) => {
@@ -168,7 +217,13 @@ function useStoreValue() {
     [setSelection, isLocked],
   );
 
-  const setVariant = useCallback((id: string, v: string) => setVariants((m) => ({ ...m, [id]: v })), [setVariants]);
+  const setVariant = useCallback(
+    (id: string, v: string) => {
+      if (variantLocked(id, v)) return setUpsell("tweak", id);
+      setVariants((m) => ({ ...m, [id]: v }));
+    },
+    [setVariants, variantLocked, setUpsell],
+  );
 
   /** Ajoute une liste "id" ou "id:variante" à la sélection (presets). */
   const selectMany = useCallback(
@@ -178,7 +233,7 @@ function useStoreValue() {
       for (const e of entries) {
         const [id, v] = e.split(":");
         const tw = tweaks.get(id);
-        if (!tw || !availability(tw, sys).ok || tw.kind === "action" || isLocked(id)) continue;
+        if (!tw || !availability(tw, sys).ok || tw.kind === "action" || isLocked(id) || (v && variantLocked(id, v))) continue;
         ids.push(id);
         if (v) vs[id] = v;
       }
@@ -186,7 +241,7 @@ function useStoreValue() {
       setSelection((s) => [...s, ...ids.filter((id) => !s.includes(id))]);
       return ids.length;
     },
-    [sys, setSelection, setVariants, isLocked],
+    [sys, setSelection, setVariants, isLocked, variantLocked],
   );
 
   const unselectMany = useCallback((ids: string[]) => setSelection((s) => s.filter((x) => !ids.includes(x))), [setSelection]);
@@ -195,12 +250,12 @@ function useStoreValue() {
     (ids?: string[]) => {
       const list = (ids ?? selection).filter((id) => !isLocked(id));
       if (!list.length) {
-        if ((ids ?? selection).length) setUpsell("tweak");
+        if ((ids ?? selection).length) setUpsell("tweak", (ids ?? selection)[0]);
         return;
       }
       setConfirm({ ids: [...list].sort((a, b) => (catalogOrder.get(a) ?? 0) - (catalogOrder.get(b) ?? 0)), single: !!ids });
     },
-    [selection, isLocked],
+    [selection, isLocked, setUpsell],
   );
 
   const runRef = useRef<RunState | null>(null);
@@ -259,10 +314,12 @@ function useStoreValue() {
         setRun((r) => (r ? { ...r, runId } : r));
         if (opts.clearSelection) unselectMany(ids);
       } catch (err) {
-        setRun((r) => (r ? { ...r, error: String(err), endedAt: Date.now() } : r));
+        const msg = String(err);
+        const error = msg.startsWith("premium_required") ? translate(lang, "err.premium_required") : msg;
+        setRun((r) => (r ? { ...r, error, endedAt: Date.now() } : r));
       }
     },
-    [variantOf, mcDir, unselectMany],
+    [variantOf, mcDir, unselectMany, lang],
   );
 
   const goTo = useCallback((p: string, tweakId?: string) => {
@@ -282,8 +339,8 @@ function useStoreValue() {
     paletteOpen, setPaletteOpen,
     focusTweak, setFocusTweak,
     pingRequest, requestPing: () => setPingRequest((n) => n + 1),
-    license, setLicense, signOut,
-    premium, isLocked, upsell, setUpsell,
+    license, setLicense, signOut, activated, activatedAt, licenseNotice, setLicenseNotice,
+    premium, isLocked, variantLocked, upsell, upsellTweak, setUpsell,
   };
 }
 

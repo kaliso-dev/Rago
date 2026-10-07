@@ -58,9 +58,11 @@ export async function createPasswordReset(db, userId) {
   return token;
 }
 
-/** True while a reset link can still be used (checked before showing the form). */
-export async function passwordResetValid(db, token) {
-  return !!(await db.get('SELECT 1 FROM password_resets WHERE token_hash = ? AND used_at IS NULL AND expires_at > ?', [sha256(String(token)), Date.now()]));
+/** The account email while a reset link can still be used (checked before showing the form), else null. */
+export async function passwordResetEmail(db, token) {
+  const row = await db.get(`SELECT u.email FROM password_resets r JOIN users u ON u.id = r.user_id
+    WHERE r.token_hash = ? AND r.used_at IS NULL AND r.expires_at > ?`, [sha256(String(token)), Date.now()]);
+  return row?.email ?? null;
 }
 
 export async function consumePasswordReset(db, token) {
@@ -87,13 +89,13 @@ async function insertLicense(db, fields) {
   const id = newId('lic');
   const claimToken = randomToken();
   await db.run(`INSERT INTO licenses (id, key, user_id, email, source, plan, stripe_session_id, stripe_payment_intent,
-      stripe_customer_id, stripe_subscription_id, current_period_end, amount, currency, claim_token_hash, created_at, claimed_at)
-    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`, [
+      stripe_customer_id, stripe_subscription_id, current_period_end, amount, currency, claim_token_hash, created_at, claimed_at, referral_code)
+    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`, [
     id, newLicenseKey(), fields.userId ?? null, normEmail(fields.email), fields.source, fields.plan ?? 'lifetime',
     fields.sessionId ?? null, fields.paymentIntent ?? null, fields.customerId ?? null,
     fields.subscriptionId ?? null, fields.periodEnd ?? null,
     fields.amount ?? null, fields.currency ?? null, sha256(claimToken), Date.now(),
-    fields.userId ? Date.now() : null,
+    fields.userId ? Date.now() : null, fields.referralCode || null,
   ]);
   return { license: await getLicense(db, id), claimToken };
 }
@@ -143,6 +145,8 @@ export async function fulfillCheckoutSession(db, session, subscription = null) {
         subscriptionId: idOf(session.subscription), periodEnd: facts?.periodEnd,
         paymentIntent: idOf(session.payment_intent), customerId: idOf(session.customer),
         amount: session.amount_total, currency: session.currency,
+        // The affiliate code the buyer arrived with (/buy?ref=), kept with the purchase.
+        referralCode: String(session.metadata?.ref || '').toUpperCase().replace(/[^A-Z0-9]/g, '').slice(0, 16) || null,
       });
       await audit(t, 'license.created', { licenseId: license.id, userId, detail: { session: session.id } });
       return { license, created: true, claimToken: userId ? null : claimToken };

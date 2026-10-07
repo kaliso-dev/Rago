@@ -329,7 +329,7 @@ const mockApi: Api = {
         buyUrl: null,
       };
     if (email.toLowerCase().startsWith("free"))
-      throw { code: "no_license", message: "This account doesn't have Rago Optimizer Premium yet.", buyUrl: "https://ragohub.com/#pricing" };
+      throw { code: "no_license", message: "This account doesn't have Rago Optimizer Premium yet.", buyUrl: `${import.meta.env.VITE_SITE_URL || location.origin}/#pricing` };
     demoPending = email;
     return { kind: "activationRequired", email, keyHint: "RAGO-9EGJN-•••••-•••••-VKXDS" };
   },
@@ -345,7 +345,24 @@ const mockApi: Api = {
     }
     return mockLicense();
   },
-  licenseRefresh: async () => mockLicense(),
+  licenseRefresh: async () => {
+    // démo : localStorage « rago.demoSim » = "revoked" simule un abonnement terminé au rafraîchissement
+    let sim: string | null = null;
+    try {
+      sim = localStorage.getItem("rago.demoSim");
+    } catch {
+      /* rien */
+    }
+    if (sim === "revoked" && demoEmail) {
+      demoEmail = null;
+      throw {
+        code: "revoked",
+        message: "Your Rago Optimizer Premium subscription ended. Renew it on the website, then sign in again.",
+        buyUrl: `${import.meta.env.VITE_SITE_URL || location.origin}/#pricing`,
+      };
+    }
+    return mockLicense();
+  },
   licenseSignOut: async () => {
     demoEmail = null;
     try {

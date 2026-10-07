@@ -2,7 +2,7 @@
   "name": "rago-licensing",
   "version": "1.0.0",
   "private": true,
-  "description": "Rago Hub Premium: Stripe checkout, accounts, license keys and one-device activation.",
+  "description": "Rago Optimizer Premium: Stripe checkout, accounts, license keys and one-device activation.",
   "type": "module",
   "engines": {
     "node": ">=22.5"

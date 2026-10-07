@@ -1,0 +1,20 @@
+RAGO OPTIMIZER - TERMS OF USE
+
+Please read these terms before installing Rago Optimizer.
+
+1. What the app does
+Rago Optimizer changes Windows settings: registry values, services, power plans, network settings and boot options. Some tweaks marked "Advanced" lower security protections (for example Spectre and Meltdown mitigations, Microsoft Defender or SmartScreen). The app tells you what each Advanced tweak does before it runs.
+
+2. Your responsibility
+You choose which tweaks to apply. Before applying, Rago Optimizer offers to create a Windows restore point; keep it on. Results depend on your hardware, drivers and games, and no specific gain in FPS, ping or input lag is guaranteed.
+
+3. Anti-cheat and screenshares
+Rago Optimizer does not modify any game. Some tweaks turn off Windows services that screenshare tools look at. Turn on RBW Mod before a screenshare to bring them back. Server rules are set by each server, not by Rago.
+
+4. License
+The free plan opens a limited set of tweaks. Premium is a personal subscription tied to one PC. You may not resell, share or redistribute the app or its scripts.
+
+5. No warranty
+The app is provided "as is", without warranty of any kind. To the extent allowed by law, Rago is not liable for any damage, data loss or downtime caused by its use.
+
+By clicking "I Agree", you accept these terms.

@@ -1,4 +1,4 @@
-import { CornerDownLeft, Search } from "lucide-react";
+import { CornerDownLeft, Lock, Search } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
 import { catalog, searchTweaks, totalTweaks, tweakModule } from "../lib/catalog";
 import { useStore } from "../lib/store";
@@ -6,7 +6,7 @@ import { Modal } from "./Modal";
 import { Kbd } from "./ui";
 
 export function SearchPalette() {
-  const { t, lang, paletteOpen, setPaletteOpen, goTo, selected, toggle } = useStore();
+  const { t, lang, paletteOpen, setPaletteOpen, goTo, selected, toggle, isLocked, setUpsell } = useStore();
   const [q, setQ] = useState("");
   const [idx, setIdx] = useState(0);
   const results = useMemo(() => searchTweaks(q, lang), [q, lang]);
@@ -73,7 +73,21 @@ export function SearchPalette() {
                 <span className="palette-name">{tw.name[lang]}</span>
                 <span className="palette-module">{moduleName(tw.id)}</span>
               </div>
-              {tw.kind === "tweak" && (
+              {tw.kind === "tweak" && isLocked(tw.id) && (
+                <button
+                  type="button"
+                  className="palette-toggle locked"
+                  aria-label={t("free.lock")}
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    setPaletteOpen(false);
+                    setUpsell("tweak", tw.id);
+                  }}
+                >
+                  <Lock size={11} />
+                </button>
+              )}
+              {tw.kind === "tweak" && !isLocked(tw.id) && (
                 <button
                   type="button"
                   className={`palette-toggle${selected.has(tw.id) ? " on" : ""}`}

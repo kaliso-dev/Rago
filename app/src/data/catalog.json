@@ -27,8 +27,8 @@
         "fr": "Profil hitreg"
        },
        "desc": {
-        "en": "TTL, TCP auto-tuning and receive coalescing, tuned for better hitreg or for Hypixel.",
-        "fr": "TTL, auto-tuning TCP et regroupement des paquets, réglés pour le hitreg ou pour Hypixel."
+        "en": "TTL, TCP auto-tuning and receive coalescing, in six profiles. Default puts Windows back as it was.",
+        "fr": "TTL, auto-tuning TCP et regroupement des paquets, en six profils. Default remet Windows comme avant."
        },
        "risk": "safe",
        "reboot": false,
@@ -46,14 +46,44 @@
          }
         },
         {
+         "id": "besthitreg",
+         "label": {
+          "en": "Best hitreg",
+          "fr": "Hitreg maximal"
+         }
+        },
+        {
+         "id": "balanced",
+         "label": {
+          "en": "Balanced",
+          "fr": "Équilibré"
+         }
+        },
+        {
          "id": "hypixel",
          "label": {
           "en": "Hypixel",
           "fr": "Hypixel"
          }
+        },
+        {
+         "id": "slowlest",
+         "label": {
+          "en": "Slowest",
+          "fr": "Le plus lent"
+         }
+        },
+        {
+         "id": "default",
+         "label": {
+          "en": "Default",
+          "fr": "Par défaut"
+         },
+         "revert": true
         }
        ],
-       "lines": 6
+       "defaultVariant": "better",
+       "lines": 18
       },
       {
        "id": "ping_packets",
@@ -62,8 +92,8 @@
         "fr": "Optimisation des paquets"
        },
        "desc": {
-        "en": "Offloads, RSS, MTU 1400, TCP flags and timers for steadier packets.",
-        "fr": "Offloads, RSS, MTU 1400, options TCP et minuteurs pour des paquets plus réguliers."
+        "en": "Offloads, RSS, MTU and TCP timers, in three profiles: Hitreg (MTU 1400), QoS or Knockback.",
+        "fr": "Offloads, RSS, MTU et minuteurs TCP, en trois profils : Hitreg (MTU 1400), QoS ou Knockback."
        },
        "risk": "safe",
        "reboot": true,
@@ -72,6 +102,30 @@
        "legacy": [
         "RAGO APP Ping Optimization Final.bat@85"
        ],
+       "variants": [
+        {
+         "id": "hitreg",
+         "label": {
+          "en": "Hitreg",
+          "fr": "Hitreg"
+         }
+        },
+        {
+         "id": "qos",
+         "label": {
+          "en": "QoS",
+          "fr": "QoS"
+         }
+        },
+        {
+         "id": "knockback",
+         "label": {
+          "en": "Knockback",
+          "fr": "Knockback"
+         }
+        }
+       ],
+       "defaultVariant": "hitreg",
        "lines": 134
       }
      ]
@@ -90,17 +144,50 @@
         "fr": "Optimisation du ping"
        },
        "desc": {
-        "en": "Tunes your network adapter and the Windows TCP/IP stack for low ping.",
-        "fr": "Règle ta carte réseau et la pile TCP/IP de Windows pour un ping bas."
+        "en": "Tunes your network adapter and the Windows TCP/IP stack for low ping, in four configs.",
+        "fr": "Règle ta carte réseau et la pile TCP/IP de Windows pour un ping bas, en quatre configurations."
        },
        "risk": "safe",
        "reboot": true,
-       "requires": [],
+       "requires": [
+        "wmic"
+       ],
        "kind": "tweak",
        "legacy": [
         "RAGO APP Ping Optimization Final.bat@259"
        ],
-       "lines": 366
+       "variants": [
+        {
+         "id": "config1",
+         "label": {
+          "en": "Config 1",
+          "fr": "Config 1"
+         }
+        },
+        {
+         "id": "config2",
+         "label": {
+          "en": "Config 2",
+          "fr": "Config 2"
+         }
+        },
+        {
+         "id": "config3",
+         "label": {
+          "en": "Config 3",
+          "fr": "Config 3"
+         }
+        },
+        {
+         "id": "config4",
+         "label": {
+          "en": "Config 4",
+          "fr": "Config 4"
+         }
+        }
+       ],
+       "defaultVariant": "config1",
+       "lines": 362
       },
       {
        "id": "ping_advanced",
@@ -114,7 +201,9 @@
        },
        "risk": "advanced",
        "reboot": true,
-       "requires": [],
+       "requires": [
+        "wmic"
+       ],
        "kind": "tweak",
        "legacy": [
         "RAGO APP Ping Optimization Final.bat@704"
@@ -138,7 +227,7 @@
        },
        "desc": {
         "fr": "Règle la pile TCP pour ton style de jeu. Hitreg coupe les offloads et passe le MTU à 1400, Knockback active CTCP, ECN et un RTO de 300 ms, QoS donne la priorité au trafic Minecraft (port 25565). Essaie-les et garde celui que tu préfères.",
-        "en": "Tunes the TCP stack for your play style. Hitreg disables offloads and sets MTU 1400, Knockback enables CTCP, ECN and a 300 ms RTO, QoS prioritises Minecraft traffic (port 25565)."
+        "en": "Tunes the TCP stack for your play style. Hitreg disables offloads and sets MTU 1400, Knockback enables CTCP, ECN and a 300 ms RTO, QoS prioritizes Minecraft traffic (port 25565)."
        },
        "risk": "safe",
        "reboot": false,
@@ -237,7 +326,11 @@
         "SERVERC@1034",
         "SERVERY@1113"
        ],
-       "lines": 468
+       "lines": 468,
+       "confirm": {
+        "en": "Resets the Windows Firewall: your custom rules are deleted. Resets Winsock and the network settings.",
+        "fr": "Réinitialise le pare-feu Windows : tes règles personnalisées sont supprimées. Réinitialise Winsock et les réglages réseau."
+       }
       }
      ]
     },
@@ -311,7 +404,7 @@
        "id": "net_adapter",
        "name": {
         "fr": "Optimiser la carte réseau",
-        "en": "Optimise network adapter"
+        "en": "Optimize network adapter"
        },
        "desc": {
         "fr": "Tampons d'émission et de réception, offloads coupés, RSS activé, contrôle de flux et délais d'interruption retirés.",
@@ -505,7 +598,7 @@
        "id": "net_lanman",
        "name": {
         "fr": "Optimiser le partage de fichiers (SMB)",
-        "en": "Optimise file sharing (SMB)"
+        "en": "Optimize file sharing (SMB)"
        },
        "desc": {
         "fr": "Ajuste le serveur de partage de Windows : pas de déconnexion automatique, verrous opportunistes coupés.",
@@ -584,406 +677,6 @@
    },
    "sections": [
     {
-     "id": "v6_cpu",
-     "name": {
-      "en": "Processor",
-      "fr": "Processeur"
-     },
-     "tweaks": [
-      {
-       "id": "cpu_amd",
-       "name": {
-        "en": "AMD CPU",
-        "fr": "CPU AMD"
-       },
-       "desc": {
-        "en": "Core parking and cooling policy for AMD processors.",
-        "fr": "Parcage des cœurs et refroidissement pour les processeurs AMD."
-       },
-       "risk": "safe",
-       "reboot": true,
-       "requires": [
-        "cpu:amd"
-       ],
-       "kind": "tweak",
-       "legacy": [
-        "RAGO APP FPS.bat@38"
-       ],
-       "lines": 25
-      },
-      {
-       "id": "cpu_intel",
-       "name": {
-        "en": "Intel CPU",
-        "fr": "CPU Intel"
-       },
-       "desc": {
-        "en": "Core parking and cooling policy for Intel processors.",
-        "fr": "Parcage des cœurs et refroidissement pour les processeurs Intel."
-       },
-       "risk": "safe",
-       "reboot": true,
-       "requires": [
-        "cpu:intel"
-       ],
-       "kind": "tweak",
-       "legacy": [
-        "RAGO APP FPS.bat@66"
-       ],
-       "lines": 26
-      },
-      {
-       "id": "cpu_advanced",
-       "name": {
-        "en": "Advanced CPU",
-        "fr": "CPU avancé"
-       },
-       "desc": {
-        "en": "C-states, P-states, throttling and scheduler settings.",
-        "fr": "C-states, P-states, bridage et réglages du planificateur."
-       },
-       "risk": "advanced",
-       "reboot": true,
-       "requires": [],
-       "kind": "tweak",
-       "legacy": [
-        "RAGO APP FPS.bat@97"
-       ],
-       "lines": 244
-      },
-      {
-       "id": "sys_latency",
-       "name": {
-        "en": "System latency",
-        "fr": "Latence système"
-       },
-       "desc": {
-        "en": "Timers, interrupts and kernel latency settings.",
-        "fr": "Minuteurs, interruptions et réglages de latence du noyau."
-       },
-       "risk": "safe",
-       "reboot": true,
-       "requires": [],
-       "kind": "tweak",
-       "legacy": [
-        "RAGO APP FPS.bat@2097"
-       ],
-       "lines": 84
-      }
-     ]
-    },
-    {
-     "id": "v6_priority",
-     "name": {
-      "en": "Priority & memory",
-      "fr": "Priorité et mémoire"
-     },
-     "tweaks": [
-      {
-       "id": "sys_priority",
-       "name": {
-        "en": "Priority optimization",
-        "fr": "Optimisation des priorités"
-       },
-       "desc": {
-        "en": "Gives games and input more CPU priority.",
-        "fr": "Donne plus de priorité CPU aux jeux et aux entrées."
-       },
-       "risk": "safe",
-       "reboot": true,
-       "requires": [],
-       "kind": "tweak",
-       "legacy": [
-        "RAGO APP FPS.bat@2309"
-       ],
-       "lines": 31
-      },
-      {
-       "id": "sys_csrss",
-       "name": {
-        "en": "CSRSS priority",
-        "fr": "Priorité CSRSS"
-       },
-       "desc": {
-        "en": "Raises the priority of the Windows process that handles input.",
-        "fr": "Monte la priorité du processus Windows qui gère les entrées."
-       },
-       "risk": "safe",
-       "reboot": true,
-       "requires": [],
-       "kind": "tweak",
-       "legacy": [
-        "RAGO APP FPS.bat@2343"
-       ],
-       "lines": 15
-      },
-      {
-       "id": "sys_ram",
-       "name": {
-        "en": "RAM optimization",
-        "fr": "Optimisation de la RAM"
-       },
-       "desc": {
-        "en": "Memory management, compression and prefetch settings. Also turns off the Spectre and Meltdown protections.",
-        "fr": "Gestion de la mémoire, compression et prefetch. Coupe aussi les protections Spectre et Meltdown."
-       },
-       "risk": "advanced",
-       "reboot": true,
-       "requires": [],
-       "kind": "tweak",
-       "confirm": {
-        "en": "This also turns off the Spectre and Meltdown protections. Your PC gets less secure.",
-        "fr": "Ça coupe aussi les protections Spectre et Meltdown. Ton PC devient moins protégé."
-       },
-       "legacy": [
-        "RAGO APP FPS.bat@1650"
-       ],
-       "lines": 73
-      },
-      {
-       "id": "sys_registry",
-       "name": {
-        "en": "Registry optimization",
-        "fr": "Optimisation du registre"
-       },
-       "desc": {
-        "en": "Large set of registry settings, including disabling the BAM service and the I/O latency cap.",
-        "fr": "Grand ensemble de réglages du registre, dont la coupure du service BAM et du plafond de latence disque."
-       },
-       "risk": "advanced",
-       "reboot": true,
-       "requires": [],
-       "kind": "tweak",
-       "confirm": {
-        "en": "This turns off BAM, the service that logs which programs ran. On a screenshare that can look like erased traces.",
-        "fr": "Ça coupe BAM, le service qui garde la trace des programmes lancés. Sur un screenshare, ça peut ressembler à des traces effacées."
-       },
-       "legacy": [
-        "RAGO APP FPS.bat@2362"
-       ],
-       "lines": 205
-      }
-     ]
-    },
-    {
-     "id": "v6_power",
-     "name": {
-      "en": "Power & storage",
-      "fr": "Alimentation et stockage"
-     },
-     "tweaks": [
-      {
-       "id": "pow_main",
-       "name": {
-        "en": "Power optimization",
-        "fr": "Optimisation de l'alimentation"
-       },
-       "desc": {
-        "en": "Turns off power saving that slows your CPU and devices.",
-        "fr": "Coupe les économies d'énergie qui ralentissent ton CPU et tes périphériques."
-       },
-       "risk": "safe",
-       "reboot": true,
-       "requires": [],
-       "kind": "tweak",
-       "legacy": [
-        "RAGO APP FPS.bat@1920"
-       ],
-       "lines": 41
-      },
-      {
-       "id": "pow_ultimate",
-       "name": {
-        "en": "Ultimate power plan",
-        "fr": "Plan Performances optimales"
-       },
-       "desc": {
-        "en": "Adds the Ultimate Performance plan and removes the default plans.",
-        "fr": "Ajoute le plan Performances optimales et supprime les plans par défaut."
-       },
-       "risk": "advanced",
-       "reboot": true,
-       "requires": [],
-       "kind": "tweak",
-       "legacy": [
-        "RAGO APP FPS.bat@1969"
-       ],
-       "lines": 32
-      },
-      {
-       "id": "pow_saving",
-       "name": {
-        "en": "Storage power saving",
-        "fr": "Économies d'énergie du stockage"
-       },
-       "desc": {
-        "en": "Keeps your drives out of idle power states.",
-        "fr": "Empêche tes disques de passer en veille."
-       },
-       "risk": "safe",
-       "reboot": true,
-       "requires": [],
-       "kind": "tweak",
-       "legacy": [
-        "RAGO APP FPS.bat@1770"
-       ],
-       "lines": 16
-      },
-      {
-       "id": "sto_general",
-       "name": {
-        "en": "Storage optimization",
-        "fr": "Optimisation du stockage"
-       },
-       "desc": {
-        "en": "NTFS, disk cache and storage driver settings.",
-        "fr": "NTFS, cache disque et pilotes de stockage."
-       },
-       "risk": "safe",
-       "reboot": true,
-       "requires": [],
-       "kind": "tweak",
-       "legacy": [
-        "RAGO APP FPS.bat@1805"
-       ],
-       "lines": 67
-      },
-      {
-       "id": "sto_ntfs",
-       "name": {
-        "en": "NTFS tweaks",
-        "fr": "Réglages NTFS"
-       },
-       "desc": {
-        "en": "File system settings for faster access.",
-        "fr": "Réglages du système de fichiers pour un accès plus rapide."
-       },
-       "risk": "safe",
-       "reboot": true,
-       "requires": [],
-       "kind": "tweak",
-       "legacy": [
-        "RAGO APP FPS.bat@1789"
-       ],
-       "lines": 5
-      },
-      {
-       "id": "sto_fsutil_v6",
-       "name": {
-        "en": "FSUTIL settings",
-        "fr": "Réglages FSUTIL"
-       },
-       "desc": {
-        "en": "Disables last-access and 8.3 names.",
-        "fr": "Coupe la date de dernier accès et les noms 8.3."
-       },
-       "risk": "safe",
-       "reboot": true,
-       "requires": [],
-       "kind": "tweak",
-       "legacy": [
-        "RAGO APP FPS.bat@1797"
-       ],
-       "lines": 3
-      },
-      {
-       "id": "sto_fsutil2",
-       "name": {
-        "en": "FSUTIL memory usage",
-        "fr": "FSUTIL mémoire"
-       },
-       "desc": {
-        "en": "NTFS memory usage settings.",
-        "fr": "Réglages mémoire de NTFS."
-       },
-       "risk": "safe",
-       "reboot": true,
-       "requires": [],
-       "kind": "tweak",
-       "legacy": [
-        "RAGO APP FPS.bat@1886"
-       ],
-       "lines": 2
-      },
-      {
-       "id": "sto_defrag",
-       "name": {
-        "en": "Optimize drive",
-        "fr": "Optimiser le disque"
-       },
-       "desc": {
-        "en": "Runs a drive optimization.",
-        "fr": "Lance une optimisation du disque."
-       },
-       "risk": "safe",
-       "reboot": false,
-       "requires": [],
-       "kind": "tweak",
-       "legacy": [
-        "RAGO APP FPS.bat@1802"
-       ],
-       "lines": 1
-      },
-      {
-       "id": "sys_time",
-       "name": {
-        "en": "Time behaviour",
-        "fr": "Gestion du temps"
-       },
-       "desc": {
-        "en": "Timer and clock settings.",
-        "fr": "Réglages des minuteurs et de l'horloge."
-       },
-       "risk": "safe",
-       "reboot": true,
-       "requires": [],
-       "kind": "tweak",
-       "legacy": [
-        "RAGO APP FPS.bat@1893"
-       ],
-       "lines": 2
-      },
-      {
-       "id": "sys_bcdedit",
-       "name": {
-        "en": "Boot settings (BCD)",
-        "fr": "Réglages de démarrage (BCD)"
-       },
-       "desc": {
-        "en": "Boot configuration: timers, tick and hypervisor options.",
-        "fr": "Configuration du démarrage : minuteurs, tick et options de l'hyperviseur."
-       },
-       "risk": "advanced",
-       "reboot": true,
-       "requires": [],
-       "kind": "tweak",
-       "legacy": [
-        "RAGO APP FPS.bat@2010"
-       ],
-       "lines": 23
-      },
-      {
-       "id": "sys_usb",
-       "name": {
-        "en": "USB optimization",
-        "fr": "Optimisation USB"
-       },
-       "desc": {
-        "en": "Turns off USB power saving and selective suspend.",
-        "fr": "Coupe les économies d'énergie et la mise en veille USB."
-       },
-       "risk": "safe",
-       "reboot": true,
-       "requires": [],
-       "kind": "tweak",
-       "legacy": [
-        "RAGO APP FPS.bat@2050"
-       ],
-       "lines": 38
-      }
-     ]
-    },
-    {
      "id": "general",
      "name": {
       "fr": "Général",
@@ -994,7 +687,7 @@
        "id": "lat_general",
        "name": {
         "fr": "Optimisations générales de latence",
-        "en": "General latency optimisations"
+        "en": "General latency optimizations"
        },
        "desc": {
         "fr": "Le socle : priorités multimédia (MMCSS) pour les jeux, timers du noyau, NTFS, délais de fermeture des applis et d'affichage des menus.",
@@ -1037,6 +730,44 @@
       "en": "Priorities"
      },
      "tweaks": [
+      {
+       "id": "sys_priority",
+       "name": {
+        "en": "Priority optimization",
+        "fr": "Optimisation des priorités"
+       },
+       "desc": {
+        "en": "Gives games and input more CPU priority.",
+        "fr": "Donne plus de priorité CPU aux jeux et aux entrées."
+       },
+       "risk": "safe",
+       "reboot": true,
+       "requires": [],
+       "kind": "tweak",
+       "legacy": [
+        "RAGO APP FPS.bat@2309"
+       ],
+       "lines": 31
+      },
+      {
+       "id": "sys_csrss",
+       "name": {
+        "en": "CSRSS priority (high)",
+        "fr": "Priorité CSRSS (haute)"
+       },
+       "desc": {
+        "en": "Raises the priority of the Windows process that handles input.",
+        "fr": "Monte la priorité du processus Windows qui gère les entrées."
+       },
+       "risk": "safe",
+       "reboot": true,
+       "requires": [],
+       "kind": "tweak",
+       "legacy": [
+        "RAGO APP FPS.bat@2343"
+       ],
+       "lines": 15
+      },
       {
        "id": "pri_game",
        "name": {
@@ -1190,7 +921,7 @@
        },
        "desc": {
         "fr": "Donne la priorité à l'interruption de l'horloge temps réel.",
-        "en": "Prioritises the real-time clock interrupt."
+        "en": "Prioritizes the real-time clock interrupt."
        },
        "risk": "safe",
        "reboot": true,
@@ -1209,7 +940,7 @@
        },
        "desc": {
         "fr": "Donne la priorité à l'IRQ16, souvent partagée avec l'USB ou le GPU.",
-        "en": "Prioritises IRQ16, often shared with USB or GPU."
+        "en": "Prioritizes IRQ16, often shared with USB or GPU."
        },
        "risk": "safe",
        "reboot": true,
@@ -1223,8 +954,8 @@
       {
        "id": "pri_csrss",
        "name": {
-        "fr": "Priorité de csrss",
-        "en": "csrss priority"
+        "en": "CSRSS priority (registry)",
+        "fr": "Priorité CSRSS (registre)"
        },
        "desc": {
         "fr": "Monte la priorité du processus qui gère les entrées clavier et souris.",
@@ -1365,8 +1096,8 @@
       {
        "id": "kbm_csrss",
        "name": {
-        "fr": "csrss en temps réel",
-        "en": "csrss realtime"
+        "en": "CSRSS realtime",
+        "fr": "CSRSS en temps réel"
        },
        "desc": {
         "fr": "Passe csrss, qui transmet tes clics, en priorité temps réel.",
@@ -1447,6 +1178,86 @@
       "en": "CPU"
      },
      "tweaks": [
+      {
+       "id": "cpu_amd",
+       "name": {
+        "en": "AMD CPU",
+        "fr": "CPU AMD"
+       },
+       "desc": {
+        "en": "Core parking and cooling policy for AMD processors.",
+        "fr": "Parcage des cœurs et refroidissement pour les processeurs AMD."
+       },
+       "risk": "safe",
+       "reboot": true,
+       "requires": [
+        "cpu:amd"
+       ],
+       "kind": "tweak",
+       "legacy": [
+        "RAGO APP FPS.bat@38"
+       ],
+       "lines": 25
+      },
+      {
+       "id": "cpu_intel",
+       "name": {
+        "en": "Intel CPU",
+        "fr": "CPU Intel"
+       },
+       "desc": {
+        "en": "Core parking and cooling policy for Intel processors.",
+        "fr": "Parcage des cœurs et refroidissement pour les processeurs Intel."
+       },
+       "risk": "safe",
+       "reboot": true,
+       "requires": [
+        "cpu:intel"
+       ],
+       "kind": "tweak",
+       "legacy": [
+        "RAGO APP FPS.bat@66"
+       ],
+       "lines": 26
+      },
+      {
+       "id": "cpu_advanced",
+       "name": {
+        "en": "Advanced CPU",
+        "fr": "CPU avancé"
+       },
+       "desc": {
+        "en": "C-states, P-states, throttling and scheduler settings.",
+        "fr": "C-states, P-states, bridage et réglages du planificateur."
+       },
+       "risk": "advanced",
+       "reboot": true,
+       "requires": [],
+       "kind": "tweak",
+       "legacy": [
+        "RAGO APP FPS.bat@97"
+       ],
+       "lines": 244
+      },
+      {
+       "id": "sys_latency",
+       "name": {
+        "en": "System latency",
+        "fr": "Latence système"
+       },
+       "desc": {
+        "en": "Timers, interrupts and kernel latency settings.",
+        "fr": "Minuteurs, interruptions et réglages de latence du noyau."
+       },
+       "risk": "safe",
+       "reboot": true,
+       "requires": [],
+       "kind": "tweak",
+       "legacy": [
+        "RAGO APP FPS.bat@2097"
+       ],
+       "lines": 84
+      },
       {
        "id": "cpu_registry",
        "name": {
@@ -1799,6 +1610,127 @@
      },
      "tweaks": [
       {
+       "id": "sys_ram",
+       "name": {
+        "en": "RAM optimization",
+        "fr": "Optimisation de la RAM"
+       },
+       "desc": {
+        "en": "Memory management, compression and prefetch settings, sized for your RAM (picked automatically). Also turns off the Spectre and Meltdown protections.",
+        "fr": "Gestion de la mémoire, compression et prefetch, selon ta RAM (choisie automatiquement). Coupe aussi les protections Spectre et Meltdown."
+       },
+       "risk": "advanced",
+       "reboot": true,
+       "requires": [],
+       "kind": "tweak",
+       "legacy": [
+        "RAGO APP FPS.bat@1650"
+       ],
+       "variants": [
+        {
+         "id": "4",
+         "label": {
+          "en": "4 GB",
+          "fr": "4 Go"
+         },
+         "auto": "ram:4"
+        },
+        {
+         "id": "8",
+         "label": {
+          "en": "8 GB",
+          "fr": "8 Go"
+         },
+         "auto": "ram:8"
+        },
+        {
+         "id": "12",
+         "label": {
+          "en": "12 GB",
+          "fr": "12 Go"
+         },
+         "auto": "ram:12"
+        },
+        {
+         "id": "16",
+         "label": {
+          "en": "16 GB",
+          "fr": "16 Go"
+         },
+         "auto": "ram:16"
+        },
+        {
+         "id": "24",
+         "label": {
+          "en": "24 GB",
+          "fr": "24 Go"
+         },
+         "auto": "ram:24"
+        },
+        {
+         "id": "32",
+         "label": {
+          "en": "32 GB",
+          "fr": "32 Go"
+         },
+         "auto": "ram:32"
+        },
+        {
+         "id": "48",
+         "label": {
+          "en": "48 GB",
+          "fr": "48 Go"
+         },
+         "auto": "ram:48"
+        },
+        {
+         "id": "64",
+         "label": {
+          "en": "64 GB",
+          "fr": "64 Go"
+         },
+         "auto": "ram:64"
+        },
+        {
+         "id": "128",
+         "label": {
+          "en": "128 GB",
+          "fr": "128 Go"
+         },
+         "auto": "ram:128"
+        }
+       ],
+       "defaultVariant": "16",
+       "lines": 352,
+       "confirm": {
+        "en": "Turns off the Spectre and Meltdown protections. Stops Prefetch from filling. On a screenshare that can look like erased traces: turn on RBW Mod before one.",
+        "fr": "Coupe les protections Spectre et Meltdown. Le Prefetch ne se remplit plus. Sur un screenshare, ça peut ressembler à des traces effacées : active le RBW Mod avant."
+       }
+      },
+      {
+       "id": "sys_registry",
+       "name": {
+        "en": "Registry optimization",
+        "fr": "Optimisation du registre"
+       },
+       "desc": {
+        "en": "Large set of registry settings, including disabling the BAM service and the I/O latency cap.",
+        "fr": "Grand ensemble de réglages du registre, dont la coupure du service BAM et du plafond de latence disque."
+       },
+       "risk": "advanced",
+       "reboot": true,
+       "requires": [],
+       "kind": "tweak",
+       "legacy": [
+        "RAGO APP FPS.bat@2362"
+       ],
+       "lines": 205,
+       "confirm": {
+        "en": "Removes the protection against attacks through Thunderbolt and PCIe devices (DMA). Turns off BAM, which logs the programs you ran. On a screenshare that can look like erased traces: turn on RBW Mod before one.",
+        "fr": "Retire la protection contre les attaques par périphériques Thunderbolt et PCIe (DMA). Coupe BAM, qui garde la trace des programmes lancés. Sur un screenshare, ça peut ressembler à des traces effacées : active le RBW Mod avant."
+       }
+      },
+      {
        "id": "mem_profile",
        "name": {
         "fr": "Profil mémoire selon ta RAM",
@@ -1808,7 +1740,7 @@
         "fr": "Compression mémoire, cache système, prefetch et seuil svchost réglés selon ta quantité de RAM. La bonne taille est choisie automatiquement.",
         "en": "Memory compression, system cache, prefetch and svchost threshold set for your RAM size, picked automatically."
        },
-       "risk": "safe",
+       "risk": "advanced",
        "reboot": true,
        "kind": "tweak",
        "variants": [
@@ -1897,7 +1829,11 @@
         "64GB@9645",
         "128GB@9659"
        ],
-       "lines": 270
+       "lines": 270,
+       "confirm": {
+        "en": "Stops Prefetch from filling. On a screenshare that can look like erased traces: turn on RBW Mod before one.",
+        "fr": "Le Prefetch ne se remplit plus. Sur un screenshare, ça peut ressembler à des traces effacées : active le RBW Mod avant."
+       }
       },
       {
        "id": "mem_svchost",
@@ -1987,14 +1923,18 @@
         "fr": "Coupe le préchargement des applis au démarrage. Inutile sur un SSD.",
         "en": "Disables app preloading at boot. Not needed on SSD."
        },
-       "risk": "safe",
+       "risk": "advanced",
        "reboot": true,
        "kind": "tweak",
        "requires": [],
        "legacy": [
         "preftch@9407"
        ],
-       "lines": 2
+       "lines": 2,
+       "confirm": {
+        "en": "Stops Prefetch from filling. On a screenshare that can look like erased traces: turn on RBW Mod before one.",
+        "fr": "Le Prefetch ne se remplit plus. Sur un screenshare, ça peut ressembler à des traces effacées : active le RBW Mod avant."
+       }
       },
       {
        "id": "mem_superfetch",
@@ -2024,6 +1964,105 @@
       "en": "Power"
      },
      "tweaks": [
+      {
+       "id": "pow_main",
+       "name": {
+        "en": "Power optimization",
+        "fr": "Optimisation de l'alimentation"
+       },
+       "desc": {
+        "en": "Turns off power saving that slows your CPU and devices.",
+        "fr": "Coupe les économies d'énergie qui ralentissent ton CPU et tes périphériques."
+       },
+       "risk": "safe",
+       "reboot": true,
+       "requires": [],
+       "kind": "tweak",
+       "legacy": [
+        "RAGO APP FPS.bat@1920"
+       ],
+       "lines": 41
+      },
+      {
+       "id": "pow_ultimate",
+       "name": {
+        "en": "Ultimate power plan",
+        "fr": "Plan Performances optimales"
+       },
+       "desc": {
+        "en": "Adds the Ultimate Performance plan and removes the default plans.",
+        "fr": "Ajoute le plan Performances optimales et supprime les plans par défaut."
+       },
+       "risk": "advanced",
+       "reboot": true,
+       "requires": [],
+       "kind": "tweak",
+       "legacy": [
+        "RAGO APP FPS.bat@1969"
+       ],
+       "lines": 32
+      },
+      {
+       "id": "pow_saving",
+       "name": {
+        "en": "Drive idle power",
+        "fr": "Veille des disques"
+       },
+       "desc": {
+        "en": "Keeps your drives out of idle power states.",
+        "fr": "Empêche tes disques de passer en veille."
+       },
+       "risk": "safe",
+       "reboot": true,
+       "requires": [],
+       "kind": "tweak",
+       "legacy": [
+        "RAGO APP FPS.bat@1770"
+       ],
+       "lines": 16
+      },
+      {
+       "id": "sys_time",
+       "name": {
+        "en": "Time behavior",
+        "fr": "Gestion du temps"
+       },
+       "desc": {
+        "en": "Timer and clock settings.",
+        "fr": "Réglages des minuteurs et de l'horloge."
+       },
+       "risk": "safe",
+       "reboot": true,
+       "requires": [],
+       "kind": "tweak",
+       "legacy": [
+        "RAGO APP FPS.bat@1893"
+       ],
+       "lines": 2
+      },
+      {
+       "id": "sys_bcdedit",
+       "name": {
+        "en": "Boot timers (BCD)",
+        "fr": "Minuteurs de démarrage (BCD)"
+       },
+       "desc": {
+        "en": "Boot configuration: timers, tick and hypervisor options.",
+        "fr": "Configuration du démarrage : minuteurs, tick et options de l'hyperviseur."
+       },
+       "risk": "advanced",
+       "reboot": true,
+       "requires": [],
+       "kind": "tweak",
+       "legacy": [
+        "RAGO APP FPS.bat@2010"
+       ],
+       "lines": 23,
+       "confirm": {
+        "en": "Turns off Hyper-V and virtualization-based security (VBS). Turns off the early-launch anti-malware drivers.",
+        "fr": "Coupe Hyper-V et la sécurité basée sur la virtualisation (VBS). Coupe les pilotes anti-malware lancés au démarrage."
+       }
+      },
       {
        "id": "pow_plan",
        "name": {
@@ -2238,8 +2277,8 @@
       {
        "id": "pow_storage",
        "name": {
-        "fr": "Économie d'énergie du stockage",
-        "en": "Storage power saving"
+        "en": "NVMe idle states",
+        "fr": "États de veille NVMe"
        },
        "desc": {
         "fr": "Les SSD NVMe ne descendent plus dans leurs états de veille.",
@@ -2341,6 +2380,105 @@
       "en": "Storage"
      },
      "tweaks": [
+      {
+       "id": "sto_general",
+       "name": {
+        "en": "Storage optimization",
+        "fr": "Optimisation du stockage"
+       },
+       "desc": {
+        "en": "Disk write cache, then a deep clean: temp files, browser caches, Windows Update cache, Recycle Bin and recent-files history, and a DISM cleanup.",
+        "fr": "Cache d'écriture des disques, puis un grand nettoyage : fichiers temporaires, caches des navigateurs, cache Windows Update, Corbeille et historique des fichiers récents, et un nettoyage DISM."
+       },
+       "risk": "advanced",
+       "reboot": true,
+       "requires": [],
+       "kind": "tweak",
+       "legacy": [
+        "RAGO APP FPS.bat@1805"
+       ],
+       "lines": 67,
+       "confirm": {
+        "en": "Empties the Recycle Bin. Clears your recent files and Run history.",
+        "fr": "Vide la Corbeille. Efface tes fichiers récents et l'historique Exécuter."
+       }
+      },
+      {
+       "id": "sto_ntfs",
+       "name": {
+        "en": "NTFS tweaks",
+        "fr": "Réglages NTFS"
+       },
+       "desc": {
+        "en": "File system settings for faster access.",
+        "fr": "Réglages du système de fichiers pour un accès plus rapide."
+       },
+       "risk": "safe",
+       "reboot": true,
+       "requires": [],
+       "kind": "tweak",
+       "legacy": [
+        "RAGO APP FPS.bat@1789"
+       ],
+       "lines": 5
+      },
+      {
+       "id": "sto_fsutil_v6",
+       "name": {
+        "en": "FSUTIL settings",
+        "fr": "Réglages FSUTIL"
+       },
+       "desc": {
+        "en": "Disables last-access and 8.3 names.",
+        "fr": "Coupe la date de dernier accès et les noms 8.3."
+       },
+       "risk": "safe",
+       "reboot": true,
+       "requires": [],
+       "kind": "tweak",
+       "legacy": [
+        "RAGO APP FPS.bat@1797"
+       ],
+       "lines": 3
+      },
+      {
+       "id": "sto_fsutil2",
+       "name": {
+        "en": "FSUTIL memory usage",
+        "fr": "FSUTIL mémoire"
+       },
+       "desc": {
+        "en": "NTFS memory usage settings.",
+        "fr": "Réglages mémoire de NTFS."
+       },
+       "risk": "safe",
+       "reboot": true,
+       "requires": [],
+       "kind": "tweak",
+       "legacy": [
+        "RAGO APP FPS.bat@1886"
+       ],
+       "lines": 2
+      },
+      {
+       "id": "sto_defrag",
+       "name": {
+        "en": "Optimize drive",
+        "fr": "Optimiser le disque"
+       },
+       "desc": {
+        "en": "Runs a drive optimization.",
+        "fr": "Lance une optimisation du disque."
+       },
+       "risk": "safe",
+       "reboot": false,
+       "requires": [],
+       "kind": "tweak",
+       "legacy": [
+        "RAGO APP FPS.bat@1802"
+       ],
+       "lines": 1
+      },
       {
        "id": "sto_fsutil",
        "name": {
@@ -2464,6 +2602,25 @@
      },
      "tweaks": [
       {
+       "id": "sys_usb",
+       "name": {
+        "en": "USB optimization",
+        "fr": "Optimisation USB"
+       },
+       "desc": {
+        "en": "Turns off USB power saving and selective suspend.",
+        "fr": "Coupe les économies d'énergie et la mise en veille USB."
+       },
+       "risk": "safe",
+       "reboot": true,
+       "requires": [],
+       "kind": "tweak",
+       "legacy": [
+        "RAGO APP FPS.bat@2050"
+       ],
+       "lines": 38
+      },
+      {
        "id": "usb_priority",
        "name": {
         "fr": "Priorité des pilotes USB",
@@ -2568,7 +2725,7 @@
        "id": "usb_advanced",
        "name": {
         "fr": "Optimisation USB avancée",
-        "en": "Advanced USB optimisation"
+        "en": "Advanced USB optimization"
        },
        "desc": {
         "fr": "Les trois réglages ci-dessus plus la désactivation globale de la suspension USB.",
@@ -2621,7 +2778,8 @@
        "risk": "safe",
        "reboot": true,
        "requires": [
-        "gpu:nvidia"
+        "gpu:nvidia",
+        "wmic"
        ],
        "kind": "tweak",
        "legacy": [
@@ -2642,13 +2800,14 @@
        "risk": "safe",
        "reboot": true,
        "requires": [
-        "gpu:amd"
+        "gpu:amd",
+        "wmic"
        ],
        "kind": "tweak",
        "legacy": [
         "RAGO APP FPS.bat@378"
        ],
-       "lines": 462
+       "lines": 460
       },
       {
        "id": "gpu_intel",
@@ -2692,7 +2851,9 @@
        },
        "risk": "safe",
        "reboot": true,
-       "requires": [],
+       "requires": [
+        "wmic"
+       ],
        "kind": "tweak",
        "legacy": [
         "RAGO APP FPS.bat@1416"
@@ -2732,7 +2893,7 @@
        "id": "nv_general",
        "name": {
         "fr": "Optimisation NVIDIA complète",
-        "en": "Full NVIDIA optimisation"
+        "en": "Full NVIDIA optimization"
        },
        "desc": {
         "fr": "Importe le profil Rago dans le pilote (Profile Inspector), active le mode MSI, coupe la préemption et le HDCP.",
@@ -3428,129 +3589,6 @@
      ]
     },
     {
-     "id": "v6_clean",
-     "name": {
-      "en": "Clean up",
-      "fr": "Nettoyage"
-     },
-     "tweaks": [
-      {
-       "id": "win_telemetry",
-       "name": {
-        "en": "Telemetry optimization",
-        "fr": "Télémétrie"
-       },
-       "desc": {
-        "en": "Turns off telemetry, scheduled tasks and Edge update services.",
-        "fr": "Coupe la télémétrie, des tâches planifiées et les services de mise à jour d'Edge."
-       },
-       "risk": "advanced",
-       "reboot": true,
-       "requires": [],
-       "kind": "tweak",
-       "legacy": [
-        "RAGO APP FPS.bat@2648"
-       ],
-       "lines": 266
-      },
-      {
-       "id": "win_optimize",
-       "name": {
-        "en": "Optimize Windows",
-        "fr": "Optimiser Windows"
-       },
-       "desc": {
-        "en": "General Windows settings: notifications, tips, background apps.",
-        "fr": "Réglages généraux : notifications, astuces, applis en arrière-plan."
-       },
-       "risk": "safe",
-       "reboot": true,
-       "requires": [],
-       "kind": "tweak",
-       "legacy": [
-        "RAGO APP FPS.bat@3008"
-       ],
-       "lines": 56
-      },
-      {
-       "id": "win_diag",
-       "name": {
-        "en": "Disable diagnostics",
-        "fr": "Couper les diagnostics"
-       },
-       "desc": {
-        "en": "Turns off diagnostic services and logs.",
-        "fr": "Coupe les services et journaux de diagnostic."
-       },
-       "risk": "safe",
-       "reboot": true,
-       "requires": [],
-       "kind": "tweak",
-       "legacy": [
-        "RAGO APP FPS.bat@3099"
-       ],
-       "lines": 25
-      },
-      {
-       "id": "win_services",
-       "name": {
-        "en": "Disable useless services",
-        "fr": "Couper les services inutiles"
-       },
-       "desc": {
-        "en": "Turns off Windows services most players don't use.",
-        "fr": "Coupe des services Windows que la plupart des joueurs n'utilisent pas."
-       },
-       "risk": "advanced",
-       "reboot": true,
-       "requires": [],
-       "kind": "tweak",
-       "legacy": [
-        "RAGO APP FPS.bat@3140"
-       ],
-       "lines": 30
-      },
-      {
-       "id": "win_apps",
-       "name": {
-        "en": "Remove useless apps",
-        "fr": "Supprimer les applis inutiles"
-       },
-       "desc": {
-        "en": "Uninstalls preinstalled Windows apps.",
-        "fr": "Désinstalle des applis Windows préinstallées."
-       },
-       "risk": "advanced",
-       "reboot": true,
-       "requires": [],
-       "kind": "tweak",
-       "legacy": [
-        "RAGO APP FPS.bat@3175"
-       ],
-       "lines": 34
-      },
-      {
-       "id": "win_store",
-       "name": {
-        "en": "Disable Microsoft Store",
-        "fr": "Couper le Microsoft Store"
-       },
-       "desc": {
-        "en": "Turns off the Store and its automatic updates.",
-        "fr": "Coupe le Store et ses mises à jour automatiques."
-       },
-       "risk": "advanced",
-       "reboot": true,
-       "requires": [],
-       "kind": "tweak",
-       "legacy": [
-        "RAGO APP FPS.bat@3084"
-       ],
-       "lines": 6
-      }
-     ]
-    },
-    {
      "id": "v6_security",
      "name": {
       "en": "Security",
@@ -3580,7 +3618,8 @@
          "label": {
           "en": "On",
           "fr": "Activé"
-         }
+         },
+         "revert": true
         },
         {
          "id": "off",
@@ -3590,7 +3629,11 @@
          }
         }
        ],
-       "lines": 4
+       "lines": 4,
+       "confirm": {
+        "en": "Off turns off memory integrity (core isolation).",
+        "fr": "Désactivé coupe l'intégrité de la mémoire (isolation du noyau)."
+       }
       },
       {
        "id": "win_mitigations",
@@ -3606,14 +3649,14 @@
        "reboot": true,
        "requires": [],
        "kind": "tweak",
-       "confirm": {
-        "en": "Your PC loses its protection against Spectre and Meltdown attacks.",
-        "fr": "Ton PC perd sa protection contre les attaques Spectre et Meltdown."
-       },
        "legacy": [
         "RAGO APP FPS.bat@2955"
        ],
-       "lines": 18
+       "lines": 18,
+       "confirm": {
+        "en": "Turns off the Spectre and Meltdown protections.",
+        "fr": "Coupe les protections Spectre et Meltdown."
+       }
       },
       {
        "id": "win_smartscreen",
@@ -3632,7 +3675,11 @@
        "legacy": [
         "RAGO APP FPS.bat@3093"
        ],
-       "lines": 3
+       "lines": 3,
+       "confirm": {
+        "en": "Turns off SmartScreen, which checks the files you download.",
+        "fr": "Coupe SmartScreen, qui vérifie les fichiers téléchargés."
+       }
       },
       {
        "id": "win_hyperv",
@@ -3651,7 +3698,11 @@
        "legacy": [
         "RAGO APP FPS.bat@3127"
        ],
-       "lines": 9
+       "lines": 9,
+       "confirm": {
+        "en": "Turns off Hyper-V and virtualization-based security (VBS).",
+        "fr": "Coupe Hyper-V et la sécurité basée sur la virtualisation (VBS)."
+       }
       },
       {
        "id": "win_bluetooth",
@@ -4210,10 +4261,128 @@
     {
      "id": "clean",
      "name": {
-      "fr": "Nettoyage",
-      "en": "Cleanup"
+      "en": "Clean up",
+      "fr": "Nettoyage"
      },
      "tweaks": [
+      {
+       "id": "win_telemetry",
+       "name": {
+        "en": "Telemetry optimization",
+        "fr": "Télémétrie"
+       },
+       "desc": {
+        "en": "Turns off telemetry, scheduled tasks and Edge update services.",
+        "fr": "Coupe la télémétrie, des tâches planifiées et les services de mise à jour d'Edge."
+       },
+       "risk": "advanced",
+       "reboot": true,
+       "requires": [],
+       "kind": "tweak",
+       "legacy": [
+        "RAGO APP FPS.bat@2648"
+       ],
+       "lines": 266,
+       "confirm": {
+        "en": "Turns off automatic Windows updates.",
+        "fr": "Coupe les mises à jour automatiques de Windows."
+       }
+      },
+      {
+       "id": "win_optimize",
+       "name": {
+        "en": "Optimize Windows",
+        "fr": "Optimiser Windows"
+       },
+       "desc": {
+        "en": "General Windows settings: notifications, tips, background apps.",
+        "fr": "Réglages généraux : notifications, astuces, applis en arrière-plan."
+       },
+       "risk": "safe",
+       "reboot": true,
+       "requires": [],
+       "kind": "tweak",
+       "legacy": [
+        "RAGO APP FPS.bat@3008"
+       ],
+       "lines": 56
+      },
+      {
+       "id": "win_diag",
+       "name": {
+        "en": "Disable diagnostics",
+        "fr": "Couper les diagnostics"
+       },
+       "desc": {
+        "en": "Turns off diagnostic services and logs.",
+        "fr": "Coupe les services et journaux de diagnostic."
+       },
+       "risk": "safe",
+       "reboot": true,
+       "requires": [],
+       "kind": "tweak",
+       "legacy": [
+        "RAGO APP FPS.bat@3099"
+       ],
+       "lines": 25
+      },
+      {
+       "id": "win_services",
+       "name": {
+        "en": "Disable useless services",
+        "fr": "Couper les services inutiles"
+       },
+       "desc": {
+        "en": "Turns off Windows services most players don't use.",
+        "fr": "Coupe des services Windows que la plupart des joueurs n'utilisent pas."
+       },
+       "risk": "advanced",
+       "reboot": true,
+       "requires": [],
+       "kind": "tweak",
+       "legacy": [
+        "RAGO APP FPS.bat@3140"
+       ],
+       "lines": 30
+      },
+      {
+       "id": "win_apps",
+       "name": {
+        "en": "Remove useless apps",
+        "fr": "Supprimer les applis inutiles"
+       },
+       "desc": {
+        "en": "Uninstalls preinstalled Windows apps.",
+        "fr": "Désinstalle des applis Windows préinstallées."
+       },
+       "risk": "advanced",
+       "reboot": true,
+       "requires": [],
+       "kind": "tweak",
+       "legacy": [
+        "RAGO APP FPS.bat@3175"
+       ],
+       "lines": 34
+      },
+      {
+       "id": "win_store",
+       "name": {
+        "en": "Disable Microsoft Store",
+        "fr": "Couper le Microsoft Store"
+       },
+       "desc": {
+        "en": "Turns off the Store and its automatic updates.",
+        "fr": "Coupe le Store et ses mises à jour automatiques."
+       },
+       "risk": "advanced",
+       "reboot": true,
+       "requires": [],
+       "kind": "tweak",
+       "legacy": [
+        "RAGO APP FPS.bat@3084"
+       ],
+       "lines": 6
+      },
       {
        "id": "cln_temp",
        "name": {
@@ -4344,7 +4513,9 @@
        },
        "risk": "safe",
        "reboot": true,
-       "requires": [],
+       "requires": [
+        "wmic"
+       ],
        "kind": "tweak",
        "legacy": [
         "RAGO APP HITREG INPUTLAG.bat@35"
@@ -4363,16 +4534,18 @@
        },
        "risk": "advanced",
        "reboot": true,
-       "requires": [],
+       "requires": [
+        "wmic"
+       ],
        "kind": "tweak",
-       "confirm": {
-        "en": "This also turns off the Spectre and Meltdown protections. Your PC gets less secure.",
-        "fr": "Ça coupe aussi les protections Spectre et Meltdown. Ton PC devient moins protégé."
-       },
        "legacy": [
         "RAGO APP HITREG INPUTLAG.bat@76"
        ],
-       "lines": 88
+       "lines": 87,
+       "confirm": {
+        "en": "Turns off the Spectre and Meltdown protections. Turns off the system-wide exploit protections. Turns off Hyper-V and virtualization-based security (VBS). Weakens Data Execution Prevention (DEP). Deletes every Image File Execution Options entry (per-program debugger and protection settings). Clears the Prefetch folder, which a screenshare can read as wiped traces.",
+        "fr": "Coupe les protections Spectre et Meltdown. Coupe les protections contre les exploits de tout le système. Coupe Hyper-V et la sécurité basée sur la virtualisation (VBS). Affaiblit la prévention de l'exécution des données (DEP). Supprime toutes les entrées Image File Execution Options (débogueur et protections par programme). Vide le dossier Prefetch, ce qu'un screenshare peut lire comme des traces effacées."
+       }
       },
       {
        "id": "in_frames",
@@ -4411,7 +4584,8 @@
          "label": {
           "en": "Default",
           "fr": "Par défaut"
-         }
+         },
+         "revert": true
         }
        ],
        "lines": 30
@@ -4430,14 +4604,14 @@
        "reboot": true,
        "requires": [],
        "kind": "tweak",
-       "confirm": {
-        "en": "This turns off UAC, Windows Update notifications and the Spectre and Meltdown protections. Your PC gets less secure.",
-        "fr": "Ça coupe l'UAC, les notifications Windows Update et les protections Spectre et Meltdown. Ton PC devient moins protégé."
-       },
        "legacy": [
         "RAGO APP HITREG INPUTLAG.bat@181"
        ],
-       "lines": 534
+       "lines": 534,
+       "confirm": {
+        "en": "Turns off the Spectre and Meltdown protections. Turns off Hyper-V and virtualization-based security (VBS). Turns off the early-launch anti-malware drivers. Turns off Microsoft Defender real-time protection. Turns off SmartScreen, which checks the files you download. Turns off UAC, the admin permission prompts. Stops Prefetch from filling. On a screenshare that can look like erased traces: turn on RBW Mod before one.",
+        "fr": "Coupe les protections Spectre et Meltdown. Coupe Hyper-V et la sécurité basée sur la virtualisation (VBS). Coupe les pilotes anti-malware lancés au démarrage. Coupe la protection en temps réel de Microsoft Defender. Coupe SmartScreen, qui vérifie les fichiers téléchargés. Coupe l'UAC, les demandes d'autorisation administrateur. Le Prefetch ne se remplit plus. Sur un screenshare, ça peut ressembler à des traces effacées : active le RBW Mod avant."
+       }
       }
      ]
     },
@@ -4530,7 +4704,8 @@
          "label": {
           "en": "Default",
           "fr": "Par défaut"
-         }
+         },
+         "revert": true
         }
        ],
        "lines": 8
@@ -4597,7 +4772,11 @@
         "lwpc1@13118",
         "ltpc1@13123"
        ],
-       "lines": 1964
+       "lines": 1964,
+       "confirm": {
+        "en": "Stops Prefetch from filling. On a screenshare that can look like erased traces: turn on RBW Mod before one.",
+        "fr": "Le Prefetch ne se remplit plus. Sur un screenshare, ça peut ressembler à des traces effacées : active le RBW Mod avant."
+       }
       }
      ]
     }
@@ -4849,8 +5028,8 @@
         "en": "RBW Mod"
        },
        "desc": {
-        "fr": "Activé remet en route et en automatique les services que les outils de screenshare vérifient (journal d'événements, SysMain, PCA, Planificateur). Désactivé les repasse en manuel et arrête SysMain après ta session.",
-        "en": "On restarts and sets to automatic the services screenshare tools check (Event Log, SysMain, PCA, Scheduler). Off sets them back to manual after your session."
+        "en": "On restarts the services screenshare tools check (Event Log, SysMain, PCA, Scheduler) and turns BAM and Prefetch back on after a restart. Off sets the services back to manual after your session.",
+        "fr": "Activé relance les services que vérifient les outils de screenshare (journal d'événements, SysMain, PCA, Planificateur) et remet BAM et le Prefetch après un redémarrage. Désactivé repasse les services en manuel après ta session."
        },
        "risk": "safe",
        "reboot": false,
@@ -4861,7 +5040,8 @@
          "label": {
           "fr": "Activé",
           "en": "On"
-         }
+         },
+         "revert": true
         },
         {
          "id": "off",
@@ -4928,7 +5108,8 @@
          "label": {
           "fr": "Désactivé",
           "en": "Off"
-         }
+         },
+         "revert": true
         }
        ],
        "requires": [],
@@ -4951,8 +5132,8 @@
     "en": "Expert mode"
    },
    "tagline": {
-    "fr": "Le God Mode du .bat. Puissant, et à manier en connaissance de cause.",
-    "en": "The .bat's God Mode. Powerful, use knowingly."
+    "en": "Kernel, boot and security settings. Powerful, use knowingly.",
+    "fr": "Noyau, démarrage et sécurité. Puissant, à utiliser en connaissance de cause."
    },
    "sections": [
     {
@@ -5298,8 +5479,8 @@
       {
        "id": "exp_autologgers",
        "name": {
-        "fr": "Désactiver les journaux automatiques",
-        "en": "Disable autologgers"
+        "en": "Disable autologgers (extended)",
+        "fr": "Couper les autologgers (étendu)"
        },
        "desc": {
         "fr": "Même réglage que dans Débloat, avec quelques clés en plus.",
@@ -5337,7 +5518,7 @@
        "id": "exp_search",
        "name": {
         "fr": "Optimiser la recherche",
-        "en": "Optimise search"
+        "en": "Optimize search"
        },
        "desc": {
         "fr": "La recherche ne passe plus par Bing ni Cortana.",
@@ -5364,8 +5545,8 @@
       {
        "id": "exp_bios",
        "name": {
-        "fr": "Réglages de démarrage (BCD)",
-        "en": "Boot settings (BCD)"
+        "en": "Boot security (BCD)",
+        "fr": "Sécurité du démarrage (BCD)"
        },
        "desc": {
         "fr": "Modifie le gestionnaire de démarrage : horloge TSC, Hyper-V et VBS coupés, x2APIC. Si Windows ne démarre plus, il faudra passer par la restauration.",
@@ -5378,7 +5559,11 @@
        "legacy": [
         "bios5@4636"
        ],
-       "lines": 31
+       "lines": 31,
+       "confirm": {
+        "en": "Turns off Hyper-V and virtualization-based security (VBS).",
+        "fr": "Coupe Hyper-V et la sécurité basée sur la virtualisation (VBS)."
+       }
       },
       {
        "id": "exp_pcie",
@@ -5416,7 +5601,11 @@
        "legacy": [
         "god21@2596"
        ],
-       "lines": 4
+       "lines": 4,
+       "confirm": {
+        "en": "Removes the protection against attacks through Thunderbolt and PCIe devices (DMA).",
+        "fr": "Retire la protection contre les attaques par périphériques Thunderbolt et PCIe (DMA)."
+       }
       },
       {
        "id": "exp_harden",
@@ -5535,7 +5724,11 @@
        "legacy": [
         "RevzertNt@14395"
        ],
-       "lines": 9
+       "lines": 9,
+       "confirm": {
+        "en": "Resets Winsock and the network settings.",
+        "fr": "Réinitialise Winsock et les réglages réseau."
+       }
       },
       {
        "id": "rst_queue",
@@ -5544,8 +5737,8 @@
         "en": "Default input queue"
        },
        "desc": {
-        "fr": "Remet la file d'attente des pilotes souris et clavier à 100.",
-        "en": "Restores the input driver queue to 100."
+        "en": "Puts the mouse and keyboard queues back to 100, the Windows default.",
+        "fr": "Remet les files souris et clavier à 100, la valeur de Windows."
        },
        "risk": "safe",
        "reboot": true,
@@ -5577,8 +5770,8 @@
    },
    "tweaks": [
     "ping_hitreg:hypixel",
-    "ping_packets",
-    "ping_main",
+    "ping_packets:hitreg",
+    "ping_main:config1",
     "in_driver",
     "in_adapter",
     "in_windows",

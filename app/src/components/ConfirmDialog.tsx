@@ -1,7 +1,7 @@
 import { RotateCcw, ShieldCheck, TriangleAlert } from "lucide-react";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { availability, tweaks } from "../lib/catalog";
-import { useStore } from "../lib/store";
+import { SESSION_TOGGLES, useStore } from "../lib/store";
 import { Modal } from "./Modal";
 import { Button, Badge } from "./ui";
 
@@ -17,11 +17,16 @@ export function ConfirmDialog() {
 
   const [restorePoint, setRestorePoint] = useState(true);
   const [wmic, setWmic] = useState(true);
+  const footRef = useRef<HTMLElement>(null);
   useEffect(() => {
     // un simple bouton « Lancer » sur une action sûre ne propose pas le point de restauration par défaut
+    // ni pour un mode à allumer et éteindre à chaque session (mode jeu, RBW Mod)
+    const session = !!confirm?.single && list.every((tw) => SESSION_TOGGLES.has(tw.id));
     const risky = list.some((tw) => tw.kind === "tweak" || tw.risk === "advanced");
-    setRestorePoint(!onlyRestore && risky);
+    setRestorePoint(!onlyRestore && risky && !session);
     setWmic(true);
+    // le bouton principal prend le focus sans faire défiler la fenêtre : le titre reste visible
+    if (confirm) requestAnimationFrame(() => footRef.current?.querySelector<HTMLButtonElement>(".btn-primary")?.focus({ preventScroll: true }));
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [confirm]);
 
@@ -88,11 +93,11 @@ export function ConfirmDialog() {
         {mcBlocked && <p className="tweak-note block">{t("confirm.mcMissing")}</p>}
       </div>
 
-      <footer className="modal-actions">
+      <footer className="modal-actions" ref={footRef}>
         <Button variant="ghost" onClick={close}>
           {t("confirm.cancel")}
         </Button>
-        <Button variant="primary" onClick={go} disabled={mcBlocked} autoFocus>
+        <Button variant="primary" onClick={go} disabled={mcBlocked}>
           {confirm?.single ? t("confirm.goOne") : t("confirm.go")}
         </Button>
       </footer>

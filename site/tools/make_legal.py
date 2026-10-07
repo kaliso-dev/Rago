@@ -1,3 +1,5 @@
+import os
+OUT=os.path.join(os.path.dirname(os.path.abspath(__file__)),'..')
 # Builds site/terms.html, privacy.html, refunds.html. Yellow <mark class="f"> = to fill in by the seller.
 F=lambda t:f'<mark class="f">[{t}]</mark>'
 SELLER=F("Seller legal name or company"); ADDR=F("Postal address"); COUNTRY=F("Country"); MAIL=F("Contact email"); REG=F("Business registration number, if any"); UPD="October 6, 2026"
@@ -11,10 +13,9 @@ HEAD='''<!doctype html>
 <title>{title} · Rago Optimizer</title>
 <link rel="icon" href="favicon.svg" type="image/svg+xml">
 <link rel="icon" href="favicon.ico" sizes="any">
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600;700&family=Geist+Mono:wght@400;500&display=swap">
 <style>
+@font-face{{font-family:"Geist";src:url("fonts/Geist-Variable.woff2") format("woff2");font-weight:100 900;font-display:swap}}
+@font-face{{font-family:"Geist Mono";src:url("fonts/GeistMono-Variable.woff2") format("woff2");font-weight:100 900;font-display:swap}}
 :root{{--ink:#0A0A0B;--ink-2:#111113;--l1:rgba(255,255,255,.07);--l2:rgba(255,255,255,.12);--t1:#F5F5F7;--t2:#A1A1AA;--t3:#71717A;--red:#FF3B30;--warn:#FFD60A}}
 *{{box-sizing:border-box;margin:0}}
 html{{background:var(--ink);color-scheme:dark}}
@@ -57,7 +58,7 @@ FOOT='''<div class="foot"><a href="terms.html">Terms of Sale</a><a href="privacy
 </html>
 '''
 def page(name,title,body):
-    open(f'/mnt/project-files/site/{name}','w').write(HEAD.format(title=title,upd=UPD)+body+FOOT)
+    open(os.path.join(OUT,name),'w').write(HEAD.format(title=title,upd=UPD)+body+FOOT)
 
 page('terms.html','Terms of Sale',f'''
 <h2>1. Who we are</h2>
@@ -153,7 +154,7 @@ page('privacy.html','Privacy Policy',f'''
 <li><strong>rg_claim</strong>: links a purchase to the account you create right after it, for 7 days. Necessary.</li>
 <li><strong>rg_ref</strong> and <strong>rago_ref</strong> (browser storage): remember an affiliate code from a share link for 30 days.</li>
 </ul>
-<p>We don't use advertising or analytics cookies. The site loads its fonts from Google Fonts, which receives your IP address.</p>
+<p>We don't use advertising or analytics cookies, and the site loads no third-party fonts or trackers.</p>
 
 <h2>Who processes it for us</h2>
 <ul>
@@ -179,3 +180,9 @@ page('privacy.html','Privacy Policy',f'''
 <p>If we change this policy in a way that matters, we'll update the date above and tell account holders by email.</p>
 ''')
 print('ok')
+
+# 404: Netlify serves it for any unknown path, so every link is absolute
+nf=HEAD.format(title='Page not found',upd='').replace('href="','href="/').replace('src="','src="/').replace('url("fonts/','url("/fonts/').replace('href="/https:','href="https:')
+nf=nf.split('<div class="draft">')[0]+'<h1>This page doesn\'t exist.</h1>\n<p class="upd">Error 404</p>\n<p>The link may be old or mistyped.</p>\n<p style="margin-top:28px;display:flex;gap:10px;flex-wrap:wrap"><a class="back" href="/" style="color:#0A0A0B;background:#FF3B30;box-shadow:none;font-weight:600;text-decoration:none;padding:10px 18px;border-radius:999px">Back to Rago Optimizer</a><a class="back" href="/#pricing" style="text-decoration:none;padding:10px 18px;border-radius:999px">See pricing</a></p>\n'+FOOT.replace('href="','href="/').replace('href="/./"','href="/"')
+nf=nf.replace('href="/./"','href="/"')
+open(os.path.join(OUT,'404.html'),'w').write(nf)

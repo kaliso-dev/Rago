@@ -18,7 +18,6 @@ const fr = {
 
   "tweak.run": "Lancer",
   "tweak.more": "Détails",
-  "tweak.legacy": "Dans Rago Free : {refs} · {lines} lignes",
   "block.noCpu.amd": "Ce n'est pas un processeur AMD",
   "block.noCpu.intel": "Ce n'est pas un processeur Intel",
   "block.noGpu.nvidia": "Aucune carte NVIDIA détectée",
@@ -80,7 +79,7 @@ const fr = {
   "dash.health.wmic": "WMIC disponible",
   "dash.health.npi": "NVIDIA Profile Inspector",
   "dash.health.restore": "Point de restauration",
-  "dash.health.restoreNone": "Aucun créé par Rago Optimizer",
+  "dash.health.restoreNone": "Aucun pour l'instant",
   "dash.health.applied": "Réglages appliqués",
   "dash.yes": "Oui",
   "dash.no": "Non",
@@ -147,7 +146,7 @@ const fr = {
   "upsell.title": "Débloque les {total} réglages",
   "upsell.lead": "Le plan gratuit ouvre {n} réglages. Premium ouvre tout le reste, sur ton PC.",
   "upsell.b1": "Tous les modules : ping, hitreg, carte graphique, CPU, Windows",
-  "upsell.b2": "Hitreg, input lag, Minecraft, RBW Mod et le mode jeu Rago",
+  "upsell.b2": "Le mode jeu Rago, le RBW Mod et les réglages Minecraft",
   "upsell.b3": "Les presets en un clic, dont Minecraft PvP",
   "upsell.b4": "Le mode expert et chaque nouveau réglage ajouté",
   "upsell.cta": "Passer Premium",
@@ -167,15 +166,15 @@ const fr = {
   "license.buy": "Obtenir Rago Optimizer Premium",
   "license.err.invalid_token": "Ta session a expiré. Reconnecte-toi.",
   "license.err.server_error": "Le serveur de licences a renvoyé une erreur. Réessaie dans un instant.",
-  "license.err.invalid_request": "Rago Optimizer n'a pas pu lire l'identifiant de ce PC. Contacte le support sur Discord.",
+  "license.err.invalid_request": "Rago Optimizer n'a pas pu lire l'identifiant de ce PC. Contacte le support.",
   "license.lock": "Ta licence sera liée à ce PC.",
   "license.create": "Créer un compte",
   "license.forgot": "Mot de passe oublié ?",
   "license.success": "Licence active. Rago Optimizer est prêt.",
   "license.err.invalid_credentials": "L'email et le mot de passe ne correspondent pas. Réessaie ou réinitialise ton mot de passe.",
   "license.err.no_license": "Ce compte n'a pas encore de licence Rago Optimizer Premium.",
-  "license.err.bound_to_other_device": "Cette licence est déjà active sur un autre PC. Rago Optimizer fonctionne sur un seul appareil par licence. Contacte le support sur Discord si tu as changé de PC.",
-  "license.err.revoked": "Cette licence a été révoquée. Contacte le support sur Discord.",
+  "license.err.bound_to_other_device": "Cette licence est déjà active sur un autre PC. Rago Optimizer fonctionne sur un seul appareil par licence. Tu as changé de PC ? Libère l'ancien depuis la page de ton compte.",
+  "license.err.revoked": "Cette licence a été révoquée. Contacte le support.",
   "license.err.rate_limited": "Trop de tentatives. Attends une minute et réessaie.",
   "license.err.network": "Impossible de joindre le serveur de licences. Vérifie ta connexion et réessaie.",
   "license.err.unconfigured": "Cette version n'est pas reliée au serveur de licences.",
@@ -188,6 +187,37 @@ const fr = {
   "account.machine": "Appareil",
   "account.signOut": "Se déconnecter",
   "account.unconfigured": "Licence non configurée dans cette version (build de développement).",
+  "upsell.plan": "Tout débloquer avec Premium",
+  "upsell.tweakNamed": "{name} fait partie de Premium",
+  "upsell.revertFree": "En gratuit, tu peux toujours remettre ce réglage par défaut.",
+  "done.upsell": "Premium ouvre {n} réglages de plus, dont le preset Minecraft PvP.",
+  "notice.subscription_ended": "Ton abonnement Premium a pris fin : tu es repassé sur le plan gratuit.",
+  "notice.revoked": "Ta licence Premium a été désactivée : tu es repassé sur le plan gratuit.",
+  "notice.bound_to_other_device": "Ta licence est maintenant active sur un autre PC : celui-ci est repassé sur le plan gratuit.",
+  "notice.invalid_token": "Ta licence n'est plus valable sur ce PC. Reconnecte-toi pour retrouver Premium.",
+  "notice.expired": "Impossible de vérifier ta licence. Connecte-toi à internet pour garder Premium.",
+  "notice.renew": "Renouveler",
+  "notice.retry": "Réessayer",
+  "notice.dismiss": "Fermer",
+  "license.successLead": "Les {total} réglages sont débloqués.",
+  "license.successDevice": "Verrouillée sur {device} · {date}",
+  "license.continue": "Commencer",
+  "account.activated": "Activée le {date}",
+  "account.pending": "Vérification en attente : connecte-toi à internet.",
+  "account.manage": "Gérer mon compte",
+  "account.help": "Aide sur Discord",
+  "signout.title": "Se déconnecter ?",
+  "signout.lead": "Se déconnecter ne libère pas ce PC : ta licence reste liée à {device}. Pour la passer sur un autre PC, va sur la page de ton compte.",
+  "signout.cancel": "Annuler",
+  "window.minimize": "Réduire",
+  "window.maximize": "Agrandir",
+  "window.close": "Fermer",
+  "tweak.details": "{lines} commandes Windows. Pour revenir en arrière, utilise le point de restauration créé avant d'appliquer.",
+  "session.turnOn": "Activer",
+  "session.turnOff": "Désactiver",
+  "session.onSince": "Activé depuis {time}",
+  "session.offSince": "Désactivé depuis {time}",
+  "err.premium_required": "Ce réglage fait partie de Premium.",
 };
 
 export type Key = keyof typeof fr;
@@ -208,7 +238,6 @@ const en: Record<Key, string> = {
   "badge.auto": "Auto",
   "tweak.run": "Run",
   "tweak.more": "Details",
-  "tweak.legacy": "In Rago Free: {refs} · {lines} lines",
   "block.noCpu.amd": "This isn't an AMD processor",
   "block.noCpu.intel": "This isn't an Intel processor",
   "block.noGpu.nvidia": "No NVIDIA card detected",
@@ -268,7 +297,7 @@ const en: Record<Key, string> = {
   "dash.health.wmic": "WMIC available",
   "dash.health.npi": "NVIDIA Profile Inspector",
   "dash.health.restore": "Restore point",
-  "dash.health.restoreNone": "None from Rago Optimizer yet",
+  "dash.health.restoreNone": "None yet",
   "dash.health.applied": "Tweaks applied",
   "dash.yes": "Yes",
   "dash.no": "No",
@@ -325,7 +354,7 @@ const en: Record<Key, string> = {
   "upsell.title": "Unlock all {total} tweaks",
   "upsell.lead": "The free plan opens {n} tweaks. Premium opens everything else, on your PC.",
   "upsell.b1": "Every module: ping, hitreg, graphics card, CPU, Windows",
-  "upsell.b2": "Hitreg, input lag, Minecraft, RBW Mod and Rago game mode",
+  "upsell.b2": "Rago game mode, RBW Mod and the Minecraft settings",
   "upsell.b3": "One-click presets, including Minecraft PvP",
   "upsell.b4": "Expert mode and every new tweak we add",
   "upsell.cta": "Get Premium",
@@ -345,15 +374,15 @@ const en: Record<Key, string> = {
   "license.buy": "Get Rago Optimizer Premium",
   "license.err.invalid_token": "Your session expired. Sign in again.",
   "license.err.server_error": "The license server returned an error. Try again in a moment.",
-  "license.err.invalid_request": "Rago Optimizer couldn't read this PC's ID. Contact support on Discord.",
+  "license.err.invalid_request": "Rago Optimizer couldn't read this PC's ID. Contact support.",
   "license.lock": "Your license will be locked to this device.",
   "license.create": "Create account",
   "license.forgot": "Forgot your password?",
   "license.success": "License active. Rago Optimizer is ready.",
   "license.err.invalid_credentials": "That email and password don't match. Try again or reset your password.",
   "license.err.no_license": "This account doesn't have a Rago Optimizer Premium license yet.",
-  "license.err.bound_to_other_device": "This license is already active on another PC. Rago Optimizer works on one device per license. Contact support on Discord if you changed PCs.",
-  "license.err.revoked": "This license has been revoked. Contact support on Discord.",
+  "license.err.bound_to_other_device": "This license is already active on another PC. Rago Optimizer works on one device per license. Changed PCs? Free your old one from your account page.",
+  "license.err.revoked": "This license has been revoked. Contact support.",
   "license.err.rate_limited": "Too many attempts. Wait a minute and try again.",
   "license.err.network": "Couldn't reach the license server. Check your connection and try again.",
   "license.err.unconfigured": "This build isn't connected to the license server.",
@@ -366,6 +395,37 @@ const en: Record<Key, string> = {
   "account.machine": "Device",
   "account.signOut": "Sign out",
   "account.unconfigured": "Licensing isn't configured in this build (development build).",
+  "upsell.plan": "Unlock everything with Premium",
+  "upsell.tweakNamed": "{name} is part of Premium",
+  "upsell.revertFree": "On the free plan you can always put this tweak back to default.",
+  "done.upsell": "Premium unlocks {n} more tweaks, including the Minecraft PvP preset.",
+  "notice.subscription_ended": "Your Premium subscription has ended. You're back on the free plan.",
+  "notice.revoked": "Your Premium license was turned off. You're back on the free plan.",
+  "notice.bound_to_other_device": "Your license is now active on another PC, so this one is back on the free plan.",
+  "notice.invalid_token": "Your license is no longer valid on this PC. Sign in again to get Premium back.",
+  "notice.expired": "Couldn't verify your license. Connect to the internet to keep Premium.",
+  "notice.renew": "Renew",
+  "notice.retry": "Retry",
+  "notice.dismiss": "Dismiss",
+  "license.successLead": "All {total} tweaks are unlocked.",
+  "license.successDevice": "Locked to {device} · {date}",
+  "license.continue": "Start optimizing",
+  "account.activated": "Activated on {date}",
+  "account.pending": "Verification pending. Connect to the internet.",
+  "account.manage": "Manage account",
+  "account.help": "Get help on Discord",
+  "signout.title": "Sign out?",
+  "signout.lead": "Signing out doesn't free this PC: your license stays locked to {device}. To move it to another PC, use your account page.",
+  "signout.cancel": "Cancel",
+  "window.minimize": "Minimize",
+  "window.maximize": "Maximize",
+  "window.close": "Close",
+  "tweak.details": "{lines} Windows commands. To undo, use the restore point Rago Optimizer creates before applying.",
+  "session.turnOn": "Turn on",
+  "session.turnOff": "Turn off",
+  "session.onSince": "On since {time}",
+  "session.offSince": "Off since {time}",
+  "err.premium_required": "This tweak is part of Premium.",
 };
 
 const dicts: Record<Lang, Record<Key, string>> = { fr, en };
@@ -381,9 +441,17 @@ export function translate(lang: Lang, key: Key, vars: Record<string, string | nu
 }
 
 export function formatDate(lang: Lang, ts: number): string {
-  return new Date(ts).toLocaleDateString(lang === "fr" ? "fr-FR" : "en-GB", { day: "numeric", month: "short" });
+  return new Date(ts).toLocaleDateString(lang === "fr" ? "fr-FR" : "en-US", { day: "numeric", month: "short" });
+}
+
+/** Heure seule le jour même, sinon date et heure. */
+export function formatTime(lang: Lang, ts: number): string {
+  const d = new Date(ts);
+  const locale = lang === "fr" ? "fr-FR" : "en-US";
+  const time = d.toLocaleTimeString(locale, { hour: "2-digit", minute: "2-digit" });
+  return d.toDateString() === new Date().toDateString() ? time : `${formatDate(lang, ts)} ${time}`;
 }
 
 export function formatNumber(lang: Lang, n: number, digits = 1): string {
-  return n.toLocaleString(lang === "fr" ? "fr-FR" : "en-GB", { minimumFractionDigits: digits, maximumFractionDigits: digits });
+  return n.toLocaleString(lang === "fr" ? "fr-FR" : "en-US", { minimumFractionDigits: digits, maximumFractionDigits: digits });
 }

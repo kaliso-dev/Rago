@@ -80,6 +80,22 @@ choice /c:"CQ" /n /m "%BS%               [C] Continue  [Q] Quit" & if !errorleve
 chcp 65001 >nul 2>&1
 
 
+
+:: Rago Free : two heavy changes run only if you accept them here.
+set "RAGO_FIREWALL=0"
+set "RAGO_SPECTRE=0"
+cls
+echo.
+echo   Some network optimizations can RESET the Windows Firewall (your custom rules are deleted).
+choice /c YN /n /m "  Allow the firewall reset? [Y/N] "
+if errorlevel 2 (set "RAGO_FIREWALL=0") else (set "RAGO_FIREWALL=1")
+echo.
+echo   Some CPU and memory optimizations turn OFF the Spectre and Meltdown protections.
+echo   Small FPS gain, lower security. Leave them on if you are not sure.
+choice /c YN /n /m "  Turn off Spectre and Meltdown protections? [Y/N] "
+if errorlevel 2 (set "RAGO_SPECTRE=0") else (set "RAGO_SPECTRE=1")
+cls
+
 :: Warning
 chcp 65001 >nul 2>&1
 CLS
@@ -712,7 +728,7 @@ cls
 :: Optimization
 netsh int ip reset > nul 2>&1
 netsh winsock reset > nul 2>&1
-netsh advfirewall reset > nul 2>&1
+if "%RAGO_FIREWALL%"=="1" netsh advfirewall reset > nul 2>&1
 ipconfig /flushdns > nul 2>&1
 cls
 powershell -Command "& {Set-NetTCPSetting -SettingName internet -ScalingHeuristics Disabled}" > $null 2>&1
@@ -807,7 +823,7 @@ cls
 :: Optimization
 netsh int ip reset > nul 2>&1
 netsh winsock reset > nul 2>&1
-netsh advfirewall reset > nul 2>&1
+if "%RAGO_FIREWALL%"=="1" netsh advfirewall reset > nul 2>&1
 ipconfig /flushdns > nul 2>&1
 cls
 :: Optimization.
@@ -3148,14 +3164,14 @@ Reg.exe add "HKLM\SYSTEM\CurrentControlSet\Control\Session Manager\Memory Manage
 echo %w%- Disable ASLR %b%
 timeout /t 1 /nobreak > nul
 ::Disable Spectre And Meltdown
-Reg.exe add "HKLM\SYSTEM\CurrentControlSet\Control\Session Manager\Memory Management" /v "FeatureSettings" /t REG_DWORD /d "1" /f
-Reg.exe add "HKLM\SYSTEM\CurrentControlSet\Control\Session Manager\Memory Management" /v "FeatureSettingsOverride" /t REG_DWORD /d "3" /f
-Reg.exe add "HKLM\SYSTEM\CurrentControlSet\Control\Session Manager\Memory Management" /v "FeatureSettingsOverrideMask" /t REG_DWORD /d "3" /f
+if "%RAGO_SPECTRE%"=="1" Reg.exe add "HKLM\SYSTEM\CurrentControlSet\Control\Session Manager\Memory Management" /v "FeatureSettings" /t REG_DWORD /d "1" /f
+if "%RAGO_SPECTRE%"=="1" Reg.exe add "HKLM\SYSTEM\CurrentControlSet\Control\Session Manager\Memory Management" /v "FeatureSettingsOverride" /t REG_DWORD /d "3" /f
+if "%RAGO_SPECTRE%"=="1" Reg.exe add "HKLM\SYSTEM\CurrentControlSet\Control\Session Manager\Memory Management" /v "FeatureSettingsOverrideMask" /t REG_DWORD /d "3" /f
 Reg.exe add "HKLM\SYSTEM\CurrentControlSet\Control\Session Manager\Memory Management" /v "MoveImages" /t REG_DWORD /d "0" /f
 
-Reg.exe add "HKLM\SYSTEM\ControlSet001\Control\Session Manager\Memory Management" /v "FeatureSettings" /t REG_DWORD /d "1" /f
-Reg.exe add "HKLM\SYSTEM\ControlSet001\Control\Session Manager\Memory Management" /v "FeatureSettingsOverride" /t REG_DWORD /d "3" /f
-Reg.exe add "HKLM\SYSTEM\ControlSet001\Control\Session Manager\Memory Management" /v "FeatureSettingsOverrideMask" /t REG_DWORD /d "3" /f
+if "%RAGO_SPECTRE%"=="1" Reg.exe add "HKLM\SYSTEM\ControlSet001\Control\Session Manager\Memory Management" /v "FeatureSettings" /t REG_DWORD /d "1" /f
+if "%RAGO_SPECTRE%"=="1" Reg.exe add "HKLM\SYSTEM\ControlSet001\Control\Session Manager\Memory Management" /v "FeatureSettingsOverride" /t REG_DWORD /d "3" /f
+if "%RAGO_SPECTRE%"=="1" Reg.exe add "HKLM\SYSTEM\ControlSet001\Control\Session Manager\Memory Management" /v "FeatureSettingsOverrideMask" /t REG_DWORD /d "3" /f
 Reg.exe add "HKLM\SYSTEM\ControlSet001\Control\Session Manager\Memory Management" /v "EnableCfg" /t REG_DWORD /d "0" /f
 Reg.exe add "HKLM\SYSTEM\ControlSet001\Control\Session Manager\Memory Management" /v "MoveImages" /t REG_DWORD /d "0" /f
 echo %w%- Disable Spectre And Meltdown %b%
@@ -6211,9 +6227,9 @@ Reg.exe add "HKLM\SYSTEM\CurrentControlSet\Control\Session Manager\Memory Manage
 echo %w% - Disabling Protection Mode%b%
 Reg.exe add "HKLM\SYSTEM\CurrentControlSet\Control\Session Manager" /v "ProtectionMode" /t REG_DWORD /d "0" /f 
 echo %w% - Disabling Spectre And Meltdown%b%
-Reg.exe add "HKLM\SYSTEM\CurrentControlSet\Control\Session Manager\Memory Management" /v "FeatureSettings" /t REG_DWORD /d "1" /f 
-Reg.exe add "HKLM\SYSTEM\CurrentControlSet\Control\Session Manager\Memory Management" /v "FeatureSettingsOverride" /t REG_DWORD /d "3" /f 
-Reg.exe add "HKLM\SYSTEM\CurrentControlSet\Control\Session Manager\Memory Management" /v "FeatureSettingsOverrideMask" /t REG_DWORD /d "3" /f
+if "%RAGO_SPECTRE%"=="1" Reg.exe add "HKLM\SYSTEM\CurrentControlSet\Control\Session Manager\Memory Management" /v "FeatureSettings" /t REG_DWORD /d "1" /f
+if "%RAGO_SPECTRE%"=="1" Reg.exe add "HKLM\SYSTEM\CurrentControlSet\Control\Session Manager\Memory Management" /v "FeatureSettingsOverride" /t REG_DWORD /d "3" /f
+if "%RAGO_SPECTRE%"=="1" Reg.exe add "HKLM\SYSTEM\CurrentControlSet\Control\Session Manager\Memory Management" /v "FeatureSettingsOverrideMask" /t REG_DWORD /d "3" /f
 echo %w% - Disabling Address Space Layout Randomization%b%
 Reg.exe add "HKLM\SYSTEM\CurrentControlSet\Control\Session Manager\Memory Management" /v "MoveImages" /t REG_DWORD /d "0" /f  
 echo.
@@ -6724,10 +6740,10 @@ cd %PROGRAMFILES(X86)%\Microsoft\Edge\Application\1*\Installer
 cd C:\Program Files (x86)\Microsoft\Edge\Application\125.0.2535.79\Installer
 setup.exe --uninstall --system-level --verbose-logging --force-uninstall
 rd /s /q "C:\Program Files (x86)\Microsoft\Edge"
-rd /s /q "C:\Program Files (x86)\Microsoft\EdgeCore"
-rd /s /q "C:\Program Files (x86)\Microsoft\EdgeUpdate"
-rd /s /q "C:\Program Files (x86)\Microsoft\EdgeWebView"
-rd /s /q "C:\Program Files (x86)\Microsoft\Temp"
+echo [skip] Edge WebView2 kept: Rago Optimizer needs it.
+echo [skip] Edge WebView2 kept: Rago Optimizer needs it.
+echo [skip] Edge WebView2 kept: Rago Optimizer needs it.
+echo [skip] Edge WebView2 kept: Rago Optimizer needs it.
 cls
 ::5
 echo %w% - Disabling GameDVR%b%
@@ -6857,10 +6873,10 @@ cd %PROGRAMFILES(X86)%\Microsoft\Edge\Application\1*\Installer
 cd C:\Program Files (x86)\Microsoft\Edge\Application\125.0.2535.79\Installer
 setup.exe --uninstall --system-level --verbose-logging --force-uninstall
 rd /s /q "C:\Program Files (x86)\Microsoft\Edge"
-rd /s /q "C:\Program Files (x86)\Microsoft\EdgeCore"
-rd /s /q "C:\Program Files (x86)\Microsoft\EdgeUpdate"
-rd /s /q "C:\Program Files (x86)\Microsoft\EdgeWebView"
-rd /s /q "C:\Program Files (x86)\Microsoft\Temp"
+echo [skip] Edge WebView2 kept: Rago Optimizer needs it.
+echo [skip] Edge WebView2 kept: Rago Optimizer needs it.
+echo [skip] Edge WebView2 kept: Rago Optimizer needs it.
+echo [skip] Edge WebView2 kept: Rago Optimizer needs it.
 cls
 echo.
 echo.
@@ -9342,9 +9358,9 @@ Reg.exe add "HKLM\SYSTEM\CurrentControlSet\Control\Session Manager\Memory Manage
 Reg.exe add "HKLM\SYSTEM\CurrentControlSet\Control\Session Manager\Memory Management" /v "SessionViewSize" /t REG_DWORD /d "192" /f
 Reg.exe add "HKLM\SYSTEM\CurrentControlSet\Control\Session Manager\Memory Management" /v "SystemPages" /t REG_DWORD /d "4294967295" /f
 Reg.exe add "HKLM\SYSTEM\CurrentControlSet\Control\Session Manager\Memory Management" /v "PhysicalAddressExtension" /t REG_DWORD /d "1" /f
-Reg.exe add "HKLM\SYSTEM\CurrentControlSet\Control\Session Manager\Memory Management" /v "FeatureSettings" /t REG_DWORD /d "1" /f
-Reg.exe add "HKLM\SYSTEM\CurrentControlSet\Control\Session Manager\Memory Management" /v "FeatureSettingsOverride" /t REG_DWORD /d "3" /f
-Reg.exe add "HKLM\SYSTEM\CurrentControlSet\Control\Session Manager\Memory Management" /v "FeatureSettingsOverrideMask" /t REG_DWORD /d "3" /f
+if "%RAGO_SPECTRE%"=="1" Reg.exe add "HKLM\SYSTEM\CurrentControlSet\Control\Session Manager\Memory Management" /v "FeatureSettings" /t REG_DWORD /d "1" /f
+if "%RAGO_SPECTRE%"=="1" Reg.exe add "HKLM\SYSTEM\CurrentControlSet\Control\Session Manager\Memory Management" /v "FeatureSettingsOverride" /t REG_DWORD /d "3" /f
+if "%RAGO_SPECTRE%"=="1" Reg.exe add "HKLM\SYSTEM\CurrentControlSet\Control\Session Manager\Memory Management" /v "FeatureSettingsOverrideMask" /t REG_DWORD /d "3" /f
 Reg.exe add "HKLM\SYSTEM\CurrentControlSet\Control\Session Manager\Memory Management" /v "PoolUsageMaximum" /t REG_DWORD /d "96" /f
 goto memory2
 
@@ -9466,9 +9482,9 @@ Reg.exe add "HKLM\SYSTEM\CurrentControlSet\Control\Session Manager\Memory Manage
 Reg.exe add "HKLM\SYSTEM\CurrentControlSet\Control\Session Manager\Memory Management" /v "SessionViewSize" /t REG_DWORD /d "192" /f
 Reg.exe add "HKLM\SYSTEM\CurrentControlSet\Control\Session Manager\Memory Management" /v "SystemPages" /t REG_DWORD /d "4294967295" /f
 Reg.exe add "HKLM\SYSTEM\CurrentControlSet\Control\Session Manager\Memory Management" /v "PhysicalAddressExtension" /t REG_DWORD /d "1" /f
-Reg.exe add "HKLM\SYSTEM\CurrentControlSet\Control\Session Manager\Memory Management" /v "FeatureSettings" /t REG_DWORD /d "1" /f
-Reg.exe add "HKLM\SYSTEM\CurrentControlSet\Control\Session Manager\Memory Management" /v "FeatureSettingsOverride" /t REG_DWORD /d "3" /f
-Reg.exe add "HKLM\SYSTEM\CurrentControlSet\Control\Session Manager\Memory Management" /v "FeatureSettingsOverrideMask" /t REG_DWORD /d "3" /f
+if "%RAGO_SPECTRE%"=="1" Reg.exe add "HKLM\SYSTEM\CurrentControlSet\Control\Session Manager\Memory Management" /v "FeatureSettings" /t REG_DWORD /d "1" /f
+if "%RAGO_SPECTRE%"=="1" Reg.exe add "HKLM\SYSTEM\CurrentControlSet\Control\Session Manager\Memory Management" /v "FeatureSettingsOverride" /t REG_DWORD /d "3" /f
+if "%RAGO_SPECTRE%"=="1" Reg.exe add "HKLM\SYSTEM\CurrentControlSet\Control\Session Manager\Memory Management" /v "FeatureSettingsOverrideMask" /t REG_DWORD /d "3" /f
 Reg.exe add "HKLM\SYSTEM\CurrentControlSet\Control\Session Manager\Memory Management" /v "PoolUsageMaximum" /t REG_DWORD /d "96" /f
 echo.
 echo.
@@ -9697,9 +9713,9 @@ Reg.exe add "HKLM\SYSTEM\CurrentControlSet\Control\Session Manager\Memory Manage
 Reg.exe add "HKLM\SYSTEM\CurrentControlSet\Control\Session Manager\Memory Management" /v "SessionViewSize" /t REG_DWORD /d "192" /f
 Reg.exe add "HKLM\SYSTEM\CurrentControlSet\Control\Session Manager\Memory Management" /v "SystemPages" /t REG_DWORD /d "4294967295" /f
 Reg.exe add "HKLM\SYSTEM\CurrentControlSet\Control\Session Manager\Memory Management" /v "PhysicalAddressExtension" /t REG_DWORD /d "1" /f
-Reg.exe add "HKLM\SYSTEM\CurrentControlSet\Control\Session Manager\Memory Management" /v "FeatureSettings" /t REG_DWORD /d "1" /f
-Reg.exe add "HKLM\SYSTEM\CurrentControlSet\Control\Session Manager\Memory Management" /v "FeatureSettingsOverride" /t REG_DWORD /d "3" /f
-Reg.exe add "HKLM\SYSTEM\CurrentControlSet\Control\Session Manager\Memory Management" /v "FeatureSettingsOverrideMask" /t REG_DWORD /d "3" /f
+if "%RAGO_SPECTRE%"=="1" Reg.exe add "HKLM\SYSTEM\CurrentControlSet\Control\Session Manager\Memory Management" /v "FeatureSettings" /t REG_DWORD /d "1" /f
+if "%RAGO_SPECTRE%"=="1" Reg.exe add "HKLM\SYSTEM\CurrentControlSet\Control\Session Manager\Memory Management" /v "FeatureSettingsOverride" /t REG_DWORD /d "3" /f
+if "%RAGO_SPECTRE%"=="1" Reg.exe add "HKLM\SYSTEM\CurrentControlSet\Control\Session Manager\Memory Management" /v "FeatureSettingsOverrideMask" /t REG_DWORD /d "3" /f
 Reg.exe add "HKLM\SYSTEM\CurrentControlSet\Control\Session Manager\Memory Management" /v "PoolUsageMaximum" /t REG_DWORD /d "96" /f
 Reg.exe add "HKLM\SYSTEM\CurrentControlSet\Control\Session Manager\Memory Management" /v "Start" /t REG_DWORD /d "4" /f
 
@@ -13399,9 +13415,9 @@ Reg.exe add "HKLM\SOFTWARE\Microsoft\Windows NT\CurrentVersion\Multimedia\System
 Reg.exe add "HKLM\SOFTWARE\Microsoft\Windows NT\CurrentVersion\Multimedia\SystemProfile\Tasks\Low Latency" /v "Latency Sensitive" /t REG_SZ /d "True" /f
 Reg.exe add "HKLM\SYSTEM\CurrentControlSet\Control\PriorityControl" /v "Win32PrioritySeparation" /t REG_DWORD /d "38" /f 
 cls
-Reg.exe add "HKLM\SYSTEM\CurrentControlSet\Control\Session Manager\Memory Management" /v "FeatureSettings" /t REG_DWORD /d "1" /f 
-Reg.exe add "HKLM\SYSTEM\CurrentControlSet\Control\Session Manager\Memory Management" /v "FeatureSettingsOverride" /t REG_DWORD /d "3" /f 
-Reg.exe add "HKLM\SYSTEM\CurrentControlSet\Control\Session Manager\Memory Management" /v "FeatureSettingsOverrideMask" /t REG_DWORD /d "3"
+if "%RAGO_SPECTRE%"=="1" Reg.exe add "HKLM\SYSTEM\CurrentControlSet\Control\Session Manager\Memory Management" /v "FeatureSettings" /t REG_DWORD /d "1" /f
+if "%RAGO_SPECTRE%"=="1" Reg.exe add "HKLM\SYSTEM\CurrentControlSet\Control\Session Manager\Memory Management" /v "FeatureSettingsOverride" /t REG_DWORD /d "3" /f
+if "%RAGO_SPECTRE%"=="1" Reg.exe add "HKLM\SYSTEM\CurrentControlSet\Control\Session Manager\Memory Management" /v "FeatureSettingsOverrideMask" /t REG_DWORD /d "3"
 Reg.exe add "HKLM\SYSTEM\CurrentControlSet\Control\PriorityControl" /v "IRQ8Priority" /t REG_DWORD /d "1" /f
 Reg.exe add "HKLM\SYSTEM\ControlSet001\Control\PriorityControl" /v "IRQ8Priority" /t REG_DWORD /d "1" /f
 Reg.exe add "HKLM\SYSTEM\CurrentControlSet\Control\PriorityControl" /v "IRQ16Priority" /t REG_DWORD /d "2" /f
@@ -13468,8 +13484,8 @@ Reg.exe add "HKLM\SYSTEM\CurrentControlSet\Control\Session Manager\Memory Manage
 Reg.exe add "HKLM\SYSTEM\CurrentControlSet\Control\Session Manager\Memory Management" /v "SessionViewSize" /t REG_DWORD /d "192" /f
 Reg.exe add "HKLM\SYSTEM\CurrentControlSet\Control\Session Manager\Memory Management" /v "SystemPages" /t REG_DWORD /d "4294967295" /f
 Reg.exe add "HKLM\SYSTEM\CurrentControlSet\Control\Session Manager\Memory Management" /v "PhysicalAddressExtension" /t REG_DWORD /d "1" /f
-Reg.exe add "HKLM\SYSTEM\CurrentControlSet\Control\Session Manager\Memory Management" /v "FeatureSettings" /t REG_DWORD /d "1" /f
-Reg.exe add "HKLM\SYSTEM\CurrentControlSet\Control\Session Manager\Memory Management" /v "FeatureSettingsOverride" /t REG_DWORD /d "3" /f
+if "%RAGO_SPECTRE%"=="1" Reg.exe add "HKLM\SYSTEM\CurrentControlSet\Control\Session Manager\Memory Management" /v "FeatureSettings" /t REG_DWORD /d "1" /f
+if "%RAGO_SPECTRE%"=="1" Reg.exe add "HKLM\SYSTEM\CurrentControlSet\Control\Session Manager\Memory Management" /v "FeatureSettingsOverride" /t REG_DWORD /d "3" /f
 Reg.exe add "HKLM\SYSTEM\CurrentControlSet\Control\Session Manager\Memory Management" /v "IoPageLockLimit" /t REG_DWORD /d "16710656" /f
 Reg.exe add "HKLM\SYSTEM\CurrentControlSet\Control\Session Manager\Memory Management" /v "PoolUsageMaximum" /t REG_DWORD /d "96" /f
 Reg.exe add "HKLM\SYSTEM\CurrentControlSet\Control\Session Manager\Memory Management" /v "Start" /t REG_DWORD /d "4" /f
@@ -14255,7 +14271,7 @@ echo Starting..
 rd /s /q %temp% > nul
 cls 
 echo Starting...
-del /s /f /q C:\Windows\Prefetch\* > nul
+rem Prefetch folder left untouched.
 cls
 echo Loading.
 net stop wuauserv > nul

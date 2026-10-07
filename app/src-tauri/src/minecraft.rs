@@ -48,14 +48,14 @@ pub fn status(dir: &Path) -> Status {
 /// Fusionne `values` dans optionsof.txt. Renvoie un message lisible pour le journal.
 pub fn apply(dir: &Path, values: &BTreeMap<String, String>, stamp: u64) -> Result<String, String> {
     if !dir.is_dir() {
-        return Err(format!("Dossier Minecraft introuvable : {}", dir.display()));
+        return Err(format!("Minecraft folder not found: {}", dir.display()));
     }
     let path = dir.join(FILE);
     let existing = fs::read_to_string(&path).unwrap_or_default();
     let mut saved = String::new();
     if !existing.is_empty() {
         let backup = dir.join(format!("{BACKUP_PREFIX}{stamp}.bak"));
-        fs::write(&backup, &existing).map_err(|e| format!("Copie de sauvegarde impossible : {e}"))?;
+        fs::write(&backup, &existing).map_err(|e| format!("Couldn't back up the file: {e}"))?;
         saved = backup.file_name().unwrap().to_string_lossy().to_string();
         let all = backups(dir);
         if all.len() > KEEP_BACKUPS {
@@ -65,18 +65,18 @@ pub fn apply(dir: &Path, values: &BTreeMap<String, String>, stamp: u64) -> Resul
         }
     }
     let merged = merge(&existing, values);
-    fs::write(&path, merged).map_err(|e| format!("Écriture de {FILE} impossible : {e}"))?;
+    fs::write(&path, merged).map_err(|e| format!("Couldn't write {FILE}: {e}"))?;
     Ok(if saved.is_empty() {
-        format!("{} options OptiFine écrites dans un nouveau {FILE}", values.len())
+        format!("{} OptiFine options written to a new {FILE}", values.len())
     } else {
-        format!("{} options OptiFine écrites, ancien fichier gardé sous {saved}", values.len())
+        format!("{} OptiFine options written, old file kept as {saved}", values.len())
     })
 }
 
 pub fn restore_latest(dir: &Path) -> Result<String, String> {
-    let latest = backups(dir).pop().ok_or("Aucune sauvegarde Rago trouvée")?;
+    let latest = backups(dir).pop().ok_or("No Rago backup found")?;
     fs::copy(&latest, dir.join(FILE)).map_err(|e| e.to_string())?;
-    Ok(format!("{FILE} restauré depuis {}", latest.file_name().unwrap().to_string_lossy()))
+    Ok(format!("{FILE} restored from {}", latest.file_name().unwrap().to_string_lossy()))
 }
 
 fn merge(existing: &str, values: &BTreeMap<String, String>) -> String {

@@ -23,13 +23,13 @@ from meta import MODULES, PRESETS  # noqa: E402
 BAT = os.path.join(ROOT, 'legacy', 'Premium v5.2 - Rago Hub.bat')
 bat = LegacyBat(BAT)
 
-TEMP_CLEAN = r'''echo - Nettoyage de C:\Windows\Temp
+TEMP_CLEAN = r'''echo - Cleaning C:\Windows\Temp
 set folder="C:\Windows\Temp"
 IF EXIST "%folder%" (
     cd /d %folder%
     for /F "delims=" %%i in ('dir /b') do (rmdir "%%i" /s/q 2>nul || del "%%i" /s/q 2>nul)
 )
-echo - Nettoyage de %TEMP%
+echo - Cleaning %TEMP%
 set folder="%LOCALAPPDATA%\Temp"
 IF EXIST "%folder%" (
     cd /d %folder%
@@ -62,9 +62,9 @@ def rbw_script(base):
     return '\n'.join(lines)
 
 
-EDGE_FIX = r'''echo - Fermeture de Edge
+EDGE_FIX = r'''echo - Closing Edge
 taskkill /f /im msedge.exe >nul 2>&1
-echo - Désinstallation de Edge
+echo - Uninstalling Edge
 for /d %%d in ("%ProgramFiles(x86)%\Microsoft\Edge\Application\*") do (
     if exist "%%d\Installer\setup.exe" "%%d\Installer\setup.exe" --uninstall --system-level --verbose-logging --force-uninstall
 )'''
@@ -149,7 +149,7 @@ def _resolve_src(src, tid, vid=None):
         script = rbw_script(script)
     if name == 'DISABLE8':
         # le mode jeu coupe le spouleur d'impression mais ne le relançait jamais
-        script += '\necho - Remise en route de l\'impression\nsc config Spooler start= auto >nul\nnet start Spooler >nul 2>&1'
+        script += '\necho - Turning printing back on\nsc config Spooler start= auto >nul\nnet start Spooler >nul 2>&1'
     if name == 'nv3':
         script = NPI_CALL
     key = f'{tid}:{vid}' if vid else tid

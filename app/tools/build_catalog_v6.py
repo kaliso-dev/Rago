@@ -12,6 +12,9 @@ import re
 import subprocess
 import sys
 
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+from extract_bat import LegacyBat  # noqa: E402  (réparation des boucles for détachées, comme en v5.2)
+
 ROOT = os.path.join(os.path.dirname(__file__), '..')
 V6 = os.path.join(ROOT, 'legacy', 'v6')
 FILES = {
@@ -28,9 +31,12 @@ def I(en, fr=None):
 
 
 def T(file, line, id, en, fr, desc_en, desc_fr, risk='safe', reboot=True, requires=(), variants=None,
-      absorb=0, confirm=None):
+      absorb=0, confirm=None, default=None, revert=None, prefix=False):
+    # variants : (id, nom en, nom fr, motif de début[, choix automatique « ram:16 »]) ; revert : la variante qui
+    # remet Windows d'origine (ouverte en gratuit) ; prefix : les lignes avant la 1re variante vont dans chacune
     return dict(file=file, line=line, id=id, name=I(en, fr), desc=I(desc_en, desc_fr), risk=risk, reboot=reboot,
-                requires=list(requires), variants=variants, absorb=absorb, confirm=confirm)
+                requires=list(requires), variants=variants, absorb=absorb, confirm=confirm, default=default,
+                revert=revert, prefix=prefix)
 
 
 ONOFF = [('on', 'On', 'Activé', r'::\s*gmode ON'), ('off', 'Off', 'Désactivé', r'::\s*gmode OF')]
@@ -40,18 +46,28 @@ MODULES = [
     ('network', 'network', I('Ping', 'Ping'), I('Lower ping, cleaner packets.', 'Un ping plus bas, des paquets plus propres.'), [
         ('hitreg', I('Hit registration', 'Enregistrement des coups'), [
             T('ping', 10, 'ping_hitreg', 'Hitreg profile', 'Profil hitreg',
-              'TTL, TCP auto-tuning and receive coalescing, tuned for better hitreg or for Hypixel.',
-              'TTL, auto-tuning TCP et regroupement des paquets, réglés pour le hitreg ou pour Hypixel.',
-              reboot=False, variants=[('better', 'Better hitreg', 'Meilleur hitreg', r'^:BETTERHITREG'),
-                                      ('hypixel', 'Hypixel', 'Hypixel', r'^:HYPIXEL')]),
+              'TTL, TCP auto-tuning and receive coalescing, in six profiles. Default puts Windows back as it was.',
+              'TTL, auto-tuning TCP et regroupement des paquets, en six profils. Default remet Windows comme avant.',
+              reboot=False, default='better', revert='default',
+              variants=[('better', 'Better hitreg', 'Meilleur hitreg', r'^:BETTERHITREG'),
+                        ('besthitreg', 'Best hitreg', 'Hitreg maximal', r'^:\s*BESTHITREG'),
+                        ('balanced', 'Balanced', 'Équilibré', r'^:\s*BALANCED'),
+                        ('hypixel', 'Hypixel', 'Hypixel', r'^:HYPIXEL'),
+                        ('slowlest', 'Slowest', 'Le plus lent', r'^:\s*SLOWLEST'),
+                        ('default', 'Default', 'Par défaut', r'^:\s*DEFAULT')]),
             T('ping', 85, 'ping_packets', 'Packet optimization', 'Optimisation des paquets',
-              'Offloads, RSS, MTU 1400, TCP flags and timers for steadier packets.',
-              'Offloads, RSS, MTU 1400, options TCP et minuteurs pour des paquets plus réguliers.'),
+              'Offloads, RSS, MTU and TCP timers, in three profiles: Hitreg (MTU 1400), QoS or Knockback.',
+              'Offloads, RSS, MTU et minuteurs TCP, en trois profils : Hitreg (MTU 1400), QoS ou Knockback.',
+              default='hitreg',
+              variants=[('hitreg', 'Hitreg', 'Hitreg', r'^:HITREG OPTION'), ('qos', 'QoS', 'QoS', r'^:\s*QOS OPTION'),
+                        ('knockback', 'Knockback', 'Knockback', r'^:\s*KNOCKBACK OPTION')]),
         ]),
         ('ping', I('Ping', 'Ping'), [
             T('ping', 259, 'ping_main', 'Ping optimization', 'Optimisation du ping',
-              'Tunes your network adapter and the Windows TCP/IP stack for low ping.',
-              'Règle ta carte réseau et la pile TCP/IP de Windows pour un ping bas.'),
+              'Tunes your network adapter and the Windows TCP/IP stack for low ping, in four configs.',
+              'Règle ta carte réseau et la pile TCP/IP de Windows pour un ping bas, en quatre configurations.',
+              default='config1',
+              variants=[(f'config{n}', f'Config {n}', f'Config {n}', rf'^:\s*CONFIG {n}\b') for n in range(1, 5)]),
             T('ping', 704, 'ping_advanced', 'Advanced network config', 'Configuration réseau avancée',
               'NetBIOS, adapter bindings and deeper TCP/IP settings.',
               'NetBIOS, liaisons de la carte et réglages TCP/IP plus poussés.', risk='advanced'),
@@ -68,20 +84,17 @@ MODULES = [
             T('input', 76, 'in_windows', 'Windows latency', 'Latence de Windows',
               'Windows scheduling, timers and priority settings for lower input lag. Also turns off the Spectre and Meltdown protections.',
               'Planification, minuteurs et priorités de Windows pour moins d\'input lag. Coupe aussi les protections Spectre et Meltdown.',
-              risk='advanced',
-              confirm=I('This also turns off the Spectre and Meltdown protections. Your PC gets less secure.',
-                        'Ça coupe aussi les protections Spectre et Meltdown. Ton PC devient moins protégé.')),
+              risk='advanced'),
             T('input', 732, 'in_frames', 'Frame latency', 'Latence des images',
               'How many frames Windows and DirectX queue before showing them.',
               'Nombre d\'images que Windows et DirectX mettent en file avant de les afficher.',
+              revert='default',
               variants=[('lowest', 'Lowest', 'Minimale', r'^\s*::\s*Lowest'), ('balanced', 'Balanced', 'Équilibrée', r'^\s*::\s*Balanced'),
                         ('default', 'Default', 'Par défaut', r'^\s*::\s*Default')]),
             T('input', 181, 'in_advanced', 'Advanced latency', 'Latence avancée',
               'Big pack: stops services, driver updates, UAC, Windows Update notifications, Spectre and Meltdown protections, plus dozens of Explorer settings.',
               'Gros pack : coupe des services, les mises à jour de pilotes, l\'UAC, les notifications Windows Update, les protections Spectre et Meltdown, et des dizaines de réglages de l\'Explorateur.',
-              risk='advanced',
-              confirm=I('This turns off UAC, Windows Update notifications and the Spectre and Meltdown protections. Your PC gets less secure.',
-                        'Ça coupe l\'UAC, les notifications Windows Update et les protections Spectre et Meltdown. Ton PC devient moins protégé.')),
+              risk='advanced'),
         ]),
         ('input', I('Mouse & keyboard', 'Souris et clavier'), [
             T('fps', 2211, 'in_mouse', 'Mouse optimization', 'Optimisation de la souris',
@@ -93,7 +106,7 @@ MODULES = [
             T('fps', 2189, 'in_queue', 'Input queue size', 'File souris et clavier',
               'How many mouse and keyboard events the drivers buffer. Lower reacts faster.',
               'Nombre d\'événements souris et clavier mis en mémoire par les pilotes. Plus bas, plus réactif.',
-              absorb=4),
+              absorb=4, revert='default'),
         ]),
     ]),
     ('gpu', 'gpu', I('Graphics card', 'Carte graphique'), I('More frames, less wait.', 'Plus d\'images, moins d\'attente.'), [
@@ -137,17 +150,14 @@ MODULES = [
               'Raises the priority of the Windows process that handles input.',
               'Monte la priorité du processus Windows qui gère les entrées.'),
             T('fps', 1650, 'sys_ram', 'RAM optimization', 'Optimisation de la RAM',
-              'Memory management, compression and prefetch settings. Also turns off the Spectre and Meltdown protections.',
-              'Gestion de la mémoire, compression et prefetch. Coupe aussi les protections Spectre et Meltdown.',
-              risk='advanced',
-              confirm=I('This also turns off the Spectre and Meltdown protections. Your PC gets less secure.',
-                        'Ça coupe aussi les protections Spectre et Meltdown. Ton PC devient moins protégé.')),
+              'Memory management, compression and prefetch settings, sized for your RAM (picked automatically). Also turns off the Spectre and Meltdown protections.',
+              'Gestion de la mémoire, compression et prefetch, selon ta RAM (choisie automatiquement). Coupe aussi les protections Spectre et Meltdown.',
+              risk='advanced', prefix=True, default='16',
+              variants=[(str(g), f'{g} GB', f'{g} Go', rf'^:{g}GB\s*$', f'ram:{g}') for g in (4, 8, 12, 16, 24, 32, 48, 64, 128)]),
             T('fps', 2362, 'sys_registry', 'Registry optimization', 'Optimisation du registre',
               'Large set of registry settings, including disabling the BAM service and the I/O latency cap.',
               'Grand ensemble de réglages du registre, dont la coupure du service BAM et du plafond de latence disque.',
-              risk='advanced',
-              confirm=I('This turns off BAM, the service that logs which programs ran. On a screenshare that can look like erased traces.',
-                        'Ça coupe BAM, le service qui garde la trace des programmes lancés. Sur un screenshare, ça peut ressembler à des traces effacées.')),
+              risk='advanced'),
         ]),
         ('power', I('Power & storage', 'Alimentation et stockage'), [
             T('fps', 1920, 'pow_main', 'Power optimization', 'Optimisation de l\'alimentation',
@@ -159,7 +169,9 @@ MODULES = [
             T('fps', 1770, 'pow_saving', 'Storage power saving', 'Économies d\'énergie du stockage',
               'Keeps your drives out of idle power states.', 'Empêche tes disques de passer en veille.'),
             T('fps', 1805, 'sto_general', 'Storage optimization', 'Optimisation du stockage',
-              'NTFS, disk cache and storage driver settings.', 'NTFS, cache disque et pilotes de stockage.'),
+              'Disk write cache, then a deep clean: temp files, browser caches, Windows Update cache, Recycle Bin and recent-files history, and a DISM cleanup.',
+              'Cache d\'écriture des disques, puis un grand nettoyage : fichiers temporaires, caches des navigateurs, cache Windows Update, Corbeille et historique des fichiers récents, et un nettoyage DISM.',
+              risk='advanced'),
             T('fps', 1789, 'sto_ntfs', 'NTFS tweaks', 'Réglages NTFS', 'File system settings for faster access.',
               'Réglages du système de fichiers pour un accès plus rapide.'),
             T('fps', 1797, 'sto_fsutil_v6', 'FSUTIL settings', 'Réglages FSUTIL', 'Disables last-access and 8.3 names.',
@@ -209,12 +221,10 @@ MODULES = [
             T('fps', 2621, 'win_coreiso', 'Core isolation', 'Isolation du noyau',
               'Turns memory integrity (HVCI) on or off. Off can add FPS but lowers protection.',
               'Active ou coupe l\'intégrité de la mémoire (HVCI). Coupée, elle peut donner des FPS mais protège moins.',
-              risk='advanced', variants=ONOFF),
+              risk='advanced', variants=ONOFF, revert='on'),
             T('fps', 2955, 'win_mitigations', 'Disable mitigations', 'Couper les protections CPU',
               'Turns off Spectre, Meltdown and other CPU security mitigations.',
-              'Coupe les protections Spectre, Meltdown et autres failles CPU.', risk='advanced',
-              confirm=I('Your PC loses its protection against Spectre and Meltdown attacks.',
-                        'Ton PC perd sa protection contre les attaques Spectre et Meltdown.')),
+              'Coupe les protections Spectre, Meltdown et autres failles CPU.', risk='advanced'),
             T('fps', 3093, 'win_smartscreen', 'Disable SmartScreen', 'Couper SmartScreen',
               'Turns off the SmartScreen check on downloads.', 'Coupe la vérification SmartScreen des téléchargements.', risk='advanced'),
             T('fps', 3127, 'win_hyperv', 'Disable Hyper-V', 'Couper Hyper-V', 'Turns off Hyper-V and virtualization services.',
@@ -229,7 +239,7 @@ MODULES = [
 
 PRESETS = [
     ('mc_pvp', I('Minecraft PvP'), I('Hitreg, ping and raw input for Minecraft PvP.', 'Hitreg, ping et entrées brutes pour le PvP Minecraft.'),
-     ['ping_hitreg:hypixel', 'ping_packets', 'ping_main', 'in_driver', 'in_adapter', 'in_windows', 'in_mouse', 'in_keyboard',
+     ['ping_hitreg:hypixel', 'ping_packets:hitreg', 'ping_main:config1', 'in_driver', 'in_adapter', 'in_windows', 'in_mouse', 'in_keyboard',
       'in_queue:low', 'win_gamemode:on', 'win_gamedvr', 'win_fullscreen']),
     ('fps', I('Max FPS', 'FPS max'), I('Graphics card, CPU and power tuned for frames.', 'Carte graphique, CPU et alimentation réglés pour les FPS.'),
      ['gpu_nvidia', 'gpu_amd', 'gpu_intel', 'gpu_general', 'gpu_directx', 'cpu_amd', 'cpu_intel', 'sys_priority', 'sys_ram',
@@ -250,6 +260,176 @@ QUEUE_VARIANTS = {'Ultra Low': ('ultra', 'Ultra low', 'Ultra basse'), 'Low': ('l
                   'Balanced': ('balanced', 'Balanced', 'Équilibrée'), 'Default': ('default', 'Default', 'Par défaut')}
 
 
+# variante qui remet Windows d'origine, ouverte en gratuit (rempli par les T(..., revert=) et complété ici)
+REVERT = {'game_mode': 'off', 'rbw_mode': 'on'}
+
+# corrections de lignes précises (vérification du 2026-10-07, verification/ecarts/app.md) : (avant, après ou None)
+SCRIPT_FIXES = {
+    'in_windows': [
+        ('powercfg import "C:\\ExcusesFN"', None),  # fichier du PC de l'auteur
+        ('C:\\Users\\justin\\AppData\\Local\\Temp', '%LOCALAPPDATA%\\Temp'),
+        ('\r\n/s /f /q c:\\windows\\temp\\*.*', '\r\ndel /s /f /q c:\\windows\\temp\\*.*'),  # « del » perdu
+    ],
+    'in_advanced': [("-Description 'Risxn Restore Point'", "-Description 'Rago Optimizer restore point'")],
+    'sys_bcdedit': [('bcdedit /deletevalue useplatformclockJ', 'bcdedit /deletevalue useplatformclock')],
+    # ProfilesDirectory vaut « %SystemDrive%\Users » non développé : la boucle sur les profils ne tournait jamais
+    'sto_general': [('for /f "tokens=3 delims=\\ " %%A in (\'reg query "HKLM\\SOFTWARE\\Microsoft\\Windows NT\\CurrentVersion\\ProfileList" ^| findstr /i "ProfilesDirectory"\') do set "PROFILES_DIR=%%A"',
+                     'for /f "skip=2 tokens=2,*" %%A in (\'reg query "HKLM\\SOFTWARE\\Microsoft\\Windows NT\\CurrentVersion\\ProfileList" /v ProfilesDirectory\') do call set "PROFILES_DIR=%%B"')],
+    'rst_queue': [('/d "80"', '/d "100"')],
+    'game_mode:on': [('echo Optimimizing', 'echo Optimizing')],
+    'in_queue:default': [('/d "32"', '/d "100"')],  # « Default » = la valeur de Windows
+}
+# lignes retirées : fenêtres qui bloquent le script tant qu'on ne les ferme pas, marques tierces
+DROP_LINES = [
+    (('win_visual', 'win_apps'), r'MessageBox\]::Show'),
+    (('win_visual',), r'^\s*%windir%\\system32\\SystemPropertiesPerformance\.exe\s*$'),
+]
+RBW_ON_EXTRA = '\n'.join([
+    'echo - BAM, DAM and Prefetch back on (active after a restart)',
+    r'reg add "HKLM\SYSTEM\CurrentControlSet\Services\bam" /v "Start" /t REG_DWORD /d "1" /f >nul',
+    r'reg add "HKLM\SYSTEM\CurrentControlSet\Services\dam" /v "Start" /t REG_DWORD /d "1" /f >nul',
+    r'reg add "HKLM\SYSTEM\CurrentControlSet\Control\Session Manager\Memory Management\PrefetchParameters" /v "EnablePrefetcher" /t REG_DWORD /d "3" /f >nul',
+    r'reg add "HKLM\SYSTEM\CurrentControlSet\Control\Session Manager\Memory Management\PrefetchParameters" /v "EnableSuperfetch" /t REG_DWORD /d "3" /f >nul',
+])
+
+# Ce que le joueur doit lire avant de lancer : déduit du script, pour que rien de lourd ne passe sans être annoncé.
+WARNINGS = [
+    (r'FeatureSettingsOverride"?\s+/t\s+REG_DWORD\s+/d\s+"?3', 'Turns off the Spectre and Meltdown protections.',
+     'Coupe les protections Spectre et Meltdown.'),
+    (r'Set-ProcessMitigation\s+-System\s+-Disable', 'Turns off the system-wide exploit protections.',
+     'Coupe les protections contre les exploits de tout le système.'),
+    (r'hypervisorlaunchtype\s+off|vsmlaunchtype\s+off', 'Turns off Hyper-V and virtualization-based security (VBS).',
+     'Coupe Hyper-V et la sécurité basée sur la virtualisation (VBS).'),
+    (r'bcdedit\s+/set\s+(\{current\}\s+)?nx\s+(OptOut|AlwaysOff)', 'Weakens Data Execution Prevention (DEP).',
+     'Affaiblit la prévention de l\'exécution des données (DEP).'),
+    (r'disableelamdrivers\s+yes', 'Turns off the early-launch anti-malware drivers.',
+     'Coupe les pilotes anti-malware lancés au démarrage.'),
+    (r'HypervisorEnforcedCodeIntegrity"?\s+/v\s+"?Enabled"?\s+/t\s+REG_DWORD\s+/d\s+"?0', 'Off turns off memory integrity (core isolation).',
+     'Désactivé coupe l\'intégrité de la mémoire (isolation du noyau).'),
+    (r'DmaRemappingCompatible"?\s+/t\s+REG_DWORD\s+/d\s+"?0', 'Removes the protection against attacks through Thunderbolt and PCIe devices (DMA).',
+     'Retire la protection contre les attaques par périphériques Thunderbolt et PCIe (DMA).'),
+    (r'DisableRealtimeMonitoring"?\s+/t\s+REG_DWORD\s+/d\s+"?1|TamperProtection"?\s+/t\s+REG_DWORD\s+/d\s+"?0|DisableAntiSpyware"?\s+/t\s+REG_DWORD\s+/d\s+"?1',
+     'Turns off Microsoft Defender real-time protection.', 'Coupe la protection en temps réel de Microsoft Defender.'),
+    (r'EnableSmartScreen"?\s+/t\s+REG_DWORD\s+/d\s+"?0', 'Turns off SmartScreen, which checks the files you download.',
+     'Coupe SmartScreen, qui vérifie les fichiers téléchargés.'),
+    (r'EnableLUA"?\s+/t\s+REG_DWORD\s+/d\s+"?0', 'Turns off UAC, the admin permission prompts.',
+     'Coupe l\'UAC, les demandes d\'autorisation administrateur.'),
+    (r'NoAutoUpdate"?\s+/t\s+REG_DWORD\s+/d\s+"?1', 'Turns off automatic Windows updates.',
+     'Coupe les mises à jour automatiques de Windows.'),
+    (r'advfirewall\s+reset', 'Resets the Windows Firewall: your custom rules are deleted.',
+     'Réinitialise le pare-feu Windows : tes règles personnalisées sont supprimées.'),
+    (r'winsock\s+reset', 'Resets Winsock and the network settings.', 'Réinitialise Winsock et les réglages réseau.'),
+    (r'Image File Execution Options\\\*', 'Deletes every Image File Execution Options entry (per-program debugger and protection settings).',
+     'Supprime toutes les entrées Image File Execution Options (débogueur et protections par programme).'),
+    (r'Services\\bam"?\s+/v\s+"?Start"?\s+/t\s+REG_DWORD\s+/d\s+"?4',
+     'Turns off BAM, which logs the programs you ran. On a screenshare that can look like erased traces: turn on RBW Mod before one.',
+     'Coupe BAM, qui garde la trace des programmes lancés. Sur un screenshare, ça peut ressembler à des traces effacées : active le RBW Mod avant.'),
+    (r'EnablePrefetcher"?\s+/t\s+REG_DWORD\s+/d\s+"?0', 'Stops Prefetch from filling. On a screenshare that can look like erased traces: turn on RBW Mod before one.',
+     'Le Prefetch ne se remplit plus. Sur un screenshare, ça peut ressembler à des traces effacées : active le RBW Mod avant.'),
+    (r'^(?!\s*echo).*(del|forfiles|rd)\b.*\\prefetch', 'Clears the Prefetch folder, which a screenshare can read as wiped traces.',
+     'Vide le dossier Prefetch, ce qu\'un screenshare peut lire comme des traces effacées.'),
+    (r'Clear-RecycleBin', 'Empties the Recycle Bin.', 'Vide la Corbeille.'),
+    (r'RunMRU|TypedPaths|OpenSavePidlMRU', 'Clears your recent files and Run history.', 'Efface tes fichiers récents et l\'historique Exécuter.'),
+]
+# avertissements écrits à la main, gardés devant ceux du script
+KEEP_CONFIRM = {'win_bluetooth', 'dbl_edge', 'dbl_onedrive'}
+
+# sections homonymes de l'ancien programme et des .bat v6 réunies (« Tout garder » : on regroupe, on ne retire rien)
+MOVE = {'cpu_amd': 'cpu', 'cpu_intel': 'cpu', 'cpu_advanced': 'cpu', 'sys_latency': 'cpu',
+        'sys_priority': 'priority', 'sys_csrss': 'priority', 'sys_ram': 'memory', 'sys_registry': 'memory',
+        'pow_main': 'power', 'pow_ultimate': 'power', 'pow_saving': 'power', 'sys_time': 'power', 'sys_bcdedit': 'power',
+        'sto_general': 'storage', 'sto_ntfs': 'storage', 'sto_fsutil_v6': 'storage', 'sto_fsutil2': 'storage',
+        'sto_defrag': 'storage', 'sys_usb': 'usb',
+        'win_telemetry': 'clean', 'win_optimize': 'clean', 'win_diag': 'clean', 'win_services': 'clean',
+        'win_apps': 'clean', 'win_store': 'clean'}
+SECTION_NAMES = {('windows', 'clean'): I('Clean up', 'Nettoyage')}
+# noms en double entre les deux programmes
+NAMES = {
+    'sys_csrss': I('CSRSS priority (high)', 'Priorité CSRSS (haute)'),
+    'pri_csrss': I('CSRSS priority (registry)', 'Priorité CSRSS (registre)'),
+    'kbm_csrss': I('CSRSS realtime', 'CSRSS en temps réel'),
+    'pow_saving': I('Drive idle power', 'Veille des disques'),
+    'pow_storage': I('NVMe idle states', 'États de veille NVMe'),
+    'sys_bcdedit': I('Boot timers (BCD)', 'Minuteurs de démarrage (BCD)'),
+    'exp_bios': I('Boot security (BCD)', 'Sécurité du démarrage (BCD)'),
+    'exp_autologgers': I('Disable autologgers (extended)', 'Couper les autologgers (étendu)'),
+}
+UK_US = [('Optimise', 'Optimize'), ('optimise', 'optimize'), ('Optimisation', 'Optimization'), ('optimisation', 'optimization'),
+         ('behaviour', 'behavior'), ('prioritise', 'prioritize'), ('Prioritise', 'Prioritize')]
+
+
+def postprocess(modules, scripts):
+    for key, fixes in SCRIPT_FIXES.items():
+        tid, _, vid = key.partition(':')
+        for v in ([vid] if vid else list(scripts[tid])):
+            for before, after in fixes:
+                if after is None:
+                    before += '\r\n' if '\r\n' in scripts[tid][v] else '\n'
+                elif '\r\n' not in scripts[tid][v]:
+                    before, after = before.replace('\r\n', '\n'), after.replace('\r\n', '\n')
+                assert before in scripts[tid][v], (key, before)
+                scripts[tid][v] = scripts[tid][v].replace(before, after or '')
+    for ids, pat in DROP_LINES:
+        for tid in ids:
+            for v, body in scripts[tid].items():
+                sep = '\r\n' if '\r\n' in body else '\n'
+                kept = [l for l in body.split(sep) if not re.search(pat, l, re.I)]
+                assert len(kept) < len(body.split(sep)), (tid, pat)
+                scripts[tid][v] = sep.join(kept)
+    sep = '\r\n' if '\r\n' in scripts['rbw_mode']['on'] else '\n'
+    scripts['rbw_mode']['on'] += sep + RBW_ON_EXTRA.replace('\n', sep)
+
+    tweaks = {t['id']: t for m in modules for sec in m['sections'] for t in sec['tweaks'] if 'id' in t}
+    for tid, t in tweaks.items():
+        body = '\n'.join(scripts.get(tid, {}).values())
+        lines = [l for l in body.replace('\r\n', '\n').split('\n') if not re.match(r'\s*(rem |::)', l, re.I)]
+        if 'wmic' in body.lower() and 'wmic' not in t.get('requires', []):
+            t['requires'] = t.get('requires', []) + ['wmic']
+        hits = [(en, fr) for pat, en, fr in WARNINGS if any(re.search(pat, l, re.I) for l in lines)]
+        if hits:
+            if not tid.startswith('rst_'):
+                t['risk'] = 'advanced'
+            own = [(t['confirm']['en'], t['confirm']['fr'])] if tid in KEEP_CONFIRM and t.get('confirm') else []
+            t['confirm'] = I(' '.join(e for e, _ in own + hits), ' '.join(f for _, f in own + hits))
+        elif tid not in KEEP_CONFIRM:
+            t.pop('confirm', None)
+        if tid in REVERT:
+            for v in t['variants']:
+                if v['id'] == REVERT[tid]:
+                    v['revert'] = True
+        if tid in NAMES:
+            t['name'] = NAMES[tid]
+        for a, b in UK_US:
+            t['name']['en'] = t['name']['en'].replace(a, b)
+            t['desc']['en'] = t['desc']['en'].replace(a, b)
+    tweaks['rbw_mode']['desc'] = I(
+        'On restarts the services screenshare tools check (Event Log, SysMain, PCA, Scheduler) and turns BAM and Prefetch back on '
+        'after a restart. Off sets the services back to manual after your session.',
+        'Activé relance les services que vérifient les outils de screenshare (journal d\'événements, SysMain, PCA, Planificateur) '
+        'et remet BAM et le Prefetch après un redémarrage. Désactivé repasse les services en manuel après ta session.')
+    tweaks['rst_queue']['desc'] = I('Puts the mouse and keyboard queues back to 100, the Windows default.',
+                                    'Remet les files souris et clavier à 100, la valeur de Windows.')
+
+    for m in modules:
+        if m['id'] == 'expert':
+            m['tagline'] = I('Kernel, boot and security settings. Powerful, use knowingly.',
+                             'Noyau, démarrage et sécurité. Puissant, à utiliser en connaissance de cause.')
+        if m['id'] not in ('latency', 'windows'):
+            continue
+        secs = {sec['id']: sec for sec in m['sections']}
+        moved = []
+        for sec in m['sections']:
+            if sec['id'].startswith('v6_'):
+                moved += [(MOVE[t['id']], t) for t in sec['tweaks'] if t.get('id') in MOVE]
+                sec['tweaks'] = [t for t in sec['tweaks'] if t.get('id') not in MOVE]
+        for target, t in reversed(moved):
+            secs[target]['tweaks'].insert(0, t)
+        m['sections'] = [sec for sec in m['sections'] if sec['tweaks']]
+        for sec in m['sections']:
+            if (m['id'], sec['id']) in SECTION_NAMES:
+                sec['name'] = SECTION_NAMES[(m['id'], sec['id'])]
+
+
 def sections_of(name):
     lines = open(os.path.join(V6, FILES[name]), encoding='utf-8', errors='replace').read().replace('\r', '').split('\n')
     out = []
@@ -262,11 +442,31 @@ def sections_of(name):
     return out
 
 
+DEVPRIO = re.compile(r'^(\s*)reg(?:\.exe)?\s+add\s+("[^"]+")\s+/v\s+"?(DevicePriority|MessageNumberLimit)"?\s+/f\s*$', re.I)
+IFACE_GUID = re.compile(r'^\s*reg(?:\.exe)?\s+add\s+"HKEY_LOCAL_MACHINE\\SYSTEM\\CurrentControlSet\\Services\\Tcpip\\Parameters'
+                        r'\\Interfaces\\\{?[0-9A-F]{8}-[0-9A-F-]{27}\}?"(.*)$', re.I)
+
+
+def repair(l):
+    """Défauts déjà corrigés dans l'ancien .bat (docs/CORRECTIONS.md), revenus dans les .bat v6."""
+    # reg add sans /t ni /d : écrit une chaîne vide ; les messages du .bat disent de supprimer ces valeurs
+    m = DEVPRIO.match(l)
+    if m:
+        return f'{m.group(1)}reg delete {m.group(2)} /v "{m.group(3)}" /f >nul 2>&1'
+    # GUID de carte réseau du PC de l'auteur : appliqué à toutes les cartes du joueur
+    m = IFACE_GUID.match(l)
+    if m:
+        return ('for /f "delims=" %%g in (\'reg query "HKLM\\SYSTEM\\CurrentControlSet\\Services\\Tcpip\\Parameters\\Interfaces"\') '
+                f'do reg add "%%g"{m.group(1).rstrip()} >nul 2>&1')
+    # boucle for dont le bloc n'était pas rattaché (cf. extract_bat.fix_line, point 6)
+    return re.sub(r'(do set "str=%%i")\s*\($', r'\1 & (', l)
+
+
 def clean(body):
     keep = []
     for l in body:
         s = l.strip()
-        if not s or s.startswith('---') or re.match(r'^(cls|pause)\b', s, re.I) or re.match(r'^:(?!:)\s*[A-Za-z]', s):
+        if not s or s.startswith('---') or re.match(r'^(cls|pause|timeout|color)\b', s, re.I) or re.match(r'^:(?!:)\s*[A-Za-z]', s):
             continue
         if 'extremelatencylow.nip' in s and s.lower().startswith('start'):
             l = NIP
@@ -275,21 +475,25 @@ def clean(body):
             l = l.replace('Disabling', 'Disable').replace('Enabling', 'Enable')
             # USER_SID n'est défini nulle part : le moteur tourne sous le compte du joueur
             l = l.replace('HKU\\!USER_SID!\\', 'HKCU\\')
+            l = repair(l)
+        if keep and l.rstrip() == keep[-1] and l.lstrip().lower().startswith('for '):
+            continue  # deux GUID de l'auteur deviennent la même boucle
         keep.append(l.rstrip())
-    return '\r\n'.join(keep)
+    return LegacyBat._fix_blocks('\n'.join(keep)).replace('\n', '\r\n')
 
 
-def split_variants(body, spec):
+def split_variants(body, spec, prefix=False):
     cut = {}
-    for vid, _, _, pat in spec:
+    for vid, _, _, pat, *_ in spec:
         idx = next((i for i, l in enumerate(body) if re.search(pat, l)), None)
         assert idx is not None, pat
         cut[vid] = idx
     order = sorted(cut.items(), key=lambda kv: kv[1])
     res = {}
+    head = body[:order[0][1]] if prefix else []
     for n, (vid, start) in enumerate(order):
         end = order[n + 1][1] if n + 1 < len(order) else len(body)
-        res[vid] = clean(body[start + 1:end])
+        res[vid] = clean(head + body[start + 1:end])
     return res
 
 
@@ -312,8 +516,9 @@ def main():
                     entry['confirm'] = t['confirm']
                 entry['legacy'] = [f"{FILES[t['file']]}@{t['line']}"]
                 if t['variants']:
-                    scripts[t['id']] = split_variants(sec['body'], t['variants'])
-                    entry['variants'] = [{'id': v, 'label': I(en, fr)} for v, en, fr, _ in t['variants']]
+                    scripts[t['id']] = split_variants(sec['body'], t['variants'], t['prefix'])
+                    entry['variants'] = [{'id': v[0], 'label': I(v[1], v[2]), **({'auto': v[4]} if len(v) > 4 else {})}
+                                         for v in t['variants']]
                 elif t['absorb']:
                     sub = secs[t['file']][n + 1:n + 1 + t['absorb']]
                     scripts[t['id']] = {}
@@ -325,6 +530,10 @@ def main():
                         entry['variants'].append({'id': vid, 'label': I(en, fr)})
                 else:
                     scripts[t['id']] = {'_': clean(sec['body'])}
+                if t['default']:
+                    entry['defaultVariant'] = t['default']
+                if t['revert']:
+                    REVERT[t['id']] = t['revert']
                 entry['lines'] = sum(len(s.split('\r\n')) for s in scripts[t['id']].values())
                 for v in scripts[t['id']].values():
                     assert v.strip(), t['id']
@@ -357,6 +566,7 @@ def main():
                 m['sections'] = [{**sec, 'id': 'v6_' + sec['id']} for sec in nm['sections']] + m['sections']
         merged.append(m)
     modules = merged
+    postprocess(modules, scripts)
 
     presets = [{'id': p, 'name': n, 'desc': d, 'tweaks': ts} for p, n, d, ts in PRESETS]
     for p in old['presets']:

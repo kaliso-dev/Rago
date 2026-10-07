@@ -1,5 +1,5 @@
-# Construit l'installateur Windows (NSIS) de Rago Optimizer Premium, qui vit dans app/.
-# Secrets : RAGO_API_BASE, RAGO_LICENSE_PUBKEY. Variable : SITE_URL.
+# Construit l'installateur Windows (NSIS) de Rago Optimizer, qui vit dans app/.
+# Secrets : RAGO_API_BASE, RAGO_LICENSE_PUBKEY. Variables : SITE_URL, SUPPORT_URL (facultative).
 name: app-windows
 
 on:
@@ -62,6 +62,8 @@ jobs:
           RAGO_LICENSE_PUBKEY: ${{ secrets.RAGO_LICENSE_PUBKEY }}
           VITE_SITE_URL: ${{ vars.SITE_URL }}
           VITE_ACCOUNT_URL: ${{ secrets.RAGO_API_BASE }}
+          # invitation Discord du support (facultatif : sans elle, aucun bouton d'aide)
+          VITE_SUPPORT_URL: ${{ vars.SUPPORT_URL }}
         with:
           projectPath: app
           tagName: ${{ startsWith(github.ref, 'refs/tags/') && github.ref_name || '' }}

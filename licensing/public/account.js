@@ -1,5 +1,10 @@
 // Small progressive enhancements. Every page works without this file.
 
+function isWindows() {
+  const p = navigator.userAgentData?.platform || navigator.platform || '';
+  return /win/i.test(p) || /Windows NT/.test(navigator.userAgent);
+}
+
 // Clipboard, with a fallback for browsers that block the async API.
 function copyText(text) {
   if (navigator.clipboard && window.isSecureContext) return navigator.clipboard.writeText(text);
@@ -51,6 +56,19 @@ document.addEventListener('click', (e) => {
   }
 
   const dl = e.target.closest('[data-download]');
+  // On a phone or a Mac, explain first: the installer only runs on Windows. A second click downloads anyway.
+  if (dl && !isWindows() && !dl.dataset.confirmed) {
+    e.preventDefault();
+    dl.dataset.confirmed = '1';
+    if (!dl.parentElement.querySelector('.notwin')) {
+      const note = document.createElement('p');
+      note.className = 'notwin';
+      note.setAttribute('role', 'status');
+      note.textContent = 'Rago Optimizer runs on Windows 10 and 11. Open this page on your Windows PC to download it, or tap the button again to download it here anyway.';
+      dl.insertAdjacentElement('afterend', note);
+    }
+    return;
+  }
   if (dl) {
     const ripple = document.createElement('span');
     ripple.className = 'ripple';
@@ -74,8 +92,8 @@ document.addEventListener('submit', (e) => {
   }
 });
 
-// Numbers count up when the page opens (affiliate progress)
-if (!matchMedia('(prefers-reduced-motion: reduce)').matches) {
+// Numbers count up when the page opens (affiliate progress). Kept with reduced motion: nothing moves.
+{
   for (const el of document.querySelectorAll('[data-count]')) {
     const to = Number(el.dataset.count);
     if (!to) continue;

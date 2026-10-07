@@ -1,7 +1,8 @@
 {
   "$schema": "https://schema.tauri.app/config/2",
   "productName": "Rago Optimizer",
-  "version": "1.0.0",
+  "version": "../package.json",
+  "mainBinaryName": "Rago Optimizer",
   "identifier": "gg.rago.optimizer",
   "build": {
     "beforeDevCommand": "npm run dev",
@@ -37,8 +38,9 @@
     "publisher": "Rago",
     "copyright": "© Rago",
     "category": "Utility",
-    "shortDescription": "Optimiseur Windows pour Minecraft PvP et les jeux compétitifs",
-    "longDescription": "Rago Optimizer règle le réseau, la latence, le hitreg et Windows pour les joueurs Minecraft PvP et les jeux compétitifs, avec un retour arrière toujours possible.",
+    "shortDescription": "Windows optimizer for Minecraft PvP and competitive games",
+    "longDescription": "Rago Optimizer tunes your network, latency, hitreg and Windows for Minecraft PvP and competitive games, with a restore point before every change.",
+    "licenseFile": "installer/eula.txt",
     "icon": [
       "icons/32x32.png",
       "icons/128x128.png",
@@ -50,7 +52,7 @@
       "webviewInstallMode": { "type": "embedBootstrapper" },
       "nsis": {
         "installMode": "perMachine",
-        "languages": ["French", "English"],
+        "languages": ["English", "French"],
         "displayLanguageSelector": false,
         "installerIcon": "icons/icon.ico",
         "headerImage": "installer/header.bmp",

@@ -118,7 +118,7 @@ export function PingCard() {
           </dl>
         </>
       ) : r?.error ? (
-        <p className="error-text small">{t("ping.error")} : {r.error}</p>
+        <p className="error-text small">{t("ping.error")}{lang === "fr" ? " : " : ": "}{r.error}</p>
       ) : (
         <p className="muted small">{t("ping.hint")}</p>
       )}
