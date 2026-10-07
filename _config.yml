@@ -1,0 +1,16 @@
+# GitHub Pages ne doit rien publier de ce dépôt privé : le site est servi par Netlify (dossier site/)
+# et le serveur de licences par Railway (dossier licensing/). Ce fichier n'affecte ni l'un ni l'autre.
+# Tant que Pages reste activé sur le dépôt, il publie ainsi un site vide.
+exclude:
+  - app
+  - brand
+  - guide
+  - licensing
+  - site
+  - README.md
+  - Dockerfile
+  - netlify.toml
+  - _config.yml
+  - .github
+  - .gitignore
+  - .dockerignore
