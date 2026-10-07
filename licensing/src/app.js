@@ -11,7 +11,7 @@ import { relative } from 'node:path';
 import { DUMMY_HASH, maskLicenseKey, signValue, unsignValue, verifyPassword } from './crypto.js';
 import { DeviceError, parseDevice, sameDevice } from './fingerprint.js';
 import { signToken, verifyToken } from './tokens.js';
-import { billingPortal, createCheckout, ensureAffiliatePromo, findPromotionCode, handleStripeEvent, isRagoCheckout } from './billing.js';
+import { billingPortal, createCheckout, ensureAffiliatePromo, findPromotionCode, handleStripeEvent, isRagoCheckout, syncPromoActive } from './billing.js';
 import * as A from './affiliates.js';
 import { createInstaller } from './installer.js';
 import * as L from './licensing.js';
@@ -168,11 +168,11 @@ export function createApp({ cfg, db, keys, stripe, mailer, log = console, fetchI
     if (!affiliate) return null;
     const license = await L.licenseForUser(db, user.id);
     if (!license || license.user_id !== user.id || Date.now() - (license.claimed_at || 0) > 60 * 60 * 1000) return null;
-    const row = await A.recordReferral(db, affiliate, user.id, license).catch((err) => {
+    const row = await A.recordReferral(db, affiliate, user.id, license, cfg).catch((err) => {
       if (!(err instanceof L.LicenseError)) throw err; // self-referral caught late: the account works, the code doesn't count
       return null;
     });
-    // Already activated on a PC: it can count right away.
+    // Already activated on a PC: it can count right away. A full code loses its Stripe discount.
     if (row) await settleAffiliate(affiliate.user_id);
     return row;
   }
@@ -191,11 +191,12 @@ export function createApp({ cfg, db, keys, stripe, mailer, log = console, fetchI
   async function checkReferral(code, email, pending) {
     if (!code) return {};
     try {
-      const affiliate = await A.checkCode(db, code, email);
-      if (pending.email !== email) await A.checkCode(db, code, pending.email);
+      const affiliate = await A.checkCode(db, code, email, cfg);
+      if (pending.email !== email) await A.checkCode(db, code, pending.email, cfg);
       return { affiliate };
     } catch (err) {
       if (err.code === 'self_referral') return { error: "You can't use your own referral code." };
+      if (err.code === 'code_full') return { error: `This referral code was already used by ${cfg.affiliateMaxReferrals} players. Leave the field empty.` };
       return { error: "That referral code doesn't exist. Check it, or leave the field empty." };
     }
   }
@@ -228,7 +229,11 @@ export function createApp({ cfg, db, keys, stripe, mailer, log = console, fetchI
   const NEXT = new Set(['/affiliate']);
   const nextPath = (v) => (NEXT.has(String(v || '')) ? String(v) : null);
 
-  const settleAffiliate = (userId) => A.settleAffiliate(db, cfg, stripe, log, userId);
+  const settleAffiliate = async (userId) => {
+    const out = await A.settleAffiliate(db, cfg, stripe, log, userId);
+    await syncPromoActive(db, stripe, cfg, userId, log);
+    return out;
+  };
   /** A referred player just activated their PC: their referral counts now, not at the affiliate's next visit. */
   async function settleReferrer(licenseId) {
     const r = await db.get("SELECT affiliate_user_id FROM referrals WHERE license_id = ? AND status = 'pending' AND machine_guid IS NOT NULL", [licenseId]);
@@ -279,7 +284,7 @@ export function createApp({ cfg, db, keys, stripe, mailer, log = console, fetchI
     // Discount already applied at checkout: a site code (?promo=RAGO15), else the affiliate's code (5 %).
     let promotionCode = (await findPromotionCode(stripe, c.req.query('promo')))?.id || null;
     const affiliate = !promotionCode && ref && await A.affiliateByCode(db, ref);
-    if (affiliate && affiliate.user_id !== user?.id) promotionCode = await ensureAffiliatePromo(db, stripe, cfg, affiliate, log);
+    if (affiliate && affiliate.user_id !== user?.id && !(await A.codeFull(db, cfg, affiliate))) promotionCode = await ensureAffiliatePromo(db, stripe, cfg, affiliate, log);
     // A returning subscriber pays with their existing Stripe customer, so invoices stay together.
     const previous = user && await db.get('SELECT stripe_customer_id FROM licenses WHERE user_id = ? AND stripe_customer_id IS NOT NULL ORDER BY created_at DESC LIMIT 1', [user.id]);
     const interval = c.req.query('interval') === 'year' ? 'year' : c.req.query('interval') === 'month' ? 'month' : undefined;
@@ -504,9 +509,9 @@ export function createApp({ cfg, db, keys, stripe, mailer, log = console, fetchI
   // ---------- affiliate program ----------
   app.get('/affiliate', async (c) => {
     const user = await currentUser(c);
-    if (user) await settleAffiliate(user.id);
     // Codes from before the Stripe discount existed (or made in the other Stripe mode) get it here.
     if (user) await ensureAffiliatePromo(db, stripe, cfg, await A.getAffiliate(db, user.id), log);
+    if (user) await settleAffiliate(user.id);
     const summary = user && await A.affiliateSummary(db, cfg, user.id);
     return c.html(V.affiliatePage(cfg, { user, summary, joined: c.req.query('n') === 'joined' }));
   });

@@ -74,6 +74,7 @@ async function setup(env = {}, extra = {}) {
     promos.push(promo);
     return promo;
   };
+  stripe.promotionCodes.update = async (id, p) => { stripeCalls.push(['promo', id, p]); const x = promos.find((q) => q.id === id); Object.assign(x, p); return x; };
   stripe.promotionCodes.list = async ({ code }) => ({ data: promos.filter((x) => x.active && x.code.toUpperCase() === String(code).toUpperCase()) });
   stripe.billingPortal.sessions.create = async (p) => { stripeCalls.push(['portal', p.customer]); return { url: 'https://billing.stripe.com/p/session/x' }; };
   const mails = [];
@@ -551,7 +552,7 @@ async function appActivate(t, email, dev) {
   return (await t.api('/licenses/activate', { device: dev }, { authorization: `Bearer ${j.access_token}` })).json();
 }
 
-test('affiliate: 5 % code in Stripe, a player counts when they activate, every 3 players = 6 months', async () => {
+test('affiliate: 5 % code in Stripe, 3 players per code, a player counts when they activate, 6 months once', async () => {
   const t = await setup(SUBS);
   // The affiliate subscribes first, activates their PC, then joins the program.
   t.paidSubscription('cs_aff', 'aff@rago.gg');
@@ -647,24 +648,43 @@ test('affiliate: 5 % code in Stripe, a player counts when they activate, every 3
   assert.equal((page.match(/<li class="on">/g) || []).length, 2);
   assert.match(page, /1 more to go/);
 
-  // Don't count: activated on the affiliate's own PC, refunded before activating, never activated.
+  // Don't count and free their spot: activated on the affiliate's own PC, refunded before activating.
   await buyer(3, { dev: pc('AFF') });
   assert.deepEqual(await referral('p3@x.io'), { status: 'void', void_reason: 'same_device' });
   const refunded = await buyer(4);
   await t.webhook('charge.refunded', { id: 'ch_4', object: 'charge', refunded: true, customer: refunded.lic.stripe_customer_id });
-  await buyer(5);
   page = await asAffiliate();
   assert.match(page, /Same PC as yours/);
   assert.match(page, /Refunded/);
+  assert.equal(t.promos[0].active, true);
+
+  // Third spot taken by a player who hasn't activated yet: the code is full (3 players at most).
+  const p5 = await buyer(5);
+  page = await asAffiliate();
+  assert.match(page, /Your code is full/);
   assert.match(page, /Not activated yet/);
   assert.match(page, /1 more to go/);
+  // (it was off for a moment each time a player signed up before activating on the same PC or being refunded)
+  assert.deepEqual(t.stripeCalls.filter((c) => c[0] === 'promo').at(-1), ['promo', 'promo_1', { active: false }]);
+  assert.equal(t.promos[0].active, false); // typed at checkout, Stripe now refuses it
+  t.jar.clear();
+  await t.browse(`/buy?interval=month&ref=${code}`);
+  assert.equal(t.created.at(-1).discounts, undefined); // no 5 % from the link either
+  assert.match((await buyer(6)).error, /already used by 3 players/);
+  assert.equal(await L.findUserByEmail(t.db, 'p6@x.io'), null);
+
+  // That player is refunded: the spot frees up and the Stripe code works again.
+  await t.webhook('charge.refunded', { id: 'ch_5', object: 'charge', refunded: true, customer: p5.lic.stripe_customer_id });
+  page = await asAffiliate();
+  assert.doesNotMatch(page, /Your code is full/);
+  assert.equal(t.promos[0].active, true);
 
   // Third real player: 3/3, the affiliate's next 6 months are free (Stripe trial), same license and PC.
   const before = (await L.licenseForUser(t.db, aff.id)).current_period_end;
-  await buyer(6, { dev: pc('P6') });
+  await buyer(7, { dev: pc('P7') });
   const update = t.stripeCalls.find((c) => c[0] === 'update' && c[1] === 'sub_cs_aff');
   assert.equal(update[2].proration_behavior, 'none');
-  assert.equal(update[2].trial_end * 1000, L.addMonths(Number(before), 6) - (L.addMonths(Number(before), 6) % 1000));
+  assert.equal(update[2].trial_end, Math.floor(L.addMonths(Number(before), 6) / 1000));
   let lic = await L.licenseForUser(t.db, aff.id);
   assert.equal(lic.id, affLic.id);
   assert.equal(lic.plan, 'month');
@@ -672,11 +692,12 @@ test('affiliate: 5 % code in Stripe, a player counts when they activate, every 3
   assert.equal(Number(lic.current_period_end), L.addMonths(Number(before), 6));
   assert.equal((await t.db.get('SELECT rewards FROM affiliates')).rewards, 1);
   page = await asAffiliate();
-  assert.match(page, /6 months of Premium added/);
+  assert.match(page, /Goal reached/);
+  assert.match(page, /6 months of Premium added to your license/);
   assert.match(page, /ring-full/);
   assert.match(page, /<b data-count="3">3<\/b><small>\/3<\/small>/);
   assert.equal((page.match(/<li class="on">/g) || []).length, 3);
-  assert.match(page, /1 reward/);
+  assert.equal(t.promos[0].active, false); // reward given: the code is closed
   // Stripe confirms with the subscription in trial: still active, renews after the free months.
   await t.webhook('customer.subscription.updated', { id: 'sub_cs_aff', object: 'subscription' });
   lic = await L.licenseForUser(t.db, aff.id);
@@ -684,32 +705,51 @@ test('affiliate: 5 % code in Stripe, a player counts when they activate, every 3
   assert.equal(Number(lic.current_period_end), update[2].trial_end * 1000);
   assert.match(await (await t.browse('/account')).text(), /Renews on/);
 
-  // A counted player refunded after the reward: the reward stays, support gets a trace.
+  // A counted player refunded after the reward: the reward stays, support gets a trace, the code stays closed.
   const p1 = await L.findUserByEmail(t.db, 'p1@x.io');
   await t.webhook('charge.refunded', { id: 'ch_after', object: 'charge', refunded: true, customer: (await L.licenseForUser(t.db, p1.id)).stripe_customer_id });
   assert.equal((await t.db.get("SELECT COUNT(*)::int AS n FROM audit WHERE type = 'affiliate.reward_at_risk'")).n, 1);
   assert.equal((await L.licenseForUser(t.db, aff.id)).status, 'active');
-
-  // Evaluated again: no second reward for the same players.
-  await asAffiliate();
-  assert.equal((await t.db.get("SELECT COUNT(*)::int AS n FROM audit WHERE type = 'affiliate.rewarded'")).n, 1);
-
-  // Next round: the refunded player is replaced, 3 more counted players add 6 more months.
-  // (made directly: the sign-up form allows 10 accounts per IP per hour)
+  page = await asAffiliate();
+  assert.equal(t.promos[0].active, false);
   const A = await import('../src/affiliates.js');
-  for (const n of [7, 8, 9, 10]) {
+  // (checked directly: the sign-up form allows 10 accounts per IP per hour)
+  await assert.rejects(A.checkCode(t.db, code, 'p8@x.io', t.cfg), /code_full/);
+
+  // One reward only, even with more counted players (code added by support, for instance).
+  for (const n of [9, 10, 11]) {
     const user = await L.createUser(t.db, `p${n}@x.io`, 'password123');
     const { license } = await L.grantLicense(t.db, `p${n}@x.io`);
     await A.recordReferral(t.db, await A.affiliateByCode(t.db, code), user.id, license);
     assert.equal((await appActivate(t, `p${n}@x.io`, pc(`P${n}`))).status, 'active');
   }
-  page = await asAffiliate();
+  await asAffiliate();
+  assert.equal((await t.db.get('SELECT rewards FROM affiliates')).rewards, 1);
+  assert.equal(t.stripeCalls.filter((c) => c[0] === 'update' && c[1] === 'sub_cs_aff').length, 1);
+});
+
+test('AFFILIATE_REWARD_MAX=0 and more spots: a reward every 3 players', async () => {
+  const t = await setup({ ...SUBS, AFFILIATE_REWARD_MAX: '0', AFFILIATE_MAX_REFERRALS: '6' });
+  await t.browse('/signup', { form: { email: 'many@aff.io', password: 'password123' } });
+  await t.browse('/affiliate/join', { form: {} });
+  const aff = await L.findUserByEmail(t.db, 'many@aff.io');
+  const { code } = await t.db.get('SELECT code FROM affiliates');
+  const A = await import('../src/affiliates.js');
+  for (const n of [1, 2, 3, 4, 5, 6]) {
+    const user = await L.createUser(t.db, `m${n}@x.io`, 'password123');
+    const { license } = await L.grantLicense(t.db, `m${n}@x.io`);
+    await A.recordReferral(t.db, await A.affiliateByCode(t.db, code), user.id, license, t.cfg);
+    assert.equal((await appActivate(t, `m${n}@x.io`, pc(`M${n}`))).status, 'active');
+  }
   assert.equal((await t.db.get('SELECT rewards FROM affiliates')).rewards, 2);
-  const updates = t.stripeCalls.filter((c) => c[0] === 'update' && c[1] === 'sub_cs_aff');
-  assert.equal(updates.length, 2);
-  assert.equal(updates[1][2].trial_end, Math.floor(L.addMonths(update[2].trial_end * 1000, 6) / 1000));
-  assert.match(page, /2 rewards/);
-  assert.match(page, /<b data-count="3">3<\/b>/);
+  const lic = await L.licenseForUser(t.db, aff.id);
+  const months = (Number(lic.current_period_end) - Date.now()) / DAY_MS;
+  assert.ok(months > 360 && months < 370, `${months} days`);
+  await assert.rejects(async () => {
+    const user = await L.createUser(t.db, 'm7@x.io', 'password123');
+    const { license } = await L.grantLicense(t.db, 'm7@x.io');
+    await A.recordReferral(t.db, await A.affiliateByCode(t.db, code), user.id, license, t.cfg);
+  }, /code_full/);
 });
 
 test('affiliate without a license gets 6 months of Premium, which end on their date', async () => {

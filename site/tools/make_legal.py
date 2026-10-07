@@ -92,7 +92,7 @@ page('terms.html','Terms of Sale',f'''
 <p>Rago doesn't modify Minecraft or inject anything into games. Server rules are set by each server: check them before you play. We aren't responsible for decisions a server's staff makes about your account.</p>
 
 <h2>7. Affiliate program</h2>
-<p>Affiliates get a personal code. New customers who use an affiliate code get 5% off their first Premium payment. A referral counts as soon as the buyer has activated the app on their PC, and stops counting if the purchase is refunded or disputed. Your own purchases and activations on your own PC don't count. Every 3 counted referrals give the affiliate 6 months of Premium for one PC. We can cancel a reward obtained by fraud.</p>
+<p>Affiliates get a personal code. New customers who use an affiliate code get 5% off their first Premium payment. A referral counts as soon as the buyer has activated the app on their PC, and stops counting if the purchase is refunded or disputed. Your own purchases and activations on your own PC don't count. Each affiliate can refer up to 3 buyers. Once those 3 referrals count, the affiliate gets 6 months of Premium for one PC. We can cancel a reward obtained by fraud.</p>
 
 <h2>8. Liability</h2>
 <p>The app is provided as is. To the extent the law allows, we aren't liable for indirect damage such as lost data, lost games or lost time, and our total liability is limited to the amount you paid us in the last 12 months. Nothing in these terms limits your statutory rights as a consumer.</p>

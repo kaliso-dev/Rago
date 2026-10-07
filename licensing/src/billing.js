@@ -1,7 +1,7 @@
 // Stripe Checkout (subscription, or the old one-time price), billing portal and webhooks.
 import Stripe from 'stripe';
 import { fulfillCheckoutSession, revokeForCharge, syncSubscription } from './licensing.js';
-import { voidReferrals } from './affiliates.js';
+import { codeFull, getAffiliate, voidReferrals } from './affiliates.js';
 
 export function createStripe(cfg) {
   return cfg.stripeSecretKey ? new Stripe(cfg.stripeSecretKey) : null;
@@ -133,7 +133,7 @@ export async function ensureAffiliatePromo(db, stripe, cfg, aff, log = console) 
       if (found?.metadata?.rago_affiliate !== aff.user_id) throw err;
       promo = found;
     }
-    await db.run('UPDATE affiliates SET stripe_promo_id = ?, stripe_promo_live = ? WHERE user_id = ?', [promo.id, live, aff.user_id]);
+    await db.run('UPDATE affiliates SET stripe_promo_id = ?, stripe_promo_live = ?, stripe_promo_active = ? WHERE user_id = ?', [promo.id, live, promo.active !== false, aff.user_id]);
     return promo.id;
   } catch (err) {
     log.error?.(`[stripe] promotion code for affiliate ${aff.code} not created:`, err.message);
@@ -147,7 +147,26 @@ export async function syncAffiliatePromos(db, stripe, cfg, log = console, limit 
   const rows = await db.all('SELECT * FROM affiliates WHERE stripe_promo_id IS NULL OR stripe_promo_live IS DISTINCT FROM ? ORDER BY created_at LIMIT ?', [isLive(cfg), limit]);
   let n = 0;
   for (const aff of rows) if (await ensureAffiliatePromo(db, stripe, cfg, aff, log)) n++;
+  // Codes that filled up or freed a spot (refund) since: their Stripe discount follows.
+  for (const { user_id: id } of await db.all('SELECT user_id FROM affiliates WHERE stripe_promo_id IS NOT NULL')) await syncPromoActive(db, stripe, cfg, id, log);
   return n;
+}
+
+/**
+ * Turns the affiliate's Stripe promotion code off once their code is full (3 players, or reward given),
+ * and back on if a spot frees up. Calls Stripe only when that changes. Never throws.
+ */
+export async function syncPromoActive(db, stripe, cfg, userId, log = console) {
+  try {
+    const aff = await getAffiliate(db, userId);
+    if (!stripe || !aff?.stripe_promo_id) return;
+    const active = !(await codeFull(db, cfg, aff));
+    if (aff.stripe_promo_active === active) return;
+    await stripe.promotionCodes.update(aff.stripe_promo_id, { active });
+    await db.run('UPDATE affiliates SET stripe_promo_active = ? WHERE user_id = ?', [active, userId]);
+  } catch (err) {
+    log.error?.(`[stripe] promotion code of affiliate ${userId} not updated:`, err.message);
+  }
 }
 
 /** Stripe-hosted page to change plan, update the card, see invoices or cancel. */

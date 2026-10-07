@@ -150,7 +150,7 @@ Premium est désormais un abonnement mensuel ou annuel ; les licences offertes e
 
 ## Récompense d'affiliation (2026-10-07, rien d'obligatoire côté app)
 
-L'affiliation donne 6 mois de Premium au lieu d'une licence à vie. Un seul ajout :
+L'affiliation donne 6 mois de Premium (une fois, un code sert à 3 joueurs) au lieu d'une licence à vie. Un seul ajout :
 
 - `license.billing.interval` peut valoir `"reward"` : licence gagnée par l'affiliation, `renews_at` à `null`, `ends_at` = sa date de fin. Le token ne dépasse pas cette date. Après, `refresh` répond `revoked` avec `reason: "subscription_ended"` et `buy_url`, comme un abonnement terminé. Un affilié abonné garde `"month"` ou `"year"` : ses 6 mois repoussent simplement `renews_at`.
 

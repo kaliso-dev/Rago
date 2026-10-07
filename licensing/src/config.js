@@ -65,7 +65,10 @@ export function loadConfig(env = process.env) {
     // A refund or chargeback later voids it; a reward already given stays.
     affiliateHoldDays: Number(env.AFFILIATE_HOLD_DAYS || 0),
     affiliateRewardMonths: Number(env.AFFILIATE_REWARD_MONTHS || 6), // Premium months given at each goal reached
-    affiliateRewardMax: Number(env.AFFILIATE_REWARD_MAX || 0), // rewards per affiliate, 0 = no limit (3, 6, 9… players)
+    // One reward per affiliate, and a code works for 3 players at most (Sofiene, Oct 7, 2026).
+    // AFFILIATE_REWARD_MAX=0 and a higher AFFILIATE_MAX_REFERRALS: a reward every 3 players.
+    affiliateRewardMax: Number(env.AFFILIATE_REWARD_MAX ?? 1),
+    affiliateMaxReferrals: Number(env.AFFILIATE_MAX_REFERRALS || env.AFFILIATE_GOAL || 3),
     // Each affiliate code is also a Stripe promotion code: this % off at checkout, on the first payment
     // (AFFILIATE_DISCOUNT_DURATION=forever: on every renewal).
     affiliateDiscountPercent: Number(env.AFFILIATE_DISCOUNT_PERCENT || 5),

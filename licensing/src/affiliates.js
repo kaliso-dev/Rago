@@ -35,18 +35,31 @@ export async function joinAffiliate(db, userId) {
   throw new Error('Could not allocate an affiliate code');
 }
 
+/**
+ * A code works for AFFILIATE_MAX_REFERRALS players (3), and not after the affiliate got their reward(s).
+ * Refunded players and players on the affiliate's own PC don't take a spot.
+ */
+export async function codeFull(db, cfg, aff) {
+  if (!cfg) return false;
+  if (cfg.affiliateRewardMax && aff.rewards >= cfg.affiliateRewardMax) return true;
+  const used = (await db.get("SELECT COUNT(*)::int AS n FROM referrals WHERE affiliate_user_id = ? AND status <> 'void'", [aff.user_id])).n;
+  return used >= cfg.affiliateMaxReferrals;
+}
+
 /** Checks a code typed at sign-up, before the account exists. */
-export async function checkCode(db, code, buyerEmail) {
+export async function checkCode(db, code, buyerEmail, cfg = null) {
   const aff = await affiliateByCode(db, code);
   if (!aff) throw new LicenseError('invalid_code');
+  if (await codeFull(db, cfg, aff)) throw new LicenseError('code_full');
   const owner = await getUser(db, aff.user_id);
   if (owner && buyerEmail && owner.email === String(buyerEmail).trim().toLowerCase()) throw new LicenseError('self_referral');
   return aff;
 }
 
 /** Links a new account and its just-claimed license to an affiliate. One code per buyer, ever. */
-export async function recordReferral(db, aff, referredUserId, license) {
+export async function recordReferral(db, aff, referredUserId, license, cfg = null) {
   if (aff.user_id === referredUserId || license.user_id !== referredUserId) throw new LicenseError('self_referral');
+  if (await codeFull(db, cfg, await getAffiliate(db, aff.user_id))) throw new LicenseError('code_full');
   const owner = await getUser(db, aff.user_id);
   if (owner?.email === license.email) throw new LicenseError('self_referral');
   if (license.stripe_customer_id) {
@@ -183,6 +196,8 @@ export async function affiliateSummary(db, cfg, userId) {
   const maxed = !!cfg.affiliateRewardMax && aff.rewards >= cfg.affiliateRewardMax;
   return {
     code: aff.code,
+    codeFull: await codeFull(db, cfg, aff),
+    maxReferrals: cfg.affiliateMaxReferrals,
     goal,
     counted,
     progress,

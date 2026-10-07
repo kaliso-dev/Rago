@@ -13,7 +13,7 @@ Serveur Node.js qui gère tout ce qui se passe après le clic sur « Get Premium
 
 Remboursement total ou litige Stripe : la licence est révoquée et l'abonnement annulé automatiquement. Abonnement terminé ou impayé : la licence s'arrête, et revient si le paiement repasse.
 
-Programme d'affiliation `/affiliate` : chaque compte peut avoir un code, qui est aussi un code promo Stripe à −5 % ; tous les 3 acheteurs comptés (à l'activation de leur PC) = 6 mois de Rago Optimizer Premium (règles anti-triche dans `docs/MISE-EN-LIGNE.md`, fin du document). `/buy?promo=CODE` applique un code promo Stripe (RAGO15 du pop-up du site).
+Programme d'affiliation `/affiliate` : chaque compte peut avoir un code, qui est aussi un code promo Stripe à −5 % ; un code sert à 3 joueurs ; 3 acheteurs comptés (à l'activation de leur PC) = 6 mois de Rago Optimizer Premium, une fois (règles anti-triche dans `docs/MISE-EN-LIGNE.md`, fin du document). `/buy?promo=CODE` applique un code promo Stripe (RAGO15 du pop-up du site).
 
 ## Choix faits
 
