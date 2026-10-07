@@ -1,13 +1,65 @@
 //! Scripts batch des réglages, générés par tools/build_catalog.py et embarqués dans le binaire.
+//!
+//! Les scripts du plan gratuit et les variantes de retour arrière sont en clair ; ceux des réglages Premium
+//! sont chiffrés (voir seal.rs) et ne s'ouvrent qu'avec la clé que le serveur donne à une licence active.
 
 use std::collections::HashMap;
-use std::sync::LazyLock;
+use std::sync::{Arc, LazyLock, Mutex};
 
 type Scripts = HashMap<String, HashMap<String, String>>;
 
+#[derive(serde::Deserialize, Default)]
+pub struct Bundle {
+    #[serde(default)]
+    scripts: Scripts,
+    #[serde(default)]
+    probes: Scripts,
+    /// annulation (scripts/undo.json) : chiffrée elle aussi pour les réglages Premium
+    #[serde(default)]
+    undo: HashMap<String, HashMap<String, Undo>>,
+}
+
+/// Scripts en clair, préparés par build.rs (embed_scripts.rs).
+static PLAIN: LazyLock<Bundle> = LazyLock::new(|| {
+    serde_json::from_str(include_str!(concat!(env!("OUT_DIR"), "/scripts.plain.json"))).expect("scripts.plain.json invalide")
+});
+static SEALED: &[u8] = include_bytes!(concat!(env!("OUT_DIR"), "/scripts.sealed"));
+/// Scripts Premium déchiffrés, gardés en mémoire avec la clé qui les a ouverts.
+static OPENED: Mutex<Option<([u8; 32], Arc<Bundle>)>> = Mutex::new(None);
+
+/// Ouvre les scripts Premium avec la clé reçue du serveur. None : clé absente ou fausse (version différente).
+pub fn premium(key: &[u8; 32]) -> Option<Arc<Bundle>> {
+    let mut opened = OPENED.lock().unwrap();
+    if let Some((k, b)) = opened.as_ref() {
+        if k == key {
+            return Some(Arc::clone(b));
+        }
+    }
+    let plain = crate::seal::open(key, SEALED)?;
+    let bundle: Arc<Bundle> = Arc::new(serde_json::from_slice(&plain).ok()?);
+    *opened = Some((*key, Arc::clone(&bundle)));
+    Some(bundle)
+}
+
+/// Tous les scripts, en clair, pour les tests seulement : l'exe n'embarque pas ce fichier.
+#[cfg(test)]
 static SCRIPTS: LazyLock<Scripts> = LazyLock::new(|| {
     serde_json::from_str(include_str!("../scripts/scripts.json")).expect("scripts.json invalide")
 });
+
+pub use crate::backup::Undo;
+
+/// Annulation du réglage (voir backup::Undo) : en clair pour le plan gratuit, dans les scripts Premium sinon.
+pub fn undo_of(id: &str, variant: Option<&str>, premium: Option<&Bundle>) -> Option<Undo> {
+    PLAIN.undo.get(id).or_else(|| premium?.undo.get(id)).and_then(|e| pick(e, variant)).cloned()
+}
+
+fn pick<'a, T>(entry: &'a HashMap<String, T>, variant: Option<&str>) -> Option<&'a T> {
+    match variant {
+        Some(v) => entry.get(v).or_else(|| entry.get("_")),
+        None => entry.get("_"),
+    }
+}
 
 #[derive(serde::Deserialize)]
 struct Free {
@@ -38,6 +90,47 @@ static REVERTS: LazyLock<Vec<String>> = LazyLock::new(|| {
     }
     out
 });
+
+/// Type de chaque réglage du catalogue : "tweak" (interrupteur, qu'on peut annuler) ou "action" (ponctuel).
+static KINDS: LazyLock<HashMap<String, String>> = LazyLock::new(|| {
+    let catalog: serde_json::Value =
+        serde_json::from_str(include_str!("../../src/data/catalog.json")).expect("catalog.json invalide");
+    let mut out = HashMap::new();
+    for m in catalog["modules"].as_array().into_iter().flatten() {
+        for s in m["sections"].as_array().into_iter().flatten() {
+            for t in s["tweaks"].as_array().into_iter().flatten() {
+                if let (Some(id), Some(kind)) = (t["id"].as_str(), t["kind"].as_str()) {
+                    out.insert(id.to_string(), kind.to_string());
+                }
+            }
+        }
+    }
+    out
+});
+
+/// Réglage qu'on allume et qu'on annule (pas une action ponctuelle ni un script interne).
+pub fn is_switch(id: &str) -> bool {
+    KINDS.get(id).is_some_and(|k| k == "tweak")
+}
+
+#[cfg(test)]
+pub fn is_free(id: &str) -> bool {
+    FREE.iter().any(|f| f == id)
+}
+
+/// Variante de retour arrière (« Default », RBW Mod « On »…) : l'appliquer revient à annuler le réglage.
+pub fn is_revert(id: &str, variant: Option<&str>) -> bool {
+    variant.is_some_and(|v| REVERTS.iter().any(|r| *r == format!("{id}:{v}")))
+}
+
+pub fn revert_variant(id: &str) -> Option<String> {
+    REVERTS.iter().find_map(|r| r.strip_prefix(&format!("{id}:")).map(str::to_string))
+}
+
+/// Script en clair (plan gratuit, retour arrière), sans licence.
+pub fn is_plain(id: &str, variant: Option<&str>) -> bool {
+    builtin(id).is_some() || PLAIN.scripts.get(id).and_then(|e| pick(e, variant)).is_some()
+}
 
 /// Réglages au script identique (champ `twin` du catalogue) : id → id du premier de leur groupe.
 static TWINS: LazyLock<HashMap<String, String>> = LazyLock::new(|| {
@@ -104,27 +197,96 @@ fn builtin(id: &str) -> Option<&'static str> {
     }
 }
 
-/// Script d'un réglage. `variant` vaut None pour un réglage sans variantes.
-pub fn script(id: &str, variant: Option<&str>) -> Option<String> {
+/// Script d'un réglage. `variant` vaut None pour un réglage sans variantes. Les scripts Premium demandent
+/// le paquet ouvert avec la clé de la licence.
+pub fn script(id: &str, variant: Option<&str>, premium: Option<&Bundle>) -> Option<String> {
     if let Some(s) = builtin(id) {
         return Some(s.to_string());
     }
-    let entry = SCRIPTS.get(id)?;
-    match variant {
-        Some(v) => entry.get(v).cloned(),
-        None => entry.get("_").cloned().or_else(|| {
-            if entry.len() == 1 {
-                entry.values().next().cloned()
-            } else {
-                None
-            }
-        }),
-    }
+    PLAIN
+        .scripts
+        .get(id)
+        .and_then(|e| pick(e, variant))
+        .or_else(|| premium.and_then(|b| b.scripts.get(id)).and_then(|e| pick(e, variant)))
+        .cloned()
+}
+
+/// Relevé du réglage (tools/probes.py) : ce que son script va modifier.
+pub fn probe(id: &str, variant: Option<&str>, premium: Option<&Bundle>) -> Option<String> {
+    PLAIN
+        .probes
+        .get(id)
+        .and_then(|e| pick(e, variant))
+        .or_else(|| premium.and_then(|b| b.probes.get(id)).and_then(|e| pick(e, variant)))
+        .cloned()
 }
 
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    fn test_key() -> [u8; 32] {
+        crate::seal::version_key(crate::seal::TEST_SECRET, option_env!("RAGO_APP_VERSION").unwrap_or(env!("CARGO_PKG_VERSION")))
+    }
+
+    /// Les scripts Premium ne sont pas en clair dans l'exe et ne s'ouvrent qu'avec la clé de la version.
+    #[test]
+    fn premium_scripts_are_sealed() {
+        let bundle = premium(&test_key()).expect("le paquet s'ouvre avec la clé de test");
+        assert!(premium(&crate::seal::version_key(crate::seal::TEST_SECRET, "0.0.0")).is_none());
+        let plain_text = include_str!(concat!(env!("OUT_DIR"), "/scripts.plain.json"));
+        let mut sealed_n = 0;
+        for (id, variants) in SCRIPTS.iter() {
+            for (v, body) in variants {
+                let open = is_free(id) || is_revert(id, Some(v));
+                let in_plain = PLAIN.scripts.get(id).and_then(|e| e.get(v));
+                let in_sealed = bundle.scripts.get(id).and_then(|e| e.get(v));
+                assert_eq!(in_plain.is_some(), open, "{id}:{v}");
+                assert_eq!(in_plain.or(in_sealed), Some(body), "{id}:{v} doit se retrouver à l'identique");
+                assert!(PLAIN.probes.get(id).and_then(|e| e.get(v)).or(bundle.probes.get(id).and_then(|e| e.get(v))).is_some(), "{id}:{v} sans relevé");
+                if !open {
+                    sealed_n += 1;
+                    assert!(!PLAIN.probes.contains_key(id), "relevé Premium en clair : {id}");
+                    // une ligne propre à ce script ne doit apparaître nulle part en clair
+                    if let Some(line) = body.lines().map(str::trim).filter(|l| l.len() > 60).find(|l| {
+                        !SCRIPTS.iter().any(|(i, vs)| (is_free(i) || REVERTS.iter().any(|r| r.starts_with(&format!("{i}:")))) && vs.values().any(|b| b.contains(*l)))
+                    }) {
+                        let json_line = serde_json::to_string(line).unwrap();
+                        assert!(!plain_text.contains(json_line.trim_matches('"')), "{id}:{v} en clair : {line}");
+                        assert!(!SEALED.windows(line.len()).any(|w| w == line.as_bytes()), "{id}:{v} lisible dans le paquet chiffré");
+                    }
+                }
+            }
+        }
+        assert!(sealed_n > 150, "{sealed_n} scripts chiffrés");
+        assert!(script("in_mouse", None, None).is_some(), "plan gratuit sans licence");
+        assert!(script("net_nagle", None, None).is_none(), "Premium sans licence");
+        assert!(script("net_nagle", None, Some(&bundle)).is_some());
+        // réglages ajoutés en 1.1.6 : Premium, et chaque valeur touchée est relevée avant d'appliquer
+        for id in ["win_ai", "win_autoplay"] {
+            assert!(script(id, None, None).is_none(), "{id} sans licence");
+            let p = probe(id, None, Some(&bundle)).expect(id);
+            assert_eq!(p.matches("@@RAGO reg ").count(), script(id, None, Some(&bundle)).unwrap().matches("reg add").count(), "{id}");
+        }
+        assert!(script("ping_hitreg", Some("default"), None).is_some(), "retour arrière sans licence");
+        // annulation : chiffrée avec les scripts Premium, en clair pour le plan gratuit
+        assert!(undo_of("net_nagle", None, None).is_none(), "annulation Premium lisible sans licence");
+        assert!(undo_of("net_nagle", None, Some(&bundle)).and_then(|u| u.full).is_some());
+        assert!(undo_of("win_gamedvr", None, None).and_then(|u| u.full).is_some(), "annulation du plan gratuit");
+        assert!(undo_of("pow_ultimate", None, Some(&bundle)).is_some_and(|u| u.rest_avant && u.rest.is_some()));
+        let reg_lines = |u: &Undo| u.full.iter().chain(u.rest.iter()).flat_map(|s| s.lines()).filter(|l| l.trim().len() > 60).map(str::trim).map(String::from).collect::<Vec<_>>();
+        for (id, vs) in bundle.undo.iter() {
+            for u in vs.values() {
+                for l in reg_lines(u) {
+                    let free_too = PLAIN.undo.values().flat_map(|e| e.values()).any(|f| reg_lines(f).contains(&l));
+                    if !free_too {
+                        let json_line = serde_json::to_string(&l).unwrap();
+                        assert!(!plain_text.contains(json_line.trim_matches('"')), "annulation {id} en clair : {l}");
+                    }
+                }
+            }
+        }
+    }
 
     #[test]
     fn every_script_is_non_empty_and_non_interactive() {
@@ -210,6 +372,22 @@ mod tests {
             assert!(low.contains("disablelastaccess 1") && !low.contains("disablelastaccess 0"), "{id}:{v}");
         }
         assert!(SCRIPTS["sto_fsutil"]["hdd"].to_lowercase().contains("disablelastaccess 2"));
+        assert!(SCRIPTS["sto_ntfs"]["_"].to_lowercase().contains("disabledeletenotify 0"), "sto_ntfs rallume le TRIM");
+        // audit du 2026-10-07 : RBW Mod désactivé remet ces services en automatique, comme Windows
+        let off = SCRIPTS["rbw_mode"]["off"].to_lowercase();
+        for svc in ["eventlog", "schedule", "dps", "sysmain", "pcasvc"] {
+            assert!(!off.contains(&format!("sc config {svc} start= demand")), "rbw_mode:off met {svc} en manuel");
+        }
+        assert!(off.contains("sc config eventlog start= auto"));
+        for (id, variants) in SCRIPTS.iter() {
+            for (v, s) in variants {
+                let low = s.to_lowercase();
+                // UAC coupé entièrement : le Minecraft Launcher et les applis du Store ne s'ouvrent plus
+                assert!(!low.lines().any(|l| l.contains("enablelua") && l.contains("/d \"0\"")), "{id}:{v} EnableLUA 0");
+                // wmic n'est plus installé par défaut (Windows 11 24H2)
+                assert!(!low.contains("wmic "), "{id}:{v} utilise wmic");
+            }
+        }
         // TRIM laissé actif (choix de Sofiene, 2026-10-07)
         for (id, variants) in SCRIPTS.iter() {
             for (v, s) in variants {
@@ -304,10 +482,14 @@ mod tests {
 
     #[test]
     fn lookup() {
-        assert!(script("ping_hitreg", Some("hypixel")).unwrap().contains("DefaultTTL"));
-        assert!(script("ping_hitreg", None).is_none());
-        assert!(script("in_queue", Some("ultra")).unwrap().contains("MouseDataQueueSize"));
-        assert!(script("gpu_nvidia", None).unwrap().contains("%RAGO_RES%"));
-        assert!(script("__wmic", None).is_some());
+        let b = premium(&test_key()).unwrap();
+        assert!(script("ping_hitreg", Some("hypixel"), Some(&b)).unwrap().contains("DefaultTTL"));
+        assert!(script("ping_hitreg", None, Some(&b)).is_none());
+        assert!(script("in_queue", Some("ultra"), Some(&b)).unwrap().contains("MouseDataQueueSize"));
+        assert!(script("gpu_nvidia", None, Some(&b)).unwrap().contains("%RAGO_RES%"));
+        assert!(script("__wmic", None, None).is_some());
+        assert!(probe("net_nagle", None, Some(&b)).unwrap().contains("@@RAGO reg"));
+        assert!(is_switch("net_nagle") && !is_switch("rst_point") && !is_switch("__wmic"));
+        assert_eq!(revert_variant("ping_hitreg").as_deref(), Some("default"));
     }
 }

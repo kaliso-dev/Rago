@@ -16,6 +16,7 @@ use std::sync::{Arc, Mutex};
 use std::time::Instant;
 use tauri::{AppHandle, Emitter};
 
+use crate::backup::{self, Ledger, Probe, Sys};
 use crate::history::{now_ms, Entry, History};
 use crate::{catalog, minecraft, shell};
 
@@ -27,6 +28,9 @@ pub struct RunItem {
     /// Données propres aux réglages natifs (valeurs OptiFine, dossier Minecraft)
     #[serde(default)]
     pub params: Option<serde_json::Value>,
+    /// réglage décoché : remettre l'état d'avant
+    #[serde(default)]
+    pub undo: bool,
 }
 
 #[derive(Clone, Serialize)]
@@ -73,7 +77,11 @@ pub struct Context {
     pub resource_dir: PathBuf,
     pub logs_dir: PathBuf,
     pub run_dir: PathBuf,
+    pub backup_dir: PathBuf,
     pub adapter: Option<String>,
+    pub ledger: Arc<Mutex<Ledger>>,
+    /// scripts Premium ouverts avec la clé de la licence (None sans licence)
+    pub premium: Option<Arc<catalog::Bundle>>,
 }
 
 impl Runner {
@@ -114,9 +122,9 @@ impl Runner {
             }
         };
         let (mut ok, mut failed) = (0, 0);
+        let sys = Sys::new(ctx.backup_dir.clone());
         // réglages jumeaux (même script) cochés ensemble : le script tourne une fois, le résultat vaut pour tous
-        // clé jumeau:variante → (réussite, code, message d'erreur, id du réglage lancé)
-        let mut twins_done: HashMap<String, (bool, Option<i32>, Option<String>, String)> = HashMap::new();
+        let mut twins_done: HashMap<String, TwinRun> = HashMap::new();
         for (index, item) in items.iter().enumerate() {
             if self.cancel.load(Ordering::SeqCst) {
                 break;
@@ -129,34 +137,80 @@ impl Runner {
                 );
             };
             emit_item("running", None, None, None);
-            write_log(&format!("==== {}{}", item.id, variant.map(|v| format!(":{v}")).unwrap_or_default()));
+            let applied = ctx.ledger.lock().unwrap().tweaks.contains_key(&item.id);
+            // décoché, ou variante de retour arrière d'un réglage appliqué : retour à l'état d'avant
+            let undo = item.undo || (applied && catalog::is_revert(&item.id, variant));
+            write_log(&format!(
+                "==== {}{}{}",
+                if undo { "undo " } else { "" },
+                item.id,
+                variant.map(|v| format!(":{v}")).unwrap_or_default()
+            ));
             let started = Instant::now();
             let emit_line = |line: String| {
                 write_log(&line);
                 let _ = ctx.app.emit("run:log", LogEvent { run_id, id: &item.id, line });
             };
-            let twin_key = catalog::twin_of(&item.id).map(|t| format!("{t}:{}", variant.unwrap_or("")));
-            let (success, code, message) = match twin_key.as_ref().and_then(|k| twins_done.get(k)) {
-                Some((s, c, msg, first)) => {
-                    let name = catalog::name_of(first);
-                    emit_line(if *s {
-                        format!("- Same commands as {name}, applied above: not run again")
-                    } else {
-                        format!("- Same commands as {name}, which failed above: not run again")
-                    });
-                    (*s, *c, msg.clone())
+            let twin_key = (!undo).then(|| catalog::twin_of(&item.id).map(|t| format!("{t}:{}", variant.unwrap_or("")))).flatten();
+            let (success, code, message) = if undo {
+                let r = self.undo_item(ctx, &sys, item, &emit_line);
+                match r {
+                    Ok((code, msg)) => (code == 0, Some(code), msg),
+                    Err(e) => (false, None, Some(e)),
                 }
-                None => {
-                    let result = self.run_item(ctx, item, &emit_line);
-                    let cancelled = self.cancel.load(Ordering::SeqCst);
-                    let r = match result {
-                        Ok((code, msg)) => (code == 0 && !cancelled, Some(code), msg),
-                        Err(e) => (false, None, Some(e)),
-                    };
-                    if let Some(k) = twin_key {
-                        twins_done.insert(k, (r.0, r.1, r.2.clone(), item.id.clone()));
+            } else {
+                match twin_key.as_ref().and_then(|k| twins_done.get(k)) {
+                    Some(t) => {
+                        let name = catalog::name_of(&t.first);
+                        emit_line(if t.ok {
+                            format!("- Same commands as {name}, applied above: not run again")
+                        } else {
+                            format!("- Same commands as {name}, which failed above: not run again")
+                        });
+                        if let Some(p) = &t.probes {
+                            let mut l = ctx.ledger.lock().unwrap();
+                            l.set_applied(&item.id, item.variant.clone(), t.ok, true, p.clone(), now_ms());
+                            l.fill_undo(&|i, v| catalog::undo_of(i, v, ctx.premium.as_deref()));
+                            l.save();
+                        }
+                        (t.ok, t.code, t.message.clone())
                     }
-                    r
+                    None => {
+                        // ce que le script va modifier, relevé avant de le lancer
+                        let switch = catalog::is_switch(&item.id) && !catalog::is_revert(&item.id, variant);
+                        let probes = if switch { self.snapshot(ctx, &sys, item, &emit_line) } else { None };
+                        let result = self.run_item(ctx, item, &emit_line);
+                        let cancelled = self.cancel.load(Ordering::SeqCst);
+                        let r = match result {
+                            Ok((code, msg)) => (code == 0 && !cancelled, Some(code), msg),
+                            Err(e) => (false, None, Some(e)),
+                        };
+                        let ids = probes.map(|probes| {
+                            sys.forget_active();
+                            let mut l = ctx.ledger.lock().unwrap();
+                            for p in probes.iter().filter(|p| matches!(p, Probe::Reg { .. })) {
+                                l.set_after(&p.id(), sys.read(p));
+                            }
+                            let ids: Vec<String> = probes.iter().map(Probe::id).collect();
+                            l.set_applied(&item.id, item.variant.clone(), r.0, true, ids.clone(), now_ms());
+                            l.fill_undo(&|i, v| catalog::undo_of(i, v, ctx.premium.as_deref()));
+                            l.save();
+                            ids
+                        });
+                        if switch && ids.is_none() {
+                            // réglage natif (OptiFine) : il garde sa propre sauvegarde
+                            let mut l = ctx.ledger.lock().unwrap();
+                            l.set_applied(&item.id, item.variant.clone(), r.0, item.id == "mc_optifine", Vec::new(), now_ms());
+                            l.save();
+                        }
+                        if let Some(k) = twin_key {
+                            twins_done.insert(
+                                k,
+                                TwinRun { ok: r.0, code: r.1, message: r.2.clone(), first: item.id.clone(), probes: ids },
+                            );
+                        }
+                        r
+                    }
                 }
             };
             let duration = started.elapsed().as_millis() as u64;
@@ -172,6 +226,7 @@ impl Runner {
                     ok: success,
                     code,
                     duration_ms: duration,
+                    undo,
                 });
             }
             if success {
@@ -185,6 +240,132 @@ impl Runner {
             "run:done",
             DoneEvent { run_id, ok, failed, cancelled, log_file: log_path.to_string_lossy().to_string() },
         );
+    }
+
+    /// Lance le relevé du réglage et garde l'état actuel de ce qu'il va modifier, s'il n'est pas déjà gardé.
+    fn snapshot(&self, ctx: &Context, sys: &Sys, item: &RunItem, emit: &dyn Fn(String)) -> Option<Vec<Probe>> {
+        let variant = item.variant.as_deref();
+        let script = catalog::probe(&item.id, variant, ctx.premium.as_deref())?;
+        let probes = if script.contains("@@RAGO") {
+            let path = write_script(&ctx.run_dir, &format!("{}-probe", item.id), variant, &script).ok()?;
+            let mut cmd = shell::hidden("cmd.exe");
+            cmd.args(["/d", "/c"]).arg(&path);
+            cmd.env("RAGO_RES", &ctx.resource_dir);
+            cmd.env("adapter_name", ctx.adapter.clone().unwrap_or_default());
+            cmd.current_dir(&ctx.run_dir);
+            cmd.stdin(Stdio::null());
+            let out = cmd.output().ok();
+            let _ = fs::remove_file(&path);
+            backup::parse_markers(&decode(&out?.stdout))
+        } else {
+            Vec::new()
+        };
+        let missing: Vec<&Probe> = {
+            let l = ctx.ledger.lock().unwrap();
+            probes.iter().filter(|p| !l.has(&p.id())).collect()
+        };
+        // lu hors du verrou : bcdedit et powercfg prennent un moment
+        let read: Vec<(Probe, backup::Saved)> = missing.into_iter().map(|p| (p.clone(), sys.read(p))).collect();
+        {
+            let mut l = ctx.ledger.lock().unwrap();
+            for (p, saved) in read.iter().cloned() {
+                l.record_before(p, saved);
+            }
+            l.save();
+        }
+        if !probes.is_empty() {
+            emit(format!("- Saved how {} settings were before, to put them back if you turn this off", probes.len()));
+        }
+        Some(probes)
+    }
+
+    /// Remet l'état d'avant : la sauvegarde si elle existe, puis ce qu'elle ne couvre pas (netsh, PowerShell…)
+    /// avec les valeurs de Windows. Sans sauvegarde : la variante de retour arrière ou les valeurs de Windows.
+    fn undo_item(&self, ctx: &Context, sys: &Sys, item: &RunItem, emit: &dyn Fn(String)) -> Result<(i32, Option<String>), String> {
+        let id = item.id.as_str();
+        let entry = ctx.ledger.lock().unwrap().tweaks.get(id).cloned();
+        let variant = entry.as_ref().and_then(|e| e.variant.clone()).or_else(|| item.variant.clone());
+        // annulation de cette version, sinon la copie gardée quand le réglage a été appliqué (scripts Premium
+        // fermés après une déconnexion ou une fin de licence)
+        let undo = catalog::undo_of(id, variant.as_deref(), ctx.premium.as_deref())
+            .or_else(|| entry.as_ref().and_then(|e| e.undo.clone()));
+        if id == "mc_optifine" {
+            let dir = item
+                .params
+                .as_ref()
+                .and_then(|p| p.get("dir"))
+                .and_then(|d| d.as_str())
+                .map(PathBuf::from)
+                .or_else(|| std::env::var("APPDATA").ok().map(|a| PathBuf::from(a).join(".minecraft")))
+                .ok_or("Minecraft folder not set")?;
+            let msg = minecraft::restore_latest(&dir)?;
+            emit(format!("- {msg}"));
+            let mut l = ctx.ledger.lock().unwrap();
+            l.release(id);
+            l.save();
+            return Ok((0, None));
+        }
+        if entry.as_ref().is_some_and(|e| e.backup) {
+            let back = {
+                let mut l = ctx.ledger.lock().unwrap();
+                let back = l.release(id);
+                l.save();
+                back
+            };
+            let (rest, rest_first) = undo.map(|u| (u.rest, u.rest_avant)).unwrap_or_default();
+            let mut code = 0;
+            let run_rest = |code: &mut i32| -> Result<(), String> {
+                if let Some(rest) = &rest {
+                    emit("- Putting back the Windows values for the network and system commands".into());
+                    *code = self.run_batch(ctx, &format!("{id}-undo"), None, rest, emit)?.0;
+                }
+                Ok(())
+            };
+            // plans d'alimentation supprimés : recréés avant que la sauvegarde réactive celui d'avant
+            if rest_first {
+                run_rest(&mut code)?;
+            }
+            emit(format!("- Putting back {} settings as they were before this tweak", back.len()));
+            let mut errors = 0;
+            for e in &back {
+                if let Err(err) = sys.restore(&e.probe, &e.before) {
+                    errors += 1;
+                    emit(format!("! {}: {err}", describe(&e.probe)));
+                }
+            }
+            if !rest_first {
+                run_rest(&mut code)?;
+            }
+            if errors > 0 {
+                return Ok((if code == 0 { 1 } else { code }, Some(format!("{errors} settings couldn't be put back"))));
+            }
+            return Ok((code, None));
+        }
+        // pas de sauvegarde (appliqué avant 1.1.6, ou par l'ancien .bat) : valeurs de Windows
+        let script = undo.and_then(|u| u.full).or_else(|| {
+            catalog::revert_variant(id).and_then(|v| catalog::script(id, Some(&v), None))
+        });
+        let Some(script) = script else {
+            return Err("This tweak can't be undone automatically yet. Use the restore point in the Restore module.".into());
+        };
+        emit("- Putting back the Windows default values".into());
+        let r = self.run_batch(ctx, &format!("{id}-undo"), None, &script, emit)?;
+        let mut l = ctx.ledger.lock().unwrap();
+        l.release(id);
+        l.save();
+        Ok(r)
+    }
+
+    fn run_batch(&self, ctx: &Context, name: &str, variant: Option<&str>, script: &str, emit: &dyn Fn(String)) -> Result<(i32, Option<String>), String> {
+        let path = write_script(&ctx.run_dir, name, variant, script)?;
+        let mut cmd = shell::hidden("cmd.exe");
+        cmd.args(["/d", "/c"]).arg(&path);
+        cmd.env("RAGO_RES", &ctx.resource_dir);
+        cmd.env("adapter_name", ctx.adapter.clone().unwrap_or_default());
+        cmd.current_dir(&ctx.run_dir);
+        let res = self.stream(cmd, emit);
+        let _ = fs::remove_file(&path);
+        res
     }
 
     /// Exécute un réglage. Ok((code de sortie, message éventuel)).
@@ -225,17 +406,9 @@ impl Runner {
                 self.stream(cmd, emit)
             }
             id => {
-                let script = catalog::script(id, item.variant.as_deref())
+                let script = catalog::script(id, item.variant.as_deref(), ctx.premium.as_deref())
                     .ok_or_else(|| format!("Unknown tweak: {id}"))?;
-                let path = write_script(&ctx.run_dir, id, item.variant.as_deref(), &script)?;
-                let mut cmd = shell::hidden("cmd.exe");
-                cmd.args(["/d", "/c"]).arg(&path);
-                cmd.env("RAGO_RES", &ctx.resource_dir);
-                cmd.env("adapter_name", ctx.adapter.clone().unwrap_or_default());
-                cmd.current_dir(&ctx.run_dir);
-                let res = self.stream(cmd, emit);
-                let _ = fs::remove_file(&path);
-                res
+                self.run_batch(ctx, id, item.variant.as_deref(), &script, emit)
             }
         }
     }
@@ -263,6 +436,28 @@ impl Runner {
         let status = child.wait().map_err(|e| e.to_string())?;
         *self.child.lock().unwrap() = None;
         Ok((status.code().unwrap_or(-1), None))
+    }
+}
+
+struct TwinRun {
+    ok: bool,
+    code: Option<i32>,
+    message: Option<String>,
+    /// réglage lancé pour le groupe
+    first: String,
+    probes: Option<Vec<String>>,
+}
+
+/// Élément remis, pour le journal.
+fn describe(p: &Probe) -> String {
+    match p {
+        Probe::Reg { key, name } => format!("{key}\\{name}"),
+        Probe::RegKey { key } | Probe::RegVals { key } | Probe::RegTree { key } => key.clone(),
+        Probe::Bcd { name, .. } => format!("boot setting {name}"),
+        Probe::Task { path } => format!("task {path}"),
+        Probe::Pwr { setting, .. } => format!("power setting {setting}"),
+        Probe::PwrActive => "power plan".into(),
+        Probe::Hib => "hibernation".into(),
     }
 }
 
@@ -325,6 +520,11 @@ Write-Output "- Creating the Rago Optimizer restore point"
 Checkpoint-Computer -Description 'Rago Optimizer' -RestorePointType 'MODIFY_SETTINGS'
 Write-Output "- Restore point created"
 "#;
+
+/// Réglages lancés par le moteur lui-même, sans script.
+pub fn is_native(id: &str) -> bool {
+    matches!(id, "mc_optifine" | "nv_profile" | "rst_point")
+}
 
 pub fn ensure_dir(p: &Path) {
     let _ = fs::create_dir_all(p);

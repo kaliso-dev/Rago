@@ -23,8 +23,9 @@ function Spec({ icon, label, value, sub }: { icon: ReactNode; label: string; val
 }
 
 export function Dashboard() {
-  const { t, lang, sys, sysLoading, refreshSys, selected, selectMany, history, lastRun, requestApply, premium, setUpsell } = useStore();
-  const applied = new Set(history.filter((h) => h.ok && tweaks.get(h.id)?.kind === "tweak").map((h) => h.id)).size;
+  const { t, lang, sys, sysLoading, refreshSys, isOn, selectMany, lastRun, requestApply, premium, setUpsell, applied: appliedMap } = useStore();
+  // réglages appliqués en ce moment (ceux qu'on a décochés depuis ne comptent plus)
+  const applied = [...appliedMap.values()].filter((a) => a.ok && tweaks.get(a.id)?.kind === "tweak").length;
   const restore = lastRun.get("rst_point");
 
   const health: { label: string; ok: boolean; value: string; action?: ReactNode }[] = sys
@@ -107,7 +108,7 @@ export function Dashboard() {
         <div className="presets">
           {catalog.presets.map((p, i) => {
             const ids = p.tweaks.map((e) => e.split(":")[0]).filter((id) => tweaks.has(id));
-            const all = ids.length > 0 && ids.every((id) => selected.has(id));
+            const all = ids.length > 0 && ids.every((id) => isOn(id));
             return (
               <motion.button
                 key={p.id}

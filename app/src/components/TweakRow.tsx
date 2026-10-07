@@ -7,17 +7,20 @@ import { SESSION_TOGGLES, useStore } from "../lib/store";
 import { Badge, Button, Segmented, Switch } from "./ui";
 
 export function TweakRow({ tweak }: { tweak: Tweak }) {
-  const { t, lang, sys, selected, toggle, variantOf, setVariant, lastRun, requestApply, focusTweak, setFocusTweak, focusSeq, isLocked, variantLocked, undoOnly, premium, setUpsell } = useStore();
+  const { t, lang, sys, selected, toggle, variantOf, setVariant, lastRun, requestApply, focusTweak, setFocusTweak, focusSeq, isLocked, variantLocked, undoOnly, premium, setUpsell, isOn: isOnFn, applied, pendingUndo, reapply } = useStore();
   const [open, setOpen] = useState(false);
   const ref = useRef<HTMLDivElement>(null);
   const av = availability(tweak, sys);
-  const isOn = selected.has(tweak.id);
+  const isOn = isOnFn(tweak.id);
   const last = lastRun.get(tweak.id);
+  const done = applied.get(tweak.id);
+  const undoing = !!done && pendingUndo.includes(tweak.id);
   const variant = variantOf(tweak);
   const auto = autoVariant(tweak, sys);
   const isAction = tweak.kind === "action";
   const focused = focusTweak === tweak.id;
-  const locked = isLocked(tweak.id);
+  // appliqué pendant Premium : on peut toujours l'éteindre (l'annulation reste ouverte sans licence)
+  const locked = isLocked(tweak.id) && !done;
   // mode jeu, RBW Mod, mode jeu Windows : on les allume et on les éteint, l'état connu vient de l'historique
   const session = SESSION_TOGGLES.has(tweak.id) && !!tweak.variants?.length && av.ok;
   const sessionState = session && last?.ok && last.variant ? last.variant : null;
@@ -50,7 +53,7 @@ export function TweakRow({ tweak }: { tweak: Tweak }) {
       <div className="tweak-main">
         <div className="tweak-title">
           <span className="tweak-name">{tweak.name[lang]}</span>
-          {!premium && !locked && <Badge tone="ok">{t(undoOnly(tweak.id) ? "free.undoBadge" : "free.badge")}</Badge>}
+          {!premium && !isLocked(tweak.id) && <Badge tone="ok">{t(undoOnly(tweak.id) ? "free.undoBadge" : "free.badge")}</Badge>}
           {tweak.risk === "advanced" && <Badge tone="warn">{t("badge.advanced")}</Badge>}
           {tweak.reboot && (
             <Badge>
@@ -62,9 +65,16 @@ export function TweakRow({ tweak }: { tweak: Tweak }) {
             <Badge tone={sessionState === "on" ? "ok" : undefined}>
               {t(sessionState === "on" ? "session.onSince" : "session.offSince", { time: formatTime(lang, last!.ts) })}
             </Badge>
-          ) : (
+          ) : isAction ? (
             last && <Badge tone={last.ok ? "ok" : "red"}>{t(last.ok ? "badge.applied" : "badge.failed", { date: formatDate(lang, last.ts) })}</Badge>
+          ) : undoing ? (
+            <Badge tone="warn">{t("badge.pendingUndo")}</Badge>
+          ) : done && selected.has(tweak.id) ? (
+            <Badge tone="warn">{t("badge.pendingUpdate")}</Badge>
+          ) : (
+            done && <Badge tone={done.ok ? "ok" : "red"}>{t(done.ok ? "badge.applied" : "badge.failed", { date: formatDate(lang, done.ts) })}</Badge>
           )}
+          {done?.drift && !undoing && !selected.has(tweak.id) && <Badge tone="warn">{t("badge.drift")}</Badge>}
           {!locked && (
             <button
               type="button"
@@ -116,8 +126,24 @@ export function TweakRow({ tweak }: { tweak: Tweak }) {
             >
               <p className="muted small">
                 {tweak.native ? t(`tweak.native.${tweak.native}` as Key) : t("tweak.details", { n: tweak.variants?.find((v) => v.id === variant)?.lines ?? tweak.lines })}
-                {!isAction && <> {t(session ? "tweak.undoSession" : "tweak.undoRestore")}</>}
+                {!isAction && <> {t(session ? "tweak.undoSession" : done && !done.backup ? "tweak.undoDefaults" : "tweak.undoSwitch")}</>}
               </p>
+              {done?.drift && !session && (
+                <p className="tweak-note warn">
+                  <TriangleAlert size={12} />
+                  {t("tweak.drift")}
+                  <button
+                    type="button"
+                    className="link"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      reapply(tweak.id);
+                    }}
+                  >
+                    {t("tweak.reapply")}
+                  </button>
+                </p>
+              )}
               {tweak.confirm && (
                 <p className="tweak-note warn">
                   <TriangleAlert size={12} />

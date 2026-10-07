@@ -1,6 +1,7 @@
 # À placer à la racine du dépôt : .github/workflows/app-windows.yml
 # Construit l'installateur Windows (NSIS) de Rago Optimizer, qui vit dans app/.
-# Secrets : RAGO_API_BASE, RAGO_LICENSE_PUBKEY. Variables : SITE_URL, SUPPORT_URL (facultative).
+# Secrets : RAGO_API_BASE, RAGO_LICENSE_PUBKEY, RAGO_SCRIPTS_SECRET (même valeur que SCRIPTS_SECRET sur Railway :
+# chiffre les scripts Premium dans l'exe). Variables : SITE_URL, SUPPORT_URL (facultative).
 name: app-windows
 
 on:
@@ -39,9 +40,14 @@ jobs:
         env:
           API_BASE: ${{ secrets.RAGO_API_BASE }}
           PUBKEY: ${{ secrets.RAGO_LICENSE_PUBKEY }}
+          SCRIPTS: ${{ secrets.RAGO_SCRIPTS_SECRET }}
         run: |
           if [ -z "$API_BASE" ] || [ -z "$PUBKEY" ]; then
             echo "::error::Secrets RAGO_API_BASE et RAGO_LICENSE_PUBKEY manquants (Settings > Secrets and variables > Actions)"
+            exit 1
+          fi
+          if [ -z "$SCRIPTS" ]; then
+            echo "::error::Secret RAGO_SCRIPTS_SECRET manquant : même valeur que SCRIPTS_SECRET sur Railway (Settings > Secrets and variables > Actions)"
             exit 1
           fi
       - uses: actions/checkout@v4
@@ -61,6 +67,7 @@ jobs:
         env:
           RAGO_API_BASE: ${{ secrets.RAGO_API_BASE }}
           RAGO_LICENSE_PUBKEY: ${{ secrets.RAGO_LICENSE_PUBKEY }}
+          RAGO_SCRIPTS_SECRET: ${{ secrets.RAGO_SCRIPTS_SECRET }}
           VITE_SITE_URL: ${{ vars.SITE_URL }}
           VITE_ACCOUNT_URL: ${{ secrets.RAGO_API_BASE }}
           # invitation Discord du support (facultatif : sans elle, aucun bouton d'aide)

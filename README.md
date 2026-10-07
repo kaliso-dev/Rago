@@ -144,12 +144,12 @@ L'app Windows ne peut être compilée que sur Windows. GitHub le fait pour toi, 
    - Onglet **Secrets**, **New repository secret** :
      - `RAGO_API_BASE` = `https://account.<ton-domaine>/api/v1`
      - `RAGO_LICENSE_PUBKEY` = le bloc affiché par `https://account.<ton-domaine>/api/v1/public-key?format=pem`, lignes `BEGIN` et `END` comprises
-     - `RAGO_SCRIPTS_SECRET` = la même valeur que `SCRIPTS_SECRET` dans Railway (voir section 8, à faire avant la 1.1.6)
+     - `RAGO_SCRIPTS_SECRET` = la même valeur que `SCRIPTS_SECRET` dans Railway (en place depuis le 7 octobre 2026). Une seule valeur, à **ne jamais changer** : les versions déjà installées ne pourraient plus déverrouiller leurs commandes Premium (`licensing/docs/MISE-EN-LIGNE.md`, étape 8)
    - Onglet **Variables**, **New repository variable** :
      - `SITE_URL` = l'adresse du **site de vente** : `https://rago-optimiser.netlify.app` aujourd'hui, `https://<ton-domaine>` ensuite (le bouton Premium de l'app ouvre `SITE_URL/#pricing`). C'est la même adresse que la variable `SITE_URL` de Railway. Aujourd'hui la variable GitHub vaut encore l'adresse Railway : ça marche (le serveur renvoie vers le site), mais passe-la sur l'adresse Netlify puis relance une fabrication.
      - `SUPPORT_URL` (optionnelle) = ton lien d'invitation Discord, affiché comme lien support dans l'app
 2. La fabrication se lance d'elle-même à chaque push qui touche `app/`. Tu peux aussi la lancer à la main : **Actions → app-windows → Run workflow**.
-3. Compte environ 5 minutes (15 à 20 la première fois). À la fin, connecté avec le compte kaliso-dev : ouvre le run, section **Artifacts**, télécharge `rago-optimizer-setup`. C'est un zip qui contient `Rago Optimizer_<version>_x64-setup.exe` (aujourd'hui `Rago Optimizer_1.1.5_x64-setup.exe`, version 1.1.5). L'artefact est effacé au bout de 90 jours.
+3. Compte environ 5 minutes (15 à 20 la première fois). À la fin, connecté avec le compte kaliso-dev : ouvre le run, section **Artifacts**, télécharge `rago-optimizer-setup`. C'est un zip qui contient `Rago Optimizer_<version>_x64-setup.exe` (aujourd'hui `Rago Optimizer_1.1.6_x64-setup.exe`, version 1.1.6). L'artefact est effacé au bout de 90 jours.
 
 **Sans les deux secrets, la fabrication s'arrête en erreur** (étape « Vérifier les secrets »). C'est voulu : un exe fabriqué sans eux ne peut jamais passer en Premium et ses boutons de compte ouvrent `localhost`. Ne distribue jamais un tel exe.
 
@@ -226,7 +226,6 @@ cd app && npm ci && npm run tauri dev
 
 ## 8. Ce qui manque encore
 
-- **À faire avant la 1.1.6** : génère **une seule** valeur secrète (par exemple `openssl rand -hex 32`, ou 64 lettres et chiffres d'un générateur de mots de passe). Mets-la dans Railway → Variables → `SCRIPTS_SECRET` **et** dans le secret GitHub `RAGO_SCRIPTS_SECRET`, identique au caractère près, et ne la change **jamais** ensuite : les versions déjà installées ne pourraient plus déverrouiller leurs commandes Premium. Laisse Railway redéployer le serveur avant de distribuer la 1.1.6 (détail : `licensing/docs/MISE-EN-LIGNE.md`, étape 8).
 - **Les prix de Premium dans Stripe** : 5,99 $ par mois et 29,99 $ par an, en dollars comme le site. Crée dans Stripe les deux prix récurrents, le portail client et les événements du webhook, puis mets `STRIPE_PRICE_MONTHLY` et `STRIPE_PRICE_YEARLY` dans Railway (et `PRICE_LABEL`, par exemple `$5.99 a month`).
 - **Affiliation et code promo** : dans Railway → Variables, supprime `AFFILIATE_HOLD_DAYS` (l'ancienne valeur 14 ; sans elle, un filleul compte dès l'activation), puis crée le code du pop-up avec `npm run admin -- create-promo RAGO15 15`, une fois avec la clé Stripe test et une fois avec la clé live.
 - **L'exe dans le bucket** `downloads` de Supabase, vérifié sur `/download/status` (section 4.1).

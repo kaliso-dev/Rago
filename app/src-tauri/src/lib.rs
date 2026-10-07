@@ -1,9 +1,11 @@
+mod backup;
 mod catalog;
 mod history;
 mod license;
 mod minecraft;
 mod ping;
 mod runner;
+mod seal;
 mod shell;
 mod system;
 
@@ -11,6 +13,7 @@ use std::path::PathBuf;
 use std::sync::{Arc, Mutex};
 use tauri::{AppHandle, Manager, State};
 
+use backup::Ledger;
 use history::History;
 use license::License;
 use runner::{Context, RunItem, Runner};
@@ -19,6 +22,7 @@ use system::SystemInfo;
 struct AppState {
     runner: Arc<Runner>,
     history: Arc<History>,
+    ledger: Arc<Mutex<Ledger>>,
     license: Arc<License>,
     system: Arc<Mutex<Option<SystemInfo>>>,
     resource_dir: PathBuf,
@@ -50,15 +54,33 @@ async fn get_system_info(state: State<'_, AppState>, refresh: Option<bool>) -> R
         .map_err(|e| e.to_string())
 }
 
+/// Garde dans le registre des réglages l'annulation de ceux qui n'en ont pas encore (appliqués avant 1.1.6, ou
+/// avant l'arrivée de la clé) : elle reste utilisable après une déconnexion ou une fin de licence.
+fn keep_undo(ledger: &Mutex<backup::Ledger>, bundle: Option<&catalog::Bundle>) {
+    let mut l = ledger.lock().unwrap();
+    if l.fill_undo(&|id, v| catalog::undo_of(id, v, bundle)) {
+        l.save();
+    }
+}
+
 #[tauri::command]
 fn run_tweaks(app: AppHandle, state: State<'_, AppState>, items: Vec<RunItem>) -> Result<String, String> {
     if items.is_empty() {
         return Err("No tweak selected".into());
     }
     let premium = state.license.status().state == "active";
-    if let Some(it) = items.iter().find(|it| !catalog::allowed(&it.id, it.variant.as_deref(), premium)) {
+    // remettre l'état d'avant reste possible sans licence
+    let applying = || items.iter().filter(|it| !it.undo);
+    if let Some(it) = applying().find(|it| !catalog::allowed(&it.id, it.variant.as_deref(), premium)) {
         return Err(format!("premium_required:{}", it.id));
     }
+    let needs_premium = applying().any(|it| !catalog::is_plain(&it.id, it.variant.as_deref()) && !runner::is_native(&it.id));
+    // ouverts dès qu'une licence active a la clé : l'annulation des réglages Premium s'y trouve aussi
+    let bundle = state.license.scripts_key().and_then(|key| catalog::premium(&key));
+    if needs_premium && bundle.is_none() {
+        return Err("premium_scripts_unavailable".into());
+    }
+    keep_undo(&state.ledger, bundle.as_deref());
     let adapter = state.system(false).adapter;
     let ctx = Context {
         app,
@@ -66,9 +88,28 @@ fn run_tweaks(app: AppHandle, state: State<'_, AppState>, items: Vec<RunItem>) -
         resource_dir: state.resource_dir.clone(),
         logs_dir: state.data_dir.join("logs"),
         run_dir: state.data_dir.join("run"),
+        backup_dir: state.data_dir.join("backup"),
         adapter,
+        ledger: Arc::clone(&state.ledger),
+        premium: bundle,
     };
     state.runner.start(ctx, items)
+}
+
+/// Réglages appliqués, et ceux dont Windows a changé une valeur depuis.
+#[tauri::command]
+async fn get_applied(state: State<'_, AppState>) -> Result<Vec<backup::AppliedView>, String> {
+    let ledger = Arc::clone(&state.ledger);
+    let dir = state.data_dir.join("backup");
+    let lic = Arc::clone(&state.license);
+    tauri::async_runtime::spawn_blocking(move || {
+        keep_undo(&ledger, lic.scripts_key().and_then(|key| catalog::premium(&key)).as_deref());
+        let sys = backup::Sys::new(dir);
+        let l = ledger.lock().unwrap();
+        l.views(&|p| sys.read(p))
+    })
+    .await
+    .map_err(|e| e.to_string())
 }
 
 #[tauri::command]
@@ -185,9 +226,17 @@ pub fn run() {
                 .unwrap_or_else(|_| PathBuf::from("resources"));
             let data_dir = app.path().app_data_dir().unwrap_or_else(|_| std::env::temp_dir().join("RagoOptimizer"));
             runner::ensure_dir(&data_dir);
+            let history = Arc::new(History::load(data_dir.join("history.json")));
+            let (mut ledger, existed) = Ledger::load(data_dir.join("applied.json"));
+            if !existed {
+                // première version avec l'état des réglages : ceux déjà appliqués d'après l'historique
+                ledger.import_history(&history.all());
+                ledger.save();
+            }
             app.manage(AppState {
                 runner: Arc::new(Runner::default()),
-                history: Arc::new(History::load(data_dir.join("history.json"))),
+                history,
+                ledger: Arc::new(Mutex::new(ledger)),
                 license: Arc::new(License::new()),
                 system: Arc::new(Mutex::new(None)),
                 resource_dir,
@@ -202,6 +251,7 @@ pub fn run() {
             is_running,
             get_history,
             clear_history,
+            get_applied,
             ping,
             minecraft_status,
             minecraft_restore,

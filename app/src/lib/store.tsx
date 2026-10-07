@@ -1,5 +1,5 @@
 import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState, type ReactNode } from "react";
-import { api, asLicenseError, type DoneEvent, type HistoryEntry, type ItemStatus, type LicenseError, type LicenseStatus, type RunItem, type SystemInfo } from "./api";
+import { api, asLicenseError, type AppliedView, type DoneEvent, type HistoryEntry, type ItemStatus, type LicenseError, type LicenseStatus, type RunItem, type SystemInfo } from "./api";
 import { autoVariant, availability, catalog, tweakModule, tweaks, type Lang, type Tweak, needsReboot } from "./catalog";
 import { translate, type Key } from "./i18n";
 import free from "../data/free.json";
@@ -41,6 +41,7 @@ export function itemName(id: string, lang: Lang): string {
 export interface RunRow {
   id: string;
   variant: string | null;
+  undo: boolean;
   status: ItemStatus;
   durationMs: number | null;
 }
@@ -54,10 +55,14 @@ export interface RunState {
   done: DoneEvent | null;
   reboot: boolean;
   error: string | null;
+  /** phrase sous le titre (fin de Premium, déconnexion) */
+  note: string | null;
 }
 
 export interface ConfirmState {
   ids: string[];
+  /** réglages décochés, à remettre comme avant */
+  undo: string[];
   /** lancé depuis un bouton « Lancer » : la sélection n'est pas touchée */
   single: boolean;
 }
@@ -97,6 +102,11 @@ function useStoreValue() {
   const [sys, setSys] = useState<SystemInfo | null>(null);
   const [sysLoading, setSysLoading] = useState(true);
   const [selection, setSelection] = usePersisted<string[]>("selection", []);
+  /** réglages appliqués décochés, annulés au prochain « Appliquer » */
+  const [pendingUndo, setPendingUndo] = usePersisted<string[]>("pendingUndo", []);
+  /** réglages appliqués d'après le moteur (applied.json), null tant qu'il n'a pas répondu */
+  const [appliedList, setAppliedList] = useState<AppliedView[] | null>(null);
+  const applied = useMemo(() => new Map((appliedList ?? []).map((a) => [a.id, a])), [appliedList]);
   const [variants, setVariants] = usePersisted<Record<string, string>>("variants", {});
   const [mcDirOverride, setMcDir] = usePersisted<string | null>("mcDir", null);
   const [history, setHistory] = useState<HistoryEntry[]>([]);
@@ -190,16 +200,30 @@ function useStoreValue() {
   }, []);
 
   const refreshHistory = useCallback(async () => setHistory(await api.history()), []);
+  const refreshApplied = useCallback(async () => setAppliedList(await api.applied()), []);
 
   useEffect(() => {
     void refreshSys();
     void refreshHistory();
-  }, [refreshSys, refreshHistory]);
+    void refreshApplied();
+  }, [refreshSys, refreshHistory, refreshApplied]);
+
+  // licence active (et clé des scripts reçue) : le moteur garde l'annulation des réglages Premium appliqués,
+  // pour pouvoir les remettre après une déconnexion ou une fin de licence
+  useEffect(() => {
+    if (license?.state === "active") void refreshApplied();
+  }, [license, refreshApplied]);
+
+  // un réglage annulé ailleurs (fin de Premium) ou plus appliqué n'a plus rien à annuler
+  useEffect(() => {
+    if (appliedList) setPendingUndo((p) => (p.every((id) => applied.has(id)) ? p : p.filter((id) => applied.has(id))));
+  }, [appliedList, applied, setPendingUndo]);
 
   // dernier passage de chaque réglage, pour les badges « Appliqué le… »
   const lastRun = useMemo(() => {
     const m = new Map<string, HistoryEntry>();
     for (const e of history) {
+      if (e.undo) continue;
       const prev = m.get(e.id);
       if (!prev || prev.ts < e.ts) m.set(e.id, e);
     }
@@ -207,6 +231,9 @@ function useStoreValue() {
   }, [history]);
 
   const selected = useMemo(() => new Set(selection), [selection]);
+  const undoSet = useMemo(() => new Set(pendingUndo), [pendingUndo]);
+  /** Interrupteur allumé : appliqué (et pas décoché depuis), ou coché pour être appliqué. */
+  const isOn = useCallback((id: string) => (applied.has(id) && !undoSet.has(id)) || selected.has(id), [applied, undoSet, selected]);
   const mcDir = mcDirOverride ?? sys?.minecraftDir ?? null;
 
   const variantOf = useCallback(
@@ -220,26 +247,42 @@ function useStoreValue() {
 
   const toggle = useCallback(
     (id: string, on?: boolean) => {
+      const want = on ?? !isOn(id);
+      if (applied.has(id)) {
+        // appliqué : l'éteindre prépare son annulation (possible même sans licence), le rallumer l'oublie
+        if (want) setPendingUndo((p) => p.filter((x) => x !== id));
+        else {
+          setPendingUndo((p) => (p.includes(id) ? p : [...p, id]));
+          setSelection((s) => s.filter((x) => x !== id));
+        }
+        return;
+      }
       if (isLocked(id)) {
         setUpsell("tweak", id);
         return;
       }
       setSelection((s) => {
         const has = s.includes(id);
-        const want = on ?? !has;
         if (want === has) return s;
         return want ? [...s, id] : s.filter((x) => x !== id);
       });
     },
-    [setSelection, isLocked],
+    [setSelection, setPendingUndo, isLocked, isOn, applied],
   );
 
   const setVariant = useCallback(
     (id: string, v: string) => {
       if (variantLocked(id, v)) return setUpsell("tweak", id);
       setVariants((m) => ({ ...m, [id]: v }));
+      // appliqué avec une autre variante : la nouvelle sera appliquée au prochain « Appliquer »
+      const a = applied.get(id);
+      if (a && SESSION_TOGGLES.has(id)) return;
+      if (a) {
+        setPendingUndo((p) => p.filter((x) => x !== id));
+        setSelection((s) => (a.variant === v ? s.filter((x) => x !== id) : s.includes(id) ? s : [...s, id]));
+      }
     },
-    [setVariants, variantLocked, setUpsell],
+    [setVariants, variantLocked, setUpsell, applied, setSelection, setPendingUndo],
   );
 
   /** Ajoute une liste "id" ou "id:variante" à la sélection (presets). */
@@ -251,28 +294,50 @@ function useStoreValue() {
         const [id, v] = e.split(":");
         const tw = tweaks.get(id);
         if (!tw || !availability(tw, sys).ok || tw.kind === "action" || isLocked(id) || (v && variantLocked(id, v))) continue;
+        // déjà appliqué avec cette variante : rien à refaire
+        const a = applied.get(id);
+        if (a && !undoSet.has(id) && (a.variant ?? null) === (v || (variants[id] ?? autoVariant(tw, sys) ?? null))) continue;
         ids.push(id);
         if (v) vs[id] = v;
       }
       setVariants((m) => ({ ...m, ...vs }));
       setSelection((s) => [...s, ...ids.filter((id) => !s.includes(id))]);
+      setPendingUndo((p) => p.filter((id) => !ids.includes(id)));
       return ids.length;
     },
-    [sys, setSelection, setVariants, isLocked, variantLocked],
+    [sys, setSelection, setVariants, setPendingUndo, isLocked, variantLocked, applied, undoSet, variants],
   );
 
-  const unselectMany = useCallback((ids: string[]) => setSelection((s) => s.filter((x) => !ids.includes(x))), [setSelection]);
+  /** Réapplique un réglage déjà appliqué (Windows en a changé une valeur depuis). */
+  const reapply = useCallback(
+    (id: string) => {
+      setPendingUndo((p) => p.filter((x) => x !== id));
+      setSelection((s) => (s.includes(id) ? s : [...s, id]));
+    },
+    [setSelection, setPendingUndo],
+  );
 
+  /** Décoche : retire de la sélection, et pour un réglage appliqué, revient à l'état appliqué. */
+  const unselectMany = useCallback(
+    (ids: string[]) => {
+      setSelection((s) => s.filter((x) => !ids.includes(x)));
+      setPendingUndo((p) => p.filter((x) => !ids.includes(x)));
+    },
+    [setSelection, setPendingUndo],
+  );
+
+  const byCatalog = (a: string, b: string) => (catalogOrder.get(a) ?? 0) - (catalogOrder.get(b) ?? 0);
   const requestApply = useCallback(
     (ids?: string[]) => {
       const list = (ids ?? selection).filter((id) => !isLocked(id));
-      if (!list.length) {
+      const undo = ids ? [] : pendingUndo.filter((id) => applied.has(id));
+      if (!list.length && !undo.length) {
         if ((ids ?? selection).length) setUpsell("tweak", (ids ?? selection)[0]);
         return;
       }
-      setConfirm({ ids: [...list].sort((a, b) => (catalogOrder.get(a) ?? 0) - (catalogOrder.get(b) ?? 0)), single: !!ids });
+      setConfirm({ ids: [...list].sort(byCatalog), undo: [...undo].sort(byCatalog), single: !!ids });
     },
-    [selection, isLocked, setUpsell],
+    [selection, pendingUndo, applied, isLocked, setUpsell],
   );
 
   const runRef = useRef<RunState | null>(null);
@@ -295,17 +360,31 @@ function useStoreValue() {
       api.onDone((e) => {
         setRun((r) => (r ? { ...r, done: e, endedAt: Date.now() } : r));
         void refreshHistory();
+        void refreshApplied();
       }),
     ];
     return () => subs.forEach((p) => void p.then((un) => un()));
-  }, [refreshHistory]);
+  }, [refreshHistory, refreshApplied]);
 
   const startRun = useCallback(
-    async (ids: string[], opts: { restorePoint: boolean; wmic: boolean; clearSelection: boolean }) => {
+    async (
+      ids: string[],
+      opts: { restorePoint: boolean; wmic: boolean; clearSelection: boolean; undo?: string[]; note?: string | null },
+    ) => {
       const items: RunItem[] = [];
       if (opts.restorePoint && !ids.includes("rst_point")) items.push({ id: "rst_point" });
       if (opts.wmic) items.push({ id: "__wmic" });
       let reboot = false;
+      // d'abord les annulations : un réglage réappliqué juste après repart de l'état d'avant
+      for (const id of opts.undo ?? []) {
+        const tw = tweaks.get(id);
+        const a = applied.get(id);
+        if (!tw) continue;
+        reboot ||= needsReboot(tw, a?.variant ?? null);
+        const item: RunItem = { id, variant: a?.variant ?? null, undo: true };
+        if (tw.native === "minecraft_optifine") item.params = { dir: mcDir };
+        items.push(item);
+      }
       for (const id of ids) {
         const tw = tweaks.get(id);
         if (!tw) continue;
@@ -318,26 +397,60 @@ function useStoreValue() {
       setConfirm(null);
       setRun({
         runId: null,
-        rows: items.map((i) => ({ id: i.id, variant: i.variant ?? null, status: "pending", durationMs: null })),
+        rows: items.map((i) => ({ id: i.id, variant: i.variant ?? null, undo: !!i.undo, status: "pending", durationMs: null })),
         logs: [],
         startedAt: Date.now(),
         endedAt: null,
         done: null,
         reboot,
         error: null,
+        note: opts.note ?? null,
       });
       try {
         const runId = await api.runTweaks(items);
         setRun((r) => (r ? { ...r, runId } : r));
-        if (opts.clearSelection) unselectMany(ids);
+        if (opts.clearSelection) unselectMany([...ids, ...(opts.undo ?? [])]);
       } catch (err) {
         const msg = String(err);
-        const error = msg.startsWith("premium_required") ? translate(lang, "err.premium_required") : msg;
+        const error = msg.startsWith("premium_required")
+          ? translate(lang, "err.premium_required")
+          : msg.startsWith("premium_scripts_unavailable")
+            ? translate(lang, "err.premium_scripts_unavailable")
+            : msg;
         setRun((r) => (r ? { ...r, error, endedAt: Date.now() } : r));
       }
     },
-    [variantOf, mcDir, unselectMany, lang],
+    [variantOf, mcDir, unselectMany, lang, applied],
   );
+
+  /** Réglages Premium appliqués : annulés à la déconnexion et à la fin de Premium. */
+  const premiumApplied = useMemo(() => [...applied.keys()].filter((id) => !FREE.has(id)).sort(byCatalog), [applied]);
+
+  const endedRef = useRef(false);
+  /** Déconnexion : annule d'abord les réglages Premium appliqués (sans licence, l'annulation reste permise). */
+  const signOutAndUndo = useCallback(async () => {
+    const ids = premiumApplied;
+    endedRef.current = true;
+    if (ids.length)
+      await startRun([], { restorePoint: false, wmic: false, clearSelection: true, undo: ids, note: translate(lang, "run.signOutNote", { n: ids.length }) });
+    await signOut();
+  }, [premiumApplied, startRun, signOut, lang]);
+
+  // Premium terminé (abonnement fini, remboursement) ou plus de licence sur ce PC : au lancement, les réglages
+  // Premium encore appliqués sont annulés, avec un message. Un jeton expiré hors ligne n'annule rien : le joueur
+  // paie peut-être encore, le serveur le dira au prochain rafraîchissement.
+  useEffect(() => {
+    if (endedRef.current || !license || !appliedList || run) return;
+    if (license.state !== "none" || !premiumApplied.length) return;
+    endedRef.current = true;
+    void startRun([], {
+      restorePoint: false,
+      wmic: false,
+      clearSelection: true,
+      undo: premiumApplied,
+      note: translate(lang, "run.endedNote", { n: premiumApplied.length }),
+    });
+  }, [license, appliedList, run, premiumApplied, startRun, lang]);
 
   const goTo = useCallback((p: string, tweakId?: string) => {
     setPage(p);
@@ -350,7 +463,8 @@ function useStoreValue() {
     page, goTo,
     sys, sysLoading, refreshSys,
     selection, selected, toggle, selectMany, unselectMany, variants, setVariant, variantOf,
-    history, lastRun, refreshHistory,
+    pendingUndo, applied, appliedLoaded: appliedList !== null, isOn, premiumApplied, signOutAndUndo, reapply,
+    history, lastRun, refreshHistory, refreshApplied,
     mcDir, setMcDir,
     confirm, setConfirm, requestApply,
     run, setRun, startRun,

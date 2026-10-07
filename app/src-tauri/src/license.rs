@@ -365,6 +365,19 @@ impl License {
 
     fn clear(&self) {
         let _ = fs::remove_file(&self.path);
+        let _ = fs::remove_file(self.key_path());
+    }
+    /// Clé des scripts Premium de cette version, gardée chiffrée (DPAPI) à côté du jeton.
+    fn key_path(&self) -> PathBuf {
+        self.path.with_file_name("scripts.bin")
+    }
+    /// Clé des scripts Premium, seulement avec une licence active.
+    pub fn scripts_key(&self) -> Option<[u8; 32]> {
+        if self.status().state != "active" {
+            return None;
+        }
+        let b64 = vault::open(&fs::read(self.key_path()).ok()?)?;
+        STANDARD.decode(b64.trim()).ok()?.try_into().ok()
     }
 
     fn empty(&self, state: &'static str) -> Status {
@@ -417,6 +430,15 @@ impl License {
         }
         *self.key_hint.lock().unwrap() = field(res, &["license", "key_hint"]);
         self.store(&token);
+        // remplacée à chaque réponse active ; absente (serveur sans SCRIPTS_SECRET) : plus de scripts Premium
+        match field(res, &["scripts_key"]).and_then(|k| vault::seal(&k)) {
+            Some(bytes) => {
+                let _ = fs::write(self.key_path(), bytes);
+            }
+            None => {
+                let _ = fs::remove_file(self.key_path());
+            }
+        }
         Ok(self.status())
     }
 

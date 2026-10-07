@@ -115,7 +115,7 @@
           "en": "Hitreg",
           "fr": "Hitreg"
          },
-         "lines": 60
+         "lines": 59
         },
         {
          "id": "qos",
@@ -131,11 +131,11 @@
           "en": "Knockback",
           "fr": "Knockback"
          },
-         "lines": 48
+         "lines": 47
         }
        ],
        "defaultVariant": "hitreg",
-       "lines": 60
+       "lines": 59
       }
      ]
     },
@@ -158,9 +158,7 @@
        },
        "risk": "safe",
        "reboot": true,
-       "requires": [
-        "wmic"
-       ],
+       "requires": [],
        "kind": "tweak",
        "legacy": [
         "RAGO APP Ping Optimization Final.bat@259"
@@ -172,7 +170,7 @@
           "en": "Config 1",
           "fr": "Config 1"
          },
-         "lines": 36
+         "lines": 35
         },
         {
          "id": "config2",
@@ -180,7 +178,7 @@
           "en": "Config 2",
           "fr": "Config 2"
          },
-         "lines": 117
+         "lines": 101
         },
         {
          "id": "config3",
@@ -196,11 +194,11 @@
           "en": "Config 4",
           "fr": "Config 4"
          },
-         "lines": 158
+         "lines": 148
         }
        ],
        "defaultVariant": "config1",
-       "lines": 158
+       "lines": 148
       },
       {
        "id": "ping_advanced",
@@ -214,14 +212,12 @@
        },
        "risk": "advanced",
        "reboot": true,
-       "requires": [
-        "wmic"
-       ],
+       "requires": [],
        "kind": "tweak",
        "legacy": [
         "RAGO APP Ping Optimization Final.bat@704"
        ],
-       "lines": 156
+       "lines": 145
       }
      ]
     },
@@ -309,7 +305,7 @@
           "fr": "Préréglage 1",
           "en": "Preset 1"
          },
-         "lines": 61
+         "lines": 58
         },
         {
          "id": "s2",
@@ -317,7 +313,7 @@
           "fr": "Préréglage 2",
           "en": "Preset 2"
          },
-         "lines": 162
+         "lines": 158
         },
         {
          "id": "s3",
@@ -325,7 +321,7 @@
           "fr": "Préréglage 3",
           "en": "Preset 3"
          },
-         "lines": 36
+         "lines": 33
         },
         {
          "id": "s4",
@@ -333,7 +329,7 @@
           "fr": "Préréglage 4",
           "en": "Preset 4"
          },
-         "lines": 117
+         "lines": 103
         }
        ],
        "requires": [
@@ -346,7 +342,7 @@
         "SERVERC@1034",
         "SERVERY@1113"
        ],
-       "lines": 162,
+       "lines": 158,
        "confirm": {
         "en": "Resets the Windows Firewall: your custom rules are deleted. Resets Winsock and the network settings.",
         "fr": "Réinitialise le pare-feu Windows : tes règles personnalisées sont supprimées. Réinitialise Winsock et les réglages réseau."
@@ -380,7 +376,7 @@
        "legacy": [
         "nigel@1754"
        ],
-       "lines": 11
+       "lines": 10
       },
       {
        "id": "net_throttle",
@@ -456,7 +452,7 @@
        "legacy": [
         "netreg@2020"
        ],
-       "lines": 32
+       "lines": 25
       },
       {
        "id": "net_advanced",
@@ -602,8 +598,8 @@
         "en": "Disable IPv6"
        },
        "desc": {
-        "fr": "Force la connexion en IPv4. À éviter si ta box ou ton FAI n'utilise que l'IPv6.",
-        "en": "Forces IPv4. Avoid if your ISP is IPv6-only."
+        "en": "Makes Windows prefer IPv4 over IPv6. IPv6 stays available if your provider only uses it.",
+        "fr": "Windows préfère l'IPv4 à l'IPv6. L'IPv6 reste disponible si ton fournisseur n'utilise que lui."
        },
        "risk": "advanced",
        "reboot": false,
@@ -720,7 +716,7 @@
        "legacy": [
         "general@8375"
        ],
-       "lines": 81
+       "lines": 79
       },
       {
        "id": "lat_directx",
@@ -767,7 +763,7 @@
        "legacy": [
         "RAGO APP FPS.bat@2309"
        ],
-       "lines": 31
+       "lines": 30
       },
       {
        "id": "sys_csrss",
@@ -786,7 +782,7 @@
        "legacy": [
         "RAGO APP FPS.bat@2343"
        ],
-       "lines": 15
+       "lines": 12
       },
       {
        "id": "pri_game",
@@ -808,7 +804,7 @@
           "fr": "Minecraft",
           "en": "Minecraft"
          },
-         "lines": 125
+         "lines": 124
         },
         {
          "id": "fortnite",
@@ -816,7 +812,7 @@
           "fr": "Fortnite",
           "en": "Fortnite"
          },
-         "lines": 125
+         "lines": 124
         },
         {
          "id": "valorant",
@@ -824,7 +820,7 @@
           "fr": "Valorant",
           "en": "Valorant"
          },
-         "lines": 125
+         "lines": 124
         },
         {
          "id": "cs2",
@@ -832,7 +828,7 @@
           "fr": "CS2",
           "en": "CS2"
          },
-         "lines": 125
+         "lines": 124
         },
         {
          "id": "apex",
@@ -840,7 +836,7 @@
           "fr": "Apex",
           "en": "Apex"
          },
-         "lines": 125
+         "lines": 124
         },
         {
          "id": "gta",
@@ -848,7 +844,7 @@
           "fr": "GTA V",
           "en": "GTA V"
          },
-         "lines": 125
+         "lines": 124
         }
        ],
        "requires": [],
@@ -861,7 +857,7 @@
         "apex@4050",
         "gta@3627"
        ],
-       "lines": 125
+       "lines": 124
       },
       {
        "id": "pri_mmcss",
@@ -1025,14 +1021,18 @@
         "fr": "Passe svchost (les services Windows) en priorité basse pour laisser la place au jeu.",
         "en": "Sets svchost (Windows services) to low priority."
        },
-       "risk": "safe",
+       "risk": "advanced",
        "reboot": true,
        "kind": "tweak",
        "requires": [],
        "legacy": [
         "SvcPriority@4583"
        ],
-       "lines": 2
+       "lines": 2,
+       "confirm": {
+        "en": "Puts every Windows service (sound, network, updates) at idle priority: sound can crackle and the network can lag while you play.",
+        "fr": "Passe tous les services Windows (son, réseau, mises à jour) en priorité minimale : le son peut grésiller et le réseau ramer pendant tes parties."
+       }
       },
       {
        "id": "pri_policy",
@@ -1051,7 +1051,7 @@
        "legacy": [
         "pr12@3455"
        ],
-       "lines": 86
+       "lines": 79
       }
      ]
     },
@@ -1088,8 +1088,8 @@
         "en": "1:1 movement, no smoothing"
        },
        "desc": {
-        "fr": "Sensibilité Windows au cran 6/11 et courbes de lissage remises à plat.",
-        "en": "Windows sensitivity at 6/11 and flat smoothing curves."
+        "en": "Turns off Enhance pointer precision (mouse acceleration) for 1:1 movement and keeps the Windows speed at 6/11.",
+        "fr": "Coupe « Améliorer la précision du pointeur » (l'accélération) pour un mouvement 1:1 et garde la vitesse Windows au cran 6/11."
        },
        "risk": "safe",
        "reboot": true,
@@ -1174,7 +1174,7 @@
        "legacy": [
         "mousecntrl@12606"
        ],
-       "lines": 30
+       "lines": 29
       },
       {
        "id": "kbm_filter",
@@ -1223,7 +1223,7 @@
        "legacy": [
         "RAGO APP FPS.bat@38"
        ],
-       "lines": 25
+       "lines": 20
       },
       {
        "id": "cpu_intel",
@@ -1244,7 +1244,7 @@
        "legacy": [
         "RAGO APP FPS.bat@66"
        ],
-       "lines": 26
+       "lines": 19
       },
       {
        "id": "cpu_advanced",
@@ -1263,7 +1263,7 @@
        "legacy": [
         "RAGO APP FPS.bat@97"
        ],
-       "lines": 244
+       "lines": 218
       },
       {
        "id": "sys_latency",
@@ -1282,7 +1282,7 @@
        "legacy": [
         "RAGO APP FPS.bat@2097"
        ],
-       "lines": 84
+       "lines": 12
       },
       {
        "id": "cpu_registry",
@@ -1301,7 +1301,7 @@
        "legacy": [
         "c1@7932"
        ],
-       "lines": 59
+       "lines": 47
       },
       {
        "id": "cpu_vendor",
@@ -1324,7 +1324,7 @@
           "en": "Intel"
          },
          "auto": "cpu:intel",
-         "lines": 30
+         "lines": 18
         },
         {
          "id": "amd",
@@ -1333,7 +1333,7 @@
           "en": "AMD"
          },
          "auto": "cpu:amd",
-         "lines": 28
+         "lines": 18
         }
        ],
        "requires": [],
@@ -1341,7 +1341,7 @@
         "c17@7522",
         "c18@7601"
        ],
-       "lines": 30
+       "lines": 18
       },
       {
        "id": "cpu_parking",
@@ -1388,8 +1388,8 @@
         "en": "Disable sleep and CPU minimum"
        },
        "desc": {
-        "fr": "Coupe la veille hybride et force le processeur à 100 % minimum sur secteur.",
-        "en": "Disables hybrid sleep and forces 100% minimum CPU on AC."
+        "en": "On mains power the PC no longer goes to sleep by itself (sleep, hybrid sleep and away mode off) and the processor stays at 100 % minimum.",
+        "fr": "Sur secteur, le PC ne se met plus en veille tout seul (veille, veille hybride et mode absence coupés) et le processeur reste à 100 % minimum."
        },
        "risk": "safe",
        "reboot": false,
@@ -1469,7 +1469,7 @@
        },
        "risk": "safe",
        "reboot": true,
-       "kind": "tweak",
+       "kind": "action",
        "requires": [],
        "legacy": [
         "c7@7784"
@@ -1761,7 +1761,7 @@
        "legacy": [
         "RAGO APP FPS.bat@2362"
        ],
-       "lines": 203,
+       "lines": 184,
        "confirm": {
         "en": "Removes the protection against attacks through Thunderbolt and PCIe devices (DMA). Turns off BAM, which logs the programs you ran. On a screenshare that can look like erased traces: turn on RBW Mod and restart your PC before one.",
         "fr": "Retire la protection contre les attaques par périphériques Thunderbolt et PCIe (DMA). Coupe BAM, qui garde la trace des programmes lancés. Sur un screenshare, ça peut ressembler à des traces effacées : active le RBW Mod et redémarre ton PC avant."
@@ -1788,7 +1788,7 @@
           "en": "4 GB"
          },
          "auto": "ram:4",
-         "lines": 23
+         "lines": 22
         },
         {
          "id": "8",
@@ -1797,7 +1797,7 @@
           "en": "8 GB"
          },
          "auto": "ram:8",
-         "lines": 23
+         "lines": 22
         },
         {
          "id": "12",
@@ -1806,7 +1806,7 @@
           "en": "12 GB"
          },
          "auto": "ram:12",
-         "lines": 23
+         "lines": 22
         },
         {
          "id": "16",
@@ -1815,7 +1815,7 @@
           "en": "16 GB"
          },
          "auto": "ram:16",
-         "lines": 23
+         "lines": 22
         },
         {
          "id": "24",
@@ -1824,7 +1824,7 @@
           "en": "24 GB"
          },
          "auto": "ram:24",
-         "lines": 23
+         "lines": 22
         },
         {
          "id": "32",
@@ -1833,7 +1833,7 @@
           "en": "32 GB"
          },
          "auto": "ram:32",
-         "lines": 23
+         "lines": 22
         },
         {
          "id": "48",
@@ -1842,7 +1842,7 @@
           "en": "48 GB"
          },
          "auto": "ram:48",
-         "lines": 23
+         "lines": 22
         },
         {
          "id": "64",
@@ -1851,7 +1851,7 @@
           "en": "64 GB"
          },
          "auto": "ram:64",
-         "lines": 23
+         "lines": 22
         },
         {
          "id": "128",
@@ -1860,7 +1860,7 @@
           "en": "128 GB"
          },
          "auto": "ram:128",
-         "lines": 23
+         "lines": 22
         }
        ],
        "requires": [],
@@ -1875,7 +1875,7 @@
         "64GB@9645",
         "128GB@9659"
        ],
-       "lines": 23,
+       "lines": 22,
        "confirm": {
         "en": "Stops Prefetch from filling. On a screenshare that can look like erased traces: turn on RBW Mod and restart your PC before one.",
         "fr": "Le Prefetch ne se remplit plus. Sur un screenshare, ça peut ressembler à des traces effacées : active le RBW Mod et redémarre ton PC avant."
@@ -1900,7 +1900,7 @@
        "legacy": [
         "svc@9425"
        ],
-       "lines": 2
+       "lines": 1
       },
       {
        "id": "mem_registry",
@@ -2027,7 +2027,7 @@
        "legacy": [
         "RAGO APP FPS.bat@1920"
        ],
-       "lines": 41
+       "lines": 27
       },
       {
        "id": "pow_ultimate",
@@ -2036,8 +2036,8 @@
         "fr": "Plan Performances optimales"
        },
        "desc": {
-        "en": "Adds the Ultimate Performance plan and removes the default plans.",
-        "fr": "Ajoute le plan Performances optimales et supprime les plans par défaut."
+        "en": "Adds the Ultimate Performance plan, turns it on and deletes the default plans.",
+        "fr": "Ajoute le plan Performances optimales, l'active et supprime les plans par défaut."
        },
        "risk": "advanced",
        "reboot": true,
@@ -2046,7 +2046,7 @@
        "legacy": [
         "RAGO APP FPS.bat@1969"
        ],
-       "lines": 32
+       "lines": 31
       },
       {
        "id": "pow_saving",
@@ -2118,8 +2118,8 @@
         "en": "Rago Low Latency power plan"
        },
        "desc": {
-        "fr": "Importe le plan d'alimentation Rago et affiche les options cachées de Windows. Active-le ensuite dans la fenêtre qui s'ouvre.",
-        "en": "Imports the Rago power plan and unhides hidden options."
+        "en": "Imports the Rago power plan, turns it on and shows the hidden Windows power options.",
+        "fr": "Importe le plan d'alimentation Rago, l'active et affiche les options d'alimentation cachées de Windows."
        },
        "risk": "safe",
        "reboot": false,
@@ -2130,7 +2130,7 @@
        "legacy": [
         "plan@9205"
        ],
-       "lines": 29
+       "lines": 28
       },
       {
        "id": "pow_extra",
@@ -2168,7 +2168,7 @@
        "legacy": [
         "wpower@8939"
        ],
-       "lines": 22
+       "lines": 21
       },
       {
        "id": "pow_throttling",
@@ -2187,7 +2187,7 @@
        "legacy": [
         "Throttoling@9022"
        ],
-       "lines": 6
+       "lines": 4
       },
       {
        "id": "pow_hwp",
@@ -2320,7 +2320,7 @@
        "legacy": [
         "gpuenrg@8871"
        ],
-       "lines": 2
+       "lines": 1
       },
       {
        "id": "pow_storage",
@@ -2446,7 +2446,7 @@
        "legacy": [
         "RAGO APP FPS.bat@1805"
        ],
-       "lines": 67,
+       "lines": 66,
        "confirm": {
         "en": "Empties the Recycle Bin. Clears your recent files and Run history.",
         "fr": "Vide la Corbeille. Efface tes fichiers récents et l'historique Exécuter."
@@ -2459,8 +2459,8 @@
         "fr": "Réglages NTFS"
        },
        "desc": {
-        "en": "Enlarges the NTFS memory cache and the MFT zone, turns off last-access timestamps and page file encryption, keeps TRIM on.",
-        "fr": "Agrandit le cache mémoire de NTFS et la zone MFT, coupe l'horodatage du dernier accès et le chiffrement du fichier d'échange, garde le TRIM actif."
+        "en": "Enlarges the NTFS memory cache and the MFT zone, turns off last-access timestamps and page file encryption, turns TRIM back on. Same commands as “NTFS settings” (Expert mode). Checked together, they run once.",
+        "fr": "Agrandit le cache mémoire de NTFS et la zone MFT, coupe l'horodatage du dernier accès et le chiffrement du fichier d'échange, rallume le TRIM. Mêmes commandes que « Réglages NTFS » (Mode expert). Cochés ensemble, ils ne s'appliquent qu'une fois."
        },
        "risk": "safe",
        "reboot": true,
@@ -2469,7 +2469,8 @@
        "legacy": [
         "RAGO APP FPS.bat@1789"
        ],
-       "lines": 4
+       "lines": 5,
+       "twin": "sto_ntfs"
       },
       {
        "id": "sto_fsutil_v6",
@@ -2524,7 +2525,7 @@
        "risk": "safe",
        "reboot": false,
        "requires": [],
-       "kind": "tweak",
+       "kind": "action",
        "legacy": [
         "RAGO APP FPS.bat@1802"
        ],
@@ -2577,8 +2578,8 @@
         "en": "Enable write cache"
        },
        "desc": {
-        "fr": "Active le cache d'écriture des disques. À éviter sans onduleur sur un PC fixe.",
-        "en": "Enables disk write caching."
+        "en": "Turns on the write cache of your internal drives (USB drives are left alone).",
+        "fr": "Active le cache d'écriture de tes disques internes (les clés et disques USB ne sont pas touchés)."
        },
        "risk": "safe",
        "reboot": true,
@@ -2587,7 +2588,7 @@
        "legacy": [
         "s2@5375"
        ],
-       "lines": 4
+       "lines": 3
       },
       {
        "id": "sto_cacheprot",
@@ -2596,17 +2597,21 @@
         "en": "Power-protected cache"
        },
        "desc": {
-        "fr": "Indique à Windows que le cache du disque est protégé, pour éviter les vidages forcés.",
-        "en": "Tells Windows the disk cache is power-protected."
+        "en": "Tells Windows your internal drives are protected against power cuts, so it stops forcing cache flushes.",
+        "fr": "Indique à Windows que tes disques internes sont protégés contre les coupures de courant : il ne force plus le vidage du cache."
        },
-       "risk": "safe",
+       "risk": "advanced",
        "reboot": true,
        "kind": "tweak",
        "requires": [],
        "legacy": [
         "cppt@5203"
        ],
-       "lines": 3
+       "lines": 3,
+       "confirm": {
+        "en": "If the power cuts (outage, unplugged PC, flat battery), files being written can be corrupted. Only with a UPS or on a laptop.",
+        "fr": "Si le courant coupe (panne, PC débranché, batterie vide), des fichiers en cours d'écriture peuvent être corrompus. Seulement avec un onduleur ou sur un portable."
+       }
       },
       {
        "id": "sto_ssdpower",
@@ -2635,8 +2640,8 @@
         "en": "TRIM system drive"
        },
        "desc": {
-        "en": "Runs TRIM on C:. Same commands as “Optimize drive” (Latency).",
-        "fr": "Lance un TRIM sur C: pour libérer les blocs inutilisés du SSD. Mêmes commandes que « Optimiser le disque » (Latence)."
+        "en": "Runs TRIM on C:. Same commands as the “Optimize drive” action (Latency).",
+        "fr": "Lance un TRIM sur C: pour libérer les blocs inutilisés du SSD. Mêmes commandes que l'action « Optimiser le disque » (Latence)."
        },
        "risk": "safe",
        "reboot": false,
@@ -2674,7 +2679,7 @@
        "legacy": [
         "RAGO APP FPS.bat@2050"
        ],
-       "lines": 38
+       "lines": 5
       },
       {
        "id": "usb_priority",
@@ -2723,8 +2728,8 @@
         "en": "Hidden USB power saving"
        },
        "desc": {
-        "fr": "Coupe les économies d'énergie USB non visibles dans les paramètres.",
-        "en": "Disables USB power saving not shown in Settings."
+        "en": "Turns off the hidden power saving of every device that has it, not only USB. On a laptop the battery lasts less.",
+        "fr": "Coupe les économies d'énergie cachées de tous les périphériques qui en ont, pas seulement l'USB. Sur un portable, la batterie dure moins."
        },
        "risk": "safe",
        "reboot": true,
@@ -2733,7 +2738,7 @@
        "legacy": [
         "usb2@12098"
        ],
-       "lines": 15
+       "lines": 12
       },
       {
        "id": "usb_controller",
@@ -2747,7 +2752,7 @@
        },
        "risk": "safe",
        "reboot": true,
-       "kind": "tweak",
+       "kind": "action",
        "requires": [
         "wmic"
        ],
@@ -2834,14 +2839,13 @@
        "risk": "safe",
        "reboot": true,
        "requires": [
-        "gpu:nvidia",
-        "wmic"
+        "gpu:nvidia"
        ],
        "kind": "tweak",
        "legacy": [
         "RAGO APP FPS.bat@847"
        ],
-       "lines": 511
+       "lines": 496
       },
       {
        "id": "gpu_amd",
@@ -2856,14 +2860,13 @@
        "risk": "safe",
        "reboot": true,
        "requires": [
-        "gpu:amd",
-        "wmic"
+        "gpu:amd"
        ],
        "kind": "tweak",
        "legacy": [
         "RAGO APP FPS.bat@378"
        ],
-       "lines": 460
+       "lines": 450
       },
       {
        "id": "gpu_intel",
@@ -2908,14 +2911,12 @@
        },
        "risk": "safe",
        "reboot": true,
-       "requires": [
-        "wmic"
-       ],
+       "requires": [],
        "kind": "tweak",
        "legacy": [
         "RAGO APP FPS.bat@1416"
        ],
-       "lines": 133
+       "lines": 123
       },
       {
        "id": "gpu_directx",
@@ -2967,7 +2968,7 @@
        "legacy": [
         "NVGEN689U@10580"
        ],
-       "lines": 68
+       "lines": 67
       },
       {
        "id": "nv_profile",
@@ -3098,8 +3099,8 @@
       {
        "id": "nv_hdcp",
        "name": {
-        "fr": "Désactiver le HDCP",
-        "en": "Disable HDCP"
+        "en": "Disable HDCP (NVIDIA)",
+        "fr": "Désactiver le HDCP (NVIDIA)"
        },
        "desc": {
         "fr": "Coupe la protection anticopie. Netflix et certains lecteurs peuvent refuser la lecture en HD.",
@@ -3232,7 +3233,7 @@
        },
        "risk": "safe",
        "reboot": false,
-       "kind": "tweak",
+       "kind": "action",
        "requires": [
         "gpu:nvidia"
        ],
@@ -3258,7 +3259,7 @@
        "legacy": [
         "nv14@10417"
        ],
-       "lines": 51
+       "lines": 50
       },
       {
        "id": "nv_powermizer",
@@ -3377,8 +3378,8 @@
       {
        "id": "amd_hdcp",
        "name": {
-        "fr": "Désactiver le HDCP",
-        "en": "Disable HDCP"
+        "en": "Disable HDCP (AMD)",
+        "fr": "Désactiver le HDCP (AMD)"
        },
        "desc": {
         "fr": "Coupe la protection anticopie.",
@@ -3433,7 +3434,11 @@
        "legacy": [
         "am5@11414"
        ],
-       "lines": 1
+       "lines": 1,
+       "confirm": {
+        "en": "Turns off the thermal throttling and power limit of your AMD card: it can run hotter. Watch your temperatures.",
+        "fr": "Coupe le bridage thermique et la limite de puissance de ta carte AMD : elle peut chauffer davantage. Surveille tes températures."
+       }
       },
       {
        "id": "amd_delag",
@@ -3496,7 +3501,11 @@
        "legacy": [
         "am8@11460"
        ],
-       "lines": 320
+       "lines": 319,
+       "confirm": {
+        "en": "Turns off the thermal throttling and power limit of your AMD card: it can run hotter. Watch your temperatures.",
+        "fr": "Coupe le bridage thermique et la limite de puissance de ta carte AMD : elle peut chauffer davantage. Surveille tes températures."
+       }
       }
      ]
     },
@@ -3616,17 +3625,21 @@
         "fr": "Couper Game DVR et Xbox"
        },
        "desc": {
-        "en": "Turns off background recording and Xbox services.",
+        "en": "Turns off background recording and the Xbox services.",
         "fr": "Coupe l'enregistrement en arrière-plan et les services Xbox."
        },
-       "risk": "safe",
+       "risk": "advanced",
        "reboot": true,
        "requires": [],
        "kind": "tweak",
        "legacy": [
         "RAGO APP FPS.bat@2917"
        ],
-       "lines": 26
+       "lines": 19,
+       "confirm": {
+        "en": "Turns off the Xbox services: Game Pass, the Xbox app and Minecraft Bedrock sign-in stop working.",
+        "fr": "Coupe les services Xbox : le Game Pass, l'appli Xbox et la connexion à Minecraft Bedrock ne marchent plus."
+       }
       },
       {
        "id": "win_visual",
@@ -3715,7 +3728,7 @@
        "legacy": [
         "RAGO APP FPS.bat@2955"
        ],
-       "lines": 18,
+       "lines": 13,
        "confirm": {
         "en": "Turns off the Spectre and Meltdown protections.",
         "fr": "Coupe les protections Spectre et Meltdown."
@@ -3844,8 +3857,8 @@
         "en": "Disable notifications"
        },
        "desc": {
-        "fr": "Plus de bannières ni de sons de notification pendant tes parties.",
-        "en": "No banners or notification sounds."
+        "en": "No more notification banners or sounds while you play. Also hides the notification center and the Windows Security alerts.",
+        "fr": "Plus de bannières ni de sons de notification pendant tes parties. Masque aussi le centre de notifications et les alertes de Sécurité Windows."
        },
        "risk": "safe",
        "reboot": true,
@@ -3950,7 +3963,7 @@
        "legacy": [
         "w14@5978"
        ],
-       "lines": 16
+       "lines": 11
       },
       {
        "id": "win_feed",
@@ -3998,8 +4011,8 @@
         "en": "Disable automatic maintenance"
        },
        "desc": {
-        "en": "No maintenance mid-game. Update manually. Same commands as “Disable maintenance” (Expert mode). Checked together, they run once.",
-        "fr": "Plus de maintenance qui se lance en pleine partie. Pense à faire tes mises à jour à la main. Mêmes commandes que « Désactiver la maintenance » (Mode expert). Cochés ensemble, ils ne s'appliquent qu'une fois."
+        "en": "No maintenance mid-game. Update manually. Windows also stops optimizing your drives on its own. Same commands as “Disable maintenance” (Expert mode). Checked together, they run once.",
+        "fr": "Plus de maintenance qui se lance en pleine partie. Pense à faire tes mises à jour à la main. Windows n'optimise plus non plus tes disques tout seul. Mêmes commandes que « Désactiver la maintenance » (Mode expert). Cochés ensemble, ils ne s'appliquent qu'une fois."
        },
        "risk": "safe",
        "reboot": true,
@@ -4067,6 +4080,23 @@
         "w20@5511"
        ],
        "lines": 13
+      },
+      {
+       "id": "win_autoplay",
+       "name": {
+        "en": "Disable AutoPlay",
+        "fr": "Désactiver l'exécution automatique"
+       },
+       "desc": {
+        "en": "Stops Windows from opening a window or running anything when you plug in a USB drive, a phone or a disc.",
+        "fr": "Windows n'ouvre plus de fenêtre et ne lance plus rien quand tu branches une clé USB, un téléphone ou un disque."
+       },
+       "risk": "safe",
+       "reboot": false,
+       "kind": "tweak",
+       "requires": [],
+       "legacy": [],
+       "lines": 1
       }
      ]
     },
@@ -4094,7 +4124,7 @@
        "legacy": [
         "d2@6313"
        ],
-       "lines": 114
+       "lines": 93
       },
       {
        "id": "dbl_xbox",
@@ -4103,17 +4133,21 @@
         "en": "Disable Xbox services"
        },
        "desc": {
-        "fr": "Coupe les services Xbox Live. Les jeux du Game Pass ne fonctionneront plus.",
-        "en": "Disables Xbox Live services. Game Pass games will stop working."
+        "en": "Turns off the Xbox Live services. Game Pass games and Minecraft Bedrock sign-in will no longer work.",
+        "fr": "Coupe les services Xbox Live. Les jeux du Game Pass et la connexion à Minecraft Bedrock ne fonctionneront plus."
        },
-       "risk": "safe",
+       "risk": "advanced",
        "reboot": false,
        "kind": "tweak",
        "requires": [],
        "legacy": [
         "d3@7046"
        ],
-       "lines": 5
+       "lines": 5,
+       "confirm": {
+        "en": "Turns off the Xbox services: Game Pass, the Xbox app and Minecraft Bedrock sign-in stop working.",
+        "fr": "Coupe les services Xbox : le Game Pass, l'appli Xbox et la connexion à Minecraft Bedrock ne marchent plus."
+       }
       },
       {
        "id": "dbl_office",
@@ -4184,7 +4218,7 @@
        },
        "risk": "advanced",
        "reboot": false,
-       "kind": "tweak",
+       "kind": "action",
        "requires": [],
        "confirm": {
         "fr": "Edge sera supprimé de ce PC. Continuer ?",
@@ -4212,7 +4246,7 @@
        "legacy": [
         "d9@6446"
        ],
-       "lines": 40,
+       "lines": 39,
        "twin": "dbl_autologgers"
       },
       {
@@ -4232,7 +4266,7 @@
        "legacy": [
         "d10@7135"
        ],
-       "lines": 22
+       "lines": 16
       },
       {
        "id": "dbl_biometrics",
@@ -4260,8 +4294,8 @@
         "en": "Uninstall OneDrive"
        },
        "desc": {
-        "fr": "Désinstalle OneDrive et supprime ses dossiers locaux. Vérifie d'abord que tes fichiers sont bien en ligne.",
-        "en": "Uninstalls OneDrive and deletes its local folders."
+        "en": "Uninstalls OneDrive and deletes its local folders. Check first that your files are online. If your Desktop or Documents live in OneDrive, that folder is kept.",
+        "fr": "Désinstalle OneDrive et supprime ses dossiers locaux. Vérifie d'abord que tes fichiers sont bien en ligne. Si ton Bureau ou tes Documents sont dans OneDrive, ce dossier est gardé."
        },
        "risk": "advanced",
        "reboot": false,
@@ -4275,6 +4309,23 @@
         "OneDrive@3028"
        ],
        "lines": 11
+      },
+      {
+       "id": "win_ai",
+       "name": {
+        "en": "Disable Copilot and Recall",
+        "fr": "Désactiver Copilot et Recall"
+       },
+       "desc": {
+        "en": "Turns off Copilot and its taskbar button, and stops Recall from taking snapshots of your screen.",
+        "fr": "Coupe Copilot et son bouton dans la barre des tâches, et empêche Recall de prendre des captures de ton écran."
+       },
+       "risk": "safe",
+       "reboot": true,
+       "kind": "tweak",
+       "requires": [],
+       "legacy": [],
+       "lines": 5
       }
      ]
     },
@@ -4292,17 +4343,17 @@
         "en": "Remove preinstalled apps"
        },
        "desc": {
-        "en": "Uninstalls ~30 Store apps. Same commands as “Remove useless apps” (Windows). Checked together, they run once.",
-        "fr": "Désinstalle une trentaine d'applis du Store (Météo, Astuces, 3D Viewer, Solitaire...). Mêmes commandes que « Supprimer les applis inutiles » (Windows). Cochés ensemble, ils ne s'appliquent qu'une fois."
+        "en": "Uninstalls ~30 Store apps. Same commands as the “Remove useless apps” action (Windows).",
+        "fr": "Désinstalle une trentaine d'applis du Store (Météo, Astuces, 3D Viewer, Solitaire...). Mêmes commandes que l'action « Supprimer les applis inutiles » (Windows)."
        },
        "risk": "advanced",
        "reboot": true,
-       "kind": "tweak",
+       "kind": "action",
        "requires": [],
        "legacy": [
         "U1@4859"
        ],
-       "lines": 33,
+       "lines": 29,
        "twin": "app_remove"
       },
       {
@@ -4340,8 +4391,8 @@
         "fr": "Télémétrie"
        },
        "desc": {
-        "en": "Turns off telemetry, scheduled tasks and Edge update services.",
-        "fr": "Coupe la télémétrie, des tâches planifiées et les services de mise à jour d'Edge."
+        "en": "Turns off telemetry, scheduled tasks and the Edge update services. Edge and WebView2, which Rago runs on, stop updating.",
+        "fr": "Coupe la télémétrie, des tâches planifiées et les services de mise à jour d'Edge. Edge et WebView2, le moteur de l'appli Rago, ne se mettent plus à jour."
        },
        "risk": "advanced",
        "reboot": true,
@@ -4350,7 +4401,7 @@
        "legacy": [
         "RAGO APP FPS.bat@2648"
        ],
-       "lines": 266,
+       "lines": 231,
        "confirm": {
         "en": "Turns off automatic Windows updates.",
         "fr": "Coupe les mises à jour automatiques de Windows."
@@ -4373,7 +4424,7 @@
        "legacy": [
         "RAGO APP FPS.bat@3008"
        ],
-       "lines": 56
+       "lines": 52
       },
       {
        "id": "win_diag",
@@ -4392,7 +4443,7 @@
        "legacy": [
         "RAGO APP FPS.bat@3099"
        ],
-       "lines": 25
+       "lines": 15
       },
       {
        "id": "win_services",
@@ -4401,8 +4452,8 @@
         "fr": "Couper les services inutiles"
        },
        "desc": {
-        "en": "Turns off Windows services most players don't use.",
-        "fr": "Coupe des services Windows que la plupart des joueurs n'utilisent pas."
+        "en": "Turns off Windows services most players do not use, including search indexing (slower search) and printing.",
+        "fr": "Coupe des services Windows que la plupart des joueurs n'utilisent pas, dont l'indexation (recherche plus lente) et l'impression."
        },
        "risk": "advanced",
        "reboot": true,
@@ -4411,7 +4462,7 @@
        "legacy": [
         "RAGO APP FPS.bat@3140"
        ],
-       "lines": 30
+       "lines": 26
       },
       {
        "id": "win_apps",
@@ -4420,17 +4471,17 @@
         "fr": "Supprimer les applis inutiles"
        },
        "desc": {
-        "en": "Uninstalls preinstalled Windows apps. Same commands as “Remove preinstalled apps” (Windows). Checked together, they run once.",
-        "fr": "Désinstalle des applis Windows préinstallées. Mêmes commandes que « Supprimer les applis préinstallées » (Windows). Cochés ensemble, ils ne s'appliquent qu'une fois."
+        "en": "Uninstalls preinstalled Windows apps. Same commands as the “Remove preinstalled apps” action (Windows).",
+        "fr": "Désinstalle des applis Windows préinstallées. Mêmes commandes que l'action « Supprimer les applis préinstallées » (Windows)."
        },
        "risk": "advanced",
        "reboot": true,
        "requires": [],
-       "kind": "tweak",
+       "kind": "action",
        "legacy": [
         "RAGO APP FPS.bat@3175"
        ],
-       "lines": 33,
+       "lines": 29,
        "twin": "app_remove"
       },
       {
@@ -4568,7 +4619,7 @@
        "legacy": [
         "RAGO APP HITREG INPUTLAG.bat@2"
        ],
-       "lines": 14
+       "lines": 8
       },
       {
        "id": "in_adapter",
@@ -4577,19 +4628,17 @@
         "fr": "Latence de la carte"
        },
        "desc": {
-        "en": "Latency settings for the display adapter and its scheduler.",
-        "fr": "Réglages de latence de la carte graphique et de son planificateur."
+        "en": "Network card and TCP settings: AFD buffers, delayed ACKs, TTL, and the network card interrupts pinned to one CPU core.",
+        "fr": "Réglages de la carte réseau et de TCP : tampons AFD, accusés de réception, TTL, et interruptions de la carte réseau épinglées sur un seul cœur du processeur."
        },
        "risk": "safe",
        "reboot": true,
-       "requires": [
-        "wmic"
-       ],
+       "requires": [],
        "kind": "tweak",
        "legacy": [
         "RAGO APP HITREG INPUTLAG.bat@35"
        ],
-       "lines": 34
+       "lines": 29
       },
       {
        "id": "in_windows",
@@ -4603,14 +4652,12 @@
        },
        "risk": "advanced",
        "reboot": true,
-       "requires": [
-        "wmic"
-       ],
+       "requires": [],
        "kind": "tweak",
        "legacy": [
         "RAGO APP HITREG INPUTLAG.bat@76"
        ],
-       "lines": 85,
+       "lines": 70,
        "confirm": {
         "en": "Turns off the Spectre and Meltdown protections. Turns off the system-wide exploit protections. Turns off Hyper-V and virtualization-based security (VBS). Weakens Data Execution Prevention (DEP). Deletes every Image File Execution Options entry (per-program debugger and protection settings). Clears the Prefetch folder, which a screenshare can read as wiped traces.",
         "fr": "Coupe les protections Spectre et Meltdown. Coupe les protections contre les exploits de tout le système. Coupe Hyper-V et la sécurité basée sur la virtualisation (VBS). Affaiblit la prévention de l'exécution des données (DEP). Supprime toutes les entrées Image File Execution Options (débogueur et protections par programme). Vide le dossier Prefetch, ce qu'un screenshare peut lire comme des traces effacées."
@@ -4679,10 +4726,10 @@
        "legacy": [
         "RAGO APP HITREG INPUTLAG.bat@181"
        ],
-       "lines": 400,
+       "lines": 377,
        "confirm": {
-        "en": "Turns off the Spectre and Meltdown protections. Turns off Hyper-V and virtualization-based security (VBS). Turns off the early-launch anti-malware drivers. Turns off Microsoft Defender real-time protection. Turns off SmartScreen, which checks the files you download. Turns off UAC, the admin permission prompts. Stops Prefetch from filling. On a screenshare that can look like erased traces: turn on RBW Mod and restart your PC before one.",
-        "fr": "Coupe les protections Spectre et Meltdown. Coupe Hyper-V et la sécurité basée sur la virtualisation (VBS). Coupe les pilotes anti-malware lancés au démarrage. Coupe la protection en temps réel de Microsoft Defender. Coupe SmartScreen, qui vérifie les fichiers téléchargés. Coupe l'UAC, les demandes d'autorisation administrateur. Le Prefetch ne se remplit plus. Sur un screenshare, ça peut ressembler à des traces effacées : active le RBW Mod et redémarre ton PC avant."
+        "en": "Turns off the Spectre and Meltdown protections. Turns off Hyper-V and virtualization-based security (VBS). Turns off the early-launch anti-malware drivers. Turns off Microsoft Defender real-time protection. Turns off SmartScreen, which checks the files you download. Stops Prefetch from filling. On a screenshare that can look like erased traces: turn on RBW Mod and restart your PC before one. Turns off the admin permission prompts (UAC): programs get admin rights without asking.",
+        "fr": "Coupe les protections Spectre et Meltdown. Coupe Hyper-V et la sécurité basée sur la virtualisation (VBS). Coupe les pilotes anti-malware lancés au démarrage. Coupe la protection en temps réel de Microsoft Defender. Coupe SmartScreen, qui vérifie les fichiers téléchargés. Le Prefetch ne se remplit plus. Sur un screenshare, ça peut ressembler à des traces effacées : active le RBW Mod et redémarre ton PC avant. Coupe les demandes d'autorisation administrateur (UAC) : les programmes obtiennent les droits administrateur sans demander."
        }
       }
      ]
@@ -4711,7 +4758,7 @@
        "legacy": [
         "RAGO APP FPS.bat@2211"
        ],
-       "lines": 41
+       "lines": 40
       },
       {
        "id": "in_keyboard",
@@ -4730,7 +4777,7 @@
        "legacy": [
         "RAGO APP FPS.bat@2259"
        ],
-       "lines": 14
+       "lines": 12
       },
       {
        "id": "in_queue",
@@ -4739,8 +4786,8 @@
         "fr": "File souris et clavier"
        },
        "desc": {
-        "en": "How many mouse and keyboard events the drivers buffer. Lower reacts faster.",
-        "fr": "Nombre d'événements souris et clavier mis en mémoire par les pilotes. Plus bas, plus réactif."
+        "en": "How many mouse and keyboard events the drivers buffer. Lower is more responsive. With a 4000 Hz mouse or faster, keep Balanced or Default.",
+        "fr": "Nombre d'événements souris et clavier mis en mémoire par les pilotes. Plus bas, plus réactif. Avec une souris 4000 Hz ou plus, garde Équilibrée ou Par défaut."
        },
        "risk": "safe",
        "reboot": true,
@@ -4802,8 +4849,8 @@
         "en": "Advanced hitreg suite"
        },
        "desc": {
-        "en": "NIC interrupt moderation, Win32 priority for your PC class, and 400+ telemetry, storage and input settings. Also turns off NTFS compression. No automatic undo: create a restore point first.",
-        "fr": "Modération d'interruptions de la carte réseau, priorité Win32 adaptée à ton PC, et plus de 400 réglages de télémétrie, stockage et entrées. Sans les modules Réseau et Latence, l'effet est faible. Coupe aussi la compression NTFS. Pas de retour arrière automatique : crée un point de restauration avant."
+        "en": "NIC interrupt moderation, Win32 priority for your PC class, and 400+ telemetry, storage and input settings. Also turns off NTFS compression.",
+        "fr": "Modération d'interruptions de la carte réseau, priorité Win32 adaptée à ton PC, et plus de 400 réglages de télémétrie, stockage et entrées. Sans les modules Réseau et Latence, l'effet est faible. Coupe aussi la compression NTFS."
        },
        "risk": "advanced",
        "reboot": true,
@@ -4815,7 +4862,7 @@
           "fr": "PC puissant",
           "en": "High-end PC"
          },
-         "lines": 418
+         "lines": 404
         },
         {
          "id": "medium",
@@ -4823,7 +4870,7 @@
           "fr": "PC moyen",
           "en": "Mid-range PC"
          },
-         "lines": 418
+         "lines": 404
         },
         {
          "id": "low",
@@ -4831,7 +4878,7 @@
           "fr": "PC modeste",
           "en": "Low-end PC"
          },
-         "lines": 418
+         "lines": 404
         },
         {
          "id": "laptop",
@@ -4839,7 +4886,7 @@
           "fr": "PC portable",
           "en": "Laptop"
          },
-         "lines": 418
+         "lines": 404
         }
        ],
        "requires": [
@@ -4852,7 +4899,7 @@
         "lwpc1@13118",
         "ltpc1@13123"
        ],
-       "lines": 418,
+       "lines": 404,
        "confirm": {
         "en": "Stops Prefetch from filling. On a screenshare that can look like erased traces: turn on RBW Mod and restart your PC before one.",
         "fr": "Le Prefetch ne se remplit plus. Sur un screenshare, ça peut ressembler à des traces effacées : active le RBW Mod et redémarre ton PC avant."
@@ -5110,8 +5157,8 @@
         "en": "RBW Mod"
        },
        "desc": {
-        "en": "On restarts the services screenshare tools check (Event Log, SysMain, PCA, Scheduler) and turns BAM and Prefetch back on after a restart. Off sets the services back to manual after your session.",
-        "fr": "Activé relance les services que vérifient les outils de screenshare (journal d'événements, SysMain, PCA, Planificateur) et remet BAM et le Prefetch après un redémarrage. Désactivé repasse les services en manuel après ta session."
+        "en": "On restarts the services screenshare tools check (Event Log, SysMain, PCA, Scheduler) and turns BAM and Prefetch back on after a restart. Off puts these services back to how Windows sets them.",
+        "fr": "Activé relance les services que vérifient les outils de screenshare (journal d'événements, SysMain, PCA, Planificateur) et remet BAM et le Prefetch après un redémarrage. Désactivé remet ces services comme Windows les règle."
        },
        "risk": "safe",
        "reboot": false,
@@ -5188,7 +5235,7 @@
           "fr": "Activé",
           "en": "On"
          },
-         "lines": 14
+         "lines": 11
         },
         {
          "id": "off",
@@ -5206,7 +5253,7 @@
         "ENABLE8@14250",
         "DISABLE8@14304"
        ],
-       "lines": 14
+       "lines": 11
       }
      ]
     }
@@ -5248,7 +5295,7 @@
        "legacy": [
         "io@3202"
        ],
-       "lines": 32
+       "lines": 24
       },
       {
        "id": "exp_iolatency",
@@ -5286,7 +5333,7 @@
        "legacy": [
         "kernel@3250"
        ],
-       "lines": 12
+       "lines": 10
       },
       {
        "id": "exp_misc",
@@ -5512,8 +5559,8 @@
         "en": "NTFS settings"
        },
        "desc": {
-        "en": "Enlarges the NTFS memory cache and the MFT zone, turns off last-access timestamps and page file encryption, keeps TRIM on.",
-        "fr": "Agrandit le cache mémoire de NTFS et la zone MFT, coupe l'horodatage du dernier accès et le chiffrement du fichier d'échange, garde le TRIM actif."
+        "en": "Enlarges the NTFS memory cache and the MFT zone, turns off last-access timestamps and page file encryption, turns TRIM back on. Same commands as “NTFS tweaks” (Latency). Checked together, they run once.",
+        "fr": "Agrandit le cache mémoire de NTFS et la zone MFT, coupe l'horodatage du dernier accès et le chiffrement du fichier d'échange, rallume le TRIM. Mêmes commandes que « Réglages NTFS » (Latence). Cochés ensemble, ils ne s'appliquent qu'une fois."
        },
        "risk": "safe",
        "reboot": true,
@@ -5522,7 +5569,8 @@
        "legacy": [
         "NFTS@2852"
        ],
-       "lines": 5
+       "lines": 5,
+       "twin": "sto_ntfs"
       },
       {
        "id": "exp_startup",
@@ -5592,7 +5640,7 @@
        "legacy": [
         "Autolog@2957"
        ],
-       "lines": 40,
+       "lines": 39,
        "twin": "dbl_autologgers"
       },
       {
@@ -5602,8 +5650,8 @@
         "en": "Disable maintenance"
        },
        "desc": {
-        "en": "No automatic maintenance. Same commands as “Disable automatic maintenance” (Windows). Checked together, they run once.",
-        "fr": "Plus de maintenance automatique. Mêmes commandes que « Désactiver la maintenance automatique » (Windows). Cochés ensemble, ils ne s'appliquent qu'une fois."
+        "en": "No automatic maintenance. Windows also stops optimizing your drives on its own. Same commands as “Disable automatic maintenance” (Windows). Checked together, they run once.",
+        "fr": "Plus de maintenance automatique. Windows n'optimise plus non plus tes disques tout seul. Mêmes commandes que « Désactiver la maintenance automatique » (Windows). Cochés ensemble, ils ne s'appliquent qu'une fois."
        },
        "risk": "safe",
        "reboot": true,
@@ -5738,14 +5786,18 @@
         "fr": "Désactive SMB1 et exige la signature et le chiffrement SMB. Peut prendre plusieurs minutes.",
         "en": "Disables SMB1 and requires SMB signing and encryption."
        },
-       "risk": "safe",
+       "risk": "advanced",
        "reboot": true,
        "kind": "tweak",
        "requires": [],
        "legacy": [
         "SMB@2635"
        ],
-       "lines": 7
+       "lines": 7,
+       "confirm": {
+        "en": "Old NAS drives, routers and TVs that do not support SMB encryption will no longer open your shared folders.",
+        "fr": "Les vieux NAS, box et TV qui ne gèrent pas le chiffrement SMB ne pourront plus ouvrir tes dossiers partagés."
+       }
       }
      ]
     }

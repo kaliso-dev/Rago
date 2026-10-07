@@ -401,9 +401,12 @@ Corrections ciblées (`SCRIPT_FIXES`, `DROP_LINES`) :
 - sto_general : `PROFILES_DIR` lu non développé, la boucle sur les profils ne tournait jamais ;
 - rst_queue et in_queue « Default » : 80 et 32 → 100, la valeur de Windows ;
 - game_mode : faute « Optimimizing ».
-- in_windows, sto_ntfs : `fsutil behavior set DisableDeleteNotify 1` retiré. Cette ligne coupait le TRIM du SSD
-  (qui le garde rapide et en bonne santé) sans le dire ; choix de Sofiene du 2026-10-07 : TRIM laissé actif. Le motif reste
-  dans `WARNINGS` et le test `dangerous_lines_stay_out` vérifie qu'aucun script ne le contient plus ;
+- in_windows, sto_ntfs : `fsutil behavior set DisableDeleteNotify 1` coupait le TRIM du SSD (qui le garde rapide et en
+  bonne santé) sans le dire ; choix de Sofiene du 2026-10-07 : TRIM laissé actif. Ligne retirée de in_windows ; dans sto_ntfs
+  elle passe à `0` (`SUB_LINES`) et rallume le TRIM, comme lat_general et exp_ntfs, pour les PC passés par l'ancien .bat v6.
+  sto_ntfs a désormais les mêmes commandes que exp_ntfs (jumeaux : même texte, un seul passage).
+  Le motif reste dans `WARNINGS` et le test `dangerous_lines_stay_out` vérifie qu'aucun script ne le contient plus ;
+- nv_hdcp, amd_hdcp : « Disable HDCP (NVIDIA) » et « Disable HDCP (AMD) », pour ne plus avoir deux lignes identiques ;
 - sto_fsutil_v6, sto_fsutil2, sys_time, sto_fsutil (variante SSD) : `disableLastAccess 0` → `1` (`SUB_LINES`). Le .bat
   ACTIVAIT la date de dernier accès alors que l'app disait la couper ; choix de Sofiene du 2026-10-07 : la couper vraiment.
   La variante disque dur (valeur 2, gérée par Windows) ne change pas ;
@@ -417,3 +420,28 @@ RBW Mod « On » remet aussi BAM, DAM et le Prefetcher (actifs après redémarra
 Les actions lourdes ne sont pas retirées (choix de Sofiene, « tout garder ») : `WARNINGS` les détecte dans chaque
 script (Spectre, Defender, SmartScreen, UAC, pare-feu, IFEO, BAM, Prefetch…), écrit l'avertissement « Read this first »
 et passe le réglage en Advanced.
+
+Réglages ajoutés par l'app (`NEW_TWEAKS`, 1.1.6), registre seulement donc sauvegardés et remis comme avant quand on
+les décoche : win_ai (Copilot et Recall coupés par les stratégies Microsoft) et win_autoplay (exécution automatique
+coupée). Premium par défaut.
+
+Audit ligne par ligne du 2026-10-07 (rapport : /mnt/project-files/audit/audit-commandes-2026-10-07.md), 1.1.6 :
+- tools/audit_fixes.py (copie de audit/outils-annulation/propositions.py) est appliqué après les corrections
+  ci-dessus (`apply_audit`) : 7 corrections de texte, 3 blocs et 590 lignes retirés, 144 lignes réécrites. Les lignes
+  dangereuses cachées dans les packs sont retirées (choix de Sofiene, 2026-10-07, « Retirer ») ; chaque action lourde
+  reste dans son réglage dédié et annoncé. Les 8 réglages « placebo » sont gardés (choix de Sofiene, « Garder ») ;
+- majeur : RBW Mod « Off » remet en automatique le journal d'événements, le Planificateur, DPS, SysMain, PCA et CDP
+  (il les passait en manuel) ;
+- l'avertissement UAC porte sur ConsentPromptBehaviorAdmin 0 ; la ligne EnableLUA 0 (Minecraft Launcher et applis du
+  Store qui ne s'ouvrent plus) est retirée ;
+- wmic, absent par défaut de Windows 11 24H2, est remplacé par PowerShell (Get-CimInstance) dans 21 réglages
+  (`WMIC_SUBS`) ;
+- actions ponctuelles (bouton, plus case) : sto_defrag, win_apps, app_remove, dbl_edge, nv_debloat, cpu_ppm,
+  usb_controller (`ONE_SHOT`) ;
+- `DROP_LINES` accepte « id:variante ».
+
+Annulation : src-tauri/scripts/undo.json, généré à chaque build par tools/undo (undo_gen.py et defaults.py de
+l'audit) depuis les scripts d'avant et d'après l'audit, réunis par merge_full.py : `full` remet les valeurs de Windows
+quand il n'y a pas de sauvegarde, `rest` ce que la sauvegarde ne relève pas, `rest_avant` (pow_ultimate,
+pow_delete_plans) le lance avant la sauvegarde. Chiffrée dans l'exe avec les scripts Premium ; l'app en garde une copie
+par réglage appliqué, pour annuler après une déconnexion ou une fin de licence.

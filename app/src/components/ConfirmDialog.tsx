@@ -6,13 +6,17 @@ import { Modal } from "./Modal";
 import { Button, Badge } from "./ui";
 
 export function ConfirmDialog() {
-  const { t, lang, confirm, setConfirm, sys, startRun, variantOf, mcDir } = useStore();
+  const { t, lang, confirm, setConfirm, sys, startRun, variantOf, mcDir, applied } = useStore();
   const ids = confirm?.ids ?? [];
+  const undoIds = confirm?.undo ?? [];
   const list = ids.map((id) => tweaks.get(id)!).filter(Boolean);
+  const undoList = undoIds.map((id) => tweaks.get(id)!).filter(Boolean);
+  const onlyUndo = list.length === 0 && undoList.length > 0;
+  const total = list.length + undoList.length;
   const onlyRestore = ids.length === 1 && ids[0] === "rst_point";
   const needsWmic = list.filter((tw) => availability(tw, sys).warn === "needsWmic").length;
   const warnings = list.filter((tw) => tw.confirm);
-  const reboot = list.some((tw) => needsReboot(tw, variantOf(tw)));
+  const reboot = list.some((tw) => needsReboot(tw, variantOf(tw))) || undoList.some((tw) => needsReboot(tw, applied.get(tw.id)?.variant ?? null));
   const mcBlocked = list.some((tw) => tw.native === "minecraft_optifine") && !mcDir;
 
   const [restorePoint, setRestorePoint] = useState(true);
@@ -23,7 +27,8 @@ export function ConfirmDialog() {
     // ni pour un mode à allumer et éteindre à chaque session (mode jeu, RBW Mod)
     const session = !!confirm?.single && list.every((tw) => SESSION_TOGGLES.has(tw.id));
     const risky = list.some((tw) => tw.kind === "tweak" || tw.risk === "advanced");
-    setRestorePoint(!onlyRestore && risky && !session);
+    // annuler seulement : on revient à l'état d'avant, pas besoin de point de restauration
+    setRestorePoint(!onlyRestore && risky && !session && list.length > 0);
     setWmic(true);
     // le bouton principal prend le focus sans faire défiler la fenêtre : le titre reste visible
     if (confirm) requestAnimationFrame(() => footRef.current?.querySelector<HTMLButtonElement>(".btn-primary")?.focus({ preventScroll: true }));
@@ -32,28 +37,45 @@ export function ConfirmDialog() {
 
   const close = () => setConfirm(null);
   const go = () =>
-    startRun(ids, { restorePoint: restorePoint && !onlyRestore, wmic: wmic && needsWmic > 0, clearSelection: !confirm?.single });
+    startRun(ids, { restorePoint: restorePoint && !onlyRestore, wmic: wmic && needsWmic > 0, clearSelection: !confirm?.single, undo: undoIds });
+
+  const title =
+    confirm?.single && list.length === 1
+      ? list[0].name[lang]
+      : onlyUndo
+        ? t("confirm.undoTitle", { n: undoList.length })
+        : undoList.length
+          ? t("confirm.changesTitle", { n: total })
+          : t("confirm.title", { n: list.length });
+  const lead = confirm?.single && list.length === 1 ? list[0].desc[lang] : onlyUndo ? t("confirm.undoLead") : t("confirm.lead");
+  const row = (tw: (typeof list)[number], v: string | null) => {
+    const vLabel = tw.variants?.find((x) => x.id === v)?.label[lang];
+    return (
+      <li key={tw.id}>
+        <span>{itemName(tw.id, lang)}</span>
+        {vLabel && <span className="confirm-variant">{vLabel}</span>}
+        {needsReboot(tw, v) && <RotateCcw size={12} className="muted" />}
+        {tw.risk === "advanced" && <Badge tone="warn">{t("badge.advanced")}</Badge>}
+      </li>
+    );
+  };
 
   return (
     <Modal open={!!confirm} onClose={close} className="confirm">
-      <h2 className="modal-title">{confirm?.single && list.length === 1 ? list[0].name[lang] : t("confirm.title", { n: list.length })}</h2>
-      <p className="modal-lead">{confirm?.single && list.length === 1 ? list[0].desc[lang] : t("confirm.lead")}</p>
+      <h2 className="modal-title">{title}</h2>
+      <p className="modal-lead">{lead}</p>
 
-      {!(confirm?.single && list.length === 1) && (
-        <ul className="confirm-list">
-          {list.map((tw) => {
-            const v = variantOf(tw);
-            const vLabel = tw.variants?.find((x) => x.id === v)?.label[lang];
-            return (
-              <li key={tw.id}>
-                <span>{itemName(tw.id, lang)}</span>
-                {vLabel && <span className="confirm-variant">{vLabel}</span>}
-                {needsReboot(tw, variantOf(tw)) && <RotateCcw size={12} className="muted" />}
-                {tw.risk === "advanced" && <Badge tone="warn">{t("badge.advanced")}</Badge>}
-              </li>
-            );
-          })}
-        </ul>
+      {!(confirm?.single && list.length === 1) && list.length > 0 && (
+        <>
+          {undoList.length > 0 && <div className="rg-overline confirm-group">{t("confirm.applyList")}</div>}
+          <ul className="confirm-list">{list.map((tw) => row(tw, variantOf(tw)))}</ul>
+        </>
+      )}
+      {undoList.length > 0 && (
+        <>
+          {list.length > 0 && <div className="rg-overline confirm-group">{t("confirm.undoList")}</div>}
+          <ul className="confirm-list undo">{undoList.map((tw) => row(tw, applied.get(tw.id)?.variant ?? null))}</ul>
+        </>
       )}
 
       {warnings.length > 0 && (
@@ -71,7 +93,7 @@ export function ConfirmDialog() {
       )}
 
       <div className="confirm-options">
-        {!onlyRestore && (
+        {!onlyRestore && !onlyUndo && (
           <label className="check">
             <input type="checkbox" checked={restorePoint} onChange={(e) => setRestorePoint(e.target.checked)} />
             <span>
@@ -98,7 +120,7 @@ export function ConfirmDialog() {
           {t("confirm.cancel")}
         </Button>
         <Button variant="primary" onClick={go} disabled={mcBlocked}>
-          {confirm?.single ? t("confirm.goOne") : t("confirm.go")}
+          {confirm?.single ? t("confirm.goOne") : onlyUndo ? t("confirm.undoGo") : t("confirm.go")}
         </Button>
       </footer>
     </Modal>

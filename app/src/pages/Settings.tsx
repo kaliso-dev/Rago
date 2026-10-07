@@ -19,7 +19,7 @@ const LICENCES = [
 ];
 
 export function Settings() {
-  const { t, lang, setLang, motion, setMotion, license, signOut, setUpsell, activatedAt, sys } = useStore();
+  const { t, lang, setLang, motion, setMotion, license, signOutAndUndo, premiumApplied, setUpsell, activatedAt, sys } = useStore();
   const [confirmOut, setConfirmOut] = useState(false);
   const device = license?.deviceName ?? sys?.hostname ?? "";
   return (
@@ -144,6 +144,7 @@ export function Settings() {
       </div>
       <Modal open={confirmOut} onClose={() => setConfirmOut(false)} className="confirm signout">
         <h2>{t("signout.title")}</h2>
+        {premiumApplied.length > 0 && <p>{t("signout.undoLead", { n: premiumApplied.length })}</p>}
         <p className="muted">{t("signout.lead", { device })}</p>
         <div className="modal-actions">
           <Button variant="ghost" className="push-left" onClick={() => void api.openUrl(`${ACCOUNT_URL}/account`)}>
@@ -155,10 +156,10 @@ export function Settings() {
             icon={<LogOut size={14} />}
             onClick={() => {
               setConfirmOut(false);
-              void signOut();
+              void signOutAndUndo();
             }}
           >
-            {t("account.signOut")}
+            {premiumApplied.length > 0 ? t("signout.go") : t("account.signOut")}
           </Button>
         </div>
       </Modal>

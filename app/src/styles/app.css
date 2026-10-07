@@ -900,6 +900,9 @@ kbd {
   gap: 8px;
   margin-top: 22px;
 }
+.confirm-group {
+  margin: 4px 0 6px;
+}
 .confirm-list {
   list-style: none;
   margin: 18px 0 0;
@@ -1109,6 +1112,14 @@ kbd {
 }
 .run-state {
   margin-bottom: 10px;
+}
+.run-note {
+  max-width: 420px;
+  margin: 0 auto 14px;
+  text-align: center;
+  color: var(--rg-text-2);
+  font-size: 13px;
+  line-height: 1.45;
 }
 .run-counter {
   font-size: 64px;

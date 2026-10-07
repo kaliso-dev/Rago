@@ -1,5 +1,12 @@
+#[path = "src/seal.rs"]
+mod seal;
+include!("embed_scripts.rs");
+
 fn main() {
     guard_test_key();
+    let manifest = std::path::PathBuf::from(std::env::var("CARGO_MANIFEST_DIR").unwrap());
+    let out = std::path::PathBuf::from(std::env::var("OUT_DIR").unwrap());
+    embed_scripts(&manifest, &out);
     // Le manifeste demande les droits administrateur au lancement : la quasi-totalité des
     // réglages écrivent dans HKLM, les services ou le BCD.
     let windows = tauri_build::WindowsAttributes::new().app_manifest(include_str!("app.manifest"));

@@ -6,7 +6,10 @@ déclarées dans SECTIONS. Le module Restore (outils de l'app) est repris de l'a
 
     python3 tools/build_catalog_v6.py
 """
+import copy
 import json
+import probes
+import audit_fixes as AUDIT
 import os
 import re
 import subprocess
@@ -284,13 +287,38 @@ DROP_LINES = [
     (('win_visual', 'win_apps'), r'MessageBox\]::Show'),
     (('win_visual',), r'^\s*%windir%\\system32\\SystemPropertiesPerformance\.exe\s*$'),
     # TRIM gardé actif (choix de Sofiene, 2026-10-07) : WARNINGS garde le motif si une future version du .bat le remet ailleurs
-    (('in_windows', 'sto_ntfs'), r'^\s*fsutil\s+behavior\s+set\s+DisableDeleteNotify\s+(NTFS\s+)?1\b'),
+    (('in_windows',), r'^\s*fsutil\s+behavior\s+set\s+DisableDeleteNotify\s+(NTFS\s+)?1\b'),
 ]
 # lignes réécrites (ids ou « id:variant », motif, remplacement)
 SUB_LINES = [
     # date de dernier accès vraiment coupée, comme l'app l'annonce (choix de Sofiene, 2026-10-07) ; la variante hdd (2) ne change pas
     (('sto_fsutil_v6', 'sto_fsutil2', 'sys_time', 'sto_fsutil:ssd'),
      r'(?i)^(\s*fsutil\s+behavior\s+set\s+disableLastAccess\s+)0\b', r'\g<1>1'),
+    # NTFS tweaks rallume le TRIM (0), comme lat_general et exp_ntfs : un PC passé par l'ancien .bat v6 le retrouve
+    (('sto_ntfs',), r'(?i)^(\s*fsutil\s+behavior\s+set\s+DisableDeleteNotify\s+)1\b', r'\g<1>0'),
+]
+# réglages ajoutés par l'app (pas dans les .bat) : registre seulement, donc sauvegardés et annulables (module, section, réglage, script)
+NEW_TWEAKS = [
+    ('windows', 'debloat', dict(
+        id='win_ai', name=I('Disable Copilot and Recall', 'Désactiver Copilot et Recall'),
+        desc=I('Turns off Copilot and its taskbar button, and stops Recall from taking snapshots of your screen.',
+               'Coupe Copilot et son bouton dans la barre des tâches, et empêche Recall de prendre des captures de ton écran.'),
+        risk='safe', reboot=True, kind='tweak', requires=[], legacy=[]), '\n'.join([
+        'echo - Turning off Copilot and Recall',
+        r'reg add "HKCU\Software\Policies\Microsoft\Windows\WindowsCopilot" /v "TurnOffWindowsCopilot" /t REG_DWORD /d "1" /f >nul',
+        r'reg add "HKLM\SOFTWARE\Policies\Microsoft\Windows\WindowsCopilot" /v "TurnOffWindowsCopilot" /t REG_DWORD /d "1" /f >nul',
+        r'reg add "HKCU\Software\Microsoft\Windows\CurrentVersion\Explorer\Advanced" /v "ShowCopilotButton" /t REG_DWORD /d "0" /f >nul',
+        r'reg add "HKCU\Software\Policies\Microsoft\Windows\WindowsAI" /v "DisableAIDataAnalysis" /t REG_DWORD /d "1" /f >nul',
+        r'reg add "HKLM\SOFTWARE\Policies\Microsoft\Windows\WindowsAI" /v "DisableAIDataAnalysis" /t REG_DWORD /d "1" /f >nul',
+    ])),
+    ('windows', 'system', dict(
+        id='win_autoplay', name=I('Disable AutoPlay', 'Désactiver l\'exécution automatique'),
+        desc=I('Stops Windows from opening a window or running anything when you plug in a USB drive, a phone or a disc.',
+               'Windows n\'ouvre plus de fenêtre et ne lance plus rien quand tu branches une clé USB, un téléphone ou un disque.'),
+        risk='safe', reboot=False, kind='tweak', requires=[], legacy=[]), '\n'.join([
+        'echo - Turning off AutoPlay',
+        r'reg add "HKCU\Software\Microsoft\Windows\CurrentVersion\Explorer\AutoplayHandlers" /v "DisableAutoplay" /t REG_DWORD /d "1" /f >nul',
+    ])),
 ]
 RBW_ON_EXTRA = '\n'.join([
     'echo - BAM, DAM and Prefetch back on (active after a restart)',
@@ -320,8 +348,8 @@ WARNINGS = [
      'Turns off Microsoft Defender real-time protection.', 'Coupe la protection en temps réel de Microsoft Defender.'),
     (r'EnableSmartScreen"?\s+/t\s+REG_DWORD\s+/d\s+"?0', 'Turns off SmartScreen, which checks the files you download.',
      'Coupe SmartScreen, qui vérifie les fichiers téléchargés.'),
-    (r'EnableLUA"?\s+/t\s+REG_DWORD\s+/d\s+"?0', 'Turns off UAC, the admin permission prompts.',
-     'Coupe l\'UAC, les demandes d\'autorisation administrateur.'),
+    # UAC : l'avertissement porte sur ConsentPromptBehaviorAdmin 0 (AUDIT.WARNINGS_PLUS) ; la ligne EnableLUA 0, qui
+    # empêchait le Minecraft Launcher et les applis du Store de s'ouvrir, est retirée par l'audit
     (r'NoAutoUpdate"?\s+/t\s+REG_DWORD\s+/d\s+"?1', 'Turns off automatic Windows updates.',
      'Coupe les mises à jour automatiques de Windows.'),
     (r'advfirewall\s+reset', 'Resets the Windows Firewall: your custom rules are deleted.',
@@ -341,6 +369,7 @@ WARNINGS = [
     (r'Clear-RecycleBin', 'Empties the Recycle Bin.', 'Vide la Corbeille.'),
     (r'RunMRU|TypedPaths|OpenSavePidlMRU', 'Clears your recent files and Run history.', 'Efface tes fichiers récents et l\'historique Exécuter.'),
 ]
+WARNINGS += AUDIT.WARNINGS_PLUS
 # descriptions qui disent ce que font les commandes (vérification du 2026-10-07, fsutil)
 LASTACCESS_OFF = ('Turns off last-access timestamps (Windows stops recording when each file was last opened) and short 8.3 file names.',
                   'Coupe l\'horodatage du dernier accès (Windows ne note plus quand chaque fichier a été ouvert) et les noms de fichiers courts 8.3.')
@@ -349,12 +378,10 @@ DESC_FIX = {
     'sto_fsutil2': LASTACCESS_OFF,
     'sys_time': LASTACCESS_OFF,
     'sto_ntfs': ('Enlarges the NTFS memory cache and the MFT zone, turns off last-access timestamps and page file encryption, '
-                 'keeps TRIM on.',
+                 'turns TRIM back on.',
                  'Agrandit le cache mémoire de NTFS et la zone MFT, coupe l\'horodatage du dernier accès et le chiffrement du fichier '
-                 'd\'échange, garde le TRIM actif.'),
-    'exp_ntfs': ('Enlarges the NTFS memory cache and the MFT zone, turns off last-access timestamps and page file encryption, keeps TRIM on.',
-                 'Agrandit le cache mémoire de NTFS et la zone MFT, coupe l\'horodatage du dernier accès et le chiffrement du fichier '
-                 'd\'échange, garde le TRIM actif.'),
+                 'd\'échange, rallume le TRIM.'),
+    'exp_ntfs': None,  # mêmes commandes que sto_ntfs : même texte (rempli plus bas)
     'exp_misc': ('Distributed timers, NVMe latency tolerance, low-latency scaling, performance counters rebuilt, Sleep hidden from the '
                  'power menu, last-access timestamps off.',
                  'Timers répartis, tolérance de latence NVMe, mise à l\'échelle basse latence, compteurs de performance reconstruits, '
@@ -364,12 +391,17 @@ DESC_FIX = {
                    'SSD : coupe l\'horodatage du dernier accès et les noms courts 8.3. Disque dur : laisse Windows gérer '
                    'l\'horodatage du dernier accès et active les noms 8.3.'),
 }
+DESC_FIX['exp_ntfs'] = DESC_FIX['sto_ntfs']
+DESC_FIX.update(AUDIT.DESC_FIX_PLUS)  # descriptions qui disent ce que font les commandes corrigées
 # lancent aussi « fsutil behavior set memoryusage 2 » sans le dire
 MEMORYUSAGE = ['gpu_nvidia', 'gpu_amd', 'gpu_general', 'nv_general', 'amd_advanced']
 # « FSUTIL memory usage » ne touche pas à memoryusage
 NAME_FIX = {'sto_fsutil2': ('FSUTIL file settings', 'Réglages de fichiers FSUTIL'),
+            'nv_hdcp': ('Disable HDCP (NVIDIA)', 'Désactiver le HDCP (NVIDIA)'),
+            'amd_hdcp': ('Disable HDCP (AMD)', 'Désactiver le HDCP (AMD)'),
             'sys_time': ('File timestamps', 'Horodatage des fichiers')}
 # avertissements écrits à la main, gardés devant ceux du script
+ONE_SHOT = ['sto_defrag', 'win_apps', 'app_remove', 'dbl_edge', 'nv_debloat', 'cpu_ppm', 'usb_controller']
 KEEP_CONFIRM = {'win_bluetooth', 'dbl_edge', 'dbl_onedrive'}
 
 # sections homonymes de l'ancien programme et des .bat v6 réunies (« Tout garder » : on regroupe, on ne retire rien)
@@ -396,6 +428,82 @@ UK_US = [('Optimise', 'Optimize'), ('optimise', 'optimize'), ('Optimisation', 'O
          ('behaviour', 'behavior'), ('prioritise', 'prioritize'), ('Prioritise', 'Prioritize')]
 
 
+def variants_of(scripts, key):
+    tid, _, only = key.partition(':')
+    assert tid in scripts and (not only or only in scripts[tid]), key
+    return [(tid, v) for v in scripts[tid] if not only or v == only]
+
+
+def drop_lines(scripts, table):
+    for ids, pat in table:
+        for key in ids:  # « id » ou « id:variante »
+            for tid, v in variants_of(scripts, key):
+                body = scripts[tid][v]
+                sep = '\r\n' if '\r\n' in body else '\n'
+                kept = [l for l in body.split(sep) if not re.search(pat, l, re.I)]
+                assert len(kept) < len(body.split(sep)), (key, v, pat)
+                scripts[tid][v] = sep.join(kept)
+
+
+def sub_lines(scripts, table):
+    for keys, pat, rep in table:
+        for key in keys:
+            for tid, v in variants_of(scripts, key):
+                body = scripts[tid][v]
+                sep = '\r\n' if '\r\n' in body else '\n'
+                new = [re.sub(pat, rep, l) for l in body.split(sep)]
+                assert new != body.split(sep), (key, v, pat)
+                scripts[tid][v] = sep.join(new)
+
+
+def apply_audit(scripts):
+    """Corrections de l'audit du 2026-10-07 (tools/audit_fixes.py), sur les scripts déjà corrigés par ce build,
+    dans l'ordre de audit/outils-annulation/audit_apply.py : le résultat est identique à son attendu.json."""
+    for key, fixes in AUDIT.SCRIPT_FIXES_PLUS.items():
+        for tid, v in variants_of(scripts, key):
+            for before, after in fixes:
+                body = scripts[tid][v]
+                if after is None:
+                    before += '\r\n' if '\r\n' in body else '\n'
+                elif '\r\n' not in body:
+                    before, after = before.replace('\r\n', '\n'), after.replace('\r\n', '\n')
+                assert before in body, (key, before)
+                scripts[tid][v] = body.replace(before, after or '')
+    for keys, start, end in AUDIT.DROP_BLOCKS:
+        for key in keys:
+            for tid, v in variants_of(scripts, key):
+                body = scripts[tid][v]
+                sep = '\r\n' if '\r\n' in body else '\n'
+                lines = body.split(sep)
+                i = next(n for n, l in enumerate(lines) if re.search(start, l, re.I))
+                j = next(n for n in range(i + 1, len(lines)) if re.search(end, lines[n], re.I))
+                scripts[tid][v] = sep.join(lines[:i] + lines[j + 1:])
+    drop_lines(scripts, AUDIT.DROP_LINES_PLUS)
+    sub_lines(scripts, AUDIT.SUB_LINES_PLUS)
+
+
+# wmic n'est plus installé par défaut sur Windows 11 24H2 (audit, 2026-10-07) : les boucles qui l'utilisaient ne
+# trouvaient plus rien. Même liste par PowerShell (Get-CimInstance), sans la ligne d'en-tête de wmic.
+WMIC_SUBS = [
+    # carte connectée : nom complet (espaces gardés), comme « NetConnectionID=… » coupé au « = »
+    (('ping_main:config3', 'hitreg_suite'),
+     r'''(?i)^for /f "skip=1 delims=" %%a in \('wmic nic where "NetConnectionStatus=2" get NetConnectionID /value 2\^>nul'\) do \($''',
+     r'''for /f "delims=" %%a in ('powershell -NoProfile -Command "(Get-CimInstance Win32_NetworkAdapter -Filter NetConnectionStatus=2).NetConnectionID"') do ('''),
+    (('ping_main:config3', 'hitreg_suite'), r'''(?i)^(\s*)for /f "tokens=2 delims==" %%b in \("%%a"\) do \($''',
+     r'''\1for /f "delims=" %%b in ("%%a") do ('''),
+    # cartes actives : la 2e colonne du CSV de wmic était le nom
+    (('net_server:s1', 'net_server:s2'),
+     r'''(?i)^for /f "tokens=1,2 delims=," %%a in \('wmic nic where "NetEnabled=true" get NetConnectionID\^,NetEnabled /format:csv \^\| find /i "true"'\) do \($''',
+     r'''for /f "delims=" %%b in ('powershell -NoProfile -Command "(Get-CimInstance Win32_NetworkAdapter -Filter NetEnabled=True).NetConnectionID"') do ('''),
+    # « wmic path <classe> get <propriété> » : la suite de la commande (findstr, 2^>nul) ne change pas
+    (('amd_advanced', 'gpu_amd', 'gpu_general', 'gpu_nvidia', 'in_adapter', 'in_windows', 'net_affinity', 'net_msi',
+      'net_nagle', 'net_server:s2', 'net_server:s3', 'net_server:s4', 'nv_general', 'nv_hdcp', 'nv_msi', 'nv_pstates',
+      'ping_advanced', 'ping_main:config1', 'ping_main:config2', 'ping_main:config4', 'usb_advanced', 'usb_controller',
+      'usb_msi', 'usb_power'),
+     r'(?i)wmic path (\w+) get (\w+)', r'powershell -NoProfile -Command "(Get-CimInstance \1).\2"'),
+]
+
+
 def postprocess(modules, scripts):
     # GUID de l'auteur ou clé « {NIC-ID} » laissée telle quelle (net_server, ancien programme) : toutes les cartes
     for tid, variants in scripts.items():
@@ -420,25 +528,14 @@ def postprocess(modules, scripts):
                     before, after = before.replace('\r\n', '\n'), after.replace('\r\n', '\n')
                 assert before in scripts[tid][v], (key, before)
                 scripts[tid][v] = scripts[tid][v].replace(before, after or '')
-    for ids, pat in DROP_LINES:
-        for tid in ids:
-            for v, body in scripts[tid].items():
-                sep = '\r\n' if '\r\n' in body else '\n'
-                kept = [l for l in body.split(sep) if not re.search(pat, l, re.I)]
-                assert len(kept) < len(body.split(sep)), (tid, pat)
-                scripts[tid][v] = sep.join(kept)
-    for keys, pat, rep in SUB_LINES:
-        for key in keys:
-            tid, _, only = key.partition(':')
-            for v, body in scripts[tid].items():
-                if only and v != only:
-                    continue
-                sep = '\r\n' if '\r\n' in body else '\n'
-                new = [re.sub(pat, rep, l) for l in body.split(sep)]
-                assert new != body.split(sep), (key, pat)
-                scripts[tid][v] = sep.join(new)
+    drop_lines(scripts, DROP_LINES)
+    sub_lines(scripts, SUB_LINES)
     sep = '\r\n' if '\r\n' in scripts['rbw_mode']['on'] else '\n'
     scripts['rbw_mode']['on'] += sep + RBW_ON_EXTRA.replace('\n', sep)
+    # scripts tels qu'avant l'audit (ce qu'ont lancé les PC jusqu'ici) : leur annulation reste dans undo.json
+    before_audit = copy.deepcopy(scripts)
+    apply_audit(scripts)
+    sub_lines(scripts, WMIC_SUBS)
 
     tweaks = {t['id']: t for m in modules for sec in m['sections'] for t in sec['tweaks'] if 'id' in t}
     for tid, t in tweaks.items():
@@ -475,10 +572,22 @@ def postprocess(modules, scripts):
         v['reboot'] = v['id'] == 'on'
     for tid, (en, fr) in DESC_FIX.items():
         tweaks[tid]['desc'] = I(en, fr)
+    for tid in ('win_maintenance', 'exp_maintenance'):
+        tweaks[tid]['desc'] = I(tweaks[tid]['desc']['en'].rstrip() + AUDIT.MAINTENANCE_NOTE[0],
+                                tweaks[tid]['desc']['fr'].rstrip() + AUDIT.MAINTENANCE_NOTE[1])
+    # le retour arrière existe maintenant (sauvegarde + scripts/undo.json) : plus de « pas de retour arrière »
     hs = tweaks['hitreg_suite']['desc']
-    tweaks['hitreg_suite']['desc'] = I(hs['en'].replace(' No automatic undo', ' Also turns off NTFS compression. No automatic undo', 1),
-                                      hs['fr'].replace(' Pas de retour arrière', ' Coupe aussi la compression NTFS. Pas de retour arrière', 1))
-    assert 'NTFS compression' in tweaks['hitreg_suite']['desc']['en'] and 'compression NTFS' in tweaks['hitreg_suite']['desc']['fr']
+    tweaks['hitreg_suite']['desc'] = I(hs['en'].replace(' No automatic undo: create a restore point first.', ' Also turns off NTFS compression.', 1),
+                                      hs['fr'].replace(' Pas de retour arrière automatique : crée un point de restauration avant.',
+                                                       ' Coupe aussi la compression NTFS.', 1))
+    hs = tweaks['hitreg_suite']['desc']
+    assert hs['en'].endswith('Also turns off NTFS compression.') and hs['fr'].endswith('Coupe aussi la compression NTFS.'), hs
+    assert 'undo' not in hs['en'].lower() and 'retour arrière' not in hs['fr'], hs
+    # ponctuels (audit du 2026-10-07, « ponctuel_sans_retour ») : un bouton, pas une case qui resterait cochée sans
+    # rien à annuler. ReTrim, désinstallations (réinstallables depuis le Store ou microsoft.com), et deux réglages
+    # qui écrivent déjà les valeurs de Windows
+    for tid in ONE_SHOT:
+        tweaks[tid]['kind'] = 'action'
     for tid in MEMORYUSAGE:
         tweaks[tid]['desc'] = I(tweaks[tid]['desc']['en'].rstrip() + ' Also enlarges the NTFS memory cache (fsutil memoryusage 2).',
                                 tweaks[tid]['desc']['fr'].rstrip() + ' Agrandit aussi le cache mémoire de NTFS (fsutil memoryusage 2).')
@@ -509,6 +618,7 @@ def postprocess(modules, scripts):
                 sec['name'] = SECTION_NAMES[(m['id'], sec['id'])]
     twins(modules, scripts)
     count_commands(modules, scripts)
+    return before_audit
 
 
 def twins(modules, scripts):
@@ -666,9 +776,12 @@ Corrections ciblées (`SCRIPT_FIXES`, `DROP_LINES`) :
 - sto_general : `PROFILES_DIR` lu non développé, la boucle sur les profils ne tournait jamais ;
 - rst_queue et in_queue « Default » : 80 et 32 → 100, la valeur de Windows ;
 - game_mode : faute « Optimimizing ».
-- in_windows, sto_ntfs : `fsutil behavior set DisableDeleteNotify 1` retiré. Cette ligne coupait le TRIM du SSD
-  (qui le garde rapide et en bonne santé) sans le dire ; choix de Sofiene du 2026-10-07 : TRIM laissé actif. Le motif reste
-  dans `WARNINGS` et le test `dangerous_lines_stay_out` vérifie qu'aucun script ne le contient plus ;
+- in_windows, sto_ntfs : `fsutil behavior set DisableDeleteNotify 1` coupait le TRIM du SSD (qui le garde rapide et en
+  bonne santé) sans le dire ; choix de Sofiene du 2026-10-07 : TRIM laissé actif. Ligne retirée de in_windows ; dans sto_ntfs
+  elle passe à `0` (`SUB_LINES`) et rallume le TRIM, comme lat_general et exp_ntfs, pour les PC passés par l'ancien .bat v6.
+  sto_ntfs a désormais les mêmes commandes que exp_ntfs (jumeaux : même texte, un seul passage).
+  Le motif reste dans `WARNINGS` et le test `dangerous_lines_stay_out` vérifie qu'aucun script ne le contient plus ;
+- nv_hdcp, amd_hdcp : « Disable HDCP (NVIDIA) » et « Disable HDCP (AMD) », pour ne plus avoir deux lignes identiques ;
 - sto_fsutil_v6, sto_fsutil2, sys_time, sto_fsutil (variante SSD) : `disableLastAccess 0` → `1` (`SUB_LINES`). Le .bat
   ACTIVAIT la date de dernier accès alors que l'app disait la couper ; choix de Sofiene du 2026-10-07 : la couper vraiment.
   La variante disque dur (valeur 2, gérée par Windows) ne change pas ;
@@ -682,7 +795,66 @@ RBW Mod « On » remet aussi BAM, DAM et le Prefetcher (actifs après redémarra
 Les actions lourdes ne sont pas retirées (choix de Sofiene, « tout garder ») : `WARNINGS` les détecte dans chaque
 script (Spectre, Defender, SmartScreen, UAC, pare-feu, IFEO, BAM, Prefetch…), écrit l'avertissement « Read this first »
 et passe le réglage en Advanced.
+
+Réglages ajoutés par l'app (`NEW_TWEAKS`, 1.1.6), registre seulement donc sauvegardés et remis comme avant quand on
+les décoche : win_ai (Copilot et Recall coupés par les stratégies Microsoft) et win_autoplay (exécution automatique
+coupée). Premium par défaut.
+
+Audit ligne par ligne du 2026-10-07 (rapport : /mnt/project-files/audit/audit-commandes-2026-10-07.md), 1.1.6 :
+- tools/audit_fixes.py (copie de audit/outils-annulation/propositions.py) est appliqué après les corrections
+  ci-dessus (`apply_audit`) : 7 corrections de texte, 3 blocs et 590 lignes retirés, 144 lignes réécrites. Les lignes
+  dangereuses cachées dans les packs sont retirées (choix de Sofiene, 2026-10-07, « Retirer ») ; chaque action lourde
+  reste dans son réglage dédié et annoncé. Les 8 réglages « placebo » sont gardés (choix de Sofiene, « Garder ») ;
+- majeur : RBW Mod « Off » remet en automatique le journal d'événements, le Planificateur, DPS, SysMain, PCA et CDP
+  (il les passait en manuel) ;
+- l'avertissement UAC porte sur ConsentPromptBehaviorAdmin 0 ; la ligne EnableLUA 0 (Minecraft Launcher et applis du
+  Store qui ne s'ouvrent plus) est retirée ;
+- wmic, absent par défaut de Windows 11 24H2, est remplacé par PowerShell (Get-CimInstance) dans 21 réglages
+  (`WMIC_SUBS`) ;
+- actions ponctuelles (bouton, plus case) : sto_defrag, win_apps, app_remove, dbl_edge, nv_debloat, cpu_ppm,
+  usb_controller (`ONE_SHOT`) ;
+- `DROP_LINES` accepte « id:variante ».
+
+Annulation : src-tauri/scripts/undo.json, généré à chaque build par tools/undo (undo_gen.py et defaults.py de
+l'audit) depuis les scripts d'avant et d'après l'audit, réunis par merge_full.py : `full` remet les valeurs de Windows
+quand il n'y a pas de sauvegarde, `rest` ce que la sauvegarde ne relève pas, `rest_avant` (pow_ultimate,
+pow_delete_plans) le lance avant la sauvegarde. Chiffrée dans l'exe avec les scripts Premium ; l'app en garde une copie
+par réglage appliqué, pour annuler après une déconnexion ou une fin de licence.
 '''
+
+
+def build_undo(before, after):
+    """undo.json : {réglage: {variante: {full, rest, rest_avant}}}. tools/undo/undo_gen.py écrit les commandes inverses
+    (valeurs de Windows, tools/undo/defaults.py) des scripts d'avant et d'après l'audit, merge_full.py les réunit :
+    un PC passé par l'ancien script retrouve aussi les valeurs des lignes retirées depuis."""
+    import tempfile
+    tools = os.path.join(ROOT, 'tools')
+    env = {**os.environ, 'RAGO_TOOLS': tools}
+    catalog = os.path.join(ROOT, 'src', 'data', 'catalog.json')
+    with tempfile.TemporaryDirectory() as tmp:
+        paths = {k: os.path.join(tmp, k + '.json') for k in ('before', 'after', 'u_before', 'u_after', 'undo')}
+        json.dump(before, open(paths['before'], 'w', encoding='utf-8'), ensure_ascii=False)
+        json.dump(after, open(paths['after'], 'w', encoding='utf-8'), ensure_ascii=False)
+        for k in ('before', 'after'):
+            subprocess.run([sys.executable, os.path.join(tools, 'undo', 'undo_gen.py'), paths[k], catalog, paths['u_' + k]],
+                           check=True, env=env, stdout=subprocess.DEVNULL)
+        subprocess.run([sys.executable, os.path.join(tools, 'undo', 'merge_full.py'), paths['u_before'], paths['u_after'], paths['undo']],
+                       check=True, env=env, stdout=subprocess.DEVNULL)
+        merged = json.load(open(paths['undo'], encoding='utf-8'))
+    out = {}
+    for tid, vs in merged.items():
+        if tid not in after or not isinstance(vs, dict):
+            continue
+        for v, u in vs.items():
+            if v not in after[tid] or not isinstance(u, dict):
+                continue
+            e = {k: u[k] for k in ('full', 'rest') if u.get(k)}
+            if e and u.get('rest_avant'):
+                e['rest_avant'] = True
+            if e:
+                out.setdefault(tid, {})[v] = e
+    assert out.get('pow_ultimate', {}).get('_', {}).get('rest_avant'), 'pow_ultimate : rest avant la sauvegarde'
+    return out
 
 
 def main():
@@ -754,7 +926,12 @@ def main():
                 m['sections'] = [{**sec, 'id': 'v6_' + sec['id']} for sec in nm['sections']] + m['sections']
         merged.append(m)
     modules = merged
-    postprocess(modules, scripts)
+    for mid, sid, entry, body in NEW_TWEAKS:
+        assert entry['id'] not in scripts, entry['id']
+        sec = next(sec for m in modules if m['id'] == mid for sec in m['sections'] if sec['id'] == sid)
+        scripts[entry['id']] = {'_': body}
+        sec['tweaks'].append({**entry, 'lines': len(body.split('\n'))})
+    before_audit = postprocess(modules, scripts)
 
     presets = [{'id': p, 'name': n, 'desc': d, 'tweaks': ts} for p, n, d, ts in PRESETS]
     for p in old['presets']:
@@ -768,6 +945,11 @@ def main():
     catalog = {'version': 7, 'modules': modules, 'presets': presets}
     json.dump(catalog, open(os.path.join(ROOT, 'src', 'data', 'catalog.json'), 'w', encoding='utf-8'), ensure_ascii=False, indent=1)
     json.dump(scripts, open(os.path.join(ROOT, 'src-tauri', 'scripts', 'scripts.json'), 'w', encoding='utf-8'), ensure_ascii=False)
+    # relevés : ce que chaque script va modifier, sauvegardé avant de l'appliquer (tools/probes.py)
+    json.dump(probes.build(scripts), open(os.path.join(ROOT, 'src-tauri', 'scripts', 'probes.json'), 'w', encoding='utf-8'), ensure_ascii=False)
+    # retour aux valeurs de Windows sans sauvegarde, et ce que la sauvegarde ne couvre pas (tools/undo, audit du 2026-10-07)
+    undo = build_undo(before_audit, scripts)
+    json.dump(undo, open(os.path.join(ROOT, 'src-tauri', 'scripts', 'undo.json'), 'w', encoding='utf-8'), ensure_ascii=False, indent=0)
     n = sum(1 for m in modules for s in m['sections'] for t in s['tweaks'] if 'id' in t)
     with open(os.path.join(ROOT, 'docs', 'CORRECTIONS.md'), 'a', encoding='utf-8') as f:
         f.write(V6_NOTES)

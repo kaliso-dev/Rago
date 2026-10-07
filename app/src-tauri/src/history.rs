@@ -17,6 +17,9 @@ pub struct Entry {
     pub ok: bool,
     pub code: Option<i32>,
     pub duration_ms: u64,
+    /// retour à l'état d'avant (réglage décoché)
+    #[serde(default)]
+    pub undo: bool,
 }
 
 pub struct History {

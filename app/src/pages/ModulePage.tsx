@@ -1,6 +1,6 @@
 import { motion } from "motion/react";
 import { ChevronDown, FolderOpen, RotateCcw, Trash2, Lock } from "lucide-react";
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { api, type MinecraftStatus } from "../lib/api";
 import { availability, catalog, sectionTweaks, tweaks } from "../lib/catalog";
 import { formatDate } from "../lib/i18n";
@@ -116,11 +116,16 @@ function HistoryList() {
 }
 
 export function ModulePage({ id }: { id: string }) {
-  const { t, lang, sys, selected, selectMany, unselectMany, isLocked, undoOnly, premium, setUpsell, focusTweak, setFocusTweak, focusSeq } = useStore();
+  const { t, lang, sys, selected, selectMany, unselectMany, isLocked, undoOnly, premium, setUpsell, focusTweak, setFocusTweak, focusSeq, isOn, pendingUndo } = useStore();
+  // dernière recherche vers chaque réglage (focusSeq) : sert de clé à sa ligne
+  const focusKeys = useRef(new Map<string, number>());
+  if (focusTweak) focusKeys.current.set(focusTweak, focusSeq);
   const index = catalog.modules.findIndex((m) => m.id === id);
   const mod = catalog.modules[index];
   const own = mod.sections.flatMap((s) => sectionTweaks(s)).filter((tw) => tw.kind === "tweak");
-  const nSel = own.filter((tw) => selected.has(tw.id)).length;
+  const nOn = own.filter((tw) => isOn(tw.id)).length;
+  // changements en attente dans ce module (cochés, ou appliqués puis décochés)
+  const nSel = own.filter((tw) => selected.has(tw.id) || pendingUndo.includes(tw.id)).length;
   const safe = own.filter((tw) => tw.risk === "safe" && availability(tw, sys).ok && !tw.confirm && !isLocked(tw.id) && !undoOnly(tw.id)).map((tw) => tw.id);
   // modules longs (Latency, Windows…) : sommaire des sections et sections repliables
   const long = own.length > 30 && mod.sections.length > 1;
@@ -165,7 +170,7 @@ export function ModulePage({ id }: { id: string }) {
         </div>
         {own.length > 1 && (
           <div className="module-tools">
-            <span className="rg-metric muted">{t("module.selected", { n: nSel, total: own.length })}</span>
+            <span className="rg-metric muted">{t("module.selected", { n: nOn, total: own.length })}</span>
             {nSel > 0 ? (
               <Button size="sm" variant="ghost" onClick={() => unselectMany(own.map((tw) => tw.id))}>
                 {t("module.clear")}
@@ -232,8 +237,9 @@ export function ModulePage({ id }: { id: string }) {
             {!folded.has(s.id) && (
               <div className="tweak-list">
                 {list.map((tw) => (
-                  // nouvelle clé à chaque recherche vers ce réglage : la mise en valeur rejoue
-                  <TweakRow key={focusTweak === tw.id ? `${tw.id}-${focusSeq}` : tw.id} tweak={tw} />
+                  // nouvelle clé à chaque recherche vers ce réglage : la mise en valeur rejoue ; la clé reste
+                  // ensuite la même quand la mise en valeur s'éteint, pour ne pas refermer un Details ouvert
+                  <TweakRow key={`${tw.id}-${focusKeys.current.get(tw.id) ?? 0}`} tweak={tw} />
                 ))}
               </div>
             )}

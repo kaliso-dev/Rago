@@ -42,6 +42,7 @@ export function RunOverlay() {
           <div className="run-hero">
             <Pulse size={132} active={!isDone} />
             <div className="rg-overline run-state">{isDone ? (cancelled ? t("run.cancelled") : t("run.done")) : t("run.title")}</div>
+            {run.note && <p className="run-note">{run.note}</p>}
             <div className="run-counter rg-metric">
               <motion.span key={finished} initial={{ y: 10, opacity: 0 }} animate={{ y: 0, opacity: 1 }}>
                 {String(finished).padStart(2, "0")}
@@ -77,7 +78,7 @@ export function RunOverlay() {
                   </>
                 )
               ) : (
-                current && itemName(current.id, lang)
+                current && (current.undo ? t("run.undoName", { name: itemName(current.id, lang) }) : itemName(current.id, lang))
               )}
             </div>
             <div className="run-actions">
@@ -121,7 +122,7 @@ export function RunOverlay() {
                     {r.status === "error" && <X size={14} />}
                     {r.status === "pending" && <span className="run-dot" />}
                   </span>
-                  <span className="run-name">{itemName(r.id, lang)}</span>
+                  <span className="run-name">{r.undo ? t("run.undoName", { name: itemName(r.id, lang) }) : itemName(r.id, lang)}</span>
                   {r.durationMs != null && <span className="rg-metric run-ms">{formatNumber(lang, r.durationMs / 1000)} s</span>}
                 </li>
               ))}

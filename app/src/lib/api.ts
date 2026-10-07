@@ -2,6 +2,7 @@
 // pour que l'interface reste utilisable sans toucher au système.
 import { invoke } from "@tauri-apps/api/core";
 import { listen, type UnlistenFn } from "@tauri-apps/api/event";
+import { tweaks } from "./catalog";
 
 export interface Gpu {
   name: string;
@@ -36,6 +37,20 @@ export interface HistoryEntry {
   ok: boolean;
   code: number | null;
   durationMs: number;
+  /** retour à l'état d'avant (réglage décoché) */
+  undo?: boolean;
+}
+
+/** Réglage appliqué (applied.json du moteur). */
+export interface AppliedView {
+  id: string;
+  variant: string | null;
+  ts: number;
+  ok: boolean;
+  /** état d'avant sauvegardé (sinon : appliqué avant 1.1.6, retour par les valeurs de Windows) */
+  backup: boolean;
+  /** Windows a changé une valeur posée par ce réglage depuis */
+  drift: boolean;
 }
 
 export interface PingResult {
@@ -60,6 +75,8 @@ export interface RunItem {
   id: string;
   variant?: string | null;
   params?: Record<string, unknown>;
+  /** décoché : remettre l'état d'avant */
+  undo?: boolean;
 }
 
 export type LicenseState = "active" | "none" | "expired" | "unconfigured";
@@ -124,6 +141,7 @@ export interface Api {
   isRunning(): Promise<boolean>;
   history(): Promise<HistoryEntry[]>;
   clearHistory(): Promise<void>;
+  applied(): Promise<AppliedView[]>;
   ping(host: string, port?: number, count?: number): Promise<PingResult>;
   minecraftStatus(dir?: string | null): Promise<MinecraftStatus>;
   minecraftRestore(dir?: string | null): Promise<string>;
@@ -149,6 +167,7 @@ const tauriApi: Api = {
   isRunning: () => invoke("is_running"),
   history: () => invoke("get_history"),
   clearHistory: () => invoke("clear_history"),
+  applied: () => invoke("get_applied"),
   ping: (host, port, count) => invoke("ping", { host, port, count }),
   minecraftStatus: (dir) => invoke("minecraft_status", { dir: dir ?? null }),
   minecraftRestore: (dir) => invoke("minecraft_restore", { dir: dir ?? null }),
@@ -190,6 +209,23 @@ const emit = <T,>(name: string, detail: T) => bus.dispatchEvent(new CustomEvent(
 const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
 
 const mockHistory: HistoryEntry[] = [];
+// démo : les réglages appliqués survivent au rechargement de la page, comme applied.json dans l'app
+const mockApplied = new Map<string, AppliedView>(
+  (() => {
+    try {
+      return JSON.parse(localStorage.getItem("rago.demoApplied") ?? "[]") as [string, AppliedView][];
+    } catch {
+      return [];
+    }
+  })(),
+);
+const saveMockApplied = () => {
+  try {
+    localStorage.setItem("rago.demoApplied", JSON.stringify([...mockApplied]));
+  } catch {
+    /* démo sans stockage */
+  }
+};
 let mockCancel = false;
 let mockRunning = false;
 let mockTuned = 0;
@@ -268,7 +304,13 @@ const mockApi: Api = {
         }
         const durationMs = Math.round(performance.now() - t0);
         ok++;
-        mockHistory.push({ id: it.id, variant: it.variant ?? null, ts: Date.now(), ok: true, code: 0, durationMs });
+        mockHistory.push({ id: it.id, variant: it.variant ?? null, ts: Date.now(), ok: true, code: 0, durationMs, undo: !!it.undo });
+        const tw = tweaks.get(it.id);
+        const revert = !!tw?.variants?.find((v) => v.id === it.variant)?.revert;
+        if (it.undo || (revert && mockApplied.has(it.id))) mockApplied.delete(it.id);
+        else if (tw?.kind === "tweak" && !revert)
+          mockApplied.set(it.id, { id: it.id, variant: it.variant ?? null, ts: Date.now(), ok: true, backup: true, drift: false });
+        saveMockApplied();
         emit<ItemEvent>("run:item", { ...base, status: "ok", code: 0, durationMs });
       }
       mockRunning = false;
@@ -285,6 +327,7 @@ const mockApi: Api = {
   clearHistory: async () => {
     mockHistory.length = 0;
   },
+  applied: async () => [...mockApplied.values()],
   ping: async (host) => {
     const base = Math.max(9, 34 - mockTuned * 6);
     const samples: number[] = [];
