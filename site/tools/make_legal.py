@@ -2,7 +2,7 @@ import os
 OUT=os.path.join(os.path.dirname(os.path.abspath(__file__)),'..')
 # Builds site/terms.html, privacy.html, refunds.html. Yellow <mark class="f"> = to fill in by the seller.
 F=lambda t:f'<mark class="f">[{t}]</mark>'
-SELLER=F("Seller legal name or company"); ADDR=F("Postal address"); COUNTRY=F("Country"); MAIL=F("Contact email"); REG=F("Business registration number, if any"); UPD="October 6, 2026"
+SELLER=F("Seller legal name or company"); ADDR=F("Postal address"); COUNTRY=F("Country"); MAIL=F("Contact email"); REG=F("Business registration number, if any"); UPD="October 7, 2026"
 HEAD='''<!doctype html>
 <html lang="en">
 <head>
@@ -153,6 +153,7 @@ page('privacy.html','Privacy Policy',f'''
 <li><strong>rg_session</strong>: keeps you signed in to your account. Necessary.</li>
 <li><strong>rg_claim</strong>: links a purchase to the account you create right after it, for 7 days. Necessary.</li>
 <li><strong>rg_ref</strong> (cookie on the account server) and <strong>rago_ref</strong> (browser storage on this site): remember an affiliate code from a share link for 30 days.</li>
+<li><strong>rago_promo_seen</strong> and <strong>rago_promo_claimed</strong> (browser storage on this site): remember that the welcome offer was shown, so it isn't shown again for 30 days, and the discount code you claimed, so it is applied at checkout. Clearing your browser data removes them.</li>
 </ul>
 <p>We don't use advertising or analytics cookies, and the site loads no third-party fonts or trackers.</p>
 

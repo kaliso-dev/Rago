@@ -184,8 +184,13 @@ export function createApp({ cfg, db, keys, stripe, mailer, log = console, fetchI
     return !!(await settleReferral(user, affiliate));
   }
 
+  /** The code if it still takes players, else null (a full code would block the account form). */
+  const openCode = async (code) => {
+    const aff = code && await A.affiliateByCode(db, code);
+    return aff && !(await A.codeFull(db, cfg, aff)) ? aff.code : null;
+  };
   /** The code to pre-fill after a purchase: the one stored with it, else the affiliate link cookie. */
-  const purchaseCode = (c, lic) => lic?.referral_code || refCode(c);
+  const purchaseCode = async (c, lic) => (await openCode(lic?.referral_code)) || (await openCode(refCode(c))) || '';
 
   /** Checks a referral code against the account email and the purchase email. Returns { affiliate } or { error }. */
   async function checkReferral(code, email, pending) {
@@ -243,7 +248,7 @@ export function createApp({ cfg, db, keys, stripe, mailer, log = console, fetchI
   async function claimSignedIn(c, user, lic) {
     const n = await settleClaim(c, user, lic);
     if (n !== 'claimed') return n;
-    const applied = await applyReferral(user, await L.getLicense(db, lic.id), purchaseCode(c, lic));
+    const applied = await applyReferral(user, await L.getLicense(db, lic.id), await purchaseCode(c, lic));
     deleteCookie(c, 'rg_ref', { path: '/' });
     return applied ? 'claimedref' : n;
   }
@@ -275,20 +280,27 @@ export function createApp({ cfg, db, keys, stripe, mailer, log = console, fetchI
   // ---------- checkout ----------
   app.get('/buy', async (c) => {
     const user = await currentUser(c);
-    if (user && (await L.licenseForUser(db, user.id))?.status === 'active') return c.redirect('/account?n=owned', 303);
+    const owned = user && await L.current(db, await L.licenseForUser(db, user.id));
+    // An affiliate reward (6 months) can turn into a subscription: no payment until the reward ends.
+    const reward = owned?.status === 'active' && owned.plan === 'reward' ? owned : null;
+    if (owned?.status === 'active' && !reward) return c.redirect('/account?n=owned', 303);
     if (!stripe || !cfg.subscriptions) {
       return c.html(V.messagePage(cfg, { user, overline: 'Checkout', title: 'Checkout opens soon.', text: 'Payments are being set up. Meanwhile, the free version of Rago Optimizer is ready to download.', action: { href: user ? '/account/download' : '/download', label: 'Download the free version' } }), 503);
     }
-    const ref = A.normalizeCode(c.req.query('ref')) || refCode(c);
+    // A full code (3 players, or reward given) is dropped: no discount, nothing pre-filled after paying.
+    let ref = await openCode(A.normalizeCode(c.req.query('ref')) || refCode(c));
     if (ref) setCookie(c, 'rg_ref', ref, { ...cookieBase, maxAge: 30 * 86400 });
+    else deleteCookie(c, 'rg_ref', { path: '/' });
     // Discount already applied at checkout: a site code (?promo=RAGO15), else the affiliate's code (5 %).
     let promotionCode = (await findPromotionCode(stripe, c.req.query('promo')))?.id || null;
-    const affiliate = !promotionCode && ref && await A.affiliateByCode(db, ref);
-    if (affiliate && affiliate.user_id !== user?.id && !(await A.codeFull(db, cfg, affiliate))) promotionCode = await ensureAffiliatePromo(db, stripe, cfg, affiliate, log);
+    const affiliate = ref && await A.affiliateByCode(db, ref);
+    if (affiliate && affiliate.user_id === user?.id) ref = null;
+    if (!promotionCode && affiliate && ref) promotionCode = await ensureAffiliatePromo(db, stripe, cfg, affiliate, log);
     // A returning subscriber pays with their existing Stripe customer, so invoices stay together.
     const previous = user && await db.get('SELECT stripe_customer_id FROM licenses WHERE user_id = ? AND stripe_customer_id IS NOT NULL ORDER BY created_at DESC LIMIT 1', [user.id]);
     const interval = c.req.query('interval') === 'year' ? 'year' : c.req.query('interval') === 'month' ? 'month' : undefined;
-    const session = await createCheckout(stripe, cfg, user, { interval, customerId: previous?.stripe_customer_id, ref, promotionCode }, log);
+    const trialEnd = reward ? Math.floor(Number(reward.current_period_end) / 1000) : null;
+    const session = await createCheckout(stripe, cfg, user, { interval, customerId: previous?.stripe_customer_id, ref, promotionCode, trialEnd }, log);
     return c.redirect(session.url, 303);
   });
 
@@ -318,9 +330,9 @@ export function createApp({ cfg, db, keys, stripe, mailer, log = console, fetchI
     setClaim(c, out.license.id);
     if (user) return c.redirect(dashWith(await claimSignedIn(c, user, out.license)), 303);
     if (await L.findUserByEmail(db, out.license.email)) {
-      return c.html(V.loginPage(cfg, { email: out.license.email, purchased: true, code: purchaseCode(c, out.license) }));
+      return c.html(V.loginPage(cfg, { email: out.license.email, purchased: true, code: await purchaseCode(c, out.license) }));
     }
-    return c.html(V.signupPage(cfg, { purchased: true, claimEmail: out.license.email, code: purchaseCode(c, out.license) }));
+    return c.html(V.signupPage(cfg, { purchased: true, claimEmail: out.license.email, code: await purchaseCode(c, out.license) }));
   });
 
   // Link from the purchase email, for buyers who closed the tab before creating their account.
@@ -334,8 +346,8 @@ export function createApp({ cfg, db, keys, stripe, mailer, log = console, fetchI
     // Signed in (e.g. the account was created on another device): attach it right away.
     if (user) return c.redirect(dashWith(await claimSignedIn(c, user, lic)), 303);
     setClaim(c, lic.id);
-    if (await L.findUserByEmail(db, lic.email)) return c.html(V.loginPage(cfg, { email: lic.email, purchased: true, code: purchaseCode(c, lic) }));
-    return c.html(V.signupPage(cfg, { purchased: true, claimEmail: lic.email, code: purchaseCode(c, lic) }));
+    if (await L.findUserByEmail(db, lic.email)) return c.html(V.loginPage(cfg, { email: lic.email, purchased: true, code: await purchaseCode(c, lic) }));
+    return c.html(V.signupPage(cfg, { purchased: true, claimEmail: lic.email, code: await purchaseCode(c, lic) }));
   });
 
   // ---------- accounts ----------
@@ -343,7 +355,7 @@ export function createApp({ cfg, db, keys, stripe, mailer, log = console, fetchI
     const next = nextPath(c.req.query('next'));
     if (await currentUser(c)) return c.redirect(next || '/account', 303);
     const lic = await pendingClaim(c);
-    return c.html(V.signupPage(cfg, { purchased: !!lic, claimEmail: lic?.email, next, code: lic ? purchaseCode(c, lic) : '' }));
+    return c.html(V.signupPage(cfg, { purchased: !!lic, claimEmail: lic?.email, next, code: lic ? await purchaseCode(c, lic) : '' }));
   });
 
   app.post('/signup', async (c) => {
@@ -383,7 +395,7 @@ export function createApp({ cfg, db, keys, stripe, mailer, log = console, fetchI
     if (await currentUser(c)) return c.redirect(next || '/account', 303);
     const n = c.req.query('n');
     const pending = await pendingClaim(c);
-    return c.html(V.loginPage(cfg, { purchased: !!pending, email: pending?.email || '', next, code: pending ? purchaseCode(c, pending) : '', notice: { reset: 'Password saved. Sign in with your new password.', out: "You're signed out." }[n] || null }));
+    return c.html(V.loginPage(cfg, { purchased: !!pending, email: pending?.email || '', next, code: pending ? await purchaseCode(c, pending) : '', notice: { reset: 'Password saved. Sign in with your new password.', out: "You're signed out." }[n] || null }));
   });
 
   app.post('/login', async (c) => {
@@ -697,14 +709,20 @@ export function createApp({ cfg, db, keys, stripe, mailer, log = console, fetchI
     let device;
     try { device = parseDevice(body.device); } catch (e) { return fail(c, 'invalid_request', { detail: e.message }); }
     if (!allow(`refresh:${claims.lic}`, 30, 60 * 60 * 1000)) return fail(c, 'rate_limited');
-    const license = await L.current(db, await L.getLicense(db, claims.lic));
+    let license = await L.current(db, await L.getLicense(db, claims.lic));
     const user = license && await L.getUser(db, claims.sub);
     if (!license || !user || license.user_id !== user.id) return fail(c, 'invalid_token');
+    // An affiliate reward replaced by a subscription: the same PC moved to the new license.
+    const replaced = license.status === 'revoked' && license.status_reason === 'replaced';
+    if (replaced) {
+      const next = await L.licenseForUser(db, user.id);
+      if (next?.status === 'active' && (await L.getDevice(db, next.id))?.id === claims.did) license = next;
+    }
     if (license.status !== 'active') return failLicense(c, license, 'revoked');
     const bound = await L.getDevice(db, license.id);
     if (bound && !sameDevice(bound, device.fp)) return fail(c, 'bound_to_other_device');
     // Device freed or re-bound since this token was issued: the app must sign in again.
-    if (!bound || bound.id !== claims.did || claims.tv !== license.token_version) return fail(c, 'invalid_token');
+    if (!bound || bound.id !== claims.did || (!replaced && claims.tv !== license.token_version)) return fail(c, 'invalid_token');
     const out = await L.activate(db, license.id, device, ip(c));
     return c.json(tokenReply(user, out.license, out.device));
   });

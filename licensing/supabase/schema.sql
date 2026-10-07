@@ -109,7 +109,8 @@ CREATE TABLE IF NOT EXISTS referrals (
 CREATE INDEX IF NOT EXISTS referrals_affiliate ON referrals(affiliate_user_id);
 -- Rewards given so far (6 months each since Oct 7, 2026; before that, one lifetime license).
 ALTER TABLE affiliates ADD COLUMN IF NOT EXISTS rewards INTEGER NOT NULL DEFAULT 0;
-UPDATE affiliates SET rewards = 1 WHERE rewards = 0 AND reward_granted_at IS NOT NULL;
+-- Only rewards actually given (a license recorded), not a claim undone after Stripe refused it.
+UPDATE affiliates SET rewards = 1 WHERE rewards = 0 AND reward_granted_at IS NOT NULL AND reward_license_id IS NOT NULL;
 -- The affiliate code as a Stripe promotion code (5 % off at checkout), one per Stripe mode (test / live).
 ALTER TABLE affiliates ADD COLUMN IF NOT EXISTS stripe_promo_id TEXT;
 ALTER TABLE affiliates ADD COLUMN IF NOT EXISTS stripe_promo_live BOOLEAN;

@@ -51,7 +51,7 @@ export async function createCheckout(stripe, cfg, user, opts = {}, log = console
   }
 }
 
-async function buildCheckout(stripe, cfg, user, { interval, customerId, terms, ref, promotionCode } = {}) {
+async function buildCheckout(stripe, cfg, user, { interval, customerId, terms, ref, promotionCode, trialEnd } = {}) {
   const choice = priceFor(cfg, interval);
   const metadata = { product: RAGO_PRODUCT, ...(choice.interval ? { interval: choice.interval } : {}), ...(ref ? { ref } : {}) };
   const common = {
@@ -78,7 +78,8 @@ async function buildCheckout(stripe, cfg, user, { interval, customerId, terms, r
   return stripe.checkout.sessions.create({
     ...common,
     mode: 'subscription',
-    subscription_data: { metadata },
+    // An affiliate reward still running: the subscription starts paying when it ends (Stripe needs 2+ days).
+    subscription_data: { metadata, ...(trialEnd && trialEnd > Date.now() / 1000 + 2 * 86400 ? { trial_end: trialEnd } : {}) },
     custom_text: custom('Rago Optimizer Premium works on one Windows PC. Cancel anytime from your account. You create your account right after paying.'),
   });
 }

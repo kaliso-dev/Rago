@@ -153,7 +153,8 @@ export async function evaluateAffiliate(db, cfg, userId, { stripe = null, log = 
     try {
       out.rewards.push(await giveReward(db, cfg, stripe, userId, won.rewards));
     } catch (err) {
-      await db.run('UPDATE affiliates SET rewards = rewards - 1 WHERE user_id = ? AND rewards = ?', [userId, won.rewards]);
+      await db.run(`UPDATE affiliates SET rewards = rewards - 1, reward_granted_at = CASE WHEN rewards = 1 THEN NULL ELSE reward_granted_at END
+        WHERE user_id = ? AND rewards = ?`, [userId, won.rewards]);
       await audit(db, 'affiliate.reward_failed', { userId, detail: { reward: won.rewards, error: String(err.message || err).slice(0, 200) } });
       throw err;
     }
@@ -212,11 +213,18 @@ export async function affiliateSummary(db, cfg, userId) {
   };
 }
 
-/** Affiliates with referrals that may have cleared the hold period since the last check. */
+/**
+ * Affiliates with referrals that may have cleared the hold period since the last check, and those
+ * at the goal whose reward isn't given yet (Stripe refused it last time: retried every hour).
+ */
 export async function affiliatesToEvaluate(db, cfg) {
   const rows = await db.all(`SELECT DISTINCT r.affiliate_user_id AS id FROM referrals r
     JOIN affiliates a ON a.user_id = r.affiliate_user_id JOIN licenses l ON l.id = r.license_id
-    WHERE r.status = 'pending' AND r.machine_guid IS NOT NULL AND l.created_at <= ?`, [Date.now() - cfg.affiliateHoldDays * DAY]);
+    WHERE r.status = 'pending' AND r.machine_guid IS NOT NULL AND l.created_at <= ?
+    UNION
+    SELECT a.user_id AS id FROM affiliates a
+    WHERE (? = 0 OR a.rewards < ?) AND (SELECT COUNT(*) FROM referrals r WHERE r.affiliate_user_id = a.user_id AND r.status = 'counted') >= ? * (a.rewards + 1)`,
+  [Date.now() - cfg.affiliateHoldDays * DAY, cfg.affiliateRewardMax, cfg.affiliateRewardMax, cfg.affiliateGoal]);
   return rows.map((r) => r.id);
 }
 

@@ -87,6 +87,24 @@ export const licenseForUser = (db, userId) =>
 const activeLicenseForUser = (db, userId) =>
   db.get("SELECT * FROM licenses WHERE user_id = ? AND status = 'active'", [userId]);
 
+/** The account's active license, unless it's an affiliate reward, which a purchase replaces. */
+const blockingLicense = async (db, userId) => {
+  const lic = await activeLicenseForUser(db, userId);
+  return lic?.plan === 'reward' ? null : lic;
+};
+
+/**
+ * A purchase replaces the account's affiliate reward: the PC moves to the new license (no new
+ * activation needed) and the reward stops. The checkout started the subscription after the reward's end.
+ */
+async function replaceReward(t, userId, newLicenseId) {
+  const old = await t.get("SELECT * FROM licenses WHERE user_id = ? AND status = 'active' AND plan = 'reward' AND id <> ? FOR UPDATE", [userId, newLicenseId]);
+  if (!old) return;
+  if (!(await getDevice(t, newLicenseId))) await t.run('UPDATE devices SET license_id = ? WHERE license_id = ?', [newLicenseId, old.id]);
+  await setLicenseStatus(t, old.id, 'revoked', 'replaced');
+  await audit(t, 'license.reward_replaced', { licenseId: old.id, userId, detail: { by: newLicenseId } });
+}
+
 async function insertLicense(db, fields) {
   const id = newId('lic');
   const claimToken = randomToken();
@@ -147,7 +165,7 @@ export async function fulfillCheckoutSession(db, session, subscription = null) {
       // Signed-in buyer without a license: attach straight away.
       let userId = null;
       const ref = session.client_reference_id;
-      if (ref && (await getUser(t, ref)) && !(await activeLicenseForUser(t, ref))) userId = ref;
+      if (ref && (await getUser(t, ref)) && !(await blockingLicense(t, ref))) userId = ref;
 
       const sub = subscription || (typeof session.subscription === 'object' ? session.subscription : null);
       const facts = session.mode === 'subscription' ? subscriptionFacts(sub) : null;
@@ -162,6 +180,7 @@ export async function fulfillCheckoutSession(db, session, subscription = null) {
         referralCode: await promoAffiliateCode(t, session) || String(session.metadata?.ref || '').toUpperCase().replace(/[^A-Z0-9]/g, '').slice(0, 16) || null,
       });
       await audit(t, 'license.created', { licenseId: license.id, userId, detail: { session: session.id } });
+      if (userId) await replaceReward(t, userId, license.id);
       return { license, created: true, claimToken: userId ? null : claimToken };
     });
   } catch (err) {
@@ -205,9 +224,10 @@ export function claimLicense(db, licenseId, userId) {
     if (!lic) throw new LicenseError('not_found');
     if (lic.user_id === userId) return lic;
     if (lic.user_id) throw new LicenseError('already_claimed');
-    if (await activeLicenseForUser(t, userId)) throw new LicenseError('already_has_license');
+    if (await blockingLicense(t, userId)) throw new LicenseError('already_has_license');
     await t.run('UPDATE licenses SET user_id = ?, claimed_at = ?, claim_token_hash = NULL WHERE id = ?', [userId, Date.now(), licenseId]);
     await audit(t, 'license.claimed', { licenseId, userId });
+    await replaceReward(t, userId, licenseId);
     return getLicense(t, licenseId);
   });
 }

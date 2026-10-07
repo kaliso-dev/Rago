@@ -371,7 +371,7 @@ export function dashboardPage(cfg, { user, license, device, notice, error, canRe
           <p class="muted small">${active
             ? `Earned with the affiliate program. Premium until ${fmtDate(end)}, nothing to pay.${cfg.affiliateRewardMax === 1 ? '' : ` Bring ${cfg.affiliateGoal} more players to add ${cfg.affiliateRewardMonths} months.`}`
             : ended ? `Your affiliate reward ended on ${fmtDate(end)}. Get Premium to keep every tweak unlocked.` : 'This license was revoked.'}</p></div></div>
-        <div class="row"><a class="link-arrow" href="/affiliate">Open affiliate program ${ICON.arrow}</a></div>
+        <div class="row">${active ? html`<a class="btn btn-ghost btn-sm" href="${buyUrl}">Subscribe now, first payment on ${fmtDate(end)}</a>` : ''}<a class="link-arrow" href="/affiliate">Open affiliate program ${ICON.arrow}</a></div>
       </article>`;
     }
     if (license.plan === 'lifetime' || !subscription) {
@@ -457,12 +457,12 @@ export function dashboardPage(cfg, { user, license, device, notice, error, canRe
   return page({ title: 'Your account', cfg, user, body, bodyClass: 'is-dash', nav: 'account', buy: !active });
 }
 
-const RULES = (cfg) => [
+const RULES = (cfg, closed = false) => [
   `A player counts once they've paid, used your code and activated Rago Optimizer on their PC.`,
   cfg.affiliateHoldDays
     ? `Each purchase counts ${cfg.affiliateHoldDays} days after payment. Refunds and chargebacks don't count.`
     : "A player who's refunded or files a chargeback stops counting.",
-  `Players type your code at checkout for ${cfg.affiliateDiscountPercent}% off, or when they create their account right after paying. It can’t be added later.`,
+  ...(closed ? [] : [`Players type your code at checkout for ${cfg.affiliateDiscountPercent}% off, or when they create their account right after paying. It can’t be added later.`]),
   "Your own purchases don't count: a player activated on one of your PCs, or paid with your account email, is left out. Rewards gained by cheating can be taken back.",
   `Your code works for ${cfg.affiliateMaxReferrals} players. A refunded player, or one on your PC, frees their spot.`,
   `${cfg.affiliateGoal} players counted = ${cfg.affiliateRewardMonths} months of Premium on one PC${cfg.affiliateRewardMax === 1 ? ', once' : ''}. Subscribed? Your payments pause for ${cfg.affiliateRewardMonths} months instead.`,
@@ -522,11 +522,14 @@ export function affiliatePage(cfg, { user, summary, joined }) {
       <article class="card card-code rise d1">
         <p class="overline">Your referral code</p>
         <div class="code-big"><code class="mono">${summary.code}</code>
-          <button class="btn btn-primary btn-sm" type="button" data-copy="${summary.code}">${ICON.copy}<span>Copy</span></button></div>
-        <div class="share"><span class="mono small share-url"><bdi>${cfg.siteUrl.replace(/^https?:\/\//, '')}/?ref=${summary.code}</bdi></span>
+          ${summary.codeFull ? '' : html`<button class="btn btn-primary btn-sm" type="button" data-copy="${summary.code}">${ICON.copy}<span>Copy</span></button>`}</div>
+        ${summary.maxed
+          ? html`<p class="small"><strong>Your code is closed.</strong> You got your ${summary.months} months of Premium: the code no longer gives a discount or counts new players.</p>`
+          : summary.codeFull
+            ? html`<p class="small"><strong>Your code is full:</strong> ${summary.maxReferrals} players used it. It opens again only if one of them is refunded.</p>`
+            : html`<div class="share"><span class="mono small share-url"><bdi>${cfg.siteUrl.replace(/^https?:\/\//, '')}/?ref=${summary.code}</bdi></span>
           <button class="btn btn-ghost btn-sm" type="button" data-copy="${cfg.siteUrl}/?ref=${summary.code}">${ICON.copy}<span>Copy link</span></button></div>
-        ${summary.codeFull && !summary.maxed ? html`<p class="small"><strong>Your code is full:</strong> ${summary.maxReferrals} players used it. It opens again only if one of them is refunded.</p>` : ''}
-        <p class="muted small">Players type the code at checkout for <strong>${summary.discount}% off</strong>, or in the <strong>Referral code</strong> field when they create their account after paying. With your link, the discount and the code are applied for them.</p>
+        <p class="muted small">Players type the code at checkout for <strong>${summary.discount}% off</strong>, or in the <strong>Referral code</strong> field when they create their account after paying. With your link, the discount and the code are applied for them.</p>`}
       </article>
       <article class="card card-progress rise d2">
         <div class="card-head"><p class="overline">Progress</p>${summary.rewards ? html`<span class="badge badge-red"><i></i>${summary.rewards === 1 ? '1 reward' : `${summary.rewards} rewards`}</span>` : ''}</div>
@@ -547,7 +550,7 @@ export function affiliatePage(cfg, { user, summary, joined }) {
       </article>
       <article class="card card-rules rise d4">
         <p class="overline">How it counts</p>
-        <ul class="rules small muted">${RULES(cfg).map((r) => html`<li>${r}</li>`)}</ul>
+        <ul class="rules small muted">${RULES(cfg, summary.maxed).map((r) => html`<li>${r}</li>`)}</ul>
       </article>
     </div>
   </main>`;

@@ -670,6 +670,9 @@ test('affiliate: 5 % code in Stripe, 3 players per code, a player counts when th
   t.jar.clear();
   await t.browse(`/buy?interval=month&ref=${code}`);
   assert.equal(t.created.at(-1).discounts, undefined); // no 5 % from the link either
+  assert.equal(t.created.at(-1).metadata.ref, undefined); // and not carried to the account form
+  t.paidSubscription('cs_fullref', 'late@x.io');
+  assert.doesNotMatch(await (await t.browse('/checkout/success?session_id=cs_fullref')).text(), new RegExp(`value="${code}"`));
   assert.match((await buyer(6)).error, /already used by 3 players/);
   assert.equal(await L.findUserByEmail(t.db, 'p6@x.io'), null);
 
@@ -698,6 +701,9 @@ test('affiliate: 5 % code in Stripe, 3 players per code, a player counts when th
   assert.match(page, /<b data-count="3">3<\/b><small>\/3<\/small>/);
   assert.equal((page.match(/<li class="on">/g) || []).length, 3);
   assert.equal(t.promos[0].active, false); // reward given: the code is closed
+  assert.match(page, /Your code is closed/);
+  assert.doesNotMatch(page, /Copy link/);
+  assert.doesNotMatch(page, /5% off/);
   // Stripe confirms with the subscription in trial: still active, renews after the free months.
   await t.webhook('customer.subscription.updated', { id: 'sub_cs_aff', object: 'subscription' });
   lic = await L.licenseForUser(t.db, aff.id);
@@ -726,6 +732,81 @@ test('affiliate: 5 % code in Stripe, 3 players per code, a player counts when th
   await asAffiliate();
   assert.equal((await t.db.get('SELECT rewards FROM affiliates')).rewards, 1);
   assert.equal(t.stripeCalls.filter((c) => c[0] === 'update' && c[1] === 'sub_cs_aff').length, 1);
+});
+
+/** A free account that joined the program and has 3 counted players (granted licenses, activated on their own PCs). */
+async function affiliateWithThree(t, email) {
+  await t.browse('/signup', { form: { email, password: 'password123' } });
+  await t.browse('/affiliate/join', { form: {} });
+  const aff = await L.findUserByEmail(t.db, email);
+  const { code } = await t.db.get('SELECT code FROM affiliates WHERE user_id = ?', [aff.id]);
+  const A = await import('../src/affiliates.js');
+  for (const n of [1, 2, 3]) {
+    const user = await L.createUser(t.db, `${n}-${email}`, 'password123');
+    const { license } = await L.grantLicense(t.db, `${n}-${email}`);
+    await A.recordReferral(t.db, await A.affiliateByCode(t.db, code), user.id, license);
+    await L.activate(t.db, license.id, { fp: { machine_guid: String(n).repeat(64), smbios_uuid: null, board_serial: null }, name: 'P', os: '', appVersion: '' });
+  }
+  return { aff, code, A };
+}
+
+test('a reward Stripe refuses is retried by the hourly sweep, and never shown as given', async () => {
+  const t = await setup(SUBS);
+  // Subscribed affiliate: the reward pauses their Stripe payments.
+  t.paidSubscription('cs_sub', 'subaff@x.io');
+  await t.browse('/checkout/success?session_id=cs_sub');
+  const { aff, A } = await affiliateWithThree(t, 'subaff@x.io');
+  const update = t.stripe.subscriptions.update;
+  t.stripe.subscriptions.update = async () => { throw new Error('Stripe is down'); };
+  await t.browse('/affiliate');
+  let row = await t.db.get('SELECT rewards, reward_granted_at FROM affiliates');
+  assert.deepEqual(row, { rewards: 0, reward_granted_at: null });
+  assert.equal((await t.db.get("SELECT COUNT(*)::int AS n FROM audit WHERE type = 'affiliate.reward_failed'")).n, 1);
+  assert.doesNotMatch(await (await t.browse('/affiliate')).text(), /months of Premium added/);
+  // Nobody pending any more, but the sweep still picks this affiliate up.
+  assert.deepEqual(await A.affiliatesToEvaluate(t.db, t.cfg), [aff.id]);
+  t.stripe.subscriptions.update = update;
+  for (const id of await A.affiliatesToEvaluate(t.db, t.cfg)) await A.settleAffiliate(t.db, t.cfg, t.stripe, console, id);
+  row = await t.db.get('SELECT rewards, reward_granted_at FROM affiliates');
+  assert.equal(row.rewards, 1);
+  assert.ok(row.reward_granted_at);
+  assert.deepEqual(await A.affiliatesToEvaluate(t.db, t.cfg), []);
+});
+
+test('an affiliate on their 6 free months can subscribe: first payment when the reward ends, same PC', async () => {
+  const t = await setup(SUBS);
+  const { aff } = await affiliateWithThree(t, 'rew@x.io');
+  let j = await (await t.api('/auth/login', { email: 'rew@x.io', password: 'password123', device: pc('R') })).json();
+  j = await (await t.api('/licenses/activate', { device: pc('R') }, { authorization: `Bearer ${j.access_token}` })).json();
+  assert.equal(j.license.billing.interval, 'reward');
+  const reward = await L.licenseForUser(t.db, aff.id);
+  assert.match(await (await t.browse('/account')).text(), /Subscribe now, first payment on/);
+
+  // Checkout opens (no "you already have Premium"), with the subscription starting at the reward's end.
+  const res = await t.browse('/buy?interval=month');
+  assert.equal(res.headers.get('location'), 'https://checkout.stripe.com/c/pay/cs_new');
+  assert.equal(t.created.at(-1).subscription_data.trial_end, Math.floor(Number(reward.current_period_end) / 1000));
+  t.paidSubscription('cs_rew', 'rew@x.io', 'month', { client_reference_id: aff.id, payment_status: 'no_payment_required' });
+  assert.equal((await t.browse('/checkout/success?session_id=cs_rew')).headers.get('location'), '/account?n=claimed');
+  const sub = await L.licenseForUser(t.db, aff.id);
+  assert.notEqual(sub.id, reward.id);
+  assert.equal(sub.plan, 'month');
+  assert.equal(sub.status, 'active');
+  assert.equal((await L.getLicense(t.db, reward.id)).status_reason, 'replaced');
+  assert.equal((await L.getDevice(t.db, sub.id)).name, 'GAMING-PC'); // the PC moved with it
+  // The app's token of the reward keeps working on that PC: refresh moves it to the subscription.
+  const r = await (await t.api('/licenses/refresh', { license_token: j.license_token, device: pc('R') })).json();
+  assert.equal(r.status, 'active');
+  assert.equal(r.license.billing.interval, 'month');
+  assert.match(await (await t.browse('/account')).text(), /Monthly/);
+
+  // After its end, a reward that wasn't replaced doesn't block buying either.
+  const t2 = await setup(SUBS);
+  const { aff: a2 } = await affiliateWithThree(t2, 'late@x.io');
+  await t2.api('/auth/login', { email: 'late@x.io', password: 'password123', device: pc('L') });
+  await t2.db.run("UPDATE licenses SET current_period_end = ? WHERE user_id = ? AND plan = 'reward'", [Date.now() - 1000, a2.id]);
+  assert.equal((await t2.browse('/buy?interval=year')).headers.get('location'), 'https://checkout.stripe.com/c/pay/cs_new');
+  assert.equal(t2.created.at(-1).subscription_data.trial_end, undefined);
 });
 
 test('AFFILIATE_REWARD_MAX=0 and more spots: a reward every 3 players', async () => {
