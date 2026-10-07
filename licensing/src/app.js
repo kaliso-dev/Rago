@@ -35,7 +35,7 @@ const API_ERRORS = {
 
 function rateLimiter() {
   const hits = new Map();
-  return (key, limit, windowMs) => {
+  const allow = (key, limit, windowMs) => {
     const now = Date.now();
     const h = hits.get(key);
     if (!h || h.reset < now) {
@@ -46,6 +46,8 @@ function rateLimiter() {
     h.n++;
     return h.n <= limit;
   };
+  allow.count = (key) => { const h = hits.get(key); return h && h.reset >= Date.now() ? h.n : 0; };
+  return allow;
 }
 
 /**
@@ -97,9 +99,13 @@ export function createApp({ cfg, db, keys, stripe, mailer, log = console, fetchI
   app.use('*', async (c, next) => {
     const p = c.req.path;
     if (c.req.method === 'POST' && !p.startsWith('/api/') && !p.startsWith('/webhooks/')) {
+      // Compared by host: behind Railway's proxy the request looks like http, and the server answers on
+      // both its Railway address and the custom domain once there is one.
       const origin = c.req.header('origin');
-      const self = new URL(c.req.url).origin;
-      if (origin && origin !== self && origin !== cfg.publicUrl) return c.text('Forbidden', 403);
+      let host = null;
+      try { host = origin ? new URL(origin).host : null; } catch { host = 'invalid'; }
+      const own = [c.req.header('host'), cfg.trustProxy ? c.req.header('x-forwarded-host') : null, new URL(cfg.publicUrl).host];
+      if (origin && !own.includes(host)) return c.text('Forbidden', 403);
     }
     await next();
   });
@@ -199,6 +205,22 @@ export function createApp({ cfg, db, keys, stripe, mailer, log = console, fetchI
   };
 
   const ip = (c) => ipOf(c);
+
+  // Sign-in limits (site and app share the per-email ones). Per IP: 10 tries per email, 50 in all.
+  // Per email, across IPs: after 20 wrong passwords, only an IP that hasn't failed on this email yet,
+  // or that signed in to it before, gets a try. Strangers can't lock a player out; a spread-out guesser
+  // gets one try per new IP.
+  const LOGIN_WINDOW = 15 * 60 * 1000;
+  function loginAllowed(c, scope, email) {
+    if (!allow(`${scope}:${ip(c)}:${email}`, 10, LOGIN_WINDOW) || !allow(`${scope}:${ip(c)}`, 50, LOGIN_WINDOW)) return false;
+    if (allow.count(`login-fail:${email}`) < 20) return true;
+    return allow.count(`login-ok:${ip(c)}:${email}`) > 0 || allow.count(`login-fail:${ip(c)}:${email}`) === 0;
+  }
+  function loginResult(c, email, ok) {
+    if (ok) { allow(`login-ok:${ip(c)}:${email}`, Infinity, 30 * 24 * 3600 * 1000); return; }
+    allow(`login-fail:${email}`, Infinity, LOGIN_WINDOW);
+    allow(`login-fail:${ip(c)}:${email}`, Infinity, LOGIN_WINDOW);
+  }
   // Where to go after signing in. Only our own pages.
   const NEXT = new Set(['/affiliate']);
   const nextPath = (v) => (NEXT.has(String(v || '')) ? String(v) : null);
@@ -355,11 +377,10 @@ export function createApp({ cfg, db, keys, stripe, mailer, log = console, fetchI
     // Buyers whose email already has an account get the code field here instead of on sign-up.
     const code = purchased ? A.normalizeCode(body.code) : '';
     const fail = (error, status) => c.html(V.loginPage(cfg, { email, purchased, next, code, error }), status);
-    if (!allow(`login:${ip(c)}:${email}`, 10, 15 * 60 * 1000) || !allow(`login:${ip(c)}`, 50, 15 * 60 * 1000) || !allow(`login-email:${email}`, 20, 15 * 60 * 1000)) {
-      return fail(API_ERRORS.rate_limited[1], 429);
-    }
+    if (!loginAllowed(c, 'login', email)) return fail(API_ERRORS.rate_limited[1], 429);
     const user = await L.findUserByEmail(db, email);
     const ok = await verifyPassword(password, user ? user.password_hash : DUMMY_HASH);
+    loginResult(c, email, user && ok);
     if (!user || !ok) return fail(API_ERRORS.invalid_credentials[1], 401);
     const { affiliate, error } = await checkReferral(code, email, pending || {});
     if (error) return fail(error, 400);
@@ -599,10 +620,11 @@ export function createApp({ cfg, db, keys, stripe, mailer, log = console, fetchI
     let device;
     try { device = parseDevice(body.device); } catch (e) { return fail(c, 'invalid_request', { detail: e instanceof DeviceError ? e.message : undefined }); }
     const email = body.email.trim().toLowerCase();
-    if (!allow(`api-login:${ip(c)}:${email}`, 10, 15 * 60 * 1000) || !allow(`api-login:${ip(c)}`, 50, 15 * 60 * 1000) || !allow(`login-email:${email}`, 20, 15 * 60 * 1000)) return fail(c, 'rate_limited');
+    if (!loginAllowed(c, 'api-login', email)) return fail(c, 'rate_limited');
 
     const user = await L.findUserByEmail(db, email);
     const ok = await verifyPassword(body.password, user ? user.password_hash : DUMMY_HASH);
+    loginResult(c, email, user && ok);
     if (!user || !ok) return fail(c, 'invalid_credentials');
     await A.rememberDevice(db, user.id, device);
     await settleAffiliate(user.id);
@@ -671,6 +693,8 @@ export function createApp({ cfg, db, keys, stripe, mailer, log = console, fetchI
   }
 
   app.notFound(async (c) => {
+    // The app reads errors in the contract's shape, also for a wrong path or method.
+    if (c.req.path.startsWith('/api/')) return c.json({ error: { code: 'invalid_request', message: `Unknown API route: ${c.req.method} ${c.req.path}` } }, 404);
     const user = await currentUser(c).catch(() => null);
     return c.html(V.messagePage(cfg, { user, overline: 'Error 404', title: 'Page not found.', text: "This page doesn't exist, or it moved.", action: user ? { href: '/account', label: 'Go to your account' } : null }), 404);
   });

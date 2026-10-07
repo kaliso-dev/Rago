@@ -326,7 +326,7 @@ test('installer from Supabase Storage: signed link, any file name, clear reason 
   // Free accounts download too (the free plan is the app with Premium tweaks locked).
   await t.browse('/signup', { form: { email: 'st@x.io', password: 'password123' } });
   assert.equal((await t.browse('/account/download')).headers.get('location'), signed);
-  assert.match(calls[0].url, /object\/sign\/downloads\/RagoOptimizer-Setup\.exe$/);
+  assert.match(calls[0].url, /object\/list\/downloads$/);
   assert.equal(calls[0].init.headers.Authorization, 'Bearer eyJservice-key');
   assert.equal(calls[0].init.headers.apikey, 'eyJservice-key');
   await L.grantLicense(t.db, 'st@x.io');
@@ -334,6 +334,11 @@ test('installer from Supabase Storage: signed link, any file name, clear reason 
   // Public link for the site's free button, and the status check for the launch guide.
   assert.equal((await t.app.request('/download')).headers.get('location'), signed);
   assert.deepEqual(await (await t.app.request('/download/status')).json(), { ok: true, source: 'supabase', file: 'downloads/Rago Optimizer_1.0.0_x64-setup.exe' });
+
+  // An old file under the configured name doesn't hide a newer upload.
+  storage['downloads/RagoOptimizer-Setup.exe'] = true;
+  const t3 = await setup({ SUPABASE_URL: 'https://abc.supabase.co', SUPABASE_SERVICE_ROLE_KEY: 'eyJservice-key' }, { fetchImpl });
+  assert.equal((await (await t3.app.request('/download/status')).json()).file, 'downloads/Rago Optimizer_1.0.0_x64-setup.exe');
 
   // Wrong key or empty bucket: the dashboard says so, and the status says why.
   keyOk = false;
@@ -579,6 +584,12 @@ test('affiliate: join, code at sign-up only, 3 real players = lifetime license',
   assert.equal(j.error.code, 'bound_to_other_device'); // still locked to AFF-PC
   assert.match(await (await t.browse('/account')).text(), /Rago Optimizer Premium for life/);
 
+  // A counted player refunded after the reward: the reward stays, support gets a trace.
+  const counted = await t.db.get("SELECT l.stripe_customer_id AS c FROM referrals r JOIN licenses l ON l.id = r.license_id WHERE r.status = 'counted' LIMIT 1");
+  await t.webhook('charge.refunded', { id: 'ch_after', object: 'charge', refunded: true, customer: counted.c });
+  assert.equal((await t.db.get("SELECT COUNT(*)::int AS n FROM audit WHERE type = 'affiliate.reward_at_risk'")).n, 1);
+  assert.equal((await L.licenseForUser(t.db, aff.id)).status, 'active');
+
   // Granted once, even if evaluated again.
   await t.browse('/affiliate');
   assert.equal((await t.db.get("SELECT COUNT(*)::int AS n FROM audit WHERE type = 'affiliate.rewarded'")).n, 1);
@@ -706,4 +717,46 @@ test('a second purchase on an email that has Premium: no purchase email, duplica
   const dup = await t.db.get("SELECT status, status_reason FROM licenses WHERE stripe_session_id = 'cs_d2'");
   assert.deepEqual([dup.status, dup.status_reason], ['revoked', 'duplicate']);
   assert.match(await (await t.browse('/account?n=duplicate')).text(), /<a href="[^"]+"[^>]*>Contact support on Discord<\/a>/);
+});
+
+test('account security: lockout by strangers, old reset links, Origin by host, API 404 in JSON, lost purchase found by support', async () => {
+  const t = await setup({ TRUST_PROXY: '1' });
+  await L.createUser(t.db, 'victim@x.io', 'password123');
+  const login = (pass, ip) => t.app.request('/api/v1/auth/login', {
+    method: 'POST', headers: { 'content-type': 'application/json', 'x-real-ip': ip },
+    body: JSON.stringify({ email: 'victim@x.io', password: pass, device: device('V') }),
+  });
+  // 20 wrong passwords from 2 IPs: those IPs are stopped, the player's own IP still gets in.
+  for (let i = 0; i < 10; i++) { await login('nope', '10.0.0.1'); await login('nope', '10.0.0.2'); }
+  assert.equal((await login('password123', '10.0.0.1')).status, 429);
+  assert.equal((await (await login('password123', '10.9.9.9')).json()).error.code, 'no_license');
+
+  // A reset link asked earlier stops working once the password changed with another one.
+  const user = await L.findUserByEmail(t.db, 'victim@x.io');
+  const first = await L.createPasswordReset(t.db, user.id);
+  const second = await L.createPasswordReset(t.db, user.id);
+  assert.equal((await t.browse(`/reset/${second}`, { form: { token: second, password: 'newpassword1' } })).status, 303);
+  assert.equal((await t.browse(`/reset/${first}`)).status, 410);
+
+  // Forms posted from the custom domain while PUBLIC_URL is still the Railway address (and back) pass.
+  const post = (host, origin) => t.app.request('/forgot', { method: 'POST', headers: { host, origin, 'content-type': 'application/x-www-form-urlencoded' }, body: 'email=a%40b.c' });
+  assert.equal((await post('account.rago.gg', 'https://account.rago.gg')).status, 200);
+  assert.equal((await post('account.rago.gg', 'https://evil.example')).status, 403);
+
+  const nope = await t.app.request('/api/v1/nope', { method: 'POST' });
+  assert.equal(nope.status, 404);
+  assert.equal((await nope.json()).error.code, 'invalid_request');
+
+  // Paid, tab closed, account made elsewhere: support finds the purchase and attaches it.
+  await t.webhook('checkout.session.completed', t.paidSession('cs_lost', 'lost@x.io'));
+  await L.createUser(t.db, 'lost@x.io', 'password123');
+  const lostUser = await L.findUserByEmail(t.db, 'lost@x.io');
+  assert.equal(await L.licenseForUser(t.db, lostUser.id), null);
+  const [loose] = await L.unclaimedLicenses(t.db, 'lost@x.io');
+  assert.ok(loose);
+  const link = await L.newClaimToken(t.db, loose.id);
+  assert.equal((await L.licenseByClaimToken(t.db, link)).id, loose.id);
+  await L.claimLicense(t.db, loose.id, lostUser.id);
+  assert.equal((await L.licenseForUser(t.db, lostUser.id)).id, loose.id);
+  await assert.rejects(L.newClaimToken(t.db, loose.id), /already_claimed/);
 });

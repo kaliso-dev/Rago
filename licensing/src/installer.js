@@ -1,8 +1,9 @@
 // Finds the Windows installer and returns a link to download it.
 // Order: INSTALLER_URL (any public link), then Supabase Storage (private bucket, 5-minute signed link),
 // then a file on the server's disk (INSTALLER_PATH).
-// In Storage, INSTALLER_OBJECT names the file; if it isn't there, the newest .exe of the same folder is
-// used, so uploading "Rago Optimizer_1.0.0_x64-setup.exe" works without renaming it.
+// In Storage, the newest .exe of INSTALLER_OBJECT's bucket and folder is served, whatever its name, so
+// uploading "Rago Optimizer_1.1.0_x64-setup.exe" next to an older file serves the new one. The exact
+// INSTALLER_OBJECT file is only a fallback when the folder can't be listed.
 import { statSync } from 'node:fs';
 
 const encodePath = (p) => p.split('/').map(encodeURIComponent).join('/');
@@ -43,13 +44,10 @@ export function createInstaller(cfg, { fetchImpl = fetch, log = console } = {}) 
     if (cfg.installerUrl) return { url: cfg.installerUrl, source: 'INSTALLER_URL' };
     if (cfg.supabaseUrl && cfg.supabaseServiceKey) {
       try {
-        const tries = [];
-        if (found && Date.now() - found.at < 5 * 60 * 1000) tries.push(found.path);
-        if (configuredPath && !tries.includes(configuredPath)) tries.push(configuredPath);
         let last;
-        for (const path of tries) {
-          last = await sign(path);
-          if (last.url) return link(path, last.url);
+        if (found && Date.now() - found.at < 5 * 60 * 1000) {
+          last = await sign(found.path);
+          if (last.url) return link(found.path, last.url);
         }
         const exe = await newestExe();
         if (exe.path) {
@@ -59,6 +57,10 @@ export function createInstaller(cfg, { fetchImpl = fetch, log = console } = {}) 
             return link(exe.path, last.url);
           }
         } else last = exe;
+        if (configuredPath && last.status !== 401 && last.status !== 403) {
+          const direct = await sign(configuredPath);
+          if (direct.url) return link(configuredPath, direct.url);
+        }
         const reason = last.status === 400 || last.status === 401 || last.status === 403
           ? `Supabase refused the key (HTTP ${last.status}): check SUPABASE_SERVICE_ROLE_KEY. ${last.body}`
           : `No installer in bucket "${bucket}"${folder ? ` folder "${folder}"` : ''}: upload the .exe there (the file inside the GitHub zip, not the zip). ${last.body}`;

@@ -31,6 +31,8 @@ export async function createUser(db, email, password) {
 export async function setPassword(db, userId, password) {
   await db.run('UPDATE users SET password_hash = ? WHERE id = ?', [await hashPassword(password), userId]);
   await db.run('DELETE FROM web_sessions WHERE user_id = ?', [userId]);
+  // Reset links sent earlier stop working once the password changed.
+  await db.run('UPDATE password_resets SET used_at = ? WHERE user_id = ? AND used_at IS NULL', [Date.now(), userId]);
 }
 
 export async function createWebSession(db, userId) {
@@ -171,6 +173,19 @@ export function grantLicense(db, email, note) {
 
 export const licenseByClaimToken = (db, token) =>
   db.get('SELECT * FROM licenses WHERE claim_token_hash = ? AND user_id IS NULL', [sha256(String(token))]);
+
+/** Paid or granted licenses with this email that no account holds yet (support: tab closed, other device). */
+export const unclaimedLicenses = (db, email) =>
+  db.all('SELECT * FROM licenses WHERE email = ? AND user_id IS NULL ORDER BY created_at DESC', [normEmail(email)]);
+
+/** A fresh /claim link for an unclaimed license; the previous link stops working. */
+export async function newClaimToken(db, licenseId) {
+  const token = randomToken();
+  const { changes } = await db.run('UPDATE licenses SET claim_token_hash = ? WHERE id = ? AND user_id IS NULL', [sha256(token), licenseId]);
+  if (!changes) throw new LicenseError('already_claimed');
+  await audit(db, 'license.claim_link', { licenseId });
+  return token;
+}
 
 /** Attaches an unclaimed license to an account. */
 export function claimLicense(db, licenseId, userId) {

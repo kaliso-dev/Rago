@@ -18,7 +18,7 @@ Programme d'affiliation `/affiliate` : chaque compte peut avoir un code ; 3 ache
 ## Choix faits
 
 - **Abonnement** mensuel ou annuel (`STRIPE_PRICE_MONTHLY`, `STRIPE_PRICE_YEARLY`). Les licences offertes et celles gagnées par l'affiliation sont à vie. Sans les deux prix, `/buy` affiche « Checkout opens soon » (503) : plus rien n'est vendu en paiement unique.
-- **Un seul PC par licence.** Le site reste accessible depuis n'importe quel navigateur ; c'est l'app qui est verrouillée. Réinstaller Windows ne bloque pas le joueur (l'empreinte combine 3 identifiants et en tolère un qui change, voir `docs/API.md`).
+- **Un seul PC par licence.** Le site reste accessible depuis n'importe quel navigateur ; c'est l'app qui est verrouillée. Réinstaller Windows ne bloque pas le joueur quand le numéro de carte mère est lisible (l'empreinte combine 3 identifiants et en tolère un qui change ; exception et détails dans `docs/API.md`).
 - **Changement de PC par le support** (`npm run admin -- reset-device <email>`). `SELF_SERVICE_RESET_DAYS=30` l'ouvre en libre-service une fois par mois.
 - **Supabase** : la base Postgres (tables dans `supabase/schema.sql`, créées automatiquement au démarrage, accès public bloqué par RLS) et l'installeur dans un bucket Storage privé, servi par lien signé de 5 minutes à tout le monde (l'app gratuite est la même que l'app Premium, c'est la licence qui débloque). Le serveur n'a donc besoin d'aucun disque.
 - **Clés de licence** : sans `LICENSE_SIGNING_KEY`, le serveur génère sa paire Ed25519 au premier démarrage et la garde dans la base. La clé publique à compiler dans l'app se lit sur `/api/v1/public-key?format=pem`.

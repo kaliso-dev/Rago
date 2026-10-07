@@ -23,12 +23,13 @@ Ce document fait foi entre le serveur de licences (`/mnt/project-files/licensing
 | code | HTTP | Quand | Ce que fait l'app |
 |---|---|---|---|
 | `invalid_request` | 400 | Corps ou empreinte mal formés (`detail` précise) | Bug côté app, journaliser |
+| `invalid_request` | 404 | Route `/api/v1` inconnue ou mauvaise méthode (souvent `RAGO_API_BASE` mal réglé) | Bug de configuration, journaliser |
 | `invalid_credentials` | 401 | Email ou mot de passe faux | Rester sur l'écran de connexion |
 | `invalid_token` | 401 | Token d'accès expiré, ou license token plus valable (appareil libéré, licence ré-activée ailleurs puis revenue) | Effacer le token, retour à la connexion |
 | `no_license` | 403 | Compte sans Premium. Contient `buy_url` (la section prix du site, où l'on choisit mensuel ou annuel) | Bouton vers `buy_url` |
 | `bound_to_other_device` | 403 | Licence déjà active sur un autre PC | Effacer le token, afficher le message, lien support |
 | `revoked` | 403 | Remboursé, litige, désactivé par le support, ou abonnement terminé. Dans ce dernier cas : `reason: "subscription_ended"`, `buy_url`, et un `message` dédié | Effacer le token, afficher le message (et un bouton vers `buy_url` s'il est là) |
-| `rate_limited` | 429 | Trop d'essais (10 logins / 15 min par email et IP) | Afficher le message, réessayer plus tard |
+| `rate_limited` | 429 | Trop d'essais. Par 15 min : 10 connexions par email et IP, 50 par IP ; et après 20 mauvais mots de passe sur un email (toutes IP), seule une IP qui n'a pas encore échoué sur cet email, ou qui s'y est déjà connectée, peut essayer | Afficher le message, réessayer plus tard |
 | `server_error` | 500 | Panne serveur | Garder le token existant, mode hors ligne |
 
 Réseau injoignable : l'app affiche « Couldn't reach the license server. Check your connection and try again. » et continue avec son token tant qu'il n'est pas expiré.
@@ -76,7 +77,7 @@ fn fp_hash(name: &str, raw: &str) -> Option<String> {
 }
 ```
 
-**Règle « même PC »** (serveur et app l'appliquent à l'identique) : on compte les identifiants présents des deux côtés ; c'est le même PC si au moins 2 sont égaux, ou tous s'il y en a moins de 2 comparables. Conséquence voulue : réinstaller Windows (nouveau `MachineGuid`) ou changer de disque ne bloque pas le joueur, car l'UUID SMBIOS et le numéro de carte mère restent. Un autre PC ne passe pas.
+**Règle « même PC »** (serveur et app l'appliquent à l'identique) : on compte les identifiants présents des deux côtés ; c'est le même PC si au moins 2 sont égaux, ou tous s'il y en a moins de 2 comparables. Conséquence : réinstaller Windows (nouveau `MachineGuid`) ou changer de disque ne bloque pas le joueur quand l'UUID SMBIOS et le numéro de carte mère sont lisibles, car ils restent. Exception : sur un PC dont le numéro de carte mère est une valeur bidon (« Default string », « To be filled by O.E.M. », fréquent sur les PC montés), il ne reste que 2 identifiants ; après une réinstallation, 1 seul est égal, donc `bound_to_other_device`, et le joueur passe par le support (`reset-device`). Un autre PC ne passe pas.
 
 ## Endpoints
 

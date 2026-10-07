@@ -29,7 +29,7 @@ Dans tout le guide, remplace `ragohub.com` par ton vrai domaine.
 >
 > Sans Resend, les emails ne partent pas : les pages le savent et disent au joueur de te demander sur Discord (mot de passe oublié, lien d'achat).
 >
-> **Le jour où tu as un domaine** : Railway Custom Domain puis `PUBLIC_URL` et `SITE_URL` ; nouvelle URL du webhook Stripe ; Netlify domaine ; `CONFIG.accountBase`, `og:url` et `SITE` de `site/tools/build.py` (dis-le-moi, je le fais) ; secrets GitHub `RAGO_API_BASE` et variable `SITE_URL`, puis une nouvelle version de l'app. **Garde l'adresse `rago-production.up.railway.app` active** : les apps déjà installées l'ont en dur et l'utilisent pour renouveler leurs licences.
+> **Le jour où tu as un domaine** : Railway Custom Domain puis `PUBLIC_URL` et `SITE_URL` ; nouvelle URL du webhook Stripe ; Netlify domaine ; `CONFIG.accountBase`, `og:url` et `SITE` de `site/tools/build.py` (dis-le-moi, je le fais) ; secrets GitHub `RAGO_API_BASE` et variable `SITE_URL`, puis une nouvelle version de l'app. **Garde l'adresse `rago-production.up.railway.app` active** : les apps déjà installées l'ont en dur et l'utilisent pour renouveler leurs licences. Le serveur accepte les deux adresses : connexion, inscription et « Forgot » marchent sur l'une comme sur l'autre (les anciens liens d'achat aussi). Chaque adresse a ses propres cookies, donc un joueur connecté sur l'une devra se reconnecter sur l'autre.
 
 **Règle d'or : tu ne m'envoies aucune clé secrète.** Tu les colles directement dans Railway (étape 5). Ce que tu me donnes est listé à la fin.
 
@@ -154,9 +154,9 @@ C'est ce qui prévient le serveur qu'un paiement est passé.
    - Secret `RAGO_LICENSE_PUBKEY` = le bloc copié ci-dessus
    - Variable `SITE_URL` = `https://ragohub.com`
 3. **Actions → app-windows → Run workflow**. Ouvre ensuite **le run le plus récent avec une coche verte** → **Artifacts** → `rago-optimizer-setup` → décompresse : le fichier est `Rago Optimizer_<version>_x64-setup.exe`. Les anciens artefacts `rago-hub-setup` contiennent l'ancienne app « Rago Hub » : supprime-les (icône corbeille dans chaque ancien run) pour ne pas te tromper.
-4. Supabase → **Storage → downloads → Upload file** : dépose le fichier `.exe` qui est **dans** le zip (pas le zip lui-même). Son nom n'a pas d'importance : le serveur prend le `.exe` le plus récent du bucket.
+4. Supabase → **Storage → downloads → Upload file** : dépose le fichier `.exe` qui est **dans** le zip (pas le zip lui-même). Son nom n'a pas d'importance : le serveur sert toujours le `.exe` le plus récent du bucket.
 5. **Vérifie** : ouvre `https://account.ragohub.com/download/status`. Tu dois voir `"ok":true` et le nom de ton fichier. Sinon la ligne `error` dit quoi corriger (clé Supabase refusée, bucket vide, mauvais nom de bucket).
-6. À chaque nouvelle version : dépose le nouvel exe (tu peux supprimer l'ancien) et mets à jour `INSTALLER_VERSION` dans Railway.
+6. À chaque nouvelle version : dépose le nouvel exe (tu peux supprimer l'ancien) et mets à jour `INSTALLER_VERSION` dans Railway. Vérifie sur `/download/status` que `file` donne bien le nouveau nom.
 
 Le bouton **Download** marche pour tous les comptes, avec ou sans Premium : sans licence, l'app tourne en version gratuite. Le lien public `https://account.ragohub.com/download` sert au bouton gratuit du site.
 
@@ -212,7 +212,7 @@ Si une étape coince, envoie-moi une capture et l'heure : je trouve la cause.
 | `STRIPE_PORTAL_LOGIN_URL` | Stripe → Portail client → lien de connexion (étape 3.4) |
 | `PRICE_LABEL` | Le prix affiché aux comptes gratuits, ex. `€4.99 a month or €49.90 a year` |
 | `LICENSE_SIGNING_KEY`, `SESSION_SECRET` | `npm run admin -- export-keys` (étape 5.7) |
-| `INSTALLER_VERSION` | La version de l'exe (ex. `1.0.0`). `INSTALLER_OBJECT` est facultatif : par défaut `downloads/RagoOptimizer-Setup.exe`, et si ce fichier n'existe pas, le `.exe` le plus récent du bucket est pris |
+| `INSTALLER_VERSION` | La version de l'exe (ex. `1.0.0`). `INSTALLER_OBJECT` est facultatif (il donne le bucket et le dossier) : le `.exe` le plus récent du dossier est toujours servi |
 
 À retirer s'il est encore là : `STRIPE_PRICE_ID` (ancien prix unique, plus vendu).
 
@@ -223,7 +223,11 @@ Depuis ton PC, avec Node 22 installé, dans le dossier `licensing` du dépôt :
 ```bash
 npm ci
 export DATABASE_URL="la même que dans Railway"
-npm run admin -- show joueur@mail.com           # sa licence, son PC, ce qui s'est passé
+export PUBLIC_URL="https://rago-production.up.railway.app"   # pour les liens que le support envoie (ton domaine plus tard)
+npm run admin -- show joueur@mail.com           # sa licence, son PC, ce qui s'est passé, et ses achats pas encore rattachés
+npm run admin -- attach joueur@mail.com         # rattache à son compte l'achat qu'il ne retrouve pas
+npm run admin -- claim-link joueur@mail.com     # nouveau lien « Create your account » pour son achat (l'ancien ne marche plus)
+npm run admin -- reset-link joueur@mail.com     # lien « Choose a new password » (1 h), si l'email n'arrive pas
 npm run admin -- reset-device joueur@mail.com   # il a changé de PC : libère l'ancien
 npm run admin -- grant ami@mail.com             # licence à vie offerte (ex. anciens acheteurs du .bat)
 npm run admin -- affiliate affilie@mail.com     # son code, ses filleuls et pourquoi chacun compte ou non
@@ -231,6 +235,7 @@ npm run admin -- delete-user joueur@mail.com    # demande de suppression (RGPD) 
 npm run admin -- export-keys                    # la clé qui signe les licences, à garder dans ton gestionnaire de mots de passe
 ```
 
+- **« J'ai payé mais mon compte n'a pas de licence »** (onglet fermé après le paiement, compte créé sur un autre appareil ou plus de 48 h après) : `show son@email.com` affiche l'achat sous « Not on any account yet ». S'il a déjà un compte avec cet email : `attach son@email.com`. S'il n'a pas de compte : `claim-link son@email.com` et envoie-lui le lien. S'il a payé avec un autre email : `show email-de-paiement`, puis `attach email-du-compte <id de la licence>`.
 - **Rôle Premium sur Discord** : le joueur ouvre un ticket avec l'email de son compte (son tableau de bord le lui dit). Vérifie avec `npm run admin -- show son@email.com` : `status: 'active'` → donne-lui le rôle Premium. Si sa licence s'arrête (fin d'abonnement, remboursement), retire le rôle.
 
 - **Un joueur qui a déjà Premium paie une deuxième fois** (souvent déconnecté du site) : son compte garde sa licence, l'abonnement en trop est annulé et la licence en double désactivée automatiquement, aucun email d'achat ne part, et son tableau de bord lui dit de te contacter. Rembourse ce deuxième paiement dans Stripe → Paiements (`npm run admin -- show` montre les deux licences dans l'historique).
@@ -243,7 +248,7 @@ npm run admin -- export-keys                    # la clé qui signe les licences
 - Un filleul compte **14 jours après son achat** (`AFFILIATE_HOLD_DAYS`), si sa licence marche encore à ce moment-là (ni remboursée, ni contestée, ni abonnement déjà terminé), et s'il a **activé Rago Optimizer sur un PC** qui n'est ni un PC de l'affilié (y compris un PC où l'affilié s'est seulement connecté à l'app gratuite) ni celui d'un autre filleul déjà compté. Même client Stripe que l'affilié : refusé aussi.
 - À 3 filleuls comptés (`AFFILIATE_GOAL`), l'affilié reçoit Rago Optimizer Premium **à vie**, verrouillé sur un PC comme les autres. S'il était abonné, c'est sa licence actuelle qui devient à vie (même clé, même PC) et Stripe arrête de le prélever à la fin de la période.
 - Le calcul se fait quand l'affilié ouvre son compte ou se connecte dans l'app, et toutes les heures sur le serveur.
-- Une fois la récompense obtenue, elle reste, même si un filleul est remboursé après coup.
-- Limite connue : quelqu'un qui paie 3 abonnements avec 3 emails, 3 cartes et 3 PC différents passera. Ça lui coûte 3 mois d'abonnement minimum ; si tu veux plus strict, monte `AFFILIATE_HOLD_DAYS` à 30 ou 45.
+- Une fois la récompense obtenue, elle reste, même si un filleul est remboursé après coup. Le serveur le note : `npm run admin -- affiliate affilie@mail.com` affiche un avertissement, et tu décides (`revoke affilie@mail.com affiliate_fraud` reprend la licence).
+- Limite connue : quelqu'un qui paie 3 abonnements avec 3 emails et 3 PC différents passera, **même avec une seule carte** (chaque paiement sans compte crée un nouveau client Stripe). Ça lui coûte 3 mois d'abonnement minimum ; si tu veux plus strict, monte `AFFILIATE_HOLD_DAYS` à 30 ou 45.
 
 Tu peux aussi voir les tables directement dans Supabase → **Table Editor**.

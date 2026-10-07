@@ -71,7 +71,13 @@ export async function rememberDevice(db, userId, parsed) {
 
 export async function voidReferrals(db, licenseIds, reason) {
   for (const id of licenseIds) {
+    const was = await db.get('SELECT status, affiliate_user_id FROM referrals WHERE license_id = ?', [id]);
     await db.run("UPDATE referrals SET status = 'void', void_reason = ? WHERE license_id = ? AND status <> 'void'", [reason, id]);
+    // The lifetime reward is kept (taking it back is Sofiene's call); support sees it in admin affiliate.
+    if (was?.status === 'counted') {
+      const aff = await db.get('SELECT reward_license_id FROM affiliates WHERE user_id = ? AND reward_granted_at IS NOT NULL', [was.affiliate_user_id]);
+      if (aff) await audit(db, 'affiliate.reward_at_risk', { licenseId: aff.reward_license_id, userId: was.affiliate_user_id, detail: { referral_license: id, reason } });
+    }
   }
 }
 
