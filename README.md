@@ -228,6 +228,7 @@ cd app && npm ci && npm run tauri dev
 - **Le lien d'invitation Discord** (dans `CONFIG.discord` du site, `SUPPORT_URL` sur Railway et la variable `SUPPORT_URL` sur GitHub) et la **clé Resend**.
 - **`LowLatency.pow` et `smartctl.exe`** : utilisés par le .bat mais pas fournis. Sans eux, le réglage « plan d'alimentation » reste grisé.
 - **Protéger la branche de production** : Settings → Branches → règle sur la branche par défaut qui interdit le force-push et la suppression.
+- **Les pages légales** (`terms.html`, `privacy.html`, `refunds.html`) sont des brouillons avec un bandeau « Draft » et des champs en jaune. Il faut ton identité de vendeur (nom ou société, adresse, pays, email de contact, numéro d'immatriculation et TVA s'il y en a) : donne-les sur le projet et elles sont remplies dans `site/tools/make_legal.py`, puis régénérées sans le bandeau. Vérifie ensuite que « Draft » a disparu des trois pages. **À faire avant d'ouvrir les paiements** : Stripe fait accepter ces conditions au client.
 - **Certificat de signature de code** (section 4.2).
 
 ### Plus tard, au calme : renommer la branche en `main`
