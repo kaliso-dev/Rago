@@ -60,7 +60,7 @@ head = '''<!doctype html>
 <meta name="theme-color" content="#0A0A0B">
 <link rel="canonical" href="{SITE}/">
 <meta property="og:title" content="Rago Optimizer: Minecraft PvP optimizer for Windows">
-<meta property="og:description" content="Every millisecond counts. The Minecraft PvP optimizer for Windows: 226 tweaks, free to start, with a restore point offered before changes.">
+<meta property="og:description" content="Every millisecond counts. The Minecraft PvP optimizer for Windows: {TOTAL} tweaks, free to start, with a restore point created before any change.">
 <meta property="og:type" content="website">
 <meta property="og:url" content="{SITE}/">
 <meta property="og:image" content="{SITE}/og-image.png">
@@ -74,7 +74,7 @@ head = '''<!doctype html>
 <link rel="icon" href="favicon.ico" sizes="any">
 <link rel="apple-touch-icon" href="apple-touch-icon.png">
 <script type="application/ld+json">{LD}</script>
-'''.replace('{SITE}', SITE).replace('{LD}', LD)
+'''.replace('{SITE}', SITE).replace('{LD}', LD).replace('{TOTAL}', re.search(r'<h2>(\d+) tweaks\. One clear app\.</h2>', s).group(1))
 OUT = os.path.join(ROOT, 'index.html')
 page = head + s[:i] + '\n</head>\n<body>\n' + s[i:].lstrip('\n') + '\n</body>\n</html>\n'
 open(OUT, 'w').write(page)

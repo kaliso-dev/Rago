@@ -46,6 +46,11 @@ s = re.sub(r'row\("([^"]+)","(?:[^"\\]|\\.)*",', hero_row, s)
 i18n = open(os.path.join(APP, 'lib', 'i18n.ts')).read(); i18n = i18n[i18n.index('const en'):]
 reboot = re.search(r'"run\.rebootNeeded":\s*"([^"]+)"', i18n).group(1)
 s = re.sub(r'<br>(?:Restart|Redémarre)[^`]*`', lambda m: '<br>' + reboot + '`', s)
+# total tweak count (tweaks and one-time actions, like the app) and the hub preview counter
+total = len(T)
+s = re.sub(r'(<h2>)\d+( tweaks\. One clear app\.</h2>)', lambda m: m.group(1) + str(total) + m.group(2), s)
+s = re.sub(r'(All |9 of |unlocks all )\d+( tweaks|<)', lambda m: m.group(1) + str(total) + m.group(2), s)
+s = re.sub(r'(id="msel">0 of )\d+', lambda m: m.group(1) + str(count('latency')), s)
 open(p, 'w').write(s)
 print('MODS', re.findall(r'\["(\w+)","[^"]+","([^"]+)",(\d+)\]', s[s.index('const MODS'):s.index('];', s.index('const MODS'))]))
-print('reboot', reboot, 'power', sec_count('power'), 'input', sec_count('input'))
+print('total', total, 'reboot', reboot, 'power', sec_count('power'), 'input', sec_count('input'))
