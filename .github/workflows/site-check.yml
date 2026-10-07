@@ -20,8 +20,23 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      # build.py fait précalculer les sections dynamiques par prerender.js (Playwright).
+      # Même version que celle qui a fabriqué index.html, pour un résultat identique.
+      - name: Installer Playwright
+        run: |
+          mkdir -p "$RUNNER_TEMP/pw" && cd "$RUNNER_TEMP/pw"
+          npm init -y >/dev/null
+          npm install --no-audit --no-fund playwright@1.56.1
+          npx playwright install --with-deps chromium
+          echo "NODE_PATH=$RUNNER_TEMP/pw/node_modules" >> "$GITHUB_ENV"
       - name: Régénérer index.html
-        run: python3 site/tools/build.py
+        shell: bash
+        run: |
+          python3 site/tools/build.py 2>&1 | tee build.log
+          if grep -q "warning: no-JS sections not baked" build.log; then echo "::error::prerender.js n'a pas tourné"; exit 1; fi
       - name: Comparer avec la version poussée
         run: |
           if ! git diff --exit-code -- site/index.html; then
