@@ -6,7 +6,7 @@
 //! fenêtre, entrée standard fermée (un `pause` oublié ne bloque donc jamais).
 
 use serde::{Deserialize, Serialize};
-use std::collections::BTreeMap;
+use std::collections::{BTreeMap, HashMap};
 use std::fs::{self, OpenOptions};
 use std::io::{BufRead, BufReader, Read, Write};
 use std::path::{Path, PathBuf};
@@ -114,6 +114,8 @@ impl Runner {
             }
         };
         let (mut ok, mut failed) = (0, 0);
+        // réglages jumeaux (même script) cochés ensemble : le script tourne une fois, le résultat vaut pour tous
+        let mut twins_done: HashMap<String, (bool, Option<i32>, String)> = HashMap::new();
         for (index, item) in items.iter().enumerate() {
             if self.cancel.load(Ordering::SeqCst) {
                 break;
@@ -132,13 +134,26 @@ impl Runner {
                 write_log(&line);
                 let _ = ctx.app.emit("run:log", LogEvent { run_id, id: &item.id, line });
             };
-            let result = self.run_item(ctx, item, &emit_line);
-            let duration = started.elapsed().as_millis() as u64;
-            let cancelled = self.cancel.load(Ordering::SeqCst);
-            let (success, code, message) = match result {
-                Ok((code, msg)) => (code == 0 && !cancelled, Some(code), msg),
-                Err(e) => (false, None, Some(e)),
+            let twin_key = catalog::twin_of(&item.id).map(|t| format!("{t}:{}", variant.unwrap_or("")));
+            let (success, code, message) = match twin_key.as_ref().and_then(|k| twins_done.get(k)) {
+                Some((s, c, first)) => {
+                    emit_line(format!("- Same commands as {first}, already applied in this run"));
+                    (*s, *c, None)
+                }
+                None => {
+                    let result = self.run_item(ctx, item, &emit_line);
+                    let cancelled = self.cancel.load(Ordering::SeqCst);
+                    let r = match result {
+                        Ok((code, msg)) => (code == 0 && !cancelled, Some(code), msg),
+                        Err(e) => (false, None, Some(e)),
+                    };
+                    if let Some(k) = twin_key {
+                        twins_done.insert(k, (r.0, r.1, item.id.clone()));
+                    }
+                    r
+                }
             };
+            let duration = started.elapsed().as_millis() as u64;
             if let Some(m) = &message {
                 write_log(m);
             }

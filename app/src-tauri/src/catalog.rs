@@ -39,6 +39,28 @@ static REVERTS: LazyLock<Vec<String>> = LazyLock::new(|| {
     out
 });
 
+/// Réglages au script identique (champ `twin` du catalogue) : id → id du premier de leur groupe.
+static TWINS: LazyLock<HashMap<String, String>> = LazyLock::new(|| {
+    let catalog: serde_json::Value =
+        serde_json::from_str(include_str!("../../src/data/catalog.json")).expect("catalog.json invalide");
+    let mut out = HashMap::new();
+    for m in catalog["modules"].as_array().into_iter().flatten() {
+        for s in m["sections"].as_array().into_iter().flatten() {
+            for t in s["tweaks"].as_array().into_iter().flatten() {
+                if let (Some(id), Some(twin)) = (t["id"].as_str(), t["twin"].as_str()) {
+                    out.insert(id.to_string(), twin.to_string());
+                }
+            }
+        }
+    }
+    out
+});
+
+/// Premier réglage du groupe dont `id` partage exactement le script, s'il y en a un.
+pub fn twin_of(id: &str) -> Option<&'static str> {
+    TWINS.get(id).map(String::as_str)
+}
+
 /// Sans licence active, seuls les réglages du plan gratuit, les variantes de retour arrière et
 /// l'installation de WMIC peuvent tourner.
 pub fn allowed(id: &str, variant: Option<&str>, premium: bool) -> bool {
@@ -213,6 +235,8 @@ mod tests {
             .flat_map(|s| s["tweaks"].as_array().unwrap())
             .filter(|t| t.get("id").is_some()).collect();
         let twins: Vec<_> = all.iter().filter(|t| t.get("twin").is_some()).collect();
+        assert_eq!(twin_of("pow_storage"), Some("pow_saving"));
+        assert_eq!(twin_of("in_mouse"), None);
         assert!(twins.len() >= 20, "{} réglages jumeaux", twins.len());
         for t in &twins {
             let first = all.iter().find(|o| o["id"] == t["twin"]).unwrap();

@@ -10,7 +10,12 @@ const IDS = ["side", "tl1", "tl2", "mq", "r1", "r2", "cmp", "xtabs", "xpanel"];
   await p.route(/^https?:/, r => r.abort()); // offline: nothing but the local file
   await p.goto("file://" + path.resolve(process.argv[2]));
   await p.waitForTimeout(300);
-  const out = await p.evaluate(ids => Object.fromEntries(ids.map(i => [i, document.getElementById(i).innerHTML])), IDS);
+  const out = await p.evaluate(ids => Object.fromEntries(ids.map(i => {
+    const el = document.getElementById(i).cloneNode(true);
+    // without JS the preview rows can't be toggled: don't announce or focus them as switches
+    el.querySelectorAll(".tw").forEach(r => { r.removeAttribute("role"); r.removeAttribute("aria-checked"); r.removeAttribute("tabindex"); });
+    return [i, el.innerHTML];
+  })), IDS);
   await b.close();
   process.stdout.write(JSON.stringify(out));
 })().catch(e => { console.error(e.message); process.exit(1); });

@@ -352,7 +352,7 @@ NAMES = {
     'pow_storage': I('NVMe idle states', 'États de veille NVMe'),
     'sys_bcdedit': I('Boot timers (BCD)', 'Minuteurs de démarrage (BCD)'),
     'exp_bios': I('Boot security (BCD)', 'Sécurité du démarrage (BCD)'),
-    'exp_autologgers': I('Disable autologgers (extended)', 'Couper les autologgers (étendu)'),
+    'exp_autologgers': I('Disable autologgers', 'Désactiver les journaux automatiques'),
 }
 UK_US = [('Optimise', 'Optimize'), ('optimise', 'optimize'), ('Optimisation', 'Optimization'), ('optimisation', 'optimization'),
          ('behaviour', 'behavior'), ('prioritise', 'prioritize'), ('Prioritise', 'Prioritize')]
@@ -425,6 +425,8 @@ def postprocess(modules, scripts):
     tweaks['rbw_mode']['reboot'] = False
     for v in tweaks['rbw_mode']['variants']:
         v['reboot'] = v['id'] == 'on'
+    # mêmes commandes que dbl_autologgers (Débloat) : plus de « quelques clés en plus »
+    tweaks['exp_autologgers']['desc'] = dict(tweaks['dbl_autologgers']['desc'])
     tweaks['rst_queue']['desc'] = I('Puts the mouse and keyboard queues back to 100, the Windows default.',
                                     'Remet les files souris et clavier à 100, la valeur de Windows.')
 
@@ -447,6 +449,7 @@ def postprocess(modules, scripts):
             if (m['id'], sec['id']) in SECTION_NAMES:
                 sec['name'] = SECTION_NAMES[(m['id'], sec['id'])]
     twins(modules, scripts)
+    count_commands(modules, scripts)
 
 
 def twins(modules, scripts):
@@ -480,10 +483,31 @@ def twins(modules, scripts):
             if confirm:
                 t['confirm'] = confirm
             others = [(o, om) for o, om in group if o is not t]
-            en = ', '.join(f"{o['name']['en']} ({om['name']['en']})" for o, om in others)
-            fr = ', '.join(f"{o['name']['fr']} ({om['name']['fr']})" for o, om in others)
-            t['desc'] = I(t['desc']['en'].rstrip() + f' Same commands as {en}: selecting both runs them once.',
-                          t['desc']['fr'].rstrip() + f' Mêmes commandes que {fr} : cochés ensemble, ils ne s\'appliquent qu\'une fois.')
+
+            def item(o, om, lang):
+                name, mod = o['name'][lang], om['name'][lang]
+                if lang == 'en':
+                    return f'the \u201c{name}\u201d action ({mod})' if o.get('kind') == 'action' else f'\u201c{name}\u201d ({mod})'
+                return f'l\'action « {name} » ({mod})' if o.get('kind') == 'action' else f'« {name} » ({mod})'
+
+            def join(parts, last):
+                return parts[0] if len(parts) == 1 else ', '.join(parts[:-1]) + f' {last} ' + parts[-1]
+
+            en = join([item(o, om, 'en') for o, om in others], 'and')
+            fr = join([item(o, om, 'fr') for o, om in others], 'et')
+            checkable = sum(o.get('kind') != 'action' for o, _ in group) > 1 and t.get('kind') != 'action'
+            t['desc'] = I(t['desc']['en'].rstrip() + f' Same commands as {en}.' + (' Checked together, they run once.' if checkable else ''),
+                          t['desc']['fr'].rstrip() + f' Mêmes commandes que {fr}.' + (' Cochés ensemble, ils ne s\'appliquent qu\'une fois.' if checkable else ''))
+
+
+def count_commands(modules, scripts):
+    """« N Windows commands » dans Details : les commandes seules, sans echo ni commentaires (des jumeaux affichent le même nombre)."""
+    for m in modules:
+        for sec in m['sections']:
+            for t in sec['tweaks']:
+                if t.get('id') in scripts:
+                    t['lines'] = sum(1 for body in scripts[t['id']].values() for l in body.replace('\r\n', '\n').split('\n')
+                                     if l.strip() and not re.match(r'\s*(@?echo\b|rem\b|::)', l, re.I))
 
 
 def sections_of(name):

@@ -85,6 +85,7 @@ try:
     for k, v in baked.items():
         page, n = re.subn(r'(<[a-z]+ [^>]*id="' + k + r'"[^>]*>)(</[a-z]+>)', lambda m: m.group(1) + v + m.group(2), page, count=1)
         assert n == 1, k
+    page = page.replace('id="xpanel" role="tabpanel"', 'id="xpanel" role="tabpanel" aria-labelledby="xt1"', 1)  # the baked tab (Latency)
     open(OUT, 'w').write(page)
 except (OSError, subprocess.CalledProcessError) as e:
     print('warning: no-JS sections not baked (node + playwright needed):', getattr(e, 'stderr', e))

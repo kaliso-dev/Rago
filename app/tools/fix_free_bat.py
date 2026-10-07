@@ -1,4 +1,5 @@
-"""Version gratuite corrigée de l'ancien .bat (Rago Free), pour le téléchargement du site.
+"""Version gratuite corrigée de l'ancien .bat (Rago Free). Gardée pour mémoire : le site ne la propose plus
+depuis le 7 octobre 2026 (choix de Sofiene), seule l'app reste gratuite.
 
 Reprend les corrections mécaniques de tools/extract_bat.py, sans toucher au contenu des réglages :
   1. « Disabling »/« Enabling » remis en « Disable »/« Enable » hors des lignes echo/commentaires ;

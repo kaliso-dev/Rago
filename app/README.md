@@ -5,7 +5,7 @@ App Windows (Tauri 2 + React + Rust) : 226 réglages, l'ancien programme Premium
 ## Ce qu'il y a dedans
 
 - `legacy/` : les .bat sources (`Premium v5.2 - Rago Hub.bat` et `v6/`).
-- `tools/` : extraction du .bat (`extract_bat.py`), métadonnées des réglages (`meta.py`), génération (`build_catalog_v6.py`, qui lance `build_catalog.py`, → `src/data/catalog.json` + `src-tauri/scripts/scripts.json`). Après une modif d'un .bat ou de `meta.py` : `npm run catalog`. `fix_free_bat.py` produit le .bat gratuit du site (`../free/rago-free-v5.2.bat`).
+- `tools/` : extraction du .bat (`extract_bat.py`), métadonnées des réglages (`meta.py`), génération (`build_catalog_v6.py`, qui lance `build_catalog.py`, → `src/data/catalog.json` + `src-tauri/scripts/scripts.json`). Après une modif d'un .bat ou de `meta.py` : `npm run catalog`. `fix_free_bat.py` a produit la version gratuite corrigée de l'ancien .bat (`../free/rago-free-v5.2.bat`), gardée pour mémoire : elle n'est plus distribuée depuis le 7 octobre 2026.
 - `src-tauri/` : moteur Rust. Exécute chaque réglage dans un `cmd` caché avec droits admin, journal en direct, historique, point de restauration, ping TCP, préréglages OptiFine, licence.
 - `src/` : interface React (anglais par défaut, français dans Settings).
 - `src-tauri/resources/` : `nvidiaProfileInspector.exe` + `extremelatencylow.nip`. À ajouter si tu les as : `LowLatency.pow` (plan d'alimentation) et `smartctl.exe`.

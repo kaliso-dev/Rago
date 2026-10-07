@@ -91,6 +91,8 @@ function useStoreValue() {
   const [confirm, setConfirm] = useState<ConfirmState | null>(null);
   const [paletteOpen, setPaletteOpen] = useState(false);
   const [focusTweak, setFocusTweak] = useState<string | null>(null);
+  // chaque recherche compte, même vers le réglage déjà visé (sa ligne a pu disparaître dans une section repliée)
+  const [focusSeq, setFocusSeq] = useState(0);
   const [pingRequest, setPingRequest] = useState(0);
   const [license, setLicense] = useState<LicenseStatus | null>(null);
   const [upsell, setUpsellKind] = useState<Upsell>(null);
@@ -291,17 +293,10 @@ function useStoreValue() {
       if (opts.restorePoint && !ids.includes("rst_point")) items.push({ id: "rst_point" });
       if (opts.wmic) items.push({ id: "__wmic" });
       let reboot = false;
-      const twins = new Set<string>();
       for (const id of ids) {
         const tw = tweaks.get(id);
         if (!tw) continue;
         const variant = variantOf(tw);
-        if (tw.twin) {
-          // deux réglages au même script cochés ensemble : une seule exécution
-          const k = `${tw.twin}:${variant ?? ""}`;
-          if (twins.has(k)) continue;
-          twins.add(k);
-        }
         reboot ||= needsReboot(tw, variant);
         const item: RunItem = { id, variant };
         if (tw.native === "minecraft_optifine") item.params = { dir: mcDir, values: tw.optifine?.[variant ?? ""] ?? {} };
@@ -334,6 +329,7 @@ function useStoreValue() {
   const goTo = useCallback((p: string, tweakId?: string) => {
     setPage(p);
     setFocusTweak(tweakId ?? null);
+    if (tweakId) setFocusSeq((n) => n + 1);
   }, []);
 
   return {
@@ -346,7 +342,7 @@ function useStoreValue() {
     confirm, setConfirm, requestApply,
     run, setRun, startRun,
     paletteOpen, setPaletteOpen,
-    focusTweak, setFocusTweak,
+    focusTweak, setFocusTweak, focusSeq,
     pingRequest, requestPing: () => setPingRequest((n) => n + 1),
     license, setLicense, signOut, activated, activatedAt, licenseNotice, setLicenseNotice,
     premium, isLocked, variantLocked, undoOnly, upsell, upsellTweak, setUpsell,

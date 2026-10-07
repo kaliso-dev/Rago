@@ -39,6 +39,9 @@ export async function openDb(url) {
     max: 5,
     ssl: local ? false : { rejectUnauthorized: false },
   });
+  // Supabase may close an idle connection (restart, maintenance). Without this listener the error
+  // would crash the server; the pool drops that client and the next query opens a new one.
+  pool.on('error', (err) => console.error('[db] idle connection lost:', err.message));
   const db = wrap(pool, async (fn) => {
     const client = await pool.connect();
     try {

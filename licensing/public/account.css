@@ -261,7 +261,7 @@ p{margin:0}
 /* Reduced motion (Windows "Animation effects" off, which Rago Optimizer's visual tweak can switch off):
    keep fades, colors and the ring filling, drop what moves across the screen. */
 @media (prefers-reduced-motion:reduce){
-  .bg span,.card-hero::before{animation:none}
+  .bg span,.bg span:first-child,.bg span:last-child,.card-hero::before{animation:none}
   .pulse i{display:none}
   .rise{animation-name:fade}
   .alert,.alert-ok{animation-name:fade}

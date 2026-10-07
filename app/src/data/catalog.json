@@ -187,7 +187,7 @@
         }
        ],
        "defaultVariant": "config1",
-       "lines": 362
+       "lines": 353
       },
       {
        "id": "ping_advanced",
@@ -208,7 +208,7 @@
        "legacy": [
         "RAGO APP Ping Optimization Final.bat@704"
        ],
-       "lines": 157
+       "lines": 156
       }
      ]
     },
@@ -262,7 +262,7 @@
         "Kbc3@409",
         "QOS2@482"
        ],
-       "lines": 136
+       "lines": 130
       }
      ]
     },
@@ -326,7 +326,7 @@
         "SERVERC@1034",
         "SERVERY@1113"
        ],
-       "lines": 468,
+       "lines": 376,
        "confirm": {
         "en": "Resets the Windows Firewall: your custom rules are deleted. Resets Winsock and the network settings.",
         "fr": "Réinitialise le pare-feu Windows : tes règles personnalisées sont supprimées. Réinitialise Winsock et les réglages réseau."
@@ -360,7 +360,7 @@
        "legacy": [
         "nigel@1754"
        ],
-       "lines": 12
+       "lines": 11
       },
       {
        "id": "net_throttle",
@@ -398,7 +398,7 @@
        "legacy": [
         "save@1857"
        ],
-       "lines": 37
+       "lines": 33
       },
       {
        "id": "net_adapter",
@@ -417,7 +417,7 @@
        "legacy": [
         "netsettings@1919"
        ],
-       "lines": 59
+       "lines": 51
       },
       {
        "id": "net_registry",
@@ -436,7 +436,7 @@
        "legacy": [
         "netreg@2020"
        ],
-       "lines": 37
+       "lines": 32
       },
       {
        "id": "net_advanced",
@@ -455,7 +455,7 @@
        "legacy": [
         "n15n@1476"
        ],
-       "lines": 67
+       "lines": 23
       },
       {
        "id": "net_dnsprio",
@@ -533,7 +533,7 @@
        "legacy": [
         "nmsi@1693"
        ],
-       "lines": 6
+       "lines": 4
       },
       {
        "id": "net_affinity",
@@ -554,7 +554,7 @@
        "legacy": [
         "n14@2087"
        ],
-       "lines": 6
+       "lines": 5
       },
       {
        "id": "net_netbios",
@@ -573,7 +573,7 @@
        "legacy": [
         "netbios@1658"
        ],
-       "lines": 2
+       "lines": 1
       },
       {
        "id": "net_ipv6",
@@ -592,7 +592,7 @@
        "legacy": [
         "n12@1442"
        ],
-       "lines": 3
+       "lines": 1
       },
       {
        "id": "net_lanman",
@@ -611,7 +611,7 @@
        "legacy": [
         "n13@1603"
        ],
-       "lines": 16
+       "lines": 6
       },
       {
        "id": "net_limit",
@@ -630,7 +630,7 @@
        "legacy": [
         "limit@1833"
        ],
-       "lines": 4
+       "lines": 2
       }
      ]
     },
@@ -658,7 +658,7 @@
        "legacy": [
         "restartY@14164"
        ],
-       "lines": 9
+       "lines": 6
       }
      ]
     }
@@ -700,7 +700,7 @@
        "legacy": [
         "general@8375"
        ],
-       "lines": 106
+       "lines": 81
       },
       {
        "id": "lat_directx",
@@ -854,7 +854,7 @@
        "legacy": [
         "game@4475"
        ],
-       "lines": 20
+       "lines": 18
       },
       {
        "id": "pri_w32",
@@ -1053,7 +1053,7 @@
        "legacy": [
         "mouaccel@12500"
        ],
-       "lines": 7
+       "lines": 5
       },
       {
        "id": "kbm_1to1",
@@ -1072,7 +1072,7 @@
        "legacy": [
         "1to1@12522"
        ],
-       "lines": 5
+       "lines": 3
       },
       {
        "id": "kbm_thread",
@@ -1091,7 +1091,7 @@
        "legacy": [
         "thread@12543"
        ],
-       "lines": 3
+       "lines": 2
       },
       {
        "id": "kbm_csrss",
@@ -1110,7 +1110,7 @@
        "legacy": [
         "crss@12584"
        ],
-       "lines": 5
+       "lines": 3
       },
       {
        "id": "kbm_repeat",
@@ -1129,7 +1129,7 @@
        "legacy": [
         "repeat@12563"
        ],
-       "lines": 4
+       "lines": 2
       },
       {
        "id": "kbm_panel",
@@ -1148,7 +1148,7 @@
        "legacy": [
         "mousecntrl@12606"
        ],
-       "lines": 31
+       "lines": 30
       },
       {
        "id": "kbm_filter",
@@ -1167,7 +1167,7 @@
        "legacy": [
         "filter@12473"
        ],
-       "lines": 8
+       "lines": 4
       }
      ]
     },
@@ -1275,7 +1275,7 @@
        "legacy": [
         "c1@7932"
        ],
-       "lines": 60
+       "lines": 59
       },
       {
        "id": "cpu_vendor",
@@ -1313,7 +1313,7 @@
         "c17@7522",
         "c18@7601"
        ],
-       "lines": 77
+       "lines": 58
       },
       {
        "id": "cpu_parking",
@@ -1332,7 +1332,7 @@
        "legacy": [
         "c11@7766"
        ],
-       "lines": 3
+       "lines": 2
       },
       {
        "id": "cpu_cstates_cfg",
@@ -1351,7 +1351,7 @@
        "legacy": [
         "c2@7838"
        ],
-       "lines": 5
+       "lines": 4
       },
       {
        "id": "cpu_cstates_off",
@@ -1370,7 +1370,7 @@
        "legacy": [
         "c3@7910"
        ],
-       "lines": 6
+       "lines": 5
       },
       {
        "id": "cpu_idle",
@@ -1389,7 +1389,7 @@
        "legacy": [
         "c4@8007"
        ],
-       "lines": 44
+       "lines": 43
       },
       {
        "id": "cpu_device_idle",
@@ -1408,7 +1408,7 @@
        "legacy": [
         "c5@7820"
        ],
-       "lines": 3
+       "lines": 2
       },
       {
        "id": "cpu_pstates",
@@ -1427,7 +1427,7 @@
        "legacy": [
         "c6@7857"
        ],
-       "lines": 3
+       "lines": 2
       },
       {
        "id": "cpu_ppm",
@@ -1446,7 +1446,7 @@
        "legacy": [
         "c7@7784"
        ],
-       "lines": 3
+       "lines": 2
       },
       {
        "id": "cpu_boost_epp",
@@ -1465,7 +1465,7 @@
        "legacy": [
         "c8@7875"
        ],
-       "lines": 3
+       "lines": 2
       },
       {
        "id": "cpu_throttle",
@@ -1484,7 +1484,7 @@
        "legacy": [
         "c9@7802"
        ],
-       "lines": 3
+       "lines": 2
       },
       {
        "id": "cpu_turbo",
@@ -1503,7 +1503,7 @@
        "legacy": [
         "c10@7892"
        ],
-       "lines": 4
+       "lines": 3
       },
       {
        "id": "cpu_cooling",
@@ -1522,7 +1522,7 @@
        "legacy": [
         "c12@7709"
        ],
-       "lines": 4
+       "lines": 3
       },
       {
        "id": "cpu_ac",
@@ -1541,7 +1541,7 @@
        "legacy": [
         "c13@7747"
        ],
-       "lines": 5
+       "lines": 4
       },
       {
        "id": "cpu_dc",
@@ -1560,7 +1560,7 @@
        "legacy": [
         "c14@7727"
        ],
-       "lines": 5
+       "lines": 4
       },
       {
        "id": "cpu_numproc",
@@ -1579,7 +1579,7 @@
        "legacy": [
         "c15@7693"
        ],
-       "lines": 2
+       "lines": 1
       },
       {
        "id": "cpu_away",
@@ -1598,7 +1598,7 @@
        "legacy": [
         "c16@7673"
        ],
-       "lines": 5
+       "lines": 4
       }
      ]
     },
@@ -1701,7 +1701,7 @@
         }
        ],
        "defaultVariant": "16",
-       "lines": 352,
+       "lines": 351,
        "confirm": {
         "en": "Turns off the Spectre and Meltdown protections. Stops Prefetch from filling. On a screenshare that can look like erased traces: turn on RBW Mod and restart your PC before one.",
         "fr": "Coupe les protections Spectre et Meltdown. Le Prefetch ne se remplit plus. Sur un screenshare, ça peut ressembler à des traces effacées : active le RBW Mod et redémarre ton PC avant."
@@ -1724,7 +1724,7 @@
        "legacy": [
         "RAGO APP FPS.bat@2362"
        ],
-       "lines": 205,
+       "lines": 203,
        "confirm": {
         "en": "Removes the protection against attacks through Thunderbolt and PCIe devices (DMA). Turns off BAM, which logs the programs you ran. On a screenshare that can look like erased traces: turn on RBW Mod and restart your PC before one.",
         "fr": "Retire la protection contre les attaques par périphériques Thunderbolt et PCIe (DMA). Coupe BAM, qui garde la trace des programmes lancés. Sur un screenshare, ça peut ressembler à des traces effacées : active le RBW Mod et redémarre ton PC avant."
@@ -1829,7 +1829,7 @@
         "64GB@9645",
         "128GB@9659"
        ],
-       "lines": 270,
+       "lines": 207,
        "confirm": {
         "en": "Stops Prefetch from filling. On a screenshare that can look like erased traces: turn on RBW Mod and restart your PC before one.",
         "fr": "Le Prefetch ne se remplit plus. Sur un screenshare, ça peut ressembler à des traces effacées : active le RBW Mod et redémarre ton PC avant."
@@ -2009,8 +2009,8 @@
         "fr": "Veille des disques"
        },
        "desc": {
-        "en": "Keeps your drives out of idle power states. Same commands as NVMe idle states (Latency), SSD power saving (Latency): selecting both runs them once.",
-        "fr": "Empêche tes disques de passer en veille. Mêmes commandes que États de veille NVMe (Latence), Économie d'énergie des SSD (Latence) : cochés ensemble, ils ne s'appliquent qu'une fois."
+        "en": "Keeps your drives out of idle power states. Same commands as “NVMe idle states” (Latency) and “SSD power saving” (Latency). Checked together, they run once.",
+        "fr": "Empêche tes disques de passer en veille. Mêmes commandes que « États de veille NVMe » (Latence) et « Économie d'énergie des SSD » (Latence). Cochés ensemble, ils ne s'appliquent qu'une fois."
        },
        "risk": "safe",
        "reboot": true,
@@ -2083,7 +2083,7 @@
        "legacy": [
         "plan@9205"
        ],
-       "lines": 31
+       "lines": 29
       },
       {
        "id": "pow_extra",
@@ -2102,7 +2102,7 @@
        "legacy": [
         "twk@8914"
        ],
-       "lines": 10
+       "lines": 9
       },
       {
        "id": "pow_windows",
@@ -2121,7 +2121,7 @@
        "legacy": [
         "wpower@8939"
        ],
-       "lines": 23
+       "lines": 22
       },
       {
        "id": "pow_throttling",
@@ -2140,7 +2140,7 @@
        "legacy": [
         "Throttoling@9022"
        ],
-       "lines": 7
+       "lines": 6
       },
       {
        "id": "pow_hwp",
@@ -2159,7 +2159,7 @@
        "legacy": [
         "pst@8998"
        ],
-       "lines": 7
+       "lines": 6
       },
       {
        "id": "pow_timer",
@@ -2178,7 +2178,7 @@
        "legacy": [
         "p12@9045"
        ],
-       "lines": 15
+       "lines": 14
       },
       {
        "id": "pow_mmcss",
@@ -2197,7 +2197,7 @@
        "legacy": [
         "p13@9077"
        ],
-       "lines": 12
+       "lines": 11
       },
       {
        "id": "pow_idle",
@@ -2216,7 +2216,7 @@
        "legacy": [
         "idlepwr@9182"
        ],
-       "lines": 2
+       "lines": 1
       },
       {
        "id": "pow_link",
@@ -2235,7 +2235,7 @@
        "legacy": [
         "linkpwr@9157"
        ],
-       "lines": 9
+       "lines": 8
       },
       {
        "id": "pow_devices",
@@ -2254,7 +2254,7 @@
        "legacy": [
         "p11@8849"
        ],
-       "lines": 2
+       "lines": 1
       },
       {
        "id": "pow_gpuenergy",
@@ -2273,7 +2273,7 @@
        "legacy": [
         "gpuenrg@8871"
        ],
-       "lines": 3
+       "lines": 2
       },
       {
        "id": "pow_storage",
@@ -2282,8 +2282,8 @@
         "fr": "États de veille NVMe"
        },
        "desc": {
-        "en": "NVMe SSDs no longer enter idle states. Same commands as Drive idle power (Latency), SSD power saving (Latency): selecting both runs them once.",
-        "fr": "Les SSD NVMe ne descendent plus dans leurs états de veille. Mêmes commandes que Veille des disques (Latence), Économie d'énergie des SSD (Latence) : cochés ensemble, ils ne s'appliquent qu'une fois."
+        "en": "NVMe SSDs no longer enter idle states. Same commands as “Drive idle power” (Latency) and “SSD power saving” (Latency). Checked together, they run once.",
+        "fr": "Les SSD NVMe ne descendent plus dans leurs états de veille. Mêmes commandes que « Veille des disques » (Latence) et « Économie d'énergie des SSD » (Latence). Cochés ensemble, ils ne s'appliquent qu'une fois."
        },
        "risk": "safe",
        "reboot": true,
@@ -2292,7 +2292,7 @@
        "legacy": [
         "p17@8794"
        ],
-       "lines": 17,
+       "lines": 16,
        "twin": "pow_saving"
       },
       {
@@ -2314,7 +2314,7 @@
        "legacy": [
         "dpower@8890"
        ],
-       "lines": 8
+       "lines": 7
       },
       {
        "id": "pow_hibernate",
@@ -2333,7 +2333,7 @@
        "legacy": [
         "p15@9125"
        ],
-       "lines": 11
+       "lines": 5
       },
       {
        "id": "pow_telemetry",
@@ -2352,7 +2352,7 @@
        "legacy": [
         "p16@9105"
        ],
-       "lines": 5
+       "lines": 4
       },
       {
        "id": "pow_delete_plans",
@@ -2371,7 +2371,7 @@
        "legacy": [
         "p14@8829"
        ],
-       "lines": 4
+       "lines": 3
       }
      ]
     },
@@ -2431,8 +2431,8 @@
         "fr": "Réglages FSUTIL"
        },
        "desc": {
-        "en": "Disables last-access and 8.3 names. Same commands as FSUTIL memory usage (Latency): selecting both runs them once.",
-        "fr": "Coupe la date de dernier accès et les noms 8.3. Mêmes commandes que FSUTIL mémoire (Latence) : cochés ensemble, ils ne s'appliquent qu'une fois."
+        "en": "Disables last-access and 8.3 names. Same commands as “FSUTIL memory usage” (Latency). Checked together, they run once.",
+        "fr": "Coupe la date de dernier accès et les noms 8.3. Mêmes commandes que « FSUTIL mémoire » (Latence). Cochés ensemble, ils ne s'appliquent qu'une fois."
        },
        "risk": "safe",
        "reboot": true,
@@ -2441,7 +2441,7 @@
        "legacy": [
         "RAGO APP FPS.bat@1797"
        ],
-       "lines": 3,
+       "lines": 2,
        "twin": "sto_fsutil_v6"
       },
       {
@@ -2451,8 +2451,8 @@
         "fr": "FSUTIL mémoire"
        },
        "desc": {
-        "en": "NTFS memory usage settings. Same commands as FSUTIL settings (Latency): selecting both runs them once.",
-        "fr": "Réglages mémoire de NTFS. Mêmes commandes que Réglages FSUTIL (Latence) : cochés ensemble, ils ne s'appliquent qu'une fois."
+        "en": "NTFS memory usage settings. Same commands as “FSUTIL settings” (Latency). Checked together, they run once.",
+        "fr": "Réglages mémoire de NTFS. Mêmes commandes que « Réglages FSUTIL » (Latence). Cochés ensemble, ils ne s'appliquent qu'une fois."
        },
        "risk": "safe",
        "reboot": true,
@@ -2471,8 +2471,8 @@
         "fr": "Optimiser le disque"
        },
        "desc": {
-        "en": "Runs a drive optimization. Same commands as TRIM system drive (Latency): selecting both runs them once.",
-        "fr": "Lance une optimisation du disque. Mêmes commandes que TRIM du disque système (Latence) : cochés ensemble, ils ne s'appliquent qu'une fois."
+        "en": "Runs a drive optimization. Same commands as the “TRIM system drive” action (Latency).",
+        "fr": "Lance une optimisation du disque. Mêmes commandes que l'action « TRIM du disque système » (Latence)."
        },
        "risk": "safe",
        "reboot": false,
@@ -2538,7 +2538,7 @@
        "legacy": [
         "s2@5375"
        ],
-       "lines": 5
+       "lines": 4
       },
       {
        "id": "sto_cacheprot",
@@ -2566,8 +2566,8 @@
         "en": "SSD power saving"
        },
        "desc": {
-        "en": "NVMe SSDs stay in their fastest state. Same commands as Drive idle power (Latency), NVMe idle states (Latency): selecting both runs them once.",
-        "fr": "Les SSD NVMe restent dans leur état le plus rapide. Mêmes commandes que Veille des disques (Latence), États de veille NVMe (Latence) : cochés ensemble, ils ne s'appliquent qu'une fois."
+        "en": "NVMe SSDs stay in their fastest state. Same commands as “Drive idle power” (Latency) and “NVMe idle states” (Latency). Checked together, they run once.",
+        "fr": "Les SSD NVMe restent dans leur état le plus rapide. Mêmes commandes que « Veille des disques » (Latence) et « États de veille NVMe » (Latence). Cochés ensemble, ils ne s'appliquent qu'une fois."
        },
        "risk": "safe",
        "reboot": true,
@@ -2576,7 +2576,7 @@
        "legacy": [
         "s3@5326"
        ],
-       "lines": 17,
+       "lines": 16,
        "twin": "pow_saving"
       },
       {
@@ -2586,8 +2586,8 @@
         "en": "TRIM system drive"
        },
        "desc": {
-        "en": "Runs TRIM on C:. Same commands as Optimize drive (Latency): selecting both runs them once.",
-        "fr": "Lance un TRIM sur C: pour libérer les blocs inutilisés du SSD. Mêmes commandes que Optimiser le disque (Latence) : cochés ensemble, ils ne s'appliquent qu'une fois."
+        "en": "Runs TRIM on C:. Same commands as “Optimize drive” (Latency).",
+        "fr": "Lance un TRIM sur C: pour libérer les blocs inutilisés du SSD. Mêmes commandes que « Optimiser le disque » (Latence)."
        },
        "risk": "safe",
        "reboot": false,
@@ -2596,7 +2596,7 @@
        "legacy": [
         "dssd@5222"
        ],
-       "lines": 2,
+       "lines": 1,
        "twin": "sto_defrag"
       }
      ]
@@ -2644,7 +2644,7 @@
        "legacy": [
         "twkusb@12213"
        ],
-       "lines": 6
+       "lines": 5
       },
       {
        "id": "usb_power",
@@ -2665,7 +2665,7 @@
        "legacy": [
         "savingp@12157"
        ],
-       "lines": 44
+       "lines": 43
       },
       {
        "id": "usb_hidden",
@@ -2705,7 +2705,7 @@
        "legacy": [
         "usb1@12125"
        ],
-       "lines": 4
+       "lines": 3
       },
       {
        "id": "usb_msi",
@@ -2726,7 +2726,7 @@
        "legacy": [
         "umsi@12140"
        ],
-       "lines": 6
+       "lines": 4
       },
       {
        "id": "usb_advanced",
@@ -2747,7 +2747,7 @@
        "legacy": [
         "USad@12297"
        ],
-       "lines": 24
+       "lines": 18
       }
      ]
     }
@@ -2823,8 +2823,8 @@
         "fr": "Graphique Intel"
        },
        "desc": {
-        "en": "Intel GPU driver settings. Same commands as Intel GPU settings (Graphics card): selecting both runs them once.",
-        "fr": "Réglages du pilote graphique Intel. Mêmes commandes que Réglages GPU Intel (Carte graphique) : cochés ensemble, ils ne s'appliquent qu'une fois."
+        "en": "Intel GPU driver settings. Same commands as “Intel GPU settings” (Graphics card). Checked together, they run once.",
+        "fr": "Réglages du pilote graphique Intel. Mêmes commandes que « Réglages GPU Intel » (Carte graphique). Cochés ensemble, ils ne s'appliquent qu'une fois."
        },
        "risk": "safe",
        "reboot": true,
@@ -2918,7 +2918,7 @@
        "legacy": [
         "NVGEN689U@10580"
        ],
-       "lines": 81
+       "lines": 68
       },
       {
        "id": "nv_profile",
@@ -3025,7 +3025,7 @@
        "legacy": [
         "nv5@10334"
        ],
-       "lines": 8
+       "lines": 5
       },
       {
        "id": "nv_tdr",
@@ -3085,7 +3085,7 @@
        "legacy": [
         "nv8@10511"
        ],
-       "lines": 57
+       "lines": 56
       },
       {
        "id": "nv_dpc",
@@ -3239,8 +3239,8 @@
         "en": "NVIDIA latency tolerance"
        },
        "desc": {
-        "en": "Lowers internal driver delays before state changes. Same commands as GPU latency tolerance (Expert mode): selecting both runs them once.",
-        "fr": "Réduit les délais internes du pilote avant les changements d'état. Mêmes commandes que Tolérance de latence du GPU (Mode expert) : cochés ensemble, ils ne s'appliquent qu'une fois."
+        "en": "Lowers internal driver delays before state changes. Same commands as “GPU latency tolerance” (Expert mode). Checked together, they run once.",
+        "fr": "Réduit les délais internes du pilote avant les changements d'état. Mêmes commandes que « Tolérance de latence du GPU » (Mode expert). Cochés ensemble, ils ne s'appliquent qu'une fois."
        },
        "risk": "safe",
        "reboot": true,
@@ -3271,7 +3271,7 @@
        "legacy": [
         "kbst@8977"
        ],
-       "lines": 5
+       "lines": 4
       }
      ]
     },
@@ -3302,7 +3302,7 @@
        "legacy": [
         "am1@11267"
        ],
-       "lines": 54
+       "lines": 20
       },
       {
        "id": "amd_power",
@@ -3323,7 +3323,7 @@
        "legacy": [
         "am2@11349"
        ],
-       "lines": 19
+       "lines": 11
       },
       {
        "id": "amd_hdcp",
@@ -3344,7 +3344,7 @@
        "legacy": [
         "am3@11429"
        ],
-       "lines": 3
+       "lines": 1
       },
       {
        "id": "amd_memsleep",
@@ -3365,7 +3365,7 @@
        "legacy": [
         "am4@11399"
        ],
-       "lines": 3
+       "lines": 1
       },
       {
        "id": "amd_thermal",
@@ -3384,7 +3384,7 @@
        "legacy": [
         "am5@11414"
        ],
-       "lines": 3
+       "lines": 1
       },
       {
        "id": "amd_delag",
@@ -3405,7 +3405,7 @@
        "legacy": [
         "am6@11384"
        ],
-       "lines": 3
+       "lines": 1
       },
       {
        "id": "amd_logging",
@@ -3426,7 +3426,7 @@
        "legacy": [
         "am7@11444"
        ],
-       "lines": 3
+       "lines": 1
       },
       {
        "id": "amd_advanced",
@@ -3447,7 +3447,7 @@
        "legacy": [
         "am8@11460"
        ],
-       "lines": 357
+       "lines": 320
       }
      ]
     },
@@ -3466,8 +3466,8 @@
         "en": "Intel GPU settings"
        },
        "desc": {
-        "en": "Adaptive Vsync off, larger dedicated segment, power policy. Same commands as Intel graphics (Graphics card): selecting both runs them once.",
-        "fr": "Adaptive Vsync coupé, segment mémoire dédié agrandi, politique d'énergie réglée. Mêmes commandes que Graphique Intel (Carte graphique) : cochés ensemble, ils ne s'appliquent qu'une fois."
+        "en": "Adaptive Vsync off, larger dedicated segment, power policy. Same commands as “Intel graphics” (Graphics card). Checked together, they run once.",
+        "fr": "Adaptive Vsync coupé, segment mémoire dédié agrandi, politique d'énergie réglée. Mêmes commandes que « Graphique Intel » (Carte graphique). Cochés ensemble, ils ne s'appliquent qu'une fois."
        },
        "risk": "safe",
        "reboot": true,
@@ -3478,7 +3478,7 @@
        "legacy": [
         "g3@8291"
        ],
-       "lines": 12,
+       "lines": 11,
        "twin": "gpu_intel"
       }
      ]
@@ -3521,7 +3521,7 @@
        "legacy": [
         "RAGO APP FPS.bat@2573"
        ],
-       "lines": 15
+       "lines": 13
       },
       {
        "id": "win_gamemode",
@@ -3594,7 +3594,7 @@
        "legacy": [
         "RAGO APP FPS.bat@2976"
        ],
-       "lines": 28
+       "lines": 26
       }
      ]
     },
@@ -3763,7 +3763,7 @@
        "legacy": [
         "w10@5860"
        ],
-       "lines": 4
+       "lines": 3
       },
       {
        "id": "win_transparency",
@@ -3782,7 +3782,7 @@
        "legacy": [
         "w1@5882"
        ],
-       "lines": 2
+       "lines": 1
       },
       {
        "id": "win_notifications",
@@ -3801,7 +3801,7 @@
        "legacy": [
         "w2@7018"
        ],
-       "lines": 12
+       "lines": 11
       },
       {
        "id": "win_popups",
@@ -3820,7 +3820,7 @@
        "legacy": [
         "w15@7213"
        ],
-       "lines": 6
+       "lines": 5
       },
       {
        "id": "win_search",
@@ -3829,8 +3829,8 @@
         "en": "Search without web"
        },
        "desc": {
-        "en": "Start menu search stops using Bing or Cortana. Same commands as Optimize search (Expert mode): selecting both runs them once.",
-        "fr": "La recherche du menu Démarrer ne passe plus par Bing ni Cortana. Mêmes commandes que Optimiser la recherche (Mode expert) : cochés ensemble, ils ne s'appliquent qu'une fois."
+        "en": "Start menu search stops using Bing or Cortana. Same commands as “Optimize search” (Expert mode). Checked together, they run once.",
+        "fr": "La recherche du menu Démarrer ne passe plus par Bing ni Cortana. Mêmes commandes que « Optimiser la recherche » (Mode expert). Cochés ensemble, ils ne s'appliquent qu'une fois."
        },
        "risk": "safe",
        "reboot": true,
@@ -3839,7 +3839,7 @@
        "legacy": [
         "w4@5474"
        ],
-       "lines": 23,
+       "lines": 22,
        "twin": "win_search"
       },
       {
@@ -3859,7 +3859,7 @@
        "legacy": [
         "w7@6928"
        ],
-       "lines": 6
+       "lines": 5
       },
       {
        "id": "win_sync",
@@ -3878,7 +3878,7 @@
        "legacy": [
         "w8@6881"
        ],
-       "lines": 31
+       "lines": 30
       },
       {
        "id": "win_tracking",
@@ -3897,7 +3897,7 @@
        "legacy": [
         "w14@5978"
        ],
-       "lines": 17
+       "lines": 16
       },
       {
        "id": "win_feed",
@@ -3916,7 +3916,7 @@
        "legacy": [
         "w16@7191"
        ],
-       "lines": 7
+       "lines": 6
       },
       {
        "id": "win_experiments",
@@ -3925,8 +3925,8 @@
         "en": "Disable experiments"
        },
        "desc": {
-        "en": "Microsoft stops testing features on your PC. Same commands as Disable Windows Insider (Expert mode): selecting both runs them once.",
-        "fr": "Microsoft ne teste plus de fonctions sur ton PC. Mêmes commandes que Désactiver Windows Insider (Mode expert) : cochés ensemble, ils ne s'appliquent qu'une fois."
+        "en": "Microsoft stops testing features on your PC. Same commands as “Disable Windows Insider” (Expert mode). Checked together, they run once.",
+        "fr": "Microsoft ne teste plus de fonctions sur ton PC. Mêmes commandes que « Désactiver Windows Insider » (Mode expert). Cochés ensemble, ils ne s'appliquent qu'une fois."
        },
        "risk": "safe",
        "reboot": true,
@@ -3935,7 +3935,7 @@
        "legacy": [
         "w11@7235"
        ],
-       "lines": 3,
+       "lines": 2,
        "twin": "win_experiments"
       },
       {
@@ -3945,8 +3945,8 @@
         "en": "Disable automatic maintenance"
        },
        "desc": {
-        "en": "No maintenance mid-game. Update manually. Same commands as Disable maintenance (Expert mode): selecting both runs them once.",
-        "fr": "Plus de maintenance qui se lance en pleine partie. Pense à faire tes mises à jour à la main. Mêmes commandes que Désactiver la maintenance (Mode expert) : cochés ensemble, ils ne s'appliquent qu'une fois."
+        "en": "No maintenance mid-game. Update manually. Same commands as “Disable maintenance” (Expert mode). Checked together, they run once.",
+        "fr": "Plus de maintenance qui se lance en pleine partie. Pense à faire tes mises à jour à la main. Mêmes commandes que « Désactiver la maintenance » (Mode expert). Cochés ensemble, ils ne s'appliquent qu'une fois."
        },
        "risk": "safe",
        "reboot": true,
@@ -3955,7 +3955,7 @@
        "legacy": [
         "w13@7174"
        ],
-       "lines": 2,
+       "lines": 1,
        "twin": "win_maintenance"
       },
       {
@@ -3975,7 +3975,7 @@
        "legacy": [
         "w18@5837"
        ],
-       "lines": 7
+       "lines": 6
       },
       {
        "id": "win_shared",
@@ -3994,7 +3994,7 @@
        "legacy": [
         "w19@5804"
        ],
-       "lines": 3
+       "lines": 2
       },
       {
        "id": "win_audit",
@@ -4013,7 +4013,7 @@
        "legacy": [
         "w20@5511"
        ],
-       "lines": 14
+       "lines": 13
       }
      ]
     },
@@ -4041,7 +4041,7 @@
        "legacy": [
         "d2@6313"
        ],
-       "lines": 116
+       "lines": 114
       },
       {
        "id": "dbl_xbox",
@@ -4060,7 +4060,7 @@
        "legacy": [
         "d3@7046"
        ],
-       "lines": 6
+       "lines": 5
       },
       {
        "id": "dbl_office",
@@ -4079,7 +4079,7 @@
        "legacy": [
         "d5@6806"
        ],
-       "lines": 31
+       "lines": 30
       },
       {
        "id": "dbl_print",
@@ -4098,7 +4098,7 @@
        "legacy": [
         "d6@6786"
        ],
-       "lines": 4
+       "lines": 3
       },
       {
        "id": "dbl_cortana",
@@ -4117,7 +4117,7 @@
        "legacy": [
         "d7@7068"
        ],
-       "lines": 9
+       "lines": 8
       },
       {
        "id": "dbl_edge",
@@ -4140,7 +4140,7 @@
        "legacy": [
         "d8@6853"
        ],
-       "lines": 7
+       "lines": 5
       },
       {
        "id": "dbl_autologgers",
@@ -4149,8 +4149,8 @@
         "en": "Disable autologgers"
        },
        "desc": {
-        "en": "Disables ~40 system traces writing to disk. Same commands as Disable autologgers (extended) (Expert mode): selecting both runs them once.",
-        "fr": "Coupe une quarantaine de traces système qui écrivent en continu sur le disque. Mêmes commandes que Couper les autologgers (étendu) (Mode expert) : cochés ensemble, ils ne s'appliquent qu'une fois."
+        "en": "Disables ~40 system traces writing to disk. Same commands as “Disable autologgers” (Expert mode). Checked together, they run once.",
+        "fr": "Coupe une quarantaine de traces système qui écrivent en continu sur le disque. Mêmes commandes que « Désactiver les journaux automatiques » (Mode expert). Cochés ensemble, ils ne s'appliquent qu'une fois."
        },
        "risk": "safe",
        "reboot": true,
@@ -4159,7 +4159,7 @@
        "legacy": [
         "d9@6446"
        ],
-       "lines": 41,
+       "lines": 40,
        "twin": "dbl_autologgers"
       },
       {
@@ -4179,7 +4179,7 @@
        "legacy": [
         "d10@7135"
        ],
-       "lines": 23
+       "lines": 22
       },
       {
        "id": "dbl_biometrics",
@@ -4198,7 +4198,7 @@
        "legacy": [
         "d12@6142"
        ],
-       "lines": 3
+       "lines": 2
       },
       {
        "id": "dbl_onedrive",
@@ -4239,8 +4239,8 @@
         "en": "Remove preinstalled apps"
        },
        "desc": {
-        "en": "Uninstalls ~30 Store apps. Same commands as Remove useless apps (Windows): selecting both runs them once.",
-        "fr": "Désinstalle une trentaine d'applis du Store (Météo, Astuces, 3D Viewer, Solitaire...). Mêmes commandes que Supprimer les applis inutiles (Windows) : cochés ensemble, ils ne s'appliquent qu'une fois."
+        "en": "Uninstalls ~30 Store apps. Same commands as “Remove useless apps” (Windows). Checked together, they run once.",
+        "fr": "Désinstalle une trentaine d'applis du Store (Météo, Astuces, 3D Viewer, Solitaire...). Mêmes commandes que « Supprimer les applis inutiles » (Windows). Cochés ensemble, ils ne s'appliquent qu'une fois."
        },
        "risk": "advanced",
        "reboot": true,
@@ -4249,7 +4249,7 @@
        "legacy": [
         "U1@4859"
        ],
-       "lines": 101,
+       "lines": 33,
        "twin": "app_remove"
       },
       {
@@ -4367,8 +4367,8 @@
         "fr": "Supprimer les applis inutiles"
        },
        "desc": {
-        "en": "Uninstalls preinstalled Windows apps. Same commands as Remove preinstalled apps (Windows): selecting both runs them once.",
-        "fr": "Désinstalle des applis Windows préinstallées. Mêmes commandes que Supprimer les applis préinstallées (Windows) : cochés ensemble, ils ne s'appliquent qu'une fois."
+        "en": "Uninstalls preinstalled Windows apps. Same commands as “Remove preinstalled apps” (Windows). Checked together, they run once.",
+        "fr": "Désinstalle des applis Windows préinstallées. Mêmes commandes que « Supprimer les applis préinstallées » (Windows). Cochés ensemble, ils ne s'appliquent qu'une fois."
        },
        "risk": "advanced",
        "reboot": true,
@@ -4377,7 +4377,7 @@
        "legacy": [
         "RAGO APP FPS.bat@3175"
        ],
-       "lines": 34,
+       "lines": 33,
        "twin": "app_remove"
       },
       {
@@ -4416,7 +4416,7 @@
        "legacy": [
         "Performance@13768:temp"
        ],
-       "lines": 12
+       "lines": 10
       },
       {
        "id": "cln_devices",
@@ -4435,7 +4435,7 @@
        "legacy": [
         "c1@12923"
        ],
-       "lines": 4
+       "lines": 1
       },
       {
        "id": "cln_disk",
@@ -4557,7 +4557,7 @@
        "legacy": [
         "RAGO APP HITREG INPUTLAG.bat@76"
        ],
-       "lines": 87,
+       "lines": 86,
        "confirm": {
         "en": "Turns off the Spectre and Meltdown protections. Turns off the system-wide exploit protections. Turns off Hyper-V and virtualization-based security (VBS). Weakens Data Execution Prevention (DEP). Deletes every Image File Execution Options entry (per-program debugger and protection settings). Clears the Prefetch folder, which a screenshare can read as wiped traces.",
         "fr": "Coupe les protections Spectre et Meltdown. Coupe les protections contre les exploits de tout le système. Coupe Hyper-V et la sécurité basée sur la virtualisation (VBS). Affaiblit la prévention de l'exécution des données (DEP). Supprime toutes les entrées Image File Execution Options (débogueur et protections par programme). Vide le dossier Prefetch, ce qu'un screenshare peut lire comme des traces effacées."
@@ -4623,7 +4623,7 @@
        "legacy": [
         "RAGO APP HITREG INPUTLAG.bat@181"
        ],
-       "lines": 534,
+       "lines": 400,
        "confirm": {
         "en": "Turns off the Spectre and Meltdown protections. Turns off Hyper-V and virtualization-based security (VBS). Turns off the early-launch anti-malware drivers. Turns off Microsoft Defender real-time protection. Turns off SmartScreen, which checks the files you download. Turns off UAC, the admin permission prompts. Stops Prefetch from filling. On a screenshare that can look like erased traces: turn on RBW Mod and restart your PC before one.",
         "fr": "Coupe les protections Spectre et Meltdown. Coupe Hyper-V et la sécurité basée sur la virtualisation (VBS). Coupe les pilotes anti-malware lancés au démarrage. Coupe la protection en temps réel de Microsoft Defender. Coupe SmartScreen, qui vérifie les fichiers téléchargés. Coupe l'UAC, les demandes d'autorisation administrateur. Le Prefetch ne se remplit plus. Sur un screenshare, ça peut ressembler à des traces effacées : active le RBW Mod et redémarre ton PC avant."
@@ -4788,7 +4788,7 @@
         "lwpc1@13118",
         "ltpc1@13123"
        ],
-       "lines": 1964,
+       "lines": 1672,
        "confirm": {
         "en": "Stops Prefetch from filling. On a screenshare that can look like erased traces: turn on RBW Mod and restart your PC before one.",
         "fr": "Le Prefetch ne se remplit plus. Sur un screenshare, ça peut ressembler à des traces effacées : active le RBW Mod et redémarre ton PC avant."
@@ -5003,7 +5003,7 @@
         "Performance@13768",
         "Quality@13875"
        ],
-       "lines": 166
+       "lines": 22
       },
       {
        "ref": "pri_game"
@@ -5075,7 +5075,7 @@
         "On@14039",
         "off@14077"
        ],
-       "lines": 27
+       "lines": 31
       }
      ]
     }
@@ -5136,7 +5136,7 @@
         "ENABLE8@14250",
         "DISABLE8@14304"
        ],
-       "lines": 48
+       "lines": 23
       }
      ]
     }
@@ -5197,7 +5197,7 @@
        "legacy": [
         "latency@3281"
        ],
-       "lines": 9
+       "lines": 8
       },
       {
        "id": "exp_kernel",
@@ -5235,7 +5235,7 @@
        "legacy": [
         "random@3305"
        ],
-       "lines": 14
+       "lines": 8
       },
       {
        "id": "exp_nolazy",
@@ -5263,8 +5263,8 @@
         "en": "GPU latency tolerance"
        },
        "desc": {
-        "en": "Same as in Graphics card, applied to the first GPU. Same commands as NVIDIA latency tolerance (Graphics card): selecting both runs them once.",
-        "fr": "Mêmes réglages que dans Carte graphique, appliqués au premier GPU. Mêmes commandes que Tolérance de latence NVIDIA (Carte graphique) : cochés ensemble, ils ne s'appliquent qu'une fois."
+        "en": "Same as in Graphics card, applied to the first GPU. Same commands as “NVIDIA latency tolerance” (Graphics card). Checked together, they run once.",
+        "fr": "Mêmes réglages que dans Carte graphique, appliqués au premier GPU. Mêmes commandes que « Tolérance de latence NVIDIA » (Carte graphique). Cochés ensemble, ils ne s'appliquent qu'une fois."
        },
        "risk": "safe",
        "reboot": true,
@@ -5405,7 +5405,7 @@
        "legacy": [
         "Multi@2615"
        ],
-       "lines": 5
+       "lines": 4
       },
       {
        "id": "exp_policy",
@@ -5483,8 +5483,8 @@
         "en": "Disable Windows Insider"
        },
        "desc": {
-        "en": "Disables Insider experiments. Same commands as Disable experiments (Windows): selecting both runs them once.",
-        "fr": "Coupe les expérimentations Insider. Mêmes commandes que Désactiver les expérimentations (Windows) : cochés ensemble, ils ne s'appliquent qu'une fois."
+        "en": "Disables Insider experiments. Same commands as “Disable experiments” (Windows). Checked together, they run once.",
+        "fr": "Coupe les expérimentations Insider. Mêmes commandes que « Désactiver les expérimentations » (Windows). Cochés ensemble, ils ne s'appliquent qu'une fois."
        },
        "risk": "safe",
        "reboot": true,
@@ -5499,12 +5499,12 @@
       {
        "id": "exp_autologgers",
        "name": {
-        "en": "Disable autologgers (extended)",
-        "fr": "Couper les autologgers (étendu)"
+        "en": "Disable autologgers",
+        "fr": "Désactiver les journaux automatiques"
        },
        "desc": {
-        "en": "Same as in Debloat, plus a few keys. Same commands as Disable autologgers (Windows): selecting both runs them once.",
-        "fr": "Même réglage que dans Débloat, avec quelques clés en plus. Mêmes commandes que Désactiver les journaux automatiques (Windows) : cochés ensemble, ils ne s'appliquent qu'une fois."
+        "en": "Disables ~40 system traces writing to disk. Same commands as “Disable autologgers” (Windows). Checked together, they run once.",
+        "fr": "Coupe une quarantaine de traces système qui écrivent en continu sur le disque. Mêmes commandes que « Désactiver les journaux automatiques » (Windows). Cochés ensemble, ils ne s'appliquent qu'une fois."
        },
        "risk": "safe",
        "reboot": true,
@@ -5523,8 +5523,8 @@
         "en": "Disable maintenance"
        },
        "desc": {
-        "en": "No automatic maintenance. Same commands as Disable automatic maintenance (Windows): selecting both runs them once.",
-        "fr": "Plus de maintenance automatique. Mêmes commandes que Désactiver la maintenance automatique (Windows) : cochés ensemble, ils ne s'appliquent qu'une fois."
+        "en": "No automatic maintenance. Same commands as “Disable automatic maintenance” (Windows). Checked together, they run once.",
+        "fr": "Plus de maintenance automatique. Mêmes commandes que « Désactiver la maintenance automatique » (Windows). Cochés ensemble, ils ne s'appliquent qu'une fois."
        },
        "risk": "safe",
        "reboot": true,
@@ -5543,8 +5543,8 @@
         "en": "Optimize search"
        },
        "desc": {
-        "en": "Search stops using Bing or Cortana. Same commands as Search without web (Windows): selecting both runs them once.",
-        "fr": "La recherche ne passe plus par Bing ni Cortana. Mêmes commandes que Recherche Windows sans le web (Windows) : cochés ensemble, ils ne s'appliquent qu'une fois."
+        "en": "Search stops using Bing or Cortana. Same commands as “Search without web” (Windows). Checked together, they run once.",
+        "fr": "La recherche ne passe plus par Bing ni Cortana. Mêmes commandes que « Recherche Windows sans le web » (Windows). Cochés ensemble, ils ne s'appliquent qu'une fois."
        },
        "risk": "safe",
        "reboot": true,
@@ -5582,7 +5582,7 @@
        "legacy": [
         "bios5@4636"
        ],
-       "lines": 31,
+       "lines": 23,
        "confirm": {
         "en": "Turns off Hyper-V and virtualization-based security (VBS).",
         "fr": "Coupe Hyper-V et la sécurité basée sur la virtualisation (VBS)."
@@ -5605,7 +5605,7 @@
        "legacy": [
         "firm@2660"
        ],
-       "lines": 5
+       "lines": 4
       },
       {
        "id": "exp_dma",
@@ -5647,7 +5647,7 @@
        "legacy": [
         "reinforce@2680"
        ],
-       "lines": 22
+       "lines": 16
       },
       {
        "id": "exp_smb",
@@ -5666,7 +5666,7 @@
        "legacy": [
         "SMB@2635"
        ],
-       "lines": 8
+       "lines": 7
       }
      ]
     }
@@ -5709,7 +5709,7 @@
        "legacy": [
         "RP@205"
        ],
-       "lines": 2
+       "lines": 1
       },
       {
        "id": "rst_open",
@@ -5747,7 +5747,7 @@
        "legacy": [
         "RevzertNt@14395"
        ],
-       "lines": 9,
+       "lines": 8,
        "confirm": {
         "en": "Resets Winsock and the network settings.",
         "fr": "Réinitialise Winsock et les réglages réseau."

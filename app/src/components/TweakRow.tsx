@@ -7,7 +7,7 @@ import { SESSION_TOGGLES, useStore } from "../lib/store";
 import { Badge, Button, Segmented, Switch } from "./ui";
 
 export function TweakRow({ tweak }: { tweak: Tweak }) {
-  const { t, lang, sys, selected, toggle, variantOf, setVariant, lastRun, requestApply, focusTweak, setFocusTweak, isLocked, variantLocked, undoOnly, premium, setUpsell } = useStore();
+  const { t, lang, sys, selected, toggle, variantOf, setVariant, lastRun, requestApply, focusTweak, setFocusTweak, focusSeq, isLocked, variantLocked, undoOnly, premium, setUpsell } = useStore();
   const [open, setOpen] = useState(false);
   const ref = useRef<HTMLDivElement>(null);
   const av = availability(tweak, sys);
@@ -32,7 +32,7 @@ export function TweakRow({ tweak }: { tweak: Tweak }) {
     ref.current.scrollIntoView({ block: "center", behavior: "smooth" });
     const h = setTimeout(() => setFocusTweak(null), 1800);
     return () => clearTimeout(h);
-  }, [focused, setFocusTweak]);
+  }, [focused, focusSeq, setFocusTweak]);
 
   const onRowClick = () => {
     if (locked) return setUpsell("tweak", tweak.id);

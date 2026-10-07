@@ -777,3 +777,14 @@ test('account security: lockout by strangers, old reset links, Origin by host, A
   assert.equal((await L.licenseForUser(t.db, lostUser.id)).id, loose.id);
   await assert.rejects(L.newClaimToken(t.db, loose.id), /already_claimed/);
 });
+
+test('real Postgres: a connection closed by the database does not stop the server', { skip: !process.env.TEST_DATABASE_URL }, async () => {
+  const db = await testDb();
+  await db.get('SELECT 1');
+  const admin = new pg.Client({ connectionString: process.env.TEST_DATABASE_URL });
+  await admin.connect();
+  await admin.query('SELECT pg_terminate_backend(pid) FROM pg_stat_activity WHERE pid <> pg_backend_pid() AND datname = current_database()');
+  await admin.end();
+  await new Promise((r) => setTimeout(r, 300));
+  assert.equal((await db.get('SELECT 1 AS ok')).ok, 1);
+});

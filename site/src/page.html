@@ -3,6 +3,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600;700&family=Geist+Mono:wght@400;500&display=swap">
+<noscript><style>.js-only,.xp-tabs,#selall{display:none!important}.xp{grid-template-columns:1fr!important}</style></noscript>
 <style>
 /* Layout: full-bleed bands, wide fluid gutters, one idea per screen. Rounded everywhere, one red (#FF3B30), no orange. */
 :root{
@@ -316,8 +317,8 @@ section[id],main[id]{scroll-margin-top:92px}
 
 /* Reviews */
 .rev{display:grid;overflow:hidden;padding-block:6px;gap:12px;mask-image:linear-gradient(90deg,transparent,#000 8%,#000 92%,transparent);-webkit-mask-image:linear-gradient(90deg,transparent,#000 8%,#000 92%,transparent)}
-.rev-row{display:flex;align-items:flex-start;gap:12px;width:max-content;animation:mq 80s linear infinite}
-.rev-row.rv2{animation-direction:reverse;animation-duration:90s}
+.rev-row{display:flex;align-items:flex-start;gap:12px;width:max-content;animation:mq 160s linear infinite}
+.rev-row.rv2{animation-direction:reverse;animation-duration:180s}
 .rev:hover .rev-row,.rev.paused .rev-row{animation-play-state:paused}
 .rev-pause{all:unset;cursor:pointer;margin-left:6px;padding:4px 10px;border-radius:var(--r-full);color:var(--t2);box-shadow:inset 0 0 0 1px var(--l2);font-size:11.5px}
 .rev-pause:hover{color:var(--t1)}
@@ -509,7 +510,7 @@ footer.foot p{max-width:80ch}
   /* touch targets */
   .seg-toggle button{padding:0 16px;min-height:44px}
   .mini{padding:0 16px;min-height:44px}
-  .xr:has(.xses){flex-wrap:wrap} .xr .xses{flex:1 1 100%;justify-content:flex-start}
+  .xr.ses{flex-wrap:wrap} .xr.ses .xses{flex:1 1 100%;justify-content:flex-start}
   footer.foot nav a{padding:11px 12px}
   .micro a{display:inline-block;padding:10px 0}
   .top.docked .top-cta .btn-red{display:none}
@@ -655,7 +656,7 @@ footer.foot p{max-width:80ch}
             <div class="run-list" id="run-list"></div>
           </div>
         </div>
-        <p class="hub-note" id="hub-note">Interactive preview of Rago Optimizer. Click the tweaks, then Apply.</p>
+        <p class="hub-note" id="hub-note">Interactive preview of Rago Optimizer.<span class="js-only"> Click the tweaks, then Apply.</span></p>
       </div>
     </div>
   </section>
@@ -1182,7 +1183,7 @@ const MODS = [
     const [id, name, tag] = MODS[i];
     const det = DETAIL[id] ? `<div class="xd"><ul>${DETAIL[id].map(d => `<li>${esc(d)}</li>`).join("")}</ul>${DETAIL_NOTE[id] ? `<p>${esc(DETAIL_NOTE[id])}</p>` : ""}</div>` : "";
     panel.setAttribute("aria-labelledby", "xt" + i);
-    panel.innerHTML = `<div><span class="ovl">${String(i + 1).padStart(2, "0")} / ${name}</span><h3>${name}</h3><p class="tg">${tag}</p></div><div class="xp-list">${EX[id].map(([n, d, f], k) => `<div class="xr${f.includes("x") ? " act" : ""}" style="animation-delay:${k * 90}ms"><div class="m"><div class="t">${esc(n)}${badge(f)}</div><p>${esc(d)}</p></div>${ctl(f)}</div>`).join("")}${det}</div>`;
+    panel.innerHTML = `<div><span class="ovl">${String(i + 1).padStart(2, "0")} / ${name}</span><h3>${name}</h3><p class="tg">${tag}</p></div><div class="xp-list">${EX[id].map(([n, d, f], k) => `<div class="xr${f.includes("x") ? " act" : ""}${f.includes("s") ? " ses" : ""}" style="animation-delay:${k * 90}ms"><div class="m"><div class="t">${esc(n)}${badge(f)}</div><p>${esc(d)}</p></div>${ctl(f)}</div>`).join("")}${det}</div>`;
     $$(".xr:not(.act)", panel).forEach((r, k) => setTimeout(() => r.classList.add("on"), reduce ? 0 : 600 + k * 250));
     const h = panel.offsetHeight; if (!phone() && h > (panel._mh || 0)) { panel._mh = h; panel.style.minHeight = h + "px"; } // never shrink: the page below stays still
     if (tabs.scrollWidth > tabs.clientWidth) tabs.scrollTo({ left: btns[i].offsetLeft - 16, behavior: reduce ? "auto" : "smooth" });
@@ -1251,7 +1252,7 @@ function howFill() {
     ["fabian","good service, my hitreg has improved much and my ping is low now. recommended!"],
   ];
   const card = ([n, t]) => `<figure class="rq${t.length > 160 ? " wide" : ""}"><p>“${esc(t)}”</p><footer><span class="av">${esc(n.replace(/[^a-z0-9]/i, "").charAt(0).toUpperCase() || "?")}</span>${esc(n)}<small>Discord</small></footer></figure>`;
-  const fill = (el, list) => { const h = list.map(card).join(""); el.innerHTML = h + h.replace(/<figure /g, '<figure aria-hidden="true" '); };
+  const fill = (el, list) => { const h = list.map(card).join(""); const copy = h.replace(/<figure /g, '<figure aria-hidden="true" '); el.innerHTML = h + copy.repeat(3); }; // 4 copies: wide screens never see the end of a row
   fill($("#r1"), A); fill($("#r2"), B);
   $("#rev-pause").addEventListener("click", e => { const on = $("#rev").classList.toggle("paused"); e.currentTarget.setAttribute("aria-pressed", on); e.currentTarget.textContent = on ? "Play" : "Pause"; });
 })();
@@ -1315,12 +1316,12 @@ $$(".js-dword").forEach(e => { e.outerHTML = dlink("Discord"); });
     ["Does it work on laptops?", "Yes. Rago runs on any Windows 10 or 11 PC, desktop or laptop. Premium includes a Laptop preset: gains without hurting battery life or heat."],
     ["Does it work on Mac or Linux?", "No. Rago Optimizer tunes Windows, so it only runs on Windows 10 and 11."],
     ["Monthly or yearly?", MONTHS_FREE >= 1 ? `Same app either way. Yearly costs ${12 - MONTHS_FREE} months of the monthly price, so you get ${MONTHS_FREE} month${MONTHS_FREE === 1 ? "" : "s"} free. You can cancel anytime from your account.` : "Same app either way. You can cancel anytime from your account."],
-    ["How do I join the Premium channel on Discord?", "After you buy, open a ticket on our Discord with the email of your Rago account. Our staff checks your purchase and gives you the Premium role. It isn't automatic, so it can take a little while."],
-    ["Can I use my license on more than one PC?", "No. Premium works on one device per license. If you change PCs, contact support on Discord."],
+    ["How do I join the Premium channel on Discord?", "After you buy, your account page links to our Discord. Open a ticket there with the email of your Rago account. Our staff checks your purchase and gives you the Premium role. It isn't automatic, so it can take a little while."],
+    ["Can I use my license on more than one PC?", "No. Premium works on one device per license. If you change PCs, open a ticket on our Discord (linked from your account page) and support moves your license."],
     ["What if I don't like a change?", "Before applying anything, Rago offers to create a Windows restore point, ticked by default. To go back, open Restore in the app and pick Open System Restore: Windows returns to that point after a restart. Restore also has quick resets for the network and the input queue."],
     ["Windows says \u201cWindows protected your PC\u201d. Is it safe?", "Windows shows this for apps that don't have a paid code-signing certificate yet, which is our case. Click More info, then Run anyway. Only do it for the installer you downloaded from this site. Rago then asks for administrator rights, because it changes system settings."],
     ["How do I uninstall Rago?", "If you want your old settings back, use Open System Restore first. Then uninstall Rago Optimizer from Windows Settings, Apps, like any other app."],
-    ["My antivirus flagged Rago. Why?", "Rago changes system settings, which is what antivirus tools watch for. Only download Rago from this site. Don't disable your antivirus: allow the file if you trust it, or ask us on Discord."],
+    ["My antivirus flagged Rago. Why?", "Rago changes system settings, which is what antivirus tools watch for. Only download Rago from this site. Don't disable your antivirus: allow the file if you trust it, or ask us on our Discord (linked from your account page)."],
     ["How does the affiliate program work?", "Join to get your code. When 3 friends buy Premium and enter your code while creating their account, your Premium access becomes permanent. A friend counts once they have activated the app and 14 days have passed since their payment."]
   ];
   $("#faqs").innerHTML = F.map(([q, a], i) => `<div class="fq"><button type="button" aria-expanded="false" aria-controls="fa${i}" id="fb${i}">${esc(q)}<span class="pm" aria-hidden="true"></span></button><div class="ans" id="fa${i}" role="region" aria-labelledby="fb${i}" inert><div><p>${dlink(esc(a))}</p></div></div></div>`).join("");
