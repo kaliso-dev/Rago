@@ -175,7 +175,8 @@ Fais-le de bout en bout, comme un vrai client, dans une fenêtre de navigation p
 7. Sur un 2e PC (celui de ton pote) : la connexion doit être refusée avec « This license is already active on another PC. »
 8. Tableau de bord → **Cancel or manage subscription** : le portail Stripe s'ouvre. Annule : la carte Subscription affiche « Ends … » et un bouton **Keep Premium**.
 9. Dans Stripe, rembourse ce paiement test : la licence passe en « Refunded » sur le tableau de bord, l'abonnement est annulé, et Rago Optimizer s'arrête à sa prochaine vérification.
-10. Affiliation : avec un 2e compte, va sur `/affiliate` → **Get my referral code**. Fais un achat test avec un autre email et tape ce code à la création du compte : il apparaît dans la liste « Players who used your code », compté 14 jours après l'achat si le joueur a activé Rago Optimizer sur son PC.
+10. Affiliation : avec un 2e compte, va sur `/affiliate` → **Get my referral code**. Fais un achat test avec un autre email en tapant ce code dans **Add promotion code** sur la page Stripe (−5 %) : il est rempli tout seul à la création du compte et apparaît dans « Players who used your code » en « Not activated yet ». Connecte-toi avec ce compte dans Rago Optimizer et clique **Activate** : recharge `/affiliate`, le joueur est « Counted » et le cercle passe à 1/3. Il faut un PC qui n'est pas celui de l'affilié (sinon « Same PC as yours »).
+11. Code du pop-up du site : `RAGO15` (voir « Codes promo » plus bas). Sur le site, attends le pop-up → **Claim my discount** → **Get Premium** : la page Stripe affiche −15 %.
 
 Si une étape coince, envoie-moi une capture et l'heure : je trouve la cause.
 
@@ -183,8 +184,35 @@ Si une étape coince, envoie-moi une capture et l'heure : je trouve la cause.
 
 1. Stripe → **Activer les paiements** : informations sur toi ou ta société, et ton IBAN. Stripe demande une pièce d'identité.
 2. Repasse en **mode live**, puis refais en live les étapes 3.2 à 3.5 et 6 : deux nouveaux `price_...`, nouvelle clé `sk_live_...`, portail client, nouveau webhook `whsec_...`.
-3. Remplace ces quatre variables dans Railway.
-4. Fais un vrai achat avec ta carte, puis rembourse-le depuis Stripe : la boucle complète est vérifiée.
+3. Remplace ces quatre variables dans Railway (et `STRIPE_PORTAL_LOGIN_URL`, le lien du portail live).
+4. Recrée `RAGO15` en live (voir « Codes promo »). Les codes d'affiliation, eux, sont recréés en live tout seuls dans l'heure qui suit (ou dès que l'affilié ouvre `/affiliate`).
+5. Fais un vrai achat avec ta carte, puis rembourse-le depuis Stripe : la boucle complète est vérifiée.
+
+## Revenir en mode test
+
+Pour refaire des essais sans vrai paiement, remets les valeurs **test** dans Railway → Variables (garde les valeurs live dans ton gestionnaire de mots de passe pour revenir ensuite). Toutes viennent de Stripe avec le bouton **Mode test** activé (en haut à droite) :
+
+| Variable | Valeur test |
+|---|---|
+| `STRIPE_SECRET_KEY` | Développeurs → Clés API → **Clé secrète** `sk_test_...` |
+| `STRIPE_PRICE_MONTHLY`, `STRIPE_PRICE_YEARLY` | Catalogue de produits → Rago Optimizer Premium → les deux prix **test** `price_...` (créés à l'étape 3.2 ; s'ils n'existent pas en test, recrée-les) |
+| `STRIPE_WEBHOOK_SECRET` | Développeurs → Webhooks → la destination **test** vers `/webhooks/stripe` → **Secret de signature** `whsec_...` (sinon crée-la comme à l'étape 6) |
+| `STRIPE_PORTAL_LOGIN_URL` | Paramètres → Facturation → Portail client (mode test) → lien de connexion |
+
+Railway redéploie tout seul. Paie ensuite avec `4242 4242 4242 4242`, une date future, n'importe quel CVC. Les achats test et les achats live ne se mélangent pas dans Stripe, mais ils vont dans la même base : un compte créé avec un achat test garde sa licence test. Avant le lancement, vide la base de test (requête « Reset base » de la mémoire du projet, jamais `server_secrets`) ou supprime ces comptes avec `npm run admin -- delete-user`.
+
+## Codes promo
+
+- **Codes d'affiliation** : chaque code devient tout seul un code promo Stripe à −5 % (`AFFILIATE_DISCOUNT_PERCENT`), sur le premier paiement seulement (`AFFILIATE_DISCOUNT_DURATION=once` ; `forever` = sur chaque renouvellement), réservé aux nouveaux clients. Le lien de l'affilié l'applique d'office ; sinon le joueur le tape dans **Add promotion code** sur la page Stripe. Rien à faire dans Stripe : le coupon `rago-referral-5-once` et les codes sont créés par le serveur, en test comme en live.
+- **RAGO15** (pop-up du site, −15 % sur le premier paiement) : à créer une fois en test, puis une fois en live. Depuis ton PC (voir « Au quotidien »), avec `STRIPE_SECRET_KEY` de ce mode :
+
+  ```bash
+  export STRIPE_SECRET_KEY="sk_test_..."     # puis sk_live_... pour le live
+  npm run admin -- create-promo RAGO15 15
+  ```
+
+  Ou à la main dans Stripe → Catalogue de produits → **Coupons → Créer** : 15 %, durée **Une fois**, puis **Ajouter un code promotionnel** `RAGO15`, case « Limiter aux premières commandes ». Le site envoie `/buy?promo=RAGO15` : le serveur applique ce code d'office ; un code inconnu est ignoré (la page Stripe garde alors le champ pour en taper un).
+- Un seul code par paiement : un visiteur venu par un lien d'affilié n'a pas le pop-up, et garde ses −5 %.
 
 ---
 
@@ -232,7 +260,8 @@ npm run admin -- claim-link joueur@mail.com     # nouveau lien « Create your ac
 npm run admin -- reset-link joueur@mail.com     # lien « Choose a new password » (1 h), si l'email n'arrive pas
 npm run admin -- reset-device joueur@mail.com   # il a changé de PC : libère l'ancien
 npm run admin -- grant ami@mail.com             # licence à vie offerte (ex. anciens acheteurs du .bat)
-npm run admin -- affiliate affilie@mail.com     # son code, ses filleuls et pourquoi chacun compte ou non
+npm run admin -- affiliate affilie@mail.com     # son code, ses filleuls, pourquoi chacun compte ou non, ses récompenses
+npm run admin -- create-promo RAGO15 15         # code promo Stripe (ici −15 % sur le premier paiement), voir « Codes promo »
 npm run admin -- delete-user joueur@mail.com    # demande de suppression (RGPD) : résilie, supprime le compte et le PC, anonymise la licence
 npm run admin -- export-keys                    # la clé qui signe les licences, à garder dans ton gestionnaire de mots de passe
 ```
@@ -245,12 +274,12 @@ npm run admin -- export-keys                    # la clé qui signe les licences
 
 ### Programme d'affiliation, ce qui est vérifié
 
-- Le code vient avec l'achat : le lien de l'affilié (`?ref=CODE`) le met dans le paiement Stripe, et il est rempli tout seul juste après, même si le joueur crée son compte plus tard sur un autre appareil. Sinon le joueur le tape juste après le paiement (création du compte, ou connexion si l'email a déjà un compte). Un client = un code, pour toujours.
+- Le code vient avec l'achat : le lien de l'affilié (`?ref=CODE`) le met dans le paiement Stripe avec −5 %, ou le joueur le tape lui-même sur la page Stripe (code promo). Il est rempli tout seul juste après, même si le joueur crée son compte plus tard sur un autre appareil. Sinon le joueur le tape juste après le paiement (création du compte, ou connexion si l'email a déjà un compte). Un client = un code, pour toujours.
 - Refusé tout de suite : code inexistant, ou code de l'affilié lui-même (même email que le compte affilié ou que l'email de paiement).
-- Un filleul compte **14 jours après son achat** (`AFFILIATE_HOLD_DAYS`), si sa licence marche encore à ce moment-là (ni remboursée, ni contestée, ni abonnement déjà terminé), et s'il a **activé Rago Optimizer sur un PC** qui n'est ni un PC de l'affilié (y compris un PC où l'affilié s'est seulement connecté à l'app gratuite) ni celui d'un autre filleul déjà compté. Même client Stripe que l'affilié : refusé aussi.
-- À 3 filleuls comptés (`AFFILIATE_GOAL`), l'affilié reçoit Rago Optimizer Premium **à vie**, verrouillé sur un PC comme les autres. S'il était abonné, c'est sa licence actuelle qui devient à vie (même clé, même PC) et Stripe arrête de le prélever à la fin de la période.
-- Le calcul se fait quand l'affilié ouvre son compte ou se connecte dans l'app, et toutes les heures sur le serveur.
-- Une fois la récompense obtenue, elle reste, même si un filleul est remboursé après coup. Le serveur le note : `npm run admin -- affiliate affilie@mail.com` affiche un avertissement, et tu décides (`revoke affilie@mail.com affiliate_fraud` reprend la licence).
-- Limite connue : quelqu'un qui paie 3 abonnements avec 3 emails et 3 PC différents passera, **même avec une seule carte** (chaque paiement sans compte crée un nouveau client Stripe). Ça lui coûte 3 mois d'abonnement minimum ; si tu veux plus strict, monte `AFFILIATE_HOLD_DAYS` à 30 ou 45.
+- Un filleul compte **dès qu'il active Rago Optimizer sur son PC** (`AFFILIATE_HOLD_DAYS=0`, choix du 7 octobre 2026 ; un nombre de jours remet un délai après l'achat), si sa licence marche encore (ni remboursée, ni contestée, ni abonnement terminé) et si ce PC n'est ni un PC de l'affilié (y compris un PC où l'affilié s'est seulement connecté à l'app gratuite) ni celui d'un autre filleul déjà compté. Même client Stripe que l'affilié : refusé aussi. Dans la base, `referrals.status` passe de `pending` à `counted` (ou `void` avec la raison).
+- Tous les 3 filleuls comptés (`AFFILIATE_GOAL`), l'affilié reçoit **6 mois de Premium** (`AFFILIATE_REWARD_MONTHS`), sans limite de paliers (`AFFILIATE_REWARD_MAX=1` = une seule fois). Abonné : Stripe ne le prélève pas pendant 6 mois (essai gratuit ajouté à son abonnement, même clé, même PC), puis l'abonnement reprend. Sans abonnement : une licence de 6 mois, ou 6 mois de plus sur celle qu'il a déjà ; à la date de fin, l'app repasse en gratuit. Licence à vie offerte : rien à ajouter.
+- Le calcul se fait quand un filleul active son PC, quand l'affilié ouvre son compte ou se connecte dans l'app, et toutes les heures sur le serveur. Si Stripe refuse la pause des paiements, la récompense est retentée toutes les heures (`npm run admin -- affiliate` affiche l'erreur).
+- Une récompense donnée reste, même si un filleul est remboursé après coup : il ne compte plus pour le palier suivant. Le serveur le note : `npm run admin -- affiliate affilie@mail.com` affiche un avertissement, et tu décides.
+- Limite connue : quelqu'un qui paie 3 abonnements avec 3 emails et 3 PC différents passera, **même avec une seule carte** (chaque paiement sans compte crée un nouveau client Stripe). Ça lui coûte 3 premiers mois à −5 % pour gagner 6 mois ; si tu veux plus strict, mets `AFFILIATE_HOLD_DAYS` à 14 (un filleul ne compte alors que 14 jours après son achat, s'il n'a pas été remboursé).
 
 Tu peux aussi voir les tables directement dans Supabase → **Table Editor**.

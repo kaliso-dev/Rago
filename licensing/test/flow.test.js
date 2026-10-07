@@ -53,7 +53,28 @@ async function setup(env = {}, extra = {}) {
   const stripeCalls = [];
   stripe.subscriptions.retrieve = async (id) => { if (!subs[id]) throw new Error('No such subscription'); return subs[id]; };
   stripe.subscriptions.cancel = async (id) => { stripeCalls.push(['cancel', id]); subs[id] = { ...subs[id], status: 'canceled' }; return subs[id]; };
-  stripe.subscriptions.update = async (id, p) => { stripeCalls.push(['update', id, p]); subs[id] = { ...subs[id], ...p }; return subs[id]; };
+  stripe.subscriptions.update = async (id, p) => {
+    stripeCalls.push(['update', id, p]);
+    subs[id] = { ...subs[id], ...p };
+    // Like Stripe: a trial end moves the period end there, no payment until then.
+    if (p.trial_end) subs[id] = { ...subs[id], status: 'trialing', items: { data: [{ ...subs[id].items.data[0], current_period_end: p.trial_end }] } };
+    return subs[id];
+  };
+  // Coupons and promotion codes (affiliate codes, RAGO15).
+  const coupons = {};
+  const promos = [];
+  stripe.coupons.retrieve = async (id) => {
+    if (coupons[id]) return coupons[id];
+    throw Object.assign(new Error(`No such coupon: '${id}'`), { statusCode: 404, code: 'resource_missing' });
+  };
+  stripe.coupons.create = async (p) => { stripeCalls.push(['coupon', p]); return (coupons[p.id] = { object: 'coupon', ...p }); };
+  stripe.promotionCodes.create = async (p) => {
+    if (promos.some((x) => x.code.toUpperCase() === p.code.toUpperCase())) throw new Error('An active promotion code with this code already exists.');
+    const promo = { id: `promo_${promos.length + 1}`, object: 'promotion_code', active: true, ...p };
+    promos.push(promo);
+    return promo;
+  };
+  stripe.promotionCodes.list = async ({ code }) => ({ data: promos.filter((x) => x.active && x.code.toUpperCase() === String(code).toUpperCase()) });
   stripe.billingPortal.sessions.create = async (p) => { stripeCalls.push(['portal', p.customer]); return { url: 'https://billing.stripe.com/p/session/x' }; };
   const mails = [];
   const mailer = { purchase: async (to, url) => mails.push({ to, url }), passwordReset: async (to, url) => mails.push({ to, url }) };
@@ -100,7 +121,7 @@ async function setup(env = {}, extra = {}) {
     const sub = subscription(`sub_${id}`, interval);
     return paidSession(id, email, { mode: 'subscription', payment_intent: null, subscription: sub, metadata: { interval }, ...extra });
   };
-  return { cfg, db, keys, app, browse, api, webhook, paidSession, paidSubscription, subscription, subs, stripeCalls, created, mails, jar, sessions };
+  return { cfg, db, keys, app, browse, api, webhook, paidSession, paidSubscription, subscription, subs, stripeCalls, created, mails, jar, sessions, promos, coupons, stripe };
 }
 
 const h = (name, v) => createHash('sha256').update(`rago-fp-v1|${name}|${v}`).digest('hex');
@@ -520,104 +541,178 @@ test('subscription refund or dispute revokes and stops renewals', async () => {
   assert.equal((await t.db.get('SELECT status_reason FROM licenses')).status_reason, 'refunded');
 });
 
-test('affiliate: join, code at sign-up only, 3 real players = lifetime license', async () => {
+/** A PC with its own identifiers (device() shares the SMBIOS UUID and board serial). */
+const pc = (name) => device(name, `UUID-${name}`, `BOARD-${name}`);
+
+/** Signs in to the app and activates this PC, like Rago Optimizer does. Returns the final reply. */
+async function appActivate(t, email, dev) {
+  const j = await (await t.api('/auth/login', { email, password: 'password123', device: dev })).json();
+  if (j.status !== 'activation_required') return j;
+  return (await t.api('/licenses/activate', { device: dev }, { authorization: `Bearer ${j.access_token}` })).json();
+}
+
+test('affiliate: 5 % code in Stripe, a player counts when they activate, every 3 players = 6 months', async () => {
   const t = await setup(SUBS);
-  // The affiliate subscribes first, then joins the program.
+  // The affiliate subscribes first, activates their PC, then joins the program.
   t.paidSubscription('cs_aff', 'aff@rago.gg');
   await t.browse('/checkout/success?session_id=cs_aff');
   await t.browse('/signup', { form: { email: 'aff@rago.gg', password: 'password123' } });
   const aff = await L.findUserByEmail(t.db, 'aff@rago.gg');
   const affLic = await L.licenseForUser(t.db, aff.id);
-  await L.activate(t.db, affLic.id, { fp: { machine_guid: 'a'.repeat(64), smbios_uuid: 'b'.repeat(64), board_serial: null }, name: 'AFF-PC', os: '', appVersion: '' });
+  assert.equal((await appActivate(t, 'aff@rago.gg', pc('AFF'))).status, 'active');
   assert.match(await (await t.browse('/affiliate')).text(), /Get my referral code/);
   assert.equal((await t.browse('/affiliate/join', { form: {} })).headers.get('location'), '/affiliate?n=joined');
   const { code } = await t.db.get('SELECT code FROM affiliates WHERE user_id = ?', [aff.id]);
   assert.match(code, /^[A-Z2-9]{6}$/);
+
+  // Joining made the code a Stripe promotion code: 5 % off the first payment, new customers only.
+  assert.equal(t.promos.length, 1);
+  assert.equal(t.promos[0].code, code);
+  assert.deepEqual(t.promos[0].promotion, { type: 'coupon', coupon: 'rago-referral-5-once' });
+  assert.equal(t.promos[0].restrictions.first_time_transaction, true);
+  assert.deepEqual(t.coupons['rago-referral-5-once'], { object: 'coupon', id: 'rago-referral-5-once', percent_off: 5, duration: 'once', name: 'Referral code, 5% off' });
+  assert.equal((await t.db.get('SELECT stripe_promo_id, stripe_promo_live FROM affiliates')).stripe_promo_id, 'promo_1');
+
   let page = await (await t.browse('/affiliate')).text();
   assert.match(page, new RegExp(code));
   assert.match(page, /3 more to go/);
+  assert.match(page, /5% off/);
+  assert.match(page, /data-count="0"/);
   const affJar = new Map(t.jar);
+  const asAffiliate = async () => { t.jar.clear(); for (const [k, v] of affJar) t.jar.set(k, v); return (await t.browse('/affiliate')).text(); };
 
   // The code field only exists right after a purchase.
   t.jar.clear();
   assert.doesNotMatch(await (await t.browse('/signup')).text(), /Referral code/);
 
-  async function buyer(n, { codeTyped = code, fp, email = `p${n}@x.io`, payer = email } = {}) {
+  // The share link opens a checkout with the 5 % already applied.
+  await t.browse(`/buy?interval=month&ref=${code.toLowerCase()}`);
+  assert.deepEqual(t.created.at(-1).discounts, [{ promotion_code: 'promo_1' }]);
+  assert.equal(t.created.at(-1).allow_promotion_codes, undefined);
+  assert.equal(t.created.at(-1).metadata.ref, code);
+  t.paidSubscription('cs_link', 'link@x.io');
+  assert.match(await (await t.browse('/checkout/success?session_id=cs_link')).text(), new RegExp(`value="${code}"`));
+  // Without a link, the buyer can type a code at checkout.
+  t.jar.clear();
+  await t.browse('/buy?interval=year');
+  assert.equal(t.created.at(-1).allow_promotion_codes, true);
+  assert.equal(t.created.at(-1).discounts, undefined);
+
+  async function buyer(n, { codeTyped = code, dev, email = `p${n}@x.io`, payer = email, stripeCode = false } = {}) {
     t.jar.clear();
-    t.paidSubscription(`cs_p${n}`, payer);
+    // stripeCode: the code was typed at checkout (Stripe promotion code), not on our form.
+    t.paidSubscription(`cs_p${n}`, payer, 'month', stripeCode ? { discounts: [{ coupon: 'rago-referral-5-once', promotion_code: 'promo_1' }] } : {});
     let html = await (await t.browse(`/checkout/success?session_id=cs_p${n}`)).text();
     if (payer !== email) html = await (await t.browse('/signup')).text(); // payer's email has an account: they're offered sign-in first
     assert.match(html, /Referral code/);
+    if (stripeCode) assert.match(html, new RegExp(`value="${code}"`));
     const res = await t.browse('/signup', { form: { email, password: 'password123', code: codeTyped } });
     if (res.status !== 303) return { error: await res.text() };
     const user = await L.findUserByEmail(t.db, email);
     const lic = await L.licenseForUser(t.db, user.id);
-    if (fp) await L.activate(t.db, lic.id, { fp, name: `P${n}`, os: '', appVersion: '' });
+    if (dev) assert.equal((await appActivate(t, email, dev)).status, 'active');
     return { user, lic };
   }
-  const fp = (c) => ({ machine_guid: c.repeat(64), smbios_uuid: null, board_serial: null });
+  const referral = async (email) => (await t.db.get('SELECT r.status, r.void_reason FROM referrals r JOIN licenses l ON l.id = r.license_id WHERE l.email = ?', [email]));
 
   // Wrong code or own code: refused before the account exists.
   assert.match((await buyer(0, { codeTyped: 'NOPE42' })).error, /referral code doesn&#39;t exist/);
   assert.match((await buyer(9, { email: 'p9@x.io', payer: 'aff@rago.gg' })).error, /can&#39;t use your own referral code/);
   assert.equal(await L.findUserByEmail(t.db, 'p9@x.io'), null);
 
-  // Shared link pre-fills the code after payment.
-  t.jar.clear();
-  await t.browse(`/buy?interval=month&ref=${code.toLowerCase()}`);
-  t.paidSubscription('cs_link', 'link@x.io');
-  assert.match(await (await t.browse('/checkout/success?session_id=cs_link')).text(), new RegExp(`value="${code}"`));
-
-  await buyer(1, { fp: fp('1') });
-  await buyer(2, { fp: fp('2') });
-  await buyer(3, { fp: fp('a') });         // activated on the affiliate's own PC
-  const refunded = await buyer(4, { fp: fp('4') });
-  await buyer(5);                           // never activated
-  await t.webhook('charge.refunded', { id: 'ch_4', object: 'charge', refunded: true, customer: refunded.lic.stripe_customer_id });
-
-  // Before the hold period nothing counts.
-  t.jar.clear(); for (const [k, v] of affJar) t.jar.set(k, v);
-  page = await (await t.browse('/affiliate')).text();
-  assert.match(page, /Counts on/);
+  // Signed up with the code but not activated yet: pending. Activating in the app counts it at once,
+  // without the affiliate opening anything.
+  await buyer(1);
+  assert.deepEqual(await referral('p1@x.io'), { status: 'pending', void_reason: null });
+  page = await asAffiliate();
   assert.match(page, /Not activated yet/);
-  assert.match(page, /Refunded/);
-  assert.doesNotMatch(page, /pa•/); // emails are masked: p1@x.io -> p1••@x.io
-  assert.match(page, /p1••@x\.io/);
+  assert.match(page, /0 \/ 3|<b data-count="0">0<\/b><small>\/3<\/small>/);
+  assert.match(page, /1 waiting/);
+  assert.equal((await appActivate(t, 'p1@x.io', pc('P1'))).status, 'active');
+  assert.deepEqual(await referral('p1@x.io'), { status: 'counted', void_reason: null });
+  page = await asAffiliate();
+  assert.match(page, /<b data-count="1">1<\/b><small>\/3<\/small>/);
+  assert.match(page, /2 more to go/);
+  assert.match(page, /<strong>1 of 3<\/strong> players counted/);
+  assert.equal((page.match(/<li class="on">/g) || []).length, 1);
+  assert.match(page, /Counted/);
+  assert.match(page, /p1••@x\.io/); // emails are masked
 
-  await t.db.run('UPDATE licenses SET created_at = created_at - ?', [15 * DAY_MS]);
-  page = await (await t.browse('/affiliate')).text();
-  assert.match(page, /Same PC as yours/);
+  // Code typed at checkout (Stripe), carried to the account form.
+  await buyer(2, { dev: pc('P2'), stripeCode: true });
+  assert.equal((await t.db.get("SELECT referral_code FROM licenses WHERE email = 'p2@x.io'")).referral_code, code);
+  assert.deepEqual(await referral('p2@x.io'), { status: 'counted', void_reason: null });
+  page = await asAffiliate();
+  assert.match(page, /<b data-count="2">2<\/b><small>\/3<\/small>/);
+  assert.equal((page.match(/<li class="on">/g) || []).length, 2);
   assert.match(page, /1 more to go/);
 
-  await buyer(6, { fp: fp('6') });
-  await t.db.run('UPDATE licenses SET created_at = created_at - ? WHERE email = ?', [15 * DAY_MS, 'p6@x.io']);
-  t.jar.clear(); for (const [k, v] of affJar) t.jar.set(k, v);
-  page = await (await t.browse('/affiliate')).text();
-  assert.match(page, /Rago Optimizer is yours for life/);
+  // Don't count: activated on the affiliate's own PC, refunded before activating, never activated.
+  await buyer(3, { dev: pc('AFF') });
+  assert.deepEqual(await referral('p3@x.io'), { status: 'void', void_reason: 'same_device' });
+  const refunded = await buyer(4);
+  await t.webhook('charge.refunded', { id: 'ch_4', object: 'charge', refunded: true, customer: refunded.lic.stripe_customer_id });
+  await buyer(5);
+  page = await asAffiliate();
+  assert.match(page, /Same PC as yours/);
+  assert.match(page, /Refunded/);
+  assert.match(page, /Not activated yet/);
+  assert.match(page, /1 more to go/);
 
-  // Their subscription license became lifetime: same key, same PC, renewals stopped.
-  const now = await L.licenseForUser(t.db, aff.id);
-  assert.equal(now.id, affLic.id);
-  assert.equal(now.plan, 'lifetime');
-  assert.deepEqual(t.stripeCalls.find((c) => c[0] === 'update'), ['update', 'sub_cs_aff', { cancel_at_period_end: true }]);
-  t.subscription('sub_cs_aff', 'month', { status: 'canceled' });
-  await t.webhook('customer.subscription.deleted', { id: 'sub_cs_aff', object: 'subscription' });
-  const j = await (await t.api('/auth/login', { email: 'aff@rago.gg', password: 'password123', device: device('X', null, null) })).json();
-  assert.equal(j.error.code, 'bound_to_other_device'); // still locked to AFF-PC
-  assert.match(await (await t.browse('/account')).text(), /Rago Optimizer Premium for life/);
+  // Third real player: 3/3, the affiliate's next 6 months are free (Stripe trial), same license and PC.
+  const before = (await L.licenseForUser(t.db, aff.id)).current_period_end;
+  await buyer(6, { dev: pc('P6') });
+  const update = t.stripeCalls.find((c) => c[0] === 'update' && c[1] === 'sub_cs_aff');
+  assert.equal(update[2].proration_behavior, 'none');
+  assert.equal(update[2].trial_end * 1000, L.addMonths(Number(before), 6) - (L.addMonths(Number(before), 6) % 1000));
+  let lic = await L.licenseForUser(t.db, aff.id);
+  assert.equal(lic.id, affLic.id);
+  assert.equal(lic.plan, 'month');
+  assert.equal(lic.status, 'active');
+  assert.equal(Number(lic.current_period_end), L.addMonths(Number(before), 6));
+  assert.equal((await t.db.get('SELECT rewards FROM affiliates')).rewards, 1);
+  page = await asAffiliate();
+  assert.match(page, /6 months of Premium added/);
+  assert.match(page, /ring-full/);
+  assert.match(page, /<b data-count="3">3<\/b><small>\/3<\/small>/);
+  assert.equal((page.match(/<li class="on">/g) || []).length, 3);
+  assert.match(page, /1 reward/);
+  // Stripe confirms with the subscription in trial: still active, renews after the free months.
+  await t.webhook('customer.subscription.updated', { id: 'sub_cs_aff', object: 'subscription' });
+  lic = await L.licenseForUser(t.db, aff.id);
+  assert.equal(lic.status, 'active');
+  assert.equal(Number(lic.current_period_end), update[2].trial_end * 1000);
+  assert.match(await (await t.browse('/account')).text(), /Renews on/);
 
   // A counted player refunded after the reward: the reward stays, support gets a trace.
-  const counted = await t.db.get("SELECT l.stripe_customer_id AS c FROM referrals r JOIN licenses l ON l.id = r.license_id WHERE r.status = 'counted' LIMIT 1");
-  await t.webhook('charge.refunded', { id: 'ch_after', object: 'charge', refunded: true, customer: counted.c });
+  const p1 = await L.findUserByEmail(t.db, 'p1@x.io');
+  await t.webhook('charge.refunded', { id: 'ch_after', object: 'charge', refunded: true, customer: (await L.licenseForUser(t.db, p1.id)).stripe_customer_id });
   assert.equal((await t.db.get("SELECT COUNT(*)::int AS n FROM audit WHERE type = 'affiliate.reward_at_risk'")).n, 1);
   assert.equal((await L.licenseForUser(t.db, aff.id)).status, 'active');
 
-  // Granted once, even if evaluated again.
-  await t.browse('/affiliate');
+  // Evaluated again: no second reward for the same players.
+  await asAffiliate();
   assert.equal((await t.db.get("SELECT COUNT(*)::int AS n FROM audit WHERE type = 'affiliate.rewarded'")).n, 1);
+
+  // Next round: the refunded player is replaced, 3 more counted players add 6 more months.
+  // (made directly: the sign-up form allows 10 accounts per IP per hour)
+  const A = await import('../src/affiliates.js');
+  for (const n of [7, 8, 9, 10]) {
+    const user = await L.createUser(t.db, `p${n}@x.io`, 'password123');
+    const { license } = await L.grantLicense(t.db, `p${n}@x.io`);
+    await A.recordReferral(t.db, await A.affiliateByCode(t.db, code), user.id, license);
+    assert.equal((await appActivate(t, `p${n}@x.io`, pc(`P${n}`))).status, 'active');
+  }
+  page = await asAffiliate();
+  assert.equal((await t.db.get('SELECT rewards FROM affiliates')).rewards, 2);
+  const updates = t.stripeCalls.filter((c) => c[0] === 'update' && c[1] === 'sub_cs_aff');
+  assert.equal(updates.length, 2);
+  assert.equal(updates[1][2].trial_end, Math.floor(L.addMonths(update[2].trial_end * 1000, 6) / 1000));
+  assert.match(page, /2 rewards/);
+  assert.match(page, /<b data-count="3">3<\/b>/);
 });
 
-test('affiliate without a license gets a new lifetime license', async () => {
+test('affiliate without a license gets 6 months of Premium, which end on their date', async () => {
   const t = await setup(SUBS);
   await t.browse('/signup?next=/affiliate');
   const r = await t.browse('/signup', { form: { email: 'free@aff.io', password: 'password123', next: '/affiliate' } });
@@ -632,17 +727,63 @@ test('affiliate without a license gets a new lifetime license', async () => {
     await A.recordReferral(t.db, await A.affiliateByCode(t.db, code), user.id, license);
     await L.activate(t.db, license.id, { fp: { machine_guid: String(n).repeat(64), smbios_uuid: null, board_serial: null }, name: 'P', os: '', appVersion: '' });
   }
-  await t.db.run('UPDATE licenses SET created_at = created_at - ?', [15 * DAY_MS]);
   assert.deepEqual(await A.affiliatesToEvaluate(t.db, t.cfg), [aff.id]);
   // The app's sign-in also settles it, so the affiliate doesn't need to open the site.
-  const j = await (await t.api('/auth/login', { email: 'free@aff.io', password: 'password123', device: device('F') })).json();
+  let j = await (await t.api('/auth/login', { email: 'free@aff.io', password: 'password123', device: device('F') })).json();
   assert.equal(j.status, 'activation_required');
   const lic = await L.licenseForUser(t.db, aff.id);
-  assert.equal(lic.plan, 'lifetime');
+  assert.equal(lic.plan, 'reward');
   assert.equal(lic.source, 'affiliate');
+  const days = (Number(lic.current_period_end) - Date.now()) / DAY_MS;
+  assert.ok(days > 180 && days < 185, `${days} days`);
+  j = await (await t.api('/licenses/activate', { device: device('F') }, { authorization: `Bearer ${j.access_token}` })).json();
+  assert.equal(j.status, 'active');
+  assert.equal(j.license.billing.interval, 'reward');
+  assert.equal(j.license.billing.renews_at, null);
+  assert.equal(Date.parse(j.license.billing.ends_at), Number(lic.current_period_end));
+  let dash = await (await t.browse('/account')).text();
+  assert.match(dash, /Affiliate reward/);
+  assert.match(dash, /Earned with the affiliate program\. Premium until/);
   // Refunds of other people's payments never touch it.
   await t.webhook('charge.refunded', { id: 'ch_x', object: 'charge', refunded: true, customer: null, payment_intent: null });
   assert.equal((await L.licenseForUser(t.db, aff.id)).status, 'active');
+
+  // Past its date, it stops like an ended subscription: the app gets subscription_ended and the buy link.
+  await t.db.run('UPDATE licenses SET current_period_end = ? WHERE id = ?', [Date.now() - 1000, lic.id]);
+  const refresh = await t.api('/licenses/refresh', { license_token: j.license_token, device: device('F') });
+  const err = (await refresh.json()).error;
+  assert.equal(err.code, 'revoked');
+  assert.equal(err.reason, 'subscription_ended');
+  assert.ok(err.buy_url);
+  dash = await (await t.browse('/account')).text();
+  assert.match(dash, /Your affiliate reward ended/);
+  assert.equal(await L.expireRewards(t.db), 0);
+});
+
+test('site discount code: /buy?promo=RAGO15 opens the checkout with it, an unknown code is ignored', async () => {
+  const t = await setup(SUBS);
+  t.promos.push({ id: 'promo_site', object: 'promotion_code', active: true, code: 'RAGO15', promotion: { type: 'coupon', coupon: 'rago-promo-15-once' } });
+  await t.browse('/buy?interval=year&promo=RAGO15');
+  assert.deepEqual(t.created.at(-1).discounts, [{ promotion_code: 'promo_site' }]);
+  assert.equal(t.created.at(-1).allow_promotion_codes, undefined);
+  await t.browse('/buy?interval=year&promo=NOPE');
+  assert.equal(t.created.at(-1).discounts, undefined);
+  assert.equal(t.created.at(-1).allow_promotion_codes, true);
+  await t.browse('/buy?promo=%3Cx%3E');
+  assert.equal(t.created.at(-1).allow_promotion_codes, true);
+});
+
+test('a discount Stripe refuses for this buyer: the checkout still opens, with the code field', async () => {
+  const t = await setup(SUBS, {});
+  t.promos.push({ id: 'promo_site', object: 'promotion_code', active: true, code: 'RAGO15' });
+  const create = t.stripe.checkout.sessions.create;
+  t.stripe.checkout.sessions.create = async (p) => {
+    if (p.discounts) throw new Error('This promotion code cannot be redeemed because the associated customer has prior transactions.');
+    return create(p);
+  };
+  const res = await t.browse('/buy?promo=RAGO15');
+  assert.equal(res.status, 303);
+  assert.equal(t.created.at(-1).allow_promotion_codes, true);
 });
 
 test('account pages: change password, foreign checkouts ignored, code typed at sign-in after a purchase, expired reset link', async () => {

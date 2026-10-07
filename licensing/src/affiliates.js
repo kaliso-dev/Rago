@@ -1,12 +1,12 @@
 // Affiliate program: each affiliate gets a code; a buyer enters it once, when creating their account
 // after paying. A referral counts after the hold period if the buyer wasn't refunded, didn't dispute
-// and activated Rago Optimizer on a PC that isn't the affiliate's. At the goal (3), the affiliate gets
-// Rago Optimizer Premium for life, locked to one PC like any license.
+// and activated Rago Optimizer on a PC that isn't the affiliate's. Each time the goal (3) is reached,
+// the affiliate gets 6 months of Rago Optimizer Premium, locked to one PC like any license.
 import { randomBytes } from 'node:crypto';
 import { audit } from './db.js';
 import { newId } from './crypto.js';
 import { COMPONENTS } from './fingerprint.js';
-import { LicenseError, getUser, makeLifetime } from './licensing.js';
+import { LicenseError, getUser, grantRewardMonths, rewardSubscription } from './licensing.js';
 
 const DAY = 86400000;
 const ALPHABET = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789'; // no 0/O, 1/I
@@ -55,7 +55,12 @@ export async function recordReferral(db, aff, referredUserId, license) {
   }
   const row = await db.get(`INSERT INTO referrals (id, affiliate_user_id, referred_user_id, license_id, created_at)
     VALUES (?, ?, ?, ?, ?) ON CONFLICT DO NOTHING RETURNING *`, [newId('ref'), aff.user_id, referredUserId, license.id, Date.now()]);
-  if (row) await audit(db, 'referral.created', { licenseId: license.id, userId: aff.user_id, detail: { referred: referredUserId } });
+  if (row) {
+    await audit(db, 'referral.created', { licenseId: license.id, userId: aff.user_id, detail: { referred: referredUserId } });
+    // Already activated (code applied after the app was set up): that PC is the one compared.
+    await db.run(`UPDATE referrals SET machine_guid = d.machine_guid, smbios_uuid = d.smbios_uuid, board_serial = d.board_serial
+      FROM devices d WHERE d.license_id = referrals.license_id AND referrals.id = ? AND referrals.machine_guid IS NULL`, [row.id]);
+  }
   return row;
 }
 
@@ -73,7 +78,7 @@ export async function voidReferrals(db, licenseIds, reason) {
   for (const id of licenseIds) {
     const was = await db.get('SELECT status, affiliate_user_id FROM referrals WHERE license_id = ?', [id]);
     await db.run("UPDATE referrals SET status = 'void', void_reason = ? WHERE license_id = ? AND status <> 'void'", [reason, id]);
-    // The lifetime reward is kept (taking it back is Sofiene's call); support sees it in admin affiliate.
+    // A reward already given is kept (taking it back is Sofiene's call); support sees it in admin affiliate.
     if (was?.status === 'counted') {
       const aff = await db.get('SELECT reward_license_id FROM affiliates WHERE user_id = ? AND reward_granted_at IS NOT NULL', [was.affiliate_user_id]);
       if (aff) await audit(db, 'affiliate.reward_at_risk', { licenseId: aff.reward_license_id, userId: was.affiliate_user_id, detail: { referral_license: id, reason } });
@@ -85,11 +90,11 @@ export async function voidReferrals(db, licenseIds, reason) {
 const anyMatch = (a, b) => COMPONENTS.some((k) => a[k] && b[k] && a[k] === b[k]);
 
 /**
- * Counts the referrals that have cleared the hold period and, at the goal, grants the reward once.
- * Safe to call often (page views, app sign-in, the hourly sweep).
- * Returns { subscriptionToCancel } when an affiliate who was subscribed just got the lifetime license.
+ * Counts the referrals that have cleared the hold period and, at each goal reached, grants the reward once.
+ * Safe to call often (activations, page views, app sign-in, the hourly sweep).
+ * A subscribed affiliate's reward skips their Stripe payments, so `stripe` is needed for them.
  */
-export async function evaluateAffiliate(db, cfg, userId) {
+export async function evaluateAffiliate(db, cfg, userId, { stripe = null, log = console } = {}) {
   const counted = await db.tx(async (t) => {
     const aff = await t.get('SELECT * FROM affiliates WHERE user_id = ? FOR UPDATE', [userId]);
     if (!aff) return 0;
@@ -123,15 +128,38 @@ export async function evaluateAffiliate(db, cfg, userId) {
     return (await t.get("SELECT COUNT(*)::int AS n FROM referrals WHERE affiliate_user_id = ? AND status = 'counted'", [userId])).n;
   });
 
-  if (counted < cfg.affiliateGoal) return {};
-  // Claim the reward atomically, then grant it.
-  const won = await db.get(`UPDATE affiliates SET reward_granted_at = ? WHERE user_id = ? AND reward_granted_at IS NULL
-    RETURNING user_id`, [Date.now(), userId]);
-  if (!won) return {};
-  const { license, subscriptionToCancel } = await makeLifetime(db, userId, 'affiliate');
-  await db.run('UPDATE affiliates SET reward_license_id = ? WHERE user_id = ?', [license.id, userId]);
-  await audit(db, 'affiliate.rewarded', { licenseId: license.id, userId });
-  return { rewarded: true, subscriptionToCancel };
+  const out = { counted, rewards: [] };
+  for (;;) {
+    const aff = await getAffiliate(db, userId);
+    if (!aff || counted < cfg.affiliateGoal * (aff.rewards + 1)) return out;
+    if (cfg.affiliateRewardMax && aff.rewards >= cfg.affiliateRewardMax) return out;
+    // Claim this reward atomically, then give it; if giving fails, the claim is undone and retried later.
+    const won = await db.get(`UPDATE affiliates SET rewards = rewards + 1, reward_granted_at = ? WHERE user_id = ? AND rewards = ?
+      RETURNING rewards`, [Date.now(), userId, aff.rewards]);
+    if (!won) return out;
+    try {
+      out.rewards.push(await giveReward(db, cfg, stripe, userId, won.rewards));
+    } catch (err) {
+      await db.run('UPDATE affiliates SET rewards = rewards - 1 WHERE user_id = ? AND rewards = ?', [userId, won.rewards]);
+      await audit(db, 'affiliate.reward_failed', { userId, detail: { reward: won.rewards, error: String(err.message || err).slice(0, 200) } });
+      throw err;
+    }
+  }
+}
+
+async function giveReward(db, cfg, stripe, userId, n) {
+  const months = cfg.affiliateRewardMonths;
+  const r = await grantRewardMonths(db, userId, months);
+  if (r.action === 'subscription') {
+    if (!stripe) throw new Error('Stripe is needed to skip the payments of a subscribed affiliate');
+    // A free trial until `until`: no payment until then, then the subscription renews as before
+    // (or ends then, if they had canceled).
+    await stripe.subscriptions.update(r.subscriptionId, { trial_end: Math.floor(r.until / 1000), proration_behavior: 'none' });
+    await rewardSubscription(db, r.license.id, r.until, months);
+  }
+  await db.run('UPDATE affiliates SET reward_license_id = ? WHERE user_id = ?', [r.license.id, userId]);
+  await audit(db, 'affiliate.rewarded', { licenseId: r.license.id, userId, detail: { reward: n, months, action: r.action } });
+  return { n, action: r.action, licenseId: r.license.id };
 }
 
 /** Everything the /affiliate page shows. */
@@ -148,12 +176,23 @@ export async function affiliateSummary(db, cfg, userId) {
     countsFrom: r.status === 'pending' ? r.bought_at + cfg.affiliateHoldDays * DAY : null,
     activated: !!r.machine_guid,
   }));
+  const goal = cfg.affiliateGoal;
+  const counted = referrals.filter((r) => r.status === 'counted').length;
+  // Progress towards the next reward: the counted players beyond those already rewarded.
+  const progress = Math.min(goal, Math.max(0, counted - goal * aff.rewards));
+  const maxed = !!cfg.affiliateRewardMax && aff.rewards >= cfg.affiliateRewardMax;
   return {
     code: aff.code,
-    goal: cfg.affiliateGoal,
-    counted: referrals.filter((r) => r.status === 'counted').length,
-    pending: referrals.filter((r) => r.status === 'pending').length,
-    rewarded: !!aff.reward_granted_at,
+    goal,
+    counted,
+    progress,
+    pending: maxed ? 0 : referrals.filter((r) => r.status === 'pending').length,
+    rewards: aff.rewards,
+    months: cfg.affiliateRewardMonths,
+    maxed,
+    // Just reached a goal, nobody new yet: the ring stays full until the next player.
+    full: maxed || (aff.rewards > 0 && progress === 0),
+    discount: cfg.affiliateDiscountPercent,
     referrals,
   };
 }
@@ -162,7 +201,7 @@ export async function affiliateSummary(db, cfg, userId) {
 export async function affiliatesToEvaluate(db, cfg) {
   const rows = await db.all(`SELECT DISTINCT r.affiliate_user_id AS id FROM referrals r
     JOIN affiliates a ON a.user_id = r.affiliate_user_id JOIN licenses l ON l.id = r.license_id
-    WHERE r.status = 'pending' AND a.reward_granted_at IS NULL AND l.created_at <= ?`, [Date.now() - cfg.affiliateHoldDays * DAY]);
+    WHERE r.status = 'pending' AND r.machine_guid IS NOT NULL AND l.created_at <= ?`, [Date.now() - cfg.affiliateHoldDays * DAY]);
   return rows.map((r) => r.id);
 }
 
@@ -171,15 +210,10 @@ export function maskEmail(email) {
   return `${name.slice(0, 2)}${'•'.repeat(Math.max(2, Math.min(6, name.length - 2)))}@${domain}`;
 }
 
-/** evaluateAffiliate, then stops the Stripe renewals of an affiliate who just got the lifetime license. Never throws. */
+/** evaluateAffiliate that never throws (a failed reward is retried at the next evaluation). */
 export async function settleAffiliate(db, cfg, stripe, log, userId) {
   try {
-    const out = await evaluateAffiliate(db, cfg, userId);
-    if (out.subscriptionToCancel && stripe) {
-      await stripe.subscriptions.update(out.subscriptionToCancel, { cancel_at_period_end: true })
-        .catch((err) => log.error('[stripe] could not stop renewals after affiliate reward', err.message));
-    }
-    return out;
+    return await evaluateAffiliate(db, cfg, userId, { stripe, log });
   } catch (err) {
     log.error('[affiliate] evaluation failed', err);
     return {};

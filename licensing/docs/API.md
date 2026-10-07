@@ -148,6 +148,12 @@ Premium est désormais un abonnement mensuel ou annuel ; les licences offertes e
 - Pour un abonné, `exp` (et `expires_at`) ne dépasse pas la fin de la période payée + 3 jours, et vaut au moins 24 h. Il peut donc être plus court que 30 jours : l'app rafraîchit déjà quand il reste moins de 7 jours, rien à changer. Le renouvellement Stripe repousse la date au refresh suivant.
 - `revoked` avec `reason: "subscription_ended"` : message « Your Rago Optimizer Premium subscription ended. Renew it on the website, then sign in again. » et `buy_url`.
 
+## Récompense d'affiliation (2026-10-07, rien d'obligatoire côté app)
+
+L'affiliation donne 6 mois de Premium au lieu d'une licence à vie. Un seul ajout :
+
+- `license.billing.interval` peut valoir `"reward"` : licence gagnée par l'affiliation, `renews_at` à `null`, `ends_at` = sa date de fin. Le token ne dépasse pas cette date. Après, `refresh` répond `revoked` avec `reason: "subscription_ended"` et `buy_url`, comme un abonnement terminé. Un affilié abonné garde `"month"` ou `"year"` : ses 6 mois repoussent simplement `renews_at`.
+
 ## Affiliation et version gratuite (2026-10-06)
 
 - **Confirmation d'activation pour l'affiliation** : rien de nouveau à appeler. La première réponse `"status": "active"` de `POST /licenses/activate` (ou de `/auth/login` sur le PC déjà lié) enregistre le PC du joueur, et c'est ce qui fait compter son parrainage. L'app affiche alors « License active. Rago Optimizer is ready. » avec `license.device.name` et `license.device.activated_at`.

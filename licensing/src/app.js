@@ -11,7 +11,7 @@ import { relative } from 'node:path';
 import { DUMMY_HASH, maskLicenseKey, signValue, unsignValue, verifyPassword } from './crypto.js';
 import { DeviceError, parseDevice, sameDevice } from './fingerprint.js';
 import { signToken, verifyToken } from './tokens.js';
-import { billingPortal, createCheckout, handleStripeEvent, isRagoCheckout } from './billing.js';
+import { billingPortal, createCheckout, ensureAffiliatePromo, findPromotionCode, handleStripeEvent, isRagoCheckout } from './billing.js';
 import * as A from './affiliates.js';
 import { createInstaller } from './installer.js';
 import * as L from './licensing.js';
@@ -168,10 +168,13 @@ export function createApp({ cfg, db, keys, stripe, mailer, log = console, fetchI
     if (!affiliate) return null;
     const license = await L.licenseForUser(db, user.id);
     if (!license || license.user_id !== user.id || Date.now() - (license.claimed_at || 0) > 60 * 60 * 1000) return null;
-    return A.recordReferral(db, affiliate, user.id, license).catch((err) => {
+    const row = await A.recordReferral(db, affiliate, user.id, license).catch((err) => {
       if (!(err instanceof L.LicenseError)) throw err; // self-referral caught late: the account works, the code doesn't count
       return null;
     });
+    // Already activated on a PC: it can count right away.
+    if (row) await settleAffiliate(affiliate.user_id);
+    return row;
   }
 
   /** Signed-in buyer: no form to type the code, so use the one that came with the purchase (or the link cookie). */
@@ -226,6 +229,11 @@ export function createApp({ cfg, db, keys, stripe, mailer, log = console, fetchI
   const nextPath = (v) => (NEXT.has(String(v || '')) ? String(v) : null);
 
   const settleAffiliate = (userId) => A.settleAffiliate(db, cfg, stripe, log, userId);
+  /** A referred player just activated their PC: their referral counts now, not at the affiliate's next visit. */
+  async function settleReferrer(licenseId) {
+    const r = await db.get("SELECT affiliate_user_id FROM referrals WHERE license_id = ? AND status = 'pending' AND machine_guid IS NOT NULL", [licenseId]);
+    if (r) await settleAffiliate(r.affiliate_user_id);
+  }
   const dashWith = (n) => (n ? `/account?n=${n}` : '/account');
   async function claimSignedIn(c, user, lic) {
     const n = await settleClaim(c, user, lic);
@@ -268,10 +276,14 @@ export function createApp({ cfg, db, keys, stripe, mailer, log = console, fetchI
     }
     const ref = A.normalizeCode(c.req.query('ref')) || refCode(c);
     if (ref) setCookie(c, 'rg_ref', ref, { ...cookieBase, maxAge: 30 * 86400 });
+    // Discount already applied at checkout: a site code (?promo=RAGO15), else the affiliate's code (5 %).
+    let promotionCode = (await findPromotionCode(stripe, c.req.query('promo')))?.id || null;
+    const affiliate = !promotionCode && ref && await A.affiliateByCode(db, ref);
+    if (affiliate && affiliate.user_id !== user?.id) promotionCode = await ensureAffiliatePromo(db, stripe, cfg, affiliate, log);
     // A returning subscriber pays with their existing Stripe customer, so invoices stay together.
     const previous = user && await db.get('SELECT stripe_customer_id FROM licenses WHERE user_id = ? AND stripe_customer_id IS NOT NULL ORDER BY created_at DESC LIMIT 1', [user.id]);
     const interval = c.req.query('interval') === 'year' ? 'year' : c.req.query('interval') === 'month' ? 'month' : undefined;
-    const session = await createCheckout(stripe, cfg, user, { interval, customerId: previous?.stripe_customer_id, ref }, log);
+    const session = await createCheckout(stripe, cfg, user, { interval, customerId: previous?.stripe_customer_id, ref, promotionCode }, log);
     return c.redirect(session.url, 303);
   });
 
@@ -451,7 +463,7 @@ export function createApp({ cfg, db, keys, stripe, mailer, log = console, fetchI
   app.get('/account', requireUser, async (c) => {
     const user = c.get('user');
     await settleAffiliate(user.id);
-    const license = await L.licenseForUser(db, user.id);
+    const license = await L.current(db, await L.licenseForUser(db, user.id));
     const device = license && await L.getDevice(db, license.id);
     const [kind, text] = NOTICES[c.req.query('n')] || [];
     return c.html(V.dashboardPage(cfg, {
@@ -493,12 +505,15 @@ export function createApp({ cfg, db, keys, stripe, mailer, log = console, fetchI
   app.get('/affiliate', async (c) => {
     const user = await currentUser(c);
     if (user) await settleAffiliate(user.id);
+    // Codes from before the Stripe discount existed (or made in the other Stripe mode) get it here.
+    if (user) await ensureAffiliatePromo(db, stripe, cfg, await A.getAffiliate(db, user.id), log);
     const summary = user && await A.affiliateSummary(db, cfg, user.id);
     return c.html(V.affiliatePage(cfg, { user, summary, joined: c.req.query('n') === 'joined' }));
   });
 
   app.post('/affiliate/join', requireUser, async (c) => {
-    await A.joinAffiliate(db, c.get('user').id);
+    const aff = await A.joinAffiliate(db, c.get('user').id);
+    await ensureAffiliatePromo(db, stripe, cfg, aff, log);
     return c.redirect('/affiliate?n=joined', 303);
   });
 
@@ -577,6 +592,8 @@ export function createApp({ cfg, db, keys, stripe, mailer, log = console, fetchI
   function tokenExp(license, iat) {
     const max = iat + cfg.licenseTokenDays * 86400;
     if (license.plan === 'lifetime' || !license.current_period_end) return max;
+    // An affiliate reward ends on its date, without the renewal grace days.
+    if (license.plan === 'reward') return Math.max(iat + 3600, Math.min(max, Math.floor(license.current_period_end / 1000)));
     const paidUntil = Math.floor(license.current_period_end / 1000) + cfg.subscriptionGraceDays * 86400;
     return Math.max(iat + 86400, Math.min(max, paidUntil));
   }
@@ -596,9 +613,9 @@ export function createApp({ cfg, db, keys, stripe, mailer, log = console, fetchI
   const licenseInfo = (license, device) => ({
     key_hint: maskLicenseKey(license.key), status: license.status, plan: 'premium',
     billing: {
-      interval: license.plan, // month | year | lifetime
-      renews_at: license.plan !== 'lifetime' && license.current_period_end && !license.cancel_at_period_end ? new Date(Number(license.current_period_end)).toISOString() : null,
-      ends_at: license.plan !== 'lifetime' && license.current_period_end && license.cancel_at_period_end ? new Date(Number(license.current_period_end)).toISOString() : null,
+      interval: license.plan, // month | year | lifetime | reward (affiliate months, ends on ends_at)
+      renews_at: license.plan !== 'lifetime' && license.plan !== 'reward' && license.current_period_end && !license.cancel_at_period_end ? new Date(Number(license.current_period_end)).toISOString() : null,
+      ends_at: license.plan !== 'lifetime' && license.current_period_end && (license.cancel_at_period_end || license.plan === 'reward') ? new Date(Number(license.current_period_end)).toISOString() : null,
     },
     device: device ? { name: device.name, activated_at: new Date(device.bound_at).toISOString() } : null,
   });
@@ -631,7 +648,7 @@ export function createApp({ cfg, db, keys, stripe, mailer, log = console, fetchI
     if (!user || !ok) return fail(c, 'invalid_credentials');
     await A.rememberDevice(db, user.id, device);
     await settleAffiliate(user.id);
-    const license = await L.licenseForUser(db, user.id);
+    const license = await L.current(db, await L.licenseForUser(db, user.id));
     if (!license) return fail(c, 'no_license', { buy_url: buyUrl() });
     let state;
     try { ({ state } = await L.deviceState(db, license, device)); } catch (err) {
@@ -640,6 +657,7 @@ export function createApp({ cfg, db, keys, stripe, mailer, log = console, fetchI
     }
     if (state === 'here') {
       const out = await L.activate(db, license.id, device, ip(c));
+      await settleReferrer(license.id);
       return c.json(tokenReply(user, out.license, out.device));
     }
     const iat = now();
@@ -655,10 +673,11 @@ export function createApp({ cfg, db, keys, stripe, mailer, log = console, fetchI
     let device;
     try { device = parseDevice(body?.device); } catch (e) { return fail(c, 'invalid_request', { detail: e.message }); }
     const user = await L.getUser(db, claims.sub);
-    const license = user && await L.getLicense(db, claims.lic);
+    const license = user && await L.current(db, await L.getLicense(db, claims.lic));
     if (!license || license.user_id !== user.id) return fail(c, 'invalid_token');
     try {
       const out = await L.activate(db, license.id, device, ip(c));
+      await settleReferrer(license.id);
       return c.json(tokenReply(user, out.license, out.device));
     } catch (err) {
       if (err instanceof L.LicenseError) return failLicense(c, license, err.code);
@@ -673,7 +692,7 @@ export function createApp({ cfg, db, keys, stripe, mailer, log = console, fetchI
     let device;
     try { device = parseDevice(body.device); } catch (e) { return fail(c, 'invalid_request', { detail: e.message }); }
     if (!allow(`refresh:${claims.lic}`, 30, 60 * 60 * 1000)) return fail(c, 'rate_limited');
-    const license = await L.getLicense(db, claims.lic);
+    const license = await L.current(db, await L.getLicense(db, claims.lic));
     const user = license && await L.getUser(db, claims.sub);
     if (!license || !user || license.user_id !== user.id) return fail(c, 'invalid_token');
     if (license.status !== 'active') return failLicense(c, license, 'revoked');

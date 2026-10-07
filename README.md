@@ -40,7 +40,7 @@ Dans ce guide, `ragohub.com` et `account.ragohub.com` sont des exemples : rempla
  │                         base de données et fichier de l'app dans Supabase               │
  │  /checkout/success  « Payment confirmed. » → création du compte (+ code d'affilié)      │
  │  /account           Tableau de bord : licence, téléchargement, PC activé, abonnement    │
- │  /affiliate         Code d'affilié et progression vers la licence à vie                 │
+ │  /affiliate         Code d'affilié et progression vers 6 mois de Premium                │
  │  /login /signup /forgot   Connexion, création de compte, mot de passe oublié            │
  │  /download          Installeur de l'app, public (30 par heure et par adresse IP)        │
  │                                                                                         │
@@ -56,11 +56,12 @@ Dans ce guide, `ragohub.com` et `account.ragohub.com` sont des exemples : rempla
 - **Gratuit** : l'app elle-même, sans compte ni licence. 9 réglages sont ouverts (souris, Game Mode, Game DVR, effets visuels, plein écran et les 4 réglages de Restore, liste dans `app/src/data/free.json`). Tout le reste est sous cadenas, presets compris ; un clic sur un cadenas propose « Unlock », qui ouvre la section Pricing du site. Le moteur Rust refuse aussi les réglages verrouillés : on ne contourne pas le cadenas en bricolant l'interface.
 - **Premium** : abonnement Stripe **mensuel ou annuel** (l'annuel vaut 10 mois). Tout est débloqué tant que l'abonnement est payé.
 - **L'ancien .bat n'est plus proposé** : la seule offre gratuite, c'est l'app. Les anciens liens `/downloads/...` renvoient vers l'accueil du site.
-- **Affiliation** : chaque affilié a un code. Un client le tape une seule fois, à la création de son compte après le paiement. À 3 clients valides, l'affilié reçoit Premium à vie (sur un PC). Un client compte 14 jours après son achat, s'il a activé l'app sur son PC et n'a été ni remboursé ni contesté. Le détail des règles est à la fin de [`licensing/docs/MISE-EN-LIGNE.md`](licensing/docs/MISE-EN-LIGNE.md).
+- **Affiliation** : chaque affilié a un code, qui donne aussi −5 % au client sur son premier paiement Stripe (lien de l'affilié, ou code tapé dans **Add promotion code**). Un client n'utilise qu'un code, pour toujours. Tous les 3 clients valides, l'affilié reçoit 6 mois de Premium. Un client compte dès qu'il active l'app sur son PC (pas celui de l'affilié), tant qu'il n'est ni remboursé ni contesté.
+- **Code promo du site** : le pop-up de la page de vente propose `RAGO15`, −15 % sur le premier paiement (à créer dans Stripe, section 8). Le détail des règles est à la fin de [`licensing/docs/MISE-EN-LIGNE.md`](licensing/docs/MISE-EN-LIGNE.md).
 
 ### Le parcours d'un acheteur, de bout en bout
 
-1. Sur le site, il choisit mensuel ou annuel et clique **Get Premium**. Le lien pointe vers `/buy?interval=month` ou `year` (avec `&ref=CODE` s'il est arrivé par le lien d'un affilié) ; le serveur le transforme en page de paiement Stripe.
+1. Sur le site, il choisit mensuel ou annuel et clique **Get Premium**. Le lien pointe vers `/buy?interval=month` ou `year` (avec `&ref=CODE` s'il est arrivé par le lien d'un affilié, ou `&promo=RAGO15` s'il a pris le code du pop-up) ; le serveur le transforme en page de paiement Stripe.
 2. Il paie. Stripe prévient le serveur (webhook), qui crée la licence. Le joueur revient sur `/checkout/success`, choisit un mot de passe (et tape le code d'un affilié s'il en a un) : son compte est créé. Il reçoit aussi un email avec le lien, au cas où il ferme l'onglet.
 3. Sur son tableau de bord `/account`, il voit sa licence, son renouvellement, le bouton **Cancel or manage subscription** (portail Stripe) et télécharge `RagoOptimizer-Setup.exe`. S'il avait déjà installé l'app gratuite, il n'a rien à retélécharger.
 4. Dans l'app, il se connecte avec **le même email et mot de passe**, clique **Activate**. La licence est verrouillée sur ce PC.
@@ -181,7 +182,8 @@ Le test complet est l'étape 9 de `licensing/docs/MISE-EN-LIGNE.md`. En résumé
 6. Tableau de bord → **Cancel or manage subscription** : le portail Stripe s'ouvre.
 7. Dans Stripe, rembourse le paiement : l'app repasse en gratuit à sa prochaine vérification.
 8. `npm run admin -- reset-device <email>` puis reconnecte-toi depuis le deuxième PC : ça doit passer.
-9. Affiliation : avec un 2e compte, `/affiliate` → **Get my referral code**, puis un achat test avec un autre email qui tape ce code.
+9. Affiliation : avec un 2e compte, `/affiliate` → **Get my referral code**, puis un achat test avec un autre email qui tape ce code dans **Add promotion code** (−5 %). Après **Activate** dans l'app sur un autre PC, le cercle de `/affiliate` passe à 1/3.
+10. Pop-up du site : **Claim my discount** puis **Get Premium** : la page Stripe affiche −15 % (`RAGO15` doit exister, section 8).
 
 Quand tout est bon : refais en **live** les prix, la clé `sk_live_`, le portail et le webhook `whsec_`, puis remplace-les dans Railway (étape 10 de `MISE-EN-LIGNE.md`).
 
@@ -197,7 +199,8 @@ npm run admin -- reset-device <email>    # le joueur a changé de PC
 npm run admin -- revoke <email> [raison]
 npm run admin -- restore <email>
 npm run admin -- grant <email> [note]    # licence à vie offerte, ex. anciens acheteurs du .bat Premium
-npm run admin -- affiliate <email>       # son code, ses filleuls et pourquoi chacun compte ou non
+npm run admin -- affiliate <email>       # son code, ses filleuls, pourquoi chacun compte ou non, ses récompenses
+npm run admin -- create-promo RAGO15 15  # code promo Stripe à −15 % (une fois en test, une fois en live)
 ```
 
 Changement de PC en libre-service (une fois tous les 30 jours depuis le tableau de bord) : mets `SELF_SERVICE_RESET_DAYS=30` dans Railway.
@@ -223,6 +226,7 @@ cd app && npm ci && npm run tauri dev
 ## 8. Ce qui manque encore
 
 - **Le prix de Premium** (mensuel ; l'annuel vaut 10 mois) et sa **devise**. Ensuite, dans Stripe : les deux prix récurrents, le portail client, les événements du webhook, puis `STRIPE_PRICE_MONTHLY` et `STRIPE_PRICE_YEARLY` dans Railway. Le site affiche des prix provisoires d'ici là.
+- **Affiliation et code promo** : dans Railway → Variables, supprime `AFFILIATE_HOLD_DAYS` (l'ancienne valeur 14 ; sans elle, un filleul compte dès l'activation), puis crée le code du pop-up avec `npm run admin -- create-promo RAGO15 15`, une fois avec la clé Stripe test et une fois avec la clé live.
 - **L'exe dans le bucket** `downloads` de Supabase, vérifié sur `/download/status` (section 4.1).
 - **Désactiver GitHub Pages** : Settings → Pages → Source « None » (ou « Unpublish site »). Rien du dépôt n'y est plus publié, mais Pages n'a aucune utilité ici.
 - **Le nom de domaine.** Le jour où il marche, il faut changer l'adresse partout où elle est écrite :

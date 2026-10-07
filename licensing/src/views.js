@@ -229,7 +229,7 @@ function ago(ms, now = Date.now()) {
   return fmtDate(ms);
 }
 
-const PLAN = { month: 'Monthly', year: 'Yearly', lifetime: 'Lifetime' };
+const PLAN = { month: 'Monthly', year: 'Yearly', lifetime: 'Lifetime', reward: 'Affiliate reward' };
 const pricingUrl = (cfg) => (cfg.subscriptions ? `${cfg.siteUrl}/#pricing` : '/buy');
 
 /**
@@ -256,6 +256,17 @@ function slots(value, goal, pending = 0) {
   return html`<ol class="slots${value >= goal ? ' slots-full' : ''}${value + pending === 0 ? ' slots-idle' : ''}" aria-hidden="true">${Array.from({ length: goal }, (_, i) => (i < value
     ? html`<li class="on">${ICON.check}</li>`
     : i < value + pending ? html`<li class="wait">${ICON.clock}</li>` : html`<li>${String(i + 1)}</li>`))}</ol>`;
+}
+
+/** The ring for the current step towards the next reward; full (green) right after a reward, until the next player counts. */
+const affiliateRing = (a, size) => (a.full ? ring(a.goal, a.goal, size) : ring(a.progress, a.goal, size, a.pending));
+
+function affiliateLine(a) {
+  const left = a.goal - a.progress;
+  const next = `${left} more player${left === 1 ? '' : 's'} for ${a.months} months of Premium.`;
+  if (a.maxed) return 'Goal reached. Your affiliate reward is on your license.';
+  if (a.rewards && a.progress === 0) return `Goal reached: ${a.months} months of Premium added. ${next}`;
+  return next;
 }
 
 export function dashboardPage(cfg, { user, license, device, notice, error, canReset, nextResetAt, affiliate }) {
@@ -353,6 +364,16 @@ export function dashboardPage(cfg, { user, license, device, notice, error, canRe
 
   const planCard = () => {
     const end = license.current_period_end;
+    if (license.plan === 'reward') {
+      return html`<article class="card card-plan rise d4">
+        <div class="card-head"><p class="overline">Plan</p>${active ? html`<span class="badge badge-red"><i></i>Until ${fmtDate(end)}</span>` : html`<span class="badge badge-off"><i></i>${offBadge()}</span>`}</div>
+        <div class="plan-line"><span class="plan-icon">${ICON.users}</span><div><strong>Rago Optimizer Premium · Affiliate reward</strong>
+          <p class="muted small">${active
+            ? `Earned with the affiliate program. Premium until ${fmtDate(end)}, nothing to pay. Bring ${cfg.affiliateGoal} more players to add ${cfg.affiliateRewardMonths} months.`
+            : ended ? `Your affiliate reward ended on ${fmtDate(end)}. Get Premium, or bring ${cfg.affiliateGoal} more players for ${cfg.affiliateRewardMonths} more months.` : 'This license was revoked.'}</p></div></div>
+        <div class="row"><a class="link-arrow" href="/affiliate">Open affiliate program ${ICON.arrow}</a></div>
+      </article>`;
+    }
     if (license.plan === 'lifetime' || !subscription) {
       return html`<article class="card card-plan rise d4">
         <div class="card-head"><p class="overline">Plan</p>${active ? html`<span class="badge badge-red"><i></i>Lifetime</span>` : html`<span class="badge badge-off"><i></i>${offBadge()}</span>`}</div>
@@ -391,14 +412,14 @@ export function dashboardPage(cfg, { user, license, device, notice, error, canRe
   };
 
   const affiliateCard = (cls) => html`<article class="card card-aff rise ${cls}">
-      <div class="card-head"><p class="overline">Affiliate program</p>${affiliate ? html`<span class="mono small muted">${affiliate.rewarded ? affiliate.goal : affiliate.counted} / ${affiliate.goal}${affiliate.pending && !affiliate.rewarded ? ` · ${affiliate.pending} waiting` : ''}</span>` : ''}</div>
+      <div class="card-head"><p class="overline">Affiliate program</p>${affiliate ? html`<span class="mono small muted">${affiliate.full ? affiliate.goal : affiliate.progress} / ${affiliate.goal}${affiliate.pending ? ` · ${affiliate.pending} waiting` : ''}</span>` : ''}</div>
       ${affiliate
-        ? html`<div class="aff-mini">${affiliate.rewarded ? ring(affiliate.goal, affiliate.goal, 'sm') : ring(affiliate.counted, affiliate.goal, 'sm', affiliate.pending)}<div class="aff-text">
+        ? html`<div class="aff-mini">${affiliateRing(affiliate, 'sm')}<div class="aff-text">
             <p class="small muted">Your code</p><p class="code-sm mono">${affiliate.code}</p>
-            <p class="small muted">${affiliate.rewarded ? 'Goal reached. Rago Optimizer Premium is yours for life.' : `${affiliate.goal - Math.min(affiliate.counted, affiliate.goal)} more player${affiliate.goal - affiliate.counted === 1 ? '' : 's'} to keep Premium for life.`}</p></div></div>
+            <p class="small muted">${affiliateLine(affiliate)}</p></div></div>
           <a class="link-arrow" href="/affiliate">Open affiliate program ${ICON.arrow}</a>`
-        : html`<div class="plan-line"><span class="plan-icon">${ICON.users}</span><div><strong>Bring ${cfg.affiliateGoal} players, keep Premium for life</strong>
-            <p class="muted small">Share your code. When ${cfg.affiliateGoal} players buy Premium with it, your access becomes permanent.</p></div></div>
+        : html`<div class="plan-line"><span class="plan-icon">${ICON.users}</span><div><strong>Bring ${cfg.affiliateGoal} players, get ${cfg.affiliateRewardMonths} months of Premium</strong>
+            <p class="muted small">Share your code: players get ${cfg.affiliateDiscountPercent}% off. Every ${cfg.affiliateGoal} players who buy Premium with it give you ${cfg.affiliateRewardMonths} months of Premium.</p></div></div>
           <a class="link-arrow" href="/affiliate">Join the affiliate program ${ICON.arrow}</a>`}
     </article>`;
 
@@ -437,11 +458,13 @@ export function dashboardPage(cfg, { user, license, device, notice, error, canRe
 }
 
 const RULES = (cfg) => [
-  `A player counts once they've paid, created their account with your code and activated Rago Optimizer on their PC.`,
-  `Each purchase counts ${cfg.affiliateHoldDays} days after payment. Refunds and chargebacks don't count.`,
-  'Players enter your code once, right after paying, when they create their account or sign in. It can’t be added later.',
+  `A player counts once they've paid, used your code and activated Rago Optimizer on their PC.`,
+  cfg.affiliateHoldDays
+    ? `Each purchase counts ${cfg.affiliateHoldDays} days after payment. Refunds and chargebacks don't count.`
+    : "A player who's refunded or files a chargeback stops counting.",
+  `Players type your code at checkout for ${cfg.affiliateDiscountPercent}% off, or when they create their account right after paying. It can’t be added later.`,
   "Your own purchases don't count: a player activated on one of your PCs, or paid with your account email, is left out. Rewards gained by cheating can be taken back.",
-  'Your lifetime license works on one PC, like every Rago Optimizer license.',
+  `Every ${cfg.affiliateGoal} players add ${cfg.affiliateRewardMonths} months of Premium on one PC. Subscribed? Your payments pause for ${cfg.affiliateRewardMonths} months instead.`,
 ];
 
 const VOID = { subscription_ended: 'Subscription ended', refunded: 'Refunded', disputed: 'Chargeback', same_device: 'Same PC as yours', same_payer: 'Same payer as you', revoked: 'License revoked' };
@@ -458,8 +481,8 @@ export function affiliatePage(cfg, { user, summary, joined }) {
   const goal = cfg.affiliateGoal;
   const how = html`<ol class="how rise d3">
       <li><span class="how-n mono">1</span><div><strong>Get your code</strong><p class="muted small">Join with your Rago Optimizer account. No purchase needed.</p></div></li>
-      <li><span class="how-n mono">2</span><div><strong>Share it with players</strong><p class="muted small">They enter it when they create their account, right after paying.</p></div></li>
-      <li><span class="how-n mono">3</span><div><strong>${goal} players, Premium for life</strong><p class="muted small">Your Rago Optimizer access becomes permanent. No more renewals.</p></div></li>
+      <li><span class="how-n mono">2</span><div><strong>Share it with players</strong><p class="muted small">They get ${cfg.affiliateDiscountPercent}% off Premium with it at checkout.</p></div></li>
+      <li><span class="how-n mono">3</span><div><strong>${goal} players, ${cfg.affiliateRewardMonths} months of Premium</strong><p class="muted small">Every ${goal} players who activate Rago Optimizer give you ${cfg.affiliateRewardMonths} months, nothing to pay.</p></div></li>
     </ol>`;
 
   if (!summary) {
@@ -478,8 +501,8 @@ export function affiliatePage(cfg, { user, summary, joined }) {
         </div>
         <ul class="rules small muted">${RULES(cfg).map((r) => html`<li>${r}</li>`)}</ul>`;
     const aside = html`<p class="overline rise">Affiliate program</p>
-      <h1 class="display rise d1">Bring ${goal} players. Keep Premium for life.</h1>
-      <p class="lede rise d2">Share your code. When ${goal} players buy Rago Optimizer Premium with it, your access becomes permanent.</p>
+      <h1 class="display rise d1">Bring ${goal} players. Get ${cfg.affiliateRewardMonths} months of Premium.</h1>
+      <p class="lede rise d2">Share your code: players get ${cfg.affiliateDiscountPercent}% off Rago Optimizer Premium. Every ${goal} players who buy with it give you ${cfg.affiliateRewardMonths} months of Premium.</p>
       ${how}`;
     return page({ title: 'Affiliate program', cfg, user, nav: 'affiliate',
       body: html`<main class="split">
@@ -487,10 +510,11 @@ export function affiliatePage(cfg, { user, summary, joined }) {
         <section class="split-form"><div class="panel rise d2">${panel}</div></section></main>` });
   }
 
-  const left = Math.max(0, goal - summary.counted);
+  const left = goal - summary.progress;
+  const fresh = summary.rewards > 0 && summary.progress === 0;
   const body = html`<main class="dash">
     <div class="dash-head rise">
-      <div><p class="overline">Affiliate program</p><h1 class="display">${summary.rewarded ? 'Rago Optimizer is yours for life.' : `${left} more to go.`}</h1></div>
+      <div><p class="overline">Affiliate program</p><h1 class="display">${summary.maxed ? 'Goal reached.' : fresh ? `${summary.months} months of Premium added.` : `${left} more to go.`}</h1></div>
     </div>
     ${joined ? alertBox("You're in. Share your code with players before they buy.", 'ok') : ''}
     <div class="grid">
@@ -500,16 +524,16 @@ export function affiliatePage(cfg, { user, summary, joined }) {
           <button class="btn btn-primary btn-sm" type="button" data-copy="${summary.code}">${ICON.copy}<span>Copy</span></button></div>
         <div class="share"><span class="mono small share-url"><bdi>${cfg.siteUrl.replace(/^https?:\/\//, '')}/?ref=${summary.code}</bdi></span>
           <button class="btn btn-ghost btn-sm" type="button" data-copy="${cfg.siteUrl}/?ref=${summary.code}">${ICON.copy}<span>Copy link</span></button></div>
-        <p class="muted small">Players type the code in the <strong>Referral code</strong> field when they create their account after paying. With your link, it's filled in for them.</p>
+        <p class="muted small">Players type the code at checkout for <strong>${summary.discount}% off</strong>, or in the <strong>Referral code</strong> field when they create their account after paying. With your link, the discount and the code are applied for them.</p>
       </article>
       <article class="card card-progress rise d2">
-        <div class="card-head"><p class="overline">Progress</p>${summary.rewarded ? html`<span class="badge badge-red"><i></i>Lifetime</span>` : ''}</div>
-        <div class="progress">${ring(summary.rewarded ? goal : summary.counted, goal, 'lg', summary.rewarded ? 0 : summary.pending)}
-          <div class="progress-text">${slots(summary.rewarded ? goal : summary.counted, goal, summary.rewarded ? 0 : summary.pending)}
-            <p class="small">${summary.rewarded
-              ? `Goal reached. Your Rago Optimizer Premium license is now lifetime, on one PC.${summary.counted < goal ? ` ${goal - summary.counted === 1 ? 'A player was' : 'Some players were'} refunded after your reward: your lifetime access stays.` : ''}`
-              : html`<strong>${summary.counted} of ${goal}</strong> players counted.${summary.pending ? ` ${summary.pending} waiting: a player counts once they've activated Rago Optimizer and ${cfg.affiliateHoldDays} days have passed since their payment.` : ''}`}</p>
-            ${summary.rewarded ? html`<a class="link-arrow" href="/account">See your license ${ICON.arrow}</a>` : ''}</div>
+        <div class="card-head"><p class="overline">Progress</p>${summary.rewards ? html`<span class="badge badge-red"><i></i>${summary.rewards === 1 ? '1 reward' : `${summary.rewards} rewards`}</span>` : ''}</div>
+        <div class="progress">${affiliateRing(summary, 'lg')}
+          <div class="progress-text">${summary.full ? slots(goal, goal) : slots(summary.progress, goal, summary.pending)}
+            <p class="small">${summary.maxed
+              ? 'Goal reached. Your affiliate reward is on your license.'
+              : html`${fresh ? `Goal reached: ${summary.months} months of Premium added to your license. Your next ${goal} players add ${summary.months} more months.` : html`<strong>${summary.progress} of ${goal}</strong> players counted${summary.rewards ? ' towards your next reward' : ''}.`}${summary.pending ? ` ${summary.pending} waiting: a player counts once they've activated Rago Optimizer${cfg.affiliateHoldDays ? ` and ${cfg.affiliateHoldDays} days have passed since their payment` : ' on their PC'}.` : ''}`}</p>
+            ${summary.rewards ? html`<a class="link-arrow" href="/account">See your license ${ICON.arrow}</a>` : ''}</div>
         </div>
       </article>
       <article class="card card-list rise d3">

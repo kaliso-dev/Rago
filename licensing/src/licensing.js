@@ -119,6 +119,16 @@ export function subscriptionFacts(sub) {
 
 const UNIQUE_VIOLATION = '23505';
 
+/** The affiliate whose promotion code the checkout used, if any. */
+async function promoAffiliateCode(db, session) {
+  for (const d of session.discounts || []) {
+    const id = idOf(d.promotion_code);
+    const row = id && await db.get('SELECT code FROM affiliates WHERE stripe_promo_id = ?', [id]);
+    if (row) return row.code;
+  }
+  return null;
+}
+
 /**
  * Idempotent: creates the license for a paid Stripe Checkout Session, once.
  * Returns { license, created, claimToken } (claimToken only when just created and unclaimed).
@@ -147,8 +157,9 @@ export async function fulfillCheckoutSession(db, session, subscription = null) {
         subscriptionId: idOf(session.subscription), periodEnd: facts?.periodEnd,
         paymentIntent: idOf(session.payment_intent), customerId: idOf(session.customer),
         amount: session.amount_total, currency: session.currency,
-        // The affiliate code the buyer arrived with (/buy?ref=), kept with the purchase.
-        referralCode: String(session.metadata?.ref || '').toUpperCase().replace(/[^A-Z0-9]/g, '').slice(0, 16) || null,
+        // The affiliate code typed at checkout (a promotion code), else the one the buyer arrived with
+        // (/buy?ref=), kept with the purchase.
+        referralCode: await promoAffiliateCode(t, session) || String(session.metadata?.ref || '').toUpperCase().replace(/[^A-Z0-9]/g, '').slice(0, 16) || null,
       });
       await audit(t, 'license.created', { licenseId: license.id, userId, detail: { session: session.id } });
       return { license, created: true, claimToken: userId ? null : claimToken };
@@ -240,20 +251,60 @@ export function syncSubscription(db, sub) {
   });
 }
 
-/** Gives the account Premium for life: turns its active license into a lifetime one, or creates one. */
-export function makeLifetime(db, userId, source) {
+/** The same day `months` later (UTC). */
+export function addMonths(ms, months) {
+  const d = new Date(ms);
+  d.setUTCMonth(d.getUTCMonth() + months);
+  return d.getTime();
+}
+
+/**
+ * Affiliate reward: `months` of Premium for the account. Returns what to do:
+ * - { action: 'lifetime' } nothing to add, the account has Premium for life;
+ * - { action: 'subscription', license, subscriptionId, until } a Stripe subscriber: the caller skips their
+ *   payments until `until` in Stripe, then calls rewardSubscription;
+ * - { action: 'extended' | 'created', license } a reward license (plan 'reward', ends on current_period_end).
+ */
+export function grantRewardMonths(db, userId, months) {
   return db.tx(async (t) => {
     const user = await getUser(t, userId);
+    const now = Date.now();
     const current = await t.get("SELECT * FROM licenses WHERE user_id = ? AND status = 'active' FOR UPDATE", [userId]);
-    if (current) {
-      await t.run("UPDATE licenses SET plan = 'lifetime', cancel_at_period_end = false WHERE id = ?", [current.id]);
-      await audit(t, 'license.lifetime', { licenseId: current.id, userId, detail: { source } });
-      return { license: await getLicense(t, current.id), subscriptionToCancel: current.plan !== 'lifetime' ? current.stripe_subscription_id : null };
+    if (current?.plan === 'lifetime') return { action: 'lifetime', license: current };
+    if (current?.stripe_subscription_id && (current.plan === 'month' || current.plan === 'year')) {
+      return { action: 'subscription', license: current, subscriptionId: current.stripe_subscription_id,
+        until: addMonths(Math.max(Number(current.current_period_end) || 0, now), months) };
     }
-    const { license } = await insertLicense(t, { email: user.email, userId, source, plan: 'lifetime' });
-    await audit(t, 'license.granted', { licenseId: license.id, userId, detail: { source } });
-    return { license, subscriptionToCancel: null };
+    if (current) {
+      const until = addMonths(Math.max(Number(current.current_period_end) || 0, now), months);
+      await t.run("UPDATE licenses SET plan = 'reward', current_period_end = ?, cancel_at_period_end = false WHERE id = ?", [until, current.id]);
+      await audit(t, 'license.reward_extended', { licenseId: current.id, userId, detail: { months, until } });
+      return { action: 'extended', license: await getLicense(t, current.id) };
+    }
+    const { license } = await insertLicense(t, { email: user.email, userId, source: 'affiliate', plan: 'reward', periodEnd: addMonths(now, months) });
+    await audit(t, 'license.granted', { licenseId: license.id, userId, detail: { source: 'affiliate', months } });
+    return { action: 'created', license };
   });
+}
+
+/** After Stripe accepted the skipped payments: the license shows the new paid-until date right away. */
+export async function rewardSubscription(db, licenseId, until, months) {
+  await db.run('UPDATE licenses SET current_period_end = GREATEST(COALESCE(current_period_end, 0), ?) WHERE id = ?', [until, licenseId]);
+  await audit(db, 'license.reward_extended', { licenseId, detail: { months, until, stripe: true } });
+}
+
+/** Reward licenses past their end date stop, like an ended subscription (the app then offers to buy). */
+export async function expireRewards(db) {
+  const rows = await db.all("SELECT id FROM licenses WHERE plan = 'reward' AND status = 'active' AND current_period_end < ?", [Date.now()]);
+  for (const r of rows) await setLicenseStatus(db, r.id, 'revoked', 'subscription_ended');
+  return rows.length;
+}
+
+/** The license as it is now: a reward license past its end date is stopped first. */
+export async function current(db, license) {
+  if (license?.plan !== 'reward' || license.status !== 'active' || Number(license.current_period_end) >= Date.now()) return license;
+  await setLicenseStatus(db, license.id, 'revoked', 'subscription_ended');
+  return getLicense(db, license.id);
 }
 
 /** Frees the device slot so the license can be activated on another PC. */

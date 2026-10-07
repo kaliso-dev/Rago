@@ -31,16 +31,27 @@ const termsText = (cfg) => `I agree to the [Terms of Sale](${cfg.siteUrl}/terms.
  * and still open the checkout, so sales don't stop while the setting is missing.
  */
 export async function createCheckout(stripe, cfg, user, opts = {}, log = console) {
+  const open = async (o) => {
+    try {
+      return await buildCheckout(stripe, cfg, user, { ...o, terms: true });
+    } catch (err) {
+      if (!/terms of service|terms_of_service/i.test(err.message || '')) throw err;
+      log.error?.('[stripe] Terms checkbox refused: set the Terms of Service URL in Stripe (Settings > Public details).', err.message);
+      return buildCheckout(stripe, cfg, user, { ...o, terms: false });
+    }
+  };
+  if (!opts.promotionCode) return open(opts);
+  // A code Stripe refuses for this buyer (e.g. already a customer): the checkout opens without it,
+  // with the field to type a code.
   try {
-    return await buildCheckout(stripe, cfg, user, { ...opts, terms: true });
+    return await open(opts);
   } catch (err) {
-    if (!/terms of service|terms_of_service/i.test(err.message || '')) throw err;
-    log.error?.('[stripe] Terms checkbox refused: set the Terms of Service URL in Stripe (Settings > Public details).', err.message);
-    return buildCheckout(stripe, cfg, user, { ...opts, terms: false });
+    log.error?.('[stripe] discount not applied, checkout opens without it:', err.message);
+    return open({ ...opts, promotionCode: null });
   }
 }
 
-async function buildCheckout(stripe, cfg, user, { interval, customerId, terms, ref } = {}) {
+async function buildCheckout(stripe, cfg, user, { interval, customerId, terms, ref, promotionCode } = {}) {
   const choice = priceFor(cfg, interval);
   const metadata = { product: RAGO_PRODUCT, ...(choice.interval ? { interval: choice.interval } : {}), ...(ref ? { ref } : {}) };
   const common = {
@@ -49,7 +60,8 @@ async function buildCheckout(stripe, cfg, user, { interval, customerId, terms, r
     cancel_url: cfg.cancelUrl,
     ...(customerId ? { customer: customerId } : { customer_email: user?.email }),
     client_reference_id: user?.id,
-    allow_promotion_codes: true,
+    // A code from the link is already applied; otherwise the buyer can type one (affiliate code, RAGO15…).
+    ...(promotionCode ? { discounts: [{ promotion_code: promotionCode }] } : { allow_promotion_codes: true }),
     metadata,
     ...(terms ? { consent_collection: { terms_of_service: 'required' } } : {}),
   };
@@ -69,6 +81,73 @@ async function buildCheckout(stripe, cfg, user, { interval, customerId, terms, r
     subscription_data: { metadata },
     custom_text: custom('Rago Optimizer Premium works on one Windows PC. Cancel anytime from your account. You create your account right after paying.'),
   });
+}
+
+const isLive = (cfg) => /^(sk|rk)_live_/.test(cfg.stripeSecretKey || '');
+const missing = (err) => err?.statusCode === 404 || err?.code === 'resource_missing';
+
+/** Creates the coupon `id` once (test and live mode each have their own). */
+export async function ensureCoupon(stripe, id, percent, duration, name) {
+  try { return (await stripe.coupons.retrieve(id)).id; } catch (err) { if (!missing(err)) throw err; }
+  try {
+    return (await stripe.coupons.create({ id, percent_off: percent, duration, name })).id;
+  } catch (err) {
+    if (err?.code === 'resource_already_exists') return id;
+    throw err;
+  }
+}
+
+/** An active promotion code typed by people (RAGO15, an affiliate code…), or null. */
+export async function findPromotionCode(stripe, code) {
+  if (!/^[A-Za-z0-9-]{2,40}$/.test(String(code || ''))) return null;
+  try {
+    return (await stripe.promotionCodes.list({ code, active: true, limit: 1 })).data[0] || null;
+  } catch {
+    return null;
+  }
+}
+
+/**
+ * The affiliate's code as a Stripe promotion code (AFFILIATE_DISCOUNT_PERCENT off), so buyers can also type
+ * it at checkout. Created once per Stripe mode; switching between test and live keys recreates it.
+ * Returns the promotion code id, or null (never throws: the program works without the discount).
+ */
+export async function ensureAffiliatePromo(db, stripe, cfg, aff, log = console) {
+  if (!stripe || !aff) return null;
+  const live = isLive(cfg);
+  if (aff.stripe_promo_id && aff.stripe_promo_live === live) return aff.stripe_promo_id;
+  try {
+    const pct = cfg.affiliateDiscountPercent;
+    const coupon = await ensureCoupon(stripe, `rago-referral-${pct}-${cfg.affiliateDiscountDuration}`, pct,
+      cfg.affiliateDiscountDuration, `Referral code, ${pct}% off`);
+    let promo;
+    try {
+      promo = await stripe.promotionCodes.create({
+        promotion: { type: 'coupon', coupon }, code: aff.code, metadata: { rago_affiliate: aff.user_id },
+        // New customers only: not on a renewal, nor for a buyer who already paid before.
+        restrictions: { first_time_transaction: true },
+      });
+    } catch (err) {
+      // Created earlier but not saved here (crash in between): reuse it if it's this affiliate's.
+      const found = await findPromotionCode(stripe, aff.code);
+      if (found?.metadata?.rago_affiliate !== aff.user_id) throw err;
+      promo = found;
+    }
+    await db.run('UPDATE affiliates SET stripe_promo_id = ?, stripe_promo_live = ? WHERE user_id = ?', [promo.id, live, aff.user_id]);
+    return promo.id;
+  } catch (err) {
+    log.error?.(`[stripe] promotion code for affiliate ${aff.code} not created:`, err.message);
+    return null;
+  }
+}
+
+/** Affiliates whose code isn't a promotion code in the current Stripe mode yet (hourly sweep). */
+export async function syncAffiliatePromos(db, stripe, cfg, log = console, limit = 50) {
+  if (!stripe) return 0;
+  const rows = await db.all('SELECT * FROM affiliates WHERE stripe_promo_id IS NULL OR stripe_promo_live IS DISTINCT FROM ? ORDER BY created_at LIMIT ?', [isLive(cfg), limit]);
+  let n = 0;
+  for (const aff of rows) if (await ensureAffiliatePromo(db, stripe, cfg, aff, log)) n++;
+  return n;
 }
 
 /** Stripe-hosted page to change plan, update the card, see invoices or cancel. */

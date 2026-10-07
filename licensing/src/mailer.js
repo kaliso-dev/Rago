@@ -30,7 +30,7 @@ const button = (href, label) => `<table role="presentation" cellspacing="0" cell
 <td bgcolor="#FF3B30" style="background:#FF3B30;border-radius:999px"><a href="${esc(href)}" style="display:inline-block;padding:13px 24px;color:#0A0A0B;font-weight:600;font-size:15px;text-decoration:none;border-radius:999px">${esc(label)}</a></td>
 </tr></table><p style="${SMALL}">Or paste this link in your browser:<br><a href="${esc(href)}" style="${LINK};word-break:break-all">${esc(href)}</a></p>`;
 
-const PLAN = { month: 'Monthly', year: 'Yearly', lifetime: 'Lifetime' };
+const PLAN = { month: 'Monthly', year: 'Yearly', lifetime: 'Lifetime', reward: 'Affiliate reward' };
 const money = (amount, currency) => (amount == null || !currency ? null
   : new Intl.NumberFormat('en-US', { style: 'currency', currency: currency.toUpperCase() }).format(amount / 100));
 const day = (ms) => new Date(Number(ms)).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric', timeZone: 'UTC' });

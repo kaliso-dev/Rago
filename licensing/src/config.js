@@ -61,7 +61,15 @@ export function loadConfig(env = process.env) {
     subscriptionGraceDays: Number(env.SUBSCRIPTION_GRACE_DAYS || 3),
 
     affiliateGoal: Number(env.AFFILIATE_GOAL || 3),
-    affiliateHoldDays: Number(env.AFFILIATE_HOLD_DAYS || 14), // a referral counts once it's this old and not refunded
+    // 0 = a referral counts as soon as the player activates Rago Optimizer (Sofiene, Oct 7, 2026).
+    // A refund or chargeback later voids it; a reward already given stays.
+    affiliateHoldDays: Number(env.AFFILIATE_HOLD_DAYS || 0),
+    affiliateRewardMonths: Number(env.AFFILIATE_REWARD_MONTHS || 6), // Premium months given at each goal reached
+    affiliateRewardMax: Number(env.AFFILIATE_REWARD_MAX || 0), // rewards per affiliate, 0 = no limit (3, 6, 9… players)
+    // Each affiliate code is also a Stripe promotion code: this % off at checkout, on the first payment
+    // (AFFILIATE_DISCOUNT_DURATION=forever: on every renewal).
+    affiliateDiscountPercent: Number(env.AFFILIATE_DISCOUNT_PERCENT || 5),
+    affiliateDiscountDuration: env.AFFILIATE_DISCOUNT_DURATION === 'forever' ? 'forever' : 'once',
   };
   cfg.subscriptions = !!(cfg.stripePriceMonthly || cfg.stripePriceYearly);
 

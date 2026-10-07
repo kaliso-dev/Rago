@@ -13,11 +13,11 @@ Serveur Node.js qui gère tout ce qui se passe après le clic sur « Get Premium
 
 Remboursement total ou litige Stripe : la licence est révoquée et l'abonnement annulé automatiquement. Abonnement terminé ou impayé : la licence s'arrête, et revient si le paiement repasse.
 
-Programme d'affiliation `/affiliate` : chaque compte peut avoir un code ; 3 acheteurs comptés = Rago Optimizer Premium à vie (règles anti-triche dans `docs/MISE-EN-LIGNE.md`, fin du document).
+Programme d'affiliation `/affiliate` : chaque compte peut avoir un code, qui est aussi un code promo Stripe à −5 % ; tous les 3 acheteurs comptés (à l'activation de leur PC) = 6 mois de Rago Optimizer Premium (règles anti-triche dans `docs/MISE-EN-LIGNE.md`, fin du document). `/buy?promo=CODE` applique un code promo Stripe (RAGO15 du pop-up du site).
 
 ## Choix faits
 
-- **Abonnement** mensuel ou annuel (`STRIPE_PRICE_MONTHLY`, `STRIPE_PRICE_YEARLY`). Les licences offertes et celles gagnées par l'affiliation sont à vie. Sans les deux prix, `/buy` affiche « Checkout opens soon » (503) : plus rien n'est vendu en paiement unique.
+- **Abonnement** mensuel ou annuel (`STRIPE_PRICE_MONTHLY`, `STRIPE_PRICE_YEARLY`). Les licences offertes sont à vie ; l'affiliation donne 6 mois. Sans les deux prix, `/buy` affiche « Checkout opens soon » (503) : plus rien n'est vendu en paiement unique.
 - **Un seul PC par licence.** Le site reste accessible depuis n'importe quel navigateur ; c'est l'app qui est verrouillée. Réinstaller Windows ne bloque pas le joueur quand le numéro de carte mère est lisible (l'empreinte combine 3 identifiants et en tolère un qui change ; exception et détails dans `docs/API.md`).
 - **Changement de PC par le support** (`npm run admin -- reset-device <email>`). `SELF_SERVICE_RESET_DAYS=30` l'ouvre en libre-service une fois par mois.
 - **Supabase** : la base Postgres (tables dans `supabase/schema.sql`, créées automatiquement au démarrage, accès public bloqué par RLS) et l'installeur dans un bucket Storage privé, servi par lien signé de 5 minutes à tout le monde (l'app gratuite est la même que l'app Premium, c'est la licence qui débloque). Le serveur n'a donc besoin d'aucun disque.

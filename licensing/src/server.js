@@ -23,12 +23,17 @@ if (!cfg.databaseUrl && process.env.DEV_SEED) {
 const stripe = createStripe(cfg);
 const app = createApp({ cfg, db, keys, stripe, mailer: createMailer(cfg) });
 
-// Hourly: referrals that cleared the hold period count, and affiliates at the goal get their reward
-// even if they don't open their account page.
+// Hourly: referrals that cleared the hold period count, affiliates at the goal get their reward even if
+// they don't open their account page, ended affiliate rewards stop, and affiliate codes become Stripe
+// promotion codes (after a switch between test and live keys too).
 const { affiliatesToEvaluate, settleAffiliate } = await import('./affiliates.js');
+const { expireRewards } = await import('./licensing.js');
+const { syncAffiliatePromos } = await import('./billing.js');
 const sweep = async () => {
   try {
     for (const id of await affiliatesToEvaluate(db, cfg)) await settleAffiliate(db, cfg, stripe, console, id);
+    await expireRewards(db);
+    await syncAffiliatePromos(db, stripe, cfg, console);
   } catch (err) { console.error('[affiliate] sweep failed', err); }
 };
 setInterval(sweep, 60 * 60 * 1000).unref();

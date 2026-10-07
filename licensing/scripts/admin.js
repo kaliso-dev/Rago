@@ -12,6 +12,10 @@
 //   grant <email> [note]         create a license by hand (e.g. Discord buyers of the .bat Premium)
 //   create-user <email> <pass>   create an account (testing)
 //   affiliate <email>            affiliate code, referrals and why each counts or not
+//   create-promo <CODE> <percent> [once|forever]
+//                                a Stripe promotion code people type at checkout or get from the site
+//                                (/buy?promo=CODE), e.g. create-promo RAGO15 15 for the site's pop-up.
+//                                Made in the mode of STRIPE_SECRET_KEY (test or live)
 //   delete-user <email>          GDPR erasure: cancel the subscription, delete the account, PC and
 //                                sessions, anonymize the license kept for accounting
 //   export-keys                  print LICENSE_SIGNING_KEY and SESSION_SECRET to save outside the database
@@ -100,20 +104,37 @@ switch (cmd) {
   case 'affiliate': {
     const user = await L.findUserByEmail(db, email);
     if (!user) { console.error(`No account for ${email}`); process.exit(1); }
-    await A.evaluateAffiliate(db, cfg, user.id);
+    await A.evaluateAffiliate(db, cfg, user.id, { stripe: cfg.stripeSecretKey ? new Stripe(cfg.stripeSecretKey) : null });
     const sum = await A.affiliateSummary(db, cfg, user.id);
     if (!sum) { console.log('Not in the affiliate program.'); break; }
-    console.log({ code: sum.code, counted: `${sum.counted}/${sum.goal}`, rewarded: sum.rewarded });
+    console.log({ code: sum.code, counted: sum.counted, towards_next: `${sum.progress}/${sum.goal}`, rewards: `${sum.rewards} x ${sum.months} months` });
+    const failed = await db.get("SELECT * FROM audit WHERE user_id = ? AND type = 'affiliate.reward_failed' ORDER BY id DESC LIMIT 1", [user.id]);
+    if (failed) console.log(`Last reward that could not be given (retried every hour): ${fmt(failed.at)} ${failed.detail || ''}`);
     for (const r of await db.all(`SELECT r.status, r.void_reason, r.created_at, r.machine_guid IS NOT NULL AS activated, l.email
       FROM referrals r JOIN licenses l ON l.id = r.license_id WHERE r.affiliate_user_id = ? ORDER BY r.created_at`, [user.id])) {
       console.log(fmt(r.created_at), r.email, r.status, r.void_reason || '', r.activated ? 'activated' : 'not activated');
     }
     const risk = await db.all("SELECT * FROM audit WHERE user_id = ? AND type = 'affiliate.reward_at_risk' ORDER BY id", [user.id]);
     if (risk.length) {
-      console.log(`\nWarning: ${risk.length} counted player(s) refunded or disputed after the reward. The lifetime license stays;`);
+      console.log(`\nWarning: ${risk.length} counted player(s) refunded or disputed after a reward. The reward stays;`);
       console.log(`to take it back: revoke ${email} affiliate_fraud (only if it's the reward license, see show ${email}).`);
       for (const e of risk) console.log(' ', fmt(e.at), e.detail || '');
     }
+    break;
+  }
+  case 'create-promo': {
+    const code = String(email || '').toUpperCase();
+    const pct = Number(rest[0]);
+    const duration = rest[1] === 'forever' ? 'forever' : 'once';
+    if (!/^[A-Z0-9-]{2,40}$/.test(code) || !(pct > 0 && pct < 100)) { console.error('Usage: create-promo RAGO15 15 [once|forever]'); process.exit(1); }
+    if (!cfg.stripeSecretKey) { console.error('Set STRIPE_SECRET_KEY first.'); process.exit(1); }
+    const stripe = new Stripe(cfg.stripeSecretKey);
+    const { ensureCoupon, findPromotionCode } = await import('../src/billing.js');
+    const existing = await findPromotionCode(stripe, code);
+    if (existing) { console.log(`${code} already exists (${existing.id}).`); break; }
+    const coupon = await ensureCoupon(stripe, `rago-promo-${pct}-${duration}`, pct, duration, `${pct}% off`);
+    const promo = await stripe.promotionCodes.create({ promotion: { type: 'coupon', coupon }, code, restrictions: { first_time_transaction: true } });
+    console.log(`${code}: ${pct}% off ${duration === 'once' ? 'the first payment' : 'every payment'}, new customers only (${promo.id}, ${/^(sk|rk)_live_/.test(cfg.stripeSecretKey) ? 'live' : 'test'} mode).`);
     break;
   }
   case 'create-user': await L.createUser(db, email, rest[0]); console.log('User created.'); break;
@@ -158,6 +179,6 @@ switch (cmd) {
     break;
   }
   default:
-    console.log('Commands: show, attach, claim-link, reset-link, reset-device, revoke, restore, grant, affiliate, create-user, delete-user, export-keys (see scripts/admin.js)');
+    console.log('Commands: show, attach, claim-link, reset-link, reset-device, revoke, restore, grant, affiliate, create-promo, create-user, delete-user, export-keys (see scripts/admin.js)');
 }
 await db.close();
