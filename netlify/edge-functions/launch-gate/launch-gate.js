@@ -22,7 +22,9 @@ const SECURITY_HEADERS = {
   "Referrer-Policy": "strict-origin-when-cross-origin",
 };
 
-const env = (name) => (globalThis.Netlify?.env.get(name) ?? "").trim();
+const env = (name) => {
+  try { return String(globalThis.Netlify?.env.get(name) ?? globalThis.Deno?.env.get(name) ?? "").trim(); } catch { return ""; }
+};
 
 export function launchTime() {
   const t = Date.parse(env("LAUNCH_AT") || DEFAULT_LAUNCH);
@@ -77,13 +79,19 @@ export default async function launchGate(request, context) {
 
   const key = env("PREVIEW_KEY");
   const enabled = key.length >= MIN_KEY_LENGTH;
-  if (url.pathname.startsWith("/acces/")) {
-    let given = "";
-    try { given = decodeURIComponent(url.pathname.slice("/acces/".length)); } catch { /* malformed: countdown */ }
+  let path = url.pathname;
+  try { path = decodeURIComponent(path); } catch { /* a raw "%" in the key: compare it as typed */ }
+  const access = path.match(/^\/acc[eè]s\/(.+?)\/?$/); // "/accès/" and a trailing "/" work too
+  if (access) {
+    const given = access[1];
     if (given === "sortir") return redirect("/", 302, passCookie(url.hostname, "", 0));
     if (enabled && sameString(await sha256(given), await sha256(key))) {
       return redirect("/", 302, passCookie(url.hostname, await passFor(key), COOKIE_MAX_AGE));
     }
+    // Netlify > Logs > Edge Functions says why, without the key.
+    console.log(!enabled
+      ? `launch-gate: /acces refused, PREVIEW_KEY ${key ? `has ${key.length} characters (16 needed)` : "is not set for this deploy (add it with the Functions scope, then redeploy)"}`
+      : `launch-gate: /acces refused, wrong key (${given.length} characters given, ${key.length} expected)`);
   } else if (enabled && sameString(readCookie(request, COOKIE), await passFor(key))) {
     return context.next();
   }
