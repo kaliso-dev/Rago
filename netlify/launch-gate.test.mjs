@@ -48,6 +48,10 @@ test("the team link sets a cookie that opens the site, and /acces/sortir removes
   assert.equal(await (await get("/terms.html", { cookie: `${COOKIE}=${pass}` })).text(), SITE);
   assert.doesNotMatch(await (await get("/", { cookie: `${COOKIE}=${pass}x` })).text(), /real site/);
 
+  // "/accès/" (as typed in French) works too
+  assert.match((await get(`/acc%C3%A8s/${KEY}`)).headers.get("set-cookie"), new RegExp(`^${COOKIE}=${pass};`));
+  assert.match((await get(`/acces/${KEY}/`)).headers.get("set-cookie"), new RegExp(`^${COOKIE}=${pass};`));
+
   const out = await get("/acces/sortir", { cookie: `${COOKIE}=${pass}` });
   assert.match(out.headers.get("set-cookie"), new RegExp(`^${COOKIE}=; Path=/; Max-Age=0;`));
   // deploy previews: host-only cookie
