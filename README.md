@@ -13,10 +13,11 @@ Tout le code de Rago dans un seul dépôt :
 
 Chaque dossier a son propre README avec le détail technique. Ce guide-ci explique comment les trois s'emboîtent et comment tout lancer, dans l'ordre.
 
-Adresses actuelles, en attendant ton nom de domaine :
+Adresses (domaine `rago-optimizer.com`, acheté chez OVH ; pas-à-pas DNS dans le guide `DOMAINE-EMAIL.md` du projet) :
 
-- site : `https://rago-optimiser.netlify.app`
-- serveur de comptes : `https://rago-production.up.railway.app`
+- site : `https://rago-optimizer.com` (l'ancienne adresse `https://rago-optimiser.netlify.app` y renvoie)
+- serveur de comptes : `https://account.rago-optimizer.com` ; `https://rago-production.up.railway.app` reste active, les apps installées (1.1.7 et avant) l'ont en dur
+- emails : `support@rago-optimizer.com` (boîte Zimbra chez OVH) ; mails automatiques envoyés par Resend depuis `noreply@rago-optimizer.com`, réponses vers `support@`
 
 Dans ce guide, `ragohub.com` et `account.ragohub.com` sont des exemples : remplace-les par ton domaine quand tu l'auras.
 
@@ -230,15 +231,14 @@ cd app && npm ci && npm run tauri dev
 - **Affiliation et code promo** : dans Railway → Variables, supprime `AFFILIATE_HOLD_DAYS` (l'ancienne valeur 14 ; sans elle, un filleul compte dès l'activation), puis crée le code du pop-up avec `npm run admin -- create-promo RAGO15 15`, une fois avec la clé Stripe test et une fois avec la clé live.
 - **L'exe dans le bucket** `downloads` de Supabase, vérifié sur `/download/status` (section 4.1).
 - **Désactiver GitHub Pages** : Settings → Pages → Source « None » (ou « Unpublish site »). Rien du dépôt n'y est plus publié, mais Pages n'a aucune utilité ici.
-- **Le nom de domaine.** Le jour où il marche, il faut changer l'adresse partout où elle est écrite :
-  - Railway : `PUBLIC_URL` (adresse du serveur de comptes, sert aussi à vérifier l'origine des formulaires) et `SITE_URL` (adresse du site) ;
-  - GitHub : le secret `RAGO_API_BASE` et la variable `SITE_URL` (adresse du site), puis une nouvelle fabrication de l'exe ;
-  - site : `accountBase` dans le `CONFIG` de `site/src/page.html`, la constante `SITE` de `site/tools/build.py`, `site/robots.txt` et `site/sitemap.xml` (qui contiennent l'adresse netlify.app), puis régénérer `index.html` ;
-  - `netlify.toml` : les 7 redirections vers `rago-production.up.railway.app` ;
-  - Stripe : les URL des conditions et de la confidentialité (Informations publiques **et** liens du portail client) et l'adresse du webhook.
+- **Le nom de domaine `rago-optimizer.com`.** Le site (`accountBase`, `SITE` de `build.py`, `robots.txt`, `sitemap.xml`), `netlify.toml` et l'email de contact des pages légales sont passés sur le domaine. Restent à la main, dans l'ordre du guide `DOMAINE-EMAIL.md` :
+  - OVH : zone DNS (Netlify, `account` pour Railway, Resend, DMARC) et boîte Zimbra `support@` ;
+  - Railway : Custom Domain `account.rago-optimizer.com`, puis `PUBLIC_URL`, `SITE_URL`, `RESEND_API_KEY`, `MAIL_FROM`, `MAIL_REPLY_TO` ;
+  - Stripe : email d'assistance et URL des conditions et de la confidentialité (Informations publiques **et** liens du portail client). Le webhook peut rester sur `rago-production.up.railway.app` ;
+  - GitHub, à la prochaine fabrication de l'exe seulement : le secret `RAGO_API_BASE` (`https://account.rago-optimizer.com/api/v1`) et la variable `SITE_URL` (`https://rago-optimizer.com`).
 - **Le lien d'invitation Discord** (dans `CONFIG.discord` du site, `SUPPORT_URL` sur Railway et la variable `SUPPORT_URL` sur GitHub) et la **clé Resend**.
 - **`LowLatency.pow` et `smartctl.exe`** : utilisés par l'app (à déposer dans `app/src-tauri/resources/`) mais pas fournis. Sans `LowLatency.pow`, le réglage « Rago Low Latency power plan » reste grisé ; sans `smartctl.exe`, « Disk power management » ne règle pas l'APM et l'AAM des disques.
-- **La variable GitHub `SITE_URL`** : la passer sur `https://rago-optimiser.netlify.app` (section 4), puis relancer une fabrication.
+- **La variable GitHub `SITE_URL`** : la passer sur `https://rago-optimizer.com` (section 4) à la prochaine fabrication.
 - **Protéger la branche de production** : Settings → Branches → règle sur la branche par défaut qui interdit le force-push et la suppression.
 - **Railway, attendre les tests** : dans le service → **Settings**, active **Wait for CI** (Railway attend que les vérifications GitHub du commit, dont `licensing-tests`, soient vertes avant de redéployer), mets **Watch Paths** = `licensing/**` (un changement du site ou de l'app ne redéploie plus le serveur) et, dans **Deploy**, **Healthcheck Path** = `/healthz` (un nouveau déploiement qui ne répond pas, par exemple parce que la base est injoignable, ne remplace pas celui qui marche). Revers de Wait for CI : si une autre vérification du même commit échoue (par exemple la fabrication de l'app ou `site-check`), Railway peut sauter le déploiement du serveur, et le commit qui répare la vérification ne le relance pas s'il ne touche pas `licensing/`. Après chaque envoi qui modifie `licensing/`, regarde donc l'onglet **Deployments** de Railway : si le déploiement est marqué sauté (*skipped*), relance-le avec **Redeploy** une fois toutes les vérifications vertes.
 - **Les pages légales** (`terms.html`, `privacy.html`, `refunds.html`) sont des brouillons avec un bandeau « Draft » et des champs en jaune. Il faut ton identité de vendeur (nom ou société, adresse, pays, email de contact, numéro d'immatriculation et TVA s'il y en a) : donne-les sur le projet et elles sont remplies dans `site/tools/make_legal.py`, puis régénérées sans le bandeau. Vérifie ensuite que « Draft » a disparu des trois pages. **À faire avant d'ouvrir les paiements** : Stripe fait accepter ces conditions au client.

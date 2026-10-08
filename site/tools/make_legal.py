@@ -2,7 +2,7 @@ import os
 OUT=os.path.join(os.path.dirname(os.path.abspath(__file__)),'..')
 # Builds site/terms.html, privacy.html, refunds.html. Yellow <mark class="f"> = to fill in by the seller.
 F=lambda t:f'<mark class="f">[{t}]</mark>'
-SELLER=F("Seller legal name or company"); ADDR=F("Postal address"); COUNTRY=F("Country"); MAIL=F("Contact email"); REG=F("Business registration number, if any"); UPD="October 7, 2026"
+SELLER=F("Seller legal name or company"); ADDR=F("Postal address"); COUNTRY=F("Country"); MAIL='<a href="mailto:support@rago-optimizer.com">support@rago-optimizer.com</a>'; REG=F("Business registration number, if any"); UPD="October 7, 2026"
 HEAD='''<!doctype html>
 <html lang="en">
 <head>

@@ -12,36 +12,44 @@
     Referrer-Policy = "strict-origin-when-cross-origin"
     Permissions-Policy = "camera=(), microphone=(), geolocation=(), payment=()"
 
+# L'ancienne adresse Netlify renvoie vers le domaine : anciens liens partagés, et les apps 1.1.7 et avant,
+# dont le bouton Premium peut ouvrir rago-optimiser.netlify.app/#pricing.
+[[redirects]]
+  from = "https://rago-optimiser.netlify.app/*"
+  to = "https://rago-optimizer.com/:splat"
+  status = 301
+  force = true
+
 # Les pages de compte vivent sur le serveur de comptes. Le site réécrit déjà ces liens en JavaScript ;
 # ces redirections couvrent les navigateurs sans JavaScript et les anciens liens partagés.
-# À changer en même temps que CONFIG.accountBase quand le domaine sera là.
+# Même adresse que CONFIG.accountBase (site/src/page.html). rago-production.up.railway.app reste active pour les apps installées.
 [[redirects]]
   from = "/buy"
-  to = "https://rago-production.up.railway.app/buy"
+  to = "https://account.rago-optimizer.com/buy"
   status = 302
 [[redirects]]
   from = "/login"
-  to = "https://rago-production.up.railway.app/login"
+  to = "https://account.rago-optimizer.com/login"
   status = 302
 [[redirects]]
   from = "/signup"
-  to = "https://rago-production.up.railway.app/signup"
+  to = "https://account.rago-optimizer.com/signup"
   status = 302
 [[redirects]]
   from = "/affiliate"
-  to = "https://rago-production.up.railway.app/affiliate"
+  to = "https://account.rago-optimizer.com/affiliate"
   status = 302
 [[redirects]]
   from = "/download"
-  to = "https://rago-production.up.railway.app/download"
+  to = "https://account.rago-optimizer.com/download"
   status = 302
 [[redirects]]
   from = "/account"
-  to = "https://rago-production.up.railway.app/account"
+  to = "https://account.rago-optimizer.com/account"
   status = 302
 [[redirects]]
   from = "/account/*"
-  to = "https://rago-production.up.railway.app/account/:splat"
+  to = "https://account.rago-optimizer.com/account/:splat"
   status = 302
 
 # L'ancien .bat gratuit n'est plus proposé : les anciens liens partagés renvoient vers l'accueil.

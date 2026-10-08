@@ -55,7 +55,7 @@ export function createMailer(cfg, { log = console.log, fetchImpl = fetch } = {})
     const res = await fetchImpl('https://api.resend.com/emails', {
       method: 'POST',
       headers: { Authorization: `Bearer ${cfg.resendApiKey}`, 'Content-Type': 'application/json' },
-      body: JSON.stringify({ from: cfg.mailFrom, to, subject, html, text }),
+      body: JSON.stringify({ from: cfg.mailFrom, to, subject, html, text, ...(cfg.mailReplyTo ? { reply_to: cfg.mailReplyTo } : {}) }),
     });
     if (!res.ok) throw new Error(`Resend ${res.status}: ${await res.text()}`);
   }

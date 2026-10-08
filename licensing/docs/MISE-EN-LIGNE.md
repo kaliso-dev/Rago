@@ -14,7 +14,9 @@
 
 Dans tout le guide, remplace `ragohub.com` par ton vrai domaine.
 
-> **Sans domaine (ta situation actuelle)**
+> **Domaine** : `rago-optimizer.com` est acheté chez OVH. Le pas-à-pas pour le brancher (site, `account.rago-optimizer.com`, Zimbra, Resend) est dans le guide `DOMAINE-EMAIL.md` du projet. L'encadré suivant vaut jusqu'à ce que ce soit fait.
+
+> **Sans domaine (avant le branchement du domaine)**
 >
 > Tu tournes sur `https://rago-optimiser.netlify.app` (site) et `https://rago-production.up.railway.app` (serveur). Saute pour l'instant les étapes **1**, **4** (Resend demande un domaine), **5.5** (Custom Domain) et **7.2**. Partout où le guide écrit `account.ragohub.com`, mets `rago-production.up.railway.app`, et `rago-optimiser.netlify.app` à la place de `ragohub.com`. Les valeurs exactes :
 >
