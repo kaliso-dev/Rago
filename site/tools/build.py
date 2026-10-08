@@ -2,7 +2,7 @@
 The source loads Geist from Google Fonts so the preview works; the built page uses the copies in site/fonts/ instead,
 so visitors' IP addresses aren't sent to Google."""
 import os
-SITE = 'https://rago-optimiser.netlify.app'  # public site URL: change when the domain is live
+SITE = 'https://rago-optimizer.com'  # public site URL
 ROOT = os.path.join(os.path.dirname(os.path.abspath(__file__)), '..')
 s = open(os.path.join(ROOT, 'src/page.html')).read()
 

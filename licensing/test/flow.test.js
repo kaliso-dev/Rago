@@ -11,6 +11,7 @@ import { applySchema, ensureKeys, openDb, openMemoryDb } from '../src/db.js';
 import pg from 'pg';
 import { loadKeys, verifyToken } from '../src/tokens.js';
 import { createApp } from '../src/app.js';
+import { createMailer } from '../src/mailer.js';
 import * as L from '../src/licensing.js';
 
 const WHSEC = 'whsec_test_secret';
@@ -470,6 +471,18 @@ test('config accepts a bare host for PUBLIC_URL and flags example values', () =>
   const exampleFrom = loadConfig({ RESEND_API_KEY: 're_real', MAIL_FROM: 'Rago Optimizer <hello@your-domain.com>', SITE_URL: 'https://ragohub.com' });
   assert.equal(exampleFrom.mailEnabled, false);
   assert.match(exampleFrom.warnings.join(' '), /MAIL_FROM.*example[\s\S]*SITE_URL is still the example|SITE_URL is still the example[\s\S]*MAIL_FROM/);
+});
+
+test('emails go out from MAIL_FROM, with replies to MAIL_REPLY_TO when set', async () => {
+  const sent = [];
+  const fetchImpl = async (url, init) => { sent.push({ url, body: JSON.parse(init.body) }); return new Response('{}', { status: 200 }); };
+  const env = { RESEND_API_KEY: 're_real', MAIL_FROM: 'Rago Optimizer <noreply@rago.test>', SITE_URL: 'https://rago.test' };
+  await createMailer(loadConfig({ ...env, MAIL_REPLY_TO: ' support@rago.test ' }), { fetchImpl }).passwordReset('player@example.org', 'https://account.rago.test/reset/x');
+  await createMailer(loadConfig(env), { fetchImpl }).passwordReset('player@example.org', 'https://account.rago.test/reset/x');
+  assert.equal(sent[0].url, 'https://api.resend.com/emails');
+  assert.equal(sent[0].body.from, 'Rago Optimizer <noreply@rago.test>');
+  assert.equal(sent[0].body.reply_to, 'support@rago.test');
+  assert.equal('reply_to' in sent[1].body, false);
 });
 
 test('no Stripe price yet: /buy says checkout is not open', async () => {

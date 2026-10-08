@@ -41,6 +41,8 @@ export function loadConfig(env = process.env) {
 
     resendApiKey: env.RESEND_API_KEY || '',
     mailFrom: env.MAIL_FROM || 'Rago Optimizer <noreply@example.com>',
+    // Where players' replies to the automatic emails go (the support mailbox). Empty = no Reply-To header.
+    mailReplyTo: (env.MAIL_REPLY_TO || '').trim(),
     supportUrl: env.SUPPORT_URL || '',
     // Stripe customer portal login link (Settings > Billing > Customer portal): lets a buyer cancel by
     // email, without a Rago account. Shown as "Cancel subscription" in the footer when set.
