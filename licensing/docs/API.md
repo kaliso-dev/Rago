@@ -171,6 +171,43 @@ L'affiliation donne 6 mois de Premium (une fois, un code sert à 3 joueurs) au l
 - **Confirmation d'activation pour l'affiliation** : rien de nouveau à appeler. La première réponse `"status": "active"` de `POST /licenses/activate` (ou de `/auth/login` sur le PC déjà lié) enregistre le PC du joueur, et c'est ce qui fait compter son parrainage. L'app affiche alors « License active. Rago Optimizer is ready. » avec `license.device.name` et `license.device.activated_at`.
 - **Version gratuite** : un compte sans Premium reçoit `no_license` à la connexion. L'app ne bloque pas : elle passe en mode gratuit (tweaks Premium verrouillés, bouton vers `buy_url`). L'app sans compte fonctionne aussi en gratuit.
 
+## Avis et photo de profil (2026-10-09, app 1.1.8)
+
+Rien d'obligatoire pour les anciennes versions. Un joueur laisse **un** avis (1 à 5 étoiles + commentaire) depuis l'app ; il le modifie au lieu d'en créer un autre. Le site affiche les avis publiés avec le nom public et la photo de l'auteur.
+
+**Authentification** : `Authorization: Bearer <jeton>` avec, au choix :
+
+- le license token du PC (Premium) : accepté tant que la licence est active et que le token n'a pas été remplacé (`tv`) ;
+- un jeton de compte, pour les comptes gratuits : `POST /account/login` avec `{ "email", "password" }` (mêmes limites que `/auth/login`) répond `{ "account_token", "expires_at", "account", "review" }`. Valable 180 jours, effacé quand le mot de passe change. À garder chiffré DPAPI comme le license token.
+
+Sans jeton valable : `401 invalid_token`.
+
+| Méthode et route | Corps | Réponse |
+|---|---|---|
+| `GET /account/me` | | `{ account, review }` |
+| `PUT /account/review` | `{ "rating": 1-5, "comment": "...", "name"?: "...", "app_version"?: "1.1.8" }` | `{ account, review }` |
+| `PUT /account/name` | `{ "name": "..." }` | `{ account, review }` |
+| `PUT /account/avatar` | les octets de l'image (JPG, PNG, WebP ou GIF, 5 Mo au plus) | `{ account, review }` |
+| `DELETE /account/avatar` | | `{ account, review }` |
+| `POST /account/logout` | | `{ "ok": true }` (efface le jeton de compte) |
+
+- `account` : `{ "email", "name": string | null, "avatar_url": string | null }`. `avatar_url` est sur ce serveur (`/avatars/<fichier>.webp`), 256 × 256, cache d'un an : une nouvelle photo a une nouvelle adresse.
+- `review` : `null` ou `{ "rating", "comment", "updated_at", "hidden" }`. `hidden: true` : masqué du site par le support.
+- L'avis exige un nom public : `name` dans le corps, sinon celui du compte, sinon `name_required`. Tout est vérifié avant d'enregistrer.
+
+| code | HTTP | Quand |
+|---|---|---|
+| `invalid_rating` | 400 | Note absente ou hors de 1 à 5 |
+| `empty_comment` | 400 | Commentaire vide (espaces et caractères invisibles retirés) |
+| `comment_too_long` | 400 | Plus de 600 caractères |
+| `name_required` / `invalid_name` | 400 | Pas de nom public ; nom de 2 à 32 lettres, chiffres, espaces et `_ . ' -`, sans email ni lien |
+| `invalid_image` | 400 | Pas une image JPG, PNG, WebP ou GIF (vérifié sur le contenu, pas sur le nom) |
+| `image_too_large` | 413 | Plus de 5 Mo ou de 40 mégapixels |
+| `storage_unavailable` | 503 | Stockage des photos injoignable : réessayer |
+| `rate_limited` | 429 | 20 avis ou photos par heure, 300 appels par heure |
+
+**Public** : `GET /reviews` (sans jeton, CORS ouvert, cache 60 s) répond `{ "count", "average", "reviews": [{ "name", "rating", "comment", "avatar_url", "date": "AAAA-MM-JJ" }] }`, du plus récent au plus ancien, 60 au plus. Le commentaire est du texte brut : l'afficher comme texte, jamais comme HTML.
+
 ## License token
 
 JWT compact, `alg: EdDSA` (Ed25519), en-tête `{"alg":"EdDSA","typ":"JWT","kid":"..."}`. Crate Rust conseillée : `jsonwebtoken` (algorithme `EdDSA`) ou `ed25519-dalek` directement.

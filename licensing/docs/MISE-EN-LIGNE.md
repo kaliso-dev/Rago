@@ -55,6 +55,7 @@ Commence tout en **mode test** Stripe : rien n'est vraiment débité tant que tu
 3. **Les tables** : rien à faire, le serveur les crée tout seul au premier démarrage. Si tu veux les voir avant, tu peux coller le contenu de `licensing/supabase/schema.sql` dans **SQL Editor → Run**. L'accès public (clé `anon`) est bloqué sur toutes ces tables.
    **Ne supprime jamais la table `server_secrets` ni le projet Supabase** : elle contient la clé qui signe les licences, et chaque app installée ne connaît que celle-là. Une nouvelle clé = toutes les apps refusent les licences jusqu'à une nouvelle version. Sauvegarde-la une fois (étape 5, point 7).
 4. **Le bucket pour l'app** : **Storage → New bucket**, nom `downloads`, **Public bucket désactivé** (privé). Tu y déposeras le fichier d'installation à l'étape 8.
+   Les photos de profil vont dans un second bucket privé, `avatars` : **rien à faire**, le serveur le crée tout seul à la première photo (avec la clé de l'étape 2.5). Il n'y garde que des images de 256 × 256 au format WebP (quelques Ko) ; la base ne garde que leur nom.
 5. **Les clés** : **Project Settings → API Keys**.
    - L'URL du projet (`https://abcd.supabase.co`) : **c'est `SUPABASE_URL`.**
    - La clé secrète (`service_role` dans l'onglet *Legacy API keys*, ou une *Secret key* `sb_secret_...`) : **c'est `SUPABASE_SERVICE_ROLE_KEY`.** Elle donne tous les droits : uniquement dans Railway.
@@ -244,7 +245,7 @@ Railway redéploie tout seul. Paie ensuite avec `4242 4242 4242 4242`, une date 
 | Variable | D'où elle vient |
 |---|---|
 | `DATABASE_URL` | Supabase → Connect → Session pooler (étape 2.2) |
-| `SUPABASE_URL`, `SUPABASE_SERVICE_ROLE_KEY` | Supabase → Project Settings → API Keys (étape 2.5) |
+| `SUPABASE_URL`, `SUPABASE_SERVICE_ROLE_KEY` | Supabase → Project Settings → API Keys (étape 2.5). Servent aussi aux photos de profil (bucket `avatars`, créé tout seul ; `AVATAR_BUCKET` change son nom, facultatif) |
 | `STRIPE_PRICE_MONTHLY`, `STRIPE_PRICE_YEARLY`, `STRIPE_SECRET_KEY` | Stripe (étapes 3.2 et 3.3) |
 | `STRIPE_WEBHOOK_SECRET` | Stripe → Webhooks (étape 6) |
 | `RESEND_API_KEY`, `MAIL_FROM` | Resend (étape 4) |
@@ -274,7 +275,11 @@ npm run admin -- reset-device joueur@mail.com   # il a changé de PC : libère l
 npm run admin -- grant ami@mail.com             # licence à vie offerte (ex. anciens acheteurs du .bat)
 npm run admin -- affiliate affilie@mail.com     # son code, ses filleuls, pourquoi chacun compte ou non, ses récompenses
 npm run admin -- create-promo RAGO15 15         # code promo Stripe (ici −15 % sur le premier paiement), voir « Codes promo »
-npm run admin -- delete-user joueur@mail.com    # demande de suppression (RGPD) : résilie, supprime le compte et le PC, anonymise la licence
+npm run admin -- reviews                        # les derniers avis laissés dans l'app (note, nom public, email, affiché ou masqué)
+npm run admin -- hide-review joueur@mail.com    # masque son avis du site (spam, insulte) ; show-review le remet
+npm run admin -- remove-photo joueur@mail.com   # retire sa photo de profil (image inappropriée) ; demande aussi SUPABASE_URL et SUPABASE_SERVICE_ROLE_KEY
+npm run admin -- set-name joueur@mail.com "Nom" # change son nom public
+npm run admin -- delete-user joueur@mail.com    # demande de suppression (RGPD) : résilie, supprime le compte, sa photo, son avis et le PC, anonymise la licence (avec une photo : SUPABASE_URL et SUPABASE_SERVICE_ROLE_KEY aussi)
 npm run admin -- export-keys                    # la clé qui signe les licences, à garder dans ton gestionnaire de mots de passe
 ```
 
@@ -282,6 +287,8 @@ npm run admin -- export-keys                    # la clé qui signe les licences
 - **Rôle Premium sur Discord** : le joueur ouvre un ticket avec l'email de son compte (son tableau de bord le lui dit). Vérifie avec `npm run admin -- show son@email.com` : `status: 'active'` → donne-lui le rôle Premium. Si sa licence s'arrête (fin d'abonnement, remboursement), retire le rôle.
 
 - **Un joueur qui a déjà Premium paie une deuxième fois** (souvent déconnecté du site) : son compte garde sa licence, l'abonnement en trop est annulé et la licence en double désactivée automatiquement, aucun email d'achat ne part, et son tableau de bord lui dit de te contacter. Rembourse ce deuxième paiement dans Stripe → Paiements (`npm run admin -- show` montre les deux licences dans l'historique).
+- **Avis** : un joueur laisse son avis depuis Rago Optimizer (1.1.8 et après), connecté à son compte ; il apparaît sur le site dans la minute, avec son nom public et sa photo. Un avis par compte : il le modifie au lieu d'en créer un autre. La section des avis du site reste masquée tant qu'il n'y en a aucun. Un avis gênant : `hide-review son@email.com`.
+- **Photo de profil** : proposée juste après l'inscription (on peut passer), puis modifiable dans l'onglet **Profile** du compte ou dans les réglages de l'app. Le serveur vérifie l'image (JPG, PNG, WebP ou GIF, 5 Mo au plus), la recadre en 256 × 256, retire les données EXIF (position GPS comprise) et supprime l'ancienne quand elle est remplacée.
 - **Mot de passe** : le joueur le change lui-même depuis son compte (lien « Change password » en bas du tableau de bord), ou avec « Forgot your password? » s'il l'a oublié.
 
 ### Programme d'affiliation, ce qui est vérifié
