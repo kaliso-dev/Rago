@@ -1,6 +1,6 @@
 import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import { api, asLicenseError, type AppliedView, type DoneEvent, type HistoryEntry, type ItemStatus, type LicenseError, type LicenseStatus, type RunItem, type SystemInfo } from "./api";
-import { autoVariant, availability, catalog, tweakModule, tweaks, type Lang, type Tweak, needsReboot } from "./catalog";
+import { autoVariant, availability, catalog, retired, tweakModule, tweaks, type Lang, type Tweak, needsReboot } from "./catalog";
 import { translate, type Key } from "./i18n";
 import free from "../data/free.json";
 
@@ -33,13 +33,13 @@ for (const lang of ["fr", "en"] as const) {
 
 export function itemName(id: string, lang: Lang): string {
   const tw = tweaks.get(id);
-  if (!tw) return BUILTIN_NAMES[id]?.[lang] ?? id;
+  if (!tw) return retired.get(id)?.name[lang] ?? BUILTIN_NAMES[id]?.[lang] ?? id;
   const mod = catalog.modules.find((m) => m.id === tweakModule.get(id));
   return DUP_NAMES[lang].has(tw.name[lang]) && mod ? `${tw.name[lang]} · ${mod.name[lang]}` : tw.name[lang];
 }
 
-/** Actions qui ne changent rien (elles ouvrent une fenêtre de Windows) : pas de point de restauration avant. */
-const NO_CHANGE = new Set(["rst_point", "rst_open", "app_settings"]);
+/** Un point de restauration réussi depuis moins longtemps que ça : la case n'est plus cochée d'office. */
+export const RESTORE_FRESH_MS = 24 * 3600 * 1000;
 
 export interface RunRow {
   id: string;
@@ -217,6 +217,9 @@ function useStoreValue() {
     if (license?.state === "active") void refreshApplied();
   }, [license, refreshApplied]);
 
+  // sélection gardée d'une version précédente : les réglages retirés du catalogue n'y ont plus leur place
+  useEffect(() => setSelection((s) => (s.every((id) => tweaks.has(id)) ? s : s.filter((id) => tweaks.has(id)))), [setSelection]);
+
   // un réglage annulé ailleurs (fin de Premium) ou plus appliqué n'a plus rien à annuler
   useEffect(() => {
     if (appliedList) setPendingUndo((p) => (p.every((id) => applied.has(id)) ? p : p.filter((id) => applied.has(id))));
@@ -232,6 +235,12 @@ function useStoreValue() {
     }
     return m;
   }, [history]);
+
+  /** dernier point de restauration créé par Rago Optimizer (réussi) */
+  const lastRestore = useMemo(
+    () => history.reduce<number | null>((m, e) => (e.id === "rst_point" && e.ok && !e.undo && (m == null || e.ts > m) ? e.ts : m), null),
+    [history],
+  );
 
   const selected = useMemo(() => new Set(selection), [selection]);
   const undoSet = useMemo(() => new Set(pendingUndo), [pendingUndo]);
@@ -375,13 +384,12 @@ function useStoreValue() {
   const startRun = useCallback(
     async (
       ids: string[],
-      opts: { wmic: boolean; clearSelection: boolean; undo?: string[]; note?: string | null },
+      opts: { restorePoint: boolean; wmic: boolean; clearSelection: boolean; undo?: string[]; note?: string | null },
     ) => {
       const items: RunItem[] = [];
-      // point de restauration obligatoire avant tout changement (choix de Sofiene, 2026-10-07), toujours en tête :
-      // le moteur refuse une liste qui change Windows sans lui
-      if (ids.includes("rst_point") || [...ids, ...(opts.undo ?? [])].some((id) => !NO_CHANGE.has(id)) || opts.wmic)
-        items.push({ id: "rst_point" });
+      // point de restauration quand la case est cochée (comme en 1.1.6), toujours en tête : s'il échoue, le moteur
+      // n'applique rien de ce qui suit
+      if (opts.restorePoint || ids.includes("rst_point")) items.push({ id: "rst_point" });
       ids = ids.filter((id) => id !== "rst_point");
       if (opts.wmic) items.push({ id: "__wmic" });
       let reboot = false;
@@ -389,10 +397,12 @@ function useStoreValue() {
       for (const id of opts.undo ?? []) {
         const tw = tweaks.get(id);
         const a = applied.get(id);
-        if (!tw) continue;
-        reboot ||= needsReboot(tw, a?.variant ?? null);
+        // réglage retiré du catalogue : il reste annulable là où une version précédente l'a appliqué
+        const gone = retired.get(id);
+        if (!tw && !gone) continue;
+        reboot ||= tw ? needsReboot(tw, a?.variant ?? null) : gone!.reboot;
         const item: RunItem = { id, variant: a?.variant ?? null, undo: true };
-        if (tw.native === "minecraft_optifine") item.params = { dir: mcDir };
+        if (tw?.native === "minecraft_optifine") item.params = { dir: mcDir };
         items.push(item);
       }
       for (const id of ids) {
@@ -433,6 +443,12 @@ function useStoreValue() {
     [variantOf, mcDir, unselectMany, lang, applied],
   );
 
+  /** Réglages retirés du catalogue mais encore appliqués sur ce PC : on propose de les remettre comme avant. */
+  const retiredApplied = useMemo(() => [...applied.keys()].filter((id) => retired.has(id)), [applied]);
+  const requestUndo = useCallback((ids: string[]) => {
+    if (ids.length) setConfirm({ ids: [], undo: ids, single: false });
+  }, []);
+
   /** Réglages Premium appliqués : annulés à la déconnexion et à la fin de Premium. */
   const premiumApplied = useMemo(() => [...applied.keys()].filter((id) => !FREE.has(id)).sort(byCatalog), [applied]);
 
@@ -442,7 +458,7 @@ function useStoreValue() {
     const ids = premiumApplied;
     endedRef.current = true;
     if (ids.length)
-      await startRun([], { wmic: false, clearSelection: true, undo: ids, note: translate(lang, "run.signOutNote", { n: ids.length }) });
+      await startRun([], { restorePoint: false, wmic: false, clearSelection: true, undo: ids, note: translate(lang, "run.signOutNote", { n: ids.length }) });
     await signOut();
   }, [premiumApplied, startRun, signOut, lang]);
 
@@ -454,6 +470,7 @@ function useStoreValue() {
     if (license.state !== "none" || !premiumApplied.length) return;
     endedRef.current = true;
     void startRun([], {
+      restorePoint: false,
       wmic: false,
       clearSelection: true,
       undo: premiumApplied,
@@ -473,7 +490,8 @@ function useStoreValue() {
     sys, sysLoading, refreshSys,
     selection, selected, toggle, selectMany, unselectMany, variants, setVariant, variantOf,
     pendingUndo, applied, appliedLoaded: appliedList !== null, isOn, premiumApplied, signOutAndUndo, reapply,
-    history, lastRun, refreshHistory, refreshApplied,
+    retiredApplied, requestUndo,
+    history, lastRun, lastRestore, refreshHistory, refreshApplied,
     mcDir, setMcDir,
     confirm, setConfirm, requestApply,
     run, setRun, startRun,

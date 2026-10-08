@@ -35,6 +35,22 @@ export interface Tweak {
   optifine?: Record<string, Record<string, string>>;
   /** même script qu'un autre réglage (id du premier) : lancé une seule fois par exécution */
   twin?: string;
+  /** bénéfice attendu, sans promesse de gain non vérifié */
+  gain?: I18n;
+  /** inconvénients possibles */
+  cons?: I18n;
+  /** pas entièrement annulable depuis l'app, ou avancé : point de restauration conseillé avant */
+  restore?: boolean;
+}
+
+/** Réglage retiré du catalogue (risque pour Windows) : plus applicable, mais encore annulable sur les PC
+ * où une version précédente l'a appliqué. */
+export interface Retired {
+  id: string;
+  name: I18n;
+  reason: I18n;
+  reboot: boolean;
+  module: string;
 }
 
 /** Le redémarrage peut dépendre de la variante : RBW Mod « On » remet BAM et le Prefetcher, « Off » non. */
@@ -70,9 +86,12 @@ interface Catalog {
   version: number;
   modules: Module[];
   presets: Preset[];
+  retired: Retired[];
 }
 
 export const catalog = raw as unknown as Catalog;
+
+export const retired: Map<string, Retired> = new Map(catalog.retired.map((r) => [r.id, r]));
 
 export const tweaks: Map<string, Tweak> = new Map();
 export const tweakModule: Map<string, string> = new Map();

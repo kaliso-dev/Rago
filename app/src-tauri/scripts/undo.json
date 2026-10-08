@@ -205,7 +205,7 @@
 },
 "pow_main": {
 "_": {
-"full": "@echo off\r\nreg delete \"HKLM\\SYSTEM\\CurrentControlSet\\Control\\Power\\PowerThrottling\" /v \"PowerThrottlingOff\" /f >nul 2>&1\r\nreg delete \"HKLM\\SYSTEM\\CurrentControlSet\\Control\\Session Manager\\Power\" /v \"CoalescingTimerInterval\" /f >nul 2>&1\r\nreg delete \"HKLM\\SYSTEM\\CurrentControlSet\\Control\\Session Manager\\Memory Management\" /v \"CoalescingTimerInterval\" /f >nul 2>&1\r\nreg delete \"HKLM\\SYSTEM\\CurrentControlSet\\Control\\Session Manager\\Kernel\" /v \"CoalescingTimerInterval\" /f >nul 2>&1\r\nreg delete \"HKLM\\SYSTEM\\CurrentControlSet\\Control\\Session Manager\\Executive\" /v \"CoalescingTimerInterval\" /f >nul 2>&1\r\nreg delete \"HKLM\\SYSTEM\\CurrentControlSet\\Control\\Session Manager\" /v \"CoalescingTimerInterval\" /f >nul 2>&1\r\nreg delete \"HKLM\\SYSTEM\\CurrentControlSet\\Control\\Power\\ModernSleep\" /v \"CoalescingTimerInterval\" /f >nul 2>&1\r\nreg delete \"HKLM\\SYSTEM\\CurrentControlSet\\Control\\Power\" /v \"CoalescingTimerInterval\" /f >nul 2>&1\r\nreg delete \"HKLM\\SYSTEM\\CurrentControlSet\\Control\" /v \"CoalescingTimerInterval\" /f >nul 2>&1\r\nreg delete \"HKLM\\SYSTEM\\CurrentControlSet\\Control\\Power\\PowerSettings\\54533251_82be_4824_96c1_47b60b740d00\" /f >nul 2>&1\r\nreg delete \"HKLM\\SYSTEM\\CurrentControlSet\\Control\\Power\" /v \"LowLatencyScalingPercentage\" /f >nul 2>&1\r\npowercfg /hibernate on >nul 2>&1"
+"full": "@echo off\r\nreg delete \"HKLM\\SYSTEM\\CurrentControlSet\\Control\\Power\\PowerThrottling\" /v \"PowerThrottlingOff\" /f >nul 2>&1\r\nreg delete \"HKLM\\SYSTEM\\CurrentControlSet\\Control\\Session Manager\\Power\" /v \"CoalescingTimerInterval\" /f >nul 2>&1\r\nreg delete \"HKLM\\SYSTEM\\CurrentControlSet\\Control\\Session Manager\\Memory Management\" /v \"CoalescingTimerInterval\" /f >nul 2>&1\r\nreg delete \"HKLM\\SYSTEM\\CurrentControlSet\\Control\\Session Manager\\Kernel\" /v \"CoalescingTimerInterval\" /f >nul 2>&1\r\nreg delete \"HKLM\\SYSTEM\\CurrentControlSet\\Control\\Session Manager\\Executive\" /v \"CoalescingTimerInterval\" /f >nul 2>&1\r\nreg delete \"HKLM\\SYSTEM\\CurrentControlSet\\Control\\Session Manager\" /v \"CoalescingTimerInterval\" /f >nul 2>&1\r\nreg delete \"HKLM\\SYSTEM\\CurrentControlSet\\Control\\Power\\ModernSleep\" /v \"CoalescingTimerInterval\" /f >nul 2>&1\r\nreg delete \"HKLM\\SYSTEM\\CurrentControlSet\\Control\\Power\" /v \"CoalescingTimerInterval\" /f >nul 2>&1\r\nreg delete \"HKLM\\SYSTEM\\CurrentControlSet\\Control\" /v \"CoalescingTimerInterval\" /f >nul 2>&1\r\nreg delete \"HKLM\\SYSTEM\\CurrentControlSet\\Control\\Power\\PowerSettings\\54533251_82be_4824_96c1_47b60b740d00\" /f >nul 2>&1\r\npowercfg /hibernate on >nul 2>&1"
 }
 },
 "pow_ultimate": {
@@ -288,12 +288,20 @@
 "full": "@echo off\r\nsc config \"WSearch\" start= delayed-auto >nul 2>&1\r\nsc config \"Fax\" start= demand >nul 2>&1\r\nsc config \"Spooler\" start= auto >nul 2>&1\r\nsc config \"CscService\" start= demand >nul 2>&1\r\nsc config \"TabletInputService\" start= demand >nul 2>&1\r\nsc config \"WerSvc\" start= demand >nul 2>&1\r\nsc config \"seclogon\" start= demand >nul 2>&1\r\nreg delete \"HKCU\\SOFTWARE\\Policies\\Microsoft\\Windows\\Explorer\" /v \"DisableNotificationCenter\" /f >nul 2>&1\r\nreg delete \"HKLM\\SOFTWARE\\Policies\\Microsoft\\Windows\\Windows Feeds\" /v \"EnableFeeds\" /f >nul 2>&1\r\nreg delete \"HKLM\\SOFTWARE\\Policies\\Microsoft\" /v \"AllowNewsAndInterests\" /f >nul 2>&1\r\nreg delete \"HKLM\\SOFTWARE\\Policies\\Microsoft\\Windows\\System\" /v \"EnableActivityFeed\" /f >nul 2>&1\r\nreg delete \"HKCU\\Control Panel\\International\\User Profile\" /v \"HttpAcceptLanguageOptOut\" /f >nul 2>&1\r\nreg delete \"HKCU\\Software\\Microsoft\\Windows\\CurrentVersion\\AdvertisingInfo\" /v \"Enabled\" /f >nul 2>&1\r\nreg delete \"HKLM\\Software\\Policies\\Microsoft\\Windows\\System\" /v \"EnableActivityFeed\" /f >nul 2>&1\r\nreg delete \"HKCU\\Software\\Microsoft\\Windows\\CurrentVersion\\Explorer\\Advanced\" /v \"DisallowShaking\" /f >nul 2>&1\r\nreg delete \"HKCU\\Software\\Microsoft\\Windows\\CurrentVersion\\Explorer\\Advanced\" /v \"EnableBalloonTips\" /f >nul 2>&1\r\nreg delete \"HKCU\\SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Explorer\\Advanced\" /v \"ShowSyncProviderNotifications\" /f >nul 2>&1\r\nreg delete \"HKLM\\SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\CapabilityAccessManager\\ConsentStore\\userNotificationListener\" /v \"Value\" /f >nul 2>&1\r\nreg delete \"HKLM\\Software\\Policies\\Microsoft\\Windows\\AdvertisingInfo\" /v \"DisabledByGroupPolicy\" /f >nul 2>&1\r\nsc start \"WSearch\" >nul 2>&1\r\nsc start \"Spooler\" >nul 2>&1"
 }
 },
+"win_bluetooth": {
+"_": {
+"full": "@echo off\r\nreg query \"HKLM\\SYSTEM\\CurrentControlSet\\Services\\BTAGService\" /v ImagePath >nul 2>&1 && reg add \"HKLM\\SYSTEM\\CurrentControlSet\\Services\\BTAGService\" /v Start /t REG_DWORD /d 3 /f >nul 2>&1\r\nreg query \"HKLM\\SYSTEM\\CurrentControlSet\\Services\\bthserv\" /v ImagePath >nul 2>&1 && reg add \"HKLM\\SYSTEM\\CurrentControlSet\\Services\\bthserv\" /v Start /t REG_DWORD /d 3 /f >nul 2>&1\r\nreg query \"HKLM\\SYSTEM\\CurrentControlSet\\Services\\BthAvctpSvc\" /v ImagePath >nul 2>&1 && reg add \"HKLM\\SYSTEM\\CurrentControlSet\\Services\\BthAvctpSvc\" /v Start /t REG_DWORD /d 3 /f >nul 2>&1\r\nreg query \"HKLM\\SYSTEM\\CurrentControlSet\\Services\\BluetoothUserService\" /v ImagePath >nul 2>&1 && reg add \"HKLM\\SYSTEM\\CurrentControlSet\\Services\\BluetoothUserService\" /v Start /t REG_DWORD /d 3 /f >nul 2>&1"
+}
+},
 "win_store": {
 "_": {
 "full": "@echo off\r\nreg delete \"HKLM\\SOFTWARE\\Policies\\Microsoft\\WindowsStore\" /v \"DisableStoreApps\" /f >nul 2>&1\r\nreg delete \"HKLM\\SOFTWARE\\Policies\\Microsoft\\WindowsStore\" /v \"RemoveWindowsStore\" /f >nul 2>&1\r\nreg delete \"HKCU\\SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\DeliveryOptimization\" /v \"SystemSettingsDownloadMode\" /f >nul 2>&1\r\nreg delete \"HKLM\\SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\DeliveryOptimization\\Config\" /v \"DODownloadMode\" /f >nul 2>&1\r\nreg delete \"HKLM\\SOFTWARE\\Policies\\Microsoft\\Windows\\DeliveryOptimization\" /v \"DODownloadMode\" /f >nul 2>&1\r\nreg delete \"HKLM\\SOFTWARE\\Policies\\Microsoft\\Windows\\DeliveryOptimization\" /v \"SystemSettingsDownloadMode\" /f >nul 2>&1"
 }
 },
 "win_coreiso": {
+"on": {
+"full": "@echo off\r\nreg delete \"HKLM\\SOFTWARE\\Policies\\Microsoft\\Windows\\DeviceGuard\" /v \"HVCIMATRequired\" /f >nul 2>&1"
+},
 "off": {
 "full": "@echo off\r\nreg delete \"HKLM\\SOFTWARE\\Policies\\Microsoft\\Windows\\DeviceGuard\" /v \"HVCIMATRequired\" /f >nul 2>&1"
 }
@@ -311,11 +319,6 @@
 "win_hyperv": {
 "_": {
 "full": "@echo off\r\nsc config \"HvHost\" start= demand >nul 2>&1\r\nsc config \"vmickvpexchange\" start= demand >nul 2>&1\r\nsc config \"vmicguestinterface\" start= demand >nul 2>&1\r\nsc config \"vmicshutdown\" start= demand >nul 2>&1\r\nsc config \"vmicheartbeat\" start= demand >nul 2>&1\r\nsc config \"vmicvmsession\" start= demand >nul 2>&1\r\nsc config \"vmicrdv\" start= demand >nul 2>&1\r\nsc config \"vmictimesync\" start= demand >nul 2>&1\r\nbcdedit /set hypervisorlaunchtype auto >nul 2>&1"
-}
-},
-"win_bluetooth": {
-"_": {
-"full": "@echo off\r\nreg query \"HKLM\\SYSTEM\\CurrentControlSet\\Services\\BTAGService\" /v ImagePath >nul 2>&1 && reg add \"HKLM\\SYSTEM\\CurrentControlSet\\Services\\BTAGService\" /v Start /t REG_DWORD /d 3 /f >nul 2>&1\r\nreg query \"HKLM\\SYSTEM\\CurrentControlSet\\Services\\bthserv\" /v ImagePath >nul 2>&1 && reg add \"HKLM\\SYSTEM\\CurrentControlSet\\Services\\bthserv\" /v Start /t REG_DWORD /d 3 /f >nul 2>&1\r\nreg query \"HKLM\\SYSTEM\\CurrentControlSet\\Services\\BthAvctpSvc\" /v ImagePath >nul 2>&1 && reg add \"HKLM\\SYSTEM\\CurrentControlSet\\Services\\BthAvctpSvc\" /v Start /t REG_DWORD /d 3 /f >nul 2>&1\r\nreg query \"HKLM\\SYSTEM\\CurrentControlSet\\Services\\BluetoothUserService\" /v ImagePath >nul 2>&1 && reg add \"HKLM\\SYSTEM\\CurrentControlSet\\Services\\BluetoothUserService\" /v Start /t REG_DWORD /d 3 /f >nul 2>&1"
 }
 },
 "net_profile": {

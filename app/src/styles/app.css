@@ -757,6 +757,22 @@ kbd {
   line-height: 1.5;
   max-width: 62em;
 }
+.tweak-facts {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  margin: 6px 0 0;
+  padding: 0;
+  list-style: none;
+  color: var(--rg-text-3);
+  font-size: 12px;
+  line-height: 1.45;
+  max-width: 62em;
+}
+.tweak-facts b {
+  color: var(--rg-text-2);
+  font-weight: 560;
+}
 .tweak-variants {
   margin-top: 12px;
 }
@@ -2076,26 +2092,30 @@ svg {
     padding: 6px 10px 4px;
   }
 }
-.confirm-restore {
-  display: flex;
-  gap: 10px;
-  align-items: flex-start;
-  margin: 0;
-  font-size: 13.5px;
+.dash-retired {
+  margin: -24px 0 40px;
 }
-.confirm-restore > svg {
-  flex: none;
-  margin-top: 2px;
-  color: var(--rg-success);
+.dash-retired .card {
+  border-color: rgba(255, 214, 10, 0.22);
 }
-.confirm-restore span {
+.retired-list {
   display: flex;
   flex-direction: column;
-  gap: 2px;
+  gap: 8px;
+  margin: 12px 0 14px;
+  padding: 0;
+  list-style: none;
 }
-.confirm-restore small {
-  color: var(--rg-text-3);
-  font-size: 12px;
+.retired-list li {
+  display: flex;
+  gap: 8px;
+  font-size: 12.5px;
+  color: var(--rg-text-2);
+}
+.retired-list svg {
+  flex: none;
+  margin-top: 3px;
+  color: var(--rg-warning);
 }
 .run-row.skipped {
   color: var(--rg-text-3);

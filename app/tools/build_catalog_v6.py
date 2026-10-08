@@ -10,6 +10,7 @@ import copy
 import json
 import probes
 import audit_fixes as AUDIT
+import safety as SAFETY
 import os
 import re
 import subprocess
@@ -198,7 +199,7 @@ MODULES = [
               'Fullscreen exclusive settings for Windows 10 and 11.', 'Plein écran exclusif pour Windows 10 et 11.'),
             T('fps', 2598, 'win_gamemode', 'Windows Game Mode', 'Mode jeu Windows',
               'Turns Windows Game Mode on or off.', 'Active ou coupe le mode jeu de Windows.', reboot=False, variants=ONOFF),
-            T('fps', 2917, 'win_gamedvr', 'Disable Game DVR and Xbox', 'Couper Game DVR et Xbox',
+            T('fps', 2917, 'win_gamedvr', 'Disable Game DVR', 'Couper Game DVR',
               'Turns off background recording and Xbox services.', 'Coupe l\'enregistrement en arrière-plan et les services Xbox.'),
             T('fps', 2976, 'win_visual', 'Optimize visuals', 'Effets visuels',
               'Turns off animations and visual effects.', 'Coupe les animations et effets visuels.', reboot=False),
@@ -215,10 +216,15 @@ MODULES = [
             T('fps', 3140, 'win_services', 'Disable useless services', 'Couper les services inutiles',
               'Turns off Windows services most players don\'t use.', 'Coupe des services Windows que la plupart des joueurs n\'utilisent pas.',
               risk='advanced'),
+            T('fps', 2948, 'win_bluetooth', 'Disable Bluetooth', 'Couper le Bluetooth',
+              'Turns off Bluetooth services.', 'Coupe les services Bluetooth.', risk='advanced',
+              confirm=I('Bluetooth headsets, controllers and mice stop working until you turn it back on.',
+                        'Les casques, manettes et souris Bluetooth ne marchent plus tant que tu ne le réactives pas.')),
             T('fps', 3175, 'win_apps', 'Remove useless apps', 'Supprimer les applis inutiles',
               'Uninstalls preinstalled Windows apps.', 'Désinstalle des applis Windows préinstallées.', risk='advanced'),
-            T('fps', 3084, 'win_store', 'Disable Microsoft Store', 'Couper le Microsoft Store',
-              'Turns off the Store and its automatic updates.', 'Coupe le Store et ses mises à jour automatiques.', risk='advanced'),
+            # le script laisse le Store ouvert (DisableStoreApps 0, RemoveWindowsStore 0) : nom et risque d'après ce qu'il fait
+            T('fps', 3084, 'win_store', 'Limit update sharing', 'Limiter le partage des mises à jour',
+              'Limits Windows update sharing to your local network.', 'Limite le partage des mises à jour au réseau local.'),
         ]),
         ('security', I('Security', 'Sécurité'), [
             T('fps', 2621, 'win_coreiso', 'Core isolation', 'Isolation du noyau',
@@ -232,10 +238,6 @@ MODULES = [
               'Turns off the SmartScreen check on downloads.', 'Coupe la vérification SmartScreen des téléchargements.', risk='advanced'),
             T('fps', 3127, 'win_hyperv', 'Disable Hyper-V', 'Couper Hyper-V', 'Turns off Hyper-V and virtualization services.',
               'Coupe Hyper-V et les services de virtualisation.', risk='advanced'),
-            T('fps', 2948, 'win_bluetooth', 'Disable Bluetooth', 'Couper le Bluetooth',
-              'Turns off Bluetooth services.', 'Coupe les services Bluetooth.', risk='advanced',
-              confirm=I('Bluetooth headsets, controllers and mice stop working until you turn it back on.',
-                        'Les casques, manettes et souris Bluetooth ne marchent plus tant que tu ne le réactives pas.')),
         ]),
     ]),
 ]
@@ -288,6 +290,10 @@ DROP_LINES = [
     (('win_visual',), r'^\s*%windir%\\system32\\SystemPropertiesPerformance\.exe\s*$'),
     # TRIM gardé actif (choix de Sofiene, 2026-10-07) : WARNINGS garde le motif si une future version du .bat le remet ailleurs
     (('in_windows',), r'^\s*fsutil\s+behavior\s+set\s+DisableDeleteNotify\s+(NTFS\s+)?1\b'),
+    # lignes coupées du .bat, refusées par reg.exe (relevées le 2026-10-08) : la ligne complète d'avant écrit déjà
+    # EnableSuperfetch ; LowLatencyScalingPercentage n'a jamais été écrit
+    (('sys_ram',), r'/v\s+"EnableSuperfetch"\s+/t\s+REG_D\s*$'),
+    (('pow_main',), r'/v\s+"LowLatencyScalingPercentage"\s.*/f\.\s*$'),
 ]
 # lignes réécrites (ids ou « id:variant », motif, remplacement)
 SUB_LINES = [
@@ -411,8 +417,12 @@ MOVE = {'cpu_amd': 'cpu', 'cpu_intel': 'cpu', 'cpu_advanced': 'cpu', 'sys_latenc
         'sto_general': 'storage', 'sto_ntfs': 'storage', 'sto_fsutil_v6': 'storage', 'sto_fsutil2': 'storage',
         'sto_defrag': 'storage', 'sys_usb': 'usb',
         'win_telemetry': 'clean', 'win_optimize': 'clean', 'win_diag': 'clean', 'win_services': 'clean',
-        'win_apps': 'clean', 'win_store': 'clean'}
-SECTION_NAMES = {('windows', 'clean'): I('Clean up', 'Nettoyage')}
+        'win_apps': 'clean', 'win_store': 'clean', 'win_bluetooth': 'system'}
+# lignes retirées par tools/safety.py (rempli par postprocess), pour docs/CORRECTIONS.md
+SAFETY_REPORT = {}
+SECTION_NAMES = {('windows', 'clean'): I('Clean up', 'Nettoyage'),
+                 # plus rien du démarrage depuis le retrait de exp_bios (tools/safety.py)
+                 ('expert', 'security'): I('Security and hardware', 'Sécurité et matériel')}
 # noms en double entre les deux programmes
 NAMES = {
     'sys_csrss': I('CSRSS priority (high)', 'Priorité CSRSS (haute)'),
@@ -536,6 +546,10 @@ def postprocess(modules, scripts):
     before_audit = copy.deepcopy(scripts)
     apply_audit(scripts)
     sub_lines(scripts, WMIC_SUBS)
+    # lignes risquées cachées dans les packs (tools/safety.py, 2026-10-08) : retirées avant les avertissements
+    global SAFETY_REPORT
+    SAFETY_REPORT = SAFETY.apply(scripts)
+    assert not SAFETY.remaining(scripts), SAFETY.remaining(scripts)[:3]
 
     tweaks = {t['id']: t for m in modules for sec in m['sections'] for t in sec['tweaks'] if 'id' in t}
     for tid, t in tweaks.items():
@@ -617,14 +631,13 @@ def postprocess(modules, scripts):
         for sec in m['sections']:
             if (m['id'], sec['id']) in SECTION_NAMES:
                 sec['name'] = SECTION_NAMES[(m['id'], sec['id'])]
-    twins(modules, scripts)
     count_commands(modules, scripts)
     return before_audit
 
 
 def twins(modules, scripts):
     """Réglages au script identique (hors echo et commentaires), gardés dans chaque module (« tout garder ») :
-    même niveau de risque, une phrase qui le dit, et `twin` pour que l'app ne lance le script qu'une fois."""
+    même niveau de risque, et `twin` pour que l'app ne lance le script qu'une fois et le dise dans les détails."""
     where = [(t, m) for m in modules for sec in m['sections'] for t in sec['tweaks'] if 'id' in t]
 
     def key(tid):
@@ -654,22 +667,6 @@ def twins(modules, scripts):
             t['risk'], t['reboot'], t['twin'] = risk, reboot, first
             if confirm:
                 t['confirm'] = confirm
-            others = [(o, om) for o, om in group if o is not t]
-
-            def item(o, om, lang):
-                name, mod = o['name'][lang], om['name'][lang]
-                if lang == 'en':
-                    return f'the \u201c{name}\u201d action ({mod})' if o.get('kind') == 'action' else f'\u201c{name}\u201d ({mod})'
-                return f'l\'action « {name} » ({mod})' if o.get('kind') == 'action' else f'« {name} » ({mod})'
-
-            def join(parts, last):
-                return parts[0] if len(parts) == 1 else ', '.join(parts[:-1]) + f' {last} ' + parts[-1]
-
-            en = join([item(o, om, 'en') for o, om in others], 'and')
-            fr = join([item(o, om, 'fr') for o, om in others], 'et')
-            checkable = sum(o.get('kind') != 'action' for o, _ in group) > 1 and t.get('kind') != 'action'
-            t['desc'] = I(t['desc']['en'].rstrip() + f' Same commands as {en}.' + (' Checked together, they run once.' if checkable else ''),
-                          t['desc']['fr'].rstrip() + f' Mêmes commandes que {fr}.' + (' Cochés ensemble, ils ne s\'appliquent qu\'une fois.' if checkable else ''))
 
 
 def count_commands(modules, scripts):
@@ -760,7 +757,7 @@ V6_NOTES = '''
 # Corrections apportées aux .bat v6 (Ping Optimization Final, HITREG INPUTLAG, FPS)
 
 Ajouté par `tools/build_catalog_v6.py` après la section v5.2 ci-dessus. Les trois .bat de Sofiene
-(`legacy/v6/`, 2026-10-06) rejoignent l'ancien programme : 226 réglages au total.
+(`legacy/v6/`, 2026-10-06) rejoignent l'ancien programme : 226 réglages au total (212 depuis 1.1.8, voir plus bas).
 
 Défauts de la v5.2 revenus dans les .bat v6, corrigés de la même façon (`repair`, `clean`) :
 - `reg add ... /v DevicePriority|MessageNumberLimit /f` sans valeur → `reg delete` ;
@@ -842,6 +839,11 @@ def build_undo(before, after):
         subprocess.run([sys.executable, os.path.join(tools, 'undo', 'merge_full.py'), paths['u_before'], paths['u_after'], paths['undo']],
                        check=True, env=env, stdout=subprocess.DEVNULL)
         merged = json.load(open(paths['undo'], encoding='utf-8'))
+        now = json.load(open(paths['u_after'], encoding='utf-8'))
+    # ce qu'aucune annulation de l'app ne remet (applis désinstallées, réseau remis à zéro…), hors actions ponctuelles
+    # qui ne changent rien à remettre (nettoyage, point de restauration)
+    no_return = {tid for tid, vs in now.items() if isinstance(vs, dict) and tid not in SAFETY.RETIRED
+                 and any(isinstance(u, dict) and u.get('sans_retour') for u in vs.values())}
     out = {}
     for tid, vs in merged.items():
         if tid not in after or not isinstance(vs, dict):
@@ -855,6 +857,41 @@ def build_undo(before, after):
             if e:
                 out.setdefault(tid, {})[v] = e
     assert out.get('pow_ultimate', {}).get('_', {}).get('rest_avant'), 'pow_ultimate : rest avant la sauvegarde'
+    return out, no_return
+
+
+def describe(modules):
+    """Texte de chaque réglage (tools/descriptions.json, 2026-10-08) : à quoi il sert, ce qu'on peut en attendre sans
+    promettre de gain non vérifié, et ses inconvénients. Les jumeaux ont le même texte."""
+    texts = json.load(open(os.path.join(ROOT, 'tools', 'descriptions.json'), encoding='utf-8'))
+    tws = [t for m in modules for sec in m['sections'] for t in sec['tweaks'] if 'id' in t]
+    ids = {t['id'] for t in tws}
+    assert set(texts) == ids, (sorted(ids - set(texts)), sorted(set(texts) - ids))
+    for t in tws:
+        x = texts[t['id']]
+        for field in ('desc', 'gain', 'cons'):
+            t[field] = I(x['en'][field], x['fr'][field])
+    for t in tws:
+        if t.get('twin'):
+            first = texts[t['twin']]
+            assert texts[t['id']] == first, ('jumeaux au texte différent', t['id'], t['twin'])
+
+
+def retire(modules, presets):
+    """Retire du catalogue et des profils les réglages risqués (tools/safety.py). Renvoie ce que l'app garde d'eux :
+    nom, raison et redémarrage, pour proposer de remettre comme avant ceux encore appliqués sur le PC."""
+    out = []
+    for m in modules:
+        for sec in m['sections']:
+            for t in sec['tweaks']:
+                if t.get('id') in SAFETY.RETIRED:
+                    en, fr = SAFETY.RETIRED[t['id']]
+                    out.append({'id': t['id'], 'name': t['name'], 'reason': I(en, fr), 'reboot': t['reboot'], 'module': m['id']})
+            sec['tweaks'] = [t for t in sec['tweaks'] if t.get('ref', t.get('id')) not in SAFETY.RETIRED]
+        m['sections'] = [sec for sec in m['sections'] if sec['tweaks']]
+    for p in presets:
+        p['tweaks'] = [e for e in p['tweaks'] if e.split(':')[0] not in SAFETY.RETIRED]
+    assert sorted(r['id'] for r in out) == sorted(SAFETY.RETIRED), set(SAFETY.RETIRED) - {r['id'] for r in out}
     return out
 
 
@@ -939,22 +976,39 @@ def main():
         if p['id'] in ('laptop', 'privacy'):
             p['tweaks'] = [RENAMED.get(e.split(':')[0], e) if e.split(':')[0] in REPLACED else e for e in p['tweaks']]
             presets.append(p)
+    retired = retire(modules, presets)
+    # après le retrait : un jumeau retiré (mem_prefetch) ne doit plus lier ni relever le risque des autres
+    twins(modules, scripts)
+    describe(modules)
     ids = {t['id'] for m in modules for sec in m['sections'] for t in sec['tweaks'] if 'id' in t}
     for p in presets:
         for e in p['tweaks']:
             assert e.split(':')[0] in ids, (p['id'], e)
-    catalog = {'version': 7, 'modules': modules, 'presets': presets}
-    json.dump(catalog, open(os.path.join(ROOT, 'src', 'data', 'catalog.json'), 'w', encoding='utf-8'), ensure_ascii=False, indent=1)
-    json.dump(scripts, open(os.path.join(ROOT, 'src-tauri', 'scripts', 'scripts.json'), 'w', encoding='utf-8'), ensure_ascii=False)
+    catalog = {'version': 8, 'modules': modules, 'presets': presets, 'retired': retired}
+    catalog_path = os.path.join(ROOT, 'src', 'data', 'catalog.json')
+    json.dump(catalog, open(catalog_path, 'w', encoding='utf-8'), ensure_ascii=False, indent=1)
+    # les réglages retirés ne se lancent plus : ni script ni relevé, seulement leur annulation (undo.json)
+    kept = {k: v for k, v in scripts.items() if k not in SAFETY.RETIRED}
+    json.dump(kept, open(os.path.join(ROOT, 'src-tauri', 'scripts', 'scripts.json'), 'w', encoding='utf-8'), ensure_ascii=False)
     # relevés : ce que chaque script va modifier, sauvegardé avant de l'appliquer (tools/probes.py)
-    json.dump(probes.build(scripts), open(os.path.join(ROOT, 'src-tauri', 'scripts', 'probes.json'), 'w', encoding='utf-8'), ensure_ascii=False)
+    json.dump(probes.build(kept), open(os.path.join(ROOT, 'src-tauri', 'scripts', 'probes.json'), 'w', encoding='utf-8'), ensure_ascii=False)
     # retour aux valeurs de Windows sans sauvegarde, et ce que la sauvegarde ne couvre pas (tools/undo, audit du 2026-10-07)
-    undo = build_undo(before_audit, scripts)
+    undo, no_return = build_undo(before_audit, scripts)
+    # valeurs de pilote (amd_thermal, sto_cacheprot) : seule la sauvegarde de l'app les remet ; Edge : rien à remettre
+    assert set(SAFETY.RETIRED) - set(undo) == {'amd_thermal', 'sto_cacheprot', 'dbl_edge'}, set(SAFETY.RETIRED) - set(undo)
     json.dump(undo, open(os.path.join(ROOT, 'src-tauri', 'scripts', 'undo.json'), 'w', encoding='utf-8'), ensure_ascii=False, indent=0)
+    # point de restauration conseillé (case cochée par défaut) : réglages avancés, ou dont l'app ne peut pas tout remettre
+    for m in modules:
+        for sec in m['sections']:
+            for t in sec['tweaks']:
+                if 'id' in t and (t['risk'] == 'advanced' or t['id'] in no_return):
+                    t['restore'] = True
+    json.dump(catalog, open(catalog_path, 'w', encoding='utf-8'), ensure_ascii=False, indent=1)
     n = sum(1 for m in modules for s in m['sections'] for t in s['tweaks'] if 'id' in t)
     with open(os.path.join(ROOT, 'docs', 'CORRECTIONS.md'), 'a', encoding='utf-8') as f:
         f.write(V6_NOTES)
-    print(f'{n} réglages, {len(scripts)} scripts')
+        f.write(SAFETY.notes(SAFETY_REPORT, n))
+    print(f'{n} réglages, {len(kept)} scripts, {len(retired)} retirés')
 
 
 if __name__ == '__main__':

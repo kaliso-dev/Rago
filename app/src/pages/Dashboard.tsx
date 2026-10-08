@@ -1,6 +1,6 @@
 import { motion } from "motion/react";
-import { Check, Cpu, Gpu, HardDrive, MemoryStick, Network, Plus, RefreshCw, Lock } from "lucide-react";
-import { catalog, totalTweaks, tweaks } from "../lib/catalog";
+import { Check, Cpu, Gpu, HardDrive, MemoryStick, Network, Plus, RefreshCw, Lock, RotateCcw, TriangleAlert } from "lucide-react";
+import { catalog, retired, totalTweaks, tweaks } from "../lib/catalog";
 import { useStore } from "../lib/store";
 import { PingCard } from "../components/PingCard";
 import { Button, Card } from "../components/ui";
@@ -23,7 +23,7 @@ function Spec({ icon, label, value, sub }: { icon: ReactNode; label: string; val
 }
 
 export function Dashboard() {
-  const { t, lang, sys, sysLoading, refreshSys, isOn, selectMany, lastRun, requestApply, premium, setUpsell, applied: appliedMap } = useStore();
+  const { t, lang, sys, sysLoading, refreshSys, isOn, selectMany, lastRun, requestApply, premium, setUpsell, applied: appliedMap, retiredApplied, requestUndo, run } = useStore();
   // réglages appliqués en ce moment (ceux qu'on a décochés depuis ne comptent plus)
   const applied = [...appliedMap.values()].filter((a) => a.ok && tweaks.get(a.id)?.kind === "tweak").length;
   const restore = lastRun.get("rst_point");
@@ -102,6 +102,30 @@ export function Dashboard() {
           </Card>
         </motion.div>
       </div>
+
+      {retiredApplied.length > 0 && (
+        <motion.div variants={rise} className="dash-retired">
+          <Card title={t("dash.retired.title")}>
+            <p className="muted small">{t("dash.retired.lead")}</p>
+            <ul className="retired-list">
+              {retiredApplied.map((id) => {
+                const r = retired.get(id)!;
+                return (
+                  <li key={id}>
+                    <TriangleAlert size={13} />
+                    <span>
+                      <b>{r.name[lang]}.</b> {r.reason[lang]}
+                    </span>
+                  </li>
+                );
+              })}
+            </ul>
+            <Button size="sm" icon={<RotateCcw size={12} />} disabled={!!run} onClick={() => requestUndo(retiredApplied)}>
+              {t("dash.retired.go")}
+            </Button>
+          </Card>
+        </motion.div>
+      )}
 
       <motion.section variants={rise}>
         <h2 className="section-title rg-overline">{t("dash.presets")}</h2>
