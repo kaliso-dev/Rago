@@ -131,6 +131,14 @@ const CONFIG = {
 - Les avis clients sont écrits directement dans la section `#reviews` de la page : de vrais avis uniquement.
 - `site/index.html` (la page publiée) est fabriquée à partir de `site/src/page.html`. Ne la modifie pas à la main : demande la modification sur le projet, elle est refaite par `site/tools/build.py`.
 
+### Avant le lancement : compte à rebours et accès de l'équipe
+
+Jusqu'au samedi 10 octobre 2026 à 15 h, heure de Paris, `rago-optimizer.com` n'affiche qu'un compte à rebours (fonction Netlify `netlify/edge-functions/launch-gate/`) : le site lui-même n'est pas envoyé. Sur le serveur de comptes, `/signup`, `/buy`, `/download` et `/affiliate` renvoient vers ce compte à rebours ; la connexion, le compte, l'API des apps et le webhook Stripe marchent normalement. À l'heure dite, tout s'ouvre sans rien toucher et les pages ouvertes se rechargent seules.
+
+- **Accès de l'équipe** : choisis une clé d'au moins 16 lettres et chiffres et mets-la dans la variable `PREVIEW_KEY` de Netlify (Site configuration → Environment variables, puis Deploys → Trigger deploy) **et** de Railway (même valeur). Ensuite, ouvrir une fois `https://rago-optimizer.com/acces/<la clé>` donne le vrai site et les pages de compte pendant 30 jours sur ce navigateur ; `https://rago-optimizer.com/acces/sortir` retire l'accès. Changer la clé coupe tous les accès donnés.
+- **Changer l'heure** : variable `LAUNCH_AT` (par exemple `2026-10-10T13:00:00Z`, en UTC) dans Netlify et Railway, puis redéployer Netlify.
+- **Après le lancement**, la fonction laisse tout passer : on peut retirer `netlify/edge-functions/launch-gate/`, son bloc `[[edge_functions]]` dans `netlify.toml` et le verrou de `licensing/src/app.js`.
+
 ### Variante : site et serveur sur un seul domaine
 
 Le `Dockerfile` à la racine sert la page de vente **et** le serveur depuis Railway, sans Netlify ni sous-domaine. Pour l'utiliser : Root Directory vide sur Railway, mêmes variables que dans `MISE-EN-LIGNE.md` (dont `DATABASE_URL`), `PUBLIC_URL` et `SITE_URL` sur le même domaine, et `accountBase: ""` dans le `CONFIG` du site. Ce n'est pas le chemin recommandé.

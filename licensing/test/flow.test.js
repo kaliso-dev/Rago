@@ -455,7 +455,7 @@ test('keys generated once and kept in the database; public key served as PEM', a
 test('config accepts a bare host for PUBLIC_URL and flags example values', () => {
   const cfg = loadConfig({ NODE_ENV: 'production', PUBLIC_URL: 'rago-production.up.railway.app', SITE_URL: 'https://rago.netlify.app/',
     DATABASE_URL: 'postgres://x', STRIPE_SECRET_KEY: 'sk_test_x', STRIPE_PRICE_MONTHLY: 'price_m', STRIPE_PRICE_YEARLY: 'price_y', STRIPE_WEBHOOK_SECRET: 'whsec_a_remplir_a_l_etape_6',
-    SUPABASE_URL: 'https://abcd.supabase.co', RESEND_API_KEY: 're_...' });
+    SUPABASE_URL: 'https://abcd.supabase.co', RESEND_API_KEY: 're_...', PREVIEW_KEY: 'k'.repeat(16) });
   assert.equal(cfg.publicUrl, 'https://rago-production.up.railway.app');
   assert.equal(cfg.siteUrl, 'https://rago.netlify.app');
   assert.equal(cfg.cancelUrl, 'https://rago.netlify.app/#pricing');
@@ -1143,4 +1143,56 @@ test('real Postgres: a table locked at boot delays the schema replay instead of 
   assert.equal(errors.length, 1);
   assert.match(errors[0], /attempt 1\/6/);
   assert.ok(Date.now() - started >= 6500);
+});
+
+test('before the launch: signup, checkout, download and affiliate pages wait, sign-in and the app keep working', async () => {
+  const KEY = 'team-preview-key-0123456789';
+  const t = await setup({ LAUNCH_AT: new Date(Date.now() + 3600e3).toISOString(), PREVIEW_KEY: KEY, SITE_URL: 'https://rago-optimizer.com' });
+  for (const path of ['/signup', '/buy?interval=month', '/download', '/affiliate']) {
+    const res = await t.app.request(path);
+    assert.equal(res.status, 302, path);
+    assert.equal(res.headers.get('location'), 'https://rago-optimizer.com/', path);
+    assert.equal(res.headers.get('cache-control'), 'no-store', path);
+  }
+  const post = await t.app.request('/signup', { method: 'POST', headers: { 'content-type': 'application/x-www-form-urlencoded' }, body: 'email=a%40b.io&password=password123' });
+  assert.equal(post.status, 302);
+  assert.ok(!(await L.findUserByEmail(t.db, 'a@b.io')));
+  // Existing accounts and installed apps.
+  await L.createUser(t.db, 'old@rago.gg', 'password123');
+  await L.grantLicense(t.db, 'old@rago.gg', 'test');
+  assert.equal((await t.app.request('/login')).status, 200);
+  assert.equal((await t.browse('/login', { form: { email: 'old@rago.gg', password: 'password123' } })).headers.get('location'), '/account');
+  assert.equal((await t.browse('/account')).status, 200);
+  const j = await (await t.api('/auth/login', { email: 'old@rago.gg', password: 'password123', device: device('A') })).json();
+  assert.equal(j.status, 'activation_required');
+  assert.equal((await t.app.request('/healthz')).status, 200);
+
+  // A wrong key is a plain 404; the team link sets the cookie for the whole domain and opens the pages.
+  assert.equal((await t.app.request('/acces/not-the-key-0123456789')).status, 404);
+  const res = await t.app.request(`/acces/${KEY}`, { headers: { host: 'account.rago-optimizer.com' } });
+  assert.equal(res.status, 302);
+  const set = res.headers.get('set-cookie');
+  assert.match(set, /Domain=rago-optimizer\.com/);
+  const pass = set.match(/^rago_preview=([^;]+)/)[1];
+  assert.equal(pass, createHmac('sha256', KEY).update('rago-preview-v1').digest('base64url'));
+  // The same cookie as the one the site's link sets.
+  const signup = await t.app.request('/signup', { headers: { cookie: `rago_preview=${pass}` } });
+  assert.equal(signup.status, 200);
+  assert.equal((await t.app.request('/signup', { headers: { cookie: `rago_preview=${pass}x` } })).status, 302);
+  // Railway address: host-only cookie.
+  assert.doesNotMatch((await t.app.request(`/acces/${KEY}`, { headers: { host: 'rago-production.up.railway.app' } })).headers.get('set-cookie'), /Domain/);
+
+  // After the launch, everyone.
+  const open = await setup({ LAUNCH_AT: new Date(Date.now() - 1000).toISOString(), PREVIEW_KEY: KEY });
+  assert.equal((await open.app.request('/signup')).status, 200);
+  // Without PREVIEW_KEY, nobody gets through before the launch.
+  const shut = await setup({ LAUNCH_AT: new Date(Date.now() + 3600e3).toISOString(), SITE_URL: 'https://rago-optimizer.com' });
+  assert.equal((await shut.app.request(`/acces/${KEY}`)).status, 404);
+  assert.equal((await shut.app.request('/signup', { headers: { cookie: `rago_preview=${pass}` } })).status, 302);
+  // Site served by this server (SITE_DIR variant): a waiting page instead.
+  assert.equal((await (await setup({ LAUNCH_AT: new Date(Date.now() + 3600e3).toISOString() })).app.request('/buy')).status, 503);
+  // Production defaults to the launch date.
+  const prod = loadConfig({ NODE_ENV: 'production', PUBLIC_URL: 'https://x.test', DATABASE_URL: 'postgres://x', STRIPE_SECRET_KEY: 'sk', STRIPE_WEBHOOK_SECRET: 'whsec' });
+  assert.equal(prod.launchAt, Date.parse('2026-10-10T13:00:00Z'));
+  assert.equal(loadConfig({}).launchAt, 0);
 });

@@ -7,7 +7,7 @@ import { createReadStream } from 'node:fs';
 import { Readable } from 'node:stream';
 import { fileURLToPath } from 'node:url';
 import { relative } from 'node:path';
-import { createHmac } from 'node:crypto';
+import { createHash, createHmac, timingSafeEqual } from 'node:crypto';
 
 import { DUMMY_HASH, maskLicenseKey, signValue, unsignValue, verifyPassword } from './crypto.js';
 import { DeviceError, parseDevice, sameDevice } from './fingerprint.js';
@@ -75,7 +75,7 @@ export function createApp({ cfg, db, keys, stripe, mailer, log = console, fetchI
 
   // Strict CSP on our own pages. The marketing site (SITE_DIR) uses inline styles and scripts,
   // so it gets the other security headers without a CSP.
-  const OWN = /^\/(assets|download|buy|checkout|claim|signup|login|logout|forgot|reset|account|affiliate|webhooks|api|healthz)(\/|$)/;
+  const OWN = /^\/(assets|download|buy|checkout|claim|signup|login|logout|forgot|reset|account|affiliate|webhooks|api|healthz|acces)(\/|$)/;
   const strictHeaders = secureHeaders({
     contentSecurityPolicy: {
       defaultSrc: ["'self'"],
@@ -118,6 +118,36 @@ export function createApp({ cfg, db, keys, stripe, mailer, log = console, fetchI
     ? bodyLimit({ maxSize: 64 * 1024, onError: tooLarge })(c, next) : next()));
 
   app.use('/assets/*', serveStatic({ root: publicDir, rewriteRequestPath: (p) => p.replace(/^\/assets/, '') }));
+
+  // ---------- before the launch ----------
+  // Until cfg.launchAt the pages that sell or hand out Rago Optimizer send visitors to the site's countdown.
+  // Sign-in, the account pages, the app's API and the Stripe webhook keep working. The team gets through with
+  // the cookie set by /acces/<PREVIEW_KEY>, here or on the site (netlify/edge-functions/launch-gate/).
+  const LOCKED = new Set(['/signup', '/buy', '/download', '/affiliate', '/affiliate/join']);
+  const PREVIEW_COOKIE = 'rago_preview';
+  // HMAC-SHA256(PREVIEW_KEY, "rago-preview-v1"), base64url: same as passFor() in the Netlify function.
+  const previewPass = cfg.previewKey.length >= 16 ? createHmac('sha256', cfg.previewKey).update('rago-preview-v1').digest('base64url') : null;
+  const sameHash = (a, b) => timingSafeEqual(createHash('sha256').update(String(a)).digest(), createHash('sha256').update(String(b)).digest());
+  const hasPreviewPass = (c) => !!previewPass && sameHash(getCookie(c, PREVIEW_COOKIE) || '', previewPass);
+  app.use('*', async (c, next) => {
+    if (!LOCKED.has(c.req.path) || Date.now() >= cfg.launchAt || hasPreviewPass(c)) return next();
+    c.header('Cache-Control', 'no-store');
+    if (cfg.siteUrl !== cfg.publicUrl) return c.redirect(`${cfg.siteUrl}/`, 302);
+    return c.html(V.messagePage(cfg, { overline: 'Rago Optimizer', title: 'Opening soon.', text: 'Rago Optimizer isn’t open yet. Come back at the launch.' }), 503);
+  });
+  app.get('/acces/:key', (c) => {
+    // On a subdomain of the site (account.rago-optimizer.com) the cookie covers the site too.
+    const siteHost = new URL(cfg.siteUrl).hostname;
+    const host = (c.req.header('host') || '').split(':')[0];
+    const domain = host.endsWith(`.${siteHost}`) ? siteHost : undefined;
+    if (c.req.param('key') === 'sortir') {
+      deleteCookie(c, PREVIEW_COOKIE, { path: '/', domain, secure: cfg.prod });
+      return c.redirect('/login', 302);
+    }
+    if (!allow(`acces:${ipOf(c)}`, 20, 60 * 60 * 1000) || !previewPass || !sameHash(c.req.param('key'), cfg.previewKey)) return c.notFound();
+    setCookie(c, PREVIEW_COOKIE, previewPass, { ...cookieBase, domain, maxAge: 30 * 86400 });
+    return c.redirect('/signup', 302);
+  });
   // Checks the database too, so an uptime monitor notices when Supabase is down.
   app.get('/healthz', async (c) => {
     try {
