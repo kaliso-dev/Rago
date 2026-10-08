@@ -11,6 +11,12 @@ function readPem(value) {
   return Buffer.from(v, 'base64').toString('utf8');
 }
 
+export const DEFAULT_LAUNCH = '2026-10-10T13:00:00Z';
+function launchTime(value, prod) {
+  const t = Date.parse((value || '').trim() || (prod ? DEFAULT_LAUNCH : ''));
+  return Number.isNaN(t) ? (prod ? Date.parse(DEFAULT_LAUNCH) : 0) : t;
+}
+
 export function loadConfig(env = process.env) {
   const prod = env.NODE_ENV === 'production';
   const publicUrl = asUrl(env.PUBLIC_URL) || `http://localhost:${env.PORT || 8787}`;
@@ -78,6 +84,13 @@ export function loadConfig(env = process.env) {
     // (AFFILIATE_DISCOUNT_DURATION=forever: on every renewal).
     affiliateDiscountPercent: Number(env.AFFILIATE_DISCOUNT_PERCENT || 5),
     affiliateDiscountDuration: env.AFFILIATE_DISCOUNT_DURATION === 'forever' ? 'forever' : 'once',
+
+    // Before the launch, /signup, /buy, /download and /affiliate send visitors to the site's countdown.
+    // LAUNCH_AT (ISO date) moves it; production defaults to Saturday, October 10, 2026, 3 PM Paris time.
+    launchAt: launchTime(env.LAUNCH_AT, prod),
+    // The team gets through with the link /acces/<PREVIEW_KEY> or the site's cookie (same value as on Netlify).
+    // Shorter than 16 characters: ignored.
+    previewKey: (env.PREVIEW_KEY || '').trim(),
   };
   cfg.subscriptions = !!(cfg.stripePriceMonthly || cfg.stripePriceYearly);
 
@@ -115,6 +128,8 @@ export function loadConfig(env = process.env) {
       cfg[k] = '';
     }
   }
+  if (env.LAUNCH_AT && Number.isNaN(Date.parse(env.LAUNCH_AT.trim()))) cfg.warnings.push(`LAUNCH_AT is not a date (${env.LAUNCH_AT}): use for example 2026-10-10T13:00:00Z.`);
+  if (cfg.launchAt > Date.now() && cfg.previewKey.length < 16) cfg.warnings.push('PREVIEW_KEY is not set (16 characters at least): until the launch, nobody can open /signup, /buy, /download and /affiliate, the team included. Use the same value as the Netlify variable.');
   // Emails really go out: pages may promise one.
   cfg.mailEnabled = !!cfg.resendApiKey && !exampleFrom;
 
