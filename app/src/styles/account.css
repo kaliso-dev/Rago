@@ -1,0 +1,210 @@
+/* Compte : photo de profil, invitation à laisser un avis, formulaire d'avis, carte Profil des réglages. */
+
+.avatar {
+  display: inline-grid;
+  place-items: center;
+  flex: none;
+  overflow: hidden;
+  border-radius: var(--rg-radius-full);
+  background: var(--rg-ink-4);
+  border: 1px solid var(--rg-line-2);
+  color: var(--rg-text-1);
+  font-weight: 600;
+  line-height: 1;
+  user-select: none;
+}
+.avatar img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+/* ------------------------------------------------ invitation (bas à droite) */
+
+.review-prompt {
+  position: fixed;
+  right: 22px;
+  bottom: 22px;
+  z-index: 30;
+  width: 300px;
+  padding: 16px 16px 14px;
+  border-radius: var(--rg-radius-lg);
+  background: rgba(23, 23, 26, 0.92);
+  backdrop-filter: blur(18px) saturate(1.4);
+  border: 1px solid var(--rg-line-2);
+  box-shadow: var(--rg-shadow-3);
+}
+[data-theme="light"] .review-prompt {
+  background: rgba(255, 255, 255, 0.94);
+}
+.review-prompt strong {
+  display: block;
+  margin-top: 8px;
+  font-size: 14px;
+  font-weight: 600;
+}
+.review-prompt p {
+  margin-top: 4px;
+  color: var(--rg-text-2);
+  font-size: 12.5px;
+  line-height: 1.5;
+}
+.review-prompt-stars {
+  display: flex;
+  gap: 2px;
+  color: var(--rg-red-500);
+}
+.review-prompt-stars svg {
+  fill: currentColor;
+}
+.review-prompt-actions {
+  display: flex;
+  gap: 6px;
+  margin-top: 12px;
+}
+.review-prompt-close {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  display: grid;
+  place-items: center;
+  width: 26px;
+  height: 26px;
+  border-radius: var(--rg-radius-full);
+  color: var(--rg-text-3);
+}
+.review-prompt-close:hover {
+  color: var(--rg-text-1);
+  background: var(--rg-ink-4);
+}
+.review-prompt-close:focus-visible {
+  box-shadow: var(--rg-focus);
+}
+
+/* ------------------------------------------------------ formulaire d'avis */
+
+.review-fields {
+  margin-top: 18px;
+}
+.review-stars {
+  display: flex;
+  gap: 4px;
+  margin-bottom: 16px;
+}
+.review-stars button {
+  display: grid;
+  place-items: center;
+  width: 40px;
+  height: 40px;
+  border-radius: var(--rg-radius-sm);
+  color: var(--rg-ink-5);
+  transition: color var(--rg-dur-instant), transform var(--rg-dur-fast) var(--rg-ease-spring);
+}
+.review-stars button svg {
+  fill: currentColor;
+}
+.review-stars button.on {
+  color: var(--rg-red-500);
+}
+.review-stars button:hover {
+  transform: scale(1.08);
+}
+.review-stars button:focus-visible {
+  box-shadow: var(--rg-focus);
+}
+.review-label {
+  display: flex;
+  justify-content: space-between;
+}
+.review-label .over {
+  color: var(--rg-red-300);
+}
+.field .input.review-text {
+  height: auto;
+  min-height: 96px;
+  padding: 10px 12px;
+  resize: vertical;
+  line-height: 1.5;
+}
+.review-name {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.review-name .input {
+  flex: 1;
+}
+.review-thanks {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+}
+.review-dialog .modal-actions {
+  align-items: center;
+}
+
+/* ------------------------------------------------------------- carte Profil */
+
+.profile-head {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+.profile-who {
+  flex: 1;
+  min-width: 0;
+}
+.profile-who > div {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.profile-photo-actions {
+  display: flex;
+  gap: 6px;
+}
+.profile-hint {
+  margin: 10px 0 4px;
+}
+.profile-name label {
+  white-space: nowrap;
+}
+.profile-name-edit {
+  display: flex;
+  gap: 6px;
+}
+.profile-name-edit .input {
+  width: 200px;
+  font-family: var(--rg-font-sans);
+}
+.profile-error {
+  margin: 4px 0;
+  color: var(--rg-red-300);
+}
+.profile-review {
+  align-items: flex-start;
+  padding-top: 10px;
+}
+.profile-stars {
+  display: inline-flex;
+  gap: 2px;
+  margin-top: 4px;
+  color: var(--rg-ink-5);
+}
+.profile-stars svg {
+  fill: currentColor;
+}
+.profile-stars .on {
+  color: var(--rg-red-500);
+}
+.profile-comment {
+  margin-top: 4px;
+  max-width: 380px;
+  color: var(--rg-text-2);
+  white-space: pre-line;
+  overflow-wrap: anywhere;
+  display: -webkit-box;
+  -webkit-line-clamp: 3;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
