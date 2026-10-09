@@ -39,7 +39,7 @@
     "copyright": "© Rago",
     "category": "Utility",
     "shortDescription": "Windows optimizer for Minecraft PvP and competitive games",
-    "longDescription": "Rago Optimizer tunes your network, latency, hitreg and Windows for Minecraft PvP and competitive games, with a restore point before every change.",
+    "longDescription": "Rago Optimizer tunes your network, latency, hitreg and Windows for Minecraft PvP and competitive games, with a restore point offered before advanced tweaks.",
     "licenseFile": "installer/eula.txt",
     "icon": [
       "icons/32x32.png",
@@ -52,7 +52,7 @@
       "webviewInstallMode": { "type": "embedBootstrapper" },
       "nsis": {
         "installMode": "perMachine",
-        "languages": ["English", "French"],
+        "languages": ["English"],
         "displayLanguageSelector": false,
         "installerIcon": "icons/icon.ico",
         "headerImage": "installer/header.bmp",
