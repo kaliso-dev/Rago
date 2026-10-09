@@ -186,6 +186,7 @@ Sans jeton valable : `401 invalid_token`.
 |---|---|---|
 | `GET /account/me` | | `{ account, review }` |
 | `PUT /account/review` | `{ "rating": 1-5, "comment": "...", "name"?: "...", "app_version"?: "1.1.8" }` | `{ account, review }` |
+| `DELETE /account/review` | | `{ account, review: null }` (l'avis quitte le site tout de suite ; le nom et la photo restent) |
 | `PUT /account/name` | `{ "name": "..." }` | `{ account, review }` |
 | `PUT /account/avatar` | les octets de l'image (JPG, PNG, WebP ou GIF, 5 Mo au plus) | `{ account, review }` |
 | `DELETE /account/avatar` | | `{ account, review }` |

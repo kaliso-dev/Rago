@@ -566,6 +566,7 @@ export function createApp({ cfg, db, keys, stripe, mailer, log = console, fetchI
     photo: ['notice', 'Photo saved. It shows on your reviews and in Rago Optimizer.'],
     removed: ['notice', 'Photo removed.'],
     name: ['notice', 'Public name saved.'],
+    review: ['notice', 'Review deleted. It no longer shows on the site.'],
     toolarge: ['error', API_ERRORS.image_too_large[1]],
   };
   const showProfile = async (c, user, { n, error, status = 200, w = welcomeOf(c.req.query()) } = {}) => {
@@ -601,6 +602,15 @@ export function createApp({ cfg, db, keys, stripe, mailer, log = console, fetchI
     }
     reviewsCache = null;
     return c.redirect(profileUrl('removed', w), 303);
+  });
+
+  app.post('/account/profile/review/delete', requireUser, async (c) => {
+    const user = c.get('user');
+    if (await R.deleteReview(db, user.id)) {
+      reviewsCache = null;
+      await audit(db, 'review.deleted', { userId: user.id });
+    }
+    return c.redirect(profileUrl('review', welcomeOf(null)), 303);
   });
 
   app.post('/account/profile/name', requireUser, async (c) => {
@@ -921,6 +931,15 @@ export function createApp({ cfg, db, keys, stripe, mailer, log = console, fetchI
     reviewsCache = null;
     await audit(db, 'review.saved', { userId: user.id, detail: { rating: review.rating } });
     return c.json(await accountReply(await L.getUser(db, user.id)));
+  });
+
+  api.delete('/account/review', async (c) => {
+    const user = c.get('user');
+    if (await R.deleteReview(db, user.id)) {
+      reviewsCache = null;
+      await audit(db, 'review.deleted', { userId: user.id, detail: { from: 'app' } });
+    }
+    return c.json(await accountReply(user));
   });
 
   api.put('/account/name', async (c) => {

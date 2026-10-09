@@ -1,7 +1,8 @@
 // Compte Rago dans l'app (nom public, photo, avis) et invitation à laisser un avis.
-// L'invitation vient après 5 minutes d'utilisation réelle (fenêtre visible, active, et le joueur s'en sert),
-// une fois par lancement au plus. Fermée : elle revient au plus tôt 7 jours et 30 minutes d'utilisation plus tard ;
-// fermée une deuxième fois, ou avis donné : plus jamais.
+// L'invitation vient après 5 minutes d'utilisation réelle, cumulées d'un lancement à l'autre : l'app au premier plan
+// (pas pendant une partie), sans compter un PC laissé allumé sans clic ni touche depuis 10 minutes.
+// Fermée : elle revient au plus tôt 7 jours et 30 minutes d'utilisation plus tard ; fermée une deuxième fois,
+// ou avis donné : plus jamais. Supprimer son avis ne la fait pas revenir.
 import { createContext, useCallback, useContext, useEffect, useRef, useState, type ReactNode } from "react";
 import { accountApi, asAccountError, type AccountState } from "./accountApi";
 import { useStore } from "./store";
@@ -15,8 +16,10 @@ export const SNOOZE_USE_MS = 30 * 60_000;
 /** fermée deux fois : plus jamais */
 export const MAX_DISMISSALS = 2;
 const TICK_MS = 5_000;
-/** sans clic, touche ni mouvement depuis 1 minute, le temps ne compte plus */
-const IDLE_MS = 60_000;
+/** sans clic, touche ni mouvement depuis 10 minutes, le temps ne compte plus (PC laissé allumé) */
+const IDLE_MS = 10 * 60_000;
+/** serveur de comptes injoignable : nouvel essai chaque minute */
+const RETRY_MS = 60_000;
 
 export interface PromptMemo {
   usedMs: number;
@@ -61,7 +64,7 @@ export type AccountStatus = "loading" | "ready" | "offline";
 export type Dialog = null | { kind: "review"; fromPrompt: boolean } | { kind: "signin" };
 
 function useAccountValue() {
-  const { license, run, confirm, paletteOpen, upsell, selection, pendingUndo } = useStore();
+  const { license, run, confirm, paletteOpen, upsell } = useStore();
   const [state, setState] = useState<AccountState>({ via: null, profile: null, review: null });
   const [status, setStatus] = useState<AccountStatus>("loading");
   const [dialog, setDialog] = useState<Dialog>(null);
@@ -91,6 +94,13 @@ function useAccountValue() {
     if (license) void refresh();
   }, [license?.state, license?.email, refresh]);
 
+  // serveur injoignable au lancement (pas de réseau, serveur en redémarrage) : on réessaie, sinon l'invitation ne viendrait jamais
+  useEffect(() => {
+    if (!license || status !== "offline") return;
+    const id = setInterval(() => void refresh(), RETRY_MS);
+    return () => clearInterval(id);
+  }, [license, status, refresh]);
+
   // un avis existe déjà (donné sur ce PC ou ailleurs) : plus d'invitation
   useEffect(() => {
     if (state.review && !memoRef.current.done) setMemo((m) => ({ ...m, done: true }));
@@ -112,7 +122,9 @@ function useAccountValue() {
       last = now;
       // la fin d'un report arrive aussi sans que le compteur bouge
       setDue(isDue(memoRef.current));
-      if (document.visibilityState !== "visible" || !document.hasFocus() || now - active > IDLE_MS) return;
+      // au premier plan : fenêtre active, ou un clic ou une touche dans la dernière minute (si la fenêtre ne dit pas qu'elle est active)
+      const front = document.visibilityState === "visible" && (document.hasFocus() || now - active < 60_000);
+      if (!front || now - active > IDLE_MS) return;
       // une fois l'invitation due, le compteur attend qu'elle soit vue
       setMemo((m) => (m.done || m.usedMs >= m.nextAtMs ? m : { ...m, usedMs: m.usedMs + step }));
     }, TICK_MS);
@@ -132,8 +144,8 @@ function useAccountValue() {
     });
   }, [setMemo]);
 
-  // pas pendant une optimisation, une fenêtre ou une sélection en cours (la barre « Appliquer » est en bas)
-  const busy = !!run || !!confirm || paletteOpen || !!upsell || !!dialog || selection.length > 0 || pendingUndo.length > 0;
+  // pas pendant une optimisation ni par-dessus une fenêtre (avec la barre « Appliquer », elle se place au-dessus)
+  const busy = !!run || !!confirm || paletteOpen || !!upsell || !!dialog;
   const showPrompt = due && status === "ready" && !state.review && !busy && license?.state !== "unconfigured";
 
   const dialogRef = useRef<Dialog>(null);
@@ -176,6 +188,7 @@ function useAccountValue() {
     },
     [act, setMemo],
   );
+  const deleteReview = useCallback(() => act(() => accountApi.deleteReview()), [act]);
   const setName = useCallback((name: string) => act(() => accountApi.setName(name)), [act]);
   const setPhoto = useCallback((base64: string) => act(() => accountApi.setPhoto(base64)), [act]);
   const removePhoto = useCallback(() => act(() => accountApi.removePhoto()), [act]);
@@ -191,6 +204,7 @@ function useAccountValue() {
     signIn,
     signOut,
     saveReview,
+    deleteReview,
     setName,
     setPhoto,
     removePhoto,

@@ -25,6 +25,7 @@
   position: fixed;
   right: 22px;
   bottom: 22px;
+  transition: bottom 0.32s var(--rg-ease-out);
   z-index: 30;
   width: 300px;
   padding: 16px 16px 14px;
@@ -33,6 +34,10 @@
   backdrop-filter: blur(18px) saturate(1.4);
   border: 1px solid var(--rg-line-2);
   box-shadow: var(--rg-shadow-3);
+}
+/* la barre « Appliquer » est en bas : l'invitation passe au-dessus */
+.review-prompt.above-bar {
+  bottom: 100px;
 }
 [data-theme="light"] .review-prompt {
   background: rgba(255, 255, 255, 0.94);
@@ -184,6 +189,27 @@
 .profile-review {
   align-items: flex-start;
   padding-top: 10px;
+}
+.profile-review-actions {
+  display: flex;
+  flex: none;
+  gap: 6px;
+}
+.profile-delete {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin: 8px 0 4px;
+  padding: 10px 10px 10px 14px;
+  border-radius: var(--rg-radius-md);
+  background: var(--rg-ink-3);
+  border: 1px solid var(--rg-line-2);
+}
+.profile-delete-actions {
+  display: flex;
+  flex: none;
+  gap: 6px;
 }
 .profile-stars {
   display: inline-flex;
