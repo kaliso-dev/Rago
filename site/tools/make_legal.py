@@ -1,9 +1,7 @@
 import os
 OUT=os.path.join(os.path.dirname(os.path.abspath(__file__)),'..')
-# Builds site/terms.html, privacy.html, refunds.html. Yellow <mark class="f"> = to fill in by the seller.
-F=lambda t:f'<mark class="f">[{t}]</mark>'
-NAME=F("Full name"); SELLER=NAME; ADDR=F("Street address and postal code")+' Paris'; COUNTRY='France'
-MAIL='<a href="mailto:support@rago-optimizer.com">support@rago-optimizer.com</a>'; UPD="October 7, 2026"
+# Builds site/terms.html, privacy.html, refunds.html (and 404.html, which shares their header).
+MAIL='<a href="mailto:support@rago-optimizer.com">support@rago-optimizer.com</a>'; UPD="October 9, 2026"
 HEAD='''<!doctype html>
 <html lang="en">
 <head>
@@ -27,7 +25,6 @@ body{{background:var(--ink);color:var(--t1);font:400 15px/1.7 Geist,system-ui,sa
 .top a.logo img{{height:22px}}
 a.back{{color:var(--t2);text-decoration:none;font-size:13.5px;padding:8px 14px;border-radius:999px;box-shadow:inset 0 0 0 1px var(--l2)}}
 a.back:hover{{color:var(--t1)}}
-.draft{{background:rgba(255,214,10,.08);border:1px solid rgba(255,214,10,.35);color:#FFE680;border-radius:24px;padding:16px 20px;font-size:13.5px;margin-bottom:40px}}
 h1{{font-size:clamp(30px,5vw,44px);letter-spacing:-.04em;line-height:1.1}}
 .upd{{color:var(--t3);font:400 12.5px/1 "Geist Mono",monospace;margin:14px 0 40px}}
 h2{{font-size:19px;letter-spacing:-.02em;margin:44px 0 12px}}
@@ -36,7 +33,6 @@ p+p{{margin-top:12px}}
 ul{{padding-left:20px;margin-top:10px}} ul+p{{margin-top:14px}} li+li{{margin-top:6px}}
 strong{{color:var(--t1);font-weight:560}}
 a{{color:var(--t1)}}
-mark.f{{background:rgba(255,214,10,.16);color:var(--warn);padding:1px 6px;border-radius:6px;font-weight:500}}
 table{{width:100%;border-collapse:collapse;margin-top:12px;font-size:13.5px}}
 th,td{{text-align:left;padding:10px 12px;border-bottom:1px solid var(--l1);color:var(--t2);vertical-align:top}}
 th{{color:var(--t1);font-weight:560}}
@@ -49,7 +45,6 @@ th{{color:var(--t1);font-weight:560}}
 <body>
 <div class="wrap">
 <div class="top"><a class="logo" href="./"><img src="rago-wordmark.svg" alt="Rago Optimizer"></a><a class="back" href="./">Back to the site</a></div>
-<div class="draft"><strong style="color:#FFE680">Draft.</strong> Fill in every yellow field and have these pages checked before taking live payments. Then delete this notice.</div>
 <h1>{title}</h1>
 <p class="upd">Last updated: {upd}</p>
 '''
@@ -63,8 +58,8 @@ def page(name,title,body):
 
 page('terms.html','Terms of Sale',f'''
 <h2>1. Who we are</h2>
-<p>Rago Optimizer is sold by {SELLER}, {ADDR}, {COUNTRY}. Contact: {MAIL}, or our Discord server.</p>
-<p>Publication director: {NAME}. This site is hosted by Netlify, Inc., 101 2nd Street, San Francisco, CA 94105, USA. Account pages and the license server are hosted by Railway Corporation, San Francisco, CA, USA.</p>
+<p>Rago Optimizer is an independent project, run and sold from France by the Rago Optimizer team. Contact: {MAIL}, or our Discord server.</p>
+<p>This site is hosted by Netlify, Inc., 101 2nd Street, San Francisco, CA 94105, USA. Account pages and the license server are hosted by Railway Corporation, San Francisco, CA, USA.</p>
 
 <h2>2. What you buy</h2>
 <p>Rago Optimizer is a Windows 10 and 11 app that changes Windows, network and game settings. It comes in two plans:</p>
@@ -137,7 +132,7 @@ page('refunds.html','Refunds and Cancellation',f'''
 
 page('privacy.html','Privacy Policy',f'''
 <h2>Who is responsible</h2>
-<p>{SELLER}, {ADDR}, {COUNTRY}, is responsible for your data. Contact: {MAIL}.</p>
+<p>The Rago Optimizer team, in France, is responsible for your data. Contact: {MAIL}.</p>
 
 <h2>What we collect, and why</h2>
 <div class="tbl"><table>
@@ -194,6 +189,6 @@ print('ok')
 
 # 404: Netlify serves it for any unknown path, so every link is absolute
 nf=HEAD.format(title='Page not found',upd='').replace('href="','href="/').replace('src="','src="/').replace('url("fonts/','url("/fonts/').replace('href="/https:','href="https:')
-nf=nf.split('<div class="draft">')[0]+'<h1>This page doesn\'t exist.</h1>\n<p class="upd">Error 404</p>\n<p>The link may be old or mistyped.</p>\n<p style="margin-top:28px;display:flex;gap:10px;flex-wrap:wrap"><a class="back" href="/" style="color:#0A0A0B;background:#FF3B30;box-shadow:none;font-weight:600;text-decoration:none;padding:10px 18px;border-radius:999px">Back to Rago Optimizer</a><a class="back" href="/#pricing" style="text-decoration:none;padding:10px 18px;border-radius:999px">See pricing</a></p>\n'+FOOT.replace('href="','href="/').replace('href="/./"','href="/"')
+nf=nf.split('<h1>')[0]+'<h1>This page doesn\'t exist.</h1>\n<p class="upd">Error 404</p>\n<p>The link may be old or mistyped.</p>\n<p style="margin-top:28px;display:flex;gap:10px;flex-wrap:wrap"><a class="back" href="/" style="color:#0A0A0B;background:#FF3B30;box-shadow:none;font-weight:600;text-decoration:none;padding:10px 18px;border-radius:999px">Back to Rago Optimizer</a><a class="back" href="/#pricing" style="text-decoration:none;padding:10px 18px;border-radius:999px">See pricing</a></p>\n'+FOOT.replace('href="','href="/').replace('href="/./"','href="/"')
 nf=nf.replace('href="/./"','href="/"')
 open(os.path.join(OUT,'404.html'),'w').write(nf)
