@@ -23,8 +23,22 @@ test("before the launch: countdown everywhere, nothing from the site", async () 
     assert.doesNotMatch(html, /real site/, path);
     assert.equal(res.headers.get("set-cookie"), null, path);
   }
-  // the countdown's own files go through
-  for (const path of ["/fonts/Geist-Variable.woff2", "/favicon.svg", "/rago-wordmark.svg"]) assert.equal(await (await get(path)).text(), SITE);
+  // the countdown's own files go through, its share image included
+  for (const path of ["/fonts/Geist-Variable.woff2", "/favicon.svg", "/rago-wordmark.svg", "/og-launch.png", "/robots.txt"]) assert.equal(await (await get(path)).text(), SITE);
+});
+
+test("before the launch: search engines skip the countdown, link previews get its own image", async () => {
+  vars = { PREVIEW_KEY: KEY, LAUNCH_AT: new Date(Date.now() + 3600e3).toISOString() };
+  const res = await get("/");
+  const html = await res.text();
+  assert.equal(res.headers.get("x-robots-tag"), "noindex");
+  assert.match(html, /<meta name="robots" content="noindex">/);
+  assert.match(html, /<meta property="og:image" content="https:\/\/rago-optimizer\.com\/og-launch\.png">/);
+  assert.match(html, /<meta property="og:url" content="https:\/\/rago-optimizer\.com\/">/);
+  assert.match(html, /<meta name="twitter:card" content="summary_large_image">/);
+  // a deploy preview points at its own copy of the image
+  assert.match(await (await get("/", { host: "deploy-preview-12--rago-optimiser.netlify.app" })).text(),
+    /content="https:\/\/deploy-preview-12--rago-optimiser\.netlify\.app\/og-launch\.png"/);
 });
 
 test("the default launch is Saturday, October 10, 2026, 3:00 PM Paris time", async () => {
@@ -72,10 +86,13 @@ test("no PREVIEW_KEY, or one too short: nobody gets in", async () => {
   }
 });
 
-test("after the launch: the site for everyone", async () => {
+test("after the launch: the site for everyone, with nothing added by the gate (no noindex)", async () => {
   vars = { LAUNCH_AT: new Date(Date.now() - 1000).toISOString() };
-  assert.equal(await (await get("/")).text(), SITE);
-  assert.equal(await (await get("/terms.html")).text(), SITE);
+  for (const path of ["/", "/terms.html", "/og-image.png", "/sitemap.xml"]) {
+    const res = await get(path);
+    assert.equal(await res.text(), SITE, path);
+    assert.equal(res.headers.get("x-robots-tag"), null, path);
+  }
 });
 
 test("the old Netlify address redirects to the domain", async () => {

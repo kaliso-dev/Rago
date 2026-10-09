@@ -1,11 +1,12 @@
 // The page every visitor sees before the launch. Self-contained: inline styles and script, plus the logo,
-// icons and fonts that launch-gate.js lets through. It says nothing about the product beyond its name.
+// icons, fonts and share image (og-launch.png) that launch-gate.js lets through. It says nothing about the product beyond its name.
 // When the clock reaches zero the page reloads, and the gate then serves the site.
 
 const esc = (s) => String(s).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
 const pad = (n) => String(n).padStart(2, "0");
 
-export function countdownPage({ launchAt, now }) {
+// origin: the address the page was asked on (the domain, or a deploy preview), for the absolute share image URL.
+export function countdownPage({ launchAt, now, origin = "https://rago-optimizer.com" }) {
   const when = new Intl.DateTimeFormat("en-US", {
     timeZone: "Europe/Paris", weekday: "long", month: "long", day: "numeric", hour: "numeric", minute: "2-digit",
   }).format(launchAt);
@@ -26,9 +27,17 @@ export function countdownPage({ launchAt, now }) {
 <meta name="robots" content="noindex">
 <title>Rago Optimizer opens ${esc(day)}</title>
 <meta name="description" content="Rago Optimizer opens on ${esc(when)}, Paris time.">
+<meta property="og:site_name" content="Rago Optimizer">
 <meta property="og:title" content="Rago Optimizer opens ${esc(day)}">
 <meta property="og:description" content="Every millisecond counts. Opens on ${esc(when)}, Paris time.">
 <meta property="og:type" content="website">
+<meta property="og:url" content="${esc(origin)}/">
+<meta property="og:image" content="${esc(origin)}/og-launch.png">
+<meta property="og:image:type" content="image/png">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta property="og:image:alt" content="Rago Optimizer. Every millisecond counts.">
+<meta name="twitter:card" content="summary_large_image">
 <link rel="icon" href="/favicon.svg" type="image/svg+xml">
 <link rel="icon" href="/favicon.ico" sizes="any">
 <link rel="apple-touch-icon" href="/apple-touch-icon.png">

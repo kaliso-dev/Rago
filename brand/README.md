@@ -7,7 +7,7 @@ Charte complète : `charte.html` (ouvrir dans un navigateur). Ce fichier est le 
 ## Logo (v1.2, 6 octobre 2026 : logo de Sofiene vectorisé, nom « Rago Optimizer »)
 - Source vectorielle unique : `logo/rago-mark.svg` (R rouge #FF3B30, viewBox 164 × 180). Tout le reste se régénère avec `tools/export-logo.js`.
 - Installeur NSIS : `logo/installer/sidebar.bmp` (164 × 314) et `header.bmp` (150 × 57), BMP 24 bits.
-- Site : `logo/web/favicon.ico` (16/32/48), `favicon.svg`, `favicon-32.png`, `apple-touch-icon.png` (180), `og-image.png` (1200 × 630).
+- Site : `logo/web/favicon.ico` (16/32/48), `favicon.svg`, `favicon-32.png`, `apple-touch-icon.png` (180), `og-image.png` (1200 × 630, l'aperçu des liens partagés : Discord, WhatsApp, réseaux) et `og-launch.png` (même format, celui du compte à rebours, qui ne montre que le nom).
 - Logo principal « Rago Optimizer » (texte vectorisé en Geist) : `logo/rago-wordmark-white.svg` (fond sombre) ou `logo/rago-wordmark-ink.svg` (fond clair).
 - Icône d'app (barre des tâches, .exe, .ico, PNG `png/rago-icon-*`) : `logo/rago-app-icon.svg`, **R rouge sur fond transparent, sans tuile** (demande de Sofiene, 6 oct.).
 - Tuile sombre conservée pour les endroits qui exigent un fond opaque : `logo/rago-app-tile.svg` → `web/apple-touch-icon.png`, `png/rago-tile-512.png` (avatar Discord, réseaux).
@@ -53,5 +53,8 @@ convert png/rago-icon-{16,20,24,32,40,48,64,128,256}.png rago.ico
 convert png/rago-icon-{16,32,48}.png web/favicon.ico
 cp rago-favicon.svg web/favicon.svg
 for n in sidebar header; do convert installer/$n.png -alpha off -type TrueColor BMP3:installer/$n.bmp; done
+for n in og-image og-launch; do convert web/$n.png -dither FloydSteinberg -colors 256 -define png:compression-level=9 PNG8:web/$n.png; done   # ~85 et ~45 Ko au lieu de ~125
 ```
+`node tools/export-logo.js og-image og-launch` ne refait que les fichiers dont le nom contient ces mots.
+Ensuite, copier `logo/web/og-image.png` et `og-launch.png` dans `site/` puis relancer `python3 site/tools/build.py` : l'adresse de l'image dans le HTML change avec son contenu (`?v=`), ce qui force Discord, WhatsApp et les réseaux à la recharger.
 Ensuite, copier `brand/logo/installer/*.bmp` dans `app/src-tauri/installer/` (chemins depuis la racine du dépôt).
