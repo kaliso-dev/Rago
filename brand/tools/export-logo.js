@@ -22,6 +22,13 @@ const FACES = `@font-face{font-family:Geist;src:url(data:font/woff2;base64,${b64
 @font-face{font-family:'Geist Mono';src:url(data:font/woff2;base64,${b64('GeistMono-Variable.woff2')}) format('woff2');font-weight:100 900}`;
 const font = "font-family:Geist,sans-serif;color:#F5F5F6;-webkit-font-smoothing:antialiased";
 const mono = "font-family:'Geist Mono',monospace";
+// nombre de réglages annoncé, comme l'app et le site : les jumeaux (même script, champ `twin`) comptent une fois
+const catalog = JSON.parse(fs.readFileSync(__dirname + '/../../app/src/data/catalog.json', 'utf8'));
+const TOTAL = new Set(catalog.modules.flatMap(m => m.sections.flatMap(s => s.tweaks.filter(t => t.id).map(t => t.twin || t.id)))).size;
+// jauge de l'image de partage (valeurs d'illustration, comme l'aperçu du site)
+const meter = (label, v) => `<div style="display:flex;flex-direction:column;gap:10px">
+        <div style="display:flex;justify-content:space-between;align-items:baseline;font-size:18px"><span>${label}</span><span style="${mono};font-size:28px;font-weight:500">${v}%</span></div>
+        <div style="height:8px;border-radius:999px;background:#1F1F23"><div style="width:${v}%;height:100%;border-radius:999px;background:#FF3B30"></div></div></div>`;
 const html = [
   ['installer/sidebar.png', 164, 314, `<div style="width:164px;height:314px;background:radial-gradient(120% 60% at 85% 0%,rgba(255,59,48,.26),transparent 60%),#0A0A0B;${font};position:relative;overflow:hidden">
     <div style="position:absolute;left:22px;top:30px">${markInline(48)}</div>
@@ -33,18 +40,16 @@ const html = [
     <div>${sized(load('rago-wordmark-white.svg'), 340, Math.round(340 * 180 / 1124))}</div>
     <div style="max-width:560px">
       <div style="font-size:68px;font-weight:700;letter-spacing:-.035em;line-height:1.02">Every millisecond <span style="color:#FF3B30">counts.</span></div>
-      <div style="margin-top:22px;font-size:26px;color:#A1A1AA;line-height:1.35">Lower ping, steadier FPS and cleaner hitreg for Minecraft PvP on Windows.</div>
+      <div style="margin-top:22px;font-size:26px;color:#A1A1AA;line-height:1.35">Steadier ping, smoother frames and less input lag for Minecraft PvP on Windows.</div>
     </div>
     <div style="display:flex;gap:12px;${mono};font-size:20px">
-      <span style="padding:10px 18px;border-radius:999px;background:#FF3B30;color:#0A0A0B;font-weight:600">226 tweaks</span>
+      <span style="padding:10px 18px;border-radius:999px;background:#FF3B30;color:#0A0A0B;font-weight:600">${TOTAL} tweaks</span>
       <span style="padding:10px 18px;border-radius:999px;border:1px solid rgba(255,255,255,.16);color:#F5F5F6">Free to start</span>
     </div>
-    <div style="position:absolute;right:-40px;top:150px;width:460px;border-radius:28px;background:#111113;border:1px solid rgba(255,255,255,.10);box-shadow:0 40px 80px -20px rgba(0,0,0,.8);padding:26px;display:flex;flex-direction:column;gap:14px">
-      <div style="${mono};font-size:13px;letter-spacing:.12em;color:#7C7C86">SERVER PING</div>
-      <div style="display:flex;align-items:baseline;gap:14px"><span style="${mono};font-size:72px;font-weight:500;letter-spacing:-.03em">18<span style="font-size:24px;color:#7C7C86"> ms</span></span><span style="${mono};font-size:24px;color:#3DDC97">−23 ms</span></div>
-      <svg viewBox="0 0 100 28" width="400" height="90" preserveAspectRatio="none"><path d="M0 6L12 8L24 5L36 9L48 7L60 16L72 19L84 21L100 22V28H0Z" fill="rgba(61,220,151,.14)"/><path d="M0 6L12 8L24 5L36 9L48 7L60 16L72 19L84 21L100 22" fill="none" stroke="#3DDC97" stroke-width="2" vector-effect="non-scaling-stroke"/></svg>
-      <div style="display:flex;justify-content:space-between;align-items:center;padding:14px 16px;border-radius:16px;background:#17171A;font-size:18px">Disable Nagle's algorithm<span style="width:46px;height:26px;border-radius:999px;background:#FF3B30;position:relative"><i style="position:absolute;right:3px;top:3px;width:20px;height:20px;border-radius:999px;background:#0A0A0B"></i></span></div>
-      <div style="display:flex;justify-content:space-between;align-items:center;padding:14px 16px;border-radius:16px;background:#17171A;font-size:18px">QoS priority for Minecraft<span style="width:46px;height:26px;border-radius:999px;background:#FF3B30;position:relative"><i style="position:absolute;right:3px;top:3px;width:20px;height:20px;border-radius:999px;background:#0A0A0B"></i></span></div>
+    <div style="position:absolute;right:64px;top:150px;width:436px;box-sizing:border-box;border-radius:28px;background:#111113;border:1px solid rgba(255,255,255,.10);box-shadow:0 40px 80px -20px rgba(0,0,0,.8);padding:26px;display:flex;flex-direction:column;gap:14px">
+      <div style="${mono};font-size:13px;letter-spacing:.12em;color:#7C7C86;display:flex;align-items:center;gap:10px">LIVE USAGE<i style="width:8px;height:8px;border-radius:999px;background:#FF3B30"></i></div>
+      ${meter('Memory (RAM)', 47)}${meter('Graphics card (GPU)', 62)}${meter('Processor (CPU)', 18)}
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-top:6px;padding:14px 16px;border-radius:16px;background:#17171A;font-size:18px">Disable Nagle's algorithm<span style="width:46px;height:26px;border-radius:999px;background:#FF3B30;position:relative"><i style="position:absolute;right:3px;top:3px;width:20px;height:20px;border-radius:999px;background:#0A0A0B"></i></span></div>
     </div></div>`],
 ];
 (async () => {

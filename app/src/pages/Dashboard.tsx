@@ -1,6 +1,6 @@
 import { motion } from "motion/react";
 import { Check, Cpu, Gpu, HardDrive, MemoryStick, Network, Plus, RefreshCw, Lock, RotateCcw, TriangleAlert } from "lucide-react";
-import { catalog, distinctKey, retired, totalTweaks, tweaks } from "../lib/catalog";
+import { availability, catalog, distinctKey, retired, totalTweaks, tweaks, type Preset } from "../lib/catalog";
 import { useStore } from "../lib/store";
 import { LiveStatsCard } from "../components/LiveStatsCard";
 import { Button, Card } from "../components/ui";
@@ -23,10 +23,23 @@ function Spec({ icon, label, value, sub }: { icon: ReactNode; label: string; val
 }
 
 export function Dashboard() {
-  const { t, lang, sys, sysLoading, refreshSys, isOn, selectMany, lastRun, requestApply, premium, setUpsell, applied: appliedMap, retiredApplied, requestUndo, run } = useStore();
+  const { t, lang, sys, sysLoading, refreshSys, isOn, selected, variantOf, selectMany, lastRun, requestApply, premium, setUpsell, applied: appliedMap, retiredApplied, requestUndo, run } = useStore();
   // réglages appliqués en ce moment (ceux qu'on a décochés depuis ne comptent plus), jumeaux comptés une fois
   const applied = new Set([...appliedMap.values()].filter((a) => a.ok && tweaks.get(a.id)?.kind === "tweak").map((a) => distinctKey(a.id))).size;
   const restore = lastRun.get("rst_point");
+
+  /** Réglages d'un preset utilisables sur ce PC (comme selectMany : pas les pilotes d'une autre marque de carte graphique
+   * ou de processeur), et preset complet : chacun allumé, avec la variante du preset. */
+  const presetState = (p: Preset) => {
+    const usable = p.tweaks.flatMap((e) => {
+      const [id, v] = e.split(":");
+      const tw = tweaks.get(id);
+      return tw && tw.kind === "tweak" && availability(tw, sys).ok ? [{ tw, v }] : [];
+    });
+    const variantNow = (id: string) => (selected.has(id) ? variantOf(tweaks.get(id)!) : appliedMap.get(id)?.variant);
+    const on = usable.length > 0 && usable.every(({ tw, v }) => isOn(tw.id) && (!v || variantNow(tw.id) === v));
+    return { n: usable.length, on };
+  };
 
   const health: { label: string; ok: boolean; value: string; action?: ReactNode }[] = sys
     ? [
@@ -131,8 +144,7 @@ export function Dashboard() {
         <h2 className="section-title rg-overline">{t("dash.presets")}</h2>
         <div className="presets">
           {catalog.presets.map((p, i) => {
-            const ids = p.tweaks.map((e) => e.split(":")[0]).filter((id) => tweaks.has(id));
-            const all = ids.length > 0 && ids.every((id) => isOn(id));
+            const { n, on: all } = presetState(p);
             return (
               <motion.button
                 key={p.id}
@@ -146,7 +158,7 @@ export function Dashboard() {
                 <span className="preset-name">{p.name[lang]}</span>
                 <span className="preset-desc">{p.desc[lang]}</span>
                 <span className="preset-foot">
-                  <span className="rg-metric">{t("dash.preset.count", { n: ids.length })}</span>
+                  <span className="rg-metric">{t("dash.preset.count", { n })}</span>
                   <span className="preset-cta">
                     {!premium ? <Lock size={12} /> : all ? <Check size={13} /> : <Plus size={13} />}
                     {!premium ? t("free.lock") : all ? t("dash.preset.added") : t("dash.preset.add")}

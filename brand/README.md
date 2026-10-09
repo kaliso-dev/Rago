@@ -36,7 +36,7 @@ Geist (UI, titres en 600, interlettrage négatif) + Geist Mono (ping, FPS, versi
 - Durées 90 / 160 / 240 / 420 ms, `cubic-bezier(.16,1,.3,1)` par défaut, ressort pour les interrupteurs. Signature « Pulse » pendant une optimisation : des ondes rondes rouges partent du R et s'effacent (1600 ms, en boucle). Tout se coupe avec `prefers-reduced-motion` / l'option Windows « Effets d'animation ».
 
 ## Interface Rago Optimizer (direction)
-Sidebar (12 modules, 226 tweaks) : Dashboard, Network, Latency, Graphics card, Windows, Hitreg, Minecraft, RBW Mod, Game mode, Expert mode, puis Restore et Settings. Chaque réglage : titre, une ligne d'explication, badge de risque (Safe / Advanced), interrupteur. Chiffres avant/après en Geist Mono avec delta vert. Bouton principal rouge à texte encre (« Apply 6 tweaks »). Maquette dans la section 07 de la charte.
+Sidebar (12 modules, 199 tweaks) : Dashboard, Network, Latency, Graphics card, Windows, Hitreg, Minecraft, RBW Mod, Game mode, Expert mode, puis Restore et Settings. Chaque réglage : titre, une ligne d'explication, badge de risque (Safe / Advanced), interrupteur. Chiffres avant/après en Geist Mono avec delta vert. Bouton principal rouge à texte encre (« Apply 6 tweaks »). Maquette dans la section 07 de la charte.
 
 ## Voice (English)
 Le site, les pages compte et l'app sont en anglais : la référence est **`voice-en.md`** (ton, vocabulaire produit, copy clé, licence 1 appareil). Résumé : "you" + contractions, sentence case, US English, chiffres mesurés, pas d'emoji ni de capitales hurlées. Tagline : *Every millisecond counts.*

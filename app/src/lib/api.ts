@@ -60,6 +60,9 @@ export interface LiveStats {
   ram: number | null;
   cpu: number | null;
   gpu: number | null;
+  /** mémoire vive utilisée et totale, en octets */
+  ramUsed: number | null;
+  ramTotal: number | null;
 }
 
 export interface MinecraftStatus {
@@ -143,6 +146,7 @@ export interface Api {
   clearHistory(): Promise<void>;
   applied(): Promise<AppliedView[]>;
   liveStats(): Promise<LiveStats>;
+  openTaskManager(): Promise<void>;
   minecraftStatus(dir?: string | null): Promise<MinecraftStatus>;
   minecraftRestore(dir?: string | null): Promise<string>;
   restartPc(): Promise<void>;
@@ -169,6 +173,7 @@ const tauriApi: Api = {
   clearHistory: () => invoke("clear_history"),
   applied: () => invoke("get_applied"),
   liveStats: () => invoke("live_stats"),
+  openTaskManager: () => invoke("open_task_manager"),
   minecraftStatus: (dir) => invoke("minecraft_status", { dir: dir ?? null }),
   minecraftRestore: (dir) => invoke("minecraft_restore", { dir: dir ?? null }),
   restartPc: () => invoke("restart_pc"),
@@ -354,7 +359,7 @@ const mockApi: Api = {
   liveStats: async () => {
     // démo : valeurs simulées ; localStorage « rago.demoNoGpu » = 1 simule un PC sans compteur de carte graphique
     mockStatsStart ||= Date.now();
-    if (Date.now() - mockStatsStart < 1000) return { ready: false, ram: null, cpu: null, gpu: null };
+    if (Date.now() - mockStatsStart < 1000) return { ready: false, ram: null, cpu: null, gpu: null, ramUsed: null, ramTotal: null };
     const drift = (v: number, step: number, min: number, max: number) => Math.min(max, Math.max(min, v + (Math.random() - 0.5) * step));
     mockLoad.ram = drift(mockLoad.ram, 1.5, 38, 64);
     mockLoad.cpu = drift(mockLoad.cpu, 10, 3, 60);
@@ -365,7 +370,11 @@ const mockApi: Api = {
     } catch {
       /* rien */
     }
-    return { ready: true, ram: mockLoad.ram, cpu: mockLoad.cpu, gpu: noGpu ? null : mockLoad.gpu };
+    const ramTotal = 32 * 1024 ** 3;
+    return { ready: true, ram: mockLoad.ram, cpu: mockLoad.cpu, gpu: noGpu ? null : mockLoad.gpu, ramUsed: (mockLoad.ram / 100) * ramTotal, ramTotal };
+  },
+  openTaskManager: async () => {
+    console.info("[démo] Gestionnaire des tâches");
   },
   minecraftStatus: async () => ({ dirExists: true, optifineFile: true, backups: 1 }),
   minecraftRestore: async () => "optionsof.txt restored (demo)",

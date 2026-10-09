@@ -22,6 +22,9 @@ pub struct LiveStats {
     pub ram: Option<f32>,
     pub cpu: Option<f32>,
     pub gpu: Option<f32>,
+    /// mémoire vive utilisée et totale, en octets (None si indisponible)
+    pub ram_used: Option<u64>,
+    pub ram_total: Option<u64>,
 }
 
 #[derive(Default)]
@@ -103,6 +106,7 @@ impl Probe {
         let total = self.sys.total_memory();
         let used = total.saturating_sub(self.sys.available_memory());
         let ram = if total > 0 { pct(used as f64 / total as f64 * 100.0) } else { None };
+        let (ram_used, ram_total) = if ram.is_some() { (Some(used), Some(total)) } else { (None, None) };
 
         #[cfg(windows)]
         let (cpu, gpu) = (
@@ -120,7 +124,7 @@ impl Probe {
             (cpu, None)
         };
 
-        LiveStats { ready: true, ram, cpu, gpu }
+        LiveStats { ready: true, ram, cpu, gpu, ram_used, ram_total }
     }
 }
 
@@ -299,6 +303,8 @@ mod tests {
         assert!(stats.ready);
         let ram = stats.ram.expect("RAM mesurée");
         assert!(ram > 0.0 && ram <= 100.0);
+        let (used, total) = (stats.ram_used.unwrap(), stats.ram_total.unwrap());
+        assert!(used > 0 && used <= total);
         let cpu = stats.cpu.expect("processeur mesuré");
         assert!((0.0..=100.0).contains(&cpu));
         if let Some(gpu) = stats.gpu {

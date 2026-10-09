@@ -21,7 +21,7 @@ An experienced competitive player who also knows Windows inside out. We talk to 
 | The app (since 2026-10-06) | **Rago Optimizer**. Never "Rago Hub" anymore. |
 | The free plan | **Free**: the same app, most tweaks locked with a padlock and an upgrade prompt. Say "Unlock with Premium" on locked items, and "Get Premium" on the upgrade button. |
 | Paid plan | **Premium** (never "Pro"). Monthly or yearly, as shown on the pricing section of the site. |
-| App sections (12) | Dashboard, Network, Latency, Graphics card, Windows, Hitreg, Minecraft, RBW Mod, Game mode, Expert mode, Restore, Settings. 226 tweaks in total. |
+| App sections (12) | Dashboard, Network, Latency, Graphics card, Windows, Hitreg, Minecraft, RBW Mod, Game mode, Expert mode, Restore, Settings. 199 tweaks in total. |
 | A single setting | a **tweak** (not "hack", "boost", "cheat") |
 | Applying settings | **Apply** (button), "Applied" (toast) |
 | Going back | **Restore** / "restore point" (not "revert", "rollback") |

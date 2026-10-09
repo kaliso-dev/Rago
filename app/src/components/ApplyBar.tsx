@@ -51,7 +51,7 @@ export function ApplyBar() {
               </div>
             </div>
             <div className="applybar-actions">
-              <Button variant="ghost" onClick={() => unselectMany([...selection, ...undo])}>
+              <Button variant="secondary" size="lg" className="applybar-clear" onClick={() => unselectMany([...selection, ...undo])}>
                 {t("apply.clear")}
               </Button>
               <Button

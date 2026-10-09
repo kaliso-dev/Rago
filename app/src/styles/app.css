@@ -876,7 +876,11 @@ kbd {
 }
 .applybar-actions {
   display: flex;
-  gap: 6px;
+  align-items: center;
+  gap: 8px;
+}
+.applybar-actions .btn {
+  border-radius: var(--rg-radius-full);
 }
 
 /* -------------------------------------------------------------- modales */
@@ -1263,7 +1267,7 @@ kbd {
 .dash-grid {
   display: grid;
   grid-template-columns: 1.25fr 1fr;
-  grid-template-areas: "system live" "system health";
+  grid-template-areas: "system live" "health health";
   gap: 16px;
   margin-bottom: 40px;
 }
@@ -1323,31 +1327,44 @@ kbd {
   }
 }
 
-.meters {
+.live {
   display: flex;
   flex-direction: column;
-  gap: 16px;
+}
+.meters {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  gap: 18px;
 }
 .meter-head {
   display: flex;
   align-items: center;
   gap: 12px;
 }
-.meter-label {
+.meter-text {
   flex: 1;
   min-width: 0;
-  font-size: 13px;
-  color: var(--rg-text-2);
+}
+.meter-label {
+  font-size: 13.5px;
+  font-weight: 520;
+}
+.meter-detail {
+  font-size: 11.5px;
+  color: var(--rg-text-3);
 }
 .meter-value {
-  font-size: 22px;
+  font-size: 24px;
   font-weight: 560;
   line-height: 1;
   font-variant-numeric: tabular-nums;
+  white-space: nowrap;
 }
 .meter.off .meter-value {
   font-family: var(--rg-font-sans);
-  font-size: 12.5px;
+  font-size: 13px;
   font-weight: 450;
   color: var(--rg-text-3);
 }
@@ -1377,8 +1394,20 @@ kbd {
     opacity: 0.35;
   }
 }
-.live .muted.small {
-  margin-top: 16px;
+.live .card-head h3 {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.live-taskmgr.btn-sm {
+  height: 26px;
+  margin-right: -6px;
+  padding: 0 8px;
+}
+.live-note {
+  margin: 18px 0 0;
+  padding-top: 14px;
+  border-top: 1px solid var(--rg-line-1);
 }
 @media (prefers-reduced-motion: reduce) {
   .meter-fill,
@@ -1410,6 +1439,11 @@ kbd {
 }
 .health-value {
   font-size: 12px;
+}
+.dash-health .health {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  column-gap: 40px;
 }
 
 .presets {
@@ -1772,7 +1806,7 @@ svg {
   }
   .applybar-label,
   .applybar-sub,
-  .applybar-actions .btn-ghost {
+  .applybar-clear {
     display: none;
   }
   .run {

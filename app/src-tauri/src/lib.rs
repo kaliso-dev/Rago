@@ -167,6 +167,13 @@ fn restart_pc() -> Result<(), String> {
         .map_err(|e| e.to_string())
 }
 
+/// Gestionnaire des tâches de Windows, depuis l'utilisation en direct : voir quelle appli prend la RAM, le processeur
+/// ou la carte graphique, et la fermer soi-même. Rago ne ferme aucun processus et ne vide pas la RAM de force.
+#[tauri::command]
+fn open_task_manager() -> Result<(), String> {
+    std::process::Command::new("taskmgr.exe").spawn().map(|_| ()).map_err(|e| e.to_string())
+}
+
 #[tauri::command]
 fn open_folder(state: State<'_, AppState>, kind: String) -> Result<(), String> {
     let path = match kind.as_str() {
@@ -317,6 +324,7 @@ pub fn run() {
             clear_history,
             get_applied,
             live_stats,
+            open_task_manager,
             minecraft_status,
             minecraft_restore,
             restart_pc,
