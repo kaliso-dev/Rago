@@ -2,8 +2,8 @@ import os
 OUT=os.path.join(os.path.dirname(os.path.abspath(__file__)),'..')
 # Builds site/terms.html, privacy.html, refunds.html. Yellow <mark class="f"> = to fill in by the seller.
 F=lambda t:f'<mark class="f">[{t}]</mark>'
-NAME=F("Full name"); SELLER=f'{NAME} EI (entrepreneur individuel, a French sole trader)'; ADDR=F("Street address and postal code")+' Paris'; COUNTRY='France'
-MAIL='<a href="mailto:support@rago-optimizer.com">support@rago-optimizer.com</a>'; PHONE=F("Phone number"); REG='SIRET: '+F("SIRET number"); MEDIATOR=F("Consumer mediator: name and website"); UPD="October 7, 2026"
+NAME=F("Full name"); SELLER=NAME; ADDR=F("Street address and postal code")+' Paris'; COUNTRY='France'
+MAIL='<a href="mailto:support@rago-optimizer.com">support@rago-optimizer.com</a>'; UPD="October 7, 2026"
 HEAD='''<!doctype html>
 <html lang="en">
 <head>
@@ -63,7 +63,7 @@ def page(name,title,body):
 
 page('terms.html','Terms of Sale',f'''
 <h2>1. Who we are</h2>
-<p>Rago Optimizer is sold by {SELLER}, {ADDR}, {COUNTRY}. {REG}. Contact: {MAIL}, {PHONE}, or our Discord server.</p>
+<p>Rago Optimizer is sold by {SELLER}, {ADDR}, {COUNTRY}. Contact: {MAIL}, or our Discord server.</p>
 <p>Publication director: {NAME}. This site is hosted by Netlify, Inc., 101 2nd Street, San Francisco, CA 94105, USA. Account pages and the license server are hosted by Railway Corporation, San Francisco, CA, USA.</p>
 
 <h2>2. What you buy</h2>
@@ -107,7 +107,7 @@ page('terms.html','Terms of Sale',f'''
 <p>We may suspend a license in case of fraud, a chargeback, a refund, or sharing of the license. A full refund or a payment dispute turns Premium off automatically.</p>
 
 <h2>11. Changes and law</h2>
-<p>We may update these terms. The version accepted at checkout applies to that purchase. These terms are governed by French law, which doesn't take away the protection the mandatory consumer law of your country gives you. If a dispute isn't solved with our support, you can refer it free of charge to our consumer mediator, {MEDIATOR}. You can also go to the courts of your own country.</p>
+<p>We may update these terms. The version accepted at checkout applies to that purchase. These terms are governed by French law, which doesn't take away the protection the mandatory consumer law of your country gives you. If a dispute isn't solved with our support, you can also use the mediation services and the courts of your own country.</p>
 ''')
 
 page('refunds.html','Refunds and Cancellation',f'''
