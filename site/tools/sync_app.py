@@ -49,9 +49,13 @@ s = re.sub(r'<br>(?:Restart|Redémarre)[^`]*`', lambda m: '<br>' + reboot + '`',
 # total tweak count, like the app (catalog.ts totalTweaks): tweaks and one-time actions, twins (same script
 # under two names or in two modules, field `twin`) counted once, sections that only point at another module's tweak ('ref') skipped
 total = len({t.get('twin') or i for i, t in T.items()})
-s = re.sub(r'(<h2>)\d+( tweaks\. One clear app\.</h2>)', lambda m: m.group(1) + str(total) + m.group(2), s)
+# heading: "Nearly 200 tweaks" while the count sits 1 to 3 under a round ten (decided with Sofiene, 9 Oct.),
+# the exact count otherwise; the counters below (All N, 9 of N, unlocks all N) always show the exact count
+ten = -(-total // 10) * 10
+heading = f'Nearly {ten} tweaks' if 0 < ten - total <= 3 else f'{total} tweaks'
+s = re.sub(r'<h2>(?:Nearly )?\d+ tweaks\. One clear app\.</h2>', lambda m: f'<h2>{heading}. One clear app.</h2>', s)
 s = re.sub(r'(All |9 of |unlocks all )\d+( tweaks|<)', lambda m: m.group(1) + str(total) + m.group(2), s)
 s = re.sub(r'(id="msel">0 of )\d+', lambda m: m.group(1) + str(count('latency')), s)
 open(p, 'w').write(s)
 print('MODS', re.findall(r'\["(\w+)","[^"]+","([^"]+)",(\d+)\]', s[s.index('const MODS'):s.index('];', s.index('const MODS'))]))
-print('total', total, 'reboot', reboot, 'power', sec_count('power'), 'input', sec_count('input'))
+print('total', total, 'heading', heading, 'reboot', reboot, 'power', sec_count('power'), 'input', sec_count('input'))
