@@ -342,3 +342,19 @@ p{margin:0}
 .stars .on{color:var(--rg-red-500)}
 .stars svg{width:15px;height:15px;fill:currentColor;display:block}
 .review-text{white-space:pre-line;overflow-wrap:anywhere}
+
+/* Admin (/admin): the site's discount pop-up */
+.field textarea{width:100%;min-height:96px;padding:12px 16px;background:var(--rg-ink-3);color:var(--rg-text-1);border:1px solid var(--rg-line-2);border-radius:var(--rg-radius-md);
+  font:400 14px/1.5 var(--rg-font-sans);resize:vertical;transition:border-color var(--rg-dur-fast),box-shadow var(--rg-dur-base) var(--rg-ease-out),background var(--rg-dur-fast)}
+.field textarea:hover{border-color:var(--rg-line-3)}
+.field textarea:focus{outline:none;border-color:var(--rg-red-500);box-shadow:0 0 0 4px var(--rg-red-a12);background:var(--rg-ink-2)}
+.pair{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+.pair + .field-hint{margin-top:-8px}
+.check{display:flex;gap:12px;align-items:center;font-size:14px;cursor:pointer}
+.check input{width:18px;height:18px;margin:0;accent-color:var(--rg-red-500);cursor:pointer}
+.is-admin .meta{max-width:440px}
+.pop-preview{max-width:400px;display:flex;flex-direction:column;gap:12px;padding:24px;background:var(--rg-ink-2);border:1px solid var(--rg-line-2);border-radius:var(--rg-radius-xl);box-shadow:var(--rg-shadow-2)}
+.pop-preview-title{font-weight:600;font-size:26px;line-height:1.15;letter-spacing:-.01em}
+.pop-preview-title span{color:var(--rg-red-500)}
+.pop-preview-code{padding:12px 16px;border:1px dashed var(--rg-red-500);border-radius:var(--rg-radius-full);background:var(--rg-red-a12);font-weight:600;letter-spacing:.12em;text-align:center}
+@media (max-width:560px){.pair{grid-template-columns:1fr}}

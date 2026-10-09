@@ -207,6 +207,8 @@ Sans jeton valable : `401 invalid_token`.
 | `storage_unavailable` | 503 | Stockage des photos injoignable : réessayer |
 | `rate_limited` | 429 | 20 avis ou photos par heure, 300 appels par heure |
 
+**Public** : `GET /promo` (sans jeton, CORS ouvert, cache 30 s) répond `{ "promo": { "code", "percent", "eyebrow", "title", "text", "total", "left" } }`, ou `{ "promo": null }` quand le pop-up est masqué (désactivé dans `/admin`, code inconnu ou désactivé dans Stripe, ou toutes ses utilisations prises). `total` et `left` valent `null` pour un code sans limite. `{percent}`, `{code}`, `{total}` et `{left}` dans les textes sont à remplacer par le site ; les textes sont du texte brut.
+
 **Public** : `GET /reviews` (sans jeton, CORS ouvert, cache 60 s) répond `{ "count", "average", "reviews": [{ "name", "rating", "comment", "avatar_url", "date": "AAAA-MM-JJ" }] }`, du plus récent au plus ancien, 60 au plus. Le commentaire est du texte brut : l'afficher comme texte, jamais comme HTML.
 
 ## License token

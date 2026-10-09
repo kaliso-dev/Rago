@@ -79,7 +79,7 @@ async function setup(env = {}, extra = {}) {
     return promo;
   };
   stripe.promotionCodes.update = async (id, p) => { stripeCalls.push(['promo', id, p]); const x = promos.find((q) => q.id === id); Object.assign(x, p); return x; };
-  stripe.promotionCodes.list = async ({ code }) => ({ data: promos.filter((x) => x.active && x.code.toUpperCase() === String(code).toUpperCase()) });
+  stripe.promotionCodes.list = async ({ code, active }) => ({ data: promos.filter((x) => (active === undefined || x.active === active) && x.code.toUpperCase() === String(code).toUpperCase()) });
   stripe.billingPortal.sessions.create = async (p) => { stripeCalls.push(['portal', p.customer]); return { url: 'https://billing.stripe.com/p/session/x' }; };
   const mails = [];
   const mailer = { purchase: async (to, url) => mails.push({ to, url }), passwordReset: async (to, url) => mails.push({ to, url }) };
@@ -462,7 +462,7 @@ test('keys generated once and kept in the database; public key served as PEM', a
 test('config accepts a bare host for PUBLIC_URL and flags example values', () => {
   const cfg = loadConfig({ NODE_ENV: 'production', PUBLIC_URL: 'rago-production.up.railway.app', SITE_URL: 'https://rago.netlify.app/',
     DATABASE_URL: 'postgres://x', STRIPE_SECRET_KEY: 'sk_test_x', STRIPE_PRICE_MONTHLY: 'price_m', STRIPE_PRICE_YEARLY: 'price_y', STRIPE_WEBHOOK_SECRET: 'whsec_a_remplir_a_l_etape_6',
-    SUPABASE_URL: 'https://abcd.supabase.co', RESEND_API_KEY: 're_...', PREVIEW_KEY: 'k'.repeat(16) });
+    SUPABASE_URL: 'https://abcd.supabase.co', RESEND_API_KEY: 're_...', PREVIEW_KEY: 'k'.repeat(16), ADMIN_KEY: 'a'.repeat(16) });
   assert.equal(cfg.publicUrl, 'https://rago-production.up.railway.app');
   assert.equal(cfg.siteUrl, 'https://rago.netlify.app');
   assert.equal(cfg.cancelUrl, 'https://rago.netlify.app/#pricing');
@@ -475,6 +475,7 @@ test('config accepts a bare host for PUBLIC_URL and flags example values', () =>
   const noPrice = loadConfig({ NODE_ENV: 'production', PUBLIC_URL: 'x.app', DATABASE_URL: 'postgres://x', STRIPE_SECRET_KEY: 'sk', STRIPE_WEBHOOK_SECRET: 'whsec' });
   assert.match(noPrice.warnings.join(' '), /STRIPE_PRICE_MONTHLY/);
   assert.match(noPrice.warnings.join(' '), /SITE_URL is not set/);
+  assert.match(noPrice.warnings.join(' '), /ADMIN_KEY is not set/);
   // The example sender from .env.example would be refused by Resend: emails stay off.
   const exampleFrom = loadConfig({ RESEND_API_KEY: 're_real', MAIL_FROM: 'Rago Optimizer <hello@your-domain.com>', SITE_URL: 'https://ragohub.com' });
   assert.equal(exampleFrom.mailEnabled, false);
@@ -967,6 +968,93 @@ test('a discount Stripe refuses for this buyer: the checkout still opens, with t
   const res = await t.browse('/buy?promo=RAGO15');
   assert.equal(res.status, 303);
   assert.equal(t.created.at(-1).allow_promotion_codes, true);
+});
+
+test('site pop-up: set from /admin with ADMIN_KEY, code created in Stripe for the first 15 customers, hidden once used up', async () => {
+  const KEY = 'admin-key-0123456789abcdef';
+  const t = await setup({ ...SUBS, ADMIN_KEY: KEY });
+  const promo = async () => {
+    const res = await t.app.request('/api/v1/promo');
+    assert.equal(res.headers.get('access-control-allow-origin'), '*');
+    return (await res.json()).promo;
+  };
+  // Default settings point at RAGO15, which this Stripe doesn't have: no pop-up rather than a code that fails.
+  assert.equal(await promo(), null);
+
+  // /admin asks for the key; a wrong key is refused, the right one opens it for 7 days, on /admin only.
+  assert.match(await (await t.browse('/admin')).text(), /Clé admin/);
+  assert.equal((await t.browse('/admin/popup', { form: { code: 'RAGO50', percent: '50' } })).headers.get('location'), '/admin');
+  assert.equal((await t.browse('/admin/login', { form: { key: 'wrong-key-0123456789' } })).status, 401);
+  const login = await t.app.request('/admin/login', { method: 'POST', headers: { origin: 'http://localhost', 'content-type': 'application/x-www-form-urlencoded' }, body: `key=${KEY}` });
+  assert.equal(login.status, 303);
+  assert.match(login.headers.get('set-cookie'), /rago_admin=.*Path=\/admin.*HttpOnly.*SameSite=Strict/i);
+  await t.browse('/admin/login', { form: { key: KEY } });
+  const page = await (await t.browse('/admin')).text();
+  assert.match(page, /Masquée/);
+  assert.match(page, /RAGO15 n’existe pas dans Stripe/);
+  assert.equal((await t.browse('/admin')).headers.get('cache-control'), 'no-store');
+
+  // A new code without a percent: refused, nothing created.
+  const typed = { enabled: 'on', code: 'rago50', percent: '', limit: '15', eyebrow: 'Launch offer', title: 'Get {percent}% off now!', text: 'For the first {total} players, on your first payment.' };
+  let res = await t.browse('/admin/popup', { form: typed });
+  assert.equal(res.status, 400);
+  assert.match(await res.text(), /RAGO50 n’existe pas encore dans Stripe/);
+  assert.equal(t.promos.length, 0);
+
+  // With 50 %: created in Stripe, 15 uses, new customers only, on the first payment.
+  res = await t.browse('/admin/popup', { form: { ...typed, percent: '50' } });
+  assert.equal(res.headers.get('location'), '/admin?n=created');
+  assert.deepEqual(t.coupons['rago-promo-50-once'], { object: 'coupon', id: 'rago-promo-50-once', percent_off: 50, duration: 'once', name: '50% off' });
+  const made = t.promos.find((p) => p.code === 'RAGO50');
+  assert.equal(made.max_redemptions, 15);
+  assert.equal(made.restrictions.first_time_transaction, true);
+  assert.deepEqual(made.promotion, { type: 'coupon', coupon: 'rago-promo-50-once' });
+  assert.deepEqual(await promo(), { code: 'RAGO50', percent: 50, eyebrow: 'Launch offer', title: 'Get {percent}% off now!', text: 'For the first {total} players, on your first payment.', total: 15, left: 15 });
+  assert.match(await (await t.browse('/admin?n=created')).text(), /Affichée sur le site[\s\S]*0 sur 15[\s\S]*Get <span>50<\/span>% off now!/);
+
+  // Stripe can't change the percent or the limit of an existing code: a new code is asked for.
+  res = await t.browse('/admin/popup', { form: { ...typed, percent: '40' } });
+  assert.match(await res.text(), /RAGO50 existe déjà dans Stripe avec 50 % de réduction/);
+  res = await t.browse('/admin/popup', { form: { ...typed, percent: '50', limit: '20' } });
+  assert.match(await res.text(), /RAGO50 existe déjà dans Stripe pour 15 clients/);
+  // The words change freely; the site sees it at once (the cache is cleared on save).
+  res = await t.browse('/admin/popup', { form: { ...typed, percent: '50', text: 'Only {left} left.' } });
+  assert.equal(res.headers.get('location'), '/admin?n=saved');
+  assert.equal((await promo()).text, 'Only {left} left.');
+  assert.equal(t.promos.length, 1);
+
+  // Uses taken: the count follows after a purchase; all 15 used: no pop-up, and /buy no longer applies the code.
+  made.times_redeemed = 14;
+  await t.webhook('checkout.session.completed', t.paidSubscription('cs_pop', 'pop@example.com', 'year'));
+  assert.equal((await promo()).left, 1);
+  await t.browse('/buy?interval=year&promo=RAGO50');
+  assert.deepEqual(t.created.at(-1).discounts, [{ promotion_code: made.id }]);
+  made.times_redeemed = 15;
+  await t.webhook('checkout.session.completed', t.paidSubscription('cs_pop2', 'pop2@example.com', 'year'));
+  assert.equal(await promo(), null);
+  assert.match(await (await t.browse('/admin')).text(), /Les 15 utilisations de RAGO50 sont prises/);
+  await t.browse('/buy?interval=year&promo=RAGO50');
+  assert.equal(t.created.at(-1).discounts, undefined);
+  assert.equal(t.created.at(-1).allow_promotion_codes, true);
+
+  // Turned off: hidden, even with Stripe out of reach.
+  t.stripe.promotionCodes.list = async () => { throw new Error('Stripe down'); };
+  res = await t.browse('/admin/popup', { form: { ...typed, enabled: '' } });
+  assert.equal(res.headers.get('location'), '/admin?n=saved');
+  assert.equal(await promo(), null);
+  assert.match(await (await t.browse('/admin')).text(), /Tu l’as désactivée/);
+
+  // Signed out of /admin: the form is closed again.
+  await t.browse('/admin/logout', { form: {} });
+  assert.match(await (await t.browse('/admin')).text(), /Clé admin/);
+});
+
+test('/admin is a 404 without ADMIN_KEY (or with one under 16 characters)', async () => {
+  for (const env of [{}, { ADMIN_KEY: 'short' }]) {
+    const t = await setup(env);
+    assert.equal((await t.browse('/admin')).status, 404);
+    assert.equal((await t.browse('/admin/login', { form: { key: 'short' } })).status, 404);
+  }
 });
 
 test('account pages: change password, foreign checkouts ignored, code typed at sign-in after a purchase, expired reset link', async () => {
