@@ -19,6 +19,7 @@ import * as L from './licensing.js';
 import * as V from './views.js';
 import * as P from './profile.js';
 import * as R from './reviews.js';
+import * as Promo from './promo.js';
 import { audit } from './db.js';
 
 const DAY = 86400000;
@@ -70,6 +71,7 @@ export function createApp({ cfg, db, keys, stripe, mailer, log = console, fetchI
   const installer = createInstaller(cfg, { fetchImpl, log });
   const allow = rateLimiter();
   let reviewsCache = null; // { at, body }: the site asks for the reviews on every visit
+  let popupCache = null; // { at, body }: same for the discount pop-up (one Stripe call per refresh)
   const publicDir = relative(process.cwd(), fileURLToPath(new URL('../public', import.meta.url))) || '.';
   const cookieBase = { httpOnly: true, secure: cfg.prod, sameSite: 'Lax', path: '/' };
 
@@ -87,7 +89,7 @@ export function createApp({ cfg, db, keys, stripe, mailer, log = console, fetchI
 
   // Strict CSP on our own pages. The marketing site (SITE_DIR) uses inline styles and scripts,
   // so it gets the other security headers without a CSP.
-  const OWN = /^\/(assets|download|buy|checkout|claim|signup|login|logout|forgot|reset|account|affiliate|webhooks|api|healthz|acces)(\/|$)/;
+  const OWN = /^\/(assets|download|buy|checkout|claim|signup|login|logout|forgot|reset|account|affiliate|webhooks|api|healthz|acces|admin)(\/|$)/;
   const strictHeaders = secureHeaders({
     contentSecurityPolicy: {
       defaultSrc: ["'self'"],
@@ -711,6 +713,54 @@ export function createApp({ cfg, db, keys, stripe, mailer, log = console, fetchI
     return c.redirect('/account?n=reset', 303);
   });
 
+  // ---------- admin: the site's discount pop-up ----------
+  // Opened with ADMIN_KEY (Railway variable, 16 characters at least): typed once, then a cookie for 7 days,
+  // limited to /admin. Changing the key closes every open admin session. Without the key, /admin is a 404.
+  const ADMIN_COOKIE = 'rago_admin';
+  const adminPass = cfg.adminKey.length >= 16 ? createHmac('sha256', cfg.adminKey).update('rago-admin-v1').digest('base64url') : null;
+  const isAdmin = (c) => !!adminPass && sameHash(getCookie(c, ADMIN_COOKIE) || '', adminPass);
+  const adminCookie = { httpOnly: true, secure: cfg.prod, sameSite: 'Strict', path: '/admin' };
+  app.use('/admin/*', async (c, next) => { c.header('Cache-Control', 'no-store'); await next(); });
+  app.use('/admin', async (c, next) => { c.header('Cache-Control', 'no-store'); await next(); });
+  const adminPage = async (c, extra = {}, status = 200) => c.html(V.adminPage(cfg, { state: await Promo.popupState(db, stripe, cfg), ...extra }), status);
+
+  app.get('/admin', async (c) => {
+    if (!adminPass) return c.notFound();
+    if (!isAdmin(c)) return c.html(V.adminLoginPage(cfg));
+    return adminPage(c, { notice: c.req.query('n') });
+  });
+  app.post('/admin/login', async (c) => {
+    if (!adminPass) return c.notFound();
+    if (!allow(`admin-login:${ip(c)}`, 10, 60 * 60 * 1000)) return c.html(V.adminLoginPage(cfg, { error: 'Trop d’essais. Réessaie dans une heure.' }), 429);
+    const body = await c.req.parseBody();
+    if (!sameHash(String(body.key || '').trim(), cfg.adminKey)) {
+      await audit(db, 'admin.login_failed', { detail: { ip: ip(c) } });
+      return c.html(V.adminLoginPage(cfg, { error: 'Cette clé ne correspond pas à ADMIN_KEY.' }), 401);
+    }
+    setCookie(c, ADMIN_COOKIE, adminPass, { ...adminCookie, maxAge: 7 * 86400 });
+    return c.redirect('/admin', 303);
+  });
+  app.post('/admin/logout', (c) => {
+    deleteCookie(c, ADMIN_COOKIE, adminCookie);
+    return c.redirect('/admin', 303);
+  });
+  app.post('/admin/popup', async (c) => {
+    if (!adminPass) return c.notFound();
+    if (!isAdmin(c)) return c.redirect('/admin', 303);
+    const body = await c.req.parseBody();
+    const input = { enabled: body.enabled === 'on' };
+    for (const k of ['code', 'percent', 'limit', 'eyebrow', 'title', 'text']) input[k] = String(body[k] ?? '');
+    try {
+      const out = await Promo.savePopup(db, stripe, input);
+      popupCache = null;
+      await audit(db, 'admin.popup', { detail: { ...out.settings, created: out.created } });
+      return c.redirect(`/admin?n=${out.created ? 'created' : 'saved'}`, 303);
+    } catch (err) {
+      if (!(err instanceof Promo.PopupError)) throw err;
+      return adminPage(c, { error: err.message, values: input }, 400);
+    }
+  });
+
   // ---------- Stripe webhook ----------
   app.post('/webhooks/stripe', async (c) => {
     if (!stripe) return c.text('Stripe not configured', 503);
@@ -723,6 +773,7 @@ export function createApp({ cfg, db, keys, stripe, mailer, log = console, fetchI
     }
     const label = await handleStripeEvent(db, event, { stripe, onLicense: sendClaimEmail, log });
     log.info?.(`[stripe] ${event.type} ${event.id} -> ${label}`);
+    if (event.type.startsWith('checkout.session.')) popupCache = null; // a code use: the pop-up's count moves
     return c.json({ received: true });
   });
 
@@ -980,6 +1031,17 @@ export function createApp({ cfg, db, keys, stripe, mailer, log = console, fetchI
   api.get('/reviews', async (c) => {
     if (!reviewsCache || Date.now() - reviewsCache.at > 30 * 1000) reviewsCache = { at: Date.now(), body: await R.publicReviews(db, cfg) };
     return c.json(reviewsCache.body, 200, { 'Access-Control-Allow-Origin': '*', 'Cache-Control': 'public, max-age=60' });
+  });
+
+  // Public: the discount pop-up the site shows (set in /admin), or { promo: null } when it's hidden. The site
+  // reads it from the browser on every visit; the count of uses left is at most 30 seconds old.
+  api.get('/promo', async (c) => {
+    if (!popupCache || Date.now() - popupCache.at > 30 * 1000) {
+      const state = await Promo.popupState(db, stripe, cfg);
+      if (state.error) log.error('[stripe] pop-up code not read:', state.error);
+      popupCache = { at: Date.now(), body: { promo: Promo.publicPopup(state) } };
+    }
+    return c.json(popupCache.body, 200, { 'Access-Control-Allow-Origin': '*', 'Cache-Control': 'public, max-age=30' });
   });
 
   app.route('/api/v1', api);

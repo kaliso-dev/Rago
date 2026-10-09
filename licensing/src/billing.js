@@ -98,11 +98,12 @@ export async function ensureCoupon(stripe, id, percent, duration, name) {
   }
 }
 
-/** An active promotion code typed by people (RAGO15, an affiliate code…), or null. */
+/** An active promotion code typed by people (RAGO15, an affiliate code…), or null. Used up (all its uses taken): null. */
 export async function findPromotionCode(stripe, code) {
   if (!/^[A-Za-z0-9-]{2,40}$/.test(String(code || ''))) return null;
   try {
-    return (await stripe.promotionCodes.list({ code, active: true, limit: 1 })).data[0] || null;
+    const promo = (await stripe.promotionCodes.list({ code, active: true, limit: 1 })).data[0] || null;
+    return promo && promo.max_redemptions != null && (promo.times_redeemed || 0) >= promo.max_redemptions ? null : promo;
   } catch {
     return null;
   }

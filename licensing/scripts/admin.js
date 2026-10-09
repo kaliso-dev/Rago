@@ -16,6 +16,12 @@
 //                                a Stripe promotion code people type at checkout or get from the site
 //                                (/buy?promo=CODE), e.g. create-promo RAGO15 15 for the site's pop-up.
 //                                Made in the mode of STRIPE_SECRET_KEY (test or live)
+//   popup                        what the site's discount pop-up shows, and how many uses are left (also on /admin)
+//   popup <CODE> [percent] [customers]
+//                                the pop-up's code, e.g. popup RAGO50 50 15: 50% off the first payment for the
+//                                first 15 customers (created in Stripe when new; customers left out = no limit)
+//   popup title|eyebrow|text "…" the pop-up's words; {percent} {code} {total} {left} are filled in
+//   popup off | on               hide or show the pop-up
 //   delete-user <email>          GDPR erasure: cancel the subscription, delete the account, PC and
 //                                sessions, anonymize the license kept for accounting
 //   export-keys                  print LICENSE_SIGNING_KEY and SESSION_SECRET to save outside the database
@@ -149,6 +155,33 @@ switch (cmd) {
     console.log(`${code}: ${pct}% off ${duration === 'once' ? 'the first payment' : 'every payment'}, new customers only (${promo.id}, ${/^(sk|rk)_live_/.test(cfg.stripeSecretKey) ? 'live' : 'test'} mode).`);
     break;
   }
+  case 'popup': {
+    const Popup = await import('../src/promo.js');
+    const stripe = cfg.stripeSecretKey ? new Stripe(cfg.stripeSecretKey) : null;
+    const [what, ...more] = [email, ...rest].filter((a) => a != null && a !== '');
+    let input = null;
+    if (what === 'off' || what === 'on') input = { enabled: what === 'on' };
+    else if (['title', 'eyebrow', 'text'].includes(what)) input = { [what]: more.join(' ') };
+    else if (what) input = { enabled: true, code: what, percent: more[0] ?? '', limit: more[1] ?? '' };
+    if (input) {
+      try {
+        const out = await Popup.savePopup(db, stripe, input);
+        console.log(out.created ? `${out.promo.code} créé dans Stripe et enregistré.` : 'Enregistré.');
+      } catch (err) {
+        if (!(err instanceof Popup.PopupError)) throw err;
+        console.error(err.message); process.exit(1);
+      }
+    }
+    const st = await Popup.popupState(db, stripe, cfg);
+    const { settings: s, promo: p } = st;
+    console.log(`Pop-up : ${st.shown ? 'affichée sur le site' : `masquée. ${st.reason}`}${st.shown ? ' (le site suit en moins d’une minute)' : ''}`);
+    if (p) {
+      console.log(`Code : ${p.code}, ${p.percent == null ? 'montant fixe' : `${p.percent} %`} ${{ once: 'sur le premier paiement', forever: 'sur chaque paiement' }[p.duration] || ''}${p.firstTime ? ', nouveaux clients' : ''} (Stripe ${st.mode})`);
+      console.log(`Utilisations : ${p.total == null ? `${p.used}, sans limite` : `${p.used} sur ${p.total}, ${p.left} restantes`}`);
+    } else console.log(`Code : ${s.code}`);
+    console.log(`Petit titre : ${s.eyebrow}\nTitre : ${s.title}\nTexte : ${s.text}`);
+    break;
+  }
   case 'create-user': await L.createUser(db, email, rest[0]); console.log('User created.'); break;
   case 'delete-user': {
     const target = String(email || '').toLowerCase();
@@ -220,6 +253,6 @@ switch (cmd) {
     break;
   }
   default:
-    console.log('Commands: show, attach, claim-link, reset-link, reset-device, revoke, restore, grant, affiliate, create-promo, create-user, delete-user, export-keys, reviews, hide-review, show-review, remove-photo, set-name (see scripts/admin.js)');
+    console.log('Commands: show, attach, claim-link, reset-link, reset-device, revoke, restore, grant, affiliate, create-promo, popup, create-user, delete-user, export-keys, reviews, hide-review, show-review, remove-photo, set-name (see scripts/admin.js)');
 }
 await db.close();

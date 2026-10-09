@@ -188,7 +188,7 @@ Fais-le de bout en bout, comme un vrai client, dans une fenêtre de navigation p
 8. Tableau de bord → **Cancel or manage subscription** : le portail Stripe s'ouvre. Annule : la carte Subscription affiche « Ends … » et un bouton **Keep Premium**.
 9. Dans Stripe, rembourse ce paiement test : la licence passe en « Refunded » sur le tableau de bord, l'abonnement est annulé, et Rago Optimizer s'arrête à sa prochaine vérification.
 10. Affiliation : avec un 2e compte, va sur `/affiliate` → **Get my referral code**. Fais un achat test avec un autre email en tapant ce code dans **Add promotion code** sur la page Stripe (−5 %) : il est rempli tout seul à la création du compte et apparaît dans « Players who used your code » en « Not activated yet ». Connecte-toi avec ce compte dans Rago Optimizer et clique **Activate** : recharge `/affiliate`, le joueur est « Counted » et le cercle passe à 1/3. Il faut un PC qui n'est pas celui de l'affilié (sinon « Same PC as yours »).
-11. Code du pop-up du site : `RAGO15` (voir « Codes promo » plus bas). Sur le site, attends le pop-up → **Claim my discount** → **Get Premium** : la page Stripe affiche −15 %.
+11. Code du pop-up du site : règle-le sur `/admin` (voir « Le pop-up du site » plus bas). Sur le site, attends le pop-up → **Claim my discount** → **Get Premium** : la page Stripe affiche la réduction.
 
 Si une étape coince, envoie-moi une capture et l'heure : je trouve la cause.
 
@@ -197,7 +197,7 @@ Si une étape coince, envoie-moi une capture et l'heure : je trouve la cause.
 1. Stripe → **Activer les paiements** : informations sur toi ou ta société, et ton IBAN. Stripe demande une pièce d'identité.
 2. Repasse en **mode live**, puis refais en live les étapes 3.2 à 3.6 et 6 : deux nouveaux `price_...`, nouvelle clé `sk_live_...`, portail client, nouveau webhook `whsec_...`.
 3. Remplace ces quatre variables dans Railway (et `STRIPE_PORTAL_LOGIN_URL`, le lien du portail live).
-4. Recrée `RAGO15` en live (voir « Codes promo »). Les codes d'affiliation, eux, sont recréés en live tout seuls dans l'heure qui suit (ou dès que l'affilié ouvre `/affiliate`).
+4. Le code du pop-up créé en test n'existe pas en live : ouvre `/admin` et enregistre-le une fois (avec la réduction et le nombre de clients), il est créé en live (voir « Le pop-up du site »). Les codes d'affiliation, eux, sont recréés en live tout seuls dans l'heure qui suit (ou dès que l'affilié ouvre `/affiliate`).
 5. Fais un vrai achat avec ta carte, puis rembourse-le depuis Stripe : la boucle complète est vérifiée.
 
 ## Revenir en mode test
@@ -216,15 +216,33 @@ Railway redéploie tout seul. Paie ensuite avec `4242 4242 4242 4242`, une date 
 ## Codes promo
 
 - **Codes d'affiliation** : chaque code devient tout seul un code promo Stripe à −5 % (`AFFILIATE_DISCOUNT_PERCENT`), sur le premier paiement seulement (`AFFILIATE_DISCOUNT_DURATION=once` ; `forever` = sur chaque renouvellement), réservé aux nouveaux clients. Le lien de l'affilié l'applique d'office ; sinon le joueur le tape dans **Add promotion code** sur la page Stripe. Rien à faire dans Stripe : le coupon `rago-referral-5-once` et les codes sont créés par le serveur, en test comme en live.
-- **RAGO15** (pop-up du site, −15 % sur le premier paiement) : à créer une fois en test, puis une fois en live. Depuis ton PC (voir « Au quotidien »), avec `STRIPE_SECRET_KEY` de ce mode :
-
-  ```bash
-  export STRIPE_SECRET_KEY="sk_test_..."     # puis sk_live_... pour le live
-  npm run admin -- create-promo RAGO15 15
-  ```
-
-  Ou à la main dans Stripe → Catalogue de produits → **Coupons → Créer** : 15 %, durée **Une fois**, puis **Ajouter un code promotionnel** `RAGO15`, case « Limiter aux premières commandes ». Le site envoie `/buy?promo=RAGO15` : le serveur applique ce code d'office ; un code inconnu est ignoré (la page Stripe garde alors le champ pour en taper un).
+- **Code du pop-up du site** (−50 % pour les 15 premiers clients au lancement, `RAGO15` avant) : il se règle sans toucher au code, sur **`https://account.rago-optimizer.com/admin`** (voir « Le pop-up du site » ci-dessous) ou avec `npm run admin -- popup`. Le site envoie `/buy?promo=CODE` : le serveur applique ce code d'office ; un code inconnu ou épuisé est ignoré (la page Stripe garde alors le champ pour en taper un).
 - Un seul code par paiement : un visiteur venu par un lien d'affilié n'a pas le pop-up, et garde ses −5 %.
+
+### Le pop-up du site
+
+Le site lit à chaque visite ce que le pop-up propose (`/api/v1/promo` du serveur de comptes) : le code, la réduction, le petit titre, le titre, le texte et le nombre de places restantes. La réduction et le nombre d'utilisations viennent de Stripe, donc le pop-up ne promet jamais plus que ce que Stripe accorde.
+
+**Une fois pour toutes** : dans Railway → Variables, ajoute `ADMIN_KEY` = une clé d'au moins 16 lettres et chiffres (différente de `PREVIEW_KEY`, à garder dans ton gestionnaire de mots de passe). Railway redéploie tout seul.
+
+**Changer le pop-up** : ouvre `https://account.rago-optimizer.com/admin`, entre la clé (l'accès dure 7 jours sur ce navigateur ; **Quitter l'admin** le retire, changer la clé coupe tous les accès), modifie, **Enregistrer**. Le site suit en moins d'une minute.
+
+- **Nouvelle offre** (ex. le lancement) : tape un nouveau code (`RAGO50`), la réduction (`50`) et le nombre de clients (`15`). Le serveur crée le code dans Stripe, dans le mode de `STRIPE_SECRET_KEY` (test ou live) : −50 % sur le premier paiement (mensuel ou annuel), réservé aux nouveaux clients, utilisable 15 fois. Nombre de clients vide : sans limite.
+- **Texte** : à écrire en anglais, comme le site. `{percent}`, `{code}`, `{total}` et `{left}` sont remplacés par la réduction, le code, le nombre de clients et les places restantes. Sous le code, le pop-up ajoute tout seul « Limited to the first 15 players · 7 left » quand le code a une limite.
+- **Les 15 places prises** : le pop-up disparaît du site tout seul, et `/buy` n'applique plus le code. La page admin affiche « Les 15 utilisations de RAGO50 sont prises ». Pour une nouvelle offre, tape un nouveau code.
+- Stripe ne permet pas de changer la réduction ni la limite d'un code existant : pour 40 % ou 20 clients, il faut un nouveau code (la page te le dit).
+- **Masquer** : décoche **Afficher la pop-up sur le site**.
+
+La même chose en ligne de commande, depuis ton PC (voir « Au quotidien », avec `DATABASE_URL` **et** `STRIPE_SECRET_KEY` de Railway) :
+
+```bash
+npm run admin -- popup                                  # ce que le pop-up affiche et les places restantes
+npm run admin -- popup RAGO50 50 15                     # code, % de réduction, nombre de clients (créé dans Stripe s'il est nouveau)
+npm run admin -- popup title "Get {percent}% off now!"  # aussi : eyebrow (petit titre), text
+npm run admin -- popup off                              # masque le pop-up ; popup on le remet
+```
+
+**À la main dans Stripe** (si tu préfères, avant de taper le code dans `/admin`) : Catalogue de produits → **Coupons → Créer un coupon** : type **Pourcentage**, `50`, durée **Une fois**. Dans le coupon, **Ajouter un code promotionnel** : code `RAGO50`, coche **Limiter aux premières commandes** (un client qui a déjà payé ne peut pas l'utiliser) et **Limiter le nombre d'utilisations de ce code**, `15`. Enregistre, puis mets `RAGO50` dans `/admin` en laissant la réduction et le nombre de clients tels que Stripe les a. Le suivi est dans Stripe → Coupons → le coupon → **Utilisations**.
 
 ---
 
@@ -255,6 +273,7 @@ Railway redéploie tout seul. Paie ensuite avec `4242 4242 4242 4242`, une date 
 | `PRICE_LABEL` | Le prix affiché aux comptes gratuits : `$5.99 a month or $29.99 a year`, mêmes montants que Stripe et le site |
 | `LICENSE_SIGNING_KEY`, `SESSION_SECRET` | `npm run admin -- export-keys` (étape 5.7) |
 | `SCRIPTS_SECRET` | Une valeur aléatoire que tu génères une fois (étape 8), identique au secret GitHub `RAGO_SCRIPTS_SECRET`. Ne la change jamais |
+| `ADMIN_KEY` | Une clé d'au moins 16 lettres et chiffres que tu choisis : elle ouvre `/admin`, où se règle le pop-up du site (« Le pop-up du site »). Sans elle, `/admin` n'existe pas |
 | `INSTALLER_VERSION` | Le numéro de l'exe déposé dans le bucket, lu dans son nom `Rago Optimizer_<numéro>_x64-setup.exe` (ex. `1.1.5`). Affiché à côté du bouton de téléchargement. `INSTALLER_OBJECT` est facultatif (il donne le bucket et le dossier) : le `.exe` le plus récent du dossier est toujours servi |
 
 À retirer s'il est encore là : `STRIPE_PRICE_ID` (ancien prix unique, plus vendu).
@@ -275,6 +294,7 @@ npm run admin -- reset-device joueur@mail.com   # il a changé de PC : libère l
 npm run admin -- grant ami@mail.com             # licence à vie offerte (ex. anciens acheteurs du .bat)
 npm run admin -- affiliate affilie@mail.com     # son code, ses filleuls, pourquoi chacun compte ou non, ses récompenses
 npm run admin -- create-promo RAGO15 15         # code promo Stripe (ici −15 % sur le premier paiement), voir « Codes promo »
+npm run admin -- popup                          # le pop-up du site et ses places restantes ; popup RAGO50 50 15 pour une offre (voir « Le pop-up du site »)
 npm run admin -- reviews                        # les derniers avis laissés dans l'app (note, nom public, email, affiché ou masqué)
 npm run admin -- hide-review joueur@mail.com    # masque son avis du site (spam, insulte) ; show-review le remet
 npm run admin -- remove-photo joueur@mail.com   # retire sa photo de profil (image inappropriée) ; demande aussi SUPABASE_URL et SUPABASE_SERVICE_ROLE_KEY

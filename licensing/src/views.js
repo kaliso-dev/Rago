@@ -48,10 +48,10 @@ export const supportLink = (cfg, label = 'Contact support on Discord') =>
 /**
  * @param buy show Pricing and "Get Premium" in the header (visitors and free accounts)
  */
-function page({ title, body, user, cfg, bodyClass = '', nav = '', cta = { href: '/login', label: 'Sign in' }, buy = !user }) {
+function page({ title, body, user, cfg, bodyClass = '', nav = '', cta = { href: '/login', label: 'Sign in' }, buy = !user, lang = 'en' }) {
   const pricing = `${cfg.siteUrl}/#pricing`;
   return `<!doctype html>
-<html lang="en">
+<html lang="${lang}">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
@@ -624,4 +624,75 @@ export function affiliatePage(cfg, { user, summary, joined }) {
     </div>
   </main>`;
   return page({ title: 'Affiliate program', cfg, user, body, bodyClass: 'is-dash', nav: 'affiliate' });
+}
+
+// ---------- /admin: the site's discount pop-up. In French, only Sofiene uses it. ----------
+const adminShell = (cfg, title, body) => page({ title, cfg, body, buy: false, lang: 'fr', bodyClass: 'is-admin', cta: { href: `${cfg.siteUrl}/`, label: 'Voir le site' } });
+
+export function adminLoginPage(cfg, { error } = {}) {
+  const aside = html`<p class="overline rise">Admin</p><h1 class="display rise d1">Pop-up du site.</h1>
+    <p class="lede rise d2">Entre la clé ADMIN_KEY (dans les variables Railway) pour changer la réduction, le code et le texte de la pop-up.</p>`;
+  const form = html`<h2 class="h2">Accès admin</h2>${alertBox(error)}
+    <form method="post" action="/admin/login" class="form" data-busy="Vérification…">
+      ${field({ label: 'Clé admin', name: 'key', type: 'password', autocomplete: 'current-password' })}
+      <button class="btn btn-primary btn-block" type="submit">Entrer</button>
+    </form>`;
+  return adminShell(cfg, 'Admin', split({ aside, form }));
+}
+
+/** The line under the code, same words as the site's pop-up (site/src/page.html). */
+export const popupLeftLine = (total, left) => `Limited to the first ${total} players · ${left} left`;
+const DURATION = { once: 'sur le premier paiement', forever: 'sur chaque paiement', repeating: 'pendant plusieurs mois' };
+const ADMIN_NOTICES = {
+  saved: 'Enregistré. Le site affiche la nouvelle version de la pop-up en moins d’une minute.',
+  created: 'Code créé dans Stripe et enregistré. Le site l’affiche en moins d’une minute.',
+};
+const fill = (t, p) => String(t).replace(/\{(percent|code|total|left)\}/g, (_, k) => String(p[k] ?? ''));
+
+export function adminPage(cfg, { state, values, error, notice }) {
+  const { settings: s, promo: p } = state;
+  const v = values || { enabled: s.enabled, code: s.code, percent: p?.percent ?? '', limit: p?.total ?? '', eyebrow: s.eyebrow, title: s.title, text: s.text };
+  const vals = p ? { percent: p.percent, code: p.code, total: p.total, left: p.left } : {};
+  const facts = p ? html`<dl class="meta">
+      <div><dt>Code</dt><dd class="mono">${p.code}</dd></div>
+      <div><dt>Réduction</dt><dd>${p.percent == null ? 'Montant fixe' : `${p.percent} %`} ${DURATION[p.duration] || ''}${p.firstTime ? ', nouveaux clients' : ''}</dd></div>
+      <div><dt>Utilisations</dt><dd>${p.total == null ? `${p.used}, sans limite` : `${p.used} sur ${p.total}`}</dd></div>
+      <div><dt>Restantes</dt><dd>${p.total == null ? 'Illimité' : String(p.left)}</dd></div>
+    </dl>` : '';
+  // What visitors see, with the saved text (the form below may hold unsaved changes).
+  const preview = p && p.percent > 0 ? html`<div class="pop-preview" aria-label="Aperçu de la pop-up">
+      <p class="overline">${fill(s.eyebrow, vals)}</p>
+      <p class="pop-preview-title">${new Raw(escape(s.title).replace(/\{(percent|code|total|left)\}/g, (_, k) => (k === 'percent' ? `<span>${escape(p.percent)}</span>` : escape(vals[k] ?? ''))))}</p>
+      <p class="muted small">${fill(s.text, vals)}</p>
+      <p class="pop-preview-code mono">${p.code}</p>
+      ${p.total != null ? html`<p class="muted small">${popupLeftLine(p.total, p.left)}</p>` : ''}
+    </div>` : '';
+  const aside = html`<p class="overline rise">Admin · Stripe ${state.mode || 'non configuré'}</p>
+    <h1 class="display rise d1">Pop-up du site.</h1>
+    <div class="row rise d2"><span class="badge ${state.shown ? 'badge-ok' : 'badge-off'}"><i></i>${state.shown ? 'Affichée sur le site' : 'Masquée'}</span>
+      ${state.reason ? html`<span class="muted small">${state.reason}</span>` : ''}</div>
+    <div class="rise d2">${facts}</div>
+    <div class="rise d3">${preview}</div>
+    <form class="rise d4" method="post" action="/admin/logout"><button class="btn btn-ghost btn-sm" type="submit">Quitter l’admin</button></form>`;
+  const form = html`<h2 class="h2">Modifier la pop-up</h2>
+    ${alertBox(ADMIN_NOTICES[notice], 'ok')}${alertBox(error)}
+    <form method="post" action="/admin/popup" class="form" data-busy="Enregistrement…">
+      <label class="check"><input type="checkbox" name="enabled" ${v.enabled ? html`checked` : ''}><span>Afficher la pop-up sur le site</span></label>
+      ${field({ label: 'Code', name: 'code', value: v.code, autocomplete: 'off', attrs: 'maxlength="40" spellcheck="false" autocapitalize="characters" class="mono"',
+        hint: 'Un code qui n’existe pas encore est créé dans Stripe, réservé aux nouveaux clients, sur le premier paiement.' })}
+      <div class="pair">
+        ${field({ label: 'Réduction (%)', name: 'percent', type: 'number', value: v.percent, required: false, attrs: 'min="1" max="99" step="any" inputmode="numeric"' })}
+        ${field({ label: 'Nombre de clients', name: 'limit', type: 'number', value: v.limit, required: false, attrs: 'min="1" step="1" inputmode="numeric"' })}
+      </div>
+      <p class="field-hint">Stripe ne change pas la réduction ni le nombre de clients d’un code existant : pour une autre offre, tape un nouveau code. Nombre de clients vide : sans limite.</p>
+      ${field({ label: 'Petit titre', name: 'eyebrow', value: v.eyebrow, attrs: 'maxlength="40"' })}
+      ${field({ label: 'Titre', name: 'title', value: v.title, attrs: 'maxlength="80"' })}
+      <div class="field">
+        <label class="field-label" for="f-text">Texte</label>
+        <textarea id="f-text" name="text" rows="3" maxlength="280" required aria-describedby="f-text-hint">${v.text}</textarea>
+        <span class="field-hint" id="f-text-hint">En anglais, comme le site. {percent} devient la réduction, {code} le code, {total} le nombre de clients et {left} les places restantes.</span>
+      </div>
+      <button class="btn btn-primary btn-block" type="submit">Enregistrer</button>
+    </form>`;
+  return adminShell(cfg, 'Pop-up du site', split({ aside, form }));
 }
