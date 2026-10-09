@@ -19,7 +19,7 @@ def flags(t):
 PICK = {'network': ['ping_hitreg', 'net_nagle', 'net_powersave', 'net_restart'], 'latency': ['kbm_accel', 'cpu_parking', 'pri_mmcss'],
  'gpu': ['gpu_nvidia', 'amd_power', 'gpu_general'], 'windows': ['win_gamemode', 'win_gamedvr', 'cln_temp'],
  'hitreg': ['in_mouse', 'in_queue', 'hitreg_suite'], 'minecraft': ['mc_optifine', 'pri_game', 'net_profile', 'cln_temp'],
- 'rbw': ['rbw_mode'], 'gamemode': ['game_mode'], 'expert': ['exp_io', 'exp_kernel', 'exp_bios'], 'restore': ['rst_point', 'rst_open', 'rst_network', 'rst_queue']}
+ 'rbw': ['rbw_mode'], 'gamemode': ['game_mode'], 'expert': ['exp_io', 'exp_kernel', 'exp_startup'], 'restore': ['rst_point', 'rst_open', 'rst_network', 'rst_queue']}
 EX = {k: [[T[i]['name']['en'], T[i]['desc']['en'], flags(T[i])] for i in v] for k, v in PICK.items()}
 a = s.index('  const EX = {'); b = s.index('\n', a)
 s = s[:a] + '  const EX = ' + json.dumps(EX, ensure_ascii=False) + ';' + s[b:]

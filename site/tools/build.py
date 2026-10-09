@@ -60,7 +60,7 @@ head = '''<!doctype html>
 <meta name="theme-color" content="#0A0A0B">
 <link rel="canonical" href="{SITE}/">
 <meta property="og:title" content="Rago Optimizer: Minecraft PvP optimizer for Windows">
-<meta property="og:description" content="Every millisecond counts. The Minecraft PvP optimizer for Windows: {TOTAL} tweaks, free to start, with a restore point created before any change.">
+<meta property="og:description" content="Every millisecond counts. The Minecraft PvP optimizer for Windows: {TOTAL} tweaks, free to start, with a restore point offered before advanced tweaks.">
 <meta property="og:type" content="website">
 <meta property="og:url" content="{SITE}/">
 <meta property="og:image" content="{SITE}/og-image.png">
