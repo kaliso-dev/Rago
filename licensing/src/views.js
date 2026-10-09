@@ -494,7 +494,11 @@ export function profilePage(cfg, { user, review, notice, error, welcome = false,
     <form method="post" action="/account/profile/photo" enctype="multipart/form-data" class="form" data-busy="Uploading…">
       <div class="field">
         <label class="field-label" for="f-photo">${user.avatar_key ? 'New photo' : 'Photo'}</label>
-        <input class="file" id="f-photo" name="photo" type="file" accept="image/jpeg,image/png,image/webp,image/gif" required aria-describedby="f-photo-hint" data-avatar-input>
+        <div class="file-drop" data-file-drop>
+          <input class="file-input" id="f-photo" name="photo" type="file" accept="image/jpeg,image/png,image/webp,image/gif" required aria-describedby="f-photo-hint" data-avatar-input>
+          <span class="btn btn-ghost btn-sm file-btn" aria-hidden="true">Choose a photo</span>
+          <span class="file-name" aria-hidden="true" data-file-name>or drop it here</span>
+        </div>
         <span class="field-hint" id="f-photo-hint">JPG, PNG, WebP or GIF, 5 MB at most. We crop it to a square and make it lighter.</span>
       </div>
       ${keep}
@@ -513,7 +517,10 @@ export function profilePage(cfg, { user, review, notice, error, welcome = false,
       ${review
         ? html`<p class="stars" aria-label="${review.rating} out of 5 stars">${Array.from({ length: 5 }, (_, i) => html`<span class="${i < review.rating ? 'on' : ''}">${STAR}</span>`)}</p>
           <p class="review-text">${review.comment}</p>
-          <p class="muted small">${review.status === 'published' ? `Shown on ${site}.` : 'Hidden from the site by the Rago team.'} To change it, open Rago Optimizer, then Settings.</p>`
+          <p class="muted small">${review.status === 'published' ? `Shown on ${site}.` : 'Hidden from the site by the Rago team.'} To change it, open Rago Optimizer, then Settings.</p>
+          <form method="post" action="/account/profile/review/delete" class="inline" data-confirm="Delete your review? It's removed from ${site}.">
+            <button class="btn btn-ghost btn-sm" type="submit">Delete review</button>
+          </form>`
         : html`<p class="muted small">No review yet. Rago Optimizer asks for one after a few minutes of use, or open Settings in the app.</p>`}
     </div>`}`;
   return page({ title: welcome ? 'Add a profile photo' : 'Your profile', cfg, user, nav: 'profile', buy: false, body: split({ aside, form }) });

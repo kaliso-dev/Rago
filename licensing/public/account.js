@@ -126,7 +126,19 @@ for (const input of document.querySelectorAll('input[name=code]')) {
   }
 }
 
-// Profile photo: preview the chosen picture before it's uploaded (the server crops it the same way).
+// Profile photo: show the chosen file's name, and preview the picture before it's uploaded (the server crops it the same way).
+for (const drop of document.querySelectorAll('[data-file-drop]')) {
+  const input = drop.querySelector('input[type=file]');
+  const name = drop.querySelector('[data-file-name]');
+  const empty = name.textContent;
+  input.addEventListener('change', () => {
+    const file = input.files && input.files[0];
+    name.textContent = file ? file.name : empty;
+    drop.classList.toggle('chosen', !!file);
+  });
+  for (const e of ['dragenter', 'dragover']) input.addEventListener(e, () => drop.classList.add('drag'));
+  for (const e of ['dragleave', 'drop']) input.addEventListener(e, () => drop.classList.remove('drag'));
+}
 for (const input of document.querySelectorAll('[data-avatar-input]')) {
   input.addEventListener('change', () => {
     const file = input.files && input.files[0];

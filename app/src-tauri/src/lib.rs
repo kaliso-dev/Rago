@@ -272,6 +272,11 @@ async fn account_set_photo(state: State<'_, AppState>, data: String) -> Result<a
 }
 
 #[tauri::command]
+async fn account_delete_review(state: State<'_, AppState>) -> Result<account::AccountState, license::ApiError> {
+    with_account(&state, |acc, lic| acc.delete_review(lic)).await
+}
+
+#[tauri::command]
 async fn account_remove_photo(state: State<'_, AppState>) -> Result<account::AccountState, license::ApiError> {
     with_account(&state, |acc, lic| acc.remove_photo(lic)).await
 }
@@ -330,6 +335,7 @@ pub fn run() {
             account_login,
             account_sign_out,
             account_save_review,
+            account_delete_review,
             account_set_name,
             account_set_photo,
             account_remove_photo,

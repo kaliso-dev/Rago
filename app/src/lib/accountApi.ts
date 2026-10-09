@@ -44,6 +44,8 @@ export interface AccountApi {
   login(email: string, password: string): Promise<AccountState>;
   signOut(): Promise<void>;
   saveReview(rating: number, comment: string, name: string | null): Promise<AccountState>;
+  /** supprime l'avis du compte (il disparaît du site) ; le nom public et la photo restent */
+  deleteReview(): Promise<AccountState>;
   setName(name: string): Promise<AccountState>;
   /** image en base64 (déjà réduite par l'interface) ; le serveur la recadre en 256 × 256 WebP */
   setPhoto(base64: string): Promise<AccountState>;
@@ -55,6 +57,7 @@ const tauriAccount: AccountApi = {
   login: (email, password) => invoke("account_login", { email, password }),
   signOut: () => invoke("account_sign_out"),
   saveReview: (rating, comment, name) => invoke("account_save_review", { rating, comment, name }),
+  deleteReview: () => invoke("account_delete_review"),
   setName: (name) => invoke("account_set_name", { name }),
   setPhoto: (data) => invoke("account_set_photo", { data }),
   removePhoto: () => invoke("account_remove_photo"),
@@ -139,6 +142,12 @@ const mockAccount: AccountApi = {
     const n = name?.trim() ? demoName(name) : d.name;
     if (!n) fail("name_required", "Add the public name shown with your review.");
     saveDemo({ ...d, name: n, review: { rating, comment: text, updatedAt: new Date().toISOString(), hidden: false } });
+    return demoState();
+  },
+  deleteReview: async () => {
+    await sleep(400);
+    signedIn();
+    saveDemo({ ...demo(), review: null });
     return demoState();
   },
   setName: async (name) => {

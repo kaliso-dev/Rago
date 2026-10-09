@@ -1286,6 +1286,38 @@ test('reviews: signed in from the app, 1 to 5 stars and a comment checked by the
   assert.equal((await call(t, 'GET', '/account/me', { token: other })).status, 401);
 });
 
+test('reviews: the player can delete their review, from the app or from the account page, and it leaves the site', async () => {
+  const t = await setup();
+  await t.browse('/signup', { form: { email: 'gone@rago.gg', password: 'password123' } });
+  const token = (await (await call(t, 'POST', '/account/login', { json: { email: 'gone@rago.gg', password: 'password123' } })).json()).account_token;
+  const put = () => call(t, 'PUT', '/account/review', { token, json: { rating: 4, comment: 'Smooth.', name: 'Gone Soon' } });
+  const shown = async () => (await (await t.app.request('/api/v1/reviews')).json()).count;
+
+  // From the app.
+  assert.equal((await put()).status, 200);
+  assert.equal(await shown(), 1);
+  assert.equal((await call(t, 'DELETE', '/account/review')).status, 401);
+  let res = await (await call(t, 'DELETE', '/account/review', { token })).json();
+  assert.equal(res.review, null);
+  assert.equal(res.account.name, 'Gone Soon'); // the public name and photo stay
+  assert.equal(await shown(), 0);
+  assert.equal((await t.db.get('SELECT COUNT(*)::int AS n FROM reviews')).n, 0);
+  assert.equal((await call(t, 'DELETE', '/account/review', { token })).status, 200); // nothing left to delete: same answer
+
+  // From the account page, after leaving a new one.
+  assert.equal((await put()).status, 200);
+  let html = await (await t.browse('/account/profile')).text();
+  assert.match(html, /action="\/account\/profile\/review\/delete"/);
+  res = await t.browse('/account/profile/review/delete', { form: {} });
+  assert.equal(res.headers.get('location'), '/account/profile?n=review');
+  html = await (await t.browse('/account/profile?n=review')).text();
+  assert.match(html, /Review deleted/);
+  assert.match(html, /No review yet/);
+  assert.doesNotMatch(html, /review\/delete/);
+  assert.equal(await shown(), 0);
+  assert.ok(await t.db.get("SELECT 1 FROM audit WHERE type = 'review.deleted'"));
+});
+
 test('reviews: a Premium PC uses its license token, which stops working once the license is revoked', async () => {
   const t = await setup();
   await t.browse('/signup', { form: { email: 'pro@rago.gg', password: 'password123' } });

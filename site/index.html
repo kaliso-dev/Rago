@@ -348,7 +348,6 @@ section[id],main[id]{scroll-margin-top:92px}
 .rev-pause:hover{color:var(--t1)}
 .rev-pause:focus-visible{outline:2px solid var(--red);outline-offset:2px}
 .rq{width:340px;flex:none;border-radius:var(--r-lg);background:var(--ink-2);border:1px solid var(--l1);padding:22px;display:flex;flex-direction:column;gap:16px;justify-content:space-between;margin:0;transition:border-color .3s,transform .4s var(--out)}
-.rq{border-color:rgba(255,59,48,.45)}
 .rq:hover{border-color:var(--red);transform:translateY(-3px)}
 .rq .stars{display:flex;gap:3px;color:var(--red)}
 .rq .stars svg{width:14px;height:14px;fill:currentColor}
@@ -360,7 +359,7 @@ section[id],main[id]{scroll-margin-top:92px}
 .rq footer small{margin-left:auto;font-size:11px;color:var(--t3);white-space:nowrap}
 .rq footer .rn{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 img.av{object-fit:cover;padding:0}
-/* A few reviews: centered cards that stay put; the moving strips start at 6 */
+/* Until two rows are full: centered cards that stay put. After that, two strips that move like a banner */
 .rev.few{mask-image:none;-webkit-mask-image:none}
 .rev.few .rev-row{animation:none;flex-wrap:wrap;width:auto;justify-content:center;padding-inline:16px}
 .rev-sum{font-size:13px;color:var(--t3);margin-top:10px}
@@ -1342,23 +1341,29 @@ function howFill() {
   const show = (data) => {
     const list = (data && Array.isArray(data.reviews) ? data.reviews : []).filter(ok);
     if (!list.length) return;
-    const rev = $("#rev");
-    if (list.length < 6) {
-      rev.classList.add("few");
-      $("#r1").innerHTML = list.map(card).join("");
-      $("#r2").remove();
-      $("#rev-pause").remove();
-    } else {
-      // two strips that move in opposite directions; 4 copies so wide screens never see the end of a row
-      const fill = (el, part) => { const h = part.map(card).join(""); el.innerHTML = h + h.replace(/<figure /g, '<figure aria-hidden="true" ').repeat(3); };
-      fill($("#r1"), list.filter((_, i) => i % 2 === 0)); fill($("#r2"), list.filter((_, i) => i % 2 === 1));
-      $("#rev-pause").addEventListener("click", e => { const on = rev.classList.toggle("paused"); e.currentTarget.setAttribute("aria-pressed", on); e.currentTarget.textContent = on ? "Play" : "Pause"; });
-    }
+    const rev = $("#rev"), r1 = $("#r1"), r2 = $("#r2"), pause = $("#rev-pause");
     // a photo that doesn't load: the first letter of the name instead
-    $$("img.av", rev).forEach(img => img.addEventListener("error", () => img.replaceWith(Object.assign(document.createElement("span"), { className: "av", textContent: img.dataset.i })), { once: true }));
+    const faces = () => $$("img.av", rev).forEach(img => img.addEventListener("error", () => img.replaceWith(Object.assign(document.createElement("span"), { className: "av", textContent: img.dataset.i })), { once: true }));
+    // Cards stay put, centered, as long as they fit on two rows at this width. Once two rows are full,
+    // they move like a banner: two strips in opposite directions, 4 copies so wide screens never see the end of a row.
+    const layout = () => {
+      rev.classList.add("few"); r2.hidden = true; pause.hidden = true;
+      r1.innerHTML = list.map(card).join("");
+      const rows = new Set([...r1.children].map(el => el.offsetTop)).size;
+      if (rows > 2) {
+        const fill = (el, part) => { const h = part.map(card).join(""); el.innerHTML = h + h.replace(/<figure /g, '<figure aria-hidden="true" ').repeat(3); };
+        rev.classList.remove("few"); r2.hidden = false; pause.hidden = false;
+        fill(r1, list.filter((_, i) => i % 2 === 0)); fill(r2, list.filter((_, i) => i % 2 === 1));
+      }
+      faces();
+    };
+    pause.addEventListener("click", e => { const on = rev.classList.toggle("paused"); e.currentTarget.setAttribute("aria-pressed", on); e.currentTarget.textContent = on ? "Play" : "Pause"; });
     const n = Number(data.count) || list.length, avg = Number(data.average);
     $("#rev-sum").textContent = `${n} review${n === 1 ? "" : "s"}${avg >= 1 && avg <= 5 ? ` · ${avg.toFixed(1)} out of 5` : ""}`;
     $$(".js-rev").forEach(el => { el.hidden = false; });
+    layout();
+    let w = innerWidth, t;
+    addEventListener("resize", () => { if (innerWidth === w) return; w = innerWidth; clearTimeout(t); t = setTimeout(layout, 200); });
     window.__watch($("#reviews .head"));
   };
   if (!("fetch" in window)) return;
