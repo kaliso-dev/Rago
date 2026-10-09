@@ -1,29 +1,44 @@
 import { RotateCcw, ShieldCheck, TriangleAlert } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
-import { availability, needsReboot, tweaks } from "../lib/catalog";
-import { itemName, useStore } from "../lib/store";
+import { availability, needsReboot, retired, tweaks } from "../lib/catalog";
+import { formatTime } from "../lib/i18n";
+import { RESTORE_FRESH_MS, SESSION_TOGGLES, itemName, useStore } from "../lib/store";
 import { Modal } from "./Modal";
 import { Button, Badge } from "./ui";
 
 export function ConfirmDialog() {
-  const { t, lang, confirm, setConfirm, sys, startRun, variantOf, mcDir, applied } = useStore();
+  const { t, lang, confirm, setConfirm, sys, startRun, variantOf, mcDir, applied, lastRestore } = useStore();
   const ids = confirm?.ids ?? [];
   const undoIds = confirm?.undo ?? [];
   const list = ids.map((id) => tweaks.get(id)!).filter(Boolean);
   const undoList = undoIds.map((id) => tweaks.get(id)!).filter(Boolean);
-  const onlyUndo = list.length === 0 && undoList.length > 0;
-  const total = list.length + undoList.length;
+  // réglages retirés du catalogue, encore appliqués sur ce PC : on peut seulement les remettre comme avant
+  const undoRetired = undoIds.map((id) => retired.get(id)!).filter(Boolean);
+  const onlyUndo = list.length === 0 && undoList.length + undoRetired.length > 0;
+  const total = list.length + undoList.length + undoRetired.length;
   const onlyRestore = ids.length === 1 && ids[0] === "rst_point";
   const needsWmic = list.filter((tw) => availability(tw, sys).warn === "needsWmic").length;
   const warnings = list.filter((tw) => tw.confirm);
-  const reboot = list.some((tw) => needsReboot(tw, variantOf(tw))) || undoList.some((tw) => needsReboot(tw, applied.get(tw.id)?.variant ?? null));
+  const reboot =
+    list.some((tw) => needsReboot(tw, variantOf(tw))) ||
+    undoList.some((tw) => needsReboot(tw, applied.get(tw.id)?.variant ?? null)) ||
+    undoRetired.some((r) => r.reboot);
   const mcBlocked = list.some((tw) => tw.native === "minecraft_optifine") && !mcDir;
 
-  // point de restauration obligatoire avant tout changement (choix de Sofiene, 2026-10-07) : plus de case
-  const opensOnly = [...ids, ...undoIds].every((id) => id === "rst_open" || id === "app_settings");
+  // Point de restauration : la case de 1.1.6, cochée d'office seulement quand il sert vraiment (choix de Sofiene,
+  // 2026-10-08). Rago Optimizer garde l'état d'avant de chaque réglage et le remet quand on le décoche ; le point
+  // n'est conseillé que pour un réglage avancé ou qui ne se remet pas entièrement, et pas deux fois dans la journée.
+  const opensOnly = ids.every((id) => id === "rst_open" || id === "app_settings");
+  const askRestore = !onlyRestore && !onlyUndo && !opensOnly && !ids.includes("rst_point");
+  const needed = list.filter((tw) => tw.restore);
+  const recent = lastRestore != null && Date.now() - lastRestore < RESTORE_FRESH_MS;
+  const [restorePoint, setRestorePoint] = useState(false);
   const [wmic, setWmic] = useState(true);
   const footRef = useRef<HTMLElement>(null);
   useEffect(() => {
+    // un mode qu'on allume et éteint à chaque session (mode jeu, RBW Mod) ne demande jamais de point
+    const session = list.length > 0 && list.every((tw) => SESSION_TOGGLES.has(tw.id));
+    setRestorePoint(askRestore && needed.length > 0 && !recent && !session);
     setWmic(true);
     // le bouton principal prend le focus sans faire défiler la fenêtre : le titre reste visible
     if (confirm) requestAnimationFrame(() => footRef.current?.querySelector<HTMLButtonElement>(".btn-primary")?.focus({ preventScroll: true }));
@@ -32,17 +47,25 @@ export function ConfirmDialog() {
 
   const close = () => setConfirm(null);
   const go = () =>
-    startRun(ids, { wmic: wmic && needsWmic > 0, clearSelection: !confirm?.single, undo: undoIds });
+    startRun(ids, { restorePoint: askRestore && restorePoint, wmic: wmic && needsWmic > 0, clearSelection: !confirm?.single, undo: undoIds });
 
   const title =
     confirm?.single && list.length === 1
       ? list[0].name[lang]
       : onlyUndo
-        ? t("confirm.undoTitle", { n: undoList.length })
+        ? t("confirm.undoTitle", { n: undoList.length + undoRetired.length })
         : undoList.length
           ? t("confirm.changesTitle", { n: total })
           : t("confirm.title", { n: list.length });
   const lead = confirm?.single && list.length === 1 ? list[0].desc[lang] : onlyUndo ? t("confirm.undoLead") : t("confirm.lead");
+  const restoreHint =
+    needed.length > 0
+      ? recent
+        ? t("confirm.restoreRecent", { time: formatTime(lang, lastRestore!) })
+        : t("confirm.restoreNeeded", { n: needed.length, names: needed.slice(0, 3).map((tw) => itemName(tw.id, lang)).join(", ") + (needed.length > 3 ? "…" : "") })
+      : list.some((tw) => tw.kind === "tweak")
+        ? t("confirm.restoreOptional")
+        : t("confirm.restoreOptionalAction", { n: list.length });
   const row = (tw: (typeof list)[number], v: string | null) => {
     const vLabel = tw.variants?.find((x) => x.id === v)?.label[lang];
     return (
@@ -66,10 +89,19 @@ export function ConfirmDialog() {
           <ul className="confirm-list">{list.map((tw) => row(tw, variantOf(tw)))}</ul>
         </>
       )}
-      {undoList.length > 0 && (
+      {undoList.length + undoRetired.length > 0 && (
         <>
           {list.length > 0 && <div className="rg-overline confirm-group">{t("confirm.undoList")}</div>}
-          <ul className="confirm-list undo">{undoList.map((tw) => row(tw, applied.get(tw.id)?.variant ?? null))}</ul>
+          <ul className="confirm-list undo">
+            {undoList.map((tw) => row(tw, applied.get(tw.id)?.variant ?? null))}
+            {undoRetired.map((r) => (
+              <li key={r.id}>
+                <span>{r.name[lang]}</span>
+                {r.reboot && <RotateCcw size={12} className="muted" />}
+                <Badge tone="warn">{t("badge.retired")}</Badge>
+              </li>
+            ))}
+          </ul>
         </>
       )}
 
@@ -88,14 +120,14 @@ export function ConfirmDialog() {
       )}
 
       <div className="confirm-options">
-        {!onlyRestore && !opensOnly && (
-          <p className="confirm-restore">
-            <ShieldCheck size={14} />
+        {askRestore && (
+          <label className="check">
+            <input type="checkbox" checked={restorePoint} onChange={(e) => setRestorePoint(e.target.checked)} />
             <span>
-              {t("confirm.restore")}
-              <small>{t("confirm.restoreHint")}</small>
+              <ShieldCheck size={14} /> {t("confirm.restore")}
+              <small>{restoreHint}</small>
             </span>
-          </p>
+          </label>
         )}
         {needsWmic > 0 && (
           <label className="check">

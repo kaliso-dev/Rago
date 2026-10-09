@@ -1,10 +1,22 @@
 import { AnimatePresence, motion } from "motion/react";
 import { ChevronDown, Lock, Play, Power, PowerOff, RotateCcw, TriangleAlert } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
-import { autoVariant, availability, type Tweak } from "../lib/catalog";
+import { autoVariant, availability, catalog, tweakModule, tweaks, type Lang, type Tweak } from "../lib/catalog";
 import { formatDate, formatTime, type Key } from "../lib/i18n";
 import { SESSION_TOGGLES, useStore } from "../lib/store";
 import { Badge, Button, Segmented, Switch } from "./ui";
+
+/** Réglages au même script (champ `twin`), avec leur module : « Nom » (Module). */
+function twinNames(tweak: Tweak, lang: Lang): string | null {
+  if (!tweak.twin) return null;
+  const names = [...tweaks.values()]
+    .filter((o) => o.twin === tweak.twin && o.id !== tweak.id)
+    .map((o) => {
+      const mod = catalog.modules.find((m) => m.id === tweakModule.get(o.id));
+      return lang === "fr" ? `« ${o.name.fr} » (${mod?.name.fr})` : `“${o.name.en}” (${mod?.name.en})`;
+    });
+  return names.length ? names.join(", ") : null;
+}
 
 export function TweakRow({ tweak }: { tweak: Tweak }) {
   const { t, lang, sys, selected, toggle, variantOf, setVariant, lastRun, requestApply, focusTweak, setFocusTweak, focusSeq, isLocked, variantLocked, undoOnly, premium, setUpsell, isOn: isOnFn, applied, pendingUndo, reapply } = useStore();
@@ -19,6 +31,7 @@ export function TweakRow({ tweak }: { tweak: Tweak }) {
   const auto = autoVariant(tweak, sys);
   const isAction = tweak.kind === "action";
   const focused = focusTweak === tweak.id;
+  const twin = twinNames(tweak, lang);
   // appliqué pendant Premium : on peut toujours l'éteindre (l'annulation reste ouverte sans licence)
   const locked = isLocked(tweak.id) && !done;
   // mode jeu, RBW Mod, mode jeu Windows : on les allume et on les éteint, l'état connu vient de l'historique
@@ -90,6 +103,20 @@ export function TweakRow({ tweak }: { tweak: Tweak }) {
           )}
         </div>
         <p className="tweak-desc">{tweak.desc[lang]}</p>
+        {(tweak.gain || tweak.cons) && (
+          <ul className="tweak-facts">
+            {tweak.gain && (
+              <li>
+                <b>{t("tweak.gain")}</b> {tweak.gain[lang]}
+              </li>
+            )}
+            {tweak.cons && (
+              <li>
+                <b>{t("tweak.cons")}</b> {tweak.cons[lang]}
+              </li>
+            )}
+          </ul>
+        )}
 
         {tweak.variants && tweak.variants.length > 1 && av.ok && !session && (
           <div className="tweak-variants">
@@ -127,6 +154,7 @@ export function TweakRow({ tweak }: { tweak: Tweak }) {
               <p className="muted small">
                 {tweak.native ? t(`tweak.native.${tweak.native}` as Key) : t("tweak.details", { n: tweak.variants?.find((v) => v.id === variant)?.lines ?? tweak.lines })}
                 {!isAction && <> {t(session ? "tweak.undoSession" : done && !done.backup ? "tweak.undoDefaults" : "tweak.undoSwitch")}</>}
+                {twin && <> {t(isAction ? "tweak.twinAction" : "tweak.twin", { names: twin })}</>}
               </p>
               {done?.drift && !session && (
                 <p className="tweak-note warn">

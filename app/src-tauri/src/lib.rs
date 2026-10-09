@@ -4,10 +4,10 @@ mod catalog;
 mod history;
 mod license;
 mod minecraft;
-mod ping;
 mod runner;
 mod seal;
 mod shell;
+mod stats;
 mod system;
 
 use std::path::PathBuf;
@@ -28,6 +28,7 @@ struct AppState {
     license: Arc<License>,
     account: Arc<Account>,
     system: Arc<Mutex<Option<SystemInfo>>>,
+    stats: stats::Sampler,
     resource_dir: PathBuf,
     data_dir: PathBuf,
 }
@@ -70,10 +71,6 @@ fn keep_undo(ledger: &Mutex<backup::Ledger>, bundle: Option<&catalog::Bundle>) {
 fn run_tweaks(app: AppHandle, state: State<'_, AppState>, items: Vec<RunItem>) -> Result<String, String> {
     if items.is_empty() {
         return Err("No tweak selected".into());
-    }
-    // point de restauration obligatoire avant tout changement, en tête de liste (l'interface l'ajoute toujours)
-    if items.iter().any(|it| runner::changes_windows(&it.id)) && items.first().map(|it| it.id.as_str()) != Some("rst_point") {
-        return Err("restore_point_required".into());
     }
     let premium = state.license.status().state == "active";
     // remettre l'état d'avant reste possible sans licence
@@ -139,13 +136,10 @@ fn clear_history(state: State<'_, AppState>) {
     state.history.clear();
 }
 
+/// Usage RAM, processeur et carte graphique en direct, demandé chaque seconde par le tableau de bord.
 #[tauri::command]
-async fn ping(host: String, port: Option<u16>, count: Option<u32>) -> Result<ping::PingResult, String> {
-    let port = port.unwrap_or(25565);
-    let count = count.unwrap_or(10).clamp(1, 50);
-    tauri::async_runtime::spawn_blocking(move || ping::tcp_ping(&host, port, count, 1500))
-        .await
-        .map_err(|e| e.to_string())
+fn live_stats(state: State<'_, AppState>) -> stats::LiveStats {
+    state.stats.latest()
 }
 
 fn minecraft_dir(dir: Option<String>) -> Result<PathBuf, String> {
@@ -171,6 +165,13 @@ fn restart_pc() -> Result<(), String> {
         .spawn()
         .map(|_| ())
         .map_err(|e| e.to_string())
+}
+
+/// Gestionnaire des tâches de Windows, depuis l'utilisation en direct : voir quelle appli prend la RAM, le processeur
+/// ou la carte graphique, et la fermer soi-même. Rago ne ferme aucun processus et ne vide pas la RAM de force.
+#[tauri::command]
+fn open_task_manager() -> Result<(), String> {
+    std::process::Command::new("taskmgr.exe").spawn().map(|_| ()).map_err(|e| e.to_string())
 }
 
 #[tauri::command]
@@ -308,6 +309,7 @@ pub fn run() {
                 license: Arc::new(License::new()),
                 account: Arc::new(Account::new()),
                 system: Arc::new(Mutex::new(None)),
+                stats: stats::Sampler::default(),
                 resource_dir,
                 data_dir,
             });
@@ -321,7 +323,8 @@ pub fn run() {
             get_history,
             clear_history,
             get_applied,
-            ping,
+            live_stats,
+            open_task_manager,
             minecraft_status,
             minecraft_restore,
             restart_pc,

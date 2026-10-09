@@ -1,6 +1,6 @@
 # Rago Optimizer
 
-App Windows (Tauri 2 + React + Rust) : 226 réglages, l'ancien programme Premium v5.2 et les 3 .bat v6 de Sofiene combinés et corrigés (voir `docs/CORRECTIONS.md`). Plan gratuit : 9 réglages ouverts (`src/data/free.json`) et les variantes de retour arrière ; le reste demande une licence Premium.
+App Windows (Tauri 2 + React + Rust) : 199 réglages (212 entrées au catalogue, dont 13 jumeaux), l'ancien programme Premium v5.2 et les 3 .bat v6 de Sofiene combinés et corrigés (voir `docs/CORRECTIONS.md`). Plan gratuit : 9 réglages ouverts (`src/data/free.json`) et les variantes de retour arrière ; le reste demande une licence Premium.
 
 ## Ce qu'il y a dedans
 

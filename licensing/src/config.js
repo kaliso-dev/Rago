@@ -58,7 +58,7 @@ export function loadConfig(env = process.env) {
     // Price shown on the free dashboard: "$5.99 a month or $29.99 a year" (same amounts as Stripe and the site). Empty = no price shown.
     priceLabel: env.PRICE_LABEL || '',
     freeTweaks: Number(env.FREE_TWEAKS || 9),
-    premiumTweaks: Number(env.PREMIUM_TWEAKS || 226),
+    premiumTweaks: Number(env.PREMIUM_TWEAKS || 199),
 
     cancelUrl: env.CHECKOUT_CANCEL_URL || `${asUrl(env.SITE_URL) || publicUrl}/#pricing`,
     selfServiceResetDays: Number(env.SELF_SERVICE_RESET_DAYS || 0), // 0 = support only

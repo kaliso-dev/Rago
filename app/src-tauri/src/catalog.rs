@@ -149,18 +149,19 @@ static TWINS: LazyLock<HashMap<String, String>> = LazyLock::new(|| {
     out
 });
 
-/// Nom anglais des réglages, pour les lignes du journal.
+/// Nom anglais des réglages, pour les lignes du journal (réglages retirés compris : leur annulation y passe).
 static NAMES_EN: LazyLock<HashMap<String, String>> = LazyLock::new(|| {
     let catalog: serde_json::Value =
         serde_json::from_str(include_str!("../../src/data/catalog.json")).expect("catalog.json invalide");
     let mut out = HashMap::new();
-    for m in catalog["modules"].as_array().into_iter().flatten() {
-        for s in m["sections"].as_array().into_iter().flatten() {
-            for t in s["tweaks"].as_array().into_iter().flatten() {
-                if let (Some(id), Some(name)) = (t["id"].as_str(), t["name"]["en"].as_str()) {
-                    out.insert(id.to_string(), name.to_string());
-                }
-            }
+    let retired = catalog["retired"].as_array().into_iter().flatten();
+    for t in catalog["modules"].as_array().into_iter().flatten()
+        .flat_map(|m| m["sections"].as_array().into_iter().flatten())
+        .flat_map(|s| s["tweaks"].as_array().into_iter().flatten())
+        .chain(retired)
+    {
+        if let (Some(id), Some(name)) = (t["id"].as_str(), t["name"]["en"].as_str()) {
+            out.insert(id.to_string(), name.to_string());
         }
     }
     out
@@ -358,7 +359,6 @@ mod tests {
         let lines = |id: &str| -> Vec<String> {
             SCRIPTS[id].values().flat_map(|s| s.lines().map(str::to_lowercase).collect::<Vec<_>>()).collect()
         };
-        assert!(!lines("dbl_edge").iter().any(|l| l.contains("edgewebview") || l.contains("edgeupdate")));
         for id in ["mem_profile", "mem_registry", "hitreg_suite"] {
             assert!(!lines(id).iter().any(|l| l.contains("featuresettingsoverride")), "{id}");
         }
@@ -462,6 +462,60 @@ mod tests {
             let first = all.iter().find(|o| o["id"] == t["twin"]).unwrap();
             assert_eq!(t["risk"], first["risk"], "{}", t["id"]);
             assert_eq!(SCRIPTS[t["id"].as_str().unwrap()].len(), SCRIPTS[first["id"].as_str().unwrap()].len());
+        }
+    }
+
+    /// Réglages retirés (tools/safety.py, 2026-10-08) : ni script ni relevé, absents du catalogue et des profils, mais
+    /// leur annulation reste là pour les PC où une version précédente les a appliqués. Les lignes risquées qu'ils
+    /// portaient ne se retrouvent plus dans aucun autre script.
+    #[test]
+    fn retired_tweaks_cannot_run() {
+        let bundle = premium(&test_key()).unwrap();
+        let catalog: serde_json::Value = serde_json::from_str(include_str!("../../src/data/catalog.json")).unwrap();
+        let retired: Vec<&str> = catalog["retired"].as_array().unwrap().iter().map(|r| r["id"].as_str().unwrap()).collect();
+        assert_eq!(retired.len(), 16);
+        let listed: Vec<&str> = catalog["modules"].as_array().unwrap().iter()
+            .flat_map(|m| m["sections"].as_array().unwrap())
+            .flat_map(|s| s["tweaks"].as_array().unwrap())
+            .filter_map(|t| t["id"].as_str().or(t["ref"].as_str()))
+            .chain(catalog["presets"].as_array().unwrap().iter()
+                .flat_map(|p| p["tweaks"].as_array().unwrap())
+                .map(|e| e.as_str().unwrap().split(':').next().unwrap()))
+            .collect();
+        for id in &retired {
+            assert!(!SCRIPTS.contains_key(*id), "{id} a encore un script");
+            assert!(!PLAIN.scripts.contains_key(*id) && !bundle.scripts.contains_key(*id), "{id} embarqué");
+            assert!(!PLAIN.probes.contains_key(*id) && !bundle.probes.contains_key(*id), "{id} relevé");
+            assert!(script(id, None, Some(&bundle)).is_none() && script(id, Some("off"), Some(&bundle)).is_none(), "{id}");
+            assert!(!listed.contains(id), "{id} encore au catalogue ou dans un profil");
+            assert_ne!(name_of(id), *id, "{id} sans nom pour le journal");
+        }
+        for id in ["win_mitigations", "nv_tdr", "dbl_xbox", "win_smartscreen", "exp_bios"] {
+            assert!(undo_of(id, None, Some(&bundle)).is_some_and(|u| u.full.is_some() || u.rest.is_some()), "annulation de {id}");
+        }
+        assert!(undo_of("win_coreiso", Some("off"), Some(&bundle)).is_some(), "annulation de win_coreiso:off");
+        for (id, variants) in SCRIPTS.iter() {
+            for (v, s) in variants {
+                for l in s.lines().map(|l| l.trim().to_lowercase()).filter(|l| !l.starts_with("echo") && !l.starts_with("rem ")) {
+                    let risky = l.contains("featuresettingsoverride")
+                        || l.contains("set-processmitigation -system -disable")
+                        || l.contains("hypervisorlaunchtype off")
+                        || l.contains("disablerealtimemonitoring\" /t reg_dword /d \"1")
+                        || l.contains("advfirewall reset")
+                        || l.contains("clear-recyclebin")
+                        || l.contains("\"enablesmartscreen\" /t reg_dword /d \"0\"")
+                        || l.contains("\"noautoupdate\" /t reg_dword /d \"1\"")
+                        || (l.contains("\"enablelua\"") && l.contains("/d \"0\""))
+                        || l.contains("\"consentpromptbehavioradmin\" /t reg_dword /d \"0\"")
+                        || l.contains("\"tdrlevel\"")
+                        || l.contains("\"enableprefetcher\" /t reg_dword /d \"0\"")
+                        || l.contains("services\\bam\" /v \"start\" /t reg_dword /d \"4\"")
+                        || (l.contains("hypervisorenforcedcodeintegrity") && l.contains("/d \"0\""))
+                        || l.contains("nx alwaysoff")
+                        || l.contains("disableelamdrivers yes");
+                    assert!(!risky, "{id}:{v} : {l}");
+                }
+            }
         }
     }
 

@@ -1,0 +1,2546 @@
+{
+ "ping_hitreg": {
+  "fr": {
+   "desc": "Six profils pour l'ajustement auto du débit TCP et le regroupement des paquets reçus ; « Par défaut » remet Windows comme avant.",
+   "gain": "Effet rarement mesurable : le hitreg est calculé par le serveur et dépend surtout de ton ping.",
+   "cons": "Les profils autres que « Hitreg maximal » et « Par défaut » peuvent ralentir les gros téléchargements."
+  },
+  "en": {
+   "desc": "Six profiles that set TCP receive auto-tuning and incoming packet coalescing; Default puts Windows back as it was.",
+   "gain": "Rarely measurable: hit registration is decided by the server and mostly depends on your ping.",
+   "cons": "Any profile other than Max hitreg or Default can slow down large downloads."
+  }
+ },
+ "ping_packets": {
+  "fr": {
+   "desc": "Trois profils : Hitreg (paquets plus petits, accélérations de la carte coupées), QoS (Minecraft marqué prioritaire) ou Knockback.",
+   "gain": "Effet rarement mesurable sur le ping ; le marquage QoS n'aide que si ta box le respecte.",
+   "cons": "Le profil Hitreg peut un peu baisser le débit et charger un peu plus le processeur."
+  },
+  "en": {
+   "desc": "Three profiles: Hitreg (smaller packets, card offloads off), QoS (Minecraft traffic tagged as priority) or Knockback.",
+   "gain": "Rarely measurable on ping; QoS tagging only helps if your router honors it.",
+   "cons": "The Hitreg profile can slightly lower throughput and add a bit of CPU load."
+  }
+ },
+ "ping_main": {
+  "fr": {
+   "desc": "Quatre configurations qui combinent réglages TCP, Nagle, économie d'énergie et accélérations de la carte réseau.",
+   "gain": "Peut lisser de petites pointes de latence sur certaines cartes ; ne te rapproche pas du serveur.",
+   "cons": "Configs 2 à 4 : plus de réveil du PC par le réseau et carte plus gourmande en énergie ; la 4 coupe aussi NetBIOS."
+  },
+  "en": {
+   "desc": "Four configs combining TCP settings, Nagle, power saving and offloads of your network card.",
+   "gain": "Can smooth out small latency spikes on some cards; doesn't bring you closer to the server.",
+   "cons": "Configs 2 to 4: no more wake-on-LAN and the card uses more power; config 4 also turns off NetBIOS."
+  }
+ },
+ "ping_advanced": {
+  "fr": {
+   "desc": "Pack réseau : NetBIOS coupé, Nagle, économie d'énergie et accélérations de la carte coupées, interruptions sur un seul cœur.",
+   "gain": "Peut lisser de petites pointes de latence sur certaines cartes ; le reste a un effet rarement mesurable.",
+   "cons": "Plus de réveil par le réseau ni de vieux partages NetBIOS ; carte plus gourmande et un peu plus de charge processeur."
+  },
+  "en": {
+   "desc": "Network pack: NetBIOS off, Nagle off, card power saving and offloads off, network interrupts on a single core.",
+   "gain": "Can smooth out small latency spikes on some cards; the rest is rarely measurable.",
+   "cons": "No more wake-on-LAN or old NetBIOS shares; the card uses more power and the CPU does a bit more work."
+  }
+ },
+ "net_profile": {
+  "fr": {
+   "desc": "Trois profils : Hitreg (paquets plus petits), Knockback (renvoi plus rapide des paquets perdus) ou QoS (Minecraft prioritaire).",
+   "gain": "Effet rarement mesurable sur le ping ; le marquage QoS n'aide que si ta box le respecte.",
+   "cons": "Le profil Hitreg peut un peu baisser le débit des gros téléchargements."
+  },
+  "en": {
+   "desc": "Three TCP profiles: Hitreg (smaller packets), Knockback (faster resend of lost packets) or QoS (Minecraft traffic first).",
+   "gain": "Rarely measurable on ping; QoS tagging only helps if your router honors it.",
+   "cons": "The Hitreg profile can slightly lower throughput on large downloads."
+  }
+ },
+ "net_server": {
+  "fr": {
+   "desc": "Quatre préréglages réseau complets (TCP, Nagle, carte, priorités DNS) ; les 1 et 2 changent aussi des minuteurs de démarrage.",
+   "gain": "Effet rarement mesurable sur le ping, qui dépend surtout de la distance et de ta connexion.",
+   "cons": "Préréglages 1 et 2 : réglages de démarrage modifiés ; 2 et 4 : économie d'énergie et réveil par le réseau coupés."
+  },
+  "en": {
+   "desc": "Four full network presets (TCP, Nagle, network card, DNS priority); presets 1 and 2 also change boot timer settings.",
+   "gain": "Rarely measurable on ping, which mostly depends on distance and your connection.",
+   "cons": "Presets 1 and 2 change boot settings; 2 and 4 turn off the card's power saving and wake-on-LAN."
+  }
+ },
+ "net_nagle": {
+  "fr": {
+   "desc": "Coupe l'algorithme de Nagle et l'accusé de réception différé, qui regroupent les petits paquets réseau avant de les envoyer.",
+   "gain": "Effet rarement mesurable : Minecraft Java et la plupart des jeux le coupent déjà eux-mêmes.",
+   "cons": "Aucun inconvénient connu."
+  },
+  "en": {
+   "desc": "Turns off Nagle's algorithm and delayed ACKs, which bundle small network packets before sending them.",
+   "gain": "Rarely measurable: Minecraft Java and most games already turn it off themselves.",
+   "cons": "No known drawback."
+  }
+ },
+ "net_throttle": {
+  "fr": {
+   "desc": "Retire la limite que Windows met sur le trafic réseau quand un son ou une vidéo est en lecture.",
+   "gain": "Ne joue que si un son ou une vidéo tourne pendant que tu joues ; effet rarement mesurable.",
+   "cons": "Aucun inconvénient connu."
+  },
+  "en": {
+   "desc": "Removes the limit Windows puts on network traffic while audio or video is playing.",
+   "gain": "Only matters if audio or video plays while you game; rarely measurable.",
+   "cons": "No known drawback."
+  }
+ },
+ "net_powersave": {
+  "fr": {
+   "desc": "Coupe l'économie d'énergie de la carte réseau (Green Ethernet, mise en veille) et le réveil du PC par le réseau.",
+   "gain": "Peut supprimer de petites pointes de latence sur certaines cartes réseau.",
+   "cons": "La carte consomme un peu plus (batterie sur portable) et le PC ne se réveille plus par le réseau."
+  },
+  "en": {
+   "desc": "Turns off network card power saving (Green Ethernet, sleep) and waking the PC over the network.",
+   "gain": "Can remove small latency spikes on some network cards.",
+   "cons": "The card uses a bit more power (battery on laptops) and the PC can't be woken over the network."
+  }
+ },
+ "net_adapter": {
+  "fr": {
+   "desc": "Coupe l'économie d'énergie, le réveil par le réseau et les accélérations de la carte réseau, et agrandit ses tampons.",
+   "gain": "Peut lisser de petites pointes de latence sur certaines cartes ; effet souvent faible.",
+   "cons": "Un peu plus de charge processeur et de consommation ; le PC ne se réveille plus par le réseau."
+  },
+  "en": {
+   "desc": "Turns off power saving, wake-on-LAN and offloads on your network card, and enlarges its buffers.",
+   "gain": "Can smooth out small latency spikes on some cards; often a small effect.",
+   "cons": "A bit more CPU load and power use; the PC can no longer be woken over the network."
+  }
+ },
+ "net_registry": {
+  "fr": {
+   "desc": "Change une vingtaine de réglages TCP/IP cachés de Windows : tampons, accusés de réception, durée de vie des paquets.",
+   "gain": "Effet rarement mesurable : beaucoup de ces valeurs datent d'anciens Windows et ne changent rien en jeu.",
+   "cons": "Aucun inconvénient connu."
+  },
+  "en": {
+   "desc": "Changes about twenty hidden TCP/IP settings in Windows: buffers, acknowledgments, packet lifetime.",
+   "gain": "Rarely measurable: many of these values date from older Windows versions and do nothing in games.",
+   "cons": "No known drawback."
+  }
+ },
+ "net_advanced": {
+  "fr": {
+   "desc": "Change une quinzaine de réglages TCP globaux de Windows et coupe Teredo et ISATAP, deux vieux tunnels IPv6.",
+   "gain": "Effet rarement mesurable sur le ping : ces réglages jouent surtout sur le débit.",
+   "cons": "Le chat de groupe Xbox et quelques jeux en pair-à-pair peuvent avoir du mal à se connecter."
+  },
+  "en": {
+   "desc": "Changes about fifteen global TCP settings and turns off Teredo and ISATAP, two old IPv6 tunnels.",
+   "gain": "Rarely measurable on ping: these settings mostly affect throughput.",
+   "cons": "Xbox party chat and some peer-to-peer games may have trouble connecting."
+  }
+ },
+ "net_dnsprio": {
+  "fr": {
+   "desc": "Fait passer le cache local et le fichier hosts avant le serveur DNS pour trouver l'adresse d'un site ou d'un serveur.",
+   "gain": "Effet rarement mesurable : Windows suit déjà cet ordre par défaut.",
+   "cons": "Aucun inconvénient connu."
+  },
+  "en": {
+   "desc": "Makes Windows check its local cache and hosts file before the DNS server when looking up an address.",
+   "gain": "Rarely measurable: Windows already uses this order by default.",
+   "cons": "No known drawback."
+  }
+ },
+ "net_dca": {
+  "fr": {
+   "desc": "Autorise la carte réseau à écrire directement dans la mémoire cache du processeur.",
+   "gain": "Effet nul sur presque tous les PC : seules certaines cartes réseau de serveur s'en servent.",
+   "cons": "Aucun inconvénient connu."
+  },
+  "en": {
+   "desc": "Lets the network card write straight into the CPU cache.",
+   "gain": "No effect on almost all PCs: only some server network cards use it.",
+   "cons": "No known drawback."
+  }
+ },
+ "net_offload": {
+  "fr": {
+   "desc": "Réactive le déchargement de certains calculs réseau vers la carte réseau.",
+   "gain": "Soulage un peu le processeur ; c'est le réglage normal de Windows.",
+   "cons": "Aucun inconvénient connu."
+  },
+  "en": {
+   "desc": "Turns task offloading to the network card back on.",
+   "gain": "Takes a bit of work off the CPU; this is the normal Windows setting.",
+   "cons": "No known drawback."
+  }
+ },
+ "net_msi": {
+  "fr": {
+   "desc": "Passe la carte réseau en interruptions MSI, une autre façon de prévenir le processeur que des données sont arrivées.",
+   "gain": "Utile seulement sur du vieux matériel : les cartes récentes utilisent déjà ce mode.",
+   "cons": "Sur une carte qui gère mal ce mode, la connexion peut ne plus marcher."
+  },
+  "en": {
+   "desc": "Switches the network card to MSI interrupts, another way of telling the CPU that data has arrived.",
+   "gain": "Only useful on old hardware: recent cards already use this mode.",
+   "cons": "On a card that handles this mode poorly, the connection may stop working."
+  }
+ },
+ "net_affinity": {
+  "fr": {
+   "desc": "Envoie toutes les interruptions de la carte réseau sur un seul cœur du processeur.",
+   "gain": "Effet rarement mesurable : Windows répartit déjà bien ce travail.",
+   "cons": "Ce cœur peut saturer sur une connexion très rapide et limiter le débit."
+  },
+  "en": {
+   "desc": "Sends all network card interrupts to a single CPU core.",
+   "gain": "Rarely measurable: Windows already spreads this work well.",
+   "cons": "That core can get overloaded on a very fast connection and limit throughput."
+  }
+ },
+ "net_netbios": {
+  "fr": {
+   "desc": "Coupe NetBIOS, un vieux protocole de partage de fichiers sur le réseau local.",
+   "gain": "Un peu moins de trafic local et un peu plus de sécurité ; aucun effet sur le ping.",
+   "cons": "Les vieux appareils partagés (NAS, imprimantes réseau, PC sous Windows 7) peuvent ne plus apparaître."
+  },
+  "en": {
+   "desc": "Turns off NetBIOS, an old file-sharing protocol on the local network.",
+   "gain": "A bit less local traffic and a bit more security; no effect on ping.",
+   "cons": "Old shared devices (NAS, network printers, Windows 7 PCs) may no longer show up."
+  }
+ },
+ "net_ipv6": {
+  "fr": {
+   "desc": "Fait passer l'IPv4 avant l'IPv6 quand un site ou un serveur propose les deux ; l'IPv6 reste actif.",
+   "gain": "Peut aider si ta connexion IPv6 est instable ; sinon effet rarement mesurable.",
+   "cons": "Aucun inconvénient connu."
+  },
+  "en": {
+   "desc": "Makes Windows use IPv4 before IPv6 when a site or server offers both; IPv6 stays on.",
+   "gain": "Can help if your IPv6 connection is unstable; otherwise rarely measurable.",
+   "cons": "No known drawback."
+  }
+ },
+ "net_lanman": {
+  "fr": {
+   "desc": "Change des réglages du partage de fichiers de Windows, utilisé quand d'autres PC ouvrent tes dossiers partagés.",
+   "gain": "Aucun effet en jeu ; ne sert que si tu partages des dossiers sur ton réseau local.",
+   "cons": "Les fichiers partagés peuvent s'ouvrir un peu plus lentement depuis les autres PC."
+  },
+  "en": {
+   "desc": "Changes Windows file-sharing settings, used when other PCs open your shared folders.",
+   "gain": "No effect in games; only matters if you share folders on your local network.",
+   "cons": "Shared files may open a bit more slowly from other PCs."
+  }
+ },
+ "net_restart": {
+  "fr": {
+   "desc": "Redémarre les cartes réseau connectées pour appliquer les réglages réseau sans redémarrer le PC.",
+   "gain": "Évite un redémarrage complet après un réglage réseau.",
+   "cons": "Ta connexion coupe quelques secondes, ce qui peut te déconnecter d'un serveur."
+  },
+  "en": {
+   "desc": "Restarts your connected network cards to apply network settings without rebooting.",
+   "gain": "Saves you a full restart after a network change.",
+   "cons": "Your connection drops for a few seconds, which can kick you from a server."
+  }
+ },
+ "lat_general": {
+  "fr": {
+   "desc": "Pack de réglages : priorité des jeux, minuteurs de Windows, système de fichiers et menus qui s'ouvrent sans délai.",
+   "gain": "Les menus s'ouvrent plus vite ; le reste a un effet rarement mesurable sur un PC récent.",
+   "cons": "Modifie le démarrage, consomme un peu plus au repos et une appli occupée affiche plus vite « ne répond pas »."
+  },
+  "en": {
+   "desc": "Bundle of settings: game priority, Windows timers, file system, and menus that open with no delay.",
+   "gain": "Menus open faster; the rest is rarely measurable on a recent PC.",
+   "cons": "Changes boot settings, uses a bit more power at idle, and busy apps show \"Not responding\" sooner."
+  }
+ },
+ "lat_directx": {
+  "fr": {
+   "desc": "Écrit d'anciens réglages DirectDraw et Direct3D, et active la planification GPU à accélération matérielle.",
+   "gain": "Ces anciens réglages ne servent ni à Minecraft ni aux jeux récents ; la planification GPU a un effet variable.",
+   "cons": "Avec certains pilotes ou jeux, la planification GPU à accélération matérielle peut causer des saccades."
+  },
+  "en": {
+   "desc": "Writes old DirectDraw and Direct3D settings and turns on hardware-accelerated GPU scheduling.",
+   "gain": "The old settings don't affect Minecraft or recent games; the effect of GPU scheduling varies by PC.",
+   "cons": "With some drivers or games, hardware-accelerated GPU scheduling can cause stutter."
+  }
+ },
+ "sys_priority": {
+  "fr": {
+   "desc": "Règle les priorités du planificateur multimédia de Windows pour les jeux, le son et l'affichage.",
+   "gain": "Effet rarement mesurable : peu de jeux utilisent ce planificateur de Windows.",
+   "cons": "Aucun inconvénient connu."
+  },
+  "en": {
+   "desc": "Adjusts the Windows multimedia scheduler priorities for games, audio and the display.",
+   "gain": "Rarely measurable: few games use this Windows scheduler.",
+   "cons": "No known drawback."
+  }
+ },
+ "sys_csrss": {
+  "fr": {
+   "desc": "Demande une priorité haute pour le processus clavier-souris de Windows, plus d'autres priorités et deux options de télémétrie.",
+   "gain": "Effet rarement mesurable : Windows ignore la priorité de ce processus et la plupart de ces valeurs.",
+   "cons": "Aucun inconvénient connu."
+  },
+  "en": {
+   "desc": "Asks for a higher priority for the process that handles keyboard and mouse, plus other priorities and two telemetry options.",
+   "gain": "Rarely measurable: Windows ignores this process's priority and most of these values.",
+   "cons": "No known drawback."
+  }
+ },
+ "pri_game": {
+  "fr": {
+   "desc": "Six jeux au choix : le jeu choisi passe en priorité haute et son trafic réseau est marqué comme prioritaire.",
+   "gain": "Peut aider si d'autres programmes chargent le processeur ; le marquage réseau n'agit que si ta box le gère.",
+   "cons": "Les autres programmes (Discord, stream) peuvent ralentir ; pour Minecraft, tous les programmes Java sont concernés."
+  },
+  "en": {
+   "desc": "Six games to choose from: the chosen game runs at high priority and its network traffic is marked as priority.",
+   "gain": "Can help when other programs load the CPU; network marking only works if your router honors it.",
+   "cons": "Other programs (Discord, streaming) may slow down; for Minecraft, all Java programs are affected."
+  }
+ },
+ "pri_mmcss": {
+  "fr": {
+   "desc": "Donne plus de priorité processeur et GPU aux tâches que le planificateur multimédia de Windows classe comme jeux ou basse latence.",
+   "gain": "Effet rarement mesurable : peu de jeux utilisent ce planificateur de Windows.",
+   "cons": "Aucun inconvénient connu."
+  },
+  "en": {
+   "desc": "Gives more CPU and GPU priority to tasks that the Windows multimedia scheduler labels as games or low latency.",
+   "gain": "Rarely measurable: few games use this Windows scheduler.",
+   "cons": "No known drawback."
+  }
+ },
+ "pri_w32": {
+  "fr": {
+   "desc": "Règle la façon dont Windows partage le temps processeur entre les programmes, en favorisant la fenêtre au premier plan.",
+   "gain": "Effet rarement mesurable : sur un PC classique, cette valeur équivaut au réglage par défaut de Windows.",
+   "cons": "Aucun inconvénient connu."
+  },
+  "en": {
+   "desc": "Sets how Windows shares CPU time between programs, favoring the window in the foreground.",
+   "gain": "Rarely measurable: on a regular PC, this value matches the Windows default behavior.",
+   "cons": "No known drawback."
+  }
+ },
+ "pri_sysresp": {
+  "fr": {
+   "desc": "Réduit la part du processeur que Windows garde pour les tâches de fond pendant le jeu ou la lecture de médias.",
+   "gain": "Effet rarement mesurable : Windows remplace 0 par 10 % et seules quelques applis sont concernées.",
+   "cons": "Aucun inconvénient connu."
+  },
+  "en": {
+   "desc": "Lowers the share of CPU that Windows keeps for background tasks during games or media playback.",
+   "gain": "Rarely measurable: Windows treats 0 as 10%, and only a few apps are affected.",
+   "cons": "No known drawback."
+  }
+ },
+ "pri_thread": {
+  "fr": {
+   "desc": "Monte la priorité des tâches internes du noyau graphique de Windows et du pilote NVIDIA.",
+   "gain": "Effet rarement mesurable sur un PC récent.",
+   "cons": "Aucun inconvénient connu."
+  },
+  "en": {
+   "desc": "Raises the priority of internal tasks of the Windows graphics kernel and the NVIDIA driver.",
+   "gain": "Rarely measurable on a recent PC.",
+   "cons": "No known drawback."
+  }
+ },
+ "pri_irq8": {
+  "fr": {
+   "desc": "Demande à Windows de donner la priorité à l'horloge temps réel du PC (IRQ8).",
+   "gain": "Effet rarement mesurable : ce vieux réglage est ignoré par les Windows récents.",
+   "cons": "Aucun inconvénient connu."
+  },
+  "en": {
+   "desc": "Asks Windows to give priority to the PC's real-time clock (IRQ8).",
+   "gain": "Rarely measurable: recent Windows versions ignore this old setting.",
+   "cons": "No known drawback."
+  }
+ },
+ "pri_irq16": {
+  "fr": {
+   "desc": "Demande à Windows de donner la priorité à l'interruption IRQ16, souvent liée à l'USB ou à la carte graphique.",
+   "gain": "Effet rarement mesurable : ce vieux réglage est ignoré par les Windows récents.",
+   "cons": "Aucun inconvénient connu."
+  },
+  "en": {
+   "desc": "Asks Windows to give priority to interrupt IRQ16, often tied to USB or the graphics card.",
+   "gain": "Rarely measurable: recent Windows versions ignore this old setting.",
+   "cons": "No known drawback."
+  }
+ },
+ "pri_csrss": {
+  "fr": {
+   "desc": "Demande une priorité plus haute pour le processus Windows qui gère le clavier, la souris et les fenêtres.",
+   "gain": "Effet rarement mesurable : Windows ignore la priorité de ce processus protégé.",
+   "cons": "Aucun inconvénient connu."
+  },
+  "en": {
+   "desc": "Asks for a higher priority for the Windows process that handles keyboard, mouse and windows.",
+   "gain": "Rarely measurable: Windows ignores the priority of this protected process.",
+   "cons": "No known drawback."
+  }
+ },
+ "pri_dwm": {
+  "fr": {
+   "desc": "Règle la priorité de l'affichage des fenêtres de Windows dans le planificateur multimédia.",
+   "gain": "Effet rarement mesurable : ce sont les valeurs que Windows utilise déjà par défaut.",
+   "cons": "Aucun inconvénient connu."
+  },
+  "en": {
+   "desc": "Sets the priority Windows gives to drawing windows in the multimedia scheduler.",
+   "gain": "Rarely measurable: these are the values Windows already uses by default.",
+   "cons": "No known drawback."
+  }
+ },
+ "pri_policy": {
+  "fr": {
+   "desc": "Retire les limites de processeur des applis en arrière-plan ou en pause et les met au même niveau que le premier plan.",
+   "gain": "Effet incertain et rarement mesurable : ces règles concernent surtout les applis en arrière-plan.",
+   "cons": "Les applis en arrière-plan ne sont plus freinées : elles peuvent prendre du processeur au jeu et vider la batterie."
+  },
+  "en": {
+   "desc": "Removes the CPU limits on background or paused apps and puts them at the same level as the foreground.",
+   "gain": "Uncertain and rarely measurable: these rules mostly concern background apps.",
+   "cons": "Background apps are no longer held back: they can take CPU time from your game and drain the battery."
+  }
+ },
+ "kbm_accel": {
+  "fr": {
+   "desc": "Coupe « Améliorer la précision du pointeur » : le curseur bouge de la même distance, quelle que soit la vitesse de ton geste.",
+   "gain": "Visée plus régulière et prévisible en PvP ; ne réduit pas la latence.",
+   "cons": "Le curseur peut sembler plus lent sur le bureau, surtout sur grand écran."
+  },
+  "en": {
+   "desc": "Turns off \"Enhance pointer precision\": the cursor moves the same distance however fast you move the mouse.",
+   "gain": "More consistent, predictable aim in PvP; does not lower latency.",
+   "cons": "The cursor may feel slower on the desktop, especially on a large screen."
+  }
+ },
+ "kbm_1to1": {
+  "fr": {
+   "desc": "Coupe « Améliorer la précision du pointeur » et remet la vitesse du pointeur Windows au cran 6/11, pour un mouvement 1:1.",
+   "gain": "Un même geste donne toujours le même déplacement : visée plus régulière, sans baisse de latence.",
+   "cons": "Si tu avais changé la vitesse du pointeur, elle repasse au cran 6 : règle ta sensibilité en jeu ou sur ta souris."
+  },
+  "en": {
+   "desc": "Turns off \"Enhance pointer precision\" and sets Windows pointer speed back to notch 6/11 for 1:1 movement.",
+   "gain": "The same hand movement always moves the cursor the same distance: steadier aim, no lower latency.",
+   "cons": "If you had changed pointer speed, it goes back to notch 6: adjust sensitivity in game or on your mouse."
+  }
+ },
+ "kbm_thread": {
+  "fr": {
+   "desc": "Demande la priorité maximale pour les pilotes Windows de la souris et du clavier.",
+   "gain": "Effet rarement mesurable sur un PC récent.",
+   "cons": "Aucun inconvénient connu."
+  },
+  "en": {
+   "desc": "Asks for maximum priority for the Windows mouse and keyboard drivers.",
+   "gain": "Rarely measurable on a recent PC.",
+   "cons": "No known drawback."
+  }
+ },
+ "kbm_csrss": {
+  "fr": {
+   "desc": "Demande la priorité temps réel pour le processus Windows qui transmet le clavier et la souris aux applis.",
+   "gain": "Effet rarement mesurable : Windows ignore la priorité de ce processus protégé.",
+   "cons": "Aucun inconvénient connu."
+  },
+  "en": {
+   "desc": "Asks for real-time priority for the Windows process that passes keyboard and mouse input to apps.",
+   "gain": "Rarely measurable: Windows ignores the priority of this protected process.",
+   "cons": "No known drawback."
+  }
+ },
+ "kbm_repeat": {
+  "fr": {
+   "desc": "Règle la répétition des touches au plus rapide : délai le plus court et vitesse maximale quand tu restes appuyé.",
+   "gain": "Plus de confort pour écrire ; en jeu, l'effet est quasi nul car les jeux lisent l'appui directement.",
+   "cons": "Une touche gardée un peu trop longtemps peut se répéter sans que tu le veuilles."
+  },
+  "en": {
+   "desc": "Sets key repeat to the fastest: shortest delay and highest speed when you hold a key down.",
+   "gain": "Nicer for typing; in games the effect is near zero, since games read the key press directly.",
+   "cons": "A key held slightly too long may repeat when you don't want it to."
+  }
+ },
+ "kbm_panel": {
+  "fr": {
+   "desc": "Coupe l'accélération de la souris, remet la vitesse du pointeur au cran 6/11 et réduit le délai de survol.",
+   "gain": "Visée plus régulière en PvP ; le reste relève du confort, sans baisse de latence.",
+   "cons": "Si tu avais changé la vitesse du pointeur, elle repasse au cran 6 ; le curseur peut sembler plus lent sur le bureau."
+  },
+  "en": {
+   "desc": "Turns off mouse acceleration, sets pointer speed back to notch 6/11 and shortens the hover delay.",
+   "gain": "More consistent aim in PvP; the rest is comfort, with no lower latency.",
+   "cons": "If you had changed pointer speed, it goes back to notch 6; the cursor may feel slower on the desktop."
+  }
+ },
+ "kbm_filter": {
+  "fr": {
+   "desc": "Coupe les raccourcis des touches rémanentes, filtres et bascules (comme Maj 5 fois de suite) et les touches souris.",
+   "gain": "Plus de fenêtre qui interrompt ton jeu quand tu appuies plusieurs fois sur Maj.",
+   "cons": "Si tu utilises ces aides d'accessibilité, il faudra les activer depuis les paramètres de Windows."
+  },
+  "en": {
+   "desc": "Turns off the shortcuts for Sticky Keys, Filter Keys and Toggle Keys (like pressing Shift 5 times), and Mouse Keys.",
+   "gain": "No more pop-up interrupting your game when you press Shift several times.",
+   "cons": "If you use these accessibility aids, you'll need to turn them on from Windows settings."
+  }
+ },
+ "cpu_amd": {
+  "fr": {
+   "desc": "Pour AMD : tous les cœurs actifs et processeur à 100 % sur secteur, ventilateurs prioritaires et veille hybride coupée.",
+   "gain": "Peut rendre les images plus régulières, surtout sur Ryzen et sur portable branché.",
+   "cons": "Plus de chaleur, de bruit et de consommation ; sans veille hybride, une coupure de courant en veille efface ton travail."
+  },
+  "en": {
+   "desc": "For AMD: all cores active and CPU at 100% on AC power, fans first, and hybrid sleep off.",
+   "gain": "Can make frame pacing smoother, especially on Ryzen and plugged-in laptops.",
+   "cons": "More heat, noise and power use; without hybrid sleep, a power cut during sleep loses your open work."
+  }
+ },
+ "cpu_intel": {
+  "fr": {
+   "desc": "Pour Intel : tous les cœurs actifs et processeur à 100 % sur secteur, ventilateurs prioritaires et veille hybride coupée.",
+   "gain": "Peut rendre les images plus régulières, surtout sur portable branché.",
+   "cons": "Plus de chaleur, de bruit et de consommation ; sans veille hybride, une coupure de courant en veille efface ton travail."
+  },
+  "en": {
+   "desc": "For Intel: all cores active and CPU at 100% on AC power, fans first, and hybrid sleep off.",
+   "gain": "Can make frame pacing smoother, especially on plugged-in laptops.",
+   "cons": "More heat, noise and power use; without hybrid sleep, a power cut during sleep loses your open work."
+  }
+ },
+ "cpu_advanced": {
+  "fr": {
+   "desc": "Gros pack processeur : tous les cœurs actifs, 100 % sur secteur, 50 % minimum sur batterie, boost maximal et moins d'économies.",
+   "gain": "Peut stabiliser les images sur certains PC ; beaucoup des valeurs écrites n'existent pas dans Windows.",
+   "cons": "Plus de chaleur, de bruit et de consommation, autonomie nettement réduite sur portable et veille hybride coupée."
+  },
+  "en": {
+   "desc": "Big CPU pack: all cores active, 100% on AC, at least 50% on battery, full boost and fewer power savings.",
+   "gain": "Can steady frame pacing on some PCs; many of the values written don't exist in Windows.",
+   "cons": "More heat, noise and power use, much shorter laptop battery life, and hybrid sleep off."
+  }
+ },
+ "sys_latency": {
+  "fr": {
+   "desc": "Demande la priorité maximale pour les pilotes USB, réseau et NVIDIA, et une priorité plus haute pour le processus clavier-souris.",
+   "gain": "Effet rarement mesurable : Windows et les pilotes récents ignorent souvent ces valeurs.",
+   "cons": "Aucun inconvénient connu."
+  },
+  "en": {
+   "desc": "Asks for maximum priority for USB, network and NVIDIA drivers, and a higher priority for the keyboard and mouse process.",
+   "gain": "Rarely measurable: Windows and recent drivers often ignore these values.",
+   "cons": "No known drawback."
+  }
+ },
+ "cpu_registry": {
+  "fr": {
+   "desc": "Écrit des dizaines de réglages processeur dans le registre et coupe la limitation d'énergie des applis en arrière-plan.",
+   "gain": "Couper cette limitation peut aider sur portable branché ; la plupart des autres valeurs sont ignorées.",
+   "cons": "Les applis en arrière-plan ne sont plus économisées : un peu plus de consommation et moins d'autonomie."
+  },
+  "en": {
+   "desc": "Writes dozens of CPU settings to the registry and turns off power throttling for background apps.",
+   "gain": "Turning off throttling can help on plugged-in laptops; most other values are ignored.",
+   "cons": "Background apps are no longer power-limited: slightly higher power use and shorter battery life."
+  }
+ },
+ "cpu_vendor": {
+  "fr": {
+   "desc": "Intel ou AMD, les deux font la même chose : tous les cœurs actifs, 100 % sur secteur, ventilateurs prioritaires.",
+   "gain": "Peut rendre les images plus régulières, surtout sur Ryzen et sur portable branché.",
+   "cons": "Plus de chaleur, de bruit et de consommation ; sans veille hybride, une coupure de courant en veille efface ton travail."
+  },
+  "en": {
+   "desc": "Intel or AMD, both do the same: all cores active, 100% on AC power, fans first.",
+   "gain": "Can make frame pacing smoother, especially on Ryzen and plugged-in laptops.",
+   "cons": "More heat, noise and power use; without hybrid sleep, a power cut during sleep loses your open work."
+  }
+ },
+ "cpu_parking": {
+  "fr": {
+   "desc": "Garde tous les cœurs du processeur actifs quand le PC est branché, au lieu d'en mettre certains en pause.",
+   "gain": "Peut réduire les micro-saccades, surtout sur Ryzen et sur portable branché.",
+   "cons": "Un peu plus de chaleur et de consommation, même quand le PC ne fait rien."
+  },
+  "en": {
+   "desc": "Keeps all CPU cores active when the PC is plugged in, instead of parking some of them.",
+   "gain": "Can reduce micro-stutter, especially on Ryzen and plugged-in laptops.",
+   "cons": "A bit more heat and power use, even when the PC is idle."
+  }
+ },
+ "cpu_cstates_cfg": {
+  "fr": {
+   "desc": "Rend le processeur plus lent à passer en veille profonde quand le PC est branché.",
+   "gain": "Peut réduire un peu le temps de réaction du processeur ; effet souvent faible sur un PC récent.",
+   "cons": "Un peu plus de chaleur et de consommation au repos."
+  },
+  "en": {
+   "desc": "Makes the CPU slower to enter deep sleep states when the PC is plugged in.",
+   "gain": "Can slightly cut CPU wake-up delay; often a small effect on a recent PC.",
+   "cons": "A bit more heat and power use at idle."
+  }
+ },
+ "cpu_cstates_off": {
+  "fr": {
+   "desc": "Sur secteur, empêche la mise en veille du PC (veille, veille hybride, mode absence) et garde le processeur à 100 % minimum.",
+   "gain": "Le processeur à 100 % peut rendre les images plus régulières ; couper la veille n'apporte rien en jeu.",
+   "cons": "Le PC branché ne se met plus en veille, même inutilisé : plus de chaleur, de bruit et de consommation."
+  },
+  "en": {
+   "desc": "On AC power, stops the PC from sleeping (sleep, hybrid sleep, away mode) and keeps the CPU at 100% minimum.",
+   "gain": "Keeping the CPU at 100% can make frame pacing smoother; turning off sleep does nothing for games.",
+   "cons": "When plugged in, the PC no longer sleeps, even unused: more heat, noise and power use."
+  }
+ },
+ "cpu_idle": {
+  "fr": {
+   "desc": "Écrit une quarantaine de valeurs de « repos processeur » dans le registre.",
+   "gain": "Aucun effet attendu : ces valeurs n'existent pas dans Windows, qui ne les lit jamais.",
+   "cons": "Aucun inconvénient connu."
+  },
+  "en": {
+   "desc": "Writes about forty \"CPU idle\" values to the registry.",
+   "gain": "No effect expected: these values don't exist in Windows, which never reads them.",
+   "cons": "No known drawback."
+  }
+ },
+ "cpu_device_idle": {
+  "fr": {
+   "desc": "Demande aux périphériques de privilégier la performance plutôt que l'économie d'énergie quand le PC est branché.",
+   "gain": "Effet rarement mesurable : sur secteur, Windows utilise souvent déjà ce mode.",
+   "cons": "Aucun inconvénient connu."
+  },
+  "en": {
+   "desc": "Tells devices to favor performance over power saving when the PC is plugged in.",
+   "gain": "Rarely measurable: on AC power, Windows often already uses this mode.",
+   "cons": "No known drawback."
+  }
+ },
+ "cpu_pstates": {
+  "fr": {
+   "desc": "Adapte les seuils de repos du processeur à sa vitesse du moment, quand le PC est branché.",
+   "gain": "Effet rarement mesurable sur un PC récent.",
+   "cons": "Aucun inconvénient connu."
+  },
+  "en": {
+   "desc": "Scales the CPU's idle thresholds to its current speed when the PC is plugged in.",
+   "gain": "Rarely measurable on a recent PC.",
+   "cons": "No known drawback."
+  }
+ },
+ "cpu_ppm": {
+  "fr": {
+   "desc": "Remet les pilotes de gestion d'énergie du processeur (Intel et AMD) en démarrage normal, comme à l'origine.",
+   "gain": "Utile seulement si un autre outil les avait coupés : le processeur retrouve sa gestion de vitesse normale.",
+   "cons": "Aucun inconvénient connu."
+  },
+  "en": {
+   "desc": "Sets the CPU power management drivers (Intel and AMD) back to normal startup, as Windows ships them.",
+   "gain": "Only useful if another tool turned them off: the CPU gets its normal speed management back.",
+   "cons": "No known drawback."
+  }
+ },
+ "cpu_boost_epp": {
+  "fr": {
+   "desc": "Dit au processeur de privilégier la performance plutôt que l'économie d'énergie quand le PC est branché.",
+   "gain": "Sur les processeurs récents, peut faire monter la fréquence plus vite.",
+   "cons": "Plus de chaleur, de bruit et de consommation."
+  },
+  "en": {
+   "desc": "Tells the CPU to favor performance over power saving when the PC is plugged in.",
+   "gain": "Can make recent CPUs ramp up their speed faster.",
+   "cons": "More heat, noise and power use."
+  }
+ },
+ "cpu_throttle": {
+  "fr": {
+   "desc": "Empêche Windows d'utiliser les états de bridage du processeur pour économiser l'énergie, quand le PC est branché.",
+   "gain": "Effet rarement mesurable : les processeurs récents utilisent peu ces états.",
+   "cons": "Aucun inconvénient connu."
+  },
+  "en": {
+   "desc": "Stops Windows from using CPU throttle states to save power when the PC is plugged in.",
+   "gain": "Rarely measurable: recent CPUs rarely use these states.",
+   "cons": "No known drawback."
+  }
+ },
+ "cpu_turbo": {
+  "fr": {
+   "desc": "Autorise le boost du processeur (Turbo Boost, Precision Boost) au-delà de sa fréquence de base, quand le PC est branché.",
+   "gain": "Utile seulement si le boost était coupé : il est déjà actif par défaut sur la plupart des PC.",
+   "cons": "Plus de chaleur, de bruit et de consommation quand le processeur monte en boost."
+  },
+  "en": {
+   "desc": "Allows CPU boost (Turbo Boost, Precision Boost) above base clock when the PC is plugged in.",
+   "gain": "Only useful if boost was off: it is already on by default on most PCs.",
+   "cons": "More heat, noise and power use when the CPU boosts."
+  }
+ },
+ "cpu_cooling": {
+  "fr": {
+   "desc": "Fait accélérer les ventilateurs avant de ralentir le processeur quand il chauffe, sur secteur comme sur batterie.",
+   "gain": "Peut éviter que le processeur ralentisse en chauffant, surtout sur portable sur batterie.",
+   "cons": "Ventilateurs plus bruyants et autonomie réduite sur batterie."
+  },
+  "en": {
+   "desc": "Speeds up the fans before slowing the CPU when it gets hot, both on AC power and on battery.",
+   "gain": "Can keep the CPU from slowing down as it heats up, mostly on laptops running on battery.",
+   "cons": "Louder fans and shorter battery life."
+  }
+ },
+ "cpu_ac": {
+  "fr": {
+   "desc": "Garde le processeur à pleine vitesse quand le PC est branché.",
+   "gain": "Peut rendre les images plus régulières, surtout sur Ryzen et sur portable branché.",
+   "cons": "Plus de chaleur, de bruit et de consommation."
+  },
+  "en": {
+   "desc": "Keeps the CPU at full speed when the PC is plugged in.",
+   "gain": "Can make frame pacing smoother, especially on Ryzen and plugged-in laptops.",
+   "cons": "More heat, noise and power use."
+  }
+ },
+ "cpu_dc": {
+  "fr": {
+   "desc": "Sur batterie, garde le processeur à au moins 50 % de sa vitesse, sans limiter son maximum.",
+   "gain": "Peut rendre le jeu plus fluide sur portable débranché.",
+   "cons": "La batterie se vide nettement plus vite et le portable chauffe davantage."
+  },
+  "en": {
+   "desc": "On battery, keeps the CPU at 50% of its speed or more, without capping its maximum.",
+   "gain": "Can make games smoother on an unplugged laptop.",
+   "cons": "The battery drains much faster and the laptop runs hotter."
+  }
+ },
+ "cpu_numproc": {
+  "fr": {
+   "desc": "Indique au démarrage de Windows un nombre fixe de cœurs à utiliser : celui de ton processeur actuel.",
+   "gain": "Aucun effet attendu : Windows utilise déjà tous les cœurs par défaut.",
+   "cons": "Modifie le démarrage : si tu changes de processeur, Windows restera limité à l'ancien nombre de cœurs."
+  },
+  "en": {
+   "desc": "Tells Windows at boot to use a fixed number of cores: the count of your current CPU.",
+   "gain": "No effect expected: Windows already uses all cores by default.",
+   "cons": "Changes boot settings: if you change CPUs, Windows stays limited to the old core count."
+  }
+ },
+ "cpu_away": {
+  "fr": {
+   "desc": "Coupe le mode absence, qui permet à certaines applis de garder le PC allumé écran éteint au lieu de le mettre en veille.",
+   "gain": "Aucun effet en jeu ; le PC se met vraiment en veille quand tu le demandes.",
+   "cons": "Aucun inconvénient connu."
+  },
+  "en": {
+   "desc": "Turns off away mode, which lets some apps keep the PC running with the screen off instead of sleeping.",
+   "gain": "No effect in games; the PC truly sleeps when you ask it to.",
+   "cons": "No known drawback."
+  }
+ },
+ "sys_ram": {
+  "fr": {
+   "desc": "Réglages mémoire selon ta RAM (choisie automatiquement) : compression coupée dès 16 Go, lancement anticipé des applis coupé.",
+   "gain": "Effet rarement mesurable : Windows gère déjà la mémoire seul et ignore une bonne partie de ces réglages.",
+   "cons": "Certaines applis du Store s'ouvrent un peu plus lentement ; dès 16 Go, saccades possibles si la RAM se remplit."
+  },
+  "en": {
+   "desc": "Memory settings sized for your RAM (picked automatically): compression off from 16 GB, app pre-launch off.",
+   "gain": "Rarely measurable: Windows already manages memory on its own and ignores many of these values.",
+   "cons": "Some Store apps may open a bit slower; from 16 GB, stutters are possible if your RAM fills up."
+  }
+ },
+ "sys_registry": {
+  "fr": {
+   "desc": "Plus de 150 réglages : priorités des jeux, minuteurs, recherche web, télémétrie, notifications, synchro et applis en arrière-plan.",
+   "gain": "Plus de vie privée et moins de distractions ; effet sur les FPS rarement mesurable.",
+   "cons": "Coupe notifications, transparence et applis du Store en arrière-plan ; peut sembler suspect en screenshare Minecraft."
+  },
+  "en": {
+   "desc": "Over 150 settings: game priorities, timers, web search, telemetry, notifications, sync and background apps.",
+   "gain": "More privacy and fewer distractions; rarely measurable effect on FPS.",
+   "cons": "Turns off notifications, transparency and background Store apps; may look suspicious in a Minecraft screenshare."
+  }
+ },
+ "mem_profile": {
+  "fr": {
+   "desc": "Réglages mémoire selon ta RAM (choisie automatiquement) : compression coupée dès 16 Go, fusion des pages mémoire coupée.",
+   "gain": "Effet rarement mesurable : Windows gère déjà la mémoire seul et ignore une bonne partie de ces réglages.",
+   "cons": "Windows peut utiliser un peu plus de RAM ; dès 16 Go, saccades possibles si la RAM se remplit."
+  },
+  "en": {
+   "desc": "Memory settings sized for your RAM (picked automatically): compression off from 16 GB, page combining off.",
+   "gain": "Rarely measurable: Windows already manages memory on its own and ignores many of these values.",
+   "cons": "Windows may use a bit more RAM; from 16 GB, stutters are possible if your RAM fills up."
+  }
+ },
+ "mem_svchost": {
+  "fr": {
+   "desc": "Regroupe les services de Windows dans moins de processus, avec un seuil calculé d'après ta RAM.",
+   "gain": "Moins de processus dans le Gestionnaire des tâches ; effet sur les FPS quasi nul.",
+   "cons": "Si un service plante, il peut entraîner avec lui les autres services de son groupe."
+  },
+  "en": {
+   "desc": "Groups Windows services into fewer processes, using a threshold based on your RAM.",
+   "gain": "Fewer processes in Task Manager; near-zero effect on FPS.",
+   "cons": "If one service crashes, it can take the other services in its group down with it."
+  }
+ },
+ "mem_registry": {
+  "fr": {
+   "desc": "Garde le cœur de Windows en RAM plutôt que dans le fichier d'échange et change des tailles de mémoire système.",
+   "gain": "Effet rarement mesurable : les Windows récents ignorent la plupart de ces valeurs.",
+   "cons": "Aucun inconvénient connu."
+  },
+  "en": {
+   "desc": "Keeps the Windows core in RAM instead of the page file and changes some system memory sizes.",
+   "gain": "Rarely measurable: recent Windows versions ignore most of these values.",
+   "cons": "No known drawback."
+  }
+ },
+ "mem_compression": {
+  "fr": {
+   "desc": "Coupe la compression de la mémoire, qui permet à Windows de faire tenir plus de données en RAM.",
+   "gain": "Peut économiser un peu de processeur sur un PC avec beaucoup de RAM ; effet souvent faible.",
+   "cons": "Avec peu de RAM (8 Go ou moins), Windows utilise plus le disque et les saccades peuvent augmenter."
+  },
+  "en": {
+   "desc": "Turns off memory compression, which lets Windows fit more data in RAM.",
+   "gain": "May save a little CPU on a PC with plenty of RAM; often a small effect.",
+   "cons": "With little RAM (8 GB or less), Windows uses the disk more and stutters can get worse."
+  }
+ },
+ "mem_combining": {
+  "fr": {
+   "desc": "Windows arrête de chercher les zones de mémoire identiques pour les fusionner.",
+   "gain": "Effet rarement mesurable : peut économiser un peu de processeur en arrière-plan.",
+   "cons": "Windows peut utiliser un peu plus de RAM."
+  },
+  "en": {
+   "desc": "Windows stops looking for identical memory areas to merge them.",
+   "gain": "Rarely measurable: may save a little background CPU.",
+   "cons": "Windows may use a bit more RAM."
+  }
+ },
+ "mem_superfetch": {
+  "fr": {
+   "desc": "Écrit un ancien réglage censé couper le préchargement des applis en mémoire.",
+   "gain": "Effet improbable : Windows 10 et 11 ignorent ce réglage, le préchargement reste actif.",
+   "cons": "Aucun inconvénient connu."
+  },
+  "en": {
+   "desc": "Writes an old setting meant to turn off app preloading into memory.",
+   "gain": "Unlikely to do anything: Windows 10 and 11 ignore it, and preloading stays on.",
+   "cons": "No known drawback."
+  }
+ },
+ "pow_main": {
+  "fr": {
+   "desc": "Coupe plusieurs économies d'énergie : ralentissement des applis en arrière-plan, regroupement des minuteurs, veille des disques.",
+   "gain": "Peut rendre les images plus régulières sur certains PC, surtout les portables branchés.",
+   "cons": "Plus de consommation et moins d'autonomie sur portable."
+  },
+  "en": {
+   "desc": "Turns off several power savings: slowing of background apps, grouping of timers and drive idle power.",
+   "gain": "May make frame pacing smoother on some PCs, especially plugged-in laptops.",
+   "cons": "Higher power use and shorter battery life on laptops."
+  }
+ },
+ "pow_ultimate": {
+  "fr": {
+   "desc": "Ajoute et active le plan Performances optimales, supprime les plans par défaut et affiche les options d'alimentation cachées.",
+   "gain": "Peut rendre les images plus régulières, surtout sur Ryzen et sur portable branché.",
+   "cons": "Plus de chaleur et de consommation ; les plans Équilibré, Performances élevées et Économie d'énergie sont supprimés."
+  },
+  "en": {
+   "desc": "Adds and turns on the Ultimate Performance plan, deletes the default plans and shows hidden power options.",
+   "gain": "May make frame pacing smoother, especially on Ryzen and plugged-in laptops.",
+   "cons": "More heat and power use; the Balanced, High performance and Power saver plans are deleted."
+  }
+ },
+ "pow_saving": {
+  "fr": {
+   "desc": "Modifie les valeurs de veille des SSD et cartes SD que Windows utilise pour estimer leur consommation.",
+   "gain": "Effet rarement mesurable : ces valeurs servent surtout à estimer la consommation, pas à gérer la veille.",
+   "cons": "Aucun inconvénient connu."
+  },
+  "en": {
+   "desc": "Changes the SSD and SD card idle values that Windows uses to estimate their power use.",
+   "gain": "Rarely measurable: these values mostly serve to estimate power use, not to control idle.",
+   "cons": "No known drawback."
+  }
+ },
+ "sys_time": {
+  "fr": {
+   "desc": "Windows ne note plus quand chaque fichier a été ouvert et ne crée plus d'anciens noms courts (format DOS) pour les fichiers.",
+   "gain": "Peut réduire un peu les écritures sur le disque ; effet rarement mesurable.",
+   "cons": "La date de dernier accès n'est plus mise à jour, et de très vieux programmes peuvent mal gérer les nouveaux fichiers."
+  },
+  "en": {
+   "desc": "Windows stops recording when each file was last opened and stops creating old DOS-style short file names.",
+   "gain": "May slightly reduce disk writes; rarely measurable.",
+   "cons": "The last access date is no longer updated, and very old programs may struggle with new files."
+  }
+ },
+ "sys_bcdedit": {
+  "fr": {
+   "desc": "Modifie les réglages de démarrage de Windows : gestion des minuteurs du processeur et animation de démarrage masquée.",
+   "gain": "Effet rarement mesurable : Windows gère déjà bien ses minuteurs.",
+   "cons": "Change les réglages de démarrage de Windows, et le PC peut consommer un peu plus au repos."
+  },
+  "en": {
+   "desc": "Changes Windows boot settings: processor timer handling and a hidden boot animation.",
+   "gain": "Rarely measurable: Windows already handles its timers well.",
+   "cons": "Changes Windows boot settings, and the PC may use a bit more power at idle."
+  }
+ },
+ "pow_plan": {
+  "fr": {
+   "desc": "Installe et active le plan d'alimentation Rago, réglé pour la performance, et affiche les options d'alimentation cachées.",
+   "gain": "Peut rendre les images plus régulières, surtout sur Ryzen et sur portable branché.",
+   "cons": "Plus de chaleur, de bruit et de consommation ; moins d'autonomie sur portable."
+  },
+  "en": {
+   "desc": "Installs and turns on the Rago power plan, tuned for performance, and shows hidden power options.",
+   "gain": "May make frame pacing smoother, especially on Ryzen and plugged-in laptops.",
+   "cons": "More heat, noise and power use; shorter battery life on laptops."
+  }
+ },
+ "pow_extra": {
+  "fr": {
+   "desc": "Coupe le ralentissement des applis en arrière-plan et l'estimation de consommation, plus des réglages processeur peu documentés.",
+   "gain": "Peut rendre les images plus régulières sur portable branché ; le reste a un effet rarement mesurable.",
+   "cons": "Plus de consommation et moins d'autonomie sur portable."
+  },
+  "en": {
+   "desc": "Turns off the slowing of background apps and power estimation, plus a few poorly documented CPU settings.",
+   "gain": "May make frame pacing smoother on plugged-in laptops; the rest is rarely measurable.",
+   "cons": "Higher power use and shorter battery life on laptops."
+  }
+ },
+ "pow_windows": {
+  "fr": {
+   "desc": "Coupe l'hibernation, le démarrage rapide, le mode absence et le ralentissement des applis en arrière-plan.",
+   "gain": "Libère l'espace du fichier d'hibernation ; images parfois plus régulières sur portable branché.",
+   "cons": "Hibernation indisponible, démarrage un peu plus long après un arrêt et moins d'autonomie sur portable."
+  },
+  "en": {
+   "desc": "Turns off hibernation, Fast Startup, away mode and the slowing of background apps.",
+   "gain": "Frees the hibernation file's disk space; frame pacing may be smoother on plugged-in laptops.",
+   "cons": "No hibernation, slightly slower boot after a shutdown and shorter battery life on laptops."
+  }
+ },
+ "pow_throttling": {
+  "fr": {
+   "desc": "Windows ne ralentit plus les applis qu'il juge en arrière-plan pour économiser l'énergie.",
+   "gain": "Peut rendre les images plus régulières sur certains PC, surtout les portables branchés.",
+   "cons": "Plus de consommation et moins d'autonomie sur portable."
+  },
+  "en": {
+   "desc": "Windows stops slowing down apps it considers in the background to save power.",
+   "gain": "May make frame pacing smoother on some PCs, especially plugged-in laptops.",
+   "cons": "Higher power use and shorter battery life on laptops."
+  }
+ },
+ "pow_hwp": {
+  "fr": {
+   "desc": "Laisse le processeur choisir lui-même sa fréquence quand le PC est branché, au lieu de Windows.",
+   "gain": "Effet souvent nul : la plupart des processeurs récents fonctionnent déjà comme ça.",
+   "cons": "Aucun inconvénient connu."
+  },
+  "en": {
+   "desc": "Lets the processor pick its own speed when the PC is plugged in, instead of Windows.",
+   "gain": "Often no effect: most recent processors already work this way.",
+   "cons": "No known drawback."
+  }
+ },
+ "pow_timer": {
+  "fr": {
+   "desc": "Demande à Windows de ne plus regrouper les réveils du processeur pour économiser l'énergie.",
+   "gain": "Effet rarement mesurable : ce réglage n'est pas documenté par Microsoft.",
+   "cons": "Aucun inconvénient connu."
+  },
+  "en": {
+   "desc": "Asks Windows to stop grouping processor wake-ups to save power.",
+   "gain": "Rarely measurable: Microsoft does not document this setting.",
+   "cons": "No known drawback."
+  }
+ },
+ "pow_mmcss": {
+  "fr": {
+   "desc": "Écrit des réglages de priorité multimédia à des endroits que Windows ne lit pas.",
+   "gain": "Effet improbable : Windows ne lit pas ces réglages.",
+   "cons": "Aucun inconvénient connu."
+  },
+  "en": {
+   "desc": "Writes multimedia priority settings to places Windows does not read.",
+   "gain": "Unlikely to do anything: Windows does not read these settings.",
+   "cons": "No known drawback."
+  }
+ },
+ "pow_idle": {
+  "fr": {
+   "desc": "Les contrôleurs de disque ne se mettent plus en veille quand ils ne servent pas.",
+   "gain": "Peut éviter de petits temps de réveil du disque ; effet rarement mesurable en jeu.",
+   "cons": "Un peu plus de consommation, surtout sur portable."
+  },
+  "en": {
+   "desc": "Drive controllers no longer go idle when they are not in use.",
+   "gain": "May avoid small drive wake-up delays; rarely measurable in games.",
+   "cons": "Slightly higher power use, mostly on laptops."
+  }
+ },
+ "pow_link": {
+  "fr": {
+   "desc": "Les disques SATA ne coupent plus leur liaison avec le PC pour économiser l'énergie.",
+   "gain": "Peut éviter de petits temps de réveil du disque ; effet rarement mesurable en jeu.",
+   "cons": "Un peu plus de consommation, surtout sur portable."
+  },
+  "en": {
+   "desc": "SATA drives no longer cut their link to the PC to save power.",
+   "gain": "May avoid small drive wake-up delays; rarely measurable in games.",
+   "cons": "Slightly higher power use, mostly on laptops."
+  }
+ },
+ "pow_devices": {
+  "fr": {
+   "desc": "Décoche « Autoriser l'ordinateur à éteindre ce périphérique » sur tous tes périphériques.",
+   "gain": "Peut éviter qu'une souris, un casque ou la carte réseau se coupe ou se réveille en retard.",
+   "cons": "Un peu plus de consommation ; moins d'autonomie sur portable."
+  },
+  "en": {
+   "desc": "Unchecks \"Allow the computer to turn off this device to save power\" on all your devices.",
+   "gain": "May stop a mouse, headset or network card from dropping out or waking up late.",
+   "cons": "Slightly higher power use; shorter battery life on laptops."
+  }
+ },
+ "pow_gpuenergy": {
+  "fr": {
+   "desc": "Désactive le pilote de Windows qui mesure la consommation d'énergie de la carte graphique.",
+   "gain": "Effet rarement mesurable sur les FPS.",
+   "cons": "Aucun inconvénient connu."
+  },
+  "en": {
+   "desc": "Turns off the Windows driver that tracks the graphics card's power use.",
+   "gain": "Rarely measurable effect on FPS.",
+   "cons": "No known drawback."
+  }
+ },
+ "pow_storage": {
+  "fr": {
+   "desc": "Modifie les valeurs de veille des SSD et cartes SD que Windows utilise pour estimer leur consommation.",
+   "gain": "Effet rarement mesurable : ces valeurs servent surtout à estimer la consommation, pas à gérer la veille.",
+   "cons": "Aucun inconvénient connu."
+  },
+  "en": {
+   "desc": "Changes the SSD and SD card idle values that Windows uses to estimate their power use.",
+   "gain": "Rarely measurable: these values mostly serve to estimate power use, not to control idle.",
+   "cons": "No known drawback."
+  }
+ },
+ "pow_storage_apm": {
+  "fr": {
+   "desc": "Empêche tes disques de passer en veille et, si smartctl est là, coupe le mode économie et silence des disques durs.",
+   "gain": "Peut éviter les temps de réveil d'un disque dur ; effet rarement mesurable sur un SSD.",
+   "cons": "Disques durs plus bruyants, plus de consommation, et sur portable la batterie se vide plus vite en veille."
+  },
+  "en": {
+   "desc": "Keeps your drives from going idle and, if smartctl is present, turns off hard drive power saving and quiet mode.",
+   "gain": "May avoid hard drive wake-up delays; rarely measurable on an SSD.",
+   "cons": "Louder hard drives, higher power use, and on laptops the battery drains faster in sleep."
+  }
+ },
+ "pow_hibernate": {
+  "fr": {
+   "desc": "Coupe l'hibernation, le démarrage rapide et le suivi de la mise en veille de Windows (Sleep Study).",
+   "gain": "Libère plusieurs Go sur le disque système ; aucun effet sur les FPS.",
+   "cons": "Hibernation indisponible (sur portable, une batterie vide en veille ferme tout) et démarrage un peu plus lent."
+  },
+  "en": {
+   "desc": "Turns off hibernation, Fast Startup and Windows sleep tracking (Sleep Study).",
+   "gain": "Frees several GB on the system drive; no effect on FPS.",
+   "cons": "No hibernation (on laptops, a battery dying in sleep closes everything) and a slightly slower boot."
+  }
+ },
+ "pow_telemetry": {
+  "fr": {
+   "desc": "Coupe l'estimation, par Windows, de la consommation d'énergie de chaque appli.",
+   "gain": "Un peu moins de suivi en arrière-plan ; effet sur les FPS quasi nul.",
+   "cons": "L'utilisation de la batterie par appli peut ne plus s'afficher dans les paramètres."
+  },
+  "en": {
+   "desc": "Stops Windows from estimating each app's power use.",
+   "gain": "Slightly less background tracking; near-zero effect on FPS.",
+   "cons": "Battery usage per app may no longer show in Settings."
+  }
+ },
+ "pow_delete_plans": {
+  "fr": {
+   "desc": "Supprime les plans d'alimentation Équilibré, Performances élevées et Économie d'énergie de Windows.",
+   "gain": "Aucun effet sur les performances : ça évite juste de repasser par erreur sur un de ces plans.",
+   "cons": "Tu ne peux plus choisir ces plans, ce qui gêne surtout sur portable pour économiser la batterie."
+  },
+  "en": {
+   "desc": "Deletes the Windows Balanced, High performance and Power saver power plans.",
+   "gain": "No performance effect: it only stops you from switching back to one of these plans by mistake.",
+   "cons": "You can no longer pick these plans, which matters most on laptops to save battery."
+  }
+ },
+ "sto_general": {
+  "fr": {
+   "desc": "Active le cache d'écriture des disques internes et vide les fichiers temporaires, caches des navigateurs et de Windows Update.",
+   "gain": "Libère de l'espace disque ; aucun gain de FPS.",
+   "cons": "Sites et miniatures un peu plus lents à recharger la première fois ; le nettoyage peut prendre plusieurs minutes."
+  },
+  "en": {
+   "desc": "Turns on the write cache of internal drives and clears temp files, browser caches and the Windows Update cache.",
+   "gain": "Frees disk space; no FPS gain.",
+   "cons": "Websites and thumbnails load a bit slower the first time; the cleanup can take several minutes."
+  }
+ },
+ "sto_ntfs": {
+  "fr": {
+   "desc": "Agrandit le cache des fichiers, coupe la date de dernier accès, garde le TRIM actif et ne chiffre plus le fichier d'échange.",
+   "gain": "Effet rarement mesurable : Windows gère déjà bien ces réglages.",
+   "cons": "La date de dernier accès des fichiers n'est plus mise à jour, et le système de fichiers utilise un peu plus de RAM."
+  },
+  "en": {
+   "desc": "Enlarges the file cache, turns off last access dates, keeps TRIM on and stops encrypting the page file.",
+   "gain": "Rarely measurable: Windows already handles these settings well.",
+   "cons": "File last access dates are no longer updated, and the file system uses a bit more RAM."
+  }
+ },
+ "sto_fsutil_v6": {
+  "fr": {
+   "desc": "Windows ne note plus quand chaque fichier a été ouvert et ne crée plus d'anciens noms courts (format DOS) pour les fichiers.",
+   "gain": "Peut réduire un peu les écritures sur le disque ; effet rarement mesurable.",
+   "cons": "La date de dernier accès n'est plus mise à jour, et de très vieux programmes peuvent mal gérer les nouveaux fichiers."
+  },
+  "en": {
+   "desc": "Windows stops recording when each file was last opened and stops creating old DOS-style short file names.",
+   "gain": "May slightly reduce disk writes; rarely measurable.",
+   "cons": "The last access date is no longer updated, and very old programs may struggle with new files."
+  }
+ },
+ "sto_fsutil2": {
+  "fr": {
+   "desc": "Windows ne note plus quand chaque fichier a été ouvert et ne crée plus d'anciens noms courts (format DOS) pour les fichiers.",
+   "gain": "Peut réduire un peu les écritures sur le disque ; effet rarement mesurable.",
+   "cons": "La date de dernier accès n'est plus mise à jour, et de très vieux programmes peuvent mal gérer les nouveaux fichiers."
+  },
+  "en": {
+   "desc": "Windows stops recording when each file was last opened and stops creating old DOS-style short file names.",
+   "gain": "May slightly reduce disk writes; rarely measurable.",
+   "cons": "The last access date is no longer updated, and very old programs may struggle with new files."
+  }
+ },
+ "sto_defrag": {
+  "fr": {
+   "desc": "Lance tout de suite un TRIM du disque C, qui signale au SSD ses espaces libres ; Windows le fait normalement chaque semaine.",
+   "gain": "Peut aider un SSD à garder ses vitesses d'écriture ; sans effet sur un disque dur.",
+   "cons": "Aucun inconvénient connu."
+  },
+  "en": {
+   "desc": "Runs a TRIM on drive C right away, telling the SSD which space is free; Windows normally does this weekly.",
+   "gain": "May help an SSD keep its write speeds; no effect on a hard drive.",
+   "cons": "No known drawback."
+  }
+ },
+ "sto_fsutil": {
+  "fr": {
+   "desc": "SSD : coupe la date de dernier accès et les noms courts DOS. Disque dur : laisse Windows gérer la date, garde les noms courts.",
+   "gain": "Peut réduire un peu les écritures sur le disque ; effet rarement mesurable.",
+   "cons": "Avec SSD, la date de dernier accès n'est plus mise à jour ; de très vieux programmes peuvent être gênés."
+  },
+  "en": {
+   "desc": "SSD: turns off last access dates and DOS short names. Hard drive: lets Windows manage the date, keeps short names.",
+   "gain": "May slightly reduce disk writes; rarely measurable.",
+   "cons": "With SSD, the last access date is no longer updated; very old programs may have trouble."
+  }
+ },
+ "sto_writecache": {
+  "fr": {
+   "desc": "Active le cache d'écriture de tes disques internes ; les clés et disques USB ne sont pas touchés.",
+   "gain": "Peut accélérer les écritures, mais Windows l'active souvent déjà par défaut.",
+   "cons": "En cas de coupure de courant brutale, les dernières données écrites peuvent être perdues."
+  },
+  "en": {
+   "desc": "Turns on the write cache of your internal drives; USB sticks and drives are left alone.",
+   "gain": "May speed up writes, but Windows often has it on by default already.",
+   "cons": "If the power cuts out suddenly, the last data written may be lost."
+  }
+ },
+ "sto_ssdpower": {
+  "fr": {
+   "desc": "Modifie les valeurs de veille des SSD et cartes SD que Windows utilise pour estimer leur consommation.",
+   "gain": "Effet rarement mesurable : ces valeurs servent surtout à estimer la consommation, pas à gérer la veille.",
+   "cons": "Aucun inconvénient connu."
+  },
+  "en": {
+   "desc": "Changes the SSD and SD card idle values that Windows uses to estimate their power use.",
+   "gain": "Rarely measurable: these values mostly serve to estimate power use, not to control idle.",
+   "cons": "No known drawback."
+  }
+ },
+ "sto_trim": {
+  "fr": {
+   "desc": "Lance tout de suite un TRIM du disque C, qui signale au SSD ses espaces libres ; Windows le fait normalement chaque semaine.",
+   "gain": "Peut aider un SSD à garder ses vitesses d'écriture ; sans effet sur un disque dur.",
+   "cons": "Aucun inconvénient connu."
+  },
+  "en": {
+   "desc": "Runs a TRIM on drive C right away, telling the SSD which space is free; Windows normally does this weekly.",
+   "gain": "May help an SSD keep its write speeds; no effect on a hard drive.",
+   "cons": "No known drawback."
+  }
+ },
+ "sys_usb": {
+  "fr": {
+   "desc": "Coupe la mise en veille des ports USB et demande une priorité plus haute pour les pilotes USB, réseau et NVIDIA.",
+   "gain": "Peut éviter qu'une souris ou un casque USB se coupe ; la partie priorité a un effet rarement mesurable.",
+   "cons": "Un peu plus de consommation ; moins d'autonomie sur portable."
+  },
+  "en": {
+   "desc": "Turns off USB port suspend and asks for higher priority for USB, network and NVIDIA drivers.",
+   "gain": "May stop a USB mouse or headset from dropping out; the priority part is rarely measurable.",
+   "cons": "Slightly higher power use; shorter battery life on laptops."
+  }
+ },
+ "usb_priority": {
+  "fr": {
+   "desc": "Demande une priorité plus haute pour les pilotes USB, réseau, NVIDIA et graphiques de Windows.",
+   "gain": "Effet rarement mesurable : ce réglage est souvent ignoré par les Windows récents.",
+   "cons": "Aucun inconvénient connu."
+  },
+  "en": {
+   "desc": "Asks for higher priority for USB, network, NVIDIA and Windows graphics drivers.",
+   "gain": "Rarely measurable: recent Windows versions often ignore this setting.",
+   "cons": "No known drawback."
+  }
+ },
+ "usb_power": {
+  "fr": {
+   "desc": "Empêche tes contrôleurs USB de se mettre en veille pour économiser l'énergie.",
+   "gain": "Peut éviter qu'une souris, un clavier ou un casque USB se coupe ou réagisse en retard.",
+   "cons": "Un peu plus de consommation ; moins d'autonomie sur portable."
+  },
+  "en": {
+   "desc": "Keeps your USB controllers from going into power-saving sleep.",
+   "gain": "May stop a USB mouse, keyboard or headset from dropping out or responding late.",
+   "cons": "Slightly higher power use; shorter battery life on laptops."
+  }
+ },
+ "usb_hidden": {
+  "fr": {
+   "desc": "Coupe les économies d'énergie cachées de tous les périphériques qui en ont, pas seulement l'USB.",
+   "gain": "Peut éviter des coupures ou des réveils lents de certains périphériques ; effet rarement mesurable en jeu.",
+   "cons": "Plus de consommation, et sur portable la batterie dure moins, même en veille."
+  },
+  "en": {
+   "desc": "Turns off hidden power saving on every device that has it, not just USB.",
+   "gain": "May prevent dropouts or slow wake-ups on some devices; rarely measurable in games.",
+   "cons": "Higher power use, and on laptops the battery lasts less, even in sleep."
+  }
+ },
+ "usb_controller": {
+  "fr": {
+   "desc": "Retire la priorité d'interruption forcée des contrôleurs de disque SATA, si un outil en avait fixé une.",
+   "gain": "Utile seulement si un autre outil avait changé ce réglage ; sinon aucun effet.",
+   "cons": "Aucun inconvénient connu."
+  },
+  "en": {
+   "desc": "Removes any forced interrupt priority from SATA drive controllers, if a tool had set one.",
+   "gain": "Only useful if another tool changed this setting; otherwise no effect.",
+   "cons": "No known drawback."
+  }
+ },
+ "usb_msi": {
+  "fr": {
+   "desc": "Passe tes contrôleurs USB en mode d'interruption MSI et retire leur priorité forcée.",
+   "gain": "Effet souvent nul : les contrôleurs USB récents utilisent déjà ce mode ; peut aider sur du vieux matériel.",
+   "cons": "Rare : sur certains contrôleurs, des périphériques USB peuvent mal fonctionner."
+  },
+  "en": {
+   "desc": "Switches your USB controllers to MSI interrupt mode and removes their forced priority.",
+   "gain": "Often no effect: recent USB controllers already use this mode; may help on old hardware.",
+   "cons": "Rare: on some controllers, USB devices may misbehave."
+  }
+ },
+ "usb_advanced": {
+  "fr": {
+   "desc": "Regroupe la coupure de la veille USB, la priorité des pilotes USB, réseau et NVIDIA et le mode MSI des contrôleurs USB.",
+   "gain": "Peut éviter des coupures de périphériques USB ; le reste a un effet rarement mesurable.",
+   "cons": "Plus de consommation sur portable ; rare : certains contrôleurs USB gèrent mal le mode MSI."
+  },
+  "en": {
+   "desc": "Combines USB suspend off, higher USB, network and NVIDIA driver priority, and MSI mode on USB controllers.",
+   "gain": "May prevent USB device dropouts; the rest is rarely measurable.",
+   "cons": "Higher power use on laptops; rare: some USB controllers handle MSI mode poorly."
+  }
+ },
+ "gpu_nvidia": {
+  "fr": {
+   "desc": "Pack NVIDIA complet : profil faible latence pour tous tes jeux, GPU gardé à fond, télémétrie coupée et réglages du pilote.",
+   "gain": "Le profil peut réduire l'input lag quand le GPU est à 100 % ; le reste a un effet rarement mesurable.",
+   "cons": "GPU à fond même au bureau (chaleur, conso), Netflix peut refuser de se lire, réglages NVIDIA globaux remplacés."
+  },
+  "en": {
+   "desc": "Full NVIDIA pack: low-latency profile for all your games, GPU kept at full speed, telemetry off and driver settings.",
+   "gain": "The profile can reduce input lag when the GPU is at 100%; the rest is rarely measurable.",
+   "cons": "GPU at full speed even on the desktop (heat, power), Netflix may refuse to play, global NVIDIA settings replaced."
+  }
+ },
+ "gpu_amd": {
+  "fr": {
+   "desc": "Pack AMD complet : économies d'énergie du GPU coupées, GPU forcé en haute fréquence, Chill coupé, Anti-Lag activé et réglages 3D.",
+   "gain": "Anti-Lag peut réduire l'input lag quand le GPU est à 100 % ; le reste a un effet rarement mesurable.",
+   "cons": "Plus de chaleur, de bruit et de conso ; overlay Radeon coupé, synchro verticale forcée sur off (risque de déchirement)."
+  },
+  "en": {
+   "desc": "Full AMD pack: GPU power saving off, GPU forced to high clocks, Chill off, Anti-Lag on and 3D driver settings.",
+   "gain": "Anti-Lag can reduce input lag when the GPU is at 100%; the rest is rarely measurable.",
+   "cons": "More heat, noise and power use; Radeon overlay off, VSync forced off (risk of screen tearing)."
+  }
+ },
+ "gpu_intel": {
+  "fr": {
+   "desc": "Réglages du pilote Intel : synchro verticale adaptative coupée, mémoire vidéo réservée agrandie et profil d'énergie modifié.",
+   "gain": "Effet rarement mesurable : les pilotes Intel récents gèrent seuls leur mémoire vidéo.",
+   "cons": "Aucun inconvénient connu."
+  },
+  "en": {
+   "desc": "Intel graphics driver settings: adaptive VSync off, larger reserved video memory and a changed power profile.",
+   "gain": "Rarely measurable: recent Intel drivers manage their video memory on their own.",
+   "cons": "No known drawback."
+  }
+ },
+ "gpu_general": {
+  "fr": {
+   "desc": "Réglages pour toutes les cartes : priorité de l'affichage, préemption du GPU coupée, mode MSI et délais d'économie d'énergie.",
+   "gain": "Effet rarement mesurable : beaucoup de ces réglages sont ignorés par les Windows récents.",
+   "cons": "Si une autre appli charge le GPU, l'affichage peut saccader ; un peu plus de mémoire vive sert au cache des fichiers."
+  },
+  "en": {
+   "desc": "Graphics settings for any card: display priority, GPU preemption off, MSI mode and power-saving delays.",
+   "gain": "Rarely measurable: many of these settings are ignored by recent Windows versions.",
+   "cons": "If another app loads the GPU, the display may stutter; a bit more RAM goes to the file cache."
+  }
+ },
+ "gpu_directx": {
+  "fr": {
+   "desc": "Modifie d'anciens réglages de DirectDraw et Direct3D, utilisés par les versions 7 à 9 de DirectX.",
+   "gain": "Effet improbable : ni Minecraft ni les jeux DirectX 11 et 12 ne lisent ces réglages.",
+   "cons": "Aucun inconvénient connu."
+  },
+  "en": {
+   "desc": "Changes old DirectDraw and Direct3D settings used by DirectX versions 7 to 9.",
+   "gain": "Unlikely to help: neither Minecraft nor DirectX 11 and 12 games read these settings.",
+   "cons": "No known drawback."
+  }
+ },
+ "nv_general": {
+  "fr": {
+   "desc": "Pack NVIDIA : profil faible latence pour tous tes jeux, mode MSI, préemption et HDCP coupés, télémétrie NVIDIA coupée.",
+   "gain": "Le profil peut réduire l'input lag quand le GPU est à 100 % ; Reflex dans le jeu fait mieux s'il existe.",
+   "cons": "Netflix et les vidéos protégées peuvent refuser de se lire, et tes réglages NVIDIA globaux sont remplacés."
+  },
+  "en": {
+   "desc": "NVIDIA pack: low-latency profile for all your games, MSI mode, preemption and HDCP off, NVIDIA telemetry off.",
+   "gain": "The profile can reduce input lag when the GPU is at 100%; in-game Reflex does better when available.",
+   "cons": "Netflix and other protected video may refuse to play, and your global NVIDIA settings are replaced."
+  }
+ },
+ "nv_profile": {
+  "fr": {
+   "desc": "Importe le profil « faible latence » de Rago dans le pilote NVIDIA, appliqué à tous tes jeux.",
+   "gain": "Peut réduire l'input lag quand le GPU est à 100 % ; Reflex dans le jeu fait mieux quand il existe.",
+   "cons": "Remplace tes réglages 3D globaux du panneau de configuration NVIDIA, pour tous les jeux."
+  },
+  "en": {
+   "desc": "Imports Rago's low-latency profile into the NVIDIA driver, applied to all your games.",
+   "gain": "Can reduce input lag when the GPU is at 100%; in-game Reflex does better when available.",
+   "cons": "Replaces your global 3D settings in the NVIDIA Control Panel, for every game."
+  }
+ },
+ "nv_telemetry": {
+  "fr": {
+   "desc": "Coupe la télémétrie NVIDIA : rapports de plantage, collecte de données et vérifications automatiques de mises à jour.",
+   "gain": "Plus de vie privée ; effet sur les FPS quasi nul.",
+   "cons": "Tu peux ne plus être prévenu des nouveaux pilotes NVIDIA, et GeForce Experience ne se met plus à jour seul."
+  },
+  "en": {
+   "desc": "Turns off NVIDIA telemetry: crash reports, data collection and automatic update checks.",
+   "gain": "More privacy; near-zero effect on FPS.",
+   "cons": "You may no longer be told about new NVIDIA drivers, and GeForce Experience no longer updates itself."
+  }
+ },
+ "nv_power": {
+  "fr": {
+   "desc": "Coupe l'économie d'énergie de l'affichage du pilote NVIDIA et quelques réglages d'économie d'énergie de Windows.",
+   "gain": "Effet rarement mesurable : plusieurs de ces réglages sont souvent ignorés par Windows.",
+   "cons": "Un peu plus de consommation, surtout sur portable ; le détail de batterie par appli peut disparaître."
+  },
+  "en": {
+   "desc": "Turns off the NVIDIA driver's display power saving and a few Windows power-saving settings.",
+   "gain": "Rarely measurable: several of these settings are often ignored by Windows.",
+   "cons": "Slightly higher power use, mainly on laptops; per-app battery usage details may disappear."
+  }
+ },
+ "nv_pstates": {
+  "fr": {
+   "desc": "Empêche la carte graphique de baisser sa fréquence quand elle a peu de travail.",
+   "gain": "Peut éviter de petites baisses de fréquence en jeu ; effet souvent faible, le GPU monte déjà vite en charge.",
+   "cons": "Le GPU reste à fond même au bureau : plus de chaleur, de bruit et de consommation."
+  },
+  "en": {
+   "desc": "Stops the graphics card from lowering its clock speed when it has little work.",
+   "gain": "Can avoid small clock drops in games; often a small effect, the GPU already ramps up fast.",
+   "cons": "The GPU stays at full speed even on the desktop: more heat, noise and power use."
+  }
+ },
+ "nv_msi": {
+  "fr": {
+   "desc": "Passe la carte graphique en mode d'interruptions MSI, une façon plus moderne de signaler son travail au processeur.",
+   "gain": "Surtout utile sur du vieux matériel : les cartes graphiques récentes utilisent déjà ce mode.",
+   "cons": "Aucun inconvénient connu."
+  },
+  "en": {
+   "desc": "Switches the graphics card to MSI interrupt mode, a more modern way to signal the processor.",
+   "gain": "Mostly useful on old hardware: recent graphics cards already use this mode.",
+   "cons": "No known drawback."
+  }
+ },
+ "nv_hdcp": {
+  "fr": {
+   "desc": "Coupe le HDCP, la protection anticopie des vidéos, sur la carte graphique NVIDIA.",
+   "gain": "Aucun gain en jeu attendu : le HDCP ne sert qu'à la lecture de vidéos protégées.",
+   "cons": "Netflix, Disney+ et les autres vidéos protégées peuvent refuser de se lire ou passer en basse qualité."
+  },
+  "en": {
+   "desc": "Turns off HDCP, the video copy protection, on the NVIDIA graphics card.",
+   "gain": "No in-game gain expected: HDCP is only used to play protected video.",
+   "cons": "Netflix, Disney+ and other protected video may refuse to play or drop to low quality."
+  }
+ },
+ "nv_preemption": {
+  "fr": {
+   "desc": "Coupe la préemption : le GPU finit sa tâche en cours avant de passer à une autre, au lieu de s'interrompre.",
+   "gain": "Effet rarement mesurable en jeu.",
+   "cons": "L'affichage peut saccader si une autre appli charge le GPU, et la projection sans fil (Miracast) peut ne plus marcher."
+  },
+  "en": {
+   "desc": "Turns off preemption: the GPU finishes its current task before switching, instead of pausing it.",
+   "gain": "Rarely measurable in games.",
+   "cons": "The display may stutter if another app loads the GPU, and wireless display (Miracast) may stop working."
+  }
+ },
+ "nv_dpc": {
+  "fr": {
+   "desc": "Laisse le pilote NVIDIA traiter ses petites tâches urgentes sur tous les cœurs du processeur au lieu d'un seul.",
+   "gain": "Effet rarement mesurable ; réglage non documenté par NVIDIA.",
+   "cons": "Aucun inconvénient connu."
+  },
+  "en": {
+   "desc": "Lets the NVIDIA driver handle its small urgent tasks on all processor cores instead of one.",
+   "gain": "Rarely measurable; NVIDIA does not document this setting.",
+   "cons": "No known drawback."
+  }
+ },
+ "nv_writecomb": {
+  "fr": {
+   "desc": "Désactive le regroupement des écritures mémoire (write combining) dans la planification graphique de Windows.",
+   "gain": "Effet rarement mesurable : ce réglage est souvent ignoré.",
+   "cons": "Aucun inconvénient connu."
+  },
+  "en": {
+   "desc": "Turns off memory write combining in Windows graphics scheduling.",
+   "gain": "Rarely measurable: this setting is often ignored.",
+   "cons": "No known drawback."
+  }
+ },
+ "nv_accel": {
+  "fr": {
+   "desc": "Règle l'accélération matérielle de la carte graphique sur « complète ».",
+   "gain": "Aucun effet attendu : c'est déjà le réglage par défaut de Windows.",
+   "cons": "Aucun inconvénient connu."
+  },
+  "en": {
+   "desc": "Sets the graphics card's hardware acceleration to full.",
+   "gain": "No effect expected: this is already the Windows default.",
+   "cons": "No known drawback."
+  }
+ },
+ "nv_contig": {
+  "fr": {
+   "desc": "Demande au pilote de réserver la mémoire du GPU en un seul bloc dans la mémoire vive.",
+   "gain": "Effet rarement mesurable ; réglage peu documenté.",
+   "cons": "Aucun inconvénient connu."
+  },
+  "en": {
+   "desc": "Asks the driver to reserve GPU memory as one single block in system RAM.",
+   "gain": "Rarely measurable; poorly documented setting.",
+   "cons": "No known drawback."
+  }
+ },
+ "nv_debloat": {
+  "fr": {
+   "desc": "Supprime les fichiers d'installation NVIDIA restés dans le dossier C:\\NVIDIA. Le pilote installé n'est pas touché.",
+   "gain": "Libère de l'espace disque ; aucun effet sur les FPS.",
+   "cons": "Pour réparer ou réinstaller le pilote, il faudra retélécharger son installateur."
+  },
+  "en": {
+   "desc": "Deletes NVIDIA installer files left in the C:\\NVIDIA folder. The installed driver is not touched.",
+   "gain": "Frees disk space; no effect on FPS.",
+   "cons": "To repair or reinstall the driver, you will need to download its installer again."
+  }
+ },
+ "nv_advanced": {
+  "fr": {
+   "desc": "Une quarantaine de réglages internes du pilote NVIDIA et de l'alimentation, avec la télémétrie NVIDIA et Miracast coupés.",
+   "gain": "Effet rarement mesurable : la plupart de ces réglages ne sont pas documentés.",
+   "cons": "La projection sans fil (Miracast) peut ne plus marcher."
+  },
+  "en": {
+   "desc": "About forty internal NVIDIA driver and power settings, with NVIDIA telemetry and Miracast turned off.",
+   "gain": "Rarely measurable: most of these settings are undocumented.",
+   "cons": "Wireless display (Miracast) may stop working."
+  }
+ },
+ "nv_powermizer": {
+  "fr": {
+   "desc": "Règle la gestion d'énergie NVIDIA (PowerMizer) sur performance maximale.",
+   "gain": "Peut éviter de petites baisses de fréquence en jeu ; effet incertain sur les pilotes récents.",
+   "cons": "Le GPU reste plus souvent à haute fréquence : plus de chaleur, de bruit et de consommation."
+  },
+  "en": {
+   "desc": "Sets NVIDIA power management (PowerMizer) to maximum performance.",
+   "gain": "Can avoid small clock drops in games; uncertain effect on recent drivers.",
+   "cons": "The GPU stays at high clocks more often: more heat, noise and power use."
+  }
+ },
+ "nv_latency": {
+  "fr": {
+   "desc": "Raccourcit des délais internes du pilote NVIDIA avant ses passages en économie d'énergie, sur la première carte graphique.",
+   "gain": "Effet rarement mesurable : réglages non documentés, et sur portable ils peuvent viser la puce intégrée.",
+   "cons": "Aucun inconvénient connu."
+  },
+  "en": {
+   "desc": "Shortens internal NVIDIA driver delays before power-saving state changes, on the first graphics card.",
+   "gain": "Rarely measurable: undocumented settings, and on laptops they may target the built-in chip.",
+   "cons": "No known drawback."
+  }
+ },
+ "nv_kboost": {
+  "fr": {
+   "desc": "Bloque la carte graphique NVIDIA à sa fréquence maximale en permanence, même au bureau.",
+   "gain": "Peut éviter de petites baisses de fréquence en jeu ; sur portable, peut viser la puce intégrée à la place.",
+   "cons": "Plus de chaleur, de bruit, de consommation et d'usure, même quand tu ne joues pas."
+  },
+  "en": {
+   "desc": "Locks the NVIDIA graphics card at its maximum clock speed all the time, even on the desktop.",
+   "gain": "Can avoid small clock drops in games; on laptops it may target the built-in chip instead.",
+   "cons": "More heat, noise, power use and wear, even when you are not gaming."
+  }
+ },
+ "amd_general": {
+  "fr": {
+   "desc": "Réglages du pilote AMD : file d'images réduite, textures en mode performance, overlay Radeon et options annexes coupés.",
+   "gain": "Peut réduire un peu l'input lag quand le GPU est à 100 % ; effet incertain sur les pilotes récents.",
+   "cons": "Textures parfois un peu moins nettes, overlay Radeon en jeu coupé et un peu plus de conso au repos."
+  },
+  "en": {
+   "desc": "AMD driver settings: shorter frame queue, textures set to performance, Radeon overlay and extra options off.",
+   "gain": "Can slightly reduce input lag when the GPU is at 100%; uncertain effect on recent drivers.",
+   "cons": "Textures may look a bit less sharp, in-game Radeon overlay off and slightly higher idle power use."
+  }
+ },
+ "amd_power": {
+  "fr": {
+   "desc": "Coupe les économies d'énergie internes de la carte AMD, dont sa mise en veille très basse consommation.",
+   "gain": "Peut éviter de petits à-coups quand la carte se réveille ; effet souvent faible.",
+   "cons": "Plus de consommation et de chaleur au repos, surtout sur portable."
+  },
+  "en": {
+   "desc": "Turns off the AMD card's internal power saving, including its ultra-low-power sleep state.",
+   "gain": "Can avoid small hitches when the card wakes up; often a small effect.",
+   "cons": "More power use and heat at idle, especially on laptops."
+  }
+ },
+ "amd_hdcp": {
+  "fr": {
+   "desc": "Essaie de couper le HDCP, la protection anticopie des vidéos, sur la carte AMD.",
+   "gain": "Effet improbable : le réglage vise un modèle d'écran précis, sans doute pas le tien ; aucun gain en jeu.",
+   "cons": "S'il s'applique, Netflix et les autres vidéos protégées peuvent refuser de se lire."
+  },
+  "en": {
+   "desc": "Tries to turn off HDCP, the video copy protection, on the AMD card.",
+   "gain": "Unlikely to apply: it targets one specific monitor model, probably not yours; no in-game gain.",
+   "cons": "If it applies, Netflix and other protected video may refuse to play."
+  }
+ },
+ "amd_memsleep": {
+  "fr": {
+   "desc": "Empêche la puce graphique AMD de passer en veille profonde quand elle a peu de travail.",
+   "gain": "Peut éviter de petits à-coups au réveil du GPU ; effet souvent faible.",
+   "cons": "Un peu plus de consommation et de chaleur au repos."
+  },
+  "en": {
+   "desc": "Stops the AMD graphics chip from entering deep sleep when it has little work.",
+   "gain": "Can avoid small hitches when the GPU wakes up; often a small effect.",
+   "cons": "Slightly more power use and heat at idle."
+  }
+ },
+ "amd_delag": {
+  "fr": {
+   "desc": "Active Anti-Lag dans le pilote AMD, qui empêche le processeur de prendre trop d'avance sur la carte graphique.",
+   "gain": "Peut réduire l'input lag quand le GPU est à 100 % ; sans effet sinon.",
+   "cons": "Peut coûter un peu de FPS dans certains jeux."
+  },
+  "en": {
+   "desc": "Turns on Anti-Lag in the AMD driver, which keeps the processor from getting too far ahead of the graphics card.",
+   "gain": "Can reduce input lag when the GPU is at 100%; no effect otherwise.",
+   "cons": "May cost a little FPS in some games."
+  }
+ },
+ "amd_logging": {
+  "fr": {
+   "desc": "Désactive le service de journaux du pilote AMD.",
+   "gain": "Effet rarement mesurable : un petit service de fond en moins.",
+   "cons": "Aucun inconvénient connu."
+  },
+  "en": {
+   "desc": "Turns off the AMD driver's logging service.",
+   "gain": "Rarely measurable: one less small background service.",
+   "cons": "No known drawback."
+  }
+ },
+ "amd_advanced": {
+  "fr": {
+   "desc": "Pack AMD avancé : économies d'énergie coupées, GPU forcé en haute fréquence, Chill coupé, Anti-Lag activé et réglages 3D.",
+   "gain": "Anti-Lag peut réduire l'input lag quand le GPU est à 100 % ; le reste a un effet rarement mesurable.",
+   "cons": "Plus de chaleur, de bruit et de conso ; overlay Radeon coupé, synchro verticale forcée sur off (risque de déchirement)."
+  },
+  "en": {
+   "desc": "Advanced AMD pack: power saving off, GPU forced to high clocks, Chill off, Anti-Lag on and 3D driver settings.",
+   "gain": "Anti-Lag can reduce input lag when the GPU is at 100%; the rest is rarely measurable.",
+   "cons": "More heat, noise and power use; Radeon overlay off, VSync forced off (risk of screen tearing)."
+  }
+ },
+ "intel_gpu": {
+  "fr": {
+   "desc": "Réglages du pilote Intel : synchro verticale adaptative coupée, mémoire vidéo réservée agrandie et profil d'énergie modifié.",
+   "gain": "Effet rarement mesurable : les pilotes Intel récents gèrent seuls leur mémoire vidéo.",
+   "cons": "Aucun inconvénient connu."
+  },
+  "en": {
+   "desc": "Intel graphics driver settings: adaptive VSync off, larger reserved video memory and a changed power profile.",
+   "gain": "Rarely measurable: recent Intel drivers manage their video memory on their own.",
+   "cons": "No known drawback."
+  }
+ },
+ "win_fullscreen": {
+  "fr": {
+   "desc": "Remet les réglages plein écran de Windows par défaut et active l'optimisation des jeux en fenêtre de Windows 11.",
+   "gain": "Peut réduire un peu la latence des jeux DirectX en fenêtre ; rarement utile pour Minecraft Java.",
+   "cons": "Écrase tes réglages graphiques de Windows 11 : Auto HDR peut se couper, tout comme le VRR forcé des vieux jeux."
+  },
+  "en": {
+   "desc": "Resets Windows fullscreen settings to default and turns on Windows 11's optimizations for windowed games.",
+   "gain": "May slightly lower latency in windowed DirectX games; rarely helps Minecraft Java.",
+   "cons": "Overwrites your Windows 11 graphics settings: Auto HDR may turn off, and so does forced VRR for older games."
+  }
+ },
+ "win_gamemode": {
+  "fr": {
+   "desc": "Active ou coupe le mode jeu de Windows, qui donne la priorité au jeu et évite les installations de mises à jour en pleine partie.",
+   "gain": "« Activé », le réglage normal de Windows, peut stabiliser les FPS si des applis tournent en fond.",
+   "cons": "Aucun inconvénient connu."
+  },
+  "en": {
+   "desc": "Turns Windows Game Mode on or off; it gives the game priority and holds back update installs while you play.",
+   "gain": "\"On\", the Windows default, can steady FPS when apps run in the background.",
+   "cons": "No known drawback."
+  }
+ },
+ "win_gamedvr": {
+  "fr": {
+   "desc": "Coupe Game DVR, l'enregistrement en arrière-plan de la Game Bar, et ajuste les réglages plein écran liés.",
+   "gain": "Peut rendre des FPS sur les petits PC si l'enregistrement en arrière-plan était actif.",
+   "cons": "Les clips et captures de la Game Bar ne marchent plus, et la touche Xbox de la manette ne l'ouvre plus."
+  },
+  "en": {
+   "desc": "Turns off Game DVR, the Game Bar's background recording, and adjusts the related fullscreen settings.",
+   "gain": "Can win back FPS on low-end PCs if background recording was on.",
+   "cons": "Game Bar clips and screenshots stop working, and the controller's Xbox button no longer opens it."
+  }
+ },
+ "win_visual": {
+  "fr": {
+   "desc": "Coupe les animations et la transparence de Windows pour une interface plus sobre.",
+   "gain": "Interface un peu plus vive sur les petits PC ; effet sur les FPS en jeu quasi nul.",
+   "cons": "Windows paraît moins fluide et moins joli : plus d'animations de fenêtres ni de transparence."
+  },
+  "en": {
+   "desc": "Turns off Windows animations and transparency for a plainer interface.",
+   "gain": "Slightly snappier interface on low-end PCs; near-zero effect on in-game FPS.",
+   "cons": "Windows looks less smooth and less polished: no more window animations or transparency."
+  }
+ },
+ "win_bluetooth": {
+  "fr": {
+   "desc": "Coupe les services Bluetooth de Windows, pour les PC qui n'utilisent aucun appareil Bluetooth.",
+   "gain": "Une porte d'entrée sans fil et quelques services en moins ; effet sur les FPS quasi nul.",
+   "cons": "Les casques, manettes et souris Bluetooth ne marchent plus tant que tu ne le réactives pas."
+  },
+  "en": {
+   "desc": "Turns off the Windows Bluetooth services, for PCs that use no Bluetooth devices.",
+   "gain": "One less wireless entry point and a few fewer services; near-zero effect on FPS.",
+   "cons": "Bluetooth headsets, controllers and mice stop working until you turn it back on."
+  }
+ },
+ "win_background": {
+  "fr": {
+   "desc": "Empêche les applis du Microsoft Store de tourner en arrière-plan une fois fermées.",
+   "gain": "Un peu moins d'activité en fond ; effet sur les FPS quasi nul.",
+   "cons": "Les applis du Store ne t'alertent plus une fois fermées, et un portable en veille moderne peut vider plus sa batterie."
+  },
+  "en": {
+   "desc": "Stops Microsoft Store apps from running in the background after you close them.",
+   "gain": "Slightly less background activity; near-zero effect on FPS.",
+   "cons": "Store apps no longer notify you once closed, and a laptop in modern standby may drain more battery."
+  }
+ },
+ "win_transparency": {
+  "fr": {
+   "desc": "Retire l'effet de transparence de la barre des tâches, du menu Démarrer et des fenêtres.",
+   "gain": "Interface un peu plus légère sur les petits PC ; effet sur les FPS quasi nul.",
+   "cons": "La barre des tâches et les menus deviennent opaques."
+  },
+  "en": {
+   "desc": "Removes the transparency effect from the taskbar, Start menu and windows.",
+   "gain": "Slightly lighter interface on low-end PCs; near-zero effect on FPS.",
+   "cons": "The taskbar and menus become opaque."
+  }
+ },
+ "win_notifications": {
+  "fr": {
+   "desc": "Coupe les bannières et sons de notification, et masque le centre de notifications de Windows.",
+   "gain": "Plus rien ne s'affiche ni ne sonne pendant tes parties ; effet sur les FPS quasi nul.",
+   "cons": "Tu ne vois plus aucune notification, même les alertes de disque plein ou de sécurité Windows."
+  },
+  "en": {
+   "desc": "Turns off notification banners and sounds, and hides the Windows notification center.",
+   "gain": "Nothing pops up or dings during your games; near-zero effect on FPS.",
+   "cons": "You see no notifications at all, not even low disk space or Windows Security alerts."
+  }
+ },
+ "win_popups": {
+  "fr": {
+   "desc": "Coupe les bulles d'aide, les pubs OneDrive dans l'explorateur, le secouage de fenêtre et l'identifiant publicitaire.",
+   "gain": "Moins de distractions et plus de vie privée ; effet sur les FPS quasi nul.",
+   "cons": "Les applis qui lisent tes notifications Windows (montre connectée, par exemple) n'y ont plus accès."
+  },
+  "en": {
+   "desc": "Turns off balloon tips, OneDrive ads in File Explorer, window shake and the advertising ID.",
+   "gain": "Fewer distractions and more privacy; near-zero effect on FPS.",
+   "cons": "Apps that read your Windows notifications (a smartwatch app, for example) lose access to them."
+  }
+ },
+ "win_search": {
+  "fr": {
+   "desc": "La recherche du menu Démarrer ne va plus sur le web (Bing) ni n'utilise ta position, et Windows n'apprend plus de ta frappe.",
+   "gain": "Plus de vie privée et des résultats limités à ton PC ; effet sur les FPS quasi nul.",
+   "cons": "Plus de résultats web ni de réponses Bing dans le menu Démarrer."
+  },
+  "en": {
+   "desc": "Start menu search stops going to the web (Bing) or using your location, and Windows stops learning from your typing.",
+   "gain": "More privacy and results limited to your PC; near-zero effect on FPS.",
+   "cons": "No more web results or Bing answers in the Start menu."
+  }
+ },
+ "win_errors": {
+  "fr": {
+   "desc": "Windows n'envoie plus de rapports de plantage à Microsoft et n'en garde plus de trace.",
+   "gain": "Un peu plus de vie privée ; effet sur les FPS quasi nul.",
+   "cons": "Moins d'infos pour comprendre un plantage de Windows ou d'un jeu."
+  },
+  "en": {
+   "desc": "Windows stops sending crash reports to Microsoft and no longer keeps a record of them.",
+   "gain": "A bit more privacy; near-zero effect on FPS.",
+   "cons": "Less information to figure out why Windows or a game crashed."
+  }
+ },
+ "win_sync": {
+  "fr": {
+   "desc": "Arrête la synchronisation de tes thèmes, mots de passe et préférences Windows avec ton compte Microsoft.",
+   "gain": "Plus de vie privée si tu utilises un compte Microsoft ; effet sur les FPS quasi nul.",
+   "cons": "Tes réglages et mots de passe ne suivent plus d'un PC à l'autre."
+  },
+  "en": {
+   "desc": "Stops syncing your themes, passwords and Windows preferences with your Microsoft account.",
+   "gain": "More privacy if you use a Microsoft account; near-zero effect on FPS.",
+   "cons": "Your settings and passwords no longer follow you from one PC to another."
+  }
+ },
+ "win_tracking": {
+  "fr": {
+   "desc": "Coupe l'historique d'activité, les suggestions basées sur ton usage et quelques tâches de diagnostic planifiées.",
+   "gain": "Plus de vie privée ; effet sur les FPS quasi nul.",
+   "cons": "Le Gestionnaire des tâches ne mesure plus l'impact des applis au démarrage."
+  },
+  "en": {
+   "desc": "Turns off activity history, suggestions based on your usage and a few scheduled diagnostic tasks.",
+   "gain": "More privacy; near-zero effect on FPS.",
+   "cons": "Task Manager no longer measures each app's startup impact."
+  }
+ },
+ "win_feed": {
+  "fr": {
+   "desc": "Retire les widgets météo et actualités de la barre des tâches et coupe l'identifiant publicitaire.",
+   "gain": "Barre des tâches plus propre et plus de vie privée ; effet sur les FPS quasi nul.",
+   "cons": "Plus de widgets météo ni d'actualités dans Windows."
+  },
+  "en": {
+   "desc": "Removes the weather and news widgets from the taskbar and turns off the advertising ID.",
+   "gain": "Cleaner taskbar and more privacy; near-zero effect on FPS.",
+   "cons": "No more weather or news widgets in Windows."
+  }
+ },
+ "win_experiments": {
+  "fr": {
+   "desc": "Empêche Microsoft de tester des fonctions ou réglages expérimentaux sur ton PC.",
+   "gain": "Peut éviter des changements de Windows faits sans prévenir ; effet sur les FPS quasi nul.",
+   "cons": "Aucun inconvénient connu."
+  },
+  "en": {
+   "desc": "Stops Microsoft from testing experimental features or settings on your PC.",
+   "gain": "May avoid unannounced changes to Windows; near-zero effect on FPS.",
+   "cons": "No known drawback."
+  }
+ },
+ "win_maintenance": {
+  "fr": {
+   "desc": "Coupe la maintenance automatique que Windows lance quand le PC est inactif (disques, ménage, diagnostics).",
+   "gain": "Peut éviter qu'une tâche de fond démarre pendant une partie ; effet souvent faible.",
+   "cons": "Windows n'optimise plus tes disques tout seul et ne fait plus son ménage ni ses diagnostics automatiques."
+  },
+  "en": {
+   "desc": "Turns off the automatic maintenance Windows runs when the PC is idle (drives, cleanup, diagnostics).",
+   "gain": "May keep a background task from starting mid-game; often a small effect.",
+   "cons": "Windows no longer optimizes your drives, cleans up or runs its automatic diagnostics on its own."
+  }
+ },
+ "win_reinstall": {
+  "fr": {
+   "desc": "Empêche Windows d'installer tout seul des applis et jeux sponsorisés (Candy Crush, etc.) et coupe ses suggestions.",
+   "gain": "Moins d'applis inutiles qui reviennent ; effet sur les FPS quasi nul.",
+   "cons": "Les images « Windows à la une » de l'écran de verrouillage peuvent ne plus changer."
+  },
+  "en": {
+   "desc": "Stops Windows from installing sponsored apps and games (Candy Crush, etc.) on its own and turns off its suggestions.",
+   "gain": "Fewer useless apps coming back; near-zero effect on FPS.",
+   "cons": "The Windows Spotlight lock screen pictures may stop changing."
+  }
+ },
+ "win_shared": {
+  "fr": {
+   "desc": "Coupe le partage de proximité et la reprise de tes activités entre ton PC et tes autres appareils.",
+   "gain": "Un peu plus de vie privée ; effet sur les FPS quasi nul.",
+   "cons": "Tu ne peux plus envoyer de fichiers à un PC proche avec le partage de proximité."
+  },
+  "en": {
+   "desc": "Turns off Nearby sharing and picking up your activities between your PC and your other devices.",
+   "gain": "A bit more privacy; near-zero effect on FPS.",
+   "cons": "You can no longer send files to a nearby PC with Nearby sharing."
+  }
+ },
+ "win_audit": {
+  "fr": {
+   "desc": "Réduit ce que Windows note dans son journal de sécurité et coupe quelques journaux de diagnostic.",
+   "gain": "Un peu moins d'écritures en arrière-plan ; effet sur les FPS rarement mesurable.",
+   "cons": "Windows garde moins de traces de ce qui se passe, ce qui complique un dépannage."
+  },
+  "en": {
+   "desc": "Reduces what Windows records in its security log and turns off a few diagnostic logs.",
+   "gain": "Slightly fewer background writes; rarely measurable effect on FPS.",
+   "cons": "Windows keeps fewer records of what happens, which makes troubleshooting harder."
+  }
+ },
+ "win_autoplay": {
+  "fr": {
+   "desc": "Windows n'ouvre plus de fenêtre et ne lance plus rien quand tu branches une clé USB, un téléphone ou un disque.",
+   "gain": "Moins de fenêtres surprises et un peu plus de sécurité face aux clés USB piégées.",
+   "cons": "Tu dois ouvrir toi-même le contenu de ce que tu branches."
+  },
+  "en": {
+   "desc": "Windows no longer opens a window or runs anything when you plug in a USB drive, a phone or a disc.",
+   "gain": "Fewer surprise windows and a bit more safety against booby-trapped USB drives.",
+   "cons": "You have to open what you plug in yourself."
+  }
+ },
+ "dbl_telemetry": {
+  "fr": {
+   "desc": "Coupe la télémétrie de Windows et d'Office et une vingtaine de tâches qui envoient des données d'usage à Microsoft.",
+   "gain": "Plus de vie privée ; effet sur les FPS quasi nul.",
+   "cons": "Coupe aussi la localisation : météo, cartes et « Localiser mon appareil » ne te situent plus."
+  },
+  "en": {
+   "desc": "Turns off Windows and Office telemetry and about twenty tasks that send usage data to Microsoft.",
+   "gain": "More privacy; near-zero effect on FPS.",
+   "cons": "Also turns off location: weather, maps and Find my device can no longer locate you."
+  }
+ },
+ "dbl_office": {
+  "fr": {
+   "desc": "Coupe la collecte de données et les envois de rapports de Microsoft Office (Word, Excel, Outlook, etc.).",
+   "gain": "Plus de vie privée si tu utilises Office ; sans effet s'il n'est pas installé.",
+   "cons": "Aucun inconvénient connu."
+  },
+  "en": {
+   "desc": "Turns off data collection and report uploads in Microsoft Office (Word, Excel, Outlook, etc.).",
+   "gain": "More privacy if you use Office; no effect if it isn't installed.",
+   "cons": "No known drawback."
+  }
+ },
+ "dbl_print": {
+  "fr": {
+   "desc": "Coupe le service d'impression de Windows et celui des cartes hors ligne.",
+   "gain": "Ferme une source de failles connue si tu n'imprimes jamais ; effet sur les FPS quasi nul.",
+   "cons": "Plus aucune impression, même en PDF, tant que tu ne le désactives pas."
+  },
+  "en": {
+   "desc": "Turns off the Windows printing service and the offline maps service.",
+   "gain": "Closes a known source of security holes if you never print; near-zero effect on FPS.",
+   "cons": "No printing at all, not even to PDF, until you turn it off."
+  }
+ },
+ "dbl_cortana": {
+  "fr": {
+   "desc": "Coupe Cortana et la recherche web du menu Démarrer, puis désinstalle l'appli Cortana.",
+   "gain": "Plus de vie privée et une appli inutile en moins ; effet sur les FPS quasi nul.",
+   "cons": "Plus de résultats web dans la recherche du menu Démarrer."
+  },
+  "en": {
+   "desc": "Turns off Cortana and Start menu web search, then uninstalls the Cortana app.",
+   "gain": "More privacy and one less useless app; near-zero effect on FPS.",
+   "cons": "No more web results in Start menu search."
+  }
+ },
+ "dbl_autologgers": {
+  "fr": {
+   "desc": "Coupe une trentaine de journaux système qui écrivent en continu sur le disque, et les suggestions d'applis sponsorisées.",
+   "gain": "Un peu moins d'écritures en fond ; effet sur les FPS rarement mesurable.",
+   "cons": "Moins de traces pour diagnostiquer un problème, et un démarrage parfois plus lent sur disque dur."
+  },
+  "en": {
+   "desc": "Turns off about thirty system logs that constantly write to the disk, plus sponsored app suggestions.",
+   "gain": "Slightly fewer background writes; rarely measurable effect on FPS.",
+   "cons": "Fewer records to diagnose a problem, and startup can be a bit slower on a hard drive."
+  }
+ },
+ "dbl_ceip": {
+  "fr": {
+   "desc": "Coupe les tâches planifiées du programme d'amélioration de l'expérience, qui envoient des statistiques à Microsoft.",
+   "gain": "Plus de vie privée ; effet sur les FPS quasi nul.",
+   "cons": "Aucun inconvénient connu."
+  },
+  "en": {
+   "desc": "Turns off the Customer Experience Improvement Program's scheduled tasks, which send statistics to Microsoft.",
+   "gain": "More privacy; near-zero effect on FPS.",
+   "cons": "No known drawback."
+  }
+ },
+ "dbl_biometrics": {
+  "fr": {
+   "desc": "Coupe la connexion biométrique de Windows Hello (empreinte digitale et reconnaissance du visage).",
+   "gain": "Un service en moins si tu n'utilises ni empreinte ni visage ; effet sur les FPS quasi nul.",
+   "cons": "Connexion par empreinte ou visage impossible : il faudra ton code PIN ou ton mot de passe."
+  },
+  "en": {
+   "desc": "Turns off Windows Hello biometric sign-in (fingerprint and face recognition).",
+   "gain": "One less service if you use neither fingerprint nor face; near-zero effect on FPS.",
+   "cons": "No more fingerprint or face sign-in: you'll need your PIN or password."
+  }
+ },
+ "win_ai": {
+  "fr": {
+   "desc": "Coupe Copilot et son bouton dans la barre des tâches, et empêche Recall de prendre des captures de ton écran.",
+   "gain": "Plus de vie privée ; effet sur les FPS quasi nul.",
+   "cons": "Le bouton Copilot disparaît de la barre des tâches."
+  },
+  "en": {
+   "desc": "Turns off Copilot and its taskbar button, and stops Recall from taking snapshots of your screen.",
+   "gain": "More privacy; near-zero effect on FPS.",
+   "cons": "The Copilot button disappears from the taskbar."
+  }
+ },
+ "app_remove": {
+  "fr": {
+   "desc": "Désinstalle une trentaine d'applis Microsoft préinstallées : Météo, Astuces, Solitaire, Skype, Cartes, Caméra, Courrier, etc.",
+   "gain": "Menu Démarrer plus propre et un peu d'espace disque libéré ; effet sur les FPS quasi nul.",
+   "cons": "Retire aussi Caméra, Courrier, Alarmes et Lien avec le téléphone ; ils se réinstallent depuis le Microsoft Store."
+  },
+  "en": {
+   "desc": "Uninstalls about thirty preinstalled Microsoft apps: Weather, Tips, Solitaire, Skype, Maps, Camera, Mail, etc.",
+   "gain": "Cleaner Start menu and a bit of disk space freed; near-zero effect on FPS.",
+   "cons": "Also removes Camera, Mail, Alarms and Phone Link; removed apps can be reinstalled from the Microsoft Store."
+  }
+ },
+ "app_settings": {
+  "fr": {
+   "desc": "Ouvre la page Applications des paramètres Windows pour désinstaller toi-même ce que tu veux.",
+   "gain": "Pratique pour finir le ménage à la main, appli par appli.",
+   "cons": "Aucun inconvénient connu."
+  },
+  "en": {
+   "desc": "Opens the Apps page in Windows Settings so you can uninstall whatever you want yourself.",
+   "gain": "Handy to finish the cleanup by hand, one app at a time.",
+   "cons": "No known drawback."
+  }
+ },
+ "win_telemetry": {
+  "fr": {
+   "desc": "Pack de plus de 200 réglages : télémétrie et tâches de collecte coupées, moins d'animations, souris sans accélération, etc.",
+   "gain": "Plus de vie privée et un Windows plus calme en fond ; effet sur les FPS rarement mesurable.",
+   "cons": "Coupe aussi la localisation et l'accélération de la souris (autre sensation) ; Windows ne cherche plus seul tes pilotes."
+  },
+  "en": {
+   "desc": "A pack of 200+ settings: telemetry and data collection tasks off, fewer animations, no mouse acceleration, etc.",
+   "gain": "More privacy and a quieter Windows in the background; rarely measurable effect on FPS.",
+   "cons": "Also turns off location and mouse acceleration (feels different); Windows stops fetching drivers on its own."
+  }
+ },
+ "win_optimize": {
+  "fr": {
+   "desc": "Une cinquantaine de réglages de confort : moins de suggestions et de pubs, Edge ne tourne plus en fond, menus plus rapides.",
+   "gain": "Windows plus calme et des menus plus vifs ; effet sur les FPS rarement mesurable.",
+   "cons": "L'Assistance à distance de Windows est coupée et Edge ne t'envoie plus de notifications une fois fermé."
+  },
+  "en": {
+   "desc": "About fifty comfort settings: fewer suggestions and ads, Edge no longer runs in the background, faster menus.",
+   "gain": "A quieter Windows and snappier menus; rarely measurable effect on FPS.",
+   "cons": "Windows Remote Assistance is turned off and Edge no longer sends notifications once closed."
+  }
+ },
+ "win_diag": {
+  "fr": {
+   "desc": "Passe le service de télémétrie en démarrage manuel et coupe le rapport d'erreurs de Windows.",
+   "gain": "Un peu plus de vie privée ; effet sur les FPS quasi nul.",
+   "cons": "Moins d'infos pour comprendre un plantage de Windows ou d'un jeu."
+  },
+  "en": {
+   "desc": "Sets the telemetry service to manual start and turns off Windows Error Reporting.",
+   "gain": "A bit more privacy; near-zero effect on FPS.",
+   "cons": "Less information to figure out why Windows or a game crashed."
+  }
+ },
+ "win_services": {
+  "fr": {
+   "desc": "Coupe l'indexation, l'impression, les fichiers hors connexion et les rapports d'erreurs, et retire Cortana et Copilot.",
+   "gain": "Quelques services de fond en moins ; effet sur les FPS rarement mesurable.",
+   "cons": "Recherche Windows plus lente, plus d'impression ni de centre de notifications tant que tu ne le désactives pas."
+  },
+  "en": {
+   "desc": "Turns off search indexing, printing, offline files and error reporting, and removes Cortana and Copilot.",
+   "gain": "A few fewer background services; rarely measurable effect on FPS.",
+   "cons": "Windows search is slower, and printing and the notification center don't work until you turn it off."
+  }
+ },
+ "win_apps": {
+  "fr": {
+   "desc": "Désinstalle une trentaine d'applis Microsoft préinstallées : Météo, Astuces, Solitaire, Skype, Cartes, Caméra, Courrier, etc.",
+   "gain": "Menu Démarrer plus propre et un peu d'espace disque libéré ; effet sur les FPS quasi nul.",
+   "cons": "Retire aussi Caméra, Courrier, Alarmes et Lien avec le téléphone ; ils se réinstallent depuis le Microsoft Store."
+  },
+  "en": {
+   "desc": "Uninstalls about thirty preinstalled Microsoft apps: Weather, Tips, Solitaire, Skype, Maps, Camera, Mail, etc.",
+   "gain": "Cleaner Start menu and a bit of disk space freed; near-zero effect on FPS.",
+   "cons": "Also removes Camera, Mail, Alarms and Phone Link; removed apps can be reinstalled from the Microsoft Store."
+  }
+ },
+ "win_store": {
+  "fr": {
+   "desc": "Laisse le Microsoft Store actif et limite le partage des mises à jour Windows aux PC de ton réseau local.",
+   "gain": "Effet peu probable : c'est souvent déjà le réglage par défaut de Windows.",
+   "cons": "Aucun inconvénient connu."
+  },
+  "en": {
+   "desc": "Leaves the Microsoft Store on and limits Windows update sharing to PCs on your local network.",
+   "gain": "Unlikely to change anything: this is often already the Windows default.",
+   "cons": "No known drawback."
+  }
+ },
+ "cln_temp": {
+  "fr": {
+   "desc": "Supprime les fichiers temporaires de Windows et de ton compte.",
+   "gain": "Libère de l'espace disque ; ne fait pas gagner de FPS.",
+   "cons": "Aucun inconvénient connu."
+  },
+  "en": {
+   "desc": "Deletes the temporary files of Windows and of your account.",
+   "gain": "Frees up disk space; does not add FPS.",
+   "cons": "No known drawback."
+  }
+ },
+ "cln_devices": {
+  "fr": {
+   "desc": "Supprime de Windows les périphériques débranchés qui y restent déclarés (anciennes clés USB, casques, etc.).",
+   "gain": "Range la liste des périphériques ; ne fait pas gagner de FPS.",
+   "cons": "Un appareil retiré se réinstalle quand tu le rebranches, mais ses réglages peuvent être perdus."
+  },
+  "en": {
+   "desc": "Removes unplugged devices that Windows still keeps on record (old USB drives, headsets, etc.).",
+   "gain": "Tidies up the device list; does not add FPS.",
+   "cons": "A removed device reinstalls when you plug it back in, but its settings may be lost."
+  }
+ },
+ "cln_disk": {
+  "fr": {
+   "desc": "Ouvre l'outil Nettoyage de disque de Windows pour supprimer les fichiers inutiles de ton choix.",
+   "gain": "Libère de l'espace disque ; ne fait pas gagner de FPS.",
+   "cons": "Vérifie les cases : certaines, comme « Téléchargements », suppriment tes propres fichiers."
+  },
+  "en": {
+   "desc": "Opens the Windows Disk Cleanup tool to delete the unneeded files you pick.",
+   "gain": "Frees up disk space; does not add FPS.",
+   "cons": "Check the boxes: some, like \"Downloads\", delete your own files."
+  }
+ },
+ "cln_repair": {
+  "fr": {
+   "desc": "Vérifie l'image de Windows et répare les fichiers système abîmés, après un ménage des anciennes mises à jour.",
+   "gain": "Utile si Windows plante ou bugge ; ne fait pas gagner de FPS sur un PC sain.",
+   "cons": "Prend plusieurs minutes et peut avoir besoin d'Internet pour réparer."
+  },
+  "en": {
+   "desc": "Checks the Windows image and repairs damaged system files, after cleaning up old updates.",
+   "gain": "Useful if Windows crashes or glitches; does not add FPS on a healthy PC.",
+   "cons": "Takes several minutes and may need the Internet to repair."
+  }
+ },
+ "in_driver": {
+  "fr": {
+   "desc": "Met à zéro un réglage de latence dans les pilotes qui en ont un, surtout ceux des disques.",
+   "gain": "Effet rarement mesurable en jeu.",
+   "cons": "Aucun inconvénient connu."
+  },
+  "en": {
+   "desc": "Sets a latency cap to zero in the drivers that have one, mostly disk drivers.",
+   "gain": "Rarely measurable in games.",
+   "cons": "No known drawback."
+  }
+ },
+ "in_adapter": {
+  "fr": {
+   "desc": "Règle les tampons réseau, les accusés de réception et la durée de vie des paquets, et met la carte réseau sur un seul cœur.",
+   "gain": "Effet rarement mesurable : ces valeurs changent peu de chose en jeu.",
+   "cons": "Toutes les interruptions réseau passent par un seul cœur, ce qui peut limiter le débit d'une connexion très rapide."
+  },
+  "en": {
+   "desc": "Tunes network buffers, acknowledgments and packet lifetime, and pins the network card to a single CPU core.",
+   "gain": "Rarely measurable: these values change little in games.",
+   "cons": "All network interrupts go through one core, which can limit throughput on a very fast connection."
+  }
+ },
+ "in_windows": {
+  "fr": {
+   "desc": "Mélange réseau, démarrage et énergie : coupe la veille des disques et de la carte réseau, et vide les fichiers temporaires.",
+   "gain": "Effet rarement mesurable : la plupart de ces valeurs changent peu de chose sur un Windows récent.",
+   "cons": "Modifie les réglages de démarrage, coûte un peu de batterie et peut gêner le chat de groupe Xbox."
+  },
+  "en": {
+   "desc": "Mix of network, boot and power settings: stops disks and the network card from sleeping, and clears temp files.",
+   "gain": "Rarely measurable: most of these values change little on a recent Windows.",
+   "cons": "Changes boot settings, costs some battery and can disrupt Xbox party chat."
+  }
+ },
+ "in_frames": {
+  "fr": {
+   "desc": "Écrit des variables système censées limiter les images en attente dans DirectX ; « Par défaut » les efface.",
+   "gain": "Effet peu probable : ni Windows ni les jeux ne lisent ces variables.",
+   "cons": "Aucun inconvénient connu."
+  },
+  "en": {
+   "desc": "Writes system variables meant to limit queued frames in DirectX; Default removes them.",
+   "gain": "Unlikely to do anything: neither Windows nor games read these variables.",
+   "cons": "No known drawback."
+  }
+ },
+ "in_advanced": {
+  "fr": {
+   "desc": "Gros pack : démarrage, priorités, réseau, Game DVR coupé, vie privée, notifications et apparence de Windows.",
+   "gain": "Couper le Game DVR peut aider sur un petit PC ; le reste a un effet rarement mesurable en jeu.",
+   "cons": "Coupe notifications, pilotes de Windows Update et alerte avant d'ouvrir un téléchargement ; change couleurs et curseurs."
+  },
+  "en": {
+   "desc": "Big pack: boot, priorities, network, Game DVR off, privacy, notifications and the look of Windows.",
+   "gain": "Turning off Game DVR can help on a low-end PC; the rest is rarely measurable in games.",
+   "cons": "Turns off notifications, drivers via Windows Update and the downloaded-file warning; changes colors and cursors."
+  }
+ },
+ "in_mouse": {
+  "fr": {
+   "desc": "Coupe l'accélération de la souris de Windows pour que le pointeur suive exactement ta main, et raccourcit le délai de survol.",
+   "gain": "Visée plus régulière : le même geste donne toujours le même déplacement ; pas de gain de latence.",
+   "cons": "Ta vitesse de pointeur Windows est remise au réglage du milieu."
+  },
+  "en": {
+   "desc": "Turns off Windows mouse acceleration so the pointer follows your hand exactly, and shortens the hover delay.",
+   "gain": "More consistent aim: the same motion always moves the same distance; no latency gain.",
+   "cons": "Your Windows pointer speed is reset to the middle setting."
+  }
+ },
+ "in_keyboard": {
+  "fr": {
+   "desc": "Répétition des touches au plus rapide et raccourcis d'accessibilité coupés, comme les touches rémanentes (Maj 5 fois).",
+   "gain": "Plus de fenêtre des touches rémanentes en pleine partie ; aucun gain de latence mesurable.",
+   "cons": "Les touches se répètent plus vite si tu restes appuyé ; les aides d'accessibilité du clavier sont coupées."
+  },
+  "en": {
+   "desc": "Fastest key repeat and accessibility shortcuts off, such as Sticky Keys (Shift 5 times).",
+   "gain": "No more Sticky Keys pop-up mid-game; no measurable latency gain.",
+   "cons": "Keys repeat faster when held down; the keyboard accessibility aids are turned off."
+  }
+ },
+ "in_queue": {
+  "fr": {
+   "desc": "Règle combien de clics et de touches les pilotes gardent en file ; « Par défaut » remet la valeur de Windows.",
+   "gain": "Effet rarement mesurable : cette file ne se remplit presque jamais en jeu.",
+   "cons": "Avec une souris à 4000 Hz ou plus, une file trop petite peut faire rater des mouvements."
+  },
+  "en": {
+   "desc": "Sets how many mouse and keyboard events the drivers queue; Default puts back the Windows value.",
+   "gain": "Rarely measurable: this queue almost never fills up in games.",
+   "cons": "With a 4000 Hz or faster mouse, a queue that's too small can drop movements."
+  }
+ },
+ "hitreg_suite": {
+  "fr": {
+   "desc": "Plus de 300 réglages : processeur à fond sur secteur, priorités, minuteurs, mémoire, vie privée ; 4 profils presque identiques.",
+   "gain": "Peut rendre les images plus régulières sur un PC branché ; le reste a un effet rarement mesurable.",
+   "cons": "Plus de chaleur ; localisation et applis Store en fond coupées ; touche au préchargement, vérifié en screenshare."
+  },
+  "en": {
+   "desc": "300+ settings: CPU at full speed when plugged in, priorities, timers, memory, privacy; the 4 profiles are almost identical.",
+   "gain": "Can make frame pacing steadier on a plugged-in PC; the rest is rarely measurable.",
+   "cons": "More heat; location and background Store apps off; touches prefetch, which screenshares check."
+  }
+ },
+ "mc_optifine": {
+  "fr": {
+   "desc": "Écrit un préréglage OptiFine, Performance ou Qualité, dans les options de Minecraft ; ton ancien fichier est sauvegardé.",
+   "gain": "Performance peut nettement augmenter les FPS, mais seulement si tu joues avec OptiFine.",
+   "cons": "Performance rend le jeu moins joli : ciel, nuages, animations et particules coupés."
+  },
+  "en": {
+   "desc": "Writes an OptiFine preset, Performance or Quality, into Minecraft's options; your old file is backed up.",
+   "gain": "Performance can raise FPS a lot, but only if you play with OptiFine.",
+   "cons": "Performance makes the game look plainer: sky, clouds, animations and particles off."
+  }
+ },
+ "rbw_mode": {
+  "fr": {
+   "desc": "Activé relance journal d'événements, préchargement et historique des applis, lus en screenshare ; Désactivé les remet par défaut.",
+   "gain": "Évite qu'un joueur clean paraisse suspect en screenshare parce que ces traces de Windows étaient coupées.",
+   "cons": "Activé relance aussi la télémétrie ; Désactivé arrête le préchargement jusqu'au redémarrage, visible en screenshare."
+  },
+  "en": {
+   "desc": "On restarts the event log, prefetch and app history that screenshare tools read; Off puts Windows defaults back.",
+   "gain": "Keeps a clean player from looking suspicious in a screenshare because these Windows traces were off.",
+   "cons": "On also restarts telemetry; Off stops prefetch until the next restart, which a screenshare can spot."
+  }
+ },
+ "game_mode": {
+  "fr": {
+   "desc": "Activé vide les fichiers temporaires, coupe l'impression et les animations de Windows ; Désactivé remet animations et impression.",
+   "gain": "Windows paraît plus vif sans animations ; aucun gain de FPS en jeu.",
+   "cons": "L'impression ne marche plus tant que le mode est activé, et la barre des tâches se relance au passage."
+  },
+  "en": {
+   "desc": "On clears temp files and turns off printing and Windows animations; Off brings animations and printing back.",
+   "gain": "Windows feels snappier without animations; no FPS gain in games.",
+   "cons": "Printing doesn't work while it's on, and the taskbar restarts when you switch."
+  }
+ },
+ "exp_io": {
+  "fr": {
+   "desc": "Baisse la priorité de l'indexation de la recherche et des mises à jour Windows, et monte celle de l'affichage du bureau.",
+   "gain": "Effet rarement mesurable ; peut limiter un peu l'activité de fond pendant tes parties.",
+   "cons": "La recherche Windows et l'installation des mises à jour peuvent être plus lentes."
+  },
+  "en": {
+   "desc": "Lowers the priority of search indexing and Windows updates, and raises the desktop display's priority.",
+   "gain": "Rarely measurable; may slightly limit background activity while you play.",
+   "cons": "Windows search and update installs may be slower."
+  }
+ },
+ "exp_iolatency": {
+  "fr": {
+   "desc": "Retire le plafond de latence que certains pilotes de stockage appliquent aux accès disque.",
+   "gain": "Effet rarement mesurable sur un PC de jeu.",
+   "cons": "Aucun inconvénient connu."
+  },
+  "en": {
+   "desc": "Removes the latency cap that some storage drivers apply to disk access.",
+   "gain": "Rarely measurable on a gaming PC.",
+   "cons": "No known drawback."
+  }
+ },
+ "exp_kernel": {
+  "fr": {
+   "desc": "Empêche Windows de déplacer les interruptions d'un cœur à l'autre et règle quelques délais de l'affichage.",
+   "gain": "Effet rarement mesurable ; deux des réglages sont déjà ceux de Windows par défaut.",
+   "cons": "Aucun inconvénient connu."
+  },
+  "en": {
+   "desc": "Stops Windows from moving interrupts between cores and adjusts a few display delays.",
+   "gain": "Rarely measurable; two of the settings are already the Windows defaults.",
+   "cons": "No known drawback."
+  }
+ },
+ "exp_misc": {
+  "fr": {
+   "desc": "Minuteurs répartis sur les cœurs, réglage de veille du SSD NVMe modifié, option Veille masquée, date de dernier accès coupée.",
+   "gain": "Effet rarement mesurable en jeu.",
+   "cons": "L'option Veille disparaît du menu Marche/Arrêt, et la date de dernier accès des fichiers n'est plus mise à jour."
+  },
+  "en": {
+   "desc": "Timers spread over cores, NVMe SSD sleep setting changed, Sleep option hidden, file last-access dates off.",
+   "gain": "Rarely measurable in games.",
+   "cons": "Sleep disappears from the power menu, and file last access dates are no longer updated."
+  }
+ },
+ "exp_nolazy": {
+  "fr": {
+   "desc": "Garde le planificateur multimédia de Windows toujours actif, sans mode économie.",
+   "gain": "Effet rarement mesurable : réglage non documenté, souvent ignoré.",
+   "cons": "Aucun inconvénient connu."
+  },
+  "en": {
+   "desc": "Keeps the Windows multimedia scheduler always active, with no power-saving mode.",
+   "gain": "Rarely measurable: undocumented setting, often ignored.",
+   "cons": "No known drawback."
+  }
+ },
+ "exp_lattol": {
+  "fr": {
+   "desc": "Raccourcit des délais internes du pilote NVIDIA avant ses passages en économie d'énergie, sur la première carte graphique.",
+   "gain": "Effet rarement mesurable : réglages non documentés, et sur portable ils peuvent viser la puce intégrée.",
+   "cons": "Aucun inconvénient connu."
+  },
+  "en": {
+   "desc": "Shortens internal NVIDIA driver delays before power-saving state changes, on the first graphics card.",
+   "gain": "Rarely measurable: undocumented settings, and on laptops they may target the built-in chip.",
+   "cons": "No known drawback."
+  }
+ },
+ "exp_monitorlat": {
+  "fr": {
+   "desc": "Règle sur zéro le délai que le noyau graphique de Windows tolère du côté de l'écran.",
+   "gain": "Effet rarement mesurable.",
+   "cons": "Aucun inconvénient connu."
+  },
+  "en": {
+   "desc": "Sets the display delay tolerated by the Windows graphics kernel to zero.",
+   "gain": "Rarely measurable.",
+   "cons": "No known drawback."
+  }
+ },
+ "exp_hz": {
+  "fr": {
+   "desc": "Force la fréquence d'écran des très vieux jeux DirectDraw ; neuf choix de 60 à 360 Hz, prends exactement celle de ton écran.",
+   "gain": "Utile seulement pour de très vieux jeux : Minecraft et les jeux récents n'en tiennent pas compte.",
+   "cons": "Une fréquence plus haute que celle de ton écran peut donner un écran noir « hors limites » dans ces vieux jeux."
+  },
+  "en": {
+   "desc": "Forces the refresh rate of very old DirectDraw games; nine choices from 60 to 360 Hz, pick your screen's exact rate.",
+   "gain": "Only matters for very old games: Minecraft and recent games ignore it.",
+   "cons": "A rate higher than your screen's can give an \"out of range\" black screen in those old games."
+  }
+ },
+ "exp_multimedia": {
+  "fr": {
+   "desc": "Écrit quelques anciens réglages « jeux » de Windows (affichage des FPS, fluidité) dans ton profil.",
+   "gain": "Effet improbable : les Windows récents ne semblent pas utiliser ces réglages.",
+   "cons": "Aucun inconvénient connu."
+  },
+  "en": {
+   "desc": "Writes a few old Windows \"games\" settings (FPS display, fluidity) to your user profile.",
+   "gain": "Unlikely to help: recent Windows versions don't seem to use these settings.",
+   "cons": "No known drawback."
+  }
+ },
+ "exp_policy": {
+  "fr": {
+   "desc": "Retire les limites que Windows impose aux applis en arrière-plan (processeur, disque, mémoire) et leur donne la même importance.",
+   "gain": "Effet rarement mesurable en jeu.",
+   "cons": "Les applis en arrière-plan ne sont plus freinées : elles peuvent prendre plus de processeur et de batterie."
+  },
+  "en": {
+   "desc": "Removes the limits Windows puts on background apps (processor, disk, memory) and gives them equal importance.",
+   "gain": "Rarely measurable in games.",
+   "cons": "Background apps are no longer held back: they can use more processor time and battery."
+  }
+ },
+ "exp_ntfs": {
+  "fr": {
+   "desc": "Agrandit le cache des fichiers, coupe la date de dernier accès, garde le TRIM actif et ne chiffre plus le fichier d'échange.",
+   "gain": "Effet rarement mesurable : Windows gère déjà bien ces réglages.",
+   "cons": "La date de dernier accès des fichiers n'est plus mise à jour, et le système de fichiers utilise un peu plus de RAM."
+  },
+  "en": {
+   "desc": "Enlarges the file cache, turns off last access dates, keeps TRIM on and stops encrypting the page file.",
+   "gain": "Rarely measurable: Windows already handles these settings well.",
+   "cons": "File last access dates are no longer updated, and the file system uses a bit more RAM."
+  }
+ },
+ "exp_startup": {
+  "fr": {
+   "desc": "Supprime le délai que Windows attend avant de lancer les applis de démarrage.",
+   "gain": "Les applis de démarrage s'ouvrent plus tôt après la connexion ; aucun effet en jeu.",
+   "cons": "Juste après la connexion, le PC peut ramer un peu plus car tout démarre en même temps."
+  },
+  "en": {
+   "desc": "Removes the delay Windows waits before launching startup apps.",
+   "gain": "Startup apps open sooner after you sign in; no effect in games.",
+   "cons": "Right after sign-in, the PC may lag a bit more since everything starts at once."
+  }
+ },
+ "exp_insider": {
+  "fr": {
+   "desc": "Empêche Microsoft de tester des fonctions ou réglages expérimentaux sur ton PC.",
+   "gain": "Peut éviter des changements de Windows faits sans prévenir ; effet sur les FPS quasi nul.",
+   "cons": "Aucun inconvénient connu."
+  },
+  "en": {
+   "desc": "Stops Microsoft from testing experimental features or settings on your PC.",
+   "gain": "May avoid unannounced changes to Windows; near-zero effect on FPS.",
+   "cons": "No known drawback."
+  }
+ },
+ "exp_autologgers": {
+  "fr": {
+   "desc": "Coupe une trentaine de journaux système qui écrivent en continu sur le disque, et les suggestions d'applis sponsorisées.",
+   "gain": "Un peu moins d'écritures en fond ; effet sur les FPS rarement mesurable.",
+   "cons": "Moins de traces pour diagnostiquer un problème, et un démarrage parfois plus lent sur disque dur."
+  },
+  "en": {
+   "desc": "Turns off about thirty system logs that constantly write to the disk, plus sponsored app suggestions.",
+   "gain": "Slightly fewer background writes; rarely measurable effect on FPS.",
+   "cons": "Fewer records to diagnose a problem, and startup can be a bit slower on a hard drive."
+  }
+ },
+ "exp_maintenance": {
+  "fr": {
+   "desc": "Coupe la maintenance automatique que Windows lance quand le PC est inactif (disques, ménage, diagnostics).",
+   "gain": "Peut éviter qu'une tâche de fond démarre pendant une partie ; effet souvent faible.",
+   "cons": "Windows n'optimise plus tes disques tout seul et ne fait plus son ménage ni ses diagnostics automatiques."
+  },
+  "en": {
+   "desc": "Turns off the automatic maintenance Windows runs when the PC is idle (drives, cleanup, diagnostics).",
+   "gain": "May keep a background task from starting mid-game; often a small effect.",
+   "cons": "Windows no longer optimizes your drives, cleans up or runs its automatic diagnostics on its own."
+  }
+ },
+ "exp_search": {
+  "fr": {
+   "desc": "La recherche du menu Démarrer ne va plus sur le web (Bing) ni n'utilise ta position, et Windows n'apprend plus de ta frappe.",
+   "gain": "Plus de vie privée et des résultats limités à ton PC ; effet sur les FPS quasi nul.",
+   "cons": "Plus de résultats web ni de réponses Bing dans le menu Démarrer."
+  },
+  "en": {
+   "desc": "Start menu search stops going to the web (Bing) or using your location, and Windows stops learning from your typing.",
+   "gain": "More privacy and results limited to your PC; near-zero effect on FPS.",
+   "cons": "No more web results or Bing answers in the Start menu."
+  }
+ },
+ "exp_pcie": {
+  "fr": {
+   "desc": "Règle la façon dont Windows configure au démarrage les composants PCI Express (carte graphique, SSD NVMe, etc.).",
+   "gain": "Effet improbable : ces valeurs sont pour la plupart déjà celles de Windows par défaut.",
+   "cons": "Modifie les paramètres de démarrage de Windows."
+  },
+  "en": {
+   "desc": "Sets how Windows configures PCI Express parts (graphics card, NVMe SSD, etc.) at boot.",
+   "gain": "Unlikely to help: most of these values are already the Windows defaults.",
+   "cons": "Changes Windows boot settings."
+  }
+ },
+ "exp_smb": {
+  "fr": {
+   "desc": "Renforce le partage de fichiers en réseau : coupe le vieux protocole SMB1 et exige la signature et le chiffrement.",
+   "gain": "Plus de sécurité sur ton réseau local ; aucun effet sur les performances en jeu.",
+   "cons": "Les vieux NAS, box et TV ne pourront plus ouvrir tes dossiers partagés ; les copies réseau peuvent ralentir."
+  },
+  "en": {
+   "desc": "Hardens network file sharing: turns off the old SMB1 protocol and requires signing and encryption.",
+   "gain": "More security on your local network; no effect on game performance.",
+   "cons": "Old NAS drives, routers and TVs will no longer open your shared folders; network copies may be slower."
+  }
+ },
+ "rst_point": {
+  "fr": {
+   "desc": "Active la protection du système si besoin et crée un point de restauration de Windows.",
+   "gain": "Te permet de remettre Windows dans cet état si un réglage pose problème.",
+   "cons": "Prend un peu de place sur le disque ; tes fichiers perso ne sont pas sauvegardés."
+  },
+  "en": {
+   "desc": "Turns on System Protection if needed and creates a Windows restore point.",
+   "gain": "Lets you put Windows back to this state if a tweak causes trouble.",
+   "cons": "Uses some disk space; your personal files aren't backed up."
+  }
+ },
+ "rst_open": {
+  "fr": {
+   "desc": "Ouvre l'outil de Windows pour revenir à un point de restauration.",
+   "gain": "Annule d'un coup les changements faits à Windows depuis ce point.",
+   "cons": "Les programmes installés après ce point devront être réinstallés ; tes fichiers perso ne bougent pas."
+  },
+  "en": {
+   "desc": "Opens the Windows tool to go back to a restore point.",
+   "gain": "Undoes all changes made to Windows since that point in one go.",
+   "cons": "Programs installed after that point will need reinstalling; your personal files stay put."
+  }
+ },
+ "rst_network": {
+  "fr": {
+   "desc": "Remet à zéro la configuration réseau de Windows, vide le cache DNS et redemande une adresse IP.",
+   "gain": "Répare souvent une connexion cassée par un réglage réseau ou un logiciel.",
+   "cons": "Tous tes réglages réseau sont effacés : IP fixe et DNS manuels à ressaisir, VPN parfois à réinstaller."
+  },
+  "en": {
+   "desc": "Resets the Windows network configuration, clears the DNS cache and requests a new IP address.",
+   "gain": "Often fixes a connection broken by a network tweak or a program.",
+   "cons": "All your network settings are wiped: re-enter any fixed IP or manual DNS; VPNs may need reinstalling."
+  }
+ },
+ "rst_queue": {
+  "fr": {
+   "desc": "Remet les files de la souris et du clavier à la valeur normale de Windows.",
+   "gain": "Utile si ta souris saute ou rate des mouvements après un réglage de file plus bas.",
+   "cons": "Aucun inconvénient connu."
+  },
+  "en": {
+   "desc": "Puts the mouse and keyboard queues back to the normal Windows value.",
+   "gain": "Useful if your mouse skips or misses movements after a lower queue setting.",
+   "cons": "No known drawback."
+  }
+ }
+}

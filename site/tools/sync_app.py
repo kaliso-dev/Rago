@@ -19,7 +19,7 @@ def flags(t):
 PICK = {'network': ['ping_hitreg', 'net_nagle', 'net_powersave', 'net_restart'], 'latency': ['kbm_accel', 'cpu_parking', 'pri_mmcss'],
  'gpu': ['gpu_nvidia', 'amd_power', 'gpu_general'], 'windows': ['win_gamemode', 'win_gamedvr', 'cln_temp'],
  'hitreg': ['in_mouse', 'in_queue', 'hitreg_suite'], 'minecraft': ['mc_optifine', 'pri_game', 'net_profile', 'cln_temp'],
- 'rbw': ['rbw_mode'], 'gamemode': ['game_mode'], 'expert': ['exp_io', 'exp_kernel', 'exp_bios'], 'restore': ['rst_point', 'rst_open', 'rst_network', 'rst_queue']}
+ 'rbw': ['rbw_mode'], 'gamemode': ['game_mode'], 'expert': ['exp_io', 'exp_kernel', 'exp_startup'], 'restore': ['rst_point', 'rst_open', 'rst_network', 'rst_queue']}
 EX = {k: [[T[i]['name']['en'], T[i]['desc']['en'], flags(T[i])] for i in v] for k, v in PICK.items()}
 a = s.index('  const EX = {'); b = s.index('\n', a)
 s = s[:a] + '  const EX = ' + json.dumps(EX, ensure_ascii=False) + ';' + s[b:]
@@ -46,11 +46,16 @@ s = re.sub(r'row\("([^"]+)","(?:[^"\\]|\\.)*",', hero_row, s)
 i18n = open(os.path.join(APP, 'lib', 'i18n.ts')).read(); i18n = i18n[i18n.index('const en'):]
 reboot = re.search(r'"run\.rebootNeeded":\s*"([^"]+)"', i18n).group(1)
 s = re.sub(r'<br>(?:Restart|Redémarre)[^`]*`', lambda m: '<br>' + reboot + '`', s)
-# total tweak count (tweaks and one-time actions, like the app) and the hub preview counter
-total = len(T)
-s = re.sub(r'(<h2>)\d+( tweaks\. One clear app\.</h2>)', lambda m: m.group(1) + str(total) + m.group(2), s)
+# total tweak count, like the app (catalog.ts totalTweaks): tweaks and one-time actions, twins (same script
+# under two names or in two modules, field `twin`) counted once, sections that only point at another module's tweak ('ref') skipped
+total = len({t.get('twin') or i for i, t in T.items()})
+# heading: "Nearly 200 tweaks" while the count sits 1 to 3 under a round ten (decided with Sofiene, 9 Oct.),
+# the exact count otherwise; the counters below (All N, 9 of N, unlocks all N) always show the exact count
+ten = -(-total // 10) * 10
+heading = f'Nearly {ten} tweaks' if 0 < ten - total <= 3 else f'{total} tweaks'
+s = re.sub(r'<h2>(?:Nearly )?\d+ tweaks\. One clear app\.</h2>', lambda m: f'<h2>{heading}. One clear app.</h2>', s)
 s = re.sub(r'(All |9 of |unlocks all )\d+( tweaks|<)', lambda m: m.group(1) + str(total) + m.group(2), s)
 s = re.sub(r'(id="msel">0 of )\d+', lambda m: m.group(1) + str(count('latency')), s)
 open(p, 'w').write(s)
 print('MODS', re.findall(r'\["(\w+)","[^"]+","([^"]+)",(\d+)\]', s[s.index('const MODS'):s.index('];', s.index('const MODS'))]))
-print('total', total, 'reboot', reboot, 'power', sec_count('power'), 'input', sec_count('input'))
+print('total', total, 'heading', heading, 'reboot', reboot, 'power', sec_count('power'), 'input', sec_count('input'))

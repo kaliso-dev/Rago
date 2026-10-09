@@ -128,7 +128,7 @@ impl Runner {
         let sys = Sys::new(ctx.backup_dir.clone());
         // réglages jumeaux (même script) cochés ensemble : le script tourne une fois, le résultat vaut pour tous
         let mut twins_done: HashMap<String, TwinRun> = HashMap::new();
-        // point de restauration obligatoire (choix de Sofiene, 2026-10-07) : s'il échoue, rien n'est appliqué.
+        // point de restauration demandé (case cochée, comme en 1.1.6) : s'il échoue, rien de ce qui suit n'est appliqué.
         // Les annulations tournent quand même : elles remettent l'état d'avant, c'est le sens sûr.
         let (mut restore_failed, mut skipped) = (false, 0);
         for (index, item) in items.iter().enumerate() {
@@ -537,8 +537,8 @@ Checkpoint-Computer -Description 'Rago Optimizer' -RestorePointType 'MODIFY_SETT
 Write-Output "- Restore point created"
 "#;
 
-/// Ce qui modifie Windows ou les fichiers, donc passe après le point de restauration (tout sauf le point lui-même
-/// et les deux actions qui ouvrent une fenêtre de Windows).
+/// Ce qui modifie Windows ou les fichiers, donc attend le point de restauration quand il est demandé (tout sauf le
+/// point lui-même et les deux actions qui ouvrent une fenêtre de Windows).
 pub fn changes_windows(id: &str) -> bool {
     !matches!(id, "rst_point" | "rst_open" | "app_settings")
 }

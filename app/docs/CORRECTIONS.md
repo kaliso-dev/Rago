@@ -384,7 +384,7 @@ Retirés de l'app :
 # Corrections apportées aux .bat v6 (Ping Optimization Final, HITREG INPUTLAG, FPS)
 
 Ajouté par `tools/build_catalog_v6.py` après la section v5.2 ci-dessus. Les trois .bat de Sofiene
-(`legacy/v6/`, 2026-10-06) rejoignent l'ancien programme : 226 réglages au total.
+(`legacy/v6/`, 2026-10-06) rejoignent l'ancien programme : 226 réglages au total (199 réglages distincts depuis 1.1.8, voir plus bas).
 
 Défauts de la v5.2 revenus dans les .bat v6, corrigés de la même façon (`repair`, `clean`) :
 - `reg add ... /v DevicePriority|MessageNumberLimit /f` sans valeur → `reg delete` ;
@@ -445,3 +445,60 @@ l'audit) depuis les scripts d'avant et d'après l'audit, réunis par merge_full.
 quand il n'y a pas de sauvegarde, `rest` ce que la sauvegarde ne relève pas, `rest_avant` (pow_ultimate,
 pow_delete_plans) le lance avant la sauvegarde. Chiffrée dans l'exe avec les scripts Premium ; l'app en garde une copie
 par réglage appliqué, pour annuler après une déconnexion ou une fin de licence.
+
+
+# Réglages risqués retirés (1.1.8)
+
+Demande de Sofiene (2026-10-08) : `tools/safety.py`. 16 réglages quittent le catalogue, les profils et le plan gratuit. Il reste 212 entrées au catalogue, soit 199 réglages distincts : les 13 autres lancent les mêmes commandes qu'un autre réglage, sous un autre nom ou dans un autre module (champ `twin`), et c'est ce nombre distinct que l'app et le site annoncent. Leur annulation reste dans undo.json : sur un PC où une version précédente les a appliqués, le tableau de bord propose de les remettre comme avant.
+
+- `win_mitigations` : Il coupait les protections Spectre et Meltdown.
+- `win_coreiso` : Couper l'intégrité de la mémoire baisse la protection de ton PC contre les pilotes malveillants.
+- `win_smartscreen` : Il coupait SmartScreen, qui vérifie les fichiers téléchargés.
+- `win_hyperv` : Il coupait Hyper-V et la sécurité basée sur la virtualisation, et cassait WSL, le Bac à sable Windows et les émulateurs.
+- `exp_bios` : Il changeait des réglages de sécurité du démarrage (sécurité basée sur la virtualisation, protection DMA, mémoire du noyau). Une mauvaise valeur peut empêcher Windows de démarrer.
+- `exp_dma` : Il retirait la protection contre les attaques par périphériques Thunderbolt et PCIe.
+- `exp_harden` : Il coupait le service Station de travail : les dossiers partagés et les lecteurs réseau ne s'ouvraient plus.
+- `net_limit` : Il bloquait deux plages d'adresses Google dans le pare-feu, ce qui peut casser YouTube et d'autres services Google, sans gain sur le ping.
+- `pri_svc` : Il passait tous les services Windows en priorité minimale : le son pouvait grésiller et le réseau ramer en jeu.
+- `nv_tdr` : Quand le pilote graphique ne répondait plus, le PC figeait au lieu de récupérer.
+- `amd_thermal` : Il coupait la protection thermique des cartes graphiques AMD.
+- `sto_cacheprot` : Des fichiers en cours d'écriture pouvaient être corrompus si le courant coupait.
+- `dbl_xbox` : Il cassait le Game Pass, l'appli Xbox et la connexion à Minecraft Bedrock.
+- `dbl_edge` : Supprimer Edge ne s'annule pas depuis l'app et peut casser des fonctions de Windows qui s'en servent.
+- `dbl_onedrive` : Il supprimait les dossiers OneDrive du PC : les fichiers pas encore synchronisés étaient perdus.
+- `mem_prefetch` : Les applis s'ouvraient plus lentement, et sur un screenshare un Prefetch vide peut ressembler à des traces effacées.
+
+Lignes risquées retirées des packs qui les cachaient (le pack reste) :
+
+- Spectre/Meltdown : hitreg_suite, in_advanced, in_windows, mem_profile, mem_registry, sys_ram, win_mitigations
+- exploit protections : in_windows
+- boot security : exp_bios, in_advanced, in_windows, sys_bcdedit, win_hyperv
+- VBS / memory integrity : exp_bios, win_coreiso, win_mitigations
+- DMA protection : exp_bios, exp_dma, sys_registry
+- Microsoft Defender : in_advanced
+- SmartScreen : in_advanced, win_smartscreen
+- UAC : in_advanced
+- Windows Update : in_advanced, win_telemetry
+- Edge, WebView2 and Chrome updates : win_telemetry
+- firewall : net_limit, net_server
+- IFEO wipe : in_windows
+- GPU counters for any app : gpu_nvidia, nv_advanced
+- services at idle priority : pri_svc
+- window manager in realtime : exp_io
+- GPU recovery (TDR) : nv_tdr
+- AMD thermal limits : amd_advanced, amd_thermal
+- DPC watchdog : exp_kernel
+- cache flush : sto_cacheprot
+- Recycle Bin : sto_general
+- Prefetch off : hitreg_suite, in_advanced, mem_prefetch, mem_profile, sys_ram
+- Prefetch wipe : in_windows
+- BAM : sys_registry
+- Xbox services : dbl_xbox, win_gamedvr
+- sto_general : la boucle qui vidait les historiques de l'Explorateur (fichiers récents, Exécuter, chemins tapés) ;
+- in_advanced : indexation, impression, fichiers hors connexion, registre à distance et rapport d'erreurs coupés sans le dire (« Couper les services inutiles » le fait en l'annonçant) ;
+- net_server (préréglages 1 et 2) : remise à zéro de la pile réseau (IP fixe et DNS manuels perdus) ;
+- app_remove, win_apps : Pense-bêtes gardé (notes non synchronisées perdues) ;
+- cpu_advanced, cpu_registry : veto de la veille moderne et politique d'alimentation XP (audit D22, motif sur le chemin de la clé) ;
+- win_gamedvr : la ligne qui réautorisait Game DVR juste après l'avoir coupé.
+
+Point de restauration (1.1.8) : la case de 1.1.6 revient. Elle est cochée d'office seulement pour un réglage `restore` (avancé, ou que l'app ne remet pas entièrement) et si Rago n'en a pas créé un réussi dans les 24 dernières heures.

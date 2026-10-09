@@ -757,6 +757,22 @@ kbd {
   line-height: 1.5;
   max-width: 62em;
 }
+.tweak-facts {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  margin: 6px 0 0;
+  padding: 0;
+  list-style: none;
+  color: var(--rg-text-3);
+  font-size: 12px;
+  line-height: 1.45;
+  max-width: 62em;
+}
+.tweak-facts b {
+  color: var(--rg-text-2);
+  font-weight: 560;
+}
 .tweak-variants {
   margin-top: 12px;
 }
@@ -860,7 +876,11 @@ kbd {
 }
 .applybar-actions {
   display: flex;
-  gap: 6px;
+  align-items: center;
+  gap: 8px;
+}
+.applybar-actions .btn {
+  border-radius: var(--rg-radius-full);
 }
 
 /* -------------------------------------------------------------- modales */
@@ -1247,15 +1267,15 @@ kbd {
 .dash-grid {
   display: grid;
   grid-template-columns: 1.25fr 1fr;
-  grid-template-areas: "system ping" "system health";
+  grid-template-areas: "system live" "health health";
   gap: 16px;
   margin-bottom: 40px;
 }
 .dash-system {
   grid-area: system;
 }
-.dash-ping {
-  grid-area: ping;
+.dash-live {
+  grid-area: live;
 }
 .dash-health {
   grid-area: health;
@@ -1307,80 +1327,94 @@ kbd {
   }
 }
 
-.ping-form {
+.live {
   display: flex;
-  gap: 8px;
+  flex-direction: column;
 }
-.ping-form .input {
+.meters {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  gap: 18px;
+}
+.meter-head {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+.meter-text {
   flex: 1;
   min-width: 0;
 }
-.ping-main {
-  display: flex;
-  align-items: flex-end;
-  justify-content: space-between;
-  gap: 12px;
-  margin-top: 16px;
+.meter-label {
+  font-size: 13.5px;
+  font-weight: 520;
 }
-.ping-value {
-  font-size: var(--rg-fs-metric);
+.meter-detail {
+  font-size: 11.5px;
+  color: var(--rg-text-3);
+}
+.meter-value {
+  font-size: 24px;
   font-weight: 560;
   line-height: 1;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
 }
-.ping-value span {
-  display: inline-block;
-}
-.ping-value small {
-  font-size: 15px;
+.meter.off .meter-value {
+  font-family: var(--rg-font-sans);
+  font-size: 13px;
+  font-weight: 450;
   color: var(--rg-text-3);
-  margin-left: 4px;
 }
-.ping-delta {
+.meter-track {
+  height: 6px;
+  margin: 10px 0 0 42px;
+  border-radius: 999px;
+  background: var(--rg-ink-4);
+  overflow: hidden;
+}
+.meter-fill {
+  height: 100%;
+  border-radius: inherit;
+  background: var(--rg-red-500);
+  transform-origin: left center;
+  transition: transform var(--rg-dur-slow) var(--rg-ease-out);
+}
+.live-dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--rg-red-500);
+  animation: live-pulse var(--rg-dur-pulse) ease-in-out infinite;
+}
+@keyframes live-pulse {
+  50% {
+    opacity: 0.35;
+  }
+}
+.live .card-head h3 {
   display: flex;
   align-items: center;
-  flex-wrap: wrap;
-  justify-content: flex-end;
-  gap: 4px;
-  font-size: 14px;
-  font-weight: 560;
+  gap: 8px;
 }
-.ping-delta span {
-  flex-basis: 100%;
-  text-align: right;
-  font-family: var(--rg-font-sans);
-  font-size: 11px;
-  font-weight: 400;
-  color: var(--rg-text-3);
+.live-taskmgr.btn-sm {
+  height: 26px;
+  margin-right: -6px;
+  padding: 0 8px;
 }
-.ping-delta.good {
-  color: var(--rg-success);
+.live-note {
+  margin: 18px 0 0;
+  padding-top: 14px;
+  border-top: 1px solid var(--rg-line-1);
 }
-.ping-delta.bad {
-  color: var(--rg-warning);
-}
-.spark {
-  display: block;
-  width: 100%;
-  height: 40px;
-  margin: 12px 0 8px;
-}
-.ping-stats {
-  display: grid;
-  grid-template-columns: repeat(4, 1fr);
-  margin: 0;
-  font-size: 13px;
-}
-.ping-stats dt {
-  font-family: var(--rg-font-sans);
-  font-size: 11px;
-  color: var(--rg-text-3);
-}
-.ping-stats dd {
-  margin: 0;
-}
-.ping .muted.small,
-.ping .error-text {
-  margin-top: 14px;
+@media (prefers-reduced-motion: reduce) {
+  .meter-fill,
+  .live-dot {
+    transition: none;
+    animation: none;
+  }
 }
 
 .health {
@@ -1405,6 +1439,11 @@ kbd {
 }
 .health-value {
   font-size: 12px;
+}
+.dash-health .health {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  column-gap: 40px;
 }
 
 .presets {
@@ -1748,7 +1787,7 @@ svg {
   }
   .dash-grid {
     grid-template-columns: 1fr;
-    grid-template-areas: "ping" "system" "health";
+    grid-template-areas: "live" "system" "health";
   }
   .presets {
     grid-template-columns: 1fr;
@@ -1767,7 +1806,7 @@ svg {
   }
   .applybar-label,
   .applybar-sub,
-  .applybar-actions .btn-ghost {
+  .applybar-clear {
     display: none;
   }
   .run {
@@ -1781,10 +1820,6 @@ svg {
   .run-side {
     border-left: 0;
     border-top: 1px solid var(--rg-line-1);
-  }
-  .ping-stats {
-    grid-template-columns: repeat(2, 1fr);
-    row-gap: 8px;
   }
 }
 .gate-buy {
@@ -2076,26 +2111,30 @@ svg {
     padding: 6px 10px 4px;
   }
 }
-.confirm-restore {
-  display: flex;
-  gap: 10px;
-  align-items: flex-start;
-  margin: 0;
-  font-size: 13.5px;
+.dash-retired {
+  margin: -24px 0 40px;
 }
-.confirm-restore > svg {
-  flex: none;
-  margin-top: 2px;
-  color: var(--rg-success);
+.dash-retired .card {
+  border-color: rgba(255, 214, 10, 0.22);
 }
-.confirm-restore span {
+.retired-list {
   display: flex;
   flex-direction: column;
-  gap: 2px;
+  gap: 8px;
+  margin: 12px 0 14px;
+  padding: 0;
+  list-style: none;
 }
-.confirm-restore small {
-  color: var(--rg-text-3);
-  font-size: 12px;
+.retired-list li {
+  display: flex;
+  gap: 8px;
+  font-size: 12.5px;
+  color: var(--rg-text-2);
+}
+.retired-list svg {
+  flex: none;
+  margin-top: 3px;
+  color: var(--rg-warning);
 }
 .run-row.skipped {
   color: var(--rg-text-3);

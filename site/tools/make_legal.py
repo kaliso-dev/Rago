@@ -78,14 +78,14 @@ page('terms.html','Terms of Sale',f'''
 <li>One Premium subscription works on <strong>one PC</strong>. The license is linked to that PC the first time you sign in to the app and activate it.</li>
 <li>If you change PCs, contact support to move your license.</li>
 <li>You may not share, resell or sublicense your account or license, or try to bypass the license check.</li>
-<li>If a renewal fails, Premium stops when the paid period ends. The app keeps working in free mode.</li>
+<li>If a renewal payment fails, Stripe tries it again over the following days and Premium stays on meanwhile. If it still fails, Premium stops. The app keeps working in free mode.</li>
 </ul>
 
 <h2>5. Right of withdrawal (EU and UK customers)</h2>
 <p>Premium is digital content supplied right after payment. By completing checkout, you ask for immediate access and acknowledge that you lose your 14-day right of withdrawal once the license is delivered. Our <a href="refunds.html">Refunds and Cancellation</a> policy explains when we refund anyway.</p>
 
 <h2>6. Using the app safely</h2>
-<p>Before applying changes, Rago offers to create a Windows restore point (on by default), and its Restore section opens System Restore so you can go back to it. Turning a tweak off puts back the Windows settings it changed. One-time actions, like removing apps, can't be turned off. When Premium ends or you sign out, Rago puts back the settings changed by Premium tweaks. Some tweaks are marked <strong>Advanced</strong>: they turn off Windows protections or services and ask for confirmation. You choose which tweaks to apply, and you are responsible for that choice.</p>
+<p>Before applying changes, Rago offers to create a Windows restore point (ticked by default before Advanced tweaks), and its Restore section opens System Restore so you can go back to it. Turning a tweak off puts back the Windows settings it changed. One-time actions, like removing apps, can't be turned off. When Premium ends or you sign out, Rago puts back the settings changed by Premium tweaks. Some tweaks are marked <strong>Advanced</strong>: they change deeper Windows settings or turn off services, and ask for confirmation. You choose which tweaks to apply, and you are responsible for that choice.</p>
 <p>Rago doesn't modify Minecraft or inject anything into games. Server rules are set by each server: check them before you play. We aren't responsible for decisions a server's staff makes about your account.</p>
 
 <h2>7. Affiliate program</h2>
