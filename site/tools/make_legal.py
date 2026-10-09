@@ -2,7 +2,8 @@ import os
 OUT=os.path.join(os.path.dirname(os.path.abspath(__file__)),'..')
 # Builds site/terms.html, privacy.html, refunds.html. Yellow <mark class="f"> = to fill in by the seller.
 F=lambda t:f'<mark class="f">[{t}]</mark>'
-SELLER=F("Seller legal name or company"); ADDR=F("Postal address"); COUNTRY=F("Country"); MAIL='<a href="mailto:support@rago-optimizer.com">support@rago-optimizer.com</a>'; REG=F("Business registration number, if any"); UPD="October 7, 2026"
+NAME=F("Full name"); SELLER=f'{NAME} EI (entrepreneur individuel, a French sole trader)'; ADDR=F("Street address and postal code")+' Paris'; COUNTRY='France'
+MAIL='<a href="mailto:support@rago-optimizer.com">support@rago-optimizer.com</a>'; PHONE=F("Phone number"); REG='SIRET: '+F("SIRET number"); MEDIATOR=F("Consumer mediator: name and website"); UPD="October 7, 2026"
 HEAD='''<!doctype html>
 <html lang="en">
 <head>
@@ -62,7 +63,8 @@ def page(name,title,body):
 
 page('terms.html','Terms of Sale',f'''
 <h2>1. Who we are</h2>
-<p>Rago Optimizer is sold by {SELLER}, {ADDR}, {COUNTRY}. {REG}. Contact: {MAIL}, or our Discord server.</p>
+<p>Rago Optimizer is sold by {SELLER}, {ADDR}, {COUNTRY}. {REG}. Contact: {MAIL}, {PHONE}, or our Discord server.</p>
+<p>Publication director: {NAME}. This site is hosted by Netlify, Inc., 101 2nd Street, San Francisco, CA 94105, USA. Account pages and the license server are hosted by Railway Corporation, San Francisco, CA, USA.</p>
 
 <h2>2. What you buy</h2>
 <p>Rago Optimizer is a Windows 10 and 11 app that changes Windows, network and game settings. It comes in two plans:</p>
@@ -73,7 +75,7 @@ page('terms.html','Terms of Sale',f'''
 <p>Results depend on your hardware, your connection and the game server. We don't promise a specific ping, frame rate or hit registration result. Distance to the server can't be changed by any software.</p>
 
 <h2>3. Prices and payment</h2>
-<p>Prices are shown on the site before checkout, in US dollars{F("add: including or excluding VAT and other taxes")}. Payment is handled by Stripe. We never see or store your card number.</p>
+<p>Prices are shown on the site before checkout, in US dollars. No VAT is charged: VAT exemption under article 293 B of the French General Tax Code (TVA non applicable, art. 293 B du CGI). Payment is handled by Stripe. We never see or store your card number.</p>
 <p>Your subscription renews automatically at the end of each month or year, at the price you accepted, until you cancel. If we change the price, we'll tell you by email before your next renewal and you can cancel before it applies.</p>
 
 <h2>4. Your license</h2>
@@ -105,7 +107,7 @@ page('terms.html','Terms of Sale',f'''
 <p>We may suspend a license in case of fraud, a chargeback, a refund, or sharing of the license. A full refund or a payment dispute turns Premium off automatically.</p>
 
 <h2>11. Changes and law</h2>
-<p>We may update these terms. The version accepted at checkout applies to that purchase. These terms are governed by the law of {F("Country")}. Consumers can also use the courts and mediation services of their own country.</p>
+<p>We may update these terms. The version accepted at checkout applies to that purchase. These terms are governed by French law, which doesn't take away the protection the mandatory consumer law of your country gives you. If a dispute isn't solved with our support, you can refer it free of charge to our consumer mediator, {MEDIATOR}. You can also go to the courts of your own country.</p>
 ''')
 
 page('refunds.html','Refunds and Cancellation',f'''
@@ -114,7 +116,7 @@ page('refunds.html','Refunds and Cancellation',f'''
 
 <h2>Refunds</h2>
 <ul>
-<li><strong>Before you activate the app:</strong> if you haven't signed in to the app and activated Premium on a PC, we refund your first payment if you ask within {F("14")} days.</li>
+<li><strong>Before you activate the app:</strong> if you haven't signed in to the app and activated Premium on a PC, we refund your first payment if you ask within 14 days.</li>
 <li><strong>Charged twice or by mistake:</strong> we refund the extra payment.</li>
 <li><strong>After activation:</strong> Premium is digital content delivered right away, so we don't refund by default. If something doesn't work on your PC, contact us first: we'll try to fix it, and refund when we can't.</li>
 </ul>
@@ -176,14 +178,14 @@ page('privacy.html','Privacy Policy',f'''
 
 <h2>How long we keep it</h2>
 <ul>
-<li>Account and license data: while your account exists, then deleted within {F("30")} days of your deletion request.</li>
-<li>Payment and invoicing records: as long as accounting law requires, {F("10")} years.</li>
+<li>Account and license data: while your account exists, then deleted within 30 days of your deletion request.</li>
+<li>Payment and invoicing records: as long as accounting law requires, 10 years.</li>
 <li>Your review and profile photo: until you delete them or your account. A replaced photo is deleted right away.</li>
-<li>Security log: {F("12")} months.</li>
+<li>Security log: 12 months.</li>
 </ul>
 
 <h2>Your rights</h2>
-<p>You can delete your review and profile photo yourself, from your account page. You can ask to access, correct, export or delete your data, or object to its use, by writing to {MAIL} from the email of your account. You can also complain to your data protection authority{F("e.g. the CNIL in France")}.</p>
+<p>You can delete your review and profile photo yourself, from your account page. You can ask to access, correct, export or delete your data, or object to its use, by writing to {MAIL} from the email of your account. You can also complain to your data protection authority: in France, the CNIL (cnil.fr).</p>
 
 <h2>Changes</h2>
 <p>If we change this policy in a way that matters, we'll update the date above and tell account holders by email.</p>
