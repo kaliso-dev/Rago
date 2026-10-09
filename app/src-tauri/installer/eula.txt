@@ -3,7 +3,7 @@ RAGO OPTIMIZER - TERMS OF USE
 Please read these terms before installing Rago Optimizer.
 
 1. What the app does
-Rago Optimizer changes Windows settings: registry values, services, power plans, network settings and boot options. Some tweaks marked "Advanced" lower security protections (for example Spectre and Meltdown mitigations, Microsoft Defender or SmartScreen). The app tells you what each Advanced tweak does before it runs.
+Rago Optimizer changes Windows settings: registry values, services, power plans, network settings and boot options. Some tweaks are marked "Advanced": they change deeper settings, such as timers, the kernel or boot options. The app tells you what each tweak does, and its drawbacks, before it runs.
 
 2. Your responsibility
 You choose which tweaks to apply. Before applying, Rago Optimizer offers to create a Windows restore point; keep it on. Results depend on your hardware, drivers and games, and no specific gain in FPS, ping or input lag is guaranteed.
