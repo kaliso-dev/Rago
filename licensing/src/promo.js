@@ -3,7 +3,7 @@
 // Stripe promotion code: its percent, its number of uses and how many are taken come from Stripe, so the
 // pop-up never offers more than Stripe gives, and hides itself once the code is used up.
 // Messages are in French: only Sofiene reads them (/admin and the admin command).
-import { ensureCoupon } from './billing.js';
+import { ensureCoupon, stripeMode } from './billing.js';
 
 export const POPUP_DEFAULTS = Object.freeze({
   enabled: true,
@@ -18,8 +18,7 @@ const MAX_LIMIT = 100000;
 
 export class PopupError extends Error {}
 
-const isLive = (key) => /^(sk|rk)_live_/.test(key || '');
-export const stripeMode = (cfg) => (!cfg.stripeSecretKey ? null : isLive(cfg.stripeSecretKey) ? 'live' : 'test');
+export { stripeMode };
 
 /** The saved settings, with the defaults for anything never saved. */
 export async function getPopup(db) {

@@ -12,7 +12,7 @@ import { createHash, createHmac, timingSafeEqual } from 'node:crypto';
 import { DUMMY_HASH, maskLicenseKey, signValue, unsignValue, verifyPassword } from './crypto.js';
 import { DeviceError, parseDevice, sameDevice } from './fingerprint.js';
 import { signToken, verifyToken } from './tokens.js';
-import { billingPortal, createCheckout, ensureAffiliatePromo, findPromotionCode, handleStripeEvent, isRagoCheckout, syncPromoActive } from './billing.js';
+import { billingPortal, createCheckout, endTestLicenses, ensureAffiliatePromo, findPromotionCode, handleStripeEvent, isRagoCheckout, stripeChecks, stripeMode, syncPromoActive } from './billing.js';
 import * as A from './affiliates.js';
 import { createInstaller } from './installer.js';
 import * as L from './licensing.js';
@@ -722,12 +722,15 @@ export function createApp({ cfg, db, keys, stripe, mailer, log = console, fetchI
   const adminCookie = { httpOnly: true, secure: cfg.prod, sameSite: 'Strict', path: '/admin' };
   app.use('/admin/*', async (c, next) => { c.header('Cache-Control', 'no-store'); await next(); });
   app.use('/admin', async (c, next) => { c.header('Cache-Control', 'no-store'); await next(); });
-  const adminPage = async (c, extra = {}, status = 200) => c.html(V.adminPage(cfg, { state: await Promo.popupState(db, stripe, cfg), ...extra }), status);
+  const adminPage = async (c, extra = {}, status = 200) => {
+    const [state, stripeState] = await Promise.all([Promo.popupState(db, stripe, cfg), stripeChecks(stripe, cfg, { db, webhook: hookSeen })]);
+    return c.html(V.adminPage(cfg, { state, stripe: stripeState, ...extra }), status);
+  };
 
   app.get('/admin', async (c) => {
     if (!adminPass) return c.notFound();
     if (!isAdmin(c)) return c.html(V.adminLoginPage(cfg));
-    return adminPage(c, { notice: c.req.query('n') });
+    return adminPage(c, { notice: c.req.query('n'), count: Number(c.req.query('count')) || 0 });
   });
   app.post('/admin/login', async (c) => {
     if (!adminPass) return c.notFound();
@@ -761,7 +764,18 @@ export function createApp({ cfg, db, keys, stripe, mailer, log = console, fetchI
     }
   });
 
+  app.post('/admin/test-licenses', async (c) => {
+    if (!adminPass) return c.notFound();
+    if (!isAdmin(c)) return c.redirect('/admin', 303);
+    const ended = await endTestLicenses(db, cfg);
+    await audit(db, 'admin.test_licenses_ended', { detail: { count: ended } });
+    return c.redirect(`/admin?n=test-ended&count=${ended}`, 303);
+  });
+
   // ---------- Stripe webhook ----------
+  // What /admin shows about the signing secret, which Stripe never shows again: when the last event with a
+  // wrong signature, or from the other Stripe mode, arrived since the server started.
+  const hookSeen = { refusedAt: 0, otherModeAt: 0 };
   app.post('/webhooks/stripe', async (c) => {
     if (!stripe) return c.text('Stripe not configured', 503);
     const raw = Buffer.from(await c.req.arrayBuffer());
@@ -769,7 +783,20 @@ export function createApp({ cfg, db, keys, stripe, mailer, log = console, fetchI
     try {
       event = stripe.webhooks.constructEvent(raw, c.req.header('stripe-signature') || '', cfg.stripeWebhookSecret);
     } catch {
+      // Anyone can post here: noted, and logged at most every 10 minutes.
+      if (c.req.header('stripe-signature') && Date.now() - hookSeen.refusedAt > 10 * 60 * 1000) {
+        log.error(`[stripe] webhook refused (bad signature): STRIPE_WEBHOOK_SECRET must be the whsec_ of the ${stripeMode(cfg) || ''} destination that sends to this server.`);
+      }
+      if (c.req.header('stripe-signature')) hookSeen.refusedAt = Date.now();
       return c.text('Bad signature', 400);
+    }
+    // Signed with our secret but from the other mode: the secret is the other destination's. Never applied with
+    // this key (a test purchase would become a real license); acknowledged so Stripe doesn't retry it for days.
+    const mode = stripeMode(cfg);
+    if (mode && typeof event.livemode === 'boolean' && event.livemode !== (mode === 'live')) {
+      hookSeen.otherModeAt = Date.now();
+      log.error(`[stripe] ${event.type} ${event.id} ignored: it comes from Stripe ${event.livemode ? 'live' : 'test'} mode and STRIPE_SECRET_KEY is the ${mode} key. Put the whsec_ of the ${mode} destination in STRIPE_WEBHOOK_SECRET.`);
+      return c.json({ received: true, ignored: 'other_mode' });
     }
     const label = await handleStripeEvent(db, event, { stripe, onLicense: sendClaimEmail, log });
     log.info?.(`[stripe] ${event.type} ${event.id} -> ${label}`);

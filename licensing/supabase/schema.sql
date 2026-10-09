@@ -74,6 +74,7 @@ CREATE TABLE IF NOT EXISTS stripe_events (
   type TEXT NOT NULL,
   received_at BIGINT NOT NULL
 );
+ALTER TABLE stripe_events ADD COLUMN IF NOT EXISTS livemode BOOLEAN;                     -- Stripe mode of the event (null before Oct 10, 2026)
 
 CREATE TABLE IF NOT EXISTS audit (
   id BIGSERIAL PRIMARY KEY,

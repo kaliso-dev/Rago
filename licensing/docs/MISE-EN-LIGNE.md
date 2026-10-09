@@ -194,11 +194,23 @@ Si une étape coince, envoie-moi une capture et l'heure : je trouve la cause.
 
 ## Étape 10 : passer en vrai
 
-1. Stripe → **Activer les paiements** : informations sur toi ou ta société, et ton IBAN. Stripe demande une pièce d'identité.
-2. Repasse en **mode live**, puis refais en live les étapes 3.2 à 3.6 et 6 : deux nouveaux `price_...`, nouvelle clé `sk_live_...`, portail client, nouveau webhook `whsec_...`.
-3. Remplace ces quatre variables dans Railway (et `STRIPE_PORTAL_LOGIN_URL`, le lien du portail live).
-4. Le code du pop-up créé en test n'existe pas en live : ouvre `/admin` et enregistre-le une fois (avec la réduction et le nombre de clients), il est créé en live (voir « Le pop-up du site »). Les codes d'affiliation, eux, sont recréés en live tout seuls dans l'heure qui suit (ou dès que l'affilié ouvre `/affiliate`).
-5. Fais un vrai achat avec ta carte, puis rembourse-le depuis Stripe : la boucle complète est vérifiée.
+Ce qui dépend du mode Stripe : la clé, les deux prix, le webhook et son secret, le portail client et son lien, les codes promo. Un objet Stripe n'existe que dans le mode où il a été créé : tout ce qui suit est à refaire **mode test éteint**. Rien ne change sur Netlify ni dans l'app (aucune clé Stripe n'y est).
+
+1. **Compte** : Stripe → **Activer les paiements** (identité, IBAN). Tant que Stripe ne l'a pas validé, `/admin` affiche « Compte : à corriger ».
+2. **Produit et prix** : Catalogue de produits → **Rago Optimizer Premium** avec deux prix **récurrents en USD** : 5,99 mensuel et 29,99 annuel (les montants du site). Copie les deux `price_...`.
+3. **Clé secrète** : Développeurs → Clés API → clé secrète `sk_live_...`. Stripe ne montre une clé live qu'une fois : colle-la directement dans Railway (étape 6 ci-dessous) et garde-la dans ton gestionnaire de mots de passe.
+4. **Webhook** : Développeurs → Webhooks → **Ajouter une destination**, URL `https://account.rago-optimizer.com/webhooks/stripe`, les 10 événements de l'étape 6. Copie son secret `whsec_...`.
+5. **Portail client** : Paramètres → Facturation → Portail client, comme à l'étape 3.5 (résiliation, changement de formule avec les deux prix **live**, moyen de paiement, liens Conditions et Confidentialité), puis **Enregistrer**. Copie le lien de connexion au portail (il ne contient pas `test_`).
+   Vérifie aussi en live : Moyens de paiement (PayPal), Abonnements et e-mails (relances, rappel avant renouvellement annuel), E-mails clients (reçus). Les Informations publiques (URL des conditions, libellé `RAGO OPTIMIZER`) sont communes aux deux modes.
+6. **Railway → Variables** : remplace `STRIPE_SECRET_KEY`, `STRIPE_PRICE_MONTHLY`, `STRIPE_PRICE_YEARLY`, `STRIPE_WEBHOOK_SECRET` et `STRIPE_PORTAL_LOGIN_URL` par les valeurs live, retire `STRIPE_PRICE_ID` s'il est encore là, puis **Deploy** une seule fois. Garde les valeurs test dans ton gestionnaire de mots de passe (« Revenir en mode test »).
+7. **Stripe, mode test** : Développeurs → Webhooks → la destination test vers `account.rago-optimizer.com` → **Désactiver**. Sinon ses événements arrivent avec le mauvais secret, sont refusés, et `/admin` le signale.
+8. **Vérifie sur `/admin`**, section **Paiements Stripe** : clé, compte, prix, webhook, portail et lien doivent être « OK ». Chaque ligne « À corriger » dit quoi changer (un prix du mode test, un événement manquant, le portail pas enregistré…). « Secret du webhook » reste « À vérifier » jusqu'au premier achat : le secret ne se lit pas dans Stripe, seul un événement reçu le confirme.
+9. **Achats de test** : les licences achetées en mode test sont dans la même base. Elles donnent encore Premium, comptent pour les affiliés et empêchent ces comptes d'acheter. Sur `/admin`, **Arrêter les licences de test** les passe en « Test purchase » (rien d'autre n'est touché : licences offertes, achats live, comptes, avis). Une licence offerte se redonne avec `npm run admin -- grant`.
+10. **Code du pop-up** : le code créé en test n'existe pas en live. Sur `/admin`, tape `RAGO50`, `50` et `15`, puis **Enregistrer** : « Code créé dans Stripe ». Les codes d'affiliation sont recréés en live tout seuls dans l'heure (ou dès que l'affilié ouvre `/affiliate`).
+11. **Un vrai achat, puis remboursé**, dans une fenêtre de navigation privée. Avant le lancement, ouvre d'abord ton lien `https://account.rago-optimizer.com/acces/<PREVIEW_KEY>`.
+    - Prends le **mensuel**, avec un email qui n'a jamais acheté, **sans** le code du pop-up : chaque utilisation de `RAGO50` prend une des 15 places, et un remboursement ne la rend pas.
+    - La page Stripe ne doit plus afficher « Mode test ». Paie avec ta carte : « Payment confirmed », crée le compte, la licence s'affiche, l'email d'achat arrive. Sur `/admin`, « Secret du webhook » passe à « OK » avec `checkout.session.completed`.
+    - Stripe → Paiements → ce paiement → **Rembourser** (en entier). Le tableau de bord affiche « Refunded » et l'abonnement est annulé dans Stripe. Stripe garde ses frais (quelques dizaines de centimes).
 
 ## Revenir en mode test
 
@@ -211,7 +223,9 @@ Pour refaire des essais sans vrai paiement, remets les valeurs **test** dans Rai
 | `STRIPE_WEBHOOK_SECRET` | Développeurs → Webhooks → la destination **test** vers `/webhooks/stripe` → **Secret de signature** `whsec_...` (sinon crée-la comme à l'étape 6) |
 | `STRIPE_PORTAL_LOGIN_URL` | Paramètres → Facturation → Portail client (mode test) → lien de connexion |
 
-Railway redéploie tout seul. Paie ensuite avec `4242 4242 4242 4242`, une date future, n'importe quel CVC. Les achats test et les achats live ne se mélangent pas dans Stripe, mais ils vont dans la même base : un compte créé avec un achat test garde sa licence test. Avant le lancement, vide la base de test (requête « Reset base » de la mémoire du projet, jamais `server_secrets`) ou supprime ces comptes avec `npm run admin -- delete-user`.
+Réactive aussi la destination webhook test (étape 10.7). **Après le lancement, ne le fais plus sur ce serveur** : avec les valeurs test, les renouvellements, remboursements et résiliations des vrais abonnés ne sont plus reçus.
+
+Railway redéploie tout seul. Paie ensuite avec `4242 4242 4242 4242`, une date future, n'importe quel CVC. Les achats test et les achats live ne se mélangent pas dans Stripe, mais ils vont dans la même base : un compte créé avec un achat test garde sa licence test. Au passage en live, le bouton **Arrêter les licences de test** de `/admin` les arrête (étape 10.9) ; `npm run admin -- delete-user` supprime un compte de test.
 
 ## Codes promo
 

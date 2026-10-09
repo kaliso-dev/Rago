@@ -1057,6 +1057,123 @@ test('/admin is a 404 without ADMIN_KEY (or with one under 16 characters)', asyn
   }
 });
 
+test('going live: /admin checks prices, webhook and portal in the live mode, test purchases can be stopped', async () => {
+  const KEY = 'admin-key-0123456789abcdef';
+  const t = await setup({ ...SUBS, ADMIN_KEY: KEY, STRIPE_SECRET_KEY: 'sk_live_fake', STRIPE_PORTAL_LOGIN_URL: 'https://billing.stripe.com/p/login/test_abc' });
+  const notFound = (msg) => Object.assign(new Error(msg), { statusCode: 404, code: 'resource_missing', param: 'price' });
+  // The monthly price is still the test one; the yearly one was made in live.
+  t.stripe.prices.retrieve = async (id) => {
+    if (id === 'price_year') return { id, active: true, type: 'recurring', recurring: { interval: 'year', interval_count: 1 }, unit_amount: 2999, currency: 'usd', product: { name: 'Rago Optimizer Premium' } };
+    throw notFound(`No such price: '${id}'; a similar object exists in test mode, but a live mode key was used to make this request.`);
+  };
+  const hook = { id: 'we_1', url: 'http://localhost/webhooks/stripe', status: 'enabled', enabled_events: ['checkout.session.completed'] };
+  t.stripe.webhookEndpoints.list = async () => ({ data: [hook, { id: 'we_2', url: 'https://other.example/hooks', status: 'enabled', enabled_events: ['*'] }] });
+  const portals = [];
+  t.stripe.billingPortal.configurations.list = async () => ({ data: portals });
+  t.stripe.accounts.retrieveCurrent = async () => ({ charges_enabled: true, settings: { payments: { statement_descriptor: 'RAGO OPTIMIZER' } } });
+
+  // A purchase made with the test keys, before the switch, on an account.
+  const before = t.paidSubscription('cs_test_before', 'tester@example.com');
+  await L.fulfillCheckoutSession(t.db, before);
+  await t.browse('/signup', { form: { email: 'tester@example.com', password: 'hunter2hunter2' } });
+  const old = await t.db.get("SELECT * FROM licenses WHERE stripe_session_id = 'cs_test_before'");
+  const tester = await L.findUserByEmail(t.db, 'tester@example.com');
+  await L.claimLicense(t.db, old.id, tester.id);
+
+  await t.browse('/admin/login', { form: { key: KEY } });
+  let page = await (await t.browse('/admin')).text();
+  assert.match(page, /Admin · Stripe live/);
+  assert.match(page, /Clé live : les paiements sont réels/);
+  assert.match(page, /Paiements activés\. Libellé sur le relevé bancaire : RAGO OPTIMIZER/);
+  assert.match(page, /price_month n’existe pas en mode live : c’est un prix du mode test\. Mets dans STRIPE_PRICE_MONTHLY le price_ créé en mode live/);
+  assert.match(page, /Rago Optimizer Premium · 29,99 USD par an/);
+  assert.match(page, /Il manque 9 événements à la destination vers localhost : checkout\.session\.async_payment_succeeded, /);
+  assert.match(page, /Pas encore enregistré en mode live/);
+  assert.match(page, /STRIPE_PORTAL_LOGIN_URL est le lien du mode test/);
+  assert.match(page, /Aucun événement live reçu pour l’instant/);
+  assert.match(page, /1 licence active vient<\/strong>|1 licence active vient d’un achat fait en mode test/);
+  assert.match(page, /badge-red"><i><\/i>\d+ à corriger/);
+
+  // Fixed in Stripe: the page says so.
+  hook.enabled_events = ['*'];
+  portals.push({ active: true, features: { subscription_cancel: { enabled: true } }, business_profile: { terms_of_service_url: 'https://rago.test/terms.html', privacy_policy_url: 'https://rago.test/privacy.html' } });
+  page = await (await t.browse('/admin')).text();
+  assert.match(page, /Destination vers localhost, avec les 10 événements/);
+  assert.match(page, /Enregistré, résiliation proposée/);
+
+  // A test event signed with the secret in Railway: STRIPE_WEBHOOK_SECRET is still the test one. Never applied.
+  const send = (event) => {
+    const payload = JSON.stringify({ object: 'event', ...event });
+    const sig = t.stripe.webhooks.generateTestHeaderString({ payload, secret: WHSEC });
+    return t.app.request('/webhooks/stripe', { method: 'POST', headers: { 'stripe-signature': sig, 'content-type': 'application/json' }, body: payload });
+  };
+  const testBuy = t.paidSession('cs_test_late', 'late@example.com');
+  const ignored = await send({ id: 'evt_test', type: 'checkout.session.completed', livemode: false, data: { object: testBuy } });
+  assert.equal(ignored.status, 200);
+  assert.deepEqual(await ignored.json(), { received: true, ignored: 'other_mode' });
+  assert.equal(await t.db.get("SELECT 1 FROM licenses WHERE stripe_session_id = 'cs_test_late'"), null);
+  assert.match(await (await t.browse('/admin')).text(), /Un événement du mode test est arrivé .*: STRIPE_WEBHOOK_SECRET est celui de la destination test/);
+
+  // A wrong signature is noted too (and logged), until a good event arrives.
+  const bad = await t.app.request('/webhooks/stripe', { method: 'POST', headers: { 'stripe-signature': 't=1,v1=00', 'content-type': 'application/json' }, body: '{}' });
+  assert.equal(bad.status, 400);
+
+  // The first live purchase: applied, and the page shows it arrived.
+  const live = t.paidSession('cs_live_first', 'buyer@example.com');
+  assert.equal((await send({ id: 'evt_live', type: 'checkout.session.completed', livemode: true, data: { object: live } })).status, 200);
+  assert.ok(await t.db.get("SELECT 1 FROM licenses WHERE stripe_session_id = 'cs_live_first' AND status = 'active'"));
+  assert.equal((await t.db.get("SELECT livemode FROM stripe_events WHERE id = 'evt_live'")).livemode, true);
+  page = await (await t.browse('/admin')).text();
+  assert.match(page, /Dernier événement live reçu : checkout\.session\.completed/);
+  assert.doesNotMatch(page, /est celui de la destination test/);
+
+  // Stopping the test purchases: the tester goes back to free, the live buyer keeps Premium.
+  let res = await t.browse('/admin/test-licenses', { form: {} });
+  assert.equal(res.headers.get('location'), '/admin?n=test-ended&count=1');
+  assert.deepEqual({ ...(await t.db.get("SELECT status, status_reason FROM licenses WHERE stripe_session_id = 'cs_test_before'")) }, { status: 'revoked', status_reason: 'test_mode' });
+  assert.ok(await t.db.get("SELECT 1 FROM licenses WHERE stripe_session_id = 'cs_live_first' AND status = 'active'"));
+  page = await (await t.browse(res.headers.get('location'))).text();
+  assert.match(page, /La licence de test ne donne plus Premium/);
+  assert.doesNotMatch(page, /achat fait en mode test/);
+  assert.equal((await t.browse('/admin/test-licenses', { form: {} })).headers.get('location'), '/admin?n=test-ended&count=0');
+
+  // The tester buys for real: their test customer doesn't exist in live, the checkout opens with their email.
+  await t.browse('/admin/logout', { form: {} });
+  await t.browse('/login', { form: { email: 'tester@example.com', password: 'hunter2hunter2' } });
+  assert.match(await (await t.browse('/account')).text(), /Test purchase/);
+  const create = t.stripe.checkout.sessions.create;
+  t.stripe.checkout.sessions.create = async (p) => {
+    if (p.customer) throw Object.assign(new Error(`No such customer: '${p.customer}'; a similar object exists in test mode, but a live mode key was used to make this request.`), { statusCode: 400, code: 'resource_missing', param: 'customer' });
+    return create(p);
+  };
+  res = await t.browse('/buy?interval=month');
+  assert.equal(res.status, 303);
+  assert.equal(t.created.at(-1).customer, undefined);
+  assert.equal(t.created.at(-1).customer_email, 'tester@example.com');
+});
+
+test('test keys: /admin says payments are not real, and events from test mode are applied', async () => {
+  const KEY = 'admin-key-0123456789abcdef';
+  const t = await setup({ ...SUBS, ADMIN_KEY: KEY, STRIPE_SECRET_KEY: 'sk_test_fake' });
+  t.stripe.prices.retrieve = async (id) => ({ id, active: true, type: 'recurring', recurring: { interval: id === 'price_year' ? 'year' : 'month' }, unit_amount: id === 'price_year' ? 2999 : 599, currency: 'usd', product: { name: 'Rago Optimizer Premium' } });
+  t.stripe.webhookEndpoints.list = async () => { throw new Error('This API key does not have the permission to read webhook endpoints'); };
+  t.stripe.billingPortal.configurations.list = async () => ({ data: [] });
+  await t.browse('/admin/login', { form: { key: KEY } });
+  const page = await (await t.browse('/admin')).text();
+  assert.match(page, /Clé de test : aucun paiement n’est réel/);
+  assert.match(page, /5,99 USD par mois/);
+  assert.match(page, /Stripe ne laisse pas lire les webhooks avec cette clé/);
+  assert.match(page, /STRIPE_PORTAL_LOGIN_URL est vide/);
+  assert.doesNotMatch(page, /Compte/);
+  const payload = JSON.stringify({ id: 'evt_t', object: 'event', type: 'checkout.session.completed', livemode: false, data: { object: t.paidSession('cs_test_ok', 'p@example.com') } });
+  const sig = t.stripe.webhooks.generateTestHeaderString({ payload, secret: WHSEC });
+  assert.equal((await t.app.request('/webhooks/stripe', { method: 'POST', headers: { 'stripe-signature': sig, 'content-type': 'application/json' }, body: payload })).status, 200);
+  assert.ok(await t.db.get("SELECT 1 FROM licenses WHERE stripe_session_id = 'cs_test_ok'"));
+  // A secret key pasted with a line break still works; a publishable key is flagged.
+  assert.equal(loadConfig({ STRIPE_SECRET_KEY: ' sk_live_x\n' }).stripeSecretKey, 'sk_live_x');
+  assert.match(loadConfig({ STRIPE_SECRET_KEY: 'pk_live_x' }).warnings.join(' '), /not a secret key/);
+});
+
 test('account pages: change password, foreign checkouts ignored, code typed at sign-in after a purchase, expired reset link', async () => {
   const t = await setup();
   // Change password while signed in: wrong current password refused, then the new one works.
