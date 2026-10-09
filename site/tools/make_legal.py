@@ -67,7 +67,7 @@ page('terms.html','Terms of Sale',f'''
 <h2>2. What you buy</h2>
 <p>Rago Optimizer is a Windows 10 and 11 app that changes Windows, network and game settings. It comes in two plans:</p>
 <ul>
-<li><strong>Free:</strong> the app with a limited set of tweaks, no account and no payment.</li>
+<li><strong>Free:</strong> the app with a limited set of tweaks, with no payment. You don't need an account to use it, only to leave a review.</li>
 <li><strong>Premium:</strong> a monthly or yearly subscription that unlocks every tweak, presets and updates while the subscription is active.</li>
 </ul>
 <p>Results depend on your hardware, your connection and the game server. We don't promise a specific ping, frame rate or hit registration result. Distance to the server can't be changed by any software.</p>
@@ -94,13 +94,17 @@ page('terms.html','Terms of Sale',f'''
 <h2>7. Affiliate program</h2>
 <p>Affiliates get a personal code. New customers who use an affiliate code get 5% off their first Premium payment. A referral counts as soon as the buyer has activated the app on their PC, and stops counting if the purchase is refunded or disputed. Your own purchases and activations on your own PC don't count. Each affiliate can refer up to 3 buyers. Once those 3 referrals count, the affiliate gets 6 months of Premium for one PC. We can cancel a reward obtained by fraud.</p>
 
-<h2>8. Liability</h2>
+<h2>8. Reviews</h2>
+<p>Once signed in to the app with a Rago account, free or Premium, you can rate Rago Optimizer from 1 to 5 stars and write a comment. Your review is shown on our site with your public name and your profile photo, if you added one. You can change or delete it anytime, from the app or from your account page.</p>
+<p>Each account can leave one review. We don't check whether its author bought Premium, and we don't pay for reviews or reward them. The site shows them from the most recently updated, whatever their rating. We may hide a review that is spam, abusive, off topic or that reveals someone's personal data. We don't hide a review because it is negative.</p>
+
+<h2>9. Liability</h2>
 <p>The app is provided as is. To the extent the law allows, we aren't liable for indirect damage such as lost data, lost games or lost time, and our total liability is limited to the amount you paid us in the last 12 months. Nothing in these terms limits your statutory rights as a consumer.</p>
 
-<h2>9. Suspension</h2>
+<h2>10. Suspension</h2>
 <p>We may suspend a license in case of fraud, a chargeback, a refund, or sharing of the license. A full refund or a payment dispute turns Premium off automatically.</p>
 
-<h2>10. Changes and law</h2>
+<h2>11. Changes and law</h2>
 <p>We may update these terms. The version accepted at checkout applies to that purchase. These terms are governed by the law of {F("Country")}. Consumers can also use the courts and mediation services of their own country.</p>
 ''')
 
@@ -136,22 +140,24 @@ page('privacy.html','Privacy Policy',f'''
 <h2>What we collect, and why</h2>
 <div class="tbl"><table>
 <tr><th>Data</th><th>Why</th></tr>
-<tr><td>Email and password (stored hashed, never readable)</td><td>Your account and sign-in</td></tr>
+<tr><td>Email, password and sign-in sessions (stored hashed, never readable)</td><td>Your account and sign-in, on the site and in the app</td></tr>
 <tr><td>Payment references from Stripe: customer and payment IDs, amount, currency, subscription status</td><td>Selling and renewing Premium, refunds, accounting</td></tr>
 <tr><td>Hashed identifiers of your PC (from the Windows machine ID, motherboard UUID and serial number), PC name, Windows version, app version, activation dates and last IP address</td><td>Linking your license to one PC and preventing license sharing</td></tr>
 <tr><td>Affiliate code, which accounts used it, and hashed identifiers of the buyer's first PC</td><td>Running the affiliate program and blocking self-referrals</td></tr>
+<tr><td>Your public name, profile photo (resized to 256 × 256 pixels, with its metadata removed) and your review: rating, comment, app version and dates</td><td>Showing your review on our site and your profile in the app. Your public name, photo, rating and comment are public.</td></tr>
 <tr><td>A log of license events (purchase, activation, refund, blocked activation with IP address)</td><td>Security and support</td></tr>
 <tr><td>IP address, kept briefly in memory</td><td>Limiting sign-in and download attempts</td></tr>
 </table></div>
-<p>The free mode of the app sends nothing to us. The app contacts our server only when you sign in, activate Premium or refresh your license. Your card number goes to Stripe, never to us.</p>
+<p>Used without an account, the app sends nothing to us. It contacts our server only when you sign in, activate Premium, refresh your license, or save your review, public name or photo. Your card number goes to Stripe, never to us.</p>
 
 <h2>Legal basis</h2>
-<p>We use your data to perform our contract with you (account, license, payment), for our legitimate interest in preventing fraud and license sharing, and to meet legal obligations such as keeping accounting records.</p>
+<p>We use your data to perform our contract with you (account, license, payment), for our legitimate interest in preventing fraud and license sharing, and to meet legal obligations such as keeping accounting records. Your review, public name and photo are published because you choose to post them: you can delete them anytime.</p>
 
 <h2>Cookies and local storage</h2>
 <ul>
 <li><strong>rg_session</strong>: keeps you signed in to your account. Necessary.</li>
-<li><strong>rg_claim</strong>: links a purchase to the account you create right after it, for 7 days. Necessary.</li>
+<li><strong>rg_claim</strong>: links a purchase to the account you create right after it, for 2 days. Necessary.</li>
+<li><strong>rago_preview</strong>: lets our team open the site before its launch. Only set for team members. Necessary.</li>
 <li><strong>rg_ref</strong> (cookie on the account server) and <strong>rago_ref</strong> (browser storage on this site): remember an affiliate code from a share link for 30 days.</li>
 <li><strong>rago_promo_seen</strong> and <strong>rago_promo_claimed</strong> (browser storage on this site): remember that the welcome offer was shown, so it isn't shown again for 30 days, and the discount code you claimed, so it is applied at checkout. Clearing your browser data removes them.</li>
 </ul>
@@ -160,10 +166,11 @@ page('privacy.html','Privacy Policy',f'''
 <h2>Who processes it for us</h2>
 <ul>
 <li><strong>Stripe</strong>: payments and subscriptions</li>
-<li><strong>Supabase</strong>: database and download storage</li>
+<li><strong>Supabase</strong>: database, download storage and profile photos</li>
 <li><strong>Railway</strong>: account and license server</li>
 <li><strong>Netlify</strong>: website hosting</li>
 <li><strong>Resend</strong>: account emails (purchase confirmation, password reset)</li>
+<li><strong>OVHcloud</strong>: our domain name and the support mailbox</li>
 </ul>
 <p>Some of these providers are in the United States. Transfers rely on the European Commission's standard contractual clauses or an equivalent safeguard.</p>
 
@@ -171,11 +178,12 @@ page('privacy.html','Privacy Policy',f'''
 <ul>
 <li>Account and license data: while your account exists, then deleted within {F("30")} days of your deletion request.</li>
 <li>Payment and invoicing records: as long as accounting law requires, {F("10")} years.</li>
+<li>Your review and profile photo: until you delete them or your account. A replaced photo is deleted right away.</li>
 <li>Security log: {F("12")} months.</li>
 </ul>
 
 <h2>Your rights</h2>
-<p>You can ask to access, correct, export or delete your data, or object to its use, by writing to {MAIL} from the email of your account. You can also complain to your data protection authority{F("e.g. the CNIL in France")}.</p>
+<p>You can delete your review and profile photo yourself, from your account page. You can ask to access, correct, export or delete your data, or object to its use, by writing to {MAIL} from the email of your account. You can also complain to your data protection authority{F("e.g. the CNIL in France")}.</p>
 
 <h2>Changes</h2>
 <p>If we change this policy in a way that matters, we'll update the date above and tell account holders by email.</p>
