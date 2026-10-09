@@ -1,13 +1,16 @@
 // Compte Rago dans l'app (nom public, photo, avis) et invitation à laisser un avis.
 // L'invitation vient après 5 minutes d'utilisation réelle, cumulées d'un lancement à l'autre : l'app au premier plan
 // (pas pendant une partie), sans compter un PC laissé allumé sans clic ni touche depuis 10 minutes.
-// Fermée : elle revient au plus tôt 7 jours et 30 minutes d'utilisation plus tard ; fermée une deuxième fois,
-// ou avis donné : plus jamais. Supprimer son avis ne la fait pas revenir.
+// Fermée : elle revient au plus tôt 7 jours et 30 minutes d'utilisation plus tard ; fermée une deuxième fois : plus jamais.
+// Pas d'invitation tant que le compte a un avis (le serveur le dit à chaque lancement) ; avis supprimé : elle peut revenir
+// après 5 nouvelles minutes d'utilisation.
 import { createContext, useCallback, useContext, useEffect, useRef, useState, type ReactNode } from "react";
 import { accountApi, asAccountError, type AccountState } from "./accountApi";
 import { useStore } from "./store";
 
-export const PROMPT_KEY = "rago.reviewPrompt";
+export const PROMPT_KEY = "rago.reviewPrompt2";
+/** état des versions de test : un avis donné puis supprimé y bloquait l'invitation pour toujours, il est oublié */
+const OLD_PROMPT_KEY = "rago.reviewPrompt";
 /** utilisation réelle avant la première invitation */
 export const FIRST_AFTER_MS = 5 * 60_000;
 /** après une fermeture : au plus tôt 7 jours et 30 minutes d'utilisation plus tard */
@@ -26,14 +29,17 @@ export interface PromptMemo {
   nextAtMs: number;
   snoozeUntil: number;
   dismissals: number;
-  /** avis donné ou invitation fermée deux fois */
+  /** invitation fermée deux fois */
   done: boolean;
+  /** le compte a un avis (dernière réponse du serveur, gardée pour un lancement sans réseau ou sans compte connecté) */
+  reviewed: boolean;
 }
 
-const FRESH: PromptMemo = { usedMs: 0, nextAtMs: FIRST_AFTER_MS, snoozeUntil: 0, dismissals: 0, done: false };
+const FRESH: PromptMemo = { usedMs: 0, nextAtMs: FIRST_AFTER_MS, snoozeUntil: 0, dismissals: 0, done: false, reviewed: false };
 
 function loadMemo(): PromptMemo {
   try {
+    localStorage.removeItem(OLD_PROMPT_KEY);
     return { ...FRESH, ...JSON.parse(localStorage.getItem(PROMPT_KEY) ?? "{}") };
   } catch {
     return FRESH;
@@ -57,7 +63,7 @@ const storageWorks = (() => {
 })();
 
 /** L'invitation est due : assez d'utilisation, et plus de report en cours. */
-const isDue = (m: PromptMemo) => storageWorks && !m.done && m.usedMs >= m.nextAtMs && Date.now() >= m.snoozeUntil;
+const isDue = (m: PromptMemo) => storageWorks && !m.done && !m.reviewed && m.usedMs >= m.nextAtMs && Date.now() >= m.snoozeUntil;
 
 /** "loading" : première réponse attendue ; "offline" : serveur injoignable (on garde l'état d'avant). */
 export type AccountStatus = "loading" | "ready" | "offline";
@@ -101,10 +107,15 @@ function useAccountValue() {
     return () => clearInterval(id);
   }, [license, status, refresh]);
 
-  // un avis existe déjà (donné sur ce PC ou ailleurs) : plus d'invitation
+  // avis donné (sur ce PC ou ailleurs) : pas d'invitation ; avis supprimé : elle revient après 5 nouvelles minutes d'utilisation.
+  // Pas connecté (compte gratuit, serveur injoignable) : on ne sait pas, la dernière réponse reste.
   useEffect(() => {
-    if (state.review && !memoRef.current.done) setMemo((m) => ({ ...m, done: true }));
-  }, [state.review, setMemo]);
+    if (!state.via) return;
+    const has = !!state.review;
+    setMemo((m) =>
+      m.reviewed === has ? m : has ? { ...m, reviewed: true } : { ...m, reviewed: false, nextAtMs: Math.max(m.nextAtMs, m.usedMs + FIRST_AFTER_MS) },
+    );
+  }, [state.via, state.review, setMemo]);
 
   // horloge d'utilisation réelle
   useEffect(() => {
@@ -181,12 +192,8 @@ function useAccountValue() {
 
   const signIn = useCallback((email: string, password: string) => act(() => accountApi.login(email.trim(), password)), [act]);
   const saveReview = useCallback(
-    async (rating: number, comment: string, name: string | null) => {
-      const err = await act(() => accountApi.saveReview(rating, comment, name));
-      if (!err) setMemo((m) => ({ ...m, done: true }));
-      return err;
-    },
-    [act, setMemo],
+    (rating: number, comment: string, name: string | null) => act(() => accountApi.saveReview(rating, comment, name)),
+    [act],
   );
   const deleteReview = useCallback(() => act(() => accountApi.deleteReview()), [act]);
   const setName = useCallback((name: string) => act(() => accountApi.setName(name)), [act]);
