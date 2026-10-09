@@ -11,9 +11,10 @@ const COOKIE_MAX_AGE = 30 * 86400;
 const MIN_KEY_LENGTH = 16; // a shorter PREVIEW_KEY is ignored: nobody gets past the countdown
 const DOMAIN = "rago-optimizer.com";
 const OLD_HOST = "rago-optimiser.netlify.app";
-// The countdown's own files (logo, icons, fonts). Everything else waits for the launch.
+// The countdown's own files (logo, icons, fonts, share image). Everything else waits for the launch.
+// The countdown answers "noindex": search engines index the site only once it's open (nothing to do at the launch).
 const PUBLIC_FILES = new Set([
-  "/favicon.svg", "/favicon.ico", "/favicon-32.png", "/apple-touch-icon.png", "/rago-wordmark.svg", "/robots.txt",
+  "/favicon.svg", "/favicon.ico", "/favicon-32.png", "/apple-touch-icon.png", "/rago-wordmark.svg", "/robots.txt", "/og-launch.png",
   "/fonts/Geist-Variable.woff2", "/fonts/GeistMono-Variable.woff2",
 ]);
 const SECURITY_HEADERS = {
@@ -96,7 +97,7 @@ export default async function launchGate(request, context) {
     return context.next();
   }
 
-  return new Response(request.method === "HEAD" ? null : countdownPage({ launchAt, now }), {
+  return new Response(request.method === "HEAD" ? null : countdownPage({ launchAt, now, origin: url.origin }), {
     status: 200,
     headers: {
       "Content-Type": "text/html; charset=utf-8",

@@ -2,13 +2,14 @@ import os
 OUT=os.path.join(os.path.dirname(os.path.abspath(__file__)),'..')
 # Builds site/terms.html, privacy.html, refunds.html (and 404.html, which shares their header).
 MAIL='<a href="mailto:support@rago-optimizer.com">support@rago-optimizer.com</a>'; UPD="October 9, 2026"
+SITE='https://rago-optimizer.com'  # same as build.py
 HEAD='''<!doctype html>
 <html lang="en">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta name="theme-color" content="#0A0A0B">
-<meta name="robots" content="noindex">
+{meta}
 <title>{title} · Rago Optimizer</title>
 <link rel="icon" href="favicon.svg" type="image/svg+xml">
 <link rel="icon" href="favicon.ico" sizes="any">
@@ -53,10 +54,12 @@ FOOT='''<div class="foot"><a href="terms.html">Terms of Sale</a><a href="privacy
 </body>
 </html>
 '''
-def page(name,title,body):
-    open(os.path.join(OUT,name),'w').write(HEAD.format(title=title,upd=UPD)+body+FOOT)
+# The legal pages are public and indexable (linked from every footer); the 404 page isn't.
+def page(name,title,desc,body):
+    meta=f'<meta name="description" content="{desc}">\n<link rel="canonical" href="{SITE}/{name}">'
+    open(os.path.join(OUT,name),'w').write(HEAD.format(title=title,upd=UPD,meta=meta)+body+FOOT)
 
-page('terms.html','Terms of Sale',f'''
+page('terms.html','Terms of Sale','Terms of sale for Rago Optimizer: the Free and Premium plans, prices, your one-PC license, renewal and cancellation.',f'''
 <h2>1. Who we are</h2>
 <p>Rago Optimizer is an independent project, run and sold from France by the Rago Optimizer team. Contact: {MAIL}, or our Discord server.</p>
 <p>This site is hosted by Netlify, Inc., 101 2nd Street, San Francisco, CA 94105, USA. Account pages and the license server are hosted by Railway Corporation, San Francisco, CA, USA.</p>
@@ -105,7 +108,7 @@ page('terms.html','Terms of Sale',f'''
 <p>We may update these terms. The version accepted at checkout applies to that purchase. These terms are governed by French law, which doesn't take away the protection the mandatory consumer law of your country gives you. If a dispute isn't solved with our support, you can also use the mediation services and the courts of your own country.</p>
 ''')
 
-page('refunds.html','Refunds and Cancellation',f'''
+page('refunds.html','Refunds and Cancellation','How to cancel a Rago Optimizer Premium subscription, when you can get a refund and what it does to your license.',f'''
 <h2>Cancel anytime</h2>
 <p>Cancel from your account page (Cancel or manage subscription). You keep Premium until the end of the period you already paid for, then the app goes back to free mode. Nothing else is charged.</p>
 
@@ -130,7 +133,7 @@ page('refunds.html','Refunds and Cancellation',f'''
 <p>{MAIL}, or our Discord server. Include the email of your Rago account.</p>
 ''')
 
-page('privacy.html','Privacy Policy',f'''
+page('privacy.html','Privacy Policy','What Rago Optimizer and its account server collect, why, who processes it, how long it is kept and how to delete it.',f'''
 <h2>Who is responsible</h2>
 <p>The Rago Optimizer team, in France, is responsible for your data. Contact: {MAIL}.</p>
 
@@ -188,7 +191,7 @@ page('privacy.html','Privacy Policy',f'''
 print('ok')
 
 # 404: Netlify serves it for any unknown path, so every link is absolute
-nf=HEAD.format(title='Page not found',upd='').replace('href="','href="/').replace('src="','src="/').replace('url("fonts/','url("/fonts/').replace('href="/https:','href="https:')
+nf=HEAD.format(title='Page not found',upd='',meta='<meta name="robots" content="noindex">').replace('href="','href="/').replace('src="','src="/').replace('url("fonts/','url("/fonts/').replace('href="/https:','href="https:')
 nf=nf.split('<h1>')[0]+'<h1>This page doesn\'t exist.</h1>\n<p class="upd">Error 404</p>\n<p>The link may be old or mistyped.</p>\n<p style="margin-top:28px;display:flex;gap:10px;flex-wrap:wrap"><a class="back" href="/" style="color:#0A0A0B;background:#FF3B30;box-shadow:none;font-weight:600;text-decoration:none;padding:10px 18px;border-radius:999px">Back to Rago Optimizer</a><a class="back" href="/#pricing" style="text-decoration:none;padding:10px 18px;border-radius:999px">See pricing</a></p>\n'+FOOT.replace('href="','href="/').replace('href="/./"','href="/"')
 nf=nf.replace('href="/./"','href="/"')
 open(os.path.join(OUT,'404.html'),'w').write(nf)

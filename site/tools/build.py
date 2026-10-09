@@ -44,37 +44,54 @@ try:
     s = s.replace('<div class="faq rv" id="faqs"></div>', '<div class="faq rv" id="faqs"></div>\n    <noscript><div class="faq">' + static + '</div></noscript>', 1)
 except (OSError, subprocess.CalledProcessError) as e:
     print('warning: static FAQ skipped (node not available):', e)
-LD = json.dumps({"@context": "https://schema.org", "@type": "SoftwareApplication", "name": "Rago Optimizer",
-  "operatingSystem": "Windows 10, Windows 11", "applicationCategory": "UtilitiesApplication", "url": SITE + "/",
-  "image": SITE + "/og-image.png", "description": "The Minecraft PvP optimizer for Windows: steadier ping, smoother frames, less input lag.",
-  "offers": [{"@type": "Offer", "name": "Free", "price": "0", "priceCurrency": ISO},
-             {"@type": "Offer", "name": "Premium monthly", "price": f"{PM:.2f}", "priceCurrency": ISO},
-             {"@type": "Offer", "name": "Premium yearly", "price": f"{PY:.2f}", "priceCurrency": ISO}]})
+# Share image: its address changes with its content, so Discord, WhatsApp and social networks fetch the new one
+import hashlib
+OG = f"{SITE}/og-image.png?v={hashlib.sha256(open(os.path.join(ROOT, 'og-image.png'), 'rb').read()).hexdigest()[:10]}"
+# Structured data, only for what the page shows: the site's name (for Google's site name), who runs it, the app and its plans
+ORG = SITE + "/#organization"
+LD = json.dumps({"@context": "https://schema.org", "@graph": [
+  {"@type": "WebSite", "@id": SITE + "/#website", "url": SITE + "/", "name": "Rago Optimizer", "alternateName": "Rago",
+   "inLanguage": "en", "publisher": {"@id": ORG}},
+  {"@type": "Organization", "@id": ORG, "name": "Rago Optimizer", "url": SITE + "/", "logo": SITE + "/apple-touch-icon.png",
+   "email": "support@rago-optimizer.com"},
+  {"@type": "SoftwareApplication", "name": "Rago Optimizer", "operatingSystem": "Windows 10, Windows 11",
+   "applicationCategory": "UtilitiesApplication", "url": SITE + "/", "image": OG, "publisher": {"@id": ORG},
+   "description": "The Minecraft PvP optimizer for Windows: steadier ping, smoother frames, less input lag.",
+   "offers": [{"@type": "Offer", "name": "Free", "price": "0", "priceCurrency": ISO},
+              {"@type": "Offer", "name": "Premium monthly", "price": f"{PM:.2f}", "priceCurrency": ISO},
+              {"@type": "Offer", "name": "Premium yearly", "price": f"{PY:.2f}", "priceCurrency": ISO}]}]})
 
 i = s.index('</style>', s.index('<style>\n/* Layout')) + len('</style>')
-head = '''<!doctype html>
+head = ('''<!doctype html>
 <html lang="en">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="theme-color" content="#0A0A0B">
 <link rel="canonical" href="{SITE}/">
-<meta property="og:title" content="Rago Optimizer: Minecraft PvP optimizer for Windows">
-<meta property="og:description" content="Every millisecond counts. The Minecraft PvP optimizer for Windows: {TOTAL}, free to start, with a restore point offered before advanced tweaks.">
+<meta property="og:site_name" content="Rago Optimizer">
 <meta property="og:type" content="website">
+<meta property="og:locale" content="en_US">
 <meta property="og:url" content="{SITE}/">
-<meta property="og:image" content="{SITE}/og-image.png">
+<meta property="og:title" content="{TITLE}">
+<meta property="og:description" content="{OGDESC}">
+<meta property="og:image" content="{OG}">
+<meta property="og:image:type" content="image/png">
 <meta property="og:image:width" content="1200">
 <meta property="og:image:height" content="630">
-<meta property="og:image:alt" content="Rago Optimizer, the Minecraft PvP optimizer for Windows">
+<meta property="og:image:alt" content="{ALT}">
 <meta name="twitter:card" content="summary_large_image">
-<meta name="twitter:image" content="{SITE}/og-image.png">
-<meta name="twitter:image:alt" content="Rago Optimizer, the Minecraft PvP optimizer for Windows">
+<meta name="twitter:title" content="{TITLE}">
+<meta name="twitter:description" content="{OGDESC}">
+<meta name="twitter:image" content="{OG}">
+<meta name="twitter:image:alt" content="{ALT}">
 <link rel="icon" href="favicon.svg" type="image/svg+xml">
 <link rel="icon" href="favicon.ico" sizes="any">
 <link rel="apple-touch-icon" href="apple-touch-icon.png">
 <script type="application/ld+json">{LD}</script>
-'''.replace('{SITE}', SITE).replace('{LD}', LD).replace('{TOTAL}', re.search(r'<h2>((?:Nearly )?\d+ tweaks)\. One clear app\.</h2>', s).group(1).lower())
+'''.replace('{OGDESC}', 'Every millisecond counts. The Minecraft PvP optimizer for Windows: {TOTAL}, free to start, with a restore point offered before advanced tweaks.')
+        .replace('{TITLE}', re.search(r'<title>([^<]+)</title>', s).group(1)).replace('{ALT}', 'Rago Optimizer, the Windows optimizer for Minecraft PvP. Every millisecond counts.')
+        .replace('{SITE}', SITE).replace('{OG}', OG).replace('{LD}', LD).replace('{TOTAL}', re.search(r'<h2>((?:Nearly )?\d+ tweaks)\. One clear app\.</h2>', s).group(1).lower()))
 OUT = os.path.join(ROOT, 'index.html')
 page = head + s[:i] + '\n</head>\n<body>\n' + s[i:].lstrip('\n') + '\n</body>\n</html>\n'
 open(OUT, 'w').write(page)

@@ -1,5 +1,5 @@
 <title>Rago Optimizer: Minecraft PvP optimizer for Windows</title>
-<meta name="description" content="Every millisecond counts. Rago tunes Windows, your network and Minecraft for steadier ping, smoother frames and less input lag. Turn a tweak off and Rago puts your settings back. A restore point is offered before advanced tweaks.">
+<meta name="description" content="Rago Optimizer tunes Windows, your network and Minecraft for steadier ping, smoother frames and less input lag. Nearly 200 tweaks, free to start.">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600;700&family=Geist+Mono:wght@400;500&display=swap">
@@ -75,7 +75,9 @@ section[id],main[id]{scroll-margin-top:92px}
 .orb.b{width:30vw;height:30vw;max-width:520px;max-height:520px;left:28vw;bottom:-16vw;background:radial-gradient(circle,rgba(255,59,48,.28),transparent 65%);animation:drift 22s ease-in-out infinite alternate-reverse}
 @keyframes drift{to{transform:translate(-6vw,5vw) scale(1.15)}}
 .hero .band{width:100%;display:grid;grid-template-columns:minmax(0,.85fr) minmax(0,1.15fr);gap:clamp(40px,6vw,110px);align-items:center}
-.hero h1{font-size:clamp(42px,5.2vw,84px);letter-spacing:-.05em;margin-block:22px 20px}
+/* The h1 holds the eyebrow (what Rago is, for search engines) and the tagline; it looks like the two separate lines it replaced */
+.hero h1{font:inherit;letter-spacing:normal}
+.hero .h1-t{display:block;font-weight:600;font-size:clamp(42px,5.2vw,84px);line-height:1.05;letter-spacing:-.05em;margin-block:22px 20px;text-wrap:balance}
 .hero h1 .w{display:inline-block;filter:blur(12px);opacity:0;transform:translateY(18px);animation:wordIn 1s var(--out) forwards}
 .hero h1 .red{color:var(--red)}
 @keyframes wordIn{to{filter:none;opacity:1;transform:none}}
@@ -630,8 +632,7 @@ footer.foot p{max-width:80ch}
     <div class="orb a" aria-hidden="true"></div><div class="orb b" aria-hidden="true"></div>
     <div class="band">
       <div>
-        <span class="eyebrow fade">Minecraft PvP optimizer for Windows</span>
-        <h1 id="h1">Every millisecond <span class="red">counts.</span></h1>
+        <h1><span class="eyebrow fade">Minecraft PvP optimizer for Windows</span> <span class="h1-t" id="h1">Every millisecond <span class="red">counts.</span></span></h1>
         <p class="lede fade d1">Steadier ping, smoother frames, less input lag. Rago tunes Windows, your network and Minecraft, and puts your settings back when you turn a tweak off.</p>
         <div class="cta-row fade d2">
           <a class="btn btn-red" href="#pricing">Get Premium<svg><use href="#i-arrow"/></svg></a>
