@@ -109,7 +109,7 @@ export function sectionTweaks(s: Section): Tweak[] {
   return s.tweaks.map((t) => ("ref" in t ? tweaks.get(t.ref)! : t)).filter(Boolean);
 }
 
-/** Clé d'un réglage sans ses doublons : les jumeaux (même script dans deux modules) partagent `twin`. */
+/** Clé d'un réglage sans ses doublons : les jumeaux (même script sous deux noms ou dans deux modules) partagent `twin`. */
 export const distinctKey = (id: string) => tweaks.get(id)?.twin ?? id;
 
 /** Nombre de réglages annoncé (app et site) : chaque jumeau compte une fois. */
