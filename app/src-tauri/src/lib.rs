@@ -1,3 +1,4 @@
+mod account;
 mod backup;
 mod catalog;
 mod history;
@@ -13,6 +14,7 @@ use std::path::PathBuf;
 use std::sync::{Arc, Mutex};
 use tauri::{AppHandle, Manager, State};
 
+use account::Account;
 use backup::Ledger;
 use history::History;
 use license::License;
@@ -24,6 +26,7 @@ struct AppState {
     history: Arc<History>,
     ledger: Arc<Mutex<Ledger>>,
     license: Arc<License>,
+    account: Arc<Account>,
     system: Arc<Mutex<Option<SystemInfo>>>,
     resource_dir: PathBuf,
     data_dir: PathBuf,
@@ -217,6 +220,62 @@ fn license_sign_out(state: State<'_, AppState>) {
     state.license.sign_out();
 }
 
+// ---------- compte : nom public, photo, avis ----------
+
+async fn with_account<T: Send + 'static>(
+    state: &AppState,
+    f: impl FnOnce(&Account, &License) -> Result<T, license::ApiError> + Send + 'static,
+) -> Result<T, license::ApiError> {
+    let (acc, lic) = (Arc::clone(&state.account), Arc::clone(&state.license));
+    tauri::async_runtime::spawn_blocking(move || f(&acc, &lic))
+        .await
+        .map_err(|_| license::ApiError::from("server_error"))?
+}
+
+#[tauri::command]
+async fn account_me(state: State<'_, AppState>) -> Result<account::AccountState, license::ApiError> {
+    with_account(&state, |acc, lic| acc.me(lic)).await
+}
+
+#[tauri::command]
+async fn account_login(state: State<'_, AppState>, email: String, password: String) -> Result<account::AccountState, license::ApiError> {
+    with_account(&state, move |acc, _| acc.login(email.trim(), &password)).await
+}
+
+#[tauri::command]
+async fn account_sign_out(state: State<'_, AppState>) -> Result<(), license::ApiError> {
+    with_account(&state, |acc, _| {
+        acc.sign_out();
+        Ok(())
+    })
+    .await
+}
+
+#[tauri::command]
+async fn account_save_review(
+    state: State<'_, AppState>,
+    rating: u8,
+    comment: String,
+    name: Option<String>,
+) -> Result<account::AccountState, license::ApiError> {
+    with_account(&state, move |acc, lic| acc.save_review(lic, rating, &comment, name.as_deref())).await
+}
+
+#[tauri::command]
+async fn account_set_name(state: State<'_, AppState>, name: String) -> Result<account::AccountState, license::ApiError> {
+    with_account(&state, move |acc, lic| acc.set_name(lic, &name)).await
+}
+
+#[tauri::command]
+async fn account_set_photo(state: State<'_, AppState>, data: String) -> Result<account::AccountState, license::ApiError> {
+    with_account(&state, move |acc, lic| acc.set_photo(lic, &data)).await
+}
+
+#[tauri::command]
+async fn account_remove_photo(state: State<'_, AppState>) -> Result<account::AccountState, license::ApiError> {
+    with_account(&state, |acc, lic| acc.remove_photo(lic)).await
+}
+
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
     tauri::Builder::default()
@@ -242,6 +301,7 @@ pub fn run() {
                 history,
                 ledger: Arc::new(Mutex::new(ledger)),
                 license: Arc::new(License::new()),
+                account: Arc::new(Account::new()),
                 system: Arc::new(Mutex::new(None)),
                 resource_dir,
                 data_dir,
@@ -266,6 +326,13 @@ pub fn run() {
             license_activate,
             license_refresh,
             license_sign_out,
+            account_me,
+            account_login,
+            account_sign_out,
+            account_save_review,
+            account_set_name,
+            account_set_photo,
+            account_remove_photo,
         ])
         .run(tauri::generate_context!())
         .expect("erreur au lancement de Rago Optimizer");

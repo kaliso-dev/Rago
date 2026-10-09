@@ -31,6 +31,7 @@ export async function createUser(db, email, password) {
 export async function setPassword(db, userId, password) {
   await db.run('UPDATE users SET password_hash = ? WHERE id = ?', [await hashPassword(password), userId]);
   await db.run('DELETE FROM web_sessions WHERE user_id = ?', [userId]);
+  await db.run('DELETE FROM api_sessions WHERE user_id = ?', [userId]);
   // Reset links sent earlier stop working once the password changed.
   await db.run('UPDATE password_resets SET used_at = ? WHERE user_id = ? AND used_at IS NULL', [Date.now(), userId]);
 }
@@ -51,6 +52,28 @@ export async function userForWebSession(db, token) {
 
 export async function deleteWebSession(db, token) {
   if (token) await db.run('DELETE FROM web_sessions WHERE token_hash = ?', [sha256(token)]);
+}
+
+// The app's account sign-in (reviews, profile photo), for players without a license on this PC.
+// Signed out by a password change, like web sessions.
+export const API_SESSION_TTL = 180 * DAY;
+
+export async function createApiSession(db, userId) {
+  const token = randomToken();
+  const now = Date.now();
+  await db.run('INSERT INTO api_sessions (token_hash, user_id, created_at, expires_at) VALUES (?, ?, ?, ?)',
+    [sha256(token), userId, now, now + API_SESSION_TTL]);
+  return { token, expiresAt: now + API_SESSION_TTL };
+}
+
+export async function userForApiSession(db, token) {
+  if (!token) return null;
+  return db.get(`SELECT u.* FROM api_sessions s JOIN users u ON u.id = s.user_id
+    WHERE s.token_hash = ? AND s.expires_at > ?`, [sha256(String(token)), Date.now()]);
+}
+
+export async function deleteApiSession(db, token) {
+  if (token) await db.run('DELETE FROM api_sessions WHERE token_hash = ?', [sha256(String(token))]);
 }
 
 export async function createPasswordReset(db, userId) {

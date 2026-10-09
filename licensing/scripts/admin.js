@@ -19,10 +19,16 @@
 //   delete-user <email>          GDPR erasure: cancel the subscription, delete the account, PC and
 //                                sessions, anonymize the license kept for accounting
 //   export-keys                  print LICENSE_SIGNING_KEY and SESSION_SECRET to save outside the database
+//   reviews                      the latest reviews, with their author's email and whether the site shows them
+//   hide-review <email>          take that account's review off the site (spam, abuse); show-review puts it back
+//   remove-photo <email>         delete that account's profile photo (inappropriate picture)
+//   set-name <email> <name>      change the public name shown with that account's review
 import { loadConfig } from '../src/config.js';
 import { openDb } from '../src/db.js';
 import * as L from '../src/licensing.js';
 import * as A from '../src/affiliates.js';
+import * as P from '../src/profile.js';
+import * as R from '../src/reviews.js';
 import Stripe from 'stripe';
 
 const cfg = loadConfig({ ...process.env, NODE_ENV: 'development' });
@@ -30,6 +36,12 @@ if (!cfg.databaseUrl) { console.error('Set DATABASE_URL (Supabase connection str
 const db = await openDb(cfg.databaseUrl);
 const [cmd, email, ...rest] = process.argv.slice(2);
 const fmt = (ms) => (ms ? new Date(ms).toISOString() : '-');
+// Profile photos live in Supabase Storage: without its keys the file would stay there after the account forgets it.
+function photoStore() {
+  const store = P.createAvatarStore(cfg);
+  if (store.kind !== 'supabase') { console.error('Set SUPABASE_URL and SUPABASE_SERVICE_ROLE_KEY too (same as Railway): the photo file is deleted from Supabase Storage.'); process.exit(1); }
+  return store;
+}
 
 async function licenseOf(email) {
   if (!email) { console.error('Give the email.'); process.exit(1); }
@@ -143,6 +155,8 @@ switch (cmd) {
     const user = await L.findUserByEmail(db, target);
     const lics = await db.all('SELECT * FROM licenses WHERE email = ? OR (user_id IS NOT NULL AND user_id = ?)', [target, user?.id ?? '']);
     if (!user && !lics.length) { console.error(`Nothing stored for ${target}`); process.exit(1); }
+    // The profile photo goes first (Storage); the review goes with the account below.
+    if (user?.avatar_key) await P.removeAvatar(db, photoStore(), user.id);
     const stripe = cfg.stripeSecretKey ? new Stripe(cfg.stripeSecretKey) : null;
     for (const l of lics) {
       if (l.stripe_subscription_id && l.status === 'active') {
@@ -161,10 +175,37 @@ switch (cmd) {
       }
       if (user) {
         await t.run('UPDATE audit SET detail = NULL WHERE user_id = ?', [user.id]);
-        await t.run('DELETE FROM users WHERE id = ?', [user.id]); // sessions, resets, affiliate, referrals follow
+        await t.run('DELETE FROM users WHERE id = ?', [user.id]); // sessions, resets, affiliate, referrals, review follow
       }
     });
     console.log(`Deleted ${target}: account ${user ? 'removed' : 'none'}, ${lics.length} license(s) anonymized.`);
+    break;
+  }
+  case 'reviews': {
+    const rows = await db.all(`SELECT r.*, u.email, u.display_name FROM reviews r JOIN users u ON u.id = r.user_id ORDER BY r.updated_at DESC LIMIT ?`, [Number(email) || 30]);
+    if (!rows.length) console.log('No review yet: the site hides its Reviews section.');
+    for (const r of rows) console.log(`${fmt(r.updated_at)}  ${'*'.repeat(r.rating)}${' '.repeat(5 - r.rating)}  ${r.status === 'published' ? 'shown ' : 'HIDDEN'}  ${r.display_name || '(no name, not shown)'} <${r.email}>\n    ${r.comment.replace(/\n/g, '\n    ')}`);
+    break;
+  }
+  case 'hide-review':
+  case 'show-review': {
+    const user = await L.findUserByEmail(db, email || '');
+    if (!user || !(await R.setReviewStatus(db, user.id, cmd === 'hide-review' ? 'hidden' : 'published'))) { console.error(`No review from ${email}.`); process.exit(1); }
+    console.log(cmd === 'hide-review' ? 'Review hidden from the site (within a minute). The player still sees it in the app, marked as hidden.' : 'Review shown on the site again.');
+    break;
+  }
+  case 'remove-photo': {
+    const user = await L.findUserByEmail(db, email || '');
+    if (!user) { console.error(`No account for ${email}.`); process.exit(1); }
+    await P.removeAvatar(db, photoStore(), user.id);
+    console.log('Photo removed: the first letter of their name shows instead.');
+    break;
+  }
+  case 'set-name': {
+    const user = await L.findUserByEmail(db, email || '');
+    if (!user) { console.error(`No account for ${email}.`); process.exit(1); }
+    try { await P.setName(db, user.id, rest.join(' ')); } catch (err) { console.error(err.message); process.exit(1); }
+    console.log('Public name changed.');
     break;
   }
   case 'export-keys': {
@@ -179,6 +220,6 @@ switch (cmd) {
     break;
   }
   default:
-    console.log('Commands: show, attach, claim-link, reset-link, reset-device, revoke, restore, grant, affiliate, create-promo, create-user, delete-user, export-keys (see scripts/admin.js)');
+    console.log('Commands: show, attach, claim-link, reset-link, reset-device, revoke, restore, grant, affiliate, create-promo, create-user, delete-user, export-keys, reviews, hide-review, show-review, remove-photo, set-name (see scripts/admin.js)');
 }
 await db.close();

@@ -17,7 +17,7 @@ use crate::shell;
 
 /// En release, fixés à la compilation : `RAGO_API_BASE=https://…/api/v1 RAGO_LICENSE_PUBKEY="<PEM>"`.
 /// En debug, le serveur local et la clé de test du contrat servent par défaut.
-const API_BASE: Option<&str> = match option_env!("RAGO_API_BASE") {
+pub(crate) const API_BASE: Option<&str> = match option_env!("RAGO_API_BASE") {
     Some(v) => Some(v),
     None if cfg!(debug_assertions) => Some("http://localhost:8787/api/v1"),
     None => None,
@@ -208,7 +208,7 @@ pub fn verify(token: &str, key: &VerifyingKey) -> Result<Claims, &'static str> {
 // ------------------------------------------------------------------ stockage
 
 /// Le jeton est chiffré avec DPAPI (lié à la session Windows) dans %LOCALAPPDATA%\Rago.
-mod vault {
+pub(crate) mod vault {
     #[cfg(windows)]
     fn crypt(data: &[u8], protect: bool) -> Option<Vec<u8>> {
         use windows_sys::Win32::Foundation::{LocalFree, HLOCAL};
@@ -478,6 +478,14 @@ impl License {
     pub fn sign_out(&self) {
         self.clear();
         *self.access.lock().unwrap() = None;
+    }
+
+    /// Jeton de licence de ce PC tant qu'il est valable : il ouvre aussi l'API du compte (avis, photo).
+    pub(crate) fn bearer(&self) -> Option<String> {
+        if self.status().state != "active" {
+            return None;
+        }
+        self.token()
     }
 }
 

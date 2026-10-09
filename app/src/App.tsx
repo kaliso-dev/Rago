@@ -3,6 +3,8 @@ import { useEffect, useRef } from "react";
 import { ApplyBar } from "./components/ApplyBar";
 import { ConfirmDialog } from "./components/ConfirmDialog";
 import { LicenseNotice } from "./components/LicenseNotice";
+import { ReviewDialog } from "./components/ReviewDialog";
+import { ReviewPrompt } from "./components/ReviewPrompt";
 import { RunOverlay } from "./components/RunOverlay";
 import { SearchPalette } from "./components/SearchPalette";
 import { Upsell } from "./components/Upsell";
@@ -59,6 +61,8 @@ export function App() {
         <ConfirmDialog />
         <SearchPalette />
         <Upsell />
+        <ReviewPrompt />
+        <ReviewDialog />
       </div>
     </MotionConfig>
   );

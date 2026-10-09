@@ -6,6 +6,7 @@ import { totalTweaks } from "../lib/catalog";
 import { FREE, useStore } from "../lib/store";
 import { ACCOUNT_URL, SITE_URL, SUPPORT_URL } from "../components/LicenseGate";
 import { Modal } from "../components/Modal";
+import { ProfileCard } from "../components/ProfileCard";
 import { Button, Card, Segmented } from "../components/ui";
 import { Wordmark } from "../components/Logo";
 
@@ -93,6 +94,7 @@ export function Settings() {
             </>
           )}
         </Card>
+        <ProfileCard />
         <Card>
           <div className="setting">
             <span>{t("settings.lang")}</span>

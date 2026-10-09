@@ -45,3 +45,18 @@ jobs:
         run: npm test
         env:
           TEST_DATABASE_URL: postgres://postgres:postgres@localhost:5432/postgres
+
+  # L'image que Railway construit (licensing/Dockerfile, Alpine) : la bibliothèque d'images des photos de profil
+  # (sharp, binaire natif) doit s'y charger et produire un WebP.
+  image:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Construit l'image Railway
+        run: docker build -t rago-licensing .
+      - name: Photo de profil dans l'image
+        run: >-
+          docker run --rm rago-licensing node -e "import('sharp').then(({ default: sharp }) =>
+          sharp({ create: { width: 600, height: 400, channels: 3, background: '#c33' } }).jpeg().toBuffer()
+          .then((jpg) => import('./src/profile.js').then((P) => P.processAvatar(jpg))).then((webp) => sharp(webp).metadata())
+          .then((m) => { if (m.format !== 'webp' || m.width !== 256) process.exit(1); console.log('avatar ok', m.format, m.width + 'x' + m.height); }))"

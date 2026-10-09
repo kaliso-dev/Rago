@@ -17,6 +17,8 @@ import * as A from './affiliates.js';
 import { createInstaller } from './installer.js';
 import * as L from './licensing.js';
 import * as V from './views.js';
+import * as P from './profile.js';
+import * as R from './reviews.js';
 import { audit } from './db.js';
 
 const DAY = 86400000;
@@ -32,6 +34,15 @@ const API_ERRORS = {
   revoked: [403, 'This license is no longer active. Contact support on Discord if you think that\'s a mistake.'],
   subscription_ended: [403, 'Your Rago Optimizer Premium subscription ended. Renew it on the website, then sign in again.'],
   rate_limited: [429, 'Too many attempts. Wait a few minutes and try again.'],
+  // Reviews and profile (2026-10-09)
+  name_required: [400, 'Add the public name shown with your review.'],
+  invalid_name: [400, "Use 2 to 32 letters, numbers, spaces and _ . ' - for your public name. No email or link."],
+  invalid_rating: [400, 'Pick a rating from 1 to 5 stars.'],
+  empty_comment: [400, 'Write a few words about Rago Optimizer.'],
+  comment_too_long: [400, `Keep your review under ${R.COMMENT_MAX} characters.`],
+  invalid_image: [400, "This file isn't a picture we can use. Upload a JPG, PNG, WebP or GIF."],
+  image_too_large: [413, 'This picture is over 5 MB. Choose a smaller one.'],
+  storage_unavailable: [503, "Your photo couldn't be saved right now. Try again in a moment."],
 };
 
 function rateLimiter() {
@@ -54,10 +65,11 @@ function rateLimiter() {
 /**
  * @param deps { cfg, db, keys, stripe, mailer, log }
  */
-export function createApp({ cfg, db, keys, stripe, mailer, log = console, fetchImpl = fetch }) {
+export function createApp({ cfg, db, keys, stripe, mailer, log = console, fetchImpl = fetch, avatars = P.createAvatarStore(cfg, { fetchImpl, log }) }) {
   const app = new Hono();
   const installer = createInstaller(cfg, { fetchImpl, log });
   const allow = rateLimiter();
+  let reviewsCache = null; // { at, body }: the site asks for the reviews on every visit
   const publicDir = relative(process.cwd(), fileURLToPath(new URL('../public', import.meta.url))) || '.';
   const cookieBase = { httpOnly: true, secure: cfg.prod, sameSite: 'Lax', path: '/' };
 
@@ -91,9 +103,9 @@ export function createApp({ cfg, db, keys, stripe, mailer, log = console, fetchI
     referrerPolicy: 'same-origin',
   });
   const siteHeaders = secureHeaders({ crossOriginEmbedderPolicy: false, referrerPolicy: 'strict-origin-when-cross-origin' });
-  // Images shown in emails load from the mail client, not from our pages.
+  // Images shown in emails load from the mail client, not from our pages; profile photos load on the site too.
   const emailAssetHeaders = secureHeaders({ crossOriginResourcePolicy: 'cross-origin' });
-  app.use('*', (c, next) => (c.req.path.startsWith('/assets/email-') ? emailAssetHeaders(c, next)
+  app.use('*', (c, next) => (c.req.path.startsWith('/assets/email-') || c.req.path.startsWith('/avatars/') ? emailAssetHeaders(c, next)
     : OWN.test(c.req.path) || !cfg.siteDir ? strictHeaders(c, next) : siteHeaders(c, next)));
 
   // Same-origin check for browser form posts (the API and the webhook are exempt).
@@ -111,11 +123,16 @@ export function createApp({ cfg, db, keys, stripe, mailer, log = console, fetchI
     await next();
   });
 
-  // Forms and API calls are tiny; Stripe events can be larger.
-  const tooLarge = (c) => c.text('Payload too large', 413);
+  // Forms and API calls are tiny; Stripe events and profile photos can be larger.
+  const tooLarge = (c) => (c.req.path.startsWith('/api/')
+    ? c.json({ error: { code: 'image_too_large', message: API_ERRORS.image_too_large[1] } }, 413)
+    : c.req.path.startsWith('/account/profile/')
+      ? c.redirect('/account/profile?n=toolarge', 303)
+      : c.text('Payload too large', 413));
+  const UPLOADS = new Set(['/account/profile/photo', '/api/v1/account/avatar']);
   app.use('/webhooks/*', bodyLimit({ maxSize: 1024 * 1024, onError: tooLarge }));
-  app.use('*', async (c, next) => (c.req.method === 'POST' && !c.req.path.startsWith('/webhooks/')
-    ? bodyLimit({ maxSize: 64 * 1024, onError: tooLarge })(c, next) : next()));
+  app.use('*', async (c, next) => (['POST', 'PUT', 'PATCH', 'DELETE'].includes(c.req.method) && !c.req.path.startsWith('/webhooks/')
+    ? bodyLimit({ maxSize: UPLOADS.has(c.req.path) ? P.AVATAR_MAX_UPLOAD + 64 * 1024 : 64 * 1024, onError: tooLarge })(c, next) : next()));
 
   app.use('/assets/*', serveStatic({ root: publicDir, rewriteRequestPath: (p) => p.replace(/^\/assets/, '') }));
 
@@ -417,8 +434,9 @@ export function createApp({ cfg, db, keys, stripe, mailer, log = console, fetchI
     const n = await settleClaim(c, user);
     deleteCookie(c, 'rg_ref', { path: '/' });
     if (n === 'claimed') await settleReferral(user, affiliate);
-    if (next && !n) return c.redirect(next, 303);
-    return c.redirect(`/account${n ? `?n=${n}` : ''}`, 303);
+    // New account: offer a profile photo first (skippable), then where the player was going.
+    const to = next && !n ? next : `/account${n ? `?n=${n}` : ''}`;
+    return c.redirect(`/account/profile?welcome=1&to=${encodeURIComponent(to)}`, 303);
   });
 
   app.get('/login', async (c) => {
@@ -534,6 +552,80 @@ export function createApp({ cfg, db, keys, stripe, mailer, log = console, fetchI
     await L.setPassword(db, user.id, password); // signs out every session, this one included
     await signIn(c, user);
     return c.redirect('/account?n=password', 303);
+  });
+
+  // ---------- public profile: photo and name ----------
+  // After sign-up the same page is a skippable step (?welcome=1&to=<where the player was going>).
+  const WELCOME_TO = /^\/(account(\?n=[a-z]+)?|affiliate)$/;
+  const welcomeOf = (src) => {
+    const to = String(src?.to || '');
+    return src?.welcome === '1' && WELCOME_TO.test(to) ? { welcome: true, to } : { welcome: false, to: null };
+  };
+  const profileUrl = (n, w) => `/account/profile?${new URLSearchParams({ ...(n ? { n } : {}), ...(w.welcome ? { welcome: '1', to: w.to } : {}) })}`.replace(/\?$/, '');
+  const PROFILE_NOTICES = {
+    photo: ['notice', 'Photo saved. It shows on your reviews and in Rago Optimizer.'],
+    removed: ['notice', 'Photo removed.'],
+    name: ['notice', 'Public name saved.'],
+    toolarge: ['error', API_ERRORS.image_too_large[1]],
+  };
+  const showProfile = async (c, user, { n, error, status = 200, w = welcomeOf(c.req.query()) } = {}) => {
+    const [kind, text] = PROFILE_NOTICES[n] || [];
+    return c.html(V.profilePage(cfg, { user, review: await R.reviewOf(db, user.id), notice: kind === 'notice' ? text : null, error: error || (kind === 'error' ? text : null), ...w }), status);
+  };
+  app.get('/account/profile', requireUser, (c) => showProfile(c, c.get('user'), { n: c.req.query('n') }));
+
+  app.post('/account/profile/photo', requireUser, async (c) => {
+    const user = c.get('user');
+    const body = await c.req.parseBody();
+    const w = welcomeOf(body);
+    if (!allow(`avatar:${user.id}`, 20, 60 * 60 * 1000)) return showProfile(c, user, { error: API_ERRORS.rate_limited[1], status: 429, w });
+    const file = body.photo;
+    try {
+      await P.replaceAvatar(db, avatars, user.id, file && typeof file === 'object' ? Buffer.from(await file.arrayBuffer()) : Buffer.alloc(0));
+    } catch (err) {
+      if (err instanceof P.ProfileError) return showProfile(c, user, { error: err.message, status: err.code === 'image_too_large' ? 413 : 400, w });
+      log.error('[avatars] upload failed', err.message);
+      return showProfile(c, user, { error: API_ERRORS.storage_unavailable[1], status: 503, w });
+    }
+    reviewsCache = null;
+    await audit(db, 'profile.photo', { userId: user.id });
+    return c.redirect(profileUrl('photo', w), 303);
+  });
+
+  app.post('/account/profile/photo/remove', requireUser, async (c) => {
+    const user = c.get('user');
+    const w = welcomeOf(await c.req.parseBody());
+    try { await P.removeAvatar(db, avatars, user.id); } catch (err) {
+      log.error('[avatars] remove failed', err.message);
+      return showProfile(c, user, { error: API_ERRORS.storage_unavailable[1], status: 503, w });
+    }
+    reviewsCache = null;
+    return c.redirect(profileUrl('removed', w), 303);
+  });
+
+  app.post('/account/profile/name', requireUser, async (c) => {
+    const user = c.get('user');
+    const body = await c.req.parseBody();
+    const w = welcomeOf(body);
+    try { await P.setName(db, user.id, body.name); } catch (err) {
+      if (err instanceof P.ProfileError) return showProfile(c, user, { error: err.message, status: 400, w });
+      throw err;
+    }
+    reviewsCache = null;
+    return c.redirect(profileUrl('name', w), 303);
+  });
+
+  // Profile photos: public, cached a year (a new photo gets a new file name). Loaded by the site too.
+  app.get('/avatars/:file', async (c) => {
+    const file = c.req.param('file');
+    if (!P.AVATAR_FILE.test(file)) return c.text('Not found', 404);
+    let bytes;
+    try { bytes = await avatars.get(file); } catch (err) {
+      log.error('[avatars] read failed', err.message);
+      return c.text('Unavailable', 503, { 'Cache-Control': 'no-store' });
+    }
+    if (!bytes) return c.text('Not found', 404, { 'Cache-Control': 'no-store' });
+    return c.body(bytes, 200, { 'Content-Type': 'image/webp', 'Content-Length': String(bytes.length), 'Cache-Control': 'public, max-age=31536000, immutable' });
   });
 
   // Stripe's customer portal: change plan, update the card, invoices, cancel.
@@ -761,6 +853,114 @@ export function createApp({ cfg, db, keys, stripe, mailer, log = console, fetchI
     if (!bound || bound.id !== claims.did || (!replaced && claims.tv !== license.token_version)) return fail(c, 'invalid_token');
     const out = await L.activate(db, license.id, device, ip(c));
     return c.json(tokenReply(user, out.license, out.device, device.appVersion));
+  });
+
+  // ---------- App API: account, review and profile photo (2026-10-09) ----------
+  // Signed in with the license token of this PC (Premium), or with an account token from /account/login
+  // (any account, free ones included).
+  async function apiUser(c) {
+    const bearer = (c.req.header('authorization') || '').replace(/^Bearer\s+/i, '').trim();
+    if (!bearer) return null;
+    if (bearer.split('.').length === 3) {
+      const claims = verifyToken(bearer, keys, { typ: 'license' });
+      if (!claims) return null;
+      const lic = await L.getLicense(db, claims.lic);
+      if (!lic || lic.status !== 'active' || lic.user_id !== claims.sub || lic.token_version !== claims.tv) return null;
+      return L.getUser(db, claims.sub);
+    }
+    return L.userForApiSession(db, bearer);
+  }
+  const accountReply = async (user) => ({ account: P.profileOf(cfg, user), review: R.reviewView(await R.reviewOf(db, user.id)) });
+  const failProfile = (c, err) => (err instanceof P.ProfileError ? fail(c, err.code) : Promise.reject(err));
+
+  api.post('/account/login', async (c) => {
+    const body = await readJson(c);
+    if (!body || typeof body.email !== 'string' || typeof body.password !== 'string') return fail(c, 'invalid_request');
+    const email = body.email.trim().toLowerCase();
+    if (!loginAllowed(c, 'api-login', email)) return fail(c, 'rate_limited');
+    const user = await L.findUserByEmail(db, email);
+    const ok = await verifyPassword(body.password, user ? user.password_hash : DUMMY_HASH);
+    loginResult(c, email, user && ok);
+    if (!user || !ok) return fail(c, 'invalid_credentials');
+    const { token, expiresAt } = await L.createApiSession(db, user.id);
+    return c.json({ account_token: token, expires_at: new Date(expiresAt).toISOString(), ...(await accountReply(user)) });
+  });
+
+  api.use('/account/*', async (c, next) => {
+    const user = await apiUser(c);
+    if (!user) return fail(c, 'invalid_token');
+    if (!allow(`account-api:${user.id}`, 300, 60 * 60 * 1000)) return fail(c, 'rate_limited');
+    c.set('user', user);
+    await next();
+  });
+
+  api.get('/account/me', async (c) => c.json(await accountReply(c.get('user'))));
+
+  api.post('/account/logout', async (c) => {
+    await L.deleteApiSession(db, (c.req.header('authorization') || '').replace(/^Bearer\s+/i, '').trim());
+    return c.json({ ok: true });
+  });
+
+  api.put('/account/review', async (c) => {
+    const user = c.get('user');
+    const body = await readJson(c);
+    if (!body || typeof body !== 'object') return fail(c, 'invalid_request');
+    if (!allow(`review:${user.id}`, 20, 60 * 60 * 1000)) return fail(c, 'rate_limited');
+    let review;
+    try {
+      // The whole review is checked before anything is saved, the name included.
+      const clean = R.cleanReview(body);
+      const typed = body.name == null ? '' : String(body.name).trim();
+      const name = typed ? P.cleanName(typed) : user.display_name;
+      if (!name) throw new P.ProfileError('name_required');
+      if (name !== user.display_name) await P.setName(db, user.id, name);
+      review = await R.saveReview(db, user.id, clean, typeof body.app_version === 'string' ? body.app_version : null);
+    } catch (err) {
+      return failProfile(c, err);
+    }
+    reviewsCache = null;
+    await audit(db, 'review.saved', { userId: user.id, detail: { rating: review.rating } });
+    return c.json(await accountReply(await L.getUser(db, user.id)));
+  });
+
+  api.put('/account/name', async (c) => {
+    const user = c.get('user');
+    const body = await readJson(c);
+    try { await P.setName(db, user.id, body?.name); } catch (err) { return failProfile(c, err); }
+    reviewsCache = null;
+    return c.json(await accountReply(await L.getUser(db, user.id)));
+  });
+
+  // Body: the picture's bytes (JPG, PNG, WebP or GIF, 5 MB at most). Stored as a 256 × 256 WebP.
+  api.put('/account/avatar', async (c) => {
+    const user = c.get('user');
+    if (!allow(`avatar:${user.id}`, 20, 60 * 60 * 1000)) return fail(c, 'rate_limited');
+    try {
+      await P.replaceAvatar(db, avatars, user.id, Buffer.from(await c.req.arrayBuffer()));
+    } catch (err) {
+      if (err instanceof P.ProfileError) return failProfile(c, err);
+      log.error('[avatars] upload failed', err.message);
+      return fail(c, 'storage_unavailable');
+    }
+    reviewsCache = null;
+    await audit(db, 'profile.photo', { userId: user.id, detail: { from: 'app' } });
+    return c.json(await accountReply(await L.getUser(db, user.id)));
+  });
+
+  api.delete('/account/avatar', async (c) => {
+    const user = c.get('user');
+    try { await P.removeAvatar(db, avatars, user.id); } catch (err) {
+      log.error('[avatars] remove failed', err.message);
+      return fail(c, 'storage_unavailable');
+    }
+    reviewsCache = null;
+    return c.json(await accountReply(await L.getUser(db, user.id)));
+  });
+
+  // Public: the reviews shown on the site (rago-optimizer.com reads it from the browser).
+  api.get('/reviews', async (c) => {
+    if (!reviewsCache || Date.now() - reviewsCache.at > 30 * 1000) reviewsCache = { at: Date.now(), body: await R.publicReviews(db, cfg) };
+    return c.json(reviewsCache.body, 200, { 'Access-Control-Allow-Origin': '*', 'Cache-Control': 'public, max-age=60' });
   });
 
   app.route('/api/v1', api);

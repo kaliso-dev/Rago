@@ -3,7 +3,7 @@
 // Usage: node prerender.js path/to/index.html   (needs the playwright package; build.py skips this step without it)
 const { chromium } = require("playwright");
 const path = require("path");
-const IDS = ["side", "tl1", "tl2", "mq", "r1", "r2", "cmp", "xtabs", "xpanel"];
+const IDS = ["side", "tl1", "tl2", "mq", "cmp", "xtabs", "xpanel"];
 (async () => {
   const b = await chromium.launch();
   const p = await b.newPage({ viewport: { width: 1440, height: 900 }, reducedMotion: "reduce" });

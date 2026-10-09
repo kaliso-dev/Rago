@@ -139,6 +139,33 @@ CREATE TABLE IF NOT EXISTS server_secrets (
   created_at BIGINT NOT NULL
 );
 
+-- Public profile (2026-10-09): the name shown with a review, and the profile photo. The photo itself is in
+-- Supabase Storage (private bucket "avatars", created by the server); only its file name is kept here.
+ALTER TABLE users ADD COLUMN IF NOT EXISTS display_name TEXT;
+ALTER TABLE users ADD COLUMN IF NOT EXISTS avatar_key TEXT;
+ALTER TABLE users ADD COLUMN IF NOT EXISTS avatar_updated_at BIGINT;
+
+-- Reviews left from Rago Optimizer (2026-10-09): one per account, edited in place, shown on the site.
+CREATE TABLE IF NOT EXISTS reviews (
+  user_id TEXT PRIMARY KEY REFERENCES users(id) ON DELETE CASCADE,
+  rating SMALLINT NOT NULL CHECK (rating BETWEEN 1 AND 5),
+  comment TEXT NOT NULL CHECK (length(btrim(comment)) > 0),
+  status TEXT NOT NULL DEFAULT 'published',      -- published | hidden (support: npm run admin -- hide-review)
+  app_version TEXT,
+  created_at BIGINT NOT NULL,
+  updated_at BIGINT NOT NULL
+);
+CREATE INDEX IF NOT EXISTS reviews_status ON reviews(status, updated_at);
+
+-- The app's account sign-in (reviews and profile photo without a license on the PC). Token stored hashed.
+CREATE TABLE IF NOT EXISTS api_sessions (
+  token_hash TEXT PRIMARY KEY,
+  user_id TEXT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  created_at BIGINT NOT NULL,
+  expires_at BIGINT NOT NULL
+);
+CREATE INDEX IF NOT EXISTS api_sessions_user ON api_sessions(user_id);
+
 ALTER TABLE users ENABLE ROW LEVEL SECURITY;
 ALTER TABLE web_sessions ENABLE ROW LEVEL SECURITY;
 ALTER TABLE licenses ENABLE ROW LEVEL SECURITY;
@@ -149,3 +176,6 @@ ALTER TABLE audit ENABLE ROW LEVEL SECURITY;
 ALTER TABLE server_secrets ENABLE ROW LEVEL SECURITY;
 ALTER TABLE affiliates ENABLE ROW LEVEL SECURITY;
 ALTER TABLE referrals ENABLE ROW LEVEL SECURITY;
+ALTER TABLE account_devices ENABLE ROW LEVEL SECURITY;
+ALTER TABLE reviews ENABLE ROW LEVEL SECURITY;
+ALTER TABLE api_sessions ENABLE ROW LEVEL SECURITY;

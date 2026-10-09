@@ -125,3 +125,18 @@ for (const input of document.querySelectorAll('input[name=code]')) {
     history.replaceState(null, '', url.pathname + url.search + url.hash);
   }
 }
+
+// Profile photo: preview the chosen picture before it's uploaded (the server crops it the same way).
+for (const input of document.querySelectorAll('[data-avatar-input]')) {
+  input.addEventListener('change', () => {
+    const file = input.files && input.files[0];
+    const box = document.querySelector('[data-avatar-preview]');
+    if (!file || !box || !/^image\/(jpeg|png|webp|gif)$/.test(file.type) || file.size > 5 * 1024 * 1024) return;
+    const reader = new FileReader();
+    reader.onload = () => {
+      const img = Object.assign(document.createElement('img'), { className: 'avatar avatar-lg', alt: '', width: 96, height: 96, src: String(reader.result) });
+      box.replaceChildren(img);
+    };
+    reader.readAsDataURL(file);
+  });
+}
