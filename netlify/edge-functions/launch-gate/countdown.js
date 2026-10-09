@@ -1,12 +1,15 @@
 // The page every visitor sees before the launch. Self-contained: inline styles and script, plus the logo,
-// icons, fonts and share image (og-launch.png) that launch-gate.js lets through. It says nothing about the product beyond its name.
+// icons, fonts and share images that launch-gate.js lets through. It says nothing about the product beyond its name.
+// Link previews (Discord, WhatsApp, X...) get the site's own share tags (share, read by launch-gate.js), so a link
+// shared now already shows the site's image and keeps the right preview after the launch. og-launch.png is the fallback.
 // When the clock reaches zero the page reloads, and the gate then serves the site.
 
 const esc = (s) => String(s).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
 const pad = (n) => String(n).padStart(2, "0");
 
-// origin: the address the page was asked on (the domain, or a deploy preview), for the absolute share image URL.
-export function countdownPage({ launchAt, now, origin = "https://rago-optimizer.com" }) {
+// origin: the address the page was asked on (the domain, or a deploy preview), for the fallback share image URL.
+// share: the site's og: and twitter: tags, or "" when they couldn't be read.
+export function countdownPage({ launchAt, now, origin = "https://rago-optimizer.com", share = "" }) {
   const when = new Intl.DateTimeFormat("en-US", {
     timeZone: "Europe/Paris", weekday: "long", month: "long", day: "numeric", hour: "numeric", minute: "2-digit",
   }).format(launchAt);
@@ -27,7 +30,7 @@ export function countdownPage({ launchAt, now, origin = "https://rago-optimizer.
 <meta name="robots" content="noindex">
 <title>Rago Optimizer opens ${esc(day)}</title>
 <meta name="description" content="Rago Optimizer opens on ${esc(when)}, Paris time.">
-<meta property="og:site_name" content="Rago Optimizer">
+${share ? `${share}\n` : `<meta property="og:site_name" content="Rago Optimizer">
 <meta property="og:title" content="Rago Optimizer opens ${esc(day)}">
 <meta property="og:description" content="Every millisecond counts. Opens on ${esc(when)}, Paris time.">
 <meta property="og:type" content="website">
@@ -38,7 +41,7 @@ export function countdownPage({ launchAt, now, origin = "https://rago-optimizer.
 <meta property="og:image:height" content="630">
 <meta property="og:image:alt" content="Rago Optimizer. Every millisecond counts.">
 <meta name="twitter:card" content="summary_large_image">
-<link rel="icon" href="/favicon.svg" type="image/svg+xml">
+`}<link rel="icon" href="/favicon.svg" type="image/svg+xml">
 <link rel="icon" href="/favicon.ico" sizes="any">
 <link rel="apple-touch-icon" href="/apple-touch-icon.png">
 <link rel="preload" href="/fonts/GeistMono-Variable.woff2" as="font" type="font/woff2" crossorigin>

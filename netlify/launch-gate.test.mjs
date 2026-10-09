@@ -9,12 +9,12 @@ const SITE = "<html>the real site</html>";
 let vars = {};
 globalThis.Netlify = { env: { get: (k) => vars[k] } };
 const context = { next: async () => new Response(SITE, { headers: { "content-type": "text/html" } }) };
-const get = (path, { host = "rago-optimizer.com", cookie } = {}) =>
-  launchGate(new Request(`https://${host}${path}`, { headers: cookie ? { cookie } : {} }), context);
+const get = (path, { host = "rago-optimizer.com", cookie, ctx = context, method } = {}) =>
+  launchGate(new Request(`https://${host}${path}`, { method, headers: cookie ? { cookie } : {} }), ctx);
 
 test("before the launch: countdown everywhere, nothing from the site", async () => {
   vars = { PREVIEW_KEY: KEY, LAUNCH_AT: new Date(Date.now() + 3600e3).toISOString() };
-  for (const path of ["/", "/index.html", "/terms.html", "/og-image.png", "/sitemap.xml", "/buy", "/acces/wrong-key-0123456789"]) {
+  for (const path of ["/", "/index.html", "/terms.html", "/sitemap.xml", "/buy", "/acces/wrong-key-0123456789"]) {
     const res = await get(path);
     const html = await res.text();
     assert.equal(res.status, 200, path);
@@ -23,11 +23,39 @@ test("before the launch: countdown everywhere, nothing from the site", async () 
     assert.doesNotMatch(html, /real site/, path);
     assert.equal(res.headers.get("set-cookie"), null, path);
   }
-  // the countdown's own files go through, its share image included
-  for (const path of ["/fonts/Geist-Variable.woff2", "/favicon.svg", "/rago-wordmark.svg", "/og-launch.png", "/robots.txt"]) assert.equal(await (await get(path)).text(), SITE);
+  // the countdown's own files go through, the share images included
+  for (const path of ["/fonts/Geist-Variable.woff2", "/favicon.svg", "/rago-wordmark.svg", "/og-image.png", "/og-launch.png", "/robots.txt"]) assert.equal(await (await get(path)).text(), SITE);
 });
 
-test("before the launch: search engines skip the countdown, link previews get its own image", async () => {
+test("before the launch: link previews get the site's share tags, and nothing else from the site", async () => {
+  vars = { PREVIEW_KEY: KEY, LAUNCH_AT: new Date(Date.now() + 3600e3).toISOString() };
+  const page = `<!doctype html><html><head><title>Rago Optimizer</title>
+<meta name="description" content="site description">
+<meta property="og:title" content="Rago Optimizer: Minecraft PvP optimizer for Windows">
+<meta property="og:image" content="https://rago-optimizer.com/og-image.png?v=153045a26b">
+<meta name="twitter:card" content="summary_large_image">
+</head><body>the real site</body></html>`;
+  // the site arrives in pieces, as from the network
+  const chunks = page.match(/[\s\S]{1,40}/g);
+  const ctx = { next: async () => new Response(new ReadableStream({
+    pull(c) { chunks.length ? c.enqueue(new TextEncoder().encode(chunks.shift())) : c.close(); },
+  }), { headers: { "content-type": "text/html; charset=utf-8" } }) };
+  const res = await get("/?v=2", { ctx });
+  const html = await res.text();
+  assert.equal(res.headers.get("x-robots-tag"), "noindex");
+  assert.match(html, /<meta name="robots" content="noindex">/);
+  assert.match(html, /Every millisecond <em>counts\.<\/em>/);
+  assert.match(html, /<meta property="og:image" content="https:\/\/rago-optimizer\.com\/og-image\.png\?v=153045a26b">/);
+  assert.match(html, /<meta property="og:title" content="Rago Optimizer: Minecraft PvP optimizer for Windows">/);
+  assert.match(html, /<meta name="twitter:card" content="summary_large_image">/);
+  assert.doesNotMatch(html, /og-launch|real site|site description/);
+  // a HEAD request doesn't read the site
+  let read = false;
+  await get("/", { method: "HEAD", ctx: { next: async () => { read = true; return new Response(page); } } });
+  assert.equal(read, false);
+});
+
+test("before the launch: without the site's tags, link previews get the countdown's own image", async () => {
   vars = { PREVIEW_KEY: KEY, LAUNCH_AT: new Date(Date.now() + 3600e3).toISOString() };
   const res = await get("/");
   const html = await res.text();

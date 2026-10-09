@@ -1,6 +1,6 @@
 // Pre-launch gate for the whole site (declared in netlify.toml).
 // Until LAUNCH_AT, every visitor gets the countdown from countdown.js instead of the site: nothing from the
-// site is sent, not even its HTML. The site is served after the launch, or to the team once they've opened
+// site is sent but its share tags (link previews). The site is served after the launch, or to the team once they've opened
 // /acces/<PREVIEW_KEY> (Netlify variable), which sets a cookie. /acces/sortir removes it.
 // The account server (licensing/) checks the same cookie, with the same PREVIEW_KEY and LAUNCH_AT.
 import { countdownPage } from "./countdown.js";
@@ -11,10 +11,11 @@ const COOKIE_MAX_AGE = 30 * 86400;
 const MIN_KEY_LENGTH = 16; // a shorter PREVIEW_KEY is ignored: nobody gets past the countdown
 const DOMAIN = "rago-optimizer.com";
 const OLD_HOST = "rago-optimiser.netlify.app";
-// The countdown's own files (logo, icons, fonts, share image). Everything else waits for the launch.
+// The countdown's own files (logo, icons, fonts, share images). Everything else waits for the launch.
 // The countdown answers "noindex": search engines index the site only once it's open (nothing to do at the launch).
 const PUBLIC_FILES = new Set([
-  "/favicon.svg", "/favicon.ico", "/favicon-32.png", "/apple-touch-icon.png", "/rago-wordmark.svg", "/robots.txt", "/og-launch.png",
+  "/favicon.svg", "/favicon.ico", "/favicon-32.png", "/apple-touch-icon.png", "/rago-wordmark.svg", "/robots.txt",
+  "/og-image.png", "/og-launch.png",
   "/fonts/Geist-Variable.woff2", "/fonts/GeistMono-Variable.woff2",
 ]);
 const SECURITY_HEADERS = {
@@ -69,6 +70,26 @@ const redirect = (location, status, setCookie) => new Response(null, {
   headers: { Location: location, "Cache-Control": "no-store", ...(setCookie ? { "Set-Cookie": setCookie } : {}) },
 });
 
+// The og: and twitter: tags of the page asked for, so a link shared before the launch shows the site's preview
+// (only these tags leave the site, never its content). Read up to </head> only; "" for anything else (404, a file, an error).
+async function shareTags(context) {
+  try {
+    const res = await context.next();
+    if (!res.ok || !res.body || !(res.headers.get("content-type") || "").includes("text/html")) return "";
+    const reader = res.body.pipeThrough(new TextDecoderStream()).getReader();
+    let head = "";
+    while (!head.includes("</head>")) {
+      const { done, value } = await reader.read();
+      if (done) break;
+      head += value;
+    }
+    reader.cancel().catch(() => {});
+    return (head.split("</head>")[0].match(/<meta (?:property="og:|name="twitter:)[^>]*>/g) || []).join("\n");
+  } catch {
+    return "";
+  }
+}
+
 export default async function launchGate(request, context) {
   const url = new URL(request.url);
   // Same rule as netlify.toml, applied here so the old address never shows anything itself.
@@ -97,7 +118,8 @@ export default async function launchGate(request, context) {
     return context.next();
   }
 
-  return new Response(request.method === "HEAD" ? null : countdownPage({ launchAt, now, origin: url.origin }), {
+  const share = request.method === "GET" ? await shareTags(context) : "";
+  return new Response(request.method === "HEAD" ? null : countdownPage({ launchAt, now, origin: url.origin, share }), {
     status: 200,
     headers: {
       "Content-Type": "text/html; charset=utf-8",
