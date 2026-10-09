@@ -757,7 +757,7 @@ V6_NOTES = '''
 # Corrections apportées aux .bat v6 (Ping Optimization Final, HITREG INPUTLAG, FPS)
 
 Ajouté par `tools/build_catalog_v6.py` après la section v5.2 ci-dessus. Les trois .bat de Sofiene
-(`legacy/v6/`, 2026-10-06) rejoignent l'ancien programme : 226 réglages au total (212 depuis 1.1.8, voir plus bas).
+(`legacy/v6/`, 2026-10-06) rejoignent l'ancien programme : 226 réglages au total (199 réglages distincts depuis 1.1.8, voir plus bas).
 
 Défauts de la v5.2 revenus dans les .bat v6, corrigés de la même façon (`repair`, `clean`) :
 - `reg add ... /v DevicePriority|MessageNumberLimit /f` sans valeur → `reg delete` ;
@@ -1004,11 +1004,14 @@ def main():
                 if 'id' in t and (t['risk'] == 'advanced' or t['id'] in no_return):
                     t['restore'] = True
     json.dump(catalog, open(catalog_path, 'w', encoding='utf-8'), ensure_ascii=False, indent=1)
-    n = sum(1 for m in modules for s in m['sections'] for t in s['tweaks'] if 'id' in t)
+    entries = [t for m in modules for s in m['sections'] for t in s['tweaks'] if 'id' in t]
+    n = len(entries)
+    # réglages distincts : les jumeaux (même script, champ `twin`) comptent une fois, comme dans l'app (catalog.ts)
+    distinct = len({t.get('twin') or t['id'] for t in entries})
     with open(os.path.join(ROOT, 'docs', 'CORRECTIONS.md'), 'a', encoding='utf-8') as f:
         f.write(V6_NOTES)
-        f.write(SAFETY.notes(SAFETY_REPORT, n))
-    print(f'{n} réglages, {len(kept)} scripts, {len(retired)} retirés')
+        f.write(SAFETY.notes(SAFETY_REPORT, n, distinct))
+    print(f'{n} réglages ({distinct} distincts), {len(kept)} scripts, {len(retired)} retirés')
 
 
 if __name__ == '__main__':

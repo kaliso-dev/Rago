@@ -1,5 +1,5 @@
 import { AnimatePresence, motion } from "motion/react";
-import { Activity, ArrowRight, Check, FolderOpen, LoaderCircle, Minus, Power, Sparkles, Square, X } from "lucide-react";
+import { ArrowRight, Check, FolderOpen, LoaderCircle, Minus, Power, Sparkles, Square, X } from "lucide-react";
 import { useEffect, useRef } from "react";
 import { api } from "../lib/api";
 import { formatNumber } from "../lib/i18n";
@@ -9,7 +9,7 @@ import { Pulse } from "./Logo";
 import { Button } from "./ui";
 
 export function RunOverlay() {
-  const { t, lang, run, setRun, goTo, requestPing, premium, license, setUpsell } = useStore();
+  const { t, lang, run, setRun, premium, license, setUpsell } = useStore();
   const consoleRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -102,20 +102,7 @@ export function RunOverlay() {
                       {t("run.reboot")}
                     </Button>
                   )}
-                  {changed && (
-                    <Button
-                      variant={reboot ? "secondary" : "primary"}
-                      icon={<Activity size={14} />}
-                      onClick={() => {
-                        close();
-                        goTo("dashboard");
-                        requestPing();
-                      }}
-                    >
-                      {t("run.ping")}
-                    </Button>
-                  )}
-                  <Button variant="ghost" onClick={close}>
+                  <Button variant={reboot ? "ghost" : "secondary"} onClick={close}>
                     {t("run.close")}
                   </Button>
                 </>

@@ -4,10 +4,10 @@ mod catalog;
 mod history;
 mod license;
 mod minecraft;
-mod ping;
 mod runner;
 mod seal;
 mod shell;
+mod stats;
 mod system;
 
 use std::path::PathBuf;
@@ -28,6 +28,7 @@ struct AppState {
     license: Arc<License>,
     account: Arc<Account>,
     system: Arc<Mutex<Option<SystemInfo>>>,
+    stats: stats::Sampler,
     resource_dir: PathBuf,
     data_dir: PathBuf,
 }
@@ -135,13 +136,10 @@ fn clear_history(state: State<'_, AppState>) {
     state.history.clear();
 }
 
+/// Usage RAM, processeur et carte graphique en direct, demandé chaque seconde par le tableau de bord.
 #[tauri::command]
-async fn ping(host: String, port: Option<u16>, count: Option<u32>) -> Result<ping::PingResult, String> {
-    let port = port.unwrap_or(25565);
-    let count = count.unwrap_or(10).clamp(1, 50);
-    tauri::async_runtime::spawn_blocking(move || ping::tcp_ping(&host, port, count, 1500))
-        .await
-        .map_err(|e| e.to_string())
+fn live_stats(state: State<'_, AppState>) -> stats::LiveStats {
+    state.stats.latest()
 }
 
 fn minecraft_dir(dir: Option<String>) -> Result<PathBuf, String> {
@@ -304,6 +302,7 @@ pub fn run() {
                 license: Arc::new(License::new()),
                 account: Arc::new(Account::new()),
                 system: Arc::new(Mutex::new(None)),
+                stats: stats::Sampler::default(),
                 resource_dir,
                 data_dir,
             });
@@ -317,7 +316,7 @@ pub fn run() {
             get_history,
             clear_history,
             get_applied,
-            ping,
+            live_stats,
             minecraft_status,
             minecraft_restore,
             restart_pc,

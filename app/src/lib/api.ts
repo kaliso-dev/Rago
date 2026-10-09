@@ -53,16 +53,13 @@ export interface AppliedView {
   drift: boolean;
 }
 
-export interface PingResult {
-  host: string;
-  ip: string | null;
-  samples: number[];
-  avg: number | null;
-  min: number | null;
-  max: number | null;
-  jitter: number | null;
-  loss: number;
-  error: string | null;
+/** Usage du PC en direct, en % ; null : Windows ne fournit pas cette mesure sur ce PC. */
+export interface LiveStats {
+  /** false jusqu'à la première mesure (une seconde après la première demande) */
+  ready: boolean;
+  ram: number | null;
+  cpu: number | null;
+  gpu: number | null;
 }
 
 export interface MinecraftStatus {
@@ -145,7 +142,7 @@ export interface Api {
   history(): Promise<HistoryEntry[]>;
   clearHistory(): Promise<void>;
   applied(): Promise<AppliedView[]>;
-  ping(host: string, port?: number, count?: number): Promise<PingResult>;
+  liveStats(): Promise<LiveStats>;
   minecraftStatus(dir?: string | null): Promise<MinecraftStatus>;
   minecraftRestore(dir?: string | null): Promise<string>;
   restartPc(): Promise<void>;
@@ -171,7 +168,7 @@ const tauriApi: Api = {
   history: () => invoke("get_history"),
   clearHistory: () => invoke("clear_history"),
   applied: () => invoke("get_applied"),
-  ping: (host, port, count) => invoke("ping", { host, port, count }),
+  liveStats: () => invoke("live_stats"),
   minecraftStatus: (dir) => invoke("minecraft_status", { dir: dir ?? null }),
   minecraftRestore: (dir) => invoke("minecraft_restore", { dir: dir ?? null }),
   restartPc: () => invoke("restart_pc"),
@@ -212,6 +209,8 @@ const emit = <T,>(name: string, detail: T) => bus.dispatchEvent(new CustomEvent(
 const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
 
 const mockHistory: HistoryEntry[] = [];
+let mockStatsStart = 0;
+const mockLoad = { ram: 47, cpu: 14, gpu: 9 };
 // démo : les réglages appliqués survivent au rechargement de la page, comme applied.json dans l'app
 const mockApplied = new Map<string, AppliedView>(
   (() => {
@@ -231,7 +230,6 @@ const saveMockApplied = () => {
 };
 let mockCancel = false;
 let mockRunning = false;
-let mockTuned = 0;
 
 const MOCK_LINES = [
   "Opération réussie.",
@@ -340,7 +338,6 @@ const mockApi: Api = {
         emit<ItemEvent>("run:item", { ...base, status: "ok", code: 0, durationMs });
       }
       mockRunning = false;
-      if (!mockCancel) mockTuned++;
       emit<DoneEvent>("run:done", { runId, ok, failed, skipped, restoreFailed, cancelled: mockCancel, logFile: "C:\\Users\\demo\\AppData\\Roaming\\gg.rago.optimizer\\logs\\demo.log" });
     })();
     return runId;
@@ -354,26 +351,21 @@ const mockApi: Api = {
     mockHistory.length = 0;
   },
   applied: async () => [...mockApplied.values()],
-  ping: async (host) => {
-    const base = Math.max(9, 34 - mockTuned * 6);
-    const samples: number[] = [];
-    for (let i = 0; i < 10; i++) {
-      await sleep(90);
-      samples.push(+(base + Math.random() * 6 - (i === 3 ? 0 : 0)).toFixed(1));
+  liveStats: async () => {
+    // démo : valeurs simulées ; localStorage « rago.demoNoGpu » = 1 simule un PC sans compteur de carte graphique
+    mockStatsStart ||= Date.now();
+    if (Date.now() - mockStatsStart < 1000) return { ready: false, ram: null, cpu: null, gpu: null };
+    const drift = (v: number, step: number, min: number, max: number) => Math.min(max, Math.max(min, v + (Math.random() - 0.5) * step));
+    mockLoad.ram = drift(mockLoad.ram, 1.5, 38, 64);
+    mockLoad.cpu = drift(mockLoad.cpu, 10, 3, 60);
+    mockLoad.gpu = drift(mockLoad.gpu, 14, 0, 75);
+    let noGpu = false;
+    try {
+      noGpu = localStorage.getItem("rago.demoNoGpu") === "1";
+    } catch {
+      /* rien */
     }
-    const avg = samples.reduce((a, b) => a + b, 0) / samples.length;
-    const diffs = samples.slice(1).map((s, i) => Math.abs(s - samples[i]));
-    return {
-      host,
-      ip: "51.91.12.34",
-      samples,
-      avg: +avg.toFixed(1),
-      min: Math.min(...samples),
-      max: Math.max(...samples),
-      jitter: +(diffs.reduce((a, b) => a + b, 0) / diffs.length).toFixed(1),
-      loss: 0,
-      error: null,
-    };
+    return { ready: true, ram: mockLoad.ram, cpu: mockLoad.cpu, gpu: noGpu ? null : mockLoad.gpu };
   },
   minecraftStatus: async () => ({ dirExists: true, optifineFile: true, backups: 1 }),
   minecraftRestore: async () => "optionsof.txt restored (demo)",

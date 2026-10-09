@@ -1,8 +1,8 @@
 import { motion } from "motion/react";
 import { Check, Cpu, Gpu, HardDrive, MemoryStick, Network, Plus, RefreshCw, Lock, RotateCcw, TriangleAlert } from "lucide-react";
-import { catalog, retired, totalTweaks, tweaks } from "../lib/catalog";
+import { catalog, distinctKey, retired, totalTweaks, tweaks } from "../lib/catalog";
 import { useStore } from "../lib/store";
-import { PingCard } from "../components/PingCard";
+import { LiveStatsCard } from "../components/LiveStatsCard";
 import { Button, Card } from "../components/ui";
 import type { ReactNode } from "react";
 
@@ -24,8 +24,8 @@ function Spec({ icon, label, value, sub }: { icon: ReactNode; label: string; val
 
 export function Dashboard() {
   const { t, lang, sys, sysLoading, refreshSys, isOn, selectMany, lastRun, requestApply, premium, setUpsell, applied: appliedMap, retiredApplied, requestUndo, run } = useStore();
-  // réglages appliqués en ce moment (ceux qu'on a décochés depuis ne comptent plus)
-  const applied = [...appliedMap.values()].filter((a) => a.ok && tweaks.get(a.id)?.kind === "tweak").length;
+  // réglages appliqués en ce moment (ceux qu'on a décochés depuis ne comptent plus), jumeaux comptés une fois
+  const applied = new Set([...appliedMap.values()].filter((a) => a.ok && tweaks.get(a.id)?.kind === "tweak").map((a) => distinctKey(a.id))).size;
   const restore = lastRun.get("rst_point");
 
   const health: { label: string; ok: boolean; value: string; action?: ReactNode }[] = sys
@@ -83,8 +83,8 @@ export function Dashboard() {
           </Card>
         </motion.div>
 
-        <motion.div variants={rise} className="dash-ping">
-          <PingCard />
+        <motion.div variants={rise} className="dash-live">
+          <LiveStatsCard />
         </motion.div>
 
         <motion.div variants={rise} className="dash-health">

@@ -119,7 +119,6 @@ function useStoreValue() {
   const [focusTweak, setFocusTweak] = useState<string | null>(null);
   // chaque recherche compte, même vers le réglage déjà visé (sa ligne a pu disparaître dans une section repliée)
   const [focusSeq, setFocusSeq] = useState(0);
-  const [pingRequest, setPingRequest] = useState(0);
   const [license, setLicense] = useState<LicenseStatus | null>(null);
   const [upsell, setUpsellKind] = useState<Upsell>(null);
   const [upsellTweak, setUpsellTweak] = useState<string | null>(null);
@@ -497,7 +496,6 @@ function useStoreValue() {
     run, setRun, startRun,
     paletteOpen, setPaletteOpen,
     focusTweak, setFocusTweak, focusSeq,
-    pingRequest, requestPing: () => setPingRequest((n) => n + 1),
     license, setLicense, signOut, activated, activatedAt, licenseNotice, setLicenseNotice,
     premium, isLocked, variantLocked, undoOnly, upsell, upsellTweak, setUpsell,
   };

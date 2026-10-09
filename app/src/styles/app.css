@@ -1263,15 +1263,15 @@ kbd {
 .dash-grid {
   display: grid;
   grid-template-columns: 1.25fr 1fr;
-  grid-template-areas: "system ping" "system health";
+  grid-template-areas: "system live" "system health";
   gap: 16px;
   margin-bottom: 40px;
 }
 .dash-system {
   grid-area: system;
 }
-.dash-ping {
-  grid-area: ping;
+.dash-live {
+  grid-area: live;
 }
 .dash-health {
   grid-area: health;
@@ -1323,80 +1323,69 @@ kbd {
   }
 }
 
-.ping-form {
+.meters {
   display: flex;
-  gap: 8px;
+  flex-direction: column;
+  gap: 16px;
 }
-.ping-form .input {
-  flex: 1;
-  min-width: 0;
-}
-.ping-main {
-  display: flex;
-  align-items: flex-end;
-  justify-content: space-between;
-  gap: 12px;
-  margin-top: 16px;
-}
-.ping-value {
-  font-size: var(--rg-fs-metric);
-  font-weight: 560;
-  line-height: 1;
-}
-.ping-value span {
-  display: inline-block;
-}
-.ping-value small {
-  font-size: 15px;
-  color: var(--rg-text-3);
-  margin-left: 4px;
-}
-.ping-delta {
+.meter-head {
   display: flex;
   align-items: center;
-  flex-wrap: wrap;
-  justify-content: flex-end;
-  gap: 4px;
-  font-size: 14px;
-  font-weight: 560;
+  gap: 12px;
 }
-.ping-delta span {
-  flex-basis: 100%;
-  text-align: right;
-  font-family: var(--rg-font-sans);
-  font-size: 11px;
-  font-weight: 400;
-  color: var(--rg-text-3);
-}
-.ping-delta.good {
-  color: var(--rg-success);
-}
-.ping-delta.bad {
-  color: var(--rg-warning);
-}
-.spark {
-  display: block;
-  width: 100%;
-  height: 40px;
-  margin: 12px 0 8px;
-}
-.ping-stats {
-  display: grid;
-  grid-template-columns: repeat(4, 1fr);
-  margin: 0;
+.meter-label {
+  flex: 1;
+  min-width: 0;
   font-size: 13px;
+  color: var(--rg-text-2);
 }
-.ping-stats dt {
+.meter-value {
+  font-size: 22px;
+  font-weight: 560;
+  line-height: 1;
+  font-variant-numeric: tabular-nums;
+}
+.meter.off .meter-value {
   font-family: var(--rg-font-sans);
-  font-size: 11px;
+  font-size: 12.5px;
+  font-weight: 450;
   color: var(--rg-text-3);
 }
-.ping-stats dd {
-  margin: 0;
+.meter-track {
+  height: 6px;
+  margin: 10px 0 0 42px;
+  border-radius: 999px;
+  background: var(--rg-ink-4);
+  overflow: hidden;
 }
-.ping .muted.small,
-.ping .error-text {
-  margin-top: 14px;
+.meter-fill {
+  height: 100%;
+  border-radius: inherit;
+  background: var(--rg-red-500);
+  transform-origin: left center;
+  transition: transform var(--rg-dur-slow) var(--rg-ease-out);
+}
+.live-dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--rg-red-500);
+  animation: live-pulse var(--rg-dur-pulse) ease-in-out infinite;
+}
+@keyframes live-pulse {
+  50% {
+    opacity: 0.35;
+  }
+}
+.live .muted.small {
+  margin-top: 16px;
+}
+@media (prefers-reduced-motion: reduce) {
+  .meter-fill,
+  .live-dot {
+    transition: none;
+    animation: none;
+  }
 }
 
 .health {
@@ -1764,7 +1753,7 @@ svg {
   }
   .dash-grid {
     grid-template-columns: 1fr;
-    grid-template-areas: "ping" "system" "health";
+    grid-template-areas: "live" "system" "health";
   }
   .presets {
     grid-template-columns: 1fr;
@@ -1797,10 +1786,6 @@ svg {
   .run-side {
     border-left: 0;
     border-top: 1px solid var(--rg-line-1);
-  }
-  .ping-stats {
-    grid-template-columns: repeat(2, 1fr);
-    row-gap: 8px;
   }
 }
 .gate-buy {

@@ -109,7 +109,11 @@ export function sectionTweaks(s: Section): Tweak[] {
   return s.tweaks.map((t) => ("ref" in t ? tweaks.get(t.ref)! : t)).filter(Boolean);
 }
 
-export const totalTweaks = tweaks.size;
+/** Clé d'un réglage sans ses doublons : les jumeaux (même script dans deux modules) partagent `twin`. */
+export const distinctKey = (id: string) => tweaks.get(id)?.twin ?? id;
+
+/** Nombre de réglages annoncé (app et site) : chaque jumeau compte une fois. */
+export const totalTweaks = new Set([...tweaks.keys()].map(distinctKey)).size;
 
 /** Variante choisie par défaut : d'après le PC si possible, sinon celle du catalogue. */
 export function autoVariant(t: Tweak, sys: SystemInfo | null): string | undefined {

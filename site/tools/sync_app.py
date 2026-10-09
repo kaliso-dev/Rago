@@ -46,8 +46,9 @@ s = re.sub(r'row\("([^"]+)","(?:[^"\\]|\\.)*",', hero_row, s)
 i18n = open(os.path.join(APP, 'lib', 'i18n.ts')).read(); i18n = i18n[i18n.index('const en'):]
 reboot = re.search(r'"run\.rebootNeeded":\s*"([^"]+)"', i18n).group(1)
 s = re.sub(r'<br>(?:Restart|Redémarre)[^`]*`', lambda m: '<br>' + reboot + '`', s)
-# total tweak count (tweaks and one-time actions, like the app) and the hub preview counter
-total = len(T)
+# total tweak count, like the app (catalog.ts totalTweaks): tweaks and one-time actions, twins (same script
+# in two modules, field `twin`) counted once, sections that only point at another module's tweak ('ref') skipped
+total = len({t.get('twin') or i for i, t in T.items()})
 s = re.sub(r'(<h2>)\d+( tweaks\. One clear app\.</h2>)', lambda m: m.group(1) + str(total) + m.group(2), s)
 s = re.sub(r'(All |9 of |unlocks all )\d+( tweaks|<)', lambda m: m.group(1) + str(total) + m.group(2), s)
 s = re.sub(r'(id="msel">0 of )\d+', lambda m: m.group(1) + str(count('latency')), s)

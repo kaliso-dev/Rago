@@ -181,11 +181,13 @@ def remaining(scripts):
     return out
 
 
-def notes(report, n_tweaks):
+def notes(report, n_tweaks, n_distinct):
     """Section de docs/CORRECTIONS.md : ce que 1.1.8 retire, d'après RETIRED et le rapport d'apply()."""
     out = ['', '', '# Réglages risqués retirés (1.1.8)', '',
            f'Demande de Sofiene (2026-10-08) : `tools/safety.py`. {len(RETIRED)} réglages quittent le catalogue, les '
-           f'profils et le plan gratuit ({n_tweaks} réglages restent). Leur annulation reste dans undo.json : sur un PC où '
+           f'profils et le plan gratuit. Il reste {n_tweaks} entrées au catalogue, soit {n_distinct} réglages distincts : '
+           f'les {n_tweaks - n_distinct} autres lancent les mêmes commandes qu\'un réglage d\'un autre module (champ `twin`), '
+           'et c\'est ce nombre distinct que l\'app et le site annoncent. Leur annulation reste dans undo.json : sur un PC où '
            'une version précédente les a appliqués, le tableau de bord propose de les remettre comme avant.', '']
     out += [f'- `{tid}` : {fr}' for tid, (_, fr) in RETIRED.items()]
     out += ['', 'Lignes risquées retirées des packs qui les cachaient (le pack reste) :', '']
