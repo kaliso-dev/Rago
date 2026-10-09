@@ -13,7 +13,7 @@ Serveur Node.js qui gère tout ce qui se passe après le clic sur « Get Premium
 
 Remboursement total ou litige Stripe : la licence est révoquée et l'abonnement annulé automatiquement. Abonnement terminé ou impayé : la licence s'arrête, et revient si le paiement repasse.
 
-Programme d'affiliation `/affiliate` : chaque compte peut avoir un code, qui est aussi un code promo Stripe à −5 % ; un code sert à 3 joueurs ; 3 acheteurs comptés (à l'activation de leur PC) = 6 mois de Rago Optimizer Premium, une fois (règles anti-triche dans `docs/MISE-EN-LIGNE.md`, fin du document). `/buy?promo=CODE` applique un code promo Stripe (RAGO15 du pop-up du site).
+Programme d'affiliation `/affiliate` : chaque compte peut avoir un code, qui est aussi un code promo Stripe à −5 % ; un code sert à 3 joueurs ; 3 acheteurs comptés (à l'activation de leur PC) = 6 mois de Rago Optimizer Premium, une fois (règles anti-triche dans `docs/MISE-EN-LIGNE.md`, fin du document). `/buy?promo=CODE` applique un code promo Stripe (celui du pop-up du site, réglé sur `/admin` avec `ADMIN_KEY` ou `npm run admin -- popup`).
 
 ## Choix faits
 
@@ -35,6 +35,7 @@ npm run admin -- revoke <email> [raison]
 npm run admin -- restore <email>
 npm run admin -- grant <email> [note]    # licence offerte, ex. anciens acheteurs du .bat Premium
 npm run admin -- reviews                 # derniers avis ; hide-review / show-review <email> pour la modération
+npm run admin -- popup                   # le pop-up du site et ses places restantes ; popup RAGO50 50 15 pour une offre (aussi sur /admin)
 npm run admin -- remove-photo <email>    # retire une photo de profil (avec SUPABASE_URL et SUPABASE_SERVICE_ROLE_KEY)
 ```
 

@@ -93,6 +93,8 @@ export function loadConfig(env = process.env) {
     // The team gets through with the link /acces/<PREVIEW_KEY> or the site's cookie (same value as on Netlify).
     // Shorter than 16 characters: ignored.
     previewKey: (env.PREVIEW_KEY || '').trim(),
+    // Opens /admin (the site's discount pop-up). Shorter than 16 characters: /admin stays closed.
+    adminKey: (env.ADMIN_KEY || '').trim(),
   };
   cfg.subscriptions = !!(cfg.stripePriceMonthly || cfg.stripePriceYearly);
 
@@ -133,6 +135,7 @@ export function loadConfig(env = process.env) {
   }
   if (env.LAUNCH_AT && Number.isNaN(Date.parse(env.LAUNCH_AT.trim()))) cfg.warnings.push(`LAUNCH_AT is not a date (${env.LAUNCH_AT}): use for example 2026-10-10T13:00:00Z.`);
   if (cfg.launchAt > Date.now() && cfg.previewKey.length < 16) cfg.warnings.push('PREVIEW_KEY is not set (16 characters at least): until the launch, nobody can open /signup, /buy, /download and /affiliate, the team included. Use the same value as the Netlify variable.');
+  if (prod && cfg.adminKey.length < 16) cfg.warnings.push('ADMIN_KEY is not set (16 characters at least): /admin, where the site\'s discount pop-up is changed, stays closed. npm run admin -- popup still works.');
   // Emails really go out: pages may promise one.
   cfg.mailEnabled = !!cfg.resendApiKey && !exampleFrom;
 

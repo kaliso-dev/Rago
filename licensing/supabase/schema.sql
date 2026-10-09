@@ -166,6 +166,14 @@ CREATE TABLE IF NOT EXISTS api_sessions (
 );
 CREATE INDEX IF NOT EXISTS api_sessions_user ON api_sessions(user_id);
 
+-- Settings changed from /admin or `npm run admin` (2026-10-09). 'popup': what the site's discount pop-up shows
+-- (JSON: enabled, code, eyebrow, title, text). The discount and its number of uses live in Stripe.
+CREATE TABLE IF NOT EXISTS site_settings (
+  name TEXT PRIMARY KEY,
+  value TEXT NOT NULL,
+  updated_at BIGINT NOT NULL
+);
+
 ALTER TABLE users ENABLE ROW LEVEL SECURITY;
 ALTER TABLE web_sessions ENABLE ROW LEVEL SECURITY;
 ALTER TABLE licenses ENABLE ROW LEVEL SECURITY;
@@ -178,4 +186,5 @@ ALTER TABLE affiliates ENABLE ROW LEVEL SECURITY;
 ALTER TABLE referrals ENABLE ROW LEVEL SECURITY;
 ALTER TABLE account_devices ENABLE ROW LEVEL SECURITY;
 ALTER TABLE reviews ENABLE ROW LEVEL SECURITY;
+ALTER TABLE site_settings ENABLE ROW LEVEL SECURITY;
 ALTER TABLE api_sessions ENABLE ROW LEVEL SECURITY;

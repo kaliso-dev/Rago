@@ -492,6 +492,8 @@ footer.foot p{max-width:80ch}
 .promo-x:hover{color:var(--t1);background:rgba(255,255,255,.1)}
 .promo-code{display:flex;justify-content:space-between;align-items:center;gap:12px;width:100%;padding:14px 18px;border-radius:var(--r-full);border:1px dashed var(--red);background:var(--red-a14);color:var(--t1);font:600 18px/1 var(--mono);letter-spacing:.12em;cursor:pointer}
 .promo-code small{font:500 11px/1 var(--sans);letter-spacing:0;color:var(--t2)}
+.promo-card .promo-left{margin-top:-6px;font-size:13px;text-align:center}
+.promo-left b{color:var(--t1);font-weight:600}
 @keyframes dlgIn{from{opacity:0}}
 .toast.show{opacity:1;transform:none}
 
@@ -911,10 +913,11 @@ footer.foot p{max-width:80ch}
 <div class="dlg" id="promo" hidden>
   <div class="dlg-card promo-card" role="dialog" aria-modal="true" aria-labelledby="promo-t">
     <button class="promo-x" type="button" id="promo-x" aria-label="Close">×</button>
-    <span class="eyebrow">Welcome offer</span>
-    <h3 id="promo-t">Get <span id="promo-pc">15</span>% off now!</h3>
-    <p>Use this code on your first Premium payment, monthly or yearly.</p>
+    <span class="eyebrow" id="promo-eb">Welcome offer</span>
+    <h3 id="promo-t">Get <span>15</span>% off now!</h3>
+    <p id="promo-p">Use this code on your first Premium payment, monthly or yearly.</p>
     <button class="promo-code mono" type="button" id="promo-copy"><span id="promo-code">RAGO15</span><small id="promo-cl">Copy</small></button>
+    <p class="promo-left" id="promo-left" hidden></p>
     <div class="dlg-acts"><button class="btn btn-ghost btn-sm" type="button" id="promo-no">No thanks</button><a class="btn btn-red btn-sm" href="#pricing" id="promo-go">Claim my discount</a></div>
   </div>
 </div>
@@ -942,8 +945,8 @@ const CONFIG = {
   affiliatePath: "/affiliate",
   freeAppPath: "/download",                         // Free plan: public installer link on the account server, no license needed
   discord: "",                                      // e.g. "https://discord.gg/yourInvite"
-  promoCode: "RAGO15",                              // pop-up code (Stripe promotion code). Empty = no pop-up
-  promoPercent: 15,
+  // The discount pop-up (code, % off, words, number of customers) is set on the account server: /admin there,
+  // or npm run admin -- popup. This page reads it from /api/v1/promo on every visit.
   currency: "$",
   priceMonth: 5.99,                                 // monthly Stripe price (USD)
   priceYear: 29.99                                  // yearly Stripe price (USD); "months free" is computed from both
@@ -999,23 +1002,29 @@ const sendUrl = () => location.origin + location.pathname.replace(/index\.html$/
   addEventListener("keydown", e => { if (e.key === "Escape" && !d.hidden) close(); });
   if (!onWindows) $$(".dock .js-free-app").forEach(a => a.textContent = "Send to my PC");
 })();
-/* Discount pop-up: once per visitor (30 days), not for visitors who came with an affiliate code */
+/* Discount pop-up: what it offers comes from the account server (set in /admin there), read on every visit.
+   Hidden when it's turned off, when its Stripe code is used up, or when the server can't be reached.
+   Once per visitor and per code (30 days), not for visitors who came with an affiliate code. */
 const PROMO_KEY = "rago_promo";
 let claimedNow = ""; // kept for this visit even when the browser blocks storage
-function promo() { try { return localStorage.getItem(PROMO_KEY + "_claimed") || claimedNow; } catch (e) { return claimedNow; } }
+let offer; // undefined until the server answers (or if it can't be reached), then the offer or null
+/* The code claimed from the pop-up, while it's still the one on offer; the server checks it again at checkout */
+function promo() {
+  let c = claimedNow;
+  try { c = localStorage.getItem(PROMO_KEY + "_claimed") || c; } catch (e) {}
+  return c && (offer === undefined || offer && offer.code === c) ? c : "";
+}
 (() => {
-  const d = $("#promo"), code = CONFIG.promoCode;
-  if (!code) return;
-  $("#promo-code").textContent = code; $("#promo-pc").textContent = CONFIG.promoPercent;
+  const d = $("#promo"), t0 = Date.now();
   // storage blocked: "once per 30 days" can't be kept, so don't show it at all
-  let seen = 0, store = true; try { seen = +localStorage.getItem(PROMO_KEY + "_seen") || 0; localStorage.setItem(PROMO_KEY + "_t", "1"); localStorage.removeItem(PROMO_KEY + "_t"); } catch (e) { store = false; }
-  const fresh = store && Date.now() - seen > 30 * 864e5;
+  let seen = 0, seenCode = "", store = true;
+  try { seen = +localStorage.getItem(PROMO_KEY + "_seen") || 0; seenCode = localStorage.getItem(PROMO_KEY + "_seen_code") || ""; localStorage.setItem(PROMO_KEY + "_t", "1"); localStorage.removeItem(PROMO_KEY + "_t"); } catch (e) { store = false; }
   let back = null;
   const close = () => { d.hidden = true; back && back.focus && back.focus({ preventScroll: true }); };
   const open = () => {
-    if (!d.hidden || typeof REF === "string" && REF || promo() || document.querySelector(".dlg:not([hidden])")) return;
+    if (!offer || !d.hidden || typeof REF === "string" && REF || promo() || document.querySelector(".dlg:not([hidden])")) return;
     if (!$("#menu").hidden) { setTimeout(open, 1500); return; } // wait until the mobile menu is closed
-    try { localStorage.setItem(PROMO_KEY + "_seen", Date.now()); } catch (e) {}
+    try { localStorage.setItem(PROMO_KEY + "_seen", Date.now()); localStorage.setItem(PROMO_KEY + "_seen_code", offer.code); } catch (e) {}
     back = document.activeElement;
     if (!back || back === document.body) { // after an anchor jump: come back to the section on screen
       back = (location.hash && document.querySelector(location.hash)) || [...$$("main section[id], section[id]")].find(x => x.getBoundingClientRect().bottom > 120) || null;
@@ -1027,13 +1036,29 @@ function promo() { try { return localStorage.getItem(PROMO_KEY + "_claimed") || 
   $("#promo-x").addEventListener("click", close); $("#promo-no").addEventListener("click", close);
   d.addEventListener("click", e => { if (e.target === d) close(); });
   addEventListener("keydown", e => { if (e.key === "Escape" && !d.hidden) close(); });
-  $("#promo-copy").addEventListener("click", async () => { try { await navigator.clipboard.writeText(code); $("#promo-cl").textContent = "Copied"; } catch (e) { toast(code); } });
-  $("#promo-go").addEventListener("click", () => { claimedNow = code; try { localStorage.setItem(PROMO_KEY + "_claimed", code); } catch (e) {} d.hidden = true; window.__bill && window.__bill(); toast(`${CONFIG.promoPercent}% off applied at checkout with ${code}.`); });
-  if (!fresh) return;
-  // show after 12 s on the page, or once the visitor has scrolled past the hero
-  const t = setTimeout(open, 12000);
-  const sc = () => { if ($(".hero").getBoundingClientRect().bottom < 0) { clearTimeout(t); removeEventListener("scroll", sc); setTimeout(open, 600); } };
-  addEventListener("scroll", sc, { passive: true });
+  $("#promo-copy").addEventListener("click", async () => { const code = offer.code; try { await navigator.clipboard.writeText(code); $("#promo-cl").textContent = "Copied"; } catch (e) { toast(code); } });
+  $("#promo-go").addEventListener("click", () => { const { code, percent } = offer; claimedNow = code; try { localStorage.setItem(PROMO_KEY + "_claimed", code); } catch (e) {} d.hidden = true; window.__bill && window.__bill(); toast(`${percent}% off applied at checkout with ${code}.`); });
+  const show = data => {
+    const o = data && data.promo;
+    offer = o && typeof o.code === "string" && /^[A-Za-z0-9-]{2,40}$/.test(o.code) && o.percent > 0 && o.percent < 100 ? o : null;
+    window.__bill && window.__bill(); // a code that's no longer on offer leaves the Get Premium links
+    if (!offer) return;
+    const v = { percent: offer.percent, code: offer.code, total: offer.total ?? "", left: offer.left ?? "" };
+    const fill = t => String(t || "").replace(/\{(percent|code|total|left)\}/g, (m, k) => v[k]);
+    $("#promo-eb").textContent = fill(offer.eyebrow); $("#promo-p").textContent = fill(offer.text);
+    $("#promo-t").innerHTML = esc(offer.title || "").replace(/\{(percent|code|total|left)\}/g, (m, k) => k === "percent" ? `<span>${esc(v.percent)}</span>` : esc(v[k]));
+    $("#promo-code").textContent = offer.code;
+    const lim = Number.isInteger(offer.total) && Number.isInteger(offer.left);
+    $("#promo-left").hidden = !lim;
+    if (lim) $("#promo-left").innerHTML = `Limited to the first ${offer.total} players · <b>${offer.left} left</b>`;
+    if (!store || seenCode === offer.code && Date.now() - seen < 30 * 864e5) return;
+    // show 12 s after the page opened, or once the visitor has scrolled past the hero
+    const t = setTimeout(open, Math.max(0, 12000 - (Date.now() - t0)));
+    const sc = () => { if ($(".hero").getBoundingClientRect().bottom < 0) { clearTimeout(t); removeEventListener("scroll", sc); setTimeout(open, 600); } };
+    addEventListener("scroll", sc, { passive: true }); sc();
+  };
+  // Server out of reach: no pop-up, and a code already claimed stays on the links (checked again at checkout)
+  fetch(acct("/api/v1/promo"), { credentials: "omit", cache: "no-cache" }).then(r => (r.ok ? r.json() : Promise.reject(r.status))).then(show).catch(() => {});
 })();
 
 /* After Download free: what to expect, SmartScreen included (the installer isn't code-signed yet) */
