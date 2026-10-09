@@ -79,7 +79,8 @@ OUT = os.path.join(ROOT, 'index.html')
 page = head + s[:i] + '\n</head>\n<body>\n' + s[i:].lstrip('\n') + '\n</body>\n</html>\n'
 open(OUT, 'w').write(page)
 
-# Without JavaScript: bake the reviews, comparison table, game strip and app previews into the HTML (the JS rewrites them on load)
+# Without JavaScript: bake the comparison table, game strip and app previews into the HTML (the JS rewrites them on load).
+# The reviews come from the account server and stay hidden without JavaScript.
 try:
     baked = json.loads(subprocess.run(['node', os.path.join(ROOT, 'tools', 'prerender.js'), OUT], capture_output=True, text=True, check=True).stdout)
     for k, v in baked.items():

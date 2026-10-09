@@ -34,6 +34,8 @@ npm run admin -- reset-device <email>    # libère le PC pour en activer un autr
 npm run admin -- revoke <email> [raison]
 npm run admin -- restore <email>
 npm run admin -- grant <email> [note]    # licence offerte, ex. anciens acheteurs du .bat Premium
+npm run admin -- reviews                 # derniers avis ; hide-review / show-review <email> pour la modération
+npm run admin -- remove-photo <email>    # retire une photo de profil (avec SUPABASE_URL et SUPABASE_SERVICE_ROLE_KEY)
 ```
 
 `grant` sur un email sans compte affiche un lien à envoyer à la personne pour qu'elle crée son compte.

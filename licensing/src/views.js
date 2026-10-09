@@ -22,6 +22,15 @@ const ICON = {
   infinity: svg('M8 8c-1.4-2-2.6-3-4-3a3 3 0 0 0 0 6c1.4 0 2.6-1 4-3zm0 0c1.4 2 2.6 3 4 3a3 3 0 0 0 0-6c-1.4 0-2.6 1-4 3z', 1.4),
 };
 
+/** Profile photo, or the first letter of the public name (or email) on a dark circle when there's none. */
+export function avatar(user, size = 'sm') {
+  const label = user?.display_name || user?.email || '?';
+  const initial = [...label.trim()][0]?.toUpperCase() || '?';
+  return user?.avatar_key
+    ? html`<img class="avatar avatar-${size}" src="/avatars/${user.avatar_key}" alt="" width="${size === 'lg' ? 96 : 28}" height="${size === 'lg' ? 96 : 28}" decoding="async">`
+    : html`<span class="avatar avatar-${size} avatar-none" aria-hidden="true">${initial}</span>`;
+}
+
 const pulse = html`<div class="pulse" aria-hidden="true"><i></i><i></i><i></i><b></b></div>`;
 
 const STEPS = ['Pay', 'Your account', 'Download', 'Activate'];
@@ -65,9 +74,10 @@ function page({ title, body, user, cfg, bodyClass = '', nav = '', cta = { href: 
   ${buy ? render(html`<a class="top-link" href="${pricing}">Pricing</a><a class="btn btn-primary btn-sm top-buy" href="${pricing}">Get Premium</a>`) : ''}
   ${user ? render(html`<nav class="tabs" aria-label="Account">
       <a href="/account" ${nav === 'account' ? html`aria-current="page"` : ''}>Account</a>
+      <a href="/account/profile" ${nav === 'profile' ? html`aria-current="page"` : ''}>Profile</a>
       <a href="/affiliate" ${nav === 'affiliate' ? html`aria-current="page"` : ''}>Affiliate</a>
     </nav>
-    <div class="top-user"><span class="top-email">${user.email}</span>
+    <div class="top-user"><a class="top-avatar" href="/account/profile" aria-label="Your profile">${avatar(user)}</a><span class="top-email">${user.email}</span>
     <form method="post" action="/logout"><button class="btn btn-ghost btn-sm" type="submit">Sign out</button></form></div>`)
     : render(html`<a class="btn btn-ghost btn-sm" href="${cta.href}">${cta.label}</a>`)}
 </header>
@@ -452,9 +462,61 @@ export function dashboardPage(cfg, { user, license, device, notice, error, canRe
     <div class="grid">
       ${license ? [active ? download() : comeBack(), licenseCard(), deviceCard(), planCard(), sideCard('d5')] : [freeCard, affiliateCard('d2 side')]}
     </div>
-    <p class="dash-foot small muted rise d5">Signed in as ${user.email} · <a href="/account/password">Change password</a></p>
+    <p class="dash-foot small muted rise d5">Signed in as ${user.email} · <a href="/account/profile">Profile photo and name</a> · <a href="/account/password">Change password</a></p>
   </main>`;
   return page({ title: 'Your account', cfg, user, body, bodyClass: 'is-dash', nav: 'account', buy: !active });
+}
+
+const STAR = html`<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2.5l2.9 6.1 6.6.8-4.9 4.6 1.3 6.6L12 17.3l-5.9 3.3 1.3-6.6-4.9-4.6 6.6-.8z"/></svg>`;
+
+/**
+ * Public profile: photo and name, shown with the player's review on the site and in Rago Optimizer.
+ * Right after sign-up (welcome) it's an optional step, with "Skip for now" back to where the player was going.
+ */
+export function profilePage(cfg, { user, review, notice, error, welcome = false, to = null }) {
+  const keep = welcome ? html`<input type="hidden" name="welcome" value="1"><input type="hidden" name="to" value="${to}">` : '';
+  const site = cfg.siteUrl.replace(/^https?:\/\//, '');
+  const aside = welcome
+    ? html`<p class="overline rise">Account created</p>
+      <h1 class="display rise d1">Add a profile photo.</h1>
+      <p class="lede rise d2">It shows next to your name when you leave a review, on ${site} and in Rago Optimizer. You can skip it and add one later from your account.</p>`
+    : html`<p class="overline rise">Your public profile</p>
+      <h1 class="display rise d1">Photo and name.</h1>
+      <p class="lede rise d2">They show with your review on ${site}, and in Rago Optimizer when you're signed in. Your email is never shown.</p>`;
+  const form = html`
+    <h2 class="h2">${welcome ? 'Profile photo' : 'Your profile'}</h2>
+    ${alertBox(error)}${alertBox(notice, 'ok')}
+    <div class="profile-photo">
+      <span class="profile-preview" data-avatar-preview>${avatar(user, 'lg')}</span>
+      <div class="profile-photo-text"><strong>${user.display_name || 'No public name yet'}</strong>
+        <p class="muted small">${user.avatar_key ? 'Your photo is a 256 × 256 picture, cropped to a square.' : 'No photo yet: the first letter of your name shows instead.'}</p></div>
+    </div>
+    <form method="post" action="/account/profile/photo" enctype="multipart/form-data" class="form" data-busy="Uploading…">
+      <div class="field">
+        <label class="field-label" for="f-photo">${user.avatar_key ? 'New photo' : 'Photo'}</label>
+        <input class="file" id="f-photo" name="photo" type="file" accept="image/jpeg,image/png,image/webp,image/gif" required aria-describedby="f-photo-hint" data-avatar-input>
+        <span class="field-hint" id="f-photo-hint">JPG, PNG, WebP or GIF, 5 MB at most. We crop it to a square and make it lighter.</span>
+      </div>
+      ${keep}
+      <button class="btn btn-primary btn-block" type="submit">${user.avatar_key ? 'Replace photo' : 'Upload photo'}</button>
+    </form>
+    ${user.avatar_key ? html`<form method="post" action="/account/profile/photo/remove" class="inline" data-confirm="Remove your profile photo?">${keep}<button class="btn btn-ghost btn-sm" type="submit">Remove photo</button></form>` : ''}
+    ${welcome
+      ? html`<div class="row profile-next">${notice ? html`<a class="btn btn-primary" href="${to}">Continue ${ICON.arrow}</a>` : html`<a class="btn btn-ghost" href="${to}">Skip for now</a>`}</div>`
+      : html`<hr class="sep">
+    <form method="post" action="/account/profile/name" class="form" data-busy="Saving…">
+      ${field({ label: 'Public name', name: 'name', value: user.display_name || '', autocomplete: 'nickname', hint: "Shown with your review instead of your email. 2 to 32 characters.", attrs: 'minlength="2" maxlength="32" spellcheck="false"' })}
+      <button class="btn btn-ghost btn-block" type="submit">Save name</button>
+    </form>
+    <div class="profile-review">
+      <p class="overline">Your review</p>
+      ${review
+        ? html`<p class="stars" aria-label="${review.rating} out of 5 stars">${Array.from({ length: 5 }, (_, i) => html`<span class="${i < review.rating ? 'on' : ''}">${STAR}</span>`)}</p>
+          <p class="review-text">${review.comment}</p>
+          <p class="muted small">${review.status === 'published' ? `Shown on ${site}.` : 'Hidden from the site by the Rago team.'} To change it, open Rago Optimizer, then Settings.</p>`
+        : html`<p class="muted small">No review yet. Rago Optimizer asks for one after a few minutes of use, or open Settings in the app.</p>`}
+    </div>`}`;
+  return page({ title: welcome ? 'Add a profile photo' : 'Your profile', cfg, user, nav: 'profile', buy: false, body: split({ aside, form }) });
 }
 
 const RULES = (cfg, closed = false) => [

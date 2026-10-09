@@ -13,6 +13,9 @@ import { loadKeys, verifyToken } from '../src/tokens.js';
 import { createApp } from '../src/app.js';
 import { createMailer } from '../src/mailer.js';
 import * as L from '../src/licensing.js';
+import * as P from '../src/profile.js';
+import * as R from '../src/reviews.js';
+import sharp from 'sharp';
 
 const WHSEC = 'whsec_test_secret';
 const installer = join(mkdtempSync(join(tmpdir(), 'rago-')), 'RagoHub-Setup.exe');
@@ -151,7 +154,11 @@ test('purchase -> webhook -> success page -> create account -> dashboard -> down
 
   const res = await t.browse('/signup', { form: { email: 'player@example.com', password: 'hunter2hunter2' } });
   assert.equal(res.status, 303);
-  assert.equal(res.headers.get('location'), '/account?n=claimed');
+  // New account: the profile photo step first, which can be skipped.
+  assert.equal(res.headers.get('location'), '/account/profile?welcome=1&to=%2Faccount%3Fn%3Dclaimed');
+  const welcome = await (await t.browse(res.headers.get('location'))).text();
+  assert.match(welcome, /Add a profile photo\./);
+  assert.match(welcome, /<a class="btn btn-ghost" href="\/account\?n=claimed">Skip for now<\/a>/);
   const dash = await (await t.browse('/account?n=claimed')).text();
   assert.match(dash, /License added to your account/);
   assert.match(dash, /RAGO-/);
@@ -460,8 +467,9 @@ test('config accepts a bare host for PUBLIC_URL and flags example values', () =>
   assert.equal(cfg.siteUrl, 'https://rago.netlify.app');
   assert.equal(cfg.cancelUrl, 'https://rago.netlify.app/#pricing');
   assert.equal(cfg.resendApiKey, '');
-  assert.equal(cfg.warnings.length, 4);
+  assert.equal(cfg.warnings.length, 5);
   assert.match(cfg.warnings.join(' '), /SCRIPTS_SECRET is not set/);
+  assert.match(cfg.warnings.join(' '), /SUPABASE_SERVICE_ROLE_KEY is not set: profile photos/);
   assert.equal(cfg.subscriptions, true);
   // No price at all: the server still starts, says so in the logs, and /buy explains checkout isn't open.
   const noPrice = loadConfig({ NODE_ENV: 'production', PUBLIC_URL: 'x.app', DATABASE_URL: 'postgres://x', STRIPE_SECRET_KEY: 'sk', STRIPE_WEBHOOK_SECRET: 'whsec' });
@@ -891,7 +899,7 @@ test('affiliate without a license gets 6 months of Premium, which end on their d
   const t = await setup(SUBS);
   await t.browse('/signup?next=/affiliate');
   const r = await t.browse('/signup', { form: { email: 'free@aff.io', password: 'password123', next: '/affiliate' } });
-  assert.equal(r.headers.get('location'), '/affiliate');
+  assert.equal(r.headers.get('location'), '/account/profile?welcome=1&to=%2Faffiliate');
   await t.browse('/affiliate/join', { form: {} });
   const aff = await L.findUserByEmail(t.db, 'free@aff.io');
   const { code } = await t.db.get('SELECT code FROM affiliates');
@@ -1196,3 +1204,236 @@ test('before the launch: signup, checkout, download and affiliate pages wait, si
   assert.equal(prod.launchAt, Date.parse('2026-10-10T13:00:00Z'));
   assert.equal(loadConfig({}).launchAt, 0);
 });
+
+// ---------- reviews and profile photos (2026-10-09) ----------
+
+const picture = (w, h, format = 'png') => sharp({ create: { width: w, height: h, channels: 3, background: { r: 230, g: 50, b: 40 } } })[format]().toBuffer();
+const call = (t, method, path, { token, json, body, headers = {} } = {}) => t.app.request(`/api/v1${path}`, {
+  method,
+  headers: { ...(token ? { authorization: `Bearer ${token}` } : {}), ...(json ? { 'content-type': 'application/json' } : {}), ...headers },
+  body: json ? JSON.stringify(json) : body,
+});
+const errCode = async (res) => (await res.json()).error?.code;
+
+test('reviews: signed in from the app, 1 to 5 stars and a comment checked by the server, one per account, shown on the site', async () => {
+  const t = await setup();
+  await t.browse('/signup', { form: { email: 'fan@rago.gg', password: 'password123' } });
+
+  // No review yet: the site gets an empty list and hides its Reviews section.
+  let pub = await t.app.request('/api/v1/reviews');
+  assert.equal(pub.headers.get('access-control-allow-origin'), '*');
+  assert.deepEqual(await pub.json(), { count: 0, average: null, reviews: [] });
+
+  assert.equal((await call(t, 'POST', '/account/login', { json: { email: 'fan@rago.gg', password: 'nope' } })).status, 401);
+  const login = await (await call(t, 'POST', '/account/login', { json: { email: ' Fan@rago.gg', password: 'password123' } })).json();
+  assert.ok(login.account_token);
+  assert.deepEqual(login.account, { email: 'fan@rago.gg', name: null, avatar_url: null });
+  assert.equal(login.review, null);
+  const token = login.account_token;
+  assert.equal((await call(t, 'GET', '/account/me')).status, 401);
+  assert.equal((await call(t, 'GET', '/account/me', { token: 'forged' })).status, 401);
+
+  const put = (json) => call(t, 'PUT', '/account/review', { token, json });
+  assert.equal(await errCode(await put({ comment: 'Great', name: 'Fan' })), 'invalid_rating'); // no stars
+  for (const rating of [0, 6, 4.5, '5 stars', null]) assert.equal(await errCode(await put({ rating, comment: 'Great', name: 'Fan' })), 'invalid_rating', String(rating));
+  assert.equal(await errCode(await put({ rating: 5, name: 'Fan' })), 'empty_comment');
+  assert.equal(await errCode(await put({ rating: 5, comment: '  \n ​ ', name: 'Fan' })), 'empty_comment');
+  assert.equal(await errCode(await put({ rating: 5, comment: 'x'.repeat(601), name: 'Fan' })), 'comment_too_long');
+  assert.equal(await errCode(await put({ rating: 5, comment: 'Great' })), 'name_required');
+  for (const name of ['x', 'me@mail.com', 'rago.gg', 'https://spam', '<b>Fan</b>', 'a'.repeat(33)]) assert.equal(await errCode(await put({ rating: 5, comment: 'Great', name })), 'invalid_name', name);
+  assert.equal((await put({ rating: 5, comment: 'Great', name: 'Fan' }).then((r) => r.status)), 200);
+  await t.db.run('DELETE FROM reviews');
+  await t.db.run('UPDATE users SET display_name = NULL');
+  // A refused review saves nothing, not even the name.
+  assert.equal(await errCode(await put({ rating: 9, comment: 'Great', name: 'Fan' })), 'invalid_rating');
+  assert.equal((await L.findUserByEmail(t.db, 'fan@rago.gg')).display_name, null);
+
+  const ok = await (await put({ rating: 4, comment: '  Ping steadier on Hypixel.\n\n\n\n<script>alert(1)</script>  ', name: '  Fan   Boy ', app_version: '1.1.8' })).json();
+  assert.deepEqual(ok.account, { email: 'fan@rago.gg', name: 'Fan Boy', avatar_url: null });
+  assert.equal(ok.review.rating, 4);
+  assert.equal(ok.review.comment, 'Ping steadier on Hypixel.\n\n<script>alert(1)</script>');
+  assert.equal(ok.review.hidden, false);
+  // The account page shows it as text, never as HTML.
+  const prof = await (await t.browse('/account/profile')).text();
+  assert.match(prof, /&lt;script&gt;alert\(1\)&lt;\/script&gt;/);
+  assert.doesNotMatch(prof, /<script>alert/);
+
+  // Editing replaces it: still one review for the account, the name kept.
+  const edited = await (await put({ rating: 5, comment: 'Even better after a restart.' })).json();
+  assert.equal(edited.review.rating, 5);
+  assert.equal(edited.account.name, 'Fan Boy');
+  assert.equal((await t.db.get('SELECT COUNT(*)::int AS n FROM reviews')).n, 1);
+
+  pub = await (await t.app.request('/api/v1/reviews')).json();
+  assert.equal(pub.count, 1);
+  assert.equal(pub.average, 5);
+  assert.deepEqual(pub.reviews.map((r) => [r.name, r.rating, r.comment, r.avatar_url]), [['Fan Boy', 5, 'Even better after a restart.', null]]);
+  assert.match(pub.reviews[0].date, /^\d{4}-\d{2}-\d{2}$/);
+  assert.doesNotMatch(JSON.stringify(pub), /fan@rago\.gg/); // the email is never public
+
+  // Support hides it: gone from the site, marked hidden for its author.
+  const fan = await L.findUserByEmail(t.db, 'fan@rago.gg');
+  assert.ok(await R.setReviewStatus(t.db, fan.id, 'hidden'));
+  assert.equal((await R.publicReviews(t.db, t.cfg)).count, 0);
+  assert.equal((await (await call(t, 'GET', '/account/me', { token })).json()).review.hidden, true);
+
+  // Signing out in the app ends that token; a new password ends every app sign-in.
+  const other = (await (await call(t, 'POST', '/account/login', { json: { email: 'fan@rago.gg', password: 'password123' } })).json()).account_token;
+  assert.equal((await call(t, 'POST', '/account/logout', { token })).status, 200);
+  assert.equal((await call(t, 'GET', '/account/me', { token })).status, 401);
+  assert.equal((await call(t, 'GET', '/account/me', { token: other })).status, 200);
+  await t.browse('/account/password', { form: { current: 'password123', password: 'new password 1' } });
+  assert.equal((await call(t, 'GET', '/account/me', { token: other })).status, 401);
+});
+
+test('reviews: a Premium PC uses its license token, which stops working once the license is revoked', async () => {
+  const t = await setup();
+  await t.browse('/signup', { form: { email: 'pro@rago.gg', password: 'password123' } });
+  await L.grantLicense(t.db, 'pro@rago.gg', 'test');
+  const login = await (await t.api('/auth/login', { email: 'pro@rago.gg', password: 'password123', device: device('G1') })).json();
+  assert.equal((await call(t, 'GET', '/account/me', { token: login.access_token })).status, 401); // an access token isn't enough
+  const active = await appActivate(t, 'pro@rago.gg', device('G1'));
+  const me = await (await call(t, 'GET', '/account/me', { token: active.license_token })).json();
+  assert.equal(me.account.email, 'pro@rago.gg');
+  assert.equal((await call(t, 'PUT', '/account/review', { token: active.license_token, json: { rating: 5, comment: 'Clean app.', name: 'Pro' } })).status, 200);
+  const lic = await L.licenseForUser(t.db, (await L.findUserByEmail(t.db, 'pro@rago.gg')).id);
+  await L.setLicenseStatus(t.db, lic.id, 'revoked', 'manual');
+  assert.equal(await errCode(await call(t, 'GET', '/account/me', { token: active.license_token })), 'invalid_token');
+});
+
+test('profile photo from the app: checked, cropped to 256 x 256 WebP without metadata, old one deleted, served to the site', async () => {
+  const t = await setup();
+  await t.browse('/signup', { form: { email: 'pic@rago.gg', password: 'password123' } });
+  const { account_token: token } = await (await call(t, 'POST', '/account/login', { json: { email: 'pic@rago.gg', password: 'password123' } })).json();
+  const upload = (body, type = 'image/png') => call(t, 'PUT', '/account/avatar', { token, body, headers: { 'content-type': type } });
+
+  const big = await sharp({ create: { width: 1600, height: 900, channels: 3, background: '#3355ff' } }).jpeg({ quality: 95 }).withExif({ IFD0: { Copyright: 'Rago test', Artist: 'someone' } }).toBuffer();
+  assert.ok((await sharp(big).metadata()).exif);
+  let res = await upload(big, 'image/jpeg');
+  assert.equal(res.status, 200);
+  const first = (await res.json()).account.avatar_url;
+  assert.match(first, /^http:\/\/localhost\/avatars\/[A-Za-z0-9_-]{20,40}\.webp$/);
+  const img = await t.app.request(new URL(first).pathname);
+  assert.equal(img.status, 200);
+  assert.equal(img.headers.get('content-type'), 'image/webp');
+  assert.equal(img.headers.get('cross-origin-resource-policy'), 'cross-origin');
+  assert.match(img.headers.get('cache-control'), /max-age=31536000, immutable/);
+  const bytes = Buffer.from(await img.arrayBuffer());
+  const meta = await sharp(bytes).metadata();
+  assert.deepEqual([meta.format, meta.width, meta.height, meta.exif], ['webp', 256, 256, undefined]);
+  assert.ok(bytes.length < 20 * 1024 && bytes.length * 5 < big.length, `${bytes.length} bytes`);
+
+  // A new photo replaces the old one, which is deleted.
+  res = await upload(await sharp({ create: { width: 64, height: 40, channels: 4, background: { r: 0, g: 0, b: 0, alpha: 0 } } }).gif().toBuffer(), 'image/gif');
+  const second = (await res.json()).account.avatar_url;
+  assert.notEqual(second, first);
+  assert.equal((await t.app.request(new URL(first).pathname)).status, 404);
+  assert.equal((await t.app.request(new URL(second).pathname)).status, 200);
+
+  // Refused: not a picture, a picture's first bytes over garbage, an SVG, empty, over 5 MB.
+  assert.equal(await errCode(await upload(Buffer.from('MZ not a picture at all'))), 'invalid_image');
+  assert.equal(await errCode(await upload(Buffer.concat([(await picture(10, 10)).subarray(0, 16), Buffer.alloc(200, 7)]))), 'invalid_image');
+  assert.equal(await errCode(await upload(Buffer.from('<svg xmlns="http://www.w3.org/2000/svg" width="10" height="10"/>'), 'image/svg+xml')), 'invalid_image');
+  assert.equal(await errCode(await upload(Buffer.alloc(0))), 'invalid_image');
+  const tooBig = await upload(Buffer.concat([await picture(32, 32), Buffer.alloc(5 * 1024 * 1024)]));
+  assert.equal(tooBig.status, 413);
+  assert.equal(await errCode(tooBig), 'image_too_large');
+  assert.equal((await (await call(t, 'GET', '/account/me', { token })).json()).account.avatar_url, second);
+
+  // The site shows it with the review.
+  await call(t, 'PUT', '/account/review', { token, json: { rating: 5, comment: 'Nice.', name: 'Pic' } });
+  assert.equal((await (await t.app.request('/api/v1/reviews')).json()).reviews[0].avatar_url, second);
+
+  res = await call(t, 'DELETE', '/account/avatar', { token });
+  assert.equal((await res.json()).account.avatar_url, null);
+  assert.equal((await t.app.request(new URL(second).pathname)).status, 404);
+  assert.equal((await (await t.app.request('/api/v1/reviews')).json()).reviews[0].avatar_url, null);
+  assert.equal((await t.app.request('/avatars/..%2F..%2Fdownloads%2Fx.exe')).status, 404);
+  assert.equal((await t.app.request('/avatars/short.webp')).status, 404);
+});
+
+test('profile photo on the site: offered after sign-up, skippable, uploaded as a form, shown on the account pages', async () => {
+  const t = await setup();
+  const r = await t.browse('/signup', { form: { email: 'web@rago.gg', password: 'password123' } });
+  assert.equal(r.headers.get('location'), '/account/profile?welcome=1&to=%2Faccount');
+  let html = await (await t.browse(r.headers.get('location'))).text();
+  assert.match(html, /Add a profile photo\./);
+  assert.match(html, /href="\/account">Skip for now</);
+  assert.match(html, /<span class="avatar avatar-lg avatar-none" aria-hidden="true">W<\/span>/); // default: first letter
+  // Only our own pages after the step.
+  html = await (await t.browse('/account/profile?welcome=1&to=https%3A%2F%2Fevil.example')).text();
+  assert.doesNotMatch(html, /evil\.example/);
+  assert.doesNotMatch(html, /Skip for now/);
+
+  const cookie = [...t.jar].map(([k, v]) => `${k}=${v}`).join('; ');
+  const form = async (file, extra = {}) => {
+    const fd = new FormData();
+    if (file) fd.append('photo', new Blob([file.bytes], { type: file.type }), file.name);
+    for (const [k, v] of Object.entries(extra)) fd.append(k, v);
+    return t.app.request('/account/profile/photo', { method: 'POST', headers: { cookie, origin: 'http://localhost' }, body: fd });
+  };
+  let res = await form({ bytes: Buffer.from('hello'), type: 'image/png', name: 'fake.png' }, { welcome: '1', to: '/account' });
+  assert.equal(res.status, 400);
+  assert.match(await res.text(), /isn&#39;t a picture we can use/);
+  res = await form({ bytes: await picture(500, 400, 'webp'), type: 'image/webp', name: 'me.webp' }, { welcome: '1', to: '/account' });
+  assert.equal(res.status, 303);
+  assert.equal(res.headers.get('location'), '/account/profile?n=photo&welcome=1&to=%2Faccount');
+  html = await (await t.browse(res.headers.get('location'))).text();
+  assert.match(html, /Photo saved\./);
+  assert.match(html, /href="\/account">Continue/);
+  const user = await L.findUserByEmail(t.db, 'web@rago.gg');
+  assert.match(user.avatar_key, P.AVATAR_FILE);
+  const dash = await (await t.browse('/account')).text();
+  assert.match(dash, new RegExp(`<img class="avatar avatar-sm" src="/avatars/${user.avatar_key}"`));
+
+  res = await t.browse('/account/profile/name', { form: { name: 'Web Player' } });
+  assert.equal(res.headers.get('location'), '/account/profile?n=name');
+  assert.equal((await L.findUserByEmail(t.db, 'web@rago.gg')).display_name, 'Web Player');
+  res = await t.browse('/account/profile/name', { form: { name: 'web@rago.gg' } });
+  assert.equal(res.status, 400);
+  res = await t.browse('/account/profile/photo/remove', { form: {} });
+  assert.equal(res.headers.get('location'), '/account/profile?n=removed');
+  assert.equal((await L.findUserByEmail(t.db, 'web@rago.gg')).avatar_key, null);
+  assert.equal((await t.app.request(`/avatars/${user.avatar_key}`)).status, 404);
+  // Signed out: the profile pages ask to sign in.
+  t.jar.clear();
+  assert.equal((await t.browse('/account/profile')).headers.get('location'), '/login');
+});
+
+test('profile photos in Supabase Storage: private bucket created on the first upload, old photo deleted', async () => {
+  const objects = new Map();
+  const calls = [];
+  let bucket = null;
+  const fetchImpl = async (url, opts = {}) => {
+    const { pathname } = new URL(url);
+    const method = opts.method || 'GET';
+    calls.push(`${method} ${pathname}`);
+    assert.equal(opts.headers.apikey, 'sb_secret_test');
+    const json = (status, body) => new Response(JSON.stringify(body), { status, headers: { 'content-type': 'application/json' } });
+    if (method === 'POST' && pathname === '/storage/v1/bucket') { bucket = JSON.parse(opts.body); return json(200, { name: bucket.name }); }
+    const m = pathname.match(/^\/storage\/v1\/object\/(authenticated\/)?avatars\/(.+)$/);
+    if (!m) return json(400, { error: 'unexpected' });
+    if (!bucket) return json(400, { statusCode: '404', error: 'Bucket not found', message: 'Bucket not found' });
+    if (method === 'POST') { assert.equal(opts.headers['Content-Type'], 'image/webp'); objects.set(m[2], Buffer.from(opts.body)); return json(200, { Key: `avatars/${m[2]}` }); }
+    if (method === 'DELETE') { objects.delete(m[2]); return json(200, {}); }
+    return objects.has(m[2]) ? new Response(objects.get(m[2]), { status: 200 }) : json(400, { error: 'not_found', message: 'Object not found' });
+  };
+  const t = await setup({ SUPABASE_URL: 'https://proj.supabase.co', SUPABASE_SERVICE_ROLE_KEY: 'sb_secret_test' }, { fetchImpl });
+  await t.browse('/signup', { form: { email: 'sb@rago.gg', password: 'password123' } });
+  const { account_token: token } = await (await call(t, 'POST', '/account/login', { json: { email: 'sb@rago.gg', password: 'password123' } })).json();
+  const up = async () => (await (await call(t, 'PUT', '/account/avatar', { token, body: await picture(300, 300), headers: { 'content-type': 'image/png' } })).json()).account.avatar_url;
+  const first = (await up()).split('/').pop();
+  assert.deepEqual(bucket, { id: 'avatars', name: 'avatars', public: false, file_size_limit: 1048576, allowed_mime_types: ['image/webp'] });
+  assert.deepEqual(calls, [`POST /storage/v1/object/avatars/${first}`, 'POST /storage/v1/bucket', `POST /storage/v1/object/avatars/${first}`]);
+  const second = (await up()).split('/').pop();
+  assert.deepEqual([...objects.keys()], [second]);
+  assert.ok(calls.includes(`DELETE /storage/v1/object/avatars/${first}`));
+  // Another server (or after a restart): read from the bucket, then from memory.
+  const store = P.createAvatarStore(t.cfg, { fetchImpl });
+  calls.length = 0;
+  assert.ok((await store.get(second)).equals(objects.get(second)));
+  assert.ok(await store.get(second));
+  assert.deepEqual(calls, [`GET /storage/v1/object/authenticated/avatars/${second}`]);
+  assert.equal(await store.get('missingmissingmissing00.webp'), null);
+});
+

@@ -314,3 +314,25 @@ p{margin:0}
   .is-purchase .panel{padding-top:16px;padding-bottom:16px}.is-purchase .form{gap:12px}
   .is-purchase .panel > .h2{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
   .is-purchase .panel > .h2 + .form,.is-purchase .panel > .h2 + p{margin-top:0}}
+
+/* Profile photo and public name (2026-10-09). Without a photo: the first letter on a dark circle. */
+.avatar{display:grid;place-items:center;flex:none;border-radius:var(--rg-radius-full);object-fit:cover;background:var(--rg-ink-4);border:1px solid var(--rg-line-2);color:var(--rg-text-1);font-weight:600;user-select:none}
+.avatar-sm{width:28px;height:28px;font-size:12px}
+.avatar-lg{width:96px;height:96px;font-size:36px;border-width:2px}
+.avatar-none{background:radial-gradient(circle at 30% 25%,var(--rg-ink-5),var(--rg-ink-3))}
+.top-avatar{display:inline-flex;border-radius:var(--rg-radius-full);text-decoration:none}
+.top-avatar:hover .avatar{border-color:var(--rg-red-500)}
+.profile-photo{display:flex;align-items:center;gap:18px;margin-bottom:22px}
+.profile-photo-text{display:flex;flex-direction:column;gap:4px;min-width:0;overflow-wrap:anywhere}
+.profile-preview{display:inline-flex}
+.file{width:100%;padding:10px;background:var(--rg-ink-3);color:var(--rg-text-2);border:1px dashed var(--rg-line-3);border-radius:var(--rg-radius-md);font:inherit;font-size:var(--rg-fs-small);cursor:pointer}
+.file:hover{border-color:var(--rg-red-500)}
+.file::file-selector-button{margin-right:12px;height:32px;padding:0 14px;border:1px solid var(--rg-line-2);border-radius:var(--rg-radius-full);background:var(--rg-ink-4);color:var(--rg-text-1);font:500 13px var(--rg-font-sans);cursor:pointer}
+.panel .inline{margin-top:12px}
+.profile-next{margin-top:24px}
+.sep{border:0;border-top:1px solid var(--rg-line-1);margin:28px 0}
+.profile-review{display:flex;flex-direction:column;gap:8px;margin-top:28px;padding-top:22px;border-top:1px solid var(--rg-line-1)}
+.stars{display:flex;gap:3px;color:var(--rg-ink-5)}
+.stars .on{color:var(--rg-red-500)}
+.stars svg{width:15px;height:15px;fill:currentColor;display:block}
+.review-text{white-space:pre-line;overflow-wrap:anywhere}

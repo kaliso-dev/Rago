@@ -30,6 +30,8 @@ export function loadConfig(env = process.env) {
     supabaseServiceKey: env.SUPABASE_SERVICE_ROLE_KEY || '',
     // <bucket>/<path> in Supabase Storage. If that file isn't there, the newest .exe of the folder is served.
     installerObject: env.INSTALLER_OBJECT || 'downloads/RagoOptimizer-Setup.exe',
+    // Private Supabase Storage bucket for profile photos, created by the server on the first upload.
+    avatarBucket: (env.AVATAR_BUCKET || 'avatars').trim(),
     trustProxy: env.TRUST_PROXY === '1' || env.TRUST_PROXY === 'true',
 
     stripeSecretKey: env.STRIPE_SECRET_KEY || '',
@@ -109,6 +111,7 @@ export function loadConfig(env = process.env) {
   if (prod && !cfg.scriptsSecret) cfg.warnings.push('SCRIPTS_SECRET is not set: Rago Optimizer 1.1.6 and later can\'t unlock the Premium tweaks ("Premium scripts unavailable"). Use the same value as the GitHub secret RAGO_SCRIPTS_SECRET.');
   if (!env.SITE_URL) cfg.warnings.push('SITE_URL is not set: links to the site (pricing, terms) point to this server and open a 404. Set it to the Netlify address.');
   else if (/ragohub\.com|example\.com/i.test(cfg.siteUrl)) cfg.warnings.push(`SITE_URL is still the example (${cfg.siteUrl}): use the real site address.`);
+  if (prod && (!cfg.supabaseUrl || !cfg.supabaseServiceKey)) cfg.warnings.push('SUPABASE_URL or SUPABASE_SERVICE_ROLE_KEY is not set: profile photos are kept in memory and lost at each restart.');
   if (placeholder(cfg.supabaseUrl)) cfg.warnings.push('SUPABASE_URL is still the example: Download Rago Optimizer will fail. Use https://<project-ref>.supabase.co');
   if (placeholder(cfg.stripeWebhookSecret)) cfg.warnings.push('STRIPE_WEBHOOK_SECRET is still the example: Stripe webhooks will be rejected (step 6).');
   if (!cfg.subscriptions) cfg.warnings.push(`No subscription price: set STRIPE_PRICE_MONTHLY and STRIPE_PRICE_YEARLY. Until then /buy shows "Checkout opens soon" and nothing is sold${cfg.stripePriceId ? ' (the old one-time STRIPE_PRICE_ID is no longer sold: remove it)' : ''}.`);

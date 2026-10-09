@@ -329,10 +329,17 @@ section[id],main[id]{scroll-margin-top:92px}
 .rq .stars{display:flex;gap:3px;color:var(--red)}
 .rq .stars svg{width:14px;height:14px;fill:currentColor}
 .rq.wide{width:460px}
-.rq p{font-size:14px;color:var(--t1);line-height:1.6}
+.rq p{font-size:14px;color:var(--t1);line-height:1.6;white-space:pre-line;overflow-wrap:anywhere}
+.rq .stars .off{display:flex;color:var(--ink-4)}
 .rq footer{display:flex;align-items:center;gap:10px;font-size:13px;color:var(--t2)}
 .av{width:30px;height:30px;border-radius:50%;display:grid;place-items:center;font:600 12px/1 var(--sans);color:var(--t1);background:var(--ink-4);border:1px solid var(--l2);flex:none}
-.rq footer small{margin-left:auto;font-size:11px;color:var(--t3)}
+.rq footer small{margin-left:auto;font-size:11px;color:var(--t3);white-space:nowrap}
+.rq footer .rn{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+img.av{object-fit:cover;padding:0}
+/* A few reviews: centered cards that stay put; the moving strips start at 6 */
+.rev.few{mask-image:none;-webkit-mask-image:none}
+.rev.few .rev-row{animation:none;flex-wrap:wrap;width:auto;justify-content:center;padding-inline:16px}
+.rev-sum{font-size:13px;color:var(--t3);margin-top:10px}
 .rev-note{text-align:center;font-size:12.5px;color:var(--t3);margin-top:28px}
 
 /* Pricing */
@@ -599,7 +606,7 @@ footer.foot p{max-width:80ch}
     <nav class="nav" aria-label="Sections">
       <a href="#why">Why Rago</a>
       <a href="#features">Features</a>
-      <a href="#reviews">Reviews</a>
+      <a class="js-rev" href="#reviews" hidden>Reviews</a>
       <a href="#pricing">Pricing</a>
       <a href="#faq">FAQ</a>
     </nav>
@@ -611,7 +618,7 @@ footer.foot p{max-width:80ch}
   </div>
   <div class="menu" id="menu" hidden>
     <nav aria-label="Menu">
-      <a href="#why">Why Rago</a><a href="#features">Features</a><a href="#reviews">Reviews</a><a href="#pricing">Pricing</a><a href="#faq">FAQ</a><a class="js-affiliate" href="/affiliate">Affiliate program</a>
+      <a href="#why">Why Rago</a><a href="#features">Features</a><a class="js-rev" href="#reviews" hidden>Reviews</a><a href="#pricing">Pricing</a><a href="#faq">FAQ</a><a class="js-affiliate" href="/affiliate">Affiliate program</a>
     </nav>
     <div class="menu-cta"><a class="btn btn-ghost js-account" href="/login">Sign in</a><a class="btn btn-ghost js-signup" href="/signup">Create account</a></div>
   </div>
@@ -742,18 +749,20 @@ footer.foot p{max-width:80ch}
     </div>
   </section>
 
-  <section class="sec band" id="reviews" style="padding-top:0;padding-bottom:clamp(40px,5vw,72px)">
+  <!-- Reviews: left by players in Rago Optimizer, read from the account server. Hidden until the first one. -->
+  <section class="sec band js-rev" id="reviews" style="padding-top:0;padding-bottom:clamp(40px,5vw,72px)" hidden>
     <div class="head rv">
       <span class="eyebrow">Reviews</span>
       <h2>Players feel the difference.</h2>
-      <p>Straight from our <span class="js-dword">Discord</span>.</p>
+      <p>Left by players in Rago Optimizer.</p>
+      <p class="rev-sum" id="rev-sum"></p>
     </div>
   </section>
-  <div class="rev" id="rev">
+  <div class="rev js-rev" id="rev" hidden>
     <div class="rev-row" id="r1"></div>
     <div class="rev-row rv2" id="r2"></div>
   </div>
-  <p class="rev-note band">Posted by members of the Rago Discord, unedited. Not checked against purchases. Results depend on your PC and connection. <button type="button" class="rev-pause" id="rev-pause" aria-pressed="false">Pause</button></p>
+  <p class="rev-note band js-rev" hidden>Posted from the app by players signed in to their Rago account, as written. Results depend on your PC and connection. <button type="button" class="rev-pause" id="rev-pause" aria-pressed="false">Pause</button></p>
 
   <section class="sec band" id="plans">
     <div class="head rv">
@@ -1292,30 +1301,42 @@ function howFill() {
   $$(".hs", w).forEach((el, i) => el.classList.toggle("lit", reduce || p >= i / 3 - .02));
 }
 
-/* Reviews: verbatim from the Rago Discord */
+/* Reviews: the real ones, left by players in Rago Optimizer, read from the account server on every visit.
+   No review yet (or the server can't be reached): the section and its menu links stay hidden. */
 (() => {
-  const A = [
-    ["shadows","+700 fps and my hitreg is sooo much better!"],
-    ["pinqk","I enjoyed the product. Went from spiking to 120 ms to having a stable 90-100 with very little spikes on hypixel unless the server is dying."],
-    ["Troller","good tweaks. -15ms on hypixel and hitreg improved so much"],
-    ["Modae","stays around 40 ping which is the same as before, more stable now though"],
-    ["band","Ping got a little lower and hit reg is alot better, helped me improve alot."],
-    ["read bio pls","GREAT tweaks, ive been running my lowest ms consistently as well as my highest FPS, my game feels completely easier to control."],
-    ["topbridge","amazing optimizer highly recommend"]
-  ];
-  const B = [
-    ["Notsu311","Before And After Results It Make My Ping So Much Stable And I get no particle hits Highly recommend. +450 fps on a potato pc"],
-    ["dead","hitreg improved so much on hypixel + more stable ping, and mouse tweaks highered my jitter cps to 15 from 13"],
-    ["Steven","The tweaks improved EVERY aspect and i wish i did these sooner. The overall smoothness of the game is incredible, my internet is very unpredictable, however even when its slow the game still retains smooth gameplay which is game changing. my ping got reduced from 140ms to 100ms, spikes occur less frequently, hitreg is incredible and reduced input delay. Honestly 10/10"],
-    ["_Agic","20ms lower and more stable ping as well as improved hitreg"],
-    ["sam","My ping combined with exit lag is way bettter now after the tweaks, my hit reg seems to be more consistent and people arent flying out of combos"],
-    ["fabian","good service, my hitreg has improved much and my ping is low now. recommended!"],
-  ];
   const STAR = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2.5l2.9 6.1 6.6.8-4.9 4.6 1.3 6.6L12 17.3l-5.9 3.3 1.3-6.6-4.9-4.6 6.6-.8z"/></svg>';
-  const card = ([n, t]) => `<figure class="rq${t.length > 160 ? " wide" : ""}"><span class="stars">${STAR.repeat(5)}</span><p>“${esc(t)}”</p><footer><span class="av">${esc(n.replace(/[^a-z0-9]/i, "").charAt(0).toUpperCase() || "?")}</span>${esc(n)}<small>Discord</small></footer></figure>`;
-  const fill = (el, list) => { const h = list.map(card).join(""); const copy = h.replace(/<figure /g, '<figure aria-hidden="true" '); el.innerHTML = h + copy.repeat(3); }; // 4 copies: wide screens never see the end of a row
-  fill($("#r1"), A); fill($("#r2"), B);
-  $("#rev-pause").addEventListener("click", e => { const on = $("#rev").classList.toggle("paused"); e.currentTarget.setAttribute("aria-pressed", on); e.currentTarget.textContent = on ? "Play" : "Pause"; });
+  const PHOTO = /^https?:\/\/[a-z0-9.-]+(:\d+)?\/avatars\/[A-Za-z0-9_-]{20,40}\.webp$/i;
+  const ok = r => r && Number.isInteger(r.rating) && r.rating >= 1 && r.rating <= 5 && typeof r.comment === "string" && r.comment.trim() && typeof r.name === "string" && r.name.trim();
+  const first = n => ([...n.trim()][0] || "?").toUpperCase();
+  const when = d => { const t = Date.parse(d); return isNaN(t) ? "" : new Date(t).toLocaleDateString("en-US", { month: "short", year: "numeric", timeZone: "UTC" }); };
+  const face = r => typeof r.avatar_url === "string" && PHOTO.test(r.avatar_url)
+    ? `<img class="av" src="${esc(r.avatar_url)}" alt="" width="30" height="30" loading="lazy" decoding="async" referrerpolicy="no-referrer" data-i="${esc(first(r.name))}">`
+    : `<span class="av" aria-hidden="true">${esc(first(r.name))}</span>`;
+  const card = r => `<figure class="rq${r.comment.length > 160 ? " wide" : ""}"><span class="stars" role="img" aria-label="${r.rating} out of 5 stars">${STAR.repeat(r.rating)}${`<span class="off">${STAR}</span>`.repeat(5 - r.rating)}</span><p>“${esc(r.comment.trim())}”</p><footer>${face(r)}<span class="rn">${esc(r.name.trim())}</span><small>${when(r.date)}</small></footer></figure>`;
+  const show = (data) => {
+    const list = (data && Array.isArray(data.reviews) ? data.reviews : []).filter(ok);
+    if (!list.length) return;
+    const rev = $("#rev");
+    if (list.length < 6) {
+      rev.classList.add("few");
+      $("#r1").innerHTML = list.map(card).join("");
+      $("#r2").remove();
+      $("#rev-pause").remove();
+    } else {
+      // two strips that move in opposite directions; 4 copies so wide screens never see the end of a row
+      const fill = (el, part) => { const h = part.map(card).join(""); el.innerHTML = h + h.replace(/<figure /g, '<figure aria-hidden="true" ').repeat(3); };
+      fill($("#r1"), list.filter((_, i) => i % 2 === 0)); fill($("#r2"), list.filter((_, i) => i % 2 === 1));
+      $("#rev-pause").addEventListener("click", e => { const on = rev.classList.toggle("paused"); e.currentTarget.setAttribute("aria-pressed", on); e.currentTarget.textContent = on ? "Play" : "Pause"; });
+    }
+    // a photo that doesn't load: the first letter of the name instead
+    $$("img.av", rev).forEach(img => img.addEventListener("error", () => img.replaceWith(Object.assign(document.createElement("span"), { className: "av", textContent: img.dataset.i })), { once: true }));
+    const n = Number(data.count) || list.length, avg = Number(data.average);
+    $("#rev-sum").textContent = `${n} review${n === 1 ? "" : "s"}${avg >= 1 && avg <= 5 ? ` · ${avg.toFixed(1)} out of 5` : ""}`;
+    $$(".js-rev").forEach(el => { el.hidden = false; });
+    window.__watch($("#reviews .head"));
+  };
+  if (!("fetch" in window)) return;
+  fetch(acct("/api/v1/reviews"), { credentials: "omit", cache: "no-cache" }).then(r => (r.ok ? r.json() : null)).then(show).catch(() => {});
 })();
 
 /* Affiliate code: keep ?ref=CODE from the share link (30 days) and pass it to checkout */

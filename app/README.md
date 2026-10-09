@@ -38,6 +38,16 @@ Contrat de référence : `licensing/docs/API.md` (thread « Comptes, licences et
 - En debug : serveur `http://localhost:8787/api/v1` et clé de test `src-tauri/keys/test-public-key.pem` par défaut. En release : `RAGO_API_BASE` et `RAGO_LICENSE_PUBKEY` (PEM) obligatoires ; sans elles, l'écran de connexion s'affiche mais refuse toute connexion (licence « unconfigured »).
 - Test de bout en bout contre le serveur local : `cargo test --manifest-path src-tauri/Cargo.toml live_flow -- --ignored`.
 
+## Compte, avis et photo de profil (1.1.8)
+
+Contrat : `licensing/docs/API.md`, section « Avis et photo de profil ». Implémentation : `src-tauri/src/account.rs` (réseau, jeton de compte chiffré DPAPI dans `%LOCALAPPDATA%\Rago\account.bin`, photo téléchargée et passée à l'interface en data URL) et `src/lib/account.tsx`.
+
+- Avec Premium, le jeton de licence du PC sert aussi pour le compte. Un compte gratuit se connecte une fois dans la fenêtre d'avis ou dans Settings → Profile.
+- Invitation à laisser un avis (`ReviewPrompt`, en bas à droite) : après 5 minutes d'utilisation réelle, cumulées d'un lancement à l'autre (fenêtre visible et active, un clic, une touche ou un mouvement dans la dernière minute). Jamais pendant une optimisation, une fenêtre ou une sélection en cours. « Not now » ou la croix : elle revient au plus tôt 7 jours et 30 minutes d'utilisation plus tard ; une deuxième fois : plus jamais. Avis donné (sur ce PC ou ailleurs) : plus jamais. État dans `localStorage` (`rago.reviewPrompt`).
+- Avis (`ReviewDialog`) : note de 1 à 5 étoiles et commentaire obligatoires, nom public, un seul avis par compte (le formulaire le modifie). Le serveur revérifie tout.
+- Settings → Profile (`ProfileCard`) : photo (réduite à 512 × 512 avant l'envoi, recadrée en 256 × 256 WebP par le serveur), nom public, son avis et « Edit review ».
+- Démo navigateur : compte simulé dans `localStorage` (`rago.demoAccount`) ; un faux mot de passe de moins de 4 caractères est refusé.
+
 ## Tests
 
 - `cargo test --manifest-path src-tauri/Cargo.toml` (scripts non interactifs, aucun chemin de l'auteur, plus de « Disabling », fusion OptiFine, ping, jeton de licence).
