@@ -235,6 +235,11 @@ impl Account {
         self.send(lic, "PUT", "/account/review", Body::Json(body))
     }
 
+    /// L'avis disparaît du site ; le nom public et la photo restent.
+    pub fn delete_review(&self, lic: &License) -> Result<AccountState, ApiError> {
+        self.send(lic, "DELETE", "/account/review", Body::Empty)
+    }
+
     pub fn set_name(&self, lic: &License, name: &str) -> Result<AccountState, ApiError> {
         self.send(lic, "PUT", "/account/name", Body::Json(json!({ "name": name })))
     }

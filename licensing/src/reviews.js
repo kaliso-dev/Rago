@@ -33,6 +33,12 @@ export async function saveReview(db, userId, input, appVersion = null) {
   return reviewOf(db, userId);
 }
 
+/** The player deletes their review: it leaves the site at once. A new one can be left later. */
+export async function deleteReview(db, userId) {
+  const { changes } = await db.run('DELETE FROM reviews WHERE user_id = ?', [userId]);
+  return changes > 0;
+}
+
 /** What the app shows about the player's own review. */
 export const reviewView = (r) => (r ? { rating: r.rating, comment: r.comment, updated_at: new Date(Number(r.updated_at)).toISOString(), hidden: r.status !== 'published' } : null);
 

@@ -2,17 +2,21 @@ import { AnimatePresence, motion } from "motion/react";
 import { Star, X } from "lucide-react";
 import { useAccount } from "../lib/account";
 import { useAccountText } from "../lib/accountText";
+import { useStore } from "../lib/store";
 import { Button } from "./ui";
 
 /** Invitation discrète à laisser un avis, en bas à droite (voir lib/account.tsx pour quand elle apparaît). */
 export function ReviewPrompt() {
   const { showPrompt, dismissPrompt, openReview } = useAccount();
   const { at } = useAccountText();
+  // même règle que la barre « Appliquer » (ApplyBar) : elle est visible, l'invitation se place au-dessus
+  const { selection, pendingUndo, applied, run } = useStore();
+  const barUp = !run && selection.length + pendingUndo.filter((id) => applied.has(id)).length > 0;
   return (
     <AnimatePresence>
       {showPrompt && (
         <motion.aside
-          className="review-prompt"
+          className={`review-prompt${barUp ? " above-bar" : ""}`}
           role="complementary"
           aria-label={at("prompt.title")}
           initial={{ opacity: 0, y: 16 }}
