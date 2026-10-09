@@ -34,12 +34,13 @@ export function loadConfig(env = process.env) {
     avatarBucket: (env.AVATAR_BUCKET || 'avatars').trim(),
     trustProxy: env.TRUST_PROXY === '1' || env.TRUST_PROXY === 'true',
 
-    stripeSecretKey: env.STRIPE_SECRET_KEY || '',
-    stripeWebhookSecret: env.STRIPE_WEBHOOK_SECRET || '',
+    // Trimmed: a space or a line break pasted with a key in Railway makes Stripe refuse it.
+    stripeSecretKey: (env.STRIPE_SECRET_KEY || '').trim(),
+    stripeWebhookSecret: (env.STRIPE_WEBHOOK_SECRET || '').trim(),
     // Subscription prices (recurring). STRIPE_PRICE_ID alone = the old one-time price, sold as a lifetime license.
-    stripePriceMonthly: env.STRIPE_PRICE_MONTHLY || '',
-    stripePriceYearly: env.STRIPE_PRICE_YEARLY || '',
-    stripePriceId: env.STRIPE_PRICE_ID || '',
+    stripePriceMonthly: (env.STRIPE_PRICE_MONTHLY || '').trim(),
+    stripePriceYearly: (env.STRIPE_PRICE_YEARLY || '').trim(),
+    stripePriceId: (env.STRIPE_PRICE_ID || '').trim(),
 
     signingKeyPem: readPem(env.LICENSE_SIGNING_KEY),
     sessionSecret: env.SESSION_SECRET || '',
@@ -54,7 +55,7 @@ export function loadConfig(env = process.env) {
     supportUrl: env.SUPPORT_URL || '',
     // Stripe customer portal login link (Settings > Billing > Customer portal): lets a buyer cancel by
     // email, without a Rago account. Shown as "Cancel subscription" in the footer when set.
-    portalLoginUrl: env.STRIPE_PORTAL_LOGIN_URL || '',
+    portalLoginUrl: (env.STRIPE_PORTAL_LOGIN_URL || '').trim(),
     // Price shown on the free dashboard: "$5.99 a month or $29.99 a year" (same amounts as Stripe and the site). Empty = no price shown.
     priceLabel: env.PRICE_LABEL || '',
     freeTweaks: Number(env.FREE_TWEAKS || 9),
@@ -115,6 +116,7 @@ export function loadConfig(env = process.env) {
   else if (/ragohub\.com|example\.com/i.test(cfg.siteUrl)) cfg.warnings.push(`SITE_URL is still the example (${cfg.siteUrl}): use the real site address.`);
   if (prod && (!cfg.supabaseUrl || !cfg.supabaseServiceKey)) cfg.warnings.push('SUPABASE_URL or SUPABASE_SERVICE_ROLE_KEY is not set: profile photos are kept in memory and lost at each restart.');
   if (placeholder(cfg.supabaseUrl)) cfg.warnings.push('SUPABASE_URL is still the example: Download Rago Optimizer will fail. Use https://<project-ref>.supabase.co');
+  if (cfg.stripeSecretKey && !/^(sk|rk)_(live|test)_/.test(cfg.stripeSecretKey)) cfg.warnings.push('STRIPE_SECRET_KEY is not a secret key: use the one starting with sk_live_ (or sk_test_), never the publishable key pk_.');
   if (placeholder(cfg.stripeWebhookSecret)) cfg.warnings.push('STRIPE_WEBHOOK_SECRET is still the example: Stripe webhooks will be rejected (step 6).');
   if (!cfg.subscriptions) cfg.warnings.push(`No subscription price: set STRIPE_PRICE_MONTHLY and STRIPE_PRICE_YEARLY. Until then /buy shows "Checkout opens soon" and nothing is sold${cfg.stripePriceId ? ' (the old one-time STRIPE_PRICE_ID is no longer sold: remove it)' : ''}.`);
   if (placeholder(cfg.resendApiKey)) {

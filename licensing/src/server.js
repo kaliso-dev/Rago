@@ -2,7 +2,7 @@ import { serve } from '@hono/node-server';
 import { loadConfig } from './config.js';
 import { ensureKeys, openDb, openMemoryDb } from './db.js';
 import { loadKeys } from './tokens.js';
-import { createStripe } from './billing.js';
+import { createStripe, stripeChecks } from './billing.js';
 import { createMailer } from './mailer.js';
 import { createApp } from './app.js';
 
@@ -22,6 +22,17 @@ if (!cfg.databaseUrl && process.env.DEV_SEED) {
 
 const stripe = createStripe(cfg);
 const app = createApp({ cfg, db, keys, stripe, mailer: createMailer(cfg) });
+
+// Prices, webhook destination and customer portal in the key's Stripe mode (the same list as /admin).
+if (stripe) {
+  stripeChecks(stripe, cfg, { db })
+    .then(({ mode, checks, testLicenses }) => {
+      console.log(`[stripe] ${mode} mode`);
+      for (const c of checks) if (c.level !== 'ok') console.warn(`[warn] Stripe, ${c.label} : ${c.text}`);
+      if (testLicenses) console.warn(`[warn] Stripe : ${testLicenses} licence(s) active(s) viennent d'achats en mode test (bouton sur /admin).`);
+    })
+    .catch((err) => console.error('[stripe] setup check failed', err.message));
+}
 
 // Hourly: referrals that cleared the hold period count, affiliates at the goal get their reward even if
 // they don't open their account page, ended affiliate rewards stop, and affiliate codes become Stripe

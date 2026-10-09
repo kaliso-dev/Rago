@@ -331,7 +331,7 @@ export function dashboardPage(cfg, { user, license, device, notice, error, canRe
       ${howto}
     </article>`;
 
-  const OFF = { subscription_ended: 'Ended', refunded: 'Refunded', disputed: 'Disputed' };
+  const OFF = { subscription_ended: 'Ended', refunded: 'Refunded', disputed: 'Disputed', test_mode: 'Test purchase' };
   const offBadge = () => OFF[reason] || 'Revoked';
   const licenseCard = () => html`<article class="card rise d2">
       <div class="card-head"><p class="overline">License key</p>
@@ -537,7 +537,7 @@ const RULES = (cfg, closed = false) => [
   `${cfg.affiliateGoal} players counted = ${cfg.affiliateRewardMonths} months of Premium on one PC${cfg.affiliateRewardMax === 1 ? ', once' : ''}. Subscribed? Your payments pause for ${cfg.affiliateRewardMonths} months instead.`,
 ];
 
-const VOID = { subscription_ended: 'Subscription ended', refunded: 'Refunded', disputed: 'Chargeback', same_device: 'Same PC as yours', same_payer: 'Same payer as you', revoked: 'License revoked' };
+const VOID = { subscription_ended: 'Subscription ended', refunded: 'Refunded', disputed: 'Chargeback', same_device: 'Same PC as yours', same_payer: 'Same payer as you', revoked: 'License revoked', test_mode: 'Test purchase' };
 
 function referralStatus(r) {
   if (r.status === 'counted') return html`<span class="badge badge-ok"><i></i>Counted</span>`;
@@ -646,10 +646,28 @@ const DURATION = { once: 'sur le premier paiement', forever: 'sur chaque paiemen
 const ADMIN_NOTICES = {
   saved: 'Enregistré. Le site affiche la nouvelle version de la pop-up en moins d’une minute.',
   created: 'Code créé dans Stripe et enregistré. Le site l’affiche en moins d’une minute.',
+  'test-ended': (n) => (n ? `${n === 1 ? 'La licence de test ne donne' : `Les ${n} licences de test ne donnent`} plus Premium.` : 'Aucune licence de test à arrêter.'),
 };
+const CHECK_BADGE = { ok: ['badge-ok', 'OK'], warn: ['badge-wait', 'À vérifier'], error: ['badge-red', 'À corriger'] };
+
+/** "Paiements Stripe" on /admin: is everything set up in the key's mode (billing.js stripeChecks). */
+function stripeSection(s) {
+  if (!s) return '';
+  const bad = s.checks.filter((c) => c.level === 'error').length;
+  return html`<section class="checks rise d3" aria-labelledby="checks-h">
+      <div class="row"><h2 class="h2" id="checks-h">Paiements Stripe</h2>
+        <span class="badge ${bad ? 'badge-red' : s.mode === 'live' ? 'badge-ok' : 'badge-wait'}"><i></i>${bad ? `${bad} à corriger` : s.mode === 'live' ? 'Prêt pour le live' : `Mode ${s.mode || 'non configuré'}`}</span></div>
+      <ul class="checks-list">${s.checks.map((c) => html`<li><span class="badge ${CHECK_BADGE[c.level][0]}"><i></i>${CHECK_BADGE[c.level][1]}</span>
+        <div><strong class="small">${c.label}</strong><p class="muted small">${c.text}</p></div></li>`)}</ul>
+      ${s.testLicenses ? html`<div class="checks-test">
+        <p class="small"><strong>${s.testLicenses === 1 ? '1 licence active vient' : `${s.testLicenses} licences actives viennent`} d’un achat fait en mode test</strong> (rien n’a été payé). Elles donnent encore Premium, comptent pour les affiliés, et bloquent un nouvel achat sur ces comptes.</p>
+        <form method="post" action="/admin/test-licenses" data-busy="Arrêt…" data-confirm="Arrêter ${s.testLicenses === 1 ? 'la licence de test' : `les ${s.testLicenses} licences de test`} ? Ces comptes repassent en version gratuite. Une licence offerte se redonne avec npm run admin -- grant."><button class="btn btn-ghost btn-sm" type="submit">Arrêter les licences de test</button></form>
+      </div>` : ''}
+    </section>`;
+}
 const fill = (t, p) => String(t).replace(/\{(percent|code|total|left)\}/g, (_, k) => String(p[k] ?? ''));
 
-export function adminPage(cfg, { state, values, error, notice }) {
+export function adminPage(cfg, { state, stripe, values, error, notice, count }) {
   const { settings: s, promo: p } = state;
   const v = values || { enabled: s.enabled, code: s.code, percent: p?.percent ?? '', limit: p?.total ?? '', eyebrow: s.eyebrow, title: s.title, text: s.text };
   const vals = p ? { percent: p.percent, code: p.code, total: p.total, left: p.left } : {};
@@ -673,9 +691,10 @@ export function adminPage(cfg, { state, values, error, notice }) {
       ${state.reason ? html`<span class="muted small">${state.reason}</span>` : ''}</div>
     <div class="rise d2">${facts}</div>
     <div class="rise d3">${preview}</div>
+    ${stripeSection(stripe)}
     <form class="rise d4" method="post" action="/admin/logout"><button class="btn btn-ghost btn-sm" type="submit">Quitter l’admin</button></form>`;
   const form = html`<h2 class="h2">Modifier la pop-up</h2>
-    ${alertBox(ADMIN_NOTICES[notice], 'ok')}${alertBox(error)}
+    ${alertBox(typeof ADMIN_NOTICES[notice] === 'function' ? ADMIN_NOTICES[notice](count) : ADMIN_NOTICES[notice], 'ok')}${alertBox(error)}
     <form method="post" action="/admin/popup" class="form" data-busy="Enregistrement…">
       <label class="check"><input type="checkbox" name="enabled" ${v.enabled ? html`checked` : ''}><span>Afficher la pop-up sur le site</span></label>
       ${field({ label: 'Code', name: 'code', value: v.code, autocomplete: 'off', attrs: 'maxlength="40" spellcheck="false" autocapitalize="characters" class="mono"',

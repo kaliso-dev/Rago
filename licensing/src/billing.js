@@ -1,11 +1,16 @@
 // Stripe Checkout (subscription, or the old one-time price), billing portal and webhooks.
 import Stripe from 'stripe';
-import { fulfillCheckoutSession, revokeForCharge, syncSubscription } from './licensing.js';
+import { fulfillCheckoutSession, revokeForCharge, setLicenseStatus, syncSubscription } from './licensing.js';
 import { codeFull, getAffiliate, voidReferrals } from './affiliates.js';
 
 export function createStripe(cfg) {
   return cfg.stripeSecretKey ? new Stripe(cfg.stripeSecretKey) : null;
 }
+
+const isLive = (cfg) => /^(sk|rk)_live_/.test(cfg.stripeSecretKey || '');
+/** 'live' or 'test' from STRIPE_SECRET_KEY, null without a key. Prices, codes and customers exist in one mode only. */
+export const stripeMode = (cfg) => (!cfg.stripeSecretKey ? null : isLive(cfg) ? 'live' : 'test');
+const missing = (err) => err?.statusCode === 404 || err?.code === 'resource_missing';
 
 /** The price for ?interval=month|year, falling back to whichever is configured. */
 export function priceFor(cfg, interval) {
@@ -31,13 +36,24 @@ const termsText = (cfg) => `I agree to the [Terms of Sale](${cfg.siteUrl}/terms.
  * and still open the checkout, so sales don't stop while the setting is missing.
  */
 export async function createCheckout(stripe, cfg, user, opts = {}, log = console) {
-  const open = async (o) => {
+  const terms = async (o) => {
     try {
       return await buildCheckout(stripe, cfg, user, { ...o, terms: true });
     } catch (err) {
       if (!/terms of service|terms_of_service/i.test(err.message || '')) throw err;
       log.error?.('[stripe] Terms checkbox refused: set the Terms of Service URL in Stripe (Settings > Public details).', err.message);
       return buildCheckout(stripe, cfg, user, { ...o, terms: false });
+    }
+  };
+  // The account's earlier Stripe customer may not exist with this key: bought with the test keys before
+  // the switch to live (or deleted in Stripe). The checkout then opens with the email, as for a first purchase.
+  const open = async (o) => {
+    try {
+      return await terms(o);
+    } catch (err) {
+      if (!o.customerId || !missing(err) || !/customer/i.test(`${err.param || ''} ${err.message || ''}`)) throw err;
+      log.error?.(`[stripe] customer ${o.customerId} not found in ${stripeMode(cfg) || 'this'} mode, checkout opens without it:`, err.message);
+      return terms({ ...o, customerId: null });
     }
   };
   if (!opts.promotionCode) return open(opts);
@@ -83,9 +99,6 @@ async function buildCheckout(stripe, cfg, user, { interval, customerId, terms, r
     custom_text: custom('Rago Optimizer Premium works on one Windows PC. Cancel anytime from your account. You create your account right after paying.'),
   });
 }
-
-const isLive = (cfg) => /^(sk|rk)_live_/.test(cfg.stripeSecretKey || '');
-const missing = (err) => err?.statusCode === 404 || err?.code === 'resource_missing';
 
 /** Creates the coupon `id` once (test and live mode each have their own). */
 export async function ensureCoupon(stripe, id, percent, duration, name) {
@@ -240,6 +253,143 @@ export async function handleStripeEvent(db, event, { stripe, onLicense, log } = 
     }
   }
   // Recorded after handling: if handling throws, Stripe retries and we try again.
-  await db.run('INSERT INTO stripe_events (id, type, received_at) VALUES (?, ?, ?) ON CONFLICT (id) DO NOTHING', [event.id, event.type, Date.now()]);
+  await db.run('INSERT INTO stripe_events (id, type, received_at, livemode) VALUES (?, ?, ?, ?) ON CONFLICT (id) DO NOTHING',
+    [event.id, event.type, Date.now(), typeof event.livemode === 'boolean' ? event.livemode : null]);
   return label;
+}
+
+// ---------- Going live: what /admin checks in the key's Stripe mode. Messages in French (only Sofiene reads them). ----------
+
+/** The events the webhook destination sends (docs/MISE-EN-LIGNE.md, step 6). */
+export const WEBHOOK_EVENTS = Object.freeze(['checkout.session.completed', 'checkout.session.async_payment_succeeded',
+  'customer.subscription.created', 'customer.subscription.updated', 'customer.subscription.deleted',
+  'customer.subscription.paused', 'customer.subscription.resumed', 'invoice.paid', 'charge.refunded', 'charge.dispute.created']);
+
+/** Licenses bought with the test keys (Checkout Session id cs_test_…) that still give Premium. */
+export const activeTestLicenses = (db) =>
+  db.all("SELECT * FROM licenses WHERE status = 'active' AND LEFT(stripe_session_id, 8) = 'cs_test_' ORDER BY created_at");
+
+/**
+ * Once the live key is in, the test purchases still in the shared database stop giving Premium
+ * (status_reason 'test_mode'), and stop counting for an affiliate. Returns how many were ended.
+ */
+export async function endTestLicenses(db, cfg) {
+  if (stripeMode(cfg) !== 'live') return 0;
+  const rows = await activeTestLicenses(db);
+  for (const r of rows) await setLicenseStatus(db, r.id, 'revoked', 'test_mode');
+  // The affiliate's spot frees up; the hourly sweep turns their Stripe code back on.
+  await voidReferrals(db, rows.map((r) => r.id), 'test_mode');
+  return rows.length;
+}
+
+const money = (amount, currency) => `${(Number(amount || 0) / 100).toFixed(2).replace('.', ',')} ${String(currency || '').toUpperCase()}`;
+const pathOf = (url) => { try { return new URL(url); } catch { return null; } };
+
+/**
+ * Whether the key, the prices, the webhook destination and the customer portal are set up in the mode of
+ * STRIPE_SECRET_KEY. Each check is { label, level: ok | warn | error, text }. Never throws: a check Stripe
+ * doesn't answer says so. `webhook` is what the server saw since it started ({ refusedAt, otherModeAt }).
+ */
+export async function stripeChecks(stripe, cfg, { db = null, webhook = {} } = {}) {
+  const mode = stripeMode(cfg);
+  const checks = [];
+  const add = (label, level, text) => checks.push({ label, level, text });
+  if (!stripe || !mode) {
+    add('Clé', 'error', 'STRIPE_SECRET_KEY manque dans Railway : personne ne peut payer.');
+    return { mode, checks, testLicenses: 0 };
+  }
+  const other = mode === 'live' ? 'test' : 'live';
+  // Stripe says "a similar object exists in test mode" for an id made with the other key.
+  const otherMode = (err) => new RegExp(`exists in ${other} mode`, 'i').test(err?.message || '');
+  const failed = (err) => (err?.message || String(err)).slice(0, 200);
+  add('Clé', mode === 'live' ? 'ok' : 'warn', mode === 'live' ? 'Clé live : les paiements sont réels.' : 'Clé de test : aucun paiement n’est réel.');
+
+  const [account, monthly, yearly, hooks, portal, lastEvent, testRows] = await Promise.allSettled([
+    mode === 'live' ? stripe.accounts.retrieveCurrent() : null,
+    cfg.stripePriceMonthly ? stripe.prices.retrieve(cfg.stripePriceMonthly, { expand: ['product'] }) : null,
+    cfg.stripePriceYearly ? stripe.prices.retrieve(cfg.stripePriceYearly, { expand: ['product'] }) : null,
+    stripe.webhookEndpoints.list({ limit: 100 }),
+    stripe.billingPortal.configurations.list({ is_default: true, limit: 1 }),
+    db ? db.get('SELECT type, received_at FROM stripe_events WHERE livemode = ? ORDER BY received_at DESC LIMIT 1', [mode === 'live']) : null,
+    db && mode === 'live' ? activeTestLicenses(db) : [],
+  ]);
+
+  if (mode === 'live') {
+    if (account.status === 'rejected') add('Compte', 'warn', `Stripe n’a pas répondu : ${failed(account.reason)}`);
+    else if (!account.value?.charges_enabled) add('Compte', 'error', 'Stripe n’accepte pas encore de paiements sur ce compte : termine « Activer les paiements » dans Stripe.');
+    else {
+      const label = account.value.settings?.payments?.statement_descriptor;
+      add('Compte', 'ok', `Paiements activés.${label ? ` Libellé sur le relevé bancaire : ${label}.` : ''}`);
+    }
+  }
+
+  const prices = [['Prix mensuel', 'STRIPE_PRICE_MONTHLY', cfg.stripePriceMonthly, 'month', monthly], ['Prix annuel', 'STRIPE_PRICE_YEARLY', cfg.stripePriceYearly, 'year', yearly]];
+  const currencies = new Set();
+  for (const [label, name, id, interval, res] of prices) {
+    const each = interval === 'month' ? 'par mois' : 'par an';
+    if (!id) { add(label, 'error', `${name} est vide : le bouton d’achat affiche « Checkout opens soon ».`); continue; }
+    if (res.status === 'rejected') {
+      add(label, 'error', missing(res.reason)
+        ? `${id} n’existe pas en mode ${mode}${otherMode(res.reason) ? ` : c’est un prix du mode ${other}. Mets dans ${name} le price_ créé en mode ${mode}` : ''}.`
+        : `Stripe n’a pas répondu : ${failed(res.reason)}`);
+      continue;
+    }
+    const p = res.value;
+    const wrong = [];
+    if (!p.active) wrong.push('il est archivé dans Stripe');
+    if (p.type !== 'recurring' || p.recurring?.interval !== interval || (p.recurring?.interval_count || 1) !== 1) wrong.push(`ce n’est pas un prix récurrent ${interval === 'month' ? 'mensuel' : 'annuel'}`);
+    if (wrong.length) { add(label, 'error', `${id} : ${wrong.join(', ')}.`); continue; }
+    currencies.add(p.currency);
+    const product = typeof p.product === 'object' && p.product?.name ? `${p.product.name} · ` : '';
+    add(label, 'ok', `${product}${money(p.unit_amount, p.currency)} ${each}.`);
+  }
+  if (currencies.size > 1) add('Devise', 'error', 'Les deux prix ne sont pas dans la même devise : le site affiche des dollars, crée-les en USD.');
+
+  // The destination(s) sending to /webhooks/stripe on this server (or its other address on Railway).
+  const ours = hooks.status === 'fulfilled' ? (hooks.value?.data || []).filter((e) => pathOf(e.url)?.pathname === '/webhooks/stripe') : [];
+  const host = pathOf(cfg.publicUrl)?.host;
+  if (hooks.status === 'rejected') add('Webhook', 'warn', `Stripe ne laisse pas lire les webhooks avec cette clé (${failed(hooks.reason)}). Vérifie dans Stripe → Développeurs → Webhooks.`);
+  else if (!ours.length) add('Webhook', 'error', `Aucune destination en mode ${mode} vers ${cfg.publicUrl}/webhooks/stripe : crée-la (étape 6 du guide). Sans elle, remboursements et fins d’abonnement ne coupent pas Premium.`);
+  else {
+    const hook = ours.find((e) => e.status === 'enabled' && pathOf(e.url)?.host === host) || ours.find((e) => e.status === 'enabled') || ours[0];
+    const events = hook.enabled_events || [];
+    const lacking = events.includes('*') ? [] : WEBHOOK_EVENTS.filter((e) => !events.includes(e));
+    const where = pathOf(hook.url).host;
+    if (hook.status !== 'enabled') add('Webhook', 'error', `La destination vers ${where} est désactivée dans Stripe : réactive-la.`);
+    else if (lacking.length) add('Webhook', 'error', `Il manque ${lacking.length === 1 ? 'un événement' : `${lacking.length} événements`} à la destination vers ${where} : ${lacking.join(', ')}.`);
+    else if (ours.length > 1) add('Webhook', 'warn', `${ours.length} destinations envoient vers /webhooks/stripe, chacune avec son propre secret : Railway n’en a qu’un, supprime les autres dans Stripe.`);
+    else add('Webhook', 'ok', `Destination vers ${where}, avec les ${WEBHOOK_EVENTS.length} événements.`);
+  }
+
+  // The signing secret can't be read from Stripe: what the server received says whether it matches.
+  const seen = lastEvent.status === 'fulfilled' ? lastEvent.value : null;
+  const since = (at) => new Date(Number(at)).toLocaleString('fr-FR', { timeZone: 'Europe/Paris', dateStyle: 'short', timeStyle: 'short' });
+  if (webhook.otherModeAt && !(seen && Number(seen.received_at) > webhook.otherModeAt)) {
+    add('Secret du webhook', 'error', `Un événement du mode ${other} est arrivé (${since(webhook.otherModeAt)}) : STRIPE_WEBHOOK_SECRET est celui de la destination ${other}. Mets le whsec_ de la destination ${mode}.`);
+  } else if (webhook.refusedAt && !(seen && Number(seen.received_at) > webhook.refusedAt)) {
+    add('Secret du webhook', 'error', `Un événement a été refusé (${since(webhook.refusedAt)}, signature fausse) : STRIPE_WEBHOOK_SECRET n’est pas le whsec_ de la destination ${mode}, ou une destination du mode ${other} envoie encore ici (désactive-la dans Stripe).`);
+  } else if (seen) {
+    add('Secret du webhook', 'ok', `Dernier événement ${mode} reçu : ${seen.type}, ${since(seen.received_at)}.`);
+  } else {
+    add('Secret du webhook', 'warn', `Aucun événement ${mode} reçu pour l’instant : le premier achat le confirmera.`);
+  }
+
+  const conf = portal.status === 'fulfilled' ? portal.value?.data?.[0] : null;
+  if (portal.status === 'rejected') add('Portail client', 'warn', `Stripe n’a pas répondu : ${failed(portal.reason)}`);
+  else if (!conf) add('Portail client', 'error', `Pas encore enregistré en mode ${mode} : Paramètres → Facturation → Portail client → Enregistrer. Sans lui, « Cancel or manage subscription » ne s’ouvre pas.`);
+  else if (!conf.active) add('Portail client', 'error', 'Le portail par défaut est désactivé dans Stripe.');
+  else {
+    const gaps = [];
+    if (!conf.features?.subscription_cancel?.enabled) gaps.push('la résiliation n’est pas proposée');
+    if (!conf.business_profile?.terms_of_service_url || !conf.business_profile?.privacy_policy_url) gaps.push('il manque les liens Conditions et Confidentialité');
+    add('Portail client', gaps.length ? 'warn' : 'ok', gaps.length ? `${gaps.join(', ')}.` : 'Enregistré, résiliation proposée.');
+  }
+
+  const login = cfg.portalLoginUrl;
+  if (!login) add('Lien « Cancel subscription »', 'warn', 'STRIPE_PORTAL_LOGIN_URL est vide : le lien est masqué en bas des pages compte.');
+  else if (mode === 'live' && /\/login\/test_/.test(login)) add('Lien « Cancel subscription »', 'error', 'STRIPE_PORTAL_LOGIN_URL est le lien du mode test : mets celui du portail en mode live.');
+  else add('Lien « Cancel subscription »', 'ok', 'Renseigné.');
+
+  const testLicenses = testRows.status === 'fulfilled' ? testRows.value.length : 0;
+  return { mode, checks, testLicenses };
 }
