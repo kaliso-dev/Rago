@@ -10,6 +10,9 @@
 //   revoke <email> [reason]      disable the license (Rago Optimizer goes back to free at its next check)
 //   restore <email>              re-enable a revoked license
 //   grant <email> [note]         create a license by hand (e.g. Discord buyers of the .bat Premium)
+//   grant-months <months> <email> [email…]
+//                                Premium for that many months from today, then it stops by itself (e.g.
+//                                grant-months 6 a@x.com b@y.com). Emails with Premium already are skipped
 //   create-user <email> <pass>   create an account (testing)
 //   affiliate <email>            affiliate code, referrals and why each counts or not
 //   create-promo <CODE> <percent> [once|forever]
@@ -137,6 +140,28 @@ switch (cmd) {
     const { license, claimToken } = await L.grantLicense(db, email, rest.join(' '));
     console.log(`License ${license.key} for ${email}.`);
     console.log(claimToken ? `Send this link so they create their account: ${cfg.publicUrl}/claim/${claimToken}` : 'Added to their existing account.');
+    break;
+  }
+  case 'grant-months': {
+    // A pasted list works too: emails separated by spaces, commas or semicolons. Run twice, nobody gets two.
+    const months = Number(email);
+    const emails = [...new Set(rest.join(' ').split(/[\s,;]+/).map((e) => e.toLowerCase()).filter(Boolean))];
+    if (!(Number.isInteger(months) && months >= 1 && months <= 120) || !emails.length) { console.error('Usage: grant-months 6 player@mail.com [other@mail.com …]'); process.exit(1); }
+    const day = (ms) => new Date(Number(ms)).toISOString().slice(0, 10);
+    let given = 0;
+    for (const to of emails) {
+      if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(to)) { console.log(`${to}: not an email, skipped.`); continue; }
+      const user = await L.findUserByEmail(db, to);
+      const owned = user && await L.current(db, await L.licenseForUser(db, user.id));
+      if (owned?.status === 'active') { console.log(`${to}: already Premium (${owned.plan}${owned.plan !== 'lifetime' && owned.current_period_end ? ` until ${day(owned.current_period_end)}` : ''}), nothing given.`); continue; }
+      const waiting = (await L.unclaimedLicenses(db, to)).find((l) => l.status === 'active');
+      if (waiting) { console.log(`${to}: a license already waits for this email (${waiting.id}), nothing given. claim-link ${to} prints a new link.`); continue; }
+      const { license, claimToken } = await L.grantLicense(db, to, `grant-months ${months}`, { months });
+      given++;
+      console.log(`${to}: license ${license.key}, Premium until ${day(license.current_period_end)}.`);
+      console.log(claimToken ? `  Send this link so they create their account: ${cfg.publicUrl}/claim/${claimToken}` : '  Added to their existing account.');
+    }
+    if (emails.length > 1) console.log(`\n${given} of ${emails.length} given.`);
     break;
   }
   case 'affiliate': {
@@ -301,6 +326,6 @@ switch (cmd) {
     break;
   }
   default:
-    console.log('Commands: show, attach, claim-link, reset-link, reset-device, revoke, restore, grant, affiliate, create-promo, popup, create-user, delete-user, export-keys, reviews, hide-review, show-review, remove-photo, set-name, discord, discord-unlink (see scripts/admin.js)');
+    console.log('Commands: show, attach, claim-link, reset-link, reset-device, revoke, restore, grant, grant-months, affiliate, create-promo, popup, create-user, delete-user, export-keys, reviews, hide-review, show-review, remove-photo, set-name, discord, discord-unlink (see scripts/admin.js)');
 }
 await db.close();

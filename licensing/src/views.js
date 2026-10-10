@@ -240,6 +240,8 @@ function ago(ms, now = Date.now()) {
 }
 
 const PLAN = { month: 'Monthly', year: 'Yearly', lifetime: 'Lifetime', reward: 'Affiliate reward' };
+// Months given by the team (admin grant-months) are a 'reward' license too, but not earned as an affiliate.
+const planName = (license) => (license.plan === 'reward' && license.source === 'grant' ? 'Gift' : PLAN[license.plan] || 'Lifetime');
 const pricingUrl = (cfg) => (cfg.subscriptions ? `${cfg.siteUrl}/#pricing` : '/buy');
 
 /**
@@ -383,7 +385,7 @@ export function dashboardPage(cfg, { user, license, device, notice, error, canRe
         </span>
       </div>
       <dl class="meta">
-        <div><dt>Plan</dt><dd>Rago Optimizer Premium · ${PLAN[license.plan] || 'Lifetime'}</dd></div>
+        <div><dt>Plan</dt><dd>Rago Optimizer Premium · ${planName(license)}</dd></div>
         <div><dt>Since</dt><dd>${fmtDate(license.created_at)}</dd></div>
       </dl>
       ${active || ended ? '' : html`<p class="muted small">This license no longer works in Rago Optimizer. ${support} if you think that's a mistake.</p>`}
@@ -413,6 +415,17 @@ export function dashboardPage(cfg, { user, license, device, notice, error, canRe
 
   const planCard = () => {
     const end = license.current_period_end;
+    if (license.plan === 'reward' && license.source === 'grant') {
+      return html`<article class="card card-plan rise d4">
+        <div class="card-head"><p class="overline">Plan</p>${active ? html`<span class="badge badge-red"><i></i>Until ${fmtDate(end)}</span>` : html`<span class="badge badge-off"><i></i>${offBadge()}</span>`}</div>
+        <div class="plan-line"><span class="plan-icon">${ICON.clock}</span><div><strong>Rago Optimizer Premium · Gift</strong>
+          <p class="muted small">${active
+            ? `Offered by the Rago team. Premium until ${fmtDate(end)}, nothing to pay.`
+            : ended ? `Your free Premium ended on ${fmtDate(end)}. Get Premium to keep every tweak unlocked.` : 'This license was revoked.'}</p></div></div>
+        ${active ? html`<div class="row"><a class="btn btn-ghost btn-sm" href="${buyUrl}">Subscribe now, first payment on ${fmtDate(end)}</a></div>`
+          : ended ? html`<div class="row"><a class="btn btn-primary btn-sm" href="${buyUrl}">Get Premium</a></div>` : ''}
+      </article>`;
+    }
     if (license.plan === 'reward') {
       return html`<article class="card card-plan rise d4">
         <div class="card-head"><p class="overline">Plan</p>${active ? html`<span class="badge badge-red"><i></i>Until ${fmtDate(end)}</span>` : html`<span class="badge badge-off"><i></i>${offBadge()}</span>`}</div>
