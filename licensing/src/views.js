@@ -356,7 +356,9 @@ export function dashboardPage(cfg, { user, license, device, notice, error, canRe
   // Shown to every account, Premium or not: the free players are the ones inviting.
   const rewardsBlock = () => {
     if (!inviteRewards.length) return '';
-    const lines = inviteRewards.map((r) => {
+    const has = (kind) => discordRewards.some((g) => g.kind === kind);
+    // The 1-boost reward isn't offered any more once the 2-boost one, which replaces it, was given.
+    const lines = inviteRewards.filter((r) => has(r.kind) || !inviteRewards.some((x) => x.replaces === r.kind && has(x.kind))).map((r) => {
       const got = discordRewards.find((g) => g.kind === r.kind);
       if (!got) return html`<li><strong>${r.name}</strong> · ${r.need}: ${r.label} of Premium and a ${r.percent}% discount code.</li>`;
       const time = got.action === 'lifetime' ? 'You already have Premium for life.' : `${r.label} of Premium added${got.until ? `, Premium until ${fmtDate(got.until)}` : ''}.`;

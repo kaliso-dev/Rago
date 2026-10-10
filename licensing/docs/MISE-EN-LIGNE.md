@@ -298,7 +298,7 @@ Un bot d'invitations (InviteLogger) compte qui a invité qui et donne le rôle *
 | **1 boost** | tout seul : Discord dit au bot qui booste le serveur | 2 semaines de Premium + code 10 % à usage unique |
 | **2 boosts** | un rôle que tu donnes (`DISCORD_BOOST2_ROLE_ID`) | 1 mois de Premium + code 30 % à usage unique |
 
-Discord ne dit pas aux bots combien de boosts une personne donne : pour « 2 boosts », regarde **Paramètres du serveur → Boost de serveur** et donne-lui le rôle (par exemple « 2x Booster »), ou fais-le donner par un bot de boosts. Les paliers se cumulent : MVP après VIP donne les deux récompenses, 2 boosts donne aussi celle d'un boost.
+Discord ne dit pas aux bots combien de boosts une personne donne : pour « 2 boosts », regarde **Paramètres du serveur → Boost de serveur** et donne-lui le rôle (par exemple « 2x Booster »), ou fais-le donner par un bot de boosts. MVP après VIP donne les deux récompenses. Les boosts, eux, ne se cumulent pas : 2 boosts donne 1 mois + 30 % à la place de 2 semaines + 10 %. Seul un joueur qui avait déjà reçu la récompense d'un boost avant d'avoir le rôle 2 boosts garde les deux.
 
 Le joueur (gratuit ou Premium) lie son Discord depuis sa page compte : la carte « Discord rewards » liste les récompenses, puis affiche celles gagnées et le code, avec un lien qui l'applique au paiement (`/buy?promo=VIP-XXXXXX`). Le code fait 10 % ou 30 % sur le premier paiement, une seule utilisation.
 
