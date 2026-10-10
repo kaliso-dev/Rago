@@ -500,7 +500,7 @@ Lignes risquées retirées des packs qui les cachaient (le pack reste) :
 - app_remove, win_apps : Pense-bêtes gardé (notes non synchronisées perdues) ;
 - cpu_advanced, cpu_registry : veto de la veille moderne et politique d'alimentation XP (audit D22, motif sur le chemin de la clé) ;
 - win_gamedvr : la ligne qui réautorisait Game DVR juste après l'avoir coupé ;
-- gpu_nvidia, gpu_amd, gpu_general, nv_general, amd_general (2026-10-10) : MPO (`OverlayTestMode`) et préemption du GPU coupés dans des packs Safe, après un partage d'écran Discord resté gris chez un client. Ils restent dans nv_preemption, nv_advanced et amd_advanced (Advanced).
+- gpu_nvidia, gpu_amd, gpu_general, nv_general, amd_general (2026-10-10) : MPO (`OverlayTestMode`) et préemption du GPU coupés sans le dire dans des packs Safe. Ils restent dans nv_preemption, nv_advanced et amd_advanced (Advanced).
 
 Point de restauration (1.1.8) : la case de 1.1.6 revient. Elle est cochée d'office seulement pour un réglage `restore` (avancé, ou que l'app ne remet pas entièrement) et si Rago n'en a pas créé un réussi dans les 24 dernières heures.
 

@@ -120,9 +120,9 @@ DROP_IN = [
     (('cpu_advanced', 'cpu_registry'), r'\\(VetoPolicy|GlobalPowerPolicy)"\s+/v\s'),
     # pas un risque, une contradiction : Game DVR coupé par la stratégie juste au-dessus, puis autorisé de nouveau ici
     (('win_gamedvr',), r'ApplicationManagement\\AllowGameDVR"\s+/v\s+"value"\s+/t\s+REG_DWORD\s+/d\s+"1"'),
-    # partage d'écran Discord gris après « Select safe tweaks » (client, 2026-10-10) : les packs Safe coupaient le MPO et
-    # la préemption du GPU, qui changent la composition de l'affichage. Ils restent dans « Désactiver la préemption » et
-    # les réglages NVIDIA et AMD avancés (Advanced, point de restauration conseillé)
+    # packs Safe qui coupaient sans le dire le MPO et la préemption du GPU (2026-10-10), alors que l'app classe ces
+    # changements Advanced ailleurs : ils restent dans « Désactiver la préemption » et les réglages NVIDIA et AMD avancés
+    # (Advanced, point de restauration conseillé)
     (('gpu_nvidia', 'gpu_amd'), r'\\Dwm"\s+/v\s+"OverlayTestMode"'),
     (('gpu_nvidia', 'gpu_amd', 'gpu_general', 'nv_general', 'amd_general'), r'/v\s+"?\w*Preemption\w*"?\s+/t'),
     (('nv_general', 'amd_general'), r'^\s*(echo\s+-|::)\s+Disabl\w*\s+Preemption\s*$'),
@@ -209,8 +209,8 @@ def notes(report, n_tweaks, n_distinct):
         'chemin de la clé) ;',
         '- win_gamedvr : la ligne qui réautorisait Game DVR juste après l\'avoir coupé ;',
         '- gpu_nvidia, gpu_amd, gpu_general, nv_general, amd_general (2026-10-10) : MPO (`OverlayTestMode`) et préemption '
-        'du GPU coupés dans des packs Safe, après un partage d\'écran Discord resté gris chez un client. Ils restent dans '
-        'nv_preemption, nv_advanced et amd_advanced (Advanced).',
+        'du GPU coupés sans le dire dans des packs Safe. Ils restent dans nv_preemption, nv_advanced et amd_advanced '
+        '(Advanced).',
     ]
     out += ['', 'Point de restauration (1.1.8) : la case de 1.1.6 revient. Elle est cochée d\'office seulement pour un '
             'réglage `restore` (avancé, ou que l\'app ne remet pas entièrement) et si Rago n\'en a pas créé un réussi '

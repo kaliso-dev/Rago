@@ -3964,8 +3964,8 @@
         "fr": "Effet rarement mesurable en jeu."
        },
        "cons": {
-        "en": "The display may stutter if another app loads the GPU, Discord screen sharing may show a gray screen, and wireless display (Miracast) may stop working.",
-        "fr": "L'affichage peut saccader si une autre appli charge le GPU, le partage d'écran Discord peut rester gris, et la projection sans fil (Miracast) peut ne plus marcher."
+        "en": "The display may stutter if another app loads the GPU, and wireless display (Miracast) may stop working.",
+        "fr": "L'affichage peut saccader si une autre appli charge le GPU, et la projection sans fil (Miracast) peut ne plus marcher."
        },
        "restore": true
       },
@@ -4137,8 +4137,8 @@
         "fr": "Effet rarement mesurable : la plupart de ces réglages ne sont pas documentés."
        },
        "cons": {
-        "en": "Turns MPO off: Discord screen sharing may show a gray screen, and wireless display (Miracast) may stop working.",
-        "fr": "Coupe le MPO : le partage d'écran Discord peut rester gris, et la projection sans fil (Miracast) peut ne plus marcher."
+        "en": "Wireless display (Miracast) may stop working.",
+        "fr": "La projection sans fil (Miracast) peut ne plus marcher."
        },
        "restore": true
       },
@@ -4436,8 +4436,8 @@
         "fr": "Anti-Lag peut réduire l'input lag quand le GPU est à 100 % ; le reste a un effet rarement mesurable."
        },
        "cons": {
-        "en": "More heat, noise and power use; Radeon overlay off, VSync forced off (risk of screen tearing); MPO off: Discord screen sharing may show a gray screen.",
-        "fr": "Plus de chaleur, de bruit et de conso ; overlay Radeon coupé, synchro verticale forcée sur off (risque de déchirement) ; MPO coupé : le partage d'écran Discord peut rester gris."
+        "en": "More heat, noise and power use; Radeon overlay off, VSync forced off (risk of screen tearing).",
+        "fr": "Plus de chaleur, de bruit et de conso ; overlay Radeon coupé, synchro verticale forcée sur off (risque de déchirement)."
        },
        "restore": true
       }

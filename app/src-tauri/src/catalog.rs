@@ -465,9 +465,9 @@ mod tests {
         }
     }
 
-    /// Partage d'écran Discord gris après « Select safe tweaks » (client, 2026-10-10) : aucun réglage Safe ne coupe le
-    /// MPO ni la préemption du GPU (tools/safety.py). Ces changements restent dans des réglages Advanced. Les valeurs
-    /// « Preemption » de pri_game sont sous Image File Execution Options, que Windows ignore pour ces noms.
+    /// Aucun réglage Safe ne coupe le MPO ni la préemption du GPU (tools/safety.py, 2026-10-10) : ces changements
+    /// restent dans des réglages Advanced. Les valeurs « Preemption » de pri_game sont sous Image File Execution
+    /// Options, que Windows ignore pour ces noms.
     #[test]
     fn safe_tweaks_keep_mpo_and_preemption() {
         let catalog: serde_json::Value = serde_json::from_str(include_str!("../../src/data/catalog.json")).unwrap();
