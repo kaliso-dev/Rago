@@ -52,7 +52,10 @@ npm ci
 npm test                                   # base Postgres en mémoire (PGlite)
 TEST_DATABASE_URL=postgres://postgres@localhost:5432/postgres npm test  # les mêmes sur un Postgres local JETABLE (voir ci-dessous)
 DEV_SEED=test@rago.dev:password123 npm run dev   # http://localhost:8787, compte Premium de test
+npm run local                              # pareil avec le site, et sans jamais les variables de production du terminal
 ```
+
+Staging (Railway `staging`, `APP_ENV=staging`) : refuse une clé Stripe live, bandeau sur chaque page, `[Test]` dans les emails. Chaque base retient l'environnement qui l'a ouverte en premier (`server_secrets.environment`) et un autre la refuse au démarrage. Mise en place : [`../DEVELOPPEMENT.md`](../DEVELOPPEMENT.md).
 
 > **Attention : `TEST_DATABASE_URL` efface toute la base visée** à chaque test (tables, comptes, licences, et la clé de signature de `server_secrets`). Ne mets **jamais** l'adresse Supabase de production : les tests refusent d'ailleurs de tourner si l'adresse n'est pas `localhost` (ou une base dont le nom contient « test »). Utilise un Postgres local créé pour l'occasion.
 

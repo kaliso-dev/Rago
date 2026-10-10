@@ -945,6 +945,7 @@ footer.foot p{max-width:80ch}
 /* ---- Fill these in ---- */
 const CONFIG = {
   accountBase: "https://account.rago-optimizer.com", // licensing server URL, no trailing slash. Empty = same domain as this site
+  previewAccountBase: "",                           // staging account server for Netlify previews: filled at build by netlify/preview.sh (STAGING_ACCOUNT_URL)
   checkoutPath: "/buy",                             // + ?interval=month|year (+ &ref=CODE from an affiliate link). Creates the Stripe Checkout session, 303 redirect
   loginPath: "/login",
   signupPath: "/signup",
@@ -966,7 +967,19 @@ const reduce = matchMedia("(prefers-reduced-motion: reduce)").matches;
 const esc = s => String(s).replace(/[&<>"]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
 const toast = m => { const t = $("#toast"); t.textContent = m; t.classList.add("show"); clearTimeout(t._h); t._h = setTimeout(() => t.classList.remove("show"), 2800); };
 const MONTHS_FREE = Math.floor(1e-9 + 12 - CONFIG.priceYear / CONFIG.priceMonth); // yearly discount, from the real prices
-const acct = p => CONFIG.accountBase.replace(/\/+$/, "") + p;
+/* Only the live site talks to the live account server. A copy on this computer uses the local one (licensing: npm run local);
+   a Netlify preview (pull request, staging branch) uses previewAccountBase, and without it its account links are off,
+   so a test click never reaches live accounts or live Stripe. */
+const HOST = location.hostname;
+if (!HOST || /^(localhost|127\.0\.0\.1|\[::1\]|10(\.\d+){3}|192\.168(\.\d+){2}|172\.(1[6-9]|2\d|3[01])(\.\d+){2})$|\.local$/.test(HOST))
+  CONFIG.accountBase = `http://${HOST && HOST !== "[::1]" ? HOST : "localhost"}:8787`;
+else if (/\.netlify\.app$/.test(HOST)) CONFIG.accountBase = CONFIG.previewAccountBase || null;
+const ACCOUNT_OFF = "#account-off";
+if (CONFIG.accountBase === null) document.addEventListener("click", e => {
+  if (!e.target.closest || !e.target.closest(`a[href="${ACCOUNT_OFF}"]`)) return;
+  e.preventDefault(); e.stopPropagation(); toast("Account pages are off on this preview (STAGING_ACCOUNT_URL isn't set on Netlify).");
+}, true);
+const acct = p => CONFIG.accountBase === null ? ACCOUNT_OFF : CONFIG.accountBase.replace(/\/+$/, "") + p;
 const wire = (sel, url, msg, ext) => $$(sel).forEach(a => {
   if (url) { a.href = url; if (ext) { a.target = "_blank"; a.rel = "noopener"; } }
   else a.addEventListener("click", e => { e.preventDefault(); toast(msg); });
@@ -1064,7 +1077,7 @@ function promo() {
     addEventListener("scroll", sc, { passive: true }); sc();
   };
   // Server out of reach: no pop-up, and a code already claimed stays on the links (checked again at checkout)
-  fetch(acct("/api/v1/promo"), { credentials: "omit", cache: "no-cache" }).then(r => (r.ok ? r.json() : Promise.reject(r.status))).then(show).catch(() => {});
+  if (CONFIG.accountBase !== null) fetch(acct("/api/v1/promo"), { credentials: "omit", cache: "no-cache" }).then(r => (r.ok ? r.json() : Promise.reject(r.status))).then(show).catch(() => {});
 })();
 
 /* After Download free: what to expect, SmartScreen included (the installer isn't code-signed yet) */
@@ -1394,7 +1407,7 @@ function howFill() {
     addEventListener("resize", () => { if (innerWidth === w) return; w = innerWidth; clearTimeout(t); t = setTimeout(layout, 200); });
     window.__watch($("#reviews .head"));
   };
-  if (!("fetch" in window)) return;
+  if (!("fetch" in window) || CONFIG.accountBase === null) return;
   fetch(acct("/api/v1/reviews"), { credentials: "omit", cache: "no-cache" }).then(r => (r.ok ? r.json() : null)).then(show).catch(() => {});
 })();
 

@@ -9,7 +9,8 @@ import { createDiscord } from './discord.js';
 
 const cfg = loadConfig();
 for (const w of cfg.warnings) console.warn(`[warn] ${w}`);
-const db = cfg.databaseUrl ? await openDb(cfg.databaseUrl) : await openMemoryDb();
+if (cfg.staging) console.log(`[env] "${cfg.envName}" test server: Stripe test keys only, a banner on every page, [Test] in email subjects.`);
+const db = cfg.databaseUrl ? await openDb(cfg.databaseUrl, { envName: cfg.envName }) : await openMemoryDb();
 await ensureKeys(db, cfg);
 const keys = loadKeys(cfg.signingKeyPem);
 // Development only: DEV_SEED=email:password creates a Premium account at startup (in-memory database).

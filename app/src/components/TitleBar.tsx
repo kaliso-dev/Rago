@@ -11,7 +11,11 @@ export function TitleBar() {
       <div className="titlebar-brand" data-tauri-drag-region>
         <Mark size={16} />
         <span data-tauri-drag-region>Rago Optimizer</span>
-        {!isTauri && <span className="titlebar-demo">{t("demo.banner")}</span>}
+        {!isTauri ? (
+          <span className="titlebar-demo">{t("demo.banner")}</span>
+        ) : (
+          import.meta.env.VITE_RAGO_SERVER === "staging" && <span className="titlebar-demo">{t("staging.banner")}</span>
+        )}
       </div>
       <button type="button" className="titlebar-search" onClick={() => setPaletteOpen(true)}>
         <Search size={14} />

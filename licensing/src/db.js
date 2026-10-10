@@ -54,7 +54,11 @@ export async function applySchema(pg, url, local, { tries = 6, log = console } =
   }
 }
 
-export async function openDb(url) {
+/**
+ * envName (cfg.envName): the database must belong to this server's environment, checked before the schema is
+ * replayed, so a server pointed at another environment's database changes nothing in it (claimDatabase).
+ */
+export async function openDb(url, { envName = null } = {}) {
   if (!url) throw new Error('DATABASE_URL is required (Supabase: Project Settings > Database > Connection string)');
   const pg = (await import('pg')).default;
   pg.types.setTypeParser(20, Number); // BIGINT -> number (millisecond timestamps fit easily)
@@ -92,9 +96,39 @@ export async function openDb(url) {
       client.release(lost || undefined); // a broken client is closed, not reused
     }
   });
-  await applySchema(pg, url, local);
   db.close = () => pool.end();
+  try {
+    if (envName) {
+      // A brand-new database has no server_secrets table yet (42P01): nobody owns it.
+      const row = await db.get("SELECT value FROM server_secrets WHERE name = 'environment'").catch((err) => {
+        if (err.code === '42P01') return null;
+        throw err;
+      });
+      if (row) refuseOtherOwner(row.value, envName);
+    }
+    await applySchema(pg, url, local);
+    if (envName) await claimDatabase(db, envName);
+  } catch (err) {
+    await pool.end().catch(() => {});
+    throw err;
+  }
   return db;
+}
+
+function refuseOtherOwner(owner, envName) {
+  if (owner === envName) return;
+  throw new Error(`This database belongs to the "${owner}" server, and this server is "${envName}". Each server needs its own database: `
+    + `set DATABASE_URL to this environment's database (a staging server uses its own Supabase project, never the live one). `
+    + `If this really is the "${owner}" server and its Railway environment was renamed, set APP_ENV=${owner}.`);
+}
+
+/**
+ * Marks the database with the environment of the first server that opens it ("production", "staging",
+ * "development") and refuses a server of another environment: a staging copy of the live server that kept the
+ * live DATABASE_URL, or a local server started with it, stops at boot instead of touching real accounts.
+ */
+export async function claimDatabase(db, envName) {
+  refuseOtherOwner(await secret(db, 'environment', () => envName), envName);
 }
 
 /** In-memory Postgres (PGlite) for tests and local development without Supabase. */
