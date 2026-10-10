@@ -15,6 +15,7 @@ import { createMailer } from '../src/mailer.js';
 import * as L from '../src/licensing.js';
 import * as P from '../src/profile.js';
 import * as R from '../src/reviews.js';
+import { createDiscord } from '../src/discord.js';
 import sharp from 'sharp';
 
 const WHSEC = 'whsec_test_secret';
@@ -1674,3 +1675,242 @@ test('profile photos in Supabase Storage: private bucket created on the first up
   assert.equal(await store.get('missingmissingmissing00.webp'), null);
 });
 
+
+// ---------- Discord: the Pro role follows Premium (2026-10-10) ----------
+const DISCORD = { DISCORD_CLIENT_ID: '100000000000000001', DISCORD_CLIENT_SECRET: 'client-secret', DISCORD_BOT_TOKEN: 'Bot bot-token', DISCORD_GUILD_ID: '200000000000000002', DISCORD_ROLE_ID: '300000000000000003' };
+const BOT_ID = '900000000000000009';
+const BOT_ROLE = '400000000000000004';
+
+/** Discord as the bot and the OAuth flow see it: who authorized each code, who is on the server and with which roles. */
+function fakeDiscord() {
+  const G = DISCORD.DISCORD_GUILD_ID;
+  const codes = {}; // OAuth code -> the Discord user who authorized it
+  const members = new Map(); // Discord id -> Set of role ids
+  const calls = [];
+  const state = {
+    refuse: null, // { status, code, message }: Discord's answer to role changes
+    redirects: ['http://localhost/account/discord/callback'],
+    roles: [{ id: G, name: '@everyone', position: 0, permissions: '0' }, { id: DISCORD.DISCORD_ROLE_ID, name: 'Pro', position: 3, permissions: '0' },
+      { id: BOT_ROLE, name: 'Rago Bot', position: 5, permissions: String((1n << 28n) | 1n) }],
+  };
+  const json = (status, body) => new Response(body == null ? null : JSON.stringify(body), { status, headers: { 'content-type': 'application/json' } });
+  async function fetchImpl(url, init = {}) {
+    const u = new URL(url);
+    assert.equal(u.origin, 'https://discord.com');
+    assert.match(init.headers['User-Agent'], /^DiscordBot \(/);
+    const path = u.pathname.replace('/api/v10', '');
+    const method = init.method || 'GET';
+    calls.push(`${method} ${path}`);
+    if (path === '/oauth2/token' || path === '/oauth2/token/revoke') {
+      assert.equal(init.headers.Authorization, `Basic ${Buffer.from(`${DISCORD.DISCORD_CLIENT_ID}:client-secret`).toString('base64')}`);
+      const p = new URLSearchParams(init.body);
+      if (path.endsWith('/revoke')) return json(200, {});
+      assert.equal(p.get('grant_type'), 'authorization_code');
+      assert.equal(p.get('redirect_uri'), 'http://localhost/account/discord/callback');
+      const user = codes[p.get('code')];
+      return user ? json(200, { access_token: `at_${user.id}`, token_type: 'Bearer', scope: 'identify guilds.join' }) : json(400, { error: 'invalid_grant' });
+    }
+    if (path === '/users/@me' && init.headers.Authorization.startsWith('Bearer ')) {
+      const id = init.headers.Authorization.replace('Bearer at_', '');
+      return json(200, Object.values(codes).find((x) => x.id === id));
+    }
+    assert.equal(init.headers.Authorization, 'Bot bot-token');
+    if (path === '/users/@me') return json(200, { id: BOT_ID, username: 'ragobot' });
+    if (path === '/applications/@me') return json(200, { id: DISCORD.DISCORD_CLIENT_ID, redirect_uris: state.redirects });
+    if (path === `/guilds/${G}`) return json(200, { id: G, name: 'Rago' });
+    if (path === `/guilds/${G}/roles`) return json(200, state.roles);
+    if (path === `/guilds/${G}/members/${BOT_ID}`) return json(200, { roles: [BOT_ROLE] });
+    let m = path.match(/^\/guilds\/(\d+)\/members\/(\d+)$/);
+    if (m && method === 'PUT') {
+      assert.equal(m[1], G);
+      const body = JSON.parse(init.body);
+      assert.equal(body.access_token, `at_${m[2]}`);
+      if (members.has(m[2])) return json(204);
+      if (state.refuse && body.roles?.length) return json(state.refuse.status, state.refuse); // roles need Manage Roles too
+      members.set(m[2], new Set(body.roles || []));
+      return json(201, { user: { id: m[2] }, roles: body.roles || [] });
+    }
+    m = path.match(/^\/guilds\/(\d+)\/members\/(\d+)\/roles\/(\d+)$/);
+    if (m) {
+      assert.equal(m[3], DISCORD.DISCORD_ROLE_ID);
+      if (state.refuse) return json(state.refuse.status, state.refuse);
+      if (!members.has(m[2])) return json(404, { code: 10007, message: 'Unknown Member' });
+      members.get(m[2])[method === 'PUT' ? 'add' : 'delete'](m[3]);
+      return json(204);
+    }
+    throw new Error(`unexpected Discord call ${method} ${path}`);
+  }
+  return { fetchImpl, codes, members, calls, state, hasRole: (id) => !!members.get(id)?.has(DISCORD.DISCORD_ROLE_ID) };
+}
+
+/** "Link Discord" on the account page, Discord's page, and back with a code. Returns where the player lands. */
+async function linkDiscord(t, d, user) {
+  const code = `code_${user.id}_${Math.random()}`;
+  d.codes[code] = user;
+  const auth = new URL((await t.browse('/account/discord')).headers.get('location'));
+  return (await t.browse(`/account/discord/callback?code=${code}&state=${auth.searchParams.get('state')}`)).headers.get('location');
+}
+const quiet = { info() {}, error() {} };
+
+test('Discord: linked from the account page, Pro role while Premium is active, taken back when it stops, back when it returns', async () => {
+  const d = fakeDiscord();
+  const t = await setup({ ...SUBS, ...DISCORD }, { fetchImpl: d.fetchImpl, log: quiet });
+  const ID = '111111111111111111';
+  t.paidSubscription('cs_d', 'gamer@rago.gg');
+  await t.browse('/checkout/success?session_id=cs_d');
+  await t.browse('/signup', { form: { email: 'gamer@rago.gg', password: 'password123' } });
+  let dash = await (await t.browse('/account')).text();
+  assert.match(dash, /Link Discord/);
+  assert.doesNotMatch(dash, /open a ticket/);
+
+  // Discord's authorization page: this app, both scopes, back to this server.
+  let res = await t.browse('/account/discord');
+  const auth = new URL(res.headers.get('location'));
+  assert.equal(`${auth.origin}${auth.pathname}`, 'https://discord.com/oauth2/authorize');
+  assert.equal(auth.searchParams.get('client_id'), DISCORD.DISCORD_CLIENT_ID);
+  assert.equal(auth.searchParams.get('scope'), 'identify guilds.join');
+  assert.equal(auth.searchParams.get('redirect_uri'), 'http://localhost/account/discord/callback');
+  assert.match(res.headers.get('set-cookie'), /rg_discord=.*Path=\/account\/discord.*HttpOnly/i);
+  // A callback with another state (a link someone sent the player): nothing linked, nobody added.
+  d.codes.someone = { id: '222222222222222222', username: 'someone' };
+  res = await t.browse('/account/discord/callback?code=someone&state=forged');
+  assert.equal(res.headers.get('location'), '/account?n=discordfail');
+  assert.equal(d.members.size, 0);
+  // Canceled on Discord's page.
+  assert.equal((await t.browse('/account/discord/callback?error=access_denied&state=x')).headers.get('location'), '/account?n=discordcancel');
+
+  // Linked: added to the server with the role, the player's token revoked right after.
+  assert.equal(await linkDiscord(t, d, { id: ID, username: 'gamer', global_name: 'Gamer' }), '/account?n=discord');
+  assert.ok(d.hasRole(ID));
+  assert.ok(d.calls.includes('POST /oauth2/token/revoke'));
+  dash = await (await t.browse('/account?n=discord')).text();
+  assert.match(dash, /Discord linked\./);
+  assert.match(dash, /Linked to <strong>@gamer<\/strong>/);
+  assert.match(dash, /Role given/);
+
+  // Unpaid: Premium stops, the role goes right after the webhook. Card fixed: it comes back.
+  t.subscription('sub_cs_d', 'month', { status: 'unpaid' });
+  await t.webhook('customer.subscription.updated', { id: 'sub_cs_d', object: 'subscription' });
+  await t.app.idle();
+  assert.equal(d.hasRole(ID), false);
+  dash = await (await t.browse('/account')).text();
+  assert.match(dash, /@gamer<\/strong> stays linked: the Premium role comes back when Premium does/);
+  t.subscription('sub_cs_d', 'month');
+  await t.webhook('invoice.paid', { id: 'in_d', object: 'invoice', subscription: 'sub_cs_d' });
+  await t.app.idle();
+  assert.ok(d.hasRole(ID));
+
+  // Left the server: the 5-minute pass sees nothing to change, the daily pass notices; the page offers to join again.
+  d.members.delete(ID);
+  const bot = createDiscord(t.cfg, { db: t.db, fetchImpl: d.fetchImpl, log: quiet });
+  const roleCalls = () => d.calls.filter((c) => c.includes('/roles/')).length;
+  let n = roleCalls();
+  await bot.syncAll();
+  assert.equal(roleCalls(), n);
+  await bot.syncAll({ all: true });
+  assert.equal(roleCalls(), n + 1);
+  assert.deepEqual(await t.db.get('SELECT role, error FROM discord_links'), { role: false, error: 'not_member' });
+  dash = await (await t.browse('/account')).text();
+  assert.match(dash, /Not on the server/);
+  assert.match(dash, /Join with Discord/);
+  // Still not there: retried hourly, not at every visit or pass.
+  n = roleCalls();
+  await t.browse('/account');
+  await bot.syncAll();
+  assert.equal(roleCalls(), n);
+  assert.equal(await linkDiscord(t, d, { id: ID, username: 'gamer' }), '/account?n=discord');
+  assert.ok(d.hasRole(ID));
+
+  // Refund: revoked by the webhook, role gone. Restored by support (no Stripe event): the next pass gives it back.
+  await t.webhook('charge.refunded', { id: 'ch_d', object: 'charge', refunded: true, payment_intent: 'pi_inv', customer: 'cus_cs_d' });
+  await t.app.idle();
+  assert.equal(d.hasRole(ID), false);
+  const lic = await t.db.get('SELECT id FROM licenses');
+  await L.setLicenseStatus(t.db, lic.id, 'active', null);
+  await bot.syncAll();
+  assert.ok(d.hasRole(ID));
+
+  // Unlinked: role taken back, link forgotten, the button is back.
+  res = await t.browse('/account/discord/unlink', { form: {} });
+  assert.equal(res.headers.get('location'), '/account?n=discordoff');
+  assert.equal(d.hasRole(ID), false);
+  assert.equal((await t.db.get('SELECT COUNT(*)::int AS n FROM discord_links')).n, 0);
+  assert.match(await (await t.browse('/account')).text(), /Link Discord/);
+  const events = (await t.db.all("SELECT type FROM audit WHERE type LIKE 'discord.%' ORDER BY id")).map((r) => r.type);
+  assert.deepEqual(events.slice(0, 3), ['discord.linked', 'discord.role_added', 'discord.role_removed']);
+  assert.equal(events.at(-1), 'discord.unlinked');
+});
+
+test('Discord: one Discord account per Rago account, refused changes retried, /admin checks the bot, manual without it', async () => {
+  const KEY = 'admin-key-0123456789abcdef';
+  const d = fakeDiscord();
+  const t = await setup({ ...SUBS, ...DISCORD, ADMIN_KEY: KEY }, { fetchImpl: d.fetchImpl, log: quiet });
+  const X = '333333333333333333';
+  t.paidSubscription('cs_a', 'a@rago.gg');
+  await t.browse('/checkout/success?session_id=cs_a');
+  await t.browse('/signup', { form: { email: 'a@rago.gg', password: 'password123' } });
+  await linkDiscord(t, d, { id: X, username: 'shared' });
+  assert.ok(d.hasRole(X));
+
+  // The same Discord account linked from a free account: the link moves there, and the role goes (no Premium).
+  await t.browse('/logout', { form: {} });
+  await t.browse('/signup', { form: { email: 'free@rago.gg', password: 'password123' } });
+  await linkDiscord(t, d, { id: X, username: 'shared' });
+  assert.equal(d.hasRole(X), false);
+  const rows = await t.db.all('SELECT u.email, d.role FROM discord_links d JOIN users u ON u.id = d.user_id');
+  assert.deepEqual(rows, [{ email: 'free@rago.gg', role: false }]);
+
+  // Back on the Premium account with another Discord account while the bot lacks the permission: linked, role pending.
+  await t.browse('/logout', { form: {} });
+  await t.browse('/login', { form: { email: 'a@rago.gg', password: 'password123' } });
+  const Y = '444444444444444444';
+  d.state.refuse = { status: 403, code: 50013, message: 'Missing Permissions' };
+  assert.equal(await linkDiscord(t, d, { id: Y, username: 'second' }), '/account?n=discord');
+  assert.ok(d.members.has(Y) && !d.hasRole(Y)); // on the server anyway, without the role
+  let dash = await (await t.browse('/account')).text();
+  assert.match(dash, /Pending/);
+  assert.match(dash, /Try again/);
+  assert.deepEqual(await t.db.get('SELECT role, error FROM discord_links WHERE discord_id = ?', [Y]), { role: false, error: 'forbidden' });
+  // Permission fixed: not retried before 15 minutes by the passes, right away with the button.
+  d.state.refuse = null;
+  const bot = createDiscord(t.cfg, { db: t.db, fetchImpl: d.fetchImpl, log: quiet });
+  await bot.syncAll();
+  assert.equal(d.hasRole(Y), false);
+  await t.db.run('UPDATE discord_links SET synced_at = ? WHERE discord_id = ?', [Date.now() - 16 * 60 * 1000, Y]);
+  await bot.syncAll();
+  assert.ok(d.hasRole(Y));
+  d.members.get(Y).delete(DISCORD.DISCORD_ROLE_ID); // removed by hand on Discord
+  await t.browse('/account/discord/sync', { form: {} });
+  assert.ok(d.hasRole(Y));
+
+  // /admin: bot, redirect URL, server, role, permissions, the bot's role above Pro, linked accounts.
+  await t.browse('/admin/login', { form: { key: KEY } });
+  let page = await (await t.browse('/admin')).text();
+  assert.match(page, /Rôle Pro sur Discord/);
+  assert.match(page, /Automatique/);
+  assert.match(page, /Connecté en tant que ragobot/);
+  assert.match(page, /« Rago Bot » est au-dessus de « Pro »/);
+  assert.match(page, /2 comptes liés, 1 avec le rôle/);
+  // The usual mistakes: the bot's role under Pro, the redirect URL not added in the Developer Portal.
+  d.state.roles[2].position = 2;
+  d.state.redirects = [];
+  page = await (await t.browse('/admin')).text();
+  assert.match(page, /2 à corriger/);
+  assert.match(page, /glisse le rôle du bot \(« Rago Bot »\) au-dessus de « Pro »/);
+  assert.match(page, /Ajoute http:\/\/localhost\/account\/discord\/callback dans Developer Portal/);
+
+  // Without the bot: the ticket text, no link route, /admin says what's missing; half a setup is flagged.
+  const manual = await setup({ ...SUBS, SUPPORT_URL: 'https://discord.gg/rago', ADMIN_KEY: KEY });
+  manual.paidSubscription('cs_m', 'm@rago.gg');
+  await manual.browse('/checkout/success?session_id=cs_m');
+  await manual.browse('/signup', { form: { email: 'm@rago.gg', password: 'password123' } });
+  assert.match(await (await manual.browse('/account')).text(), /open a ticket with your account email/);
+  assert.equal((await manual.browse('/account/discord')).headers.get('location'), '/account');
+  await manual.browse('/admin/login', { form: { key: KEY } });
+  assert.match(await (await manual.browse('/admin')).text(), /À régler dans Railway : DISCORD_CLIENT_ID, DISCORD_CLIENT_SECRET, DISCORD_BOT_TOKEN, DISCORD_GUILD_ID, DISCORD_ROLE_ID/);
+  const half = loadConfig({ DISCORD_BOT_TOKEN: 'x', DISCORD_GUILD_ID: 'not-an-id' });
+  assert.equal(half.discord, false);
+  assert.ok(half.warnings.some((w) => /DISCORD_CLIENT_ID, DISCORD_CLIENT_SECRET, DISCORD_ROLE_ID not set/.test(w)));
+  assert.ok(half.warnings.some((w) => /DISCORD_GUILD_ID is not a Discord id/.test(w)));
+  assert.equal(loadConfig(DISCORD).discordBotToken, 'bot-token');
+});

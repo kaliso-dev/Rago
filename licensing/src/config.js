@@ -96,8 +96,20 @@ export function loadConfig(env = process.env) {
     previewKey: (env.PREVIEW_KEY || '').trim(),
     // Opens /admin (the site's discount pop-up). Shorter than 16 characters: /admin stays closed.
     adminKey: (env.ADMIN_KEY || '').trim(),
+
+    // Pro role on the Rago Discord (2026-10-10): Premium players link their Discord from /account, a bot gives
+    // them the role and takes it back when Premium stops. Without all five, the role stays manual (ticket).
+    discordClientId: (env.DISCORD_CLIENT_ID || '').trim(),
+    discordClientSecret: (env.DISCORD_CLIENT_SECRET || '').trim(),
+    // "Bot " pasted with the token from the Developer Portal is dropped.
+    discordBotToken: (env.DISCORD_BOT_TOKEN || '').trim().replace(/^Bot\s+/i, ''),
+    discordGuildId: (env.DISCORD_GUILD_ID || '').trim(),
+    discordRoleId: (env.DISCORD_ROLE_ID || '').trim(),
   };
   cfg.subscriptions = !!(cfg.stripePriceMonthly || cfg.stripePriceYearly);
+  const DISCORD_VARS = { DISCORD_CLIENT_ID: 'discordClientId', DISCORD_CLIENT_SECRET: 'discordClientSecret', DISCORD_BOT_TOKEN: 'discordBotToken', DISCORD_GUILD_ID: 'discordGuildId', DISCORD_ROLE_ID: 'discordRoleId' };
+  const discordMissing = Object.keys(DISCORD_VARS).filter((k) => !cfg[DISCORD_VARS[k]]);
+  cfg.discord = discordMissing.length === 0;
 
   const missing = [];
   if (prod) {
@@ -138,6 +150,14 @@ export function loadConfig(env = process.env) {
   if (env.LAUNCH_AT && Number.isNaN(Date.parse(env.LAUNCH_AT.trim()))) cfg.warnings.push(`LAUNCH_AT is not a date (${env.LAUNCH_AT}): use for example 2026-10-10T13:00:00Z.`);
   if (cfg.launchAt > Date.now() && cfg.previewKey.length < 16) cfg.warnings.push('PREVIEW_KEY is not set (16 characters at least): until the launch, nobody can open /signup, /buy, /download and /affiliate, the team included. Use the same value as the Netlify variable.');
   if (prod && cfg.adminKey.length < 16) cfg.warnings.push('ADMIN_KEY is not set (16 characters at least): /admin, where the site\'s discount pop-up is changed, stays closed. npm run admin -- popup still works.');
+  if (discordMissing.length && discordMissing.length < 5) cfg.warnings.push(`${discordMissing.join(', ')} not set: the Discord Pro role stays manual until the five DISCORD_ variables are in.`);
+  for (const k of ['DISCORD_CLIENT_ID', 'DISCORD_GUILD_ID', 'DISCORD_ROLE_ID']) {
+    // Discord ids are 17 to 20 digits (Developer mode > right click > Copy ID).
+    if (cfg[DISCORD_VARS[k]] && !/^\d{17,20}$/.test(cfg[DISCORD_VARS[k]])) {
+      cfg.warnings.push(`${k} is not a Discord id (17 to 20 digits): the Discord Pro role stays manual.`);
+      cfg.discord = false;
+    }
+  }
   // Emails really go out: pages may promise one.
   cfg.mailEnabled = !!cfg.resendApiKey && !exampleFrom;
 
