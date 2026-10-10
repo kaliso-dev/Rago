@@ -1333,14 +1333,14 @@
  },
  "gpu_general": {
   "fr": {
-   "desc": "Réglages pour toutes les cartes : priorité de l'affichage, préemption du GPU coupée, mode MSI et délais d'économie d'énergie.",
+   "desc": "Réglages pour toutes les cartes : priorité de l'affichage, mode MSI et délais d'économie d'énergie.",
    "gain": "Effet rarement mesurable : beaucoup de ces réglages sont ignorés par les Windows récents.",
-   "cons": "Si une autre appli charge le GPU, l'affichage peut saccader ; un peu plus de mémoire vive sert au cache des fichiers."
+   "cons": "Un peu plus de mémoire vive sert au cache des fichiers."
   },
   "en": {
-   "desc": "Graphics settings for any card: display priority, GPU preemption off, MSI mode and power-saving delays.",
+   "desc": "Graphics settings for any card: display priority, MSI mode and power-saving delays.",
    "gain": "Rarely measurable: many of these settings are ignored by recent Windows versions.",
-   "cons": "If another app loads the GPU, the display may stutter; a bit more RAM goes to the file cache."
+   "cons": "A bit more RAM goes to the file cache."
   }
  },
  "gpu_directx": {
@@ -1357,12 +1357,12 @@
  },
  "nv_general": {
   "fr": {
-   "desc": "Pack NVIDIA : profil faible latence pour tous tes jeux, mode MSI, préemption et HDCP coupés, télémétrie NVIDIA coupée.",
+   "desc": "Pack NVIDIA : profil faible latence pour tous tes jeux, mode MSI, HDCP coupé, télémétrie NVIDIA coupée.",
    "gain": "Le profil peut réduire l'input lag quand le GPU est à 100 % ; Reflex dans le jeu fait mieux s'il existe.",
    "cons": "Netflix et les vidéos protégées peuvent refuser de se lire, et tes réglages NVIDIA globaux sont remplacés."
   },
   "en": {
-   "desc": "NVIDIA pack: low-latency profile for all your games, MSI mode, preemption and HDCP off, NVIDIA telemetry off.",
+   "desc": "NVIDIA pack: low-latency profile for all your games, MSI mode, HDCP off, NVIDIA telemetry off.",
    "gain": "The profile can reduce input lag when the GPU is at 100%; in-game Reflex does better when available.",
    "cons": "Netflix and other protected video may refuse to play, and your global NVIDIA settings are replaced."
   }
@@ -1443,12 +1443,12 @@
   "fr": {
    "desc": "Coupe la préemption : le GPU finit sa tâche en cours avant de passer à une autre, au lieu de s'interrompre.",
    "gain": "Effet rarement mesurable en jeu.",
-   "cons": "L'affichage peut saccader si une autre appli charge le GPU, et la projection sans fil (Miracast) peut ne plus marcher."
+   "cons": "L'affichage peut saccader si une autre appli charge le GPU, le partage d'écran Discord peut rester gris, et la projection sans fil (Miracast) peut ne plus marcher."
   },
   "en": {
    "desc": "Turns off preemption: the GPU finishes its current task before switching, instead of pausing it.",
    "gain": "Rarely measurable in games.",
-   "cons": "The display may stutter if another app loads the GPU, and wireless display (Miracast) may stop working."
+   "cons": "The display may stutter if another app loads the GPU, Discord screen sharing may show a gray screen, and wireless display (Miracast) may stop working."
   }
  },
  "nv_dpc": {
@@ -1515,12 +1515,12 @@
   "fr": {
    "desc": "Une quarantaine de réglages internes du pilote NVIDIA et de l'alimentation, avec la télémétrie NVIDIA et Miracast coupés.",
    "gain": "Effet rarement mesurable : la plupart de ces réglages ne sont pas documentés.",
-   "cons": "La projection sans fil (Miracast) peut ne plus marcher."
+   "cons": "Coupe le MPO : le partage d'écran Discord peut rester gris, et la projection sans fil (Miracast) peut ne plus marcher."
   },
   "en": {
    "desc": "About forty internal NVIDIA driver and power settings, with NVIDIA telemetry and Miracast turned off.",
    "gain": "Rarely measurable: most of these settings are undocumented.",
-   "cons": "Wireless display (Miracast) may stop working."
+   "cons": "Turns MPO off: Discord screen sharing may show a gray screen, and wireless display (Miracast) may stop working."
   }
  },
  "nv_powermizer": {
@@ -1635,12 +1635,12 @@
   "fr": {
    "desc": "Pack AMD avancé : économies d'énergie coupées, GPU forcé en haute fréquence, Chill coupé, Anti-Lag activé et réglages 3D.",
    "gain": "Anti-Lag peut réduire l'input lag quand le GPU est à 100 % ; le reste a un effet rarement mesurable.",
-   "cons": "Plus de chaleur, de bruit et de conso ; overlay Radeon coupé, synchro verticale forcée sur off (risque de déchirement)."
+   "cons": "Plus de chaleur, de bruit et de conso ; overlay Radeon coupé, synchro verticale forcée sur off (risque de déchirement) ; MPO coupé : le partage d'écran Discord peut rester gris."
   },
   "en": {
    "desc": "Advanced AMD pack: power saving off, GPU forced to high clocks, Chill off, Anti-Lag on and 3D driver settings.",
    "gain": "Anti-Lag can reduce input lag when the GPU is at 100%; the rest is rarely measurable.",
-   "cons": "More heat, noise and power use; Radeon overlay off, VSync forced off (risk of screen tearing)."
+   "cons": "More heat, noise and power use; Radeon overlay off, VSync forced off (risk of screen tearing); MPO off: Discord screen sharing may show a gray screen."
   }
  },
  "intel_gpu": {

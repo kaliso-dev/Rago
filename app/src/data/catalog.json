@@ -3595,7 +3595,7 @@
        "legacy": [
         "RAGO APP FPS.bat@847"
        ],
-       "lines": 494,
+       "lines": 362,
        "gain": {
         "en": "The profile can reduce input lag when the GPU is at 100%; the rest is rarely measurable.",
         "fr": "Le profil peut réduire l'input lag quand le GPU est à 100 % ; le reste a un effet rarement mesurable."
@@ -3624,7 +3624,7 @@
        "legacy": [
         "RAGO APP FPS.bat@378"
        ],
-       "lines": 450,
+       "lines": 432,
        "gain": {
         "en": "Anti-Lag can reduce input lag when the GPU is at 100%; the rest is rarely measurable.",
         "fr": "Anti-Lag peut réduire l'input lag quand le GPU est à 100 % ; le reste a un effet rarement mesurable."
@@ -3680,8 +3680,8 @@
         "fr": "GPU général"
        },
        "desc": {
-        "en": "Graphics settings for any card: display priority, GPU preemption off, MSI mode and power-saving delays.",
-        "fr": "Réglages pour toutes les cartes : priorité de l'affichage, préemption du GPU coupée, mode MSI et délais d'économie d'énergie."
+        "en": "Graphics settings for any card: display priority, MSI mode and power-saving delays.",
+        "fr": "Réglages pour toutes les cartes : priorité de l'affichage, mode MSI et délais d'économie d'énergie."
        },
        "risk": "safe",
        "reboot": true,
@@ -3690,14 +3690,14 @@
        "legacy": [
         "RAGO APP FPS.bat@1416"
        ],
-       "lines": 123,
+       "lines": 109,
        "gain": {
         "en": "Rarely measurable: many of these settings are ignored by recent Windows versions.",
         "fr": "Effet rarement mesurable : beaucoup de ces réglages sont ignorés par les Windows récents."
        },
        "cons": {
-        "en": "If another app loads the GPU, the display may stutter; a bit more RAM goes to the file cache.",
-        "fr": "Si une autre appli charge le GPU, l'affichage peut saccader ; un peu plus de mémoire vive sert au cache des fichiers."
+        "en": "A bit more RAM goes to the file cache.",
+        "fr": "Un peu plus de mémoire vive sert au cache des fichiers."
        }
       },
       {
@@ -3744,8 +3744,8 @@
         "en": "Full NVIDIA optimization"
        },
        "desc": {
-        "en": "NVIDIA pack: low-latency profile for all your games, MSI mode, preemption and HDCP off, NVIDIA telemetry off.",
-        "fr": "Pack NVIDIA : profil faible latence pour tous tes jeux, mode MSI, préemption et HDCP coupés, télémétrie NVIDIA coupée."
+        "en": "NVIDIA pack: low-latency profile for all your games, MSI mode, HDCP off, NVIDIA telemetry off.",
+        "fr": "Pack NVIDIA : profil faible latence pour tous tes jeux, mode MSI, HDCP coupé, télémétrie NVIDIA coupée."
        },
        "risk": "safe",
        "reboot": true,
@@ -3757,7 +3757,7 @@
        "legacy": [
         "NVGEN689U@10580"
        ],
-       "lines": 67,
+       "lines": 48,
        "gain": {
         "en": "The profile can reduce input lag when the GPU is at 100%; in-game Reflex does better when available.",
         "fr": "Le profil peut réduire l'input lag quand le GPU est à 100 % ; Reflex dans le jeu fait mieux s'il existe."
@@ -3964,8 +3964,8 @@
         "fr": "Effet rarement mesurable en jeu."
        },
        "cons": {
-        "en": "The display may stutter if another app loads the GPU, and wireless display (Miracast) may stop working.",
-        "fr": "L'affichage peut saccader si une autre appli charge le GPU, et la projection sans fil (Miracast) peut ne plus marcher."
+        "en": "The display may stutter if another app loads the GPU, Discord screen sharing may show a gray screen, and wireless display (Miracast) may stop working.",
+        "fr": "L'affichage peut saccader si une autre appli charge le GPU, le partage d'écran Discord peut rester gris, et la projection sans fil (Miracast) peut ne plus marcher."
        },
        "restore": true
       },
@@ -4137,8 +4137,8 @@
         "fr": "Effet rarement mesurable : la plupart de ces réglages ne sont pas documentés."
        },
        "cons": {
-        "en": "Wireless display (Miracast) may stop working.",
-        "fr": "La projection sans fil (Miracast) peut ne plus marcher."
+        "en": "Turns MPO off: Discord screen sharing may show a gray screen, and wireless display (Miracast) may stop working.",
+        "fr": "Coupe le MPO : le partage d'écran Discord peut rester gris, et la projection sans fil (Miracast) peut ne plus marcher."
        },
        "restore": true
       },
@@ -4258,7 +4258,7 @@
        "legacy": [
         "am1@11267"
        ],
-       "lines": 20,
+       "lines": 19,
        "gain": {
         "en": "Can slightly reduce input lag when the GPU is at 100%; uncertain effect on recent drivers.",
         "fr": "Peut réduire un peu l'input lag quand le GPU est à 100 % ; effet incertain sur les pilotes récents."
@@ -4436,8 +4436,8 @@
         "fr": "Anti-Lag peut réduire l'input lag quand le GPU est à 100 % ; le reste a un effet rarement mesurable."
        },
        "cons": {
-        "en": "More heat, noise and power use; Radeon overlay off, VSync forced off (risk of screen tearing).",
-        "fr": "Plus de chaleur, de bruit et de conso ; overlay Radeon coupé, synchro verticale forcée sur off (risque de déchirement)."
+        "en": "More heat, noise and power use; Radeon overlay off, VSync forced off (risk of screen tearing); MPO off: Discord screen sharing may show a gray screen.",
+        "fr": "Plus de chaleur, de bruit et de conso ; overlay Radeon coupé, synchro verticale forcée sur off (risque de déchirement) ; MPO coupé : le partage d'écran Discord peut rester gris."
        },
        "restore": true
       }
