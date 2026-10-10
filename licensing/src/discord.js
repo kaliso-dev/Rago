@@ -21,15 +21,19 @@ const RETRY_NOT_MEMBER_MS = 60 * 60 * 1000; // left the server: retried hourly, 
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 
 /**
- * Invite rewards (2026-10-10). An invite bot (InviteLogger…) counts the invites and gives the role; the Rago bot sees
- * the role on a linked account and gives its reward once: Premium time and a one-use discount code.
+ * Discord rewards (2026-10-10). An invite bot (InviteLogger…) counts the invites and gives VIP or MVP; boosting the
+ * server is seen on the member itself. The Rago bot gives each reward once to the linked Rago account: Premium time
+ * and a one-use discount code. Discord doesn't tell bots how many boosts a member gives, so "2 boosts" is a role
+ * staff (or a boost bot) give.
  */
 export const REWARDS = [
-  { kind: 'vip', name: 'VIP', cfgKey: 'discordVipRoleId', invites: 10, time: { days: 14 }, label: '2 weeks', percent: 10 },
-  { kind: 'mvp', name: 'MVP', cfgKey: 'discordMvpRoleId', invites: 15, time: { months: 1 }, label: '1 month', percent: 30 },
+  { kind: 'vip', name: 'VIP', cfgKey: 'discordVipRoleId', need: '10 invites', time: { months: 1 }, label: '1 month', percent: 10 },
+  { kind: 'mvp', name: 'MVP', cfgKey: 'discordMvpRoleId', need: '15 invites', time: { months: 3 }, label: '3 months', percent: 30 },
+  { kind: 'boost', name: 'BOOST', boost: true, need: '1 server boost', time: { days: 14 }, label: '2 weeks', percent: 10 },
+  { kind: 'boost2', name: 'BOOST2', cfgKey: 'discordBoost2RoleId', need: '2 server boosts', time: { months: 1 }, label: '1 month', percent: 30 },
 ];
-/** The rewards whose role is set (DISCORD_VIP_ROLE_ID, DISCORD_MVP_ROLE_ID), with the bot configured. */
-export const rewardsOn = (cfg) => (cfg.discord ? REWARDS.filter((r) => cfg[r.cfgKey]) : []);
+/** The rewards on: VIP / MVP / 2 boosts when their role is set, 1 boost always (with the bot configured). */
+export const rewardsOn = (cfg) => (cfg.discord ? REWARDS.filter((r) => r.boost || cfg[r.cfgKey]) : []);
 const REWARD_RECHECK_MS = 30 * 60 * 1000; // the background pass looks at each linked account's roles this often
 const CODE_LETTERS = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
 
@@ -166,7 +170,7 @@ export function createDiscord(cfg, { db, fetchImpl = fetch, log = console, strip
     return rows.length;
   }
 
-  // ---------- Invite rewards: VIP / MVP roles turned into Premium time and a one-use code ----------
+  // ---------- Discord rewards: VIP / MVP roles and boosts turned into Premium time and a one-use code ----------
   const rewards = rewardsOn(cfg);
   const rewardsOf = (userId) => db.all('SELECT * FROM discord_rewards WHERE user_id = ? ORDER BY given_at', [userId]);
 
@@ -209,7 +213,7 @@ export function createDiscord(cfg, { db, fetchImpl = fetch, log = console, strip
   }
 
   /**
-   * Looks at the linked member's roles and gives the reward of each VIP / MVP role they have and haven't had.
+   * Looks at the linked member's roles and boost and gives each reward they qualify for and haven't had.
    * Not more than once a `minAge`. Never throws: a failure is logged and the next check tries again.
    */
   async function checkRewards(userId, { minAge = 60 * 1000 } = {}) {
@@ -230,7 +234,8 @@ export function createDiscord(cfg, { db, fetchImpl = fetch, log = console, strip
     }
     const out = [];
     for (const r of todo) {
-      if (!member?.roles?.includes(cfg[r.cfgKey])) continue;
+      // Boosting: premium_since is set while the member boosts the server.
+      if (!(r.boost ? member?.premium_since : member?.roles?.includes(cfg[r.cfgKey]))) continue;
       try {
         const got = await giveReward(row, r);
         if (got) out.push(got);
@@ -313,7 +318,7 @@ export function createDiscord(cfg, { db, fetchImpl = fetch, log = console, strip
         const joined = row.want && err.kind === 'forbidden' && await join(null).then(() => true, () => false);
         if (!joined) log.error(`[discord] ${me.id} not added to the server: ${err.message}`);
       }
-      // Already VIP or MVP on the server: the reward comes now (and with Premium, the Pro role below).
+      // Already VIP, MVP or a booster on the server: the reward comes now (and with Premium, the Pro role below).
       const won = await checkRewards(userId, { minAge: 0 });
       return apply(won.length ? await linkOf(userId) : row, { force: true });
     } finally {
@@ -401,7 +406,8 @@ export function createDiscord(cfg, { db, fetchImpl = fetch, log = console, strip
       const found = all.find((x) => x.id === cfg[r.cfgKey]);
       const n = (given.status === 'fulfilled' ? given.value : []).find((g) => g.kind === r.kind)?.n || 0;
       const what = `${r.time.days ? `${r.time.days} jours` : `${r.time.months} mois`} de Premium et un code ${r.percent} % à usage unique`;
-      if (!found) add(`Récompense ${r.name}`, 'error', `DISCORD_${r.name}_ROLE_ID ne correspond à aucun rôle de ce serveur : clic droit sur le rôle ${r.name} → Copier l’identifiant.`);
+      if (r.boost) add(`Récompense ${r.name}`, 'ok', `Booster le serveur donne ${what} au compte Rago lié. ${n} donnée${n > 1 ? 's' : ''}.`);
+      else if (!found) add(`Récompense ${r.name}`, 'error', `DISCORD_${r.name}_ROLE_ID ne correspond à aucun rôle de ce serveur : clic droit sur le rôle ${r.name} → Copier l’identifiant.`);
       else add(`Récompense ${r.name}`, 'ok', `« ${found.name} » donne ${what} au compte Rago lié. ${n} donnée${n > 1 ? 's' : ''}.`);
     }
 

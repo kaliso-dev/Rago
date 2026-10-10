@@ -105,10 +105,12 @@ export function loadConfig(env = process.env) {
     discordBotToken: (env.DISCORD_BOT_TOKEN || '').trim().replace(/^Bot\s+/i, ''),
     discordGuildId: (env.DISCORD_GUILD_ID || '').trim(),
     discordRoleId: (env.DISCORD_ROLE_ID || '').trim(),
-    // Invite rewards (2026-10-10): an invite bot (InviteLogger…) gives VIP at 10 invites and MVP at 15; the Rago bot
-    // turns those roles into free Premium and a one-use discount code for the linked Rago account. Optional.
+    // Discord rewards (2026-10-10): an invite bot (InviteLogger…) gives VIP at 10 invites and MVP at 15; the Rago bot
+    // turns those roles (and boosting the server) into free Premium and a one-use discount code. Optional.
     discordVipRoleId: (env.DISCORD_VIP_ROLE_ID || '').trim(),
     discordMvpRoleId: (env.DISCORD_MVP_ROLE_ID || '').trim(),
+    // "2 boosts" reward: a role staff (or a boost bot) give; one boost is seen by the bot itself.
+    discordBoost2RoleId: (env.DISCORD_BOOST2_ROLE_ID || '').trim(),
   };
   cfg.subscriptions = !!(cfg.stripePriceMonthly || cfg.stripePriceYearly);
   const DISCORD_VARS = { DISCORD_CLIENT_ID: 'discordClientId', DISCORD_CLIENT_SECRET: 'discordClientSecret', DISCORD_BOT_TOKEN: 'discordBotToken', DISCORD_GUILD_ID: 'discordGuildId', DISCORD_ROLE_ID: 'discordRoleId' };
@@ -162,7 +164,7 @@ export function loadConfig(env = process.env) {
       cfg.discord = false;
     }
   }
-  for (const [k, key] of [['DISCORD_VIP_ROLE_ID', 'discordVipRoleId'], ['DISCORD_MVP_ROLE_ID', 'discordMvpRoleId']]) {
+  for (const [k, key] of [['DISCORD_VIP_ROLE_ID', 'discordVipRoleId'], ['DISCORD_MVP_ROLE_ID', 'discordMvpRoleId'], ['DISCORD_BOOST2_ROLE_ID', 'discordBoost2RoleId']]) {
     if (cfg[key] && !/^\d{17,20}$/.test(cfg[key])) {
       cfg.warnings.push(`${k} is not a Discord id (17 to 20 digits): that invite reward is off.`);
       cfg[key] = '';
