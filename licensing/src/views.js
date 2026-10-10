@@ -351,13 +351,13 @@ export function dashboardPage(cfg, { user, license, device, notice, error, canRe
       </div>`;
   };
 
-  // Invite rewards: VIP / MVP on the Rago Discord (given by an invite bot) bring Premium time and a one-use code.
+  // Discord rewards: VIP / MVP (given by an invite bot) and boosts bring Premium time and a one-use code.
   // Shown to every account, Premium or not: the free players are the ones inviting.
   const rewardsBlock = () => {
     if (!inviteRewards.length) return '';
     const lines = inviteRewards.map((r) => {
       const got = discordRewards.find((g) => g.kind === r.kind);
-      if (!got) return html`<li><strong>${r.name}</strong> · ${r.invites} invites: ${r.label} of Premium and a ${r.percent}% discount code.</li>`;
+      if (!got) return html`<li><strong>${r.name}</strong> · ${r.need}: ${r.label} of Premium and a ${r.percent}% discount code.</li>`;
       const time = got.action === 'lifetime' ? 'You already have Premium for life.' : `${r.label} of Premium added${got.until ? `, Premium until ${fmtDate(got.until)}` : ''}.`;
       return html`<li><strong>${r.name}</strong> · <span class="badge badge-ok"><i></i>Earned</span> ${time}
         ${got.promo_code ? html`<br>Your ${r.percent}% code, one use: <code class="mono">${got.promo_code}</code> <a class="link-arrow" href="/buy?promo=${got.promo_code}">Use it ${ICON.arrow}</a>` : ''}</li>`;
@@ -367,9 +367,9 @@ export function dashboardPage(cfg, { user, license, device, notice, error, canRe
     const linkedHere = discordLink && !active;
     return html`<div class="discord">
         <span class="plan-icon">${ICON.users}</span>
-        <div><strong>Invite rewards on Discord</strong>
-          <p class="muted small">Invite players to the Rago Discord. ${discordLink
-            ? 'Your rewards show up here once you get the role.'
+        <div><strong>Discord rewards</strong>
+          <p class="muted small">Invite players to the Rago Discord or boost the server. ${discordLink
+            ? 'Your rewards show up here a few minutes after you earn them.'
             : 'Link your Discord account to get your rewards here.'}</p>
           <ul class="small rewards">${lines}</ul>
           ${linkHere ? html`<a class="btn btn-primary btn-sm" href="/account/discord">Link Discord</a>` : ''}
