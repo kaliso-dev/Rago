@@ -32,7 +32,8 @@
 //   hide-review <email>          take that account's review off the site (spam, abuse); show-review puts it back
 //   remove-photo <email>         delete that account's profile photo (inappropriate picture)
 //   set-name <email> <name>      change the public name shown with that account's review
-//   discord <email>              the Discord account linked to it and its Pro role, given again or taken back now
+//   discord <email>              the Discord account linked to it and its Pro role, given again or taken back now,
+//                                and its VIP / MVP invite rewards (given now if the role is there)
 //   discord                      the same for every linked account (the server does it every 5 minutes)
 //   discord-unlink <email>       take the Pro role back and unlink their Discord account
 import { loadConfig } from '../src/config.js';
@@ -65,7 +66,7 @@ async function licenseOf(email) {
 }
 // The Pro role bot, with the same DISCORD_ variables as Railway.
 function discordBot() {
-  const bot = createDiscord(cfg, { db });
+  const bot = createDiscord(cfg, { db, stripe: cfg.stripeSecretKey ? new Stripe(cfg.stripeSecretKey) : null });
   if (!bot) { console.error('Set the five DISCORD_ variables (same as Railway) first.'); process.exit(1); }
   return bot;
 }
@@ -131,7 +132,7 @@ switch (cmd) {
     const { user, lic } = await licenseOf(email);
     await L.setLicenseStatus(db, lic.id, cmd === 'revoke' ? 'revoked' : 'active', cmd === 'revoke' ? rest[0] || 'manual' : null);
     // The Discord Pro role follows now rather than at the server's next pass (5 minutes).
-    const bot = user && createDiscord(cfg, { db });
+    const bot = user && createDiscord(cfg, { db, stripe: cfg.stripeSecretKey ? new Stripe(cfg.stripeSecretKey) : null });
     const d = bot && await bot.syncUser(user.id);
     console.log(`${cmd === 'revoke' ? 'Revoked' : 'Restored'}.${d ? ` Discord: ${discordLine(d)}.` : ''}`);
     break;
@@ -299,8 +300,12 @@ switch (cmd) {
     }
     const user = await L.findUserByEmail(db, email);
     if (!user) { console.error(`No account for ${email}.`); process.exit(1); }
+    await bot.checkRewards(user.id, { minAge: 0 });
     const row = await bot.syncUser(user.id, { force: true });
     console.log(row ? discordLine(row) : `${email} hasn't linked a Discord account: they do it from their account page (Link Discord).`);
+    for (const r of await bot.rewardsOf(user.id)) {
+      console.log(`  ${r.kind.toUpperCase()} reward ${fmt(r.given_at)}: ${r.action === 'lifetime' ? 'already Premium for life' : `Premium until ${fmt(r.until)}`}${r.promo_code ? `, code ${r.promo_code}` : ''}`);
+    }
     break;
   }
   case 'discord-unlink': {

@@ -294,6 +294,11 @@ p{margin:0}
 /* Premium channel block inside the download card */
 .discord{display:flex;gap:14px;align-items:flex-start;margin-top:auto;padding:18px;border-radius:var(--rg-radius-lg);background:var(--rg-ink-3);border:1px solid var(--rg-line-1)}
 .discord p{margin:4px 0 8px}
+.discord + .discord{margin-top:12px}
+/* Invite rewards (VIP / MVP) */
+.rewards{margin:0 0 10px;padding-left:18px;display:grid;gap:6px;color:var(--rg-text-2)}
+.rewards strong{color:var(--rg-text-1)}
+.rewards code{overflow-wrap:anywhere}
 .price{color:var(--rg-text-1)}
 /* Referral rows on small phones: badge under the email */
 @media (max-width:420px){.refs li{flex-wrap:wrap;row-gap:8px}.refs li > div{flex:1 1 calc(100% - 64px)}.refs .badge{margin-left:50px}.refs .mono{overflow-wrap:anywhere}.refs p{white-space:nowrap}}

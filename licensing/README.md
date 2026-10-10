@@ -13,7 +13,7 @@ Serveur Node.js qui gère tout ce qui se passe après le clic sur « Get Premium
 
 Remboursement total ou litige Stripe : la licence est révoquée et l'abonnement annulé automatiquement. Abonnement terminé ou impayé : la licence s'arrête, et revient si le paiement repasse.
 
-Rôle Pro sur Discord (avec les cinq variables `DISCORD_`) : **Link Discord** sur `/account` ajoute le joueur au serveur avec le rôle, et un bot le lui retire quand la licence s'arrête, puis le rend si elle revient (`src/discord.js`, réglages dans `docs/MISE-EN-LIGNE.md`, « Le rôle Pro sur Discord »). Sans elles, la page compte dit d'ouvrir un ticket.
+Rôle Pro sur Discord (avec les cinq variables `DISCORD_`) : **Link Discord** sur `/account` ajoute le joueur au serveur avec le rôle, et un bot le lui retire quand la licence s'arrête, puis le rend si elle revient (`src/discord.js`, réglages dans `docs/MISE-EN-LIGNE.md`, « Le rôle Pro sur Discord »). Sans elles, la page compte dit d'ouvrir un ticket. Avec `DISCORD_VIP_ROLE_ID` et `DISCORD_MVP_ROLE_ID`, les rôles VIP et MVP (donnés par un bot d'invitations) rapportent une fois au compte lié 2 semaines ou 1 mois de Premium et un code de 10 % ou 30 % à usage unique (« Les récompenses d'invitation »).
 
 Programme d'affiliation `/affiliate` : chaque compte peut avoir un code, qui est aussi un code promo Stripe à −5 % ; un code sert à 3 joueurs ; 3 acheteurs comptés (à l'activation de leur PC) = 6 mois de Rago Optimizer Premium, une fois (règles anti-triche dans `docs/MISE-EN-LIGNE.md`, fin du document). `/buy?promo=CODE` applique un code promo Stripe (celui du pop-up du site, réglé sur `/admin` avec `ADMIN_KEY` ou `npm run admin -- popup`).
 
@@ -40,7 +40,7 @@ npm run admin -- grant-months 6 <email> [email…]  # Premium offert 6 mois, pui
 npm run admin -- reviews                 # derniers avis ; hide-review / show-review <email> pour la modération
 npm run admin -- popup                   # le pop-up du site et ses places restantes ; popup RAGO50 50 15 pour une offre (aussi sur /admin)
 npm run admin -- remove-photo <email>    # retire une photo de profil (avec SUPABASE_URL et SUPABASE_SERVICE_ROLE_KEY)
-npm run admin -- discord <email>         # son Discord lié et son rôle Pro, remis d'aplomb tout de suite (avec les DISCORD_ de Railway)
+npm run admin -- discord <email>         # son Discord lié, son rôle Pro remis d'aplomb et ses récompenses VIP / MVP (avec les DISCORD_ de Railway)
 ```
 
 `grant` sur un email sans compte affiche un lien à envoyer à la personne pour qu'elle crée son compte.

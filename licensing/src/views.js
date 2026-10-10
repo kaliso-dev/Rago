@@ -281,7 +281,7 @@ function affiliateLine(a) {
   return next;
 }
 
-export function dashboardPage(cfg, { user, license, device, notice, error, canReset, nextResetAt, affiliate, discordLink }) {
+export function dashboardPage(cfg, { user, license, device, notice, error, canReset, nextResetAt, affiliate, discordLink, discordRewards = [], inviteRewards = [] }) {
   const active = license?.status === 'active';
   const reason = license?.status_reason;
   const ended = !active && reason === 'subscription_ended';
@@ -351,6 +351,33 @@ export function dashboardPage(cfg, { user, license, device, notice, error, canRe
       </div>`;
   };
 
+  // Invite rewards: VIP / MVP on the Rago Discord (given by an invite bot) bring Premium time and a one-use code.
+  // Shown to every account, Premium or not: the free players are the ones inviting.
+  const rewardsBlock = () => {
+    if (!inviteRewards.length) return '';
+    const lines = inviteRewards.map((r) => {
+      const got = discordRewards.find((g) => g.kind === r.kind);
+      if (!got) return html`<li><strong>${r.name}</strong> · ${r.invites} invites: ${r.label} of Premium and a ${r.percent}% discount code.</li>`;
+      const time = got.action === 'lifetime' ? 'You already have Premium for life.' : `${r.label} of Premium added${got.until ? `, Premium until ${fmtDate(got.until)}` : ''}.`;
+      return html`<li><strong>${r.name}</strong> · <span class="badge badge-ok"><i></i>Earned</span> ${time}
+        ${got.promo_code ? html`<br>Your ${r.percent}% code, one use: <code class="mono">${got.promo_code}</code> <a class="link-arrow" href="/buy?promo=${got.promo_code}">Use it ${ICON.arrow}</a>` : ''}</li>`;
+    });
+    // With Premium, the Premium role block above already links Discord and shows the account.
+    const linkHere = !discordLink && !(active && cfg.discord);
+    const linkedHere = discordLink && !active;
+    return html`<div class="discord">
+        <span class="plan-icon">${ICON.users}</span>
+        <div><strong>Invite rewards on Discord</strong>
+          <p class="muted small">Invite players to the Rago Discord. ${discordLink
+            ? 'Your rewards show up here once you get the role.'
+            : 'Link your Discord account to get your rewards here.'}</p>
+          <ul class="small rewards">${lines}</ul>
+          ${linkHere ? html`<a class="btn btn-primary btn-sm" href="/account/discord">Link Discord</a>` : ''}
+          ${linkedHere ? html`<div class="row"><span class="muted small">Linked to <strong>@${discordLink.discord_name || discordLink.discord_id}</strong></span>${unlinkForm}</div>` : ''}
+          ${openDiscord}</div>
+      </div>`;
+  };
+
   const download = () => html`<article class="card card-hero rise d1">
       <p class="overline">Rago Optimizer for Windows</p>
       <h2 class="h1">Download Rago Optimizer for Windows</h2>
@@ -358,6 +385,7 @@ export function dashboardPage(cfg, { user, license, device, notice, error, canRe
       <a class="btn btn-primary btn-lg" href="/account/download" data-download>${ICON.download}<span>Download Rago Optimizer</span></a>
       ${howto}
       ${discordBlock()}
+      ${rewardsBlock()}
     </article>`;
 
   // Premium stopped (ended, refunded, revoked): the way back comes first.
@@ -370,6 +398,7 @@ export function dashboardPage(cfg, { user, license, device, notice, error, canRe
       <p class="muted small">Windows 10 and 11, 64-bit.${version}</p>
       ${howto}
       ${cfg.discord && discordLink ? html`<p class="muted small">Your Discord account <strong>@${discordLink.discord_name || discordLink.discord_id}</strong> stays linked: the Premium role comes back when Premium does.</p>` : ''}
+      ${rewardsBlock()}
     </article>`;
 
   const OFF = { subscription_ended: 'Ended', refunded: 'Refunded', disputed: 'Disputed', test_mode: 'Test purchase' };
@@ -427,12 +456,14 @@ export function dashboardPage(cfg, { user, license, device, notice, error, canRe
       </article>`;
     }
     if (license.plan === 'reward') {
+      const fromDiscord = license.source === 'discord';
       return html`<article class="card card-plan rise d4">
         <div class="card-head"><p class="overline">Plan</p>${active ? html`<span class="badge badge-red"><i></i>Until ${fmtDate(end)}</span>` : html`<span class="badge badge-off"><i></i>${offBadge()}</span>`}</div>
-        <div class="plan-line"><span class="plan-icon">${ICON.users}</span><div><strong>Rago Optimizer Premium · Affiliate reward</strong>
+        <div class="plan-line"><span class="plan-icon">${ICON.users}</span><div><strong>Rago Optimizer Premium · ${fromDiscord ? 'Discord reward' : 'Affiliate reward'}</strong>
           <p class="muted small">${active
-            ? `Earned with the affiliate program. Premium until ${fmtDate(end)}, nothing to pay.${cfg.affiliateRewardMax === 1 ? '' : ` Bring ${cfg.affiliateGoal} more players to add ${cfg.affiliateRewardMonths} months.`}`
-            : ended ? `Your affiliate reward ended on ${fmtDate(end)}. Get Premium to keep every tweak unlocked.` : 'This license was revoked.'}</p></div></div>
+            ? fromDiscord ? `Earned by inviting players to the Rago Discord. Premium until ${fmtDate(end)}, nothing to pay.`
+              : `Earned with the affiliate program. Premium until ${fmtDate(end)}, nothing to pay.${cfg.affiliateRewardMax === 1 ? '' : ` Bring ${cfg.affiliateGoal} more players to add ${cfg.affiliateRewardMonths} months.`}`
+            : ended ? `Your ${fromDiscord ? 'Discord' : 'affiliate'} reward ended on ${fmtDate(end)}. Get Premium to keep every tweak unlocked.` : 'This license was revoked.'}</p></div></div>
         <div class="row">${active ? html`<a class="btn btn-ghost btn-sm" href="${buyUrl}">Subscribe now, first payment on ${fmtDate(end)}</a>` : ''}<a class="link-arrow" href="/affiliate">Open affiliate program ${ICON.arrow}</a></div>
       </article>`;
     }
@@ -493,13 +524,14 @@ export function dashboardPage(cfg, { user, license, device, notice, error, canRe
     </article>`;
   const sideCard = (cls) => (!affiliate && active && license?.plan === 'lifetime' ? helpCard(cls) : affiliateCard(cls));
 
-  const freeCard = html`<article class="card card-hero solo rise d1">
+  const freeCard = () => html`<article class="card card-hero solo rise d1">
       <div class="card-head"><p class="overline">Your plan</p><span class="badge badge-off"><i></i>Free</span></div>
       <h2 class="h1">You're on Free</h2>
       <p class="muted">${cfg.freeTweaks} tweaks unlocked. ${unlocks.split('. ')[0]}.${cfg.priceLabel ? html` <strong class="price">${cfg.priceLabel}</strong>.` : ''}</p>
       <div class="row"><a class="btn btn-buy btn-lg" href="${buyUrl}">Get Premium ${ICON.arrow}</a>
         <a class="btn btn-ghost btn-lg" href="/account/download" data-download>${ICON.download}<span>Download the free version</span></a></div>
       <p class="muted small">${cfg.subscriptions ? 'Monthly or yearly. Secure checkout with Stripe. Cancel anytime.' : 'Secure checkout with Stripe.'} Already paid? Sign in with the email you paid with${cfg.mailEnabled ? ', or open the link in your purchase email' : ''}. Still not here? ${supportLink(cfg, 'Ask on Discord')} with your payment email and we'll add it to this account.</p>
+      ${rewardsBlock()}
     </article>`;
 
   const title = !license ? 'Welcome to Rago Optimizer'
@@ -512,7 +544,7 @@ export function dashboardPage(cfg, { user, license, device, notice, error, canRe
     </div>
     ${alertBox(error)}${alertBox(notice, 'ok')}
     <div class="grid">
-      ${license ? [active ? download() : comeBack(), licenseCard(), deviceCard(), planCard(), sideCard('d5')] : [freeCard, affiliateCard('d2 side')]}
+      ${license ? [active ? download() : comeBack(), licenseCard(), deviceCard(), planCard(), sideCard('d5')] : [freeCard(), affiliateCard('d2 side')]}
     </div>
     <p class="dash-foot small muted rise d5">Signed in as ${user.email} · <a href="/account/profile">Profile photo and name</a> · <a href="/account/password">Change password</a></p>
   </main>`;

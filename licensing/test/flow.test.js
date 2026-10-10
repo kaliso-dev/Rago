@@ -1774,6 +1774,7 @@ function fakeDiscord() {
       members.set(m[2], new Set(body.roles || []));
       return json(201, { user: { id: m[2] }, roles: body.roles || [] });
     }
+    if (m && method === 'GET') return members.has(m[2]) ? json(200, { user: { id: m[2] }, roles: [...members.get(m[2])] }) : json(404, { code: 10007, message: 'Unknown Member' });
     m = path.match(/^\/guilds\/(\d+)\/members\/(\d+)\/roles\/(\d+)$/);
     if (m) {
       assert.equal(m[3], DISCORD.DISCORD_ROLE_ID);
@@ -1957,4 +1958,114 @@ test('Discord: one Discord account per Rago account, refused changes retried, /a
   assert.ok(half.warnings.some((w) => /DISCORD_CLIENT_ID, DISCORD_CLIENT_SECRET, DISCORD_ROLE_ID not set/.test(w)));
   assert.ok(half.warnings.some((w) => /DISCORD_GUILD_ID is not a Discord id/.test(w)));
   assert.equal(loadConfig(DISCORD).discordBotToken, 'bot-token');
+});
+
+test('Discord invite rewards: VIP and MVP give Premium time and a one-use code, once per Discord and per Rago account', async () => {
+  const KEY = 'admin-key-0123456789abcdef';
+  const VIP = '600000000000000006';
+  const MVP = '700000000000000007';
+  const d = fakeDiscord();
+  d.state.roles.push({ id: VIP, name: 'VIP', position: 1, permissions: '0' }, { id: MVP, name: 'MVP', position: 2, permissions: '0' });
+  const t = await setup({ ...SUBS, ...DISCORD, DISCORD_VIP_ROLE_ID: VIP, DISCORD_MVP_ROLE_ID: MVP, ADMIN_KEY: KEY }, { fetchImpl: d.fetchImpl, log: quiet });
+  const bot = createDiscord(t.cfg, { db: t.db, fetchImpl: d.fetchImpl, log: quiet, stripe: t.stripe });
+  const later = () => t.db.run('UPDATE discord_links SET rewards_checked_at = ?', [Date.now() - 31 * 60 * 1000]);
+  const V = '555555555555555555';
+
+  // A free account: the page lists the rewards and offers to link Discord.
+  await t.browse('/signup', { form: { email: 'free@rago.gg', password: 'password123' } });
+  let dash = await (await t.browse('/account')).text();
+  assert.match(dash, /Invite rewards on Discord/);
+  assert.match(dash, /<strong>VIP<\/strong> · 10 invites: 2 weeks of Premium and a 10% discount code/);
+  assert.match(dash, /<strong>MVP<\/strong> · 15 invites: 1 month of Premium and a 30% discount code/);
+  assert.match(dash, /href="\/account\/discord">Link Discord/);
+  // Linked before reaching VIP: on the server, no Premium, no Pro role.
+  assert.equal(await linkDiscord(t, d, { id: V, username: 'inviter' }), '/account?n=discord');
+  assert.ok(d.members.has(V));
+  assert.equal(d.hasRole(V), false);
+  assert.equal((await t.db.get('SELECT COUNT(*)::int AS n FROM licenses')).n, 0);
+  assert.match(await (await t.browse('/account')).text(), /Linked to <strong>@inviter<\/strong>/);
+
+  // The invite bot gives VIP: the background pass gives 2 weeks of Premium, a one-use 10% code and the Pro role.
+  d.members.get(V).add(VIP);
+  await bot.syncAll();
+  assert.equal((await t.db.get('SELECT COUNT(*)::int AS n FROM licenses')).n, 0); // looked at less than 30 minutes ago
+  await later();
+  await bot.syncAll();
+  const lic = await t.db.get('SELECT * FROM licenses');
+  assert.equal(lic.plan, 'reward');
+  assert.equal(lic.source, 'discord');
+  assert.ok(Math.abs(lic.current_period_end - (Date.now() + 14 * DAY_MS)) < 60000);
+  assert.ok(d.hasRole(V));
+  const vip = t.promos.find((p) => /^VIP-[A-Z2-9]{6}$/.test(p.code));
+  assert.equal(vip.max_redemptions, 1);
+  assert.equal(vip.promotion.coupon, 'rago-promo-10-once');
+  assert.equal(t.coupons['rago-promo-10-once'].percent_off, 10);
+  dash = await (await t.browse('/account')).text();
+  assert.match(dash, /Premium · Discord reward/);
+  assert.match(dash, new RegExp(`<code class="mono">${vip.code}</code>`));
+  assert.match(dash, new RegExp(`href="/buy\\?promo=${vip.code}"`));
+  // Looked at again: given once.
+  await later();
+  await bot.syncAll();
+  assert.equal(t.promos.filter((p) => p.code.startsWith('VIP-')).length, 1);
+
+  // MVP, seen when the player opens their account page: 1 month more on top, a one-use 30% code.
+  d.members.get(V).add(MVP);
+  await t.db.run('UPDATE discord_links SET rewards_checked_at = 0');
+  dash = await (await t.browse('/account')).text();
+  const lic2 = await t.db.get('SELECT * FROM licenses');
+  assert.equal(lic2.id, lic.id);
+  assert.ok(lic2.current_period_end - lic.current_period_end > 27 * DAY_MS);
+  const mvp = t.promos.find((p) => /^MVP-/.test(p.code));
+  assert.equal(mvp.max_redemptions, 1);
+  assert.equal(t.coupons['rago-promo-30-once'].percent_off, 30);
+  assert.match(dash, new RegExp(`<code class="mono">${mvp.code}</code>`));
+  assert.equal((await t.db.get("SELECT COUNT(*)::int AS n FROM audit WHERE type = 'discord.reward'")).n, 2);
+
+  // The same Discord account linked to another Rago account: nothing more to win.
+  t.jar.clear();
+  await t.browse('/signup', { form: { email: 'alt@rago.gg', password: 'password123' } });
+  assert.equal(await linkDiscord(t, d, { id: V, username: 'inviter' }), '/account?n=discord');
+  const alt = await L.findUserByEmail(t.db, 'alt@rago.gg');
+  assert.equal(await t.db.get('SELECT * FROM licenses WHERE user_id = ?', [alt.id]), null);
+  assert.equal(t.promos.length, 2);
+
+  // A subscriber reaching VIP: their next payment moves 2 weeks later (a Stripe trial), no second license.
+  t.jar.clear();
+  const S = '444444444444444444';
+  t.paidSubscription('cs_s', 'sub@rago.gg');
+  await t.browse('/checkout/success?session_id=cs_s');
+  await t.browse('/signup', { form: { email: 'sub@rago.gg', password: 'password123' } });
+  const subLic = await t.db.get("SELECT * FROM licenses WHERE email = 'sub@rago.gg'");
+  d.members.set(S, new Set([VIP]));
+  assert.equal(await linkDiscord(t, d, { id: S, username: 'subscriber' }), '/account?n=discord');
+  const update = t.stripeCalls.find((c) => c[0] === 'update' && c[1] === 'sub_cs_s');
+  assert.ok(Math.abs(update[2].trial_end * 1000 - (subLic.current_period_end + 14 * DAY_MS)) < 60000);
+  assert.equal((await t.db.get("SELECT COUNT(*)::int AS n FROM licenses WHERE email = 'sub@rago.gg'")).n, 1);
+  assert.ok(d.hasRole(S));
+
+  // Stripe refuses: nothing given, tried again later.
+  const create = t.stripe.promotionCodes.create;
+  t.stripe.promotionCodes.create = async () => { throw new Error('Stripe down'); };
+  t.jar.clear();
+  await t.browse('/signup', { form: { email: 'late@rago.gg', password: 'password123' } });
+  const Z = '888888888888888888';
+  d.members.set(Z, new Set([VIP]));
+  await linkDiscord(t, d, { id: Z, username: 'late' });
+  const late = await L.findUserByEmail(t.db, 'late@rago.gg');
+  assert.equal(await t.db.get('SELECT * FROM discord_rewards WHERE user_id = ?', [late.id]), null);
+  assert.equal(await t.db.get('SELECT * FROM licenses WHERE user_id = ?', [late.id]), null);
+  t.stripe.promotionCodes.create = create;
+  await later();
+  await bot.syncAll();
+  assert.equal((await t.db.get('SELECT plan FROM licenses WHERE user_id = ?', [late.id])).plan, 'reward');
+
+  // /admin: both roles found, rewards counted. A role id that isn't one is flagged in the config.
+  await t.browse('/admin/login', { form: { key: KEY } });
+  const page = await (await t.browse('/admin')).text();
+  assert.match(page, /« VIP » donne 14 jours de Premium et un code 10 % à usage unique au compte Rago lié\. 3 données\./);
+  assert.match(page, /« MVP » donne 1 mois de Premium et un code 30 % à usage unique au compte Rago lié\. 1 donnée\./);
+  const bad = loadConfig({ ...DISCORD, DISCORD_VIP_ROLE_ID: 'VIP' });
+  assert.equal(bad.discordVipRoleId, '');
+  assert.ok(bad.warnings.some((w) => /DISCORD_VIP_ROLE_ID is not a Discord id/.test(w)));
 });

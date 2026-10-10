@@ -3,7 +3,11 @@
 // server with the role. From then on the role follows the account's license: the bot takes it back when Premium
 // stops (subscription ended or unpaid, refund, dispute, revoked, reward over) and gives it back when it returns.
 // discord_links.role keeps what the bot last did, so a pass only calls Discord for the accounts that changed.
+import { randomInt } from 'node:crypto';
 import { audit } from './db.js';
+import { newId } from './crypto.js';
+import { givePremiumTime } from './licensing.js';
+import { ensureCoupon } from './billing.js';
 
 const API = 'https://discord.com/api/v10';
 const MANAGE_ROLES = 1n << 28n;
@@ -15,6 +19,19 @@ export const BOT_PERMISSIONS = String(MANAGE_ROLES | CREATE_INSTANT_INVITE);
 const RETRY_MS = 15 * 60 * 1000;
 const RETRY_NOT_MEMBER_MS = 60 * 60 * 1000; // left the server: retried hourly, in case they come back
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
+
+/**
+ * Invite rewards (2026-10-10). An invite bot (InviteLogger…) counts the invites and gives the role; the Rago bot sees
+ * the role on a linked account and gives its reward once: Premium time and a one-use discount code.
+ */
+export const REWARDS = [
+  { kind: 'vip', name: 'VIP', cfgKey: 'discordVipRoleId', invites: 10, time: { days: 14 }, label: '2 weeks', percent: 10 },
+  { kind: 'mvp', name: 'MVP', cfgKey: 'discordMvpRoleId', invites: 15, time: { months: 1 }, label: '1 month', percent: 30 },
+];
+/** The rewards whose role is set (DISCORD_VIP_ROLE_ID, DISCORD_MVP_ROLE_ID), with the bot configured. */
+export const rewardsOn = (cfg) => (cfg.discord ? REWARDS.filter((r) => cfg[r.cfgKey]) : []);
+const REWARD_RECHECK_MS = 30 * 60 * 1000; // the background pass looks at each linked account's roles this often
+const CODE_LETTERS = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
 
 export class DiscordError extends Error {
   constructor(status, code, message) {
@@ -77,7 +94,7 @@ function restClient(cfg, fetchImpl) {
  * The Discord link and the Pro role, or null when the five DISCORD_ variables aren't all set (the role then
  * stays manual and the account page says to open a ticket).
  */
-export function createDiscord(cfg, { db, fetchImpl = fetch, log = console } = {}) {
+export function createDiscord(cfg, { db, fetchImpl = fetch, log = console, stripe = null } = {}) {
   if (!cfg.discord) return null;
   const call = restClient(cfg, fetchImpl);
   const redirectUri = `${cfg.publicUrl}/account/discord/callback`;
@@ -149,6 +166,95 @@ export function createDiscord(cfg, { db, fetchImpl = fetch, log = console } = {}
     return rows.length;
   }
 
+  // ---------- Invite rewards: VIP / MVP roles turned into Premium time and a one-use code ----------
+  const rewards = rewardsOn(cfg);
+  const rewardsOf = (userId) => db.all('SELECT * FROM discord_rewards WHERE user_id = ? ORDER BY given_at', [userId]);
+
+  /** A one-use Stripe code for `percent` off the first payment, e.g. VIP-7K2M9Q. */
+  async function oneUseCode(r, userId) {
+    const coupon = await ensureCoupon(stripe, `rago-promo-${r.percent}-once`, r.percent, 'once', `${r.percent}% off`);
+    for (let attempt = 1; ; attempt++) {
+      const code = `${r.name}-${Array.from({ length: 6 }, () => CODE_LETTERS[randomInt(CODE_LETTERS.length)]).join('')}`;
+      try {
+        await stripe.promotionCodes.create({ promotion: { type: 'coupon', coupon }, code, max_redemptions: 1, metadata: { rago_discord_reward: r.kind, rago_user: userId } });
+        return code;
+      } catch (err) {
+        if (attempt >= 3 || !/already exists/i.test(err?.message || '')) throw err; // same code drawn twice: draw again
+      }
+    }
+  }
+
+  /** Gives reward `r` to the linked account `row`, once per Discord account and once per Rago account. */
+  async function giveReward(row, r) {
+    const id = newId('drw');
+    // Claimed first: two checks at the same moment give it once.
+    const claimed = await db.get(`INSERT INTO discord_rewards (id, kind, discord_id, user_id, given_at) VALUES (?, ?, ?, ?, ?)
+      ON CONFLICT DO NOTHING RETURNING id`, [id, r.kind, row.discord_id, row.user_id, Date.now()]);
+    if (!claimed) return null;
+    let code = null;
+    try {
+      // The code first: if Premium can't be given, the claim is undone and both are tried again later.
+      code = stripe ? await oneUseCode(r, row.user_id) : null;
+      const premium = await givePremiumTime(db, stripe, row.user_id, { ...r.time, source: 'discord' });
+      const until = premium.action === 'lifetime' ? null : premium.action === 'subscription' ? premium.until : Number(premium.license.current_period_end);
+      await db.run('UPDATE discord_rewards SET license_id = ?, action = ?, until = ?, promo_code = ? WHERE id = ?', [premium.license.id, premium.action, until, code, id]);
+      await audit(db, 'discord.reward', { licenseId: premium.license.id, userId: row.user_id, detail: { kind: r.kind, discord_id: row.discord_id, action: premium.action, until, code } });
+      log.info?.(`[discord] ${r.name} reward given to ${row.discord_id} (${premium.action}${code ? `, code ${code}` : ''})`);
+      return { kind: r.kind, action: premium.action, until, code };
+    } catch (err) {
+      await db.run('DELETE FROM discord_rewards WHERE id = ?', [id]);
+      if (code) await stripe.promotionCodes.list({ code, limit: 1 }).then((l) => l.data[0] && stripe.promotionCodes.update(l.data[0].id, { active: false })).catch(() => {});
+      throw err;
+    }
+  }
+
+  /**
+   * Looks at the linked member's roles and gives the reward of each VIP / MVP role they have and haven't had.
+   * Not more than once a `minAge`. Never throws: a failure is logged and the next check tries again.
+   */
+  async function checkRewards(userId, { minAge = 60 * 1000 } = {}) {
+    if (!rewards.length) return [];
+    const row = await db.get('SELECT * FROM discord_links WHERE user_id = ?', [userId]);
+    if (!row || (row.rewards_checked_at && Date.now() - Number(row.rewards_checked_at) < minAge)) return [];
+    await db.run('UPDATE discord_links SET rewards_checked_at = ? WHERE user_id = ?', [Date.now(), userId]);
+    const had = await db.all('SELECT kind FROM discord_rewards WHERE discord_id = ? OR user_id = ?', [row.discord_id, userId]);
+    const todo = rewards.filter((r) => !had.some((h) => h.kind === r.kind));
+    if (!todo.length) return [];
+    let member;
+    try {
+      member = await call('GET', memberPath(row.discord_id));
+    } catch (err) {
+      if (!(err instanceof DiscordError)) throw err;
+      if (err.kind !== 'not_member') log.error(`[discord] roles of ${row.discord_id} not read: ${err.message}`);
+      return [];
+    }
+    const out = [];
+    for (const r of todo) {
+      if (!member?.roles?.includes(cfg[r.cfgKey])) continue;
+      try {
+        const got = await giveReward(row, r);
+        if (got) out.push(got);
+      } catch (err) {
+        log.error(`[discord] ${r.name} reward for ${row.discord_id} not given, tried again later:`, err?.message || err);
+      }
+    }
+    return out;
+  }
+
+  /** Background: up to 50 linked accounts not looked at for 30 minutes and still missing a reward. */
+  async function rewardPass() {
+    if (!rewards.length) return 0;
+    const rows = await db.all(`SELECT d.user_id FROM discord_links d
+      WHERE (d.rewards_checked_at IS NULL OR d.rewards_checked_at < ?)
+        AND (SELECT COUNT(DISTINCT r.kind) FROM discord_rewards r WHERE r.discord_id = d.discord_id OR r.user_id = d.user_id) < ?
+      ORDER BY d.rewards_checked_at NULLS FIRST, d.linked_at LIMIT 50`, [Date.now() - REWARD_RECHECK_MS, rewards.length]);
+    for (const { user_id: userId } of rows) {
+      // Premium given: the Pro role follows right away.
+      if ((await checkRewards(userId, { minAge: 0 })).length) await syncUser(userId);
+    }
+    return rows.length;
+  }
+
   // One pass at a time. A pass asked for while one runs happens right after it (the license may have changed).
   let running = null;
   let again = null;
@@ -162,6 +268,7 @@ export function createDiscord(cfg, { db, fetchImpl = fetch, log = console } = {}
       while (opts) {
         again = null;
         try { await reconcile(opts); } catch (err) { log.error('[discord] sync failed', err); }
+        try { await rewardPass(); } catch (err) { log.error('[discord] rewards check failed', err); }
         opts = again;
       }
     })().finally(() => { running = null; });
@@ -206,7 +313,9 @@ export function createDiscord(cfg, { db, fetchImpl = fetch, log = console } = {}
         const joined = row.want && err.kind === 'forbidden' && await join(null).then(() => true, () => false);
         if (!joined) log.error(`[discord] ${me.id} not added to the server: ${err.message}`);
       }
-      return apply(row, { force: true });
+      // Already VIP or MVP on the server: the reward comes now (and with Premium, the Pro role below).
+      const won = await checkRewards(userId, { minAge: 0 });
+      return apply(won.length ? await linkOf(userId) : row, { force: true });
     } finally {
       // The player's token was only needed to read who they are and add them: Discord forgets it now.
       await call('POST', '/oauth2/token/revoke', { auth: 'basic', form: { token: token.access_token, token_type_hint: 'access_token' } }).catch(() => {});
@@ -236,7 +345,7 @@ export function createDiscord(cfg, { db, fetchImpl = fetch, log = console } = {}
     const list = [];
     const add = (label, level, text) => list.push({ label, level, text });
     const failed = (err) => (err?.message || String(err)).slice(0, 200);
-    const [me, app, guild, roles, stats] = await Promise.allSettled([
+    const [me, app, guild, roles, stats, given] = await Promise.allSettled([
       call('GET', '/users/@me'),
       call('GET', '/applications/@me'),
       call('GET', `/guilds/${cfg.discordGuildId}`),
@@ -244,6 +353,7 @@ export function createDiscord(cfg, { db, fetchImpl = fetch, log = console } = {}
       db.get(`SELECT COUNT(*)::int AS linked, COUNT(*) FILTER (WHERE role)::int AS with_role,
         COUNT(*) FILTER (WHERE error = 'not_member')::int AS away, COUNT(*) FILTER (WHERE error IS NOT NULL AND error <> 'not_member')::int AS failing
         FROM discord_links`),
+      db.all('SELECT kind, COUNT(*)::int AS n FROM discord_rewards GROUP BY kind'),
     ]);
     if (me.status === 'rejected') {
       add('Bot', 'error', me.reason?.status === 401 ? 'DISCORD_BOT_TOKEN est refusé par Discord : recopie le token (Developer Portal → Bot → Reset Token).' : `Discord n’a pas répondu : ${failed(me.reason)}`);
@@ -286,6 +396,15 @@ export function createDiscord(cfg, { db, fetchImpl = fetch, log = console } = {}
       } else add('Ordre des rôles', 'ok', `« ${top.name} » est au-dessus de « ${role.name} ».`);
     }
 
+    // Invite rewards: the VIP / MVP roles the invite bot gives.
+    for (const r of rewards) {
+      const found = all.find((x) => x.id === cfg[r.cfgKey]);
+      const n = (given.status === 'fulfilled' ? given.value : []).find((g) => g.kind === r.kind)?.n || 0;
+      const what = `${r.time.days ? `${r.time.days} jours` : `${r.time.months} mois`} de Premium et un code ${r.percent} % à usage unique`;
+      if (!found) add(`Récompense ${r.name}`, 'error', `DISCORD_${r.name}_ROLE_ID ne correspond à aucun rôle de ce serveur : clic droit sur le rôle ${r.name} → Copier l’identifiant.`);
+      else add(`Récompense ${r.name}`, 'ok', `« ${found.name} » donne ${what} au compte Rago lié. ${n} donnée${n > 1 ? 's' : ''}.`);
+    }
+
     const s = stats.status === 'fulfilled' ? stats.value : null;
     if (s) {
       const away = s.away ? `, ${s.away} pas sur le serveur` : '';
@@ -295,7 +414,7 @@ export function createDiscord(cfg, { db, fetchImpl = fetch, log = console } = {}
     return { checks: list, inviteUrl, redirectUri };
   }
 
-  return { authorizeUrl, inviteUrl, redirectUri, link, unlink, linkOf, syncUser, syncAll, idle: () => running || Promise.resolve(), checks };
+  return { authorizeUrl, inviteUrl, redirectUri, link, unlink, linkOf, syncUser, syncAll, idle: () => running || Promise.resolve(), checks, checkRewards, rewardsOf, rewards };
 }
 
 /** /admin without the bot: the variables missing, or not a Discord id. */
