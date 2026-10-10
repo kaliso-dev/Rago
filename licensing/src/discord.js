@@ -30,8 +30,11 @@ export const REWARDS = [
   { kind: 'vip', name: 'VIP', cfgKey: 'discordVipRoleId', need: '10 invites', time: { months: 1 }, label: '1 month', percent: 10 },
   { kind: 'mvp', name: 'MVP', cfgKey: 'discordMvpRoleId', need: '15 invites', time: { months: 3 }, label: '3 months', percent: 30 },
   { kind: 'boost', name: 'BOOST', boost: true, need: '1 server boost', time: { days: 14 }, label: '2 weeks', percent: 10 },
-  { kind: 'boost2', name: 'BOOST2', cfgKey: 'discordBoost2RoleId', need: '2 server boosts', time: { months: 1 }, label: '1 month', percent: 30 },
+  // Replaces the 1-boost reward: 2 boosts give 1 month and 30 %, not 2 weeks and 10 % on top (Sofiene, 2026-10-10).
+  { kind: 'boost2', name: 'BOOST2', cfgKey: 'discordBoost2RoleId', need: '2 server boosts', time: { months: 1 }, label: '1 month', percent: 30, replaces: 'boost' },
 ];
+/** The reward that replaces `r` when both are earned (2 boosts for 1 boost), or null. */
+export const replacedBy = (r, list = REWARDS) => list.find((x) => x.replaces === r.kind) || null;
 /** The rewards on: VIP / MVP / 2 boosts when their role is set, 1 boost always (with the bot configured). */
 export const rewardsOn = (cfg) => (cfg.discord ? REWARDS.filter((r) => r.boost || cfg[r.cfgKey]) : []);
 const REWARD_RECHECK_MS = 30 * 60 * 1000; // the background pass looks at each linked account's roles this often
@@ -232,10 +235,14 @@ export function createDiscord(cfg, { db, fetchImpl = fetch, log = console, strip
       if (err.kind !== 'not_member') log.error(`[discord] roles of ${row.discord_id} not read: ${err.message}`);
       return [];
     }
+    // Boosting: premium_since is set while the member boosts the server.
+    const earned = (r) => !!(r.boost ? member?.premium_since : member?.roles?.includes(cfg[r.cfgKey]));
     const out = [];
     for (const r of todo) {
-      // Boosting: premium_since is set while the member boosts the server.
-      if (!(r.boost ? member?.premium_since : member?.roles?.includes(cfg[r.cfgKey]))) continue;
+      if (!earned(r)) continue;
+      // The 1-boost reward isn't given with (or after) the 2-boost one. Given before it, the player keeps it.
+      const higher = replacedBy(r, rewards);
+      if (higher && (had.some((h) => h.kind === higher.kind) || earned(higher))) continue;
       try {
         const got = await giveReward(row, r);
         if (got) out.push(got);

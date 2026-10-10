@@ -2069,13 +2069,33 @@ test('Discord rewards: VIP, MVP and boosts give Premium time and a one-use code,
   await bot.syncAll();
   assert.equal((await t.db.get('SELECT plan FROM licenses WHERE user_id = ?', [late.id])).plan, 'reward');
 
+  // 2 boosts (the role, and boosting) when linking: 1 month and a 30% code, not the 1-boost reward on top.
+  t.jar.clear();
+  await t.browse('/signup', { form: { email: 'twice@rago.gg', password: 'password123' } });
+  const W = '777777777777777777';
+  d.members.set(W, new Set([BOOST2]));
+  d.state.boosting.add(W);
+  assert.equal(await linkDiscord(t, d, { id: W, username: 'twice' }), '/account?n=discord');
+  const twice = await L.findUserByEmail(t.db, 'twice@rago.gg');
+  assert.deepEqual((await t.db.all('SELECT kind FROM discord_rewards WHERE user_id = ?', [twice.id])).map((r) => r.kind), ['boost2']);
+  const twiceLic = await t.db.get('SELECT * FROM licenses WHERE user_id = ?', [twice.id]);
+  assert.ok(twiceLic.current_period_end - Date.now() > 27 * DAY_MS && twiceLic.current_period_end - Date.now() < 32 * DAY_MS);
+  assert.ok(t.promos.some((p) => /^BOOST2-[A-Z2-9]{6}$/.test(p.code) && p.promotion.coupon === 'rago-promo-30-once'));
+  // Looked at again later: still no 1-boost reward, and the page doesn't offer it any more.
+  await later();
+  await bot.syncAll();
+  assert.equal((await t.db.get('SELECT COUNT(*)::int AS n FROM discord_rewards WHERE user_id = ?', [twice.id])).n, 1);
+  dash = await (await t.browse('/account')).text();
+  assert.match(dash, /<strong>BOOST2<\/strong> · <span class="badge badge-ok">/);
+  assert.doesNotMatch(dash, /<strong>BOOST<\/strong>/);
+
   // /admin: both roles found, rewards counted. A role id that isn't one is flagged in the config.
   await t.browse('/admin/login', { form: { key: KEY } });
   const page = await (await t.browse('/admin')).text();
   assert.match(page, /« VIP » donne 1 mois de Premium et un code 10 % à usage unique au compte Rago lié\. 2 données\./);
   assert.match(page, /« MVP » donne 3 mois de Premium et un code 30 % à usage unique au compte Rago lié\. 1 donnée\./);
   assert.match(page, /Booster le serveur donne 14 jours de Premium et un code 10 % à usage unique au compte Rago lié\. 1 donnée\./);
-  assert.match(page, /« 2x Booster » donne 1 mois de Premium et un code 30 % à usage unique au compte Rago lié\. 0 donnée\./);
+  assert.match(page, /« 2x Booster » donne 1 mois de Premium et un code 30 % à usage unique au compte Rago lié\. 1 donnée\./);
   const bad = loadConfig({ ...DISCORD, DISCORD_VIP_ROLE_ID: 'VIP' });
   assert.equal(bad.discordVipRoleId, '');
   assert.ok(bad.warnings.some((w) => /DISCORD_VIP_ROLE_ID is not a Discord id/.test(w)));
