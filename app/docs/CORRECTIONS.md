@@ -502,3 +502,26 @@ Lignes risquées retirées des packs qui les cachaient (le pack reste) :
 - win_gamedvr : la ligne qui réautorisait Game DVR juste après l'avoir coupé.
 
 Point de restauration (1.1.8) : la case de 1.1.6 revient. Elle est cochée d'office seulement pour un réglage `restore` (avancé, ou que l'app ne remet pas entièrement) et si Rago n'en a pas créé un réussi dans les 24 dernières heures.
+
+# Plan d'alimentation Rago Low Latency (1.1.9)
+
+`src-tauri/resources/LowLatency.pow`, fourni par Sofiene le 2026-10-10 (sha256 `c953bead…c840d7`, 24 Ko). C'est une ruche
+de registre exportée par `powercfg -export` (en-tête propre, somme de contrôle valide) qui ne contient que des valeurs :
+2 textes (nom « IIIEXOIII LOW LATENCY », description « LOWEST LATENCY POSSIBLE BY IIIEXOIII ») et 81 réglages, presque
+tous pour le secteur seulement. Personnalité Performances élevées : ce que le fichier ne règle pas (sur batterie
+notamment) prend les valeurs du plan Performances élevées de Windows.
+
+Gardé tel quel : parcage des cœurs coupé, montée en fréquence immédiate, états de throttling coupés, interruptions
+verrouillées sur leur cœur, mise en veille sélective USB coupée (aussi sur batterie), NVMe et disques jamais en veille,
+écran jamais éteint et veille interdite sur secteur, boutons veille et capot sans effet sur secteur.
+
+Corrigé par le script à l'import (`audit_fixes.py`, sur secteur) :
+- repos processeur coupé (`IDLEDISABLE` 1, processeur maintenu en C0) → 0, comme pour `in_windows` : chauffe, moins de
+  boost, ventilateurs à fond et processeur affiché à 100 % dans le Gestionnaire des tâches ;
+- pas de mot de passe au réveil (`CONSOLELOCK` 0) → 1 ;
+- bouton d'alimentation sans effet (`PBUTTONACTION` 0) → 3, éteindre : sinon le joueur coupe le courant en maintenant
+  le bouton ;
+- renommé « Rago Low Latency ».
+
+L'annulation réactive le plan d'avant (relevé `pwractive`) puis supprime le plan Rago. Le test
+`rago_power_plan_imports_on_windows` importe le vrai fichier sur la CI Windows sous un GUID de test.

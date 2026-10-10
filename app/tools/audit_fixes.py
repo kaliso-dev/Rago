@@ -274,9 +274,17 @@ SUB_LINES_PLUS = [
      'powercfg /query b5a8c3e1-4d2f-4e6a-9b71-2c8f0d6e3a95 >nul 2>&1 || powercfg -duplicatescheme '
      'e9a42b02-d5df-448d-aa00-03f14749eb61 b5a8c3e1-4d2f-4e6a-9b71-2c8f0d6e3a95 & powercfg -setactive '
      'b5a8c3e1-4d2f-4e6a-9b71-2c8f0d6e3a95'),
-    # plan Rago : importé sous un GUID fixe puis activé (avant : importé, jamais activé)
+    # plan Rago : importé sous un GUID fixe puis activé (avant : importé, jamais activé). Le .pow fourni le 2026-10-10
+    # vient d'un plan « IIIEXOIII LOW LATENCY » : renommé Rago, et trois réglages remis comme Windows (branché) :
+    # repos processeur coupé (C0 permanent, déjà retiré de in_windows), pas de mot de passe au réveil, bouton
+    # d'alimentation sans effet (le joueur finit par couper le courant en maintenant le bouton)
     (('pow_plan',), r'(?i)^(\s*powercfg\s+-import\s+"%RAGO_RES%\\LowLatency\.pow")\s*$',
-     r'\1 7c4e2a51-3b9d-4f7e-9a62-5d18c0f3b6a4 & powercfg -setactive 7c4e2a51-3b9d-4f7e-9a62-5d18c0f3b6a4'),
+     r'\1 7c4e2a51-3b9d-4f7e-9a62-5d18c0f3b6a4'
+     r' & powercfg -changename 7c4e2a51-3b9d-4f7e-9a62-5d18c0f3b6a4 "Rago Low Latency" "Rago Optimizer low latency power plan"'
+     r' & powercfg -setacvalueindex 7c4e2a51-3b9d-4f7e-9a62-5d18c0f3b6a4 54533251-82be-4824-96c1-47b60b740d00 5d76a2ca-e8c0-402f-a133-2158492d58ad 0'
+     r' & powercfg -setacvalueindex 7c4e2a51-3b9d-4f7e-9a62-5d18c0f3b6a4 fea3413e-7e05-4911-9a71-700331f1c294 0e796bdb-100d-47d6-a2d5-f7d2daa51f51 1'
+     r' & powercfg -setacvalueindex 7c4e2a51-3b9d-4f7e-9a62-5d18c0f3b6a4 4f971e89-eebd-4455-a8de-9e59040e7347 7648efa3-dd9c-4e3e-b566-50f929386280 3'
+     r' & powercfg -setactive 7c4e2a51-3b9d-4f7e-9a62-5d18c0f3b6a4'),
     # PowerMizer : « Class{… } » sans « \ » ni instance, aucun effet. Écrit dans la vraie clé du pilote NVIDIA
     (('nv_powermizer',), r'(?i)^Reg\.exe add "HKLM\\System\\CurrentControlSet\\Control\\Class\{4d36e968-e325-11ce-bfc1-08002be10318\}"( /v .*)$',
      r'''for /f %%k in ('reg query "HKLM\\SYSTEM\\CurrentControlSet\\Control\\Class\\{4d36e968-e325-11ce-bfc1-08002be10318}" /s /d /f "NVIDIA" ^| findstr /r /c:"\\\\[0-9][0-9][0-9][0-9]$"') do Reg.exe add "%%k"\1'''),

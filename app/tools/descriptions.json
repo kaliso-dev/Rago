@@ -915,12 +915,12 @@
   "fr": {
    "desc": "Installe et active le plan d'alimentation Rago, réglé pour la performance, et affiche les options d'alimentation cachées.",
    "gain": "Peut rendre les images plus régulières, surtout sur Ryzen et sur portable branché.",
-   "cons": "Plus de chaleur, de bruit et de consommation ; moins d'autonomie sur portable."
+   "cons": "Plus de chaleur, de bruit et de consommation ; moins d'autonomie sur portable. Branché, le PC ne se met plus en veille et l'écran ne s'éteint plus tout seul."
   },
   "en": {
    "desc": "Installs and turns on the Rago power plan, tuned for performance, and shows hidden power options.",
    "gain": "May make frame pacing smoother, especially on Ryzen and plugged-in laptops.",
-   "cons": "More heat, noise and power use; shorter battery life on laptops."
+   "cons": "More heat, noise and power use; shorter battery life on laptops. When plugged in, the PC no longer goes to sleep and the screen no longer turns off on its own."
   }
  },
  "pow_extra": {

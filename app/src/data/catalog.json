@@ -2663,8 +2663,8 @@
         "fr": "Peut rendre les images plus régulières, surtout sur Ryzen et sur portable branché."
        },
        "cons": {
-        "en": "More heat, noise and power use; shorter battery life on laptops.",
-        "fr": "Plus de chaleur, de bruit et de consommation ; moins d'autonomie sur portable."
+        "en": "More heat, noise and power use; shorter battery life on laptops. When plugged in, the PC no longer goes to sleep and the screen no longer turns off on its own.",
+        "fr": "Plus de chaleur, de bruit et de consommation ; moins d'autonomie sur portable. Branché, le PC ne se met plus en veille et l'écran ne s'éteint plus tout seul."
        }
       },
       {
