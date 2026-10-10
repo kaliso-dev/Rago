@@ -22,7 +22,7 @@ if (!cfg.databaseUrl && process.env.DEV_SEED) {
 }
 
 const stripe = createStripe(cfg);
-const discord = createDiscord(cfg, { db });
+const discord = createDiscord(cfg, { db, stripe });
 const app = createApp({ cfg, db, keys, stripe, mailer: createMailer(cfg), discord });
 
 // Prices, webhook destination and customer portal in the key's Stripe mode (the same list as /admin).

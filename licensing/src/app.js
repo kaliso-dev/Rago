@@ -67,7 +67,7 @@ function rateLimiter() {
 /**
  * @param deps { cfg, db, keys, stripe, mailer, log, discord } (discord: the Pro role bot, null when not configured)
  */
-export function createApp({ cfg, db, keys, stripe, mailer, log = console, fetchImpl = fetch, avatars = P.createAvatarStore(cfg, { fetchImpl, log }), discord = createDiscord(cfg, { db, fetchImpl, log }) }) {
+export function createApp({ cfg, db, keys, stripe, mailer, log = console, fetchImpl = fetch, avatars = P.createAvatarStore(cfg, { fetchImpl, log }), discord = createDiscord(cfg, { db, fetchImpl, log, stripe }) }) {
   const app = new Hono();
   // The Discord role pass started by a webhook runs after the reply to Stripe; tests wait for it here.
   app.idle = () => discord?.idle() ?? Promise.resolve();
@@ -539,13 +539,16 @@ export function createApp({ cfg, db, keys, stripe, mailer, log = console, fetchI
   app.get('/account', requireUser, async (c) => {
     const user = c.get('user');
     await settleAffiliate(user.id);
+    // VIP / MVP on Discord since the last look: the reward (Premium time, a code) is given before the page shows.
+    if (discord) await discord.checkRewards(user.id);
     const license = await L.current(db, await L.licenseForUser(db, user.id));
     const device = license && await L.getDevice(db, license.id);
     // The Discord role follows Premium as of now (a claim or an ended reward since the last pass).
     const discordLink = discord && await discord.syncUser(user.id);
+    const discordRewards = discord?.rewards.length ? await discord.rewardsOf(user.id) : [];
     const [kind, text] = NOTICES[c.req.query('n')] || [];
     return c.html(V.dashboardPage(cfg, {
-      user, license, device, discordLink,
+      user, license, device, discordLink, discordRewards, inviteRewards: discord?.rewards || [],
       notice: kind === 'notice' ? text : null, error: kind === 'error' ? text : null,
       ...(license ? resetWindow(license, device) : {}),
       affiliate: await A.affiliateSummary(db, cfg, user.id),

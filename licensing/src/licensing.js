@@ -302,13 +302,14 @@ export function addMonths(ms, months) {
 }
 
 /**
- * Affiliate reward: `months` of Premium for the account. Returns what to do:
+ * Free Premium for the account: `months` and/or `days` (affiliate reward, Discord invite reward). Returns what to do:
  * - { action: 'lifetime' } nothing to add, the account has Premium for life;
  * - { action: 'subscription', license, subscriptionId, until } a Stripe subscriber: the caller skips their
  *   payments until `until` in Stripe, then calls rewardSubscription;
  * - { action: 'extended' | 'created', license } a reward license (plan 'reward', ends on current_period_end).
  */
-export function grantRewardMonths(db, userId, months) {
+export function grantRewardTime(db, userId, { months = 0, days = 0, source = 'affiliate' }) {
+  const add = (from) => addMonths(from, months) + days * 24 * 3600 * 1000;
   return db.tx(async (t) => {
     const user = await getUser(t, userId);
     const now = Date.now();
@@ -316,18 +317,35 @@ export function grantRewardMonths(db, userId, months) {
     if (current?.plan === 'lifetime') return { action: 'lifetime', license: current };
     if (current?.stripe_subscription_id && (current.plan === 'month' || current.plan === 'year')) {
       return { action: 'subscription', license: current, subscriptionId: current.stripe_subscription_id,
-        until: addMonths(Math.max(Number(current.current_period_end) || 0, now), months) };
+        until: add(Math.max(Number(current.current_period_end) || 0, now)) };
     }
     if (current) {
-      const until = addMonths(Math.max(Number(current.current_period_end) || 0, now), months);
+      const until = add(Math.max(Number(current.current_period_end) || 0, now));
       await t.run("UPDATE licenses SET plan = 'reward', current_period_end = ?, cancel_at_period_end = false WHERE id = ?", [until, current.id]);
-      await audit(t, 'license.reward_extended', { licenseId: current.id, userId, detail: { months, until } });
+      await audit(t, 'license.reward_extended', { licenseId: current.id, userId, detail: { source, months, days, until } });
       return { action: 'extended', license: await getLicense(t, current.id) };
     }
-    const { license } = await insertLicense(t, { email: user.email, userId, source: 'affiliate', plan: 'reward', periodEnd: addMonths(now, months) });
-    await audit(t, 'license.granted', { licenseId: license.id, userId, detail: { source: 'affiliate', months } });
+    const { license } = await insertLicense(t, { email: user.email, userId, source, plan: 'reward', periodEnd: add(now) });
+    await audit(t, 'license.granted', { licenseId: license.id, userId, detail: { source, months, days } });
     return { action: 'created', license };
   });
+}
+
+/** Affiliate reward: `months` of Premium (see grantRewardTime). */
+export const grantRewardMonths = (db, userId, months) => grantRewardTime(db, userId, { months });
+
+/**
+ * grantRewardTime, then for a Stripe subscriber a free trial until the new date: no payment until then, then the
+ * subscription renews as before (or ends then, if they had canceled).
+ */
+export async function givePremiumTime(db, stripe, userId, time) {
+  const r = await grantRewardTime(db, userId, time);
+  if (r.action === 'subscription') {
+    if (!stripe) throw new Error('Stripe is needed to skip the payments of a subscriber');
+    await stripe.subscriptions.update(r.subscriptionId, { trial_end: Math.floor(r.until / 1000), proration_behavior: 'none' });
+    await rewardSubscription(db, r.license.id, r.until, time.months ?? 0);
+  }
+  return r;
 }
 
 /** After Stripe accepted the skipped payments: the license shows the new paid-until date right away. */

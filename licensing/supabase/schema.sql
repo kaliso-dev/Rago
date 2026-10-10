@@ -187,6 +187,23 @@ CREATE TABLE IF NOT EXISTS discord_links (
   synced_at BIGINT
 );
 
+-- Invite rewards (2026-10-10): VIP / MVP roles (given by an invite bot) turned into Premium time and a one-use
+-- discount code, once per Discord account and once per Rago account for each role.
+ALTER TABLE discord_links ADD COLUMN IF NOT EXISTS rewards_checked_at BIGINT;    -- last look at the member's roles
+CREATE TABLE IF NOT EXISTS discord_rewards (
+  id TEXT PRIMARY KEY,
+  kind TEXT NOT NULL,                             -- vip | mvp
+  discord_id TEXT NOT NULL,
+  user_id TEXT REFERENCES users(id) ON DELETE SET NULL,
+  given_at BIGINT NOT NULL,
+  license_id TEXT,
+  action TEXT,                                    -- created | extended | subscription | lifetime
+  until BIGINT,                                   -- Premium until (ms), when time was added
+  promo_code TEXT,                                -- the one-use Stripe code shown on the account page
+  UNIQUE (discord_id, kind),
+  UNIQUE (user_id, kind)
+);
+
 ALTER TABLE users ENABLE ROW LEVEL SECURITY;
 ALTER TABLE web_sessions ENABLE ROW LEVEL SECURITY;
 ALTER TABLE licenses ENABLE ROW LEVEL SECURITY;
@@ -202,3 +219,4 @@ ALTER TABLE reviews ENABLE ROW LEVEL SECURITY;
 ALTER TABLE site_settings ENABLE ROW LEVEL SECURITY;
 ALTER TABLE api_sessions ENABLE ROW LEVEL SECURITY;
 ALTER TABLE discord_links ENABLE ROW LEVEL SECURITY;
+ALTER TABLE discord_rewards ENABLE ROW LEVEL SECURITY;

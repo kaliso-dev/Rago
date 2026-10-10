@@ -285,6 +285,22 @@ Sans les cinq variables ci-dessous, rien ne change : la page compte dit d'ouvrir
 
 La page compte dit « Premium role » (le mot de la charte) ; le bot donne le rôle dont tu as mis l'identifiant, quel que soit son nom sur le serveur.
 
+### Les récompenses d'invitation (VIP et MVP)
+
+Un bot d'invitations (InviteLogger) compte qui a invité qui et donne le rôle **VIP** à 10 invitations, **MVP** à 15. Le bot Rago voit ces rôles sur les comptes liés et donne la récompense **une seule fois** :
+
+- **VIP** : 2 semaines de Premium et un code de 10 % à usage unique.
+- **MVP** : 1 mois de Premium et un code de 30 % à usage unique.
+
+Le joueur (gratuit ou Premium) lie son Discord depuis sa page compte : la carte « Invite rewards on Discord » liste les récompenses, puis affiche celles gagnées et le code, avec un lien qui l'applique au paiement (`/buy?promo=VIP-XXXXXX`). Le code fait 10 % ou 30 % sur le premier paiement, une seule utilisation.
+
+- Le Premium s'ajoute à ce qu'il a : un compte gratuit reçoit une licence « Discord reward » qui s'arrête seule à la date ; un abonné voit son prochain paiement repoussé d'autant (essai gratuit Stripe) ; un compte à vie garde son Premium et reçoit le code.
+- Une fois par compte Discord et une fois par compte Rago : relier le même Discord à un autre compte ne redonne rien.
+- Le bot regarde les rôles à la liaison, quand le joueur ouvre sa page compte, et toutes les 30 minutes pour les autres. Retirer VIP ou MVP ensuite ne reprend pas la récompense.
+- Donner VIP ou MVP à la main sur Discord donne aussi la récompense : c'est la façon de récompenser quelqu'un sans passer par les invitations.
+
+**À faire une fois** : dans InviteLogger, crée les deux rangs (VIP à 10, MVP à 15) et active le filtre des fausses invitations. Puis clic droit sur le rôle **VIP** → **Copier l'identifiant du rôle** → variable Railway `DISCORD_VIP_ROLE_ID`, pareil pour **MVP** → `DISCORD_MVP_ROLE_ID`. Sur `/admin`, les lignes « Récompense VIP » et « Récompense MVP » doivent être « OK » ; elles comptent aussi les récompenses données. `npm run admin -- discord joueur@mail.com` montre les récompenses d'un joueur (et la donne tout de suite s'il a le rôle).
+
 ---
 
 ## Ce que tu me donnes
@@ -315,6 +331,7 @@ La page compte dit « Premium role » (le mot de la charte) ; le bot donne le r�
 | `LICENSE_SIGNING_KEY`, `SESSION_SECRET` | `npm run admin -- export-keys` (étape 5.7) |
 | `SCRIPTS_SECRET` | Une valeur aléatoire que tu génères une fois (étape 8), identique au secret GitHub `RAGO_SCRIPTS_SECRET`. Ne la change jamais |
 | `DISCORD_CLIENT_ID`, `DISCORD_CLIENT_SECRET`, `DISCORD_BOT_TOKEN`, `DISCORD_GUILD_ID`, `DISCORD_ROLE_ID` | Discord Developer Portal et ton serveur (« Le rôle Pro sur Discord »). Facultatives : sans elles, le rôle se donne à la main |
+| `DISCORD_VIP_ROLE_ID`, `DISCORD_MVP_ROLE_ID` | Clic droit sur les rôles VIP et MVP → Copier l'identifiant (« Les récompenses d'invitation »). Facultatives : sans elles, pas de récompense d'invitation |
 | `ADMIN_KEY` | Une clé d'au moins 16 lettres et chiffres que tu choisis : elle ouvre `/admin`, où se règle le pop-up du site (« Le pop-up du site »). Sans elle, `/admin` n'existe pas |
 | `INSTALLER_VERSION` | Le numéro de l'exe déposé dans le bucket, lu dans son nom `Rago Optimizer_<numéro>_x64-setup.exe` (ex. `1.1.5`). Affiché à côté du bouton de téléchargement. `INSTALLER_OBJECT` est facultatif (il donne le bucket et le dossier) : le `.exe` le plus récent du dossier est toujours servi |
 

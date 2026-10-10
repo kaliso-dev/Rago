@@ -6,7 +6,7 @@ import { randomBytes } from 'node:crypto';
 import { audit } from './db.js';
 import { newId } from './crypto.js';
 import { COMPONENTS } from './fingerprint.js';
-import { LicenseError, getUser, grantRewardMonths, rewardSubscription } from './licensing.js';
+import { LicenseError, getUser, givePremiumTime } from './licensing.js';
 
 const DAY = 86400000;
 const ALPHABET = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789'; // no 0/O, 1/I
@@ -163,14 +163,7 @@ export async function evaluateAffiliate(db, cfg, userId, { stripe = null, log = 
 
 async function giveReward(db, cfg, stripe, userId, n) {
   const months = cfg.affiliateRewardMonths;
-  const r = await grantRewardMonths(db, userId, months);
-  if (r.action === 'subscription') {
-    if (!stripe) throw new Error('Stripe is needed to skip the payments of a subscribed affiliate');
-    // A free trial until `until`: no payment until then, then the subscription renews as before
-    // (or ends then, if they had canceled).
-    await stripe.subscriptions.update(r.subscriptionId, { trial_end: Math.floor(r.until / 1000), proration_behavior: 'none' });
-    await rewardSubscription(db, r.license.id, r.until, months);
-  }
+  const r = await givePremiumTime(db, stripe, userId, { months });
   await db.run('UPDATE affiliates SET reward_license_id = ? WHERE user_id = ?', [r.license.id, userId]);
   await audit(db, 'affiliate.rewarded', { licenseId: r.license.id, userId, detail: { reward: n, months, action: r.action } });
   return { n, action: r.action, licenseId: r.license.id };
