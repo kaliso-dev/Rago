@@ -945,6 +945,50 @@ test('affiliate without a license gets 6 months of Premium, which end on their d
   assert.equal(await L.expireRewards(t.db), 0);
 });
 
+test('months given by the team (admin grant-months): Premium until its date, shown as a gift, then it stops', async () => {
+  const t = await setup(SUBS);
+  // No account yet: the claim link creates it and the gift follows.
+  const { license, claimToken } = await L.grantLicense(t.db, 'Old@Bat.io', 'grant-months 6', { months: 6 });
+  assert.ok(claimToken);
+  assert.equal(license.plan, 'reward');
+  assert.equal(license.source, 'grant');
+  assert.equal(license.user_id, null);
+  const days = (Number(license.current_period_end) - Date.now()) / DAY_MS;
+  assert.ok(days > 180 && days < 185, `${days} days`);
+  await t.browse(`/claim/${claimToken}`);
+  await t.browse('/signup', { form: { email: 'old@bat.io', password: 'password123' } });
+  const user = await L.findUserByEmail(t.db, 'old@bat.io');
+  assert.equal((await L.licenseForUser(t.db, user.id)).id, license.id);
+  let dash = await (await t.browse('/account')).text();
+  assert.match(dash, /Rago Optimizer Premium · Gift/);
+  assert.match(dash, /Offered by the Rago team\. Premium until/);
+  assert.match(dash, /Subscribe now, first payment on/);
+  assert.doesNotMatch(dash, /Affiliate reward|affiliate program\. Premium/);
+
+  // The app gets Premium with its end date.
+  let j = await (await t.api('/auth/login', { email: 'old@bat.io', password: 'password123', device: pc('G') })).json();
+  j = await (await t.api('/licenses/activate', { device: pc('G') }, { authorization: `Bearer ${j.access_token}` })).json();
+  assert.equal(j.status, 'active');
+  assert.equal(j.license.billing.renews_at, null);
+  assert.equal(Date.parse(j.license.billing.ends_at), Number(license.current_period_end));
+
+  // An account without Premium gets it straight away, no link.
+  const acc = await L.createUser(t.db, 'acc@bat.io', 'password123');
+  const direct = await L.grantLicense(t.db, 'acc@bat.io', null, { months: 6 });
+  assert.equal(direct.claimToken, null);
+  assert.equal(direct.license.user_id, acc.id);
+
+  // Past its date it stops by itself, like an affiliate reward.
+  await t.db.run('UPDATE licenses SET current_period_end = ? WHERE id = ?', [Date.now() - 1000, license.id]);
+  assert.equal(await L.expireRewards(t.db), 1);
+  dash = await (await t.browse('/account')).text();
+  assert.match(dash, /Your free Premium ended on/);
+  assert.match(dash, />Get Premium</);
+
+  // Without months, grant stays for life.
+  assert.equal((await L.grantLicense(t.db, 'life@bat.io')).license.plan, 'lifetime');
+});
+
 test('site discount code: /buy?promo=RAGO15 opens the checkout with it, an unknown code is ignored', async () => {
   const t = await setup(SUBS);
   t.promos.push({ id: 'promo_site', object: 'promotion_code', active: true, code: 'RAGO15', promotion: { type: 'coupon', coupon: 'rago-promo-15-once' } });

@@ -209,6 +209,7 @@ npm run admin -- reset-device <email>    # le joueur a changé de PC
 npm run admin -- revoke <email> [raison]
 npm run admin -- restore <email>
 npm run admin -- grant <email> [note]    # licence à vie offerte, ex. anciens acheteurs du .bat Premium
+npm run admin -- grant-months 6 <email> [email…]  # Premium offert 6 mois, puis il s'arrête tout seul (plusieurs emails possibles)
 npm run admin -- affiliate <email>       # son code, ses filleuls, pourquoi chacun compte ou non, ses récompenses
 npm run admin -- popup RAGO50 50 15      # code du pop-up du site : −50 % pour 15 clients (aussi sur /admin)
 ```

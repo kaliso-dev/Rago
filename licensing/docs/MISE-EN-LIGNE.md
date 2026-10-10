@@ -334,6 +334,7 @@ npm run admin -- claim-link joueur@mail.com     # nouveau lien « Create your ac
 npm run admin -- reset-link joueur@mail.com     # lien « Choose a new password » (1 h), si l'email n'arrive pas
 npm run admin -- reset-device joueur@mail.com   # il a changé de PC : libère l'ancien
 npm run admin -- grant ami@mail.com             # licence à vie offerte (ex. anciens acheteurs du .bat)
+npm run admin -- grant-months 6 ami@mail.com    # Premium offert 6 mois à partir d'aujourd'hui, puis il s'arrête tout seul ; plusieurs emails à la suite possibles, ceux qui ont déjà Premium sont sautés
 npm run admin -- affiliate affilie@mail.com     # son code, ses filleuls, pourquoi chacun compte ou non, ses récompenses
 npm run admin -- create-promo RAGO15 15         # code promo Stripe (ici −15 % sur le premier paiement), voir « Codes promo »
 npm run admin -- popup                          # le pop-up du site et ses places restantes ; popup RAGO50 50 15 pour une offre (voir « Le pop-up du site »)
