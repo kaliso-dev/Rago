@@ -5,6 +5,7 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
+    "window": "node tools/window.mjs",
     "build": "tsc --noEmit && vite build",
     "preview": "vite preview",
     "catalog": "python3 tools/build_catalog_v6.py",

@@ -68,6 +68,7 @@ function page({ title, body, user, cfg, bodyClass = '', nav = '', cta = { href: 
 <script src="/assets/account.js" defer></script>
 </head>
 <body class="${escape(bodyClass)}">
+${cfg.staging ? render(html`<div class="staging-bar" role="note"><b>Test server (${cfg.envName})</b> Not the real Rago: payments use Stripe test cards (4242 4242 4242 4242), accounts here are test accounts.</div>`) : ''}
 <div class="bg" aria-hidden="true"><span></span><span></span></div>
 <header class="top">
   <a class="brand" href="${escape(cfg.siteUrl)}/" aria-label="Rago Optimizer home">${render(WORDMARK)}</a>

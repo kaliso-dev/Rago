@@ -48,6 +48,7 @@ export function orderLines(license = {}) {
 
 export function createMailer(cfg, { log = console.log, fetchImpl = fetch } = {}) {
   async function send(to, subject, html, text) {
+    if (cfg.staging) subject = `[Test] ${subject}`; // from the staging server: never mistaken for a real purchase
     if (!cfg.resendApiKey) {
       log(`[mail] to=${to} subject="${subject}"\n${text}`);
       return;

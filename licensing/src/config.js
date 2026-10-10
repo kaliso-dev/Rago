@@ -17,11 +17,20 @@ function launchTime(value, prod) {
   return Number.isNaN(t) ? (prod ? Date.parse(DEFAULT_LAUNCH) : 0) : t;
 }
 
+// A test copy of the server: Railway environment named "staging" (or a PR environment, "test", "preview", "dev"),
+// or APP_ENV=staging. It refuses live Stripe keys and says on every page and email that it isn't the real one.
+const STAGING_NAME = /stag|test|preview|^dev$|pr-\d/;
+
 export function loadConfig(env = process.env) {
   const prod = env.NODE_ENV === 'production';
   const publicUrl = asUrl(env.PUBLIC_URL) || `http://localhost:${env.PORT || 8787}`;
+  // Which server this is. The first server to open a database marks it with this name, and a server with another
+  // name refuses that database (claimDatabase in db.js): a staging copy keeps away from the live accounts.
+  const envName = String(env.APP_ENV || env.RAILWAY_ENVIRONMENT_NAME || (prod ? 'production' : 'development')).trim().toLowerCase();
   const cfg = {
     prod,
+    envName,
+    staging: STAGING_NAME.test(envName),
     port: Number(env.PORT || 8787),
     publicUrl,
     siteUrl: asUrl(env.SITE_URL) || publicUrl,
@@ -125,6 +134,9 @@ export function loadConfig(env = process.env) {
     if (!publicUrl.startsWith('https://')) missing.push('PUBLIC_URL (https)');
     if (missing.length) throw new Error(`Missing production config: ${missing.join(', ')}`);
   }
+  if (cfg.staging && /^(sk|rk)_live_/.test(cfg.stripeSecretKey)) {
+    throw new Error(`This is the "${envName}" test server, but STRIPE_SECRET_KEY is a live key: real cards would be charged. Use the Stripe test keys here (sk_test_..., and the test webhook secret and prices).`);
+  }
 
   // Values still set to the examples from .env.example: the server runs, but say what won't work.
   cfg.warnings = [];
@@ -170,6 +182,9 @@ export function loadConfig(env = process.env) {
       cfg[key] = '';
     }
   }
+  if (cfg.staging && cfg.discord) cfg.warnings.push(`Test server with the Discord bot on: it gives and removes roles on the Discord server ${cfg.discordGuildId}. Use a test Discord server, or remove the DISCORD_ variables from this environment.`);
+  if (cfg.staging && cfg.signingKeyPem) cfg.warnings.push('Test server with LICENSE_SIGNING_KEY set: if it is the live key, licenses from this test server unlock the real app. Remove it from this environment: the test server then makes its own key.');
+
   // Emails really go out: pages may promise one.
   cfg.mailEnabled = !!cfg.resendApiKey && !exampleFrom;
 

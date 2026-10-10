@@ -160,7 +160,7 @@ L'app Windows ne peut être compilée que sur Windows. GitHub le fait pour toi, 
 2. La fabrication se lance d'elle-même à chaque push qui touche `app/`. Tu peux aussi la lancer à la main : **Actions → app-windows → Run workflow**.
 3. Compte environ 5 minutes (15 à 20 la première fois). À la fin, connecté avec le compte kaliso-dev : ouvre le run, section **Artifacts**, télécharge `rago-optimizer-setup`. C'est un zip qui contient `Rago Optimizer_<version>_x64-setup.exe` (aujourd'hui `Rago Optimizer_1.1.8_x64-setup.exe`, version 1.1.8). L'artefact est effacé au bout de 90 jours.
 
-**Sans les deux secrets, la fabrication s'arrête en erreur** (étape « Vérifier les secrets »). C'est voulu : un exe fabriqué sans eux ne peut jamais passer en Premium et ses boutons de compte ouvrent `localhost`. Ne distribue jamais un tel exe.
+**Sans les deux secrets, la fabrication s'arrête en erreur** (étape « Choisir le serveur et vérifier les secrets »). C'est voulu : un exe fabriqué sans eux ne peut jamais passer en Premium et ses boutons de compte ouvrent `localhost`. Ne distribue jamais un tel exe.
 
 ### 4.1 Mettre l'exe à disposition des joueurs
 
@@ -222,13 +222,18 @@ Changement de PC en libre-service (une fois tous les 30 jours depuis le tableau 
 
 ## 7. Développer en local
 
+Le pas-à-pas complet, Mac compris, et le serveur de test en ligne (staging) : **[`DEVELOPPEMENT.md`](DEVELOPPEMENT.md)**. Toute modification passe par une pull request ; seule la fusion change le site et le serveur en ligne.
+
 ```bash
-# Serveur + site, sur http://localhost:8787 (sans DATABASE_URL : base en mémoire, effacée à l'arrêt)
-cd licensing && npm ci && SITE_DIR=../site npm run dev
+# Serveur + site, sur http://localhost:8787 : base en mémoire, compte test@rago.dev / password123,
+# jamais la base, le Stripe live, Resend ni Discord de production (même s'ils sont dans le terminal)
+cd licensing && npm install && npm run local
 npm test                                  # parcours complet (aussi lancé par GitHub à chaque push sur licensing/)
 
-# Le build debug de l'app vise localhost:8787 avec la clé de test de licensing/docs/test/
-# App, sur un PC Windows dans un terminal administrateur
+# Interface de l'app, sur Mac ou n'importe quel PC : fenêtre Chrome à la taille de l'app, réglages simulés
+cd app && npm install && npm run window
+
+# App complète, sur un PC Windows dans un terminal administrateur (le build debug vise localhost:8787)
 cd app && npm ci && npm run tauri dev
 ```
 

@@ -34,6 +34,9 @@ p{margin:0}
 @keyframes drift2{to{transform:translate(-8vmax,-6vmax) scale(1.1)}}
 
 /* Header / footer */
+/* Staging server only (cfg.staging): says on every page that it isn't the real Rago */
+.staging-bar{position:relative;z-index:11;padding:8px clamp(16px,4vw,56px);background:var(--rg-warning);color:#0A0A0B;font-size:var(--rg-fs-small);line-height:1.4;text-align:center}
+.staging-bar b{margin-right:6px}
 .top{position:sticky;top:0;z-index:10;display:flex;align-items:center;gap:20px;padding:16px clamp(16px,4vw,56px);
   background:linear-gradient(var(--rg-ink-1) 30%,rgba(10,10,11,0));-webkit-backdrop-filter:blur(8px);backdrop-filter:blur(8px)}
 .brand{display:inline-flex;color:var(--rg-text-1);border-radius:var(--rg-radius-xs);margin-right:auto}

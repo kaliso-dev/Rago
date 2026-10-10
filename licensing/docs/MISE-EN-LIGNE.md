@@ -214,6 +214,8 @@ Ce qui dépend du mode Stripe : la clé, les deux prix, le webhook et son secret
 
 ## Revenir en mode test
 
+Depuis le lancement, les essais sans vrai paiement se font sur le serveur de staging, qui a sa propre base et Stripe en mode test : voir [`DEVELOPPEMENT.md`](../../DEVELOPPEMENT.md), section 5. Ce qui suit ne concerne que ce serveur-ci avant l'ouverture.
+
 Pour refaire des essais sans vrai paiement, remets les valeurs **test** dans Railway → Variables (garde les valeurs live dans ton gestionnaire de mots de passe pour revenir ensuite). Toutes viennent de Stripe avec le bouton **Mode test** activé (en haut à droite) :
 
 | Variable | Valeur test |

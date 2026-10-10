@@ -7,7 +7,7 @@ import { join } from 'node:path';
 import Stripe from 'stripe';
 
 import { loadConfig } from '../src/config.js';
-import { applySchema, ensureKeys, openDb, openMemoryDb } from '../src/db.js';
+import { applySchema, claimDatabase, ensureKeys, openDb, openMemoryDb } from '../src/db.js';
 import pg from 'pg';
 import { loadKeys, verifyToken } from '../src/tokens.js';
 import { createApp } from '../src/app.js';
@@ -2079,4 +2079,68 @@ test('Discord rewards: VIP, MVP and boosts give Premium time and a one-use code,
   const bad = loadConfig({ ...DISCORD, DISCORD_VIP_ROLE_ID: 'VIP' });
   assert.equal(bad.discordVipRoleId, '');
   assert.ok(bad.warnings.some((w) => /DISCORD_VIP_ROLE_ID is not a Discord id/.test(w)));
+});
+
+test('staging server: named by Railway or APP_ENV, refuses live Stripe keys, says so on every page and email', async () => {
+  const live = { NODE_ENV: 'production', PUBLIC_URL: 'https://x.test', DATABASE_URL: 'postgres://x', STRIPE_WEBHOOK_SECRET: 'whsec_x' };
+  // The live server: Railway's "production" environment, or no name at all. Its live key is fine.
+  assert.equal(loadConfig({ ...live, STRIPE_SECRET_KEY: 'sk_live_x', RAILWAY_ENVIRONMENT_NAME: 'production' }).staging, false);
+  assert.equal(loadConfig({ ...live, STRIPE_SECRET_KEY: 'sk_live_x' }).envName, 'production');
+  assert.equal(loadConfig({}).envName, 'development');
+  assert.equal(loadConfig({}).staging, false);
+  // A test copy: Railway environment "staging" (or a PR environment), or APP_ENV.
+  for (const name of ['staging', 'Staging', 'rago-pr-21', 'test']) {
+    const cfg = loadConfig({ ...live, STRIPE_SECRET_KEY: 'sk_test_x', RAILWAY_ENVIRONMENT_NAME: name });
+    assert.equal(cfg.staging, true, name);
+    assert.equal(cfg.envName, name.toLowerCase());
+  }
+  assert.equal(loadConfig({ ...live, STRIPE_SECRET_KEY: 'sk_test_x', APP_ENV: 'staging', RAILWAY_ENVIRONMENT_NAME: 'production' }).envName, 'staging');
+  // Copied from the live environment with its live key: it doesn't start.
+  assert.throws(() => loadConfig({ ...live, STRIPE_SECRET_KEY: 'sk_live_x', RAILWAY_ENVIRONMENT_NAME: 'staging' }), /test server, but STRIPE_SECRET_KEY is a live key/);
+  assert.throws(() => loadConfig({ ...live, STRIPE_SECRET_KEY: ' rk_live_x ', APP_ENV: 'staging' }), /live key/);
+  // ...and with the live Discord bot or signing key, the logs say what to remove.
+  const copied = loadConfig({ ...live, STRIPE_SECRET_KEY: 'sk_test_x', RAILWAY_ENVIRONMENT_NAME: 'staging', LICENSE_SIGNING_KEY: '-----BEGIN PRIVATE KEY-----x',
+    DISCORD_CLIENT_ID: '123456789012345678', DISCORD_CLIENT_SECRET: 's', DISCORD_BOT_TOKEN: 't', DISCORD_GUILD_ID: '223456789012345678', DISCORD_ROLE_ID: '323456789012345678' });
+  assert.match(copied.warnings.join(' '), /Test server with the Discord bot on/);
+  assert.match(copied.warnings.join(' '), /Test server with LICENSE_SIGNING_KEY set/);
+
+  // Every page carries the banner; the live server's pages don't.
+  const t = await setup({ APP_ENV: 'staging' });
+  assert.match(await (await t.browse('/login')).text(), /class="staging-bar"[^>]*><b>Test server \(staging\)<\/b>/);
+  assert.doesNotMatch(await (await (await setup()).browse('/login')).text(), /staging-bar/);
+  // Emails from the staging server say [Test].
+  const sent = [];
+  const fetchImpl = async (url, init) => { sent.push(JSON.parse(init.body)); return new Response('{}', { status: 200 }); };
+  const env = { RESEND_API_KEY: 're_real', MAIL_FROM: 'Rago Optimizer <noreply@rago.test>', SITE_URL: 'https://rago.test' };
+  await createMailer(loadConfig({ ...env, APP_ENV: 'staging' }), { fetchImpl }).passwordReset('player@example.org', 'https://account.rago.test/reset/x');
+  await createMailer(loadConfig(env), { fetchImpl }).passwordReset('player@example.org', 'https://account.rago.test/reset/x');
+  assert.match(sent[0].subject, /^\[Test\] /);
+  assert.doesNotMatch(sent[1].subject, /\[Test\]/);
+});
+
+test('a database belongs to the first environment that opens it: another one refuses it', async () => {
+  const db = await testDb();
+  await claimDatabase(db, 'production');
+  await claimDatabase(db, 'production'); // the same server again, or its next deployment
+  await assert.rejects(claimDatabase(db, 'staging'), /This database belongs to the "production" server, and this server is "staging"/);
+  await assert.rejects(claimDatabase(db, 'development'), /set APP_ENV=production/);
+  assert.equal((await db.get("SELECT value FROM server_secrets WHERE name = 'environment'")).value, 'production');
+});
+
+test('real Postgres: a staging server on the live database stops before replaying the schema', { skip: !process.env.TEST_DATABASE_URL }, async () => {
+  await testDb();
+  for (const d of opened.splice(0)) await d.close();
+  const url = process.env.TEST_DATABASE_URL;
+  const live = await openDb(url, { envName: 'production' });
+  await live.close();
+  // Something only the newer schema would add: it must not appear when the staging server is refused.
+  const admin = new pg.Client({ connectionString: url });
+  await admin.connect();
+  await admin.query('ALTER TABLE stripe_events DROP COLUMN livemode');
+  await assert.rejects(openDb(url, { envName: 'staging' }), /belongs to the "production" server/);
+  const { rows } = await admin.query("SELECT 1 FROM information_schema.columns WHERE table_name = 'stripe_events' AND column_name = 'livemode'");
+  assert.equal(rows.length, 0);
+  await admin.end();
+  const again = await openDb(url, { envName: 'production' });
+  opened.push(again);
 });

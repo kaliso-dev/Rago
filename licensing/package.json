@@ -10,6 +10,7 @@
   "scripts": {
     "start": "node src/server.js",
     "dev": "node --watch src/server.js",
+    "local": "node --watch scripts/local.js",
     "test": "node --test --test-concurrency=1 test/*.test.js",
     "keys": "node scripts/keys.js",
     "admin": "node scripts/admin.js"
