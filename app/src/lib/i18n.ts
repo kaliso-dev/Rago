@@ -254,8 +254,7 @@ const fr = {
   "confirm.undoList": "À annuler, remis comme avant",
   "confirm.undoGo": "Annuler maintenant",
   "run.undoName": "Annuler · {name}",
-  "run.endedNote": "Ton Premium a pris fin : Rago Optimizer remet les réglages de Windows changés par {n} réglage Premium. Tes réglages gratuits restent actifs.|Ton Premium a pris fin : Rago Optimizer remet les réglages de Windows changés par {n} réglages Premium. Tes réglages gratuits restent actifs.",
-  "run.signOutNote": "Déconnexion : Rago Optimizer remet les réglages de Windows changés par {n} réglage Premium.|Déconnexion : Rago Optimizer remet les réglages de Windows changés par {n} réglages Premium.",
+  "reset.done": "Tweaks réinitialisés",
   "signout.undoLead": "Tes {n} réglage Premium vont être annulés : Rago Optimizer remet les réglages de Windows comme avant. Tes réglages gratuits restent actifs.|Tes {n} réglages Premium vont être annulés : Rago Optimizer remet les réglages de Windows comme avant. Tes réglages gratuits restent actifs.",
   "signout.go": "Annuler et me déconnecter",
 };
@@ -502,8 +501,7 @@ const en: Record<Key, string> = {
   "confirm.undoList": "To undo, back to how it was",
   "confirm.undoGo": "Undo now",
   "run.undoName": "Undo · {name}",
-  "run.endedNote": "Your Premium ended. Rago Optimizer is putting back the Windows settings changed by {n} Premium tweak. Your free tweaks stay on.|Your Premium ended. Rago Optimizer is putting back the Windows settings changed by {n} Premium tweaks. Your free tweaks stay on.",
-  "run.signOutNote": "Signing out. Rago Optimizer is putting back the Windows settings changed by {n} Premium tweak.|Signing out. Rago Optimizer is putting back the Windows settings changed by {n} Premium tweaks.",
+  "reset.done": "Tweaks have been reset",
   "signout.undoLead": "Your {n} Premium tweak will be undone: Rago Optimizer puts those Windows settings back the way they were. Your free tweaks stay on.|Your {n} Premium tweaks will be undone: Rago Optimizer puts those Windows settings back the way they were. Your free tweaks stay on.",
   "signout.go": "Undo and sign out",
 };

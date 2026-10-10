@@ -3,6 +3,7 @@
 import { invoke } from "@tauri-apps/api/core";
 import { listen, type UnlistenFn } from "@tauri-apps/api/event";
 import { tweaks } from "./catalog";
+import free from "../data/free.json";
 
 export interface Gpu {
   name: string;
@@ -134,6 +135,11 @@ export interface DoneEvent {
   cancelled: boolean;
   logFile: string;
 }
+/** Remise à zéro faite par le moteur, sans fenêtre (fin de Premium, déconnexion). */
+export interface ResetDone {
+  ok: number;
+  failed: number;
+}
 
 export const isTauri = typeof window !== "undefined" && "__TAURI_INTERNALS__" in window;
 
@@ -156,6 +162,7 @@ export interface Api {
   onItem(cb: (e: ItemEvent) => void): Promise<UnlistenFn>;
   onLog(cb: (e: LogEvent) => void): Promise<UnlistenFn>;
   onDone(cb: (e: DoneEvent) => void): Promise<UnlistenFn>;
+  onReset(cb: (e: ResetDone) => void): Promise<UnlistenFn>;
   licenseStatus(): Promise<LicenseStatus>;
   licenseLogin(email: string, password: string): Promise<LoginResult>;
   licenseActivate(): Promise<LicenseStatus>;
@@ -195,6 +202,7 @@ const tauriApi: Api = {
   onItem: (cb) => listen<ItemEvent>("run:item", (e) => cb(e.payload)),
   onLog: (cb) => listen<LogEvent>("run:log", (e) => cb(e.payload)),
   onDone: (cb) => listen<DoneEvent>("run:done", (e) => cb(e.payload)),
+  onReset: (cb) => listen<ResetDone>("reset:done", (e) => cb(e.payload)),
   window: {
     minimize: () => void import("@tauri-apps/api/window").then((w) => w.getCurrentWindow().minimize()),
     toggleMaximize: () => void import("@tauri-apps/api/window").then((w) => w.getCurrentWindow().toggleMaximize()),
@@ -266,6 +274,17 @@ function mockLicense(): LicenseStatus {
 }
 
 let demoPending: string | null = null;
+
+/** Démo : la remise à zéro du moteur à la fin de Premium (réglages Premium remis en arrière-plan). */
+function mockReset() {
+  const ids = [...mockApplied.keys()].filter((id) => !free.tweaks.includes(id));
+  if (!ids.length) return;
+  setTimeout(() => {
+    for (const id of ids) mockApplied.delete(id);
+    saveMockApplied();
+    emit<ResetDone>("reset:done", { ok: ids.length, failed: 0 });
+  }, 1500);
+}
 
 const mockApi: Api = {
   systemInfo: async () => {
@@ -425,6 +444,7 @@ const mockApi: Api = {
     }
     if (sim === "revoked" && demoEmail) {
       demoEmail = null;
+      mockReset();
       throw {
         code: "revoked",
         message: "Your Rago Optimizer Premium subscription ended. Renew it on the website, then sign in again.",
@@ -440,10 +460,12 @@ const mockApi: Api = {
     } catch {
       /* rien */
     }
+    mockReset();
   },
   onItem: (cb) => on("run:item", cb),
   onLog: (cb) => on("run:log", cb),
   onDone: (cb) => on("run:done", cb),
+  onReset: (cb) => on("reset:done", cb),
   window: { minimize() {}, toggleMaximize() {}, close() {} },
 };
 
