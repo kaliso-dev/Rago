@@ -279,7 +279,7 @@ function affiliateLine(a) {
   return next;
 }
 
-export function dashboardPage(cfg, { user, license, device, notice, error, canReset, nextResetAt, affiliate }) {
+export function dashboardPage(cfg, { user, license, device, notice, error, canReset, nextResetAt, affiliate, discordLink }) {
   const active = license?.status === 'active';
   const reason = license?.status_reason;
   const ended = !active && reason === 'subscription_ended';
@@ -303,13 +303,51 @@ export function dashboardPage(cfg, { user, license, device, notice, error, canRe
       </ol>`;
   const version = cfg.installerVersion ? html` <span class="mono chip">v${cfg.installerVersion}</span>` : '';
 
-  // Premium players get the Discord role by showing their account email to staff.
-  const discord = active && cfg.supportUrl ? html`<div class="discord">
-      <span class="plan-icon">${ICON.users}</span>
-      <div><strong>Premium channel on Discord</strong>
-        <p class="muted small">Join the server and open a ticket with your account email, <strong>${user.email}</strong>. Staff check your license and give you the Premium role.</p>
-        <a class="link-arrow" href="${cfg.supportUrl}" rel="noopener">Open Discord ${ICON.arrow}</a></div>
-    </div>` : '';
+  // The Premium role on Discord: the bot gives it once the player links their Discord account (cfg.discord) and
+  // takes it back when Premium stops. Without the bot, staff give it on a ticket.
+  const openDiscord = cfg.supportUrl ? html`<a class="link-arrow" href="${cfg.supportUrl}" rel="noopener">Open Discord ${ICON.arrow}</a>` : '';
+  const unlinkForm = html`<form method="post" action="/account/discord/unlink" class="inline" data-busy="Unlinking…" data-confirm="Unlink Discord? The bot removes your Premium role on the Rago server.">
+      <button class="btn btn-ghost btn-sm" type="submit">Unlink</button></form>`;
+  const discordState = () => {
+    const name = html`<strong>@${discordLink.discord_name || discordLink.discord_id}</strong>`;
+    if (discordLink.role) {
+      return { badge: html`<span class="badge badge-ok"><i></i>Role given</span>`, text: html`Linked to ${name}. The role stays while your Premium is active.`,
+        actions: html`<form method="post" action="/account/discord/sync" class="inline" data-busy="Syncing…"><button class="btn btn-ghost btn-sm" type="submit">Role missing? Sync it</button></form>${unlinkForm}` };
+    }
+    if (discordLink.error === 'not_member') {
+      return { badge: html`<span class="badge badge-wait"><i></i>Not on the server</span>`, text: html`Linked to ${name}, but that account isn't on the Rago server. Join it with Discord to get the role.`,
+        actions: html`<a class="btn btn-primary btn-sm" href="/account/discord">Join with Discord</a>${unlinkForm}` };
+    }
+    return { badge: html`<span class="badge badge-wait"><i></i>Pending</span>`, text: html`Linked to ${name}. The role couldn't be given yet. It's tried again automatically.`,
+      actions: html`<form method="post" action="/account/discord/sync" class="inline" data-busy="Syncing…"><button class="btn btn-ghost btn-sm" type="submit">Try again</button></form>${unlinkForm}` };
+  };
+  const discordBlock = () => {
+    if (!active) return '';
+    if (!cfg.discord) {
+      return cfg.supportUrl ? html`<div class="discord">
+        <span class="plan-icon">${ICON.users}</span>
+        <div><strong>Premium channel on Discord</strong>
+          <p class="muted small">Join the server and open a ticket with your account email, <strong>${user.email}</strong>. Staff check your license and give you the Premium role.</p>
+          ${openDiscord}</div>
+      </div>` : '';
+    }
+    if (!discordLink) {
+      return html`<div class="discord">
+        <span class="plan-icon">${ICON.users}</span>
+        <div><strong>Premium role on Discord</strong>
+          <p class="muted small">Link your Discord account to join the Rago server with the Premium role. It stays while your Premium is active.</p>
+          <a class="btn btn-primary btn-sm" href="/account/discord">Link Discord</a></div>
+      </div>`;
+    }
+    const st = discordState();
+    return html`<div class="discord">
+        <span class="plan-icon">${ICON.users}</span>
+        <div><div class="row"><strong>Premium role on Discord</strong>${st.badge}</div>
+          <p class="muted small">${st.text}</p>
+          <div class="row">${st.actions}</div>
+          ${discordLink.role ? openDiscord : ''}</div>
+      </div>`;
+  };
 
   const download = () => html`<article class="card card-hero rise d1">
       <p class="overline">Rago Optimizer for Windows</p>
@@ -317,7 +355,7 @@ export function dashboardPage(cfg, { user, license, device, notice, error, canRe
       <p class="muted">Windows 10 and 11, 64-bit.${version}</p>
       <a class="btn btn-primary btn-lg" href="/account/download" data-download>${ICON.download}<span>Download Rago Optimizer</span></a>
       ${howto}
-      ${discord}
+      ${discordBlock()}
     </article>`;
 
   // Premium stopped (ended, refunded, revoked): the way back comes first.
@@ -329,6 +367,7 @@ export function dashboardPage(cfg, { user, license, device, notice, error, canRe
         <a class="btn btn-ghost btn-lg" href="/account/download" data-download>${ICON.download}<span>Download the free version</span></a></div>
       <p class="muted small">Windows 10 and 11, 64-bit.${version}</p>
       ${howto}
+      ${cfg.discord && discordLink ? html`<p class="muted small">Your Discord account <strong>@${discordLink.discord_name || discordLink.discord_id}</strong> stays linked: the Premium role comes back when Premium does.</p>` : ''}
     </article>`;
 
   const OFF = { subscription_ended: 'Ended', refunded: 'Refunded', disputed: 'Disputed', test_mode: 'Test purchase' };
@@ -665,9 +704,28 @@ function stripeSection(s) {
       </div>` : ''}
     </section>`;
 }
+/** "Rôle Pro sur Discord" on /admin: the bot, the server, the role and its place (discord.js checks). */
+function discordSection(d) {
+  if (!d) return '';
+  if (d.missing) {
+    return html`<section class="checks rise d3" aria-labelledby="discord-h">
+      <div class="row"><h2 class="h2" id="discord-h">Rôle Pro sur Discord</h2><span class="badge badge-off"><i></i>Manuel</span></div>
+      <p class="muted small">Le bot n’est pas configuré : la page compte dit d’ouvrir un ticket pour avoir le rôle. À régler dans Railway : ${d.missing.join(', ')}.</p>
+    </section>`;
+  }
+  const bad = d.checks.filter((c) => c.level === 'error').length;
+  const needsInvite = d.checks.some((c) => c.label === 'Serveur' && c.level === 'error');
+  return html`<section class="checks rise d3" aria-labelledby="discord-h">
+      <div class="row"><h2 class="h2" id="discord-h">Rôle Pro sur Discord</h2>
+        <span class="badge ${bad ? 'badge-red' : 'badge-ok'}"><i></i>${bad ? `${bad} à corriger` : 'Automatique'}</span></div>
+      <ul class="checks-list">${d.checks.map((c) => html`<li><span class="badge ${CHECK_BADGE[c.level][0]}"><i></i>${CHECK_BADGE[c.level][1]}</span>
+        <div><strong class="small">${c.label}</strong><p class="muted small">${c.text}</p></div></li>`)}</ul>
+      ${needsInvite ? html`<a class="btn btn-ghost btn-sm" href="${d.inviteUrl}" rel="noopener">Inviter le bot sur le serveur</a>` : ''}
+    </section>`;
+}
 const fill = (t, p) => String(t).replace(/\{(percent|code|total|left)\}/g, (_, k) => String(p[k] ?? ''));
 
-export function adminPage(cfg, { state, stripe, values, error, notice, count }) {
+export function adminPage(cfg, { state, stripe, discord, values, error, notice, count }) {
   const { settings: s, promo: p } = state;
   const v = values || { enabled: s.enabled, code: s.code, percent: p?.percent ?? '', limit: p?.total ?? '', eyebrow: s.eyebrow, title: s.title, text: s.text };
   const vals = p ? { percent: p.percent, code: p.code, total: p.total, left: p.left } : {};
@@ -692,6 +750,7 @@ export function adminPage(cfg, { state, stripe, values, error, notice, count }) 
     <div class="rise d2">${facts}</div>
     <div class="rise d3">${preview}</div>
     ${stripeSection(stripe)}
+    ${discordSection(discord)}
     <form class="rise d4" method="post" action="/admin/logout"><button class="btn btn-ghost btn-sm" type="submit">Quitter l’admin</button></form>`;
   const form = html`<h2 class="h2">Modifier la pop-up</h2>
     ${alertBox(typeof ADMIN_NOTICES[notice] === 'function' ? ADMIN_NOTICES[notice](count) : ADMIN_NOTICES[notice], 'ok')}${alertBox(error)}

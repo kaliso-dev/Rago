@@ -175,6 +175,18 @@ CREATE TABLE IF NOT EXISTS site_settings (
   updated_at BIGINT NOT NULL
 );
 
+-- Discord account linked from /account (2026-10-10). A bot gives it the Pro role while the account's Premium is
+-- active and takes it back when Premium stops. One Discord account per Rago account, and the other way round.
+CREATE TABLE IF NOT EXISTS discord_links (
+  user_id TEXT PRIMARY KEY REFERENCES users(id) ON DELETE CASCADE,
+  discord_id TEXT NOT NULL UNIQUE,
+  discord_name TEXT,                              -- @username when linked, for support
+  linked_at BIGINT NOT NULL,
+  role BOOLEAN NOT NULL DEFAULT false,            -- the Pro role, as the bot last set it
+  error TEXT,                                     -- why the last change failed: not_member | forbidden | unauthorized | config | unavailable
+  synced_at BIGINT
+);
+
 ALTER TABLE users ENABLE ROW LEVEL SECURITY;
 ALTER TABLE web_sessions ENABLE ROW LEVEL SECURITY;
 ALTER TABLE licenses ENABLE ROW LEVEL SECURITY;
@@ -189,3 +201,4 @@ ALTER TABLE account_devices ENABLE ROW LEVEL SECURITY;
 ALTER TABLE reviews ENABLE ROW LEVEL SECURITY;
 ALTER TABLE site_settings ENABLE ROW LEVEL SECURITY;
 ALTER TABLE api_sessions ENABLE ROW LEVEL SECURITY;
+ALTER TABLE discord_links ENABLE ROW LEVEL SECURITY;

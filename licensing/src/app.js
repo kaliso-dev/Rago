@@ -9,12 +9,13 @@ import { fileURLToPath } from 'node:url';
 import { relative } from 'node:path';
 import { createHash, createHmac, timingSafeEqual } from 'node:crypto';
 
-import { DUMMY_HASH, maskLicenseKey, signValue, unsignValue, verifyPassword } from './crypto.js';
+import { DUMMY_HASH, maskLicenseKey, randomToken, signValue, unsignValue, verifyPassword } from './crypto.js';
 import { DeviceError, parseDevice, sameDevice } from './fingerprint.js';
 import { signToken, verifyToken } from './tokens.js';
 import { billingPortal, createCheckout, endTestLicenses, ensureAffiliatePromo, findPromotionCode, handleStripeEvent, isRagoCheckout, stripeChecks, stripeMode, syncPromoActive } from './billing.js';
 import * as A from './affiliates.js';
 import { createInstaller } from './installer.js';
+import { createDiscord, DiscordError, discordSetupMissing } from './discord.js';
 import * as L from './licensing.js';
 import * as V from './views.js';
 import * as P from './profile.js';
@@ -64,10 +65,12 @@ function rateLimiter() {
 }
 
 /**
- * @param deps { cfg, db, keys, stripe, mailer, log }
+ * @param deps { cfg, db, keys, stripe, mailer, log, discord } (discord: the Pro role bot, null when not configured)
  */
-export function createApp({ cfg, db, keys, stripe, mailer, log = console, fetchImpl = fetch, avatars = P.createAvatarStore(cfg, { fetchImpl, log }) }) {
+export function createApp({ cfg, db, keys, stripe, mailer, log = console, fetchImpl = fetch, avatars = P.createAvatarStore(cfg, { fetchImpl, log }), discord = createDiscord(cfg, { db, fetchImpl, log }) }) {
   const app = new Hono();
+  // The Discord role pass started by a webhook runs after the reply to Stripe; tests wait for it here.
+  app.idle = () => discord?.idle() ?? Promise.resolve();
   const installer = createInstaller(cfg, { fetchImpl, log });
   const allow = rateLimiter();
   let reviewsCache = null; // { at, body }: the site asks for the reviews on every visit
@@ -520,6 +523,11 @@ export function createApp({ cfg, db, keys, stripe, mailer, log = console, fetchI
     password: ['notice', 'Password changed. Other browsers were signed out.'],
     nofile: ['error', V.html`The Windows app can't be downloaded right now. Try again a bit later, or ${V.supportLink(cfg, 'ask on Discord')} and we'll tell you when it's back.`],
     nobilling: ['error', V.html`Billing isn't available right now. Try again in a moment, or ${V.supportLink(cfg, 'contact support on Discord')}.`],
+    discord: ['notice', 'Discord linked.'],
+    discordoff: ['notice', 'Discord unlinked. The Premium role was removed from that Discord account.'],
+    discordcancel: ['error', "Discord isn't linked: the authorization was canceled on Discord. Link it again anytime below."],
+    discordfail: ['error', V.html`Discord couldn't be linked. Try again, or ${V.supportLink(cfg, 'ask on Discord')}.`],
+    discordbusy: ['error', "Discord isn't answering right now. Try again in a moment."],
   };
 
   function resetWindow(license, device) {
@@ -533,9 +541,11 @@ export function createApp({ cfg, db, keys, stripe, mailer, log = console, fetchI
     await settleAffiliate(user.id);
     const license = await L.current(db, await L.licenseForUser(db, user.id));
     const device = license && await L.getDevice(db, license.id);
+    // The Discord role follows Premium as of now (a claim or an ended reward since the last pass).
+    const discordLink = discord && await discord.syncUser(user.id);
     const [kind, text] = NOTICES[c.req.query('n')] || [];
     return c.html(V.dashboardPage(cfg, {
-      user, license, device,
+      user, license, device, discordLink,
       notice: kind === 'notice' ? text : null, error: kind === 'error' ? text : null,
       ...(license ? resetWindow(license, device) : {}),
       affiliate: await A.affiliateSummary(db, cfg, user.id),
@@ -653,6 +663,57 @@ export function createApp({ cfg, db, keys, stripe, mailer, log = console, fetchI
     }
   });
 
+  // ---------- Discord: the Pro role, given by the bot while Premium is active ----------
+  // "Link Discord" sends the player to Discord's authorization page (identify + guilds.join). The state is tied to
+  // this account and browser by a signed cookie, so nobody can link their own Discord account to someone else's.
+  const DISCORD_COOKIE = 'rg_discord';
+  const discordCookie = { ...cookieBase, path: '/account/discord' };
+  app.get('/account/discord', requireUser, (c) => {
+    if (!discord) return c.redirect('/account', 303);
+    const state = randomToken(16);
+    setCookie(c, DISCORD_COOKIE, signValue(`${c.get('user').id}.${state}`, cfg.sessionSecret), { ...discordCookie, maxAge: 10 * 60 });
+    return c.redirect(discord.authorizeUrl(state), 302);
+  });
+
+  app.get('/account/discord/callback', requireUser, async (c) => {
+    if (!discord) return c.redirect('/account', 303);
+    const user = c.get('user');
+    const saved = unsignValue(getCookie(c, DISCORD_COOKIE), cfg.sessionSecret);
+    deleteCookie(c, DISCORD_COOKIE, { path: discordCookie.path });
+    const { code, state, error } = c.req.query();
+    if (error) return c.redirect('/account?n=discordcancel', 303); // Cancel on Discord's page
+    if (!code || !state || !saved || !sameHash(saved, `${user.id}.${state}`) || !allow(`discord:${user.id}`, 10, 60 * 60 * 1000)) {
+      return c.redirect('/account?n=discordfail', 303);
+    }
+    try {
+      await discord.link(user.id, String(code));
+    } catch (err) {
+      if (!(err instanceof DiscordError)) throw err;
+      log.error('[discord] link failed:', err.message);
+      return c.redirect('/account?n=discordfail', 303);
+    }
+    return c.redirect('/account?n=discord', 303);
+  });
+
+  // "Sync role": gives the role again right away (left the server and came back, role removed by hand).
+  app.post('/account/discord/sync', requireUser, async (c) => {
+    const user = c.get('user');
+    if (discord && allow(`discord-sync:${user.id}`, 10, 60 * 60 * 1000)) await discord.syncUser(user.id, { force: true });
+    return c.redirect('/account', 303);
+  });
+
+  app.post('/account/discord/unlink', requireUser, async (c) => {
+    if (!discord) return c.redirect('/account', 303);
+    try {
+      await discord.unlink(c.get('user').id);
+    } catch (err) {
+      if (!(err instanceof DiscordError)) throw err;
+      log.error('[discord] unlink refused:', err.message);
+      return c.redirect('/account?n=discordbusy', 303);
+    }
+    return c.redirect('/account?n=discordoff', 303);
+  });
+
   // ---------- affiliate program ----------
   app.get('/affiliate', async (c) => {
     const user = await currentUser(c);
@@ -723,8 +784,9 @@ export function createApp({ cfg, db, keys, stripe, mailer, log = console, fetchI
   app.use('/admin/*', async (c, next) => { c.header('Cache-Control', 'no-store'); await next(); });
   app.use('/admin', async (c, next) => { c.header('Cache-Control', 'no-store'); await next(); });
   const adminPage = async (c, extra = {}, status = 200) => {
-    const [state, stripeState] = await Promise.all([Promo.popupState(db, stripe, cfg), stripeChecks(stripe, cfg, { db, webhook: hookSeen })]);
-    return c.html(V.adminPage(cfg, { state, stripe: stripeState, ...extra }), status);
+    const [state, stripeState, discordState] = await Promise.all([Promo.popupState(db, stripe, cfg), stripeChecks(stripe, cfg, { db, webhook: hookSeen }),
+      discord ? discord.checks() : { missing: discordSetupMissing(cfg) }]);
+    return c.html(V.adminPage(cfg, { state, stripe: stripeState, discord: discordState, ...extra }), status);
   };
 
   app.get('/admin', async (c) => {
@@ -769,6 +831,7 @@ export function createApp({ cfg, db, keys, stripe, mailer, log = console, fetchI
     if (!isAdmin(c)) return c.redirect('/admin', 303);
     const ended = await endTestLicenses(db, cfg);
     await audit(db, 'admin.test_licenses_ended', { detail: { count: ended } });
+    discord?.syncAll(); // their Discord role goes too
     return c.redirect(`/admin?n=test-ended&count=${ended}`, 303);
   });
 
@@ -800,6 +863,8 @@ export function createApp({ cfg, db, keys, stripe, mailer, log = console, fetchI
     }
     const label = await handleStripeEvent(db, event, { stripe, onLicense: sendClaimEmail, log });
     log.info?.(`[stripe] ${event.type} ${event.id} -> ${label}`);
+    // Premium may have started, stopped or come back: the Discord role follows, after this reply to Stripe.
+    discord?.syncAll();
     if (event.type.startsWith('checkout.session.')) popupCache = null; // a code use: the pop-up's count moves
     return c.json({ received: true });
   });
