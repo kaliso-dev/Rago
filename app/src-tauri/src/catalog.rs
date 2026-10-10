@@ -575,6 +575,8 @@ mod tests {
     #[test]
     fn rago_power_plan_imports_on_windows() {
         if !crate::shell::is_elevated() {
+            // sur la CI (administrateur), un test sauté ne prouverait rien
+            assert!(std::env::var_os("CI").is_none(), "CI sans droits administrateur : le plan n'a pas été importé");
             eprintln!("powercfg -import demande les droits administrateur : test sauté");
             return;
         }
