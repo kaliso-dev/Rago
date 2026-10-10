@@ -546,4 +546,69 @@ mod tests {
         assert!(is_switch("net_nagle") && !is_switch("rst_point") && !is_switch("__wmic"));
         assert_eq!(revert_variant("ping_hitreg").as_deref(), Some("default"));
     }
+
+    const RAGO_PLAN: &str = "7c4e2a51-3b9d-4f7e-9a62-5d18c0f3b6a4";
+    /// Corrigés à l'import du plan Rago (sous-groupe, réglage, valeur branché) : repos processeur actif, mot de passe
+    /// au réveil, bouton d'alimentation qui éteint le PC.
+    const RAGO_PLAN_FIXES: [(&str, &str, u32); 3] = [
+        ("54533251-82be-4824-96c1-47b60b740d00", "5d76a2ca-e8c0-402f-a133-2158492d58ad", 0),
+        ("fea3413e-7e05-4911-9a71-700331f1c294", "0e796bdb-100d-47d6-a2d5-f7d2daa51f51", 1),
+        ("4f971e89-eebd-4455-a8de-9e59040e7347", "7648efa3-dd9c-4e3e-b566-50f929386280", 3),
+    ];
+
+    /// Plan Rago Low Latency (LowLatency.pow, 2026-10-10) : le fichier arrive avec le repos processeur coupé, sans mot
+    /// de passe au réveil et un bouton d'alimentation sans effet. Le script les remet, puis renomme et active le plan.
+    #[test]
+    fn rago_power_plan_is_corrected_on_import() {
+        assert!(std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join("resources/LowLatency.pow").is_file());
+        let s = SCRIPTS["pow_plan"]["_"].to_lowercase();
+        for (sub, setting, value) in RAGO_PLAN_FIXES {
+            assert!(s.contains(&format!("powercfg -setacvalueindex {RAGO_PLAN} {sub} {setting} {value}")), "{setting}");
+        }
+        assert!(s.contains(&format!("powercfg -changename {RAGO_PLAN} \"rago low latency\"")));
+        assert!(s.find("-setactive").unwrap() > s.rfind("-setacvalueindex").unwrap(), "activé après les corrections");
+    }
+
+    /// Le vrai fichier passé à powercfg (CI Windows, administrateur) sous un GUID de test : rien n'est activé, le plan
+    /// est supprimé à la fin.
+    #[cfg(windows)]
+    #[test]
+    fn rago_power_plan_imports_on_windows() {
+        if !crate::shell::is_elevated() {
+            eprintln!("powercfg -import demande les droits administrateur : test sauté");
+            return;
+        }
+        const TEST_PLAN: &str = "7c4e2a51-3b9d-4f7e-9a62-00000000c0de";
+        struct Cleanup;
+        impl Drop for Cleanup {
+            fn drop(&mut self) {
+                let _ = crate::shell::hidden("powercfg.exe").args(["-delete", TEST_PLAN]).output();
+            }
+        }
+        let _cleanup = Cleanup;
+        let powercfg = |args: &[&str]| {
+            let o = crate::shell::hidden("powercfg.exe").args(args).output().unwrap();
+            (o.status.success(), format!("{}{}", String::from_utf8_lossy(&o.stdout), String::from_utf8_lossy(&o.stderr)))
+        };
+        let res = std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join("resources");
+        let line = SCRIPTS["pow_plan"]["_"].lines().find(|l| l.contains("powercfg -import")).unwrap().replace(RAGO_PLAN, TEST_PLAN);
+        for cmd in line.split(" & ").filter(|c| !c.contains("-setactive")) {
+            let cmd = cmd.replace("%RAGO_RES%", &res.to_string_lossy());
+            // arguments séparés par des espaces, "…" gardés entiers
+            let args: Vec<&str> = cmd.split('"').enumerate().flat_map(|(i, p)| if i % 2 == 1 { vec![p] } else { p.split_whitespace().collect() }).collect();
+            assert_eq!(args[0], "powercfg");
+            let (ok, out) = powercfg(&args[1..]);
+            assert!(ok, "{cmd}\n{out}");
+        }
+        let (_, list) = powercfg(&["/list"]);
+        assert!(list.contains(TEST_PLAN) && list.contains("(Rago Low Latency)"), "{list}");
+        let ac = |sub: &str, setting: &str| {
+            ["/q", "/qh"].into_iter().find_map(|q| crate::backup::parse_pwr(&powercfg(&[q, TEST_PLAN, sub, setting]).1).0)
+        };
+        for (sub, setting, value) in RAGO_PLAN_FIXES {
+            assert_eq!(ac(sub, setting), Some(value), "{setting}");
+        }
+        // une valeur du fichier : écran jamais éteint branché (le plan Performances élevées l'éteint après 15 min)
+        assert_eq!(ac("7516b95f-f776-4464-8c53-06167f40cc99", "3c0bc021-c8a8-4e07-a973-6b14cbcb2b7e"), Some(0));
+    }
 }
