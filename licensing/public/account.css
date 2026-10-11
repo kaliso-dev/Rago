@@ -301,6 +301,8 @@ p{margin:0}
 .discord > div > :last-child{margin-bottom:0}
 .card-discord > * + .discord{padding-top:18px;border-top:1px solid var(--rg-line-1)}
 .card-discord > .card-head + .discord{padding-top:0;border-top:0}
+.card-discord > .card-actions{gap:10px 20px;padding-top:18px;border-top:1px solid var(--rg-line-1)}
+.card-actions .link-arrow{margin-top:0}
 /* Invite rewards (VIP / MVP) */
 .rewards{margin:0 0 12px;padding-left:18px;display:grid;gap:6px;color:var(--rg-text-2)}
 .rewards strong{color:var(--rg-text-1)}
