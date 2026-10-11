@@ -330,16 +330,14 @@ export function dashboardPage(cfg, { user, license, device, notice, error, canRe
       return cfg.supportUrl ? html`<div class="discord">
         <span class="plan-icon">${ICON.users}</span>
         <div><strong>Premium channel on Discord</strong>
-          <p class="muted small">Join the server and open a ticket with your account email, <strong>${user.email}</strong>. Staff check your license and give you the Premium role.</p>
-          ${openDiscord}</div>
+          <p class="muted small">Join the server and open a ticket with your account email, <strong>${user.email}</strong>. Staff check your license and give you the Premium role.</p></div>
       </div>` : '';
     }
     if (!discordLink) {
       return html`<div class="discord">
         <span class="plan-icon">${ICON.users}</span>
         <div><strong>Premium role on Discord</strong>
-          <p class="muted small">Link your Discord account to join the Rago server with the Premium role. It stays while your Premium is active.</p>
-          <a class="btn btn-primary btn-sm" href="/account/discord">Link Discord</a></div>
+          <p class="muted small">Link your Discord account to join the Rago server with the Premium role. It stays while your Premium is active.</p></div>
       </div>`;
     }
     const st = discordState();
@@ -347,8 +345,7 @@ export function dashboardPage(cfg, { user, license, device, notice, error, canRe
         <span class="plan-icon">${ICON.users}</span>
         <div><div class="row"><strong>Premium role on Discord</strong>${st.badge}</div>
           <p class="muted small">${st.text}</p>
-          <div class="row">${st.actions}</div>
-          ${discordLink.role ? openDiscord : ''}</div>
+          <div class="row">${st.actions}</div></div>
       </div>`;
   };
 
@@ -367,8 +364,7 @@ export function dashboardPage(cfg, { user, license, device, notice, error, canRe
       return html`<li><strong>${r.name}</strong> · <span class="badge badge-ok"><i></i>Earned</span> ${time}
         ${got.promo_code ? html`<br>Your ${r.percent}% code, one use: <code class="mono">${got.promo_code}</code> <a class="link-arrow" href="/buy?promo=${got.promo_code}">Use it ${ICON.arrow}</a>` : ''}</li>`;
     });
-    // With Premium, the Premium role block above already links Discord and shows the account.
-    const linkHere = !discordLink && !(active && cfg.discord);
+    // With Premium, the Premium role block above already shows the account.
     const linkedHere = discordLink && !active;
     return html`<div class="discord">
         <span class="plan-icon">${ICON.users}</span>
@@ -377,10 +373,25 @@ export function dashboardPage(cfg, { user, license, device, notice, error, canRe
             ? 'Your rewards show up here a few minutes after you earn them.'
             : 'Link your Discord account to get your rewards here.'}</p>
           <ul class="small rewards">${lines}</ul>
-          ${linkHere ? html`<a class="btn btn-primary btn-sm" href="/account/discord">Link Discord</a>` : ''}
-          ${linkedHere ? html`<div class="row"><span class="muted small">Linked to <strong>@${discordLink.discord_name || discordLink.discord_id}</strong></span>${unlinkForm}</div>` : ''}
-          ${openDiscord}</div>
+          ${linkedHere ? html`<div class="row"><span class="muted small">Linked to <strong>@${discordLink.discord_name || discordLink.discord_id}</strong></span>${unlinkForm}</div>` : ''}</div>
       </div>`;
+  };
+
+  // Everything Discord in one card of its own, so the download card stays short and the cards next to it
+  // keep their own height.
+  const discordCard = (cls) => {
+    const role = active ? discordBlock()
+      : license && cfg.discord && discordLink ? html`<p class="muted small">Your Discord account <strong>@${discordLink.discord_name || discordLink.discord_id}</strong> stays linked: the Premium role comes back when Premium does.</p>` : '';
+    const rewards = rewardsBlock();
+    if (!role && !rewards) return '';
+    // Link Discord and Open Discord side by side at the bottom of the card.
+    const link = !discordLink && ((active && cfg.discord) || rewards) ? html`<a class="btn btn-primary btn-sm" href="/account/discord">Link Discord</a>` : '';
+    const open = rewards || (active && (!cfg.discord || discordLink?.role)) ? openDiscord : '';
+    return html`<article class="card card-discord rise ${cls}">
+      <div class="card-head"><p class="overline">Discord</p></div>
+      ${role}${rewards}
+      ${link || open ? html`<div class="row card-actions">${link}${open}</div>` : ''}
+    </article>`;
   };
 
   const download = () => html`<article class="card card-hero rise d1">
@@ -389,8 +400,6 @@ export function dashboardPage(cfg, { user, license, device, notice, error, canRe
       <p class="muted">Windows 10 and 11, 64-bit.${version}</p>
       <a class="btn btn-primary btn-lg" href="/account/download" data-download>${ICON.download}<span>Download Rago Optimizer</span></a>
       ${howto}
-      ${discordBlock()}
-      ${rewardsBlock()}
     </article>`;
 
   // Premium stopped (ended, refunded, revoked): the way back comes first.
@@ -402,8 +411,6 @@ export function dashboardPage(cfg, { user, license, device, notice, error, canRe
         <a class="btn btn-ghost btn-lg" href="/account/download" data-download>${ICON.download}<span>Download the free version</span></a></div>
       <p class="muted small">Windows 10 and 11, 64-bit.${version}</p>
       ${howto}
-      ${cfg.discord && discordLink ? html`<p class="muted small">Your Discord account <strong>@${discordLink.discord_name || discordLink.discord_id}</strong> stays linked: the Premium role comes back when Premium does.</p>` : ''}
-      ${rewardsBlock()}
     </article>`;
 
   const OFF = { subscription_ended: 'Ended', refunded: 'Refunded', disputed: 'Disputed', test_mode: 'Test purchase' };
@@ -529,15 +536,27 @@ export function dashboardPage(cfg, { user, license, device, notice, error, canRe
     </article>`;
   const sideCard = (cls) => (!affiliate && active && license?.plan === 'lifetime' ? helpCard(cls) : affiliateCard(cls));
 
-  const freeCard = () => html`<article class="card card-hero solo rise d1">
+  const freeCard = () => html`<article class="card card-hero rise d1">
       <div class="card-head"><p class="overline">Your plan</p><span class="badge badge-off"><i></i>Free</span></div>
       <h2 class="h1">You're on Free</h2>
       <p class="muted">${cfg.freeTweaks} tweaks unlocked. ${unlocks.split('. ')[0]}.${cfg.priceLabel ? html` <strong class="price">${cfg.priceLabel}</strong>.` : ''}</p>
       <div class="row"><a class="btn btn-buy btn-lg" href="${buyUrl}">Get Premium ${ICON.arrow}</a>
         <a class="btn btn-ghost btn-lg" href="/account/download" data-download>${ICON.download}<span>Download the free version</span></a></div>
       <p class="muted small">${cfg.subscriptions ? 'Monthly or yearly. Secure checkout with Stripe. Cancel anytime.' : 'Secure checkout with Stripe.'} Already paid? Sign in with the email you paid with${cfg.mailEnabled ? ', or open the link in your purchase email' : ''}. Still not here? ${supportLink(cfg, 'Ask on Discord')} with your payment email and we'll add it to this account.</p>
-      ${rewardsBlock()}
     </article>`;
+
+  // Two columns that don't share rows, so each card keeps its own height. The Discord card is the long one
+  // when it lists the rewards: the affiliate card then goes under the license cards to even out the columns.
+  const columns = () => {
+    if (!license) {
+      const discord = discordCard('d3');
+      return discord ? [[freeCard(), affiliateCard('d2')], discord] : [freeCard(), affiliateCard('d2')];
+    }
+    const hero = active ? download() : comeBack();
+    return inviteRewards.length
+      ? [[hero, discordCard('d5')], [licenseCard(), deviceCard(), planCard(), sideCard('d5')]]
+      : [[hero, discordCard('d5'), sideCard('d5')], [licenseCard(), deviceCard(), planCard()]];
+  };
 
   const title = !license ? 'Welcome to Rago Optimizer'
     : active ? 'Rago Optimizer Premium'
@@ -548,9 +567,7 @@ export function dashboardPage(cfg, { user, license, device, notice, error, canRe
       ${stepIndex == null ? '' : steps(stepIndex)}
     </div>
     ${alertBox(error)}${alertBox(notice, 'ok')}
-    <div class="grid">
-      ${license ? [active ? download() : comeBack(), licenseCard(), deviceCard(), planCard(), sideCard('d5')] : [freeCard(), affiliateCard('d2 side')]}
-    </div>
+    <div class="dash-grid">${columns().map((col) => html`<div class="dash-col">${col}</div>`)}</div>
     <p class="dash-foot small muted rise d5">Signed in as ${user.email} · <a href="/account/profile">Profile photo and name</a> · <a href="/account/password">Change password</a></p>
   </main>`;
   return page({ title: 'Your account', cfg, user, body, bodyClass: 'is-dash', nav: 'account', buy: !active });
