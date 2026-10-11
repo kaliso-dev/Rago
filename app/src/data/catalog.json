@@ -5337,8 +5337,8 @@
         "fr": "Menu Démarrer plus propre et un peu d'espace disque libéré ; effet sur les FPS quasi nul."
        },
        "cons": {
-        "en": "Also removes Camera, Mail, Alarms and Phone Link; removed apps can be reinstalled from the Microsoft Store.",
-        "fr": "Retire aussi Caméra, Courrier, Alarmes et Lien avec le téléphone ; ils se réinstallent depuis le Microsoft Store."
+        "en": "Also removes Camera, Mail, Alarms and Phone Link; removed apps can be reinstalled from the Microsoft Store. To go back with a restore point, start System Restore from Advanced startup (Shift + Restart): from inside Windows it often fails on removed apps.",
+        "fr": "Retire aussi Caméra, Courrier, Alarmes et Lien avec le téléphone ; ils se réinstallent depuis le Microsoft Store. Pour revenir avec un point de restauration, lance la restauration depuis le démarrage avancé (Maj + Redémarrer) : depuis Windows, elle échoue souvent sur les applis retirées."
        },
        "restore": true
       },
@@ -5512,8 +5512,8 @@
         "fr": "Menu Démarrer plus propre et un peu d'espace disque libéré ; effet sur les FPS quasi nul."
        },
        "cons": {
-        "en": "Also removes Camera, Mail, Alarms and Phone Link; removed apps can be reinstalled from the Microsoft Store.",
-        "fr": "Retire aussi Caméra, Courrier, Alarmes et Lien avec le téléphone ; ils se réinstallent depuis le Microsoft Store."
+        "en": "Also removes Camera, Mail, Alarms and Phone Link; removed apps can be reinstalled from the Microsoft Store. To go back with a restore point, start System Restore from Advanced startup (Shift + Restart): from inside Windows it often fails on removed apps.",
+        "fr": "Retire aussi Caméra, Courrier, Alarmes et Lien avec le téléphone ; ils se réinstallent depuis le Microsoft Store. Pour revenir avec un point de restauration, lance la restauration depuis le démarrage avancé (Maj + Redémarrer) : depuis Windows, elle échoue souvent sur les applis retirées."
        },
        "restore": true
       },

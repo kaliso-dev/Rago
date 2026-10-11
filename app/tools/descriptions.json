@@ -1995,12 +1995,12 @@
   "fr": {
    "desc": "Désinstalle une trentaine d'applis Microsoft préinstallées : Météo, Astuces, Solitaire, Skype, Cartes, Caméra, Courrier, etc.",
    "gain": "Menu Démarrer plus propre et un peu d'espace disque libéré ; effet sur les FPS quasi nul.",
-   "cons": "Retire aussi Caméra, Courrier, Alarmes et Lien avec le téléphone ; ils se réinstallent depuis le Microsoft Store."
+   "cons": "Retire aussi Caméra, Courrier, Alarmes et Lien avec le téléphone ; ils se réinstallent depuis le Microsoft Store. Pour revenir avec un point de restauration, lance la restauration depuis le démarrage avancé (Maj + Redémarrer) : depuis Windows, elle échoue souvent sur les applis retirées."
   },
   "en": {
    "desc": "Uninstalls about thirty preinstalled Microsoft apps: Weather, Tips, Solitaire, Skype, Maps, Camera, Mail, etc.",
    "gain": "Cleaner Start menu and a bit of disk space freed; near-zero effect on FPS.",
-   "cons": "Also removes Camera, Mail, Alarms and Phone Link; removed apps can be reinstalled from the Microsoft Store."
+   "cons": "Also removes Camera, Mail, Alarms and Phone Link; removed apps can be reinstalled from the Microsoft Store. To go back with a restore point, start System Restore from Advanced startup (Shift + Restart): from inside Windows it often fails on removed apps."
   }
  },
  "app_settings": {
@@ -2067,12 +2067,12 @@
   "fr": {
    "desc": "Désinstalle une trentaine d'applis Microsoft préinstallées : Météo, Astuces, Solitaire, Skype, Cartes, Caméra, Courrier, etc.",
    "gain": "Menu Démarrer plus propre et un peu d'espace disque libéré ; effet sur les FPS quasi nul.",
-   "cons": "Retire aussi Caméra, Courrier, Alarmes et Lien avec le téléphone ; ils se réinstallent depuis le Microsoft Store."
+   "cons": "Retire aussi Caméra, Courrier, Alarmes et Lien avec le téléphone ; ils se réinstallent depuis le Microsoft Store. Pour revenir avec un point de restauration, lance la restauration depuis le démarrage avancé (Maj + Redémarrer) : depuis Windows, elle échoue souvent sur les applis retirées."
   },
   "en": {
    "desc": "Uninstalls about thirty preinstalled Microsoft apps: Weather, Tips, Solitaire, Skype, Maps, Camera, Mail, etc.",
    "gain": "Cleaner Start menu and a bit of disk space freed; near-zero effect on FPS.",
-   "cons": "Also removes Camera, Mail, Alarms and Phone Link; removed apps can be reinstalled from the Microsoft Store."
+   "cons": "Also removes Camera, Mail, Alarms and Phone Link; removed apps can be reinstalled from the Microsoft Store. To go back with a restore point, start System Restore from Advanced startup (Shift + Restart): from inside Windows it often fails on removed apps."
   }
  },
  "win_store": {
