@@ -337,8 +337,7 @@ export function dashboardPage(cfg, { user, license, device, notice, error, canRe
       return html`<div class="discord">
         <span class="plan-icon">${ICON.users}</span>
         <div><strong>Premium role on Discord</strong>
-          <p class="muted small">Link your Discord account to join the Rago server with the Premium role. It stays while your Premium is active.</p>
-          <a class="btn btn-primary btn-sm" href="/account/discord">Link Discord</a></div>
+          <p class="muted small">Link your Discord account to join the Rago server with the Premium role. It stays while your Premium is active.</p></div>
       </div>`;
     }
     const st = discordState();
@@ -365,8 +364,7 @@ export function dashboardPage(cfg, { user, license, device, notice, error, canRe
       return html`<li><strong>${r.name}</strong> · <span class="badge badge-ok"><i></i>Earned</span> ${time}
         ${got.promo_code ? html`<br>Your ${r.percent}% code, one use: <code class="mono">${got.promo_code}</code> <a class="link-arrow" href="/buy?promo=${got.promo_code}">Use it ${ICON.arrow}</a>` : ''}</li>`;
     });
-    // With Premium, the Premium role block above already links Discord and shows the account.
-    const linkHere = !discordLink && !(active && cfg.discord);
+    // With Premium, the Premium role block above already shows the account.
     const linkedHere = discordLink && !active;
     return html`<div class="discord">
         <span class="plan-icon">${ICON.users}</span>
@@ -375,7 +373,6 @@ export function dashboardPage(cfg, { user, license, device, notice, error, canRe
             ? 'Your rewards show up here a few minutes after you earn them.'
             : 'Link your Discord account to get your rewards here.'}</p>
           <ul class="small rewards">${lines}</ul>
-          ${linkHere ? html`<a class="btn btn-primary btn-sm" href="/account/discord">Link Discord</a>` : ''}
           ${linkedHere ? html`<div class="row"><span class="muted small">Linked to <strong>@${discordLink.discord_name || discordLink.discord_id}</strong></span>${unlinkForm}</div>` : ''}</div>
       </div>`;
   };
@@ -387,10 +384,13 @@ export function dashboardPage(cfg, { user, license, device, notice, error, canRe
       : license && cfg.discord && discordLink ? html`<p class="muted small">Your Discord account <strong>@${discordLink.discord_name || discordLink.discord_id}</strong> stays linked: the Premium role comes back when Premium does.</p>` : '';
     const rewards = rewardsBlock();
     if (!role && !rewards) return '';
+    // Link Discord and Open Discord side by side at the bottom of the card.
+    const link = !discordLink && ((active && cfg.discord) || rewards) ? html`<a class="btn btn-primary btn-sm" href="/account/discord">Link Discord</a>` : '';
+    const open = rewards || (active && (!cfg.discord || discordLink?.role)) ? openDiscord : '';
     return html`<article class="card card-discord rise ${cls}">
       <div class="card-head"><p class="overline">Discord</p></div>
       ${role}${rewards}
-      ${rewards || (active && (!cfg.discord || discordLink?.role)) ? openDiscord : ''}
+      ${link || open ? html`<div class="row card-actions">${link}${open}</div>` : ''}
     </article>`;
   };
 
