@@ -155,13 +155,54 @@ p{margin:0}
   box-shadow:0 0 0 40px rgba(255,59,48,.03),0 0 0 80px rgba(255,59,48,.02);animation:breathe 6s var(--rg-ease-in-out) infinite;pointer-events:none}
 @keyframes breathe{50%{transform:scale(1.06);opacity:.7}}
 .card-hero .btn{align-self:flex-start;margin-top:4px}
-/* Account page: two columns that stack their cards independently, so a long card on one side never
-   stretches the cards on the other (each card is as tall as its content). One column under 1000px:
-   download, license, device, plan, then Discord and the affiliate card. */
-.dash-grid{display:grid;grid-template-columns:minmax(0,7fr) minmax(0,5fr);gap:20px;align-items:start}
-.dash-col{display:flex;flex-direction:column;gap:20px;min-width:0}
-@media (max-width:1000px){.dash-grid{display:flex;flex-direction:column;align-items:stretch}.dash-col{display:contents}
-  .dash-grid .card-discord{order:1}.dash-grid .card-aff{order:2}}
+/* Account page (2026-10-11): the download card across the page, then two cards of full-width rows (license key,
+   device, plan; then Discord, affiliate program, your review). A row is as tall as what it says: title on the left,
+   content in the middle, action on the right. Nothing stretches to match a neighbor, so there is no hole whatever the
+   account shows. Under 1000px the action goes under the content; on a phone each row stacks. */
+.dash-stack{display:flex;flex-direction:column;gap:20px}
+.hero-split{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:24px clamp(32px,4vw,64px);align-items:center;isolation:isolate}
+.hero-split::before{z-index:-1}
+.hero-main{display:flex;flex-direction:column;gap:20px;align-items:flex-start;min-width:0}
+.hero-split .howto{margin:0;padding:4px 0 4px clamp(24px,3vw,48px);border-top:0;border-left:1px solid var(--rg-line-1)}
+.hero-tag{display:flex;align-items:center;gap:12px}
+/* The rows of a card share their columns (subgrid), so the content of every row starts and ends at the same place */
+.dash-panel{--pad:clamp(24px,2.4vw,32px);--label:clamp(150px,13vw,210px);display:grid;grid-template-columns:calc(var(--label) + var(--pad)) minmax(0,1fr) fit-content(380px);gap:0 clamp(24px,3vw,56px);padding:0}
+.sect{grid-column:1 / -1;display:grid;grid-template-columns:var(--label) minmax(0,1fr) fit-content(380px);grid-template-columns:subgrid;align-items:start;gap:16px clamp(24px,3vw,56px);min-width:0;padding:clamp(22px,2.2vw,28px) var(--pad)}
+.sect + .sect{border-top:1px solid var(--rg-line-1)}
+.sect-head{display:flex;flex-direction:column;align-items:flex-start;gap:10px;padding-top:4px;min-width:0}
+.sect-body{display:flex;flex-direction:column;gap:14px;min-width:0}
+.sect-foot{align-self:center;display:flex;flex-direction:column;align-items:flex-end;gap:10px}
+.sect-foot .row{justify-content:flex-end;gap:10px 20px}
+.sect-foot .link-arrow{margin-top:0}
+/* License key and device: the key (or the PC) on the left, its dates next to it at the same place on both rows,
+   or under it when the row is too narrow */
+.sect-license .sect-body,.sect-device .sect-body{flex-direction:row;flex-wrap:wrap;align-items:center;gap:14px clamp(24px,3vw,56px)}
+.sect-license .key,.sect-device .device{flex:0 0 min(100%,440px)}
+.sect-license .meta,.sect-device .meta{flex:1 1 340px;grid-template-columns:minmax(0,1.6fr) minmax(0,1fr);max-width:520px}
+.sect-note,.sect-device .device-empty{flex-basis:100%}
+.device p + p{margin-top:2px}
+/* Discord: the Premium role, then the Discord rewards */
+.sect-discord .sect-body > * + *{padding-top:14px;border-top:1px solid var(--rg-line-1)}
+.sect-review .stars svg{width:16px;height:16px}
+.sect-review .review-clamp{-webkit-line-clamp:2}
+.sect-review .review-text{max-width:90ch}
+.sect-foot .rate-quick{margin:-8px -7px -4px 0}
+@media (max-width:1000px){
+  .hero-split{grid-template-columns:minmax(0,1fr)}
+  .hero-split .howto{padding:22px 0 0;border-left:0;border-top:1px solid var(--rg-line-1)}
+  .dash-panel{--label:clamp(120px,16vw,150px);grid-template-columns:calc(var(--label) + var(--pad)) minmax(0,1fr)}
+  .sect{grid-template-columns:var(--label) minmax(0,1fr);grid-template-columns:subgrid}
+  .sect-foot{grid-column:2;align-self:start;align-items:flex-start}
+  .sect-foot .row{justify-content:flex-start}
+  .sect-foot .rate-quick{margin:-6px 0 -4px -8px}
+}
+@media (max-width:760px){
+  .dash-panel{display:flex;flex-direction:column}
+  .sect{display:flex;flex-direction:column;align-items:stretch;gap:16px}
+  .sect-head{flex-direction:row;justify-content:space-between;align-items:center;padding-top:0}
+  .sect-foot{align-self:stretch}
+  .sect-review .review-clamp{-webkit-line-clamp:3}
+}
 .card-head{display:flex;justify-content:space-between;align-items:center;gap:12px}
 .howto{list-style:none;margin:8px 0 0;padding:22px 0 0;border-top:1px solid var(--rg-line-1);display:grid;gap:14px;color:var(--rg-text-2);font-size:var(--rg-fs-small)}
 .howto li{display:flex;gap:12px;align-items:flex-start}
@@ -294,15 +335,11 @@ p{margin:0}
 .foot-legal{margin:0;color:var(--rg-text-3);font-size:12px;max-width:72ch}
 /* Keyboard focus on the current tab */
 .tabs a[aria-current]:focus-visible{box-shadow:var(--rg-focus),var(--rg-shadow-1)}
-/* Discord card: Premium role and Discord rewards, one section each */
+/* Discord: Premium role and Discord rewards, one block each */
 .discord{display:flex;gap:14px;align-items:flex-start}
 .discord > div{flex:1;min-width:0}
 .discord p{margin:4px 0 12px}
 .discord > div > :last-child{margin-bottom:0}
-.card-discord > * + .discord{padding-top:18px;border-top:1px solid var(--rg-line-1)}
-.card-discord > .card-head + .discord{padding-top:0;border-top:0}
-.card-discord > .card-actions{gap:10px 20px;padding-top:18px;border-top:1px solid var(--rg-line-1)}
-.card-actions .link-arrow{margin-top:0}
 /* Invite rewards (VIP / MVP) */
 .rewards{margin:0 0 12px;padding-left:18px;display:grid;gap:6px;color:var(--rg-text-2)}
 .rewards strong{color:var(--rg-text-1)}
@@ -380,3 +417,58 @@ p{margin:0}
 .checks-list p{margin:2px 0 0;overflow-wrap:anywhere}
 .checks-test{display:flex;flex-direction:column;gap:10px;padding:14px 16px;border:1px solid var(--rg-line-2);border-radius:var(--rg-radius-md);background:var(--rg-ink-2)}
 @media (max-width:420px){.checks-list li{grid-template-columns:1fr;gap:6px}.checks-list .badge{justify-self:start}}
+
+/* Review from the account page (2026-10-11): the form, the preview of the card shown on the site, the dashboard card */
+.is-review .panel{max-width:480px}
+.review-card{width:100%;max-width:460px;display:flex;flex-direction:column;gap:16px;margin:0;padding:22px;background:var(--rg-ink-2);border:1px solid var(--rg-line-2);border-radius:var(--rg-radius-lg);box-shadow:var(--rg-shadow-2);transition:border-color var(--rg-dur-base)}
+.review-card:hover{border-color:var(--rg-red-500)}
+.review-card .stars{gap:3px}
+.review-card .stars svg{width:14px;height:14px}
+.review-card .stars .on svg{animation:pop var(--rg-dur-base) var(--rg-ease-spring) both}
+.review-card-text{font-size:14px;line-height:1.6;white-space:pre-line;overflow-wrap:anywhere;color:var(--rg-text-1)}
+.review-card-text::before{content:"\201C"}.review-card-text::after{content:"\201D"}
+.review-card-text.is-empty{color:var(--rg-text-3)}
+.review-card-text.is-empty::before,.review-card-text.is-empty::after{content:none}
+.review-card footer{display:flex;align-items:center;gap:10px;font-size:13px;color:var(--rg-text-2)}
+.review-card footer > span:first-child{display:inline-flex}
+.review-card .avatar{width:30px;height:30px;font-size:12px}
+.review-card-name{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.review-card small{margin-left:auto;font-size:11px;color:var(--rg-text-3);white-space:nowrap}
+.review-preview-note{margin-top:-12px}
+/* Stars: one radio per star (keyboard: arrows). A star lights up with the ones before it; hovering previews the rating. */
+.rate-field{border:0;margin:0;padding:0;min-width:0}
+.rate-field legend{padding:0;margin-bottom:10px}
+.rate-row{display:flex;align-items:center;gap:6px 14px;flex-wrap:wrap}
+.rate{display:inline-flex;margin-left:-6px}
+.rate label{display:grid;place-items:center;width:46px;height:46px;border-radius:var(--rg-radius-sm);color:var(--rg-ink-5);cursor:pointer;transition:color var(--rg-dur-fast)}
+.rate label svg{width:32px;height:32px;fill:currentColor;transition:transform var(--rg-dur-base) var(--rg-ease-spring)}
+.rate:not(:hover) label:has(~ input:checked),.rate:not(:hover) input:checked + label{color:var(--rg-red-500)}
+.rate label:hover,.rate label:has(~ label:hover){color:var(--rg-red-400)}
+.rate label:hover svg{transform:scale(1.14)}
+.rate input:checked + label svg{animation:pop var(--rg-dur-slow) var(--rg-ease-spring)}
+.rate input:focus-visible + label{box-shadow:var(--rg-focus)}
+.rate-word{font:500 12px/1 var(--rg-font-mono);letter-spacing:.04em;color:var(--rg-text-2)}
+.field-row{display:flex;justify-content:space-between;align-items:baseline;gap:12px}
+.field-count{font-size:11px;color:var(--rg-text-3);transition:color var(--rg-dur-fast)}
+.field-count.near{color:var(--rg-warning)}
+.field-count.full{color:var(--rg-red-400)}
+.review-form textarea{min-height:156px}
+.review-name{display:flex;align-items:center;gap:12px}
+.review-name > span:first-child{display:inline-flex}
+.review-name .avatar{width:42px;height:42px;font-size:16px}
+.review-name .field-box{flex:1;min-width:0}
+.review-state{display:flex;flex-wrap:wrap;align-items:center;gap:8px 10px;margin:-8px 0 22px}
+.review-foot{justify-content:space-between;gap:12px 20px;margin-top:18px}
+.review-foot .link-arrow,.review-all{margin-top:0}
+.panel > .review-all{display:inline-flex;margin-top:22px}
+.review-locked{margin-bottom:22px}
+.review-actions + .sep{margin-top:24px}
+/* Line breaks become spaces here, so the cut never lands on an empty line */
+.review-clamp{display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden;white-space:normal}
+.rate-quick{display:inline-flex;margin:-6px 0 -4px -8px}
+.rate-quick a{display:grid;place-items:center;width:42px;height:42px;border-radius:var(--rg-radius-sm);color:var(--rg-ink-5);transition:color var(--rg-dur-fast)}
+.rate-quick a svg{width:28px;height:28px;fill:currentColor;transition:transform var(--rg-dur-base) var(--rg-ease-spring)}
+.rate-quick a:hover,.rate-quick a:focus-visible,.rate-quick a:has(~ a:hover),.rate-quick a:has(~ a:focus-visible){color:var(--rg-red-500)}
+.rate-quick a:hover svg{transform:scale(1.14)}
+@media (prefers-reduced-motion:reduce){.rate label svg,.rate-quick a svg{transition:none}.rate input:checked + label svg,.review-card .stars .on svg{animation:none}}
+.rate-word.missing{color:var(--rg-red-400)}

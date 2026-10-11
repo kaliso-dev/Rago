@@ -8,7 +8,7 @@ Tout le code de Rago dans un seul dépôt :
 | `brand/` | Logo, tailles d'icônes, `.ico`, images d'installeur, favicons, couleurs et voix de la marque | SVG, PNG |
 | `site/` | La page de vente publique (anglais) et les pages légales | HTML statique, sans framework |
 | `licensing/` | Le serveur : abonnements Stripe, comptes, licences, verrou sur un PC, affiliation, téléchargement de l'app | Node 22, Hono, Supabase (Postgres + Storage) |
-| `.github/workflows/` | `app-windows.yml` fabrique le `setup.exe` sur un Windows de GitHub ; `licensing-tests.yml` lance les tests du serveur ; `site-check.yml` vérifie que `site/index.html` a été régénérée | GitHub Actions |
+| `.github/workflows/` | `app-windows.yml` fabrique le `setup.exe` sur un Windows de GitHub ; `licensing-tests.yml` lance les tests du serveur ; `site-check.yml` vérifie que `site/index.html` et `site/reviews.html` ont été régénérées | GitHub Actions |
 | `netlify.toml` / `Dockerfile` (racine) | Publication du site sur Netlify / variante qui sert site + serveur ensemble | Netlify / Docker |
 
 Chaque dossier a son propre README avec le détail technique. Ce guide-ci explique comment les trois s'emboîtent et comment tout lancer, dans l'ordre.
@@ -128,8 +128,8 @@ const CONFIG = {
 
 - `priceMonth` et `priceYear` doivent être **exactement** les prix des deux `price_...` Stripe, dans la même devise que `currency`.
 - Tant que `discord` est vide, les liens Discord du site sont masqués.
-- Les avis viennent de l'application : un joueur connecté à son compte Rago laisse une note (1 à 5 étoiles) et un commentaire, qu'il peut modifier ou supprimer ensuite (dans l'app ou dans l'onglet Profile du compte). Le site les lit sur le serveur de comptes (`/api/v1/reviews`) à chaque visite : la section `#reviews` reste masquée tant qu'aucun avis n'existe et apparaît dès le premier, sans modifier le site. Les cartes restent fixes tant qu'elles tiennent sur deux lignes à la largeur de l'écran ; au-delà, elles défilent en deux bandes. Modération : `npm run admin -- reviews`, `hide-review <email>`, `show-review <email>` (dossier `licensing/`).
-- `site/index.html` (la page publiée) est fabriquée à partir de `site/src/page.html`. Ne la modifie pas à la main : demande la modification sur le projet, elle est refaite par `site/tools/build.py`.
+- Les avis viennent de l'application, ou du site pour les comptes Premium : un joueur connecté à son compte Rago laisse une note (1 à 5 étoiles) et un commentaire, qu'il peut modifier ou supprimer ensuite (dans l'app, ou sur la page compte : ligne « Your review » et `/account/review` pour les Premium, onglet Profile pour supprimer). C'est le même avis partout (un par compte). Le site les lit sur le serveur de comptes (`/api/v1/reviews`) à chaque visite : la section `#reviews` reste masquée tant qu'aucun avis n'existe et apparaît dès le premier, sans modifier le site. Les cartes restent fixes tant qu'elles tiennent sur deux lignes à la largeur de l'écran ; au-delà, elles défilent en deux bandes. Toutes les cartes ont la même taille (4 lignes de texte) : un avis plus long est coupé après un mot, à la mesure de la carte, avec « See more », qui ouvre la page `reviews.html` sur cet avis : elle montre tous les avis en entier (`/api/v1/reviews?all=1`), avec la moyenne, un filtre par note et un tri. Modération : `npm run admin -- reviews`, `hide-review <email>`, `show-review <email>` (dossier `licensing/`).
+- `site/index.html` (la page publiée) est fabriquée à partir de `site/src/page.html`, et `site/reviews.html` à partir de `site/src/reviews.html`. Ne les modifie pas à la main : demande la modification sur le projet, elles sont refaites par `site/tools/build.py`.
 
 ### Avant le lancement : compte à rebours et accès de l'équipe
 

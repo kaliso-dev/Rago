@@ -1590,6 +1590,115 @@ test('reviews: the player can delete their review, from the app or from the acco
   assert.ok(await t.db.get("SELECT 1 FROM audit WHERE type = 'review.deleted'"));
 });
 
+test('reviews: Premium accounts write theirs from the account page, the same review as in the app; free accounts are sent to the app', async () => {
+  const t = await setup();
+  await t.browse('/signup', { form: { email: 'web@rago.gg', password: 'password123' } });
+  const count = async () => (await t.db.get('SELECT COUNT(*)::int AS n FROM reviews')).n;
+
+  // Free account: no form, the app instead. A post is refused and saves nothing.
+  let html = await (await t.browse('/account/review')).text();
+  assert.match(html, /Leave your review in Rago Optimizer/);
+  assert.doesNotMatch(html, /name="comment"/);
+  let res = await t.browse('/account/review', { form: { rating: '5', comment: 'Great', name: 'Web Fan' } });
+  assert.equal(res.status, 403);
+  assert.equal(await count(), 0);
+  assert.doesNotMatch(await (await t.browse('/account')).text(), /sect-review/);
+
+  // Premium: a review row on the account page; its stars open the form with that rating picked.
+  await L.grantLicense(t.db, 'web@rago.gg', 'test');
+  html = await (await t.browse('/account')).text();
+  assert.match(html, /class="sect sect-review/);
+  assert.match(html, /href="\/account\/review\?rating=4"/);
+  html = await (await t.browse('/account/review?rating=4')).text();
+  assert.match(html, /name="comment"/);
+  assert.match(html, /id="f-rate-4" name="rating" value="4" checked/);
+  assert.doesNotMatch(html, /value="[1235]" checked/);
+
+  // Refused: the form comes back with what was typed, and nothing is saved, not even the name.
+  const long = 'Long one. '.repeat(61);
+  res = await t.browse('/account/review', { form: { rating: '5', comment: long, name: 'Web Fan' } });
+  assert.equal(res.status, 400);
+  html = await res.text();
+  assert.match(html, /Keep your review under 600 characters/);
+  assert.ok(html.includes(long), 'the long review is kept in the form');
+  assert.match(html, /value="Web Fan"/);
+  for (const [form, msg] of [
+    [{ comment: 'Great', name: 'Web Fan' }, /Pick a rating/],
+    [{ rating: '9', comment: 'Great', name: 'Web Fan' }, /Pick a rating/],
+    [{ rating: '5', comment: '  ', name: 'Web Fan' }, /Write a few words/],
+    [{ rating: '5', comment: 'Great', name: 'x' }, /public name/],
+    [{ rating: '5', comment: 'Great', name: 'me@mail.com' }, /No email or link/],
+    [{ rating: '5', comment: 'Great' }, /Add the public name/],
+  ]) {
+    res = await t.browse('/account/review', { form });
+    assert.equal(res.status, 400, JSON.stringify(form));
+    assert.match(await res.text(), msg);
+  }
+  assert.equal(await count(), 0);
+  assert.equal((await L.findUserByEmail(t.db, 'web@rago.gg')).display_name, null);
+
+  // Saved: shown on the site, and on the account pages as text, never as HTML.
+  res = await t.browse('/account/review', { form: { rating: '4', comment: '  Steadier ping.\r\n\r\n\r\n<b>FPS</b> up  ', name: ' Web  Fan ' } });
+  assert.equal(res.status, 303);
+  assert.equal(res.headers.get('location'), '/account/review?n=saved');
+  html = await (await t.browse('/account/review?n=saved')).text();
+  assert.match(html, /Thanks! Your review is on the site/);
+  assert.match(html, /&lt;b&gt;FPS&lt;\/b&gt; up/);
+  assert.doesNotMatch(html, /<b>FPS/);
+  assert.match(html, /Update review/);
+  let pub = await (await t.app.request('/api/v1/reviews')).json();
+  assert.deepEqual(pub.reviews.map((r) => [r.name, r.rating, r.comment]), [['Web Fan', 4, 'Steadier ping.\n\n<b>FPS</b> up']]);
+  const { id } = pub.reviews[0];
+  assert.match(id, /^[a-z0-9]{1,12}$/);
+  assert.ok(await t.db.get("SELECT 1 FROM audit WHERE type = 'review.saved'"));
+
+  // Edited: still one review, same id on the site (the home page links to it), the name kept when left empty.
+  res = await t.browse('/account/review', { form: { rating: '5', comment: 'Even better.', name: '' } });
+  assert.equal(res.status, 303);
+  assert.equal(await count(), 1);
+  pub = await (await t.app.request('/api/v1/reviews')).json();
+  assert.deepEqual(pub.reviews.map((r) => [r.id, r.name, r.rating, r.comment]), [[id, 'Web Fan', 5, 'Even better.']]);
+
+  // The app sees the same review, and the account pages show it with a way to edit it.
+  const token = (await (await call(t, 'POST', '/account/login', { json: { email: 'web@rago.gg', password: 'password123' } })).json()).account_token;
+  assert.equal((await (await call(t, 'GET', '/account/me', { token })).json()).review.comment, 'Even better.');
+  html = await (await t.browse('/account')).text();
+  assert.match(html, /Even better\./);
+  assert.match(html, /On the site/);
+  assert.match(await (await t.browse('/account/profile')).text(), /href="\/account\/review">Edit your review/);
+
+  // Deleted from the review page: gone from the site.
+  res = await t.browse('/account/review/delete', { form: {} });
+  assert.equal(res.headers.get('location'), '/account/review?n=deleted');
+  assert.match(await (await t.browse('/account/review?n=deleted')).text(), /Review deleted/);
+  assert.equal((await (await t.app.request('/api/v1/reviews')).json()).count, 0);
+
+  // Signed out: the site's "Leave a review" goes through sign-in, then back to the form.
+  await t.browse('/logout', { form: {} });
+  res = await t.browse('/account/review');
+  assert.equal(res.headers.get('location'), '/login?next=%2Faccount%2Freview');
+  assert.match(await (await t.browse('/login?next=%2Faccount%2Freview')).text(), /Sign in to leave your review/);
+  res = await t.browse('/login', { form: { email: 'web@rago.gg', password: 'password123', next: '/account/review' } });
+  assert.equal(res.headers.get('location'), '/account/review');
+});
+
+test('reviews: the home page gets the latest 60, the reviews page all of them', async () => {
+  const t = await setup();
+  const now = Date.now();
+  for (let i = 0; i < 65; i++) {
+    await t.db.run('INSERT INTO users (id, email, password_hash, created_at, display_name) VALUES (?, ?, ?, ?, ?)', [`usr_${i}`, `p${i}@rago.gg`, 'x', now, `Player ${i}`]);
+    await t.db.run('INSERT INTO reviews (user_id, rating, comment, created_at, updated_at) VALUES (?, ?, ?, ?, ?)', [`usr_${i}`, 1 + (i % 5), `Review ${i}`, now - 1000 * i, now - 1000 * i]);
+  }
+  const site = await (await t.app.request('/api/v1/reviews')).json();
+  const all = await (await t.app.request('/api/v1/reviews?all=1')).json();
+  assert.equal(site.count, 65);
+  assert.equal(site.reviews.length, 60);
+  assert.equal(all.count, 65);
+  assert.equal(all.reviews.length, 65);
+  assert.equal(all.reviews[0].comment, 'Review 0'); // newest first
+  assert.equal(new Set(all.reviews.map((r) => r.id)).size, 65);
+});
+
 test('reviews: a Premium PC uses its license token, which stops working once the license is revoked', async () => {
   const t = await setup();
   await t.browse('/signup', { form: { email: 'pro@rago.gg', password: 'password123' } });

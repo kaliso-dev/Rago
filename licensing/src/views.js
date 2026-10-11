@@ -1,5 +1,6 @@
 // Server-rendered account pages. Copy follows /brand/voice-en.md, look follows brand kit v1.1.
 import { maskLicenseKey } from './crypto.js';
+import { COMMENT_MAX } from './reviews.js';
 
 class Raw { constructor(s) { this.s = s; } toString() { return this.s; } }
 const escape = (v) => String(v).replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[c]);
@@ -20,6 +21,7 @@ const ICON = {
   users: svg('M6 7.5a2.3 2.3 0 1 0 0-4.6 2.3 2.3 0 0 0 0 4.6zM1.8 13.5c.4-2.3 2.1-3.6 4.2-3.6s3.8 1.3 4.2 3.6M10.6 3a2.2 2.2 0 0 1 0 4.4M12.2 9.9c1.2.4 1.9 1.6 2.1 3.6', 1.4),
   clock: svg('M8 14.5a6.5 6.5 0 1 0 0-13 6.5 6.5 0 0 0 0 13zM8 4.5V8l2.5 1.5', 1.4),
   infinity: svg('M8 8c-1.4-2-2.6-3-4-3a3 3 0 0 0 0 6c1.4 0 2.6-1 4-3zm0 0c1.4 2 2.6 3 4 3a3 3 0 0 0 0-6c-1.4 0-2.6 1-4 3z', 1.4),
+  star: svg('M8 1.9l1.9 4 4.4.5-3.3 3.1.9 4.4L8 11.7l-3.9 2.2.9-4.4-3.3-3.1 4.4-.5z', 1.4),
 };
 
 /** Profile photo, or the first letter of the public name (or email) on a dark circle when there's none. */
@@ -151,6 +153,10 @@ export function loginPage(cfg, { email = '', error, notice, purchased = false, n
     ? html`<p class="overline rise">Affiliate program</p>
       <h1 class="display rise d1">Welcome back.</h1>
       <p class="lede rise d2">Sign in to get your referral code and follow your progress.</p>`
+    : next === '/account/review' && !purchased
+      ? html`<p class="overline rise">Reviews</p>
+        <h1 class="display rise d1">Welcome back.</h1>
+        <p class="lede rise d2">Sign in to leave your review of Rago Optimizer. It shows on the site with your public name.</p>`
     : html`<p class="overline rise">${purchased ? 'Rago Optimizer Premium' : 'Rago Optimizer account'}</p>
       <h1 class="display rise d1">${purchased ? 'Payment confirmed.' : 'Welcome back.'}</h1>
       <p class="lede rise d2">${purchased ? 'Sign in and we add the license to your account.' : 'Sign in to get your license key and download Rago Optimizer.'}</p>`;
@@ -282,7 +288,7 @@ function affiliateLine(a) {
   return next;
 }
 
-export function dashboardPage(cfg, { user, license, device, notice, error, canReset, nextResetAt, affiliate, discordLink, discordRewards = [], inviteRewards = [] }) {
+export function dashboardPage(cfg, { user, license, device, notice, error, canReset, nextResetAt, affiliate, discordLink, discordRewards = [], inviteRewards = [], review = null }) {
   const active = license?.status === 'active';
   const reason = license?.status_reason;
   const ended = !active && reason === 'subscription_ended';
@@ -377,48 +383,61 @@ export function dashboardPage(cfg, { user, license, device, notice, error, canRe
       </div>`;
   };
 
-  // Everything Discord in one card of its own, so the download card stays short and the cards next to it
-  // keep their own height.
-  const discordCard = (cls) => {
+  // Layout: the download card (Free, or the way back) across the page, the steps next to it, then two cards of full-width
+  // rows: license key, device, plan; then Discord, affiliate program, your review. A row is as tall as what it says, with
+  // its title on the left and its action on the right, so nothing has to stretch to match a neighbor: the page has no
+  // hole whatever the account shows. On a phone each row stacks: title, content, action.
+  const hero = (main, side) => html`<article class="card card-hero hero-split rise d1"><div class="hero-main">${main}</div>${side}</article>`;
+  const sect = (cls, head, body, foot = '', id = '') => html`<section class="sect ${cls}"${id ? html` id="${id}"` : ''}>
+      <div class="sect-head">${head}</div>
+      <div class="sect-body">${body}</div>
+      ${foot ? html`<div class="sect-foot">${foot}</div>` : ''}
+    </section>`;
+  const panel = (sections, cls) => {
+    const list = sections.filter(Boolean);
+    return list.length ? html`<div class="card dash-panel rise ${cls}">${list}</div>` : '';
+  };
+
+  // Everything Discord in one section: the Premium role, the Discord rewards, then Link / Open Discord.
+  const discordSect = () => {
     const role = active ? discordBlock()
       : license && cfg.discord && discordLink ? html`<p class="muted small">Your Discord account <strong>@${discordLink.discord_name || discordLink.discord_id}</strong> stays linked: the Premium role comes back when Premium does.</p>` : '';
     const rewards = rewardsBlock();
     if (!role && !rewards) return '';
-    // Link Discord and Open Discord side by side at the bottom of the card.
     const link = !discordLink && ((active && cfg.discord) || rewards) ? html`<a class="btn btn-primary btn-sm" href="/account/discord">Link Discord</a>` : '';
     const open = rewards || (active && (!cfg.discord || discordLink?.role)) ? openDiscord : '';
-    return html`<article class="card card-discord rise ${cls}">
-      <div class="card-head"><p class="overline">Discord</p></div>
-      ${role}${rewards}
-      ${link || open ? html`<div class="row card-actions">${link}${open}</div>` : ''}
-    </article>`;
+    return sect('sect-discord', html`<p class="overline">Discord</p>`, html`${role}${rewards}`,
+      link || open ? html`<div class="row">${link}${open}</div>` : '');
   };
 
-  const download = () => html`<article class="card card-hero rise d1">
+  const download = () => hero(html`
       <p class="overline">Rago Optimizer for Windows</p>
       <h2 class="h1">Download Rago Optimizer for Windows</h2>
       <p class="muted">Windows 10 and 11, 64-bit.${version}</p>
-      <a class="btn btn-primary btn-lg" href="/account/download" data-download>${ICON.download}<span>Download Rago Optimizer</span></a>
-      ${howto}
-    </article>`;
+      <a class="btn btn-primary btn-lg" href="/account/download" data-download>${ICON.download}<span>Download Rago Optimizer</span></a>`, howto);
 
   // Premium stopped (ended, refunded, revoked): the way back comes first.
-  const comeBack = () => html`<article class="card card-hero rise d1">
+  const comeBack = () => hero(html`
       <p class="overline">Rago Optimizer Premium</p>
       <h2 class="h1">${ended ? 'Renew Premium' : 'Get Premium again'}</h2>
       <p class="muted">Rago Optimizer now runs as the free version on your PC. ${unlocks}</p>
       <div class="row"><a class="btn btn-buy btn-lg" href="${buyUrl}">${ended ? 'Renew Premium' : 'Get Premium'} ${ICON.arrow}</a>
         <a class="btn btn-ghost btn-lg" href="/account/download" data-download>${ICON.download}<span>Download the free version</span></a></div>
-      <p class="muted small">Windows 10 and 11, 64-bit.${version}</p>
-      ${howto}
-    </article>`;
+      <p class="muted small">Windows 10 and 11, 64-bit.${version}</p>`, howto);
+
+  const freeCard = () => hero(html`
+      <div class="hero-tag"><p class="overline">Your plan</p><span class="badge badge-off"><i></i>Free</span></div>
+      <h2 class="h1">You're on Free</h2>
+      <p class="muted">${cfg.freeTweaks} tweaks unlocked. ${unlocks.split('. ')[0]}.${cfg.priceLabel ? html` <strong class="price">${cfg.priceLabel}</strong>.` : ''}</p>
+      <div class="row"><a class="btn btn-buy btn-lg" href="${buyUrl}">Get Premium ${ICON.arrow}</a>
+        <a class="btn btn-ghost btn-lg" href="/account/download" data-download>${ICON.download}<span>Download the free version</span></a></div>
+      <p class="muted small">${cfg.subscriptions ? 'Monthly or yearly. Secure checkout with Stripe. Cancel anytime.' : 'Secure checkout with Stripe.'} Already paid? Sign in with the email you paid with${cfg.mailEnabled ? ', or open the link in your purchase email' : ''}. Still not here? ${supportLink(cfg, 'Ask on Discord')} with your payment email and we'll add it to this account.</p>`, howto);
 
   const OFF = { subscription_ended: 'Ended', refunded: 'Refunded', disputed: 'Disputed', test_mode: 'Test purchase' };
   const offBadge = () => OFF[reason] || 'Revoked';
-  const licenseCard = () => html`<article class="card rise d2">
-      <div class="card-head"><p class="overline">License key</p>
-        ${active ? html`<span class="badge badge-ok"><i></i>Active</span>` : html`<span class="badge badge-off"><i></i>${offBadge()}</span>`}</div>
-      <div class="key">
+  const licenseSect = () => sect('sect-license', html`<p class="overline">License key</p>
+      ${active ? html`<span class="badge badge-ok"><i></i>Active</span>` : html`<span class="badge badge-off"><i></i>${offBadge()}</span>`}`,
+    html`<div class="key">
         <code class="mono" data-key="${license.key}" data-masked="${maskLicenseKey(license.key)}">${maskLicenseKey(license.key)}</code>
         <span class="key-actions">
           <button class="btn btn-ghost btn-sm" type="button" data-reveal-key>Show</button>
@@ -429,65 +448,59 @@ export function dashboardPage(cfg, { user, license, device, notice, error, canRe
         <div><dt>Plan</dt><dd>Rago Optimizer Premium · ${planName(license)}</dd></div>
         <div><dt>Since</dt><dd>${fmtDate(license.created_at)}</dd></div>
       </dl>
-      ${active || ended ? '' : html`<p class="muted small">This license no longer works in Rago Optimizer. ${support} if you think that's a mistake.</p>`}
-    </article>`;
+      ${active || ended ? '' : html`<p class="muted small sect-note">This license no longer works in Rago Optimizer. ${support} if you think that's a mistake.</p>`}`);
 
-  const deviceCard = () => html`<article class="card rise d3">
-      <div class="card-head"><p class="overline">Device</p>
-        <span class="mono small muted">${device && active ? '1 / 1' : '0 / 1'}</span></div>
-      ${device
-        ? html`<div class="device"><span class="device-icon">${ICON.pc}</span><div><strong>${device.name}</strong>
-            <p class="muted small">${device.os || 'Windows'}${device.app_version ? ` · Rago Optimizer ${device.app_version}` : ''}</p></div></div>
-          <p class="small">${active ? 'This license is active on 1 device.' : 'This PC was linked to the license. It now runs the free version.'}</p>
-          <dl class="meta">
-            <div><dt>Activated</dt><dd>${fmtDate(device.bound_at)}</dd></div>
-            <div><dt>Last seen</dt><dd>${ago(device.last_seen_at)}</dd></div>
-          </dl>
-          ${!active ? '' : canReset
-            ? html`<form method="post" action="/account/reset-device" class="inline" data-confirm="Free this license? Rago Optimizer signs out on ${device.name} and you can activate another PC. You can do this once every ${cfg.selfServiceResetDays} days.">
-                <button class="btn btn-ghost btn-sm" type="submit">Use on another PC</button></form>`
-            : html`<p class="muted small">Changed PCs? ${support}.${nextResetAt ? html` You can free it yourself from ${fmtDate(nextResetAt)}.` : ''}</p>`}`
-        : active
-          ? html`<div class="device device-empty"><span class="device-icon">${ICON.pc}</span><div><strong>Not activated yet</strong>
+  const deviceSect = () => {
+    const head = html`<p class="overline">Device</p><span class="mono small muted">${device && active ? '1 / 1' : '0 / 1'}</span>`;
+    if (!device) {
+      return sect('sect-device', head, active
+        ? html`<div class="device device-empty"><span class="device-icon">${ICON.pc}</span><div><strong>Not activated yet</strong>
             <p class="muted small">Sign in to Rago Optimizer on your PC to activate it. Rago Optimizer works on one device per license.</p></div></div>`
-          : html`<div class="device device-empty"><span class="device-icon">${ICON.pc}</span><div><strong>No device</strong>
-            <p class="muted small">${ended ? 'Renew Premium, then sign in to the app on your PC to activate it.' : "This license can't be activated."}</p></div></div>`}
-    </article>`;
+        : html`<div class="device device-empty"><span class="device-icon">${ICON.pc}</span><div><strong>No device</strong>
+            <p class="muted small">${ended ? 'Renew Premium, then sign in to the app on your PC to activate it.' : "This license can't be activated."}</p></div></div>`);
+    }
+    return sect('sect-device', head,
+      html`<div class="device"><span class="device-icon">${ICON.pc}</span><div><strong>${device.name}</strong>
+          <p class="muted small">${device.os || 'Windows'}${device.app_version ? ` · Rago Optimizer ${device.app_version}` : ''}</p>
+          <p class="small">${active ? 'This license is active on 1 device.' : 'This PC was linked to the license. It now runs the free version.'}</p></div></div>
+        <dl class="meta">
+          <div><dt>Activated</dt><dd>${fmtDate(device.bound_at)}</dd></div>
+          <div><dt>Last seen</dt><dd>${ago(device.last_seen_at)}</dd></div>
+        </dl>
+        ${active && !canReset ? html`<p class="muted small sect-note">Changed PCs? ${support}.${nextResetAt ? html` You can free it yourself from ${fmtDate(nextResetAt)}.` : ''}</p>` : ''}`,
+      active && canReset ? html`<form method="post" action="/account/reset-device" class="inline" data-confirm="Free this license? Rago Optimizer signs out on ${device.name} and you can activate another PC. You can do this once every ${cfg.selfServiceResetDays} days.">
+          <button class="btn btn-ghost btn-sm" type="submit">Use on another PC</button></form>` : '');
+  };
 
-  const planCard = () => {
+  const planSect = () => {
     const end = license.current_period_end;
+    const row = (...items) => (items.some(Boolean) ? html`<div class="row">${items}</div>` : '');
     if (license.plan === 'reward' && license.source === 'grant') {
-      return html`<article class="card card-plan rise d4">
-        <div class="card-head"><p class="overline">Plan</p>${active ? html`<span class="badge badge-red"><i></i>Until ${fmtDate(end)}</span>` : html`<span class="badge badge-off"><i></i>${offBadge()}</span>`}</div>
-        <div class="plan-line"><span class="plan-icon">${ICON.clock}</span><div><strong>Rago Optimizer Premium · Gift</strong>
+      return sect('sect-plan', html`<p class="overline">Plan</p>${active ? html`<span class="badge badge-red"><i></i>Until ${fmtDate(end)}</span>` : html`<span class="badge badge-off"><i></i>${offBadge()}</span>`}`,
+        html`<div class="plan-line"><span class="plan-icon">${ICON.clock}</span><div><strong>Rago Optimizer Premium · Gift</strong>
           <p class="muted small">${active
             ? `Offered by the Rago team. Premium until ${fmtDate(end)}, nothing to pay.`
-            : ended ? `Your free Premium ended on ${fmtDate(end)}. Get Premium to keep every tweak unlocked.` : 'This license was revoked.'}</p></div></div>
-        ${active ? html`<div class="row"><a class="btn btn-ghost btn-sm" href="${buyUrl}">Subscribe now, first payment on ${fmtDate(end)}</a></div>`
-          : ended ? html`<div class="row"><a class="btn btn-primary btn-sm" href="${buyUrl}">Get Premium</a></div>` : ''}
-      </article>`;
+            : ended ? `Your free Premium ended on ${fmtDate(end)}. Get Premium to keep every tweak unlocked.` : 'This license was revoked.'}</p></div></div>`,
+        active ? row(html`<a class="btn btn-ghost btn-sm" href="${buyUrl}">Subscribe now, first payment on ${fmtDate(end)}</a>`)
+          : ended ? row(html`<a class="btn btn-primary btn-sm" href="${buyUrl}">Get Premium</a>`) : '');
     }
     if (license.plan === 'reward') {
       const fromDiscord = license.source === 'discord';
-      return html`<article class="card card-plan rise d4">
-        <div class="card-head"><p class="overline">Plan</p>${active ? html`<span class="badge badge-red"><i></i>Until ${fmtDate(end)}</span>` : html`<span class="badge badge-off"><i></i>${offBadge()}</span>`}</div>
-        <div class="plan-line"><span class="plan-icon">${ICON.users}</span><div><strong>Rago Optimizer Premium · ${fromDiscord ? 'Discord reward' : 'Affiliate reward'}</strong>
+      return sect('sect-plan', html`<p class="overline">Plan</p>${active ? html`<span class="badge badge-red"><i></i>Until ${fmtDate(end)}</span>` : html`<span class="badge badge-off"><i></i>${offBadge()}</span>`}`,
+        html`<div class="plan-line"><span class="plan-icon">${ICON.users}</span><div><strong>Rago Optimizer Premium · ${fromDiscord ? 'Discord reward' : 'Affiliate reward'}</strong>
           <p class="muted small">${active
             ? fromDiscord ? `Earned by inviting players to the Rago Discord. Premium until ${fmtDate(end)}, nothing to pay.`
               : `Earned with the affiliate program. Premium until ${fmtDate(end)}, nothing to pay.${cfg.affiliateRewardMax === 1 ? '' : ` Bring ${cfg.affiliateGoal} more players to add ${cfg.affiliateRewardMonths} months.`}`
-            : ended ? `Your ${fromDiscord ? 'Discord' : 'affiliate'} reward ended on ${fmtDate(end)}. Get Premium to keep every tweak unlocked.` : 'This license was revoked.'}</p></div></div>
-        <div class="row">${active ? html`<a class="btn btn-ghost btn-sm" href="${buyUrl}">Subscribe now, first payment on ${fmtDate(end)}</a>` : ''}<a class="link-arrow" href="/affiliate">Open affiliate program ${ICON.arrow}</a></div>
-      </article>`;
+            : ended ? `Your ${fromDiscord ? 'Discord' : 'affiliate'} reward ended on ${fmtDate(end)}. Get Premium to keep every tweak unlocked.` : 'This license was revoked.'}</p></div></div>`,
+        row(active ? html`<a class="btn btn-ghost btn-sm" href="${buyUrl}">Subscribe now, first payment on ${fmtDate(end)}</a>` : '', html`<a class="link-arrow" href="/affiliate">Open affiliate program ${ICON.arrow}</a>`));
     }
     if (license.plan === 'lifetime' || !subscription) {
-      return html`<article class="card card-plan rise d4">
-        <div class="card-head"><p class="overline">Plan</p>${active ? html`<span class="badge badge-red"><i></i>Lifetime</span>` : html`<span class="badge badge-off"><i></i>${offBadge()}</span>`}</div>
-        <div class="plan-line"><span class="plan-icon">${ICON.infinity}</span><div><strong>Rago Optimizer Premium for life</strong>
+      return sect('sect-plan', html`<p class="overline">Plan</p>${active ? html`<span class="badge badge-red"><i></i>Lifetime</span>` : html`<span class="badge badge-off"><i></i>${offBadge()}</span>`}`,
+        html`<div class="plan-line"><span class="plan-icon">${ICON.infinity}</span><div><strong>Rago Optimizer Premium for life</strong>
           <p class="muted small">${active
             ? `${license.source === 'affiliate' ? 'Earned with the affiliate program. ' : ''}No renewals, nothing to pay.`
-            : reason === 'refunded' ? 'Refunded. This license no longer works.' : reason === 'disputed' ? 'The payment was disputed. This license no longer works.' : 'This license was revoked.'}</p></div></div>
-        ${active ? html`<div class="row">${portalButton('Cancel or manage subscription')}</div>` : html`<div class="row">${portalButton('Invoices and billing')}</div>`}
-      </article>`;
+            : reason === 'refunded' ? 'Refunded. This license no longer works.' : reason === 'disputed' ? 'The payment was disputed. This license no longer works.' : 'This license was revoked.'}</p></div></div>`,
+        row(portalButton(active ? 'Cancel or manage subscription' : 'Invoices and billing')));
     }
     let line;
     let badge = html`<span class="chip mono">${PLAN[license.plan]}</span>`;
@@ -508,55 +521,48 @@ export function dashboardPage(cfg, { user, license, device, notice, error, canRe
     } else {
       line = end ? `Renews on ${fmtDate(end)}. Cancel anytime.` : 'Renews automatically. Cancel anytime.';
     }
-    return html`<article class="card card-plan rise d4">
-      <div class="card-head"><p class="overline">Subscription</p>${badge}</div>
-      <div class="plan-line"><span class="plan-icon">${ICON.card}</span><div><strong>Rago Optimizer Premium · ${PLAN[license.plan]}</strong>
-        <p class="muted small">${line}</p></div></div>
-      <div class="row">${actions}</div>
-    </article>`;
+    return sect('sect-plan', html`<p class="overline">Subscription</p>${badge}`,
+      html`<div class="plan-line"><span class="plan-icon">${ICON.card}</span><div><strong>Rago Optimizer Premium · ${PLAN[license.plan]}</strong>
+        <p class="muted small">${line}</p></div></div>`,
+      row(actions));
   };
 
-  const affiliateCard = (cls) => html`<article class="card card-aff rise ${cls}">
-      <div class="card-head"><p class="overline">Affiliate program</p>${affiliate ? html`<span class="mono small muted">${affiliate.full ? affiliate.goal : affiliate.progress} / ${affiliate.goal}${affiliate.pending ? ` · ${affiliate.pending} waiting` : ''}</span>` : ''}</div>
-      ${affiliate
-        ? html`<div class="aff-mini">${affiliateRing(affiliate, 'sm')}<div class="aff-text">
-            <p class="small muted">Your code</p><p class="code-sm mono">${affiliate.code}</p>
-            <p class="small muted">${affiliateLine(affiliate)}</p></div></div>
-          <a class="link-arrow" href="/affiliate">Open affiliate program ${ICON.arrow}</a>`
-        : html`<div class="plan-line"><span class="plan-icon">${ICON.users}</span><div><strong>Bring ${cfg.affiliateGoal} players, get ${cfg.affiliateRewardMonths} months of Premium</strong>
-            <p class="muted small">Share your code: players get ${cfg.affiliateDiscountPercent}% off. When ${cfg.affiliateGoal} players have bought Premium with it, you get ${cfg.affiliateRewardMonths} months of Premium.</p></div></div>
-          <a class="link-arrow" href="/affiliate">Join the affiliate program ${ICON.arrow}</a>`}
-    </article>`;
+  const affiliateSect = () => sect('sect-aff', html`<p class="overline">Affiliate program</p>${affiliate ? html`<span class="mono small muted">${affiliate.full ? affiliate.goal : affiliate.progress} / ${affiliate.goal}${affiliate.pending ? ` · ${affiliate.pending} waiting` : ''}</span>` : ''}`,
+    affiliate
+      ? html`<div class="aff-mini">${affiliateRing(affiliate, 'sm')}<div class="aff-text">
+          <p class="small muted">Your code</p><p class="code-sm mono">${affiliate.code}</p>
+          <p class="small muted">${affiliateLine(affiliate)}</p></div></div>`
+      : html`<div class="plan-line"><span class="plan-icon">${ICON.users}</span><div><strong>Bring ${cfg.affiliateGoal} players, get ${cfg.affiliateRewardMonths} months of Premium</strong>
+          <p class="muted small">Share your code: players get ${cfg.affiliateDiscountPercent}% off. When ${cfg.affiliateGoal} players have bought Premium with it, you get ${cfg.affiliateRewardMonths} months of Premium.</p></div></div>`,
+    html`<a class="link-arrow" href="/affiliate">${affiliate ? 'Open affiliate program' : 'Join the affiliate program'} ${ICON.arrow}</a>`);
 
-  const helpCard = (cls) => html`<article class="card card-aff rise ${cls}">
-      <div class="card-head"><p class="overline">Help</p></div>
-      <div class="plan-line"><span class="plan-icon">${ICON.users}</span><div><strong>Questions about a tweak or your PC?</strong>
-        <p class="muted small">The Rago team and players answer on Discord.</p></div></div>
-      ${cfg.supportUrl ? html`<a class="link-arrow" href="${cfg.supportUrl}" rel="noopener">Open Discord ${ICON.arrow}</a>` : ''}
-    </article>`;
-  const sideCard = (cls) => (!affiliate && active && license?.plan === 'lifetime' ? helpCard(cls) : affiliateCard(cls));
+  // A lifetime license has nothing to win from the affiliate program: no row for it until the player joins.
+  const sideSect = () => (!affiliate && active && license?.plan === 'lifetime' ? '' : affiliateSect());
 
-  const freeCard = () => html`<article class="card card-hero rise d1">
-      <div class="card-head"><p class="overline">Your plan</p><span class="badge badge-off"><i></i>Free</span></div>
-      <h2 class="h1">You're on Free</h2>
-      <p class="muted">${cfg.freeTweaks} tweaks unlocked. ${unlocks.split('. ')[0]}.${cfg.priceLabel ? html` <strong class="price">${cfg.priceLabel}</strong>.` : ''}</p>
-      <div class="row"><a class="btn btn-buy btn-lg" href="${buyUrl}">Get Premium ${ICON.arrow}</a>
-        <a class="btn btn-ghost btn-lg" href="/account/download" data-download>${ICON.download}<span>Download the free version</span></a></div>
-      <p class="muted small">${cfg.subscriptions ? 'Monthly or yearly. Secure checkout with Stripe. Cancel anytime.' : 'Secure checkout with Stripe.'} Already paid? Sign in with the email you paid with${cfg.mailEnabled ? ', or open the link in your purchase email' : ''}. Still not here? ${supportLink(cfg, 'Ask on Discord')} with your payment email and we'll add it to this account.</p>
-    </article>`;
-
-  // Two columns that don't share rows, so each card keeps its own height. The Discord card is the long one
-  // when it lists the rewards: the affiliate card then goes under the license cards to even out the columns.
-  const columns = () => {
-    if (!license) {
-      const discord = discordCard('d3');
-      return discord ? [[freeCard(), affiliateCard('d2')], discord] : [freeCard(), affiliateCard('d2')];
+  // Premium: the player's review, left or edited on /account/review. Free accounts leave theirs in the app.
+  const reviewSect = () => {
+    const site = cfg.siteUrl.replace(/^https?:\/\//, '');
+    if (!review) {
+      return sect('sect-review', html`<p class="overline">Your review</p>`,
+        html`<div class="plan-line"><span class="plan-icon">${ICON.star}</span><div><strong>How is Rago Optimizer working for you?</strong>
+          <p class="muted small">Rate it and tell other players what changed. Your review shows on ${site} with your public name.</p></div></div>`,
+        html`<div class="rate-quick" role="group" aria-label="Rate Rago Optimizer">${[1, 2, 3, 4, 5].map((n) => html`<a href="/account/review?rating=${n}" aria-label="${n} star${n === 1 ? '' : 's'}: ${RATING_WORDS[n]}" title="${RATING_WORDS[n]}">${STAR}</a>`)}</div>
+        <a class="link-arrow" href="/account/review">Write your review ${ICON.arrow}</a>`, 'review');
     }
-    const hero = active ? download() : comeBack();
-    return inviteRewards.length
-      ? [[hero, discordCard('d5')], [licenseCard(), deviceCard(), planCard(), sideCard('d5')]]
-      : [[hero, discordCard('d5'), sideCard('d5')], [licenseCard(), deviceCard(), planCard()]];
+    const shown = review.status === 'published';
+    return sect('sect-review', html`<p class="overline">Your review</p>${shown ? html`<span class="badge badge-ok"><i></i>On the site</span>` : html`<span class="badge badge-off"><i></i>Hidden</span>`}`,
+      html`${stars(review.rating)}
+        <p class="review-text review-clamp">${review.comment}</p>
+        <p class="muted small">${shown ? `Updated ${fmtDate(review.updated_at)}.` : 'Hidden from the site by the Rago team.'}</p>`,
+      html`<div class="row"><a class="btn btn-ghost btn-sm" href="/account/review">Edit review</a><a class="link-arrow" href="${cfg.siteUrl}/reviews.html">See all reviews ${ICON.arrow}</a></div>`, 'review');
   };
+
+  // Free: the affiliate program, then Discord. Premium (or ended): license key, device, plan; then Discord, the affiliate
+  // program and the review.
+  const cards = !license
+    ? [freeCard(), panel([affiliateSect(), discordSect()], 'd2')]
+    : [active ? download() : comeBack(), panel([licenseSect(), deviceSect(), planSect()], 'd2'),
+      panel([discordSect(), sideSect(), active ? reviewSect() : ''], 'd3')];
 
   const title = !license ? 'Welcome to Rago Optimizer'
     : active ? 'Rago Optimizer Premium'
@@ -567,19 +573,22 @@ export function dashboardPage(cfg, { user, license, device, notice, error, canRe
       ${stepIndex == null ? '' : steps(stepIndex)}
     </div>
     ${alertBox(error)}${alertBox(notice, 'ok')}
-    <div class="dash-grid">${columns().map((col) => html`<div class="dash-col">${col}</div>`)}</div>
+    <div class="dash-stack">${cards}</div>
     <p class="dash-foot small muted rise d5">Signed in as ${user.email} · <a href="/account/profile">Profile photo and name</a> · <a href="/account/password">Change password</a></p>
   </main>`;
   return page({ title: 'Your account', cfg, user, body, bodyClass: 'is-dash', nav: 'account', buy: !active });
 }
 
 const STAR = html`<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2.5l2.9 6.1 6.6.8-4.9 4.6 1.3 6.6L12 17.3l-5.9 3.3 1.3-6.6-4.9-4.6 6.6-.8z"/></svg>`;
+const stars = (n, attrs = '') => html`<p class="stars" role="img" aria-label="${n} out of 5 stars" ${new Raw(attrs)}>${Array.from({ length: 5 }, (_, i) => html`<span class="${i < n ? 'on' : ''}">${STAR}</span>`)}</p>`;
+// What each rating means, shown next to the stars while the player picks one.
+const RATING_WORDS = ['', 'Not for me', 'Could be better', 'Good', 'Great', 'Excellent'];
 
 /**
  * Public profile: photo and name, shown with the player's review on the site and in Rago Optimizer.
  * Right after sign-up (welcome) it's an optional step, with "Skip for now" back to where the player was going.
  */
-export function profilePage(cfg, { user, review, notice, error, welcome = false, to = null }) {
+export function profilePage(cfg, { user, review, premium = false, notice, error, welcome = false, to = null }) {
   const keep = welcome ? html`<input type="hidden" name="welcome" value="1"><input type="hidden" name="to" value="${to}">` : '';
   const site = cfg.siteUrl.replace(/^https?:\/\//, '');
   const aside = welcome
@@ -621,15 +630,92 @@ export function profilePage(cfg, { user, review, notice, error, welcome = false,
     <div class="profile-review">
       <p class="overline">Your review</p>
       ${review
-        ? html`<p class="stars" aria-label="${review.rating} out of 5 stars">${Array.from({ length: 5 }, (_, i) => html`<span class="${i < review.rating ? 'on' : ''}">${STAR}</span>`)}</p>
+        ? html`${stars(review.rating)}
           <p class="review-text">${review.comment}</p>
-          <p class="muted small">${review.status === 'published' ? `Shown on ${site}.` : 'Hidden from the site by the Rago team.'} To change it, open Rago Optimizer, then Settings.</p>
+          <p class="muted small">${review.status === 'published' ? `Shown on ${site}.` : 'Hidden from the site by the Rago team.'} ${premium ? html`<a href="/account/review">Edit your review</a>` : 'To change it, open Rago Optimizer, then Settings.'}</p>
           <form method="post" action="/account/profile/review/delete" class="inline" data-confirm="Delete your review? It's removed from ${site}.">
             <button class="btn btn-ghost btn-sm" type="submit">Delete review</button>
           </form>`
-        : html`<p class="muted small">No review yet. Rago Optimizer asks for one after a few minutes of use, or open Settings in the app.</p>`}
+        : premium
+          ? html`<p class="muted small">No review yet. <a href="/account/review">Leave one here</a>, or in Rago Optimizer, in Settings.</p>`
+          : html`<p class="muted small">No review yet. Rago Optimizer asks for one after a few minutes of use, or open Settings in the app.</p>`}
     </div>`}`;
   return page({ title: welcome ? 'Add a profile photo' : 'Your profile', cfg, user, nav: 'profile', buy: false, body: split({ aside, form }) });
+}
+
+/**
+ * The review, from the account page (2026-10-11): Premium accounts rate Rago Optimizer and write it here, the same
+ * review as in the app. Free accounts are sent to the app, and can still delete a review they left there.
+ * The left side previews the card players see on the site; account.js updates it as the player types.
+ * @param draft what the player typed, when the server refused it: the form shows it again
+ * @param rating stars picked on the account page (?rating=), before the form
+ */
+export function reviewPage(cfg, { user, premium, review, draft = null, rating = null, notice, error }) {
+  const site = cfg.siteUrl.replace(/^https?:\/\//, '');
+  const shown = review?.status === 'published';
+  const value = draft || { rating: rating || review?.rating || 0, comment: review?.comment || '', name: user.display_name || '' };
+  const name = value.name.trim() || user.display_name || 'Your name';
+  // Photo, or the first letter of the name being typed (of the email when there's none yet).
+  const face = avatar({ ...user, display_name: value.name.trim() || user.display_name });
+  const month = (ms) => new Date(ms).toLocaleDateString('en-US', { month: 'short', year: 'numeric', timeZone: 'UTC' });
+  const PLACEHOLDER = 'Your review shows here, as you write it.';
+
+  const preview = html`<figure class="review-card rise d3" data-review-preview aria-label="Preview of your review on ${site}">
+      ${stars(value.rating, 'data-preview-stars')}
+      <p class="review-card-text${value.comment.trim() ? '' : ' is-empty'}" data-preview-text data-empty="${PLACEHOLDER}">${value.comment.trim() || PLACEHOLDER}</p>
+      <footer><span data-preview-avatar>${face}</span><span class="review-card-name" data-preview-name>${name}</span><small>${month(review ? Number(review.updated_at) : Date.now())}</small></footer>
+    </figure>`;
+  const status = review ? html`<p class="review-state small"><span class="badge ${shown ? 'badge-ok' : 'badge-off'}"><i></i>${shown ? 'On the site' : 'Hidden'}</span>
+      <span class="muted">${shown ? `Shown on ${site} since ${fmtDate(review.updated_at)}.` : html`Hidden from the site by the Rago team. ${supportLink(cfg, 'Ask on Discord')} if you think that's a mistake.`}</span></p>` : '';
+  const del = review ? html`<form method="post" action="/account/review/delete" class="inline review-delete" data-confirm="Delete your review? It's removed from ${site}.">
+      <button class="btn btn-ghost btn-sm" type="submit">Delete review</button></form>` : '';
+  const allReviews = html`<a class="link-arrow review-all" href="${cfg.siteUrl}/reviews.html">See all reviews on ${site} ${ICON.arrow}</a>`;
+
+  if (!premium) {
+    const aside = html`<p class="overline rise">Your review</p>
+      <h1 class="display rise d1">Leave your review in Rago Optimizer.</h1>
+      <p class="lede rise d2">Writing it from your account page is part of Premium. On the free version, open Rago Optimizer, then Settings, then Leave a review. It shows on ${site} the same way.</p>
+      ${review ? preview : ''}`;
+    const form = html`<h2 class="h2">Leave a review</h2>
+      ${alertBox(error)}${alertBox(notice, 'ok')}
+      <div class="plan-line review-locked"><span class="plan-icon">${ICON.star}</span><div><strong>Part of Rago Optimizer Premium</strong>
+        <p class="muted small">Premium members rate Rago Optimizer and write their review right here. Everyone can leave one in the app.</p></div></div>
+      <div class="stack review-actions"><a class="btn btn-primary btn-block" href="${pricingUrl(cfg)}">Get Premium ${ICON.arrow}</a><a class="btn btn-ghost btn-block" href="/account">Back to your account</a></div>
+      ${review ? html`<hr class="sep">${status}${del}` : ''}
+      ${allReviews}`;
+    return page({ title: 'Your review', cfg, user, nav: 'account', buy: true, bodyClass: 'is-review', body: split({ aside, form }) });
+  }
+
+  const aside = html`<p class="overline rise">Your review</p>
+    <h1 class="display rise d1">${review ? 'Update your review.' : 'Tell players what changed.'}</h1>
+    <p class="lede rise d2">It shows on ${site} with your public name and photo, as written. Your email is never shown.</p>
+    ${preview}
+    <p class="muted small rise d4 review-preview-note">Preview of your review on ${site}.</p>`;
+  const form = html`<h2 class="h2">${review ? 'Edit your review' : 'Rate Rago Optimizer'}</h2>
+    ${alertBox(error)}${alertBox(notice, 'ok')}
+    ${status}
+    <form method="post" action="/account/review" class="form review-form" data-busy="${review ? 'Saving…' : 'Posting…'}" data-review-form>
+      <fieldset class="field rate-field">
+        <legend class="field-label">Your rating</legend>
+        <div class="rate-row">
+          <div class="rate">${[1, 2, 3, 4, 5].map((n) => html`<input class="sr-only" type="radio" id="f-rate-${n}" name="rating" value="${n}" ${value.rating === n ? html`checked` : ''} required><label for="f-rate-${n}" title="${RATING_WORDS[n]}" data-word="${RATING_WORDS[n]}"><span class="sr-only">${n} star${n === 1 ? '' : 's'}, ${RATING_WORDS[n]}</span>${STAR}</label>`)}</div>
+          <span class="rate-word" data-rate-word data-empty="Pick 1 to 5 stars" aria-hidden="true">${value.rating ? RATING_WORDS[value.rating] : 'Pick 1 to 5 stars'}</span>
+        </div>
+      </fieldset>
+      <div class="field">
+        <span class="field-row"><label class="field-label" for="f-comment">Your review</label><span class="field-count mono" data-counter>${value.comment.length} / ${COMMENT_MAX}</span></span>
+        <textarea id="f-comment" name="comment" rows="6" maxlength="${COMMENT_MAX}" required aria-describedby="f-comment-hint" placeholder="What do you play, and what changed? Ping, FPS, input lag, hit registration…">${value.comment}</textarea>
+        <span class="field-hint" id="f-comment-hint">Long reviews are shortened on the home page, with a link to read them in full.</span>
+      </div>
+      <div class="field">
+        <label class="field-label" for="f-name">Public name</label>
+        <span class="review-name"><span data-name-avatar>${face}</span><span class="field-box"><input id="f-name" name="name" type="text" value="${value.name}" autocomplete="nickname" required minlength="2" maxlength="32" spellcheck="false" aria-describedby="f-name-hint"></span></span>
+        <span class="field-hint" id="f-name-hint">Shown with your review instead of your email, and in Rago Optimizer. ${user.avatar_key ? html`<a href="/account/profile">Change your photo</a>` : html`<a href="/account/profile">Add a photo</a>`}</span>
+      </div>
+      <button class="btn btn-primary btn-block" type="submit">${review ? 'Update review' : 'Post review'}</button>
+    </form>
+    <div class="row review-foot">${del}${allReviews}</div>`;
+  return page({ title: 'Your review', cfg, user, nav: 'account', buy: false, bodyClass: 'is-review', body: split({ aside, form }) });
 }
 
 const RULES = (cfg, closed = false) => [

@@ -152,3 +152,60 @@ for (const input of document.querySelectorAll('[data-avatar-input]')) {
     reader.readAsDataURL(file);
   });
 }
+
+// Review form (/account/review): what the rating means, characters left, and the preview of the card players
+// see on the site, updated as the player types. The server checks everything again.
+for (const form of document.querySelectorAll('[data-review-form]')) {
+  const word = form.querySelector('[data-rate-word]');
+  const text = form.querySelector('textarea[name=comment]');
+  const counter = form.querySelector('[data-counter]');
+  const name = form.querySelector('input[name=name]');
+  const card = document.querySelector('[data-review-preview]');
+  const picked = () => form.querySelector('input[name=rating]:checked');
+  const wordOf = (input) => (input ? form.querySelector(`label[for="${input.id}"]`).dataset.word : word.dataset.empty);
+  const first = (s) => ([...s.trim()][0] || '').toUpperCase();
+  const fallback = card ? card.querySelector('[data-preview-name]').textContent : '';
+
+  const stars = () => {
+    word.textContent = wordOf(picked());
+    const n = Number(picked()?.value || 0);
+    if (card) card.querySelectorAll('[data-preview-stars] span').forEach((s, i) => s.classList.toggle('on', i < n));
+    if (card) card.querySelector('[data-preview-stars]').setAttribute('aria-label', `${n} out of 5 stars`);
+  };
+  const count = () => {
+    const n = text.value.length, max = Number(text.maxLength) || 600;
+    counter.textContent = `${n} / ${max}`;
+    counter.classList.toggle('near', n >= max - 60 && n < max);
+    counter.classList.toggle('full', n >= max);
+    if (!card) return;
+    const p = card.querySelector('[data-preview-text]');
+    const v = text.value.trim();
+    p.textContent = v || p.dataset.empty;
+    p.classList.toggle('is-empty', !v);
+  };
+  // Without a photo, the circle shows the first letter of the name being typed, here and on the preview.
+  const named = () => {
+    const v = name.value.replace(/\s+/g, ' ').trim();
+    if (card) card.querySelector('[data-preview-name]').textContent = v || fallback;
+    const letter = first(v);
+    if (letter) document.querySelectorAll('[data-name-avatar] .avatar-none, [data-preview-avatar] .avatar-none').forEach((a) => { a.textContent = letter; });
+  };
+
+  form.addEventListener('change', (e) => { if (e.target.name === 'rating') stars(); });
+  for (const label of form.querySelectorAll('.rate label')) {
+    label.addEventListener('mouseenter', () => { word.textContent = label.dataset.word; });
+    label.addEventListener('mouseleave', () => { word.textContent = wordOf(picked()); });
+  }
+  text.addEventListener('input', count);
+  name.addEventListener('input', named);
+  // No stars picked: say so next to them instead of the browser's bubble on a hidden radio.
+  form.addEventListener('invalid', (e) => {
+    if (e.target.name !== 'rating') return;
+    e.preventDefault();
+    word.textContent = 'Pick 1 to 5 stars first';
+    word.classList.add('missing');
+    form.querySelector('input[name=rating]').focus();
+  }, true);
+  form.addEventListener('change', () => word.classList.remove('missing'));
+  stars(); count();
+}
