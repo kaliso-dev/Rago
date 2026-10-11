@@ -149,19 +149,19 @@ p{margin:0}
 .card{background:var(--rg-ink-2);border:1px solid var(--rg-line-1);border-radius:var(--rg-radius-lg);padding:clamp(24px,2.4vw,32px);display:flex;flex-direction:column;gap:18px;min-width:0;position:relative;
   box-shadow:var(--rg-shadow-1);transition:border-color var(--rg-dur-base),transform var(--rg-dur-base) var(--rg-ease-out),box-shadow var(--rg-dur-base) var(--rg-ease-out)}
 .card:hover{border-color:var(--rg-line-2);transform:translateY(-2px);box-shadow:var(--rg-shadow-2)}
-.card-hero{grid-column:span 7;grid-row:span 2;overflow:hidden;border-radius:var(--rg-radius-xl);gap:20px;
+.card-hero{overflow:hidden;border-radius:var(--rg-radius-xl);gap:20px;
   background:radial-gradient(110% 80% at 100% 0%,rgba(255,59,48,.13),transparent 55%),var(--rg-ink-2)}
 .card-hero::before{content:"";position:absolute;width:280px;height:280px;right:-90px;top:-90px;border-radius:50%;border:1px solid rgba(255,59,48,.18);
   box-shadow:0 0 0 40px rgba(255,59,48,.03),0 0 0 80px rgba(255,59,48,.02);animation:breathe 6s var(--rg-ease-in-out) infinite;pointer-events:none}
 @keyframes breathe{50%{transform:scale(1.06);opacity:.7}}
 .card-hero .btn{align-self:flex-start;margin-top:4px}
-.grid > .card{grid-column:span 5}
-.grid > .card-hero{grid-column:span 7}
-.grid > .card-plan,.grid > .card-aff{grid-column:span 6}
-.grid > .card-hero:only-child{grid-column:1 / -1}
-.grid > .card-hero.solo{grid-row:auto}
-.grid > .card-aff.side{grid-column:span 5}
-@media (max-width:1000px){.grid > .card,.grid > .card-hero,.grid > .card-plan,.grid > .card-aff,.grid > .card-aff.side{grid-column:1 / -1;grid-row:auto}}
+/* Account page: two columns that stack their cards independently, so a long card on one side never
+   stretches the cards on the other (each card is as tall as its content). One column under 1000px:
+   download, license, device, plan, then Discord and the affiliate card. */
+.dash-grid{display:grid;grid-template-columns:minmax(0,7fr) minmax(0,5fr);gap:20px;align-items:start}
+.dash-col{display:flex;flex-direction:column;gap:20px;min-width:0}
+@media (max-width:1000px){.dash-grid{display:flex;flex-direction:column;align-items:stretch}.dash-col{display:contents}
+  .dash-grid .card-discord{order:1}.dash-grid .card-aff{order:2}}
 .card-head{display:flex;justify-content:space-between;align-items:center;gap:12px}
 .howto{list-style:none;margin:8px 0 0;padding:22px 0 0;border-top:1px solid var(--rg-line-1);display:grid;gap:14px;color:var(--rg-text-2);font-size:var(--rg-fs-small)}
 .howto li{display:flex;gap:12px;align-items:flex-start}
@@ -280,7 +280,7 @@ p{margin:0}
 @media (max-width:560px){.top-email{display:none}.steps li + li::before{width:14px;margin:0 8px}.steps li span:last-child{display:none}.steps li.now span:last-child{display:inline}.meta{grid-template-columns:1fr}
   .key{padding:12px}.key code{flex-basis:100%}.code-big{padding:14px 14px 14px 18px}}
 /* Account settings line under the dashboard */
-.dash-foot{margin:28px 0 0;text-align:center}
+.dash-foot{margin:0;text-align:center}
 .dash-foot a{color:var(--rg-text-2)}
 /* Phones: the Account / Affiliate tabs move to their own full-width row instead of disappearing */
 @media (max-width:720px){.top{flex-wrap:wrap;row-gap:12px}.tabs{display:flex;order:3;width:100%}.tabs a{flex:1;text-align:center}}
@@ -294,12 +294,15 @@ p{margin:0}
 .foot-legal{margin:0;color:var(--rg-text-3);font-size:12px;max-width:72ch}
 /* Keyboard focus on the current tab */
 .tabs a[aria-current]:focus-visible{box-shadow:var(--rg-focus),var(--rg-shadow-1)}
-/* Premium channel block inside the download card */
-.discord{display:flex;gap:14px;align-items:flex-start;margin-top:auto;padding:18px;border-radius:var(--rg-radius-lg);background:var(--rg-ink-3);border:1px solid var(--rg-line-1)}
-.discord p{margin:4px 0 8px}
-.discord + .discord{margin-top:12px}
+/* Discord card: Premium role and Discord rewards, one section each */
+.discord{display:flex;gap:14px;align-items:flex-start}
+.discord > div{flex:1;min-width:0}
+.discord p{margin:4px 0 12px}
+.discord > div > :last-child{margin-bottom:0}
+.card-discord > * + .discord{padding-top:18px;border-top:1px solid var(--rg-line-1)}
+.card-discord > .card-head + .discord{padding-top:0;border-top:0}
 /* Invite rewards (VIP / MVP) */
-.rewards{margin:0 0 10px;padding-left:18px;display:grid;gap:6px;color:var(--rg-text-2)}
+.rewards{margin:0 0 12px;padding-left:18px;display:grid;gap:6px;color:var(--rg-text-2)}
 .rewards strong{color:var(--rg-text-1)}
 .rewards code{overflow-wrap:anywhere}
 .price{color:var(--rg-text-1)}
