@@ -989,6 +989,28 @@ test('months given by the team (admin grant-months): Premium until its date, sho
   assert.equal((await L.grantLicense(t.db, 'life@bat.io')).license.plan, 'lifetime');
 });
 
+test('days given by the team (admin grant-days): Premium for a week, as a gift, then it stops', async () => {
+  const t = await setup(SUBS);
+  const before = Date.now();
+  const { license, claimToken } = await L.grantLicense(t.db, 'week@bat.io', 'grant-days 7', { days: 7 });
+  assert.ok(claimToken);
+  assert.equal(license.plan, 'reward');
+  assert.equal(license.source, 'grant');
+  const end = Number(license.current_period_end);
+  assert.ok(end >= before + 7 * DAY_MS && end <= Date.now() + 7 * DAY_MS, `${(end - before) / DAY_MS} days`);
+  const granted = await t.db.get("SELECT detail FROM audit WHERE license_id = ? AND type = 'license.granted'", [license.id]);
+  assert.deepEqual(JSON.parse(granted.detail), { note: 'grant-days 7', days: 7 });
+
+  await t.browse(`/claim/${claimToken}`);
+  await t.browse('/signup', { form: { email: 'week@bat.io', password: 'password123' } });
+  const dash = await (await t.browse('/account')).text();
+  assert.match(dash, /Rago Optimizer Premium · Gift/);
+
+  await t.db.run('UPDATE licenses SET current_period_end = ? WHERE id = ?', [Date.now() - 1000, license.id]);
+  assert.equal(await L.expireRewards(t.db), 1);
+  assert.equal((await L.getLicense(t.db, license.id)).status_reason, 'subscription_ended');
+});
+
 test('site discount code: /buy?promo=RAGO15 opens the checkout with it, an unknown code is ignored', async () => {
   const t = await setup(SUBS);
   t.promos.push({ id: 'promo_site', object: 'promotion_code', active: true, code: 'RAGO15', promotion: { type: 'coupon', coupon: 'rago-promo-15-once' } });
