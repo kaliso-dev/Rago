@@ -1602,12 +1602,12 @@ test('reviews: Premium accounts write theirs from the account page, the same rev
   let res = await t.browse('/account/review', { form: { rating: '5', comment: 'Great', name: 'Web Fan' } });
   assert.equal(res.status, 403);
   assert.equal(await count(), 0);
-  assert.doesNotMatch(await (await t.browse('/account')).text(), /card-review/);
+  assert.doesNotMatch(await (await t.browse('/account')).text(), /sect-review/);
 
-  // Premium: a review card on the account page; its stars open the form with that rating picked.
+  // Premium: a review row on the account page; its stars open the form with that rating picked.
   await L.grantLicense(t.db, 'web@rago.gg', 'test');
   html = await (await t.browse('/account')).text();
-  assert.match(html, /class="card card-review/);
+  assert.match(html, /class="sect sect-review/);
   assert.match(html, /href="\/account\/review\?rating=4"/);
   html = await (await t.browse('/account/review?rating=4')).text();
   assert.match(html, /name="comment"/);
