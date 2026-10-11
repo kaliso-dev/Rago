@@ -95,7 +95,7 @@ page('terms.html','Terms of Sale','Terms of sale for Rago Optimizer: the Free an
 <p>Affiliates get a personal code. New customers who use an affiliate code get 5% off their first Premium payment. A referral counts as soon as the buyer has activated the app on their PC, and stops counting if the purchase is refunded or disputed. Your own purchases and activations on your own PC don't count. Each affiliate can refer up to 3 buyers. Once those 3 referrals count, the affiliate gets 6 months of Premium for one PC. We can cancel a reward obtained by fraud.</p>
 
 <h2>8. Reviews</h2>
-<p>Once signed in to the app with a Rago account, free or Premium, you can rate Rago Optimizer from 1 to 5 stars and write a comment. Your review is shown on our site with your public name and your profile photo, if you added one. You can change or delete it anytime, from the app or from your account page.</p>
+<p>Once signed in to the app with a Rago account, free or Premium, you can rate Rago Optimizer from 1 to 5 stars and write a comment. With Premium, you can also write it from your account page on our site. Your review is shown on our site with your public name and your profile photo, if you added one. Long reviews are shortened on the home page, with a link to read them in full on our reviews page. You can change your review anytime from the app, or from your account page with Premium, and delete it from either.</p>
 <p>Each account can leave one review. We don't check whether its author bought Premium, and we don't pay for reviews or reward them. The site shows them from the most recently updated, whatever their rating. We may hide a review that is spam, abusive, off topic or that reveals someone's personal data. We don't hide a review because it is negative.</p>
 
 <h2>9. Liability</h2>
@@ -106,7 +106,7 @@ page('terms.html','Terms of Sale','Terms of sale for Rago Optimizer: the Free an
 
 <h2>11. Changes and law</h2>
 <p>We may update these terms. The version accepted at checkout applies to that purchase. These terms are governed by French law, which doesn't take away the protection the mandatory consumer law of your country gives you. If a dispute isn't solved with our support, you can also use the mediation services and the courts of your own country.</p>
-''')
+''',upd="October 11, 2026")
 
 page('refunds.html','Refunds and Cancellation','How to cancel a Rago Optimizer Premium subscription, when you can get a refund and what it does to your license.',f'''
 <h2>Cancel anytime</h2>
