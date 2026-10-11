@@ -73,7 +73,7 @@ export function createApp({ cfg, db, keys, stripe, mailer, log = console, fetchI
   app.idle = () => discord?.idle() ?? Promise.resolve();
   const installer = createInstaller(cfg, { fetchImpl, log });
   const allow = rateLimiter();
-  let reviewsCache = null; // { at, body }: the site asks for the reviews on every visit
+  let reviewsCache = null; // { at, bodies }: the site asks for the reviews on every visit (home page, reviews page)
   let popupCache = null; // { at, body }: same for the discount pop-up (one Stripe call per refresh)
   const publicDir = relative(process.cwd(), fileURLToPath(new URL('../public', import.meta.url))) || '.';
   const cookieBase = { httpOnly: true, secure: cfg.prod, sameSite: 'Lax', path: '/' };
@@ -261,7 +261,8 @@ export function createApp({ cfg, db, keys, stripe, mailer, log = console, fetchI
 
   const requireUser = async (c, next) => {
     const user = await currentUser(c);
-    if (!user) return c.redirect('/login', 303);
+    // Pages a link can point at directly (the site's "Leave a review"): back there after signing in.
+    if (!user) return c.redirect(NEXT.has(c.req.path) ? `/login?next=${encodeURIComponent(c.req.path)}` : '/login', 303);
     c.set('user', user);
     await next();
   };
@@ -284,7 +285,7 @@ export function createApp({ cfg, db, keys, stripe, mailer, log = console, fetchI
     allow(`login-fail:${ip(c)}:${email}`, Infinity, LOGIN_WINDOW);
   }
   // Where to go after signing in. Only our own pages.
-  const NEXT = new Set(['/affiliate']);
+  const NEXT = new Set(['/affiliate', '/account/review']);
   const nextPath = (v) => (NEXT.has(String(v || '')) ? String(v) : null);
 
   const settleAffiliate = async (userId) => {
@@ -552,6 +553,7 @@ export function createApp({ cfg, db, keys, stripe, mailer, log = console, fetchI
       notice: kind === 'notice' ? text : null, error: kind === 'error' ? text : null,
       ...(license ? resetWindow(license, device) : {}),
       affiliate: await A.affiliateSummary(db, cfg, user.id),
+      review: await R.reviewOf(db, user.id),
     }));
   });
 
@@ -571,7 +573,7 @@ export function createApp({ cfg, db, keys, stripe, mailer, log = console, fetchI
 
   // ---------- public profile: photo and name ----------
   // After sign-up the same page is a skippable step (?welcome=1&to=<where the player was going>).
-  const WELCOME_TO = /^\/(account(\?n=[a-z]+)?|affiliate)$/;
+  const WELCOME_TO = /^\/(account(\?n=[a-z]+)?|account\/review|affiliate)$/;
   const welcomeOf = (src) => {
     const to = String(src?.to || '');
     return src?.welcome === '1' && WELCOME_TO.test(to) ? { welcome: true, to } : { welcome: false, to: null };
@@ -586,7 +588,7 @@ export function createApp({ cfg, db, keys, stripe, mailer, log = console, fetchI
   };
   const showProfile = async (c, user, { n, error, status = 200, w = welcomeOf(c.req.query()) } = {}) => {
     const [kind, text] = PROFILE_NOTICES[n] || [];
-    return c.html(V.profilePage(cfg, { user, review: await R.reviewOf(db, user.id), notice: kind === 'notice' ? text : null, error: error || (kind === 'error' ? text : null), ...w }), status);
+    return c.html(V.profilePage(cfg, { user, review: await R.reviewOf(db, user.id), premium: await hasPremium(user.id), notice: kind === 'notice' ? text : null, error: error || (kind === 'error' ? text : null), ...w }), status);
   };
   app.get('/account/profile', requireUser, (c) => showProfile(c, c.get('user'), { n: c.req.query('n') }));
 
@@ -626,6 +628,57 @@ export function createApp({ cfg, db, keys, stripe, mailer, log = console, fetchI
       await audit(db, 'review.deleted', { userId: user.id });
     }
     return c.redirect(profileUrl('review', welcomeOf(null)), 303);
+  });
+
+  // ---------- review from the account page (2026-10-11) ----------
+  // The same review as the one left in Rago Optimizer (one per account, see reviews.js), written here by Premium
+  // accounts. Free accounts still leave theirs in the app; anyone can delete their own, here or on the profile page.
+  const hasPremium = async (userId) => (await L.current(db, await L.licenseForUser(db, userId)))?.status === 'active';
+  const REVIEW_NOTICES = {
+    saved: 'Thanks! Your review is on the site.',
+    deleted: 'Review deleted. It no longer shows on the site.',
+  };
+  /** draft: what the player typed, put back in the form when it's refused. */
+  const showReview = async (c, user, { n, error, status = 200, draft = null } = {}) => {
+    const rating = Number(c.req.query('rating'));
+    return c.html(V.reviewPage(cfg, {
+      user, premium: await hasPremium(user.id), review: await R.reviewOf(db, user.id), draft, error,
+      notice: REVIEW_NOTICES[n] || null, rating: Number.isInteger(rating) && rating >= 1 && rating <= 5 ? rating : null,
+    }), status);
+  };
+  app.get('/account/review', requireUser, (c) => showReview(c, c.get('user'), { n: c.req.query('n') }));
+
+  app.post('/account/review', requireUser, async (c) => {
+    const user = c.get('user');
+    const body = await c.req.parseBody();
+    const draft = { rating: Number(body.rating) || 0, comment: String(body.comment ?? ''), name: String(body.name ?? '') };
+    if (!(await hasPremium(user.id))) return showReview(c, user, { status: 403 });
+    if (!allow(`review:${user.id}`, 20, 60 * 60 * 1000)) return showReview(c, user, { error: API_ERRORS.rate_limited[1], status: 429, draft });
+    let review;
+    try {
+      // Same checks as the app (PUT /api/v1/account/review): the whole review, the name included, before anything is saved.
+      const clean = R.cleanReview(body);
+      const typed = draft.name.trim();
+      const name = typed ? P.cleanName(typed) : user.display_name;
+      if (!name) throw new P.ProfileError('name_required', API_ERRORS.name_required[1]);
+      if (name !== user.display_name) await P.setName(db, user.id, name);
+      review = await R.saveReview(db, user.id, clean);
+    } catch (err) {
+      if (err instanceof P.ProfileError) return showReview(c, user, { error: err.message || API_ERRORS[err.code]?.[1], status: 400, draft });
+      throw err;
+    }
+    reviewsCache = null;
+    await audit(db, 'review.saved', { userId: user.id, detail: { rating: review.rating, from: 'site' } });
+    return c.redirect('/account/review?n=saved', 303);
+  });
+
+  app.post('/account/review/delete', requireUser, async (c) => {
+    const user = c.get('user');
+    if (await R.deleteReview(db, user.id)) {
+      reviewsCache = null;
+      await audit(db, 'review.deleted', { userId: user.id, detail: { from: 'site' } });
+    }
+    return c.redirect('/account/review?n=deleted', 303);
   });
 
   app.post('/account/profile/name', requireUser, async (c) => {
@@ -1122,10 +1175,15 @@ export function createApp({ cfg, db, keys, stripe, mailer, log = console, fetchI
     return c.json(await accountReply(await L.getUser(db, user.id)));
   });
 
-  // Public: the reviews shown on the site (rago-optimizer.com reads it from the browser).
+  // Public: the reviews shown on the site (rago-optimizer.com reads it from the browser). The home page's carousel
+  // gets the latest ones; the reviews page asks for all of them (?all=1).
   api.get('/reviews', async (c) => {
-    if (!reviewsCache || Date.now() - reviewsCache.at > 30 * 1000) reviewsCache = { at: Date.now(), body: await R.publicReviews(db, cfg) };
-    return c.json(reviewsCache.body, 200, { 'Access-Control-Allow-Origin': '*', 'Cache-Control': 'public, max-age=60' });
+    const all = c.req.query('all') === '1';
+    if (!reviewsCache || Date.now() - reviewsCache.at > 30 * 1000) reviewsCache = { at: Date.now(), bodies: {} };
+    const { bodies } = reviewsCache; // a review saved meanwhile drops reviewsCache, not this answer
+    const key = all ? 'all' : 'site';
+    bodies[key] ??= await R.publicReviews(db, cfg, all ? R.ALL_LIMIT : R.SITE_LIMIT);
+    return c.json(bodies[key], 200, { 'Access-Control-Allow-Origin': '*', 'Cache-Control': 'public, max-age=60' });
   });
 
   // Public: the discount pop-up the site shows (set in /admin), or { promo: null } when it's hidden. The site

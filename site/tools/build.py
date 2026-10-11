@@ -1,4 +1,5 @@
-"""Builds site/index.html (what Netlify serves) from site/src/page.html (also the Claude preview).
+"""Builds site/index.html (what Netlify serves) from site/src/page.html (also the Claude preview), and site/reviews.html
+from site/src/reviews.html.
 The source loads Geist from Google Fonts so the preview works; the built page uses the copies in site/fonts/ instead,
 so visitors' IP addresses aren't sent to Google."""
 import os
@@ -108,3 +109,13 @@ try:
 except (OSError, subprocess.CalledProcessError) as e:
     print('warning: no-JS sections not baked (node + playwright needed):', getattr(e, 'stderr', e))
 print('index.html built')
+
+# Reviews page (site/reviews.html, from src/reviews.html): local fonts too, and the same account server as the home page.
+r = open(os.path.join(ROOT, 'src/reviews.html')).read()
+assert GOOGLE in r, 'Google Fonts block changed in reviews.html: update build.py'
+r = r.replace(GOOGLE, LOCAL)
+r, n = re.subn(r'accountBase: "[^"]*"', f'accountBase: "{BASE}"', r, count=1)
+assert n == 1, 'accountBase not found in reviews.html'
+r = r.replace('href="https://account.rago-optimizer.com/', f'href="{BASE}/')  # the link baked for visitors without JavaScript
+open(os.path.join(ROOT, 'reviews.html'), 'w').write(r)
+print('reviews.html built')

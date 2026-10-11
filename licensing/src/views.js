@@ -1,5 +1,6 @@
 // Server-rendered account pages. Copy follows /brand/voice-en.md, look follows brand kit v1.1.
 import { maskLicenseKey } from './crypto.js';
+import { COMMENT_MAX } from './reviews.js';
 
 class Raw { constructor(s) { this.s = s; } toString() { return this.s; } }
 const escape = (v) => String(v).replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[c]);
@@ -20,6 +21,7 @@ const ICON = {
   users: svg('M6 7.5a2.3 2.3 0 1 0 0-4.6 2.3 2.3 0 0 0 0 4.6zM1.8 13.5c.4-2.3 2.1-3.6 4.2-3.6s3.8 1.3 4.2 3.6M10.6 3a2.2 2.2 0 0 1 0 4.4M12.2 9.9c1.2.4 1.9 1.6 2.1 3.6', 1.4),
   clock: svg('M8 14.5a6.5 6.5 0 1 0 0-13 6.5 6.5 0 0 0 0 13zM8 4.5V8l2.5 1.5', 1.4),
   infinity: svg('M8 8c-1.4-2-2.6-3-4-3a3 3 0 0 0 0 6c1.4 0 2.6-1 4-3zm0 0c1.4 2 2.6 3 4 3a3 3 0 0 0 0-6c-1.4 0-2.6 1-4 3z', 1.4),
+  star: svg('M8 1.9l1.9 4 4.4.5-3.3 3.1.9 4.4L8 11.7l-3.9 2.2.9-4.4-3.3-3.1 4.4-.5z', 1.4),
 };
 
 /** Profile photo, or the first letter of the public name (or email) on a dark circle when there's none. */
@@ -151,6 +153,10 @@ export function loginPage(cfg, { email = '', error, notice, purchased = false, n
     ? html`<p class="overline rise">Affiliate program</p>
       <h1 class="display rise d1">Welcome back.</h1>
       <p class="lede rise d2">Sign in to get your referral code and follow your progress.</p>`
+    : next === '/account/review' && !purchased
+      ? html`<p class="overline rise">Reviews</p>
+        <h1 class="display rise d1">Welcome back.</h1>
+        <p class="lede rise d2">Sign in to leave your review of Rago Optimizer. It shows on the site with your public name.</p>`
     : html`<p class="overline rise">${purchased ? 'Rago Optimizer Premium' : 'Rago Optimizer account'}</p>
       <h1 class="display rise d1">${purchased ? 'Payment confirmed.' : 'Welcome back.'}</h1>
       <p class="lede rise d2">${purchased ? 'Sign in and we add the license to your account.' : 'Sign in to get your license key and download Rago Optimizer.'}</p>`;
@@ -282,7 +288,7 @@ function affiliateLine(a) {
   return next;
 }
 
-export function dashboardPage(cfg, { user, license, device, notice, error, canReset, nextResetAt, affiliate, discordLink, discordRewards = [], inviteRewards = [] }) {
+export function dashboardPage(cfg, { user, license, device, notice, error, canReset, nextResetAt, affiliate, discordLink, discordRewards = [], inviteRewards = [], review = null }) {
   const active = license?.status === 'active';
   const reason = license?.status_reason;
   const ended = !active && reason === 'subscription_ended';
@@ -536,6 +542,28 @@ export function dashboardPage(cfg, { user, license, device, notice, error, canRe
     </article>`;
   const sideCard = (cls) => (!affiliate && active && license?.plan === 'lifetime' ? helpCard(cls) : affiliateCard(cls));
 
+  // Premium: the player's review, left or edited on /account/review. Free accounts leave theirs in the app.
+  const reviewCard = (cls) => {
+    const site = cfg.siteUrl.replace(/^https?:\/\//, '');
+    if (!review) {
+      return html`<article class="card card-review rise ${cls}" id="review">
+      <div class="card-head"><p class="overline">Your review</p></div>
+      <div class="plan-line"><span class="plan-icon">${ICON.star}</span><div><strong>How is Rago Optimizer working for you?</strong>
+        <p class="muted small">Rate it and tell other players what changed. Your review shows on ${site} with your public name.</p></div></div>
+      <div class="rate-quick" role="group" aria-label="Rate Rago Optimizer">${[1, 2, 3, 4, 5].map((n) => html`<a href="/account/review?rating=${n}" aria-label="${n} star${n === 1 ? '' : 's'}: ${RATING_WORDS[n]}" title="${RATING_WORDS[n]}">${STAR}</a>`)}</div>
+      <a class="link-arrow" href="/account/review">Write your review ${ICON.arrow}</a>
+    </article>`;
+    }
+    const shown = review.status === 'published';
+    return html`<article class="card card-review rise ${cls}" id="review">
+      <div class="card-head"><p class="overline">Your review</p>${shown ? html`<span class="badge badge-ok"><i></i>On the site</span>` : html`<span class="badge badge-off"><i></i>Hidden</span>`}</div>
+      ${stars(review.rating)}
+      <p class="review-text review-clamp">${review.comment}</p>
+      <p class="muted small">${shown ? `Updated ${fmtDate(review.updated_at)}.` : 'Hidden from the site by the Rago team.'}</p>
+      <div class="row card-actions"><a class="btn btn-ghost btn-sm" href="/account/review">Edit review</a><a class="link-arrow" href="${cfg.siteUrl}/reviews.html">See all reviews ${ICON.arrow}</a></div>
+    </article>`;
+  };
+
   const freeCard = () => html`<article class="card card-hero rise d1">
       <div class="card-head"><p class="overline">Your plan</p><span class="badge badge-off"><i></i>Free</span></div>
       <h2 class="h1">You're on Free</h2>
@@ -553,9 +581,11 @@ export function dashboardPage(cfg, { user, license, device, notice, error, canRe
       return discord ? [[freeCard(), affiliateCard('d2')], discord] : [freeCard(), affiliateCard('d2')];
     }
     const hero = active ? download() : comeBack();
+    // Premium: the review card goes in the shorter column.
+    const rev = active ? reviewCard('d5') : '';
     return inviteRewards.length
-      ? [[hero, discordCard('d5')], [licenseCard(), deviceCard(), planCard(), sideCard('d5')]]
-      : [[hero, discordCard('d5'), sideCard('d5')], [licenseCard(), deviceCard(), planCard()]];
+      ? [[hero, discordCard('d5'), rev], [licenseCard(), deviceCard(), planCard(), sideCard('d5')]]
+      : [[hero, discordCard('d5'), sideCard('d5')], [licenseCard(), deviceCard(), planCard(), rev]];
   };
 
   const title = !license ? 'Welcome to Rago Optimizer'
@@ -574,12 +604,15 @@ export function dashboardPage(cfg, { user, license, device, notice, error, canRe
 }
 
 const STAR = html`<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2.5l2.9 6.1 6.6.8-4.9 4.6 1.3 6.6L12 17.3l-5.9 3.3 1.3-6.6-4.9-4.6 6.6-.8z"/></svg>`;
+const stars = (n, attrs = '') => html`<p class="stars" role="img" aria-label="${n} out of 5 stars" ${new Raw(attrs)}>${Array.from({ length: 5 }, (_, i) => html`<span class="${i < n ? 'on' : ''}">${STAR}</span>`)}</p>`;
+// What each rating means, shown next to the stars while the player picks one.
+const RATING_WORDS = ['', 'Not for me', 'Could be better', 'Good', 'Great', 'Excellent'];
 
 /**
  * Public profile: photo and name, shown with the player's review on the site and in Rago Optimizer.
  * Right after sign-up (welcome) it's an optional step, with "Skip for now" back to where the player was going.
  */
-export function profilePage(cfg, { user, review, notice, error, welcome = false, to = null }) {
+export function profilePage(cfg, { user, review, premium = false, notice, error, welcome = false, to = null }) {
   const keep = welcome ? html`<input type="hidden" name="welcome" value="1"><input type="hidden" name="to" value="${to}">` : '';
   const site = cfg.siteUrl.replace(/^https?:\/\//, '');
   const aside = welcome
@@ -621,15 +654,92 @@ export function profilePage(cfg, { user, review, notice, error, welcome = false,
     <div class="profile-review">
       <p class="overline">Your review</p>
       ${review
-        ? html`<p class="stars" aria-label="${review.rating} out of 5 stars">${Array.from({ length: 5 }, (_, i) => html`<span class="${i < review.rating ? 'on' : ''}">${STAR}</span>`)}</p>
+        ? html`${stars(review.rating)}
           <p class="review-text">${review.comment}</p>
-          <p class="muted small">${review.status === 'published' ? `Shown on ${site}.` : 'Hidden from the site by the Rago team.'} To change it, open Rago Optimizer, then Settings.</p>
+          <p class="muted small">${review.status === 'published' ? `Shown on ${site}.` : 'Hidden from the site by the Rago team.'} ${premium ? html`<a href="/account/review">Edit your review</a>` : 'To change it, open Rago Optimizer, then Settings.'}</p>
           <form method="post" action="/account/profile/review/delete" class="inline" data-confirm="Delete your review? It's removed from ${site}.">
             <button class="btn btn-ghost btn-sm" type="submit">Delete review</button>
           </form>`
-        : html`<p class="muted small">No review yet. Rago Optimizer asks for one after a few minutes of use, or open Settings in the app.</p>`}
+        : premium
+          ? html`<p class="muted small">No review yet. <a href="/account/review">Leave one here</a>, or in Rago Optimizer, in Settings.</p>`
+          : html`<p class="muted small">No review yet. Rago Optimizer asks for one after a few minutes of use, or open Settings in the app.</p>`}
     </div>`}`;
   return page({ title: welcome ? 'Add a profile photo' : 'Your profile', cfg, user, nav: 'profile', buy: false, body: split({ aside, form }) });
+}
+
+/**
+ * The review, from the account page (2026-10-11): Premium accounts rate Rago Optimizer and write it here, the same
+ * review as in the app. Free accounts are sent to the app, and can still delete a review they left there.
+ * The left side previews the card players see on the site; account.js updates it as the player types.
+ * @param draft what the player typed, when the server refused it: the form shows it again
+ * @param rating stars picked on the account page (?rating=), before the form
+ */
+export function reviewPage(cfg, { user, premium, review, draft = null, rating = null, notice, error }) {
+  const site = cfg.siteUrl.replace(/^https?:\/\//, '');
+  const shown = review?.status === 'published';
+  const value = draft || { rating: rating || review?.rating || 0, comment: review?.comment || '', name: user.display_name || '' };
+  const name = value.name.trim() || user.display_name || 'Your name';
+  // Photo, or the first letter of the name being typed (of the email when there's none yet).
+  const face = avatar({ ...user, display_name: value.name.trim() || user.display_name });
+  const month = (ms) => new Date(ms).toLocaleDateString('en-US', { month: 'short', year: 'numeric', timeZone: 'UTC' });
+  const PLACEHOLDER = 'Your review shows here, as you write it.';
+
+  const preview = html`<figure class="review-card rise d3" data-review-preview aria-label="Preview of your review on ${site}">
+      ${stars(value.rating, 'data-preview-stars')}
+      <p class="review-card-text${value.comment.trim() ? '' : ' is-empty'}" data-preview-text data-empty="${PLACEHOLDER}">${value.comment.trim() || PLACEHOLDER}</p>
+      <footer><span data-preview-avatar>${face}</span><span class="review-card-name" data-preview-name>${name}</span><small>${month(review ? Number(review.updated_at) : Date.now())}</small></footer>
+    </figure>`;
+  const status = review ? html`<p class="review-state small"><span class="badge ${shown ? 'badge-ok' : 'badge-off'}"><i></i>${shown ? 'On the site' : 'Hidden'}</span>
+      <span class="muted">${shown ? `Shown on ${site} since ${fmtDate(review.updated_at)}.` : html`Hidden from the site by the Rago team. ${supportLink(cfg, 'Ask on Discord')} if you think that's a mistake.`}</span></p>` : '';
+  const del = review ? html`<form method="post" action="/account/review/delete" class="inline review-delete" data-confirm="Delete your review? It's removed from ${site}.">
+      <button class="btn btn-ghost btn-sm" type="submit">Delete review</button></form>` : '';
+  const allReviews = html`<a class="link-arrow review-all" href="${cfg.siteUrl}/reviews.html">See all reviews on ${site} ${ICON.arrow}</a>`;
+
+  if (!premium) {
+    const aside = html`<p class="overline rise">Your review</p>
+      <h1 class="display rise d1">Leave your review in Rago Optimizer.</h1>
+      <p class="lede rise d2">Writing it from your account page is part of Premium. On the free version, open Rago Optimizer, then Settings, then Leave a review. It shows on ${site} the same way.</p>
+      ${review ? preview : ''}`;
+    const form = html`<h2 class="h2">Leave a review</h2>
+      ${alertBox(error)}${alertBox(notice, 'ok')}
+      <div class="plan-line review-locked"><span class="plan-icon">${ICON.star}</span><div><strong>Part of Rago Optimizer Premium</strong>
+        <p class="muted small">Premium members rate Rago Optimizer and write their review right here. Everyone can leave one in the app.</p></div></div>
+      <div class="stack review-actions"><a class="btn btn-primary btn-block" href="${pricingUrl(cfg)}">Get Premium ${ICON.arrow}</a><a class="btn btn-ghost btn-block" href="/account">Back to your account</a></div>
+      ${review ? html`<hr class="sep">${status}${del}` : ''}
+      ${allReviews}`;
+    return page({ title: 'Your review', cfg, user, nav: 'account', buy: true, bodyClass: 'is-review', body: split({ aside, form }) });
+  }
+
+  const aside = html`<p class="overline rise">Your review</p>
+    <h1 class="display rise d1">${review ? 'Update your review.' : 'Tell players what changed.'}</h1>
+    <p class="lede rise d2">It shows on ${site} with your public name and photo, as written. Your email is never shown.</p>
+    ${preview}
+    <p class="muted small rise d4 review-preview-note">Preview of your review on ${site}.</p>`;
+  const form = html`<h2 class="h2">${review ? 'Edit your review' : 'Rate Rago Optimizer'}</h2>
+    ${alertBox(error)}${alertBox(notice, 'ok')}
+    ${status}
+    <form method="post" action="/account/review" class="form review-form" data-busy="${review ? 'Saving…' : 'Posting…'}" data-review-form>
+      <fieldset class="field rate-field">
+        <legend class="field-label">Your rating</legend>
+        <div class="rate-row">
+          <div class="rate">${[1, 2, 3, 4, 5].map((n) => html`<input class="sr-only" type="radio" id="f-rate-${n}" name="rating" value="${n}" ${value.rating === n ? html`checked` : ''} required><label for="f-rate-${n}" title="${RATING_WORDS[n]}" data-word="${RATING_WORDS[n]}"><span class="sr-only">${n} star${n === 1 ? '' : 's'}, ${RATING_WORDS[n]}</span>${STAR}</label>`)}</div>
+          <span class="rate-word" data-rate-word data-empty="Pick 1 to 5 stars" aria-hidden="true">${value.rating ? RATING_WORDS[value.rating] : 'Pick 1 to 5 stars'}</span>
+        </div>
+      </fieldset>
+      <div class="field">
+        <span class="field-row"><label class="field-label" for="f-comment">Your review</label><span class="field-count mono" data-counter>${value.comment.length} / ${COMMENT_MAX}</span></span>
+        <textarea id="f-comment" name="comment" rows="6" maxlength="${COMMENT_MAX}" required aria-describedby="f-comment-hint" placeholder="What do you play, and what changed? Ping, FPS, input lag, hit registration…">${value.comment}</textarea>
+        <span class="field-hint" id="f-comment-hint">Long reviews are shortened on the home page, with a link to read them in full.</span>
+      </div>
+      <div class="field">
+        <label class="field-label" for="f-name">Public name</label>
+        <span class="review-name"><span data-name-avatar>${face}</span><span class="field-box"><input id="f-name" name="name" type="text" value="${value.name}" autocomplete="nickname" required minlength="2" maxlength="32" spellcheck="false" aria-describedby="f-name-hint"></span></span>
+        <span class="field-hint" id="f-name-hint">Shown with your review instead of your email, and in Rago Optimizer. ${user.avatar_key ? html`<a href="/account/profile">Change your photo</a>` : html`<a href="/account/profile">Add a photo</a>`}</span>
+      </div>
+      <button class="btn btn-primary btn-block" type="submit">${review ? 'Update review' : 'Post review'}</button>
+    </form>
+    <div class="row review-foot">${del}${allReviews}</div>`;
+  return page({ title: 'Your review', cfg, user, nav: 'account', buy: false, bodyClass: 'is-review', body: split({ aside, form }) });
 }
 
 const RULES = (cfg, closed = false) => [

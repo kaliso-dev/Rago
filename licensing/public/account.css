@@ -380,3 +380,60 @@ p{margin:0}
 .checks-list p{margin:2px 0 0;overflow-wrap:anywhere}
 .checks-test{display:flex;flex-direction:column;gap:10px;padding:14px 16px;border:1px solid var(--rg-line-2);border-radius:var(--rg-radius-md);background:var(--rg-ink-2)}
 @media (max-width:420px){.checks-list li{grid-template-columns:1fr;gap:6px}.checks-list .badge{justify-self:start}}
+
+/* Review from the account page (2026-10-11): the form, the preview of the card shown on the site, the dashboard card */
+.is-review .panel{max-width:480px}
+.review-card{width:100%;max-width:460px;display:flex;flex-direction:column;gap:16px;margin:0;padding:22px;background:var(--rg-ink-2);border:1px solid var(--rg-line-2);border-radius:var(--rg-radius-lg);box-shadow:var(--rg-shadow-2);transition:border-color var(--rg-dur-base)}
+.review-card:hover{border-color:var(--rg-red-500)}
+.review-card .stars{gap:3px}
+.review-card .stars svg{width:14px;height:14px}
+.review-card .stars .on svg{animation:pop var(--rg-dur-base) var(--rg-ease-spring) both}
+.review-card-text{font-size:14px;line-height:1.6;white-space:pre-line;overflow-wrap:anywhere;color:var(--rg-text-1)}
+.review-card-text::before{content:"\201C"}.review-card-text::after{content:"\201D"}
+.review-card-text.is-empty{color:var(--rg-text-3)}
+.review-card-text.is-empty::before,.review-card-text.is-empty::after{content:none}
+.review-card footer{display:flex;align-items:center;gap:10px;font-size:13px;color:var(--rg-text-2)}
+.review-card footer > span:first-child{display:inline-flex}
+.review-card .avatar{width:30px;height:30px;font-size:12px}
+.review-card-name{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.review-card small{margin-left:auto;font-size:11px;color:var(--rg-text-3);white-space:nowrap}
+.review-preview-note{margin-top:-12px}
+/* Stars: one radio per star (keyboard: arrows). A star lights up with the ones before it; hovering previews the rating. */
+.rate-field{border:0;margin:0;padding:0;min-width:0}
+.rate-field legend{padding:0;margin-bottom:10px}
+.rate-row{display:flex;align-items:center;gap:6px 14px;flex-wrap:wrap}
+.rate{display:inline-flex;margin-left:-6px}
+.rate label{display:grid;place-items:center;width:46px;height:46px;border-radius:var(--rg-radius-sm);color:var(--rg-ink-5);cursor:pointer;transition:color var(--rg-dur-fast)}
+.rate label svg{width:32px;height:32px;fill:currentColor;transition:transform var(--rg-dur-base) var(--rg-ease-spring)}
+.rate:not(:hover) label:has(~ input:checked),.rate:not(:hover) input:checked + label{color:var(--rg-red-500)}
+.rate label:hover,.rate label:has(~ label:hover){color:var(--rg-red-400)}
+.rate label:hover svg{transform:scale(1.14)}
+.rate input:checked + label svg{animation:pop var(--rg-dur-slow) var(--rg-ease-spring)}
+.rate input:focus-visible + label{box-shadow:var(--rg-focus)}
+.rate-word{font:500 12px/1 var(--rg-font-mono);letter-spacing:.04em;color:var(--rg-text-2)}
+.field-row{display:flex;justify-content:space-between;align-items:baseline;gap:12px}
+.field-count{font-size:11px;color:var(--rg-text-3);transition:color var(--rg-dur-fast)}
+.field-count.near{color:var(--rg-warning)}
+.field-count.full{color:var(--rg-red-400)}
+.review-form textarea{min-height:156px}
+.review-name{display:flex;align-items:center;gap:12px}
+.review-name > span:first-child{display:inline-flex}
+.review-name .avatar{width:42px;height:42px;font-size:16px}
+.review-name .field-box{flex:1;min-width:0}
+.review-state{display:flex;flex-wrap:wrap;align-items:center;gap:8px 10px;margin:-8px 0 22px}
+.review-foot{justify-content:space-between;gap:12px 20px;margin-top:18px}
+.review-foot .link-arrow,.review-all{margin-top:0}
+.panel > .review-all{display:inline-flex;margin-top:22px}
+.review-locked{margin-bottom:22px}
+.review-actions + .sep{margin-top:24px}
+/* Line breaks become spaces here, so the cut never lands on an empty line */
+.review-clamp{display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden;white-space:normal}
+.card-review .stars svg{width:16px;height:16px}
+.rate-quick{display:inline-flex;margin:-6px 0 -4px -8px}
+.rate-quick a{display:grid;place-items:center;width:42px;height:42px;border-radius:var(--rg-radius-sm);color:var(--rg-ink-5);transition:color var(--rg-dur-fast)}
+.rate-quick a svg{width:28px;height:28px;fill:currentColor;transition:transform var(--rg-dur-base) var(--rg-ease-spring)}
+.rate-quick a:hover,.rate-quick a:focus-visible,.rate-quick a:has(~ a:hover),.rate-quick a:has(~ a:focus-visible){color:var(--rg-red-500)}
+.rate-quick a:hover svg{transform:scale(1.14)}
+@media (max-width:1000px){.dash-grid .card-review{order:1}}
+@media (prefers-reduced-motion:reduce){.rate label svg,.rate-quick a svg{transition:none}.rate input:checked + label svg,.review-card .stars .on svg{animation:none}}
+.rate-word.missing{color:var(--rg-red-400)}
