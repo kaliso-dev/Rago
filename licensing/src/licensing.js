@@ -215,15 +215,16 @@ export async function fulfillCheckoutSession(db, session, subscription = null) {
 
 /**
  * Manual license, e.g. for players who bought the .bat Premium on Discord. For life, or with `months`
- * for that many months from today: a 'reward' license, which stops by itself on its date like an
+ * and/or `days` for that long from today: a 'reward' license, which stops by itself on its date like an
  * affiliate reward (and which a purchase replaces).
  */
-export function grantLicense(db, email, note, { months = 0 } = {}) {
+export function grantLicense(db, email, note, { months = 0, days = 0 } = {}) {
+  const limited = months > 0 || days > 0;
   return db.tx(async (t) => {
     const user = await findUserByEmail(t, email);
     const userId = user && !(await activeLicenseForUser(t, user.id)) ? user.id : null;
-    const out = await insertLicense(t, { email, userId, source: 'grant', ...(months > 0 ? { plan: 'reward', periodEnd: addMonths(Date.now(), months) } : {}) });
-    await audit(t, 'license.granted', { licenseId: out.license.id, userId, detail: { note, ...(months > 0 ? { months } : {}) } });
+    const out = await insertLicense(t, { email, userId, source: 'grant', ...(limited ? { plan: 'reward', periodEnd: addMonths(Date.now(), months) + days * 24 * 3600 * 1000 } : {}) });
+    await audit(t, 'license.granted', { licenseId: out.license.id, userId, detail: { note, ...(months > 0 ? { months } : {}), ...(days > 0 ? { days } : {}) } });
     return { ...out, claimToken: userId ? null : out.claimToken };
   });
 }
