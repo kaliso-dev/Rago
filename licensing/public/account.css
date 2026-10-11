@@ -436,6 +436,10 @@ p{margin:0}
 .rate-quick a:hover svg{transform:scale(1.14)}
 /* Account page, Premium: the review card runs under both columns (on a phone, after the plan card) */
 .dash-grid > .card-review{grid-column:1 / -1}
+/* With the review card under them, both columns end on the same line: the last card of the shorter one fills the gap
+   (the columns are balanced server side, so it only grows a little) */
+.dash-grid.with-review{align-items:stretch}
+.dash-grid.with-review > .dash-col > :last-child{flex-grow:1}
 .review-row{display:grid;grid-template-columns:minmax(0,1fr) auto;align-items:center;gap:18px 48px}
 .review-main{display:grid;gap:12px;min-width:0}
 .review-main .review-text{max-width:90ch}
