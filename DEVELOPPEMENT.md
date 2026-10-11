@@ -6,7 +6,7 @@ Rago est en ligne depuis le 10 octobre 2026. Ce guide explique comment continuer
 
 | Quoi | Ce qui le met à jour |
 |---|---|
-| Le site `rago-optimizer.com` (Netlify) | Une pull request **fusionnée** dans la branche principale |
+| Le site `rago-optimizer.com` (Netlify) | Une pull request **fusionnée** dans la branche principale (si elle touche `site/`, `netlify/` ou `netlify.toml` : chaque publication coûte des crédits Netlify) |
 | Le serveur de comptes `account.rago-optimizer.com` (Railway) | Une pull request **fusionnée** dans la branche principale (si elle touche `licensing/`) |
 | L'app chez les joueurs | Un nouvel exe **déposé par toi** dans le bucket `downloads` du Supabase de production |
 
@@ -133,6 +133,7 @@ Si tu as oublié une variable, ce n'est pas grave : avec la clé Stripe live ou 
 1. **Site configuration → Build & deploy → Continuous deployment → Branches and deploy contexts → Configure** → Branch deploys : **Let me add individual branches** → `staging`. Laisse les Deploy Previews activées.
 2. **Site configuration → Environment variables → Add a variable** : `STAGING_ACCOUNT_URL` = l'adresse staging (sans `/` à la fin).
 3. Le site de staging est `https://staging--rago-optimiser.netlify.app`. Les aperçus des pull requests utilisent aussi le serveur de staging. Sans la variable, leurs boutons de compte sont simplement coupés : un aperçu n'envoie jamais vers le vrai serveur ni vers le vrai Stripe.
+4. Pour refabriquer le site de staging (par exemple après avoir changé la variable) : **Deploys** → la dernière ligne « Branch deploy: staging » → **Retry deploy**.
 
 ### f. GitHub : l'exe de test (facultatif)
 

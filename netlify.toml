@@ -3,6 +3,9 @@
   publish = "site"
   # Les sources et notes internes de site/ ne doivent pas être publiées.
   command = "rm -rf site/src site/tools && rm -f site/*.md"
+  # Pas de nouvelle publication quand site/, netlify/ et ce fichier n'ont pas changé (une modification du serveur ou
+  # de l'app seulement) : chaque publication en production coûte des crédits Netlify. Retry deploy force. Voir le script.
+  ignore = "sh netlify/ignore.sh"
 
 # Aperçus (deploy previews des pull requests, branche staging) : même chose, mais leurs liens de compte, les avis et le
 # pop-up passent par le serveur de comptes de staging (variable Netlify STAGING_ACCOUNT_URL), jamais par le vrai.
