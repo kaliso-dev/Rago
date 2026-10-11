@@ -353,12 +353,13 @@ section[id],main[id]{scroll-margin-top:92px}
 .rev-pause{all:unset;cursor:pointer;margin-left:6px;padding:4px 10px;border-radius:var(--r-full);color:var(--t2);box-shadow:inset 0 0 0 1px var(--l2);font-size:11.5px}
 .rev-pause:hover{color:var(--t1)}
 .rev-pause:focus-visible{outline:2px solid var(--red);outline-offset:2px}
-.rq{width:340px;flex:none;border-radius:var(--r-lg);background:var(--ink-2);border:1px solid var(--l1);padding:22px;display:flex;flex-direction:column;gap:16px;justify-content:space-between;margin:0;transition:border-color .3s,transform .4s var(--out)}
+/* Every card is the same size, whatever the review: 4 lines of text (a longer review is cut to fit, see the script) */
+.rq{width:360px;flex:none;border-radius:var(--r-lg);background:var(--ink-2);border:1px solid var(--l1);padding:22px;display:flex;flex-direction:column;gap:16px;margin:0;transition:border-color .3s,transform .4s var(--out)}
 .rq:hover{border-color:var(--red);transform:translateY(-3px)}
 .rq .stars{display:flex;gap:3px;color:var(--red)}
 .rq .stars svg{width:14px;height:14px;fill:currentColor}
-.rq.wide{width:460px}
-.rq p{font-size:14px;color:var(--t1);line-height:1.6;white-space:pre-line;overflow-wrap:anywhere}
+.rq p{font-size:14px;color:var(--t1);line-height:1.6;white-space:pre-line;overflow-wrap:anywhere;height:calc(1.6em * 4);overflow:hidden}
+.rq.probe{position:absolute;top:0;left:0;visibility:hidden;pointer-events:none}.rq.probe p{height:auto}
 .rq .stars .off{display:flex;color:var(--ink-4)}
 .rq footer{display:flex;align-items:center;gap:10px;font-size:13px;color:var(--t2)}
 .av{width:30px;height:30px;border-radius:50%;display:grid;place-items:center;font:600 12px/1 var(--sans);color:var(--t1);background:var(--ink-4);border:1px solid var(--l2);flex:none}
@@ -548,7 +549,7 @@ footer.foot p{max-width:80ch}
   .tw p{white-space:normal}
   .how{grid-template-columns:1fr 1fr;row-gap:40px}
   .how-line{display:none}
-  .rq{width:280px}.rq.wide{width:320px}
+  .rq{width:min(300px,80vw)}
   .dock{display:flex}
   footer.foot{padding-bottom:120px}
   .cta-row .btn{flex:1 1 100%}
@@ -1387,18 +1388,36 @@ function howFill() {
   const face = r => typeof r.avatar_url === "string" && PHOTO.test(r.avatar_url)
     ? `<img class="av" src="${esc(r.avatar_url)}" alt="" width="30" height="30" loading="lazy" decoding="async" referrerpolicy="no-referrer" data-i="${esc(first(r.name))}">`
     : `<span class="av" aria-hidden="true">${esc(first(r.name))}</span>`;
-  // At most 220 characters and 5 lines, cut after a word: about 4 lines on a card, whatever the review.
-  const MAX = 220, LINES = 5;
-  const cut = t => {
-    let s = t.split("\n").slice(0, LINES).join("\n"), cps = [...s];
-    if (cps.length > MAX) { s = cps.slice(0, MAX).join(""); const sp = s.search(/\s\S*$/); if (sp > MAX * .6) s = s.slice(0, sp); }
-    return s === t ? null : s.replace(/[\s.,;:!?…'"-]+$/u, "") + "…";
-  };
+  // Every card shows 4 lines (CSS). A longer review is cut after a word so that it fits with "…" and "See more", measured
+  // on a hidden card of the same width: once per review each time the cards are laid out (new width, fonts loaded).
+  const LINES = 4;
   const more = r => `reviews.html${typeof r.id === "string" && /^[a-z0-9]{1,12}$/.test(r.id) ? "#r-" + r.id : ""}`;
+  const moreLink = (r, attrs = "") => ` <a class="rq-more" href="${more(r)}"${attrs}>See more</a>`;
+  const cutAt = (cps, n) => {
+    let s = cps.slice(0, n).join("");
+    const sp = s.search(/\s\S*$/); if (sp > n * .6) s = s.slice(0, sp);
+    return s.replace(/[\s.,;:!?…'"-]+$/u, "") + "…";
+  };
+  const fitter = host => {
+    // visibility:hidden keeps it from screen readers too (not aria-hidden: the copies' rule would take it off the page)
+    const probe = Object.assign(document.createElement("figure"), { className: "rq probe", innerHTML: "<p></p>" });
+    host.append(probe);
+    const p = probe.firstChild, max = parseFloat(getComputedStyle(p).lineHeight) * LINES + 1;
+    const fits = h => { p.innerHTML = h; return p.offsetHeight <= max; };
+    const fit = t => {
+      if (fits(`“${esc(t)}”`)) return null;
+      // the longest cut that still fits (the first character always does)
+      const cps = [...t]; let lo = 1, hi = cps.length - 1;
+      while (lo < hi) { const mid = (lo + hi + 1) >> 1; if (fits(`“${esc(cutAt(cps, mid))}”${moreLink({})}`)) lo = mid; else hi = mid - 1; }
+      return cutAt(cps, lo);
+    };
+    return { fit, done: () => probe.remove() };
+  };
+  let cuts = new Map();
   const card = r => {
-    const t = r.comment.trim(), short = cut(t), shown = short || t;
-    const link = short ? ` <a class="rq-more" href="${more(r)}" aria-label="See more: ${esc(r.name.trim())}'s full review">See more</a>` : "";
-    return `<figure class="rq${shown.length > 160 ? " wide" : ""}"><span class="stars" role="img" aria-label="${r.rating} out of 5 stars">${STAR.repeat(r.rating)}${`<span class="off">${STAR}</span>`.repeat(5 - r.rating)}</span><p>“${esc(shown)}”${link}</p><footer>${face(r)}<span class="rn">${esc(r.name.trim())}</span><small>${when(r.date)}</small></footer></figure>`;
+    const t = r.comment.trim(), short = cuts.get(r), shown = short || t;
+    const link = short ? moreLink(r, ` aria-label="See more: ${esc(r.name.trim())}'s full review"`) : "";
+    return `<figure class="rq"><span class="stars" role="img" aria-label="${r.rating} out of 5 stars">${STAR.repeat(r.rating)}${`<span class="off">${STAR}</span>`.repeat(5 - r.rating)}</span><p>“${esc(shown)}”${link}</p><footer>${face(r)}<span class="rn">${esc(r.name.trim())}</span><small>${when(r.date)}</small></footer></figure>`;
   };
   const show = (data) => {
     const list = (data && Array.isArray(data.reviews) ? data.reviews : []).filter(ok);
@@ -1410,6 +1429,9 @@ function howFill() {
     // they move like a banner: two strips in opposite directions, 4 copies so wide screens never see the end of a row.
     const layout = () => {
       rev.classList.add("few"); r2.hidden = true; pause.hidden = true;
+      const f = fitter(r1);
+      cuts = new Map(list.map(r => [r, f.fit(r.comment.trim())]));
+      f.done();
       r1.innerHTML = list.map(card).join("");
       const rows = new Set([...r1.children].map(el => el.offsetTop)).size;
       if (rows > 2) {
@@ -1425,6 +1447,8 @@ function howFill() {
     $("#rev-sum").textContent = `${n} review${n === 1 ? "" : "s"}${avg >= 1 && avg <= 5 ? ` · ${avg.toFixed(1)} out of 5` : ""}`;
     $$(".js-rev").forEach(el => { el.hidden = false; });
     layout();
+    // the cuts are measured with the site's font: once it's there, measure again
+    if (document.fonts && document.fonts.status !== "loaded") document.fonts.ready.then(layout);
     let w = innerWidth, t;
     addEventListener("resize", () => { if (innerWidth === w) return; w = innerWidth; clearTimeout(t); t = setTimeout(layout, 200); });
     window.__watch($("#reviews .head"));

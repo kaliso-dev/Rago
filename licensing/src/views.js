@@ -543,24 +543,33 @@ export function dashboardPage(cfg, { user, license, device, notice, error, canRe
   const sideCard = (cls) => (!affiliate && active && license?.plan === 'lifetime' ? helpCard(cls) : affiliateCard(cls));
 
   // Premium: the player's review, left or edited on /account/review. Free accounts leave theirs in the app.
-  const reviewCard = (cls) => {
+  // A wide card under the two columns: in one of them, it made that column much longer than the other.
+  const reviewCard = () => {
     const site = cfg.siteUrl.replace(/^https?:\/\//, '');
     if (!review) {
-      return html`<article class="card card-review rise ${cls}" id="review">
+      return html`<article class="card card-review rise d5" id="review">
       <div class="card-head"><p class="overline">Your review</p></div>
-      <div class="plan-line"><span class="plan-icon">${ICON.star}</span><div><strong>How is Rago Optimizer working for you?</strong>
-        <p class="muted small">Rate it and tell other players what changed. Your review shows on ${site} with your public name.</p></div></div>
-      <div class="rate-quick" role="group" aria-label="Rate Rago Optimizer">${[1, 2, 3, 4, 5].map((n) => html`<a href="/account/review?rating=${n}" aria-label="${n} star${n === 1 ? '' : 's'}: ${RATING_WORDS[n]}" title="${RATING_WORDS[n]}">${STAR}</a>`)}</div>
-      <a class="link-arrow" href="/account/review">Write your review ${ICON.arrow}</a>
+      <div class="review-row">
+        <div class="plan-line"><span class="plan-icon">${ICON.star}</span><div><strong>How is Rago Optimizer working for you?</strong>
+          <p class="muted small">Rate it and tell other players what changed. Your review shows on ${site} with your public name.</p></div></div>
+        <div class="review-act">
+          <div class="rate-quick" role="group" aria-label="Rate Rago Optimizer">${[1, 2, 3, 4, 5].map((n) => html`<a href="/account/review?rating=${n}" aria-label="${n} star${n === 1 ? '' : 's'}: ${RATING_WORDS[n]}" title="${RATING_WORDS[n]}">${STAR}</a>`)}</div>
+          <a class="link-arrow" href="/account/review">Write your review ${ICON.arrow}</a>
+        </div>
+      </div>
     </article>`;
     }
     const shown = review.status === 'published';
-    return html`<article class="card card-review rise ${cls}" id="review">
+    return html`<article class="card card-review rise d5" id="review">
       <div class="card-head"><p class="overline">Your review</p>${shown ? html`<span class="badge badge-ok"><i></i>On the site</span>` : html`<span class="badge badge-off"><i></i>Hidden</span>`}</div>
-      ${stars(review.rating)}
-      <p class="review-text review-clamp">${review.comment}</p>
-      <p class="muted small">${shown ? `Updated ${fmtDate(review.updated_at)}.` : 'Hidden from the site by the Rago team.'}</p>
-      <div class="row card-actions"><a class="btn btn-ghost btn-sm" href="/account/review">Edit review</a><a class="link-arrow" href="${cfg.siteUrl}/reviews.html">See all reviews ${ICON.arrow}</a></div>
+      <div class="review-row">
+        <div class="review-main">
+          ${stars(review.rating)}
+          <p class="review-text review-clamp">${review.comment}</p>
+          <p class="muted small">${shown ? `Updated ${fmtDate(review.updated_at)}.` : 'Hidden from the site by the Rago team.'}</p>
+        </div>
+        <div class="row card-actions"><a class="btn btn-ghost btn-sm" href="/account/review">Edit review</a><a class="link-arrow" href="${cfg.siteUrl}/reviews.html">See all reviews ${ICON.arrow}</a></div>
+      </div>
     </article>`;
   };
 
@@ -581,11 +590,9 @@ export function dashboardPage(cfg, { user, license, device, notice, error, canRe
       return discord ? [[freeCard(), affiliateCard('d2')], discord] : [freeCard(), affiliateCard('d2')];
     }
     const hero = active ? download() : comeBack();
-    // Premium: the review card goes in the shorter column.
-    const rev = active ? reviewCard('d5') : '';
     return inviteRewards.length
-      ? [[hero, discordCard('d5'), rev], [licenseCard(), deviceCard(), planCard(), sideCard('d5')]]
-      : [[hero, discordCard('d5'), sideCard('d5')], [licenseCard(), deviceCard(), planCard(), rev]];
+      ? [[hero, discordCard('d5')], [licenseCard(), deviceCard(), planCard(), sideCard('d5')]]
+      : [[hero, discordCard('d5'), sideCard('d5')], [licenseCard(), deviceCard(), planCard()]];
   };
 
   const title = !license ? 'Welcome to Rago Optimizer'
@@ -597,7 +604,7 @@ export function dashboardPage(cfg, { user, license, device, notice, error, canRe
       ${stepIndex == null ? '' : steps(stepIndex)}
     </div>
     ${alertBox(error)}${alertBox(notice, 'ok')}
-    <div class="dash-grid">${columns().map((col) => html`<div class="dash-col">${col}</div>`)}</div>
+    <div class="dash-grid">${columns().map((col) => html`<div class="dash-col">${col}</div>`)}${license && active ? reviewCard() : ''}</div>
     <p class="dash-foot small muted rise d5">Signed in as ${user.email} · <a href="/account/profile">Profile photo and name</a> · <a href="/account/password">Change password</a></p>
   </main>`;
   return page({ title: 'Your account', cfg, user, body, bodyClass: 'is-dash', nav: 'account', buy: !active });
