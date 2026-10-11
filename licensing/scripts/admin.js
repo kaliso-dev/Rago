@@ -13,6 +13,8 @@
 //   grant-months <months> <email> [email…]
 //                                Premium for that many months from today, then it stops by itself (e.g.
 //                                grant-months 6 a@x.com b@y.com). Emails with Premium already are skipped
+//   grant-days <days> <email> [email…]
+//                                the same in days, e.g. grant-days 7 a@x.com for a week of Premium
 //   create-user <email> <pass>   create an account (testing)
 //   affiliate <email>            affiliate code, referrals and why each counts or not
 //   create-promo <CODE> <percent> [once|forever]
@@ -143,11 +145,16 @@ switch (cmd) {
     console.log(claimToken ? `Send this link so they create their account: ${cfg.publicUrl}/claim/${claimToken}` : 'Added to their existing account.');
     break;
   }
-  case 'grant-months': {
+  case 'grant-months':
+  case 'grant-days': {
     // A pasted list works too: emails separated by spaces, commas or semicolons. Run twice, nobody gets two.
-    const months = Number(email);
-    const emails = [...new Set(rest.join(' ').split(/[\s,;]+/).map((e) => e.toLowerCase()).filter(Boolean))];
-    if (!(Number.isInteger(months) && months >= 1 && months <= 120) || !emails.length) { console.error('Usage: grant-months 6 player@mail.com [other@mail.com …]'); process.exit(1); }
+    // The number can also come after the emails (grant-days player@mail.com 7).
+    const unit = cmd === 'grant-days' ? 'days' : 'months';
+    const words = [email, ...rest].join(' ').split(/[\s,;]+/).filter(Boolean);
+    const count = words.find((w) => /^\d+$/.test(w));
+    const n = Number(count);
+    const emails = [...new Set(words.filter((w) => w !== count).map((e) => e.toLowerCase()))];
+    if (!(n >= 1 && n <= (unit === 'days' ? 3650 : 120)) || !emails.length) { console.error(`Usage: ${cmd} ${unit === 'days' ? 7 : 6} player@mail.com [other@mail.com …]`); process.exit(1); }
     const day = (ms) => new Date(Number(ms)).toISOString().slice(0, 10);
     let given = 0;
     for (const to of emails) {
@@ -157,7 +164,7 @@ switch (cmd) {
       if (owned?.status === 'active') { console.log(`${to}: already Premium (${owned.plan}${owned.plan !== 'lifetime' && owned.current_period_end ? ` until ${day(owned.current_period_end)}` : ''}), nothing given.`); continue; }
       const waiting = (await L.unclaimedLicenses(db, to)).find((l) => l.status === 'active');
       if (waiting) { console.log(`${to}: a license already waits for this email (${waiting.id}), nothing given. claim-link ${to} prints a new link.`); continue; }
-      const { license, claimToken } = await L.grantLicense(db, to, `grant-months ${months}`, { months });
+      const { license, claimToken } = await L.grantLicense(db, to, `${cmd} ${n}`, { [unit]: n });
       given++;
       console.log(`${to}: license ${license.key}, Premium until ${day(license.current_period_end)}.`);
       console.log(claimToken ? `  Send this link so they create their account: ${cfg.publicUrl}/claim/${claimToken}` : '  Added to their existing account.');
@@ -331,6 +338,6 @@ switch (cmd) {
     break;
   }
   default:
-    console.log('Commands: show, attach, claim-link, reset-link, reset-device, revoke, restore, grant, grant-months, affiliate, create-promo, popup, create-user, delete-user, export-keys, reviews, hide-review, show-review, remove-photo, set-name, discord, discord-unlink (see scripts/admin.js)');
+    console.log('Commands: show, attach, claim-link, reset-link, reset-device, revoke, restore, grant, grant-months, grant-days, affiliate, create-promo, popup, create-user, delete-user, export-keys, reviews, hide-review, show-review, remove-photo, set-name, discord, discord-unlink (see scripts/admin.js)');
 }
 await db.close();
