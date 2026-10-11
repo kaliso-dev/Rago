@@ -1,4 +1,5 @@
-// Player reviews, left from Rago Optimizer: one per account, edited in place, shown on the site.
+// Player reviews, left from Rago Optimizer or, for Premium accounts, from the account page: one per account,
+// edited in place, shown on the site.
 // Text is stored as typed (trimmed). Pages and the site always render it as text, never as HTML.
 import { avatarUrl, ProfileError } from './profile.js';
 
@@ -42,16 +43,23 @@ export async function deleteReview(db, userId) {
 /** What the app shows about the player's own review. */
 export const reviewView = (r) => (r ? { rating: r.rating, comment: r.comment, updated_at: new Date(Number(r.updated_at)).toISOString(), hidden: r.status !== 'published' } : null);
 
-/** Reviews shown on the site, newest first. Only published ones, from accounts with a public name. */
-export async function publicReviews(db, cfg, limit = 60) {
-  const rows = await db.all(`SELECT r.rating, r.comment, r.updated_at, u.display_name, u.avatar_key FROM reviews r JOIN users u ON u.id = r.user_id
+/** How many reviews the home page's carousel gets, and the reviews page (all of them, up to a sane cap). */
+export const SITE_LIMIT = 60;
+export const ALL_LIMIT = 1000;
+
+/**
+ * Reviews shown on the site, newest first. Only published ones, from accounts with a public name.
+ * `id` (the creation time, base 36) is stable while the review exists: the home page links to it on the reviews page.
+ */
+export async function publicReviews(db, cfg, limit = SITE_LIMIT) {
+  const rows = await db.all(`SELECT r.rating, r.comment, r.created_at, r.updated_at, u.display_name, u.avatar_key FROM reviews r JOIN users u ON u.id = r.user_id
     WHERE r.status = 'published' AND u.display_name IS NOT NULL ORDER BY r.updated_at DESC LIMIT ?`, [limit]);
   const stats = await db.get(`SELECT COUNT(*)::int AS count, ROUND(AVG(r.rating)::numeric, 1)::float AS average FROM reviews r JOIN users u ON u.id = r.user_id
     WHERE r.status = 'published' AND u.display_name IS NOT NULL`);
   return {
     count: stats.count,
     average: stats.count ? Number(stats.average) : null,
-    reviews: rows.map((r) => ({ name: r.display_name, rating: r.rating, comment: r.comment, avatar_url: avatarUrl(cfg, r.avatar_key), date: new Date(Number(r.updated_at)).toISOString().slice(0, 10) })),
+    reviews: rows.map((r) => ({ id: Number(r.created_at).toString(36), name: r.display_name, rating: r.rating, comment: r.comment, avatar_url: avatarUrl(cfg, r.avatar_key), date: new Date(Number(r.updated_at)).toISOString().slice(0, 10) })),
   };
 }
 

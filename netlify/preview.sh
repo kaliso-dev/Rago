@@ -1,8 +1,9 @@
 #!/bin/sh
 # Build of the Netlify previews: deploy previews of pull requests and branch deploys (the staging branch).
-# Same as the live build, plus: the site's account links and the reviews and pop-up it reads go to the staging
-# account server (Netlify variable STAGING_ACCOUNT_URL), never to the live one. Without the variable they're off
-# on the preview (see previewAccountBase in site/src/page.html). The live site is built by [build] in netlify.toml.
+# Same as the live build, plus: the site's account links and the reviews and pop-up it reads (home page and reviews
+# page) go to the staging account server (Netlify variable STAGING_ACCOUNT_URL), never to the live one. Without the
+# variable they're off on the preview (see previewAccountBase in site/src/page.html). The live site is built by
+# [build] in netlify.toml.
 set -eu
 LIVE="https://account.rago-optimizer.com"
 URL=$(printf '%s' "${STAGING_ACCOUNT_URL:-}" | tr -d ' \r\n' | sed 's|/*$||')
@@ -22,14 +23,16 @@ else
   echo "Preview: STAGING_ACCOUNT_URL isn't set, account links are off on this preview"
 fi
 
-# The page's CONFIG, then the links baked for visitors without JavaScript.
-sed -i "s|previewAccountBase: \"\"|previewAccountBase: \"$URL\"|" site/index.html
-if [ -n "$URL" ]; then
-  sed -i "s|href=\"$LIVE/|href=\"$URL/|g" site/index.html
-else
-  sed -i "s|href=\"$LIVE/[^\"]*\"|href=\"$TARGET\"|g" site/index.html
-fi
-grep -q "previewAccountBase: \"$URL\"" site/index.html || { echo "previewAccountBase not found in site/index.html"; exit 1; }
+# Each page's CONFIG (home page, reviews page), then the links baked for visitors without JavaScript.
+for PAGE in site/index.html site/reviews.html; do
+  sed -i "s|previewAccountBase: \"\"|previewAccountBase: \"$URL\"|" "$PAGE"
+  if [ -n "$URL" ]; then
+    sed -i "s|href=\"$LIVE/|href=\"$URL/|g" "$PAGE"
+  else
+    sed -i "s|href=\"$LIVE/[^\"]*\"|href=\"$TARGET\"|g" "$PAGE"
+  fi
+  grep -q "previewAccountBase: \"$URL\"" "$PAGE" || { echo "previewAccountBase not found in $PAGE"; exit 1; }
+done
 
 # Same as the live build: the sources and notes of site/ aren't published.
 rm -rf site/src site/tools && rm -f site/*.md
