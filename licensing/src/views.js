@@ -361,7 +361,9 @@ export function dashboardPage(cfg, { user, license, device, notice, error, canRe
     const lines = inviteRewards.filter((r) => has(r.kind) || !inviteRewards.some((x) => x.replaces === r.kind && has(x.kind))).map((r) => {
       const got = discordRewards.find((g) => g.kind === r.kind);
       if (!got) return html`<li><strong>${r.name}</strong> · ${r.need}: ${r.label} of Premium and a ${r.percent}% discount code.</li>`;
-      const time = got.action === 'lifetime' ? 'You already have Premium for life.' : `${r.label} of Premium added${got.until ? `, Premium until ${fmtDate(got.until)}` : ''}.`;
+      // 2 boosts after 1: the reward only topped it up to its own time.
+      const label = r.topUp && has(r.replaces) ? r.topUp.label : r.label;
+      const time = got.action === 'lifetime' ? 'You already have Premium for life.' : `${label} of Premium added${got.until ? `, Premium until ${fmtDate(got.until)}` : ''}.`;
       return html`<li><strong>${r.name}</strong> · <span class="badge badge-ok"><i></i>Earned</span> ${time}
         ${got.promo_code ? html`<br>Your ${r.percent}% code, one use: <code class="mono">${got.promo_code}</code> <a class="link-arrow" href="/buy?promo=${got.promo_code}">Use it ${ICON.arrow}</a>` : ''}</li>`;
     });
