@@ -157,7 +157,7 @@ p{margin:0}
 .card-hero .btn{align-self:flex-start;margin-top:4px}
 /* Account page: two columns that stack their cards independently, so a long card on one side never
    stretches the cards on the other (each card is as tall as its content). One column under 1000px:
-   download, license, device, plan, then Discord and the affiliate card. */
+   download, license, device, plan, your review (Premium), then Discord and the affiliate card. */
 .dash-grid{display:grid;grid-template-columns:minmax(0,7fr) minmax(0,5fr);gap:20px;align-items:start}
 .dash-col{display:flex;flex-direction:column;gap:20px;min-width:0}
 @media (max-width:1000px){.dash-grid{display:flex;flex-direction:column;align-items:stretch}.dash-col{display:contents}
@@ -434,6 +434,16 @@ p{margin:0}
 .rate-quick a svg{width:28px;height:28px;fill:currentColor;transition:transform var(--rg-dur-base) var(--rg-ease-spring)}
 .rate-quick a:hover,.rate-quick a:focus-visible,.rate-quick a:has(~ a:hover),.rate-quick a:has(~ a:focus-visible){color:var(--rg-red-500)}
 .rate-quick a:hover svg{transform:scale(1.14)}
-@media (max-width:1000px){.dash-grid .card-review{order:1}}
+/* Account page, Premium: the review card runs under both columns (on a phone, after the plan card) */
+.dash-grid > .card-review{grid-column:1 / -1}
+.review-row{display:grid;grid-template-columns:minmax(0,1fr) auto;align-items:center;gap:18px 48px}
+.review-main{display:grid;gap:12px;min-width:0}
+.review-main .review-text{max-width:90ch}
+.card-review .review-clamp{-webkit-line-clamp:2}
+.card-review .card-actions{gap:10px 20px}
+.review-act{display:flex;flex-direction:column;align-items:flex-end;gap:8px}
+.review-act .link-arrow{margin-top:0}
+.review-act .rate-quick{margin:-8px -7px -4px 0}
+@media (max-width:760px){.review-row{grid-template-columns:minmax(0,1fr)}.review-act{align-items:flex-start}.review-act .rate-quick{margin:-6px 0 -4px -8px}.card-review .review-clamp{-webkit-line-clamp:3}}
 @media (prefers-reduced-motion:reduce){.rate label svg,.rate-quick a svg{transition:none}.rate input:checked + label svg,.review-card .stars .on svg{animation:none}}
 .rate-word.missing{color:var(--rg-red-400)}
