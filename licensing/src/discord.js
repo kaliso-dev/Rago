@@ -30,8 +30,10 @@ export const REWARDS = [
   { kind: 'vip', name: 'VIP', cfgKey: 'discordVipRoleId', need: '10 invites', time: { months: 1 }, label: '1 month', percent: 10 },
   { kind: 'mvp', name: 'MVP', cfgKey: 'discordMvpRoleId', need: '15 invites', time: { months: 3 }, label: '3 months', percent: 30 },
   { kind: 'boost', name: 'BOOST', boost: true, need: '1 server boost', time: { days: 14 }, label: '2 weeks', percent: 10 },
-  // Replaces the 1-boost reward: 2 boosts give 1 month and 30 %, not 2 weeks and 10 % on top (Sofiene, 2026-10-10).
-  { kind: 'boost2', name: 'BOOST2', cfgKey: 'discordBoost2RoleId', need: '2 server boosts', time: { months: 1 }, label: '1 month', percent: 30, replaces: 'boost' },
+  // Replaces the 1-boost reward: 2 boosts give 1 month in all and 30 %, not 2 weeks and 10 % on top (Sofiene,
+  // 2026-10-10). After the 1-boost reward (boosted once, then twice), it adds what's missing to reach 1 month.
+  { kind: 'boost2', name: 'BOOST2', cfgKey: 'discordBoost2RoleId', need: '2 server boosts', time: { months: 1 }, label: '1 month', percent: 30,
+    replaces: 'boost', topUp: { time: { months: 1, days: -14 }, label: '2 more weeks' } },
 ];
 /** The reward that replaces `r` when both are earned (2 boosts for 1 boost), or null. */
 export const replacedBy = (r, list = REWARDS) => list.find((x) => x.replaces === r.kind) || null;
@@ -192,7 +194,7 @@ export function createDiscord(cfg, { db, fetchImpl = fetch, log = console, strip
   }
 
   /** Gives reward `r` to the linked account `row`, once per Discord account and once per Rago account. */
-  async function giveReward(row, r) {
+  async function giveReward(row, r, time = r.time) {
     const id = newId('drw');
     // Claimed first: two checks at the same moment give it once.
     const claimed = await db.get(`INSERT INTO discord_rewards (id, kind, discord_id, user_id, given_at) VALUES (?, ?, ?, ?, ?)
@@ -202,7 +204,7 @@ export function createDiscord(cfg, { db, fetchImpl = fetch, log = console, strip
     try {
       // The code first: if Premium can't be given, the claim is undone and both are tried again later.
       code = stripe ? await oneUseCode(r, row.user_id) : null;
-      const premium = await givePremiumTime(db, stripe, row.user_id, { ...r.time, source: 'discord' });
+      const premium = await givePremiumTime(db, stripe, row.user_id, { ...time, source: 'discord' });
       const until = premium.action === 'lifetime' ? null : premium.action === 'subscription' ? premium.until : Number(premium.license.current_period_end);
       await db.run('UPDATE discord_rewards SET license_id = ?, action = ?, until = ?, promo_code = ? WHERE id = ?', [premium.license.id, premium.action, until, code, id]);
       await audit(db, 'discord.reward', { licenseId: premium.license.id, userId: row.user_id, detail: { kind: r.kind, discord_id: row.discord_id, action: premium.action, until, code } });
@@ -243,8 +245,10 @@ export function createDiscord(cfg, { db, fetchImpl = fetch, log = console, strip
       // The 1-boost reward isn't given with (or after) the 2-boost one. Given before it, the player keeps it.
       const higher = replacedBy(r, rewards);
       if (higher && (had.some((h) => h.kind === higher.kind) || earned(higher))) continue;
+      // Given after the reward it replaces: only what's missing to reach its own time.
+      const topUp = r.topUp && had.some((h) => h.kind === r.replaces);
       try {
-        const got = await giveReward(row, r);
+        const got = await giveReward(row, r, topUp ? r.topUp.time : r.time);
         if (got) out.push(got);
       } catch (err) {
         log.error(`[discord] ${r.name} reward for ${row.discord_id} not given, tried again later:`, err?.message || err);
