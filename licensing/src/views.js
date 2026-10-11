@@ -604,7 +604,7 @@ export function dashboardPage(cfg, { user, license, device, notice, error, canRe
       ${stepIndex == null ? '' : steps(stepIndex)}
     </div>
     ${alertBox(error)}${alertBox(notice, 'ok')}
-    <div class="dash-grid">${columns().map((col) => html`<div class="dash-col">${col}</div>`)}${license && active ? reviewCard() : ''}</div>
+    <div class="dash-grid${license && active ? ' with-review' : ''}">${columns().map((col) => html`<div class="dash-col">${col}</div>`)}${license && active ? reviewCard() : ''}</div>
     <p class="dash-foot small muted rise d5">Signed in as ${user.email} · <a href="/account/profile">Profile photo and name</a> · <a href="/account/password">Change password</a></p>
   </main>`;
   return page({ title: 'Your account', cfg, user, body, bodyClass: 'is-dash', nav: 'account', buy: !active });
