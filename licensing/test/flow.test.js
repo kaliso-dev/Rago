@@ -2089,13 +2089,34 @@ test('Discord rewards: VIP, MVP and boosts give Premium time and a one-use code,
   assert.match(dash, /<strong>BOOST2<\/strong> · <span class="badge badge-ok">/);
   assert.doesNotMatch(dash, /<strong>BOOST<\/strong>/);
 
+  // 1 boost, then 2: 2 weeks and a 10% code, then 2 more weeks and a 30% code, so 1 month in all.
+  t.jar.clear();
+  await t.browse('/signup', { form: { email: 'once@rago.gg', password: 'password123' } });
+  const O = '666666666666666666';
+  d.members.set(O, new Set());
+  d.state.boosting.add(O);
+  assert.equal(await linkDiscord(t, d, { id: O, username: 'once' }), '/account?n=discord');
+  const once = await L.findUserByEmail(t.db, 'once@rago.gg');
+  const onceLic = await t.db.get('SELECT * FROM licenses WHERE user_id = ?', [once.id]);
+  assert.ok(Math.abs(onceLic.current_period_end - (Date.now() + 14 * DAY_MS)) < 60000);
+  d.members.get(O).add(BOOST2);
+  await later();
+  await bot.syncAll();
+  assert.deepEqual((await t.db.all('SELECT kind FROM discord_rewards WHERE user_id = ? ORDER BY given_at', [once.id])).map((r) => r.kind), ['boost', 'boost2']);
+  const topped = await t.db.get('SELECT * FROM licenses WHERE user_id = ?', [once.id]);
+  assert.equal(topped.id, onceLic.id);
+  assert.ok(topped.current_period_end - Date.now() > 27 * DAY_MS && topped.current_period_end - Date.now() < 32 * DAY_MS);
+  dash = await (await t.browse('/account')).text();
+  assert.match(dash, /<strong>BOOST2<\/strong> · <span class="badge badge-ok"><i><\/i>Earned<\/span> 2 more weeks of Premium added/);
+  assert.match(dash, /<strong>BOOST<\/strong> · <span class="badge badge-ok"><i><\/i>Earned<\/span> 2 weeks of Premium added/);
+
   // /admin: both roles found, rewards counted. A role id that isn't one is flagged in the config.
   await t.browse('/admin/login', { form: { key: KEY } });
   const page = await (await t.browse('/admin')).text();
   assert.match(page, /« VIP » donne 1 mois de Premium et un code 10 % à usage unique au compte Rago lié\. 2 données\./);
   assert.match(page, /« MVP » donne 3 mois de Premium et un code 30 % à usage unique au compte Rago lié\. 1 donnée\./);
-  assert.match(page, /Booster le serveur donne 14 jours de Premium et un code 10 % à usage unique au compte Rago lié\. 1 donnée\./);
-  assert.match(page, /« 2x Booster » donne 1 mois de Premium et un code 30 % à usage unique au compte Rago lié\. 1 donnée\./);
+  assert.match(page, /Booster le serveur donne 14 jours de Premium et un code 10 % à usage unique au compte Rago lié\. 2 données\./);
+  assert.match(page, /« 2x Booster » donne 1 mois de Premium et un code 30 % à usage unique au compte Rago lié\. 2 données\./);
   const bad = loadConfig({ ...DISCORD, DISCORD_VIP_ROLE_ID: 'VIP' });
   assert.equal(bad.discordVipRoleId, '');
   assert.ok(bad.warnings.some((w) => /DISCORD_VIP_ROLE_ID is not a Discord id/.test(w)));
