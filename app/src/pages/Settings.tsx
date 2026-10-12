@@ -20,7 +20,7 @@ const LICENCES = [
 ];
 
 export function Settings() {
-  const { t, lang, setLang, motion, setMotion, license, signOutAndUndo, premiumApplied, setUpsell, activatedAt, sys } = useStore();
+  const { t, lang, setLang, motion, setMotion, license, signOut, premiumApplied, setUpsell, activatedAt, sys } = useStore();
   const [confirmOut, setConfirmOut] = useState(false);
   const device = license?.deviceName ?? sys?.hostname ?? "";
   return (
@@ -158,7 +158,7 @@ export function Settings() {
             icon={<LogOut size={14} />}
             onClick={() => {
               setConfirmOut(false);
-              void signOutAndUndo();
+              void signOut();
             }}
           >
             {premiumApplied.length > 0 ? t("signout.go") : t("account.signOut")}
