@@ -1197,6 +1197,13 @@ export function createApp({ cfg, db, keys, stripe, mailer, log = console, fetchI
     return c.json(popupCache.body, 200, { 'Access-Control-Allow-Origin': '*', 'Cache-Control': 'public, max-age=30' });
   });
 
+  // Public: the version of the installer /download serves (Railway variable INSTALLER_VERSION), shown under the
+  // site's download button. { version: null } while the variable isn't set.
+  api.get('/installer', (c) => {
+    const v = cfg.installerVersion.trim().replace(/^v/i, '');
+    return c.json({ version: /^\d+(\.\d+){1,3}$/.test(v) ? v : null }, 200, { 'Access-Control-Allow-Origin': '*', 'Cache-Control': 'public, max-age=300' });
+  });
+
   app.route('/api/v1', api);
 
   // Optional: serve the marketing site from the same server (SITE_DIR), so /buy and the site share a domain.

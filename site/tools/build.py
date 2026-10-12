@@ -1,5 +1,5 @@
-"""Builds site/index.html (what Netlify serves) from site/src/page.html (also the Claude preview), and site/reviews.html
-from site/src/reviews.html.
+"""Builds site/index.html (what Netlify serves) from site/src/page.html (also the Claude preview), site/reviews.html
+from site/src/reviews.html and site/tweaks.html from site/src/tweaks.html (its tweak list: tools/sync_tweaks.py).
 The source loads Geist from Google Fonts so the preview works; the built page uses the copies in site/fonts/ instead,
 so visitors' IP addresses aren't sent to Google."""
 import os
@@ -119,3 +119,13 @@ assert n == 1, 'accountBase not found in reviews.html'
 r = r.replace('href="https://account.rago-optimizer.com/', f'href="{BASE}/')  # the link baked for visitors without JavaScript
 open(os.path.join(ROOT, 'reviews.html'), 'w').write(r)
 print('reviews.html built')
+
+# Tweaks page (site/tweaks.html, from src/tweaks.html): same as the reviews page.
+t = open(os.path.join(ROOT, 'src/tweaks.html')).read()
+assert GOOGLE in t, 'Google Fonts block changed in tweaks.html: update build.py'
+t = t.replace(GOOGLE, LOCAL)
+t, n = re.subn(r'accountBase: "[^"]*"', f'accountBase: "{BASE}"', t, count=1)
+assert n == 1, 'accountBase not found in tweaks.html'
+t = t.replace('href="https://account.rago-optimizer.com/', f'href="{BASE}/')  # the links baked for visitors without JavaScript
+open(os.path.join(ROOT, 'tweaks.html'), 'w').write(t)
+print('tweaks.html built')
