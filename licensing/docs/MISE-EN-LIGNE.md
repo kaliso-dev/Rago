@@ -309,6 +309,27 @@ Le joueur (gratuit ou Premium) lie son Discord depuis sa page compte : la carte 
 
 **À faire une fois** : dans InviteLogger, crée les deux rangs (VIP à 10, MVP à 15) et active le filtre des fausses invitations. Puis clic droit sur le rôle **VIP** → **Copier l'identifiant du rôle** → variable Railway `DISCORD_VIP_ROLE_ID`, pareil pour **MVP** → `DISCORD_MVP_ROLE_ID` et pour ton rôle 2 boosts → `DISCORD_BOOST2_ROLE_ID`. La récompense d'un boost marche sans variable. Sur `/admin`, les lignes « Récompense … » doivent être « OK » ; elles comptent aussi les récompenses données. `npm run admin -- discord joueur@mail.com` montre les récompenses d'un joueur (et les donne tout de suite s'il y a droit).
 
+### Le bot communauté (invitations, accueil, partenaires)
+
+Le même bot écoute le serveur en direct (`DISCORD_COMMUNITY=1`). Il note par quel lien chaque membre arrive et s'il reste, ce qu'aucun bot d'invitations ne relie à tes ventes :
+
+- **`/invites`** pour tout le monde (et `/invites @membre`) : un ami compte seulement après **7 jours** sur le serveur. Revenir après être parti, un compte Discord de moins d'une semaine ou son propre lien ne comptent jamais. **`/top-invites`** : les 10 meilleurs.
+- **Accueil** dans un salon (jamais en message privé, interdit par Discord) : « Welcome @membre, you're member #… », qui l'a invité, puis le lien de la version gratuite et de la page compte. Seul le nouveau membre est notifié.
+- **`/partner-link Axora`** (staff) : crée un lien d'invitation suivi pour un partenaire (ou suit un lien existant avec `code`). Les arrivées par ce lien ne comptent pour aucun membre.
+- **`/growth`** (staff, visible par toi seul) : sur 30 jours, par source (chaque partenaire, invitations des membres, lien personnalisé) : arrivés, partis en moins de 24 h, restés 7 jours, encore là, compte Rago lié, acheteurs. Plus le nombre de membres qui portent le tag du serveur. `npm run admin -- growth` donne le même tableau.
+- **`/invites-adjust @membre 12`** (staff) : reprend le compte d'Invite Tracker pour un membre, ajouté au compte du bot Rago (0 l'enlève).
+- **VIP et MVP par le bot Rago** (`DISCORD_INVITE_ROLES=1`) : le bot donne VIP à 10 invitations et MVP à 15 (réglables avec `DISCORD_VIP_INVITES` et `DISCORD_MVP_INVITES`), l'annonce dans le salon d'accueil, et la récompense Premium suit si le compte est lié. Coupe d'abord les rangs de l'autre bot, sinon les deux donnent le rôle.
+
+**À faire une fois** (sur le serveur de test d'abord) :
+
+1. Developer Portal → ton application → **Bot** → **Privileged Gateway Intents** : active **Server Members Intent**, puis Save Changes. Sans lui, Discord coupe la connexion (code 4014) et `/admin` le dit.
+2. Sur Discord, **Paramètres du serveur → Rôles** → le rôle du bot : coche **Gérer le serveur** (sans elle, Discord cache les invitations au bot et aucune n'est comptée) et vérifie qu'il peut écrire dans le salon d'accueil. Ou ouvre le lien « Redonner ses permissions au bot » sur `/admin`.
+3. Clic droit sur le salon d'accueil → **Copier l'identifiant du salon** → `DISCORD_WELCOME_CHANNEL_ID`. Puis `DISCORD_COMMUNITY=1` et redémarre.
+4. Sur `/admin`, la section **Bot communauté Discord** doit afficher « Connexion live » et « Invitations » en OK. Les commandes `/invites`… apparaissent sur le serveur dans la minute.
+5. Reprends les meilleurs comptes d'Invite Tracker avec `/invites-adjust`, puis passe `DISCORD_INVITE_ROLES=1` si tu veux que le bot Rago donne VIP et MVP.
+
+Le bot compte à partir du moment où il est connecté : rien avant. Un test (staging) avec les mêmes variables Discord que la production écouterait le vrai serveur : utilise un serveur Discord de test pour staging.
+
 ---
 
 ## Ce que tu me donnes
@@ -340,6 +361,7 @@ Le joueur (gratuit ou Premium) lie son Discord depuis sa page compte : la carte 
 | `SCRIPTS_SECRET` | Une valeur aléatoire que tu génères une fois (étape 8), identique au secret GitHub `RAGO_SCRIPTS_SECRET`. Ne la change jamais |
 | `DISCORD_CLIENT_ID`, `DISCORD_CLIENT_SECRET`, `DISCORD_BOT_TOKEN`, `DISCORD_GUILD_ID`, `DISCORD_ROLE_ID` | Discord Developer Portal et ton serveur (« Le rôle Pro sur Discord »). Facultatives : sans elles, le rôle se donne à la main |
 | `DISCORD_VIP_ROLE_ID`, `DISCORD_MVP_ROLE_ID`, `DISCORD_BOOST2_ROLE_ID` | Clic droit sur les rôles VIP, MVP et 2 boosts → Copier l'identifiant (« Les récompenses Discord »). Facultatives : sans elles, pas de récompense pour ce palier |
+| `DISCORD_COMMUNITY`, `DISCORD_WELCOME_CHANNEL_ID`, `DISCORD_WELCOME_TEXT`, `DISCORD_INVITE_ROLES`, `DISCORD_VIP_INVITES`, `DISCORD_MVP_INVITES` | Le bot communauté (« Le bot communauté »). Facultatives : sans `DISCORD_COMMUNITY=1`, rien ne change |
 | `ADMIN_KEY` | Une clé d'au moins 16 lettres et chiffres que tu choisis : elle ouvre `/admin`, où se règle le pop-up du site (« Le pop-up du site »). Sans elle, `/admin` n'existe pas |
 | `INSTALLER_VERSION` | Le numéro de l'exe déposé dans le bucket, lu dans son nom `Rago Optimizer_<numéro>_x64-setup.exe` (ex. `1.1.5`). Affiché à côté du bouton de téléchargement. `INSTALLER_OBJECT` est facultatif (il donne le bucket et le dossier) : le `.exe` le plus récent du dossier est toujours servi |
 
@@ -372,6 +394,7 @@ npm run admin -- delete-user joueur@mail.com    # demande de suppression (RGPD) 
 npm run admin -- export-keys                    # la clé qui signe les licences, à garder dans ton gestionnaire de mots de passe
 npm run admin -- discord joueur@mail.com        # son Discord lié et son rôle Pro, remis d'aplomb tout de suite (demande les cinq DISCORD_ de Railway)
 npm run admin -- discord-unlink joueur@mail.com # retire le rôle et délie son Discord
+npm run admin -- growth                         # arrivées sur Discord des 30 derniers jours par source (growth 7 : sur 7 jours)
 ```
 
 - **« J'ai payé mais mon compte n'a pas de licence »** (onglet fermé après le paiement, compte créé sur un autre appareil ou plus de 48 h après) : `show son@email.com` affiche l'achat sous « Not on any account yet ». S'il a déjà un compte avec cet email : `attach son@email.com`. S'il n'a pas de compte : `claim-link son@email.com` et envoie-lui le lien. S'il a payé avec un autre email : `show email-de-paiement`, puis `attach email-du-compte <id de la licence>`.
