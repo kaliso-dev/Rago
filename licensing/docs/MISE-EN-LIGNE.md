@@ -341,7 +341,7 @@ Le joueur (gratuit ou Premium) lie son Discord depuis sa page compte : la carte 
 | `DISCORD_CLIENT_ID`, `DISCORD_CLIENT_SECRET`, `DISCORD_BOT_TOKEN`, `DISCORD_GUILD_ID`, `DISCORD_ROLE_ID` | Discord Developer Portal et ton serveur (« Le rôle Pro sur Discord »). Facultatives : sans elles, le rôle se donne à la main |
 | `DISCORD_VIP_ROLE_ID`, `DISCORD_MVP_ROLE_ID`, `DISCORD_BOOST2_ROLE_ID` | Clic droit sur les rôles VIP, MVP et 2 boosts → Copier l'identifiant (« Les récompenses Discord »). Facultatives : sans elles, pas de récompense pour ce palier |
 | `ADMIN_KEY` | Une clé d'au moins 16 lettres et chiffres que tu choisis : elle ouvre `/admin`, où se règle le pop-up du site (« Le pop-up du site »). Sans elle, `/admin` n'existe pas |
-| `INSTALLER_VERSION` | Le numéro de l'exe déposé dans le bucket, lu dans son nom `Rago Optimizer_<numéro>_x64-setup.exe` (ex. `1.1.5`). Affiché à côté du bouton de téléchargement. `INSTALLER_OBJECT` est facultatif (il donne le bucket et le dossier) : le `.exe` le plus récent du dossier est toujours servi |
+| `INSTALLER_VERSION` | Le numéro de l'exe déposé dans le bucket, lu dans son nom `Rago Optimizer_<numéro>_x64-setup.exe` (ex. `1.1.5`). Affiché à côté du bouton de téléchargement, et sous celui de la page Tweaks du site, qui le lit sur `/api/v1/installer`. `INSTALLER_OBJECT` est facultatif (il donne le bucket et le dossier) : le `.exe` le plus récent du dossier est toujours servi |
 
 À retirer s'il est encore là : `STRIPE_PRICE_ID` (ancien prix unique, plus vendu).
 

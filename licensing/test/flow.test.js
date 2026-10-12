@@ -439,6 +439,16 @@ test('installer from Supabase Storage: signed link, any file name, clear reason 
   assert.doesNotMatch(nofile + offText, /\.bat|rago-optimizer-free/);
 });
 
+test('installer version: the site reads INSTALLER_VERSION from /api/v1/installer, null while it is not set', async () => {
+  const t = await setup({ INSTALLER_VERSION: ' v1.2.0 ' });
+  const res = await t.app.request('/api/v1/installer');
+  assert.equal(res.status, 200);
+  assert.equal(res.headers.get('access-control-allow-origin'), '*');
+  assert.deepEqual(await res.json(), { version: '1.2.0' });
+  assert.deepEqual(await (await (await setup()).app.request('/api/v1/installer')).json(), { version: null });
+  assert.deepEqual(await (await (await setup({ INSTALLER_VERSION: '<b>1.2</b>' })).app.request('/api/v1/installer')).json(), { version: null });
+});
+
 test('concurrent activations from two PCs: exactly one wins', async () => {
   const t = await setup();
   await L.createUser(t.db, 'race@x.io', 'password123');

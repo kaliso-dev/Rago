@@ -1,4 +1,5 @@
-"""Re-sync the app preview in src/page.html with the app (app/ in the repo, app/rago-hub/ in the project folder) (catalog.json and i18n.ts are the truth). Run after the app changes its texts, then build.py."""
+"""Re-sync the app preview in src/page.html with the app (app/ in the repo, app/rago-hub/ in the project folder) (catalog.json and i18n.ts are the truth). Run after the app changes its texts, then build.py.
+Also re-syncs the tweak list of the Tweaks page (src/tweaks.html), with sync_tweaks.py."""
 import json, os, re
 HERE = os.path.dirname(os.path.abspath(__file__))
 # the app lives in app/ in the GitHub repo and in app/rago-hub/ in the project folder
@@ -59,3 +60,6 @@ s = re.sub(r'(id="msel">0 of )\d+', lambda m: m.group(1) + str(count('latency'))
 open(p, 'w').write(s)
 print('MODS', re.findall(r'\["(\w+)","[^"]+","([^"]+)",(\d+)\]', s[s.index('const MODS'):s.index('];', s.index('const MODS'))]))
 print('total', total, 'heading', heading, 'reboot', reboot, 'power', sec_count('power'), 'input', sec_count('input'))
+# the Tweaks page: same catalog
+import runpy
+runpy.run_path(os.path.join(HERE, 'sync_tweaks.py'))
