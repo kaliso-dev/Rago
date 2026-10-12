@@ -1,6 +1,7 @@
 """Writes the tweak list of src/tweaks.html (the Tweaks page) from the app's catalog (catalog.json, free.json: the truth
 for names, sections, badges and what the app says) and from src/tweaks-copy.json (the page's own words for each tweak:
-summary, about, helps, and undo when turning the switch off doesn't put everything back). Run after the app changes its tweaks (sync_app.py runs it too), then build.py.
+summary, about, helps, plus undo when turning the switch off doesn't put everything back and restart when
+the change needs one although the catalog says not). Run after the app changes its tweaks (sync_app.py runs it too), then build.py.
 
 Same count as the app and the home page: tweaks and one-time actions, twins (same script under two names) once.
 A tweak without its words in tweaks-copy.json still gets a card, with the app's description, and a warning here."""
@@ -64,6 +65,8 @@ def card(m, sec, t, k):
     c = COPY.get(k) or {"summary": t['desc']['en'], "about": t['desc']['en'], "helps": []}
     free = t['id'] in FREE
     rb, rb_txt = restart(t)
+    if c.get('restart'):  # the catalog says no restart, but the change only applies after one (checked against the script)
+        rb, rb_txt = ('v' if 'some' in c['restart'] else '1'), c['restart']
     kind = 'session' if t['id'] in SESSION else t['kind']
     needs = [NEEDS[r] for r in t['requires'] + ([sec['requires']] if sec.get('requires') else []) if r in NEEDS]
     badges = ''

@@ -17,7 +17,7 @@
  },
  "ping_main": {
   "summary": "Tunes your network card and connection settings to help even out small ping spikes.",
-  "about": "Four configs mix different settings for how Windows sends network data and how your network card behaves, including its power saving. On some cards, that can smooth out small, sudden jumps in latency. Your usual ping won't drop, though, because no setting can bring you closer to the server. Configs 2 to 4 make the card use more power and stop the PC from waking over the network, so start with config 1 if you want to keep those.",
+  "about": "Four configs mix different settings for how Windows sends network data and how your network card behaves, including its power saving. On some cards, that can smooth out small, sudden jumps in latency. Your usual ping won't drop, though, because no setting can bring you closer to the server. Configs 2 to 4 make the card use more power and stop the PC from waking over the network, and config 4 also turns off an old local file-sharing feature, so start with config 1 if you want to keep those.",
   "helps": [
    "Connection"
   ]
@@ -31,15 +31,16 @@
  },
  "net_profile": {
   "summary": "Sets how your connection treats game data, with profiles for hitreg, knockback or priority.",
-  "about": "You get three profiles for how your connection handles game data. They let you send it in smaller pieces, resend lost data faster, or put Minecraft traffic ahead of everything else. The priority option only works if your router respects it, and none of them usually changes your ping in a way you would notice. You can switch between them without restarting your PC.",
+  "about": "You get three profiles for how your connection handles game data. They let you send it in smaller pieces, resend lost data faster, or put Minecraft traffic ahead of everything else. The priority option only works if your router respects it, and none of them usually changes your ping in a way you would notice. Some of the changes may only fully apply after you restart your PC.",
   "helps": [
    "Connection",
    "Hitreg"
-  ]
+  ],
+  "restart": "Needed for some profiles"
  },
  "net_server": {
   "summary": "Applies one of four complete network setups covering your connection, card and address lookups.",
-  "about": "Instead of changing network settings one at a time, you pick one of four presets that set them all together, including your network card and how Windows finds server addresses. Presets 1 and 2 also change settings Windows uses while starting up, so this is for players who know what they're changing. Since ping mostly depends on distance and your internet connection, expect little or no difference there. A restart applies the preset.",
+  "about": "Instead of changing network settings one at a time, you pick one of four presets that set them all together, including your network card and how Windows finds server addresses. Presets 1 and 2 also change settings Windows uses while starting up, and presets 2 and 4 stop your network card from saving power or waking the PC, so this is for players who know what they're changing. Since ping mostly depends on distance and your internet connection, expect little or no difference there. A restart applies the preset.",
   "helps": [
    "Connection"
   ]
@@ -66,8 +67,8 @@
   ]
  },
  "net_adapter": {
-  "summary": "Stops your network card from saving power and gives it more room to hold data.",
-  "about": "Several network card settings change at once here. Power saving and waking the PC over the network are turned off, the card hands some of its tasks back to your processor, and it gets more room to hold data as it comes and goes. On some cards, that can even out small lag spikes, though the effect is often modest. Your processor works a little harder and the card uses a bit more power, which matters most on a laptop.",
+  "summary": "Stops your wired network card from saving power and gives it more room to hold data.",
+  "about": "Several settings of your wired (Ethernet) network card change at once here, and a Wi-Fi card is usually left untouched. Power saving and waking the PC over the network are turned off, the card hands some of its tasks back to your processor, and it gets more room to hold data as it comes and goes. On some cards, that can even out small lag spikes, though the effect is often modest. Your processor works a little harder and the card uses a bit more power, which matters most on a laptop.",
   "helps": [
    "Connection"
   ]
@@ -80,8 +81,8 @@
   ]
  },
  "net_advanced": {
-  "summary": "Changes about fifteen global connection settings and turns off two old connection tunnels.",
-  "about": "About fifteen settings that control how your PC moves data over the internet are changed, and two outdated connection tunnels are switched off. These settings mostly affect how much data gets through at once, not ping, so most players won't notice a change in game. Xbox party chat and some games that connect players directly may have trouble connecting afterward. It's best left to players who know what they're changing.",
+  "summary": "Changes about twenty global connection settings and turns off two old connection tunnels.",
+  "about": "About twenty settings that control how your PC moves data over the internet are changed, and two outdated connection tunnels are switched off. These settings mostly affect how much data gets through at once, not ping, so most players won't notice a change in game. Xbox party chat and some games that connect players directly may have trouble connecting afterward. It's best left to players who know what they're changing.",
   "helps": [
    "Connection"
   ]
@@ -135,7 +136,8 @@
   "about": "Many sites and servers can be reached through two kinds of internet address, an older one and a newer one. This setting tells Windows to try the older kind first, while the newer kind stays available. Despite the name, nothing is fully turned off. It can help if your connection over the newer kind is unstable, but otherwise you're unlikely to see a difference, so it's mainly for players troubleshooting their connection.",
   "helps": [
    "Connection"
-  ]
+  ],
+  "restart": "Needed"
  },
  "net_lanman": {
   "summary": "Adjusts the settings Windows uses when other PCs open your shared folders.",
@@ -171,7 +173,8 @@
   "helps": [
    "Smoothness",
    "Connection"
-  ]
+  ],
+  "undo": "Turn it off to put back the settings. The temporary files it deleted don't come back."
  },
  "in_frames": {
   "summary": "Writes settings meant to limit how many frames wait in line before reaching your screen.",
@@ -182,10 +185,11 @@
  },
  "in_advanced": {
   "summary": "Applies a large pack of Windows changes, including turning off background game recording.",
-  "about": "A large bundle of changes lands at once, covering startup, priorities, network, privacy, notifications and how Windows looks. Turning off background game recording is the part that can help, mainly on a low-end PC, while the rest rarely makes a difference you can measure in games. You also lose notifications, driver updates from Windows Update and the safety warning on downloaded files, and your colors and cursors change. It suits players who know what they're giving up.",
+  "about": "A large bundle of changes lands at once, covering startup, priorities, network, privacy, notifications and how Windows looks. Turning off background game recording is the part that can help, mainly on a low-end PC, while the rest rarely makes a measurable difference in games. You also lose notifications, hibernation, the Windows Security icon, driver updates from Windows Update and the safety warning on downloaded files. Some built-in apps lose camera and microphone access, mouse acceleration is turned off and your colors and cursors change, so it suits players who know what they're giving up.",
   "helps": [
    "Background",
-   "FPS"
+   "FPS",
+   "Privacy"
   ]
  },
  "in_mouse": {
@@ -193,7 +197,8 @@
   "about": "By default, Windows speeds up the pointer when you move the mouse quickly, so the same motion can travel different distances. Turning that off means your aim depends only on how far you move your hand, which makes it more consistent. It also shortens the delay before things react when you hover over them. It won't make your mouse respond any faster, and your Windows pointer speed goes back to the middle notch.",
   "helps": [
    "Input lag"
-  ]
+  ],
+  "restart": "Sign out or restart to apply"
  },
  "in_keyboard": {
   "summary": "Stops the Sticky Keys pop-up from appearing mid-game and sets the fastest key repeat.",
@@ -201,7 +206,8 @@
   "helps": [
    "Background",
    "Input lag"
-  ]
+  ],
+  "restart": "Sign out or restart to apply"
  },
  "in_queue": {
   "summary": "Sets how many mouse and keyboard inputs can wait in line before your PC handles them.",
@@ -212,14 +218,15 @@
  },
  "hitreg_suite": {
   "summary": "Applies over 300 Windows changes at once, from processor speed to priorities and privacy.",
-  "about": "More than 300 settings change at once, covering processor speed, priorities, timing, memory and privacy. On a plugged-in PC, it can make frames arrive more evenly, while most of the rest rarely makes a measurable difference. The four PC profiles are almost identical, so your choice matters little. It's for experienced players: expect more heat, location and background Store apps turned off, and a change that screenshare tools check.",
+  "about": "More than 300 settings change at once, covering processor speed, priorities, timing, memory and privacy. On a plugged-in PC, it can make frames arrive more evenly, while most of the rest rarely makes a measurable difference. The four PC profiles are almost identical, so your choice matters little. It's for experienced players: expect more heat, a change that screenshare tools check, and hibernation, Game Mode, mouse acceleration, location and background Store apps turned off.",
   "helps": [
-   "Smoothness"
+   "Smoothness",
+   "Privacy"
   ]
  },
  "mc_optifine": {
   "summary": "Sets your OptiFine video settings to a ready-made Performance or Quality preset.",
-  "about": "If you play with OptiFine, you can apply a ready-made set of video settings instead of adjusting each one yourself. The performance preset can raise your FPS a lot, but it makes the game look plainer, with the sky, clouds, animations and particles turned off. The quality preset is there if you care more about looks. Your old settings file is backed up first, and without OptiFine nothing changes.",
+  "about": "If you play with OptiFine, you can apply a ready-made set of video settings instead of adjusting each one yourself. The performance preset can raise your FPS a lot, but it makes the game look plainer, with the sky, clouds, animations and particles turned off, while the quality preset is there if you care more about looks. Both also set the OptiFine zoom key to Left Ctrl, which Minecraft uses for sprinting by default, so check your controls. Your old settings file is backed up first, and without OptiFine nothing changes.",
   "helps": [
    "FPS"
   ]
@@ -318,10 +325,11 @@
  },
  "exp_smb": {
   "summary": "Makes file sharing on your home network more secure by turning off an old, weaker method.",
-  "about": "File sharing between devices on your home network gets stricter here. An old, less secure way of sharing is turned off, and shared files must be protected and verified as they travel. Your games won't run any differently, since this is purely about security. Older storage drives, routers and TVs may no longer open your shared folders, and copying over the network can be slower.",
+  "about": "File sharing between devices on your home network gets stricter here. An old, less secure way of sharing is turned off, and shared files must be protected and verified as they travel. Your games won't run any differently, since this is purely about security. Older storage drives, routers and TVs may no longer open your shared folders, your PC may no longer open theirs, and copying over the network can be slower.",
   "helps": [
    "Privacy"
-  ]
+  ],
+  "undo": "Turn it off to put back the sharing settings. The old sharing method stays uninstalled."
  },
  "rst_point": {
   "summary": "Saves the current state of Windows so you can return to it if a tweak causes trouble.",
@@ -355,7 +363,7 @@
  },
  "lat_general": {
   "summary": "Applies a set of Windows timing and priority settings and makes menus open without delay.",
-  "about": "A bundle of Windows settings sits behind this switch: more priority for your game, adjusted Windows timers, a few changes to how files are handled, and menus that open with no delay. The part you will actually notice is the menus appearing right away. On a recent PC, the rest rarely makes a measurable difference. It needs a restart and uses slightly more power while the PC sits idle, so see it as a snappier Windows rather than extra FPS.",
+  "about": "A bundle of Windows settings sits behind this switch: more priority for your game, adjusted Windows timers, a few changes to how files are handled, and menus that open with no delay. The part you will actually notice is the menus appearing right away, so see it as a snappier Windows rather than extra FPS. On a recent PC, the rest rarely makes a measurable difference. It changes boot settings, needs a restart, uses slightly more power at idle and makes Windows mark busy apps as not responding sooner.",
   "helps": [
    "Input lag"
   ]
@@ -561,7 +569,7 @@
  },
  "cpu_cstates_off": {
   "summary": "Stops the PC from sleeping when plugged in and keeps the processor at full speed.",
-  "about": "While your PC is plugged in, two things change: it no longer goes to sleep on its own, and the processor never drops below full speed. The second part is what can help, by making frames arrive more evenly. Turning off sleep does nothing for your games and only matters if you want the PC to stay awake. Keep in mind it stays on even when nobody is using it, with the extra heat, noise and power use that brings.",
+  "about": "While your PC is plugged in, two things change: sleep is switched off, and the processor never drops below full speed. The second part is what can help, by making frames arrive more evenly. Turning off sleep does nothing for your games and only matters if you want the PC to stay awake. Keep in mind it stays on even when nobody is using it, with the extra heat, noise and power use that brings.",
   "helps": [
    "Smoothness"
   ]
@@ -656,7 +664,8 @@
   "helps": [
    "FPS",
    "Smoothness"
-  ]
+  ],
+  "undo": "Turn it off and memory compression and app pre-launch are switched back on."
  },
  "sys_registry": {
   "summary": "Changes over 150 hidden Windows settings for more privacy and fewer distractions.",
@@ -720,7 +729,8 @@
   "about": "A hidden high-end power plan built into Windows gets added and turned on, and power options that are normally hidden become visible. The usual Balanced, High performance and Power saver plans are deleted at the same time. Frames may come out more evenly, mostly on AMD Ryzen processors and laptops that stay plugged in. It's meant for players who know their power settings, since the PC also runs warmer and uses more power.",
   "helps": [
    "Smoothness"
-  ]
+  ],
+  "undo": "Turn it off to bring back the usual power plans, with Windows' default settings."
  },
  "pow_saving": {
   "summary": "Adjusts the idle values Windows keeps for your SSD and SD card.",
@@ -738,7 +748,7 @@
  },
  "sys_bcdedit": {
   "summary": "Changes startup settings for how Windows handles your processor's timers.",
-  "about": "A few of the settings Windows reads when it starts get changed here: how the processor's timers are handled, plus one for the animation shown during startup. Windows already does a good job with its timers, so in games the change is rarely measurable. Your PC may also draw a little more power while idle. It's an advanced option for players who are comfortable changing how Windows boots.",
+  "about": "A few of the settings Windows reads when it starts get changed here: how the processor's timers and the signals from your devices are handled, plus the startup animation, which gets hidden. Windows already does a good job with its timers, so in games the change is rarely measurable. Your PC may also draw a little more power while idle. It's an advanced option for players who are comfortable changing how Windows boots.",
   "helps": [
    "Input lag"
   ]
@@ -813,7 +823,8 @@
   "helps": [
    "Input lag",
    "Connection"
-  ]
+  ],
+  "undo": "Turn it off and Windows can turn off every device to save power again, even ones you had kept on."
  },
  "pow_gpuenergy": {
   "summary": "Turns off the Windows driver that keeps track of your graphics card's power use.",
@@ -827,7 +838,8 @@
   "about": "Your drives normally rest when they're not busy, and hard drives also have their own power saving and a quiet mode. This keeps the drives awake and, where possible, turns those hard drive features off. If you still use a hard drive, it may avoid the pause while it wakes up, but on an SSD the effect is rarely measurable. Expect a louder hard drive and, on laptops, faster battery drain while asleep.",
   "helps": [
    "Smoothness"
-  ]
+  ],
+  "undo": "Turn it off to let your drives rest again. Hard drive power saving and quiet mode stay off."
  },
  "pow_hibernate": {
   "summary": "Turns off hibernation and sleep tracking to free several GB on your system drive.",
@@ -848,14 +860,16 @@
   "about": "Balanced, High performance and Power saver are the power plans Windows comes with. Deleting them doesn't make your PC any faster. It simply stops you from switching back to one of them by mistake and leaving your chosen plan. It's an advanced option, and laptop players should think twice, since those plans are the usual way to save battery.",
   "helps": [
    "Cleanup"
-  ]
+  ],
+  "undo": "Turn it off to bring back the usual power plans, with Windows' default settings."
  },
  "sto_general": {
   "summary": "Clears temporary files and caches to free disk space, and turns on drive write caching.",
   "about": "Temporary files, browser caches and the Windows Update cache get cleared out, and your internal drives are allowed to buffer data before writing it. What you gain is free disk space, not extra FPS. Give the cleanup a few minutes to finish, and expect websites to load a touch slower the first time afterward. It's an advanced option that makes the most sense when your drive is getting full.",
   "helps": [
    "Cleanup"
-  ]
+  ],
+  "undo": "Turn it off to put back the drive setting. The files it cleaned stay deleted."
  },
  "sto_ntfs": {
   "summary": "Tunes how Windows stores and reads files, with a bigger file cache and fewer date updates.",
@@ -1080,8 +1094,8 @@
   ]
  },
  "dbl_telemetry": {
-  "summary": "Stops Windows and Office from sending usage data to Microsoft.",
-  "about": "Usage data about Windows and Office is sent to Microsoft regularly, partly through around twenty scheduled tasks. This switches all of that collection off. It's about privacy, so don't expect your frame rate to change. Location is switched off as part of it, so apps like weather, maps or Find my device lose track of where you are.",
+  "summary": "Stops Windows and Office from sending most usage data to Microsoft.",
+  "about": "Usage data about Windows and Office is sent to Microsoft regularly, partly through around twenty scheduled tasks. This switches off most of that collection, though Windows still sends a basic minimum on Home and Pro editions. It's about privacy, so don't expect your frame rate to change. Location is switched off as part of it, so apps like weather, maps or Find my device lose track of where you are.",
   "helps": [
    "Privacy"
   ]
@@ -1107,7 +1121,8 @@
   "helps": [
    "Privacy",
    "Cleanup"
-  ]
+  ],
+  "undo": "Turn it off to put back the search settings. The Cortana app stays uninstalled."
  },
  "dbl_autologgers": {
   "summary": "Turns off about thirty logs that keep writing to your drive, plus sponsored app suggestions.",
@@ -1153,7 +1168,7 @@
  },
  "win_telemetry": {
   "summary": "Applies over 200 settings that cut data collection, animations and mouse acceleration.",
-  "about": "More than 200 Windows settings change at once here: data collection and the tasks behind it are switched off, animations are reduced and mouse acceleration is removed. The result is more privacy and a quieter Windows in the background, though frames rarely change in a way you can measure. It's meant for players who know what they're changing. Expect your mouse to feel different at first, location to be off, and driver updates to become your job.",
+  "about": "More than 200 Windows settings change at once here: most data collection and the tasks behind it are switched off, animations are reduced and mouse acceleration is removed. The result is more privacy and a quieter Windows in the background, though frames rarely change in a way you can measure. It's meant for players who know what they're changing. Expect your mouse to feel different at first, location to be off, Store apps to stop running in the background, and driver updates to become your job.",
   "helps": [
    "Privacy",
    "Background"
@@ -1161,9 +1176,10 @@
  },
  "win_optimize": {
   "summary": "Applies about fifty comfort settings: fewer ads, faster menus, no Edge in the background.",
-  "about": "Around fifty small settings change in one go to make Windows calmer to use. You'll see fewer suggestions and ads, menus open faster, and Edge stops running once you close it. It's about everyday comfort, and your frame rate will rarely change in a way you can measure. If someone helps you through Windows Remote Assistance, know that it gets turned off.",
+  "about": "Around fifty small settings change in one go to make Windows calmer to use. You'll see fewer suggestions and ads, menus open faster, and Edge stops running once you close it. It's about everyday comfort, and your frame rate will rarely change in a way you can measure. Know that it also turns off Windows Remote Assistance and stops syncing your settings and passwords with your Microsoft account.",
   "helps": [
-   "Background"
+   "Background",
+   "Privacy"
   ]
  },
  "win_diag": {
@@ -1174,11 +1190,12 @@
   ]
  },
  "win_services": {
-  "summary": "Turns off several background Windows features, like printing, and removes Cortana and Copilot.",
-  "about": "Several Windows features keep running whether you use them or not. This switches off the scanning that keeps file search fast, along with printing, offline files and crash reporting, and it removes Cortana and Copilot. Fewer things run in the background, though the effect on frames is rarely measurable. It's for players who know they can live without these, since file search gets slower and printing and the notification center stop working.",
+  "summary": "Turns off several background Windows features, like printing, and removes the Cortana app.",
+  "about": "Several Windows features keep running whether you use them or not. This switches off the scanning that keeps file search fast, along with printing, offline files and crash reporting, and it removes Cortana and an older Copilot component. Fewer things run in the background, though the effect on frames is rarely measurable. It's for players who know they can live without these, since file search gets slower and printing and the notification center stop working.",
   "helps": [
    "Background"
-  ]
+  ],
+  "undo": "Turn it off to bring the features back. The Cortana app stays uninstalled."
  },
  "win_store": {
   "summary": "Keeps Windows update sharing to PCs on your local network and leaves the Store on.",
@@ -1209,18 +1226,19 @@
   ]
  },
  "cln_repair": {
-  "summary": "Checks Windows for damaged system files and repairs them, after clearing old updates.",
-  "about": "If Windows crashes or behaves oddly, this is a good thing to try. It first clears out old updates, then checks Windows itself and fixes any damaged system files it finds. On a healthy PC it won't change your frames. Plan for it to take several minutes, and stay connected to the Internet in case it needs to download repairs.",
+  "summary": "Checks the Windows system image for damage and repairs it, after clearing out old updates.",
+  "about": "If Windows crashes or behaves oddly, this is a good thing to try. It first clears out old updates, then checks the stored copy of system files that Windows repairs itself from and fixes any damage it finds. On a healthy PC it won't change your frames. Plan for it to take several minutes, and stay connected to the Internet in case it needs to download repairs.",
   "helps": [
    "Recovery"
   ]
  },
  "gpu_nvidia": {
   "summary": "Applies a full set of low-delay settings to your NVIDIA card for all your games.",
-  "about": "On NVIDIA cards, this pack sets a low-delay profile for every game, keeps the card running at full speed, turns off NVIDIA's data collection and adjusts other driver settings. The profile matters most when your graphics card is working flat out, where it can make your aim feel a bit more responsive. The other changes rarely make a difference you can feel. Your own global NVIDIA settings get replaced and the card runs warmer even on the desktop, so laptop players may prefer to skip it.",
+  "about": "On NVIDIA cards, this pack sets a low-delay profile for every game, keeps the card at full speed and adjusts other driver settings. It also turns off video copy protection, NVIDIA's data collection and update checks, and deletes leftover installer files. The profile matters most when your graphics card is working flat out, where it can make your aim feel a bit more responsive, while the rest rarely makes a difference you can feel. Your global NVIDIA settings get replaced, Netflix may refuse to play and the card runs warmer even on the desktop.",
   "helps": [
    "Input lag"
-  ]
+  ],
+  "undo": "Turn it off to put back most settings. Your previous NVIDIA profile and the deleted installer files don't come back."
  },
  "gpu_amd": {
   "summary": "Sets up your AMD card for lower input delay and steady speed in every game.",
@@ -1255,14 +1273,16 @@
   "about": "Several NVIDIA driver changes come in one package here, led by a low-delay profile for all your games. It also turns off video copy protection and NVIDIA's data collection, among other settings. The profile helps most when your graphics card is fully loaded, and if a game offers NVIDIA Reflex in its own settings, that option does a better job. Keep in mind that Netflix and other streaming video may refuse to play, and your global NVIDIA settings get replaced.",
   "helps": [
    "Input lag"
-  ]
+  ],
+  "undo": "Turn it off to put back most settings. Your previous NVIDIA profile doesn't come back."
  },
  "nv_profile": {
   "summary": "Loads a low-delay profile into your NVIDIA driver that applies to all your games.",
   "about": "Rago's ready-made low-delay profile gets loaded into your NVIDIA driver and applies to every game you play, with no restart needed. It's most useful when your graphics card runs at full load, which is when it can trim the delay between your mouse and the screen. When a game has NVIDIA Reflex in its own settings, turning that on works better. If you have set up your own 3D settings in the NVIDIA Control Panel, note that this profile takes their place.",
   "helps": [
    "Input lag"
-  ]
+  ],
+  "undo": "Turning it off doesn't bring your previous NVIDIA settings back yet."
  },
  "nv_telemetry": {
   "summary": "Stops NVIDIA's crash reports, data collection and automatic update checks.",
