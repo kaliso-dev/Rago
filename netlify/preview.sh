@@ -23,8 +23,8 @@ else
   echo "Preview: STAGING_ACCOUNT_URL isn't set, account links are off on this preview"
 fi
 
-# Each page's CONFIG (home page, reviews page), then the links baked for visitors without JavaScript.
-for PAGE in site/index.html site/reviews.html; do
+# Each page's CONFIG (home page, reviews page, tweaks page), then the links baked for visitors without JavaScript.
+for PAGE in site/index.html site/reviews.html site/tweaks.html; do
   sed -i "s|previewAccountBase: \"\"|previewAccountBase: \"$URL\"|" "$PAGE"
   if [ -n "$URL" ]; then
     sed -i "s|href=\"$LIVE/|href=\"$URL/|g" "$PAGE"

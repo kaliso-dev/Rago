@@ -56,7 +56,7 @@ npm run local
 - Les boutons du site (Sign in, Get Premium, Download) vont vers ce serveur local, **jamais vers le vrai**. Même si ton Terminal a encore le `DATABASE_URL` de production (pour `npm run admin`), `npm run local` l'ignore, comme les clés Stripe live, Resend et Discord.
 - L'app et le serveur ensemble : lance `npm run local` dans un Terminal et `npm run window` dans un autre ; les liens de compte de l'app ouvrent alors ce serveur local.
 
-La page publiée `site/index.html` est fabriquée à partir de `site/src/page.html` (et `site/reviews.html` à partir de `site/src/reviews.html`). Pendant une modification, `http://localhost:8787/src/page.html` montre la source ; `index.html` et `reviews.html` sont refaites par `python3 site/tools/build.py` (Claude le fait dans la pull request).
+La page publiée `site/index.html` est fabriquée à partir de `site/src/page.html` (et `site/reviews.html` à partir de `site/src/reviews.html`, `site/tweaks.html` à partir de `site/src/tweaks.html`). Pendant une modification, `http://localhost:8787/src/page.html` montre la source ; `index.html`, `reviews.html` et `tweaks.html` sont refaites par `python3 site/tools/build.py` (Claude le fait dans la pull request).
 
 ## 4. Le chemin d'une modification
 
