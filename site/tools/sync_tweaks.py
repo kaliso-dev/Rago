@@ -1,6 +1,6 @@
 """Writes the tweak list of src/tweaks.html (the Tweaks page) from the app's catalog (catalog.json, free.json: the truth
 for names, sections, badges and what the app says) and from src/tweaks-copy.json (the page's own words for each tweak:
-summary, about, helps). Run after the app changes its tweaks (sync_app.py runs it too), then build.py.
+summary, about, helps, and undo when turning the switch off doesn't put everything back). Run after the app changes its tweaks (sync_app.py runs it too), then build.py.
 
 Same count as the app and the home page: tweaks and one-time actions, twins (same script under two names) once.
 A tweak without its words in tweaks-copy.json still gets a card, with the app's description, and a warning here."""
@@ -79,6 +79,8 @@ def card(m, sec, t, k):
     how = {'tweak': ('Switch', 'Turn it off and your previous settings come back.'),
            'action': ('One-time action', 'It runs once and has no off switch.'),
            'session': ('On and off', 'Turn it on before playing, off after.')}[kind]
+    if c.get('undo') and kind == 'tweak':  # what turning it off can't give back (checked against the script)
+        how = (how[0], c['undo'])
     spec = [
         ('Plan', 'Free' if free else 'Premium', 'Open in the free version' if free else 'Unlocked with Premium', ''),
         ('Level', 'Advanced' if t['risk'] == 'advanced' else 'Safe', 'For players who know what they change' if t['risk'] == 'advanced' else 'Fine for every PC', ''),
