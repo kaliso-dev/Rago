@@ -68,7 +68,7 @@ section[id],main[id]{scroll-margin-top:92px}
 #pricing{scroll-margin-top:118px}
 
 /* Hero */
-.hero{position:relative;min-height:min(980px,100svh);display:flex;align-items:center;padding-block:140px 90px;overflow:hidden;overflow:clip;isolation:isolate}
+.hero{position:relative;min-height:100vh;min-height:100svh;display:flex;align-items:center;padding-block:140px 112px;overflow:hidden;overflow:clip;isolation:isolate}
 #dots{position:absolute;inset:0;width:100%;height:100%;z-index:-2}
 .orb{position:absolute;z-index:-1;border-radius:50%;filter:blur(80px);pointer-events:none;opacity:.55}
 .orb.a{width:46vw;height:46vw;max-width:760px;max-height:760px;right:-8vw;top:-14vw;background:radial-gradient(circle,rgba(255,59,48,.55),transparent 65%);animation:drift 18s ease-in-out infinite alternate}
@@ -85,6 +85,17 @@ section[id],main[id]{scroll-margin-top:92px}
 .fade{animation:fadeUp .9s var(--out) both}
 .d1{animation-delay:.45s}.d2{animation-delay:.6s}.d3{animation-delay:.75s}.d4{animation-delay:.35s}
 @keyframes fadeUp{from{opacity:.001;transform:translateY(16px)}to{opacity:1;transform:none}}
+/* Scroll cue (same as tweaks.html): bottom of the first screen (or of the hero when it is shorter); JS hides it when it would touch the content or once the page moves */
+.cue{display:none;position:absolute;left:50%;top:calc(min(100%, 100svh) - 80px);transform:translateX(-50%);flex-direction:column;align-items:center;gap:8px;padding:4px 8px;color:var(--t3);text-decoration:none;font:500 10px/1 var(--mono);letter-spacing:.2em;text-indent:.2em;text-transform:uppercase;transition:color .3s,opacity .5s var(--out),visibility .5s}
+.js .cue{display:flex}
+.cue:hover{color:var(--t1)}
+.cue-m,.cue-t{animation:cueIn 1s var(--out) 1.3s both}
+.cue-m{position:relative;width:20px;height:30px;border-radius:11px;border:1.5px solid rgba(255,255,255,.26);transition:border-color .3s}
+.cue:hover .cue-m{border-color:var(--t3)}
+.cue-m i{position:absolute;left:50%;top:6px;width:4px;height:6px;margin-left:-2px;border-radius:2px;background:var(--red);box-shadow:0 0 10px rgba(255,59,48,.6);animation:wheel 1.9s var(--out) 2.2s infinite both}
+.cue.gone,.cue.tight{opacity:0;visibility:hidden}
+@keyframes cueIn{from{opacity:0;transform:translateY(-10px)}}
+@keyframes wheel{0%{transform:none;opacity:0}20%{opacity:1}70%,100%{transform:translateY(10px);opacity:0}}
 .cta-row{display:flex;flex-wrap:wrap;gap:10px;margin-top:34px}
 .ticks{display:flex;flex-wrap:wrap;gap:8px;margin-top:26px}
 .ticks span{display:inline-flex;align-items:center;gap:7px;padding:6px 12px;border-radius:var(--r-full);background:var(--ink-2);border:1px solid var(--l1);font-size:12.5px;color:var(--t2)}
@@ -490,7 +501,7 @@ footer.foot p{max-width:80ch}
 .js .rv.pre{transform:translateY(36px);filter:blur(6px)}
 
 @media (max-width:1180px){
-  .hero{min-height:0}
+  .hero{padding-bottom:90px}
   .hero .band{grid-template-columns:1fr}
   .hub{transform:none}.hub:hover{transform:none}
   .story{grid-template-columns:1fr}
@@ -581,9 +592,9 @@ footer.foot p{max-width:80ch}
 }
 @media (prefers-reduced-motion:reduce){
   html{scroll-behavior:auto}
-  .orb,.mq-track,.pulse u,.rev-row,.rev-row.rv2{animation:none}
+  .orb,.mq-track,.pulse u,.rev-row,.rev-row.rv2,.cue-m i{animation:none}
   .hero h1 .w{filter:none;transform:none;animation-name:fadeIn}
-  .fade,.menu,.xr{animation-name:fadeIn}
+  .fade,.menu,.xr,.cue-m,.cue-t{animation-name:fadeIn}
   .rv{transition:opacity .6s var(--out)}
   .js .rv.pre{transform:none;filter:none;opacity:0}
   .hub,.hub:hover,.rq:hover{transform:none}
@@ -593,8 +604,13 @@ footer.foot p{max-width:80ch}
   .rev-row{flex-wrap:wrap;width:auto;justify-content:center;padding-inline:16px}
   .rev-row > [aria-hidden="true"],.rev-pause{display:none}
 }
+/* Laptop screens: the hero fits the screen, and the scroll cue drops its label to keep room under the content */
+@media (min-width:1181px) and (max-height:860px){
+  .hero{padding-block:96px 72px}
+  .cue{top:calc(min(100%, 100svh) - 54px)}
+  .cue-t{display:none}
+}
 @media (min-width:1181px) and (max-height:760px){
-  .hero{padding-block:104px 56px;min-height:0}
   .hb{height:440px}
   .stage{top:92px;gap:16px;padding:22px 26px}
   .stage .lanes{gap:12px} .stage-note{display:none}
@@ -689,6 +705,7 @@ footer.foot p{max-width:80ch}
         <p class="hub-note" id="hub-note"><span class="js-only">Interactive preview of Rago Optimizer. Click the tweaks, then Apply.</span><noscript>Preview of Rago Optimizer.</noscript></p>
       </div>
     </div>
+    <a class="cue" id="cue" href="#why" aria-label="Scroll down"><span class="cue-m" aria-hidden="true"><i></i></span><span class="cue-t" aria-hidden="true">Scroll</span></a>
   </section>
 
   <div class="mq" aria-label="Game modes and games covered">
@@ -1086,6 +1103,15 @@ function promo() {
 /* Headline: words blur in one by one */
 (() => { const h = $("#h1"); const walk = (n, acc) => { [...n.childNodes].forEach(c => { if (c.nodeType === 3) { const f = document.createDocumentFragment(); c.textContent.split(/(\s+)/).forEach(w => { if (!w) return; if (/^\s+$/.test(w)) { f.append(w); return; } const s = document.createElement("span"); s.className = "w"; s.textContent = w; s.style.animationDelay = (acc.i++ * 0.09) + "s"; f.append(s); }); c.replaceWith(f); } else walk(c, acc); }); }; walk(h, { i: 0 }); })();
 
+/* Scroll cue: only where it has room under the first screen's content */
+const cue = $("#cue");
+const cueFit = () => {
+  const c = cue.getBoundingClientRect();
+  cue.classList.toggle("tight", $$(".hero .eyebrow, .hero h1 .w, .hero .lede, .hero .cta-row > a, .hero .ticks > span, #hub").some(e => { const r = e.getBoundingClientRect(); return r.bottom + 16 > c.top && r.top - 16 < c.bottom && r.right + 24 > c.left && r.left - 24 < c.right; }));
+};
+cueFit(); setTimeout(cueFit, 1500);
+let cueRaf = 0; addEventListener("resize", () => { cancelAnimationFrame(cueRaf); cueRaf = requestAnimationFrame(cueFit); });
+
 /* Header + dock */
 const header = $("#top"), dock = $("#dock");
 /* The dock hides over the app preview, the Why story and pricing, where it would cover what the visitor is reading */
@@ -1093,6 +1119,7 @@ const busy = new Set();
 if ("IntersectionObserver" in window) { const bo = new IntersectionObserver(es => { es.forEach(e => e.isIntersecting ? busy.add(e.target) : busy.delete(e.target)); onScroll(); }, { rootMargin: "-30% 0px -30% 0px" }); ["#hub", "#why", "#plans"].forEach(q => $(q) && bo.observe($(q))); }
 const onScroll = () => {
   header.classList.toggle("scrolled", scrollY > 10);
+  cue.classList.toggle("gone", scrollY > 40);
   const show = scrollY > 640 && innerHeight + scrollY < document.body.scrollHeight - 320 && !busy.size;
   dock.classList.toggle("show", show); header.classList.toggle("docked", show);
   howFill();
