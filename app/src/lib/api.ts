@@ -151,6 +151,8 @@ export interface Api {
   history(): Promise<HistoryEntry[]>;
   clearHistory(): Promise<void>;
   applied(): Promise<AppliedView[]>;
+  /** « Tout annuler » : réglages appliqués sur ce PC, dans l'ordre de la remise à zéro (le dernier appliqué en premier). */
+  undoAllPlan(): Promise<string[]>;
   liveStats(): Promise<LiveStats>;
   openTaskManager(): Promise<void>;
   minecraftStatus(dir?: string | null): Promise<MinecraftStatus>;
@@ -179,6 +181,7 @@ const tauriApi: Api = {
   history: () => invoke("get_history"),
   clearHistory: () => invoke("clear_history"),
   applied: () => invoke("get_applied"),
+  undoAllPlan: () => invoke("undo_all_plan"),
   liveStats: () => invoke("live_stats"),
   openTaskManager: () => invoke("open_task_manager"),
   minecraftStatus: (dir) => invoke("minecraft_status", { dir: dir ?? null }),
@@ -375,6 +378,7 @@ const mockApi: Api = {
     mockHistory.length = 0;
   },
   applied: async () => [...mockApplied.values()],
+  undoAllPlan: async () => [...mockApplied.values()].sort((a, b) => b.ts - a.ts || a.id.localeCompare(b.id)).map((a) => a.id),
   liveStats: async () => {
     // démo : valeurs simulées ; localStorage « rago.demoNoGpu » = 1 simule un PC sans compteur de carte graphique
     mockStatsStart ||= Date.now();

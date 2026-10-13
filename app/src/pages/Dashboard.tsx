@@ -23,7 +23,7 @@ function Spec({ icon, label, value, sub }: { icon: ReactNode; label: string; val
 }
 
 export function Dashboard() {
-  const { t, lang, sys, sysLoading, refreshSys, isOn, selected, variantOf, selectMany, lastRun, requestApply, premium, setUpsell, applied: appliedMap, retiredApplied, requestUndo, run } = useStore();
+  const { t, lang, sys, sysLoading, refreshSys, isOn, selected, variantOf, selectMany, lastRun, requestApply, premium, setUpsell, applied: appliedMap, retiredApplied, requestUndo, requestUndoAll, run } = useStore();
   // réglages appliqués en ce moment (ceux qu'on a décochés depuis ne comptent plus), jumeaux comptés une fois
   const applied = new Set([...appliedMap.values()].filter((a) => a.ok && tweaks.get(a.id)?.kind === "tweak").map((a) => distinctKey(a.id))).size;
   const restore = lastRun.get("rst_point");
@@ -60,7 +60,18 @@ export function Dashboard() {
             </Button>
           ) : undefined,
         },
-        { label: t("dash.health.applied"), ok: applied > 0, value: `${applied} / ${totalTweaks}` },
+        {
+          label: t("dash.health.applied"),
+          ok: applied > 0,
+          value: `${applied} / ${totalTweaks}`,
+          // tout ce que Rago Optimizer a appliqué sur ce PC, remis comme avant après confirmation (RAG-43)
+          action:
+            appliedMap.size > 0 ? (
+              <Button size="sm" icon={<RotateCcw size={12} />} disabled={!!run} onClick={() => void requestUndoAll()}>
+                {t("dash.undoAll")}
+              </Button>
+            ) : undefined,
+        },
       ]
     : [];
 

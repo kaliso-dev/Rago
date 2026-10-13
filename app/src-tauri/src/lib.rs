@@ -150,6 +150,14 @@ async fn get_applied(state: State<'_, AppState>) -> Result<Vec<backup::AppliedVi
     .map_err(|e| e.to_string())
 }
 
+/// « Tout annuler » (tableau de bord) : les réglages à remettre, dans l'ordre de la remise à zéro de la
+/// désinstallation (le dernier appliqué en premier). L'interface les montre pour confirmation puis les lance comme
+/// annulations : même moteur, même sauvegarde, même ordre.
+#[tauri::command]
+fn undo_all_plan(state: State<'_, AppState>) -> Vec<String> {
+    reset::targets(&state.ledger.lock().unwrap(), reset::Scope::All)
+}
+
 #[tauri::command]
 fn cancel_run(state: State<'_, AppState>) {
     state.runner.cancel();
@@ -378,6 +386,7 @@ pub fn run() {
             get_history,
             clear_history,
             get_applied,
+            undo_all_plan,
             live_stats,
             open_task_manager,
             minecraft_status,
