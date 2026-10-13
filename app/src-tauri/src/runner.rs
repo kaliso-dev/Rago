@@ -305,6 +305,15 @@ impl Runner {
         // fermés après une déconnexion ou une fin de licence)
         let undo = catalog::undo_of(id, variant.as_deref(), ctx.premium.as_deref())
             .or_else(|| entry.as_ref().and_then(|e| e.undo.clone()));
+        // RBW Mod : « Activé » en entier, jamais la sauvegarde d'avant « Désactivé » (voir catalog::revert_runs_script)
+        if let Some(v) = catalog::revert_variant(id).filter(|_| catalog::revert_runs_script(id)) {
+            let script = catalog::script(id, Some(&v), ctx.premium.as_deref()).ok_or_else(|| format!("Unknown tweak: {id}"))?;
+            let r = self.run_batch(ctx, id, Some(&v), &script, emit)?;
+            let mut l = ctx.ledger.lock().unwrap();
+            l.release(id);
+            l.save();
+            return Ok(r);
+        }
         if id == "mc_optifine" {
             let dir = item
                 .params

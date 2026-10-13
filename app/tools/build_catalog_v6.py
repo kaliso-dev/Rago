@@ -326,12 +326,67 @@ NEW_TWEAKS = [
         r'reg add "HKCU\Software\Microsoft\Windows\CurrentVersion\Explorer\AutoplayHandlers" /v "DisableAutoplay" /t REG_DWORD /d "1" /f >nul',
     ])),
 ]
-RBW_ON_EXTRA = '\n'.join([
-    'echo - BAM, DAM and Prefetch back on (active after a restart)',
+# Ce que lit le vérificateur officiel de RBW (QuickPots, github.com/quickpots/RBW-SS, Services.ps1, relevé le 2026-10-13) :
+# services en cours d'exécution, et 6 réglages du registre.
+RBW_SERVICES = ['SysMain', 'PcaSvc', 'DPS', 'BAM', 'EventLog', 'WSearch', 'DusmSvc', 'BFE', 'AppInfo', 'DCOMLaunch', 'PlugPlay']
+# RBW Mod « On » (script entier, 2026-10-13) : le .bat ne relançait que 8 services et laissait ce que d'autres réglages
+# coupent (WSearch, PCA par stratégie AppCompat, historique d'activités, listes de raccourcis, journaux de DPS).
+# DcomLaunch et PlugPlay ne s'arrêtent pas : seulement vérifiés. Appinfo, Planificateur, DsmSvc et DiagTrack : comme avant.
+RBW_ON = '\n'.join([
+    'echo - Services the RBW screenshare checker looks at: set to start with Windows',
+    'sc config SysMain start= auto >nul',
+    'sc config PcaSvc start= auto >nul',
+    'sc config DPS start= auto >nul',
+    'sc config EventLog start= auto >nul',
+    'sc config WSearch start= delayed-auto >nul',
+    'sc config DusmSvc start= auto >nul',
+    'sc config BFE start= auto >nul',
+    'sc config Appinfo start= auto >nul',
+    'sc config Schedule start= auto >nul',
+    'sc config DsmSvc start= auto >nul',
+    'sc config DiagTrack start= auto >nul',
+    # CDPUserSvc_xxxx : service par utilisateur, son démarrage se règle sur le modèle CDPUserSvc
+    r'reg add "HKLM\SYSTEM\CurrentControlSet\Services\CDPUserSvc" /v "Start" /t REG_DWORD /d "2" /f >nul',
+    'echo - Starting them now',
+    'for %%s in (SysMain PcaSvc DPS EventLog WSearch DusmSvc BFE Appinfo Schedule DsmSvc DiagTrack) do sc start %%s >nul 2>&1',
+    # noms lus dans le registre : la sortie de sc query peut être traduite
+    r'''for /f "tokens=5 delims=\" %%s in ('reg query "HKLM\SYSTEM\CurrentControlSet\Services" /k /f "CDPUserSvc_" ^| find /i "CDPUserSvc_"') do sc start %%s >nul 2>&1''',
+    'echo - Activity history, PCA logging, jump lists, CMD and PowerShell logging back to how Windows sets them',
+    r'reg delete "HKLM\SOFTWARE\Policies\Microsoft\Windows\System" /v "EnableActivityFeed" /f >nul 2>&1',
+    r'reg delete "HKLM\SOFTWARE\Policies\Microsoft\Windows\System" /v "PublishUserActivities" /f >nul 2>&1',
+    # le vérificateur voit « PCA Logging: Disabled » dès que cette clé existe (AITEnable, DisablePCA, DisableInventory…)
+    r'reg delete "HKLM\SOFTWARE\Policies\Microsoft\Windows\AppCompat" /f >nul 2>&1',
+    r'reg add "HKCU\Software\Microsoft\Windows\CurrentVersion\Explorer\Advanced" /v "Start_TrackDocs" /t REG_DWORD /d "1" /f >nul',
+    r'reg delete "HKCU\Software\Policies\Microsoft\Windows\System" /v "DisableCMD" /f >nul 2>&1',
+    r'reg query "HKLM\SOFTWARE\Policies\Microsoft\Windows\PowerShell\ScriptBlockLogging" /v "EnableScriptBlockLogging" 2>nul | find "0x0" >nul && reg delete "HKLM\SOFTWARE\Policies\Microsoft\Windows\PowerShell\ScriptBlockLogging" /v "EnableScriptBlockLogging" /f >nul',
+    'echo - BAM, DAM, Prefetch and the diagnostics logs DPS needs back on (active after a restart)',
     r'reg add "HKLM\SYSTEM\CurrentControlSet\Services\bam" /v "Start" /t REG_DWORD /d "1" /f >nul',
     r'reg add "HKLM\SYSTEM\CurrentControlSet\Services\dam" /v "Start" /t REG_DWORD /d "1" /f >nul',
     r'reg add "HKLM\SYSTEM\CurrentControlSet\Control\Session Manager\Memory Management\PrefetchParameters" /v "EnablePrefetcher" /t REG_DWORD /d "3" /f >nul',
     r'reg add "HKLM\SYSTEM\CurrentControlSet\Control\Session Manager\Memory Management\PrefetchParameters" /v "EnableSuperfetch" /t REG_DWORD /d "3" /f >nul',
+    # DPS ne démarre pas sans ces deux journaux (coupés par les réglages télémétrie et autologgers) : relancés au démarrage
+    r'reg add "HKLM\SYSTEM\CurrentControlSet\Control\WMI\Autologger\DiagLog" /v "Start" /t REG_DWORD /d "1" /f >nul',
+    r'reg add "HKLM\SYSTEM\CurrentControlSet\Control\WMI\Autologger\WdiContextLog" /v "Start" /t REG_DWORD /d "1" /f >nul',
+    'echo - What the RBW screenshare checker sees now',
+    # mêmes lectures que Services.ps1. Une ligne qui commence par « ! » est en rouge dans le journal de l'app ; écrit
+    # [char]33 : le script tourne avec EnableDelayedExpansion, cmd retirerait un « ! » de la ligne
+    'powershell -NoProfile -NonInteractive -ExecutionPolicy Bypass -Command "$w = [char]33 + \' \'; $names = @(' + ','.join(f"'{s}'" for s in RBW_SERVICES) + ') + '
+    "@(Get-Service -Name 'CDPUserSvc_*' -ErrorAction SilentlyContinue | Select-Object -ExpandProperty Name); "
+    "foreach ($n in $names) { $s = Get-Service -Name $n -ErrorAction SilentlyContinue; "
+    "if ($s -and $s.Status -eq 'StartPending') { try { $s.WaitForStatus('Running', '00:00:15') } catch {} }; "
+    "if ($s -and $s.Status -eq 'Running') { '- ' + $n + ': running' } else { "
+    "$c = Get-CimInstance -ClassName Win32_Service -Filter ('Name=' + [char]39 + $n + [char]39) -ErrorAction SilentlyContinue; "
+    "$e = if ($c.ExitCode -eq 1066) { $c.ServiceSpecificExitCode } else { $c.ExitCode }; "
+    "$w + $n + ': stopped' + $(if ($e) { ' (error ' + $e + ')' }) + ', restart your PC: it starts with Windows' } }\"",
+    'powershell -NoProfile -NonInteractive -ExecutionPolicy Bypass -Command "$w = [char]33 + \' \'; $checks = @('
+    r"@('CMD', 'HKCU:\Software\Policies\Microsoft\Windows\System', 'DisableCMD'), "
+    r"@('PowerShell Scriptblock Logging', 'HKLM:\SOFTWARE\Policies\Microsoft\Windows\PowerShell\ScriptBlockLogging', 'EnableScriptBlockLogging'), "
+    r"@('Activities Cache', 'HKLM:\SOFTWARE\Policies\Microsoft\Windows\System', 'EnableActivityFeed'), "
+    r"@('Prefetch', 'HKLM:\SYSTEM\CurrentControlSet\Control\Session Manager\Memory Management\PrefetchParameters', 'EnablePrefetcher'), "
+    r"@('Jump Lists', 'HKCU:\Software\Microsoft\Windows\CurrentVersion\Explorer\Advanced', 'Start_TrackDocs')); "
+    "foreach ($c in $checks) { $v = (Get-ItemProperty -Path $c[1] -Name $c[2] -ErrorAction SilentlyContinue).($c[2]); "
+    "if ($v -eq 0) { $w + $c[0] + ': off' } else { '- ' + $c[0] + ': on' } }; "
+    r"if (Test-Path 'HKLM:\SOFTWARE\Policies\Microsoft\Windows\AppCompat') { $w + 'PCA Logging: off' } else { '- PCA Logging: on' }" + '"',
 ])
 
 # Ce que le joueur doit lire avant de lancer : déduit du script, pour que rien de lourd ne passe sans être annoncé.
@@ -541,7 +596,7 @@ def postprocess(modules, scripts):
     drop_lines(scripts, DROP_LINES)
     sub_lines(scripts, SUB_LINES)
     sep = '\r\n' if '\r\n' in scripts['rbw_mode']['on'] else '\n'
-    scripts['rbw_mode']['on'] += sep + RBW_ON_EXTRA.replace('\n', sep)
+    scripts['rbw_mode']['on'] = RBW_ON.replace('\n', sep)
     # scripts tels qu'avant l'audit (ce qu'ont lancé les PC jusqu'ici) : leur annulation reste dans undo.json
     before_audit = copy.deepcopy(scripts)
     apply_audit(scripts)
@@ -788,7 +843,13 @@ Corrections ciblées (`SCRIPT_FIXES`, `DROP_LINES`) :
 Profils exclusifs découpés en variantes (ils s'exécutaient tous à la suite) : ping_hitreg (6 profils dont Default),
 ping_packets (Hitreg, QoS, Knockback), ping_main (Config 1 à 4), sys_ram (selon la RAM).
 
-RBW Mod « On » remet aussi BAM, DAM et le Prefetcher (actifs après redémarrage, demandé par l'app pour cette variante).
+RBW Mod « On » (réécrit le 2026-10-13, `RBW_ON`) passe le vérificateur officiel de RBW (github.com/quickpots/RBW-SS,
+Services.ps1) : SysMain, PcaSvc, DPS, EventLog, WSearch, DusmSvc, BFE, Appinfo et CDPUserSvc démarrent avec Windows et
+sont lancés ; historique d'activités, journal PCA (clé de stratégies AppCompat supprimée), listes de raccourcis, CMD
+et journal PowerShell reviennent comme Windows les règle ; BAM, DAM, le Prefetcher et les journaux DiagLog et
+WdiContextLog (sans eux DPS ne démarre pas) reviennent au redémarrage, demandé par l'app pour cette variante. Le
+script finit par les mêmes lectures que le vérificateur, dans le journal de l'app. « On » lance toujours ce script,
+même après « Off » (`catalog::revert_runs_script`) : la sauvegarde d'avant « Off » ne démarrait aucun service.
 
 Les actions lourdes ne sont pas retirées (choix de Sofiene, « tout garder ») : `WARNINGS` les détecte dans chaque
 script (Spectre, Defender, SmartScreen, UAC, pare-feu, IFEO, BAM, Prefetch…), écrit l'avertissement « Read this first »

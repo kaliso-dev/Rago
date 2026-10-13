@@ -415,7 +415,13 @@ Corrections ciblées (`SCRIPT_FIXES`, `DROP_LINES`) :
 Profils exclusifs découpés en variantes (ils s'exécutaient tous à la suite) : ping_hitreg (6 profils dont Default),
 ping_packets (Hitreg, QoS, Knockback), ping_main (Config 1 à 4), sys_ram (selon la RAM).
 
-RBW Mod « On » remet aussi BAM, DAM et le Prefetcher (actifs après redémarrage, demandé par l'app pour cette variante).
+RBW Mod « On » (réécrit le 2026-10-13, `RBW_ON`) passe le vérificateur officiel de RBW (github.com/quickpots/RBW-SS,
+Services.ps1) : SysMain, PcaSvc, DPS, EventLog, WSearch, DusmSvc, BFE, Appinfo et CDPUserSvc démarrent avec Windows et
+sont lancés ; historique d'activités, journal PCA (clé de stratégies AppCompat supprimée), listes de raccourcis, CMD
+et journal PowerShell reviennent comme Windows les règle ; BAM, DAM, le Prefetcher et les journaux DiagLog et
+WdiContextLog (sans eux DPS ne démarre pas) reviennent au redémarrage, demandé par l'app pour cette variante. Le
+script finit par les mêmes lectures que le vérificateur, dans le journal de l'app. « On » lance toujours ce script,
+même après « Off » (`catalog::revert_runs_script`) : la sauvegarde d'avant « Off » ne démarrait aucun service.
 
 Les actions lourdes ne sont pas retirées (choix de Sofiene, « tout garder ») : `WARNINGS` les détecte dans chaque
 script (Spectre, Defender, SmartScreen, UAC, pare-feu, IFEO, BAM, Prefetch…), écrit l'avertissement « Read this first »

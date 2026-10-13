@@ -6301,8 +6301,8 @@
         "en": "RBW Mod"
        },
        "desc": {
-        "en": "On restarts the event log, prefetch and app history that screenshare tools read; Off puts Windows defaults back.",
-        "fr": "Activé relance journal d'événements, préchargement et historique des applis, lus en screenshare ; Désactivé les remet par défaut."
+        "en": "On starts every service and restores every setting the RBW screenshare checker reads, even if other tweaks turned them off; Off puts the services back to Windows defaults.",
+        "fr": "Activé démarre chaque service et remet chaque réglage que lit le vérificateur de screenshare RBW, même coupés par d'autres réglages ; Désactivé remet les services par défaut."
        },
        "risk": "safe",
        "reboot": false,
@@ -6316,7 +6316,7 @@
          },
          "revert": true,
          "reboot": true,
-         "lines": 21
+         "lines": 28
         },
         {
          "id": "off",
@@ -6334,14 +6334,14 @@
         "On@14039",
         "off@14077"
        ],
-       "lines": 21,
+       "lines": 28,
        "gain": {
-        "en": "Keeps a clean player from looking suspicious in a screenshare because these Windows traces were off.",
-        "fr": "Évite qu'un joueur clean paraisse suspect en screenshare parce que ces traces de Windows étaient coupées."
+        "en": "The official RBW checker shows everything green after the restart, so a clean player doesn't look suspicious.",
+        "fr": "Le vérificateur officiel de RBW voit tout en vert après le redémarrage, et un joueur clean ne paraît pas suspect."
        },
        "cons": {
-        "en": "On also restarts telemetry; Off stops prefetch until the next restart, which a screenshare can spot.",
-        "fr": "Activé relance aussi la télémétrie ; Désactivé arrête le préchargement jusqu'au redémarrage, visible en screenshare."
+        "en": "On also restarts telemetry and undoes part of the app's privacy tweaks; Off stops prefetch until the next restart, which a screenshare can spot.",
+        "fr": "Activé relance aussi la télémétrie et défait une partie des réglages vie privée de l'app ; Désactivé arrête le préchargement jusqu'au redémarrage, visible en screenshare."
        }
       }
      ]

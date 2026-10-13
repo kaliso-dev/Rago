@@ -127,6 +127,14 @@ pub fn revert_variant(id: &str) -> Option<String> {
     REVERTS.iter().find_map(|r| r.strip_prefix(&format!("{id}:")).map(str::to_string))
 }
 
+/// Réglage dont le retour arrière lance toujours le script de sa variante `revert`, jamais la sauvegarde : RBW Mod
+/// « Activé » doit démarrer les services que lit le screenshare et remettre ce que d'autres réglages coupent. La
+/// sauvegarde prise avant « Désactivé » ne fait que réécrire le registre (aucun service démarré) et peut remettre un
+/// service qu'un autre réglage avait coupé.
+pub fn revert_runs_script(id: &str) -> bool {
+    id == "rbw_mode"
+}
+
 /// Script en clair (plan gratuit, retour arrière), sans licence.
 pub fn is_plain(id: &str, variant: Option<&str>) -> bool {
     builtin(id).is_some() || PLAIN.scripts.get(id).and_then(|e| pick(e, variant)).is_some()
@@ -279,7 +287,9 @@ mod tests {
         for (id, vs) in bundle.undo.iter() {
             for u in vs.values() {
                 for l in reg_lines(u) {
-                    let free_too = PLAIN.undo.values().flat_map(|e| e.values()).any(|f| reg_lines(f).contains(&l));
+                    // une ligne qu'un script en clair lance aussi (RBW Mod « Activé » remet des valeurs de Windows) n'apprend rien
+                    let free_too = PLAIN.undo.values().flat_map(|e| e.values()).any(|f| reg_lines(f).contains(&l))
+                        || PLAIN.scripts.values().flat_map(|e| e.values()).any(|s| s.lines().any(|x| x.trim() == l));
                     if !free_too {
                         let json_line = serde_json::to_string(&l).unwrap();
                         assert!(!plain_text.contains(json_line.trim_matches('"')), "annulation {id} en clair : {l}");
@@ -517,6 +527,71 @@ mod tests {
                 }
             }
         }
+    }
+
+    /// RBW Mod « Activé » passe le vérificateur officiel de RBW (github.com/quickpots/RBW-SS, Services.ps1, relevé le
+    /// 2026-10-13) : chaque service qu'il lit démarre avec Windows et tourne, et ses 6 réglages reviennent comme Windows
+    /// les règle, même quand un autre réglage de l'app les a coupés.
+    #[test]
+    fn rbw_mode_on_passes_the_rbw_checker() {
+        let on = SCRIPTS["rbw_mode"]["on"].to_lowercase();
+        let lines: Vec<&str> = on.lines().map(str::trim).collect();
+        let has = |l: &str| lines.contains(&l);
+        for svc in ["sysmain", "pcasvc", "dps", "eventlog", "dusmsvc", "bfe", "appinfo"] {
+            assert!(has(&format!("sc config {svc} start= auto >nul")), "{svc} ne démarre pas avec Windows");
+        }
+        assert!(has("sc config wsearch start= delayed-auto >nul"));
+        let started = lines.iter().find(|l| l.starts_with("for %%s in (")).expect("services lancés");
+        let started: Vec<&str> = started[started.find('(').unwrap() + 1..started.find(')').unwrap()].split_whitespace().collect();
+        for svc in ["sysmain", "pcasvc", "dps", "eventlog", "wsearch", "dusmsvc", "bfe", "appinfo"] {
+            assert!(started.contains(&svc), "{svc} pas lancé");
+        }
+        assert!(on.contains("services\\cdpusersvc\" /v \"start\" /t reg_dword /d \"2\""));
+        assert!(lines.iter().any(|l| l.contains("/f \"cdpusersvc_\"") && l.ends_with("do sc start %%s >nul 2>&1")), "CDPUserSvc_xxxx pas lancé");
+        // réglages lus par le vérificateur
+        assert!(has("reg delete \"hklm\\software\\policies\\microsoft\\windows\\appcompat\" /f >nul 2>&1"), "PCA Logging");
+        assert!(has("reg delete \"hklm\\software\\policies\\microsoft\\windows\\system\" /v \"enableactivityfeed\" /f >nul 2>&1"), "Activities Cache");
+        assert!(on.contains("explorer\\advanced\" /v \"start_trackdocs\" /t reg_dword /d \"1\""), "Jump Lists");
+        assert!(on.contains("reg delete \"hkcu\\software\\policies\\microsoft\\windows\\system\" /v \"disablecmd\""), "CMD");
+        assert!(on.contains("reg delete \"hklm\\software\\policies\\microsoft\\windows\\powershell\\scriptblocklogging\""), "PowerShell logging");
+        // DPS ne démarre pas sans ses journaux de diagnostic
+        for log in ["diaglog", "wdicontextlog"] {
+            assert!(on.contains(&format!("autologger\\{log}\" /v \"start\" /t reg_dword /d \"1\"")), "{log}");
+        }
+        assert!(!on.contains("start= disabled") && !on.contains("start= demand"));
+        // le script tourne avec EnableDelayedExpansion : un « ! » serait retiré par cmd
+        assert!(!on.contains('!'));
+        // ce que les autres réglages coupent parmi ce que lit le vérificateur : le RBW Mod le remet
+        let checked = ["sysmain", "pcasvc", "dps", "eventlog", "wsearch", "dusmsvc", "bfe", "appinfo"];
+        for (id, variants) in SCRIPTS.iter().filter(|(id, _)| id.as_str() != "rbw_mode") {
+            for (v, s) in variants {
+                for l in s.to_lowercase().lines().map(str::trim).filter(|l| !l.starts_with("echo") && !l.starts_with("rem ")) {
+                    let l = l.replace("start= ", "start=").replace('"', "");
+                    let start_off = |key: &str| l.contains(&format!("{key} /v start ")) && !l.contains("/d 1 ") && !l.contains("/d 2 ");
+                    for svc in checked {
+                        let off = l.contains(&format!("sc config {svc} start=disabled"))
+                            || l.contains(&format!("sc config {svc} start=demand"))
+                            || start_off(&format!("services\\{svc}"));
+                        assert!(!off || started.contains(&svc), "{id}:{v} coupe {svc} : {l}");
+                    }
+                    if l.contains("policies\\microsoft\\windows\\system /v enableactivityfeed /t reg_dword /d 0") {
+                        assert!(on.contains("/v \"enableactivityfeed\" /f"), "{id}:{v}");
+                    }
+                    if l.contains("policies\\microsoft\\windows\\appcompat ") {
+                        assert!(on.contains("reg delete \"hklm\\software\\policies\\microsoft\\windows\\appcompat\" /f"), "{id}:{v}");
+                    }
+                    for log in ["diaglog", "wdicontextlog"] {
+                        if start_off(&format!("autologger\\{log}")) {
+                            assert!(on.contains(&format!("autologger\\{log}\" /v \"start\" /t reg_dword /d \"1\"")), "{id}:{v} : {l}");
+                        }
+                    }
+                }
+            }
+        }
+        // « Activé » lance toujours son script, même après « Désactivé » (pas la sauvegarde, qui ne démarre rien)
+        assert!(revert_runs_script("rbw_mode") && !revert_runs_script("game_mode"));
+        assert_eq!(revert_variant("rbw_mode").as_deref(), Some("on"));
+        assert!(PLAIN.scripts.get("rbw_mode").and_then(|e| e.get("on")).is_some(), "ouvert sans licence");
     }
 
     #[test]
