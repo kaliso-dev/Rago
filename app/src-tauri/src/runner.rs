@@ -855,11 +855,23 @@ fn script_command(ctx: &Context, path: &Path) -> Result<Command, String> {
 fn batch_command(ctx: &Context, path: &Path, env: &[(String, String)]) -> Result<Command, String> {
     let mut cmd = script_command(ctx, path)?;
     // variables laissées par un lancement précédent de l'app : seules celles de cette annulation comptent
-    for (k, _) in std::env::vars().filter(|(k, _)| k.starts_with("RAGO_STATE_") || k.starts_with("RAGO_HELD_")) {
+    for k in inherited_rago_vars(std::env::vars_os()) {
         cmd.env_remove(k);
     }
     cmd.envs(env.iter().map(|(k, v)| (k, v)));
     Ok(cmd)
+}
+
+/// Noms des variables RAGO_STATE_… et RAGO_HELD_… héritées, sans tenir compte de la casse (comme Windows et cmd). Lus
+/// avec vars_os : vars() panique dès qu'une variable du PC n'est pas de l'Unicode valide, et l'exe release s'arrête net
+/// (panic = "abort") à chaque réglage lancé.
+fn inherited_rago_vars(vars: impl Iterator<Item = (std::ffi::OsString, std::ffi::OsString)>) -> Vec<std::ffi::OsString> {
+    vars.map(|(k, _)| k)
+        .filter(|k| {
+            let k = k.to_string_lossy().to_ascii_uppercase();
+            k.starts_with("RAGO_STATE_") || k.starts_with("RAGO_HELD_")
+        })
+        .collect()
 }
 
 fn sanitize(s: &str) -> String {
@@ -1101,6 +1113,33 @@ mod tests {
         let rago = envs.iter().filter(|(k, v)| v.is_some() && (k.starts_with("RAGO_STATE_") || k.starts_with("RAGO_HELD_")));
         assert_eq!(rago.count(), 2, "{envs:?}");
         let _ = fs::remove_dir_all(ctx.run_dir.parent().unwrap().parent().unwrap());
+    }
+
+    /// Une variable du PC qui n'est pas de l'Unicode valide ne fait pas planter le lancement (vars() paniquait), et une
+    /// RAGO_HELD_ héritée dans une autre casse est retirée elle aussi.
+    #[test]
+    fn inherited_variables_survive_invalid_unicode() {
+        use std::ffi::OsString;
+        #[cfg(windows)]
+        let bad = {
+            use std::os::windows::ffi::OsStringExt;
+            OsString::from_wide(&[0x0041, 0xD800])
+        };
+        #[cfg(unix)]
+        let bad = {
+            use std::os::unix::ffi::OsStringExt;
+            OsString::from_vec(vec![0x41, 0xFF])
+        };
+        assert!(bad.to_str().is_none(), "pas de l'Unicode valide");
+        let vars = vec![
+            (bad.clone(), OsString::from("1")),
+            (OsString::from("PATH"), bad.clone()),
+            (OsString::from("RAGO_STATE_MMAGENT"), bad.clone()),
+            (OsString::from("Rago_Held_aaaaaaaaaa"), OsString::from("1")),
+            (OsString::from("RAGO_RES"), OsString::from("x")),
+        ];
+        let names = inherited_rago_vars(vars.into_iter());
+        assert_eq!(names, [OsString::from("RAGO_STATE_MMAGENT"), OsString::from("Rago_Held_aaaaaaaaaa")]);
     }
 
     /// Sur Windows (CI) : le script lancé par `.\nom.cmd` voit ces variables, et le PowerShell qu'il lance aussi.
