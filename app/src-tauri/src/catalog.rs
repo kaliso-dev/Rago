@@ -519,6 +519,162 @@ mod tests {
         }
     }
 
+    /// Lignes qui empêchent cmd.exe de lire un bloc entre parenthèses (RAG-68, 2026-10-13) : cmd lit tout le bloc avant
+    /// de l'exécuter et, sur une erreur, s'arrête net (« ) was unexpected at this time. ») : le reste du script ne tourne
+    /// pas et le réglage échoue. Renvoie « ligne : problème » pour chaque défaut. Lecture simplifiée de cmd : parenthèses
+    /// hors guillemets et hors `^`, commentaires `::`/`rem` et `echo` à part (une `)` dans un echo ferme quand même le bloc).
+    fn block_errors(script: &str) -> Vec<String> {
+        #[derive(Clone, Copy, PartialEq)]
+        enum Kind {
+            Label,
+            Rem,
+            Echo,
+            Cmd,
+        }
+        fn kind(t: &str) -> Kind {
+            let low = t.to_lowercase();
+            let after = |w: &str| low.strip_prefix(w).map(|r| r.chars().next());
+            if t.starts_with(':') {
+                Kind::Label
+            } else if matches!(after("rem"), Some(None) | Some(Some(' ' | '\t'))) {
+                Kind::Rem
+            } else if matches!(after("echo"), Some(None) | Some(Some(' ' | '\t' | '.' | '(' | ':' | '/'))) {
+                Kind::Echo
+            } else {
+                Kind::Cmd
+            }
+        }
+        // parenthèses hors guillemets et hors ^, dans l'ordre ; et le texte hors guillemets
+        fn scan(t: &str) -> (Vec<i32>, String) {
+            let (mut out, mut bare, mut quoted, mut chars) = (Vec::new(), String::new(), false, t.chars());
+            while let Some(c) = chars.next() {
+                match c {
+                    '"' => {
+                        quoted = !quoted;
+                        bare.push('x');
+                    }
+                    '^' if !quoted => {
+                        chars.next();
+                        bare.push('x');
+                    }
+                    '(' if !quoted => {
+                        out.push(1);
+                        bare.push('(');
+                    }
+                    ')' if !quoted => {
+                        out.push(-1);
+                        bare.push(')');
+                    }
+                    _ if quoted => {}
+                    c => bare.push(c),
+                }
+            }
+            (out, bare)
+        }
+        let mut errors = Vec::new();
+        let mut depth = 0i32;
+        // dernière ligne non vide : sa nature, et si elle se termine en ouvrant un bloc
+        let mut prev: Option<(Kind, bool)> = None;
+        for (n, line) in script.lines().enumerate() {
+            let t = line.trim().trim_start_matches('@').trim();
+            if t.is_empty() {
+                continue;
+            }
+            let k = kind(t);
+            let (parens, bare) = scan(t);
+            let mut opens = false;
+            match k {
+                Kind::Label => {
+                    if depth > 0 && prev.is_some_and(|(p, _)| p == Kind::Label) {
+                        errors.push(format!("{}: deux commentaires :: de suite dans un bloc", n + 1));
+                    }
+                }
+                Kind::Rem => {}
+                Kind::Echo => {
+                    if depth > 0 && parens.contains(&-1) {
+                        errors.push(format!("{}: une ) dans un echo ferme le bloc : {t}", n + 1));
+                    }
+                }
+                Kind::Cmd => {
+                    if t.starts_with(')') {
+                        match prev {
+                            Some((Kind::Cmd, true)) => errors.push(format!("{}: bloc vide, « ( » puis « ) »", n + 1)),
+                            Some((Kind::Label, _)) if depth > 0 => {
+                                errors.push(format!("{}: commentaire :: juste avant la « ) » du bloc", n + 1))
+                            }
+                            _ => {}
+                        }
+                    }
+                    // « ( ) » sur une seule ligne
+                    let compact: String = bare.chars().filter(|c| !c.is_whitespace()).collect();
+                    if compact.contains("()") {
+                        errors.push(format!("{}: bloc vide sur la ligne : {t}", n + 1));
+                    }
+                    for p in parens {
+                        depth += p;
+                        if depth < 0 {
+                            errors.push(format!("{}: « ) » sans bloc ouvert : {t}", n + 1));
+                            depth = 0;
+                        }
+                    }
+                    opens = bare.trim_end().ends_with('(');
+                }
+            }
+            prev = Some((k, opens));
+        }
+        if depth != 0 {
+            errors.push(format!("{depth} bloc(s) jamais fermé(s)"));
+        }
+        errors
+    }
+
+    #[test]
+    fn block_checker_sees_what_cmd_refuses() {
+        // RAG-68 : boucle du mode MSI dont les lignes ont été retirées
+        let rag68 = "for /f %%i in ('powershell -Command \"(Get-CimInstance x).PNPDeviceID\"') do set \"str=%%i\" & (\r\n)\r\necho ok";
+        assert_eq!(block_errors(rag68).len(), 1, "{:?}", block_errors(rag68));
+        assert_eq!(block_errors("if defined x (\r\nver >nul\r\n) else (\r\n)").len(), 1);
+        assert_eq!(block_errors("for %%a in (1) do ( )").len(), 1);
+        assert_eq!(block_errors("if x==y (\r\necho a (b)\r\n)").len(), 1, "la ) de l'echo ferme le bloc");
+        assert_eq!(block_errors("(\r\n:: a\r\n)").len(), 1);
+        assert_eq!(block_errors("(\r\n:: a\r\n:: b\r\nver >nul\r\n)").len(), 1);
+        assert_eq!(block_errors("for /f %%a in ('x') do (\r\nreg add \"HKLM\\A (x86)\" /f\r\n").len(), 1, "jamais fermé");
+        // correct : guillemets, ^, echo hors bloc, ) else (, commentaire suivi d'une commande dans un bloc
+        let ok = "for /f \"delims=\" %%a in ('powershell -Command \"(Get-CimInstance x).NetConnectionID\"') do (\r\n\
+                  \x20 :: carte\r\n  for /f \"delims=\" %%b in (\"%%a\") do (\r\n    set \"n=%%b\"\r\n  )\r\n)\r\n\
+                  if defined n (\r\n  ver >nul\r\n) else (\r\n  echo pas de carte\r\n)\r\necho (fin)\r\nfind \"^)\" x";
+        assert!(block_errors(ok).is_empty(), "{:?}", block_errors(ok));
+    }
+
+    /// Tous les scripts que le moteur lance (réglages, relevés, annulations) se lisent jusqu'au bout dans cmd.exe.
+    #[test]
+    fn every_script_has_well_formed_blocks() {
+        let probes: Scripts = serde_json::from_str(include_str!("../scripts/probes.json")).unwrap();
+        let undo: HashMap<String, HashMap<String, Undo>> = serde_json::from_str(include_str!("../scripts/undo.json")).unwrap();
+        let mut bad = Vec::new();
+        let mut check = |what: String, s: &str| bad.extend(block_errors(s).into_iter().map(|e| format!("{what} {e}")));
+        for (id, variants) in SCRIPTS.iter() {
+            for (v, s) in variants {
+                check(format!("{id}:{v}"), s);
+            }
+        }
+        for (id, variants) in &probes {
+            for (v, s) in variants {
+                check(format!("relevé {id}:{v}"), s);
+            }
+        }
+        for (id, variants) in &undo {
+            for (v, u) in variants {
+                for (part, s) in [("full", &u.full), ("rest", &u.rest)] {
+                    if let Some(s) = s {
+                        check(format!("annulation {id}:{v} {part}"), s);
+                    }
+                }
+            }
+        }
+        assert!(bad.is_empty(), "{} défauts :\n{}", bad.len(), bad.join("\n"));
+    }
+
     #[test]
     fn free_plan() {
         assert!(allowed("in_mouse", None, false) && allowed("rst_point", None, false) && allowed("__wmic", None, false));

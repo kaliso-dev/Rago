@@ -303,8 +303,18 @@ def dry_script(script):
             continue
         d = dry_line(line)
         if d:
+            # bloc dont toutes les lignes étaient des echo ou des commentaires : « ( » puis « ) » est une erreur de
+            # syntaxe pour cmd, qui arrête le relevé là (RAG-68, 2026-10-13 : hitreg_suite ne relevait plus rien)
+            if d.startswith(')') and out and opens_block(out[-1]):
+                out.append(NOOP)
             out.append(d)
     return '\r\n'.join(out)
+
+
+def opens_block(line):
+    """La ligne se termine par une « ( » qui ouvre un bloc (hors guillemets, pas « ^( »)."""
+    bare = re.sub(r'"[^"]*"', '""', line).rstrip()
+    return bare.endswith('(') and not bare.endswith('^(')
 
 
 ALLOWED_HEADS = re.compile(r'(?i)^(echo @@RAGO\b|ver >nul|set\b|setlocal\b|endlocal\b|exit\b|shift\b|for\b|if\b|\(|\)|&)')
