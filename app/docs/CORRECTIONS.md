@@ -564,8 +564,8 @@ undo.json : un PC qui les a lancés retrouve aussi les valeurs des lignes chang�
 - in_advanced : `HibernateEnabled` 0, mode jeu.
 - win_gamedvr : `GameDVR_FSEBehaviorMode` 1 et `GameDVR_HonorUserFSEBehaviorMode` 1 (contraires de win_fullscreen).
 - exp_io : `ntoskrnl.exe` et `WOW6432Node` (sans effet).
-- ping_packets, net_profile, net_advanced : `netsh int tcp set global` refusés par Windows 10 et 11 (chimney, netdma,
-  minrto, congestionprovider…) ; net_advanced : `SackOpts` 0.
+- ping_packets, net_profile, net_advanced, in_windows : `netsh int tcp set global` refusés par Windows 10 et 11
+  (chimney, netdma, minrto, congestionprovider…) ; net_advanced : `SackOpts` 0.
 
 **Catalogue**
 - Redémarrage : net_ipv6, in_mouse, in_keyboard ; net_profile (Knockback et QoS, pas Hitreg).
@@ -769,3 +769,9 @@ depuis la 1.1.9, `ping_advanced` n'épingle les interruptions de la carte résea
 et ne touche à rien (`AFFINITY_IDS` de `tools/coherence.py`). L'annulation retire toujours les deux valeurs. Le texte
 du réglage dit « (4 threads ou plus) ». Le test vérifie aussi qu'aucun autre script n'épingle la carte sans cette
 garde.
+
+**`chimney=disabled` dans `in_windows`.** Windows 10 et 11 refusent `netsh int tcp set global chimney=…` (« paramètre
+incorrect ») : la ligne ne changeait rien et mettait une erreur dans le journal. `in_windows` rejoint `NETSH_IDS` de
+`tools/coherence.py`, la règle qui retire déjà ces paramètres de `ping_packets`, `net_profile` et `net_advanced` ; ses
+autres lignes netsh (autotuninglevel, timestamps, ecncapability, rsc, nonsackrttresiliency) restent. Test
+`scripts_target_the_right_hardware_and_do_what_they_say`.

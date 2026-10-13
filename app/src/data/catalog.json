@@ -5789,7 +5789,7 @@
        "legacy": [
         "RAGO APP HITREG INPUTLAG.bat@76"
        ],
-       "lines": 57,
+       "lines": 56,
        "gain": {
         "en": "Rarely measurable: most of these values change little on a recent Windows.",
         "fr": "Effet rarement mesurable : la plupart de ces valeurs changent peu de chose sur un Windows récent."

@@ -43,7 +43,8 @@ VIDEO_LOOP = re.compile(r'(?i)Get-CimInstance Win32_VideoController\)\.PNPDevice
 NETSH_GLOBAL_OK = {'autotuninglevel', 'rss', 'rsc', 'ecncapability', 'timestamps', 'nonsackrttresiliency', 'fastopen',
                    'fastopenfallback', 'hystart', 'prr', 'pacingprofile', 'dca', 'initialrto', 'maxsynretransmissions'}
 NETSH_GLOBAL = re.compile(r'(?i)^\s*netsh\s+int(?:erface)?\s+tcp\s+set\s+global\s+(\w+)')
-NETSH_IDS = ('ping_packets:hitreg', 'ping_packets:knockback', 'net_profile:hitreg', 'net_profile:knockback')
+# in_windows : `chimney=disabled`, retiré aux finitions du 2026-10-13
+NETSH_IDS = ('ping_packets:hitreg', 'ping_packets:knockback', 'net_profile:hitreg', 'net_profile:knockback', 'in_windows')
 QOS_IDS = ('ping_packets:qos', 'net_profile:qos')
 # hors domaine d'entreprise, Windows n'applique le marquage DSCP d'une stratégie QoS que si « Do not use NLA » vaut "1"
 NLA_LINE = 'reg add "HKLM\\SYSTEM\\CurrentControlSet\\Services\\Tcpip\\QoS" /v "Do not use NLA" /t REG_SZ /d "1" /f >nul 2>&1'
@@ -430,8 +431,8 @@ undo.json : un PC qui les a lancés retrouve aussi les valeurs des lignes chang�
 - in_advanced : `HibernateEnabled` 0, mode jeu.
 - win_gamedvr : `GameDVR_FSEBehaviorMode` 1 et `GameDVR_HonorUserFSEBehaviorMode` 1 (contraires de win_fullscreen).
 - exp_io : `ntoskrnl.exe` et `WOW6432Node` (sans effet).
-- ping_packets, net_profile, net_advanced : `netsh int tcp set global` refusés par Windows 10 et 11 (chimney, netdma,
-  minrto, congestionprovider…) ; net_advanced : `SackOpts` 0.
+- ping_packets, net_profile, net_advanced, in_windows : `netsh int tcp set global` refusés par Windows 10 et 11
+  (chimney, netdma, minrto, congestionprovider…) ; net_advanced : `SackOpts` 0.
 
 **Catalogue**
 - Redémarrage : net_ipv6, in_mouse, in_keyboard ; net_profile (Knockback et QoS, pas Hitreg).

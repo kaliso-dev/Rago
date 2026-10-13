@@ -718,7 +718,7 @@ mod tests {
         let netsh_ok = ["autotuninglevel", "rss", "rsc", "ecncapability", "timestamps", "nonsackrttresiliency", "fastopen",
                         "fastopenfallback", "hystart", "prr", "pacingprofile", "dca", "initialrto", "maxsynretransmissions"];
         for (id, v) in [("ping_packets", "hitreg"), ("ping_packets", "knockback"), ("net_profile", "hitreg"),
-                        ("net_profile", "knockback"), ("net_advanced", "_")] {
+                        ("net_profile", "knockback"), ("net_advanced", "_"), ("in_windows", "_")] {
             for l in low(id, v).lines() {
                 let t = l.trim().replace("netsh interface ", "netsh int ");
                 if let Some(rest) = t.strip_prefix("netsh int tcp set global ") {
