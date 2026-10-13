@@ -108,14 +108,7 @@ pub fn uninstall() {
     let data_dir = std::env::var("APPDATA")
         .map(|a| PathBuf::from(a).join(IDENTIFIER))
         .unwrap_or_else(|_| std::env::temp_dir().join("RagoOptimizer"));
-    let history = Arc::new(History::load(data_dir.join("history.json")));
-    let (mut ledger, existed) = Ledger::load(data_dir.join("applied.json"));
-    if !existed {
-        // jamais lancée depuis 1.1.6 : les réglages appliqués d'après l'historique, comme au démarrage de l'app
-        ledger.import_history(&history.all());
-    }
-    // applis du Store supprimées par une version d'avant (action ponctuelle) : remises elles aussi
-    ledger.import_former_actions(&history.all(), catalog::FORMER_ACTIONS);
+    let (history, ledger) = load_for_uninstall(&data_dir);
     let ids = targets(&ledger, Scope::All);
     if ids.is_empty() {
         return;
@@ -154,6 +147,23 @@ pub fn uninstall() {
     runner.run_now(&ctx, &items(ids));
 }
 
+/// applied.json et l'historique comme l'app les voit à son lancement (lib.rs, setup) : réglages notés d'après
+/// l'historique, anciennes actions ponctuelles, et réparations du lancement (repair::at_startup). Une version jamais
+/// lancée avant d'être désinstallée garderait sinon un état d'avant à 0 pour CoalescingTimerInterval (PC passé par
+/// l'ancien .bat) : la remise l'écrirait, écran bleu 0x7E au démarrage suivant, et plus d'app pour réparer (RAG-67).
+fn load_for_uninstall(data_dir: &std::path::Path) -> (Arc<History>, Ledger) {
+    let history = Arc::new(History::load(data_dir.join("history.json")));
+    let (mut ledger, existed) = Ledger::load(data_dir.join("applied.json"));
+    if !existed {
+        // jamais lancée depuis 1.1.6 : les réglages appliqués d'après l'historique, comme au démarrage de l'app
+        ledger.import_history(&history.all());
+    }
+    // applis du Store supprimées par une version d'avant (action ponctuelle) : remises elles aussi
+    ledger.import_former_actions(&history.all(), catalog::FORMER_ACTIONS);
+    crate::repair::at_startup(&crate::backup::Sys::new(data_dir.join("backup")), &mut ledger, &data_dir.join("logs"));
+    (history, ledger)
+}
+
 /// Durée maximale de la remise à la désinstallation. Une remise complète prend d'habitude une à cinq minutes.
 pub const UNINSTALL_LIMIT: std::time::Duration = std::time::Duration::from_secs(15 * 60);
 
@@ -183,6 +193,26 @@ mod tests {
         assert_eq!(targets(&l, Scope::All), vec!["net_saved", "net_legacy"], "Tout annuler et la désinstallation essaient tout");
         l.tweaks.get_mut("net_legacy").unwrap().undo = Some(crate::backup::Undo { full: Some("reg add x".into()), ..Default::default() });
         assert_eq!(targets(&l, Scope::Premium), vec!["net_saved", "net_legacy"], "copie de l'annulation gardée : il est remis");
+    }
+
+    /// Désinstallée sans avoir été lancée depuis la mise à jour : applied.json de 1.1.9 tel quel, état d'avant à 0 pour
+    /// CoalescingTimerInterval (ancien .bat). La remise de la désinstallation ne doit pas réécrire ce 0 (RAG-67).
+    #[test]
+    fn uninstall_never_puts_the_crashing_zero_back() {
+        use crate::backup::{Saved, SavedEntry};
+        let dir = std::env::temp_dir().join(format!("rago-test-uninstall-{}", std::process::id()));
+        let _ = std::fs::remove_dir_all(&dir);
+        let zero = || Saved::Value { kind: 4, data: "00000000".into() };
+        let mut old = Ledger::load(dir.join("applied.json")).0;
+        let probe = crate::repair::timer_probes()[0].clone();
+        old.saved.push((probe.id(), SavedEntry { probe: probe.clone(), before: zero(), after: Some(zero()) }));
+        old.set_applied("pow_main", None, true, true, vec![probe.id()], 1);
+        old.save();
+        assert_eq!(Ledger::load(dir.join("applied.json")).0.saved[0].1.before, zero(), "fichier de 1.1.9");
+        let (_, ledger) = load_for_uninstall(&dir);
+        assert!(ledger.tweaks.contains_key("pow_main"));
+        assert!(ledger.saved.iter().all(|(_, e)| !crate::repair::is_zero(&e.before)), "{:?}", ledger.saved);
+        let _ = std::fs::remove_dir_all(&dir);
     }
 
     #[test]
