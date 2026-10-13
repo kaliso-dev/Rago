@@ -108,20 +108,49 @@ pub fn hitreg_suite_without_backup(ledger: &mut Ledger) -> bool {
     }
 }
 
+/// Réglage retiré « Disable timer coalescing » : il ne posait que `CoalescingTimerInterval` à 0 dans les huit clés.
+pub const POW_TIMER: &str = "pow_timer";
+
+/// M2 (revue du 2026-10-13) : une fois les huit valeurs réparées (absentes, ou non nulles), « Disable timer coalescing »
+/// n'a plus rien d'appliqué sur ce PC. Il quitte le registre des réglages : plus de carte « Réglages retirés encore
+/// appliqués » ni de « Remettre comme avant » qui supprimerait des valeurs déjà parties et proposerait un redémarrage
+/// inutile. Les éléments qu'un autre réglage encore appliqué tient (pow_main…) restent gardés (`Ledger::release`). Une
+/// valeur encore à 0 (suppression refusée) ou illisible : il reste, on réessaie au lancement suivant. Ce qu'on perd :
+/// une valeur d'avant non nulle posée à la main avant Rago (1500…), qui reste absente, c'est-à-dire la valeur de Windows.
+/// Renvoie true s'il a été oublié.
+pub fn forget_pow_timer(ledger: &mut Ledger, now: &dyn Fn(&Probe) -> Saved) -> bool {
+    if !ledger.tweaks.contains_key(POW_TIMER) {
+        return false;
+    }
+    let repaired = timer_probes().iter().all(|p| match now(p) {
+        Saved::Unknown => false,
+        s => !is_zero(&s),
+    });
+    if repaired {
+        ledger.release(POW_TIMER);
+    }
+    repaired
+}
+
 /// Au lancement de l'app : les réparations ci-dessus, le registre des réglages enregistré s'il a changé, et une ligne
 /// dans logs\repairs.log pour chaque valeur supprimée (le support peut la lire).
 pub fn at_startup(sys: &Sys, ledger: &mut Ledger, logs_dir: &Path) -> Vec<String> {
     let (removed, mut changed) = remove_zero_values(sys, ledger, &timer_probes());
     changed |= hitreg_suite_without_backup(ledger);
+    let forgot = forget_pow_timer(ledger, &|p| sys.read(p));
+    changed |= forgot;
     if changed {
         ledger.save();
     }
-    if !removed.is_empty() {
+    if !removed.is_empty() || forgot {
         let _ = std::fs::create_dir_all(logs_dir);
         if let Ok(mut f) = std::fs::OpenOptions::new().create(true).append(true).open(logs_dir.join("repairs.log")) {
             let ts = crate::history::now_ms();
             for r in &removed {
                 let _ = writeln!(f, "{ts} removed {r} (0: blue screen 0x7E after startup, RAG-67)");
+            }
+            if forgot {
+                let _ = writeln!(f, "{ts} {POW_TIMER} (retired) no longer applied: its only values are gone");
             }
         }
     }
@@ -207,6 +236,38 @@ mod tests {
         l.set_applied("hitreg_suite", Some("good".into()), true, true, vec!["reg|hklm\\a|b".into()], 1);
         assert!(!hitreg_suite_without_backup(&mut l));
         assert!(l.tweaks["hitreg_suite"].backup);
+    }
+
+    #[test]
+    fn pow_timer_is_forgotten_once_its_values_are_repaired() {
+        // retiré du catalogue (carte « Réglages retirés »), plus jamais lancé
+        assert_eq!(crate::catalog::name_of(POW_TIMER), "Disable timer coalescing");
+        assert!(!crate::catalog::is_switch(POW_TIMER) && crate::catalog::script(POW_TIMER, None, None).is_none());
+        let probes = timer_probes();
+        let absent = || Saved::Absent { created: None };
+        let mut l = Ledger::default();
+        for p in &probes {
+            l.saved.push(entry(p.clone(), absent(), Some(zero())));
+        }
+        l.set_applied(POW_TIMER, None, true, true, probes.iter().map(Probe::id).collect(), 1);
+        // pow_main tient aussi la première valeur : elle reste gardée pour lui
+        l.set_applied("pow_main", None, true, true, vec![probes[0].id()], 2);
+        // une valeur encore à 0 (suppression refusée), ou illisible : il reste appliqué
+        let one_zero = |p: &Probe| if p.id() == probes[3].id() { zero() } else { absent() };
+        assert!(!forget_pow_timer(&mut l, &one_zero));
+        assert!(!forget_pow_timer(&mut l, &|_| Saved::Unknown));
+        assert!(l.tweaks.contains_key(POW_TIMER));
+        // toutes absentes (ou une valeur non nulle posée par un autre) : il part, une seule fois
+        let repaired = |p: &Probe| if p.id() == probes[5].id() { Saved::Value { kind: 4, data: "dc050000".into() } } else { absent() };
+        assert!(forget_pow_timer(&mut l, &repaired));
+        assert!(!l.tweaks.contains_key(POW_TIMER));
+        assert!(l.tweaks.contains_key("pow_main"));
+        assert!(l.has(&probes[0].id()), "élément tenu par pow_main : gardé");
+        assert!(!l.has(&probes[1].id()), "élément de pow_timer seul : oublié");
+        assert!(!forget_pow_timer(&mut l, &repaired), "une seule fois");
+        // jamais appliqué : rien
+        let mut empty = Ledger::default();
+        assert!(!forget_pow_timer(&mut empty, &|_| absent()));
     }
 
     /// Sur Windows (CI) : une vraie valeur à 0 est supprimée, une valeur à 1500 reste.

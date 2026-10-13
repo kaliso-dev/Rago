@@ -655,3 +655,12 @@ Sans relevé (réglage lancé comme action ponctuelle par une version d'avant, n
 appliqué avant ce relevé), l'annulation remet les applis de la liste du réglage (champ `apps` du catalogue) que
 Windows garde encore. Les contre des deux réglages conseillent de lancer la Restauration du système depuis l'écran de
 récupération : depuis Windows, elle peut échouer sur AppRepository (0x80070301) après une suppression d'applis.
+
+# Finitions de la revue du 2026-10-13 (RBW Mod, réglage retiré, réparation, chemins du profil)
+
+**« Disable timer coalescing » (`pow_timer`, retiré) ne reste plus « appliqué » une fois réparé.** Il ne posait que
+`CoalescingTimerInterval` à 0 dans les huit clés que `repair.rs` répare au lancement. Quand aucune ne vaut plus 0 (et
+qu'aucune n'est illisible), `forget_pow_timer` le retire d'`applied.json` : plus de carte « Réglages retirés encore
+appliqués », ni de « Remettre comme avant » qui supprimerait des valeurs déjà parties en proposant un redémarrage
+inutile. Les éléments qu'un autre réglage encore appliqué tient (`pow_main`…) restent gardés. Une ligne le note dans
+`logs\repairs.log`. Test `pow_timer_is_forgotten_once_its_values_are_repaired`.
