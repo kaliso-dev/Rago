@@ -135,6 +135,19 @@ impl Runner {
             if self.cancel.load(Ordering::SeqCst) {
                 break;
             }
+            let applied = ctx.ledger.lock().unwrap().tweaks.contains_key(&item.id);
+            // RBW Mod : revenir en arrière (« Activé » après « Désactivé », déconnexion), c'est lancer « Activé » en entier,
+            // jamais la sauvegarde d'avant « Désactivé », qui ne démarrait aucun service (catalog::revert_runs_script).
+            // Lancé et noté dans l'historique comme « Activé » : l'interface affiche « Activé depuis… »
+            let as_script;
+            let converted = catalog::revert_runs_script(&item.id)
+                && (item.undo || (applied && catalog::is_revert(&item.id, item.variant.as_deref())));
+            let item = if converted {
+                as_script = RunItem { variant: catalog::revert_variant(&item.id), undo: false, ..item.clone() };
+                &as_script
+            } else {
+                item
+            };
             let variant = item.variant.as_deref();
             let emit_item = |status: &str, code: Option<i32>, duration: Option<u64>, message: Option<String>| {
                 let _ = ctx.app.emit(
@@ -142,10 +155,10 @@ impl Runner {
                     ItemEvent { run_id, index, id: &item.id, variant, status, code, duration_ms: duration, message },
                 );
             };
-            let applied = ctx.ledger.lock().unwrap().tweaks.contains_key(&item.id);
             // décoché, ou variante de retour arrière d'un réglage appliqué : retour à l'état d'avant
-            let undo = item.undo || (applied && catalog::is_revert(&item.id, variant));
-            if restore_failed && !undo && changes_windows(&item.id) {
+            let undo = item.undo || (applied && catalog::is_revert(&item.id, variant) && !catalog::revert_runs_script(&item.id));
+            // un retour arrière converti tourne lui aussi sans point de restauration, comme avant (c'était une annulation)
+            if restore_failed && !undo && !converted && changes_windows(&item.id) {
                 write_log(&format!("==== skipped {} (no restore point)", item.id));
                 emit_item("skipped", None, None, None);
                 skipped += 1;
@@ -190,7 +203,10 @@ impl Runner {
                     None => {
                         // ce que le script va modifier, relevé avant de le lancer
                         let switch = catalog::is_switch(&item.id) && !catalog::is_revert(&item.id, variant);
-                        let probes = if switch { self.snapshot(ctx, &sys, item, &emit_line) } else { None };
+                        // RBW Mod : rien à sauvegarder, son retour arrière lance « Activé » ; un relevé retiendrait les
+                        // valeurs d'autres réglages et cacherait ce qu'il leur change (badge « Changé par Windows »)
+                        let keep = switch && !catalog::revert_runs_script(&item.id);
+                        let probes = if keep { self.snapshot(ctx, &sys, item, &emit_line) } else { None };
                         let result = self.run_item(ctx, item, &emit_line);
                         let cancelled = self.cancel.load(Ordering::SeqCst);
                         let r = match result {
@@ -210,9 +226,18 @@ impl Runner {
                             ids
                         });
                         if switch && ids.is_none() {
-                            // réglage natif (OptiFine) : il garde sa propre sauvegarde
+                            // réglage natif (OptiFine) : il garde sa propre sauvegarde ; RBW Mod « Désactivé » : aucune (le
+                            // relevé d'une version précédente est oublié, il ne retient plus les valeurs d'autres réglages)
                             let mut l = ctx.ledger.lock().unwrap();
+                            if catalog::revert_runs_script(&item.id) {
+                                l.release(&item.id);
+                            }
                             l.set_applied(&item.id, item.variant.clone(), r.0, item.id == "mc_optifine", Vec::new(), now_ms());
+                            l.save();
+                        } else if catalog::revert_runs_script(&item.id) {
+                            // RBW Mod « Activé » : il n'est plus « appliqué » (« Désactivé » l'était)
+                            let mut l = ctx.ledger.lock().unwrap();
+                            l.release(&item.id);
                             l.save();
                         }
                         if let Some(k) = twin_key {

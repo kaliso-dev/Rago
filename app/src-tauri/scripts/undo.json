@@ -1004,7 +1004,7 @@
 },
 "rbw_mode": {
 "off": {
-"full": "@echo off\r\nfor /f \"tokens=2\" %%s in ('sc query state^= all ^| findstr /r /c:\"SERVICE_NAME: CDPUserSvc_\"') do sc config \"%%s\" start= auto >nul 2>&1\r\nsc config \"DPS\" start= auto >nul 2>&1\r\nsc config \"EventLog\" start= auto >nul 2>&1\r\nsc config \"PcaSvc\" start= auto >nul 2>&1\r\nsc config \"Schedule\" start= auto >nul 2>&1\r\nsc config \"SysMain\" start= auto >nul 2>&1\r\nsc start \"DPS\" >nul 2>&1\r\nsc start \"EventLog\" >nul 2>&1\r\nsc start \"PcaSvc\" >nul 2>&1\r\nsc start \"Schedule\" >nul 2>&1\r\nsc start \"SysMain\" >nul 2>&1"
+"full": "@echo off\r\nfor /f \"tokens=2\" %%s in ('sc query state^= all ^| findstr /r /c:\"SERVICE_NAME: CDPUserSvc_\"') do sc config \"%%s\" start= auto >nul 2>&1\r\nsc config \"DPS\" start= auto >nul 2>&1\r\nsc config \"EventLog\" start= auto >nul 2>&1\r\nsc config \"PcaSvc\" start= auto >nul 2>&1\r\nsc config \"Schedule\" start= auto >nul 2>&1\r\nsc config \"SysMain\" start= auto >nul 2>&1\r\nsc start \"DPS\" >nul 2>&1\r\nsc start \"EventLog\" >nul 2>&1\r\nsc start \"PcaSvc\" >nul 2>&1\r\nsc start \"Schedule\" >nul 2>&1\r\nsc start \"SysMain\" >nul 2>&1\r\nreg delete \"HKCU\\Software\\Microsoft\\Windows\\CurrentVersion\\Explorer\\Advanced\" /v \"Start_TrackDocs\" /f >nul 2>&1\r\nreg delete \"HKLM\\SYSTEM\\CurrentControlSet\\Control\\Session Manager\\Memory Management\\PrefetchParameters\" /v \"EnableSuperfetch\" /f >nul 2>&1"
 }
 },
 "game_mode": {

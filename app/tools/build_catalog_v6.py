@@ -11,6 +11,7 @@ import json
 import probes
 import audit_fixes as AUDIT
 import safety as SAFETY
+import rbw as RBW
 import os
 import re
 import subprocess
@@ -326,14 +327,6 @@ NEW_TWEAKS = [
         r'reg add "HKCU\Software\Microsoft\Windows\CurrentVersion\Explorer\AutoplayHandlers" /v "DisableAutoplay" /t REG_DWORD /d "1" /f >nul',
     ])),
 ]
-RBW_ON_EXTRA = '\n'.join([
-    'echo - BAM, DAM and Prefetch back on (active after a restart)',
-    r'reg add "HKLM\SYSTEM\CurrentControlSet\Services\bam" /v "Start" /t REG_DWORD /d "1" /f >nul',
-    r'reg add "HKLM\SYSTEM\CurrentControlSet\Services\dam" /v "Start" /t REG_DWORD /d "1" /f >nul',
-    r'reg add "HKLM\SYSTEM\CurrentControlSet\Control\Session Manager\Memory Management\PrefetchParameters" /v "EnablePrefetcher" /t REG_DWORD /d "3" /f >nul',
-    r'reg add "HKLM\SYSTEM\CurrentControlSet\Control\Session Manager\Memory Management\PrefetchParameters" /v "EnableSuperfetch" /t REG_DWORD /d "3" /f >nul',
-])
-
 # Ce que le joueur doit lire avant de lancer : déduit du script, pour que rien de lourd ne passe sans être annoncé.
 WARNINGS = [
     (r'FeatureSettingsOverride"?\s+/t\s+REG_DWORD\s+/d\s+"?3', 'Turns off the Spectre and Meltdown protections.',
@@ -368,7 +361,8 @@ WARNINGS = [
      'Coupe BAM, qui garde la trace des programmes lancés. Sur un screenshare, ça peut ressembler à des traces effacées : active le RBW Mod et redémarre ton PC avant.'),
     (r'EnablePrefetcher"?\s+/t\s+REG_DWORD\s+/d\s+"?0', 'Stops Prefetch from filling. On a screenshare that can look like erased traces: turn on RBW Mod and restart your PC before one.',
      'Le Prefetch ne se remplit plus. Sur un screenshare, ça peut ressembler à des traces effacées : active le RBW Mod et redémarre ton PC avant.'),
-    (r'^(?!\s*echo).*(del|forfiles|rd)\b.*\\prefetch', 'Clears the Prefetch folder, which a screenshare can read as wiped traces.',
+    # commandes del, forfiles ou rd entières (comme safety.py) : « -Type DWord » finit aussi par « rd »
+    (r'^(?!\s*echo).*\b(del|forfiles|rd)\b.*\\prefetch', 'Clears the Prefetch folder, which a screenshare can read as wiped traces.',
      'Vide le dossier Prefetch, ce qu\'un screenshare peut lire comme des traces effacées.'),
     (r'DisableDeleteNotify\s+(NTFS\s+)?1\b', 'Turns off TRIM on your SSD, which keeps it fast and healthy over time.',
      'Coupe le TRIM du SSD, qui le garde rapide et en bonne santé dans le temps.'),
@@ -557,8 +551,6 @@ def postprocess(modules, scripts):
                 scripts[tid][v] = scripts[tid][v].replace(before, after or '')
     drop_lines(scripts, DROP_LINES)
     sub_lines(scripts, SUB_LINES)
-    sep = '\r\n' if '\r\n' in scripts['rbw_mode']['on'] else '\n'
-    scripts['rbw_mode']['on'] += sep + RBW_ON_EXTRA.replace('\n', sep)
     # scripts tels qu'avant l'audit (ce qu'ont lancé les PC jusqu'ici) : leur annulation reste dans undo.json
     before_audit = copy.deepcopy(scripts)
     apply_audit(scripts)
@@ -568,6 +560,10 @@ def postprocess(modules, scripts):
     global SAFETY_REPORT
     SAFETY_REPORT = SAFETY.apply(scripts)
     assert not SAFETY.remaining(scripts), SAFETY.remaining(scripts)[:3]
+    # RBW Mod (tools/rbw.py, RAG-69) : scripts entiers, posés après l'audit et safety.py pour qu'aucune de leurs lignes ne
+    # soit retirée ou réécrite (« Activé » est le script validé par Sofiene, étape par étape)
+    sep = '\r\n' if '\r\n' in scripts['rbw_mode']['on'] else '\n'
+    scripts['rbw_mode'] = {'on': RBW.ON.replace('\n', sep), 'off': RBW.OFF.replace('\n', sep)}
 
     tweaks = {t['id']: t for m in modules for sec in m['sections'] for t in sec['tweaks'] if 'id' in t}
     for tid, t in tweaks.items():
@@ -593,13 +589,10 @@ def postprocess(modules, scripts):
         for a, b in UK_US:
             t['name']['en'] = t['name']['en'].replace(a, b)
             t['desc']['en'] = t['desc']['en'].replace(a, b)
-    tweaks['rbw_mode']['desc'] = I(
-        'On restarts the services screenshare tools check (Event Log, SysMain, PCA, Scheduler) and turns BAM and Prefetch back on '
-        'after a restart. Off sets the services back to manual after your session.',
-        'Activé relance les services que vérifient les outils de screenshare (journal d\'événements, SysMain, PCA, Planificateur) '
-        'et remet BAM et le Prefetch après un redémarrage. Désactivé repasse les services en manuel après ta session.')
-    # BAM est un pilote et le Prefetcher se relit au démarrage : sans redémarrage, « On » ne remet rien de visible.
-    # « Off » ne fait que repasser des services en manuel : pas de redémarrage.
+    # texte du RBW Mod : tools/descriptions.json (describe). Il remet Windows comme avant : sûr, sans avertissement
+    assert tweaks['rbw_mode']['risk'] == 'safe' and 'confirm' not in tweaks['rbw_mode'], tweaks['rbw_mode'].get('confirm')
+    # BAM est un pilote, les journaux DiagLog et WdiContextLog (sans eux DPS ne démarre pas) et le Prefetcher se relisent
+    # au démarrage : « On » demande un redémarrage. « Off » ne sert pas avant un screenshare : pas de redémarrage.
     tweaks['rbw_mode']['reboot'] = False
     for v in tweaks['rbw_mode']['variants']:
         v['reboot'] = v['id'] == 'on'
@@ -806,7 +799,20 @@ Corrections ciblées (`SCRIPT_FIXES`, `DROP_LINES`) :
 Profils exclusifs découpés en variantes (ils s'exécutaient tous à la suite) : ping_hitreg (6 profils dont Default),
 ping_packets (Hitreg, QoS, Knockback), ping_main (Config 1 à 4), sys_ram (selon la RAM).
 
-RBW Mod « On » remet aussi BAM, DAM et le Prefetcher (actifs après redémarrage, demandé par l'app pour cette variante).
+RBW Mod (RAG-69, réécrit le 2026-10-13, `tools/rbw.py`) : « On » fait ce que fait Rago-RBW-Fix.ps1, le script validé
+par Sofiene sur son PC, dans le même ordre, une ligne PowerShell par étape : démarrage avec Windows de SysMain, PcaSvc,
+DPS, EventLog, WSearch, DusmSvc, BFE, Appinfo, Schedule, DsmSvc, DiagTrack, DcomLaunch, PlugPlay, BAM, DAM, CDPUserSvc
+et de chaque CDPUserSvc_xxxx (sc config, puis Set-Service, puis la valeur Start du registre ; Windows Search remis s'il
+a été retiré) ; services dont ils dépendent remis en manuel s'ils sont désactivés ; réglages lus par le vérificateur
+officiel de RBW (historique d'activités, clé de stratégies AppCompat, listes de raccourcis, CMD, journal PowerShell,
+Prefetch), journaux DiagLog et WdiContextLog et stratégie WDI sans lesquels DPS ne démarre pas ; lancement de chaque
+service (Start-Service, sc start, net start) ; ce que voit le vérificateur, avec le code et le message de Windows pour
+ce qui reste arrêté ; tâches planifiées et programmes de démarrage qui les recouperaient (lecture seule) ; verdict.
+« On » lance toujours ce script, même après « Off » (`catalog::revert_runs_script`) : la sauvegarde d'avant « Off »
+ne démarrait aucun service. « Off » remet ces services et réglages comme Windows les règle (Appinfo, DsmSvc et
+PlugPlay en manuel) et lance ceux que Windows lance de lui-même, sans rien arrêter ; l'ancien « Off » arrêtait SysMain
+et DiagTrack. Le RBW Mod ne garde pas de sauvegarde (rien à remettre) : les réglages qui coupent ces éléments gardent
+la leur et affichent « Changé par Windows » après le RBW Mod.
 
 Les actions lourdes ne sont pas retirées (choix de Sofiene, « tout garder ») : `WARNINGS` les détecte dans chaque
 script (Spectre, Defender, SmartScreen, UAC, pare-feu, IFEO, BAM, Prefetch…), écrit l'avertissement « Read this first »
