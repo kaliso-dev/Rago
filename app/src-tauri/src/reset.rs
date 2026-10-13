@@ -18,8 +18,9 @@ use crate::{catalog, minecraft, system};
 
 /// Argument passé par le désinstallateur.
 pub const UNINSTALL_ARG: &str = "--reset-tweaks";
-/// Identifiant de tauri.conf.json : nom du dossier des données dans %APPDATA%, comme app_data_dir() de Tauri.
-pub const IDENTIFIER: &str = "gg.rago.optimizer";
+/// Identifiant de tauri.conf.json : nom du dossier des données dans %APPDATA%, comme app_data_dir() de Tauri. Lu par
+/// build.rs : l'exe de test (gg.rago.optimizer.staging) remet ses propres réglages, jamais ceux du vrai.
+pub const IDENTIFIER: &str = env!("RAGO_IDENTIFIER");
 
 #[derive(Clone, Copy, PartialEq, Debug)]
 pub enum Scope {
