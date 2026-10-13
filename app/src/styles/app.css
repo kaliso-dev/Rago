@@ -2020,12 +2020,20 @@ svg {
 
 /* ---------------------------------------------------- vérification du 2026-10-07 */
 
-/* licence perdue ou à revérifier : bandeau en haut de la page */
-.reset-toast {
+/* petits messages en bas à droite (ResetToast) : les uns au-dessus des autres, jamais cliquables */
+.toasts {
   position: fixed;
   right: 20px;
   bottom: 20px;
   z-index: 60;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 8px;
+  max-width: min(420px, calc(100vw - 40px));
+  pointer-events: none;
+}
+.reset-toast {
   display: flex;
   align-items: center;
   gap: 8px;
@@ -2045,6 +2053,7 @@ svg {
 .reset-toast.warn > svg {
   color: var(--rg-warning);
 }
+/* licence perdue ou à revérifier : bandeau en haut de la page */
 .license-notice {
   display: flex;
   align-items: center;

@@ -612,7 +612,10 @@ les réglages Advanced ne suffisait pas.
 - `safety.py` : la ligne part de tous les scripts (`DROP_EVERYWHERE`) ; `pow_timer`, qui ne faisait que ça, est retiré
   (`RETIRED`), son annulation reste.
 - `src-tauri/src/repair.rs` : à chaque lancement, l'app supprime la valeur là où elle vaut 0 dans ces huit clés, sans
-  rien demander (elle tourne en administrateur) ; Windows reprend sa valeur interne au démarrage suivant. Une valeur
+  rien demander (elle tourne en administrateur) ; Windows reprend sa valeur interne au prochain démarrage complet
+  (« Redémarrer », ou le redémarrage après un écran bleu). Avec le démarrage rapide de Windows, actif par défaut,
+  « Arrêter » puis rallumer ne relit pas la valeur (le noyau sort de veille prolongée) : le PC peut planter une fois de
+  plus. L'app affiche donc une fois « Redémarre ton PC pour finir : Redémarrer, pas Arrêter ». Une valeur
   différente de 0 n'est pas touchée. Chaque suppression est notée dans `logs\repairs.log`. Le registre des réglages
   (`applied.json`) ne remet jamais 0 en annulant, et n'affiche pas « Changé par Windows » pour ces valeurs.
 - Les annulations (`undo.json`) suppriment toujours la valeur ; le test `kernel_timer_value_stays_out` vérifie qu'aucun
@@ -664,3 +667,9 @@ qu'aucune n'est illisible), `forget_pow_timer` le retire d'`applied.json` : plus
 appliqués », ni de « Remettre comme avant » qui supprimerait des valeurs déjà parties en proposant un redémarrage
 inutile. Les éléments qu'un autre réglage encore appliqué tient (`pow_main`…) restent gardés. Une ligne le note dans
 `logs\repairs.log`. Test `pow_timer_is_forgotten_once_its_values_are_repaired`.
+
+**Redémarrer après la réparation, pas Arrêter.** Au lancement où `repair.rs` a supprimé une valeur à 0, l'interface
+affiche une fois, en bas à droite, « Rago Optimizer a réparé une valeur qui peut faire planter Windows. Redémarre ton PC
+pour finir : Redémarrer, pas Arrêter. » (commande `take_repair_notice`, vraie une seule fois par lancement ; rien n'est
+gardé sur disque). Le message part seul après 20 secondes et ne bloque rien. Aux lancements suivants il n'y a plus rien
+à réparer, donc plus de message, sauf si un autre programme remet 0.

@@ -138,6 +138,15 @@ function useStoreValue() {
   const [activatedAt, setActivatedAt] = usePersisted<number | null>("activatedAt", null);
   /** Remise à zéro faite par le moteur (fin de Premium, déconnexion) : petit message en bas à droite. */
   const [resetDone, setResetDone] = useState<(ResetDone & { at: number }) | null>(null);
+  /** La réparation du moteur au lancement a supprimé une valeur qui peut faire planter Windows (RAG-67) : petit message
+   * « redémarre ton PC », une seule fois (le moteur ne le dit qu'au premier appel de ce lancement). */
+  const [repairNotice, setRepairNotice] = useState(false);
+  useEffect(() => {
+    void api.takeRepairNotice().then(
+      (v) => v && setRepairNotice(true),
+      () => {},
+    );
+  }, []);
   const premium = license?.state === "active";
   /** Verrouillé en gratuit : tout sauf la liste gratuite et les réglages qui ont une variante de retour arrière. */
   const isLocked = useCallback((id: string) => !premium && !FREE.has(id) && !REVERTS.has(id), [premium]);
@@ -489,6 +498,7 @@ function useStoreValue() {
     sys, sysLoading, refreshSys,
     selection, selected, toggle, selectMany, unselectMany, variants, setVariant, variantOf,
     pendingUndo, applied, appliedLoaded: appliedList !== null, isOn, premiumApplied, reapply, resetDone, setResetDone,
+    repairNotice, setRepairNotice,
     retiredApplied, requestUndo, requestUndoAll,
     history, lastRun, lastRestore, refreshHistory, refreshApplied,
     mcDir, setMcDir,

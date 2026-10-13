@@ -7,7 +7,10 @@
 //! documentée par Microsoft ; le noyau la lit au démarrage et divise par elle : à 0, écran bleu 0x7E (exception
 //! c0000094, division par zéro) quelques minutes après le démarrage (Windows 11 24H2), même après avoir décoché les
 //! réglages Advanced, puisque des réglages Safe l'écrivaient aussi. Au lancement, l'app supprime la valeur là où elle
-//! vaut 0 : Windows reprend sa valeur interne au démarrage suivant. Une valeur différente de 0 n'est pas touchée.
+//! vaut 0 : Windows reprend sa valeur interne au prochain démarrage complet, « Redémarrer » ou le redémarrage après un
+//! écran bleu. Avec le démarrage rapide de Windows (actif par défaut), « Arrêter » met le noyau en veille prolongée et
+//! ne relit pas la valeur : le PC peut planter une fois de plus. L'interface demande donc, une fois, de redémarrer
+//! (`take_repair_notice`, lib.rs). Une valeur différente de 0 n'est pas touchée.
 //! L'app tourne en administrateur (app.manifest) : elle peut écrire dans HKLM sans rien demander.
 
 use std::collections::HashSet;

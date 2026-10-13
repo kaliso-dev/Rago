@@ -155,6 +155,8 @@ export interface Api {
   applied(): Promise<AppliedView[]>;
   /** « Tout annuler » : réglages appliqués sur ce PC, dans l'ordre de la remise à zéro (le dernier appliqué en premier). */
   undoAllPlan(): Promise<string[]>;
+  /** Vrai une seule fois, au lancement où la réparation du moteur a supprimé une valeur (RAG-67) : il faut redémarrer. */
+  takeRepairNotice(): Promise<boolean>;
   liveStats(): Promise<LiveStats>;
   openTaskManager(): Promise<void>;
   minecraftStatus(dir?: string | null): Promise<MinecraftStatus>;
@@ -184,6 +186,7 @@ const tauriApi: Api = {
   clearHistory: () => invoke("clear_history"),
   applied: () => invoke("get_applied"),
   undoAllPlan: () => invoke("undo_all_plan"),
+  takeRepairNotice: () => invoke("take_repair_notice"),
   liveStats: () => invoke("live_stats"),
   openTaskManager: () => invoke("open_task_manager"),
   minecraftStatus: (dir) => invoke("minecraft_status", { dir: dir ?? null }),
@@ -382,6 +385,14 @@ const mockApi: Api = {
   },
   applied: async () => [...mockApplied.values()],
   undoAllPlan: async () => [...mockApplied.values()].sort((a, b) => b.ts - a.ts || a.id.localeCompare(b.id)).map((a) => a.id),
+  // démo : localStorage « rago.demoRepair » = 1 simule une réparation au lancement
+  takeRepairNotice: async () => {
+    try {
+      return localStorage.getItem("rago.demoRepair") === "1";
+    } catch {
+      return false;
+    }
+  },
   liveStats: async () => {
     // démo : valeurs simulées ; localStorage « rago.demoNoGpu » = 1 simule un PC sans compteur de carte graphique
     mockStatsStart ||= Date.now();
