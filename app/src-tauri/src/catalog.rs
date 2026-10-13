@@ -1763,4 +1763,41 @@ mod tests {
         // une valeur du fichier : écran jamais éteint branché (le plan Performances élevées l'éteint après 15 min)
         assert_eq!(ac("7516b95f-f776-4464-8c53-06167f40cc99", "3c0bc021-c8a8-4e07-a973-6b14cbcb2b7e"), Some(0));
     }
+
+    /// Revue finale du moteur (2026-10-13) : un PC passé par 1.1.9 garde dans applied.json la copie de l'annulation
+    /// de 1.1.9. Sans licence (fin de Premium, déconnexion, Tout annuler, désinstallation), c'est elle qui tourne :
+    /// elle doit être remplacée par celle de cette version dès que la licence est encore active (keep_undo, appelé à
+    /// chaque lecture des réglages appliqués), sinon les corrections du retour arrière (RAG-60) ne servent qu'aux
+    /// joueurs encore abonnés.
+    #[test]
+    fn undo_copies_of_older_versions_are_refreshed_while_licensed() {
+        use crate::backup::{Ledger, Undo};
+        let bundle = premium(&test_key()).unwrap();
+        // textes de 1.1.9 (undo.json de 1c340df)
+        let old = [
+            ("in_advanced", "powershell -NoProfile -ExecutionPolicy Bypass -Command \"Disable-ComputerRestore -Drive 'D:\\','E:\\','F:\\','G:\\' -ErrorAction SilentlyContinue\" >nul 2>&1"),
+            ("sys_registry", "auditpol /set /subcategory:{0CCE922C-69AE-11D9-BED3-505054503030} /success:disable /failure:disable >nul 2>&1"),
+        ];
+        let mut l = Ledger::default();
+        for (i, (id, rest)) in old.iter().enumerate() {
+            l.set_applied(id, None, true, true, vec![], i as u64);
+            l.tweaks.get_mut(*id).unwrap().undo = Some(Undo { rest: Some(rest.to_string()), ..Default::default() });
+            // réglages Premium : sans licence, le moteur n'a que cette copie (runner::undo_item)
+            assert!(undo_of(id, None, None).is_none(), "{id}");
+        }
+        let ledger = Mutex::new(l);
+        // sans licence : rien à mettre à la place, la copie reste
+        crate::keep_undo(&ledger, None);
+        assert!(ledger.lock().unwrap().tweaks["in_advanced"].undo.as_ref().unwrap().rest.as_deref().unwrap().contains("Disable-ComputerRestore"));
+        // licence active : la copie devient l'annulation de cette version
+        crate::keep_undo(&ledger, Some(&bundle));
+        let l = ledger.lock().unwrap();
+        for (id, _) in old {
+            let copy = l.tweaks[id].undo.clone().unwrap();
+            assert_eq!(Some(&copy), undo_of(id, None, Some(&bundle)).as_ref(), "{id}");
+            let (full, rest) = (copy.full.unwrap_or_default().to_lowercase(), copy.rest.unwrap_or_default().to_lowercase());
+            assert!(!full.contains("disable-computerrestore") && !rest.contains("disable-computerrestore"), "{id}");
+            assert!(!rest.contains("auditpol"), "{id}");
+        }
+    }
 }
