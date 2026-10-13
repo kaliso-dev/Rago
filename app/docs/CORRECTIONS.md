@@ -503,6 +503,59 @@ Lignes risquées retirées des packs qui les cachaient (le pack reste) :
 
 Point de restauration (1.1.8) : la case de 1.1.6 revient. Elle est cochée d'office seulement pour un réglage `restore` (avancé, ou que l'app ne remet pas entièrement) et si Rago n'en a pas créé un réussi dans les 24 dernières heures.
 
+
+# Cohérence des scripts et des textes (1.1.9)
+
+Worker « textes-scripts », 2026-10-13 : `tools/coherence.py` et `tools/descriptions.json`. Sources : Linear RAG-60
+(§4 et §5), RAG-27 et les « Points relevés sans correction » de l'audit du 2026-10-07. Les scripts d'avant restent dans
+undo.json : un PC qui les a lancés retrouve aussi les valeurs des lignes changées ici.
+
+**Carte graphique visée**
+- nv_accel, nv_contig, nv_kboost, gpu_nvidia, amd_general, amd_power, amd_memsleep, amd_delag, gpu_amd écrivaient
+  dans `Class\{4d36e968…}\0000`, souvent la puce intégrée d'un portable à deux cartes. Le script cherche une fois les
+  clés dont `MatchingDeviceId` est du bon fabricant (`ven_10de` NVIDIA, `ven_1002` AMD) et n'écrit que là. Une seule
+  carte : même clé qu'avant. Aucune carte du fabricant : rien n'est écrit.
+- gpu_amd : `%REGPATH_AMD%` (la dernière clé trouvée) remplacé de la même façon.
+- nv_msi, gpu_nvidia, gpu_amd : mode MSI seulement sur les cartes du bon fabricant.
+- gpu_nvidia : trois boucles cassées retirées (`echo %w%-` écrivait dans `Control\Class\-`) ; les boucles juste
+  au-dessus font déjà ce travail. La ligne qui coupait la préemption des cartes AMD (`KMD_EnableComputePreemption`,
+  souvent l'iGPU d'un portable Ryzen) quitte ce pack NVIDIA.
+
+**Valeurs**
+- nv_kboost : `PerfLevelSrc` 2222 → 8738 (0x2222, comme nv_powermizer).
+- amd_power : « Disable Clock Gating » posait 1 ; maintenant 0.
+- pow_windows : `EnergyEstimationEnabled` 1 → 0 (le script posait aussi `EnergyEstimationDisabled` 1).
+- gpu_amd : texte parasite collé à une commande (`%b%╚═…`) retiré.
+- dbl_telemetry, win_telemetry : tâche Office `\Microsoftd\` → `\Microsoft\`.
+- dbl_cortana : `DisableWebSearch` 0 → 1, comme « Recherche Windows sans le web ».
+- win_services : `AllowNewsAndInterests` sous `Policies\Microsoft\Dsh`, comme win_feed.
+- hitreg_suite : `Disable-ScheduledTask` (PowerShell lancé par cmd, sans effet) → `schtasks /change … /disable`.
+- ping_packets et net_profile, profil QoS : « Do not use NLA » = "1" ajouté (sinon Windows ignore le marquage hors
+  domaine d'entreprise), `DSCP Value` en texte "46" et `Throttle Rate` "-1", comme les écrit Windows.
+- ping_main:config3 : propriétés de la carte par `-RegistryKeyword` (toutes langues) au lieu du nom anglais ; Jumbo
+  Packet 0 (valeur refusée) devient 1514 (désactivé, comme plus bas), doublons retirés.
+- win_fullscreen : `DirectXUserGlobalSettings` fusionné au lieu d'écrasé (Auto HDR gardé).
+- net_affinity, in_adapter, ping_main:config4 : l'épinglage sur le processeur n°2 seulement avec 4 processeurs
+  logiques ou plus.
+
+**Lignes retirées**
+- hitreg_suite : `AlwaysOn` 1 et `DisableTaskOffload` 1 (défaits plus bas), mode jeu (affaire de win_gamemode),
+  compression mémoire (affaire de « Profil mémoire »), `HibernateEnabled` 0.
+- in_advanced : `HibernateEnabled` 0, mode jeu.
+- win_gamedvr : `GameDVR_FSEBehaviorMode` 1 et `GameDVR_HonorUserFSEBehaviorMode` 1 (contraires de win_fullscreen).
+- exp_io : `ntoskrnl.exe` et `WOW6432Node` (sans effet).
+- ping_packets, net_profile, net_advanced : `netsh int tcp set global` refusés par Windows 10 et 11 (chimney, netdma,
+  minrto, congestionprovider…) ; net_advanced : `SackOpts` 0.
+
+**Catalogue**
+- Redémarrage : net_ipv6, in_mouse, in_keyboard ; net_profile (Knockback et QoS, pas Hitreg).
+- Noms : mem_superfetch « Désactiver Superfetch (ancien réglage) », net_ipv6 « Préférer l'IPv4 à l'IPv6 ».
+- exp_smb : l'avertissement dit aussi que le PC n'ouvre plus les partages des vieux NAS.
+- Textes (descriptions.json) : ping_hitreg, net_adapter, net_powersave, net_advanced, hitreg_suite, in_advanced,
+  gpu_nvidia, nv_general, nv_kboost, mc_optifine, exp_smb, win_telemetry, win_optimize, win_services, win_ai,
+  dbl_telemetry, sys_bcdedit, pow_main, pow_throttling, pow_windows, win_fullscreen, net_affinity, in_adapter.
+- Point de restauration (runner.rs) : la limite d'un point par 24 h est levée le temps de le créer, puis remise.
+
 # Plan d'alimentation Rago Low Latency (1.1.9)
 
 `src-tauri/resources/LowLatency.pow`, fourni par Sofiene le 2026-10-10 (sha256 `c953bead…c840d7`, 24 Ko). C'est une ruche

@@ -11,6 +11,7 @@ import json
 import probes
 import audit_fixes as AUDIT
 import safety as SAFETY
+import coherence as COHERENCE
 import os
 import re
 import subprocess
@@ -376,6 +377,7 @@ WARNINGS = [
     (r'RunMRU|TypedPaths|OpenSavePidlMRU', 'Clears your recent files and Run history.', 'Efface tes fichiers récents et l\'historique Exécuter.'),
 ]
 WARNINGS += AUDIT.WARNINGS_PLUS
+WARNINGS += COHERENCE.WARNINGS  # 1.1.9 : exp_smb, partages des vieux NAS (RAG-60 §4)
 # descriptions qui disent ce que font les commandes (vérification du 2026-10-07, fsutil)
 LASTACCESS_OFF = ('Turns off last-access timestamps (Windows stops recording when each file was last opened) and short 8.3 file names.',
                   'Coupe l\'horodatage du dernier accès (Windows ne note plus quand chaque fichier a été ouvert) et les noms de fichiers courts 8.3.')
@@ -550,6 +552,8 @@ def postprocess(modules, scripts):
     global SAFETY_REPORT
     SAFETY_REPORT = SAFETY.apply(scripts)
     assert not SAFETY.remaining(scripts), SAFETY.remaining(scripts)[:3]
+    # scripts qui visaient la mauvaise carte graphique, valeurs fausses, lignes contradictoires (tools/coherence.py, 1.1.9)
+    COHERENCE.apply(scripts, drop_lines, sub_lines)
 
     tweaks = {t['id']: t for m in modules for sec in m['sections'] for t in sec['tweaks'] if 'id' in t}
     for tid, t in tweaks.items():
@@ -612,6 +616,8 @@ def postprocess(modules, scripts):
     tweaks['exp_autologgers']['desc'] = dict(tweaks['dbl_autologgers']['desc'])
     tweaks['rst_queue']['desc'] = I('Puts the mouse and keyboard queues back to 100, the Windows default.',
                                     'Remet les files souris et clavier à 100, la valeur de Windows.')
+    # redémarrage et noms qui ne disaient pas ce que fait le script (tools/coherence.py, 1.1.9)
+    COHERENCE.catalog(tweaks)
 
     for m in modules:
         if m['id'] == 'expert':
@@ -1011,6 +1017,7 @@ def main():
     with open(os.path.join(ROOT, 'docs', 'CORRECTIONS.md'), 'a', encoding='utf-8') as f:
         f.write(V6_NOTES)
         f.write(SAFETY.notes(SAFETY_REPORT, n, distinct))
+        f.write(COHERENCE.NOTES)
     print(f'{n} réglages ({distinct} distincts), {len(kept)} scripts, {len(retired)} retirés')
 
 
