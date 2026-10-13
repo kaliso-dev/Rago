@@ -891,6 +891,27 @@ def guard_held(full, shared):
     return '\r\n'.join(out), ids
 
 
+STATE_GUARD = re.compile(r'if not defined RAGO_STATE_([A-Z0-9]+) ')
+
+
+def state_guards(relev, undo):
+    """rest saute une commande « valeur de Windows » (Enable-MMAgent, net accounts…) quand le moteur a relevé l'état
+    pour ce réglage. Une ligne retirée du script depuis (ex. Disable-MMAgent de hitreg_suite, 1.1.9) laisse sa commande
+    inverse dans rest : les scripts de 1.1.6 à 1.1.8 l'ont lancée avec une sauvegarde, sans ce relevé. Le relevé
+    d'aujourd'hui relève donc quand même cet état : rest ne la lance que sur les PC passés par l'ancien script, jamais
+    à l'aveugle après le nouveau (qui n'a rien changé : la sauvegarde ne remet rien)."""
+    for tid, vs in undo.items():
+        for v, e in vs.items():
+            body = relev.get(tid, {}).get(v)
+            if body is None:  # réglage retiré : plus de relevé, pas d'application
+                continue
+            for name in sorted({n.lower() for n in STATE_GUARD.findall(e.get('rest') or '')}):
+                assert name in probes.STATES, (tid, v, name)
+                if f'@@RAGO state "{name}"' not in body:
+                    body += f'\r\necho @@RAGO state "{name}"'
+            relev[tid][v] = body
+
+
 def build_undo(before, with_backup, after):
     """undo.json : {réglage: {variante: {full, rest, rest_avant}}}. tools/undo/undo_gen.py écrit les commandes inverses
     (valeurs de Windows, tools/undo/defaults.py) de chaque génération de scripts, merge_full.py les réunit.
@@ -1110,9 +1131,11 @@ def main():
     kept = {k: v for k, v in scripts.items() if k not in SAFETY.RETIRED}
     json.dump(kept, open(os.path.join(ROOT, 'src-tauri', 'scripts', 'scripts.json'), 'w', encoding='utf-8'), ensure_ascii=False)
     # relevés : ce que chaque script va modifier, sauvegardé avant de l'appliquer (tools/probes.py)
-    json.dump(probes.build(kept), open(os.path.join(ROOT, 'src-tauri', 'scripts', 'probes.json'), 'w', encoding='utf-8'), ensure_ascii=False)
+    relev = probes.build(kept)
     # retour aux valeurs de Windows sans sauvegarde, et ce que la sauvegarde ne couvre pas (tools/undo, audit du 2026-10-07)
     undo, no_return = build_undo(before_audit, with_backup, scripts)
+    state_guards(relev, undo)
+    json.dump(relev, open(os.path.join(ROOT, 'src-tauri', 'scripts', 'probes.json'), 'w', encoding='utf-8'), ensure_ascii=False)
     # valeurs de pilote (amd_thermal) : seule la sauvegarde de l'app les remet ; Edge : rien à remettre. sto_cacheprot :
     # CacheIsPowerProtected (« Désactiver le vidage du cache d'écriture »), absent d'office, est effacé sans sauvegarde
     runs = {t for t, vs in undo.items() if any(e.get('full') or e.get('rest') for e in vs.values())}

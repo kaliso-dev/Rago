@@ -499,6 +499,10 @@ mod tests {
                 assert!(!s.contains("disable-computerrestore"), "{id}:{v} coupe la protection système des autres disques");
                 for l in s.lines() {
                     assert!(!(l.contains("sfio priority") && l.contains("reg_dword")), "{id}:{v} SFIO Priority en DWORD : {l}");
+                    // clés des cartes graphiques (Control\Class\{4d36e968…}\0000…) : seulement des valeurs, jamais la clé
+                    if l.contains("reg delete") && l.contains("control\\class\\{4d36e968") {
+                        assert!(l.contains(" /v "), "{id}:{v} supprime la clé de la carte graphique : {l}");
+                    }
                 }
             }
             for l in rest.lines() {

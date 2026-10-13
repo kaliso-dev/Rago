@@ -63,6 +63,8 @@ STATE_PS = [
             r'|(dis|en)able-netadapterlso|reset-netadapteradvancedproperty'),
     ('pnppower', r'mspower_deviceenable'),
 ]
+# tous les états connus du moteur (backup.rs, STATES) : ceux de PowerShell, net accounts et le profil NVIDIA
+STATES = [n for n, _ in STATE_PS] + ['maxpwage', 'nvbase']
 GUID = re.compile(r'[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}')
 # commandes lancées dans la partie IN d'un for /f : lecture seule
 IN_OK = re.compile(r'(?i)^\s*(reg(\.exe)?\s+query|sc\s+query\b|find\b|sort\b|more\b|wmic\b.*\bget\b|findstr|dir\b|type\b|echo\b|ver\b|call\s+"%RAGO_RES%\\smartctl\.exe"\s+--scan'
