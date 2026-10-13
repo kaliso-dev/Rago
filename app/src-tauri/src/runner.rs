@@ -375,17 +375,34 @@ impl Runner {
                 }
                 emit(format!("- Putting back {} settings as they were before this tweak", back.len()));
                 let mut errors = 0;
+                // applis du Store : remises ensemble à la fin, dans un seul PowerShell
+                let (mut exact, mut patterns) = (Vec::new(), Vec::new());
                 for e in &back {
-                    if let Err(err) = sys.restore(&e.probe, &e.before) {
-                        errors += 1;
-                        emit(format!("! {}: {err}", describe(&e.probe)));
+                    match (&e.probe, &e.before) {
+                        (Probe::Appx { .. }, backup::Saved::Apps { packages }) => exact.extend(packages.iter().cloned()),
+                        // relevé illisible : les applis de ce nom que Windows garde encore
+                        (Probe::Appx { name }, _) => patterns.push(name.clone()),
+                        _ => {
+                            if let Err(err) = sys.restore(&e.probe, &e.before) {
+                                errors += 1;
+                                emit(format!("! {}: {err}", describe(&e.probe)));
+                            }
+                        }
                     }
                 }
+                // appliqué avant le relevé des applis (version d'avant) : celles de la liste du réglage
+                if !entry.as_ref().is_some_and(|e| e.probes.iter().any(|p| p.starts_with("appx|"))) {
+                    patterns.extend(unclaimed_apps(ctx, id));
+                }
+                let apps_error = self.put_back_apps(sys, &exact, &patterns, emit);
                 if !rest_first {
                     run_rest(&mut code)?;
                 }
                 if errors > 0 {
                     return Ok((if code == 0 { 1 } else { code }, Some(format!("{errors} settings couldn't be put back"))));
+                }
+                if let Some(e) = apps_error {
+                    return Ok((if code == 0 { 1 } else { code }, Some(e)));
                 }
                 Ok((code, None))
             };
@@ -403,17 +420,51 @@ impl Runner {
         let script = undo.and_then(|u| u.full).or_else(|| {
             catalog::revert_variant(id).and_then(|v| catalog::script(id, Some(&v), None))
         });
-        let Some(script) = script else {
+        // applis du Store de la liste du réglage (ancienne action ponctuelle, ou appliqué avant le relevé des applis)
+        if script.is_none() && catalog::apps_of(id).is_empty() {
             return Err("This tweak can't be undone automatically yet. Use the restore point in the Restore module.".into());
-        };
-        emit("- Putting back the Windows default values".into());
-        let r = self.run_batch(ctx, &format!("{id}-undo"), None, &script, emit)?;
+        }
+        let apps = unclaimed_apps(ctx, id);
+        if apps.len() < catalog::apps_of(id).len() {
+            emit("- Some of its Microsoft Store apps stay removed: another tweak that is still on removes them too".into());
+        }
+        let mut r = (0, None);
+        if let Some(script) = script {
+            emit("- Putting back the Windows default values".into());
+            r = self.run_batch(ctx, &format!("{id}-undo"), None, &script, emit)?;
+        }
+        if let Some(e) = self.put_back_apps(sys, &[], &apps, emit) {
+            r = (if r.0 == 0 { 1 } else { r.0 }, Some(e));
+        }
         if !self.cancel.load(Ordering::SeqCst) {
             let mut l = ctx.ledger.lock().unwrap();
             l.release(id);
             l.save();
         }
         Ok(r)
+    }
+
+    /// Réenregistre les applis du Store désinstallées par le réglage. Renvoie l'erreur à afficher s'il en manque.
+    fn put_back_apps(&self, sys: &Sys, exact: &[backup::AppxPkg], patterns: &[String], emit: &dyn Fn(String)) -> Option<String> {
+        if exact.is_empty() && patterns.is_empty() {
+            return None;
+        }
+        emit("- Putting back the Microsoft Store apps this tweak removed (no download needed)".into());
+        match sys.put_back_apps(exact, patterns) {
+            Ok(r) => {
+                for name in &r.back {
+                    emit(format!("- Put back {name}"));
+                }
+                if r.back.is_empty() && r.missing.is_empty() {
+                    emit("- Nothing to put back: these apps are already installed".into());
+                }
+                r.error().inspect(|e| emit(format!("! {e}")))
+            }
+            Err(e) => {
+                emit(format!("! {e}"));
+                Some(e)
+            }
+        }
     }
 
     fn run_batch(&self, ctx: &Context, name: &str, variant: Option<&str>, script: &str, emit: &dyn Fn(String)) -> Result<(i32, Option<String>), String> {
@@ -508,6 +559,19 @@ struct TwinRun {
     probes: Option<Vec<String>>,
 }
 
+/// Applis du Store de la liste du réglage qu'aucun autre réglage encore appliqué ne désinstalle aussi : elles peuvent
+/// revenir quand on éteint celui-ci.
+fn unclaimed_apps(ctx: &Context, id: &str) -> Vec<String> {
+    let l = ctx.ledger.lock().unwrap();
+    let others: std::collections::HashSet<String> = l
+        .tweaks
+        .keys()
+        .filter(|t| t.as_str() != id)
+        .flat_map(|t| catalog::apps_of(t).iter().map(|a| a.to_lowercase()))
+        .collect();
+    catalog::apps_of(id).iter().filter(|a| !others.contains(&a.to_lowercase())).cloned().collect()
+}
+
 /// Élément remis, pour le journal.
 fn describe(p: &Probe) -> String {
     match p {
@@ -518,6 +582,7 @@ fn describe(p: &Probe) -> String {
         Probe::Pwr { setting, .. } => format!("power setting {setting}"),
         Probe::PwrActive => "power plan".into(),
         Probe::Hib => "hibernation".into(),
+        Probe::Appx { name } => format!("Microsoft Store apps {name}"),
     }
 }
 
@@ -657,6 +722,38 @@ mod tests {
         assert_eq!((ok, failed), (3, 0), "le second net_a est déjà remis : rien à faire");
         assert!(ctx.ledger.lock().unwrap().tweaks.is_empty());
         assert_eq!(ctx.history.all().len(), 2);
+    }
+
+    /// RAG-65 : suppression d'applis lancée par une version d'avant (action ponctuelle, notée d'après l'historique,
+    /// sans sauvegarde ni script d'annulation) : l'annulation remet les applis de sa liste, sans licence.
+    #[test]
+    fn former_app_removal_is_undone_without_backup_or_license() {
+        let ctx = test_ctx("apps", None);
+        {
+            let mut l = ctx.ledger.lock().unwrap();
+            l.set_applied("app_remove", None, true, false, vec![], 3);
+            l.set_applied("dbl_cortana", None, true, false, vec![], 4);
+            l.set_applied("win_services", None, true, false, vec![], 5);
+        }
+        assert!(catalog::undo_of("app_remove", None, None).is_none(), "pas de script d'annulation");
+        assert_eq!(unclaimed_apps(&ctx, "app_remove"), catalog::apps_of("app_remove").to_vec());
+        // Cortana : win_services, encore appliqué, la retire aussi
+        assert!(unclaimed_apps(&ctx, "dbl_cortana").is_empty());
+        assert_eq!(unclaimed_apps(&ctx, "win_services"), vec!["Microsoft.Windows.Ai.Copilot.Provider".to_string()]);
+        let lines = Mutex::new(Vec::new());
+        let sys = Sys::new(ctx.backup_dir.clone());
+        let r = Runner::default().undo_item(&ctx, &sys, &undo("app_remove"), &|l| lines.lock().unwrap().push(l));
+        assert_eq!(r, Ok((0, None)));
+        assert!(!ctx.ledger.lock().unwrap().tweaks.contains_key("app_remove"));
+        assert!(lines.lock().unwrap().iter().any(|l| l.contains("Putting back the Microsoft Store apps")));
+        // jumeau encore appliqué : ses applis attendent qu'il soit éteint aussi, sans erreur
+        ctx.ledger.lock().unwrap().set_applied("app_remove", None, true, false, vec![], 6);
+        ctx.ledger.lock().unwrap().set_applied("win_apps", None, true, false, vec![], 7);
+        lines.lock().unwrap().clear();
+        let r = Runner::default().undo_item(&ctx, &sys, &undo("app_remove"), &|l| lines.lock().unwrap().push(l));
+        assert_eq!(r, Ok((0, None)));
+        assert!(lines.lock().unwrap().iter().any(|l| l.contains("stay removed")));
+        assert!(!lines.lock().unwrap().iter().any(|l| l.contains("Putting back the Microsoft Store apps")));
     }
 
     #[test]

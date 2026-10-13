@@ -149,6 +149,32 @@ static TWINS: LazyLock<HashMap<String, String>> = LazyLock::new(|| {
     out
 });
 
+/// Applis du Store que chaque réglage désinstalle (champ `apps` du catalogue, tools/probes.py) : noms de paquet avec
+/// jokers, comme dans `Get-AppxPackage`. En clair, scripts Premium fermés ou pas : l'annulation sans relevé s'en sert.
+static APPS: LazyLock<HashMap<String, Vec<String>>> = LazyLock::new(|| {
+    let catalog: serde_json::Value =
+        serde_json::from_str(include_str!("../../src/data/catalog.json")).expect("catalog.json invalide");
+    let mut out = HashMap::new();
+    for t in catalog["modules"].as_array().into_iter().flatten()
+        .flat_map(|m| m["sections"].as_array().into_iter().flatten())
+        .flat_map(|s| s["tweaks"].as_array().into_iter().flatten())
+    {
+        if let (Some(id), Some(apps)) = (t["id"].as_str(), t["apps"].as_array()) {
+            out.insert(id.to_string(), apps.iter().filter_map(|a| a.as_str().map(str::to_string)).collect());
+        }
+    }
+    out
+});
+
+/// Applis du Store que le réglage désinstalle (vide pour les autres).
+pub fn apps_of(id: &str) -> &'static [String] {
+    APPS.get(id).map(Vec::as_slice).unwrap_or(&[])
+}
+
+/// Anciennes actions ponctuelles devenues des cases (RAG-65, 2026-10-13) : lancées par une version d'avant, elles
+/// sont notées appliquées d'après l'historique pour qu'on puisse les éteindre et récupérer les applis du Store.
+pub const FORMER_ACTIONS: &[&str] = &["app_remove", "win_apps"];
+
 /// Nom anglais des réglages, pour les lignes du journal (réglages retirés compris : leur annulation y passe).
 static NAMES_EN: LazyLock<HashMap<String, String>> = LazyLock::new(|| {
     let catalog: serde_json::Value =
@@ -545,6 +571,38 @@ mod tests {
         assert!(probe("net_nagle", None, Some(&b)).unwrap().contains("@@RAGO reg"));
         assert!(is_switch("net_nagle") && !is_switch("rst_point") && !is_switch("__wmic"));
         assert_eq!(revert_variant("ping_hitreg").as_deref(), Some("default"));
+    }
+
+    /// RAG-65 : toute désinstallation d'applis du Store se remet. Le réglage est une case (relevé et annulation), son
+    /// relevé note les applis visées et le catalogue garde leur liste pour l'annulation sans relevé.
+    #[test]
+    fn store_app_removals_can_be_undone() {
+        let b = premium(&test_key()).unwrap();
+        let mut seen = Vec::new();
+        for (id, vs) in SCRIPTS.iter() {
+            for (v, body) in vs {
+                if !body.to_lowercase().contains("remove-appxpackage") {
+                    continue;
+                }
+                seen.push(id.as_str());
+                assert!(is_switch(id), "{id} : une case, pas une action ponctuelle");
+                assert!(!apps_of(id).is_empty(), "{id} : liste des applis dans le catalogue");
+                let p = probe(id, Some(v), Some(&b)).or_else(|| probe(id, None, Some(&b))).unwrap();
+                for app in apps_of(id) {
+                    assert!(p.contains(&format!("@@RAGO appx \"{app}\"")), "{id} : relevé de {app}");
+                }
+                assert!(!body.to_lowercase().contains("remove-appxprovisionedpackage"), "{id} : l'image garde le paquet");
+            }
+        }
+        seen.sort();
+        seen.dedup();
+        assert_eq!(seen, vec!["app_remove", "dbl_cortana", "win_apps", "win_services"]);
+        assert!(apps_of("app_remove").iter().any(|a| a == "*Microsoft.WindowsCamera*"));
+        assert_eq!(apps_of("app_remove"), apps_of("win_apps"), "jumeaux");
+        for id in FORMER_ACTIONS {
+            assert!(is_switch(id) && !apps_of(id).is_empty(), "{id}");
+        }
+        assert!(apps_of("net_nagle").is_empty());
     }
 
     const RAGO_PLAN: &str = "7c4e2a51-3b9d-4f7e-9a62-5d18c0f3b6a4";

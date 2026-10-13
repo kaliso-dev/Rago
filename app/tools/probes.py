@@ -16,6 +16,8 @@ Types émis (lus par src-tauri/src/backup.rs) :
   pwr "SCHÉMA" "SOUS-GROUPE" "RÉGLAGE"   index secteur et batterie d'un réglage d'alimentation
   pwractive            plan d'alimentation actif
   hib                  mise en veille prolongée
+  appx "NOM"           applis du Store dont le nom correspond (jokers *) : celles installées pour le joueur sont
+                       relevées (nom, famille, dossier) et réenregistrées au retour (`Get-AppxPackage … | Remove-AppxPackage`)
 
     python3 tools/probes.py          # vérifie et affiche la couverture
 """
@@ -49,6 +51,25 @@ PWR_CHANGE = {
     'hibernate-timeout': ('SUB_SLEEP', 'HIBERNATEIDLE'),
 }
 NOOP = 'ver >nul'
+# PowerShell qui désinstalle une appli du Store pour le joueur : `Get-AppxPackage [-AllUsers] [-Name] MOTIF [ÉDITEUR]
+# | Remove-AppxPackage`. MOTIF est le nom du paquet (jokers *) ; un second mot sans guillemets (« *Drawboard PDF* »)
+# est pris par PowerShell comme éditeur et n'élargit pas la recherche : seul MOTIF est relevé.
+APPX_REMOVE = re.compile(r'(?i)Get-AppxPackage\s+(?:-AllUsers\s+)?(?:-Name\s+)?([^\s|"}\'-][^\s|"}\']*)[^|]*\|\s*Remove-AppxPackage\b')
+
+
+def appx_patterns(script):
+    """Noms d'applis du Store que le script désinstalle, dans l'ordre, sans doublon (casse ignorée)."""
+    out, seen = [], set()
+    for line in script.replace('\r\n', '\n').split('\n'):
+        s = line.strip()
+        if re.match(r'(?i)^(echo|rem\b|::)', s):
+            continue
+        for m in APPX_REMOVE.finditer(s):
+            pat = m.group(1)
+            if pat.lower() not in seen:
+                seen.add(pat.lower())
+                out.append(pat)
+    return out
 # commandes lancées dans la partie IN d'un for /f : lecture seule
 IN_OK = re.compile(r'(?i)^\s*(reg(\.exe)?\s+query|sc\s+query\b|find\b|sort\b|more\b|wmic\b.*\bget\b|findstr|dir\b|type\b|echo\b|ver\b|call\s+"%RAGO_RES%\\smartctl\.exe"\s+--scan'
                    r'|powershell(\.exe)?\s+(-\w+\s+)*"?(&\s*\{\s*)?\(?\s*Get-)')
@@ -165,6 +186,10 @@ def dry_cmd(cmd):
         if sub in ('duplicatescheme', 'import'):
             return marker('pwractive')
         return NOOP
+    if head in ('powershell', 'pwsh'):
+        pats = appx_patterns(raw)
+        if pats:
+            return ' & '.join(marker('appx', f'"{p}"') for p in pats)
     return NOOP
 
 

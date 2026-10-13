@@ -437,7 +437,8 @@ Audit ligne par ligne du 2026-10-07 (rapport : /mnt/project-files/audit/audit-co
 - wmic, absent par défaut de Windows 11 24H2, est remplacé par PowerShell (Get-CimInstance) dans 21 réglages
   (`WMIC_SUBS`) ;
 - actions ponctuelles (bouton, plus case) : sto_defrag, win_apps, app_remove, dbl_edge, nv_debloat, cpu_ppm,
-  usb_controller (`ONE_SHOT`) ;
+  usb_controller (`ONE_SHOT`) ; win_apps et app_remove redeviennent des cases avec RAG-65 (2026-10-13) : les applis
+  du Store sont relevées avant et réenregistrées au retour ;
 - `DROP_LINES` accepte « id:variante ».
 
 Annulation : src-tauri/scripts/undo.json, généré à chaque build par tools/undo (undo_gen.py et defaults.py de
@@ -525,3 +526,23 @@ Corrigé par le script à l'import (`audit_fixes.py`, sur secteur) :
 
 L'annulation réactive le plan d'avant (relevé `pwractive`) puis supprime le plan Rago. Le test
 `rago_power_plan_imports_on_windows` importe le vrai fichier sur la CI Windows sous un GUID de test.
+
+# Applis du Store remises par l'annulation (RAG-65, 2026-10-13)
+
+« Supprimer les applis préinstallées » (app_remove) et « Supprimer les applis inutiles » (win_apps) redeviennent des
+cases : avant le script, l'app relève les applis du Store installées pour le joueur qui correspondent à chaque ligne
+`Get-AppxPackage … | Remove-AppxPackage` (relevé `appx`, tools/probes.py : nom, famille et dossier du paquet). Éteindre
+le réglage les réenregistre sans réseau (`Add-AppxPackage -Register …\AppxManifest.xml -DisableDevelopmentMode`, puis
+le même paquet gardé par Windows pour un autre compte ou dans l'image, puis `-RegisterByFamilyName`). Même chose pour
+Cortana (dbl_cortana, win_services) et le fournisseur Copilot (win_services).
+
+Ce qui marche : les scripts ne retirent les applis que pour le compte du joueur (`Remove-AppxPackage`, jamais
+`Remove-AppxProvisionedPackage`) ; Windows garde donc leur paquet et elles reviennent, hors ligne, sous Windows 10
+comme 11. Ce qui ne revient pas : une appli que Windows a retirée du PC depuis (mise à jour de Windows qui ne la livre
+plus, paquet effacé) ; elle est nommée dans le journal, à réinstaller depuis le Microsoft Store. Les autres comptes du
+PC (lignes `-allusers`) ne sont pas relevés.
+
+Sans relevé (réglage lancé comme action ponctuelle par une version d'avant, noté appliqué d'après l'historique ; ou
+appliqué avant ce relevé), l'annulation remet les applis de la liste du réglage (champ `apps` du catalogue) que
+Windows garde encore. Les contre des deux réglages conseillent de lancer la Restauration du système depuis l'écran de
+récupération : depuis Windows, elle peut échouer sur AppRepository (0x80070301) après une suppression d'applis.

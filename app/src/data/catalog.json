@@ -5194,6 +5194,9 @@
         "en": "No more web results in Start menu search.",
         "fr": "Plus de résultats web dans la recherche du menu Démarrer."
        },
+       "apps": [
+        "*Microsoft.549981C3F5F10*"
+       ],
        "restore": true
       },
       {
@@ -5325,7 +5328,7 @@
        },
        "risk": "advanced",
        "reboot": true,
-       "kind": "action",
+       "kind": "tweak",
        "requires": [],
        "legacy": [
         "U1@4859"
@@ -5337,9 +5340,38 @@
         "fr": "Menu Démarrer plus propre et un peu d'espace disque libéré ; effet sur les FPS quasi nul."
        },
        "cons": {
-        "en": "Also removes Camera, Mail, Alarms and Phone Link; removed apps can be reinstalled from the Microsoft Store.",
-        "fr": "Retire aussi Caméra, Courrier, Alarmes et Lien avec le téléphone ; ils se réinstallent depuis le Microsoft Store."
+        "en": "Also removes Camera, Mail, Alarms and Phone Link: turn the tweak off to bring them back (or use the Microsoft Store). A System Restore started from Windows may then fail (error 0x80070301): start it from the recovery screen instead (Shift + Restart > Troubleshoot > Advanced options).",
+        "fr": "Retire aussi Caméra, Courrier, Alarmes et Lien avec le téléphone : éteins le réglage pour les remettre (sinon, Microsoft Store). Une restauration du système lancée depuis Windows peut ensuite échouer (erreur 0x80070301) : lance-la depuis l'écran de récupération (Maj + Redémarrer > Dépannage > Options avancées)."
        },
+       "apps": [
+        "*Microsoft.BingWeather*",
+        "*Microsoft.GetHelp*",
+        "*Microsoft.Getstarted*",
+        "*Microsoft.Messaging*",
+        "*Microsoft.Microsoft3DViewer*",
+        "*Microsoft.MicrosoftSolitaireCollection*",
+        "*Microsoft.MixedReality.Portal*",
+        "*Microsoft.OneConnect*",
+        "*Microsoft.People*",
+        "*Microsoft.Print3D*",
+        "*Microsoft.SkypeApp*",
+        "*Microsoft.WindowsAlarms*",
+        "*Microsoft.WindowsCamera*",
+        "*microsoft.windowscommunicationsapps*",
+        "*Microsoft.WindowsMaps*",
+        "*Microsoft.WindowsFeedbackHub*",
+        "*Microsoft.WindowsSoundRecorder*",
+        "*Microsoft.YourPhone*",
+        "*Microsoft.3dBuilder*",
+        "*bing*",
+        "*bingfinance*",
+        "*bingsports*",
+        "*CommsPhone*",
+        "*Drawboard",
+        "*Sway*",
+        "*WindowsAlarms*",
+        "*WindowsPhone*"
+       ],
        "restore": true
       },
       {
@@ -5486,6 +5518,10 @@
         "en": "Windows search is slower, and printing and the notification center don't work until you turn it off.",
         "fr": "Recherche Windows plus lente, plus d'impression ni de centre de notifications tant que tu ne le désactives pas."
        },
+       "apps": [
+        "*Microsoft.549981C3F5F10*",
+        "Microsoft.Windows.Ai.Copilot.Provider"
+       ],
        "restore": true
       },
       {
@@ -5501,7 +5537,7 @@
        "risk": "advanced",
        "reboot": true,
        "requires": [],
-       "kind": "action",
+       "kind": "tweak",
        "legacy": [
         "RAGO APP FPS.bat@3175"
        ],
@@ -5512,9 +5548,38 @@
         "fr": "Menu Démarrer plus propre et un peu d'espace disque libéré ; effet sur les FPS quasi nul."
        },
        "cons": {
-        "en": "Also removes Camera, Mail, Alarms and Phone Link; removed apps can be reinstalled from the Microsoft Store.",
-        "fr": "Retire aussi Caméra, Courrier, Alarmes et Lien avec le téléphone ; ils se réinstallent depuis le Microsoft Store."
+        "en": "Also removes Camera, Mail, Alarms and Phone Link: turn the tweak off to bring them back (or use the Microsoft Store). A System Restore started from Windows may then fail (error 0x80070301): start it from the recovery screen instead (Shift + Restart > Troubleshoot > Advanced options).",
+        "fr": "Retire aussi Caméra, Courrier, Alarmes et Lien avec le téléphone : éteins le réglage pour les remettre (sinon, Microsoft Store). Une restauration du système lancée depuis Windows peut ensuite échouer (erreur 0x80070301) : lance-la depuis l'écran de récupération (Maj + Redémarrer > Dépannage > Options avancées)."
        },
+       "apps": [
+        "*Microsoft.BingWeather*",
+        "*Microsoft.GetHelp*",
+        "*Microsoft.Getstarted*",
+        "*Microsoft.Messaging*",
+        "*Microsoft.Microsoft3DViewer*",
+        "*Microsoft.MicrosoftSolitaireCollection*",
+        "*Microsoft.MixedReality.Portal*",
+        "*Microsoft.OneConnect*",
+        "*Microsoft.People*",
+        "*Microsoft.Print3D*",
+        "*Microsoft.SkypeApp*",
+        "*Microsoft.WindowsAlarms*",
+        "*Microsoft.WindowsCamera*",
+        "*microsoft.windowscommunicationsapps*",
+        "*Microsoft.WindowsMaps*",
+        "*Microsoft.WindowsFeedbackHub*",
+        "*Microsoft.WindowsSoundRecorder*",
+        "*Microsoft.YourPhone*",
+        "*Microsoft.3dBuilder*",
+        "*bing*",
+        "*bingfinance*",
+        "*bingsports*",
+        "*CommsPhone*",
+        "*Drawboard",
+        "*Sway*",
+        "*WindowsAlarms*",
+        "*WindowsPhone*"
+       ],
        "restore": true
       },
       {

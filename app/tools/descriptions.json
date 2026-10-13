@@ -1995,12 +1995,12 @@
   "fr": {
    "desc": "Désinstalle une trentaine d'applis Microsoft préinstallées : Météo, Astuces, Solitaire, Skype, Cartes, Caméra, Courrier, etc.",
    "gain": "Menu Démarrer plus propre et un peu d'espace disque libéré ; effet sur les FPS quasi nul.",
-   "cons": "Retire aussi Caméra, Courrier, Alarmes et Lien avec le téléphone ; ils se réinstallent depuis le Microsoft Store."
+   "cons": "Retire aussi Caméra, Courrier, Alarmes et Lien avec le téléphone : éteins le réglage pour les remettre (sinon, Microsoft Store). Une restauration du système lancée depuis Windows peut ensuite échouer (erreur 0x80070301) : lance-la depuis l'écran de récupération (Maj + Redémarrer > Dépannage > Options avancées)."
   },
   "en": {
    "desc": "Uninstalls about thirty preinstalled Microsoft apps: Weather, Tips, Solitaire, Skype, Maps, Camera, Mail, etc.",
    "gain": "Cleaner Start menu and a bit of disk space freed; near-zero effect on FPS.",
-   "cons": "Also removes Camera, Mail, Alarms and Phone Link; removed apps can be reinstalled from the Microsoft Store."
+   "cons": "Also removes Camera, Mail, Alarms and Phone Link: turn the tweak off to bring them back (or use the Microsoft Store). A System Restore started from Windows may then fail (error 0x80070301): start it from the recovery screen instead (Shift + Restart > Troubleshoot > Advanced options)."
   }
  },
  "app_settings": {
@@ -2067,12 +2067,12 @@
   "fr": {
    "desc": "Désinstalle une trentaine d'applis Microsoft préinstallées : Météo, Astuces, Solitaire, Skype, Cartes, Caméra, Courrier, etc.",
    "gain": "Menu Démarrer plus propre et un peu d'espace disque libéré ; effet sur les FPS quasi nul.",
-   "cons": "Retire aussi Caméra, Courrier, Alarmes et Lien avec le téléphone ; ils se réinstallent depuis le Microsoft Store."
+   "cons": "Retire aussi Caméra, Courrier, Alarmes et Lien avec le téléphone : éteins le réglage pour les remettre (sinon, Microsoft Store). Une restauration du système lancée depuis Windows peut ensuite échouer (erreur 0x80070301) : lance-la depuis l'écran de récupération (Maj + Redémarrer > Dépannage > Options avancées)."
   },
   "en": {
    "desc": "Uninstalls about thirty preinstalled Microsoft apps: Weather, Tips, Solitaire, Skype, Maps, Camera, Mail, etc.",
    "gain": "Cleaner Start menu and a bit of disk space freed; near-zero effect on FPS.",
-   "cons": "Also removes Camera, Mail, Alarms and Phone Link; removed apps can be reinstalled from the Microsoft Store."
+   "cons": "Also removes Camera, Mail, Alarms and Phone Link: turn the tweak off to bring them back (or use the Microsoft Store). A System Restore started from Windows may then fail (error 0x80070301): start it from the recovery screen instead (Shift + Restart > Troubleshoot > Advanced options)."
   }
  },
  "win_store": {

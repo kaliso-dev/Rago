@@ -407,7 +407,9 @@ NAME_FIX = {'sto_fsutil2': ('FSUTIL file settings', 'Réglages de fichiers FSUTI
             'amd_hdcp': ('Disable HDCP (AMD)', 'Désactiver le HDCP (AMD)'),
             'sys_time': ('File timestamps', 'Horodatage des fichiers')}
 # avertissements écrits à la main, gardés devant ceux du script
-ONE_SHOT = ['sto_defrag', 'win_apps', 'app_remove', 'dbl_edge', 'nv_debloat', 'cpu_ppm', 'usb_controller']
+# win_apps et app_remove (applis du Store) n'en font plus partie depuis RAG-65 (2026-10-13) : l'app relève les applis
+# installées avant de les désinstaller et les réenregistre quand on éteint le réglage (relevé « appx », tools/probes.py)
+ONE_SHOT = ['sto_defrag', 'dbl_edge', 'nv_debloat', 'cpu_ppm', 'usb_controller']
 KEEP_CONFIRM = {'win_bluetooth', 'dbl_edge', 'dbl_onedrive'}
 
 # sections homonymes de l'ancien programme et des .bat v6 réunies (« Tout garder » : on regroupe, on ne retire rien)
@@ -810,7 +812,8 @@ Audit ligne par ligne du 2026-10-07 (rapport : /mnt/project-files/audit/audit-co
 - wmic, absent par défaut de Windows 11 24H2, est remplacé par PowerShell (Get-CimInstance) dans 21 réglages
   (`WMIC_SUBS`) ;
 - actions ponctuelles (bouton, plus case) : sto_defrag, win_apps, app_remove, dbl_edge, nv_debloat, cpu_ppm,
-  usb_controller (`ONE_SHOT`) ;
+  usb_controller (`ONE_SHOT`) ; win_apps et app_remove redeviennent des cases avec RAG-65 (2026-10-13) : les applis
+  du Store sont relevées avant et réenregistrées au retour ;
 - `DROP_LINES` accepte « id:variante ».
 
 Annulation : src-tauri/scripts/undo.json, généré à chaque build par tools/undo (undo_gen.py et defaults.py de
@@ -980,6 +983,20 @@ def main():
     # après le retrait : un jumeau retiré (mem_prefetch) ne doit plus lier ni relever le risque des autres
     twins(modules, scripts)
     describe(modules)
+    # applis du Store désinstallées par chaque réglage (tools/probes.py) : l'app les réenregistre au retour, même sans
+    # relevé (réglage passé par une version où la suppression des applis était une action ponctuelle)
+    for m in modules:
+        for sec in m['sections']:
+            for t in sec['tweaks']:
+                if 'id' in t and t['id'] in scripts:
+                    pats, seen = [], set()
+                    for body in scripts[t['id']].values():
+                        for p in probes.appx_patterns(body):
+                            if p.lower() not in seen:
+                                seen.add(p.lower())
+                                pats.append(p)
+                    if pats:
+                        t['apps'] = pats
     ids = {t['id'] for m in modules for sec in m['sections'] for t in sec['tweaks'] if 'id' in t}
     for p in presets:
         for e in p['tweaks']:

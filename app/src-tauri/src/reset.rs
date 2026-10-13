@@ -112,6 +112,8 @@ pub fn uninstall() {
         // jamais lancée depuis 1.1.6 : les réglages appliqués d'après l'historique, comme au démarrage de l'app
         ledger.import_history(&history.all());
     }
+    // applis du Store supprimées par une version d'avant (action ponctuelle) : remises elles aussi
+    ledger.import_former_actions(&history.all(), catalog::FORMER_ACTIONS);
     let ids = targets(&ledger, Scope::All);
     if ids.is_empty() {
         return;

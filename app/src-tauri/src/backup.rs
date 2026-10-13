@@ -27,6 +27,8 @@ pub enum Probe {
     Pwr { scheme: String, sub: String, setting: String },
     PwrActive,
     Hib,
+    /// applis du Store installées pour le joueur dont le nom correspond (jokers `*`), désinstallées par le script
+    Appx { name: String },
 }
 
 impl Probe {
@@ -44,6 +46,7 @@ impl Probe {
             }
             Probe::PwrActive => "pwractive".into(),
             Probe::Hib => "hib".into(),
+            Probe::Appx { name } => format!("appx|{}", name.to_lowercase()),
         }
     }
 }
@@ -96,6 +99,7 @@ pub fn parse_markers(output: &str) -> Vec<Probe> {
             "pwr" if a.len() == 3 => Some(Probe::Pwr { scheme: a[0].clone(), sub: a[1].clone(), setting: a[2].clone() }),
             "pwractive" => Some(Probe::PwrActive),
             "hib" => Some(Probe::Hib),
+            "appx" if !a.is_empty() && !a[0].trim().is_empty() => Some(Probe::Appx { name: a[0].trim().to_string() }),
             _ => None,
         };
         if let Some(p) = probe {
@@ -128,8 +132,174 @@ pub enum Saved {
     Pwr { scheme: String, ac: Option<u32>, dc: Option<u32> },
     Active { guid: String },
     Hib { on: bool },
+    /// applis du Store installées pour le joueur avant le script
+    Apps { packages: Vec<AppxPkg> },
     /// illisible : rien à remettre
     Unknown,
+}
+
+/// Appli du Store installée pour le joueur, relevée avant qu'un réglage la désinstalle.
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+pub struct AppxPkg {
+    /// nom du paquet (Microsoft.BingWeather)
+    pub name: String,
+    /// famille du paquet (Microsoft.BingWeather_8wekyb3d8bbwe), stable d'une version à l'autre
+    pub family: String,
+    /// dossier du paquet au moment du relevé (son AppxManifest.xml sert à le réenregistrer)
+    #[serde(default)]
+    pub location: String,
+}
+
+/// Applis du Store remises (noms) et celles que Windows n'a plus (à réinstaller depuis le Microsoft Store).
+#[derive(Debug, Default, PartialEq)]
+pub struct AppsBack {
+    pub back: Vec<String>,
+    pub missing: Vec<String>,
+}
+
+impl AppsBack {
+    /// Message d'erreur quand des applis n'ont pas pu revenir.
+    pub fn error(&self) -> Option<String> {
+        (!self.missing.is_empty()).then(|| {
+            format!(
+                "{} Microsoft Store app(s) couldn't be put back, Windows no longer has them: {}. Reinstall them from the Microsoft Store",
+                self.missing.len(),
+                self.missing.join(", ")
+            )
+        })
+    }
+}
+
+/// Jokers de `Get-AppxPackage -Name` : `*` (n'importe quelle suite) et `?` (un caractère), casse ignorée.
+pub fn like(pattern: &str, name: &str) -> bool {
+    let p: Vec<char> = pattern.to_lowercase().chars().collect();
+    let n: Vec<char> = name.to_lowercase().chars().collect();
+    let (mut i, mut j, mut star, mut mark) = (0usize, 0usize, None::<usize>, 0usize);
+    while j < n.len() {
+        if i < p.len() && (p[i] == '?' || p[i] == n[j]) {
+            i += 1;
+            j += 1;
+        } else if i < p.len() && p[i] == '*' {
+            star = Some(i);
+            mark = j;
+            i += 1;
+        } else if let Some(s) = star {
+            i = s + 1;
+            mark += 1;
+            j = mark;
+        } else {
+            return false;
+        }
+    }
+    while i < p.len() && p[i] == '*' {
+        i += 1;
+    }
+    i == p.len()
+}
+
+/// Liste des applis du joueur (sortie JSON de LIST_APPS_PS).
+pub fn parse_apps_list(json: &str) -> Option<Vec<AppxPkg>> {
+    #[derive(Deserialize)]
+    struct Row {
+        n: Option<String>,
+        f: Option<String>,
+        l: Option<String>,
+    }
+    let v: serde_json::Value = serde_json::from_str(json.trim()).ok()?;
+    // un objet seul plutôt qu'un tableau : une seule appli
+    let rows: Vec<Row> = match v {
+        serde_json::Value::Array(_) => serde_json::from_value(v).ok()?,
+        serde_json::Value::Object(_) => vec![serde_json::from_value(v).ok()?],
+        _ => return None,
+    };
+    Some(
+        rows.into_iter()
+            .filter_map(|r| Some(AppxPkg { name: r.n?, family: r.f?, location: r.l.unwrap_or_default() }))
+            .collect(),
+    )
+}
+
+/// Sortie de RESTORE_APPS_PS : `@@BACK nom` et `@@MISSING nom famille`.
+pub fn parse_apps_result(out: &str) -> AppsBack {
+    let mut r = AppsBack::default();
+    for line in out.lines() {
+        let line = line.trim();
+        if let Some(n) = line.strip_prefix("@@BACK ") {
+            r.back.push(n.trim().to_string());
+        } else if let Some(rest) = line.strip_prefix("@@MISSING ") {
+            r.missing.push(rest.split_whitespace().next().unwrap_or(rest).to_string());
+        }
+    }
+    r
+}
+
+/// Applis du Store installées pour le joueur : nom, famille et dossier, en JSON.
+pub const LIST_APPS_PS: &str = "$ProgressPreference = 'SilentlyContinue'; \
+ConvertTo-Json -Compress -InputObject @(Get-AppxPackage -ErrorAction Stop | Where-Object { -not $_.IsFramework } | \
+ForEach-Object { [pscustomobject]@{ n = $_.Name; f = $_.PackageFamilyName; l = $_.InstallLocation } })";
+
+/// Réenregistre les applis du Store pour le joueur, sans réseau : d'abord le paquet relevé (son AppxManifest.xml),
+/// puis le même paquet que Windows garde pour un autre compte ou dans l'image (`Get-AppxPackage -AllUsers`, puis
+/// `Add-AppxPackage -Register -DisableDevelopmentMode`, doc de Add-AppxPackage), puis par sa famille
+/// (`-RegisterByFamilyName`). `patterns` : sans relevé, les applis de la liste du réglage que Windows garde encore
+/// (autres comptes, applis provisionnées de l'image). Une appli que Windows a retirée du PC ressort en `@@MISSING` :
+/// seul le Microsoft Store la remet.
+pub const RESTORE_APPS_PS: &str = r#"$ErrorActionPreference = 'Continue'
+$ProgressPreference = 'SilentlyContinue'
+[Console]::OutputEncoding = [Text.Encoding]::UTF8
+$data = @'
+__DATA__
+'@ | ConvertFrom-Json
+
+function Test-Here($name, $family) {
+    [bool](Get-AppxPackage -Name $name -ErrorAction SilentlyContinue | Where-Object { $_.PackageFamilyName -eq $family })
+}
+
+function Register-Manifest($manifest, $name, $family) {
+    if (-not $manifest -or -not (Test-Path -LiteralPath $manifest)) { return $false }
+    try { Add-AppxPackage -Path $manifest -Register -DisableDevelopmentMode -ErrorAction Stop } catch { }
+    return (Test-Here $name $family)
+}
+
+function Restore-App($name, $family, $location) {
+    if (-not $name -or -not $family -or (Test-Here $name $family)) { return }
+    if ($location -and (Register-Manifest ([IO.Path]::Combine($location, 'AppxManifest.xml')) $name $family)) { Write-Output "@@BACK $name"; return }
+    $kept = @(Get-AppxPackage -AllUsers -Name $name -ErrorAction SilentlyContinue |
+        Where-Object { $_.PackageFamilyName -eq $family -and $_.InstallLocation } | Sort-Object { [version]$_.Version } -Descending)
+    foreach ($k in $kept) {
+        if (Register-Manifest ([IO.Path]::Combine($k.InstallLocation, 'AppxManifest.xml')) $name $family) { Write-Output "@@BACK $name"; return }
+    }
+    try { Add-AppxPackage -RegisterByFamilyName -MainPackage $family -ErrorAction Stop } catch { }
+    if (Test-Here $name $family) { Write-Output "@@BACK $name"; return }
+    Write-Output "@@MISSING $name $family"
+}
+
+foreach ($a in @($data.exact)) { if ($a) { Restore-App $a.n $a.f $a.l } }
+foreach ($p in @($data.patterns)) {
+    if (-not $p) { continue }
+    $found = @{}
+    Get-AppxPackage -AllUsers -Name $p -ErrorAction SilentlyContinue | Where-Object { -not $_.IsFramework } |
+        Sort-Object { [version]$_.Version } -Descending | ForEach-Object {
+            if (-not $found.ContainsKey($_.PackageFamilyName)) { $found[$_.PackageFamilyName] = @($_.Name, $_.InstallLocation) }
+        }
+    Get-AppxProvisionedPackage -Online -ErrorAction SilentlyContinue | Where-Object { $_.DisplayName -like $p } | ForEach-Object {
+        $f = $_.DisplayName + '_' + $_.PublisherId
+        if (-not $found.ContainsKey($f)) { $found[$f] = @($_.DisplayName, $null) }
+    }
+    foreach ($f in @($found.Keys)) { Restore-App $found[$f][0] $f $found[$f][1] }
+}
+"#;
+
+/// Script de remise des applis, avec la liste à remettre.
+pub fn apps_script(exact: &[AppxPkg], patterns: &[String]) -> String {
+    let mut seen = HashSet::new();
+    let exact: Vec<serde_json::Value> = exact
+        .iter()
+        .filter(|p| seen.insert(p.family.to_lowercase()))
+        .map(|p| serde_json::json!({ "n": p.name, "f": p.family, "l": p.location }))
+        .collect();
+    let data = serde_json::json!({ "exact": exact, "patterns": patterns });
+    RESTORE_APPS_PS.replace("__DATA__", &data.to_string())
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -322,6 +492,29 @@ impl Ledger {
         }
     }
 
+    /// Réglages qui étaient des actions ponctuelles et sont devenus des cases (`ids`, voir catalog::FORMER_ACTIONS) :
+    /// lancés avec succès par une version d'avant, ils n'ont pas d'entrée. Ils sont notés appliqués, sans sauvegarde,
+    /// pour qu'on puisse les éteindre (l'annulation remet alors les applis du Store de leur liste). Pas après une
+    /// annulation : le dernier passage dans l'historique doit être une application réussie. Renvoie true si quelque
+    /// chose a changé.
+    pub fn import_former_actions(&mut self, history: &[crate::history::Entry], ids: &[&str]) -> bool {
+        let mut changed = false;
+        for id in ids {
+            if self.tweaks.contains_key(*id) {
+                continue;
+            }
+            let last = history.iter().filter(|e| e.id == *id).max_by_key(|e| e.ts);
+            if let Some(e) = last.filter(|e| e.ok && !e.undo) {
+                self.tweaks.insert(
+                    id.to_string(),
+                    Applied { variant: e.variant.clone(), ts: e.ts, ok: true, backup: false, ..Default::default() },
+                );
+                changed = true;
+            }
+        }
+        changed
+    }
+
     pub fn views(&self, read: &dyn Fn(&Probe) -> Saved) -> Vec<AppliedView> {
         // valeur attendue de chaque élément de registre : la dernière posée par Rago Optimizer
         let mut drifted = HashSet::new();
@@ -440,11 +633,13 @@ pub struct Sys {
     pub backup_dir: PathBuf,
     bcd: std::cell::RefCell<HashMap<String, HashMap<String, String>>>,
     active: std::cell::RefCell<Option<String>>,
+    /// applis du Store du joueur, lues une fois par relevé
+    apps: std::cell::RefCell<Option<Vec<AppxPkg>>>,
 }
 
 impl Sys {
     pub fn new(backup_dir: PathBuf) -> Self {
-        Sys { backup_dir, bcd: Default::default(), active: Default::default() }
+        Sys { backup_dir, bcd: Default::default(), active: Default::default(), apps: Default::default() }
     }
 }
 
@@ -672,7 +867,41 @@ mod win {
                         .map(|(_, d)| d.first().copied().unwrap_or(0) != 0);
                     on.map(|on| Saved::Hib { on }).unwrap_or(Saved::Unknown)
                 }
+                Probe::Appx { name } => match self.installed_apps() {
+                    Some(all) => Saved::Apps { packages: all.into_iter().filter(|p| like(name, &p.name)).collect() },
+                    None => Saved::Unknown,
+                },
             }
+        }
+
+        /// Applis du Store installées pour le joueur (une lecture PowerShell par relevé).
+        fn installed_apps(&self) -> Option<Vec<AppxPkg>> {
+            if let Some(list) = self.apps.borrow().clone() {
+                return Some(list);
+            }
+            let list = parse_apps_list(&shell::powershell(LIST_APPS_PS)?)?;
+            *self.apps.borrow_mut() = Some(list.clone());
+            Some(list)
+        }
+
+        /// Réenregistre les applis du Store (voir RESTORE_APPS_PS), toutes dans un seul PowerShell.
+        pub fn put_back_apps(&self, exact: &[AppxPkg], patterns: &[String]) -> Result<AppsBack, String> {
+            if exact.is_empty() && patterns.is_empty() {
+                return Ok(AppsBack::default());
+            }
+            let _ = fs::create_dir_all(&self.backup_dir);
+            let file = self.backup_dir.join(format!("restore-apps-{}.ps1", std::process::id()));
+            // avec BOM : Windows PowerShell 5.1 lit sinon le fichier dans la page de code du système
+            let mut bytes = vec![0xEF, 0xBB, 0xBF];
+            bytes.extend_from_slice(apps_script(exact, patterns).as_bytes());
+            fs::write(&file, bytes).map_err(|e| format!("couldn't write the app restore script: {e}"))?;
+            let out = shell::hidden("powershell.exe")
+                .args(["-NoProfile", "-NonInteractive", "-ExecutionPolicy", "Bypass", "-File"])
+                .arg(&file)
+                .output();
+            let _ = fs::remove_file(&file);
+            let out = out.map_err(|e| format!("couldn't start PowerShell: {e}"))?;
+            Ok(parse_apps_result(&String::from_utf8_lossy(&out.stdout)))
         }
 
         /// GUID du schéma visé : le schéma actif au moment du relevé pour `scheme_current`.
@@ -688,10 +917,11 @@ mod win {
             Some(g)
         }
 
-        /// Le plan actif a pu changer pendant le script.
+        /// Le plan actif a pu changer pendant le script (et les applis du Store, le démarrage…).
         pub fn forget_active(&self) {
             *self.active.borrow_mut() = None;
             self.bcd.borrow_mut().clear();
+            *self.apps.borrow_mut() = None;
         }
 
         pub fn restore(&self, probe: &Probe, saved: &Saved) -> Result<(), String> {
@@ -754,6 +984,10 @@ mod win {
                 }
                 (Probe::PwrActive, Saved::Active { guid }) => run("powercfg.exe", &["/setactive", guid]).map(|_| ()),
                 (Probe::Hib, Saved::Hib { on }) => run("powercfg.exe", &["/hibernate", if *on { "on" } else { "off" }]).map(|_| ()),
+                (Probe::Appx { .. }, Saved::Apps { packages }) => match self.put_back_apps(packages, &[])?.error() {
+                    Some(e) => Err(e),
+                    None => Ok(()),
+                },
                 _ => Ok(()),
             }
         }
@@ -766,10 +1000,13 @@ impl Sys {
         Saved::Unknown
     }
     pub fn forget_active(&self) {
-        let _ = (&self.bcd, &self.active);
+        let _ = (&self.bcd, &self.active, &self.apps);
     }
     pub fn restore(&self, _probe: &Probe, _saved: &Saved) -> Result<(), String> {
         Ok(())
+    }
+    pub fn put_back_apps(&self, _exact: &[AppxPkg], _patterns: &[String]) -> Result<AppsBack, String> {
+        Ok(AppsBack::default())
     }
 }
 
@@ -910,4 +1147,104 @@ device                  partition=C:\r\ndisabledynamictick      Oui\r\ntscsyncpo
         let _ = fs::remove_dir_all(&dir);
     }
 
+    #[test]
+    fn store_apps_are_probed_and_matched_like_powershell() {
+        let out = "@@RAGO appx \"*Microsoft.BingWeather*\"\r\n@@RAGO appx \"*microsoft.bingweather*\"\r\n@@RAGO appx \"\"\r\n\
+@@RAGO appx \"Microsoft.Windows.Ai.Copilot.Provider\"\r\n";
+        let p = parse_markers(out);
+        assert_eq!(
+            p,
+            vec![
+                Probe::Appx { name: "*Microsoft.BingWeather*".into() },
+                Probe::Appx { name: "Microsoft.Windows.Ai.Copilot.Provider".into() }
+            ],
+            "doublons (casse) et motif vide retirés"
+        );
+        assert_eq!(p[0].id(), "appx|*microsoft.bingweather*");
+        assert!(like("*Microsoft.BingWeather*", "Microsoft.BingWeather"));
+        assert!(like("*bing*", "Microsoft.BingFinance"));
+        assert!(like("Microsoft.Windows.Ai.Copilot.Provider", "microsoft.windows.ai.copilot.provider"));
+        assert!(like("*Drawboard", "Flexcell.Drawboard"));
+        assert!(like("Micro?oft.*", "Microsoft.People"));
+        assert!(!like("*Microsoft.People*", "Microsoft.YourPhone"));
+        assert!(!like("Microsoft.Windows.Ai.Copilot.Provider", "Microsoft.Windows.Ai.Copilot.Provider2"));
+        assert!(like("*", ""));
+    }
+
+    #[test]
+    fn store_app_lists_and_results_are_read() {
+        let list = parse_apps_list(r#"[{"n":"Microsoft.BingWeather","f":"Microsoft.BingWeather_8wekyb3d8bbwe","l":"C:\\Program Files\\WindowsApps\\w"},{"n":"X","f":"X_1","l":null},{"n":null,"f":"Y_1","l":"C:\\y"}]"#)
+            .unwrap();
+        assert_eq!(list.len(), 2, "sans nom ou famille : ignorée");
+        assert_eq!(list[1], AppxPkg { name: "X".into(), family: "X_1".into(), location: String::new() });
+        assert_eq!(parse_apps_list(r#"{"n":"A","f":"A_1","l":"C:\\a"}"#).unwrap().len(), 1, "objet seul");
+        assert_eq!(parse_apps_list("[]"), Some(vec![]));
+        assert_eq!(parse_apps_list("WARNING: oops"), None, "sortie illisible : relevé inconnu, rien à remettre");
+        let r = parse_apps_result("noise\r\n@@BACK Microsoft.BingWeather\r\n@@MISSING Microsoft.People Microsoft.People_8wekyb3d8bbwe\r\n");
+        assert_eq!(r.back, vec!["Microsoft.BingWeather"]);
+        assert_eq!(r.missing, vec!["Microsoft.People"]);
+        assert!(r.error().unwrap().contains("Microsoft.People"));
+        assert!(AppsBack::default().error().is_none());
+        // une appli par famille, données dans le script, motifs gardés
+        let a = AppxPkg { name: "A".into(), family: "A_1".into(), location: "C:\\it's here".into() };
+        let script = apps_script(&[a.clone(), a], &["*bing*".into()]);
+        assert_eq!(script.matches("\"f\":\"A_1\"").count(), 1);
+        assert!(script.contains("\"patterns\":[\"*bing*\"]"));
+        assert!(!script.contains("__DATA__"));
+        assert!(script.contains("-Register -DisableDevelopmentMode") && script.contains("-RegisterByFamilyName"));
+        // la liste ne sort jamais du texte entre @' et '@
+        assert_eq!(script.matches("\n'@").count(), 1);
+        let saved = Saved::Apps { packages: list };
+        let json = serde_json::to_string(&saved).unwrap();
+        assert_eq!(serde_json::from_str::<Saved>(&json).unwrap(), saved);
+    }
+
+    /// CI Windows : les deux scripts tournent sous Windows PowerShell 5.1. Lecture seule : l'appli à remettre n'existe
+    /// pas, rien n'est installé.
+    #[cfg(windows)]
+    #[test]
+    fn store_app_scripts_run_on_windows() {
+        if let Some(out) = crate::shell::powershell(LIST_APPS_PS) {
+            assert!(parse_apps_list(&out).is_some(), "{out}");
+        }
+        let dir = std::env::temp_dir().join(format!("rago-apps-{}", std::process::id()));
+        let sys = Sys::new(dir.clone());
+        let fake = AppxPkg {
+            name: "Rago.NoSuchApp".into(),
+            family: "Rago.NoSuchApp_0000000000000".into(),
+            location: dir.join("none").to_string_lossy().into_owned(),
+        };
+        let r = sys.put_back_apps(&[fake], &["*RagoNoSuchApp*".into()]).unwrap();
+        assert_eq!(r.missing, vec!["Rago.NoSuchApp"]);
+        assert!(r.back.is_empty());
+        let _ = fs::remove_dir_all(dir);
+    }
+
+    #[test]
+    fn former_actions_are_imported_from_history() {
+        let e = |id: &str, ts: u64, ok: bool, undo: bool| crate::history::Entry {
+            id: id.into(),
+            variant: None,
+            ts,
+            ok,
+            code: Some(0),
+            duration_ms: 1,
+            undo,
+        };
+        let mut l = Ledger::default();
+        let ids = ["app_remove", "win_apps", "dbl_edge"];
+        // app_remove lancé avec succès ; win_apps lancé puis annulé ; dbl_edge raté
+        let h = vec![e("app_remove", 5, true, false), e("win_apps", 1, true, false), e("win_apps", 2, true, true), e("dbl_edge", 3, false, false)];
+        assert!(l.import_former_actions(&h, &ids));
+        assert_eq!(l.tweaks.keys().collect::<Vec<_>>(), vec!["app_remove"]);
+        let a = &l.tweaks["app_remove"];
+        assert!(a.ok && !a.backup && a.ts == 5);
+        assert!(!l.import_former_actions(&h, &ids), "déjà noté : rien ne change");
+        // éteint depuis : l'annulation est la dernière entrée, il ne revient pas
+        l.release("app_remove");
+        let mut h2 = h.clone();
+        h2.push(e("app_remove", 9, true, true));
+        assert!(!l.import_former_actions(&h2, &ids));
+        assert!(l.tweaks.is_empty());
+    }
 }

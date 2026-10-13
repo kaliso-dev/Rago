@@ -353,6 +353,11 @@ pub fn run() {
                 ledger.import_history(&history.all());
                 ledger.save();
             }
+            // suppression des applis du Store lancée comme action ponctuelle par une version d'avant : notée
+            // appliquée, pour pouvoir l'éteindre et récupérer les applis
+            if ledger.import_former_actions(&history.all(), catalog::FORMER_ACTIONS) {
+                ledger.save();
+            }
             app.manage(AppState {
                 runner: Arc::new(Runner::default()),
                 history,
