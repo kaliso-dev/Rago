@@ -1057,12 +1057,12 @@
  },
  "pow_storage_apm": {
   "fr": {
-   "desc": "Empêche tes disques de passer en veille et, si smartctl est là, coupe le mode économie et silence des disques durs.",
+   "desc": "Empêche tes disques de passer en veille et coupe le mode économie et silence des disques durs jusqu'au prochain redémarrage ou mise en veille.",
    "gain": "Peut éviter les temps de réveil d'un disque dur ; effet rarement mesurable sur un SSD.",
    "cons": "Disques durs plus bruyants, plus de consommation, et sur portable la batterie se vide plus vite en veille."
   },
   "en": {
-   "desc": "Keeps your drives from going idle and, if smartctl is present, turns off hard drive power saving and quiet mode.",
+   "desc": "Keeps your drives from going idle and turns off hard drive power saving and quiet mode until the next restart or sleep.",
    "gain": "May avoid hard drive wake-up delays; rarely measurable on an SSD.",
    "cons": "Louder hard drives, higher power use, and on laptops the battery drains faster in sleep."
   }
@@ -1107,12 +1107,12 @@
   "fr": {
    "desc": "Active le cache d'écriture des disques internes et vide les fichiers temporaires, caches des navigateurs et de Windows Update.",
    "gain": "Libère de l'espace disque ; aucun gain de FPS.",
-   "cons": "Sites et miniatures un peu plus lents à recharger la première fois ; le nettoyage peut prendre plusieurs minutes."
+   "cons": "Sites et miniatures plus lents à recharger la première fois ; le nettoyage est long et ne s'annule pas (seul le cache d'écriture revient)."
   },
   "en": {
    "desc": "Turns on the write cache of internal drives and clears temp files, browser caches and the Windows Update cache.",
    "gain": "Frees disk space; no FPS gain.",
-   "cons": "Websites and thumbnails load a bit slower the first time; the cleanup can take several minutes."
+   "cons": "Websites and thumbnails load slower the first time; the cleanup takes a while and can't be undone (only the write cache goes back)."
   }
  },
  "sto_ntfs": {
@@ -2043,12 +2043,12 @@
   "fr": {
    "desc": "Passe le service de télémétrie en démarrage manuel et coupe le rapport d'erreurs de Windows.",
    "gain": "Un peu plus de vie privée ; effet sur les FPS quasi nul.",
-   "cons": "Moins d'infos pour comprendre un plantage de Windows ou d'un jeu."
+   "cons": "Moins d'infos pour comprendre un plantage de Windows ou d'un jeu. Réactive le service DPS et les tâches de diagnostic des disques s'ils étaient coupés."
   },
   "en": {
    "desc": "Sets the telemetry service to manual start and turns off Windows Error Reporting.",
    "gain": "A bit more privacy; near-zero effect on FPS.",
-   "cons": "Less information to figure out why Windows or a game crashed."
+   "cons": "Less information to figure out why Windows or a game crashed. Turns the DPS service and the disk diagnostic tasks back on if they were off."
   }
  },
  "win_services": {
