@@ -47,7 +47,6 @@ export function RunOverlay() {
           <div className="run-hero">
             <Pulse size={132} active={!isDone} />
             <div className="rg-overline run-state">{isDone ? (cancelled ? t("run.cancelled") : t("run.done")) : t("run.title")}</div>
-            {run.note && <p className="run-note">{run.note}</p>}
             <div className="run-counter rg-metric">
               <motion.span key={finished} initial={{ y: 10, opacity: 0 }} animate={{ y: 0, opacity: 1 }}>
                 {String(finished).padStart(2, "0")}

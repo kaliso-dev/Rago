@@ -52,6 +52,13 @@ fn copies(dir: &Path) -> Vec<PathBuf> {
     backups(dir).into_iter().filter(|p| !is_marker(p)).collect()
 }
 
+/// `undo` a de quoi remettre l'état d'avant : une copie du fichier du joueur ou un marqueur d'absence (fichier créé
+/// par Rago, à supprimer). `Status::backups` ne compte que les copies (bouton « Restaurer ») : la remise de fin de
+/// Premium doit regarder ceci, sinon OptiFine appliqué sans optionsof.txt d'origine resterait appliqué.
+pub fn undoable(dir: &Path) -> bool {
+    !backups(dir).is_empty()
+}
+
 pub fn status(dir: &Path) -> Status {
     Status {
         dir_exists: dir.is_dir(),
@@ -199,10 +206,13 @@ mod tests {
         // le marqueur n'est pas une copie : le bouton Restaurer ne s'affiche pas pour lui
         assert_eq!(status(&dir).backups, 0);
         assert!(restore_latest(&dir).is_err());
+        // mais l'annulation sait remettre l'état d'avant (remise de fin de Premium comprise)
+        assert!(undoable(&dir));
         undo(&dir).unwrap();
         assert!(!dir.join(FILE).exists());
         // marqueur consommé
         assert!(backups(&dir).is_empty());
+        assert!(!undoable(&dir));
         fs::remove_dir_all(&dir).unwrap();
     }
 

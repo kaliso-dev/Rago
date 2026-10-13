@@ -12,7 +12,7 @@ use std::io::{BufRead, BufReader, Read, Write};
 use std::path::{Path, PathBuf};
 use std::process::{Child, Command, Stdio};
 use std::sync::atomic::{AtomicBool, Ordering};
-use std::sync::{Arc, Mutex};
+use std::sync::{Arc, Mutex, MutexGuard, PoisonError};
 use std::time::Instant;
 use tauri::{AppHandle, Emitter};
 
@@ -67,6 +67,13 @@ struct DoneEvent<'a> {
     log_file: String,
 }
 
+/// Un seul lot à la fois sur Windows : un lot lancé depuis l'interface attend la fin d'une remise à zéro en cours.
+static EXCLUSIVE: Mutex<()> = Mutex::new(());
+
+fn exclusive() -> MutexGuard<'static, ()> {
+    EXCLUSIVE.lock().unwrap_or_else(PoisonError::into_inner)
+}
+
 #[derive(Default)]
 pub struct Runner {
     running: AtomicBool,
@@ -75,7 +82,8 @@ pub struct Runner {
 }
 
 pub struct Context {
-    pub app: AppHandle,
+    /// fenêtre qui suit le lot ; None pour la remise à zéro (fin de Premium, désinstallation), qui ne montre rien
+    pub app: Option<AppHandle>,
     pub history: Arc<History>,
     pub resource_dir: PathBuf,
     pub logs_dir: PathBuf,
@@ -85,6 +93,17 @@ pub struct Context {
     pub ledger: Arc<Mutex<Ledger>>,
     /// scripts Premium ouverts avec la clé de la licence (None sans licence)
     pub premium: Option<Arc<catalog::Bundle>>,
+    /// remise à zéro : vrai quand elle n'a plus lieu d'être (licence revenue). Lu entre deux réglages, jamais au
+    /// milieu d'un script : un réglage commencé est toujours remis en entier.
+    pub stop_when: Option<Arc<dyn Fn() -> bool + Send + Sync>>,
+}
+
+impl Context {
+    fn emit<S: Serialize + Clone>(&self, event: &str, payload: S) {
+        if let Some(app) = &self.app {
+            let _ = app.emit(event, payload);
+        }
+    }
 }
 
 impl Runner {
@@ -109,13 +128,20 @@ impl Runner {
         let me = Arc::clone(self);
         let rid = run_id.clone();
         std::thread::spawn(move || {
+            let _one = exclusive();
             me.run(&ctx, &rid, &items);
             me.running.store(false, Ordering::SeqCst);
         });
         Ok(run_id)
     }
 
-    fn run(&self, ctx: &Context, run_id: &str, items: &[RunItem]) {
+    /// Lance le lot sur le thread appelant, sans interface (remise à zéro). Renvoie (réussis, ratés).
+    pub fn run_now(&self, ctx: &Context, items: &[RunItem]) -> (usize, usize) {
+        let _one = exclusive();
+        self.run(ctx, &format!("reset-{}", now_ms()), items)
+    }
+
+    fn run(&self, ctx: &Context, run_id: &str, items: &[RunItem]) -> (usize, usize) {
         let _ = fs::create_dir_all(&ctx.logs_dir);
         let log_path = ctx.logs_dir.join(format!("{run_id}.log"));
         let log = Mutex::new(OpenOptions::new().create(true).append(true).open(&log_path).ok());
@@ -135,17 +161,39 @@ impl Runner {
             if self.cancel.load(Ordering::SeqCst) {
                 break;
             }
+            if ctx.stop_when.as_ref().is_some_and(|stop| stop()) {
+                write_log(&format!("==== stopped before {}: no longer needed", item.id));
+                break;
+            }
+            let applied = ctx.ledger.lock().unwrap().tweaks.contains_key(&item.id);
+            if item.undo && !applied {
+                // décoché, mais déjà remis entre-temps par la remise à zéro : plus rien à annuler
+                write_log(&format!("==== undo {}: already put back", item.id));
+                let variant = item.variant.as_deref();
+                ctx.emit("run:item", ItemEvent { run_id, index, id: &item.id, variant, status: "ok", code: Some(0), duration_ms: Some(0), message: None });
+                ok += 1;
+                continue;
+            }
+            // RBW Mod : revenir en arrière (« Activé » après « Désactivé », déconnexion), c'est lancer « Activé » en entier,
+            // jamais la sauvegarde d'avant « Désactivé », qui ne démarrait aucun service (catalog::revert_runs_script).
+            // Lancé et noté dans l'historique comme « Activé » : l'interface affiche « Activé depuis… »
+            let as_script;
+            let converted = catalog::revert_runs_script(&item.id)
+                && (item.undo || (applied && catalog::is_revert(&item.id, item.variant.as_deref())));
+            let item = if converted {
+                as_script = RunItem { variant: catalog::revert_variant(&item.id), undo: false, ..item.clone() };
+                &as_script
+            } else {
+                item
+            };
             let variant = item.variant.as_deref();
             let emit_item = |status: &str, code: Option<i32>, duration: Option<u64>, message: Option<String>| {
-                let _ = ctx.app.emit(
-                    "run:item",
-                    ItemEvent { run_id, index, id: &item.id, variant, status, code, duration_ms: duration, message },
-                );
+                ctx.emit("run:item", ItemEvent { run_id, index, id: &item.id, variant, status, code, duration_ms: duration, message });
             };
-            let applied = ctx.ledger.lock().unwrap().tweaks.contains_key(&item.id);
             // décoché, ou variante de retour arrière d'un réglage appliqué : retour à l'état d'avant
-            let undo = item.undo || (applied && catalog::is_revert(&item.id, variant));
-            if restore_failed && !undo && changes_windows(&item.id) {
+            let undo = item.undo || (applied && catalog::is_revert(&item.id, variant) && !catalog::revert_runs_script(&item.id));
+            // un retour arrière converti tourne lui aussi sans point de restauration, comme avant (c'était une annulation)
+            if restore_failed && !undo && !converted && changes_windows(&item.id) {
                 write_log(&format!("==== skipped {} (no restore point)", item.id));
                 emit_item("skipped", None, None, None);
                 skipped += 1;
@@ -161,7 +209,7 @@ impl Runner {
             let started = Instant::now();
             let emit_line = |line: String| {
                 write_log(&line);
-                let _ = ctx.app.emit("run:log", LogEvent { run_id, id: &item.id, line });
+                ctx.emit("run:log", LogEvent { run_id, id: &item.id, line });
             };
             let twin_key = (!undo).then(|| catalog::twin_of(&item.id).map(|t| format!("{t}:{}", variant.unwrap_or("")))).flatten();
             let (success, code, message) = if undo {
@@ -190,7 +238,10 @@ impl Runner {
                     None => {
                         // ce que le script va modifier, relevé avant de le lancer
                         let switch = catalog::is_switch(&item.id) && !catalog::is_revert(&item.id, variant);
-                        let snap = if switch { self.snapshot(ctx, &sys, item, &emit_line) } else { None };
+                        // RBW Mod : rien à sauvegarder, son retour arrière lance « Activé » ; un relevé retiendrait les
+                        // valeurs d'autres réglages et cacherait ce qu'il leur change (badge « Changé par Windows »)
+                        let keep = switch && !catalog::revert_runs_script(&item.id);
+                        let snap = if keep { self.snapshot(ctx, &sys, item, &emit_line) } else { None };
                         let result = self.run_item(ctx, item, &emit_line);
                         let cancelled = self.cancel.load(Ordering::SeqCst);
                         let r = match result {
@@ -219,9 +270,18 @@ impl Runner {
                             ids
                         });
                         if switch && ids.is_none() {
-                            // réglage natif (OptiFine) : il garde sa propre sauvegarde
+                            // réglage natif (OptiFine) : il garde sa propre sauvegarde ; RBW Mod « Désactivé » : aucune (le
+                            // relevé d'une version précédente est oublié, il ne retient plus les valeurs d'autres réglages)
                             let mut l = ctx.ledger.lock().unwrap();
+                            if catalog::revert_runs_script(&item.id) {
+                                l.release(&item.id);
+                            }
                             l.set_applied(&item.id, item.variant.clone(), r.0, item.id == "mc_optifine", Vec::new(), now_ms());
+                            l.save();
+                        } else if catalog::revert_runs_script(&item.id) {
+                            // RBW Mod « Activé » : il n'est plus « appliqué » (« Désactivé » l'était)
+                            let mut l = ctx.ledger.lock().unwrap();
+                            l.release(&item.id);
                             l.save();
                         }
                         if let Some(k) = twin_key {
@@ -261,10 +321,11 @@ impl Runner {
             }
         }
         let cancelled = self.cancel.load(Ordering::SeqCst);
-        let _ = ctx.app.emit(
+        ctx.emit(
             "run:done",
             DoneEvent { run_id, ok, failed, skipped, restore_failed, cancelled, log_file: log_path.to_string_lossy().to_string() },
         );
+        (ok, failed)
     }
 
     /// Lance le relevé du réglage et garde l'état actuel de ce qu'il va modifier, s'il n'est pas déjà gardé.
@@ -352,91 +413,149 @@ impl Runner {
             return Ok((0, None));
         }
         // valeurs qu'un autre réglage encore appliqué modifie aussi : full, et rest pour la compression mémoire
-        // (RAGO_HELD_…), les laissent telles quelles
+        // (RAGO_HELD_…), les laissent telles quelles. Sauf le RBW Mod « Désactivé » : il ne pose que des valeurs de
+        // Windows (celles que full remet) et ne garde rien pour les autres, comme il ne relève rien (RAG-69)
         let held = {
-            let l = ctx.ledger.lock().unwrap();
-            let others: Vec<Vec<String>> = l
-                .tweaks
-                .iter()
-                .filter(|(t, _)| t.as_str() != id)
-                .filter_map(|(t, a)| {
-                    let u = catalog::undo_of(t, a.variant.as_deref(), ctx.premium.as_deref()).or_else(|| a.undo.clone())?;
-                    Some(holds(a, u.writes))
-                })
-                .collect();
+            let others = others_writes(&ctx.ledger.lock().unwrap(), id, ctx.premium.as_deref());
             held_env(undo.as_ref().map(|u| u.writes.as_slice()).unwrap_or_default(), &others)
         };
         if let Some(entry) = entry.as_ref().filter(|e| e.backup) {
+            // retiré d'applied.json seulement une fois remis : une remise coupée reprend au lancement suivant
             let (back, env) = {
-                let mut l = ctx.ledger.lock().unwrap();
+                let l = ctx.ledger.lock().unwrap();
                 // états relevés avant d'appliquer (remis au plus près par la sauvegarde) : rest ne les touche pas
                 let mut env = state_env(&entry.probes, &l.saved);
                 env.extend(held.iter().cloned());
-                let back = l.release(id);
-                l.save();
-                (back, env)
+                (l.releasable(id), env)
             };
             let (rest, rest_first) = undo.map(|u| (u.rest, u.rest_avant)).unwrap_or_default();
-            let mut code = 0;
-            let run_rest = |code: &mut i32| -> Result<(), String> {
-                if let Some(rest) = &rest {
-                    emit("- Putting back the Windows values for the network and system commands".into());
-                    *code = self.run_batch(ctx, &format!("{id}-undo"), None, rest, &env, emit)?.0;
+            let put_back = || -> Result<(i32, Option<String>), String> {
+                let mut code = 0;
+                let run_rest = |code: &mut i32| -> Result<(), String> {
+                    if let Some(rest) = &rest {
+                        emit("- Putting back the Windows values for the network and system commands".into());
+                        *code = self.run_batch(ctx, &format!("{id}-undo"), None, rest, &env, emit)?.0;
+                    }
+                    Ok(())
+                };
+                emit(format!("- Putting back {} settings as they were before this tweak", back.len()));
+                let mut errors = 0;
+                let mut restore = |e: &backup::SavedEntry| {
+                    if e.before == backup::Saved::Unknown {
+                        // relevé illisible (pas de pilote NVIDIA, PowerShell bloqué…) : rien de sûr à remettre
+                        emit(format!("- {}: couldn't be read before this tweak, left as it is", describe(&e.probe)));
+                        return;
+                    }
+                    if let Err(err) = sys.restore_entry(e) {
+                        errors += 1;
+                        emit(format!("! {}: {err}", describe(&e.probe)));
+                    }
+                };
+                // plans d'alimentation exportés : réimportés d'abord, rest ne les recrée alors pas avec les valeurs de
+                // Windows ; puis rest (rest_avant) avant que la sauvegarde réactive le plan d'avant
+                back.iter().filter(|e| matches!(e.probe, Probe::Plan { .. })).for_each(&mut restore);
+                if rest_first {
+                    run_rest(&mut code)?;
                 }
-                Ok(())
+                back.iter()
+                    .filter(|e| !matches!(e.probe, Probe::Plan { .. } | Probe::State { .. } | Probe::Appx { .. }))
+                    .for_each(&mut restore);
+                // états en dernier : services (SysMain) et registre déjà remis
+                back.iter().filter(|e| matches!(e.probe, Probe::State { .. })).for_each(&mut restore);
+                // applis du Store : remises ensemble à la fin, dans un seul PowerShell
+                let (mut exact, mut patterns) = (Vec::new(), Vec::new());
+                for e in &back {
+                    match (&e.probe, &e.before) {
+                        (Probe::Appx { .. }, backup::Saved::Apps { packages }) => exact.extend(packages.iter().cloned()),
+                        // relevé illisible : les applis de ce nom que Windows garde encore
+                        (Probe::Appx { name }, _) => patterns.push(name.clone()),
+                        _ => {}
+                    }
+                }
+                // appliqué avant le relevé des applis (version d'avant) : celles de la liste du réglage
+                if !entry.probes.iter().any(|p| p.starts_with("appx|")) {
+                    patterns.extend(unclaimed_apps(ctx, id));
+                }
+                let apps_error = self.put_back_apps(sys, &exact, &patterns, emit);
+                if !rest_first {
+                    run_rest(&mut code)?;
+                }
+                if errors > 0 {
+                    return Ok((if code == 0 { 1 } else { code }, Some(format!("{errors} settings couldn't be put back"))));
+                }
+                if let Some(e) = apps_error {
+                    return Ok((if code == 0 { 1 } else { code }, Some(e)));
+                }
+                Ok((code, None))
             };
-            emit(format!("- Putting back {} settings as they were before this tweak", back.len()));
-            let mut errors = 0;
-            let mut restore = |e: &backup::SavedEntry| {
-                if e.before == backup::Saved::Unknown {
-                    // relevé illisible (pas de pilote NVIDIA, PowerShell bloqué…) : rien de sûr à remettre
-                    emit(format!("- {}: couldn't be read before this tweak, left as it is", describe(&e.probe)));
-                    return;
-                }
-                if let Err(err) = sys.restore_entry(e) {
-                    errors += 1;
-                    emit(format!("! {}: {err}", describe(&e.probe)));
-                }
-            };
-            // plans d'alimentation exportés : réimportés d'abord, rest ne les recrée alors pas avec les valeurs de
-            // Windows ; puis rest (rest_avant) avant que la sauvegarde réactive le plan d'avant
-            back.iter().filter(|e| matches!(e.probe, Probe::Plan { .. })).for_each(&mut restore);
-            if rest_first {
-                run_rest(&mut code)?;
+            let r = put_back();
+            // arrêté en route (bouton Arrêter, délai de la désinstallation) : le réglage reste appliqué, la prochaine
+            // annulation reprend tout depuis la sauvegarde
+            if !self.cancel.load(Ordering::SeqCst) {
+                let mut l = ctx.ledger.lock().unwrap();
+                l.release(id);
+                l.save();
             }
-            back.iter().filter(|e| !matches!(e.probe, Probe::Plan { .. } | Probe::State { .. })).for_each(&mut restore);
-            // états en dernier : services (SysMain) et registre déjà remis
-            back.iter().filter(|e| matches!(e.probe, Probe::State { .. })).for_each(&mut restore);
-            if !rest_first {
-                run_rest(&mut code)?;
-            }
-            if errors > 0 {
-                return Ok((if code == 0 { 1 } else { code }, Some(format!("{errors} settings couldn't be put back"))));
-            }
-            return Ok((code, None));
+            return r;
         }
         // pas de sauvegarde (appliqué avant 1.1.6, ou par l'ancien .bat) : valeurs de Windows, sauf celles qu'un autre
         // réglage encore appliqué modifie aussi (held)
         let script = undo.and_then(|u| u.full).or_else(|| {
             catalog::revert_variant(id).and_then(|v| catalog::script(id, Some(&v), None))
         });
-        let Some(script) = script else {
+        // applis du Store de la liste du réglage (ancienne action ponctuelle, ou appliqué avant le relevé des applis)
+        if script.is_none() && catalog::apps_of(id).is_empty() {
             if id == "nv_profile" {
                 return Err("This NVIDIA profile was imported by an older version, before its settings were saved. \
                             Use \"Restore\" on the Base Profile in NVIDIA Profile Inspector, or the restore point."
                     .into());
             }
             return Err("This tweak can't be undone automatically yet. Use the restore point in the Restore module.".into());
-        };
-        emit("- Putting back the Windows default values".into());
-        if !held.is_empty() {
-            emit(format!("- Keeping {} settings that another applied tweak also changes", held.len()));
         }
-        let r = self.run_batch(ctx, &format!("{id}-undo"), None, &script, &held, emit)?;
-        let mut l = ctx.ledger.lock().unwrap();
-        l.release(id);
-        l.save();
+        let apps = unclaimed_apps(ctx, id);
+        if apps.len() < catalog::apps_of(id).len() {
+            emit("- Some of its Microsoft Store apps stay removed: another tweak that is still on removes them too".into());
+        }
+        let mut r = (0, None);
+        if let Some(script) = script {
+            emit("- Putting back the Windows default values".into());
+            if !held.is_empty() {
+                emit(format!("- Keeping {} settings that another applied tweak also changes", held.len()));
+            }
+            r = self.run_batch(ctx, &format!("{id}-undo"), None, &script, &held, emit)?;
+        }
+        if let Some(e) = self.put_back_apps(sys, &[], &apps, emit) {
+            r = (if r.0 == 0 { 1 } else { r.0 }, Some(e));
+        }
+        if !self.cancel.load(Ordering::SeqCst) {
+            let mut l = ctx.ledger.lock().unwrap();
+            l.release(id);
+            l.save();
+        }
         Ok(r)
+    }
+
+    /// Réenregistre les applis du Store désinstallées par le réglage. Renvoie l'erreur à afficher s'il en manque.
+    fn put_back_apps(&self, sys: &Sys, exact: &[backup::AppxPkg], patterns: &[String], emit: &dyn Fn(String)) -> Option<String> {
+        if exact.is_empty() && patterns.is_empty() {
+            return None;
+        }
+        emit("- Putting back the Microsoft Store apps this tweak removed (no download needed)".into());
+        match sys.put_back_apps(exact, patterns) {
+            Ok(r) => {
+                for name in &r.back {
+                    emit(format!("- Put back {name}"));
+                }
+                if r.back.is_empty() && r.missing.is_empty() {
+                    emit("- Nothing to put back: these apps are already installed".into());
+                }
+                r.error().inspect(|e| emit(format!("! {e}")))
+            }
+            Err(e) => {
+                emit(format!("! {e}"));
+                Some(e)
+            }
+        }
     }
 
     fn run_batch(
@@ -545,6 +664,19 @@ struct TwinRun {
     probes: Option<Vec<String>>,
 }
 
+/// Applis du Store de la liste du réglage qu'aucun autre réglage encore appliqué ne désinstalle aussi : elles peuvent
+/// revenir quand on éteint celui-ci.
+fn unclaimed_apps(ctx: &Context, id: &str) -> Vec<String> {
+    let l = ctx.ledger.lock().unwrap();
+    let others: std::collections::HashSet<String> = l
+        .tweaks
+        .keys()
+        .filter(|t| t.as_str() != id)
+        .flat_map(|t| catalog::apps_of(t).iter().map(|a| a.to_lowercase()))
+        .collect();
+    catalog::apps_of(id).iter().filter(|a| !others.contains(&a.to_lowercase())).cloned().collect()
+}
+
 /// Élément remis, pour le journal.
 fn describe(p: &Probe) -> String {
     match p {
@@ -565,6 +697,7 @@ fn describe(p: &Probe) -> String {
             "nvbase" => "NVIDIA global 3D settings".into(),
             other => other.to_string(),
         },
+        Probe::Appx { name } => format!("Microsoft Store apps {name}"),
         Probe::Untouched { name } => format!("{name} (not changed by this tweak)"),
         Probe::Other => "setting saved by a newer version".into(),
     }
@@ -600,6 +733,19 @@ pub fn holds(a: &backup::Applied, writes: Vec<String>) -> Vec<String> {
     }
     let mm: Vec<String> = MM_FLAGS.iter().map(|f| held_tag(&format!("mmagent|{f}"))).collect();
     writes.into_iter().filter(|t| !mm.contains(t)).collect()
+}
+
+/// Étiquettes `writes` des autres réglages encore appliqués (voir `holds`). Le RBW Mod n'en garde aucune : il ne pose
+/// que des valeurs de Windows, celles que full remet, et ne relève rien (RAG-69).
+pub fn others_writes(l: &Ledger, id: &str, premium: Option<&catalog::Bundle>) -> Vec<Vec<String>> {
+    l.tweaks
+        .iter()
+        .filter(|(t, _)| t.as_str() != id && !catalog::revert_runs_script(t))
+        .filter_map(|(t, a)| {
+            let u = catalog::undo_of(t, a.variant.as_deref(), premium).or_else(|| a.undo.clone())?;
+            Some(holds(a, u.writes))
+        })
+        .collect()
 }
 
 /// Variables d'environnement de `full` et de `rest` : RAGO_HELD_<étiquette> pour chaque valeur que ce réglage modifie
@@ -661,12 +807,24 @@ fn sanitize(s: &str) -> String {
     s.chars().map(|c| if c.is_ascii_alphanumeric() || "-_.".contains(c) { c } else { '_' }).collect()
 }
 
+/// Windows ne crée qu'un point de restauration par 24 h : la limite (SystemRestorePointCreationFrequency) est levée le
+/// temps de créer celui de Rago, puis remise telle qu'elle était, même si la création échoue (avant 1.1.9 elle restait
+/// à 0 pour toujours, RAG-60). Un 0 déjà là est remis à 0 : « Latence avancée » (in_advanced) l'écrit exprès, et
+/// le retirer ferait afficher « Changé par Windows » sur ce réglage.
 const RESTORE_POINT_PS: &str = r#"$ErrorActionPreference = 'Stop'
 try { Enable-ComputerRestore -Drive "$env:SystemDrive\" } catch { Write-Output "- System Restore already on or locked" }
-New-ItemProperty -Path 'HKLM:\SOFTWARE\Microsoft\Windows NT\CurrentVersion\SystemRestore' -Name 'SystemRestorePointCreationFrequency' -Value 0 -PropertyType DWord -Force | Out-Null
-Write-Output "- Creating the Rago Optimizer restore point"
-Checkpoint-Computer -Description 'Rago Optimizer' -RestorePointType 'MODIFY_SETTINGS'
-Write-Output "- Restore point created"
+$key = 'HKLM:\SOFTWARE\Microsoft\Windows NT\CurrentVersion\SystemRestore'
+$name = 'SystemRestorePointCreationFrequency'
+$old = (Get-ItemProperty -Path $key -Name $name -ErrorAction SilentlyContinue).$name
+New-ItemProperty -Path $key -Name $name -Value 0 -PropertyType DWord -Force | Out-Null
+try {
+    Write-Output "- Creating the Rago Optimizer restore point"
+    Checkpoint-Computer -Description 'Rago Optimizer' -RestorePointType 'MODIFY_SETTINGS'
+    Write-Output "- Restore point created"
+} finally {
+    if ($null -eq $old) { Remove-ItemProperty -Path $key -Name $name -ErrorAction SilentlyContinue }
+    else { Set-ItemProperty -Path $key -Name $name -Value $old }
+}
 "#;
 
 /// Ce qui modifie Windows ou les fichiers, donc attend le point de restauration quand il est demandé (tout sauf le
@@ -748,6 +906,21 @@ mod tests {
         assert_eq!(holds(&applied(&["reg|hklm\\a|b"], true), writes.clone()), writes);
     }
 
+    /// Le RBW Mod « Désactivé » (valeurs de Windows seulement) ne garde rien pour les autres réglages (RAG-69).
+    #[test]
+    fn rbw_mode_holds_nothing_for_other_tweaks() {
+        let mut l = Ledger::default();
+        let with = |writes: &[&str]| backup::Applied {
+            ok: true,
+            undo: Some(backup::Undo { writes: writes.iter().map(|w| w.to_string()).collect(), ..Default::default() }),
+            ..Default::default()
+        };
+        l.tweaks.insert("rbw_mode".into(), backup::Applied { variant: Some("off".into()), ..with(&["aaaaaaaaaa"]) });
+        l.tweaks.insert("zz_other".into(), with(&["bbbbbbbbbb"]));
+        assert_eq!(others_writes(&l, "zz_undone", None), vec![vec!["bbbbbbbbbb".to_string()]]);
+        assert!(others_writes(&l, "zz_other", None).is_empty());
+    }
+
     /// Un état seulement noté (`untouched`) ne fait pas du réglage un copropriétaire : décocher l'autre réglage qui
     /// l'a vraiment changé le remet tout de suite.
     #[test]
@@ -771,5 +944,105 @@ mod tests {
         assert_eq!(held_env(&mine, &others), vec![("RAGO_HELD_bbbbbbbbbb".to_string(), "1".to_string())]);
         assert!(held_env(&mine, &[]).is_empty());
         assert!(held_env(&[], &others).is_empty());
+    }
+
+    fn test_ctx(name: &str, stop_when: Option<Arc<dyn Fn() -> bool + Send + Sync>>) -> Context {
+        let dir = std::env::temp_dir().join(format!("rago-test-{name}-{}", std::process::id()));
+        let _ = fs::remove_dir_all(&dir);
+        let mut ledger = Ledger::default();
+        ledger.set_applied("net_a", None, true, true, vec![], 1);
+        ledger.set_applied("net_b", None, true, true, vec![], 2);
+        Context {
+            app: None,
+            history: Arc::new(History::load(dir.join("history.json"))),
+            resource_dir: dir.join("resources"),
+            logs_dir: dir.join("logs"),
+            run_dir: dir.join("run"),
+            backup_dir: dir.join("backup"),
+            adapter: None,
+            ledger: Arc::new(Mutex::new(ledger)),
+            premium: None,
+            stop_when,
+        }
+    }
+
+    fn undo(id: &str) -> RunItem {
+        RunItem { id: id.into(), variant: None, params: None, undo: true }
+    }
+
+    #[test]
+    fn reset_stops_when_the_license_comes_back() {
+        let ctx = test_ctx("stop", Some(Arc::new(|| true)));
+        let (ok, failed) = Runner::default().run_now(&ctx, &[undo("net_b"), undo("net_a")]);
+        assert_eq!((ok, failed), (0, 0), "rien n'est lancé");
+        assert_eq!(ctx.ledger.lock().unwrap().tweaks.len(), 2, "les réglages restent appliqués");
+        assert!(ctx.history.all().is_empty());
+    }
+
+    #[test]
+    fn reset_puts_back_and_releases_each_tweak() {
+        let ctx = test_ctx("release", None);
+        let (ok, failed) = Runner::default().run_now(&ctx, &[undo("net_b"), undo("net_a"), undo("net_a")]);
+        assert_eq!((ok, failed), (3, 0), "le second net_a est déjà remis : rien à faire");
+        assert!(ctx.ledger.lock().unwrap().tweaks.is_empty());
+        assert_eq!(ctx.history.all().len(), 2);
+    }
+
+    /// RAG-65 : suppression d'applis lancée par une version d'avant (action ponctuelle, notée d'après l'historique,
+    /// sans sauvegarde ni script d'annulation) : l'annulation remet les applis de sa liste, sans licence.
+    #[test]
+    fn former_app_removal_is_undone_without_backup_or_license() {
+        let ctx = test_ctx("apps", None);
+        {
+            let mut l = ctx.ledger.lock().unwrap();
+            l.set_applied("app_remove", None, true, false, vec![], 3);
+            l.set_applied("dbl_cortana", None, true, false, vec![], 4);
+            l.set_applied("win_services", None, true, false, vec![], 5);
+        }
+        assert!(catalog::undo_of("app_remove", None, None).is_none(), "pas de script d'annulation");
+        assert_eq!(unclaimed_apps(&ctx, "app_remove"), catalog::apps_of("app_remove").to_vec());
+        // Cortana : win_services, encore appliqué, la retire aussi
+        assert!(unclaimed_apps(&ctx, "dbl_cortana").is_empty());
+        assert_eq!(unclaimed_apps(&ctx, "win_services"), vec!["Microsoft.Windows.Ai.Copilot.Provider".to_string()]);
+        let lines = Mutex::new(Vec::new());
+        let sys = Sys::new(ctx.backup_dir.clone());
+        let r = Runner::default().undo_item(&ctx, &sys, &undo("app_remove"), &|l| lines.lock().unwrap().push(l));
+        assert_eq!(r, Ok((0, None)));
+        assert!(!ctx.ledger.lock().unwrap().tweaks.contains_key("app_remove"));
+        assert!(lines.lock().unwrap().iter().any(|l| l.contains("Putting back the Microsoft Store apps")));
+        // jumeau encore appliqué : ses applis attendent qu'il soit éteint aussi, sans erreur
+        ctx.ledger.lock().unwrap().set_applied("app_remove", None, true, false, vec![], 6);
+        ctx.ledger.lock().unwrap().set_applied("win_apps", None, true, false, vec![], 7);
+        lines.lock().unwrap().clear();
+        let r = Runner::default().undo_item(&ctx, &sys, &undo("app_remove"), &|l| lines.lock().unwrap().push(l));
+        assert_eq!(r, Ok((0, None)));
+        assert!(lines.lock().unwrap().iter().any(|l| l.contains("stay removed")));
+        assert!(!lines.lock().unwrap().iter().any(|l| l.contains("Putting back the Microsoft Store apps")));
+    }
+
+    #[test]
+    fn stopped_undo_keeps_the_tweak_applied() {
+        let ctx = test_ctx("cancel", None);
+        let runner = Runner::default();
+        runner.cancel();
+        let sys = Sys::new(ctx.backup_dir.clone());
+        assert!(runner.undo_item(&ctx, &sys, &undo("net_a"), &|_| {}).is_ok());
+        assert!(ctx.ledger.lock().unwrap().tweaks.contains_key("net_a"), "arrêté en route : à remettre de nouveau");
+    }
+
+    /// RAG-60 : la limite d'un point de restauration par 24 h n'est levée que le temps de créer celui de Rago.
+    #[test]
+    fn restore_point_puts_the_frequency_back() {
+        let ps = RESTORE_POINT_PS;
+        let set0 = ps.find("-Value 0 -PropertyType DWord").expect("limite levée");
+        let point = ps.find("Checkpoint-Computer").unwrap();
+        let fin = ps.find("} finally {").expect("remise même en cas d'échec");
+        assert!(set0 < point && point < fin);
+        assert!(ps.contains("$old = (Get-ItemProperty"), "valeur d'avant relevée");
+        let after = &ps[fin..];
+        assert!(after.contains("Remove-ItemProperty -Path $key -Name $name"));
+        assert!(after.contains("Set-ItemProperty -Path $key -Name $name -Value $old"));
+        // la valeur d'avant est remise telle quelle, 0 compris (in_advanced écrit 0 : pas de faux « Changé par Windows »)
+        assert!(after.contains("if ($null -eq $old) {") && !after.contains("-eq 0"));
     }
 }

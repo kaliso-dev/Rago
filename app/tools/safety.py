@@ -50,6 +50,12 @@ RETIRED = {
                      'Il supprimait les dossiers OneDrive du PC : les fichiers pas encore synchronisés étaient perdus.'),
     'mem_prefetch': ('Apps opened slower, and on a screenshare an empty Prefetch can look like erased traces.',
                      'Les applis s\'ouvraient plus lentement, et sur un screenshare un Prefetch vide peut ressembler à des traces effacées.'),
+    # RAG-67 (2026-10-13) : son script ne faisait que poser CoalescingTimerInterval à 0 (DROP_EVERYWHERE plus bas) ;
+    # sans ces lignes il ne ferait plus rien
+    'pow_timer': ('It set a kernel timer value to 0 that Windows divides by: on some PCs (Windows 11 24H2) this caused a '
+                  'blue screen a few minutes after startup, for no measurable gain.',
+                  'Il mettait à 0 une valeur du noyau par laquelle Windows divise : sur certains PC (Windows 11 24H2), '
+                  'écran bleu quelques minutes après le démarrage, sans gain mesurable.'),
 }
 
 # (motif, raison) : retiré de tous les scripts. Motifs sans casse, sur une ligne entière.
@@ -87,6 +93,12 @@ DROP_EVERYWHERE = [
     (r'PP_ThermalAutoThrottlingEnable"?\s+/t\s+REG_DWORD\s+/d\s+"?0|PP_DisablePowerContainment"?\s+/t\s+REG_DWORD\s+/d\s+"?1',
      'AMD thermal limits'),
     (r'Session Manager\\kernel"?\s+/v\s+"?(DpcWatchdogPeriod|DpcTimeout)"?\s+/t\s+REG_DWORD\s+/d\s+"?0\b', 'DPC watchdog'),
+    # RAG-67 (2026-10-13) : valeur non documentée, lue par le noyau au démarrage, qui sert de diviseur : à 0, écran bleu
+    # 0x7E (c0000094, division par zéro) quelques minutes après le démarrage (Windows 11 24H2). Toutes les clés de
+    # Control (Session Manager, kernel, Executive, Memory Management, Power, ModernSleep, Control lui-même). Les PC qui
+    # l'ont déjà la perdent au lancement de l'app (src-tauri/src/repair.rs) ; l'annulation la supprime toujours
+    (r'(CurrentControlSet|ControlSet\d{3})\\Control\b[^"]*"?\s+/v\s+"?CoalescingTimerInterval"?\s',
+     'CoalescingTimerInterval (blue screen)'),
     # fichiers et traces
     (r'CacheIsPowerProtected\s+/t\s+REG_DWORD\s+/d\s+1\b', 'cache flush'),
     (r'Clear-RecycleBin', 'Recycle Bin'),
@@ -120,6 +132,12 @@ DROP_IN = [
     (('cpu_advanced', 'cpu_registry'), r'\\(VetoPolicy|GlobalPowerPolicy)"\s+/v\s'),
     # pas un risque, une contradiction : Game DVR coupé par la stratégie juste au-dessus, puis autorisé de nouveau ici
     (('win_gamedvr',), r'ApplicationManagement\\AllowGameDVR"\s+/v\s+"value"\s+/t\s+REG_DWORD\s+/d\s+"1"'),
+    # packs Safe qui coupaient sans le dire le MPO et la préemption du GPU (2026-10-10), alors que l'app classe ces
+    # changements Advanced ailleurs : ils restent dans « Désactiver la préemption » et les réglages NVIDIA et AMD avancés
+    # (Advanced, point de restauration conseillé)
+    (('gpu_nvidia', 'gpu_amd'), r'\\Dwm"\s+/v\s+"OverlayTestMode"'),
+    (('gpu_nvidia', 'gpu_amd', 'gpu_general', 'nv_general', 'amd_general'), r'/v\s+"?\w*Preemption\w*"?\s+/t'),
+    (('nv_general', 'amd_general'), r'^\s*(echo\s+-|::)\s+Disabl\w*\s+Preemption\s*$'),
 ]
 
 
@@ -201,7 +219,10 @@ def notes(report, n_tweaks, n_distinct):
         '- app_remove, win_apps : Pense-bêtes gardé (notes non synchronisées perdues) ;',
         '- cpu_advanced, cpu_registry : veto de la veille moderne et politique d\'alimentation XP (audit D22, motif sur le '
         'chemin de la clé) ;',
-        '- win_gamedvr : la ligne qui réautorisait Game DVR juste après l\'avoir coupé.',
+        '- win_gamedvr : la ligne qui réautorisait Game DVR juste après l\'avoir coupé ;',
+        '- gpu_nvidia, gpu_amd, gpu_general, nv_general, amd_general (2026-10-10) : MPO (`OverlayTestMode`) et préemption '
+        'du GPU coupés sans le dire dans des packs Safe. Ils restent dans nv_preemption, nv_advanced et amd_advanced '
+        '(Advanced).',
     ]
     out += ['', 'Point de restauration (1.1.8) : la case de 1.1.6 revient. Elle est cochée d\'office seulement pour un '
             'réglage `restore` (avancé, ou que l\'app ne remet pas entièrement) et si Rago n\'en a pas créé un réussi '

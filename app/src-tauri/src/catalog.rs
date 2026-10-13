@@ -113,7 +113,7 @@ pub fn is_switch(id: &str) -> bool {
     KINDS.get(id).is_some_and(|k| k == "tweak")
 }
 
-#[cfg(test)]
+/// Réglage du plan gratuit : il reste appliqué quand Premium prend fin.
 pub fn is_free(id: &str) -> bool {
     FREE.iter().any(|f| f == id)
 }
@@ -125,6 +125,14 @@ pub fn is_revert(id: &str, variant: Option<&str>) -> bool {
 
 pub fn revert_variant(id: &str) -> Option<String> {
     REVERTS.iter().find_map(|r| r.strip_prefix(&format!("{id}:")).map(str::to_string))
+}
+
+/// Réglage dont le retour arrière lance toujours le script de sa variante `revert`, jamais la sauvegarde : RBW Mod
+/// « Activé » doit démarrer les services que lit le screenshare et remettre ce que d'autres réglages coupent. La
+/// sauvegarde prise avant « Désactivé » ne fait que réécrire le registre (aucun service démarré) et recouperait les
+/// services qu'un autre réglage avait coupés.
+pub fn revert_runs_script(id: &str) -> bool {
+    id == "rbw_mode"
 }
 
 /// Script en clair (plan gratuit, retour arrière), sans licence.
@@ -148,6 +156,32 @@ static TWINS: LazyLock<HashMap<String, String>> = LazyLock::new(|| {
     }
     out
 });
+
+/// Applis du Store que chaque réglage désinstalle (champ `apps` du catalogue, tools/probes.py) : noms de paquet avec
+/// jokers, comme dans `Get-AppxPackage`. En clair, scripts Premium fermés ou pas : l'annulation sans relevé s'en sert.
+static APPS: LazyLock<HashMap<String, Vec<String>>> = LazyLock::new(|| {
+    let catalog: serde_json::Value =
+        serde_json::from_str(include_str!("../../src/data/catalog.json")).expect("catalog.json invalide");
+    let mut out = HashMap::new();
+    for t in catalog["modules"].as_array().into_iter().flatten()
+        .flat_map(|m| m["sections"].as_array().into_iter().flatten())
+        .flat_map(|s| s["tweaks"].as_array().into_iter().flatten())
+    {
+        if let (Some(id), Some(apps)) = (t["id"].as_str(), t["apps"].as_array()) {
+            out.insert(id.to_string(), apps.iter().filter_map(|a| a.as_str().map(str::to_string)).collect());
+        }
+    }
+    out
+});
+
+/// Applis du Store que le réglage désinstalle (vide pour les autres).
+pub fn apps_of(id: &str) -> &'static [String] {
+    APPS.get(id).map(Vec::as_slice).unwrap_or(&[])
+}
+
+/// Anciennes actions ponctuelles devenues des cases (RAG-65, 2026-10-13) : lancées par une version d'avant, elles
+/// sont notées appliquées d'après l'historique pour qu'on puisse les éteindre et récupérer les applis du Store.
+pub const FORMER_ACTIONS: &[&str] = &["app_remove", "win_apps"];
 
 /// Nom anglais des réglages, pour les lignes du journal (réglages retirés compris : leur annulation y passe).
 static NAMES_EN: LazyLock<HashMap<String, String>> = LazyLock::new(|| {
@@ -436,8 +470,8 @@ mod tests {
         assert_eq!(SCRIPTS["ping_main"].len(), 4);
         // le RBW Mod remet ce que d'autres réglages coupent avant un screenshare
         let rbw = SCRIPTS["rbw_mode"]["on"].to_lowercase();
-        assert!(rbw.contains("services\\bam\" /v \"start\" /t reg_dword /d \"1\""));
-        assert!(rbw.contains("enableprefetcher\" /t reg_dword /d \"3\""));
+        assert!(rbw.contains("bam = 1;") && rbw.contains("set-start $name $services[$name]"));
+        assert!(rbw.contains("foreach ($v in 'enableprefetcher', 'enablesuperfetch') { if ((reg $pf $v) -ne 3) { set-itemproperty -path $pf -name $v -value 3"));
         // BAM et le Prefetcher ne reviennent qu'au démarrage : l'app doit le demander
         let cat: serde_json::Value = serde_json::from_str(catalog).unwrap();
         let rbw = cat["modules"].as_array().unwrap().iter()
@@ -553,6 +587,42 @@ mod tests {
         }
     }
 
+    /// Sans relevé, full remet aussi les valeurs écrites dans la carte visée (« for %%G in (!rago_gpu!) », 1.1.9), pas
+    /// seulement celles de « …\0000 » des anciens scripts : sur un portable à deux cartes, la carte NVIDIA est souvent
+    /// « …\0001 ». La garde RAGO_HELD est celle de la même valeur dans « …\0000 ».
+    #[test]
+    fn gpu_undo_follows_the_targeted_card() {
+        let undo: serde_json::Value = serde_json::from_str(include_str!("../scripts/undo.json")).unwrap();
+        let gpu0 = "class\\{4d36e968-e325-11ce-bfc1-08002be10318}\\0000\" /v \"";
+        for id in ["nv_accel", "nv_contig", "nv_kboost", "gpu_nvidia", "amd_general", "gpu_amd"] {
+            let full = undo[id]["_"]["full"].as_str().unwrap().to_lowercase();
+            let script = SCRIPTS[id]["_"].to_lowercase();
+            let looped: Vec<&str> = script
+                .lines()
+                .filter(|l| l.contains(" in (!rago_gpu!) do reg.exe add "))
+                .filter_map(|l| l.split(" /v \"").nth(1)?.split('"').next())
+                .collect();
+            let mut n = 0;
+            for name in full.lines().filter_map(|l| l.split(gpu0).nth(1)?.split('"').next()) {
+                if !looped.contains(&name) {
+                    continue;
+                }
+                let card = full.lines().find(|l| {
+                    l.contains(" in (!rago_gpu!) do ") && l.contains("reg delete \"%%") && l.contains(&format!("/v \"{name}\""))
+                });
+                let card = card.unwrap_or_else(|| panic!("{id} : {name} remis seulement dans …\\0000"));
+                let fixed = full.lines().find(|l| l.contains(&format!("{gpu0}{name}\""))).unwrap();
+                let tag = |l: &str| l.split("rago_held_").nth(1).map(|t| t[..10].to_string());
+                assert_eq!(tag(card), tag(fixed), "{id} : {name} gardé autrement dans …\\0000 et dans la carte");
+                n += 1;
+            }
+            assert!(n > 0, "{id}");
+            // les cartes du fabricant sont cherchées avant la première boucle
+            let find = full.find("set \"rago_gpu=\"").unwrap_or_else(|| panic!("{id}"));
+            assert!(find < full.find(" in (!rago_gpu!) do ").unwrap(), "{id}");
+        }
+    }
+
     /// Priorité par jeu : les vrais exécutables (RAG-60) ; réparation : sfc après DISM.
     #[test]
     fn per_game_priority_targets_real_executables() {
@@ -569,6 +639,135 @@ mod tests {
         assert!(repair.find("/restorehealth").unwrap() < repair.find("sfc.exe /scannow").unwrap());
     }
 
+    /// Aucun réglage Safe ne coupe le MPO ni la préemption du GPU (tools/safety.py, 2026-10-10) : ces changements
+    /// restent dans des réglages Advanced. Les valeurs « Preemption » de pri_game sont sous Image File Execution
+    /// Options, que Windows ignore pour ces noms.
+    #[test]
+    fn safe_tweaks_keep_mpo_and_preemption() {
+        let catalog: serde_json::Value = serde_json::from_str(include_str!("../../src/data/catalog.json")).unwrap();
+        let all: Vec<&serde_json::Value> = catalog["modules"].as_array().unwrap().iter()
+            .flat_map(|m| m["sections"].as_array().unwrap())
+            .flat_map(|s| s["tweaks"].as_array().unwrap())
+            .filter(|t| t.get("id").is_some()).collect();
+        for t in all.iter().filter(|t| t["risk"] == "safe") {
+            let id = t["id"].as_str().unwrap();
+            for (v, s) in SCRIPTS.get(id).into_iter().flatten() {
+                for l in s.lines().map(|l| l.trim().to_lowercase()).filter(|l| !l.starts_with("echo") && !l.starts_with("rem ") && !l.starts_with("::")) {
+                    let display = l.contains("\"overlaytestmode\" /t reg_dword /d \"5\"")
+                        || (l.contains("preemption") && !l.contains("image file execution options"));
+                    assert!(!display, "{id}:{v} : {l}");
+                }
+            }
+        }
+        for id in ["nv_preemption", "nv_advanced", "amd_advanced"] {
+            assert!(all.iter().any(|t| t["id"] == id && t["risk"] == "advanced"), "{id}");
+        }
+    }
+
+    /// Cohérence 1.1.9 (tools/coherence.py ; RAG-60 §4-§5, RAG-27, audit du 2026-10-07) : scripts qui visaient la
+    /// mauvaise carte, valeurs fausses, lignes contradictoires ou sans effet. Ces défauts ne doivent pas revenir.
+    #[test]
+    fn scripts_target_the_right_hardware_and_do_what_they_say() {
+        let probes: Scripts = serde_json::from_str(include_str!("../scripts/probes.json")).unwrap();
+        let undo: serde_json::Value = serde_json::from_str(include_str!("../scripts/undo.json")).unwrap();
+        let low = |id: &str, v: &str| SCRIPTS[id][v].to_lowercase();
+        // carte graphique : plus de « …\0000 » en dur, chaque écriture passe par les cartes du bon fabricant
+        let gpu0 = "class\\{4d36e968-e325-11ce-bfc1-08002be10318}\\0000";
+        for (id, ven) in [("nv_accel", "10de"), ("nv_contig", "10de"), ("nv_kboost", "10de"), ("gpu_nvidia", "10de"),
+                          ("amd_general", "1002"), ("amd_power", "1002"), ("amd_memsleep", "1002"), ("amd_delag", "1002"),
+                          ("gpu_amd", "1002")] {
+            let s = low(id, "_");
+            assert!(!s.contains(gpu0) && !s.contains("regpath_amd"), "{id} écrit dans la première carte venue");
+            assert!(s.contains("/v matchingdeviceid 2^>nul ^| findstr /i \"ven_") && s.contains(&format!("\"ven_{ven}\"")), "{id}");
+            assert!(s.lines().any(|l| l.starts_with("for %%") && l.contains(" in (!rago_gpu!) do reg")), "{id}");
+            assert!(s.is_ascii(), "{id} : texte parasite");
+            // le relevé suit les mêmes cartes, et rien n'est relevé sur la clé 0000 en dur
+            let p = probes[id]["_"].to_lowercase();
+            assert!(p.contains("in (!rago_gpu!) do echo @@rago reg") && !p.contains(gpu0), "{id} relevé");
+        }
+        assert!(!low("gpu_nvidia", "_").contains("%w%-"), "gpu_nvidia : boucles qui écrivaient dans Class\\-");
+        // mode MSI : seulement sur les cartes du fabricant
+        for (id, ven) in [("nv_msi", "10de"), ("gpu_nvidia", "10de"), ("gpu_amd", "1002")] {
+            for l in low(id, "_").lines().filter(|l| l.contains("win32_videocontroller")) {
+                assert!(l.contains(&format!("findstr /i \"ven_{ven}\"")), "{id} : {l}");
+            }
+        }
+        // valeurs
+        assert!(low("nv_kboost", "_").contains("\"perflevelsrc\" /t reg_dword /d \"8738\""));
+        assert!(!low("amd_power", "_").contains("clockgating\" /t reg_dword /d \"1\""));
+        assert!(low("pow_windows", "_").contains("energyestimationenabled /t reg_dword /d 0 "));
+        assert!(low("dbl_cortana", "_").contains("\"disablewebsearch\" /t reg_dword /d \"1\""));
+        assert!(low("win_services", "_").contains("policies\\microsoft\\dsh\" /v \"allownewsandinterests\""));
+        for (id, variants) in SCRIPTS.iter() {
+            for (v, s) in variants {
+                assert!(!s.to_lowercase().contains("\\microsoftd\\"), "{id}:{v}");
+            }
+        }
+        // réseau : netsh refusés par Windows 10 et 11, propriétés de carte par leur nom anglais, QoS hors domaine
+        let netsh_ok = ["autotuninglevel", "rss", "rsc", "ecncapability", "timestamps", "nonsackrttresiliency", "fastopen",
+                        "fastopenfallback", "hystart", "prr", "pacingprofile", "dca", "initialrto", "maxsynretransmissions"];
+        for (id, v) in [("ping_packets", "hitreg"), ("ping_packets", "knockback"), ("net_profile", "hitreg"),
+                        ("net_profile", "knockback"), ("net_advanced", "_")] {
+            for l in low(id, v).lines() {
+                let t = l.trim().replace("netsh interface ", "netsh int ");
+                if let Some(rest) = t.strip_prefix("netsh int tcp set global ") {
+                    let param = rest.split(['=', ' ']).next().unwrap();
+                    assert!(netsh_ok.contains(&param), "{id}:{v} : {l}");
+                }
+            }
+        }
+        assert!(!low("net_advanced", "_").contains("\"sackopts\" /t reg_dword /d \"0\""));
+        for v in SCRIPTS["ping_main"].keys() {
+            assert!(!low("ping_main", v).contains("-displayname"), "ping_main:{v} vise un nom anglais");
+        }
+        assert!(low("ping_main", "config3").contains("-registrykeyword '*flowcontrol'"));
+        let rest = undo["ping_main"]["config3"]["rest"].as_str().unwrap().to_lowercase();
+        assert!(rest.contains("reset-netadapteradvancedproperty") && rest.contains("'*flowcontrol'"), "annulation de config3");
+        for id in ["ping_packets", "net_profile"] {
+            let s = low(id, "qos");
+            assert!(s.contains("tcpip\\qos\" /v \"do not use nla\" /t reg_sz /d \"1\""), "{id}:qos");
+            assert!(s.contains("\"dscp value\" /t reg_sz /d \"46\"") && s.contains("\"throttle rate\" /t reg_sz /d \"-1\""), "{id}:qos");
+        }
+        // épinglage sur le processeur n°2 : seulement s'il existe, mais l'annulation retire toujours les valeurs
+        for (id, v) in [("net_affinity", "_"), ("in_adapter", "_"), ("ping_main", "config4")] {
+            let s = low(id, v);
+            let pins: Vec<&str> = s.lines().filter(|l| l.contains("\"assignmentsetoverride\"") || l.contains("/v \"devicepolicy\"")).collect();
+            assert_eq!(pins.len(), 2, "{id}:{v}");
+            assert!(pins.iter().all(|l| l.starts_with("if %number_of_processors% geq 4 ")), "{id}:{v}");
+            let full = undo[id][v]["full"].as_str().unwrap().to_lowercase();
+            assert!(full.contains("/v \"assignmentsetoverride\" /f") && !full.contains("number_of_processors"), "{id}:{v} annulation");
+        }
+        // packs : plus de lignes contraires à un autre réglage ou défaites plus bas
+        for (v, s) in &SCRIPTS["hitreg_suite"] {
+            let s = s.to_lowercase();
+            for bad in ["disable-scheduledtask", "disable-mmagent", "autogamemode", "\"hibernateenabled\"",
+                        "\"alwayson\" /t reg_dword /d \"1\"", "\"disabletaskoffload\" /t reg_dword /d \"1\""] {
+                assert!(!s.contains(bad), "hitreg_suite:{v} : {bad}");
+            }
+            assert!(s.contains("schtasks /change /tn \"\\microsoft\\windows\\application experience\\microsoft compatibility appraiser\" /disable"));
+        }
+        assert!(!low("in_advanced", "_").contains("autogamemode") && !low("in_advanced", "_").contains("\"hibernateenabled\""));
+        assert!(!low("win_gamedvr", "_").contains("fsebehaviormode\" /t reg_dword /d \"1\""));
+        assert!(!low("exp_io", "_").contains("ntoskrnl.exe") && !low("exp_io", "_").contains("wow6432node"));
+        // Plein écran garde Auto HDR et les autres réglages graphiques de Windows 11
+        let fs = low("win_fullscreen", "_");
+        assert!(fs.contains("/d \"!rago_dx!vrroptimizeenable=0;swapeffectupgradeenable=1;\""));
+        assert!(!fs.contains("/d \"vrroptimizeenable=0;"));
+        // redémarrage annoncé
+        let cat: serde_json::Value = serde_json::from_str(include_str!("../../src/data/catalog.json")).unwrap();
+        let tw = |id: &str| cat["modules"].as_array().unwrap().iter()
+            .flat_map(|m| m["sections"].as_array().unwrap())
+            .flat_map(|s| s["tweaks"].as_array().unwrap())
+            .find(|t| t["id"] == id).unwrap_or_else(|| panic!("{id} absent")).clone();
+        for id in ["net_ipv6", "in_mouse", "in_keyboard", "net_profile"] {
+            assert_eq!(tw(id)["reboot"], true, "{id}");
+        }
+        let np = tw("net_profile");
+        let reboot = |v: &str| np["variants"].as_array().unwrap().iter().find(|x| x["id"] == v).unwrap()["reboot"].clone();
+        assert_eq!((reboot("hitreg"), reboot("knockback"), reboot("qos")), (false.into(), true.into(), true.into()));
+        assert_eq!(name_of("mem_superfetch"), "Disable Superfetch (legacy setting)");
+    }
+
     /// Réglages retirés (tools/safety.py, 2026-10-08) : ni script ni relevé, absents du catalogue et des profils, mais
     /// leur annulation reste là pour les PC où une version précédente les a appliqués. Les lignes risquées qu'ils
     /// portaient ne se retrouvent plus dans aucun autre script.
@@ -577,7 +776,7 @@ mod tests {
         let bundle = premium(&test_key()).unwrap();
         let catalog: serde_json::Value = serde_json::from_str(include_str!("../../src/data/catalog.json")).unwrap();
         let retired: Vec<&str> = catalog["retired"].as_array().unwrap().iter().map(|r| r["id"].as_str().unwrap()).collect();
-        assert_eq!(retired.len(), 16);
+        assert_eq!(retired.len(), 17);
         let listed: Vec<&str> = catalog["modules"].as_array().unwrap().iter()
             .flat_map(|m| m["sections"].as_array().unwrap())
             .flat_map(|s| s["tweaks"].as_array().unwrap())
@@ -623,6 +822,481 @@ mod tests {
         }
     }
 
+    /// RAG-67 (2026-10-13) : `CoalescingTimerInterval` à 0 sous `HKLM\SYSTEM\CurrentControlSet\Control` fait planter
+    /// Windows (écran bleu 0x7E, division par zéro) quelques minutes après le démarrage. Plus aucun script ni relevé ne
+    /// l'écrit (tools/safety.py DROP_EVERYWHERE) ; les annulations la suppriment encore pour les PC où une version
+    /// précédente l'a posée, aucune ne la remet, et chaque clé qu'elles nettoient est aussi réparée au lancement
+    /// (repair::TIMER_KEYS). Celle des fichiers de jeu (Image File Execution Options) n'est pas concernée.
+    #[test]
+    fn kernel_timer_value_stays_out() {
+        let bundle = premium(&test_key()).unwrap();
+        let probes: Scripts = serde_json::from_str(include_str!("../scripts/probes.json")).unwrap();
+        let kernel = |l: &str| {
+            let l = l.to_lowercase();
+            l.contains("coalescingtimerinterval") && l.contains("\\control")
+        };
+        for (id, variants) in SCRIPTS.iter().chain(probes.iter()) {
+            for (v, s) in variants {
+                for l in s.lines().map(str::trim).filter(|l| !l.to_lowercase().starts_with("echo")) {
+                    assert!(!kernel(l), "{id}:{v} écrit encore la valeur : {l}");
+                }
+            }
+        }
+        let keys: std::collections::HashSet<String> = crate::repair::TIMER_KEYS.iter().map(|k| k.to_lowercase()).collect();
+        for (id, v) in [
+            ("pow_main", None),
+            ("pow_timer", None),
+            ("pow_throttling", None),
+            ("gpu_nvidia", None),
+            ("gpu_amd", None),
+            ("gpu_general", None),
+            ("amd_advanced", None),
+            ("hitreg_suite", Some("good")),
+            ("hitreg_suite", Some("laptop")),
+        ] {
+            let full = undo_of(id, v, Some(&bundle)).and_then(|u| u.full).unwrap_or_default();
+            let deleted: Vec<&str> = full.lines().map(str::trim).filter(|l| kernel(l)).collect();
+            assert!(!deleted.is_empty(), "{id} : l'annulation ne supprime plus la valeur posée avant");
+            for l in deleted {
+                assert!(l.to_lowercase().starts_with("reg delete"), "{id} : {l}");
+                let key = l.split('"').nth(1).unwrap().to_lowercase().replace("hkey_local_machine", "hklm");
+                assert!(keys.contains(&key), "{id} : {key} n'est pas réparée au lancement (repair::TIMER_KEYS)");
+            }
+        }
+        for (id, variants) in bundle.undo.iter().chain(PLAIN.undo.iter()) {
+            for (v, u) in variants {
+                for l in u.full.iter().chain(u.rest.iter()).flat_map(|s| s.lines()).map(str::trim) {
+                    assert!(!kernel(l) || l.to_lowercase().starts_with("reg delete"), "annulation {id}:{v} : {l}");
+                }
+            }
+        }
+    }
+
+    /// RAG-66 (2026-10-13) : vider les dossiers temporaires bute toujours sur des fichiers ouverts, arrêter le spouleur
+    /// déjà arrêté répond une erreur, taskkill annonce son succès : ces messages, sans échec réel, affolaient les joueurs
+    /// dans le journal. Ces commandes-là se taisent (tools/build_catalog_v6.py QUIET), %temp% est toujours entre
+    /// guillemets (un espace dans le chemin faisait effacer le premier morceau).
+    #[test]
+    fn temp_cleaning_stays_quiet() {
+        let silent = |l: &str| l.contains("2>&1") || l.contains("2>nul");
+        for (id, variants) in SCRIPTS.iter() {
+            for (v, s) in variants {
+                for l in s.lines().map(|l| l.trim().to_lowercase()).filter(|l| !l.starts_with("echo") && !l.starts_with("::")) {
+                    let bare: String = l.split('"').step_by(2).collect();
+                    assert!(!bare.contains("%temp%") && !bare.contains("%tmp%"), "{id}:{v} : %temp% sans guillemets : {l}");
+                    if ["game_mode", "in_windows", "sto_general", "cln_temp"].contains(&id.as_str())
+                        && (l.starts_with("del ") || l.starts_with("forfiles") || l.contains("rd /s") || l.contains("rmdir"))
+                    {
+                        assert!(silent(&l), "{id}:{v} : {l}");
+                    }
+                }
+            }
+        }
+        let on = &SCRIPTS["game_mode"]["on"];
+        let stop: Vec<&str> = on.lines().filter(|l| l.to_lowercase().contains("net stop spooler")).collect();
+        assert_eq!(stop.len(), 1);
+        assert!(stop[0].to_lowercase().starts_with("sc query spooler | find \"running\" >nul && "), "{}", stop[0]);
+        for v in ["on", "off"] {
+            let kill: Vec<&str> = SCRIPTS["game_mode"][v].lines().filter(|l| l.contains("taskkill")).collect();
+            assert!(!kill.is_empty() && kill.iter().all(|l| l.trim_end().ends_with(">nul")), "game_mode:{v}");
+        }
+    }
+
+    /// Lignes qui empêchent cmd.exe de lire un bloc entre parenthèses (RAG-68, 2026-10-13) : cmd lit tout le bloc avant
+    /// de l'exécuter et, sur une erreur, s'arrête net (« ) was unexpected at this time. ») : le reste du script ne tourne
+    /// pas et le réglage échoue. Renvoie « ligne : problème » pour chaque défaut. Lecture simplifiée de cmd : parenthèses
+    /// hors guillemets et hors `^`, commentaires `::`/`rem` et `echo` à part (une `)` dans un echo ferme quand même le bloc).
+    fn block_errors(script: &str) -> Vec<String> {
+        #[derive(Clone, Copy, PartialEq)]
+        enum Kind {
+            Label,
+            Rem,
+            Echo,
+            Cmd,
+        }
+        fn kind(t: &str) -> Kind {
+            let low = t.to_lowercase();
+            let after = |w: &str| low.strip_prefix(w).map(|r| r.chars().next());
+            if t.starts_with(':') {
+                Kind::Label
+            } else if matches!(after("rem"), Some(None) | Some(Some(' ' | '\t'))) {
+                Kind::Rem
+            } else if matches!(after("echo"), Some(None) | Some(Some(' ' | '\t' | '.' | '(' | ':' | '/'))) {
+                Kind::Echo
+            } else {
+                Kind::Cmd
+            }
+        }
+        // parenthèses hors guillemets et hors ^, dans l'ordre ; et le texte hors guillemets
+        fn scan(t: &str) -> (Vec<i32>, String) {
+            let (mut out, mut bare, mut quoted, mut chars) = (Vec::new(), String::new(), false, t.chars());
+            while let Some(c) = chars.next() {
+                match c {
+                    '"' => {
+                        quoted = !quoted;
+                        bare.push('x');
+                    }
+                    '^' if !quoted => {
+                        chars.next();
+                        bare.push('x');
+                    }
+                    '(' if !quoted => {
+                        out.push(1);
+                        bare.push('(');
+                    }
+                    ')' if !quoted => {
+                        out.push(-1);
+                        bare.push(')');
+                    }
+                    _ if quoted => {}
+                    c => bare.push(c),
+                }
+            }
+            (out, bare)
+        }
+        let mut errors = Vec::new();
+        let mut depth = 0i32;
+        // dernière ligne non vide : sa nature, et si elle se termine en ouvrant un bloc
+        let mut prev: Option<(Kind, bool)> = None;
+        for (n, line) in script.lines().enumerate() {
+            let t = line.trim().trim_start_matches('@').trim();
+            if t.is_empty() {
+                continue;
+            }
+            let k = kind(t);
+            let (parens, bare) = scan(t);
+            let mut opens = false;
+            match k {
+                Kind::Label => {
+                    if depth > 0 && prev.is_some_and(|(p, _)| p == Kind::Label) {
+                        errors.push(format!("{}: deux commentaires :: de suite dans un bloc", n + 1));
+                    }
+                }
+                Kind::Rem => {}
+                Kind::Echo => {
+                    if depth > 0 && parens.contains(&-1) {
+                        errors.push(format!("{}: une ) dans un echo ferme le bloc : {t}", n + 1));
+                    }
+                }
+                Kind::Cmd => {
+                    if t.starts_with(')') {
+                        match prev {
+                            Some((Kind::Cmd, true)) => errors.push(format!("{}: bloc vide, « ( » puis « ) »", n + 1)),
+                            Some((Kind::Label, _)) if depth > 0 => {
+                                errors.push(format!("{}: commentaire :: juste avant la « ) » du bloc", n + 1))
+                            }
+                            _ => {}
+                        }
+                    }
+                    // « ( ) » sur une seule ligne
+                    let compact: String = bare.chars().filter(|c| !c.is_whitespace()).collect();
+                    if compact.contains("()") {
+                        errors.push(format!("{}: bloc vide sur la ligne : {t}", n + 1));
+                    }
+                    for p in parens {
+                        depth += p;
+                        if depth < 0 {
+                            errors.push(format!("{}: « ) » sans bloc ouvert : {t}", n + 1));
+                            depth = 0;
+                        }
+                    }
+                    opens = bare.trim_end().ends_with('(');
+                }
+            }
+            prev = Some((k, opens));
+        }
+        if depth != 0 {
+            errors.push(format!("{depth} bloc(s) jamais fermé(s)"));
+        }
+        errors
+    }
+
+    #[test]
+    fn block_checker_sees_what_cmd_refuses() {
+        // RAG-68 : boucle du mode MSI dont les lignes ont été retirées
+        let rag68 = "for /f %%i in ('powershell -Command \"(Get-CimInstance x).PNPDeviceID\"') do set \"str=%%i\" & (\r\n)\r\necho ok";
+        assert_eq!(block_errors(rag68).len(), 1, "{:?}", block_errors(rag68));
+        assert_eq!(block_errors("if defined x (\r\nver >nul\r\n) else (\r\n)").len(), 1);
+        assert_eq!(block_errors("for %%a in (1) do ( )").len(), 1);
+        assert_eq!(block_errors("if x==y (\r\necho a (b)\r\n)").len(), 1, "la ) de l'echo ferme le bloc");
+        assert_eq!(block_errors("(\r\n:: a\r\n)").len(), 1);
+        assert_eq!(block_errors("(\r\n:: a\r\n:: b\r\nver >nul\r\n)").len(), 1);
+        assert_eq!(block_errors("for /f %%a in ('x') do (\r\nreg add \"HKLM\\A (x86)\" /f\r\n").len(), 1, "jamais fermé");
+        // correct : guillemets, ^, echo hors bloc, ) else (, commentaire suivi d'une commande dans un bloc
+        let ok = "for /f \"delims=\" %%a in ('powershell -Command \"(Get-CimInstance x).NetConnectionID\"') do (\r\n\
+                  \x20 :: carte\r\n  for /f \"delims=\" %%b in (\"%%a\") do (\r\n    set \"n=%%b\"\r\n  )\r\n)\r\n\
+                  if defined n (\r\n  ver >nul\r\n) else (\r\n  echo pas de carte\r\n)\r\necho (fin)\r\nfind \"^)\" x";
+        assert!(block_errors(ok).is_empty(), "{:?}", block_errors(ok));
+    }
+
+    /// Tous les scripts que le moteur lance (réglages, relevés, annulations) se lisent jusqu'au bout dans cmd.exe.
+    #[test]
+    fn every_script_has_well_formed_blocks() {
+        let probes: Scripts = serde_json::from_str(include_str!("../scripts/probes.json")).unwrap();
+        let undo: HashMap<String, HashMap<String, Undo>> = serde_json::from_str(include_str!("../scripts/undo.json")).unwrap();
+        let mut bad = Vec::new();
+        let mut check = |what: String, s: &str| bad.extend(block_errors(s).into_iter().map(|e| format!("{what} {e}")));
+        for (id, variants) in SCRIPTS.iter() {
+            for (v, s) in variants {
+                check(format!("{id}:{v}"), s);
+            }
+        }
+        for (id, variants) in &probes {
+            for (v, s) in variants {
+                check(format!("relevé {id}:{v}"), s);
+            }
+        }
+        for (id, variants) in &undo {
+            for (v, u) in variants {
+                for (part, s) in [("full", &u.full), ("rest", &u.rest)] {
+                    if let Some(s) = s {
+                        check(format!("annulation {id}:{v} {part}"), s);
+                    }
+                }
+            }
+        }
+        assert!(bad.is_empty(), "{} défauts :\n{}", bad.len(), bad.join("\n"));
+    }
+
+    /// Services que lit le vérificateur officiel de RBW (github.com/quickpots/RBW-SS, Services.ps1, relevé le
+    /// 2026-10-13), en plus de chaque CDPUserSvc_xxxx : il les veut tous en Running.
+    const RBW_CHECKER: [&str; 11] = ["sysmain", "pcasvc", "dps", "bam", "eventlog", "wsearch", "dusmsvc", "bfe", "appinfo", "dcomlaunch", "plugplay"];
+
+    /// RBW Mod « Activé » fait ce que fait le script validé par Sofiene (rbw/Rago-RBW-Fix.ps1), dans le même ordre :
+    /// démarrage avec Windows, services dont ils dépendent, réglages lus par le vérificateur, lancement, rapport, programmes
+    /// qui les recouperaient. Le vérificateur passe au vert même quand un autre réglage de l'app les a coupés.
+    #[test]
+    fn rbw_mode_on_does_what_the_validated_fix_does() {
+        let on = SCRIPTS["rbw_mode"]["on"].to_lowercase();
+        // services et démarrage voulu (2 automatique, 3 manuel, 1 système), comme $services dans le script validé
+        let list = on.split("$services = [ordered]@{ ").nth(1).and_then(|s| s.split(" }").next()).expect("$services");
+        let wanted: Vec<(&str, &str)> = list.split("; ").map(|p| p.split_once(" = ").expect(p)).collect();
+        assert_eq!(
+            wanted,
+            [
+                ("sysmain", "2"), ("pcasvc", "2"), ("dps", "2"), ("eventlog", "2"), ("wsearch", "2"), ("dusmsvc", "2"), ("bfe", "2"),
+                ("appinfo", "2"), ("schedule", "2"), ("dsmsvc", "2"), ("diagtrack", "2"), ("dcomlaunch", "2"), ("plugplay", "3"),
+                ("bam", "1"), ("dam", "1"), ("cdpusersvc", "2"),
+            ]
+        );
+        for svc in RBW_CHECKER {
+            assert!(wanted.iter().any(|(n, _)| *n == svc), "{svc} absent de la liste");
+        }
+        let at = |part: &str| on.find(part).unwrap_or_else(|| panic!("absent : {part}"));
+        // chaque CDPUserSvc_xxxx (suffixe propre à chaque session), lu dans le registre : la sortie de sc query est
+        // traduite (NOM_SERVICE sur un Windows en français)
+        at("get-childitem -path 'hklm:\\system\\currentcontrolset\\services' | where-object { $_.pschildname -like 'cdpusersvc_*' } | foreach-object { $services[$_.pschildname] = 2 }");
+        assert!(!on.contains("service_name"), "sortie de sc lue");
+        // 1. démarrage avec Windows : sc config, puis Set-Service, puis la valeur Start du registre ; WSearch en différé ;
+        //    Windows Search remis s'il a été retiré
+        let start_type = at("function set-start($name, $start)");
+        for part in [
+            "sc.exe config $name start= $mode | out-null",
+            "set-service -name $name -startuptype $type",
+            "set-itemproperty -path $key -name 'start' -value $start -type dword",
+            "set-itemproperty -path $key -name 'delayedautostart' -value 1 -type dword",
+            "enable-windowsoptionalfeature -online -featurename 'searchengine-client-package' -all -norestart",
+            "foreach ($name in @($services.keys)) { set-start $name $services[$name] }",
+        ] {
+            assert!(at(part) > start_type, "{part}");
+        }
+        // 2. services dont ils dépendent : désactivés, remis en manuel
+        let deps = at("function fix-dependencies($name)");
+        assert!(at("(get-service -name $name).servicesdependedon") > deps);
+        assert!(at("sc.exe config $d.name start= demand") > deps);
+        assert!(at("set-itemproperty -path $key -name 'start' -value 3 -type dword") > deps);
+        // 3. réglages lus par le vérificateur, et ce dont DPS a besoin pour démarrer
+        let settings = at("$sys = 'hklm:\\software\\policies\\microsoft\\windows\\system'");
+        for part in [
+            "foreach ($v in 'enableactivityfeed', 'publishuseractivities') { if ($null -ne (reg $sys $v)) { remove-itemproperty -path $sys -name $v",
+            "$ac = 'hklm:\\software\\policies\\microsoft\\windows\\appcompat'; if (test-path $ac) { remove-item -path $ac -recurse -force",
+            "if ((reg $adv 'start_trackdocs') -ne 1) { set-itemproperty -path $adv -name 'start_trackdocs' -value 1 -type dword",
+            "$cmd = 'hkcu:\\software\\policies\\microsoft\\windows\\system'; if ($null -ne (reg $cmd 'disablecmd')) { remove-itemproperty -path $cmd -name 'disablecmd'",
+            "if ((reg $sb 'enablescriptblocklogging') -eq 0) { remove-itemproperty -path $sb -name 'enablescriptblocklogging'",
+            "foreach ($v in 'enableprefetcher', 'enablesuperfetch') { if ((reg $pf $v) -ne 3) { set-itemproperty -path $pf -name $v -value 3 -type dword",
+            "foreach ($logger in 'diaglog', 'wdicontextlog') { $key = 'hklm:\\system\\currentcontrolset\\control\\wmi\\autologger\\' + $logger; if ((test-path $key) -and (reg $key 'start') -ne 1) { set-itemproperty -path $key -name 'start' -value 1 -type dword",
+            "$wdi = 'hklm:\\software\\policies\\microsoft\\windows\\wdi\\{9c5a40da-b965-4fc3-8781-88dd50a6299d}'; if ($null -ne (reg $wdi 'scenarioexecutionenabled')) { remove-itemproperty -path $wdi -name 'scenarioexecutionenabled'",
+        ] {
+            assert!(at(part) > settings, "{part}");
+        }
+        // 4. lancement : Start-Service, puis sc start, puis net start ; tous sauf le modèle CDPUserSvc et DAM
+        let launch = at("function start-one($name)");
+        for part in ["start-service -name $name", "sc.exe start $name | out-null", "net.exe start $name 2>&1 | out-null"] {
+            assert!(at(part) > launch, "{part}");
+        }
+        at("foreach ($name in @($services.keys) | where-object { $_ -notin 'cdpusersvc', 'dam' }) { start-one $name }");
+        // 5. ce que voit le vérificateur, lu comme lui ; 6. ce qui les recouperait au démarrage (rien n'est changé)
+        let report = at("$since = (get-date).addminutes(-30)");
+        let names = at("$names = @(") + "$names = @(".len();
+        let names = &on[names..names + on[names..].find(')').unwrap()];
+        assert_eq!(names.replace('\'', "").split(", ").collect::<Vec<_>>(), RBW_CHECKER, "services lus par le rapport");
+        assert!(at("$names += @(get-service | where-object { $_.name -match '^cdpusersvc_.+' }") > report);
+        assert!(at("if (test-path 'hklm:\\software\\policies\\microsoft\\windows\\appcompat') { $red++") > report);
+        for part in ["get-ciminstance -classname win32_service", "get-winevent", "servicespecificexitcode"] {
+            assert!(at(part) > report, "{part}");
+        }
+        let scan = at("get-scheduledtask");
+        // même ordre que le script validé
+        assert!(start_type < deps && deps < settings && settings < launch && launch < report && report < scan);
+        // cmd : lignes de moins de 8191 caractères ; dans le code PowerShell, ni « " » (fin de l'argument), ni « % »
+        // (variable de cmd), ni « ! » (retiré par EnableDelayedExpansion)
+        assert!(!on.contains('!') && !on.contains('%'));
+        let stages: Vec<&str> = on.lines().filter(|l| !l.starts_with("echo ")).collect();
+        assert_eq!(stages.len(), 6);
+        for l in stages {
+            assert!(l.len() < 8191, "ligne de {} caractères", l.len());
+            let code = l.strip_prefix("powershell -noprofile -noninteractive -executionpolicy bypass -command \"").and_then(|c| c.strip_suffix('"')).expect(l);
+            assert!(!code.contains('"'), "{code}");
+        }
+        // « Activé » lance toujours son script, même après « Désactivé » (pas la sauvegarde, qui ne démarre rien)
+        assert!(revert_runs_script("rbw_mode") && !revert_runs_script("game_mode"));
+        assert_eq!(revert_variant("rbw_mode").as_deref(), Some("on"));
+        assert!(PLAIN.scripts.get("rbw_mode").and_then(|e| e.get("on")).is_some(), "ouvert sans licence");
+    }
+
+    /// RBW Mod « Désactivé » : services et réglages comme Windows les règle, rien d'arrêté.
+    #[test]
+    fn rbw_mode_off_puts_windows_values_and_stops_nothing() {
+        let off = SCRIPTS["rbw_mode"]["off"].to_lowercase();
+        let lines: Vec<&str> = off.lines().map(str::trim).collect();
+        assert!(!off.contains("sc stop") && !off.contains("stop-service") && !off.contains("net stop") && !off.contains("disabled") && !off.contains('!'));
+        for (svc, mode) in [
+            ("sysmain", "auto"), ("pcasvc", "auto"), ("dps", "auto"), ("eventlog", "auto"), ("wsearch", "delayed-auto"), ("dusmsvc", "auto"),
+            ("bfe", "auto"), ("appinfo", "demand"), ("schedule", "auto"), ("dsmsvc", "demand"), ("diagtrack", "auto"), ("dcomlaunch", "auto"),
+            ("plugplay", "demand"), ("bam", "system"), ("dam", "system"),
+        ] {
+            assert!(lines.contains(&format!("sc config {svc} start= {mode} >nul 2>&1").as_str()), "{svc} pas en {mode}");
+        }
+        // les réglages lus par le vérificateur, comme « Activé »
+        for part in [
+            "reg delete \"hklm\\software\\policies\\microsoft\\windows\\system\" /v \"enableactivityfeed\" /f",
+            "reg delete \"hklm\\software\\policies\\microsoft\\windows\\appcompat\" /f",
+            "explorer\\advanced\" /v \"start_trackdocs\" /t reg_dword /d \"1\" /f",
+            "reg delete \"hkcu\\software\\policies\\microsoft\\windows\\system\" /v \"disablecmd\" /f",
+            "| find \"0x0\" >nul && reg delete \"hklm\\software\\policies\\microsoft\\windows\\powershell\\scriptblocklogging\" /v \"enablescriptblocklogging\" /f",
+            "/v \"enableprefetcher\" /t reg_dword /d \"3\" /f",
+            "autologger\\diaglog\" /v \"start\" /t reg_dword /d \"1\" /f",
+            "autologger\\wdicontextlog\" /v \"start\" /t reg_dword /d \"1\" /f",
+            "/v \"scenarioexecutionenabled\" /f",
+        ] {
+            assert!(off.contains(part), "« Désactivé » ne remet pas : {part}");
+        }
+        // les services que Windows démarre seul sont lancés, chaque CDPUserSvc_xxxx compris, en automatique comme son
+        // modèle (noms lus dans le registre, pas dans la sortie de sc, traduite)
+        let started = lines.iter().find(|l| l.starts_with("for %%s in (")).expect("services lancés");
+        for svc in ["sysmain", "pcasvc", "dps", "eventlog", "wsearch", "dusmsvc", "bfe", "bam"] {
+            assert!(started.split(['(', ')', ' ']).any(|s| s == svc), "{svc} pas lancé");
+        }
+        assert!(lines.iter().any(|l| l.contains("('reg query \"hklm\\system\\currentcontrolset\\services\" /k /f \"cdpusersvc_\" ^| find /i \"cdpusersvc_\"')")
+            && l.ends_with("do (reg add \"hklm\\system\\currentcontrolset\\services\\%%s\" /v \"start\" /t reg_dword /d \"2\" /f >nul & sc start %%s >nul 2>&1)")));
+        assert!(!off.contains("service_name"));
+    }
+
+    /// Ce qu'un réglage de l'app change dans ce que lit le vérificateur RBW (ou dans ce dont ses services ont besoin pour
+    /// démarrer) et que RBW Mod « Activé » ne remettrait pas. None : rien, ou « Activé » le remet.
+    fn rbw_gap(line: &str) -> Option<String> {
+        let mut l = line.to_lowercase().replace(['"', '\''], "");
+        for (a, b) in [("hkey_local_machine", "hklm"), ("hkey_current_user", "hkcu"), ("reg.exe", "reg"), ("sc.exe", "sc"), ("net.exe", "net"), ("start= ", "start=")] {
+            l = l.replace(a, b);
+        }
+        let l = l.split_whitespace().collect::<Vec<_>>().join(" ");
+        if l.is_empty() || l.starts_with("echo") || l.starts_with("rem ") || l.starts_with("::") {
+            return None;
+        }
+        let tk: Vec<&str> = l.split(|c: char| c.is_whitespace() || "\\(),;|&>".contains(c)).filter(|t| !t.is_empty()).collect();
+        if tk.is_empty() {
+            return None;
+        }
+        let after = |w: &str| tk.iter().position(|t| *t == w).and_then(|i| tk.get(i + 1)).copied();
+        let value = after("/v").or(after("-name"));
+        let reads = (tk[0] == "reg" && tk.get(1) == Some(&"query")) || tk[0] == "get-itemproperty";
+        // services : démarrage et état seulement, « Activé » remet le démarrage voulu puis les lance
+        let svc = RBW_CHECKER.iter().find(|s| tk.contains(s)).copied().or(tk.iter().find(|t| t.starts_with("cdpusersvc")).copied());
+        if let Some(svc) = svc.filter(|_| tk.contains(&"sc") || tk.contains(&"net") || l.contains("-service") || l.contains("services\\")) {
+            let ok = if l.contains("services\\") {
+                reads || matches!(value, Some("start" | "delayedautostart"))
+            } else if tk.contains(&"sc") {
+                match after("sc") {
+                    Some("stop" | "start" | "query" | "qc") => true,
+                    Some("config") => tk.iter().skip_while(|t| **t != "config").filter(|t| t.contains('=')).all(|t| t.starts_with("start=")),
+                    _ => false,
+                }
+            } else if tk.contains(&"net") {
+                matches!(after("net"), Some("stop" | "start"))
+            } else {
+                ["stop-service", "start-service", "get-service"].iter().any(|c| l.contains(c))
+                    || (l.contains("set-service") && (l.contains("-startuptype") || l.contains("-status")) && !l.contains("-securitydescriptor"))
+            };
+            if !ok {
+                return Some(format!("service {svc}"));
+            }
+        }
+        // valeurs : « Activé » enlève les stratégies, la clé AppCompat, remet Start_TrackDocs, le Prefetcher, les journaux
+        // de DPS (Start) ; une autre valeur de ces journaux ou du scénario WDI, ou la clé entière, n'est pas remise
+        for key in ["autologger\\diaglog", "autologger\\wdicontextlog"] {
+            if l.contains(key) && !reads && value != Some("start") {
+                return Some(key.to_string());
+            }
+        }
+        if l.contains("wdi\\{9c5a40da-b965-4fc3-8781-88dd50a6299d}") && !reads && value != Some("scenarioexecutionenabled") {
+            return Some("WDI".into());
+        }
+        None
+    }
+
+    /// Garde pour les réglages à venir : ce qu'un autre réglage coupe parmi ce que lit le vérificateur RBW, RBW Mod
+    /// « Activé » le remet (relevé du 2026-10-13 : win_services, dbl_autologgers, exp_autologgers, sys_registry,
+    /// win_audit, win_telemetry, win_tracking, dbl_telemetry, hitreg_suite, in_advanced, win_feed, sys_csrss, win_diag).
+    /// Un nouveau réglage qui coupe autrement un de ces éléments fait échouer ce test : le remettre dans tools/rbw.py
+    /// (« Activé », comme le script validé), ou ne pas le couper.
+    #[test]
+    fn rbw_mode_puts_back_what_other_tweaks_turn_off() {
+        let mut touched = std::collections::BTreeSet::new();
+        for (id, variants) in SCRIPTS.iter().filter(|(id, _)| id.as_str() != "rbw_mode") {
+            for (v, s) in variants {
+                for l in s.lines() {
+                    assert_eq!(rbw_gap(l), None, "{id}:{v} : le RBW Mod ne remet pas : {l}");
+                    let low = l.to_lowercase();
+                    if ["enableactivityfeed", "appcompat", "start_trackdocs", "enableprefetcher", "autologger\\diaglog", "wdicontextlog", "sc config wsearch"]
+                        .iter()
+                        .any(|p| low.contains(p))
+                    {
+                        touched.insert(id.as_str());
+                    }
+                }
+            }
+        }
+        // la garde voit bien les réglages qui coupent ces éléments aujourd'hui
+        for id in ["win_services", "dbl_autologgers", "sys_registry", "win_telemetry", "dbl_telemetry", "hitreg_suite", "in_advanced"] {
+            assert!(touched.contains(id), "{id}");
+        }
+        // et elle refuse ce que « Activé » ne remet pas
+        for l in [
+            "sc delete SysMain",
+            "sc.exe sdset DPS D:(D;;GA;;;WD)",
+            "sc config WSearch depend= RpcSs/NoSuchService",
+            "reg delete \"HKLM\\SYSTEM\\CurrentControlSet\\Services\\bam\" /f",
+            "Reg.exe add \"HKLM\\SYSTEM\\CurrentControlSet\\Services\\PcaSvc\" /v \"ImagePath\" /t REG_EXPAND_SZ /d \"x\" /f",
+            "Set-ItemProperty -Path 'HKLM:\\SYSTEM\\CurrentControlSet\\Services\\CDPUserSvc' -Name UserServiceFlags -Value 0",
+            "Remove-Item -Path 'HKLM:\\SYSTEM\\CurrentControlSet\\Services\\EventLog' -Recurse",
+            "reg delete \"HKLM\\SYSTEM\\CurrentControlSet\\Control\\WMI\\Autologger\\DiagLog\" /f",
+            "reg add \"HKLM\\SOFTWARE\\Policies\\Microsoft\\Windows\\WDI\\{9c5a40da-b965-4fc3-8781-88dd50a6299d}\" /v \"EnabledScenarioExecutionLevel\" /t REG_DWORD /d \"1\" /f",
+        ] {
+            assert!(rbw_gap(l).is_some(), "pas vu : {l}");
+        }
+        for l in [
+            "sc config DPS start= disabled",
+            "for %%s in (SysMain WSearch) do sc stop %%s >nul 2>&1",
+            "net stop bfe /y",
+            "Set-Service -Name DusmSvc -StartupType Disabled",
+            "reg add \"HKLM\\SYSTEM\\CurrentControlSet\\Services\\bam\" /v \"Start\" /t REG_DWORD /d \"4\" /f",
+            "reg add \"HKLM\\SYSTEM\\CurrentControlSet\\Control\\WMI\\Autologger\\WdiContextLog\" /v \"Start\" /t REG_DWORD /d \"0\" /f",
+            "reg add \"HKLM\\SOFTWARE\\Microsoft\\DusmSvc\\Settings\" /v \"DisableSystemBucket\" /t REG_DWORD /d \"1\" /f",
+        ] {
+            assert_eq!(rbw_gap(l), None, "{l}");
+        }
+    }
+
     #[test]
     fn free_plan() {
         assert!(allowed("in_mouse", None, false) && allowed("rst_point", None, false) && allowed("__wmic", None, false));
@@ -649,6 +1323,38 @@ mod tests {
         assert!(probe("net_nagle", None, Some(&b)).unwrap().contains("@@RAGO reg"));
         assert!(is_switch("net_nagle") && !is_switch("rst_point") && !is_switch("__wmic"));
         assert_eq!(revert_variant("ping_hitreg").as_deref(), Some("default"));
+    }
+
+    /// RAG-65 : toute désinstallation d'applis du Store se remet. Le réglage est une case (relevé et annulation), son
+    /// relevé note les applis visées et le catalogue garde leur liste pour l'annulation sans relevé.
+    #[test]
+    fn store_app_removals_can_be_undone() {
+        let b = premium(&test_key()).unwrap();
+        let mut seen = Vec::new();
+        for (id, vs) in SCRIPTS.iter() {
+            for (v, body) in vs {
+                if !body.to_lowercase().contains("remove-appxpackage") {
+                    continue;
+                }
+                seen.push(id.as_str());
+                assert!(is_switch(id), "{id} : une case, pas une action ponctuelle");
+                assert!(!apps_of(id).is_empty(), "{id} : liste des applis dans le catalogue");
+                let p = probe(id, Some(v), Some(&b)).or_else(|| probe(id, None, Some(&b))).unwrap();
+                for app in apps_of(id) {
+                    assert!(p.contains(&format!("@@RAGO appx \"{app}\"")), "{id} : relevé de {app}");
+                }
+                assert!(!body.to_lowercase().contains("remove-appxprovisionedpackage"), "{id} : l'image garde le paquet");
+            }
+        }
+        seen.sort();
+        seen.dedup();
+        assert_eq!(seen, vec!["app_remove", "dbl_cortana", "win_apps", "win_services"]);
+        assert!(apps_of("app_remove").iter().any(|a| a == "*Microsoft.WindowsCamera*"));
+        assert_eq!(apps_of("app_remove"), apps_of("win_apps"), "jumeaux");
+        for id in FORMER_ACTIONS {
+            assert!(is_switch(id) && !apps_of(id).is_empty(), "{id}");
+        }
+        assert!(apps_of("net_nagle").is_empty());
     }
 
     const RAGO_PLAN: &str = "7c4e2a51-3b9d-4f7e-9a62-5d18c0f3b6a4";

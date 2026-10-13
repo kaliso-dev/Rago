@@ -415,7 +415,20 @@ Corrections ciblées (`SCRIPT_FIXES`, `DROP_LINES`) :
 Profils exclusifs découpés en variantes (ils s'exécutaient tous à la suite) : ping_hitreg (6 profils dont Default),
 ping_packets (Hitreg, QoS, Knockback), ping_main (Config 1 à 4), sys_ram (selon la RAM).
 
-RBW Mod « On » remet aussi BAM, DAM et le Prefetcher (actifs après redémarrage, demandé par l'app pour cette variante).
+RBW Mod (RAG-69, réécrit le 2026-10-13, `tools/rbw.py`) : « On » fait ce que fait Rago-RBW-Fix.ps1, le script validé
+par Sofiene sur son PC, dans le même ordre, une ligne PowerShell par étape : démarrage avec Windows de SysMain, PcaSvc,
+DPS, EventLog, WSearch, DusmSvc, BFE, Appinfo, Schedule, DsmSvc, DiagTrack, DcomLaunch, PlugPlay, BAM, DAM, CDPUserSvc
+et de chaque CDPUserSvc_xxxx (sc config, puis Set-Service, puis la valeur Start du registre ; Windows Search remis s'il
+a été retiré) ; services dont ils dépendent remis en manuel s'ils sont désactivés ; réglages lus par le vérificateur
+officiel de RBW (historique d'activités, clé de stratégies AppCompat, listes de raccourcis, CMD, journal PowerShell,
+Prefetch), journaux DiagLog et WdiContextLog et stratégie WDI sans lesquels DPS ne démarre pas ; lancement de chaque
+service (Start-Service, sc start, net start) ; ce que voit le vérificateur, avec le code et le message de Windows pour
+ce qui reste arrêté ; tâches planifiées et programmes de démarrage qui les recouperaient (lecture seule) ; verdict.
+« On » lance toujours ce script, même après « Off » (`catalog::revert_runs_script`) : la sauvegarde d'avant « Off »
+ne démarrait aucun service. « Off » remet ces services et réglages comme Windows les règle (Appinfo, DsmSvc et
+PlugPlay en manuel) et lance ceux que Windows lance de lui-même, sans rien arrêter ; l'ancien « Off » arrêtait SysMain
+et DiagTrack. Le RBW Mod ne garde pas de sauvegarde (rien à remettre) : les réglages qui coupent ces éléments gardent
+la leur et affichent « Changé par Windows » après le RBW Mod.
 
 Les actions lourdes ne sont pas retirées (choix de Sofiene, « tout garder ») : `WARNINGS` les détecte dans chaque
 script (Spectre, Defender, SmartScreen, UAC, pare-feu, IFEO, BAM, Prefetch…), écrit l'avertissement « Read this first »
@@ -437,7 +450,8 @@ Audit ligne par ligne du 2026-10-07 (rapport : /mnt/project-files/audit/audit-co
 - wmic, absent par défaut de Windows 11 24H2, est remplacé par PowerShell (Get-CimInstance) dans 21 réglages
   (`WMIC_SUBS`) ;
 - actions ponctuelles (bouton, plus case) : sto_defrag, win_apps, app_remove, dbl_edge, nv_debloat, cpu_ppm,
-  usb_controller (`ONE_SHOT`) ;
+  usb_controller (`ONE_SHOT`) ; win_apps et app_remove redeviennent des cases avec RAG-65 (2026-10-13) : les applis
+  du Store sont relevées avant et réenregistrées au retour ;
 - `DROP_LINES` accepte « id:variante ».
 
 Annulation : src-tauri/scripts/undo.json, généré à chaque build par tools/undo (undo_gen.py et defaults.py de
@@ -449,7 +463,7 @@ par réglage appliqué, pour annuler après une déconnexion ou une fin de licen
 
 # Réglages risqués retirés (1.1.8)
 
-Demande de Sofiene (2026-10-08) : `tools/safety.py`. 16 réglages quittent le catalogue, les profils et le plan gratuit. Il reste 212 entrées au catalogue, soit 199 réglages distincts : les 13 autres lancent les mêmes commandes qu'un autre réglage, sous un autre nom ou dans un autre module (champ `twin`), et c'est ce nombre distinct que l'app et le site annoncent. Leur annulation reste dans undo.json : sur un PC où une version précédente les a appliqués, le tableau de bord propose de les remettre comme avant.
+Demande de Sofiene (2026-10-08) : `tools/safety.py`. 17 réglages quittent le catalogue, les profils et le plan gratuit. Il reste 211 entrées au catalogue, soit 198 réglages distincts : les 13 autres lancent les mêmes commandes qu'un autre réglage, sous un autre nom ou dans un autre module (champ `twin`), et c'est ce nombre distinct que l'app et le site annoncent. Leur annulation reste dans undo.json : sur un PC où une version précédente les a appliqués, le tableau de bord propose de les remettre comme avant.
 
 - `win_mitigations` : Il coupait les protections Spectre et Meltdown.
 - `win_coreiso` : Couper l'intégrité de la mémoire baisse la protection de ton PC contre les pilotes malveillants.
@@ -467,6 +481,7 @@ Demande de Sofiene (2026-10-08) : `tools/safety.py`. 16 réglages quittent le ca
 - `dbl_edge` : Supprimer Edge ne s'annule pas depuis l'app et peut casser des fonctions de Windows qui s'en servent.
 - `dbl_onedrive` : Il supprimait les dossiers OneDrive du PC : les fichiers pas encore synchronisés étaient perdus.
 - `mem_prefetch` : Les applis s'ouvraient plus lentement, et sur un screenshare un Prefetch vide peut ressembler à des traces effacées.
+- `pow_timer` : Il mettait à 0 une valeur du noyau par laquelle Windows divise : sur certains PC (Windows 11 24H2), écran bleu quelques minutes après le démarrage, sans gain mesurable.
 
 Lignes risquées retirées des packs qui les cachaient (le pack reste) :
 
@@ -488,6 +503,7 @@ Lignes risquées retirées des packs qui les cachaient (le pack reste) :
 - GPU recovery (TDR) : nv_tdr
 - AMD thermal limits : amd_advanced, amd_thermal
 - DPC watchdog : exp_kernel
+- CoalescingTimerInterval (blue screen) : amd_advanced, gpu_amd, gpu_general, gpu_nvidia, hitreg_suite, pow_main, pow_throttling, pow_timer
 - cache flush : sto_cacheprot
 - Recycle Bin : sto_general
 - Prefetch off : hitreg_suite, in_advanced, mem_prefetch, mem_profile, sys_ram
@@ -499,9 +515,63 @@ Lignes risquées retirées des packs qui les cachaient (le pack reste) :
 - net_server (préréglages 1 et 2) : remise à zéro de la pile réseau (IP fixe et DNS manuels perdus) ;
 - app_remove, win_apps : Pense-bêtes gardé (notes non synchronisées perdues) ;
 - cpu_advanced, cpu_registry : veto de la veille moderne et politique d'alimentation XP (audit D22, motif sur le chemin de la clé) ;
-- win_gamedvr : la ligne qui réautorisait Game DVR juste après l'avoir coupé.
+- win_gamedvr : la ligne qui réautorisait Game DVR juste après l'avoir coupé ;
+- gpu_nvidia, gpu_amd, gpu_general, nv_general, amd_general (2026-10-10) : MPO (`OverlayTestMode`) et préemption du GPU coupés sans le dire dans des packs Safe. Ils restent dans nv_preemption, nv_advanced et amd_advanced (Advanced).
 
 Point de restauration (1.1.8) : la case de 1.1.6 revient. Elle est cochée d'office seulement pour un réglage `restore` (avancé, ou que l'app ne remet pas entièrement) et si Rago n'en a pas créé un réussi dans les 24 dernières heures.
+
+
+# Cohérence des scripts et des textes (1.1.9)
+
+Worker « textes-scripts », 2026-10-13 : `tools/coherence.py` et `tools/descriptions.json`. Sources : Linear RAG-60
+(§4 et §5), RAG-27 et les « Points relevés sans correction » de l'audit du 2026-10-07. Les scripts d'avant restent dans
+undo.json : un PC qui les a lancés retrouve aussi les valeurs des lignes changées ici.
+
+**Carte graphique visée**
+- nv_accel, nv_contig, nv_kboost, gpu_nvidia, amd_general, amd_power, amd_memsleep, amd_delag, gpu_amd écrivaient
+  dans `Class\{4d36e968…}\0000`, souvent la puce intégrée d'un portable à deux cartes. Le script cherche une fois les
+  clés dont `MatchingDeviceId` est du bon fabricant (`ven_10de` NVIDIA, `ven_1002` AMD) et n'écrit que là. Une seule
+  carte : même clé qu'avant. Aucune carte du fabricant : rien n'est écrit.
+- gpu_amd : `%REGPATH_AMD%` (la dernière clé trouvée) remplacé de la même façon.
+- nv_msi, gpu_nvidia, gpu_amd : mode MSI seulement sur les cartes du bon fabricant.
+- gpu_nvidia : trois boucles cassées retirées (`echo %w%-` écrivait dans `Control\Class\-`) ; les boucles juste
+  au-dessus font déjà ce travail. La ligne qui coupait la préemption des cartes AMD (`KMD_EnableComputePreemption`,
+  souvent l'iGPU d'un portable Ryzen) quitte ce pack NVIDIA.
+
+**Valeurs**
+- nv_kboost : `PerfLevelSrc` 2222 → 8738 (0x2222, comme nv_powermizer).
+- amd_power : « Disable Clock Gating » posait 1 ; maintenant 0.
+- pow_windows : `EnergyEstimationEnabled` 1 → 0 (le script posait aussi `EnergyEstimationDisabled` 1).
+- gpu_amd : texte parasite collé à une commande (`%b%╚═…`) retiré.
+- dbl_telemetry, win_telemetry : tâche Office `\Microsoftd\` → `\Microsoft\`.
+- dbl_cortana : `DisableWebSearch` 0 → 1, comme « Recherche Windows sans le web ».
+- win_services : `AllowNewsAndInterests` sous `Policies\Microsoft\Dsh`, comme win_feed.
+- hitreg_suite : `Disable-ScheduledTask` (PowerShell lancé par cmd, sans effet) → `schtasks /change … /disable`.
+- ping_packets et net_profile, profil QoS : « Do not use NLA » = "1" ajouté (sinon Windows ignore le marquage hors
+  domaine d'entreprise), `DSCP Value` en texte "46" et `Throttle Rate` "-1", comme les écrit Windows.
+- ping_main:config3 : propriétés de la carte par `-RegistryKeyword` (toutes langues) au lieu du nom anglais ; Jumbo
+  Packet 0 (valeur refusée) devient 1514 (désactivé, comme plus bas), doublons retirés.
+- win_fullscreen : `DirectXUserGlobalSettings` fusionné au lieu d'écrasé (Auto HDR gardé).
+- net_affinity, in_adapter, ping_main:config4 : l'épinglage sur le processeur n°2 seulement avec 4 processeurs
+  logiques ou plus.
+
+**Lignes retirées**
+- hitreg_suite : `AlwaysOn` 1 et `DisableTaskOffload` 1 (défaits plus bas), mode jeu (affaire de win_gamemode),
+  compression mémoire (affaire de « Profil mémoire »), `HibernateEnabled` 0.
+- in_advanced : `HibernateEnabled` 0, mode jeu.
+- win_gamedvr : `GameDVR_FSEBehaviorMode` 1 et `GameDVR_HonorUserFSEBehaviorMode` 1 (contraires de win_fullscreen).
+- exp_io : `ntoskrnl.exe` et `WOW6432Node` (sans effet).
+- ping_packets, net_profile, net_advanced : `netsh int tcp set global` refusés par Windows 10 et 11 (chimney, netdma,
+  minrto, congestionprovider…) ; net_advanced : `SackOpts` 0.
+
+**Catalogue**
+- Redémarrage : net_ipv6, in_mouse, in_keyboard ; net_profile (Knockback et QoS, pas Hitreg).
+- Noms : mem_superfetch « Désactiver Superfetch (ancien réglage) », net_ipv6 « Préférer l'IPv4 à l'IPv6 ».
+- exp_smb : l'avertissement dit aussi que le PC n'ouvre plus les partages des vieux NAS.
+- Textes (descriptions.json) : ping_hitreg, net_adapter, net_powersave, net_advanced, hitreg_suite, in_advanced,
+  gpu_nvidia, nv_general, nv_kboost, mc_optifine, exp_smb, win_telemetry, win_optimize, win_services, win_ai,
+  dbl_telemetry, sys_bcdedit, pow_main, pow_throttling, pow_windows, win_fullscreen, net_affinity, in_adapter.
+- Point de restauration (runner.rs) : la limite d'un point par 24 h est levée le temps de le créer, puis remise.
 
 # Plan d'alimentation Rago Low Latency (1.1.9)
 
@@ -525,3 +595,60 @@ Corrigé par le script à l'import (`audit_fixes.py`, sur secteur) :
 
 L'annulation réactive le plan d'avant (relevé `pwractive`) puis supprime le plan Rago. Le test
 `rago_power_plan_imports_on_windows` importe le vrai fichier sur la CI Windows sous un GUID de test.
+
+# Écran bleu au démarrage, préréglage réseau 3, journal du Mode jeu (2026-10-13)
+
+Signalés par des joueurs (RAG-66, RAG-67, RAG-68).
+
+**RAG-67, écran bleu 0x7E quelques minutes après le démarrage (Windows 11 24H2).** `CoalescingTimerInterval` n'est pas
+documentée par Microsoft. Le noyau la lit au démarrage sous `HKLM\SYSTEM\CurrentControlSet\Control` et s'en sert comme
+diviseur : à 0, exception c0000094 (division entière par zéro), écran bleu 0x7E. Huit réglages la mettaient à 0 dans
+huit clés : `pow_main`, `pow_timer`, `hitreg_suite` (huit clés chacun), `pow_throttling`, `gpu_nvidia`, `gpu_amd`,
+`gpu_general` et `amd_advanced` (clé `Control\Power`). `pow_main` et les packs graphiques sont des réglages Safe : décocher
+les réglages Advanced ne suffisait pas.
+- `safety.py` : la ligne part de tous les scripts (`DROP_EVERYWHERE`) ; `pow_timer`, qui ne faisait que ça, est retiré
+  (`RETIRED`), son annulation reste.
+- `src-tauri/src/repair.rs` : à chaque lancement, l'app supprime la valeur là où elle vaut 0 dans ces huit clés, sans
+  rien demander (elle tourne en administrateur) ; Windows reprend sa valeur interne au démarrage suivant. Une valeur
+  différente de 0 n'est pas touchée. Chaque suppression est notée dans `logs\repairs.log`. Le registre des réglages
+  (`applied.json`) ne remet jamais 0 en annulant, et n'affiche pas « Changé par Windows » pour ces valeurs.
+- Les annulations (`undo.json`) suppriment toujours la valeur ; le test `kernel_timer_value_stays_out` vérifie qu'aucun
+  script ni relevé ne l'écrit, qu'aucune annulation ne la remet, et que chaque clé nettoyée est aussi réparée au
+  lancement. La valeur par processus de `pri_game` (Image File Execution Options du jeu) n'est pas concernée.
+
+**RAG-68, préréglage réseau 3 (`net_server:s3`) toujours en échec.** La boucle du mode MSI était restée vide
+(`… do set "str=%%i" & (` puis `)`) : cmd refuse un bloc vide (« ) was unexpected at this time. ») et s'arrêtait là, sans
+lancer TCPNoDelay, TcpAckFrequency, TcpDelAckTicks ni les priorités DNS qui suivaient. La boucle part avec son
+commentaire (`audit_fixes.py`, `DROP_BLOCKS`). Le même défaut cassait cinq relevés (`probes.py` : un bloc dont toutes
+les lignes étaient des `echo` devenait vide) : `hitreg_suite` (les quatre variantes) ne relevait rien du tout, et son
+annulation ne remettait aucune valeur ; au lancement, l'app le repasse au retour par les valeurs de Windows
+(`repair.rs`). Ceux de `ping_main:config3`, `sys_registry` et `net_restart` s'arrêtaient après leur dernier élément :
+rien de perdu, mais ils échouaient. Le
+test `every_script_has_well_formed_blocks` lit tous les scripts, relevés et annulations comme cmd lit un bloc.
+
+**RAG-66, journal du Mode jeu.** Rien n'échouait, mais vider `%temp%` affichait « The process cannot access the file… »
+et « Access is denied. » (fichiers ouverts), arrêter le spouleur déjà arrêté « NET HELPMSG 3521 », et taskkill
+« SUCCESS: … explorer.exe … terminated ». `build_catalog_v6.py`, table `QUIET` : ces commandes se taisent dans
+`game_mode` et `in_windows`, « net stop Spooler » ne se lance que si `sc query` le voit tourner, et `%temp%` passe entre
+guillemets (avec un espace dans le chemin, `del /s` visait le premier morceau). Les autres lignes gardent leurs erreurs.
+Test `temp_cleaning_stays_quiet`.
+
+# Applis du Store remises par l'annulation (RAG-65, 2026-10-13)
+
+« Supprimer les applis préinstallées » (app_remove) et « Supprimer les applis inutiles » (win_apps) redeviennent des
+cases : avant le script, l'app relève les applis du Store installées pour le joueur qui correspondent à chaque ligne
+`Get-AppxPackage … | Remove-AppxPackage` (relevé `appx`, tools/probes.py : nom, famille et dossier du paquet). Éteindre
+le réglage les réenregistre sans réseau (`Add-AppxPackage -Register …\AppxManifest.xml -DisableDevelopmentMode`, puis
+le même paquet gardé par Windows pour un autre compte ou dans l'image, puis `-RegisterByFamilyName`). Même chose pour
+Cortana (dbl_cortana, win_services) et le fournisseur Copilot (win_services).
+
+Ce qui marche : les scripts ne retirent les applis que pour le compte du joueur (`Remove-AppxPackage`, jamais
+`Remove-AppxProvisionedPackage`) ; Windows garde donc leur paquet et elles reviennent, hors ligne, sous Windows 10
+comme 11. Ce qui ne revient pas : une appli que Windows a retirée du PC depuis (mise à jour de Windows qui ne la livre
+plus, paquet effacé) ; elle est nommée dans le journal, à réinstaller depuis le Microsoft Store. Les autres comptes du
+PC (lignes `-allusers`) ne sont pas relevés.
+
+Sans relevé (réglage lancé comme action ponctuelle par une version d'avant, noté appliqué d'après l'historique ; ou
+appliqué avant ce relevé), l'annulation remet les applis de la liste du réglage (champ `apps` du catalogue) que
+Windows garde encore. Les contre des deux réglages conseillent de lancer la Restauration du système depuis l'écran de
+récupération : depuis Windows, elle peut échouer sur AppRepository (0x80070301) après une suppression d'applis.

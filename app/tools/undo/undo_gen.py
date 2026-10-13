@@ -90,6 +90,12 @@ ReduceSpeedOnPowerDown RxAbsIntDelay S5NicKeepOverrideMacAddrV2 S5WakeOnLan TCPC
 TCPChecksumOffloadIPv6 TransmitBuffers TxAbsIntDelay TxIntDelay UDPChecksumOffloadIPv4 UDPChecksumOffloadIPv6 ULPMode
 WakeOnDisconnect WakeOnLink WolShutdownLinkSpeed *NicAutoPowerSaver AlternateSemaphoreDelay MIMOPowerSaveMode'''.split()}
 
+# Carte graphique visée par tools/coherence.py (« for %%G in (!rago_gpu!) do reg add "%%G…" ») : la clé de chaque carte
+# du bon fabricant. Ses valeurs de Windows sont celles de la clé « …\0000 » des anciens scripts (defaults.py) ; sans
+# ça, full ne remettait que « …\0000 », et laissait les valeurs de la carte NVIDIA d'un portable (souvent « …\0001 »).
+GPU_KEY = r'HKLM\SYSTEM\CurrentControlSet\Control\Class\{4d36e968-e325-11ce-bfc1-08002be10318}\0000'
+GPU_LOOP = re.compile(r'(?i)\bfor\s+%%([a-z])\s+in\s+\(\s*!rago_gpu!\s*\)\s+do\b')
+
 LOG = collections.defaultdict(set)
 
 
@@ -112,6 +118,7 @@ class Ctx:
         self.mm = []
         self.hib = False
         self.same = 0
+        self.gpu = set()  # variables des boucles sur !rago_gpu! (« %%g »)
 
     def add(self, lst, x):
         lst = getattr(self, lst)
@@ -248,7 +255,8 @@ def h_reg(raw, c, args, low):
         return None
 
     vflag = f'/v "{esc(name)}"' if name else '/ve'
-    bare = re.fullmatch(r'(%%[a-z]|![a-z_]+!|%[a-z_]+%)(\\device|\\device parameters\\disk)?', nk) is not None
+    gpu = next((g for g in C.gpu if nk == g or nk.startswith(g + '\\')), None)
+    bare = not gpu and re.fullmatch(r'(%%[a-z]|![a-z_]+!|%[a-z_]+%)(\\device|\\device parameters\\disk)?', nk) is not None
     if bare and name.lower() in NIC_NAMES:
         C.add('nic_kw_reg', name)
     if re.search(r'\\control\\power$', nk) and name.lower() == 'hibernateenabled':
@@ -257,7 +265,7 @@ def h_reg(raw, c, args, low):
             C.reversible = True
         return None
     a = BARE.get(name.lower()) if bare and name else None
-    a = a or DF.lookup(key, name or '(default)')
+    a = a or DF.lookup(GPU_KEY + k[len(gpu):] if gpu else key, name or '(default)')
     kind = a[0]
     if kind == 'svc':
         return svc_reg(key, name, data)
@@ -554,7 +562,13 @@ def h_powershell(raw, c, args, low):
     tl = t.lower()
     if 'remove-appxpackage' in tl:
         m = re.search(r'(?i)Get-AppxPackage\s+(?:-allusers\s+)?\*?([^*|"}]+)\*?', t)
-        gone(f'application {m.group(1).strip() if m else "?"} désinstallée (réinstallable depuis le Microsoft Store)')
+        name = m.group(1).strip() if m else "?"
+        # l'app relève les applis installées avant (relevé « appx ») et les réenregistre au retour, ou, sans relevé,
+        # celles de la liste que Windows garde encore (champ `apps` du catalogue) ; une appli que Windows a retirée
+        # du PC (mise à jour de Windows, paquet effacé) ne revient que depuis le Microsoft Store
+        backup(f'application {name}', "réenregistrée par l'app tant que Windows garde son paquet")
+        gone(f'application {name} désinstallée : réenregistrée au retour tant que Windows garde son paquet, '
+             f'sinon à réinstaller depuis le Microsoft Store')
         return None
     if 'image file execution options' in tl and 'remove-item' in tl:
         gone("TOUTES les options d'exécution des programmes (IFEO) effacées : seule une sauvegarde reg export les remet")
@@ -606,16 +620,18 @@ def h_powershell(raw, c, args, low):
         if v.lower() == d.lower():
             return None
         return both(f'{PS} "Set-NetTCPSetting -SettingName Internet -{m.group(2)} {d} -ErrorAction SilentlyContinue"{R}')
-    m = re.search(r"(?i)-displayname\s+'([^']+)'\s*\|\s*set-netadapteradvancedproperty", t)
+    m = re.search(r"(?i)-(displayname|registrykeyword)\s+'([^']+)'\s*\|\s*set-netadapteradvancedproperty", t)
     if m:
-        kw = NIC_KW.get(m.group(1).lower())
+        # par mot-clé du registre (ping_main:config3 depuis 1.1.9) ou par nom affiché anglais
+        kw = m.group(2) if m.group(1).lower() == 'registrykeyword' else NIC_KW.get(m.group(2).lower())
         if kw:
             C.add('nic_kw', kw)
         else:
-            LOG['nic displayname ' + m.group(1)].add(C.where)
+            LOG['nic displayname ' + m.group(2)].add(C.where)
         C.reversible = True
-        note('propriétés de la carte réseau choisies par leur nom anglais : sans effet sur un Windows dans une autre '
-             'langue ; l\'annulation passe par le mot-clé du registre (toutes langues)')
+        if m.group(1).lower() == 'displayname':
+            note('propriétés de la carte réseau choisies par leur nom anglais : sans effet sur un Windows dans une autre '
+                 'langue ; l\'annulation passe par le mot-clé du registre (toutes langues)')
         return None
     if re.search(r'(?i)set-processmitigation\s+-system', t):
         # in_windows jusqu'à 1.1.7 coupait TOUTES les protections (Set-ProcessMitigation -System -Disable, sans
@@ -968,8 +984,12 @@ def epilogue(ctx):
 def run(body, mode, where):
     global C
     C = Ctx(mode, where)
+    C.gpu = {'%%' + g.lower() for g in GPU_LOOP.findall(body)}
     # « ) > nul » ferme un bloc : la redirection ne doit pas en faire une commande
     body = re.sub(r'(?m)^(\s*\))\s*\d?>\s*nul\s*(2>&1)?\s*$', r'\1', body)
+    # garde « assez de processeurs » (tools/coherence.py) : elle protège l'application, pas l'annulation, qui retire
+    # les valeurs sur tous les PC (un PC passé par un script sans garde les a peut-être)
+    body = re.sub(r'(?im)^(\s*)if %NUMBER_OF_PROCESSORS% GEQ \d+ ', r'\1', body)
     text = P.dry_script(body)
     return finish(text, epilogue(C)), C
 

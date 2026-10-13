@@ -57,6 +57,10 @@ DROP_BLOCKS = [
     # « Scaling » à 1 sur toutes les configurations d'écran (!str! sans expansion retardée : condition toujours vraie) :
     # les résolutions étirées (4:3 étiré) passent en bandes noires
     (('gpu_general',), r'/f Scaling\'\) do set "str=%%i"', r'^\s*\)\s*$'),
+    # RAG-68 (2026-10-13) : boucle du mode MSI restée vide (« & ( » puis « ) ») depuis la réparation des boucles
+    # détachées ; ses deux commandes étaient hors de la boucle (retirées plus bas). cmd refuse un bloc vide (« ) was
+    # unexpected at this time. ») et arrêtait le préréglage 3 là : la boucle part avec son commentaire
+    (('net_server:s3',), r'^::\s*Enabling MSI Mode On Network Adapter\s*$', r'^\s*\)\s*$'),
 ]
 
 # ---------------------------------------------------------------------------------------------------------------
@@ -94,8 +98,9 @@ DROP_LINES_PLUS = [
     (('net_server:s1', 'net_server:s2'), r'/v\s+IPEnableRouter\s+/t\s+REG_DWORD\s+/d\s+1\b'),
     # plafond de connexions TCP (navigateur + launcher + Discord peuvent le dépasser)
     (('ping_packets:hitreg', 'ping_packets:knockback', 'net_server:s1', 'net_server:s2'), r'/v\s+TcpNumConnections\s'),
-    # boucle wmic vide, puis %%i utilisé hors boucle : écrit sous « Enum\%i »
-    (('net_server:s3',), r'Enum\\%%i\\'),
+    # boucle wmic vide, puis %%i utilisé hors boucle : écrit sous « Enum\%i » (la boucle vide part dans DROP_BLOCKS,
+    # avec les commentaires de ces deux lignes)
+    (('net_server:s3',), r'Enum\\%%i\\|^::\s*(Delete network Device Priority|Enable MSI Mode on NetAdapter)\s*$'),
     # « netsh int ipv6 set state » n'existe pas (aucun effet) ; net_ipv6 est réparé plus bas
     (('ping_main:config4', 'ping_advanced'), r'^\s*netsh\s+int\s+ipv6\s+set\s+state\s+disabled'),
 

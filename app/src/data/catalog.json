@@ -95,7 +95,7 @@
         "fr": "Effet rarement mesurable : le hitreg est calculé par le serveur et dépend surtout de ton ping."
        },
        "cons": {
-        "en": "Any profile other than Max hitreg or Default can slow down large downloads.",
+        "en": "Any profile other than Best hitreg or Default can slow down large downloads.",
         "fr": "Les profils autres que « Hitreg maximal » et « Par défaut » peuvent ralentir les gros téléchargements."
        }
       },
@@ -123,7 +123,7 @@
           "en": "Hitreg",
           "fr": "Hitreg"
          },
-         "lines": 59
+         "lines": 45
         },
         {
          "id": "qos",
@@ -131,7 +131,7 @@
           "en": "QoS",
           "fr": "QoS"
          },
-         "lines": 26
+         "lines": 27
         },
         {
          "id": "knockback",
@@ -139,11 +139,11 @@
           "en": "Knockback",
           "fr": "Knockback"
          },
-         "lines": 47
+         "lines": 35
         }
        ],
        "defaultVariant": "hitreg",
-       "lines": 59,
+       "lines": 45,
        "gain": {
         "en": "Rarely measurable on ping; QoS tagging only helps if your router honors it.",
         "fr": "Effet rarement mesurable sur le ping ; le marquage QoS n'aide que si ta box le respecte."
@@ -202,7 +202,7 @@
           "en": "Config 3",
           "fr": "Config 3"
          },
-         "lines": 42
+         "lines": 39
         },
         {
          "id": "config4",
@@ -210,11 +210,11 @@
           "en": "Config 4",
           "fr": "Config 4"
          },
-         "lines": 148
+         "lines": 149
         }
        ],
        "defaultVariant": "config1",
-       "lines": 148,
+       "lines": 149,
        "gain": {
         "en": "Can smooth out small latency spikes on some cards; doesn't bring you closer to the server.",
         "fr": "Peut lisser de petites pointes de latence sur certaines cartes ; ne te rapproche pas du serveur."
@@ -272,7 +272,7 @@
         "fr": "Trois profils : Hitreg (paquets plus petits), Knockback (renvoi plus rapide des paquets perdus) ou QoS (Minecraft prioritaire)."
        },
        "risk": "safe",
-       "reboot": false,
+       "reboot": true,
        "kind": "tweak",
        "variants": [
         {
@@ -281,7 +281,8 @@
           "fr": "Hitreg",
           "en": "Hitreg"
          },
-         "lines": 50
+         "reboot": false,
+         "lines": 26
         },
         {
          "id": "knockback",
@@ -289,7 +290,8 @@
           "fr": "Knockback",
           "en": "Knockback"
          },
-         "lines": 52
+         "reboot": true,
+         "lines": 28
         },
         {
          "id": "qos",
@@ -297,7 +299,8 @@
           "fr": "QoS Minecraft",
           "en": "QoS Minecraft"
          },
-         "lines": 28
+         "reboot": true,
+         "lines": 29
         }
        ],
        "requires": [],
@@ -307,7 +310,7 @@
         "Kbc3@409",
         "QOS2@482"
        ],
-       "lines": 52,
+       "lines": 29,
        "gain": {
         "en": "Rarely measurable on ping; QoS tagging only helps if your router honors it.",
         "fr": "Effet rarement mesurable sur le ping ; le marquage QoS n'aide que si ta box le respecte."
@@ -362,7 +365,7 @@
           "fr": "Préréglage 3",
           "en": "Preset 3"
          },
-         "lines": 33
+         "lines": 31
         },
         {
          "id": "s4",
@@ -462,8 +465,8 @@
         "en": "Disable NIC power saving"
        },
        "desc": {
-        "en": "Turns off network card power saving (Green Ethernet, sleep) and waking the PC over the network.",
-        "fr": "Coupe l'économie d'énergie de la carte réseau (Green Ethernet, mise en veille) et le réveil du PC par le réseau."
+        "en": "Turns off network card power saving (Green Ethernet, sleep), waking the PC over the network and Large Send Offload.",
+        "fr": "Coupe l'économie d'énergie de la carte réseau (Green Ethernet, mise en veille), le réveil du PC par le réseau et le Large Send Offload."
        },
        "risk": "safe",
        "reboot": true,
@@ -478,8 +481,8 @@
         "fr": "Peut supprimer de petites pointes de latence sur certaines cartes réseau."
        },
        "cons": {
-        "en": "The card uses a bit more power (battery on laptops) and the PC can't be woken over the network.",
-        "fr": "La carte consomme un peu plus (batterie sur portable) et le PC ne se réveille plus par le réseau."
+        "en": "The card uses a bit more power (battery on laptops), the PC can't be woken over the network and the CPU splits large sends itself.",
+        "fr": "La carte consomme un peu plus (batterie sur portable), le PC ne se réveille plus par le réseau et le processeur découpe lui-même les gros envois."
        }
       },
       {
@@ -489,8 +492,8 @@
         "en": "Optimize network adapter"
        },
        "desc": {
-        "en": "Turns off power saving, wake-on-LAN and offloads on your network card, and enlarges its buffers.",
-        "fr": "Coupe l'économie d'énergie, le réveil par le réseau et les accélérations de la carte réseau, et agrandit ses tampons."
+        "en": "Turns off power saving, wake-on-LAN and offloads on your wired (Ethernet) card, and enlarges its buffers; Wi-Fi is left alone.",
+        "fr": "Coupe l'économie d'énergie, le réveil par le réseau et les accélérations de ta carte filaire (Ethernet), et agrandit ses tampons ; le Wi-Fi n'est pas modifié."
        },
        "risk": "safe",
        "reboot": true,
@@ -543,8 +546,8 @@
         "en": "Advanced TCP settings"
        },
        "desc": {
-        "en": "Changes about fifteen global TCP settings and turns off Teredo and ISATAP, two old IPv6 tunnels.",
-        "fr": "Change une quinzaine de réglages TCP globaux de Windows et coupe Teredo et ISATAP, deux vieux tunnels IPv6."
+        "en": "Changes about twenty Windows TCP settings, turns off two TCP protections (MPP and security profiles) and the old Teredo and ISATAP IPv6 tunnels.",
+        "fr": "Change une vingtaine de réglages TCP de Windows, coupe deux protections TCP (MPP et profils de sécurité) et les vieux tunnels IPv6 Teredo et ISATAP."
        },
        "risk": "advanced",
        "reboot": false,
@@ -553,14 +556,14 @@
        "legacy": [
         "n15n@1476"
        ],
-       "lines": 23,
+       "lines": 21,
        "gain": {
         "en": "Rarely measurable on ping: these settings mostly affect throughput.",
         "fr": "Effet rarement mesurable sur le ping : ces réglages jouent surtout sur le débit."
        },
        "cons": {
-        "en": "Xbox party chat and some peer-to-peer games may have trouble connecting.",
-        "fr": "Le chat de groupe Xbox et quelques jeux en pair-à-pair peuvent avoir du mal à se connecter."
+        "en": "Windows copes less well with a flood of malicious connections; Xbox party chat and some peer-to-peer games may have trouble connecting.",
+        "fr": "Windows résiste moins à un flot de connexions malveillantes ; le chat de groupe Xbox et quelques jeux en pair-à-pair peuvent avoir du mal à se connecter."
        },
        "restore": true
       },
@@ -679,8 +682,8 @@
         "en": "Network adapter CPU affinity"
        },
        "desc": {
-        "en": "Sends all network card interrupts to a single CPU core.",
-        "fr": "Envoie toutes les interruptions de la carte réseau sur un seul cœur du processeur."
+        "en": "Sends all network card interrupts to a single CPU core, if your processor has at least 4 threads.",
+        "fr": "Envoie toutes les interruptions de la carte réseau sur un seul cœur du processeur, si ton processeur a au moins 4 threads."
        },
        "risk": "advanced",
        "reboot": true,
@@ -689,7 +692,7 @@
        "legacy": [
         "n14@2087"
        ],
-       "lines": 5,
+       "lines": 6,
        "gain": {
         "en": "Rarely measurable: Windows already spreads this work well.",
         "fr": "Effet rarement mesurable : Windows répartit déjà bien ce travail."
@@ -730,15 +733,15 @@
       {
        "id": "net_ipv6",
        "name": {
-        "fr": "Désactiver IPv6",
-        "en": "Disable IPv6"
+        "en": "Prefer IPv4 over IPv6",
+        "fr": "Préférer l'IPv4 à l'IPv6"
        },
        "desc": {
         "en": "Makes Windows use IPv4 before IPv6 when a site or server offers both; IPv6 stays on.",
         "fr": "Fait passer l'IPv4 avant l'IPv6 quand un site ou un serveur propose les deux ; l'IPv6 reste actif."
        },
        "risk": "advanced",
-       "reboot": false,
+       "reboot": true,
        "kind": "tweak",
        "requires": [],
        "legacy": [
@@ -2466,8 +2469,8 @@
       {
        "id": "mem_superfetch",
        "name": {
-        "fr": "Désactiver SysMain (Superfetch)",
-        "en": "Disable SysMain (Superfetch)"
+        "en": "Disable Superfetch (legacy setting)",
+        "fr": "Désactiver Superfetch (ancien réglage)"
        },
        "desc": {
         "en": "Writes an old setting meant to turn off app preloading into memory.",
@@ -2506,8 +2509,8 @@
         "fr": "Optimisation de l'alimentation"
        },
        "desc": {
-        "en": "Turns off several power savings: slowing of background apps, grouping of timers and drive idle power.",
-        "fr": "Coupe plusieurs économies d'énergie : ralentissement des applis en arrière-plan, regroupement des minuteurs, veille des disques."
+        "en": "Turns off several power savings: slowing of background apps, SATA link and drive idle power, and per-app power tracking.",
+        "fr": "Coupe plusieurs économies d'énergie : ralentissement des applis en arrière-plan, veille de la liaison SATA et des disques, suivi de la consommation par appli."
        },
        "risk": "safe",
        "reboot": true,
@@ -2516,7 +2519,7 @@
        "legacy": [
         "RAGO APP FPS.bat@1920"
        ],
-       "lines": 26,
+       "lines": 18,
        "gain": {
         "en": "May make frame pacing smoother on some PCs, especially plugged-in laptops.",
         "fr": "Peut rendre les images plus régulières sur certains PC, surtout les portables branchés."
@@ -2617,8 +2620,8 @@
         "fr": "Minuteurs de démarrage (BCD)"
        },
        "desc": {
-        "en": "Changes Windows boot settings: processor timer handling and a hidden boot animation.",
-        "fr": "Modifie les réglages de démarrage de Windows : gestion des minuteurs du processeur et animation de démarrage masquée."
+        "en": "Changes Windows boot settings: processor timers and interrupts, dynamic tick off, emergency console off and boot without animation.",
+        "fr": "Modifie le démarrage de Windows : minuteurs et interruptions du processeur, tick dynamique coupé, console de secours coupée et démarrage sans animation."
        },
        "risk": "advanced",
        "reboot": true,
@@ -2701,8 +2704,8 @@
         "en": "Windows power settings"
        },
        "desc": {
-        "en": "Turns off hibernation, Fast Startup, away mode and the slowing of background apps.",
-        "fr": "Coupe l'hibernation, le démarrage rapide, le mode absence et le ralentissement des applis en arrière-plan."
+        "en": "Turns off hibernation, Fast Startup, away mode, app power estimation and the slowing of background apps.",
+        "fr": "Coupe l'hibernation, le démarrage rapide, le mode absence, l'estimation de la consommation des applis et le ralentissement des applis en arrière-plan."
        },
        "risk": "safe",
        "reboot": true,
@@ -2728,8 +2731,8 @@
         "en": "Disable Power Throttling"
        },
        "desc": {
-        "en": "Windows stops slowing down apps it considers in the background to save power.",
-        "fr": "Windows ne ralentit plus les applis qu'il juge en arrière-plan pour économiser l'énergie."
+        "en": "Windows stops slowing down apps it considers in the background and stops estimating their power use.",
+        "fr": "Windows ne ralentit plus les applis qu'il juge en arrière-plan et n'estime plus leur consommation d'énergie."
        },
        "risk": "safe",
        "reboot": true,
@@ -2738,14 +2741,14 @@
        "legacy": [
         "Throttoling@9022"
        ],
-       "lines": 4,
+       "lines": 3,
        "gain": {
         "en": "May make frame pacing smoother on some PCs, especially plugged-in laptops.",
         "fr": "Peut rendre les images plus régulières sur certains PC, surtout les portables branchés."
        },
        "cons": {
-        "en": "Higher power use and shorter battery life on laptops.",
-        "fr": "Plus de consommation et moins d'autonomie sur portable."
+        "en": "Higher power use and shorter battery life on laptops; the per-app battery details may stay empty.",
+        "fr": "Plus de consommation et moins d'autonomie sur portable ; le détail de la batterie par appli peut rester vide."
        }
       },
       {
@@ -2769,33 +2772,6 @@
        "gain": {
         "en": "Often no effect: most recent processors already work this way.",
         "fr": "Effet souvent nul : la plupart des processeurs récents fonctionnent déjà comme ça."
-       },
-       "cons": {
-        "en": "No known drawback.",
-        "fr": "Aucun inconvénient connu."
-       }
-      },
-      {
-       "id": "pow_timer",
-       "name": {
-        "fr": "Désactiver le regroupement des timers",
-        "en": "Disable timer coalescing"
-       },
-       "desc": {
-        "en": "Asks Windows to stop grouping processor wake-ups to save power.",
-        "fr": "Demande à Windows de ne plus regrouper les réveils du processeur pour économiser l'énergie."
-       },
-       "risk": "safe",
-       "reboot": true,
-       "kind": "tweak",
-       "requires": [],
-       "legacy": [
-        "p12@9045"
-       ],
-       "lines": 14,
-       "gain": {
-        "en": "Rarely measurable: Microsoft does not document this setting.",
-        "fr": "Effet rarement mesurable : ce réglage n'est pas documenté par Microsoft."
        },
        "cons": {
         "en": "No known drawback.",
@@ -3583,8 +3559,8 @@
         "fr": "Optimisation NVIDIA"
        },
        "desc": {
-        "en": "Full NVIDIA pack: low-latency profile for all your games, GPU kept at full speed, telemetry off and driver settings.",
-        "fr": "Pack NVIDIA complet : profil faible latence pour tous tes jeux, GPU gardé à fond, télémétrie coupée et réglages du pilote."
+        "en": "Full NVIDIA pack: low-latency profile for all your games, GPU kept at full speed, telemetry off, driver settings and a C:\\NVIDIA cleanup.",
+        "fr": "Pack NVIDIA complet : profil faible latence pour tous tes jeux, GPU gardé à fond, télémétrie coupée, réglages du pilote et ménage de C:\\NVIDIA."
        },
        "risk": "safe",
        "reboot": true,
@@ -3595,14 +3571,14 @@
        "legacy": [
         "RAGO APP FPS.bat@847"
        ],
-       "lines": 494,
+       "lines": 343,
        "gain": {
         "en": "The profile can reduce input lag when the GPU is at 100%; the rest is rarely measurable.",
         "fr": "Le profil peut réduire l'input lag quand le GPU est à 100 % ; le reste a un effet rarement mesurable."
        },
        "cons": {
-        "en": "GPU at full speed even on the desktop (heat, power), Netflix may refuse to play, global NVIDIA settings replaced.",
-        "fr": "GPU à fond même au bureau (chaleur, conso), Netflix peut refuser de se lire, réglages NVIDIA globaux remplacés."
+        "en": "GPU at full speed even on the desktop (heat, power); HDCP off, so Netflix may refuse to play; no new-driver alerts; NVIDIA settings replaced.",
+        "fr": "GPU à fond même au bureau (chaleur, conso) ; HDCP coupé : Netflix peut refuser de se lire ; plus d'alerte de nouveau pilote ; réglages NVIDIA remplacés."
        }
       },
       {
@@ -3624,7 +3600,7 @@
        "legacy": [
         "RAGO APP FPS.bat@378"
        ],
-       "lines": 450,
+       "lines": 433,
        "gain": {
         "en": "Anti-Lag can reduce input lag when the GPU is at 100%; the rest is rarely measurable.",
         "fr": "Anti-Lag peut réduire l'input lag quand le GPU est à 100 % ; le reste a un effet rarement mesurable."
@@ -3680,8 +3656,8 @@
         "fr": "GPU général"
        },
        "desc": {
-        "en": "Graphics settings for any card: display priority, GPU preemption off, MSI mode and power-saving delays.",
-        "fr": "Réglages pour toutes les cartes : priorité de l'affichage, préemption du GPU coupée, mode MSI et délais d'économie d'énergie."
+        "en": "Graphics settings for any card: display priority, MSI mode and power-saving delays.",
+        "fr": "Réglages pour toutes les cartes : priorité de l'affichage, mode MSI et délais d'économie d'énergie."
        },
        "risk": "safe",
        "reboot": true,
@@ -3690,14 +3666,14 @@
        "legacy": [
         "RAGO APP FPS.bat@1416"
        ],
-       "lines": 123,
+       "lines": 108,
        "gain": {
         "en": "Rarely measurable: many of these settings are ignored by recent Windows versions.",
         "fr": "Effet rarement mesurable : beaucoup de ces réglages sont ignorés par les Windows récents."
        },
        "cons": {
-        "en": "If another app loads the GPU, the display may stutter; a bit more RAM goes to the file cache.",
-        "fr": "Si une autre appli charge le GPU, l'affichage peut saccader ; un peu plus de mémoire vive sert au cache des fichiers."
+        "en": "A bit more RAM goes to the file cache.",
+        "fr": "Un peu plus de mémoire vive sert au cache des fichiers."
        }
       },
       {
@@ -3744,8 +3720,8 @@
         "en": "Full NVIDIA optimization"
        },
        "desc": {
-        "en": "NVIDIA pack: low-latency profile for all your games, MSI mode, preemption and HDCP off, NVIDIA telemetry off.",
-        "fr": "Pack NVIDIA : profil faible latence pour tous tes jeux, mode MSI, préemption et HDCP coupés, télémétrie NVIDIA coupée."
+        "en": "NVIDIA pack: low-latency profile for all your games, MSI mode, HDCP off, NVIDIA telemetry off.",
+        "fr": "Pack NVIDIA : profil faible latence pour tous tes jeux, mode MSI, HDCP coupé, télémétrie NVIDIA coupée."
        },
        "risk": "safe",
        "reboot": true,
@@ -3757,14 +3733,14 @@
        "legacy": [
         "NVGEN689U@10580"
        ],
-       "lines": 67,
+       "lines": 48,
        "gain": {
         "en": "The profile can reduce input lag when the GPU is at 100%; in-game Reflex does better when available.",
         "fr": "Le profil peut réduire l'input lag quand le GPU est à 100 % ; Reflex dans le jeu fait mieux s'il existe."
        },
        "cons": {
-        "en": "Netflix and other protected video may refuse to play, and your global NVIDIA settings are replaced.",
-        "fr": "Netflix et les vidéos protégées peuvent refuser de se lire, et tes réglages NVIDIA globaux sont remplacés."
+        "en": "Netflix and other protected video may refuse to play, NVIDIA no longer tells you about new drivers, and your global NVIDIA settings are replaced.",
+        "fr": "Netflix et les vidéos protégées peuvent refuser de se lire, NVIDIA ne te prévient plus des nouveaux pilotes, et tes réglages NVIDIA globaux sont remplacés."
        }
       },
       {
@@ -4046,7 +4022,7 @@
        "legacy": [
         "nv11@10215"
        ],
-       "lines": 1,
+       "lines": 4,
        "gain": {
         "en": "No effect expected: this is already the Windows default.",
         "fr": "Aucun effet attendu : c'est déjà le réglage par défaut de Windows."
@@ -4075,7 +4051,7 @@
        "legacy": [
         "nv12@10227"
        ],
-       "lines": 1,
+       "lines": 4,
        "gain": {
         "en": "Rarely measurable; poorly documented setting.",
         "fr": "Effet rarement mesurable ; réglage peu documenté."
@@ -4218,10 +4194,10 @@
        "legacy": [
         "kbst@8977"
        ],
-       "lines": 4,
+       "lines": 7,
        "gain": {
-        "en": "Can avoid small clock drops in games; on laptops it may target the built-in chip instead.",
-        "fr": "Peut éviter de petites baisses de fréquence en jeu ; sur portable, peut viser la puce intégrée à la place."
+        "en": "Can avoid small clock drops in games; does nothing without an NVIDIA card.",
+        "fr": "Peut éviter de petites baisses de fréquence en jeu ; sans effet sans carte NVIDIA."
        },
        "cons": {
         "en": "More heat, noise, power use and wear, even when you are not gaming.",
@@ -4258,7 +4234,7 @@
        "legacy": [
         "am1@11267"
        ],
-       "lines": 20,
+       "lines": 22,
        "gain": {
         "en": "Can slightly reduce input lag when the GPU is at 100%; uncertain effect on recent drivers.",
         "fr": "Peut réduire un peu l'input lag quand le GPU est à 100 % ; effet incertain sur les pilotes récents."
@@ -4287,7 +4263,7 @@
        "legacy": [
         "am2@11349"
        ],
-       "lines": 11,
+       "lines": 14,
        "gain": {
         "en": "Can avoid small hitches when the card wakes up; often a small effect.",
         "fr": "Peut éviter de petits à-coups quand la carte se réveille ; effet souvent faible."
@@ -4345,7 +4321,7 @@
        "legacy": [
         "am4@11399"
        ],
-       "lines": 1,
+       "lines": 4,
        "gain": {
         "en": "Can avoid small hitches when the GPU wakes up; often a small effect.",
         "fr": "Peut éviter de petits à-coups au réveil du GPU ; effet souvent faible."
@@ -4374,7 +4350,7 @@
        "legacy": [
         "am6@11384"
        ],
-       "lines": 1,
+       "lines": 4,
        "gain": {
         "en": "Can reduce input lag when the GPU is at 100%; no effect otherwise.",
         "fr": "Peut réduire l'input lag quand le GPU est à 100 % ; sans effet sinon."
@@ -4430,7 +4406,7 @@
        "legacy": [
         "am8@11460"
        ],
-       "lines": 315,
+       "lines": 314,
        "gain": {
         "en": "Anti-Lag can reduce input lag when the GPU is at 100%; the rest is rarely measurable.",
         "fr": "Anti-Lag peut réduire l'input lag quand le GPU est à 100 % ; le reste a un effet rarement mesurable."
@@ -4521,14 +4497,14 @@
        "legacy": [
         "RAGO APP FPS.bat@2573"
        ],
-       "lines": 13,
+       "lines": 15,
        "gain": {
         "en": "May slightly lower latency in windowed DirectX games; rarely helps Minecraft Java.",
         "fr": "Peut réduire un peu la latence des jeux DirectX en fenêtre ; rarement utile pour Minecraft Java."
        },
        "cons": {
-        "en": "Overwrites your Windows 11 graphics settings: Auto HDR may turn off, and so does forced VRR for older games.",
-        "fr": "Écrase tes réglages graphiques de Windows 11 : Auto HDR peut se couper, tout comme le VRR forcé des vieux jeux."
+        "en": "Forced VRR for older games is turned off; Auto HDR and your other Windows 11 graphics settings are kept.",
+        "fr": "Le VRR forcé des vieux jeux est coupé ; Auto HDR et tes autres réglages graphiques de Windows 11 sont gardés."
        }
       },
       {
@@ -4593,7 +4569,7 @@
        "legacy": [
         "RAGO APP FPS.bat@2917"
        ],
-       "lines": 13,
+       "lines": 11,
        "gain": {
         "en": "Can win back FPS on low-end PCs if background recording was on.",
         "fr": "Peut rendre des FPS sur les petits PC si l'enregistrement en arrière-plan était actif."
@@ -5093,8 +5069,8 @@
         "en": "Disable telemetry"
        },
        "desc": {
-        "en": "Turns off Windows and Office telemetry and about twenty tasks that send usage data to Microsoft.",
-        "fr": "Coupe la télémétrie de Windows et d'Office et une vingtaine de tâches qui envoient des données d'usage à Microsoft."
+        "en": "Lowers Windows and Office telemetry to the minimum your edition allows and turns off about twenty tasks that send data to Microsoft.",
+        "fr": "Réduit la télémétrie de Windows et d'Office au minimum que permet ton édition et coupe une vingtaine de tâches qui envoient des données à Microsoft."
        },
        "risk": "safe",
        "reboot": true,
@@ -5194,6 +5170,9 @@
         "en": "No more web results in Start menu search.",
         "fr": "Plus de résultats web dans la recherche du menu Démarrer."
        },
+       "apps": [
+        "*Microsoft.549981C3F5F10*"
+       ],
        "restore": true
       },
       {
@@ -5286,8 +5265,8 @@
         "fr": "Désactiver Copilot et Recall"
        },
        "desc": {
-        "en": "Turns off Copilot and its taskbar button, and stops Recall from taking snapshots of your screen.",
-        "fr": "Coupe Copilot et son bouton dans la barre des tâches, et empêche Recall de prendre des captures de ton écran."
+        "en": "Hides the Copilot button and stops Recall from taking snapshots of your screen; the 'Copilot off' policy no longer works on recent Windows 11.",
+        "fr": "Masque le bouton Copilot et empêche Recall de prendre des captures de ton écran ; la règle « Copilot coupé » n'agit plus sur les Windows 11 récents."
        },
        "risk": "safe",
        "reboot": true,
@@ -5300,8 +5279,8 @@
         "fr": "Plus de vie privée ; effet sur les FPS quasi nul."
        },
        "cons": {
-        "en": "The Copilot button disappears from the taskbar.",
-        "fr": "Le bouton Copilot disparaît de la barre des tâches."
+        "en": "The Copilot button disappears from the taskbar; on recent Windows 11, the Copilot app stays installed and usable.",
+        "fr": "Le bouton Copilot disparaît de la barre des tâches ; sur les Windows 11 récents, l'appli Copilot reste installée et utilisable."
        }
       }
      ]
@@ -5325,7 +5304,7 @@
        },
        "risk": "advanced",
        "reboot": true,
-       "kind": "action",
+       "kind": "tweak",
        "requires": [],
        "legacy": [
         "U1@4859"
@@ -5337,9 +5316,38 @@
         "fr": "Menu Démarrer plus propre et un peu d'espace disque libéré ; effet sur les FPS quasi nul."
        },
        "cons": {
-        "en": "Also removes Camera, Mail, Alarms and Phone Link; removed apps can be reinstalled from the Microsoft Store.",
-        "fr": "Retire aussi Caméra, Courrier, Alarmes et Lien avec le téléphone ; ils se réinstallent depuis le Microsoft Store."
+        "en": "Also removes Camera, Mail, Alarms and Phone Link: turn the tweak off to bring them back (or use the Microsoft Store). A System Restore started from Windows may then fail (error 0x80070301): start it from the recovery screen instead (Shift + Restart > Troubleshoot > Advanced options).",
+        "fr": "Retire aussi Caméra, Courrier, Alarmes et Lien avec le téléphone : éteins le réglage pour les remettre (sinon, Microsoft Store). Une restauration du système lancée depuis Windows peut ensuite échouer (erreur 0x80070301) : lance-la depuis l'écran de récupération (Maj + Redémarrer > Dépannage > Options avancées)."
        },
+       "apps": [
+        "*Microsoft.BingWeather*",
+        "*Microsoft.GetHelp*",
+        "*Microsoft.Getstarted*",
+        "*Microsoft.Messaging*",
+        "*Microsoft.Microsoft3DViewer*",
+        "*Microsoft.MicrosoftSolitaireCollection*",
+        "*Microsoft.MixedReality.Portal*",
+        "*Microsoft.OneConnect*",
+        "*Microsoft.People*",
+        "*Microsoft.Print3D*",
+        "*Microsoft.SkypeApp*",
+        "*Microsoft.WindowsAlarms*",
+        "*Microsoft.WindowsCamera*",
+        "*microsoft.windowscommunicationsapps*",
+        "*Microsoft.WindowsMaps*",
+        "*Microsoft.WindowsFeedbackHub*",
+        "*Microsoft.WindowsSoundRecorder*",
+        "*Microsoft.YourPhone*",
+        "*Microsoft.3dBuilder*",
+        "*bing*",
+        "*bingfinance*",
+        "*bingsports*",
+        "*CommsPhone*",
+        "*Drawboard",
+        "*Sway*",
+        "*WindowsAlarms*",
+        "*WindowsPhone*"
+       ],
        "restore": true
       },
       {
@@ -5401,8 +5409,8 @@
         "fr": "Plus de vie privée et un Windows plus calme en fond ; effet sur les FPS rarement mesurable."
        },
        "cons": {
-        "en": "Also turns off location and mouse acceleration (feels different); Windows stops fetching drivers on its own.",
-        "fr": "Coupe aussi la localisation et l'accélération de la souris (autre sensation) ; Windows ne cherche plus seul tes pilotes."
+        "en": "Also turns off location, mouse acceleration and background Store apps; Windows stops fetching drivers on its own.",
+        "fr": "Coupe aussi la localisation, l'accélération de la souris et les applis du Store en arrière-plan ; Windows ne cherche plus seul tes pilotes."
        },
        "restore": true
       },
@@ -5429,8 +5437,8 @@
         "fr": "Windows plus calme et des menus plus vifs ; effet sur les FPS rarement mesurable."
        },
        "cons": {
-        "en": "Windows Remote Assistance is turned off and Edge no longer sends notifications once closed.",
-        "fr": "L'Assistance à distance de Windows est coupée et Edge ne t'envoie plus de notifications une fois fermé."
+        "en": "Remote Assistance is turned off, your settings and passwords no longer sync between PCs, and Edge no longer notifies once closed.",
+        "fr": "L'Assistance à distance est coupée, tes paramètres et mots de passe ne se synchronisent plus entre tes PC, et Edge fermé ne notifie plus."
        }
       },
       {
@@ -5467,8 +5475,8 @@
         "fr": "Couper les services inutiles"
        },
        "desc": {
-        "en": "Turns off search indexing, printing, offline files and error reporting, and removes Cortana and Copilot.",
-        "fr": "Coupe l'indexation, l'impression, les fichiers hors connexion et les rapports d'erreurs, et retire Cortana et Copilot."
+        "en": "Turns off search indexing, printing, offline files and error reporting, and removes Cortana and the old Copilot component (not the current app).",
+        "fr": "Coupe l'indexation, l'impression, les fichiers hors connexion et les rapports d'erreurs, et retire Cortana et l'ancien module Copilot (pas l'appli actuelle)."
        },
        "risk": "advanced",
        "reboot": true,
@@ -5486,6 +5494,10 @@
         "en": "Windows search is slower, and printing and the notification center don't work until you turn it off.",
         "fr": "Recherche Windows plus lente, plus d'impression ni de centre de notifications tant que tu ne le désactives pas."
        },
+       "apps": [
+        "*Microsoft.549981C3F5F10*",
+        "Microsoft.Windows.Ai.Copilot.Provider"
+       ],
        "restore": true
       },
       {
@@ -5501,7 +5513,7 @@
        "risk": "advanced",
        "reboot": true,
        "requires": [],
-       "kind": "action",
+       "kind": "tweak",
        "legacy": [
         "RAGO APP FPS.bat@3175"
        ],
@@ -5512,9 +5524,38 @@
         "fr": "Menu Démarrer plus propre et un peu d'espace disque libéré ; effet sur les FPS quasi nul."
        },
        "cons": {
-        "en": "Also removes Camera, Mail, Alarms and Phone Link; removed apps can be reinstalled from the Microsoft Store.",
-        "fr": "Retire aussi Caméra, Courrier, Alarmes et Lien avec le téléphone ; ils se réinstallent depuis le Microsoft Store."
+        "en": "Also removes Camera, Mail, Alarms and Phone Link: turn the tweak off to bring them back (or use the Microsoft Store). A System Restore started from Windows may then fail (error 0x80070301): start it from the recovery screen instead (Shift + Restart > Troubleshoot > Advanced options).",
+        "fr": "Retire aussi Caméra, Courrier, Alarmes et Lien avec le téléphone : éteins le réglage pour les remettre (sinon, Microsoft Store). Une restauration du système lancée depuis Windows peut ensuite échouer (erreur 0x80070301) : lance-la depuis l'écran de récupération (Maj + Redémarrer > Dépannage > Options avancées)."
        },
+       "apps": [
+        "*Microsoft.BingWeather*",
+        "*Microsoft.GetHelp*",
+        "*Microsoft.Getstarted*",
+        "*Microsoft.Messaging*",
+        "*Microsoft.Microsoft3DViewer*",
+        "*Microsoft.MicrosoftSolitaireCollection*",
+        "*Microsoft.MixedReality.Portal*",
+        "*Microsoft.OneConnect*",
+        "*Microsoft.People*",
+        "*Microsoft.Print3D*",
+        "*Microsoft.SkypeApp*",
+        "*Microsoft.WindowsAlarms*",
+        "*Microsoft.WindowsCamera*",
+        "*microsoft.windowscommunicationsapps*",
+        "*Microsoft.WindowsMaps*",
+        "*Microsoft.WindowsFeedbackHub*",
+        "*Microsoft.WindowsSoundRecorder*",
+        "*Microsoft.YourPhone*",
+        "*Microsoft.3dBuilder*",
+        "*bing*",
+        "*bingfinance*",
+        "*bingsports*",
+        "*CommsPhone*",
+        "*Drawboard",
+        "*Sway*",
+        "*WindowsAlarms*",
+        "*WindowsPhone*"
+       ],
        "restore": true
       },
       {
@@ -5711,8 +5752,8 @@
         "fr": "Latence de la carte"
        },
        "desc": {
-        "en": "Tunes network buffers, acknowledgments and packet lifetime, and pins the network card to a single CPU core.",
-        "fr": "Règle les tampons réseau, les accusés de réception et la durée de vie des paquets, et met la carte réseau sur un seul cœur."
+        "en": "Tunes network buffers, acknowledgments and packet lifetime, and pins the network card to a single CPU core (4 threads or more).",
+        "fr": "Règle les tampons réseau, les accusés de réception et la durée de vie des paquets, et met la carte réseau sur un seul cœur (4 threads ou plus)."
        },
        "risk": "safe",
        "reboot": true,
@@ -5721,7 +5762,7 @@
        "legacy": [
         "RAGO APP HITREG INPUTLAG.bat@35"
        ],
-       "lines": 29,
+       "lines": 30,
        "gain": {
         "en": "Rarely measurable: these values change little in games.",
         "fr": "Effet rarement mesurable : ces valeurs changent peu de chose en jeu."
@@ -5820,8 +5861,8 @@
         "fr": "Latence avancée"
        },
        "desc": {
-        "en": "Big pack: boot, priorities, network, Game DVR off, privacy, notifications and the look of Windows.",
-        "fr": "Gros pack : démarrage, priorités, réseau, Game DVR coupé, vie privée, notifications et apparence de Windows."
+        "en": "Big pack: boot, priorities, network, Game DVR off, no mouse acceleration, privacy, notifications, and Windows colors and cursors.",
+        "fr": "Gros pack : démarrage, priorités, réseau, Game DVR coupé, souris sans accélération, vie privée, notifications, couleurs et curseurs de Windows."
        },
        "risk": "advanced",
        "reboot": true,
@@ -5830,14 +5871,14 @@
        "legacy": [
         "RAGO APP HITREG INPUTLAG.bat@181"
        ],
-       "lines": 346,
+       "lines": 343,
        "gain": {
         "en": "Turning off Game DVR can help on a low-end PC; the rest is rarely measurable in games.",
         "fr": "Couper le Game DVR peut aider sur un petit PC ; le reste a un effet rarement mesurable en jeu."
        },
        "cons": {
-        "en": "Turns off notifications, drivers via Windows Update and the downloaded-file warning; changes colors and cursors.",
-        "fr": "Coupe notifications, pilotes de Windows Update et alerte avant d'ouvrir un téléchargement ; change couleurs et curseurs."
+        "en": "Turns off notifications, drivers via Windows Update and the download warning; hides the Windows Security icon; Camera and Game Bar lose webcam and mic.",
+        "fr": "Coupe notifications, pilotes via Windows Update et alerte sur les téléchargements ; cache l'icône Sécurité Windows ; Caméra et Game Bar perdent webcam et micro."
        },
        "restore": true
       }
@@ -5861,7 +5902,7 @@
         "fr": "Coupe l'accélération de la souris de Windows pour que le pointeur suive exactement ta main, et raccourcit le délai de survol."
        },
        "risk": "safe",
-       "reboot": false,
+       "reboot": true,
        "requires": [],
        "kind": "tweak",
        "legacy": [
@@ -5888,7 +5929,7 @@
         "fr": "Répétition des touches au plus rapide et raccourcis d'accessibilité coupés, comme les touches rémanentes (Maj 5 fois)."
        },
        "risk": "safe",
-       "reboot": false,
+       "reboot": true,
        "requires": [],
        "kind": "tweak",
        "legacy": [
@@ -5995,7 +6036,7 @@
           "fr": "PC puissant",
           "en": "High-end PC"
          },
-         "lines": 400
+         "lines": 383
         },
         {
          "id": "medium",
@@ -6003,7 +6044,7 @@
           "fr": "PC moyen",
           "en": "Mid-range PC"
          },
-         "lines": 400
+         "lines": 383
         },
         {
          "id": "low",
@@ -6011,7 +6052,7 @@
           "fr": "PC modeste",
           "en": "Low-end PC"
          },
-         "lines": 400
+         "lines": 383
         },
         {
          "id": "laptop",
@@ -6019,7 +6060,7 @@
           "fr": "PC portable",
           "en": "Laptop"
          },
-         "lines": 400
+         "lines": 383
         }
        ],
        "requires": [],
@@ -6030,14 +6071,14 @@
         "lwpc1@13118",
         "ltpc1@13123"
        ],
-       "lines": 400,
+       "lines": 383,
        "gain": {
         "en": "Can make frame pacing steadier on a plugged-in PC; the rest is rarely measurable.",
         "fr": "Peut rendre les images plus régulières sur un PC branché ; le reste a un effet rarement mesurable."
        },
        "cons": {
-        "en": "More heat; location and background Store apps off; touches prefetch, which screenshares check.",
-        "fr": "Plus de chaleur ; localisation et applis Store en fond coupées ; touche au préchargement, vérifié en screenshare."
+        "en": "More heat; mouse acceleration, location and background Store apps off; touches prefetch, which screenshares check.",
+        "fr": "Plus de chaleur ; accélération de la souris, localisation et applis Store en fond coupées ; touche au préchargement, vérifié en screenshare."
        },
        "restore": true
       }
@@ -6258,8 +6299,8 @@
         "fr": "Performance peut nettement augmenter les FPS, mais seulement si tu joues avec OptiFine."
        },
        "cons": {
-        "en": "Performance makes the game look plainer: sky, clouds, animations and particles off.",
-        "fr": "Performance rend le jeu moins joli : ciel, nuages, animations et particules coupés."
+        "en": "Performance makes the game look plainer (sky, clouds, animations, particles); zoom moves to Left Ctrl, which is also the default sprint key.",
+        "fr": "Performance rend le jeu moins joli (ciel, nuages, animations, particules) ; le zoom passe sur Ctrl gauche, déjà la touche de sprint par défaut."
        }
       },
       {
@@ -6301,8 +6342,8 @@
         "en": "RBW Mod"
        },
        "desc": {
-        "en": "On restarts the event log, prefetch and app history that screenshare tools read; Off puts Windows defaults back.",
-        "fr": "Activé relance journal d'événements, préchargement et historique des applis, lus en screenshare ; Désactivé les remet par défaut."
+        "en": "On starts every service and restores every setting the RBW screenshare checker reads, even if other tweaks turned them off; Off puts them back to Windows defaults without stopping anything.",
+        "fr": "Activé démarre les services et remet les réglages que lit le vérificateur de screenshare RBW, même coupés par d'autres réglages ; Désactivé les remet comme Windows par défaut, sans rien arrêter."
        },
        "risk": "safe",
        "reboot": false,
@@ -6316,7 +6357,7 @@
          },
          "revert": true,
          "reboot": true,
-         "lines": 21
+         "lines": 6
         },
         {
          "id": "off",
@@ -6325,7 +6366,7 @@
           "en": "Off"
          },
          "reboot": false,
-         "lines": 10
+         "lines": 29
         }
        ],
        "requires": [],
@@ -6334,14 +6375,14 @@
         "On@14039",
         "off@14077"
        ],
-       "lines": 21,
+       "lines": 29,
        "gain": {
-        "en": "Keeps a clean player from looking suspicious in a screenshare because these Windows traces were off.",
-        "fr": "Évite qu'un joueur clean paraisse suspect en screenshare parce que ces traces de Windows étaient coupées."
+        "en": "The official RBW checker shows everything green after the restart, so a clean player doesn't look suspicious.",
+        "fr": "Le vérificateur officiel de RBW voit tout en vert après le redémarrage, et un joueur clean ne paraît pas suspect."
        },
        "cons": {
-        "en": "On also restarts telemetry; Off stops prefetch until the next restart, which a screenshare can spot.",
-        "fr": "Activé relance aussi la télémétrie ; Désactivé arrête le préchargement jusqu'au redémarrage, visible en screenshare."
+        "en": "On and Off alike turn telemetry back on and undo part of the app's privacy tweaks: those then show \"Changed by Windows\". Apply them again only after your RBW games.",
+        "fr": "Activé comme Désactivé relancent la télémétrie et défont une partie des réglages vie privée de l'app : ils affichent ensuite « Changé par Windows ». Ne les réapplique qu'après tes parties RBW."
        }
       }
      ]
@@ -6455,7 +6496,7 @@
        "legacy": [
         "io@3202"
        ],
-       "lines": 22,
+       "lines": 10,
        "gain": {
         "en": "Rarely measurable; may slightly limit background activity while you play.",
         "fr": "Effet rarement mesurable ; peut limiter un peu l'activité de fond pendant tes parties."
@@ -7025,16 +7066,16 @@
        ],
        "lines": 7,
        "confirm": {
-        "en": "Old NAS drives, routers and TVs that do not support SMB encryption will no longer open your shared folders.",
-        "fr": "Les vieux NAS, box et TV qui ne gèrent pas le chiffrement SMB ne pourront plus ouvrir tes dossiers partagés."
+        "en": "Old NAS drives, routers and TVs that do not support SMB encryption will no longer open your shared folders. This PC will also stop opening the shared folders of old NAS drives and routers that do not support SMB signing.",
+        "fr": "Les vieux NAS, box et TV qui ne gèrent pas le chiffrement SMB ne pourront plus ouvrir tes dossiers partagés. Ton PC ne pourra plus non plus ouvrir les dossiers partagés des vieux NAS et box qui ne gèrent pas la signature SMB."
        },
        "gain": {
         "en": "More security on your local network; no effect on game performance.",
         "fr": "Plus de sécurité sur ton réseau local ; aucun effet sur les performances en jeu."
        },
        "cons": {
-        "en": "Old NAS drives, routers and TVs will no longer open your shared folders; network copies may be slower.",
-        "fr": "Les vieux NAS, box et TV ne pourront plus ouvrir tes dossiers partagés ; les copies réseau peuvent ralentir."
+        "en": "Old NAS drives, routers and TVs can't open your shared folders, and your PC can't open old NAS shares; network copies may be slower.",
+        "fr": "Les vieux NAS, box et TV n'ouvrent plus tes dossiers partagés, et ton PC n'ouvre plus ceux des vieux NAS ; les copies réseau peuvent ralentir."
        },
        "restore": true
       }
@@ -7343,6 +7384,19 @@
    "reason": {
     "en": "Apps opened slower, and on a screenshare an empty Prefetch can look like erased traces.",
     "fr": "Les applis s'ouvraient plus lentement, et sur un screenshare un Prefetch vide peut ressembler à des traces effacées."
+   },
+   "reboot": true,
+   "module": "latency"
+  },
+  {
+   "id": "pow_timer",
+   "name": {
+    "fr": "Désactiver le regroupement des timers",
+    "en": "Disable timer coalescing"
+   },
+   "reason": {
+    "en": "It set a kernel timer value to 0 that Windows divides by: on some PCs (Windows 11 24H2) this caused a blue screen a few minutes after startup, for no measurable gain.",
+    "fr": "Il mettait à 0 une valeur du noyau par laquelle Windows divise : sur certains PC (Windows 11 24H2), écran bleu quelques minutes après le démarrage, sans gain mesurable."
    },
    "reboot": true,
    "module": "latency"
