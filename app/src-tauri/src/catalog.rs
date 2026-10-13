@@ -569,6 +569,36 @@ mod tests {
         }
     }
 
+    /// RAG-66 (2026-10-13) : vider les dossiers temporaires bute toujours sur des fichiers ouverts, arrêter le spouleur
+    /// déjà arrêté répond une erreur, taskkill annonce son succès : ces messages, sans échec réel, affolaient les joueurs
+    /// dans le journal. Ces commandes-là se taisent (tools/build_catalog_v6.py QUIET), %temp% est toujours entre
+    /// guillemets (un espace dans le chemin faisait effacer le premier morceau).
+    #[test]
+    fn temp_cleaning_stays_quiet() {
+        let silent = |l: &str| l.contains("2>&1") || l.contains("2>nul");
+        for (id, variants) in SCRIPTS.iter() {
+            for (v, s) in variants {
+                for l in s.lines().map(|l| l.trim().to_lowercase()).filter(|l| !l.starts_with("echo") && !l.starts_with("::")) {
+                    let bare: String = l.split('"').step_by(2).collect();
+                    assert!(!bare.contains("%temp%") && !bare.contains("%tmp%"), "{id}:{v} : %temp% sans guillemets : {l}");
+                    if ["game_mode", "in_windows", "sto_general", "cln_temp"].contains(&id.as_str())
+                        && (l.starts_with("del ") || l.starts_with("forfiles") || l.contains("rd /s") || l.contains("rmdir"))
+                    {
+                        assert!(silent(&l), "{id}:{v} : {l}");
+                    }
+                }
+            }
+        }
+        let on = &SCRIPTS["game_mode"]["on"];
+        let stop: Vec<&str> = on.lines().filter(|l| l.to_lowercase().contains("net stop spooler")).collect();
+        assert_eq!(stop.len(), 1);
+        assert!(stop[0].to_lowercase().starts_with("sc query spooler | find \"running\" >nul && "), "{}", stop[0]);
+        for v in ["on", "off"] {
+            let kill: Vec<&str> = SCRIPTS["game_mode"][v].lines().filter(|l| l.contains("taskkill")).collect();
+            assert!(!kill.is_empty() && kill.iter().all(|l| l.trim_end().ends_with(">nul")), "game_mode:{v}");
+        }
+    }
+
     /// Lignes qui empêchent cmd.exe de lire un bloc entre parenthèses (RAG-68, 2026-10-13) : cmd lit tout le bloc avant
     /// de l'exécuter et, sur une erreur, s'arrête net (« ) was unexpected at this time. ») : le reste du script ne tourne
     /// pas et le réglage échoue. Renvoie « ligne : problème » pour chaque défaut. Lecture simplifiée de cmd : parenthèses
