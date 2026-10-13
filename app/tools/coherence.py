@@ -87,8 +87,11 @@ DROP = [
 SUB = [
     # KBoost : la valeur habituelle est 0x2222 (8738), celle de nv_powermizer ; « 2222 » en décimal ne bloque rien
     (('nv_kboost',), r'(/v "PerfLevelSrc" /t REG_DWORD /d )"2222"', r'\1"8738"'),
-    # l'étape « Disable Clock Gating » allumait le clock gating
-    (('amd_power',), r'(/v "(?:EnableVceSwClockGating|EnableUvdClockGating)" /t REG_DWORD /d )"1"', r'\1"0"'),
+    # l'étape « Disable Clock Gating » allumait le clock gating. gpu_amd et amd_advanced reprennent la même étape (« Disabling
+    # VCESW/UVD Clock Gating ») : corrigée aussi, sinon ils remettaient 1 par-dessus le 0 d'amd_power, selon l'ordre de
+    # lancement (ces deux packs posent déjà 0 et DisableAllClockGating 1 dans leur bloc AMD)
+    (('amd_power', 'gpu_amd', 'amd_advanced'), r'(/v "(?:EnableVceSwClockGating|EnableUvdClockGating)" /t REG_DWORD /d )"1"',
+     r'\1"0"'),
     # EnergyEstimationEnabled 1 et EnergyEstimationDisabled 1 dans le même script : l'estimation est coupée partout
     (('pow_windows',), r'(/v EnergyEstimationEnabled /t REG_DWORD /d )1 ', r'\g<1>0 '),
     # texte parasite collé à la fin de la commande (cadre ASCII mal encodé) : la commande échouait
@@ -362,6 +365,11 @@ def check(scripts):
         assert '"hibernateenabled"' not in low, line
     assert 'rago_dx' in scripts['win_fullscreen']['_']
     assert '"8738"' in scripts['nv_kboost']['_']
+    # clock gating vidéo AMD : aucun réglage ne le rallume (deux réglages ne se contredisent pas sur la même valeur)
+    gating_on = re.compile(r'(?i)/v "?(EnableVceSwClockGating|EnableUvdClockGating)"? /t REG_DWORD /d "?1\b')
+    for tid, vs in scripts.items():
+        for v, body in vs.items():
+            assert not gating_on.search(body), (tid, v)
 
 
 def catalog(tweaks):
@@ -397,7 +405,7 @@ undo.json : un PC qui les a lancés retrouve aussi les valeurs des lignes chang�
 
 **Valeurs**
 - nv_kboost : `PerfLevelSrc` 2222 → 8738 (0x2222, comme nv_powermizer).
-- amd_power : « Disable Clock Gating » posait 1 ; maintenant 0.
+- amd_power, et la même étape dans gpu_amd et amd_advanced : « Disable Clock Gating » posait 1 ; maintenant 0.
 - pow_windows : `EnergyEstimationEnabled` 1 → 0 (le script posait aussi `EnergyEstimationDisabled` 1).
 - gpu_amd : texte parasite collé à une commande (`%b%╚═…`) retiré.
 - dbl_telemetry, win_telemetry : tâche Office `\\Microsoftd\\` → `\\Microsoft\\`.

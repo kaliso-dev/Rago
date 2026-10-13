@@ -543,7 +543,7 @@ undo.json : un PC qui les a lancés retrouve aussi les valeurs des lignes chang�
 
 **Valeurs**
 - nv_kboost : `PerfLevelSrc` 2222 → 8738 (0x2222, comme nv_powermizer).
-- amd_power : « Disable Clock Gating » posait 1 ; maintenant 0.
+- amd_power, et la même étape dans gpu_amd et amd_advanced : « Disable Clock Gating » posait 1 ; maintenant 0.
 - pow_windows : `EnergyEstimationEnabled` 1 → 0 (le script posait aussi `EnergyEstimationDisabled` 1).
 - gpu_amd : texte parasite collé à une commande (`%b%╚═…`) retiré.
 - dbl_telemetry, win_telemetry : tâche Office `\Microsoftd\` → `\Microsoft\`.
