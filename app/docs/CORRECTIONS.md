@@ -548,15 +548,15 @@ undo.json : un PC qui les a lancés retrouve aussi les valeurs des lignes chang�
 - gpu_amd : texte parasite collé à une commande (`%b%╚═…`) retiré.
 - dbl_telemetry, win_telemetry : tâche Office `\Microsoftd\` → `\Microsoft\`.
 - dbl_cortana : `DisableWebSearch` 0 → 1, comme « Recherche Windows sans le web ».
-- win_services : `AllowNewsAndInterests` sous `Policies\Microsoft\Dsh`, comme win_feed.
+- win_services, sys_registry : `AllowNewsAndInterests` sous `Policies\Microsoft\Dsh`, comme win_feed.
 - hitreg_suite : `Disable-ScheduledTask` (PowerShell lancé par cmd, sans effet) → `schtasks /change … /disable`.
 - ping_packets et net_profile, profil QoS : « Do not use NLA » = "1" ajouté (sinon Windows ignore le marquage hors
   domaine d'entreprise), `DSCP Value` en texte "46" et `Throttle Rate` "-1", comme les écrit Windows.
 - ping_main:config3 : propriétés de la carte par `-RegistryKeyword` (toutes langues) au lieu du nom anglais ; Jumbo
   Packet 0 (valeur refusée) devient 1514 (désactivé, comme plus bas), doublons retirés.
 - win_fullscreen : `DirectXUserGlobalSettings` fusionné au lieu d'écrasé (Auto HDR gardé).
-- net_affinity, in_adapter, ping_main:config4 : l'épinglage sur le processeur n°2 seulement avec 4 processeurs
-  logiques ou plus.
+- net_affinity, in_adapter, ping_main:config4, ping_advanced : l'épinglage sur le processeur n°2 seulement avec 4
+  processeurs logiques ou plus.
 
 **Lignes retirées**
 - hitreg_suite : `AlwaysOn` 1 et `DisableTaskOffload` 1 (défaits plus bas), mode jeu (affaire de win_gamemode),
@@ -564,18 +564,20 @@ undo.json : un PC qui les a lancés retrouve aussi les valeurs des lignes chang�
 - in_advanced : `HibernateEnabled` 0, mode jeu.
 - win_gamedvr : `GameDVR_FSEBehaviorMode` 1 et `GameDVR_HonorUserFSEBehaviorMode` 1 (contraires de win_fullscreen).
 - exp_io : `ntoskrnl.exe` et `WOW6432Node` (sans effet).
-- ping_packets, net_profile, net_advanced : `netsh int tcp set global` refusés par Windows 10 et 11 (chimney, netdma,
-  minrto, congestionprovider…) ; net_advanced : `SackOpts` 0.
+- ping_packets, net_profile, net_advanced, in_windows : `netsh int tcp set global` refusés par Windows 10 et 11
+  (chimney, netdma, minrto, congestionprovider…) ; net_advanced : `SackOpts` 0.
 
 **Catalogue**
 - Redémarrage : net_ipv6, in_mouse, in_keyboard ; net_profile (Knockback et QoS, pas Hitreg).
 - Noms : mem_superfetch « Désactiver Superfetch (ancien réglage) », net_ipv6 « Préférer l'IPv4 à l'IPv6 ».
-- exp_smb : l'avertissement dit aussi que le PC n'ouvre plus les partages des vieux NAS.
+- exp_smb : l'avertissement dit aussi que le PC n'ouvre plus les partages des vieux NAS. SMB 1 coupé avec
+  `-NoRestart` (pas de question « redémarrer maintenant ? » pendant le réglage).
 - Textes (descriptions.json) : ping_hitreg, net_adapter, net_powersave, net_advanced, hitreg_suite, in_advanced,
   gpu_nvidia, nv_general, nv_kboost, mc_optifine, exp_smb, win_telemetry, win_optimize, win_services, win_ai,
   dbl_telemetry, sys_bcdedit, pow_main, pow_throttling, pow_windows, win_fullscreen, net_affinity, in_adapter.
 - Point de restauration (runner.rs) : la limite d'un point par 24 h est levée le temps de le créer, puis remise.
 
+<!-- Sections écrites à la main : le générateur (tools/corrections_md.py) garde tel quel tout ce qui suit cette ligne. Ajouter les nouvelles sections en bas du fichier. -->
 # Plan d'alimentation Rago Low Latency (1.1.9)
 
 `src-tauri/resources/LowLatency.pow`, fourni par Sofiene le 2026-10-10 (sha256 `c953bead…c840d7`, 24 Ko). C'est une ruche
@@ -702,3 +704,81 @@ profil. Les variables du retour arrière (`RAGO_STATE_…`, `RAGO_HELD_…`) pas
 (`batch_command`), jamais par la ligne de commande : le script et le PowerShell qu'il lance les lisent. Tests
 `scripts_start_by_name_from_their_folder`, `undo_variables_go_with_the_script` et, sur Windows,
 `scripts_run_from_a_folder_with_special_characters` et `undo_variables_reach_the_script_and_powershell`.
+
+# Finitions 2 de la revue du 2026-10-13
+
+**Sections écrites à la main de ce fichier.** `tools/build_catalog.py` réécrivait tout `docs/CORRECTIONS.md` et
+`tools/build_catalog_v6.py` y ajoutait ses sections : chaque génération effaçait ce qui avait été écrit à la main en bas
+(plan d'alimentation, écran bleu, applis du Store, finitions de la revue). La ligne de commentaire
+`<!-- Sections écrites à la main … -->`, juste avant « Plan d'alimentation Rago Low Latency (1.1.9) », sépare maintenant
+les sections générées (au-dessus) de celles écrites à la main (en dessous) : `tools/corrections_md.py` relit ce qui la
+suit avant d'écrire et le remet tel quel, fichier en CRLF compris. `build_catalog_v6.py` vérifie après l'écriture que
+cette partie n'a pas changé. Une nouvelle section s'écrit à la main en bas du fichier.
+
+**Notifications de l'appli Paramètres : le `!` de la clé.** La clé
+`HKCU\…\Notifications\Settings\windows.immersivecontrolpanel_cw5n1h2txyewy!microsoft.windows.immersivecontrolpanel`
+porte un `!` (identifiant d'appli du Store, « famille!appli »). Le moteur lance chaque script avec le développement
+retardé : juste avant d'exécuter la commande, cmd retire un `!` resté seul, guillemets compris. `in_advanced`,
+`sys_registry` et `win_notifications` écrivaient donc `…cw5n1h2txyewymicrosoft…`, une clé que Windows ne lit pas, et
+leurs relevés et annulations visaient la même clé fausse. `tools/expansion.py` (sur les scripts, les relevés et les
+annulations) fait tourner ces lignes avec `setlocal DisableDelayedExpansion & … & endlocal` : la vraie clé est écrite,
+relevée et remise. L'annulation sans relevé (PC passés par une version sans sauvegarde) supprime aussi la clé sans `!`
+que posaient les anciens scripts ; avec un relevé fait par la 1.1.9, la restauration la supprime déjà. Comme la valeur
+est posée par trois réglages, l'annulation d'un des trois la laisse quand un autre est encore appliqué
+(`RAGO_HELD_…`). Le générateur refuse tout autre `!` écrit tel quel dans une commande lancée avec le développement
+retardé (le texte affiché par un `echo` n'en est pas une). Tests `no_literal_bang_with_delayed_expansion` et
+`bang_checker_sees_what_cmd_removes`.
+
+**Nom de la carte réseau dans un bloc (`ping_main` « config3 », `hitreg_suite`).** Le script trouve la carte connectée
+(`set "adapter_name=%%b"`) puis la règle dans `if defined adapter_name ( … )`. cmd remplace `%adapter_name%` en lisant
+tout le bloc, avant de le découper : un nom avec `)` (« Ethernet (2) », nom donné par le joueur ou un pilote) fermait le
+bloc au milieu, un `&` coupait la commande, et la suite tournait hors du `if`. Dans les lignes PowerShell,
+`\"%adapter_name%\"` laissait même le nom hors des guillemets de cmd. `tools/expansion.py` fait lire le nom à
+l'exécution : `!adapter_name!` pour l'echo, `$env:adapter_name` pour PowerShell (la commande est alors entièrement entre
+guillemets pour cmd). La carte visée ne change pas. Les lignes `netsh interface ipv4 set subinterface "%adapter_name%"`
+de `net_profile`, `ping_packets` et `net_advanced` sont hors bloc, entre guillemets, et lisent le nom que le moteur
+donne (`runner.rs`, première carte physique active) : elles ne changent pas. Tests `adapter_name_cannot_break_a_block`
+et `adapter_checker_sees_what_breaks_a_block`.
+
+**Dossiers NVIDIA absents (`gpu_nvidia`, `nv_debloat`).** Les deux scripts suppriment 28 dossiers d'un ancien
+installeur NVIDIA (`C:\NVIDIA\Display.NView`, `…\PhysX`, `…\GFExperience\www`…). L'installeur actuel extrait ailleurs
+(`C:\NVIDIA\DisplayDriver\<version>\…`) : sur presque tous les PC, le journal montrait « Le fichier spécifié est
+introuvable. » 28 fois. `QUIET` écrit `if exist "C:\Nvidia\…" rd /s /q "C:\Nvidia\…"` : rien n'est lancé quand le
+dossier n'existe pas, et une vraie erreur de rd (accès refusé, fichier ouvert) s'affiche toujours. Test
+`nvidia_leftovers_are_removed_quietly`.
+
+**Mode jeu : « Désactivé depuis… » après Désactiver.** Le moteur note « Désactivé » lancé sur un Mode jeu activé
+comme une annulation (variante de retour arrière d'un réglage appliqué), et le badge de la ligne ne regardait que les
+passages qui n'en sont pas : la ligne gardait « Activé depuis… ». Pour le Mode jeu et le mode jeu de Windows
+(`SESSION_TOGGLES`), une annulation compte maintenant comme leur variante de retour arrière (`src/lib/store.tsx`,
+`lastRun`) : « Désactivé depuis… » après Désactiver ou Tout annuler ; sans variante de retour arrière (mode jeu de
+Windows), plus de badge de session après une annulation ; une annulation qui échoue n'en affiche pas non plus (le
+réglage n'est plus noté appliqué). Le RBW Mod ne change pas : son annulation après « Désactivé » ne lance rien et garde
+« Désactivé depuis… », son retour arrière est noté « Activé ». Le mode démo du navigateur (`api.ts`) note les
+annulations comme le moteur.
+
+**Actualités et centres d'intérêt dans `sys_registry`.** La ligne écrivait `AllowNewsAndInterests` sous
+`HKLM\SOFTWARE\Policies\Microsoft`, où Windows ne la lit pas ; la stratégie est sous `…\Policies\Microsoft\Dsh`, comme
+dans `win_feed` et `win_services` (corrigé pour ce dernier en 1.1.9). `tools/coherence.py` corrige aussi
+`sys_registry` : script, relevé et annulation visent `…\Dsh`. Sans relevé, l'annulation retire les deux valeurs (celle
+des anciens scripts et la nouvelle), et laisse celle de `…\Dsh` quand `win_feed` ou `win_services` est encore appliqué.
+Test `scripts_target_the_right_hardware_and_do_what_they_say`.
+
+**Carte réseau sur un seul cœur dans `ping_advanced`.** Comme `net_affinity`, `in_adapter` et `ping_main` « config4 »
+depuis la 1.1.9, `ping_advanced` n'épingle les interruptions de la carte réseau sur le processeur logique n°2
+(`AssignmentSetOverride` 04, `DevicePolicy` 4) qu'avec 4 processeurs logiques ou plus ; en dessous, le script le dit
+et ne touche à rien (`AFFINITY_IDS` de `tools/coherence.py`). L'annulation retire toujours les deux valeurs. Le texte
+du réglage dit « (4 threads ou plus) ». Le test vérifie aussi qu'aucun autre script n'épingle la carte sans cette
+garde.
+
+**`chimney=disabled` dans `in_windows`.** Windows 10 et 11 refusent `netsh int tcp set global chimney=…` (« paramètre
+incorrect ») : la ligne ne changeait rien et mettait une erreur dans le journal. `in_windows` rejoint `NETSH_IDS` de
+`tools/coherence.py`, la règle qui retire déjà ces paramètres de `ping_packets`, `net_profile` et `net_advanced` ; ses
+autres lignes netsh (autotuninglevel, timestamps, ecncapability, rsc, nonsackrttresiliency) restent. Test
+`scripts_target_the_right_hardware_and_do_what_they_say`.
+
+**SMB 1 coupé sans question de redémarrage (`exp_smb`).** Sur un PC où SMB 1 était installé,
+`Disable-WindowsOptionalFeature` sans `-NoRestart` demande s'il faut redémarrer tout de suite (« [Y] Yes [N] No », Y
+par défaut) ; le moteur lance les scripts sans rien leur répondre. Les trois lignes ont maintenant `-NoRestart` : la
+fonctionnalité est coupée, Windows finit au prochain redémarrage, que le badge « Redémarrage » du réglage annonce
+toujours. Le générateur et le test vérifient qu'aucune ligne `Enable-`/`Disable-WindowsOptionalFeature` n'en manque.

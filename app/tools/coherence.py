@@ -43,12 +43,13 @@ VIDEO_LOOP = re.compile(r'(?i)Get-CimInstance Win32_VideoController\)\.PNPDevice
 NETSH_GLOBAL_OK = {'autotuninglevel', 'rss', 'rsc', 'ecncapability', 'timestamps', 'nonsackrttresiliency', 'fastopen',
                    'fastopenfallback', 'hystart', 'prr', 'pacingprofile', 'dca', 'initialrto', 'maxsynretransmissions'}
 NETSH_GLOBAL = re.compile(r'(?i)^\s*netsh\s+int(?:erface)?\s+tcp\s+set\s+global\s+(\w+)')
-NETSH_IDS = ('ping_packets:hitreg', 'ping_packets:knockback', 'net_profile:hitreg', 'net_profile:knockback')
+# in_windows : `chimney=disabled`, retiré aux finitions du 2026-10-13
+NETSH_IDS = ('ping_packets:hitreg', 'ping_packets:knockback', 'net_profile:hitreg', 'net_profile:knockback', 'in_windows')
 QOS_IDS = ('ping_packets:qos', 'net_profile:qos')
 # hors domaine d'entreprise, Windows n'applique le marquage DSCP d'une stratégie QoS que si « Do not use NLA » vaut "1"
 NLA_LINE = 'reg add "HKLM\\SYSTEM\\CurrentControlSet\\Services\\Tcpip\\QoS" /v "Do not use NLA" /t REG_SZ /d "1" /f >nul 2>&1'
 # AssignmentSetOverride 04 = processeur logique n°2 : absent ou seul cœur restant sur un petit processeur
-AFFINITY_IDS = ('net_affinity', 'in_adapter', 'ping_main:config4')
+AFFINITY_IDS = ('net_affinity', 'in_adapter', 'ping_main:config4', 'ping_advanced')
 CPU_GUARD = 'if %NUMBER_OF_PROCESSORS% GEQ 4 '
 CPU_SKIP = ('if %NUMBER_OF_PROCESSORS% LSS 4 echo - Fewer than 4 logical processors: '
             'network interrupts stay where Windows puts them')
@@ -100,8 +101,10 @@ SUB = [
     (('dbl_telemetry', 'win_telemetry'), r'\\Microsoftd\\', r'\\Microsoft\\'),
     # Cortana rallumait la recherche web que « Recherche Windows sans le web » coupe (RAG-27)
     (('dbl_cortana',), r'(/v "DisableWebSearch" /t REG_DWORD /d )"0"', r'\1"1"'),
-    # Actualités et centres d'intérêt : la stratégie est sous Policies\Microsoft\Dsh (comme win_feed)
-    (('win_services',), r'"HKLM\\SOFTWARE\\Policies\\Microsoft" (/v "AllowNewsAndInterests")', r'"HKLM\\SOFTWARE\\Policies\\Microsoft\\Dsh" \1'),
+    # Actualités et centres d'intérêt : la stratégie est sous Policies\Microsoft\Dsh (comme win_feed). sys_registry : même
+    # ligne, corrigée aux finitions du 2026-10-13
+    (('win_services', 'sys_registry'), r'"HKLM\\SOFTWARE\\Policies\\Microsoft" (/v "AllowNewsAndInterests")',
+     r'"HKLM\\SOFTWARE\\Policies\\Microsoft\\Dsh" \1'),
     # commande PowerShell lancée par cmd (sans effet) et chemin de tâche faux : la vraie tâche, avec schtasks
     (('hitreg_suite',), r'^Disable-ScheduledTask -TaskPath "HKCU\\Software\\Microsoft\\Windows\\Application Experience" '
                         r'-TaskName "Microsoft Compatibility Appraiser"',
@@ -109,6 +112,11 @@ SUB = [
     # stratégie QoS : Windows écrit ces valeurs en texte, « -1 » pour « pas de limite de débit »
     (QOS_IDS, r'/v "DSCP Value" /t REG_DWORD /d 46 ', r'/v "DSCP Value" /t REG_SZ /d "46" '),
     (QOS_IDS, r'/v "Throttle Rate" /t REG_SZ /d "Disabled" ', r'/v "Throttle Rate" /t REG_SZ /d "-1" '),
+    # SMB 1 : sans -NoRestart, Disable-WindowsOptionalFeature demande s'il faut redémarrer tout de suite (« [Y] Yes [N]
+    # No », Y par défaut) quand la fonctionnalité était installée ; le moteur ne répond à rien (entrée vide). Le
+    # redémarrage reste annoncé par le badge du réglage (finitions du 2026-10-13)
+    (('exp_smb',), r'^(POWERSHELL "Disable-WindowsOptionalFeature -Online -FeatureName SMB1Protocol(?:-Client|-Server)?)"$',
+     r'\1 -NoRestart"'),
     # Jumbo Packet n'accepte pas 0 : 1514 (désactivé), la valeur que le script pose plus bas (doublon retiré ensuite)
     (('ping_main:config3',), r"(-DisplayName 'Jumbo Packet' \| Set-NetAdapterAdvancedProperty -RegistryValue )0\"", r'\g<1>1514"'),
 ]
@@ -364,7 +372,16 @@ def check(scripts):
         assert 'disable-scheduledtask' not in low and 'disable-mmagent' not in low and 'autogamemode' not in low, line
         assert '"hibernateenabled"' not in low, line
     assert 'rago_dx' in scripts['win_fullscreen']['_']
+    # fonctionnalités de Windows : jamais de question « redémarrer maintenant ? » pendant un réglage
+    for tid, vs in scripts.items():
+        for v, body in vs.items():
+            for line in body.replace('\r\n', '\n').split('\n'):
+                if re.search(r'(?i)(Enable|Disable)-WindowsOptionalFeature', line):
+                    assert re.search(r'(?i)-NoRestart\b', line), (tid, v, line)
+    assert scripts['exp_smb']['_'].count(' -NoRestart"') == 3
     assert '"8738"' in scripts['nv_kboost']['_']
+    for tid in ('win_services', 'sys_registry', 'win_feed'):
+        assert 'Policies\\Microsoft\\Dsh" /v "AllowNewsAndInterests"' in scripts[tid]['_'], tid
     # clock gating vidéo AMD : aucun réglage ne le rallume (deux réglages ne se contredisent pas sur la même valeur)
     gating_on = re.compile(r'(?i)/v "?(EnableVceSwClockGating|EnableUvdClockGating)"? /t REG_DWORD /d "?1\b')
     for tid, vs in scripts.items():
@@ -410,15 +427,15 @@ undo.json : un PC qui les a lancés retrouve aussi les valeurs des lignes chang�
 - gpu_amd : texte parasite collé à une commande (`%b%╚═…`) retiré.
 - dbl_telemetry, win_telemetry : tâche Office `\\Microsoftd\\` → `\\Microsoft\\`.
 - dbl_cortana : `DisableWebSearch` 0 → 1, comme « Recherche Windows sans le web ».
-- win_services : `AllowNewsAndInterests` sous `Policies\\Microsoft\\Dsh`, comme win_feed.
+- win_services, sys_registry : `AllowNewsAndInterests` sous `Policies\\Microsoft\\Dsh`, comme win_feed.
 - hitreg_suite : `Disable-ScheduledTask` (PowerShell lancé par cmd, sans effet) → `schtasks /change … /disable`.
 - ping_packets et net_profile, profil QoS : « Do not use NLA » = "1" ajouté (sinon Windows ignore le marquage hors
   domaine d'entreprise), `DSCP Value` en texte "46" et `Throttle Rate` "-1", comme les écrit Windows.
 - ping_main:config3 : propriétés de la carte par `-RegistryKeyword` (toutes langues) au lieu du nom anglais ; Jumbo
   Packet 0 (valeur refusée) devient 1514 (désactivé, comme plus bas), doublons retirés.
 - win_fullscreen : `DirectXUserGlobalSettings` fusionné au lieu d'écrasé (Auto HDR gardé).
-- net_affinity, in_adapter, ping_main:config4 : l'épinglage sur le processeur n°2 seulement avec 4 processeurs
-  logiques ou plus.
+- net_affinity, in_adapter, ping_main:config4, ping_advanced : l'épinglage sur le processeur n°2 seulement avec 4
+  processeurs logiques ou plus.
 
 **Lignes retirées**
 - hitreg_suite : `AlwaysOn` 1 et `DisableTaskOffload` 1 (défaits plus bas), mode jeu (affaire de win_gamemode),
@@ -426,13 +443,14 @@ undo.json : un PC qui les a lancés retrouve aussi les valeurs des lignes chang�
 - in_advanced : `HibernateEnabled` 0, mode jeu.
 - win_gamedvr : `GameDVR_FSEBehaviorMode` 1 et `GameDVR_HonorUserFSEBehaviorMode` 1 (contraires de win_fullscreen).
 - exp_io : `ntoskrnl.exe` et `WOW6432Node` (sans effet).
-- ping_packets, net_profile, net_advanced : `netsh int tcp set global` refusés par Windows 10 et 11 (chimney, netdma,
-  minrto, congestionprovider…) ; net_advanced : `SackOpts` 0.
+- ping_packets, net_profile, net_advanced, in_windows : `netsh int tcp set global` refusés par Windows 10 et 11
+  (chimney, netdma, minrto, congestionprovider…) ; net_advanced : `SackOpts` 0.
 
 **Catalogue**
 - Redémarrage : net_ipv6, in_mouse, in_keyboard ; net_profile (Knockback et QoS, pas Hitreg).
 - Noms : mem_superfetch « Désactiver Superfetch (ancien réglage) », net_ipv6 « Préférer l'IPv4 à l'IPv6 ».
-- exp_smb : l'avertissement dit aussi que le PC n'ouvre plus les partages des vieux NAS.
+- exp_smb : l'avertissement dit aussi que le PC n'ouvre plus les partages des vieux NAS. SMB 1 coupé avec
+  `-NoRestart` (pas de question « redémarrer maintenant ? » pendant le réglage).
 - Textes (descriptions.json) : ping_hitreg, net_adapter, net_powersave, net_advanced, hitreg_suite, in_advanced,
   gpu_nvidia, nv_general, nv_kboost, mc_optifine, exp_smb, win_telemetry, win_optimize, win_services, win_ai,
   dbl_telemetry, sys_bcdedit, pow_main, pow_throttling, pow_windows, win_fullscreen, net_affinity, in_adapter.

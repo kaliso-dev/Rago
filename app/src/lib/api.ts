@@ -363,9 +363,12 @@ const mockApi: Api = {
         }
         const durationMs = Math.round(performance.now() - t0);
         ok++;
-        mockHistory.push({ id: it.id, variant: it.variant ?? null, ts: Date.now(), ok: true, code: 0, durationMs, undo: !!it.undo });
         const tw = tweaks.get(it.id);
         const revert = !!tw?.variants?.find((v) => v.id === it.variant)?.revert;
+        // comme le moteur (runner.rs) : la variante de retour arrière d'un réglage appliqué est notée comme une
+        // annulation, sauf celle du RBW Mod, qui lance « Activé » en entier
+        const undo = !!it.undo || (revert && mockApplied.has(it.id) && it.id !== "rbw_mode");
+        mockHistory.push({ id: it.id, variant: it.variant ?? null, ts: Date.now(), ok: true, code: 0, durationMs, undo });
         if (it.undo || (revert && mockApplied.has(it.id))) mockApplied.delete(it.id);
         else if (tw?.kind === "tweak" && !revert)
           // RBW Mod « Désactivé » : valeurs de Windows, sans sauvegarde (moteur : runner.rs)

@@ -698,17 +698,27 @@ mod tests {
         assert!(!low("amd_power", "_").contains("clockgating\" /t reg_dword /d \"1\""));
         assert!(low("pow_windows", "_").contains("energyestimationenabled /t reg_dword /d 0 "));
         assert!(low("dbl_cortana", "_").contains("\"disablewebsearch\" /t reg_dword /d \"1\""));
-        assert!(low("win_services", "_").contains("policies\\microsoft\\dsh\" /v \"allownewsandinterests\""));
+        // Actualités et centres d'intérêt : la stratégie est sous Policies\Microsoft\Dsh ; sans relevé, l'annulation retire
+        // aussi la valeur que les anciens scripts posaient sous Policies\Microsoft (finitions du 2026-10-13 : sys_registry)
+        for id in ["win_services", "win_feed", "sys_registry"] {
+            assert!(low(id, "_").contains("policies\\microsoft\\dsh\" /v \"allownewsandinterests\""), "{id}");
+            assert!(probes[id]["_"].to_lowercase().contains("policies\\microsoft\\dsh\" \"allownewsandinterests\""), "{id} relevé");
+            let full = undo[id]["_"]["full"].as_str().unwrap().to_lowercase();
+            for key in ["policies\\microsoft\" /v \"allownewsandinterests\" /f", "policies\\microsoft\\dsh\" /v \"allownewsandinterests\" /f"] {
+                assert!(full.contains(key), "{id} annulation : {key}");
+            }
+        }
         for (id, variants) in SCRIPTS.iter() {
             for (v, s) in variants {
                 assert!(!s.to_lowercase().contains("\\microsoftd\\"), "{id}:{v}");
+                assert!(!s.to_lowercase().contains("policies\\microsoft\" /v \"allownewsandinterests\""), "{id}:{v}");
             }
         }
         // réseau : netsh refusés par Windows 10 et 11, propriétés de carte par leur nom anglais, QoS hors domaine
         let netsh_ok = ["autotuninglevel", "rss", "rsc", "ecncapability", "timestamps", "nonsackrttresiliency", "fastopen",
                         "fastopenfallback", "hystart", "prr", "pacingprofile", "dca", "initialrto", "maxsynretransmissions"];
         for (id, v) in [("ping_packets", "hitreg"), ("ping_packets", "knockback"), ("net_profile", "hitreg"),
-                        ("net_profile", "knockback"), ("net_advanced", "_")] {
+                        ("net_profile", "knockback"), ("net_advanced", "_"), ("in_windows", "_")] {
             for l in low(id, v).lines() {
                 let t = l.trim().replace("netsh interface ", "netsh int ");
                 if let Some(rest) = t.strip_prefix("netsh int tcp set global ") {
@@ -730,13 +740,22 @@ mod tests {
             assert!(s.contains("\"dscp value\" /t reg_sz /d \"46\"") && s.contains("\"throttle rate\" /t reg_sz /d \"-1\""), "{id}:qos");
         }
         // épinglage sur le processeur n°2 : seulement s'il existe, mais l'annulation retire toujours les valeurs
-        for (id, v) in [("net_affinity", "_"), ("in_adapter", "_"), ("ping_main", "config4")] {
+        for (id, v) in [("net_affinity", "_"), ("in_adapter", "_"), ("ping_main", "config4"), ("ping_advanced", "_")] {
             let s = low(id, v);
             let pins: Vec<&str> = s.lines().filter(|l| l.contains("\"assignmentsetoverride\"") || l.contains("/v \"devicepolicy\"")).collect();
             assert_eq!(pins.len(), 2, "{id}:{v}");
             assert!(pins.iter().all(|l| l.starts_with("if %number_of_processors% geq 4 ")), "{id}:{v}");
             let full = undo[id][v]["full"].as_str().unwrap().to_lowercase();
             assert!(full.contains("/v \"assignmentsetoverride\" /f") && !full.contains("number_of_processors"), "{id}:{v} annulation");
+            assert!(s.contains("if %number_of_processors% lss 4 echo - fewer than 4 logical processors"), "{id}:{v} message");
+        }
+        // aucun autre script n'épingle la carte réseau sans cette garde (ping_advanced l'a reçue aux finitions du 2026-10-13)
+        for (id, variants) in SCRIPTS.iter() {
+            for (v, s) in variants {
+                for l in s.to_lowercase().lines().filter(|l| l.contains("\"assignmentsetoverride\" /t reg_binary")) {
+                    assert!(l.starts_with("if %number_of_processors% geq 4 "), "{id}:{v} : {l}");
+                }
+            }
         }
         // packs : plus de lignes contraires à un autre réglage ou défaites plus bas
         for (v, s) in &SCRIPTS["hitreg_suite"] {
@@ -763,6 +782,17 @@ mod tests {
         for id in ["net_ipv6", "in_mouse", "in_keyboard", "net_profile"] {
             assert_eq!(tw(id)["reboot"], true, "{id}");
         }
+        // fonctionnalités de Windows : jamais de question « redémarrer maintenant ? » pendant un réglage (le moteur ne
+        // répond à rien) ; le redémarrage est annoncé par le badge (exp_smb, finitions du 2026-10-13)
+        for (id, variants) in SCRIPTS.iter() {
+            for (v, s) in variants {
+                for l in s.to_lowercase().lines().filter(|l| l.contains("-windowsoptionalfeature")) {
+                    assert!(l.contains("-norestart"), "{id}:{v} : {l}");
+                }
+            }
+        }
+        assert_eq!(low("exp_smb", "_").matches("disable-windowsoptionalfeature -online -featurename smb1protocol").count(), 3);
+        assert_eq!(tw("exp_smb")["reboot"], true);
         let np = tw("net_profile");
         let reboot = |v: &str| np["variants"].as_array().unwrap().iter().find(|x| x["id"] == v).unwrap()["reboot"].clone();
         assert_eq!((reboot("hitreg"), reboot("knockback"), reboot("qos")), (false.into(), true.into(), true.into()));
@@ -908,6 +938,23 @@ mod tests {
         for v in ["on", "off"] {
             let kill: Vec<&str> = SCRIPTS["game_mode"][v].lines().filter(|l| l.contains("taskkill")).collect();
             assert!(!kill.is_empty() && kill.iter().all(|l| l.trim_end().ends_with(">nul")), "game_mode:{v}");
+        }
+    }
+
+    /// Finitions du 2026-10-13 : gpu_nvidia et nv_debloat suppriment 28 dossiers d'un ancien installeur NVIDIA
+    /// (C:\NVIDIA\<composant>), absents sur presque tous les PC : « Le fichier spécifié est introuvable. » 28 fois dans le
+    /// journal. rd ne se lance que si le dossier existe (tools/build_catalog_v6.py QUIET), sans cacher ses vraies erreurs.
+    #[test]
+    fn nvidia_leftovers_are_removed_quietly() {
+        for id in ["gpu_nvidia", "nv_debloat"] {
+            let s = &SCRIPTS[id]["_"];
+            let rd: Vec<&str> = s.lines().filter(|l| l.to_lowercase().contains("rd /s /q \"c:\\nvidia\\")).collect();
+            assert_eq!(rd.len(), 28, "{id}");
+            for l in rd {
+                let path = l.split_once(" rd /s /q ").map(|(_, p)| p).unwrap_or("");
+                assert_eq!(l, format!("if exist {path} rd /s /q {path}"), "{id}");
+                assert!(!l.contains("nul"), "{id} : une vraie erreur de rd doit rester visible : {l}");
+            }
         }
     }
 
@@ -1396,6 +1443,356 @@ mod tests {
         let sto = &SCRIPTS["sto_general"]["_"];
         assert_eq!(sto.lines().filter(|l| l.trim() == "setlocal DisableDelayedExpansion").count(), 3, "{sto}");
         assert_eq!(sto.lines().filter(|l| l.starts_with("if defined PROFILES_DIR for /d %%U in (\"!PROFILES_DIR!\\*\") do (")).count(), 3, "{sto}");
+    }
+
+    /// Variables que Windows ou le moteur posent avant le script (runner.rs : RAGO_RES, adapter_name), comme ENV_VARS
+    /// de tools/expansion.py.
+    const ENV_VARS: [&str; 26] = [
+        "TEMP", "TMP", "LOCALAPPDATA", "APPDATA", "USERPROFILE", "PROGRAMDATA", "ALLUSERSPROFILE", "PUBLIC", "SYSTEMROOT", "WINDIR",
+        "SYSTEMDRIVE", "HOMEDRIVE", "HOMEPATH", "USERNAME", "ONEDRIVE", "PROGRAMFILES", "PROGRAMFILES(X86)", "PROGRAMW6432",
+        "COMMONPROGRAMFILES", "COMMONPROGRAMFILES(X86)", "PROFILES_DIR", "NUMBER_OF_PROCESSORS", "PROCESSOR_ARCHITECTURE",
+        "COMPUTERNAME", "RAGO_RES", "ADAPTER_NAME",
+    ];
+
+    /// `!` écrits tels quels dans les commandes qu'un script lance avec le développement retardé (runner.rs, PREAMBLE).
+    /// Juste avant d'exécuter une commande, cmd remplace chaque `!NOM!` par la variable (vide si elle n'existe pas) et
+    /// retire un `!` resté seul, entre guillemets aussi : `…_cw5n1h2txyewy!microsoft.windows.immersivecontrolpanel`
+    /// devenait une autre clé (finitions du 2026-10-13, tools/expansion.py vérifie la même règle à la génération).
+    /// Acceptés : `!NOM!` d'une variable que le script pose (`set NOM=`, `set "NOM=`, `set /a NOM+=`), que Windows ou le
+    /// moteur posent ; la suite d'une ligne après `setlocal DisableDelayedExpansion`, et les lignes entre
+    /// `setlocal DisableDelayedExpansion` et `endlocal` ; le texte d'un echo (jusqu'au premier `&` ou `|` hors
+    /// guillemets), sauf `echo @@RAGO` (relevé lu par le moteur) ; les commentaires.
+    fn bang_errors(script: &str) -> Vec<String> {
+        use std::collections::BTreeSet;
+        const DDE_OFF: &str = "setlocal disabledelayedexpansion";
+        fn name_char(c: u8, first: bool) -> bool {
+            c.is_ascii_alphabetic() || c == b'_' || (!first && (c.is_ascii_digit() || b"#$.()-".contains(&c)))
+        }
+        fn spaces(b: &[u8], k: &mut usize) -> bool {
+            let start = *k;
+            while *k < b.len() && b[*k].is_ascii_whitespace() {
+                *k += 1;
+            }
+            *k > start
+        }
+        // noms posés par le script (comme SET_NAME de tools/expansion.py)
+        let mut known: BTreeSet<String> = ENV_VARS.iter().map(|v| v.to_string()).collect();
+        let low = script.to_ascii_lowercase();
+        let b = low.as_bytes();
+        for s in (0..b.len()).filter(|&s| b[s..].starts_with(b"set")) {
+            if s > 0 && !(b[s - 1].is_ascii_whitespace() || b"&|(@\"".contains(&b[s - 1])) {
+                continue;
+            }
+            let mut k = s + 3;
+            if !spaces(b, &mut k) {
+                continue;
+            }
+            if b[k..].starts_with(b"/a") || b[k..].starts_with(b"/p") {
+                let mut k2 = k + 2;
+                if spaces(b, &mut k2) {
+                    k = k2;
+                }
+            }
+            if b.get(k) == Some(&b'"') {
+                k += 1;
+            }
+            if !b.get(k).is_some_and(|&c| name_char(c, true)) {
+                continue;
+            }
+            // nom le plus court suivi de `[espaces][-+*/]=`
+            let mut e = k + 1;
+            loop {
+                let mut r = e;
+                while r < b.len() && b[r].is_ascii_whitespace() {
+                    r += 1;
+                }
+                if r < b.len() && b"-+*/".contains(&b[r]) && b.get(r + 1) == Some(&b'=') {
+                    r += 1;
+                }
+                if b.get(r) == Some(&b'=') {
+                    known.insert(low[k..e].to_ascii_uppercase());
+                    break;
+                }
+                if e < b.len() && name_char(b[e], false) {
+                    e += 1;
+                } else {
+                    break;
+                }
+            }
+        }
+        let mut errors = Vec::new();
+        let mut dde = vec![true];
+        for (n, l) in script.lines().enumerate() {
+            let t = l.trim();
+            let low = t.trim_start_matches('@').trim().to_ascii_lowercase();
+            let word = |w: &str| low.strip_prefix(w).is_some_and(|r| r.bytes().next().is_none_or(|c| !(c.is_ascii_alphanumeric() || c == b'_')));
+            if word("setlocal") && !low.contains('&') {
+                let top = *dde.last().unwrap();
+                dde.push(if low.contains("disabledelayedexpansion") {
+                    false
+                } else if low.contains("enabledelayedexpansion") {
+                    true
+                } else {
+                    top
+                });
+            } else if word("endlocal") && !low.contains('&') && dde.len() > 1 {
+                dde.pop();
+            }
+            if !*dde.last().unwrap() || t.is_empty() {
+                continue;
+            }
+            let after = |w: &str| low.strip_prefix(w).map(|r| r.bytes().next());
+            let start = if low.starts_with(':') || matches!(after("rem"), Some(None)) || matches!(after("rem"), Some(Some(c)) if c.is_ascii_whitespace()) {
+                continue;
+            } else if matches!(after("echo"), Some(None)) || matches!(after("echo"), Some(Some(c)) if c.is_ascii_whitespace() || b".(:/".contains(&c)) {
+                let marker = low.strip_prefix("echo @@rago").is_some_and(|r| r.bytes().next().is_none_or(|c| !(c.is_ascii_alphanumeric() || c == b'_')));
+                if marker {
+                    0
+                } else {
+                    match masked_line(l).find(['&', '|']) {
+                        Some(p) => p,
+                        None => continue,
+                    }
+                }
+            } else {
+                0
+            };
+            let off = l.to_ascii_lowercase().find(DDE_OFF);
+            let lb = l.as_bytes();
+            let next = |from: usize| (from..lb.len()).find(|&i| lb[i] == b'!');
+            let mut i = next(start);
+            while let Some(a) = i {
+                let (pos, why) = match next(a + 1) {
+                    None => (a, "! seul".to_string()),
+                    Some(z) => {
+                        let name = l[a + 1..z].split(':').next().unwrap();
+                        let nb = name.as_bytes();
+                        let var = !nb.is_empty()
+                            && nb.iter().enumerate().all(|(k, &c)| name_char(c, k == 0))
+                            && known.contains(&name.to_ascii_uppercase());
+                        i = next(z + 1);
+                        if var {
+                            continue;
+                        }
+                        (a, format!("!{}!", &l[a + 1..z]))
+                    }
+                };
+                if !off.is_some_and(|o| o < pos) {
+                    errors.push(format!("{}: {why} : {t}", n + 1));
+                }
+                if why == "! seul" {
+                    break;
+                }
+            }
+        }
+        errors
+    }
+
+    #[test]
+    fn bang_checker_sees_what_cmd_removes() {
+        let bad = [
+            (
+                "Reg.exe add \"HKCU\\SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Notifications\\Settings\\windows.immersivecontrolpanel_cw5n1h2txyewy!microsoft.windows.immersivecontrolpanel\" /v \"Enabled\" /t REG_DWORD /d \"0\" /f",
+                "! seul",
+            ),
+            ("echo @@RAGO reg \"HKCU\\A!B\" \"Enabled\"", "! seul"),
+            ("echo - Notifications & reg add \"HKCU\\A!B\" /f", "! seul"),
+            ("if not defined RAGO_HELD_1 reg delete \"HKCU\\A!B\" /v \"Enabled\" /f >nul 2>&1", "! seul"),
+            ("reg add \"HKCU\\A!B!C\" /f", "!B!"),
+            ("reg add \"HKCU\\!Jean!\" /f", "!Jean!"),
+            ("set \"x=1\"\r\nreg add \"HKCU\\!x!\" /d \"!y!\" /f", "!y!"),
+            // le bloc DisableDelayedExpansion est refermé
+            ("setlocal DisableDelayedExpansion\r\nendlocal\r\nreg add \"HKCU\\A!B\" /f", "! seul"),
+            // le `!` est avant le setlocal de la ligne
+            ("reg add \"HKCU\\A!B\" /f & setlocal DisableDelayedExpansion & endlocal", "! seul"),
+        ];
+        for (s, why) in bad {
+            let e = bang_errors(s);
+            assert!(e.len() == 1 && e[0].contains(why), "{s}\n{e:?}");
+        }
+        let good = [
+            "setlocal DisableDelayedExpansion & Reg.exe add \"HKCU\\A!B\" /v \"Enabled\" /f & endlocal",
+            "setlocal DisableDelayedExpansion & echo @@RAGO reg \"HKCU\\A!B\" \"Enabled\" & endlocal",
+            "setlocal DisableDelayedExpansion & (if not defined RAGO_HELD_1 reg delete \"HKCU\\A!B\" /v \"Enabled\" /f >nul 2>&1) & endlocal",
+            "setlocal DisableDelayedExpansion\r\nreg add \"HKCU\\A!B\" /f\r\nendlocal",
+            "set /a n+=1\r\nreg add \"HKCU\\K\" /v N /d \"!n!\" /f",
+            "for /f %%a in ('ver') do set \"v=%%a\"\r\nreg add \"HKCU\\K\" /d \"!v:~0,4!\" /f",
+            "netsh interface ipv4 set subinterface \"!adapter_name!\" mtu=1500 store=persistent",
+            "if defined temp del /s /f /q \"!temp!\\*\" >nul 2>&1",
+            "echo Credit to Mathako for helping!",
+            "echo.- Finished!",
+            ":: Notifications!",
+            "rem Notifications!",
+        ];
+        for s in good {
+            assert!(bang_errors(s).is_empty(), "{s}\n{:?}", bang_errors(s));
+        }
+    }
+
+    /// Rien de ce que lance le moteur (réglages, relevés, annulations) n'a de `!` que cmd retirerait ou remplacerait
+    /// (bang_errors). La clé des notifications de l'appli Paramètres (identifiant d'appli du Store, « famille!appli »)
+    /// est écrite, relevée et annulée avec son `!`, et l'annulation sans relevé nettoie aussi la clé sans `!` que
+    /// posaient les anciens scripts (finitions du 2026-10-13, tools/expansion.py).
+    #[test]
+    fn no_literal_bang_with_delayed_expansion() {
+        let probes: Scripts = serde_json::from_str(include_str!("../scripts/probes.json")).unwrap();
+        let undo: HashMap<String, HashMap<String, Undo>> = serde_json::from_str(include_str!("../scripts/undo.json")).unwrap();
+        let mut bad = Vec::new();
+        let mut check = |what: String, s: &str| bad.extend(bang_errors(s).into_iter().map(|e| format!("{what} {e}")));
+        for (id, variants) in SCRIPTS.iter() {
+            for (v, s) in variants {
+                check(format!("{id}:{v}"), s);
+            }
+        }
+        for (id, variants) in &probes {
+            for (v, s) in variants {
+                check(format!("relevé {id}:{v}"), s);
+            }
+        }
+        for (id, variants) in &undo {
+            for (v, u) in variants {
+                for (part, s) in [("full", &u.full), ("rest", &u.rest)] {
+                    if let Some(s) = s {
+                        check(format!("annulation {id}:{v} {part}"), s);
+                    }
+                }
+            }
+        }
+        assert!(bad.is_empty(), "{} défauts :\n{}", bad.len(), bad.join("\n"));
+        const KEY: &str = "\"HKCU\\SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Notifications\\Settings\\windows.immersivecontrolpanel_cw5n1h2txyewy";
+        const APP: &str = "microsoft.windows.immersivecontrolpanel\"";
+        for id in ["in_advanced", "sys_registry", "win_notifications"] {
+            let (s, p, full) = (&SCRIPTS[id]["_"], &probes[id]["_"], undo[id]["_"].full.as_deref().unwrap());
+            let set = format!("add {KEY}!{APP} /v \"Enabled\" /t REG_DWORD /d \"0\" /f & endlocal");
+            let ok = |l: &str, end: &str| l.starts_with("setlocal DisableDelayedExpansion & ") && l.ends_with(end);
+            assert_eq!(s.lines().filter(|l| ok(l, &set)).count(), 1, "{id}\n{s}");
+            assert_eq!(s.matches("immersivecontrolpanel_").count(), 1, "{id}\n{s}");
+            assert_eq!(p.lines().filter(|l| ok(l, &format!("echo @@RAGO reg {KEY}!{APP} \"Enabled\" & endlocal"))).count(), 1, "{id}\n{p}");
+            assert_eq!(p.matches("immersivecontrolpanel_").count(), 1, "{id}\n{p}");
+            let del = format!("reg delete {KEY}!{APP} /v \"Enabled\" /f >nul 2>&1) & endlocal");
+            assert_eq!(full.lines().filter(|l| ok(l, &del)).count(), 1, "{id}\n{full}");
+            let old = format!("reg delete {KEY}{APP} /v \"Enabled\" /f >nul 2>&1)");
+            assert_eq!(full.lines().filter(|l| l.ends_with(&old)).count(), 1, "{id}\n{full}");
+        }
+    }
+
+    /// Nom de la carte réseau lu par cmd en lisant un bloc (finitions du 2026-10-13, tools/expansion.py) : `%adapter_name%`
+    /// est remplacé avant que le bloc soit découpé, un `)` dans le nom (« Ethernet (2) ») fermait le `if … (` au milieu
+    /// et un `&` coupait la commande. `\"%NOM%\"` dans une commande PowerShell laisse même le nom hors des guillemets de
+    /// cmd, qui ne connaît pas `\"`.
+    fn adapter_errors(script: &str) -> Vec<String> {
+        // parenthèses avant `end` sur une ligne de commande, hors guillemets et hors ^ (comme block_errors) : (ouvertes
+        // et pas encore fermées sur la ligne, somme des +1 / -1)
+        fn parens(l: &str, end: usize) -> (i32, i32) {
+            let t = l.trim().trim_start_matches('@').trim().to_ascii_lowercase();
+            let first = t.split(|c: char| c.is_ascii_whitespace() || ".(:/".contains(c)).next().unwrap_or("");
+            if t.starts_with(':') || first == "rem" || first == "echo" {
+                return (0, 0);
+            }
+            let (mut open, mut sum, mut quoted, mut it) = (0, 0, false, l[..end].bytes());
+            while let Some(c) = it.next() {
+                match c {
+                    b'"' => quoted = !quoted,
+                    b'^' if !quoted => {
+                        it.next();
+                    }
+                    b'(' if !quoted => {
+                        open += 1;
+                        sum += 1;
+                    }
+                    b')' if !quoted => {
+                        open = (open - 1).max(0);
+                        sum -= 1;
+                    }
+                    _ => {}
+                }
+            }
+            (open, sum)
+        }
+        let mut errors = Vec::new();
+        let mut depth = 0;
+        for (n, l) in script.lines().enumerate() {
+            let t = l.trim();
+            let low = l.to_ascii_lowercase();
+            if low.match_indices("%adapter_name%").any(|(i, _)| depth + parens(l, i).0 > 0) {
+                errors.push(format!("{}: %adapter_name% dans un bloc : {t}", n + 1));
+            }
+            if l.match_indices("\\\"%").any(|(i, _)| l[i + 3..].find('%').is_some_and(|j| l[i + 3 + j + 1..].starts_with("\\\""))) {
+                errors.push(format!("{}: \\\"%…%\\\" hors des guillemets de cmd : {t}", n + 1));
+            }
+            depth = (depth + parens(l, l.len()).1).max(0);
+        }
+        errors
+    }
+
+    #[test]
+    fn adapter_checker_sees_what_breaks_a_block() {
+        let bad = [
+            ("if defined adapter_name (\r\n    echo Your current network adapter is: %adapter_name%\r\n)", "dans un bloc"),
+            ("if defined adapter_name (\r\n    netsh interface ipv4 set subinterface \"%adapter_name%\" mtu=1500\r\n)", "dans un bloc"),
+            ("if defined adapter_name ( echo %adapter_name% )", "dans un bloc"),
+            ("powershell -Command \"Get-NetAdapter -Name \\\"%adapter_name%\\\"\"", "hors des guillemets"),
+        ];
+        for (s, why) in bad {
+            let e = adapter_errors(s);
+            assert!(e.len() == 1 && e[0].contains(why), "{s}\n{e:?}");
+        }
+        let good = [
+            "netsh interface ipv4 set subinterface \"%adapter_name%\" mtu=1500 store=persistent >nul 2>&1",
+            "if \"%adapter_name%\"==\"\" (\r\n    exit /B\r\n)",
+            "if defined adapter_name (\r\n    echo Your current network adapter is: !adapter_name!\r\n    powershell -Command \"Get-NetAdapterAdvancedProperty \
+             -Name $env:adapter_name -RegistryKeyword '*EEE' | Set-NetAdapterAdvancedProperty -RegistryValue 0\" >nul 2>&1\r\n) else (\r\n    echo Skipping.\r\n)\r\n\
+             netsh interface ipv4 set subinterface \"%adapter_name%\" mtu=1500",
+            "for /f \"delims=\" %%a in ('x') do (\r\n    set \"adapter_name=%%a\"\r\n)\r\necho %adapter_name%",
+        ];
+        for s in good {
+            assert!(adapter_errors(s).is_empty(), "{s}\n{:?}", adapter_errors(s));
+        }
+    }
+
+    /// Le nom de la carte réseau (ping_main:config3, hitreg_suite) est lu à l'exécution dans les blocs : `!adapter_name!`
+    /// pour l'echo, `$env:adapter_name` pour PowerShell (adapter_errors). Les lignes netsh qui lisent la valeur posée
+    /// par le moteur (hors bloc, entre guillemets) ne changent pas.
+    #[test]
+    fn adapter_name_cannot_break_a_block() {
+        let probes: Scripts = serde_json::from_str(include_str!("../scripts/probes.json")).unwrap();
+        let undo: HashMap<String, HashMap<String, Undo>> = serde_json::from_str(include_str!("../scripts/undo.json")).unwrap();
+        let mut bad = Vec::new();
+        let mut check = |what: String, s: &str| bad.extend(adapter_errors(s).into_iter().map(|e| format!("{what} {e}")));
+        for (id, variants) in SCRIPTS.iter() {
+            for (v, s) in variants {
+                check(format!("{id}:{v}"), s);
+            }
+        }
+        for (id, variants) in &probes {
+            for (v, s) in variants {
+                check(format!("relevé {id}:{v}"), s);
+            }
+        }
+        for (id, variants) in &undo {
+            for (v, u) in variants {
+                for (part, s) in [("full", &u.full), ("rest", &u.rest)] {
+                    if let Some(s) = s {
+                        check(format!("annulation {id}:{v} {part}"), s);
+                    }
+                }
+            }
+        }
+        assert!(bad.is_empty(), "{} défauts :\n{}", bad.len(), bad.join("\n"));
+        let echo = "    echo Your current network adapter is: !adapter_name!";
+        let ps = "    powershell -Command \"Get-NetAdapterAdvancedProperty -Name $env:adapter_name -";
+        let s = &SCRIPTS["ping_main"]["config3"];
+        assert_eq!(s.lines().filter(|l| *l == echo).count(), 1, "{s}");
+        assert_eq!(s.lines().filter(|l| l.starts_with(ps)).count(), 29, "{s}");
+        for v in ["good", "medium", "low", "laptop"] {
+            let s = &SCRIPTS["hitreg_suite"][v];
+            assert_eq!(s.lines().filter(|l| *l == echo).count(), 1, "{v}\n{s}");
+            assert_eq!(s.lines().filter(|l| l.starts_with(ps)).count(), 2, "{v}\n{s}");
+        }
+        // décision de Sofiene en attente : valeur posée par le moteur (runner.rs, carte physique active), inchangée
+        for (id, v) in [("net_profile", "hitreg"), ("net_profile", "knockback"), ("ping_packets", "hitreg"), ("ping_packets", "knockback"), ("net_advanced", "_")] {
+            assert!(SCRIPTS[id][v].contains("netsh interface ipv4 set subinterface \"%adapter_name%\" mtu="), "{id}:{v}");
+        }
     }
 
     /// Services que lit le vérificateur officiel de RBW (github.com/quickpots/RBW-SS, Services.ps1, relevé le

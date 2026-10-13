@@ -37,12 +37,12 @@
  },
  "ping_advanced": {
   "fr": {
-   "desc": "Pack réseau : NetBIOS coupé, Nagle, économie d'énergie et accélérations de la carte coupées, interruptions sur un seul cœur.",
+   "desc": "Pack réseau : NetBIOS coupé, Nagle, économie d'énergie et accélérations de la carte coupées, interruptions sur un seul cœur (4 threads ou plus).",
    "gain": "Peut lisser de petites pointes de latence sur certaines cartes ; le reste a un effet rarement mesurable.",
    "cons": "Plus de réveil par le réseau ni de vieux partages NetBIOS ; carte plus gourmande et un peu plus de charge processeur."
   },
   "en": {
-   "desc": "Network pack: NetBIOS off, Nagle off, card power saving and offloads off, network interrupts on a single core.",
+   "desc": "Network pack: NetBIOS off, Nagle off, card power saving and offloads off, network interrupts on a single core (4 threads or more).",
    "gain": "Can smooth out small latency spikes on some cards; the rest is rarely measurable.",
    "cons": "No more wake-on-LAN or old NetBIOS shares; the card uses more power and the CPU does a bit more work."
   }

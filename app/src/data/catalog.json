@@ -231,8 +231,8 @@
         "fr": "Configuration réseau avancée"
        },
        "desc": {
-        "en": "Network pack: NetBIOS off, Nagle off, card power saving and offloads off, network interrupts on a single core.",
-        "fr": "Pack réseau : NetBIOS coupé, Nagle, économie d'énergie et accélérations de la carte coupées, interruptions sur un seul cœur."
+        "en": "Network pack: NetBIOS off, Nagle off, card power saving and offloads off, network interrupts on a single core (4 threads or more).",
+        "fr": "Pack réseau : NetBIOS coupé, Nagle, économie d'énergie et accélérations de la carte coupées, interruptions sur un seul cœur (4 threads ou plus)."
        },
        "risk": "advanced",
        "reboot": true,
@@ -241,7 +241,7 @@
        "legacy": [
         "RAGO APP Ping Optimization Final.bat@704"
        ],
-       "lines": 145,
+       "lines": 146,
        "gain": {
         "en": "Can smooth out small latency spikes on some cards; the rest is rarely measurable.",
         "fr": "Peut lisser de petites pointes de latence sur certaines cartes ; le reste a un effet rarement mesurable."
@@ -5789,7 +5789,7 @@
        "legacy": [
         "RAGO APP HITREG INPUTLAG.bat@76"
        ],
-       "lines": 57,
+       "lines": 56,
        "gain": {
         "en": "Rarely measurable: most of these values change little on a recent Windows.",
         "fr": "Effet rarement mesurable : la plupart de ces valeurs changent peu de chose sur un Windows récent."
