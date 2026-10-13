@@ -318,8 +318,10 @@ impl Runner {
                                 }
                             }
                             l.save();
-                        } else if catalog::revert_runs_script(&item.id) {
-                            // RBW Mod « Activé » : il n'est plus « appliqué » (« Désactivé » l'était)
+                        } else if catalog::revert_runs_script(&item.id) && r.0 {
+                            // RBW Mod « Activé » allé au bout : il n'est plus « appliqué » (« Désactivé » l'était). Arrêté
+                            // ou pas démarré (r.0 faux : le script finit toujours par exit /b 0), « Désactivé » reste noté :
+                            // la ligne ne dit pas « Activé depuis… », et la remise de fin de Premium le retentera
                             let mut l = ctx.ledger.lock().unwrap();
                             l.release(&item.id);
                             l.save();
@@ -1279,6 +1281,42 @@ mod tests {
 
     fn reset_item(id: &str) -> Vec<RunItem> {
         crate::reset::items(vec![id.to_string()])
+    }
+
+    /// m2 (revue finale du moteur) : « Activé » lancé pour revenir de « Désactivé » qui n'a pas tourné (dossier run
+    /// impossible à créer ici ; ailleurs : arrêté, cmd.exe qui ne démarre pas) laisse « Désactivé » noté. Avant, l'entrée
+    /// partait quand même : la ligne disait « Activé depuis… » et la remise de fin de Premium ne le retentait plus. Vrai
+    /// pour les deux chemins qui lancent « Activé » : la conversion d'une annulation (entrée d'une version d'avant :
+    /// décochée, Tout annuler, remise à zéro) et le clic sur « Activé ». Le chemin M1 (« Désactivé » de cette version
+    /// défait sans clic) ne lance rien et libère toujours l'entrée.
+    #[test]
+    fn rbw_on_that_did_not_run_keeps_off_applied() {
+        let mut ctx = test_ctx("rbw-on-fails", None);
+        ctx.run_dir = unwritable(&ctx, "run");
+        let runner = Runner::default();
+        let rbw = |variant: &str, undo: bool| vec![RunItem { id: "rbw_mode".into(), variant: Some(variant.into()), params: None, undo }];
+        let off = |backup: bool, windows_values: bool| backup::Applied { variant: Some("off".into()), ok: true, backup, windows_values, ts: 1, ..Default::default() };
+        let cases: [(&str, backup::Applied, Vec<RunItem>); 4] = [
+            ("conversion : remise à zéro d'une sauvegarde de 1.1.9", off(true, false), reset_item("rbw_mode")),
+            ("conversion : ancien « Désactivé » noté d'après l'historique, décoché ou Tout annuler", off(false, false), rbw("off", true)),
+            ("clic sur « Activé », « Désactivé » de cette version appliqué", off(false, true), rbw("on", false)),
+            ("clic sur « Activé », sauvegarde de 1.1.9", off(true, false), rbw("on", false)),
+        ];
+        for (case, entry, items) in cases {
+            ctx.ledger.lock().unwrap().tweaks.insert("rbw_mode".into(), entry.clone());
+            let (ok, failed) = runner.run_now(&ctx, &items);
+            assert_eq!((ok, failed), (0, 1), "{case} : « Activé » tenté, et raté");
+            let last = ctx.history.all().into_iter().max_by_key(|e| e.ts).unwrap();
+            assert!(last.variant.as_deref() == Some("on") && !last.undo && !last.ok, "{case} : {last:?}");
+            let l = ctx.ledger.lock().unwrap();
+            let kept = l.tweaks.get("rbw_mode").unwrap_or_else(|| panic!("{case} : entrée retirée sans que « Activé » ait tourné"));
+            assert_eq!(kept.variant.as_deref(), Some("off"), "{case}");
+            assert_eq!((kept.backup, kept.windows_values), (entry.backup, entry.windows_values), "{case}");
+        }
+        // le chemin M1, lui, ne lance rien et libère l'entrée
+        ctx.ledger.lock().unwrap().tweaks.insert("rbw_mode".into(), off(false, true));
+        assert_eq!(runner.run_now(&ctx, &reset_item("rbw_mode")), (1, 0));
+        assert!(!ctx.ledger.lock().unwrap().tweaks.contains_key("rbw_mode"));
     }
 
     #[test]
