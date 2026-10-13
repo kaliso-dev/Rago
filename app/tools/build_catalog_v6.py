@@ -13,6 +13,7 @@ import audit_fixes as AUDIT
 import safety as SAFETY
 import rbw as RBW
 import coherence as COHERENCE
+import paths as PATHS
 import os
 import re
 import subprocess
@@ -570,6 +571,10 @@ def postprocess(modules, scripts):
     # soit retirée ou réécrite (« Activé » est le script validé par Sofiene, étape par étape)
     sep = '\r\n' if '\r\n' in scripts['rbw_mode']['on'] else '\n'
     scripts['rbw_mode'] = {'on': RBW.ON.replace('\n', sep), 'off': RBW.OFF.replace('\n', sep)}
+    # chemins du profil (revue du 2026-10-13, P1/P2, tools/paths.py) : `!VAR!` au lieu de `%VAR%`, `if defined` devant
+    # ce qui supprime, boucles qui suppriment sans développement retardé ; nettoyages « set folder= » de cln_temp et
+    # mc_optifine (2 + 2 x 2) récrits
+    assert PATHS.apply(scripts) == 6, 'nettoyages set folder= de cln_temp et mc_optifine'
 
     tweaks = {t['id']: t for m in modules for sec in m['sections'] for t in sec['tweaks'] if 'id' in t}
     for tid, t in tweaks.items():
@@ -1041,9 +1046,12 @@ def main():
     kept = {k: v for k, v in scripts.items() if k not in SAFETY.RETIRED}
     json.dump(kept, open(os.path.join(ROOT, 'src-tauri', 'scripts', 'scripts.json'), 'w', encoding='utf-8'), ensure_ascii=False)
     # relevés : ce que chaque script va modifier, sauvegardé avant de l'appliquer (tools/probes.py)
-    json.dump(probes.build(kept), open(os.path.join(ROOT, 'src-tauri', 'scripts', 'probes.json'), 'w', encoding='utf-8'), ensure_ascii=False)
+    dry = probes.build(kept)
+    PATHS.apply(dry)  # mêmes règles que les scripts (tools/paths.py)
+    json.dump(dry, open(os.path.join(ROOT, 'src-tauri', 'scripts', 'probes.json'), 'w', encoding='utf-8'), ensure_ascii=False)
     # retour aux valeurs de Windows sans sauvegarde, et ce que la sauvegarde ne couvre pas (tools/undo, audit du 2026-10-07)
     undo, no_return = build_undo(before_audit, scripts)
+    PATHS.apply(undo)
     # valeurs de pilote (amd_thermal, sto_cacheprot) : seule la sauvegarde de l'app les remet ; Edge : rien à remettre
     assert set(SAFETY.RETIRED) - set(undo) == {'amd_thermal', 'sto_cacheprot', 'dbl_edge'}, set(SAFETY.RETIRED) - set(undo)
     json.dump(undo, open(os.path.join(ROOT, 'src-tauri', 'scripts', 'undo.json'), 'w', encoding='utf-8'), ensure_ascii=False, indent=0)

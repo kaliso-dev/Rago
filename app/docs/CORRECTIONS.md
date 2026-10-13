@@ -673,3 +673,20 @@ affiche une fois, en bas à droite, « Rago Optimizer a réparé une valeur qui 
 pour finir : Redémarrer, pas Arrêter. » (commande `take_repair_notice`, vraie une seule fois par lancement ; rien n'est
 gardé sur disque). Le message part seul après 20 secondes et ne bloque rien. Aux lancements suivants il n'y a plus rien
 à réparer, donc plus de message, sauf si un autre programme remet 0.
+
+**Chemins du profil dans les scripts : `!VAR!`, `if defined`.** Le moteur lance chaque script avec le développement
+retardé (`setlocal EnableDelayedExpansion`). cmd remplace `%temp%` avant de lire la ligne, puis retire les `!` du texte
+obtenu : avec un compte « Jean! », `del /s /f /q "%temp%\*"` vidait le dossier temporaire du compte « Jean ».
+`tools/paths.py` (branché après `QUIET` et le RBW Mod, puis sur les relevés et les annulations) écrit les variables de
+chemin `!temp!`, `!SystemRoot!`, `!ProgramData!`, `!LOCALAPPDATA!`, `!APPDATA!`, `!USERNAME!`, `!SystemDrive!` et
+`!PROFILES_DIR!` (`game_mode`, `in_windows`, `sto_general`, `cln_temp`, `mc_optifine`) : leur texte n'est jamais relu.
+Il met `if defined …` devant chaque `del`, `rd`, `forfiles`, `takeown` et `icacls` qui en dépend, ou devant la boucle qui
+les contient (vide, `"!temp!\*"` viserait la racine du disque). Les suppressions sur une variable de boucle (`%%d`,
+`%%i`, `%%U`) tournent avec `setlocal DisableDelayedExpansion` : cette variable est remplacée avant les `!…!`, et un
+dossier nommé `!SystemRoot!`, qu'un compte standard peut créer dans `C:\Windows\Temp`, faisait lancer
+`rmdir "C:\Windows" /s/q` à `cln_temp`, en administrateur. Le nettoyage par `set folder="…"` (`cln_temp`, `mc_optifine`)
+écrit le chemin une fois entre guillemets et ne vide le dossier que si `cd` a réussi : avant, `IF EXIST "%folder%"`
+doublait les guillemets, un `&` dans le nom du compte arrêtait le script sur une erreur de syntaxe, un espace sautait le
+test, et si `cd` échouait la boucle vidait le dossier où l'app lance ses scripts. Les autres lignes ne changent pas ;
+`undo.json` non plus. Tests `deletions_never_use_a_percent_path` (scripts, relevés, annulations : aucune suppression sur
+`%VAR%`, aucune variable de chemin écrite `%VAR%`) et `deletion_checker_sees_bad_paths`.

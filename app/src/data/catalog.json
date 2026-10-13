@@ -3078,7 +3078,7 @@
        "legacy": [
         "RAGO APP FPS.bat@1805"
        ],
-       "lines": 59,
+       "lines": 65,
        "gain": {
         "en": "Frees disk space; no FPS gain.",
         "fr": "Libère de l'espace disque ; aucun gain de FPS."
@@ -5602,7 +5602,7 @@
        "legacy": [
         "Performance@13768:temp"
        ],
-       "lines": 10,
+       "lines": 6,
        "gain": {
         "en": "Frees up disk space; does not add FPS.",
         "fr": "Libère de l'espace disque ; ne fait pas gagner de FPS."
@@ -6125,7 +6125,7 @@
           "fr": "Performance",
           "en": "Performance"
          },
-         "lines": 11
+         "lines": 7
         },
         {
          "id": "quality",
@@ -6133,7 +6133,7 @@
           "fr": "Qualité",
           "en": "Quality"
          },
-         "lines": 11
+         "lines": 7
         }
        ],
        "requires": [],
@@ -6293,7 +6293,7 @@
         "Performance@13768",
         "Quality@13875"
        ],
-       "lines": 11,
+       "lines": 7,
        "gain": {
         "en": "Performance can raise FPS a lot, but only if you play with OptiFine.",
         "fr": "Performance peut nettement augmenter les FPS, mais seulement si tu joues avec OptiFine."
