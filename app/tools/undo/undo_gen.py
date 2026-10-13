@@ -598,16 +598,18 @@ def h_powershell(raw, c, args, low):
         if v.lower() == d.lower():
             return None
         return both(f'{PS} "Set-NetTCPSetting -SettingName Internet -{m.group(2)} {d} -ErrorAction SilentlyContinue"{R}')
-    m = re.search(r"(?i)-displayname\s+'([^']+)'\s*\|\s*set-netadapteradvancedproperty", t)
+    m = re.search(r"(?i)-(displayname|registrykeyword)\s+'([^']+)'\s*\|\s*set-netadapteradvancedproperty", t)
     if m:
-        kw = NIC_KW.get(m.group(1).lower())
+        # par mot-clé du registre (ping_main:config3 depuis 1.1.9) ou par nom affiché anglais
+        kw = m.group(2) if m.group(1).lower() == 'registrykeyword' else NIC_KW.get(m.group(2).lower())
         if kw:
             C.add('nic_kw', kw)
         else:
-            LOG['nic displayname ' + m.group(1)].add(C.where)
+            LOG['nic displayname ' + m.group(2)].add(C.where)
         C.reversible = True
-        note('propriétés de la carte réseau choisies par leur nom anglais : sans effet sur un Windows dans une autre '
-             'langue ; l\'annulation passe par le mot-clé du registre (toutes langues)')
+        if m.group(1).lower() == 'displayname':
+            note('propriétés de la carte réseau choisies par leur nom anglais : sans effet sur un Windows dans une autre '
+                 'langue ; l\'annulation passe par le mot-clé du registre (toutes langues)')
         return None
     if re.search(r'(?i)set-processmitigation\s+-system', t):
         k = r'HKLM\SYSTEM\CurrentControlSet\Control\Session Manager\kernel'
@@ -939,6 +941,9 @@ def run(body, mode, where):
     C = Ctx(mode, where)
     # « ) > nul » ferme un bloc : la redirection ne doit pas en faire une commande
     body = re.sub(r'(?m)^(\s*\))\s*\d?>\s*nul\s*(2>&1)?\s*$', r'\1', body)
+    # garde « assez de processeurs » (tools/coherence.py) : elle protège l'application, pas l'annulation, qui retire
+    # les valeurs sur tous les PC (un PC passé par un script sans garde les a peut-être)
+    body = re.sub(r'(?im)^(\s*)if %NUMBER_OF_PROCESSORS% GEQ \d+ ', r'\1', body)
     text = P.dry_script(body)
     return finish(text, epilogue(C)), C
 

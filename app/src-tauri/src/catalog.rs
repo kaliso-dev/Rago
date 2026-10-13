@@ -524,6 +524,110 @@ mod tests {
         }
     }
 
+    /// Cohérence 1.1.9 (tools/coherence.py ; RAG-60 §4-§5, RAG-27, audit du 2026-10-07) : scripts qui visaient la
+    /// mauvaise carte, valeurs fausses, lignes contradictoires ou sans effet. Ces défauts ne doivent pas revenir.
+    #[test]
+    fn scripts_target_the_right_hardware_and_do_what_they_say() {
+        let probes: Scripts = serde_json::from_str(include_str!("../scripts/probes.json")).unwrap();
+        let undo: serde_json::Value = serde_json::from_str(include_str!("../scripts/undo.json")).unwrap();
+        let low = |id: &str, v: &str| SCRIPTS[id][v].to_lowercase();
+        // carte graphique : plus de « …\0000 » en dur, chaque écriture passe par les cartes du bon fabricant
+        let gpu0 = "class\\{4d36e968-e325-11ce-bfc1-08002be10318}\\0000";
+        for (id, ven) in [("nv_accel", "10de"), ("nv_contig", "10de"), ("nv_kboost", "10de"), ("gpu_nvidia", "10de"),
+                          ("amd_general", "1002"), ("amd_power", "1002"), ("amd_memsleep", "1002"), ("amd_delag", "1002"),
+                          ("gpu_amd", "1002")] {
+            let s = low(id, "_");
+            assert!(!s.contains(gpu0) && !s.contains("regpath_amd"), "{id} écrit dans la première carte venue");
+            assert!(s.contains("/v matchingdeviceid 2^>nul ^| findstr /i \"ven_") && s.contains(&format!("\"ven_{ven}\"")), "{id}");
+            assert!(s.lines().any(|l| l.starts_with("for %%") && l.contains(" in (!rago_gpu!) do reg")), "{id}");
+            assert!(s.is_ascii(), "{id} : texte parasite");
+            // le relevé suit les mêmes cartes, et rien n'est relevé sur la clé 0000 en dur
+            let p = probes[id]["_"].to_lowercase();
+            assert!(p.contains("in (!rago_gpu!) do echo @@rago reg") && !p.contains(gpu0), "{id} relevé");
+        }
+        assert!(!low("gpu_nvidia", "_").contains("%w%-"), "gpu_nvidia : boucles qui écrivaient dans Class\\-");
+        // mode MSI : seulement sur les cartes du fabricant
+        for (id, ven) in [("nv_msi", "10de"), ("gpu_nvidia", "10de"), ("gpu_amd", "1002")] {
+            for l in low(id, "_").lines().filter(|l| l.contains("win32_videocontroller")) {
+                assert!(l.contains(&format!("findstr /i \"ven_{ven}\"")), "{id} : {l}");
+            }
+        }
+        // valeurs
+        assert!(low("nv_kboost", "_").contains("\"perflevelsrc\" /t reg_dword /d \"8738\""));
+        assert!(!low("amd_power", "_").contains("clockgating\" /t reg_dword /d \"1\""));
+        assert!(low("pow_windows", "_").contains("energyestimationenabled /t reg_dword /d 0 "));
+        assert!(low("dbl_cortana", "_").contains("\"disablewebsearch\" /t reg_dword /d \"1\""));
+        assert!(low("win_services", "_").contains("policies\\microsoft\\dsh\" /v \"allownewsandinterests\""));
+        for (id, variants) in SCRIPTS.iter() {
+            for (v, s) in variants {
+                assert!(!s.to_lowercase().contains("\\microsoftd\\"), "{id}:{v}");
+            }
+        }
+        // réseau : netsh refusés par Windows 10 et 11, propriétés de carte par leur nom anglais, QoS hors domaine
+        let netsh_ok = ["autotuninglevel", "rss", "rsc", "ecncapability", "timestamps", "nonsackrttresiliency", "fastopen",
+                        "fastopenfallback", "hystart", "prr", "pacingprofile", "dca", "initialrto", "maxsynretransmissions"];
+        for (id, v) in [("ping_packets", "hitreg"), ("ping_packets", "knockback"), ("net_profile", "hitreg"),
+                        ("net_profile", "knockback"), ("net_advanced", "_")] {
+            for l in low(id, v).lines() {
+                let t = l.trim().replace("netsh interface ", "netsh int ");
+                if let Some(rest) = t.strip_prefix("netsh int tcp set global ") {
+                    let param = rest.split(['=', ' ']).next().unwrap();
+                    assert!(netsh_ok.contains(&param), "{id}:{v} : {l}");
+                }
+            }
+        }
+        assert!(!low("net_advanced", "_").contains("\"sackopts\" /t reg_dword /d \"0\""));
+        for v in SCRIPTS["ping_main"].keys() {
+            assert!(!low("ping_main", v).contains("-displayname"), "ping_main:{v} vise un nom anglais");
+        }
+        assert!(low("ping_main", "config3").contains("-registrykeyword '*flowcontrol'"));
+        let rest = undo["ping_main"]["config3"]["rest"].as_str().unwrap().to_lowercase();
+        assert!(rest.contains("reset-netadapteradvancedproperty") && rest.contains("'*flowcontrol'"), "annulation de config3");
+        for id in ["ping_packets", "net_profile"] {
+            let s = low(id, "qos");
+            assert!(s.contains("tcpip\\qos\" /v \"do not use nla\" /t reg_sz /d \"1\""), "{id}:qos");
+            assert!(s.contains("\"dscp value\" /t reg_sz /d \"46\"") && s.contains("\"throttle rate\" /t reg_sz /d \"-1\""), "{id}:qos");
+        }
+        // épinglage sur le processeur n°2 : seulement s'il existe, mais l'annulation retire toujours les valeurs
+        for (id, v) in [("net_affinity", "_"), ("in_adapter", "_"), ("ping_main", "config4")] {
+            let s = low(id, v);
+            let pins: Vec<&str> = s.lines().filter(|l| l.contains("\"assignmentsetoverride\"") || l.contains("/v \"devicepolicy\"")).collect();
+            assert_eq!(pins.len(), 2, "{id}:{v}");
+            assert!(pins.iter().all(|l| l.starts_with("if %number_of_processors% geq 4 ")), "{id}:{v}");
+            let full = undo[id][v]["full"].as_str().unwrap().to_lowercase();
+            assert!(full.contains("/v \"assignmentsetoverride\" /f") && !full.contains("number_of_processors"), "{id}:{v} annulation");
+        }
+        // packs : plus de lignes contraires à un autre réglage ou défaites plus bas
+        for (v, s) in &SCRIPTS["hitreg_suite"] {
+            let s = s.to_lowercase();
+            for bad in ["disable-scheduledtask", "disable-mmagent", "autogamemode", "\"hibernateenabled\"",
+                        "\"alwayson\" /t reg_dword /d \"1\"", "\"disabletaskoffload\" /t reg_dword /d \"1\""] {
+                assert!(!s.contains(bad), "hitreg_suite:{v} : {bad}");
+            }
+            assert!(s.contains("schtasks /change /tn \"\\microsoft\\windows\\application experience\\microsoft compatibility appraiser\" /disable"));
+        }
+        assert!(!low("in_advanced", "_").contains("autogamemode") && !low("in_advanced", "_").contains("\"hibernateenabled\""));
+        assert!(!low("win_gamedvr", "_").contains("fsebehaviormode\" /t reg_dword /d \"1\""));
+        assert!(!low("exp_io", "_").contains("ntoskrnl.exe") && !low("exp_io", "_").contains("wow6432node"));
+        // Plein écran garde Auto HDR et les autres réglages graphiques de Windows 11
+        let fs = low("win_fullscreen", "_");
+        assert!(fs.contains("/d \"!rago_dx!vrroptimizeenable=0;swapeffectupgradeenable=1;\""));
+        assert!(!fs.contains("/d \"vrroptimizeenable=0;"));
+        // redémarrage annoncé
+        let cat: serde_json::Value = serde_json::from_str(include_str!("../../src/data/catalog.json")).unwrap();
+        let tw = |id: &str| cat["modules"].as_array().unwrap().iter()
+            .flat_map(|m| m["sections"].as_array().unwrap())
+            .flat_map(|s| s["tweaks"].as_array().unwrap())
+            .find(|t| t["id"] == id).unwrap_or_else(|| panic!("{id} absent")).clone();
+        for id in ["net_ipv6", "in_mouse", "in_keyboard", "net_profile"] {
+            assert_eq!(tw(id)["reboot"], true, "{id}");
+        }
+        let np = tw("net_profile");
+        let reboot = |v: &str| np["variants"].as_array().unwrap().iter().find(|x| x["id"] == v).unwrap()["reboot"].clone();
+        assert_eq!((reboot("hitreg"), reboot("knockback"), reboot("qos")), (false.into(), true.into(), true.into()));
+        assert_eq!(name_of("mem_superfetch"), "Disable Superfetch (legacy setting)");
+    }
+
     /// Réglages retirés (tools/safety.py, 2026-10-08) : ni script ni relevé, absents du catalogue et des profils, mais
     /// leur annulation reste là pour les PC où une version précédente les a appliqués. Les lignes risquées qu'ils
     /// portaient ne se retrouvent plus dans aucun autre script.

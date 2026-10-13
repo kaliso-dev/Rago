@@ -8,7 +8,7 @@
   "en": {
    "desc": "Six profiles that set TCP receive auto-tuning and incoming packet coalescing; Default puts Windows back as it was.",
    "gain": "Rarely measurable: hit registration is decided by the server and mostly depends on your ping.",
-   "cons": "Any profile other than Max hitreg or Default can slow down large downloads."
+   "cons": "Any profile other than Best hitreg or Default can slow down large downloads."
   }
  },
  "ping_packets": {
@@ -97,24 +97,24 @@
  },
  "net_powersave": {
   "fr": {
-   "desc": "Coupe l'économie d'énergie de la carte réseau (Green Ethernet, mise en veille) et le réveil du PC par le réseau.",
+   "desc": "Coupe l'économie d'énergie de la carte réseau (Green Ethernet, mise en veille), le réveil du PC par le réseau et le Large Send Offload.",
    "gain": "Peut supprimer de petites pointes de latence sur certaines cartes réseau.",
-   "cons": "La carte consomme un peu plus (batterie sur portable) et le PC ne se réveille plus par le réseau."
+   "cons": "La carte consomme un peu plus (batterie sur portable), le PC ne se réveille plus par le réseau et le processeur découpe lui-même les gros envois."
   },
   "en": {
-   "desc": "Turns off network card power saving (Green Ethernet, sleep) and waking the PC over the network.",
+   "desc": "Turns off network card power saving (Green Ethernet, sleep), waking the PC over the network and Large Send Offload.",
    "gain": "Can remove small latency spikes on some network cards.",
-   "cons": "The card uses a bit more power (battery on laptops) and the PC can't be woken over the network."
+   "cons": "The card uses a bit more power (battery on laptops), the PC can't be woken over the network and the CPU splits large sends itself."
   }
  },
  "net_adapter": {
   "fr": {
-   "desc": "Coupe l'économie d'énergie, le réveil par le réseau et les accélérations de la carte réseau, et agrandit ses tampons.",
+   "desc": "Coupe l'économie d'énergie, le réveil par le réseau et les accélérations de ta carte filaire (Ethernet), et agrandit ses tampons ; le Wi-Fi n'est pas modifié.",
    "gain": "Peut lisser de petites pointes de latence sur certaines cartes ; effet souvent faible.",
    "cons": "Un peu plus de charge processeur et de consommation ; le PC ne se réveille plus par le réseau."
   },
   "en": {
-   "desc": "Turns off power saving, wake-on-LAN and offloads on your network card, and enlarges its buffers.",
+   "desc": "Turns off power saving, wake-on-LAN and offloads on your wired (Ethernet) card, and enlarges its buffers; Wi-Fi is left alone.",
    "gain": "Can smooth out small latency spikes on some cards; often a small effect.",
    "cons": "A bit more CPU load and power use; the PC can no longer be woken over the network."
   }
@@ -133,14 +133,14 @@
  },
  "net_advanced": {
   "fr": {
-   "desc": "Change une quinzaine de réglages TCP globaux de Windows et coupe Teredo et ISATAP, deux vieux tunnels IPv6.",
+   "desc": "Change une vingtaine de réglages TCP de Windows, coupe deux protections TCP (MPP et profils de sécurité) et les vieux tunnels IPv6 Teredo et ISATAP.",
    "gain": "Effet rarement mesurable sur le ping : ces réglages jouent surtout sur le débit.",
-   "cons": "Le chat de groupe Xbox et quelques jeux en pair-à-pair peuvent avoir du mal à se connecter."
+   "cons": "Windows résiste moins à un flot de connexions malveillantes ; le chat de groupe Xbox et quelques jeux en pair-à-pair peuvent avoir du mal à se connecter."
   },
   "en": {
-   "desc": "Changes about fifteen global TCP settings and turns off Teredo and ISATAP, two old IPv6 tunnels.",
+   "desc": "Changes about twenty Windows TCP settings, turns off two TCP protections (MPP and security profiles) and the old Teredo and ISATAP IPv6 tunnels.",
    "gain": "Rarely measurable on ping: these settings mostly affect throughput.",
-   "cons": "Xbox party chat and some peer-to-peer games may have trouble connecting."
+   "cons": "Windows copes less well with a flood of malicious connections; Xbox party chat and some peer-to-peer games may have trouble connecting."
   }
  },
  "net_dnsprio": {
@@ -193,12 +193,12 @@
  },
  "net_affinity": {
   "fr": {
-   "desc": "Envoie toutes les interruptions de la carte réseau sur un seul cœur du processeur.",
+   "desc": "Envoie toutes les interruptions de la carte réseau sur un seul cœur du processeur, si ton processeur a au moins 4 threads.",
    "gain": "Effet rarement mesurable : Windows répartit déjà bien ce travail.",
    "cons": "Ce cœur peut saturer sur une connexion très rapide et limiter le débit."
   },
   "en": {
-   "desc": "Sends all network card interrupts to a single CPU core.",
+   "desc": "Sends all network card interrupts to a single CPU core, if your processor has at least 4 threads.",
    "gain": "Rarely measurable: Windows already spreads this work well.",
    "cons": "That core can get overloaded on a very fast connection and limit throughput."
   }
@@ -853,12 +853,12 @@
  },
  "pow_main": {
   "fr": {
-   "desc": "Coupe plusieurs économies d'énergie : ralentissement des applis en arrière-plan, veille des liaisons SATA et des disques.",
+   "desc": "Coupe plusieurs économies d'énergie : ralentissement des applis en arrière-plan, veille de la liaison SATA et des disques, suivi de la consommation par appli.",
    "gain": "Peut rendre les images plus régulières sur certains PC, surtout les portables branchés.",
    "cons": "Plus de consommation et moins d'autonomie sur portable."
   },
   "en": {
-   "desc": "Turns off several power savings: slowing of background apps, SATA link and drive idle power.",
+   "desc": "Turns off several power savings: slowing of background apps, SATA link and drive idle power, and per-app power tracking.",
    "gain": "May make frame pacing smoother on some PCs, especially plugged-in laptops.",
    "cons": "Higher power use and shorter battery life on laptops."
   }
@@ -901,12 +901,12 @@
  },
  "sys_bcdedit": {
   "fr": {
-   "desc": "Modifie les réglages de démarrage de Windows : gestion des minuteurs du processeur et animation de démarrage masquée.",
+   "desc": "Modifie le démarrage de Windows : minuteurs et interruptions du processeur, tick dynamique coupé, console de secours coupée et démarrage sans animation.",
    "gain": "Effet rarement mesurable : Windows gère déjà bien ses minuteurs.",
    "cons": "Change les réglages de démarrage de Windows, et le PC peut consommer un peu plus au repos."
   },
   "en": {
-   "desc": "Changes Windows boot settings: processor timer handling and a hidden boot animation.",
+   "desc": "Changes Windows boot settings: processor timers and interrupts, dynamic tick off, emergency console off and boot without animation.",
    "gain": "Rarely measurable: Windows already handles its timers well.",
    "cons": "Changes Windows boot settings, and the PC may use a bit more power at idle."
   }
@@ -937,26 +937,26 @@
  },
  "pow_windows": {
   "fr": {
-   "desc": "Coupe l'hibernation, le démarrage rapide, le mode absence et le ralentissement des applis en arrière-plan.",
+   "desc": "Coupe l'hibernation, le démarrage rapide, le mode absence, l'estimation de la consommation des applis et le ralentissement des applis en arrière-plan.",
    "gain": "Libère l'espace du fichier d'hibernation ; images parfois plus régulières sur portable branché.",
    "cons": "Hibernation indisponible, démarrage un peu plus long après un arrêt et moins d'autonomie sur portable."
   },
   "en": {
-   "desc": "Turns off hibernation, Fast Startup, away mode and the slowing of background apps.",
+   "desc": "Turns off hibernation, Fast Startup, away mode, app power estimation and the slowing of background apps.",
    "gain": "Frees the hibernation file's disk space; frame pacing may be smoother on plugged-in laptops.",
    "cons": "No hibernation, slightly slower boot after a shutdown and shorter battery life on laptops."
   }
  },
  "pow_throttling": {
   "fr": {
-   "desc": "Windows ne ralentit plus les applis qu'il juge en arrière-plan pour économiser l'énergie.",
+   "desc": "Windows ne ralentit plus les applis qu'il juge en arrière-plan et n'estime plus leur consommation d'énergie.",
    "gain": "Peut rendre les images plus régulières sur certains PC, surtout les portables branchés.",
-   "cons": "Plus de consommation et moins d'autonomie sur portable."
+   "cons": "Plus de consommation et moins d'autonomie sur portable ; le détail de la batterie par appli peut rester vide."
   },
   "en": {
-   "desc": "Windows stops slowing down apps it considers in the background to save power.",
+   "desc": "Windows stops slowing down apps it considers in the background and stops estimating their power use.",
    "gain": "May make frame pacing smoother on some PCs, especially plugged-in laptops.",
-   "cons": "Higher power use and shorter battery life on laptops."
+   "cons": "Higher power use and shorter battery life on laptops; the per-app battery details may stay empty."
   }
  },
  "pow_hwp": {
@@ -1285,14 +1285,14 @@
  },
  "gpu_nvidia": {
   "fr": {
-   "desc": "Pack NVIDIA complet : profil faible latence pour tous tes jeux, GPU gardé à fond, télémétrie coupée et réglages du pilote.",
+   "desc": "Pack NVIDIA complet : profil faible latence pour tous tes jeux, GPU gardé à fond, télémétrie coupée, réglages du pilote et ménage de C:\\NVIDIA.",
    "gain": "Le profil peut réduire l'input lag quand le GPU est à 100 % ; le reste a un effet rarement mesurable.",
-   "cons": "GPU à fond même au bureau (chaleur, conso), Netflix peut refuser de se lire, réglages NVIDIA globaux remplacés."
+   "cons": "GPU à fond même au bureau (chaleur, conso) ; HDCP coupé : Netflix peut refuser de se lire ; plus d'alerte de nouveau pilote ; réglages NVIDIA remplacés."
   },
   "en": {
-   "desc": "Full NVIDIA pack: low-latency profile for all your games, GPU kept at full speed, telemetry off and driver settings.",
+   "desc": "Full NVIDIA pack: low-latency profile for all your games, GPU kept at full speed, telemetry off, driver settings and a C:\\NVIDIA cleanup.",
    "gain": "The profile can reduce input lag when the GPU is at 100%; the rest is rarely measurable.",
-   "cons": "GPU at full speed even on the desktop (heat, power), Netflix may refuse to play, global NVIDIA settings replaced."
+   "cons": "GPU at full speed even on the desktop (heat, power); HDCP off, so Netflix may refuse to play; no new-driver alerts; NVIDIA settings replaced."
   }
  },
  "gpu_amd": {
@@ -1347,12 +1347,12 @@
   "fr": {
    "desc": "Pack NVIDIA : profil faible latence pour tous tes jeux, mode MSI, HDCP coupé, télémétrie NVIDIA coupée.",
    "gain": "Le profil peut réduire l'input lag quand le GPU est à 100 % ; Reflex dans le jeu fait mieux s'il existe.",
-   "cons": "Netflix et les vidéos protégées peuvent refuser de se lire, et tes réglages NVIDIA globaux sont remplacés."
+   "cons": "Netflix et les vidéos protégées peuvent refuser de se lire, NVIDIA ne te prévient plus des nouveaux pilotes, et tes réglages NVIDIA globaux sont remplacés."
   },
   "en": {
    "desc": "NVIDIA pack: low-latency profile for all your games, MSI mode, HDCP off, NVIDIA telemetry off.",
    "gain": "The profile can reduce input lag when the GPU is at 100%; in-game Reflex does better when available.",
-   "cons": "Netflix and other protected video may refuse to play, and your global NVIDIA settings are replaced."
+   "cons": "Netflix and other protected video may refuse to play, NVIDIA no longer tells you about new drivers, and your global NVIDIA settings are replaced."
   }
  },
  "nv_profile": {
@@ -1538,12 +1538,12 @@
  "nv_kboost": {
   "fr": {
    "desc": "Bloque la carte graphique NVIDIA à sa fréquence maximale en permanence, même au bureau.",
-   "gain": "Peut éviter de petites baisses de fréquence en jeu ; sur portable, peut viser la puce intégrée à la place.",
+   "gain": "Peut éviter de petites baisses de fréquence en jeu ; sans effet sans carte NVIDIA.",
    "cons": "Plus de chaleur, de bruit, de consommation et d'usure, même quand tu ne joues pas."
   },
   "en": {
    "desc": "Locks the NVIDIA graphics card at its maximum clock speed all the time, even on the desktop.",
-   "gain": "Can avoid small clock drops in games; on laptops it may target the built-in chip instead.",
+   "gain": "Can avoid small clock drops in games; does nothing without an NVIDIA card.",
    "cons": "More heat, noise, power use and wear, even when you are not gaming."
   }
  },
@@ -1647,12 +1647,12 @@
   "fr": {
    "desc": "Remet les réglages plein écran de Windows par défaut et active l'optimisation des jeux en fenêtre de Windows 11.",
    "gain": "Peut réduire un peu la latence des jeux DirectX en fenêtre ; rarement utile pour Minecraft Java.",
-   "cons": "Écrase tes réglages graphiques de Windows 11 : Auto HDR peut se couper, tout comme le VRR forcé des vieux jeux."
+   "cons": "Le VRR forcé des vieux jeux est coupé ; Auto HDR et tes autres réglages graphiques de Windows 11 sont gardés."
   },
   "en": {
    "desc": "Resets Windows fullscreen settings to default and turns on Windows 11's optimizations for windowed games.",
    "gain": "May slightly lower latency in windowed DirectX games; rarely helps Minecraft Java.",
-   "cons": "Overwrites your Windows 11 graphics settings: Auto HDR may turn off, and so does forced VRR for older games."
+   "cons": "Forced VRR for older games is turned off; Auto HDR and your other Windows 11 graphics settings are kept."
   }
  },
  "win_gamemode": {
@@ -1885,12 +1885,12 @@
  },
  "dbl_telemetry": {
   "fr": {
-   "desc": "Coupe la télémétrie de Windows et d'Office et une vingtaine de tâches qui envoient des données d'usage à Microsoft.",
+   "desc": "Réduit la télémétrie de Windows et d'Office au minimum que permet ton édition et coupe une vingtaine de tâches qui envoient des données à Microsoft.",
    "gain": "Plus de vie privée ; effet sur les FPS quasi nul.",
    "cons": "Coupe aussi la localisation : météo, cartes et « Localiser mon appareil » ne te situent plus."
   },
   "en": {
-   "desc": "Turns off Windows and Office telemetry and about twenty tasks that send usage data to Microsoft.",
+   "desc": "Lowers Windows and Office telemetry to the minimum your edition allows and turns off about twenty tasks that send data to Microsoft.",
    "gain": "More privacy; near-zero effect on FPS.",
    "cons": "Also turns off location: weather, maps and Find my device can no longer locate you."
   }
@@ -1969,14 +1969,14 @@
  },
  "win_ai": {
   "fr": {
-   "desc": "Coupe Copilot et son bouton dans la barre des tâches, et empêche Recall de prendre des captures de ton écran.",
+   "desc": "Masque le bouton Copilot et empêche Recall de prendre des captures de ton écran ; la règle « Copilot coupé » n'agit plus sur les Windows 11 récents.",
    "gain": "Plus de vie privée ; effet sur les FPS quasi nul.",
-   "cons": "Le bouton Copilot disparaît de la barre des tâches."
+   "cons": "Le bouton Copilot disparaît de la barre des tâches ; sur les Windows 11 récents, l'appli Copilot reste installée et utilisable."
   },
   "en": {
-   "desc": "Turns off Copilot and its taskbar button, and stops Recall from taking snapshots of your screen.",
+   "desc": "Hides the Copilot button and stops Recall from taking snapshots of your screen; the 'Copilot off' policy no longer works on recent Windows 11.",
    "gain": "More privacy; near-zero effect on FPS.",
-   "cons": "The Copilot button disappears from the taskbar."
+   "cons": "The Copilot button disappears from the taskbar; on recent Windows 11, the Copilot app stays installed and usable."
   }
  },
  "app_remove": {
@@ -2007,24 +2007,24 @@
   "fr": {
    "desc": "Pack de plus de 200 réglages : télémétrie et tâches de collecte coupées, moins d'animations, souris sans accélération, etc.",
    "gain": "Plus de vie privée et un Windows plus calme en fond ; effet sur les FPS rarement mesurable.",
-   "cons": "Coupe aussi la localisation et l'accélération de la souris (autre sensation) ; Windows ne cherche plus seul tes pilotes."
+   "cons": "Coupe aussi la localisation, l'accélération de la souris et les applis du Store en arrière-plan ; Windows ne cherche plus seul tes pilotes."
   },
   "en": {
    "desc": "A pack of 200+ settings: telemetry and data collection tasks off, fewer animations, no mouse acceleration, etc.",
    "gain": "More privacy and a quieter Windows in the background; rarely measurable effect on FPS.",
-   "cons": "Also turns off location and mouse acceleration (feels different); Windows stops fetching drivers on its own."
+   "cons": "Also turns off location, mouse acceleration and background Store apps; Windows stops fetching drivers on its own."
   }
  },
  "win_optimize": {
   "fr": {
    "desc": "Une cinquantaine de réglages de confort : moins de suggestions et de pubs, Edge ne tourne plus en fond, menus plus rapides.",
    "gain": "Windows plus calme et des menus plus vifs ; effet sur les FPS rarement mesurable.",
-   "cons": "L'Assistance à distance de Windows est coupée et Edge ne t'envoie plus de notifications une fois fermé."
+   "cons": "L'Assistance à distance est coupée, tes paramètres et mots de passe ne se synchronisent plus entre tes PC, et Edge fermé ne notifie plus."
   },
   "en": {
    "desc": "About fifty comfort settings: fewer suggestions and ads, Edge no longer runs in the background, faster menus.",
    "gain": "A quieter Windows and snappier menus; rarely measurable effect on FPS.",
-   "cons": "Windows Remote Assistance is turned off and Edge no longer sends notifications once closed."
+   "cons": "Remote Assistance is turned off, your settings and passwords no longer sync between PCs, and Edge no longer notifies once closed."
   }
  },
  "win_diag": {
@@ -2041,12 +2041,12 @@
  },
  "win_services": {
   "fr": {
-   "desc": "Coupe l'indexation, l'impression, les fichiers hors connexion et les rapports d'erreurs, et retire Cortana et Copilot.",
+   "desc": "Coupe l'indexation, l'impression, les fichiers hors connexion et les rapports d'erreurs, et retire Cortana et l'ancien module Copilot (pas l'appli actuelle).",
    "gain": "Quelques services de fond en moins ; effet sur les FPS rarement mesurable.",
    "cons": "Recherche Windows plus lente, plus d'impression ni de centre de notifications tant que tu ne le désactives pas."
   },
   "en": {
-   "desc": "Turns off search indexing, printing, offline files and error reporting, and removes Cortana and Copilot.",
+   "desc": "Turns off search indexing, printing, offline files and error reporting, and removes Cortana and the old Copilot component (not the current app).",
    "gain": "A few fewer background services; rarely measurable effect on FPS.",
    "cons": "Windows search is slower, and printing and the notification center don't work until you turn it off."
   }
@@ -2137,12 +2137,12 @@
  },
  "in_adapter": {
   "fr": {
-   "desc": "Règle les tampons réseau, les accusés de réception et la durée de vie des paquets, et met la carte réseau sur un seul cœur.",
+   "desc": "Règle les tampons réseau, les accusés de réception et la durée de vie des paquets, et met la carte réseau sur un seul cœur (4 threads ou plus).",
    "gain": "Effet rarement mesurable : ces valeurs changent peu de chose en jeu.",
    "cons": "Toutes les interruptions réseau passent par un seul cœur, ce qui peut limiter le débit d'une connexion très rapide."
   },
   "en": {
-   "desc": "Tunes network buffers, acknowledgments and packet lifetime, and pins the network card to a single CPU core.",
+   "desc": "Tunes network buffers, acknowledgments and packet lifetime, and pins the network card to a single CPU core (4 threads or more).",
    "gain": "Rarely measurable: these values change little in games.",
    "cons": "All network interrupts go through one core, which can limit throughput on a very fast connection."
   }
@@ -2173,14 +2173,14 @@
  },
  "in_advanced": {
   "fr": {
-   "desc": "Gros pack : démarrage, priorités, réseau, Game DVR coupé, vie privée, notifications et apparence de Windows.",
+   "desc": "Gros pack : démarrage, priorités, réseau, Game DVR coupé, souris sans accélération, vie privée, notifications, couleurs et curseurs de Windows.",
    "gain": "Couper le Game DVR peut aider sur un petit PC ; le reste a un effet rarement mesurable en jeu.",
-   "cons": "Coupe notifications, pilotes de Windows Update et alerte avant d'ouvrir un téléchargement ; change couleurs et curseurs."
+   "cons": "Coupe notifications, pilotes via Windows Update et alerte sur les téléchargements ; cache l'icône Sécurité Windows ; Caméra et Game Bar perdent webcam et micro."
   },
   "en": {
-   "desc": "Big pack: boot, priorities, network, Game DVR off, privacy, notifications and the look of Windows.",
+   "desc": "Big pack: boot, priorities, network, Game DVR off, no mouse acceleration, privacy, notifications, and Windows colors and cursors.",
    "gain": "Turning off Game DVR can help on a low-end PC; the rest is rarely measurable in games.",
-   "cons": "Turns off notifications, drivers via Windows Update and the downloaded-file warning; changes colors and cursors."
+   "cons": "Turns off notifications, drivers via Windows Update and the download warning; hides the Windows Security icon; Camera and Game Bar lose webcam and mic."
   }
  },
  "in_mouse": {
@@ -2223,24 +2223,24 @@
   "fr": {
    "desc": "Plus de 300 réglages : processeur à fond sur secteur, priorités, minuteurs, mémoire, vie privée ; 4 profils presque identiques.",
    "gain": "Peut rendre les images plus régulières sur un PC branché ; le reste a un effet rarement mesurable.",
-   "cons": "Plus de chaleur ; localisation et applis Store en fond coupées ; touche au préchargement, vérifié en screenshare."
+   "cons": "Plus de chaleur ; accélération de la souris, localisation et applis Store en fond coupées ; touche au préchargement, vérifié en screenshare."
   },
   "en": {
    "desc": "300+ settings: CPU at full speed when plugged in, priorities, timers, memory, privacy; the 4 profiles are almost identical.",
    "gain": "Can make frame pacing steadier on a plugged-in PC; the rest is rarely measurable.",
-   "cons": "More heat; location and background Store apps off; touches prefetch, which screenshares check."
+   "cons": "More heat; mouse acceleration, location and background Store apps off; touches prefetch, which screenshares check."
   }
  },
  "mc_optifine": {
   "fr": {
    "desc": "Écrit un préréglage OptiFine, Performance ou Qualité, dans les options de Minecraft ; ton ancien fichier est sauvegardé.",
    "gain": "Performance peut nettement augmenter les FPS, mais seulement si tu joues avec OptiFine.",
-   "cons": "Performance rend le jeu moins joli : ciel, nuages, animations et particules coupés."
+   "cons": "Performance rend le jeu moins joli (ciel, nuages, animations, particules) ; le zoom passe sur Ctrl gauche, déjà la touche de sprint par défaut."
   },
   "en": {
    "desc": "Writes an OptiFine preset, Performance or Quality, into Minecraft's options; your old file is backed up.",
    "gain": "Performance can raise FPS a lot, but only if you play with OptiFine.",
-   "cons": "Performance makes the game look plainer: sky, clouds, animations and particles off."
+   "cons": "Performance makes the game look plainer (sky, clouds, animations, particles); zoom moves to Left Ctrl, which is also the default sprint key."
   }
  },
  "rbw_mode": {
@@ -2475,12 +2475,12 @@
   "fr": {
    "desc": "Renforce le partage de fichiers en réseau : coupe le vieux protocole SMB1 et exige la signature et le chiffrement.",
    "gain": "Plus de sécurité sur ton réseau local ; aucun effet sur les performances en jeu.",
-   "cons": "Les vieux NAS, box et TV ne pourront plus ouvrir tes dossiers partagés ; les copies réseau peuvent ralentir."
+   "cons": "Les vieux NAS, box et TV n'ouvrent plus tes dossiers partagés, et ton PC n'ouvre plus ceux des vieux NAS ; les copies réseau peuvent ralentir."
   },
   "en": {
    "desc": "Hardens network file sharing: turns off the old SMB1 protocol and requires signing and encryption.",
    "gain": "More security on your local network; no effect on game performance.",
-   "cons": "Old NAS drives, routers and TVs will no longer open your shared folders; network copies may be slower."
+   "cons": "Old NAS drives, routers and TVs can't open your shared folders, and your PC can't open old NAS shares; network copies may be slower."
   }
  },
  "rst_point": {
