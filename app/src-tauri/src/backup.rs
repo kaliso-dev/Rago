@@ -389,6 +389,9 @@ pub struct Ledger {
     pub saved: Vec<(String, SavedEntry)>,
     #[serde(skip)]
     path: PathBuf,
+    /// le fichier sur disque n'a pu être ni lu ni mis de côté : rien ne doit l'écraser (voir `load`)
+    #[serde(skip)]
+    unread: std::sync::atomic::AtomicBool,
 }
 
 /// Réglage appliqué, tel que l'interface l'affiche.
@@ -408,24 +411,88 @@ pub struct AppliedView {
 }
 
 impl Ledger {
+    /// applied.json : `(registre, true)` s'il a été lu. Absent : registre vide et `false` (premier lancement depuis
+    /// 1.1.6, l'appelant le remplit d'après l'historique). Présent mais illisible (coupure de courant pendant une
+    /// écriture, champ qu'une version future rend obligatoire, fichier verrouillé) : avant, il était traité comme absent
+    /// puis écrasé au premier enregistrement, et tous les états d'avant étaient perdus. Il est maintenant mis de côté
+    /// sous `applied.json.bad-<horodatage>` (noté dans logs\repairs.log : le support peut le relire ou le remettre), et
+    /// un registre neuf commence. S'il ne peut même pas être renommé, rien ne l'écrase pendant ce lancement.
     pub fn load(path: PathBuf) -> (Self, bool) {
-        match fs::read_to_string(&path).ok().and_then(|s| serde_json::from_str::<Ledger>(&s).ok()) {
-            Some(mut l) => {
-                l.path = path;
-                (l, true)
+        let read = || match fs::read(&path) {
+            Ok(bytes) => Ok(Some(bytes)),
+            Err(e) if e.kind() == std::io::ErrorKind::NotFound => Ok(None),
+            Err(e) => Err(e.to_string()),
+        };
+        // verrou passager (antivirus, sauvegarde) : quelques essais avant de conclure qu'il ne se lit pas
+        let mut got = read();
+        for _ in 0..3 {
+            if got.is_ok() {
+                break;
             }
-            None => (Ledger { path, ..Default::default() }, false),
+            std::thread::sleep(std::time::Duration::from_millis(200));
+            got = read();
         }
+        let why = match got {
+            Ok(None) => return (Ledger { path, ..Default::default() }, false),
+            Ok(Some(bytes)) => match serde_json::from_slice::<Ledger>(&bytes) {
+                Ok(mut l) => {
+                    l.path = path;
+                    return (l, true);
+                }
+                Err(e) => format!("unreadable ({e})"),
+            },
+            Err(e) => format!("couldn't be read ({e})"),
+        };
+        let l = Ledger { path, ..Default::default() };
+        if !l.set_aside(&why) {
+            l.unread.store(true, std::sync::atomic::Ordering::SeqCst);
+        }
+        (l, false)
+    }
+
+    /// Met applied.json de côté sous `applied.json.bad-<horodatage>`, avec une ligne dans logs\repairs.log. Faux s'il
+    /// est encore là sous son nom.
+    fn set_aside(&self, why: &str) -> bool {
+        let ts = crate::history::now_ms();
+        let name = self.path.file_name().map(|n| n.to_string_lossy().into_owned()).unwrap_or_else(|| "applied.json".into());
+        let aside = self.path.with_file_name(format!("{name}.bad-{ts}"));
+        let moved = fs::rename(&self.path, &aside).is_ok() || !self.path.exists();
+        if let Some(logs) = self.path.parent().map(|d| d.join("logs")) {
+            let _ = fs::create_dir_all(&logs);
+            if let Ok(mut f) = fs::OpenOptions::new().create(true).append(true).open(logs.join("repairs.log")) {
+                use std::io::Write;
+                let _ = if moved {
+                    writeln!(f, "{ts} {name} {why}: kept as {}, a new one is started", aside.display())
+                } else {
+                    writeln!(f, "{ts} {name} {why}, and couldn't be set aside: left untouched, changes of this launch aren't saved")
+                };
+            }
+        }
+        moved
     }
 
     pub fn save(&self) {
+        use std::sync::atomic::Ordering;
         if let Some(dir) = self.path.parent() {
             let _ = fs::create_dir_all(dir);
         }
+        // fichier d'avant illisible et encore en place (verrou) : jamais écrasé ; mis de côté dès que possible
+        if self.unread.load(Ordering::SeqCst) {
+            if !self.set_aside("couldn't be read at launch") {
+                return;
+            }
+            self.unread.store(false, Ordering::SeqCst);
+        }
         if let Ok(json) = serde_json::to_string(self) {
-            // écrit à côté puis remplace : un arrêt brutal ne laisse pas un fichier coupé
+            // écrit à côté, sur le disque (sync_all), puis remplace : une coupure de courant ne laisse ni un fichier
+            // coupé ni un fichier vide sous le bon nom
             let tmp = self.path.with_extension("json.tmp");
-            if fs::write(&tmp, json).is_ok() {
+            let written = fs::File::create(&tmp).and_then(|mut f| {
+                use std::io::Write;
+                f.write_all(json.as_bytes())?;
+                f.sync_all()
+            });
+            if written.is_ok() {
                 let _ = fs::rename(&tmp, &self.path);
             }
         }
@@ -1651,6 +1718,65 @@ device                  partition=C:\r\ndisabledynamictick      Oui\r\ntscsyncpo
         assert_eq!(l2.tweaks["one"].variant.as_deref(), Some("v"));
         assert_eq!(l2.saved[0].1.before, Saved::Value { kind: 1, data: "6100".into() });
         let _ = fs::remove_file(path);
+    }
+
+    /// applied.json illisible (coupé par une coupure de courant, vide, ou qui ne se lit pas) : mis de côté avec ses
+    /// états d'avant, jamais écrasé par le registre neuf (déjà présent en 1.1.9 : tout était perdu).
+    #[test]
+    fn unreadable_ledger_is_set_aside_not_overwritten() {
+        let dir = std::env::temp_dir().join(format!("rago-bad-ledger-{}", std::process::id()));
+        let _ = fs::remove_dir_all(&dir);
+        fs::create_dir_all(&dir).unwrap();
+        let path = dir.join("applied.json");
+        let aside = || -> Vec<PathBuf> {
+            fs::read_dir(&dir).unwrap().flatten().map(|e| e.path()).filter(|p| p.to_string_lossy().contains("applied.json.bad-")).collect()
+        };
+        for (case, content) in [("coupé", &br#"{"tweaks":{"net_a":{"variant":null,"ts":1,"ok":true,"backup":true,"probes":["reg:"#[..]), ("vide", &b""[..])] {
+            fs::write(&path, content).unwrap();
+            let (mut l, existed) = Ledger::load(path.clone());
+            assert!(!existed, "{case}");
+            let kept = aside();
+            assert_eq!(kept.len(), 1, "{case} : mis de côté");
+            assert_eq!(fs::read(&kept[0]).unwrap(), content, "{case} : tel quel");
+            l.set_applied("net_b", None, true, true, vec![], 2);
+            l.save();
+            assert!(Ledger::load(path.clone()).1, "{case} : registre neuf lisible");
+            assert_eq!(fs::read(&kept[0]).unwrap(), content, "{case} : jamais écrasé");
+            assert!(!dir.join("applied.json.tmp").exists());
+            fs::remove_file(&kept[0]).unwrap();
+        }
+        // ne se lit pas du tout (ici un dossier à sa place) : mis de côté lui aussi, avec ce qu'il contient
+        fs::remove_file(&path).unwrap();
+        fs::create_dir_all(path.join("x")).unwrap();
+        let (l, existed) = Ledger::load(path.clone());
+        assert!(!existed);
+        assert!(aside().iter().any(|p| p.join("x").exists()));
+        l.save();
+        assert!(Ledger::load(path.clone()).1);
+        let log = fs::read_to_string(dir.join("logs").join("repairs.log")).unwrap();
+        assert_eq!(log.lines().filter(|l| l.contains("applied.json") && l.contains("kept as")).count(), 3, "{log}");
+        let _ = fs::remove_dir_all(&dir);
+    }
+
+    /// Fichier d'avant qui n'a pu être ni lu ni renommé au lancement (verrou) : l'enregistrement le met d'abord de côté,
+    /// et ne l'écrase jamais (s'il ne peut toujours pas être renommé, rien n'est écrit ; non simulable ici).
+    #[test]
+    fn unread_ledger_is_set_aside_before_any_save() {
+        use std::sync::atomic::Ordering;
+        let dir = std::env::temp_dir().join(format!("rago-unread-ledger-{}", std::process::id()));
+        let _ = fs::remove_dir_all(&dir);
+        fs::create_dir_all(&dir).unwrap();
+        let path = dir.join("applied.json");
+        fs::write(&path, "ancien").unwrap();
+        let l = Ledger { path: path.clone(), ..Default::default() };
+        l.unread.store(true, Ordering::SeqCst);
+        l.save();
+        let aside: Vec<_> = fs::read_dir(&dir).unwrap().flatten().map(|e| e.path()).filter(|p| p.to_string_lossy().contains(".bad-")).collect();
+        assert_eq!(aside.len(), 1);
+        assert_eq!(fs::read_to_string(&aside[0]).unwrap(), "ancien");
+        assert!(Ledger::load(path).1, "registre neuf écrit après");
+        assert!(!l.unread.load(Ordering::SeqCst));
+        let _ = fs::remove_dir_all(&dir);
     }
 
     #[test]
