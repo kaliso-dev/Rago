@@ -222,6 +222,55 @@ mod tests {
         assert!(hooks.contains("$EXEDIR != $INSTDIR"), "pas quand un installateur lance le désinstallateur en place");
         assert!(hooks.contains("ExecWait"));
         assert!(UNINSTALL_LIMIT.as_secs() <= 20 * 60, "la désinstallation ne doit jamais rester bloquée");
+        // m3 : … sauf si le joueur fait effacer les données de l'app (applied.json, sauvegardes), même pendant une mise
+        // à jour lancée par l'installateur. /UPDATE reste la condition extérieure : Tauri n'efface rien avec /UPDATE.
+        let at = |s: &str| hooks.find(s).unwrap_or_else(|| panic!("« {s} » absent de hooks.nsh"));
+        let (update, in_place, data) = (at("${If} $UpdateMode <> 1"), at("${If} $EXEDIR != $INSTDIR"), at("${OrIf} $DeleteAppDataCheckboxState = 1"));
+        assert!(update < in_place && in_place < data && data < at("ExecWait"));
+        assert_eq!(hooks.matches("ExecWait").count(), 1, "une seule remise");
+        assert_eq!(hooks.matches("${If}").count(), hooks.matches("${EndIf}").count());
+    }
+
+    /// m3 : le crochet lit `$DeleteAppDataCheckboxState`, variable du modèle NSIS de Tauri. Vérifié dans la CLI installée
+    /// par npm (node_modules ; en CI, `npm ci` passe avant les tests) : la variable existe sous ce nom, la page de
+    /// confirmation la remplit en la quittant (un.ConfirmLeave), cette page passe avant celle qui lance la section
+    /// Uninstall, et dans la section le crochet passe avant l'effacement des données. Une CLI qui changerait cela fait
+    /// échouer ce test : revoir alors installer/hooks.nsh.
+    #[test]
+    fn delete_app_data_checkbox_is_read_before_the_hook() {
+        let dir = std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join("../node_modules/@tauri-apps");
+        let clis: Vec<PathBuf> = std::fs::read_dir(&dir)
+            .into_iter()
+            .flatten()
+            .flatten()
+            .filter(|e| e.file_name().to_string_lossy().starts_with("cli-"))
+            .flat_map(|e| std::fs::read_dir(e.path()).into_iter().flatten().flatten())
+            .map(|e| e.path())
+            .filter(|p| p.extension().is_some_and(|x| x == "node"))
+            .collect();
+        if clis.is_empty() {
+            eprintln!("CLI de Tauri absente de node_modules (npm ci pas lancé) : modèle NSIS non vérifié");
+            return;
+        }
+        for cli in clis {
+            let bin = std::fs::read(&cli).unwrap();
+            let find = |hay: &[u8], pat: &str| hay.windows(pat.len()).position(|w| w == pat.as_bytes());
+            let start = find(&bin, "Var DeleteAppDataCheckboxState")
+                .unwrap_or_else(|| panic!("{} : variable absente du modèle NSIS, revoir installer/hooks.nsh", cli.display()));
+            let nsi = &bin[start..(start + 64 * 1024).min(bin.len())];
+            let at = |pat: &str| find(nsi, pat).unwrap_or_else(|| panic!("{} : « {pat} » absent du modèle NSIS", cli.display()));
+            let order = [
+                at("!define MUI_PAGE_CUSTOMFUNCTION_LEAVE un.ConfirmLeave"),
+                at("${BM_GETCHECK} 0 0 $DeleteAppDataCheckboxState"),
+                at("!insertmacro MUI_UNPAGE_CONFIRM"),
+                at("!insertmacro MUI_UNPAGE_INSTFILES"),
+                at("Section Uninstall"),
+                at("!insertmacro NSIS_HOOK_PREUNINSTALL"),
+                at("${If} $DeleteAppDataCheckboxState = 1"),
+                at("RmDir /r \"$APPDATA\\${BUNDLEID}\""),
+            ];
+            assert!(order.windows(2).all(|w| w[0] < w[1]), "{} : {order:?}", cli.display());
+        }
     }
 
     #[test]
