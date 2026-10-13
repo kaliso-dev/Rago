@@ -271,6 +271,19 @@ impl Ledger {
         entry.ts = ts;
     }
 
+    /// Ce que `release` renverra, sans retirer le réglage : il reste dans applied.json pendant qu'on remet ses
+    /// éléments, pour qu'une remise coupée (app fermée, PC éteint) reprenne au lancement suivant.
+    pub fn releasable(&self, tid: &str) -> Vec<SavedEntry> {
+        let Some(applied) = self.tweaks.get(tid) else { return Vec::new() };
+        let still: HashSet<&String> =
+            self.tweaks.iter().filter(|(id, _)| id.as_str() != tid).flat_map(|(_, a)| a.probes.iter()).collect();
+        let mine: HashSet<&String> = applied.probes.iter().collect();
+        let mut out: Vec<SavedEntry> =
+            self.saved.iter().filter(|(id, _)| mine.contains(id) && !still.contains(id)).map(|(_, e)| e.clone()).collect();
+        out.reverse();
+        out
+    }
+
     /// Retire le réglage. Renvoie, dans l'ordre inverse du relevé, les éléments à remettre : ceux qu'aucun
     /// autre réglage encore appliqué ne modifie.
     pub fn release(&mut self, tid: &str) -> Vec<SavedEntry> {
@@ -835,9 +848,13 @@ device                  partition=C:\r\ndisabledynamictick      Oui\r\ntscsyncpo
         l.set_applied("two", None, true, true, vec![b.id(), c.id()], 2);
         assert_eq!(l.saved.len(), 3);
 
+        let peek: Vec<Probe> = l.releasable("one").into_iter().map(|e| e.probe).collect();
         let back = l.release("one");
         assert_eq!(back.len(), 1, "Shared reste posé tant que le réglage 2 est appliqué");
         assert_eq!(back[0].probe, a);
+        assert_eq!(peek, vec![a], "releasable annonce ce que release rend");
+        assert_eq!(l.releasable("two").len(), 2);
+        assert!(l.tweaks.contains_key("two"), "releasable ne retire rien");
         let back = l.release("two");
         assert_eq!(back.iter().map(|e| e.probe.clone()).collect::<Vec<_>>(), vec![c, b.clone()], "ordre inverse du relevé");
         assert_eq!(back[1].before, Saved::Value { kind: 4, data: "14000000".into() });

@@ -1,5 +1,5 @@
 import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState, type ReactNode } from "react";
-import { api, asLicenseError, type AppliedView, type DoneEvent, type HistoryEntry, type ItemStatus, type LicenseError, type LicenseStatus, type RunItem, type SystemInfo } from "./api";
+import { api, asLicenseError, type AppliedView, type DoneEvent, type HistoryEntry, type ItemStatus, type LicenseError, type LicenseStatus, type ResetDone, type RunItem, type SystemInfo } from "./api";
 import { autoVariant, availability, catalog, retired, tweakModule, tweaks, type Lang, type Tweak, needsReboot } from "./catalog";
 import { translate, type Key } from "./i18n";
 import free from "../data/free.json";
@@ -58,8 +58,6 @@ export interface RunState {
   done: DoneEvent | null;
   reboot: boolean;
   error: string | null;
-  /** phrase sous le titre (fin de Premium, déconnexion) */
-  note: string | null;
 }
 
 export interface ConfirmState {
@@ -129,6 +127,8 @@ function useStoreValue() {
   /** Licence perdue au rafraîchissement (abonnement terminé, remboursement…) ou plus vérifiable hors ligne. */
   const [licenseNotice, setLicenseNotice] = useState<LicenseError | null>(null);
   const [activatedAt, setActivatedAt] = usePersisted<number | null>("activatedAt", null);
+  /** Remise à zéro faite par le moteur (fin de Premium, déconnexion) : petit message en bas à droite. */
+  const [resetDone, setResetDone] = useState<(ResetDone & { at: number }) | null>(null);
   const premium = license?.state === "active";
   /** Verrouillé en gratuit : tout sauf la liste gratuite et les réglages qui ont une variante de retour arrière. */
   const isLocked = useCallback((id: string) => !premium && !FREE.has(id) && !REVERTS.has(id), [premium]);
@@ -383,7 +383,7 @@ function useStoreValue() {
   const startRun = useCallback(
     async (
       ids: string[],
-      opts: { restorePoint: boolean; wmic: boolean; clearSelection: boolean; undo?: string[]; note?: string | null },
+      opts: { restorePoint: boolean; wmic: boolean; clearSelection: boolean; undo?: string[] },
     ) => {
       const items: RunItem[] = [];
       // point de restauration quand la case est cochée (comme en 1.1.6), toujours en tête : s'il échoue, le moteur
@@ -423,7 +423,6 @@ function useStoreValue() {
         done: null,
         reboot,
         error: null,
-        note: opts.note ?? null,
       });
       try {
         const runId = await api.runTweaks(items);
@@ -448,34 +447,19 @@ function useStoreValue() {
     if (ids.length) setConfirm({ ids: [], undo: ids, single: false });
   }, []);
 
-  /** Réglages Premium appliqués : annulés à la déconnexion et à la fin de Premium. */
+  /** Réglages Premium appliqués : le moteur les remet de lui-même à la déconnexion et à la fin de Premium. */
   const premiumApplied = useMemo(() => [...applied.keys()].filter((id) => !FREE.has(id)).sort(byCatalog), [applied]);
 
-  const endedRef = useRef(false);
-  /** Déconnexion : annule d'abord les réglages Premium appliqués (sans licence, l'annulation reste permise). */
-  const signOutAndUndo = useCallback(async () => {
-    const ids = premiumApplied;
-    endedRef.current = true;
-    if (ids.length)
-      await startRun([], { restorePoint: false, wmic: false, clearSelection: true, undo: ids, note: translate(lang, "run.signOutNote", { n: ids.length }) });
-    await signOut();
-  }, [premiumApplied, startRun, signOut, lang]);
-
-  // Premium terminé (abonnement fini, remboursement) ou plus de licence sur ce PC : au lancement, les réglages
-  // Premium encore appliqués sont annulés, avec un message. Un jeton expiré hors ligne n'annule rien : le joueur
-  // paie peut-être encore, le serveur le dira au prochain rafraîchissement.
+  // Premium terminé (abonnement fini, remboursement), plus de licence sur ce PC ou déconnexion : le moteur remet les
+  // réglages Premium en arrière-plan, sans fenêtre ni bouton pour l'arrêter, et ne prévient qu'à la fin.
   useEffect(() => {
-    if (endedRef.current || !license || !appliedList || run) return;
-    if (license.state !== "none" || !premiumApplied.length) return;
-    endedRef.current = true;
-    void startRun([], {
-      restorePoint: false,
-      wmic: false,
-      clearSelection: true,
-      undo: premiumApplied,
-      note: translate(lang, "run.endedNote", { n: premiumApplied.length }),
+    const sub = api.onReset((e) => {
+      void refreshApplied();
+      void refreshHistory();
+      if (e.ok > 0 || e.failed > 0) setResetDone({ ...e, at: Date.now() });
     });
-  }, [license, appliedList, run, premiumApplied, startRun, lang]);
+    return () => void sub.then((un) => un());
+  }, [refreshApplied, refreshHistory]);
 
   const goTo = useCallback((p: string, tweakId?: string) => {
     setPage(p);
@@ -488,7 +472,7 @@ function useStoreValue() {
     page, goTo,
     sys, sysLoading, refreshSys,
     selection, selected, toggle, selectMany, unselectMany, variants, setVariant, variantOf,
-    pendingUndo, applied, appliedLoaded: appliedList !== null, isOn, premiumApplied, signOutAndUndo, reapply,
+    pendingUndo, applied, appliedLoaded: appliedList !== null, isOn, premiumApplied, reapply, resetDone, setResetDone,
     retiredApplied, requestUndo,
     history, lastRun, lastRestore, refreshHistory, refreshApplied,
     mcDir, setMcDir,

@@ -4,6 +4,7 @@ mod catalog;
 mod history;
 mod license;
 mod minecraft;
+mod reset;
 mod runner;
 mod seal;
 mod shell;
@@ -12,12 +13,13 @@ mod system;
 
 use std::path::PathBuf;
 use std::sync::{Arc, Mutex};
-use tauri::{AppHandle, Manager, State};
+use tauri::{AppHandle, Emitter, Manager, State};
 
 use account::Account;
 use backup::Ledger;
 use history::History;
 use license::License;
+use reset::Reset;
 use runner::{Context, RunItem, Runner};
 use system::SystemInfo;
 
@@ -27,6 +29,7 @@ struct AppState {
     ledger: Arc<Mutex<Ledger>>,
     license: Arc<License>,
     account: Arc<Account>,
+    reset: Arc<Reset>,
     system: Arc<Mutex<Option<SystemInfo>>>,
     stats: stats::Sampler,
     resource_dir: PathBuf,
@@ -45,6 +48,49 @@ impl AppState {
     fn system(&self, refresh: bool) -> SystemInfo {
         probe_cached(&self.system, &self.resource_dir, refresh)
     }
+
+    /// `app` : fenêtre qui suit le lot (None : remise à zéro, rien à l'écran).
+    fn context(&self, app: Option<AppHandle>, premium: Option<Arc<catalog::Bundle>>) -> Context {
+        Context {
+            app,
+            history: Arc::clone(&self.history),
+            resource_dir: self.resource_dir.clone(),
+            logs_dir: self.data_dir.join("logs"),
+            run_dir: self.data_dir.join("run"),
+            backup_dir: self.data_dir.join("backup"),
+            adapter: self.system(false).adapter,
+            ledger: Arc::clone(&self.ledger),
+            premium,
+            stop_when: None,
+        }
+    }
+}
+
+/// Plus de licence sur ce PC (abonnement terminé, remboursement, déconnexion) et des réglages Premium encore
+/// appliqués : ils sont remis en arrière-plan, sans fenêtre ni bouton pour arrêter. L'interface n'en voit que la fin
+/// (`reset:done`). Un jeton expiré hors ligne n'annule rien : le joueur paie peut-être encore, le serveur le dira au
+/// prochain rafraîchissement. La licence revient pendant la remise (reconnexion) : elle s'arrête après le réglage en
+/// cours, les suivants restent appliqués.
+fn reset_if_unlicensed(app: &AppHandle) {
+    let app = app.clone();
+    std::thread::spawn(move || {
+        let state = app.state::<AppState>();
+        if state.license.status().state != "none" {
+            return;
+        }
+        let ids = reset::targets(&state.ledger.lock().unwrap(), reset::Scope::Premium);
+        if ids.is_empty() || !state.reset.begin() {
+            return;
+        }
+        let lic = Arc::clone(&state.license);
+        let ctx = Context { stop_when: Some(Arc::new(move || lic.status().state != "none")), ..state.context(None, None) };
+        let (ok, failed) = Runner::default().run_now(&ctx, &reset::items(ids));
+        let quit = state.reset.end();
+        let _ = app.emit("reset:done", reset::Done { ok, failed });
+        if quit {
+            app.exit(0);
+        }
+    });
 }
 
 #[tauri::command]
@@ -60,7 +106,7 @@ async fn get_system_info(state: State<'_, AppState>, refresh: Option<bool>) -> R
 
 /// Garde dans le registre des réglages l'annulation de ceux qui n'en ont pas encore (appliqués avant 1.1.6, ou
 /// avant l'arrivée de la clé) : elle reste utilisable après une déconnexion ou une fin de licence.
-fn keep_undo(ledger: &Mutex<backup::Ledger>, bundle: Option<&catalog::Bundle>) {
+pub(crate) fn keep_undo(ledger: &Mutex<backup::Ledger>, bundle: Option<&catalog::Bundle>) {
     let mut l = ledger.lock().unwrap();
     if l.fill_undo(&|id, v| catalog::undo_of(id, v, bundle)) {
         l.save();
@@ -85,19 +131,7 @@ fn run_tweaks(app: AppHandle, state: State<'_, AppState>, items: Vec<RunItem>) -
         return Err("premium_scripts_unavailable".into());
     }
     keep_undo(&state.ledger, bundle.as_deref());
-    let adapter = state.system(false).adapter;
-    let ctx = Context {
-        app,
-        history: Arc::clone(&state.history),
-        resource_dir: state.resource_dir.clone(),
-        logs_dir: state.data_dir.join("logs"),
-        run_dir: state.data_dir.join("run"),
-        backup_dir: state.data_dir.join("backup"),
-        adapter,
-        ledger: Arc::clone(&state.ledger),
-        premium: bundle,
-    };
-    state.runner.start(ctx, items)
+    state.runner.start(state.context(Some(app), bundle), items)
 }
 
 /// Réglages appliqués, et ceux dont Windows a changé une valeur depuis.
@@ -209,16 +243,20 @@ async fn license_activate(state: State<'_, AppState>) -> Result<license::Status,
 }
 
 #[tauri::command]
-async fn license_refresh(state: State<'_, AppState>) -> Result<license::Status, license::ApiError> {
+async fn license_refresh(app: AppHandle, state: State<'_, AppState>) -> Result<license::Status, license::ApiError> {
     let lic = Arc::clone(&state.license);
-    tauri::async_runtime::spawn_blocking(move || lic.refresh())
+    let r = tauri::async_runtime::spawn_blocking(move || lic.refresh())
         .await
-        .map_err(|_| license::ApiError::from("server_error"))?
+        .map_err(|_| license::ApiError::from("server_error"))?;
+    // abonnement terminé, remboursement, licence révoquée : le jeton vient d'être effacé
+    reset_if_unlicensed(&app);
+    r
 }
 
 #[tauri::command]
-fn license_sign_out(state: State<'_, AppState>) {
+fn license_sign_out(app: AppHandle, state: State<'_, AppState>) {
     state.license.sign_out();
+    reset_if_unlicensed(&app);
 }
 
 // ---------- compte : nom public, photo, avis ----------
@@ -284,6 +322,11 @@ async fn account_remove_photo(state: State<'_, AppState>) -> Result<account::Acc
 
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
+    // lancé par le désinstallateur : remise à zéro sans fenêtre, puis on quitte
+    if std::env::args_os().skip(1).any(|a| a == reset::UNINSTALL_ARG) {
+        reset::uninstall();
+        return;
+    }
     tauri::Builder::default()
         .plugin(tauri_plugin_dialog::init())
         .plugin(tauri_plugin_opener::init())
@@ -308,12 +351,24 @@ pub fn run() {
                 ledger: Arc::new(Mutex::new(ledger)),
                 license: Arc::new(License::new()),
                 account: Arc::new(Account::new()),
+                reset: Arc::new(Reset::default()),
                 system: Arc::new(Mutex::new(None)),
                 stats: stats::Sampler::default(),
                 resource_dir,
                 data_dir,
             });
+            // licence perdue depuis le dernier lancement, ou remise coupée en cours de route : elle reprend ici
+            reset_if_unlicensed(app.handle());
             Ok(())
+        })
+        .on_window_event(|window, event| {
+            if let tauri::WindowEvent::CloseRequested { api, .. } = event {
+                // remise à zéro en cours : la fenêtre se cache et l'app quitte quand la remise est finie
+                if window.try_state::<AppState>().is_some_and(|s| s.reset.hold_exit()) {
+                    api.prevent_close();
+                    let _ = window.hide();
+                }
+            }
         })
         .invoke_handler(tauri::generate_handler![
             get_system_info,

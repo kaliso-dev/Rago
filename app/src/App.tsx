@@ -4,6 +4,7 @@ import { ApplyBar } from "./components/ApplyBar";
 import { ConfirmDialog } from "./components/ConfirmDialog";
 import { LicenseNotice } from "./components/LicenseNotice";
 import { ReviewDialog } from "./components/ReviewDialog";
+import { ResetToast } from "./components/ResetToast";
 import { ReviewPrompt } from "./components/ReviewPrompt";
 import { RunOverlay } from "./components/RunOverlay";
 import { SearchPalette } from "./components/SearchPalette";
@@ -63,6 +64,7 @@ export function App() {
         <Upsell />
         <ReviewPrompt />
         <ReviewDialog />
+        <ResetToast />
       </div>
     </MotionConfig>
   );

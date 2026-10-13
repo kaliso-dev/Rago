@@ -113,7 +113,7 @@ pub fn is_switch(id: &str) -> bool {
     KINDS.get(id).is_some_and(|k| k == "tweak")
 }
 
-#[cfg(test)]
+/// Réglage du plan gratuit : il reste appliqué quand Premium prend fin.
 pub fn is_free(id: &str) -> bool {
     FREE.iter().any(|f| f == id)
 }

@@ -12,7 +12,7 @@ use std::io::{BufRead, BufReader, Read, Write};
 use std::path::{Path, PathBuf};
 use std::process::{Child, Command, Stdio};
 use std::sync::atomic::{AtomicBool, Ordering};
-use std::sync::{Arc, Mutex};
+use std::sync::{Arc, Mutex, MutexGuard, PoisonError};
 use std::time::Instant;
 use tauri::{AppHandle, Emitter};
 
@@ -67,6 +67,13 @@ struct DoneEvent<'a> {
     log_file: String,
 }
 
+/// Un seul lot à la fois sur Windows : un lot lancé depuis l'interface attend la fin d'une remise à zéro en cours.
+static EXCLUSIVE: Mutex<()> = Mutex::new(());
+
+fn exclusive() -> MutexGuard<'static, ()> {
+    EXCLUSIVE.lock().unwrap_or_else(PoisonError::into_inner)
+}
+
 #[derive(Default)]
 pub struct Runner {
     running: AtomicBool,
@@ -75,7 +82,8 @@ pub struct Runner {
 }
 
 pub struct Context {
-    pub app: AppHandle,
+    /// fenêtre qui suit le lot ; None pour la remise à zéro (fin de Premium, désinstallation), qui ne montre rien
+    pub app: Option<AppHandle>,
     pub history: Arc<History>,
     pub resource_dir: PathBuf,
     pub logs_dir: PathBuf,
@@ -85,6 +93,17 @@ pub struct Context {
     pub ledger: Arc<Mutex<Ledger>>,
     /// scripts Premium ouverts avec la clé de la licence (None sans licence)
     pub premium: Option<Arc<catalog::Bundle>>,
+    /// remise à zéro : vrai quand elle n'a plus lieu d'être (licence revenue). Lu entre deux réglages, jamais au
+    /// milieu d'un script : un réglage commencé est toujours remis en entier.
+    pub stop_when: Option<Arc<dyn Fn() -> bool + Send + Sync>>,
+}
+
+impl Context {
+    fn emit<S: Serialize + Clone>(&self, event: &str, payload: S) {
+        if let Some(app) = &self.app {
+            let _ = app.emit(event, payload);
+        }
+    }
 }
 
 impl Runner {
@@ -109,13 +128,20 @@ impl Runner {
         let me = Arc::clone(self);
         let rid = run_id.clone();
         std::thread::spawn(move || {
+            let _one = exclusive();
             me.run(&ctx, &rid, &items);
             me.running.store(false, Ordering::SeqCst);
         });
         Ok(run_id)
     }
 
-    fn run(&self, ctx: &Context, run_id: &str, items: &[RunItem]) {
+    /// Lance le lot sur le thread appelant, sans interface (remise à zéro). Renvoie (réussis, ratés).
+    pub fn run_now(&self, ctx: &Context, items: &[RunItem]) -> (usize, usize) {
+        let _one = exclusive();
+        self.run(ctx, &format!("reset-{}", now_ms()), items)
+    }
+
+    fn run(&self, ctx: &Context, run_id: &str, items: &[RunItem]) -> (usize, usize) {
         let _ = fs::create_dir_all(&ctx.logs_dir);
         let log_path = ctx.logs_dir.join(format!("{run_id}.log"));
         let log = Mutex::new(OpenOptions::new().create(true).append(true).open(&log_path).ok());
@@ -135,14 +161,22 @@ impl Runner {
             if self.cancel.load(Ordering::SeqCst) {
                 break;
             }
+            if ctx.stop_when.as_ref().is_some_and(|stop| stop()) {
+                write_log(&format!("==== stopped before {}: no longer needed", item.id));
+                break;
+            }
             let variant = item.variant.as_deref();
             let emit_item = |status: &str, code: Option<i32>, duration: Option<u64>, message: Option<String>| {
-                let _ = ctx.app.emit(
-                    "run:item",
-                    ItemEvent { run_id, index, id: &item.id, variant, status, code, duration_ms: duration, message },
-                );
+                ctx.emit("run:item", ItemEvent { run_id, index, id: &item.id, variant, status, code, duration_ms: duration, message });
             };
             let applied = ctx.ledger.lock().unwrap().tweaks.contains_key(&item.id);
+            if item.undo && !applied {
+                // décoché, mais déjà remis entre-temps par la remise à zéro : plus rien à annuler
+                write_log(&format!("==== undo {}: already put back", item.id));
+                emit_item("ok", Some(0), Some(0), None);
+                ok += 1;
+                continue;
+            }
             // décoché, ou variante de retour arrière d'un réglage appliqué : retour à l'état d'avant
             let undo = item.undo || (applied && catalog::is_revert(&item.id, variant));
             if restore_failed && !undo && changes_windows(&item.id) {
@@ -161,7 +195,7 @@ impl Runner {
             let started = Instant::now();
             let emit_line = |line: String| {
                 write_log(&line);
-                let _ = ctx.app.emit("run:log", LogEvent { run_id, id: &item.id, line });
+                ctx.emit("run:log", LogEvent { run_id, id: &item.id, line });
             };
             let twin_key = (!undo).then(|| catalog::twin_of(&item.id).map(|t| format!("{t}:{}", variant.unwrap_or("")))).flatten();
             let (success, code, message) = if undo {
@@ -252,10 +286,11 @@ impl Runner {
             }
         }
         let cancelled = self.cancel.load(Ordering::SeqCst);
-        let _ = ctx.app.emit(
+        ctx.emit(
             "run:done",
             DoneEvent { run_id, ok, failed, skipped, restore_failed, cancelled, log_file: log_path.to_string_lossy().to_string() },
         );
+        (ok, failed)
     }
 
     /// Lance le relevé du réglage et garde l'état actuel de ce qu'il va modifier, s'il n'est pas déjà gardé.
@@ -322,40 +357,47 @@ impl Runner {
             return Ok((0, None));
         }
         if entry.as_ref().is_some_and(|e| e.backup) {
-            let back = {
-                let mut l = ctx.ledger.lock().unwrap();
-                let back = l.release(id);
-                l.save();
-                back
-            };
+            // retiré d'applied.json seulement une fois remis : une remise coupée reprend au lancement suivant
+            let back = ctx.ledger.lock().unwrap().releasable(id);
             let (rest, rest_first) = undo.map(|u| (u.rest, u.rest_avant)).unwrap_or_default();
-            let mut code = 0;
-            let run_rest = |code: &mut i32| -> Result<(), String> {
-                if let Some(rest) = &rest {
-                    emit("- Putting back the Windows values for the network and system commands".into());
-                    *code = self.run_batch(ctx, &format!("{id}-undo"), None, rest, emit)?.0;
+            let put_back = || -> Result<(i32, Option<String>), String> {
+                let mut code = 0;
+                let run_rest = |code: &mut i32| -> Result<(), String> {
+                    if let Some(rest) = &rest {
+                        emit("- Putting back the Windows values for the network and system commands".into());
+                        *code = self.run_batch(ctx, &format!("{id}-undo"), None, rest, emit)?.0;
+                    }
+                    Ok(())
+                };
+                // plans d'alimentation supprimés : recréés avant que la sauvegarde réactive celui d'avant
+                if rest_first {
+                    run_rest(&mut code)?;
                 }
-                Ok(())
+                emit(format!("- Putting back {} settings as they were before this tweak", back.len()));
+                let mut errors = 0;
+                for e in &back {
+                    if let Err(err) = sys.restore(&e.probe, &e.before) {
+                        errors += 1;
+                        emit(format!("! {}: {err}", describe(&e.probe)));
+                    }
+                }
+                if !rest_first {
+                    run_rest(&mut code)?;
+                }
+                if errors > 0 {
+                    return Ok((if code == 0 { 1 } else { code }, Some(format!("{errors} settings couldn't be put back"))));
+                }
+                Ok((code, None))
             };
-            // plans d'alimentation supprimés : recréés avant que la sauvegarde réactive celui d'avant
-            if rest_first {
-                run_rest(&mut code)?;
+            let r = put_back();
+            // arrêté en route (bouton Arrêter, délai de la désinstallation) : le réglage reste appliqué, la prochaine
+            // annulation reprend tout depuis la sauvegarde
+            if !self.cancel.load(Ordering::SeqCst) {
+                let mut l = ctx.ledger.lock().unwrap();
+                l.release(id);
+                l.save();
             }
-            emit(format!("- Putting back {} settings as they were before this tweak", back.len()));
-            let mut errors = 0;
-            for e in &back {
-                if let Err(err) = sys.restore(&e.probe, &e.before) {
-                    errors += 1;
-                    emit(format!("! {}: {err}", describe(&e.probe)));
-                }
-            }
-            if !rest_first {
-                run_rest(&mut code)?;
-            }
-            if errors > 0 {
-                return Ok((if code == 0 { 1 } else { code }, Some(format!("{errors} settings couldn't be put back"))));
-            }
-            return Ok((code, None));
+            return r;
         }
         // pas de sauvegarde (appliqué avant 1.1.6, ou par l'ancien .bat) : valeurs de Windows
         let script = undo.and_then(|u| u.full).or_else(|| {
@@ -366,9 +408,11 @@ impl Runner {
         };
         emit("- Putting back the Windows default values".into());
         let r = self.run_batch(ctx, &format!("{id}-undo"), None, &script, emit)?;
-        let mut l = ctx.ledger.lock().unwrap();
-        l.release(id);
-        l.save();
+        if !self.cancel.load(Ordering::SeqCst) {
+            let mut l = ctx.ledger.lock().unwrap();
+            l.release(id);
+            l.save();
+        }
         Ok(r)
     }
 
@@ -571,5 +615,57 @@ mod tests {
         assert!(s.contains("echo 1\r\necho 2\r\nexit /b 0\r\n"));
         assert!(p.file_name().unwrap().to_str().unwrap().starts_with("test-a_b-"));
         fs::remove_file(p).unwrap();
+    }
+
+    fn test_ctx(name: &str, stop_when: Option<Arc<dyn Fn() -> bool + Send + Sync>>) -> Context {
+        let dir = std::env::temp_dir().join(format!("rago-test-{name}-{}", std::process::id()));
+        let _ = fs::remove_dir_all(&dir);
+        let mut ledger = Ledger::default();
+        ledger.set_applied("net_a", None, true, true, vec![], 1);
+        ledger.set_applied("net_b", None, true, true, vec![], 2);
+        Context {
+            app: None,
+            history: Arc::new(History::load(dir.join("history.json"))),
+            resource_dir: dir.join("resources"),
+            logs_dir: dir.join("logs"),
+            run_dir: dir.join("run"),
+            backup_dir: dir.join("backup"),
+            adapter: None,
+            ledger: Arc::new(Mutex::new(ledger)),
+            premium: None,
+            stop_when,
+        }
+    }
+
+    fn undo(id: &str) -> RunItem {
+        RunItem { id: id.into(), variant: None, params: None, undo: true }
+    }
+
+    #[test]
+    fn reset_stops_when_the_license_comes_back() {
+        let ctx = test_ctx("stop", Some(Arc::new(|| true)));
+        let (ok, failed) = Runner::default().run_now(&ctx, &[undo("net_b"), undo("net_a")]);
+        assert_eq!((ok, failed), (0, 0), "rien n'est lancé");
+        assert_eq!(ctx.ledger.lock().unwrap().tweaks.len(), 2, "les réglages restent appliqués");
+        assert!(ctx.history.all().is_empty());
+    }
+
+    #[test]
+    fn reset_puts_back_and_releases_each_tweak() {
+        let ctx = test_ctx("release", None);
+        let (ok, failed) = Runner::default().run_now(&ctx, &[undo("net_b"), undo("net_a"), undo("net_a")]);
+        assert_eq!((ok, failed), (3, 0), "le second net_a est déjà remis : rien à faire");
+        assert!(ctx.ledger.lock().unwrap().tweaks.is_empty());
+        assert_eq!(ctx.history.all().len(), 2);
+    }
+
+    #[test]
+    fn stopped_undo_keeps_the_tweak_applied() {
+        let ctx = test_ctx("cancel", None);
+        let runner = Runner::default();
+        runner.cancel();
+        let sys = Sys::new(ctx.backup_dir.clone());
+        assert!(runner.undo_item(&ctx, &sys, &undo("net_a"), &|_| {}).is_ok());
+        assert!(ctx.ledger.lock().unwrap().tweaks.contains_key("net_a"), "arrêté en route : à remettre de nouveau");
     }
 }
