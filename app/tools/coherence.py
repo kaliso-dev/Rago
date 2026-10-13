@@ -48,7 +48,7 @@ QOS_IDS = ('ping_packets:qos', 'net_profile:qos')
 # hors domaine d'entreprise, Windows n'applique le marquage DSCP d'une stratégie QoS que si « Do not use NLA » vaut "1"
 NLA_LINE = 'reg add "HKLM\\SYSTEM\\CurrentControlSet\\Services\\Tcpip\\QoS" /v "Do not use NLA" /t REG_SZ /d "1" /f >nul 2>&1'
 # AssignmentSetOverride 04 = processeur logique n°2 : absent ou seul cœur restant sur un petit processeur
-AFFINITY_IDS = ('net_affinity', 'in_adapter', 'ping_main:config4')
+AFFINITY_IDS = ('net_affinity', 'in_adapter', 'ping_main:config4', 'ping_advanced')
 CPU_GUARD = 'if %NUMBER_OF_PROCESSORS% GEQ 4 '
 CPU_SKIP = ('if %NUMBER_OF_PROCESSORS% LSS 4 echo - Fewer than 4 logical processors: '
             'network interrupts stay where Windows puts them')
@@ -421,8 +421,8 @@ undo.json : un PC qui les a lancés retrouve aussi les valeurs des lignes chang�
 - ping_main:config3 : propriétés de la carte par `-RegistryKeyword` (toutes langues) au lieu du nom anglais ; Jumbo
   Packet 0 (valeur refusée) devient 1514 (désactivé, comme plus bas), doublons retirés.
 - win_fullscreen : `DirectXUserGlobalSettings` fusionné au lieu d'écrasé (Auto HDR gardé).
-- net_affinity, in_adapter, ping_main:config4 : l'épinglage sur le processeur n°2 seulement avec 4 processeurs
-  logiques ou plus.
+- net_affinity, in_adapter, ping_main:config4, ping_advanced : l'épinglage sur le processeur n°2 seulement avec 4
+  processeurs logiques ou plus.
 
 **Lignes retirées**
 - hitreg_suite : `AlwaysOn` 1 et `DisableTaskOffload` 1 (défaits plus bas), mode jeu (affaire de win_gamemode),

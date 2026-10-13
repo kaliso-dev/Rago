@@ -555,8 +555,8 @@ undo.json : un PC qui les a lancés retrouve aussi les valeurs des lignes chang�
 - ping_main:config3 : propriétés de la carte par `-RegistryKeyword` (toutes langues) au lieu du nom anglais ; Jumbo
   Packet 0 (valeur refusée) devient 1514 (désactivé, comme plus bas), doublons retirés.
 - win_fullscreen : `DirectXUserGlobalSettings` fusionné au lieu d'écrasé (Auto HDR gardé).
-- net_affinity, in_adapter, ping_main:config4 : l'épinglage sur le processeur n°2 seulement avec 4 processeurs
-  logiques ou plus.
+- net_affinity, in_adapter, ping_main:config4, ping_advanced : l'épinglage sur le processeur n°2 seulement avec 4
+  processeurs logiques ou plus.
 
 **Lignes retirées**
 - hitreg_suite : `AlwaysOn` 1 et `DisableTaskOffload` 1 (défaits plus bas), mode jeu (affaire de win_gamemode),
@@ -762,3 +762,10 @@ dans `win_feed` et `win_services` (corrigé pour ce dernier en 1.1.9). `tools/co
 `sys_registry` : script, relevé et annulation visent `…\Dsh`. Sans relevé, l'annulation retire les deux valeurs (celle
 des anciens scripts et la nouvelle), et laisse celle de `…\Dsh` quand `win_feed` ou `win_services` est encore appliqué.
 Test `scripts_target_the_right_hardware_and_do_what_they_say`.
+
+**Carte réseau sur un seul cœur dans `ping_advanced`.** Comme `net_affinity`, `in_adapter` et `ping_main` « config4 »
+depuis la 1.1.9, `ping_advanced` n'épingle les interruptions de la carte réseau sur le processeur logique n°2
+(`AssignmentSetOverride` 04, `DevicePolicy` 4) qu'avec 4 processeurs logiques ou plus ; en dessous, le script le dit
+et ne touche à rien (`AFFINITY_IDS` de `tools/coherence.py`). L'annulation retire toujours les deux valeurs. Le texte
+du réglage dit « (4 threads ou plus) ». Le test vérifie aussi qu'aucun autre script n'épingle la carte sans cette
+garde.

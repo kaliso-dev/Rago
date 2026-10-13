@@ -740,13 +740,22 @@ mod tests {
             assert!(s.contains("\"dscp value\" /t reg_sz /d \"46\"") && s.contains("\"throttle rate\" /t reg_sz /d \"-1\""), "{id}:qos");
         }
         // épinglage sur le processeur n°2 : seulement s'il existe, mais l'annulation retire toujours les valeurs
-        for (id, v) in [("net_affinity", "_"), ("in_adapter", "_"), ("ping_main", "config4")] {
+        for (id, v) in [("net_affinity", "_"), ("in_adapter", "_"), ("ping_main", "config4"), ("ping_advanced", "_")] {
             let s = low(id, v);
             let pins: Vec<&str> = s.lines().filter(|l| l.contains("\"assignmentsetoverride\"") || l.contains("/v \"devicepolicy\"")).collect();
             assert_eq!(pins.len(), 2, "{id}:{v}");
             assert!(pins.iter().all(|l| l.starts_with("if %number_of_processors% geq 4 ")), "{id}:{v}");
             let full = undo[id][v]["full"].as_str().unwrap().to_lowercase();
             assert!(full.contains("/v \"assignmentsetoverride\" /f") && !full.contains("number_of_processors"), "{id}:{v} annulation");
+            assert!(s.contains("if %number_of_processors% lss 4 echo - fewer than 4 logical processors"), "{id}:{v} message");
+        }
+        // aucun autre script n'épingle la carte réseau sans cette garde (ping_advanced l'a reçue aux finitions du 2026-10-13)
+        for (id, variants) in SCRIPTS.iter() {
+            for (v, s) in variants {
+                for l in s.to_lowercase().lines().filter(|l| l.contains("\"assignmentsetoverride\" /t reg_binary")) {
+                    assert!(l.starts_with("if %number_of_processors% geq 4 "), "{id}:{v} : {l}");
+                }
+            }
         }
         // packs : plus de lignes contraires à un autre réglage ou défaites plus bas
         for (v, s) in &SCRIPTS["hitreg_suite"] {
