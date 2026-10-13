@@ -698,10 +698,20 @@ mod tests {
         assert!(!low("amd_power", "_").contains("clockgating\" /t reg_dword /d \"1\""));
         assert!(low("pow_windows", "_").contains("energyestimationenabled /t reg_dword /d 0 "));
         assert!(low("dbl_cortana", "_").contains("\"disablewebsearch\" /t reg_dword /d \"1\""));
-        assert!(low("win_services", "_").contains("policies\\microsoft\\dsh\" /v \"allownewsandinterests\""));
+        // Actualités et centres d'intérêt : la stratégie est sous Policies\Microsoft\Dsh ; sans relevé, l'annulation retire
+        // aussi la valeur que les anciens scripts posaient sous Policies\Microsoft (finitions du 2026-10-13 : sys_registry)
+        for id in ["win_services", "win_feed", "sys_registry"] {
+            assert!(low(id, "_").contains("policies\\microsoft\\dsh\" /v \"allownewsandinterests\""), "{id}");
+            assert!(probes[id]["_"].to_lowercase().contains("policies\\microsoft\\dsh\" \"allownewsandinterests\""), "{id} relevé");
+            let full = undo[id]["_"]["full"].as_str().unwrap().to_lowercase();
+            for key in ["policies\\microsoft\" /v \"allownewsandinterests\" /f", "policies\\microsoft\\dsh\" /v \"allownewsandinterests\" /f"] {
+                assert!(full.contains(key), "{id} annulation : {key}");
+            }
+        }
         for (id, variants) in SCRIPTS.iter() {
             for (v, s) in variants {
                 assert!(!s.to_lowercase().contains("\\microsoftd\\"), "{id}:{v}");
+                assert!(!s.to_lowercase().contains("policies\\microsoft\" /v \"allownewsandinterests\""), "{id}:{v}");
             }
         }
         // réseau : netsh refusés par Windows 10 et 11, propriétés de carte par leur nom anglais, QoS hors domaine

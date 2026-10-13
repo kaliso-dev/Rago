@@ -100,8 +100,10 @@ SUB = [
     (('dbl_telemetry', 'win_telemetry'), r'\\Microsoftd\\', r'\\Microsoft\\'),
     # Cortana rallumait la recherche web que « Recherche Windows sans le web » coupe (RAG-27)
     (('dbl_cortana',), r'(/v "DisableWebSearch" /t REG_DWORD /d )"0"', r'\1"1"'),
-    # Actualités et centres d'intérêt : la stratégie est sous Policies\Microsoft\Dsh (comme win_feed)
-    (('win_services',), r'"HKLM\\SOFTWARE\\Policies\\Microsoft" (/v "AllowNewsAndInterests")', r'"HKLM\\SOFTWARE\\Policies\\Microsoft\\Dsh" \1'),
+    # Actualités et centres d'intérêt : la stratégie est sous Policies\Microsoft\Dsh (comme win_feed). sys_registry : même
+    # ligne, corrigée aux finitions du 2026-10-13
+    (('win_services', 'sys_registry'), r'"HKLM\\SOFTWARE\\Policies\\Microsoft" (/v "AllowNewsAndInterests")',
+     r'"HKLM\\SOFTWARE\\Policies\\Microsoft\\Dsh" \1'),
     # commande PowerShell lancée par cmd (sans effet) et chemin de tâche faux : la vraie tâche, avec schtasks
     (('hitreg_suite',), r'^Disable-ScheduledTask -TaskPath "HKCU\\Software\\Microsoft\\Windows\\Application Experience" '
                         r'-TaskName "Microsoft Compatibility Appraiser"',
@@ -365,6 +367,8 @@ def check(scripts):
         assert '"hibernateenabled"' not in low, line
     assert 'rago_dx' in scripts['win_fullscreen']['_']
     assert '"8738"' in scripts['nv_kboost']['_']
+    for tid in ('win_services', 'sys_registry', 'win_feed'):
+        assert 'Policies\\Microsoft\\Dsh" /v "AllowNewsAndInterests"' in scripts[tid]['_'], tid
     # clock gating vidéo AMD : aucun réglage ne le rallume (deux réglages ne se contredisent pas sur la même valeur)
     gating_on = re.compile(r'(?i)/v "?(EnableVceSwClockGating|EnableUvdClockGating)"? /t REG_DWORD /d "?1\b')
     for tid, vs in scripts.items():
@@ -410,7 +414,7 @@ undo.json : un PC qui les a lancés retrouve aussi les valeurs des lignes chang�
 - gpu_amd : texte parasite collé à une commande (`%b%╚═…`) retiré.
 - dbl_telemetry, win_telemetry : tâche Office `\\Microsoftd\\` → `\\Microsoft\\`.
 - dbl_cortana : `DisableWebSearch` 0 → 1, comme « Recherche Windows sans le web ».
-- win_services : `AllowNewsAndInterests` sous `Policies\\Microsoft\\Dsh`, comme win_feed.
+- win_services, sys_registry : `AllowNewsAndInterests` sous `Policies\\Microsoft\\Dsh`, comme win_feed.
 - hitreg_suite : `Disable-ScheduledTask` (PowerShell lancé par cmd, sans effet) → `schtasks /change … /disable`.
 - ping_packets et net_profile, profil QoS : « Do not use NLA » = "1" ajouté (sinon Windows ignore le marquage hors
   domaine d'entreprise), `DSCP Value` en texte "46" et `Throttle Rate` "-1", comme les écrit Windows.

@@ -548,7 +548,7 @@ undo.json : un PC qui les a lancés retrouve aussi les valeurs des lignes chang�
 - gpu_amd : texte parasite collé à une commande (`%b%╚═…`) retiré.
 - dbl_telemetry, win_telemetry : tâche Office `\Microsoftd\` → `\Microsoft\`.
 - dbl_cortana : `DisableWebSearch` 0 → 1, comme « Recherche Windows sans le web ».
-- win_services : `AllowNewsAndInterests` sous `Policies\Microsoft\Dsh`, comme win_feed.
+- win_services, sys_registry : `AllowNewsAndInterests` sous `Policies\Microsoft\Dsh`, comme win_feed.
 - hitreg_suite : `Disable-ScheduledTask` (PowerShell lancé par cmd, sans effet) → `schtasks /change … /disable`.
 - ping_packets et net_profile, profil QoS : « Do not use NLA » = "1" ajouté (sinon Windows ignore le marquage hors
   domaine d'entreprise), `DSCP Value` en texte "46" et `Throttle Rate` "-1", comme les écrit Windows.
@@ -755,3 +755,10 @@ Windows), plus de badge de session après une annulation ; une annulation qui é
 réglage n'est plus noté appliqué). Le RBW Mod ne change pas : son annulation après « Désactivé » ne lance rien et garde
 « Désactivé depuis… », son retour arrière est noté « Activé ». Le mode démo du navigateur (`api.ts`) note les
 annulations comme le moteur.
+
+**Actualités et centres d'intérêt dans `sys_registry`.** La ligne écrivait `AllowNewsAndInterests` sous
+`HKLM\SOFTWARE\Policies\Microsoft`, où Windows ne la lit pas ; la stratégie est sous `…\Policies\Microsoft\Dsh`, comme
+dans `win_feed` et `win_services` (corrigé pour ce dernier en 1.1.9). `tools/coherence.py` corrige aussi
+`sys_registry` : script, relevé et annulation visent `…\Dsh`. Sans relevé, l'annulation retire les deux valeurs (celle
+des anciens scripts et la nouvelle), et laisse celle de `…\Dsh` quand `win_feed` ou `win_services` est encore appliqué.
+Test `scripts_target_the_right_hardware_and_do_what_they_say`.
