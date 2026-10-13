@@ -314,7 +314,7 @@ impl Runner {
                 .map(PathBuf::from)
                 .or_else(|| std::env::var("APPDATA").ok().map(|a| PathBuf::from(a).join(".minecraft")))
                 .ok_or("Minecraft folder not set")?;
-            let msg = minecraft::restore_latest(&dir)?;
+            let msg = minecraft::undo(&dir)?;
             emit(format!("- {msg}"));
             let mut l = ctx.ledger.lock().unwrap();
             l.release(id);
@@ -400,7 +400,8 @@ impl Runner {
                     .and_then(|v| serde_json::from_value(v.clone()).ok())
                     .ok_or("Missing OptiFine values")?;
                 emit(format!("- Folder: {}", dir.display()));
-                let msg = minecraft::apply(&dir, &values, now_ms())?;
+                let already = ctx.ledger.lock().unwrap().tweaks.contains_key("mc_optifine");
+                let msg = minecraft::apply(&dir, &values, now_ms(), already)?;
                 emit(format!("- {msg}"));
                 Ok((0, None))
             }
