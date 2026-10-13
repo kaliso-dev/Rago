@@ -1333,14 +1333,14 @@
  },
  "gpu_general": {
   "fr": {
-   "desc": "Réglages pour toutes les cartes : priorité de l'affichage, préemption du GPU coupée, mode MSI et délais d'économie d'énergie.",
+   "desc": "Réglages pour toutes les cartes : priorité de l'affichage, mode MSI et délais d'économie d'énergie.",
    "gain": "Effet rarement mesurable : beaucoup de ces réglages sont ignorés par les Windows récents.",
-   "cons": "Si une autre appli charge le GPU, l'affichage peut saccader ; un peu plus de mémoire vive sert au cache des fichiers."
+   "cons": "Un peu plus de mémoire vive sert au cache des fichiers."
   },
   "en": {
-   "desc": "Graphics settings for any card: display priority, GPU preemption off, MSI mode and power-saving delays.",
+   "desc": "Graphics settings for any card: display priority, MSI mode and power-saving delays.",
    "gain": "Rarely measurable: many of these settings are ignored by recent Windows versions.",
-   "cons": "If another app loads the GPU, the display may stutter; a bit more RAM goes to the file cache."
+   "cons": "A bit more RAM goes to the file cache."
   }
  },
  "gpu_directx": {
@@ -1357,12 +1357,12 @@
  },
  "nv_general": {
   "fr": {
-   "desc": "Pack NVIDIA : profil faible latence pour tous tes jeux, mode MSI, préemption et HDCP coupés, télémétrie NVIDIA coupée.",
+   "desc": "Pack NVIDIA : profil faible latence pour tous tes jeux, mode MSI, HDCP coupé, télémétrie NVIDIA coupée.",
    "gain": "Le profil peut réduire l'input lag quand le GPU est à 100 % ; Reflex dans le jeu fait mieux s'il existe.",
    "cons": "Netflix et les vidéos protégées peuvent refuser de se lire, et tes réglages NVIDIA globaux sont remplacés."
   },
   "en": {
-   "desc": "NVIDIA pack: low-latency profile for all your games, MSI mode, preemption and HDCP off, NVIDIA telemetry off.",
+   "desc": "NVIDIA pack: low-latency profile for all your games, MSI mode, HDCP off, NVIDIA telemetry off.",
    "gain": "The profile can reduce input lag when the GPU is at 100%; in-game Reflex does better when available.",
    "cons": "Netflix and other protected video may refuse to play, and your global NVIDIA settings are replaced."
   }

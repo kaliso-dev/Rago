@@ -491,6 +491,31 @@ mod tests {
         }
     }
 
+    /// Aucun réglage Safe ne coupe le MPO ni la préemption du GPU (tools/safety.py, 2026-10-10) : ces changements
+    /// restent dans des réglages Advanced. Les valeurs « Preemption » de pri_game sont sous Image File Execution
+    /// Options, que Windows ignore pour ces noms.
+    #[test]
+    fn safe_tweaks_keep_mpo_and_preemption() {
+        let catalog: serde_json::Value = serde_json::from_str(include_str!("../../src/data/catalog.json")).unwrap();
+        let all: Vec<&serde_json::Value> = catalog["modules"].as_array().unwrap().iter()
+            .flat_map(|m| m["sections"].as_array().unwrap())
+            .flat_map(|s| s["tweaks"].as_array().unwrap())
+            .filter(|t| t.get("id").is_some()).collect();
+        for t in all.iter().filter(|t| t["risk"] == "safe") {
+            let id = t["id"].as_str().unwrap();
+            for (v, s) in SCRIPTS.get(id).into_iter().flatten() {
+                for l in s.lines().map(|l| l.trim().to_lowercase()).filter(|l| !l.starts_with("echo") && !l.starts_with("rem ") && !l.starts_with("::")) {
+                    let display = l.contains("\"overlaytestmode\" /t reg_dword /d \"5\"")
+                        || (l.contains("preemption") && !l.contains("image file execution options"));
+                    assert!(!display, "{id}:{v} : {l}");
+                }
+            }
+        }
+        for id in ["nv_preemption", "nv_advanced", "amd_advanced"] {
+            assert!(all.iter().any(|t| t["id"] == id && t["risk"] == "advanced"), "{id}");
+        }
+    }
+
     /// Réglages retirés (tools/safety.py, 2026-10-08) : ni script ni relevé, absents du catalogue et des profils, mais
     /// leur annulation reste là pour les PC où une version précédente les a appliqués. Les lignes risquées qu'ils
     /// portaient ne se retrouvent plus dans aucun autre script.
