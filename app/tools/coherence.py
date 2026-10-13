@@ -112,6 +112,11 @@ SUB = [
     # stratégie QoS : Windows écrit ces valeurs en texte, « -1 » pour « pas de limite de débit »
     (QOS_IDS, r'/v "DSCP Value" /t REG_DWORD /d 46 ', r'/v "DSCP Value" /t REG_SZ /d "46" '),
     (QOS_IDS, r'/v "Throttle Rate" /t REG_SZ /d "Disabled" ', r'/v "Throttle Rate" /t REG_SZ /d "-1" '),
+    # SMB 1 : sans -NoRestart, Disable-WindowsOptionalFeature demande s'il faut redémarrer tout de suite (« [Y] Yes [N]
+    # No », Y par défaut) quand la fonctionnalité était installée ; le moteur ne répond à rien (entrée vide). Le
+    # redémarrage reste annoncé par le badge du réglage (finitions du 2026-10-13)
+    (('exp_smb',), r'^(POWERSHELL "Disable-WindowsOptionalFeature -Online -FeatureName SMB1Protocol(?:-Client|-Server)?)"$',
+     r'\1 -NoRestart"'),
     # Jumbo Packet n'accepte pas 0 : 1514 (désactivé), la valeur que le script pose plus bas (doublon retiré ensuite)
     (('ping_main:config3',), r"(-DisplayName 'Jumbo Packet' \| Set-NetAdapterAdvancedProperty -RegistryValue )0\"", r'\g<1>1514"'),
 ]
@@ -367,6 +372,13 @@ def check(scripts):
         assert 'disable-scheduledtask' not in low and 'disable-mmagent' not in low and 'autogamemode' not in low, line
         assert '"hibernateenabled"' not in low, line
     assert 'rago_dx' in scripts['win_fullscreen']['_']
+    # fonctionnalités de Windows : jamais de question « redémarrer maintenant ? » pendant un réglage
+    for tid, vs in scripts.items():
+        for v, body in vs.items():
+            for line in body.replace('\r\n', '\n').split('\n'):
+                if re.search(r'(?i)(Enable|Disable)-WindowsOptionalFeature', line):
+                    assert re.search(r'(?i)-NoRestart\b', line), (tid, v, line)
+    assert scripts['exp_smb']['_'].count(' -NoRestart"') == 3
     assert '"8738"' in scripts['nv_kboost']['_']
     for tid in ('win_services', 'sys_registry', 'win_feed'):
         assert 'Policies\\Microsoft\\Dsh" /v "AllowNewsAndInterests"' in scripts[tid]['_'], tid
@@ -437,7 +449,8 @@ undo.json : un PC qui les a lancés retrouve aussi les valeurs des lignes chang�
 **Catalogue**
 - Redémarrage : net_ipv6, in_mouse, in_keyboard ; net_profile (Knockback et QoS, pas Hitreg).
 - Noms : mem_superfetch « Désactiver Superfetch (ancien réglage) », net_ipv6 « Préférer l'IPv4 à l'IPv6 ».
-- exp_smb : l'avertissement dit aussi que le PC n'ouvre plus les partages des vieux NAS.
+- exp_smb : l'avertissement dit aussi que le PC n'ouvre plus les partages des vieux NAS. SMB 1 coupé avec
+  `-NoRestart` (pas de question « redémarrer maintenant ? » pendant le réglage).
 - Textes (descriptions.json) : ping_hitreg, net_adapter, net_powersave, net_advanced, hitreg_suite, in_advanced,
   gpu_nvidia, nv_general, nv_kboost, mc_optifine, exp_smb, win_telemetry, win_optimize, win_services, win_ai,
   dbl_telemetry, sys_bcdedit, pow_main, pow_throttling, pow_windows, win_fullscreen, net_affinity, in_adapter.

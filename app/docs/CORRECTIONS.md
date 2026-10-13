@@ -570,7 +570,8 @@ undo.json : un PC qui les a lancés retrouve aussi les valeurs des lignes chang�
 **Catalogue**
 - Redémarrage : net_ipv6, in_mouse, in_keyboard ; net_profile (Knockback et QoS, pas Hitreg).
 - Noms : mem_superfetch « Désactiver Superfetch (ancien réglage) », net_ipv6 « Préférer l'IPv4 à l'IPv6 ».
-- exp_smb : l'avertissement dit aussi que le PC n'ouvre plus les partages des vieux NAS.
+- exp_smb : l'avertissement dit aussi que le PC n'ouvre plus les partages des vieux NAS. SMB 1 coupé avec
+  `-NoRestart` (pas de question « redémarrer maintenant ? » pendant le réglage).
 - Textes (descriptions.json) : ping_hitreg, net_adapter, net_powersave, net_advanced, hitreg_suite, in_advanced,
   gpu_nvidia, nv_general, nv_kboost, mc_optifine, exp_smb, win_telemetry, win_optimize, win_services, win_ai,
   dbl_telemetry, sys_bcdedit, pow_main, pow_throttling, pow_windows, win_fullscreen, net_affinity, in_adapter.
@@ -775,3 +776,9 @@ incorrect ») : la ligne ne changeait rien et mettait une erreur dans le journal
 `tools/coherence.py`, la règle qui retire déjà ces paramètres de `ping_packets`, `net_profile` et `net_advanced` ; ses
 autres lignes netsh (autotuninglevel, timestamps, ecncapability, rsc, nonsackrttresiliency) restent. Test
 `scripts_target_the_right_hardware_and_do_what_they_say`.
+
+**SMB 1 coupé sans question de redémarrage (`exp_smb`).** Sur un PC où SMB 1 était installé,
+`Disable-WindowsOptionalFeature` sans `-NoRestart` demande s'il faut redémarrer tout de suite (« [Y] Yes [N] No », Y
+par défaut) ; le moteur lance les scripts sans rien leur répondre. Les trois lignes ont maintenant `-NoRestart` : la
+fonctionnalité est coupée, Windows finit au prochain redémarrage, que le badge « Redémarrage » du réglage annonce
+toujours. Le générateur et le test vérifient qu'aucune ligne `Enable-`/`Disable-WindowsOptionalFeature` n'en manque.

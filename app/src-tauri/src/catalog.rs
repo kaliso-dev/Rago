@@ -782,6 +782,17 @@ mod tests {
         for id in ["net_ipv6", "in_mouse", "in_keyboard", "net_profile"] {
             assert_eq!(tw(id)["reboot"], true, "{id}");
         }
+        // fonctionnalités de Windows : jamais de question « redémarrer maintenant ? » pendant un réglage (le moteur ne
+        // répond à rien) ; le redémarrage est annoncé par le badge (exp_smb, finitions du 2026-10-13)
+        for (id, variants) in SCRIPTS.iter() {
+            for (v, s) in variants {
+                for l in s.to_lowercase().lines().filter(|l| l.contains("-windowsoptionalfeature")) {
+                    assert!(l.contains("-norestart"), "{id}:{v} : {l}");
+                }
+            }
+        }
+        assert_eq!(low("exp_smb", "_").matches("disable-windowsoptionalfeature -online -featurename smb1protocol").count(), 3);
+        assert_eq!(tw("exp_smb")["reboot"], true);
         let np = tw("net_profile");
         let reboot = |v: &str| np["variants"].as_array().unwrap().iter().find(|x| x["id"] == v).unwrap()["reboot"].clone();
         assert_eq!((reboot("hitreg"), reboot("knockback"), reboot("qos")), (false.into(), true.into(), true.into()));
