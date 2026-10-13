@@ -523,9 +523,10 @@ impl Runner {
                 Ok((code, None))
             };
             let r = put_back();
-            // arrêté en route (bouton Arrêter, délai de la désinstallation) : le réglage reste appliqué, la prochaine
+            // arrêté en route (bouton Arrêter, délai de la désinstallation), ou rest pas lancé (script pas écrit, cmd.exe
+            // pas démarré : avec rest_avant, rien n'a encore été remis) : le réglage reste appliqué, la prochaine
             // annulation reprend tout depuis la sauvegarde
-            if !self.cancel.load(Ordering::SeqCst) {
+            if r.is_ok() && !self.cancel.load(Ordering::SeqCst) {
                 let mut l = ctx.ledger.lock().unwrap();
                 l.release(id);
                 l.save();
@@ -1271,6 +1272,41 @@ mod tests {
         let sys = Sys::new(ctx.backup_dir.clone());
         assert!(runner.undo_item(&ctx, &sys, &undo("net_a"), &|_| {}).is_ok());
         assert!(ctx.ledger.lock().unwrap().tweaks.contains_key("net_a"), "arrêté en route : à remettre de nouveau");
+    }
+
+    /// rest pas lancé (dossier run impossible à créer, cmd.exe qui ne démarre pas) : avec rest_avant, rien n'a été
+    /// remis. Le réglage et sa sauvegarde restent, la prochaine annulation remet tout (avant : sauvegarde jetée).
+    #[test]
+    fn undo_that_could_not_start_keeps_the_backup() {
+        use backup::{Applied, Saved, Undo};
+        let mut ctx = test_ctx("rest-fails", None);
+        // un fichier à la place d'un dossier parent : write_script échoue, sous Windows comme ailleurs
+        let blocker = ctx.backup_dir.parent().unwrap().join("blocker");
+        fs::create_dir_all(blocker.parent().unwrap()).unwrap();
+        fs::write(&blocker, "x").unwrap();
+        ctx.run_dir = blocker.join("run");
+        let probe = Probe::Reg { key: "HKLM\\SOFTWARE\\RagoTest".into(), name: "v".into() };
+        {
+            let mut l = ctx.ledger.lock().unwrap();
+            l.record_before(probe.clone(), Saved::Absent { created: None });
+            l.tweaks.insert(
+                "zz_plan".into(),
+                Applied {
+                    ok: true,
+                    backup: true,
+                    probes: vec![probe.id()],
+                    undo: Some(Undo { rest: Some("echo rest".into()), rest_avant: true, ..Default::default() }),
+                    ..Default::default()
+                },
+            );
+        }
+        let sys = Sys::new(ctx.backup_dir.clone());
+        assert!(Runner::default().undo_item(&ctx, &sys, &undo("zz_plan"), &|_| {}).is_err());
+        let l = ctx.ledger.lock().unwrap();
+        assert!(l.tweaks.contains_key("zz_plan"), "toujours appliqué");
+        assert!(l.has(&probe.id()), "sauvegarde gardée");
+        drop(l);
+        let _ = fs::remove_dir_all(ctx.backup_dir.parent().unwrap());
     }
 
     /// RAG-60 : la limite d'un point de restauration par 24 h n'est levée que le temps de créer celui de Rago.
