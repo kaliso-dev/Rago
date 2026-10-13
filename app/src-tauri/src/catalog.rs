@@ -473,7 +473,7 @@ mod tests {
         let bundle = premium(&test_key()).unwrap();
         let catalog: serde_json::Value = serde_json::from_str(include_str!("../../src/data/catalog.json")).unwrap();
         let retired: Vec<&str> = catalog["retired"].as_array().unwrap().iter().map(|r| r["id"].as_str().unwrap()).collect();
-        assert_eq!(retired.len(), 16);
+        assert_eq!(retired.len(), 17);
         let listed: Vec<&str> = catalog["modules"].as_array().unwrap().iter()
             .flat_map(|m| m["sections"].as_array().unwrap())
             .flat_map(|s| s["tweaks"].as_array().unwrap())
@@ -517,6 +517,242 @@ mod tests {
                 }
             }
         }
+    }
+
+    /// RAG-67 (2026-10-13) : `CoalescingTimerInterval` à 0 sous `HKLM\SYSTEM\CurrentControlSet\Control` fait planter
+    /// Windows (écran bleu 0x7E, division par zéro) quelques minutes après le démarrage. Plus aucun script ni relevé ne
+    /// l'écrit (tools/safety.py DROP_EVERYWHERE) ; les annulations la suppriment encore pour les PC où une version
+    /// précédente l'a posée, aucune ne la remet, et chaque clé qu'elles nettoient est aussi réparée au lancement
+    /// (repair::TIMER_KEYS). Celle des fichiers de jeu (Image File Execution Options) n'est pas concernée.
+    #[test]
+    fn kernel_timer_value_stays_out() {
+        let bundle = premium(&test_key()).unwrap();
+        let probes: Scripts = serde_json::from_str(include_str!("../scripts/probes.json")).unwrap();
+        let kernel = |l: &str| {
+            let l = l.to_lowercase();
+            l.contains("coalescingtimerinterval") && l.contains("\\control")
+        };
+        for (id, variants) in SCRIPTS.iter().chain(probes.iter()) {
+            for (v, s) in variants {
+                for l in s.lines().map(str::trim).filter(|l| !l.to_lowercase().starts_with("echo")) {
+                    assert!(!kernel(l), "{id}:{v} écrit encore la valeur : {l}");
+                }
+            }
+        }
+        let keys: std::collections::HashSet<String> = crate::repair::TIMER_KEYS.iter().map(|k| k.to_lowercase()).collect();
+        for (id, v) in [
+            ("pow_main", None),
+            ("pow_timer", None),
+            ("pow_throttling", None),
+            ("gpu_nvidia", None),
+            ("gpu_amd", None),
+            ("gpu_general", None),
+            ("amd_advanced", None),
+            ("hitreg_suite", Some("good")),
+            ("hitreg_suite", Some("laptop")),
+        ] {
+            let full = undo_of(id, v, Some(&bundle)).and_then(|u| u.full).unwrap_or_default();
+            let deleted: Vec<&str> = full.lines().map(str::trim).filter(|l| kernel(l)).collect();
+            assert!(!deleted.is_empty(), "{id} : l'annulation ne supprime plus la valeur posée avant");
+            for l in deleted {
+                assert!(l.to_lowercase().starts_with("reg delete"), "{id} : {l}");
+                let key = l.split('"').nth(1).unwrap().to_lowercase().replace("hkey_local_machine", "hklm");
+                assert!(keys.contains(&key), "{id} : {key} n'est pas réparée au lancement (repair::TIMER_KEYS)");
+            }
+        }
+        for (id, variants) in bundle.undo.iter().chain(PLAIN.undo.iter()) {
+            for (v, u) in variants {
+                for l in u.full.iter().chain(u.rest.iter()).flat_map(|s| s.lines()).map(str::trim) {
+                    assert!(!kernel(l) || l.to_lowercase().starts_with("reg delete"), "annulation {id}:{v} : {l}");
+                }
+            }
+        }
+    }
+
+    /// RAG-66 (2026-10-13) : vider les dossiers temporaires bute toujours sur des fichiers ouverts, arrêter le spouleur
+    /// déjà arrêté répond une erreur, taskkill annonce son succès : ces messages, sans échec réel, affolaient les joueurs
+    /// dans le journal. Ces commandes-là se taisent (tools/build_catalog_v6.py QUIET), %temp% est toujours entre
+    /// guillemets (un espace dans le chemin faisait effacer le premier morceau).
+    #[test]
+    fn temp_cleaning_stays_quiet() {
+        let silent = |l: &str| l.contains("2>&1") || l.contains("2>nul");
+        for (id, variants) in SCRIPTS.iter() {
+            for (v, s) in variants {
+                for l in s.lines().map(|l| l.trim().to_lowercase()).filter(|l| !l.starts_with("echo") && !l.starts_with("::")) {
+                    let bare: String = l.split('"').step_by(2).collect();
+                    assert!(!bare.contains("%temp%") && !bare.contains("%tmp%"), "{id}:{v} : %temp% sans guillemets : {l}");
+                    if ["game_mode", "in_windows", "sto_general", "cln_temp"].contains(&id.as_str())
+                        && (l.starts_with("del ") || l.starts_with("forfiles") || l.contains("rd /s") || l.contains("rmdir"))
+                    {
+                        assert!(silent(&l), "{id}:{v} : {l}");
+                    }
+                }
+            }
+        }
+        let on = &SCRIPTS["game_mode"]["on"];
+        let stop: Vec<&str> = on.lines().filter(|l| l.to_lowercase().contains("net stop spooler")).collect();
+        assert_eq!(stop.len(), 1);
+        assert!(stop[0].to_lowercase().starts_with("sc query spooler | find \"running\" >nul && "), "{}", stop[0]);
+        for v in ["on", "off"] {
+            let kill: Vec<&str> = SCRIPTS["game_mode"][v].lines().filter(|l| l.contains("taskkill")).collect();
+            assert!(!kill.is_empty() && kill.iter().all(|l| l.trim_end().ends_with(">nul")), "game_mode:{v}");
+        }
+    }
+
+    /// Lignes qui empêchent cmd.exe de lire un bloc entre parenthèses (RAG-68, 2026-10-13) : cmd lit tout le bloc avant
+    /// de l'exécuter et, sur une erreur, s'arrête net (« ) was unexpected at this time. ») : le reste du script ne tourne
+    /// pas et le réglage échoue. Renvoie « ligne : problème » pour chaque défaut. Lecture simplifiée de cmd : parenthèses
+    /// hors guillemets et hors `^`, commentaires `::`/`rem` et `echo` à part (une `)` dans un echo ferme quand même le bloc).
+    fn block_errors(script: &str) -> Vec<String> {
+        #[derive(Clone, Copy, PartialEq)]
+        enum Kind {
+            Label,
+            Rem,
+            Echo,
+            Cmd,
+        }
+        fn kind(t: &str) -> Kind {
+            let low = t.to_lowercase();
+            let after = |w: &str| low.strip_prefix(w).map(|r| r.chars().next());
+            if t.starts_with(':') {
+                Kind::Label
+            } else if matches!(after("rem"), Some(None) | Some(Some(' ' | '\t'))) {
+                Kind::Rem
+            } else if matches!(after("echo"), Some(None) | Some(Some(' ' | '\t' | '.' | '(' | ':' | '/'))) {
+                Kind::Echo
+            } else {
+                Kind::Cmd
+            }
+        }
+        // parenthèses hors guillemets et hors ^, dans l'ordre ; et le texte hors guillemets
+        fn scan(t: &str) -> (Vec<i32>, String) {
+            let (mut out, mut bare, mut quoted, mut chars) = (Vec::new(), String::new(), false, t.chars());
+            while let Some(c) = chars.next() {
+                match c {
+                    '"' => {
+                        quoted = !quoted;
+                        bare.push('x');
+                    }
+                    '^' if !quoted => {
+                        chars.next();
+                        bare.push('x');
+                    }
+                    '(' if !quoted => {
+                        out.push(1);
+                        bare.push('(');
+                    }
+                    ')' if !quoted => {
+                        out.push(-1);
+                        bare.push(')');
+                    }
+                    _ if quoted => {}
+                    c => bare.push(c),
+                }
+            }
+            (out, bare)
+        }
+        let mut errors = Vec::new();
+        let mut depth = 0i32;
+        // dernière ligne non vide : sa nature, et si elle se termine en ouvrant un bloc
+        let mut prev: Option<(Kind, bool)> = None;
+        for (n, line) in script.lines().enumerate() {
+            let t = line.trim().trim_start_matches('@').trim();
+            if t.is_empty() {
+                continue;
+            }
+            let k = kind(t);
+            let (parens, bare) = scan(t);
+            let mut opens = false;
+            match k {
+                Kind::Label => {
+                    if depth > 0 && prev.is_some_and(|(p, _)| p == Kind::Label) {
+                        errors.push(format!("{}: deux commentaires :: de suite dans un bloc", n + 1));
+                    }
+                }
+                Kind::Rem => {}
+                Kind::Echo => {
+                    if depth > 0 && parens.contains(&-1) {
+                        errors.push(format!("{}: une ) dans un echo ferme le bloc : {t}", n + 1));
+                    }
+                }
+                Kind::Cmd => {
+                    if t.starts_with(')') {
+                        match prev {
+                            Some((Kind::Cmd, true)) => errors.push(format!("{}: bloc vide, « ( » puis « ) »", n + 1)),
+                            Some((Kind::Label, _)) if depth > 0 => {
+                                errors.push(format!("{}: commentaire :: juste avant la « ) » du bloc", n + 1))
+                            }
+                            _ => {}
+                        }
+                    }
+                    // « ( ) » sur une seule ligne
+                    let compact: String = bare.chars().filter(|c| !c.is_whitespace()).collect();
+                    if compact.contains("()") {
+                        errors.push(format!("{}: bloc vide sur la ligne : {t}", n + 1));
+                    }
+                    for p in parens {
+                        depth += p;
+                        if depth < 0 {
+                            errors.push(format!("{}: « ) » sans bloc ouvert : {t}", n + 1));
+                            depth = 0;
+                        }
+                    }
+                    opens = bare.trim_end().ends_with('(');
+                }
+            }
+            prev = Some((k, opens));
+        }
+        if depth != 0 {
+            errors.push(format!("{depth} bloc(s) jamais fermé(s)"));
+        }
+        errors
+    }
+
+    #[test]
+    fn block_checker_sees_what_cmd_refuses() {
+        // RAG-68 : boucle du mode MSI dont les lignes ont été retirées
+        let rag68 = "for /f %%i in ('powershell -Command \"(Get-CimInstance x).PNPDeviceID\"') do set \"str=%%i\" & (\r\n)\r\necho ok";
+        assert_eq!(block_errors(rag68).len(), 1, "{:?}", block_errors(rag68));
+        assert_eq!(block_errors("if defined x (\r\nver >nul\r\n) else (\r\n)").len(), 1);
+        assert_eq!(block_errors("for %%a in (1) do ( )").len(), 1);
+        assert_eq!(block_errors("if x==y (\r\necho a (b)\r\n)").len(), 1, "la ) de l'echo ferme le bloc");
+        assert_eq!(block_errors("(\r\n:: a\r\n)").len(), 1);
+        assert_eq!(block_errors("(\r\n:: a\r\n:: b\r\nver >nul\r\n)").len(), 1);
+        assert_eq!(block_errors("for /f %%a in ('x') do (\r\nreg add \"HKLM\\A (x86)\" /f\r\n").len(), 1, "jamais fermé");
+        // correct : guillemets, ^, echo hors bloc, ) else (, commentaire suivi d'une commande dans un bloc
+        let ok = "for /f \"delims=\" %%a in ('powershell -Command \"(Get-CimInstance x).NetConnectionID\"') do (\r\n\
+                  \x20 :: carte\r\n  for /f \"delims=\" %%b in (\"%%a\") do (\r\n    set \"n=%%b\"\r\n  )\r\n)\r\n\
+                  if defined n (\r\n  ver >nul\r\n) else (\r\n  echo pas de carte\r\n)\r\necho (fin)\r\nfind \"^)\" x";
+        assert!(block_errors(ok).is_empty(), "{:?}", block_errors(ok));
+    }
+
+    /// Tous les scripts que le moteur lance (réglages, relevés, annulations) se lisent jusqu'au bout dans cmd.exe.
+    #[test]
+    fn every_script_has_well_formed_blocks() {
+        let probes: Scripts = serde_json::from_str(include_str!("../scripts/probes.json")).unwrap();
+        let undo: HashMap<String, HashMap<String, Undo>> = serde_json::from_str(include_str!("../scripts/undo.json")).unwrap();
+        let mut bad = Vec::new();
+        let mut check = |what: String, s: &str| bad.extend(block_errors(s).into_iter().map(|e| format!("{what} {e}")));
+        for (id, variants) in SCRIPTS.iter() {
+            for (v, s) in variants {
+                check(format!("{id}:{v}"), s);
+            }
+        }
+        for (id, variants) in &probes {
+            for (v, s) in variants {
+                check(format!("relevé {id}:{v}"), s);
+            }
+        }
+        for (id, variants) in &undo {
+            for (v, u) in variants {
+                for (part, s) in [("full", &u.full), ("rest", &u.rest)] {
+                    if let Some(s) = s {
+                        check(format!("annulation {id}:{v} {part}"), s);
+                    }
+                }
+            }
+        }
+        assert!(bad.is_empty(), "{} défauts :\n{}", bad.len(), bad.join("\n"));
     }
 
     #[test]

@@ -853,12 +853,12 @@
  },
  "pow_main": {
   "fr": {
-   "desc": "Coupe plusieurs économies d'énergie : ralentissement des applis en arrière-plan, regroupement des minuteurs, veille des disques.",
+   "desc": "Coupe plusieurs économies d'énergie : ralentissement des applis en arrière-plan, veille des liaisons SATA et des disques.",
    "gain": "Peut rendre les images plus régulières sur certains PC, surtout les portables branchés.",
    "cons": "Plus de consommation et moins d'autonomie sur portable."
   },
   "en": {
-   "desc": "Turns off several power savings: slowing of background apps, grouping of timers and drive idle power.",
+   "desc": "Turns off several power savings: slowing of background apps, SATA link and drive idle power.",
    "gain": "May make frame pacing smoother on some PCs, especially plugged-in laptops.",
    "cons": "Higher power use and shorter battery life on laptops."
   }
@@ -968,18 +968,6 @@
   "en": {
    "desc": "Lets the processor pick its own speed when the PC is plugged in, instead of Windows.",
    "gain": "Often no effect: most recent processors already work this way.",
-   "cons": "No known drawback."
-  }
- },
- "pow_timer": {
-  "fr": {
-   "desc": "Demande à Windows de ne plus regrouper les réveils du processeur pour économiser l'énergie.",
-   "gain": "Effet rarement mesurable : ce réglage n'est pas documenté par Microsoft.",
-   "cons": "Aucun inconvénient connu."
-  },
-  "en": {
-   "desc": "Asks Windows to stop grouping processor wake-ups to save power.",
-   "gain": "Rarely measurable: Microsoft does not document this setting.",
    "cons": "No known drawback."
   }
  },

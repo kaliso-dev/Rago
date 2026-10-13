@@ -514,6 +514,23 @@ WMIC_SUBS = [
 ]
 
 
+# RAG-66 (2026-10-13) : messages de Windows qui affolaient les joueurs dans le journal, alors que rien n'avait échoué
+# (le moteur ne regarde que le code de sortie). Vider %temp% bute toujours sur des fichiers ouverts (« The process cannot
+# access the file… », « Access is denied. ») ; arrêter le spouleur déjà arrêté répond « NET HELPMSG 3521 » ; taskkill
+# annonce « SUCCESS: … explorer.exe … terminated ». Seules ces commandes se taisent : une erreur d'une autre ligne
+# s'affiche toujours, et « net stop » ne se lance que si le spouleur tourne (sc query), pour garder ses vraies erreurs.
+# %temp% passe entre guillemets : avec un espace dans le chemin, del effaçait le premier morceau (C:\Users\Jean pour
+# « Jean Dupont »), récursivement.
+QUIET = [
+    (('game_mode:on',), r'(?i)^del /s /f /q %temp%\\\* > nul$', r'del /s /f /q "%temp%\\*" >nul 2>&1'),
+    (('game_mode:on',), r'(?i)^net stop Spooler > nul$', r'sc query Spooler | find "RUNNING" >nul && net stop Spooler >nul'),
+    (('game_mode:on', 'game_mode:off'), r'(?i)^(taskkill /f /im explorer\.exe)$', r'\1 >nul'),
+    (('in_windows',), r'(?i)^(forfiles -p "[^"]+" -s -m \*\.\* /C "cmd /c del @path")$', r'\1 >nul 2>&1'),
+    (('in_windows',), r'(?i)^(del /s /f /q c:\\windows\\temp\\\*\.\*)$', r'\1 >nul 2>&1'),
+    (('in_windows',), r'(?i)^del /s /f /q %temp%\\\*\.\*$', r'del /s /f /q "%temp%\\*.*" >nul 2>&1'),
+]
+
+
 def postprocess(modules, scripts):
     # GUID de l'auteur ou clé « {NIC-ID} » laissée telle quelle (net_server, ancien programme) : toutes les cartes
     for tid, variants in scripts.items():
@@ -546,6 +563,7 @@ def postprocess(modules, scripts):
     before_audit = copy.deepcopy(scripts)
     apply_audit(scripts)
     sub_lines(scripts, WMIC_SUBS)
+    sub_lines(scripts, QUIET)
     # lignes risquées cachées dans les packs (tools/safety.py, 2026-10-08) : retirées avant les avertissements
     global SAFETY_REPORT
     SAFETY_REPORT = SAFETY.apply(scripts)
