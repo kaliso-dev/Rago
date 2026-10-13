@@ -48,9 +48,10 @@ pub fn targets(ledger: &Ledger, scope: Scope) -> Vec<String> {
 /// annulation ou variante de retour arrière en clair.
 fn undoable_unlicensed(id: &str, a: &Applied) -> bool {
     if id == "mc_optifine" {
-        // la remise ne connaît que le dossier par défaut (le dossier choisi reste dans l'interface)
+        // la remise ne connaît que le dossier par défaut (le dossier choisi reste dans l'interface). Copie du fichier
+        // du joueur ou marqueur d'absence (optionsof.txt créé par Rago) : les deux se remettent
         return std::env::var("APPDATA")
-            .map(|d| minecraft::status(&PathBuf::from(d).join(".minecraft")).backups > 0)
+            .map(|d| minecraft::undoable(&PathBuf::from(d).join(".minecraft")))
             .unwrap_or(false);
     }
     a.backup

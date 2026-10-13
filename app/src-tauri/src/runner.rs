@@ -275,18 +275,27 @@ impl Runner {
                         // RBW Mod : rien à sauvegarder, son retour arrière lance « Activé » ; un relevé retiendrait les
                         // valeurs d'autres réglages et cacherait ce qu'il leur change (badge « Changé par Windows »)
                         let keep = switch && !catalog::revert_runs_script(&item.id);
-                        let probes = if keep { self.snapshot(ctx, &sys, item, &emit_line) } else { None };
+                        let snap = if keep { self.snapshot(ctx, &sys, item, &emit_line) } else { None };
                         let result = self.run_item(ctx, item, &emit_line);
                         let cancelled = self.cancel.load(Ordering::SeqCst);
                         let r = match result {
                             Ok((code, msg)) => (code == 0 && !cancelled, Some(code), msg),
                             Err(e) => (false, None, Some(e)),
                         };
-                        let ids = probes.map(|probes| {
+                        let ids = snap.map(|(probes, pre)| {
                             sys.forget_active();
+                            // valeurs posées par l'app : registre (dérive) et états (seul ce que l'app a changé revient)
+                            let after: Vec<(Probe, backup::Saved)> = probes
+                                .iter()
+                                .filter(|p| matches!(p, Probe::Reg { .. } | Probe::State { .. }))
+                                .map(|p| (p.clone(), sys.read(p)))
+                                .collect();
                             let mut l = ctx.ledger.lock().unwrap();
-                            for p in probes.iter().filter(|p| matches!(p, Probe::Reg { .. })) {
-                                l.set_after(&p.id(), sys.read(p));
+                            for (p, now) in after {
+                                match pre.get(&p.id()) {
+                                    Some(before_run) => l.merge_state_after(&p.id(), before_run, &now),
+                                    None => l.set_after(&p.id(), now),
+                                }
                             }
                             let ids: Vec<String> = probes.iter().map(Probe::id).collect();
                             l.set_applied(&item.id, item.variant.clone(), r.0, true, ids.clone(), now_ms());
@@ -360,10 +369,18 @@ impl Runner {
     }
 
     /// Lance le relevé du réglage et garde l'état actuel de ce qu'il va modifier, s'il n'est pas déjà gardé.
-    fn snapshot(&self, ctx: &Context, sys: &Sys, item: &RunItem, emit: &dyn Fn(String)) -> Option<Vec<Probe>> {
+    /// Renvoie aussi, pour les états déjà gardés par un autre réglage, leur valeur juste avant ce script.
+    fn snapshot(&self, ctx: &Context, sys: &Sys, item: &RunItem, emit: &dyn Fn(String)) -> Option<(Vec<Probe>, HashMap<String, backup::Saved>)> {
         let variant = item.variant.as_deref();
-        let script = catalog::probe(&item.id, variant, ctx.premium.as_deref())?;
-        let probes = if script.contains("@@RAGO") {
+        // profil NVIDIA importé par l'app elle-même : réglages du profil de base lus par NVAPI
+        let script = if item.id == "nv_profile" {
+            "echo @@RAGO state \"nvbase\"".to_string()
+        } else {
+            catalog::probe(&item.id, variant, ctx.premium.as_deref())?
+        };
+        let mut probes = if item.id == "nv_profile" {
+            backup::parse_markers(&script)
+        } else if script.contains("@@RAGO") {
             let path = write_script(&ctx.run_dir, &format!("{}-probe", item.id), variant, &script).ok()?;
             let out = script_command(ctx, &path).ok().and_then(|mut cmd| cmd.output().ok());
             let _ = fs::remove_file(&path);
@@ -371,12 +388,24 @@ impl Runner {
         } else {
             Vec::new()
         };
-        let missing: Vec<&Probe> = {
+        let (missing, shared): (Vec<Probe>, Vec<Probe>) = {
             let l = ctx.ledger.lock().unwrap();
-            probes.iter().filter(|p| !l.has(&p.id())).collect()
+            // réglage déjà appliqué par une version sans ce relevé d'état : ce qu'on lirait maintenant est déjà son
+            // effet. Il garde l'ancien retour (rest, valeurs de Windows) pour cet état.
+            if let Some(a) = l.tweaks.get(&item.id) {
+                probes.retain(|p| !matches!(p, Probe::State { .. } | Probe::Untouched { .. }) || a.probes.contains(&p.id()));
+            }
+            // état que ce script ne change pas : seulement noté pour rest, rien à lire ni à garder
+            probes.iter().filter(|p| !matches!(p, Probe::Untouched { .. })).cloned().partition(|p| !l.has(&p.id()))
         };
-        // lu hors du verrou : bcdedit et powercfg prennent un moment
-        let read: Vec<(Probe, backup::Saved)> = missing.into_iter().map(|p| (p.clone(), sys.read(p))).collect();
+        // lu hors du verrou : bcdedit, powercfg et PowerShell prennent un moment
+        let read: Vec<(Probe, backup::Saved)> = missing.into_iter().map(|p| { let s = sys.read(&p); (p, s) }).collect();
+        // états déjà gardés par un autre réglage : leur valeur juste avant ce script (voir Ledger::merge_state_after)
+        let pre: HashMap<String, backup::Saved> = shared
+            .iter()
+            .filter(|p| matches!(p, Probe::State { .. }))
+            .map(|p| (p.id(), sys.read(p)))
+            .collect();
         {
             let mut l = ctx.ledger.lock().unwrap();
             for (p, saved) in read.iter().cloned() {
@@ -384,10 +413,11 @@ impl Runner {
             }
             l.save();
         }
-        if !probes.is_empty() {
-            emit(format!("- Saved how {} settings were before, to put them back if you turn this off", probes.len()));
+        let saved = probes.iter().filter(|p| !matches!(p, Probe::Untouched { .. })).count();
+        if saved > 0 {
+            emit(format!("- Saved how {saved} settings were before, to put them back if you turn this off"));
         }
-        Some(probes)
+        Some((probes, pre))
     }
 
     /// Remet l'état d'avant : la sauvegarde si elle existe, puis ce qu'elle ne couvre pas (netsh, PowerShell…)
@@ -409,32 +439,63 @@ impl Runner {
                 .map(PathBuf::from)
                 .or_else(|| std::env::var("APPDATA").ok().map(|a| PathBuf::from(a).join(".minecraft")))
                 .ok_or("Minecraft folder not set")?;
-            let msg = minecraft::restore_latest(&dir)?;
+            let msg = minecraft::undo(&dir)?;
             emit(format!("- {msg}"));
             let mut l = ctx.ledger.lock().unwrap();
             l.release(id);
             l.save();
             return Ok((0, None));
         }
-        if entry.as_ref().is_some_and(|e| e.backup) {
+        // valeurs qu'un autre réglage encore appliqué modifie aussi : full, et rest pour la compression mémoire
+        // (RAGO_HELD_…), les laissent telles quelles. Sauf le RBW Mod « Désactivé » : il ne pose que des valeurs de
+        // Windows (celles que full remet) et ne garde rien pour les autres, comme il ne relève rien (RAG-69)
+        let held = {
+            let others = others_writes(&ctx.ledger.lock().unwrap(), id, ctx.premium.as_deref());
+            held_env(undo.as_ref().map(|u| u.writes.as_slice()).unwrap_or_default(), &others)
+        };
+        if let Some(entry) = entry.as_ref().filter(|e| e.backup) {
             // retiré d'applied.json seulement une fois remis : une remise coupée reprend au lancement suivant
-            let back = ctx.ledger.lock().unwrap().releasable(id);
+            let (back, env) = {
+                let l = ctx.ledger.lock().unwrap();
+                // états relevés avant d'appliquer (remis au plus près par la sauvegarde) : rest ne les touche pas
+                let mut env = state_env(&entry.probes, &l.saved);
+                env.extend(held.iter().cloned());
+                (l.releasable(id), env)
+            };
             let (rest, rest_first) = undo.map(|u| (u.rest, u.rest_avant)).unwrap_or_default();
             let put_back = || -> Result<(i32, Option<String>), String> {
                 let mut code = 0;
                 let run_rest = |code: &mut i32| -> Result<(), String> {
                     if let Some(rest) = &rest {
                         emit("- Putting back the Windows values for the network and system commands".into());
-                        *code = self.run_batch(ctx, &format!("{id}-undo"), None, rest, emit)?.0;
+                        *code = self.run_batch(ctx, &format!("{id}-undo"), None, rest, &env, emit)?.0;
                     }
                     Ok(())
                 };
-                // plans d'alimentation supprimés : recréés avant que la sauvegarde réactive celui d'avant
+                emit(format!("- Putting back {} settings as they were before this tweak", back.len()));
+                let mut errors = 0;
+                let mut restore = |e: &backup::SavedEntry| {
+                    if e.before == backup::Saved::Unknown {
+                        // relevé illisible (pas de pilote NVIDIA, PowerShell bloqué…) : rien de sûr à remettre
+                        emit(format!("- {}: couldn't be read before this tweak, left as it is", describe(&e.probe)));
+                        return;
+                    }
+                    if let Err(err) = sys.restore_entry(e) {
+                        errors += 1;
+                        emit(format!("! {}: {err}", describe(&e.probe)));
+                    }
+                };
+                // plans d'alimentation exportés : réimportés d'abord, rest ne les recrée alors pas avec les valeurs de
+                // Windows ; puis rest (rest_avant) avant que la sauvegarde réactive le plan d'avant
+                back.iter().filter(|e| matches!(e.probe, Probe::Plan { .. })).for_each(&mut restore);
                 if rest_first {
                     run_rest(&mut code)?;
                 }
-                emit(format!("- Putting back {} settings as they were before this tweak", back.len()));
-                let mut errors = 0;
+                back.iter()
+                    .filter(|e| !matches!(e.probe, Probe::Plan { .. } | Probe::State { .. } | Probe::Appx { .. }))
+                    .for_each(&mut restore);
+                // états en dernier : services (SysMain) et registre déjà remis
+                back.iter().filter(|e| matches!(e.probe, Probe::State { .. })).for_each(&mut restore);
                 // applis du Store : remises ensemble à la fin, dans un seul PowerShell
                 let (mut exact, mut patterns) = (Vec::new(), Vec::new());
                 for e in &back {
@@ -442,16 +503,11 @@ impl Runner {
                         (Probe::Appx { .. }, backup::Saved::Apps { packages }) => exact.extend(packages.iter().cloned()),
                         // relevé illisible : les applis de ce nom que Windows garde encore
                         (Probe::Appx { name }, _) => patterns.push(name.clone()),
-                        _ => {
-                            if let Err(err) = sys.restore(&e.probe, &e.before) {
-                                errors += 1;
-                                emit(format!("! {}: {err}", describe(&e.probe)));
-                            }
-                        }
+                        _ => {}
                     }
                 }
                 // appliqué avant le relevé des applis (version d'avant) : celles de la liste du réglage
-                if !entry.as_ref().is_some_and(|e| e.probes.iter().any(|p| p.starts_with("appx|"))) {
+                if !entry.probes.iter().any(|p| p.starts_with("appx|")) {
                     patterns.extend(unclaimed_apps(ctx, id));
                 }
                 let apps_error = self.put_back_apps(sys, &exact, &patterns, emit);
@@ -476,12 +532,18 @@ impl Runner {
             }
             return r;
         }
-        // pas de sauvegarde (appliqué avant 1.1.6, ou par l'ancien .bat) : valeurs de Windows
+        // pas de sauvegarde (appliqué avant 1.1.6, ou par l'ancien .bat) : valeurs de Windows, sauf celles qu'un autre
+        // réglage encore appliqué modifie aussi (held)
         let script = undo.and_then(|u| u.full).or_else(|| {
             catalog::revert_variant(id).and_then(|v| catalog::script(id, Some(&v), None))
         });
         // applis du Store de la liste du réglage (ancienne action ponctuelle, ou appliqué avant le relevé des applis)
         if script.is_none() && catalog::apps_of(id).is_empty() {
+            if id == "nv_profile" {
+                return Err("This NVIDIA profile was imported by an older version, before its settings were saved. \
+                            Use \"Restore\" on the Base Profile in NVIDIA Profile Inspector, or the restore point."
+                    .into());
+            }
             return Err("This tweak can't be undone automatically yet. Use the restore point in the Restore module.".into());
         }
         let apps = unclaimed_apps(ctx, id);
@@ -491,7 +553,10 @@ impl Runner {
         let mut r = (0, None);
         if let Some(script) = script {
             emit("- Putting back the Windows default values".into());
-            r = self.run_batch(ctx, &format!("{id}-undo"), None, &script, emit)?;
+            if !held.is_empty() {
+                emit(format!("- Keeping {} settings that another applied tweak also changes", held.len()));
+            }
+            r = self.run_batch(ctx, &format!("{id}-undo"), None, &script, &held, emit)?;
         }
         if let Some(e) = self.put_back_apps(sys, &[], &apps, emit) {
             r = (if r.0 == 0 { 1 } else { r.0 }, Some(e));
@@ -527,9 +592,17 @@ impl Runner {
         }
     }
 
-    fn run_batch(&self, ctx: &Context, name: &str, variant: Option<&str>, script: &str, emit: &dyn Fn(String)) -> Result<(i32, Option<String>), String> {
+    fn run_batch(
+        &self,
+        ctx: &Context,
+        name: &str,
+        variant: Option<&str>,
+        script: &str,
+        env: &[(String, String)],
+        emit: &dyn Fn(String),
+    ) -> Result<(i32, Option<String>), String> {
         let path = write_script(&ctx.run_dir, name, variant, script)?;
-        let res = script_command(ctx, &path).and_then(|cmd| self.stream(cmd, emit));
+        let res = batch_command(ctx, &path, env).and_then(|cmd| self.stream(cmd, emit));
         let _ = fs::remove_file(&path);
         res
     }
@@ -550,7 +623,8 @@ impl Runner {
                     .and_then(|v| serde_json::from_value(v.clone()).ok())
                     .ok_or("Missing OptiFine values")?;
                 emit(format!("- Folder: {}", dir.display()));
-                let msg = minecraft::apply(&dir, &values, now_ms())?;
+                let already = ctx.ledger.lock().unwrap().tweaks.contains_key("mc_optifine");
+                let msg = minecraft::apply(&dir, &values, now_ms(), already)?;
                 emit(format!("- {msg}"));
                 Ok((0, None))
             }
@@ -574,7 +648,7 @@ impl Runner {
             id => {
                 let script = catalog::script(id, item.variant.as_deref(), ctx.premium.as_deref())
                     .ok_or_else(|| format!("Unknown tweak: {id}"))?;
-                self.run_batch(ctx, id, item.variant.as_deref(), &script, emit)
+                self.run_batch(ctx, id, item.variant.as_deref(), &script, &[], emit)
             }
         }
     }
@@ -637,8 +711,72 @@ fn describe(p: &Probe) -> String {
         Probe::Pwr { setting, .. } => format!("power setting {setting}"),
         Probe::PwrActive => "power plan".into(),
         Probe::Hib => "hibernation".into(),
+        Probe::Plan { guid } => format!("deleted power plan {guid}"),
+        Probe::State { name } => match name.as_str() {
+            "mmagent" => "memory compression and app prelaunch".into(),
+            "maxpwage" => "maximum password age".into(),
+            "smb" => "file sharing (SMB) settings".into(),
+            "nic" => "network adapter properties".into(),
+            "pnppower" => "\"Allow the computer to turn off this device\" boxes".into(),
+            "nvbase" => "NVIDIA global 3D settings".into(),
+            other => other.to_string(),
+        },
         Probe::Appx { name } => format!("Microsoft Store apps {name}"),
+        Probe::Untouched { name } => format!("{name} (not changed by this tweak)"),
+        Probe::Other => "setting saved by a newer version".into(),
     }
+}
+
+/// Variables d'environnement de `rest` : RAGO_STATE_<NOM> pour chaque état relevé avant d'appliquer le réglage
+/// (la sauvegarde le remet au plus près, rest ne doit plus le remettre aux valeurs de Windows), et pour chaque état
+/// que le script appliqué ne changeait pas (`untouched|…` : rien à remettre).
+pub fn state_env(probes: &[String], saved: &[(String, backup::SavedEntry)]) -> Vec<(String, String)> {
+    let read = probes.iter().filter_map(|p| p.strip_prefix("state|")).filter(|name| {
+        saved.iter().any(|(id, e)| id == &format!("state|{name}") && matches!(e.before, backup::Saved::State { .. }))
+    });
+    let untouched = probes.iter().filter_map(|p| p.strip_prefix("untouched|"));
+    read.chain(untouched).map(|name| (format!("RAGO_STATE_{}", name.to_uppercase()), "1".to_string())).collect()
+}
+
+/// Fonctions de la gestion mémoire (Get-MMAgent) partagées entre réglages (build_catalog_v6.mmagent_ids).
+const MM_FLAGS: [&str; 5] = ["memorycompression", "pagecombining", "applicationprelaunch", "operationapi", "applicationlaunchprefetching"];
+
+/// Étiquette `writes` d'un élément partagé (build_catalog_v6.held_tag) : 10 chiffres hexadécimaux de son SHA-256.
+pub fn held_tag(id: &str) -> String {
+    use sha2::{Digest, Sha256};
+    backup::hex(&Sha256::digest(id.as_bytes())[..5])
+}
+
+/// Étiquettes qu'un autre réglage encore appliqué garde : celles de undo.json (`writes`, valeurs que ses scripts
+/// modifient, toutes versions confondues), sauf la gestion mémoire quand son relevé dit que le script qui a tourné
+/// n'y touchait pas (`untouched|mmagent`, hitreg_suite) : sinon décocher « Profil mémoire » laisserait la compression
+/// coupée, et décocher ensuite la suite ne la remettrait pas non plus.
+pub fn holds(a: &backup::Applied, writes: Vec<String>) -> Vec<String> {
+    if !a.probes.iter().any(|p| p == "untouched|mmagent") {
+        return writes;
+    }
+    let mm: Vec<String> = MM_FLAGS.iter().map(|f| held_tag(&format!("mmagent|{f}"))).collect();
+    writes.into_iter().filter(|t| !mm.contains(t)).collect()
+}
+
+/// Étiquettes `writes` des autres réglages encore appliqués (voir `holds`). Le RBW Mod n'en garde aucune : il ne pose
+/// que des valeurs de Windows, celles que full remet, et ne relève rien (RAG-69).
+pub fn others_writes(l: &Ledger, id: &str, premium: Option<&catalog::Bundle>) -> Vec<Vec<String>> {
+    l.tweaks
+        .iter()
+        .filter(|(t, _)| t.as_str() != id && !catalog::revert_runs_script(t))
+        .filter_map(|(t, a)| {
+            let u = catalog::undo_of(t, a.variant.as_deref(), premium).or_else(|| a.undo.clone())?;
+            Some(holds(a, u.writes))
+        })
+        .collect()
+}
+
+/// Variables d'environnement de `full` et de `rest` : RAGO_HELD_<étiquette> pour chaque valeur que ce réglage modifie
+/// et qu'un autre réglage encore appliqué modifie aussi (`writes` de undo.json) : l'annulation la laisse telle quelle.
+pub fn held_env(mine: &[String], others: &[Vec<String>]) -> Vec<(String, String)> {
+    let theirs: std::collections::HashSet<&String> = others.iter().flatten().collect();
+    mine.iter().filter(|t| theirs.contains(t)).map(|t| (format!("RAGO_HELD_{t}"), "1".to_string())).collect()
 }
 
 fn pump<R: Read>(r: R, tx: std::sync::mpsc::Sender<String>) {
@@ -711,6 +849,19 @@ fn script_command(ctx: &Context, path: &Path) -> Result<Command, String> {
     Ok(cmd)
 }
 
+/// script_command, plus les variables RAGO_STATE_<NOM> et RAGO_HELD_<étiquette> de ce lancement (state_env, held_env) :
+/// elles passent par l'environnement du processus, jamais par la ligne de commande ; le script, et le PowerShell qu'il
+/// lance, les lisent telles quelles.
+fn batch_command(ctx: &Context, path: &Path, env: &[(String, String)]) -> Result<Command, String> {
+    let mut cmd = script_command(ctx, path)?;
+    // variables laissées par un lancement précédent de l'app : seules celles de cette annulation comptent
+    for (k, _) in std::env::vars().filter(|(k, _)| k.starts_with("RAGO_STATE_") || k.starts_with("RAGO_HELD_")) {
+        cmd.env_remove(k);
+    }
+    cmd.envs(env.iter().map(|(k, v)| (k, v)));
+    Ok(cmd)
+}
+
 fn sanitize(s: &str) -> String {
     s.chars().map(|c| if c.is_ascii_alphanumeric() || "-_.".contains(c) { c } else { '_' }).collect()
 }
@@ -769,6 +920,89 @@ mod tests {
         assert!(s.contains("echo 1\r\necho 2\r\nexit /b 0\r\n"));
         assert!(p.file_name().unwrap().to_str().unwrap().starts_with("test-a_b-"));
         fs::remove_file(p).unwrap();
+    }
+
+    #[test]
+    fn rest_skips_only_states_saved_for_this_tweak() {
+        use backup::{Saved, SavedEntry};
+        let entry = |name: &str, before: Saved| {
+            (format!("state|{name}"), SavedEntry { probe: Probe::State { name: name.into() }, before, after: None })
+        };
+        let saved = vec![
+            entry("mmagent", Saved::State { values: Default::default() }),
+            // relevé illisible : rest garde la valeur de Windows
+            entry("nic", Saved::Unknown),
+            entry("smb", Saved::State { values: Default::default() }),
+        ];
+        // réglage appliqué par une version sans ce relevé : pas de state|smb dans ses éléments
+        let probes = vec!["state|mmagent".to_string(), "state|nic".to_string(), "reg|hklm\\a|b".to_string()];
+        assert_eq!(state_env(&probes, &saved), vec![("RAGO_STATE_MMAGENT".to_string(), "1".to_string())]);
+        assert!(state_env(&[], &saved).is_empty());
+        // état que le script appliqué ne changeait pas (hitreg_suite et la compression mémoire) : rien de gardé, rest
+        // saute quand même sa commande
+        let probes = vec!["untouched|maxpwage".to_string()];
+        assert_eq!(state_env(&probes, &saved), vec![("RAGO_STATE_MAXPWAGE".to_string(), "1".to_string())]);
+    }
+
+    /// Étiquettes de la gestion mémoire : les mêmes que tools/build_catalog_v6.py ; un réglage dont le script ne
+    /// touchait pas la compression (untouched|mmagent) ne la garde pas pour les autres.
+    #[test]
+    fn memory_tags_follow_what_the_applied_script_did() {
+        let comp = held_tag("mmagent|memorycompression");
+        assert_eq!(comp, "e86e22276a");
+        assert_eq!(held_tag("mmagent|pagecombining"), "82b2f0cc3a");
+        let writes = vec![comp.clone(), "0123456789".to_string()];
+        let applied = |probes: &[&str], backup: bool| backup::Applied {
+            ok: true,
+            backup,
+            probes: probes.iter().map(|p| p.to_string()).collect(),
+            ..Default::default()
+        };
+        assert_eq!(holds(&applied(&["untouched|mmagent", "reg|hklm\\a|b"], true), writes.clone()), vec!["0123456789".to_string()]);
+        assert_eq!(holds(&applied(&["state|mmagent"], true), writes.clone()), writes);
+        // sans sauvegarde (1.1.5 ou avant) ou avec une sauvegarde sans relevé d'état (1.1.6 à 1.1.8) : tout est gardé
+        assert_eq!(holds(&applied(&[], false), writes.clone()), writes);
+        assert_eq!(holds(&applied(&["reg|hklm\\a|b"], true), writes.clone()), writes);
+    }
+
+    /// Le RBW Mod « Désactivé » (valeurs de Windows seulement) ne garde rien pour les autres réglages (RAG-69).
+    #[test]
+    fn rbw_mode_holds_nothing_for_other_tweaks() {
+        let mut l = Ledger::default();
+        let with = |writes: &[&str]| backup::Applied {
+            ok: true,
+            undo: Some(backup::Undo { writes: writes.iter().map(|w| w.to_string()).collect(), ..Default::default() }),
+            ..Default::default()
+        };
+        l.tweaks.insert("rbw_mode".into(), backup::Applied { variant: Some("off".into()), ..with(&["aaaaaaaaaa"]) });
+        l.tweaks.insert("zz_other".into(), with(&["bbbbbbbbbb"]));
+        assert_eq!(others_writes(&l, "zz_undone", None), vec![vec!["bbbbbbbbbb".to_string()]]);
+        assert!(others_writes(&l, "zz_other", None).is_empty());
+    }
+
+    /// Un état seulement noté (`untouched`) ne fait pas du réglage un copropriétaire : décocher l'autre réglage qui
+    /// l'a vraiment changé le remet tout de suite.
+    #[test]
+    fn untouched_state_does_not_hold_the_saved_state() {
+        use backup::{Applied, Ledger, Saved};
+        let mut l = Ledger::default();
+        l.record_before(Probe::State { name: "mmagent".into() }, Saved::State { values: Default::default() });
+        let applied = |probes: &[&str]| Applied { ok: true, backup: true, probes: probes.iter().map(|p| p.to_string()).collect(), ..Default::default() };
+        l.tweaks.insert("sys_ram".into(), applied(&["state|mmagent"]));
+        l.tweaks.insert("hitreg_suite".into(), applied(&["untouched|mmagent"]));
+        let back = l.release("sys_ram");
+        assert_eq!(back.len(), 1);
+        assert_eq!(back[0].probe, Probe::State { name: "mmagent".into() });
+        assert!(l.release("hitreg_suite").is_empty());
+    }
+
+    #[test]
+    fn full_keeps_values_other_applied_tweaks_change() {
+        let mine = vec!["aaaaaaaaaa".to_string(), "bbbbbbbbbb".to_string()];
+        let others = vec![vec!["bbbbbbbbbb".to_string(), "cccccccccc".to_string()], vec![]];
+        assert_eq!(held_env(&mine, &others), vec![("RAGO_HELD_bbbbbbbbbb".to_string(), "1".to_string())]);
+        assert!(held_env(&mine, &[]).is_empty());
+        assert!(held_env(&[], &others).is_empty());
     }
 
     fn test_ctx(name: &str, stop_when: Option<Arc<dyn Fn() -> bool + Send + Sync>>) -> Context {
@@ -838,6 +1072,55 @@ mod tests {
         let _ = fs::remove_dir_all(ctx.run_dir.parent().unwrap().parent().unwrap());
         assert!(out.status.success(), "{text}\n{}", decode(&out.stderr));
         assert!(text.lines().any(|l| l.trim() == format!("ok-{name}")), "{text}");
+    }
+
+    /// Retour arrière : les RAGO_STATE_… et RAGO_HELD_… de state_env et held_env partent avec le lancement `.\nom.cmd`
+    /// (environnement du processus), le dossier et la ligne de commande restant ceux de script_command.
+    #[test]
+    fn undo_variables_go_with_the_script() {
+        let ctx = odd_ctx("launch-env");
+        let path = write_script(&ctx.run_dir, "net_a", Some("rest"), "echo ok").unwrap();
+        let name = path.file_name().unwrap().to_str().unwrap().to_string();
+        let env = vec![
+            ("RAGO_STATE_MMAGENT".to_string(), "1".to_string()),
+            ("RAGO_HELD_bbbbbbbbbb".to_string(), "1".to_string()),
+        ];
+        let cmd = batch_command(&ctx, &path, &env).unwrap();
+        let args: Vec<String> = cmd.get_args().map(|a| a.to_string_lossy().into_owned()).collect();
+        assert_eq!(args, ["/d".to_string(), "/c".to_string(), format!(".\\{name}")]);
+        assert_eq!(cmd.get_current_dir(), Some(ctx.run_dir.as_path()));
+        let envs: Vec<(String, Option<String>)> = cmd
+            .get_envs()
+            .map(|(k, v)| (k.to_string_lossy().into_owned(), v.map(|v| v.to_string_lossy().into_owned())))
+            .collect();
+        for (k, v) in &env {
+            assert!(envs.contains(&(k.clone(), Some(v.clone()))), "{k} : {envs:?}");
+        }
+        assert!(envs.iter().any(|(k, v)| k == "RAGO_RES" && v.is_some()), "{envs:?}");
+        // aucune autre variable RAGO_STATE_/RAGO_HELD_ n'est posée
+        let rago = envs.iter().filter(|(k, v)| v.is_some() && (k.starts_with("RAGO_STATE_") || k.starts_with("RAGO_HELD_")));
+        assert_eq!(rago.count(), 2, "{envs:?}");
+        let _ = fs::remove_dir_all(ctx.run_dir.parent().unwrap().parent().unwrap());
+    }
+
+    /// Sur Windows (CI) : le script lancé par `.\nom.cmd` voit ces variables, et le PowerShell qu'il lance aussi.
+    #[cfg(windows)]
+    #[test]
+    fn undo_variables_reach_the_script_and_powershell() {
+        let ctx = odd_ctx("launch-env-win");
+        let script = "if defined RAGO_HELD_bbbbbbbbbb (echo held-%RAGO_HELD_bbbbbbbbbb%) else (echo free)\r\n\
+                      powershell -NoProfile -Command \"Write-Output ('ps-' + $env:RAGO_STATE_MMAGENT)\"";
+        let path = write_script(&ctx.run_dir, "net_a", Some("rest"), script).unwrap();
+        let env = vec![
+            ("RAGO_STATE_MMAGENT".to_string(), "1".to_string()),
+            ("RAGO_HELD_bbbbbbbbbb".to_string(), "1".to_string()),
+        ];
+        let out = batch_command(&ctx, &path, &env).unwrap().output().unwrap();
+        let text = decode(&out.stdout);
+        let _ = fs::remove_dir_all(ctx.run_dir.parent().unwrap().parent().unwrap());
+        assert!(out.status.success(), "{text}\n{}", decode(&out.stderr));
+        assert!(text.lines().any(|l| l.trim() == "held-1"), "{text}");
+        assert!(text.lines().any(|l| l.trim() == "ps-1"), "{text}");
     }
 
     #[test]

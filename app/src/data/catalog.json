@@ -2948,8 +2948,8 @@
         "en": "Disk power management"
        },
        "desc": {
-        "en": "Keeps your drives from going idle and, if smartctl is present, turns off hard drive power saving and quiet mode.",
-        "fr": "Empêche tes disques de passer en veille et, si smartctl est là, coupe le mode économie et silence des disques durs."
+        "en": "Keeps your drives from going idle and turns off hard drive power saving and quiet mode until the next restart or sleep.",
+        "fr": "Empêche tes disques de passer en veille et coupe le mode économie et silence des disques durs jusqu'au prochain redémarrage ou mise en veille."
        },
        "risk": "safe",
        "reboot": true,
@@ -3084,8 +3084,8 @@
         "fr": "Libère de l'espace disque ; aucun gain de FPS."
        },
        "cons": {
-        "en": "Websites and thumbnails load a bit slower the first time; the cleanup can take several minutes.",
-        "fr": "Sites et miniatures un peu plus lents à recharger la première fois ; le nettoyage peut prendre plusieurs minutes."
+        "en": "Websites and thumbnails load slower the first time; the cleanup takes a while and can't be undone (only the write cache goes back).",
+        "fr": "Sites et miniatures plus lents à recharger la première fois ; le nettoyage est long et ne s'annule pas (seul le cache d'écriture revient)."
        },
        "restore": true
       },
@@ -5464,8 +5464,8 @@
         "fr": "Un peu plus de vie privée ; effet sur les FPS quasi nul."
        },
        "cons": {
-        "en": "Less information to figure out why Windows or a game crashed.",
-        "fr": "Moins d'infos pour comprendre un plantage de Windows ou d'un jeu."
+        "en": "Less information to figure out why Windows or a game crashed. Turns the DPS service and the disk diagnostic tasks back on if they were off.",
+        "fr": "Moins d'infos pour comprendre un plantage de Windows ou d'un jeu. Réactive le service DPS et les tâches de diagnostic des disques s'ils étaient coupés."
        }
       },
       {
@@ -5684,14 +5684,14 @@
        "legacy": [
         "f1@6053"
        ],
-       "lines": 4,
+       "lines": 5,
        "gain": {
         "en": "Useful if Windows crashes or glitches; does not add FPS on a healthy PC.",
         "fr": "Utile si Windows plante ou bugge ; ne fait pas gagner de FPS sur un PC sain."
        },
        "cons": {
-        "en": "Takes several minutes and may need the Internet to repair.",
-        "fr": "Prend plusieurs minutes et peut avoir besoin d'Internet pour réparer."
+        "en": "Takes a long while (DISM then sfc) and may need the Internet to repair.",
+        "fr": "Prend de longues minutes (DISM puis sfc) et peut avoir besoin d'Internet pour réparer."
        },
        "restore": true
       }

@@ -500,6 +500,146 @@ mod tests {
         }
     }
 
+    /// Retour arrière (RAG-60, 2026-10-13) : l'annulation ne remet que ce que l'app a changé. Les commandes qui
+    /// posent la valeur de Windows sans savoir ce que le joueur avait (rest) ne tournent que sans relevé de l'état,
+    /// et full laisse les valeurs qu'un autre réglage encore appliqué modifie (étiquettes `writes`).
+    #[test]
+    fn undo_puts_back_only_what_the_app_changed() {
+        let bundle = premium(&test_key()).unwrap();
+        let undo: Vec<(&String, &String, &Undo)> =
+            PLAIN.undo.iter().chain(bundle.undo.iter()).flat_map(|(id, vs)| vs.iter().map(move |(v, u)| (id, v, u))).collect();
+        assert!(undo.len() > 150, "{} annulations", undo.len());
+        let probe_of = |id: &str, v: &str| {
+            PLAIN.probes.get(id).or(bundle.probes.get(id)).and_then(|e| pick(e, Some(v))).cloned().unwrap_or_default()
+        };
+        const BLIND: [(&str, &str); 9] = [
+            ("enable-mmagent", "mmagent"),
+            ("disable-mmagent", "mmagent"),
+            ("/maxpwage", "maxpwage"),
+            ("reset-netadapteradvancedproperty", "nic"),
+            ("set-netadapterpowermanagement", "nic"),
+            ("enable-netadapterlso", "nic"),
+            ("mspower_deviceenable", "pnppower"),
+            ("set-smbclientconfiguration", "smb"),
+            ("set-smbserverconfiguration", "smb"),
+        ];
+        let (mut guarded, mut held) = (0, 0);
+        for (id, v, u) in &undo {
+            let full = u.full.as_deref().unwrap_or("").to_lowercase();
+            let rest = u.rest.as_deref().unwrap_or("").to_lowercase();
+            // rest tourne aussi après une sauvegarde de cette version : il ne lance que ce que les scripts appliqués
+            // depuis 1.1.6 lancent (l'audit de sécurité n'est plus touché que par win_audit, que full remet)
+            assert!(!rest.contains("auditpol") || id.as_str() == "win_audit", "{id}:{v} touche à l'audit de sécurité");
+            for s in [&full, &rest] {
+                assert!(!s.contains("disable-computerrestore"), "{id}:{v} coupe la protection système des autres disques");
+                for l in s.lines() {
+                    assert!(!(l.contains("sfio priority") && l.contains("reg_dword")), "{id}:{v} SFIO Priority en DWORD : {l}");
+                    // clés des cartes graphiques (Control\Class\{4d36e968…}\0000…) : seulement des valeurs, jamais la clé
+                    if l.contains("reg delete") && l.contains("control\\class\\{4d36e968") {
+                        assert!(l.contains(" /v "), "{id}:{v} supprime la clé de la carte graphique : {l}");
+                    }
+                }
+            }
+            for l in rest.lines() {
+                for (cmd, state) in BLIND {
+                    if l.contains(cmd) {
+                        assert!(l.contains(&format!("if not defined rago_state_{state} ")), "{id}:{v} rest sans garde : {l}");
+                    }
+                }
+            }
+            let probe = probe_of(id, v);
+            for part in rest.split("rago_state_").skip(1) {
+                let name: String = part.chars().take_while(|c| c.is_ascii_alphanumeric()).collect();
+                assert!(crate::backup::STATES.contains(&name.as_str()), "{id}:{v} état inconnu {name}");
+                // relevé de l'état, ou « untouched » : le script d'aujourd'hui ne le change plus (hitreg_suite)
+                assert!(
+                    probe.contains(&format!("@@RAGO state \"{name}\"")) || probe.contains(&format!("@@RAGO untouched \"{name}\"")),
+                    "{id}:{v} garde {name} sans relevé"
+                );
+                guarded += 1;
+            }
+            for s in [u.full.as_deref().unwrap_or(""), u.rest.as_deref().unwrap_or("")] {
+                for part in s.split("RAGO_HELD_").skip(1) {
+                    let tag: String = part.chars().take_while(|c| c.is_ascii_hexdigit()).collect();
+                    assert!(tag.len() == 10 && u.writes.contains(&tag), "{id}:{v} garde {tag} hors de writes");
+                    held += 1;
+                }
+            }
+            // compression mémoire : coupée aussi par d'autres réglages, jamais rallumée sans garde
+            for l in full.lines().chain(rest.lines()) {
+                let calls = l.matches("enable-mmagent -memorycompression").count();
+                let tag = crate::runner::held_tag("mmagent|memorycompression");
+                let guarded_calls = l.matches(&format!("rago_held_{tag}) {{ enable-mmagent -memorycompression")).count();
+                assert_eq!(calls, guarded_calls, "{id}:{v} rallume la compression sans garde : {l}");
+            }
+        }
+        assert!(guarded > 10 && held > 1000, "{guarded} gardes d'état, {held} gardes de valeurs partagées");
+        // une valeur partagée n'est gardée que si un autre réglage l'écrit aussi
+        let mut owners: HashMap<&String, std::collections::HashSet<&String>> = HashMap::new();
+        for (id, _, u) in &undo {
+            for t in &u.writes {
+                owners.entry(t).or_default().insert(*id);
+            }
+        }
+        for (id, v, u) in &undo {
+            for t in &u.writes {
+                assert!(owners[t].len() > 1, "{id}:{v} étiquette {t} propre à ce réglage");
+            }
+        }
+    }
+
+    /// Sans relevé, full remet aussi les valeurs écrites dans la carte visée (« for %%G in (!rago_gpu!) », 1.1.9), pas
+    /// seulement celles de « …\0000 » des anciens scripts : sur un portable à deux cartes, la carte NVIDIA est souvent
+    /// « …\0001 ». La garde RAGO_HELD est celle de la même valeur dans « …\0000 ».
+    #[test]
+    fn gpu_undo_follows_the_targeted_card() {
+        let undo: serde_json::Value = serde_json::from_str(include_str!("../scripts/undo.json")).unwrap();
+        let gpu0 = "class\\{4d36e968-e325-11ce-bfc1-08002be10318}\\0000\" /v \"";
+        for id in ["nv_accel", "nv_contig", "nv_kboost", "gpu_nvidia", "amd_general", "gpu_amd"] {
+            let full = undo[id]["_"]["full"].as_str().unwrap().to_lowercase();
+            let script = SCRIPTS[id]["_"].to_lowercase();
+            let looped: Vec<&str> = script
+                .lines()
+                .filter(|l| l.contains(" in (!rago_gpu!) do reg.exe add "))
+                .filter_map(|l| l.split(" /v \"").nth(1)?.split('"').next())
+                .collect();
+            let mut n = 0;
+            for name in full.lines().filter_map(|l| l.split(gpu0).nth(1)?.split('"').next()) {
+                if !looped.contains(&name) {
+                    continue;
+                }
+                let card = full.lines().find(|l| {
+                    l.contains(" in (!rago_gpu!) do ") && l.contains("reg delete \"%%") && l.contains(&format!("/v \"{name}\""))
+                });
+                let card = card.unwrap_or_else(|| panic!("{id} : {name} remis seulement dans …\\0000"));
+                let fixed = full.lines().find(|l| l.contains(&format!("{gpu0}{name}\""))).unwrap();
+                let tag = |l: &str| l.split("rago_held_").nth(1).map(|t| t[..10].to_string());
+                assert_eq!(tag(card), tag(fixed), "{id} : {name} gardé autrement dans …\\0000 et dans la carte");
+                n += 1;
+            }
+            assert!(n > 0, "{id}");
+            // les cartes du fabricant sont cherchées avant la première boucle
+            let find = full.find("set \"rago_gpu=\"").unwrap_or_else(|| panic!("{id}"));
+            assert!(find < full.find(" in (!rago_gpu!) do ").unwrap(), "{id}");
+        }
+    }
+
+    /// Priorité par jeu : les vrais exécutables (RAG-60) ; réparation : sfc après DISM.
+    #[test]
+    fn per_game_priority_targets_real_executables() {
+        for (v, s) in &SCRIPTS["pri_game"] {
+            let low = s.to_lowercase();
+            assert!(!low.contains(".exe.exe") && !low.contains("%%i.exe"), "pri_game:{v}");
+            assert!(!low.contains("valorantclient") && !low.contains("(fortniteclient-win64)"), "pri_game:{v}");
+        }
+        assert!(SCRIPTS["pri_game"]["valorant"].contains("VALORANT-Win64-Shipping.exe"));
+        assert!(SCRIPTS["pri_game"]["fortnite"].contains("in (FortniteClient-Win64-Shipping.exe)"));
+        assert!(SCRIPTS["pri_game"]["apex"].contains("r5apex_dx12.exe"));
+        assert!(SCRIPTS["pri_game"]["gta"].contains("GTA5_Enhanced.exe"));
+        let repair = SCRIPTS["cln_repair"]["_"].to_lowercase();
+        assert!(repair.find("/restorehealth").unwrap() < repair.find("sfc.exe /scannow").unwrap());
+    }
+
     /// Aucun réglage Safe ne coupe le MPO ni la préemption du GPU (tools/safety.py, 2026-10-10) : ces changements
     /// restent dans des réglages Advanced. Les valeurs « Preemption » de pri_game sont sous Image File Execution
     /// Options, que Windows ignore pour ces noms.

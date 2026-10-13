@@ -239,6 +239,13 @@ mod tests {
         l.set_applied("hitreg_suite", Some("good".into()), true, true, vec!["reg|hklm\\a|b".into()], 1);
         assert!(!hitreg_suite_without_backup(&mut l));
         assert!(l.tweaks["hitreg_suite"].backup);
+        // relevé neuf réduit à des états (mot de passe, carte réseau) et à la compression mémoire non touchée : c'est un
+        // relevé, la sauvegarde reste
+        let mut l = Ledger::default();
+        let states = vec!["state|nic".into(), "state|maxpwage".into(), "untouched|mmagent".into()];
+        l.set_applied("hitreg_suite", Some("good".into()), true, true, states, 1);
+        assert!(!hitreg_suite_without_backup(&mut l));
+        assert!(l.tweaks["hitreg_suite"].backup);
     }
 
     #[test]

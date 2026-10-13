@@ -698,4 +698,7 @@ caractères. Avec un compte « Tom&Jerry » ou « Jean (PC) », chaque réglage 
 cmd reçoit seulement `.\<script>.cmd` (lettres, chiffres, `-`, `_` et `.`), le dossier `run` passe en dossier courant
 par CreateProcess, comme avant. Même chose pour les relevés. Les autres programmes lancés par l'app reçoivent leurs
 arguments séparément (reg.exe, powercfg, explorer, PowerShell `-File`) ou un texte fixe (`-Command`), sans chemin du
-profil. Tests `scripts_start_by_name_from_their_folder` et, sur Windows, `scripts_run_from_a_folder_with_special_characters`.
+profil. Les variables du retour arrière (`RAGO_STATE_…`, `RAGO_HELD_…`) passent par l'environnement du processus
+(`batch_command`), jamais par la ligne de commande : le script et le PowerShell qu'il lance les lisent. Tests
+`scripts_start_by_name_from_their_folder`, `undo_variables_go_with_the_script` et, sur Windows,
+`scripts_run_from_a_folder_with_special_characters` et `undo_variables_reach_the_script_and_powershell`.
