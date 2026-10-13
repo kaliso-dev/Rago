@@ -582,6 +582,9 @@ def postprocess(modules, scripts):
     # ce qui supprime, boucles qui suppriment sans développement retardé ; nettoyages « set folder= » de cln_temp et
     # mc_optifine (2 + 2 x 2) récrits
     assert PATHS.apply(scripts) == 6, 'nettoyages set folder= de cln_temp et mc_optifine'
+    # nom de la carte réseau lu à l'exécution dans les blocs : un « ) » ou un « & » dans le nom ne coupe plus le bloc
+    # (tools/expansion.py ; ping_main:config3 : 1 echo + 29 PowerShell, hitreg_suite : 4 x (1 + 2))
+    assert EXPANSION.adapter(scripts) == 42, 'nom de la carte réseau dans les blocs'
 
     tweaks = {t['id']: t for m in modules for sec in m['sections'] for t in sec['tweaks'] if 'id' in t}
     for tid, t in tweaks.items():
@@ -1281,6 +1284,13 @@ def main():
     for vs in relev.values():
         for body in vs.values():
             probes.lint(body)
+    # nom de la carte réseau : jamais lu `%adapter_name%` dans un bloc, ni `\"%…%\"` (tools/expansion.py)
+    for where, tree in (('script', kept), ('relevé', relev), ('annulation', undo)):
+        for tid, vs in tree.items():
+            for v, body in vs.items():
+                for part, text in (body.items() if isinstance(body, dict) else [('', body)]):
+                    if isinstance(text, str):
+                        assert not EXPANSION.adapter_errors(text), (where, tid, v, part, EXPANSION.adapter_errors(text))
     json.dump(kept, open(os.path.join(ROOT, 'src-tauri', 'scripts', 'scripts.json'), 'w', encoding='utf-8'), ensure_ascii=False)
     json.dump(relev, open(os.path.join(ROOT, 'src-tauri', 'scripts', 'probes.json'), 'w', encoding='utf-8'), ensure_ascii=False)
     # valeurs de pilote (amd_thermal) : seule la sauvegarde de l'app les remet ; Edge : rien à remettre. sto_cacheprot :

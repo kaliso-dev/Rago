@@ -727,3 +727,14 @@ est posée par trois réglages, l'annulation d'un des trois la laisse quand un a
 (`RAGO_HELD_…`). Le générateur refuse tout autre `!` écrit tel quel dans une commande lancée avec le développement
 retardé (le texte affiché par un `echo` n'en est pas une). Tests `no_literal_bang_with_delayed_expansion` et
 `bang_checker_sees_what_cmd_removes`.
+
+**Nom de la carte réseau dans un bloc (`ping_main` « config3 », `hitreg_suite`).** Le script trouve la carte connectée
+(`set "adapter_name=%%b"`) puis la règle dans `if defined adapter_name ( … )`. cmd remplace `%adapter_name%` en lisant
+tout le bloc, avant de le découper : un nom avec `)` (« Ethernet (2) », nom donné par le joueur ou un pilote) fermait le
+bloc au milieu, un `&` coupait la commande, et la suite tournait hors du `if`. Dans les lignes PowerShell,
+`\"%adapter_name%\"` laissait même le nom hors des guillemets de cmd. `tools/expansion.py` fait lire le nom à
+l'exécution : `!adapter_name!` pour l'echo, `$env:adapter_name` pour PowerShell (la commande est alors entièrement entre
+guillemets pour cmd). La carte visée ne change pas. Les lignes `netsh interface ipv4 set subinterface "%adapter_name%"`
+de `net_profile`, `ping_packets` et `net_advanced` sont hors bloc, entre guillemets, et lisent le nom que le moteur
+donne (`runner.rs`, première carte physique active) : elles ne changent pas. Tests `adapter_name_cannot_break_a_block`
+et `adapter_checker_sees_what_breaks_a_block`.

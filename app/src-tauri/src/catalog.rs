@@ -1629,6 +1629,125 @@ mod tests {
         }
     }
 
+    /// Nom de la carte réseau lu par cmd en lisant un bloc (finitions du 2026-10-13, tools/expansion.py) : `%adapter_name%`
+    /// est remplacé avant que le bloc soit découpé, un `)` dans le nom (« Ethernet (2) ») fermait le `if … (` au milieu
+    /// et un `&` coupait la commande. `\"%NOM%\"` dans une commande PowerShell laisse même le nom hors des guillemets de
+    /// cmd, qui ne connaît pas `\"`.
+    fn adapter_errors(script: &str) -> Vec<String> {
+        // parenthèses avant `end` sur une ligne de commande, hors guillemets et hors ^ (comme block_errors) : (ouvertes
+        // et pas encore fermées sur la ligne, somme des +1 / -1)
+        fn parens(l: &str, end: usize) -> (i32, i32) {
+            let t = l.trim().trim_start_matches('@').trim().to_ascii_lowercase();
+            let first = t.split(|c: char| c.is_ascii_whitespace() || ".(:/".contains(c)).next().unwrap_or("");
+            if t.starts_with(':') || first == "rem" || first == "echo" {
+                return (0, 0);
+            }
+            let (mut open, mut sum, mut quoted, mut it) = (0, 0, false, l[..end].bytes());
+            while let Some(c) = it.next() {
+                match c {
+                    b'"' => quoted = !quoted,
+                    b'^' if !quoted => {
+                        it.next();
+                    }
+                    b'(' if !quoted => {
+                        open += 1;
+                        sum += 1;
+                    }
+                    b')' if !quoted => {
+                        open = (open - 1).max(0);
+                        sum -= 1;
+                    }
+                    _ => {}
+                }
+            }
+            (open, sum)
+        }
+        let mut errors = Vec::new();
+        let mut depth = 0;
+        for (n, l) in script.lines().enumerate() {
+            let t = l.trim();
+            let low = l.to_ascii_lowercase();
+            if low.match_indices("%adapter_name%").any(|(i, _)| depth + parens(l, i).0 > 0) {
+                errors.push(format!("{}: %adapter_name% dans un bloc : {t}", n + 1));
+            }
+            if l.match_indices("\\\"%").any(|(i, _)| l[i + 3..].find('%').is_some_and(|j| l[i + 3 + j + 1..].starts_with("\\\""))) {
+                errors.push(format!("{}: \\\"%…%\\\" hors des guillemets de cmd : {t}", n + 1));
+            }
+            depth = (depth + parens(l, l.len()).1).max(0);
+        }
+        errors
+    }
+
+    #[test]
+    fn adapter_checker_sees_what_breaks_a_block() {
+        let bad = [
+            ("if defined adapter_name (\r\n    echo Your current network adapter is: %adapter_name%\r\n)", "dans un bloc"),
+            ("if defined adapter_name (\r\n    netsh interface ipv4 set subinterface \"%adapter_name%\" mtu=1500\r\n)", "dans un bloc"),
+            ("if defined adapter_name ( echo %adapter_name% )", "dans un bloc"),
+            ("powershell -Command \"Get-NetAdapter -Name \\\"%adapter_name%\\\"\"", "hors des guillemets"),
+        ];
+        for (s, why) in bad {
+            let e = adapter_errors(s);
+            assert!(e.len() == 1 && e[0].contains(why), "{s}\n{e:?}");
+        }
+        let good = [
+            "netsh interface ipv4 set subinterface \"%adapter_name%\" mtu=1500 store=persistent >nul 2>&1",
+            "if \"%adapter_name%\"==\"\" (\r\n    exit /B\r\n)",
+            "if defined adapter_name (\r\n    echo Your current network adapter is: !adapter_name!\r\n    powershell -Command \"Get-NetAdapterAdvancedProperty \
+             -Name $env:adapter_name -RegistryKeyword '*EEE' | Set-NetAdapterAdvancedProperty -RegistryValue 0\" >nul 2>&1\r\n) else (\r\n    echo Skipping.\r\n)\r\n\
+             netsh interface ipv4 set subinterface \"%adapter_name%\" mtu=1500",
+            "for /f \"delims=\" %%a in ('x') do (\r\n    set \"adapter_name=%%a\"\r\n)\r\necho %adapter_name%",
+        ];
+        for s in good {
+            assert!(adapter_errors(s).is_empty(), "{s}\n{:?}", adapter_errors(s));
+        }
+    }
+
+    /// Le nom de la carte réseau (ping_main:config3, hitreg_suite) est lu à l'exécution dans les blocs : `!adapter_name!`
+    /// pour l'echo, `$env:adapter_name` pour PowerShell (adapter_errors). Les lignes netsh qui lisent la valeur posée
+    /// par le moteur (hors bloc, entre guillemets) ne changent pas.
+    #[test]
+    fn adapter_name_cannot_break_a_block() {
+        let probes: Scripts = serde_json::from_str(include_str!("../scripts/probes.json")).unwrap();
+        let undo: HashMap<String, HashMap<String, Undo>> = serde_json::from_str(include_str!("../scripts/undo.json")).unwrap();
+        let mut bad = Vec::new();
+        let mut check = |what: String, s: &str| bad.extend(adapter_errors(s).into_iter().map(|e| format!("{what} {e}")));
+        for (id, variants) in SCRIPTS.iter() {
+            for (v, s) in variants {
+                check(format!("{id}:{v}"), s);
+            }
+        }
+        for (id, variants) in &probes {
+            for (v, s) in variants {
+                check(format!("relevé {id}:{v}"), s);
+            }
+        }
+        for (id, variants) in &undo {
+            for (v, u) in variants {
+                for (part, s) in [("full", &u.full), ("rest", &u.rest)] {
+                    if let Some(s) = s {
+                        check(format!("annulation {id}:{v} {part}"), s);
+                    }
+                }
+            }
+        }
+        assert!(bad.is_empty(), "{} défauts :\n{}", bad.len(), bad.join("\n"));
+        let echo = "    echo Your current network adapter is: !adapter_name!";
+        let ps = "    powershell -Command \"Get-NetAdapterAdvancedProperty -Name $env:adapter_name -";
+        let s = &SCRIPTS["ping_main"]["config3"];
+        assert_eq!(s.lines().filter(|l| *l == echo).count(), 1, "{s}");
+        assert_eq!(s.lines().filter(|l| l.starts_with(ps)).count(), 29, "{s}");
+        for v in ["good", "medium", "low", "laptop"] {
+            let s = &SCRIPTS["hitreg_suite"][v];
+            assert_eq!(s.lines().filter(|l| *l == echo).count(), 1, "{v}\n{s}");
+            assert_eq!(s.lines().filter(|l| l.starts_with(ps)).count(), 2, "{v}\n{s}");
+        }
+        // décision de Sofiene en attente : valeur posée par le moteur (runner.rs, carte physique active), inchangée
+        for (id, v) in [("net_profile", "hitreg"), ("net_profile", "knockback"), ("ping_packets", "hitreg"), ("ping_packets", "knockback"), ("net_advanced", "_")] {
+            assert!(SCRIPTS[id][v].contains("netsh interface ipv4 set subinterface \"%adapter_name%\" mtu="), "{id}:{v}");
+        }
+    }
+
     /// Services que lit le vérificateur officiel de RBW (github.com/quickpots/RBW-SS, Services.ps1, relevé le
     /// 2026-10-13), en plus de chaque CDPUserSvc_xxxx : il les veut tous en Running.
     const RBW_CHECKER: [&str; 11] = ["sysmain", "pcasvc", "dps", "bam", "eventlog", "wsearch", "dusmsvc", "bfe", "appinfo", "dcomlaunch", "plugplay"];

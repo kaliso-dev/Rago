@@ -17,6 +17,15 @@ Le moteur lance chaque script, relevé et annulation après `setlocal EnableExte
    `no_literal_bang_with_delayed_expansion` relit la même règle dans catalog.rs). Le texte affiché par un `echo` n'est
    pas une commande (un `!` y disparaît de l'écran, sans autre effet), sauf les lignes `echo @@RAGO` des relevés, lues
    par le moteur.
+3. adapter : nom de la carte réseau (ping_main:config3, hitreg_suite). Le script le pose (`set "adapter_name=%%b"`)
+   puis le lit dans le bloc `if defined adapter_name ( … )`. cmd remplace `%adapter_name%` en lisant le bloc entier,
+   avant de le découper : un nom avec `)` (« Ethernet (2) », nom donné par le joueur ou par un pilote) fermait le bloc
+   au milieu, un `&` coupait la commande, et les lignes suivantes tournaient hors du `if`. Dans les lignes PowerShell,
+   `\\"%adapter_name%\\"` laissait même le nom hors des guillemets de cmd (cmd ne connaît pas `\\"`). Dans un bloc,
+   l'echo lit `!adapter_name!` (remplacé à l'exécution, jamais relu) et PowerShell lit `$env:adapter_name` (la
+   variable, que cmd lui transmet) : la commande PowerShell est entièrement entre guillemets pour cmd. Le nom visé ne
+   change pas. adapter_errors (et le test Rust `adapter_name_cannot_break_a_block`) refuse `%adapter_name%` dans un bloc
+   et tout `\\"%NOM%\\"`.
 """
 import re
 
@@ -136,3 +145,75 @@ def apply(tree, where=''):
         elif isinstance(v, dict):
             n += apply(v, f'{where}{k}:')
     return n
+
+
+ADAPTER = re.compile(r'(?i)%adapter_name%')
+# `\"%NOM%\"` dans une commande PowerShell : pour cmd, le guillemet de `\"` ferme le texte entre guillemets
+PS_QUOTED = re.compile(r'\\"%[A-Za-z_][\w#$.()-]*%\\"')
+ADAPTER_PS = re.compile(r'(?i)\\"%adapter_name%\\"')
+
+
+def opened(line, end):
+    """Parenthèses ouvertes, hors guillemets et hors ^, avant la position `end` d'une ligne de commande."""
+    if PATHS.kind(line) != 'cmd':
+        return 0
+    n, quoted, i = 0, False, 0
+    while i < end:
+        c = line[i]
+        if c == '"':
+            quoted = not quoted
+        elif c == '^' and not quoted:
+            i += 1
+        elif c == '(' and not quoted:
+            n += 1
+        elif c == ')' and not quoted:
+            n = max(0, n - 1)
+        i += 1
+    return n
+
+
+def lines_depth(text):
+    """(ligne, développement retardé actif, parenthèses ouvertes avant la ligne)."""
+    depth = 0
+    for l, on in lines_state(text):
+        yield l, on, depth
+        depth = max(0, depth + sum(PATHS.parens(l)))
+
+
+def adapter_text(text, where):
+    sep = '\r\n' if '\r\n' in text else '\n'
+    out, n = [], 0
+    for l, on, depth in lines_depth(text):
+        new = ADAPTER_PS.sub('$env:adapter_name', l)
+        spots = [m for m in ADAPTER.finditer(new) if depth + opened(new, m.start()) > 0]
+        if spots:
+            assert on and DDE_OFF.lower() not in new.lower(), (where, 'développement retardé coupé', l)
+            for m in reversed(spots):
+                new = new[:m.start()] + '!adapter_name!' + new[m.end():]
+        n += new != l
+        out.append(new)
+    return sep.join(out), n
+
+
+def adapter(scripts):
+    """Nom de la carte réseau lu à l'exécution dans les blocs (point 3 de la docstring). Renvoie le nombre de lignes."""
+    n = 0
+    for tid, variants in scripts.items():
+        for v, body in variants.items():
+            variants[v], m = adapter_text(body, f'{tid}:{v}')
+            n += m
+            assert not adapter_errors(variants[v]), (tid, v, adapter_errors(variants[v]))
+    return n
+
+
+def adapter_errors(text):
+    """`%adapter_name%` lu dans un bloc (ou après la parenthèse qui l'ouvre), `\\"%NOM%\\"` dans une commande."""
+    out = []
+    for n, (l, on, depth) in enumerate(lines_depth(text), 1):
+        if PATHS.kind(l) in ('label', 'rem'):
+            continue
+        if any(depth + opened(l, m.start()) > 0 for m in ADAPTER.finditer(l)):
+            out.append(f'{n}: %adapter_name% dans un bloc : {l.strip()}')
+        if PS_QUOTED.search(l):
+            out.append(f'{n}: \\"%…%\\" hors des guillemets de cmd : {l.strip()}')
+    return out
