@@ -529,12 +529,23 @@ fn sanitize(s: &str) -> String {
     s.chars().map(|c| if c.is_ascii_alphanumeric() || "-_.".contains(c) { c } else { '_' }).collect()
 }
 
+/// Windows ne crée qu'un point de restauration par 24 h : la limite (SystemRestorePointCreationFrequency) est levée le
+/// temps de créer celui de Rago, puis remise, même si la création échoue. Avant 1.1.9 elle restait à 0 pour toujours
+/// (RAG-60) : une valeur 0 trouvée ici est donc retirée, ce qui rend la limite de Windows.
 const RESTORE_POINT_PS: &str = r#"$ErrorActionPreference = 'Stop'
 try { Enable-ComputerRestore -Drive "$env:SystemDrive\" } catch { Write-Output "- System Restore already on or locked" }
-New-ItemProperty -Path 'HKLM:\SOFTWARE\Microsoft\Windows NT\CurrentVersion\SystemRestore' -Name 'SystemRestorePointCreationFrequency' -Value 0 -PropertyType DWord -Force | Out-Null
-Write-Output "- Creating the Rago Optimizer restore point"
-Checkpoint-Computer -Description 'Rago Optimizer' -RestorePointType 'MODIFY_SETTINGS'
-Write-Output "- Restore point created"
+$key = 'HKLM:\SOFTWARE\Microsoft\Windows NT\CurrentVersion\SystemRestore'
+$name = 'SystemRestorePointCreationFrequency'
+$old = (Get-ItemProperty -Path $key -Name $name -ErrorAction SilentlyContinue).$name
+New-ItemProperty -Path $key -Name $name -Value 0 -PropertyType DWord -Force | Out-Null
+try {
+    Write-Output "- Creating the Rago Optimizer restore point"
+    Checkpoint-Computer -Description 'Rago Optimizer' -RestorePointType 'MODIFY_SETTINGS'
+    Write-Output "- Restore point created"
+} finally {
+    if ($null -eq $old -or $old -eq 0) { Remove-ItemProperty -Path $key -Name $name -ErrorAction SilentlyContinue }
+    else { Set-ItemProperty -Path $key -Name $name -Value $old }
+}
 "#;
 
 /// Ce qui modifie Windows ou les fichiers, donc attend le point de restauration quand il est demandé (tout sauf le
@@ -571,5 +582,21 @@ mod tests {
         assert!(s.contains("echo 1\r\necho 2\r\nexit /b 0\r\n"));
         assert!(p.file_name().unwrap().to_str().unwrap().starts_with("test-a_b-"));
         fs::remove_file(p).unwrap();
+    }
+
+    /// RAG-60 : la limite d'un point de restauration par 24 h n'est levée que le temps de créer celui de Rago.
+    #[test]
+    fn restore_point_puts_the_frequency_back() {
+        let ps = RESTORE_POINT_PS;
+        let set0 = ps.find("-Value 0 -PropertyType DWord").expect("limite levée");
+        let point = ps.find("Checkpoint-Computer").unwrap();
+        let fin = ps.find("} finally {").expect("remise même en cas d'échec");
+        assert!(set0 < point && point < fin);
+        assert!(ps.contains("$old = (Get-ItemProperty"), "valeur d'avant relevée");
+        let after = &ps[fin..];
+        assert!(after.contains("Remove-ItemProperty -Path $key -Name $name"));
+        assert!(after.contains("Set-ItemProperty -Path $key -Name $name -Value $old"));
+        // la valeur 0 laissée par les versions d'avant 1.1.9 est retirée, pas remise
+        assert!(after.contains("$old -eq 0"));
     }
 }
