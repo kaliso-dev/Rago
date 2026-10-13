@@ -532,6 +532,11 @@ QUIET = [
     (('in_windows',), r'(?i)^(forfiles -p "[^"]+" -s -m \*\.\* /C "cmd /c del @path")$', r'\1 >nul 2>&1'),
     (('in_windows',), r'(?i)^(del /s /f /q c:\\windows\\temp\\\*\.\*)$', r'\1 >nul 2>&1'),
     (('in_windows',), r'(?i)^del /s /f /q %temp%\\\*\.\*$', r'del /s /f /q "%temp%\\*.*" >nul 2>&1'),
+    # finitions du 2026-10-13 : 28 dossiers d'un ancien installeur NVIDIA (C:\NVIDIA\<composant>), absents sur presque
+    # tous les PC (l'installeur actuel extrait dans C:\NVIDIA\DisplayDriver\<version>\…) : « Le fichier spécifié est
+    # introuvable. » 28 fois. rd ne se lance que si le dossier existe ; ses vraies erreurs (accès refusé, fichier
+    # ouvert) s'affichent toujours.
+    (('gpu_nvidia', 'nv_debloat'), r'(?i)^rd /s /q ("C:\\Nvidia\\[^"%!]+")$', r'if exist \1 rd /s /q \1'),
 ]
 
 

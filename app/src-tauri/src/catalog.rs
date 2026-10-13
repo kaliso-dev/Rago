@@ -911,6 +911,23 @@ mod tests {
         }
     }
 
+    /// Finitions du 2026-10-13 : gpu_nvidia et nv_debloat suppriment 28 dossiers d'un ancien installeur NVIDIA
+    /// (C:\NVIDIA\<composant>), absents sur presque tous les PC : « Le fichier spécifié est introuvable. » 28 fois dans le
+    /// journal. rd ne se lance que si le dossier existe (tools/build_catalog_v6.py QUIET), sans cacher ses vraies erreurs.
+    #[test]
+    fn nvidia_leftovers_are_removed_quietly() {
+        for id in ["gpu_nvidia", "nv_debloat"] {
+            let s = &SCRIPTS[id]["_"];
+            let rd: Vec<&str> = s.lines().filter(|l| l.to_lowercase().contains("rd /s /q \"c:\\nvidia\\")).collect();
+            assert_eq!(rd.len(), 28, "{id}");
+            for l in rd {
+                let path = l.split_once(" rd /s /q ").map(|(_, p)| p).unwrap_or("");
+                assert_eq!(l, format!("if exist {path} rd /s /q {path}"), "{id}");
+                assert!(!l.contains("nul"), "{id} : une vraie erreur de rd doit rester visible : {l}");
+            }
+        }
+    }
+
     /// Lignes qui empêchent cmd.exe de lire un bloc entre parenthèses (RAG-68, 2026-10-13) : cmd lit tout le bloc avant
     /// de l'exécuter et, sur une erreur, s'arrête net (« ) was unexpected at this time. ») : le reste du script ne tourne
     /// pas et le réglage échoue. Renvoie « ligne : problème » pour chaque défaut. Lecture simplifiée de cmd : parenthèses

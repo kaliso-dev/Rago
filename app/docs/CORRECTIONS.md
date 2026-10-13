@@ -738,3 +738,10 @@ guillemets pour cmd). La carte visée ne change pas. Les lignes `netsh interface
 de `net_profile`, `ping_packets` et `net_advanced` sont hors bloc, entre guillemets, et lisent le nom que le moteur
 donne (`runner.rs`, première carte physique active) : elles ne changent pas. Tests `adapter_name_cannot_break_a_block`
 et `adapter_checker_sees_what_breaks_a_block`.
+
+**Dossiers NVIDIA absents (`gpu_nvidia`, `nv_debloat`).** Les deux scripts suppriment 28 dossiers d'un ancien
+installeur NVIDIA (`C:\NVIDIA\Display.NView`, `…\PhysX`, `…\GFExperience\www`…). L'installeur actuel extrait ailleurs
+(`C:\NVIDIA\DisplayDriver\<version>\…`) : sur presque tous les PC, le journal montrait « Le fichier spécifié est
+introuvable. » 28 fois. `QUIET` écrit `if exist "C:\Nvidia\…" rd /s /q "C:\Nvidia\…"` : rien n'est lancé quand le
+dossier n'existe pas, et une vraie erreur de rd (accès refusé, fichier ouvert) s'affiche toujours. Test
+`nvidia_leftovers_are_removed_quietly`.
