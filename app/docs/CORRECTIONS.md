@@ -450,7 +450,8 @@ Audit ligne par ligne du 2026-10-07 (rapport : /mnt/project-files/audit/audit-co
 - wmic, absent par défaut de Windows 11 24H2, est remplacé par PowerShell (Get-CimInstance) dans 21 réglages
   (`WMIC_SUBS`) ;
 - actions ponctuelles (bouton, plus case) : sto_defrag, win_apps, app_remove, dbl_edge, nv_debloat, cpu_ppm,
-  usb_controller (`ONE_SHOT`) ;
+  usb_controller (`ONE_SHOT`) ; win_apps et app_remove redeviennent des cases avec RAG-65 (2026-10-13) : les applis
+  du Store sont relevées avant et réenregistrées au retour ;
 - `DROP_LINES` accepte « id:variante ».
 
 Annulation : src-tauri/scripts/undo.json, généré à chaque build par tools/undo (undo_gen.py et defaults.py de
@@ -514,7 +515,8 @@ Lignes risquées retirées des packs qui les cachaient (le pack reste) :
 - net_server (préréglages 1 et 2) : remise à zéro de la pile réseau (IP fixe et DNS manuels perdus) ;
 - app_remove, win_apps : Pense-bêtes gardé (notes non synchronisées perdues) ;
 - cpu_advanced, cpu_registry : veto de la veille moderne et politique d'alimentation XP (audit D22, motif sur le chemin de la clé) ;
-- win_gamedvr : la ligne qui réautorisait Game DVR juste après l'avoir coupé.
+- win_gamedvr : la ligne qui réautorisait Game DVR juste après l'avoir coupé ;
+- gpu_nvidia, gpu_amd, gpu_general, nv_general, amd_general (2026-10-10) : MPO (`OverlayTestMode`) et préemption du GPU coupés sans le dire dans des packs Safe. Ils restent dans nv_preemption, nv_advanced et amd_advanced (Advanced).
 
 Point de restauration (1.1.8) : la case de 1.1.6 revient. Elle est cochée d'office seulement pour un réglage `restore` (avancé, ou que l'app ne remet pas entièrement) et si Rago n'en a pas créé un réussi dans les 24 dernières heures.
 
@@ -577,3 +579,23 @@ et « Access is denied. » (fichiers ouverts), arrêter le spouleur déjà arrê
 `game_mode` et `in_windows`, « net stop Spooler » ne se lance que si `sc query` le voit tourner, et `%temp%` passe entre
 guillemets (avec un espace dans le chemin, `del /s` visait le premier morceau). Les autres lignes gardent leurs erreurs.
 Test `temp_cleaning_stays_quiet`.
+
+# Applis du Store remises par l'annulation (RAG-65, 2026-10-13)
+
+« Supprimer les applis préinstallées » (app_remove) et « Supprimer les applis inutiles » (win_apps) redeviennent des
+cases : avant le script, l'app relève les applis du Store installées pour le joueur qui correspondent à chaque ligne
+`Get-AppxPackage … | Remove-AppxPackage` (relevé `appx`, tools/probes.py : nom, famille et dossier du paquet). Éteindre
+le réglage les réenregistre sans réseau (`Add-AppxPackage -Register …\AppxManifest.xml -DisableDevelopmentMode`, puis
+le même paquet gardé par Windows pour un autre compte ou dans l'image, puis `-RegisterByFamilyName`). Même chose pour
+Cortana (dbl_cortana, win_services) et le fournisseur Copilot (win_services).
+
+Ce qui marche : les scripts ne retirent les applis que pour le compte du joueur (`Remove-AppxPackage`, jamais
+`Remove-AppxProvisionedPackage`) ; Windows garde donc leur paquet et elles reviennent, hors ligne, sous Windows 10
+comme 11. Ce qui ne revient pas : une appli que Windows a retirée du PC depuis (mise à jour de Windows qui ne la livre
+plus, paquet effacé) ; elle est nommée dans le journal, à réinstaller depuis le Microsoft Store. Les autres comptes du
+PC (lignes `-allusers`) ne sont pas relevés.
+
+Sans relevé (réglage lancé comme action ponctuelle par une version d'avant, noté appliqué d'après l'historique ; ou
+appliqué avant ce relevé), l'annulation remet les applis de la liste du réglage (champ `apps` du catalogue) que
+Windows garde encore. Les contre des deux réglages conseillent de lancer la Restauration du système depuis l'écran de
+récupération : depuis Windows, elle peut échouer sur AppRepository (0x80070301) après une suppression d'applis.

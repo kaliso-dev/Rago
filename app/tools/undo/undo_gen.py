@@ -542,7 +542,13 @@ def h_powershell(raw, c, args, low):
     tl = t.lower()
     if 'remove-appxpackage' in tl:
         m = re.search(r'(?i)Get-AppxPackage\s+(?:-allusers\s+)?\*?([^*|"}]+)\*?', t)
-        gone(f'application {m.group(1).strip() if m else "?"} désinstallée (réinstallable depuis le Microsoft Store)')
+        name = m.group(1).strip() if m else "?"
+        # l'app relève les applis installées avant (relevé « appx ») et les réenregistre au retour, ou, sans relevé,
+        # celles de la liste que Windows garde encore (champ `apps` du catalogue) ; une appli que Windows a retirée
+        # du PC (mise à jour de Windows, paquet effacé) ne revient que depuis le Microsoft Store
+        backup(f'application {name}', "réenregistrée par l'app tant que Windows garde son paquet")
+        gone(f'application {name} désinstallée : réenregistrée au retour tant que Windows garde son paquet, '
+             f'sinon à réinstaller depuis le Microsoft Store')
         return None
     if 'image file execution options' in tl and 'remove-item' in tl:
         gone("TOUTES les options d'exécution des programmes (IFEO) effacées : seule une sauvegarde reg export les remet")

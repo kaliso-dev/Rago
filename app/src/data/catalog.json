@@ -3568,7 +3568,7 @@
        "legacy": [
         "RAGO APP FPS.bat@847"
        ],
-       "lines": 493,
+       "lines": 361,
        "gain": {
         "en": "The profile can reduce input lag when the GPU is at 100%; the rest is rarely measurable.",
         "fr": "Le profil peut réduire l'input lag quand le GPU est à 100 % ; le reste a un effet rarement mesurable."
@@ -3597,7 +3597,7 @@
        "legacy": [
         "RAGO APP FPS.bat@378"
        ],
-       "lines": 449,
+       "lines": 431,
        "gain": {
         "en": "Anti-Lag can reduce input lag when the GPU is at 100%; the rest is rarely measurable.",
         "fr": "Anti-Lag peut réduire l'input lag quand le GPU est à 100 % ; le reste a un effet rarement mesurable."
@@ -3653,8 +3653,8 @@
         "fr": "GPU général"
        },
        "desc": {
-        "en": "Graphics settings for any card: display priority, GPU preemption off, MSI mode and power-saving delays.",
-        "fr": "Réglages pour toutes les cartes : priorité de l'affichage, préemption du GPU coupée, mode MSI et délais d'économie d'énergie."
+        "en": "Graphics settings for any card: display priority, MSI mode and power-saving delays.",
+        "fr": "Réglages pour toutes les cartes : priorité de l'affichage, mode MSI et délais d'économie d'énergie."
        },
        "risk": "safe",
        "reboot": true,
@@ -3663,14 +3663,14 @@
        "legacy": [
         "RAGO APP FPS.bat@1416"
        ],
-       "lines": 122,
+       "lines": 108,
        "gain": {
         "en": "Rarely measurable: many of these settings are ignored by recent Windows versions.",
         "fr": "Effet rarement mesurable : beaucoup de ces réglages sont ignorés par les Windows récents."
        },
        "cons": {
-        "en": "If another app loads the GPU, the display may stutter; a bit more RAM goes to the file cache.",
-        "fr": "Si une autre appli charge le GPU, l'affichage peut saccader ; un peu plus de mémoire vive sert au cache des fichiers."
+        "en": "A bit more RAM goes to the file cache.",
+        "fr": "Un peu plus de mémoire vive sert au cache des fichiers."
        }
       },
       {
@@ -3717,8 +3717,8 @@
         "en": "Full NVIDIA optimization"
        },
        "desc": {
-        "en": "NVIDIA pack: low-latency profile for all your games, MSI mode, preemption and HDCP off, NVIDIA telemetry off.",
-        "fr": "Pack NVIDIA : profil faible latence pour tous tes jeux, mode MSI, préemption et HDCP coupés, télémétrie NVIDIA coupée."
+        "en": "NVIDIA pack: low-latency profile for all your games, MSI mode, HDCP off, NVIDIA telemetry off.",
+        "fr": "Pack NVIDIA : profil faible latence pour tous tes jeux, mode MSI, HDCP coupé, télémétrie NVIDIA coupée."
        },
        "risk": "safe",
        "reboot": true,
@@ -3730,7 +3730,7 @@
        "legacy": [
         "NVGEN689U@10580"
        ],
-       "lines": 67,
+       "lines": 48,
        "gain": {
         "en": "The profile can reduce input lag when the GPU is at 100%; in-game Reflex does better when available.",
         "fr": "Le profil peut réduire l'input lag quand le GPU est à 100 % ; Reflex dans le jeu fait mieux s'il existe."
@@ -4231,7 +4231,7 @@
        "legacy": [
         "am1@11267"
        ],
-       "lines": 20,
+       "lines": 19,
        "gain": {
         "en": "Can slightly reduce input lag when the GPU is at 100%; uncertain effect on recent drivers.",
         "fr": "Peut réduire un peu l'input lag quand le GPU est à 100 % ; effet incertain sur les pilotes récents."
@@ -5167,6 +5167,9 @@
         "en": "No more web results in Start menu search.",
         "fr": "Plus de résultats web dans la recherche du menu Démarrer."
        },
+       "apps": [
+        "*Microsoft.549981C3F5F10*"
+       ],
        "restore": true
       },
       {
@@ -5298,7 +5301,7 @@
        },
        "risk": "advanced",
        "reboot": true,
-       "kind": "action",
+       "kind": "tweak",
        "requires": [],
        "legacy": [
         "U1@4859"
@@ -5310,9 +5313,38 @@
         "fr": "Menu Démarrer plus propre et un peu d'espace disque libéré ; effet sur les FPS quasi nul."
        },
        "cons": {
-        "en": "Also removes Camera, Mail, Alarms and Phone Link; removed apps can be reinstalled from the Microsoft Store.",
-        "fr": "Retire aussi Caméra, Courrier, Alarmes et Lien avec le téléphone ; ils se réinstallent depuis le Microsoft Store."
+        "en": "Also removes Camera, Mail, Alarms and Phone Link: turn the tweak off to bring them back (or use the Microsoft Store). A System Restore started from Windows may then fail (error 0x80070301): start it from the recovery screen instead (Shift + Restart > Troubleshoot > Advanced options).",
+        "fr": "Retire aussi Caméra, Courrier, Alarmes et Lien avec le téléphone : éteins le réglage pour les remettre (sinon, Microsoft Store). Une restauration du système lancée depuis Windows peut ensuite échouer (erreur 0x80070301) : lance-la depuis l'écran de récupération (Maj + Redémarrer > Dépannage > Options avancées)."
        },
+       "apps": [
+        "*Microsoft.BingWeather*",
+        "*Microsoft.GetHelp*",
+        "*Microsoft.Getstarted*",
+        "*Microsoft.Messaging*",
+        "*Microsoft.Microsoft3DViewer*",
+        "*Microsoft.MicrosoftSolitaireCollection*",
+        "*Microsoft.MixedReality.Portal*",
+        "*Microsoft.OneConnect*",
+        "*Microsoft.People*",
+        "*Microsoft.Print3D*",
+        "*Microsoft.SkypeApp*",
+        "*Microsoft.WindowsAlarms*",
+        "*Microsoft.WindowsCamera*",
+        "*microsoft.windowscommunicationsapps*",
+        "*Microsoft.WindowsMaps*",
+        "*Microsoft.WindowsFeedbackHub*",
+        "*Microsoft.WindowsSoundRecorder*",
+        "*Microsoft.YourPhone*",
+        "*Microsoft.3dBuilder*",
+        "*bing*",
+        "*bingfinance*",
+        "*bingsports*",
+        "*CommsPhone*",
+        "*Drawboard",
+        "*Sway*",
+        "*WindowsAlarms*",
+        "*WindowsPhone*"
+       ],
        "restore": true
       },
       {
@@ -5459,6 +5491,10 @@
         "en": "Windows search is slower, and printing and the notification center don't work until you turn it off.",
         "fr": "Recherche Windows plus lente, plus d'impression ni de centre de notifications tant que tu ne le désactives pas."
        },
+       "apps": [
+        "*Microsoft.549981C3F5F10*",
+        "Microsoft.Windows.Ai.Copilot.Provider"
+       ],
        "restore": true
       },
       {
@@ -5474,7 +5510,7 @@
        "risk": "advanced",
        "reboot": true,
        "requires": [],
-       "kind": "action",
+       "kind": "tweak",
        "legacy": [
         "RAGO APP FPS.bat@3175"
        ],
@@ -5485,9 +5521,38 @@
         "fr": "Menu Démarrer plus propre et un peu d'espace disque libéré ; effet sur les FPS quasi nul."
        },
        "cons": {
-        "en": "Also removes Camera, Mail, Alarms and Phone Link; removed apps can be reinstalled from the Microsoft Store.",
-        "fr": "Retire aussi Caméra, Courrier, Alarmes et Lien avec le téléphone ; ils se réinstallent depuis le Microsoft Store."
+        "en": "Also removes Camera, Mail, Alarms and Phone Link: turn the tweak off to bring them back (or use the Microsoft Store). A System Restore started from Windows may then fail (error 0x80070301): start it from the recovery screen instead (Shift + Restart > Troubleshoot > Advanced options).",
+        "fr": "Retire aussi Caméra, Courrier, Alarmes et Lien avec le téléphone : éteins le réglage pour les remettre (sinon, Microsoft Store). Une restauration du système lancée depuis Windows peut ensuite échouer (erreur 0x80070301) : lance-la depuis l'écran de récupération (Maj + Redémarrer > Dépannage > Options avancées)."
        },
+       "apps": [
+        "*Microsoft.BingWeather*",
+        "*Microsoft.GetHelp*",
+        "*Microsoft.Getstarted*",
+        "*Microsoft.Messaging*",
+        "*Microsoft.Microsoft3DViewer*",
+        "*Microsoft.MicrosoftSolitaireCollection*",
+        "*Microsoft.MixedReality.Portal*",
+        "*Microsoft.OneConnect*",
+        "*Microsoft.People*",
+        "*Microsoft.Print3D*",
+        "*Microsoft.SkypeApp*",
+        "*Microsoft.WindowsAlarms*",
+        "*Microsoft.WindowsCamera*",
+        "*microsoft.windowscommunicationsapps*",
+        "*Microsoft.WindowsMaps*",
+        "*Microsoft.WindowsFeedbackHub*",
+        "*Microsoft.WindowsSoundRecorder*",
+        "*Microsoft.YourPhone*",
+        "*Microsoft.3dBuilder*",
+        "*bing*",
+        "*bingfinance*",
+        "*bingsports*",
+        "*CommsPhone*",
+        "*Drawboard",
+        "*Sway*",
+        "*WindowsAlarms*",
+        "*WindowsPhone*"
+       ],
        "restore": true
       },
       {

@@ -1133,14 +1133,6 @@ kbd {
 .run-state {
   margin-bottom: 10px;
 }
-.run-note {
-  max-width: 420px;
-  margin: 0 auto 14px;
-  text-align: center;
-  color: var(--rg-text-2);
-  font-size: 13px;
-  line-height: 1.45;
-}
 .run-counter {
   font-size: 64px;
   font-weight: 560;
@@ -2029,6 +2021,30 @@ svg {
 /* ---------------------------------------------------- vérification du 2026-10-07 */
 
 /* licence perdue ou à revérifier : bandeau en haut de la page */
+.reset-toast {
+  position: fixed;
+  right: 20px;
+  bottom: 20px;
+  z-index: 60;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 9px 14px;
+  border: 1px solid var(--rg-line-2);
+  border-radius: var(--rg-radius-sm);
+  background: var(--rg-ink-4);
+  box-shadow: var(--rg-shadow-2);
+  color: var(--rg-text-1);
+  font-size: var(--rg-fs-small);
+  pointer-events: none;
+}
+.reset-toast > svg {
+  flex: none;
+  color: var(--rg-success);
+}
+.reset-toast.warn > svg {
+  color: var(--rg-warning);
+}
 .license-notice {
   display: flex;
   align-items: center;
