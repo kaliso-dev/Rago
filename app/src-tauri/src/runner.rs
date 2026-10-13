@@ -523,9 +523,10 @@ impl Runner {
                 Ok((code, None))
             };
             let r = put_back();
-            // arrêté en route (bouton Arrêter, délai de la désinstallation) : le réglage reste appliqué, la prochaine
+            // arrêté en route (bouton Arrêter, délai de la désinstallation), ou rest pas lancé (script pas écrit, cmd.exe
+            // pas démarré : avec rest_avant, rien n'a encore été remis) : le réglage reste appliqué, la prochaine
             // annulation reprend tout depuis la sauvegarde
-            if !self.cancel.load(Ordering::SeqCst) {
+            if r.is_ok() && !self.cancel.load(Ordering::SeqCst) {
                 let mut l = ctx.ledger.lock().unwrap();
                 l.release(id);
                 l.save();
@@ -855,11 +856,23 @@ fn script_command(ctx: &Context, path: &Path) -> Result<Command, String> {
 fn batch_command(ctx: &Context, path: &Path, env: &[(String, String)]) -> Result<Command, String> {
     let mut cmd = script_command(ctx, path)?;
     // variables laissées par un lancement précédent de l'app : seules celles de cette annulation comptent
-    for (k, _) in std::env::vars().filter(|(k, _)| k.starts_with("RAGO_STATE_") || k.starts_with("RAGO_HELD_")) {
+    for k in inherited_rago_vars(std::env::vars_os()) {
         cmd.env_remove(k);
     }
     cmd.envs(env.iter().map(|(k, v)| (k, v)));
     Ok(cmd)
+}
+
+/// Noms des variables RAGO_STATE_… et RAGO_HELD_… héritées, sans tenir compte de la casse (comme Windows et cmd). Lus
+/// avec vars_os : vars() panique dès qu'une variable du PC n'est pas de l'Unicode valide, et l'exe release s'arrête net
+/// (panic = "abort") à chaque réglage lancé.
+fn inherited_rago_vars(vars: impl Iterator<Item = (std::ffi::OsString, std::ffi::OsString)>) -> Vec<std::ffi::OsString> {
+    vars.map(|(k, _)| k)
+        .filter(|k| {
+            let k = k.to_string_lossy().to_ascii_uppercase();
+            k.starts_with("RAGO_STATE_") || k.starts_with("RAGO_HELD_")
+        })
+        .collect()
 }
 
 fn sanitize(s: &str) -> String {
@@ -1029,6 +1042,15 @@ mod tests {
         RunItem { id: id.into(), variant: None, params: None, undo: true }
     }
 
+    /// Chemin sous un fichier : rien ne peut s'y écrire, sous Windows comme ailleurs. Un test qui passe par un vrai
+    /// réglage ne le lance donc jamais sur le PC qui fait tourner les tests (cargo test tourne aussi sur la CI Windows).
+    fn unwritable(ctx: &Context, name: &str) -> PathBuf {
+        let file = ctx.logs_dir.parent().unwrap().join(format!("{name}-is-a-file"));
+        fs::create_dir_all(file.parent().unwrap()).unwrap();
+        fs::write(&file, "x").unwrap();
+        file.join(name)
+    }
+
     /// Dossier run d'un compte « O'Brien & Co (x) ^1 %TEMP% !y! » : tout ce que cmd ou PowerShell pourrait lire.
     fn odd_ctx(name: &str) -> Context {
         let mut ctx = test_ctx(name, None);
@@ -1103,6 +1125,33 @@ mod tests {
         let _ = fs::remove_dir_all(ctx.run_dir.parent().unwrap().parent().unwrap());
     }
 
+    /// Une variable du PC qui n'est pas de l'Unicode valide ne fait pas planter le lancement (vars() paniquait), et une
+    /// RAGO_HELD_ héritée dans une autre casse est retirée elle aussi.
+    #[test]
+    fn inherited_variables_survive_invalid_unicode() {
+        use std::ffi::OsString;
+        #[cfg(windows)]
+        let bad = {
+            use std::os::windows::ffi::OsStringExt;
+            OsString::from_wide(&[0x0041, 0xD800])
+        };
+        #[cfg(unix)]
+        let bad = {
+            use std::os::unix::ffi::OsStringExt;
+            OsString::from_vec(vec![0x41, 0xFF])
+        };
+        assert!(bad.to_str().is_none(), "pas de l'Unicode valide");
+        let vars = vec![
+            (bad.clone(), OsString::from("1")),
+            (OsString::from("PATH"), bad.clone()),
+            (OsString::from("RAGO_STATE_MMAGENT"), bad.clone()),
+            (OsString::from("Rago_Held_aaaaaaaaaa"), OsString::from("1")),
+            (OsString::from("RAGO_RES"), OsString::from("x")),
+        ];
+        let names = inherited_rago_vars(vars.into_iter());
+        assert_eq!(names, [OsString::from("RAGO_STATE_MMAGENT"), OsString::from("Rago_Held_aaaaaaaaaa")]);
+    }
+
     /// Sur Windows (CI) : le script lancé par `.\nom.cmd` voit ces variables, et le PowerShell qu'il lance aussi.
     #[cfg(windows)]
     #[test]
@@ -1158,9 +1207,15 @@ mod tests {
         assert!(unclaimed_apps(&ctx, "dbl_cortana").is_empty());
         assert_eq!(unclaimed_apps(&ctx, "win_services"), vec!["Microsoft.Windows.Ai.Copilot.Provider".to_string()]);
         let lines = Mutex::new(Vec::new());
-        let sys = Sys::new(ctx.backup_dir.clone());
+        // Windows : le script des applis ne peut pas s'écrire, rien n'est réenregistré sur le PC qui lance les tests
+        // (ailleurs, Sys ne lance rien)
+        let sys = Sys::new(unwritable(&ctx, "backup"));
         let r = Runner::default().undo_item(&ctx, &sys, &undo("app_remove"), &|l| lines.lock().unwrap().push(l));
-        assert_eq!(r, Ok((0, None)));
+        if cfg!(windows) {
+            assert!(matches!(&r, Ok((1, Some(e))) if e.contains("app restore script")), "{r:?}");
+        } else {
+            assert_eq!(r, Ok((0, None)));
+        }
         assert!(!ctx.ledger.lock().unwrap().tweaks.contains_key("app_remove"));
         assert!(lines.lock().unwrap().iter().any(|l| l.contains("Putting back the Microsoft Store apps")));
         // jumeau encore appliqué : ses applis attendent qu'il soit éteint aussi, sans erreur
@@ -1175,11 +1230,13 @@ mod tests {
 
     /// M1 (revue du 2026-10-13) : défaire le RBW Mod « Désactivé » de cette version (décoché, Tout annuler, déconnexion,
     /// fin de Premium, désinstallation) ne lance rien, il avait déjà remis les valeurs de Windows. « Activé » ne tourne
-    /// que sur un clic, ou pour une entrée d'une version d'avant. Sous Linux, lancer un script échoue (pas de cmd.exe) :
-    /// un lot réussi prouve que rien n'a été lancé.
+    /// que sur un clic, ou pour une entrée d'une version d'avant. Le dossier run ne peut pas être créé : aucun script ne
+    /// peut être lancé, sous Windows (CI) comme ailleurs. Un lot réussi prouve donc que rien n'a été tenté, et le vrai
+    /// « Activé » ne tourne jamais sur le PC qui lance les tests.
     #[test]
     fn rbw_off_is_forgotten_without_running_on() {
-        let ctx = test_ctx("rbw", None);
+        let mut ctx = test_ctx("rbw", None);
+        ctx.run_dir = unwritable(&ctx, "run");
         let rbw = |variant: &str, undo: bool| RunItem { id: "rbw_mode".into(), variant: Some(variant.into()), params: None, undo };
         let runner = Runner::default();
         // « Désactivé » : noté appliqué sans sauvegarde, avec « valeurs de Windows » (même raté ici, faute de script)
@@ -1232,6 +1289,38 @@ mod tests {
         let sys = Sys::new(ctx.backup_dir.clone());
         assert!(runner.undo_item(&ctx, &sys, &undo("net_a"), &|_| {}).is_ok());
         assert!(ctx.ledger.lock().unwrap().tweaks.contains_key("net_a"), "arrêté en route : à remettre de nouveau");
+    }
+
+    /// rest pas lancé (dossier run impossible à créer, cmd.exe qui ne démarre pas) : avec rest_avant, rien n'a été
+    /// remis. Le réglage et sa sauvegarde restent, la prochaine annulation remet tout (avant : sauvegarde jetée).
+    #[test]
+    fn undo_that_could_not_start_keeps_the_backup() {
+        use backup::{Applied, Saved, Undo};
+        let mut ctx = test_ctx("rest-fails", None);
+        // write_script échoue, sous Windows comme ailleurs
+        ctx.run_dir = unwritable(&ctx, "run");
+        let probe = Probe::Reg { key: "HKLM\\SOFTWARE\\RagoTest".into(), name: "v".into() };
+        {
+            let mut l = ctx.ledger.lock().unwrap();
+            l.record_before(probe.clone(), Saved::Absent { created: None });
+            l.tweaks.insert(
+                "zz_plan".into(),
+                Applied {
+                    ok: true,
+                    backup: true,
+                    probes: vec![probe.id()],
+                    undo: Some(Undo { rest: Some("echo rest".into()), rest_avant: true, ..Default::default() }),
+                    ..Default::default()
+                },
+            );
+        }
+        let sys = Sys::new(ctx.backup_dir.clone());
+        assert!(Runner::default().undo_item(&ctx, &sys, &undo("zz_plan"), &|_| {}).is_err());
+        let l = ctx.ledger.lock().unwrap();
+        assert!(l.tweaks.contains_key("zz_plan"), "toujours appliqué");
+        assert!(l.has(&probe.id()), "sauvegarde gardée");
+        drop(l);
+        let _ = fs::remove_dir_all(ctx.backup_dir.parent().unwrap());
     }
 
     /// RAG-60 : la limite d'un point de restauration par 24 h n'est levée que le temps de créer celui de Rago.
