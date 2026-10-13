@@ -70,16 +70,18 @@ impl AppState {
     }
 }
 
-/// Plus de licence sur ce PC (abonnement terminé, remboursement, déconnexion) et des réglages Premium encore
-/// appliqués : ils sont remis en arrière-plan, sans fenêtre ni bouton pour arrêter. L'interface n'en voit que la fin
-/// (`reset:done`). Un jeton expiré hors ligne n'annule rien : le joueur paie peut-être encore, le serveur le dira au
-/// prochain rafraîchissement. La licence revient pendant la remise (reconnexion) : elle s'arrête après le réglage en
-/// cours, les suivants restent appliqués.
+/// Fin de Premium sur ce PC (le joueur s'est déconnecté, ou le serveur a dit que sa licence est arrêtée : abonnement
+/// terminé, remboursement, licence coupée) et des réglages Premium encore appliqués : ils sont remis en arrière-plan,
+/// sans fenêtre ni bouton pour arrêter. L'interface n'en voit que la fin (`reset:done`). Rien n'est remis sur un doute
+/// (`license::premium_ended`) : jeton expiré hors ligne, jeton effacé parce qu'il ne se lit plus, que sa signature ne
+/// passe plus (clé changée) ou que le PC a changé, refus ambigu du serveur. Le joueur est seulement déconnecté. La
+/// licence revient pendant la remise (reconnexion) : elle s'arrête après le réglage en cours, les suivants restent
+/// appliqués.
 fn reset_if_unlicensed(app: &AppHandle) {
     let app = app.clone();
     std::thread::spawn(move || {
         let state = app.state::<AppState>();
-        if state.license.status().state != "none" {
+        if !state.license.ended() {
             return;
         }
         let ids = reset::targets(&state.ledger.lock().unwrap(), reset::Scope::Premium);
@@ -269,7 +271,7 @@ async fn license_refresh(app: AppHandle, state: State<'_, AppState>) -> Result<l
     let r = tauri::async_runtime::spawn_blocking(move || lic.refresh())
         .await
         .map_err(|_| license::ApiError::from("server_error"))?;
-    // abonnement terminé, remboursement, licence révoquée : le jeton vient d'être effacé
+    // abonnement terminé, remboursement, licence révoquée : le jeton vient d'être effacé et la fin notée
     reset_if_unlicensed(&app);
     r
 }
@@ -386,7 +388,7 @@ pub fn run() {
                 data_dir,
                 repaired: AtomicBool::new(!removed.is_empty()),
             });
-            // licence perdue depuis le dernier lancement, ou remise coupée en cours de route : elle reprend ici
+            // fin de Premium notée depuis le dernier lancement, ou remise coupée en cours de route : elle reprend ici
             reset_if_unlicensed(app.handle());
             Ok(())
         })
