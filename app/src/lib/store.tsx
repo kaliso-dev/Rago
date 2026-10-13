@@ -245,8 +245,17 @@ function useStoreValue() {
   // dernier passage de chaque réglage, pour les badges « Appliqué le… »
   const lastRun = useMemo(() => {
     const m = new Map<string, HistoryEntry>();
-    for (const e of history) {
-      if (e.undo) continue;
+    for (let e of history) {
+      if (e.undo) {
+        // Mode jeu et mode jeu de Windows (on les allume et on les éteint) : une annulation remet l'état d'avant. Le
+        // moteur note comme annulation « Désactivé » lancé sur un Mode jeu activé (variante de retour arrière) : la
+        // ligne affichait encore « Activé depuis… ». L'annulation compte comme cette variante (« Désactivé
+        // depuis… ») ; sans variante de retour arrière (mode jeu de Windows), plus de badge. RBW Mod : son annulation
+        // après « Désactivé » ne lance rien et garde « Désactivé depuis… » (runner.rs) ; son retour arrière est noté
+        // comme « Activé », pas comme une annulation.
+        if (!SESSION_TOGGLES.has(e.id) || REVERT_RUNS_SCRIPT.has(e.id)) continue;
+        e = { ...e, variant: REVERTS.get(e.id) ?? null };
+      }
       const prev = m.get(e.id);
       if (!prev || prev.ts < e.ts) m.set(e.id, e);
     }

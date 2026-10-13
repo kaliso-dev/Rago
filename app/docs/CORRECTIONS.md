@@ -745,3 +745,13 @@ installeur NVIDIA (`C:\NVIDIA\Display.NView`, `…\PhysX`, `…\GFExperience\www
 introuvable. » 28 fois. `QUIET` écrit `if exist "C:\Nvidia\…" rd /s /q "C:\Nvidia\…"` : rien n'est lancé quand le
 dossier n'existe pas, et une vraie erreur de rd (accès refusé, fichier ouvert) s'affiche toujours. Test
 `nvidia_leftovers_are_removed_quietly`.
+
+**Mode jeu : « Désactivé depuis… » après Désactiver.** Le moteur note « Désactivé » lancé sur un Mode jeu activé
+comme une annulation (variante de retour arrière d'un réglage appliqué), et le badge de la ligne ne regardait que les
+passages qui n'en sont pas : la ligne gardait « Activé depuis… ». Pour le Mode jeu et le mode jeu de Windows
+(`SESSION_TOGGLES`), une annulation compte maintenant comme leur variante de retour arrière (`src/lib/store.tsx`,
+`lastRun`) : « Désactivé depuis… » après Désactiver ou Tout annuler ; sans variante de retour arrière (mode jeu de
+Windows), plus de badge de session après une annulation ; une annulation qui échoue n'en affiche pas non plus (le
+réglage n'est plus noté appliqué). Le RBW Mod ne change pas : son annulation après « Désactivé » ne lance rien et garde
+« Désactivé depuis… », son retour arrière est noté « Activé ». Le mode démo du navigateur (`api.ts`) note les
+annulations comme le moteur.
