@@ -339,6 +339,11 @@ pub struct Applied {
     /// dans l'exe, et la déconnexion ou la fin de licence doit quand même pouvoir tout remettre
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub undo: Option<Undo>,
+    /// le réglage n'a posé que les valeurs de Windows (RBW Mod « Désactivé » depuis RAG-69) : rien à défaire, son
+    /// annulation ne lance rien. Absent des entrées d'avant, dont l'ancien « Désactivé » qui mettait des services en
+    /// manuel : celles-là gardent leur retour arrière
+    #[serde(default, skip_serializing_if = "std::ops::Not::not")]
+    pub windows_values: bool,
 }
 
 #[derive(Debug, Default, Serialize, Deserialize)]
@@ -363,6 +368,9 @@ pub struct AppliedView {
     pub backup: bool,
     /// Windows (ou une autre app) a changé une valeur posée par ce réglage depuis
     pub drift: bool,
+    /// voir Applied::windows_values : l'annulation ne lance rien (pas de redémarrage à proposer)
+    #[serde(skip_serializing_if = "std::ops::Not::not")]
+    pub windows_values: bool,
 }
 
 impl Ledger {
@@ -534,6 +542,7 @@ impl Ledger {
                 ok: a.ok,
                 backup: a.backup,
                 drift: a.probes.iter().any(|p| drifted.contains(p)),
+                windows_values: a.windows_values,
             })
             .collect()
     }

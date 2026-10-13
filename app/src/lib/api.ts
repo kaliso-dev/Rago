@@ -52,6 +52,8 @@ export interface AppliedView {
   backup: boolean;
   /** Windows a changé une valeur posée par ce réglage depuis */
   drift: boolean;
+  /** n'a posé que les valeurs de Windows (RBW Mod « Désactivé ») : son annulation ne lance rien */
+  windowsValues?: boolean;
 }
 
 /** Usage du PC en direct, en % ; null : Windows ne fournit pas cette mesure sur ce PC. */
@@ -360,7 +362,8 @@ const mockApi: Api = {
         const revert = !!tw?.variants?.find((v) => v.id === it.variant)?.revert;
         if (it.undo || (revert && mockApplied.has(it.id))) mockApplied.delete(it.id);
         else if (tw?.kind === "tweak" && !revert)
-          mockApplied.set(it.id, { id: it.id, variant: it.variant ?? null, ts: Date.now(), ok: true, backup: true, drift: false });
+          // RBW Mod « Désactivé » : valeurs de Windows, sans sauvegarde (moteur : runner.rs)
+          mockApplied.set(it.id, { id: it.id, variant: it.variant ?? null, ts: Date.now(), ok: true, backup: it.id !== "rbw_mode", drift: false, windowsValues: it.id === "rbw_mode" });
         saveMockApplied();
         emit<ItemEvent>("run:item", { ...base, status: "ok", code: 0, durationMs });
       }

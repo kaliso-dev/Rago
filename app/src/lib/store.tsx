@@ -14,6 +14,13 @@ for (const tw of tweaks.values()) {
 }
 /** Modes qu'on allume avant de jouer et qu'on éteint après : deux boutons au lieu d'un interrupteur. */
 export const SESSION_TOGGLES = new Set(["game_mode", "rbw_mode", "win_gamemode"]);
+/** Retour arrière qui lance la variante `revert` en entier (moteur : catalog::revert_runs_script) : RBW Mod « Activé ». */
+export const REVERT_RUNS_SCRIPT = new Set(["rbw_mode"]);
+/** Variante que le moteur lance vraiment pour annuler un réglage appliqué, pour le calcul du redémarrage. RBW Mod :
+ * « Activé » (qui demande un redémarrage), sauf après le « Désactivé » de cette version, qui n'a posé que les valeurs
+ * de Windows : rien n'est lancé. Les autres réglages : la variante appliquée, comme avant. */
+export const undoVariant = (id: string, a: AppliedView | undefined): string | null =>
+  REVERT_RUNS_SCRIPT.has(id) && a && !a.windowsValues ? (REVERTS.get(id) ?? a.variant) : (a?.variant ?? null);
 /** « plan » : la carte Free plan ou le bouton Premium d'un module, sans réglage précis. */
 export type Upsell = "tweak" | "plan" | "preset" | "signin" | null;
 
@@ -402,7 +409,7 @@ function useStoreValue() {
         // version mais noté dans applied.json (Tout annuler) : le moteur le remet quand même avec ce qu'il a gardé
         const gone = retired.get(id);
         if (!tw && !gone && !a) continue;
-        reboot ||= tw ? needsReboot(tw, a?.variant ?? null) : (gone?.reboot ?? false);
+        reboot ||= tw ? needsReboot(tw, undoVariant(id, a)) : (gone?.reboot ?? false);
         const item: RunItem = { id, variant: a?.variant ?? null, undo: true };
         if (tw?.native === "minecraft_optifine") item.params = { dir: mcDir };
         items.push(item);

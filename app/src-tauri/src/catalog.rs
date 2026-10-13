@@ -130,7 +130,8 @@ pub fn revert_variant(id: &str) -> Option<String> {
 /// Réglage dont le retour arrière lance toujours le script de sa variante `revert`, jamais la sauvegarde : RBW Mod
 /// « Activé » doit démarrer les services que lit le screenshare et remettre ce que d'autres réglages coupent. La
 /// sauvegarde prise avant « Désactivé » ne fait que réécrire le registre (aucun service démarré) et recouperait les
-/// services qu'un autre réglage avait coupés.
+/// services qu'un autre réglage avait coupés. Exception (runner.rs) : défaire le « Désactivé » de cette version
+/// (Applied::windows_values) ne lance rien, il n'a posé que les valeurs de Windows.
 pub fn revert_runs_script(id: &str) -> bool {
     id == "rbw_mode"
 }

@@ -820,7 +820,10 @@ ce qui reste arrêté ; tâches planifiées et programmes de démarrage qui les 
 ne démarrait aucun service. « Off » remet ces services et réglages comme Windows les règle (Appinfo, DsmSvc et
 PlugPlay en manuel) et lance ceux que Windows lance de lui-même, sans rien arrêter ; l'ancien « Off » arrêtait SysMain
 et DiagTrack. Le RBW Mod ne garde pas de sauvegarde (rien à remettre) : les réglages qui coupent ces éléments gardent
-la leur et affichent « Changé par Windows » après le RBW Mod.
+la leur et affichent « Changé par Windows » après le RBW Mod. Défaire « Off » sans cliquer « On » (Tout annuler,
+déconnexion, fin de Premium, désinstallation) ne lance donc rien et ne demande pas de redémarrage (`windows_values`
+dans applied.json) ; un « Off » noté par une version d'avant (sauvegarde de 1.1.9, ou ancien « Off » qui passait des
+services en manuel, repris de l'historique) repasse toujours par « On ».
 
 Les actions lourdes ne sont pas retirées (choix de Sofiene, « tout garder ») : `WARNINGS` les détecte dans chaque
 script (Spectre, Defender, SmartScreen, UAC, pare-feu, IFEO, BAM, Prefetch…), écrit l'avertissement « Read this first »
