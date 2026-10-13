@@ -1192,6 +1192,27 @@ mod tests {
         assert_eq!(ctx.history.all().len(), 2);
     }
 
+    /// m4 (revue finale du moteur) : la confirmation de déconnexion annonce `reset_plan`, la liste de la remise de fin de
+    /// Premium, et non plus tous les réglages Premium appliqués. Le nombre annoncé est celui que la remise remet : un
+    /// réglage appliqué avant 1.1.6 sans copie de son annulation reste appliqué, et n'est plus compté.
+    #[test]
+    fn sign_out_count_is_what_the_reset_puts_back() {
+        let ctx = test_ctx("plan", None);
+        {
+            let mut l = ctx.ledger.lock().unwrap();
+            l.set_applied("net_legacy", None, true, false, vec![], 3);
+            l.set_applied("win_gamemode", None, true, true, vec![], 4);
+        }
+        let plan = crate::reset::targets(&ctx.ledger.lock().unwrap(), crate::reset::Scope::Premium);
+        let premium_applied = ctx.ledger.lock().unwrap().tweaks.keys().filter(|id| !catalog::is_free(id)).count();
+        assert_eq!((premium_applied, plan.len()), (3, 2), "l'ancien message comptait aussi net_legacy");
+        let before = ctx.ledger.lock().unwrap().tweaks.len();
+        assert_eq!(Runner::default().run_now(&ctx, &crate::reset::items(plan.clone())), (plan.len(), 0));
+        let l = ctx.ledger.lock().unwrap();
+        assert_eq!(before - l.tweaks.len(), plan.len(), "annoncés = remis");
+        assert!(l.tweaks.contains_key("net_legacy") && l.tweaks.contains_key("win_gamemode"));
+    }
+
     /// RAG-65 : suppression d'applis lancée par une version d'avant (action ponctuelle, notée d'après l'historique,
     /// sans sauvegarde ni script d'annulation) : l'annulation remet les applis de sa liste, sans licence.
     #[test]

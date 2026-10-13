@@ -260,7 +260,7 @@ const fr = {
   "confirm.undoAllTitle": "Tout annuler ?",
   "confirm.undoAllLead": "Rago Optimizer remet Windows comme avant pour le réglage appliqué sur ce PC. Ta licence ne change pas.|Rago Optimizer remet Windows comme avant pour les {n} réglages appliqués sur ce PC, du dernier appliqué au premier. Ta licence ne change pas.",
   "reset.failed": "{n} réglage n'a pas pu être remis : détails dans l'historique (module Restaurer)|{n} réglages n'ont pas pu être remis : détails dans l'historique (module Restaurer)",
-  "signout.undoLead": "Tes {n} réglage Premium vont être annulés : Rago Optimizer remet les réglages de Windows comme avant. Tes réglages gratuits restent actifs.|Tes {n} réglages Premium vont être annulés : Rago Optimizer remet les réglages de Windows comme avant. Tes réglages gratuits restent actifs.",
+  "signout.undoLead": "Ton réglage Premium va être annulé : Rago Optimizer remet les réglages de Windows comme avant. Tes réglages gratuits restent actifs.|Tes {n} réglages Premium vont être annulés : Rago Optimizer remet les réglages de Windows comme avant. Tes réglages gratuits restent actifs.",
   "signout.go": "Annuler et me déconnecter",
   "repair.restart": "Rago Optimizer a réparé une valeur qui peut faire planter Windows. Redémarre ton PC pour finir : Redémarrer, pas Arrêter.",
 };

@@ -164,6 +164,24 @@ fn undo_all_plan(state: State<'_, AppState>) -> Vec<String> {
     reset::targets(&state.ledger.lock().unwrap(), reset::Scope::All)
 }
 
+/// Déconnexion : les réglages Premium que la remise de fin de Premium remettra, dans son ordre (même liste que
+/// `reset_if_unlicensed`). L'interface en annonce le nombre : les réglages que le moteur ne sait pas remettre sans la
+/// licence (appliqués avant 1.1.6 sans copie de leur annulation, OptiFine hors du dossier .minecraft habituel) restent
+/// appliqués et ne sont pas comptés. L'annulation des réglages Premium est d'abord gardée, tant que la licence est là
+/// (comme `get_applied`) : après la déconnexion, la remise n'a plus que ces copies.
+#[tauri::command]
+async fn reset_plan(state: State<'_, AppState>) -> Result<Vec<String>, String> {
+    let ledger = Arc::clone(&state.ledger);
+    let lic = Arc::clone(&state.license);
+    tauri::async_runtime::spawn_blocking(move || {
+        keep_undo(&ledger, lic.scripts_key().and_then(|key| catalog::premium(&key)).as_deref());
+        let l = ledger.lock().unwrap();
+        reset::targets(&l, reset::Scope::Premium)
+    })
+    .await
+    .map_err(|e| e.to_string())
+}
+
 /// Vrai une seule fois, au lancement où la réparation a supprimé une valeur à 0 (RAG-67) : l'interface demande alors de
 /// redémarrer le PC (« Redémarrer », pas « Arrêter » : avec le démarrage rapide de Windows, « Arrêter » garde le noyau
 /// en mémoire et la valeur n'est relue qu'au redémarrage suivant). Rien n'est gardé sur disque : le message ne revient
@@ -410,6 +428,7 @@ pub fn run() {
             clear_history,
             get_applied,
             undo_all_plan,
+            reset_plan,
             take_repair_notice,
             live_stats,
             open_task_manager,

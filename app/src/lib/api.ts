@@ -155,6 +155,8 @@ export interface Api {
   applied(): Promise<AppliedView[]>;
   /** « Tout annuler » : réglages appliqués sur ce PC, dans l'ordre de la remise à zéro (le dernier appliqué en premier). */
   undoAllPlan(): Promise<string[]>;
+  /** Déconnexion : réglages Premium que le moteur remettra (sans ceux qu'il ne sait pas remettre sans la licence). */
+  resetPlan(): Promise<string[]>;
   /** Vrai une seule fois, au lancement où la réparation du moteur a supprimé une valeur (RAG-67) : il faut redémarrer. */
   takeRepairNotice(): Promise<boolean>;
   liveStats(): Promise<LiveStats>;
@@ -186,6 +188,7 @@ const tauriApi: Api = {
   clearHistory: () => invoke("clear_history"),
   applied: () => invoke("get_applied"),
   undoAllPlan: () => invoke("undo_all_plan"),
+  resetPlan: () => invoke("reset_plan"),
   takeRepairNotice: () => invoke("take_repair_notice"),
   liveStats: () => invoke("live_stats"),
   openTaskManager: () => invoke("open_task_manager"),
@@ -385,6 +388,8 @@ const mockApi: Api = {
   },
   applied: async () => [...mockApplied.values()],
   undoAllPlan: async () => [...mockApplied.values()].sort((a, b) => b.ts - a.ts || a.id.localeCompare(b.id)).map((a) => a.id),
+  // démo : ce que mockReset remet
+  resetPlan: async () => [...mockApplied.keys()].filter((id) => !free.tweaks.includes(id)),
   // démo : localStorage « rago.demoRepair » = 1 simule une réparation au lancement
   takeRepairNotice: async () => {
     try {

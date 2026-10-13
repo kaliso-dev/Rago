@@ -22,6 +22,19 @@ const LICENCES = [
 export function Settings() {
   const { t, lang, setLang, motion, setMotion, license, signOut, premiumApplied, setUpsell, activatedAt, sys } = useStore();
   const [confirmOut, setConfirmOut] = useState(false);
+  /** Réglages que le moteur remettra à la déconnexion (reset_plan) ; null tant que la réponse n'est pas là. Il saute
+   * ceux qu'il ne sait pas remettre sans la licence : les compter tous annoncerait plus de réglages annulés que remis. */
+  const [toUndo, setToUndo] = useState<number | null>(null);
+  const askSignOut = () => {
+    setToUndo(null);
+    setConfirmOut(true);
+    // repli si le moteur ne répond pas : tous les réglages Premium appliqués, comme avant
+    void api.resetPlan().then(
+      (ids) => setToUndo(ids.length),
+      () => setToUndo(premiumApplied.length),
+    );
+  };
+  const undoCount = toUndo ?? premiumApplied.length;
   const device = license?.deviceName ?? sys?.hostname ?? "";
   return (
     <div className="page settings">
@@ -43,7 +56,7 @@ export function Settings() {
                         : t("account.device")}
                   </div>
                 </div>
-                <Button size="sm" variant="ghost" icon={<LogOut size={13} />} onClick={() => setConfirmOut(true)}>
+                <Button size="sm" variant="ghost" icon={<LogOut size={13} />} onClick={askSignOut}>
                   {t("account.signOut")}
                 </Button>
               </div>
@@ -146,7 +159,7 @@ export function Settings() {
       </div>
       <Modal open={confirmOut} onClose={() => setConfirmOut(false)} className="confirm signout">
         <h2>{t("signout.title")}</h2>
-        {premiumApplied.length > 0 && <p>{t("signout.undoLead", { n: premiumApplied.length })}</p>}
+        {toUndo !== null && toUndo > 0 && <p>{t("signout.undoLead", { n: toUndo })}</p>}
         <p className="muted">{t("signout.lead", { device })}</p>
         <div className="modal-actions">
           <Button variant="ghost" className="push-left" onClick={() => void api.openUrl(`${ACCOUNT_URL}/account`)}>
@@ -161,7 +174,7 @@ export function Settings() {
               void signOut();
             }}
           >
-            {premiumApplied.length > 0 ? t("signout.go") : t("account.signOut")}
+            {undoCount > 0 ? t("signout.go") : t("account.signOut")}
           </Button>
         </div>
       </Modal>
