@@ -329,28 +329,16 @@ NEW_TWEAKS = [
 # Ce que lit le vérificateur officiel de RBW (QuickPots, github.com/quickpots/RBW-SS, Services.ps1, relevé le 2026-10-13) :
 # services en cours d'exécution, et 6 réglages du registre.
 RBW_SERVICES = ['SysMain', 'PcaSvc', 'DPS', 'BAM', 'EventLog', 'WSearch', 'DusmSvc', 'BFE', 'AppInfo', 'DCOMLaunch', 'PlugPlay']
-# RBW Mod « On » (script entier, 2026-10-13) : le .bat ne relançait que 8 services et laissait ce que d'autres réglages
-# coupent (WSearch, PCA par stratégie AppCompat, historique d'activités, listes de raccourcis, journaux de DPS).
-# DcomLaunch et PlugPlay ne s'arrêtent pas : seulement vérifiés. Appinfo, Planificateur, DsmSvc et DiagTrack : comme avant.
-RBW_ON = '\n'.join([
-    'echo - Services the RBW screenshare checker looks at: set to start with Windows',
-    'sc config SysMain start= auto >nul',
-    'sc config PcaSvc start= auto >nul',
-    'sc config DPS start= auto >nul',
-    'sc config EventLog start= auto >nul',
-    'sc config WSearch start= delayed-auto >nul',
-    'sc config DusmSvc start= auto >nul',
-    'sc config BFE start= auto >nul',
-    'sc config Appinfo start= auto >nul',
-    'sc config Schedule start= auto >nul',
-    'sc config DsmSvc start= auto >nul',
-    'sc config DiagTrack start= auto >nul',
-    # CDPUserSvc_xxxx : service par utilisateur, son démarrage se règle sur le modèle CDPUserSvc
-    r'reg add "HKLM\SYSTEM\CurrentControlSet\Services\CDPUserSvc" /v "Start" /t REG_DWORD /d "2" /f >nul',
-    'echo - Starting them now',
-    'for %%s in (SysMain PcaSvc DPS EventLog WSearch DusmSvc BFE Appinfo Schedule DsmSvc DiagTrack) do sc start %%s >nul 2>&1',
-    # noms lus dans le registre : la sortie de sc query peut être traduite
-    r'''for /f "tokens=5 delims=\" %%s in ('reg query "HKLM\SYSTEM\CurrentControlSet\Services" /k /f "CDPUserSvc_" ^| find /i "CDPUserSvc_"') do sc start %%s >nul 2>&1''',
+# RBW Mod, scripts entiers (2026-10-13 ; le .bat ne relançait que 8 services). Démarrage de chaque service :
+# (nom, « Activé », « Désactivé » = comme Windows). Appinfo et DsmSvc sont en manuel dans Windows : « Activé » les met en
+# automatique pour qu'ils tournent encore après un redémarrage. DcomLaunch et PlugPlay ne s'arrêtent pas : seulement vérifiés.
+RBW_START = [('SysMain', 'auto', 'auto'), ('PcaSvc', 'auto', 'auto'), ('DPS', 'auto', 'auto'), ('EventLog', 'auto', 'auto'),
+             ('WSearch', 'delayed-auto', 'delayed-auto'), ('DusmSvc', 'auto', 'auto'), ('BFE', 'auto', 'auto'),
+             ('Appinfo', 'auto', 'demand'), ('Schedule', 'auto', 'auto'), ('DsmSvc', 'auto', 'demand'), ('DiagTrack', 'auto', 'auto')]
+# Réglages remis comme Windows les règle, par « Activé » comme par « Désactivé » : ceux que lit le vérificateur et ce dont
+# BAM, le Prefetch et DPS ont besoin (actifs au redémarrage). D'autres réglages de l'app les coupent (test
+# rbw_mode_on_passes_the_rbw_checker dans catalog.rs).
+RBW_SETTINGS = [
     'echo - Activity history, PCA logging, jump lists, CMD and PowerShell logging back to how Windows sets them',
     r'reg delete "HKLM\SOFTWARE\Policies\Microsoft\Windows\System" /v "EnableActivityFeed" /f >nul 2>&1',
     r'reg delete "HKLM\SOFTWARE\Policies\Microsoft\Windows\System" /v "PublishUserActivities" /f >nul 2>&1',
@@ -359,7 +347,7 @@ RBW_ON = '\n'.join([
     r'reg add "HKCU\Software\Microsoft\Windows\CurrentVersion\Explorer\Advanced" /v "Start_TrackDocs" /t REG_DWORD /d "1" /f >nul',
     r'reg delete "HKCU\Software\Policies\Microsoft\Windows\System" /v "DisableCMD" /f >nul 2>&1',
     r'reg query "HKLM\SOFTWARE\Policies\Microsoft\Windows\PowerShell\ScriptBlockLogging" /v "EnableScriptBlockLogging" 2>nul | find "0x0" >nul && reg delete "HKLM\SOFTWARE\Policies\Microsoft\Windows\PowerShell\ScriptBlockLogging" /v "EnableScriptBlockLogging" /f >nul',
-    'echo - BAM, DAM, Prefetch and the diagnostics logs DPS needs back on (active after a restart)',
+    'echo - BAM, DAM, Prefetch and the diagnostics DPS needs back on (active after a restart)',
     r'reg add "HKLM\SYSTEM\CurrentControlSet\Services\bam" /v "Start" /t REG_DWORD /d "1" /f >nul',
     r'reg add "HKLM\SYSTEM\CurrentControlSet\Services\dam" /v "Start" /t REG_DWORD /d "1" /f >nul',
     r'reg add "HKLM\SYSTEM\CurrentControlSet\Control\Session Manager\Memory Management\PrefetchParameters" /v "EnablePrefetcher" /t REG_DWORD /d "3" /f >nul',
@@ -367,18 +355,67 @@ RBW_ON = '\n'.join([
     # DPS ne démarre pas sans ces deux journaux (coupés par les réglages télémétrie et autologgers) : relancés au démarrage
     r'reg add "HKLM\SYSTEM\CurrentControlSet\Control\WMI\Autologger\DiagLog" /v "Start" /t REG_DWORD /d "1" /f >nul',
     r'reg add "HKLM\SYSTEM\CurrentControlSet\Control\WMI\Autologger\WdiContextLog" /v "Start" /t REG_DWORD /d "1" /f >nul',
-    'echo - What the RBW screenshare checker sees now',
-    # mêmes lectures que Services.ps1. Une ligne qui commence par « ! » est en rouge dans le journal de l'app ; écrit
-    # [char]33 : le script tourne avec EnableDelayedExpansion, cmd retirerait un « ! » de la ligne
-    'powershell -NoProfile -NonInteractive -ExecutionPolicy Bypass -Command "$w = [char]33 + \' \'; $names = @(' + ','.join(f"'{s}'" for s in RBW_SERVICES) + ') + '
+    # scénario de diagnostic coupé par sys_registry et win_tracking
+    r'reg delete "HKLM\SOFTWARE\Policies\Microsoft\Windows\WDI\{9c5a40da-b965-4fc3-8781-88dd50a6299d}" /v "ScenarioExecutionEnabled" /f >nul 2>&1',
+]
+
+
+def rbw_services(col):
+    return [f'sc config {name} start= {modes[col - 1]} >nul' for name, *modes in RBW_START] + [
+        # CDPUserSvc_xxxx : service par utilisateur, son démarrage se règle sur le modèle CDPUserSvc
+        r'reg add "HKLM\SYSTEM\CurrentControlSet\Services\CDPUserSvc" /v "Start" /t REG_DWORD /d "2" /f >nul']
+
+
+RBW_SVC_KEY = r'HKLM:\SYSTEM\CurrentControlSet\Services' + '\\'
+
+
+def ps(code):
+    # une ligne de cmd : pas de guillemet double ni de % dans le code PowerShell, et pas de « ! » (EnableDelayedExpansion
+    # retirerait la ligne) ; « ! » s'écrit [char]33. cmd refuse les lignes de plus de 8191 caractères
+    line = 'powershell -NoProfile -NonInteractive -ExecutionPolicy Bypass -Command "' + code + '"'
+    assert '"' not in code and '%' not in code and '!' not in code and len(line) < 8000, code[:60]
+    return line
+
+
+# démarrage voulu par « Activé » : 2 = automatique, 1 = système (pilotes BAM et DAM)
+RBW_WANT = [(n, 2) for n, *_ in RBW_START] + [('bam', 1), ('dam', 1), ('CDPUserSvc', 2)]
+RBW_CHECK_REG = (
+    "$w = [char]33 + ' '; $want = @{" + '; '.join(f'{n}={v}' for n, v in RBW_WANT) + '}; '
+    f"Get-ChildItem -Path '{RBW_SVC_KEY[:-1]}' -ErrorAction SilentlyContinue | Where-Object {{ $_.PSChildName -like 'CDPUserSvc_*' }} | "
+    "ForEach-Object { $want[$_.PSChildName] = 2 }; "
+    f"foreach ($n in @($want.Keys)) {{ $k = '{RBW_SVC_KEY}' + $n; if (-not (Test-Path -Path $k)) {{ continue }}; "
+    "if ((Get-ItemProperty -Path $k -Name Start -ErrorAction SilentlyContinue).Start -ne $want[$n]) { "
+    "Set-ItemProperty -Path $k -Name Start -Value $want[$n] -Type DWord -ErrorAction SilentlyContinue; "
+    "if ($n -eq 'WSearch') { Set-ItemProperty -Path $k -Name DelayedAutostart -Value 1 -Type DWord -ErrorAction SilentlyContinue }; "
+    "if ((Get-ItemProperty -Path $k -Name Start -ErrorAction SilentlyContinue).Start -eq $want[$n]) { '- ' + $n + ': start type written in the registry' } "
+    "else { $w + $n + ': Windows refuses to change its start type' } }; "
+    "foreach ($d in (Get-Service -Name $n -ErrorAction SilentlyContinue).ServicesDependedOn) { "
+    f"$dk = '{RBW_SVC_KEY}' + $d.Name; "
+    "if ((Get-ItemProperty -Path $dk -Name Start -ErrorAction SilentlyContinue).Start -eq 4) { "
+    "Set-ItemProperty -Path $dk -Name Start -Value 3 -Type DWord -ErrorAction SilentlyContinue; "
+    "'- ' + $d.Name + ' (needed by ' + $n + '): was disabled, back to manual' } } }; "
+    f"if (-not (Test-Path -Path '{RBW_SVC_KEY}WSearch')) {{ "
+    "Enable-WindowsOptionalFeature -Online -FeatureName SearchEngine-Client-Package -All -NoRestart -ErrorAction SilentlyContinue | Out-Null; "
+    "'- Windows Search was removed from Windows: put back, restart your PC' }")
+RBW_RETRY = (
+    "$w = [char]33 + ' '; $since = (Get-Date).AddMinutes(-15); $names = @(" + ','.join(f"'{s}'" for s in RBW_SERVICES) + ') + '
     "@(Get-Service -Name 'CDPUserSvc_*' -ErrorAction SilentlyContinue | Select-Object -ExpandProperty Name); "
     "foreach ($n in $names) { $s = Get-Service -Name $n -ErrorAction SilentlyContinue; "
-    "if ($s -and $s.Status -eq 'StartPending') { try { $s.WaitForStatus('Running', '00:00:15') } catch {} }; "
+    "if ($s -and $s.Status -ne 'Running') { "
+    "if ($s.StartType -eq 'Disabled') { Set-Service -Name $n -StartupType Automatic -ErrorAction SilentlyContinue }; "
+    "if ($s.Status -eq 'Stopped') { try { $s.Start() } catch {} }; "
+    "try { $s.WaitForStatus('Running', '00:00:15') } catch {}; $s.Refresh(); "
+    "if ($s.Status -ne 'Running') { net.exe start $n 2>&1 | Out-Null; $s.Refresh() } }; "
     "if ($s -and $s.Status -eq 'Running') { '- ' + $n + ': running' } else { "
-    "$c = Get-CimInstance -ClassName Win32_Service -Filter ('Name=' + [char]39 + $n + [char]39) -ErrorAction SilentlyContinue; "
+    "$f = 'Name=' + [char]39 + $n + [char]39; $c = Get-CimInstance -ClassName Win32_Service -Filter $f -ErrorAction SilentlyContinue; "
+    "if (-not $c) { $c = Get-CimInstance -ClassName Win32_SystemDriver -Filter $f -ErrorAction SilentlyContinue }; "
     "$e = if ($c.ExitCode -eq 1066) { $c.ServiceSpecificExitCode } else { $c.ExitCode }; "
-    "$w + $n + ': stopped' + $(if ($e) { ' (error ' + $e + ')' }) + ', restart your PC: it starts with Windows' } }\"",
-    'powershell -NoProfile -NonInteractive -ExecutionPolicy Bypass -Command "$w = [char]33 + \' \'; $checks = @('
+    "$w + $n + ': stopped' + $(if ($e) { ' (error ' + $e + ')' }) + ', restart your PC: it starts with Windows'; "
+    "if ($c.DisplayName) { $ev = Get-WinEvent -FilterHashtable @{ LogName = 'System'; ProviderName = 'Service Control Manager'; StartTime = $since } "
+    "-MaxEvents 100 -ErrorAction SilentlyContinue | Where-Object { $_.Message -like ('*' + $c.DisplayName + '*') } | Select-Object -First 1; "
+    "if ($ev) { $w + '  Windows says: ' + ($ev.Message -replace '\\s+', ' ') } } } }")
+RBW_SETTINGS_CHECK = (
+    "$w = [char]33 + ' '; $checks = @("
     r"@('CMD', 'HKCU:\Software\Policies\Microsoft\Windows\System', 'DisableCMD'), "
     r"@('PowerShell Scriptblock Logging', 'HKLM:\SOFTWARE\Policies\Microsoft\Windows\PowerShell\ScriptBlockLogging', 'EnableScriptBlockLogging'), "
     r"@('Activities Cache', 'HKLM:\SOFTWARE\Policies\Microsoft\Windows\System', 'EnableActivityFeed'), "
@@ -386,7 +423,49 @@ RBW_ON = '\n'.join([
     r"@('Jump Lists', 'HKCU:\Software\Microsoft\Windows\CurrentVersion\Explorer\Advanced', 'Start_TrackDocs')); "
     "foreach ($c in $checks) { $v = (Get-ItemProperty -Path $c[1] -Name $c[2] -ErrorAction SilentlyContinue).($c[2]); "
     "if ($v -eq 0) { $w + $c[0] + ': off' } else { '- ' + $c[0] + ': on' } }; "
-    r"if (Test-Path 'HKLM:\SOFTWARE\Policies\Microsoft\Windows\AppCompat') { $w + 'PCA Logging: off' } else { '- PCA Logging: on' }" + '"',
+    r"if (Test-Path 'HKLM:\SOFTWARE\Policies\Microsoft\Windows\AppCompat') { $w + 'PCA Logging: off' } else { '- PCA Logging: on' }")
+# lecture seule : une tâche planifiée ou un programme de démarrage (hors Microsoft) qui recouperait ces services
+RBW_STARTUP_SCAN = (
+    "$w = [char]33 + ' '; $global:found = 0; "
+    r"$p = '(?i)(sc(\.exe)?\s+(config|stop)|set-service|stop-service|net(\.exe)?\s+stop|reg(\.exe)?\s+(add|delete)|set-itemproperty).*"
+    r"(sysmain|pcasvc|\bdps\b|wsearch|dusmsvc|\bbfe\b|appinfo|eventlog|cdpusersvc|\bbam\b|enableactivityfeed|appcompat|start_trackdocs|enableprefetcher|diaglog|wdicontextlog)'; "
+    "function Check($label, $cmd) { $t = [string]$cmd; "
+    r"foreach ($m in [regex]::Matches($t, '(?i)[a-z]:\\[^<>|*?]+?\.(bat|cmd|ps1|vbs)')) { "
+    "if (Test-Path -LiteralPath $m.Value) { $t += ' ' + (Get-Content -LiteralPath $m.Value -Raw -ErrorAction SilentlyContinue) } }; "
+    "if ($t -match $p) { $global:found++; $w + $label + ' can turn them off again at startup: ' + $cmd } }; "
+    r"Get-ScheduledTask -ErrorAction SilentlyContinue | Where-Object { $_.TaskPath -notlike '\Microsoft\*' } | "
+    "ForEach-Object { $k = $_; foreach ($a in $k.Actions) { Check ('Scheduled task ' + $k.TaskPath + $k.TaskName) ($a.Execute + ' ' + $a.Arguments) } }; "
+    r"foreach ($r in 'HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\Run', 'HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\RunOnce', "
+    r"'HKLM:\SOFTWARE\WOW6432Node\Microsoft\Windows\CurrentVersion\Run', 'HKCU:\Software\Microsoft\Windows\CurrentVersion\Run', "
+    r"'HKCU:\Software\Microsoft\Windows\CurrentVersion\RunOnce') { $o = Get-ItemProperty -Path $r -ErrorAction SilentlyContinue; "
+    "if ($o) { $o.PSObject.Properties | Where-Object { $_.Name -notlike 'PS*' } | ForEach-Object { Check ('Startup entry ' + $_.Name) $_.Value } } }; "
+    "foreach ($d in [Environment]::GetFolderPath('Startup'), [Environment]::GetFolderPath('CommonStartup')) { "
+    "Get-ChildItem -LiteralPath $d -File -ErrorAction SilentlyContinue | Where-Object { $_.Extension -match '^[.](bat|cmd|ps1|vbs)$' } | "
+    "ForEach-Object { Check ('Startup folder ' + $_.Name) $_.FullName } }; "
+    "if ($global:found -eq 0) { '- Nothing found that turns them off again at startup' }")
+
+RBW_ON = '\n'.join(['echo - Services the RBW screenshare checker looks at: set to start with Windows'] + rbw_services(1) + RBW_SETTINGS + [
+    # « Activé » comme le script de test validé par Sofiene le 2026-10-13 (RBW-Reactivation.ps1) : le registre si sc
+    # config n'a pas suffi, les services dont ils dépendent, Windows Search remis s'il a été retiré
+    'echo - Checking each start type in the registry, and the services they need',
+    ps(RBW_CHECK_REG),
+    'echo - Starting them now',
+    'for %%s in (' + ' '.join(n for n, *_ in RBW_START) + ' bam) do sc start %%s >nul 2>&1',
+    # noms lus dans le registre : la sortie de sc query peut être traduite
+    r'''for /f "tokens=5 delims=\" %%s in ('reg query "HKLM\SYSTEM\CurrentControlSet\Services" /k /f "CDPUserSvc_" ^| find /i "CDPUserSvc_"') do sc start %%s >nul 2>&1''',
+    'echo - Second and third try for any service still stopped, then what the RBW screenshare checker sees now',
+    # mêmes lectures que Services.ps1 ; une ligne qui commence par « ! » est en rouge dans le journal de l'app
+    ps(RBW_RETRY),
+    ps(RBW_SETTINGS_CHECK),
+    'echo - Looking for a program that turns them off again at startup (nothing is changed)',
+    ps(RBW_STARTUP_SCAN),
+])
+# « Désactivé » : services et réglages comme Windows les règle, rien d'arrêté (le .bat arrêtait SysMain et DiagTrack ;
+# demandé par Sofiene le 2026-10-13). Les services automatiques sont lancés, comme Windows le fait à son démarrage.
+RBW_OFF = '\n'.join(['echo - Services back to how Windows sets them (nothing is stopped)'] + rbw_services(2) + RBW_SETTINGS + [
+    'echo - Starting the ones Windows starts by itself',
+    'for %%s in (' + ' '.join(n for n, _, off in RBW_START if off != 'demand') + ' bam) do sc start %%s >nul 2>&1',
+    r'''for /f "tokens=5 delims=\" %%s in ('reg query "HKLM\SYSTEM\CurrentControlSet\Services" /k /f "CDPUserSvc_" ^| find /i "CDPUserSvc_"') do sc start %%s >nul 2>&1''',
 ])
 
 # Ce que le joueur doit lire avant de lancer : déduit du script, pour que rien de lourd ne passe sans être annoncé.
@@ -605,6 +684,8 @@ def postprocess(modules, scripts):
     global SAFETY_REPORT
     SAFETY_REPORT = SAFETY.apply(scripts)
     assert not SAFETY.remaining(scripts), SAFETY.remaining(scripts)[:3]
+    # après l'audit : les scripts d'avant (ce qu'ont lancé les PC) gardent l'ancien « Désactivé » pour undo.json
+    scripts['rbw_mode']['off'] = RBW_OFF.replace('\n', sep)
 
     tweaks = {t['id']: t for m in modules for sec in m['sections'] for t in sec['tweaks'] if 'id' in t}
     for tid, t in tweaks.items():
@@ -845,11 +926,18 @@ ping_packets (Hitreg, QoS, Knockback), ping_main (Config 1 à 4), sys_ram (selon
 
 RBW Mod « On » (réécrit le 2026-10-13, `RBW_ON`) passe le vérificateur officiel de RBW (github.com/quickpots/RBW-SS,
 Services.ps1) : SysMain, PcaSvc, DPS, EventLog, WSearch, DusmSvc, BFE, Appinfo et CDPUserSvc démarrent avec Windows et
-sont lancés ; historique d'activités, journal PCA (clé de stratégies AppCompat supprimée), listes de raccourcis, CMD
-et journal PowerShell reviennent comme Windows les règle ; BAM, DAM, le Prefetcher et les journaux DiagLog et
-WdiContextLog (sans eux DPS ne démarre pas) reviennent au redémarrage, demandé par l'app pour cette variante. Le
-script finit par les mêmes lectures que le vérificateur, dans le journal de l'app. « On » lance toujours ce script,
-même après « Off » (`catalog::revert_runs_script`) : la sauvegarde d'avant « Off » ne démarrait aucun service.
+sont lancés, puis relancés par PowerShell et net start s'ils sont encore arrêtés (le code d'erreur et le message de
+Windows vont dans le journal). Comme le script de test validé par Sofiene le 2026-10-13 (RBW-Reactivation.ps1), le
+démarrage est aussi écrit dans le registre quand sc config ne suffit pas, les services dont ils dépendent sont remis
+en manuel s'ils sont désactivés, Windows Search est remis s'il a été retiré, et le journal signale une tâche planifiée
+ou un programme de démarrage qui les recouperait (sans rien y changer) ; historique d'activités, journal PCA (clé de stratégies AppCompat supprimée), listes de raccourcis, CMD et journal
+PowerShell reviennent comme Windows les règle ; BAM, DAM, le Prefetcher, les journaux DiagLog et WdiContextLog (sans
+eux DPS ne démarre pas) et le scénario de diagnostic WDI coupé par sys_registry et win_tracking reviennent au
+redémarrage, demandé par l'app pour cette variante. Le script finit par les mêmes lectures que le vérificateur, dans le
+journal de l'app. « On » lance toujours ce script, même après « Off » (`catalog::revert_runs_script`) : la sauvegarde
+d'avant « Off » ne démarrait aucun service. « Off » (`RBW_OFF`, demande de Sofiene du 2026-10-13) remet ces services
+et réglages comme Windows les règle (Appinfo et DsmSvc en manuel) et lance les services automatiques, sans rien
+arrêter ; l'ancien « Off » arrêtait SysMain et DiagTrack.
 
 Les actions lourdes ne sont pas retirées (choix de Sofiene, « tout garder ») : `WARNINGS` les détecte dans chaque
 script (Spectre, Defender, SmartScreen, UAC, pare-feu, IFEO, BAM, Prefetch…), écrit l'avertissement « Read this first »

@@ -2257,14 +2257,14 @@
  },
  "rbw_mode": {
   "fr": {
-   "desc": "Activé démarre chaque service et remet chaque réglage que lit le vérificateur de screenshare RBW, même coupés par d'autres réglages ; Désactivé remet les services par défaut.",
+   "desc": "Activé démarre chaque service et remet chaque réglage que lit le vérificateur de screenshare RBW, même coupés par d'autres réglages ; Désactivé les remet comme Windows par défaut, sans rien arrêter.",
    "gain": "Le vérificateur officiel de RBW voit tout en vert après le redémarrage, et un joueur clean ne paraît pas suspect.",
-   "cons": "Activé relance aussi la télémétrie et défait une partie des réglages vie privée de l'app ; Désactivé arrête le préchargement jusqu'au redémarrage, visible en screenshare."
+   "cons": "Activé comme Désactivé relancent la télémétrie et défont une partie des réglages vie privée de l'app."
   },
   "en": {
-   "desc": "On starts every service and restores every setting the RBW screenshare checker reads, even if other tweaks turned them off; Off puts the services back to Windows defaults.",
+   "desc": "On starts every service and restores every setting the RBW screenshare checker reads, even if other tweaks turned them off; Off puts them back to Windows defaults without stopping anything.",
    "gain": "The official RBW checker shows everything green after the restart, so a clean player doesn't look suspicious.",
-   "cons": "On also restarts telemetry and undoes part of the app's privacy tweaks; Off stops prefetch until the next restart, which a screenshare can spot."
+   "cons": "On and Off alike turn telemetry back on and undo part of the app's privacy tweaks."
   }
  },
  "game_mode": {

@@ -561,6 +561,13 @@ mod tests {
         assert!(!on.contains("start= disabled") && !on.contains("start= demand"));
         // le script tourne avec EnableDelayedExpansion : un « ! » serait retiré par cmd
         assert!(!on.contains('!'));
+        // comme le script de test validé par Sofiene (RBW-Reactivation.ps1) : le registre si sc config ne suffit pas, les
+        // services dont ils dépendent, un 3e essai, l'explication de Windows, ce qui les recouperait au démarrage
+        for part in ["set-itemproperty -path $k -name start", "servicesdependedon", "net.exe start", "get-winevent", "get-scheduledtask"] {
+            assert!(on.contains(part), "{part}");
+        }
+        // cmd refuse les lignes de plus de 8191 caractères
+        assert!(on.lines().all(|l| l.len() < 8191));
         // ce que les autres réglages coupent parmi ce que lit le vérificateur : le RBW Mod le remet
         let checked = ["sysmain", "pcasvc", "dps", "eventlog", "wsearch", "dusmsvc", "bfe", "appinfo"];
         for (id, variants) in SCRIPTS.iter().filter(|(id, _)| id.as_str() != "rbw_mode") {
@@ -587,6 +594,20 @@ mod tests {
                     }
                 }
             }
+        }
+        // « Désactivé » : services et réglages comme Windows les règle, rien d'arrêté
+        let off = SCRIPTS["rbw_mode"]["off"].to_lowercase();
+        let off_lines: Vec<&str> = off.lines().map(str::trim).collect();
+        assert!(!off.contains("sc stop") && !off.contains("stop-service") && !off.contains("start= disabled") && !off.contains('!'));
+        for svc in ["appinfo", "dsmsvc"] {
+            assert!(off_lines.contains(&format!("sc config {svc} start= demand >nul").as_str()), "{svc} pas en manuel");
+        }
+        for l in lines.iter().filter(|l| l.starts_with("reg ")) {
+            assert!(off_lines.contains(l), "« Désactivé » ne remet pas : {l}");
+        }
+        let off_started = off_lines.iter().find(|l| l.starts_with("for %%s in (")).expect("services lancés par « Désactivé »");
+        for svc in ["sysmain", "pcasvc", "dps", "eventlog", "wsearch", "dusmsvc", "bfe"] {
+            assert!(off_started.split(['(', ')', ' ']).any(|s| s == svc), "{svc} pas lancé par « Désactivé »");
         }
         // « Activé » lance toujours son script, même après « Désactivé » (pas la sauvegarde, qui ne démarre rien)
         assert!(revert_runs_script("rbw_mode") && !revert_runs_script("game_mode"));

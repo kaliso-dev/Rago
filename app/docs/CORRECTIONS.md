@@ -417,11 +417,18 @@ ping_packets (Hitreg, QoS, Knockback), ping_main (Config 1 à 4), sys_ram (selon
 
 RBW Mod « On » (réécrit le 2026-10-13, `RBW_ON`) passe le vérificateur officiel de RBW (github.com/quickpots/RBW-SS,
 Services.ps1) : SysMain, PcaSvc, DPS, EventLog, WSearch, DusmSvc, BFE, Appinfo et CDPUserSvc démarrent avec Windows et
-sont lancés ; historique d'activités, journal PCA (clé de stratégies AppCompat supprimée), listes de raccourcis, CMD
-et journal PowerShell reviennent comme Windows les règle ; BAM, DAM, le Prefetcher et les journaux DiagLog et
-WdiContextLog (sans eux DPS ne démarre pas) reviennent au redémarrage, demandé par l'app pour cette variante. Le
-script finit par les mêmes lectures que le vérificateur, dans le journal de l'app. « On » lance toujours ce script,
-même après « Off » (`catalog::revert_runs_script`) : la sauvegarde d'avant « Off » ne démarrait aucun service.
+sont lancés, puis relancés par PowerShell et net start s'ils sont encore arrêtés (le code d'erreur et le message de
+Windows vont dans le journal). Comme le script de test validé par Sofiene le 2026-10-13 (RBW-Reactivation.ps1), le
+démarrage est aussi écrit dans le registre quand sc config ne suffit pas, les services dont ils dépendent sont remis
+en manuel s'ils sont désactivés, Windows Search est remis s'il a été retiré, et le journal signale une tâche planifiée
+ou un programme de démarrage qui les recouperait (sans rien y changer) ; historique d'activités, journal PCA (clé de stratégies AppCompat supprimée), listes de raccourcis, CMD et journal
+PowerShell reviennent comme Windows les règle ; BAM, DAM, le Prefetcher, les journaux DiagLog et WdiContextLog (sans
+eux DPS ne démarre pas) et le scénario de diagnostic WDI coupé par sys_registry et win_tracking reviennent au
+redémarrage, demandé par l'app pour cette variante. Le script finit par les mêmes lectures que le vérificateur, dans le
+journal de l'app. « On » lance toujours ce script, même après « Off » (`catalog::revert_runs_script`) : la sauvegarde
+d'avant « Off » ne démarrait aucun service. « Off » (`RBW_OFF`, demande de Sofiene du 2026-10-13) remet ces services
+et réglages comme Windows les règle (Appinfo et DsmSvc en manuel) et lance les services automatiques, sans rien
+arrêter ; l'ancien « Off » arrêtait SysMain et DiagTrack.
 
 Les actions lourdes ne sont pas retirées (choix de Sofiene, « tout garder ») : `WARNINGS` les détecte dans chaque
 script (Spectre, Defender, SmartScreen, UAC, pare-feu, IFEO, BAM, Prefetch…), écrit l'avertissement « Read this first »
