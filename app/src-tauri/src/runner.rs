@@ -2,8 +2,8 @@
 //! l'interface ligne par ligne.
 //!
 //! Chaque script batch est écrit dans le dossier de données de l'app (sous-dossier run, hors de
-//! %TEMP% : beaucoup de réglages vident %TEMP% et tuaient leur propre script) puis lancé par `cmd.exe /d /c`, sans
-//! fenêtre, entrée standard fermée (un `pause` oublié ne bloque donc jamais).
+//! %TEMP% : beaucoup de réglages vident %TEMP% et tuaient leur propre script) puis lancé par `cmd.exe /d /c .\nom.cmd`
+//! depuis ce dossier (script_command), sans fenêtre, entrée standard fermée (un `pause` oublié ne bloque donc jamais).
 
 use serde::{Deserialize, Serialize};
 use std::collections::{BTreeMap, HashMap};
@@ -365,13 +365,7 @@ impl Runner {
         let script = catalog::probe(&item.id, variant, ctx.premium.as_deref())?;
         let probes = if script.contains("@@RAGO") {
             let path = write_script(&ctx.run_dir, &format!("{}-probe", item.id), variant, &script).ok()?;
-            let mut cmd = shell::hidden("cmd.exe");
-            cmd.args(["/d", "/c"]).arg(&path);
-            cmd.env("RAGO_RES", &ctx.resource_dir);
-            cmd.env("adapter_name", ctx.adapter.clone().unwrap_or_default());
-            cmd.current_dir(&ctx.run_dir);
-            cmd.stdin(Stdio::null());
-            let out = cmd.output().ok();
+            let out = script_command(ctx, &path).ok().and_then(|mut cmd| cmd.output().ok());
             let _ = fs::remove_file(&path);
             backup::parse_markers(&decode(&out?.stdout))
         } else {
@@ -535,12 +529,7 @@ impl Runner {
 
     fn run_batch(&self, ctx: &Context, name: &str, variant: Option<&str>, script: &str, emit: &dyn Fn(String)) -> Result<(i32, Option<String>), String> {
         let path = write_script(&ctx.run_dir, name, variant, script)?;
-        let mut cmd = shell::hidden("cmd.exe");
-        cmd.args(["/d", "/c"]).arg(&path);
-        cmd.env("RAGO_RES", &ctx.resource_dir);
-        cmd.env("adapter_name", ctx.adapter.clone().unwrap_or_default());
-        cmd.current_dir(&ctx.run_dir);
-        let res = self.stream(cmd, emit);
+        let res = script_command(ctx, &path).and_then(|cmd| self.stream(cmd, emit));
         let _ = fs::remove_file(&path);
         res
     }
@@ -700,6 +689,28 @@ fn write_script(dir: &Path, id: &str, variant: Option<&str>, body: &str) -> Resu
     Ok(path)
 }
 
+/// cmd.exe qui lance un script écrit par write_script (relevé ou réglage), depuis son dossier. Sur la ligne de commande,
+/// seulement `.\nom.cmd` : le dossier run est dans %APPDATA%, et un `&`, `(`, `)` ou `^` dans le nom du compte coupait
+/// `cmd /d /c C:\Users\…\run\x.cmd` (sans espace, le chemin n'a pas de guillemets ; avec, cmd /c les retire dès qu'il y
+/// voit un de ces caractères) : chaque réglage échouait. Le nom n'a que des lettres, chiffres, `-`, `_` et `.`
+/// (sanitize), rien que cmd interprète, et `.\` le trouve dans le dossier courant même quand
+/// NoDefaultCurrentDirectoryInExePath est posé. Le dossier passe par CreateProcess (dossier courant), jamais par la ligne
+/// de commande.
+fn script_command(ctx: &Context, path: &Path) -> Result<Command, String> {
+    let name = path
+        .file_name()
+        .and_then(|n| n.to_str())
+        .filter(|n| !n.is_empty() && n.chars().all(|c| c.is_ascii_alphanumeric() || "-_.".contains(c)))
+        .ok_or_else(|| format!("Unexpected script name: {}", path.display()))?;
+    let dir = path.parent().ok_or("Script without a folder")?;
+    let mut cmd = shell::hidden("cmd.exe");
+    cmd.args(["/d", "/c"]).arg(format!(".\\{name}"));
+    cmd.env("RAGO_RES", &ctx.resource_dir);
+    cmd.env("adapter_name", ctx.adapter.clone().unwrap_or_default());
+    cmd.current_dir(dir);
+    Ok(cmd)
+}
+
 fn sanitize(s: &str) -> String {
     s.chars().map(|c| if c.is_ascii_alphanumeric() || "-_.".contains(c) { c } else { '_' }).collect()
 }
@@ -782,6 +793,51 @@ mod tests {
 
     fn undo(id: &str) -> RunItem {
         RunItem { id: id.into(), variant: None, params: None, undo: true }
+    }
+
+    /// Dossier run d'un compte « O'Brien & Co (x) ^1 %TEMP% !y! » : tout ce que cmd ou PowerShell pourrait lire.
+    fn odd_ctx(name: &str) -> Context {
+        let mut ctx = test_ctx(name, None);
+        ctx.run_dir = ctx.run_dir.join("O'Brien & Co (x) ^1 %TEMP% !y!");
+        ctx
+    }
+
+    /// Le dossier run (dans %APPDATA%, donc le nom du compte) n'entre jamais dans la ligne de commande de cmd : seulement
+    /// `.\nom.cmd`, le dossier en dossier courant (revue du 2026-10-13, « Lancement des scripts »).
+    #[test]
+    fn scripts_start_by_name_from_their_folder() {
+        let ctx = odd_ctx("launch");
+        for (id, variant) in [("net_a", Some("on")), ("net_a-probe", None), ("O'Brien&(x)^", Some("a b"))] {
+            let path = write_script(&ctx.run_dir, id, variant, "echo ok").unwrap();
+            let name = path.file_name().unwrap().to_str().unwrap().to_string();
+            assert!(name.chars().all(|c| c.is_ascii_alphanumeric() || "-_.".contains(c)), "{name}");
+            let cmd = script_command(&ctx, &path).unwrap();
+            assert_eq!(cmd.get_program(), "cmd.exe");
+            let args: Vec<String> = cmd.get_args().map(|a| a.to_string_lossy().into_owned()).collect();
+            assert_eq!(args, ["/d".to_string(), "/c".to_string(), format!(".\\{name}")]);
+            assert_eq!(cmd.get_current_dir(), Some(ctx.run_dir.as_path()));
+            let envs: Vec<String> = cmd.get_envs().map(|(k, _)| k.to_string_lossy().into_owned()).collect();
+            assert!(envs.contains(&"RAGO_RES".to_string()) && envs.contains(&"adapter_name".to_string()), "{envs:?}");
+            fs::remove_file(path).unwrap();
+        }
+        // un nom que cmd lirait n'est jamais lancé
+        assert!(script_command(&ctx, &ctx.run_dir.join("a&b.cmd")).is_err());
+        assert!(script_command(&ctx, Path::new("")).is_err());
+        let _ = fs::remove_dir_all(ctx.run_dir.parent().unwrap().parent().unwrap());
+    }
+
+    /// Sur Windows (CI) : le script se lance vraiment depuis ce dossier (`.\nom.cmd` n'est cherché que là).
+    #[cfg(windows)]
+    #[test]
+    fn scripts_run_from_a_folder_with_special_characters() {
+        let ctx = odd_ctx("launch-win");
+        let path = write_script(&ctx.run_dir, "probe", None, "echo ok-%~nx0").unwrap();
+        let name = path.file_name().unwrap().to_str().unwrap().to_string();
+        let out = script_command(&ctx, &path).unwrap().output().unwrap();
+        let text = decode(&out.stdout);
+        let _ = fs::remove_dir_all(ctx.run_dir.parent().unwrap().parent().unwrap());
+        assert!(out.status.success(), "{text}\n{}", decode(&out.stderr));
+        assert!(text.lines().any(|l| l.trim() == format!("ok-{name}")), "{text}");
     }
 
     #[test]

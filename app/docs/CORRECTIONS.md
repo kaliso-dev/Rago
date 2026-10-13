@@ -690,3 +690,12 @@ doublait les guillemets, un `&` dans le nom du compte arrêtait le script sur un
 test, et si `cd` échouait la boucle vidait le dossier où l'app lance ses scripts. Les autres lignes ne changent pas ;
 `undo.json` non plus. Tests `deletions_never_use_a_percent_path` (scripts, relevés, annulations : aucune suppression sur
 `%VAR%`, aucune variable de chemin écrite `%VAR%`) et `deletion_checker_sees_bad_paths`.
+
+**Lancement des scripts avec `&`, `(`, `)` ou `^` dans le nom du compte.** Le moteur lançait
+`cmd /d /c C:\Users\<compte>\AppData\Roaming\gg.rago.optimizer\run\<script>.cmd` : sans espace, le chemin passe sans
+guillemets et cmd coupe la ligne au `&` ; avec un espace, cmd /c retire les guillemets dès qu'il voit un de ces
+caractères. Avec un compte « Tom&Jerry » ou « Jean (PC) », chaque réglage échouait. `runner.rs`, `script_command` :
+cmd reçoit seulement `.\<script>.cmd` (lettres, chiffres, `-`, `_` et `.`), le dossier `run` passe en dossier courant
+par CreateProcess, comme avant. Même chose pour les relevés. Les autres programmes lancés par l'app reçoivent leurs
+arguments séparément (reg.exe, powercfg, explorer, PowerShell `-File`) ou un texte fixe (`-Command`), sans chemin du
+profil. Tests `scripts_start_by_name_from_their_folder` et, sur Windows, `scripts_run_from_a_folder_with_special_characters`.
