@@ -5643,14 +5643,14 @@
        "legacy": [
         "f1@6053"
        ],
-       "lines": 4,
+       "lines": 5,
        "gain": {
         "en": "Useful if Windows crashes or glitches; does not add FPS on a healthy PC.",
         "fr": "Utile si Windows plante ou bugge ; ne fait pas gagner de FPS sur un PC sain."
        },
        "cons": {
-        "en": "Takes several minutes and may need the Internet to repair.",
-        "fr": "Prend plusieurs minutes et peut avoir besoin d'Internet pour réparer."
+        "en": "Takes a long while (DISM then sfc) and may need the Internet to repair.",
+        "fr": "Prend de longues minutes (DISM puis sfc) et peut avoir besoin d'Internet pour réparer."
        },
        "restore": true
       }

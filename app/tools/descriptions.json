@@ -2127,12 +2127,12 @@
   "fr": {
    "desc": "Vérifie l'image de Windows et répare les fichiers système abîmés, après un ménage des anciennes mises à jour.",
    "gain": "Utile si Windows plante ou bugge ; ne fait pas gagner de FPS sur un PC sain.",
-   "cons": "Prend plusieurs minutes et peut avoir besoin d'Internet pour réparer."
+   "cons": "Prend de longues minutes (DISM puis sfc) et peut avoir besoin d'Internet pour réparer."
   },
   "en": {
    "desc": "Checks the Windows image and repairs damaged system files, after cleaning up old updates.",
    "gain": "Useful if Windows crashes or glitches; does not add FPS on a healthy PC.",
-   "cons": "Takes several minutes and may need the Internet to repair."
+   "cons": "Takes a long while (DISM then sfc) and may need the Internet to repair."
   }
  },
  "in_driver": {

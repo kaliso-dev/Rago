@@ -536,6 +536,22 @@ mod tests {
         }
     }
 
+    /// Priorité par jeu : les vrais exécutables (RAG-60) ; réparation : sfc après DISM.
+    #[test]
+    fn per_game_priority_targets_real_executables() {
+        for (v, s) in &SCRIPTS["pri_game"] {
+            let low = s.to_lowercase();
+            assert!(!low.contains(".exe.exe") && !low.contains("%%i.exe"), "pri_game:{v}");
+            assert!(!low.contains("valorantclient") && !low.contains("(fortniteclient-win64)"), "pri_game:{v}");
+        }
+        assert!(SCRIPTS["pri_game"]["valorant"].contains("VALORANT-Win64-Shipping.exe"));
+        assert!(SCRIPTS["pri_game"]["fortnite"].contains("in (FortniteClient-Win64-Shipping.exe)"));
+        assert!(SCRIPTS["pri_game"]["apex"].contains("r5apex_dx12.exe"));
+        assert!(SCRIPTS["pri_game"]["gta"].contains("GTA5_Enhanced.exe"));
+        let repair = SCRIPTS["cln_repair"]["_"].to_lowercase();
+        assert!(repair.find("/restorehealth").unwrap() < repair.find("sfc.exe /scannow").unwrap());
+    }
+
     /// Réglages retirés (tools/safety.py, 2026-10-08) : ni script ni relevé, absents du catalogue et des profils, mais
     /// leur annulation reste là pour les PC où une version précédente les a appliqués. Les lignes risquées qu'ils
     /// portaient ne se retrouvent plus dans aucun autre script.
