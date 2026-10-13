@@ -77,7 +77,9 @@ MMFLAGS = {'-memorycompression': '-MemoryCompression', '-pagecombining': '-PageC
 PS = 'powershell -NoProfile -ExecutionPolicy Bypass -Command'
 # Valeurs écrites sur une clé trouvée par une boucle (« %%g », « %%k\\Device ») dont le défaut est connu
 BARE = {'tcpackfrequency': DF.DEL, 'tcpnodelay': DF.DEL, 'tcpdelackticks': DF.DEL,
-        'netbiosoptions': ('set', 'REG_DWORD', '0'), 'cacheispowerprotected': DF.DEL, 'userwritecachesetting': DF.DEL}
+        'netbiosoptions': ('set', 'REG_DWORD', '0'), 'cacheispowerprotected': DF.DEL, 'userwritecachesetting': DF.DEL,
+        # nv_powermizer (clés de la carte NVIDIA trouvées par la boucle) : absentes d'un pilote installé (RAG-60)
+        'powermizerenable': DF.DEL, 'powermizerlevel': DF.DEL, 'powermizerlevelac': DF.DEL, 'perflevelsrc': DF.DEL}
 # Mots-clés de carte réseau écrits dans la clé du pilote (boucles sur Class\\{4D36E972…})
 NIC_NAMES = {x.lower() for x in '''*EEE *FlowControl *NumRssQueues *WakeOnMagicPacket *WakeOnPattern AdvancedEEE
 AutoDisableGigabit AutoPowerSaveModeEnabled DisableDelayedPowerUp EEE EEELinkAdvertisement EnableConnectedPowerGating
@@ -130,6 +132,16 @@ def full_only(cmd):
     """Commande inverse couverte par la sauvegarde : dans full seulement."""
     C.reversible = True
     return cmd if C.mode == 'full' else None
+
+
+def guarded(state, cmd):
+    """Commande inverse d'un état que le moteur relève avant d'appliquer (Probe::State de backup.rs : mmagent,
+    maxpwage, smb, nic, pnppower). Un réglage appliqué avec ce relevé est remis par la sauvegarde, au plus près
+    (seulement ce que le script a changé et que personne n'a touché depuis) : le moteur définit alors
+    RAGO_STATE_<NOM> et rest saute la commande, qui remettait la valeur de Windows sans regarder celle d'avant
+    (RAG-60). Sans ce relevé (réglage appliqué avant cette version) : rest la lance comme avant. full aussi."""
+    assert '&' not in P.strip_redir(cmd).replace('2>&1', ''), cmd
+    return cmd if C.mode == 'full' else f'if not defined RAGO_STATE_{state.upper()} {cmd}'
 
 
 def backup(what, why):
@@ -236,7 +248,7 @@ def h_reg(raw, c, args, low):
         return None
 
     vflag = f'/v "{esc(name)}"' if name else '/ve'
-    bare = re.fullmatch(r'(%%[a-z]|![a-z_]+!|%[a-z_]+%)(\\device)?', nk) is not None
+    bare = re.fullmatch(r'(%%[a-z]|![a-z_]+!|%[a-z_]+%)(\\device|\\device parameters\\disk)?', nk) is not None
     if bare and name.lower() in NIC_NAMES:
         C.add('nic_kw_reg', name)
     if re.search(r'\\control\\power$', nk) and name.lower() == 'hibernateenabled':
@@ -557,10 +569,12 @@ def h_powershell(raw, c, args, low):
             and not re.search(r'(?i)\b(set|disable|enable)-', t):
         return None
     if 'enable-computerrestore' in tl:
+        # pas de Disable-ComputerRestore : couper la protection d'un disque efface ses points de restauration, et rien
+        # ne dit qu'elle était coupée avant (RAG-60). L'ancienne version (1.1.5) l'activait aussi sur D: à G:.
         drives = [d for d in re.findall(r"'([A-Za-z]):\\'", t) if d.upper() != 'C']
         if drives:
-            lst = ','.join(f"'{d}:\\'" for d in drives)
-            return both(f'{PS} "Disable-ComputerRestore -Drive {lst} -ErrorAction SilentlyContinue"{R}')
+            note('protection système activée sur ' + ', '.join(f'{d}:' for d in drives) + ' par une ancienne version : '
+                 'laissée active (la couper effacerait les points de restauration de ces disques)')
         return None
     m = re.search(r'(?i)disable-mmagent((?:\s+-\w+)+)', t)
     if m:
@@ -572,7 +586,7 @@ def h_powershell(raw, c, args, low):
     if re.search(r'(?i)enable-mmagent', t):
         return None
     if re.search(r'(?i)disable-netadapterlso', t):
-        return both(f"{PS} \"Enable-NetAdapterLso -Name '*' -ErrorAction SilentlyContinue\"{R}")
+        return both(guarded('nic', f"{PS} \"Enable-NetAdapterLso -Name '*' -ErrorAction SilentlyContinue\"{R}"))
     if re.search(r'(?i)disable-netadapterpowermanagement', t):
         C.nic_pm = True
         C.reversible = True
@@ -604,23 +618,38 @@ def h_powershell(raw, c, args, low):
              'langue ; l\'annulation passe par le mot-clé du registre (toutes langues)')
         return None
     if re.search(r'(?i)set-processmitigation\s+-system', t):
-        k = r'HKLM\SYSTEM\CurrentControlSet\Control\Session Manager\kernel'
-        return both(f'reg delete "{k}" /v MitigationOptions /f{R} & reg delete "{k}" /v MitigationAuditOptions /f{R}')
+        # in_windows jusqu'à 1.1.7 coupait TOUTES les protections (Set-ProcessMitigation -System -Disable, sans
+        # relevé). Les effacer remet celles de Windows, mais efface aussi des réglages de Sécurité Windows (protection
+        # contre les exploits) posés par le joueur ou remis depuis. On ne les efface donc que si CFG, ASLR obligatoire
+        # (BottomUp) et SEHOP sont encore coupés, comme les a laissés ce script : des protections actives par défaut
+        # que personne ne coupe à la main (RAG-60).
+        k = r'HKLM:\SYSTEM\CurrentControlSet\Control\Session Manager\kernel'
+        note('protections contre les failles (Set-ProcessMitigation) : remises seulement si elles sont encore toutes '
+             "coupées comme les a laissées l'ancien in_windows")
+        return both(f"{PS} \"$m = Get-ProcessMitigation -System -ErrorAction SilentlyContinue; "
+                    f"if ($m -and [string]$m.CFG.Enable -eq 'OFF' -and [string]$m.ASLR.BottomUp -eq 'OFF' "
+                    f"-and [string]$m.SEHOP.Enable -eq 'OFF') {{ Remove-ItemProperty -Path '{k}' "
+                    f"-Name MitigationOptions,MitigationAuditOptions -ErrorAction SilentlyContinue }}\"{R}")
     if 'mspower_deviceenable' in tl:
         inv = re.sub(r'(?i)\$false', '$True', P.strip_redir(raw))
-        return both(inv + R)
+        return both(guarded('pnppower', inv + R))
     m = re.search(r'(?i)set-smbclientconfiguration\s+-(\w+)\s+\$(\w+)', t)
     if m:
         if m.group(1).lower() == 'requiresecuritysignature' and m.group(2).lower() == 'true':
-            return both(f'{PS} "if([Environment]::OSVersion.Version.Build -lt 26100){{ Set-SmbClientConfiguration '
-                        f'-RequireSecuritySignature $False -Force }}"{R}')
+            return both(guarded('smb', f'{PS} "if([Environment]::OSVersion.Version.Build -lt 26100){{ '
+                                       f'Set-SmbClientConfiguration -RequireSecuritySignature $False -Force }}"{R}'))
         return None
     m = re.search(r'(?i)set-smbserverconfiguration\s+-(\w+)\s+\$(\w+)', t)
     if m:
         if m.group(1).lower() == 'encryptdata' and m.group(2).lower() == 'true':
-            return both(f'{PS} "Set-SmbServerConfiguration -EncryptData $False -Force"{R}')
+            return both(guarded('smb', f'{PS} "Set-SmbServerConfiguration -EncryptData $False -Force"{R}'))
         return None
     if re.search(r'(?i)disable-windowsoptionalfeature.*smb1', t):
+        # SMB1 : désactivé d'office depuis Windows 10 1709. Le relevé « smb » le réactive s'il était actif avant ;
+        # sans ce relevé, il reste désactivé (protocole sans chiffrement, celui qu'exploitait WannaCry)
+        note("SMB1 réactivé seulement s'il était actif avant (relevé « smb » de la sauvegarde) ; sinon il reste "
+             "désactivé, comme sur un Windows 10 ou 11 récent")
+        C.reversible = True
         return None
     LOG['ps ' + t[:90]].add(C.where)
     return None
@@ -651,7 +680,8 @@ def h_auditpol(raw, c, args, low):
 
 def h_net(raw, c, args, low):
     if low[:1] == ['accounts'] and any(a.startswith('/maxpwage') for a in low):
-        return both(f'net accounts /maxpwage:42{R}')
+        # 42 jours : valeur de Windows. Avec le relevé « maxpwage » (net accounts), la sauvegarde remet celle d'avant
+        return both(guarded('maxpwage', f'net accounts /maxpwage:42{R}'))
     return None
 
 
@@ -688,8 +718,8 @@ def other(head, raw, c, args, low):
             gone('OneDrive désinstallé (réinstallable depuis microsoft.com)')
         return None
     if head == 'nvidiaprofileinspector':
-        backup('profil NVIDIA du pilote', "réimporter le profil exporté avant, ou « Restore » du profil Base dans "
-               "nvidiaProfileInspector ; réinstaller le pilote NVIDIA remet aussi tout")
+        backup('profil NVIDIA du pilote', "réglages du profil de base relevés avant l'import (NVAPI, relevé « nvbase ») ; "
+               "sans sauvegarde : « Restore » du profil Base dans nvidiaProfileInspector, ou réinstaller le pilote")
         C.reversible = True
         return None
     if head == 'setup' and '--uninstall' in t:
@@ -897,13 +927,18 @@ def epilogue(ctx):
     kws = list(ctx.nic_kw) + ([k for k in ctx.nic_kw_reg if k not in ctx.nic_kw] if full else [])
     if ctx.nic_pm:
         kws += [k for k in NIC_PM if k not in kws]
+    # propriétés des cartes réseau posées par PowerShell : le relevé « nic » remet la valeur d'avant de chacune,
+    # sans lui (réglage appliqué avant cette version) celle du pilote. Les mots-clés écrits dans le registre par une
+    # boucle (nic_kw_reg, full seulement) n'ont pas ce relevé.
+    nic = (lambda cmd: cmd) if full or not (ctx.nic_kw or ctx.nic_pm) else (
+        lambda cmd: f'if not defined RAGO_STATE_NIC {cmd}')
     if kws:
         lst = ','.join(f"'{k}'" for k in kws)
-        e.append(f"{PS} \"foreach($k in @({lst})){{ Reset-NetAdapterAdvancedProperty -Name '*' -RegistryKeyword $k "
-                 f"-ErrorAction SilentlyContinue }}\"{R}")
+        e.append(nic(f"{PS} \"foreach($k in @({lst})){{ Reset-NetAdapterAdvancedProperty -Name '*' -RegistryKeyword $k "
+                     f"-ErrorAction SilentlyContinue }}\"{R}"))
     if ctx.nic_pm:
-        e.append(f"{PS} \"Set-NetAdapterPowerManagement -Name '*' -AllowComputerToTurnOffDevice Enabled "
-                 f"-ErrorAction SilentlyContinue\"{R}")
+        e.append(nic(f"{PS} \"Set-NetAdapterPowerManagement -Name '*' -AllowComputerToTurnOffDevice Enabled "
+                     f"-ErrorAction SilentlyContinue\"{R}"))
     if full and ctx.power:
         e.append(power_block(ctx.power))
     for g in ctx.plans:
@@ -923,8 +958,10 @@ def epilogue(ctx):
         for s in ctx.svc_start:
             e.append(f'sc start "{s}"{R}')
     if ctx.mm:
-        e.append(f'sc start SysMain{R}')
-        e.append(f'{PS} "Enable-MMAgent {" ".join(ctx.mm)} -ErrorAction SilentlyContinue"{R}')
+        # relevé « mmagent » (Get-MMAgent) : la sauvegarde remet chaque option comme avant ; sans lui, celles de Windows
+        mm = (lambda cmd: cmd) if full else (lambda cmd: f'if not defined RAGO_STATE_MMAGENT {cmd}')
+        e.append(mm(f'sc start SysMain{R}'))
+        e.append(mm(f'{PS} "Enable-MMAgent {" ".join(ctx.mm)} -ErrorAction SilentlyContinue"{R}'))
     return e
 
 
@@ -939,8 +976,8 @@ def run(body, mode, where):
 
 NATIVE = {
     'mc_optifine': "réglage natif de l'app (options.txt de Minecraft) : l'app garde une copie du fichier",
-    'nv_profile': "profil NVIDIA appliqué par nvidiaProfileInspector : l'annulation réimporte le profil d'origine "
-                  "exporté avant (ou « Restore » du profil Base dans l'outil)",
+    'nv_profile': "profil NVIDIA appliqué par nvidiaProfileInspector : le moteur relève avant les réglages du profil "
+                  "de base qu'il change (NVAPI, relevé « nvbase ») et les remet quand on le décoche",
     'rst_point': "point de restauration : rien à annuler",
 }
 
@@ -974,6 +1011,7 @@ def main(scripts_path, catalog_path, out_path):
                 entry['ponctuel_sans_retour'] = tid == 'rst_point'
             elif entry['ponctuel_sans_retour'] and cf.same and not cf.sans_retour:
                 entry['notes'].append('ce réglage écrit déjà les valeurs de Windows : rien à annuler')
+                entry['valeurs_windows'] = True
             if cf.plans:
                 entry['rest_avant'] = True
                 entry['notes'].append("plans d'alimentation supprimés : lancer « rest » AVANT de remettre la sauvegarde, "

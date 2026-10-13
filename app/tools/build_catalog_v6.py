@@ -546,6 +546,8 @@ def postprocess(modules, scripts):
     before_audit = copy.deepcopy(scripts)
     apply_audit(scripts)
     sub_lines(scripts, WMIC_SUBS)
+    # scripts de 1.1.6 et 1.1.7 (audit appliqué, pas encore safety.py) : les premiers lancés avec une sauvegarde
+    with_backup = copy.deepcopy(scripts)
     # lignes risquées cachées dans les packs (tools/safety.py, 2026-10-08) : retirées avant les avertissements
     global SAFETY_REPORT
     SAFETY_REPORT = SAFETY.apply(scripts)
@@ -632,7 +634,7 @@ def postprocess(modules, scripts):
             if (m['id'], sec['id']) in SECTION_NAMES:
                 sec['name'] = SECTION_NAMES[(m['id'], sec['id'])]
     count_commands(modules, scripts)
-    return before_audit
+    return before_audit, with_backup
 
 
 def twins(modules, scripts):
@@ -821,42 +823,159 @@ par réglage appliqué, pour annuler après une déconnexion ou une fin de licen
 '''
 
 
-def build_undo(before, after):
+ROOTS = (('HKEY_LOCAL_MACHINE', 'HKLM'), ('HKEY_CURRENT_USER', 'HKCU'), ('HKEY_USERS', 'HKU'),
+         ('HKEY_CLASSES_ROOT', 'HKCR'), ('HKEY_CURRENT_CONFIG', 'HKCC'))
+
+
+def held_id(kind, a, b):
+    """Identité d'une valeur de registre ou d'un élément bcdedit, la même dans les relevés et dans full (les clés
+    ControlSet00x et HKEY_… sont ramenées à leur forme courte, comme le fait undo_gen)."""
+    if kind == 'bcd':
+        return f'bcd|{(a or "{current}").lower()}|{b.lower()}'
+    k = a.strip().strip('"').rstrip('\\')
+    for long, short in ROOTS:
+        if k.upper().startswith(long):
+            k = short + k[len(long):]
+    k = re.sub(r'\\\\+', r'\\', k)
+    k = re.sub(r'(?i)\\ControlSet00\d\\', r'\\CurrentControlSet\\', k)
+    return f'reg|{k.lower()}|{b.lower()}'
+
+
+def held_tag(i):
+    """Étiquette courte d'une valeur (10 chiffres hexadécimaux) : variable RAGO_HELD_<étiquette> dans full, élément de
+    `writes` que le moteur compare entre réglages appliqués (runner.rs, held_env)."""
+    import hashlib
+    return hashlib.sha256(i.encode('utf-8')).hexdigest()[:10]
+
+
+def static_writes(scripts):
+    """{réglage: {variante: ids}} : valeurs de registre et éléments bcdedit à chemin fixe que chaque script modifie
+    (relevés de tools/probes.py, hors boucles)."""
+    out = {}
+    for tid, vs in scripts.items():
+        for v, body in vs.items():
+            ids = set()
+            for line in probes.dry_script(body).split('\r\n'):
+                for m in re.finditer(r'@@RAGO (reg|bcd) "([^"]*)" "([^"]*)"', line):
+                    if '%' in m.group(2) or '!' in m.group(2) or not m.group(2):
+                        continue
+                    ids.add(held_id(m.group(1), m.group(2), m.group(3)))
+            out.setdefault(tid, {})[v] = ids
+    return out
+
+
+HELD_LINE = re.compile(r'(?i)^(?:reg(?:\.exe)? (?:add|delete) "([^"%!]+)" /v "([^"]+)"'
+                       r'|bcdedit(?:\.exe)? /(?:set|deletevalue) (?:(\{[a-z]+\}) )?([a-z]+)\b)')
+
+
+def guard_held(full, shared):
+    """Dans full, chaque commande qui remet une valeur que d'autres réglages modifient aussi passe sous
+    « if not defined RAGO_HELD_… » : le moteur définit la variable quand un autre réglage encore appliqué la modifie,
+    pour ne pas défaire ce réglage-là (RAG-60 : sys_latency remettait les touches rémanentes de kbm_filter, cpu_intel
+    effaçait le numproc de cpu_numproc)."""
+    out, ids = [], set()
+    for line in full.split('\r\n'):
+        indent = line[:len(line) - len(line.lstrip())]
+        segs, changed = [], False
+        for piece, op in probes.split_top(line.strip(), ('&&', '||', '&')):
+            p = piece.strip()
+            m = HELD_LINE.match(p)
+            if m:
+                i = held_id('reg', m.group(1), m.group(2)) if m.group(1) else held_id('bcd', m.group(3), m.group(4))
+                if i in shared:
+                    ids.add(i)
+                    p = f'(if not defined RAGO_HELD_{held_tag(i)} {p})'
+                    changed = True
+            segs.append(p + (f' {op} ' if op else ''))
+        out.append(indent + ''.join(segs).rstrip() if changed else line)
+    return '\r\n'.join(out), ids
+
+
+def build_undo(before, with_backup, after):
     """undo.json : {réglage: {variante: {full, rest, rest_avant}}}. tools/undo/undo_gen.py écrit les commandes inverses
-    (valeurs de Windows, tools/undo/defaults.py) des scripts d'avant et d'après l'audit, merge_full.py les réunit :
-    un PC passé par l'ancien script retrouve aussi les valeurs des lignes retirées depuis."""
+    (valeurs de Windows, tools/undo/defaults.py) de chaque génération de scripts, merge_full.py les réunit.
+
+    - full (pas de sauvegarde : réglage appliqué avant 1.1.6) couvre les trois générations : un PC passé par l'ancien
+      script retrouve aussi les valeurs des lignes retirées depuis ;
+    - rest (lancé avec la sauvegarde) ne couvre que les scripts lancés avec une sauvegarde : ceux de 1.1.6 et 1.1.7
+      (`with_backup`, audit appliqué) et ceux d'aujourd'hui. Les scripts d'avant l'audit (1.1.5 et avant) n'ont jamais
+      tourné avec une sauvegarde : leurs lignes retirées (auditpol de sys_registry, protection système de D: à G:
+      d'in_advanced…) n'ont rien à faire dans rest (RAG-60)."""
     import tempfile
     tools = os.path.join(ROOT, 'tools')
     env = {**os.environ, 'RAGO_TOOLS': tools}
     catalog = os.path.join(ROOT, 'src', 'data', 'catalog.json')
+    gens = {'before': before, 'mid': with_backup, 'after': after}
     with tempfile.TemporaryDirectory() as tmp:
-        paths = {k: os.path.join(tmp, k + '.json') for k in ('before', 'after', 'u_before', 'u_after', 'undo')}
-        json.dump(before, open(paths['before'], 'w', encoding='utf-8'), ensure_ascii=False)
-        json.dump(after, open(paths['after'], 'w', encoding='utf-8'), ensure_ascii=False)
-        for k in ('before', 'after'):
-            subprocess.run([sys.executable, os.path.join(tools, 'undo', 'undo_gen.py'), paths[k], catalog, paths['u_' + k]],
+        path = lambda k: os.path.join(tmp, k + '.json')
+        for k, sc in gens.items():
+            json.dump(sc, open(path(k), 'w', encoding='utf-8'), ensure_ascii=False)
+            subprocess.run([sys.executable, os.path.join(tools, 'undo', 'undo_gen.py'), path(k), catalog, path('u_' + k)],
                            check=True, env=env, stdout=subprocess.DEVNULL)
-        subprocess.run([sys.executable, os.path.join(tools, 'undo', 'merge_full.py'), paths['u_before'], paths['u_after'], paths['undo']],
-                       check=True, env=env, stdout=subprocess.DEVNULL)
-        merged = json.load(open(paths['undo'], encoding='utf-8'))
-        now = json.load(open(paths['u_after'], encoding='utf-8'))
+        merge = lambda a, b, out: subprocess.run(
+            [sys.executable, os.path.join(tools, 'undo', 'merge_full.py'), path(a), path(b), path(out)],
+            check=True, env=env, stdout=subprocess.DEVNULL)
+        merge('u_before', 'u_mid', 'u_old')
+        merge('u_old', 'u_after', 'u_full')
+        merge('u_mid', 'u_after', 'u_rest')
+        full = json.load(open(path('u_full'), encoding='utf-8'))
+        rest = json.load(open(path('u_rest'), encoding='utf-8'))
+        now = json.load(open(path('u_after'), encoding='utf-8'))
     # ce qu'aucune annulation de l'app ne remet (applis désinstallées, réseau remis à zéro…), hors actions ponctuelles
     # qui ne changent rien à remettre (nettoyage, point de restauration)
     no_return = {tid for tid, vs in now.items() if isinstance(vs, dict) and tid not in SAFETY.RETIRED
                  and any(isinstance(u, dict) and u.get('sans_retour') for u in vs.values())}
     out = {}
-    for tid, vs in merged.items():
+    for tid, vs in full.items():
         if tid not in after or not isinstance(vs, dict):
             continue
         for v, u in vs.items():
             if v not in after[tid] or not isinstance(u, dict):
                 continue
-            e = {k: u[k] for k in ('full', 'rest') if u.get(k)}
-            if e and u.get('rest_avant'):
+            r = (rest.get(tid) or {}).get(v) or {}
+            e = {k: x[k] for k, x in (('full', u), ('rest', r)) if x.get(k)}
+            if e and (u.get('rest_avant') or r.get('rest_avant')):
                 e['rest_avant'] = True
+            if not e and u.get('valeurs_windows'):
+                # le script n'écrit que des valeurs de Windows (pri_dwm) : sans sauvegarde, rien à remettre, et le
+                # décocher ne doit pas répondre « can't be undone automatically »
+                e = {'full': '@echo off\r\necho - This tweak only writes the Windows default values: nothing to put back'}
             if e:
                 out.setdefault(tid, {})[v] = e
+    # valeurs modifiées par plusieurs réglages : full ne les remet pas tant qu'un autre réglage qui les modifie est
+    # encore appliqué (guard_held). `writes` : celles que ce réglage modifie, lues par le moteur pour les autres.
+    writes = {}
+    for sc in (before, with_backup, after):
+        for tid, vs in static_writes(sc).items():
+            for v, ids in vs.items():
+                writes.setdefault(tid, {}).setdefault(v, set()).update(ids)
+    owners = {}
+    for tid, vs in writes.items():
+        for ids in vs.values():
+            for i in ids:
+                owners.setdefault(i, set()).add(tid)
+    shared = {i for i, ts in owners.items() if len(ts) > 1}
+    assert len({held_tag(i) for i in shared}) == len(shared), 'deux valeurs ont la même étiquette'
+    for tid, vs in out.items():
+        for v, e in vs.items():
+            mine = writes.get(tid, {}).get(v, set()) & shared
+            if e.get('full'):
+                e['full'], used = guard_held(e['full'], shared)
+                mine |= used
+            if mine:
+                e['writes'] = sorted(held_tag(i) for i in mine)
+    # réglages sans annulation à lancer (valeurs de pilote remises par la sauvegarde seule, variantes de retour…) qui
+    # écrivent une valeur partagée : leurs étiquettes servent quand même aux autres (runner::held_env), sinon le full
+    # d'un autre réglage remettrait cette valeur pendant qu'ils sont appliqués
+    for tid, vs in writes.items():
+        for v, ids in vs.items():
+            mine = ids & shared
+            if mine and v in after.get(tid, {}) and v not in out.get(tid, {}):
+                out.setdefault(tid, {})[v] = {'writes': sorted(held_tag(i) for i in mine)}
     assert out.get('pow_ultimate', {}).get('_', {}).get('rest_avant'), 'pow_ultimate : rest avant la sauvegarde'
+    # lignes des scripts d'avant l'audit, jamais lancées avec une sauvegarde : pas dans rest (RAG-60)
+    for tid, v, bad in (('in_advanced', '_', 'Disable-ComputerRestore'), ('sys_registry', '_', 'auditpol')):
+        assert bad.lower() not in (out.get(tid, {}).get(v, {}).get('rest') or '').lower(), (tid, bad)
     return out, no_return
 
 
@@ -969,7 +1088,7 @@ def main():
         sec = next(sec for m in modules if m['id'] == mid for sec in m['sections'] if sec['id'] == sid)
         scripts[entry['id']] = {'_': body}
         sec['tweaks'].append({**entry, 'lines': len(body.split('\n'))})
-    before_audit = postprocess(modules, scripts)
+    before_audit, with_backup = postprocess(modules, scripts)
 
     presets = [{'id': p, 'name': n, 'desc': d, 'tweaks': ts} for p, n, d, ts in PRESETS]
     for p in old['presets']:
@@ -993,9 +1112,11 @@ def main():
     # relevés : ce que chaque script va modifier, sauvegardé avant de l'appliquer (tools/probes.py)
     json.dump(probes.build(kept), open(os.path.join(ROOT, 'src-tauri', 'scripts', 'probes.json'), 'w', encoding='utf-8'), ensure_ascii=False)
     # retour aux valeurs de Windows sans sauvegarde, et ce que la sauvegarde ne couvre pas (tools/undo, audit du 2026-10-07)
-    undo, no_return = build_undo(before_audit, scripts)
-    # valeurs de pilote (amd_thermal, sto_cacheprot) : seule la sauvegarde de l'app les remet ; Edge : rien à remettre
-    assert set(SAFETY.RETIRED) - set(undo) == {'amd_thermal', 'sto_cacheprot', 'dbl_edge'}, set(SAFETY.RETIRED) - set(undo)
+    undo, no_return = build_undo(before_audit, with_backup, scripts)
+    # valeurs de pilote (amd_thermal) : seule la sauvegarde de l'app les remet ; Edge : rien à remettre. sto_cacheprot :
+    # CacheIsPowerProtected (« Désactiver le vidage du cache d'écriture »), absent d'office, est effacé sans sauvegarde
+    runs = {t for t, vs in undo.items() if any(e.get('full') or e.get('rest') for e in vs.values())}
+    assert set(SAFETY.RETIRED) - runs == {'amd_thermal', 'dbl_edge'}, set(SAFETY.RETIRED) - runs
     json.dump(undo, open(os.path.join(ROOT, 'src-tauri', 'scripts', 'undo.json'), 'w', encoding='utf-8'), ensure_ascii=False, indent=0)
     # point de restauration conseillé (case cochée par défaut) : réglages avancés, ou dont l'app ne peut pas tout remettre
     for m in modules:

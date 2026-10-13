@@ -465,6 +465,77 @@ mod tests {
         }
     }
 
+    /// Retour arrière (RAG-60, 2026-10-13) : l'annulation ne remet que ce que l'app a changé. Les commandes qui
+    /// posent la valeur de Windows sans savoir ce que le joueur avait (rest) ne tournent que sans relevé de l'état,
+    /// et full laisse les valeurs qu'un autre réglage encore appliqué modifie (étiquettes `writes`).
+    #[test]
+    fn undo_puts_back_only_what_the_app_changed() {
+        let bundle = premium(&test_key()).unwrap();
+        let undo: Vec<(&String, &String, &Undo)> =
+            PLAIN.undo.iter().chain(bundle.undo.iter()).flat_map(|(id, vs)| vs.iter().map(move |(v, u)| (id, v, u))).collect();
+        assert!(undo.len() > 150, "{} annulations", undo.len());
+        let probe_of = |id: &str, v: &str| {
+            PLAIN.probes.get(id).or(bundle.probes.get(id)).and_then(|e| pick(e, Some(v))).cloned().unwrap_or_default()
+        };
+        const BLIND: [(&str, &str); 9] = [
+            ("enable-mmagent", "mmagent"),
+            ("disable-mmagent", "mmagent"),
+            ("/maxpwage", "maxpwage"),
+            ("reset-netadapteradvancedproperty", "nic"),
+            ("set-netadapterpowermanagement", "nic"),
+            ("enable-netadapterlso", "nic"),
+            ("mspower_deviceenable", "pnppower"),
+            ("set-smbclientconfiguration", "smb"),
+            ("set-smbserverconfiguration", "smb"),
+        ];
+        let (mut guarded, mut held) = (0, 0);
+        for (id, v, u) in &undo {
+            let full = u.full.as_deref().unwrap_or("").to_lowercase();
+            let rest = u.rest.as_deref().unwrap_or("").to_lowercase();
+            // rest tourne aussi après une sauvegarde de cette version : il ne lance que ce que les scripts appliqués
+            // depuis 1.1.6 lancent (l'audit de sécurité n'est plus touché que par win_audit, que full remet)
+            assert!(!rest.contains("auditpol") || id.as_str() == "win_audit", "{id}:{v} touche à l'audit de sécurité");
+            for s in [&full, &rest] {
+                assert!(!s.contains("disable-computerrestore"), "{id}:{v} coupe la protection système des autres disques");
+                for l in s.lines() {
+                    assert!(!(l.contains("sfio priority") && l.contains("reg_dword")), "{id}:{v} SFIO Priority en DWORD : {l}");
+                }
+            }
+            for l in rest.lines() {
+                for (cmd, state) in BLIND {
+                    if l.contains(cmd) {
+                        assert!(l.contains(&format!("if not defined rago_state_{state} ")), "{id}:{v} rest sans garde : {l}");
+                    }
+                }
+            }
+            let probe = probe_of(id, v);
+            for part in rest.split("rago_state_").skip(1) {
+                let name: String = part.chars().take_while(|c| c.is_ascii_alphanumeric()).collect();
+                assert!(crate::backup::STATES.contains(&name.as_str()), "{id}:{v} état inconnu {name}");
+                assert!(probe.contains(&format!("@@RAGO state \"{name}\"")), "{id}:{v} garde {name} sans relevé");
+                guarded += 1;
+            }
+            for part in u.full.as_deref().unwrap_or("").split("RAGO_HELD_").skip(1) {
+                let tag: String = part.chars().take_while(|c| c.is_ascii_hexdigit()).collect();
+                assert!(tag.len() == 10 && u.writes.contains(&tag), "{id}:{v} garde {tag} hors de writes");
+                held += 1;
+            }
+        }
+        assert!(guarded > 10 && held > 1000, "{guarded} gardes d'état, {held} gardes de valeurs partagées");
+        // une valeur partagée n'est gardée que si un autre réglage l'écrit aussi
+        let mut owners: HashMap<&String, std::collections::HashSet<&String>> = HashMap::new();
+        for (id, _, u) in &undo {
+            for t in &u.writes {
+                owners.entry(t).or_default().insert(*id);
+            }
+        }
+        for (id, v, u) in &undo {
+            for t in &u.writes {
+                assert!(owners[t].len() > 1, "{id}:{v} étiquette {t} propre à ce réglage");
+            }
+        }
+    }
+
     /// Réglages retirés (tools/safety.py, 2026-10-08) : ni script ni relevé, absents du catalogue et des profils, mais
     /// leur annulation reste là pour les PC où une version précédente les a appliqués. Les lignes risquées qu'ils
     /// portaient ne se retrouvent plus dans aucun autre script.

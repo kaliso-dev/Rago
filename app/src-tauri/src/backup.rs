@@ -27,7 +27,17 @@ pub enum Probe {
     Pwr { scheme: String, sub: String, setting: String },
     PwrActive,
     Hib,
+    /// plan d'alimentation supprimé (`powercfg -delete`) : exporté avant (`powercfg /export`)
+    Plan { guid: String },
+    /// état lu par le moteur hors registre (voir STATES) : compression mémoire, SMB, cartes réseau, profil NVIDIA…
+    State { name: String },
+    /// élément d'une version plus récente de l'app : gardé tel quel, rien à remettre
+    #[serde(other)]
+    Other,
 }
+
+/// États que le moteur sait lire et remettre (`@@RAGO state "nom"`, tools/probes.py).
+pub const STATES: [&str; 6] = ["mmagent", "maxpwage", "smb", "nic", "pnppower", "nvbase"];
 
 impl Probe {
     /// Identité, insensible à la casse comme le registre et les commandes Windows.
@@ -44,6 +54,9 @@ impl Probe {
             }
             Probe::PwrActive => "pwractive".into(),
             Probe::Hib => "hib".into(),
+            Probe::Plan { guid } => format!("plan|{}", guid.to_lowercase()),
+            Probe::State { name } => format!("state|{}", name.to_lowercase()),
+            Probe::Other => "other".into(),
         }
     }
 }
@@ -96,6 +109,10 @@ pub fn parse_markers(output: &str) -> Vec<Probe> {
             "pwr" if a.len() == 3 => Some(Probe::Pwr { scheme: a[0].clone(), sub: a[1].clone(), setting: a[2].clone() }),
             "pwractive" => Some(Probe::PwrActive),
             "hib" => Some(Probe::Hib),
+            "plan" if a.len() == 1 && parse_guid(&a[0]).is_some_and(|g| g.eq_ignore_ascii_case(a[0].trim())) => {
+                Some(Probe::Plan { guid: a[0].trim().to_lowercase() })
+            }
+            "state" if a.len() == 1 && STATES.contains(&a[0].as_str()) => Some(Probe::State { name: a[0].clone() }),
             _ => None,
         };
         if let Some(p) = probe {
@@ -128,7 +145,14 @@ pub enum Saved {
     Pwr { scheme: String, ac: Option<u32>, dc: Option<u32> },
     Active { guid: String },
     Hib { on: bool },
-    /// illisible : rien à remettre
+    /// plan d'alimentation exporté avant sa suppression
+    Plan { file: String },
+    /// plan absent au moment du relevé : rien à recréer
+    NoPlan,
+    /// état lu par le moteur (Probe::State) : nom → valeur
+    State { values: BTreeMap<String, String> },
+    /// illisible, ou écrit par une version plus récente de l'app : rien à remettre
+    #[serde(other)]
     Unknown,
 }
 
@@ -153,6 +177,10 @@ pub struct Undo {
     pub rest: Option<String>,
     #[serde(default, skip_serializing_if = "std::ops::Not::not")]
     pub rest_avant: bool,
+    /// étiquettes des valeurs que ce réglage modifie et que d'autres modifient aussi : `full` ne remet pas celles
+    /// qu'un autre réglage encore appliqué modifie (variables RAGO_HELD_<étiquette>, runner::held_env)
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub writes: Vec<String>,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize, Default)]
@@ -234,6 +262,32 @@ impl Ledger {
         if let Some((_, e)) = self.saved.iter_mut().find(|(id, _)| id == probe_id) {
             e.after = Some(after);
         }
+    }
+
+    /// État déjà relevé par un réglage précédent, modifié par un autre : `after` garde, pour chaque élément, la
+    /// dernière valeur posée par l'app. Les éléments que ce script n'a pas changés (pre == post) gardent la leur :
+    /// un changement du joueur entre deux réglages n'est pas pris pour celui de l'app.
+    pub fn merge_state_after(&mut self, probe_id: &str, pre: &Saved, post: &Saved) {
+        let Some((_, e)) = self.saved.iter_mut().find(|(id, _)| id == probe_id) else { return };
+        let (Saved::State { values: before }, Saved::State { values: post }) = (&mut e.before, post) else { return };
+        let empty = BTreeMap::new();
+        let pre = match pre {
+            Saved::State { values } => values,
+            _ => &empty,
+        };
+        let mut after = match e.after.take() {
+            Some(Saved::State { values }) => values,
+            _ => BTreeMap::new(),
+        };
+        for (k, v) in post {
+            if pre.get(k) != Some(v) {
+                after.insert(k.clone(), v.clone());
+                if let (false, Some(p)) = (before.contains_key(k), pre.get(k)) {
+                    before.insert(k.clone(), p.clone());
+                }
+            }
+        }
+        e.after = Some(Saved::State { values: after });
     }
 
     /// Marque le réglage appliqué. Un réglage réappliqué (autre variante) garde ses éléments déjà relevés.
@@ -389,6 +443,206 @@ pub fn parse_guid(output: &str) -> Option<String> {
         ok.then(|| s.to_lowercase())
     })
 }
+
+// ------------------------------------------------------------------ états lus hors registre (Probe::State)
+
+/// Sortie des lectures d'état : une ligne « clé=valeur » par élément (la clé peut contenir des tabulations).
+pub fn parse_state(output: &str) -> BTreeMap<String, String> {
+    output
+        .lines()
+        .filter_map(|l| {
+            let (k, v) = l.trim().rsplit_once('=')?;
+            let k = k.trim();
+            (!k.is_empty() && !k.starts_with("ERR ")).then(|| (k.to_string(), v.trim().to_string()))
+        })
+        .collect()
+}
+
+/// `net accounts` : 3e ligne, « Durée de vie maximale du mot de passe (jours) : 42 » dans la langue de Windows. Le
+/// nombre ne se traduit pas ; « Illimité », « Unlimited »… deviennent « unlimited », le mot qu'attend /maxpwage.
+pub fn parse_maxpwage(output: &str) -> Option<String> {
+    let lines: Vec<&str> = output.lines().map(str::trim).filter(|l| !l.is_empty()).collect();
+    if lines.len() < 6 || !lines[2].contains(':') {
+        return None;
+    }
+    let v = lines[2].rsplit(':').next()?.trim();
+    if v.is_empty() {
+        None
+    } else if v.chars().all(|c| c.is_ascii_digit()) {
+        Some(v.to_string())
+    } else {
+        Some("unlimited".into())
+    }
+}
+
+/// Éléments à remettre : ceux que l'app a changés (avant ≠ après) et que personne n'a touchés depuis
+/// (actuel = après). Sans « après » (arrêt pendant le script), tous ceux qui diffèrent d'avant.
+pub fn state_changes(
+    before: &BTreeMap<String, String>,
+    after: Option<&BTreeMap<String, String>>,
+    current: &BTreeMap<String, String>,
+) -> Vec<(String, String)> {
+    before
+        .iter()
+        .filter(|(k, b)| match after {
+            Some(after) => after.get(*k).is_some_and(|a| a != *b && current.get(*k) == Some(a)),
+            None => current.get(*k).is_some_and(|c| c != *b),
+        })
+        .map(|(k, b)| (k.clone(), b.clone()))
+        .collect()
+}
+
+pub fn ps_quote(s: &str) -> String {
+    format!("'{}'", s.replace('\'', "''"))
+}
+
+/// Lecture d'un état (script PowerShell, sortie « clé=valeur ») ; maxpwage et nvbase sont lus sans PowerShell.
+pub fn read_ps(name: &str) -> Option<&'static str> {
+    Some(match name {
+        "mmagent" => {
+            "$m = Get-MMAgent -ErrorAction Stop; foreach ($p in 'MemoryCompression','PageCombining','ApplicationPreLaunch',\
+             'OperationAPI','ApplicationLaunchPrefetching') { if ($null -ne $m.$p) { '{0}={1}' -f $p, $m.$p } }"
+        }
+        "smb" => {
+            "try { $c = Get-SmbClientConfiguration -ErrorAction Stop; foreach ($p in 'RequireSecuritySignature',\
+             'EnableSecuritySignature') { 'client.{0}={1}' -f $p, $c.$p } } catch {}; \
+             try { $s = Get-SmbServerConfiguration -ErrorAction Stop; foreach ($p in 'EncryptData','EnableSMB1Protocol',\
+             'RequireSecuritySignature','EnableSecuritySignature') { 'server.{0}={1}' -f $p, $s.$p } } catch {}; \
+             foreach ($f in 'SMB1Protocol','SMB1Protocol-Client','SMB1Protocol-Server','SMB1Protocol-Deprecation') { \
+             $o = Get-WindowsOptionalFeature -Online -FeatureName $f -ErrorAction SilentlyContinue; \
+             if ($o) { if ([string]$o.State -like 'Enable*') { 'feature.{0}=Enabled' -f $f } else { 'feature.{0}=Disabled' -f $f } } }"
+        }
+        "nic" => {
+            "$t = [char]9; Get-NetAdapter -ErrorAction SilentlyContinue | ForEach-Object { $n = $_.Name; \
+             $_ | Get-NetAdapterAdvancedProperty -ErrorAction SilentlyContinue | Where-Object { $_.RegistryKeyword } | \
+             ForEach-Object { 'adv{0}{1}{0}{2}={3}' -f $t, $n, $_.RegistryKeyword, ($_.RegistryValue -join ',') }; \
+             $p = $_ | Get-NetAdapterPowerManagement -ErrorAction SilentlyContinue; \
+             if ($p) { 'pm{0}{1}{0}AllowComputerToTurnOffDevice={2}' -f $t, $n, $p.AllowComputerToTurnOffDevice } }"
+        }
+        "pnppower" => {
+            "Get-CimInstance -Namespace root\\wmi -ClassName MSPower_DeviceEnable -ErrorAction Stop | \
+             ForEach-Object { '{0}={1}' -f $_.InstanceName, $_.Enable }"
+        }
+        _ => return None,
+    })
+}
+
+const MM_FLAGS: [&str; 5] = ["MemoryCompression", "PageCombining", "ApplicationPreLaunch", "OperationAPI", "ApplicationLaunchPrefetching"];
+const SMB_FEATURES: [&str; 4] = ["SMB1Protocol", "SMB1Protocol-Client", "SMB1Protocol-Server", "SMB1Protocol-Deprecation"];
+
+fn ps_bool(v: &str) -> &'static str {
+    if v.eq_ignore_ascii_case("true") {
+        "$true"
+    } else {
+        "$false"
+    }
+}
+
+fn ps_try(cmd: &str, what: &str) -> String {
+    format!("try {{ {cmd} -ErrorAction Stop | Out-Null }} catch {{ 'ERR {}: ' + $_.Exception.Message }}\r\n", what.replace('\'', ""))
+}
+
+/// Script PowerShell qui remet les éléments `changes` (clé, valeur d'avant) d'un état. Les erreurs sortent en
+/// lignes « ERR … ». None : rien à faire.
+pub fn restore_ps(name: &str, changes: &[(String, String)]) -> Option<String> {
+    let mut s = String::new();
+    match name {
+        "mmagent" => {
+            let ok: Vec<&(String, String)> = changes.iter().filter(|(k, _)| MM_FLAGS.contains(&k.as_str())).collect();
+            if ok.iter().any(|(_, v)| v.eq_ignore_ascii_case("true")) {
+                // la compression mémoire passe par SysMain : démarré s'il n'est pas désactivé
+                s += "$sv = Get-Service SysMain -ErrorAction SilentlyContinue\r\n\
+                      if ($sv -and [string]$sv.StartType -ne 'Disabled') { Start-Service SysMain -ErrorAction SilentlyContinue }\r\n";
+            }
+            for (k, v) in ok {
+                let verb = if v.eq_ignore_ascii_case("true") { "Enable" } else { "Disable" };
+                s += &ps_try(&format!("{verb}-MMAgent -{k}"), k);
+            }
+        }
+        "smb" => {
+            for (k, v) in changes {
+                let (side, prop) = k.split_once('.').unwrap_or(("", ""));
+                match side {
+                    "client" if ["RequireSecuritySignature", "EnableSecuritySignature"].contains(&prop) => {
+                        s += &ps_try(&format!("Set-SmbClientConfiguration -{prop} {} -Force -Confirm:$false", ps_bool(v)), k);
+                    }
+                    "server" if ["EncryptData", "EnableSMB1Protocol", "RequireSecuritySignature", "EnableSecuritySignature"].contains(&prop) => {
+                        s += &ps_try(&format!("Set-SmbServerConfiguration -{prop} {} -Force -Confirm:$false", ps_bool(v)), k);
+                    }
+                    _ => {}
+                }
+            }
+            // fonctionnalités dans l'ordre : SMB1Protocol avant ses sous-fonctionnalités
+            for f in SMB_FEATURES {
+                if let Some((k, v)) = changes.iter().find(|(k, _)| k == &format!("feature.{f}")) {
+                    let cmd = if v == "Enabled" {
+                        format!("Enable-WindowsOptionalFeature -Online -FeatureName {f} -All -NoRestart")
+                    } else {
+                        format!("Disable-WindowsOptionalFeature -Online -FeatureName {f} -NoRestart")
+                    };
+                    s += &ps_try(&cmd, k);
+                }
+            }
+        }
+        "nic" => {
+            let mut by_name: BTreeMap<&str, Vec<(&str, &str, &str)>> = BTreeMap::new();
+            for (k, v) in changes {
+                let parts: Vec<&str> = k.split('\t').collect();
+                if let [kind @ ("adv" | "pm"), name, prop] = parts[..] {
+                    by_name.entry(name).or_default().push((kind, prop, v));
+                }
+            }
+            for (name, props) in by_name {
+                s += &format!("$a = Get-NetAdapter -ErrorAction SilentlyContinue | Where-Object {{ $_.Name -eq {} }}\r\nif ($a) {{\r\n", ps_quote(name));
+                for (kind, prop, v) in props {
+                    let what = format!("{name} {prop}");
+                    if kind == "adv" {
+                        let vals: Vec<String> = v.split(',').map(ps_quote).collect();
+                        s += &ps_try(&format!("$a | Set-NetAdapterAdvancedProperty -RegistryKeyword {} -RegistryValue @({}) -NoRestart", ps_quote(prop), vals.join(",")), &what);
+                    } else if prop == "AllowComputerToTurnOffDevice" && (v == "Enabled" || v == "Disabled") {
+                        s += &ps_try(&format!("$a | Set-NetAdapterPowerManagement -AllowComputerToTurnOffDevice {v} -NoRestart"), &what);
+                    }
+                }
+                s += "$a | Restart-NetAdapter -ErrorAction SilentlyContinue\r\n}\r\n";
+            }
+        }
+        "pnppower" => {
+            let list = |want: bool| -> String {
+                changes
+                    .iter()
+                    .filter(|(_, v)| v.eq_ignore_ascii_case("true") == want)
+                    .map(|(k, _)| ps_quote(k))
+                    .collect::<Vec<_>>()
+                    .join(",")
+            };
+            if changes.is_empty() {
+                return None;
+            }
+            s += &format!("$on = @({})\r\n$off = @({})\r\n", list(true), list(false));
+            s += "Get-CimInstance -Namespace root\\wmi -ClassName MSPower_DeviceEnable -ErrorAction Stop | ForEach-Object {\r\n\
+                  $w = $null; if ($on -contains $_.InstanceName) { $w = $true } elseif ($off -contains $_.InstanceName) { $w = $false }\r\n\
+                  if ($null -ne $w -and $_.Enable -ne $w) { $_.Enable = $w; try { Set-CimInstance -InputObject $_ -ErrorAction Stop } \
+                  catch { 'ERR ' + $_.Exception.Message } }\r\n}\r\n";
+        }
+        _ => return None,
+    }
+    (!s.is_empty()).then_some(s)
+}
+
+/// Réglages DWORD du profil NVIDIA importé (resources/extremelatencylow.nip) : ceux que nvbase relève.
+pub fn nip_settings(xml: &str) -> Vec<u32> {
+    let mut out = Vec::new();
+    for block in xml.split("<ProfileSetting>").skip(1) {
+        let tag = |t: &str| block.split(&format!("<{t}>")).nth(1).and_then(|r| r.split(&format!("</{t}>")).next()).map(str::trim);
+        if let (Some(id), Some("Dword")) = (tag("SettingID").and_then(|i| i.parse::<u32>().ok()), tag("ValueType")) {
+            out.push(id);
+        }
+    }
+    out
+}
+
+pub static NIP_SETTINGS: std::sync::LazyLock<Vec<u32>> =
+    std::sync::LazyLock::new(|| nip_settings(include_str!("../resources/extremelatencylow.nip")));
 
 /// Fichier XML d'une tâche planifiée : activée sauf `<Enabled>false</Enabled>` dans `<Settings>`.
 pub fn task_enabled(xml: &str) -> Option<bool> {
@@ -595,6 +849,245 @@ mod win {
         }
     }
 
+    /// Script PowerShell écrit dans un fichier (UTF-8 avec BOM : noms de cartes accentués), sortie en UTF-8.
+    fn ps_file(dir: &Path, script: &str) -> Result<String, String> {
+        let _ = fs::create_dir_all(dir);
+        let path = dir.join(format!("state-{}-{}.ps1", std::process::id(), crate::history::now_ms()));
+        let body = format!("\u{feff}[Console]::OutputEncoding = [Text.Encoding]::UTF8\r\n$ProgressPreference = 'SilentlyContinue'\r\n{script}");
+        fs::write(&path, body).map_err(|e| e.to_string())?;
+        let out = shell::hidden("powershell.exe")
+            .args(["-NoProfile", "-NonInteractive", "-ExecutionPolicy", "Bypass", "-File"])
+            .arg(&path)
+            .output();
+        let _ = fs::remove_file(&path);
+        let o = out.map_err(|e| e.to_string())?;
+        Ok(String::from_utf8_lossy(&o.stdout).into_owned())
+    }
+
+    fn plan_exists(guid: &str) -> bool {
+        run("powercfg.exe", &["/query", guid]).is_ok()
+    }
+
+    /// Profil de base du pilote NVIDIA (NVAPI, nvapi64.dll installée avec le pilote), sans outil externe.
+    mod nv {
+        use std::ffi::c_void;
+        use windows_sys::Win32::System::LibraryLoader::{GetProcAddress, LoadLibraryExW, LOAD_LIBRARY_SEARCH_SYSTEM32};
+
+        /// NVDRS_SETTING_V1 (nvapi.h, pack 4) : 12 320 octets
+        #[repr(C)]
+        struct Setting {
+            version: u32,
+            name: [u16; 2048],
+            id: u32,
+            kind: u32,
+            location: u32,
+            is_current_predefined: u32,
+            is_predefined_valid: u32,
+            predefined: [u8; 4100],
+            current: [u8; 4100],
+        }
+        const _: () = assert!(std::mem::size_of::<Setting>() == 12320);
+        const SETTING_VER: u32 = 12320 | (1 << 16);
+        const OK: i32 = 0;
+        const SETTING_NOT_FOUND: i32 = -160;
+        const DWORD_TYPE: u32 = 0;
+        const CURRENT_PROFILE_LOCATION: u32 = 0;
+
+        type QueryInterface = unsafe extern "C" fn(u32) -> *mut c_void;
+        type Init = unsafe extern "C" fn() -> i32;
+        type CreateSession = unsafe extern "C" fn(*mut *mut c_void) -> i32;
+        type SessionFn = unsafe extern "C" fn(*mut c_void) -> i32;
+        type GetBase = unsafe extern "C" fn(*mut c_void, *mut *mut c_void) -> i32;
+        type GetSetting = unsafe extern "C" fn(*mut c_void, *mut c_void, u32, *mut Setting) -> i32;
+        type SetSetting = unsafe extern "C" fn(*mut c_void, *mut c_void, *mut Setting) -> i32;
+        type DeleteSetting = unsafe extern "C" fn(*mut c_void, *mut c_void, u32) -> i32;
+
+        pub struct Drs {
+            session: *mut c_void,
+            base: *mut c_void,
+            destroy: SessionFn,
+            save: SessionFn,
+            get: GetSetting,
+            set: SetSetting,
+            delete: DeleteSetting,
+        }
+
+        impl Drop for Drs {
+            fn drop(&mut self) {
+                unsafe { (self.destroy)(self.session) };
+            }
+        }
+
+        impl Drs {
+            pub fn open() -> Result<Drs, String> {
+                unsafe {
+                    let name: Vec<u16> = "nvapi64.dll".encode_utf16().chain(std::iter::once(0)).collect();
+                    let lib = LoadLibraryExW(name.as_ptr(), std::ptr::null_mut(), LOAD_LIBRARY_SEARCH_SYSTEM32);
+                    if lib.is_null() {
+                        return Err("no NVIDIA driver".into());
+                    }
+                    let qi = GetProcAddress(lib, c"nvapi_QueryInterface".as_ptr() as *const u8).ok_or("no NVAPI")?;
+                    let qi: QueryInterface = std::mem::transmute(qi);
+                    let f = |id: u32| -> Result<*mut c_void, String> {
+                        let p = qi(id);
+                        if p.is_null() { Err(format!("NVAPI function {id:#x} missing")) } else { Ok(p) }
+                    };
+                    let init: Init = std::mem::transmute(f(0x0150e828)?);
+                    let create: CreateSession = std::mem::transmute(f(0x0694d52e)?);
+                    let destroy: SessionFn = std::mem::transmute(f(0xdad9cff8)?);
+                    let load: SessionFn = std::mem::transmute(f(0x375dbd6b)?);
+                    let save: SessionFn = std::mem::transmute(f(0xfcbc7e14)?);
+                    let get_base: GetBase = std::mem::transmute(f(0xda8466a0)?);
+                    let get: GetSetting = std::mem::transmute(f(0x73bf8338)?);
+                    let set: SetSetting = std::mem::transmute(f(0x577dd202)?);
+                    let delete: DeleteSetting = std::mem::transmute(f(0xe4a26362)?);
+                    if init() != OK {
+                        return Err("NVAPI unavailable".into());
+                    }
+                    let mut session = std::ptr::null_mut();
+                    if create(&mut session) != OK {
+                        return Err("NVIDIA settings session refused".into());
+                    }
+                    let mut drs = Drs { session, base: std::ptr::null_mut(), destroy, save, get, set, delete };
+                    if load(session) != OK {
+                        return Err("NVIDIA settings unreadable".into());
+                    }
+                    if get_base(session, &mut drs.base) != OK || drs.base.is_null() {
+                        return Err("NVIDIA base profile not found".into());
+                    }
+                    Ok(drs)
+                }
+            }
+
+            /// Valeur du réglage dans le profil de base : « none » (pas posé), « pre:N » (valeur du pilote),
+            /// « user:N » (posée par le joueur ou un outil). None : réglage illisible ou pas un DWORD.
+            pub fn get(&self, id: u32) -> Option<String> {
+                let mut s: Box<Setting> = Box::new(unsafe { std::mem::zeroed() });
+                s.version = SETTING_VER;
+                let r = unsafe { (self.get)(self.session, self.base, id, &mut *s) };
+                if r == SETTING_NOT_FOUND {
+                    return Some("none".into());
+                }
+                if r != OK || s.kind != DWORD_TYPE {
+                    return None;
+                }
+                if s.location != CURRENT_PROFILE_LOCATION {
+                    return Some("none".into());
+                }
+                let v = u32::from_le_bytes([s.current[0], s.current[1], s.current[2], s.current[3]]);
+                Some(if s.is_current_predefined != 0 { format!("pre:{v}") } else { format!("user:{v}") })
+            }
+
+            /// Remet la valeur relevée : celle du joueur, ou rien (le pilote reprend la sienne).
+            pub fn put(&self, id: u32, before: &str) -> Result<(), String> {
+                let r = match before.strip_prefix("user:").and_then(|v| v.parse::<u32>().ok()) {
+                    Some(v) => {
+                        let mut s: Box<Setting> = Box::new(unsafe { std::mem::zeroed() });
+                        s.version = SETTING_VER;
+                        s.id = id;
+                        s.kind = DWORD_TYPE;
+                        s.current[..4].copy_from_slice(&v.to_le_bytes());
+                        unsafe { (self.set)(self.session, self.base, &mut *s) }
+                    }
+                    None => match unsafe { (self.delete)(self.session, self.base, id) } {
+                        SETTING_NOT_FOUND => OK,
+                        r => r,
+                    },
+                };
+                if r == OK { Ok(()) } else { Err(format!("NVIDIA setting {id} (error {r})")) }
+            }
+
+            pub fn save(&self) -> Result<(), String> {
+                match unsafe { (self.save)(self.session) } {
+                    OK => Ok(()),
+                    r => Err(format!("NVIDIA settings not saved (error {r})")),
+                }
+            }
+        }
+    }
+
+    impl Sys {
+        fn read_state(&self, name: &str) -> Saved {
+            let values = match name {
+                "maxpwage" => run("net.exe", &["accounts"])
+                    .ok()
+                    .and_then(|o| parse_maxpwage(&o))
+                    .map(|v| BTreeMap::from([("maxpwage".to_string(), v)]))
+                    .unwrap_or_default(),
+                "nvbase" => match nv::Drs::open() {
+                    Ok(drs) => NIP_SETTINGS.iter().filter_map(|id| drs.get(*id).map(|v| (id.to_string(), v))).collect(),
+                    Err(_) => BTreeMap::new(),
+                },
+                _ => match read_ps(name) {
+                    Some(script) => ps_file(&self.backup_dir, script).map(|o| parse_state(&o)).unwrap_or_default(),
+                    None => BTreeMap::new(),
+                },
+            };
+            if values.is_empty() {
+                Saved::Unknown
+            } else {
+                Saved::State { values }
+            }
+        }
+
+        fn restore_state(&self, name: &str, before: &BTreeMap<String, String>, after: Option<&Saved>) -> Result<(), String> {
+            let Saved::State { values: current } = self.read_state(name) else {
+                return Err("couldn't read the current state".into());
+            };
+            let after = match after {
+                Some(Saved::State { values }) => Some(values),
+                _ => None,
+            };
+            let changes = state_changes(before, after, &current);
+            if changes.is_empty() {
+                return Ok(());
+            }
+            match name {
+                "maxpwage" => {
+                    let v = &changes[0].1;
+                    run("net.exe", &["accounts", &format!("/maxpwage:{v}")]).map(|_| ())
+                }
+                "nvbase" => {
+                    let drs = nv::Drs::open()?;
+                    let mut errors = Vec::new();
+                    for (id, v) in &changes {
+                        if let Ok(id) = id.parse::<u32>() {
+                            if let Err(e) = drs.put(id, v) {
+                                errors.push(e);
+                            }
+                        }
+                    }
+                    drs.save()?;
+                    errors.first().cloned().map_or(Ok(()), Err)
+                }
+                _ => {
+                    let Some(script) = restore_ps(name, &changes) else { return Ok(()) };
+                    let out = ps_file(&self.backup_dir, &script)?;
+                    match out.lines().find(|l| l.starts_with("ERR ")) {
+                        Some(e) => Err(e.trim_start_matches("ERR ").trim().to_string()),
+                        None => Ok(()),
+                    }
+                }
+            }
+        }
+
+        /// Remet un élément relevé. Les états (Probe::State) comparent avant, après et maintenant : seul ce que l'app a
+        /// changé et que personne n'a retouché depuis est remis.
+        pub fn restore_entry(&self, e: &SavedEntry) -> Result<(), String> {
+            match (&e.probe, &e.before) {
+                (Probe::State { name }, Saved::State { values }) => self.restore_state(name, values, e.after.as_ref()),
+                (Probe::Plan { guid }, Saved::Plan { file }) => {
+                    // recréé depuis (par le joueur, ou par l'annulation) : on le laisse tel quel
+                    if plan_exists(guid) {
+                        return Ok(());
+                    }
+                    run("powercfg.exe", &["/import", file, guid]).map(|_| ())
+                }
+                (probe, before) => self.restore(probe, before),
+            }
+        }
+    }
+
     impl Sys {
         pub fn read(&self, probe: &Probe) -> Saved {
             match probe {
@@ -659,6 +1152,19 @@ mod win {
                         .map(|(_, d)| d.first().copied().unwrap_or(0) != 0);
                     on.map(|on| Saved::Hib { on }).unwrap_or(Saved::Unknown)
                 }
+                Probe::Plan { guid } => {
+                    if !plan_exists(guid) {
+                        return Saved::NoPlan;
+                    }
+                    let _ = fs::create_dir_all(&self.backup_dir);
+                    let file = file_for(&self.backup_dir, &probe.id()).with_extension("pow");
+                    match run("powercfg.exe", &["/export", &file.to_string_lossy(), guid]) {
+                        Ok(_) if file.exists() => Saved::Plan { file: file.to_string_lossy().into_owned() },
+                        _ => Saved::Unknown,
+                    }
+                }
+                Probe::State { name } => self.read_state(name),
+                Probe::Other => Saved::Unknown,
             }
         }
 
@@ -756,6 +1262,9 @@ impl Sys {
         let _ = (&self.bcd, &self.active);
     }
     pub fn restore(&self, _probe: &Probe, _saved: &Saved) -> Result<(), String> {
+        Ok(())
+    }
+    pub fn restore_entry(&self, _e: &SavedEntry) -> Result<(), String> {
         Ok(())
     }
 }
@@ -891,6 +1400,208 @@ device                  partition=C:\r\ndisabledynamictick      Oui\r\ntscsyncpo
         l.set_applied("net_x", Some("b".into()), true, true, vec![], 2);
         assert!(l.tweaks["net_x"].undo.is_none());
         let _ = fs::remove_dir_all(&dir);
+    }
+
+    #[test]
+    fn plan_and_state_markers() {
+        let out = "\
+@@RAGO plan \"E9A42B02-D5DF-448D-AA00-03F14749EB61\"\r\n\
+@@RAGO plan \"scheme_current\"\r\n\
+@@RAGO plan \"e9a42b02-d5df-448d-aa00-03f14749eb61x\"\r\n\
+@@RAGO state \"mmagent\"\r\n\
+@@RAGO state \"nvbase\"\r\n\
+@@RAGO state \"inconnu\"\r\n\
+@@RAGO state \"\"\r\n\
+@@RAGO plan \"e9a42b02-d5df-448d-aa00-03f14749eb61\"\r\n";
+        let p = parse_markers(out);
+        assert_eq!(
+            p,
+            vec![
+                Probe::Plan { guid: "e9a42b02-d5df-448d-aa00-03f14749eb61".into() },
+                Probe::State { name: "mmagent".into() },
+                Probe::State { name: "nvbase".into() },
+            ]
+        );
+        assert_eq!(p[1].id(), "state|mmagent");
+        // chaque état émis par tools/probes.py est connu du moteur
+        let probes: serde_json::Value = serde_json::from_str(include_str!("../scripts/probes.json")).unwrap();
+        let mut names = HashSet::new();
+        for (_, variants) in probes.as_object().unwrap() {
+            for (_, body) in variants.as_object().unwrap() {
+                for l in body.as_str().unwrap().lines() {
+                    for rest in l.split("@@RAGO state ").skip(1) {
+                        names.insert(quoted(rest).first().cloned().unwrap_or_default());
+                    }
+                }
+            }
+        }
+        assert!(!names.is_empty());
+        for n in &names {
+            assert!(STATES.contains(&n.as_str()), "état inconnu du moteur : {n}");
+        }
+    }
+
+    #[test]
+    fn states_are_read_in_any_language() {
+        let out = "MemoryCompression=True\r\nPageCombining=False\r\nERR x: refusé\r\n\r\nadv\tWi-Fi 2\t*EEE=0\r\nbad line\r\n";
+        let m = parse_state(out);
+        assert_eq!(m.len(), 3, "{m:?}");
+        assert_eq!(m["MemoryCompression"], "True");
+        assert_eq!(m["adv\tWi-Fi 2\t*EEE"], "0");
+
+        let en = "Force user logoff how long after time expires?:       Never\r\n\
+Minimum password age (days):                          0\r\n\
+Maximum password age (days):                          42\r\n\
+Minimum password length:                              0\r\n\
+Length of password history maintained:                None\r\n\
+Lockout threshold:                                    Never\r\n\
+The command completed successfully.\r\n";
+        assert_eq!(parse_maxpwage(en).as_deref(), Some("42"));
+        let fr = "Fermeture de session forcée après expiration du délai :    Jamais\r\n\
+Durée de vie minimale du mot de passe (jours) :          0\r\n\
+Durée de vie maximale du mot de passe (jours) :          Illimité\r\n\
+Longueur minimale du mot de passe :                      0\r\n\
+Longueur de l'historique des mots de passe :             Aucune\r\n\
+Seuil de verrouillage :                                  Jamais\r\n\
+La commande s'est terminée correctement.\r\n";
+        assert_eq!(parse_maxpwage(fr).as_deref(), Some("unlimited"));
+        assert_eq!(parse_maxpwage("Erreur système 5.\r\nAccès refusé.\r\n"), None);
+    }
+
+    fn st(pairs: &[(&str, &str)]) -> BTreeMap<String, String> {
+        pairs.iter().map(|(k, v)| (k.to_string(), v.to_string())).collect()
+    }
+
+    #[test]
+    fn only_what_the_app_changed_comes_back() {
+        let before = st(&[("MemoryCompression", "True"), ("PageCombining", "True"), ("ApplicationPreLaunch", "False")]);
+        let after = st(&[("MemoryCompression", "False"), ("PageCombining", "False"), ("ApplicationPreLaunch", "False")]);
+        // le joueur a rallumé PageCombining lui-même depuis : on n'y touche pas
+        let current = st(&[("MemoryCompression", "False"), ("PageCombining", "True"), ("ApplicationPreLaunch", "False")]);
+        assert_eq!(state_changes(&before, Some(&after), &current), vec![("MemoryCompression".to_string(), "True".to_string())]);
+        // rien de changé par l'app (déjà coupé avant) : rien à remettre
+        assert!(state_changes(&before, Some(&before), &after).is_empty());
+        // pas d'« après » (script interrompu) : tout ce qui diffère d'avant
+        assert_eq!(state_changes(&before, None, &current).len(), 1);
+        // un élément disparu (carte réseau débranchée) n'est pas remis
+        assert!(state_changes(&before, Some(&after), &st(&[])).is_empty());
+    }
+
+    #[test]
+    fn shared_state_keeps_the_first_before() {
+        let mut l = Ledger::default();
+        let p = Probe::State { name: "mmagent".into() };
+        // réglage 1 coupe MemoryCompression
+        l.record_before(p.clone(), Saved::State { values: st(&[("MemoryCompression", "True"), ("PageCombining", "True")]) });
+        l.set_after(&p.id(), Saved::State { values: st(&[("MemoryCompression", "False"), ("PageCombining", "True")]) });
+        l.set_applied("one", None, true, true, vec![p.id()], 1);
+        // le joueur coupe PageCombining lui-même, puis réglage 2 coupe ApplicationPreLaunch
+        let pre = Saved::State { values: st(&[("MemoryCompression", "False"), ("PageCombining", "False"), ("ApplicationPreLaunch", "True")]) };
+        let post = Saved::State { values: st(&[("MemoryCompression", "False"), ("PageCombining", "False"), ("ApplicationPreLaunch", "False")]) };
+        l.record_before(p.clone(), pre.clone());
+        l.merge_state_after(&p.id(), &pre, &post);
+        l.set_applied("two", None, true, true, vec![p.id()], 2);
+        let e = &l.saved[0].1;
+        assert_eq!(e.before, Saved::State { values: st(&[("ApplicationPreLaunch", "True"), ("MemoryCompression", "True"), ("PageCombining", "True")]) });
+        let Some(Saved::State { values: after }) = &e.after else { panic!() };
+        assert_eq!(after["ApplicationPreLaunch"], "False");
+        assert_eq!(after["PageCombining"], "True", "le changement du joueur n'est pas pris pour celui de l'app");
+        let (Saved::State { values: b }, Saved::State { values: c }) = (&e.before, &post) else { panic!() };
+        let back = state_changes(b, Some(after), c);
+        assert_eq!(back.len(), 2, "{back:?}");
+        assert!(!back.iter().any(|(k, _)| k == "PageCombining"));
+    }
+
+    #[test]
+    fn restore_scripts_touch_only_the_changes() {
+        assert!(restore_ps("mmagent", &[]).is_none());
+        let s = restore_ps("mmagent", &[("MemoryCompression".into(), "True".into()), ("Bogus".into(), "True".into())]).unwrap();
+        assert!(s.contains("Enable-MMAgent -MemoryCompression") && s.contains("Start-Service SysMain") && !s.contains("Bogus"));
+        let s = restore_ps("mmagent", &[("PageCombining".into(), "False".into())]).unwrap();
+        assert!(s.contains("Disable-MMAgent -PageCombining") && !s.contains("SysMain"));
+
+        let s = restore_ps(
+            "smb",
+            &[
+                ("feature.SMB1Protocol-Client".into(), "Enabled".into()),
+                ("feature.SMB1Protocol".into(), "Enabled".into()),
+                ("server.EncryptData".into(), "False".into()),
+                ("client.Bogus".into(), "True".into()),
+            ],
+        )
+        .unwrap();
+        assert!(s.contains("Set-SmbServerConfiguration -EncryptData $false -Force"));
+        let (a, b) = (s.find("-FeatureName SMB1Protocol -All").unwrap(), s.find("-FeatureName SMB1Protocol-Client").unwrap());
+        assert!(a < b, "SMB1Protocol avant ses sous-fonctionnalités");
+        assert!(!s.contains("Bogus"));
+
+        let s = restore_ps("nic", &[("adv\tEthernet d'Olivier\t*EEE".into(), "1".into()), ("pm\tEthernet d'Olivier\tAllowComputerToTurnOffDevice".into(), "Enabled".into())]).unwrap();
+        assert!(s.contains("$_.Name -eq 'Ethernet d''Olivier'"), "{s}");
+        assert!(s.contains("-RegistryKeyword '*EEE' -RegistryValue @('1')"));
+        assert!(s.contains("-AllowComputerToTurnOffDevice Enabled"));
+        assert_eq!(s.matches("Restart-NetAdapter").count(), 1);
+
+        let s = restore_ps("pnppower", &[("USB\\ROOT_HUB30\\4&1_0".into(), "True".into())]).unwrap();
+        assert!(s.contains("$on = @('USB\\ROOT_HUB30\\4&1_0')") && s.contains("$off = @()"));
+        assert!(restore_ps("maxpwage", &[("maxpwage".into(), "42".into())]).is_none());
+        assert!(read_ps("nvbase").is_none() && read_ps("smb").is_some());
+    }
+
+    #[test]
+    fn nvidia_profile_settings_are_known() {
+        assert_eq!(NIP_SETTINGS.len(), 38);
+        assert!(NIP_SETTINGS.iter().all(|&id| id != 0));
+    }
+
+    #[test]
+    fn ledgers_of_other_versions_load() {
+        // 1.1.9 : types connus seulement
+        let old = r#"{"tweaks":{"one":{"variant":null,"ts":1,"ok":true,"backup":true,"probes":["reg|hklm\\a|b"]}},
+            "saved":[["reg|hklm\\a|b",{"probe":{"t":"reg","key":"HKLM\\A","name":"B"},"before":{"t":"absent"},"after":null}]]}"#;
+        let l: Ledger = serde_json::from_str(old).unwrap();
+        assert!(l.tweaks["one"].undo.is_none());
+        // version plus récente : types inconnus gardés comme « rien à remettre » au lieu de perdre tout le fichier
+        let newer = r#"{"tweaks":{},"saved":[["x|y",{"probe":{"t":"later","foo":1},"before":{"t":"later2","bar":[1]}}],
+            ["state|smb",{"probe":{"t":"state","name":"smb"},"before":{"t":"state","values":{"server.EncryptData":"False"}}}]]}"#;
+        let l: Ledger = serde_json::from_str(newer).unwrap();
+        assert_eq!(l.saved[0].1.probe, Probe::Other);
+        assert_eq!(l.saved[0].1.before, Saved::Unknown);
+        assert!(matches!(&l.saved[1].1.before, Saved::State { values } if values["server.EncryptData"] == "False"));
+        // undo.json avec et sans étiquettes « writes »
+        let u: Undo = serde_json::from_str(r#"{"full":"x"}"#).unwrap();
+        assert!(u.writes.is_empty());
+        assert!(!serde_json::to_string(&u).unwrap().contains("writes"));
+    }
+
+    /// Vérification de syntaxe des scripts PowerShell du moteur, hors Windows : RAGO_PS_DUMP=<dossier> écrit les
+    /// lectures et des remises types dans ce dossier (à passer au parseur de pwsh). Sans la variable : rien.
+    #[test]
+    fn dump_powershell_scripts() {
+        let Ok(dir) = std::env::var("RAGO_PS_DUMP") else { return };
+        let dir = PathBuf::from(dir);
+        fs::create_dir_all(&dir).unwrap();
+        for name in STATES {
+            if let Some(s) = read_ps(name) {
+                fs::write(dir.join(format!("read-{name}.ps1")), s).unwrap();
+            }
+        }
+        let samples: [(&str, Vec<(String, String)>); 4] = [
+            ("mmagent", vec![("MemoryCompression".into(), "True".into()), ("PageCombining".into(), "False".into())]),
+            (
+                "smb",
+                vec![
+                    ("client.RequireSecuritySignature".into(), "False".into()),
+                    ("server.EnableSMB1Protocol".into(), "True".into()),
+                    ("feature.SMB1Protocol".into(), "Enabled".into()),
+                    ("feature.SMB1Protocol-Server".into(), "Disabled".into()),
+                ],
+            ),
+            ("nic", vec![("adv\tWi-Fi d'en haut\t*EEE".into(), "1,2".into()), ("pm\tEthernet\tAllowComputerToTurnOffDevice".into(), "Disabled".into())]),
+            ("pnppower", vec![("PCI\\VEN_8086&DEV_A36D\\3&11583659&0&A0_0".into(), "True".into()), ("USB\\ROOT_HUB30\\x".into(), "False".into())]),
+        ];
+        for (name, changes) in samples {
+            fs::write(dir.join(format!("restore-{name}.ps1")), restore_ps(name, &changes).unwrap()).unwrap();
+        }
     }
 
 }
