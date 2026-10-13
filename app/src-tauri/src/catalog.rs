@@ -1398,6 +1398,237 @@ mod tests {
         assert_eq!(sto.lines().filter(|l| l.starts_with("if defined PROFILES_DIR for /d %%U in (\"!PROFILES_DIR!\\*\") do (")).count(), 3, "{sto}");
     }
 
+    /// Variables que Windows ou le moteur posent avant le script (runner.rs : RAGO_RES, adapter_name), comme ENV_VARS
+    /// de tools/expansion.py.
+    const ENV_VARS: [&str; 26] = [
+        "TEMP", "TMP", "LOCALAPPDATA", "APPDATA", "USERPROFILE", "PROGRAMDATA", "ALLUSERSPROFILE", "PUBLIC", "SYSTEMROOT", "WINDIR",
+        "SYSTEMDRIVE", "HOMEDRIVE", "HOMEPATH", "USERNAME", "ONEDRIVE", "PROGRAMFILES", "PROGRAMFILES(X86)", "PROGRAMW6432",
+        "COMMONPROGRAMFILES", "COMMONPROGRAMFILES(X86)", "PROFILES_DIR", "NUMBER_OF_PROCESSORS", "PROCESSOR_ARCHITECTURE",
+        "COMPUTERNAME", "RAGO_RES", "ADAPTER_NAME",
+    ];
+
+    /// `!` écrits tels quels dans les commandes qu'un script lance avec le développement retardé (runner.rs, PREAMBLE).
+    /// Juste avant d'exécuter une commande, cmd remplace chaque `!NOM!` par la variable (vide si elle n'existe pas) et
+    /// retire un `!` resté seul, entre guillemets aussi : `…_cw5n1h2txyewy!microsoft.windows.immersivecontrolpanel`
+    /// devenait une autre clé (finitions du 2026-10-13, tools/expansion.py vérifie la même règle à la génération).
+    /// Acceptés : `!NOM!` d'une variable que le script pose (`set NOM=`, `set "NOM=`, `set /a NOM+=`), que Windows ou le
+    /// moteur posent ; la suite d'une ligne après `setlocal DisableDelayedExpansion`, et les lignes entre
+    /// `setlocal DisableDelayedExpansion` et `endlocal` ; le texte d'un echo (jusqu'au premier `&` ou `|` hors
+    /// guillemets), sauf `echo @@RAGO` (relevé lu par le moteur) ; les commentaires.
+    fn bang_errors(script: &str) -> Vec<String> {
+        use std::collections::BTreeSet;
+        const DDE_OFF: &str = "setlocal disabledelayedexpansion";
+        fn name_char(c: u8, first: bool) -> bool {
+            c.is_ascii_alphabetic() || c == b'_' || (!first && (c.is_ascii_digit() || b"#$.()-".contains(&c)))
+        }
+        fn spaces(b: &[u8], k: &mut usize) -> bool {
+            let start = *k;
+            while *k < b.len() && b[*k].is_ascii_whitespace() {
+                *k += 1;
+            }
+            *k > start
+        }
+        // noms posés par le script (comme SET_NAME de tools/expansion.py)
+        let mut known: BTreeSet<String> = ENV_VARS.iter().map(|v| v.to_string()).collect();
+        let low = script.to_ascii_lowercase();
+        let b = low.as_bytes();
+        for s in (0..b.len()).filter(|&s| b[s..].starts_with(b"set")) {
+            if s > 0 && !(b[s - 1].is_ascii_whitespace() || b"&|(@\"".contains(&b[s - 1])) {
+                continue;
+            }
+            let mut k = s + 3;
+            if !spaces(b, &mut k) {
+                continue;
+            }
+            if b[k..].starts_with(b"/a") || b[k..].starts_with(b"/p") {
+                let mut k2 = k + 2;
+                if spaces(b, &mut k2) {
+                    k = k2;
+                }
+            }
+            if b.get(k) == Some(&b'"') {
+                k += 1;
+            }
+            if !b.get(k).is_some_and(|&c| name_char(c, true)) {
+                continue;
+            }
+            // nom le plus court suivi de `[espaces][-+*/]=`
+            let mut e = k + 1;
+            loop {
+                let mut r = e;
+                while r < b.len() && b[r].is_ascii_whitespace() {
+                    r += 1;
+                }
+                if r < b.len() && b"-+*/".contains(&b[r]) && b.get(r + 1) == Some(&b'=') {
+                    r += 1;
+                }
+                if b.get(r) == Some(&b'=') {
+                    known.insert(low[k..e].to_ascii_uppercase());
+                    break;
+                }
+                if e < b.len() && name_char(b[e], false) {
+                    e += 1;
+                } else {
+                    break;
+                }
+            }
+        }
+        let mut errors = Vec::new();
+        let mut dde = vec![true];
+        for (n, l) in script.lines().enumerate() {
+            let t = l.trim();
+            let low = t.trim_start_matches('@').trim().to_ascii_lowercase();
+            let word = |w: &str| low.strip_prefix(w).is_some_and(|r| r.bytes().next().is_none_or(|c| !(c.is_ascii_alphanumeric() || c == b'_')));
+            if word("setlocal") && !low.contains('&') {
+                let top = *dde.last().unwrap();
+                dde.push(if low.contains("disabledelayedexpansion") {
+                    false
+                } else if low.contains("enabledelayedexpansion") {
+                    true
+                } else {
+                    top
+                });
+            } else if word("endlocal") && !low.contains('&') && dde.len() > 1 {
+                dde.pop();
+            }
+            if !*dde.last().unwrap() || t.is_empty() {
+                continue;
+            }
+            let after = |w: &str| low.strip_prefix(w).map(|r| r.bytes().next());
+            let start = if low.starts_with(':') || matches!(after("rem"), Some(None)) || matches!(after("rem"), Some(Some(c)) if c.is_ascii_whitespace()) {
+                continue;
+            } else if matches!(after("echo"), Some(None)) || matches!(after("echo"), Some(Some(c)) if c.is_ascii_whitespace() || b".(:/".contains(&c)) {
+                let marker = low.strip_prefix("echo @@rago").is_some_and(|r| r.bytes().next().is_none_or(|c| !(c.is_ascii_alphanumeric() || c == b'_')));
+                if marker {
+                    0
+                } else {
+                    match masked_line(l).find(['&', '|']) {
+                        Some(p) => p,
+                        None => continue,
+                    }
+                }
+            } else {
+                0
+            };
+            let off = l.to_ascii_lowercase().find(DDE_OFF);
+            let lb = l.as_bytes();
+            let next = |from: usize| (from..lb.len()).find(|&i| lb[i] == b'!');
+            let mut i = next(start);
+            while let Some(a) = i {
+                let (pos, why) = match next(a + 1) {
+                    None => (a, "! seul".to_string()),
+                    Some(z) => {
+                        let name = l[a + 1..z].split(':').next().unwrap();
+                        let nb = name.as_bytes();
+                        let var = !nb.is_empty()
+                            && nb.iter().enumerate().all(|(k, &c)| name_char(c, k == 0))
+                            && known.contains(&name.to_ascii_uppercase());
+                        i = next(z + 1);
+                        if var {
+                            continue;
+                        }
+                        (a, format!("!{}!", &l[a + 1..z]))
+                    }
+                };
+                if !off.is_some_and(|o| o < pos) {
+                    errors.push(format!("{}: {why} : {t}", n + 1));
+                }
+                if why == "! seul" {
+                    break;
+                }
+            }
+        }
+        errors
+    }
+
+    #[test]
+    fn bang_checker_sees_what_cmd_removes() {
+        let bad = [
+            (
+                "Reg.exe add \"HKCU\\SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Notifications\\Settings\\windows.immersivecontrolpanel_cw5n1h2txyewy!microsoft.windows.immersivecontrolpanel\" /v \"Enabled\" /t REG_DWORD /d \"0\" /f",
+                "! seul",
+            ),
+            ("echo @@RAGO reg \"HKCU\\A!B\" \"Enabled\"", "! seul"),
+            ("echo - Notifications & reg add \"HKCU\\A!B\" /f", "! seul"),
+            ("if not defined RAGO_HELD_1 reg delete \"HKCU\\A!B\" /v \"Enabled\" /f >nul 2>&1", "! seul"),
+            ("reg add \"HKCU\\A!B!C\" /f", "!B!"),
+            ("reg add \"HKCU\\!Jean!\" /f", "!Jean!"),
+            ("set \"x=1\"\r\nreg add \"HKCU\\!x!\" /d \"!y!\" /f", "!y!"),
+            // le bloc DisableDelayedExpansion est refermé
+            ("setlocal DisableDelayedExpansion\r\nendlocal\r\nreg add \"HKCU\\A!B\" /f", "! seul"),
+            // le `!` est avant le setlocal de la ligne
+            ("reg add \"HKCU\\A!B\" /f & setlocal DisableDelayedExpansion & endlocal", "! seul"),
+        ];
+        for (s, why) in bad {
+            let e = bang_errors(s);
+            assert!(e.len() == 1 && e[0].contains(why), "{s}\n{e:?}");
+        }
+        let good = [
+            "setlocal DisableDelayedExpansion & Reg.exe add \"HKCU\\A!B\" /v \"Enabled\" /f & endlocal",
+            "setlocal DisableDelayedExpansion & echo @@RAGO reg \"HKCU\\A!B\" \"Enabled\" & endlocal",
+            "setlocal DisableDelayedExpansion & (if not defined RAGO_HELD_1 reg delete \"HKCU\\A!B\" /v \"Enabled\" /f >nul 2>&1) & endlocal",
+            "setlocal DisableDelayedExpansion\r\nreg add \"HKCU\\A!B\" /f\r\nendlocal",
+            "set /a n+=1\r\nreg add \"HKCU\\K\" /v N /d \"!n!\" /f",
+            "for /f %%a in ('ver') do set \"v=%%a\"\r\nreg add \"HKCU\\K\" /d \"!v:~0,4!\" /f",
+            "netsh interface ipv4 set subinterface \"!adapter_name!\" mtu=1500 store=persistent",
+            "if defined temp del /s /f /q \"!temp!\\*\" >nul 2>&1",
+            "echo Credit to Mathako for helping!",
+            "echo.- Finished!",
+            ":: Notifications!",
+            "rem Notifications!",
+        ];
+        for s in good {
+            assert!(bang_errors(s).is_empty(), "{s}\n{:?}", bang_errors(s));
+        }
+    }
+
+    /// Rien de ce que lance le moteur (réglages, relevés, annulations) n'a de `!` que cmd retirerait ou remplacerait
+    /// (bang_errors). La clé des notifications de l'appli Paramètres (identifiant d'appli du Store, « famille!appli »)
+    /// est écrite, relevée et annulée avec son `!`, et l'annulation sans relevé nettoie aussi la clé sans `!` que
+    /// posaient les anciens scripts (finitions du 2026-10-13, tools/expansion.py).
+    #[test]
+    fn no_literal_bang_with_delayed_expansion() {
+        let probes: Scripts = serde_json::from_str(include_str!("../scripts/probes.json")).unwrap();
+        let undo: HashMap<String, HashMap<String, Undo>> = serde_json::from_str(include_str!("../scripts/undo.json")).unwrap();
+        let mut bad = Vec::new();
+        let mut check = |what: String, s: &str| bad.extend(bang_errors(s).into_iter().map(|e| format!("{what} {e}")));
+        for (id, variants) in SCRIPTS.iter() {
+            for (v, s) in variants {
+                check(format!("{id}:{v}"), s);
+            }
+        }
+        for (id, variants) in &probes {
+            for (v, s) in variants {
+                check(format!("relevé {id}:{v}"), s);
+            }
+        }
+        for (id, variants) in &undo {
+            for (v, u) in variants {
+                for (part, s) in [("full", &u.full), ("rest", &u.rest)] {
+                    if let Some(s) = s {
+                        check(format!("annulation {id}:{v} {part}"), s);
+                    }
+                }
+            }
+        }
+        assert!(bad.is_empty(), "{} défauts :\n{}", bad.len(), bad.join("\n"));
+        const KEY: &str = "\"HKCU\\SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Notifications\\Settings\\windows.immersivecontrolpanel_cw5n1h2txyewy";
+        const APP: &str = "microsoft.windows.immersivecontrolpanel\"";
+        for id in ["in_advanced", "sys_registry", "win_notifications"] {
+            let (s, p, full) = (&SCRIPTS[id]["_"], &probes[id]["_"], undo[id]["_"].full.as_deref().unwrap());
+            let set = format!("add {KEY}!{APP} /v \"Enabled\" /t REG_DWORD /d \"0\" /f & endlocal");
+            let ok = |l: &str, end: &str| l.starts_with("setlocal DisableDelayedExpansion & ") && l.ends_with(end);
+            assert_eq!(s.lines().filter(|l| ok(l, &set)).count(), 1, "{id}\n{s}");
+            assert_eq!(s.matches("immersivecontrolpanel_").count(), 1, "{id}\n{s}");
+            assert_eq!(p.lines().filter(|l| ok(l, &format!("echo @@RAGO reg {KEY}!{APP} \"Enabled\" & endlocal"))).count(), 1, "{id}\n{p}");
+            assert_eq!(p.matches("immersivecontrolpanel_").count(), 1, "{id}\n{p}");
+            let del = format!("reg delete {KEY}!{APP} /v \"Enabled\" /f >nul 2>&1) & endlocal");
+            assert_eq!(full.lines().filter(|l| ok(l, &del)).count(), 1, "{id}\n{full}");
+            let old = format!("reg delete {KEY}{APP} /v \"Enabled\" /f >nul 2>&1)");
+            assert_eq!(full.lines().filter(|l| l.ends_with(&old)).count(), 1, "{id}\n{full}");
+        }
+    }
+
     /// Services que lit le vérificateur officiel de RBW (github.com/quickpots/RBW-SS, Services.ps1, relevé le
     /// 2026-10-13), en plus de chaque CDPUserSvc_xxxx : il les veut tous en Running.
     const RBW_CHECKER: [&str; 11] = ["sysmain", "pcasvc", "dps", "bam", "eventlog", "wsearch", "dusmsvc", "bfe", "appinfo", "dcomlaunch", "plugplay"];

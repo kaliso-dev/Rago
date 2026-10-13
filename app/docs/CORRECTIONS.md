@@ -713,3 +713,17 @@ profil. Les variables du retour arrière (`RAGO_STATE_…`, `RAGO_HELD_…`) pas
 les sections générées (au-dessus) de celles écrites à la main (en dessous) : `tools/corrections_md.py` relit ce qui la
 suit avant d'écrire et le remet tel quel, fichier en CRLF compris. `build_catalog_v6.py` vérifie après l'écriture que
 cette partie n'a pas changé. Une nouvelle section s'écrit à la main en bas du fichier.
+
+**Notifications de l'appli Paramètres : le `!` de la clé.** La clé
+`HKCU\…\Notifications\Settings\windows.immersivecontrolpanel_cw5n1h2txyewy!microsoft.windows.immersivecontrolpanel`
+porte un `!` (identifiant d'appli du Store, « famille!appli »). Le moteur lance chaque script avec le développement
+retardé : juste avant d'exécuter la commande, cmd retire un `!` resté seul, guillemets compris. `in_advanced`,
+`sys_registry` et `win_notifications` écrivaient donc `…cw5n1h2txyewymicrosoft…`, une clé que Windows ne lit pas, et
+leurs relevés et annulations visaient la même clé fausse. `tools/expansion.py` (sur les scripts, les relevés et les
+annulations) fait tourner ces lignes avec `setlocal DisableDelayedExpansion & … & endlocal` : la vraie clé est écrite,
+relevée et remise. L'annulation sans relevé (PC passés par une version sans sauvegarde) supprime aussi la clé sans `!`
+que posaient les anciens scripts ; avec un relevé fait par la 1.1.9, la restauration la supprime déjà. Comme la valeur
+est posée par trois réglages, l'annulation d'un des trois la laisse quand un autre est encore appliqué
+(`RAGO_HELD_…`). Le générateur refuse tout autre `!` écrit tel quel dans une commande lancée avec le développement
+retardé (le texte affiché par un `echo` n'en est pas une). Tests `no_literal_bang_with_delayed_expansion` et
+`bang_checker_sees_what_cmd_removes`.

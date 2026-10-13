@@ -18,6 +18,7 @@ import rbw as RBW
 import coherence as COHERENCE
 import paths as PATHS
 import corrections_md as CORRECTIONS
+import expansion as EXPANSION
 import os
 import re
 import subprocess
@@ -917,7 +918,9 @@ def static_writes(scripts):
             for line in probes.dry_script(body).split('\r\n'):
                 for m in re.finditer(r'@@RAGO (reg|bcd) "([^"]*)" "([^"]*)"', line):
                     key = gpu_key(line, m.group(2))
-                    if '%' in key or '!' in key or not key:
+                    # variable (%…%, !NOM!) : clé connue seulement à l'exécution ; un « ! » écrit tel quel (identifiant
+                    # d'appli du Store, tools/expansion.py) fait partie du nom de la clé
+                    if '%' in key or VAR_BANG.search(key) or not key:
                         continue
                     ids.add(held_id(m.group(1), key, m.group(3)))
             # fonctions de la gestion mémoire (Get-MMAgent) que le script coupe ou active
@@ -964,7 +967,9 @@ def guard_mmagent(text, shared):
 # l'app la retire aussi au lancement (src-tauri/src/repair.rs, TIMER_KEYS)
 NEVER_HELD = re.compile(r'^reg\|hklm\\system\\currentcontrolset\\control(\\[^|]*)?\|coalescingtimerinterval$')
 
-HELD_LINE = re.compile(r'(?i)^(?:reg(?:\.exe)? (?:add|delete) "([^"%!]+)" /v "([^"]+)"'
+# `!NOM!` dans une clé : une variable ; un `!` seul fait partie du nom (tools/expansion.py)
+VAR_BANG = re.compile(r'![A-Za-z_][^!"]*!')
+HELD_LINE = re.compile(r'(?i)^(?:reg(?:\.exe)? (?:add|delete) "([^"%]+)" /v "([^"]+)"'
                        r'|bcdedit(?:\.exe)? /(?:set|deletevalue) (?:(\{[a-z]+\}) )?([a-z]+)\b)')
 
 
@@ -986,6 +991,8 @@ def guard_held(full, shared):
             loop = GPU_LOOP.match(p)
             head, p = (p[:loop.end()], p[loop.end():]) if loop else ('', p)
             m = GPU_HELD.match(p) if loop else HELD_LINE.match(p)
+            if m and not loop and m.group(1) and VAR_BANG.search(m.group(1)):
+                m = None
             if m and loop:
                 i = held_id('reg', gpu_key(head, m.group(1)), m.group(2))
             elif m:
@@ -1258,7 +1265,6 @@ def main():
     json.dump(catalog, open(catalog_path, 'w', encoding='utf-8'), ensure_ascii=False, indent=1)
     # les réglages retirés ne se lancent plus : ni script ni relevé, seulement leur annulation (undo.json)
     kept = {k: v for k, v in scripts.items() if k not in SAFETY.RETIRED}
-    json.dump(kept, open(os.path.join(ROOT, 'src-tauri', 'scripts', 'scripts.json'), 'w', encoding='utf-8'), ensure_ascii=False)
     # relevés : ce que chaque script va modifier, sauvegardé avant de l'appliquer (tools/probes.py)
     relev = probes.build(kept)
     # retour aux valeurs de Windows sans sauvegarde, et ce que la sauvegarde ne couvre pas (tools/undo, audit du 2026-10-07)
@@ -1267,6 +1273,15 @@ def main():
     # relevés et annulations : mêmes règles que les scripts, gardes comprises (tools/paths.py)
     PATHS.apply(relev)
     PATHS.apply(undo)
+    # « ! » écrits tels quels (clé des notifications de l'appli Paramètres) : lignes sans développement retardé, dans
+    # les scripts, les relevés et les annulations, après les annulations (calculées sur les lignes d'origine, sinon
+    # celles des anciens scripts et celles d'aujourd'hui ne se reconnaîtraient plus) (tools/expansion.py)
+    assert EXPANSION.apply(kept) == 3 and EXPANSION.apply(relev) == 3, 'clé des notifications de Paramètres'
+    assert EXPANSION.apply(undo) == 3, 'annulations de la clé des notifications de Paramètres'
+    for vs in relev.values():
+        for body in vs.values():
+            probes.lint(body)
+    json.dump(kept, open(os.path.join(ROOT, 'src-tauri', 'scripts', 'scripts.json'), 'w', encoding='utf-8'), ensure_ascii=False)
     json.dump(relev, open(os.path.join(ROOT, 'src-tauri', 'scripts', 'probes.json'), 'w', encoding='utf-8'), ensure_ascii=False)
     # valeurs de pilote (amd_thermal) : seule la sauvegarde de l'app les remet ; Edge : rien à remettre. sto_cacheprot :
     # CacheIsPowerProtected (« Désactiver le vidage du cache d'écriture »), absent d'office, est effacé sans sauvegarde
