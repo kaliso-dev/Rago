@@ -298,9 +298,10 @@ impl Runner {
             // réglage déjà appliqué par une version sans ce relevé d'état : ce qu'on lirait maintenant est déjà son
             // effet. Il garde l'ancien retour (rest, valeurs de Windows) pour cet état.
             if let Some(a) = l.tweaks.get(&item.id) {
-                probes.retain(|p| !matches!(p, Probe::State { .. }) || a.probes.contains(&p.id()));
+                probes.retain(|p| !matches!(p, Probe::State { .. } | Probe::Untouched { .. }) || a.probes.contains(&p.id()));
             }
-            probes.iter().cloned().partition(|p| !l.has(&p.id()))
+            // état que ce script ne change pas : seulement noté pour rest, rien à lire ni à garder
+            probes.iter().filter(|p| !matches!(p, Probe::Untouched { .. })).cloned().partition(|p| !l.has(&p.id()))
         };
         // lu hors du verrou : bcdedit, powercfg et PowerShell prennent un moment
         let read: Vec<(Probe, backup::Saved)> = missing.into_iter().map(|p| { let s = sys.read(&p); (p, s) }).collect();
@@ -317,8 +318,9 @@ impl Runner {
             }
             l.save();
         }
-        if !probes.is_empty() {
-            emit(format!("- Saved how {} settings were before, to put them back if you turn this off", probes.len()));
+        let saved = probes.iter().filter(|p| !matches!(p, Probe::Untouched { .. })).count();
+        if saved > 0 {
+            emit(format!("- Saved how {saved} settings were before, to put them back if you turn this off"));
         }
         Some((probes, pre))
     }
@@ -349,11 +351,27 @@ impl Runner {
             l.save();
             return Ok((0, None));
         }
+        // valeurs qu'un autre réglage encore appliqué modifie aussi : full, et rest pour la compression mémoire
+        // (RAGO_HELD_…), les laissent telles quelles
+        let held = {
+            let l = ctx.ledger.lock().unwrap();
+            let others: Vec<Vec<String>> = l
+                .tweaks
+                .iter()
+                .filter(|(t, _)| t.as_str() != id)
+                .filter_map(|(t, a)| {
+                    let u = catalog::undo_of(t, a.variant.as_deref(), ctx.premium.as_deref()).or_else(|| a.undo.clone())?;
+                    Some(holds(a, u.writes))
+                })
+                .collect();
+            held_env(undo.as_ref().map(|u| u.writes.as_slice()).unwrap_or_default(), &others)
+        };
         if let Some(entry) = entry.as_ref().filter(|e| e.backup) {
             let (back, env) = {
                 let mut l = ctx.ledger.lock().unwrap();
                 // états relevés avant d'appliquer (remis au plus près par la sauvegarde) : rest ne les touche pas
-                let env = state_env(&entry.probes, &l.saved);
+                let mut env = state_env(&entry.probes, &l.saved);
+                env.extend(held.iter().cloned());
                 let back = l.release(id);
                 l.save();
                 (back, env)
@@ -398,18 +416,7 @@ impl Runner {
             return Ok((code, None));
         }
         // pas de sauvegarde (appliqué avant 1.1.6, ou par l'ancien .bat) : valeurs de Windows, sauf celles qu'un autre
-        // réglage encore appliqué modifie aussi
-        let held = {
-            let l = ctx.ledger.lock().unwrap();
-            let others: Vec<Vec<String>> = l
-                .tweaks
-                .iter()
-                .filter(|(t, _)| t.as_str() != id)
-                .filter_map(|(t, a)| catalog::undo_of(t, a.variant.as_deref(), ctx.premium.as_deref()).or_else(|| a.undo.clone()))
-                .map(|u| u.writes)
-                .collect();
-            held_env(undo.as_ref().map(|u| u.writes.as_slice()).unwrap_or_default(), &others)
-        };
+        // réglage encore appliqué modifie aussi (held)
         let script = undo.and_then(|u| u.full).or_else(|| {
             catalog::revert_variant(id).and_then(|v| catalog::script(id, Some(&v), None))
         });
@@ -558,25 +565,45 @@ fn describe(p: &Probe) -> String {
             "nvbase" => "NVIDIA global 3D settings".into(),
             other => other.to_string(),
         },
+        Probe::Untouched { name } => format!("{name} (not changed by this tweak)"),
         Probe::Other => "setting saved by a newer version".into(),
     }
 }
 
 /// Variables d'environnement de `rest` : RAGO_STATE_<NOM> pour chaque état relevé avant d'appliquer le réglage
-/// (la sauvegarde le remet au plus près, rest ne doit plus le remettre aux valeurs de Windows).
+/// (la sauvegarde le remet au plus près, rest ne doit plus le remettre aux valeurs de Windows), et pour chaque état
+/// que le script appliqué ne changeait pas (`untouched|…` : rien à remettre).
 pub fn state_env(probes: &[String], saved: &[(String, backup::SavedEntry)]) -> Vec<(String, String)> {
-    probes
-        .iter()
-        .filter_map(|p| p.strip_prefix("state|"))
-        .filter(|name| {
-            saved.iter().any(|(id, e)| id == &format!("state|{name}") && matches!(e.before, backup::Saved::State { .. }))
-        })
-        .map(|name| (format!("RAGO_STATE_{}", name.to_uppercase()), "1".to_string()))
-        .collect()
+    let read = probes.iter().filter_map(|p| p.strip_prefix("state|")).filter(|name| {
+        saved.iter().any(|(id, e)| id == &format!("state|{name}") && matches!(e.before, backup::Saved::State { .. }))
+    });
+    let untouched = probes.iter().filter_map(|p| p.strip_prefix("untouched|"));
+    read.chain(untouched).map(|name| (format!("RAGO_STATE_{}", name.to_uppercase()), "1".to_string())).collect()
 }
 
-/// Variables d'environnement de `full` : RAGO_HELD_<étiquette> pour chaque valeur que ce réglage modifie et qu'un
-/// autre réglage encore appliqué modifie aussi (`writes` de undo.json) : full la laisse telle quelle.
+/// Fonctions de la gestion mémoire (Get-MMAgent) partagées entre réglages (build_catalog_v6.mmagent_ids).
+const MM_FLAGS: [&str; 5] = ["memorycompression", "pagecombining", "applicationprelaunch", "operationapi", "applicationlaunchprefetching"];
+
+/// Étiquette `writes` d'un élément partagé (build_catalog_v6.held_tag) : 10 chiffres hexadécimaux de son SHA-256.
+pub fn held_tag(id: &str) -> String {
+    use sha2::{Digest, Sha256};
+    backup::hex(&Sha256::digest(id.as_bytes())[..5])
+}
+
+/// Étiquettes qu'un autre réglage encore appliqué garde : celles de undo.json (`writes`, valeurs que ses scripts
+/// modifient, toutes versions confondues), sauf la gestion mémoire quand son relevé dit que le script qui a tourné
+/// n'y touchait pas (`untouched|mmagent`, hitreg_suite) : sinon décocher « Profil mémoire » laisserait la compression
+/// coupée, et décocher ensuite la suite ne la remettrait pas non plus.
+pub fn holds(a: &backup::Applied, writes: Vec<String>) -> Vec<String> {
+    if !a.probes.iter().any(|p| p == "untouched|mmagent") {
+        return writes;
+    }
+    let mm: Vec<String> = MM_FLAGS.iter().map(|f| held_tag(&format!("mmagent|{f}"))).collect();
+    writes.into_iter().filter(|t| !mm.contains(t)).collect()
+}
+
+/// Variables d'environnement de `full` et de `rest` : RAGO_HELD_<étiquette> pour chaque valeur que ce réglage modifie
+/// et qu'un autre réglage encore appliqué modifie aussi (`writes` de undo.json) : l'annulation la laisse telle quelle.
 pub fn held_env(mine: &[String], others: &[Vec<String>]) -> Vec<(String, String)> {
     let theirs: std::collections::HashSet<&String> = others.iter().flatten().collect();
     mine.iter().filter(|t| theirs.contains(t)).map(|t| (format!("RAGO_HELD_{t}"), "1".to_string())).collect()
@@ -694,6 +721,47 @@ mod tests {
         let probes = vec!["state|mmagent".to_string(), "state|nic".to_string(), "reg|hklm\\a|b".to_string()];
         assert_eq!(state_env(&probes, &saved), vec![("RAGO_STATE_MMAGENT".to_string(), "1".to_string())]);
         assert!(state_env(&[], &saved).is_empty());
+        // état que le script appliqué ne changeait pas (hitreg_suite et la compression mémoire) : rien de gardé, rest
+        // saute quand même sa commande
+        let probes = vec!["untouched|maxpwage".to_string()];
+        assert_eq!(state_env(&probes, &saved), vec![("RAGO_STATE_MAXPWAGE".to_string(), "1".to_string())]);
+    }
+
+    /// Étiquettes de la gestion mémoire : les mêmes que tools/build_catalog_v6.py ; un réglage dont le script ne
+    /// touchait pas la compression (untouched|mmagent) ne la garde pas pour les autres.
+    #[test]
+    fn memory_tags_follow_what_the_applied_script_did() {
+        let comp = held_tag("mmagent|memorycompression");
+        assert_eq!(comp, "e86e22276a");
+        assert_eq!(held_tag("mmagent|pagecombining"), "82b2f0cc3a");
+        let writes = vec![comp.clone(), "0123456789".to_string()];
+        let applied = |probes: &[&str], backup: bool| backup::Applied {
+            ok: true,
+            backup,
+            probes: probes.iter().map(|p| p.to_string()).collect(),
+            ..Default::default()
+        };
+        assert_eq!(holds(&applied(&["untouched|mmagent", "reg|hklm\\a|b"], true), writes.clone()), vec!["0123456789".to_string()]);
+        assert_eq!(holds(&applied(&["state|mmagent"], true), writes.clone()), writes);
+        // sans sauvegarde (1.1.5 ou avant) ou avec une sauvegarde sans relevé d'état (1.1.6 à 1.1.8) : tout est gardé
+        assert_eq!(holds(&applied(&[], false), writes.clone()), writes);
+        assert_eq!(holds(&applied(&["reg|hklm\\a|b"], true), writes.clone()), writes);
+    }
+
+    /// Un état seulement noté (`untouched`) ne fait pas du réglage un copropriétaire : décocher l'autre réglage qui
+    /// l'a vraiment changé le remet tout de suite.
+    #[test]
+    fn untouched_state_does_not_hold_the_saved_state() {
+        use backup::{Applied, Ledger, Saved};
+        let mut l = Ledger::default();
+        l.record_before(Probe::State { name: "mmagent".into() }, Saved::State { values: Default::default() });
+        let applied = |probes: &[&str]| Applied { ok: true, backup: true, probes: probes.iter().map(|p| p.to_string()).collect(), ..Default::default() };
+        l.tweaks.insert("sys_ram".into(), applied(&["state|mmagent"]));
+        l.tweaks.insert("hitreg_suite".into(), applied(&["untouched|mmagent"]));
+        let back = l.release("sys_ram");
+        assert_eq!(back.len(), 1);
+        assert_eq!(back[0].probe, Probe::State { name: "mmagent".into() });
+        assert!(l.release("hitreg_suite").is_empty());
     }
 
     #[test]

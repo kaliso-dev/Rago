@@ -19,6 +19,8 @@ Types émis (lus par src-tauri/src/backup.rs) :
   plan "GUID"          plan d'alimentation supprimé (exporté avec powercfg /export avant)
   state "NOM"          état lu par le moteur (PowerShell, net accounts, NVAPI), voir STATE_PS ; décocher le réglage
                        remet seulement ce que le script a changé et que personne n'a touché depuis
+  untouched "NOM"      état que le script ne change plus (ajouté par build_catalog_v6.state_guards) : rien n'est lu,
+                       rest saute la commande inverse gardée pour les PC passés par l'ancien script
 
     python3 tools/probes.py          # vérifie et affiche la couverture
 """

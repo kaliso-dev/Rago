@@ -31,6 +31,10 @@ pub enum Probe {
     Plan { guid: String },
     /// état lu par le moteur hors registre (voir STATES) : compression mémoire, SMB, cartes réseau, profil NVIDIA…
     State { name: String },
+    /// état que le script d'aujourd'hui ne change plus, mais dont rest garde la commande inverse pour les PC passés
+    /// par un ancien script (Disable-MMAgent de hitreg_suite) : rien n'est lu ni gardé, le réglage n'en devient pas
+    /// copropriétaire, et rest saute cette commande (runner::state_env)
+    Untouched { name: String },
     /// élément d'une version plus récente de l'app : gardé tel quel, rien à remettre
     #[serde(other)]
     Other,
@@ -56,6 +60,7 @@ impl Probe {
             Probe::Hib => "hib".into(),
             Probe::Plan { guid } => format!("plan|{}", guid.to_lowercase()),
             Probe::State { name } => format!("state|{}", name.to_lowercase()),
+            Probe::Untouched { name } => format!("untouched|{}", name.to_lowercase()),
             Probe::Other => "other".into(),
         }
     }
@@ -113,6 +118,7 @@ pub fn parse_markers(output: &str) -> Vec<Probe> {
                 Some(Probe::Plan { guid: a[0].trim().to_lowercase() })
             }
             "state" if a.len() == 1 && STATES.contains(&a[0].as_str()) => Some(Probe::State { name: a[0].clone() }),
+            "untouched" if a.len() == 1 && STATES.contains(&a[0].as_str()) => Some(Probe::Untouched { name: a[0].clone() }),
             _ => None,
         };
         if let Some(p) = probe {
@@ -1164,7 +1170,7 @@ mod win {
                     }
                 }
                 Probe::State { name } => self.read_state(name),
-                Probe::Other => Saved::Unknown,
+                Probe::Untouched { .. } | Probe::Other => Saved::Unknown,
             }
         }
 
@@ -1412,6 +1418,8 @@ device                  partition=C:\r\ndisabledynamictick      Oui\r\ntscsyncpo
 @@RAGO state \"nvbase\"\r\n\
 @@RAGO state \"inconnu\"\r\n\
 @@RAGO state \"\"\r\n\
+@@RAGO untouched \"maxpwage\"\r\n\
+@@RAGO untouched \"inconnu\"\r\n\
 @@RAGO plan \"e9a42b02-d5df-448d-aa00-03f14749eb61\"\r\n";
         let p = parse_markers(out);
         assert_eq!(
@@ -1420,16 +1428,18 @@ device                  partition=C:\r\ndisabledynamictick      Oui\r\ntscsyncpo
                 Probe::Plan { guid: "e9a42b02-d5df-448d-aa00-03f14749eb61".into() },
                 Probe::State { name: "mmagent".into() },
                 Probe::State { name: "nvbase".into() },
+                Probe::Untouched { name: "maxpwage".into() },
             ]
         );
         assert_eq!(p[1].id(), "state|mmagent");
+        assert_eq!(p[3].id(), "untouched|maxpwage");
         // chaque état émis par tools/probes.py est connu du moteur
         let probes: serde_json::Value = serde_json::from_str(include_str!("../scripts/probes.json")).unwrap();
         let mut names = HashSet::new();
         for (_, variants) in probes.as_object().unwrap() {
             for (_, body) in variants.as_object().unwrap() {
                 for l in body.as_str().unwrap().lines() {
-                    for rest in l.split("@@RAGO state ").skip(1) {
+                    for rest in l.split("@@RAGO state ").skip(1).chain(l.split("@@RAGO untouched ").skip(1)) {
                         names.insert(quoted(rest).first().cloned().unwrap_or_default());
                     }
                 }

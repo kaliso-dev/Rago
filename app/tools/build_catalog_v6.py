@@ -860,8 +860,43 @@ def static_writes(scripts):
                     if '%' in m.group(2) or '!' in m.group(2) or not m.group(2):
                         continue
                     ids.add(held_id(m.group(1), m.group(2), m.group(3)))
+            # fonctions de la gestion mémoire (Get-MMAgent) que le script coupe ou active
+            for line in re.split(r'\r?\n', body):
+                if not re.match(r'(?i)\s*(@?echo|rem|::)\b', line):
+                    ids |= mmagent_ids(line)
             out.setdefault(tid, {})[v] = ids
     return out
+
+
+MM_FLAGS = ('MemoryCompression', 'PageCombining', 'ApplicationPreLaunch', 'OperationAPI', 'ApplicationLaunchPrefetching')
+MM_CALL = re.compile(r'(?i)\b((?:dis|en)able-mmagent)((?:\s+-(?:' + '|'.join(MM_FLAGS) + r')\b)+)((?:\s+-ErrorAction\s+\w+)?)')
+
+
+def mmagent_ids(line):
+    """Identités `mmagent|fonction` des fonctions qu'une ligne coupe ou active : partagées comme une valeur de registre
+    (sys_ram, mem_profile, mem_compression, mem_combining, anciens scripts de hitreg_suite)."""
+    return {f'mmagent|{f.lower()}' for m in MM_CALL.finditer(line) for f in re.findall(r'-(\w+)', m.group(2))}
+
+
+def guard_mmagent(text, shared):
+    """Enable-MMAgent de full et de rest : chaque fonction qu'un autre réglage encore appliqué coupe aussi passe sous
+    « if (-not $env:RAGO_HELD_…) » (PowerShell lit la variable du moteur). Décocher une suite appliquée par 1.1.6 à
+    1.1.8 ne rallume plus la compression que « Profil mémoire » garde coupée."""
+    used = set()
+
+    def one(m):
+        call, flags, tail = m.group(1), re.findall(r'-(\w+)', m.group(2)), m.group(3)
+        held = [f for f in flags if f'mmagent|{f.lower()}' in shared]
+        if not held:
+            return m.group(0)
+        parts = [f'if (-not $env:RAGO_HELD_{held_tag("mmagent|" + f.lower())}) {{ {call} -{f}{tail} }}' for f in held]
+        free = [f for f in flags if f not in held]
+        if free:
+            parts.append(f'{call} {" ".join("-" + f for f in free)}{tail}')
+        used.update(f'mmagent|{f.lower()}' for f in held)
+        return '; '.join(parts)
+
+    return MM_CALL.sub(one, text), used
 
 
 HELD_LINE = re.compile(r'(?i)^(?:reg(?:\.exe)? (?:add|delete) "([^"%!]+)" /v "([^"]+)"'
@@ -896,10 +931,12 @@ STATE_GUARD = re.compile(r'if not defined RAGO_STATE_([A-Z0-9]+) ')
 
 def state_guards(relev, undo):
     """rest saute une commande « valeur de Windows » (Enable-MMAgent, net accounts…) quand le moteur a relevé l'état
-    pour ce réglage. Une ligne retirée du script depuis (ex. Disable-MMAgent de hitreg_suite, 1.1.9) laisse sa commande
-    inverse dans rest : les scripts de 1.1.6 à 1.1.8 l'ont lancée avec une sauvegarde, sans ce relevé. Le relevé
-    d'aujourd'hui relève donc quand même cet état : rest ne la lance que sur les PC passés par l'ancien script, jamais
-    à l'aveugle après le nouveau (qui n'a rien changé : la sauvegarde ne remet rien)."""
+    pour ce réglage. Une ligne retirée du script depuis (ex. Disable-MMAgent de hitreg_suite) laisse sa commande
+    inverse dans rest : les scripts de 1.1.6 à 1.1.8 l'ont lancée avec une sauvegarde, sans relevé d'état. Le relevé
+    d'aujourd'hui le dit au moteur (`untouched`, rien n'est lu ni gardé) : rest ne lance la commande que sur les PC
+    passés par l'ancien script, jamais à l'aveugle après le nouveau. Un vrai relevé (`state`) ferait de ce réglage un
+    copropriétaire de l'état : décocher « Profil mémoire » ne remettrait plus la compression tant que la suite reste
+    appliquée."""
     for tid, vs in undo.items():
         for v, e in vs.items():
             body = relev.get(tid, {}).get(v)
@@ -908,7 +945,7 @@ def state_guards(relev, undo):
             for name in sorted({n.lower() for n in STATE_GUARD.findall(e.get('rest') or '')}):
                 assert name in probes.STATES, (tid, v, name)
                 if f'@@RAGO state "{name}"' not in body:
-                    body += f'\r\necho @@RAGO state "{name}"'
+                    body += f'\r\necho @@RAGO untouched "{name}"'
             relev[tid][v] = body
 
 
@@ -983,6 +1020,10 @@ def build_undo(before, with_backup, after):
             if e.get('full'):
                 e['full'], used = guard_held(e['full'], shared)
                 mine |= used
+            for key in ('full', 'rest'):
+                if e.get(key):
+                    e[key], used = guard_mmagent(e[key], shared)
+                    mine |= used
             if mine:
                 e['writes'] = sorted(held_tag(i) for i in mine)
     # réglages sans annulation à lancer (valeurs de pilote remises par la sauvegarde seule, variantes de retour…) qui

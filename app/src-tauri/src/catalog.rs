@@ -516,13 +516,26 @@ mod tests {
             for part in rest.split("rago_state_").skip(1) {
                 let name: String = part.chars().take_while(|c| c.is_ascii_alphanumeric()).collect();
                 assert!(crate::backup::STATES.contains(&name.as_str()), "{id}:{v} état inconnu {name}");
-                assert!(probe.contains(&format!("@@RAGO state \"{name}\"")), "{id}:{v} garde {name} sans relevé");
+                // relevé de l'état, ou « untouched » : le script d'aujourd'hui ne le change plus (hitreg_suite)
+                assert!(
+                    probe.contains(&format!("@@RAGO state \"{name}\"")) || probe.contains(&format!("@@RAGO untouched \"{name}\"")),
+                    "{id}:{v} garde {name} sans relevé"
+                );
                 guarded += 1;
             }
-            for part in u.full.as_deref().unwrap_or("").split("RAGO_HELD_").skip(1) {
-                let tag: String = part.chars().take_while(|c| c.is_ascii_hexdigit()).collect();
-                assert!(tag.len() == 10 && u.writes.contains(&tag), "{id}:{v} garde {tag} hors de writes");
-                held += 1;
+            for s in [u.full.as_deref().unwrap_or(""), u.rest.as_deref().unwrap_or("")] {
+                for part in s.split("RAGO_HELD_").skip(1) {
+                    let tag: String = part.chars().take_while(|c| c.is_ascii_hexdigit()).collect();
+                    assert!(tag.len() == 10 && u.writes.contains(&tag), "{id}:{v} garde {tag} hors de writes");
+                    held += 1;
+                }
+            }
+            // compression mémoire : coupée aussi par d'autres réglages, jamais rallumée sans garde
+            for l in full.lines().chain(rest.lines()) {
+                let calls = l.matches("enable-mmagent -memorycompression").count();
+                let tag = crate::runner::held_tag("mmagent|memorycompression");
+                let guarded_calls = l.matches(&format!("rago_held_{tag}) {{ enable-mmagent -memorycompression")).count();
+                assert_eq!(calls, guarded_calls, "{id}:{v} rallume la compression sans garde : {l}");
             }
         }
         assert!(guarded > 10 && held > 1000, "{guarded} gardes d'état, {held} gardes de valeurs partagées");
