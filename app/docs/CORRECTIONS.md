@@ -527,3 +527,40 @@ Corrigé par le script à l'import (`audit_fixes.py`, sur secteur) :
 
 L'annulation réactive le plan d'avant (relevé `pwractive`) puis supprime le plan Rago. Le test
 `rago_power_plan_imports_on_windows` importe le vrai fichier sur la CI Windows sous un GUID de test.
+
+# Écran bleu au démarrage, préréglage réseau 3, journal du Mode jeu (2026-10-13)
+
+Signalés par des joueurs (RAG-66, RAG-67, RAG-68).
+
+**RAG-67, écran bleu 0x7E quelques minutes après le démarrage (Windows 11 24H2).** `CoalescingTimerInterval` n'est pas
+documentée par Microsoft. Le noyau la lit au démarrage sous `HKLM\SYSTEM\CurrentControlSet\Control` et s'en sert comme
+diviseur : à 0, exception c0000094 (division entière par zéro), écran bleu 0x7E. Huit réglages la mettaient à 0 dans
+huit clés : `pow_main`, `pow_timer`, `hitreg_suite` (huit clés chacun), `pow_throttling`, `gpu_nvidia`, `gpu_amd`,
+`gpu_general` et `amd_advanced` (clé `Control\Power`). `pow_main` et les packs graphiques sont des réglages Safe : décocher
+les réglages Advanced ne suffisait pas.
+- `safety.py` : la ligne part de tous les scripts (`DROP_EVERYWHERE`) ; `pow_timer`, qui ne faisait que ça, est retiré
+  (`RETIRED`), son annulation reste.
+- `src-tauri/src/repair.rs` : à chaque lancement, l'app supprime la valeur là où elle vaut 0 dans ces huit clés, sans
+  rien demander (elle tourne en administrateur) ; Windows reprend sa valeur interne au démarrage suivant. Une valeur
+  différente de 0 n'est pas touchée. Chaque suppression est notée dans `logs\repairs.log`. Le registre des réglages
+  (`applied.json`) ne remet jamais 0 en annulant, et n'affiche pas « Changé par Windows » pour ces valeurs.
+- Les annulations (`undo.json`) suppriment toujours la valeur ; le test `kernel_timer_value_stays_out` vérifie qu'aucun
+  script ni relevé ne l'écrit, qu'aucune annulation ne la remet, et que chaque clé nettoyée est aussi réparée au
+  lancement. La valeur par processus de `pri_game` (Image File Execution Options du jeu) n'est pas concernée.
+
+**RAG-68, préréglage réseau 3 (`net_server:s3`) toujours en échec.** La boucle du mode MSI était restée vide
+(`… do set "str=%%i" & (` puis `)`) : cmd refuse un bloc vide (« ) was unexpected at this time. ») et s'arrêtait là, sans
+lancer TCPNoDelay, TcpAckFrequency, TcpDelAckTicks ni les priorités DNS qui suivaient. La boucle part avec son
+commentaire (`audit_fixes.py`, `DROP_BLOCKS`). Le même défaut cassait cinq relevés (`probes.py` : un bloc dont toutes
+les lignes étaient des `echo` devenait vide) : `hitreg_suite` (les quatre variantes) ne relevait rien du tout, et son
+annulation ne remettait aucune valeur ; au lancement, l'app le repasse au retour par les valeurs de Windows
+(`repair.rs`). Ceux de `ping_main:config3`, `sys_registry` et `net_restart` s'arrêtaient après leur dernier élément :
+rien de perdu, mais ils échouaient. Le
+test `every_script_has_well_formed_blocks` lit tous les scripts, relevés et annulations comme cmd lit un bloc.
+
+**RAG-66, journal du Mode jeu.** Rien n'échouait, mais vider `%temp%` affichait « The process cannot access the file… »
+et « Access is denied. » (fichiers ouverts), arrêter le spouleur déjà arrêté « NET HELPMSG 3521 », et taskkill
+« SUCCESS: … explorer.exe … terminated ». `build_catalog_v6.py`, table `QUIET` : ces commandes se taisent dans
+`game_mode` et `in_windows`, « net stop Spooler » ne se lance que si `sc query` le voit tourner, et `%temp%` passe entre
+guillemets (avec un espace dans le chemin, `del /s` visait le premier morceau). Les autres lignes gardent leurs erreurs.
+Test `temp_cleaning_stays_quiet`.
