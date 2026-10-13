@@ -576,6 +576,7 @@ undo.json : un PC qui les a lancés retrouve aussi les valeurs des lignes chang�
   dbl_telemetry, sys_bcdedit, pow_main, pow_throttling, pow_windows, win_fullscreen, net_affinity, in_adapter.
 - Point de restauration (runner.rs) : la limite d'un point par 24 h est levée le temps de le créer, puis remise.
 
+<!-- Sections écrites à la main : le générateur (tools/corrections_md.py) garde tel quel tout ce qui suit cette ligne. Ajouter les nouvelles sections en bas du fichier. -->
 # Plan d'alimentation Rago Low Latency (1.1.9)
 
 `src-tauri/resources/LowLatency.pow`, fourni par Sofiene le 2026-10-10 (sha256 `c953bead…c840d7`, 24 Ko). C'est une ruche
@@ -702,3 +703,13 @@ profil. Les variables du retour arrière (`RAGO_STATE_…`, `RAGO_HELD_…`) pas
 (`batch_command`), jamais par la ligne de commande : le script et le PowerShell qu'il lance les lisent. Tests
 `scripts_start_by_name_from_their_folder`, `undo_variables_go_with_the_script` et, sur Windows,
 `scripts_run_from_a_folder_with_special_characters` et `undo_variables_reach_the_script_and_powershell`.
+
+# Finitions 2 de la revue du 2026-10-13
+
+**Sections écrites à la main de ce fichier.** `tools/build_catalog.py` réécrivait tout `docs/CORRECTIONS.md` et
+`tools/build_catalog_v6.py` y ajoutait ses sections : chaque génération effaçait ce qui avait été écrit à la main en bas
+(plan d'alimentation, écran bleu, applis du Store, finitions de la revue). La ligne de commentaire
+`<!-- Sections écrites à la main … -->`, juste avant « Plan d'alimentation Rago Low Latency (1.1.9) », sépare maintenant
+les sections générées (au-dessus) de celles écrites à la main (en dessous) : `tools/corrections_md.py` relit ce qui la
+suit avant d'écrire et le remet tel quel, fichier en CRLF compris. `build_catalog_v6.py` vérifie après l'écriture que
+cette partie n'a pas changé. Une nouvelle section s'écrit à la main en bas du fichier.

@@ -5,6 +5,9 @@ Chaque bloc « :: Titre » des .bat devient un réglage ; les variantes (Hypixel
 déclarées dans SECTIONS. Le module Restore (outils de l'app) est repris de l'ancien catalogue.
 
     python3 tools/build_catalog_v6.py
+
+docs/CORRECTIONS.md est réécrit à chaque génération, sauf ce qui suit sa ligne marqueur (sections écrites à la main,
+gardées telles quelles : tools/corrections_md.py). Ajouter une section à la main : en bas du fichier.
 """
 import copy
 import json
@@ -14,6 +17,7 @@ import safety as SAFETY
 import rbw as RBW
 import coherence as COHERENCE
 import paths as PATHS
+import corrections_md as CORRECTIONS
 import os
 import re
 import subprocess
@@ -1280,10 +1284,11 @@ def main():
     n = len(entries)
     # réglages distincts : les jumeaux (même script, champ `twin`) comptent une fois, comme dans l'app (catalog.ts)
     distinct = len({t.get('twin') or t['id'] for t in entries})
-    with open(os.path.join(ROOT, 'docs', 'CORRECTIONS.md'), 'a', encoding='utf-8') as f:
-        f.write(V6_NOTES)
-        f.write(SAFETY.notes(SAFETY_REPORT, n, distinct))
-        f.write(COHERENCE.NOTES)
+    # docs/CORRECTIONS.md : section v5.2 (build_catalog.py), puis celles-ci ; les sections écrites à la main, sous la
+    # ligne marqueur, restent à la fin telles quelles (tools/corrections_md.py)
+    head, manual = CORRECTIONS.parts()
+    CORRECTIONS.write(head + V6_NOTES + SAFETY.notes(SAFETY_REPORT, n, distinct) + COHERENCE.NOTES, manual)
+    assert CORRECTIONS.parts()[1] == manual, 'sections de CORRECTIONS.md écrites à la main perdues'
     print(f'{n} réglages ({distinct} distincts), {len(kept)} scripts, {len(retired)} retirés')
 
 
