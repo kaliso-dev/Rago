@@ -530,8 +530,9 @@ fn sanitize(s: &str) -> String {
 }
 
 /// Windows ne crée qu'un point de restauration par 24 h : la limite (SystemRestorePointCreationFrequency) est levée le
-/// temps de créer celui de Rago, puis remise, même si la création échoue. Avant 1.1.9 elle restait à 0 pour toujours
-/// (RAG-60) : une valeur 0 trouvée ici est donc retirée, ce qui rend la limite de Windows.
+/// temps de créer celui de Rago, puis remise telle qu'elle était, même si la création échoue (avant 1.1.9 elle restait
+/// à 0 pour toujours, RAG-60). Un 0 déjà là est remis à 0 : « Latence avancée » (in_advanced) l'écrit exprès, et
+/// le retirer ferait afficher « Changé par Windows » sur ce réglage.
 const RESTORE_POINT_PS: &str = r#"$ErrorActionPreference = 'Stop'
 try { Enable-ComputerRestore -Drive "$env:SystemDrive\" } catch { Write-Output "- System Restore already on or locked" }
 $key = 'HKLM:\SOFTWARE\Microsoft\Windows NT\CurrentVersion\SystemRestore'
@@ -543,7 +544,7 @@ try {
     Checkpoint-Computer -Description 'Rago Optimizer' -RestorePointType 'MODIFY_SETTINGS'
     Write-Output "- Restore point created"
 } finally {
-    if ($null -eq $old -or $old -eq 0) { Remove-ItemProperty -Path $key -Name $name -ErrorAction SilentlyContinue }
+    if ($null -eq $old) { Remove-ItemProperty -Path $key -Name $name -ErrorAction SilentlyContinue }
     else { Set-ItemProperty -Path $key -Name $name -Value $old }
 }
 "#;
@@ -596,7 +597,7 @@ mod tests {
         let after = &ps[fin..];
         assert!(after.contains("Remove-ItemProperty -Path $key -Name $name"));
         assert!(after.contains("Set-ItemProperty -Path $key -Name $name -Value $old"));
-        // la valeur 0 laissée par les versions d'avant 1.1.9 est retirée, pas remise
-        assert!(after.contains("$old -eq 0"));
+        // la valeur d'avant est remise telle quelle, 0 compris (in_advanced écrit 0 : pas de faux « Changé par Windows »)
+        assert!(after.contains("if ($null -eq $old) {") && !after.contains("-eq 0"));
     }
 }
