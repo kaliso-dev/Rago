@@ -92,9 +92,12 @@ export function RunOverlay() {
             </div>
             <div className="run-actions">
               {!isDone ? (
-                <Button icon={<Square size={12} />} onClick={() => api.cancelRun()}>
-                  {t("run.cancel")}
-                </Button>
+                // remise à zéro obligatoire (déconnexion) : aucun bouton pour l'arrêter
+                run.noCancel ? null : (
+                  <Button icon={<Square size={12} />} onClick={() => api.cancelRun()}>
+                    {t("run.cancel")}
+                  </Button>
+                )
               ) : (
                 <>
                   {reboot && (

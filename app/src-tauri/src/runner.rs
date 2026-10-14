@@ -75,7 +75,8 @@ pub struct Runner {
 }
 
 pub struct Context {
-    pub app: AppHandle,
+    /// None en mode sans interface (remise à zéro à la désinstallation) : aucun événement n'est envoyé
+    pub app: Option<AppHandle>,
     pub history: Arc<History>,
     pub resource_dir: PathBuf,
     pub logs_dir: PathBuf,
@@ -97,6 +98,37 @@ impl Runner {
         if let Some(pid) = *self.child.lock().unwrap() {
             let _ = shell::hidden("taskkill.exe").args(["/PID", &pid.to_string(), "/T", "/F"]).status();
         }
+    }
+
+    /// Remet tout à zéro sans interface : à la désinstallation, le désinstallateur relance l'exe avec
+    /// `--revert-all`. On annule chaque réglage encore dans le registre, dans le thread courant (pas de
+    /// fenêtre, pas d'événement), puis on écrit le registre vidé. Les scripts d'annulation Premium gardés
+    /// dans le registre servent même hors ligne ; la sauvegarde DPAPI s'ouvre car le désinstallateur tourne
+    /// sous le même compte Windows.
+    pub fn revert_all(&self, data_dir: &Path, resource_dir: &Path) {
+        let (ledger, _) = Ledger::load(data_dir.join("applied.json"));
+        let ctx = Context {
+            app: None,
+            history: Arc::new(History::load(data_dir.join("history.json"))),
+            resource_dir: resource_dir.to_path_buf(),
+            logs_dir: data_dir.join("logs"),
+            run_dir: data_dir.join("run"),
+            backup_dir: data_dir.join("backup"),
+            adapter: None,
+            ledger: Arc::new(Mutex::new(ledger)),
+            // pas de licence hors ligne : l'annulation Premium vient de la copie gardée dans le registre
+            premium: None,
+        };
+        let sys = Sys::new(ctx.backup_dir.clone());
+        let noop = |_: String| {};
+        let ids: Vec<String> = ctx.ledger.lock().unwrap().tweaks.keys().cloned().collect();
+        for id in ids {
+            let item = RunItem { id, variant: None, params: None, undo: true };
+            let _ = self.undo_item(&ctx, &sys, &item, &noop);
+        }
+        ctx.ledger.lock().unwrap().save();
+        // les scripts écrits en clair pendant l'annulation sont effacés aussitôt ; on vide le dossier au cas où
+        let _ = fs::remove_dir_all(&ctx.run_dir);
     }
 
     /// Lance le lot dans un thread. Renvoie l'identifiant du lot.
@@ -137,10 +169,12 @@ impl Runner {
             }
             let variant = item.variant.as_deref();
             let emit_item = |status: &str, code: Option<i32>, duration: Option<u64>, message: Option<String>| {
-                let _ = ctx.app.emit(
-                    "run:item",
-                    ItemEvent { run_id, index, id: &item.id, variant, status, code, duration_ms: duration, message },
-                );
+                if let Some(app) = &ctx.app {
+                    let _ = app.emit(
+                        "run:item",
+                        ItemEvent { run_id, index, id: &item.id, variant, status, code, duration_ms: duration, message },
+                    );
+                }
             };
             let applied = ctx.ledger.lock().unwrap().tweaks.contains_key(&item.id);
             // décoché, ou variante de retour arrière d'un réglage appliqué : retour à l'état d'avant
@@ -161,7 +195,9 @@ impl Runner {
             let started = Instant::now();
             let emit_line = |line: String| {
                 write_log(&line);
-                let _ = ctx.app.emit("run:log", LogEvent { run_id, id: &item.id, line });
+                if let Some(app) = &ctx.app {
+                    let _ = app.emit("run:log", LogEvent { run_id, id: &item.id, line });
+                }
             };
             let twin_key = (!undo).then(|| catalog::twin_of(&item.id).map(|t| format!("{t}:{}", variant.unwrap_or("")))).flatten();
             let (success, code, message) = if undo {
@@ -252,10 +288,12 @@ impl Runner {
             }
         }
         let cancelled = self.cancel.load(Ordering::SeqCst);
-        let _ = ctx.app.emit(
-            "run:done",
-            DoneEvent { run_id, ok, failed, skipped, restore_failed, cancelled, log_file: log_path.to_string_lossy().to_string() },
-        );
+        if let Some(app) = &ctx.app {
+            let _ = app.emit(
+                "run:done",
+                DoneEvent { run_id, ok, failed, skipped, restore_failed, cancelled, log_file: log_path.to_string_lossy().to_string() },
+            );
+        }
     }
 
     /// Lance le relevé du réglage et garde l'état actuel de ce qu'il va modifier, s'il n'est pas déjà gardé.
@@ -560,6 +598,17 @@ mod tests {
     fn decodes_cp850_fallback() {
         assert_eq!(decode("déjà".as_bytes()), "déjà");
         assert_eq!(decode(&[0x82, b't', 0x82]), "été");
+    }
+
+    #[test]
+    fn revert_all_on_empty_dir_is_safe() {
+        // aucun réglage appliqué : la remise à zéro ne doit rien casser et laisser un registre vide
+        let dir = std::env::temp_dir().join(format!("rago-test-revert-{}", now_ms()));
+        fs::create_dir_all(&dir).unwrap();
+        Runner::default().revert_all(&dir, &dir);
+        let (ledger, _) = Ledger::load(dir.join("applied.json"));
+        assert!(ledger.tweaks.is_empty());
+        let _ = fs::remove_dir_all(&dir);
     }
 
     #[test]
