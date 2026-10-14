@@ -256,8 +256,8 @@ const fr = {
   "confirm.undoGo": "Annuler maintenant",
   "run.undoName": "Annuler · {name}",
   "run.endedNote": "Ton Premium a pris fin : Rago Optimizer remet les réglages de Windows changés par {n} réglage Premium. Tes réglages gratuits restent actifs.|Ton Premium a pris fin : Rago Optimizer remet les réglages de Windows changés par {n} réglages Premium. Tes réglages gratuits restent actifs.",
-  "run.signOutNote": "Déconnexion : Rago Optimizer remet les réglages de Windows changés par {n} réglage Premium.|Déconnexion : Rago Optimizer remet les réglages de Windows changés par {n} réglages Premium.",
-  "signout.undoLead": "Tes {n} réglage Premium vont être annulés : Rago Optimizer remet les réglages de Windows comme avant. Tes réglages gratuits restent actifs.|Tes {n} réglages Premium vont être annulés : Rago Optimizer remet les réglages de Windows comme avant. Tes réglages gratuits restent actifs.",
+  "run.signOutNote": "Déconnexion : Rago Optimizer remet Windows comme avant en annulant ton réglage. Ne ferme pas l'application.|Déconnexion : Rago Optimizer remet Windows comme avant en annulant tes {n} réglages. Ne ferme pas l'application.",
+  "signout.undoLead": "Ton réglage appliqué va être annulé : Rago Optimizer remet Windows exactement comme avant de te déconnecter, et ça ne peut pas être interrompu.|Tes {n} réglages appliqués vont tous être annulés : Rago Optimizer remet Windows exactement comme avant de te déconnecter, et ça ne peut pas être interrompu.",
   "signout.go": "Annuler et me déconnecter",
 };
 
@@ -505,8 +505,8 @@ const en: Record<Key, string> = {
   "confirm.undoGo": "Undo now",
   "run.undoName": "Undo · {name}",
   "run.endedNote": "Your Premium ended. Rago Optimizer is putting back the Windows settings changed by {n} Premium tweak. Your free tweaks stay on.|Your Premium ended. Rago Optimizer is putting back the Windows settings changed by {n} Premium tweaks. Your free tweaks stay on.",
-  "run.signOutNote": "Signing out. Rago Optimizer is putting back the Windows settings changed by {n} Premium tweak.|Signing out. Rago Optimizer is putting back the Windows settings changed by {n} Premium tweaks.",
-  "signout.undoLead": "Your {n} Premium tweak will be undone: Rago Optimizer puts those Windows settings back the way they were. Your free tweaks stay on.|Your {n} Premium tweaks will be undone: Rago Optimizer puts those Windows settings back the way they were. Your free tweaks stay on.",
+  "run.signOutNote": "Signing out. Rago Optimizer is putting Windows back by undoing your tweak. Don't close the app.|Signing out. Rago Optimizer is putting Windows back by undoing your {n} tweaks. Don't close the app.",
+  "signout.undoLead": "Your applied tweak will be undone: Rago Optimizer puts Windows back exactly as it was before signing out, and this can't be stopped.|All {n} applied tweaks will be undone: Rago Optimizer puts Windows back exactly as it was before signing out, and this can't be stopped.",
   "signout.go": "Undo and sign out",
 };
 

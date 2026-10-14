@@ -87,7 +87,7 @@ fn run_tweaks(app: AppHandle, state: State<'_, AppState>, items: Vec<RunItem>) -
     keep_undo(&state.ledger, bundle.as_deref());
     let adapter = state.system(false).adapter;
     let ctx = Context {
-        app,
+        app: Some(app),
         history: Arc::clone(&state.history),
         resource_dir: state.resource_dir.clone(),
         logs_dir: state.data_dir.join("logs"),
@@ -282,8 +282,30 @@ async fn account_remove_photo(state: State<'_, AppState>) -> Result<account::Acc
     with_account(&state, |acc, lic| acc.remove_photo(lic)).await
 }
 
+/// Remise à zéro à la désinstallation. Le désinstallateur NSIS relance l'exe avec `--revert-all` avant de
+/// supprimer les fichiers : on annule tous les réglages sans ouvrir de fenêtre, puis on quitte. Le dossier
+/// de données est `%APPDATA%\<identifiant>` (comme `app_data_dir` de Tauri) et l'identifiant vient de la
+/// configuration embarquée, pour viser le bon dossier aussi bien en production qu'en test.
+fn revert_all_headless(identifier: &str) {
+    let data_dir = std::env::var_os("APPDATA")
+        .map(|a| PathBuf::from(a).join(identifier))
+        .unwrap_or_else(|| std::env::temp_dir().join(identifier));
+    // les ressources (outils embarqués) sont à côté de l'exe ; elles existent encore au moment du pré-désinstall
+    let resource_dir = std::env::current_exe()
+        .ok()
+        .and_then(|e| e.parent().map(|p| p.join("resources")))
+        .unwrap_or_else(|| PathBuf::from("resources"));
+    runner::Runner::default().revert_all(&data_dir, &resource_dir);
+}
+
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
+    let context = tauri::generate_context!();
+    // lancé par le désinstallateur : on remet tout à zéro puis on quitte, sans jamais ouvrir de fenêtre
+    if std::env::args().skip(1).any(|a| a == "--revert-all") {
+        revert_all_headless(&context.config().identifier);
+        return;
+    }
     tauri::Builder::default()
         .plugin(tauri_plugin_dialog::init())
         .plugin(tauri_plugin_opener::init())
@@ -350,6 +372,6 @@ pub fn run() {
             account_set_photo,
             account_remove_photo,
         ])
-        .run(tauri::generate_context!())
+        .run(context)
         .expect("erreur au lancement de Rago Optimizer");
 }

@@ -60,6 +60,8 @@ export interface RunState {
   error: string | null;
   /** phrase sous le titre (fin de Premium, déconnexion) */
   note: string | null;
+  /** remise à zéro obligatoire (déconnexion) : pas de bouton pour l'arrêter */
+  noCancel: boolean;
 }
 
 export interface ConfirmState {
@@ -383,7 +385,7 @@ function useStoreValue() {
   const startRun = useCallback(
     async (
       ids: string[],
-      opts: { restorePoint: boolean; wmic: boolean; clearSelection: boolean; undo?: string[]; note?: string | null },
+      opts: { restorePoint: boolean; wmic: boolean; clearSelection: boolean; undo?: string[]; note?: string | null; noCancel?: boolean },
     ) => {
       const items: RunItem[] = [];
       // point de restauration quand la case est cochée (comme en 1.1.6), toujours en tête : s'il échoue, le moteur
@@ -424,6 +426,7 @@ function useStoreValue() {
         reboot,
         error: null,
         note: opts.note ?? null,
+        noCancel: opts.noCancel ?? false,
       });
       try {
         const runId = await api.runTweaks(items);
@@ -448,18 +451,29 @@ function useStoreValue() {
     if (ids.length) setConfirm({ ids: [], undo: ids, single: false });
   }, []);
 
-  /** Réglages Premium appliqués : annulés à la déconnexion et à la fin de Premium. */
+  /** Réglages Premium appliqués : annulés quand l'abonnement Premium prend fin. */
   const premiumApplied = useMemo(() => [...applied.keys()].filter((id) => !FREE.has(id)).sort(byCatalog), [applied]);
 
+  /** Tous les réglages appliqués (Premium et gratuits) : tout remis comme avant à la déconnexion. */
+  const allApplied = useMemo(() => [...applied.keys()].sort(byCatalog), [applied]);
+
   const endedRef = useRef(false);
-  /** Déconnexion : annule d'abord les réglages Premium appliqués (sans licence, l'annulation reste permise). */
+  /** Déconnexion : remet d'abord TOUS les réglages comme avant (Premium et gratuits), sans pouvoir l'arrêter, puis
+   *  déconnecte. L'annulation reste permise sans licence. */
   const signOutAndUndo = useCallback(async () => {
-    const ids = premiumApplied;
+    const ids = allApplied;
     endedRef.current = true;
     if (ids.length)
-      await startRun([], { restorePoint: false, wmic: false, clearSelection: true, undo: ids, note: translate(lang, "run.signOutNote", { n: ids.length }) });
+      await startRun([], {
+        restorePoint: false,
+        wmic: false,
+        clearSelection: true,
+        undo: ids,
+        note: translate(lang, "run.signOutNote", { n: ids.length }),
+        noCancel: true,
+      });
     await signOut();
-  }, [premiumApplied, startRun, signOut, lang]);
+  }, [allApplied, startRun, signOut, lang]);
 
   // Premium terminé (abonnement fini, remboursement) ou plus de licence sur ce PC : au lancement, les réglages
   // Premium encore appliqués sont annulés, avec un message. Un jeton expiré hors ligne n'annule rien : le joueur
@@ -488,7 +502,7 @@ function useStoreValue() {
     page, goTo,
     sys, sysLoading, refreshSys,
     selection, selected, toggle, selectMany, unselectMany, variants, setVariant, variantOf,
-    pendingUndo, applied, appliedLoaded: appliedList !== null, isOn, premiumApplied, signOutAndUndo, reapply,
+    pendingUndo, applied, appliedLoaded: appliedList !== null, isOn, premiumApplied, allApplied, signOutAndUndo, reapply,
     retiredApplied, requestUndo,
     history, lastRun, lastRestore, refreshHistory, refreshApplied,
     mcDir, setMcDir,
