@@ -57,7 +57,11 @@ impl AppState {
     /// `app` : fenêtre qui suit le lot (None : remise à zéro, rien à l'écran).
     fn context(&self, app: Option<AppHandle>, premium: Option<Arc<catalog::Bundle>>) -> Context {
         Context {
-            app,
+            app: app.map(|app| {
+                Arc::new(move |event: &str, payload: serde_json::Value| {
+                    let _ = app.emit(event, payload);
+                }) as runner::Emit
+            }),
             history: Arc::clone(&self.history),
             resource_dir: self.resource_dir.clone(),
             logs_dir: self.data_dir.join("logs"),

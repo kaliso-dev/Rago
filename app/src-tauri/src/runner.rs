@@ -14,7 +14,6 @@ use std::process::{Child, Command, Stdio};
 use std::sync::atomic::{AtomicBool, Ordering};
 use std::sync::{Arc, Mutex, MutexGuard, PoisonError};
 use std::time::Instant;
-use tauri::{AppHandle, Emitter};
 
 use crate::backup::{self, Ledger, Probe, Sys};
 use crate::history::{now_ms, Entry, History};
@@ -81,9 +80,14 @@ pub struct Runner {
     child: Mutex<Option<u32>>,
 }
 
+/// Envoi d'un événement à la fenêtre (lib.rs le relie à `AppHandle::emit`). Jamais `AppHandle` ici : les tests lancent
+/// des lots, et sous Windows leur programme ne démarre plus s'il contient le code des fenêtres de Tauri (une fonction
+/// de comctl32 v6 qu'il ne trouve pas sans le manifeste de l'app : STATUS_ENTRYPOINT_NOT_FOUND).
+pub type Emit = Arc<dyn Fn(&str, serde_json::Value) + Send + Sync>;
+
 pub struct Context {
     /// fenêtre qui suit le lot ; None pour la remise à zéro (fin de Premium, désinstallation), qui ne montre rien
-    pub app: Option<AppHandle>,
+    pub app: Option<Emit>,
     pub history: Arc<History>,
     pub resource_dir: PathBuf,
     pub logs_dir: PathBuf,
@@ -99,9 +103,11 @@ pub struct Context {
 }
 
 impl Context {
-    fn emit<S: Serialize + Clone>(&self, event: &str, payload: S) {
+    fn emit<S: Serialize>(&self, event: &str, payload: S) {
         if let Some(app) = &self.app {
-            let _ = app.emit(event, payload);
+            if let Ok(payload) = serde_json::to_value(payload) {
+                app(event, payload);
+            }
         }
     }
 }
