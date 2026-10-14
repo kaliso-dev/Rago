@@ -180,6 +180,9 @@ pub struct Ledger {
     pub saved: Vec<(String, SavedEntry)>,
     #[serde(skip)]
     path: PathBuf,
+    /// le fichier lu était en clair (version d'avant le chiffrement au repos) : à réécrire chiffré
+    #[serde(skip)]
+    legacy_plaintext: bool,
 }
 
 /// Réglage appliqué, tel que l'interface l'affiche.
@@ -197,11 +200,23 @@ pub struct AppliedView {
 
 impl Ledger {
     pub fn load(path: PathBuf) -> (Self, bool) {
-        match fs::read_to_string(&path).ok().and_then(|s| serde_json::from_str::<Ledger>(&s).ok()) {
-            Some(mut l) => {
+        let Ok(bytes) = fs::read(&path) else {
+            return (Ledger { path, ..Default::default() }, false);
+        };
+        // Chiffré au repos avec DPAPI (lié au compte Windows) : illisible en ouvrant le fichier, et
+        // inexploitable sur une autre machine. Un fichier d'une version d'avant le chiffrement est encore
+        // en clair : on le lit quand même, `needs_migration` demandera de le réécrire chiffré.
+        let (json, legacy) = match crate::license::vault::open(&bytes) {
+            Some(text) => (text, false),
+            None => (String::from_utf8_lossy(&bytes).into_owned(), true),
+        };
+        match serde_json::from_str::<Ledger>(&json) {
+            Ok(mut l) => {
                 l.path = path;
+                l.legacy_plaintext = legacy;
                 (l, true)
             }
+            // illisible (fichier coupé, ou chiffré pour un autre compte) : on repart d'un journal vide
             None => (Ledger { path, ..Default::default() }, false),
         }
     }
@@ -211,12 +226,20 @@ impl Ledger {
             let _ = fs::create_dir_all(dir);
         }
         if let Ok(json) = serde_json::to_string(self) {
+            // chiffré au repos (DPAPI) ; si le chiffrement échoue, on garde au moins un fichier que l'app
+            // sait relire plutôt que de perdre l'état des réglages
+            let bytes = crate::license::vault::seal(&json).unwrap_or_else(|| json.into_bytes());
             // écrit à côté puis remplace : un arrêt brutal ne laisse pas un fichier coupé
             let tmp = self.path.with_extension("json.tmp");
-            if fs::write(&tmp, json).is_ok() {
+            if fs::write(&tmp, &bytes).is_ok() {
                 let _ = fs::rename(&tmp, &self.path);
             }
         }
+    }
+
+    /// Le fichier lu était en clair (version d'avant le chiffrement) : le réécrire chiffré au premier lancement.
+    pub fn needs_migration(&self) -> bool {
+        self.legacy_plaintext
     }
 
     pub fn has(&self, probe_id: &str) -> bool {
@@ -893,4 +916,32 @@ device                  partition=C:\r\ndisabledynamictick      Oui\r\ntscsyncpo
         let _ = fs::remove_dir_all(&dir);
     }
 
+    // Le chiffrement au repos est DPAPI, propre à Windows (ailleurs le coffre laisse passer en clair).
+    #[cfg(windows)]
+    #[test]
+    fn reads_legacy_plaintext_ledger_then_reseals() {
+        let dir = std::env::temp_dir().join(format!("rago-legacy-{}", std::process::id()));
+        let _ = fs::create_dir_all(&dir);
+        let path = dir.join("applied.json");
+        // simule un fichier d'une version d'avant le chiffrement : du JSON en clair sur le disque
+        let mut old = Ledger::default();
+        old.set_applied("net_x", Some("a".into()), true, true, vec![], 1);
+        old.tweaks.get_mut("net_x").unwrap().undo = Some(Undo { full: Some("netsh int tcp reset".into()), ..Default::default() });
+        fs::write(&path, serde_json::to_string(&old).unwrap()).unwrap();
+
+        let (loaded, existed) = Ledger::load(path.clone());
+        assert!(existed);
+        assert!(loaded.needs_migration(), "un fichier en clair doit être repéré");
+        assert_eq!(loaded.tweaks["net_x"].undo.as_ref().unwrap().full.as_deref(), Some("netsh int tcp reset"));
+
+        // la migration réécrit chiffré
+        loaded.save();
+        let raw = fs::read(&path).unwrap();
+        assert!(!raw.windows(5).any(|w| w == b"netsh"), "le fichier chiffré ne doit pas contenir la commande en clair");
+
+        let (back, _) = Ledger::load(path.clone());
+        assert!(!back.needs_migration(), "déjà chiffré");
+        assert_eq!(back.tweaks["net_x"].undo, loaded.tweaks["net_x"].undo);
+        let _ = fs::remove_dir_all(&dir);
+    }
 }

@@ -301,6 +301,9 @@ pub fn run() {
                 // première version avec l'état des réglages : ceux déjà appliqués d'après l'historique
                 ledger.import_history(&history.all());
                 ledger.save();
+            } else if ledger.needs_migration() {
+                // fichier d'une version d'avant le chiffrement au repos : on le réécrit chiffré
+                ledger.save();
             }
             app.manage(AppState {
                 runner: Arc::new(Runner::default()),
