@@ -35,6 +35,33 @@ pub fn version_key(secret: &str, version: &str) -> [u8; 32] {
     hmac(secret.as_bytes(), format!("rago-scripts-v1|{version}").as_bytes())
 }
 
+/// Secret d'obfuscation des scripts hors licence, reconstruit par XOR de deux moitiés pour qu'il n'apparaisse pas
+/// d'un bloc dans le binaire. Ce n'est pas un vrai secret (il est dans l'exe), mais il évite qu'on lise les
+/// commandes en ouvrant le fichier.
+fn offline_secret() -> [u8; 32] {
+    const A: [u8; 32] = [
+        0xe0, 0x96, 0xc5, 0x19, 0x82, 0x6c, 0x5d, 0xb7, 0xbe, 0x70, 0xae, 0x4b, 0xa5, 0x2c, 0x1a, 0xc1,
+        0xe5, 0xf8, 0x12, 0x6a, 0xd9, 0xbc, 0x45, 0x1f, 0xc5, 0xa0, 0x5b, 0x1f, 0x37, 0x2b, 0xb7, 0x5d,
+    ];
+    const B: [u8; 32] = [
+        0x31, 0x86, 0x3b, 0xf1, 0xdf, 0xc6, 0x12, 0xc6, 0x91, 0xa8, 0xe5, 0x12, 0x75, 0x8d, 0x31, 0xb2,
+        0xba, 0x52, 0xb6, 0x90, 0x1e, 0x8d, 0x94, 0xb6, 0x56, 0xd8, 0xdc, 0x40, 0x5b, 0x76, 0x35, 0xc4,
+    ];
+    let mut s = [0u8; 32];
+    for i in 0..32 {
+        s[i] = A[i] ^ B[i];
+    }
+    s
+}
+
+/// Clé des scripts du plan gratuit et de retour arrière, qui doivent tourner sans licence ni serveur. À la
+/// différence de `version_key` (secret resté sur le serveur), elle est reconstituée dans le binaire : une
+/// obfuscation, pas un secret. Elle empêche de lire les commandes en ouvrant l'exe (ou en le donnant à une IA) ;
+/// elle n'arrête pas une rétro-ingénierie déterminée. Dérivée de la version, comme la clé Premium.
+pub fn offline_key(version: &str) -> [u8; 32] {
+    hmac(&offline_secret(), format!("rago-plain-v1|{version}").as_bytes())
+}
+
 fn xor_stream(key: &[u8; 32], nonce: &[u8], data: &mut [u8]) {
     let ek = hmac(key, b"enc");
     let mut block = nonce.to_vec();

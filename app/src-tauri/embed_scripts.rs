@@ -1,6 +1,7 @@
-// Inclus par build.rs : sépare les scripts gratuits (en clair) des scripts Premium (chiffrés, voir src/seal.rs).
-// En clair : réglages du plan gratuit, variantes de retour arrière, scripts internes. Chiffré : le reste,
-// avec les relevés (scripts/probes.json) et l'annulation (scripts/undo.json) des réglages Premium.
+// Inclus par build.rs : sépare les scripts du plan gratuit/retour arrière des scripts Premium, et chiffre les deux
+// paquets (voir src/seal.rs). Le paquet gratuit utilise une clé reconstruite dans le binaire (doit tourner sans
+// licence) ; le paquet Premium, une clé propre à la version restée sur le serveur. Chaque paquet porte les scripts,
+// les relevés (scripts/probes.json) et l'annulation (scripts/undo.json). Aucune commande n'est en clair dans l'exe.
 
 fn embed_scripts(manifest: &std::path::Path, out: &std::path::Path) {
     use std::collections::{BTreeMap, HashSet};
@@ -64,12 +65,17 @@ fn embed_scripts(manifest: &std::path::Path, out: &std::path::Path) {
         let dst = if free.contains(&id) { &mut plain_u } else { &mut sealed_u };
         dst.insert(id, u);
     }
-    let plain = serde_json::json!({ "scripts": plain_s, "probes": plain_p, "undo": plain_u });
-    std::fs::write(out.join("scripts.plain.json"), serde_json::to_vec(&plain).unwrap()).unwrap();
-    let premium = serde_json::to_vec(&serde_json::json!({ "scripts": sealed_s, "probes": sealed_p, "undo": sealed_u })).unwrap();
     let version = std::env::var("CARGO_PKG_VERSION").unwrap();
-    let key = seal::version_key(&secret, &version);
     let stamp = std::time::SystemTime::now().duration_since(std::time::UNIX_EPOCH).unwrap().as_nanos();
-    let nonce: [u8; 16] = seal::hmac(&key, format!("nonce|{stamp}|{}", premium.len()).as_bytes())[..16].try_into().unwrap();
-    std::fs::write(out.join("scripts.sealed"), seal::seal(&key, &nonce, &premium)).unwrap();
+    let seal_to = |path: &str, key: &[u8; 32], body: &[u8]| {
+        let nonce: [u8; 16] = seal::hmac(key, format!("nonce|{stamp}|{}", body.len()).as_bytes())[..16].try_into().unwrap();
+        std::fs::write(out.join(path), seal::seal(key, &nonce, body)).unwrap();
+    };
+    // Plan gratuit et retour arrière : chiffrés avec une clé reconstruite dans le binaire (obfuscation), car ils
+    // doivent tourner sans licence. Plus aucune commande d'optimisation n'est en clair dans l'exe.
+    let plain = serde_json::to_vec(&serde_json::json!({ "scripts": plain_s, "probes": plain_p, "undo": plain_u })).unwrap();
+    seal_to("scripts.plain.sealed", &seal::offline_key(&version), &plain);
+    // Premium : clé propre à la version, qui ne quitte pas le serveur de licences.
+    let premium = serde_json::to_vec(&serde_json::json!({ "scripts": sealed_s, "probes": sealed_p, "undo": sealed_u })).unwrap();
+    seal_to("scripts.sealed", &seal::version_key(&secret, &version), &premium);
 }
