@@ -217,7 +217,7 @@ impl Ledger {
                 (l, true)
             }
             // illisible (fichier coupé, ou chiffré pour un autre compte) : on repart d'un journal vide
-            None => (Ledger { path, ..Default::default() }, false),
+            Err(_) => (Ledger { path, ..Default::default() }, false),
         }
     }
 
