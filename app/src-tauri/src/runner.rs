@@ -174,9 +174,43 @@ impl Runner {
                 ok += 1;
                 continue;
             }
-            // RBW Mod : revenir en arrière (« Activé » après « Désactivé », déconnexion), c'est lancer « Activé » en entier,
-            // jamais la sauvegarde d'avant « Désactivé », qui ne démarrait aucun service (catalog::revert_runs_script).
-            // Lancé et noté dans l'historique comme « Activé » : l'interface affiche « Activé depuis… »
+            // RBW Mod « Désactivé » de cette version : il n'a posé que les valeurs de Windows, il n'y a rien à défaire. Le
+            // défaire sans clic sur « Activé » (décoché, Tout annuler, déconnexion, fin de Premium, désinstallation) ne
+            // lance rien : ni les 6 étapes d'« Activé », ni son verdict (« post a screenshot on Discord »), que le joueur
+            // n'a pas demandés. Noté comme une annulation : la ligne garde « Désactivé depuis… », ce qui reste vrai.
+            if item.undo && catalog::revert_runs_script(&item.id) {
+                let entry = ctx.ledger.lock().unwrap().tweaks.get(&item.id).cloned();
+                if let Some(entry) = entry.filter(|a| !a.backup && a.windows_values) {
+                    let variant = entry.variant.as_deref().or(item.variant.as_deref());
+                    ctx.emit("run:item", ItemEvent { run_id, index, id: &item.id, variant, status: "running", code: None, duration_ms: None, message: None });
+                    write_log(&format!("==== undo {}{}", item.id, variant.map(|v| format!(":{v}")).unwrap_or_default()));
+                    let line = "- Off already put the Windows values back: nothing to undo".to_string();
+                    write_log(&line);
+                    ctx.emit("run:log", LogEvent { run_id, id: &item.id, line });
+                    {
+                        let mut l = ctx.ledger.lock().unwrap();
+                        l.release(&item.id);
+                        l.save();
+                    }
+                    ctx.emit("run:item", ItemEvent { run_id, index, id: &item.id, variant, status: "ok", code: Some(0), duration_ms: Some(0), message: None });
+                    ctx.history.push(Entry {
+                        id: item.id.clone(),
+                        variant: variant.map(str::to_string),
+                        ts: now_ms(),
+                        ok: true,
+                        code: Some(0),
+                        duration_ms: 0,
+                        undo: true,
+                    });
+                    ok += 1;
+                    continue;
+                }
+            }
+            // RBW Mod : revenir en arrière autrement (« Activé » après « Désactivé » ; entrée d'une version d'avant :
+            // sauvegarde de 1.1.9, ou ancien « Désactivé » noté d'après l'historique, qui passait des services en manuel),
+            // c'est lancer « Activé » en entier, jamais la sauvegarde d'avant « Désactivé », qui ne démarrait aucun service
+            // (catalog::revert_runs_script). Lancé et noté dans l'historique comme « Activé » : l'interface affiche
+            // « Activé depuis… »
             let as_script;
             let converted = catalog::revert_runs_script(&item.id)
                 && (item.undo || (applied && catalog::is_revert(&item.id, item.variant.as_deref())));
@@ -268,6 +302,12 @@ impl Runner {
                                 l.release(&item.id);
                             }
                             l.set_applied(&item.id, item.variant.clone(), r.0, item.id == "mc_optifine", Vec::new(), now_ms());
+                            if catalog::revert_runs_script(&item.id) {
+                                // « Désactivé » ne pose que des valeurs de Windows, même lancé à moitié : rien à défaire
+                                if let Some(a) = l.tweaks.get_mut(&item.id) {
+                                    a.windows_values = true;
+                                }
+                            }
                             l.save();
                         } else if catalog::revert_runs_script(&item.id) {
                             // RBW Mod « Activé » : il n'est plus « appliqué » (« Désactivé » l'était)
@@ -683,6 +723,57 @@ mod tests {
         assert_eq!((ok, failed), (3, 0), "le second net_a est déjà remis : rien à faire");
         assert!(ctx.ledger.lock().unwrap().tweaks.is_empty());
         assert_eq!(ctx.history.all().len(), 2);
+    }
+
+    /// M1 (revue du 2026-10-13) : défaire le RBW Mod « Désactivé » de cette version (décoché, Tout annuler, déconnexion,
+    /// fin de Premium, désinstallation) ne lance rien, il avait déjà remis les valeurs de Windows. « Activé » ne tourne
+    /// que sur un clic, ou pour une entrée d'une version d'avant. Sous Linux, lancer un script échoue (pas de cmd.exe) :
+    /// un lot réussi prouve que rien n'a été lancé.
+    #[test]
+    fn rbw_off_is_forgotten_without_running_on() {
+        let ctx = test_ctx("rbw", None);
+        let rbw = |variant: &str, undo: bool| RunItem { id: "rbw_mode".into(), variant: Some(variant.into()), params: None, undo };
+        let runner = Runner::default();
+        // « Désactivé » : noté appliqué sans sauvegarde, avec « valeurs de Windows » (même raté ici, faute de script)
+        runner.run_now(&ctx, &[rbw("off", false)]);
+        {
+            let l = ctx.ledger.lock().unwrap();
+            let a = &l.tweaks["rbw_mode"];
+            assert!(!a.backup && a.windows_values && a.variant.as_deref() == Some("off"));
+            assert!(l.views(&|_| backup::Saved::Unknown).iter().any(|v| v.id == "rbw_mode" && v.windows_values));
+        }
+        // défait sans clic (remise à zéro : variante inconnue) : rien n'est lancé, l'entrée part, l'historique dit « annulé »
+        let (ok, failed) = runner.run_now(&ctx, &reset_item("rbw_mode"));
+        assert_eq!((ok, failed), (1, 0), "aucun script lancé");
+        assert!(!ctx.ledger.lock().unwrap().tweaks.contains_key("rbw_mode"));
+        let last = ctx.history.all().into_iter().max_by_key(|e| e.ts).unwrap();
+        assert!(last.id == "rbw_mode" && last.undo && last.ok && last.variant.as_deref() == Some("off"), "{last:?}");
+        let log = fs::read_dir(&ctx.logs_dir).unwrap().filter_map(|e| fs::read_to_string(e.ok()?.path()).ok()).collect::<String>();
+        assert!(log.contains("nothing to undo"), "{log}");
+
+        // clic sur « Activé » alors que « Désactivé » est appliqué : « Activé » est lancé (ici il échoue, faute de cmd.exe)
+        ctx.ledger.lock().unwrap().tweaks.insert("rbw_mode".into(), backup::Applied { variant: Some("off".into()), windows_values: true, ..Default::default() });
+        let (_, failed) = runner.run_now(&ctx, &[rbw("on", false)]);
+        assert_eq!(failed, 1, "« Activé » a été lancé");
+        let last = ctx.history.all().into_iter().max_by_key(|e| e.ts).unwrap();
+        assert!(last.variant.as_deref() == Some("on") && !last.undo, "{last:?}");
+
+        // entrées d'une version d'avant : sauvegarde de 1.1.9, ou ancien « Désactivé » noté d'après l'historique (il passait
+        // des services en manuel) : leur retour arrière lance toujours « Activé »
+        for backup in [true, false] {
+            ctx.ledger.lock().unwrap().tweaks.insert("rbw_mode".into(), backup::Applied { variant: Some("off".into()), backup, ..Default::default() });
+            let (_, failed) = runner.run_now(&ctx, &[rbw("off", true)]);
+            assert_eq!(failed, 1, "backup={backup} : « Activé » a été lancé");
+            let last = ctx.history.all().into_iter().max_by_key(|e| e.ts).unwrap();
+            assert!(last.variant.as_deref() == Some("on") && !last.undo, "backup={backup} : {last:?}");
+        }
+        // une entrée d'avant n'a jamais « valeurs de Windows » (champ absent du fichier)
+        let old: backup::Applied = serde_json::from_str(r#"{"variant":"off","ts":1,"ok":true,"backup":false}"#).unwrap();
+        assert!(!old.windows_values);
+    }
+
+    fn reset_item(id: &str) -> Vec<RunItem> {
+        crate::reset::items(vec![id.to_string()])
     }
 
     #[test]

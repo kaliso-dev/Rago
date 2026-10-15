@@ -1,7 +1,7 @@
 import { AnimatePresence, motion } from "motion/react";
 import { ArrowRight } from "lucide-react";
 import { needsReboot, retired, tweaks } from "../lib/catalog";
-import { useStore } from "../lib/store";
+import { undoVariant, useStore } from "../lib/store";
 import { Button } from "./ui";
 
 export function ApplyBar() {
@@ -15,7 +15,7 @@ export function ApplyBar() {
     }).length +
     undo.filter((id) => {
       const tw = tweaks.get(id);
-      return tw ? needsReboot(tw, applied.get(id)?.variant ?? null) : !!retired.get(id)?.reboot;
+      return tw ? needsReboot(tw, undoVariant(id, applied.get(id))) : !!retired.get(id)?.reboot;
     }).length;
   return (
     <div className="applybar-wrap">

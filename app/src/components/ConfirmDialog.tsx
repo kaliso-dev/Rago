@@ -2,7 +2,7 @@ import { RotateCcw, ShieldCheck, TriangleAlert } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import { availability, needsReboot, retired, tweaks } from "../lib/catalog";
 import { formatTime } from "../lib/i18n";
-import { RESTORE_FRESH_MS, SESSION_TOGGLES, itemName, useStore } from "../lib/store";
+import { RESTORE_FRESH_MS, SESSION_TOGGLES, itemName, undoVariant, useStore } from "../lib/store";
 import { Modal } from "./Modal";
 import { Button, Badge } from "./ui";
 
@@ -24,7 +24,7 @@ export function ConfirmDialog() {
   const warnings = list.filter((tw) => tw.confirm);
   const reboot =
     list.some((tw) => needsReboot(tw, variantOf(tw))) ||
-    undoList.some((tw) => needsReboot(tw, applied.get(tw.id)?.variant ?? null)) ||
+    undoList.some((tw) => needsReboot(tw, undoVariant(tw.id, applied.get(tw.id)))) ||
     undoRetired.some((r) => r.reboot);
   const mcBlocked = list.some((tw) => tw.native === "minecraft_optifine") && !mcDir;
 
@@ -78,13 +78,14 @@ export function ConfirmDialog() {
       : list.some((tw) => tw.kind === "tweak")
         ? t("confirm.restoreOptional")
         : t("confirm.restoreOptionalAction", { n: list.length });
-  const row = (tw: (typeof list)[number], v: string | null) => {
+  // run : variante que le moteur lance vraiment (une annulation du RBW Mod lance « Activé »), pour l'icône de redémarrage
+  const row = (tw: (typeof list)[number], v: string | null, run: string | null = v) => {
     const vLabel = tw.variants?.find((x) => x.id === v)?.label[lang];
     return (
       <li key={tw.id}>
         <span>{itemName(tw.id, lang)}</span>
         {vLabel && <span className="confirm-variant">{vLabel}</span>}
-        {needsReboot(tw, v) && <RotateCcw size={12} className="muted" />}
+        {needsReboot(tw, run) && <RotateCcw size={12} className="muted" />}
         {tw.risk === "advanced" && <Badge tone="warn">{t("badge.advanced")}</Badge>}
       </li>
     );
@@ -105,7 +106,7 @@ export function ConfirmDialog() {
         <>
           {list.length > 0 && <div className="rg-overline confirm-group">{t("confirm.undoList")}</div>}
           <ul className="confirm-list undo">
-            {undoList.map((tw) => row(tw, applied.get(tw.id)?.variant ?? null))}
+            {undoList.map((tw) => row(tw, applied.get(tw.id)?.variant ?? null, undoVariant(tw.id, applied.get(tw.id))))}
             {undoRetired.map((r) => (
               <li key={r.id}>
                 <span>{r.name[lang]}</span>
