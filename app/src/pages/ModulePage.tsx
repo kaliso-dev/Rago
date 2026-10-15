@@ -95,12 +95,13 @@ function HistoryList() {
         <ul className="history">
           {items.map((h, i) => {
             const tw = tweaks.get(h.id);
-            const v = tw?.variants?.find((x) => x.id === h.variant)?.label[lang];
+            // annulation : « Annuler · Nom », sans la variante (celle qu'on a défaite se lirait comme celle appliquée)
+            const v = h.undo ? undefined : tw?.variants?.find((x) => x.id === h.variant)?.label[lang];
             return (
               <li key={`${h.ts}-${i}`}>
                 <span className={`dot ${h.ok ? "dot-ok" : "dot-bad"}`} />
                 <span className="history-name">
-                  {itemName(h.id, lang)}
+                  {h.undo ? t("run.undoName", { name: itemName(h.id, lang) }) : itemName(h.id, lang)}
                   {v && <span className="muted"> · {v}</span>}
                 </span>
                 <span className="rg-metric muted">
