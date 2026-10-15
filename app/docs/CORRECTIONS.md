@@ -544,3 +544,70 @@ Corrigé par le script à l'import (`audit_fixes.py`, sur secteur) :
 
 L'annulation réactive le plan d'avant (relevé `pwractive`) puis supprime le plan Rago. Le test
 `rago_power_plan_imports_on_windows` importe le vrai fichier sur la CI Windows sous un GUID de test.
+
+# Version 1.1.14 (construite sur la 1.1.10, 2026-10-15)
+
+Demande de Sofiene (2026-10-15) : repartir de la 1.1.10 (personne n'a la 1.1.12 ni la 1.1.13) sans toucher aux
+optimisations, sauf trois changements : le nouveau RBW Mod, les lignes qui faisaient planter le PC, et les chemins avec
+un caractère spécial dans le nom du compte Windows. Vérifié en comparant `scripts.json`, `probes.json`, `undo.json` et
+`catalog.json` à ceux de la 1.1.10 (a11f230) : rien d'autre ne change dans ce que lancent les réglages. Ne sont donc pas
+dans cette version : RAG-60, RAG-64, RAG-65, RAG-66 (sauf les guillemets de `%temp%`), RAG-68 (sauf la réparation de
+Advanced hitreg suite ci-dessous), RAG-74 et les finitions 2 de la revue du 2026-10-13 (`tools/expansion.py`, dossiers
+NVIDIA, `sys_registry`, `ping_advanced`, `chimney`, SMB 1).
+
+**Écran bleu 0x7E (RAG-67).** `CoalescingTimerInterval` à 0 part de tous les scripts et relevés (`safety.py`,
+`DROP_EVERYWHERE`) : huit réglages l'écrivaient, dont `pow_main` et les packs graphiques, des réglages Safe. « Disable
+timer coalescing » (`pow_timer`), qui ne faisait que ça, est retiré : 198 réglages distincts, 17 retirés. À chaque
+lancement, `repair.rs` supprime la valeur là où elle vaut 0 dans les huit clés (une ligne dans `logs\repairs.log`),
+oublie `pow_timer` une fois ses valeurs parties (`forget_pow_timer`), et l'interface demande une fois de redémarrer :
+« Redémarrer, pas Arrêter » (avec le démarrage rapide de Windows, Arrêter ne relit pas la valeur). Aucune annulation ne
+remet 0. Le relevé d'Advanced hitreg suite de la 1.1.10 ne relève rien (bloc vide, RAG-68) : le réglage repasse au
+retour par les valeurs de Windows (`undo.json`, `full`), au lancement et, depuis cette version, dès qu'il est appliqué
+(`runner.rs`), pour qu'une déconnexion juste après le remette aussi.
+
+**RBW Mod (RAG-69, M1, m2).** Seuls ses deux scripts changent, remplacés en entier par `tools/rbw.py` (détail dans la
+partie générée plus haut) : « Activé » fait ce que fait Rago-RBW-Fix.ps1, étape par étape ; « Désactivé » remet les
+services et réglages comme Windows les règle, sans rien arrêter. Défaire « Désactivé » ne lance rien (M1) ; un
+« Activé » qui n'est pas allé au bout laisse « Désactivé » noté (m2).
+
+**Nom du compte Windows avec un caractère spécial.** Dans `cln_temp`, `game_mode`, `in_windows`, `mc_optifine` et
+`sto_general` seulement, `tools/paths.py` écrit les chemins du profil `!VAR!`, met `if defined` devant chaque
+suppression qui en dépend et fait tourner les boucles qui suppriment avec `DisableDelayedExpansion` (détail dans
+« Chemins du profil dans les scripts », revue du 2026-10-13). `%temp%` passe entre guillemets dans `game_mode` et
+`in_windows` (`TEMP_QUOTES` de `build_catalog_v6.py`, seule partie reprise de RAG-66 ; la ligne du Mode jeu garde son
+« > nul »). Le moteur lance `cmd /d /c .\<script>.cmd` depuis le dossier `run` (`script_command`) : un `&`, `(`, `)` ou
+`^` dans le nom du compte ne coupe plus la ligne de commande.
+
+**Fin de licence et déconnexion : tous les réglages remis, en arrière-plan.** Comme la 1.1.10, rien ne s'affiche
+pendant la remise, seulement « Tweaks réinitialisés » à la fin ; mais tous les réglages appliqués sont remis, gratuits
+compris (la 1.1.10 ne remettait que les Premium ; la version testée le 2026-10-15 montrait la remise, et fermer
+l'app la coupait).
+`reset.rs` note d'abord la fin de licence sur le disque (`reset-pending.json`) : fermer la fenêtre la cache et l'app
+quitte une fois la remise finie ; app tuée ou PC éteint, la remise reprend au lancement suivant ; relancer Rago pendant
+la remise réaffiche la fenêtre cachée (`instance.rs`, événement `Local\<identifiant>.show`). Un réglage ne quitte
+`applied.json` qu'une fois remis, et une reconnexion arrête la remise entre deux réglages. Pendant la remise, un lot
+lancé depuis l'interface est refusé (`reset_running`). Seuls les réglages que l'app sait remettre seule sont lancés
+(sauvegarde, annulation `full`, variante de retour arrière, copie OptiFine) : les autres, sans annulation automatique
+(« can't be undone automatically yet » dans les journaux de déconnexion reçus), restent appliqués et se remettent par
+le point de restauration, au lieu d'échouer à chaque fois. Déclencheurs : la déconnexion, et à l'actualisation de la
+licence (au lancement puis chaque jour) un jeton refusé par le serveur (`invalid_token`, `bound_to_other_device`,
+`revoked`), ou plus de licence alors que des réglages Premium sont encore appliqués. Un jeton expiré hors ligne ne
+déclenche rien. La fenêtre de déconnexion compte les réglages qui seront remis (`sign_out_plan`).
+
+**Fichiers sur le disque.** Les scripts gratuits et de retour arrière sont chiffrés dans l'exe comme les Premium (#48).
+`applied.json` est chiffré au repos par DPAPI, sinon par une clé de secours de l'app, jamais en clair ; illisible, il
+est mis de côté (`applied.json.bad-<horodatage>`), pas écrasé. `history.json` est chiffré en deux couches : le
+chiffrement authentifié de l'app (clé `seal::history_key`, nonce aléatoire à chaque écriture), puis DPAPI avec un
+secret propre à l'app ; il ne s'ouvre que sur ce PC, avec ce compte Windows, par Rago Optimizer, et modifié il ne se
+relit plus (mis de côté en `history.json.bad-<horodatage>`). Un fichier en clair d'une version d'avant est relu puis
+réécrit chiffré. `LowLatency.pow` et `extremelatencylow.nip` passent de `src-tauri/resources` (installés en clair) à
+`src-tauri/assets`, chiffrés dans l'exe : le script qui en importe un l'écrit dans `run\` le temps de son exécution, ou
+dans `%SystemRoot%\Temp\<identifiant>` quand le chemin de `run\` contient un `!` (cmd le retirerait de `%RAGO_SEC%`).
+L'installeur efface les copies en clair d'une version d'avant ; `run\` est vidé au démarrage et à la désinstallation.
+Le catalogue de l'interface ne dit plus d'où vient chaque réglage dans les .bat, et « Ouvrir un dossier » n'ouvre que
+ceux de l'app.
+
+**Interface.** Plan gratuit : cadenas sur chaque onglet qui a un réglage réservé à Premium, Windows et Hitreg compris
+(avant, seulement sur un onglet sans aucun réglage gratuit). Mode jeu : « Désactivé depuis… » après Désactiver ou Tout
+annuler. Bouton « Tout annuler » dans la carte État (RAG-43), une seule Rago Optimizer à la fois, et les petites
+corrections reprises de la 1.1.13 (dates, historique, fenêtres superposées, messages de fin d'exécution).
