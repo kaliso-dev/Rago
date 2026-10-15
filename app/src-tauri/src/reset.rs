@@ -29,7 +29,8 @@ pub enum Scope {
     /// fin de licence : tous les réglages, gratuits compris, que Rago Optimizer sait remettre tout seul
     LicenseEnd,
     /// seulement les réglages Premium de `LicenseEnd` : encore appliqués sans licence, ils disent que la licence a pris
-    /// fin sans que ce soit noté (jeton effacé ou plus valable)
+    /// fin sans que ce soit noté (jeton effacé ou plus valable). Sauf ceux qui étaient gratuits dans une version d'avant
+    /// (la souris) : un joueur du plan gratuit a pu les appliquer.
     Premium,
     /// désinstallation, « Tout annuler » : tous, même ceux qui n'ont pas d'annulation automatique
     All,
@@ -46,7 +47,7 @@ pub fn targets(ledger: &Ledger, scope: Scope, bundle: Option<&catalog::Bundle>) 
         .filter(|(id, a)| match scope {
             Scope::All => true,
             Scope::LicenseEnd => undoable(id, a, bundle),
-            Scope::Premium => !catalog::is_free(id) && undoable(id, a, bundle),
+            Scope::Premium => !catalog::is_free(id) && !catalog::was_free(id) && undoable(id, a, bundle),
         })
         .map(|(id, a)| (id, a.ts))
         .collect();
@@ -374,6 +375,13 @@ mod tests {
         assert_eq!(due(&dir, "expired", &free).map(|p| p.why), Some("signed_out".into()));
         assert_eq!(due(&dir, "active", &free), None, "reconnecté : rien à remettre");
         assert_eq!(Pending::load(&dir), None, "et la fin notée est oubliée");
+
+        // la souris, appliquée quand elle était gratuite (avant la 1.1.14) : le joueur n'a jamais eu Premium
+        let mut before = Ledger::default();
+        before.set_applied("win_gamemode", None, true, true, vec![], 1);
+        before.set_applied("in_mouse", None, true, true, vec![], 2);
+        assert_eq!(due(&dir, "none", &before), None, "souris d'une version d'avant : ses réglages restent");
+        assert_eq!(targets(&before, Scope::LicenseEnd, None), vec!["in_mouse", "win_gamemode"], "remise à la déconnexion");
 
         let mut premium = Ledger::default();
         premium.set_applied("net_x", None, true, true, vec![], 1);

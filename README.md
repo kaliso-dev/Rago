@@ -4,7 +4,7 @@ Tout le code de Rago dans un seul dépôt :
 
 | Dossier | Quoi | Techno |
 |---|---|---|
-| `app/` | **Rago Optimizer**, l'app Windows (198 réglages, 10 modules, 5 presets). Gratuite avec 9 réglages ouverts, tout le reste avec Premium | Tauri 2, React + TypeScript, Rust |
+| `app/` | **Rago Optimizer**, l'app Windows (198 réglages, 10 modules, 5 presets). Gratuite avec 8 réglages ouverts, tout le reste avec Premium | Tauri 2, React + TypeScript, Rust |
 | `brand/` | Logo, tailles d'icônes, `.ico`, images d'installeur, favicons, couleurs et voix de la marque | SVG, PNG |
 | `site/` | La page de vente publique (anglais) et les pages légales | HTML statique, sans framework |
 | `licensing/` | Le serveur : abonnements Stripe, comptes, licences, verrou sur un PC, affiliation, téléchargement de l'app | Node 22, Hono, Supabase (Postgres + Storage) |
@@ -54,7 +54,7 @@ Dans ce guide, `ragohub.com` et `account.ragohub.com` sont des exemples : rempla
 
 ### L'offre
 
-- **Gratuit** : l'app elle-même, sans compte ni licence. 9 réglages sont ouverts (souris, Game Mode, Game DVR, effets visuels, plein écran et les 4 réglages de Restore, liste dans `app/src/data/free.json`). Tout le reste est sous cadenas, presets compris ; un clic sur un cadenas propose « Unlock », qui ouvre la section Pricing du site. Le moteur Rust refuse aussi les réglages verrouillés : on ne contourne pas le cadenas en bricolant l'interface.
+- **Gratuit** : l'app elle-même, sans compte ni licence. 8 réglages sont ouverts (Game Mode, Game DVR, effets visuels, plein écran et les 4 outils de Restaurer, liste dans `app/src/data/free.json`), plus le retour arrière de RBW Mod et du mode jeu ; rien de Latence, Réseau, Hitreg ni Minecraft. Tout le reste est sous cadenas, presets compris ; un clic sur un cadenas propose « Unlock », qui ouvre la section Pricing du site. Le moteur Rust refuse aussi les réglages verrouillés : on ne contourne pas le cadenas en bricolant l'interface.
 - **Premium** : abonnement Stripe **5,99 $ par mois ou 29,99 $ par an** (prix choisis le 7 octobre 2026). Tout est débloqué tant que l'abonnement est payé.
 - **L'ancien .bat n'est plus proposé** : la seule offre gratuite, c'est l'app. Les anciens liens `/downloads/...` renvoient vers l'accueil du site.
 - **Affiliation** : chaque affilié a un code, qui donne aussi −5 % au client sur son premier paiement Stripe (lien de l'affilié, ou code tapé dans **Add promotion code**). Un client n'utilise qu'un code, pour toujours. À 3 clients valides, l'affilié reçoit 6 mois de Premium, une seule fois, pour 3 filleuls (3 filleuls au maximum par affilié). Un client compte dès qu'il active l'app sur son PC (pas celui de l'affilié), tant qu'il n'est ni remboursé ni contesté.
@@ -184,7 +184,7 @@ Un certificat ne fait pas disparaître l'alerte du jour au lendemain : un certif
 Le test complet est l'étape 9 de `licensing/docs/MISE-EN-LIGNE.md`. En résumé, avec les clés Stripe de **test**, dans une fenêtre de navigation privée :
 
 0. Si tu avais installé l'ancienne version de test **« Rago Hub »**, désinstalle-la d'abord : Paramètres Windows → **Applications → Applications installées** → Rago Hub → **Désinstaller**. Elle a un autre identifiant que Rago Optimizer, donc les deux s'installeraient côte à côte.
-1. Sur le site, **Download free** : l'app s'installe et tourne en gratuit, 9 réglages ouverts.
+1. Sur le site, **Download free** : l'app s'installe et tourne en gratuit, 8 réglages ouverts.
 2. **Get Premium** (mensuel), paie avec `4242 4242 4242 4242`.
 3. Crée ton compte, vérifie que le tableau de bord montre la licence et que l'exe se télécharge.
 4. Dans l'app, connecte-toi, clique **Activate** : tout se débloque.

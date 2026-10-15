@@ -51,15 +51,20 @@ s = re.sub(r'<br>(?:Restart|Redémarre)[^`]*`', lambda m: '<br>' + reboot + '`',
 # under two names or in two modules, field `twin`) counted once, sections that only point at another module's tweak ('ref') skipped
 total = len({t.get('twin') or i for i, t in T.items()})
 # heading: "Nearly 200 tweaks" while the count sits 1 to 3 under a round ten (decided with Sofiene, 9 Oct.),
-# the exact count otherwise; the counters below (All N, 9 of N, unlocks all N) always show the exact count
+# the exact count otherwise; the counters below (All N, F of N, unlocks all N) always show the exact count
 ten = -(-total // 10) * 10
 heading = f'Nearly {ten} tweaks' if 0 < ten - total <= 3 else f'{total} tweaks'
 s = re.sub(r'<h2>(?:Nearly )?\d+ tweaks\. One clear app\.</h2>', lambda m: f'<h2>{heading}. One clear app.</h2>', s)
-s = re.sub(r'(All |9 of |unlocks all )\d+( tweaks|<)', lambda m: m.group(1) + str(total) + m.group(2), s)
+s = re.sub(r'(All |unlocks all )\d+( tweaks|<)', lambda m: m.group(1) + str(total) + m.group(2), s)
+# tweaks open in the free plan, like the app (store.tsx FREE.size: the list of free.json, Restore tools included)
+n_free = len(json.load(open(os.path.join(APP, 'data', 'free.json')))['tweaks'])
+s = re.sub(r'(<span class="txt">)\d+ of \d+(</span>)', lambda m: f'{m.group(1)}{n_free} of {total}{m.group(2)}', s)
+s = re.sub(r'\b\d+( tweaks open, | tweaks are open, )', lambda m: f'{n_free}{m.group(1)}', s)
+s = re.sub(r'(Free opens )\d+( tweaks)', lambda m: f'{m.group(1)}{n_free}{m.group(2)}', s)
 s = re.sub(r'(id="msel">0 of )\d+', lambda m: m.group(1) + str(count('latency')), s)
 open(p, 'w').write(s)
 print('MODS', re.findall(r'\["(\w+)","[^"]+","([^"]+)",(\d+)\]', s[s.index('const MODS'):s.index('];', s.index('const MODS'))]))
-print('total', total, 'heading', heading, 'reboot', reboot, 'power', sec_count('power'), 'input', sec_count('input'))
+print('total', total, 'free', n_free, 'heading', heading, 'reboot', reboot, 'power', sec_count('power'), 'input', sec_count('input'))
 # the Tweaks page: same catalog
 import runpy
 runpy.run_path(os.path.join(HERE, 'sync_tweaks.py'))

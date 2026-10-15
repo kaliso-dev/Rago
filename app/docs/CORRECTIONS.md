@@ -607,6 +607,17 @@ L'installeur efface les copies en clair d'une version d'avant ; `run\` est vidé
 Le catalogue de l'interface ne dit plus d'où vient chaque réglage dans les .bat, et « Ouvrir un dossier » n'ouvre que
 ceux de l'app.
 
+**Plan gratuit : Windows, carte graphique et Restaurer seulement.** Demande de Sofiene (2026-10-15) : rien de Latence,
+Réseau, Hitreg ni Minecraft en gratuit. « Optimisation de la souris » (`in_mouse`, Hitreg) passe en Premium, avec son
+script et son annulation (paquet Premium) : 8 réglages ouverts, Mode jeu Windows, Couper Game DVR, Effets visuels, Plein
+écran et les 4 outils de Restaurer. « Par défaut » de Profil hitreg, Latence des images et File souris et clavier n'est
+plus ouvert sans licence, dans l'interface comme dans le moteur (`catalog::allowed`) ; seuls RBW Mod « Activé » et Mode
+jeu Rago « Désactivé » le restent (`free.json`, `reverts`). Ces variantes restent dans le paquet gratuit : l'annulation
+d'un réglage appliqué sans sauvegarde s'en sert. Un joueur du plan gratuit qui avait appliqué la souris la garde et peut
+l'éteindre : sans licence, elle ne déclenche pas la remise de fin de licence (`free.json`, `formerly` ; `reset::due`).
+Le site suit (`sync_app.py` lit le nombre de réglages gratuits dans `free.json`) : 8 réglages gratuits, 198 au total, et
+la FAQ ne dit plus que les réglages gratuits restent quand Premium prend fin.
+
 **Interface.** Plan gratuit : cadenas sur chaque onglet qui a un réglage réservé à Premium, Windows et Hitreg compris
 (avant, seulement sur un onglet sans aucun réglage gratuit). Mode jeu : « Désactivé depuis… » après Désactiver ou Tout
 annuler. Bouton « Tout annuler » dans la carte État (RAG-43), une seule Rago Optimizer à la fois, et les petites

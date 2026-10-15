@@ -1,7 +1,7 @@
 import { ArrowRight, Check, Lock } from "lucide-react";
 import { api } from "../lib/api";
 import { totalTweaks, tweaks } from "../lib/catalog";
-import { FREE, REVERTS, useStore } from "../lib/store";
+import { FREE, FREE_REVERTS, useStore } from "../lib/store";
 import { LicenseGate, SITE_URL } from "./LicenseGate";
 import { Pulse } from "./Logo";
 import { Modal } from "./Modal";
@@ -27,7 +27,7 @@ export function Upsell() {
         <h2>{title}</h2>
         <p className="muted">
           {t("upsell.lead", vars)}
-          {tw && REVERTS.has(tw.id) && ` ${t("upsell.revertFree")}`}
+          {tw && FREE_REVERTS.has(tw.id) && ` ${t("upsell.revertFree")}`}
         </p>
         <ul className="upsell-list">
           {(["upsell.b1", "upsell.b2", "upsell.b3", "upsell.b4"] as const).map((k) => (
