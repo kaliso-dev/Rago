@@ -49,10 +49,11 @@ export function Settings() {
                 <div>
                   <div>{license.email}</div>
                   <div className="muted small">
+                    {/* « 14 oct. » finit déjà par un point : la phrase n'en prend pas un second */}
                     {license.state === "expired"
                       ? t("account.pending")
                       : activatedAt
-                        ? `${t("account.device")} ${t("account.activated", { date: formatDate(lang, activatedAt) })}.`
+                        ? `${t("account.device")} ${t("account.activated", { date: formatDate(lang, activatedAt) }).replace(/\.?$/, ".")}`
                         : t("account.device")}
                   </div>
                 </div>
