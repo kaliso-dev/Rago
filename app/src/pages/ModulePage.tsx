@@ -48,10 +48,12 @@ function MinecraftFolder() {
                 variant="ghost"
                 icon={<RotateCcw size={12} />}
                 onClick={async () => {
+                  // le moteur répond en anglais : on affiche nos textes, l'erreur système (dans la langue de Windows) en détail
                   try {
-                    setMsg(await api.minecraftRestore(mcDir));
+                    await api.minecraftRestore(mcDir);
+                    setMsg(t("mc.restored"));
                   } catch (e) {
-                    setMsg(String(e));
+                    setMsg(String(e) === "No Rago backup found" ? t("mc.noBackup") : t("mc.restoreFailed", { error: String(e) }));
                   }
                   void refresh();
                 }}
