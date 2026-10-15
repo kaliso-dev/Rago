@@ -9,6 +9,9 @@
   ${AndIf} $EXEDIR != $INSTDIR
     ; l'app ouverte est fermée d'abord : la remise ne doit pas croiser un lot lancé depuis la fenêtre
     !insertmacro CheckIfAppIsRunning "$INSTDIR\${MAINBINARYNAME}.exe" "${PRODUCTNAME}"
+    ; la remise s'arrête d'elle-même au bout de 15 minutes (reset::UNINSTALL_LIMIT) : la désinstallation ne reste
+    ; jamais bloquée
+    DetailPrint "Putting back the Windows settings changed by ${PRODUCTNAME} (this can take a few minutes)..."
     ExecWait '"$INSTDIR\${MAINBINARYNAME}.exe" --reset-tweaks'
   ${EndIf}
 !macroend

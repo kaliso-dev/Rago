@@ -2042,6 +2042,9 @@ svg {
   flex: none;
   color: var(--rg-success);
 }
+.reset-toast.warn > svg {
+  color: var(--rg-warning);
+}
 .license-notice {
   display: flex;
   align-items: center;

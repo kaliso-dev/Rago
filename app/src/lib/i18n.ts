@@ -256,6 +256,7 @@ const fr = {
   "confirm.undoGo": "Annuler maintenant",
   "run.undoName": "Annuler · {name}",
   "reset.done": "Tweaks réinitialisés",
+  "reset.failed": "{n} réglage n'a pas pu être remis : détails dans l'historique (module Restaurer)|{n} réglages n'ont pas pu être remis : détails dans l'historique (module Restaurer)",
   "signout.undoLead": "Tes {n} réglage Premium vont être annulés : Rago Optimizer remet les réglages de Windows comme avant. Tes réglages gratuits restent actifs.|Tes {n} réglages Premium vont être annulés : Rago Optimizer remet les réglages de Windows comme avant. Tes réglages gratuits restent actifs.",
   "signout.go": "Annuler et me déconnecter",
 };
@@ -504,6 +505,7 @@ const en: Record<Key, string> = {
   "confirm.undoGo": "Undo now",
   "run.undoName": "Undo · {name}",
   "reset.done": "Tweaks have been reset",
+  "reset.failed": "{n} tweak couldn't be put back: details in History (Restore module)|{n} tweaks couldn't be put back: details in History (Restore module)",
   "signout.undoLead": "Your {n} Premium tweak will be undone: Rago Optimizer puts those Windows settings back the way they were. Your free tweaks stay on.|Your {n} Premium tweaks will be undone: Rago Optimizer puts those Windows settings back the way they were. Your free tweaks stay on.",
   "signout.go": "Undo and sign out",
 };

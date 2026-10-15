@@ -10,11 +10,11 @@ use std::path::PathBuf;
 use std::sync::atomic::{AtomicBool, Ordering};
 use std::sync::{Arc, Mutex};
 
-use crate::backup::Ledger;
+use crate::backup::{Applied, Ledger};
 use crate::history::History;
 use crate::license::License;
 use crate::runner::{Context, RunItem, Runner};
-use crate::{catalog, system};
+use crate::{catalog, minecraft, system};
 
 /// Argument passé par le désinstallateur.
 pub const UNINSTALL_ARG: &str = "--reset-tweaks";
@@ -29,16 +29,34 @@ pub enum Scope {
     All,
 }
 
-/// Réglages à remettre, le dernier appliqué en premier.
+/// Réglages à remettre, le dernier appliqué en premier. Fin de Premium : seulement ceux que Rago Optimizer sait
+/// remettre sans la licence. Les autres (appliqués avant 1.1.6 sans copie de leur annulation, OptiFine hors du dossier
+/// .minecraft habituel) échoueraient à chaque lancement et rempliraient l'historique d'erreurs : ils restent
+/// appliqués, annulables à la main (Tout annuler, point de restauration).
 pub fn targets(ledger: &Ledger, scope: Scope) -> Vec<String> {
     let mut ids: Vec<(&String, u64)> = ledger
         .tweaks
         .iter()
-        .filter(|(id, _)| scope == Scope::All || !catalog::is_free(id))
+        .filter(|(id, a)| scope == Scope::All || (!catalog::is_free(id) && undoable_unlicensed(id, a)))
         .map(|(id, a)| (id, a.ts))
         .collect();
-    ids.sort_by(|a, b| b.1.cmp(&a.1));
+    ids.sort_by(|a, b| b.1.cmp(&a.1).then_with(|| a.0.cmp(b.0)));
     ids.into_iter().map(|(id, _)| id.clone()).collect()
+}
+
+/// Le moteur sait remettre ce réglage sans les scripts Premium : sauvegarde de l'état d'avant, copie de l'annulation,
+/// annulation ou variante de retour arrière en clair.
+fn undoable_unlicensed(id: &str, a: &Applied) -> bool {
+    if id == "mc_optifine" {
+        // la remise ne connaît que le dossier par défaut (le dossier choisi reste dans l'interface)
+        return std::env::var("APPDATA")
+            .map(|d| minecraft::status(&PathBuf::from(d).join(".minecraft")).backups > 0)
+            .unwrap_or(false);
+    }
+    a.backup
+        || a.undo.as_ref().is_some_and(|u| u.full.is_some())
+        || catalog::undo_of(id, a.variant.as_deref(), None).is_some_and(|u| u.full.is_some())
+        || catalog::revert_variant(id).is_some_and(|v| catalog::script(id, Some(&v), None).is_some())
 }
 
 pub fn items(ids: Vec<String>) -> Vec<RunItem> {
@@ -117,9 +135,23 @@ pub fn uninstall() {
         backup_dir: data_dir.join("backup"),
         ledger,
         premium,
+        stop_when: None,
     };
-    Runner::default().run_now(&ctx, &items(ids));
+    let runner = Arc::new(Runner::default());
+    // un script bloqué ne doit jamais coincer la désinstallation : au bout du délai, le script en cours est arrêté
+    // et le reste n'est pas remis (il reste dans applied.json, et le point de restauration reste possible)
+    let watchdog = Arc::clone(&runner);
+    std::thread::spawn(move || {
+        std::thread::sleep(UNINSTALL_LIMIT);
+        watchdog.cancel();
+        std::thread::sleep(std::time::Duration::from_secs(30));
+        std::process::exit(2);
+    });
+    runner.run_now(&ctx, &items(ids));
 }
+
+/// Durée maximale de la remise à la désinstallation. Une remise complète prend d'habitude une à cinq minutes.
+pub const UNINSTALL_LIMIT: std::time::Duration = std::time::Duration::from_secs(15 * 60);
 
 #[cfg(test)]
 mod tests {
@@ -135,6 +167,27 @@ mod tests {
         assert_eq!(targets(&l, Scope::Premium), vec!["net_new", "net_old"], "le dernier appliqué en premier");
         assert_eq!(targets(&l, Scope::All), vec!["net_new", "net_old", "win_gamemode"]);
         assert!(items(targets(&l, Scope::All)).iter().all(|i| i.undo && i.variant.is_none()));
+    }
+
+    #[test]
+    fn premium_scope_skips_what_cannot_be_put_back_without_the_license() {
+        let mut l = Ledger::default();
+        // appliqué avant 1.1.6, sans copie de son annulation : il échouerait à chaque lancement
+        l.set_applied("net_legacy", None, true, false, vec![], 1);
+        l.set_applied("net_saved", None, true, true, vec![], 2);
+        assert_eq!(targets(&l, Scope::Premium), vec!["net_saved"]);
+        assert_eq!(targets(&l, Scope::All), vec!["net_saved", "net_legacy"], "Tout annuler et la désinstallation essaient tout");
+        l.tweaks.get_mut("net_legacy").unwrap().undo = Some(crate::backup::Undo { full: Some("reg add x".into()), ..Default::default() });
+        assert_eq!(targets(&l, Scope::Premium), vec!["net_saved", "net_legacy"], "copie de l'annulation gardée : il est remis");
+    }
+
+    #[test]
+    fn uninstaller_hook_skips_updates_and_is_bounded() {
+        let hooks = include_str!("../installer/hooks.nsh");
+        assert!(hooks.contains("$UpdateMode <> 1"), "pas pendant une mise à jour");
+        assert!(hooks.contains("$EXEDIR != $INSTDIR"), "pas quand un installateur lance le désinstallateur en place");
+        assert!(hooks.contains("ExecWait"));
+        assert!(UNINSTALL_LIMIT.as_secs() <= 20 * 60, "la désinstallation ne doit jamais rester bloquée");
     }
 
     #[test]

@@ -61,6 +61,7 @@ impl AppState {
             adapter: self.system(false).adapter,
             ledger: Arc::clone(&self.ledger),
             premium,
+            stop_when: None,
         }
     }
 }
@@ -68,7 +69,8 @@ impl AppState {
 /// Plus de licence sur ce PC (abonnement terminé, remboursement, déconnexion) et des réglages Premium encore
 /// appliqués : ils sont remis en arrière-plan, sans fenêtre ni bouton pour arrêter. L'interface n'en voit que la fin
 /// (`reset:done`). Un jeton expiré hors ligne n'annule rien : le joueur paie peut-être encore, le serveur le dira au
-/// prochain rafraîchissement.
+/// prochain rafraîchissement. La licence revient pendant la remise (reconnexion) : elle s'arrête après le réglage en
+/// cours, les suivants restent appliqués.
 fn reset_if_unlicensed(app: &AppHandle) {
     let app = app.clone();
     std::thread::spawn(move || {
@@ -80,7 +82,9 @@ fn reset_if_unlicensed(app: &AppHandle) {
         if ids.is_empty() || !state.reset.begin() {
             return;
         }
-        let (ok, failed) = Runner::default().run_now(&state.context(None, None), &reset::items(ids));
+        let lic = Arc::clone(&state.license);
+        let ctx = Context { stop_when: Some(Arc::new(move || lic.status().state != "none")), ..state.context(None, None) };
+        let (ok, failed) = Runner::default().run_now(&ctx, &reset::items(ids));
         let quit = state.reset.end();
         let _ = app.emit("reset:done", reset::Done { ok, failed });
         if quit {

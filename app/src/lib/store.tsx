@@ -1,5 +1,5 @@
 import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState, type ReactNode } from "react";
-import { api, asLicenseError, type AppliedView, type DoneEvent, type HistoryEntry, type ItemStatus, type LicenseError, type LicenseStatus, type RunItem, type SystemInfo } from "./api";
+import { api, asLicenseError, type AppliedView, type DoneEvent, type HistoryEntry, type ItemStatus, type LicenseError, type LicenseStatus, type ResetDone, type RunItem, type SystemInfo } from "./api";
 import { autoVariant, availability, catalog, retired, tweakModule, tweaks, type Lang, type Tweak, needsReboot } from "./catalog";
 import { translate, type Key } from "./i18n";
 import free from "../data/free.json";
@@ -128,7 +128,7 @@ function useStoreValue() {
   const [licenseNotice, setLicenseNotice] = useState<LicenseError | null>(null);
   const [activatedAt, setActivatedAt] = usePersisted<number | null>("activatedAt", null);
   /** Remise à zéro faite par le moteur (fin de Premium, déconnexion) : petit message en bas à droite. */
-  const [resetAt, setResetAt] = useState<number | null>(null);
+  const [resetDone, setResetDone] = useState<(ResetDone & { at: number }) | null>(null);
   const premium = license?.state === "active";
   /** Verrouillé en gratuit : tout sauf la liste gratuite et les réglages qui ont une variante de retour arrière. */
   const isLocked = useCallback((id: string) => !premium && !FREE.has(id) && !REVERTS.has(id), [premium]);
@@ -456,7 +456,7 @@ function useStoreValue() {
     const sub = api.onReset((e) => {
       void refreshApplied();
       void refreshHistory();
-      if (e.ok > 0) setResetAt(Date.now());
+      if (e.ok > 0 || e.failed > 0) setResetDone({ ...e, at: Date.now() });
     });
     return () => void sub.then((un) => un());
   }, [refreshApplied, refreshHistory]);
@@ -472,7 +472,7 @@ function useStoreValue() {
     page, goTo,
     sys, sysLoading, refreshSys,
     selection, selected, toggle, selectMany, unselectMany, variants, setVariant, variantOf,
-    pendingUndo, applied, appliedLoaded: appliedList !== null, isOn, premiumApplied, reapply, resetAt, setResetAt,
+    pendingUndo, applied, appliedLoaded: appliedList !== null, isOn, premiumApplied, reapply, resetDone, setResetDone,
     retiredApplied, requestUndo,
     history, lastRun, lastRestore, refreshHistory, refreshApplied,
     mcDir, setMcDir,
