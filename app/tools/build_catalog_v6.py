@@ -1012,6 +1012,12 @@ def main():
     for p in presets:
         for e in p['tweaks']:
             assert e.split(':')[0] in ids, (p['id'], e)
+    # origine de chaque réglage dans les .bat (fichier et ligne) : utile ici, pas dans l'interface, où elle donnerait le
+    # plan des anciens programmes à qui ouvre l'app
+    for m in modules:
+        for sec in m['sections']:
+            for t in sec['tweaks']:
+                t.pop('legacy', None)
     catalog = {'version': 8, 'modules': modules, 'presets': presets, 'retired': retired}
     catalog_path = os.path.join(ROOT, 'src', 'data', 'catalog.json')
     json.dump(catalog, open(catalog_path, 'w', encoding='utf-8'), ensure_ascii=False, indent=1)
