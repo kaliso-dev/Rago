@@ -8,6 +8,7 @@ exclude:
   - licensing
   - site
   - README.md
+  - DEVELOPPEMENT.md
   - Dockerfile
   - netlify.toml
   - _config.yml

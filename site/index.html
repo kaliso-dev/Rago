@@ -97,7 +97,7 @@ section[id],main[id]{scroll-margin-top:92px}
 #pricing{scroll-margin-top:118px}
 
 /* Hero */
-.hero{position:relative;min-height:min(980px,100svh);display:flex;align-items:center;padding-block:140px 90px;overflow:hidden;overflow:clip;isolation:isolate}
+.hero{position:relative;min-height:100vh;min-height:100svh;display:flex;align-items:center;padding-block:140px 112px;overflow:hidden;overflow:clip;isolation:isolate}
 #dots{position:absolute;inset:0;width:100%;height:100%;z-index:-2}
 .orb{position:absolute;z-index:-1;border-radius:50%;filter:blur(80px);pointer-events:none;opacity:.55}
 .orb.a{width:46vw;height:46vw;max-width:760px;max-height:760px;right:-8vw;top:-14vw;background:radial-gradient(circle,rgba(255,59,48,.55),transparent 65%);animation:drift 18s ease-in-out infinite alternate}
@@ -114,6 +114,17 @@ section[id],main[id]{scroll-margin-top:92px}
 .fade{animation:fadeUp .9s var(--out) both}
 .d1{animation-delay:.45s}.d2{animation-delay:.6s}.d3{animation-delay:.75s}.d4{animation-delay:.35s}
 @keyframes fadeUp{from{opacity:.001;transform:translateY(16px)}to{opacity:1;transform:none}}
+/* Scroll cue (same as tweaks.html): bottom of the first screen (or of the hero when it is shorter); JS hides it when it would touch the content or once the page moves */
+.cue{display:none;position:absolute;left:50%;top:calc(min(100%, 100svh) - 80px);transform:translateX(-50%);flex-direction:column;align-items:center;gap:8px;padding:4px 8px;color:var(--t3);text-decoration:none;font:500 10px/1 var(--mono);letter-spacing:.2em;text-indent:.2em;text-transform:uppercase;transition:color .3s,opacity .5s var(--out),visibility .5s}
+.js .cue{display:flex}
+.cue:hover{color:var(--t1)}
+.cue-m,.cue-t{animation:cueIn 1s var(--out) 1.3s both}
+.cue-m{position:relative;width:20px;height:30px;border-radius:11px;border:1.5px solid rgba(255,255,255,.26);transition:border-color .3s}
+.cue:hover .cue-m{border-color:var(--t3)}
+.cue-m i{position:absolute;left:50%;top:6px;width:4px;height:6px;margin-left:-2px;border-radius:2px;background:var(--red);box-shadow:0 0 10px rgba(255,59,48,.6);animation:wheel 1.9s var(--out) 2.2s infinite both}
+.cue.gone,.cue.tight{opacity:0;visibility:hidden}
+@keyframes cueIn{from{opacity:0;transform:translateY(-10px)}}
+@keyframes wheel{0%{transform:none;opacity:0}20%{opacity:1}70%,100%{transform:translateY(10px);opacity:0}}
 .cta-row{display:flex;flex-wrap:wrap;gap:10px;margin-top:34px}
 .ticks{display:flex;flex-wrap:wrap;gap:8px;margin-top:26px}
 .ticks span{display:inline-flex;align-items:center;gap:7px;padding:6px 12px;border-radius:var(--r-full);background:var(--ink-2);border:1px solid var(--l1);font-size:12.5px;color:var(--t2)}
@@ -333,6 +344,8 @@ section[id],main[id]{scroll-margin-top:92px}
 .ring.go .fg{stroke-dashoffset:0}
 .restore-demo b{font-size:14px;font-weight:560;display:block}
 .restore-demo span{font-size:12.5px;color:var(--t3)}
+.more-tw{display:flex;justify-content:center;margin-top:28px;font-size:14px}
+.more-tw .rev-all{padding:10px 18px}
 
 /* How */
 .how{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px;position:relative;max-width:1300px;margin-inline:auto}
@@ -353,12 +366,13 @@ section[id],main[id]{scroll-margin-top:92px}
 .rev-pause{all:unset;cursor:pointer;margin-left:6px;padding:4px 10px;border-radius:var(--r-full);color:var(--t2);box-shadow:inset 0 0 0 1px var(--l2);font-size:11.5px}
 .rev-pause:hover{color:var(--t1)}
 .rev-pause:focus-visible{outline:2px solid var(--red);outline-offset:2px}
-.rq{width:340px;flex:none;border-radius:var(--r-lg);background:var(--ink-2);border:1px solid var(--l1);padding:22px;display:flex;flex-direction:column;gap:16px;justify-content:space-between;margin:0;transition:border-color .3s,transform .4s var(--out)}
+/* Every card is the same size, whatever the review: 4 lines of text (a longer review is cut to fit, see the script) */
+.rq{width:360px;flex:none;border-radius:var(--r-lg);background:var(--ink-2);border:1px solid var(--l1);padding:22px;display:flex;flex-direction:column;gap:16px;margin:0;transition:border-color .3s,transform .4s var(--out)}
 .rq:hover{border-color:var(--red);transform:translateY(-3px)}
 .rq .stars{display:flex;gap:3px;color:var(--red)}
 .rq .stars svg{width:14px;height:14px;fill:currentColor}
-.rq.wide{width:460px}
-.rq p{font-size:14px;color:var(--t1);line-height:1.6;white-space:pre-line;overflow-wrap:anywhere}
+.rq p{font-size:14px;color:var(--t1);line-height:1.6;white-space:pre-line;overflow-wrap:anywhere;height:calc(1.6em * 4);overflow:hidden}
+.rq.probe{position:absolute;top:0;left:0;visibility:hidden;pointer-events:none}.rq.probe p{height:auto}
 .rq .stars .off{display:flex;color:var(--ink-4)}
 .rq footer{display:flex;align-items:center;gap:10px;font-size:13px;color:var(--t2)}
 .av{width:30px;height:30px;border-radius:50%;display:grid;place-items:center;font:600 12px/1 var(--sans);color:var(--t1);background:var(--ink-4);border:1px solid var(--l2);flex:none}
@@ -368,7 +382,14 @@ img.av{object-fit:cover;padding:0}
 /* Until two rows are full: centered cards that stay put. After that, two strips that move like a banner */
 .rev.few{mask-image:none;-webkit-mask-image:none}
 .rev.few .rev-row{animation:none;flex-wrap:wrap;width:auto;justify-content:center;padding-inline:16px}
-.rev-sum{font-size:13px;color:var(--t3);margin-top:10px}
+.rev-sum{display:flex;flex-wrap:wrap;justify-content:center;align-items:center;gap:6px 14px;font-size:13px;color:var(--t3);margin-top:10px}
+.rev-all{display:inline-flex;align-items:center;gap:6px;color:var(--t1);font-weight:500;text-decoration:none;padding:4px 12px;border-radius:var(--r-full);box-shadow:inset 0 0 0 1px var(--l2);transition:box-shadow .16s,background .16s}
+.rev-all:hover{background:var(--l1);box-shadow:inset 0 0 0 1px var(--l3)}
+.rev-all svg{width:13px;height:13px;transition:transform .24s var(--out)}
+.rev-all:hover svg{transform:translateX(2px)}
+/* A long review is cut in the carousel; "See more" opens it in full on the reviews page */
+.rq-more{color:var(--red);font-weight:500;text-decoration:none;white-space:nowrap;border-radius:var(--r-xs)}
+.rq-more:hover{text-decoration:underline;text-underline-offset:3px}
 .rev-note{text-align:center;font-size:12.5px;color:var(--t3);margin-top:28px}
 
 /* Pricing */
@@ -509,7 +530,7 @@ footer.foot p{max-width:80ch}
 .js .rv.pre{transform:translateY(36px);filter:blur(6px)}
 
 @media (max-width:1180px){
-  .hero{min-height:0}
+  .hero{padding-bottom:90px}
   .hero .band{grid-template-columns:1fr}
   .hub{transform:none}.hub:hover{transform:none}
   .story{grid-template-columns:1fr}
@@ -541,7 +562,7 @@ footer.foot p{max-width:80ch}
   .tw p{white-space:normal}
   .how{grid-template-columns:1fr 1fr;row-gap:40px}
   .how-line{display:none}
-  .rq{width:280px}.rq.wide{width:320px}
+  .rq{width:min(300px,80vw)}
   .dock{display:flex}
   footer.foot{padding-bottom:120px}
   .cta-row .btn{flex:1 1 100%}
@@ -600,9 +621,9 @@ footer.foot p{max-width:80ch}
 }
 @media (prefers-reduced-motion:reduce){
   html{scroll-behavior:auto}
-  .orb,.mq-track,.pulse u,.rev-row,.rev-row.rv2{animation:none}
+  .orb,.mq-track,.pulse u,.rev-row,.rev-row.rv2,.cue-m i{animation:none}
   .hero h1 .w{filter:none;transform:none;animation-name:fadeIn}
-  .fade,.menu,.xr{animation-name:fadeIn}
+  .fade,.menu,.xr,.cue-m,.cue-t{animation-name:fadeIn}
   .rv{transition:opacity .6s var(--out)}
   .js .rv.pre{transform:none;filter:none;opacity:0}
   .hub,.hub:hover,.rq:hover{transform:none}
@@ -612,8 +633,13 @@ footer.foot p{max-width:80ch}
   .rev-row{flex-wrap:wrap;width:auto;justify-content:center;padding-inline:16px}
   .rev-row > [aria-hidden="true"],.rev-pause{display:none}
 }
+/* Laptop screens: the hero fits the screen, and the scroll cue drops its label to keep room under the content */
+@media (min-width:1181px) and (max-height:860px){
+  .hero{padding-block:96px 72px}
+  .cue{top:calc(min(100%, 100svh) - 54px)}
+  .cue-t{display:none}
+}
 @media (min-width:1181px) and (max-height:760px){
-  .hero{padding-block:104px 56px;min-height:0}
   .hb{height:440px}
   .stage{top:92px;gap:16px;padding:22px 26px}
   .stage .lanes{gap:12px} .stage-note{display:none}
@@ -638,6 +664,7 @@ footer.foot p{max-width:80ch}
     <nav class="nav" aria-label="Sections">
       <a href="#why">Why Rago</a>
       <a href="#features">Features</a>
+      <a href="tweaks.html">Tweaks</a>
       <a class="js-rev" href="#reviews" hidden>Reviews</a>
       <a href="#pricing">Pricing</a>
       <a href="#faq">FAQ</a>
@@ -650,7 +677,7 @@ footer.foot p{max-width:80ch}
   </div>
   <div class="menu" id="menu" hidden>
     <nav aria-label="Menu">
-      <a href="#why">Why Rago</a><a href="#features">Features</a><a class="js-rev" href="#reviews" hidden>Reviews</a><a href="#pricing">Pricing</a><a href="#faq">FAQ</a><a class="js-affiliate" href="https://account.rago-optimizer.com/affiliate">Affiliate program</a>
+      <a href="#why">Why Rago</a><a href="#features">Features</a><a href="tweaks.html">Tweaks</a><a class="js-rev" href="#reviews" hidden>Reviews</a><a href="#pricing">Pricing</a><a href="#faq">FAQ</a><a class="js-affiliate" href="https://account.rago-optimizer.com/affiliate">Affiliate program</a>
     </nav>
     <div class="menu-cta"><a class="btn btn-ghost js-account" href="https://account.rago-optimizer.com/login">Sign in</a><a class="btn btn-ghost js-signup" href="https://account.rago-optimizer.com/signup">Create account</a></div>
   </div>
@@ -708,6 +735,7 @@ footer.foot p{max-width:80ch}
         <p class="hub-note" id="hub-note"><span class="js-only">Interactive preview of Rago Optimizer. Click the tweaks, then Apply.</span><noscript>Preview of Rago Optimizer.</noscript></p>
       </div>
     </div>
+    <a class="cue" id="cue" href="#why" aria-label="Scroll down"><span class="cue-m" aria-hidden="true"><i></i></span><span class="cue-t" aria-hidden="true">Scroll</span></a>
   </section>
 
   <div class="mq" aria-label="Game modes and games covered">
@@ -764,6 +792,7 @@ footer.foot p{max-width:80ch}
         <div class="restore-demo"><svg class="ring" id="ring" viewBox="0 0 64 64"><circle class="bg" cx="32" cy="32" r="28"/><circle class="fg" cx="32" cy="32" r="28"/></svg><div><b>Restore point created</b><span>Restore Windows with System Restore.</span></div></div>
       </div>
     </div>
+    <p class="more-tw rv"><a class="rev-all" href="tweaks.html">All 199 tweaks, explained one by one<svg><use href="#i-arrow"/></svg></a></p>
   </section>
 
   <section class="sec band" id="how" style="padding-top:0">
@@ -780,20 +809,21 @@ footer.foot p{max-width:80ch}
     </div>
   </section>
 
-  <!-- Reviews: left by players in Rago Optimizer, read from the account server. Hidden until the first one. -->
+  <!-- Reviews: left by players in Rago Optimizer or from their account, read from the account server. Hidden until the first one.
+       All of them, in full: reviews.html. -->
   <section class="sec band js-rev" id="reviews" style="padding-top:0;padding-bottom:clamp(40px,5vw,72px)" hidden>
     <div class="head rv">
       <span class="eyebrow">Reviews</span>
       <h2>Players feel the difference.</h2>
-      <p>Left by players in Rago Optimizer.</p>
-      <p class="rev-sum" id="rev-sum"></p>
+      <p>Left by players, in Rago Optimizer or from their account.</p>
+      <p class="rev-sum"><span id="rev-sum"></span><a class="rev-all" href="reviews.html">See all reviews<svg><use href="#i-arrow"/></svg></a></p>
     </div>
   </section>
   <div class="rev js-rev" id="rev" hidden>
     <div class="rev-row" id="r1"></div>
     <div class="rev-row rv2" id="r2"></div>
   </div>
-  <p class="rev-note band js-rev" hidden>Posted from the app by players signed in to their Rago account, as written. Results depend on your PC and connection. <button type="button" class="rev-pause" id="rev-pause" aria-pressed="false">Pause</button></p>
+  <p class="rev-note band js-rev" hidden>Posted by players signed in to their Rago account, from the app or the website, as written. Results depend on your PC and connection. <button type="button" class="rev-pause" id="rev-pause" aria-pressed="false">Pause</button></p>
 
   <section class="sec band" id="plans">
     <div class="head rv">
@@ -896,7 +926,7 @@ footer.foot p{max-width:80ch}
   <div class="band">
     <div class="row">
       <svg viewBox="0 0 1124 180" style="height:22px;width:auto;color:var(--t1)"><use href="#i-word"/></svg>
-      <nav aria-label="Footer"><a href="#features">Features</a><a href="#pricing">Pricing</a><a href="#faq">FAQ</a><a class="js-affiliate" href="https://account.rago-optimizer.com/affiliate">Affiliate program</a><a class="js-account" href="https://account.rago-optimizer.com/login">Sign in</a><a class="js-signup" href="https://account.rago-optimizer.com/signup">Create account</a><a class="js-discord" href="#reviews">Discord</a><a href="terms.html">Terms</a><a href="privacy.html">Privacy</a><a href="refunds.html">Refunds</a></nav>
+      <nav aria-label="Footer"><a href="#features">Features</a><a href="tweaks.html">Tweaks</a><a href="#pricing">Pricing</a><a href="#faq">FAQ</a><a class="js-affiliate" href="https://account.rago-optimizer.com/affiliate">Affiliate program</a><a class="js-account" href="https://account.rago-optimizer.com/login">Sign in</a><a class="js-signup" href="https://account.rago-optimizer.com/signup">Create account</a><a class="js-discord" href="#reviews">Discord</a><a href="terms.html">Terms</a><a href="privacy.html">Privacy</a><a href="refunds.html">Refunds</a></nav>
     </div>
     <p>Rago Optimizer changes Windows settings. Results depend on your hardware and connection. A restore point is offered before advanced tweaks. Minecraft is a trademark of Mojang Studios; Rago Optimizer isn't affiliated with Mojang or Microsoft. © 2026 Rago Optimizer, by Rago and Kaliso.</p>
   </div>
@@ -945,6 +975,7 @@ footer.foot p{max-width:80ch}
 /* ---- Fill these in ---- */
 const CONFIG = {
   accountBase: "https://account.rago-optimizer.com", // licensing server URL, no trailing slash. Empty = same domain as this site
+  previewAccountBase: "",                           // staging account server for Netlify previews: filled at build by netlify/preview.sh (STAGING_ACCOUNT_URL)
   checkoutPath: "/buy",                             // + ?interval=month|year (+ &ref=CODE from an affiliate link). Creates the Stripe Checkout session, 303 redirect
   loginPath: "/login",
   signupPath: "/signup",
@@ -966,7 +997,19 @@ const reduce = matchMedia("(prefers-reduced-motion: reduce)").matches;
 const esc = s => String(s).replace(/[&<>"]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
 const toast = m => { const t = $("#toast"); t.textContent = m; t.classList.add("show"); clearTimeout(t._h); t._h = setTimeout(() => t.classList.remove("show"), 2800); };
 const MONTHS_FREE = Math.floor(1e-9 + 12 - CONFIG.priceYear / CONFIG.priceMonth); // yearly discount, from the real prices
-const acct = p => CONFIG.accountBase.replace(/\/+$/, "") + p;
+/* Only the live site talks to the live account server. A copy on this computer uses the local one (licensing: npm run local);
+   a Netlify preview (pull request, staging branch) uses previewAccountBase, and without it its account links are off,
+   so a test click never reaches live accounts or live Stripe. */
+const HOST = location.hostname;
+if (!HOST || /^(localhost|127\.0\.0\.1|\[::1\]|10(\.\d+){3}|192\.168(\.\d+){2}|172\.(1[6-9]|2\d|3[01])(\.\d+){2})$|\.local$/.test(HOST))
+  CONFIG.accountBase = `http://${HOST && HOST !== "[::1]" ? HOST : "localhost"}:8787`;
+else if (/\.netlify\.app$/.test(HOST)) CONFIG.accountBase = CONFIG.previewAccountBase || null;
+const ACCOUNT_OFF = "#account-off";
+if (CONFIG.accountBase === null) document.addEventListener("click", e => {
+  if (!e.target.closest || !e.target.closest(`a[href="${ACCOUNT_OFF}"]`)) return;
+  e.preventDefault(); e.stopPropagation(); toast("Account pages are off on this preview (STAGING_ACCOUNT_URL isn't set on Netlify).");
+}, true);
+const acct = p => CONFIG.accountBase === null ? ACCOUNT_OFF : CONFIG.accountBase.replace(/\/+$/, "") + p;
 const wire = (sel, url, msg, ext) => $$(sel).forEach(a => {
   if (url) { a.href = url; if (ext) { a.target = "_blank"; a.rel = "noopener"; } }
   else a.addEventListener("click", e => { e.preventDefault(); toast(msg); });
@@ -1064,7 +1107,7 @@ function promo() {
     addEventListener("scroll", sc, { passive: true }); sc();
   };
   // Server out of reach: no pop-up, and a code already claimed stays on the links (checked again at checkout)
-  fetch(acct("/api/v1/promo"), { credentials: "omit", cache: "no-cache" }).then(r => (r.ok ? r.json() : Promise.reject(r.status))).then(show).catch(() => {});
+  if (CONFIG.accountBase !== null) fetch(acct("/api/v1/promo"), { credentials: "omit", cache: "no-cache" }).then(r => (r.ok ? r.json() : Promise.reject(r.status))).then(show).catch(() => {});
 })();
 
 /* After Download free: what to expect, SmartScreen included (the installer isn't code-signed yet) */
@@ -1091,6 +1134,15 @@ function promo() {
 /* Headline: words blur in one by one */
 (() => { const h = $("#h1"); const walk = (n, acc) => { [...n.childNodes].forEach(c => { if (c.nodeType === 3) { const f = document.createDocumentFragment(); c.textContent.split(/(\s+)/).forEach(w => { if (!w) return; if (/^\s+$/.test(w)) { f.append(w); return; } const s = document.createElement("span"); s.className = "w"; s.textContent = w; s.style.animationDelay = (acc.i++ * 0.09) + "s"; f.append(s); }); c.replaceWith(f); } else walk(c, acc); }); }; walk(h, { i: 0 }); })();
 
+/* Scroll cue: only where it has room under the first screen's content */
+const cue = $("#cue");
+const cueFit = () => {
+  const c = cue.getBoundingClientRect();
+  cue.classList.toggle("tight", $$(".hero .eyebrow, .hero h1 .w, .hero .lede, .hero .cta-row > a, .hero .ticks > span, #hub").some(e => { const r = e.getBoundingClientRect(); return r.bottom + 16 > c.top && r.top - 16 < c.bottom && r.right + 24 > c.left && r.left - 24 < c.right; }));
+};
+cueFit(); setTimeout(cueFit, 1500);
+let cueRaf = 0; addEventListener("resize", () => { cancelAnimationFrame(cueRaf); cueRaf = requestAnimationFrame(cueFit); });
+
 /* Header + dock */
 const header = $("#top"), dock = $("#dock");
 /* The dock hides over the app preview, the Why story and pricing, where it would cover what the visitor is reading */
@@ -1098,6 +1150,7 @@ const busy = new Set();
 if ("IntersectionObserver" in window) { const bo = new IntersectionObserver(es => { es.forEach(e => e.isIntersecting ? busy.add(e.target) : busy.delete(e.target)); onScroll(); }, { rootMargin: "-30% 0px -30% 0px" }); ["#hub", "#why", "#plans"].forEach(q => $(q) && bo.observe($(q))); }
 const onScroll = () => {
   header.classList.toggle("scrolled", scrollY > 10);
+  cue.classList.toggle("gone", scrollY > 40);
   const show = scrollY > 640 && innerHeight + scrollY < document.body.scrollHeight - 320 && !busy.size;
   dock.classList.toggle("show", show); header.classList.toggle("docked", show);
   howFill();
@@ -1354,8 +1407,9 @@ function howFill() {
   $$(".hs", w).forEach((el, i) => el.classList.toggle("lit", reduce || p >= i / 3 - .02));
 }
 
-/* Reviews: the real ones, left by players in Rago Optimizer, read from the account server on every visit.
-   No review yet (or the server can't be reached): the section and its menu links stay hidden. */
+/* Reviews: the real ones, left by players in Rago Optimizer or from their account, read from the account server on
+   every visit. No review yet (or the server can't be reached): the section and its menu links stay hidden.
+   A long review is cut to a few lines here, with "See more" to read it in full on the reviews page (reviews.html). */
 (() => {
   const STAR = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2.5l2.9 6.1 6.6.8-4.9 4.6 1.3 6.6L12 17.3l-5.9 3.3 1.3-6.6-4.9-4.6 6.6-.8z"/></svg>';
   const PHOTO = /^https?:\/\/[a-z0-9.-]+(:\d+)?\/avatars\/[A-Za-z0-9_-]{20,40}\.webp$/i;
@@ -1365,7 +1419,37 @@ function howFill() {
   const face = r => typeof r.avatar_url === "string" && PHOTO.test(r.avatar_url)
     ? `<img class="av" src="${esc(r.avatar_url)}" alt="" width="30" height="30" loading="lazy" decoding="async" referrerpolicy="no-referrer" data-i="${esc(first(r.name))}">`
     : `<span class="av" aria-hidden="true">${esc(first(r.name))}</span>`;
-  const card = r => `<figure class="rq${r.comment.length > 160 ? " wide" : ""}"><span class="stars" role="img" aria-label="${r.rating} out of 5 stars">${STAR.repeat(r.rating)}${`<span class="off">${STAR}</span>`.repeat(5 - r.rating)}</span><p>“${esc(r.comment.trim())}”</p><footer>${face(r)}<span class="rn">${esc(r.name.trim())}</span><small>${when(r.date)}</small></footer></figure>`;
+  // Every card shows 4 lines (CSS). A longer review is cut after a word so that it fits with "…" and "See more", measured
+  // on a hidden card of the same width: once per review each time the cards are laid out (new width, fonts loaded).
+  const LINES = 4;
+  const more = r => `reviews.html${typeof r.id === "string" && /^[a-z0-9]{1,12}$/.test(r.id) ? "#r-" + r.id : ""}`;
+  const moreLink = (r, attrs = "") => ` <a class="rq-more" href="${more(r)}"${attrs}>See more</a>`;
+  const cutAt = (cps, n) => {
+    let s = cps.slice(0, n).join("");
+    const sp = s.search(/\s\S*$/); if (sp > n * .6) s = s.slice(0, sp);
+    return s.replace(/[\s.,;:!?…'"-]+$/u, "") + "…";
+  };
+  const fitter = host => {
+    // visibility:hidden keeps it from screen readers too (not aria-hidden: the copies' rule would take it off the page)
+    const probe = Object.assign(document.createElement("figure"), { className: "rq probe", innerHTML: "<p></p>" });
+    host.append(probe);
+    const p = probe.firstChild, max = parseFloat(getComputedStyle(p).lineHeight) * LINES + 1;
+    const fits = h => { p.innerHTML = h; return p.offsetHeight <= max; };
+    const fit = t => {
+      if (fits(`“${esc(t)}”`)) return null;
+      // the longest cut that still fits (the first character always does)
+      const cps = [...t]; let lo = 1, hi = cps.length - 1;
+      while (lo < hi) { const mid = (lo + hi + 1) >> 1; if (fits(`“${esc(cutAt(cps, mid))}”${moreLink({})}`)) lo = mid; else hi = mid - 1; }
+      return cutAt(cps, lo);
+    };
+    return { fit, done: () => probe.remove() };
+  };
+  let cuts = new Map();
+  const card = r => {
+    const t = r.comment.trim(), short = cuts.get(r), shown = short || t;
+    const link = short ? moreLink(r, ` aria-label="See more: ${esc(r.name.trim())}'s full review"`) : "";
+    return `<figure class="rq"><span class="stars" role="img" aria-label="${r.rating} out of 5 stars">${STAR.repeat(r.rating)}${`<span class="off">${STAR}</span>`.repeat(5 - r.rating)}</span><p>“${esc(shown)}”${link}</p><footer>${face(r)}<span class="rn">${esc(r.name.trim())}</span><small>${when(r.date)}</small></footer></figure>`;
+  };
   const show = (data) => {
     const list = (data && Array.isArray(data.reviews) ? data.reviews : []).filter(ok);
     if (!list.length) return;
@@ -1376,10 +1460,14 @@ function howFill() {
     // they move like a banner: two strips in opposite directions, 4 copies so wide screens never see the end of a row.
     const layout = () => {
       rev.classList.add("few"); r2.hidden = true; pause.hidden = true;
+      const f = fitter(r1);
+      cuts = new Map(list.map(r => [r, f.fit(r.comment.trim())]));
+      f.done();
       r1.innerHTML = list.map(card).join("");
       const rows = new Set([...r1.children].map(el => el.offsetTop)).size;
       if (rows > 2) {
-        const fill = (el, part) => { const h = part.map(card).join(""); el.innerHTML = h + h.replace(/<figure /g, '<figure aria-hidden="true" ').repeat(3); };
+        // the copies are hidden from screen readers, and their "See more" links from the keyboard
+        const fill = (el, part) => { const h = part.map(card).join(""); el.innerHTML = h + h.replace(/<figure /g, '<figure aria-hidden="true" ').replace(/<a /g, '<a tabindex="-1" ').repeat(3); };
         rev.classList.remove("few"); r2.hidden = false; pause.hidden = false;
         fill(r1, list.filter((_, i) => i % 2 === 0)); fill(r2, list.filter((_, i) => i % 2 === 1));
       }
@@ -1390,11 +1478,13 @@ function howFill() {
     $("#rev-sum").textContent = `${n} review${n === 1 ? "" : "s"}${avg >= 1 && avg <= 5 ? ` · ${avg.toFixed(1)} out of 5` : ""}`;
     $$(".js-rev").forEach(el => { el.hidden = false; });
     layout();
+    // the cuts are measured with the site's font: once it's there, measure again
+    if (document.fonts && document.fonts.status !== "loaded") document.fonts.ready.then(layout);
     let w = innerWidth, t;
     addEventListener("resize", () => { if (innerWidth === w) return; w = innerWidth; clearTimeout(t); t = setTimeout(layout, 200); });
     window.__watch($("#reviews .head"));
   };
-  if (!("fetch" in window)) return;
+  if (!("fetch" in window) || CONFIG.accountBase === null) return;
   fetch(acct("/api/v1/reviews"), { credentials: "omit", cache: "no-cache" }).then(r => (r.ok ? r.json() : null)).then(show).catch(() => {});
 })();
 

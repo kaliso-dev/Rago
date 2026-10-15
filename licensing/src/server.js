@@ -5,10 +5,12 @@ import { loadKeys } from './tokens.js';
 import { createStripe, stripeChecks } from './billing.js';
 import { createMailer } from './mailer.js';
 import { createApp } from './app.js';
+import { createDiscord } from './discord.js';
 
 const cfg = loadConfig();
 for (const w of cfg.warnings) console.warn(`[warn] ${w}`);
-const db = cfg.databaseUrl ? await openDb(cfg.databaseUrl) : await openMemoryDb();
+if (cfg.staging) console.log(`[env] "${cfg.envName}" test server: Stripe test keys only, a banner on every page, [Test] in email subjects.`);
+const db = cfg.databaseUrl ? await openDb(cfg.databaseUrl, { envName: cfg.envName }) : await openMemoryDb();
 await ensureKeys(db, cfg);
 const keys = loadKeys(cfg.signingKeyPem);
 // Development only: DEV_SEED=email:password creates a Premium account at startup (in-memory database).
@@ -21,7 +23,8 @@ if (!cfg.databaseUrl && process.env.DEV_SEED) {
 }
 
 const stripe = createStripe(cfg);
-const app = createApp({ cfg, db, keys, stripe, mailer: createMailer(cfg) });
+const discord = createDiscord(cfg, { db, stripe });
+const app = createApp({ cfg, db, keys, stripe, mailer: createMailer(cfg), discord });
 
 // Prices, webhook destination and customer portal in the key's Stripe mode (the same list as /admin).
 if (stripe) {
@@ -49,6 +52,16 @@ const sweep = async () => {
 };
 setInterval(sweep, 60 * 60 * 1000).unref();
 setTimeout(sweep, 30 * 1000).unref();
+
+// Discord Pro role: every 5 minutes, the linked accounts whose Premium changed without a Stripe event (support
+// revoke or restore, an affiliate reward that ended, a retry after Discord refused). Once a day, the role is
+// given again to every Premium account, for players who left the server and came back.
+if (discord) {
+  console.log('[discord] Pro role bot on: roles follow Premium.');
+  setInterval(() => discord.syncAll(), 5 * 60 * 1000).unref();
+  setInterval(() => discord.syncAll({ all: true }), 24 * 60 * 60 * 1000).unref();
+  setTimeout(() => discord.syncAll({ all: true }), 60 * 1000).unref();
+}
 
 if (!cfg.databaseUrl) console.warn('[warn] DATABASE_URL not set: in-memory database and keys, everything is lost on restart.');
 if (!cfg.stripeSecretKey) console.warn('[warn] STRIPE_SECRET_KEY not set: /buy and the webhook are disabled.');

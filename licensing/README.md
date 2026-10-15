@@ -13,6 +13,8 @@ Serveur Node.js qui gère tout ce qui se passe après le clic sur « Get Premium
 
 Remboursement total ou litige Stripe : la licence est révoquée et l'abonnement annulé automatiquement. Abonnement terminé ou impayé : la licence s'arrête, et revient si le paiement repasse.
 
+Rôle Pro sur Discord (avec les cinq variables `DISCORD_`) : **Link Discord** sur `/account` ajoute le joueur au serveur avec le rôle, et un bot le lui retire quand la licence s'arrête, puis le rend si elle revient (`src/discord.js`, réglages dans `docs/MISE-EN-LIGNE.md`, « Le rôle Pro sur Discord »). Sans elles, la page compte dit d'ouvrir un ticket. Les rôles VIP et MVP (donnés par un bot d'invitations) et les boosts du serveur rapportent une fois au compte lié du Premium et un code de 10 % ou 30 % à usage unique (« Les récompenses Discord »).
+
 Programme d'affiliation `/affiliate` : chaque compte peut avoir un code, qui est aussi un code promo Stripe à −5 % ; un code sert à 3 joueurs ; 3 acheteurs comptés (à l'activation de leur PC) = 6 mois de Rago Optimizer Premium, une fois (règles anti-triche dans `docs/MISE-EN-LIGNE.md`, fin du document). `/buy?promo=CODE` applique un code promo Stripe (celui du pop-up du site, réglé sur `/admin` avec `ADMIN_KEY` ou `npm run admin -- popup`).
 
 ## Choix faits
@@ -34,9 +36,12 @@ npm run admin -- reset-device <email>    # libère le PC pour en activer un autr
 npm run admin -- revoke <email> [raison]
 npm run admin -- restore <email>
 npm run admin -- grant <email> [note]    # licence offerte, ex. anciens acheteurs du .bat Premium
+npm run admin -- grant-months 6 <email> [email…]  # Premium offert 6 mois, puis il s'arrête tout seul (plusieurs emails possibles)
+npm run admin -- grant-days 7 <email> [email…]    # pareil en jours, ex. une semaine de Premium
 npm run admin -- reviews                 # derniers avis ; hide-review / show-review <email> pour la modération
 npm run admin -- popup                   # le pop-up du site et ses places restantes ; popup RAGO50 50 15 pour une offre (aussi sur /admin)
 npm run admin -- remove-photo <email>    # retire une photo de profil (avec SUPABASE_URL et SUPABASE_SERVICE_ROLE_KEY)
+npm run admin -- discord <email>         # son Discord lié, son rôle Pro remis d'aplomb et ses récompenses VIP / MVP (avec les DISCORD_ de Railway)
 ```
 
 `grant` sur un email sans compte affiche un lien à envoyer à la personne pour qu'elle crée son compte.
@@ -48,8 +53,11 @@ npm ci
 npm test                                   # base Postgres en mémoire (PGlite)
 TEST_DATABASE_URL=postgres://postgres@localhost:5432/postgres npm test  # les mêmes sur un Postgres local JETABLE (voir ci-dessous)
 DEV_SEED=test@rago.dev:password123 npm run dev   # http://localhost:8787, compte Premium de test
+npm run local                              # pareil avec le site, et sans jamais les variables de production du terminal
 ```
+
+Staging (Railway `staging`, `APP_ENV=staging`) : refuse une clé Stripe live, bandeau sur chaque page, `[Test]` dans les emails. Chaque base retient l'environnement qui l'a ouverte en premier (`server_secrets.environment`) et un autre la refuse au démarrage. Mise en place : [`../DEVELOPPEMENT.md`](../DEVELOPPEMENT.md).
 
 > **Attention : `TEST_DATABASE_URL` efface toute la base visée** à chaque test (tables, comptes, licences, et la clé de signature de `server_secrets`). Ne mets **jamais** l'adresse Supabase de production : les tests refusent d'ailleurs de tourner si l'adresse n'est pas `localhost` (ou une base dont le nom contient « test »). Utilise un Postgres local créé pour l'occasion.
 
-Node 22 ou plus. Code : `src/app.js` (routes), `src/licensing.js` (comptes, licences, verrou), `src/db.js` (Postgres), `src/billing.js` (Stripe), `src/affiliates.js` (affiliation), `src/views.js` + `public/` (pages), `docs/API.md` (contrat avec l'app).
+Node 22 ou plus. Code : `src/app.js` (routes), `src/licensing.js` (comptes, licences, verrou), `src/db.js` (Postgres), `src/billing.js` (Stripe), `src/affiliates.js` (affiliation), `src/discord.js` (rôle Pro sur Discord), `src/views.js` + `public/` (pages), `docs/API.md` (contrat avec l'app).

@@ -214,6 +214,8 @@ Ce qui dépend du mode Stripe : la clé, les deux prix, le webhook et son secret
 
 ## Revenir en mode test
 
+Depuis le lancement, les essais sans vrai paiement se font sur le serveur de staging, qui a sa propre base et Stripe en mode test : voir [`DEVELOPPEMENT.md`](../../DEVELOPPEMENT.md), section 5. Ce qui suit ne concerne que ce serveur-ci avant l'ouverture.
+
 Pour refaire des essais sans vrai paiement, remets les valeurs **test** dans Railway → Variables (garde les valeurs live dans ton gestionnaire de mots de passe pour revenir ensuite). Toutes viennent de Stripe avec le bouton **Mode test** activé (en haut à droite) :
 
 | Variable | Valeur test |
@@ -258,6 +260,55 @@ npm run admin -- popup off                              # masque le pop-up ; pop
 
 **À la main dans Stripe** (si tu préfères, avant de taper le code dans `/admin`) : Catalogue de produits → **Coupons → Créer un coupon** : type **Pourcentage**, `50`, durée **Une fois**. Dans le coupon, **Ajouter un code promotionnel** : code `RAGO50`, coche **Limiter aux premières commandes** (un client qui a déjà payé ne peut pas l'utiliser) et **Limiter le nombre d'utilisations de ce code**, `15`. Enregistre, puis mets `RAGO50` dans `/admin` en laissant la réduction et le nombre de clients tels que Stripe les a. Le suivi est dans Stripe → Coupons → le coupon → **Utilisations**.
 
+## Le rôle Pro sur Discord
+
+Un bot donne le rôle Pro aux joueurs Premium et le leur retire quand Premium s'arrête, comme chez les concurrents. Le joueur clique **Link Discord** sur sa page compte, autorise sur Discord, et il rejoint le serveur avec le rôle (s'il n'y était pas déjà). Ensuite le rôle suit sa licence, sans rien faire :
+
+- **Retiré** à la fin de l'abonnement (résilié, impayé), au remboursement, au litige, à `revoke`, à la fin des 6 mois d'affiliation.
+- **Rendu** au renouvellement, quand la carte repasse, à `restore`.
+- Le changement part juste après l'événement Stripe ; tout le reste (commande admin, récompense terminée) est rattrapé toutes les 5 minutes. Une fois par jour (et à chaque redémarrage), le bot redonne le rôle à tous les comptes Premium liés : un joueur qui a quitté le serveur et qui revient le récupère.
+- Un compte Rago = un compte Discord. Lier le même Discord depuis un autre compte le déplace (le rôle suit le nouveau compte). Délier retire le rôle.
+- Les rôles donnés à la main avant (tickets) ne sont pas touchés : le bot ne gère que les comptes liés. Annonce sur Discord que chacun lie son compte, puis retire les anciens rôles à la main.
+
+Sans les cinq variables ci-dessous, rien ne change : la page compte dit d'ouvrir un ticket, comme avant.
+
+**Une fois pour toutes** (10 minutes) :
+
+1. Ouvre **https://discord.com/developers/applications** → **New Application**, nom `Rago Optimizer` (c'est ce que le joueur voit sur la page d'autorisation), accepte les conditions.
+2. **General Information** : copie l'**Application ID** → variable `DISCORD_CLIENT_ID`. Tu peux mettre le logo Rago en icône.
+3. **OAuth2** : **Reset Secret**, copie-le → `DISCORD_CLIENT_SECRET`. Dans **Redirects**, **Add Redirect** : `https://account.rago-optimizer.com/account/discord/callback` (ton `PUBLIC_URL` suivi de `/account/discord/callback`, à l'identique), puis **Save Changes**.
+4. **Bot** : **Reset Token**, copie-le → `DISCORD_BOT_TOKEN`. Aucun « Privileged Gateway Intent » n'est nécessaire.
+5. **OAuth2 → URL Generator** : coche le scope `bot`, puis les permissions **Manage Roles** et **Create Instant Invite**. Ouvre l'URL générée en bas, choisis le serveur Rago, **Autoriser**. (La page `/admin` donne aussi ce lien tant que le bot n'est pas sur le serveur.)
+6. Sur Discord : **Paramètres du serveur → Rôles**, glisse le rôle du bot (il porte son nom) **au-dessus** du rôle Pro. Discord interdit à un bot de donner un rôle placé au-dessus du sien : c'est l'oubli le plus courant.
+7. Active le mode développeur : **Paramètres utilisateur → Avancés → Mode développeur**. Clic droit sur l'icône du serveur → **Copier l'identifiant du serveur** → `DISCORD_GUILD_ID`. Paramètres du serveur → Rôles → clic droit sur **Pro** → **Copier l'identifiant du rôle** → `DISCORD_ROLE_ID`.
+8. Railway → Variables : ajoute les cinq (`DISCORD_CLIENT_ID`, `DISCORD_CLIENT_SECRET`, `DISCORD_BOT_TOKEN`, `DISCORD_GUILD_ID`, `DISCORD_ROLE_ID`). Railway redéploie tout seul.
+9. Ouvre `/admin` : la section **Rôle Pro sur Discord** vérifie le bot, l'adresse de retour, le serveur, le rôle, les permissions et l'ordre des rôles, et dit quoi corriger. Tout doit être « OK ».
+10. Teste avec ton compte Premium : **Link Discord** sur la page compte. Le badge « Role given » s'affiche et tu as le rôle sur le serveur.
+
+La page compte dit « Premium role » (le mot de la charte) ; le bot donne le rôle dont tu as mis l'identifiant, quel que soit son nom sur le serveur.
+
+### Les récompenses Discord (invitations et boosts)
+
+Un bot d'invitations (InviteLogger) compte qui a invité qui et donne le rôle **VIP** à 10 invitations, **MVP** à 15. Le bot Rago voit ces rôles et les boosts sur les comptes liés, et donne chaque récompense **une seule fois** :
+
+| Palier | Comment le bot le voit | Récompense |
+|---|---|---|
+| **VIP** (10 invitations) | rôle VIP (`DISCORD_VIP_ROLE_ID`) | 1 mois de Premium + code 10 % à usage unique |
+| **MVP** (15 invitations) | rôle MVP (`DISCORD_MVP_ROLE_ID`) | 3 mois de Premium + code 30 % à usage unique |
+| **1 boost** | tout seul : Discord dit au bot qui booste le serveur | 2 semaines de Premium + code 10 % à usage unique |
+| **2 boosts** | un rôle que tu donnes (`DISCORD_BOOST2_ROLE_ID`) | 1 mois de Premium + code 30 % à usage unique |
+
+Discord ne dit pas aux bots combien de boosts une personne donne : pour « 2 boosts », regarde **Paramètres du serveur → Boost de serveur** et donne-lui le rôle (par exemple « 2x Booster »), ou fais-le donner par un bot de boosts. MVP après VIP donne les deux récompenses. Les boosts, eux, ne se cumulent pas : 2 boosts donne 1 mois de Premium au total + code 30 %. Un joueur qui met ses 2 boosts d'un coup reçoit seulement 1 mois + 30 %. Celui qui avait déjà reçu les 2 semaines de son premier boost les garde, et le deuxième lui ajoute 2 semaines + code 30 % pour arriver à 1 mois.
+
+Le joueur (gratuit ou Premium) lie son Discord depuis sa page compte : la carte « Discord rewards » liste les récompenses, puis affiche celles gagnées et le code, avec un lien qui l'applique au paiement (`/buy?promo=VIP-XXXXXX`). Le code fait 10 % ou 30 % sur le premier paiement, une seule utilisation.
+
+- Le Premium s'ajoute à ce qu'il a : un compte gratuit reçoit une licence « Discord reward » qui s'arrête seule à la date ; un abonné voit son prochain paiement repoussé d'autant (essai gratuit Stripe) ; un compte à vie garde son Premium et reçoit le code.
+- Une fois par compte Discord et une fois par compte Rago : relier le même Discord à un autre compte ne redonne rien.
+- Le bot regarde à la liaison, quand le joueur ouvre sa page compte, et toutes les 30 minutes pour les autres. Retirer le rôle ou le boost ensuite ne reprend pas la récompense.
+- Donner VIP, MVP ou le rôle 2 boosts à la main sur Discord donne aussi la récompense.
+
+**À faire une fois** : dans InviteLogger, crée les deux rangs (VIP à 10, MVP à 15) et active le filtre des fausses invitations. Puis clic droit sur le rôle **VIP** → **Copier l'identifiant du rôle** → variable Railway `DISCORD_VIP_ROLE_ID`, pareil pour **MVP** → `DISCORD_MVP_ROLE_ID` et pour ton rôle 2 boosts → `DISCORD_BOOST2_ROLE_ID`. La récompense d'un boost marche sans variable. Sur `/admin`, les lignes « Récompense … » doivent être « OK » ; elles comptent aussi les récompenses données. `npm run admin -- discord joueur@mail.com` montre les récompenses d'un joueur (et les donne tout de suite s'il y a droit).
+
 ---
 
 ## Ce que tu me donnes
@@ -287,8 +338,10 @@ npm run admin -- popup off                              # masque le pop-up ; pop
 | `PRICE_LABEL` | Le prix affiché aux comptes gratuits : `$5.99 a month or $29.99 a year`, mêmes montants que Stripe et le site |
 | `LICENSE_SIGNING_KEY`, `SESSION_SECRET` | `npm run admin -- export-keys` (étape 5.7) |
 | `SCRIPTS_SECRET` | Une valeur aléatoire que tu génères une fois (étape 8), identique au secret GitHub `RAGO_SCRIPTS_SECRET`. Ne la change jamais |
+| `DISCORD_CLIENT_ID`, `DISCORD_CLIENT_SECRET`, `DISCORD_BOT_TOKEN`, `DISCORD_GUILD_ID`, `DISCORD_ROLE_ID` | Discord Developer Portal et ton serveur (« Le rôle Pro sur Discord »). Facultatives : sans elles, le rôle se donne à la main |
+| `DISCORD_VIP_ROLE_ID`, `DISCORD_MVP_ROLE_ID`, `DISCORD_BOOST2_ROLE_ID` | Clic droit sur les rôles VIP, MVP et 2 boosts → Copier l'identifiant (« Les récompenses Discord »). Facultatives : sans elles, pas de récompense pour ce palier |
 | `ADMIN_KEY` | Une clé d'au moins 16 lettres et chiffres que tu choisis : elle ouvre `/admin`, où se règle le pop-up du site (« Le pop-up du site »). Sans elle, `/admin` n'existe pas |
-| `INSTALLER_VERSION` | Le numéro de l'exe déposé dans le bucket, lu dans son nom `Rago Optimizer_<numéro>_x64-setup.exe` (ex. `1.1.5`). Affiché à côté du bouton de téléchargement. `INSTALLER_OBJECT` est facultatif (il donne le bucket et le dossier) : le `.exe` le plus récent du dossier est toujours servi |
+| `INSTALLER_VERSION` | Le numéro de l'exe déposé dans le bucket, lu dans son nom `Rago Optimizer_<numéro>_x64-setup.exe` (ex. `1.1.5`). Affiché à côté du bouton de téléchargement, et sous celui de la page Tweaks du site, qui le lit sur `/api/v1/installer`. `INSTALLER_OBJECT` est facultatif (il donne le bucket et le dossier) : le `.exe` le plus récent du dossier est toujours servi |
 
 À retirer s'il est encore là : `STRIPE_PRICE_ID` (ancien prix unique, plus vendu).
 
@@ -306,6 +359,8 @@ npm run admin -- claim-link joueur@mail.com     # nouveau lien « Create your ac
 npm run admin -- reset-link joueur@mail.com     # lien « Choose a new password » (1 h), si l'email n'arrive pas
 npm run admin -- reset-device joueur@mail.com   # il a changé de PC : libère l'ancien
 npm run admin -- grant ami@mail.com             # licence à vie offerte (ex. anciens acheteurs du .bat)
+npm run admin -- grant-months 6 ami@mail.com    # Premium offert 6 mois à partir d'aujourd'hui, puis il s'arrête tout seul ; plusieurs emails à la suite possibles, ceux qui ont déjà Premium sont sautés
+npm run admin -- grant-days 7 ami@mail.com      # pareil en jours : ici une semaine de Premium, puis il s'arrête tout seul
 npm run admin -- affiliate affilie@mail.com     # son code, ses filleuls, pourquoi chacun compte ou non, ses récompenses
 npm run admin -- create-promo RAGO15 15         # code promo Stripe (ici −15 % sur le premier paiement), voir « Codes promo »
 npm run admin -- popup                          # le pop-up du site et ses places restantes ; popup RAGO50 50 15 pour une offre (voir « Le pop-up du site »)
@@ -315,10 +370,12 @@ npm run admin -- remove-photo joueur@mail.com   # retire sa photo de profil (ima
 npm run admin -- set-name joueur@mail.com "Nom" # change son nom public
 npm run admin -- delete-user joueur@mail.com    # demande de suppression (RGPD) : résilie, supprime le compte, sa photo, son avis et le PC, anonymise la licence (avec une photo : SUPABASE_URL et SUPABASE_SERVICE_ROLE_KEY aussi)
 npm run admin -- export-keys                    # la clé qui signe les licences, à garder dans ton gestionnaire de mots de passe
+npm run admin -- discord joueur@mail.com        # son Discord lié et son rôle Pro, remis d'aplomb tout de suite (demande les cinq DISCORD_ de Railway)
+npm run admin -- discord-unlink joueur@mail.com # retire le rôle et délie son Discord
 ```
 
 - **« J'ai payé mais mon compte n'a pas de licence »** (onglet fermé après le paiement, compte créé sur un autre appareil ou plus de 48 h après) : `show son@email.com` affiche l'achat sous « Not on any account yet ». S'il a déjà un compte avec cet email : `attach son@email.com`. S'il n'a pas de compte : `claim-link son@email.com` et envoie-lui le lien. S'il a payé avec un autre email : `show email-de-paiement`, puis `attach email-du-compte <id de la licence>`.
-- **Rôle Premium sur Discord** : le joueur ouvre un ticket avec l'email de son compte (son tableau de bord le lui dit). Vérifie avec `npm run admin -- show son@email.com` : `status: 'active'` → donne-lui le rôle Premium. Si sa licence s'arrête (fin d'abonnement, remboursement), retire le rôle.
+- **Rôle Pro sur Discord** : avec le bot (« Le rôle Pro sur Discord »), le joueur clique **Link Discord** sur sa page compte et le rôle suit sa licence tout seul. « Je n'ai pas le rôle » : `show son@email.com` affiche la ligne `discord` (compte lié, rôle donné ou non, et pourquoi : `not_member` = il n'est pas sur le serveur, son tableau de bord lui propose **Join with Discord**). `discord son@email.com` le remet d'aplomb tout de suite. Sans le bot : le joueur ouvre un ticket avec l'email de son compte, vérifie `status: 'active'` avec `show`, donne le rôle, et retire-le quand sa licence s'arrête.
 
 - **Un joueur qui a déjà Premium paie une deuxième fois** (souvent déconnecté du site) : son compte garde sa licence, l'abonnement en trop est annulé et la licence en double désactivée automatiquement, aucun email d'achat ne part, et son tableau de bord lui dit de te contacter. Rembourse ce deuxième paiement dans Stripe → Paiements (`npm run admin -- show` montre les deux licences dans l'historique).
 - **Avis** : un joueur laisse son avis depuis Rago Optimizer (1.1.8 et après), connecté à son compte ; il apparaît sur le site dans la minute, avec son nom public et sa photo. Un avis par compte : il le modifie au lieu d'en créer un autre, et peut le supprimer (dans l'app ou dans l'onglet **Profile** du compte). La section des avis du site reste masquée tant qu'il n'y en a aucun. Un avis gênant : `hide-review son@email.com`.

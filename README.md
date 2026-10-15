@@ -8,7 +8,7 @@ Tout le code de Rago dans un seul dépôt :
 | `brand/` | Logo, tailles d'icônes, `.ico`, images d'installeur, favicons, couleurs et voix de la marque | SVG, PNG |
 | `site/` | La page de vente publique (anglais) et les pages légales | HTML statique, sans framework |
 | `licensing/` | Le serveur : abonnements Stripe, comptes, licences, verrou sur un PC, affiliation, téléchargement de l'app | Node 22, Hono, Supabase (Postgres + Storage) |
-| `.github/workflows/` | `app-windows.yml` fabrique le `setup.exe` sur un Windows de GitHub ; `licensing-tests.yml` lance les tests du serveur ; `site-check.yml` vérifie que `site/index.html` a été régénérée | GitHub Actions |
+| `.github/workflows/` | `app-windows.yml` fabrique le `setup.exe` sur un Windows de GitHub ; `licensing-tests.yml` lance les tests du serveur ; `site-check.yml` vérifie que `site/index.html`, `site/reviews.html` et `site/tweaks.html` ont été régénérées | GitHub Actions |
 | `netlify.toml` / `Dockerfile` (racine) | Publication du site sur Netlify / variante qui sert site + serveur ensemble | Netlify / Docker |
 
 Chaque dossier a son propre README avec le détail technique. Ce guide-ci explique comment les trois s'emboîtent et comment tout lancer, dans l'ordre.
@@ -128,8 +128,8 @@ const CONFIG = {
 
 - `priceMonth` et `priceYear` doivent être **exactement** les prix des deux `price_...` Stripe, dans la même devise que `currency`.
 - Tant que `discord` est vide, les liens Discord du site sont masqués.
-- Les avis viennent de l'application : un joueur connecté à son compte Rago laisse une note (1 à 5 étoiles) et un commentaire, qu'il peut modifier ou supprimer ensuite (dans l'app ou dans l'onglet Profile du compte). Le site les lit sur le serveur de comptes (`/api/v1/reviews`) à chaque visite : la section `#reviews` reste masquée tant qu'aucun avis n'existe et apparaît dès le premier, sans modifier le site. Les cartes restent fixes tant qu'elles tiennent sur deux lignes à la largeur de l'écran ; au-delà, elles défilent en deux bandes. Modération : `npm run admin -- reviews`, `hide-review <email>`, `show-review <email>` (dossier `licensing/`).
-- `site/index.html` (la page publiée) est fabriquée à partir de `site/src/page.html`. Ne la modifie pas à la main : demande la modification sur le projet, elle est refaite par `site/tools/build.py`.
+- Les avis viennent de l'application, ou du site pour les comptes Premium : un joueur connecté à son compte Rago laisse une note (1 à 5 étoiles) et un commentaire, qu'il peut modifier ou supprimer ensuite (dans l'app, ou sur la page compte : ligne « Your review » et `/account/review` pour les Premium, onglet Profile pour supprimer). C'est le même avis partout (un par compte). Le site les lit sur le serveur de comptes (`/api/v1/reviews`) à chaque visite : la section `#reviews` reste masquée tant qu'aucun avis n'existe et apparaît dès le premier, sans modifier le site. Les cartes restent fixes tant qu'elles tiennent sur deux lignes à la largeur de l'écran ; au-delà, elles défilent en deux bandes. Toutes les cartes ont la même taille (4 lignes de texte) : un avis plus long est coupé après un mot, à la mesure de la carte, avec « See more », qui ouvre la page `reviews.html` sur cet avis : elle montre tous les avis en entier (`/api/v1/reviews?all=1`), avec la moyenne, un filtre par note et un tri. Modération : `npm run admin -- reviews`, `hide-review <email>`, `show-review <email>` (dossier `licensing/`).
+- `site/index.html` (la page publiée) est fabriquée à partir de `site/src/page.html`, `site/reviews.html` à partir de `site/src/reviews.html`, et `site/tweaks.html` (la page qui présente les 199 réglages, avec le téléchargement gratuit et la recherche) à partir de `site/src/tweaks.html`. La liste des réglages de cette page vient du catalogue de l'app (`app/src/data/catalog.json`) et des textes de `site/src/tweaks-copy.json`, recopiés par `site/tools/sync_app.py`. Ne les modifie pas à la main : demande la modification sur le projet, elles sont refaites par `site/tools/build.py`.
 
 ### Avant le lancement : compte à rebours et accès de l'équipe
 
@@ -160,7 +160,7 @@ L'app Windows ne peut être compilée que sur Windows. GitHub le fait pour toi, 
 2. La fabrication se lance d'elle-même à chaque push qui touche `app/`. Tu peux aussi la lancer à la main : **Actions → app-windows → Run workflow**.
 3. Compte environ 5 minutes (15 à 20 la première fois). À la fin, connecté avec le compte kaliso-dev : ouvre le run, section **Artifacts**, télécharge `rago-optimizer-setup`. C'est un zip qui contient `Rago Optimizer_<version>_x64-setup.exe` (aujourd'hui `Rago Optimizer_1.1.8_x64-setup.exe`, version 1.1.8). L'artefact est effacé au bout de 90 jours.
 
-**Sans les deux secrets, la fabrication s'arrête en erreur** (étape « Vérifier les secrets »). C'est voulu : un exe fabriqué sans eux ne peut jamais passer en Premium et ses boutons de compte ouvrent `localhost`. Ne distribue jamais un tel exe.
+**Sans les deux secrets, la fabrication s'arrête en erreur** (étape « Choisir le serveur et vérifier les secrets »). C'est voulu : un exe fabriqué sans eux ne peut jamais passer en Premium et ses boutons de compte ouvrent `localhost`. Ne distribue jamais un tel exe.
 
 ### 4.1 Mettre l'exe à disposition des joueurs
 
@@ -209,6 +209,8 @@ npm run admin -- reset-device <email>    # le joueur a changé de PC
 npm run admin -- revoke <email> [raison]
 npm run admin -- restore <email>
 npm run admin -- grant <email> [note]    # licence à vie offerte, ex. anciens acheteurs du .bat Premium
+npm run admin -- grant-months 6 <email> [email…]  # Premium offert 6 mois, puis il s'arrête tout seul (plusieurs emails possibles)
+npm run admin -- grant-days 7 <email> [email…]    # pareil en jours, ex. une semaine de Premium
 npm run admin -- affiliate <email>       # son code, ses filleuls, pourquoi chacun compte ou non, ses récompenses
 npm run admin -- popup RAGO50 50 15      # code du pop-up du site : −50 % pour 15 clients (aussi sur /admin)
 ```
@@ -221,13 +223,18 @@ Changement de PC en libre-service (une fois tous les 30 jours depuis le tableau 
 
 ## 7. Développer en local
 
+Le pas-à-pas complet, Mac compris, et le serveur de test en ligne (staging) : **[`DEVELOPPEMENT.md`](DEVELOPPEMENT.md)**. Toute modification passe par une pull request ; seule la fusion change le site et le serveur en ligne.
+
 ```bash
-# Serveur + site, sur http://localhost:8787 (sans DATABASE_URL : base en mémoire, effacée à l'arrêt)
-cd licensing && npm ci && SITE_DIR=../site npm run dev
+# Serveur + site, sur http://localhost:8787 : base en mémoire, compte test@rago.dev / password123,
+# jamais la base, le Stripe live, Resend ni Discord de production (même s'ils sont dans le terminal)
+cd licensing && npm install && npm run local
 npm test                                  # parcours complet (aussi lancé par GitHub à chaque push sur licensing/)
 
-# Le build debug de l'app vise localhost:8787 avec la clé de test de licensing/docs/test/
-# App, sur un PC Windows dans un terminal administrateur
+# Interface de l'app, sur Mac ou n'importe quel PC : fenêtre Chrome à la taille de l'app, réglages simulés
+cd app && npm install && npm run window
+
+# App complète, sur un PC Windows dans un terminal administrateur (le build debug vise localhost:8787)
 cd app && npm ci && npm run tauri dev
 ```
 

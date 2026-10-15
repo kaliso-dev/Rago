@@ -7,7 +7,7 @@ import { join } from 'node:path';
 import Stripe from 'stripe';
 
 import { loadConfig } from '../src/config.js';
-import { applySchema, ensureKeys, openDb, openMemoryDb } from '../src/db.js';
+import { applySchema, claimDatabase, ensureKeys, openDb, openMemoryDb } from '../src/db.js';
 import pg from 'pg';
 import { loadKeys, verifyToken } from '../src/tokens.js';
 import { createApp } from '../src/app.js';
@@ -15,6 +15,7 @@ import { createMailer } from '../src/mailer.js';
 import * as L from '../src/licensing.js';
 import * as P from '../src/profile.js';
 import * as R from '../src/reviews.js';
+import { createDiscord } from '../src/discord.js';
 import sharp from 'sharp';
 
 const WHSEC = 'whsec_test_secret';
@@ -436,6 +437,16 @@ test('installer from Supabase Storage: signed link, any file name, clear reason 
   const offText = await off.text();
   assert.match(offText, /Ask on Discord/);
   assert.doesNotMatch(nofile + offText, /\.bat|rago-optimizer-free/);
+});
+
+test('installer version: the site reads INSTALLER_VERSION from /api/v1/installer, null while it is not set', async () => {
+  const t = await setup({ INSTALLER_VERSION: ' v1.2.0 ' });
+  const res = await t.app.request('/api/v1/installer');
+  assert.equal(res.status, 200);
+  assert.equal(res.headers.get('access-control-allow-origin'), '*');
+  assert.deepEqual(await res.json(), { version: '1.2.0' });
+  assert.deepEqual(await (await (await setup()).app.request('/api/v1/installer')).json(), { version: null });
+  assert.deepEqual(await (await (await setup({ INSTALLER_VERSION: '<b>1.2</b>' })).app.request('/api/v1/installer')).json(), { version: null });
 });
 
 test('concurrent activations from two PCs: exactly one wins', async () => {
@@ -942,6 +953,72 @@ test('affiliate without a license gets 6 months of Premium, which end on their d
   dash = await (await t.browse('/account')).text();
   assert.match(dash, /Your affiliate reward ended/);
   assert.equal(await L.expireRewards(t.db), 0);
+});
+
+test('months given by the team (admin grant-months): Premium until its date, shown as a gift, then it stops', async () => {
+  const t = await setup(SUBS);
+  // No account yet: the claim link creates it and the gift follows.
+  const { license, claimToken } = await L.grantLicense(t.db, 'Old@Bat.io', 'grant-months 6', { months: 6 });
+  assert.ok(claimToken);
+  assert.equal(license.plan, 'reward');
+  assert.equal(license.source, 'grant');
+  assert.equal(license.user_id, null);
+  const days = (Number(license.current_period_end) - Date.now()) / DAY_MS;
+  assert.ok(days > 180 && days < 185, `${days} days`);
+  await t.browse(`/claim/${claimToken}`);
+  await t.browse('/signup', { form: { email: 'old@bat.io', password: 'password123' } });
+  const user = await L.findUserByEmail(t.db, 'old@bat.io');
+  assert.equal((await L.licenseForUser(t.db, user.id)).id, license.id);
+  let dash = await (await t.browse('/account')).text();
+  assert.match(dash, /Rago Optimizer Premium · Gift/);
+  assert.match(dash, /Offered by the Rago team\. Premium until/);
+  assert.match(dash, /Subscribe now, first payment on/);
+  assert.doesNotMatch(dash, /Affiliate reward|affiliate program\. Premium/);
+
+  // The app gets Premium with its end date.
+  let j = await (await t.api('/auth/login', { email: 'old@bat.io', password: 'password123', device: pc('G') })).json();
+  j = await (await t.api('/licenses/activate', { device: pc('G') }, { authorization: `Bearer ${j.access_token}` })).json();
+  assert.equal(j.status, 'active');
+  assert.equal(j.license.billing.renews_at, null);
+  assert.equal(Date.parse(j.license.billing.ends_at), Number(license.current_period_end));
+
+  // An account without Premium gets it straight away, no link.
+  const acc = await L.createUser(t.db, 'acc@bat.io', 'password123');
+  const direct = await L.grantLicense(t.db, 'acc@bat.io', null, { months: 6 });
+  assert.equal(direct.claimToken, null);
+  assert.equal(direct.license.user_id, acc.id);
+
+  // Past its date it stops by itself, like an affiliate reward.
+  await t.db.run('UPDATE licenses SET current_period_end = ? WHERE id = ?', [Date.now() - 1000, license.id]);
+  assert.equal(await L.expireRewards(t.db), 1);
+  dash = await (await t.browse('/account')).text();
+  assert.match(dash, /Your free Premium ended on/);
+  assert.match(dash, />Get Premium</);
+
+  // Without months, grant stays for life.
+  assert.equal((await L.grantLicense(t.db, 'life@bat.io')).license.plan, 'lifetime');
+});
+
+test('days given by the team (admin grant-days): Premium for a week, as a gift, then it stops', async () => {
+  const t = await setup(SUBS);
+  const before = Date.now();
+  const { license, claimToken } = await L.grantLicense(t.db, 'week@bat.io', 'grant-days 7', { days: 7 });
+  assert.ok(claimToken);
+  assert.equal(license.plan, 'reward');
+  assert.equal(license.source, 'grant');
+  const end = Number(license.current_period_end);
+  assert.ok(end >= before + 7 * DAY_MS && end <= Date.now() + 7 * DAY_MS, `${(end - before) / DAY_MS} days`);
+  const granted = await t.db.get("SELECT detail FROM audit WHERE license_id = ? AND type = 'license.granted'", [license.id]);
+  assert.deepEqual(JSON.parse(granted.detail), { note: 'grant-days 7', days: 7 });
+
+  await t.browse(`/claim/${claimToken}`);
+  await t.browse('/signup', { form: { email: 'week@bat.io', password: 'password123' } });
+  const dash = await (await t.browse('/account')).text();
+  assert.match(dash, /Rago Optimizer Premium · Gift/);
+
+  await t.db.run('UPDATE licenses SET current_period_end = ? WHERE id = ?', [Date.now() - 1000, license.id]);
+  assert.equal(await L.expireRewards(t.db), 1);
+  assert.equal((await L.getLicense(t.db, license.id)).status_reason, 'subscription_ended');
 });
 
 test('site discount code: /buy?promo=RAGO15 opens the checkout with it, an unknown code is ignored', async () => {
@@ -1523,6 +1600,115 @@ test('reviews: the player can delete their review, from the app or from the acco
   assert.ok(await t.db.get("SELECT 1 FROM audit WHERE type = 'review.deleted'"));
 });
 
+test('reviews: Premium accounts write theirs from the account page, the same review as in the app; free accounts are sent to the app', async () => {
+  const t = await setup();
+  await t.browse('/signup', { form: { email: 'web@rago.gg', password: 'password123' } });
+  const count = async () => (await t.db.get('SELECT COUNT(*)::int AS n FROM reviews')).n;
+
+  // Free account: no form, the app instead. A post is refused and saves nothing.
+  let html = await (await t.browse('/account/review')).text();
+  assert.match(html, /Leave your review in Rago Optimizer/);
+  assert.doesNotMatch(html, /name="comment"/);
+  let res = await t.browse('/account/review', { form: { rating: '5', comment: 'Great', name: 'Web Fan' } });
+  assert.equal(res.status, 403);
+  assert.equal(await count(), 0);
+  assert.doesNotMatch(await (await t.browse('/account')).text(), /sect-review/);
+
+  // Premium: a review row on the account page; its stars open the form with that rating picked.
+  await L.grantLicense(t.db, 'web@rago.gg', 'test');
+  html = await (await t.browse('/account')).text();
+  assert.match(html, /class="sect sect-review/);
+  assert.match(html, /href="\/account\/review\?rating=4"/);
+  html = await (await t.browse('/account/review?rating=4')).text();
+  assert.match(html, /name="comment"/);
+  assert.match(html, /id="f-rate-4" name="rating" value="4" checked/);
+  assert.doesNotMatch(html, /value="[1235]" checked/);
+
+  // Refused: the form comes back with what was typed, and nothing is saved, not even the name.
+  const long = 'Long one. '.repeat(61);
+  res = await t.browse('/account/review', { form: { rating: '5', comment: long, name: 'Web Fan' } });
+  assert.equal(res.status, 400);
+  html = await res.text();
+  assert.match(html, /Keep your review under 600 characters/);
+  assert.ok(html.includes(long), 'the long review is kept in the form');
+  assert.match(html, /value="Web Fan"/);
+  for (const [form, msg] of [
+    [{ comment: 'Great', name: 'Web Fan' }, /Pick a rating/],
+    [{ rating: '9', comment: 'Great', name: 'Web Fan' }, /Pick a rating/],
+    [{ rating: '5', comment: '  ', name: 'Web Fan' }, /Write a few words/],
+    [{ rating: '5', comment: 'Great', name: 'x' }, /public name/],
+    [{ rating: '5', comment: 'Great', name: 'me@mail.com' }, /No email or link/],
+    [{ rating: '5', comment: 'Great' }, /Add the public name/],
+  ]) {
+    res = await t.browse('/account/review', { form });
+    assert.equal(res.status, 400, JSON.stringify(form));
+    assert.match(await res.text(), msg);
+  }
+  assert.equal(await count(), 0);
+  assert.equal((await L.findUserByEmail(t.db, 'web@rago.gg')).display_name, null);
+
+  // Saved: shown on the site, and on the account pages as text, never as HTML.
+  res = await t.browse('/account/review', { form: { rating: '4', comment: '  Steadier ping.\r\n\r\n\r\n<b>FPS</b> up  ', name: ' Web  Fan ' } });
+  assert.equal(res.status, 303);
+  assert.equal(res.headers.get('location'), '/account/review?n=saved');
+  html = await (await t.browse('/account/review?n=saved')).text();
+  assert.match(html, /Thanks! Your review is on the site/);
+  assert.match(html, /&lt;b&gt;FPS&lt;\/b&gt; up/);
+  assert.doesNotMatch(html, /<b>FPS/);
+  assert.match(html, /Update review/);
+  let pub = await (await t.app.request('/api/v1/reviews')).json();
+  assert.deepEqual(pub.reviews.map((r) => [r.name, r.rating, r.comment]), [['Web Fan', 4, 'Steadier ping.\n\n<b>FPS</b> up']]);
+  const { id } = pub.reviews[0];
+  assert.match(id, /^[a-z0-9]{1,12}$/);
+  assert.ok(await t.db.get("SELECT 1 FROM audit WHERE type = 'review.saved'"));
+
+  // Edited: still one review, same id on the site (the home page links to it), the name kept when left empty.
+  res = await t.browse('/account/review', { form: { rating: '5', comment: 'Even better.', name: '' } });
+  assert.equal(res.status, 303);
+  assert.equal(await count(), 1);
+  pub = await (await t.app.request('/api/v1/reviews')).json();
+  assert.deepEqual(pub.reviews.map((r) => [r.id, r.name, r.rating, r.comment]), [[id, 'Web Fan', 5, 'Even better.']]);
+
+  // The app sees the same review, and the account pages show it with a way to edit it.
+  const token = (await (await call(t, 'POST', '/account/login', { json: { email: 'web@rago.gg', password: 'password123' } })).json()).account_token;
+  assert.equal((await (await call(t, 'GET', '/account/me', { token })).json()).review.comment, 'Even better.');
+  html = await (await t.browse('/account')).text();
+  assert.match(html, /Even better\./);
+  assert.match(html, /On the site/);
+  assert.match(await (await t.browse('/account/profile')).text(), /href="\/account\/review">Edit your review/);
+
+  // Deleted from the review page: gone from the site.
+  res = await t.browse('/account/review/delete', { form: {} });
+  assert.equal(res.headers.get('location'), '/account/review?n=deleted');
+  assert.match(await (await t.browse('/account/review?n=deleted')).text(), /Review deleted/);
+  assert.equal((await (await t.app.request('/api/v1/reviews')).json()).count, 0);
+
+  // Signed out: the site's "Leave a review" goes through sign-in, then back to the form.
+  await t.browse('/logout', { form: {} });
+  res = await t.browse('/account/review');
+  assert.equal(res.headers.get('location'), '/login?next=%2Faccount%2Freview');
+  assert.match(await (await t.browse('/login?next=%2Faccount%2Freview')).text(), /Sign in to leave your review/);
+  res = await t.browse('/login', { form: { email: 'web@rago.gg', password: 'password123', next: '/account/review' } });
+  assert.equal(res.headers.get('location'), '/account/review');
+});
+
+test('reviews: the home page gets the latest 60, the reviews page all of them', async () => {
+  const t = await setup();
+  const now = Date.now();
+  for (let i = 0; i < 65; i++) {
+    await t.db.run('INSERT INTO users (id, email, password_hash, created_at, display_name) VALUES (?, ?, ?, ?, ?)', [`usr_${i}`, `p${i}@rago.gg`, 'x', now, `Player ${i}`]);
+    await t.db.run('INSERT INTO reviews (user_id, rating, comment, created_at, updated_at) VALUES (?, ?, ?, ?, ?)', [`usr_${i}`, 1 + (i % 5), `Review ${i}`, now - 1000 * i, now - 1000 * i]);
+  }
+  const site = await (await t.app.request('/api/v1/reviews')).json();
+  const all = await (await t.app.request('/api/v1/reviews?all=1')).json();
+  assert.equal(site.count, 65);
+  assert.equal(site.reviews.length, 60);
+  assert.equal(all.count, 65);
+  assert.equal(all.reviews.length, 65);
+  assert.equal(all.reviews[0].comment, 'Review 0'); // newest first
+  assert.equal(new Set(all.reviews.map((r) => r.id)).size, 65);
+});
+
 test('reviews: a Premium PC uses its license token, which stops working once the license is revoked', async () => {
   const t = await setup();
   await t.browse('/signup', { form: { email: 'pro@rago.gg', password: 'password123' } });
@@ -1674,3 +1860,469 @@ test('profile photos in Supabase Storage: private bucket created on the first up
   assert.equal(await store.get('missingmissingmissing00.webp'), null);
 });
 
+
+// ---------- Discord: the Pro role follows Premium (2026-10-10) ----------
+const DISCORD = { DISCORD_CLIENT_ID: '100000000000000001', DISCORD_CLIENT_SECRET: 'client-secret', DISCORD_BOT_TOKEN: 'Bot bot-token', DISCORD_GUILD_ID: '200000000000000002', DISCORD_ROLE_ID: '300000000000000003' };
+const BOT_ID = '900000000000000009';
+const BOT_ROLE = '400000000000000004';
+
+/** Discord as the bot and the OAuth flow see it: who authorized each code, who is on the server and with which roles. */
+function fakeDiscord() {
+  const G = DISCORD.DISCORD_GUILD_ID;
+  const codes = {}; // OAuth code -> the Discord user who authorized it
+  const members = new Map(); // Discord id -> Set of role ids
+  const calls = [];
+  const state = {
+    refuse: null, // { status, code, message }: Discord's answer to role changes
+    boosting: new Set(), // Discord ids boosting the server
+    redirects: ['http://localhost/account/discord/callback'],
+    roles: [{ id: G, name: '@everyone', position: 0, permissions: '0' }, { id: DISCORD.DISCORD_ROLE_ID, name: 'Pro', position: 3, permissions: '0' },
+      { id: BOT_ROLE, name: 'Rago Bot', position: 5, permissions: String((1n << 28n) | 1n) }],
+  };
+  const json = (status, body) => new Response(body == null ? null : JSON.stringify(body), { status, headers: { 'content-type': 'application/json' } });
+  async function fetchImpl(url, init = {}) {
+    const u = new URL(url);
+    assert.equal(u.origin, 'https://discord.com');
+    assert.match(init.headers['User-Agent'], /^DiscordBot \(/);
+    const path = u.pathname.replace('/api/v10', '');
+    const method = init.method || 'GET';
+    calls.push(`${method} ${path}`);
+    if (path === '/oauth2/token' || path === '/oauth2/token/revoke') {
+      assert.equal(init.headers.Authorization, `Basic ${Buffer.from(`${DISCORD.DISCORD_CLIENT_ID}:client-secret`).toString('base64')}`);
+      const p = new URLSearchParams(init.body);
+      if (path.endsWith('/revoke')) return json(200, {});
+      assert.equal(p.get('grant_type'), 'authorization_code');
+      assert.equal(p.get('redirect_uri'), 'http://localhost/account/discord/callback');
+      const user = codes[p.get('code')];
+      return user ? json(200, { access_token: `at_${user.id}`, token_type: 'Bearer', scope: 'identify guilds.join' }) : json(400, { error: 'invalid_grant' });
+    }
+    if (path === '/users/@me' && init.headers.Authorization.startsWith('Bearer ')) {
+      const id = init.headers.Authorization.replace('Bearer at_', '');
+      return json(200, Object.values(codes).find((x) => x.id === id));
+    }
+    assert.equal(init.headers.Authorization, 'Bot bot-token');
+    if (path === '/users/@me') return json(200, { id: BOT_ID, username: 'ragobot' });
+    if (path === '/applications/@me') return json(200, { id: DISCORD.DISCORD_CLIENT_ID, redirect_uris: state.redirects });
+    if (path === `/guilds/${G}`) return json(200, { id: G, name: 'Rago' });
+    if (path === `/guilds/${G}/roles`) return json(200, state.roles);
+    if (path === `/guilds/${G}/members/${BOT_ID}`) return json(200, { roles: [BOT_ROLE] });
+    let m = path.match(/^\/guilds\/(\d+)\/members\/(\d+)$/);
+    if (m && method === 'PUT') {
+      assert.equal(m[1], G);
+      const body = JSON.parse(init.body);
+      assert.equal(body.access_token, `at_${m[2]}`);
+      if (members.has(m[2])) return json(204);
+      if (state.refuse && body.roles?.length) return json(state.refuse.status, state.refuse); // roles need Manage Roles too
+      members.set(m[2], new Set(body.roles || []));
+      return json(201, { user: { id: m[2] }, roles: body.roles || [] });
+    }
+    if (m && method === 'GET') {
+      if (!members.has(m[2])) return json(404, { code: 10007, message: 'Unknown Member' });
+      return json(200, { user: { id: m[2] }, roles: [...members.get(m[2])], premium_since: state.boosting.has(m[2]) ? '2026-10-10T12:00:00.000Z' : null });
+    }
+    m = path.match(/^\/guilds\/(\d+)\/members\/(\d+)\/roles\/(\d+)$/);
+    if (m) {
+      assert.equal(m[3], DISCORD.DISCORD_ROLE_ID);
+      if (state.refuse) return json(state.refuse.status, state.refuse);
+      if (!members.has(m[2])) return json(404, { code: 10007, message: 'Unknown Member' });
+      members.get(m[2])[method === 'PUT' ? 'add' : 'delete'](m[3]);
+      return json(204);
+    }
+    throw new Error(`unexpected Discord call ${method} ${path}`);
+  }
+  return { fetchImpl, codes, members, calls, state, hasRole: (id) => !!members.get(id)?.has(DISCORD.DISCORD_ROLE_ID) };
+}
+
+/** "Link Discord" on the account page, Discord's page, and back with a code. Returns where the player lands. */
+async function linkDiscord(t, d, user) {
+  const code = `code_${user.id}_${Math.random()}`;
+  d.codes[code] = user;
+  const auth = new URL((await t.browse('/account/discord')).headers.get('location'));
+  return (await t.browse(`/account/discord/callback?code=${code}&state=${auth.searchParams.get('state')}`)).headers.get('location');
+}
+const quiet = { info() {}, error() {} };
+
+test('Discord: linked from the account page, Pro role while Premium is active, taken back when it stops, back when it returns', async () => {
+  const d = fakeDiscord();
+  const t = await setup({ ...SUBS, ...DISCORD }, { fetchImpl: d.fetchImpl, log: quiet });
+  const ID = '111111111111111111';
+  t.paidSubscription('cs_d', 'gamer@rago.gg');
+  await t.browse('/checkout/success?session_id=cs_d');
+  await t.browse('/signup', { form: { email: 'gamer@rago.gg', password: 'password123' } });
+  let dash = await (await t.browse('/account')).text();
+  assert.match(dash, /Link Discord/);
+  assert.doesNotMatch(dash, /open a ticket/);
+
+  // Discord's authorization page: this app, both scopes, back to this server.
+  let res = await t.browse('/account/discord');
+  const auth = new URL(res.headers.get('location'));
+  assert.equal(`${auth.origin}${auth.pathname}`, 'https://discord.com/oauth2/authorize');
+  assert.equal(auth.searchParams.get('client_id'), DISCORD.DISCORD_CLIENT_ID);
+  assert.equal(auth.searchParams.get('scope'), 'identify guilds.join');
+  assert.equal(auth.searchParams.get('redirect_uri'), 'http://localhost/account/discord/callback');
+  assert.match(res.headers.get('set-cookie'), /rg_discord=.*Path=\/account\/discord.*HttpOnly/i);
+  // A callback with another state (a link someone sent the player): nothing linked, nobody added.
+  d.codes.someone = { id: '222222222222222222', username: 'someone' };
+  res = await t.browse('/account/discord/callback?code=someone&state=forged');
+  assert.equal(res.headers.get('location'), '/account?n=discordfail');
+  assert.equal(d.members.size, 0);
+  // Canceled on Discord's page.
+  assert.equal((await t.browse('/account/discord/callback?error=access_denied&state=x')).headers.get('location'), '/account?n=discordcancel');
+
+  // Linked: added to the server with the role, the player's token revoked right after.
+  assert.equal(await linkDiscord(t, d, { id: ID, username: 'gamer', global_name: 'Gamer' }), '/account?n=discord');
+  assert.ok(d.hasRole(ID));
+  assert.ok(d.calls.includes('POST /oauth2/token/revoke'));
+  dash = await (await t.browse('/account?n=discord')).text();
+  assert.match(dash, /Discord linked\./);
+  assert.match(dash, /Linked to <strong>@gamer<\/strong>/);
+  assert.match(dash, /Role given/);
+
+  // Unpaid: Premium stops, the role goes right after the webhook. Card fixed: it comes back.
+  t.subscription('sub_cs_d', 'month', { status: 'unpaid' });
+  await t.webhook('customer.subscription.updated', { id: 'sub_cs_d', object: 'subscription' });
+  await t.app.idle();
+  assert.equal(d.hasRole(ID), false);
+  dash = await (await t.browse('/account')).text();
+  assert.match(dash, /@gamer<\/strong> stays linked: the Premium role comes back when Premium does/);
+  t.subscription('sub_cs_d', 'month');
+  await t.webhook('invoice.paid', { id: 'in_d', object: 'invoice', subscription: 'sub_cs_d' });
+  await t.app.idle();
+  assert.ok(d.hasRole(ID));
+
+  // Left the server: the 5-minute pass sees nothing to change, the daily pass notices; the page offers to join again.
+  d.members.delete(ID);
+  const bot = createDiscord(t.cfg, { db: t.db, fetchImpl: d.fetchImpl, log: quiet });
+  const roleCalls = () => d.calls.filter((c) => c.includes('/roles/')).length;
+  let n = roleCalls();
+  await bot.syncAll();
+  assert.equal(roleCalls(), n);
+  await bot.syncAll({ all: true });
+  assert.equal(roleCalls(), n + 1);
+  assert.deepEqual(await t.db.get('SELECT role, error FROM discord_links'), { role: false, error: 'not_member' });
+  dash = await (await t.browse('/account')).text();
+  assert.match(dash, /Not on the server/);
+  assert.match(dash, /Join with Discord/);
+  // Still not there: retried hourly, not at every visit or pass.
+  n = roleCalls();
+  await t.browse('/account');
+  await bot.syncAll();
+  assert.equal(roleCalls(), n);
+  assert.equal(await linkDiscord(t, d, { id: ID, username: 'gamer' }), '/account?n=discord');
+  assert.ok(d.hasRole(ID));
+
+  // Refund: revoked by the webhook, role gone. Restored by support (no Stripe event): the next pass gives it back.
+  await t.webhook('charge.refunded', { id: 'ch_d', object: 'charge', refunded: true, payment_intent: 'pi_inv', customer: 'cus_cs_d' });
+  await t.app.idle();
+  assert.equal(d.hasRole(ID), false);
+  const lic = await t.db.get('SELECT id FROM licenses');
+  await L.setLicenseStatus(t.db, lic.id, 'active', null);
+  await bot.syncAll();
+  assert.ok(d.hasRole(ID));
+
+  // Unlinked: role taken back, link forgotten, the button is back.
+  res = await t.browse('/account/discord/unlink', { form: {} });
+  assert.equal(res.headers.get('location'), '/account?n=discordoff');
+  assert.equal(d.hasRole(ID), false);
+  assert.equal((await t.db.get('SELECT COUNT(*)::int AS n FROM discord_links')).n, 0);
+  assert.match(await (await t.browse('/account')).text(), /Link Discord/);
+  const events = (await t.db.all("SELECT type FROM audit WHERE type LIKE 'discord.%' ORDER BY id")).map((r) => r.type);
+  assert.deepEqual(events.slice(0, 3), ['discord.linked', 'discord.role_added', 'discord.role_removed']);
+  assert.equal(events.at(-1), 'discord.unlinked');
+});
+
+test('Discord: one Discord account per Rago account, refused changes retried, /admin checks the bot, manual without it', async () => {
+  const KEY = 'admin-key-0123456789abcdef';
+  const d = fakeDiscord();
+  const t = await setup({ ...SUBS, ...DISCORD, ADMIN_KEY: KEY }, { fetchImpl: d.fetchImpl, log: quiet });
+  const X = '333333333333333333';
+  t.paidSubscription('cs_a', 'a@rago.gg');
+  await t.browse('/checkout/success?session_id=cs_a');
+  await t.browse('/signup', { form: { email: 'a@rago.gg', password: 'password123' } });
+  await linkDiscord(t, d, { id: X, username: 'shared' });
+  assert.ok(d.hasRole(X));
+
+  // The same Discord account linked from a free account: the link moves there, and the role goes (no Premium).
+  await t.browse('/logout', { form: {} });
+  await t.browse('/signup', { form: { email: 'free@rago.gg', password: 'password123' } });
+  await linkDiscord(t, d, { id: X, username: 'shared' });
+  assert.equal(d.hasRole(X), false);
+  const rows = await t.db.all('SELECT u.email, d.role FROM discord_links d JOIN users u ON u.id = d.user_id');
+  assert.deepEqual(rows, [{ email: 'free@rago.gg', role: false }]);
+
+  // Back on the Premium account with another Discord account while the bot lacks the permission: linked, role pending.
+  await t.browse('/logout', { form: {} });
+  await t.browse('/login', { form: { email: 'a@rago.gg', password: 'password123' } });
+  const Y = '444444444444444444';
+  d.state.refuse = { status: 403, code: 50013, message: 'Missing Permissions' };
+  assert.equal(await linkDiscord(t, d, { id: Y, username: 'second' }), '/account?n=discord');
+  assert.ok(d.members.has(Y) && !d.hasRole(Y)); // on the server anyway, without the role
+  let dash = await (await t.browse('/account')).text();
+  assert.match(dash, /Pending/);
+  assert.match(dash, /Try again/);
+  assert.deepEqual(await t.db.get('SELECT role, error FROM discord_links WHERE discord_id = ?', [Y]), { role: false, error: 'forbidden' });
+  // Permission fixed: not retried before 15 minutes by the passes, right away with the button.
+  d.state.refuse = null;
+  const bot = createDiscord(t.cfg, { db: t.db, fetchImpl: d.fetchImpl, log: quiet });
+  await bot.syncAll();
+  assert.equal(d.hasRole(Y), false);
+  await t.db.run('UPDATE discord_links SET synced_at = ? WHERE discord_id = ?', [Date.now() - 16 * 60 * 1000, Y]);
+  await bot.syncAll();
+  assert.ok(d.hasRole(Y));
+  d.members.get(Y).delete(DISCORD.DISCORD_ROLE_ID); // removed by hand on Discord
+  await t.browse('/account/discord/sync', { form: {} });
+  assert.ok(d.hasRole(Y));
+
+  // /admin: bot, redirect URL, server, role, permissions, the bot's role above Pro, linked accounts.
+  await t.browse('/admin/login', { form: { key: KEY } });
+  let page = await (await t.browse('/admin')).text();
+  assert.match(page, /Rôle Pro sur Discord/);
+  assert.match(page, /Automatique/);
+  assert.match(page, /Connecté en tant que ragobot/);
+  assert.match(page, /« Rago Bot » est au-dessus de « Pro »/);
+  assert.match(page, /2 comptes liés, 1 avec le rôle/);
+  // The usual mistakes: the bot's role under Pro, the redirect URL not added in the Developer Portal.
+  d.state.roles[2].position = 2;
+  d.state.redirects = [];
+  page = await (await t.browse('/admin')).text();
+  assert.match(page, /2 à corriger/);
+  assert.match(page, /glisse le rôle du bot \(« Rago Bot »\) au-dessus de « Pro »/);
+  assert.match(page, /Ajoute http:\/\/localhost\/account\/discord\/callback dans Developer Portal/);
+
+  // Without the bot: the ticket text, no link route, /admin says what's missing; half a setup is flagged.
+  const manual = await setup({ ...SUBS, SUPPORT_URL: 'https://discord.gg/rago', ADMIN_KEY: KEY });
+  manual.paidSubscription('cs_m', 'm@rago.gg');
+  await manual.browse('/checkout/success?session_id=cs_m');
+  await manual.browse('/signup', { form: { email: 'm@rago.gg', password: 'password123' } });
+  assert.match(await (await manual.browse('/account')).text(), /open a ticket with your account email/);
+  assert.equal((await manual.browse('/account/discord')).headers.get('location'), '/account');
+  await manual.browse('/admin/login', { form: { key: KEY } });
+  assert.match(await (await manual.browse('/admin')).text(), /À régler dans Railway : DISCORD_CLIENT_ID, DISCORD_CLIENT_SECRET, DISCORD_BOT_TOKEN, DISCORD_GUILD_ID, DISCORD_ROLE_ID/);
+  const half = loadConfig({ DISCORD_BOT_TOKEN: 'x', DISCORD_GUILD_ID: 'not-an-id' });
+  assert.equal(half.discord, false);
+  assert.ok(half.warnings.some((w) => /DISCORD_CLIENT_ID, DISCORD_CLIENT_SECRET, DISCORD_ROLE_ID not set/.test(w)));
+  assert.ok(half.warnings.some((w) => /DISCORD_GUILD_ID is not a Discord id/.test(w)));
+  assert.equal(loadConfig(DISCORD).discordBotToken, 'bot-token');
+});
+
+test('Discord rewards: VIP, MVP and boosts give Premium time and a one-use code, once per Discord and per Rago account', async () => {
+  const KEY = 'admin-key-0123456789abcdef';
+  const VIP = '600000000000000006';
+  const MVP = '700000000000000007';
+  const BOOST2 = '710000000000000007';
+  const d = fakeDiscord();
+  d.state.roles.push({ id: VIP, name: 'VIP', position: 1, permissions: '0' }, { id: MVP, name: 'MVP', position: 2, permissions: '0' }, { id: BOOST2, name: '2x Booster', position: 1, permissions: '0' });
+  const t = await setup({ ...SUBS, ...DISCORD, DISCORD_VIP_ROLE_ID: VIP, DISCORD_MVP_ROLE_ID: MVP, DISCORD_BOOST2_ROLE_ID: BOOST2, ADMIN_KEY: KEY }, { fetchImpl: d.fetchImpl, log: quiet });
+  const bot = createDiscord(t.cfg, { db: t.db, fetchImpl: d.fetchImpl, log: quiet, stripe: t.stripe });
+  const later = () => t.db.run('UPDATE discord_links SET rewards_checked_at = ?', [Date.now() - 31 * 60 * 1000]);
+  const V = '555555555555555555';
+
+  // A free account: the page lists the rewards and offers to link Discord.
+  await t.browse('/signup', { form: { email: 'free@rago.gg', password: 'password123' } });
+  let dash = await (await t.browse('/account')).text();
+  assert.match(dash, /Discord rewards/);
+  assert.match(dash, /<strong>VIP<\/strong> · 10 invites: 1 month of Premium and a 10% discount code/);
+  assert.match(dash, /<strong>MVP<\/strong> · 15 invites: 3 months of Premium and a 30% discount code/);
+  assert.match(dash, /<strong>BOOST<\/strong> · 1 server boost: 2 weeks of Premium and a 10% discount code/);
+  assert.match(dash, /<strong>BOOST2<\/strong> · 2 server boosts: 1 month of Premium and a 30% discount code/);
+  assert.match(dash, /href="\/account\/discord">Link Discord/);
+  // Linked before reaching VIP: on the server, no Premium, no Pro role.
+  assert.equal(await linkDiscord(t, d, { id: V, username: 'inviter' }), '/account?n=discord');
+  assert.ok(d.members.has(V));
+  assert.equal(d.hasRole(V), false);
+  assert.equal((await t.db.get('SELECT COUNT(*)::int AS n FROM licenses')).n, 0);
+  assert.match(await (await t.browse('/account')).text(), /Linked to <strong>@inviter<\/strong>/);
+
+  // The invite bot gives VIP: the background pass gives 1 month of Premium, a one-use 10% code and the Pro role.
+  d.members.get(V).add(VIP);
+  await bot.syncAll();
+  assert.equal((await t.db.get('SELECT COUNT(*)::int AS n FROM licenses')).n, 0); // looked at less than 30 minutes ago
+  await later();
+  await bot.syncAll();
+  const lic = await t.db.get('SELECT * FROM licenses');
+  assert.equal(lic.plan, 'reward');
+  assert.equal(lic.source, 'discord');
+  assert.ok(lic.current_period_end - Date.now() > 27 * DAY_MS && lic.current_period_end - Date.now() < 32 * DAY_MS);
+  assert.ok(d.hasRole(V));
+  const vip = t.promos.find((p) => /^VIP-[A-Z2-9]{6}$/.test(p.code));
+  assert.equal(vip.max_redemptions, 1);
+  assert.equal(vip.promotion.coupon, 'rago-promo-10-once');
+  assert.equal(t.coupons['rago-promo-10-once'].percent_off, 10);
+  dash = await (await t.browse('/account')).text();
+  assert.match(dash, /Premium · Discord reward/);
+  assert.match(dash, new RegExp(`<code class="mono">${vip.code}</code>`));
+  assert.match(dash, new RegExp(`href="/buy\\?promo=${vip.code}"`));
+  // Looked at again: given once.
+  await later();
+  await bot.syncAll();
+  assert.equal(t.promos.filter((p) => p.code.startsWith('VIP-')).length, 1);
+
+  // MVP, seen when the player opens their account page: 3 months more on top, a one-use 30% code.
+  d.members.get(V).add(MVP);
+  await t.db.run('UPDATE discord_links SET rewards_checked_at = 0');
+  dash = await (await t.browse('/account')).text();
+  const lic2 = await t.db.get('SELECT * FROM licenses');
+  assert.equal(lic2.id, lic.id);
+  assert.ok(lic2.current_period_end - lic.current_period_end > 88 * DAY_MS);
+  const mvp = t.promos.find((p) => /^MVP-/.test(p.code));
+  assert.equal(mvp.max_redemptions, 1);
+  assert.equal(t.coupons['rago-promo-30-once'].percent_off, 30);
+  assert.match(dash, new RegExp(`<code class="mono">${mvp.code}</code>`));
+  assert.equal((await t.db.get("SELECT COUNT(*)::int AS n FROM audit WHERE type = 'discord.reward'")).n, 2);
+
+  // The same Discord account linked to another Rago account: nothing more to win.
+  t.jar.clear();
+  await t.browse('/signup', { form: { email: 'alt@rago.gg', password: 'password123' } });
+  assert.equal(await linkDiscord(t, d, { id: V, username: 'inviter' }), '/account?n=discord');
+  const alt = await L.findUserByEmail(t.db, 'alt@rago.gg');
+  assert.equal(await t.db.get('SELECT * FROM licenses WHERE user_id = ?', [alt.id]), null);
+  assert.equal(t.promos.length, 2);
+
+  // A subscriber who boosts the server: their next payment moves 2 weeks later (a Stripe trial), no second license.
+  t.jar.clear();
+  const S = '444444444444444444';
+  t.paidSubscription('cs_s', 'sub@rago.gg');
+  await t.browse('/checkout/success?session_id=cs_s');
+  await t.browse('/signup', { form: { email: 'sub@rago.gg', password: 'password123' } });
+  const subLic = await t.db.get("SELECT * FROM licenses WHERE email = 'sub@rago.gg'");
+  d.members.set(S, new Set());
+  d.state.boosting.add(S);
+  assert.equal(await linkDiscord(t, d, { id: S, username: 'subscriber' }), '/account?n=discord');
+  assert.match((await t.db.get('SELECT promo_code FROM discord_rewards WHERE discord_id = ?', [S])).promo_code, /^BOOST-[A-Z2-9]{6}$/);
+  const update = t.stripeCalls.find((c) => c[0] === 'update' && c[1] === 'sub_cs_s');
+  assert.ok(Math.abs(update[2].trial_end * 1000 - (subLic.current_period_end + 14 * DAY_MS)) < 60000);
+  assert.equal((await t.db.get("SELECT COUNT(*)::int AS n FROM licenses WHERE email = 'sub@rago.gg'")).n, 1);
+  assert.ok(d.hasRole(S));
+
+  // Stripe refuses: nothing given, tried again later.
+  const create = t.stripe.promotionCodes.create;
+  t.stripe.promotionCodes.create = async () => { throw new Error('Stripe down'); };
+  t.jar.clear();
+  await t.browse('/signup', { form: { email: 'late@rago.gg', password: 'password123' } });
+  const Z = '888888888888888888';
+  d.members.set(Z, new Set([VIP]));
+  await linkDiscord(t, d, { id: Z, username: 'late' });
+  const late = await L.findUserByEmail(t.db, 'late@rago.gg');
+  assert.equal(await t.db.get('SELECT * FROM discord_rewards WHERE user_id = ?', [late.id]), null);
+  assert.equal(await t.db.get('SELECT * FROM licenses WHERE user_id = ?', [late.id]), null);
+  t.stripe.promotionCodes.create = create;
+  await later();
+  await bot.syncAll();
+  assert.equal((await t.db.get('SELECT plan FROM licenses WHERE user_id = ?', [late.id])).plan, 'reward');
+
+  // 2 boosts (the role, and boosting) when linking: 1 month and a 30% code, not the 1-boost reward on top.
+  t.jar.clear();
+  await t.browse('/signup', { form: { email: 'twice@rago.gg', password: 'password123' } });
+  const W = '777777777777777777';
+  d.members.set(W, new Set([BOOST2]));
+  d.state.boosting.add(W);
+  assert.equal(await linkDiscord(t, d, { id: W, username: 'twice' }), '/account?n=discord');
+  const twice = await L.findUserByEmail(t.db, 'twice@rago.gg');
+  assert.deepEqual((await t.db.all('SELECT kind FROM discord_rewards WHERE user_id = ?', [twice.id])).map((r) => r.kind), ['boost2']);
+  const twiceLic = await t.db.get('SELECT * FROM licenses WHERE user_id = ?', [twice.id]);
+  assert.ok(twiceLic.current_period_end - Date.now() > 27 * DAY_MS && twiceLic.current_period_end - Date.now() < 32 * DAY_MS);
+  assert.ok(t.promos.some((p) => /^BOOST2-[A-Z2-9]{6}$/.test(p.code) && p.promotion.coupon === 'rago-promo-30-once'));
+  // Looked at again later: still no 1-boost reward, and the page doesn't offer it any more.
+  await later();
+  await bot.syncAll();
+  assert.equal((await t.db.get('SELECT COUNT(*)::int AS n FROM discord_rewards WHERE user_id = ?', [twice.id])).n, 1);
+  dash = await (await t.browse('/account')).text();
+  assert.match(dash, /<strong>BOOST2<\/strong> · <span class="badge badge-ok">/);
+  assert.doesNotMatch(dash, /<strong>BOOST<\/strong>/);
+
+  // 1 boost, then 2: 2 weeks and a 10% code, then 2 more weeks and a 30% code, so 1 month in all.
+  t.jar.clear();
+  await t.browse('/signup', { form: { email: 'once@rago.gg', password: 'password123' } });
+  const O = '666666666666666666';
+  d.members.set(O, new Set());
+  d.state.boosting.add(O);
+  assert.equal(await linkDiscord(t, d, { id: O, username: 'once' }), '/account?n=discord');
+  const once = await L.findUserByEmail(t.db, 'once@rago.gg');
+  const onceLic = await t.db.get('SELECT * FROM licenses WHERE user_id = ?', [once.id]);
+  assert.ok(Math.abs(onceLic.current_period_end - (Date.now() + 14 * DAY_MS)) < 60000);
+  d.members.get(O).add(BOOST2);
+  await later();
+  await bot.syncAll();
+  assert.deepEqual((await t.db.all('SELECT kind FROM discord_rewards WHERE user_id = ? ORDER BY given_at', [once.id])).map((r) => r.kind), ['boost', 'boost2']);
+  const topped = await t.db.get('SELECT * FROM licenses WHERE user_id = ?', [once.id]);
+  assert.equal(topped.id, onceLic.id);
+  assert.ok(topped.current_period_end - Date.now() > 27 * DAY_MS && topped.current_period_end - Date.now() < 32 * DAY_MS);
+  dash = await (await t.browse('/account')).text();
+  assert.match(dash, /<strong>BOOST2<\/strong> · <span class="badge badge-ok"><i><\/i>Earned<\/span> 2 more weeks of Premium added/);
+  assert.match(dash, /<strong>BOOST<\/strong> · <span class="badge badge-ok"><i><\/i>Earned<\/span> 2 weeks of Premium added/);
+
+  // /admin: both roles found, rewards counted. A role id that isn't one is flagged in the config.
+  await t.browse('/admin/login', { form: { key: KEY } });
+  const page = await (await t.browse('/admin')).text();
+  assert.match(page, /« VIP » donne 1 mois de Premium et un code 10 % à usage unique au compte Rago lié\. 2 données\./);
+  assert.match(page, /« MVP » donne 3 mois de Premium et un code 30 % à usage unique au compte Rago lié\. 1 donnée\./);
+  assert.match(page, /Booster le serveur donne 14 jours de Premium et un code 10 % à usage unique au compte Rago lié\. 2 données\./);
+  assert.match(page, /« 2x Booster » donne 1 mois de Premium et un code 30 % à usage unique au compte Rago lié\. 2 données\./);
+  const bad = loadConfig({ ...DISCORD, DISCORD_VIP_ROLE_ID: 'VIP' });
+  assert.equal(bad.discordVipRoleId, '');
+  assert.ok(bad.warnings.some((w) => /DISCORD_VIP_ROLE_ID is not a Discord id/.test(w)));
+});
+
+test('staging server: named by Railway or APP_ENV, refuses live Stripe keys, says so on every page and email', async () => {
+  const live = { NODE_ENV: 'production', PUBLIC_URL: 'https://x.test', DATABASE_URL: 'postgres://x', STRIPE_WEBHOOK_SECRET: 'whsec_x' };
+  // The live server: Railway's "production" environment, or no name at all. Its live key is fine.
+  assert.equal(loadConfig({ ...live, STRIPE_SECRET_KEY: 'sk_live_x', RAILWAY_ENVIRONMENT_NAME: 'production' }).staging, false);
+  assert.equal(loadConfig({ ...live, STRIPE_SECRET_KEY: 'sk_live_x' }).envName, 'production');
+  assert.equal(loadConfig({}).envName, 'development');
+  assert.equal(loadConfig({}).staging, false);
+  // A test copy: Railway environment "staging" (or a PR environment), or APP_ENV.
+  for (const name of ['staging', 'Staging', 'rago-pr-21', 'test']) {
+    const cfg = loadConfig({ ...live, STRIPE_SECRET_KEY: 'sk_test_x', RAILWAY_ENVIRONMENT_NAME: name });
+    assert.equal(cfg.staging, true, name);
+    assert.equal(cfg.envName, name.toLowerCase());
+  }
+  assert.equal(loadConfig({ ...live, STRIPE_SECRET_KEY: 'sk_test_x', APP_ENV: 'staging', RAILWAY_ENVIRONMENT_NAME: 'production' }).envName, 'staging');
+  // Copied from the live environment with its live key: it doesn't start.
+  assert.throws(() => loadConfig({ ...live, STRIPE_SECRET_KEY: 'sk_live_x', RAILWAY_ENVIRONMENT_NAME: 'staging' }), /test server, but STRIPE_SECRET_KEY is a live key/);
+  assert.throws(() => loadConfig({ ...live, STRIPE_SECRET_KEY: ' rk_live_x ', APP_ENV: 'staging' }), /live key/);
+  // ...and with the live Discord bot or signing key, the logs say what to remove.
+  const copied = loadConfig({ ...live, STRIPE_SECRET_KEY: 'sk_test_x', RAILWAY_ENVIRONMENT_NAME: 'staging', LICENSE_SIGNING_KEY: '-----BEGIN PRIVATE KEY-----x',
+    DISCORD_CLIENT_ID: '123456789012345678', DISCORD_CLIENT_SECRET: 's', DISCORD_BOT_TOKEN: 't', DISCORD_GUILD_ID: '223456789012345678', DISCORD_ROLE_ID: '323456789012345678' });
+  assert.match(copied.warnings.join(' '), /Test server with the Discord bot on/);
+  assert.match(copied.warnings.join(' '), /Test server with LICENSE_SIGNING_KEY set/);
+
+  // Every page carries the banner; the live server's pages don't.
+  const t = await setup({ APP_ENV: 'staging' });
+  assert.match(await (await t.browse('/login')).text(), /class="staging-bar"[^>]*><b>Test server \(staging\)<\/b>/);
+  assert.doesNotMatch(await (await (await setup()).browse('/login')).text(), /staging-bar/);
+  // Emails from the staging server say [Test].
+  const sent = [];
+  const fetchImpl = async (url, init) => { sent.push(JSON.parse(init.body)); return new Response('{}', { status: 200 }); };
+  const env = { RESEND_API_KEY: 're_real', MAIL_FROM: 'Rago Optimizer <noreply@rago.test>', SITE_URL: 'https://rago.test' };
+  await createMailer(loadConfig({ ...env, APP_ENV: 'staging' }), { fetchImpl }).passwordReset('player@example.org', 'https://account.rago.test/reset/x');
+  await createMailer(loadConfig(env), { fetchImpl }).passwordReset('player@example.org', 'https://account.rago.test/reset/x');
+  assert.match(sent[0].subject, /^\[Test\] /);
+  assert.doesNotMatch(sent[1].subject, /\[Test\]/);
+});
+
+test('a database belongs to the first environment that opens it: another one refuses it', async () => {
+  const db = await testDb();
+  await claimDatabase(db, 'production');
+  await claimDatabase(db, 'production'); // the same server again, or its next deployment
+  await assert.rejects(claimDatabase(db, 'staging'), /This database belongs to the "production" server, and this server is "staging"/);
+  await assert.rejects(claimDatabase(db, 'development'), /set APP_ENV=production/);
+  assert.equal((await db.get("SELECT value FROM server_secrets WHERE name = 'environment'")).value, 'production');
+});
+
+test('real Postgres: a staging server on the live database stops before replaying the schema', { skip: !process.env.TEST_DATABASE_URL }, async () => {
+  await testDb();
+  for (const d of opened.splice(0)) await d.close();
+  const url = process.env.TEST_DATABASE_URL;
+  const live = await openDb(url, { envName: 'production' });
+  await live.close();
+  // Something only the newer schema would add: it must not appear when the staging server is refused.
+  const admin = new pg.Client({ connectionString: url });
+  await admin.connect();
+  await admin.query('ALTER TABLE stripe_events DROP COLUMN livemode');
+  await assert.rejects(openDb(url, { envName: 'staging' }), /belongs to the "production" server/);
+  const { rows } = await admin.query("SELECT 1 FROM information_schema.columns WHERE table_name = 'stripe_events' AND column_name = 'livemode'");
+  assert.equal(rows.length, 0);
+  await admin.end();
+  const again = await openDb(url, { envName: 'production' });
+  opened.push(again);
+});

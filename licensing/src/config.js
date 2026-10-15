@@ -17,11 +17,20 @@ function launchTime(value, prod) {
   return Number.isNaN(t) ? (prod ? Date.parse(DEFAULT_LAUNCH) : 0) : t;
 }
 
+// A test copy of the server: Railway environment named "staging" (or a PR environment, "test", "preview", "dev"),
+// or APP_ENV=staging. It refuses live Stripe keys and says on every page and email that it isn't the real one.
+const STAGING_NAME = /stag|test|preview|^dev$|pr-\d/;
+
 export function loadConfig(env = process.env) {
   const prod = env.NODE_ENV === 'production';
   const publicUrl = asUrl(env.PUBLIC_URL) || `http://localhost:${env.PORT || 8787}`;
+  // Which server this is. The first server to open a database marks it with this name, and a server with another
+  // name refuses that database (claimDatabase in db.js): a staging copy keeps away from the live accounts.
+  const envName = String(env.APP_ENV || env.RAILWAY_ENVIRONMENT_NAME || (prod ? 'production' : 'development')).trim().toLowerCase();
   const cfg = {
     prod,
+    envName,
+    staging: STAGING_NAME.test(envName),
     port: Number(env.PORT || 8787),
     publicUrl,
     siteUrl: asUrl(env.SITE_URL) || publicUrl,
@@ -96,8 +105,26 @@ export function loadConfig(env = process.env) {
     previewKey: (env.PREVIEW_KEY || '').trim(),
     // Opens /admin (the site's discount pop-up). Shorter than 16 characters: /admin stays closed.
     adminKey: (env.ADMIN_KEY || '').trim(),
+
+    // Pro role on the Rago Discord (2026-10-10): Premium players link their Discord from /account, a bot gives
+    // them the role and takes it back when Premium stops. Without all five, the role stays manual (ticket).
+    discordClientId: (env.DISCORD_CLIENT_ID || '').trim(),
+    discordClientSecret: (env.DISCORD_CLIENT_SECRET || '').trim(),
+    // "Bot " pasted with the token from the Developer Portal is dropped.
+    discordBotToken: (env.DISCORD_BOT_TOKEN || '').trim().replace(/^Bot\s+/i, ''),
+    discordGuildId: (env.DISCORD_GUILD_ID || '').trim(),
+    discordRoleId: (env.DISCORD_ROLE_ID || '').trim(),
+    // Discord rewards (2026-10-10): an invite bot (InviteLogger…) gives VIP at 10 invites and MVP at 15; the Rago bot
+    // turns those roles (and boosting the server) into free Premium and a one-use discount code. Optional.
+    discordVipRoleId: (env.DISCORD_VIP_ROLE_ID || '').trim(),
+    discordMvpRoleId: (env.DISCORD_MVP_ROLE_ID || '').trim(),
+    // "2 boosts" reward: a role staff (or a boost bot) give; one boost is seen by the bot itself.
+    discordBoost2RoleId: (env.DISCORD_BOOST2_ROLE_ID || '').trim(),
   };
   cfg.subscriptions = !!(cfg.stripePriceMonthly || cfg.stripePriceYearly);
+  const DISCORD_VARS = { DISCORD_CLIENT_ID: 'discordClientId', DISCORD_CLIENT_SECRET: 'discordClientSecret', DISCORD_BOT_TOKEN: 'discordBotToken', DISCORD_GUILD_ID: 'discordGuildId', DISCORD_ROLE_ID: 'discordRoleId' };
+  const discordMissing = Object.keys(DISCORD_VARS).filter((k) => !cfg[DISCORD_VARS[k]]);
+  cfg.discord = discordMissing.length === 0;
 
   const missing = [];
   if (prod) {
@@ -106,6 +133,9 @@ export function loadConfig(env = process.env) {
     }
     if (!publicUrl.startsWith('https://')) missing.push('PUBLIC_URL (https)');
     if (missing.length) throw new Error(`Missing production config: ${missing.join(', ')}`);
+  }
+  if (cfg.staging && /^(sk|rk)_live_/.test(cfg.stripeSecretKey)) {
+    throw new Error(`This is the "${envName}" test server, but STRIPE_SECRET_KEY is a live key: real cards would be charged. Use the Stripe test keys here (sk_test_..., and the test webhook secret and prices).`);
   }
 
   // Values still set to the examples from .env.example: the server runs, but say what won't work.
@@ -138,6 +168,23 @@ export function loadConfig(env = process.env) {
   if (env.LAUNCH_AT && Number.isNaN(Date.parse(env.LAUNCH_AT.trim()))) cfg.warnings.push(`LAUNCH_AT is not a date (${env.LAUNCH_AT}): use for example 2026-10-10T13:00:00Z.`);
   if (cfg.launchAt > Date.now() && cfg.previewKey.length < 16) cfg.warnings.push('PREVIEW_KEY is not set (16 characters at least): until the launch, nobody can open /signup, /buy, /download and /affiliate, the team included. Use the same value as the Netlify variable.');
   if (prod && cfg.adminKey.length < 16) cfg.warnings.push('ADMIN_KEY is not set (16 characters at least): /admin, where the site\'s discount pop-up is changed, stays closed. npm run admin -- popup still works.');
+  if (discordMissing.length && discordMissing.length < 5) cfg.warnings.push(`${discordMissing.join(', ')} not set: the Discord Pro role stays manual until the five DISCORD_ variables are in.`);
+  for (const k of ['DISCORD_CLIENT_ID', 'DISCORD_GUILD_ID', 'DISCORD_ROLE_ID']) {
+    // Discord ids are 17 to 20 digits (Developer mode > right click > Copy ID).
+    if (cfg[DISCORD_VARS[k]] && !/^\d{17,20}$/.test(cfg[DISCORD_VARS[k]])) {
+      cfg.warnings.push(`${k} is not a Discord id (17 to 20 digits): the Discord Pro role stays manual.`);
+      cfg.discord = false;
+    }
+  }
+  for (const [k, key] of [['DISCORD_VIP_ROLE_ID', 'discordVipRoleId'], ['DISCORD_MVP_ROLE_ID', 'discordMvpRoleId'], ['DISCORD_BOOST2_ROLE_ID', 'discordBoost2RoleId']]) {
+    if (cfg[key] && !/^\d{17,20}$/.test(cfg[key])) {
+      cfg.warnings.push(`${k} is not a Discord id (17 to 20 digits): that invite reward is off.`);
+      cfg[key] = '';
+    }
+  }
+  if (cfg.staging && cfg.discord) cfg.warnings.push(`Test server with the Discord bot on: it gives and removes roles on the Discord server ${cfg.discordGuildId}. Use a test Discord server, or remove the DISCORD_ variables from this environment.`);
+  if (cfg.staging && cfg.signingKeyPem) cfg.warnings.push('Test server with LICENSE_SIGNING_KEY set: if it is the live key, licenses from this test server unlock the real app. Remove it from this environment: the test server then makes its own key.');
+
   // Emails really go out: pages may promise one.
   cfg.mailEnabled = !!cfg.resendApiKey && !exampleFrom;
 

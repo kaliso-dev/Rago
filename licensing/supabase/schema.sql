@@ -175,6 +175,35 @@ CREATE TABLE IF NOT EXISTS site_settings (
   updated_at BIGINT NOT NULL
 );
 
+-- Discord account linked from /account (2026-10-10). A bot gives it the Pro role while the account's Premium is
+-- active and takes it back when Premium stops. One Discord account per Rago account, and the other way round.
+CREATE TABLE IF NOT EXISTS discord_links (
+  user_id TEXT PRIMARY KEY REFERENCES users(id) ON DELETE CASCADE,
+  discord_id TEXT NOT NULL UNIQUE,
+  discord_name TEXT,                              -- @username when linked, for support
+  linked_at BIGINT NOT NULL,
+  role BOOLEAN NOT NULL DEFAULT false,            -- the Pro role, as the bot last set it
+  error TEXT,                                     -- why the last change failed: not_member | forbidden | unauthorized | config | unavailable
+  synced_at BIGINT
+);
+
+-- Invite rewards (2026-10-10): VIP / MVP roles (given by an invite bot) turned into Premium time and a one-use
+-- discount code, once per Discord account and once per Rago account for each role.
+ALTER TABLE discord_links ADD COLUMN IF NOT EXISTS rewards_checked_at BIGINT;    -- last look at the member's roles
+CREATE TABLE IF NOT EXISTS discord_rewards (
+  id TEXT PRIMARY KEY,
+  kind TEXT NOT NULL,                             -- vip | mvp
+  discord_id TEXT NOT NULL,
+  user_id TEXT REFERENCES users(id) ON DELETE SET NULL,
+  given_at BIGINT NOT NULL,
+  license_id TEXT,
+  action TEXT,                                    -- created | extended | subscription | lifetime
+  until BIGINT,                                   -- Premium until (ms), when time was added
+  promo_code TEXT,                                -- the one-use Stripe code shown on the account page
+  UNIQUE (discord_id, kind),
+  UNIQUE (user_id, kind)
+);
+
 ALTER TABLE users ENABLE ROW LEVEL SECURITY;
 ALTER TABLE web_sessions ENABLE ROW LEVEL SECURITY;
 ALTER TABLE licenses ENABLE ROW LEVEL SECURITY;
@@ -189,3 +218,5 @@ ALTER TABLE account_devices ENABLE ROW LEVEL SECURITY;
 ALTER TABLE reviews ENABLE ROW LEVEL SECURITY;
 ALTER TABLE site_settings ENABLE ROW LEVEL SECURITY;
 ALTER TABLE api_sessions ENABLE ROW LEVEL SECURITY;
+ALTER TABLE discord_links ENABLE ROW LEVEL SECURITY;
+ALTER TABLE discord_rewards ENABLE ROW LEVEL SECURITY;

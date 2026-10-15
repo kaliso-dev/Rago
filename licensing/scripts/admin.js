@@ -10,6 +10,11 @@
 //   revoke <email> [reason]      disable the license (Rago Optimizer goes back to free at its next check)
 //   restore <email>              re-enable a revoked license
 //   grant <email> [note]         create a license by hand (e.g. Discord buyers of the .bat Premium)
+//   grant-months <months> <email> [email…]
+//                                Premium for that many months from today, then it stops by itself (e.g.
+//                                grant-months 6 a@x.com b@y.com). Emails with Premium already are skipped
+//   grant-days <days> <email> [email…]
+//                                the same in days, e.g. grant-days 7 a@x.com for a week of Premium
 //   create-user <email> <pass>   create an account (testing)
 //   affiliate <email>            affiliate code, referrals and why each counts or not
 //   create-promo <CODE> <percent> [once|forever]
@@ -29,12 +34,17 @@
 //   hide-review <email>          take that account's review off the site (spam, abuse); show-review puts it back
 //   remove-photo <email>         delete that account's profile photo (inappropriate picture)
 //   set-name <email> <name>      change the public name shown with that account's review
+//   discord <email>              the Discord account linked to it and its Pro role, given again or taken back now,
+//                                and its VIP / MVP invite rewards (given now if the role is there)
+//   discord                      the same for every linked account (the server does it every 5 minutes)
+//   discord-unlink <email>       take the Pro role back and unlink their Discord account
 import { loadConfig } from '../src/config.js';
 import { openDb } from '../src/db.js';
 import * as L from '../src/licensing.js';
 import * as A from '../src/affiliates.js';
 import * as P from '../src/profile.js';
 import * as R from '../src/reviews.js';
+import { createDiscord, DiscordError } from '../src/discord.js';
 import Stripe from 'stripe';
 
 const cfg = loadConfig({ ...process.env, NODE_ENV: 'development' });
@@ -56,6 +66,13 @@ async function licenseOf(email) {
   if (!lic) { console.error(`No license for ${email}`); process.exit(1); }
   return { user, lic };
 }
+// The Pro role bot, with the same DISCORD_ variables as Railway.
+function discordBot() {
+  const bot = createDiscord(cfg, { db, stripe: cfg.stripeSecretKey ? new Stripe(cfg.stripeSecretKey) : null });
+  if (!bot) { console.error('Set the five DISCORD_ variables (same as Railway) first.'); process.exit(1); }
+  return bot;
+}
+const discordLine = (d) => (d ? `@${d.discord_name} (${d.discord_id}), Pro role ${d.role ? 'given' : 'not given'}${d.error ? `, last problem: ${d.error}` : ''}, linked ${fmt(d.linked_at)}` : 'not linked');
 const unclaimedLine = (l) => `${l.id}  ${l.email}  ${l.status}  ${l.plan}  ${l.source}  paid ${fmt(l.created_at)}${l.referral_code ? `  code ${l.referral_code}` : ''}`;
 
 switch (cmd) {
@@ -65,7 +82,8 @@ switch (cmd) {
     console.log({ account: user ? { id: user.id, email: user.email, created: fmt(user.created_at) } : 'none (unclaimed)',
       license: { id: lic.id, key: lic.key, status: lic.status, reason: lic.status_reason, source: lic.source, plan: lic.plan, paid_until: fmt(lic.current_period_end), cancel_at_period_end: lic.cancel_at_period_end,
         subscription: lic.stripe_subscription_id, created: fmt(lic.created_at), payment_intent: lic.stripe_payment_intent },
-      device: dev ? { name: dev.name, os: dev.os, bound: fmt(dev.bound_at), last_seen: fmt(dev.last_seen_at), ip: dev.last_ip } : 'not activated' });
+      device: dev ? { name: dev.name, os: dev.os, bound: fmt(dev.bound_at), last_seen: fmt(dev.last_seen_at), ip: dev.last_ip } : 'not activated',
+      discord: user ? discordLine(await db.get('SELECT * FROM discord_links WHERE user_id = ?', [user.id])) : '-' });
     for (const e of await db.all('SELECT * FROM audit WHERE license_id = ? ORDER BY id DESC LIMIT 15', [lic.id])) console.log(fmt(e.at), e.type, e.detail || '');
     const loose = (await L.unclaimedLicenses(db, email)).filter((l) => l.id !== lic.id || user);
     if (loose.length) {
@@ -111,12 +129,47 @@ switch (cmd) {
     break;
   }
   case 'reset-device': await L.resetDevice(db, (await licenseOf(email)).lic.id, 'support'); console.log('Device freed.'); break;
-  case 'revoke': await L.setLicenseStatus(db, (await licenseOf(email)).lic.id, 'revoked', rest[0] || 'manual'); console.log('Revoked.'); break;
-  case 'restore': await L.setLicenseStatus(db, (await licenseOf(email)).lic.id, 'active', null); console.log('Restored.'); break;
+  case 'revoke':
+  case 'restore': {
+    const { user, lic } = await licenseOf(email);
+    await L.setLicenseStatus(db, lic.id, cmd === 'revoke' ? 'revoked' : 'active', cmd === 'revoke' ? rest[0] || 'manual' : null);
+    // The Discord Pro role follows now rather than at the server's next pass (5 minutes).
+    const bot = user && createDiscord(cfg, { db, stripe: cfg.stripeSecretKey ? new Stripe(cfg.stripeSecretKey) : null });
+    const d = bot && await bot.syncUser(user.id);
+    console.log(`${cmd === 'revoke' ? 'Revoked' : 'Restored'}.${d ? ` Discord: ${discordLine(d)}.` : ''}`);
+    break;
+  }
   case 'grant': {
     const { license, claimToken } = await L.grantLicense(db, email, rest.join(' '));
     console.log(`License ${license.key} for ${email}.`);
     console.log(claimToken ? `Send this link so they create their account: ${cfg.publicUrl}/claim/${claimToken}` : 'Added to their existing account.');
+    break;
+  }
+  case 'grant-months':
+  case 'grant-days': {
+    // A pasted list works too: emails separated by spaces, commas or semicolons. Run twice, nobody gets two.
+    // The number can also come after the emails (grant-days player@mail.com 7).
+    const unit = cmd === 'grant-days' ? 'days' : 'months';
+    const words = [email, ...rest].join(' ').split(/[\s,;]+/).filter(Boolean);
+    const count = words.find((w) => /^\d+$/.test(w));
+    const n = Number(count);
+    const emails = [...new Set(words.filter((w) => w !== count).map((e) => e.toLowerCase()))];
+    if (!(n >= 1 && n <= (unit === 'days' ? 3650 : 120)) || !emails.length) { console.error(`Usage: ${cmd} ${unit === 'days' ? 7 : 6} player@mail.com [other@mail.com …]`); process.exit(1); }
+    const day = (ms) => new Date(Number(ms)).toISOString().slice(0, 10);
+    let given = 0;
+    for (const to of emails) {
+      if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(to)) { console.log(`${to}: not an email, skipped.`); continue; }
+      const user = await L.findUserByEmail(db, to);
+      const owned = user && await L.current(db, await L.licenseForUser(db, user.id));
+      if (owned?.status === 'active') { console.log(`${to}: already Premium (${owned.plan}${owned.plan !== 'lifetime' && owned.current_period_end ? ` until ${day(owned.current_period_end)}` : ''}), nothing given.`); continue; }
+      const waiting = (await L.unclaimedLicenses(db, to)).find((l) => l.status === 'active');
+      if (waiting) { console.log(`${to}: a license already waits for this email (${waiting.id}), nothing given. claim-link ${to} prints a new link.`); continue; }
+      const { license, claimToken } = await L.grantLicense(db, to, `${cmd} ${n}`, { [unit]: n });
+      given++;
+      console.log(`${to}: license ${license.key}, Premium until ${day(license.current_period_end)}.`);
+      console.log(claimToken ? `  Send this link so they create their account: ${cfg.publicUrl}/claim/${claimToken}` : '  Added to their existing account.');
+    }
+    if (emails.length > 1) console.log(`\n${given} of ${emails.length} given.`);
     break;
   }
   case 'affiliate': {
@@ -190,6 +243,8 @@ switch (cmd) {
     if (!user && !lics.length) { console.error(`Nothing stored for ${target}`); process.exit(1); }
     // The profile photo goes first (Storage); the review goes with the account below.
     if (user?.avatar_key) await P.removeAvatar(db, photoStore(), user.id);
+    // The Discord Pro role too (the link itself goes with the account).
+    if (user && (await db.get('SELECT role FROM discord_links WHERE user_id = ?', [user.id]))?.role) await discordBot().unlink(user.id);
     const stripe = cfg.stripeSecretKey ? new Stripe(cfg.stripeSecretKey) : null;
     for (const l of lics) {
       if (l.stripe_subscription_id && l.status === 'active') {
@@ -241,6 +296,36 @@ switch (cmd) {
     console.log('Public name changed.');
     break;
   }
+  case 'discord': {
+    const bot = discordBot();
+    if (!email) {
+      await bot.syncAll({ all: true });
+      const s = await db.get('SELECT COUNT(*)::int AS linked, COUNT(*) FILTER (WHERE role)::int AS with_role, COUNT(*) FILTER (WHERE error IS NOT NULL)::int AS failing FROM discord_links');
+      console.log(`${s.linked} linked account(s), ${s.with_role} with the Pro role, ${s.failing} with a problem (see /admin).`);
+      for (const r of await db.all('SELECT d.*, u.email FROM discord_links d JOIN users u ON u.id = d.user_id WHERE d.error IS NOT NULL ORDER BY d.linked_at')) console.log(' ', r.email, discordLine(r));
+      break;
+    }
+    const user = await L.findUserByEmail(db, email);
+    if (!user) { console.error(`No account for ${email}.`); process.exit(1); }
+    await bot.checkRewards(user.id, { minAge: 0 });
+    const row = await bot.syncUser(user.id, { force: true });
+    console.log(row ? discordLine(row) : `${email} hasn't linked a Discord account: they do it from their account page (Link Discord).`);
+    for (const r of await bot.rewardsOf(user.id)) {
+      console.log(`  ${r.kind.toUpperCase()} reward ${fmt(r.given_at)}: ${r.action === 'lifetime' ? 'already Premium for life' : `Premium until ${fmt(r.until)}`}${r.promo_code ? `, code ${r.promo_code}` : ''}`);
+    }
+    break;
+  }
+  case 'discord-unlink': {
+    const user = await L.findUserByEmail(db, email || '');
+    if (!user) { console.error(`No account for ${email}.`); process.exit(1); }
+    try {
+      console.log((await discordBot().unlink(user.id)) ? 'Discord unlinked, Pro role taken back.' : 'No Discord account linked.');
+    } catch (err) {
+      if (!(err instanceof DiscordError)) throw err;
+      console.error(`Discord refused: ${err.message}`); process.exit(1);
+    }
+    break;
+  }
   case 'export-keys': {
     // The signing key's public half is compiled into every Rago Optimizer build: lose it and every
     // installed app rejects new licenses. Keep these two values in a password manager.
@@ -253,6 +338,6 @@ switch (cmd) {
     break;
   }
   default:
-    console.log('Commands: show, attach, claim-link, reset-link, reset-device, revoke, restore, grant, affiliate, create-promo, popup, create-user, delete-user, export-keys, reviews, hide-review, show-review, remove-photo, set-name (see scripts/admin.js)');
+    console.log('Commands: show, attach, claim-link, reset-link, reset-device, revoke, restore, grant, grant-months, grant-days, affiliate, create-promo, popup, create-user, delete-user, export-keys, reviews, hide-review, show-review, remove-photo, set-name, discord, discord-unlink (see scripts/admin.js)');
 }
 await db.close();

@@ -136,6 +136,7 @@ const fr = {
   "palette.go": "Aller au module",
 
   "demo.banner": "Démo web : les réglages sont simulés",
+  "staging.banner": "Serveur de test (staging)",
   "apply.goN": "Appliquer {n} réglage|Appliquer {n} réglages",
   "run.applied": "Appliqué.",
 
@@ -386,6 +387,7 @@ const en: Record<Key, string> = {
   "palette.empty": "No tweak matches.",
   "palette.go": "Go to section",
   "demo.banner": "Web demo, tweaks are simulated",
+  "staging.banner": "Test server (staging)",
   "free.badge": "Free",
   "free.undoBadge": "Undo free",
   "free.lock": "Premium",

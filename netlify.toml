@@ -4,6 +4,14 @@
   # Les sources et notes internes de site/ ne doivent pas être publiées.
   command = "rm -rf site/src site/tools && rm -f site/*.md"
 
+# Aperçus (deploy previews des pull requests, branche staging) : même chose, mais leurs liens de compte, les avis et le
+# pop-up passent par le serveur de comptes de staging (variable Netlify STAGING_ACCOUNT_URL), jamais par le vrai.
+# Sans la variable, ces liens sont coupés sur l'aperçu. Voir DEVELOPPEMENT.md.
+[context.deploy-preview]
+  command = "sh netlify/preview.sh"
+[context.branch-deploy]
+  command = "sh netlify/preview.sh"
+
 # Avant le lancement (LAUNCH_AT, par défaut samedi 10 octobre 2026 à 15 h, heure de Paris), tout le site est
 # remplacé par un compte à rebours, sauf pour l'équipe : le lien /acces/<PREVIEW_KEY> pose un cookie d'accès,
 # /acces/sortir le retire. PREVIEW_KEY et LAUNCH_AT sont des variables Netlify (mêmes valeurs dans Railway).

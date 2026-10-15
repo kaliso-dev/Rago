@@ -55,9 +55,9 @@ FOOT='''<div class="foot"><a href="terms.html">Terms of Sale</a><a href="privacy
 </html>
 '''
 # The legal pages are public and indexable (linked from every footer); the 404 page isn't.
-def page(name,title,desc,body):
+def page(name,title,desc,body,upd=UPD):
     meta=f'<meta name="description" content="{desc}">\n<link rel="canonical" href="{SITE}/{name}">'
-    open(os.path.join(OUT,name),'w').write(HEAD.format(title=title,upd=UPD,meta=meta)+body+FOOT)
+    open(os.path.join(OUT,name),'w').write(HEAD.format(title=title,upd=upd,meta=meta)+body+FOOT)
 
 page('terms.html','Terms of Sale','Terms of sale for Rago Optimizer: the Free and Premium plans, prices, your one-PC license, renewal and cancellation.',f'''
 <h2>1. Who we are</h2>
@@ -95,7 +95,7 @@ page('terms.html','Terms of Sale','Terms of sale for Rago Optimizer: the Free an
 <p>Affiliates get a personal code. New customers who use an affiliate code get 5% off their first Premium payment. A referral counts as soon as the buyer has activated the app on their PC, and stops counting if the purchase is refunded or disputed. Your own purchases and activations on your own PC don't count. Each affiliate can refer up to 3 buyers. Once those 3 referrals count, the affiliate gets 6 months of Premium for one PC. We can cancel a reward obtained by fraud.</p>
 
 <h2>8. Reviews</h2>
-<p>Once signed in to the app with a Rago account, free or Premium, you can rate Rago Optimizer from 1 to 5 stars and write a comment. Your review is shown on our site with your public name and your profile photo, if you added one. You can change or delete it anytime, from the app or from your account page.</p>
+<p>Once signed in to the app with a Rago account, free or Premium, you can rate Rago Optimizer from 1 to 5 stars and write a comment. With Premium, you can also write it from your account page on our site. Your review is shown on our site with your public name and your profile photo, if you added one. Long reviews are shortened on the home page, with a link to read them in full on our reviews page. You can change your review anytime from the app, or from your account page with Premium, and delete it from either.</p>
 <p>Each account can leave one review. We don't check whether its author bought Premium, and we don't pay for reviews or reward them. The site shows them from the most recently updated, whatever their rating. We may hide a review that is spam, abusive, off topic or that reveals someone's personal data. We don't hide a review because it is negative.</p>
 
 <h2>9. Liability</h2>
@@ -106,7 +106,7 @@ page('terms.html','Terms of Sale','Terms of sale for Rago Optimizer: the Free an
 
 <h2>11. Changes and law</h2>
 <p>We may update these terms. The version accepted at checkout applies to that purchase. These terms are governed by French law, which doesn't take away the protection the mandatory consumer law of your country gives you. If a dispute isn't solved with our support, you can also use the mediation services and the courts of your own country.</p>
-''')
+''',upd="October 11, 2026")
 
 page('refunds.html','Refunds and Cancellation','How to cancel a Rago Optimizer Premium subscription, when you can get a refund and what it does to your license.',f'''
 <h2>Cancel anytime</h2>
@@ -145,6 +145,7 @@ page('privacy.html','Privacy Policy','What Rago Optimizer and its account server
 <tr><td>Hashed identifiers of your PC (from the Windows machine ID, motherboard UUID and serial number), PC name, Windows version, app version, activation dates and last IP address</td><td>Linking your license to one PC and preventing license sharing</td></tr>
 <tr><td>Affiliate code, which accounts used it, and hashed identifiers of the buyer's first PC</td><td>Running the affiliate program and blocking self-referrals</td></tr>
 <tr><td>Your public name, profile photo (resized to 256 × 256 pixels, with its metadata removed) and your review: rating, comment, app version and dates</td><td>Showing your review on our site and your profile in the app. Your public name, photo, rating and comment are public.</td></tr>
+<tr><td>If you link your Discord account: its Discord user ID and username</td><td>Adding you to our Discord server and giving you the Premium role while your Premium is active, then removing it when Premium ends. We don't keep your Discord sign-in: it's revoked right after linking. You can unlink anytime from your account page.</td></tr>
 <tr><td>A log of license events (purchase, activation, refund, blocked activation with IP address)</td><td>Security and support</td></tr>
 <tr><td>IP address, kept briefly in memory</td><td>Limiting sign-in and download attempts</td></tr>
 </table></div>
@@ -157,6 +158,7 @@ page('privacy.html','Privacy Policy','What Rago Optimizer and its account server
 <ul>
 <li><strong>rg_session</strong>: keeps you signed in to your account. Necessary.</li>
 <li><strong>rg_claim</strong>: links a purchase to the account you create right after it, for 2 days. Necessary.</li>
+<li><strong>rg_discord</strong>: checks that the Discord account coming back from Discord's authorization page is linked to your account, for 10 minutes. Only set when you link Discord. Necessary.</li>
 <li><strong>rago_preview</strong>: lets our team open the site before its launch. Only set for team members. Necessary.</li>
 <li><strong>rg_ref</strong> (cookie on the account server) and <strong>rago_ref</strong> (browser storage on this site): remember an affiliate code from a share link for 30 days.</li>
 <li><strong>rago_promo_seen</strong> and <strong>rago_promo_claimed</strong> (browser storage on this site): remember that the welcome offer was shown, so it isn't shown again for 30 days, and the discount code you claimed, so it is applied at checkout. Clearing your browser data removes them.</li>
@@ -171,6 +173,7 @@ page('privacy.html','Privacy Policy','What Rago Optimizer and its account server
 <li><strong>Netlify</strong>: website hosting</li>
 <li><strong>Resend</strong>: account emails (purchase confirmation, password reset)</li>
 <li><strong>OVHcloud</strong>: our domain name and the support mailbox</li>
+<li><strong>Discord</strong>: our community server, and the Premium role if you link your Discord account</li>
 </ul>
 <p>Some of these providers are in the United States. Transfers rely on the European Commission's standard contractual clauses or an equivalent safeguard.</p>
 
@@ -187,7 +190,7 @@ page('privacy.html','Privacy Policy','What Rago Optimizer and its account server
 
 <h2>Changes</h2>
 <p>If we change this policy in a way that matters, we'll update the date above and tell account holders by email.</p>
-''')
+''',upd="October 10, 2026")
 print('ok')
 
 # 404: Netlify serves it for any unknown path, so every link is absolute
