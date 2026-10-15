@@ -24,11 +24,12 @@ export function Sidebar() {
     for (const s of m.sections) for (const tw of s.tweaks) if (!("ref" in tw) && selected.has(tw.id)) n++;
     return n;
   };
-  // module sans aucun réglage ouvert en plan gratuit
+  // plan gratuit : cadenas dès qu'un réglage du module est réservé à Premium, même si d'autres sont gratuits (Windows,
+  // Hitreg) ; pas de cadenas pour un module entièrement gratuit (Restaurer)
   const lockedModule = (id: string) => {
     const m = modules.get(id);
     if (premium || !m) return false;
-    return !m.sections.some((s) => s.tweaks.some((tw) => !("ref" in tw) && !isLocked(tw.id) && !undoOnly(tw.id)));
+    return m.sections.some((s) => s.tweaks.some((tw) => !("ref" in tw) && (isLocked(tw.id) || undoOnly(tw.id))));
   };
 
   const item = (id: string, label: string, icon: string) => {
