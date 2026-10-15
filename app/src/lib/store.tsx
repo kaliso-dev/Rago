@@ -65,6 +65,8 @@ export interface RunState {
   done: DoneEvent | null;
   reboot: boolean;
   error: string | null;
+  /** déconnexion : le moteur remet tous les réglages, rien ne l'arrête (pas de bouton Stop) */
+  signOut?: boolean;
 }
 
 export interface ConfirmState {
@@ -121,8 +123,16 @@ function useStoreValue() {
   const [mcDirOverride, setMcDir] = usePersisted<string | null>("mcDir", null);
   const [history, setHistory] = useState<HistoryEntry[]>([]);
   const [run, setRun] = useState<RunState | null>(null);
+  const runRef = useRef<RunState | null>(null);
+  runRef.current = run;
   const [confirm, setConfirm] = useState<ConfirmState | null>(null);
-  const [paletteOpen, setPaletteOpen] = useState(false);
+  const [paletteOpen, openPalette] = useState(false);
+  /** Lot en cours (la fenêtre de suivi est ouverte et pas finie) : rien ne s'ouvre par-dessus (Ctrl+K, connexion). */
+  const busy = () => {
+    const r = runRef.current;
+    return !!r && !r.done && !r.error;
+  };
+  const setPaletteOpen = useCallback((open: boolean) => openPalette(open && !busy()), []);
   const [focusTweak, setFocusTweak] = useState<string | null>(null);
   // chaque recherche compte, même vers le réglage déjà visé (sa ligne a pu disparaître dans une section repliée)
   const [focusSeq, setFocusSeq] = useState(0);
@@ -130,13 +140,14 @@ function useStoreValue() {
   const [upsell, setUpsellKind] = useState<Upsell>(null);
   const [upsellTweak, setUpsellTweak] = useState<string | null>(null);
   const setUpsell = useCallback((u: Upsell, tweakId?: string) => {
+    if (u && busy()) return;
     setUpsellKind(u);
     if (u !== "signin") setUpsellTweak(tweakId ?? null);
   }, []);
   /** Licence perdue au rafraîchissement (abonnement terminé, remboursement…) ou plus vérifiable hors ligne. */
   const [licenseNotice, setLicenseNotice] = useState<LicenseError | null>(null);
   const [activatedAt, setActivatedAt] = usePersisted<number | null>("activatedAt", null);
-  /** Remise à zéro faite par le moteur (fin de Premium, déconnexion) : petit message en bas à droite. */
+  /** Remise à zéro faite par le moteur à la fin de Premium : petit message en bas à droite. */
   const [resetDone, setResetDone] = useState<(ResetDone & { at: number }) | null>(null);
   /** La réparation du moteur au lancement a supprimé une valeur qui peut faire planter Windows (RAG-67) : petit message
    * « redémarre ton PC », une seule fois (le moteur ne le dit qu'au premier appel de ce lancement). */
@@ -191,12 +202,65 @@ function useStoreValue() {
     return () => clearInterval(daily);
   }, []);
 
+  /** Lignes de la fenêtre de suivi pour la remise de la déconnexion (annulations, le dernier appliqué en premier). */
+  const signOutRun = (ids: string[], runId: string | null): RunState => ({
+    runId,
+    rows: ids.map((id) => ({ id, variant: appliedRef.current.get(id)?.variant ?? null, undo: true, status: "pending", durationMs: null })),
+    logs: [],
+    startedAt: Date.now(),
+    endedAt: null,
+    done: null,
+    reboot: ids.some((id) => {
+      const tw = tweaks.get(id);
+      return tw ? needsReboot(tw, undoVariant(id, appliedRef.current.get(id))) : (retired.get(id)?.reboot ?? false);
+    }),
+    error: null,
+    signOut: true,
+  });
+
+  /** Déconnexion : le moteur remet d'abord tous les réglages appliqués sur ce PC (Premium et gratuits), sans bouton pour
+   * l'arrêter, puis efface le jeton (lib.rs, `license_sign_out`). La remise s'affiche dans la fenêtre de suivi ; fermée
+   * de force, elle reprend au lancement suivant (voir plus bas). */
   const signOut = useCallback(async () => {
-    await api.licenseSignOut();
-    setLicenseNotice(null);
-    setActivatedAt(null);
-    setLicense(await api.licenseStatus());
-  }, [setActivatedAt]);
+    const ids = await api.signOutPlan().catch(() => [...appliedRef.current.keys()]);
+    if (ids.length) setRun(signOutRun(ids, null));
+    try {
+      await api.licenseSignOut();
+    } catch (err) {
+      setRun((r) => ({ ...(r ?? signOutRun([], null)), error: String(err), endedAt: Date.now() }));
+    }
+  }, []);
+  const signOutRef = useRef(signOut);
+  signOutRef.current = signOut;
+
+  // le moteur commence la remise (ordre définitif), puis a fini et effacé le jeton : la licence passe au plan gratuit
+  useEffect(() => {
+    let live = true;
+    const subs = [
+      api.onSignOutStart((e) => setRun((r) => ({ ...signOutRun(e.ids, e.runId), startedAt: r?.signOut ? r.startedAt : Date.now() }))),
+      api.onSignOutDone(() => {
+        setLicenseNotice(null);
+        setActivatedAt(null);
+        void api.licenseStatus().then(setLicense);
+        void refreshApplied();
+        void refreshHistory();
+        // rien n'était à remettre : pas de fenêtre de suivi à laisser ouverte
+        setRun((r) => (r?.signOut && !r.done && !r.error ? null : r));
+      }),
+    ];
+    // déconnexion coupée (app fermée de force, PC éteint) : elle reprend ici, avant toute autre chose
+    void Promise.all(subs).then(() =>
+      api.signOutPending().then(
+        (pending) => live && pending && void signOutRef.current(),
+        () => {},
+      ),
+    );
+    return () => {
+      live = false;
+      subs.forEach((p) => void p.then((un) => un()));
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   /** Licence activée dans l'app (connexion ou Activate). */
   const activated = useCallback(
@@ -378,8 +442,8 @@ function useStoreValue() {
     [selection, pendingUndo, applied, isLocked, setUpsell],
   );
 
-  const runRef = useRef<RunState | null>(null);
-  runRef.current = run;
+  const appliedRef = useRef(applied);
+  appliedRef.current = applied;
 
   useEffect(() => {
     const subs = [
@@ -484,8 +548,8 @@ function useStoreValue() {
   /** Réglages Premium appliqués : le moteur les remet de lui-même à la déconnexion et à la fin de Premium. */
   const premiumApplied = useMemo(() => [...applied.keys()].filter((id) => !FREE.has(id)).sort(byCatalog), [applied]);
 
-  // Premium terminé (abonnement fini, remboursement), plus de licence sur ce PC ou déconnexion : le moteur remet les
-  // réglages Premium en arrière-plan, sans fenêtre ni bouton pour l'arrêter, et ne prévient qu'à la fin.
+  // Premium terminé (abonnement fini, remboursement) : le moteur remet les réglages Premium en arrière-plan, sans
+  // fenêtre ni bouton pour l'arrêter, et ne prévient qu'à la fin. La déconnexion, elle, remet tout (signOut).
   useEffect(() => {
     const sub = api.onReset((e) => {
       void refreshApplied();

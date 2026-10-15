@@ -143,8 +143,13 @@ impl Runner {
 
     /// Lance le lot sur le thread appelant, sans interface (remise à zéro). Renvoie (réussis, ratés).
     pub fn run_now(&self, ctx: &Context, items: &[RunItem]) -> (usize, usize) {
+        self.run_as(ctx, &format!("reset-{}", now_ms()), items)
+    }
+
+    /// Comme `run_now`, sous un identifiant choisi : la remise de la déconnexion, que l'interface suit.
+    pub fn run_as(&self, ctx: &Context, run_id: &str, items: &[RunItem]) -> (usize, usize) {
         let _one = exclusive();
-        self.run(ctx, &format!("reset-{}", now_ms()), items)
+        self.run(ctx, run_id, items)
     }
 
     fn run(&self, ctx: &Context, run_id: &str, items: &[RunItem]) -> (usize, usize) {
@@ -1198,11 +1203,10 @@ mod tests {
         assert_eq!(ctx.history.all().len(), 2);
     }
 
-    /// m4 (revue finale du moteur) : la confirmation de déconnexion annonce `reset_plan`, la liste de la remise de fin de
-    /// Premium, et non plus tous les réglages Premium appliqués. Le nombre annoncé est celui que la remise remet : un
-    /// réglage appliqué avant 1.1.6 sans copie de son annulation reste appliqué, et n'est plus compté.
+    /// m4 (revue finale du moteur) : la remise de fin de Premium (`reset::targets`, portée Premium) remet exactement
+    /// sa liste : un réglage appliqué avant 1.1.6 sans copie de son annulation reste appliqué, et n'y est pas.
     #[test]
-    fn sign_out_count_is_what_the_reset_puts_back() {
+    fn premium_reset_puts_back_exactly_its_plan() {
         let ctx = test_ctx("plan", None);
         {
             let mut l = ctx.ledger.lock().unwrap();

@@ -137,10 +137,16 @@ export interface DoneEvent {
   cancelled: boolean;
   logFile: string;
 }
-/** Remise à zéro faite par le moteur, sans fenêtre (fin de Premium, déconnexion). */
+/** Remise à zéro faite par le moteur : sans fenêtre à la fin de Premium (`reset:done`), suivie à l'écran à la
+ * déconnexion (`signout:done`). */
 export interface ResetDone {
   ok: number;
   failed: number;
+}
+/** Déconnexion : la remise de tous les réglages commence, dans cet ordre (lot suivi par `run:item` et `run:done`). */
+export interface SignOutStart {
+  runId: string;
+  ids: string[];
 }
 
 export const isTauri = typeof window !== "undefined" && "__TAURI_INTERNALS__" in window;
@@ -155,8 +161,10 @@ export interface Api {
   applied(): Promise<AppliedView[]>;
   /** « Tout annuler » : réglages appliqués sur ce PC, dans l'ordre de la remise à zéro (le dernier appliqué en premier). */
   undoAllPlan(): Promise<string[]>;
-  /** Déconnexion : réglages Premium que le moteur remettra (sans ceux qu'il ne sait pas remettre sans la licence). */
-  resetPlan(): Promise<string[]>;
+  /** Déconnexion : tous les réglages que le moteur remettra avant de déconnecter, dans l'ordre de la remise. */
+  signOutPlan(): Promise<string[]>;
+  /** Déconnexion demandée et pas finie (app fermée de force pendant la remise) : à relancer au lancement. */
+  signOutPending(): Promise<boolean>;
   /** Vrai une seule fois, au lancement où la réparation du moteur a supprimé une valeur (RAG-67) : il faut redémarrer. */
   takeRepairNotice(): Promise<boolean>;
   liveStats(): Promise<LiveStats>;
@@ -171,10 +179,14 @@ export interface Api {
   onLog(cb: (e: LogEvent) => void): Promise<UnlistenFn>;
   onDone(cb: (e: DoneEvent) => void): Promise<UnlistenFn>;
   onReset(cb: (e: ResetDone) => void): Promise<UnlistenFn>;
+  onSignOutStart(cb: (e: SignOutStart) => void): Promise<UnlistenFn>;
+  onSignOutDone(cb: (e: ResetDone) => void): Promise<UnlistenFn>;
   licenseStatus(): Promise<LicenseStatus>;
   licenseLogin(email: string, password: string): Promise<LoginResult>;
   licenseActivate(): Promise<LicenseStatus>;
   licenseRefresh(): Promise<LicenseStatus>;
+  /** Lance la déconnexion : le moteur remet tous les réglages (`signout:start`, lot, `signout:done`), puis efface le
+   * jeton. Rend la main tout de suite. */
   licenseSignOut(): Promise<void>;
   window: { minimize(): void; toggleMaximize(): void; close(): void };
 }
@@ -188,7 +200,8 @@ const tauriApi: Api = {
   clearHistory: () => invoke("clear_history"),
   applied: () => invoke("get_applied"),
   undoAllPlan: () => invoke("undo_all_plan"),
-  resetPlan: () => invoke("reset_plan"),
+  signOutPlan: () => invoke("sign_out_plan"),
+  signOutPending: () => invoke("sign_out_pending"),
   takeRepairNotice: () => invoke("take_repair_notice"),
   liveStats: () => invoke("live_stats"),
   openTaskManager: () => invoke("open_task_manager"),
@@ -214,6 +227,8 @@ const tauriApi: Api = {
   onLog: (cb) => listen<LogEvent>("run:log", (e) => cb(e.payload)),
   onDone: (cb) => listen<DoneEvent>("run:done", (e) => cb(e.payload)),
   onReset: (cb) => listen<ResetDone>("reset:done", (e) => cb(e.payload)),
+  onSignOutStart: (cb) => listen<SignOutStart>("signout:start", (e) => cb(e.payload)),
+  onSignOutDone: (cb) => listen<ResetDone>("signout:done", (e) => cb(e.payload)),
   window: {
     minimize: () => void import("@tauri-apps/api/window").then((w) => w.getCurrentWindow().minimize()),
     toggleMaximize: () => void import("@tauri-apps/api/window").then((w) => w.getCurrentWindow().toggleMaximize()),
@@ -391,8 +406,9 @@ const mockApi: Api = {
   },
   applied: async () => [...mockApplied.values()],
   undoAllPlan: async () => [...mockApplied.values()].sort((a, b) => b.ts - a.ts || a.id.localeCompare(b.id)).map((a) => a.id),
-  // démo : ce que mockReset remet
-  resetPlan: async () => [...mockApplied.keys()].filter((id) => !free.tweaks.includes(id)),
+  // démo : ce que la déconnexion remet (tout, le dernier appliqué en premier)
+  signOutPlan: async () => [...mockApplied.values()].sort((a, b) => b.ts - a.ts || a.id.localeCompare(b.id)).map((a) => a.id),
+  signOutPending: async () => false,
   // démo : localStorage « rago.demoRepair » = 1 simule une réparation au lancement
   takeRepairNotice: async () => {
     try {
@@ -480,18 +496,38 @@ const mockApi: Api = {
     return mockLicense();
   },
   licenseSignOut: async () => {
-    demoEmail = null;
-    try {
-      localStorage.removeItem("rago.demoLicense");
-    } catch {
-      /* rien */
-    }
-    mockReset();
+    // démo : comme le moteur, tous les réglages sont remis (suivis à l'écran), puis le jeton est effacé
+    const ids = [...mockApplied.values()].sort((a, b) => b.ts - a.ts || a.id.localeCompare(b.id)).map((a) => a.id);
+    const runId = `signout-${Date.now()}`;
+    void (async () => {
+      if (ids.length) {
+        emit<SignOutStart>("signout:start", { runId, ids });
+        for (const [index, id] of ids.entries()) {
+          const base = { runId, index, id, variant: null, code: null, durationMs: null, message: null };
+          emit<ItemEvent>("run:item", { ...base, status: "running" });
+          await sleep(300);
+          mockHistory.push({ id, variant: null, ts: Date.now(), ok: true, code: 0, durationMs: 300, undo: true });
+          mockApplied.delete(id);
+          saveMockApplied();
+          emit<ItemEvent>("run:item", { ...base, status: "ok", code: 0, durationMs: 300 });
+        }
+        emit<DoneEvent>("run:done", { runId, ok: ids.length, failed: 0, skipped: 0, restoreFailed: false, cancelled: false, logFile: "" });
+      }
+      demoEmail = null;
+      try {
+        localStorage.removeItem("rago.demoLicense");
+      } catch {
+        /* rien */
+      }
+      emit<ResetDone>("signout:done", { ok: ids.length, failed: 0 });
+    })();
   },
   onItem: (cb) => on("run:item", cb),
   onLog: (cb) => on("run:log", cb),
   onDone: (cb) => on("run:done", cb),
   onReset: (cb) => on("reset:done", cb),
+  onSignOutStart: (cb) => on("signout:start", cb),
+  onSignOutDone: (cb) => on("signout:done", cb),
   window: { minimize() {}, toggleMaximize() {}, close() {} },
 };
 

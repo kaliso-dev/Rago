@@ -20,21 +20,21 @@ const LICENCES = [
 ];
 
 export function Settings() {
-  const { t, lang, setLang, motion, setMotion, license, signOut, premiumApplied, setUpsell, activatedAt, sys } = useStore();
+  const { t, lang, setLang, motion, setMotion, license, signOut, applied, setUpsell, activatedAt, sys } = useStore();
   const [confirmOut, setConfirmOut] = useState(false);
-  /** Réglages que le moteur remettra à la déconnexion (reset_plan) ; null tant que la réponse n'est pas là. Il saute
-   * ceux qu'il ne sait pas remettre sans la licence : les compter tous annoncerait plus de réglages annulés que remis. */
+  /** Réglages que le moteur remettra avant de déconnecter (sign_out_plan : tous, Premium et gratuits) ; null tant que la
+   * réponse n'est pas là. */
   const [toUndo, setToUndo] = useState<number | null>(null);
   const askSignOut = () => {
     setToUndo(null);
     setConfirmOut(true);
-    // repli si le moteur ne répond pas : tous les réglages Premium appliqués, comme avant
-    void api.resetPlan().then(
+    // repli si le moteur ne répond pas : tous les réglages appliqués
+    void api.signOutPlan().then(
       (ids) => setToUndo(ids.length),
-      () => setToUndo(premiumApplied.length),
+      () => setToUndo(applied.size),
     );
   };
-  const undoCount = toUndo ?? premiumApplied.length;
+  const undoCount = toUndo ?? applied.size;
   const device = license?.deviceName ?? sys?.hostname ?? "";
   return (
     <div className="page settings">

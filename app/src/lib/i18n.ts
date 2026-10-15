@@ -260,7 +260,10 @@ const fr = {
   "confirm.undoAllTitle": "Tout annuler ?",
   "confirm.undoAllLead": "Rago Optimizer remet Windows comme avant pour le réglage appliqué sur ce PC. Ta licence ne change pas.|Rago Optimizer remet Windows comme avant pour les {n} réglages appliqués sur ce PC, du dernier appliqué au premier. Ta licence ne change pas.",
   "reset.failed": "{n} réglage n'a pas pu être remis : détails dans l'historique (module Restaurer)|{n} réglages n'ont pas pu être remis : détails dans l'historique (module Restaurer)",
-  "signout.undoLead": "Ton réglage Premium va être annulé : Rago Optimizer remet les réglages de Windows comme avant. Tes réglages gratuits restent actifs.|Tes {n} réglages Premium vont être annulés : Rago Optimizer remet les réglages de Windows comme avant. Tes réglages gratuits restent actifs.",
+  "signout.undoLead": "Avant de te déconnecter, Rago Optimizer annule ton réglage appliqué et remet les réglages de Windows qu'il avait changés. Ça ne peut pas être arrêté.|Avant de te déconnecter, Rago Optimizer annule tes {n} réglages appliqués, gratuits compris, et remet les réglages de Windows qu'ils avaient changés. Ça ne peut pas être arrêté.",
+  "signout.runTitle": "Déconnexion : remise de tes réglages",
+  "signout.runDone": "Déconnecté",
+  "signout.runNote": "La remise ne peut pas être arrêtée. Si tu fermes la fenêtre, elle se termine en arrière-plan avant que l'app se ferme.",
   "signout.go": "Annuler et me déconnecter",
   "repair.restart": "Rago Optimizer a réparé une valeur qui peut faire planter Windows. Redémarre ton PC pour finir : Redémarrer, pas Arrêter.",
 };
@@ -513,7 +516,10 @@ const en: Record<Key, string> = {
   "confirm.undoAllTitle": "Undo everything?",
   "confirm.undoAllLead": "Rago Optimizer puts Windows back the way it was for the tweak applied on this PC. Your license doesn't change.|Rago Optimizer puts Windows back the way it was for the {n} tweaks applied on this PC, newest first. Your license doesn't change.",
   "reset.failed": "{n} tweak couldn't be put back: details in History (Restore module)|{n} tweaks couldn't be put back: details in History (Restore module)",
-  "signout.undoLead": "Your {n} Premium tweak will be undone: Rago Optimizer puts those Windows settings back the way they were. Your free tweaks stay on.|Your {n} Premium tweaks will be undone: Rago Optimizer puts those Windows settings back the way they were. Your free tweaks stay on.",
+  "signout.undoLead": "Before signing you out, Rago Optimizer undoes your applied tweak and puts back the Windows settings it changed. This can't be stopped.|Before signing you out, Rago Optimizer undoes your {n} applied tweaks, free ones included, and puts back the Windows settings they changed. This can't be stopped.",
+  "signout.runTitle": "Signing out: putting your settings back",
+  "signout.runDone": "Signed out",
+  "signout.runNote": "This can't be stopped. If you close the window, it finishes in the background before the app closes.",
   "signout.go": "Undo and sign out",
   "repair.restart": "Rago Optimizer fixed a value that can crash Windows. Restart your PC to finish: Restart, not Shut down.",
 };

@@ -1,6 +1,7 @@
-//! Remise à zéro des réglages, sans fenêtre ni bouton pour l'arrêter : les réglages Premium quand ce PC n'a plus de
-//! licence (abonnement terminé, remboursement, déconnexion), tous les réglages à la désinstallation (le
-//! désinstallateur lance l'exe avec `--reset-tweaks`, voir installer/hooks.nsh).
+//! Remise à zéro des réglages, sans bouton pour l'arrêter : tous les réglages à la déconnexion (avant d'effacer le
+//! jeton, suivie à l'écran : lib.rs, `license_sign_out`), les réglages Premium quand ce PC n'a plus de licence
+//! (abonnement terminé, remboursement : sans fenêtre), tous les réglages à la désinstallation (le désinstallateur lance
+//! l'exe avec `--reset-tweaks`, voir installer/hooks.nsh).
 //!
 //! Un réglage ne quitte applied.json qu'une fois remis : une remise coupée (app fermée de force, PC éteint) reprend au
 //! lancement suivant.
@@ -26,7 +27,7 @@ pub const IDENTIFIER: &str = env!("RAGO_IDENTIFIER");
 pub enum Scope {
     /// fin de Premium : les réglages gratuits restent
     Premium,
-    /// désinstallation
+    /// déconnexion, désinstallation, « Tout annuler »
     All,
 }
 

@@ -1170,6 +1170,12 @@ kbd {
   gap: 8px;
   margin-top: 18px;
 }
+.run-note {
+  max-width: 380px;
+  font-size: 12.5px;
+  line-height: 1.5;
+  text-align: center;
+}
 .run-side {
   display: flex;
   flex-direction: column;

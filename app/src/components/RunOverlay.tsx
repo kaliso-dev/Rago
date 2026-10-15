@@ -46,7 +46,15 @@ export function RunOverlay() {
         <motion.div className="run" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} transition={{ duration: 0.24 }}>
           <div className="run-hero">
             <Pulse size={132} active={!isDone} />
-            <div className="rg-overline run-state">{isDone ? (cancelled ? t("run.cancelled") : t("run.done")) : t("run.title")}</div>
+            <div className="rg-overline run-state">
+              {run.signOut
+                ? t(isDone ? "signout.runDone" : "signout.runTitle")
+                : isDone
+                  ? cancelled
+                    ? t("run.cancelled")
+                    : t("run.done")
+                  : t("run.title")}
+            </div>
             <div className="run-counter rg-metric">
               <motion.span key={finished} initial={{ y: 10, opacity: 0 }} animate={{ y: 0, opacity: 1 }}>
                 {String(finished).padStart(2, "0")}
@@ -69,7 +77,7 @@ export function RunOverlay() {
                       failed > 0 && <div className="error-text">{t("run.failed", { n: failed })}</div>
                     )}
                     {reboot && <div className="muted">{t("run.rebootNeeded")}</div>}
-                    {license && !premium && !cancelled && (
+                    {license && !premium && !cancelled && !run.signOut && (
                       <button
                         type="button"
                         className="run-upsell"
@@ -91,9 +99,14 @@ export function RunOverlay() {
             </div>
             <div className="run-actions">
               {!isDone ? (
-                <Button icon={<Square size={12} />} onClick={() => api.cancelRun()}>
-                  {t("run.cancel")}
-                </Button>
+                // déconnexion : la remise de tous les réglages ne s'arrête pas
+                run.signOut ? (
+                  <div className="muted run-note">{t("signout.runNote")}</div>
+                ) : (
+                  <Button icon={<Square size={12} />} onClick={() => api.cancelRun()}>
+                    {t("run.cancel")}
+                  </Button>
+                )
               ) : (
                 <>
                   {reboot && (

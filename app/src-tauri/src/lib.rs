@@ -75,9 +75,10 @@ impl AppState {
     }
 }
 
-/// Fin de Premium sur ce PC (le joueur s'est déconnecté, ou le serveur a dit que sa licence est arrêtée : abonnement
-/// terminé, remboursement, licence coupée) et des réglages Premium encore appliqués : ils sont remis en arrière-plan,
-/// sans fenêtre ni bouton pour arrêter. L'interface n'en voit que la fin (`reset:done`). Rien n'est remis sur un doute
+/// Fin de Premium sur ce PC (le serveur a dit que sa licence est arrêtée : abonnement terminé, remboursement, licence
+/// coupée ; ou réglage Premium resté après une déconnexion) et des réglages Premium encore appliqués : ils sont remis en
+/// arrière-plan, sans fenêtre ni bouton pour arrêter. Les réglages gratuits restent : le joueur garde le plan gratuit.
+/// La déconnexion elle-même remet tous les réglages avant d'effacer le jeton (`license_sign_out`). L'interface n'en voit que la fin (`reset:done`). Rien n'est remis sur un doute
 /// (`license::premium_ended`) : jeton expiré hors ligne, jeton effacé parce qu'il ne se lit plus, que sa signature ne
 /// passe plus (clé changée) ou que le PC a changé, refus ambigu du serveur. Le joueur est seulement déconnecté. La
 /// licence revient pendant la remise (reconnexion) : elle s'arrête après le réglage en cours, les suivants restent
@@ -129,6 +130,10 @@ fn run_tweaks(app: AppHandle, state: State<'_, AppState>, items: Vec<RunItem>) -
     if items.is_empty() {
         return Err("No tweak selected".into());
     }
+    // déconnexion en cours : rien d'autre ne tourne avant que tous les réglages soient remis
+    if state.license.sign_out_pending() {
+        return Err("signing_out".into());
+    }
     let premium = state.license.status().state == "active";
     // remettre l'état d'avant reste possible sans licence
     let applying = || items.iter().filter(|it| !it.undo);
@@ -169,19 +174,17 @@ fn undo_all_plan(state: State<'_, AppState>) -> Vec<String> {
     reset::targets(&state.ledger.lock().unwrap(), reset::Scope::All)
 }
 
-/// Déconnexion : les réglages Premium que la remise de fin de Premium remettra, dans son ordre (même liste que
-/// `reset_if_unlicensed`). L'interface en annonce le nombre : les réglages que le moteur ne sait pas remettre sans la
-/// licence (appliqués avant 1.1.6 sans copie de leur annulation, OptiFine hors du dossier .minecraft habituel) restent
-/// appliqués et ne sont pas comptés. L'annulation des réglages Premium est d'abord gardée, tant que la licence est là
-/// (comme `get_applied`) : après la déconnexion, la remise n'a plus que ces copies.
+/// Confirmation de déconnexion : les réglages que la déconnexion remettra, tous (Premium et gratuits), dans l'ordre de
+/// la remise (même liste que `license_sign_out`). L'annulation des réglages Premium est d'abord gardée, tant que la
+/// licence est là (comme `get_applied`).
 #[tauri::command]
-async fn reset_plan(state: State<'_, AppState>) -> Result<Vec<String>, String> {
+async fn sign_out_plan(state: State<'_, AppState>) -> Result<Vec<String>, String> {
     let ledger = Arc::clone(&state.ledger);
     let lic = Arc::clone(&state.license);
     tauri::async_runtime::spawn_blocking(move || {
         keep_undo(&ledger, lic.scripts_key().and_then(|key| catalog::premium(&key)).as_deref());
         let l = ledger.lock().unwrap();
-        reset::targets(&l, reset::Scope::Premium)
+        reset::targets(&l, reset::Scope::All)
     })
     .await
     .map_err(|e| e.to_string())
@@ -299,10 +302,60 @@ async fn license_refresh(app: AppHandle, state: State<'_, AppState>) -> Result<l
     r
 }
 
+/// Remise de la déconnexion qui commence : l'interface montre ces réglages et suit le lot (`run:item`, `run:done`).
+#[derive(Clone, serde::Serialize)]
+#[serde(rename_all = "camelCase")]
+struct SignOutStart {
+    run_id: String,
+    ids: Vec<String>,
+}
+
+/// Déconnexion (Paramètres) : tous les réglages appliqués sur ce PC, Premium et gratuits, sont d'abord remis comme
+/// avant, puis le jeton est effacé. Rien ne l'arrête : le lot tourne hors de `state.runner` (`cancel_run` ne l'atteint
+/// pas) et l'interface ne montre pas de bouton Stop. Tant que la licence est là, l'annulation des réglages Premium vient
+/// des scripts de cette version.
+///
+/// La demande est notée sur disque avant de commencer (`License::begin_sign_out`) : fenêtre fermée, la remise continue
+/// cachée et l'app quitte à la fin (`Reset::hold_exit`) ; app tuée ou PC éteint, l'interface la relance au lancement
+/// suivant (`sign_out_pending`), et aucun lot ne part avant (`run_tweaks`). Une remise de fin de Premium en cours passe
+/// d'abord. L'interface reçoit `signout:start` (réglages remis, dans l'ordre), suit le lot, puis `signout:done`.
 #[tauri::command]
-fn license_sign_out(app: AppHandle, state: State<'_, AppState>) {
-    state.license.sign_out();
-    reset_if_unlicensed(&app);
+fn license_sign_out(app: AppHandle, state: State<'_, AppState>) -> Result<(), String> {
+    if state.runner.is_running() {
+        return Err("An optimization is already running".into());
+    }
+    state.license.begin_sign_out();
+    std::thread::spawn(move || {
+        let state = app.state::<AppState>();
+        while !state.reset.begin() {
+            std::thread::sleep(std::time::Duration::from_millis(250));
+        }
+        let bundle = state.license.scripts_key().and_then(|key| catalog::premium(&key));
+        keep_undo(&state.ledger, bundle.as_deref());
+        let ids = reset::targets(&state.ledger.lock().unwrap(), reset::Scope::All);
+        let (mut ok, mut failed) = (0, 0);
+        if !ids.is_empty() {
+            let run_id = format!("signout-{}", history::now_ms());
+            let _ = app.emit("signout:start", SignOutStart { run_id: run_id.clone(), ids: ids.clone() });
+            let ctx = state.context(Some(app.clone()), bundle);
+            (ok, failed) = Runner::default().run_as(&ctx, &run_id, &reset::items(ids));
+        }
+        // un réglage qui n'a pas pu être remis reste noté appliqué : la remise de fin de Premium le reprend au lancement
+        // suivant s'il est Premium, « Tout annuler » reste possible pour les autres
+        state.license.sign_out();
+        let quit = state.reset.end();
+        let _ = app.emit("signout:done", reset::Done { ok, failed });
+        if quit {
+            app.exit(0);
+        }
+    });
+    Ok(())
+}
+
+/// Déconnexion demandée et pas finie (app fermée de force pendant sa remise) : l'interface la relance au lancement.
+#[tauri::command]
+fn sign_out_pending(state: State<'_, AppState>) -> bool {
+    state.license.sign_out_pending()
 }
 
 // ---------- compte : nom public, photo, avis ----------
@@ -448,7 +501,8 @@ pub fn run() {
             clear_history,
             get_applied,
             undo_all_plan,
-            reset_plan,
+            sign_out_plan,
+            sign_out_pending,
             take_repair_notice,
             live_stats,
             open_task_manager,

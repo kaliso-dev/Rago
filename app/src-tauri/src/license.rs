@@ -525,10 +525,29 @@ impl License {
         }
     }
 
+    /// Déconnexion demandée et pas encore finie, notée à côté du jeton : tous les réglages de ce PC sont d'abord remis
+    /// (lib.rs, `license_sign_out`), puis le jeton est effacé (`sign_out`). Gardée sur disque : une remise coupée (app
+    /// tuée, PC éteint) reprend au lancement suivant, avant la déconnexion.
+    fn sign_out_path(&self) -> PathBuf {
+        self.path.with_file_name("sign-out-pending")
+    }
+
+    pub fn begin_sign_out(&self) {
+        if let Some(dir) = self.path.parent() {
+            let _ = fs::create_dir_all(dir);
+        }
+        let _ = fs::write(self.sign_out_path(), now_ms().to_string());
+    }
+
+    pub fn sign_out_pending(&self) -> bool {
+        self.sign_out_path().exists()
+    }
+
     pub fn sign_out(&self) {
         self.clear();
         *self.access.lock().unwrap() = None;
         self.note_end("signed_out");
+        let _ = fs::remove_file(self.sign_out_path());
     }
 
     /// Jeton de licence de ce PC tant qu'il est valable : il ouvre aussi l'API du compte (avis, photo).
@@ -663,9 +682,13 @@ mod tests {
         lic.store("jeton");
         assert!(!lic.end_path().exists());
 
-        // déconnexion du joueur
+        // déconnexion du joueur : notée avant la remise, le jeton reste jusqu'à la fin de la remise
+        lic.store("jeton");
+        lic.begin_sign_out();
+        assert!(lic.sign_out_pending() && lic.path.exists() && !lic.end_path().exists());
         lic.sign_out();
         assert!(lic.end_path().exists() && !lic.path.exists());
+        assert!(!lic.sign_out_pending(), "déconnexion finie : plus rien à reprendre");
         let _ = fs::remove_dir_all(dir);
     }
 
