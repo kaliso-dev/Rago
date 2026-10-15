@@ -719,6 +719,15 @@ mod tests {
         RunItem { id: id.into(), variant: None, params: None, undo: true }
     }
 
+    /// Chemin sous un fichier : rien ne peut s'y écrire, sous Windows comme ailleurs. Un test qui passe par un vrai
+    /// réglage ne le lance donc jamais sur le PC qui fait tourner les tests (cargo test tourne aussi sur la CI Windows).
+    fn unwritable(ctx: &Context, name: &str) -> PathBuf {
+        let file = ctx.logs_dir.parent().unwrap().join(format!("{name}-is-a-file"));
+        fs::create_dir_all(file.parent().unwrap()).unwrap();
+        fs::write(&file, "x").unwrap();
+        file.join(name)
+    }
+
     /// Dossier run d'un compte « O'Brien & Co (x) ^1 %TEMP% !y! » : tout ce que cmd ou PowerShell pourrait lire.
     fn odd_ctx(name: &str) -> Context {
         let mut ctx = test_ctx(name, None);
@@ -784,11 +793,13 @@ mod tests {
 
     /// M1 (revue du 2026-10-13) : défaire le RBW Mod « Désactivé » de cette version (décoché, Tout annuler, déconnexion,
     /// fin de Premium, désinstallation) ne lance rien, il avait déjà remis les valeurs de Windows. « Activé » ne tourne
-    /// que sur un clic, ou pour une entrée d'une version d'avant. Sous Linux, lancer un script échoue (pas de cmd.exe) :
-    /// un lot réussi prouve que rien n'a été lancé.
+    /// que sur un clic, ou pour une entrée d'une version d'avant. Le dossier run ne peut pas être créé : aucun script ne
+    /// peut être lancé, sous Windows (CI) comme ailleurs. Un lot réussi prouve donc que rien n'a été tenté, et le vrai
+    /// « Activé » ne tourne jamais sur le PC qui lance les tests.
     #[test]
     fn rbw_off_is_forgotten_without_running_on() {
-        let ctx = test_ctx("rbw", None);
+        let mut ctx = test_ctx("rbw", None);
+        ctx.run_dir = unwritable(&ctx, "run");
         let rbw = |variant: &str, undo: bool| RunItem { id: "rbw_mode".into(), variant: Some(variant.into()), params: None, undo };
         let runner = Runner::default();
         // « Désactivé » : noté appliqué sans sauvegarde, avec « valeurs de Windows » (même raté ici, faute de script)
@@ -849,11 +860,8 @@ mod tests {
     fn undo_that_could_not_start_keeps_the_backup() {
         use backup::{Applied, Saved, Undo};
         let mut ctx = test_ctx("rest-fails", None);
-        // un fichier à la place d'un dossier parent : write_script échoue, sous Windows comme ailleurs
-        let blocker = ctx.backup_dir.parent().unwrap().join("blocker");
-        fs::create_dir_all(blocker.parent().unwrap()).unwrap();
-        fs::write(&blocker, "x").unwrap();
-        ctx.run_dir = blocker.join("run");
+        // write_script échoue, sous Windows comme ailleurs
+        ctx.run_dir = unwritable(&ctx, "run");
         let probe = Probe::Reg { key: "HKLM\\SOFTWARE\\RagoTest".into(), name: "v".into() };
         {
             let mut l = ctx.ledger.lock().unwrap();
