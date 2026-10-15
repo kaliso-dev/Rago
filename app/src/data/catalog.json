@@ -34,9 +34,6 @@
        "reboot": false,
        "requires": [],
        "kind": "tweak",
-       "legacy": [
-        "RAGO APP Ping Optimization Final.bat@10"
-       ],
        "variants": [
         {
          "id": "better",
@@ -113,9 +110,6 @@
        "reboot": true,
        "requires": [],
        "kind": "tweak",
-       "legacy": [
-        "RAGO APP Ping Optimization Final.bat@85"
-       ],
        "variants": [
         {
          "id": "hitreg",
@@ -176,9 +170,6 @@
        "reboot": true,
        "requires": [],
        "kind": "tweak",
-       "legacy": [
-        "RAGO APP Ping Optimization Final.bat@259"
-       ],
        "variants": [
         {
          "id": "config1",
@@ -238,9 +229,6 @@
        "reboot": true,
        "requires": [],
        "kind": "tweak",
-       "legacy": [
-        "RAGO APP Ping Optimization Final.bat@704"
-       ],
        "lines": 146,
        "gain": {
         "en": "Can smooth out small latency spikes on some cards; the rest is rarely measurable.",
@@ -305,11 +293,6 @@
        ],
        "requires": [],
        "defaultVariant": "qos",
-       "legacy": [
-        "Hitreg1@530",
-        "Kbc3@409",
-        "QOS2@482"
-       ],
        "lines": 29,
        "gain": {
         "en": "Rarely measurable on ping; QoS tagging only helps if your router honors it.",
@@ -378,12 +361,6 @@
        ],
        "requires": [],
        "defaultVariant": "s3",
-       "legacy": [
-        "SERVERA@677",
-        "SERVERB@772",
-        "SERVERC@1034",
-        "SERVERY@1113"
-       ],
        "lines": 155,
        "gain": {
         "en": "Rarely measurable on ping, which mostly depends on distance and your connection.",
@@ -418,9 +395,6 @@
        "reboot": true,
        "kind": "tweak",
        "requires": [],
-       "legacy": [
-        "nigel@1754"
-       ],
        "lines": 10,
        "gain": {
         "en": "Rarely measurable: Minecraft Java and most games already turn it off themselves.",
@@ -445,9 +419,6 @@
        "reboot": true,
        "kind": "tweak",
        "requires": [],
-       "legacy": [
-        "NetworkThrottlingIndex@1643"
-       ],
        "lines": 1,
        "gain": {
         "en": "Only matters if audio or video plays while you game; rarely measurable.",
@@ -472,9 +443,6 @@
        "reboot": true,
        "kind": "tweak",
        "requires": [],
-       "legacy": [
-        "save@1857"
-       ],
        "lines": 33,
        "gain": {
         "en": "Can remove small latency spikes on some network cards.",
@@ -499,9 +467,6 @@
        "reboot": true,
        "kind": "tweak",
        "requires": [],
-       "legacy": [
-        "netsettings@1919"
-       ],
        "lines": 51,
        "gain": {
         "en": "Can smooth out small latency spikes on some cards; often a small effect.",
@@ -526,9 +491,6 @@
        "reboot": true,
        "kind": "tweak",
        "requires": [],
-       "legacy": [
-        "netreg@2020"
-       ],
        "lines": 25,
        "gain": {
         "en": "Rarely measurable: many of these values date from older Windows versions and do nothing in games.",
@@ -553,9 +515,6 @@
        "reboot": false,
        "kind": "tweak",
        "requires": [],
-       "legacy": [
-        "n15n@1476"
-       ],
        "lines": 21,
        "gain": {
         "en": "Rarely measurable on ping: these settings mostly affect throughput.",
@@ -581,9 +540,6 @@
        "reboot": true,
        "kind": "tweak",
        "requires": [],
-       "legacy": [
-        "dnsprio@1716"
-       ],
        "lines": 4,
        "gain": {
         "en": "Rarely measurable: Windows already uses this order by default.",
@@ -608,9 +564,6 @@
        "reboot": false,
        "kind": "tweak",
        "requires": [],
-       "legacy": [
-        "dirl@1677"
-       ],
        "lines": 1,
        "gain": {
         "en": "No effect on almost all PCs: only some server network cards use it.",
@@ -635,9 +588,6 @@
        "reboot": true,
        "kind": "tweak",
        "requires": [],
-       "legacy": [
-        "onboard@1736"
-       ],
        "lines": 3,
        "gain": {
         "en": "Takes a bit of work off the CPU; this is the normal Windows setting.",
@@ -662,9 +612,6 @@
        "reboot": true,
        "kind": "tweak",
        "requires": [],
-       "legacy": [
-        "nmsi@1693"
-       ],
        "lines": 4,
        "gain": {
         "en": "Only useful on old hardware: recent cards already use this mode.",
@@ -689,9 +636,6 @@
        "reboot": true,
        "kind": "tweak",
        "requires": [],
-       "legacy": [
-        "n14@2087"
-       ],
        "lines": 6,
        "gain": {
         "en": "Rarely measurable: Windows already spreads this work well.",
@@ -717,9 +661,6 @@
        "reboot": true,
        "kind": "tweak",
        "requires": [],
-       "legacy": [
-        "netbios@1658"
-       ],
        "lines": 1,
        "gain": {
         "en": "A bit less local traffic and a bit more security; no effect on ping.",
@@ -744,9 +685,6 @@
        "reboot": true,
        "kind": "tweak",
        "requires": [],
-       "legacy": [
-        "n12@1442"
-       ],
        "lines": 1,
        "gain": {
         "en": "Can help if your IPv6 connection is unstable; otherwise rarely measurable.",
@@ -772,9 +710,6 @@
        "reboot": true,
        "kind": "tweak",
        "requires": [],
-       "legacy": [
-        "n13@1603"
-       ],
        "lines": 6,
        "gain": {
         "en": "No effect in games; only matters if you share folders on your local network.",
@@ -808,9 +743,6 @@
        "reboot": false,
        "kind": "action",
        "requires": [],
-       "legacy": [
-        "restartY@14164"
-       ],
        "lines": 6,
        "gain": {
         "en": "Saves you a full restart after a network change.",
@@ -858,9 +790,6 @@
        "reboot": true,
        "kind": "tweak",
        "requires": [],
-       "legacy": [
-        "general@8375"
-       ],
        "lines": 79,
        "gain": {
         "en": "Menus open faster; the rest is rarely measurable on a recent PC.",
@@ -885,9 +814,6 @@
        "reboot": true,
        "kind": "tweak",
        "requires": [],
-       "legacy": [
-        "6@2195"
-       ],
        "lines": 54,
        "gain": {
         "en": "The old settings don't affect Minecraft or recent games; the effect of GPU scheduling varies by PC.",
@@ -921,9 +847,6 @@
        "reboot": true,
        "requires": [],
        "kind": "tweak",
-       "legacy": [
-        "RAGO APP FPS.bat@2309"
-       ],
        "lines": 30,
        "gain": {
         "en": "Rarely measurable: few games use this Windows scheduler.",
@@ -948,9 +871,6 @@
        "reboot": true,
        "requires": [],
        "kind": "tweak",
-       "legacy": [
-        "RAGO APP FPS.bat@2343"
-       ],
        "lines": 12,
        "gain": {
         "en": "Rarely measurable: Windows ignores this process's priority and most of these values.",
@@ -1026,14 +946,6 @@
        ],
        "requires": [],
        "defaultVariant": "minecraft",
-       "legacy": [
-        "fivem@3768",
-        "fn@4191",
-        "val@4334",
-        "cs2@3909",
-        "apex@4050",
-        "gta@3627"
-       ],
        "lines": 124,
        "gain": {
         "en": "Can help when other programs load the CPU; network marking only works if your router honors it.",
@@ -1058,9 +970,6 @@
        "reboot": true,
        "kind": "tweak",
        "requires": [],
-       "legacy": [
-        "game@4475"
-       ],
        "lines": 18,
        "gain": {
         "en": "Rarely measurable: few games use this Windows scheduler.",
@@ -1085,9 +994,6 @@
        "reboot": true,
        "kind": "tweak",
        "requires": [],
-       "legacy": [
-        "w32prio@3560"
-       ],
        "lines": 2,
        "gain": {
         "en": "Rarely measurable: on a regular PC, this value matches the Windows default behavior.",
@@ -1112,9 +1018,6 @@
        "reboot": true,
        "kind": "tweak",
        "requires": [],
-       "legacy": [
-        "sysrep@4619"
-       ],
        "lines": 1,
        "gain": {
         "en": "Rarely measurable: Windows treats 0 as 10%, and only a few apps are affected.",
@@ -1139,9 +1042,6 @@
        "reboot": true,
        "kind": "tweak",
        "requires": [],
-       "legacy": [
-        "thrprio@4603"
-       ],
        "lines": 2,
        "gain": {
         "en": "Rarely measurable on a recent PC.",
@@ -1166,9 +1066,6 @@
        "reboot": true,
        "kind": "tweak",
        "requires": [],
-       "legacy": [
-        "irq8@4549"
-       ],
        "lines": 2,
        "gain": {
         "en": "Rarely measurable: recent Windows versions ignore this old setting.",
@@ -1193,9 +1090,6 @@
        "reboot": true,
        "kind": "tweak",
        "requires": [],
-       "legacy": [
-        "irq16@4565"
-       ],
        "lines": 2,
        "gain": {
         "en": "Rarely measurable: recent Windows versions ignore this old setting.",
@@ -1220,9 +1114,6 @@
        "reboot": true,
        "kind": "tweak",
        "requires": [],
-       "legacy": [
-        "crss@4533"
-       ],
        "lines": 2,
        "gain": {
         "en": "Rarely measurable: Windows ignores the priority of this protected process.",
@@ -1247,9 +1138,6 @@
        "reboot": true,
        "kind": "tweak",
        "requires": [],
-       "legacy": [
-        "wmngr@4513"
-       ],
        "lines": 6,
        "gain": {
         "en": "Rarely measurable: these are the values Windows already uses by default.",
@@ -1274,9 +1162,6 @@
        "reboot": true,
        "kind": "tweak",
        "requires": [],
-       "legacy": [
-        "pr12@3455"
-       ],
        "lines": 79,
        "gain": {
         "en": "Uncertain and rarely measurable: these rules mostly concern background apps.",
@@ -1311,9 +1196,6 @@
        "reboot": true,
        "kind": "tweak",
        "requires": [],
-       "legacy": [
-        "mouaccel@12500"
-       ],
        "lines": 5,
        "gain": {
         "en": "More consistent, predictable aim in PvP; does not lower latency.",
@@ -1338,9 +1220,6 @@
        "reboot": true,
        "kind": "tweak",
        "requires": [],
-       "legacy": [
-        "1to1@12522"
-       ],
        "lines": 3,
        "gain": {
         "en": "The same hand movement always moves the cursor the same distance: steadier aim, no lower latency.",
@@ -1365,9 +1244,6 @@
        "reboot": true,
        "kind": "tweak",
        "requires": [],
-       "legacy": [
-        "thread@12543"
-       ],
        "lines": 2,
        "gain": {
         "en": "Rarely measurable on a recent PC.",
@@ -1392,9 +1268,6 @@
        "reboot": true,
        "kind": "tweak",
        "requires": [],
-       "legacy": [
-        "crss@12584"
-       ],
        "lines": 3,
        "gain": {
         "en": "Rarely measurable: Windows ignores the priority of this protected process.",
@@ -1420,9 +1293,6 @@
        "reboot": true,
        "kind": "tweak",
        "requires": [],
-       "legacy": [
-        "repeat@12563"
-       ],
        "lines": 2,
        "gain": {
         "en": "Nicer for typing; in games the effect is near zero, since games read the key press directly.",
@@ -1447,9 +1317,6 @@
        "reboot": true,
        "kind": "tweak",
        "requires": [],
-       "legacy": [
-        "mousecntrl@12606"
-       ],
        "lines": 29,
        "gain": {
         "en": "More consistent aim in PvP; the rest is comfort, with no lower latency.",
@@ -1474,9 +1341,6 @@
        "reboot": true,
        "kind": "tweak",
        "requires": [],
-       "legacy": [
-        "filter@12473"
-       ],
        "lines": 4,
        "gain": {
         "en": "No more pop-up interrupting your game when you press Shift several times.",
@@ -1512,9 +1376,6 @@
         "cpu:amd"
        ],
        "kind": "tweak",
-       "legacy": [
-        "RAGO APP FPS.bat@38"
-       ],
        "lines": 20,
        "gain": {
         "en": "Can make frame pacing smoother, especially on Ryzen and plugged-in laptops.",
@@ -1541,9 +1402,6 @@
         "cpu:intel"
        ],
        "kind": "tweak",
-       "legacy": [
-        "RAGO APP FPS.bat@66"
-       ],
        "lines": 19,
        "gain": {
         "en": "Can make frame pacing smoother, especially on plugged-in laptops.",
@@ -1568,9 +1426,6 @@
        "reboot": true,
        "requires": [],
        "kind": "tweak",
-       "legacy": [
-        "RAGO APP FPS.bat@97"
-       ],
        "lines": 210,
        "gain": {
         "en": "Can steady frame pacing on some PCs; many of the values written don't exist in Windows.",
@@ -1596,9 +1451,6 @@
        "reboot": true,
        "requires": [],
        "kind": "tweak",
-       "legacy": [
-        "RAGO APP FPS.bat@2097"
-       ],
        "lines": 12,
        "gain": {
         "en": "Rarely measurable: Windows and recent drivers often ignore these values.",
@@ -1623,9 +1475,6 @@
        "reboot": true,
        "kind": "tweak",
        "requires": [],
-       "legacy": [
-        "c1@7932"
-       ],
        "lines": 43,
        "gain": {
         "en": "Turning off throttling can help on plugged-in laptops; most other values are ignored.",
@@ -1670,10 +1519,6 @@
         }
        ],
        "requires": [],
-       "legacy": [
-        "c17@7522",
-        "c18@7601"
-       ],
        "lines": 18,
        "gain": {
         "en": "Can make frame pacing smoother, especially on Ryzen and plugged-in laptops.",
@@ -1699,9 +1544,6 @@
        "reboot": false,
        "kind": "tweak",
        "requires": [],
-       "legacy": [
-        "c11@7766"
-       ],
        "lines": 2,
        "gain": {
         "en": "Can reduce micro-stutter, especially on Ryzen and plugged-in laptops.",
@@ -1726,9 +1568,6 @@
        "reboot": false,
        "kind": "tweak",
        "requires": [],
-       "legacy": [
-        "c2@7838"
-       ],
        "lines": 4,
        "gain": {
         "en": "Can slightly cut CPU wake-up delay; often a small effect on a recent PC.",
@@ -1753,9 +1592,6 @@
        "reboot": false,
        "kind": "tweak",
        "requires": [],
-       "legacy": [
-        "c3@7910"
-       ],
        "lines": 5,
        "gain": {
         "en": "Keeping the CPU at 100% can make frame pacing smoother; turning off sleep does nothing for games.",
@@ -1780,9 +1616,6 @@
        "reboot": true,
        "kind": "tweak",
        "requires": [],
-       "legacy": [
-        "c4@8007"
-       ],
        "lines": 43,
        "gain": {
         "en": "No effect expected: these values don't exist in Windows, which never reads them.",
@@ -1807,9 +1640,6 @@
        "reboot": false,
        "kind": "tweak",
        "requires": [],
-       "legacy": [
-        "c5@7820"
-       ],
        "lines": 2,
        "gain": {
         "en": "Rarely measurable: on AC power, Windows often already uses this mode.",
@@ -1834,9 +1664,6 @@
        "reboot": false,
        "kind": "tweak",
        "requires": [],
-       "legacy": [
-        "c6@7857"
-       ],
        "lines": 2,
        "gain": {
         "en": "Rarely measurable on a recent PC.",
@@ -1861,9 +1688,6 @@
        "reboot": true,
        "kind": "action",
        "requires": [],
-       "legacy": [
-        "c7@7784"
-       ],
        "lines": 2,
        "gain": {
         "en": "Only useful if another tool turned them off: the CPU gets its normal speed management back.",
@@ -1888,9 +1712,6 @@
        "reboot": false,
        "kind": "tweak",
        "requires": [],
-       "legacy": [
-        "c8@7875"
-       ],
        "lines": 2,
        "gain": {
         "en": "Can make recent CPUs ramp up their speed faster.",
@@ -1915,9 +1736,6 @@
        "reboot": false,
        "kind": "tweak",
        "requires": [],
-       "legacy": [
-        "c9@7802"
-       ],
        "lines": 2,
        "gain": {
         "en": "Rarely measurable: recent CPUs rarely use these states.",
@@ -1942,9 +1760,6 @@
        "reboot": false,
        "kind": "tweak",
        "requires": [],
-       "legacy": [
-        "c10@7892"
-       ],
        "lines": 3,
        "gain": {
         "en": "Only useful if boost was off: it is already on by default on most PCs.",
@@ -1969,9 +1784,6 @@
        "reboot": false,
        "kind": "tweak",
        "requires": [],
-       "legacy": [
-        "c12@7709"
-       ],
        "lines": 3,
        "gain": {
         "en": "Can keep the CPU from slowing down as it heats up, mostly on laptops running on battery.",
@@ -1996,9 +1808,6 @@
        "reboot": false,
        "kind": "tweak",
        "requires": [],
-       "legacy": [
-        "c13@7747"
-       ],
        "lines": 4,
        "gain": {
         "en": "Can make frame pacing smoother, especially on Ryzen and plugged-in laptops.",
@@ -2023,9 +1832,6 @@
        "reboot": false,
        "kind": "tweak",
        "requires": [],
-       "legacy": [
-        "c14@7727"
-       ],
        "lines": 4,
        "gain": {
         "en": "Can make games smoother on an unplugged laptop.",
@@ -2050,9 +1856,6 @@
        "reboot": true,
        "kind": "tweak",
        "requires": [],
-       "legacy": [
-        "c15@7693"
-       ],
        "lines": 1,
        "gain": {
         "en": "No effect expected: Windows already uses all cores by default.",
@@ -2078,9 +1881,6 @@
        "reboot": false,
        "kind": "tweak",
        "requires": [],
-       "legacy": [
-        "c16@7673"
-       ],
        "lines": 4,
        "gain": {
         "en": "No effect in games; the PC truly sleeps when you ask it to.",
@@ -2114,9 +1914,6 @@
        "reboot": true,
        "requires": [],
        "kind": "tweak",
-       "legacy": [
-        "RAGO APP FPS.bat@1650"
-       ],
        "variants": [
         {
          "id": "4",
@@ -2226,9 +2023,6 @@
        "reboot": true,
        "requires": [],
        "kind": "tweak",
-       "legacy": [
-        "RAGO APP FPS.bat@2362"
-       ],
        "lines": 181,
        "gain": {
         "en": "More privacy and fewer distractions; rarely measurable effect on FPS.",
@@ -2337,17 +2131,6 @@
         }
        ],
        "requires": [],
-       "legacy": [
-        "4GB@9546",
-        "8GB@9560",
-        "12GB@9574",
-        "16GB@9588",
-        "24GB@9603",
-        "32GB@9617",
-        "48GB@9631",
-        "64GB@9645",
-        "128GB@9659"
-       ],
        "lines": 20,
        "gain": {
         "en": "Rarely measurable: Windows already manages memory on its own and ignores many of these values.",
@@ -2372,9 +2155,6 @@
        "reboot": true,
        "kind": "tweak",
        "requires": [],
-       "legacy": [
-        "svc@9425"
-       ],
        "lines": 1,
        "gain": {
         "en": "Fewer processes in Task Manager; near-zero effect on FPS.",
@@ -2399,9 +2179,6 @@
        "reboot": true,
        "kind": "tweak",
        "requires": [],
-       "legacy": [
-        "reged@9442"
-       ],
        "lines": 26,
        "gain": {
         "en": "Rarely measurable: recent Windows versions ignore most of these values.",
@@ -2426,9 +2203,6 @@
        "reboot": false,
        "kind": "tweak",
        "requires": [],
-       "legacy": [
-        "memski@9371"
-       ],
        "lines": 1,
        "gain": {
         "en": "May save a little CPU on a PC with plenty of RAM; often a small effect.",
@@ -2453,9 +2227,6 @@
        "reboot": false,
        "kind": "tweak",
        "requires": [],
-       "legacy": [
-        "memsk@9389"
-       ],
        "lines": 1,
        "gain": {
         "en": "Rarely measurable: may save a little background CPU.",
@@ -2480,9 +2251,6 @@
        "reboot": true,
        "kind": "tweak",
        "requires": [],
-       "legacy": [
-        "Superfetch@9355"
-       ],
        "lines": 1,
        "gain": {
         "en": "Unlikely to do anything: Windows 10 and 11 ignore it, and preloading stays on.",
@@ -2516,9 +2284,6 @@
        "reboot": true,
        "requires": [],
        "kind": "tweak",
-       "legacy": [
-        "RAGO APP FPS.bat@1920"
-       ],
        "lines": 18,
        "gain": {
         "en": "May make frame pacing smoother on some PCs, especially plugged-in laptops.",
@@ -2543,9 +2308,6 @@
        "reboot": true,
        "requires": [],
        "kind": "tweak",
-       "legacy": [
-        "RAGO APP FPS.bat@1969"
-       ],
        "lines": 31,
        "gain": {
         "en": "May make frame pacing smoother, especially on Ryzen and plugged-in laptops.",
@@ -2571,9 +2333,6 @@
        "reboot": true,
        "requires": [],
        "kind": "tweak",
-       "legacy": [
-        "RAGO APP FPS.bat@1770"
-       ],
        "lines": 16,
        "twin": "pow_saving",
        "gain": {
@@ -2599,9 +2358,6 @@
        "reboot": true,
        "requires": [],
        "kind": "tweak",
-       "legacy": [
-        "RAGO APP FPS.bat@1893"
-       ],
        "lines": 2,
        "twin": "sys_time",
        "gain": {
@@ -2627,9 +2383,6 @@
        "reboot": true,
        "requires": [],
        "kind": "tweak",
-       "legacy": [
-        "RAGO APP FPS.bat@2010"
-       ],
        "lines": 15,
        "gain": {
         "en": "Rarely measurable: Windows already handles its timers well.",
@@ -2657,9 +2410,6 @@
        "requires": [
         "res:LowLatency.pow"
        ],
-       "legacy": [
-        "plan@9205"
-       ],
        "lines": 28,
        "gain": {
         "en": "May make frame pacing smoother, especially on Ryzen and plugged-in laptops.",
@@ -2684,9 +2434,6 @@
        "reboot": true,
        "kind": "tweak",
        "requires": [],
-       "legacy": [
-        "twk@8914"
-       ],
        "lines": 9,
        "gain": {
         "en": "May make frame pacing smoother on plugged-in laptops; the rest is rarely measurable.",
@@ -2711,9 +2458,6 @@
        "reboot": true,
        "kind": "tweak",
        "requires": [],
-       "legacy": [
-        "wpower@8939"
-       ],
        "lines": 21,
        "gain": {
         "en": "Frees the hibernation file's disk space; frame pacing may be smoother on plugged-in laptops.",
@@ -2738,9 +2482,6 @@
        "reboot": true,
        "kind": "tweak",
        "requires": [],
-       "legacy": [
-        "Throttoling@9022"
-       ],
        "lines": 3,
        "gain": {
         "en": "May make frame pacing smoother on some PCs, especially plugged-in laptops.",
@@ -2765,9 +2506,6 @@
        "reboot": false,
        "kind": "tweak",
        "requires": [],
-       "legacy": [
-        "pst@8998"
-       ],
        "lines": 6,
        "gain": {
         "en": "Often no effect: most recent processors already work this way.",
@@ -2792,9 +2530,6 @@
        "reboot": true,
        "kind": "tweak",
        "requires": [],
-       "legacy": [
-        "p13@9077"
-       ],
        "lines": 11,
        "gain": {
         "en": "Unlikely to do anything: Windows does not read these settings.",
@@ -2819,9 +2554,6 @@
        "reboot": true,
        "kind": "tweak",
        "requires": [],
-       "legacy": [
-        "idlepwr@9182"
-       ],
        "lines": 1,
        "gain": {
         "en": "May avoid small drive wake-up delays; rarely measurable in games.",
@@ -2846,9 +2578,6 @@
        "reboot": true,
        "kind": "tweak",
        "requires": [],
-       "legacy": [
-        "linkpwr@9157"
-       ],
        "lines": 8,
        "gain": {
         "en": "May avoid small drive wake-up delays; rarely measurable in games.",
@@ -2873,9 +2602,6 @@
        "reboot": false,
        "kind": "tweak",
        "requires": [],
-       "legacy": [
-        "p11@8849"
-       ],
        "lines": 1,
        "gain": {
         "en": "May stop a mouse, headset or network card from dropping out or waking up late.",
@@ -2900,9 +2626,6 @@
        "reboot": true,
        "kind": "tweak",
        "requires": [],
-       "legacy": [
-        "gpuenrg@8871"
-       ],
        "lines": 1,
        "gain": {
         "en": "Rarely measurable effect on FPS.",
@@ -2927,9 +2650,6 @@
        "reboot": true,
        "kind": "tweak",
        "requires": [],
-       "legacy": [
-        "p17@8794"
-       ],
        "lines": 16,
        "twin": "pow_saving",
        "gain": {
@@ -2957,9 +2677,6 @@
        "requires": [
         "res:smartctl.exe"
        ],
-       "legacy": [
-        "dpower@8890"
-       ],
        "lines": 7,
        "gain": {
         "en": "May avoid hard drive wake-up delays; rarely measurable on an SSD.",
@@ -2984,9 +2701,6 @@
        "reboot": true,
        "kind": "tweak",
        "requires": [],
-       "legacy": [
-        "p15@9125"
-       ],
        "lines": 5,
        "gain": {
         "en": "Frees several GB on the system drive; no effect on FPS.",
@@ -3011,9 +2725,6 @@
        "reboot": true,
        "kind": "tweak",
        "requires": [],
-       "legacy": [
-        "p16@9105"
-       ],
        "lines": 4,
        "gain": {
         "en": "Slightly less background tracking; near-zero effect on FPS.",
@@ -3038,9 +2749,6 @@
        "reboot": false,
        "kind": "tweak",
        "requires": [],
-       "legacy": [
-        "p14@8829"
-       ],
        "lines": 3,
        "gain": {
         "en": "No performance effect: it only stops you from switching back to one of these plans by mistake.",
@@ -3075,9 +2783,6 @@
        "reboot": true,
        "requires": [],
        "kind": "tweak",
-       "legacy": [
-        "RAGO APP FPS.bat@1805"
-       ],
        "lines": 65,
        "gain": {
         "en": "Frees disk space; no FPS gain.",
@@ -3103,9 +2808,6 @@
        "reboot": true,
        "requires": [],
        "kind": "tweak",
-       "legacy": [
-        "RAGO APP FPS.bat@1789"
-       ],
        "lines": 5,
        "twin": "sto_ntfs",
        "gain": {
@@ -3131,9 +2833,6 @@
        "reboot": true,
        "requires": [],
        "kind": "tweak",
-       "legacy": [
-        "RAGO APP FPS.bat@1797"
-       ],
        "lines": 2,
        "twin": "sys_time",
        "gain": {
@@ -3159,9 +2858,6 @@
        "reboot": true,
        "requires": [],
        "kind": "tweak",
-       "legacy": [
-        "RAGO APP FPS.bat@1886"
-       ],
        "lines": 2,
        "twin": "sys_time",
        "gain": {
@@ -3187,9 +2883,6 @@
        "reboot": false,
        "requires": [],
        "kind": "action",
-       "legacy": [
-        "RAGO APP FPS.bat@1802"
-       ],
        "lines": 1,
        "twin": "sto_defrag",
        "gain": {
@@ -3234,10 +2927,6 @@
        ],
        "requires": [],
        "defaultVariant": "ssd",
-       "legacy": [
-        "ssd@5306",
-        "hdd@5288"
-       ],
        "lines": 2,
        "gain": {
         "en": "May slightly reduce disk writes; rarely measurable.",
@@ -3262,9 +2951,6 @@
        "reboot": true,
        "kind": "tweak",
        "requires": [],
-       "legacy": [
-        "s2@5375"
-       ],
        "lines": 3,
        "gain": {
         "en": "May speed up writes, but Windows often has it on by default already.",
@@ -3289,9 +2975,6 @@
        "reboot": true,
        "kind": "tweak",
        "requires": [],
-       "legacy": [
-        "s3@5326"
-       ],
        "lines": 16,
        "twin": "pow_saving",
        "gain": {
@@ -3317,9 +3000,6 @@
        "reboot": false,
        "kind": "action",
        "requires": [],
-       "legacy": [
-        "dssd@5222"
-       ],
        "lines": 1,
        "twin": "sto_defrag",
        "gain": {
@@ -3354,9 +3034,6 @@
        "reboot": true,
        "requires": [],
        "kind": "tweak",
-       "legacy": [
-        "RAGO APP FPS.bat@2050"
-       ],
        "lines": 5,
        "gain": {
         "en": "May stop a USB mouse or headset from dropping out; the priority part is rarely measurable.",
@@ -3381,9 +3058,6 @@
        "reboot": true,
        "kind": "tweak",
        "requires": [],
-       "legacy": [
-        "twkusb@12213"
-       ],
        "lines": 5,
        "gain": {
         "en": "Rarely measurable: recent Windows versions often ignore this setting.",
@@ -3408,9 +3082,6 @@
        "reboot": true,
        "kind": "tweak",
        "requires": [],
-       "legacy": [
-        "savingp@12157"
-       ],
        "lines": 43,
        "gain": {
         "en": "May stop a USB mouse, keyboard or headset from dropping out or responding late.",
@@ -3435,9 +3106,6 @@
        "reboot": true,
        "kind": "tweak",
        "requires": [],
-       "legacy": [
-        "usb2@12098"
-       ],
        "lines": 12,
        "gain": {
         "en": "May prevent dropouts or slow wake-ups on some devices; rarely measurable in games.",
@@ -3462,9 +3130,6 @@
        "reboot": true,
        "kind": "action",
        "requires": [],
-       "legacy": [
-        "usb1@12125"
-       ],
        "lines": 3,
        "gain": {
         "en": "Only useful if another tool changed this setting; otherwise no effect.",
@@ -3489,9 +3154,6 @@
        "reboot": true,
        "kind": "tweak",
        "requires": [],
-       "legacy": [
-        "umsi@12140"
-       ],
        "lines": 4,
        "gain": {
         "en": "Often no effect: recent USB controllers already use this mode; may help on old hardware.",
@@ -3516,9 +3178,6 @@
        "reboot": true,
        "kind": "tweak",
        "requires": [],
-       "legacy": [
-        "USad@12297"
-       ],
        "lines": 18,
        "gain": {
         "en": "May prevent USB device dropouts; the rest is rarely measurable.",
@@ -3568,9 +3227,6 @@
         "gpu:nvidia"
        ],
        "kind": "tweak",
-       "legacy": [
-        "RAGO APP FPS.bat@847"
-       ],
        "lines": 343,
        "gain": {
         "en": "The profile can reduce input lag when the GPU is at 100%; the rest is rarely measurable.",
@@ -3597,9 +3253,6 @@
         "gpu:amd"
        ],
        "kind": "tweak",
-       "legacy": [
-        "RAGO APP FPS.bat@378"
-       ],
        "lines": 433,
        "gain": {
         "en": "Anti-Lag can reduce input lag when the GPU is at 100%; the rest is rarely measurable.",
@@ -3626,9 +3279,6 @@
         "gpu:intel"
        ],
        "kind": "tweak",
-       "legacy": [
-        "RAGO APP FPS.bat@1395"
-       ],
        "lines": 11,
        "twin": "gpu_intel",
        "gain": {
@@ -3663,9 +3313,6 @@
        "reboot": true,
        "requires": [],
        "kind": "tweak",
-       "legacy": [
-        "RAGO APP FPS.bat@1416"
-       ],
        "lines": 108,
        "gain": {
         "en": "Rarely measurable: many of these settings are ignored by recent Windows versions.",
@@ -3690,9 +3337,6 @@
        "reboot": true,
        "requires": [],
        "kind": "tweak",
-       "legacy": [
-        "RAGO APP FPS.bat@1562"
-       ],
        "lines": 47,
        "gain": {
         "en": "Unlikely to help: neither Minecraft nor DirectX 11 and 12 games read these settings.",
@@ -3730,9 +3374,6 @@
         "gpu:nvidia",
         "res:nvidiaProfileInspector.exe"
        ],
-       "legacy": [
-        "NVGEN689U@10580"
-       ],
        "lines": 48,
        "gain": {
         "en": "The profile can reduce input lag when the GPU is at 100%; in-game Reflex does better when available.",
@@ -3761,7 +3402,6 @@
         "res:nvidiaProfileInspector.exe"
        ],
        "native": "nvidia_profile",
-       "legacy": [],
        "lines": 0,
        "gain": {
         "en": "Can reduce input lag when the GPU is at 100%; in-game Reflex does better when available.",
@@ -3787,9 +3427,6 @@
        "kind": "tweak",
        "requires": [
         "gpu:nvidia"
-       ],
-       "legacy": [
-        "nv1@10312"
        ],
        "lines": 11,
        "gain": {
@@ -3817,9 +3454,6 @@
        "requires": [
         "gpu:nvidia"
        ],
-       "legacy": [
-        "nv2@10392"
-       ],
        "lines": 11,
        "gain": {
         "en": "Rarely measurable: several of these settings are often ignored by Windows.",
@@ -3845,9 +3479,6 @@
        "kind": "tweak",
        "requires": [
         "gpu:nvidia"
-       ],
-       "legacy": [
-        "nv4@10355"
        ],
        "lines": 7,
        "gain": {
@@ -3875,9 +3506,6 @@
        "requires": [
         "gpu:nvidia"
        ],
-       "legacy": [
-        "nv5@10334"
-       ],
        "lines": 5,
        "gain": {
         "en": "Mostly useful on old hardware: recent graphics cards already use this mode.",
@@ -3904,9 +3532,6 @@
        "requires": [
         "gpu:nvidia"
        ],
-       "legacy": [
-        "nv7@10374"
-       ],
        "lines": 7,
        "gain": {
         "en": "No in-game gain expected: HDCP is only used to play protected video.",
@@ -3931,9 +3556,6 @@
        "reboot": true,
        "kind": "tweak",
        "requires": [],
-       "legacy": [
-        "nv8@10511"
-       ],
        "lines": 56,
        "gain": {
         "en": "Rarely measurable in games.",
@@ -3961,9 +3583,6 @@
        "requires": [
         "gpu:nvidia"
        ],
-       "legacy": [
-        "nv9@10239"
-       ],
        "lines": 5,
        "gain": {
         "en": "Rarely measurable; NVIDIA does not document this setting.",
@@ -3989,9 +3608,6 @@
        "kind": "tweak",
        "requires": [
         "gpu:nvidia"
-       ],
-       "legacy": [
-        "nv10@10255"
        ],
        "lines": 1,
        "gain": {
@@ -4019,9 +3635,6 @@
        "requires": [
         "gpu:nvidia"
        ],
-       "legacy": [
-        "nv11@10215"
-       ],
        "lines": 4,
        "gain": {
         "en": "No effect expected: this is already the Windows default.",
@@ -4047,9 +3660,6 @@
        "kind": "tweak",
        "requires": [
         "gpu:nvidia"
-       ],
-       "legacy": [
-        "nv12@10227"
        ],
        "lines": 4,
        "gain": {
@@ -4077,9 +3687,6 @@
        "requires": [
         "gpu:nvidia"
        ],
-       "legacy": [
-        "nv13@10148"
-       ],
        "lines": 28,
        "gain": {
         "en": "Frees disk space; no effect on FPS.",
@@ -4104,9 +3711,6 @@
        "reboot": true,
        "kind": "tweak",
        "requires": [],
-       "legacy": [
-        "nv14@10417"
-       ],
        "lines": 49,
        "gain": {
         "en": "Rarely measurable: most of these settings are undocumented.",
@@ -4134,9 +3738,6 @@
        "requires": [
         "gpu:nvidia"
        ],
-       "legacy": [
-        "nv15@10285"
-       ],
        "lines": 4,
        "gain": {
         "en": "Can avoid small clock drops in games; uncertain effect on recent drivers.",
@@ -4163,9 +3764,6 @@
        "requires": [
         "gpu:nvidia"
        ],
-       "legacy": [
-        "nv16@10480"
-       ],
        "lines": 19,
        "twin": "nv_latency",
        "gain": {
@@ -4191,9 +3789,6 @@
        "reboot": true,
        "kind": "tweak",
        "requires": [],
-       "legacy": [
-        "kbst@8977"
-       ],
        "lines": 7,
        "gain": {
         "en": "Can avoid small clock drops in games; does nothing without an NVIDIA card.",
@@ -4231,9 +3826,6 @@
        "requires": [
         "gpu:amd"
        ],
-       "legacy": [
-        "am1@11267"
-       ],
        "lines": 22,
        "gain": {
         "en": "Can slightly reduce input lag when the GPU is at 100%; uncertain effect on recent drivers.",
@@ -4259,9 +3851,6 @@
        "kind": "tweak",
        "requires": [
         "gpu:amd"
-       ],
-       "legacy": [
-        "am2@11349"
        ],
        "lines": 14,
        "gain": {
@@ -4289,9 +3878,6 @@
        "requires": [
         "gpu:amd"
        ],
-       "legacy": [
-        "am3@11429"
-       ],
        "lines": 1,
        "gain": {
         "en": "Unlikely to apply: it targets one specific monitor model, probably not yours; no in-game gain.",
@@ -4317,9 +3903,6 @@
        "kind": "tweak",
        "requires": [
         "gpu:amd"
-       ],
-       "legacy": [
-        "am4@11399"
        ],
        "lines": 4,
        "gain": {
@@ -4347,9 +3930,6 @@
        "requires": [
         "gpu:amd"
        ],
-       "legacy": [
-        "am6@11384"
-       ],
        "lines": 4,
        "gain": {
         "en": "Can reduce input lag when the GPU is at 100%; no effect otherwise.",
@@ -4376,9 +3956,6 @@
        "requires": [
         "gpu:amd"
        ],
-       "legacy": [
-        "am7@11444"
-       ],
        "lines": 1,
        "gain": {
         "en": "Rarely measurable: one less small background service.",
@@ -4403,9 +3980,6 @@
        "reboot": true,
        "kind": "tweak",
        "requires": [],
-       "legacy": [
-        "am8@11460"
-       ],
        "lines": 314,
        "gain": {
         "en": "Anti-Lag can reduce input lag when the GPU is at 100%; the rest is rarely measurable.",
@@ -4442,9 +4016,6 @@
        "kind": "tweak",
        "requires": [
         "gpu:intel"
-       ],
-       "legacy": [
-        "g3@8291"
        ],
        "lines": 11,
        "twin": "gpu_intel",
@@ -4494,9 +4065,6 @@
        "reboot": true,
        "requires": [],
        "kind": "tweak",
-       "legacy": [
-        "RAGO APP FPS.bat@2573"
-       ],
        "lines": 15,
        "gain": {
         "en": "May slightly lower latency in windowed DirectX games; rarely helps Minecraft Java.",
@@ -4521,9 +4089,6 @@
        "reboot": false,
        "requires": [],
        "kind": "tweak",
-       "legacy": [
-        "RAGO APP FPS.bat@2598"
-       ],
        "variants": [
         {
          "id": "on",
@@ -4566,9 +4131,6 @@
        "reboot": true,
        "requires": [],
        "kind": "tweak",
-       "legacy": [
-        "RAGO APP FPS.bat@2917"
-       ],
        "lines": 11,
        "gain": {
         "en": "Can win back FPS on low-end PCs if background recording was on.",
@@ -4593,9 +4155,6 @@
        "reboot": false,
        "requires": [],
        "kind": "tweak",
-       "legacy": [
-        "RAGO APP FPS.bat@2976"
-       ],
        "lines": 26,
        "gain": {
         "en": "Slightly snappier interface on low-end PCs; near-zero effect on in-game FPS.",
@@ -4633,9 +4192,6 @@
         "en": "Bluetooth headsets, controllers and mice stop working until you turn it back on.",
         "fr": "Les casques, manettes et souris Bluetooth ne marchent plus tant que tu ne le réactives pas."
        },
-       "legacy": [
-        "RAGO APP FPS.bat@2948"
-       ],
        "lines": 4,
        "gain": {
         "en": "One less wireless entry point and a few fewer services; near-zero effect on FPS.",
@@ -4661,9 +4217,6 @@
        "reboot": true,
        "kind": "tweak",
        "requires": [],
-       "legacy": [
-        "w10@5860"
-       ],
        "lines": 3,
        "gain": {
         "en": "Slightly less background activity; near-zero effect on FPS.",
@@ -4688,9 +4241,6 @@
        "reboot": false,
        "kind": "tweak",
        "requires": [],
-       "legacy": [
-        "w1@5882"
-       ],
        "lines": 1,
        "gain": {
         "en": "Slightly lighter interface on low-end PCs; near-zero effect on FPS.",
@@ -4715,9 +4265,6 @@
        "reboot": true,
        "kind": "tweak",
        "requires": [],
-       "legacy": [
-        "w2@7018"
-       ],
        "lines": 11,
        "gain": {
         "en": "Nothing pops up or dings during your games; near-zero effect on FPS.",
@@ -4742,9 +4289,6 @@
        "reboot": true,
        "kind": "tweak",
        "requires": [],
-       "legacy": [
-        "w15@7213"
-       ],
        "lines": 5,
        "gain": {
         "en": "Fewer distractions and more privacy; near-zero effect on FPS.",
@@ -4769,9 +4313,6 @@
        "reboot": true,
        "kind": "tweak",
        "requires": [],
-       "legacy": [
-        "w4@5474"
-       ],
        "lines": 22,
        "twin": "win_search",
        "gain": {
@@ -4797,9 +4338,6 @@
        "reboot": true,
        "kind": "tweak",
        "requires": [],
-       "legacy": [
-        "w7@6928"
-       ],
        "lines": 5,
        "gain": {
         "en": "A bit more privacy; near-zero effect on FPS.",
@@ -4824,9 +4362,6 @@
        "reboot": true,
        "kind": "tweak",
        "requires": [],
-       "legacy": [
-        "w8@6881"
-       ],
        "lines": 30,
        "gain": {
         "en": "More privacy if you use a Microsoft account; near-zero effect on FPS.",
@@ -4851,9 +4386,6 @@
        "reboot": true,
        "kind": "tweak",
        "requires": [],
-       "legacy": [
-        "w14@5978"
-       ],
        "lines": 11,
        "gain": {
         "en": "More privacy; near-zero effect on FPS.",
@@ -4878,9 +4410,6 @@
        "reboot": true,
        "kind": "tweak",
        "requires": [],
-       "legacy": [
-        "w16@7191"
-       ],
        "lines": 6,
        "gain": {
         "en": "Cleaner taskbar and more privacy; near-zero effect on FPS.",
@@ -4905,9 +4434,6 @@
        "reboot": true,
        "kind": "tweak",
        "requires": [],
-       "legacy": [
-        "w11@7235"
-       ],
        "lines": 2,
        "twin": "win_experiments",
        "gain": {
@@ -4933,9 +4459,6 @@
        "reboot": true,
        "kind": "tweak",
        "requires": [],
-       "legacy": [
-        "w13@7174"
-       ],
        "lines": 1,
        "twin": "win_maintenance",
        "gain": {
@@ -4961,9 +4484,6 @@
        "reboot": true,
        "kind": "tweak",
        "requires": [],
-       "legacy": [
-        "w18@5837"
-       ],
        "lines": 6,
        "gain": {
         "en": "Fewer useless apps coming back; near-zero effect on FPS.",
@@ -4988,9 +4508,6 @@
        "reboot": true,
        "kind": "tweak",
        "requires": [],
-       "legacy": [
-        "w19@5804"
-       ],
        "lines": 2,
        "gain": {
         "en": "A bit more privacy; near-zero effect on FPS.",
@@ -5015,9 +4532,6 @@
        "reboot": true,
        "kind": "tweak",
        "requires": [],
-       "legacy": [
-        "w20@5511"
-       ],
        "lines": 13,
        "gain": {
         "en": "Slightly fewer background writes; rarely measurable effect on FPS.",
@@ -5042,7 +4556,6 @@
        "reboot": false,
        "kind": "tweak",
        "requires": [],
-       "legacy": [],
        "lines": 1,
        "gain": {
         "en": "Fewer surprise windows and a bit more safety against booby-trapped USB drives.",
@@ -5076,9 +4589,6 @@
        "reboot": true,
        "kind": "tweak",
        "requires": [],
-       "legacy": [
-        "d2@6313"
-       ],
        "lines": 93,
        "gain": {
         "en": "More privacy; near-zero effect on FPS.",
@@ -5103,9 +4613,6 @@
        "reboot": true,
        "kind": "tweak",
        "requires": [],
-       "legacy": [
-        "d5@6806"
-       ],
        "lines": 30,
        "gain": {
         "en": "More privacy if you use Office; no effect if it isn't installed.",
@@ -5130,9 +4637,6 @@
        "reboot": true,
        "kind": "tweak",
        "requires": [],
-       "legacy": [
-        "d6@6786"
-       ],
        "lines": 3,
        "gain": {
         "en": "Closes a known source of security holes if you never print; near-zero effect on FPS.",
@@ -5158,9 +4662,6 @@
        "reboot": false,
        "kind": "tweak",
        "requires": [],
-       "legacy": [
-        "d7@7068"
-       ],
        "lines": 8,
        "gain": {
         "en": "More privacy and one less useless app; near-zero effect on FPS.",
@@ -5189,9 +4690,6 @@
        "reboot": true,
        "kind": "tweak",
        "requires": [],
-       "legacy": [
-        "d9@6446"
-       ],
        "lines": 39,
        "twin": "dbl_autologgers",
        "gain": {
@@ -5217,9 +4715,6 @@
        "reboot": true,
        "kind": "tweak",
        "requires": [],
-       "legacy": [
-        "d10@7135"
-       ],
        "lines": 16,
        "gain": {
         "en": "More privacy; near-zero effect on FPS.",
@@ -5244,9 +4739,6 @@
        "reboot": true,
        "kind": "tweak",
        "requires": [],
-       "legacy": [
-        "d12@6142"
-       ],
        "lines": 2,
        "gain": {
         "en": "One less service if you use neither fingerprint nor face; near-zero effect on FPS.",
@@ -5272,7 +4764,6 @@
        "reboot": true,
        "kind": "tweak",
        "requires": [],
-       "legacy": [],
        "lines": 5,
        "gain": {
         "en": "More privacy; near-zero effect on FPS.",
@@ -5306,9 +4797,6 @@
        "reboot": true,
        "kind": "tweak",
        "requires": [],
-       "legacy": [
-        "U1@4859"
-       ],
        "lines": 28,
        "twin": "app_remove",
        "gain": {
@@ -5364,9 +4852,6 @@
        "reboot": false,
        "kind": "action",
        "requires": [],
-       "legacy": [
-        "U2@4846"
-       ],
        "lines": 1,
        "gain": {
         "en": "Handy to finish the cleanup by hand, one app at a time.",
@@ -5400,9 +4885,6 @@
        "reboot": true,
        "requires": [],
        "kind": "tweak",
-       "legacy": [
-        "RAGO APP FPS.bat@2648"
-       ],
        "lines": 226,
        "gain": {
         "en": "More privacy and a quieter Windows in the background; rarely measurable effect on FPS.",
@@ -5428,9 +4910,6 @@
        "reboot": true,
        "requires": [],
        "kind": "tweak",
-       "legacy": [
-        "RAGO APP FPS.bat@3008"
-       ],
        "lines": 52,
        "gain": {
         "en": "A quieter Windows and snappier menus; rarely measurable effect on FPS.",
@@ -5455,9 +4934,6 @@
        "reboot": true,
        "requires": [],
        "kind": "tweak",
-       "legacy": [
-        "RAGO APP FPS.bat@3099"
-       ],
        "lines": 15,
        "gain": {
         "en": "A bit more privacy; near-zero effect on FPS.",
@@ -5482,9 +4958,6 @@
        "reboot": true,
        "requires": [],
        "kind": "tweak",
-       "legacy": [
-        "RAGO APP FPS.bat@3140"
-       ],
        "lines": 26,
        "gain": {
         "en": "A few fewer background services; rarely measurable effect on FPS.",
@@ -5514,9 +4987,6 @@
        "reboot": true,
        "requires": [],
        "kind": "tweak",
-       "legacy": [
-        "RAGO APP FPS.bat@3175"
-       ],
        "lines": 28,
        "twin": "app_remove",
        "gain": {
@@ -5572,9 +5042,6 @@
        "reboot": true,
        "requires": [],
        "kind": "tweak",
-       "legacy": [
-        "RAGO APP FPS.bat@3084"
-       ],
        "lines": 6,
        "gain": {
         "en": "Unlikely to change anything: this is often already the Windows default.",
@@ -5599,9 +5066,6 @@
        "reboot": false,
        "kind": "action",
        "requires": [],
-       "legacy": [
-        "Performance@13768:temp"
-       ],
        "lines": 6,
        "gain": {
         "en": "Frees up disk space; does not add FPS.",
@@ -5626,9 +5090,6 @@
        "reboot": false,
        "kind": "action",
        "requires": [],
-       "legacy": [
-        "c1@12923"
-       ],
        "lines": 1,
        "gain": {
         "en": "Tidies up the device list; does not add FPS.",
@@ -5654,9 +5115,6 @@
        "reboot": false,
        "kind": "action",
        "requires": [],
-       "legacy": [
-        "c2@12945"
-       ],
        "lines": 1,
        "gain": {
         "en": "Frees up disk space; does not add FPS.",
@@ -5681,9 +5139,6 @@
        "reboot": false,
        "kind": "action",
        "requires": [],
-       "legacy": [
-        "f1@6053"
-       ],
        "lines": 5,
        "gain": {
         "en": "Useful if Windows crashes or glitches; does not add FPS on a healthy PC.",
@@ -5732,9 +5187,6 @@
        "reboot": true,
        "requires": [],
        "kind": "tweak",
-       "legacy": [
-        "RAGO APP HITREG INPUTLAG.bat@2"
-       ],
        "lines": 8,
        "gain": {
         "en": "Rarely measurable in games.",
@@ -5759,9 +5211,6 @@
        "reboot": true,
        "requires": [],
        "kind": "tweak",
-       "legacy": [
-        "RAGO APP HITREG INPUTLAG.bat@35"
-       ],
        "lines": 30,
        "gain": {
         "en": "Rarely measurable: these values change little in games.",
@@ -5786,9 +5235,6 @@
        "reboot": true,
        "requires": [],
        "kind": "tweak",
-       "legacy": [
-        "RAGO APP HITREG INPUTLAG.bat@76"
-       ],
        "lines": 56,
        "gain": {
         "en": "Rarely measurable: most of these values change little on a recent Windows.",
@@ -5814,9 +5260,6 @@
        "reboot": true,
        "requires": [],
        "kind": "tweak",
-       "legacy": [
-        "RAGO APP HITREG INPUTLAG.bat@732"
-       ],
        "variants": [
         {
          "id": "lowest",
@@ -5868,9 +5311,6 @@
        "reboot": true,
        "requires": [],
        "kind": "tweak",
-       "legacy": [
-        "RAGO APP HITREG INPUTLAG.bat@181"
-       ],
        "lines": 343,
        "gain": {
         "en": "Turning off Game DVR can help on a low-end PC; the rest is rarely measurable in games.",
@@ -5905,9 +5345,6 @@
        "reboot": true,
        "requires": [],
        "kind": "tweak",
-       "legacy": [
-        "RAGO APP FPS.bat@2211"
-       ],
        "lines": 40,
        "gain": {
         "en": "More consistent aim: the same motion always moves the same distance; no latency gain.",
@@ -5932,9 +5369,6 @@
        "reboot": true,
        "requires": [],
        "kind": "tweak",
-       "legacy": [
-        "RAGO APP FPS.bat@2259"
-       ],
        "lines": 12,
        "gain": {
         "en": "No more Sticky Keys pop-up mid-game; no measurable latency gain.",
@@ -5959,9 +5393,6 @@
        "reboot": true,
        "requires": [],
        "kind": "tweak",
-       "legacy": [
-        "RAGO APP FPS.bat@2189"
-       ],
        "variants": [
         {
          "id": "ultra",
@@ -6065,12 +5496,6 @@
        ],
        "requires": [],
        "defaultVariant": "medium",
-       "legacy": [
-        "ggpc1@13108",
-        "mdpc1@13113",
-        "lwpc1@13118",
-        "ltpc1@13123"
-       ],
        "lines": 383,
        "gain": {
         "en": "Can make frame pacing steadier on a plugged-in PC; the rest is rarely measurable.",
@@ -6289,10 +5714,6 @@
          "key_of.key.zoom": "29"
         }
        },
-       "legacy": [
-        "Performance@13768",
-        "Quality@13875"
-       ],
        "lines": 7,
        "gain": {
         "en": "Performance can raise FPS a lot, but only if you play with OptiFine.",
@@ -6371,10 +5792,6 @@
        ],
        "requires": [],
        "defaultVariant": "on",
-       "legacy": [
-        "On@14039",
-        "off@14077"
-       ],
        "lines": 29,
        "gain": {
         "en": "The official RBW checker shows everything green after the restart, so a clean player doesn't look suspicious.",
@@ -6442,10 +5859,6 @@
        ],
        "requires": [],
        "defaultVariant": "on",
-       "legacy": [
-        "ENABLE8@14250",
-        "DISABLE8@14304"
-       ],
        "lines": 11,
        "gain": {
         "en": "Windows feels snappier without animations; no FPS gain in games.",
@@ -6493,9 +5906,6 @@
        "reboot": true,
        "kind": "tweak",
        "requires": [],
-       "legacy": [
-        "io@3202"
-       ],
        "lines": 10,
        "gain": {
         "en": "Rarely measurable; may slightly limit background activity while you play.",
@@ -6520,9 +5930,6 @@
        "reboot": true,
        "kind": "tweak",
        "requires": [],
-       "legacy": [
-        "latency@3281"
-       ],
        "lines": 8,
        "gain": {
         "en": "Rarely measurable on a gaming PC.",
@@ -6547,9 +5954,6 @@
        "reboot": true,
        "kind": "tweak",
        "requires": [],
-       "legacy": [
-        "kernel@3250"
-       ],
        "lines": 8,
        "gain": {
         "en": "Rarely measurable; two of the settings are already the Windows defaults.",
@@ -6575,9 +5979,6 @@
        "reboot": true,
        "kind": "tweak",
        "requires": [],
-       "legacy": [
-        "random@3305"
-       ],
        "lines": 8,
        "gain": {
         "en": "Rarely measurable in games.",
@@ -6602,9 +6003,6 @@
        "reboot": true,
        "kind": "tweak",
        "requires": [],
-       "legacy": [
-        "nolazy@2924"
-       ],
        "lines": 2,
        "gain": {
         "en": "Rarely measurable: undocumented setting, often ignored.",
@@ -6629,9 +6027,6 @@
        "reboot": true,
        "kind": "tweak",
        "requires": [],
-       "legacy": [
-        "latencytolernace@2783"
-       ],
        "lines": 19,
        "twin": "nv_latency",
        "gain": {
@@ -6657,9 +6052,6 @@
        "reboot": true,
        "kind": "tweak",
        "requires": [],
-       "legacy": [
-        "god24@2360"
-       ],
        "lines": 2,
        "gain": {
         "en": "Rarely measurable.",
@@ -6759,17 +6151,6 @@
        ],
        "requires": [],
        "defaultVariant": "144",
-       "legacy": [
-        "60h@2432",
-        "75h@2448",
-        "120h@2464",
-        "144h@2480",
-        "160h@2496",
-        "165h@2512",
-        "240h@2528",
-        "280h@2544",
-        "360h@2560"
-       ],
        "lines": 2,
        "gain": {
         "en": "Only matters for very old games: Minecraft and recent games ignore it.",
@@ -6794,9 +6175,6 @@
        "reboot": true,
        "kind": "tweak",
        "requires": [],
-       "legacy": [
-        "Multi@2615"
-       ],
        "lines": 4,
        "gain": {
         "en": "Unlikely to help: recent Windows versions don't seem to use these settings.",
@@ -6821,9 +6199,6 @@
        "reboot": true,
        "kind": "tweak",
        "requires": [],
-       "legacy": [
-        "RPolicy@3056"
-       ],
        "lines": 43,
        "gain": {
         "en": "Rarely measurable in games.",
@@ -6848,9 +6223,6 @@
        "reboot": true,
        "kind": "tweak",
        "requires": [],
-       "legacy": [
-        "NFTS@2852"
-       ],
        "lines": 5,
        "twin": "sto_ntfs",
        "gain": {
@@ -6876,9 +6248,6 @@
        "reboot": true,
        "kind": "tweak",
        "requires": [],
-       "legacy": [
-        "god22@2578"
-       ],
        "lines": 2,
        "gain": {
         "en": "Startup apps open sooner after you sign in; no effect in games.",
@@ -6912,9 +6281,6 @@
        "reboot": true,
        "kind": "tweak",
        "requires": [],
-       "legacy": [
-        "insd@3011"
-       ],
        "lines": 2,
        "twin": "win_experiments",
        "gain": {
@@ -6940,9 +6306,6 @@
        "reboot": true,
        "kind": "tweak",
        "requires": [],
-       "legacy": [
-        "Autolog@2957"
-       ],
        "lines": 39,
        "twin": "dbl_autologgers",
        "gain": {
@@ -6968,9 +6331,6 @@
        "reboot": true,
        "kind": "tweak",
        "requires": [],
-       "legacy": [
-        "10ski@2940"
-       ],
        "lines": 1,
        "twin": "win_maintenance",
        "gain": {
@@ -6996,9 +6356,6 @@
        "reboot": true,
        "kind": "tweak",
        "requires": [],
-       "legacy": [
-        "searchopt@2816"
-       ],
        "lines": 22,
        "twin": "win_search",
        "gain": {
@@ -7033,9 +6390,6 @@
        "reboot": true,
        "kind": "tweak",
        "requires": [],
-       "legacy": [
-        "firm@2660"
-       ],
        "lines": 4,
        "gain": {
         "en": "Unlikely to help: most of these values are already the Windows defaults.",
@@ -7061,9 +6415,6 @@
        "reboot": true,
        "kind": "tweak",
        "requires": [],
-       "legacy": [
-        "SMB@2635"
-       ],
        "lines": 7,
        "confirm": {
         "en": "Old NAS drives, routers and TVs that do not support SMB encryption will no longer open your shared folders. This PC will also stop opening the shared folders of old NAS drives and routers that do not support SMB signing.",
@@ -7117,9 +6468,6 @@
        "kind": "action",
        "requires": [],
        "native": "restore_point",
-       "legacy": [
-        "RP@205"
-       ],
        "lines": 1,
        "gain": {
         "en": "Lets you put Windows back to this state if a tweak causes trouble.",
@@ -7144,9 +6492,6 @@
        "reboot": false,
        "kind": "action",
        "requires": [],
-       "legacy": [
-        "restore@230"
-       ],
        "lines": 1,
        "gain": {
         "en": "Undoes all changes made to Windows since that point in one go.",
@@ -7171,9 +6516,6 @@
        "reboot": true,
        "kind": "action",
        "requires": [],
-       "legacy": [
-        "RevzertNt@14395"
-       ],
        "lines": 8,
        "confirm": {
         "en": "Resets Winsock and the network settings.",
@@ -7203,9 +6545,6 @@
        "reboot": true,
        "kind": "action",
        "requires": [],
-       "legacy": [
-        "Mdrevert@12817"
-       ],
        "lines": 2,
        "gain": {
         "en": "Useful if your mouse skips or misses movements after a lower queue setting.",

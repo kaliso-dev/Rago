@@ -30,7 +30,6 @@ export interface Tweak {
   requires: string[];
   confirm?: I18n;
   native?: string;
-  legacy: string[];
   lines: number;
   optifine?: Record<string, Record<string, string>>;
   /** même script qu'un autre réglage (id du premier) : lancé une seule fois par exécution */
