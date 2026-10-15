@@ -34,7 +34,19 @@ export function RunOverlay() {
   const restoreFailed = !!run?.done?.restoreFailed;
   // quelque chose a vraiment été changé (pas seulement un point de restauration raté)
   const changed = finished - failed - skipped > 0;
-  const reboot = !!run?.reboot && !cancelled && changed;
+  // arrêté en cours de route : redémarrage seulement si un réglage qui le demande est allé au bout
+  const reboot = !!run?.reboot && (cancelled ? run.rows.some((r) => r.reboot && r.status === "ok") : changed);
+  // point de restauration raté : le moteur saute ce qui applique, mais lance quand même les annulations (runner.rs)
+  const ranAfter = run?.rows.filter((r) => r.id !== "rst_point" && (r.status === "ok" || r.status === "error")).length ?? 0;
+  const restoreKey = skipped
+    ? ranAfter
+      ? "run.restoreFailedPartial"
+      : "run.restoreFailed"
+    : ranAfter
+      ? "run.restoreFailedUndo"
+      : "run.restoreFailedAlone";
+  // le point de restauration raté a son propre message : les autres échecs restent comptés
+  const otherFailed = failed - (restoreFailed ? 1 : 0);
   const seconds = run ? ((run.endedAt ?? Date.now()) - run.startedAt) / 1000 : 0;
   const pct = total ? (finished / total) * 100 : 0;
 
@@ -63,11 +75,8 @@ export function RunOverlay() {
                 ) : (
                   <>
                     {t("run.summary", { ok: finished - failed - skipped, total, s: formatNumber(lang, seconds) })}
-                    {restoreFailed ? (
-                      <div className="error-text run-restore-failed">{t(skipped ? "run.restoreFailed" : "run.restoreFailedUndo", { n: skipped })}</div>
-                    ) : (
-                      failed > 0 && <div className="error-text">{t("run.failed", { n: failed })}</div>
-                    )}
+                    {restoreFailed && <div className="error-text run-restore-failed">{t(restoreKey, { n: skipped })}</div>}
+                    {otherFailed > 0 && <div className="error-text">{t("run.failed", { n: otherFailed })}</div>}
                     {reboot && <div className="muted">{t("run.rebootNeeded")}</div>}
                     {license && !premium && !cancelled && (
                       <button
