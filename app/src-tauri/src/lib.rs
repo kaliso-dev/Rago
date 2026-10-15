@@ -1,4 +1,5 @@
 mod account;
+mod assets;
 mod backup;
 mod catalog;
 mod history;

@@ -971,7 +971,7 @@ pub fn restore_ps(name: &str, changes: &[(String, String)]) -> Option<String> {
     (!s.is_empty()).then_some(s)
 }
 
-/// Réglages DWORD du profil NVIDIA importé (resources/extremelatencylow.nip) : ceux que nvbase relève.
+/// Réglages DWORD du profil NVIDIA importé (assets/extremelatencylow.nip) : ceux que nvbase relève.
 pub fn nip_settings(xml: &str) -> Vec<u32> {
     let mut out = Vec::new();
     for block in xml.split("<ProfileSetting>").skip(1) {
@@ -984,7 +984,7 @@ pub fn nip_settings(xml: &str) -> Vec<u32> {
 }
 
 pub static NIP_SETTINGS: std::sync::LazyLock<Vec<u32>> =
-    std::sync::LazyLock::new(|| nip_settings(include_str!("../resources/extremelatencylow.nip")));
+    std::sync::LazyLock::new(|| nip_settings(&String::from_utf8_lossy(&crate::assets::bytes("extremelatencylow.nip").unwrap_or_default())));
 
 /// Fichier XML d'une tâche planifiée : activée sauf `<Enabled>false</Enabled>` dans `<Settings>`.
 pub fn task_enabled(xml: &str) -> Option<bool> {
