@@ -66,6 +66,8 @@ export interface ConfirmState {
   undo: string[];
   /** lancé depuis un bouton « Lancer » : la sélection n'est pas touchée */
   single: boolean;
+  /** « Tout annuler » du tableau de bord : tous les réglages appliqués sur ce PC */
+  all?: boolean;
 }
 
 function load<T>(key: string, fallback: T): T {
@@ -396,10 +398,11 @@ function useStoreValue() {
       for (const id of opts.undo ?? []) {
         const tw = tweaks.get(id);
         const a = applied.get(id);
-        // réglage retiré du catalogue : il reste annulable là où une version précédente l'a appliqué
+        // réglage retiré du catalogue : il reste annulable là où une version précédente l'a appliqué. Inconnu de cette
+        // version mais noté dans applied.json (Tout annuler) : le moteur le remet quand même avec ce qu'il a gardé
         const gone = retired.get(id);
-        if (!tw && !gone) continue;
-        reboot ||= tw ? needsReboot(tw, a?.variant ?? null) : gone!.reboot;
+        if (!tw && !gone && !a) continue;
+        reboot ||= tw ? needsReboot(tw, a?.variant ?? null) : (gone?.reboot ?? false);
         const item: RunItem = { id, variant: a?.variant ?? null, undo: true };
         if (tw?.native === "minecraft_optifine") item.params = { dir: mcDir };
         items.push(item);
@@ -446,6 +449,12 @@ function useStoreValue() {
   const requestUndo = useCallback((ids: string[]) => {
     if (ids.length) setConfirm({ ids: [], undo: ids, single: false });
   }, []);
+  /** « Tout annuler » : la liste vient du moteur (même liste et même ordre que la remise à zéro de la désinstallation),
+   * le joueur confirme, puis chaque réglage est remis comme une annulation ordinaire. */
+  const requestUndoAll = useCallback(async () => {
+    const ids = await api.undoAllPlan().catch(() => [...applied.keys()]);
+    if (ids.length) setConfirm({ ids: [], undo: ids, single: false, all: true });
+  }, [applied]);
 
   /** Réglages Premium appliqués : le moteur les remet de lui-même à la déconnexion et à la fin de Premium. */
   const premiumApplied = useMemo(() => [...applied.keys()].filter((id) => !FREE.has(id)).sort(byCatalog), [applied]);
@@ -473,7 +482,7 @@ function useStoreValue() {
     sys, sysLoading, refreshSys,
     selection, selected, toggle, selectMany, unselectMany, variants, setVariant, variantOf,
     pendingUndo, applied, appliedLoaded: appliedList !== null, isOn, premiumApplied, reapply, resetDone, setResetDone,
-    retiredApplied, requestUndo,
+    retiredApplied, requestUndo, requestUndoAll,
     history, lastRun, lastRestore, refreshHistory, refreshApplied,
     mcDir, setMcDir,
     confirm, setConfirm, requestApply,
