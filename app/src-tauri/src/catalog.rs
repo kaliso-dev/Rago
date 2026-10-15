@@ -127,6 +127,14 @@ pub fn revert_variant(id: &str) -> Option<String> {
     REVERTS.iter().find_map(|r| r.strip_prefix(&format!("{id}:")).map(str::to_string))
 }
 
+/// Réglage dont le retour arrière lance toujours le script de sa variante `revert`, jamais la sauvegarde : RBW Mod
+/// « Activé » doit démarrer les services que lit le screenshare et remettre ce que d'autres réglages coupent. La
+/// sauvegarde prise avant « Désactivé » ne fait que réécrire le registre (aucun service démarré) et recouperait les
+/// services qu'un autre réglage avait coupés.
+pub fn revert_runs_script(id: &str) -> bool {
+    id == "rbw_mode"
+}
+
 /// Script en clair (plan gratuit, retour arrière), sans licence.
 pub fn is_plain(id: &str, variant: Option<&str>) -> bool {
     builtin(id).is_some() || PLAIN.scripts.get(id).and_then(|e| pick(e, variant)).is_some()
@@ -436,8 +444,8 @@ mod tests {
         assert_eq!(SCRIPTS["ping_main"].len(), 4);
         // le RBW Mod remet ce que d'autres réglages coupent avant un screenshare
         let rbw = SCRIPTS["rbw_mode"]["on"].to_lowercase();
-        assert!(rbw.contains("services\\bam\" /v \"start\" /t reg_dword /d \"1\""));
-        assert!(rbw.contains("enableprefetcher\" /t reg_dword /d \"3\""));
+        assert!(rbw.contains("bam = 1;") && rbw.contains("set-start $name $services[$name]"));
+        assert!(rbw.contains("foreach ($v in 'enableprefetcher', 'enablesuperfetch') { if ((reg $pf $v) -ne 3) { set-itemproperty -path $pf -name $v -value 3"));
         // BAM et le Prefetcher ne reviennent qu'au démarrage : l'app doit le demander
         let cat: serde_json::Value = serde_json::from_str(catalog).unwrap();
         let rbw = cat["modules"].as_array().unwrap().iter()
@@ -566,6 +574,245 @@ mod tests {
                     assert!(!kernel(l) || l.to_lowercase().starts_with("reg delete"), "annulation {id}:{v} : {l}");
                 }
             }
+        }
+    }
+
+    /// Services que lit le vérificateur officiel de RBW (github.com/quickpots/RBW-SS, Services.ps1, relevé le
+    /// 2026-10-13), en plus de chaque CDPUserSvc_xxxx : il les veut tous en Running.
+    const RBW_CHECKER: [&str; 11] = ["sysmain", "pcasvc", "dps", "bam", "eventlog", "wsearch", "dusmsvc", "bfe", "appinfo", "dcomlaunch", "plugplay"];
+
+    /// RBW Mod « Activé » fait ce que fait le script validé par Sofiene (rbw/Rago-RBW-Fix.ps1), dans le même ordre :
+    /// démarrage avec Windows, services dont ils dépendent, réglages lus par le vérificateur, lancement, rapport, programmes
+    /// qui les recouperaient. Le vérificateur passe au vert même quand un autre réglage de l'app les a coupés.
+    #[test]
+    fn rbw_mode_on_does_what_the_validated_fix_does() {
+        let on = SCRIPTS["rbw_mode"]["on"].to_lowercase();
+        // services et démarrage voulu (2 automatique, 3 manuel, 1 système), comme $services dans le script validé
+        let list = on.split("$services = [ordered]@{ ").nth(1).and_then(|s| s.split(" }").next()).expect("$services");
+        let wanted: Vec<(&str, &str)> = list.split("; ").map(|p| p.split_once(" = ").expect(p)).collect();
+        assert_eq!(
+            wanted,
+            [
+                ("sysmain", "2"), ("pcasvc", "2"), ("dps", "2"), ("eventlog", "2"), ("wsearch", "2"), ("dusmsvc", "2"), ("bfe", "2"),
+                ("appinfo", "2"), ("schedule", "2"), ("dsmsvc", "2"), ("diagtrack", "2"), ("dcomlaunch", "2"), ("plugplay", "3"),
+                ("bam", "1"), ("dam", "1"), ("cdpusersvc", "2"),
+            ]
+        );
+        for svc in RBW_CHECKER {
+            assert!(wanted.iter().any(|(n, _)| *n == svc), "{svc} absent de la liste");
+        }
+        let at = |part: &str| on.find(part).unwrap_or_else(|| panic!("absent : {part}"));
+        // chaque CDPUserSvc_xxxx (suffixe propre à chaque session), lu dans le registre : la sortie de sc query est
+        // traduite (NOM_SERVICE sur un Windows en français)
+        at("get-childitem -path 'hklm:\\system\\currentcontrolset\\services' | where-object { $_.pschildname -like 'cdpusersvc_*' } | foreach-object { $services[$_.pschildname] = 2 }");
+        assert!(!on.contains("service_name"), "sortie de sc lue");
+        // 1. démarrage avec Windows : sc config, puis Set-Service, puis la valeur Start du registre ; WSearch en différé ;
+        //    Windows Search remis s'il a été retiré
+        let start_type = at("function set-start($name, $start)");
+        for part in [
+            "sc.exe config $name start= $mode | out-null",
+            "set-service -name $name -startuptype $type",
+            "set-itemproperty -path $key -name 'start' -value $start -type dword",
+            "set-itemproperty -path $key -name 'delayedautostart' -value 1 -type dword",
+            "enable-windowsoptionalfeature -online -featurename 'searchengine-client-package' -all -norestart",
+            "foreach ($name in @($services.keys)) { set-start $name $services[$name] }",
+        ] {
+            assert!(at(part) > start_type, "{part}");
+        }
+        // 2. services dont ils dépendent : désactivés, remis en manuel
+        let deps = at("function fix-dependencies($name)");
+        assert!(at("(get-service -name $name).servicesdependedon") > deps);
+        assert!(at("sc.exe config $d.name start= demand") > deps);
+        assert!(at("set-itemproperty -path $key -name 'start' -value 3 -type dword") > deps);
+        // 3. réglages lus par le vérificateur, et ce dont DPS a besoin pour démarrer
+        let settings = at("$sys = 'hklm:\\software\\policies\\microsoft\\windows\\system'");
+        for part in [
+            "foreach ($v in 'enableactivityfeed', 'publishuseractivities') { if ($null -ne (reg $sys $v)) { remove-itemproperty -path $sys -name $v",
+            "$ac = 'hklm:\\software\\policies\\microsoft\\windows\\appcompat'; if (test-path $ac) { remove-item -path $ac -recurse -force",
+            "if ((reg $adv 'start_trackdocs') -ne 1) { set-itemproperty -path $adv -name 'start_trackdocs' -value 1 -type dword",
+            "$cmd = 'hkcu:\\software\\policies\\microsoft\\windows\\system'; if ($null -ne (reg $cmd 'disablecmd')) { remove-itemproperty -path $cmd -name 'disablecmd'",
+            "if ((reg $sb 'enablescriptblocklogging') -eq 0) { remove-itemproperty -path $sb -name 'enablescriptblocklogging'",
+            "foreach ($v in 'enableprefetcher', 'enablesuperfetch') { if ((reg $pf $v) -ne 3) { set-itemproperty -path $pf -name $v -value 3 -type dword",
+            "foreach ($logger in 'diaglog', 'wdicontextlog') { $key = 'hklm:\\system\\currentcontrolset\\control\\wmi\\autologger\\' + $logger; if ((test-path $key) -and (reg $key 'start') -ne 1) { set-itemproperty -path $key -name 'start' -value 1 -type dword",
+            "$wdi = 'hklm:\\software\\policies\\microsoft\\windows\\wdi\\{9c5a40da-b965-4fc3-8781-88dd50a6299d}'; if ($null -ne (reg $wdi 'scenarioexecutionenabled')) { remove-itemproperty -path $wdi -name 'scenarioexecutionenabled'",
+        ] {
+            assert!(at(part) > settings, "{part}");
+        }
+        // 4. lancement : Start-Service, puis sc start, puis net start ; tous sauf le modèle CDPUserSvc et DAM
+        let launch = at("function start-one($name)");
+        for part in ["start-service -name $name", "sc.exe start $name | out-null", "net.exe start $name 2>&1 | out-null"] {
+            assert!(at(part) > launch, "{part}");
+        }
+        at("foreach ($name in @($services.keys) | where-object { $_ -notin 'cdpusersvc', 'dam' }) { start-one $name }");
+        // 5. ce que voit le vérificateur, lu comme lui ; 6. ce qui les recouperait au démarrage (rien n'est changé)
+        let report = at("$since = (get-date).addminutes(-30)");
+        let names = at("$names = @(") + "$names = @(".len();
+        let names = &on[names..names + on[names..].find(')').unwrap()];
+        assert_eq!(names.replace('\'', "").split(", ").collect::<Vec<_>>(), RBW_CHECKER, "services lus par le rapport");
+        assert!(at("$names += @(get-service | where-object { $_.name -match '^cdpusersvc_.+' }") > report);
+        assert!(at("if (test-path 'hklm:\\software\\policies\\microsoft\\windows\\appcompat') { $red++") > report);
+        for part in ["get-ciminstance -classname win32_service", "get-winevent", "servicespecificexitcode"] {
+            assert!(at(part) > report, "{part}");
+        }
+        let scan = at("get-scheduledtask");
+        // même ordre que le script validé
+        assert!(start_type < deps && deps < settings && settings < launch && launch < report && report < scan);
+        // cmd : lignes de moins de 8191 caractères ; dans le code PowerShell, ni « " » (fin de l'argument), ni « % »
+        // (variable de cmd), ni « ! » (retiré par EnableDelayedExpansion)
+        assert!(!on.contains('!') && !on.contains('%'));
+        let stages: Vec<&str> = on.lines().filter(|l| !l.starts_with("echo ")).collect();
+        assert_eq!(stages.len(), 6);
+        for l in stages {
+            assert!(l.len() < 8191, "ligne de {} caractères", l.len());
+            let code = l.strip_prefix("powershell -noprofile -noninteractive -executionpolicy bypass -command \"").and_then(|c| c.strip_suffix('"')).expect(l);
+            assert!(!code.contains('"'), "{code}");
+        }
+        // « Activé » lance toujours son script, même après « Désactivé » (pas la sauvegarde, qui ne démarre rien)
+        assert!(revert_runs_script("rbw_mode") && !revert_runs_script("game_mode"));
+        assert_eq!(revert_variant("rbw_mode").as_deref(), Some("on"));
+        assert!(PLAIN.scripts.get("rbw_mode").and_then(|e| e.get("on")).is_some(), "ouvert sans licence");
+    }
+
+    /// RBW Mod « Désactivé » : services et réglages comme Windows les règle, rien d'arrêté.
+    #[test]
+    fn rbw_mode_off_puts_windows_values_and_stops_nothing() {
+        let off = SCRIPTS["rbw_mode"]["off"].to_lowercase();
+        let lines: Vec<&str> = off.lines().map(str::trim).collect();
+        assert!(!off.contains("sc stop") && !off.contains("stop-service") && !off.contains("net stop") && !off.contains("disabled") && !off.contains('!'));
+        for (svc, mode) in [
+            ("sysmain", "auto"), ("pcasvc", "auto"), ("dps", "auto"), ("eventlog", "auto"), ("wsearch", "delayed-auto"), ("dusmsvc", "auto"),
+            ("bfe", "auto"), ("appinfo", "demand"), ("schedule", "auto"), ("dsmsvc", "demand"), ("diagtrack", "auto"), ("dcomlaunch", "auto"),
+            ("plugplay", "demand"), ("bam", "system"), ("dam", "system"),
+        ] {
+            assert!(lines.contains(&format!("sc config {svc} start= {mode} >nul 2>&1").as_str()), "{svc} pas en {mode}");
+        }
+        // les réglages lus par le vérificateur, comme « Activé »
+        for part in [
+            "reg delete \"hklm\\software\\policies\\microsoft\\windows\\system\" /v \"enableactivityfeed\" /f",
+            "reg delete \"hklm\\software\\policies\\microsoft\\windows\\appcompat\" /f",
+            "explorer\\advanced\" /v \"start_trackdocs\" /t reg_dword /d \"1\" /f",
+            "reg delete \"hkcu\\software\\policies\\microsoft\\windows\\system\" /v \"disablecmd\" /f",
+            "| find \"0x0\" >nul && reg delete \"hklm\\software\\policies\\microsoft\\windows\\powershell\\scriptblocklogging\" /v \"enablescriptblocklogging\" /f",
+            "/v \"enableprefetcher\" /t reg_dword /d \"3\" /f",
+            "autologger\\diaglog\" /v \"start\" /t reg_dword /d \"1\" /f",
+            "autologger\\wdicontextlog\" /v \"start\" /t reg_dword /d \"1\" /f",
+            "/v \"scenarioexecutionenabled\" /f",
+        ] {
+            assert!(off.contains(part), "« Désactivé » ne remet pas : {part}");
+        }
+        // les services que Windows démarre seul sont lancés, chaque CDPUserSvc_xxxx compris, en automatique comme son
+        // modèle (noms lus dans le registre, pas dans la sortie de sc, traduite)
+        let started = lines.iter().find(|l| l.starts_with("for %%s in (")).expect("services lancés");
+        for svc in ["sysmain", "pcasvc", "dps", "eventlog", "wsearch", "dusmsvc", "bfe", "bam"] {
+            assert!(started.split(['(', ')', ' ']).any(|s| s == svc), "{svc} pas lancé");
+        }
+        assert!(lines.iter().any(|l| l.contains("('reg query \"hklm\\system\\currentcontrolset\\services\" /k /f \"cdpusersvc_\" ^| find /i \"cdpusersvc_\"')")
+            && l.ends_with("do (reg add \"hklm\\system\\currentcontrolset\\services\\%%s\" /v \"start\" /t reg_dword /d \"2\" /f >nul & sc start %%s >nul 2>&1)")));
+        assert!(!off.contains("service_name"));
+    }
+
+    /// Ce qu'un réglage de l'app change dans ce que lit le vérificateur RBW (ou dans ce dont ses services ont besoin pour
+    /// démarrer) et que RBW Mod « Activé » ne remettrait pas. None : rien, ou « Activé » le remet.
+    fn rbw_gap(line: &str) -> Option<String> {
+        let mut l = line.to_lowercase().replace(['"', '\''], "");
+        for (a, b) in [("hkey_local_machine", "hklm"), ("hkey_current_user", "hkcu"), ("reg.exe", "reg"), ("sc.exe", "sc"), ("net.exe", "net"), ("start= ", "start=")] {
+            l = l.replace(a, b);
+        }
+        let l = l.split_whitespace().collect::<Vec<_>>().join(" ");
+        if l.is_empty() || l.starts_with("echo") || l.starts_with("rem ") || l.starts_with("::") {
+            return None;
+        }
+        let tk: Vec<&str> = l.split(|c: char| c.is_whitespace() || "\\(),;|&>".contains(c)).filter(|t| !t.is_empty()).collect();
+        if tk.is_empty() {
+            return None;
+        }
+        let after = |w: &str| tk.iter().position(|t| *t == w).and_then(|i| tk.get(i + 1)).copied();
+        let value = after("/v").or(after("-name"));
+        let reads = (tk[0] == "reg" && tk.get(1) == Some(&"query")) || tk[0] == "get-itemproperty";
+        // services : démarrage et état seulement, « Activé » remet le démarrage voulu puis les lance
+        let svc = RBW_CHECKER.iter().find(|s| tk.contains(s)).copied().or(tk.iter().find(|t| t.starts_with("cdpusersvc")).copied());
+        if let Some(svc) = svc.filter(|_| tk.contains(&"sc") || tk.contains(&"net") || l.contains("-service") || l.contains("services\\")) {
+            let ok = if l.contains("services\\") {
+                reads || matches!(value, Some("start" | "delayedautostart"))
+            } else if tk.contains(&"sc") {
+                match after("sc") {
+                    Some("stop" | "start" | "query" | "qc") => true,
+                    Some("config") => tk.iter().skip_while(|t| **t != "config").filter(|t| t.contains('=')).all(|t| t.starts_with("start=")),
+                    _ => false,
+                }
+            } else if tk.contains(&"net") {
+                matches!(after("net"), Some("stop" | "start"))
+            } else {
+                ["stop-service", "start-service", "get-service"].iter().any(|c| l.contains(c))
+                    || (l.contains("set-service") && (l.contains("-startuptype") || l.contains("-status")) && !l.contains("-securitydescriptor"))
+            };
+            if !ok {
+                return Some(format!("service {svc}"));
+            }
+        }
+        // valeurs : « Activé » enlève les stratégies, la clé AppCompat, remet Start_TrackDocs, le Prefetcher, les journaux
+        // de DPS (Start) ; une autre valeur de ces journaux ou du scénario WDI, ou la clé entière, n'est pas remise
+        for key in ["autologger\\diaglog", "autologger\\wdicontextlog"] {
+            if l.contains(key) && !reads && value != Some("start") {
+                return Some(key.to_string());
+            }
+        }
+        if l.contains("wdi\\{9c5a40da-b965-4fc3-8781-88dd50a6299d}") && !reads && value != Some("scenarioexecutionenabled") {
+            return Some("WDI".into());
+        }
+        None
+    }
+
+    /// Garde pour les réglages à venir : ce qu'un autre réglage coupe parmi ce que lit le vérificateur RBW, RBW Mod
+    /// « Activé » le remet (relevé du 2026-10-13 : win_services, dbl_autologgers, exp_autologgers, sys_registry,
+    /// win_audit, win_telemetry, win_tracking, dbl_telemetry, hitreg_suite, in_advanced, win_feed, sys_csrss, win_diag).
+    /// Un nouveau réglage qui coupe autrement un de ces éléments fait échouer ce test : le remettre dans tools/rbw.py
+    /// (« Activé », comme le script validé), ou ne pas le couper.
+    #[test]
+    fn rbw_mode_puts_back_what_other_tweaks_turn_off() {
+        let mut touched = std::collections::BTreeSet::new();
+        for (id, variants) in SCRIPTS.iter().filter(|(id, _)| id.as_str() != "rbw_mode") {
+            for (v, s) in variants {
+                for l in s.lines() {
+                    assert_eq!(rbw_gap(l), None, "{id}:{v} : le RBW Mod ne remet pas : {l}");
+                    let low = l.to_lowercase();
+                    if ["enableactivityfeed", "appcompat", "start_trackdocs", "enableprefetcher", "autologger\\diaglog", "wdicontextlog", "sc config wsearch"]
+                        .iter()
+                        .any(|p| low.contains(p))
+                    {
+                        touched.insert(id.as_str());
+                    }
+                }
+            }
+        }
+        // la garde voit bien les réglages qui coupent ces éléments aujourd'hui
+        for id in ["win_services", "dbl_autologgers", "sys_registry", "win_telemetry", "dbl_telemetry", "hitreg_suite", "in_advanced"] {
+            assert!(touched.contains(id), "{id}");
+        }
+        // et elle refuse ce que « Activé » ne remet pas
+        for l in [
+            "sc delete SysMain",
+            "sc.exe sdset DPS D:(D;;GA;;;WD)",
+            "sc config WSearch depend= RpcSs/NoSuchService",
+            "reg delete \"HKLM\\SYSTEM\\CurrentControlSet\\Services\\bam\" /f",
+            "Reg.exe add \"HKLM\\SYSTEM\\CurrentControlSet\\Services\\PcaSvc\" /v \"ImagePath\" /t REG_EXPAND_SZ /d \"x\" /f",
+            "Set-ItemProperty -Path 'HKLM:\\SYSTEM\\CurrentControlSet\\Services\\CDPUserSvc' -Name UserServiceFlags -Value 0",
+            "Remove-Item -Path 'HKLM:\\SYSTEM\\CurrentControlSet\\Services\\EventLog' -Recurse",
+            "reg delete \"HKLM\\SYSTEM\\CurrentControlSet\\Control\\WMI\\Autologger\\DiagLog\" /f",
+            "reg add \"HKLM\\SOFTWARE\\Policies\\Microsoft\\Windows\\WDI\\{9c5a40da-b965-4fc3-8781-88dd50a6299d}\" /v \"EnabledScenarioExecutionLevel\" /t REG_DWORD /d \"1\" /f",
+        ] {
+            assert!(rbw_gap(l).is_some(), "pas vu : {l}");
+        }
+        for l in [
+            "sc config DPS start= disabled",
+            "for %%s in (SysMain WSearch) do sc stop %%s >nul 2>&1",
+            "net stop bfe /y",
+            "Set-Service -Name DusmSvc -StartupType Disabled",
+            "reg add \"HKLM\\SYSTEM\\CurrentControlSet\\Services\\bam\" /v \"Start\" /t REG_DWORD /d \"4\" /f",
+            "reg add \"HKLM\\SYSTEM\\CurrentControlSet\\Control\\WMI\\Autologger\\WdiContextLog\" /v \"Start\" /t REG_DWORD /d \"0\" /f",
+            "reg add \"HKLM\\SOFTWARE\\Microsoft\\DusmSvc\\Settings\" /v \"DisableSystemBucket\" /t REG_DWORD /d \"1\" /f",
+        ] {
+            assert_eq!(rbw_gap(l), None, "{l}");
         }
     }
 
