@@ -225,7 +225,7 @@ function useStoreValue() {
     const ids = await api.signOutPlan().catch(() => [...appliedRef.current.keys()]);
     if (ids.length) setRun(signOutRun(ids, null));
     try {
-      await api.licenseSignOut();
+      await api.licenseSignOut(mcDirRef.current);
     } catch (err) {
       setRun((r) => ({ ...(r ?? signOutRun([], null)), error: String(err), endedAt: Date.now() }));
     }
@@ -444,6 +444,8 @@ function useStoreValue() {
 
   const appliedRef = useRef(applied);
   appliedRef.current = applied;
+  const mcDirRef = useRef(mcDir);
+  mcDirRef.current = mcDir;
 
   useEffect(() => {
     const subs = [

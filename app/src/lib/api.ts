@@ -186,8 +186,8 @@ export interface Api {
   licenseActivate(): Promise<LicenseStatus>;
   licenseRefresh(): Promise<LicenseStatus>;
   /** Lance la déconnexion : le moteur remet tous les réglages (`signout:start`, lot, `signout:done`), puis efface le
-   * jeton. Rend la main tout de suite. */
-  licenseSignOut(): Promise<void>;
+   * jeton. Rend la main tout de suite. `mcDir` : dossier Minecraft où remettre OptiFine. */
+  licenseSignOut(mcDir: string | null): Promise<void>;
   window: { minimize(): void; toggleMaximize(): void; close(): void };
 }
 
@@ -222,7 +222,7 @@ const tauriApi: Api = {
   licenseLogin: (email, password) => invoke("license_login", { email, password }),
   licenseActivate: () => invoke("license_activate"),
   licenseRefresh: () => invoke("license_refresh"),
-  licenseSignOut: () => invoke("license_sign_out"),
+  licenseSignOut: (mcDir) => invoke("license_sign_out", { mcDir }),
   onItem: (cb) => listen<ItemEvent>("run:item", (e) => cb(e.payload)),
   onLog: (cb) => listen<LogEvent>("run:log", (e) => cb(e.payload)),
   onDone: (cb) => listen<DoneEvent>("run:done", (e) => cb(e.payload)),

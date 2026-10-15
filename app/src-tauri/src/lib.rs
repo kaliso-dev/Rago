@@ -319,8 +319,9 @@ struct SignOutStart {
 /// cachée et l'app quitte à la fin (`Reset::hold_exit`) ; app tuée ou PC éteint, l'interface la relance au lancement
 /// suivant (`sign_out_pending`), et aucun lot ne part avant (`run_tweaks`). Une remise de fin de Premium en cours passe
 /// d'abord. L'interface reçoit `signout:start` (réglages remis, dans l'ordre), suit le lot, puis `signout:done`.
+/// `mc_dir` : dossier Minecraft choisi dans l'interface, où OptiFine est remis (sinon le dossier habituel).
 #[tauri::command]
-fn license_sign_out(app: AppHandle, state: State<'_, AppState>) -> Result<(), String> {
+fn license_sign_out(app: AppHandle, state: State<'_, AppState>, mc_dir: Option<String>) -> Result<(), String> {
     if state.runner.is_running() {
         return Err("An optimization is already running".into());
     }
@@ -338,7 +339,11 @@ fn license_sign_out(app: AppHandle, state: State<'_, AppState>) -> Result<(), St
             let run_id = format!("signout-{}", history::now_ms());
             let _ = app.emit("signout:start", SignOutStart { run_id: run_id.clone(), ids: ids.clone() });
             let ctx = state.context(Some(app.clone()), bundle);
-            (ok, failed) = Runner::default().run_as(&ctx, &run_id, &reset::items(ids));
+            let mut items = reset::items(ids);
+            for it in items.iter_mut().filter(|it| it.id == "mc_optifine") {
+                it.params = mc_dir.as_ref().map(|dir| serde_json::json!({ "dir": dir }));
+            }
+            (ok, failed) = Runner::default().run_as(&ctx, &run_id, &items);
         }
         // un réglage qui n'a pas pu être remis reste noté appliqué : la remise de fin de Premium le reprend au lancement
         // suivant s'il est Premium, « Tout annuler » reste possible pour les autres
