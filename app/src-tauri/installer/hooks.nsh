@@ -23,3 +23,10 @@
     ${EndIf}
   ${EndIf}
 !macroend
+
+; Plan d'alimentation et profil NVIDIA : chiffrés dans l'exe depuis 1.1.14 (src/assets.rs). Une installation par-dessus
+; une version d'avant laisserait leurs copies en clair dans le dossier de l'app : elles sont retirées.
+!macro NSIS_HOOK_POSTINSTALL
+  Delete "$INSTDIR\resources\LowLatency.pow"
+  Delete "$INSTDIR\resources\extremelatencylow.nip"
+!macroend

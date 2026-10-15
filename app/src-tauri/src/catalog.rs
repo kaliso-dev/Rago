@@ -1193,7 +1193,7 @@ mod tests {
     /// de passe au réveil et un bouton d'alimentation sans effet. Le script les remet, puis renomme et active le plan.
     #[test]
     fn rago_power_plan_is_corrected_on_import() {
-        assert!(std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join("resources/LowLatency.pow").is_file());
+        assert!(crate::assets::bytes("LowLatency.pow").is_some_and(|b| !b.is_empty()));
         let s = SCRIPTS["pow_plan"]["_"].to_lowercase();
         for (sub, setting, value) in RAGO_PLAN_FIXES {
             assert!(s.contains(&format!("powercfg -setacvalueindex {RAGO_PLAN} {sub} {setting} {value}")), "{setting}");
@@ -1225,10 +1225,13 @@ mod tests {
             let o = crate::shell::hidden("powercfg.exe").args(args).output().unwrap();
             (o.status.success(), format!("{}{}", String::from_utf8_lossy(&o.stdout), String::from_utf8_lossy(&o.stderr)))
         };
-        let res = std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join("resources");
+        // le fichier chiffré dans l'exe, écrit comme le fait le moteur (assets.rs)
+        let run = std::env::temp_dir().join(format!("rago-test-plan-{}", std::process::id()));
         let line = SCRIPTS["pow_plan"]["_"].lines().find(|l| l.contains("powercfg -import")).unwrap().replace(RAGO_PLAN, TEST_PLAN);
+        let (staged, line) = crate::assets::stage(&run, &line).unwrap();
+        let res = staged.dir().unwrap().to_path_buf();
         for cmd in line.split(" & ").filter(|c| !c.contains("-setactive")) {
-            let cmd = cmd.replace("%RAGO_RES%", &res.to_string_lossy());
+            let cmd = cmd.replace("%RAGO_SEC%", &res.to_string_lossy());
             // arguments séparés par des espaces, "…" gardés entiers
             let args: Vec<&str> = cmd.split('"').enumerate().flat_map(|(i, p)| if i % 2 == 1 { vec![p] } else { p.split_whitespace().collect() }).collect();
             assert_eq!(args[0], "powercfg");

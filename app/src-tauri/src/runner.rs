@@ -17,7 +17,7 @@ use std::time::Instant;
 
 use crate::backup::{self, Ledger, Probe, Sys};
 use crate::history::{now_ms, Entry, History};
-use crate::{catalog, minecraft, shell};
+use crate::{assets, catalog, minecraft, shell};
 
 #[derive(Debug, Clone, Deserialize)]
 #[serde(rename_all = "camelCase")]
@@ -486,9 +486,17 @@ impl Runner {
     }
 
     fn run_batch(&self, ctx: &Context, name: &str, variant: Option<&str>, script: &str, emit: &dyn Fn(String)) -> Result<(i32, Option<String>), String> {
-        let path = write_script(&ctx.run_dir, name, variant, script)?;
-        let res = script_command(ctx, &path).and_then(|cmd| self.stream(cmd, emit));
+        // plan d'alimentation, profil NVIDIA : écrits en clair dans run\ le temps du script seulement (assets.rs)
+        let (staged, script) = assets::stage(&ctx.run_dir, script)?;
+        let path = write_script(&ctx.run_dir, name, variant, &script)?;
+        let res = script_command(ctx, &path).and_then(|mut cmd| {
+            if let Some(dir) = staged.dir() {
+                cmd.env("RAGO_SEC", dir);
+            }
+            self.stream(cmd, emit)
+        });
         let _ = fs::remove_file(&path);
+        drop(staged);
         res
     }
 
@@ -514,10 +522,12 @@ impl Runner {
             }
             "nv_profile" => {
                 let exe = ctx.resource_dir.join("nvidiaProfileInspector.exe");
-                let nip = ctx.resource_dir.join("extremelatencylow.nip");
-                if !exe.exists() || !nip.exists() {
-                    return Err("NVIDIA Profile Inspector or the .nip profile is missing from the app folder".into());
+                if !exe.exists() {
+                    return Err("NVIDIA Profile Inspector is missing from the app folder".into());
                 }
+                // profil chiffré dans l'exe : écrit dans run\ le temps de l'import (assets.rs)
+                let (staged, _) = assets::stage(&ctx.run_dir, "%RAGO_RES%\\extremelatencylow.nip")?;
+                let nip = staged.dir().ok_or("The .nip profile is missing from the app")?.join("extremelatencylow.nip");
                 emit("- Importing the extremelatencylow.nip profile into the NVIDIA driver".into());
                 let mut cmd = shell::hidden(&exe.to_string_lossy());
                 cmd.arg(&nip).arg("-silentImport");
