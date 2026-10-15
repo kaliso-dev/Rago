@@ -244,14 +244,17 @@ impl Ledger {
         }
     }
 
-    /// Marque le réglage appliqué. Un réglage réappliqué (autre variante) garde ses éléments déjà relevés.
-    /// Garde l'annulation des réglages appliqués qui n'en ont pas encore (lookup : scripts ouverts maintenant).
-    /// Renvoie true si quelque chose a changé.
+    /// Garde, pour chaque réglage appliqué, la copie de son annulation telle que cette version la lance (lookup :
+    /// scripts ouverts maintenant). Une copie prise par une version d'avant (1.1.6 à 1.1.10) est remplacée dès que
+    /// l'annulation de cette version est connue : sans licence (fin de Premium, déconnexion, désinstallation, Tout
+    /// annuler), c'est la copie qui tourne, et seule celle de cette version a les corrections de l'écran bleu (plus de
+    /// CoalescingTimerInterval à 0) et des chemins du profil. Sans lookup (scripts Premium fermés), la copie reste
+    /// telle quelle. Renvoie true si quelque chose a changé.
     pub fn fill_undo(&mut self, lookup: &dyn Fn(&str, Option<&str>) -> Option<Undo>) -> bool {
         let mut changed = false;
         for (id, a) in self.tweaks.iter_mut() {
-            if a.undo.is_none() {
-                if let Some(u) = lookup(id, a.variant.as_deref()) {
+            if let Some(u) = lookup(id, a.variant.as_deref()) {
+                if a.undo.as_ref() != Some(&u) {
                     a.undo = Some(u);
                     changed = true;
                 }
@@ -919,4 +922,20 @@ device                  partition=C:\r\ndisabledynamictick      Oui\r\ntscsyncpo
         let _ = fs::remove_dir_all(&dir);
     }
 
+    /// Copie gardée par une version d'avant (1.1.9, 1.1.10) : remplacée par l'annulation de cette version dès qu'elle
+    /// est connue, gardée telle quelle sinon (scripts Premium fermés).
+    #[test]
+    fn old_undo_copy_is_refreshed() {
+        let mut l = Ledger::default();
+        l.set_applied("in_x", None, true, true, vec![], 1);
+        let old = Undo { rest: Some("reg add \"HKLM\\SYSTEM\\CurrentControlSet\\Control\" /v CoalescingTimerInterval /d 0".into()), ..Default::default() };
+        l.tweaks.get_mut("in_x").unwrap().undo = Some(old.clone());
+        // scripts fermés : rien à mettre à la place
+        assert!(!l.fill_undo(&|_, _| None));
+        assert_eq!(l.tweaks["in_x"].undo, Some(old));
+        let new = Undo { rest: Some("echo ok".into()), ..Default::default() };
+        assert!(l.fill_undo(&|_, _| Some(new.clone())));
+        assert_eq!(l.tweaks["in_x"].undo, Some(new.clone()));
+        assert!(!l.fill_undo(&|_, _| Some(new.clone())), "déjà à jour : rien ne change, rien à enregistrer");
+    }
 }
