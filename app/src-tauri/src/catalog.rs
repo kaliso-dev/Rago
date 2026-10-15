@@ -1,7 +1,9 @@
 //! Scripts batch des réglages, générés par tools/build_catalog.py et embarqués dans le binaire.
 //!
-//! Les scripts du plan gratuit et les variantes de retour arrière sont en clair ; ceux des réglages Premium
-//! sont chiffrés (voir seal.rs) et ne s'ouvrent qu'avec la clé que le serveur donne à une licence active.
+//! Tous les scripts sont chiffrés dans l'exe (voir seal.rs) : aucune commande n'y est en clair. Ceux du plan
+//! gratuit et les variantes de retour arrière s'ouvrent avec une clé reconstruite dans le binaire (ils doivent
+//! tourner sans licence) ; ceux des réglages Premium ne s'ouvrent qu'avec la clé que le serveur donne à une
+//! licence active.
 
 use std::collections::HashMap;
 use std::sync::{Arc, LazyLock, Mutex};
@@ -19,10 +21,15 @@ pub struct Bundle {
     undo: HashMap<String, HashMap<String, Undo>>,
 }
 
-/// Scripts en clair, préparés par build.rs (embed_scripts.rs).
+/// Scripts du plan gratuit et de retour arrière, préparés par build.rs (embed_scripts.rs). Chiffrés eux aussi,
+/// avec une clé reconstruite dans le binaire : ils doivent tourner sans licence, donc on les ouvre au démarrage.
+static PLAIN_SEALED: &[u8] = include_bytes!(concat!(env!("OUT_DIR"), "/scripts.plain.sealed"));
 static PLAIN: LazyLock<Bundle> = LazyLock::new(|| {
-    serde_json::from_str(include_str!(concat!(env!("OUT_DIR"), "/scripts.plain.json"))).expect("scripts.plain.json invalide")
+    let key = crate::seal::offline_key(env!("CARGO_PKG_VERSION"));
+    let plain = crate::seal::open(&key, PLAIN_SEALED).expect("scripts.plain.sealed illisible");
+    serde_json::from_slice(&plain).expect("scripts.plain.sealed invalide")
 });
+/// Scripts Premium, chiffrés avec la clé de la version (restée sur le serveur de licences).
 static SEALED: &[u8] = include_bytes!(concat!(env!("OUT_DIR"), "/scripts.sealed"));
 /// Scripts Premium déchiffrés, gardés en mémoire avec la clé qui les a ouverts.
 static OPENED: Mutex<Option<([u8; 32], Arc<Bundle>)>> = Mutex::new(None);
@@ -265,12 +272,15 @@ mod tests {
         crate::seal::version_key(crate::seal::TEST_SECRET, option_env!("RAGO_APP_VERSION").unwrap_or(env!("CARGO_PKG_VERSION")))
     }
 
-    /// Les scripts Premium ne sont pas en clair dans l'exe et ne s'ouvrent qu'avec la clé de la version.
+    /// Aucun script (gratuit ou Premium) n'est en clair dans l'exe : les deux paquets embarqués ne contiennent que
+    /// du chiffré, et chacun ne s'ouvre qu'avec sa clé (hors ligne pour le gratuit, version pour le Premium).
     #[test]
-    fn premium_scripts_are_sealed() {
-        let bundle = premium(&test_key()).expect("le paquet s'ouvre avec la clé de test");
+    fn scripts_are_sealed() {
+        let bundle = premium(&test_key()).expect("le paquet Premium s'ouvre avec la clé de test");
         assert!(premium(&crate::seal::version_key(crate::seal::TEST_SECRET, "0.0.0")).is_none());
-        let plain_text = include_str!(concat!(env!("OUT_DIR"), "/scripts.plain.json"));
+        // le paquet gratuit est chiffré, et ne s'ouvre qu'avec la clé hors ligne de cette version
+        assert!(crate::seal::open(&crate::seal::offline_key(env!("CARGO_PKG_VERSION")), PLAIN_SEALED).is_some());
+        assert!(crate::seal::open(&crate::seal::offline_key("0.0.0"), PLAIN_SEALED).is_none());
         let mut sealed_n = 0;
         for (id, variants) in SCRIPTS.iter() {
             for (v, body) in variants {
@@ -282,15 +292,12 @@ mod tests {
                 assert!(PLAIN.probes.get(id).and_then(|e| e.get(v)).or(bundle.probes.get(id).and_then(|e| e.get(v))).is_some(), "{id}:{v} sans relevé");
                 if !open {
                     sealed_n += 1;
-                    assert!(!PLAIN.probes.contains_key(id), "relevé Premium en clair : {id}");
-                    // une ligne propre à ce script ne doit apparaître nulle part en clair
-                    if let Some(line) = body.lines().map(str::trim).filter(|l| l.len() > 60).find(|l| {
-                        !SCRIPTS.iter().any(|(i, vs)| (is_free(i) || REVERTS.iter().any(|r| r.starts_with(&format!("{i}:")))) && vs.values().any(|b| b.contains(*l)))
-                    }) {
-                        let json_line = serde_json::to_string(line).unwrap();
-                        assert!(!plain_text.contains(json_line.trim_matches('"')), "{id}:{v} en clair : {line}");
-                        assert!(!SEALED.windows(line.len()).any(|w| w == line.as_bytes()), "{id}:{v} lisible dans le paquet chiffré");
-                    }
+                    assert!(!PLAIN.probes.contains_key(id), "relevé Premium dans le paquet gratuit : {id}");
+                }
+                // une ligne de ce script ne doit se lire en clair dans aucun des deux paquets embarqués
+                if let Some(line) = body.lines().map(str::trim).find(|l| l.len() > 60) {
+                    assert!(!PLAIN_SEALED.windows(line.len()).any(|w| w == line.as_bytes()), "{id}:{v} lisible dans scripts.plain.sealed");
+                    assert!(!SEALED.windows(line.len()).any(|w| w == line.as_bytes()), "{id}:{v} lisible dans scripts.sealed");
                 }
             }
         }
@@ -305,20 +312,17 @@ mod tests {
             assert_eq!(p.matches("@@RAGO reg ").count(), script(id, None, Some(&bundle)).unwrap().matches("reg add").count(), "{id}");
         }
         assert!(script("ping_hitreg", Some("default"), None).is_some(), "retour arrière sans licence");
-        // annulation : chiffrée avec les scripts Premium, en clair pour le plan gratuit
+        // annulation : dans le paquet Premium pour les réglages Premium, dans le paquet gratuit sinon ; les deux chiffrés
         assert!(undo_of("net_nagle", None, None).is_none(), "annulation Premium lisible sans licence");
         assert!(undo_of("net_nagle", None, Some(&bundle)).and_then(|u| u.full).is_some());
         assert!(undo_of("win_gamedvr", None, None).and_then(|u| u.full).is_some(), "annulation du plan gratuit");
         assert!(undo_of("pow_ultimate", None, Some(&bundle)).is_some_and(|u| u.rest_avant && u.rest.is_some()));
-        let reg_lines = |u: &Undo| u.full.iter().chain(u.rest.iter()).flat_map(|s| s.lines()).filter(|l| l.trim().len() > 60).map(str::trim).map(String::from).collect::<Vec<_>>();
+        let first_long = |u: &Undo| u.full.iter().chain(u.rest.iter()).flat_map(|s| s.lines()).map(str::trim).find(|l| l.len() > 60).map(String::from);
         for (id, vs) in bundle.undo.iter() {
             for u in vs.values() {
-                for l in reg_lines(u) {
-                    let free_too = PLAIN.undo.values().flat_map(|e| e.values()).any(|f| reg_lines(f).contains(&l));
-                    if !free_too {
-                        let json_line = serde_json::to_string(&l).unwrap();
-                        assert!(!plain_text.contains(json_line.trim_matches('"')), "annulation {id} en clair : {l}");
-                    }
+                if let Some(l) = first_long(u) {
+                    assert!(!PLAIN_SEALED.windows(l.len()).any(|w| w == l.as_bytes()), "annulation {id} lisible dans scripts.plain.sealed : {l}");
+                    assert!(!SEALED.windows(l.len()).any(|w| w == l.as_bytes()), "annulation {id} lisible dans scripts.sealed : {l}");
                 }
             }
         }

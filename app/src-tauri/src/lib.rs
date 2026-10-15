@@ -392,11 +392,18 @@ pub fn run() {
                 .unwrap_or_else(|_| PathBuf::from("resources"));
             let data_dir = app.path().app_data_dir().unwrap_or_else(|_| std::env::temp_dir().join("RagoOptimizer"));
             runner::ensure_dir(&data_dir);
+            // Les scripts sont écrits en clair dans run\ le temps que cmd.exe les exécute (Windows a besoin du
+            // fichier pour les lancer), puis effacés aussitôt. Au cas où un arrêt brutal en aurait laissé un, on
+            // vide le dossier au démarrage : aucune commande d'optimisation ne reste sur le disque.
+            let _ = std::fs::remove_dir_all(data_dir.join("run"));
             let history = Arc::new(History::load(data_dir.join("history.json")));
             let (mut ledger, existed) = Ledger::load(data_dir.join("applied.json"));
             if !existed {
                 // première version avec l'état des réglages : ceux déjà appliqués d'après l'historique
                 ledger.import_history(&history.all());
+                ledger.save();
+            } else if ledger.needs_migration() {
+                // fichier d'une version d'avant le chiffrement au repos : on le réécrit chiffré
                 ledger.save();
             }
             // suppression des applis du Store lancée comme action ponctuelle par une version d'avant : notée
