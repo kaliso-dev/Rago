@@ -54,6 +54,8 @@ export interface RunRow {
   undo: boolean;
   status: ItemStatus;
   durationMs: number | null;
+  /** demande un redémarrage (variante lancée, ou celle que remet l'annulation) */
+  reboot: boolean;
 }
 
 export interface RunState {
@@ -172,51 +174,63 @@ function useStoreValue() {
     if (license && !premium) setSelection((s) => (s.every(openInFree) ? s : s.filter(openInFree)));
   }, [license, premium, setSelection, openInFree]);
 
-  useEffect(() => {
-    // Au démarrage puis une fois par jour : rafraîchit le jeton si le serveur répond.
-    // Sans réseau, le jeton reste valable jusqu'à son expiration ; une révocation renvoie à la connexion.
-    const refresh = (st: LicenseStatus) => {
-      if (st.state !== "active" && st.state !== "expired") return;
-      void api.licenseRefresh().then(
-        (next) => {
-          setLicense(next);
-          setLicenseNotice(next.state === "expired" ? { code: "expired", message: null, buyUrl: null } : null);
-        },
-        async (e) => {
-          const err = asLicenseError(e);
-          if (err.code === "invalid_token" || err.code === "bound_to_other_device" || err.code === "revoked") {
-            setLicenseNotice(err);
-            setLicense(await api.licenseStatus());
-          } else if (st.state === "expired") {
-            // pas de réseau : le joueur paie peut-être encore, on le lui dit au lieu d'afficher le plan gratuit
-            setLicenseNotice({ code: "expired", message: null, buyUrl: null });
-          }
-        },
-      );
-    };
-    void api.licenseStatus().then((st) => {
-      setLicense(st);
-      refresh(st);
-    });
-    const daily = setInterval(() => void api.licenseStatus().then(refresh), 24 * 3600 * 1000);
-    return () => clearInterval(daily);
+  // Rafraîchit le jeton si le serveur répond : au démarrage, une fois par jour et avec « Réessayer » du bandeau.
+  // Sans réseau, le jeton reste valable jusqu'à son expiration ; une révocation renvoie à la connexion.
+  const refreshLicense = useCallback(async (st: LicenseStatus) => {
+    if (st.state !== "active" && st.state !== "expired") return;
+    try {
+      const next = await api.licenseRefresh();
+      setLicense(next);
+      setLicenseNotice(next.state === "expired" ? { code: "expired", message: null, buyUrl: null } : null);
+    } catch (e) {
+      const err = asLicenseError(e);
+      if (err.code === "invalid_token" || err.code === "bound_to_other_device" || err.code === "revoked") {
+        setLicenseNotice(err);
+        setLicense(await api.licenseStatus());
+      } else if (st.state === "expired") {
+        // pas de réseau : le joueur paie peut-être encore, on le lui dit au lieu d'afficher le plan gratuit
+        setLicenseNotice({ code: "expired", message: null, buyUrl: null });
+      }
+    }
   }, []);
 
+  useEffect(() => {
+    let last: LicenseStatus | null = null;
+    let refreshedAt = Date.now();
+    void api.licenseStatus().then((st) => {
+      last = st;
+      setLicense(st);
+      void refreshLicense(st);
+    });
+    // Toutes les heures : relit l'état du jeton, pour qu'un jeton expiré hors ligne fasse quitter Premium à l'interface
+    // comme au moteur. Le serveur n'est retenté qu'une fois par jour, ou dès que le jeton vient d'expirer.
+    const hourly = setInterval(
+      () =>
+        void api.licenseStatus().then((st) => {
+          const justExpired = st.state === "expired" && last?.state !== "expired";
+          last = st;
+          // même état qu'affiché : on garde l'objet, rien ne se recalcule
+          setLicense((cur) => (JSON.stringify(cur) === JSON.stringify(st) ? cur : st));
+          if (justExpired || Date.now() - refreshedAt >= 24 * 3600 * 1000) {
+            refreshedAt = Date.now();
+            void refreshLicense(st);
+          }
+        }),
+      3600 * 1000,
+    );
+    return () => clearInterval(hourly);
+  }, [refreshLicense]);
+
   /** Lignes de la fenêtre de suivi pour la remise de la déconnexion (annulations, le dernier appliqué en premier). */
-  const signOutRun = (ids: string[], runId: string | null): RunState => ({
-    runId,
-    rows: ids.map((id) => ({ id, variant: appliedRef.current.get(id)?.variant ?? null, undo: true, status: "pending", durationMs: null })),
-    logs: [],
-    startedAt: Date.now(),
-    endedAt: null,
-    done: null,
-    reboot: ids.some((id) => {
+  const signOutRun = (ids: string[], runId: string | null): RunState => {
+    const rows: RunRow[] = ids.map((id) => {
       const tw = tweaks.get(id);
-      return tw ? needsReboot(tw, undoVariant(id, appliedRef.current.get(id))) : (retired.get(id)?.reboot ?? false);
-    }),
-    error: null,
-    signOut: true,
-  });
+      const a = appliedRef.current.get(id);
+      const reboot = tw ? needsReboot(tw, undoVariant(id, a)) : (retired.get(id)?.reboot ?? false);
+      return { id, variant: a?.variant ?? null, undo: true, status: "pending", durationMs: null, reboot };
+    });
+    return { runId, rows, logs: [], startedAt: Date.now(), endedAt: null, done: null, reboot: rows.some((r) => r.reboot), error: null, signOut: true };
+  };
 
   /** Déconnexion : le moteur remet d'abord tous les réglages appliqués sur ce PC (Premium et gratuits), sans bouton pour
    * l'arrêter, puis efface le jeton (lib.rs, `license_sign_out`). La remise s'affiche dans la fenêtre de suivi ; fermée
@@ -484,7 +498,8 @@ function useStoreValue() {
       if (opts.restorePoint || ids.includes("rst_point")) items.push({ id: "rst_point" });
       ids = ids.filter((id) => id !== "rst_point");
       if (opts.wmic) items.push({ id: "__wmic" });
-      let reboot = false;
+      // lignes du lot qui demandent un redémarrage : après « Arrêter », seules celles allées au bout comptent
+      const rebootAt = new Set<number>();
       // d'abord les annulations : un réglage réappliqué juste après repart de l'état d'avant
       for (const id of opts.undo ?? []) {
         const tw = tweaks.get(id);
@@ -493,7 +508,7 @@ function useStoreValue() {
         // version mais noté dans applied.json (Tout annuler) : le moteur le remet quand même avec ce qu'il a gardé
         const gone = retired.get(id);
         if (!tw && !gone && !a) continue;
-        reboot ||= tw ? needsReboot(tw, undoVariant(id, a)) : (gone?.reboot ?? false);
+        if (tw ? needsReboot(tw, undoVariant(id, a)) : (gone?.reboot ?? false)) rebootAt.add(items.length);
         const item: RunItem = { id, variant: a?.variant ?? null, undo: true };
         if (tw?.native === "minecraft_optifine") item.params = { dir: mcDir };
         items.push(item);
@@ -502,7 +517,7 @@ function useStoreValue() {
         const tw = tweaks.get(id);
         if (!tw) continue;
         const variant = variantOf(tw);
-        reboot ||= needsReboot(tw, variant);
+        if (needsReboot(tw, variant)) rebootAt.add(items.length);
         const item: RunItem = { id, variant };
         if (tw.native === "minecraft_optifine") item.params = { dir: mcDir, values: tw.optifine?.[variant ?? ""] ?? {} };
         items.push(item);
@@ -510,12 +525,12 @@ function useStoreValue() {
       setConfirm(null);
       setRun({
         runId: null,
-        rows: items.map((i) => ({ id: i.id, variant: i.variant ?? null, undo: !!i.undo, status: "pending", durationMs: null })),
+        rows: items.map((i, n) => ({ id: i.id, variant: i.variant ?? null, undo: !!i.undo, status: "pending", durationMs: null, reboot: rebootAt.has(n) })),
         logs: [],
         startedAt: Date.now(),
         endedAt: null,
         done: null,
-        reboot,
+        reboot: rebootAt.size > 0,
         error: null,
       });
       try {
@@ -570,6 +585,7 @@ function useStoreValue() {
   return {
     lang, setLang, motion, setMotion, t,
     page, goTo,
+    refreshLicense,
     sys, sysLoading, refreshSys,
     selection, selected, toggle, selectMany, unselectMany, variants, setVariant, variantOf,
     pendingUndo, applied, appliedLoaded: appliedList !== null, isOn, premiumApplied, reapply, resetDone, setResetDone,
