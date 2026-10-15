@@ -378,6 +378,9 @@ pub fn run() {
                 // première version avec l'état des réglages : ceux déjà appliqués d'après l'historique
                 ledger.import_history(&history.all());
                 ledger.save();
+            } else if ledger.needs_migration() {
+                // fichier d'une version d'avant le chiffrement au repos : on le réécrit chiffré
+                ledger.save();
             }
             // ce qu'une version précédente a laissé et qui fait planter le PC (RAG-67), sans attendre le joueur
             let removed = repair::at_startup(&backup::Sys::new(data_dir.join("backup")), &mut ledger, &data_dir.join("logs"));

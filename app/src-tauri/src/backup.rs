@@ -9,6 +9,7 @@ use serde::{Deserialize, Serialize};
 use std::collections::{BTreeMap, HashMap, HashSet};
 use std::fs;
 use std::path::{Path, PathBuf};
+use sha2::{Digest, Sha256};
 
 /// Ce qu'un script va modifier, lu dans les lignes `@@RAGO` de son relevé.
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
@@ -188,6 +189,9 @@ pub struct Ledger {
     /// le fichier sur disque n'a pu être ni lu ni mis de côté : rien ne doit l'écraser (voir `load`)
     #[serde(skip)]
     unread: std::sync::atomic::AtomicBool,
+    /// le fichier lu était en clair (version d'avant le chiffrement au repos) : à réécrire chiffré
+    #[serde(skip)]
+    legacy_plaintext: bool,
 }
 
 /// Réglage appliqué, tel que l'interface l'affiche.
@@ -204,6 +208,42 @@ pub struct AppliedView {
     /// voir Applied::windows_values : l'annulation ne lance rien (pas de redémarrage à proposer)
     #[serde(skip_serializing_if = "std::ops::Not::not")]
     pub windows_values: bool,
+}
+
+/// En-tête d'applied.json chiffré avec la clé de secours de l'app (voir `encode`).
+const LEDGER_FALLBACK: &[u8] = b"RAGO-LEDGER-1\0";
+
+/// Contenu chiffré d'applied.json. DPAPI (lié au compte Windows) dans le cas normal ; s'il refuse (profil Windows
+/// abîmé), la clé de secours de l'app (`seal::ledger_key`) : jamais de commandes en clair sur le disque.
+fn encode(json: &str, dpapi: Option<Vec<u8>>) -> Vec<u8> {
+    if let Some(bytes) = dpapi {
+        return bytes;
+    }
+    let t = std::time::SystemTime::now().duration_since(std::time::UNIX_EPOCH).map(|d| d.as_nanos()).unwrap_or(0);
+    let digest = Sha256::new()
+        .chain_update(t.to_le_bytes())
+        .chain_update(std::process::id().to_le_bytes())
+        .chain_update(json.as_bytes())
+        .finalize();
+    let mut nonce = [0u8; 16];
+    nonce.copy_from_slice(&digest[..16]);
+    let mut out = LEDGER_FALLBACK.to_vec();
+    out.extend(crate::seal::seal(&crate::seal::ledger_key(), &nonce, json.as_bytes()));
+    out
+}
+
+/// Texte d'applied.json, et s'il est à réécrire chiffré avec DPAPI : fichier d'une version d'avant le chiffrement
+/// au repos (encore en clair), ou chiffré avec la clé de secours.
+fn decode(bytes: &[u8]) -> (String, bool) {
+    if let Some(rest) = bytes.strip_prefix(LEDGER_FALLBACK) {
+        if let Some(text) = crate::seal::open(&crate::seal::ledger_key(), rest).and_then(|b| String::from_utf8(b).ok()) {
+            return (text, true);
+        }
+    }
+    match crate::license::vault::open(bytes) {
+        Some(text) => (text, false),
+        None => (String::from_utf8_lossy(bytes).into_owned(), true),
+    }
 }
 
 impl Ledger {
@@ -230,13 +270,18 @@ impl Ledger {
         }
         let why = match got {
             Ok(None) => return (Ledger { path, ..Default::default() }, false),
-            Ok(Some(bytes)) => match serde_json::from_slice::<Ledger>(&bytes) {
-                Ok(mut l) => {
-                    l.path = path;
-                    return (l, true);
+            Ok(Some(bytes)) => {
+                let (json, legacy) = decode(&bytes);
+                match serde_json::from_str::<Ledger>(&json) {
+                    Ok(mut l) => {
+                        l.path = path;
+                        l.legacy_plaintext = legacy;
+                        return (l, true);
+                    }
+                    // fichier coupé, ou chiffré pour un autre compte Windows : mis de côté, jamais écrasé
+                    Err(e) => format!("unreadable ({e})"),
                 }
-                Err(e) => format!("unreadable ({e})"),
-            },
+            }
             Err(e) => format!("couldn't be read ({e})"),
         };
         let l = Ledger { path, ..Default::default() };
@@ -280,18 +325,24 @@ impl Ledger {
             self.unread.store(false, Ordering::SeqCst);
         }
         if let Ok(json) = serde_json::to_string(self) {
-            // écrit à côté, sur le disque (sync_all), puis remplace : une coupure de courant ne laisse ni un fichier
-            // coupé ni un fichier vide sous le bon nom
+            // chiffré au repos, puis écrit à côté, sur le disque (sync_all), et remplace : une coupure de courant ne
+            // laisse ni un fichier coupé ni un fichier vide sous le bon nom
+            let bytes = encode(&json, crate::license::vault::seal(&json));
             let tmp = self.path.with_extension("json.tmp");
             let written = fs::File::create(&tmp).and_then(|mut f| {
                 use std::io::Write;
-                f.write_all(json.as_bytes())?;
+                f.write_all(&bytes)?;
                 f.sync_all()
             });
             if written.is_ok() {
                 let _ = fs::rename(&tmp, &self.path);
             }
         }
+    }
+
+    /// Le fichier lu était en clair (version d'avant le chiffrement) : le réécrire chiffré au premier lancement.
+    pub fn needs_migration(&self) -> bool {
+        self.legacy_plaintext
     }
 
     pub fn has(&self, probe_id: &str) -> bool {
@@ -1063,5 +1114,46 @@ device                  partition=C:\r\ndisabledynamictick      Oui\r\ntscsyncpo
         assert!(l.fill_undo(&|_, _| Some(new.clone())));
         assert_eq!(l.tweaks["in_x"].undo, Some(new.clone()));
         assert!(!l.fill_undo(&|_, _| Some(new.clone())), "déjà à jour : rien ne change, rien à enregistrer");
+    }
+
+    #[test]
+    fn ledger_never_written_in_clear_when_dpapi_fails() {
+        let json = r#"{"tweaks":{"net_x":{"undo":{"full":"netsh int tcp reset"}}}}"#;
+        let bytes = encode(json, None);
+        assert!(!bytes.windows(5).any(|w| w == b"netsh"), "pas de commande en clair sur le disque");
+        assert_eq!(decode(&bytes), (json.to_string(), true));
+        let mut bad = bytes.clone();
+        let n = bad.len() - 1;
+        bad[n] ^= 1;
+        assert_ne!(decode(&bad).0, json, "un fichier modifié n'est pas relu comme valide");
+    }
+
+    // Le chiffrement au repos est DPAPI, propre à Windows (ailleurs le coffre laisse passer en clair).
+    #[cfg(windows)]
+    #[test]
+    fn reads_legacy_plaintext_ledger_then_reseals() {
+        let dir = std::env::temp_dir().join(format!("rago-legacy-{}", std::process::id()));
+        let _ = fs::create_dir_all(&dir);
+        let path = dir.join("applied.json");
+        // simule un fichier d'une version d'avant le chiffrement : du JSON en clair sur le disque
+        let mut old = Ledger::default();
+        old.set_applied("net_x", Some("a".into()), true, true, vec![], 1);
+        old.tweaks.get_mut("net_x").unwrap().undo = Some(Undo { full: Some("netsh int tcp reset".into()), ..Default::default() });
+        fs::write(&path, serde_json::to_string(&old).unwrap()).unwrap();
+
+        let (loaded, existed) = Ledger::load(path.clone());
+        assert!(existed);
+        assert!(loaded.needs_migration(), "un fichier en clair doit être repéré");
+        assert_eq!(loaded.tweaks["net_x"].undo.as_ref().unwrap().full.as_deref(), Some("netsh int tcp reset"));
+
+        // la migration réécrit chiffré
+        loaded.save();
+        let raw = fs::read(&path).unwrap();
+        assert!(!raw.windows(5).any(|w| w == b"netsh"), "le fichier chiffré ne doit pas contenir la commande en clair");
+
+        let (back, _) = Ledger::load(path.clone());
+        assert!(!back.needs_migration(), "déjà chiffré");
+        assert_eq!(back.tweaks["net_x"].undo, loaded.tweaks["net_x"].undo);
+        let _ = fs::remove_dir_all(&dir);
     }
 }

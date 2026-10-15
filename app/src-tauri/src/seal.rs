@@ -62,6 +62,13 @@ pub fn offline_key(version: &str) -> [u8; 32] {
     hmac(&offline_secret(), format!("rago-plain-v1|{version}").as_bytes())
 }
 
+/// Clé de secours d'applied.json quand DPAPI refuse de chiffrer (profil Windows abîmé) : comme `offline_key`, une
+/// obfuscation reconstituée dans le binaire, qui garde au moins les commandes illisibles sur le disque. Fixe d'une
+/// version à l'autre : le fichier doit rester lisible après une mise à jour.
+pub fn ledger_key() -> [u8; 32] {
+    hmac(&offline_secret(), b"rago-ledger-v1")
+}
+
 fn xor_stream(key: &[u8; 32], nonce: &[u8], data: &mut [u8]) {
     let ek = hmac(key, b"enc");
     let mut block = nonce.to_vec();
