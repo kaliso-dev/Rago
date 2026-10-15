@@ -1136,9 +1136,9 @@ mod tests {
             }
         }
         assert!(bad.is_empty(), "{} défauts :\n{}", bad.len(), bad.join("\n"));
-        // ce que tools/paths.py a écrit
+        // ce que tools/paths.py a écrit (redirection « > nul » de la 1.1.10 : le journal du Mode jeu n'est pas changé)
         let on = &SCRIPTS["game_mode"]["on"];
-        assert!(on.lines().any(|l| l == "if defined temp del /s /f /q \"!temp!\\*\" >nul 2>&1"), "{on}");
+        assert!(on.lines().any(|l| l == "if defined temp del /s /f /q \"!temp!\\*\" > nul"), "{on}");
         assert!(
             on.lines().any(|l| l
                 == "if defined temp for /d %%d in (\"!temp!\\*\") do (setlocal DisableDelayedExpansion & rd /s /q \"%%d\" >nul 2>&1 & endlocal)"),
