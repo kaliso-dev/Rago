@@ -209,19 +209,24 @@ pub fn verify(token: &str, key: &VerifyingKey) -> Result<Claims, &'static str> {
 
 /// Le jeton est chiffré avec DPAPI (lié à la session Windows) dans %LOCALAPPDATA%\Rago.
 pub(crate) mod vault {
+    /// DPAPI de Windows : chiffré pour le compte Windows de ce PC (AES-256 et HMAC-SHA512), illisible par un autre
+    /// compte ou sur un autre PC, et toute modification fait échouer `protect = false`. `entropy` : secret
+    /// supplémentaire sans lequel le compte lui-même ne peut pas déchiffrer (un programme qui appelle DPAPI ne suffit pas).
     #[cfg(windows)]
-    fn crypt(data: &[u8], protect: bool) -> Option<Vec<u8>> {
+    fn crypt(data: &[u8], protect: bool, entropy: Option<&[u8]>) -> Option<Vec<u8>> {
         use windows_sys::Win32::Foundation::{LocalFree, HLOCAL};
         use windows_sys::Win32::Security::Cryptography::{
             CryptProtectData, CryptUnprotectData, CRYPTPROTECT_UI_FORBIDDEN, CRYPT_INTEGER_BLOB,
         };
         let input = CRYPT_INTEGER_BLOB { cbData: data.len() as u32, pbData: data.as_ptr() as *mut u8 };
+        let extra = entropy.map(|e| CRYPT_INTEGER_BLOB { cbData: e.len() as u32, pbData: e.as_ptr() as *mut u8 });
+        let extra = extra.as_ref().map_or(std::ptr::null(), |e| e as *const CRYPT_INTEGER_BLOB);
         let mut out = CRYPT_INTEGER_BLOB { cbData: 0, pbData: std::ptr::null_mut() };
         let ok = unsafe {
             if protect {
-                CryptProtectData(&input, std::ptr::null(), std::ptr::null(), std::ptr::null(), std::ptr::null(), CRYPTPROTECT_UI_FORBIDDEN, &mut out)
+                CryptProtectData(&input, std::ptr::null(), extra, std::ptr::null(), std::ptr::null(), CRYPTPROTECT_UI_FORBIDDEN, &mut out)
             } else {
-                CryptUnprotectData(&input, std::ptr::null_mut(), std::ptr::null(), std::ptr::null(), std::ptr::null(), CRYPTPROTECT_UI_FORBIDDEN, &mut out)
+                CryptUnprotectData(&input, std::ptr::null_mut(), extra, std::ptr::null(), std::ptr::null(), CRYPTPROTECT_UI_FORBIDDEN, &mut out)
             }
         };
         if ok == 0 {
@@ -233,16 +238,39 @@ pub(crate) mod vault {
     }
 
     #[cfg(not(windows))]
-    fn crypt(data: &[u8], _protect: bool) -> Option<Vec<u8>> {
+    fn crypt(data: &[u8], _protect: bool, _entropy: Option<&[u8]>) -> Option<Vec<u8>> {
         Some(data.to_vec())
     }
 
     pub fn seal(text: &str) -> Option<Vec<u8>> {
-        crypt(text.as_bytes(), true)
+        crypt(text.as_bytes(), true, None)
     }
 
     pub fn open(bytes: &[u8]) -> Option<String> {
-        crypt(bytes, false).and_then(|b| String::from_utf8(b).ok())
+        crypt(bytes, false, None).and_then(|b| String::from_utf8(b).ok())
+    }
+
+    /// Comme `seal`, avec un secret propre à l'app en plus du compte Windows.
+    pub fn protect(data: &[u8], entropy: &[u8]) -> Option<Vec<u8>> {
+        crypt(data, true, Some(entropy))
+    }
+
+    pub fn unprotect(data: &[u8], entropy: &[u8]) -> Option<Vec<u8>> {
+        crypt(data, false, Some(entropy))
+    }
+
+    /// Octets aléatoires du générateur de Windows (BCryptGenRandom). None s'il refuse.
+    #[cfg(windows)]
+    pub fn random<const N: usize>() -> Option<[u8; N]> {
+        use windows_sys::Win32::Security::Cryptography::{BCryptGenRandom, BCRYPT_USE_SYSTEM_PREFERRED_RNG};
+        let mut buf = [0u8; N];
+        let status = unsafe { BCryptGenRandom(std::ptr::null_mut(), buf.as_mut_ptr(), N as u32, BCRYPT_USE_SYSTEM_PREFERRED_RNG) };
+        (status >= 0).then_some(buf)
+    }
+
+    #[cfg(not(windows))]
+    pub fn random<const N: usize>() -> Option<[u8; N]> {
+        None
     }
 }
 

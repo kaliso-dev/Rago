@@ -69,6 +69,17 @@ pub fn ledger_key() -> [u8; 32] {
     hmac(&offline_secret(), b"rago-ledger-v1")
 }
 
+/// Clé de history.json (chiffrement de l'app, sous celui de DPAPI) : reconstituée dans le binaire comme `ledger_key`,
+/// fixe d'une version à l'autre pour que l'historique reste lisible après une mise à jour.
+pub fn history_key() -> [u8; 32] {
+    hmac(&offline_secret(), b"rago-history-v1")
+}
+
+/// Secret ajouté au compte Windows pour le chiffrement DPAPI de history.json (`vault::protect`).
+pub fn history_entropy() -> [u8; 32] {
+    hmac(&offline_secret(), b"rago-history-entropy-v1")
+}
+
 fn xor_stream(key: &[u8; 32], nonce: &[u8], data: &mut [u8]) {
     let ek = hmac(key, b"enc");
     let mut block = nonce.to_vec();
