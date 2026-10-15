@@ -109,6 +109,17 @@ pub fn uninstall() {
     let data_dir = std::env::var("APPDATA")
         .map(|a| PathBuf::from(a).join(IDENTIFIER))
         .unwrap_or_else(|_| std::env::temp_dir().join("RagoOptimizer"));
+    // comme au démarrage de l'app : aucun script ni fichier de l'app laissé en clair (avant, pendant le délai, à la fin)
+    let clear_run = {
+        let run_dir = data_dir.join("run");
+        move || {
+            let _ = std::fs::remove_dir_all(&run_dir);
+            if let Some(dir) = crate::assets::fallback_root() {
+                let _ = std::fs::remove_dir_all(dir);
+            }
+        }
+    };
+    clear_run();
     let (history, ledger) = load_for_uninstall(&data_dir);
     let ids = targets(&ledger, Scope::All);
     if ids.is_empty() {
@@ -139,13 +150,16 @@ pub fn uninstall() {
     // un script bloqué ne doit jamais coincer la désinstallation : au bout du délai, le script en cours est arrêté
     // et le reste n'est pas remis (il reste dans applied.json, et le point de restauration reste possible)
     let watchdog = Arc::clone(&runner);
+    let clear_late = clear_run.clone();
     std::thread::spawn(move || {
         std::thread::sleep(UNINSTALL_LIMIT);
         watchdog.cancel();
         std::thread::sleep(std::time::Duration::from_secs(30));
+        clear_late();
         std::process::exit(2);
     });
     runner.run_now(&ctx, &items(ids));
+    clear_run();
 }
 
 /// applied.json et l'historique comme l'app les voit à son lancement (lib.rs, setup) : réglages notés d'après

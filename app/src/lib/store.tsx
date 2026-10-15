@@ -543,7 +543,9 @@ function useStoreValue() {
           ? translate(lang, "err.premium_required")
           : msg.startsWith("premium_scripts_unavailable")
             ? translate(lang, "err.premium_scripts_unavailable")
-            : msg;
+            : msg.startsWith("signing_out")
+              ? translate(lang, "err.signing_out")
+              : msg;
         setRun((r) => (r ? { ...r, error, endedAt: Date.now() } : r));
       }
     },

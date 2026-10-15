@@ -60,7 +60,7 @@ export function RunOverlay() {
             <Pulse size={132} active={!isDone} />
             <div className="rg-overline run-state">
               {run.signOut
-                ? t(isDone ? "signout.runDone" : "signout.runTitle")
+                ? t(run.error ? "signout.failed" : isDone ? "signout.runDone" : "signout.runTitle")
                 : isDone
                   ? cancelled
                     ? t("run.cancelled")

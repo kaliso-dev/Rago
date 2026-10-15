@@ -347,6 +347,8 @@ pub struct License {
     /// jeton d'accès de 15 minutes, gardé en mémoire entre login et activation
     access: Mutex<Option<String>>,
     key_hint: Mutex<Option<String>>,
+    /// écriture du jeton par un rafraîchissement contre son effacement par la déconnexion (voir `refresh`)
+    write: Mutex<()>,
 }
 
 fn field(v: &Value, path: &[&str]) -> Option<String> {
@@ -364,7 +366,7 @@ impl License {
     }
 
     pub fn with(path: PathBuf, probe: fn() -> Device) -> Self {
-        License { path, device: OnceLock::new(), probe, access: Mutex::new(None), key_hint: Mutex::new(None) }
+        License { path, device: OnceLock::new(), probe, access: Mutex::new(None), key_hint: Mutex::new(None), write: Mutex::new(()) }
     }
 
     /// Calculé au premier besoin : la sonde lance reg.exe et PowerShell.
@@ -505,8 +507,16 @@ impl License {
     /// Prolonge le jeton, même expiré. Sans réseau ou en panne serveur, le jeton actuel est gardé.
     pub fn refresh(&self) -> Result<Status, ApiError> {
         let token = self.token().ok_or("invalid_token")?;
-        match post("/licenses/refresh", None, json!({ "license_token": token, "device": self.device().to_json() })) {
-            Ok(res) => self.accept(&res),
+        match post("/licenses/refresh", None, json!({ "license_token": &token, "device": self.device().to_json() })) {
+            Ok(res) => {
+                // déconnexion (ou autre connexion) pendant la requête : la réponse vaut pour un jeton qui n'est plus
+                // là, elle ne doit pas le remettre
+                let _w = self.write.lock().unwrap_or_else(std::sync::PoisonError::into_inner);
+                if self.token().as_deref() != Some(token.as_str()) {
+                    return Ok(self.status());
+                }
+                self.accept(&res)
+            }
             Err(e) => {
                 self.refused(&e);
                 Err(e)
@@ -526,6 +536,7 @@ impl License {
     }
 
     pub fn sign_out(&self) {
+        let _w = self.write.lock().unwrap_or_else(std::sync::PoisonError::into_inner);
         self.clear();
         *self.access.lock().unwrap() = None;
         self.note_end("signed_out");

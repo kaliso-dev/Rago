@@ -40,6 +40,9 @@ struct AppState {
     data_dir: PathBuf,
     /// la réparation de ce lancement a supprimé une valeur (repair::at_startup) : l'interface le dit une fois
     repaired: AtomicBool,
+    /// déconnexion lancée par ce processus (`license_sign_out`) : `Some` dès la demande, avec la remise une fois sa
+    /// liste faite. Une seconde demande (double clic, interface rechargée) ne relance rien et retrouve celle en cours.
+    signing_out: Mutex<Option<Option<SignOutStart>>>,
 }
 
 /// Déconnexion demandée et pas encore finie (`license_sign_out`), notée dans le dossier des données de cette app (le
@@ -332,11 +335,21 @@ struct SignOutStart {
 /// `mc_dir` : dossier Minecraft choisi dans l'interface, où OptiFine est remis (sinon le dossier habituel).
 #[tauri::command]
 fn license_sign_out(app: AppHandle, state: State<'_, AppState>, mc_dir: Option<String>) -> Result<(), String> {
+    let mut current = state.signing_out.lock().unwrap();
+    if let Some(started) = current.as_ref() {
+        // déjà en cours : l'interface (rechargée) reprend le suivi de la même remise
+        if let Some(start) = started {
+            let _ = app.emit("signout:start", start.clone());
+        }
+        return Ok(());
+    }
     if state.runner.is_running() {
         return Err("An optimization is already running".into());
     }
     runner::ensure_dir(&state.data_dir);
     std::fs::write(sign_out_marker(&state), history::now_ms().to_string()).map_err(|e| format!("Couldn't start signing out: {e}"))?;
+    *current = Some(None);
+    drop(current);
     std::thread::spawn(move || {
         let state = app.state::<AppState>();
         while !state.reset.begin() {
@@ -348,7 +361,9 @@ fn license_sign_out(app: AppHandle, state: State<'_, AppState>, mc_dir: Option<S
         let (mut ok, mut failed) = (0, 0);
         if !ids.is_empty() {
             let run_id = format!("signout-{}", history::now_ms());
-            let _ = app.emit("signout:start", SignOutStart { run_id: run_id.clone(), ids: ids.clone() });
+            let start = SignOutStart { run_id: run_id.clone(), ids: ids.clone() };
+            *state.signing_out.lock().unwrap() = Some(Some(start.clone()));
+            let _ = app.emit("signout:start", start);
             let ctx = state.context(Some(app.clone()), bundle);
             let mut items = reset::items(ids);
             for it in items.iter_mut().filter(|it| it.id == "mc_optifine") {
@@ -360,6 +375,7 @@ fn license_sign_out(app: AppHandle, state: State<'_, AppState>, mc_dir: Option<S
         // suivant s'il est Premium, « Tout annuler » reste possible pour les autres
         state.license.sign_out();
         let _ = std::fs::remove_file(sign_out_marker(&state));
+        *state.signing_out.lock().unwrap() = None;
         let quit = state.reset.end();
         let _ = app.emit("signout:done", reset::Done { ok, failed });
         if quit {
@@ -466,6 +482,9 @@ pub fn run() {
             // fichier pour les lancer), puis effacés aussitôt. Au cas où un arrêt brutal en aurait laissé un, on
             // vide le dossier au démarrage : aucune commande d'optimisation ne reste sur le disque.
             let _ = std::fs::remove_dir_all(data_dir.join("run"));
+            if let Some(dir) = assets::fallback_root() {
+                let _ = std::fs::remove_dir_all(dir);
+            }
             let history = Arc::new(History::load(data_dir.join("history.json")));
             let (mut ledger, existed) = Ledger::load(data_dir.join("applied.json"));
             if !existed {
@@ -495,6 +514,7 @@ pub fn run() {
                 resource_dir,
                 data_dir,
                 repaired: AtomicBool::new(!removed.is_empty()),
+                signing_out: Mutex::new(None),
             });
             // fin de Premium notée depuis le dernier lancement, ou remise coupée en cours de route : elle reprend ici
             reset_if_unlicensed(app.handle());
