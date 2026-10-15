@@ -418,7 +418,7 @@ mod tests {
                     assert!(!t.ends_with("do set \"str=%%i\" ("), "{id}:{v} boucle détachée : {l}");
                     assert!(!(t.contains("/v \"devicepriority\" /f") && t.starts_with("reg")) || t.starts_with("reg delete"), "{id}:{v} {l}");
                     assert!(!t.starts_with('/'), "{id}:{v} ligne orpheline : {l}");
-                    assert!(!t.contains("c:\\users\\") || t.contains("%username%"), "{id}:{v} chemin de l'auteur : {l}");
+                    assert!(!t.contains("c:\\users\\") || t.contains("!username!"), "{id}:{v} chemin de l'auteur : {l}");
                     assert!(!t.contains("{nic-id}") && !t.contains("c4accd00-2ba5") && !t.contains("122afb68-2ba4"), "{id}:{v} carte réseau de l'auteur : {l}");
                 }
                 assert!(!low.contains("messagebox") && !low.contains("risxn") && !low.contains("excusesfn"), "{id}:{v}");
@@ -815,6 +815,337 @@ mod tests {
         ] {
             assert_eq!(rbw_gap(l), None, "{l}");
         }
+    }
+
+    /// Le texte entre guillemets remplacé par des x, octet par octet (mêmes positions).
+    fn masked_line(l: &str) -> String {
+        let mut quoted = false;
+        let b: Vec<u8> = l
+            .bytes()
+            .map(|c| {
+                if c == b'"' {
+                    quoted = !quoted;
+                    c
+                } else if quoted {
+                    b'x'
+                } else {
+                    c
+                }
+            })
+            .collect();
+        String::from_utf8(b).unwrap()
+    }
+
+    /// Variables `%NOM%` (mark `%` ; les `%%` restent : variable de boucle ou `%` écrit tel quel) ou `!NOM!` (mark `!`)
+    /// d'une ligne, en majuscules, dans l'ordre (comme PERCENT et BANG de tools/paths.py).
+    fn var_refs(l: &str, mark: u8) -> Vec<String> {
+        let name = |c: u8, first: bool| c.is_ascii_alphabetic() || c == b'_' || (!first && (c.is_ascii_digit() || b"()#$.-".contains(&c)));
+        let b = l.as_bytes();
+        let (mut out, mut i) = (Vec::new(), 0);
+        while i < b.len() {
+            if b[i] != mark {
+                i += 1;
+                continue;
+            }
+            if mark == b'%' && b.get(i + 1) == Some(&b'%') {
+                i += 2;
+                continue;
+            }
+            let mut j = i + 1;
+            while j < b.len() && name(b[j], j == i + 1) {
+                j += 1;
+            }
+            if j > i + 1 && b.get(j) == Some(&mark) {
+                out.push(l[i + 1..j].to_ascii_uppercase());
+                i = j + 1;
+            } else {
+                i += 1;
+            }
+        }
+        out
+    }
+
+    /// Défauts des commandes qui suppriment ou prennent possession de fichiers (del, erase, rd, rmdir, forfiles,
+    /// takeown, icacls) dans un script que le moteur lance après `setlocal EnableDelayedExpansion` (runner.rs,
+    /// PREAMBLE). Revue du 2026-10-13, P1/P2 ; tools/paths.py vérifie les mêmes règles à la génération :
+    /// - chemin `%VAR%`, sur la ligne ou sur une ligne qui ouvre son bloc : cmd le remplace avant de lire la ligne, puis
+    ///   retire ses `!` (« Jean! ») ou remplace le texte entre deux `!` : la commande vise un autre dossier ;
+    /// - `!VAR!` sans `if defined VAR` devant (sur la ligne ou sur une ligne qui ouvre son bloc) : vide, `"!temp!\*"`
+    ///   vise la racine du disque ;
+    /// - variable de boucle (`%%d`) avec le développement retardé actif : elle est remplacée avant les `!…!`, un dossier
+    ///   nommé `!SystemRoot!` deviendrait `C:\Windows` ;
+    /// - `!…!` après `setlocal DisableDelayedExpansion` : il ne serait plus remplacé ;
+    /// - variable hors guillemets : un espace dans le chemin le couperait en deux.
+    /// Le texte d'un echo (jusqu'au premier `&` ou `|`) et les commentaires ne lancent rien.
+    fn deletion_errors(script: &str) -> Vec<String> {
+        use std::collections::BTreeSet;
+        const ACTIONS: [&str; 7] = ["del", "erase", "rd", "rmdir", "forfiles", "takeown", "icacls"];
+        const DDE_OFF: &str = "setlocal disabledelayedexpansion";
+        fn kind(l: &str) -> char {
+            let t = l.trim().trim_start_matches('@').trim().to_ascii_lowercase();
+            let after = |w: &str| t.strip_prefix(w).map(|r| r.bytes().next());
+            if t.starts_with(':') {
+                ':'
+            } else if matches!(after("rem"), Some(None)) || matches!(after("rem"), Some(Some(c)) if c.is_ascii_whitespace()) {
+                'r'
+            } else if matches!(after("echo"), Some(None))
+                || matches!(after("echo"), Some(Some(c)) if c.is_ascii_whitespace() || b".(:/".contains(&c))
+            {
+                'e'
+            } else {
+                'c'
+            }
+        }
+        fn first_action(l: &str) -> Option<usize> {
+            let k = kind(l);
+            if k == ':' || k == 'r' {
+                return None;
+            }
+            let bare = masked_line(l).to_ascii_lowercase();
+            let b = bare.as_bytes();
+            let start = if k == 'e' { bare.find(['&', '|'])? } else { 0 };
+            for i in start..b.len() {
+                if i > 0 && !(b[i - 1].is_ascii_whitespace() || b"&|(@".contains(&b[i - 1])) {
+                    continue;
+                }
+                for w in ACTIONS {
+                    if b[i..].starts_with(w.as_bytes()) {
+                        let mut k = i + w.len();
+                        if b[k..].starts_with(b".exe") {
+                            k += 4;
+                        }
+                        if k == b.len() || b[k].is_ascii_whitespace() {
+                            return Some(i);
+                        }
+                    }
+                }
+            }
+            None
+        }
+        // `if [/i] defined NOM` (pas `if not defined`)
+        fn guards(l: &str) -> BTreeSet<String> {
+            fn spaces(b: &[u8], k: &mut usize) -> bool {
+                let start = *k;
+                while *k < b.len() && b[*k].is_ascii_whitespace() {
+                    *k += 1;
+                }
+                *k > start
+            }
+            let low = l.to_ascii_lowercase();
+            let b = low.as_bytes();
+            let mut out = BTreeSet::new();
+            for s in (0..b.len()).filter(|&s| b[s..].starts_with(b"if")) {
+                if s > 0 && (b[s - 1].is_ascii_alphanumeric() || b[s - 1] == b'_') {
+                    continue;
+                }
+                let mut k = s + 2;
+                if !spaces(b, &mut k) {
+                    continue;
+                }
+                if b[k..].starts_with(b"/i") {
+                    let mut k2 = k + 2;
+                    if spaces(b, &mut k2) {
+                        k = k2;
+                    }
+                }
+                if !b[k..].starts_with(b"defined") {
+                    continue;
+                }
+                k += 7;
+                if !spaces(b, &mut k) {
+                    continue;
+                }
+                let start = k;
+                while k < b.len() && !b[k].is_ascii_whitespace() && !b"\"()&|".contains(&b[k]) {
+                    k += 1;
+                }
+                if k > start {
+                    out.insert(low[start..k].to_ascii_uppercase());
+                }
+            }
+            out
+        }
+        // +1 / -1 par parenthèse hors guillemets et hors ^, sur une ligne de commande (comme block_errors)
+        fn parens(l: &str) -> Vec<i32> {
+            if kind(l) != 'c' {
+                return Vec::new();
+            }
+            let (mut out, mut quoted, mut it) = (Vec::new(), false, l.bytes());
+            while let Some(c) = it.next() {
+                match c {
+                    b'"' => quoted = !quoted,
+                    b'^' if !quoted => {
+                        it.next();
+                    }
+                    b'(' if !quoted => out.push(1),
+                    b')' if !quoted => out.push(-1),
+                    _ => {}
+                }
+            }
+            out
+        }
+        let for_var = |s: &str| s.as_bytes().windows(3).any(|w| w[0] == b'%' && w[1] == b'%' && (w[2] == b'~' || w[2].is_ascii_alphabetic()));
+        let mut errors = Vec::new();
+        // par parenthèse ouverte : variables %…%, variables !…! et gardes de sa ligne et des blocs au-dessus
+        let mut stack: Vec<(BTreeSet<String>, BTreeSet<String>, BTreeSet<String>)> = Vec::new();
+        // développement retardé : PREAMBLE, puis les lignes setlocal / endlocal entières
+        let mut dde = vec![true];
+        for (n, l) in script.lines().enumerate() {
+            let t = l.trim();
+            let low = t.trim_start_matches('@').trim().to_ascii_lowercase();
+            let word = |w: &str| low.strip_prefix(w).is_some_and(|r| r.bytes().next().is_none_or(|c| !(c.is_ascii_alphanumeric() || c == b'_')));
+            if word("setlocal") && !low.contains('&') {
+                let top = *dde.last().unwrap();
+                dde.push(if low.contains("disabledelayedexpansion") {
+                    false
+                } else if low.contains("enabledelayedexpansion") {
+                    true
+                } else {
+                    top
+                });
+            } else if word("endlocal") && !low.contains('&') && dde.len() > 1 {
+                dde.pop();
+            }
+            let (pct, bang, gd) = stack.last().cloned().unwrap_or_default();
+            let line_pct: BTreeSet<String> = var_refs(l, b'%').into_iter().collect();
+            let line_bang: BTreeSet<String> = var_refs(l, b'!').into_iter().collect();
+            if let Some(pos) = first_action(l) {
+                let on = *dde.last().unwrap();
+                let all: Vec<String> = pct.union(&line_pct).cloned().collect();
+                if !all.is_empty() {
+                    errors.push(format!("{}: suppression sur %{}% : {t}", n + 1, all.join("%, %")));
+                }
+                let before = guards(&l[..pos]);
+                let need: Vec<String> = bang.union(&line_bang).filter(|v| !gd.contains(*v) && !before.contains(*v)).cloned().collect();
+                if !need.is_empty() {
+                    errors.push(format!("{}: suppression sans if defined {} : {t}", n + 1, need.join(", ")));
+                }
+                let off = l.to_ascii_lowercase().find(DDE_OFF);
+                if for_var(&l[pos..]) && on && !off.is_some_and(|o| o < pos) {
+                    errors.push(format!("{}: variable de boucle avec le développement retardé actif : {t}", n + 1));
+                }
+                if (!on && l.contains('!')) || off.is_some_and(|o| l[o..].contains('!')) {
+                    errors.push(format!("{}: !…! qui ne serait plus développé : {t}", n + 1));
+                }
+                let bare = masked_line(l);
+                if !var_refs(&bare, b'!').is_empty() || !var_refs(&bare, b'%').is_empty() {
+                    errors.push(format!("{}: variable hors guillemets : {t}", n + 1));
+                }
+            }
+            let here = (
+                pct.union(&line_pct).cloned().collect(),
+                bang.union(&line_bang).cloned().collect(),
+                gd.union(&guards(l)).cloned().collect(),
+            );
+            for p in parens(l) {
+                if p > 0 {
+                    stack.push(Clone::clone(&here));
+                } else {
+                    stack.pop();
+                }
+            }
+        }
+        errors
+    }
+
+    #[test]
+    fn deletion_checker_sees_bad_paths() {
+        let bad = [
+            ("del /s /f /q \"%temp%\\*\" >nul 2>&1", "suppression sur %TEMP%"),
+            ("rd /s /q \"%SystemRoot%\\Temp\"", "suppression sur %SYSTEMROOT%"),
+            ("forfiles -p \"%LOCALAPPDATA%\\Temp\" -s -m *.* /C \"cmd /c del @path\" >nul 2>&1", "suppression sur %LOCALAPPDATA%"),
+            ("echo - Cleaning & del /q \"%temp%\\x\"", "suppression sur %TEMP%"),
+            // la boucle qui ouvre le bloc lit %PROFILES_DIR%
+            ("for /d %%U in (\"%PROFILES_DIR%\\*\") do (\r\n  setlocal DisableDelayedExpansion\r\n  del /q \"%%U\\x\"\r\n  endlocal\r\n)",
+             "suppression sur %PROFILES_DIR%"),
+            ("del /s /f /q \"!temp!\\*\" >nul 2>&1", "sans if defined TEMP"),
+            ("if not defined temp del \"!temp!\\x\"", "sans if defined TEMP"),
+            ("for /d %%U in (\"!PROFILES_DIR!\\*\") do (\r\n  setlocal DisableDelayedExpansion\r\n  del /q \"%%U\\x\"\r\n  endlocal\r\n)",
+             "sans if defined PROFILES_DIR"),
+            ("if defined temp for /d %%d in (\"!temp!\\*\") do rd /s /q \"%%d\" >nul 2>&1", "variable de boucle"),
+            ("if defined PROFILES_DIR for /d %%U in (\"!PROFILES_DIR!\\*\") do (\r\n  del /q \"%%U\\x\"\r\n)", "variable de boucle"),
+            // cln_temp avant la revue : un dossier « !SystemRoot! » dans C:\Windows\Temp devenait rmdir "C:\Windows"
+            ("cd /d \"C:\\Windows\\Temp\" && for /F \"delims=\" %%i in ('dir /b') do (rmdir \"%%i\" /s/q 2>nul || del \"%%i\" /s/q 2>nul)",
+             "variable de boucle"),
+            ("if defined temp for /d %%d in (\"!temp!\\*\") do (setlocal DisableDelayedExpansion & rd /s /q \"!temp!\\%%d\" & endlocal)",
+             "ne serait plus développé"),
+            ("if defined temp del /s /f /q !temp!\\* >nul 2>&1", "hors guillemets"),
+        ];
+        for (s, why) in bad {
+            let e = deletion_errors(s);
+            assert!(e.len() == 1 && e[0].contains(why), "{s}\n{e:?}");
+        }
+        let good = [
+            "if defined temp del /s /f /q \"!temp!\\*\" >nul 2>&1",
+            "if defined temp for /d %%d in (\"!temp!\\*\") do (setlocal DisableDelayedExpansion & rd /s /q \"%%d\" >nul 2>&1 & endlocal)",
+            "if defined PROFILES_DIR for /d %%U in (\"!PROFILES_DIR!\\*\") do (\r\n  setlocal DisableDelayedExpansion\r\n  if exist \"%%U\\T\" (\r\n    \
+             del /q \"%%U\\T\\*.*\"\r\n    for /d %%D in (\"%%U\\T\\*\") do rd /s /q \"%%D\"\r\n  )\r\n  endlocal\r\n)",
+            "if defined LOCALAPPDATA if exist \"!LOCALAPPDATA!\\Temp\" (\r\n    cd /d \"!LOCALAPPDATA!\\Temp\" && for /F \"delims=\" %%i in ('dir /b') do \
+             (setlocal DisableDelayedExpansion & (rmdir \"%%i\" /s/q 2>nul || del \"%%i\" /s/q 2>nul) & endlocal)\r\n)",
+            "rd /s /q \"C:\\Nvidia\\PhysX\"",
+            "reg delete \"HKCU\\Software\\%x%\" /f",
+            "echo - DEL Sata controllers %x%",
+            ":: del \"%temp%\\*\"",
+        ];
+        for s in good {
+            assert!(deletion_errors(s).is_empty(), "{s}\n{:?}", deletion_errors(s));
+        }
+    }
+
+    /// Rien de ce que lance le moteur (réglages, relevés, annulations) ne supprime sur un chemin `%VAR%`, sur un
+    /// `!VAR!` sans garde ni sur une variable de boucle avec le développement retardé actif (deletion_errors), et
+    /// aucune variable de chemin n'y est plus écrite `%VAR%` (revue du 2026-10-13, P1/P2, tools/paths.py).
+    #[test]
+    fn deletions_never_use_a_percent_path() {
+        const PATH_VARS: [&str; 16] = [
+            "TEMP", "TMP", "LOCALAPPDATA", "APPDATA", "USERPROFILE", "PROGRAMDATA", "ALLUSERSPROFILE", "PUBLIC", "SYSTEMROOT", "WINDIR",
+            "SYSTEMDRIVE", "HOMEDRIVE", "HOMEPATH", "USERNAME", "ONEDRIVE", "PROFILES_DIR",
+        ];
+        let probes: Scripts = serde_json::from_str(include_str!("../scripts/probes.json")).unwrap();
+        let undo: HashMap<String, HashMap<String, Undo>> = serde_json::from_str(include_str!("../scripts/undo.json")).unwrap();
+        let mut bad = Vec::new();
+        let mut check = |what: String, s: &str| {
+            bad.extend(deletion_errors(s).into_iter().map(|e| format!("{what} {e}")));
+            for l in s.lines() {
+                if let Some(v) = var_refs(l, b'%').into_iter().find(|v| PATH_VARS.contains(&v.as_str())) {
+                    bad.push(format!("{what} %{v}% au lieu de !{v}! : {}", l.trim()));
+                }
+            }
+        };
+        for (id, variants) in SCRIPTS.iter() {
+            for (v, s) in variants {
+                check(format!("{id}:{v}"), s);
+            }
+        }
+        for (id, variants) in &probes {
+            for (v, s) in variants {
+                check(format!("relevé {id}:{v}"), s);
+            }
+        }
+        for (id, variants) in &undo {
+            for (v, u) in variants {
+                for (part, s) in [("full", &u.full), ("rest", &u.rest)] {
+                    if let Some(s) = s {
+                        check(format!("annulation {id}:{v} {part}"), s);
+                    }
+                }
+            }
+        }
+        assert!(bad.is_empty(), "{} défauts :\n{}", bad.len(), bad.join("\n"));
+        // ce que tools/paths.py a écrit
+        let on = &SCRIPTS["game_mode"]["on"];
+        assert!(on.lines().any(|l| l == "if defined temp del /s /f /q \"!temp!\\*\" >nul 2>&1"), "{on}");
+        assert!(
+            on.lines().any(|l| l
+                == "if defined temp for /d %%d in (\"!temp!\\*\") do (setlocal DisableDelayedExpansion & rd /s /q \"%%d\" >nul 2>&1 & endlocal)"),
+            "{on}"
+        );
+        let cln = &SCRIPTS["cln_temp"]["_"];
+        assert!(cln.lines().any(|l| l == "if defined LOCALAPPDATA if exist \"!LOCALAPPDATA!\\Temp\" ("), "{cln}");
+        assert_eq!(cln.matches("\" && for /F \"delims=\" %%i in ('dir /b') do (setlocal DisableDelayedExpansion & (rmdir \"%%i\"").count(), 2, "{cln}");
+        let sto = &SCRIPTS["sto_general"]["_"];
+        assert_eq!(sto.lines().filter(|l| l.trim() == "setlocal DisableDelayedExpansion").count(), 3, "{sto}");
+        assert_eq!(sto.lines().filter(|l| l.starts_with("if defined PROFILES_DIR for /d %%U in (\"!PROFILES_DIR!\\*\") do (")).count(), 3, "{sto}");
     }
 
     #[test]
