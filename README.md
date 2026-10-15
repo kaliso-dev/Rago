@@ -4,7 +4,7 @@ Tout le code de Rago dans un seul dépôt :
 
 | Dossier | Quoi | Techno |
 |---|---|---|
-| `app/` | **Rago Optimizer**, l'app Windows (199 réglages, 10 modules, 5 presets). Gratuite avec 9 réglages ouverts, tout le reste avec Premium | Tauri 2, React + TypeScript, Rust |
+| `app/` | **Rago Optimizer**, l'app Windows (198 réglages, 10 modules, 5 presets). Gratuite avec 9 réglages ouverts, tout le reste avec Premium | Tauri 2, React + TypeScript, Rust |
 | `brand/` | Logo, tailles d'icônes, `.ico`, images d'installeur, favicons, couleurs et voix de la marque | SVG, PNG |
 | `site/` | La page de vente publique (anglais) et les pages légales | HTML statique, sans framework |
 | `licensing/` | Le serveur : abonnements Stripe, comptes, licences, verrou sur un PC, affiliation, téléchargement de l'app | Node 22, Hono, Supabase (Postgres + Storage) |
