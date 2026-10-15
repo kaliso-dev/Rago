@@ -54,6 +54,8 @@ export interface RunRow {
   undo: boolean;
   status: ItemStatus;
   durationMs: number | null;
+  /** demande un redémarrage (variante lancée, ou celle que remet l'annulation) */
+  reboot: boolean;
 }
 
 export interface RunState {
@@ -418,7 +420,8 @@ function useStoreValue() {
       if (opts.restorePoint || ids.includes("rst_point")) items.push({ id: "rst_point" });
       ids = ids.filter((id) => id !== "rst_point");
       if (opts.wmic) items.push({ id: "__wmic" });
-      let reboot = false;
+      // lignes du lot qui demandent un redémarrage : après « Arrêter », seules celles allées au bout comptent
+      const rebootAt = new Set<number>();
       // d'abord les annulations : un réglage réappliqué juste après repart de l'état d'avant
       for (const id of opts.undo ?? []) {
         const tw = tweaks.get(id);
@@ -427,7 +430,7 @@ function useStoreValue() {
         // version mais noté dans applied.json (Tout annuler) : le moteur le remet quand même avec ce qu'il a gardé
         const gone = retired.get(id);
         if (!tw && !gone && !a) continue;
-        reboot ||= tw ? needsReboot(tw, undoVariant(id, a)) : (gone?.reboot ?? false);
+        if (tw ? needsReboot(tw, undoVariant(id, a)) : (gone?.reboot ?? false)) rebootAt.add(items.length);
         const item: RunItem = { id, variant: a?.variant ?? null, undo: true };
         if (tw?.native === "minecraft_optifine") item.params = { dir: mcDir };
         items.push(item);
@@ -436,7 +439,7 @@ function useStoreValue() {
         const tw = tweaks.get(id);
         if (!tw) continue;
         const variant = variantOf(tw);
-        reboot ||= needsReboot(tw, variant);
+        if (needsReboot(tw, variant)) rebootAt.add(items.length);
         const item: RunItem = { id, variant };
         if (tw.native === "minecraft_optifine") item.params = { dir: mcDir, values: tw.optifine?.[variant ?? ""] ?? {} };
         items.push(item);
@@ -444,12 +447,12 @@ function useStoreValue() {
       setConfirm(null);
       setRun({
         runId: null,
-        rows: items.map((i) => ({ id: i.id, variant: i.variant ?? null, undo: !!i.undo, status: "pending", durationMs: null })),
+        rows: items.map((i, n) => ({ id: i.id, variant: i.variant ?? null, undo: !!i.undo, status: "pending", durationMs: null, reboot: rebootAt.has(n) })),
         logs: [],
         startedAt: Date.now(),
         endedAt: null,
         done: null,
-        reboot,
+        reboot: rebootAt.size > 0,
         error: null,
       });
       try {
