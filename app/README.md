@@ -8,7 +8,8 @@ App Windows (Tauri 2 + React + Rust) : 199 réglages (212 entrées au catalogue,
 - `tools/` : extraction du .bat (`extract_bat.py`), métadonnées des réglages (`meta.py`), génération (`build_catalog_v6.py`, qui lance `build_catalog.py`, → `src/data/catalog.json` + `src-tauri/scripts/scripts.json`). Après une modif d'un .bat ou de `meta.py` : `npm run catalog`. `fix_free_bat.py` a produit la version gratuite corrigée de l'ancien .bat (`../free/rago-free-v5.2.bat`), gardée pour mémoire : elle n'est plus distribuée depuis le 7 octobre 2026.
 - `src-tauri/` : moteur Rust. Exécute chaque réglage dans un `cmd` caché avec droits admin, journal en direct, historique, point de restauration, ping TCP, préréglages OptiFine, licence.
 - `src/` : interface React (anglais par défaut, français dans Settings).
-- `src-tauri/resources/` : `nvidiaProfileInspector.exe` + `extremelatencylow.nip` + `LowLatency.pow` (plan d'alimentation Rago Low Latency, fourni le 10 octobre 2026). À ajouter si tu l'as : `smartctl.exe`.
+- `src-tauri/resources/` : `nvidiaProfileInspector.exe`, installé tel quel avec l'app. À ajouter si tu l'as : `smartctl.exe`.
+- `src-tauri/assets/` : `extremelatencylow.nip` + `LowLatency.pow` (plan d'alimentation Rago Low Latency, fourni le 10 octobre 2026). Chiffrés dans l'exe à la compilation, jamais installés en clair (`src/assets.rs`).
 
 ## Compiler l'installateur (.exe)
 

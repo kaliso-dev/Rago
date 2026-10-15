@@ -1,5 +1,5 @@
 import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState, type ReactNode } from "react";
-import { api, asLicenseError, type AppliedView, type DoneEvent, type HistoryEntry, type ItemStatus, type LicenseError, type LicenseStatus, type RunItem, type SystemInfo } from "./api";
+import { api, asLicenseError, type AppliedView, type DoneEvent, type HistoryEntry, type ItemStatus, type LicenseError, type LicenseStatus, type ResetDone, type RunItem, type SystemInfo } from "./api";
 import { autoVariant, availability, catalog, retired, tweakModule, tweaks, type Lang, type Tweak, needsReboot } from "./catalog";
 import { translate, type Key } from "./i18n";
 import free from "../data/free.json";
@@ -14,6 +14,13 @@ for (const tw of tweaks.values()) {
 }
 /** Modes qu'on allume avant de jouer et qu'on éteint après : deux boutons au lieu d'un interrupteur. */
 export const SESSION_TOGGLES = new Set(["game_mode", "rbw_mode", "win_gamemode"]);
+/** Retour arrière qui lance la variante `revert` en entier (moteur : catalog::revert_runs_script) : RBW Mod « Activé ». */
+export const REVERT_RUNS_SCRIPT = new Set(["rbw_mode"]);
+/** Variante que le moteur lance vraiment pour annuler un réglage appliqué, pour le calcul du redémarrage. RBW Mod :
+ * « Activé » (qui demande un redémarrage), sauf après le « Désactivé » de cette version, qui n'a posé que les valeurs
+ * de Windows : rien n'est lancé. Les autres réglages : la variante appliquée, comme avant. */
+export const undoVariant = (id: string, a: AppliedView | undefined): string | null =>
+  REVERT_RUNS_SCRIPT.has(id) && a && !a.windowsValues ? (REVERTS.get(id) ?? a.variant) : (a?.variant ?? null);
 /** « plan » : la carte Free plan ou le bouton Premium d'un module, sans réglage précis. */
 export type Upsell = "tweak" | "plan" | "preset" | "signin" | null;
 
@@ -47,6 +54,8 @@ export interface RunRow {
   undo: boolean;
   status: ItemStatus;
   durationMs: number | null;
+  /** demande un redémarrage (variante lancée, ou celle que remet l'annulation) */
+  reboot: boolean;
 }
 
 export interface RunState {
@@ -58,8 +67,8 @@ export interface RunState {
   done: DoneEvent | null;
   reboot: boolean;
   error: string | null;
-  /** phrase sous le titre (fin de Premium, déconnexion) */
-  note: string | null;
+  /** déconnexion : le moteur remet tous les réglages, rien ne l'arrête (pas de bouton Stop) */
+  signOut?: boolean;
 }
 
 export interface ConfirmState {
@@ -68,6 +77,8 @@ export interface ConfirmState {
   undo: string[];
   /** lancé depuis un bouton « Lancer » : la sélection n'est pas touchée */
   single: boolean;
+  /** « Tout annuler » du tableau de bord : tous les réglages appliqués sur ce PC */
+  all?: boolean;
 }
 
 function load<T>(key: string, fallback: T): T {
@@ -114,8 +125,16 @@ function useStoreValue() {
   const [mcDirOverride, setMcDir] = usePersisted<string | null>("mcDir", null);
   const [history, setHistory] = useState<HistoryEntry[]>([]);
   const [run, setRun] = useState<RunState | null>(null);
+  const runRef = useRef<RunState | null>(null);
+  runRef.current = run;
   const [confirm, setConfirm] = useState<ConfirmState | null>(null);
-  const [paletteOpen, setPaletteOpen] = useState(false);
+  const [paletteOpen, openPalette] = useState(false);
+  /** Lot en cours (la fenêtre de suivi est ouverte et pas finie) : rien ne s'ouvre par-dessus (Ctrl+K, connexion). */
+  const busy = () => {
+    const r = runRef.current;
+    return !!r && !r.done && !r.error;
+  };
+  const setPaletteOpen = useCallback((open: boolean) => openPalette(open && !busy()), []);
   const [focusTweak, setFocusTweak] = useState<string | null>(null);
   // chaque recherche compte, même vers le réglage déjà visé (sa ligne a pu disparaître dans une section repliée)
   const [focusSeq, setFocusSeq] = useState(0);
@@ -123,12 +142,24 @@ function useStoreValue() {
   const [upsell, setUpsellKind] = useState<Upsell>(null);
   const [upsellTweak, setUpsellTweak] = useState<string | null>(null);
   const setUpsell = useCallback((u: Upsell, tweakId?: string) => {
+    if (u && busy()) return;
     setUpsellKind(u);
     if (u !== "signin") setUpsellTweak(tweakId ?? null);
   }, []);
   /** Licence perdue au rafraîchissement (abonnement terminé, remboursement…) ou plus vérifiable hors ligne. */
   const [licenseNotice, setLicenseNotice] = useState<LicenseError | null>(null);
   const [activatedAt, setActivatedAt] = usePersisted<number | null>("activatedAt", null);
+  /** Remise à zéro faite par le moteur à la fin de Premium : petit message en bas à droite. */
+  const [resetDone, setResetDone] = useState<(ResetDone & { at: number }) | null>(null);
+  /** La réparation du moteur au lancement a supprimé une valeur qui peut faire planter Windows (RAG-67) : petit message
+   * « redémarre ton PC », une seule fois (le moteur ne le dit qu'au premier appel de ce lancement). */
+  const [repairNotice, setRepairNotice] = useState(false);
+  useEffect(() => {
+    void api.takeRepairNotice().then(
+      (v) => v && setRepairNotice(true),
+      () => {},
+    );
+  }, []);
   const premium = license?.state === "active";
   /** Verrouillé en gratuit : tout sauf la liste gratuite et les réglages qui ont une variante de retour arrière. */
   const isLocked = useCallback((id: string) => !premium && !FREE.has(id) && !REVERTS.has(id), [premium]);
@@ -143,42 +174,107 @@ function useStoreValue() {
     if (license && !premium) setSelection((s) => (s.every(openInFree) ? s : s.filter(openInFree)));
   }, [license, premium, setSelection, openInFree]);
 
-  useEffect(() => {
-    // Au démarrage puis une fois par jour : rafraîchit le jeton si le serveur répond.
-    // Sans réseau, le jeton reste valable jusqu'à son expiration ; une révocation renvoie à la connexion.
-    const refresh = (st: LicenseStatus) => {
-      if (st.state !== "active" && st.state !== "expired") return;
-      void api.licenseRefresh().then(
-        (next) => {
-          setLicense(next);
-          setLicenseNotice(next.state === "expired" ? { code: "expired", message: null, buyUrl: null } : null);
-        },
-        async (e) => {
-          const err = asLicenseError(e);
-          if (err.code === "invalid_token" || err.code === "bound_to_other_device" || err.code === "revoked") {
-            setLicenseNotice(err);
-            setLicense(await api.licenseStatus());
-          } else if (st.state === "expired") {
-            // pas de réseau : le joueur paie peut-être encore, on le lui dit au lieu d'afficher le plan gratuit
-            setLicenseNotice({ code: "expired", message: null, buyUrl: null });
-          }
-        },
-      );
-    };
-    void api.licenseStatus().then((st) => {
-      setLicense(st);
-      refresh(st);
-    });
-    const daily = setInterval(() => void api.licenseStatus().then(refresh), 24 * 3600 * 1000);
-    return () => clearInterval(daily);
+  // Rafraîchit le jeton si le serveur répond : au démarrage, une fois par jour et avec « Réessayer » du bandeau.
+  // Sans réseau, le jeton reste valable jusqu'à son expiration ; une révocation renvoie à la connexion.
+  const refreshLicense = useCallback(async (st: LicenseStatus) => {
+    if (st.state !== "active" && st.state !== "expired") return;
+    try {
+      const next = await api.licenseRefresh();
+      setLicense(next);
+      setLicenseNotice(next.state === "expired" ? { code: "expired", message: null, buyUrl: null } : null);
+    } catch (e) {
+      const err = asLicenseError(e);
+      if (err.code === "invalid_token" || err.code === "bound_to_other_device" || err.code === "revoked") {
+        setLicenseNotice(err);
+        setLicense(await api.licenseStatus());
+      } else if (st.state === "expired") {
+        // pas de réseau : le joueur paie peut-être encore, on le lui dit au lieu d'afficher le plan gratuit
+        setLicenseNotice({ code: "expired", message: null, buyUrl: null });
+      }
+    }
   }, []);
 
+  useEffect(() => {
+    let last: LicenseStatus | null = null;
+    let refreshedAt = Date.now();
+    void api.licenseStatus().then((st) => {
+      last = st;
+      setLicense(st);
+      void refreshLicense(st);
+    });
+    // Toutes les heures : relit l'état du jeton, pour qu'un jeton expiré hors ligne fasse quitter Premium à l'interface
+    // comme au moteur. Le serveur n'est retenté qu'une fois par jour, ou dès que le jeton vient d'expirer.
+    const hourly = setInterval(
+      () =>
+        void api.licenseStatus().then((st) => {
+          const justExpired = st.state === "expired" && last?.state !== "expired";
+          last = st;
+          // même état qu'affiché : on garde l'objet, rien ne se recalcule
+          setLicense((cur) => (JSON.stringify(cur) === JSON.stringify(st) ? cur : st));
+          if (justExpired || Date.now() - refreshedAt >= 24 * 3600 * 1000) {
+            refreshedAt = Date.now();
+            void refreshLicense(st);
+          }
+        }),
+      3600 * 1000,
+    );
+    return () => clearInterval(hourly);
+  }, [refreshLicense]);
+
+  /** Lignes de la fenêtre de suivi pour la remise de la déconnexion (annulations, le dernier appliqué en premier). */
+  const signOutRun = (ids: string[], runId: string | null): RunState => {
+    const rows: RunRow[] = ids.map((id) => {
+      const tw = tweaks.get(id);
+      const a = appliedRef.current.get(id);
+      const reboot = tw ? needsReboot(tw, undoVariant(id, a)) : (retired.get(id)?.reboot ?? false);
+      return { id, variant: a?.variant ?? null, undo: true, status: "pending", durationMs: null, reboot };
+    });
+    return { runId, rows, logs: [], startedAt: Date.now(), endedAt: null, done: null, reboot: rows.some((r) => r.reboot), error: null, signOut: true };
+  };
+
+  /** Déconnexion : le moteur remet d'abord tous les réglages appliqués sur ce PC (Premium et gratuits), sans bouton pour
+   * l'arrêter, puis efface le jeton (lib.rs, `license_sign_out`). La remise s'affiche dans la fenêtre de suivi ; fermée
+   * de force, elle reprend au lancement suivant (voir plus bas). */
   const signOut = useCallback(async () => {
-    await api.licenseSignOut();
-    setLicenseNotice(null);
-    setActivatedAt(null);
-    setLicense(await api.licenseStatus());
-  }, [setActivatedAt]);
+    const ids = await api.signOutPlan().catch(() => [...appliedRef.current.keys()]);
+    if (ids.length) setRun(signOutRun(ids, null));
+    try {
+      await api.licenseSignOut(mcDirRef.current);
+    } catch (err) {
+      setRun((r) => ({ ...(r ?? signOutRun([], null)), error: String(err), endedAt: Date.now() }));
+    }
+  }, []);
+  const signOutRef = useRef(signOut);
+  signOutRef.current = signOut;
+
+  // le moteur commence la remise (ordre définitif), puis a fini et effacé le jeton : la licence passe au plan gratuit
+  useEffect(() => {
+    let live = true;
+    const subs = [
+      api.onSignOutStart((e) => setRun((r) => ({ ...signOutRun(e.ids, e.runId), startedAt: r?.signOut ? r.startedAt : Date.now() }))),
+      api.onSignOutDone(() => {
+        setLicenseNotice(null);
+        setActivatedAt(null);
+        void api.licenseStatus().then(setLicense);
+        void refreshApplied();
+        void refreshHistory();
+        // rien n'était à remettre : pas de fenêtre de suivi à laisser ouverte
+        setRun((r) => (r?.signOut && !r.done && !r.error ? null : r));
+      }),
+    ];
+    // déconnexion coupée (app fermée de force, PC éteint) : elle reprend ici, avant toute autre chose
+    void Promise.all(subs).then(() =>
+      api.signOutPending().then(
+        (pending) => live && pending && void signOutRef.current(),
+        () => {},
+      ),
+    );
+    return () => {
+      live = false;
+      subs.forEach((p) => void p.then((un) => un()));
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   /** Licence activée dans l'app (connexion ou Activate). */
   const activated = useCallback(
@@ -227,8 +323,17 @@ function useStoreValue() {
   // dernier passage de chaque réglage, pour les badges « Appliqué le… »
   const lastRun = useMemo(() => {
     const m = new Map<string, HistoryEntry>();
-    for (const e of history) {
-      if (e.undo) continue;
+    for (let e of history) {
+      if (e.undo) {
+        // Mode jeu et mode jeu de Windows (on les allume et on les éteint) : une annulation remet l'état d'avant. Le
+        // moteur note comme annulation « Désactivé » lancé sur un Mode jeu activé (variante de retour arrière) : la
+        // ligne affichait encore « Activé depuis… ». L'annulation compte comme cette variante (« Désactivé
+        // depuis… ») ; sans variante de retour arrière (mode jeu de Windows), plus de badge. RBW Mod : son annulation
+        // après « Désactivé » ne lance rien et garde « Désactivé depuis… » (runner.rs) ; son retour arrière est noté
+        // comme « Activé », pas comme une annulation.
+        if (!SESSION_TOGGLES.has(e.id) || REVERT_RUNS_SCRIPT.has(e.id)) continue;
+        e = { ...e, variant: REVERTS.get(e.id) ?? null };
+      }
       const prev = m.get(e.id);
       if (!prev || prev.ts < e.ts) m.set(e.id, e);
     }
@@ -351,8 +456,10 @@ function useStoreValue() {
     [selection, pendingUndo, applied, isLocked, setUpsell],
   );
 
-  const runRef = useRef<RunState | null>(null);
-  runRef.current = run;
+  const appliedRef = useRef(applied);
+  appliedRef.current = applied;
+  const mcDirRef = useRef(mcDir);
+  mcDirRef.current = mcDir;
 
   useEffect(() => {
     const subs = [
@@ -383,7 +490,7 @@ function useStoreValue() {
   const startRun = useCallback(
     async (
       ids: string[],
-      opts: { restorePoint: boolean; wmic: boolean; clearSelection: boolean; undo?: string[]; note?: string | null },
+      opts: { restorePoint: boolean; wmic: boolean; clearSelection: boolean; undo?: string[] },
     ) => {
       const items: RunItem[] = [];
       // point de restauration quand la case est cochée (comme en 1.1.6), toujours en tête : s'il échoue, le moteur
@@ -391,15 +498,17 @@ function useStoreValue() {
       if (opts.restorePoint || ids.includes("rst_point")) items.push({ id: "rst_point" });
       ids = ids.filter((id) => id !== "rst_point");
       if (opts.wmic) items.push({ id: "__wmic" });
-      let reboot = false;
+      // lignes du lot qui demandent un redémarrage : après « Arrêter », seules celles allées au bout comptent
+      const rebootAt = new Set<number>();
       // d'abord les annulations : un réglage réappliqué juste après repart de l'état d'avant
       for (const id of opts.undo ?? []) {
         const tw = tweaks.get(id);
         const a = applied.get(id);
-        // réglage retiré du catalogue : il reste annulable là où une version précédente l'a appliqué
+        // réglage retiré du catalogue : il reste annulable là où une version précédente l'a appliqué. Inconnu de cette
+        // version mais noté dans applied.json (Tout annuler) : le moteur le remet quand même avec ce qu'il a gardé
         const gone = retired.get(id);
-        if (!tw && !gone) continue;
-        reboot ||= tw ? needsReboot(tw, a?.variant ?? null) : gone!.reboot;
+        if (!tw && !gone && !a) continue;
+        if (tw ? needsReboot(tw, undoVariant(id, a)) : (gone?.reboot ?? false)) rebootAt.add(items.length);
         const item: RunItem = { id, variant: a?.variant ?? null, undo: true };
         if (tw?.native === "minecraft_optifine") item.params = { dir: mcDir };
         items.push(item);
@@ -408,7 +517,7 @@ function useStoreValue() {
         const tw = tweaks.get(id);
         if (!tw) continue;
         const variant = variantOf(tw);
-        reboot ||= needsReboot(tw, variant);
+        if (needsReboot(tw, variant)) rebootAt.add(items.length);
         const item: RunItem = { id, variant };
         if (tw.native === "minecraft_optifine") item.params = { dir: mcDir, values: tw.optifine?.[variant ?? ""] ?? {} };
         items.push(item);
@@ -416,14 +525,13 @@ function useStoreValue() {
       setConfirm(null);
       setRun({
         runId: null,
-        rows: items.map((i) => ({ id: i.id, variant: i.variant ?? null, undo: !!i.undo, status: "pending", durationMs: null })),
+        rows: items.map((i, n) => ({ id: i.id, variant: i.variant ?? null, undo: !!i.undo, status: "pending", durationMs: null, reboot: rebootAt.has(n) })),
         logs: [],
         startedAt: Date.now(),
         endedAt: null,
         done: null,
-        reboot,
+        reboot: rebootAt.size > 0,
         error: null,
-        note: opts.note ?? null,
       });
       try {
         const runId = await api.runTweaks(items);
@@ -435,7 +543,9 @@ function useStoreValue() {
           ? translate(lang, "err.premium_required")
           : msg.startsWith("premium_scripts_unavailable")
             ? translate(lang, "err.premium_scripts_unavailable")
-            : msg;
+            : msg.startsWith("signing_out")
+              ? translate(lang, "err.signing_out")
+              : msg;
         setRun((r) => (r ? { ...r, error, endedAt: Date.now() } : r));
       }
     },
@@ -447,35 +557,26 @@ function useStoreValue() {
   const requestUndo = useCallback((ids: string[]) => {
     if (ids.length) setConfirm({ ids: [], undo: ids, single: false });
   }, []);
+  /** « Tout annuler » : la liste vient du moteur (même liste et même ordre que la remise à zéro de la désinstallation),
+   * le joueur confirme, puis chaque réglage est remis comme une annulation ordinaire. */
+  const requestUndoAll = useCallback(async () => {
+    const ids = await api.undoAllPlan().catch(() => [...applied.keys()]);
+    if (ids.length) setConfirm({ ids: [], undo: ids, single: false, all: true });
+  }, [applied]);
 
-  /** Réglages Premium appliqués : annulés à la déconnexion et à la fin de Premium. */
+  /** Réglages Premium appliqués : le moteur les remet de lui-même à la déconnexion et à la fin de Premium. */
   const premiumApplied = useMemo(() => [...applied.keys()].filter((id) => !FREE.has(id)).sort(byCatalog), [applied]);
 
-  const endedRef = useRef(false);
-  /** Déconnexion : annule d'abord les réglages Premium appliqués (sans licence, l'annulation reste permise). */
-  const signOutAndUndo = useCallback(async () => {
-    const ids = premiumApplied;
-    endedRef.current = true;
-    if (ids.length)
-      await startRun([], { restorePoint: false, wmic: false, clearSelection: true, undo: ids, note: translate(lang, "run.signOutNote", { n: ids.length }) });
-    await signOut();
-  }, [premiumApplied, startRun, signOut, lang]);
-
-  // Premium terminé (abonnement fini, remboursement) ou plus de licence sur ce PC : au lancement, les réglages
-  // Premium encore appliqués sont annulés, avec un message. Un jeton expiré hors ligne n'annule rien : le joueur
-  // paie peut-être encore, le serveur le dira au prochain rafraîchissement.
+  // Premium terminé (abonnement fini, remboursement) : le moteur remet les réglages Premium en arrière-plan, sans
+  // fenêtre ni bouton pour l'arrêter, et ne prévient qu'à la fin. La déconnexion, elle, remet tout (signOut).
   useEffect(() => {
-    if (endedRef.current || !license || !appliedList || run) return;
-    if (license.state !== "none" || !premiumApplied.length) return;
-    endedRef.current = true;
-    void startRun([], {
-      restorePoint: false,
-      wmic: false,
-      clearSelection: true,
-      undo: premiumApplied,
-      note: translate(lang, "run.endedNote", { n: premiumApplied.length }),
+    const sub = api.onReset((e) => {
+      void refreshApplied();
+      void refreshHistory();
+      if (e.ok > 0 || e.failed > 0) setResetDone({ ...e, at: Date.now() });
     });
-  }, [license, appliedList, run, premiumApplied, startRun, lang]);
+    return () => void sub.then((un) => un());
+  }, [refreshApplied, refreshHistory]);
 
   const goTo = useCallback((p: string, tweakId?: string) => {
     setPage(p);
@@ -486,10 +587,12 @@ function useStoreValue() {
   return {
     lang, setLang, motion, setMotion, t,
     page, goTo,
+    refreshLicense,
     sys, sysLoading, refreshSys,
     selection, selected, toggle, selectMany, unselectMany, variants, setVariant, variantOf,
-    pendingUndo, applied, appliedLoaded: appliedList !== null, isOn, premiumApplied, signOutAndUndo, reapply,
-    retiredApplied, requestUndo,
+    pendingUndo, applied, appliedLoaded: appliedList !== null, isOn, premiumApplied, reapply, resetDone, setResetDone,
+    repairNotice, setRepairNotice,
+    retiredApplied, requestUndo, requestUndoAll,
     history, lastRun, lastRestore, refreshHistory, refreshApplied,
     mcDir, setMcDir,
     confirm, setConfirm, requestApply,

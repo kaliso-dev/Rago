@@ -33,6 +33,15 @@ SCRIPT_FIXES_PLUS = {
     # OneDrive : sous Windows 11, le Bureau, les Documents et les Images sont souvent DANS %USERPROFILE%\OneDrive
     # (sauvegarde des dossiers). Supprimer ce dossier efface leur contenu local et laisse Windows pointer vers des
     # dossiers disparus (Bureau vide, « emplacement non disponible »). La suppression annoncée reste, sauf dans ce cas
+    # « Réparer les fichiers système » ne lançait que DISM, qui répare le magasin de composants (la source des
+    # réparations) mais pas les fichiers en service : sfc /scannow les remplace ensuite depuis ce magasin (ordre
+    # conseillé par Microsoft, RAG-60). sfc écrit en UTF-16 quand sa sortie est redirigée : PowerShell la relit en
+    # Unicode, retire les lignes de progression (« 45 % ») et la réécrit dans l'encodage du script
+    'cln_repair': [('DISM /Online /Cleanup-Image /RestoreHealth',
+                    'DISM /Online /Cleanup-Image /RestoreHealth\r\n'
+                    'powershell -NoProfile -Command "$e=[Console]::OutputEncoding; [Console]::OutputEncoding=[Text.Encoding]::Unicode;'
+                    ' $o=sfc.exe /scannow; [Console]::OutputEncoding=$e;'
+                    ' $o | ForEach-Object { $_.Trim() } | Where-Object { $_ -and $_ -notmatch \'\\d\\s*%%\' }"')],
     'dbl_onedrive': [('rd "%USERPROFILE%\\OneDrive" /q /s',
                       'reg query "HKCU\\Software\\Microsoft\\Windows\\CurrentVersion\\Explorer\\User Shell Folders" | findstr /i "OneDrive" >nul || rd "%USERPROFILE%\\OneDrive" /q /s')],
 }
@@ -48,6 +57,10 @@ DROP_BLOCKS = [
     # « Scaling » à 1 sur toutes les configurations d'écran (!str! sans expansion retardée : condition toujours vraie) :
     # les résolutions étirées (4:3 étiré) passent en bandes noires
     (('gpu_general',), r'/f Scaling\'\) do set "str=%%i"', r'^\s*\)\s*$'),
+    # RAG-68 (2026-10-13) : boucle du mode MSI restée vide (« & ( » puis « ) ») depuis la réparation des boucles
+    # détachées ; ses deux commandes étaient hors de la boucle (retirées plus bas). cmd refuse un bloc vide (« ) was
+    # unexpected at this time. ») et arrêtait le préréglage 3 là : la boucle part avec son commentaire
+    (('net_server:s3',), r'^::\s*Enabling MSI Mode On Network Adapter\s*$', r'^\s*\)\s*$'),
 ]
 
 # ---------------------------------------------------------------------------------------------------------------
@@ -85,8 +98,9 @@ DROP_LINES_PLUS = [
     (('net_server:s1', 'net_server:s2'), r'/v\s+IPEnableRouter\s+/t\s+REG_DWORD\s+/d\s+1\b'),
     # plafond de connexions TCP (navigateur + launcher + Discord peuvent le dépasser)
     (('ping_packets:hitreg', 'ping_packets:knockback', 'net_server:s1', 'net_server:s2'), r'/v\s+TcpNumConnections\s'),
-    # boucle wmic vide, puis %%i utilisé hors boucle : écrit sous « Enum\%i »
-    (('net_server:s3',), r'Enum\\%%i\\'),
+    # boucle wmic vide, puis %%i utilisé hors boucle : écrit sous « Enum\%i » (la boucle vide part dans DROP_BLOCKS,
+    # avec les commentaires de ces deux lignes)
+    (('net_server:s3',), r'Enum\\%%i\\|^::\s*(Delete network Device Priority|Enable MSI Mode on NetAdapter)\s*$'),
     # « netsh int ipv6 set state » n'existe pas (aucun effet) ; net_ipv6 est réparé plus bas
     (('ping_main:config4', 'ping_advanced'), r'^\s*netsh\s+int\s+ipv6\s+set\s+state\s+disabled'),
 
@@ -305,6 +319,21 @@ SUB_LINES_PLUS = [
     # Minecraft : la boucle porte déjà « javaw.exe » : « %%i.exe » donnait « javaw.exe.exe » (QoS et IFEO sans effet)
     (('pri_game:minecraft',), r'(?i)/d "%%i\.exe"', r'/d "%%i"'),
     (('pri_game:minecraft',), r'(?i)\\javaw\.exe\.exe\\', r'\\javaw.exe\\'),
+    # Autres jeux (RAG-60) : même « %%i.exe » sur une boucle qui porte déjà « .exe » (cs2.exe.exe…), et des noms
+    # d'exécutables faux, donc ni priorité ni règle réseau. Noms vérifiés (dossiers d'installation, journaux d'erreur
+    # de Windows) : VALORANT-Win64-Shipping.exe (ShooterGame\Binaries\Win64 ; ValorantClient-… n'existe pas),
+    # FortniteClient-Win64-Shipping.exe (la règle réseau visait « FortniteClient-Win64 »), r5apex_dx12.exe (Apex en
+    # DirectX 12, le mode par défaut ; r5apex.exe reste le DirectX 11), GTA5_Enhanced.exe (édition Enhanced de 2025 ;
+    # GTA5.exe reste la Legacy). Les deux exécutables d'Apex et de GTA sont visés
+    (('pri_game:fortnite', 'pri_game:valorant', 'pri_game:cs2', 'pri_game:apex', 'pri_game:gta'), r'(?i)/d "%%i\.exe"', r'/d "%%i"'),
+    (('pri_game:valorant',), r'(?i)\bValorantClient-Win64-Shipping\.exe\b', 'VALORANT-Win64-Shipping.exe'),
+    (('pri_game:fortnite',), r'(?i)^for %%i in \(FortniteClient-Win64\) do \($', 'for %%i in (FortniteClient-Win64-Shipping.exe) do ('),
+    (('pri_game:apex',), r'(?i)^for %%i in \(r5apex\.exe\) do \($', 'for %%i in (r5apex.exe r5apex_dx12.exe) do ('),
+    (('pri_game:gta',), r'(?i)^for %%i in \(GTA5\.exe\) do \($', 'for %%i in (GTA5.exe GTA5_Enhanced.exe) do ('),
+    (('pri_game:apex',), r'(?i)^(Reg\.exe add "HKLM\\SOFTWARE\\Microsoft\\Windows NT\\CurrentVersion\\Image File Execution Options\\)r5apex\.exe(\\.*)$',
+     r'for %%e in (r5apex.exe r5apex_dx12.exe) do \1%%e\2'),
+    (('pri_game:gta',), r'(?i)^(Reg\.exe add "HKLM\\SOFTWARE\\Microsoft\\Windows NT\\CurrentVersion\\Image File Execution Options\\)GTA5\.exe(\\.*)$',
+     r'for %%e in (GTA5.exe GTA5_Enhanced.exe) do \1%%e\2'),
     # points de restauration activés sur D: à G: (place prise sur des disques de données, parfois des clés USB)
     (('in_advanced',), r"(?i)(Enable-ComputerRestore -Drive )'C:\\', 'D:\\', 'E:\\', 'F:\\', 'G:\\'", r"\1'C:\\'"),
     # ---- Effets visuels : masque de 4 octets au lieu de 8 ; « meilleure apparence » au lieu de « laisser Windows choisir »

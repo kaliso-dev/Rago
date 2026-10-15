@@ -16,6 +16,13 @@ Types émis (lus par src-tauri/src/backup.rs) :
   pwr "SCHÉMA" "SOUS-GROUPE" "RÉGLAGE"   index secteur et batterie d'un réglage d'alimentation
   pwractive            plan d'alimentation actif
   hib                  mise en veille prolongée
+  plan "GUID"          plan d'alimentation supprimé (exporté avec powercfg /export avant)
+  state "NOM"          état lu par le moteur (PowerShell, net accounts, NVAPI), voir STATE_PS ; décocher le réglage
+                       remet seulement ce que le script a changé et que personne n'a touché depuis
+  untouched "NOM"      état que le script ne change plus (ajouté par build_catalog_v6.state_guards) : rien n'est lu,
+                       rest saute la commande inverse gardée pour les PC passés par l'ancien script
+  appx "NOM"           applis du Store dont le nom correspond (jokers *) : celles installées pour le joueur sont
+                       relevées (nom, famille, dossier) et réenregistrées au retour (`Get-AppxPackage … | Remove-AppxPackage`)
 
     python3 tools/probes.py          # vérifie et affiche la couverture
 """
@@ -49,6 +56,39 @@ PWR_CHANGE = {
     'hibernate-timeout': ('SUB_SLEEP', 'HIBERNATEIDLE'),
 }
 NOOP = 'ver >nul'
+# commandes PowerShell dont l'état d'avant est lu par le moteur (backup.rs, Probe::State), audit du 2026-10-07 :
+# compression mémoire (Get-MMAgent), SMB (Get-SmbClient/ServerConfiguration, SMB1), propriétés des cartes réseau
+# (Get-NetAdapterAdvancedProperty, Get-NetAdapterPowerManagement), « Autoriser l'ordinateur à éteindre ce
+# périphérique » (MSPower_DeviceEnable)
+STATE_PS = [
+    ('mmagent', r'(dis|en)able-mmagent'),
+    ('smb', r'set-smb(client|server)configuration|(dis|en)able-windowsoptionalfeature\b.*smb1'),
+    ('nic', r'set-netadapteradvancedproperty|(dis|en)able-netadapterpowermanagement|set-netadapterpowermanagement'
+            r'|(dis|en)able-netadapterlso|reset-netadapteradvancedproperty'),
+    ('pnppower', r'mspower_deviceenable'),
+]
+# tous les états connus du moteur (backup.rs, STATES) : ceux de PowerShell, net accounts et le profil NVIDIA
+STATES = [n for n, _ in STATE_PS] + ['maxpwage', 'nvbase']
+GUID = re.compile(r'[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}')
+# PowerShell qui désinstalle une appli du Store pour le joueur : `Get-AppxPackage [-AllUsers] [-Name] MOTIF [ÉDITEUR]
+# | Remove-AppxPackage`. MOTIF est le nom du paquet (jokers *) ; un second mot sans guillemets (« *Drawboard PDF* »)
+# est pris par PowerShell comme éditeur et n'élargit pas la recherche : seul MOTIF est relevé.
+APPX_REMOVE = re.compile(r'(?i)Get-AppxPackage\s+(?:-AllUsers\s+)?(?:-Name\s+)?([^\s|"}\'-][^\s|"}\']*)[^|]*\|\s*Remove-AppxPackage\b')
+
+
+def appx_patterns(script):
+    """Noms d'applis du Store que le script désinstalle, dans l'ordre, sans doublon (casse ignorée)."""
+    out, seen = [], set()
+    for line in script.replace('\r\n', '\n').split('\n'):
+        s = line.strip()
+        if re.match(r'(?i)^(echo|rem\b|::)', s):
+            continue
+        for m in APPX_REMOVE.finditer(s):
+            pat = m.group(1)
+            if pat.lower() not in seen:
+                seen.add(pat.lower())
+                out.append(pat)
+    return out
 # commandes lancées dans la partie IN d'un for /f : lecture seule
 IN_OK = re.compile(r'(?i)^\s*(reg(\.exe)?\s+query|sc\s+query\b|find\b|sort\b|more\b|wmic\b.*\bget\b|findstr|dir\b|type\b|echo\b|ver\b|call\s+"%RAGO_RES%\\smartctl\.exe"\s+--scan'
                    r'|powershell(\.exe)?\s+(-\w+\s+)*"?(&\s*\{\s*)?\(?\s*Get-)')
@@ -164,7 +204,21 @@ def dry_cmd(cmd):
                 return marker('pwr', '"scheme_current"', *(f'"{x}"' for x in PWR_CHANGE[alias]))
         if sub in ('duplicatescheme', 'import'):
             return marker('pwractive')
+        if sub in ('delete', 'd') and len(args) >= 2 and GUID.fullmatch(unq(args[1]).lower()):
+            return marker('plan', q(unq(args[1]).lower()))
         return NOOP
+    if head in ('powershell', 'pwsh'):
+        pats = appx_patterns(raw)
+        if pats:
+            return ' & '.join(marker('appx', f'"{p}"') for p in pats)
+        t = c.lower()
+        name = next((n for n, pat in STATE_PS if re.search(pat, t)), None)
+        return marker('state', f'"{name}"') if name else NOOP
+    if head == 'net' and low[:1] == ['accounts'] and any(a.startswith('/maxpwage') for a in low):
+        return marker('state', '"maxpwage"')
+    if head == 'nvidiaprofileinspector':
+        # profil importé dans le pilote : réglages du profil de base lus avant (NVAPI)
+        return marker('state', '"nvbase"')
     return NOOP
 
 
@@ -303,8 +357,18 @@ def dry_script(script):
             continue
         d = dry_line(line)
         if d:
+            # bloc dont toutes les lignes étaient des echo ou des commentaires : « ( » puis « ) » est une erreur de
+            # syntaxe pour cmd, qui arrête le relevé là (RAG-68, 2026-10-13 : hitreg_suite ne relevait plus rien)
+            if d.startswith(')') and out and opens_block(out[-1]):
+                out.append(NOOP)
             out.append(d)
     return '\r\n'.join(out)
+
+
+def opens_block(line):
+    """La ligne se termine par une « ( » qui ouvre un bloc (hors guillemets, pas « ^( »)."""
+    bare = re.sub(r'"[^"]*"', '""', line).rstrip()
+    return bare.endswith('(') and not bare.endswith('^(')
 
 
 ALLOWED_HEADS = re.compile(r'(?i)^(echo @@RAGO\b|ver >nul|set\b|setlocal\b|endlocal\b|exit\b|shift\b|for\b|if\b|\(|\)|&)')

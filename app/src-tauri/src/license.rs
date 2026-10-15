@@ -269,6 +269,26 @@ impl ApiError {
     fn drops_token(&self) -> bool {
         matches!(self.code.as_str(), "invalid_token" | "bound_to_other_device" | "revoked")
     }
+
+    /// Le serveur dit que la licence de ce PC n'est plus active : abonnement terminé (`reason: "subscription_ended"`),
+    /// récompense d'affiliation finie, remboursement, litige, licence coupée par le support (licensing/src/app.js,
+    /// `/licenses/refresh` : `license.status !== 'active'`). Les autres refus ne disent pas que Premium est fini :
+    /// - `invalid_token` : jeton que le serveur ne vérifie plus (sa clé de signature a changé), PC libéré par le
+    ///   support, jeton remplacé, compte supprimé : le joueur se reconnecte, sa licence peut être toujours payée ;
+    /// - `bound_to_other_device` : licence active, liée à un PC qui ne ressemble plus à celui-ci (autre PC, ou carte
+    ///   mère changée : le serveur ne sait pas les distinguer) ;
+    /// - réseau, panne serveur, trop d'essais.
+    fn ends_premium(&self) -> bool {
+        self.code == "revoked"
+    }
+}
+
+/// Remettre les réglages Premium de ce PC : seulement sans licence (`state == "none"`) ET après une vraie fin, notée sur
+/// disque (déconnexion du joueur, ou licence arrêtée d'après le serveur). Un jeton effacé pour une autre raison (jeton
+/// illisible, signature qui ne passe plus après un changement de clé, deux identifiants du PC changés, refus ambigu
+/// du serveur) déconnecte seulement le joueur, comme en 1.1.9 : ses réglages restent.
+pub fn premium_ended(state: &str, end_noted: bool) -> bool {
+    state == "none" && end_noted
 }
 
 fn post(path: &str, bearer: Option<&str>, body: Value) -> Result<Value, ApiError> {
@@ -327,6 +347,8 @@ pub struct License {
     /// jeton d'accès de 15 minutes, gardé en mémoire entre login et activation
     access: Mutex<Option<String>>,
     key_hint: Mutex<Option<String>>,
+    /// écriture du jeton par un rafraîchissement contre son effacement par la déconnexion (voir `refresh`)
+    write: Mutex<()>,
 }
 
 fn field(v: &Value, path: &[&str]) -> Option<String> {
@@ -344,7 +366,7 @@ impl License {
     }
 
     pub fn with(path: PathBuf, probe: fn() -> Device) -> Self {
-        License { path, device: OnceLock::new(), probe, access: Mutex::new(None), key_hint: Mutex::new(None) }
+        License { path, device: OnceLock::new(), probe, access: Mutex::new(None), key_hint: Mutex::new(None), write: Mutex::new(()) }
     }
 
     /// Calculé au premier besoin : la sonde lance reg.exe et PowerShell.
@@ -361,11 +383,32 @@ impl License {
             let _ = fs::create_dir_all(dir);
             let _ = fs::write(&self.path, bytes);
         }
+        // le serveur vient de répondre « active » : une fin notée avant (déconnexion, licence arrêtée) ne vaut plus
+        let _ = fs::remove_file(self.end_path());
     }
 
     fn clear(&self) {
         let _ = fs::remove_file(&self.path);
         let _ = fs::remove_file(self.key_path());
+    }
+
+    /// Fin de Premium sur ce PC, notée à côté du jeton : déconnexion du joueur ou licence arrêtée d'après le serveur.
+    /// Gardée sur disque : une remise coupée (app fermée, PC éteint) reprend au lancement suivant. Retirée dès qu'une
+    /// licence revient (`store`).
+    fn end_path(&self) -> PathBuf {
+        self.path.with_file_name("premium-ended")
+    }
+
+    fn note_end(&self, why: &str) {
+        if let Some(dir) = self.path.parent() {
+            let _ = fs::create_dir_all(dir);
+        }
+        let _ = fs::write(self.end_path(), format!("{why} {}", now_ms()));
+    }
+
+    /// Les réglages Premium de ce PC doivent être remis (voir `premium_ended`).
+    pub fn ended(&self) -> bool {
+        premium_ended(self.status().state, self.end_path().exists())
     }
     /// Clé des scripts Premium de cette version, gardée chiffrée (DPAPI) à côté du jeton.
     fn key_path(&self) -> PathBuf {
@@ -464,20 +507,39 @@ impl License {
     /// Prolonge le jeton, même expiré. Sans réseau ou en panne serveur, le jeton actuel est gardé.
     pub fn refresh(&self) -> Result<Status, ApiError> {
         let token = self.token().ok_or("invalid_token")?;
-        match post("/licenses/refresh", None, json!({ "license_token": token, "device": self.device().to_json() })) {
-            Ok(res) => self.accept(&res),
-            Err(e) => {
-                if e.drops_token() {
-                    self.clear();
+        match post("/licenses/refresh", None, json!({ "license_token": &token, "device": self.device().to_json() })) {
+            Ok(res) => {
+                // déconnexion (ou autre connexion) pendant la requête : la réponse vaut pour un jeton qui n'est plus
+                // là, elle ne doit pas le remettre
+                let _w = self.write.lock().unwrap_or_else(std::sync::PoisonError::into_inner);
+                if self.token().as_deref() != Some(token.as_str()) {
+                    return Ok(self.status());
                 }
+                self.accept(&res)
+            }
+            Err(e) => {
+                self.refused(&e);
                 Err(e)
             }
         }
     }
 
+    /// Refus du serveur au rafraîchissement du jeton de ce PC. Seule une licence arrêtée (`revoked`) note la fin de
+    /// Premium ; les autres refus effacent le jeton sans toucher aux réglages.
+    fn refused(&self, e: &ApiError) {
+        if e.drops_token() {
+            self.clear();
+        }
+        if e.ends_premium() {
+            self.note_end("revoked");
+        }
+    }
+
     pub fn sign_out(&self) {
+        let _w = self.write.lock().unwrap_or_else(std::sync::PoisonError::into_inner);
         self.clear();
         *self.access.lock().unwrap() = None;
+        self.note_end("signed_out");
     }
 
     /// Jeton de licence de ce PC tant qu'il est valable : il ouvre aussi l'API du compte (avis, photo).
@@ -569,6 +631,69 @@ mod tests {
         let fake = format!("{}.{}.{}", parts[0], URL_SAFE_NO_PAD.encode(serde_json::to_vec(&forged).unwrap()), parts[2]);
         assert!(verify(&fake, &sk.verifying_key()).is_err());
         assert!(verify("a.b", &sk.verifying_key()).is_err());
+    }
+
+    fn test_device() -> Device {
+        Device { name: "PC-TEST".into(), os: String::new(), app_version: "1.0.0".into(), fingerprint: fp(Some("a"), Some("b"), None) }
+    }
+
+    fn test_license(name: &str) -> (License, PathBuf) {
+        let dir = std::env::temp_dir().join(format!("rago-lic-{name}-{}", std::process::id()));
+        let _ = fs::remove_dir_all(&dir);
+        fs::create_dir_all(&dir).unwrap();
+        (License::with(dir.join("license.bin"), test_device), dir)
+    }
+
+    /// N1 : les réglages Premium ne sont remis qu'après une vraie fin (déconnexion, licence arrêtée d'après le serveur),
+    /// jamais parce que le jeton a été effacé sur un doute.
+    #[test]
+    fn premium_ends_only_on_sign_out_or_revocation() {
+        assert!(premium_ended("none", true));
+        assert!(!premium_ended("none", false), "jeton effacé sans fin notée : le joueur est seulement déconnecté");
+        for state in ["active", "expired", "unconfigured"] {
+            assert!(!premium_ended(state, true), "{state}");
+        }
+
+        // refus du serveur au rafraîchissement : seule une licence arrêtée note la fin
+        let (lic, dir) = test_license("refused");
+        for code in ["network", "server_error", "rate_limited", "invalid_request", "unconfigured", "invalid_token", "bound_to_other_device", "revoked"] {
+            fs::write(&lic.path, b"jeton").unwrap();
+            let _ = fs::remove_file(lic.end_path());
+            let e = ApiError::from(code);
+            lic.refused(&e);
+            assert_eq!(lic.end_path().exists(), code == "revoked", "{code}");
+            assert_eq!(!lic.path.exists(), e.drops_token(), "{code} : jeton effacé seulement s'il ne vaut plus rien");
+        }
+        // abonnement terminé : même code, avec une raison en plus
+        let ended = ApiError { code: "revoked".into(), message: None, buy_url: Some("https://x/#pricing".into()) };
+        let _ = fs::remove_file(lic.end_path());
+        lic.refused(&ended);
+        assert!(lic.end_path().exists());
+
+        // une licence revient (réponse « active » gardée) : la fin ne vaut plus
+        lic.store("jeton");
+        assert!(!lic.end_path().exists());
+
+        // déconnexion du joueur
+        lic.sign_out();
+        assert!(lic.end_path().exists() && !lic.path.exists());
+        let _ = fs::remove_dir_all(dir);
+    }
+
+    /// Jeton effacé par la vérification hors ligne (illisible, signature qui ne passe plus après un changement de clé du
+    /// serveur, jeton d'un autre PC) : aucune fin notée, aucun réglage remis.
+    #[test]
+    fn a_dropped_token_is_not_the_end_of_premium() {
+        let (lic, dir) = test_license("dropped");
+        assert!(!lic.ended(), "jamais connecté");
+        fs::write(&lic.path, b"pas un jeton").unwrap();
+        assert_ne!(lic.status().state, "active");
+        assert!(!lic.end_path().exists() && !lic.ended());
+        let other_key = SigningKey::from_bytes(&[9u8; 32]);
+        lic.store(&token(&other_key, &claims()));
+        assert_ne!(lic.status().state, "active");
+        assert!(!lic.end_path().exists() && !lic.ended(), "signature d'une autre clé");
+        let _ = fs::remove_dir_all(dir);
     }
 
     #[test]

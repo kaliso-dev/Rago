@@ -6,7 +6,7 @@ import { Modal } from "./Modal";
 import { Kbd } from "./ui";
 
 export function SearchPalette() {
-  const { t, lang, paletteOpen, setPaletteOpen, goTo, selected, toggle, isLocked, setUpsell } = useStore();
+  const { t, lang, paletteOpen, setPaletteOpen, goTo, selected, toggle, unselectMany, isLocked, setUpsell } = useStore();
   const [q, setQ] = useState("");
   const [idx, setIdx] = useState(0);
   const results = useMemo(() => searchTweaks(q, lang), [q, lang]);
@@ -93,7 +93,9 @@ export function SearchPalette() {
                   className={`palette-toggle${selected.has(tw.id) ? " on" : ""}`}
                   onClick={(e) => {
                     e.stopPropagation();
-                    toggle(tw.id);
+                    // « + » allume, « ✓ » retire de la sélection : jamais d'annulation d'un réglage déjà appliqué
+                    if (selected.has(tw.id)) unselectMany([tw.id]);
+                    else toggle(tw.id, true);
                   }}
                 >
                   {selected.has(tw.id) ? "✓" : "+"}

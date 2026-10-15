@@ -34,7 +34,19 @@ export function RunOverlay() {
   const restoreFailed = !!run?.done?.restoreFailed;
   // quelque chose a vraiment été changé (pas seulement un point de restauration raté)
   const changed = finished - failed - skipped > 0;
-  const reboot = !!run?.reboot && !cancelled && changed;
+  // arrêté en cours de route : redémarrage seulement si un réglage qui le demande est allé au bout
+  const reboot = !!run?.reboot && (cancelled ? run.rows.some((r) => r.reboot && r.status === "ok") : changed);
+  // point de restauration raté : le moteur saute ce qui applique, mais lance quand même les annulations (runner.rs)
+  const ranAfter = run?.rows.filter((r) => r.id !== "rst_point" && (r.status === "ok" || r.status === "error")).length ?? 0;
+  const restoreKey = skipped
+    ? ranAfter
+      ? "run.restoreFailedPartial"
+      : "run.restoreFailed"
+    : ranAfter
+      ? "run.restoreFailedUndo"
+      : "run.restoreFailedAlone";
+  // le point de restauration raté a son propre message : les autres échecs restent comptés
+  const otherFailed = failed - (restoreFailed ? 1 : 0);
   const seconds = run ? ((run.endedAt ?? Date.now()) - run.startedAt) / 1000 : 0;
   const pct = total ? (finished / total) * 100 : 0;
 
@@ -46,8 +58,15 @@ export function RunOverlay() {
         <motion.div className="run" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} transition={{ duration: 0.24 }}>
           <div className="run-hero">
             <Pulse size={132} active={!isDone} />
-            <div className="rg-overline run-state">{isDone ? (cancelled ? t("run.cancelled") : t("run.done")) : t("run.title")}</div>
-            {run.note && <p className="run-note">{run.note}</p>}
+            <div className="rg-overline run-state">
+              {run.signOut
+                ? t(run.error ? "signout.failed" : isDone ? "signout.runDone" : "signout.runTitle")
+                : isDone
+                  ? cancelled
+                    ? t("run.cancelled")
+                    : t("run.done")
+                  : t("run.title")}
+            </div>
             <div className="run-counter rg-metric">
               <motion.span key={finished} initial={{ y: 10, opacity: 0 }} animate={{ y: 0, opacity: 1 }}>
                 {String(finished).padStart(2, "0")}
@@ -64,13 +83,10 @@ export function RunOverlay() {
                 ) : (
                   <>
                     {t("run.summary", { ok: finished - failed - skipped, total, s: formatNumber(lang, seconds) })}
-                    {restoreFailed ? (
-                      <div className="error-text run-restore-failed">{t(skipped ? "run.restoreFailed" : "run.restoreFailedUndo", { n: skipped })}</div>
-                    ) : (
-                      failed > 0 && <div className="error-text">{t("run.failed", { n: failed })}</div>
-                    )}
+                    {restoreFailed && <div className="error-text run-restore-failed">{t(restoreKey, { n: skipped })}</div>}
+                    {otherFailed > 0 && <div className="error-text">{t("run.failed", { n: otherFailed })}</div>}
                     {reboot && <div className="muted">{t("run.rebootNeeded")}</div>}
-                    {license && !premium && !cancelled && (
+                    {license && !premium && !cancelled && !run.signOut && (
                       <button
                         type="button"
                         className="run-upsell"
@@ -92,9 +108,14 @@ export function RunOverlay() {
             </div>
             <div className="run-actions">
               {!isDone ? (
-                <Button icon={<Square size={12} />} onClick={() => api.cancelRun()}>
-                  {t("run.cancel")}
-                </Button>
+                // déconnexion : la remise de tous les réglages ne s'arrête pas
+                run.signOut ? (
+                  <div className="muted run-note">{t("signout.runNote")}</div>
+                ) : (
+                  <Button icon={<Square size={12} />} onClick={() => api.cancelRun()}>
+                    {t("run.cancel")}
+                  </Button>
+                )
               ) : (
                 <>
                   {reboot && (

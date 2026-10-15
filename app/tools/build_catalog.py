@@ -6,7 +6,8 @@
 Sorties :
   src/data/catalog.json          ce que l'interface affiche (sans les scripts)
   src-tauri/scripts/scripts.json les scripts batch, embarqués dans le binaire Rust
-  docs/CORRECTIONS.md            la liste des corrections appliquées au .bat
+  docs/CORRECTIONS.md            la liste des corrections appliquées au .bat (les sections écrites à la main, sous la
+                                 ligne marqueur de tools/corrections_md.py, sont gardées telles quelles)
 """
 import json
 import os
@@ -18,6 +19,7 @@ ROOT = os.path.dirname(HERE)
 sys.path.insert(0, HERE)
 
 from extract_bat import LegacyBat, NPI_CALL  # noqa: E402
+import corrections_md as CM  # noqa: E402
 from meta import MODULES, PRESETS  # noqa: E402
 
 BAT = os.path.join(ROOT, 'legacy', 'Premium v5.2 - Rago Hub.bat')
@@ -262,8 +264,9 @@ by_kind = {
     'paths': [f for f in fixes if 'RAGO_RES' in f[2]],
 }
 os.makedirs(os.path.join(ROOT, 'docs'), exist_ok=True)
-with open(os.path.join(ROOT, 'docs', 'CORRECTIONS.md'), 'w', encoding='utf-8') as f:
-    f.write(f'''# Corrections apportées au .bat Premium v5.2
+# sections écrites à la main (sous la ligne marqueur) : relues avant de réécrire le fichier, remises à la fin
+_, manual = CM.parts()
+text = (f'''# Corrections apportées au .bat Premium v5.2
 
 Généré par `tools/build_catalog.py`. Rago Hub reprend les {n_scripts} scripts du .bat
 ({n_lines} lignes de commandes) pour {n_tweaks} réglages, en corrigeant ce qui ne marchait pas.
@@ -292,8 +295,7 @@ Retirés de l'app :
 
 ## Détail ligne par ligne
 
-''')
-    for ln, before, after in fixes:
-        f.write(f'- L{ln}: `{before}`\n  → `{after}`\n')
+''' + ''.join(f'- L{ln}: `{before}`\n  → `{after}`\n' for ln, before, after in fixes))
+CM.write(text, manual)
 
 print(f'{n_tweaks} réglages, {n_scripts} scripts, {n_lines} lignes, {len(fixes)} lignes corrigées')

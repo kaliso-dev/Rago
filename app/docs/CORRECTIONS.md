@@ -415,7 +415,23 @@ Corrections ciblées (`SCRIPT_FIXES`, `DROP_LINES`) :
 Profils exclusifs découpés en variantes (ils s'exécutaient tous à la suite) : ping_hitreg (6 profils dont Default),
 ping_packets (Hitreg, QoS, Knockback), ping_main (Config 1 à 4), sys_ram (selon la RAM).
 
-RBW Mod « On » remet aussi BAM, DAM et le Prefetcher (actifs après redémarrage, demandé par l'app pour cette variante).
+RBW Mod (RAG-69, réécrit le 2026-10-13, `tools/rbw.py`) : « On » fait ce que fait Rago-RBW-Fix.ps1, le script validé
+par Sofiene sur son PC, dans le même ordre, une ligne PowerShell par étape : démarrage avec Windows de SysMain, PcaSvc,
+DPS, EventLog, WSearch, DusmSvc, BFE, Appinfo, Schedule, DsmSvc, DiagTrack, DcomLaunch, PlugPlay, BAM, DAM, CDPUserSvc
+et de chaque CDPUserSvc_xxxx (sc config, puis Set-Service, puis la valeur Start du registre ; Windows Search remis s'il
+a été retiré) ; services dont ils dépendent remis en manuel s'ils sont désactivés ; réglages lus par le vérificateur
+officiel de RBW (historique d'activités, clé de stratégies AppCompat, listes de raccourcis, CMD, journal PowerShell,
+Prefetch), journaux DiagLog et WdiContextLog et stratégie WDI sans lesquels DPS ne démarre pas ; lancement de chaque
+service (Start-Service, sc start, net start) ; ce que voit le vérificateur, avec le code et le message de Windows pour
+ce qui reste arrêté ; tâches planifiées et programmes de démarrage qui les recouperaient (lecture seule) ; verdict.
+« On » lance toujours ce script, même après « Off » (`catalog::revert_runs_script`) : la sauvegarde d'avant « Off »
+ne démarrait aucun service. « Off » remet ces services et réglages comme Windows les règle (Appinfo, DsmSvc et
+PlugPlay en manuel) et lance ceux que Windows lance de lui-même, sans rien arrêter ; l'ancien « Off » arrêtait SysMain
+et DiagTrack. Le RBW Mod ne garde pas de sauvegarde (rien à remettre) : les réglages qui coupent ces éléments gardent
+la leur et affichent « Changé par Windows » après le RBW Mod. Défaire « Off » sans cliquer « On » (Tout annuler,
+déconnexion, fin de Premium, désinstallation) ne lance donc rien et ne demande pas de redémarrage (`windows_values`
+dans applied.json) ; un « Off » noté par une version d'avant (sauvegarde de 1.1.9, ou ancien « Off » qui passait des
+services en manuel, repris de l'historique) repasse toujours par « On ».
 
 Les actions lourdes ne sont pas retirées (choix de Sofiene, « tout garder ») : `WARNINGS` les détecte dans chaque
 script (Spectre, Defender, SmartScreen, UAC, pare-feu, IFEO, BAM, Prefetch…), écrit l'avertissement « Read this first »
@@ -437,7 +453,8 @@ Audit ligne par ligne du 2026-10-07 (rapport : /mnt/project-files/audit/audit-co
 - wmic, absent par défaut de Windows 11 24H2, est remplacé par PowerShell (Get-CimInstance) dans 21 réglages
   (`WMIC_SUBS`) ;
 - actions ponctuelles (bouton, plus case) : sto_defrag, win_apps, app_remove, dbl_edge, nv_debloat, cpu_ppm,
-  usb_controller (`ONE_SHOT`) ;
+  usb_controller (`ONE_SHOT`) ; win_apps et app_remove redeviennent des cases avec RAG-65 (2026-10-13) : les applis
+  du Store sont relevées avant et réenregistrées au retour ;
 - `DROP_LINES` accepte « id:variante ».
 
 Annulation : src-tauri/scripts/undo.json, généré à chaque build par tools/undo (undo_gen.py et defaults.py de
@@ -449,7 +466,7 @@ par réglage appliqué, pour annuler après une déconnexion ou une fin de licen
 
 # Réglages risqués retirés (1.1.8)
 
-Demande de Sofiene (2026-10-08) : `tools/safety.py`. 16 réglages quittent le catalogue, les profils et le plan gratuit. Il reste 212 entrées au catalogue, soit 199 réglages distincts : les 13 autres lancent les mêmes commandes qu'un autre réglage, sous un autre nom ou dans un autre module (champ `twin`), et c'est ce nombre distinct que l'app et le site annoncent. Leur annulation reste dans undo.json : sur un PC où une version précédente les a appliqués, le tableau de bord propose de les remettre comme avant.
+Demande de Sofiene (2026-10-08) : `tools/safety.py`. 17 réglages quittent le catalogue, les profils et le plan gratuit. Il reste 211 entrées au catalogue, soit 198 réglages distincts : les 13 autres lancent les mêmes commandes qu'un autre réglage, sous un autre nom ou dans un autre module (champ `twin`), et c'est ce nombre distinct que l'app et le site annoncent. Leur annulation reste dans undo.json : sur un PC où une version précédente les a appliqués, le tableau de bord propose de les remettre comme avant.
 
 - `win_mitigations` : Il coupait les protections Spectre et Meltdown.
 - `win_coreiso` : Couper l'intégrité de la mémoire baisse la protection de ton PC contre les pilotes malveillants.
@@ -467,6 +484,7 @@ Demande de Sofiene (2026-10-08) : `tools/safety.py`. 16 réglages quittent le ca
 - `dbl_edge` : Supprimer Edge ne s'annule pas depuis l'app et peut casser des fonctions de Windows qui s'en servent.
 - `dbl_onedrive` : Il supprimait les dossiers OneDrive du PC : les fichiers pas encore synchronisés étaient perdus.
 - `mem_prefetch` : Les applis s'ouvraient plus lentement, et sur un screenshare un Prefetch vide peut ressembler à des traces effacées.
+- `pow_timer` : Il mettait à 0 une valeur du noyau par laquelle Windows divise : sur certains PC (Windows 11 24H2), écran bleu quelques minutes après le démarrage, sans gain mesurable.
 
 Lignes risquées retirées des packs qui les cachaient (le pack reste) :
 
@@ -488,6 +506,7 @@ Lignes risquées retirées des packs qui les cachaient (le pack reste) :
 - GPU recovery (TDR) : nv_tdr
 - AMD thermal limits : amd_advanced, amd_thermal
 - DPC watchdog : exp_kernel
+- CoalescingTimerInterval (blue screen) : amd_advanced, gpu_amd, gpu_general, gpu_nvidia, hitreg_suite, pow_main, pow_throttling, pow_timer
 - cache flush : sto_cacheprot
 - Recycle Bin : sto_general
 - Prefetch off : hitreg_suite, in_advanced, mem_prefetch, mem_profile, sys_ram
@@ -499,10 +518,66 @@ Lignes risquées retirées des packs qui les cachaient (le pack reste) :
 - net_server (préréglages 1 et 2) : remise à zéro de la pile réseau (IP fixe et DNS manuels perdus) ;
 - app_remove, win_apps : Pense-bêtes gardé (notes non synchronisées perdues) ;
 - cpu_advanced, cpu_registry : veto de la veille moderne et politique d'alimentation XP (audit D22, motif sur le chemin de la clé) ;
-- win_gamedvr : la ligne qui réautorisait Game DVR juste après l'avoir coupé.
+- win_gamedvr : la ligne qui réautorisait Game DVR juste après l'avoir coupé ;
+- gpu_nvidia, gpu_amd, gpu_general, nv_general, amd_general (2026-10-10) : MPO (`OverlayTestMode`) et préemption du GPU coupés sans le dire dans des packs Safe. Ils restent dans nv_preemption, nv_advanced et amd_advanced (Advanced).
 
 Point de restauration (1.1.8) : la case de 1.1.6 revient. Elle est cochée d'office seulement pour un réglage `restore` (avancé, ou que l'app ne remet pas entièrement) et si Rago n'en a pas créé un réussi dans les 24 dernières heures.
 
+
+# Cohérence des scripts et des textes (1.1.9)
+
+Worker « textes-scripts », 2026-10-13 : `tools/coherence.py` et `tools/descriptions.json`. Sources : Linear RAG-60
+(§4 et §5), RAG-27 et les « Points relevés sans correction » de l'audit du 2026-10-07. Les scripts d'avant restent dans
+undo.json : un PC qui les a lancés retrouve aussi les valeurs des lignes changées ici.
+
+**Carte graphique visée**
+- nv_accel, nv_contig, nv_kboost, gpu_nvidia, amd_general, amd_power, amd_memsleep, amd_delag, gpu_amd écrivaient
+  dans `Class\{4d36e968…}\0000`, souvent la puce intégrée d'un portable à deux cartes. Le script cherche une fois les
+  clés dont `MatchingDeviceId` est du bon fabricant (`ven_10de` NVIDIA, `ven_1002` AMD) et n'écrit que là. Une seule
+  carte : même clé qu'avant. Aucune carte du fabricant : rien n'est écrit.
+- gpu_amd : `%REGPATH_AMD%` (la dernière clé trouvée) remplacé de la même façon.
+- nv_msi, gpu_nvidia, gpu_amd : mode MSI seulement sur les cartes du bon fabricant.
+- gpu_nvidia : trois boucles cassées retirées (`echo %w%-` écrivait dans `Control\Class\-`) ; les boucles juste
+  au-dessus font déjà ce travail. La ligne qui coupait la préemption des cartes AMD (`KMD_EnableComputePreemption`,
+  souvent l'iGPU d'un portable Ryzen) quitte ce pack NVIDIA.
+
+**Valeurs**
+- nv_kboost : `PerfLevelSrc` 2222 → 8738 (0x2222, comme nv_powermizer).
+- amd_power, et la même étape dans gpu_amd et amd_advanced : « Disable Clock Gating » posait 1 ; maintenant 0.
+- pow_windows : `EnergyEstimationEnabled` 1 → 0 (le script posait aussi `EnergyEstimationDisabled` 1).
+- gpu_amd : texte parasite collé à une commande (`%b%╚═…`) retiré.
+- dbl_telemetry, win_telemetry : tâche Office `\Microsoftd\` → `\Microsoft\`.
+- dbl_cortana : `DisableWebSearch` 0 → 1, comme « Recherche Windows sans le web ».
+- win_services, sys_registry : `AllowNewsAndInterests` sous `Policies\Microsoft\Dsh`, comme win_feed.
+- hitreg_suite : `Disable-ScheduledTask` (PowerShell lancé par cmd, sans effet) → `schtasks /change … /disable`.
+- ping_packets et net_profile, profil QoS : « Do not use NLA » = "1" ajouté (sinon Windows ignore le marquage hors
+  domaine d'entreprise), `DSCP Value` en texte "46" et `Throttle Rate` "-1", comme les écrit Windows.
+- ping_main:config3 : propriétés de la carte par `-RegistryKeyword` (toutes langues) au lieu du nom anglais ; Jumbo
+  Packet 0 (valeur refusée) devient 1514 (désactivé, comme plus bas), doublons retirés.
+- win_fullscreen : `DirectXUserGlobalSettings` fusionné au lieu d'écrasé (Auto HDR gardé).
+- net_affinity, in_adapter, ping_main:config4, ping_advanced : l'épinglage sur le processeur n°2 seulement avec 4
+  processeurs logiques ou plus.
+
+**Lignes retirées**
+- hitreg_suite : `AlwaysOn` 1 et `DisableTaskOffload` 1 (défaits plus bas), mode jeu (affaire de win_gamemode),
+  compression mémoire (affaire de « Profil mémoire »), `HibernateEnabled` 0.
+- in_advanced : `HibernateEnabled` 0, mode jeu.
+- win_gamedvr : `GameDVR_FSEBehaviorMode` 1 et `GameDVR_HonorUserFSEBehaviorMode` 1 (contraires de win_fullscreen).
+- exp_io : `ntoskrnl.exe` et `WOW6432Node` (sans effet).
+- ping_packets, net_profile, net_advanced, in_windows : `netsh int tcp set global` refusés par Windows 10 et 11
+  (chimney, netdma, minrto, congestionprovider…) ; net_advanced : `SackOpts` 0.
+
+**Catalogue**
+- Redémarrage : net_ipv6, in_mouse, in_keyboard ; net_profile (Knockback et QoS, pas Hitreg).
+- Noms : mem_superfetch « Désactiver Superfetch (ancien réglage) », net_ipv6 « Préférer l'IPv4 à l'IPv6 ».
+- exp_smb : l'avertissement dit aussi que le PC n'ouvre plus les partages des vieux NAS. SMB 1 coupé avec
+  `-NoRestart` (pas de question « redémarrer maintenant ? » pendant le réglage).
+- Textes (descriptions.json) : ping_hitreg, net_adapter, net_powersave, net_advanced, hitreg_suite, in_advanced,
+  gpu_nvidia, nv_general, nv_kboost, mc_optifine, exp_smb, win_telemetry, win_optimize, win_services, win_ai,
+  dbl_telemetry, sys_bcdedit, pow_main, pow_throttling, pow_windows, win_fullscreen, net_affinity, in_adapter.
+- Point de restauration (runner.rs) : la limite d'un point par 24 h est levée le temps de le créer, puis remise.
+
+<!-- Sections écrites à la main : le générateur (tools/corrections_md.py) garde tel quel tout ce qui suit cette ligne. Ajouter les nouvelles sections en bas du fichier. -->
 # Plan d'alimentation Rago Low Latency (1.1.9)
 
 `src-tauri/resources/LowLatency.pow`, fourni par Sofiene le 2026-10-10 (sha256 `c953bead…c840d7`, 24 Ko). C'est une ruche
@@ -525,3 +600,185 @@ Corrigé par le script à l'import (`audit_fixes.py`, sur secteur) :
 
 L'annulation réactive le plan d'avant (relevé `pwractive`) puis supprime le plan Rago. Le test
 `rago_power_plan_imports_on_windows` importe le vrai fichier sur la CI Windows sous un GUID de test.
+
+# Écran bleu au démarrage, préréglage réseau 3, journal du Mode jeu (2026-10-13)
+
+Signalés par des joueurs (RAG-66, RAG-67, RAG-68).
+
+**RAG-67, écran bleu 0x7E quelques minutes après le démarrage (Windows 11 24H2).** `CoalescingTimerInterval` n'est pas
+documentée par Microsoft. Le noyau la lit au démarrage sous `HKLM\SYSTEM\CurrentControlSet\Control` et s'en sert comme
+diviseur : à 0, exception c0000094 (division entière par zéro), écran bleu 0x7E. Huit réglages la mettaient à 0 dans
+huit clés : `pow_main`, `pow_timer`, `hitreg_suite` (huit clés chacun), `pow_throttling`, `gpu_nvidia`, `gpu_amd`,
+`gpu_general` et `amd_advanced` (clé `Control\Power`). `pow_main` et les packs graphiques sont des réglages Safe : décocher
+les réglages Advanced ne suffisait pas.
+- `safety.py` : la ligne part de tous les scripts (`DROP_EVERYWHERE`) ; `pow_timer`, qui ne faisait que ça, est retiré
+  (`RETIRED`), son annulation reste.
+- `src-tauri/src/repair.rs` : à chaque lancement, l'app supprime la valeur là où elle vaut 0 dans ces huit clés, sans
+  rien demander (elle tourne en administrateur) ; Windows reprend sa valeur interne au prochain démarrage complet
+  (« Redémarrer », ou le redémarrage après un écran bleu). Avec le démarrage rapide de Windows, actif par défaut,
+  « Arrêter » puis rallumer ne relit pas la valeur (le noyau sort de veille prolongée) : le PC peut planter une fois de
+  plus. L'app affiche donc une fois « Redémarre ton PC pour finir : Redémarrer, pas Arrêter ». Une valeur
+  différente de 0 n'est pas touchée. Chaque suppression est notée dans `logs\repairs.log`. Le registre des réglages
+  (`applied.json`) ne remet jamais 0 en annulant, et n'affiche pas « Changé par Windows » pour ces valeurs.
+- Les annulations (`undo.json`) suppriment toujours la valeur ; le test `kernel_timer_value_stays_out` vérifie qu'aucun
+  script ni relevé ne l'écrit, qu'aucune annulation ne la remet, et que chaque clé nettoyée est aussi réparée au
+  lancement. La valeur par processus de `pri_game` (Image File Execution Options du jeu) n'est pas concernée.
+
+**RAG-68, préréglage réseau 3 (`net_server:s3`) toujours en échec.** La boucle du mode MSI était restée vide
+(`… do set "str=%%i" & (` puis `)`) : cmd refuse un bloc vide (« ) was unexpected at this time. ») et s'arrêtait là, sans
+lancer TCPNoDelay, TcpAckFrequency, TcpDelAckTicks ni les priorités DNS qui suivaient. La boucle part avec son
+commentaire (`audit_fixes.py`, `DROP_BLOCKS`). Le même défaut cassait cinq relevés (`probes.py` : un bloc dont toutes
+les lignes étaient des `echo` devenait vide) : `hitreg_suite` (les quatre variantes) ne relevait rien du tout, et son
+annulation ne remettait aucune valeur ; au lancement, l'app le repasse au retour par les valeurs de Windows
+(`repair.rs`). Ceux de `ping_main:config3`, `sys_registry` et `net_restart` s'arrêtaient après leur dernier élément :
+rien de perdu, mais ils échouaient. Le
+test `every_script_has_well_formed_blocks` lit tous les scripts, relevés et annulations comme cmd lit un bloc.
+
+**RAG-66, journal du Mode jeu.** Rien n'échouait, mais vider `%temp%` affichait « The process cannot access the file… »
+et « Access is denied. » (fichiers ouverts), arrêter le spouleur déjà arrêté « NET HELPMSG 3521 », et taskkill
+« SUCCESS: … explorer.exe … terminated ». `build_catalog_v6.py`, table `QUIET` : ces commandes se taisent dans
+`game_mode` et `in_windows`, « net stop Spooler » ne se lance que si `sc query` le voit tourner, et `%temp%` passe entre
+guillemets (avec un espace dans le chemin, `del /s` visait le premier morceau). Les autres lignes gardent leurs erreurs.
+Test `temp_cleaning_stays_quiet`.
+
+# Applis du Store remises par l'annulation (RAG-65, 2026-10-13)
+
+« Supprimer les applis préinstallées » (app_remove) et « Supprimer les applis inutiles » (win_apps) redeviennent des
+cases : avant le script, l'app relève les applis du Store installées pour le joueur qui correspondent à chaque ligne
+`Get-AppxPackage … | Remove-AppxPackage` (relevé `appx`, tools/probes.py : nom, famille et dossier du paquet). Éteindre
+le réglage les réenregistre sans réseau (`Add-AppxPackage -Register …\AppxManifest.xml -DisableDevelopmentMode`, puis
+le même paquet gardé par Windows pour un autre compte ou dans l'image, puis `-RegisterByFamilyName`). Même chose pour
+Cortana (dbl_cortana, win_services) et le fournisseur Copilot (win_services).
+
+Ce qui marche : les scripts ne retirent les applis que pour le compte du joueur (`Remove-AppxPackage`, jamais
+`Remove-AppxProvisionedPackage`) ; Windows garde donc leur paquet et elles reviennent, hors ligne, sous Windows 10
+comme 11. Ce qui ne revient pas : une appli que Windows a retirée du PC depuis (mise à jour de Windows qui ne la livre
+plus, paquet effacé) ; elle est nommée dans le journal, à réinstaller depuis le Microsoft Store. Les autres comptes du
+PC (lignes `-allusers`) ne sont pas relevés.
+
+Sans relevé (réglage lancé comme action ponctuelle par une version d'avant, noté appliqué d'après l'historique ; ou
+appliqué avant ce relevé), l'annulation remet les applis de la liste du réglage (champ `apps` du catalogue) que
+Windows garde encore. Les contre des deux réglages conseillent de lancer la Restauration du système depuis l'écran de
+récupération : depuis Windows, elle peut échouer sur AppRepository (0x80070301) après une suppression d'applis.
+
+# Finitions de la revue du 2026-10-13 (RBW Mod, réglage retiré, réparation, chemins du profil)
+
+**« Disable timer coalescing » (`pow_timer`, retiré) ne reste plus « appliqué » une fois réparé.** Il ne posait que
+`CoalescingTimerInterval` à 0 dans les huit clés que `repair.rs` répare au lancement. Quand aucune ne vaut plus 0 (et
+qu'aucune n'est illisible), `forget_pow_timer` le retire d'`applied.json` : plus de carte « Réglages retirés encore
+appliqués », ni de « Remettre comme avant » qui supprimerait des valeurs déjà parties en proposant un redémarrage
+inutile. Les éléments qu'un autre réglage encore appliqué tient (`pow_main`…) restent gardés. Une ligne le note dans
+`logs\repairs.log`. Test `pow_timer_is_forgotten_once_its_values_are_repaired`.
+
+**Redémarrer après la réparation, pas Arrêter.** Au lancement où `repair.rs` a supprimé une valeur à 0, l'interface
+affiche une fois, en bas à droite, « Rago Optimizer a réparé une valeur qui peut faire planter Windows. Redémarre ton PC
+pour finir : Redémarrer, pas Arrêter. » (commande `take_repair_notice`, vraie une seule fois par lancement ; rien n'est
+gardé sur disque). Le message part seul après 20 secondes et ne bloque rien. Aux lancements suivants il n'y a plus rien
+à réparer, donc plus de message, sauf si un autre programme remet 0.
+
+**Chemins du profil dans les scripts : `!VAR!`, `if defined`.** Le moteur lance chaque script avec le développement
+retardé (`setlocal EnableDelayedExpansion`). cmd remplace `%temp%` avant de lire la ligne, puis retire les `!` du texte
+obtenu : avec un compte « Jean! », `del /s /f /q "%temp%\*"` vidait le dossier temporaire du compte « Jean ».
+`tools/paths.py` (branché après `QUIET` et le RBW Mod, puis sur les relevés et les annulations) écrit les variables de
+chemin `!temp!`, `!SystemRoot!`, `!ProgramData!`, `!LOCALAPPDATA!`, `!APPDATA!`, `!USERNAME!`, `!SystemDrive!` et
+`!PROFILES_DIR!` (`game_mode`, `in_windows`, `sto_general`, `cln_temp`, `mc_optifine`) : leur texte n'est jamais relu.
+Il met `if defined …` devant chaque `del`, `rd`, `forfiles`, `takeown` et `icacls` qui en dépend, ou devant la boucle qui
+les contient (vide, `"!temp!\*"` viserait la racine du disque). Les suppressions sur une variable de boucle (`%%d`,
+`%%i`, `%%U`) tournent avec `setlocal DisableDelayedExpansion` : cette variable est remplacée avant les `!…!`, et un
+dossier nommé `!SystemRoot!`, qu'un compte standard peut créer dans `C:\Windows\Temp`, faisait lancer
+`rmdir "C:\Windows" /s/q` à `cln_temp`, en administrateur. Le nettoyage par `set folder="…"` (`cln_temp`, `mc_optifine`)
+écrit le chemin une fois entre guillemets et ne vide le dossier que si `cd` a réussi : avant, `IF EXIST "%folder%"`
+doublait les guillemets, un `&` dans le nom du compte arrêtait le script sur une erreur de syntaxe, un espace sautait le
+test, et si `cd` échouait la boucle vidait le dossier où l'app lance ses scripts. Les autres lignes ne changent pas ;
+`undo.json` non plus. Tests `deletions_never_use_a_percent_path` (scripts, relevés, annulations : aucune suppression sur
+`%VAR%`, aucune variable de chemin écrite `%VAR%`) et `deletion_checker_sees_bad_paths`.
+
+**Lancement des scripts avec `&`, `(`, `)` ou `^` dans le nom du compte.** Le moteur lançait
+`cmd /d /c C:\Users\<compte>\AppData\Roaming\gg.rago.optimizer\run\<script>.cmd` : sans espace, le chemin passe sans
+guillemets et cmd coupe la ligne au `&` ; avec un espace, cmd /c retire les guillemets dès qu'il voit un de ces
+caractères. Avec un compte « Tom&Jerry » ou « Jean (PC) », chaque réglage échouait. `runner.rs`, `script_command` :
+cmd reçoit seulement `.\<script>.cmd` (lettres, chiffres, `-`, `_` et `.`), le dossier `run` passe en dossier courant
+par CreateProcess, comme avant. Même chose pour les relevés. Les autres programmes lancés par l'app reçoivent leurs
+arguments séparément (reg.exe, powercfg, explorer, PowerShell `-File`) ou un texte fixe (`-Command`), sans chemin du
+profil. Les variables du retour arrière (`RAGO_STATE_…`, `RAGO_HELD_…`) passent par l'environnement du processus
+(`batch_command`), jamais par la ligne de commande : le script et le PowerShell qu'il lance les lisent. Tests
+`scripts_start_by_name_from_their_folder`, `undo_variables_go_with_the_script` et, sur Windows,
+`scripts_run_from_a_folder_with_special_characters` et `undo_variables_reach_the_script_and_powershell`.
+
+# Finitions 2 de la revue du 2026-10-13
+
+**Sections écrites à la main de ce fichier.** `tools/build_catalog.py` réécrivait tout `docs/CORRECTIONS.md` et
+`tools/build_catalog_v6.py` y ajoutait ses sections : chaque génération effaçait ce qui avait été écrit à la main en bas
+(plan d'alimentation, écran bleu, applis du Store, finitions de la revue). La ligne de commentaire
+`<!-- Sections écrites à la main … -->`, juste avant « Plan d'alimentation Rago Low Latency (1.1.9) », sépare maintenant
+les sections générées (au-dessus) de celles écrites à la main (en dessous) : `tools/corrections_md.py` relit ce qui la
+suit avant d'écrire et le remet tel quel, fichier en CRLF compris. `build_catalog_v6.py` vérifie après l'écriture que
+cette partie n'a pas changé. Une nouvelle section s'écrit à la main en bas du fichier.
+
+**Notifications de l'appli Paramètres : le `!` de la clé.** La clé
+`HKCU\…\Notifications\Settings\windows.immersivecontrolpanel_cw5n1h2txyewy!microsoft.windows.immersivecontrolpanel`
+porte un `!` (identifiant d'appli du Store, « famille!appli »). Le moteur lance chaque script avec le développement
+retardé : juste avant d'exécuter la commande, cmd retire un `!` resté seul, guillemets compris. `in_advanced`,
+`sys_registry` et `win_notifications` écrivaient donc `…cw5n1h2txyewymicrosoft…`, une clé que Windows ne lit pas, et
+leurs relevés et annulations visaient la même clé fausse. `tools/expansion.py` (sur les scripts, les relevés et les
+annulations) fait tourner ces lignes avec `setlocal DisableDelayedExpansion & … & endlocal` : la vraie clé est écrite,
+relevée et remise. L'annulation sans relevé (PC passés par une version sans sauvegarde) supprime aussi la clé sans `!`
+que posaient les anciens scripts ; avec un relevé fait par la 1.1.9, la restauration la supprime déjà. Comme la valeur
+est posée par trois réglages, l'annulation d'un des trois la laisse quand un autre est encore appliqué
+(`RAGO_HELD_…`). Le générateur refuse tout autre `!` écrit tel quel dans une commande lancée avec le développement
+retardé (le texte affiché par un `echo` n'en est pas une). Tests `no_literal_bang_with_delayed_expansion` et
+`bang_checker_sees_what_cmd_removes`.
+
+**Nom de la carte réseau dans un bloc (`ping_main` « config3 », `hitreg_suite`).** Le script trouve la carte connectée
+(`set "adapter_name=%%b"`) puis la règle dans `if defined adapter_name ( … )`. cmd remplace `%adapter_name%` en lisant
+tout le bloc, avant de le découper : un nom avec `)` (« Ethernet (2) », nom donné par le joueur ou un pilote) fermait le
+bloc au milieu, un `&` coupait la commande, et la suite tournait hors du `if`. Dans les lignes PowerShell,
+`\"%adapter_name%\"` laissait même le nom hors des guillemets de cmd. `tools/expansion.py` fait lire le nom à
+l'exécution : `!adapter_name!` pour l'echo, `$env:adapter_name` pour PowerShell (la commande est alors entièrement entre
+guillemets pour cmd). La carte visée ne change pas. Les lignes `netsh interface ipv4 set subinterface "%adapter_name%"`
+de `net_profile`, `ping_packets` et `net_advanced` sont hors bloc, entre guillemets, et lisent le nom que le moteur
+donne (`runner.rs`, première carte physique active) : elles ne changent pas. Tests `adapter_name_cannot_break_a_block`
+et `adapter_checker_sees_what_breaks_a_block`.
+
+**Dossiers NVIDIA absents (`gpu_nvidia`, `nv_debloat`).** Les deux scripts suppriment 28 dossiers d'un ancien
+installeur NVIDIA (`C:\NVIDIA\Display.NView`, `…\PhysX`, `…\GFExperience\www`…). L'installeur actuel extrait ailleurs
+(`C:\NVIDIA\DisplayDriver\<version>\…`) : sur presque tous les PC, le journal montrait « Le fichier spécifié est
+introuvable. » 28 fois. `QUIET` écrit `if exist "C:\Nvidia\…" rd /s /q "C:\Nvidia\…"` : rien n'est lancé quand le
+dossier n'existe pas, et une vraie erreur de rd (accès refusé, fichier ouvert) s'affiche toujours. Test
+`nvidia_leftovers_are_removed_quietly`.
+
+**Mode jeu : « Désactivé depuis… » après Désactiver.** Le moteur note « Désactivé » lancé sur un Mode jeu activé
+comme une annulation (variante de retour arrière d'un réglage appliqué), et le badge de la ligne ne regardait que les
+passages qui n'en sont pas : la ligne gardait « Activé depuis… ». Pour le Mode jeu et le mode jeu de Windows
+(`SESSION_TOGGLES`), une annulation compte maintenant comme leur variante de retour arrière (`src/lib/store.tsx`,
+`lastRun`) : « Désactivé depuis… » après Désactiver ou Tout annuler ; sans variante de retour arrière (mode jeu de
+Windows), plus de badge de session après une annulation ; une annulation qui échoue n'en affiche pas non plus (le
+réglage n'est plus noté appliqué). Le RBW Mod ne change pas : son annulation après « Désactivé » ne lance rien et garde
+« Désactivé depuis… », son retour arrière est noté « Activé ». Le mode démo du navigateur (`api.ts`) note les
+annulations comme le moteur.
+
+**Actualités et centres d'intérêt dans `sys_registry`.** La ligne écrivait `AllowNewsAndInterests` sous
+`HKLM\SOFTWARE\Policies\Microsoft`, où Windows ne la lit pas ; la stratégie est sous `…\Policies\Microsoft\Dsh`, comme
+dans `win_feed` et `win_services` (corrigé pour ce dernier en 1.1.9). `tools/coherence.py` corrige aussi
+`sys_registry` : script, relevé et annulation visent `…\Dsh`. Sans relevé, l'annulation retire les deux valeurs (celle
+des anciens scripts et la nouvelle), et laisse celle de `…\Dsh` quand `win_feed` ou `win_services` est encore appliqué.
+Test `scripts_target_the_right_hardware_and_do_what_they_say`.
+
+**Carte réseau sur un seul cœur dans `ping_advanced`.** Comme `net_affinity`, `in_adapter` et `ping_main` « config4 »
+depuis la 1.1.9, `ping_advanced` n'épingle les interruptions de la carte réseau sur le processeur logique n°2
+(`AssignmentSetOverride` 04, `DevicePolicy` 4) qu'avec 4 processeurs logiques ou plus ; en dessous, le script le dit
+et ne touche à rien (`AFFINITY_IDS` de `tools/coherence.py`). L'annulation retire toujours les deux valeurs. Le texte
+du réglage dit « (4 threads ou plus) ». Le test vérifie aussi qu'aucun autre script n'épingle la carte sans cette
+garde.
+
+**`chimney=disabled` dans `in_windows`.** Windows 10 et 11 refusent `netsh int tcp set global chimney=…` (« paramètre
+incorrect ») : la ligne ne changeait rien et mettait une erreur dans le journal. `in_windows` rejoint `NETSH_IDS` de
+`tools/coherence.py`, la règle qui retire déjà ces paramètres de `ping_packets`, `net_profile` et `net_advanced` ; ses
+autres lignes netsh (autotuninglevel, timestamps, ecncapability, rsc, nonsackrttresiliency) restent. Test
+`scripts_target_the_right_hardware_and_do_what_they_say`.
+
+**SMB 1 coupé sans question de redémarrage (`exp_smb`).** Sur un PC où SMB 1 était installé,
+`Disable-WindowsOptionalFeature` sans `-NoRestart` demande s'il faut redémarrer tout de suite (« [Y] Yes [N] No », Y
+par défaut) ; le moteur lance les scripts sans rien leur répondre. Les trois lignes ont maintenant `-NoRestart` : la
+fonctionnalité est coupée, Windows finit au prochain redémarrage, que le badge « Redémarrage » du réglage annonce
+toujours. Le générateur et le test vérifient qu'aucune ligne `Enable-`/`Disable-WindowsOptionalFeature` n'en manque.
