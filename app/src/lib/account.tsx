@@ -241,6 +241,7 @@ export function useAccount(): Account {
 /** Image choisie par le joueur, réduite à 512 × 512 au plus (carré centré) avant l'envoi, en base64 sans en-tête. */
 export async function shrinkPhoto(file: File): Promise<string> {
   if (!/^image\/(jpeg|png|webp|gif)$/.test(file.type)) throw { code: "invalid_image", message: null };
+  // limite du fichier choisi (texte err.image_too_large) ; réduite, l'image reste bien sous les 5 Mo du serveur
   if (file.size > 25 * 1024 * 1024) throw { code: "image_too_large", message: null };
   let bmp: ImageBitmap;
   try {
