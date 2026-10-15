@@ -2,6 +2,7 @@ mod account;
 mod backup;
 mod catalog;
 mod history;
+mod instance;
 mod license;
 mod minecraft;
 mod repair;
@@ -343,8 +344,16 @@ async fn account_remove_photo(state: State<'_, AppState>) -> Result<account::Acc
 
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
+    // une seule Rago Optimizer à la fois (instance.rs) : le verrou est gardé jusqu'à la fin du processus
+    let uninstall = std::env::args_os().skip(1).any(|a| a == reset::UNINSTALL_ARG);
+    let lock = instance::acquire(if uninstall { instance::UNINSTALL_WAIT } else { std::time::Duration::ZERO });
+    if !lock.starts(uninstall) {
+        // une autre fenêtre est ouverte : elle passe au premier plan, celle-ci ne charge rien
+        instance::show_other();
+        return;
+    }
     // lancé par le désinstallateur : remise à zéro sans fenêtre, puis on quitte
-    if std::env::args_os().skip(1).any(|a| a == reset::UNINSTALL_ARG) {
+    if uninstall {
         reset::uninstall();
         return;
     }
