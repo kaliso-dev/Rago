@@ -13,6 +13,7 @@ mod stats;
 mod system;
 
 use std::path::PathBuf;
+use std::sync::atomic::{AtomicBool, Ordering};
 use std::sync::{Arc, Mutex};
 use tauri::{AppHandle, Emitter, Manager, State};
 
@@ -35,6 +36,8 @@ struct AppState {
     stats: stats::Sampler,
     resource_dir: PathBuf,
     data_dir: PathBuf,
+    /// la réparation de ce lancement a supprimé une valeur (repair::at_startup) : l'interface le dit une fois
+    repaired: AtomicBool,
 }
 
 fn probe_cached(cache: &Mutex<Option<SystemInfo>>, resource_dir: &std::path::Path, refresh: bool) -> SystemInfo {
@@ -157,6 +160,15 @@ async fn get_applied(state: State<'_, AppState>) -> Result<Vec<backup::AppliedVi
 #[tauri::command]
 fn undo_all_plan(state: State<'_, AppState>) -> Vec<String> {
     reset::targets(&state.ledger.lock().unwrap(), reset::Scope::All)
+}
+
+/// Vrai une seule fois, au lancement où la réparation a supprimé une valeur à 0 (RAG-67) : l'interface demande alors de
+/// redémarrer le PC (« Redémarrer », pas « Arrêter » : avec le démarrage rapide de Windows, « Arrêter » garde le noyau
+/// en mémoire et la valeur n'est relue qu'au redémarrage suivant). Rien n'est gardé sur disque : le message ne revient
+/// pas aux lancements suivants, où il n'y a plus rien à réparer.
+#[tauri::command]
+fn take_repair_notice(state: State<'_, AppState>) -> bool {
+    state.repaired.swap(false, Ordering::SeqCst)
 }
 
 #[tauri::command]
@@ -355,7 +367,7 @@ pub fn run() {
                 ledger.save();
             }
             // ce qu'une version précédente a laissé et qui fait planter le PC (RAG-67), sans attendre le joueur
-            repair::at_startup(&backup::Sys::new(data_dir.join("backup")), &mut ledger, &data_dir.join("logs"));
+            let removed = repair::at_startup(&backup::Sys::new(data_dir.join("backup")), &mut ledger, &data_dir.join("logs"));
             app.manage(AppState {
                 runner: Arc::new(Runner::default()),
                 history,
@@ -367,6 +379,7 @@ pub fn run() {
                 stats: stats::Sampler::default(),
                 resource_dir,
                 data_dir,
+                repaired: AtomicBool::new(!removed.is_empty()),
             });
             // licence perdue depuis le dernier lancement, ou remise coupée en cours de route : elle reprend ici
             reset_if_unlicensed(app.handle());
@@ -390,6 +403,7 @@ pub fn run() {
             clear_history,
             get_applied,
             undo_all_plan,
+            take_repair_notice,
             live_stats,
             open_task_manager,
             minecraft_status,

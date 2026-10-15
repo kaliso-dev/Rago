@@ -262,6 +262,7 @@ const fr = {
   "reset.failed": "{n} réglage n'a pas pu être remis : détails dans l'historique (module Restaurer)|{n} réglages n'ont pas pu être remis : détails dans l'historique (module Restaurer)",
   "signout.undoLead": "Tes {n} réglage Premium vont être annulés : Rago Optimizer remet les réglages de Windows comme avant. Tes réglages gratuits restent actifs.|Tes {n} réglages Premium vont être annulés : Rago Optimizer remet les réglages de Windows comme avant. Tes réglages gratuits restent actifs.",
   "signout.go": "Annuler et me déconnecter",
+  "repair.restart": "Rago Optimizer a réparé une valeur qui peut faire planter Windows. Redémarre ton PC pour finir : Redémarrer, pas Arrêter.",
 };
 
 export type Key = keyof typeof fr;
@@ -514,6 +515,7 @@ const en: Record<Key, string> = {
   "reset.failed": "{n} tweak couldn't be put back: details in History (Restore module)|{n} tweaks couldn't be put back: details in History (Restore module)",
   "signout.undoLead": "Your {n} Premium tweak will be undone: Rago Optimizer puts those Windows settings back the way they were. Your free tweaks stay on.|Your {n} Premium tweaks will be undone: Rago Optimizer puts those Windows settings back the way they were. Your free tweaks stay on.",
   "signout.go": "Undo and sign out",
+  "repair.restart": "Rago Optimizer fixed a value that can crash Windows. Restart your PC to finish: Restart, not Shut down.",
 };
 
 const dicts: Record<Lang, Record<Key, string>> = { fr, en };
