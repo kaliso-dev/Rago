@@ -2506,8 +2506,8 @@
         "fr": "Optimisation de l'alimentation"
        },
        "desc": {
-        "en": "Turns off several power savings: slowing of background apps, grouping of timers and drive idle power.",
-        "fr": "Coupe plusieurs économies d'énergie : ralentissement des applis en arrière-plan, regroupement des minuteurs, veille des disques."
+        "en": "Turns off several power savings: slowing of background apps, SATA link and drive idle power.",
+        "fr": "Coupe plusieurs économies d'énergie : ralentissement des applis en arrière-plan, veille des liaisons SATA et des disques."
        },
        "risk": "safe",
        "reboot": true,
@@ -2516,7 +2516,7 @@
        "legacy": [
         "RAGO APP FPS.bat@1920"
        ],
-       "lines": 26,
+       "lines": 18,
        "gain": {
         "en": "May make frame pacing smoother on some PCs, especially plugged-in laptops.",
         "fr": "Peut rendre les images plus régulières sur certains PC, surtout les portables branchés."
@@ -2738,7 +2738,7 @@
        "legacy": [
         "Throttoling@9022"
        ],
-       "lines": 4,
+       "lines": 3,
        "gain": {
         "en": "May make frame pacing smoother on some PCs, especially plugged-in laptops.",
         "fr": "Peut rendre les images plus régulières sur certains PC, surtout les portables branchés."
@@ -2769,33 +2769,6 @@
        "gain": {
         "en": "Often no effect: most recent processors already work this way.",
         "fr": "Effet souvent nul : la plupart des processeurs récents fonctionnent déjà comme ça."
-       },
-       "cons": {
-        "en": "No known drawback.",
-        "fr": "Aucun inconvénient connu."
-       }
-      },
-      {
-       "id": "pow_timer",
-       "name": {
-        "fr": "Désactiver le regroupement des timers",
-        "en": "Disable timer coalescing"
-       },
-       "desc": {
-        "en": "Asks Windows to stop grouping processor wake-ups to save power.",
-        "fr": "Demande à Windows de ne plus regrouper les réveils du processeur pour économiser l'énergie."
-       },
-       "risk": "safe",
-       "reboot": true,
-       "kind": "tweak",
-       "requires": [],
-       "legacy": [
-        "p12@9045"
-       ],
-       "lines": 14,
-       "gain": {
-        "en": "Rarely measurable: Microsoft does not document this setting.",
-        "fr": "Effet rarement mesurable : ce réglage n'est pas documenté par Microsoft."
        },
        "cons": {
         "en": "No known drawback.",
@@ -3595,7 +3568,7 @@
        "legacy": [
         "RAGO APP FPS.bat@847"
        ],
-       "lines": 494,
+       "lines": 493,
        "gain": {
         "en": "The profile can reduce input lag when the GPU is at 100%; the rest is rarely measurable.",
         "fr": "Le profil peut réduire l'input lag quand le GPU est à 100 % ; le reste a un effet rarement mesurable."
@@ -3624,7 +3597,7 @@
        "legacy": [
         "RAGO APP FPS.bat@378"
        ],
-       "lines": 450,
+       "lines": 449,
        "gain": {
         "en": "Anti-Lag can reduce input lag when the GPU is at 100%; the rest is rarely measurable.",
         "fr": "Anti-Lag peut réduire l'input lag quand le GPU est à 100 % ; le reste a un effet rarement mesurable."
@@ -3690,7 +3663,7 @@
        "legacy": [
         "RAGO APP FPS.bat@1416"
        ],
-       "lines": 123,
+       "lines": 122,
        "gain": {
         "en": "Rarely measurable: many of these settings are ignored by recent Windows versions.",
         "fr": "Effet rarement mesurable : beaucoup de ces réglages sont ignorés par les Windows récents."
@@ -4430,7 +4403,7 @@
        "legacy": [
         "am8@11460"
        ],
-       "lines": 315,
+       "lines": 314,
        "gain": {
         "en": "Anti-Lag can reduce input lag when the GPU is at 100%; the rest is rarely measurable.",
         "fr": "Anti-Lag peut réduire l'input lag quand le GPU est à 100 % ; le reste a un effet rarement mesurable."
@@ -5995,7 +5968,7 @@
           "fr": "PC puissant",
           "en": "High-end PC"
          },
-         "lines": 400
+         "lines": 391
         },
         {
          "id": "medium",
@@ -6003,7 +5976,7 @@
           "fr": "PC moyen",
           "en": "Mid-range PC"
          },
-         "lines": 400
+         "lines": 391
         },
         {
          "id": "low",
@@ -6011,7 +5984,7 @@
           "fr": "PC modeste",
           "en": "Low-end PC"
          },
-         "lines": 400
+         "lines": 391
         },
         {
          "id": "laptop",
@@ -6019,7 +5992,7 @@
           "fr": "PC portable",
           "en": "Laptop"
          },
-         "lines": 400
+         "lines": 391
         }
        ],
        "requires": [],
@@ -6030,7 +6003,7 @@
         "lwpc1@13118",
         "ltpc1@13123"
        ],
-       "lines": 400,
+       "lines": 391,
        "gain": {
         "en": "Can make frame pacing steadier on a plugged-in PC; the rest is rarely measurable.",
         "fr": "Peut rendre les images plus régulières sur un PC branché ; le reste a un effet rarement mesurable."
@@ -7343,6 +7316,19 @@
    "reason": {
     "en": "Apps opened slower, and on a screenshare an empty Prefetch can look like erased traces.",
     "fr": "Les applis s'ouvraient plus lentement, et sur un screenshare un Prefetch vide peut ressembler à des traces effacées."
+   },
+   "reboot": true,
+   "module": "latency"
+  },
+  {
+   "id": "pow_timer",
+   "name": {
+    "fr": "Désactiver le regroupement des timers",
+    "en": "Disable timer coalescing"
+   },
+   "reason": {
+    "en": "It set a kernel timer value to 0 that Windows divides by: on some PCs (Windows 11 24H2) this caused a blue screen a few minutes after startup, for no measurable gain.",
+    "fr": "Il mettait à 0 une valeur du noyau par laquelle Windows divise : sur certains PC (Windows 11 24H2), écran bleu quelques minutes après le démarrage, sans gain mesurable."
    },
    "reboot": true,
    "module": "latency"

@@ -473,7 +473,7 @@ mod tests {
         let bundle = premium(&test_key()).unwrap();
         let catalog: serde_json::Value = serde_json::from_str(include_str!("../../src/data/catalog.json")).unwrap();
         let retired: Vec<&str> = catalog["retired"].as_array().unwrap().iter().map(|r| r["id"].as_str().unwrap()).collect();
-        assert_eq!(retired.len(), 16);
+        assert_eq!(retired.len(), 17);
         let listed: Vec<&str> = catalog["modules"].as_array().unwrap().iter()
             .flat_map(|m| m["sections"].as_array().unwrap())
             .flat_map(|s| s["tweaks"].as_array().unwrap())
@@ -514,6 +514,56 @@ mod tests {
                         || l.contains("nx alwaysoff")
                         || l.contains("disableelamdrivers yes");
                     assert!(!risky, "{id}:{v} : {l}");
+                }
+            }
+        }
+    }
+
+    /// RAG-67 (2026-10-13) : `CoalescingTimerInterval` à 0 sous `HKLM\SYSTEM\CurrentControlSet\Control` fait planter
+    /// Windows (écran bleu 0x7E, division par zéro) quelques minutes après le démarrage. Plus aucun script ni relevé ne
+    /// l'écrit (tools/safety.py DROP_EVERYWHERE) ; les annulations la suppriment encore pour les PC où une version
+    /// précédente l'a posée, aucune ne la remet, et chaque clé qu'elles nettoient est aussi réparée au lancement
+    /// (repair::TIMER_KEYS). Celle des fichiers de jeu (Image File Execution Options) n'est pas concernée.
+    #[test]
+    fn kernel_timer_value_stays_out() {
+        let bundle = premium(&test_key()).unwrap();
+        let probes: Scripts = serde_json::from_str(include_str!("../scripts/probes.json")).unwrap();
+        let kernel = |l: &str| {
+            let l = l.to_lowercase();
+            l.contains("coalescingtimerinterval") && l.contains("\\control")
+        };
+        for (id, variants) in SCRIPTS.iter().chain(probes.iter()) {
+            for (v, s) in variants {
+                for l in s.lines().map(str::trim).filter(|l| !l.to_lowercase().starts_with("echo")) {
+                    assert!(!kernel(l), "{id}:{v} écrit encore la valeur : {l}");
+                }
+            }
+        }
+        let keys: std::collections::HashSet<String> = crate::repair::TIMER_KEYS.iter().map(|k| k.to_lowercase()).collect();
+        for (id, v) in [
+            ("pow_main", None),
+            ("pow_timer", None),
+            ("pow_throttling", None),
+            ("gpu_nvidia", None),
+            ("gpu_amd", None),
+            ("gpu_general", None),
+            ("amd_advanced", None),
+            ("hitreg_suite", Some("good")),
+            ("hitreg_suite", Some("laptop")),
+        ] {
+            let full = undo_of(id, v, Some(&bundle)).and_then(|u| u.full).unwrap_or_default();
+            let deleted: Vec<&str> = full.lines().map(str::trim).filter(|l| kernel(l)).collect();
+            assert!(!deleted.is_empty(), "{id} : l'annulation ne supprime plus la valeur posée avant");
+            for l in deleted {
+                assert!(l.to_lowercase().starts_with("reg delete"), "{id} : {l}");
+                let key = l.split('"').nth(1).unwrap().to_lowercase().replace("hkey_local_machine", "hklm");
+                assert!(keys.contains(&key), "{id} : {key} n'est pas réparée au lancement (repair::TIMER_KEYS)");
+            }
+        }
+        for (id, variants) in bundle.undo.iter().chain(PLAIN.undo.iter()) {
+            for (v, u) in variants {
+                for l in u.full.iter().chain(u.rest.iter()).flat_map(|s| s.lines()).map(str::trim) {
+                    assert!(!kernel(l) || l.to_lowercase().starts_with("reg delete"), "annulation {id}:{v} : {l}");
                 }
             }
         }

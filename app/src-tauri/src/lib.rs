@@ -4,6 +4,7 @@ mod catalog;
 mod history;
 mod license;
 mod minecraft;
+mod repair;
 mod reset;
 mod runner;
 mod seal;
@@ -345,6 +346,8 @@ pub fn run() {
                 ledger.import_history(&history.all());
                 ledger.save();
             }
+            // ce qu'une version précédente a laissé et qui fait planter le PC (RAG-67), sans attendre le joueur
+            repair::at_startup(&backup::Sys::new(data_dir.join("backup")), &mut ledger, &data_dir.join("logs"));
             app.manage(AppState {
                 runner: Arc::new(Runner::default()),
                 history,
