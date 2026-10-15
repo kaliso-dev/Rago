@@ -1211,6 +1211,24 @@ mod tests {
         assert!(FORMERLY_FREE.iter().all(|id| KINDS.contains_key(id)), "réglage d'avant absent du catalogue");
     }
 
+    /// Aucun bloc vide (« ( » puis « ) ») dans les scripts : cmd s'arrête sur « ) était inattendu » et les lignes d'après
+    /// ne tournent jamais (préréglage 3 de Full network preset, RAG-68).
+    #[test]
+    fn no_empty_cmd_block() {
+        let mut checked = 0;
+        for (id, variants) in SCRIPTS.iter() {
+            for (v, body) in variants {
+                let lines: Vec<&str> = body.lines().map(str::trim).collect();
+                for w in lines.windows(2) {
+                    assert!(!(w[0].ends_with('(') && w[1].starts_with(')')), "{id}:{v} : bloc vide après « {} »", w[0]);
+                }
+                checked += 1;
+            }
+        }
+        assert!(checked > 200, "{checked}");
+        assert!(SCRIPTS["net_server"]["s3"].contains("TcpAckFrequency"));
+    }
+
     #[test]
     fn lookup() {
         let b = premium(&test_key()).unwrap();

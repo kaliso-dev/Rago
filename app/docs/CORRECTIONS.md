@@ -607,6 +607,14 @@ L'installeur efface les copies en clair d'une version d'avant ; `run\` est vidé
 Le catalogue de l'interface ne dit plus d'où vient chaque réglage dans les .bat, et « Ouvrir un dossier » n'ouvre que
 ceux de l'app.
 
+**Full network preset, préréglage 3 (RAG-68).** Demande de Sofiene (2026-10-15), après le test de la 1.1.14 relié au
+vrai serveur : le préréglage 3 (celui par défaut) s'arrêtait sur « ) était inattendu ». Une boucle du mode MSI réseau,
+vidée par l'audit, laissait un bloc `( )` vide, que cmd refuse : TCPNoDelay, TcpAckFrequency et TcpDelAckTicks par carte
+et les priorités DNS ne tournaient jamais. La boucle vide et son commentaire partent (`EMPTY_BLOCKS` de
+`build_catalog_v6.py`) ; le relevé du préréglage relève maintenant ces valeurs, donc l'annulation les remet. Le mode MSI
+réseau reste dans son propre réglage. Nouveau test : aucun bloc vide dans les scripts (`no_empty_cmd_block`). Les autres
+scripts ne changent pas ; les relevés d'autres réglages qui ont le même défaut (RAG-68) restent hors de cette version.
+
 **Plan gratuit : Windows, carte graphique et Restaurer seulement.** Demande de Sofiene (2026-10-15) : rien de Latence,
 Réseau, Hitreg ni Minecraft en gratuit. « Optimisation de la souris » (`in_mouse`, Hitreg) passe en Premium, avec son
 script et son annulation (paquet Premium) : 8 réglages ouverts, Mode jeu Windows, Couper Game DVR, Effets visuels, Plein
