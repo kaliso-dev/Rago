@@ -9,6 +9,7 @@ use serde::{Deserialize, Serialize};
 use std::collections::{BTreeMap, HashMap, HashSet};
 use std::fs;
 use std::path::{Path, PathBuf};
+use sha2::{Digest, Sha256};
 
 /// Ce qu'un script va modifier, lu dans les lignes `@@RAGO` de son relevé.
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
@@ -169,6 +170,15 @@ pub struct Applied {
     /// dans l'exe, et la déconnexion ou la fin de licence doit quand même pouvoir tout remettre
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub undo: Option<Undo>,
+    /// le réglage n'a posé que les valeurs de Windows (RBW Mod « Désactivé » depuis RAG-69) : rien à défaire, son
+    /// annulation ne lance rien. Absent des entrées d'avant, dont l'ancien « Désactivé » qui mettait des services en
+    /// manuel : celles-là gardent leur retour arrière
+    #[serde(default, skip_serializing_if = "std::ops::Not::not")]
+    pub windows_values: bool,
+    /// OptiFine : dossier Minecraft choisi dans l'interface quand il a été appliqué. La remise de fin de licence et
+    /// celle de la désinstallation, lancées sans l'interface, le remettent au même endroit (sinon le dossier habituel).
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub dir: Option<String>,
 }
 
 #[derive(Debug, Default, Serialize, Deserialize)]
@@ -180,6 +190,12 @@ pub struct Ledger {
     pub saved: Vec<(String, SavedEntry)>,
     #[serde(skip)]
     path: PathBuf,
+    /// le fichier sur disque n'a pu être ni lu ni mis de côté : rien ne doit l'écraser (voir `load`)
+    #[serde(skip)]
+    unread: std::sync::atomic::AtomicBool,
+    /// le fichier lu était en clair (version d'avant le chiffrement au repos) : à réécrire chiffré
+    #[serde(skip)]
+    legacy_plaintext: bool,
 }
 
 /// Réglage appliqué, tel que l'interface l'affiche.
@@ -193,30 +209,144 @@ pub struct AppliedView {
     pub backup: bool,
     /// Windows (ou une autre app) a changé une valeur posée par ce réglage depuis
     pub drift: bool,
+    /// voir Applied::windows_values : l'annulation ne lance rien (pas de redémarrage à proposer)
+    #[serde(skip_serializing_if = "std::ops::Not::not")]
+    pub windows_values: bool,
+}
+
+/// En-tête d'applied.json chiffré avec la clé de secours de l'app (voir `encode`).
+const LEDGER_FALLBACK: &[u8] = b"RAGO-LEDGER-1\0";
+
+/// Contenu chiffré d'applied.json. DPAPI (lié au compte Windows) dans le cas normal ; s'il refuse (profil Windows
+/// abîmé), la clé de secours de l'app (`seal::ledger_key`) : jamais de commandes en clair sur le disque.
+fn encode(json: &str, dpapi: Option<Vec<u8>>) -> Vec<u8> {
+    if let Some(bytes) = dpapi {
+        return bytes;
+    }
+    let t = std::time::SystemTime::now().duration_since(std::time::UNIX_EPOCH).map(|d| d.as_nanos()).unwrap_or(0);
+    let digest = Sha256::new()
+        .chain_update(t.to_le_bytes())
+        .chain_update(std::process::id().to_le_bytes())
+        .chain_update(json.as_bytes())
+        .finalize();
+    let mut nonce = [0u8; 16];
+    nonce.copy_from_slice(&digest[..16]);
+    let mut out = LEDGER_FALLBACK.to_vec();
+    out.extend(crate::seal::seal(&crate::seal::ledger_key(), &nonce, json.as_bytes()));
+    out
+}
+
+/// Texte d'applied.json, et s'il est à réécrire chiffré avec DPAPI : fichier d'une version d'avant le chiffrement
+/// au repos (encore en clair), ou chiffré avec la clé de secours.
+fn decode(bytes: &[u8]) -> (String, bool) {
+    if let Some(rest) = bytes.strip_prefix(LEDGER_FALLBACK) {
+        if let Some(text) = crate::seal::open(&crate::seal::ledger_key(), rest).and_then(|b| String::from_utf8(b).ok()) {
+            return (text, true);
+        }
+    }
+    match crate::license::vault::open(bytes) {
+        Some(text) => (text, false),
+        None => (String::from_utf8_lossy(bytes).into_owned(), true),
+    }
 }
 
 impl Ledger {
+    /// applied.json : `(registre, true)` s'il a été lu. Absent : registre vide et `false` (premier lancement depuis
+    /// 1.1.6, l'appelant le remplit d'après l'historique). Présent mais illisible (coupure de courant pendant une
+    /// écriture, champ qu'une version future rend obligatoire, fichier verrouillé) : avant, il était traité comme absent
+    /// puis écrasé au premier enregistrement, et tous les états d'avant étaient perdus. Il est maintenant mis de côté
+    /// sous `applied.json.bad-<horodatage>` (noté dans logs\repairs.log : le support peut le relire ou le remettre), et
+    /// un registre neuf commence. S'il ne peut même pas être renommé, rien ne l'écrase pendant ce lancement.
     pub fn load(path: PathBuf) -> (Self, bool) {
-        match fs::read_to_string(&path).ok().and_then(|s| serde_json::from_str::<Ledger>(&s).ok()) {
-            Some(mut l) => {
-                l.path = path;
-                (l, true)
+        let read = || match fs::read(&path) {
+            Ok(bytes) => Ok(Some(bytes)),
+            Err(e) if e.kind() == std::io::ErrorKind::NotFound => Ok(None),
+            Err(e) => Err(e.to_string()),
+        };
+        // verrou passager (antivirus, sauvegarde) : quelques essais avant de conclure qu'il ne se lit pas
+        let mut got = read();
+        for _ in 0..3 {
+            if got.is_ok() {
+                break;
             }
-            None => (Ledger { path, ..Default::default() }, false),
+            std::thread::sleep(std::time::Duration::from_millis(200));
+            got = read();
         }
+        let why = match got {
+            Ok(None) => return (Ledger { path, ..Default::default() }, false),
+            Ok(Some(bytes)) => {
+                let (json, legacy) = decode(&bytes);
+                match serde_json::from_str::<Ledger>(&json) {
+                    Ok(mut l) => {
+                        l.path = path;
+                        l.legacy_plaintext = legacy;
+                        return (l, true);
+                    }
+                    // fichier coupé, ou chiffré pour un autre compte Windows : mis de côté, jamais écrasé
+                    Err(e) => format!("unreadable ({e})"),
+                }
+            }
+            Err(e) => format!("couldn't be read ({e})"),
+        };
+        let l = Ledger { path, ..Default::default() };
+        if !l.set_aside(&why) {
+            l.unread.store(true, std::sync::atomic::Ordering::SeqCst);
+        }
+        (l, false)
+    }
+
+    /// Met applied.json de côté sous `applied.json.bad-<horodatage>`, avec une ligne dans logs\repairs.log. Faux s'il
+    /// est encore là sous son nom.
+    fn set_aside(&self, why: &str) -> bool {
+        let ts = crate::history::now_ms();
+        let name = self.path.file_name().map(|n| n.to_string_lossy().into_owned()).unwrap_or_else(|| "applied.json".into());
+        let aside = self.path.with_file_name(format!("{name}.bad-{ts}"));
+        let moved = fs::rename(&self.path, &aside).is_ok() || !self.path.exists();
+        if let Some(logs) = self.path.parent().map(|d| d.join("logs")) {
+            let _ = fs::create_dir_all(&logs);
+            if let Ok(mut f) = fs::OpenOptions::new().create(true).append(true).open(logs.join("repairs.log")) {
+                use std::io::Write;
+                let _ = if moved {
+                    writeln!(f, "{ts} {name} {why}: kept as {}, a new one is started", aside.display())
+                } else {
+                    writeln!(f, "{ts} {name} {why}, and couldn't be set aside: left untouched, changes of this launch aren't saved")
+                };
+            }
+        }
+        moved
     }
 
     pub fn save(&self) {
+        use std::sync::atomic::Ordering;
         if let Some(dir) = self.path.parent() {
             let _ = fs::create_dir_all(dir);
         }
+        // fichier d'avant illisible et encore en place (verrou) : jamais écrasé ; mis de côté dès que possible
+        if self.unread.load(Ordering::SeqCst) {
+            if !self.set_aside("couldn't be read at launch") {
+                return;
+            }
+            self.unread.store(false, Ordering::SeqCst);
+        }
         if let Ok(json) = serde_json::to_string(self) {
-            // écrit à côté puis remplace : un arrêt brutal ne laisse pas un fichier coupé
+            // chiffré au repos, puis écrit à côté, sur le disque (sync_all), et remplace : une coupure de courant ne
+            // laisse ni un fichier coupé ni un fichier vide sous le bon nom
+            let bytes = encode(&json, crate::license::vault::seal(&json));
             let tmp = self.path.with_extension("json.tmp");
-            if fs::write(&tmp, json).is_ok() {
+            let written = fs::File::create(&tmp).and_then(|mut f| {
+                use std::io::Write;
+                f.write_all(&bytes)?;
+                f.sync_all()
+            });
+            if written.is_ok() {
                 let _ = fs::rename(&tmp, &self.path);
             }
         }
+    }
+
+    /// Le fichier lu était en clair (version d'avant le chiffrement) : le réécrire chiffré au premier lancement.
+    pub fn needs_migration(&self) -> bool {
+        self.legacy_plaintext
     }
 
     pub fn has(&self, probe_id: &str) -> bool {
@@ -236,14 +366,17 @@ impl Ledger {
         }
     }
 
-    /// Marque le réglage appliqué. Un réglage réappliqué (autre variante) garde ses éléments déjà relevés.
-    /// Garde l'annulation des réglages appliqués qui n'en ont pas encore (lookup : scripts ouverts maintenant).
-    /// Renvoie true si quelque chose a changé.
+    /// Garde, pour chaque réglage appliqué, la copie de son annulation telle que cette version la lance (lookup :
+    /// scripts ouverts maintenant). Une copie prise par une version d'avant (1.1.6 à 1.1.10) est remplacée dès que
+    /// l'annulation de cette version est connue : sans licence (fin de Premium, déconnexion, désinstallation, Tout
+    /// annuler), c'est la copie qui tourne, et seule celle de cette version a les corrections de l'écran bleu (plus de
+    /// CoalescingTimerInterval à 0) et des chemins du profil. Sans lookup (scripts Premium fermés), la copie reste
+    /// telle quelle. Renvoie true si quelque chose a changé.
     pub fn fill_undo(&mut self, lookup: &dyn Fn(&str, Option<&str>) -> Option<Undo>) -> bool {
         let mut changed = false;
         for (id, a) in self.tweaks.iter_mut() {
-            if a.undo.is_none() {
-                if let Some(u) = lookup(id, a.variant.as_deref()) {
+            if let Some(u) = lookup(id, a.variant.as_deref()) {
+                if a.undo.as_ref() != Some(&u) {
                     a.undo = Some(u);
                     changed = true;
                 }
@@ -269,6 +402,19 @@ impl Ledger {
         entry.variant = variant;
         entry.ok = ok;
         entry.ts = ts;
+    }
+
+    /// Ce que `release` renverra, sans retirer le réglage : il reste dans applied.json pendant qu'on remet ses
+    /// éléments, pour qu'une remise coupée (app fermée, PC éteint) reprenne au lancement suivant.
+    pub fn releasable(&self, tid: &str) -> Vec<SavedEntry> {
+        let Some(applied) = self.tweaks.get(tid) else { return Vec::new() };
+        let still: HashSet<&String> =
+            self.tweaks.iter().filter(|(id, _)| id.as_str() != tid).flat_map(|(_, a)| a.probes.iter()).collect();
+        let mine: HashSet<&String> = applied.probes.iter().collect();
+        let mut out: Vec<SavedEntry> =
+            self.saved.iter().filter(|(id, _)| mine.contains(id) && !still.contains(id)).map(|(_, e)| e.clone()).collect();
+        out.reverse();
+        out
     }
 
     /// Retire le réglage. Renvoie, dans l'ordre inverse du relevé, les éléments à remettre : ceux qu'aucun
@@ -328,6 +474,7 @@ impl Ledger {
                 ok: a.ok,
                 backup: a.backup,
                 drift: a.probes.iter().any(|p| drifted.contains(p)),
+                windows_values: a.windows_values,
             })
             .collect()
     }
@@ -835,9 +982,13 @@ device                  partition=C:\r\ndisabledynamictick      Oui\r\ntscsyncpo
         l.set_applied("two", None, true, true, vec![b.id(), c.id()], 2);
         assert_eq!(l.saved.len(), 3);
 
+        let peek: Vec<Probe> = l.releasable("one").into_iter().map(|e| e.probe).collect();
         let back = l.release("one");
         assert_eq!(back.len(), 1, "Shared reste posé tant que le réglage 2 est appliqué");
         assert_eq!(back[0].probe, a);
+        assert_eq!(peek, vec![a], "releasable annonce ce que release rend");
+        assert_eq!(l.releasable("two").len(), 2);
+        assert!(l.tweaks.contains_key("two"), "releasable ne retire rien");
         let back = l.release("two");
         assert_eq!(back.iter().map(|e| e.probe.clone()).collect::<Vec<_>>(), vec![c, b.clone()], "ordre inverse du relevé");
         assert_eq!(back[1].before, Saved::Value { kind: 4, data: "14000000".into() });
@@ -872,6 +1023,65 @@ device                  partition=C:\r\ndisabledynamictick      Oui\r\ntscsyncpo
         let _ = fs::remove_file(path);
     }
 
+    /// applied.json illisible (coupé par une coupure de courant, vide, ou qui ne se lit pas) : mis de côté avec ses
+    /// états d'avant, jamais écrasé par le registre neuf (déjà présent en 1.1.9 : tout était perdu).
+    #[test]
+    fn unreadable_ledger_is_set_aside_not_overwritten() {
+        let dir = std::env::temp_dir().join(format!("rago-bad-ledger-{}", std::process::id()));
+        let _ = fs::remove_dir_all(&dir);
+        fs::create_dir_all(&dir).unwrap();
+        let path = dir.join("applied.json");
+        let aside = || -> Vec<PathBuf> {
+            fs::read_dir(&dir).unwrap().flatten().map(|e| e.path()).filter(|p| p.to_string_lossy().contains("applied.json.bad-")).collect()
+        };
+        for (case, content) in [("coupé", &br#"{"tweaks":{"net_a":{"variant":null,"ts":1,"ok":true,"backup":true,"probes":["reg:"#[..]), ("vide", &b""[..])] {
+            fs::write(&path, content).unwrap();
+            let (mut l, existed) = Ledger::load(path.clone());
+            assert!(!existed, "{case}");
+            let kept = aside();
+            assert_eq!(kept.len(), 1, "{case} : mis de côté");
+            assert_eq!(fs::read(&kept[0]).unwrap(), content, "{case} : tel quel");
+            l.set_applied("net_b", None, true, true, vec![], 2);
+            l.save();
+            assert!(Ledger::load(path.clone()).1, "{case} : registre neuf lisible");
+            assert_eq!(fs::read(&kept[0]).unwrap(), content, "{case} : jamais écrasé");
+            assert!(!dir.join("applied.json.tmp").exists());
+            fs::remove_file(&kept[0]).unwrap();
+        }
+        // ne se lit pas du tout (ici un dossier à sa place) : mis de côté lui aussi, avec ce qu'il contient
+        fs::remove_file(&path).unwrap();
+        fs::create_dir_all(path.join("x")).unwrap();
+        let (l, existed) = Ledger::load(path.clone());
+        assert!(!existed);
+        assert!(aside().iter().any(|p| p.join("x").exists()));
+        l.save();
+        assert!(Ledger::load(path.clone()).1);
+        let log = fs::read_to_string(dir.join("logs").join("repairs.log")).unwrap();
+        assert_eq!(log.lines().filter(|l| l.contains("applied.json") && l.contains("kept as")).count(), 3, "{log}");
+        let _ = fs::remove_dir_all(&dir);
+    }
+
+    /// Fichier d'avant qui n'a pu être ni lu ni renommé au lancement (verrou) : l'enregistrement le met d'abord de côté,
+    /// et ne l'écrase jamais (s'il ne peut toujours pas être renommé, rien n'est écrit ; non simulable ici).
+    #[test]
+    fn unread_ledger_is_set_aside_before_any_save() {
+        use std::sync::atomic::Ordering;
+        let dir = std::env::temp_dir().join(format!("rago-unread-ledger-{}", std::process::id()));
+        let _ = fs::remove_dir_all(&dir);
+        fs::create_dir_all(&dir).unwrap();
+        let path = dir.join("applied.json");
+        fs::write(&path, "ancien").unwrap();
+        let l = Ledger { path: path.clone(), ..Default::default() };
+        l.unread.store(true, Ordering::SeqCst);
+        l.save();
+        let aside: Vec<_> = fs::read_dir(&dir).unwrap().flatten().map(|e| e.path()).filter(|p| p.to_string_lossy().contains(".bad-")).collect();
+        assert_eq!(aside.len(), 1);
+        assert_eq!(fs::read_to_string(&aside[0]).unwrap(), "ancien");
+        assert!(Ledger::load(path).1, "registre neuf écrit après");
+        assert!(!l.unread.load(Ordering::SeqCst));
+        let _ = fs::remove_dir_all(&dir);
+    }
+
     #[test]
     fn undo_copy_is_kept_and_follows_the_variant() {
         let dir = std::env::temp_dir().join(format!("rago-undo-{}", std::process::id()));
@@ -893,4 +1103,61 @@ device                  partition=C:\r\ndisabledynamictick      Oui\r\ntscsyncpo
         let _ = fs::remove_dir_all(&dir);
     }
 
+    /// Copie gardée par une version d'avant (1.1.9, 1.1.10) : remplacée par l'annulation de cette version dès qu'elle
+    /// est connue, gardée telle quelle sinon (scripts Premium fermés).
+    #[test]
+    fn old_undo_copy_is_refreshed() {
+        let mut l = Ledger::default();
+        l.set_applied("in_x", None, true, true, vec![], 1);
+        let old = Undo { rest: Some("reg add \"HKLM\\SYSTEM\\CurrentControlSet\\Control\" /v CoalescingTimerInterval /d 0".into()), ..Default::default() };
+        l.tweaks.get_mut("in_x").unwrap().undo = Some(old.clone());
+        // scripts fermés : rien à mettre à la place
+        assert!(!l.fill_undo(&|_, _| None));
+        assert_eq!(l.tweaks["in_x"].undo, Some(old));
+        let new = Undo { rest: Some("echo ok".into()), ..Default::default() };
+        assert!(l.fill_undo(&|_, _| Some(new.clone())));
+        assert_eq!(l.tweaks["in_x"].undo, Some(new.clone()));
+        assert!(!l.fill_undo(&|_, _| Some(new.clone())), "déjà à jour : rien ne change, rien à enregistrer");
+    }
+
+    #[test]
+    fn ledger_never_written_in_clear_when_dpapi_fails() {
+        let json = r#"{"tweaks":{"net_x":{"undo":{"full":"netsh int tcp reset"}}}}"#;
+        let bytes = encode(json, None);
+        assert!(!bytes.windows(5).any(|w| w == b"netsh"), "pas de commande en clair sur le disque");
+        assert_eq!(decode(&bytes), (json.to_string(), true));
+        let mut bad = bytes.clone();
+        let n = bad.len() - 1;
+        bad[n] ^= 1;
+        assert_ne!(decode(&bad).0, json, "un fichier modifié n'est pas relu comme valide");
+    }
+
+    // Le chiffrement au repos est DPAPI, propre à Windows (ailleurs le coffre laisse passer en clair).
+    #[cfg(windows)]
+    #[test]
+    fn reads_legacy_plaintext_ledger_then_reseals() {
+        let dir = std::env::temp_dir().join(format!("rago-legacy-{}", std::process::id()));
+        let _ = fs::create_dir_all(&dir);
+        let path = dir.join("applied.json");
+        // simule un fichier d'une version d'avant le chiffrement : du JSON en clair sur le disque
+        let mut old = Ledger::default();
+        old.set_applied("net_x", Some("a".into()), true, true, vec![], 1);
+        old.tweaks.get_mut("net_x").unwrap().undo = Some(Undo { full: Some("netsh int tcp reset".into()), ..Default::default() });
+        fs::write(&path, serde_json::to_string(&old).unwrap()).unwrap();
+
+        let (loaded, existed) = Ledger::load(path.clone());
+        assert!(existed);
+        assert!(loaded.needs_migration(), "un fichier en clair doit être repéré");
+        assert_eq!(loaded.tweaks["net_x"].undo.as_ref().unwrap().full.as_deref(), Some("netsh int tcp reset"));
+
+        // la migration réécrit chiffré
+        loaded.save();
+        let raw = fs::read(&path).unwrap();
+        assert!(!raw.windows(5).any(|w| w == b"netsh"), "le fichier chiffré ne doit pas contenir la commande en clair");
+
+        let (back, _) = Ledger::load(path.clone());
+        assert!(!back.needs_migration(), "déjà chiffré");
+        assert_eq!(back.tweaks["net_x"].undo, loaded.tweaks["net_x"].undo);
+        let _ = fs::remove_dir_all(&dir);
+    }
 }

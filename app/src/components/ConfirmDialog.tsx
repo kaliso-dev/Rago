@@ -2,7 +2,7 @@ import { RotateCcw, ShieldCheck, TriangleAlert } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import { availability, needsReboot, retired, tweaks } from "../lib/catalog";
 import { formatTime } from "../lib/i18n";
-import { RESTORE_FRESH_MS, SESSION_TOGGLES, itemName, useStore } from "../lib/store";
+import { RESTORE_FRESH_MS, SESSION_TOGGLES, itemName, undoVariant, useStore } from "../lib/store";
 import { Modal } from "./Modal";
 import { Button, Badge } from "./ui";
 
@@ -14,14 +14,17 @@ export function ConfirmDialog() {
   const undoList = undoIds.map((id) => tweaks.get(id)!).filter(Boolean);
   // réglages retirés du catalogue, encore appliqués sur ce PC : on peut seulement les remettre comme avant
   const undoRetired = undoIds.map((id) => retired.get(id)!).filter(Boolean);
-  const onlyUndo = list.length === 0 && undoList.length + undoRetired.length > 0;
-  const total = list.length + undoList.length + undoRetired.length;
+  // Tout annuler : noté dans applied.json par une autre version, inconnu de celle-ci (le moteur le remet quand même)
+  const undoUnknown = confirm?.all ? undoIds.filter((id) => !tweaks.has(id) && !retired.has(id)) : [];
+  const undoCount = undoList.length + undoRetired.length + undoUnknown.length;
+  const onlyUndo = list.length === 0 && undoCount > 0;
+  const total = list.length + undoCount;
   const onlyRestore = ids.length === 1 && ids[0] === "rst_point";
   const needsWmic = list.filter((tw) => availability(tw, sys).warn === "needsWmic").length;
   const warnings = list.filter((tw) => tw.confirm);
   const reboot =
     list.some((tw) => needsReboot(tw, variantOf(tw))) ||
-    undoList.some((tw) => needsReboot(tw, applied.get(tw.id)?.variant ?? null)) ||
+    undoList.some((tw) => needsReboot(tw, undoVariant(tw.id, applied.get(tw.id)))) ||
     undoRetired.some((r) => r.reboot);
   const mcBlocked = list.some((tw) => tw.native === "minecraft_optifine") && !mcDir;
 
@@ -52,12 +55,21 @@ export function ConfirmDialog() {
   const title =
     confirm?.single && list.length === 1
       ? list[0].name[lang]
-      : onlyUndo
-        ? t("confirm.undoTitle", { n: undoList.length + undoRetired.length })
-        : undoList.length
+      : confirm?.all
+        ? t("confirm.undoAllTitle")
+        : onlyUndo
+          ? t("confirm.undoTitle", { n: undoCount })
+          : undoList.length
           ? t("confirm.changesTitle", { n: total })
           : t("confirm.title", { n: list.length });
-  const lead = confirm?.single && list.length === 1 ? list[0].desc[lang] : onlyUndo ? t("confirm.undoLead") : t("confirm.lead");
+  const lead =
+    confirm?.single && list.length === 1
+      ? list[0].desc[lang]
+      : confirm?.all
+        ? t("confirm.undoAllLead", { n: undoCount })
+        : onlyUndo
+          ? t("confirm.undoLead")
+          : t("confirm.lead");
   const restoreHint =
     needed.length > 0
       ? recent
@@ -66,13 +78,14 @@ export function ConfirmDialog() {
       : list.some((tw) => tw.kind === "tweak")
         ? t("confirm.restoreOptional")
         : t("confirm.restoreOptionalAction", { n: list.length });
-  const row = (tw: (typeof list)[number], v: string | null) => {
+  // run : variante que le moteur lance vraiment (une annulation du RBW Mod lance « Activé »), pour l'icône de redémarrage
+  const row = (tw: (typeof list)[number], v: string | null, run: string | null = v) => {
     const vLabel = tw.variants?.find((x) => x.id === v)?.label[lang];
     return (
       <li key={tw.id}>
         <span>{itemName(tw.id, lang)}</span>
         {vLabel && <span className="confirm-variant">{vLabel}</span>}
-        {needsReboot(tw, v) && <RotateCcw size={12} className="muted" />}
+        {needsReboot(tw, run) && <RotateCcw size={12} className="muted" />}
         {tw.risk === "advanced" && <Badge tone="warn">{t("badge.advanced")}</Badge>}
       </li>
     );
@@ -89,15 +102,21 @@ export function ConfirmDialog() {
           <ul className="confirm-list">{list.map((tw) => row(tw, variantOf(tw)))}</ul>
         </>
       )}
-      {undoList.length + undoRetired.length > 0 && (
+      {undoCount > 0 && (
         <>
           {list.length > 0 && <div className="rg-overline confirm-group">{t("confirm.undoList")}</div>}
           <ul className="confirm-list undo">
-            {undoList.map((tw) => row(tw, applied.get(tw.id)?.variant ?? null))}
+            {undoList.map((tw) => row(tw, applied.get(tw.id)?.variant ?? null, undoVariant(tw.id, applied.get(tw.id))))}
             {undoRetired.map((r) => (
               <li key={r.id}>
                 <span>{r.name[lang]}</span>
                 {r.reboot && <RotateCcw size={12} className="muted" />}
+                <Badge tone="warn">{t("badge.retired")}</Badge>
+              </li>
+            ))}
+            {undoUnknown.map((id) => (
+              <li key={id}>
+                <span>{itemName(id, lang)}</span>
                 <Badge tone="warn">{t("badge.retired")}</Badge>
               </li>
             ))}
@@ -147,7 +166,7 @@ export function ConfirmDialog() {
           {t("confirm.cancel")}
         </Button>
         <Button variant="primary" onClick={go} disabled={mcBlocked}>
-          {confirm?.single ? t("confirm.goOne") : onlyUndo ? t("confirm.undoGo") : t("confirm.go")}
+          {confirm?.single ? t("confirm.goOne") : confirm?.all ? t("dash.undoAll") : onlyUndo ? t("confirm.undoGo") : t("confirm.go")}
         </Button>
       </footer>
     </Modal>

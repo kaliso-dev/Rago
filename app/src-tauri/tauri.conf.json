@@ -55,6 +55,7 @@
         "languages": ["English"],
         "displayLanguageSelector": false,
         "installerIcon": "icons/icon.ico",
+        "installerHooks": "installer/hooks.nsh",
         "headerImage": "installer/header.bmp",
         "sidebarImage": "installer/sidebar.bmp"
       }

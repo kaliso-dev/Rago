@@ -2,8 +2,8 @@
 //! l'interface ligne par ligne.
 //!
 //! Chaque script batch est écrit dans le dossier de données de l'app (sous-dossier run, hors de
-//! %TEMP% : beaucoup de réglages vident %TEMP% et tuaient leur propre script) puis lancé par `cmd.exe /d /c`, sans
-//! fenêtre, entrée standard fermée (un `pause` oublié ne bloque donc jamais).
+//! %TEMP% : beaucoup de réglages vident %TEMP% et tuaient leur propre script) puis lancé par `cmd.exe /d /c .\nom.cmd`
+//! depuis ce dossier (script_command), sans fenêtre, entrée standard fermée (un `pause` oublié ne bloque donc jamais).
 
 use serde::{Deserialize, Serialize};
 use std::collections::{BTreeMap, HashMap};
@@ -12,13 +12,12 @@ use std::io::{BufRead, BufReader, Read, Write};
 use std::path::{Path, PathBuf};
 use std::process::{Child, Command, Stdio};
 use std::sync::atomic::{AtomicBool, Ordering};
-use std::sync::{Arc, Mutex};
+use std::sync::{Arc, Mutex, MutexGuard, PoisonError};
 use std::time::Instant;
-use tauri::{AppHandle, Emitter};
 
 use crate::backup::{self, Ledger, Probe, Sys};
 use crate::history::{now_ms, Entry, History};
-use crate::{catalog, minecraft, shell};
+use crate::{assets, catalog, minecraft, shell};
 
 #[derive(Debug, Clone, Deserialize)]
 #[serde(rename_all = "camelCase")]
@@ -67,6 +66,13 @@ struct DoneEvent<'a> {
     log_file: String,
 }
 
+/// Un seul lot à la fois sur Windows : un lot lancé depuis l'interface attend la fin d'une remise à zéro en cours.
+static EXCLUSIVE: Mutex<()> = Mutex::new(());
+
+fn exclusive() -> MutexGuard<'static, ()> {
+    EXCLUSIVE.lock().unwrap_or_else(PoisonError::into_inner)
+}
+
 #[derive(Default)]
 pub struct Runner {
     running: AtomicBool,
@@ -74,8 +80,14 @@ pub struct Runner {
     child: Mutex<Option<u32>>,
 }
 
+/// Envoi d'un événement à la fenêtre (lib.rs le relie à `AppHandle::emit`). Jamais `AppHandle` ici : les tests lancent
+/// des lots, et sous Windows leur programme ne démarre plus s'il contient le code des fenêtres de Tauri (une fonction
+/// de comctl32 v6 qu'il ne trouve pas sans le manifeste de l'app : STATUS_ENTRYPOINT_NOT_FOUND).
+pub type Emit = Arc<dyn Fn(&str, serde_json::Value) + Send + Sync>;
+
 pub struct Context {
-    pub app: AppHandle,
+    /// fenêtre qui suit le lot ; None pour la remise à zéro (fin de Premium, désinstallation), qui ne montre rien
+    pub app: Option<Emit>,
     pub history: Arc<History>,
     pub resource_dir: PathBuf,
     pub logs_dir: PathBuf,
@@ -85,6 +97,19 @@ pub struct Context {
     pub ledger: Arc<Mutex<Ledger>>,
     /// scripts Premium ouverts avec la clé de la licence (None sans licence)
     pub premium: Option<Arc<catalog::Bundle>>,
+    /// remise à zéro : vrai quand elle n'a plus lieu d'être (licence revenue). Lu entre deux réglages, jamais au
+    /// milieu d'un script : un réglage commencé est toujours remis en entier.
+    pub stop_when: Option<Arc<dyn Fn() -> bool + Send + Sync>>,
+}
+
+impl Context {
+    fn emit<S: Serialize>(&self, event: &str, payload: S) {
+        if let Some(app) = &self.app {
+            if let Ok(payload) = serde_json::to_value(payload) {
+                app(event, payload);
+            }
+        }
+    }
 }
 
 impl Runner {
@@ -109,13 +134,20 @@ impl Runner {
         let me = Arc::clone(self);
         let rid = run_id.clone();
         std::thread::spawn(move || {
+            let _one = exclusive();
             me.run(&ctx, &rid, &items);
             me.running.store(false, Ordering::SeqCst);
         });
         Ok(run_id)
     }
 
-    fn run(&self, ctx: &Context, run_id: &str, items: &[RunItem]) {
+    /// Lance le lot sur le thread appelant, sans interface (remise à zéro). Renvoie (réussis, ratés).
+    pub fn run_now(&self, ctx: &Context, items: &[RunItem]) -> (usize, usize) {
+        let _one = exclusive();
+        self.run(ctx, &format!("reset-{}", now_ms()), items)
+    }
+
+    fn run(&self, ctx: &Context, run_id: &str, items: &[RunItem]) -> (usize, usize) {
         let _ = fs::create_dir_all(&ctx.logs_dir);
         let log_path = ctx.logs_dir.join(format!("{run_id}.log"));
         let log = Mutex::new(OpenOptions::new().create(true).append(true).open(&log_path).ok());
@@ -135,17 +167,73 @@ impl Runner {
             if self.cancel.load(Ordering::SeqCst) {
                 break;
             }
+            if ctx.stop_when.as_ref().is_some_and(|stop| stop()) {
+                write_log(&format!("==== stopped before {}: no longer needed", item.id));
+                break;
+            }
+            let applied = ctx.ledger.lock().unwrap().tweaks.contains_key(&item.id);
+            if item.undo && !applied {
+                // décoché, mais déjà remis entre-temps par la remise à zéro : plus rien à annuler
+                write_log(&format!("==== undo {}: already put back", item.id));
+                let variant = item.variant.as_deref();
+                ctx.emit("run:item", ItemEvent { run_id, index, id: &item.id, variant, status: "ok", code: Some(0), duration_ms: Some(0), message: None });
+                ok += 1;
+                continue;
+            }
+            // RBW Mod « Désactivé » de cette version : il n'a posé que les valeurs de Windows, il n'y a rien à défaire. Le
+            // défaire sans clic sur « Activé » (décoché, Tout annuler, déconnexion, fin de Premium, désinstallation) ne
+            // lance rien : ni les 6 étapes d'« Activé », ni son verdict (« post a screenshot on Discord »), que le joueur
+            // n'a pas demandés. Noté comme une annulation : la ligne garde « Désactivé depuis… », ce qui reste vrai.
+            if item.undo && catalog::revert_runs_script(&item.id) {
+                let entry = ctx.ledger.lock().unwrap().tweaks.get(&item.id).cloned();
+                if let Some(entry) = entry.filter(|a| !a.backup && a.windows_values) {
+                    let variant = entry.variant.as_deref().or(item.variant.as_deref());
+                    ctx.emit("run:item", ItemEvent { run_id, index, id: &item.id, variant, status: "running", code: None, duration_ms: None, message: None });
+                    write_log(&format!("==== undo {}{}", item.id, variant.map(|v| format!(":{v}")).unwrap_or_default()));
+                    let line = "- Off already put the Windows values back: nothing to undo".to_string();
+                    write_log(&line);
+                    ctx.emit("run:log", LogEvent { run_id, id: &item.id, line });
+                    {
+                        let mut l = ctx.ledger.lock().unwrap();
+                        l.release(&item.id);
+                        l.save();
+                    }
+                    ctx.emit("run:item", ItemEvent { run_id, index, id: &item.id, variant, status: "ok", code: Some(0), duration_ms: Some(0), message: None });
+                    ctx.history.push(Entry {
+                        id: item.id.clone(),
+                        variant: variant.map(str::to_string),
+                        ts: now_ms(),
+                        ok: true,
+                        code: Some(0),
+                        duration_ms: 0,
+                        undo: true,
+                    });
+                    ok += 1;
+                    continue;
+                }
+            }
+            // RBW Mod : revenir en arrière autrement (« Activé » après « Désactivé » ; entrée d'une version d'avant :
+            // sauvegarde de 1.1.9, ou ancien « Désactivé » noté d'après l'historique, qui passait des services en manuel),
+            // c'est lancer « Activé » en entier, jamais la sauvegarde d'avant « Désactivé », qui ne démarrait aucun service
+            // (catalog::revert_runs_script). Lancé et noté dans l'historique comme « Activé » : l'interface affiche
+            // « Activé depuis… »
+            let as_script;
+            let converted = catalog::revert_runs_script(&item.id)
+                && (item.undo || (applied && catalog::is_revert(&item.id, item.variant.as_deref())));
+            let item = if converted {
+                as_script = RunItem { variant: catalog::revert_variant(&item.id), undo: false, ..item.clone() };
+                &as_script
+            } else {
+                item
+            };
             let variant = item.variant.as_deref();
             let emit_item = |status: &str, code: Option<i32>, duration: Option<u64>, message: Option<String>| {
-                let _ = ctx.app.emit(
-                    "run:item",
-                    ItemEvent { run_id, index, id: &item.id, variant, status, code, duration_ms: duration, message },
-                );
+                ctx.emit("run:item", ItemEvent { run_id, index, id: &item.id, variant, status, code, duration_ms: duration, message });
             };
-            let applied = ctx.ledger.lock().unwrap().tweaks.contains_key(&item.id);
             // décoché, ou variante de retour arrière d'un réglage appliqué : retour à l'état d'avant
-            let undo = item.undo || (applied && catalog::is_revert(&item.id, variant));
-            if restore_failed && !undo && changes_windows(&item.id) {
+            let undo = item.undo || (applied && catalog::is_revert(&item.id, variant) && !catalog::revert_runs_script(&item.id));
+            // un retour arrière converti tourne lui aussi sans point de restauration, comme avant (c'était une annulation)
+            if restore_failed && !undo && !converted && changes_windows(&item.id) {
                 write_log(&format!("==== skipped {} (no restore point)", item.id));
                 emit_item("skipped", None, None, None);
                 skipped += 1;
@@ -161,7 +249,7 @@ impl Runner {
             let started = Instant::now();
             let emit_line = |line: String| {
                 write_log(&line);
-                let _ = ctx.app.emit("run:log", LogEvent { run_id, id: &item.id, line });
+                ctx.emit("run:log", LogEvent { run_id, id: &item.id, line });
             };
             let twin_key = (!undo).then(|| catalog::twin_of(&item.id).map(|t| format!("{t}:{}", variant.unwrap_or("")))).flatten();
             let (success, code, message) = if undo {
@@ -190,7 +278,10 @@ impl Runner {
                     None => {
                         // ce que le script va modifier, relevé avant de le lancer
                         let switch = catalog::is_switch(&item.id) && !catalog::is_revert(&item.id, variant);
-                        let probes = if switch { self.snapshot(ctx, &sys, item, &emit_line) } else { None };
+                        // RBW Mod : rien à sauvegarder, son retour arrière lance « Activé » ; un relevé retiendrait les
+                        // valeurs d'autres réglages et cacherait ce qu'il leur change (badge « Changé par Windows »)
+                        let keep = switch && !catalog::revert_runs_script(&item.id);
+                        let probes = if keep { self.snapshot(ctx, &sys, item, &emit_line) } else { None };
                         let result = self.run_item(ctx, item, &emit_line);
                         let cancelled = self.cancel.load(Ordering::SeqCst);
                         let r = match result {
@@ -205,14 +296,41 @@ impl Runner {
                             }
                             let ids: Vec<String> = probes.iter().map(Probe::id).collect();
                             l.set_applied(&item.id, item.variant.clone(), r.0, true, ids.clone(), now_ms());
+                            // relevé d'Advanced hitreg suite qui ne relève rien (RAG-68, pas dans cette version) : retour
+                            // par les valeurs de Windows dès maintenant, comme au lancement suivant (repair.rs), pour
+                            // qu'une déconnexion juste après le remette aussi
+                            crate::repair::hitreg_suite_without_backup(&mut l);
                             l.fill_undo(&|i, v| catalog::undo_of(i, v, ctx.premium.as_deref()));
                             l.save();
                             ids
                         });
                         if switch && ids.is_none() {
-                            // réglage natif (OptiFine) : il garde sa propre sauvegarde
+                            // réglage natif (OptiFine) : il garde sa propre sauvegarde ; RBW Mod « Désactivé » : aucune (le
+                            // relevé d'une version précédente est oublié, il ne retient plus les valeurs d'autres réglages)
                             let mut l = ctx.ledger.lock().unwrap();
+                            if catalog::revert_runs_script(&item.id) {
+                                l.release(&item.id);
+                            }
                             l.set_applied(&item.id, item.variant.clone(), r.0, item.id == "mc_optifine", Vec::new(), now_ms());
+                            if item.id == "mc_optifine" {
+                                // dossier choisi dans l'interface : la remise sans interface le retrouve (reset.rs)
+                                if let Some(a) = l.tweaks.get_mut(&item.id) {
+                                    a.dir = param_dir(item).map(|d| d.to_string_lossy().into_owned());
+                                }
+                            }
+                            if catalog::revert_runs_script(&item.id) {
+                                // « Désactivé » ne pose que des valeurs de Windows, même lancé à moitié : rien à défaire
+                                if let Some(a) = l.tweaks.get_mut(&item.id) {
+                                    a.windows_values = true;
+                                }
+                            }
+                            l.save();
+                        } else if catalog::revert_runs_script(&item.id) && r.0 {
+                            // RBW Mod « Activé » allé au bout : il n'est plus « appliqué » (« Désactivé » l'était). Arrêté
+                            // ou pas démarré (r.0 faux : le script finit toujours par exit /b 0), « Désactivé » reste noté :
+                            // la ligne ne dit pas « Activé depuis… », et la remise de fin de Premium le retentera
+                            let mut l = ctx.ledger.lock().unwrap();
+                            l.release(&item.id);
                             l.save();
                         }
                         if let Some(k) = twin_key {
@@ -252,10 +370,11 @@ impl Runner {
             }
         }
         let cancelled = self.cancel.load(Ordering::SeqCst);
-        let _ = ctx.app.emit(
+        ctx.emit(
             "run:done",
             DoneEvent { run_id, ok, failed, skipped, restore_failed, cancelled, log_file: log_path.to_string_lossy().to_string() },
         );
+        (ok, failed)
     }
 
     /// Lance le relevé du réglage et garde l'état actuel de ce qu'il va modifier, s'il n'est pas déjà gardé.
@@ -264,13 +383,7 @@ impl Runner {
         let script = catalog::probe(&item.id, variant, ctx.premium.as_deref())?;
         let probes = if script.contains("@@RAGO") {
             let path = write_script(&ctx.run_dir, &format!("{}-probe", item.id), variant, &script).ok()?;
-            let mut cmd = shell::hidden("cmd.exe");
-            cmd.args(["/d", "/c"]).arg(&path);
-            cmd.env("RAGO_RES", &ctx.resource_dir);
-            cmd.env("adapter_name", ctx.adapter.clone().unwrap_or_default());
-            cmd.current_dir(&ctx.run_dir);
-            cmd.stdin(Stdio::null());
-            let out = cmd.output().ok();
+            let out = script_command(ctx, &path).ok().and_then(|mut cmd| cmd.output().ok());
             let _ = fs::remove_file(&path);
             backup::parse_markers(&decode(&out?.stdout))
         } else {
@@ -306,13 +419,9 @@ impl Runner {
         let undo = catalog::undo_of(id, variant.as_deref(), ctx.premium.as_deref())
             .or_else(|| entry.as_ref().and_then(|e| e.undo.clone()));
         if id == "mc_optifine" {
-            let dir = item
-                .params
-                .as_ref()
-                .and_then(|p| p.get("dir"))
-                .and_then(|d| d.as_str())
-                .map(PathBuf::from)
-                .or_else(|| std::env::var("APPDATA").ok().map(|a| PathBuf::from(a).join(".minecraft")))
+            // dossier donné par l'interface, sinon celui où il a été appliqué, sinon le dossier habituel
+            let dir = param_dir(item)
+                .or_else(|| crate::reset::optifine_dir(entry.as_ref()))
                 .ok_or("Minecraft folder not set")?;
             let msg = minecraft::restore_latest(&dir)?;
             emit(format!("- {msg}"));
@@ -322,40 +431,48 @@ impl Runner {
             return Ok((0, None));
         }
         if entry.as_ref().is_some_and(|e| e.backup) {
-            let back = {
-                let mut l = ctx.ledger.lock().unwrap();
-                let back = l.release(id);
-                l.save();
-                back
-            };
+            // retiré d'applied.json seulement une fois remis : une remise coupée reprend au lancement suivant
+            let back = ctx.ledger.lock().unwrap().releasable(id);
             let (rest, rest_first) = undo.map(|u| (u.rest, u.rest_avant)).unwrap_or_default();
-            let mut code = 0;
-            let run_rest = |code: &mut i32| -> Result<(), String> {
-                if let Some(rest) = &rest {
-                    emit("- Putting back the Windows values for the network and system commands".into());
-                    *code = self.run_batch(ctx, &format!("{id}-undo"), None, rest, emit)?.0;
+            let put_back = || -> Result<(i32, Option<String>), String> {
+                let mut code = 0;
+                let run_rest = |code: &mut i32| -> Result<(), String> {
+                    if let Some(rest) = &rest {
+                        emit("- Putting back the Windows values for the network and system commands".into());
+                        *code = self.run_batch(ctx, &format!("{id}-undo"), None, rest, emit)?.0;
+                    }
+                    Ok(())
+                };
+                // plans d'alimentation supprimés : recréés avant que la sauvegarde réactive celui d'avant
+                if rest_first {
+                    run_rest(&mut code)?;
                 }
-                Ok(())
+                emit(format!("- Putting back {} settings as they were before this tweak", back.len()));
+                let mut errors = 0;
+                for e in &back {
+                    if let Err(err) = sys.restore(&e.probe, &e.before) {
+                        errors += 1;
+                        emit(format!("! {}: {err}", describe(&e.probe)));
+                    }
+                }
+                if !rest_first {
+                    run_rest(&mut code)?;
+                }
+                if errors > 0 {
+                    return Ok((if code == 0 { 1 } else { code }, Some(format!("{errors} settings couldn't be put back"))));
+                }
+                Ok((code, None))
             };
-            // plans d'alimentation supprimés : recréés avant que la sauvegarde réactive celui d'avant
-            if rest_first {
-                run_rest(&mut code)?;
+            let r = put_back();
+            // arrêté en route (bouton Arrêter, délai de la désinstallation), ou rest pas lancé (script pas écrit, cmd.exe
+            // pas démarré : avec rest_avant, rien n'a encore été remis) : le réglage reste appliqué, la prochaine
+            // annulation reprend tout depuis la sauvegarde
+            if r.is_ok() && !self.cancel.load(Ordering::SeqCst) {
+                let mut l = ctx.ledger.lock().unwrap();
+                l.release(id);
+                l.save();
             }
-            emit(format!("- Putting back {} settings as they were before this tweak", back.len()));
-            let mut errors = 0;
-            for e in &back {
-                if let Err(err) = sys.restore(&e.probe, &e.before) {
-                    errors += 1;
-                    emit(format!("! {}: {err}", describe(&e.probe)));
-                }
-            }
-            if !rest_first {
-                run_rest(&mut code)?;
-            }
-            if errors > 0 {
-                return Ok((if code == 0 { 1 } else { code }, Some(format!("{errors} settings couldn't be put back"))));
-            }
-            return Ok((code, None));
+            return r;
         }
         // pas de sauvegarde (appliqué avant 1.1.6, ou par l'ancien .bat) : valeurs de Windows
         let script = undo.and_then(|u| u.full).or_else(|| {
@@ -366,21 +483,26 @@ impl Runner {
         };
         emit("- Putting back the Windows default values".into());
         let r = self.run_batch(ctx, &format!("{id}-undo"), None, &script, emit)?;
-        let mut l = ctx.ledger.lock().unwrap();
-        l.release(id);
-        l.save();
+        if !self.cancel.load(Ordering::SeqCst) {
+            let mut l = ctx.ledger.lock().unwrap();
+            l.release(id);
+            l.save();
+        }
         Ok(r)
     }
 
     fn run_batch(&self, ctx: &Context, name: &str, variant: Option<&str>, script: &str, emit: &dyn Fn(String)) -> Result<(i32, Option<String>), String> {
-        let path = write_script(&ctx.run_dir, name, variant, script)?;
-        let mut cmd = shell::hidden("cmd.exe");
-        cmd.args(["/d", "/c"]).arg(&path);
-        cmd.env("RAGO_RES", &ctx.resource_dir);
-        cmd.env("adapter_name", ctx.adapter.clone().unwrap_or_default());
-        cmd.current_dir(&ctx.run_dir);
-        let res = self.stream(cmd, emit);
+        // plan d'alimentation, profil NVIDIA : écrits en clair dans run\ le temps du script seulement (assets.rs)
+        let (staged, script) = assets::stage(&ctx.run_dir, script)?;
+        let path = write_script(&ctx.run_dir, name, variant, &script)?;
+        let res = script_command(ctx, &path).and_then(|mut cmd| {
+            if let Some(dir) = staged.dir() {
+                cmd.env("RAGO_SEC", dir);
+            }
+            self.stream(cmd, emit)
+        });
         let _ = fs::remove_file(&path);
+        drop(staged);
         res
     }
 
@@ -406,10 +528,12 @@ impl Runner {
             }
             "nv_profile" => {
                 let exe = ctx.resource_dir.join("nvidiaProfileInspector.exe");
-                let nip = ctx.resource_dir.join("extremelatencylow.nip");
-                if !exe.exists() || !nip.exists() {
-                    return Err("NVIDIA Profile Inspector or the .nip profile is missing from the app folder".into());
+                if !exe.exists() {
+                    return Err("NVIDIA Profile Inspector is missing from the app folder".into());
                 }
+                // profil chiffré dans l'exe : écrit dans run\ le temps de l'import (assets.rs)
+                let (staged, _) = assets::stage(&ctx.run_dir, "%RAGO_RES%\\extremelatencylow.nip")?;
+                let nip = staged.dir().ok_or("The .nip profile is missing from the app")?.join("extremelatencylow.nip");
                 emit("- Importing the extremelatencylow.nip profile into the NVIDIA driver".into());
                 let mut cmd = shell::hidden(&exe.to_string_lossy());
                 cmd.arg(&nip).arg("-silentImport");
@@ -515,6 +639,11 @@ fn cp850(b: u8) -> char {
 
 const PREAMBLE: &str = "@echo off\r\nchcp 65001 >nul\r\nsetlocal EnableExtensions EnableDelayedExpansion\r\n";
 
+/// Dossier Minecraft passé par l'interface avec OptiFine.
+fn param_dir(item: &RunItem) -> Option<PathBuf> {
+    item.params.as_ref().and_then(|p| p.get("dir")).and_then(|d| d.as_str()).filter(|d| !d.is_empty()).map(PathBuf::from)
+}
+
 fn write_script(dir: &Path, id: &str, variant: Option<&str>, body: &str) -> Result<PathBuf, String> {
     fs::create_dir_all(dir).map_err(|e| e.to_string())?;
     let name = format!("{}{}-{}.cmd", id, variant.map(|v| format!("-{v}")).unwrap_or_default(), now_ms());
@@ -523,6 +652,28 @@ fn write_script(dir: &Path, id: &str, variant: Option<&str>, body: &str) -> Resu
     let content = format!("{PREAMBLE}{body}\r\nexit /b 0\r\n");
     fs::write(&path, content).map_err(|e| format!("Couldn't write the script: {e}"))?;
     Ok(path)
+}
+
+/// cmd.exe qui lance un script écrit par write_script (relevé ou réglage), depuis son dossier. Sur la ligne de commande,
+/// seulement `.\nom.cmd` : le dossier run est dans %APPDATA%, et un `&`, `(`, `)` ou `^` dans le nom du compte coupait
+/// `cmd /d /c C:\Users\…\run\x.cmd` (sans espace, le chemin n'a pas de guillemets ; avec, cmd /c les retire dès qu'il y
+/// voit un de ces caractères) : chaque réglage échouait. Le nom n'a que des lettres, chiffres, `-`, `_` et `.`
+/// (sanitize), rien que cmd interprète, et `.\` le trouve dans le dossier courant même quand
+/// NoDefaultCurrentDirectoryInExePath est posé. Le dossier passe par CreateProcess (dossier courant), jamais par la ligne
+/// de commande.
+fn script_command(ctx: &Context, path: &Path) -> Result<Command, String> {
+    let name = path
+        .file_name()
+        .and_then(|n| n.to_str())
+        .filter(|n| !n.is_empty() && n.chars().all(|c| c.is_ascii_alphanumeric() || "-_.".contains(c)))
+        .ok_or_else(|| format!("Unexpected script name: {}", path.display()))?;
+    let dir = path.parent().ok_or("Script without a folder")?;
+    let mut cmd = shell::hidden("cmd.exe");
+    cmd.args(["/d", "/c"]).arg(format!(".\\{name}"));
+    cmd.env("RAGO_RES", &ctx.resource_dir);
+    cmd.env("adapter_name", ctx.adapter.clone().unwrap_or_default());
+    cmd.current_dir(dir);
+    Ok(cmd)
 }
 
 fn sanitize(s: &str) -> String {
@@ -572,4 +723,232 @@ mod tests {
         assert!(p.file_name().unwrap().to_str().unwrap().starts_with("test-a_b-"));
         fs::remove_file(p).unwrap();
     }
+
+    fn test_ctx(name: &str, stop_when: Option<Arc<dyn Fn() -> bool + Send + Sync>>) -> Context {
+        let dir = std::env::temp_dir().join(format!("rago-test-{name}-{}", std::process::id()));
+        let _ = fs::remove_dir_all(&dir);
+        let mut ledger = Ledger::default();
+        ledger.set_applied("net_a", None, true, true, vec![], 1);
+        ledger.set_applied("net_b", None, true, true, vec![], 2);
+        Context {
+            app: None,
+            history: Arc::new(History::load(dir.join("history.json"))),
+            resource_dir: dir.join("resources"),
+            logs_dir: dir.join("logs"),
+            run_dir: dir.join("run"),
+            backup_dir: dir.join("backup"),
+            adapter: None,
+            ledger: Arc::new(Mutex::new(ledger)),
+            premium: None,
+            stop_when,
+        }
+    }
+
+    fn undo(id: &str) -> RunItem {
+        RunItem { id: id.into(), variant: None, params: None, undo: true }
+    }
+
+    /// Chemin sous un fichier : rien ne peut s'y écrire, sous Windows comme ailleurs. Un test qui passe par un vrai
+    /// réglage ne le lance donc jamais sur le PC qui fait tourner les tests (cargo test tourne aussi sur la CI Windows).
+    fn unwritable(ctx: &Context, name: &str) -> PathBuf {
+        let file = ctx.logs_dir.parent().unwrap().join(format!("{name}-is-a-file"));
+        fs::create_dir_all(file.parent().unwrap()).unwrap();
+        fs::write(&file, "x").unwrap();
+        file.join(name)
+    }
+
+    /// Dossier run d'un compte « O'Brien & Co (x) ^1 %TEMP% !y! » : tout ce que cmd ou PowerShell pourrait lire.
+    fn odd_ctx(name: &str) -> Context {
+        let mut ctx = test_ctx(name, None);
+        ctx.run_dir = ctx.run_dir.join("O'Brien & Co (x) ^1 %TEMP% !y!");
+        ctx
+    }
+
+    /// Le dossier run (dans %APPDATA%, donc le nom du compte) n'entre jamais dans la ligne de commande de cmd : seulement
+    /// `.\nom.cmd`, le dossier en dossier courant (revue du 2026-10-13, « Lancement des scripts »).
+    #[test]
+    fn scripts_start_by_name_from_their_folder() {
+        let ctx = odd_ctx("launch");
+        for (id, variant) in [("net_a", Some("on")), ("net_a-probe", None), ("O'Brien&(x)^", Some("a b"))] {
+            let path = write_script(&ctx.run_dir, id, variant, "echo ok").unwrap();
+            let name = path.file_name().unwrap().to_str().unwrap().to_string();
+            assert!(name.chars().all(|c| c.is_ascii_alphanumeric() || "-_.".contains(c)), "{name}");
+            let cmd = script_command(&ctx, &path).unwrap();
+            assert_eq!(cmd.get_program(), "cmd.exe");
+            let args: Vec<String> = cmd.get_args().map(|a| a.to_string_lossy().into_owned()).collect();
+            assert_eq!(args, ["/d".to_string(), "/c".to_string(), format!(".\\{name}")]);
+            assert_eq!(cmd.get_current_dir(), Some(ctx.run_dir.as_path()));
+            let envs: Vec<String> = cmd.get_envs().map(|(k, _)| k.to_string_lossy().into_owned()).collect();
+            assert!(envs.contains(&"RAGO_RES".to_string()) && envs.contains(&"adapter_name".to_string()), "{envs:?}");
+            fs::remove_file(path).unwrap();
+        }
+        // un nom que cmd lirait n'est jamais lancé
+        assert!(script_command(&ctx, &ctx.run_dir.join("a&b.cmd")).is_err());
+        assert!(script_command(&ctx, Path::new("")).is_err());
+        let _ = fs::remove_dir_all(ctx.run_dir.parent().unwrap().parent().unwrap());
+    }
+
+    /// Sur Windows (CI) : le script se lance vraiment depuis ce dossier (`.\nom.cmd` n'est cherché que là).
+    #[cfg(windows)]
+    #[test]
+    fn scripts_run_from_a_folder_with_special_characters() {
+        let ctx = odd_ctx("launch-win");
+        let path = write_script(&ctx.run_dir, "probe", None, "echo ok-%~nx0").unwrap();
+        let name = path.file_name().unwrap().to_str().unwrap().to_string();
+        let out = script_command(&ctx, &path).unwrap().output().unwrap();
+        let text = decode(&out.stdout);
+        let _ = fs::remove_dir_all(ctx.run_dir.parent().unwrap().parent().unwrap());
+        assert!(out.status.success(), "{text}\n{}", decode(&out.stderr));
+        assert!(text.lines().any(|l| l.trim() == format!("ok-{name}")), "{text}");
+    }
+
+    #[test]
+    fn reset_stops_when_the_license_comes_back() {
+        let ctx = test_ctx("stop", Some(Arc::new(|| true)));
+        let (ok, failed) = Runner::default().run_now(&ctx, &[undo("net_b"), undo("net_a")]);
+        assert_eq!((ok, failed), (0, 0), "rien n'est lancé");
+        assert_eq!(ctx.ledger.lock().unwrap().tweaks.len(), 2, "les réglages restent appliqués");
+        assert!(ctx.history.all().is_empty());
+    }
+
+    #[test]
+    fn reset_puts_back_and_releases_each_tweak() {
+        let ctx = test_ctx("release", None);
+        let (ok, failed) = Runner::default().run_now(&ctx, &[undo("net_b"), undo("net_a"), undo("net_a")]);
+        assert_eq!((ok, failed), (3, 0), "le second net_a est déjà remis : rien à faire");
+        assert!(ctx.ledger.lock().unwrap().tweaks.is_empty());
+        assert_eq!(ctx.history.all().len(), 2);
+    }
+
+    /// M1 (revue du 2026-10-13) : défaire le RBW Mod « Désactivé » de cette version (décoché, Tout annuler, déconnexion,
+    /// fin de Premium, désinstallation) ne lance rien, il avait déjà remis les valeurs de Windows. « Activé » ne tourne
+    /// que sur un clic, ou pour une entrée d'une version d'avant. Le dossier run ne peut pas être créé : aucun script ne
+    /// peut être lancé, sous Windows (CI) comme ailleurs. Un lot réussi prouve donc que rien n'a été tenté, et le vrai
+    /// « Activé » ne tourne jamais sur le PC qui lance les tests.
+    #[test]
+    fn rbw_off_is_forgotten_without_running_on() {
+        let mut ctx = test_ctx("rbw", None);
+        ctx.run_dir = unwritable(&ctx, "run");
+        let rbw = |variant: &str, undo: bool| RunItem { id: "rbw_mode".into(), variant: Some(variant.into()), params: None, undo };
+        let runner = Runner::default();
+        // « Désactivé » : noté appliqué sans sauvegarde, avec « valeurs de Windows » (même raté ici, faute de script)
+        runner.run_now(&ctx, &[rbw("off", false)]);
+        {
+            let l = ctx.ledger.lock().unwrap();
+            let a = &l.tweaks["rbw_mode"];
+            assert!(!a.backup && a.windows_values && a.variant.as_deref() == Some("off"));
+            assert!(l.views(&|_| backup::Saved::Unknown).iter().any(|v| v.id == "rbw_mode" && v.windows_values));
+        }
+        // défait sans clic (remise à zéro : variante inconnue) : rien n'est lancé, l'entrée part, l'historique dit « annulé »
+        let (ok, failed) = runner.run_now(&ctx, &reset_item("rbw_mode"));
+        assert_eq!((ok, failed), (1, 0), "aucun script lancé");
+        assert!(!ctx.ledger.lock().unwrap().tweaks.contains_key("rbw_mode"));
+        let last = ctx.history.all().into_iter().max_by_key(|e| e.ts).unwrap();
+        assert!(last.id == "rbw_mode" && last.undo && last.ok && last.variant.as_deref() == Some("off"), "{last:?}");
+        let log = fs::read_dir(&ctx.logs_dir).unwrap().filter_map(|e| fs::read_to_string(e.ok()?.path()).ok()).collect::<String>();
+        assert!(log.contains("nothing to undo"), "{log}");
+
+        // clic sur « Activé » alors que « Désactivé » est appliqué : « Activé » est lancé (ici il échoue, faute de cmd.exe)
+        ctx.ledger.lock().unwrap().tweaks.insert("rbw_mode".into(), backup::Applied { variant: Some("off".into()), windows_values: true, ..Default::default() });
+        let (_, failed) = runner.run_now(&ctx, &[rbw("on", false)]);
+        assert_eq!(failed, 1, "« Activé » a été lancé");
+        let last = ctx.history.all().into_iter().max_by_key(|e| e.ts).unwrap();
+        assert!(last.variant.as_deref() == Some("on") && !last.undo, "{last:?}");
+
+        // entrées d'une version d'avant : sauvegarde de 1.1.9, ou ancien « Désactivé » noté d'après l'historique (il passait
+        // des services en manuel) : leur retour arrière lance toujours « Activé »
+        for backup in [true, false] {
+            ctx.ledger.lock().unwrap().tweaks.insert("rbw_mode".into(), backup::Applied { variant: Some("off".into()), backup, ..Default::default() });
+            let (_, failed) = runner.run_now(&ctx, &[rbw("off", true)]);
+            assert_eq!(failed, 1, "backup={backup} : « Activé » a été lancé");
+            let last = ctx.history.all().into_iter().max_by_key(|e| e.ts).unwrap();
+            assert!(last.variant.as_deref() == Some("on") && !last.undo, "backup={backup} : {last:?}");
+        }
+        // une entrée d'avant n'a jamais « valeurs de Windows » (champ absent du fichier)
+        let old: backup::Applied = serde_json::from_str(r#"{"variant":"off","ts":1,"ok":true,"backup":false}"#).unwrap();
+        assert!(!old.windows_values);
+    }
+
+    fn reset_item(id: &str) -> Vec<RunItem> {
+        crate::reset::items(vec![id.to_string()])
+    }
+
+    /// m2 (revue finale du moteur) : « Activé » lancé pour revenir de « Désactivé » qui n'a pas tourné (dossier run
+    /// impossible à créer ici ; ailleurs : arrêté, cmd.exe qui ne démarre pas) laisse « Désactivé » noté. Avant, l'entrée
+    /// partait quand même : la ligne disait « Activé depuis… » et la remise de fin de Premium ne le retentait plus. Vrai
+    /// pour les deux chemins qui lancent « Activé » : la conversion d'une annulation (entrée d'une version d'avant :
+    /// décochée, Tout annuler, remise à zéro) et le clic sur « Activé ». Le chemin M1 (« Désactivé » de cette version
+    /// défait sans clic) ne lance rien et libère toujours l'entrée.
+    #[test]
+    fn rbw_on_that_did_not_run_keeps_off_applied() {
+        let mut ctx = test_ctx("rbw-on-fails", None);
+        ctx.run_dir = unwritable(&ctx, "run");
+        let runner = Runner::default();
+        let rbw = |variant: &str, undo: bool| vec![RunItem { id: "rbw_mode".into(), variant: Some(variant.into()), params: None, undo }];
+        let off = |backup: bool, windows_values: bool| backup::Applied { variant: Some("off".into()), ok: true, backup, windows_values, ts: 1, ..Default::default() };
+        let cases: [(&str, backup::Applied, Vec<RunItem>); 4] = [
+            ("conversion : remise à zéro d'une sauvegarde de 1.1.9", off(true, false), reset_item("rbw_mode")),
+            ("conversion : ancien « Désactivé » noté d'après l'historique, décoché ou Tout annuler", off(false, false), rbw("off", true)),
+            ("clic sur « Activé », « Désactivé » de cette version appliqué", off(false, true), rbw("on", false)),
+            ("clic sur « Activé », sauvegarde de 1.1.9", off(true, false), rbw("on", false)),
+        ];
+        for (case, entry, items) in cases {
+            ctx.ledger.lock().unwrap().tweaks.insert("rbw_mode".into(), entry.clone());
+            let (ok, failed) = runner.run_now(&ctx, &items);
+            assert_eq!((ok, failed), (0, 1), "{case} : « Activé » tenté, et raté");
+            let last = ctx.history.all().into_iter().max_by_key(|e| e.ts).unwrap();
+            assert!(last.variant.as_deref() == Some("on") && !last.undo && !last.ok, "{case} : {last:?}");
+            let l = ctx.ledger.lock().unwrap();
+            let kept = l.tweaks.get("rbw_mode").unwrap_or_else(|| panic!("{case} : entrée retirée sans que « Activé » ait tourné"));
+            assert_eq!(kept.variant.as_deref(), Some("off"), "{case}");
+            assert_eq!((kept.backup, kept.windows_values), (entry.backup, entry.windows_values), "{case}");
+        }
+        // le chemin M1, lui, ne lance rien et libère l'entrée
+        ctx.ledger.lock().unwrap().tweaks.insert("rbw_mode".into(), off(false, true));
+        assert_eq!(runner.run_now(&ctx, &reset_item("rbw_mode")), (1, 0));
+        assert!(!ctx.ledger.lock().unwrap().tweaks.contains_key("rbw_mode"));
+    }
+
+    #[test]
+    fn stopped_undo_keeps_the_tweak_applied() {
+        let ctx = test_ctx("cancel", None);
+        let runner = Runner::default();
+        runner.cancel();
+        let sys = Sys::new(ctx.backup_dir.clone());
+        assert!(runner.undo_item(&ctx, &sys, &undo("net_a"), &|_| {}).is_ok());
+        assert!(ctx.ledger.lock().unwrap().tweaks.contains_key("net_a"), "arrêté en route : à remettre de nouveau");
+    }
+
+    /// rest pas lancé (dossier run impossible à créer, cmd.exe qui ne démarre pas) : avec rest_avant, rien n'a été
+    /// remis. Le réglage et sa sauvegarde restent, la prochaine annulation remet tout (avant : sauvegarde jetée).
+    #[test]
+    fn undo_that_could_not_start_keeps_the_backup() {
+        use backup::{Applied, Saved, Undo};
+        let mut ctx = test_ctx("rest-fails", None);
+        // write_script échoue, sous Windows comme ailleurs
+        ctx.run_dir = unwritable(&ctx, "run");
+        let probe = Probe::Reg { key: "HKLM\\SOFTWARE\\RagoTest".into(), name: "v".into() };
+        {
+            let mut l = ctx.ledger.lock().unwrap();
+            l.record_before(probe.clone(), Saved::Absent { created: None });
+            l.tweaks.insert(
+                "zz_plan".into(),
+                Applied {
+                    ok: true,
+                    backup: true,
+                    probes: vec![probe.id()],
+                    undo: Some(Undo { rest: Some("echo rest".into()), rest_avant: true, ..Default::default() }),
+                    ..Default::default()
+                },
+            );
+        }
+        let sys = Sys::new(ctx.backup_dir.clone());
+        assert!(Runner::default().undo_item(&ctx, &sys, &undo("zz_plan"), &|_| {}).is_err());
+        let l = ctx.ledger.lock().unwrap();
+        assert!(l.tweaks.contains_key("zz_plan"), "toujours appliqué");
+        assert!(l.has(&probe.id()), "sauvegarde gardée");
+        drop(l);
+        let _ = fs::remove_dir_all(ctx.backup_dir.parent().unwrap());
+    }
+
 }

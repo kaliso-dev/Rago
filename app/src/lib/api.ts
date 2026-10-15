@@ -51,6 +51,8 @@ export interface AppliedView {
   backup: boolean;
   /** Windows a changé une valeur posée par ce réglage depuis */
   drift: boolean;
+  /** n'a posé que les valeurs de Windows (RBW Mod « Désactivé ») : son annulation ne lance rien */
+  windowsValues?: boolean;
 }
 
 /** Usage du PC en direct, en % ; null : Windows ne fournit pas cette mesure sur ce PC. */
@@ -134,6 +136,11 @@ export interface DoneEvent {
   cancelled: boolean;
   logFile: string;
 }
+/** Remise à zéro faite par le moteur, sans fenêtre (fin de Premium, déconnexion). */
+export interface ResetDone {
+  ok: number;
+  failed: number;
+}
 
 export const isTauri = typeof window !== "undefined" && "__TAURI_INTERNALS__" in window;
 
@@ -145,17 +152,24 @@ export interface Api {
   history(): Promise<HistoryEntry[]>;
   clearHistory(): Promise<void>;
   applied(): Promise<AppliedView[]>;
+  /** « Tout annuler » : réglages appliqués sur ce PC, dans l'ordre de la remise à zéro (le dernier appliqué en premier). */
+  undoAllPlan(): Promise<string[]>;
+  /** Déconnexion : réglages que le moteur remettra en arrière-plan (tous ceux qu'il sait remettre, gratuits compris). */
+  signOutPlan(): Promise<string[]>;
+  /** Vrai une seule fois, au lancement où la réparation du moteur a supprimé une valeur (RAG-67) : il faut redémarrer. */
+  takeRepairNotice(): Promise<boolean>;
   liveStats(): Promise<LiveStats>;
   openTaskManager(): Promise<void>;
   minecraftStatus(dir?: string | null): Promise<MinecraftStatus>;
   minecraftRestore(dir?: string | null): Promise<string>;
   restartPc(): Promise<void>;
-  openFolder(kind: "logs" | "resources" | "data" | string): Promise<void>;
+  openFolder(kind: "logs" | "resources" | "data"): Promise<void>;
   pickFolder(title: string): Promise<string | null>;
   openUrl(url: string): Promise<void>;
   onItem(cb: (e: ItemEvent) => void): Promise<UnlistenFn>;
   onLog(cb: (e: LogEvent) => void): Promise<UnlistenFn>;
   onDone(cb: (e: DoneEvent) => void): Promise<UnlistenFn>;
+  onReset(cb: (e: ResetDone) => void): Promise<UnlistenFn>;
   licenseStatus(): Promise<LicenseStatus>;
   licenseLogin(email: string, password: string): Promise<LoginResult>;
   licenseActivate(): Promise<LicenseStatus>;
@@ -172,6 +186,9 @@ const tauriApi: Api = {
   history: () => invoke("get_history"),
   clearHistory: () => invoke("clear_history"),
   applied: () => invoke("get_applied"),
+  undoAllPlan: () => invoke("undo_all_plan"),
+  signOutPlan: () => invoke("sign_out_plan"),
+  takeRepairNotice: () => invoke("take_repair_notice"),
   liveStats: () => invoke("live_stats"),
   openTaskManager: () => invoke("open_task_manager"),
   minecraftStatus: (dir) => invoke("minecraft_status", { dir: dir ?? null }),
@@ -195,6 +212,7 @@ const tauriApi: Api = {
   onItem: (cb) => listen<ItemEvent>("run:item", (e) => cb(e.payload)),
   onLog: (cb) => listen<LogEvent>("run:log", (e) => cb(e.payload)),
   onDone: (cb) => listen<DoneEvent>("run:done", (e) => cb(e.payload)),
+  onReset: (cb) => listen<ResetDone>("reset:done", (e) => cb(e.payload)),
   window: {
     minimize: () => void import("@tauri-apps/api/window").then((w) => w.getCurrentWindow().minimize()),
     toggleMaximize: () => void import("@tauri-apps/api/window").then((w) => w.getCurrentWindow().toggleMaximize()),
@@ -267,6 +285,17 @@ function mockLicense(): LicenseStatus {
 
 let demoPending: string | null = null;
 
+/** Démo : la remise du moteur à la fin de la licence (tous les réglages remis en arrière-plan). */
+function mockReset() {
+  const ids = [...mockApplied.keys()];
+  if (!ids.length) return;
+  setTimeout(() => {
+    for (const id of ids) mockApplied.delete(id);
+    saveMockApplied();
+    emit<ResetDone>("reset:done", { ok: ids.length, failed: 0 });
+  }, 1500);
+}
+
 const mockApi: Api = {
   systemInfo: async () => {
     await sleep(500);
@@ -333,12 +362,16 @@ const mockApi: Api = {
         }
         const durationMs = Math.round(performance.now() - t0);
         ok++;
-        mockHistory.push({ id: it.id, variant: it.variant ?? null, ts: Date.now(), ok: true, code: 0, durationMs, undo: !!it.undo });
         const tw = tweaks.get(it.id);
         const revert = !!tw?.variants?.find((v) => v.id === it.variant)?.revert;
+        // comme le moteur (runner.rs) : la variante de retour arrière d'un réglage appliqué est notée comme une
+        // annulation, sauf celle du RBW Mod, qui lance « Activé » en entier
+        const undo = !!it.undo || (revert && mockApplied.has(it.id) && it.id !== "rbw_mode");
+        mockHistory.push({ id: it.id, variant: it.variant ?? null, ts: Date.now(), ok: true, code: 0, durationMs, undo });
         if (it.undo || (revert && mockApplied.has(it.id))) mockApplied.delete(it.id);
         else if (tw?.kind === "tweak" && !revert)
-          mockApplied.set(it.id, { id: it.id, variant: it.variant ?? null, ts: Date.now(), ok: true, backup: true, drift: false });
+          // RBW Mod « Désactivé » : valeurs de Windows, sans sauvegarde (moteur : runner.rs)
+          mockApplied.set(it.id, { id: it.id, variant: it.variant ?? null, ts: Date.now(), ok: true, backup: it.id !== "rbw_mode", drift: false, windowsValues: it.id === "rbw_mode" });
         saveMockApplied();
         emit<ItemEvent>("run:item", { ...base, status: "ok", code: 0, durationMs });
       }
@@ -356,6 +389,16 @@ const mockApi: Api = {
     mockHistory.length = 0;
   },
   applied: async () => [...mockApplied.values()],
+  undoAllPlan: async () => [...mockApplied.values()].sort((a, b) => b.ts - a.ts || a.id.localeCompare(b.id)).map((a) => a.id),
+  signOutPlan: async () => [...mockApplied.values()].sort((a, b) => b.ts - a.ts || a.id.localeCompare(b.id)).map((a) => a.id),
+  // démo : localStorage « rago.demoRepair » = 1 simule une réparation au lancement
+  takeRepairNotice: async () => {
+    try {
+      return localStorage.getItem("rago.demoRepair") === "1";
+    } catch {
+      return false;
+    }
+  },
   liveStats: async () => {
     // démo : valeurs simulées ; localStorage « rago.demoNoGpu » = 1 simule un PC sans compteur de carte graphique
     mockStatsStart ||= Date.now();
@@ -425,6 +468,7 @@ const mockApi: Api = {
     }
     if (sim === "revoked" && demoEmail) {
       demoEmail = null;
+      mockReset();
       throw {
         code: "revoked",
         message: "Your Rago Optimizer Premium subscription ended. Renew it on the website, then sign in again.",
@@ -440,10 +484,12 @@ const mockApi: Api = {
     } catch {
       /* rien */
     }
+    mockReset();
   },
   onItem: (cb) => on("run:item", cb),
   onLog: (cb) => on("run:log", cb),
   onDone: (cb) => on("run:done", cb),
+  onReset: (cb) => on("reset:done", cb),
   window: { minimize() {}, toggleMaximize() {}, close() {} },
 };
 

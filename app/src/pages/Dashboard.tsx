@@ -6,6 +6,11 @@ import { LiveStatsCard } from "../components/LiveStatsCard";
 import { Button, Card } from "../components/ui";
 import type { ReactNode } from "react";
 
+/** Interrupteurs du catalogue (les actions ponctuelles ne restent jamais « appliquées »), jumeaux comptés une fois. */
+const totalSwitches = new Set([...tweaks.values()].filter((tw) => tw.kind === "tweak").map((tw) => distinctKey(tw.id))).size;
+/** Plus aucun réglage ne se sert de WMIC (retiré de Windows 11 24H2) : sans lui, la ligne n'a rien à signaler. */
+const wmicUsed = [...tweaks.values()].some((tw) => tw.requires.includes("wmic"));
+
 const stagger = { animate: { transition: { staggerChildren: 0.04 } } };
 const rise = { initial: { opacity: 0, y: 10 }, animate: { opacity: 1, y: 0, transition: { duration: 0.42, ease: [0.16, 1, 0.3, 1] as const } } };
 
@@ -23,10 +28,9 @@ function Spec({ icon, label, value, sub }: { icon: ReactNode; label: string; val
 }
 
 export function Dashboard() {
-  const { t, lang, sys, sysLoading, refreshSys, isOn, selected, variantOf, selectMany, lastRun, requestApply, premium, setUpsell, applied: appliedMap, retiredApplied, requestUndo, run } = useStore();
+  const { t, lang, sys, sysLoading, refreshSys, isOn, selected, variantOf, selectMany, lastRestore, requestApply, premium, setUpsell, applied: appliedMap, retiredApplied, requestUndo, requestUndoAll, run } = useStore();
   // réglages appliqués en ce moment (ceux qu'on a décochés depuis ne comptent plus), jumeaux comptés une fois
   const applied = new Set([...appliedMap.values()].filter((a) => a.ok && tweaks.get(a.id)?.kind === "tweak").map((a) => distinctKey(a.id))).size;
-  const restore = lastRun.get("rst_point");
 
   /** Réglages d'un preset utilisables sur ce PC (comme selectMany : pas les pilotes d'une autre marque de carte graphique
    * ou de processeur), et preset complet : chacun allumé, avec la variante du preset. */
@@ -44,23 +48,35 @@ export function Dashboard() {
   const health: { label: string; ok: boolean; value: string; action?: ReactNode }[] = sys
     ? [
         { label: t("dash.health.admin"), ok: sys.isAdmin, value: sys.isAdmin ? t("dash.yes") : t("dash.no") },
-        { label: t("dash.health.wmic"), ok: sys.hasWmic, value: sys.hasWmic ? t("dash.yes") : t("dash.no") },
+        ...(wmicUsed ? [{ label: t("dash.health.wmic"), ok: sys.hasWmic, value: sys.hasWmic ? t("dash.yes") : t("dash.no") }] : []),
         {
           label: t("dash.health.npi"),
           ok: sys.resources.includes("nvidiaProfileInspector.exe"),
           value: sys.resources.includes("nvidiaProfileInspector.exe") ? t("dash.yes") : t("dash.no"),
         },
+        // dernier point réussi : une tentative ratée depuis ne le fait pas oublier
         {
           label: t("dash.health.restore"),
-          ok: !!restore?.ok,
-          value: restore?.ok ? new Date(restore.ts).toLocaleString(lang === "fr" ? "fr-FR" : "en-US", { dateStyle: "short", timeStyle: "short" }) : t("dash.health.restoreNone"),
-          action: !restore?.ok ? (
+          ok: lastRestore != null,
+          value: lastRestore != null ? new Date(lastRestore).toLocaleString(lang === "fr" ? "fr-FR" : "en-US", { dateStyle: "short", timeStyle: "short" }) : t("dash.health.restoreNone"),
+          action: lastRestore == null ? (
             <Button size="sm" onClick={() => requestApply(["rst_point"])}>
               {t("dash.createRestore")}
             </Button>
           ) : undefined,
         },
-        { label: t("dash.health.applied"), ok: applied > 0, value: `${applied} / ${totalTweaks}` },
+        {
+          label: t("dash.health.applied"),
+          ok: applied > 0,
+          value: `${applied} / ${totalSwitches}`,
+          // tout ce que Rago Optimizer a appliqué sur ce PC, remis comme avant après confirmation (RAG-43)
+          action:
+            appliedMap.size > 0 ? (
+              <Button size="sm" icon={<RotateCcw size={12} />} disabled={!!run} onClick={() => void requestUndoAll()}>
+                {t("dash.undoAll")}
+              </Button>
+            ) : undefined,
+        },
       ]
     : [];
 
