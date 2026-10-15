@@ -65,9 +65,10 @@ function rateLimiter() {
 }
 
 /**
- * @param deps { cfg, db, keys, stripe, mailer, log, discord } (discord: the Pro role bot, null when not configured)
+ * @param deps { cfg, db, keys, stripe, mailer, log, discord, community } (discord: the Pro role bot, null when not configured;
+ *   community: the community bot of community.js, for /admin)
  */
-export function createApp({ cfg, db, keys, stripe, mailer, log = console, fetchImpl = fetch, avatars = P.createAvatarStore(cfg, { fetchImpl, log }), discord = createDiscord(cfg, { db, fetchImpl, log, stripe }) }) {
+export function createApp({ cfg, db, keys, stripe, mailer, log = console, fetchImpl = fetch, avatars = P.createAvatarStore(cfg, { fetchImpl, log }), discord = createDiscord(cfg, { db, fetchImpl, log, stripe }), community = null }) {
   const app = new Hono();
   // The Discord role pass started by a webhook runs after the reply to Stripe; tests wait for it here.
   app.idle = () => discord?.idle() ?? Promise.resolve();
@@ -842,7 +843,8 @@ export function createApp({ cfg, db, keys, stripe, mailer, log = console, fetchI
   const adminPage = async (c, extra = {}, status = 200) => {
     const [state, stripeState, discordState] = await Promise.all([Promo.popupState(db, stripe, cfg), stripeChecks(stripe, cfg, { db, webhook: hookSeen }),
       discord ? discord.checks() : { missing: discordSetupMissing(cfg) }]);
-    return c.html(V.adminPage(cfg, { state, stripe: stripeState, discord: discordState, ...extra }), status);
+    const communityState = community ? { checks: community.checks(), inviteUrl: discord?.inviteUrl } : null;
+    return c.html(V.adminPage(cfg, { state, stripe: stripeState, discord: discordState, community: communityState, ...extra }), status);
   };
 
   app.get('/admin', async (c) => {

@@ -2034,7 +2034,9 @@ test('Discord: linked from the account page, Pro role while Premium is active, t
 test('Discord: one Discord account per Rago account, refused changes retried, /admin checks the bot, manual without it', async () => {
   const KEY = 'admin-key-0123456789abcdef';
   const d = fakeDiscord();
-  const t = await setup({ ...SUBS, ...DISCORD, ADMIN_KEY: KEY }, { fetchImpl: d.fetchImpl, log: quiet });
+  // The community bot's lines (community.js, tested in community.test.js) get their own section on /admin.
+  const community = { checks: () => [{ label: 'Invitations', level: 'error', text: 'Le bot n’a pas la permission « Gérer le serveur »' }] };
+  const t = await setup({ ...SUBS, ...DISCORD, ADMIN_KEY: KEY }, { fetchImpl: d.fetchImpl, log: quiet, community });
   const X = '333333333333333333';
   t.paidSubscription('cs_a', 'a@rago.gg');
   await t.browse('/checkout/success?session_id=cs_a');
@@ -2081,6 +2083,9 @@ test('Discord: one Discord account per Rago account, refused changes retried, /a
   assert.match(page, /Connecté en tant que ragobot/);
   assert.match(page, /« Rago Bot » est au-dessus de « Pro »/);
   assert.match(page, /2 comptes liés, 1 avec le rôle/);
+  assert.match(page, /Bot communauté Discord/);
+  assert.match(page, /Gérer le serveur/);
+  assert.match(page, /Redonner ses permissions au bot/);
   // The usual mistakes: the bot's role under Pro, the redirect URL not added in the Developer Portal.
   d.state.roles[2].position = 2;
   d.state.redirects = [];

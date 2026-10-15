@@ -6,6 +6,7 @@ import { createStripe, stripeChecks } from './billing.js';
 import { createMailer } from './mailer.js';
 import { createApp } from './app.js';
 import { createDiscord } from './discord.js';
+import { createCommunity } from './community.js';
 
 const cfg = loadConfig();
 for (const w of cfg.warnings) console.warn(`[warn] ${w}`);
@@ -24,7 +25,9 @@ if (!cfg.databaseUrl && process.env.DEV_SEED) {
 
 const stripe = createStripe(cfg);
 const discord = createDiscord(cfg, { db, stripe });
-const app = createApp({ cfg, db, keys, stripe, mailer: createMailer(cfg), discord });
+// The community bot (DISCORD_COMMUNITY=1): the same bot, listening live to the server for joins, invites and commands.
+const community = cfg.discordCommunity ? createCommunity(cfg, { db, discord }) : null;
+const app = createApp({ cfg, db, keys, stripe, mailer: createMailer(cfg), discord, community });
 
 // Prices, webhook destination and customer portal in the key's Stripe mode (the same list as /admin).
 if (stripe) {
@@ -62,6 +65,7 @@ if (discord) {
   setInterval(() => discord.syncAll({ all: true }), 24 * 60 * 60 * 1000).unref();
   setTimeout(() => discord.syncAll({ all: true }), 60 * 1000).unref();
 }
+if (community) community.start();
 
 if (!cfg.databaseUrl) console.warn('[warn] DATABASE_URL not set: in-memory database and keys, everything is lost on restart.');
 if (!cfg.stripeSecretKey) console.warn('[warn] STRIPE_SECRET_KEY not set: /buy and the webhook are disabled.');
