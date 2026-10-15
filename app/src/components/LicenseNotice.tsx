@@ -11,7 +11,7 @@ import { Button } from "./ui";
  * hors ligne : le joueur l'apprend ici au lieu de retomber sans un mot sur le plan gratuit.
  */
 export function LicenseNotice() {
-  const { t, lang, licenseNotice, setLicenseNotice, setLicense, setUpsell } = useStore();
+  const { t, lang, licenseNotice, setLicenseNotice, refreshLicense, setUpsell } = useStore();
   const [busy, setBusy] = useState(false);
   if (!licenseNotice) return null;
   const n = licenseNotice;
@@ -24,10 +24,11 @@ export function LicenseNotice() {
   const retry = async () => {
     setBusy(true);
     try {
-      setLicense(await api.licenseRefresh());
-      setLicenseNotice(null);
+      // même chemin qu'au démarrage : une licence révoquée entre-temps change la licence et ce bandeau ; toujours hors
+      // ligne, le bandeau reste
+      await refreshLicense(await api.licenseStatus());
     } catch {
-      /* toujours hors ligne : le bandeau reste */
+      /* moteur injoignable : le bandeau reste */
     } finally {
       setBusy(false);
     }

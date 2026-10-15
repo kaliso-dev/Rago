@@ -163,35 +163,52 @@ function useStoreValue() {
     if (license && !premium) setSelection((s) => (s.every(openInFree) ? s : s.filter(openInFree)));
   }, [license, premium, setSelection, openInFree]);
 
-  useEffect(() => {
-    // Au démarrage puis une fois par jour : rafraîchit le jeton si le serveur répond.
-    // Sans réseau, le jeton reste valable jusqu'à son expiration ; une révocation renvoie à la connexion.
-    const refresh = (st: LicenseStatus) => {
-      if (st.state !== "active" && st.state !== "expired") return;
-      void api.licenseRefresh().then(
-        (next) => {
-          setLicense(next);
-          setLicenseNotice(next.state === "expired" ? { code: "expired", message: null, buyUrl: null } : null);
-        },
-        async (e) => {
-          const err = asLicenseError(e);
-          if (err.code === "invalid_token" || err.code === "bound_to_other_device" || err.code === "revoked") {
-            setLicenseNotice(err);
-            setLicense(await api.licenseStatus());
-          } else if (st.state === "expired") {
-            // pas de réseau : le joueur paie peut-être encore, on le lui dit au lieu d'afficher le plan gratuit
-            setLicenseNotice({ code: "expired", message: null, buyUrl: null });
-          }
-        },
-      );
-    };
-    void api.licenseStatus().then((st) => {
-      setLicense(st);
-      refresh(st);
-    });
-    const daily = setInterval(() => void api.licenseStatus().then(refresh), 24 * 3600 * 1000);
-    return () => clearInterval(daily);
+  // Rafraîchit le jeton si le serveur répond : au démarrage, une fois par jour et avec « Réessayer » du bandeau.
+  // Sans réseau, le jeton reste valable jusqu'à son expiration ; une révocation renvoie à la connexion.
+  const refreshLicense = useCallback(async (st: LicenseStatus) => {
+    if (st.state !== "active" && st.state !== "expired") return;
+    try {
+      const next = await api.licenseRefresh();
+      setLicense(next);
+      setLicenseNotice(next.state === "expired" ? { code: "expired", message: null, buyUrl: null } : null);
+    } catch (e) {
+      const err = asLicenseError(e);
+      if (err.code === "invalid_token" || err.code === "bound_to_other_device" || err.code === "revoked") {
+        setLicenseNotice(err);
+        setLicense(await api.licenseStatus());
+      } else if (st.state === "expired") {
+        // pas de réseau : le joueur paie peut-être encore, on le lui dit au lieu d'afficher le plan gratuit
+        setLicenseNotice({ code: "expired", message: null, buyUrl: null });
+      }
+    }
   }, []);
+
+  useEffect(() => {
+    let last: LicenseStatus | null = null;
+    let refreshedAt = Date.now();
+    void api.licenseStatus().then((st) => {
+      last = st;
+      setLicense(st);
+      void refreshLicense(st);
+    });
+    // Toutes les heures : relit l'état du jeton, pour qu'un jeton expiré hors ligne fasse quitter Premium à l'interface
+    // comme au moteur. Le serveur n'est retenté qu'une fois par jour, ou dès que le jeton vient d'expirer.
+    const hourly = setInterval(
+      () =>
+        void api.licenseStatus().then((st) => {
+          const justExpired = st.state === "expired" && last?.state !== "expired";
+          last = st;
+          // même état qu'affiché : on garde l'objet, rien ne se recalcule
+          setLicense((cur) => (JSON.stringify(cur) === JSON.stringify(st) ? cur : st));
+          if (justExpired || Date.now() - refreshedAt >= 24 * 3600 * 1000) {
+            refreshedAt = Date.now();
+            void refreshLicense(st);
+          }
+        }),
+      3600 * 1000,
+    );
+    return () => clearInterval(hourly);
+  }, [refreshLicense]);
 
   const signOut = useCallback(async () => {
     await api.licenseSignOut();
@@ -507,6 +524,7 @@ function useStoreValue() {
   return {
     lang, setLang, motion, setMotion, t,
     page, goTo,
+    refreshLicense,
     sys, sysLoading, refreshSys,
     selection, selected, toggle, selectMany, unselectMany, variants, setVariant, variantOf,
     pendingUndo, applied, appliedLoaded: appliedList !== null, isOn, premiumApplied, reapply, resetDone, setResetDone,
