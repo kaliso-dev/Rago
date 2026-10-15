@@ -296,6 +296,10 @@ impl Runner {
                             }
                             let ids: Vec<String> = probes.iter().map(Probe::id).collect();
                             l.set_applied(&item.id, item.variant.clone(), r.0, true, ids.clone(), now_ms());
+                            // relevé d'Advanced hitreg suite qui ne relève rien (RAG-68, pas dans cette version) : retour
+                            // par les valeurs de Windows dès maintenant, comme au lancement suivant (repair.rs), pour
+                            // qu'une déconnexion juste après le remette aussi
+                            crate::repair::hitreg_suite_without_backup(&mut l);
                             l.fill_undo(&|i, v| catalog::undo_of(i, v, ctx.premium.as_deref()));
                             l.save();
                             ids
