@@ -3,7 +3,6 @@
 import { invoke } from "@tauri-apps/api/core";
 import { listen, type UnlistenFn } from "@tauri-apps/api/event";
 import { tweaks } from "./catalog";
-import free from "../data/free.json";
 
 export interface Gpu {
   name: string;
@@ -155,6 +154,8 @@ export interface Api {
   applied(): Promise<AppliedView[]>;
   /** « Tout annuler » : réglages appliqués sur ce PC, dans l'ordre de la remise à zéro (le dernier appliqué en premier). */
   undoAllPlan(): Promise<string[]>;
+  /** Déconnexion : réglages que le moteur remettra en arrière-plan (tous ceux qu'il sait remettre, gratuits compris). */
+  signOutPlan(): Promise<string[]>;
   /** Vrai une seule fois, au lancement où la réparation du moteur a supprimé une valeur (RAG-67) : il faut redémarrer. */
   takeRepairNotice(): Promise<boolean>;
   liveStats(): Promise<LiveStats>;
@@ -186,6 +187,7 @@ const tauriApi: Api = {
   clearHistory: () => invoke("clear_history"),
   applied: () => invoke("get_applied"),
   undoAllPlan: () => invoke("undo_all_plan"),
+  signOutPlan: () => invoke("sign_out_plan"),
   takeRepairNotice: () => invoke("take_repair_notice"),
   liveStats: () => invoke("live_stats"),
   openTaskManager: () => invoke("open_task_manager"),
@@ -283,9 +285,9 @@ function mockLicense(): LicenseStatus {
 
 let demoPending: string | null = null;
 
-/** Démo : la remise à zéro du moteur à la fin de Premium (réglages Premium remis en arrière-plan). */
+/** Démo : la remise du moteur à la fin de la licence (tous les réglages remis en arrière-plan). */
 function mockReset() {
-  const ids = [...mockApplied.keys()].filter((id) => !free.tweaks.includes(id));
+  const ids = [...mockApplied.keys()];
   if (!ids.length) return;
   setTimeout(() => {
     for (const id of ids) mockApplied.delete(id);
@@ -388,6 +390,7 @@ const mockApi: Api = {
   },
   applied: async () => [...mockApplied.values()],
   undoAllPlan: async () => [...mockApplied.values()].sort((a, b) => b.ts - a.ts || a.id.localeCompare(b.id)).map((a) => a.id),
+  signOutPlan: async () => [...mockApplied.values()].sort((a, b) => b.ts - a.ts || a.id.localeCompare(b.id)).map((a) => a.id),
   // démo : localStorage « rago.demoRepair » = 1 simule une réparation au lancement
   takeRepairNotice: async () => {
     try {

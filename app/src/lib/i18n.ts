@@ -234,6 +234,7 @@ const fr = {
   "session.onSince": "Activé depuis {time}",
   "session.offSince": "Désactivé depuis {time}",
   "err.premium_required": "Ce réglage fait partie de Premium.",
+  "err.reset_running": "Rago Optimizer remet encore tes réglages comme avant, en arrière-plan. Réessaie dans un instant.",
   "err.premium_scripts_unavailable": "Les réglages Premium ne s'ouvrent pas sur cette version. Reconnecte-toi, ou installe la dernière version de Rago Optimizer.",
   "badge.pendingUndo": "Sera annulé",
   "badge.pendingUpdate": "Nouvelle variante à appliquer",
@@ -265,7 +266,7 @@ const fr = {
   "confirm.undoAllTitle": "Tout annuler ?",
   "confirm.undoAllLead": "Rago Optimizer remet Windows comme avant pour le réglage appliqué sur ce PC. Ta licence ne change pas.|Rago Optimizer remet Windows comme avant pour les {n} réglages appliqués sur ce PC, du dernier appliqué au premier. Ta licence ne change pas.",
   "reset.failed": "{n} réglage n'a pas pu être remis : détails dans l'historique (module Restaurer)|{n} réglages n'ont pas pu être remis : détails dans l'historique (module Restaurer)",
-  "signout.undoLead": "Tes {n} réglage Premium vont être annulés : Rago Optimizer remet les réglages de Windows comme avant. Tes réglages gratuits restent actifs.|Tes {n} réglages Premium vont être annulés : Rago Optimizer remet les réglages de Windows comme avant. Tes réglages gratuits restent actifs.",
+  "signout.undoLead": "Ton réglage appliqué va être annulé : Rago Optimizer remet ce réglage de Windows comme avant, en arrière-plan. Tu peux continuer à utiliser ton PC, ou fermer l'app : la remise continue.|Tes {n} réglages appliqués vont être annulés, gratuits compris : Rago Optimizer remet les réglages de Windows comme avant, en arrière-plan. Tu peux continuer à utiliser ton PC, ou fermer l'app : la remise continue.",
   "signout.go": "Annuler et me déconnecter",
   "repair.restart": "Rago Optimizer a réparé une valeur qui peut faire planter Windows. Redémarre ton PC pour finir : Redémarrer, pas Arrêter.",
 };
@@ -492,6 +493,7 @@ const en: Record<Key, string> = {
   "session.onSince": "On since {time}",
   "session.offSince": "Off since {time}",
   "err.premium_required": "This tweak is part of Premium.",
+  "err.reset_running": "Rago Optimizer is still putting your tweaks back in the background. Try again in a moment.",
   "err.premium_scripts_unavailable": "Premium tweaks can't open on this version. Sign in again, or install the latest Rago Optimizer.",
   "badge.pendingUndo": "Will be undone",
   "badge.pendingUpdate": "New option to apply",
@@ -523,7 +525,7 @@ const en: Record<Key, string> = {
   "confirm.undoAllTitle": "Undo everything?",
   "confirm.undoAllLead": "Rago Optimizer puts Windows back the way it was for the tweak applied on this PC. Your license doesn't change.|Rago Optimizer puts Windows back the way it was for the {n} tweaks applied on this PC, newest first. Your license doesn't change.",
   "reset.failed": "{n} tweak couldn't be put back: details in History (Restore module)|{n} tweaks couldn't be put back: details in History (Restore module)",
-  "signout.undoLead": "Your {n} Premium tweak will be undone: Rago Optimizer puts those Windows settings back the way they were. Your free tweaks stay on.|Your {n} Premium tweaks will be undone: Rago Optimizer puts those Windows settings back the way they were. Your free tweaks stay on.",
+  "signout.undoLead": "Your applied tweak will be undone: Rago Optimizer puts that Windows setting back the way it was, in the background. You can keep using your PC, or close the app: it keeps going.|Your {n} applied tweaks will be undone, free ones included: Rago Optimizer puts those Windows settings back the way they were, in the background. You can keep using your PC, or close the app: it keeps going.",
   "signout.go": "Undo and sign out",
   "repair.restart": "Rago Optimizer fixed a value that can crash Windows. Restart your PC to finish: Restart, not Shut down.",
 };

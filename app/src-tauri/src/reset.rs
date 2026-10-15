@@ -1,12 +1,14 @@
-//! Remise à zéro des réglages, sans fenêtre ni bouton pour l'arrêter : les réglages Premium quand ce PC n'a plus de
-//! licence (abonnement terminé, remboursement, déconnexion), tous les réglages à la désinstallation (le
-//! désinstallateur lance l'exe avec `--reset-tweaks`, voir installer/hooks.nsh).
+//! Remise à zéro des réglages, sans fenêtre ni bouton pour l'arrêter : tous les réglages appliqués quand la licence de
+//! ce PC prend fin (déconnexion, abonnement terminé, remboursement, licence passée sur un autre PC), et à la
+//! désinstallation (le désinstallateur lance l'exe avec `--reset-tweaks`, voir installer/hooks.nsh).
 //!
-//! Un réglage ne quitte applied.json qu'une fois remis : une remise coupée (app fermée de force, PC éteint) reprend au
-//! lancement suivant.
+//! La fin de licence est notée sur le disque (`Pending`) avant que la remise commence : fenêtre fermée, l'app finit la
+//! remise cachée ; app tuée ou PC éteint, elle reprend au lancement suivant. Un réglage ne quitte applied.json qu'une
+//! fois remis.
 
-use serde::Serialize;
-use std::path::PathBuf;
+use serde::{Deserialize, Serialize};
+use std::fs;
+use std::path::{Path, PathBuf};
 use std::sync::atomic::{AtomicBool, Ordering};
 use std::sync::{Arc, Mutex};
 
@@ -24,40 +26,52 @@ pub const IDENTIFIER: &str = env!("RAGO_IDENTIFIER");
 
 #[derive(Clone, Copy, PartialEq, Debug)]
 pub enum Scope {
-    /// fin de Premium : les réglages gratuits restent
+    /// fin de licence : tous les réglages, gratuits compris, que Rago Optimizer sait remettre tout seul
+    LicenseEnd,
+    /// seulement les réglages Premium de `LicenseEnd` : encore appliqués sans licence, ils disent que la licence a pris
+    /// fin sans que ce soit noté (jeton effacé ou plus valable)
     Premium,
-    /// désinstallation
+    /// désinstallation, « Tout annuler » : tous, même ceux qui n'ont pas d'annulation automatique
     All,
 }
 
-/// Réglages à remettre, le dernier appliqué en premier. Fin de Premium : seulement ceux que Rago Optimizer sait
-/// remettre sans la licence. Les autres (appliqués avant 1.1.6 sans copie de leur annulation, OptiFine hors du dossier
-/// .minecraft habituel) échoueraient à chaque lancement et rempliraient l'historique d'erreurs : ils restent
-/// appliqués, annulables à la main (Tout annuler, point de restauration).
-pub fn targets(ledger: &Ledger, scope: Scope) -> Vec<String> {
+/// Réglages à remettre, le dernier appliqué en premier. Fin de licence : seulement ceux que Rago Optimizer sait remettre
+/// (avec `bundle`, les scripts Premium encore ouverts au moment de la déconnexion). Les autres (aucune annulation
+/// automatique, OptiFine sans copie à remettre) échoueraient à chaque fois : ils restent appliqués, annulables à la main
+/// (Tout annuler, point de restauration).
+pub fn targets(ledger: &Ledger, scope: Scope, bundle: Option<&catalog::Bundle>) -> Vec<String> {
     let mut ids: Vec<(&String, u64)> = ledger
         .tweaks
         .iter()
-        .filter(|(id, a)| scope == Scope::All || (!catalog::is_free(id) && undoable_unlicensed(id, a)))
+        .filter(|(id, a)| match scope {
+            Scope::All => true,
+            Scope::LicenseEnd => undoable(id, a, bundle),
+            Scope::Premium => !catalog::is_free(id) && undoable(id, a, bundle),
+        })
         .map(|(id, a)| (id, a.ts))
         .collect();
     ids.sort_by(|a, b| b.1.cmp(&a.1).then_with(|| a.0.cmp(b.0)));
     ids.into_iter().map(|(id, _)| id.clone()).collect()
 }
 
-/// Le moteur sait remettre ce réglage sans les scripts Premium : sauvegarde de l'état d'avant, copie de l'annulation,
-/// annulation ou variante de retour arrière en clair.
-fn undoable_unlicensed(id: &str, a: &Applied) -> bool {
+/// Dossier Minecraft où OptiFine a été appliqué : celui choisi dans l'interface (noté dans applied.json), sinon le
+/// dossier habituel.
+pub fn optifine_dir(a: Option<&Applied>) -> Option<PathBuf> {
+    a.and_then(|a| a.dir.clone())
+        .map(PathBuf::from)
+        .or_else(|| std::env::var("APPDATA").ok().map(|d| PathBuf::from(d).join(".minecraft")))
+}
+
+/// Le moteur sait remettre ce réglage : sauvegarde de l'état d'avant, copie de l'annulation, annulation ou variante
+/// de retour arrière (du plan gratuit, ou des scripts Premium de `bundle`).
+fn undoable(id: &str, a: &Applied, bundle: Option<&catalog::Bundle>) -> bool {
     if id == "mc_optifine" {
-        // la remise ne connaît que le dossier par défaut (le dossier choisi reste dans l'interface)
-        return std::env::var("APPDATA")
-            .map(|d| minecraft::status(&PathBuf::from(d).join(".minecraft")).backups > 0)
-            .unwrap_or(false);
+        return optifine_dir(Some(a)).is_some_and(|d| minecraft::status(&d).backups > 0);
     }
     a.backup
         || a.undo.as_ref().is_some_and(|u| u.full.is_some())
-        || catalog::undo_of(id, a.variant.as_deref(), None).is_some_and(|u| u.full.is_some())
-        || catalog::revert_variant(id).is_some_and(|v| catalog::script(id, Some(&v), None).is_some())
+        || catalog::undo_of(id, a.variant.as_deref(), bundle).is_some_and(|u| u.full.is_some())
+        || catalog::revert_variant(id).is_some_and(|v| catalog::script(id, Some(&v), bundle).is_some())
 }
 
 pub fn items(ids: Vec<String>) -> Vec<RunItem> {
@@ -71,33 +85,136 @@ pub struct Done {
     pub failed: usize,
 }
 
+/// Fin de licence pas encore remise, notée dans le dossier des données de cette app (l'exe de test a le sien) :
+/// `reset-pending.json`. Écrite avant que le jeton soit effacé (déconnexion) ou dès que le serveur l'a refusé ; effacée
+/// quand tout ce qui pouvait être remis l'a été, ou quand la licence revient.
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct Pending {
+    /// « signed_out », code du serveur (« revoked », « bound_to_other_device », « invalid_token »), ou « license_gone »
+    pub why: String,
+    pub at: u64,
+}
+
+impl Pending {
+    pub fn new(why: &str) -> Self {
+        Pending { why: why.into(), at: crate::history::now_ms() }
+    }
+
+    fn path(data_dir: &Path) -> PathBuf {
+        data_dir.join("reset-pending.json")
+    }
+
+    /// Fichier présent mais illisible (coupé par une coupure de courant) : la remise est due quand même.
+    pub fn load(data_dir: &Path) -> Option<Pending> {
+        let bytes = fs::read(Self::path(data_dir)).ok()?;
+        Some(serde_json::from_slice(&bytes).unwrap_or_else(|_| Pending { why: "unreadable".into(), at: 0 }))
+    }
+
+    /// Écrit à côté, sur le disque, puis remplace : une coupure de courant ne laisse pas un fichier vide.
+    pub fn save(&self, data_dir: &Path) -> Result<(), String> {
+        let _ = fs::create_dir_all(data_dir);
+        let path = Self::path(data_dir);
+        let tmp = path.with_extension("json.tmp");
+        let json = serde_json::to_vec(self).map_err(|e| e.to_string())?;
+        fs::File::create(&tmp)
+            .and_then(|mut f| {
+                use std::io::Write;
+                f.write_all(&json)?;
+                f.sync_all()
+            })
+            .and_then(|_| fs::rename(&tmp, &path))
+            .map_err(|e| format!("Couldn't note the reset: {e}"))
+    }
+
+    pub fn remove(data_dir: &Path) {
+        let _ = fs::remove_file(Self::path(data_dir));
+    }
+}
+
+/// Fin de licence à remettre maintenant, d'après l'état de la licence (`License::status`). Licence active (reconnecté
+/// entre-temps) : rien, et la fin notée est oubliée. Sinon la fin notée, ou une fin pas notée : plus de jeton valable
+/// et des réglages Premium encore appliqués (jeton effacé à la main, copié depuis un autre PC, version d'avant). Un jeton
+/// expiré hors ligne ne remet rien : le joueur paie peut-être encore, le serveur le dira au prochain rafraîchissement.
+pub fn due(data_dir: &Path, license_state: &str, ledger: &Ledger) -> Option<Pending> {
+    if license_state == "active" || license_state == "unconfigured" {
+        Pending::remove(data_dir);
+        return None;
+    }
+    if let Some(p) = Pending::load(data_dir) {
+        return Some(p);
+    }
+    if license_state == "none" && !targets(ledger, Scope::Premium, None).is_empty() {
+        let p = Pending::new("license_gone");
+        let _ = p.save(data_dir);
+        return Some(p);
+    }
+    None
+}
+
+#[derive(Default)]
+struct Turn {
+    running: bool,
+    /// une demande est arrivée pendant la remise : un tour de plus avant de finir
+    again: bool,
+}
+
 #[derive(Default)]
 pub struct Reset {
-    running: AtomicBool,
+    turn: Mutex<Turn>,
     /// fenêtre fermée pendant la remise : l'app reste cachée et quitte à la fin
     quit_after: AtomicBool,
+    /// fin de licence notée (jeton effacé puis `Pending` écrit) contre sa lecture par la remise (`due`) : une remise
+    /// qui lirait la licence encore active entre les deux oublierait la fin qui vient d'être notée
+    note: Mutex<()>,
 }
 
 impl Reset {
-    /// false si une remise tourne déjà.
-    pub fn begin(&self) -> bool {
-        !self.running.swap(true, Ordering::SeqCst)
+    /// `f` sans croiser une fin de licence en train d'être notée (voir `note`).
+    pub fn noting<T>(&self, f: impl FnOnce() -> T) -> T {
+        let _n = self.note.lock().unwrap_or_else(std::sync::PoisonError::into_inner);
+        f()
     }
 
-    /// Remise finie : true si la fenêtre a été fermée entre-temps et que l'app doit quitter.
-    pub fn end(&self) -> bool {
-        self.running.store(false, Ordering::SeqCst);
-        self.quit_after.load(Ordering::SeqCst)
+    /// false si une remise tourne déjà : elle refait un tour pour cette demande avant de finir.
+    pub fn begin(&self) -> bool {
+        let mut t = self.turn.lock().unwrap_or_else(std::sync::PoisonError::into_inner);
+        if t.running {
+            t.again = true;
+            return false;
+        }
+        *t = Turn { running: true, again: false };
+        true
+    }
+
+    /// Tour fini. None : une demande est arrivée entre-temps, refaire un tour. Sinon la remise est finie, et `true` si la
+    /// fenêtre a été fermée entre-temps (l'app doit quitter).
+    pub fn end(&self) -> Option<bool> {
+        let mut t = self.turn.lock().unwrap_or_else(std::sync::PoisonError::into_inner);
+        if std::mem::take(&mut t.again) {
+            return None;
+        }
+        t.running = false;
+        Some(self.quit_after.swap(false, Ordering::SeqCst))
+    }
+
+    pub fn is_running(&self) -> bool {
+        self.turn.lock().unwrap_or_else(std::sync::PoisonError::into_inner).running
     }
 
     /// Fenêtre fermée : true si l'app doit rester ouverte, cachée, jusqu'à la fin de la remise.
     pub fn hold_exit(&self) -> bool {
-        if !self.running.load(Ordering::SeqCst) {
+        let t = self.turn.lock().unwrap_or_else(std::sync::PoisonError::into_inner);
+        if !t.running {
             return false;
         }
         self.quit_after.store(true, Ordering::SeqCst);
-        // finie entre-temps : end() n'a peut-être pas vu la demande, l'app se ferme normalement
-        self.running.load(Ordering::SeqCst)
+        true
+    }
+
+    /// Fenêtre remontrée (Rago Optimizer relancée pendant la fin de la remise) : l'app ne quitte plus à la fin.
+    pub fn keep_open(&self) {
+        self.quit_after.store(false, Ordering::SeqCst);
     }
 }
 
@@ -119,7 +236,7 @@ pub fn uninstall() {
     };
     clear_run();
     let (history, ledger) = load_for_uninstall(&data_dir);
-    let ids = targets(&ledger, Scope::All);
+    let ids = targets(&ledger, Scope::All, None);
     if ids.is_empty() {
         return;
     }
@@ -183,27 +300,92 @@ mod tests {
     use super::*;
 
     #[test]
-    fn premium_scope_keeps_free_tweaks() {
+    fn license_end_puts_back_free_tweaks_too() {
         let mut l = Ledger::default();
         l.set_applied("win_gamemode", None, true, true, vec![], 1);
         l.set_applied("net_old", None, true, true, vec![], 2);
         l.set_applied("net_new", None, true, true, vec![], 3);
         assert!(catalog::is_free("win_gamemode"));
-        assert_eq!(targets(&l, Scope::Premium), vec!["net_new", "net_old"], "le dernier appliqué en premier");
-        assert_eq!(targets(&l, Scope::All), vec!["net_new", "net_old", "win_gamemode"]);
-        assert!(items(targets(&l, Scope::All)).iter().all(|i| i.undo && i.variant.is_none()));
+        assert_eq!(targets(&l, Scope::LicenseEnd, None), vec!["net_new", "net_old", "win_gamemode"], "le dernier appliqué en premier");
+        assert_eq!(targets(&l, Scope::Premium, None), vec!["net_new", "net_old"]);
+        assert_eq!(targets(&l, Scope::All, None), vec!["net_new", "net_old", "win_gamemode"]);
+        assert!(items(targets(&l, Scope::All, None)).iter().all(|i| i.undo && i.variant.is_none()));
     }
 
     #[test]
-    fn premium_scope_skips_what_cannot_be_put_back_without_the_license() {
+    fn license_end_skips_what_cannot_be_put_back() {
         let mut l = Ledger::default();
-        // appliqué avant 1.1.6, sans copie de son annulation : il échouerait à chaque lancement
+        // appliqué avant 1.1.6, sans copie de son annulation : il échouerait à chaque fois
         l.set_applied("net_legacy", None, true, false, vec![], 1);
         l.set_applied("net_saved", None, true, true, vec![], 2);
-        assert_eq!(targets(&l, Scope::Premium), vec!["net_saved"]);
-        assert_eq!(targets(&l, Scope::All), vec!["net_saved", "net_legacy"], "Tout annuler et la désinstallation essaient tout");
+        assert_eq!(targets(&l, Scope::LicenseEnd, None), vec!["net_saved"]);
+        assert_eq!(targets(&l, Scope::All, None), vec!["net_saved", "net_legacy"], "Tout annuler et la désinstallation essaient tout");
         l.tweaks.get_mut("net_legacy").unwrap().undo = Some(crate::backup::Undo { full: Some("reg add x".into()), ..Default::default() });
-        assert_eq!(targets(&l, Scope::Premium), vec!["net_saved", "net_legacy"], "copie de l'annulation gardée : il est remis");
+        assert_eq!(targets(&l, Scope::LicenseEnd, None), vec!["net_saved", "net_legacy"], "copie de l'annulation gardée : il est remis");
+    }
+
+    /// Les 15 réglages sans annulation automatique (journal d'une déconnexion de la 1.1.13) ne sont pas lancés par la
+    /// remise de fin de licence : ils n'y feraient qu'afficher une erreur. Ils restent appliqués (point de restauration).
+    #[test]
+    fn tweaks_without_automatic_undo_are_left_alone() {
+        let mut l = Ledger::default();
+        let mut checked = 0;
+        for (n, id) in ["exp_iolatency", "in_driver", "amd_logging", "usb_msi", "pow_idle", "net_msi"].into_iter().enumerate() {
+            l.set_applied(id, None, true, false, vec![], n as u64);
+            if catalog::undo_of(id, None, None).is_some_and(|u| u.full.is_some()) || catalog::revert_variant(id).is_some() {
+                continue;
+            }
+            assert!(targets(&l, Scope::LicenseEnd, None).iter().all(|t| t != id), "{id}");
+            checked += 1;
+        }
+        assert!(checked >= 4, "{checked}");
+    }
+
+    /// OptiFine est remis dans le dossier où il a été appliqué, noté dans applied.json.
+    #[test]
+    fn optifine_is_put_back_where_it_was_applied() {
+        let dir = std::env::temp_dir().join(format!("rago-test-mc-{}", std::process::id()));
+        let _ = fs::remove_dir_all(&dir);
+        let mut l = Ledger::default();
+        l.set_applied("mc_optifine", None, true, true, vec![], 1);
+        l.tweaks.get_mut("mc_optifine").unwrap().dir = Some(dir.to_string_lossy().into_owned());
+        assert_eq!(optifine_dir(l.tweaks.get("mc_optifine")), Some(dir.clone()));
+        assert!(targets(&l, Scope::LicenseEnd, None).is_empty(), "aucune copie d'optionsof.txt : rien à remettre");
+        fs::create_dir_all(&dir).unwrap();
+        fs::write(dir.join("optionsof.txt"), "ofFastRender:true\n").unwrap();
+        minecraft::apply(&dir, &std::collections::BTreeMap::from([("ofFastRender".to_string(), "false".to_string())]), 1).unwrap();
+        assert_eq!(targets(&l, Scope::LicenseEnd, None), vec!["mc_optifine"]);
+        let _ = fs::remove_dir_all(&dir);
+    }
+
+    /// La fin de licence notée survit à l'app tuée ; elle est oubliée quand la licence revient. Pas notée : seulement des
+    /// réglages Premium encore appliqués sans jeton la font remettre (un joueur du plan gratuit garde les siens).
+    #[test]
+    fn license_end_is_noted_and_resumed() {
+        let dir = std::env::temp_dir().join(format!("rago-test-pending-{}", std::process::id()));
+        let _ = fs::remove_dir_all(&dir);
+        let mut free = Ledger::default();
+        free.set_applied("win_gamemode", None, true, true, vec![], 1);
+        assert_eq!(due(&dir, "none", &free), None, "plan gratuit : ses réglages restent");
+        assert_eq!(due(&dir, "expired", &Ledger::default()), None);
+
+        Pending::new("signed_out").save(&dir).unwrap();
+        assert_eq!(due(&dir, "none", &free).map(|p| p.why), Some("signed_out".into()), "reprise au lancement suivant");
+        assert_eq!(due(&dir, "expired", &free).map(|p| p.why), Some("signed_out".into()));
+        assert_eq!(due(&dir, "active", &free), None, "reconnecté : rien à remettre");
+        assert_eq!(Pending::load(&dir), None, "et la fin notée est oubliée");
+
+        let mut premium = Ledger::default();
+        premium.set_applied("net_x", None, true, true, vec![], 1);
+        assert_eq!(due(&dir, "expired", &premium), None, "jeton expiré hors ligne : le serveur le dira");
+        assert_eq!(due(&dir, "none", &premium).map(|p| p.why), Some("license_gone".into()), "jeton disparu");
+        assert!(Pending::load(&dir).is_some(), "notée aussi");
+
+        fs::write(dir.join("reset-pending.json"), "{").unwrap();
+        assert_eq!(due(&dir, "none", &free).map(|p| p.why), Some("unreadable".into()), "fichier coupé : la remise est due");
+        Pending::remove(&dir);
+        assert_eq!(Pending::load(&dir), None);
+        let _ = fs::remove_dir_all(&dir);
     }
 
     /// Désinstallée sans avoir été lancée depuis la mise à jour : applied.json de 1.1.9 tel quel, état d'avant à 0 pour
@@ -289,9 +471,16 @@ mod tests {
         let r = Reset::default();
         assert!(!r.hold_exit(), "rien en cours : la fenêtre se ferme");
         assert!(r.begin());
+        assert!(r.is_running());
         assert!(!r.begin(), "une seule remise à la fois");
+        assert_eq!(r.end(), None, "une demande arrivée pendant la remise : un tour de plus");
         assert!(r.hold_exit(), "remise en cours : l'app reste, cachée");
-        assert!(r.end(), "puis quitte à la fin");
+        assert_eq!(r.end(), Some(true), "puis quitte à la fin");
+        assert!(!r.is_running());
+        assert!(r.begin());
+        assert!(r.hold_exit());
+        r.keep_open();
+        assert_eq!(r.end(), Some(false), "fenêtre remontrée par un nouveau lancement : l'app reste ouverte");
     }
 
     #[test]

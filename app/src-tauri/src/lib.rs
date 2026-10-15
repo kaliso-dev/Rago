@@ -76,28 +76,56 @@ impl AppState {
     }
 }
 
-/// Plus de licence sur ce PC (abonnement terminé, remboursement, déconnexion) et des réglages Premium encore
-/// appliqués : ils sont remis en arrière-plan, sans fenêtre ni bouton pour arrêter. L'interface n'en voit que la fin
-/// (`reset:done`). Un jeton expiré hors ligne n'annule rien : le joueur paie peut-être encore, le serveur le dira au
-/// prochain rafraîchissement. La licence revient pendant la remise (reconnexion) : elle s'arrête après le réglage en
-/// cours, les suivants restent appliqués.
-fn reset_if_unlicensed(app: &AppHandle) {
+/// Fin de la licence sur ce PC (déconnexion, abonnement terminé, remboursement, licence passée sur un autre PC) : tous
+/// les réglages appliqués que Rago Optimizer sait remettre, gratuits compris, sont remis comme avant en arrière-plan,
+/// sans fenêtre de suivi ni bouton pour arrêter. L'interface n'en voit que la fin (`reset:done`, petit message en bas à
+/// droite). Fenêtre fermée pendant la remise : l'app reste ouverte, cachée, et quitte à la fin (`Reset::hold_exit`) ;
+/// app tuée ou PC éteint : la fin de licence est notée (`reset::Pending`), la remise reprend au lancement suivant. La
+/// licence revient pendant la remise (reconnexion) : elle s'arrête après le réglage en cours, les suivants restent
+/// appliqués. `bundle` : scripts Premium encore ouverts au moment de la déconnexion (leur annulation est la plus juste).
+fn reset_after_license(app: &AppHandle, bundle: Option<Arc<catalog::Bundle>>) {
     let app = app.clone();
     std::thread::spawn(move || {
         let state = app.state::<AppState>();
-        if state.license.status().state != "none" {
+        let due = || state.reset.noting(|| reset::due(&state.data_dir, state.license.status().state, &state.ledger.lock().unwrap()));
+        // rien à remettre (cas de chaque lancement) : les lots ne sont pas bloqués, même le temps de vérifier
+        if due().is_none() && !state.reset.is_running() {
             return;
         }
-        let ids = reset::targets(&state.ledger.lock().unwrap(), reset::Scope::Premium);
-        if ids.is_empty() || !state.reset.begin() {
+        // une remise tourne déjà : elle refait un tour pour cette demande
+        if !state.reset.begin() {
             return;
         }
-        let lic = Arc::clone(&state.license);
-        let ctx = Context { stop_when: Some(Arc::new(move || lic.status().state != "none")), ..state.context(None, None) };
-        let (ok, failed) = Runner::default().run_now(&ctx, &reset::items(ids));
-        let quit = state.reset.end();
-        let _ = app.emit("reset:done", reset::Done { ok, failed });
-        if quit {
+        let (mut ok, mut failed) = (0, 0);
+        // chaque réglage n'est essayé qu'une fois par remise : un échec reste noté appliqué, sans boucler
+        let mut tried = std::collections::HashSet::new();
+        let quit = loop {
+            if due().is_some() {
+                let ids: Vec<String> = reset::targets(&state.ledger.lock().unwrap(), reset::Scope::LicenseEnd, bundle.as_deref())
+                    .into_iter()
+                    .filter(|id| !tried.contains(id))
+                    .collect();
+                if !ids.is_empty() {
+                    tried.extend(ids.iter().cloned());
+                    let lic = Arc::clone(&state.license);
+                    let ctx = Context { stop_when: Some(Arc::new(move || lic.status().state == "active")), ..state.context(None, bundle.clone()) };
+                    let (o, f) = Runner::default().run_now(&ctx, &reset::items(ids));
+                    (ok, failed) = (ok + o, failed + f);
+                    continue;
+                }
+                // tout ce qui pouvait être remis l'a été
+                reset::Pending::remove(&state.data_dir);
+            }
+            if let Some(quit) = state.reset.end() {
+                break quit;
+            }
+        };
+        if ok + failed > 0 {
+            let _ = app.emit("reset:done", reset::Done { ok, failed });
+        }
+        // fenêtre fermée pendant la remise et pas remontrée depuis : l'app avait été quittée
+        let visible = app.get_webview_window("main").and_then(|w| w.is_visible().ok()).unwrap_or(false);
+        if quit && !visible {
             app.exit(0);
         }
     });
@@ -127,6 +155,10 @@ pub(crate) fn keep_undo(ledger: &Mutex<backup::Ledger>, bundle: Option<&catalog:
 fn run_tweaks(app: AppHandle, state: State<'_, AppState>, items: Vec<RunItem>) -> Result<String, String> {
     if items.is_empty() {
         return Err("No tweak selected".into());
+    }
+    // remise de fin de licence en cours (rien à l'écran) : un lot attendrait sa fin sans rien afficher
+    if state.reset.is_running() {
+        return Err("reset_running".into());
     }
     let premium = state.license.status().state == "active";
     // remettre l'état d'avant reste possible sans licence
@@ -165,7 +197,21 @@ async fn get_applied(state: State<'_, AppState>) -> Result<Vec<backup::AppliedVi
 /// annulations : même moteur, même sauvegarde, même ordre.
 #[tauri::command]
 fn undo_all_plan(state: State<'_, AppState>) -> Vec<String> {
-    reset::targets(&state.ledger.lock().unwrap(), reset::Scope::All)
+    reset::targets(&state.ledger.lock().unwrap(), reset::Scope::All, None)
+}
+
+/// Déconnexion : les réglages que la remise de fin de licence remettra, pour la confirmation de l'interface.
+#[tauri::command]
+async fn sign_out_plan(state: State<'_, AppState>) -> Result<Vec<String>, String> {
+    let (ledger, lic) = (Arc::clone(&state.ledger), Arc::clone(&state.license));
+    tauri::async_runtime::spawn_blocking(move || {
+        let bundle = lic.scripts_key().and_then(|key| catalog::premium(&key));
+        keep_undo(&ledger, bundle.as_deref());
+        let l = ledger.lock().unwrap();
+        reset::targets(&l, reset::Scope::LicenseEnd, bundle.as_deref())
+    })
+    .await
+    .map_err(|e| e.to_string())
 }
 
 /// Vrai une seule fois, au lancement où la réparation a supprimé une valeur à 0 (RAG-67) : l'interface demande alors de
@@ -273,19 +319,53 @@ async fn license_activate(state: State<'_, AppState>) -> Result<license::Status,
 
 #[tauri::command]
 async fn license_refresh(app: AppHandle, state: State<'_, AppState>) -> Result<license::Status, license::ApiError> {
-    let lic = Arc::clone(&state.license);
-    let r = tauri::async_runtime::spawn_blocking(move || lic.refresh())
-        .await
-        .map_err(|_| license::ApiError::from("server_error"))?;
-    // abonnement terminé, remboursement, licence révoquée : le jeton vient d'être effacé
-    reset_if_unlicensed(&app);
+    let (lic, ledger, data_dir) = (Arc::clone(&state.license), Arc::clone(&state.ledger), state.data_dir.clone());
+    let resets = Arc::clone(&state.reset);
+    let (r, bundle) = tauri::async_runtime::spawn_blocking(move || {
+        // scripts Premium ouverts tant que la licence est là : si le serveur la refuse, leur annulation sert à la remise
+        let bundle = lic.scripts_key().and_then(|key| catalog::premium(&key));
+        keep_undo(&ledger, bundle.as_deref());
+        let r = resets.noting(|| {
+            let r = lic.refresh();
+            // abonnement terminé, remboursement, licence révoquée ou passée sur un autre PC : le jeton vient d'être
+            // effacé, la remise est notée avant de commencer
+            if let Err(e) = &r {
+                if e.drops_token() {
+                    let _ = reset::Pending::new(&e.code).save(&data_dir);
+                }
+            }
+            r
+        });
+        (r, bundle)
+    })
+    .await
+    .map_err(|_| license::ApiError::from("server_error"))?;
+    if r.as_ref().is_err_and(|e| e.drops_token()) {
+        reset_after_license(&app, bundle);
+    }
     r
 }
 
+/// Déconnexion : effacée tout de suite (l'interface repasse en gratuit), puis tous les réglages sont remis en
+/// arrière-plan (`reset_after_license`). Avant d'effacer le jeton : l'annulation de chaque réglage est gardée dans
+/// applied.json, et la remise est notée, pour qu'elle reprenne au lancement suivant si l'app est tuée.
 #[tauri::command]
-fn license_sign_out(app: AppHandle, state: State<'_, AppState>) {
-    state.license.sign_out();
-    reset_if_unlicensed(&app);
+async fn license_sign_out(app: AppHandle, state: State<'_, AppState>) -> Result<(), String> {
+    let (lic, ledger, data_dir) = (Arc::clone(&state.license), Arc::clone(&state.ledger), state.data_dir.clone());
+    let resets = Arc::clone(&state.reset);
+    let bundle = tauri::async_runtime::spawn_blocking(move || {
+        let bundle = lic.scripts_key().and_then(|key| catalog::premium(&key));
+        keep_undo(&ledger, bundle.as_deref());
+        resets.noting(|| {
+            let _ = reset::Pending::new("signed_out").save(&data_dir);
+            lic.sign_out();
+        });
+        bundle
+    })
+    .await
+    .map_err(|e| e.to_string())?;
+    reset_after_license(&app, bundle);
+    Ok(())
 }
 
 // ---------- compte : nom public, photo, avis ----------
@@ -407,13 +487,25 @@ pub fn run() {
                 data_dir,
                 repaired: AtomicBool::new(!removed.is_empty()),
             });
-            // licence perdue depuis le dernier lancement, ou remise coupée en cours de route : elle reprend ici
-            reset_if_unlicensed(app.handle());
+            // Rago Optimizer relancée pendant qu'elle finit une remise, fenêtre cachée : la fenêtre revient
+            let handle = app.handle().clone();
+            instance::on_show_request(move || {
+                if let Some(state) = handle.try_state::<AppState>() {
+                    state.reset.keep_open();
+                }
+                if let Some(w) = handle.get_webview_window("main") {
+                    let _ = w.show();
+                    let _ = w.unminimize();
+                    let _ = w.set_focus();
+                }
+            });
+            // fin de licence depuis le dernier lancement, ou remise coupée en cours de route : elle reprend ici
+            reset_after_license(app.handle(), None);
             Ok(())
         })
         .on_window_event(|window, event| {
             if let tauri::WindowEvent::CloseRequested { api, .. } = event {
-                // remise à zéro en cours : la fenêtre se cache et l'app quitte quand la remise est finie
+                // remise en cours : la fenêtre se cache, la remise continue et l'app quitte quand elle est finie
                 if window.try_state::<AppState>().is_some_and(|s| s.reset.hold_exit()) {
                     api.prevent_close();
                     let _ = window.hide();
@@ -429,6 +521,7 @@ pub fn run() {
             clear_history,
             get_applied,
             undo_all_plan,
+            sign_out_plan,
             take_repair_notice,
             live_stats,
             open_task_manager,

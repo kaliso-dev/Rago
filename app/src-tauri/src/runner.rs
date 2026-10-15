@@ -308,6 +308,12 @@ impl Runner {
                                 l.release(&item.id);
                             }
                             l.set_applied(&item.id, item.variant.clone(), r.0, item.id == "mc_optifine", Vec::new(), now_ms());
+                            if item.id == "mc_optifine" {
+                                // dossier choisi dans l'interface : la remise sans interface le retrouve (reset.rs)
+                                if let Some(a) = l.tweaks.get_mut(&item.id) {
+                                    a.dir = param_dir(item).map(|d| d.to_string_lossy().into_owned());
+                                }
+                            }
                             if catalog::revert_runs_script(&item.id) {
                                 // « Désactivé » ne pose que des valeurs de Windows, même lancé à moitié : rien à défaire
                                 if let Some(a) = l.tweaks.get_mut(&item.id) {
@@ -409,13 +415,9 @@ impl Runner {
         let undo = catalog::undo_of(id, variant.as_deref(), ctx.premium.as_deref())
             .or_else(|| entry.as_ref().and_then(|e| e.undo.clone()));
         if id == "mc_optifine" {
-            let dir = item
-                .params
-                .as_ref()
-                .and_then(|p| p.get("dir"))
-                .and_then(|d| d.as_str())
-                .map(PathBuf::from)
-                .or_else(|| std::env::var("APPDATA").ok().map(|a| PathBuf::from(a).join(".minecraft")))
+            // dossier donné par l'interface, sinon celui où il a été appliqué, sinon le dossier habituel
+            let dir = param_dir(item)
+                .or_else(|| crate::reset::optifine_dir(entry.as_ref()))
                 .ok_or("Minecraft folder not set")?;
             let msg = minecraft::restore_latest(&dir)?;
             emit(format!("- {msg}"));
@@ -632,6 +634,11 @@ fn cp850(b: u8) -> char {
 }
 
 const PREAMBLE: &str = "@echo off\r\nchcp 65001 >nul\r\nsetlocal EnableExtensions EnableDelayedExpansion\r\n";
+
+/// Dossier Minecraft passé par l'interface avec OptiFine.
+fn param_dir(item: &RunItem) -> Option<PathBuf> {
+    item.params.as_ref().and_then(|p| p.get("dir")).and_then(|d| d.as_str()).filter(|d| !d.is_empty()).map(PathBuf::from)
+}
 
 fn write_script(dir: &Path, id: &str, variant: Option<&str>, body: &str) -> Result<PathBuf, String> {
     fs::create_dir_all(dir).map_err(|e| e.to_string())?;

@@ -464,7 +464,9 @@ function useStoreValue() {
           ? translate(lang, "err.premium_required")
           : msg.startsWith("premium_scripts_unavailable")
             ? translate(lang, "err.premium_scripts_unavailable")
-            : msg;
+            : msg.startsWith("reset_running")
+              ? translate(lang, "err.reset_running")
+              : msg;
         setRun((r) => (r ? { ...r, error, endedAt: Date.now() } : r));
       }
     },
@@ -486,8 +488,8 @@ function useStoreValue() {
   /** Réglages Premium appliqués : le moteur les remet de lui-même à la déconnexion et à la fin de Premium. */
   const premiumApplied = useMemo(() => [...applied.keys()].filter((id) => !FREE.has(id)).sort(byCatalog), [applied]);
 
-  // Premium terminé (abonnement fini, remboursement), plus de licence sur ce PC ou déconnexion : le moteur remet les
-  // réglages Premium en arrière-plan, sans fenêtre ni bouton pour l'arrêter, et ne prévient qu'à la fin.
+  // Licence terminée (abonnement fini, remboursement, licence passée sur un autre PC) ou déconnexion : le moteur remet
+  // tous les réglages en arrière-plan, sans fenêtre ni bouton pour l'arrêter, et ne prévient qu'à la fin.
   useEffect(() => {
     const sub = api.onReset((e) => {
       void refreshApplied();

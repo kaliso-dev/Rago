@@ -175,6 +175,10 @@ pub struct Applied {
     /// manuel : celles-là gardent leur retour arrière
     #[serde(default, skip_serializing_if = "std::ops::Not::not")]
     pub windows_values: bool,
+    /// OptiFine : dossier Minecraft choisi dans l'interface quand il a été appliqué. La remise de fin de licence et
+    /// celle de la désinstallation, lancées sans l'interface, le remettent au même endroit (sinon le dossier habituel).
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub dir: Option<String>,
 }
 
 #[derive(Debug, Default, Serialize, Deserialize)]

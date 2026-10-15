@@ -266,7 +266,7 @@ impl From<&str> for ApiError {
 
 impl ApiError {
     /// Ces erreurs rendent le jeton local inutilisable : on l'efface.
-    fn drops_token(&self) -> bool {
+    pub fn drops_token(&self) -> bool {
         matches!(self.code.as_str(), "invalid_token" | "bound_to_other_device" | "revoked")
     }
 }

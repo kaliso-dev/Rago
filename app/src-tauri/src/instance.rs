@@ -91,14 +91,65 @@ fn acquire_named(_name: &str, _wait: Duration) -> Lock {
     Lock::Mine(Guard {})
 }
 
-/// Une autre Rago Optimizer tient le verrou : sa fenêtre est ramenée au premier plan (restaurée si elle est réduite).
-/// Rien de visible au bout de 3 secondes (fenêtre cachée pendant la fin d'une remise, remise de la désinstallation, ou
-/// fenêtre pas encore créée) : un message le dit, en français et en anglais (l'interface n'est pas chargée).
+/// Événement nommé par lequel un nouveau lancement demande à la Rago Optimizer ouverte de montrer sa fenêtre (cachée
+/// pendant qu'elle finit une remise en arrière-plan).
+#[cfg_attr(not(windows), allow(dead_code))]
+fn show_event() -> String {
+    format!("Local\\{}.show", crate::reset::IDENTIFIER)
+}
+
+/// Fenêtre de cette Rago Optimizer : `show` est appelé chaque fois qu'un nouveau lancement la demande (`show_other`).
+#[cfg(windows)]
+pub fn on_show_request(show: impl Fn() + Send + 'static) {
+    use windows_sys::Win32::Foundation::WAIT_OBJECT_0;
+    use windows_sys::Win32::System::Threading::{CreateEventW, WaitForSingleObject, INFINITE};
+    let name: Vec<u16> = show_event().encode_utf16().chain([0]).collect();
+    // remis à zéro par chaque attente satisfaite (auto-reset) : une demande, un affichage
+    let handle = unsafe { CreateEventW(std::ptr::null(), 0, 0, name.as_ptr()) };
+    if handle.is_null() {
+        return;
+    }
+    let handle = handle as usize;
+    std::thread::spawn(move || {
+        while unsafe { WaitForSingleObject(handle as windows_sys::Win32::Foundation::HANDLE, INFINITE) } == WAIT_OBJECT_0 {
+            show();
+        }
+    });
+}
+
+#[cfg(not(windows))]
+pub fn on_show_request(_show: impl Fn() + Send + 'static) {}
+
+/// Demande à la Rago Optimizer ouverte de montrer sa fenêtre. Faux si elle n'écoute pas (remise de la désinstallation).
+#[cfg(windows)]
+fn request_show() -> bool {
+    use windows_sys::Win32::Foundation::CloseHandle;
+    use windows_sys::Win32::System::Threading::{OpenEventW, SetEvent, EVENT_MODIFY_STATE};
+    use windows_sys::Win32::UI::WindowsAndMessaging::{AllowSetForegroundWindow, ASFW_ANY};
+    let name: Vec<u16> = show_event().encode_utf16().chain([0]).collect();
+    unsafe {
+        let handle = OpenEventW(EVENT_MODIFY_STATE, 0, name.as_ptr());
+        if handle.is_null() {
+            return false;
+        }
+        // ce lancement vient du joueur : il laisse l'autre passer au premier plan
+        AllowSetForegroundWindow(ASFW_ANY);
+        let ok = SetEvent(handle) != 0;
+        CloseHandle(handle);
+        ok
+    }
+}
+
+/// Une autre Rago Optimizer tient le verrou : sa fenêtre est ramenée au premier plan (restaurée si elle est réduite,
+/// montrée si elle était cachée pendant la fin d'une remise). Rien de visible au bout de 3 secondes (remise de la
+/// désinstallation, ou fenêtre pas encore créée) : un message le dit, en français et en anglais (l'interface n'est pas
+/// chargée).
 #[cfg(windows)]
 pub fn show_other() {
     use windows_sys::Win32::UI::WindowsAndMessaging::{
         IsIconic, MessageBoxW, SetForegroundWindow, ShowWindow, MB_ICONINFORMATION, MB_OK, MB_SETFOREGROUND, MB_TOPMOST, SW_RESTORE,
     };
+    request_show();
     for _ in 0..12 {
         if let Some(hwnd) = other_window() {
             unsafe {
