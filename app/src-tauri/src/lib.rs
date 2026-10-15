@@ -377,6 +377,9 @@ pub fn run() {
             // fichier pour les lancer), puis effacés aussitôt. Au cas où un arrêt brutal en aurait laissé un, on
             // vide le dossier au démarrage : aucune commande d'optimisation ne reste sur le disque.
             let _ = std::fs::remove_dir_all(data_dir.join("run"));
+            if let Some(dir) = assets::fallback_root() {
+                let _ = std::fs::remove_dir_all(dir);
+            }
             let history = Arc::new(History::load(data_dir.join("history.json")));
             let (mut ledger, existed) = Ledger::load(data_dir.join("applied.json"));
             if !existed {

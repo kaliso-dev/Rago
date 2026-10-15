@@ -20,6 +20,22 @@ pub fn bytes(name: &str) -> Option<Vec<u8>> {
     crate::seal::open(&crate::seal::offline_key(env!("CARGO_PKG_VERSION")), sealed)
 }
 
+/// Dossier où écrire ces fichiers : run\ en temps normal. Un « ! » dans son chemin (nom du compte Windows) disparaît
+/// quand cmd développe %RAGO_SEC% avec EnableDelayedExpansion (PREAMBLE de runner.rs) : le script ne trouverait plus le
+/// fichier et le réglage passerait pour réussi. Dans ce cas, le dossier Temp de Windows, sans nom de compte.
+fn root(run_dir: &Path) -> PathBuf {
+    match fallback_root() {
+        Some(fallback) if run_dir.to_string_lossy().contains('!') => fallback,
+        _ => run_dir.to_path_buf(),
+    }
+}
+
+/// Dossier de repli de `root`, vidé au démarrage comme run\ (lib.rs) et par la remise de la désinstallation. Un par
+/// identifiant d'app : l'exe de test et le vrai ne vident pas les fichiers l'un de l'autre.
+pub fn fallback_root() -> Option<PathBuf> {
+    std::env::var_os("SystemRoot").map(|r| PathBuf::from(r).join("Temp").join(crate::reset::IDENTIFIER))
+}
+
 /// Dossier de run\ où un script trouve ces fichiers, effacé dès qu'il ne sert plus (fin du script, même ratée).
 pub struct Staged(Option<PathBuf>);
 
@@ -46,7 +62,7 @@ pub fn stage<'a>(run_dir: &Path, script: &'a str) -> Result<(Staged, Cow<'a, str
     if refs.is_empty() {
         return Ok((Staged(None), Cow::Borrowed(script)));
     }
-    let dir = run_dir.join(format!("res-{}-{}", std::process::id(), crate::history::now_ms()));
+    let dir = root(run_dir).join(format!("res-{}-{}", std::process::id(), crate::history::now_ms()));
     fs::create_dir_all(&dir).map_err(|e| format!("Couldn't prepare the app files: {e}"))?;
     let staged = Staged(Some(dir.clone()));
     let mut out = script.to_string();
@@ -90,6 +106,15 @@ mod tests {
         drop(s);
         assert!(!dir.exists(), "effacé à la fin du script");
         let _ = fs::remove_dir_all(&run);
+    }
+
+    /// Compte Windows avec « ! » : les fichiers vont dans le Temp de Windows, sinon dans run\.
+    #[test]
+    fn staging_folder_avoids_an_exclamation_mark() {
+        assert_eq!(root(Path::new("C:\\Users\\Gamer\\run")), PathBuf::from("C:\\Users\\Gamer\\run"));
+        let bang = Path::new("C:\\Users\\Gamer!\\run");
+        assert_eq!(root(bang), fallback_root().unwrap_or_else(|| bang.to_path_buf()));
+        assert!(!fallback_root().is_some_and(|d| d.to_string_lossy().contains('!')));
     }
 
     /// Chaque script qui ouvre un de ces fichiers l'écrit exactement `%RAGO_RES%\<nom>` : sinon `stage` ne le verrait pas
