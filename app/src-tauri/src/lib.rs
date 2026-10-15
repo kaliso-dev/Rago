@@ -258,13 +258,15 @@ fn open_task_manager() -> Result<(), String> {
     std::process::Command::new("taskmgr.exe").spawn().map(|_| ()).map_err(|e| e.to_string())
 }
 
+/// Dossiers de l'app seulement : l'app tourne en administrateur, et explorer.exe lancé sur un chemin quelconque ouvrirait
+/// aussi un programme.
 #[tauri::command]
 fn open_folder(state: State<'_, AppState>, kind: String) -> Result<(), String> {
     let path = match kind.as_str() {
         "logs" => state.data_dir.join("logs"),
         "resources" => state.resource_dir.clone(),
         "data" => state.data_dir.clone(),
-        other => PathBuf::from(other),
+        _ => return Err("Unknown folder".into()),
     };
     runner::ensure_dir(&path);
     std::process::Command::new("explorer.exe").arg(&path).spawn().map(|_| ()).map_err(|e| e.to_string())

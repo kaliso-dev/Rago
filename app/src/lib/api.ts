@@ -172,7 +172,7 @@ export interface Api {
   minecraftStatus(dir?: string | null): Promise<MinecraftStatus>;
   minecraftRestore(dir?: string | null): Promise<string>;
   restartPc(): Promise<void>;
-  openFolder(kind: "logs" | "resources" | "data" | string): Promise<void>;
+  openFolder(kind: "logs" | "resources" | "data"): Promise<void>;
   pickFolder(title: string): Promise<string | null>;
   openUrl(url: string): Promise<void>;
   onItem(cb: (e: ItemEvent) => void): Promise<UnlistenFn>;
