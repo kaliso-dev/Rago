@@ -42,6 +42,13 @@ struct AppState {
     repaired: AtomicBool,
 }
 
+/// Déconnexion demandée et pas encore finie (`license_sign_out`), notée dans le dossier des données de cette app (le
+/// jeton, lui, est commun à l'exe de test et au vrai) : une remise coupée (app tuée, PC éteint) reprend au lancement
+/// suivant, avant la déconnexion. Effacée une fois le jeton effacé.
+fn sign_out_marker(state: &AppState) -> PathBuf {
+    state.data_dir.join("sign-out-pending")
+}
+
 fn probe_cached(cache: &Mutex<Option<SystemInfo>>, resource_dir: &std::path::Path, refresh: bool) -> SystemInfo {
     let mut guard = cache.lock().unwrap();
     if refresh || guard.is_none() {
@@ -132,7 +139,7 @@ fn run_tweaks(app: AppHandle, state: State<'_, AppState>, items: Vec<RunItem>) -
         return Err("No tweak selected".into());
     }
     // déconnexion en cours : rien d'autre ne tourne avant que tous les réglages soient remis
-    if state.license.sign_out_pending() {
+    if sign_out_marker(&state).exists() {
         return Err("signing_out".into());
     }
     let premium = state.license.status().state == "active";
@@ -318,7 +325,7 @@ struct SignOutStart {
 /// pas) et l'interface ne montre pas de bouton Stop. Tant que la licence est là, l'annulation des réglages Premium vient
 /// des scripts de cette version.
 ///
-/// La demande est notée sur disque avant de commencer (`License::begin_sign_out`) : fenêtre fermée, la remise continue
+/// La demande est notée sur disque avant de commencer (`sign_out_marker`) : fenêtre fermée, la remise continue
 /// cachée et l'app quitte à la fin (`Reset::hold_exit`) ; app tuée ou PC éteint, l'interface la relance au lancement
 /// suivant (`sign_out_pending`), et aucun lot ne part avant (`run_tweaks`). Une remise de fin de Premium en cours passe
 /// d'abord. L'interface reçoit `signout:start` (réglages remis, dans l'ordre), suit le lot, puis `signout:done`.
@@ -328,7 +335,8 @@ fn license_sign_out(app: AppHandle, state: State<'_, AppState>, mc_dir: Option<S
     if state.runner.is_running() {
         return Err("An optimization is already running".into());
     }
-    state.license.begin_sign_out();
+    runner::ensure_dir(&state.data_dir);
+    std::fs::write(sign_out_marker(&state), history::now_ms().to_string()).map_err(|e| format!("Couldn't start signing out: {e}"))?;
     std::thread::spawn(move || {
         let state = app.state::<AppState>();
         while !state.reset.begin() {
@@ -351,6 +359,7 @@ fn license_sign_out(app: AppHandle, state: State<'_, AppState>, mc_dir: Option<S
         // un réglage qui n'a pas pu être remis reste noté appliqué : la remise de fin de Premium le reprend au lancement
         // suivant s'il est Premium, « Tout annuler » reste possible pour les autres
         state.license.sign_out();
+        let _ = std::fs::remove_file(sign_out_marker(&state));
         let quit = state.reset.end();
         let _ = app.emit("signout:done", reset::Done { ok, failed });
         if quit {
@@ -363,7 +372,7 @@ fn license_sign_out(app: AppHandle, state: State<'_, AppState>, mc_dir: Option<S
 /// Déconnexion demandée et pas finie (app fermée de force pendant sa remise) : l'interface la relance au lancement.
 #[tauri::command]
 fn sign_out_pending(state: State<'_, AppState>) -> bool {
-    state.license.sign_out_pending()
+    sign_out_marker(&state).exists()
 }
 
 // ---------- compte : nom public, photo, avis ----------
