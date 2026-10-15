@@ -521,6 +521,7 @@ Lignes risquées retirées des packs qui les cachaient (le pack reste) :
 
 Point de restauration (1.1.8) : la case de 1.1.6 revient. Elle est cochée d'office seulement pour un réglage `restore` (avancé, ou que l'app ne remet pas entièrement) et si Rago n'en a pas créé un réussi dans les 24 dernières heures.
 
+<!-- Sections écrites à la main : le générateur (tools/corrections_md.py) garde tel quel tout ce qui suit cette ligne. Ajouter les nouvelles sections en bas du fichier. -->
 # Plan d'alimentation Rago Low Latency (1.1.9)
 
 `src-tauri/resources/LowLatency.pow`, fourni par Sofiene le 2026-10-10 (sha256 `c953bead…c840d7`, 24 Ko). C'est une ruche
