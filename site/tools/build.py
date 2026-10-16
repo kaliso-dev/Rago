@@ -39,6 +39,12 @@ s = re.sub(r'<div class="price-note" id="p-note">[^<]*</div>', f'<div class="pri
 s = re.sub(r'<span class="save" id="save"( hidden)?>[^<]*</span>', f'<span class="save" id="save"{"" if FREE >= 1 else " hidden"}>{free_txt} yearly</span>', s)
 s, n = re.subn(r'<b id="l-amt">[^<]*</b>', f'<b id="l-amt">{CUR}{PL:.2f}</b>', s)  # Lifetime: its button stays "Coming soon" without JavaScript
 assert n == 1, 'Lifetime price (l-amt) not found in page.html'
+# The account server sells Lifetime only at its own LIFETIME_PRICE: both must say the same amount
+srv = os.path.join(ROOT, '..', 'licensing', 'src', 'billing.js')
+if os.path.isfile(srv):
+    m = re.search(r"LIFETIME_PRICE = \{ amount: (\d+), currency: '(\w+)' \}", open(srv).read())
+    assert m and (int(m.group(1)), m.group(2)) == (round(PL * 100), ISO.lower()), \
+        f'priceLifetime ({CUR}{PL:.2f} in src/page.html) and LIFETIME_PRICE (licensing/src/billing.js) differ: change both'
 # FAQ without JavaScript: the same questions, rendered once here into a <noscript> block
 a = s.index('  const F = ['); b = s.index('\n  ];', a) + len('\n  ];')
 try:
@@ -47,7 +53,8 @@ try:
     esc = lambda t: t.replace('&', '&amp;').replace('<', '&lt;').replace('>', '&gt;')
     DISCORD = cfg('discord')
     dlink = lambda h: re.sub(r'\bDiscord\b', f'<a href="{DISCORD}" rel="noopener">Discord</a>', h) if DISCORD else h
-    static = ''.join(f'<details class="fq-s"><summary>{esc(q)}</summary><p>{dlink(esc(x))}</p></details>' for q, x in faq)
+    # without JavaScript, Lifetime can't be bought from this page: its questions (marked "life") stay out
+    static = ''.join(f'<details class="fq-s"><summary>{esc(q)}</summary><p>{dlink(esc(x))}</p></details>' for q, x, *only in faq if not only)
     s = s.replace('<div class="faq rv" id="faqs"></div>', '<div class="faq rv" id="faqs"></div>\n    <noscript><div class="faq">' + static + '</div></noscript>', 1)
 except (OSError, subprocess.CalledProcessError) as e:
     print('warning: static FAQ skipped (node not available):', e)
@@ -66,8 +73,7 @@ LD = json.dumps({"@context": "https://schema.org", "@graph": [
    "description": "The Minecraft PvP optimizer for Windows: steadier ping, smoother frames, less input lag.",
    "offers": [{"@type": "Offer", "name": "Free", "price": "0", "priceCurrency": ISO},
               {"@type": "Offer", "name": "Premium monthly", "price": f"{PM:.2f}", "priceCurrency": ISO},
-              {"@type": "Offer", "name": "Premium yearly", "price": f"{PY:.2f}", "priceCurrency": ISO},
-              {"@type": "Offer", "name": "Premium lifetime", "price": f"{PL:.2f}", "priceCurrency": ISO}]}]})
+              {"@type": "Offer", "name": "Premium yearly", "price": f"{PY:.2f}", "priceCurrency": ISO}]}]})
 
 i = s.index('</style>', s.index('<style>\n/* Layout')) + len('</style>')
 head = ('''<!doctype html>

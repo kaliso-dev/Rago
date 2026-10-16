@@ -77,7 +77,7 @@ page('terms.html','Terms of Sale','Terms of sale for Rago Optimizer: the Free, P
 <p>Prices are shown on the site before checkout, in US dollars. No VAT is charged: VAT exemption under article 293 B of the French General Tax Code (TVA non applicable, art. 293 B du CGI). Payment is handled by Stripe. We never see or store your card number.</p>
 <p>A subscription renews automatically at the end of each month or year, at the price you accepted, until you cancel. If we change the price, we'll tell you by email before your next renewal and you can cancel before it applies. Lifetime is paid once and never renews.</p>
 <p>Discount codes, affiliate codes included, apply to Lifetime as they do to a subscription, within their own conditions (for example, a first payment only).</p>
-<p>If you have a Premium subscription, you can switch to Lifetime. Right after the Lifetime payment, your subscription is canceled so it doesn't renew, and your license stays on the same PC. The time left on your subscription isn't refunded.</p>
+<p>If you have a Premium subscription, you can switch to Lifetime. As soon as Lifetime is on your account (right after the payment if you pay while signed in), your subscription is canceled so it doesn't renew, and your license stays on the same PC. The time left on your subscription isn't refunded.</p>
 
 <h2>4. Your license</h2>
 <ul>
@@ -117,7 +117,7 @@ page('refunds.html','Refunds and Cancellation','How to cancel a Rago Optimizer P
 <p>Lifetime is a single payment: there is nothing to cancel and nothing renews.</p>
 
 <h2>Switching to Lifetime</h2>
-<p>When a subscriber buys Lifetime, their subscription is canceled right after the payment, so it doesn't renew. The time left on the subscription isn't refunded. If the subscription renews anyway, we refund that renewal.</p>
+<p>When a subscriber buys Lifetime, their subscription is canceled as soon as Lifetime is on their account (right after the payment if they pay while signed in), so it doesn't renew. The time left on the subscription isn't refunded. If the subscription renews anyway, we refund that renewal.</p>
 
 <h2>Refunds</h2>
 <ul>

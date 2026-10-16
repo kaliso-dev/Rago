@@ -273,10 +273,12 @@ export function claimLicense(db, licenseId, userId) {
     if (!lic) throw new LicenseError('not_found');
     if (lic.user_id === userId) return lic;
     if (lic.user_id) throw new LicenseError('already_claimed');
-    if (await blockingLicense(t, userId, lic)) throw new LicenseError('already_has_license');
+    // A purchase revoked meanwhile (refunded, disputed...) replaces nothing: the license already there stays.
+    const incoming = lic.status === 'active' ? lic : null;
+    if (await blockingLicense(t, userId, incoming)) throw new LicenseError('already_has_license');
     await t.run('UPDATE licenses SET user_id = ?, claimed_at = ?, claim_token_hash = NULL WHERE id = ?', [userId, Date.now(), licenseId]);
     await audit(t, 'license.claimed', { licenseId, userId });
-    await replaceOld(t, userId, lic);
+    if (incoming) await replaceOld(t, userId, lic);
     return getLicense(t, licenseId);
   });
 }

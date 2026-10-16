@@ -1,7 +1,7 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { createHash, createHmac, createPublicKey } from 'node:crypto';
-import { mkdtempSync, writeFileSync } from 'node:fs';
+import { mkdtempSync, readFileSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import Stripe from 'stripe';
@@ -16,7 +16,7 @@ import * as L from '../src/licensing.js';
 import * as P from '../src/profile.js';
 import * as R from '../src/reviews.js';
 import { createDiscord } from '../src/discord.js';
-import { stopAllReplacedSubscriptions } from '../src/billing.js';
+import { LIFETIME_PRICE, stopAllReplacedSubscriptions } from '../src/billing.js';
 import sharp from 'sharp';
 
 const WHSEC = 'whsec_test_secret';
@@ -2346,6 +2346,9 @@ const paidLifetime = (t, id, email, extra = {}) => t.paidSession(id, email, { mo
 const cancels = (t) => t.stripeCalls.filter((c) => c[0] === 'cancel');
 
 test('lifetime: one payment at its own price, codes like Premium, Premium for life in the app, refund revokes', async () => {
+  // The site shows the price the server sells at (priceLifetime in site/src/page.html, LIFETIME_PRICE here).
+  const site = readFileSync(new URL('../../site/src/page.html', import.meta.url), 'utf8');
+  assert.deepEqual({ amount: Math.round(Number(site.match(/priceLifetime: ([\d.]+)/)[1]) * 100), currency: 'usd' }, LIFETIME_PRICE);
   const t = await setup(LIFE);
   lifetimeInStripe(t);
   // The site's card asks whether Lifetime can be bought, and at what price.
@@ -2533,11 +2536,14 @@ test('lifetime: not for sale until its own one-time price works in Stripe; a sec
     assert.match(cfg.warnings.join(' '), /STRIPE_PRICE_LIFETIME is the id of another price/);
   }
   assert.equal(loadConfig(LIFE).stripePriceLifetime, 'price_life');
-  // Archived, recurring, unknown in this Stripe mode, or Stripe not answering: not for sale, no error page.
+  // Archived, recurring, another amount or currency than the site's $59.99 (an old one-time price pasted by mistake),
+  // unknown in this Stripe mode, or Stripe not answering: not for sale, no error page.
   const notFound = Object.assign(new Error("No such price: 'price_life'"), { statusCode: 404, code: 'resource_missing' });
   for (const retrieve of [
     async (id) => ({ id, active: false, type: 'one_time', unit_amount: 5999, currency: 'usd' }),
     async (id) => ({ id, active: true, type: 'recurring', recurring: { interval: 'year' }, unit_amount: 5999, currency: 'usd' }),
+    async (id) => ({ id, active: true, type: 'one_time', unit_amount: 4999, currency: 'usd' }),
+    async (id) => ({ id, active: true, type: 'one_time', unit_amount: 1499, currency: 'eur' }),
     async () => { throw notFound; },
     async () => { throw new Error('Stripe is down'); },
   ]) {
@@ -2593,7 +2599,134 @@ test('/admin checks the Lifetime price: one payment, in USD, and its amount', as
   t.stripe.webhookEndpoints.list = async () => ({ data: [] });
   t.stripe.billingPortal.configurations.list = async () => ({ data: [] });
   await t.browse('/admin/login', { form: { key: KEY } });
-  assert.match(await (await t.browse('/admin')).text(), /Rago Optimizer Premium · 59,99 USD une fois\. Le site ne vend Lifetime que si ce montant est celui qu’il affiche/);
+  assert.match(await (await t.browse('/admin')).text(), /Rago Optimizer Premium · 59,99 USD une fois, le prix affiché sur le site\./);
+  Object.assign(life, { unit_amount: 4999 });
+  assert.match(await (await t.browse('/admin')).text(), /price_life : il vaut 49,99 USD au lieu de 59,99 USD, le prix affiché sur le site\. Lifetime n’est pas vendu\./);
   Object.assign(life, { type: 'recurring', currency: 'eur' });
-  assert.match(await (await t.browse('/admin')).text(), /price_life : ce n’est pas un prix en paiement unique, il n’est pas en USD alors que le site affiche des dollars\./);
+  assert.match(await (await t.browse('/admin')).text(), /price_life : ce n’est pas un prix en paiement unique, il n’est pas en USD alors que le site affiche des dollars\. Lifetime n’est pas vendu\./);
+});
+
+test('lifetime: refunded, it replaces nothing when claimed later; refunded after a refused cancel, the subscription still stops', async () => {
+  const t = await setup(LIFE, { log: quiet });
+  lifetimeInStripe(t);
+  t.paidSubscription('cs_s', 'sub@rago.gg', 'month');
+  await t.browse('/checkout/success?session_id=cs_s');
+  await t.browse('/signup', { form: { email: 'sub@rago.gg', password: 'password123' } });
+  const user = await L.findUserByEmail(t.db, 'sub@rago.gg');
+  const j = await appActivate(t, 'sub@rago.gg', pc('S'));
+  // Bought signed out on another PC and refunded before it was claimed: its link changes nothing on the account.
+  paidLifetime(t, 'cs_l', 'sub@rago.gg');
+  await t.webhook('checkout.session.completed', t.sessions.cs_l);
+  const link = new URL(t.mails.at(-1).url).pathname;
+  await t.webhook('charge.refunded', { id: 'ch_l', object: 'charge', refunded: true, payment_intent: 'pi_cs_l', customer: 'cus_cs_l' });
+  assert.equal((await t.browse(link)).headers.get('location'), '/account?n=duplicate');
+  assert.equal((await L.licenseForUser(t.db, user.id)).plan, 'month');
+  assert.equal(t.subs.sub_cs_s.status, 'active');
+  const r = await (await t.api('/licenses/refresh', { license_token: j.license_token, device: pc('S') })).json();
+  assert.equal(r.status, 'active');
+  assert.equal(r.license.billing.interval, 'month');
+
+  // Switched signed in, Stripe refused the cancel, then Lifetime was refunded: the replaced subscription gives no
+  // Premium anymore, so the hourly sweep still stops it instead of letting it renew.
+  const cancel = t.stripe.subscriptions.cancel;
+  t.stripe.subscriptions.cancel = async () => { throw new Error('Stripe is down'); };
+  paidLifetime(t, 'cs_l2', 'sub@rago.gg', { client_reference_id: user.id, customer: 'cus_cs_s' });
+  await t.webhook('checkout.session.completed', t.sessions.cs_l2);
+  assert.equal((await L.licenseForUser(t.db, user.id)).plan, 'lifetime');
+  t.stripe.subscriptions.cancel = cancel;
+  await t.webhook('charge.refunded', { id: 'ch_l2', object: 'charge', refunded: true, payment_intent: 'pi_cs_l2', customer: 'cus_cs_s' });
+  assert.equal((await t.db.get("SELECT status_reason FROM licenses WHERE stripe_session_id = 'cs_l2'")).status_reason, 'refunded');
+  assert.equal(await stopAllReplacedSubscriptions(t.db, t.stripe), 1);
+  assert.equal(t.subs.sub_cs_s.status, 'canceled');
+  assert.equal(await stopAllReplacedSubscriptions(t.db, t.stripe), 0);
+});
+
+test('lifetime: a subscriber who switches signed out with an affiliate code still counts for the affiliate', async () => {
+  const t = await setup(LIFE);
+  lifetimeInStripe(t);
+  await t.browse('/signup', { form: { email: 'aff@x.io', password: 'password123' } });
+  await t.browse('/affiliate/join', { form: {} });
+  const { code } = await t.db.get('SELECT code FROM affiliates');
+  await t.browse('/logout', { form: {} });
+  t.paidSubscription('cs_s', 'sub@x.io', 'month');
+  await t.browse('/checkout/success?session_id=cs_s');
+  await t.browse('/signup', { form: { email: 'sub@x.io', password: 'password123' } });
+  await t.browse('/logout', { form: {} });
+  // Paid signed out from the affiliate's link, then signed in with the code the form shows after paying.
+  paidLifetime(t, 'cs_l', 'sub@x.io', { metadata: { ref: code } });
+  await t.webhook('checkout.session.completed', t.sessions.cs_l);
+  await t.browse('/checkout/success?session_id=cs_l');
+  assert.equal((await t.browse('/login', { form: { email: 'sub@x.io', password: 'password123', code } })).headers.get('location'), '/account?n=upgraded');
+  const user = await L.findUserByEmail(t.db, 'sub@x.io');
+  assert.equal((await t.db.get('SELECT license_id FROM referrals')).license_id, (await L.licenseForUser(t.db, user.id)).id);
+  assert.equal(t.subs.sub_cs_s.status, 'canceled');
+});
+
+test('lifetime: the webhook and the success page at the same time cancel the subscription once and say it worked', async () => {
+  const t = await setup(LIFE, { log: quiet });
+  lifetimeInStripe(t);
+  t.paidSubscription('cs_s', 'sub@rago.gg', 'year');
+  await t.browse('/checkout/success?session_id=cs_s');
+  await t.browse('/signup', { form: { email: 'sub@rago.gg', password: 'password123' } });
+  const user = await L.findUserByEmail(t.db, 'sub@rago.gg');
+  // Like Stripe, slower: a subscription already canceled can't be canceled again.
+  const later = (ms) => new Promise((r) => setTimeout(r, ms));
+  t.stripe.subscriptions.retrieve = async (id) => { await later(30); return t.subs[id]; };
+  t.stripe.subscriptions.cancel = async (id) => {
+    await later(10);
+    if (t.subs[id].status === 'canceled') throw Object.assign(new Error(`No such subscription: '${id}'`), { statusCode: 404, code: 'resource_missing' });
+    t.stripeCalls.push(['cancel', id]);
+    t.subs[id] = { ...t.subs[id], status: 'canceled' };
+    await later(80);
+    return t.subs[id];
+  };
+  paidLifetime(t, 'cs_l', 'sub@rago.gg', { client_reference_id: user.id, customer: 'cus_cs_s' });
+  const [hook, page] = await Promise.all([t.webhook('checkout.session.completed', t.sessions.cs_l), t.browse('/checkout/success?session_id=cs_l')]);
+  assert.equal(hook.status, 200);
+  assert.equal(page.headers.get('location'), '/account?n=upgraded');
+  assert.equal(t.subs.sub_cs_s.status, 'canceled');
+  assert.equal(cancels(t).length, 1);
+  assert.equal(await stopAllReplacedSubscriptions(t.db, t.stripe), 0);
+});
+
+test('lifetime: Stripe is asked for the price once a minute at most, even while it fails', async () => {
+  const t = await setup(LIFE, { log: quiet });
+  let calls = 0;
+  t.stripe.prices.retrieve = async () => { calls++; await new Promise((r) => setTimeout(r, 50)); throw new Error('Stripe is down'); };
+  // Visitors at the same time, then more: one call, and Lifetime stays "Coming soon".
+  const answers = await Promise.all([1, 2, 3].map(async () => (await t.app.request('/api/v1/plans')).json()));
+  for (let i = 0; i < 3; i++) answers.push(await (await t.app.request('/api/v1/plans')).json());
+  assert.deepEqual(answers, Array(6).fill({ lifetime: null }));
+  await t.browse('/signup', { form: { email: 'free@rago.gg', password: 'password123' } });
+  assert.doesNotMatch(await (await t.browse('/account')).text(), /Lifetime in one payment/);
+  assert.equal(calls, 1);
+});
+
+test('lifetime: purchase emails of subscriptions are as before; an older one-time purchase replaces a subscription too', async () => {
+  // A subscription bought signed out by an account that has Premium (here a month given by the team): no email, as
+  // before. A Lifetime bought the same way gets its link: it replaces what the account has.
+  const t = await setup(LIFE);
+  lifetimeInStripe(t);
+  await t.browse('/signup', { form: { email: 'gift@rago.gg', password: 'password123' } });
+  await L.grantLicense(t.db, 'gift@rago.gg', 'test', { months: 1 });
+  await t.browse('/logout', { form: {} });
+  const before = t.mails.length;
+  t.paidSubscription('cs_g', 'gift@rago.gg', 'month');
+  await t.webhook('checkout.session.completed', t.sessions.cs_g);
+  assert.equal(t.mails.length, before);
+  paidLifetime(t, 'cs_gl', 'gift@rago.gg');
+  await t.webhook('checkout.session.completed', t.sessions.cs_gl);
+  assert.equal(t.mails.length, before + 1);
+  assert.match(t.mails.at(-1).url, /\/claim\//);
+
+  // A one-time purchase from before the subscriptions (plan lifetime too), claimed by a subscriber: Premium for life
+  // replaces the subscription, which stops, instead of being refused as a second purchase.
+  const o = await setup(SUBS);
+  o.paidSubscription('cs_s', 'sub@rago.gg', 'month');
+  await o.browse('/checkout/success?session_id=cs_s');
+  await o.browse('/signup', { form: { email: 'sub@rago.gg', password: 'password123' } });
+  await o.webhook('checkout.session.completed', o.paidSession('cs_old', 'old@rago.gg'));
+  assert.equal((await o.browse(new URL(o.mails.at(-1).url).pathname)).headers.get('location'), '/account?n=upgraded');
+  assert.equal((await L.licenseForUser(o.db, (await L.findUserByEmail(o.db, 'sub@rago.gg')).id)).stripe_session_id, 'cs_old');
+  assert.equal(o.subs.sub_cs_s.status, 'canceled');
 });

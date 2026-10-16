@@ -216,9 +216,9 @@ Sans jeton valable : `401 invalid_token`.
 Premium s'achète aussi en un seul paiement, Lifetime, sur son propre prix Stripe (`STRIPE_PRICE_LIFETIME`, voir MISE-EN-LIGNE.md). Le contrat de l'app ne change pas :
 
 - `license.billing.interval` vaut `"lifetime"` pour une licence achetée ainsi, comme pour les licences offertes et les anciens achats uniques, avec `renews_at` et `ends_at` à `null`.
-- Un abonné qui passe à Lifetime garde son PC : son ancienne licence est remplacée et son abonnement Stripe arrêté juste après le paiement. Le `refresh` avec le token de l'ancienne licence répond `active` avec la licence Lifetime, comme après une récompense d'affiliation remplacée.
+- Un abonné qui passe à Lifetime garde son PC : son ancienne licence est remplacée et son abonnement Stripe arrêté dès que Lifetime est sur son compte (juste après le paiement s'il était connecté). Le `refresh` avec le token de l'ancienne licence répond `active` avec la licence Lifetime, comme après une récompense d'affiliation remplacée.
 
-**Public** : `GET /plans` (sans jeton, CORS ouvert, cache 60 s) répond `{ "lifetime": { "amount", "currency" } }`, `amount` en centimes (`5999`) et `currency` en minuscules (`"usd"`), ou `{ "lifetime": null }` quand Lifetime ne peut pas être payé : variable absente, prix archivé ou pas en paiement unique, Stripe injoignable avant toute réponse. Le site n'active « Get Lifetime » que si ce montant et cette devise sont exactement ceux qu'il affiche ; sinon le bouton reste « Coming soon ». L'achat passe par `/buy/lifetime`, qui accepte `?ref=` et `?promo=` comme `/buy`.
+**Public** : `GET /plans` (sans jeton, CORS ouvert, cache 60 s) répond `{ "lifetime": { "amount", "currency" } }`, `amount` en centimes (`5999`) et `currency` en minuscules (`"usd"`), ou `{ "lifetime": null }` quand Lifetime ne peut pas être payé : variable absente, prix archivé, pas en paiement unique ou différent de 59,99 USD (`LIFETIME_PRICE` dans `src/billing.js`), Stripe injoignable avant toute réponse. Le site n'active « Get Lifetime » que si ce montant et cette devise sont exactement ceux qu'il affiche ; sinon le bouton reste « Coming soon ». L'achat passe par `/buy/lifetime`, qui accepte `?ref=` et `?promo=` comme `/buy`.
 
 ## License token
 

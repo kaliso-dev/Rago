@@ -115,6 +115,7 @@ Tout se règle dans l'objet `CONFIG`, en bas de `site/src/page.html` :
 const CONFIG = {
   accountBase: "https://rago-production.up.railway.app", // le serveur de comptes, sans / à la fin
   checkoutPath: "/buy",                 // ne pas toucher
+  lifetimePath: "/buy/lifetime",        // ne pas toucher (achat Lifetime, paiement unique)
   loginPath: "/login",                  // ne pas toucher
   signupPath: "/signup",                // ne pas toucher
   affiliatePath: "/affiliate",          // ne pas toucher
@@ -122,14 +123,17 @@ const CONFIG = {
   discord: "",                          // ton invitation, ex. "https://discord.gg/tonInvite"
   currency: "$",
   priceMonth: 5.99,                     // prix mensuel Stripe
-  priceYear: 29.99                      // prix annuel Stripe
+  priceYear: 29.99,                     // prix annuel Stripe
+  priceLifetime: 59.99                  // prix Lifetime Stripe (paiement unique)
 };
 ```
 
 - `priceMonth` et `priceYear` doivent être **exactement** les prix des deux `price_...` Stripe, dans la même devise que `currency`.
+- `priceLifetime` doit être **exactement** le prix du `price_...` Lifetime de Stripe (variable `STRIPE_PRICE_LIFETIME` du serveur) **et** la valeur `LIFETIME_PRICE` de `licensing/src/billing.js` : le serveur ne vend Lifetime qu'à ce prix, et `site/tools/build.py` s'arrête si le site et le serveur ne sont pas d'accord. Tant que le serveur ne vend pas Lifetime (pas de prix, ou un prix différent), la carte Lifetime affiche « Coming soon » sans lien d'achat, et ses questions de la FAQ restent masquées.
 - Tant que `discord` est vide, les liens Discord du site sont masqués.
 - Les avis viennent de l'application, ou du site pour les comptes Premium : un joueur connecté à son compte Rago laisse une note (1 à 5 étoiles) et un commentaire, qu'il peut modifier ou supprimer ensuite (dans l'app, ou sur la page compte : ligne « Your review » et `/account/review` pour les Premium, onglet Profile pour supprimer). C'est le même avis partout (un par compte). Le site les lit sur le serveur de comptes (`/api/v1/reviews`) à chaque visite : la section `#reviews` reste masquée tant qu'aucun avis n'existe et apparaît dès le premier, sans modifier le site. Les cartes restent fixes tant qu'elles tiennent sur deux lignes à la largeur de l'écran ; au-delà, elles défilent en deux bandes. Toutes les cartes ont la même taille (4 lignes de texte) : un avis plus long est coupé après un mot, à la mesure de la carte, avec « See more », qui ouvre la page `reviews.html` sur cet avis : elle montre tous les avis en entier (`/api/v1/reviews?all=1`), avec la moyenne, un filtre par note et un tri. Modération : `npm run admin -- reviews`, `hide-review <email>`, `show-review <email>` (dossier `licensing/`).
-- `site/index.html` (la page publiée) est fabriquée à partir de `site/src/page.html`, `site/reviews.html` à partir de `site/src/reviews.html`, et `site/tweaks.html` (la page qui présente les 199 réglages, avec le téléchargement gratuit et la recherche) à partir de `site/src/tweaks.html`. La liste des réglages de cette page vient du catalogue de l'app (`app/src/data/catalog.json`) et des textes de `site/src/tweaks-copy.json`, recopiés par `site/tools/sync_app.py`. Ne les modifie pas à la main : demande la modification sur le projet, elles sont refaites par `site/tools/build.py`.
+- `site/index.html` (la page publiée) est fabriquée à partir de `site/src/page.html`, `site/reviews.html` à partir de `site/src/reviews.html`, `site/partners.html` à partir de `site/src/partners.html`, et `site/tweaks.html` (la page qui présente les 199 réglages, avec le téléchargement gratuit et la recherche) à partir de `site/src/tweaks.html`. La liste des réglages de cette page vient du catalogue de l'app (`app/src/data/catalog.json`) et des textes de `site/src/tweaks-copy.json`, recopiés par `site/tools/sync_app.py`. Ne les modifie pas à la main : demande la modification sur le projet, elles sont refaites par `site/tools/build.py`.
+- **Partenaires** : la liste (nom exact, lien d’invitation, logo) est dans `site/src/partners.json`, la seule source. La section « Partners » de l'accueil et la page `partners.html` en sont tirées par `site/tools/build.py` (qui lance `site/tools/sync_partners.py`). Pour ajouter un partenaire : une entrée dans ce fichier, son logo officiel en WebP carré de 256 px dans `site/img/partners/` (pour un logo animé, sa première image en plus, dans `"still"`), puis `python3 site/tools/build.py`. L'accueil montre ceux marqués `"home": true` (en garder 4 pour que les rangées restent pleines) et « See all » mène à la page qui les montre tous.
 
 ### Avant le lancement : compte à rebours et accès de l'équipe
 
