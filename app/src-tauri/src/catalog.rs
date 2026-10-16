@@ -1177,6 +1177,8 @@ mod tests {
         assert!(allowed("win_gamedvr", None, false) && allowed("rst_point", None, false) && allowed("__wmic", None, false));
         assert!(!allowed("gpu_nvidia", None, false) && !allowed("in_advanced", None, false));
         assert!(allowed("gpu_nvidia", None, true));
+        // Sofiene, 16 octobre 2026 : trois réglages de confort de Windows ouverts en gratuit
+        assert!(["win_notifications", "win_popups", "win_ai"].iter().all(|id| allowed(id, None, false)));
         // la souris (Hitreg) : gratuite avant la 1.1.14
         assert!(!allowed("in_mouse", None, false) && !is_free("in_mouse") && was_free("in_mouse"));
         // retour arrière ouvert en gratuit pour RBW Mod et le mode jeu, pas les autres variantes
