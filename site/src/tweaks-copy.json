@@ -233,7 +233,7 @@
  },
  "rbw_mode": {
   "summary": "Turns back on the Windows activity records that Ranked BedWars screenshare tools check.",
-  "about": "Ranked BedWars screenshares look at records Windows keeps of what ran on your PC. If some of those records were turned off, a clean player can end up looking suspicious. Switching it On starts them again, along with Windows usage reporting to Microsoft. Off goes back to the Windows defaults, but it also pauses one of those records until your next restart, which a screenshare can spot.",
+  "about": "Ranked BedWars screenshares look at records Windows keeps of what ran on your PC. If some of those records were turned off, a clean player can end up looking suspicious. Switching it On starts them all again, even ones other tweaks turned off, along with Windows usage reporting to Microsoft; restart after so the checker sees everything. Off goes back to the Windows defaults without stopping anything.",
   "helps": [
    "Screenshare"
   ]
@@ -789,13 +789,6 @@
    "Smoothness"
   ]
  },
- "pow_timer": {
-  "summary": "Asks Windows to stop grouping processor wake-ups together to save power.",
-  "about": "To save energy, Windows can bundle small timed tasks so the processor wakes up less often. This asks it to stop doing that. Microsoft doesn't document the setting, so it's hard to know how much Windows follows it, and any effect is rarely measurable. With no known drawback, it's a low-stakes choice for players who like to try every timing option.",
-  "helps": [
-   "Input lag"
-  ]
- },
  "pow_mmcss": {
   "summary": "Writes multimedia priority settings to places Windows doesn't actually read.",
   "about": "Settings meant to give multimedia tasks higher priority get written here, but to places Windows doesn't read. In practice, that means it's unlikely to change anything on your PC. There's no known drawback either, so it does no harm. You can safely skip it, or turn it on if you simply like having every option in this section applied.",
@@ -1282,7 +1275,7 @@
   "helps": [
    "Input lag"
   ],
-  "undo": "Turning it off doesn't bring your previous NVIDIA settings back yet."
+  "undo": "Turn it off and the driver's global 3D settings go back to NVIDIA's defaults, not to your own earlier ones."
  },
  "nv_telemetry": {
   "summary": "Stops NVIDIA's crash reports, data collection and automatic update checks.",

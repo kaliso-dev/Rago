@@ -71,12 +71,25 @@ fn pick<'a, T>(entry: &'a HashMap<String, T>, variant: Option<&str>) -> Option<&
 #[derive(serde::Deserialize)]
 struct Free {
     tweaks: Vec<String>,
+    #[serde(default)]
+    reverts: Vec<String>,
+    #[serde(default)]
+    formerly: Vec<String>,
+}
+
+fn free_json() -> Free {
+    serde_json::from_str(include_str!("../../src/data/free.json")).expect("free.json invalide")
 }
 
 /// Réglages du plan gratuit, partagés avec l'interface (src/data/free.json).
-static FREE: LazyLock<Vec<String>> = LazyLock::new(|| {
-    serde_json::from_str::<Free>(include_str!("../../src/data/free.json")).expect("free.json invalide").tweaks
-});
+static FREE: LazyLock<Vec<String>> = LazyLock::new(|| free_json().tweaks);
+
+/// Réglages Premium dont seule la variante de retour arrière est ouverte en gratuit (free.json, « reverts ») : RBW Mod
+/// « Activé » et mode jeu « Désactivé ». Ceux de Réseau et Hitreg restent fermés.
+static FREE_REVERTS: LazyLock<Vec<String>> = LazyLock::new(|| free_json().reverts);
+
+/// Réglages gratuits d'une version d'avant (free.json, « formerly ») : la souris (in_mouse) avant la 1.1.14.
+static FORMERLY_FREE: LazyLock<Vec<String>> = LazyLock::new(|| free_json().formerly);
 
 /// Variantes « retour arrière » (« id:variante ») marquées `revert` dans le catalogue : un joueur sans
 /// licence, ou dont l'abonnement a pris fin, doit pouvoir remettre Windows comme avant.
@@ -120,9 +133,15 @@ pub fn is_switch(id: &str) -> bool {
     KINDS.get(id).is_some_and(|k| k == "tweak")
 }
 
-#[cfg(test)]
+/// Réglage du plan gratuit : appliqué sans licence, il ne dit pas que Premium a pris fin (reset::due).
 pub fn is_free(id: &str) -> bool {
     FREE.iter().any(|f| f == id)
+}
+
+/// Réglage gratuit dans une version d'avant, Premium maintenant : un joueur du plan gratuit a pu l'appliquer. Encore
+/// appliqué sans licence, il ne dit pas non plus que Premium a pris fin.
+pub fn was_free(id: &str) -> bool {
+    FORMERLY_FREE.iter().any(|f| f == id)
 }
 
 /// Variante de retour arrière (« Default », RBW Mod « On »…) : l'appliquer revient à annuler le réglage.
@@ -132,6 +151,15 @@ pub fn is_revert(id: &str, variant: Option<&str>) -> bool {
 
 pub fn revert_variant(id: &str) -> Option<String> {
     REVERTS.iter().find_map(|r| r.strip_prefix(&format!("{id}:")).map(str::to_string))
+}
+
+/// Réglage dont le retour arrière lance toujours le script de sa variante `revert`, jamais la sauvegarde : RBW Mod
+/// « Activé » doit démarrer les services que lit le screenshare et remettre ce que d'autres réglages coupent. La
+/// sauvegarde prise avant « Désactivé » ne fait que réécrire le registre (aucun service démarré) et recouperait les
+/// services qu'un autre réglage avait coupés. Exception (runner.rs) : défaire le « Désactivé » de cette version
+/// (Applied::windows_values) ne lance rien, il n'a posé que les valeurs de Windows.
+pub fn revert_runs_script(id: &str) -> bool {
+    id == "rbw_mode"
 }
 
 /// Script en clair (plan gratuit, retour arrière), sans licence.
@@ -184,13 +212,11 @@ pub fn twin_of(id: &str) -> Option<&'static str> {
     TWINS.get(id).map(String::as_str)
 }
 
-/// Sans licence active, seuls les réglages du plan gratuit, les variantes de retour arrière et
-/// l'installation de WMIC peuvent tourner.
+/// Sans licence active, seuls les réglages du plan gratuit, le retour arrière de RBW Mod et du mode jeu et
+/// l'installation de WMIC peuvent tourner. Les autres retours arrière restent dans le paquet gratuit : l'annulation d'un
+/// réglage appliqué sans sauvegarde s'en sert (runner.rs), et une annulation ne passe pas par ici.
 pub fn allowed(id: &str, variant: Option<&str>, premium: bool) -> bool {
-    premium
-        || id == "__wmic"
-        || FREE.iter().any(|f| f == id)
-        || variant.is_some_and(|v| REVERTS.iter().any(|r| *r == format!("{id}:{v}")))
+    premium || id == "__wmic" || FREE.iter().any(|f| f == id) || (FREE_REVERTS.iter().any(|f| f == id) && is_revert(id, variant))
 }
 
 /// Scripts internes à l'app, qui ne viennent pas du .bat.
@@ -267,12 +293,17 @@ mod tests {
             }
         }
         assert!(sealed_n > 150, "{sealed_n} scripts chiffrés");
-        assert!(script("in_mouse", None, None).is_some(), "plan gratuit sans licence");
+        assert!(script("win_gamedvr", None, None).is_some(), "plan gratuit sans licence");
+        // la souris : gratuite avant la 1.1.14, Premium depuis, son annulation comprise
+        assert!(script("in_mouse", None, None).is_none() && script("in_mouse", None, Some(&bundle)).is_some());
+        assert!(undo_of("in_mouse", None, None).is_none() && undo_of("in_mouse", None, Some(&bundle)).is_some());
         assert!(script("net_nagle", None, None).is_none(), "Premium sans licence");
         assert!(script("net_nagle", None, Some(&bundle)).is_some());
-        // réglages ajoutés en 1.1.6 : Premium, et chaque valeur touchée est relevée avant d'appliquer
+        // réglages ajoutés en 1.1.6 : chaque valeur touchée est relevée avant d'appliquer ; win_autoplay est Premium,
+        // win_ai gratuit depuis le 16 octobre 2026
+        assert!(script("win_autoplay", None, None).is_none(), "win_autoplay sans licence");
+        assert!(script("win_ai", None, None).is_some(), "win_ai dans le plan gratuit");
         for id in ["win_ai", "win_autoplay"] {
-            assert!(script(id, None, None).is_none(), "{id} sans licence");
             let p = probe(id, None, Some(&bundle)).expect(id);
             assert_eq!(p.matches("@@RAGO reg ").count(), script(id, None, Some(&bundle)).unwrap().matches("reg add").count(), "{id}");
         }
@@ -413,7 +444,7 @@ mod tests {
                     assert!(!t.ends_with("do set \"str=%%i\" ("), "{id}:{v} boucle détachée : {l}");
                     assert!(!(t.contains("/v \"devicepriority\" /f") && t.starts_with("reg")) || t.starts_with("reg delete"), "{id}:{v} {l}");
                     assert!(!t.starts_with('/'), "{id}:{v} ligne orpheline : {l}");
-                    assert!(!t.contains("c:\\users\\") || t.contains("%username%"), "{id}:{v} chemin de l'auteur : {l}");
+                    assert!(!t.contains("c:\\users\\") || t.contains("!username!"), "{id}:{v} chemin de l'auteur : {l}");
                     assert!(!t.contains("{nic-id}") && !t.contains("c4accd00-2ba5") && !t.contains("122afb68-2ba4"), "{id}:{v} carte réseau de l'auteur : {l}");
                 }
                 assert!(!low.contains("messagebox") && !low.contains("risxn") && !low.contains("excusesfn"), "{id}:{v}");
@@ -440,8 +471,8 @@ mod tests {
         assert_eq!(SCRIPTS["ping_main"].len(), 4);
         // le RBW Mod remet ce que d'autres réglages coupent avant un screenshare
         let rbw = SCRIPTS["rbw_mode"]["on"].to_lowercase();
-        assert!(rbw.contains("services\\bam\" /v \"start\" /t reg_dword /d \"1\""));
-        assert!(rbw.contains("enableprefetcher\" /t reg_dword /d \"3\""));
+        assert!(rbw.contains("bam = 1;") && rbw.contains("set-start $name $services[$name]"));
+        assert!(rbw.contains("foreach ($v in 'enableprefetcher', 'enablesuperfetch') { if ((reg $pf $v) -ne 3) { set-itemproperty -path $pf -name $v -value 3"));
         // BAM et le Prefetcher ne reviennent qu'au démarrage : l'app doit le demander
         let cat: serde_json::Value = serde_json::from_str(catalog).unwrap();
         let rbw = cat["modules"].as_array().unwrap().iter()
@@ -477,7 +508,7 @@ mod tests {
         let bundle = premium(&test_key()).unwrap();
         let catalog: serde_json::Value = serde_json::from_str(include_str!("../../src/data/catalog.json")).unwrap();
         let retired: Vec<&str> = catalog["retired"].as_array().unwrap().iter().map(|r| r["id"].as_str().unwrap()).collect();
-        assert_eq!(retired.len(), 16);
+        assert_eq!(retired.len(), 17);
         let listed: Vec<&str> = catalog["modules"].as_array().unwrap().iter()
             .flat_map(|m| m["sections"].as_array().unwrap())
             .flat_map(|s| s["tweaks"].as_array().unwrap())
@@ -523,19 +554,683 @@ mod tests {
         }
     }
 
+    /// RAG-67 (2026-10-13) : `CoalescingTimerInterval` à 0 sous `HKLM\SYSTEM\CurrentControlSet\Control` fait planter
+    /// Windows (écran bleu 0x7E, division par zéro) quelques minutes après le démarrage. Plus aucun script ni relevé ne
+    /// l'écrit (tools/safety.py DROP_EVERYWHERE) ; les annulations la suppriment encore pour les PC où une version
+    /// précédente l'a posée, aucune ne la remet, et chaque clé qu'elles nettoient est aussi réparée au lancement
+    /// (repair::TIMER_KEYS). Celle des fichiers de jeu (Image File Execution Options) n'est pas concernée.
+    #[test]
+    fn kernel_timer_value_stays_out() {
+        let bundle = premium(&test_key()).unwrap();
+        let probes: Scripts = serde_json::from_str(include_str!("../scripts/probes.json")).unwrap();
+        let kernel = |l: &str| {
+            let l = l.to_lowercase();
+            l.contains("coalescingtimerinterval") && l.contains("\\control")
+        };
+        for (id, variants) in SCRIPTS.iter().chain(probes.iter()) {
+            for (v, s) in variants {
+                for l in s.lines().map(str::trim).filter(|l| !l.to_lowercase().starts_with("echo")) {
+                    assert!(!kernel(l), "{id}:{v} écrit encore la valeur : {l}");
+                }
+            }
+        }
+        let keys: std::collections::HashSet<String> = crate::repair::TIMER_KEYS.iter().map(|k| k.to_lowercase()).collect();
+        for (id, v) in [
+            ("pow_main", None),
+            ("pow_timer", None),
+            ("pow_throttling", None),
+            ("gpu_nvidia", None),
+            ("gpu_amd", None),
+            ("gpu_general", None),
+            ("amd_advanced", None),
+            ("hitreg_suite", Some("good")),
+            ("hitreg_suite", Some("laptop")),
+        ] {
+            let full = undo_of(id, v, Some(&bundle)).and_then(|u| u.full).unwrap_or_default();
+            let deleted: Vec<&str> = full.lines().map(str::trim).filter(|l| kernel(l)).collect();
+            assert!(!deleted.is_empty(), "{id} : l'annulation ne supprime plus la valeur posée avant");
+            for l in deleted {
+                assert!(l.to_lowercase().starts_with("reg delete"), "{id} : {l}");
+                let key = l.split('"').nth(1).unwrap().to_lowercase().replace("hkey_local_machine", "hklm");
+                assert!(keys.contains(&key), "{id} : {key} n'est pas réparée au lancement (repair::TIMER_KEYS)");
+            }
+        }
+        for (id, variants) in bundle.undo.iter().chain(PLAIN.undo.iter()) {
+            for (v, u) in variants {
+                for l in u.full.iter().chain(u.rest.iter()).flat_map(|s| s.lines()).map(str::trim) {
+                    assert!(!kernel(l) || l.to_lowercase().starts_with("reg delete"), "annulation {id}:{v} : {l}");
+                }
+            }
+        }
+    }
+
+    /// Services que lit le vérificateur officiel de RBW (github.com/quickpots/RBW-SS, Services.ps1, relevé le
+    /// 2026-10-13), en plus de chaque CDPUserSvc_xxxx : il les veut tous en Running.
+    const RBW_CHECKER: [&str; 11] = ["sysmain", "pcasvc", "dps", "bam", "eventlog", "wsearch", "dusmsvc", "bfe", "appinfo", "dcomlaunch", "plugplay"];
+
+    /// RBW Mod « Activé » fait ce que fait le script validé par Sofiene (rbw/Rago-RBW-Fix.ps1), dans le même ordre :
+    /// démarrage avec Windows, services dont ils dépendent, réglages lus par le vérificateur, lancement, rapport, programmes
+    /// qui les recouperaient. Le vérificateur passe au vert même quand un autre réglage de l'app les a coupés.
+    #[test]
+    fn rbw_mode_on_does_what_the_validated_fix_does() {
+        let on = SCRIPTS["rbw_mode"]["on"].to_lowercase();
+        // services et démarrage voulu (2 automatique, 3 manuel, 1 système), comme $services dans le script validé
+        let list = on.split("$services = [ordered]@{ ").nth(1).and_then(|s| s.split(" }").next()).expect("$services");
+        let wanted: Vec<(&str, &str)> = list.split("; ").map(|p| p.split_once(" = ").expect(p)).collect();
+        assert_eq!(
+            wanted,
+            [
+                ("sysmain", "2"), ("pcasvc", "2"), ("dps", "2"), ("eventlog", "2"), ("wsearch", "2"), ("dusmsvc", "2"), ("bfe", "2"),
+                ("appinfo", "2"), ("schedule", "2"), ("dsmsvc", "2"), ("diagtrack", "2"), ("dcomlaunch", "2"), ("plugplay", "3"),
+                ("bam", "1"), ("dam", "1"), ("cdpusersvc", "2"),
+            ]
+        );
+        for svc in RBW_CHECKER {
+            assert!(wanted.iter().any(|(n, _)| *n == svc), "{svc} absent de la liste");
+        }
+        let at = |part: &str| on.find(part).unwrap_or_else(|| panic!("absent : {part}"));
+        // chaque CDPUserSvc_xxxx (suffixe propre à chaque session), lu dans le registre : la sortie de sc query est
+        // traduite (NOM_SERVICE sur un Windows en français)
+        at("get-childitem -path 'hklm:\\system\\currentcontrolset\\services' | where-object { $_.pschildname -like 'cdpusersvc_*' } | foreach-object { $services[$_.pschildname] = 2 }");
+        assert!(!on.contains("service_name"), "sortie de sc lue");
+        // 1. démarrage avec Windows : sc config, puis Set-Service, puis la valeur Start du registre ; WSearch en différé ;
+        //    Windows Search remis s'il a été retiré
+        let start_type = at("function set-start($name, $start)");
+        for part in [
+            "sc.exe config $name start= $mode | out-null",
+            "set-service -name $name -startuptype $type",
+            "set-itemproperty -path $key -name 'start' -value $start -type dword",
+            "set-itemproperty -path $key -name 'delayedautostart' -value 1 -type dword",
+            "enable-windowsoptionalfeature -online -featurename 'searchengine-client-package' -all -norestart",
+            "foreach ($name in @($services.keys)) { set-start $name $services[$name] }",
+        ] {
+            assert!(at(part) > start_type, "{part}");
+        }
+        // 2. services dont ils dépendent : désactivés, remis en manuel
+        let deps = at("function fix-dependencies($name)");
+        assert!(at("(get-service -name $name).servicesdependedon") > deps);
+        assert!(at("sc.exe config $d.name start= demand") > deps);
+        assert!(at("set-itemproperty -path $key -name 'start' -value 3 -type dword") > deps);
+        // 3. réglages lus par le vérificateur, et ce dont DPS a besoin pour démarrer
+        let settings = at("$sys = 'hklm:\\software\\policies\\microsoft\\windows\\system'");
+        for part in [
+            "foreach ($v in 'enableactivityfeed', 'publishuseractivities') { if ($null -ne (reg $sys $v)) { remove-itemproperty -path $sys -name $v",
+            "$ac = 'hklm:\\software\\policies\\microsoft\\windows\\appcompat'; if (test-path $ac) { remove-item -path $ac -recurse -force",
+            "if ((reg $adv 'start_trackdocs') -ne 1) { set-itemproperty -path $adv -name 'start_trackdocs' -value 1 -type dword",
+            "$cmd = 'hkcu:\\software\\policies\\microsoft\\windows\\system'; if ($null -ne (reg $cmd 'disablecmd')) { remove-itemproperty -path $cmd -name 'disablecmd'",
+            "if ((reg $sb 'enablescriptblocklogging') -eq 0) { remove-itemproperty -path $sb -name 'enablescriptblocklogging'",
+            "foreach ($v in 'enableprefetcher', 'enablesuperfetch') { if ((reg $pf $v) -ne 3) { set-itemproperty -path $pf -name $v -value 3 -type dword",
+            "foreach ($logger in 'diaglog', 'wdicontextlog') { $key = 'hklm:\\system\\currentcontrolset\\control\\wmi\\autologger\\' + $logger; if ((test-path $key) -and (reg $key 'start') -ne 1) { set-itemproperty -path $key -name 'start' -value 1 -type dword",
+            "$wdi = 'hklm:\\software\\policies\\microsoft\\windows\\wdi\\{9c5a40da-b965-4fc3-8781-88dd50a6299d}'; if ($null -ne (reg $wdi 'scenarioexecutionenabled')) { remove-itemproperty -path $wdi -name 'scenarioexecutionenabled'",
+        ] {
+            assert!(at(part) > settings, "{part}");
+        }
+        // 4. lancement : Start-Service, puis sc start, puis net start ; tous sauf le modèle CDPUserSvc et DAM
+        let launch = at("function start-one($name)");
+        for part in ["start-service -name $name", "sc.exe start $name | out-null", "net.exe start $name 2>&1 | out-null"] {
+            assert!(at(part) > launch, "{part}");
+        }
+        at("foreach ($name in @($services.keys) | where-object { $_ -notin 'cdpusersvc', 'dam' }) { start-one $name }");
+        // 5. ce que voit le vérificateur, lu comme lui ; 6. ce qui les recouperait au démarrage (rien n'est changé)
+        let report = at("$since = (get-date).addminutes(-30)");
+        let names = at("$names = @(") + "$names = @(".len();
+        let names = &on[names..names + on[names..].find(')').unwrap()];
+        assert_eq!(names.replace('\'', "").split(", ").collect::<Vec<_>>(), RBW_CHECKER, "services lus par le rapport");
+        assert!(at("$names += @(get-service | where-object { $_.name -match '^cdpusersvc_.+' }") > report);
+        assert!(at("if (test-path 'hklm:\\software\\policies\\microsoft\\windows\\appcompat') { $red++") > report);
+        for part in ["get-ciminstance -classname win32_service", "get-winevent", "servicespecificexitcode"] {
+            assert!(at(part) > report, "{part}");
+        }
+        let scan = at("get-scheduledtask");
+        // même ordre que le script validé
+        assert!(start_type < deps && deps < settings && settings < launch && launch < report && report < scan);
+        // cmd : lignes de moins de 8191 caractères ; dans le code PowerShell, ni « " » (fin de l'argument), ni « % »
+        // (variable de cmd), ni « ! » (retiré par EnableDelayedExpansion)
+        assert!(!on.contains('!') && !on.contains('%'));
+        let stages: Vec<&str> = on.lines().filter(|l| !l.starts_with("echo ")).collect();
+        assert_eq!(stages.len(), 6);
+        for l in stages {
+            assert!(l.len() < 8191, "ligne de {} caractères", l.len());
+            let code = l.strip_prefix("powershell -noprofile -noninteractive -executionpolicy bypass -command \"").and_then(|c| c.strip_suffix('"')).expect(l);
+            assert!(!code.contains('"'), "{code}");
+        }
+        // « Activé » lance toujours son script, même après « Désactivé » (pas la sauvegarde, qui ne démarre rien)
+        assert!(revert_runs_script("rbw_mode") && !revert_runs_script("game_mode"));
+        assert_eq!(revert_variant("rbw_mode").as_deref(), Some("on"));
+        assert!(PLAIN.scripts.get("rbw_mode").and_then(|e| e.get("on")).is_some(), "ouvert sans licence");
+    }
+
+    /// RBW Mod « Désactivé » : services et réglages comme Windows les règle, rien d'arrêté.
+    #[test]
+    fn rbw_mode_off_puts_windows_values_and_stops_nothing() {
+        let off = SCRIPTS["rbw_mode"]["off"].to_lowercase();
+        let lines: Vec<&str> = off.lines().map(str::trim).collect();
+        assert!(!off.contains("sc stop") && !off.contains("stop-service") && !off.contains("net stop") && !off.contains("disabled") && !off.contains('!'));
+        for (svc, mode) in [
+            ("sysmain", "auto"), ("pcasvc", "auto"), ("dps", "auto"), ("eventlog", "auto"), ("wsearch", "delayed-auto"), ("dusmsvc", "auto"),
+            ("bfe", "auto"), ("appinfo", "demand"), ("schedule", "auto"), ("dsmsvc", "demand"), ("diagtrack", "auto"), ("dcomlaunch", "auto"),
+            ("plugplay", "demand"), ("bam", "system"), ("dam", "system"),
+        ] {
+            assert!(lines.contains(&format!("sc config {svc} start= {mode} >nul 2>&1").as_str()), "{svc} pas en {mode}");
+        }
+        // les réglages lus par le vérificateur, comme « Activé »
+        for part in [
+            "reg delete \"hklm\\software\\policies\\microsoft\\windows\\system\" /v \"enableactivityfeed\" /f",
+            "reg delete \"hklm\\software\\policies\\microsoft\\windows\\appcompat\" /f",
+            "explorer\\advanced\" /v \"start_trackdocs\" /t reg_dword /d \"1\" /f",
+            "reg delete \"hkcu\\software\\policies\\microsoft\\windows\\system\" /v \"disablecmd\" /f",
+            "| find \"0x0\" >nul && reg delete \"hklm\\software\\policies\\microsoft\\windows\\powershell\\scriptblocklogging\" /v \"enablescriptblocklogging\" /f",
+            "/v \"enableprefetcher\" /t reg_dword /d \"3\" /f",
+            "autologger\\diaglog\" /v \"start\" /t reg_dword /d \"1\" /f",
+            "autologger\\wdicontextlog\" /v \"start\" /t reg_dword /d \"1\" /f",
+            "/v \"scenarioexecutionenabled\" /f",
+        ] {
+            assert!(off.contains(part), "« Désactivé » ne remet pas : {part}");
+        }
+        // les services que Windows démarre seul sont lancés, chaque CDPUserSvc_xxxx compris, en automatique comme son
+        // modèle (noms lus dans le registre, pas dans la sortie de sc, traduite)
+        let started = lines.iter().find(|l| l.starts_with("for %%s in (")).expect("services lancés");
+        for svc in ["sysmain", "pcasvc", "dps", "eventlog", "wsearch", "dusmsvc", "bfe", "bam"] {
+            assert!(started.split(['(', ')', ' ']).any(|s| s == svc), "{svc} pas lancé");
+        }
+        assert!(lines.iter().any(|l| l.contains("('reg query \"hklm\\system\\currentcontrolset\\services\" /k /f \"cdpusersvc_\" ^| find /i \"cdpusersvc_\"')")
+            && l.ends_with("do (reg add \"hklm\\system\\currentcontrolset\\services\\%%s\" /v \"start\" /t reg_dword /d \"2\" /f >nul & sc start %%s >nul 2>&1)")));
+        assert!(!off.contains("service_name"));
+    }
+
+    /// Ce qu'un réglage de l'app change dans ce que lit le vérificateur RBW (ou dans ce dont ses services ont besoin pour
+    /// démarrer) et que RBW Mod « Activé » ne remettrait pas. None : rien, ou « Activé » le remet.
+    fn rbw_gap(line: &str) -> Option<String> {
+        let mut l = line.to_lowercase().replace(['"', '\''], "");
+        for (a, b) in [("hkey_local_machine", "hklm"), ("hkey_current_user", "hkcu"), ("reg.exe", "reg"), ("sc.exe", "sc"), ("net.exe", "net"), ("start= ", "start=")] {
+            l = l.replace(a, b);
+        }
+        let l = l.split_whitespace().collect::<Vec<_>>().join(" ");
+        if l.is_empty() || l.starts_with("echo") || l.starts_with("rem ") || l.starts_with("::") {
+            return None;
+        }
+        let tk: Vec<&str> = l.split(|c: char| c.is_whitespace() || "\\(),;|&>".contains(c)).filter(|t| !t.is_empty()).collect();
+        if tk.is_empty() {
+            return None;
+        }
+        let after = |w: &str| tk.iter().position(|t| *t == w).and_then(|i| tk.get(i + 1)).copied();
+        let value = after("/v").or(after("-name"));
+        let reads = (tk[0] == "reg" && tk.get(1) == Some(&"query")) || tk[0] == "get-itemproperty";
+        // services : démarrage et état seulement, « Activé » remet le démarrage voulu puis les lance
+        let svc = RBW_CHECKER.iter().find(|s| tk.contains(s)).copied().or(tk.iter().find(|t| t.starts_with("cdpusersvc")).copied());
+        if let Some(svc) = svc.filter(|_| tk.contains(&"sc") || tk.contains(&"net") || l.contains("-service") || l.contains("services\\")) {
+            let ok = if l.contains("services\\") {
+                reads || matches!(value, Some("start" | "delayedautostart"))
+            } else if tk.contains(&"sc") {
+                match after("sc") {
+                    Some("stop" | "start" | "query" | "qc") => true,
+                    Some("config") => tk.iter().skip_while(|t| **t != "config").filter(|t| t.contains('=')).all(|t| t.starts_with("start=")),
+                    _ => false,
+                }
+            } else if tk.contains(&"net") {
+                matches!(after("net"), Some("stop" | "start"))
+            } else {
+                ["stop-service", "start-service", "get-service"].iter().any(|c| l.contains(c))
+                    || (l.contains("set-service") && (l.contains("-startuptype") || l.contains("-status")) && !l.contains("-securitydescriptor"))
+            };
+            if !ok {
+                return Some(format!("service {svc}"));
+            }
+        }
+        // valeurs : « Activé » enlève les stratégies, la clé AppCompat, remet Start_TrackDocs, le Prefetcher, les journaux
+        // de DPS (Start) ; une autre valeur de ces journaux ou du scénario WDI, ou la clé entière, n'est pas remise
+        for key in ["autologger\\diaglog", "autologger\\wdicontextlog"] {
+            if l.contains(key) && !reads && value != Some("start") {
+                return Some(key.to_string());
+            }
+        }
+        if l.contains("wdi\\{9c5a40da-b965-4fc3-8781-88dd50a6299d}") && !reads && value != Some("scenarioexecutionenabled") {
+            return Some("WDI".into());
+        }
+        None
+    }
+
+    /// Garde pour les réglages à venir : ce qu'un autre réglage coupe parmi ce que lit le vérificateur RBW, RBW Mod
+    /// « Activé » le remet (relevé du 2026-10-13 : win_services, dbl_autologgers, exp_autologgers, sys_registry,
+    /// win_audit, win_telemetry, win_tracking, dbl_telemetry, hitreg_suite, in_advanced, win_feed, sys_csrss, win_diag).
+    /// Un nouveau réglage qui coupe autrement un de ces éléments fait échouer ce test : le remettre dans tools/rbw.py
+    /// (« Activé », comme le script validé), ou ne pas le couper.
+    #[test]
+    fn rbw_mode_puts_back_what_other_tweaks_turn_off() {
+        let mut touched = std::collections::BTreeSet::new();
+        for (id, variants) in SCRIPTS.iter().filter(|(id, _)| id.as_str() != "rbw_mode") {
+            for (v, s) in variants {
+                for l in s.lines() {
+                    assert_eq!(rbw_gap(l), None, "{id}:{v} : le RBW Mod ne remet pas : {l}");
+                    let low = l.to_lowercase();
+                    if ["enableactivityfeed", "appcompat", "start_trackdocs", "enableprefetcher", "autologger\\diaglog", "wdicontextlog", "sc config wsearch"]
+                        .iter()
+                        .any(|p| low.contains(p))
+                    {
+                        touched.insert(id.as_str());
+                    }
+                }
+            }
+        }
+        // la garde voit bien les réglages qui coupent ces éléments aujourd'hui
+        for id in ["win_services", "dbl_autologgers", "sys_registry", "win_telemetry", "dbl_telemetry", "hitreg_suite", "in_advanced"] {
+            assert!(touched.contains(id), "{id}");
+        }
+        // et elle refuse ce que « Activé » ne remet pas
+        for l in [
+            "sc delete SysMain",
+            "sc.exe sdset DPS D:(D;;GA;;;WD)",
+            "sc config WSearch depend= RpcSs/NoSuchService",
+            "reg delete \"HKLM\\SYSTEM\\CurrentControlSet\\Services\\bam\" /f",
+            "Reg.exe add \"HKLM\\SYSTEM\\CurrentControlSet\\Services\\PcaSvc\" /v \"ImagePath\" /t REG_EXPAND_SZ /d \"x\" /f",
+            "Set-ItemProperty -Path 'HKLM:\\SYSTEM\\CurrentControlSet\\Services\\CDPUserSvc' -Name UserServiceFlags -Value 0",
+            "Remove-Item -Path 'HKLM:\\SYSTEM\\CurrentControlSet\\Services\\EventLog' -Recurse",
+            "reg delete \"HKLM\\SYSTEM\\CurrentControlSet\\Control\\WMI\\Autologger\\DiagLog\" /f",
+            "reg add \"HKLM\\SOFTWARE\\Policies\\Microsoft\\Windows\\WDI\\{9c5a40da-b965-4fc3-8781-88dd50a6299d}\" /v \"EnabledScenarioExecutionLevel\" /t REG_DWORD /d \"1\" /f",
+        ] {
+            assert!(rbw_gap(l).is_some(), "pas vu : {l}");
+        }
+        for l in [
+            "sc config DPS start= disabled",
+            "for %%s in (SysMain WSearch) do sc stop %%s >nul 2>&1",
+            "net stop bfe /y",
+            "Set-Service -Name DusmSvc -StartupType Disabled",
+            "reg add \"HKLM\\SYSTEM\\CurrentControlSet\\Services\\bam\" /v \"Start\" /t REG_DWORD /d \"4\" /f",
+            "reg add \"HKLM\\SYSTEM\\CurrentControlSet\\Control\\WMI\\Autologger\\WdiContextLog\" /v \"Start\" /t REG_DWORD /d \"0\" /f",
+            "reg add \"HKLM\\SOFTWARE\\Microsoft\\DusmSvc\\Settings\" /v \"DisableSystemBucket\" /t REG_DWORD /d \"1\" /f",
+        ] {
+            assert_eq!(rbw_gap(l), None, "{l}");
+        }
+    }
+
+    /// Le texte entre guillemets remplacé par des x, octet par octet (mêmes positions).
+    fn masked_line(l: &str) -> String {
+        let mut quoted = false;
+        let b: Vec<u8> = l
+            .bytes()
+            .map(|c| {
+                if c == b'"' {
+                    quoted = !quoted;
+                    c
+                } else if quoted {
+                    b'x'
+                } else {
+                    c
+                }
+            })
+            .collect();
+        String::from_utf8(b).unwrap()
+    }
+
+    /// Variables `%NOM%` (mark `%` ; les `%%` restent : variable de boucle ou `%` écrit tel quel) ou `!NOM!` (mark `!`)
+    /// d'une ligne, en majuscules, dans l'ordre (comme PERCENT et BANG de tools/paths.py).
+    fn var_refs(l: &str, mark: u8) -> Vec<String> {
+        let name = |c: u8, first: bool| c.is_ascii_alphabetic() || c == b'_' || (!first && (c.is_ascii_digit() || b"()#$.-".contains(&c)));
+        let b = l.as_bytes();
+        let (mut out, mut i) = (Vec::new(), 0);
+        while i < b.len() {
+            if b[i] != mark {
+                i += 1;
+                continue;
+            }
+            if mark == b'%' && b.get(i + 1) == Some(&b'%') {
+                i += 2;
+                continue;
+            }
+            let mut j = i + 1;
+            while j < b.len() && name(b[j], j == i + 1) {
+                j += 1;
+            }
+            if j > i + 1 && b.get(j) == Some(&mark) {
+                out.push(l[i + 1..j].to_ascii_uppercase());
+                i = j + 1;
+            } else {
+                i += 1;
+            }
+        }
+        out
+    }
+
+    /// Défauts des commandes qui suppriment ou prennent possession de fichiers (del, erase, rd, rmdir, forfiles,
+    /// takeown, icacls) dans un script que le moteur lance après `setlocal EnableDelayedExpansion` (runner.rs,
+    /// PREAMBLE). Revue du 2026-10-13, P1/P2 ; tools/paths.py vérifie les mêmes règles à la génération :
+    /// - chemin `%VAR%`, sur la ligne ou sur une ligne qui ouvre son bloc : cmd le remplace avant de lire la ligne, puis
+    ///   retire ses `!` (« Jean! ») ou remplace le texte entre deux `!` : la commande vise un autre dossier ;
+    /// - `!VAR!` sans `if defined VAR` devant (sur la ligne ou sur une ligne qui ouvre son bloc) : vide, `"!temp!\*"`
+    ///   vise la racine du disque ;
+    /// - variable de boucle (`%%d`) avec le développement retardé actif : elle est remplacée avant les `!…!`, un dossier
+    ///   nommé `!SystemRoot!` deviendrait `C:\Windows` ;
+    /// - `!…!` après `setlocal DisableDelayedExpansion` : il ne serait plus remplacé ;
+    /// - variable hors guillemets : un espace dans le chemin le couperait en deux.
+    /// Le texte d'un echo (jusqu'au premier `&` ou `|`) et les commentaires ne lancent rien.
+    fn deletion_errors(script: &str) -> Vec<String> {
+        use std::collections::BTreeSet;
+        const ACTIONS: [&str; 7] = ["del", "erase", "rd", "rmdir", "forfiles", "takeown", "icacls"];
+        const DDE_OFF: &str = "setlocal disabledelayedexpansion";
+        fn kind(l: &str) -> char {
+            let t = l.trim().trim_start_matches('@').trim().to_ascii_lowercase();
+            let after = |w: &str| t.strip_prefix(w).map(|r| r.bytes().next());
+            if t.starts_with(':') {
+                ':'
+            } else if matches!(after("rem"), Some(None)) || matches!(after("rem"), Some(Some(c)) if c.is_ascii_whitespace()) {
+                'r'
+            } else if matches!(after("echo"), Some(None))
+                || matches!(after("echo"), Some(Some(c)) if c.is_ascii_whitespace() || b".(:/".contains(&c))
+            {
+                'e'
+            } else {
+                'c'
+            }
+        }
+        fn first_action(l: &str) -> Option<usize> {
+            let k = kind(l);
+            if k == ':' || k == 'r' {
+                return None;
+            }
+            let bare = masked_line(l).to_ascii_lowercase();
+            let b = bare.as_bytes();
+            let start = if k == 'e' { bare.find(['&', '|'])? } else { 0 };
+            for i in start..b.len() {
+                if i > 0 && !(b[i - 1].is_ascii_whitespace() || b"&|(@".contains(&b[i - 1])) {
+                    continue;
+                }
+                for w in ACTIONS {
+                    if b[i..].starts_with(w.as_bytes()) {
+                        let mut k = i + w.len();
+                        if b[k..].starts_with(b".exe") {
+                            k += 4;
+                        }
+                        if k == b.len() || b[k].is_ascii_whitespace() {
+                            return Some(i);
+                        }
+                    }
+                }
+            }
+            None
+        }
+        // `if [/i] defined NOM` (pas `if not defined`)
+        fn guards(l: &str) -> BTreeSet<String> {
+            fn spaces(b: &[u8], k: &mut usize) -> bool {
+                let start = *k;
+                while *k < b.len() && b[*k].is_ascii_whitespace() {
+                    *k += 1;
+                }
+                *k > start
+            }
+            let low = l.to_ascii_lowercase();
+            let b = low.as_bytes();
+            let mut out = BTreeSet::new();
+            for s in (0..b.len()).filter(|&s| b[s..].starts_with(b"if")) {
+                if s > 0 && (b[s - 1].is_ascii_alphanumeric() || b[s - 1] == b'_') {
+                    continue;
+                }
+                let mut k = s + 2;
+                if !spaces(b, &mut k) {
+                    continue;
+                }
+                if b[k..].starts_with(b"/i") {
+                    let mut k2 = k + 2;
+                    if spaces(b, &mut k2) {
+                        k = k2;
+                    }
+                }
+                if !b[k..].starts_with(b"defined") {
+                    continue;
+                }
+                k += 7;
+                if !spaces(b, &mut k) {
+                    continue;
+                }
+                let start = k;
+                while k < b.len() && !b[k].is_ascii_whitespace() && !b"\"()&|".contains(&b[k]) {
+                    k += 1;
+                }
+                if k > start {
+                    out.insert(low[start..k].to_ascii_uppercase());
+                }
+            }
+            out
+        }
+        // +1 / -1 par parenthèse hors guillemets et hors ^, sur une ligne de commande (comme block_errors)
+        fn parens(l: &str) -> Vec<i32> {
+            if kind(l) != 'c' {
+                return Vec::new();
+            }
+            let (mut out, mut quoted, mut it) = (Vec::new(), false, l.bytes());
+            while let Some(c) = it.next() {
+                match c {
+                    b'"' => quoted = !quoted,
+                    b'^' if !quoted => {
+                        it.next();
+                    }
+                    b'(' if !quoted => out.push(1),
+                    b')' if !quoted => out.push(-1),
+                    _ => {}
+                }
+            }
+            out
+        }
+        let for_var = |s: &str| s.as_bytes().windows(3).any(|w| w[0] == b'%' && w[1] == b'%' && (w[2] == b'~' || w[2].is_ascii_alphabetic()));
+        let mut errors = Vec::new();
+        // par parenthèse ouverte : variables %…%, variables !…! et gardes de sa ligne et des blocs au-dessus
+        let mut stack: Vec<(BTreeSet<String>, BTreeSet<String>, BTreeSet<String>)> = Vec::new();
+        // développement retardé : PREAMBLE, puis les lignes setlocal / endlocal entières
+        let mut dde = vec![true];
+        for (n, l) in script.lines().enumerate() {
+            let t = l.trim();
+            let low = t.trim_start_matches('@').trim().to_ascii_lowercase();
+            let word = |w: &str| low.strip_prefix(w).is_some_and(|r| r.bytes().next().is_none_or(|c| !(c.is_ascii_alphanumeric() || c == b'_')));
+            if word("setlocal") && !low.contains('&') {
+                let top = *dde.last().unwrap();
+                dde.push(if low.contains("disabledelayedexpansion") {
+                    false
+                } else if low.contains("enabledelayedexpansion") {
+                    true
+                } else {
+                    top
+                });
+            } else if word("endlocal") && !low.contains('&') && dde.len() > 1 {
+                dde.pop();
+            }
+            let (pct, bang, gd) = stack.last().cloned().unwrap_or_default();
+            let line_pct: BTreeSet<String> = var_refs(l, b'%').into_iter().collect();
+            let line_bang: BTreeSet<String> = var_refs(l, b'!').into_iter().collect();
+            if let Some(pos) = first_action(l) {
+                let on = *dde.last().unwrap();
+                let all: Vec<String> = pct.union(&line_pct).cloned().collect();
+                if !all.is_empty() {
+                    errors.push(format!("{}: suppression sur %{}% : {t}", n + 1, all.join("%, %")));
+                }
+                let before = guards(&l[..pos]);
+                let need: Vec<String> = bang.union(&line_bang).filter(|v| !gd.contains(*v) && !before.contains(*v)).cloned().collect();
+                if !need.is_empty() {
+                    errors.push(format!("{}: suppression sans if defined {} : {t}", n + 1, need.join(", ")));
+                }
+                let off = l.to_ascii_lowercase().find(DDE_OFF);
+                if for_var(&l[pos..]) && on && !off.is_some_and(|o| o < pos) {
+                    errors.push(format!("{}: variable de boucle avec le développement retardé actif : {t}", n + 1));
+                }
+                if (!on && l.contains('!')) || off.is_some_and(|o| l[o..].contains('!')) {
+                    errors.push(format!("{}: !…! qui ne serait plus développé : {t}", n + 1));
+                }
+                let bare = masked_line(l);
+                if !var_refs(&bare, b'!').is_empty() || !var_refs(&bare, b'%').is_empty() {
+                    errors.push(format!("{}: variable hors guillemets : {t}", n + 1));
+                }
+            }
+            let here = (
+                pct.union(&line_pct).cloned().collect(),
+                bang.union(&line_bang).cloned().collect(),
+                gd.union(&guards(l)).cloned().collect(),
+            );
+            for p in parens(l) {
+                if p > 0 {
+                    stack.push(Clone::clone(&here));
+                } else {
+                    stack.pop();
+                }
+            }
+        }
+        errors
+    }
+
+    #[test]
+    fn deletion_checker_sees_bad_paths() {
+        let bad = [
+            ("del /s /f /q \"%temp%\\*\" >nul 2>&1", "suppression sur %TEMP%"),
+            ("rd /s /q \"%SystemRoot%\\Temp\"", "suppression sur %SYSTEMROOT%"),
+            ("forfiles -p \"%LOCALAPPDATA%\\Temp\" -s -m *.* /C \"cmd /c del @path\" >nul 2>&1", "suppression sur %LOCALAPPDATA%"),
+            ("echo - Cleaning & del /q \"%temp%\\x\"", "suppression sur %TEMP%"),
+            // la boucle qui ouvre le bloc lit %PROFILES_DIR%
+            ("for /d %%U in (\"%PROFILES_DIR%\\*\") do (\r\n  setlocal DisableDelayedExpansion\r\n  del /q \"%%U\\x\"\r\n  endlocal\r\n)",
+             "suppression sur %PROFILES_DIR%"),
+            ("del /s /f /q \"!temp!\\*\" >nul 2>&1", "sans if defined TEMP"),
+            ("if not defined temp del \"!temp!\\x\"", "sans if defined TEMP"),
+            ("for /d %%U in (\"!PROFILES_DIR!\\*\") do (\r\n  setlocal DisableDelayedExpansion\r\n  del /q \"%%U\\x\"\r\n  endlocal\r\n)",
+             "sans if defined PROFILES_DIR"),
+            ("if defined temp for /d %%d in (\"!temp!\\*\") do rd /s /q \"%%d\" >nul 2>&1", "variable de boucle"),
+            ("if defined PROFILES_DIR for /d %%U in (\"!PROFILES_DIR!\\*\") do (\r\n  del /q \"%%U\\x\"\r\n)", "variable de boucle"),
+            // cln_temp avant la revue : un dossier « !SystemRoot! » dans C:\Windows\Temp devenait rmdir "C:\Windows"
+            ("cd /d \"C:\\Windows\\Temp\" && for /F \"delims=\" %%i in ('dir /b') do (rmdir \"%%i\" /s/q 2>nul || del \"%%i\" /s/q 2>nul)",
+             "variable de boucle"),
+            ("if defined temp for /d %%d in (\"!temp!\\*\") do (setlocal DisableDelayedExpansion & rd /s /q \"!temp!\\%%d\" & endlocal)",
+             "ne serait plus développé"),
+            ("if defined temp del /s /f /q !temp!\\* >nul 2>&1", "hors guillemets"),
+        ];
+        for (s, why) in bad {
+            let e = deletion_errors(s);
+            assert!(e.len() == 1 && e[0].contains(why), "{s}\n{e:?}");
+        }
+        let good = [
+            "if defined temp del /s /f /q \"!temp!\\*\" >nul 2>&1",
+            "if defined temp for /d %%d in (\"!temp!\\*\") do (setlocal DisableDelayedExpansion & rd /s /q \"%%d\" >nul 2>&1 & endlocal)",
+            "if defined PROFILES_DIR for /d %%U in (\"!PROFILES_DIR!\\*\") do (\r\n  setlocal DisableDelayedExpansion\r\n  if exist \"%%U\\T\" (\r\n    \
+             del /q \"%%U\\T\\*.*\"\r\n    for /d %%D in (\"%%U\\T\\*\") do rd /s /q \"%%D\"\r\n  )\r\n  endlocal\r\n)",
+            "if defined LOCALAPPDATA if exist \"!LOCALAPPDATA!\\Temp\" (\r\n    cd /d \"!LOCALAPPDATA!\\Temp\" && for /F \"delims=\" %%i in ('dir /b') do \
+             (setlocal DisableDelayedExpansion & (rmdir \"%%i\" /s/q 2>nul || del \"%%i\" /s/q 2>nul) & endlocal)\r\n)",
+            "rd /s /q \"C:\\Nvidia\\PhysX\"",
+            "reg delete \"HKCU\\Software\\%x%\" /f",
+            "echo - DEL Sata controllers %x%",
+            ":: del \"%temp%\\*\"",
+        ];
+        for s in good {
+            assert!(deletion_errors(s).is_empty(), "{s}\n{:?}", deletion_errors(s));
+        }
+    }
+
+    /// Rien de ce que lance le moteur (réglages, relevés, annulations) ne supprime sur un chemin `%VAR%`, sur un
+    /// `!VAR!` sans garde ni sur une variable de boucle avec le développement retardé actif (deletion_errors), et
+    /// aucune variable de chemin n'y est plus écrite `%VAR%` (revue du 2026-10-13, P1/P2, tools/paths.py).
+    #[test]
+    fn deletions_never_use_a_percent_path() {
+        const PATH_VARS: [&str; 16] = [
+            "TEMP", "TMP", "LOCALAPPDATA", "APPDATA", "USERPROFILE", "PROGRAMDATA", "ALLUSERSPROFILE", "PUBLIC", "SYSTEMROOT", "WINDIR",
+            "SYSTEMDRIVE", "HOMEDRIVE", "HOMEPATH", "USERNAME", "ONEDRIVE", "PROFILES_DIR",
+        ];
+        let probes: Scripts = serde_json::from_str(include_str!("../scripts/probes.json")).unwrap();
+        let undo: HashMap<String, HashMap<String, Undo>> = serde_json::from_str(include_str!("../scripts/undo.json")).unwrap();
+        let mut bad = Vec::new();
+        let mut check = |what: String, s: &str| {
+            bad.extend(deletion_errors(s).into_iter().map(|e| format!("{what} {e}")));
+            for l in s.lines() {
+                if let Some(v) = var_refs(l, b'%').into_iter().find(|v| PATH_VARS.contains(&v.as_str())) {
+                    bad.push(format!("{what} %{v}% au lieu de !{v}! : {}", l.trim()));
+                }
+            }
+        };
+        for (id, variants) in SCRIPTS.iter() {
+            for (v, s) in variants {
+                check(format!("{id}:{v}"), s);
+            }
+        }
+        for (id, variants) in &probes {
+            for (v, s) in variants {
+                check(format!("relevé {id}:{v}"), s);
+            }
+        }
+        for (id, variants) in &undo {
+            for (v, u) in variants {
+                for (part, s) in [("full", &u.full), ("rest", &u.rest)] {
+                    if let Some(s) = s {
+                        check(format!("annulation {id}:{v} {part}"), s);
+                    }
+                }
+            }
+        }
+        assert!(bad.is_empty(), "{} défauts :\n{}", bad.len(), bad.join("\n"));
+        // ce que tools/paths.py a écrit (redirection « > nul » de la 1.1.10 : le journal du Mode jeu n'est pas changé)
+        let on = &SCRIPTS["game_mode"]["on"];
+        assert!(on.lines().any(|l| l == "if defined temp del /s /f /q \"!temp!\\*\" > nul"), "{on}");
+        assert!(
+            on.lines().any(|l| l
+                == "if defined temp for /d %%d in (\"!temp!\\*\") do (setlocal DisableDelayedExpansion & rd /s /q \"%%d\" >nul 2>&1 & endlocal)"),
+            "{on}"
+        );
+        let cln = &SCRIPTS["cln_temp"]["_"];
+        assert!(cln.lines().any(|l| l == "if defined LOCALAPPDATA if exist \"!LOCALAPPDATA!\\Temp\" ("), "{cln}");
+        assert_eq!(cln.matches("\" && for /F \"delims=\" %%i in ('dir /b') do (setlocal DisableDelayedExpansion & (rmdir \"%%i\"").count(), 2, "{cln}");
+        let sto = &SCRIPTS["sto_general"]["_"];
+        assert_eq!(sto.lines().filter(|l| l.trim() == "setlocal DisableDelayedExpansion").count(), 3, "{sto}");
+        assert_eq!(sto.lines().filter(|l| l.starts_with("if defined PROFILES_DIR for /d %%U in (\"!PROFILES_DIR!\\*\") do (")).count(), 3, "{sto}");
+    }
+
     #[test]
     fn free_plan() {
-        assert!(allowed("in_mouse", None, false) && allowed("rst_point", None, false) && allowed("__wmic", None, false));
+        assert!(allowed("win_gamedvr", None, false) && allowed("rst_point", None, false) && allowed("__wmic", None, false));
         assert!(!allowed("gpu_nvidia", None, false) && !allowed("in_advanced", None, false));
         assert!(allowed("gpu_nvidia", None, true));
-        // retours arrière ouverts en gratuit, pas les autres variantes
+        // Sofiene, 16 octobre 2026 : trois réglages de confort de Windows ouverts en gratuit
+        assert!(["win_notifications", "win_popups", "win_ai"].iter().all(|id| allowed(id, None, false)));
+        // la souris (Hitreg) : gratuite avant la 1.1.14
+        assert!(!allowed("in_mouse", None, false) && !is_free("in_mouse") && was_free("in_mouse"));
+        // retour arrière ouvert en gratuit pour RBW Mod et le mode jeu, pas les autres variantes
         assert!(allowed("game_mode", Some("off"), false) && !allowed("game_mode", Some("on"), false));
-        assert!(allowed("ping_hitreg", Some("default"), false) && !allowed("ping_hitreg", Some("hypixel"), false));
-        assert!(allowed("rbw_mode", Some("on"), false) && allowed("in_queue", Some("default"), false));
-        let catalog = include_str!("../../src/data/catalog.json");
-        for id in FREE.iter() {
-            assert!(catalog.contains(&format!("\"id\": \"{id}\"")), "{id} absent du catalogue");
+        assert!(allowed("rbw_mode", Some("on"), false) && !allowed("rbw_mode", Some("off"), false));
+        // Réseau et Hitreg : fermés en entier sans licence, retour arrière compris
+        for (id, v) in [("ping_hitreg", "default"), ("in_queue", "default"), ("in_frames", "default")] {
+            assert!(is_revert(id, Some(v)) && !allowed(id, Some(v), false) && allowed(id, Some(v), true), "{id}:{v}");
         }
+        assert!(!allowed("ping_hitreg", Some("hypixel"), false));
+        // Sofiene, 15 octobre 2026 : en gratuit, rien de Latence, Réseau, Hitreg ni Minecraft ; seulement des réglages de
+        // Windows et de la carte graphique, les outils de Restaurer, et le retour arrière de RBW Mod et du mode jeu
+        let catalog: serde_json::Value = serde_json::from_str(include_str!("../../src/data/catalog.json")).unwrap();
+        let (mut free, mut reverts) = (0, 0);
+        for m in catalog["modules"].as_array().unwrap() {
+            let module = m["id"].as_str().unwrap();
+            for t in m["sections"].as_array().unwrap().iter().flat_map(|s| s["tweaks"].as_array().unwrap()) {
+                // « ref » : un réglage d'un autre module, compté dans le sien
+                let Some(id) = t["id"].as_str() else { continue };
+                if is_free(id) {
+                    assert!(["windows", "gpu", "restore"].contains(&module), "{id} gratuit dans {module}");
+                    free += 1;
+                }
+                if FREE_REVERTS.iter().any(|f| f == id) {
+                    assert!(["rbw", "gamemode"].contains(&module) && revert_variant(id).is_some(), "{id} dans {module}");
+                    reverts += 1;
+                }
+                assert!(!(was_free(id) && is_free(id)), "{id}");
+            }
+        }
+        assert_eq!((free, reverts), (FREE.len(), FREE_REVERTS.len()), "chaque réglage de free.json est dans le catalogue");
+        assert!(FORMERLY_FREE.iter().all(|id| KINDS.contains_key(id)), "réglage d'avant absent du catalogue");
+    }
+
+    /// Aucun bloc vide (« ( » puis « ) ») dans les scripts : cmd s'arrête sur « ) était inattendu » et les lignes d'après
+    /// ne tournent jamais (préréglage 3 de Full network preset, RAG-68).
+    #[test]
+    fn no_empty_cmd_block() {
+        let mut checked = 0;
+        for (id, variants) in SCRIPTS.iter() {
+            for (v, body) in variants {
+                let lines: Vec<&str> = body.lines().map(str::trim).collect();
+                for w in lines.windows(2) {
+                    assert!(!(w[0].ends_with('(') && w[1].starts_with(')')), "{id}:{v} : bloc vide après « {} »", w[0]);
+                }
+                checked += 1;
+            }
+        }
+        assert!(checked > 200, "{checked}");
+        assert!(SCRIPTS["net_server"]["s3"].contains("TcpAckFrequency"));
     }
 
     #[test]
@@ -564,7 +1259,7 @@ mod tests {
     /// de passe au réveil et un bouton d'alimentation sans effet. Le script les remet, puis renomme et active le plan.
     #[test]
     fn rago_power_plan_is_corrected_on_import() {
-        assert!(std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join("resources/LowLatency.pow").is_file());
+        assert!(crate::assets::bytes("LowLatency.pow").is_some_and(|b| !b.is_empty()));
         let s = SCRIPTS["pow_plan"]["_"].to_lowercase();
         for (sub, setting, value) in RAGO_PLAN_FIXES {
             assert!(s.contains(&format!("powercfg -setacvalueindex {RAGO_PLAN} {sub} {setting} {value}")), "{setting}");
@@ -596,10 +1291,13 @@ mod tests {
             let o = crate::shell::hidden("powercfg.exe").args(args).output().unwrap();
             (o.status.success(), format!("{}{}", String::from_utf8_lossy(&o.stdout), String::from_utf8_lossy(&o.stderr)))
         };
-        let res = std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join("resources");
+        // le fichier chiffré dans l'exe, écrit comme le fait le moteur (assets.rs)
+        let run = std::env::temp_dir().join(format!("rago-test-plan-{}", std::process::id()));
         let line = SCRIPTS["pow_plan"]["_"].lines().find(|l| l.contains("powercfg -import")).unwrap().replace(RAGO_PLAN, TEST_PLAN);
+        let (staged, line) = crate::assets::stage(&run, &line).unwrap();
+        let res = staged.dir().unwrap().to_path_buf();
         for cmd in line.split(" & ").filter(|c| !c.contains("-setactive")) {
-            let cmd = cmd.replace("%RAGO_RES%", &res.to_string_lossy());
+            let cmd = cmd.replace("%RAGO_SEC%", &res.to_string_lossy());
             // arguments séparés par des espaces, "…" gardés entiers
             let args: Vec<&str> = cmd.split('"').enumerate().flat_map(|(i, p)| if i % 2 == 1 { vec![p] } else { p.split_whitespace().collect() }).collect();
             assert_eq!(args[0], "powercfg");

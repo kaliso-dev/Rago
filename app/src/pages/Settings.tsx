@@ -20,8 +20,18 @@ const LICENCES = [
 ];
 
 export function Settings() {
-  const { t, lang, setLang, motion, setMotion, license, signOutAndUndo, premiumApplied, setUpsell, activatedAt, sys } = useStore();
+  const { t, lang, setLang, motion, setMotion, license, signOut, setUpsell, activatedAt, sys } = useStore();
   const [confirmOut, setConfirmOut] = useState(false);
+  /** Réglages que la déconnexion remettra comme avant (liste du moteur), lue à l'ouverture de la confirmation. */
+  const [outPlan, setOutPlan] = useState(0);
+  const askSignOut = () => {
+    setOutPlan(0);
+    setConfirmOut(true);
+    void api.signOutPlan().then(
+      (ids) => setOutPlan(ids.length),
+      () => {},
+    );
+  };
   const device = license?.deviceName ?? sys?.hostname ?? "";
   return (
     <div className="page settings">
@@ -36,14 +46,15 @@ export function Settings() {
                 <div>
                   <div>{license.email}</div>
                   <div className="muted small">
+                    {/* « 14 oct. » finit déjà par un point : la phrase n'en prend pas un second */}
                     {license.state === "expired"
                       ? t("account.pending")
                       : activatedAt
-                        ? `${t("account.device")} ${t("account.activated", { date: formatDate(lang, activatedAt) })}.`
+                        ? `${t("account.device")} ${t("account.activated", { date: formatDate(lang, activatedAt) }).replace(/\.?$/, ".")}`
                         : t("account.device")}
                   </div>
                 </div>
-                <Button size="sm" variant="ghost" icon={<LogOut size={13} />} onClick={() => setConfirmOut(true)}>
+                <Button size="sm" variant="ghost" icon={<LogOut size={13} />} onClick={askSignOut}>
                   {t("account.signOut")}
                 </Button>
               </div>
@@ -146,7 +157,7 @@ export function Settings() {
       </div>
       <Modal open={confirmOut} onClose={() => setConfirmOut(false)} className="confirm signout">
         <h2>{t("signout.title")}</h2>
-        {premiumApplied.length > 0 && <p>{t("signout.undoLead", { n: premiumApplied.length })}</p>}
+        {outPlan > 0 && <p>{t("signout.undoLead", { n: outPlan })}</p>}
         <p className="muted">{t("signout.lead", { device })}</p>
         <div className="modal-actions">
           <Button variant="ghost" className="push-left" onClick={() => void api.openUrl(`${ACCOUNT_URL}/account`)}>
@@ -158,10 +169,10 @@ export function Settings() {
             icon={<LogOut size={14} />}
             onClick={() => {
               setConfirmOut(false);
-              void signOutAndUndo();
+              void signOut();
             }}
           >
-            {premiumApplied.length > 0 ? t("signout.go") : t("account.signOut")}
+            {outPlan > 0 ? t("signout.go") : t("account.signOut")}
           </Button>
         </div>
       </Modal>
