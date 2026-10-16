@@ -1,0 +1,11 @@
+{
+  "_about": "Partner servers, in the order shown. The home page shows those with \"home\": true (keep 4 so its rows stay full), partners.html shows all of them. Name and invite link exactly as the team gives them, never made up. Logo: a square WebP in site/img/partners/ (256 px); for an animated logo, \"still\" is its first frame, shown when animations are off. Then run python3 site/tools/build.py.",
+  "partners": [
+    { "name": "Pika Ranked Bedwars", "url": "https://discord.gg/takeR8xPqB", "logo": "img/partners/pika-ranked-bedwars.webp", "home": true },
+    { "name": "Ranked Bedwars", "url": "https://discord.gg/AF44k9RhPn", "logo": "img/partners/ranked-bedwars.webp", "home": true },
+    { "name": "Ranked Bedwars [SEASON 8]", "url": "https://discord.gg/rankedbw", "logo": "img/partners/ranked-bedwars-season-8.webp", "home": true },
+    { "name": "Axora Ranked Bedwars", "url": "https://discord.gg/9nwyWrd48", "logo": "img/partners/axora-ranked-bedwars.webp", "home": true },
+    { "name": "Ranked Bedwars 2v2s [SEASON 1]", "url": "https://discord.gg/vkY8cEAhU9", "logo": "img/partners/ranked-bedwars-2v2s.webp", "still": "img/partners/ranked-bedwars-2v2s-still.webp" },
+    { "name": "Ayor Ranked Bedwars", "url": "https://discord.gg/AR5fnTP7S6", "logo": "img/partners/ayor-ranked-bedwars.webp" }
+  ]
+}

@@ -110,22 +110,43 @@ export const licenseForUser = (db, userId) =>
 const activeLicenseForUser = (db, userId) =>
   db.get("SELECT * FROM licenses WHERE user_id = ? AND status = 'active'", [userId]);
 
-/** The account's active license, unless it's an affiliate reward, which a purchase replaces. */
-const blockingLicense = async (db, userId) => {
+const SUBSCRIPTION_PLANS = ['month', 'year'];
+/** A Lifetime bought with Stripe (2026-10-16), which replaces a subscription. A Lifetime given by the team doesn't. */
+const paidLifetime = (lic) => lic?.plan === 'lifetime' && (lic.source ?? 'stripe') === 'stripe';
+
+/**
+ * Whether the account's active license stops the purchase `incoming` ({ plan, source }; none: a subscription). An
+ * affiliate reward never does: the purchase replaces it. A subscription doesn't stop a paid Lifetime either: Lifetime
+ * replaces it, and the subscription stops (billing.js stopReplacedSubscriptions).
+ */
+export const blocksPurchase = (active, incoming = null) =>
+  !!active && active.plan !== 'reward' && !(paidLifetime(incoming) && SUBSCRIPTION_PLANS.includes(active.plan));
+
+/** The account's active license, unless the purchase `incoming` replaces it. */
+const blockingLicense = async (db, userId, incoming) => {
   const lic = await activeLicenseForUser(db, userId);
-  return lic?.plan === 'reward' ? null : lic;
+  return blocksPurchase(lic, incoming) ? lic : null;
 };
 
 /**
  * A purchase replaces the account's affiliate reward: the PC moves to the new license (no new
  * activation needed) and the reward stops. The checkout started the subscription after the reward's end.
+ * Lifetime replaces a subscription the same way; billing.js stopReplacedSubscriptions then cancels it in Stripe.
  */
-async function replaceReward(t, userId, newLicenseId) {
-  const old = await t.get("SELECT * FROM licenses WHERE user_id = ? AND status = 'active' AND plan = 'reward' AND id <> ? FOR UPDATE", [userId, newLicenseId]);
-  if (!old) return;
-  if (!(await getDevice(t, newLicenseId))) await t.run('UPDATE devices SET license_id = ? WHERE license_id = ?', [newLicenseId, old.id]);
-  await setLicenseStatus(t, old.id, 'revoked', 'replaced');
-  await audit(t, 'license.reward_replaced', { licenseId: old.id, userId, detail: { by: newLicenseId } });
+async function replaceOld(t, userId, license) {
+  const plans = paidLifetime(license) ? ['reward', ...SUBSCRIPTION_PLANS] : ['reward'];
+  const rows = await t.all(`SELECT * FROM licenses WHERE user_id = ? AND status = 'active' AND plan IN (${plans.map(() => '?').join(', ')}) AND id <> ? FOR UPDATE`, [userId, ...plans, license.id]);
+  for (const old of rows) {
+    if (!(await getDevice(t, license.id))) await t.run('UPDATE devices SET license_id = ? WHERE license_id = ?', [license.id, old.id]);
+    await setLicenseStatus(t, old.id, 'revoked', 'replaced');
+    if (old.plan === 'reward') {
+      await audit(t, 'license.reward_replaced', { licenseId: old.id, userId, detail: { by: license.id } });
+      continue;
+    }
+    // A referral still in its hold period follows the player to Lifetime instead of failing with the subscription.
+    await t.run("UPDATE referrals SET license_id = ? WHERE license_id = ? AND status = 'pending'", [license.id, old.id]);
+    await audit(t, 'license.subscription_replaced', { licenseId: old.id, userId, detail: { by: license.id } });
+  }
 }
 
 async function insertLicense(db, fields) {
@@ -185,16 +206,16 @@ export async function fulfillCheckoutSession(db, session, subscription = null) {
   if (!email) throw new LicenseError('no_email', `Checkout session ${session.id} has no email`);
   try {
     return await db.tx(async (t) => {
-      // Signed-in buyer without a license: attach straight away.
-      let userId = null;
-      const ref = session.client_reference_id;
-      if (ref && (await getUser(t, ref)) && !(await blockingLicense(t, ref))) userId = ref;
-
       const sub = subscription || (typeof session.subscription === 'object' ? session.subscription : null);
       const facts = session.mode === 'subscription' ? subscriptionFacts(sub) : null;
+      const plan = facts ? (sub ? facts.plan : session.metadata?.interval === 'year' ? 'year' : 'month') : 'lifetime';
+      // Signed-in buyer without a license this purchase can't replace: attach straight away.
+      let userId = null;
+      const ref = session.client_reference_id;
+      if (ref && (await getUser(t, ref)) && !(await blockingLicense(t, ref, { plan, source: 'stripe' }))) userId = ref;
+
       const { license, claimToken } = await insertLicense(t, {
-        email, userId, source: 'stripe', sessionId: session.id,
-        plan: facts ? (sub ? facts.plan : session.metadata?.interval === 'year' ? 'year' : 'month') : 'lifetime',
+        email, userId, source: 'stripe', sessionId: session.id, plan,
         subscriptionId: idOf(session.subscription), periodEnd: facts?.periodEnd,
         paymentIntent: idOf(session.payment_intent), customerId: idOf(session.customer),
         amount: session.amount_total, currency: session.currency,
@@ -203,7 +224,7 @@ export async function fulfillCheckoutSession(db, session, subscription = null) {
         referralCode: await promoAffiliateCode(t, session) || String(session.metadata?.ref || '').toUpperCase().replace(/[^A-Z0-9]/g, '').slice(0, 16) || null,
       });
       await audit(t, 'license.created', { licenseId: license.id, userId, detail: { session: session.id } });
-      if (userId) await replaceReward(t, userId, license.id);
+      if (userId) await replaceOld(t, userId, license);
       return { license, created: true, claimToken: userId ? null : claimToken };
     });
   } catch (err) {
@@ -252,10 +273,12 @@ export function claimLicense(db, licenseId, userId) {
     if (!lic) throw new LicenseError('not_found');
     if (lic.user_id === userId) return lic;
     if (lic.user_id) throw new LicenseError('already_claimed');
-    if (await blockingLicense(t, userId)) throw new LicenseError('already_has_license');
+    // A purchase revoked meanwhile (refunded, disputed...) replaces nothing: the license already there stays.
+    const incoming = lic.status === 'active' ? lic : null;
+    if (await blockingLicense(t, userId, incoming)) throw new LicenseError('already_has_license');
     await t.run('UPDATE licenses SET user_id = ?, claimed_at = ?, claim_token_hash = NULL WHERE id = ?', [userId, Date.now(), licenseId]);
     await audit(t, 'license.claimed', { licenseId, userId });
-    await replaceReward(t, userId, licenseId);
+    if (incoming) await replaceOld(t, userId, lic);
     return getLicense(t, licenseId);
   });
 }
