@@ -30,10 +30,10 @@
   width: 300px;
   padding: 16px 16px 14px;
   border-radius: var(--rg-radius-lg);
-  background: rgba(23, 23, 26, 0.92);
-  backdrop-filter: blur(18px) saturate(1.4);
+  background: var(--rg-glass-float);
+  backdrop-filter: var(--rg-glass-blur);
   border: 1px solid var(--rg-line-2);
-  box-shadow: var(--rg-shadow-3);
+  box-shadow: var(--rg-glass-edge), var(--rg-shadow-3);
 }
 /* la barre « Appliquer » est en bas : l'invitation passe au-dessus */
 .review-prompt.above-bar {
@@ -80,7 +80,7 @@
 }
 .review-prompt-close:hover {
   color: var(--rg-text-1);
-  background: var(--rg-ink-4);
+  background: var(--rg-glass-2);
 }
 .review-prompt-close:focus-visible {
   box-shadow: var(--rg-focus);
@@ -203,7 +203,7 @@
   margin: 8px 0 4px;
   padding: 10px 10px 10px 14px;
   border-radius: var(--rg-radius-md);
-  background: var(--rg-ink-3);
+  background: var(--rg-glass-2);
   border: 1px solid var(--rg-line-2);
 }
 .profile-delete-actions {
