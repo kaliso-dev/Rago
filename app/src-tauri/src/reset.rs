@@ -64,10 +64,14 @@ pub fn optifine_dir(a: Option<&Applied>) -> Option<PathBuf> {
 }
 
 /// Le moteur sait remettre ce réglage : sauvegarde de l'état d'avant, copie de l'annulation, annulation ou variante
-/// de retour arrière (du plan gratuit, ou des scripts Premium de `bundle`).
+/// de retour arrière (du plan gratuit, ou des scripts Premium de `bundle`). Le profil NVIDIA revient aux réglages du
+/// pilote (runner.rs).
 fn undoable(id: &str, a: &Applied, bundle: Option<&catalog::Bundle>) -> bool {
     if id == "mc_optifine" {
         return optifine_dir(Some(a)).is_some_and(|d| minecraft::status(&d).backups > 0);
+    }
+    if id == "nv_profile" {
+        return true;
     }
     a.backup
         || a.undo.as_ref().is_some_and(|u| u.full.is_some())
@@ -342,6 +346,16 @@ mod tests {
         assert!(checked >= 4, "{checked}");
     }
 
+    /// Le profil NVIDIA n'a ni sauvegarde ni script d'annulation : il est quand même remis à la déconnexion (réglages
+    /// du pilote par défaut), comme tous les autres.
+    #[test]
+    fn nvidia_profile_is_put_back_too() {
+        let mut l = Ledger::default();
+        l.set_applied("nv_profile", None, true, false, vec![], 1);
+        assert!(catalog::undo_of("nv_profile", None, None).is_none());
+        assert_eq!(targets(&l, Scope::LicenseEnd, None), vec!["nv_profile"]);
+    }
+
     /// OptiFine est remis dans le dossier où il a été appliqué, noté dans applied.json.
     #[test]
     fn optifine_is_put_back_where_it_was_applied() {
@@ -354,7 +368,7 @@ mod tests {
         assert!(targets(&l, Scope::LicenseEnd, None).is_empty(), "aucune copie d'optionsof.txt : rien à remettre");
         fs::create_dir_all(&dir).unwrap();
         fs::write(dir.join("optionsof.txt"), "ofFastRender:true\n").unwrap();
-        minecraft::apply(&dir, &std::collections::BTreeMap::from([("ofFastRender".to_string(), "false".to_string())]), 1).unwrap();
+        minecraft::apply(&dir, &std::collections::BTreeMap::from([("ofFastRender".to_string(), "false".to_string())]), 1, false).unwrap();
         assert_eq!(targets(&l, Scope::LicenseEnd, None), vec!["mc_optifine"]);
         let _ = fs::remove_dir_all(&dir);
     }

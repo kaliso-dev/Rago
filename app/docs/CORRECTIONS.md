@@ -639,6 +639,14 @@ dont la clé refuse l'écriture est remis par le gestionnaire de services (`sc c
 Une valeur posée par Rago qui ne peut pas être supprimée est signalée, au lieu d'être comptée comme remise. La
 désinstallation et « Tout annuler » passent par la même remise. Tests : `values_already_back_need_no_write`,
 `service_start_maps_to_sc_config`, et sur Windows (CI) `restore_on_windows`.
+Deux réglages que la VM ne pouvait pas appliquer sont aussi remis. Profil pilote Rago (NVIDIA) n'avait aucune
+annulation, Profile Inspector ne sachant pas exporter le profil d'avant : son annulation importe maintenant un profil
+global vide, ce qui remet les réglages 3D globaux du pilote par défaut, comme « Restaurer » dans le panneau NVIDIA
+(sans pilote NVIDIA, rien à remettre). OptiFine ne gardait une copie que si optionsof.txt existait, et en reprenait une
+à chaque application : après un changement de variante, l'annulation remettait la variante d'avant. La copie d'avant
+Rago est maintenant gardée tant que le réglage est appliqué dans ce dossier ; sans fichier avant, une copie `.none`
+fait supprimer le fichier à la remise ; un optionsof.txt illisible n'est plus remplacé sans copie. Tests :
+`put_back_as_before_rago`, `nvidia_profile_is_put_back_too`.
 
 **Interface.** Plan gratuit : cadenas sur chaque onglet qui a un réglage réservé à Premium, Windows et Hitreg compris
 (avant, seulement sur un onglet sans aucun réglage gratuit). Mode jeu : « Désactivé depuis… » après Désactiver ou Tout
