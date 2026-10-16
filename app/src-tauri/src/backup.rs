@@ -9,6 +9,7 @@ use serde::{Deserialize, Serialize};
 use std::collections::{BTreeMap, HashMap, HashSet};
 use std::fs;
 use std::path::{Path, PathBuf};
+use sha2::{Digest, Sha256};
 
 /// Ce qu'un script va modifier, lu dans les lignes `@@RAGO` de son relevé.
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
@@ -169,6 +170,15 @@ pub struct Applied {
     /// dans l'exe, et la déconnexion ou la fin de licence doit quand même pouvoir tout remettre
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub undo: Option<Undo>,
+    /// le réglage n'a posé que les valeurs de Windows (RBW Mod « Désactivé » depuis RAG-69) : rien à défaire, son
+    /// annulation ne lance rien. Absent des entrées d'avant, dont l'ancien « Désactivé » qui mettait des services en
+    /// manuel : celles-là gardent leur retour arrière
+    #[serde(default, skip_serializing_if = "std::ops::Not::not")]
+    pub windows_values: bool,
+    /// OptiFine : dossier Minecraft choisi dans l'interface quand il a été appliqué. La remise de fin de licence et
+    /// celle de la désinstallation, lancées sans l'interface, le remettent au même endroit (sinon le dossier habituel).
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub dir: Option<String>,
 }
 
 #[derive(Debug, Default, Serialize, Deserialize)]
@@ -180,6 +190,9 @@ pub struct Ledger {
     pub saved: Vec<(String, SavedEntry)>,
     #[serde(skip)]
     path: PathBuf,
+    /// le fichier sur disque n'a pu être ni lu ni mis de côté : rien ne doit l'écraser (voir `load`)
+    #[serde(skip)]
+    unread: std::sync::atomic::AtomicBool,
     /// le fichier lu était en clair (version d'avant le chiffrement au repos) : à réécrire chiffré
     #[serde(skip)]
     legacy_plaintext: bool,
@@ -196,42 +209,136 @@ pub struct AppliedView {
     pub backup: bool,
     /// Windows (ou une autre app) a changé une valeur posée par ce réglage depuis
     pub drift: bool,
+    /// voir Applied::windows_values : l'annulation ne lance rien (pas de redémarrage à proposer)
+    #[serde(skip_serializing_if = "std::ops::Not::not")]
+    pub windows_values: bool,
+}
+
+/// En-tête d'applied.json chiffré avec la clé de secours de l'app (voir `encode`).
+const LEDGER_FALLBACK: &[u8] = b"RAGO-LEDGER-1\0";
+
+/// Contenu chiffré d'applied.json. DPAPI (lié au compte Windows) dans le cas normal ; s'il refuse (profil Windows
+/// abîmé), la clé de secours de l'app (`seal::ledger_key`) : jamais de commandes en clair sur le disque.
+fn encode(json: &str, dpapi: Option<Vec<u8>>) -> Vec<u8> {
+    if let Some(bytes) = dpapi {
+        return bytes;
+    }
+    let t = std::time::SystemTime::now().duration_since(std::time::UNIX_EPOCH).map(|d| d.as_nanos()).unwrap_or(0);
+    let digest = Sha256::new()
+        .chain_update(t.to_le_bytes())
+        .chain_update(std::process::id().to_le_bytes())
+        .chain_update(json.as_bytes())
+        .finalize();
+    let mut nonce = [0u8; 16];
+    nonce.copy_from_slice(&digest[..16]);
+    let mut out = LEDGER_FALLBACK.to_vec();
+    out.extend(crate::seal::seal(&crate::seal::ledger_key(), &nonce, json.as_bytes()));
+    out
+}
+
+/// Texte d'applied.json, et s'il est à réécrire chiffré avec DPAPI : fichier d'une version d'avant le chiffrement
+/// au repos (encore en clair), ou chiffré avec la clé de secours.
+fn decode(bytes: &[u8]) -> (String, bool) {
+    if let Some(rest) = bytes.strip_prefix(LEDGER_FALLBACK) {
+        if let Some(text) = crate::seal::open(&crate::seal::ledger_key(), rest).and_then(|b| String::from_utf8(b).ok()) {
+            return (text, true);
+        }
+    }
+    match crate::license::vault::open(bytes) {
+        Some(text) => (text, false),
+        None => (String::from_utf8_lossy(bytes).into_owned(), true),
+    }
 }
 
 impl Ledger {
+    /// applied.json : `(registre, true)` s'il a été lu. Absent : registre vide et `false` (premier lancement depuis
+    /// 1.1.6, l'appelant le remplit d'après l'historique). Présent mais illisible (coupure de courant pendant une
+    /// écriture, champ qu'une version future rend obligatoire, fichier verrouillé) : avant, il était traité comme absent
+    /// puis écrasé au premier enregistrement, et tous les états d'avant étaient perdus. Il est maintenant mis de côté
+    /// sous `applied.json.bad-<horodatage>` (noté dans logs\repairs.log : le support peut le relire ou le remettre), et
+    /// un registre neuf commence. S'il ne peut même pas être renommé, rien ne l'écrase pendant ce lancement.
     pub fn load(path: PathBuf) -> (Self, bool) {
-        let Ok(bytes) = fs::read(&path) else {
-            return (Ledger { path, ..Default::default() }, false);
+        let read = || match fs::read(&path) {
+            Ok(bytes) => Ok(Some(bytes)),
+            Err(e) if e.kind() == std::io::ErrorKind::NotFound => Ok(None),
+            Err(e) => Err(e.to_string()),
         };
-        // Chiffré au repos avec DPAPI (lié au compte Windows) : illisible en ouvrant le fichier, et
-        // inexploitable sur une autre machine. Un fichier d'une version d'avant le chiffrement est encore
-        // en clair : on le lit quand même, `needs_migration` demandera de le réécrire chiffré.
-        let (json, legacy) = match crate::license::vault::open(&bytes) {
-            Some(text) => (text, false),
-            None => (String::from_utf8_lossy(&bytes).into_owned(), true),
-        };
-        match serde_json::from_str::<Ledger>(&json) {
-            Ok(mut l) => {
-                l.path = path;
-                l.legacy_plaintext = legacy;
-                (l, true)
+        // verrou passager (antivirus, sauvegarde) : quelques essais avant de conclure qu'il ne se lit pas
+        let mut got = read();
+        for _ in 0..3 {
+            if got.is_ok() {
+                break;
             }
-            // illisible (fichier coupé, ou chiffré pour un autre compte) : on repart d'un journal vide
-            Err(_) => (Ledger { path, ..Default::default() }, false),
+            std::thread::sleep(std::time::Duration::from_millis(200));
+            got = read();
         }
+        let why = match got {
+            Ok(None) => return (Ledger { path, ..Default::default() }, false),
+            Ok(Some(bytes)) => {
+                let (json, legacy) = decode(&bytes);
+                match serde_json::from_str::<Ledger>(&json) {
+                    Ok(mut l) => {
+                        l.path = path;
+                        l.legacy_plaintext = legacy;
+                        return (l, true);
+                    }
+                    // fichier coupé, ou chiffré pour un autre compte Windows : mis de côté, jamais écrasé
+                    Err(e) => format!("unreadable ({e})"),
+                }
+            }
+            Err(e) => format!("couldn't be read ({e})"),
+        };
+        let l = Ledger { path, ..Default::default() };
+        if !l.set_aside(&why) {
+            l.unread.store(true, std::sync::atomic::Ordering::SeqCst);
+        }
+        (l, false)
+    }
+
+    /// Met applied.json de côté sous `applied.json.bad-<horodatage>`, avec une ligne dans logs\repairs.log. Faux s'il
+    /// est encore là sous son nom.
+    fn set_aside(&self, why: &str) -> bool {
+        let ts = crate::history::now_ms();
+        let name = self.path.file_name().map(|n| n.to_string_lossy().into_owned()).unwrap_or_else(|| "applied.json".into());
+        let aside = self.path.with_file_name(format!("{name}.bad-{ts}"));
+        let moved = fs::rename(&self.path, &aside).is_ok() || !self.path.exists();
+        if let Some(logs) = self.path.parent().map(|d| d.join("logs")) {
+            let _ = fs::create_dir_all(&logs);
+            if let Ok(mut f) = fs::OpenOptions::new().create(true).append(true).open(logs.join("repairs.log")) {
+                use std::io::Write;
+                let _ = if moved {
+                    writeln!(f, "{ts} {name} {why}: kept as {}, a new one is started", aside.display())
+                } else {
+                    writeln!(f, "{ts} {name} {why}, and couldn't be set aside: left untouched, changes of this launch aren't saved")
+                };
+            }
+        }
+        moved
     }
 
     pub fn save(&self) {
+        use std::sync::atomic::Ordering;
         if let Some(dir) = self.path.parent() {
             let _ = fs::create_dir_all(dir);
         }
+        // fichier d'avant illisible et encore en place (verrou) : jamais écrasé ; mis de côté dès que possible
+        if self.unread.load(Ordering::SeqCst) {
+            if !self.set_aside("couldn't be read at launch") {
+                return;
+            }
+            self.unread.store(false, Ordering::SeqCst);
+        }
         if let Ok(json) = serde_json::to_string(self) {
-            // chiffré au repos (DPAPI) ; si le chiffrement échoue, on garde au moins un fichier que l'app
-            // sait relire plutôt que de perdre l'état des réglages
-            let bytes = crate::license::vault::seal(&json).unwrap_or_else(|| json.into_bytes());
-            // écrit à côté puis remplace : un arrêt brutal ne laisse pas un fichier coupé
+            // chiffré au repos, puis écrit à côté, sur le disque (sync_all), et remplace : une coupure de courant ne
+            // laisse ni un fichier coupé ni un fichier vide sous le bon nom
+            let bytes = encode(&json, crate::license::vault::seal(&json));
             let tmp = self.path.with_extension("json.tmp");
-            if fs::write(&tmp, &bytes).is_ok() {
+            let written = fs::File::create(&tmp).and_then(|mut f| {
+                use std::io::Write;
+                f.write_all(&bytes)?;
+                f.sync_all()
+            });
+            if written.is_ok() {
                 let _ = fs::rename(&tmp, &self.path);
             }
         }
@@ -259,14 +366,17 @@ impl Ledger {
         }
     }
 
-    /// Marque le réglage appliqué. Un réglage réappliqué (autre variante) garde ses éléments déjà relevés.
-    /// Garde l'annulation des réglages appliqués qui n'en ont pas encore (lookup : scripts ouverts maintenant).
-    /// Renvoie true si quelque chose a changé.
+    /// Garde, pour chaque réglage appliqué, la copie de son annulation telle que cette version la lance (lookup :
+    /// scripts ouverts maintenant). Une copie prise par une version d'avant (1.1.6 à 1.1.10) est remplacée dès que
+    /// l'annulation de cette version est connue : sans licence (fin de Premium, déconnexion, désinstallation, Tout
+    /// annuler), c'est la copie qui tourne, et seule celle de cette version a les corrections de l'écran bleu (plus de
+    /// CoalescingTimerInterval à 0) et des chemins du profil. Sans lookup (scripts Premium fermés), la copie reste
+    /// telle quelle. Renvoie true si quelque chose a changé.
     pub fn fill_undo(&mut self, lookup: &dyn Fn(&str, Option<&str>) -> Option<Undo>) -> bool {
         let mut changed = false;
         for (id, a) in self.tweaks.iter_mut() {
-            if a.undo.is_none() {
-                if let Some(u) = lookup(id, a.variant.as_deref()) {
+            if let Some(u) = lookup(id, a.variant.as_deref()) {
+                if a.undo.as_ref() != Some(&u) {
                     a.undo = Some(u);
                     changed = true;
                 }
@@ -292,6 +402,19 @@ impl Ledger {
         entry.variant = variant;
         entry.ok = ok;
         entry.ts = ts;
+    }
+
+    /// Ce que `release` renverra, sans retirer le réglage : il reste dans applied.json pendant qu'on remet ses
+    /// éléments, pour qu'une remise coupée (app fermée, PC éteint) reprenne au lancement suivant.
+    pub fn releasable(&self, tid: &str) -> Vec<SavedEntry> {
+        let Some(applied) = self.tweaks.get(tid) else { return Vec::new() };
+        let still: HashSet<&String> =
+            self.tweaks.iter().filter(|(id, _)| id.as_str() != tid).flat_map(|(_, a)| a.probes.iter()).collect();
+        let mine: HashSet<&String> = applied.probes.iter().collect();
+        let mut out: Vec<SavedEntry> =
+            self.saved.iter().filter(|(id, _)| mine.contains(id) && !still.contains(id)).map(|(_, e)| e.clone()).collect();
+        out.reverse();
+        out
     }
 
     /// Retire le réglage. Renvoie, dans l'ordre inverse du relevé, les éléments à remettre : ceux qu'aucun
@@ -351,6 +474,7 @@ impl Ledger {
                 ok: a.ok,
                 backup: a.backup,
                 drift: a.probes.iter().any(|p| drifted.contains(p)),
+                windows_values: a.windows_values,
             })
             .collect()
     }
@@ -443,6 +567,60 @@ pub fn file_for(dir: &Path, probe_id: &str) -> PathBuf {
     dir.join(format!("{h}.reg"))
 }
 
+/// Clé d'un service, `HKLM\SYSTEM\CurrentControlSet\Services\<nom>` ou `HKLM\SYSTEM\ControlSet001\Services\<nom>` :
+/// numéro du jeu de contrôle (None pour CurrentControlSet) et nom du service.
+pub fn service_key(key: &str) -> Option<(Option<u32>, &str)> {
+    let p: Vec<&str> = key.split('\\').collect();
+    let [root, system, set, services, name] = p[..] else { return None };
+    if !root.eq_ignore_ascii_case("HKLM") || !system.eq_ignore_ascii_case("SYSTEM") || !services.eq_ignore_ascii_case("Services") || name.is_empty() {
+        return None;
+    }
+    if set.eq_ignore_ascii_case("CurrentControlSet") {
+        return Some((None, name));
+    }
+    let n = set.get(..10).filter(|s| s.eq_ignore_ascii_case("ControlSet")).and_then(|_| set[10..].parse().ok())?;
+    Some((Some(n), name))
+}
+
+/// Valeur DWORD relevée (Start d'un service…) ; None si elle est absente ou d'un autre type.
+pub fn dword(s: &Saved) -> Option<u32> {
+    match s {
+        // 4 : REG_DWORD
+        Saved::Value { kind: 4, data } => unhex(data).get(..4).map(|b| u32::from_le_bytes([b[0], b[1], b[2], b[3]])),
+        _ => None,
+    }
+}
+
+/// Argument `start=` de sc.exe qui donne au service ces valeurs Start et DelayedAutostart.
+pub fn start_mode(start: Option<u32>, delayed: Option<u32>) -> Option<&'static str> {
+    Some(match start? {
+        0 => "boot",
+        1 => "system",
+        2 if delayed.unwrap_or(0) != 0 => "delayed-auto",
+        2 => "auto",
+        3 => "demand",
+        4 => "disabled",
+        _ => return None,
+    })
+}
+
+/// La valeur de registre est-elle déjà comme avant ? Absente des deux côtés (même si sa clé a été créée entre-temps),
+/// ou même type et mêmes octets. DelayedAutostart d'un service : absente vaut 0, comme pour Windows.
+pub fn same_reg(key: &str, name: &str, now: &Saved, before: &Saved) -> bool {
+    if name.eq_ignore_ascii_case("DelayedAutostart") && service_key(key).is_some() {
+        let delayed = |s: &Saved| match s {
+            Saved::Absent { .. } => Some(false),
+            _ => dword(s).map(|v| v != 0),
+        };
+        return delayed(now).is_some() && delayed(now) == delayed(before);
+    }
+    match (now, before) {
+        (Saved::Absent { .. }, Saved::Absent { .. }) => true,
+        (Saved::Value { kind: a, data: x }, Saved::Value { kind: b, data: y }) => a == b && x.eq_ignore_ascii_case(y),
+        _ => false,
+    }
+}
+
 // ------------------------------------------------------------------ Windows
 
 /// Lecture et remise des éléments sur Windows. Ailleurs (tests, démo), rien n'est lu ni écrit.
@@ -496,6 +674,8 @@ mod win {
         (r == ERROR_SUCCESS).then_some(Key(out))
     }
 
+    /// Clé ouverte (créée au besoin) avec le seul droit d'y écrire des valeurs : certaines clés de Windows refusent
+    /// l'accès complet aux administrateurs, pas l'écriture d'une valeur.
     fn create(key: &str) -> Option<Key> {
         let (h, sub) = root(key)?;
         let mut out: HKEY = std::ptr::null_mut();
@@ -506,7 +686,7 @@ mod win {
                 0,
                 std::ptr::null(),
                 REG_OPTION_NON_VOLATILE,
-                KEY_ALL_ACCESS | KEY_WOW64_64KEY,
+                KEY_SET_VALUE | KEY_WOW64_64KEY,
                 std::ptr::null(),
                 &mut out,
                 std::ptr::null_mut(),
@@ -618,6 +798,19 @@ mod win {
         }
     }
 
+    /// Service dont `key` est la clé, dans le jeu de contrôle en cours (le seul que sc.exe change).
+    fn service_name(key: &str) -> Option<&str> {
+        let (set, name) = service_key(key)?;
+        let current = || {
+            let (_, d) = open(r"HKLM\SYSTEM\Select", KEY_READ).and_then(|k| query(&k, "Current"))?;
+            d.get(..4).map(|b| u32::from_le_bytes([b[0], b[1], b[2], b[3]]))
+        };
+        match set {
+            None => Some(name),
+            Some(n) => (current() == Some(n)).then_some(name),
+        }
+    }
+
     impl Sys {
         pub fn read(&self, probe: &Probe) -> Saved {
             match probe {
@@ -704,23 +897,60 @@ mod win {
             self.bcd.borrow_mut().clear();
         }
 
+        /// Start ou DelayedAutostart d'un service dont la clé refuse l'écriture (DPS, que le script change avec sc config) :
+        /// remis par le gestionnaire de services. `err` seulement si la valeur n'est toujours pas comme avant.
+        fn by_service(&self, probe: &Probe, before: &Saved, err: String) -> Result<(), String> {
+            let Probe::Reg { key, name } = probe else { return Err(err) };
+            let Some(svc) = service_name(key) else { return Err(err) };
+            let now = |n: &str| dword(&self.read(&Probe::Reg { key: key.clone(), name: n.into() }));
+            let mode = if name.eq_ignore_ascii_case("Start") {
+                start_mode(dword(before), now("DelayedAutostart"))
+            } else if name.eq_ignore_ascii_case("DelayedAutostart") {
+                start_mode(now("Start"), dword(before))
+            } else {
+                None
+            };
+            let Some(mode) = mode else { return Err(err) };
+            let _ = run("sc.exe", &["config", svc, "start=", mode]);
+            if same_reg(key, name, &self.read(probe), before) {
+                Ok(())
+            } else {
+                Err(err)
+            }
+        }
+
         pub fn restore(&self, probe: &Probe, saved: &Saved) -> Result<(), String> {
             match (probe, saved) {
                 (_, Saved::Unknown) => Ok(()),
                 (Probe::Reg { key, name }, Saved::Value { kind, data }) => {
-                    let k = create(key).ok_or("couldn't open the registry key")?;
+                    // déjà comme avant : rien à écrire. C'est le cas des clés que Windows protège (dossier Réseau sous
+                    // HKCR\CLSID, Diagnostics\Performance, journaux de Defender) : le script n'a pas pu les changer non plus
+                    if same_reg(key, name, &self.read(probe), saved) {
+                        return Ok(());
+                    }
+                    let Some(k) = create(key) else {
+                        return self.by_service(probe, saved, "couldn't open the registry key".into());
+                    };
                     let bytes = unhex(data);
                     let r = unsafe { RegSetValueExW(k.0, wide(name).as_ptr(), 0, *kind, bytes.as_ptr(), bytes.len() as u32) };
-                    (r == ERROR_SUCCESS).then_some(()).ok_or_else(|| format!("couldn't write {name} (error {r})"))
+                    drop(k);
+                    if r == ERROR_SUCCESS {
+                        return Ok(());
+                    }
+                    self.by_service(probe, saved, format!("couldn't write {name} (error {r})"))
                 }
                 (Probe::Reg { key, name }, Saved::Absent { created }) => {
-                    if let Some(k) = open(key, KEY_ALL_ACCESS) {
+                    if let Some(k) = open(key, KEY_SET_VALUE) {
                         unsafe { RegDeleteValueW(k.0, wide(name).as_ptr()) };
                     }
                     if let Some(c) = created {
                         prune(key, c);
                     }
-                    Ok(())
+                    // encore là (suppression refusée) : le réglage resterait posé sans que personne le sache
+                    if same_reg(key, name, &self.read(probe), saved) {
+                        return Ok(());
+                    }
+                    self.by_service(probe, saved, format!("couldn't delete {name}"))
                 }
                 (Probe::RegKey { key }, Saved::Key { existed: false }) => {
                     if is_empty(key) {
@@ -751,6 +981,10 @@ mod win {
                     r.map(|_| ()).or_else(|e| if value.is_none() { Ok(()) } else { Err(e) })
                 }
                 (Probe::Task { path }, Saved::Task { enabled: Some(on) }) => {
+                    // déjà comme avant (tâche que Windows protège : le script n'a pas pu la changer non plus)
+                    if self.read(probe) == *saved {
+                        return Ok(());
+                    }
                     run("schtasks.exe", &["/change", "/tn", path, if *on { "/enable" } else { "/disable" }]).map(|_| ())
                 }
                 (Probe::Pwr { sub, setting, .. }, Saved::Pwr { scheme, ac, dc }) => {
@@ -840,6 +1074,80 @@ device                  partition=C:\r\ndisabledynamictick      Oui\r\ntscsyncpo
         assert_eq!(unhex(&hex(&[0, 1, 0xab, 0xff])), vec![0, 1, 0xab, 0xff]);
     }
 
+    /// Journal de déconnexion du 16 octobre : quatre réglages « pas remis » parce que leurs clés sont protégées par
+    /// Windows (CLSID du dossier Réseau, Diagnostics\Performance, service DPS) ou par Defender (ses journaux). Le script
+    /// n'avait pas pu les changer non plus : la valeur d'avant est encore là, rien à écrire.
+    #[test]
+    fn values_already_back_need_no_write() {
+        let v = |d: &str| Saved::Value { kind: 4, data: d.into() };
+        let clsid = r"HKCR\CLSID\{F02C1A0D-BE21-4350-88B0-7367FC96EF3C}\ShellFolder";
+        assert!(same_reg(clsid, "Attributes", &v("640004b0"), &v("640004B0")));
+        assert!(!same_reg(clsid, "Attributes", &v("640094b0"), &v("640004b0")), "changée par le script : à remettre");
+        assert!(!same_reg(clsid, "Attributes", &Saved::Value { kind: 3, data: "640004b0".into() }, &v("640004b0")), "autre type");
+        let k = r"HKLM\SOFTWARE\Test";
+        assert!(same_reg(k, "X", &Saved::Absent { created: None }, &Saved::Absent { created: Some(k.into()) }), "clé créée depuis");
+        assert!(!same_reg(k, "X", &v("01000000"), &Saved::Absent { created: None }), "posée par le script : à retirer");
+        let dps = r"HKLM\SYSTEM\CurrentControlSet\Services\DPS";
+        assert!(same_reg(dps, "DelayedAutostart", &v("00000000"), &Saved::Absent { created: None }), "absente vaut 0");
+        assert!(!same_reg(dps, "DelayedAutostart", &v("01000000"), &Saved::Absent { created: None }));
+        assert!(!same_reg(k, "DelayedAutostart", &v("00000000"), &Saved::Absent { created: None }), "seulement pour un service");
+    }
+
+    /// Start d'un service dont la clé refuse l'écriture : remis avec sc config, comme le script l'avait changé.
+    #[test]
+    fn service_start_maps_to_sc_config() {
+        assert_eq!(service_key(r"HKLM\SYSTEM\CurrentControlSet\Services\DPS"), Some((None, "DPS")));
+        assert_eq!(service_key(r"HKLM\System\CurrentControlSet\services\NvTelemetryContainer"), Some((None, "NvTelemetryContainer")));
+        assert_eq!(service_key(r"HKLM\SYSTEM\ControlSet001\Services\BTAGService"), Some((Some(1), "BTAGService")));
+        assert_eq!(service_key(r"HKLM\SYSTEM\CurrentControlSet\Services\Tcpip\Parameters"), None);
+        assert_eq!(service_key(r"HKLM\SYSTEM\CurrentControlSet\Control\Diagnostics\Performance"), None);
+        assert_eq!(service_key(r"HKCU\SYSTEM\CurrentControlSet\Services\DPS"), None);
+        assert_eq!(service_key(r"HKLM\SYSTEM\ControlSet\Services\DPS"), None);
+        let v = |n: u32| Saved::Value { kind: 4, data: hex(&n.to_le_bytes()) };
+        assert_eq!(dword(&v(2)), Some(2));
+        assert_eq!(dword(&Saved::Absent { created: None }), None);
+        assert_eq!(dword(&Saved::Value { kind: 1, data: "3200".into() }), None, "pas un DWORD");
+        assert_eq!(start_mode(dword(&v(2)), None), Some("auto"));
+        assert_eq!(start_mode(Some(2), Some(1)), Some("delayed-auto"));
+        assert_eq!(start_mode(Some(2), Some(0)), Some("auto"));
+        assert_eq!(start_mode(Some(3), Some(1)), Some("demand"));
+        assert_eq!(start_mode(Some(4), None), Some("disabled"));
+        assert_eq!(start_mode(Some(1), None), Some("system"));
+        assert_eq!(start_mode(Some(0), None), Some("boot"));
+        assert_eq!(start_mode(Some(7), None), None);
+        assert_eq!(start_mode(None, Some(1)), None);
+    }
+
+    /// Sur Windows (CI) : les valeurs du journal du 16 octobre, déjà comme avant, se remettent sans erreur et sans
+    /// écriture ; une valeur posée sous HKCU est remise, puis retirée avec la clé créée pour elle.
+    #[cfg(windows)]
+    #[test]
+    fn restore_on_windows() {
+        let sys = Sys::new(std::env::temp_dir());
+        for (key, name) in [
+            (r"HKCR\CLSID\{F02C1A0D-BE21-4350-88B0-7367FC96EF3C}\ShellFolder", "Attributes"),
+            (r"HKCR\WOW6432Node\CLSID\{F02C1A0D-BE21-4350-88B0-7367FC96EF3C}\ShellFolder", "Attributes"),
+            (r"HKLM\System\CurrentControlSet\Control\Diagnostics\Performance", "DisablediagnosticTracing"),
+            (r"HKLM\SYSTEM\CurrentControlSet\Services\DPS", "Start"),
+            (r"HKLM\SYSTEM\CurrentControlSet\Services\DPS", "DelayedAutostart"),
+            (r"HKLM\SYSTEM\CurrentControlSet\Control\WMI\Autologger\DefenderApiLogger", "Start"),
+            (r"HKLM\SYSTEM\CurrentControlSet\Control\WMI\Autologger\DefenderAuditLogger", "Start"),
+        ] {
+            let p = Probe::Reg { key: key.into(), name: name.into() };
+            let before = sys.read(&p);
+            assert_eq!(sys.restore(&p, &before), Ok(()), "{key}\\{name}");
+            assert_eq!(sys.read(&p), before, "{key}\\{name}");
+        }
+        let top = format!(r"HKCU\Software\RagoOptimizerTest-{}", std::process::id());
+        let p = Probe::Reg { key: format!(r"{top}\Sub"), name: "V".into() };
+        let before = sys.read(&p);
+        assert_eq!(before, Saved::Absent { created: Some(top.clone()) });
+        sys.restore(&p, &Saved::Value { kind: 4, data: "01000000".into() }).unwrap();
+        assert_eq!(dword(&sys.read(&p)), Some(1));
+        sys.restore(&p, &before).unwrap();
+        assert_eq!(sys.read(&Probe::RegKey { key: top }), Saved::Key { existed: false }, "clé créée pour la valeur : retirée");
+    }
+
     fn reg(name: &str) -> Probe {
         Probe::Reg { key: r"HKLM\SOFTWARE\Test".into(), name: name.into() }
     }
@@ -858,9 +1166,13 @@ device                  partition=C:\r\ndisabledynamictick      Oui\r\ntscsyncpo
         l.set_applied("two", None, true, true, vec![b.id(), c.id()], 2);
         assert_eq!(l.saved.len(), 3);
 
+        let peek: Vec<Probe> = l.releasable("one").into_iter().map(|e| e.probe).collect();
         let back = l.release("one");
         assert_eq!(back.len(), 1, "Shared reste posé tant que le réglage 2 est appliqué");
         assert_eq!(back[0].probe, a);
+        assert_eq!(peek, vec![a], "releasable annonce ce que release rend");
+        assert_eq!(l.releasable("two").len(), 2);
+        assert!(l.tweaks.contains_key("two"), "releasable ne retire rien");
         let back = l.release("two");
         assert_eq!(back.iter().map(|e| e.probe.clone()).collect::<Vec<_>>(), vec![c, b.clone()], "ordre inverse du relevé");
         assert_eq!(back[1].before, Saved::Value { kind: 4, data: "14000000".into() });
@@ -895,6 +1207,65 @@ device                  partition=C:\r\ndisabledynamictick      Oui\r\ntscsyncpo
         let _ = fs::remove_file(path);
     }
 
+    /// applied.json illisible (coupé par une coupure de courant, vide, ou qui ne se lit pas) : mis de côté avec ses
+    /// états d'avant, jamais écrasé par le registre neuf (déjà présent en 1.1.9 : tout était perdu).
+    #[test]
+    fn unreadable_ledger_is_set_aside_not_overwritten() {
+        let dir = std::env::temp_dir().join(format!("rago-bad-ledger-{}", std::process::id()));
+        let _ = fs::remove_dir_all(&dir);
+        fs::create_dir_all(&dir).unwrap();
+        let path = dir.join("applied.json");
+        let aside = || -> Vec<PathBuf> {
+            fs::read_dir(&dir).unwrap().flatten().map(|e| e.path()).filter(|p| p.to_string_lossy().contains("applied.json.bad-")).collect()
+        };
+        for (case, content) in [("coupé", &br#"{"tweaks":{"net_a":{"variant":null,"ts":1,"ok":true,"backup":true,"probes":["reg:"#[..]), ("vide", &b""[..])] {
+            fs::write(&path, content).unwrap();
+            let (mut l, existed) = Ledger::load(path.clone());
+            assert!(!existed, "{case}");
+            let kept = aside();
+            assert_eq!(kept.len(), 1, "{case} : mis de côté");
+            assert_eq!(fs::read(&kept[0]).unwrap(), content, "{case} : tel quel");
+            l.set_applied("net_b", None, true, true, vec![], 2);
+            l.save();
+            assert!(Ledger::load(path.clone()).1, "{case} : registre neuf lisible");
+            assert_eq!(fs::read(&kept[0]).unwrap(), content, "{case} : jamais écrasé");
+            assert!(!dir.join("applied.json.tmp").exists());
+            fs::remove_file(&kept[0]).unwrap();
+        }
+        // ne se lit pas du tout (ici un dossier à sa place) : mis de côté lui aussi, avec ce qu'il contient
+        fs::remove_file(&path).unwrap();
+        fs::create_dir_all(path.join("x")).unwrap();
+        let (l, existed) = Ledger::load(path.clone());
+        assert!(!existed);
+        assert!(aside().iter().any(|p| p.join("x").exists()));
+        l.save();
+        assert!(Ledger::load(path.clone()).1);
+        let log = fs::read_to_string(dir.join("logs").join("repairs.log")).unwrap();
+        assert_eq!(log.lines().filter(|l| l.contains("applied.json") && l.contains("kept as")).count(), 3, "{log}");
+        let _ = fs::remove_dir_all(&dir);
+    }
+
+    /// Fichier d'avant qui n'a pu être ni lu ni renommé au lancement (verrou) : l'enregistrement le met d'abord de côté,
+    /// et ne l'écrase jamais (s'il ne peut toujours pas être renommé, rien n'est écrit ; non simulable ici).
+    #[test]
+    fn unread_ledger_is_set_aside_before_any_save() {
+        use std::sync::atomic::Ordering;
+        let dir = std::env::temp_dir().join(format!("rago-unread-ledger-{}", std::process::id()));
+        let _ = fs::remove_dir_all(&dir);
+        fs::create_dir_all(&dir).unwrap();
+        let path = dir.join("applied.json");
+        fs::write(&path, "ancien").unwrap();
+        let l = Ledger { path: path.clone(), ..Default::default() };
+        l.unread.store(true, Ordering::SeqCst);
+        l.save();
+        let aside: Vec<_> = fs::read_dir(&dir).unwrap().flatten().map(|e| e.path()).filter(|p| p.to_string_lossy().contains(".bad-")).collect();
+        assert_eq!(aside.len(), 1);
+        assert_eq!(fs::read_to_string(&aside[0]).unwrap(), "ancien");
+        assert!(Ledger::load(path).1, "registre neuf écrit après");
+        assert!(!l.unread.load(Ordering::SeqCst));
+        let _ = fs::remove_dir_all(&dir);
+    }
+
     #[test]
     fn undo_copy_is_kept_and_follows_the_variant() {
         let dir = std::env::temp_dir().join(format!("rago-undo-{}", std::process::id()));
@@ -914,6 +1285,35 @@ device                  partition=C:\r\ndisabledynamictick      Oui\r\ntscsyncpo
         l.set_applied("net_x", Some("b".into()), true, true, vec![], 2);
         assert!(l.tweaks["net_x"].undo.is_none());
         let _ = fs::remove_dir_all(&dir);
+    }
+
+    /// Copie gardée par une version d'avant (1.1.9, 1.1.10) : remplacée par l'annulation de cette version dès qu'elle
+    /// est connue, gardée telle quelle sinon (scripts Premium fermés).
+    #[test]
+    fn old_undo_copy_is_refreshed() {
+        let mut l = Ledger::default();
+        l.set_applied("in_x", None, true, true, vec![], 1);
+        let old = Undo { rest: Some("reg add \"HKLM\\SYSTEM\\CurrentControlSet\\Control\" /v CoalescingTimerInterval /d 0".into()), ..Default::default() };
+        l.tweaks.get_mut("in_x").unwrap().undo = Some(old.clone());
+        // scripts fermés : rien à mettre à la place
+        assert!(!l.fill_undo(&|_, _| None));
+        assert_eq!(l.tweaks["in_x"].undo, Some(old));
+        let new = Undo { rest: Some("echo ok".into()), ..Default::default() };
+        assert!(l.fill_undo(&|_, _| Some(new.clone())));
+        assert_eq!(l.tweaks["in_x"].undo, Some(new.clone()));
+        assert!(!l.fill_undo(&|_, _| Some(new.clone())), "déjà à jour : rien ne change, rien à enregistrer");
+    }
+
+    #[test]
+    fn ledger_never_written_in_clear_when_dpapi_fails() {
+        let json = r#"{"tweaks":{"net_x":{"undo":{"full":"netsh int tcp reset"}}}}"#;
+        let bytes = encode(json, None);
+        assert!(!bytes.windows(5).any(|w| w == b"netsh"), "pas de commande en clair sur le disque");
+        assert_eq!(decode(&bytes), (json.to_string(), true));
+        let mut bad = bytes.clone();
+        let n = bad.len() - 1;
+        bad[n] ^= 1;
+        assert_ne!(decode(&bad).0, json, "un fichier modifié n'est pas relu comme valide");
     }
 
     // Le chiffrement au repos est DPAPI, propre à Windows (ailleurs le coffre laisse passer en clair).

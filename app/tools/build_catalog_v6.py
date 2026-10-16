@@ -5,12 +5,18 @@ Chaque bloc « :: Titre » des .bat devient un réglage ; les variantes (Hypixel
 déclarées dans SECTIONS. Le module Restore (outils de l'app) est repris de l'ancien catalogue.
 
     python3 tools/build_catalog_v6.py
+
+docs/CORRECTIONS.md est réécrit à chaque génération, sauf ce qui suit sa ligne marqueur (sections écrites à la main,
+gardées telles quelles : tools/corrections_md.py). Ajouter une section à la main : en bas du fichier.
 """
 import copy
 import json
 import probes
 import audit_fixes as AUDIT
 import safety as SAFETY
+import rbw as RBW
+import paths as PATHS
+import corrections_md as CORRECTIONS
 import os
 import re
 import subprocess
@@ -326,14 +332,6 @@ NEW_TWEAKS = [
         r'reg add "HKCU\Software\Microsoft\Windows\CurrentVersion\Explorer\AutoplayHandlers" /v "DisableAutoplay" /t REG_DWORD /d "1" /f >nul',
     ])),
 ]
-RBW_ON_EXTRA = '\n'.join([
-    'echo - BAM, DAM and Prefetch back on (active after a restart)',
-    r'reg add "HKLM\SYSTEM\CurrentControlSet\Services\bam" /v "Start" /t REG_DWORD /d "1" /f >nul',
-    r'reg add "HKLM\SYSTEM\CurrentControlSet\Services\dam" /v "Start" /t REG_DWORD /d "1" /f >nul',
-    r'reg add "HKLM\SYSTEM\CurrentControlSet\Control\Session Manager\Memory Management\PrefetchParameters" /v "EnablePrefetcher" /t REG_DWORD /d "3" /f >nul',
-    r'reg add "HKLM\SYSTEM\CurrentControlSet\Control\Session Manager\Memory Management\PrefetchParameters" /v "EnableSuperfetch" /t REG_DWORD /d "3" /f >nul',
-])
-
 # Ce que le joueur doit lire avant de lancer : déduit du script, pour que rien de lourd ne passe sans être annoncé.
 WARNINGS = [
     (r'FeatureSettingsOverride"?\s+/t\s+REG_DWORD\s+/d\s+"?3', 'Turns off the Spectre and Meltdown protections.',
@@ -368,7 +366,8 @@ WARNINGS = [
      'Coupe BAM, qui garde la trace des programmes lancés. Sur un screenshare, ça peut ressembler à des traces effacées : active le RBW Mod et redémarre ton PC avant.'),
     (r'EnablePrefetcher"?\s+/t\s+REG_DWORD\s+/d\s+"?0', 'Stops Prefetch from filling. On a screenshare that can look like erased traces: turn on RBW Mod and restart your PC before one.',
      'Le Prefetch ne se remplit plus. Sur un screenshare, ça peut ressembler à des traces effacées : active le RBW Mod et redémarre ton PC avant.'),
-    (r'^(?!\s*echo).*(del|forfiles|rd)\b.*\\prefetch', 'Clears the Prefetch folder, which a screenshare can read as wiped traces.',
+    # commandes del, forfiles ou rd entières (comme safety.py) : « -Type DWord » finit aussi par « rd »
+    (r'^(?!\s*echo).*\b(del|forfiles|rd)\b.*\\prefetch', 'Clears the Prefetch folder, which a screenshare can read as wiped traces.',
      'Vide le dossier Prefetch, ce qu\'un screenshare peut lire comme des traces effacées.'),
     (r'DisableDeleteNotify\s+(NTFS\s+)?1\b', 'Turns off TRIM on your SSD, which keeps it fast and healthy over time.',
      'Coupe le TRIM du SSD, qui le garde rapide et en bonne santé dans le temps.'),
@@ -492,6 +491,13 @@ def apply_audit(scripts):
     sub_lines(scripts, AUDIT.SUB_LINES_PLUS)
 
 
+# boucles dont le corps (mode MSI de la carte réseau) a été retiré par l'audit : le commentaire au-dessus, la ligne
+# « for ... & ( » et la « ) » qui la suit partent ensemble ; le mode MSI réseau reste dans son propre réglage (net_msi)
+EMPTY_BLOCKS = [
+    (('net_server:s3',), r'set "str=%%i" & \($'),
+]
+
+
 # wmic n'est plus installé par défaut sur Windows 11 24H2 (audit, 2026-10-07) : les boucles qui l'utilisaient ne
 # trouvaient plus rien. Même liste par PowerShell (Get-CimInstance), sans la ligne d'en-tête de wmic.
 WMIC_SUBS = [
@@ -511,6 +517,15 @@ WMIC_SUBS = [
       'ping_advanced', 'ping_main:config1', 'ping_main:config2', 'ping_main:config4', 'usb_advanced', 'usb_controller',
       'usb_msi', 'usb_power'),
      r'(?i)wmic path (\w+) get (\w+)', r'powershell -NoProfile -Command "(Get-CimInstance \1).\2"'),
+]
+
+
+# Dossier temporaire entre guillemets (reprise de RAG-66, seulement les guillemets) : avec un espace dans le nom du
+# compte Windows (« Jean Dupont »), del /s visait le premier morceau (C:\Users\Jean), récursivement. tools/paths.py
+# passe ensuite ces chemins en !VAR! avec leur garde « if defined » et vérifie chaque suppression.
+TEMP_QUOTES = [
+    (('game_mode:on',), r'(?i)^del /s /f /q %temp%\\\* > nul$', r'del /s /f /q "%temp%\\*" > nul'),
+    (('in_windows',), r'(?i)^del /s /f /q %temp%\\\*\.\*$', r'del /s /f /q "%temp%\\*.*"'),
 ]
 
 
@@ -540,16 +555,34 @@ def postprocess(modules, scripts):
                 scripts[tid][v] = scripts[tid][v].replace(before, after or '')
     drop_lines(scripts, DROP_LINES)
     sub_lines(scripts, SUB_LINES)
-    sep = '\r\n' if '\r\n' in scripts['rbw_mode']['on'] else '\n'
-    scripts['rbw_mode']['on'] += sep + RBW_ON_EXTRA.replace('\n', sep)
     # scripts tels qu'avant l'audit (ce qu'ont lancé les PC jusqu'ici) : leur annulation reste dans undo.json
     before_audit = copy.deepcopy(scripts)
     apply_audit(scripts)
     sub_lines(scripts, WMIC_SUBS)
+    sub_lines(scripts, TEMP_QUOTES)
     # lignes risquées cachées dans les packs (tools/safety.py, 2026-10-08) : retirées avant les avertissements
     global SAFETY_REPORT
     SAFETY_REPORT = SAFETY.apply(scripts)
     assert not SAFETY.remaining(scripts), SAFETY.remaining(scripts)[:3]
+    # RBW Mod (tools/rbw.py, RAG-69) : scripts entiers, posés après l'audit et safety.py pour qu'aucune de leurs lignes ne
+    # soit retirée ou réécrite (« Activé » est le script validé par Sofiene, étape par étape)
+    sep = '\r\n' if '\r\n' in scripts['rbw_mode']['on'] else '\n'
+    scripts['rbw_mode'] = {'on': RBW.ON.replace('\n', sep), 'off': RBW.OFF.replace('\n', sep)}
+    # chemins du profil (revue du 2026-10-13, P1/P2, tools/paths.py) : `!VAR!` au lieu de `%VAR%`, `if defined` devant
+    # ce qui supprime, boucles qui suppriment sans développement retardé ; nettoyages « set folder= » de cln_temp et
+    # mc_optifine (2 + 2 x 2) récrits
+    assert PATHS.apply(scripts) == 6, 'nettoyages set folder= de cln_temp et mc_optifine'
+    # blocs vides (RAG-68, demandé par Sofiene le 15/10 après le test de la 1.1.14) : cmd refuse « ( » suivi de « ) »
+    # (« ) était inattendu ») et arrête le script, les lignes d'après ne tournaient jamais
+    for keys, start in EMPTY_BLOCKS:
+        for key in keys:
+            for tid, v in variants_of(scripts, key):
+                body = scripts[tid][v]
+                sep = '\r\n' if '\r\n' in body else '\n'
+                lines = body.split(sep)
+                i = next(n for n, l in enumerate(lines) if re.search(start, l))
+                assert lines[i - 1].startswith('::') and lines[i + 1].strip() == ')', (key, lines[i - 1:i + 2])
+                scripts[tid][v] = sep.join(lines[:i - 1] + lines[i + 2:])
 
     tweaks = {t['id']: t for m in modules for sec in m['sections'] for t in sec['tweaks'] if 'id' in t}
     for tid, t in tweaks.items():
@@ -575,13 +608,10 @@ def postprocess(modules, scripts):
         for a, b in UK_US:
             t['name']['en'] = t['name']['en'].replace(a, b)
             t['desc']['en'] = t['desc']['en'].replace(a, b)
-    tweaks['rbw_mode']['desc'] = I(
-        'On restarts the services screenshare tools check (Event Log, SysMain, PCA, Scheduler) and turns BAM and Prefetch back on '
-        'after a restart. Off sets the services back to manual after your session.',
-        'Activé relance les services que vérifient les outils de screenshare (journal d\'événements, SysMain, PCA, Planificateur) '
-        'et remet BAM et le Prefetch après un redémarrage. Désactivé repasse les services en manuel après ta session.')
-    # BAM est un pilote et le Prefetcher se relit au démarrage : sans redémarrage, « On » ne remet rien de visible.
-    # « Off » ne fait que repasser des services en manuel : pas de redémarrage.
+    # texte du RBW Mod : tools/descriptions.json (describe). Il remet Windows comme avant : sûr, sans avertissement
+    assert tweaks['rbw_mode']['risk'] == 'safe' and 'confirm' not in tweaks['rbw_mode'], tweaks['rbw_mode'].get('confirm')
+    # BAM est un pilote, les journaux DiagLog et WdiContextLog (sans eux DPS ne démarre pas) et le Prefetcher se relisent
+    # au démarrage : « On » demande un redémarrage. « Off » ne sert pas avant un screenshare : pas de redémarrage.
     tweaks['rbw_mode']['reboot'] = False
     for v in tweaks['rbw_mode']['variants']:
         v['reboot'] = v['id'] == 'on'
@@ -788,7 +818,23 @@ Corrections ciblées (`SCRIPT_FIXES`, `DROP_LINES`) :
 Profils exclusifs découpés en variantes (ils s'exécutaient tous à la suite) : ping_hitreg (6 profils dont Default),
 ping_packets (Hitreg, QoS, Knockback), ping_main (Config 1 à 4), sys_ram (selon la RAM).
 
-RBW Mod « On » remet aussi BAM, DAM et le Prefetcher (actifs après redémarrage, demandé par l'app pour cette variante).
+RBW Mod (RAG-69, réécrit le 2026-10-13, `tools/rbw.py`) : « On » fait ce que fait Rago-RBW-Fix.ps1, le script validé
+par Sofiene sur son PC, dans le même ordre, une ligne PowerShell par étape : démarrage avec Windows de SysMain, PcaSvc,
+DPS, EventLog, WSearch, DusmSvc, BFE, Appinfo, Schedule, DsmSvc, DiagTrack, DcomLaunch, PlugPlay, BAM, DAM, CDPUserSvc
+et de chaque CDPUserSvc_xxxx (sc config, puis Set-Service, puis la valeur Start du registre ; Windows Search remis s'il
+a été retiré) ; services dont ils dépendent remis en manuel s'ils sont désactivés ; réglages lus par le vérificateur
+officiel de RBW (historique d'activités, clé de stratégies AppCompat, listes de raccourcis, CMD, journal PowerShell,
+Prefetch), journaux DiagLog et WdiContextLog et stratégie WDI sans lesquels DPS ne démarre pas ; lancement de chaque
+service (Start-Service, sc start, net start) ; ce que voit le vérificateur, avec le code et le message de Windows pour
+ce qui reste arrêté ; tâches planifiées et programmes de démarrage qui les recouperaient (lecture seule) ; verdict.
+« On » lance toujours ce script, même après « Off » (`catalog::revert_runs_script`) : la sauvegarde d'avant « Off »
+ne démarrait aucun service. « Off » remet ces services et réglages comme Windows les règle (Appinfo, DsmSvc et
+PlugPlay en manuel) et lance ceux que Windows lance de lui-même, sans rien arrêter ; l'ancien « Off » arrêtait SysMain
+et DiagTrack. Le RBW Mod ne garde pas de sauvegarde (rien à remettre) : les réglages qui coupent ces éléments gardent
+la leur et affichent « Changé par Windows » après le RBW Mod. Défaire « Off » sans cliquer « On » (Tout annuler,
+déconnexion, fin de Premium, désinstallation) ne lance donc rien et ne demande pas de redémarrage (`windows_values`
+dans applied.json) ; un « Off » noté par une version d'avant (sauvegarde de 1.1.9, ou ancien « Off » qui passait des
+services en manuel, repris de l'historique) repasse toujours par « On ».
 
 Les actions lourdes ne sont pas retirées (choix de Sofiene, « tout garder ») : `WARNINGS` les détecte dans chaque
 script (Spectre, Defender, SmartScreen, UAC, pare-feu, IFEO, BAM, Prefetch…), écrit l'avertissement « Read this first »
@@ -984,6 +1030,12 @@ def main():
     for p in presets:
         for e in p['tweaks']:
             assert e.split(':')[0] in ids, (p['id'], e)
+    # origine de chaque réglage dans les .bat (fichier et ligne) : utile ici, pas dans l'interface, où elle donnerait le
+    # plan des anciens programmes à qui ouvre l'app
+    for m in modules:
+        for sec in m['sections']:
+            for t in sec['tweaks']:
+                t.pop('legacy', None)
     catalog = {'version': 8, 'modules': modules, 'presets': presets, 'retired': retired}
     catalog_path = os.path.join(ROOT, 'src', 'data', 'catalog.json')
     json.dump(catalog, open(catalog_path, 'w', encoding='utf-8'), ensure_ascii=False, indent=1)
@@ -991,9 +1043,12 @@ def main():
     kept = {k: v for k, v in scripts.items() if k not in SAFETY.RETIRED}
     json.dump(kept, open(os.path.join(ROOT, 'src-tauri', 'scripts', 'scripts.json'), 'w', encoding='utf-8'), ensure_ascii=False)
     # relevés : ce que chaque script va modifier, sauvegardé avant de l'appliquer (tools/probes.py)
-    json.dump(probes.build(kept), open(os.path.join(ROOT, 'src-tauri', 'scripts', 'probes.json'), 'w', encoding='utf-8'), ensure_ascii=False)
+    dry = probes.build(kept)
+    PATHS.apply(dry)  # mêmes règles que les scripts (tools/paths.py)
+    json.dump(dry, open(os.path.join(ROOT, 'src-tauri', 'scripts', 'probes.json'), 'w', encoding='utf-8'), ensure_ascii=False)
     # retour aux valeurs de Windows sans sauvegarde, et ce que la sauvegarde ne couvre pas (tools/undo, audit du 2026-10-07)
     undo, no_return = build_undo(before_audit, scripts)
+    PATHS.apply(undo)
     # valeurs de pilote (amd_thermal, sto_cacheprot) : seule la sauvegarde de l'app les remet ; Edge : rien à remettre
     assert set(SAFETY.RETIRED) - set(undo) == {'amd_thermal', 'sto_cacheprot', 'dbl_edge'}, set(SAFETY.RETIRED) - set(undo)
     json.dump(undo, open(os.path.join(ROOT, 'src-tauri', 'scripts', 'undo.json'), 'w', encoding='utf-8'), ensure_ascii=False, indent=0)
@@ -1008,9 +1063,11 @@ def main():
     n = len(entries)
     # réglages distincts : les jumeaux (même script, champ `twin`) comptent une fois, comme dans l'app (catalog.ts)
     distinct = len({t.get('twin') or t['id'] for t in entries})
-    with open(os.path.join(ROOT, 'docs', 'CORRECTIONS.md'), 'a', encoding='utf-8') as f:
-        f.write(V6_NOTES)
-        f.write(SAFETY.notes(SAFETY_REPORT, n, distinct))
+    # docs/CORRECTIONS.md : section v5.2 (build_catalog.py), puis celles-ci ; les sections écrites à la main, sous la
+    # ligne marqueur, restent à la fin telles quelles (tools/corrections_md.py)
+    head, manual = CORRECTIONS.parts()
+    CORRECTIONS.write(head + V6_NOTES + SAFETY.notes(SAFETY_REPORT, n, distinct), manual)
+    assert CORRECTIONS.parts()[1] == manual, 'sections de CORRECTIONS.md écrites à la main perdues'
     print(f'{n} réglages ({distinct} distincts), {len(kept)} scripts, {len(retired)} retirés')
 
 

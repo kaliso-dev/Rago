@@ -117,10 +117,12 @@ pub fn probe(resource_dir: &Path) -> SystemInfo {
         .filter(|p| p.exists())
         .map(|p| p.to_string_lossy().to_string());
 
-    let resources = ["nvidiaProfileInspector.exe", "extremelatencylow.nip", "LowLatency.pow", "smartctl.exe"]
+    // plan d'alimentation et profil NVIDIA : chiffrés dans l'exe (assets.rs), toujours là
+    let resources = ["nvidiaProfileInspector.exe", "smartctl.exe"]
         .iter()
         .filter(|f| resource_dir.join(f).exists())
         .map(|f| f.to_string())
+        .chain(crate::assets::NAMES.iter().map(|f| f.to_string()))
         .collect();
 
     SystemInfo {

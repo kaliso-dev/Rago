@@ -91,7 +91,7 @@ page('terms.html','Terms of Sale','Terms of sale for Rago Optimizer: the Free, P
 <p>Premium, by subscription or Lifetime, is digital content supplied right after payment. By completing checkout, you ask for immediate access and acknowledge that you lose your 14-day right of withdrawal once the license is delivered. Our <a href="refunds.html">Refunds and Cancellation</a> policy explains when we refund anyway.</p>
 
 <h2>6. Using the app safely</h2>
-<p>Before applying changes, Rago offers to create a Windows restore point (ticked by default before Advanced tweaks), and its Restore section opens System Restore so you can go back to it. Turning a tweak off puts back the Windows settings it changed. One-time actions, like removing apps, can't be turned off. When Premium ends or you sign out, Rago puts back the settings changed by Premium tweaks. Some tweaks are marked <strong>Advanced</strong>: they change deeper Windows settings or turn off services, and ask for confirmation. You choose which tweaks to apply, and you are responsible for that choice.</p>
+<p>Before applying changes, Rago offers to create a Windows restore point (ticked by default before Advanced tweaks), and its Restore section opens System Restore so you can go back to it. Turning a tweak off puts back the Windows settings it changed. One-time actions, like removing apps, can't be turned off. When Premium ends or you sign out, Rago puts back the settings of every tweak it can undo by itself, free tweaks included. Uninstalling the app does the same. Some tweaks are marked <strong>Advanced</strong>: they change deeper Windows settings or turn off services, and ask for confirmation. You choose which tweaks to apply, and you are responsible for that choice.</p>
 <p>Rago doesn't modify Minecraft or inject anything into games. Server rules are set by each server: check them before you play. We aren't responsible for decisions a server's staff makes about your account.</p>
 
 <h2>7. Affiliate program</h2>
@@ -149,7 +149,7 @@ page('privacy.html','Privacy Policy','What Rago Optimizer and its account server
 <tr><th>Data</th><th>Why</th></tr>
 <tr><td>Email, password and sign-in sessions (stored hashed, never readable)</td><td>Your account and sign-in, on the site and in the app</td></tr>
 <tr><td>Payment references from Stripe: customer and payment IDs, amount, currency, subscription status</td><td>Selling and renewing Premium, refunds, accounting</td></tr>
-<tr><td>Hashed identifiers of your PC (from the Windows machine ID, motherboard UUID and serial number), PC name, Windows version, app version, activation dates and last IP address</td><td>Linking your license to one PC and preventing license sharing</td></tr>
+<tr><td>Hashed identifiers of your PC (from the Windows machine ID, the PC's hardware UUID and motherboard serial number), PC name, Windows version, app version, activation dates and last IP address</td><td>Linking your license to one PC and preventing license sharing</td></tr>
 <tr><td>Affiliate code, which accounts used it, and hashed identifiers of the buyer's first PC</td><td>Running the affiliate program and blocking self-referrals</td></tr>
 <tr><td>Your public name, profile photo (resized to 256 × 256 pixels, with its metadata removed) and your review: rating, comment, app version and dates</td><td>Showing your review on our site and your profile in the app. Your public name, photo, rating and comment are public.</td></tr>
 <tr><td>If you link your Discord account: its Discord user ID and username</td><td>Adding you to our Discord server and giving you the Premium role while your Premium is active, then removing it when Premium ends. We don't keep your Discord sign-in: it's revoked right after linking. You can unlink anytime from your account page.</td></tr>
@@ -197,7 +197,7 @@ page('privacy.html','Privacy Policy','What Rago Optimizer and its account server
 
 <h2>Changes</h2>
 <p>If we change this policy in a way that matters, we'll update the date above and tell account holders by email.</p>
-''',upd="October 10, 2026")
+''',upd="October 16, 2026")
 print('ok')
 
 # 404: Netlify serves it for any unknown path, so every link is absolute

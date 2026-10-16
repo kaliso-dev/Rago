@@ -13,6 +13,8 @@ P = os.path.join(SRC, 'tweaks.html')
 s = open(P).read()
 cat = json.load(open(os.path.join(APP, 'data', 'catalog.json')))
 FREE = set(json.load(open(os.path.join(APP, 'data', 'free.json')))['tweaks'])
+# Premium tweaks whose undo option stays open without a license (free.json « reverts »: RBW Mod On, Rago game mode Off)
+FREE_REVERTS = set(json.load(open(os.path.join(APP, 'data', 'free.json'))).get('reverts', []))
 COPY = json.load(open(os.path.join(SRC, 'tweaks-copy.json')))
 SESSION = {"game_mode", "rbw_mode", "win_gamemode"}  # store.tsx SESSION_TOGGLES: turned on before playing, off after
 # Same groups as the app's sidebar (and the home page preview)
@@ -84,8 +86,9 @@ def card(m, sec, t, k):
            'session': ('On and off', 'Turn it on before playing, off after.')}[kind]
     if c.get('undo') and kind == 'tweak':  # what turning it off can't give back (checked against the script)
         how = (how[0], c['undo'])
+    open_v = next((v['label']['en'] for v in t.get('variants', []) if v.get('revert')), None) if t['id'] in FREE_REVERTS else None
     spec = [
-        ('Plan', 'Free' if free else 'Premium', 'Open in the free version' if free else 'Unlocked with Premium', ''),
+        ('Plan', 'Free' if free else 'Premium', 'Open in the free version' if free else f'{open_v} is open in the free version' if open_v else 'Unlocked with Premium', ''),
         ('Level', 'Advanced' if t['risk'] == 'advanced' else 'Safe', 'For players who know what they change' if t['risk'] == 'advanced' else 'Fine for every PC', ''),
         ('In the app', how[0], how[1], ''),
         ('Restart', rb_txt, '', ''),

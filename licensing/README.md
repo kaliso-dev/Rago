@@ -24,7 +24,7 @@ Programme d'affiliation `/affiliate` : chaque compte peut avoir un code, qui est
 - **Changement de PC par le support** (`npm run admin -- reset-device <email>`). `SELF_SERVICE_RESET_DAYS=30` l'ouvre en libre-service une fois par mois.
 - **Supabase** : la base Postgres (tables dans `supabase/schema.sql`, créées automatiquement au démarrage, accès public bloqué par RLS) et l'installeur dans un bucket Storage privé, servi par lien signé de 5 minutes à tout le monde (l'app gratuite est la même que l'app Premium, c'est la licence qui débloque). Le serveur n'a donc besoin d'aucun disque.
 - **Clés de licence** : sans `LICENSE_SIGNING_KEY`, le serveur génère sa paire Ed25519 au premier démarrage et la garde dans la base. La clé publique à compiler dans l'app se lit sur `/api/v1/public-key?format=pem`.
-- Le plan gratuit, c'est l'app elle-même sans compte (9 réglages).
+- Le plan gratuit, c'est l'app elle-même sans compte (11 réglages).
 
 ## Support
 
