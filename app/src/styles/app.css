@@ -157,9 +157,10 @@ kbd {
   z-index: -1;
   pointer-events: none;
   background:
-    radial-gradient(55% 45% at 88% -8%, rgba(255, 59, 48, 0.13), transparent 70%),
-    radial-gradient(45% 40% at 8% 108%, rgba(201, 34, 26, 0.09), transparent 70%),
-    radial-gradient(70% 60% at 50% 40%, rgba(255, 255, 255, 0.018), transparent 75%);
+    radial-gradient(50% 45% at 92% -6%, rgba(255, 59, 48, 0.2), transparent 70%),
+    radial-gradient(35% 35% at 60% 18%, rgba(255, 94, 85, 0.05), transparent 70%),
+    radial-gradient(45% 45% at 4% 104%, rgba(201, 34, 26, 0.14), transparent 70%),
+    radial-gradient(70% 60% at 50% 45%, rgba(255, 255, 255, 0.025), transparent 75%);
 }
 .body {
   position: relative;
@@ -269,9 +270,10 @@ kbd {
   gap: 2px;
   overflow-y: auto;
   border-radius: var(--rg-radius-lg);
-  background: linear-gradient(180deg, rgba(255, 255, 255, 0.045), rgba(255, 255, 255, 0.02));
+  background: var(--rg-glass-fill);
+  backdrop-filter: var(--rg-glass-blur);
   border: 1px solid var(--rg-line-1);
-  box-shadow: var(--rg-glass-edge), 0 18px 48px -24px rgba(0, 0, 0, 0.7);
+  box-shadow: var(--rg-glass-edge), inset 1px 0 0 rgba(255, 255, 255, 0.04), 0 18px 48px -24px rgba(0, 0, 0, 0.7);
 }
 .nav-group {
   display: flex;
@@ -471,7 +473,7 @@ kbd {
 
 /* carte de verre : voile clair sur l'encre, reflet en haut, pas de flou (rien ne défile derrière) */
 .card {
-  background: linear-gradient(180deg, rgba(255, 255, 255, 0.05), rgba(255, 255, 255, 0.025));
+  background: var(--rg-glass-fill);
   border: 1px solid var(--rg-line-1);
   border-radius: var(--rg-radius-lg);
   padding: 16px 18px;
@@ -714,7 +716,7 @@ kbd {
   margin-bottom: 26px;
 }
 .tweak-list {
-  background: linear-gradient(180deg, rgba(255, 255, 255, 0.045), rgba(255, 255, 255, 0.025));
+  background: var(--rg-glass-fill);
   border: 1px solid var(--rg-line-1);
   border-radius: var(--rg-radius-lg);
   box-shadow: var(--rg-glass-edge), 0 12px 32px -20px rgba(0, 0, 0, 0.7);
@@ -1216,7 +1218,7 @@ kbd {
   margin: 10px 10px 10px 0;
   border: 1px solid var(--rg-line-1);
   border-radius: var(--rg-radius-lg);
-  background: linear-gradient(180deg, rgba(255, 255, 255, 0.045), rgba(255, 255, 255, 0.02));
+  background: var(--rg-glass-fill);
   box-shadow: var(--rg-glass-edge);
   overflow: hidden;
 }
@@ -1496,18 +1498,18 @@ kbd {
   padding: 16px;
   text-align: left;
   border-radius: var(--rg-radius-lg);
-  background: linear-gradient(180deg, rgba(255, 255, 255, 0.05), rgba(255, 255, 255, 0.022));
+  background: var(--rg-glass-fill);
   border: 1px solid var(--rg-line-1);
   box-shadow: var(--rg-glass-edge);
   transition: border-color var(--rg-dur-fast), background var(--rg-dur-fast), box-shadow var(--rg-dur-fast);
 }
 .preset:hover {
   border-color: var(--rg-line-3);
-  background: linear-gradient(180deg, rgba(255, 255, 255, 0.075), rgba(255, 255, 255, 0.035));
+  background: linear-gradient(rgba(255, 255, 255, 0.03), rgba(255, 255, 255, 0.03)), var(--rg-glass-fill);
 }
 .preset.on {
   border-color: rgba(255, 59, 48, 0.5);
-  background: radial-gradient(120% 80% at 100% 0%, var(--rg-red-a12), transparent 65%), linear-gradient(180deg, rgba(255, 255, 255, 0.05), rgba(255, 255, 255, 0.022));
+  background: radial-gradient(120% 80% at 100% 0%, var(--rg-red-a12), transparent 65%), var(--rg-glass-fill);
   box-shadow: var(--rg-glass-edge), inset 0 0 0 1px rgba(255, 59, 48, 0.2);
 }
 .preset-index {
@@ -2214,4 +2216,81 @@ svg {
   max-width: 380px;
   margin: 6px auto 0;
   line-height: 1.45;
+}
+
+/* ---------------------------------------------------- verre : bord lumineux */
+
+/* Liseré dégradé (vif en haut à gauche, éteint au milieu) tracé par un ::after masqué, comme le verre d'Apple.
+   Seulement sur ce qui ne défile pas à l'intérieur : la barre latérale et les modales gardent leur reflet en
+   box-shadow, sinon le liseré défilerait avec leur contenu. */
+.card,
+.tweak-list,
+.preset,
+.applybar,
+.gate-card,
+.nav-upgrade,
+.titlebar-search,
+.section-chip,
+.btn-secondary {
+  position: relative;
+}
+.card::after,
+.tweak-list::after,
+.preset::after,
+.applybar::after,
+.gate-card::after,
+.nav-upgrade::after,
+.titlebar-search::after,
+.section-chip::after,
+.btn-secondary::after,
+.review-prompt::after,
+.nav-active::after,
+.segmented-pill::after {
+  content: "";
+  position: absolute;
+  inset: -1px;
+  border-radius: inherit;
+  padding: 1px;
+  background: var(--rg-glass-rim);
+  -webkit-mask:
+    linear-gradient(#000 0 0) content-box,
+    linear-gradient(#000 0 0);
+  -webkit-mask-composite: xor;
+  mask-composite: exclude;
+  pointer-events: none;
+}
+/* la liste coupe ce qui dépasse : son liseré se pose sur le bord intérieur, à la place de la bordure */
+.tweak-list {
+  border-color: transparent;
+}
+.tweak-list::after {
+  inset: 0;
+}
+.nav-active::after,
+.segmented-pill::after {
+  inset: 0;
+  opacity: 0.7;
+}
+.preset.on::after {
+  background: linear-gradient(150deg, rgba(255, 94, 85, 0.6), rgba(255, 59, 48, 0.12) 40%, rgba(255, 59, 48, 0.05) 65%, rgba(255, 59, 48, 0.3));
+}
+.nav-upgrade::after {
+  background: linear-gradient(150deg, rgba(255, 94, 85, 0.5), rgba(255, 59, 48, 0.1) 40%, rgba(255, 255, 255, 0.03) 65%, rgba(255, 59, 48, 0.25));
+}
+.modal,
+.run-side {
+  box-shadow: var(--rg-glass-edge), inset 1px 0 0 rgba(255, 255, 255, 0.05), var(--rg-shadow-3);
+}
+.modal.modal-gate {
+  box-shadow: none;
+}
+/* interrupteur allumé et bouton principal : reflet bombé */
+.switch.on {
+  background: linear-gradient(180deg, var(--rg-red-400), var(--rg-red-500) 60%);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.25), 0 0 12px -2px rgba(255, 59, 48, 0.45);
+}
+.btn-primary:not(:disabled),
+.btn-primary:hover:not(:disabled),
+.btn-primary:active:not(:disabled) {
+  background-image: linear-gradient(180deg, rgba(255, 255, 255, 0.14), transparent 55%);
 }
