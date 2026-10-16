@@ -626,6 +626,20 @@ l'éteindre : sans licence, elle ne déclenche pas la remise de fin de licence (
 Le site suit (`sync_app.py` lit le nombre de réglages gratuits dans `free.json`) : 8 réglages gratuits, 198 au total, et
 la FAQ ne dit plus que les réglages gratuits restent quand Premium prend fin.
 
+**Déconnexion : plus de réglage « pas remis » sur une clé protégée.** Demande de Sofiene (2026-10-16), avec le journal
+d'une déconnexion sur une machine virtuelle Windows où tous les réglages possibles étaient appliqués : quatre réglages
+signalés comme pas désactivés (Latence avancée, Couper les diagnostics, Désactiver les journaux automatiques,
+Désactiver le suivi d'activité), sept valeurs en tout. Leurs clés sont protégées par Windows (dossier Réseau sous
+`HKCR\CLSID`, `Control\Diagnostics\Performance`, service DPS) ou par la protection contre les falsifications de Defender
+(`WMI\Autologger\DefenderApiLogger` et `DefenderAuditLogger`) : le script n'avait pas pu les changer non plus, elles
+avaient encore leur valeur d'avant, mais la remise les réécrivait avec l'accès complet à la clé et Windows refusait.
+`Sys::restore` (`backup.rs`) lit maintenant la valeur d'abord et n'écrit rien quand elle est déjà comme avant (tâches
+planifiées comprises). Il ouvre la clé avec le seul droit d'y écrire une valeur. Start ou DelayedAutostart d'un service
+dont la clé refuse l'écriture est remis par le gestionnaire de services (`sc config`, comme le script l'avait changé).
+Une valeur posée par Rago qui ne peut pas être supprimée est signalée, au lieu d'être comptée comme remise. La
+désinstallation et « Tout annuler » passent par la même remise. Tests : `values_already_back_need_no_write`,
+`service_start_maps_to_sc_config`, et sur Windows (CI) `restore_on_windows`.
+
 **Interface.** Plan gratuit : cadenas sur chaque onglet qui a un réglage réservé à Premium, Windows et Hitreg compris
 (avant, seulement sur un onglet sans aucun réglage gratuit). Mode jeu : « Désactivé depuis… » après Désactiver ou Tout
 annuler. Bouton « Tout annuler » dans la carte État (RAG-43), une seule Rago Optimizer à la fois, et les petites

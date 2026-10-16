@@ -567,6 +567,60 @@ pub fn file_for(dir: &Path, probe_id: &str) -> PathBuf {
     dir.join(format!("{h}.reg"))
 }
 
+/// Clé d'un service, `HKLM\SYSTEM\CurrentControlSet\Services\<nom>` ou `HKLM\SYSTEM\ControlSet001\Services\<nom>` :
+/// numéro du jeu de contrôle (None pour CurrentControlSet) et nom du service.
+pub fn service_key(key: &str) -> Option<(Option<u32>, &str)> {
+    let p: Vec<&str> = key.split('\\').collect();
+    let [root, system, set, services, name] = p[..] else { return None };
+    if !root.eq_ignore_ascii_case("HKLM") || !system.eq_ignore_ascii_case("SYSTEM") || !services.eq_ignore_ascii_case("Services") || name.is_empty() {
+        return None;
+    }
+    if set.eq_ignore_ascii_case("CurrentControlSet") {
+        return Some((None, name));
+    }
+    let n = set.get(..10).filter(|s| s.eq_ignore_ascii_case("ControlSet")).and_then(|_| set[10..].parse().ok())?;
+    Some((Some(n), name))
+}
+
+/// Valeur DWORD relevée (Start d'un service…) ; None si elle est absente ou d'un autre type.
+pub fn dword(s: &Saved) -> Option<u32> {
+    match s {
+        // 4 : REG_DWORD
+        Saved::Value { kind: 4, data } => unhex(data).get(..4).map(|b| u32::from_le_bytes([b[0], b[1], b[2], b[3]])),
+        _ => None,
+    }
+}
+
+/// Argument `start=` de sc.exe qui donne au service ces valeurs Start et DelayedAutostart.
+pub fn start_mode(start: Option<u32>, delayed: Option<u32>) -> Option<&'static str> {
+    Some(match start? {
+        0 => "boot",
+        1 => "system",
+        2 if delayed.unwrap_or(0) != 0 => "delayed-auto",
+        2 => "auto",
+        3 => "demand",
+        4 => "disabled",
+        _ => return None,
+    })
+}
+
+/// La valeur de registre est-elle déjà comme avant ? Absente des deux côtés (même si sa clé a été créée entre-temps),
+/// ou même type et mêmes octets. DelayedAutostart d'un service : absente vaut 0, comme pour Windows.
+pub fn same_reg(key: &str, name: &str, now: &Saved, before: &Saved) -> bool {
+    if name.eq_ignore_ascii_case("DelayedAutostart") && service_key(key).is_some() {
+        let delayed = |s: &Saved| match s {
+            Saved::Absent { .. } => Some(false),
+            _ => dword(s).map(|v| v != 0),
+        };
+        return delayed(now).is_some() && delayed(now) == delayed(before);
+    }
+    match (now, before) {
+        (Saved::Absent { .. }, Saved::Absent { .. }) => true,
+        (Saved::Value { kind: a, data: x }, Saved::Value { kind: b, data: y }) => a == b && x.eq_ignore_ascii_case(y),
+        _ => false,
+    }
+}
+
 // ------------------------------------------------------------------ Windows
 
 /// Lecture et remise des éléments sur Windows. Ailleurs (tests, démo), rien n'est lu ni écrit.
@@ -620,6 +674,8 @@ mod win {
         (r == ERROR_SUCCESS).then_some(Key(out))
     }
 
+    /// Clé ouverte (créée au besoin) avec le seul droit d'y écrire des valeurs : certaines clés de Windows refusent
+    /// l'accès complet aux administrateurs, pas l'écriture d'une valeur.
     fn create(key: &str) -> Option<Key> {
         let (h, sub) = root(key)?;
         let mut out: HKEY = std::ptr::null_mut();
@@ -630,7 +686,7 @@ mod win {
                 0,
                 std::ptr::null(),
                 REG_OPTION_NON_VOLATILE,
-                KEY_ALL_ACCESS | KEY_WOW64_64KEY,
+                KEY_SET_VALUE | KEY_WOW64_64KEY,
                 std::ptr::null(),
                 &mut out,
                 std::ptr::null_mut(),
@@ -742,6 +798,19 @@ mod win {
         }
     }
 
+    /// Service dont `key` est la clé, dans le jeu de contrôle en cours (le seul que sc.exe change).
+    fn service_name(key: &str) -> Option<&str> {
+        let (set, name) = service_key(key)?;
+        let current = || {
+            let (_, d) = open(r"HKLM\SYSTEM\Select", KEY_READ).and_then(|k| query(&k, "Current"))?;
+            d.get(..4).map(|b| u32::from_le_bytes([b[0], b[1], b[2], b[3]]))
+        };
+        match set {
+            None => Some(name),
+            Some(n) => (current() == Some(n)).then_some(name),
+        }
+    }
+
     impl Sys {
         pub fn read(&self, probe: &Probe) -> Saved {
             match probe {
@@ -828,23 +897,60 @@ mod win {
             self.bcd.borrow_mut().clear();
         }
 
+        /// Start ou DelayedAutostart d'un service dont la clé refuse l'écriture (DPS, que le script change avec sc config) :
+        /// remis par le gestionnaire de services. `err` seulement si la valeur n'est toujours pas comme avant.
+        fn by_service(&self, probe: &Probe, before: &Saved, err: String) -> Result<(), String> {
+            let Probe::Reg { key, name } = probe else { return Err(err) };
+            let Some(svc) = service_name(key) else { return Err(err) };
+            let now = |n: &str| dword(&self.read(&Probe::Reg { key: key.clone(), name: n.into() }));
+            let mode = if name.eq_ignore_ascii_case("Start") {
+                start_mode(dword(before), now("DelayedAutostart"))
+            } else if name.eq_ignore_ascii_case("DelayedAutostart") {
+                start_mode(now("Start"), dword(before))
+            } else {
+                None
+            };
+            let Some(mode) = mode else { return Err(err) };
+            let _ = run("sc.exe", &["config", svc, "start=", mode]);
+            if same_reg(key, name, &self.read(probe), before) {
+                Ok(())
+            } else {
+                Err(err)
+            }
+        }
+
         pub fn restore(&self, probe: &Probe, saved: &Saved) -> Result<(), String> {
             match (probe, saved) {
                 (_, Saved::Unknown) => Ok(()),
                 (Probe::Reg { key, name }, Saved::Value { kind, data }) => {
-                    let k = create(key).ok_or("couldn't open the registry key")?;
+                    // déjà comme avant : rien à écrire. C'est le cas des clés que Windows protège (dossier Réseau sous
+                    // HKCR\CLSID, Diagnostics\Performance, journaux de Defender) : le script n'a pas pu les changer non plus
+                    if same_reg(key, name, &self.read(probe), saved) {
+                        return Ok(());
+                    }
+                    let Some(k) = create(key) else {
+                        return self.by_service(probe, saved, "couldn't open the registry key".into());
+                    };
                     let bytes = unhex(data);
                     let r = unsafe { RegSetValueExW(k.0, wide(name).as_ptr(), 0, *kind, bytes.as_ptr(), bytes.len() as u32) };
-                    (r == ERROR_SUCCESS).then_some(()).ok_or_else(|| format!("couldn't write {name} (error {r})"))
+                    drop(k);
+                    if r == ERROR_SUCCESS {
+                        return Ok(());
+                    }
+                    self.by_service(probe, saved, format!("couldn't write {name} (error {r})"))
                 }
                 (Probe::Reg { key, name }, Saved::Absent { created }) => {
-                    if let Some(k) = open(key, KEY_ALL_ACCESS) {
+                    if let Some(k) = open(key, KEY_SET_VALUE) {
                         unsafe { RegDeleteValueW(k.0, wide(name).as_ptr()) };
                     }
                     if let Some(c) = created {
                         prune(key, c);
                     }
-                    Ok(())
+                    // encore là (suppression refusée) : le réglage resterait posé sans que personne le sache
+                    if same_reg(key, name, &self.read(probe), saved) {
+                        return Ok(());
+                    }
+                    self.by_service(probe, saved, format!("couldn't delete {name}"))
                 }
                 (Probe::RegKey { key }, Saved::Key { existed: false }) => {
                     if is_empty(key) {
@@ -875,6 +981,10 @@ mod win {
                     r.map(|_| ()).or_else(|e| if value.is_none() { Ok(()) } else { Err(e) })
                 }
                 (Probe::Task { path }, Saved::Task { enabled: Some(on) }) => {
+                    // déjà comme avant (tâche que Windows protège : le script n'a pas pu la changer non plus)
+                    if self.read(probe) == *saved {
+                        return Ok(());
+                    }
                     run("schtasks.exe", &["/change", "/tn", path, if *on { "/enable" } else { "/disable" }]).map(|_| ())
                 }
                 (Probe::Pwr { sub, setting, .. }, Saved::Pwr { scheme, ac, dc }) => {
@@ -962,6 +1072,80 @@ device                  partition=C:\r\ndisabledynamictick      Oui\r\ntscsyncpo
         let utf16: Vec<u8> = [0xFF, 0xFE].into_iter().chain("<Settings>".encode_utf16().flat_map(|u| u.to_le_bytes())).collect();
         assert_eq!(decode_text(&utf16), "<Settings>");
         assert_eq!(unhex(&hex(&[0, 1, 0xab, 0xff])), vec![0, 1, 0xab, 0xff]);
+    }
+
+    /// Journal de déconnexion du 16 octobre : quatre réglages « pas remis » parce que leurs clés sont protégées par
+    /// Windows (CLSID du dossier Réseau, Diagnostics\Performance, service DPS) ou par Defender (ses journaux). Le script
+    /// n'avait pas pu les changer non plus : la valeur d'avant est encore là, rien à écrire.
+    #[test]
+    fn values_already_back_need_no_write() {
+        let v = |d: &str| Saved::Value { kind: 4, data: d.into() };
+        let clsid = r"HKCR\CLSID\{F02C1A0D-BE21-4350-88B0-7367FC96EF3C}\ShellFolder";
+        assert!(same_reg(clsid, "Attributes", &v("640004b0"), &v("640004B0")));
+        assert!(!same_reg(clsid, "Attributes", &v("640094b0"), &v("640004b0")), "changée par le script : à remettre");
+        assert!(!same_reg(clsid, "Attributes", &Saved::Value { kind: 3, data: "640004b0".into() }, &v("640004b0")), "autre type");
+        let k = r"HKLM\SOFTWARE\Test";
+        assert!(same_reg(k, "X", &Saved::Absent { created: None }, &Saved::Absent { created: Some(k.into()) }), "clé créée depuis");
+        assert!(!same_reg(k, "X", &v("01000000"), &Saved::Absent { created: None }), "posée par le script : à retirer");
+        let dps = r"HKLM\SYSTEM\CurrentControlSet\Services\DPS";
+        assert!(same_reg(dps, "DelayedAutostart", &v("00000000"), &Saved::Absent { created: None }), "absente vaut 0");
+        assert!(!same_reg(dps, "DelayedAutostart", &v("01000000"), &Saved::Absent { created: None }));
+        assert!(!same_reg(k, "DelayedAutostart", &v("00000000"), &Saved::Absent { created: None }), "seulement pour un service");
+    }
+
+    /// Start d'un service dont la clé refuse l'écriture : remis avec sc config, comme le script l'avait changé.
+    #[test]
+    fn service_start_maps_to_sc_config() {
+        assert_eq!(service_key(r"HKLM\SYSTEM\CurrentControlSet\Services\DPS"), Some((None, "DPS")));
+        assert_eq!(service_key(r"HKLM\System\CurrentControlSet\services\NvTelemetryContainer"), Some((None, "NvTelemetryContainer")));
+        assert_eq!(service_key(r"HKLM\SYSTEM\ControlSet001\Services\BTAGService"), Some((Some(1), "BTAGService")));
+        assert_eq!(service_key(r"HKLM\SYSTEM\CurrentControlSet\Services\Tcpip\Parameters"), None);
+        assert_eq!(service_key(r"HKLM\SYSTEM\CurrentControlSet\Control\Diagnostics\Performance"), None);
+        assert_eq!(service_key(r"HKCU\SYSTEM\CurrentControlSet\Services\DPS"), None);
+        assert_eq!(service_key(r"HKLM\SYSTEM\ControlSet\Services\DPS"), None);
+        let v = |n: u32| Saved::Value { kind: 4, data: hex(&n.to_le_bytes()) };
+        assert_eq!(dword(&v(2)), Some(2));
+        assert_eq!(dword(&Saved::Absent { created: None }), None);
+        assert_eq!(dword(&Saved::Value { kind: 1, data: "3200".into() }), None, "pas un DWORD");
+        assert_eq!(start_mode(dword(&v(2)), None), Some("auto"));
+        assert_eq!(start_mode(Some(2), Some(1)), Some("delayed-auto"));
+        assert_eq!(start_mode(Some(2), Some(0)), Some("auto"));
+        assert_eq!(start_mode(Some(3), Some(1)), Some("demand"));
+        assert_eq!(start_mode(Some(4), None), Some("disabled"));
+        assert_eq!(start_mode(Some(1), None), Some("system"));
+        assert_eq!(start_mode(Some(0), None), Some("boot"));
+        assert_eq!(start_mode(Some(7), None), None);
+        assert_eq!(start_mode(None, Some(1)), None);
+    }
+
+    /// Sur Windows (CI) : les valeurs du journal du 16 octobre, déjà comme avant, se remettent sans erreur et sans
+    /// écriture ; une valeur posée sous HKCU est remise, puis retirée avec la clé créée pour elle.
+    #[cfg(windows)]
+    #[test]
+    fn restore_on_windows() {
+        let sys = Sys::new(std::env::temp_dir());
+        for (key, name) in [
+            (r"HKCR\CLSID\{F02C1A0D-BE21-4350-88B0-7367FC96EF3C}\ShellFolder", "Attributes"),
+            (r"HKCR\WOW6432Node\CLSID\{F02C1A0D-BE21-4350-88B0-7367FC96EF3C}\ShellFolder", "Attributes"),
+            (r"HKLM\System\CurrentControlSet\Control\Diagnostics\Performance", "DisablediagnosticTracing"),
+            (r"HKLM\SYSTEM\CurrentControlSet\Services\DPS", "Start"),
+            (r"HKLM\SYSTEM\CurrentControlSet\Services\DPS", "DelayedAutostart"),
+            (r"HKLM\SYSTEM\CurrentControlSet\Control\WMI\Autologger\DefenderApiLogger", "Start"),
+            (r"HKLM\SYSTEM\CurrentControlSet\Control\WMI\Autologger\DefenderAuditLogger", "Start"),
+        ] {
+            let p = Probe::Reg { key: key.into(), name: name.into() };
+            let before = sys.read(&p);
+            assert_eq!(sys.restore(&p, &before), Ok(()), "{key}\\{name}");
+            assert_eq!(sys.read(&p), before, "{key}\\{name}");
+        }
+        let top = format!(r"HKCU\Software\RagoOptimizerTest-{}", std::process::id());
+        let p = Probe::Reg { key: format!(r"{top}\Sub"), name: "V".into() };
+        let before = sys.read(&p);
+        assert_eq!(before, Saved::Absent { created: Some(top.clone()) });
+        sys.restore(&p, &Saved::Value { kind: 4, data: "01000000".into() }).unwrap();
+        assert_eq!(dword(&sys.read(&p)), Some(1));
+        sys.restore(&p, &before).unwrap();
+        assert_eq!(sys.read(&Probe::RegKey { key: top }), Saved::Key { existed: false }, "clé créée pour la valeur : retirée");
     }
 
     fn reg(name: &str) -> Probe {
