@@ -626,6 +626,13 @@ l'éteindre : sans licence, elle ne déclenche pas la remise de fin de licence (
 Le site suit (`sync_app.py` lit le nombre de réglages gratuits dans `free.json`) : 8 réglages gratuits, 198 au total, et
 la FAQ ne dit plus que les réglages gratuits restent quand Premium prend fin.
 
+**Plan gratuit : trois réglages de confort de Windows en plus.** Demande de Sofiene (2026-10-16) : trois réglages utiles,
+mais pas ceux qui font acheter Premium. « Désactiver les notifications » (`win_notifications`), « Désactiver les bulles et
+suggestions » (`win_popups`) et « Désactiver Copilot et Recall » (`win_ai`) passent dans `free.json` : rien ne change pour
+FPS, latence, ping ni hitreg (le catalogue les dit « effet sur les FPS quasi nul »). Les trois ont une annulation
+automatique, n'ont pas de jumeau et ne sont dans aucun autre module. Leurs scripts passent dans le paquet gratuit
+(`embed_scripts.rs` lit `free.json`). 11 réglages ouverts ; le site suit (`sync_app.py`, `build.py`).
+
 **Déconnexion : plus de réglage « pas remis » sur une clé protégée.** Demande de Sofiene (2026-10-16), avec le journal
 d'une déconnexion sur une machine virtuelle Windows où tous les réglages possibles étaient appliqués : quatre réglages
 signalés comme pas désactivés (Latence avancée, Couper les diagnostics, Désactiver les journaux automatiques,
