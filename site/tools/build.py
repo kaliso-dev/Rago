@@ -1,10 +1,14 @@
 """Builds site/index.html (what Netlify serves) from site/src/page.html (also the Claude preview), site/reviews.html
-from site/src/reviews.html and site/tweaks.html from site/src/tweaks.html (its tweak list: tools/sync_tweaks.py).
+from site/src/reviews.html, site/tweaks.html from site/src/tweaks.html (its tweak list: tools/sync_tweaks.py) and
+site/partners.html from site/src/partners.html (partner cards: src/partners.json, written first by tools/sync_partners.py).
 The source loads Geist from Google Fonts so the preview works; the built page uses the copies in site/fonts/ instead,
 so visitors' IP addresses aren't sent to Google."""
 import os
 SITE = 'https://rago-optimizer.com'  # public site URL
 ROOT = os.path.join(os.path.dirname(os.path.abspath(__file__)), '..')
+# Partner cards of the home page and of partners.html, from src/partners.json (stops here if an entry is incomplete)
+import subprocess, sys
+subprocess.run([sys.executable, os.path.join(ROOT, 'tools', 'sync_partners.py')], check=True)
 s = open(os.path.join(ROOT, 'src/page.html')).read()
 
 GOOGLE = '''<link rel="preconnect" href="https://fonts.googleapis.com">
@@ -22,7 +26,7 @@ s = s.replace(GOOGLE, LOCAL)
 import re, json
 cfg = lambda k: (lambda m: m.group(1) if m.group(1) is not None else m.group(2))(re.search(k + r':\s*(?:"([^"]*)"|([\d.]+))', s))
 BASE, CUR = cfg('accountBase').rstrip('/'), cfg('currency')
-PM, PY = float(cfg('priceMonth')), float(cfg('priceYear'))
+PM, PY, PL = float(cfg('priceMonth')), float(cfg('priceYear')), float(cfg('priceLifetime'))
 ISO = {'$': 'USD', '€': 'EUR', '£': 'GBP'}.get(CUR, 'USD')
 for path in ('/login', '/signup', '/affiliate', '/download', '/buy?interval=year'):
     s = s.replace(f'href="{path}"', f'href="{BASE}{path}"')
@@ -33,15 +37,24 @@ free_txt = f"{FREE} month{'' if FREE == 1 else 's'} free"
 s = re.sub(r'<b id="p-amt">[^<]*</b>', f'<b id="p-amt">{CUR}{jsround(PY / 12):.2f}</b>', s)
 s = re.sub(r'<div class="price-note" id="p-note">[^<]*</div>', f'<div class="price-note" id="p-note">Billed {CUR}{jsround(PY):.2f} yearly.{" " + free_txt + "." if FREE >= 1 else ""}</div>', s)
 s = re.sub(r'<span class="save" id="save"( hidden)?>[^<]*</span>', f'<span class="save" id="save"{"" if FREE >= 1 else " hidden"}>{free_txt} yearly</span>', s)
+s, n = re.subn(r'<b id="l-amt">[^<]*</b>', f'<b id="l-amt">{CUR}{PL:.2f}</b>', s)  # Lifetime: its button stays "Coming soon" without JavaScript
+assert n == 1, 'Lifetime price (l-amt) not found in page.html'
+# The account server sells Lifetime only at its own LIFETIME_PRICE: both must say the same amount
+srv = os.path.join(ROOT, '..', 'licensing', 'src', 'billing.js')
+if os.path.isfile(srv):
+    m = re.search(r"LIFETIME_PRICE = \{ amount: (\d+), currency: '(\w+)' \}", open(srv).read())
+    assert m and (int(m.group(1)), m.group(2)) == (round(PL * 100), ISO.lower()), \
+        f'priceLifetime ({CUR}{PL:.2f} in src/page.html) and LIFETIME_PRICE (licensing/src/billing.js) differ: change both'
 # FAQ without JavaScript: the same questions, rendered once here into a <noscript> block
 a = s.index('  const F = ['); b = s.index('\n  ];', a) + len('\n  ];')
 try:
-    faq = json.loads(subprocess.run(['node', '-e', f'const MONTHS_FREE = {FREE};' + s[a:b] + ';process.stdout.write(JSON.stringify(F))'],
+    faq = json.loads(subprocess.run(['node', '-e', f'const MONTHS_FREE = {FREE}; const CONFIG = {json.dumps({"currency": CUR, "priceLifetime": PL})};' + s[a:b] + ';process.stdout.write(JSON.stringify(F))'],
                                     capture_output=True, text=True, check=True).stdout)
     esc = lambda t: t.replace('&', '&amp;').replace('<', '&lt;').replace('>', '&gt;')
     DISCORD = cfg('discord')
     dlink = lambda h: re.sub(r'\bDiscord\b', f'<a href="{DISCORD}" rel="noopener">Discord</a>', h) if DISCORD else h
-    static = ''.join(f'<details class="fq-s"><summary>{esc(q)}</summary><p>{dlink(esc(x))}</p></details>' for q, x in faq)
+    # without JavaScript, Lifetime can't be bought from this page: its questions (marked "life") stay out
+    static = ''.join(f'<details class="fq-s"><summary>{esc(q)}</summary><p>{dlink(esc(x))}</p></details>' for q, x, *only in faq if not only)
     s = s.replace('<div class="faq rv" id="faqs"></div>', '<div class="faq rv" id="faqs"></div>\n    <noscript><div class="faq">' + static + '</div></noscript>', 1)
 except (OSError, subprocess.CalledProcessError) as e:
     print('warning: static FAQ skipped (node not available):', e)
@@ -129,3 +142,9 @@ assert n == 1, 'accountBase not found in tweaks.html'
 t = t.replace('href="https://account.rago-optimizer.com/', f'href="{BASE}/')  # the links baked for visitors without JavaScript
 open(os.path.join(ROOT, 'tweaks.html'), 'w').write(t)
 print('tweaks.html built')
+
+# Partners page (site/partners.html, from src/partners.html): local fonts too. Static: no account server.
+pa = open(os.path.join(ROOT, 'src/partners.html')).read()
+assert GOOGLE in pa, 'Google Fonts block changed in partners.html: update build.py'
+open(os.path.join(ROOT, 'partners.html'), 'w').write(pa.replace(GOOGLE, LOCAL))
+print('partners.html built')

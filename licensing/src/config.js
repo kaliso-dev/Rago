@@ -46,10 +46,12 @@ export function loadConfig(env = process.env) {
     // Trimmed: a space or a line break pasted with a key in Railway makes Stripe refuse it.
     stripeSecretKey: (env.STRIPE_SECRET_KEY || '').trim(),
     stripeWebhookSecret: (env.STRIPE_WEBHOOK_SECRET || '').trim(),
-    // Subscription prices (recurring). STRIPE_PRICE_ID alone = the old one-time price, sold as a lifetime license.
+    // Subscription prices (recurring). STRIPE_PRICE_ID = the old one-time price, no longer sold (Lifetime has its own below).
     stripePriceMonthly: (env.STRIPE_PRICE_MONTHLY || '').trim(),
     stripePriceYearly: (env.STRIPE_PRICE_YEARLY || '').trim(),
     stripePriceId: (env.STRIPE_PRICE_ID || '').trim(),
+    // Lifetime (2026-10-16): its own one-time price, Premium for life in one payment. Never one of the prices above.
+    stripePriceLifetime: (env.STRIPE_PRICE_LIFETIME || '').trim(),
 
     signingKeyPem: readPem(env.LICENSE_SIGNING_KEY),
     sessionSecret: env.SESSION_SECRET || '',
@@ -149,6 +151,14 @@ export function loadConfig(env = process.env) {
   if (cfg.stripeSecretKey && !/^(sk|rk)_(live|test)_/.test(cfg.stripeSecretKey)) cfg.warnings.push('STRIPE_SECRET_KEY is not a secret key: use the one starting with sk_live_ (or sk_test_), never the publishable key pk_.');
   if (placeholder(cfg.stripeWebhookSecret)) cfg.warnings.push('STRIPE_WEBHOOK_SECRET is still the example: Stripe webhooks will be rejected (step 6).');
   if (!cfg.subscriptions) cfg.warnings.push(`No subscription price: set STRIPE_PRICE_MONTHLY and STRIPE_PRICE_YEARLY. Until then /buy shows "Checkout opens soon" and nothing is sold${cfg.stripePriceId ? ' (the old one-time STRIPE_PRICE_ID is no longer sold: remove it)' : ''}.`);
+  // A subscription price (or the old one-time price) as the Lifetime price would sell the wrong thing: Lifetime stays off.
+  if (placeholder(cfg.stripePriceLifetime)) {
+    cfg.warnings.push('STRIPE_PRICE_LIFETIME is still the example: Lifetime is not sold. Put the price_ of its one-time price in Stripe.');
+    cfg.stripePriceLifetime = '';
+  } else if (cfg.stripePriceLifetime && [cfg.stripePriceMonthly, cfg.stripePriceYearly, cfg.stripePriceId].includes(cfg.stripePriceLifetime)) {
+    cfg.warnings.push('STRIPE_PRICE_LIFETIME is the id of another price (STRIPE_PRICE_MONTHLY, STRIPE_PRICE_YEARLY or the old STRIPE_PRICE_ID): Lifetime is not sold. Create its own one-time price in Stripe.');
+    cfg.stripePriceLifetime = '';
+  }
   if (placeholder(cfg.resendApiKey)) {
     cfg.warnings.push('RESEND_API_KEY is still the example: emails are printed to the logs instead of sent.');
     cfg.resendApiKey = '';
