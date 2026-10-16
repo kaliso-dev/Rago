@@ -298,7 +298,7 @@ export function dashboardPage(cfg, { user, license, device, notice, error, canRe
   const stepIndex = active && license.source === 'stripe' ? (device ? 4 : 2) : null;
   const support = supportLink(cfg);
   const buyUrl = pricingUrl(cfg);
-  const unlocks = `Premium unlocks all ${cfg.premiumTweaks} tweaks and every preset. The free version keeps ${cfg.freeTweaks}.`;
+  const unlocks = `Premium unlocks all ${cfg.premiumTweaks} tweaks and every preset. The free version opens ${cfg.freeTweaks}.`;
 
   const portalButton = (label, cls = 'btn-ghost') => (license?.stripe_customer_id && license.stripe_subscription_id
     ? html`<form method="post" action="/account/billing" class="inline" data-busy="Opening…"><button class="btn ${cls} btn-sm" type="submit">${ICON.card}<span>${label}</span></button></form>` : '');
@@ -468,7 +468,7 @@ export function dashboardPage(cfg, { user, license, device, notice, error, canRe
           <div><dt>Last seen</dt><dd>${ago(device.last_seen_at)}</dd></div>
         </dl>
         ${active && !canReset ? html`<p class="muted small sect-note">Changed PCs? ${support}.${nextResetAt ? html` You can free it yourself from ${fmtDate(nextResetAt)}.` : ''}</p>` : ''}`,
-      active && canReset ? html`<form method="post" action="/account/reset-device" class="inline" data-confirm="Free this license? Rago Optimizer signs out on ${device.name} and you can activate another PC. You can do this once every ${cfg.selfServiceResetDays} days.">
+      active && canReset ? html`<form method="post" action="/account/reset-device" class="inline" data-confirm="Free this license? At its next license check, Rago Optimizer signs out on ${device.name} and puts back its tweaks, and you can activate another PC. You can do this once every ${cfg.selfServiceResetDays} days.">
           <button class="btn btn-ghost btn-sm" type="submit">Use on another PC</button></form>` : '');
   };
 
@@ -515,7 +515,7 @@ export function dashboardPage(cfg, { user, license, device, notice, error, canRe
       badge = html`<span class="badge badge-off"><i></i>${offBadge()}</span>`;
       actions = portalButton('Invoices and billing');
     } else if (canceling) {
-      line = `Canceled. Premium keeps working until ${end ? fmtDate(end) : 'the end of the period'}, then Rago Optimizer goes back to the free version.`;
+      line = `Canceled. Premium keeps working until ${end ? fmtDate(end) : 'the end of the period'}, then Rago Optimizer goes back to the free version and puts back its tweaks.`;
       badge = html`<span class="badge badge-wait"><i></i>Ends ${end ? fmtDate(end) : 'soon'}</span>`;
       actions = html`${portalButton('Keep Premium', 'btn-primary')}`;
     } else {

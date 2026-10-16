@@ -29,7 +29,8 @@ pub enum Scope {
     /// fin de licence : tous les réglages, gratuits compris, que Rago Optimizer sait remettre tout seul
     LicenseEnd,
     /// seulement les réglages Premium de `LicenseEnd` : encore appliqués sans licence, ils disent que la licence a pris
-    /// fin sans que ce soit noté (jeton effacé ou plus valable)
+    /// fin sans que ce soit noté (jeton effacé ou plus valable). Sauf ceux qui étaient gratuits dans une version d'avant
+    /// (la souris) : un joueur du plan gratuit a pu les appliquer.
     Premium,
     /// désinstallation, « Tout annuler » : tous, même ceux qui n'ont pas d'annulation automatique
     All,
@@ -46,7 +47,7 @@ pub fn targets(ledger: &Ledger, scope: Scope, bundle: Option<&catalog::Bundle>) 
         .filter(|(id, a)| match scope {
             Scope::All => true,
             Scope::LicenseEnd => undoable(id, a, bundle),
-            Scope::Premium => !catalog::is_free(id) && undoable(id, a, bundle),
+            Scope::Premium => !catalog::is_free(id) && !catalog::was_free(id) && undoable(id, a, bundle),
         })
         .map(|(id, a)| (id, a.ts))
         .collect();
@@ -63,10 +64,14 @@ pub fn optifine_dir(a: Option<&Applied>) -> Option<PathBuf> {
 }
 
 /// Le moteur sait remettre ce réglage : sauvegarde de l'état d'avant, copie de l'annulation, annulation ou variante
-/// de retour arrière (du plan gratuit, ou des scripts Premium de `bundle`).
+/// de retour arrière (du plan gratuit, ou des scripts Premium de `bundle`). Le profil NVIDIA revient aux réglages du
+/// pilote (runner.rs).
 fn undoable(id: &str, a: &Applied, bundle: Option<&catalog::Bundle>) -> bool {
     if id == "mc_optifine" {
         return optifine_dir(Some(a)).is_some_and(|d| minecraft::status(&d).backups > 0);
+    }
+    if id == "nv_profile" {
+        return true;
     }
     a.backup
         || a.undo.as_ref().is_some_and(|u| u.full.is_some())
@@ -341,6 +346,16 @@ mod tests {
         assert!(checked >= 4, "{checked}");
     }
 
+    /// Le profil NVIDIA n'a ni sauvegarde ni script d'annulation : il est quand même remis à la déconnexion (réglages
+    /// du pilote par défaut), comme tous les autres.
+    #[test]
+    fn nvidia_profile_is_put_back_too() {
+        let mut l = Ledger::default();
+        l.set_applied("nv_profile", None, true, false, vec![], 1);
+        assert!(catalog::undo_of("nv_profile", None, None).is_none());
+        assert_eq!(targets(&l, Scope::LicenseEnd, None), vec!["nv_profile"]);
+    }
+
     /// OptiFine est remis dans le dossier où il a été appliqué, noté dans applied.json.
     #[test]
     fn optifine_is_put_back_where_it_was_applied() {
@@ -353,7 +368,7 @@ mod tests {
         assert!(targets(&l, Scope::LicenseEnd, None).is_empty(), "aucune copie d'optionsof.txt : rien à remettre");
         fs::create_dir_all(&dir).unwrap();
         fs::write(dir.join("optionsof.txt"), "ofFastRender:true\n").unwrap();
-        minecraft::apply(&dir, &std::collections::BTreeMap::from([("ofFastRender".to_string(), "false".to_string())]), 1).unwrap();
+        minecraft::apply(&dir, &std::collections::BTreeMap::from([("ofFastRender".to_string(), "false".to_string())]), 1, false).unwrap();
         assert_eq!(targets(&l, Scope::LicenseEnd, None), vec!["mc_optifine"]);
         let _ = fs::remove_dir_all(&dir);
     }
@@ -374,6 +389,13 @@ mod tests {
         assert_eq!(due(&dir, "expired", &free).map(|p| p.why), Some("signed_out".into()));
         assert_eq!(due(&dir, "active", &free), None, "reconnecté : rien à remettre");
         assert_eq!(Pending::load(&dir), None, "et la fin notée est oubliée");
+
+        // la souris, appliquée quand elle était gratuite (avant la 1.1.14) : le joueur n'a jamais eu Premium
+        let mut before = Ledger::default();
+        before.set_applied("win_gamemode", None, true, true, vec![], 1);
+        before.set_applied("in_mouse", None, true, true, vec![], 2);
+        assert_eq!(due(&dir, "none", &before), None, "souris d'une version d'avant : ses réglages restent");
+        assert_eq!(targets(&before, Scope::LicenseEnd, None), vec!["in_mouse", "win_gamemode"], "remise à la déconnexion");
 
         let mut premium = Ledger::default();
         premium.set_applied("net_x", None, true, true, vec![], 1);

@@ -491,6 +491,13 @@ def apply_audit(scripts):
     sub_lines(scripts, AUDIT.SUB_LINES_PLUS)
 
 
+# boucles dont le corps (mode MSI de la carte réseau) a été retiré par l'audit : le commentaire au-dessus, la ligne
+# « for ... & ( » et la « ) » qui la suit partent ensemble ; le mode MSI réseau reste dans son propre réglage (net_msi)
+EMPTY_BLOCKS = [
+    (('net_server:s3',), r'set "str=%%i" & \($'),
+]
+
+
 # wmic n'est plus installé par défaut sur Windows 11 24H2 (audit, 2026-10-07) : les boucles qui l'utilisaient ne
 # trouvaient plus rien. Même liste par PowerShell (Get-CimInstance), sans la ligne d'en-tête de wmic.
 WMIC_SUBS = [
@@ -565,6 +572,17 @@ def postprocess(modules, scripts):
     # ce qui supprime, boucles qui suppriment sans développement retardé ; nettoyages « set folder= » de cln_temp et
     # mc_optifine (2 + 2 x 2) récrits
     assert PATHS.apply(scripts) == 6, 'nettoyages set folder= de cln_temp et mc_optifine'
+    # blocs vides (RAG-68, demandé par Sofiene le 15/10 après le test de la 1.1.14) : cmd refuse « ( » suivi de « ) »
+    # (« ) était inattendu ») et arrête le script, les lignes d'après ne tournaient jamais
+    for keys, start in EMPTY_BLOCKS:
+        for key in keys:
+            for tid, v in variants_of(scripts, key):
+                body = scripts[tid][v]
+                sep = '\r\n' if '\r\n' in body else '\n'
+                lines = body.split(sep)
+                i = next(n for n, l in enumerate(lines) if re.search(start, l))
+                assert lines[i - 1].startswith('::') and lines[i + 1].strip() == ')', (key, lines[i - 1:i + 2])
+                scripts[tid][v] = sep.join(lines[:i - 1] + lines[i + 2:])
 
     tweaks = {t['id']: t for m in modules for sec in m['sections'] for t in sec['tweaks'] if 'id' in t}
     for tid, t in tweaks.items():

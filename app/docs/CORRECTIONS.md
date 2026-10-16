@@ -607,6 +607,54 @@ L'installeur efface les copies en clair d'une version d'avant ; `run\` est vidé
 Le catalogue de l'interface ne dit plus d'où vient chaque réglage dans les .bat, et « Ouvrir un dossier » n'ouvre que
 ceux de l'app.
 
+**Full network preset, préréglage 3 (RAG-68).** Demande de Sofiene (2026-10-15), après le test de la 1.1.14 relié au
+vrai serveur : le préréglage 3 (celui par défaut) s'arrêtait sur « ) était inattendu ». Une boucle du mode MSI réseau,
+vidée par l'audit, laissait un bloc `( )` vide, que cmd refuse : TCPNoDelay, TcpAckFrequency et TcpDelAckTicks par carte
+et les priorités DNS ne tournaient jamais. La boucle vide et son commentaire partent (`EMPTY_BLOCKS` de
+`build_catalog_v6.py`) ; le relevé du préréglage relève maintenant ces valeurs, donc l'annulation les remet. Le mode MSI
+réseau reste dans son propre réglage. Nouveau test : aucun bloc vide dans les scripts (`no_empty_cmd_block`). Les autres
+scripts ne changent pas ; les relevés d'autres réglages qui ont le même défaut (RAG-68) restent hors de cette version.
+
+**Plan gratuit : Windows, carte graphique et Restaurer seulement.** Demande de Sofiene (2026-10-15) : rien de Latence,
+Réseau, Hitreg ni Minecraft en gratuit. « Optimisation de la souris » (`in_mouse`, Hitreg) passe en Premium, avec son
+script et son annulation (paquet Premium) : 8 réglages ouverts, Mode jeu Windows, Couper Game DVR, Effets visuels, Plein
+écran et les 4 outils de Restaurer. « Par défaut » de Profil hitreg, Latence des images et File souris et clavier n'est
+plus ouvert sans licence, dans l'interface comme dans le moteur (`catalog::allowed`) ; seuls RBW Mod « Activé » et Mode
+jeu Rago « Désactivé » le restent (`free.json`, `reverts`). Ces variantes restent dans le paquet gratuit : l'annulation
+d'un réglage appliqué sans sauvegarde s'en sert. Un joueur du plan gratuit qui avait appliqué la souris la garde et peut
+l'éteindre : sans licence, elle ne déclenche pas la remise de fin de licence (`free.json`, `formerly` ; `reset::due`).
+Le site suit (`sync_app.py` lit le nombre de réglages gratuits dans `free.json`) : 8 réglages gratuits, 198 au total, et
+la FAQ ne dit plus que les réglages gratuits restent quand Premium prend fin.
+
+**Plan gratuit : trois réglages de confort de Windows en plus.** Demande de Sofiene (2026-10-16) : trois réglages utiles,
+mais pas ceux qui font acheter Premium. « Désactiver les notifications » (`win_notifications`), « Désactiver les bulles et
+suggestions » (`win_popups`) et « Désactiver Copilot et Recall » (`win_ai`) passent dans `free.json` : rien ne change pour
+FPS, latence, ping ni hitreg (le catalogue les dit « effet sur les FPS quasi nul »). Les trois ont une annulation
+automatique, n'ont pas de jumeau et ne sont dans aucun autre module. Leurs scripts passent dans le paquet gratuit
+(`embed_scripts.rs` lit `free.json`). 11 réglages ouverts ; le site suit (`sync_app.py`, `build.py`).
+
+**Déconnexion : plus de réglage « pas remis » sur une clé protégée.** Demande de Sofiene (2026-10-16), avec le journal
+d'une déconnexion sur une machine virtuelle Windows où tous les réglages possibles étaient appliqués : quatre réglages
+signalés comme pas désactivés (Latence avancée, Couper les diagnostics, Désactiver les journaux automatiques,
+Désactiver le suivi d'activité), sept valeurs en tout. Leurs clés sont protégées par Windows (dossier Réseau sous
+`HKCR\CLSID`, `Control\Diagnostics\Performance`, service DPS) ou par la protection contre les falsifications de Defender
+(`WMI\Autologger\DefenderApiLogger` et `DefenderAuditLogger`) : le script n'avait pas pu les changer non plus, elles
+avaient encore leur valeur d'avant, mais la remise les réécrivait avec l'accès complet à la clé et Windows refusait.
+`Sys::restore` (`backup.rs`) lit maintenant la valeur d'abord et n'écrit rien quand elle est déjà comme avant (tâches
+planifiées comprises). Il ouvre la clé avec le seul droit d'y écrire une valeur. Start ou DelayedAutostart d'un service
+dont la clé refuse l'écriture est remis par le gestionnaire de services (`sc config`, comme le script l'avait changé).
+Une valeur posée par Rago qui ne peut pas être supprimée est signalée, au lieu d'être comptée comme remise. La
+désinstallation et « Tout annuler » passent par la même remise. Tests : `values_already_back_need_no_write`,
+`service_start_maps_to_sc_config`, et sur Windows (CI) `restore_on_windows`.
+Deux réglages que la VM ne pouvait pas appliquer sont aussi remis. Profil pilote Rago (NVIDIA) n'avait aucune
+annulation, Profile Inspector ne sachant pas exporter le profil d'avant : son annulation importe maintenant un profil
+global vide, ce qui remet les réglages 3D globaux du pilote par défaut, comme « Restaurer » dans le panneau NVIDIA
+(sans pilote NVIDIA, rien à remettre). OptiFine ne gardait une copie que si optionsof.txt existait, et en reprenait une
+à chaque application : après un changement de variante, l'annulation remettait la variante d'avant. La copie d'avant
+Rago est maintenant gardée tant que le réglage est appliqué dans ce dossier ; sans fichier avant, une copie `.none`
+fait supprimer le fichier à la remise ; un optionsof.txt illisible n'est plus remplacé sans copie. Tests :
+`put_back_as_before_rago`, `nvidia_profile_is_put_back_too`.
+
 **Interface.** Plan gratuit : cadenas sur chaque onglet qui a un réglage réservé à Premium, Windows et Hitreg compris
 (avant, seulement sur un onglet sans aucun réglage gratuit). Mode jeu : « Désactivé depuis… » après Désactiver ou Tout
 annuler. Bouton « Tout annuler » dans la carte État (RAG-43), une seule Rago Optimizer à la fois, et les petites

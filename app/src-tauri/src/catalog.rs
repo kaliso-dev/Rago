@@ -71,12 +71,25 @@ fn pick<'a, T>(entry: &'a HashMap<String, T>, variant: Option<&str>) -> Option<&
 #[derive(serde::Deserialize)]
 struct Free {
     tweaks: Vec<String>,
+    #[serde(default)]
+    reverts: Vec<String>,
+    #[serde(default)]
+    formerly: Vec<String>,
+}
+
+fn free_json() -> Free {
+    serde_json::from_str(include_str!("../../src/data/free.json")).expect("free.json invalide")
 }
 
 /// Réglages du plan gratuit, partagés avec l'interface (src/data/free.json).
-static FREE: LazyLock<Vec<String>> = LazyLock::new(|| {
-    serde_json::from_str::<Free>(include_str!("../../src/data/free.json")).expect("free.json invalide").tweaks
-});
+static FREE: LazyLock<Vec<String>> = LazyLock::new(|| free_json().tweaks);
+
+/// Réglages Premium dont seule la variante de retour arrière est ouverte en gratuit (free.json, « reverts ») : RBW Mod
+/// « Activé » et mode jeu « Désactivé ». Ceux de Réseau et Hitreg restent fermés.
+static FREE_REVERTS: LazyLock<Vec<String>> = LazyLock::new(|| free_json().reverts);
+
+/// Réglages gratuits d'une version d'avant (free.json, « formerly ») : la souris (in_mouse) avant la 1.1.14.
+static FORMERLY_FREE: LazyLock<Vec<String>> = LazyLock::new(|| free_json().formerly);
 
 /// Variantes « retour arrière » (« id:variante ») marquées `revert` dans le catalogue : un joueur sans
 /// licence, ou dont l'abonnement a pris fin, doit pouvoir remettre Windows comme avant.
@@ -120,9 +133,15 @@ pub fn is_switch(id: &str) -> bool {
     KINDS.get(id).is_some_and(|k| k == "tweak")
 }
 
-/// Réglage du plan gratuit : il reste appliqué quand Premium prend fin.
+/// Réglage du plan gratuit : appliqué sans licence, il ne dit pas que Premium a pris fin (reset::due).
 pub fn is_free(id: &str) -> bool {
     FREE.iter().any(|f| f == id)
+}
+
+/// Réglage gratuit dans une version d'avant, Premium maintenant : un joueur du plan gratuit a pu l'appliquer. Encore
+/// appliqué sans licence, il ne dit pas non plus que Premium a pris fin.
+pub fn was_free(id: &str) -> bool {
+    FORMERLY_FREE.iter().any(|f| f == id)
 }
 
 /// Variante de retour arrière (« Default », RBW Mod « On »…) : l'appliquer revient à annuler le réglage.
@@ -193,13 +212,11 @@ pub fn twin_of(id: &str) -> Option<&'static str> {
     TWINS.get(id).map(String::as_str)
 }
 
-/// Sans licence active, seuls les réglages du plan gratuit, les variantes de retour arrière et
-/// l'installation de WMIC peuvent tourner.
+/// Sans licence active, seuls les réglages du plan gratuit, le retour arrière de RBW Mod et du mode jeu et
+/// l'installation de WMIC peuvent tourner. Les autres retours arrière restent dans le paquet gratuit : l'annulation d'un
+/// réglage appliqué sans sauvegarde s'en sert (runner.rs), et une annulation ne passe pas par ici.
 pub fn allowed(id: &str, variant: Option<&str>, premium: bool) -> bool {
-    premium
-        || id == "__wmic"
-        || FREE.iter().any(|f| f == id)
-        || variant.is_some_and(|v| REVERTS.iter().any(|r| *r == format!("{id}:{v}")))
+    premium || id == "__wmic" || FREE.iter().any(|f| f == id) || (FREE_REVERTS.iter().any(|f| f == id) && is_revert(id, variant))
 }
 
 /// Scripts internes à l'app, qui ne viennent pas du .bat.
@@ -276,12 +293,17 @@ mod tests {
             }
         }
         assert!(sealed_n > 150, "{sealed_n} scripts chiffrés");
-        assert!(script("in_mouse", None, None).is_some(), "plan gratuit sans licence");
+        assert!(script("win_gamedvr", None, None).is_some(), "plan gratuit sans licence");
+        // la souris : gratuite avant la 1.1.14, Premium depuis, son annulation comprise
+        assert!(script("in_mouse", None, None).is_none() && script("in_mouse", None, Some(&bundle)).is_some());
+        assert!(undo_of("in_mouse", None, None).is_none() && undo_of("in_mouse", None, Some(&bundle)).is_some());
         assert!(script("net_nagle", None, None).is_none(), "Premium sans licence");
         assert!(script("net_nagle", None, Some(&bundle)).is_some());
-        // réglages ajoutés en 1.1.6 : Premium, et chaque valeur touchée est relevée avant d'appliquer
+        // réglages ajoutés en 1.1.6 : chaque valeur touchée est relevée avant d'appliquer ; win_autoplay est Premium,
+        // win_ai gratuit depuis le 16 octobre 2026
+        assert!(script("win_autoplay", None, None).is_none(), "win_autoplay sans licence");
+        assert!(script("win_ai", None, None).is_some(), "win_ai dans le plan gratuit");
         for id in ["win_ai", "win_autoplay"] {
-            assert!(script(id, None, None).is_none(), "{id} sans licence");
             let p = probe(id, None, Some(&bundle)).expect(id);
             assert_eq!(p.matches("@@RAGO reg ").count(), script(id, None, Some(&bundle)).unwrap().matches("reg add").count(), "{id}");
         }
@@ -1154,17 +1176,61 @@ mod tests {
 
     #[test]
     fn free_plan() {
-        assert!(allowed("in_mouse", None, false) && allowed("rst_point", None, false) && allowed("__wmic", None, false));
+        assert!(allowed("win_gamedvr", None, false) && allowed("rst_point", None, false) && allowed("__wmic", None, false));
         assert!(!allowed("gpu_nvidia", None, false) && !allowed("in_advanced", None, false));
         assert!(allowed("gpu_nvidia", None, true));
-        // retours arrière ouverts en gratuit, pas les autres variantes
+        // Sofiene, 16 octobre 2026 : trois réglages de confort de Windows ouverts en gratuit
+        assert!(["win_notifications", "win_popups", "win_ai"].iter().all(|id| allowed(id, None, false)));
+        // la souris (Hitreg) : gratuite avant la 1.1.14
+        assert!(!allowed("in_mouse", None, false) && !is_free("in_mouse") && was_free("in_mouse"));
+        // retour arrière ouvert en gratuit pour RBW Mod et le mode jeu, pas les autres variantes
         assert!(allowed("game_mode", Some("off"), false) && !allowed("game_mode", Some("on"), false));
-        assert!(allowed("ping_hitreg", Some("default"), false) && !allowed("ping_hitreg", Some("hypixel"), false));
-        assert!(allowed("rbw_mode", Some("on"), false) && allowed("in_queue", Some("default"), false));
-        let catalog = include_str!("../../src/data/catalog.json");
-        for id in FREE.iter() {
-            assert!(catalog.contains(&format!("\"id\": \"{id}\"")), "{id} absent du catalogue");
+        assert!(allowed("rbw_mode", Some("on"), false) && !allowed("rbw_mode", Some("off"), false));
+        // Réseau et Hitreg : fermés en entier sans licence, retour arrière compris
+        for (id, v) in [("ping_hitreg", "default"), ("in_queue", "default"), ("in_frames", "default")] {
+            assert!(is_revert(id, Some(v)) && !allowed(id, Some(v), false) && allowed(id, Some(v), true), "{id}:{v}");
         }
+        assert!(!allowed("ping_hitreg", Some("hypixel"), false));
+        // Sofiene, 15 octobre 2026 : en gratuit, rien de Latence, Réseau, Hitreg ni Minecraft ; seulement des réglages de
+        // Windows et de la carte graphique, les outils de Restaurer, et le retour arrière de RBW Mod et du mode jeu
+        let catalog: serde_json::Value = serde_json::from_str(include_str!("../../src/data/catalog.json")).unwrap();
+        let (mut free, mut reverts) = (0, 0);
+        for m in catalog["modules"].as_array().unwrap() {
+            let module = m["id"].as_str().unwrap();
+            for t in m["sections"].as_array().unwrap().iter().flat_map(|s| s["tweaks"].as_array().unwrap()) {
+                // « ref » : un réglage d'un autre module, compté dans le sien
+                let Some(id) = t["id"].as_str() else { continue };
+                if is_free(id) {
+                    assert!(["windows", "gpu", "restore"].contains(&module), "{id} gratuit dans {module}");
+                    free += 1;
+                }
+                if FREE_REVERTS.iter().any(|f| f == id) {
+                    assert!(["rbw", "gamemode"].contains(&module) && revert_variant(id).is_some(), "{id} dans {module}");
+                    reverts += 1;
+                }
+                assert!(!(was_free(id) && is_free(id)), "{id}");
+            }
+        }
+        assert_eq!((free, reverts), (FREE.len(), FREE_REVERTS.len()), "chaque réglage de free.json est dans le catalogue");
+        assert!(FORMERLY_FREE.iter().all(|id| KINDS.contains_key(id)), "réglage d'avant absent du catalogue");
+    }
+
+    /// Aucun bloc vide (« ( » puis « ) ») dans les scripts : cmd s'arrête sur « ) était inattendu » et les lignes d'après
+    /// ne tournent jamais (préréglage 3 de Full network preset, RAG-68).
+    #[test]
+    fn no_empty_cmd_block() {
+        let mut checked = 0;
+        for (id, variants) in SCRIPTS.iter() {
+            for (v, body) in variants {
+                let lines: Vec<&str> = body.lines().map(str::trim).collect();
+                for w in lines.windows(2) {
+                    assert!(!(w[0].ends_with('(') && w[1].starts_with(')')), "{id}:{v} : bloc vide après « {} »", w[0]);
+                }
+                checked += 1;
+            }
+        }
+        assert!(checked > 200, "{checked}");
+        assert!(SCRIPTS["net_server"]["s3"].contains("TcpAckFrequency"));
     }
 
     #[test]

@@ -6,12 +6,15 @@ import free from "../data/free.json";
 
 /** Réglages ouverts sans licence. Le moteur Rust applique la même liste. */
 export const FREE = new Set<string>(free.tweaks);
-/** Variante « retour arrière » de chaque réglage qui en a une : ouverte en gratuit, pour remettre Windows comme avant. */
+/** Variante « retour arrière » de chaque réglage qui en a une, pour remettre Windows comme avant. */
 export const REVERTS = new Map<string, string>();
 for (const tw of tweaks.values()) {
   const v = tw.variants?.find((x) => x.revert);
   if (v) REVERTS.set(tw.id, v.id);
 }
+/** Réglages Premium dont seul le retour arrière est ouvert sans licence : RBW Mod et mode jeu (free.json, le moteur
+ * applique la même liste). Ceux de Réseau et Hitreg restent fermés. */
+export const FREE_REVERTS = new Set<string>(free.reverts);
 /** Modes qu'on allume avant de jouer et qu'on éteint après : deux boutons au lieu d'un interrupteur. */
 export const SESSION_TOGGLES = new Set(["game_mode", "rbw_mode", "win_gamemode"]);
 /** Retour arrière qui lance la variante `revert` en entier (moteur : catalog::revert_runs_script) : RBW Mod « Activé ». */
@@ -150,13 +153,16 @@ function useStoreValue() {
     );
   }, []);
   const premium = license?.state === "active";
-  /** Verrouillé en gratuit : tout sauf la liste gratuite et les réglages qui ont une variante de retour arrière. */
-  const isLocked = useCallback((id: string) => !premium && !FREE.has(id) && !REVERTS.has(id), [premium]);
-  /** En gratuit, seule la variante de retour arrière d'un réglage Premium est ouverte. */
-  const variantLocked = useCallback((id: string, v: string) => !premium && !FREE.has(id) && REVERTS.get(id) !== v, [premium]);
-  const openInFree = useCallback((id: string) => premium || FREE.has(id) || REVERTS.has(id), [premium]);
+  /** Verrouillé en gratuit : tout sauf la liste gratuite et les réglages dont le retour arrière est ouvert. */
+  const isLocked = useCallback((id: string) => !premium && !FREE.has(id) && !FREE_REVERTS.has(id), [premium]);
+  /** En gratuit, seule la variante de retour arrière de RBW Mod et du mode jeu est ouverte. */
+  const variantLocked = useCallback(
+    (id: string, v: string) => !premium && !FREE.has(id) && !(FREE_REVERTS.has(id) && REVERTS.get(id) === v),
+    [premium],
+  );
+  const openInFree = useCallback((id: string) => premium || FREE.has(id) || FREE_REVERTS.has(id), [premium]);
   /** Réglage Premium dont seul le retour arrière est gratuit : ni badge « Free », ni « Select safe tweaks ». */
-  const undoOnly = useCallback((id: string) => !premium && !FREE.has(id) && REVERTS.has(id), [premium]);
+  const undoOnly = useCallback((id: string) => !premium && !FREE.has(id) && FREE_REVERTS.has(id), [premium]);
 
   // Plan gratuit : une sélection faite avant la déconnexion ne garde que les réglages ouverts.
   useEffect(() => {
@@ -278,7 +284,7 @@ function useStoreValue() {
   const variantOf = useCallback(
     (tw: Tweak) => {
       if (!tw.variants?.length) return null;
-      if (!premium && !FREE.has(tw.id) && REVERTS.has(tw.id)) return REVERTS.get(tw.id)!;
+      if (!premium && !FREE.has(tw.id) && FREE_REVERTS.has(tw.id)) return REVERTS.get(tw.id)!;
       return variants[tw.id] ?? autoVariant(tw, sys) ?? null;
     },
     [variants, sys, premium],

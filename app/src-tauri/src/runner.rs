@@ -430,6 +430,15 @@ impl Runner {
             l.save();
             return Ok((0, None));
         }
+        if id == "nv_profile" {
+            let r = self.nvidia_defaults(ctx, emit)?;
+            if r.0 == 0 && !self.cancel.load(Ordering::SeqCst) {
+                let mut l = ctx.ledger.lock().unwrap();
+                l.release(id);
+                l.save();
+            }
+            return Ok(r);
+        }
         if entry.as_ref().is_some_and(|e| e.backup) {
             // retiré d'applied.json seulement une fois remis : une remise coupée reprend au lancement suivant
             let back = ctx.ledger.lock().unwrap().releasable(id);
@@ -491,6 +500,31 @@ impl Runner {
         Ok(r)
     }
 
+    /// Annulation du profil NVIDIA. Profile Inspector ne sait pas exporter le profil d'avant : les réglages 3D globaux
+    /// (Base Profile) reviennent à ceux du pilote, comme « Restaurer » dans le panneau de configuration NVIDIA. Un import
+    /// commence par remettre le profil par défaut ; celui-ci est vide, il n'y pose rien d'autre.
+    fn nvidia_defaults(&self, ctx: &Context, emit: &dyn Fn(String)) -> Result<(i32, Option<String>), String> {
+        let windir = std::env::var("SystemRoot").unwrap_or_else(|_| r"C:\Windows".into());
+        if !Path::new(&windir).join("System32").join("nvapi64.dll").exists() {
+            emit("- No NVIDIA driver on this PC anymore: nothing to put back".into());
+            return Ok((0, None));
+        }
+        let exe = ctx.resource_dir.join("nvidiaProfileInspector.exe");
+        if !exe.exists() {
+            return Err("NVIDIA Profile Inspector is missing from the app folder".into());
+        }
+        fs::create_dir_all(&ctx.run_dir).map_err(|e| e.to_string())?;
+        let nip = ctx.run_dir.join("nvidia-defaults.nip");
+        let bytes: Vec<u8> = [0xFF, 0xFE].into_iter().chain(NVIDIA_DEFAULTS.encode_utf16().flat_map(u16::to_le_bytes)).collect();
+        fs::write(&nip, bytes).map_err(|e| e.to_string())?;
+        emit("- Putting the NVIDIA global 3D settings back to the driver defaults".into());
+        let mut cmd = shell::hidden(&exe.to_string_lossy());
+        cmd.arg(&nip).arg("-silentImport");
+        let r = self.stream(cmd, emit);
+        let _ = fs::remove_file(&nip);
+        r
+    }
+
     fn run_batch(&self, ctx: &Context, name: &str, variant: Option<&str>, script: &str, emit: &dyn Fn(String)) -> Result<(i32, Option<String>), String> {
         // plan d'alimentation, profil NVIDIA : écrits en clair dans run\ le temps du script seulement (assets.rs)
         let (staged, script) = assets::stage(&ctx.run_dir, script)?;
@@ -522,7 +556,9 @@ impl Runner {
                     .and_then(|v| serde_json::from_value(v.clone()).ok())
                     .ok_or("Missing OptiFine values")?;
                 emit(format!("- Folder: {}", dir.display()));
-                let msg = minecraft::apply(&dir, &values, now_ms())?;
+                // déjà appliqué dans ce dossier (autre variante) : la copie d'avant Rago reste celle que l'annulation remet
+                let keep = ctx.ledger.lock().unwrap().tweaks.get("mc_optifine").and_then(|a| crate::reset::optifine_dir(Some(a))) == Some(dir.clone());
+                let msg = minecraft::apply(&dir, &values, now_ms(), keep)?;
                 emit(format!("- {msg}"));
                 Ok((0, None))
             }
@@ -587,6 +623,11 @@ struct TwinRun {
     first: String,
     probes: Option<Vec<String>>,
 }
+
+/// Profil vide pour Profile Inspector (même forme que extremelatencylow.nip) : son import remet les réglages 3D
+/// globaux du pilote NVIDIA par défaut.
+const NVIDIA_DEFAULTS: &str = "<?xml version=\"1.0\" encoding=\"utf-16\"?>\r\n<ArrayOfProfile>\r\n  <Profile>\r\n    \
+<ProfileName>Base Profile</ProfileName>\r\n    <Executeables />\r\n    <Settings />\r\n  </Profile>\r\n</ArrayOfProfile>\r\n";
 
 /// Élément remis, pour le journal.
 fn describe(p: &Probe) -> String {
