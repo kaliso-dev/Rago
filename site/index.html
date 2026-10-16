@@ -395,7 +395,8 @@ img.av{object-fit:cover;padding:0}
 /* Pricing */
 .bill{display:flex;justify-content:center;align-items:center;gap:12px;margin-bottom:48px;flex-wrap:wrap}
 .save{font-size:12px;font-weight:600;color:var(--ok);background:rgba(61,220,151,.1);padding:6px 10px;border-radius:var(--r-full)}
-.plans{display:grid;grid-template-columns:minmax(0,.85fr) minmax(0,1.15fr);gap:20px;align-items:center;max-width:1080px;margin-inline:auto}
+/* Free, Premium (the recommended one, wider) and Lifetime side by side; Premium first on tablets and phones */
+.plans{display:grid;grid-template-columns:minmax(0,.9fr) minmax(0,1.2fr) minmax(0,.9fr);gap:20px;align-items:center;max-width:1240px;margin-inline:auto}
 .plan{border-radius:var(--r-xl);background:var(--ink-2);border:1px solid var(--l1);padding:clamp(26px,3vw,40px);display:flex;flex-direction:column;gap:18px;min-width:0}
 .plan h3{font-size:20px;letter-spacing:-.025em}
 .plan .sub{font-size:13.5px;color:var(--t3);margin-top:-10px}
@@ -416,7 +417,11 @@ img.av{object-fit:cover;padding:0}
 .rec{position:absolute;top:-14px;left:50%;transform:translateX(-50%);padding:7px 14px;border-radius:var(--r-full);background:var(--red);color:var(--ink);font-size:12px;font-weight:600;white-space:nowrap;z-index:2}
 .lic{display:flex;gap:10px;align-items:center;padding:12px 14px;border-radius:var(--r-md);background:var(--ink);border:1px solid var(--l1);font-size:12.5px;color:var(--t2)}
 .lic svg{width:16px;height:16px;flex:none;fill:none;stroke:currentColor;stroke-width:1.6}
-.cmp-wrap{max-width:1080px;margin:64px auto 0;overflow-x:auto;border-radius:var(--r-xl);border:1px solid var(--l1);background:var(--ink-2)}
+/* Lifetime: "Coming soon" (no link) until the account server says its Stripe price is the one shown here */
+.btn.js-lifetime:not([href]){cursor:default;color:var(--t3);background:none;box-shadow:inset 0 0 0 1px var(--l1);transform:none}
+/* What only applies once Lifetime can be bought (.life-on: FAQ, table, checkout line) or until then (.life-off) */
+:root:not(.life) .life-on,:root.life .life-off{display:none!important}
+.cmp-wrap{max-width:1240px;margin:64px auto 0;overflow-x:auto;border-radius:var(--r-xl);border:1px solid var(--l1);background:var(--ink-2)}
 .cmp{width:100%;border-collapse:collapse;font-size:13.5px;min-width:520px}
 .cmp th,.cmp td{padding:15px 22px;text-align:left;border-bottom:1px solid var(--l1)}
 .cmp tr:last-child td{border-bottom:0}
@@ -435,7 +440,7 @@ img.av{object-fit:cover;padding:0}
 .lk svg{width:13px;height:13px}
 .plan li.locked{color:var(--t3)}
 .plan li.locked svg{color:var(--t3)}
-.micro a{color:var(--t2);text-decoration:underline;text-underline-offset:3px}
+.micro a{color:var(--t2);text-decoration:underline;text-underline-offset:3px;white-space:nowrap}
 .micro a:hover{color:var(--t1)}
 /* FAQ: animated accordion */
 .faq{max-width:820px;margin-inline:auto;display:grid;gap:10px}
@@ -458,6 +463,22 @@ img.av{object-fit:cover;padding:0}
 .fq .ans p{padding:0 22px 22px;color:var(--t2);font-size:14px;max-width:62ch;opacity:0;transform:translateY(-6px);transition:opacity .35s,transform .45s var(--out)}
 .fq .ans a{color:var(--t1);text-decoration:underline;text-underline-offset:3px}
 .fq.open .ans p{opacity:1;transform:none;transition-delay:.1s}
+
+/* Partners: one card per server (written from src/partners.json by tools/sync_partners.py), same card on partners.html */
+.pts{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px;max-width:1200px;margin-inline:auto}
+.pt{position:relative;display:flex;align-items:center;gap:16px;min-width:0;padding:18px 20px;border-radius:var(--r-lg);background:var(--ink-2);border:1px solid var(--l1);color:var(--t1);text-decoration:none;isolation:isolate;overflow:hidden;transition:transform .4s var(--out),border-color .3s}
+.pt::after{content:"";position:absolute;inset:0;z-index:-1;background:radial-gradient(260px circle at var(--mx,50%) var(--my,0%),rgba(255,59,48,.11),transparent 60%);opacity:0;transition:opacity .3s;pointer-events:none}
+.pt:hover{transform:translateY(-2px);border-color:var(--l3)}
+.pt:hover::after,.pt:focus-visible::after{opacity:1}
+.pt picture{display:block;flex:none}
+.pt img{width:56px;height:56px;flex:none;border-radius:var(--r-md);background:var(--ink-3);border:1px solid var(--l1);object-fit:cover}
+.pt-t{min-width:0}
+.pt b{display:block;font-size:16px;font-weight:600;letter-spacing:-.02em;line-height:1.3;overflow-wrap:anywhere;text-wrap:balance}
+.pt small{display:inline-flex;align-items:center;gap:6px;font-size:13px;color:var(--t2);transition:color .16s}
+.pt small svg{width:13px;height:13px;transition:transform .24s var(--out)}
+.pt:hover small{color:var(--t1)}
+.pt:hover small svg{transform:translateX(2px)}
+.sr-only{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0}
 
 /* Affiliate */
 .aff{max-width:1200px;margin-inline:auto;border-radius:var(--r-xl);border:1px solid var(--l1);background:radial-gradient(80% 120% at 100% 0%,rgba(255,59,48,.12),transparent 60%),var(--ink-2);padding:clamp(28px,4vw,64px);display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:clamp(28px,4vw,72px);align-items:center}
@@ -539,8 +560,10 @@ footer.foot p{max-width:80ch}
   .stage-note{display:none}
   .st{min-height:75vh;justify-content:flex-end;padding-block:0 170px}
   .feat{grid-template-columns:1fr}
-  .plans{grid-template-columns:1fr;max-width:620px}
+  .plans{grid-template-columns:repeat(2,minmax(0,1fr));max-width:900px}
   .pro{order:-1}
+  .plan-free{order:1;grid-column:1/-1;justify-self:center;width:100%;max-width:620px}
+  .pts{grid-template-columns:repeat(2,minmax(0,1fr));max-width:900px}
   .aff{grid-template-columns:1fr}
   .xp{grid-template-columns:1fr} .xp-tabs{display:flex;overflow-x:auto;scrollbar-width:none;border-radius:var(--r-full);padding:6px} .xp-tabs::-webkit-scrollbar{display:none} .xt{flex:none;height:40px;border-radius:var(--r-full)} .xt .bar{bottom:4px}
 }
@@ -548,6 +571,8 @@ footer.foot p{max-width:80ch}
   .nav{display:none} .top-cta{margin-left:auto} .menu-btn{display:flex}
 }
 @media (max-width:760px){
+  .plans{grid-template-columns:1fr;max-width:620px} .plan-free{grid-column:auto;order:0}
+  .pts{grid-template-columns:1fr;max-width:620px}
   .cmp{min-width:0;font-size:12.5px} .cmp th,.cmp td{padding:12px 12px}
   .top{padding-inline:12px}
   .top-in{padding-left:18px}
@@ -626,7 +651,7 @@ footer.foot p{max-width:80ch}
   .fade,.menu,.xr,.cue-m,.cue-t{animation-name:fadeIn}
   .rv{transition:opacity .6s var(--out)}
   .js .rv.pre{transform:none;filter:none;opacity:0}
-  .hub,.hub:hover,.rq:hover{transform:none}
+  .hub,.hub:hover,.rq:hover,.pt,.pt:hover{transform:none}
   .xr{opacity:1;transform:none;animation-fill-mode:both}
   .fr.in{transform:none}
   .rev{mask-image:none;-webkit-mask-image:none}
@@ -677,7 +702,7 @@ footer.foot p{max-width:80ch}
   </div>
   <div class="menu" id="menu" hidden>
     <nav aria-label="Menu">
-      <a href="#why">Why Rago</a><a href="#features">Features</a><a href="tweaks.html">Tweaks</a><a class="js-rev" href="#reviews" hidden>Reviews</a><a href="#pricing">Pricing</a><a href="#faq">FAQ</a><a class="js-affiliate" href="https://account.rago-optimizer.com/affiliate">Affiliate program</a>
+      <a href="#why">Why Rago</a><a href="#features">Features</a><a href="tweaks.html">Tweaks</a><a class="js-rev" href="#reviews" hidden>Reviews</a><a href="#pricing">Pricing</a><a href="#faq">FAQ</a><a href="#partners">Partners</a><a class="js-affiliate" href="https://account.rago-optimizer.com/affiliate">Affiliate program</a>
     </nav>
     <div class="menu-cta"><a class="btn btn-ghost js-account" href="https://account.rago-optimizer.com/login">Sign in</a><a class="btn btn-ghost js-signup" href="https://account.rago-optimizer.com/signup">Create account</a></div>
   </div>
@@ -713,11 +738,11 @@ footer.foot p{max-width:80ch}
           <div class="main">
             <div class="mhead">
               <div><span class="ovl">02 / Latency</span><div class="mh">Latency</div><p>Timers, priorities, CPU, memory and power.</p></div>
-              <div class="mtools"><span class="mono" id="msel">0 of 82 on</span><button class="mini" type="button" id="selall">Select safe tweaks</button></div>
+              <div class="mtools"><span class="mono" id="msel">0 of 83 on</span><button class="mini" type="button" id="selall">Select safe tweaks</button></div>
             </div>
             <div class="stitle"><span>Mouse and keyboard</span><span class="mono">7</span></div>
             <div class="tlist" id="tl1"><div class="tw" data-name="Disable mouse acceleration"><div class="tw-m"><div class="tw-t"><span>Disable mouse acceleration</span><span class="bdg"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"></path><path d="M3 3v5h5"></path></svg>Restart</span></div><p>Turns off "Enhance pointer precision": the cursor moves the same distance however fast you move the mouse.</p></div><i class="sw" aria-hidden="true"></i></div><div class="tw" data-name="1:1 movement, no smoothing"><div class="tw-m"><div class="tw-t"><span>1:1 movement, no smoothing</span><span class="bdg"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"></path><path d="M3 3v5h5"></path></svg>Restart</span></div><p>Turns off "Enhance pointer precision" and sets Windows pointer speed back to notch 6/11 for 1:1 movement.</p></div><i class="sw" aria-hidden="true"></i></div></div>
-            <div class="stitle"><span>Power</span><span class="mono">20</span></div>
+            <div class="stitle"><span>Power</span><span class="mono">21</span></div>
             <div class="tlist" id="tl2"><div class="tw" data-name="Additional power settings"><div class="tw-m"><div class="tw-t"><span>Additional power settings</span><span class="bdg"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"></path><path d="M3 3v5h5"></path></svg>Restart</span></div><p>Turns off the slowing of background apps and power estimation, plus a few poorly documented CPU settings.</p></div><i class="sw" aria-hidden="true"></i></div><div class="tw" data-name="Disable Power Throttling"><div class="tw-m"><div class="tw-t"><span>Disable Power Throttling</span><span class="bdg"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"></path><path d="M3 3v5h5"></path></svg>Restart</span></div><p>Windows stops slowing down apps it considers in the background to save power.</p></div><i class="sw" aria-hidden="true"></i></div></div>
           </div>
           <div class="abar" id="abar"><span class="n" id="abn">0</span><div><div class="l" id="abl">tweaks selected</div><div class="s" id="abs"></div></div><div class="acts"><button class="btn btn-ghost clr" type="button" id="abclr">Clear</button><button class="btn btn-red go" type="button" id="apply">Apply</button></div></div>
@@ -792,7 +817,7 @@ footer.foot p{max-width:80ch}
         <div class="restore-demo"><svg class="ring" id="ring" viewBox="0 0 64 64"><circle class="bg" cx="32" cy="32" r="28"/><circle class="fg" cx="32" cy="32" r="28"/></svg><div><b>Restore point created</b><span>Restore Windows with System Restore.</span></div></div>
       </div>
     </div>
-    <p class="more-tw rv"><a class="rev-all" href="tweaks.html">All 198 tweaks, explained one by one<svg><use href="#i-arrow"/></svg></a></p>
+    <p class="more-tw rv"><a class="rev-all" href="tweaks.html">All 199 tweaks, explained one by one<svg><use href="#i-arrow"/></svg></a></p>
   </section>
 
   <section class="sec band" id="how" style="padding-top:0">
@@ -803,9 +828,9 @@ footer.foot p{max-width:80ch}
     <div class="how" id="howwrap">
       <div class="how-line" aria-hidden="true"><i id="howline"></i></div>
       <div class="hs"><span class="ic"><svg viewBox="0 0 24 24"><path d="M12 3v12M7 10l5 5 5-5M4 20h16"/></svg></span><h3>Download free</h3><p>Windows 10 and 11. No account needed.</p></div>
-      <div class="hs"><span class="ic"><svg viewBox="0 0 24 24"><rect x="5" y="10" width="14" height="10" rx="3"/><path d="M8 10V7a4 4 0 0 1 8 0v3"/></svg></span><h3>Try the free tweaks</h3><p>8 tweaks open, the rest shown with a lock.</p></div>
+      <div class="hs"><span class="ic"><svg viewBox="0 0 24 24"><rect x="5" y="10" width="14" height="10" rx="3"/><path d="M8 10V7a4 4 0 0 1 8 0v3"/></svg></span><h3>Try the free tweaks</h3><p>9 tweaks open, the rest shown with a lock.</p></div>
       <div class="hs"><span class="ic"><svg viewBox="0 0 24 24"><rect x="2" y="5" width="20" height="14" rx="3"/><path d="M2 10h20M6 15h4"/></svg></span><h3>Go Premium</h3><p>Pay with Stripe, then create your account.</p></div>
-      <div class="hs"><span class="ic"><svg viewBox="0 0 24 24"><path d="M13 2L4 14h7l-1 8 9-12h-7z"/></svg></span><h3>Sign in and unlock</h3><p>All 198 tweaks. Apply, restart, play.</p></div>
+      <div class="hs"><span class="ic"><svg viewBox="0 0 24 24"><path d="M13 2L4 14h7l-1 8 9-12h-7z"/></svg></span><h3>Sign in and unlock</h3><p>All 199 tweaks. Apply, restart, play.</p></div>
     </div>
   </section>
 
@@ -835,14 +860,14 @@ footer.foot p{max-width:80ch}
       <span class="save" id="save">6 months free yearly</span>
     </div>
     <div class="plans">
-      <div class="plan rv">
+      <div class="plan plan-free rv">
         <h3>Free</h3>
         <p class="sub">The app, with the essentials open.</p>
         <div class="price"><b>$0</b><small>forever</small></div>
         <div class="price-note">No license needed</div>
         <ul id="free-list">
           <li><svg><use href="#i-check"/></svg>The full Rago Optimizer app</li>
-          <li><svg><use href="#i-check"/></svg>4 Windows tweaks: Game Mode, Game DVR off, visual effects, fullscreen</li>
+          <li><svg><use href="#i-check"/></svg>5 tweaks: mouse, Windows Game Mode, Game DVR off, visual effects, fullscreen</li>
           <li><svg><use href="#i-check"/></svg>The 4 Restore tools</li>
           <li><svg><use href="#i-check"/></svg>Live RAM, GPU and CPU usage</li>
           <li class="locked"><svg><use href="#i-lock"/></svg>Everything else, presets included, locked</li>
@@ -858,7 +883,7 @@ footer.foot p{max-width:80ch}
           <div class="price"><b id="p-amt">$2.50</b><small id="p-per">/ month</small></div>
           <div class="price-note" id="p-note">Billed $29.99 yearly. 6 months free.</div>
           <ul>
-            <li><svg><use href="#i-check"/></svg>All 198 tweaks unlocked</li>
+            <li><svg><use href="#i-check"/></svg>All 199 tweaks unlocked</li>
             <li><svg><use href="#i-check"/></svg>5 one-click presets</li>
             <li><svg><use href="#i-check"/></svg>Minecraft, RBW Mod, Game mode and Expert mode</li>
             <li><svg><use href="#i-check"/></svg>New tweaks from future versions</li>
@@ -869,11 +894,26 @@ footer.foot p{max-width:80ch}
           <p class="micro">Secure checkout with Stripe · Cancel anytime · <a href="refunds.html">Refund policy</a></p>
         </div>
       </div>
+      <div class="plan rv" id="lifetime">
+        <h3>Lifetime</h3>
+        <p class="sub">Premium, paid once.</p>
+        <div class="price"><b id="l-amt">$59.99</b><small>once</small></div>
+        <div class="price-note">One-time payment. No renewals.</div>
+        <ul>
+          <li><svg><use href="#i-check"/></svg>Everything in Premium</li>
+          <li><svg><use href="#i-check"/></svg>Every tweak and the 5 presets</li>
+          <li><svg><use href="#i-check"/></svg>New tweaks from future versions</li>
+          <li><svg><use href="#i-check"/></svg>The Premium channel on Discord, after purchase</li>
+        </ul>
+        <div class="lic"><svg viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="12" rx="3"/><path d="M8 20h8M12 16v4"/></svg>One license, one PC.</div>
+        <a class="btn btn-ghost js-lifetime" role="link" aria-disabled="true">Coming soon</a>
+        <p class="micro"><span class="life-on">Secure checkout with Stripe · </span>One-time payment · <a href="refunds.html">Refund policy</a></p>
+      </div>
     </div>
     <div class="cmp-wrap rv">
       <table class="cmp">
         <thead><tr><th>What you get</th><th>Free</th><th class="pc">Premium</th></tr></thead>
-        <tbody id="cmp"><tr><td>Rago Optimizer app and interface</td><td><span class="yes"><svg viewBox="0 0 16 16"><use href="#i-check"></use></svg></span></td><td class="pcol"><span class="yes"><svg viewBox="0 0 16 16"><use href="#i-check"></use></svg></span></td></tr><tr><td>Tweaks unlocked</td><td><span class="txt">8 of 198</span></td><td class="pcol"><span class="txt">All 198</span></td></tr><tr><td>Restore point before advanced tweaks</td><td><span class="yes"><svg viewBox="0 0 16 16"><use href="#i-check"></use></svg></span></td><td class="pcol"><span class="yes"><svg viewBox="0 0 16 16"><use href="#i-check"></use></svg></span></td></tr><tr><td>Network, latency, hitreg and graphics card tweaks</td><td><span class="lk" title="Locked in Free"><svg viewBox="0 0 16 16"><use href="#i-lock"></use></svg></span></td><td class="pcol"><span class="yes"><svg viewBox="0 0 16 16"><use href="#i-check"></use></svg></span></td></tr><tr><td>Presets: Minecraft PvP, Max FPS, Low latency, Laptop, Privacy</td><td><span class="lk" title="Locked in Free"><svg viewBox="0 0 16 16"><use href="#i-lock"></use></svg></span></td><td class="pcol"><span class="yes"><svg viewBox="0 0 16 16"><use href="#i-check"></use></svg></span></td></tr><tr><td>Minecraft, RBW Mod, Game mode and Expert mode</td><td><span class="lk" title="Locked in Free"><svg viewBox="0 0 16 16"><use href="#i-lock"></use></svg></span></td><td class="pcol"><span class="yes"><svg viewBox="0 0 16 16"><use href="#i-check"></use></svg></span></td></tr><tr><td>Live RAM, GPU and CPU usage</td><td><span class="yes"><svg viewBox="0 0 16 16"><use href="#i-check"></use></svg></span></td><td class="pcol"><span class="yes"><svg viewBox="0 0 16 16"><use href="#i-check"></use></svg></span></td></tr><tr><td>New tweaks from future versions</td><td><span class="lk" title="Locked in Free"><svg viewBox="0 0 16 16"><use href="#i-lock"></use></svg></span></td><td class="pcol"><span class="yes"><svg viewBox="0 0 16 16"><use href="#i-check"></use></svg></span></td></tr><tr><td>Undo the tweaks you applied</td><td><span class="yes"><svg viewBox="0 0 16 16"><use href="#i-check"></use></svg></span></td><td class="pcol"><span class="yes"><svg viewBox="0 0 16 16"><use href="#i-check"></use></svg></span></td></tr><tr><td>Premium Discord channel</td><td><span class="no"><svg viewBox="0 0 16 16"><path d="M4.5 8h7"></path></svg></span></td><td class="pcol"><span class="yes"><svg viewBox="0 0 16 16"><use href="#i-check"></use></svg></span></td></tr><tr><td>License</td><td><span class="txt">Not needed</span></td><td class="pcol"><span class="txt">1 PC per license</span></td></tr></tbody>
+        <tbody id="cmp"><tr><td>Rago Optimizer app and interface</td><td><span class="yes"><svg viewBox="0 0 16 16"><use href="#i-check"></use></svg></span></td><td class="pcol"><span class="yes"><svg viewBox="0 0 16 16"><use href="#i-check"></use></svg></span></td></tr><tr><td>Tweaks unlocked</td><td><span class="txt">9 of 199</span></td><td class="pcol"><span class="txt">All 199</span></td></tr><tr><td>Restore point before advanced tweaks</td><td><span class="yes"><svg viewBox="0 0 16 16"><use href="#i-check"></use></svg></span></td><td class="pcol"><span class="yes"><svg viewBox="0 0 16 16"><use href="#i-check"></use></svg></span></td></tr><tr><td>Network, latency and graphics card tweaks</td><td><span class="lk" title="Locked in Free"><svg viewBox="0 0 16 16"><use href="#i-lock"></use></svg></span></td><td class="pcol"><span class="yes"><svg viewBox="0 0 16 16"><use href="#i-check"></use></svg></span></td></tr><tr><td>Hitreg tweaks</td><td><span class="txt">Mouse only</span></td><td class="pcol"><span class="yes"><svg viewBox="0 0 16 16"><use href="#i-check"></use></svg></span></td></tr><tr><td>Presets: Minecraft PvP, Max FPS, Low latency, Laptop, Privacy</td><td><span class="lk" title="Locked in Free"><svg viewBox="0 0 16 16"><use href="#i-lock"></use></svg></span></td><td class="pcol"><span class="yes"><svg viewBox="0 0 16 16"><use href="#i-check"></use></svg></span></td></tr><tr><td>Minecraft, RBW Mod, Game mode and Expert mode</td><td><span class="lk" title="Locked in Free"><svg viewBox="0 0 16 16"><use href="#i-lock"></use></svg></span></td><td class="pcol"><span class="yes"><svg viewBox="0 0 16 16"><use href="#i-check"></use></svg></span></td></tr><tr><td>Live RAM, GPU and CPU usage</td><td><span class="yes"><svg viewBox="0 0 16 16"><use href="#i-check"></use></svg></span></td><td class="pcol"><span class="yes"><svg viewBox="0 0 16 16"><use href="#i-check"></use></svg></span></td></tr><tr><td>New tweaks from future versions</td><td><span class="lk" title="Locked in Free"><svg viewBox="0 0 16 16"><use href="#i-lock"></use></svg></span></td><td class="pcol"><span class="yes"><svg viewBox="0 0 16 16"><use href="#i-check"></use></svg></span></td></tr><tr><td>Undo the tweaks you applied</td><td><span class="yes"><svg viewBox="0 0 16 16"><use href="#i-check"></use></svg></span></td><td class="pcol"><span class="yes"><svg viewBox="0 0 16 16"><use href="#i-check"></use></svg></span></td></tr><tr><td>Premium Discord channel</td><td><span class="no"><svg viewBox="0 0 16 16"><path d="M4.5 8h7"></path></svg></span></td><td class="pcol"><span class="yes"><svg viewBox="0 0 16 16"><use href="#i-check"></use></svg></span></td></tr><tr><td>How you pay</td><td><span class="txt">Free</span></td><td class="pcol"><span class="txt life-off">Monthly or yearly</span><span class="txt life-on">Monthly, yearly or once</span></td></tr><tr><td>License</td><td><span class="txt">Not needed</span></td><td class="pcol"><span class="txt">1 PC per license</span></td></tr></tbody>
       </table>
     </div>
   </section>
@@ -881,7 +921,26 @@ footer.foot p{max-width:80ch}
   <section class="sec band" id="faq" style="padding-top:0">
     <div class="head rv"><span class="eyebrow">FAQ</span><h2>Before you buy.</h2></div>
     <div class="faq rv" id="faqs"></div>
-    <noscript><div class="faq"><details class="fq-s"><summary>Can I get banned for using Rago?</summary><p>Rago doesn't modify Minecraft and injects nothing into the game. It changes Windows and network settings, the same ones you could change by hand. Some servers screenshare players and check Windows logs. A few Advanced tweaks turn off Windows services staff look at, and each one says so. Turn on RBW Mod and restart your PC before a screenshare: it brings those services back.</p></details><details class="fq-s"><summary>Will it lower my ping?</summary><p>It depends where your ping comes from. Distance to the server can't be fixed by any software. Rago cuts the delay your PC adds and makes your timing steadier, which is what matters most for hits.</p></details><details class="fq-s"><summary>What's the difference between Free and Premium?</summary><p>Both are the same Rago Optimizer app. Free opens 8 tweaks, Restore included, and shows everything else with a lock. Both show your live RAM, GPU and CPU usage. Premium unlocks all 198 tweaks, the 5 presets and the new tweaks of future versions. In both, you can undo the tweaks you applied.</p></details><details class="fq-s"><summary>Does it work on laptops?</summary><p>Yes. Rago runs on any Windows 10 or 11 PC, desktop or laptop. Premium includes a Laptop preset: gains without hurting battery life or heat.</p></details><details class="fq-s"><summary>Does it work on Mac or Linux?</summary><p>No. Rago Optimizer tunes Windows, so it only runs on Windows 10 and 11.</p></details><details class="fq-s"><summary>Monthly or yearly?</summary><p>Same app either way. Paying yearly works out to 6 months free compared with paying monthly. You can cancel anytime from your account. When Premium ends, Rago puts back the settings changed by its tweaks, free ones included.</p></details><details class="fq-s"><summary>How do I join the Premium channel on Discord?</summary><p>After you buy, your account page links to our Discord. Open a ticket there with the email of your Rago account. Our staff checks your purchase and gives you the Premium role. It isn't automatic, so it can take a little while.</p></details><details class="fq-s"><summary>Can I use my license on more than one PC?</summary><p>No. Premium works on one device per license. If you change PCs, open a ticket on our Discord (linked from your account page) and support moves your license.</p></details><details class="fq-s"><summary>What if I don't like a change?</summary><p>Turn the tweak off and apply: Rago Optimizer puts those Windows settings back the way they were. One-time actions, like removing apps, have a button instead of a switch and can't be turned off. For those, Rago offers to create a Windows restore point before applying, ticked by default: open Restore in the app and pick Open System Restore to go back to it. Restore also has quick resets for the network and the input queue.</p></details><details class="fq-s"><summary>Windows says “Windows protected your PC”. Is it safe?</summary><p>Windows shows this for apps that don't have a paid code-signing certificate yet, which is our case. Click More info, then Run anyway. Only do it for the installer you downloaded from this site. Rago then asks for administrator rights, because it changes system settings.</p></details><details class="fq-s"><summary>How do I uninstall Rago?</summary><p>If you want your old settings back, turn your tweaks off and apply first, or use Open System Restore. Then uninstall Rago Optimizer from Windows Settings, Apps, like any other app.</p></details><details class="fq-s"><summary>My antivirus flagged Rago. Why?</summary><p>Rago changes system settings, which is what antivirus tools watch for. Only download Rago from this site. Don't disable your antivirus: allow the file if you trust it, or ask us on our Discord (linked from your account page).</p></details><details class="fq-s"><summary>How does the affiliate program work?</summary><p>Join to get your code and share it. Friends who use your code get 5% off their first Premium payment. A friend counts as soon as they activate the app on their PC. 3 friends who activate the app give you 6 months of Premium. You can refer up to 3 friends.</p></details></div></noscript>
+    <noscript><div class="faq"><details class="fq-s"><summary>Can I get banned for using Rago?</summary><p>Rago doesn't modify Minecraft and injects nothing into the game. It changes Windows and network settings, the same ones you could change by hand. Some servers screenshare players and check Windows logs. A few Advanced tweaks turn off Windows services staff look at, and each one says so. Turn on RBW Mod and restart your PC before a screenshare: it brings those services back.</p></details><details class="fq-s"><summary>Will it lower my ping?</summary><p>It depends where your ping comes from. Distance to the server can't be fixed by any software. Rago cuts the delay your PC adds and makes your timing steadier, which is what matters most for hits.</p></details><details class="fq-s"><summary>What's the difference between Free and Premium?</summary><p>Both are the same Rago Optimizer app. Free opens 9 tweaks, Restore included, and shows everything else with a lock. Both show your live RAM, GPU and CPU usage. Premium unlocks all 199 tweaks, the 5 presets and the new tweaks of future versions. In both, you can undo the tweaks you applied.</p></details><details class="fq-s"><summary>Does it work on laptops?</summary><p>Yes. Rago runs on any Windows 10 or 11 PC, desktop or laptop. Premium includes a Laptop preset: gains without hurting battery life or heat.</p></details><details class="fq-s"><summary>Does it work on Mac or Linux?</summary><p>No. Rago Optimizer tunes Windows, so it only runs on Windows 10 and 11.</p></details><details class="fq-s"><summary>Monthly or yearly?</summary><p>Same app either way. Paying yearly works out to 6 months free compared with paying monthly. You can cancel anytime from your account. When Premium ends, Rago puts back the settings changed by Premium tweaks and your free tweaks stay on.</p></details><details class="fq-s"><summary>How do I join the Premium channel on Discord?</summary><p>After you buy, your account page links to our Discord. Open a ticket there with the email of your Rago account. Our staff checks your purchase and gives you the Premium role. It isn't automatic, so it can take a little while.</p></details><details class="fq-s"><summary>Can I use my license on more than one PC?</summary><p>No. Premium works on one device per license. If you change PCs, open a ticket on our Discord (linked from your account page) and support moves your license.</p></details><details class="fq-s"><summary>What if I don't like a change?</summary><p>Turn the tweak off and apply: Rago Optimizer puts those Windows settings back the way they were. One-time actions, like removing apps, have a button instead of a switch and can't be turned off. For those, Rago offers to create a Windows restore point before applying, ticked by default: open Restore in the app and pick Open System Restore to go back to it. Restore also has quick resets for the network and the input queue.</p></details><details class="fq-s"><summary>Windows says “Windows protected your PC”. Is it safe?</summary><p>Windows shows this for apps that don't have a paid code-signing certificate yet, which is our case. Click More info, then Run anyway. Only do it for the installer you downloaded from this site. Rago then asks for administrator rights, because it changes system settings.</p></details><details class="fq-s"><summary>How do I uninstall Rago?</summary><p>If you want your old settings back, turn your tweaks off and apply first, or use Open System Restore. Then uninstall Rago Optimizer from Windows Settings, Apps, like any other app.</p></details><details class="fq-s"><summary>My antivirus flagged Rago. Why?</summary><p>Rago changes system settings, which is what antivirus tools watch for. Only download Rago from this site. Don't disable your antivirus: allow the file if you trust it, or ask us on our Discord (linked from your account page).</p></details><details class="fq-s"><summary>How does the affiliate program work?</summary><p>Join to get your code and share it. Friends who use your code get 5% off their first Premium payment. A friend counts as soon as they activate the app on their PC. 3 friends who activate the app give you 6 months of Premium. You can refer up to 3 friends.</p></details></div></noscript>
+  </section>
+
+  <!-- Partners: the servers marked "home" in src/partners.json (cards written by tools/sync_partners.py, which build.py
+       runs). All of them: partners.html. -->
+  <section class="sec band" id="partners" style="padding-top:0">
+    <div class="head rv">
+      <span class="eyebrow">Partners</span>
+      <h2>Our partner servers.</h2>
+      <p>Minecraft PvP communities that work with Rago Optimizer.</p>
+    </div>
+    <div class="pts rv">
+      <!-- partners:home -->
+      <a class="pt" href="https://discord.gg/takeR8xPqB" target="_blank" rel="noopener"><img src="img/partners/pika-ranked-bedwars.webp" alt="" width="56" height="56" loading="lazy" decoding="async"><span class="pt-t"><b>Pika Ranked Bedwars</b> <small>Join on Discord<svg aria-hidden="true"><use href="#i-arrow"/></svg></small><span class="sr-only"> (opens in a new tab)</span></span></a>
+      <a class="pt" href="https://discord.gg/AF44k9RhPn" target="_blank" rel="noopener"><img src="img/partners/ranked-bedwars.webp" alt="" width="56" height="56" loading="lazy" decoding="async"><span class="pt-t"><b>Ranked Bedwars</b> <small>Join on Discord<svg aria-hidden="true"><use href="#i-arrow"/></svg></small><span class="sr-only"> (opens in a new tab)</span></span></a>
+      <a class="pt" href="https://discord.gg/rankedbw" target="_blank" rel="noopener"><img src="img/partners/ranked-bedwars-season-8.webp" alt="" width="56" height="56" loading="lazy" decoding="async"><span class="pt-t"><b>Ranked Bedwars [SEASON 8]</b> <small>Join on Discord<svg aria-hidden="true"><use href="#i-arrow"/></svg></small><span class="sr-only"> (opens in a new tab)</span></span></a>
+      <a class="pt" href="https://discord.gg/9nwyWrd48" target="_blank" rel="noopener"><img src="img/partners/axora-ranked-bedwars.webp" alt="" width="56" height="56" loading="lazy" decoding="async"><span class="pt-t"><b>Axora Ranked Bedwars</b> <small>Join on Discord<svg aria-hidden="true"><use href="#i-arrow"/></svg></small><span class="sr-only"> (opens in a new tab)</span></span></a>
+      <!-- /partners:home -->
+    </div>
+    <p class="more-tw rv"><a class="rev-all" href="partners.html">See all partners<svg><use href="#i-arrow"/></svg></a></p>
   </section>
 
   <section class="band" id="affiliate">
@@ -926,7 +985,7 @@ footer.foot p{max-width:80ch}
   <div class="band">
     <div class="row">
       <svg viewBox="0 0 1124 180" style="height:22px;width:auto;color:var(--t1)"><use href="#i-word"/></svg>
-      <nav aria-label="Footer"><a href="#features">Features</a><a href="tweaks.html">Tweaks</a><a href="#pricing">Pricing</a><a href="#faq">FAQ</a><a class="js-affiliate" href="https://account.rago-optimizer.com/affiliate">Affiliate program</a><a class="js-account" href="https://account.rago-optimizer.com/login">Sign in</a><a class="js-signup" href="https://account.rago-optimizer.com/signup">Create account</a><a class="js-discord" href="#reviews">Discord</a><a href="terms.html">Terms</a><a href="privacy.html">Privacy</a><a href="refunds.html">Refunds</a></nav>
+      <nav aria-label="Footer"><a href="#features">Features</a><a href="tweaks.html">Tweaks</a><a href="#pricing">Pricing</a><a href="#faq">FAQ</a><a class="js-affiliate" href="https://account.rago-optimizer.com/affiliate">Affiliate program</a><a href="partners.html">Partners</a><a class="js-account" href="https://account.rago-optimizer.com/login">Sign in</a><a class="js-signup" href="https://account.rago-optimizer.com/signup">Create account</a><a class="js-discord" href="#reviews">Discord</a><a href="terms.html">Terms</a><a href="privacy.html">Privacy</a><a href="refunds.html">Refunds</a></nav>
     </div>
     <p>Rago Optimizer changes Windows settings. Results depend on your hardware and connection. A restore point is offered before advanced tweaks. Minecraft is a trademark of Mojang Studios; Rago Optimizer isn't affiliated with Mojang or Microsoft. © 2026 Rago Optimizer, by Rago and Kaliso.</p>
   </div>
@@ -964,7 +1023,7 @@ footer.foot p{max-width:80ch}
     <ol>
       <li><b>Open RagoOptimizer-Setup.exe</b><span>From your Downloads folder.</span></li>
       <li><b>If Windows says “Windows protected your PC”</b><span>Click More info, then Run anyway. Windows shows this because Rago doesn't have a paid code-signing certificate yet. Then accept the administrator prompt: Rago needs it to change system settings.</span></li>
-      <li><b>Rago opens in free mode</b><span>No account needed. 8 tweaks are open, the rest show a lock until you go Premium.</span></li>
+      <li><b>Rago opens in free mode</b><span>No account needed. 9 tweaks are open, the rest show a lock until you go Premium.</span></li>
     </ol>
     <div class="dlg-acts"><button class="btn btn-ghost btn-sm" type="button" id="dlg-ok">Got it</button><a class="btn btn-red btn-sm" href="#pricing" id="dlg-pro">See Premium</a></div>
     <p class="micro">Nothing downloaded? <a class="js-free-app" href="https://account.rago-optimizer.com/download" id="dlg-retry">Try again</a></p>
@@ -977,6 +1036,7 @@ const CONFIG = {
   accountBase: "https://account.rago-optimizer.com", // licensing server URL, no trailing slash. Empty = same domain as this site
   previewAccountBase: "",                           // staging account server for Netlify previews: filled at build by netlify/preview.sh (STAGING_ACCOUNT_URL)
   checkoutPath: "/buy",                             // + ?interval=month|year (+ &ref=CODE from an affiliate link). Creates the Stripe Checkout session, 303 redirect
+  lifetimePath: "/buy/lifetime",                    // Lifetime checkout (one payment, + ?ref=CODE or ?promo=CODE). Opened only once /api/v1/plans says it's sold at priceLifetime
   loginPath: "/login",
   signupPath: "/signup",
   affiliatePath: "/affiliate",
@@ -986,7 +1046,8 @@ const CONFIG = {
   // or npm run admin -- popup. This page reads it from /api/v1/promo on every visit.
   currency: "$",
   priceMonth: 5.99,                                 // monthly Stripe price (USD)
-  priceYear: 29.99                                  // yearly Stripe price (USD); "months free" is computed from both
+  priceYear: 29.99,                                 // yearly Stripe price (USD); "months free" is computed from both
+  priceLifetime: 59.99                              // Lifetime, paid once (USD): the account server sells it only at LIFETIME_PRICE (licensing/src/billing.js), the same
 };
 /* ----------------------- */
 
@@ -1215,7 +1276,7 @@ const ICO = { // small Lucide glyphs used in rows and buttons
 };
 const svg = (d, c = "") => `<svg viewBox="0 0 24 24"${c ? ` class="${c}"` : ""} aria-hidden="true">${d}</svg>`;
 const MODS = [
-  ["network","Network","Ping, stability and hit registration.",20],["latency","Latency","Timers, priorities, CPU, memory and power.",82],
+  ["network","Network","Ping, stability and hit registration.",20],["latency","Latency","Timers, priorities, CPU, memory and power.",83],
   ["gpu","Graphics card","NVIDIA, AMD and Intel, each with its own settings.",29],["windows","Windows","What runs for nothing in the background.",33],
   ["hitreg","Hitreg","The advanced suite so your hits land.",9],["minecraft","Minecraft","OptiFine, javaw priority and game traffic.",1],
   ["rbw","RBW Mod","Ready for a Ranked BedWars screenshare.",1],["gamemode","Game mode","Turn on before playing, off after.",1],
@@ -1338,7 +1399,7 @@ const MODS = [
 
 /* Inside the app: click a section, see real tweaks from it */
 (() => {
-  const EX = {"network": [["Hitreg profile", "Six profiles that set TCP receive auto-tuning and incoming packet coalescing; Default puts Windows back as it was.", ""], ["Disable Nagle's algorithm", "Turns off Nagle's algorithm and delayed ACKs, which bundle small network packets before sending them.", "r"], ["Disable NIC power saving", "Turns off network card power saving (Green Ethernet, sleep) and waking the PC over the network.", "r"], ["Restart network adapter", "Restarts your connected network cards to apply network settings without rebooting.", "x"]], "latency": [["Disable mouse acceleration", "Turns off \"Enhance pointer precision\": the cursor moves the same distance however fast you move the mouse.", "r"], ["Disable core parking", "Keeps all CPU cores active when the PC is plugged in, instead of parking some of them.", ""], ["Multimedia scheduler (MMCSS)", "Gives more CPU and GPU priority to tasks that the Windows multimedia scheduler labels as games or low latency.", "r"]], "gpu": [["NVIDIA optimization", "Full NVIDIA pack: low-latency profile for all your games, GPU kept at full speed, telemetry off and driver settings.", "r"], ["AMD power saving", "Turns off the AMD card's internal power saving, including its ultra-low-power sleep state.", "r"], ["General GPU", "Graphics settings for any card: display priority, GPU preemption off, MSI mode and power-saving delays.", "r"]], "windows": [["Windows Game Mode", "Turns Windows Game Mode on or off; it gives the game priority and holds back update installs while you play.", "s"], ["Disable Game DVR", "Turns off Game DVR, the Game Bar's background recording, and adjusts the related fullscreen settings.", "r"], ["Clear temp files", "Deletes the temporary files of Windows and of your account.", "x"]], "hitreg": [["Mouse optimization", "Turns off Windows mouse acceleration so the pointer follows your hand exactly, and shortens the hover delay.", ""], ["Input queue size", "Sets how many mouse and keyboard events the drivers queue; Default puts back the Windows value.", "r"], ["Advanced hitreg suite", "300+ settings: CPU at full speed when plugged in, priorities, timers, memory, privacy; the 4 profiles are almost identical.", "ar"]], "minecraft": [["OptiFine preset", "Writes an OptiFine preset, Performance or Quality, into Minecraft's options; your old file is backed up.", ""], ["Per-game advanced priority", "Six games to choose from: the chosen game runs at high priority and its network traffic is marked as priority.", "r"], ["Network profile", "Three TCP profiles: Hitreg (smaller packets), Knockback (faster resend of lost packets) or QoS (Minecraft traffic first).", ""], ["Clear temp files", "Deletes the temporary files of Windows and of your account.", "x"]], "rbw": [["RBW Mod", "On starts every service and restores every setting the RBW screenshare checker reads, even if other tweaks turned them off; Off puts them back to Windows defaults without stopping anything.", "s"]], "gamemode": [["Rago game mode", "On clears temp files and turns off printing and Windows animations; Off brings animations and printing back.", "s"]], "expert": [["I/O priority", "Lowers the priority of search indexing and Windows updates, and raises the desktop display's priority.", "r"], ["Kernel settings", "Stops Windows from moving interrupts between cores and adjusts a few display delays.", "ar"], ["Faster startup", "Removes the delay Windows waits before launching startup apps.", "r"]], "restore": [["Create a restore point", "Turns on System Protection if needed and creates a Windows restore point.", "x"], ["Open System Restore", "Opens the Windows tool to go back to a restore point.", "x"], ["Reset network", "Resets the Windows network configuration, clears the DNS cache and requests a new IP address.", "arx"], ["Default input queue", "Puts the mouse and keyboard queues back to the normal Windows value.", "rx"]]};
+  const EX = {"network": [["Hitreg profile", "Six profiles that set TCP receive auto-tuning and incoming packet coalescing; Default puts Windows back as it was.", ""], ["Disable Nagle's algorithm", "Turns off Nagle's algorithm and delayed ACKs, which bundle small network packets before sending them.", "r"], ["Disable NIC power saving", "Turns off network card power saving (Green Ethernet, sleep) and waking the PC over the network.", "r"], ["Restart network adapter", "Restarts your connected network cards to apply network settings without rebooting.", "x"]], "latency": [["Disable mouse acceleration", "Turns off \"Enhance pointer precision\": the cursor moves the same distance however fast you move the mouse.", "r"], ["Disable core parking", "Keeps all CPU cores active when the PC is plugged in, instead of parking some of them.", ""], ["Multimedia scheduler (MMCSS)", "Gives more CPU and GPU priority to tasks that the Windows multimedia scheduler labels as games or low latency.", "r"]], "gpu": [["NVIDIA optimization", "Full NVIDIA pack: low-latency profile for all your games, GPU kept at full speed, telemetry off and driver settings.", "r"], ["AMD power saving", "Turns off the AMD card's internal power saving, including its ultra-low-power sleep state.", "r"], ["General GPU", "Graphics settings for any card: display priority, GPU preemption off, MSI mode and power-saving delays.", "r"]], "windows": [["Windows Game Mode", "Turns Windows Game Mode on or off; it gives the game priority and holds back update installs while you play.", "s"], ["Disable Game DVR", "Turns off Game DVR, the Game Bar's background recording, and adjusts the related fullscreen settings.", "r"], ["Clear temp files", "Deletes the temporary files of Windows and of your account.", "x"]], "hitreg": [["Mouse optimization", "Turns off Windows mouse acceleration so the pointer follows your hand exactly, and shortens the hover delay.", ""], ["Input queue size", "Sets how many mouse and keyboard events the drivers queue; Default puts back the Windows value.", "r"], ["Advanced hitreg suite", "300+ settings: CPU at full speed when plugged in, priorities, timers, memory, privacy; the 4 profiles are almost identical.", "ar"]], "minecraft": [["OptiFine preset", "Writes an OptiFine preset, Performance or Quality, into Minecraft's options; your old file is backed up.", ""], ["Per-game advanced priority", "Six games to choose from: the chosen game runs at high priority and its network traffic is marked as priority.", "r"], ["Network profile", "Three TCP profiles: Hitreg (smaller packets), Knockback (faster resend of lost packets) or QoS (Minecraft traffic first).", ""], ["Clear temp files", "Deletes the temporary files of Windows and of your account.", "x"]], "rbw": [["RBW Mod", "On restarts the event log, prefetch and app history that screenshare tools read; Off puts Windows defaults back.", "s"]], "gamemode": [["Rago game mode", "On clears temp files and turns off printing and Windows animations; Off brings animations and printing back.", "s"]], "expert": [["I/O priority", "Lowers the priority of search indexing and Windows updates, and raises the desktop display's priority.", "r"], ["Kernel settings", "Stops Windows from moving interrupts between cores and adjusts a few display delays.", "ar"], ["Faster startup", "Removes the delay Windows waits before launching startup apps.", "r"]], "restore": [["Create a restore point", "Turns on System Protection if needed and creates a Windows restore point.", "x"], ["Open System Restore", "Opens the Windows tool to go back to a restore point.", "x"], ["Reset network", "Resets the Windows network configuration, clears the DNS cache and requests a new IP address.", "arx"], ["Default input queue", "Puts the mouse and keyboard queues back to the normal Windows value.", "rx"]]};
   const DETAIL = {
     rbw: ["Event Log", "SysMain", "Program Compatibility Assistant", "Task Scheduler"],
     gamemode: ["Clears temp files", "Stops printing", "Turns off Windows animations", "Restarts Explorer"]
@@ -1503,11 +1564,31 @@ const REF = (() => {
   return null;
 })();
 
-/* Pricing: monthly / yearly */
+/* Pricing: monthly / yearly, and Lifetime */
 (() => {
   const c = CONFIG.currency, fmt = n => c + (Math.round(n * 100) / 100).toFixed(2);
   const free = MONTHS_FREE, freeTxt = `${free} month${free === 1 ? "" : "s"} free`;
   $("#save").textContent = `${freeTxt} yearly`; $("#save").hidden = free < 1;
+  $("#l-amt").textContent = fmt(CONFIG.priceLifetime);
+  /* Lifetime shows "Coming soon" until the account server says it's sold, at the price shown here (its Stripe price
+     is set, one-time, active, same amount and currency). Then its button opens checkout, with the same codes as Premium. */
+  let life = false;
+  const setLife = () => {
+    if (!life) return;
+    const q = REF ? "?ref=" + encodeURIComponent(REF) : promo() ? "?promo=" + encodeURIComponent(promo()) : "";
+    $$(".js-lifetime").forEach(a => { a.href = acct(CONFIG.lifetimePath + q); });
+  };
+  const sold = l => !!l && l.amount === Math.round(CONFIG.priceLifetime * 100) && l.currency === ({ "$": "usd", "€": "eur", "£": "gbp" }[c] || "usd");
+  if (CONFIG.accountBase !== null && "fetch" in window) fetch(acct("/api/v1/plans"), { credentials: "omit", cache: "no-cache" })
+    .then(r => (r.ok ? r.json() : Promise.reject(r.status)))
+    .then(d => {
+      if (!sold(d && d.lifetime)) return;
+      life = true;
+      document.documentElement.classList.add("life");
+      $$(".js-lifetime").forEach(a => { a.removeAttribute("role"); a.removeAttribute("aria-disabled"); a.innerHTML = 'Get Lifetime<svg><use href="#i-arrow"/></svg>'; });
+      setLife();
+    })
+    .catch(() => {});
   let bill = "year";
   const setBill = v => {
     const y = v === "year";
@@ -1515,21 +1596,24 @@ const REF = (() => {
     $("#p-per").textContent = "/ month";
     $("#p-note").textContent = y ? `Billed ${fmt(CONFIG.priceYear)} yearly.${free >= 1 ? " " + freeTxt + "." : ""}` : "Billed monthly.";
     $$(".js-checkout").forEach(a => a.href = acct(`${CONFIG.checkoutPath}?interval=${y ? "year" : "month"}${REF ? "&ref=" + encodeURIComponent(REF) : promo() ? "&promo=" + encodeURIComponent(promo()) : ""}`));
+    setLife();
     const amt = $("#p-amt"); amt.animate && !reduce && amt.animate([{ transform: "translateY(8px)", opacity: 0 }, { transform: "none", opacity: 1 }], { duration: 400, easing: "cubic-bezier(.16,1,.3,1)" });
   };
   window.__seg($("#billing"), v => { bill = v; setBill(v); }); setBill("year"); window.__bill = () => setBill(bill);
   const Y = '<span class="yes"><svg viewBox="0 0 16 16"><use href="#i-check"/></svg></span>', N = '<span class="no"><svg viewBox="0 0 16 16"><path d="M4.5 8h7"/></svg></span>', L = '<span class="lk" title="Locked in Free"><svg viewBox="0 0 16 16"><use href="#i-lock"/></svg></span>';
   const rows = [
     ["Rago Optimizer app and interface", Y, Y],
-    ['Tweaks unlocked', '<span class="txt">8 of 198</span>', '<span class="txt">All 198</span>'],
+    ['Tweaks unlocked', '<span class="txt">9 of 199</span>', '<span class="txt">All 199</span>'],
     ["Restore point before advanced tweaks", Y, Y],
-    ["Network, latency, hitreg and graphics card tweaks", L, Y],
+    ["Network, latency and graphics card tweaks", L, Y],
+    ["Hitreg tweaks", '<span class="txt">Mouse only</span>', Y],
     ["Presets: Minecraft PvP, Max FPS, Low latency, Laptop, Privacy", L, Y],
     ["Minecraft, RBW Mod, Game mode and Expert mode", L, Y],
     ["Live RAM, GPU and CPU usage", Y, Y],
     ["New tweaks from future versions", L, Y],
     ["Undo the tweaks you applied", Y, Y],
     ["Premium Discord channel", N, Y],
+    ["How you pay", '<span class="txt">Free</span>', '<span class="txt life-off">Monthly or yearly</span><span class="txt life-on">Monthly, yearly or once</span>'],
     ["License", '<span class="txt">Not needed</span>', '<span class="txt">1 PC per license</span>']
   ];
   $("#cmp").innerHTML = rows.map(([a, b, p]) => `<tr><td>${a}</td><td>${b}</td><td class="pcol">${p}</td></tr>`).join("");
@@ -1544,11 +1628,13 @@ $$(".js-dword").forEach(e => { e.outerHTML = dlink("Discord"); });
   const F = [
     ["Can I get banned for using Rago?", "Rago doesn't modify Minecraft and injects nothing into the game. It changes Windows and network settings, the same ones you could change by hand. Some servers screenshare players and check Windows logs. A few Advanced tweaks turn off Windows services staff look at, and each one says so. Turn on RBW Mod and restart your PC before a screenshare: it brings those services back."],
     ["Will it lower my ping?", "It depends where your ping comes from. Distance to the server can't be fixed by any software. Rago cuts the delay your PC adds and makes your timing steadier, which is what matters most for hits."],
-    ["What's the difference between Free and Premium?", "Both are the same Rago Optimizer app. Free opens 8 tweaks, Restore included, and shows everything else with a lock. Both show your live RAM, GPU and CPU usage. Premium unlocks all 198 tweaks, the 5 presets and the new tweaks of future versions. In both, you can undo the tweaks you applied."],
+    ["What's the difference between Free and Premium?", "Both are the same Rago Optimizer app. Free opens 9 tweaks, Restore included, and shows everything else with a lock. Both show your live RAM, GPU and CPU usage. Premium unlocks all 199 tweaks, the 5 presets and the new tweaks of future versions. In both, you can undo the tweaks you applied."],
     ["Does it work on laptops?", "Yes. Rago runs on any Windows 10 or 11 PC, desktop or laptop. Premium includes a Laptop preset: gains without hurting battery life or heat."],
     ["Does it work on Mac or Linux?", "No. Rago Optimizer tunes Windows, so it only runs on Windows 10 and 11."],
-    ["Monthly or yearly?", MONTHS_FREE >= 1 ? `Same app either way. Paying yearly works out to ${MONTHS_FREE} month${MONTHS_FREE === 1 ? "" : "s"} free compared with paying monthly. You can cancel anytime from your account. When Premium ends, Rago puts back the settings changed by its tweaks, free ones included.` : "Same app either way. You can cancel anytime from your account. When Premium ends, Rago puts back the settings changed by its tweaks, free ones included."],
+    ["Monthly or yearly?", MONTHS_FREE >= 1 ? `Same app either way. Paying yearly works out to ${MONTHS_FREE} month${MONTHS_FREE === 1 ? "" : "s"} free compared with paying monthly. You can cancel anytime from your account. When Premium ends, Rago puts back the settings changed by Premium tweaks and your free tweaks stay on.` : "Same app either way. You can cancel anytime from your account. When Premium ends, Rago puts back the settings changed by Premium tweaks and your free tweaks stay on."],
     ["How do I join the Premium channel on Discord?", "After you buy, your account page links to our Discord. Open a ticket there with the email of your Rago account. Our staff checks your purchase and gives you the Premium role. It isn't automatic, so it can take a little while."],
+    ["What's Lifetime?", `Lifetime is Premium paid once: ${CONFIG.currency}${CONFIG.priceLifetime.toFixed(2)}, with no subscription and nothing to renew. You get everything in Premium on one PC, new tweaks from future versions included.`, "life"],
+    ["I'm subscribed. Can I switch to Lifetime?", "Yes. Sign in, then choose Get Lifetime here or Switch to Lifetime on your account page. Right after the payment, your subscription is canceled so it doesn't renew, and Premium stays on the same PC. The time left on your subscription isn't refunded.", "life"],
     ["Can I use my license on more than one PC?", "No. Premium works on one device per license. If you change PCs, open a ticket on our Discord (linked from your account page) and support moves your license."],
     ["What if I don't like a change?", "Turn the tweak off and apply: Rago Optimizer puts those Windows settings back the way they were. One-time actions, like removing apps, have a button instead of a switch and can't be turned off. For those, Rago offers to create a Windows restore point before applying, ticked by default: open Restore in the app and pick Open System Restore to go back to it. Restore also has quick resets for the network and the input queue."],
     ["Windows says \u201cWindows protected your PC\u201d. Is it safe?", "Windows shows this for apps that don't have a paid code-signing certificate yet, which is our case. Click More info, then Run anyway. Only do it for the installer you downloaded from this site. Rago then asks for administrator rights, because it changes system settings."],
@@ -1556,13 +1642,17 @@ $$(".js-dword").forEach(e => { e.outerHTML = dlink("Discord"); });
     ["My antivirus flagged Rago. Why?", "Rago changes system settings, which is what antivirus tools watch for. Only download Rago from this site. Don't disable your antivirus: allow the file if you trust it, or ask us on our Discord (linked from your account page)."],
     ["How does the affiliate program work?", "Join to get your code and share it. Friends who use your code get 5% off their first Premium payment. A friend counts as soon as they activate the app on their PC. 3 friends who activate the app give you 6 months of Premium. You can refer up to 3 friends."]
   ];
-  $("#faqs").innerHTML = F.map(([q, a], i) => `<div class="fq"><button type="button" aria-expanded="false" aria-controls="fa${i}" id="fb${i}">${esc(q)}<span class="pm" aria-hidden="true"></span></button><div class="ans" id="fa${i}" role="region" aria-labelledby="fb${i}" inert><div><p>${dlink(esc(a))}</p></div></div></div>`).join("");
+  // A third item "life": a question about Lifetime, shown once it can be bought (not in the FAQ baked for no-JS visitors)
+  $("#faqs").innerHTML = F.map(([q, a, only], i) => `<div class="fq${only ? " life-on" : ""}"><button type="button" aria-expanded="false" aria-controls="fa${i}" id="fb${i}">${esc(q)}<span class="pm" aria-hidden="true"></span></button><div class="ans" id="fa${i}" role="region" aria-labelledby="fb${i}" inert><div><p>${dlink(esc(a))}</p></div></div></div>`).join("");
   $$("#faqs .fq").forEach(f => $("button", f).addEventListener("click", () => {
     const open = !f.classList.contains("open");
     $$("#faqs .fq.open").forEach(o => { if (o !== f) { o.classList.remove("open"); $("button", o).setAttribute("aria-expanded", "false"); $(".ans", o).inert = true; } });
     f.classList.toggle("open", open); $("button", f).setAttribute("aria-expanded", open); $(".ans", f).inert = !open;
   }));
 })();
+
+/* Partner cards: the red glow follows the pointer, as on the Tweaks page */
+$$(".pts").forEach(g => g.addEventListener("pointermove", e => { const c = e.target.closest(".pt"); if (!c) return; const r = c.getBoundingClientRect(); c.style.setProperty("--mx", e.clientX - r.left + "px"); c.style.setProperty("--my", e.clientY - r.top + "px"); }));
 
 /* Affiliate: friends fill in, access unlocks */
 (() => {

@@ -12,7 +12,7 @@ import { createHash, createHmac, timingSafeEqual } from 'node:crypto';
 import { DUMMY_HASH, maskLicenseKey, randomToken, signValue, unsignValue, verifyPassword } from './crypto.js';
 import { DeviceError, parseDevice, sameDevice } from './fingerprint.js';
 import { signToken, verifyToken } from './tokens.js';
-import { billingPortal, createCheckout, endTestLicenses, ensureAffiliatePromo, findPromotionCode, handleStripeEvent, isRagoCheckout, stripeChecks, stripeMode, syncPromoActive } from './billing.js';
+import { billingPortal, createCheckout, endTestLicenses, ensureAffiliatePromo, findPromotionCode, handleStripeEvent, isRagoCheckout, lifetimePrice, stopReplacedSubscriptions, stripeChecks, stripeMode, syncPromoActive } from './billing.js';
 import * as A from './affiliates.js';
 import { createInstaller } from './installer.js';
 import { createDiscord, DiscordError, discordSetupMissing } from './discord.js';
@@ -76,6 +76,8 @@ export function createApp({ cfg, db, keys, stripe, mailer, log = console, fetchI
   const allow = rateLimiter();
   let reviewsCache = null; // { at, bodies }: the site asks for the reviews on every visit (home page, reviews page)
   let popupCache = null; // { at, body }: same for the discount pop-up (one Stripe call per refresh)
+  let lifetimeCache = null; // { at, offer }: the Lifetime price as Stripe has it (the site's card, /buy/lifetime)
+  let lifetimeRead = null; // the Stripe call reading it, while one runs
   const publicDir = relative(process.cwd(), fileURLToPath(new URL('../public', import.meta.url))) || '.';
   const cookieBase = { httpOnly: true, secure: cfg.prod, sameSite: 'Lax', path: '/' };
 
@@ -146,7 +148,7 @@ export function createApp({ cfg, db, keys, stripe, mailer, log = console, fetchI
   // Until cfg.launchAt the pages that sell or hand out Rago Optimizer send visitors to the site's countdown.
   // Sign-in, the account pages, the app's API and the Stripe webhook keep working. The team gets through with
   // the cookie set by /acces/<PREVIEW_KEY>, here or on the site (netlify/edge-functions/launch-gate/).
-  const LOCKED = new Set(['/signup', '/buy', '/download', '/affiliate', '/affiliate/join']);
+  const LOCKED = new Set(['/signup', '/buy', '/buy/lifetime', '/download', '/affiliate', '/affiliate/join']);
   const PREVIEW_COOKIE = 'rago_preview';
   // HMAC-SHA256(PREVIEW_KEY, "rago-preview-v1"), base64url: same as passFor() in the Netlify function.
   const previewPass = cfg.previewKey.length >= 16 ? createHmac('sha256', cfg.previewKey).update('rago-preview-v1').digest('base64url') : null;
@@ -202,8 +204,10 @@ export function createApp({ cfg, db, keys, stripe, mailer, log = console, fetchI
     deleteCookie(c, 'rg_claim', { path: '/' });
     if (!lic) return null;
     try {
-      await L.claimLicense(db, lic.id, user.id);
-      return 'claimed';
+      const claimed = await L.claimLicense(db, lic.id, user.id);
+      // Lifetime claimed by a subscriber: the subscription it replaced stops now.
+      const life = claimed.status === 'active' && claimed.plan === 'lifetime' && claimed.source === 'stripe';
+      return (life && await settleLifetime(user.id, claimed.id)) || 'claimed';
     } catch (err) {
       if (err.code !== 'already_has_license') throw err;
       // A second purchase on an account that already has Premium: stop the extra subscription so it
@@ -213,8 +217,39 @@ export function createApp({ cfg, db, keys, stripe, mailer, log = console, fetchI
       }
       await L.setLicenseStatus(db, lic.id, 'revoked', 'duplicate');
       await audit(db, 'license.duplicate', { licenseId: lic.id, userId: user.id });
-      return 'duplicate';
+      // A paid Lifetime is only stopped by Premium for life (a subscription or a reward would have been replaced),
+      // unless it was refunded meanwhile: then anything active stops it, as before.
+      return lic.plan === 'lifetime' && lic.source === 'stripe' && lic.status === 'active' ? 'duplicatelife' : 'duplicate';
     }
+  }
+
+  /**
+   * Lifetime `lifetimeId` is on the account: the subscription it replaced (if any) is canceled in Stripe. Returns the
+   * dashboard notice, 'upgraded' or 'upgradefail' (the hourly sweep keeps trying), or null when it replaced none.
+   */
+  async function settleLifetime(userId, lifetimeId) {
+    if (!stripe) return null;
+    const { replaced, failed } = await stopReplacedSubscriptions(db, stripe, userId, log, lifetimeId);
+    return failed.length ? 'upgradefail' : replaced ? 'upgraded' : null;
+  }
+
+  /**
+   * The Lifetime offer ({ amount, currency }) when it can be bought, else null. Stripe is asked at most once a minute,
+   * and briefly: while it doesn't answer, the last answer stands for a minute (none yet: not for sale), so the
+   * account pages and the site's card never wait on it for long.
+   */
+  function lifetimeOffer() {
+    if (!stripe || !cfg.stripePriceLifetime) return Promise.resolve(null);
+    if (lifetimeCache && Date.now() - lifetimeCache.at < 60 * 1000) return Promise.resolve(lifetimeCache.offer);
+    // One call at a time: the requests that arrive meanwhile share its answer.
+    lifetimeRead ||= lifetimePrice(stripe, cfg, { timeout: 5000, maxNetworkRetries: 0 })
+      .catch((err) => {
+        log.error('[stripe] Lifetime price not read:', err.message);
+        return lifetimeCache?.offer ?? null;
+      })
+      .then((offer) => { lifetimeCache = { at: Date.now(), offer }; return offer; })
+      .finally(() => { lifetimeRead = null; });
+    return lifetimeRead;
   }
 
   /** Records the referral code typed right after a purchase, once the license is on the account. */
@@ -300,12 +335,14 @@ export function createApp({ cfg, db, keys, stripe, mailer, log = console, fetchI
     if (r) await settleAffiliate(r.affiliate_user_id);
   }
   const dashWith = (n) => (n ? `/account?n=${n}` : '/account');
+  // The purchase is on the account (a Lifetime that replaced a subscription too): its referral code counts.
+  const CLAIMED = ['claimed', 'upgraded', 'upgradefail'];
   async function claimSignedIn(c, user, lic) {
     const n = await settleClaim(c, user, lic);
-    if (n !== 'claimed') return n;
+    if (!CLAIMED.includes(n)) return n;
     const applied = await applyReferral(user, await L.getLicense(db, lic.id), await purchaseCode(c, lic));
     deleteCookie(c, 'rg_ref', { path: '/' });
-    return applied ? 'claimedref' : n;
+    return applied && n === 'claimed' ? 'claimedref' : n;
   }
   // An affiliate's link (/buy?ref=CODE) pre-fills the code field the buyer sees after paying.
   const refCode = (c) => A.normalizeCode(getCookie(c, 'rg_ref'));
@@ -321,7 +358,9 @@ export function createApp({ cfg, db, keys, stripe, mailer, log = console, fetchI
     }
     if (!claimToken) return;
     const owner = await L.findUserByEmail(db, license.email);
-    if (owner && (await L.licenseForUser(db, owner.id))?.status === 'active') {
+    const owned = owner && await L.licenseForUser(db, owner.id);
+    // A subscriber who bought Lifetime signed out still gets the link: Lifetime replaces the subscription.
+    if (owned?.status === 'active' && (license.plan !== 'lifetime' || L.blocksPurchase(owned, license))) {
       log.info?.(`[mail] no purchase email: ${license.email} already has Premium (second purchase, refund it in Stripe)`);
       return;
     }
@@ -333,13 +372,24 @@ export function createApp({ cfg, db, keys, stripe, mailer, log = console, fetchI
   }
 
   // ---------- checkout ----------
-  app.get('/buy', async (c) => {
+  // /buy?interval=month|year: a subscription. /buy/lifetime (2026-10-16): Premium for life in one payment, which a
+  // subscriber can switch to (the subscription stops once Lifetime is paid). Its own path: a server without Lifetime
+  // answers 404 there instead of opening the yearly checkout.
+  app.get('/buy', (c) => buy(c, false));
+  app.get('/buy/lifetime', (c) => buy(c, true));
+  async function buy(c, lifetime) {
     const user = await currentUser(c);
     const owned = user && await L.current(db, await L.licenseForUser(db, user.id));
+    const active = owned?.status === 'active' ? owned : null;
     // An affiliate reward (6 months) can turn into a subscription: no payment until the reward ends.
-    const reward = owned?.status === 'active' && owned.plan === 'reward' ? owned : null;
-    if (owned?.status === 'active' && !reward) return c.redirect('/account?n=owned', 303);
-    if (!stripe || !cfg.subscriptions) {
+    const reward = active?.plan === 'reward' ? active : null;
+    if (L.blocksPurchase(active, lifetime ? { plan: 'lifetime', source: 'stripe' } : null)) return c.redirect('/account?n=owned', 303);
+    if (lifetime && !(await lifetimeOffer())) {
+      return c.html(V.messagePage(cfg, { user, overline: 'Checkout', title: 'Lifetime opens soon.',
+        text: cfg.subscriptions && stripe ? 'The one-time Lifetime payment is being set up. Meanwhile, Premium is available monthly or yearly.' : 'Payments are being set up. Meanwhile, the free version of Rago Optimizer is ready to download.',
+        action: cfg.subscriptions && stripe ? { href: `${cfg.siteUrl}/#pricing`, label: 'See the plans' } : { href: user ? '/account/download' : '/download', label: 'Download the free version' } }), 503);
+    }
+    if (!lifetime && (!stripe || !cfg.subscriptions)) {
       return c.html(V.messagePage(cfg, { user, overline: 'Checkout', title: 'Checkout opens soon.', text: 'Payments are being set up. Meanwhile, the free version of Rago Optimizer is ready to download.', action: { href: user ? '/account/download' : '/download', label: 'Download the free version' } }), 503);
     }
     // A full code (3 players, or reward given) is dropped: no discount, nothing pre-filled after paying.
@@ -353,11 +403,17 @@ export function createApp({ cfg, db, keys, stripe, mailer, log = console, fetchI
     if (!promotionCode && affiliate && ref) promotionCode = await ensureAffiliatePromo(db, stripe, cfg, affiliate, log);
     // A returning subscriber pays with their existing Stripe customer, so invoices stay together.
     const previous = user && await db.get('SELECT stripe_customer_id FROM licenses WHERE user_id = ? AND stripe_customer_id IS NOT NULL ORDER BY created_at DESC LIMIT 1', [user.id]);
+    if (lifetime) {
+      // Lifetime replaces the reward or the subscription once paid: no trial, the checkout says the subscription stops.
+      const replaces = !!active && active.plan !== 'reward';
+      const session = await createCheckout(stripe, cfg, user, { interval: 'lifetime', customerId: previous?.stripe_customer_id, ref, promotionCode, replaces }, log);
+      return c.redirect(session.url, 303);
+    }
     const interval = c.req.query('interval') === 'year' ? 'year' : c.req.query('interval') === 'month' ? 'month' : undefined;
     const trialEnd = reward ? Math.floor(Number(reward.current_period_end) / 1000) : null;
     const session = await createCheckout(stripe, cfg, user, { interval, customerId: previous?.stripe_customer_id, ref, promotionCode, trialEnd }, log);
     return c.redirect(session.url, 303);
-  });
+  }
 
   app.get('/checkout/success', async (c) => {
     const id = c.req.query('session_id');
@@ -381,7 +437,11 @@ export function createApp({ cfg, db, keys, stripe, mailer, log = console, fetchI
     if (out.created) await sendClaimEmail(out.license, out.claimToken);
 
     const user = await currentUser(c);
-    if (out.license.user_id) return c.redirect(user ? '/account?n=claimed' : '/login', 303);
+    if (out.license.user_id) {
+      // Lifetime bought signed in while subscribed: the subscription stops now (unless the webhook already did it).
+      const n = out.license.plan === 'lifetime' && out.license.status === 'active' ? await settleLifetime(out.license.user_id, out.license.id) : null;
+      return c.redirect(user ? `/account?n=${n || 'claimed'}` : '/login', 303);
+    }
     setClaim(c, out.license.id);
     if (user) return c.redirect(dashWith(await claimSignedIn(c, user, out.license)), 303);
     if (await L.findUserByEmail(db, out.license.email)) {
@@ -440,7 +500,7 @@ export function createApp({ cfg, db, keys, stripe, mailer, log = console, fetchI
     await signIn(c, user);
     const n = await settleClaim(c, user);
     deleteCookie(c, 'rg_ref', { path: '/' });
-    if (n === 'claimed') await settleReferral(user, affiliate);
+    if (CLAIMED.includes(n)) await settleReferral(user, affiliate);
     // New account: offer a profile photo first (skippable), then where the player was going.
     const to = next && !n ? next : `/account${n ? `?n=${n}` : ''}`;
     return c.redirect(`/account/profile?welcome=1&to=${encodeURIComponent(to)}`, 303);
@@ -474,7 +534,7 @@ export function createApp({ cfg, db, keys, stripe, mailer, log = console, fetchI
     await signIn(c, user);
     const n = await settleClaim(c, user);
     deleteCookie(c, 'rg_ref', { path: '/' });
-    if (n === 'claimed') await settleReferral(user, affiliate);
+    if (CLAIMED.includes(n)) await settleReferral(user, affiliate);
     if (next && !n) return c.redirect(next, 303);
     return c.redirect(`/account${n ? `?n=${n}` : ''}`, 303);
   });
@@ -522,6 +582,9 @@ export function createApp({ cfg, db, keys, stripe, mailer, log = console, fetchI
     owned: ['notice', 'You already have Rago Optimizer Premium. No need to buy it twice.'],
     reset: ['notice', 'Device freed. Sign in to Rago Optimizer on your new PC to activate it.'],
     duplicate: ['error', V.html`This account already has Premium, so the new purchase was not added and its subscription was stopped. ${V.supportLink(cfg, 'Contact support on Discord')} for a refund of the extra payment.`],
+    duplicatelife: ['error', V.html`This account already has Premium for life, so the new purchase was not added. ${V.supportLink(cfg, 'Contact support on Discord')} for a refund of the extra payment.`],
+    upgraded: ['notice', 'Premium for life is on your account. Your subscription was canceled, so you won’t be charged again.'],
+    upgradefail: ['error', V.html`Premium for life is on your account, but your subscription couldn’t be canceled yet. We’ll keep trying; if it renews, ${V.supportLink(cfg, 'contact support on Discord')} for a refund.`],
     password: ['notice', 'Password changed. Other browsers were signed out.'],
     nofile: ['error', V.html`The Windows app can't be downloaded right now. Try again a bit later, or ${V.supportLink(cfg, 'ask on Discord')} and we'll tell you when it's back.`],
     nobilling: ['error', V.html`Billing isn't available right now. Try again in a moment, or ${V.supportLink(cfg, 'contact support on Discord')}.`],
@@ -555,6 +618,9 @@ export function createApp({ cfg, db, keys, stripe, mailer, log = console, fetchI
       ...(license ? resetWindow(license, device) : {}),
       affiliate: await A.affiliateSummary(db, cfg, user.id),
       review: await R.reviewOf(db, user.id),
+      // Lifetime is offered (free plan text, "Switch to Lifetime") only while its Stripe price can really be paid, and
+      // only where it shows: Stripe isn't asked for accounts that hold Premium for life or a reward.
+      lifetime: (license?.status !== 'active' || license.plan === 'month' || license.plan === 'year') && !!(await lifetimeOffer()),
     }));
   });
 
@@ -1051,7 +1117,8 @@ export function createApp({ cfg, db, keys, stripe, mailer, log = console, fetchI
     let license = await L.current(db, await L.getLicense(db, claims.lic));
     const user = license && await L.getUser(db, claims.sub);
     if (!license || !user || license.user_id !== user.id) return fail(c, 'invalid_token');
-    // An affiliate reward replaced by a subscription: the same PC moved to the new license.
+    // A license replaced by a purchase (an affiliate reward, or a subscription replaced by Lifetime): the same PC
+    // moved to the new license.
     const replaced = license.status === 'revoked' && license.status_reason === 'replaced';
     if (replaced) {
       const next = await L.licenseForUser(db, user.id);
@@ -1198,6 +1265,10 @@ export function createApp({ cfg, db, keys, stripe, mailer, log = console, fetchI
     }
     return c.json(popupCache.body, 200, { 'Access-Control-Allow-Origin': '*', 'Cache-Control': 'public, max-age=30' });
   });
+
+  // Public: whether the site's Lifetime card can sell (2026-10-16). { lifetime: { amount, currency } } once
+  // STRIPE_PRICE_LIFETIME is an active one-time price in Stripe, else { lifetime: null } ("Coming soon" on the site).
+  api.get('/plans', async (c) => c.json({ lifetime: await lifetimeOffer() }, 200, { 'Access-Control-Allow-Origin': '*', 'Cache-Control': 'public, max-age=60' }));
 
   // Public: the version of the installer /download serves (Railway variable INSTALLER_VERSION), shown under the
   // site's download button. { version: null } while the variable isn't set.
