@@ -1,5 +1,5 @@
-# Vérifie que site/index.html, site/reviews.html et site/tweaks.html (pages publiées par Netlify) ont bien été
-# régénérées depuis site/src/page.html, site/src/reviews.html et site/src/tweaks.html.
+# Vérifie que site/index.html, site/reviews.html, site/tweaks.html et site/partners.html (pages publiées par Netlify) ont bien été
+# régénérées depuis site/src/page.html, site/src/reviews.html, site/src/tweaks.html et site/src/partners.html (cartes partenaires : site/src/partners.json).
 name: site-check
 
 on:
@@ -33,14 +33,14 @@ jobs:
           npm install --no-audit --no-fund playwright@1.56.1
           npx playwright install --with-deps chromium
           echo "NODE_PATH=$RUNNER_TEMP/pw/node_modules" >> "$GITHUB_ENV"
-      - name: Régénérer index.html, reviews.html et tweaks.html
+      - name: Régénérer index.html, reviews.html, tweaks.html et partners.html
         shell: bash
         run: |
           python3 site/tools/build.py 2>&1 | tee build.log
           if grep -q "warning: no-JS sections not baked" build.log; then echo "::error::prerender.js n'a pas tourné"; exit 1; fi
       - name: Comparer avec la version poussée
         run: |
-          if ! git diff --exit-code -- site/index.html site/reviews.html site/tweaks.html; then
-            echo "::error::site/index.html, site/reviews.html ou site/tweaks.html n'est pas à jour : lance python3 site/tools/build.py et pousse le résultat"
+          if ! git diff --exit-code -- site/index.html site/reviews.html site/tweaks.html site/partners.html || ! git ls-files --error-unmatch site/partners.html >/dev/null 2>&1; then
+            echo "::error::site/index.html, site/reviews.html, site/tweaks.html ou site/partners.html n'est pas à jour : lance python3 site/tools/build.py et pousse le résultat"
             exit 1
           fi

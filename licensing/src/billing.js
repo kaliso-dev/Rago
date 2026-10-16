@@ -1,5 +1,6 @@
-// Stripe Checkout (subscription, or the old one-time price), billing portal and webhooks.
+// Stripe Checkout (subscription, or the one-time Lifetime price), billing portal and webhooks.
 import Stripe from 'stripe';
+import { audit } from './db.js';
 import { fulfillCheckoutSession, revokeForCharge, setLicenseStatus, syncSubscription } from './licensing.js';
 import { codeFull, getAffiliate, voidReferrals } from './affiliates.js';
 
@@ -12,8 +13,10 @@ const isLive = (cfg) => /^(sk|rk)_live_/.test(cfg.stripeSecretKey || '');
 export const stripeMode = (cfg) => (!cfg.stripeSecretKey ? null : isLive(cfg) ? 'live' : 'test');
 const missing = (err) => err?.statusCode === 404 || err?.code === 'resource_missing';
 
-/** The price for ?interval=month|year, falling back to whichever is configured. */
+/** The price for ?interval=month|year, falling back to whichever is configured. 'lifetime': the one-time Lifetime price. */
 export function priceFor(cfg, interval) {
+  // Lifetime (2026-10-16): one payment, its own price (STRIPE_PRICE_LIFETIME), sold with or without the subscriptions.
+  if (interval === 'lifetime') return cfg.stripePriceLifetime ? { price: cfg.stripePriceLifetime, interval: null, plan: 'lifetime' } : null;
   // Premium is sold as a subscription only (decision of Oct 6, 2026). Without the recurring prices
   // nothing is sold: the old one-time STRIPE_PRICE_ID would sell a lifetime license the site doesn't offer.
   if (!cfg.subscriptions) return null;
@@ -67,9 +70,17 @@ export async function createCheckout(stripe, cfg, user, opts = {}, log = console
   }
 }
 
-async function buildCheckout(stripe, cfg, user, { interval, customerId, terms, ref, promotionCode, trialEnd } = {}) {
+/**
+ * What a Lifetime buyer reads above the Pay button. `replaces`: a subscriber switching to Lifetime, whose
+ * subscription stops once this is paid (stopReplacedSubscriptions).
+ */
+const lifetimeText = (user, replaces) => ['One payment: Rago Optimizer Premium for life on one Windows PC. No subscription, nothing renews.',
+  ...(replaces ? ['Your current subscription stops right after this payment.'] : []),
+  ...(user ? [] : ['You create your account right after paying.'])].join(' ');
+
+async function buildCheckout(stripe, cfg, user, { interval, customerId, terms, ref, promotionCode, trialEnd, replaces } = {}) {
   const choice = priceFor(cfg, interval);
-  const metadata = { product: RAGO_PRODUCT, ...(choice.interval ? { interval: choice.interval } : {}), ...(ref ? { ref } : {}) };
+  const metadata = { product: RAGO_PRODUCT, ...(choice.interval ? { interval: choice.interval } : {}), ...(choice.plan ? { plan: choice.plan } : {}), ...(ref ? { ref } : {}) };
   const common = {
     line_items: [{ price: choice.price, quantity: 1 }],
     success_url: `${cfg.publicUrl}/checkout/success?session_id={CHECKOUT_SESSION_ID}`,
@@ -88,7 +99,8 @@ async function buildCheckout(stripe, cfg, user, { interval, customerId, terms, r
       mode: 'payment',
       ...(customerId ? {} : { customer_creation: 'always' }),
       payment_intent_data: { metadata },
-      custom_text: custom('Rago Optimizer Premium works on one Windows PC per license. You create your account right after paying.'),
+      custom_text: custom(choice.plan === 'lifetime' ? lifetimeText(user, replaces)
+        : 'Rago Optimizer Premium works on one Windows PC per license. You create your account right after paying.'),
     });
   }
   return stripe.checkout.sessions.create({
@@ -194,6 +206,75 @@ export const isRagoCheckout = (session) => session?.metadata?.product === RAGO_P
 
 const idOf = (v) => (typeof v === 'string' ? v : v?.id ?? null);
 
+/** What Lifetime costs (2026-10-16): $59.99, once. The site shows the same amount (priceLifetime in site/src/page.html): change both together. */
+export const LIFETIME_PRICE = { amount: 5999, currency: 'usd' };
+
+/**
+ * The Lifetime offer as Stripe has it, for the site's card and /buy/lifetime: { amount, currency } (cents, 'usd'), or
+ * null when STRIPE_PRICE_LIFETIME isn't set, doesn't exist in this mode, isn't an active one-time price, or isn't
+ * LIFETIME_PRICE (another price pasted by mistake is never sold). `options`: Stripe request options (timeout).
+ * Throws when Stripe doesn't answer (the caller keeps its last answer).
+ */
+export async function lifetimePrice(stripe, cfg, options = {}) {
+  if (!stripe || !cfg.stripePriceLifetime) return null;
+  let p;
+  try { p = await stripe.prices.retrieve(cfg.stripePriceLifetime, {}, options); } catch (err) { if (missing(err)) return null; throw err; }
+  return p.active && p.type === 'one_time' && p.unit_amount === LIFETIME_PRICE.amount && p.currency === LIFETIME_PRICE.currency
+    ? { amount: p.unit_amount, currency: p.currency } : null;
+}
+
+// Subscription licenses a Lifetime purchase replaced (licensing.js, the only way a monthly or yearly license is
+// 'replaced') whose Stripe subscription isn't stopped yet. Even if that Lifetime was refunded since: the replaced
+// license gives no Premium, so its subscription must not renew.
+const REPLACED_SUBSCRIPTIONS = `FROM licenses l WHERE l.status = 'revoked' AND l.status_reason = 'replaced'
+  AND l.stripe_subscription_id IS NOT NULL AND l.plan IN ('month', 'year')
+  AND NOT EXISTS (SELECT 1 FROM audit a WHERE a.license_id = l.id AND a.type = 'license.subscription_stopped')`;
+const over = (sub) => !sub || ['canceled', 'incomplete_expired'].includes(sub.status);
+
+/**
+ * A subscriber bought Lifetime: the subscription it replaced is canceled in Stripe, so it never renews. Safe to call
+ * again, and twice at once (the webhook and the success page): each one is stopped once, one already canceled is only
+ * noted. Never throws: a failure is logged and retried by the hourly sweep. Returns { replaced, failed }: how many
+ * subscriptions the Lifetime `lifetimeId` replaced (any Lifetime of the account when not given), and the ids still running.
+ */
+export async function stopReplacedSubscriptions(db, stripe, userId, log = console, lifetimeId = null) {
+  // replaceOld (licensing.js) notes each replaced subscription with { by: <the Lifetime license id> }.
+  const replaced = (lifetimeId
+    ? await db.get("SELECT COUNT(*)::int AS n FROM audit WHERE type = 'license.subscription_replaced' AND user_id = ? AND detail = ?", [userId, JSON.stringify({ by: lifetimeId })])
+    : await db.get(`SELECT COUNT(*)::int AS n FROM licenses WHERE user_id = ? AND status = 'revoked'
+      AND status_reason = 'replaced' AND stripe_subscription_id IS NOT NULL AND plan IN ('month', 'year')`, [userId])).n;
+  const failed = [];
+  for (const l of await db.all(`SELECT l.id, l.stripe_subscription_id ${REPLACED_SUBSCRIPTIONS} AND l.user_id = ?`, [userId])) {
+    const id = l.stripe_subscription_id;
+    const read = async () => { try { return await stripe.subscriptions.retrieve(id); } catch (err) { if (missing(err)) return null; throw err; } };
+    try {
+      // Gone or already over (canceled from the portal meanwhile): nothing left to stop.
+      const running = !over(await read());
+      if (running) {
+        try {
+          await stripe.subscriptions.cancel(id);
+        } catch (err) {
+          // Canceled by the other caller in the meantime: Stripe refuses a second cancel, the subscription is stopped.
+          if (!over(await read())) throw err;
+        }
+      }
+      await audit(db, 'license.subscription_stopped', { licenseId: l.id, userId, detail: { subscription: id, by: 'lifetime', ...(running ? {} : { already: true }) } });
+    } catch (err) {
+      log.error?.(`[stripe] subscription ${id} replaced by Lifetime not canceled yet:`, err.message);
+      failed.push(id);
+    }
+  }
+  return { replaced, failed };
+}
+
+/** Hourly sweep: the subscriptions replaced by Lifetime that a Stripe error left running. Returns how many accounts. */
+export async function stopAllReplacedSubscriptions(db, stripe, log = console) {
+  if (!stripe) return 0;
+  const rows = await db.all(`SELECT DISTINCT l.user_id ${REPLACED_SUBSCRIPTIONS}`);
+  for (const r of rows) await stopReplacedSubscriptions(db, stripe, r.user_id, log);
+  return rows.length;
+}
+
 /** Stops future renewals after a refund or dispute. Best effort: the license is already revoked. */
 async function cancelSubscriptions(stripe, licenses, log) {
   for (const l of licenses) {
@@ -222,6 +303,8 @@ export async function handleStripeEvent(db, event, { stripe, onLicense, log } = 
         ? await stripe.subscriptions.retrieve(idOf(obj.subscription)) : null;
       const out = await fulfillCheckoutSession(db, obj, sub);
       if (out.created && onLicense) await onLicense(out.license, out.claimToken);
+      // Lifetime bought while subscribed: the subscription it replaced stops now.
+      if (out.license?.plan === 'lifetime' && out.license.status === 'active' && out.license.user_id && stripe) await stopReplacedSubscriptions(db, stripe, out.license.user_id, log, out.license.id);
       label = out.created ? 'license_created' : out.license ? 'license_exists' : 'unpaid';
       break;
     }
@@ -304,10 +387,11 @@ export async function stripeChecks(stripe, cfg, { db = null, webhook = {} } = {}
   const failed = (err) => (err?.message || String(err)).slice(0, 200);
   add('Clé', mode === 'live' ? 'ok' : 'warn', mode === 'live' ? 'Clé live : les paiements sont réels.' : 'Clé de test : aucun paiement n’est réel.');
 
-  const [account, monthly, yearly, hooks, portal, lastEvent, testRows] = await Promise.allSettled([
+  const [account, monthly, yearly, lifetime, hooks, portal, lastEvent, testRows] = await Promise.allSettled([
     mode === 'live' ? stripe.accounts.retrieveCurrent() : null,
     cfg.stripePriceMonthly ? stripe.prices.retrieve(cfg.stripePriceMonthly, { expand: ['product'] }) : null,
     cfg.stripePriceYearly ? stripe.prices.retrieve(cfg.stripePriceYearly, { expand: ['product'] }) : null,
+    cfg.stripePriceLifetime ? stripe.prices.retrieve(cfg.stripePriceLifetime, { expand: ['product'] }) : null,
     stripe.webhookEndpoints.list({ limit: 100 }),
     stripe.billingPortal.configurations.list({ is_default: true, limit: 1 }),
     db ? db.get('SELECT type, received_at FROM stripe_events WHERE livemode = ? ORDER BY received_at DESC LIMIT 1', [mode === 'live']) : null,
@@ -344,6 +428,25 @@ export async function stripeChecks(stripe, cfg, { db = null, webhook = {} } = {}
     add(label, 'ok', `${product}${money(p.unit_amount, p.currency)} ${each}.`);
   }
   if (currencies.size > 1) add('Devise', 'error', 'Les deux prix ne sont pas dans la même devise : le site affiche des dollars, crée-les en USD.');
+
+  // Lifetime (2026-10-16): optional. Without it the site's Lifetime card says "Coming soon" and nothing is sold.
+  const life = cfg.stripePriceLifetime;
+  if (!life) add('Prix Lifetime', 'warn', 'STRIPE_PRICE_LIFETIME est vide : la carte Lifetime du site affiche « Coming soon » et rien n’est vendu.');
+  else if (lifetime.status === 'rejected') {
+    add('Prix Lifetime', 'error', missing(lifetime.reason)
+      ? `${life} n’existe pas en mode ${mode}${otherMode(lifetime.reason) ? ` : c’est un prix du mode ${other}. Mets dans STRIPE_PRICE_LIFETIME le price_ créé en mode ${mode}` : life.startsWith('prod_') ? ' : c’est l’identifiant du produit, mets celui du prix (price_…)' : ''}.`
+      : `Stripe n’a pas répondu : ${failed(lifetime.reason)}`);
+  } else {
+    const p = lifetime.value;
+    const wrong = [];
+    if (!p.active) wrong.push('il est archivé dans Stripe');
+    if (p.type !== 'one_time') wrong.push('ce n’est pas un prix en paiement unique');
+    if (p.currency !== LIFETIME_PRICE.currency) wrong.push('il n’est pas en USD alors que le site affiche des dollars');
+    else if (p.unit_amount !== LIFETIME_PRICE.amount) wrong.push(`il vaut ${money(p.unit_amount, p.currency)} au lieu de ${money(LIFETIME_PRICE.amount, LIFETIME_PRICE.currency)}, le prix affiché sur le site`);
+    const product = typeof p.product === 'object' && p.product?.name ? `${p.product.name} · ` : '';
+    if (wrong.length) add('Prix Lifetime', 'error', `${life} : ${wrong.join(', ')}. Lifetime n’est pas vendu.`);
+    else add('Prix Lifetime', 'ok', `${product}${money(p.unit_amount, p.currency)} une fois, le prix affiché sur le site.`);
+  }
 
   // The destination(s) sending to /webhooks/stripe on this server (or its other address on Railway).
   const ours = hooks.status === 'fulfilled' ? (hooks.value?.data || []).filter((e) => pathOf(e.url)?.pathname === '/webhooks/stripe') : [];

@@ -59,33 +59,36 @@ def page(name,title,desc,body,upd=UPD):
     meta=f'<meta name="description" content="{desc}">\n<link rel="canonical" href="{SITE}/{name}">'
     open(os.path.join(OUT,name),'w').write(HEAD.format(title=title,upd=upd,meta=meta)+body+FOOT)
 
-page('terms.html','Terms of Sale','Terms of sale for Rago Optimizer: the Free and Premium plans, prices, your one-PC license, renewal and cancellation.',f'''
+page('terms.html','Terms of Sale','Terms of sale for Rago Optimizer: the Free, Premium and Lifetime plans, prices, your one-PC license, renewal and cancellation.',f'''
 <h2>1. Who we are</h2>
 <p>Rago Optimizer is an independent project, run and sold from France by the Rago Optimizer team. Contact: {MAIL}, or our Discord server.</p>
 <p>This site is hosted by Netlify, Inc., 101 2nd Street, San Francisco, CA 94105, USA. Account pages and the license server are hosted by Railway Corporation, San Francisco, CA, USA.</p>
 
 <h2>2. What you buy</h2>
-<p>Rago Optimizer is a Windows 10 and 11 app that changes Windows, network and game settings. It comes in two plans:</p>
+<p>Rago Optimizer is a Windows 10 and 11 app that changes Windows, network and game settings. It comes in three plans:</p>
 <ul>
 <li><strong>Free:</strong> the app with a limited set of tweaks, with no payment. You don't need an account to use it, only to leave a review.</li>
 <li><strong>Premium:</strong> a monthly or yearly subscription that unlocks every tweak, presets and updates while the subscription is active.</li>
+<li><strong>Lifetime:</strong> Premium in one payment, with no subscription and nothing to renew. It unlocks the same tweaks, presets and updates as Premium for as long as Rago Optimizer Premium is offered.</li>
 </ul>
 <p>Results depend on your hardware, your connection and the game server. We don't promise a specific ping, frame rate or hit registration result. Distance to the server can't be changed by any software.</p>
 
 <h2>3. Prices and payment</h2>
 <p>Prices are shown on the site before checkout, in US dollars. No VAT is charged: VAT exemption under article 293 B of the French General Tax Code (TVA non applicable, art. 293 B du CGI). Payment is handled by Stripe. We never see or store your card number.</p>
-<p>Your subscription renews automatically at the end of each month or year, at the price you accepted, until you cancel. If we change the price, we'll tell you by email before your next renewal and you can cancel before it applies.</p>
+<p>A subscription renews automatically at the end of each month or year, at the price you accepted, until you cancel. If we change the price, we'll tell you by email before your next renewal and you can cancel before it applies. Lifetime is paid once and never renews.</p>
+<p>Discount codes, affiliate codes included, apply to Lifetime as they do to a subscription, within their own conditions (for example, a first payment only).</p>
+<p>If you have a Premium subscription, you can switch to Lifetime. As soon as Lifetime is on your account (right after the payment if you pay while signed in), your subscription is canceled so it doesn't renew, and your license stays on the same PC. The time left on your subscription isn't refunded.</p>
 
 <h2>4. Your license</h2>
 <ul>
-<li>One Premium subscription works on <strong>one PC</strong>. The license is linked to that PC the first time you sign in to the app and activate it.</li>
+<li>One Premium subscription, or one Lifetime purchase, works on <strong>one PC</strong>. The license is linked to that PC the first time you sign in to the app and activate it.</li>
 <li>If you change PCs, contact support to move your license.</li>
 <li>You may not share, resell or sublicense your account or license, or try to bypass the license check.</li>
 <li>If a renewal payment fails, Stripe tries it again over the following days and Premium stays on meanwhile. If it still fails, Premium stops. The app keeps working in free mode.</li>
 </ul>
 
 <h2>5. Right of withdrawal (EU and UK customers)</h2>
-<p>Premium is digital content supplied right after payment. By completing checkout, you ask for immediate access and acknowledge that you lose your 14-day right of withdrawal once the license is delivered. Our <a href="refunds.html">Refunds and Cancellation</a> policy explains when we refund anyway.</p>
+<p>Premium, by subscription or Lifetime, is digital content supplied right after payment. By completing checkout, you ask for immediate access and acknowledge that you lose your 14-day right of withdrawal once the license is delivered. Our <a href="refunds.html">Refunds and Cancellation</a> policy explains when we refund anyway.</p>
 
 <h2>6. Using the app safely</h2>
 <p>Before applying changes, Rago offers to create a Windows restore point (ticked by default before Advanced tweaks), and its Restore section opens System Restore so you can go back to it. Turning a tweak off puts back the Windows settings it changed. One-time actions, like removing apps, can't be turned off. When Premium ends or you sign out, Rago puts back the settings changed by Premium tweaks. Some tweaks are marked <strong>Advanced</strong>: they change deeper Windows settings or turn off services, and ask for confirmation. You choose which tweaks to apply, and you are responsible for that choice.</p>
@@ -106,15 +109,19 @@ page('terms.html','Terms of Sale','Terms of sale for Rago Optimizer: the Free an
 
 <h2>11. Changes and law</h2>
 <p>We may update these terms. The version accepted at checkout applies to that purchase. These terms are governed by French law, which doesn't take away the protection the mandatory consumer law of your country gives you. If a dispute isn't solved with our support, you can also use the mediation services and the courts of your own country.</p>
-''',upd="October 11, 2026")
+''',upd="October 16, 2026")
 
-page('refunds.html','Refunds and Cancellation','How to cancel a Rago Optimizer Premium subscription, when you can get a refund and what it does to your license.',f'''
+page('refunds.html','Refunds and Cancellation','How to cancel a Rago Optimizer Premium subscription, when you can get a refund, Lifetime included, and what it does to your license.',f'''
 <h2>Cancel anytime</h2>
 <p>Cancel from your account page (Cancel or manage subscription). You keep Premium until the end of the period you already paid for, then the app goes back to free mode. Nothing else is charged.</p>
+<p>Lifetime is a single payment: there is nothing to cancel and nothing renews.</p>
+
+<h2>Switching to Lifetime</h2>
+<p>When a subscriber buys Lifetime, their subscription is canceled as soon as Lifetime is on their account (right after the payment if they pay while signed in), so it doesn't renew. The time left on the subscription isn't refunded. If the subscription renews anyway, we refund that renewal.</p>
 
 <h2>Refunds</h2>
 <ul>
-<li><strong>Before you activate the app:</strong> if you haven't signed in to the app and activated Premium on a PC, we refund your first payment if you ask within 14 days.</li>
+<li><strong>Before you activate the app:</strong> if you haven't signed in to the app and activated Premium on a PC, we refund your first payment, or your Lifetime payment, if you ask within 14 days.</li>
 <li><strong>Charged twice or by mistake:</strong> we refund the extra payment.</li>
 <li><strong>After activation:</strong> Premium is digital content delivered right away, so we don't refund by default. If something doesn't work on your PC, contact us first: we'll try to fix it, and refund when we can't.</li>
 </ul>
@@ -131,7 +138,7 @@ page('refunds.html','Refunds and Cancellation','How to cancel a Rago Optimizer P
 
 <h2>Contact</h2>
 <p>{MAIL}, or our Discord server. Include the email of your Rago account.</p>
-''')
+''',upd="October 16, 2026")
 
 page('privacy.html','Privacy Policy','What Rago Optimizer and its account server collect, why, who processes it, how long it is kept and how to delete it.',f'''
 <h2>Who is responsible</h2>

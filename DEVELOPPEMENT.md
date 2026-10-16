@@ -56,7 +56,7 @@ npm run local
 - Les boutons du site (Sign in, Get Premium, Download) vont vers ce serveur local, **jamais vers le vrai**. Même si ton Terminal a encore le `DATABASE_URL` de production (pour `npm run admin`), `npm run local` l'ignore, comme les clés Stripe live, Resend et Discord.
 - L'app et le serveur ensemble : lance `npm run local` dans un Terminal et `npm run window` dans un autre ; les liens de compte de l'app ouvrent alors ce serveur local.
 
-La page publiée `site/index.html` est fabriquée à partir de `site/src/page.html` (et `site/reviews.html` à partir de `site/src/reviews.html`, `site/tweaks.html` à partir de `site/src/tweaks.html`). Pendant une modification, `http://localhost:8787/src/page.html` montre la source ; `index.html`, `reviews.html` et `tweaks.html` sont refaites par `python3 site/tools/build.py` (Claude le fait dans la pull request).
+La page publiée `site/index.html` est fabriquée à partir de `site/src/page.html` (et `site/reviews.html` à partir de `site/src/reviews.html`, `site/tweaks.html` à partir de `site/src/tweaks.html`, `site/partners.html` à partir de `site/src/partners.html` et de la liste `site/src/partners.json`). Pendant une modification, `http://localhost:8787/src/page.html` montre la source ; `index.html`, `reviews.html`, `tweaks.html` et `partners.html` sont refaites par `python3 site/tools/build.py` (Claude le fait dans la pull request).
 
 ## 4. Le chemin d'une modification
 
@@ -101,7 +101,7 @@ Ne copie jamais la base de production dans ce projet : staging doit rester vide 
 
 Tout se fait avec **Mode test** activé (en haut à droite), comme avant le lancement :
 
-- **Prix** : Catalogue de produits → Rago Optimizer Premium → les deux prix **test** (5,99 et 29,99 USD) créés avant le lancement. Copie les deux `price_...`.
+- **Prix** : Catalogue de produits → Rago Optimizer Premium → les deux prix **test** (5,99 et 29,99 USD) créés avant le lancement. Copie les deux `price_...`. Pour Lifetime, ajoute au même produit un prix **test** en **paiement unique** de 59,99 USD (description `Lifetime`) et copie son `price_...`.
 - **Clé** : Développeurs → Clés API → clé secrète `sk_test_...`.
 - **Webhook** : Développeurs → Webhooks → **Ajouter une destination**, URL `<adresse staging>/webhooks/stripe`, les 10 événements de l'étape 6 de [`licensing/docs/MISE-EN-LIGNE.md`](licensing/docs/MISE-EN-LIGNE.md). Copie son secret `whsec_...`. (Il te faudra l'adresse staging de l'étape d : tu peux revenir ici après.)
 - **Portail client** (mode test) enregistré, comme à l'étape 3.5 du même guide.
@@ -115,7 +115,7 @@ Tout se fait avec **Mode test** activé (en haut à droite), comme avant le lanc
    | Variable | Valeur staging |
    |---|---|
    | `DATABASE_URL` | l'adresse du projet Supabase `rago-staging` |
-   | `STRIPE_SECRET_KEY`, `STRIPE_PRICE_MONTHLY`, `STRIPE_PRICE_YEARLY`, `STRIPE_WEBHOOK_SECRET` | les valeurs **test** de l'étape c |
+   | `STRIPE_SECRET_KEY`, `STRIPE_PRICE_MONTHLY`, `STRIPE_PRICE_YEARLY`, `STRIPE_PRICE_LIFETIME`, `STRIPE_WEBHOOK_SECRET` | les valeurs **test** de l'étape c |
    | `STRIPE_PORTAL_LOGIN_URL` | le lien du portail **test**, ou supprime-la |
    | `PUBLIC_URL` | l'adresse staging |
    | `SITE_URL` | `https://staging--rago-optimiser.netlify.app` |
