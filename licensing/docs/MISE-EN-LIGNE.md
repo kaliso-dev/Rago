@@ -63,13 +63,14 @@ Commence tout en **mode test** Stripe : rien n'est vraiment débité tant que tu
 ## Étape 3 : Stripe (paiement)
 
 1. Crée un compte sur [stripe.com](https://stripe.com). En haut à droite, active le **mode test**.
-2. **Catalogue de produits → Ajouter un produit**, un seul produit avec **deux prix** :
+2. **Catalogue de produits → Ajouter un produit**, un seul produit avec **trois prix** :
    - Nom : `Rago Optimizer Premium`. Description : `Rago Optimizer for Windows, one PC per license.`
    - **Devise : USD** (choix du 7 octobre 2026, le site affiche des $). Les deux prix doivent être en USD ; Stripe ne convertit pas.
    - Prix 1 : **Récurrent**, période **Mensuelle**, **5,99 $**.
    - **Ajouter un autre prix** → Prix 2 : **Récurrent**, période **Annuelle**, **29,99 $** (5 mois payés au lieu de 12, comme l'annonce le site).
+   - **Ajouter un autre prix** → Prix 3 : **Paiement unique**, **59,99 $**, description `Lifetime` : c'est Lifetime, Premium à vie en un seul paiement (offre du 16 octobre 2026, même montant que `priceLifetime` dans `site/src/page.html`).
    - Fais-le une fois en mode test, puis une fois en live (étape 10) : chaque mode a ses propres `price_...`.
-   - Enregistre. Ouvre chaque prix et copie son identifiant `price_...` : le mensuel **c'est `STRIPE_PRICE_MONTHLY`**, l'annuel **c'est `STRIPE_PRICE_YEARLY`**.
+   - Enregistre. Ouvre chaque prix et copie son identifiant `price_...` (pas celui du produit, `prod_...`) : le mensuel **c'est `STRIPE_PRICE_MONTHLY`**, l'annuel **c'est `STRIPE_PRICE_YEARLY`**, le paiement unique **c'est `STRIPE_PRICE_LIFETIME`**.
 3. **Développeurs → Clés API** : copie la **clé secrète** `sk_test_...` : **c'est `STRIPE_SECRET_KEY`.**
 4. **PayPal** (beaucoup de jeunes joueurs n'ont pas de carte) : **Paramètres → Moyens de paiement** → active **PayPal**. Pour les abonnements, Stripe doit d'abord valider ton compte pour le paiement récurrent PayPal (demande depuis la même page). Rien à changer côté serveur : la page de paiement propose tout seul les moyens activés.
 5. **Paramètres → Facturation → Portail client** : clique **Activer le lien de test** (ou Enregistrer), coche « Annuler les abonnements » (à la fin de la période), « Changer de formule » avec tes deux prix, et « Mettre à jour le moyen de paiement ». C'est la page qu'ouvre le bouton **Cancel or manage subscription** du tableau de bord.
@@ -82,7 +83,9 @@ Commence tout en **mode test** Stripe : rien n'est vraiment débité tant que tu
    Sur la même page : **Libellé de relevé bancaire** (statement descriptor) = `RAGO OPTIMIZER` (c'est ce que le joueur lit sur son relevé ; un libellé qu'il ne reconnaît pas finit en contestation), et **E-mail du service client** = une adresse que tu lis vraiment (elle apparaît sur les reçus Stripe).
 9. Dans le **Portail client** (point 4), ajoute aussi les liens **Conditions** et **Confidentialité** vers ces deux mêmes pages.
 
-Tu avais déjà créé un prix « Paiement unique » (`STRIPE_PRICE_ID`) ? Il ne sert plus : **retire `STRIPE_PRICE_ID` de Railway**. Premium se vend uniquement en abonnement : tant que `STRIPE_PRICE_MONTHLY` et `STRIPE_PRICE_YEARLY` ne sont pas renseignés, le bouton d'achat affiche « Checkout opens soon » et rien n'est vendu (avant, il vendait l'ancien prix unique comme licence à vie, contrairement au site).
+Tu avais déjà créé un prix « Paiement unique » (`STRIPE_PRICE_ID`) ? Il ne sert plus : **retire `STRIPE_PRICE_ID` de Railway**. Tant que `STRIPE_PRICE_MONTHLY` et `STRIPE_PRICE_YEARLY` ne sont pas renseignés, le bouton d'achat affiche « Checkout opens soon » et rien n'est vendu.
+
+Lifetime a **son propre prix** (`STRIPE_PRICE_LIFETIME`), jamais celui d'un abonnement ni l'ancien `STRIPE_PRICE_ID` : le serveur refuse de le vendre avec l'identifiant d'un autre prix. Tant que `STRIPE_PRICE_LIFETIME` est vide, ou que son prix Stripe n'est pas un paiement unique actif, la carte Lifetime du site affiche « Coming soon », la page compte ne le propose pas et rien n'est vendu. Le site ne l'ouvre que si le montant dans Stripe est celui qu'il affiche (59,99 $) : si tu changes le prix, change aussi `priceLifetime` dans `site/src/page.html`. Les codes promo marchent sur Lifetime comme sur l'abonnement (décision du 16 octobre 2026). Un abonné qui achète Lifetime garde son PC, et son abonnement est annulé dans Stripe juste après le paiement (sans remboursement du temps restant) ; si Stripe refuse l'annulation, le serveur réessaie toutes les heures.
 
 Le webhook se fait à l'étape 6, une fois le serveur en ligne.
 
@@ -115,6 +118,7 @@ Sans Resend, tout marche sauf les emails : pas de lien de secours après achat, 
    STRIPE_SECRET_KEY=sk_test_...
    STRIPE_PRICE_MONTHLY=price_...
    STRIPE_PRICE_YEARLY=price_...
+   STRIPE_PRICE_LIFETIME=price_...
    STRIPE_WEBHOOK_SECRET=whsec_a_remplir_a_l_etape_6
    STRIPE_PORTAL_LOGIN_URL=https://billing.stripe.com/p/login/...
    RESEND_API_KEY=re_...
@@ -123,7 +127,7 @@ Sans Resend, tout marche sauf les emails : pas de lien de secours après achat, 
    PRICE_LABEL=$5.99 a month or $29.99 a year
    ```
 
-   `PRICE_LABEL` est le prix affiché aux comptes gratuits sur leur tableau de bord (mêmes montants et devise que Stripe et le site ; laisse vide pour ne rien afficher).
+   `PRICE_LABEL` est le prix affiché aux comptes gratuits sur leur tableau de bord (mêmes montants et devise que Stripe et le site ; laisse vide pour ne rien afficher). Avec Lifetime en vente, tu peux mettre `$5.99 a month, $29.99 a year or $59.99 once`.
    Tu n'as **pas** de clé de licence à générer : au premier démarrage, le serveur crée sa paire de clés et la garde dans Supabase (table `server_secrets`). Sauvegarde-la au point 7.
 5. **Settings → Networking → Custom Domain** : `account.ragohub.com`. Railway affiche un enregistrement **CNAME** : ajoute-le chez ton registrar (nom `account`, valeur donnée par Railway). Le HTTPS se met en place tout seul.
 6. **Vérifie** dans ton navigateur :
@@ -197,14 +201,14 @@ Si une étape coince, envoie-moi une capture et l'heure : je trouve la cause.
 Ce qui dépend du mode Stripe : la clé, les deux prix, le webhook et son secret, le portail client et son lien, les codes promo. Un objet Stripe n'existe que dans le mode où il a été créé : tout ce qui suit est à refaire **mode test éteint**. Rien ne change sur Netlify ni dans l'app (aucune clé Stripe n'y est).
 
 1. **Compte** : Stripe → **Activer les paiements** (identité, IBAN). Tant que Stripe ne l'a pas validé, `/admin` affiche « Compte : à corriger ».
-2. **Produit et prix** : Catalogue de produits → **Rago Optimizer Premium** avec deux prix **récurrents en USD** : 5,99 mensuel et 29,99 annuel (les montants du site). Copie les deux `price_...`.
+2. **Produit et prix** : Catalogue de produits → **Rago Optimizer Premium** avec deux prix **récurrents en USD** : 5,99 mensuel et 29,99 annuel, et un prix en **paiement unique** de 59,99 USD pour Lifetime (les montants du site). Copie les trois `price_...`.
 3. **Clé secrète** : Développeurs → Clés API → clé secrète `sk_live_...`. Stripe ne montre une clé live qu'une fois : colle-la directement dans Railway (étape 6 ci-dessous) et garde-la dans ton gestionnaire de mots de passe.
 4. **Webhook** : Développeurs → Webhooks → **Ajouter une destination**, URL `https://account.rago-optimizer.com/webhooks/stripe`, les 10 événements de l'étape 6. Copie son secret `whsec_...`.
 5. **Portail client** : Paramètres → Facturation → Portail client, comme à l'étape 3.5 (résiliation, changement de formule avec les deux prix **live**, moyen de paiement, liens Conditions et Confidentialité), puis **Enregistrer**. Copie le lien de connexion au portail (il ne contient pas `test_`).
    Vérifie aussi en live : Moyens de paiement (PayPal), Abonnements et e-mails (relances, rappel avant renouvellement annuel), E-mails clients (reçus). Les Informations publiques (URL des conditions, libellé `RAGO OPTIMIZER`) sont communes aux deux modes.
-6. **Railway → Variables** : remplace `STRIPE_SECRET_KEY`, `STRIPE_PRICE_MONTHLY`, `STRIPE_PRICE_YEARLY`, `STRIPE_WEBHOOK_SECRET` et `STRIPE_PORTAL_LOGIN_URL` par les valeurs live, retire `STRIPE_PRICE_ID` s'il est encore là, puis **Deploy** une seule fois. Garde les valeurs test dans ton gestionnaire de mots de passe (« Revenir en mode test »).
+6. **Railway → Variables** : remplace `STRIPE_SECRET_KEY`, `STRIPE_PRICE_MONTHLY`, `STRIPE_PRICE_YEARLY`, `STRIPE_PRICE_LIFETIME`, `STRIPE_WEBHOOK_SECRET` et `STRIPE_PORTAL_LOGIN_URL` par les valeurs live, retire `STRIPE_PRICE_ID` s'il est encore là, puis **Deploy** une seule fois. Garde les valeurs test dans ton gestionnaire de mots de passe (« Revenir en mode test »).
 7. **Stripe, mode test** : Développeurs → Webhooks → la destination test vers `account.rago-optimizer.com` → **Désactiver**. Sinon ses événements arrivent avec le mauvais secret, sont refusés, et `/admin` le signale.
-8. **Vérifie sur `/admin`**, section **Paiements Stripe** : clé, compte, prix, webhook, portail et lien doivent être « OK ». Chaque ligne « À corriger » dit quoi changer (un prix du mode test, un événement manquant, le portail pas enregistré…). « Secret du webhook » reste « À vérifier » jusqu'au premier achat : le secret ne se lit pas dans Stripe, seul un événement reçu le confirme.
+8. **Vérifie sur `/admin`**, section **Paiements Stripe** : clé, compte, prix (dont « Prix Lifetime »), webhook, portail et lien doivent être « OK ». Chaque ligne « À corriger » dit quoi changer (un prix du mode test, un événement manquant, le portail pas enregistré…). « Secret du webhook » reste « À vérifier » jusqu'au premier achat : le secret ne se lit pas dans Stripe, seul un événement reçu le confirme.
 9. **Achats de test** : les licences achetées en mode test sont dans la même base. Elles donnent encore Premium, comptent pour les affiliés et empêchent ces comptes d'acheter. Sur `/admin`, **Arrêter les licences de test** les passe en « Test purchase » (rien d'autre n'est touché : licences offertes, achats live, comptes, avis). Une licence offerte se redonne avec `npm run admin -- grant`.
 10. **Code du pop-up** : le code créé en test n'existe pas en live. Sur `/admin`, tape `RAGO50`, `50` et `15`, puis **Enregistrer** : « Code créé dans Stripe ». Les codes d'affiliation sont recréés en live tout seuls dans l'heure (ou dès que l'affilié ouvre `/affiliate`).
 11. **Un vrai achat, puis remboursé**, dans une fenêtre de navigation privée. Avant le lancement, ouvre d'abord ton lien `https://account.rago-optimizer.com/acces/<PREVIEW_KEY>`.
@@ -221,7 +225,7 @@ Pour refaire des essais sans vrai paiement, remets les valeurs **test** dans Rai
 | Variable | Valeur test |
 |---|---|
 | `STRIPE_SECRET_KEY` | Développeurs → Clés API → **Clé secrète** `sk_test_...` |
-| `STRIPE_PRICE_MONTHLY`, `STRIPE_PRICE_YEARLY` | Catalogue de produits → Rago Optimizer Premium → les deux prix **test** `price_...` (créés à l'étape 3.2 ; s'ils n'existent pas en test, recrée-les) |
+| `STRIPE_PRICE_MONTHLY`, `STRIPE_PRICE_YEARLY`, `STRIPE_PRICE_LIFETIME` | Catalogue de produits → Rago Optimizer Premium → les trois prix **test** `price_...` (créés à l'étape 3.2 ; s'ils n'existent pas en test, recrée-les) |
 | `STRIPE_WEBHOOK_SECRET` | Développeurs → Webhooks → la destination **test** vers `/webhooks/stripe` → **Secret de signature** `whsec_...` (sinon crée-la comme à l'étape 6) |
 | `STRIPE_PORTAL_LOGIN_URL` | Paramètres → Facturation → Portail client (mode test) → lien de connexion |
 
@@ -351,12 +355,13 @@ Le bot compte à partir du moment où il est connecté : rien avant. Un test (st
 | `DATABASE_URL` | Supabase → Connect → Session pooler (étape 2.2) |
 | `SUPABASE_URL`, `SUPABASE_SERVICE_ROLE_KEY` | Supabase → Project Settings → API Keys (étape 2.5). Servent aussi aux photos de profil (bucket `avatars`, créé tout seul ; `AVATAR_BUCKET` change son nom, facultatif) |
 | `STRIPE_PRICE_MONTHLY`, `STRIPE_PRICE_YEARLY`, `STRIPE_SECRET_KEY` | Stripe (étapes 3.2 et 3.3) |
+| `STRIPE_PRICE_LIFETIME` | Stripe, le prix en paiement unique de 59,99 $ (étape 3.2). Facultative : vide, Lifetime reste « Coming soon » sur le site et rien n'est vendu |
 | `STRIPE_WEBHOOK_SECRET` | Stripe → Webhooks (étape 6) |
 | `RESEND_API_KEY`, `MAIL_FROM` | Resend (étape 4) |
 | `PUBLIC_URL`, `SITE_URL` | Ton domaine (étape 1) |
 | `SUPPORT_URL` | Ton invitation Discord |
 | `STRIPE_PORTAL_LOGIN_URL` | Stripe → Portail client → lien de connexion (étape 3.5) |
-| `PRICE_LABEL` | Le prix affiché aux comptes gratuits : `$5.99 a month or $29.99 a year`, mêmes montants que Stripe et le site |
+| `PRICE_LABEL` | Le prix affiché aux comptes gratuits : `$5.99 a month or $29.99 a year` (avec Lifetime : `$5.99 a month, $29.99 a year or $59.99 once`), mêmes montants que Stripe et le site |
 | `LICENSE_SIGNING_KEY`, `SESSION_SECRET` | `npm run admin -- export-keys` (étape 5.7) |
 | `SCRIPTS_SECRET` | Une valeur aléatoire que tu génères une fois (étape 8), identique au secret GitHub `RAGO_SCRIPTS_SECRET`. Ne la change jamais |
 | `DISCORD_CLIENT_ID`, `DISCORD_CLIENT_SECRET`, `DISCORD_BOT_TOKEN`, `DISCORD_GUILD_ID`, `DISCORD_ROLE_ID` | Discord Developer Portal et ton serveur (« Le rôle Pro sur Discord »). Facultatives : sans elles, le rôle se donne à la main |

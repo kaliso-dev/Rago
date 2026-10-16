@@ -41,17 +41,19 @@ if (stripe) {
 }
 
 // Hourly: referrals that cleared the hold period count, affiliates at the goal get their reward even if
-// they don't open their account page, ended affiliate rewards stop, and affiliate codes become Stripe
-// promotion codes (after a switch between test and live keys too).
+// they don't open their account page, ended affiliate rewards stop, affiliate codes become Stripe
+// promotion codes (after a switch between test and live keys too), and subscriptions replaced by Lifetime stop.
 const { affiliatesToEvaluate, settleAffiliate } = await import('./affiliates.js');
 const { expireRewards } = await import('./licensing.js');
-const { syncAffiliatePromos } = await import('./billing.js');
+const { stopAllReplacedSubscriptions, syncAffiliatePromos } = await import('./billing.js');
 const sweep = async () => {
   try {
     for (const id of await affiliatesToEvaluate(db, cfg)) await settleAffiliate(db, cfg, stripe, console, id);
     await expireRewards(db);
     await syncAffiliatePromos(db, stripe, cfg, console);
   } catch (err) { console.error('[affiliate] sweep failed', err); }
+  // A subscription replaced by Lifetime that Stripe didn't let us cancel at the purchase: tried again.
+  try { await stopAllReplacedSubscriptions(db, stripe, console); } catch (err) { console.error('[stripe] Lifetime sweep failed', err); }
 };
 setInterval(sweep, 60 * 60 * 1000).unref();
 setTimeout(sweep, 30 * 1000).unref();

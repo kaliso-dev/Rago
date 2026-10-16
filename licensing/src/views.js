@@ -288,7 +288,7 @@ function affiliateLine(a) {
   return next;
 }
 
-export function dashboardPage(cfg, { user, license, device, notice, error, canReset, nextResetAt, affiliate, discordLink, discordRewards = [], inviteRewards = [], review = null }) {
+export function dashboardPage(cfg, { user, license, device, notice, error, canReset, nextResetAt, affiliate, discordLink, discordRewards = [], inviteRewards = [], review = null, lifetime = false }) {
   const active = license?.status === 'active';
   const reason = license?.status_reason;
   const ended = !active && reason === 'subscription_ended';
@@ -431,7 +431,7 @@ export function dashboardPage(cfg, { user, license, device, notice, error, canRe
       <p class="muted">${cfg.freeTweaks} tweaks unlocked. ${unlocks.split('. ')[0]}.${cfg.priceLabel ? html` <strong class="price">${cfg.priceLabel}</strong>.` : ''}</p>
       <div class="row"><a class="btn btn-buy btn-lg" href="${buyUrl}">Get Premium ${ICON.arrow}</a>
         <a class="btn btn-ghost btn-lg" href="/account/download" data-download>${ICON.download}<span>Download the free version</span></a></div>
-      <p class="muted small">${cfg.subscriptions ? 'Monthly or yearly. Secure checkout with Stripe. Cancel anytime.' : 'Secure checkout with Stripe.'} Already paid? Sign in with the email you paid with${cfg.mailEnabled ? ', or open the link in your purchase email' : ''}. Still not here? ${supportLink(cfg, 'Ask on Discord')} with your payment email and we'll add it to this account.</p>`, howto);
+      <p class="muted small">${cfg.subscriptions ? (lifetime ? 'Monthly or yearly, cancel anytime, or Lifetime in one payment. Secure checkout with Stripe.' : 'Monthly or yearly. Secure checkout with Stripe. Cancel anytime.') : 'Secure checkout with Stripe.'} Already paid? Sign in with the email you paid with${cfg.mailEnabled ? ', or open the link in your purchase email' : ''}. Still not here? ${supportLink(cfg, 'Ask on Discord')} with your payment email and we'll add it to this account.</p>`, howto);
 
   const OFF = { subscription_ended: 'Ended', refunded: 'Refunded', disputed: 'Disputed', test_mode: 'Test purchase' };
   const offBadge = () => OFF[reason] || 'Revoked';
@@ -521,6 +521,8 @@ export function dashboardPage(cfg, { user, license, device, notice, error, canRe
     } else {
       line = end ? `Renews on ${fmtDate(end)}. Cancel anytime.` : 'Renews automatically. Cancel anytime.';
     }
+    // Lifetime on sale (2026-10-16): a subscriber can switch, the subscription stops once Lifetime is paid.
+    if (active && lifetime) actions = html`${actions}<a class="btn btn-ghost btn-sm" href="/buy/lifetime">Switch to Lifetime</a>`;
     return sect('sect-plan', html`<p class="overline">Subscription</p>${badge}`,
       html`<div class="plan-line"><span class="plan-icon">${ICON.card}</span><div><strong>Rago Optimizer Premium · ${PLAN[license.plan]}</strong>
         <p class="muted small">${line}</p></div></div>`,

@@ -211,6 +211,15 @@ Sans jeton valable : `401 invalid_token`.
 
 **Public** : `GET /reviews` (sans jeton, CORS ouvert, cache 60 s) répond `{ "count", "average", "reviews": [{ "name", "rating", "comment", "avatar_url", "date": "AAAA-MM-JJ" }] }`, du plus récent au plus ancien, 60 au plus. Le commentaire est du texte brut : l'afficher comme texte, jamais comme HTML.
 
+## Lifetime (2026-10-16, rien d'obligatoire côté app)
+
+Premium s'achète aussi en un seul paiement, Lifetime, sur son propre prix Stripe (`STRIPE_PRICE_LIFETIME`, voir MISE-EN-LIGNE.md). Le contrat de l'app ne change pas :
+
+- `license.billing.interval` vaut `"lifetime"` pour une licence achetée ainsi, comme pour les licences offertes et les anciens achats uniques, avec `renews_at` et `ends_at` à `null`.
+- Un abonné qui passe à Lifetime garde son PC : son ancienne licence est remplacée et son abonnement Stripe arrêté juste après le paiement. Le `refresh` avec le token de l'ancienne licence répond `active` avec la licence Lifetime, comme après une récompense d'affiliation remplacée.
+
+**Public** : `GET /plans` (sans jeton, CORS ouvert, cache 60 s) répond `{ "lifetime": { "amount", "currency" } }`, `amount` en centimes (`5999`) et `currency` en minuscules (`"usd"`), ou `{ "lifetime": null }` quand Lifetime ne peut pas être payé : variable absente, prix archivé ou pas en paiement unique, Stripe injoignable avant toute réponse. Le site n'active « Get Lifetime » que si ce montant et cette devise sont exactement ceux qu'il affiche ; sinon le bouton reste « Coming soon ». L'achat passe par `/buy/lifetime`, qui accepte `?ref=` et `?promo=` comme `/buy`.
+
 ## License token
 
 JWT compact, `alg: EdDSA` (Ed25519), en-tête `{"alg":"EdDSA","typ":"JWT","kid":"..."}`. Crate Rust conseillée : `jsonwebtoken` (algorithme `EdDSA`) ou `ed25519-dalek` directement.

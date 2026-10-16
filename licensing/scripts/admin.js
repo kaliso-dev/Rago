@@ -114,6 +114,12 @@ switch (cmd) {
       console.error(`Not attached: ${why}.`); process.exit(1);
     }
     console.log(`License ${lic.key} is now on ${email}. They see it on their account page and can activate it in the app.`);
+    // Lifetime on a subscriber's account replaces the subscription: it stops in Stripe (else the server's hourly sweep does it).
+    if (lic.plan === 'lifetime' && cfg.stripeSecretKey) {
+      const { stopReplacedSubscriptions } = await import('../src/billing.js');
+      const { replaced, failed } = await stopReplacedSubscriptions(db, new Stripe(cfg.stripeSecretKey), user.id);
+      if (replaced) console.log(failed.length ? `It replaced their subscription ${failed.join(', ')}, which Stripe didn't cancel yet: the server tries again every hour.` : 'It replaced their subscription, now canceled in Stripe: nothing else will be charged.');
+    }
     if (lic.referral_code) console.log(`The purchase came with referral code ${lic.referral_code}: it isn't applied by hand (run affiliate <affiliate email> to check that player's status).`);
     break;
   }

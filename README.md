@@ -243,6 +243,7 @@ cd app && npm ci && npm run tauri dev
 ## 8. Ce qui manque encore
 
 - **Les prix de Premium dans Stripe** : 5,99 $ par mois et 29,99 $ par an, en dollars comme le site. Crée dans Stripe les deux prix récurrents, le portail client et les événements du webhook, puis mets `STRIPE_PRICE_MONTHLY` et `STRIPE_PRICE_YEARLY` dans Railway (et `PRICE_LABEL`, par exemple `$5.99 a month`).
+- **Le prix Lifetime dans Stripe** : 59,99 $ en paiement unique, ajouté au même produit (étape 3.2 de [`licensing/docs/MISE-EN-LIGNE.md`](licensing/docs/MISE-EN-LIGNE.md)), puis `STRIPE_PRICE_LIFETIME` dans Railway, staging (prix test) d'abord, production (prix live) ensuite. Tant qu'il manque, la carte Lifetime du site affiche « Coming soon ».
 - **Affiliation et code promo** : dans Railway → Variables, supprime `AFFILIATE_HOLD_DAYS` (l'ancienne valeur 14 ; sans elle, un filleul compte dès l'activation), puis ajoute `ADMIN_KEY` et règle le code du pop-up sur `https://account.rago-optimizer.com/admin` (il est créé dans Stripe dans le mode de la clé de Railway, test ou live).
 - **L'exe dans le bucket** `downloads` de Supabase, vérifié sur `/download/status` (section 4.1).
 - **Désactiver GitHub Pages** : Settings → Pages → Source « None » (ou « Unpublish site »). Rien du dépôt n'y est plus publié, mais Pages n'a aucune utilité ici.
