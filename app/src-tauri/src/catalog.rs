@@ -299,9 +299,11 @@ mod tests {
         assert!(undo_of("in_mouse", None, None).is_none() && undo_of("in_mouse", None, Some(&bundle)).is_some());
         assert!(script("net_nagle", None, None).is_none(), "Premium sans licence");
         assert!(script("net_nagle", None, Some(&bundle)).is_some());
-        // réglages ajoutés en 1.1.6 : Premium, et chaque valeur touchée est relevée avant d'appliquer
+        // réglages ajoutés en 1.1.6 : chaque valeur touchée est relevée avant d'appliquer ; win_autoplay est Premium,
+        // win_ai gratuit depuis le 16 octobre 2026
+        assert!(script("win_autoplay", None, None).is_none(), "win_autoplay sans licence");
+        assert!(script("win_ai", None, None).is_some(), "win_ai dans le plan gratuit");
         for id in ["win_ai", "win_autoplay"] {
-            assert!(script(id, None, None).is_none(), "{id} sans licence");
             let p = probe(id, None, Some(&bundle)).expect(id);
             assert_eq!(p.matches("@@RAGO reg ").count(), script(id, None, Some(&bundle)).unwrap().matches("reg add").count(), "{id}");
         }
