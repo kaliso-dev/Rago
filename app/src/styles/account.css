@@ -181,9 +181,12 @@
   display: flex;
   align-items: center;
   gap: 6px;
+  min-width: 0;
 }
 .profile-name-edit .input {
   width: 200px;
+  min-width: 0;
+  flex: 0 1 200px;
   font-family: var(--rg-font-sans);
 }
 .profile-name-edit .btn {
