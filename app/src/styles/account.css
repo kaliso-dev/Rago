@@ -102,7 +102,7 @@
   width: 40px;
   height: 40px;
   border-radius: var(--rg-radius-sm);
-  color: var(--rg-ink-5);
+  color: var(--rg-text-3);
   transition: color var(--rg-dur-instant), transform var(--rg-dur-fast) var(--rg-ease-spring);
 }
 .review-stars button svg {
@@ -171,16 +171,26 @@
 .profile-hint {
   margin: 10px 0 4px;
 }
+.profile-hint + .setting {
+  border-top: 1px solid var(--rg-line-1);
+}
 .profile-name label {
   white-space: nowrap;
 }
 .profile-name-edit {
   display: flex;
+  align-items: center;
   gap: 6px;
 }
 .profile-name-edit .input {
   width: 200px;
   font-family: var(--rg-font-sans);
+}
+.profile-name-edit .btn {
+  height: 34px;
+  padding: 0 14px;
+  font-size: 13.5px;
+  border-radius: var(--rg-radius-md);
 }
 .profile-error {
   margin: 4px 0;
@@ -215,7 +225,7 @@
   display: inline-flex;
   gap: 2px;
   margin-top: 4px;
-  color: var(--rg-ink-5);
+  color: var(--rg-text-3);
 }
 .profile-stars svg {
   fill: currentColor;
@@ -233,4 +243,12 @@
   -webkit-line-clamp: 3;
   -webkit-box-orient: vertical;
   overflow: hidden;
+}
+
+/* l'invitation à laisser un avis couvre la colonne des interrupteurs : la page garde de quoi défiler dessous */
+.app:has(.review-prompt) .page {
+  padding-bottom: 200px;
+}
+.app:has(.review-prompt.above-bar) .page {
+  padding-bottom: 280px;
 }
