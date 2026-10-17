@@ -8,6 +8,7 @@ mod instance;
 mod license;
 mod memory;
 mod minecraft;
+mod nettest;
 mod repair;
 mod report;
 mod reset;
@@ -284,6 +285,31 @@ fn restart_pc() -> Result<(), String> {
 async fn clean_ram(state: State<'_, AppState>, trim: bool) -> Result<memory::Cleaned, String> {
     let keep = state.library.install_dirs();
     tauri::async_runtime::spawn_blocking(move || memory::clean(trim, &keep)).await.map_err(|e| e.to_string())?
+}
+
+/// Test réseau (nettest.rs) : les serveurs demandés mesurés en même temps ; chacun est envoyé à l'interface
+/// (`nettest:measure`) dès qu'il a fini.
+#[tauri::command]
+async fn net_test(app: AppHandle, ids: Vec<String>) -> Result<Vec<nettest::Measure>, String> {
+    let ids: Vec<String> = ids.into_iter().filter(|id| nettest::TARGETS.iter().any(|(t, _, _)| t == id)).take(16).collect();
+    tauri::async_runtime::spawn_blocking(move || {
+        std::thread::scope(|s| {
+            let jobs: Vec<_> = ids
+                .iter()
+                .map(|id| {
+                    let app = app.clone();
+                    s.spawn(move || {
+                        let m = nettest::measure(id);
+                        let _ = app.emit("nettest:measure", &m);
+                        m
+                    })
+                })
+                .collect();
+            jobs.into_iter().filter_map(|j| j.join().ok()).collect()
+        })
+    })
+    .await
+    .map_err(|e| e.to_string())
 }
 
 // ---------- bibliothèque de jeux (games.rs)
@@ -689,6 +715,7 @@ pub fn run() {
             take_repair_notice,
             live_stats,
             clean_ram,
+            net_test,
             games_list,
             game_art,
             game_launch,

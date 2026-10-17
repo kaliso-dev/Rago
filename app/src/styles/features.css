@@ -604,3 +604,244 @@
     text-align: left;
   }
 }
+
+/* ---------- test réseau (RAG-50, étape 0), sur le dessin de la page Proxy ---------- */
+.net-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 0.72fr) minmax(0, 1fr);
+  gap: 12px;
+  align-items: start;
+}
+.net-conn {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+}
+.net-conn .card-head {
+  align-self: stretch;
+}
+.net-orb {
+  --c: 161, 161, 170;
+  width: 134px;
+  height: 134px;
+  margin: 10px 0 22px;
+  border-radius: 50%;
+  display: grid;
+  place-items: center;
+  color: rgb(var(--c));
+  background: radial-gradient(circle at 50% 40%, rgba(var(--c), 0.16), rgba(var(--c), 0.04) 70%);
+  border: 1px solid rgba(var(--c), 0.28);
+  box-shadow: 0 0 48px -12px rgba(var(--c), 0.45), inset 0 1px 0 rgba(255, 255, 255, 0.06);
+  transition: color var(--rg-dur-base), background var(--rg-dur-base), border-color var(--rg-dur-base), box-shadow var(--rg-dur-base);
+}
+.net-orb.great,
+.net-orb.good {
+  --c: 61, 220, 151;
+}
+.net-orb.fair {
+  --c: 255, 214, 10;
+}
+.net-orb.bad {
+  --c: 255, 59, 48;
+}
+.net-orb.busy {
+  animation: net-pulse 1.4s ease-in-out infinite;
+}
+@keyframes net-pulse {
+  50% {
+    box-shadow: 0 0 64px -6px rgba(var(--c), 0.55), inset 0 1px 0 rgba(255, 255, 255, 0.06);
+    transform: scale(1.03);
+  }
+}
+.net-verdict {
+  font-size: 18px;
+  font-weight: 600;
+  letter-spacing: -0.01em;
+}
+.net-sub {
+  margin-top: 2px;
+}
+.net-stats {
+  align-self: stretch;
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 8px;
+  margin: 22px 0 12px;
+}
+.net-stat {
+  padding: 12px 8px 10px;
+  border-radius: var(--rg-radius-md);
+  background: rgba(0, 0, 0, 0.22);
+  border: 1px solid var(--rg-line-1);
+}
+.net-stat-value {
+  font-size: 20px;
+  font-weight: 500;
+}
+.net-stat-value span {
+  margin-left: 4px;
+  font-size: 11px;
+  color: var(--rg-text-3);
+}
+.net-stat-value.warn {
+  color: var(--rg-warning);
+}
+.net-stat-label {
+  margin-top: 2px;
+  font-size: 11.5px;
+  color: var(--rg-text-3);
+}
+.net-go {
+  align-self: stretch;
+  justify-content: center;
+}
+.net-tip {
+  align-self: stretch;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-top: 10px;
+  padding: 10px 12px;
+  border-radius: var(--rg-radius-md);
+  background: rgba(255, 214, 10, 0.06);
+  border: 1px solid rgba(255, 214, 10, 0.16);
+  color: var(--rg-text-1);
+  font-size: 12.5px;
+  text-align: left;
+}
+.net-tip span {
+  flex: 1;
+}
+.net-tip:hover {
+  background: rgba(255, 214, 10, 0.09);
+}
+.net-group + .net-group {
+  margin-top: 8px;
+}
+.net-group-label {
+  padding: 4px 10px 6px;
+  font-size: 10px;
+}
+.net-row {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-height: 52px;
+  padding: 6px 10px;
+  border-radius: var(--rg-radius-md);
+  text-align: left;
+  transition: background var(--rg-dur-fast);
+}
+.net-row {
+  position: relative;
+}
+/* filet entre deux lignes, effacé autour de la ligne choisie */
+.net-row + .net-row::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 52px;
+  right: 10px;
+  border-top: 1px solid var(--rg-line-1);
+}
+.net-row.on::before,
+.net-row.on + .net-row::before {
+  display: none;
+}
+.net-row:hover {
+  background: rgba(255, 255, 255, 0.025);
+}
+.net-row.on {
+  background: rgba(255, 255, 255, 0.05);
+}
+.net-radio {
+  width: 18px;
+  height: 18px;
+  flex: none;
+  border-radius: 50%;
+  border: 1px solid var(--rg-line-3);
+  display: grid;
+  place-items: center;
+}
+.net-row.on .net-radio {
+  border-color: var(--rg-red-500);
+  background: var(--rg-red-500);
+  box-shadow: inset 0 0 0 4px var(--rg-red-500), inset 0 0 0 9px #fff;
+}
+.net-code {
+  width: 30px;
+  height: 30px;
+  flex: none;
+  display: grid;
+  place-items: center;
+  border-radius: var(--rg-radius-xs);
+  background: rgba(255, 255, 255, 0.06);
+  font-size: 11px;
+  color: var(--rg-text-2);
+}
+.net-name {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  font-size: 14px;
+  font-weight: 560;
+}
+.net-name .small {
+  font-weight: 400;
+}
+.net-bars {
+  display: flex;
+  align-items: flex-end;
+  gap: 2px;
+  height: 14px;
+}
+.net-bars i {
+  width: 3px;
+  border-radius: 1px;
+  background: rgba(255, 255, 255, 0.14);
+}
+.net-bars i:nth-child(1) { height: 5px; }
+.net-bars i:nth-child(2) { height: 8px; }
+.net-bars i:nth-child(3) { height: 11px; }
+.net-bars i:nth-child(4) { height: 14px; }
+.net-bars.great i.lit,
+.net-bars.good i.lit {
+  background: var(--rg-success);
+}
+.net-bars.fair i.lit {
+  background: var(--rg-warning);
+}
+.net-bars.bad i.lit {
+  background: var(--rg-red-500);
+}
+.net-ms {
+  width: 76px;
+  display: flex;
+  justify-content: flex-end;
+  font-size: 14px;
+}
+.net-ms.great {
+  color: var(--rg-success);
+}
+.net-ms.bad {
+  color: var(--rg-red-400);
+}
+.net-note {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 10px 0 0;
+  padding: 10px 10px 0;
+  border-top: 1px solid var(--rg-line-1);
+}
+.net-note svg {
+  flex: none;
+}
+@media (max-width: 1100px) {
+  .net-grid {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}

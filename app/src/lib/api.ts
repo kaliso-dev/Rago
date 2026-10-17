@@ -106,6 +106,18 @@ export interface Game {
   running: boolean;
 }
 
+/** Mesure du test réseau (nettest.rs), en ms ; perte de 0 à 1. */
+export interface NetMeasure {
+  id: string;
+  ping: number | null;
+  best: number | null;
+  jitter: number | null;
+  loss: number;
+  samples: number;
+  /** "dns" : serveur introuvable ; "timeout" : aucune réponse */
+  error: string | null;
+}
+
 export interface MinecraftStatus {
   dirExists: boolean;
   optifineFile: boolean;
@@ -234,6 +246,9 @@ export interface Api {
   /** Lit un fichier .rago choisi par le joueur ; null : fenêtre fermée sans choisir. */
   openPresetFile(title: string): Promise<string | null>;
   copyText(text: string): Promise<void>;
+  /** Test réseau vers les serveurs donnés (identifiants de nettest.rs). */
+  netTest(ids: string[]): Promise<NetMeasure[]>;
+  onNetMeasure(cb: (m: NetMeasure) => void): Promise<UnlistenFn>;
   /** Jeux installés (launchers et ajoutés à la main) ; `refresh` : nouvelle recherche sur le PC. */
   gamesList(refresh: boolean): Promise<Game[]>;
   /** Image officielle du jeu (data: URL), null s'il n'y en a pas. */
@@ -302,6 +317,8 @@ const tauriApi: Api = {
     return typeof path === "string" ? invoke<string>("read_preset_file", { path }) : null;
   },
   copyText,
+  netTest: (ids) => invoke("net_test", { ids }),
+  onNetMeasure: (cb) => listen<NetMeasure>("nettest:measure", (e) => cb(e.payload)),
   gamesList: (refresh) => invoke("games_list", { refresh }),
   gameArt: (id) => invoke("game_art", { id }),
   gameLaunch: (id) => invoke("game_launch", { id }),
@@ -591,6 +608,20 @@ const mockApi: Api = {
       input.click();
     }),
   copyText,
+  netTest: async (ids) => {
+    // démo : valeurs plausibles depuis Paris, chaque serveur fini à son rythme
+    const base: Record<string, number> = { hypixel: 92, minemen: 21, paris: 9, frankfurt: 17, london: 14, stockholm: 33, madrid: 28, virginia: 86, internet: 7 };
+    return Promise.all(
+      ids.map(async (id) => {
+        await sleep(900 + Math.random() * 1400);
+        const ping = Math.round(((base[id] ?? 40) + Math.random() * 4) * 10) / 10;
+        const m: NetMeasure = { id, ping, best: Math.round((ping - 1.5) * 10) / 10, jitter: Math.round((0.6 + Math.random() * 2.4) * 10) / 10, loss: 0, samples: 10, error: null };
+        emit("nettest:measure", m);
+        return m;
+      }),
+    );
+  },
+  onNetMeasure: (cb) => on("nettest:measure", cb),
   gamesList: async () => {
     await sleep(400);
     return [...mockGames].sort((a, b) => (b.lastPlayed ?? 0) - (a.lastPlayed ?? 0) || a.name.localeCompare(b.name));
