@@ -67,6 +67,14 @@ export interface LiveStats {
   ramTotal: number | null;
 }
 
+/** « Nettoyer » sous la RAM (memory.rs) : cache de Windows vidé et, avec l'option, mémoire rendue par les applis en
+ * arrière-plan, en octets. */
+export interface Cleaned {
+  standby: number;
+  trimmed: number;
+  apps: number;
+}
+
 export interface MinecraftStatus {
   dirExists: boolean;
   optifineFile: boolean;
@@ -160,6 +168,8 @@ export interface Api {
   takeRepairNotice(): Promise<boolean>;
   liveStats(): Promise<LiveStats>;
   openTaskManager(): Promise<void>;
+  /** Vide le cache mémoire de Windows ; `trim` : réduit aussi les applis en arrière-plan (option des paramètres). */
+  cleanRam(trim: boolean): Promise<Cleaned>;
   minecraftStatus(dir?: string | null): Promise<MinecraftStatus>;
   minecraftRestore(dir?: string | null): Promise<string>;
   restartPc(): Promise<void>;
@@ -191,6 +201,7 @@ const tauriApi: Api = {
   takeRepairNotice: () => invoke("take_repair_notice"),
   liveStats: () => invoke("live_stats"),
   openTaskManager: () => invoke("open_task_manager"),
+  cleanRam: (trim) => invoke("clean_ram", { trim }),
   minecraftStatus: (dir) => invoke("minecraft_status", { dir: dir ?? null }),
   minecraftRestore: (dir) => invoke("minecraft_restore", { dir: dir ?? null }),
   restartPc: () => invoke("restart_pc"),
@@ -418,6 +429,11 @@ const mockApi: Api = {
   },
   openTaskManager: async () => {
     console.info("[démo] Gestionnaire des tâches");
+  },
+  cleanRam: async (trim) => {
+    await sleep(900);
+    const gb = 1024 ** 3;
+    return { standby: (1.2 + Math.random() * 1.6) * gb, trimmed: trim ? 0.4 * gb : 0, apps: trim ? 7 : 0 };
   },
   minecraftStatus: async () => ({ dirExists: true, optifineFile: true, backups: 1 }),
   minecraftRestore: async () => "optionsof.txt restored (demo)",

@@ -1,0 +1,14 @@
+/* Nouvelles fonctionnalités de la 1.2.0 (17/10/2026), sur les jetons et le verre de la refonte : Nettoyer la RAM,
+   partage et support, mise à jour, bibliothèque de jeux, test réseau, barre en jeu. Les règles de app.css ne sont
+   pas modifiées ici. */
+
+/* ---------- Nettoyer la RAM (RAG-48) ---------- */
+.meter-clean {
+  flex: none;
+}
+.meter-cleaned {
+  color: var(--rg-success);
+}
+.meter-cleaned.failed {
+  color: var(--rg-warning);
+}

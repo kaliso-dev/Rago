@@ -5,6 +5,7 @@ mod catalog;
 mod history;
 mod instance;
 mod license;
+mod memory;
 mod minecraft;
 mod repair;
 mod reset;
@@ -275,7 +276,15 @@ fn restart_pc() -> Result<(), String> {
 }
 
 /// Gestionnaire des tâches de Windows, depuis l'utilisation en direct : voir quelle appli prend la RAM, le processeur
-/// ou la carte graphique, et la fermer soi-même. Rago ne ferme aucun processus et ne vide pas la RAM de force.
+/// ou la carte graphique, et la fermer soi-même. Rago ne ferme aucun processus (« Nettoyer » vide seulement le cache
+/// de Windows, voir memory.rs).
+/// « Nettoyer » sous la RAM (tableau de bord) : cache de Windows vidé, et applis en arrière-plan réduites si l'option
+/// des paramètres est cochée. Les dossiers des jeux de la bibliothèque ne sont jamais touchés.
+#[tauri::command]
+async fn clean_ram(trim: bool) -> Result<memory::Cleaned, String> {
+    tauri::async_runtime::spawn_blocking(move || memory::clean(trim, &[])).await.map_err(|e| e.to_string())?
+}
+
 #[tauri::command]
 fn open_task_manager() -> Result<(), String> {
     std::process::Command::new("taskmgr.exe").spawn().map(|_| ()).map_err(|e| e.to_string())
@@ -524,6 +533,7 @@ pub fn run() {
             sign_out_plan,
             take_repair_notice,
             live_stats,
+            clean_ram,
             open_task_manager,
             minecraft_status,
             minecraft_restore,

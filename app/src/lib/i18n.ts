@@ -103,7 +103,7 @@ const fr = {
   "live.cpuDetail": "Tous les cœurs",
   "live.hint": "Mesuré par Windows chaque seconde.",
   "live.taskmgr": "Gestionnaire des tâches",
-  "live.free": "Pour libérer de la RAM, ferme les applis qui en prennent le plus. Rago ne vide pas la RAM de force : tes applis ralentiraient en la rechargeant.",
+  "live.free": "« Nettoyer » vide la mémoire que Windows garde en cache, sans fermer tes applis. Pour libérer plus de RAM, ferme celles qui en prennent le plus.",
 
   "mc.folder": "Dossier Minecraft",
   "mc.change": "Changer",
@@ -269,6 +269,16 @@ const fr = {
   "signout.undoLead": "Ton réglage appliqué va être annulé : Rago Optimizer remet ce réglage de Windows comme avant, en arrière-plan. Tu peux continuer à utiliser ton PC, ou fermer l'app : la remise continue.|Tes {n} réglages appliqués vont être annulés, gratuits compris : Rago Optimizer remet les réglages de Windows comme avant, en arrière-plan. Tu peux continuer à utiliser ton PC, ou fermer l'app : la remise continue.",
   "signout.go": "Annuler et me déconnecter",
   "repair.restart": "Rago Optimizer a réparé une valeur qui peut faire planter Windows. Redémarre ton PC pour finir : Redémarrer, pas Arrêter.",
+  "live.clean": "Nettoyer",
+  "live.cleaning": "Nettoyage…",
+  "live.cleanHint": "Vider le cache mémoire de Windows",
+  "live.cleaned": "{n} Go de cache vidés",
+  "live.cleanedEmpty": "Cache déjà vide",
+  "live.cleanedApps": "{gb} Go rendus par 1 appli|{gb} Go rendus par {n} applis",
+  "live.cleanFailed": "Nettoyage impossible, réessaie",
+  "settings.memory": "Mémoire",
+  "settings.cleanTrim": "« Nettoyer » réduit aussi les applis en arrière-plan",
+  "settings.cleanTrimHint": "Jamais la fenêtre au premier plan, tes jeux ni les anti-cheat. Une appli réduite peut mettre un instant à se réveiller.",
 };
 
 export type Key = keyof typeof fr;
@@ -370,7 +380,7 @@ const en: Record<Key, string> = {
   "live.cpuDetail": "All cores",
   "live.hint": "Measured by Windows every second.",
   "live.taskmgr": "Task Manager",
-  "live.free": "To free up RAM, close the apps using the most. Rago doesn't force-empty your RAM: your apps would slow down reloading it.",
+  "live.free": "Clean empties the memory Windows keeps on standby, without closing your apps. To free more RAM, close the apps using the most.",
   "mc.folder": "Minecraft folder",
   "mc.change": "Change",
   "mc.pick": "Pick your .minecraft folder",
@@ -528,6 +538,16 @@ const en: Record<Key, string> = {
   "signout.undoLead": "Your applied tweak will be undone: Rago Optimizer puts that Windows setting back the way it was, in the background. You can keep using your PC, or close the app: it keeps going.|Your {n} applied tweaks will be undone, free ones included: Rago Optimizer puts those Windows settings back the way they were, in the background. You can keep using your PC, or close the app: it keeps going.",
   "signout.go": "Undo and sign out",
   "repair.restart": "Rago Optimizer fixed a value that can crash Windows. Restart your PC to finish: Restart, not Shut down.",
+  "live.clean": "Clean",
+  "live.cleaning": "Cleaning…",
+  "live.cleanHint": "Empty the memory Windows keeps on standby",
+  "live.cleaned": "{n} GB of cache cleared",
+  "live.cleanedEmpty": "Cache already empty",
+  "live.cleanedApps": "{gb} GB back from 1 app|{gb} GB back from {n} apps",
+  "live.cleanFailed": "Couldn't clean, try again",
+  "settings.memory": "Memory",
+  "settings.cleanTrim": "Clean also trims background apps",
+  "settings.cleanTrimHint": "Never the window in front, your games or anti-cheats. A trimmed app can take a moment to wake up.",
 };
 
 const dicts: Record<Lang, Record<Key, string>> = { fr, en };

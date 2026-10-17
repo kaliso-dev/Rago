@@ -124,6 +124,8 @@ function useStoreValue() {
   const applied = useMemo(() => new Map((appliedList ?? []).map((a) => [a.id, a])), [appliedList]);
   const [variants, setVariants] = usePersisted<Record<string, string>>("variants", {});
   const [mcDirOverride, setMcDir] = usePersisted<string | null>("mcDir", null);
+  /** « Nettoyer » la RAM réduit aussi les applis en arrière-plan (paramètres, désactivé par défaut) */
+  const [cleanTrim, setCleanTrim] = usePersisted<boolean>("cleanTrim", false);
   const [history, setHistory] = useState<HistoryEntry[]>([]);
   const [run, setRun] = useState<RunState | null>(null);
   const [confirm, setConfirm] = useState<ConfirmState | null>(null);
@@ -521,7 +523,7 @@ function useStoreValue() {
     repairNotice, setRepairNotice,
     retiredApplied, requestUndo, requestUndoAll,
     history, lastRun, lastRestore, refreshHistory, refreshApplied,
-    mcDir, setMcDir,
+    mcDir, setMcDir, cleanTrim, setCleanTrim,
     confirm, setConfirm, requestApply,
     run, setRun, startRun,
     paletteOpen, setPaletteOpen,
