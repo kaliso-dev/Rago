@@ -495,15 +495,18 @@
   right: 44px;
   color: var(--rg-text-2);
 }
-.games-empty {
+.games-empty,
+.page-error {
   padding: 24px;
 }
-.games-empty h3 {
+.games-empty h3,
+.page-error h3 {
   font-size: 16px;
   font-weight: 600;
   margin: 0 0 6px;
 }
-.games-empty .share-actions {
+.games-empty .share-actions,
+.page-error .share-actions {
   justify-content: flex-start;
 }
 .games-bar {

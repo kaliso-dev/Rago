@@ -3,6 +3,7 @@ import { useEffect, useRef } from "react";
 import { ApplyBar } from "./components/ApplyBar";
 import { ConfirmDialog } from "./components/ConfirmDialog";
 import { LicenseNotice } from "./components/LicenseNotice";
+import { PageBoundary } from "./components/PageBoundary";
 import { ReviewDialog } from "./components/ReviewDialog";
 import { ResetToast } from "./components/ResetToast";
 import { ReviewPrompt } from "./components/ReviewPrompt";
@@ -55,7 +56,9 @@ export function App() {
                 exit={{ opacity: 0, x: -8 }}
                 transition={{ duration: 0.16, ease: [0.16, 1, 0.3, 1] }}
               >
-                {page === "dashboard" ? <Dashboard /> : page === "settings" ? <Settings /> : page === "share" ? <Share /> : page === "games" ? <Games /> : page === "nettest" ? <NetTest /> : <ModulePage id={page} />}
+                <PageBoundary lang={lang}>
+                  {page === "dashboard" ? <Dashboard /> : page === "settings" ? <Settings /> : page === "share" ? <Share /> : page === "games" ? <Games /> : page === "nettest" ? <NetTest /> : <ModulePage id={page} />}
+                </PageBoundary>
               </motion.div>
             </AnimatePresence>
           </main>
