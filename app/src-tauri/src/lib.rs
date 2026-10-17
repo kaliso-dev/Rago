@@ -2,6 +2,7 @@ mod account;
 mod assets;
 mod backup;
 mod catalog;
+mod games;
 mod history;
 mod instance;
 mod license;
@@ -38,6 +39,7 @@ struct AppState {
     reset: Arc<Reset>,
     system: Arc<Mutex<Option<SystemInfo>>>,
     stats: stats::Sampler,
+    library: Arc<games::Library>,
     resource_dir: PathBuf,
     data_dir: PathBuf,
     /// la réparation de ce lancement a supprimé une valeur (repair::at_startup) : l'interface le dit une fois
@@ -279,8 +281,47 @@ fn restart_pc() -> Result<(), String> {
 /// « Nettoyer » sous la RAM (tableau de bord) : cache de Windows vidé, et applis en arrière-plan réduites si l'option
 /// des paramètres est cochée. Les dossiers des jeux de la bibliothèque ne sont jamais touchés.
 #[tauri::command]
-async fn clean_ram(trim: bool) -> Result<memory::Cleaned, String> {
-    tauri::async_runtime::spawn_blocking(move || memory::clean(trim, &[])).await.map_err(|e| e.to_string())?
+async fn clean_ram(state: State<'_, AppState>, trim: bool) -> Result<memory::Cleaned, String> {
+    let keep = state.library.install_dirs();
+    tauri::async_runtime::spawn_blocking(move || memory::clean(trim, &keep)).await.map_err(|e| e.to_string())?
+}
+
+// ---------- bibliothèque de jeux (games.rs)
+
+#[tauri::command]
+async fn games_list(state: State<'_, AppState>, refresh: bool) -> Result<Vec<games::Game>, String> {
+    let lib = Arc::clone(&state.library);
+    tauri::async_runtime::spawn_blocking(move || lib.list(refresh)).await.map_err(|e| e.to_string())
+}
+
+/// Image officielle d'un jeu (data: URL), téléchargée une fois puis gardée dans art\.
+#[tauri::command]
+async fn game_art(state: State<'_, AppState>, id: String) -> Result<Option<String>, String> {
+    let lib = Arc::clone(&state.library);
+    tauri::async_runtime::spawn_blocking(move || lib.art(&id)).await.map_err(|e| e.to_string())
+}
+
+#[tauri::command]
+async fn game_launch(state: State<'_, AppState>, id: String) -> Result<(), String> {
+    let lib = Arc::clone(&state.library);
+    tauri::async_runtime::spawn_blocking(move || lib.launch(&id)).await.map_err(|e| e.to_string())?
+}
+
+#[tauri::command]
+async fn game_add(state: State<'_, AppState>, path: String) -> Result<String, String> {
+    let lib = Arc::clone(&state.library);
+    tauri::async_runtime::spawn_blocking(move || lib.add(&path)).await.map_err(|e| e.to_string())?
+}
+
+#[tauri::command]
+fn game_remove(state: State<'_, AppState>, id: String) {
+    state.library.remove(&id);
+}
+
+#[tauri::command]
+async fn games_unhide(state: State<'_, AppState>) -> Result<(), String> {
+    let lib = Arc::clone(&state.library);
+    tauri::async_runtime::spawn_blocking(move || lib.unhide_all()).await.map_err(|e| e.to_string())
 }
 
 /// Gestionnaire des tâches de Windows, depuis l'utilisation en direct : voir quelle appli prend la RAM, le processeur
@@ -582,6 +623,20 @@ pub fn run() {
             }
             // ce qu'une version précédente a laissé et qui fait planter le PC (RAG-67), sans attendre le joueur
             let removed = repair::at_startup(&backup::Sys::new(data_dir.join("backup")), &mut ledger, &data_dir.join("logs"));
+            let library = Arc::new(games::Library::new(&data_dir));
+            // jeux lancés : la dernière partie de chacun est notée, l'interface suit ceux en cours
+            {
+                let (library, handle) = (Arc::clone(&library), app.handle().clone());
+                std::thread::spawn(move || {
+                    library.list(false);
+                    loop {
+                        if let Some(running) = library.poll(&games::process_paths()) {
+                            let _ = handle.emit("games:running", running);
+                        }
+                        std::thread::sleep(std::time::Duration::from_secs(4));
+                    }
+                });
+            }
             app.manage(AppState {
                 runner: Arc::new(Runner::default()),
                 history,
@@ -591,6 +646,7 @@ pub fn run() {
                 reset: Arc::new(Reset::default()),
                 system: Arc::new(Mutex::new(None)),
                 stats: stats::Sampler::default(),
+                library,
                 resource_dir,
                 data_dir,
                 repaired: AtomicBool::new(!removed.is_empty()),
@@ -633,6 +689,12 @@ pub fn run() {
             take_repair_notice,
             live_stats,
             clean_ram,
+            games_list,
+            game_art,
+            game_launch,
+            game_add,
+            game_remove,
+            games_unhide,
             open_task_manager,
             minecraft_status,
             minecraft_restore,

@@ -88,6 +88,15 @@ export interface ConfirmState {
   single: boolean;
   /** « Tout annuler » du tableau de bord : tous les réglages appliqués sur ce PC */
   all?: boolean;
+  /** « Optimiser et jouer » (bibliothèque) : le jeu lancé une fois le lot fini */
+  play?: { id: string; name: string };
+}
+
+/** Lancement d'un jeu de la bibliothèque, suivi par la page Jeux et la fenêtre du lot. */
+export interface Playing {
+  id: string;
+  name: string;
+  status: "waiting" | "started" | "failed";
 }
 
 function load<T>(key: string, fallback: T): T {
@@ -135,6 +144,23 @@ function useStoreValue() {
   /** « Nettoyer » la RAM réduit aussi les applis en arrière-plan (paramètres, désactivé par défaut) */
   const [cleanTrim, setCleanTrim] = usePersisted<boolean>("cleanTrim", false);
   const [myPresets, setMyPresets] = usePersisted<MyPreset[]>("myPresets", []);
+  /** preset choisi pour chaque jeu de la bibliothèque : "builtin:<id>", "mine:<id>" ou "none" */
+  const [gamePresets, setGamePresets] = usePersisted<Record<string, string>>("gamePresets", {});
+  const [playing, setPlaying] = useState<Playing | null>(null);
+  /** jeu à lancer à la fin du lot en cours (« Optimiser et jouer ») */
+  const launchAfter = useRef<Playing | null>(null);
+
+  const launchGame = useCallback(async (id: string, name: string) => {
+    setPlaying({ id, name, status: "waiting" });
+    try {
+      await api.gameLaunch(id);
+      setPlaying({ id, name, status: "started" });
+    } catch {
+      setPlaying({ id, name, status: "failed" });
+    }
+  }, []);
+  const launchGameRef = useRef(launchGame);
+  launchGameRef.current = launchGame;
   const [history, setHistory] = useState<HistoryEntry[]>([]);
   const [run, setRun] = useState<RunState | null>(null);
   const [confirm, setConfirm] = useState<ConfirmState | null>(null);
@@ -384,6 +410,41 @@ function useStoreValue() {
     [sys, setSelection, setVariants, setPendingUndo, isLocked, variantLocked, applied, undoSet, variants],
   );
 
+  /** Réglages d'une liste "id" ou "id:variante" à appliquer sur ce PC (mêmes règles que selectMany), sans toucher à
+   * la sélection : variante voulue de chacun, déjà appliqués avec cette variante exclus. */
+  const toApply = useCallback(
+    (entries: string[]) => {
+      const ids: string[] = [];
+      const vs: Record<string, string> = {};
+      for (const e of entries) {
+        const [id, v] = e.split(":");
+        const tw = tweaks.get(id);
+        if (!tw || !availability(tw, sys).ok || tw.kind === "action" || isLocked(id) || (v && variantLocked(id, v))) continue;
+        const variant = v && tw.variants?.some((x) => x.id === v) ? v : undefined;
+        const a = applied.get(id);
+        if (a && !undoSet.has(id) && (a.variant ?? null) === (variant || (variants[id] ?? autoVariant(tw, sys) ?? null))) continue;
+        ids.push(id);
+        if (variant) vs[id] = variant;
+      }
+      return { ids, vs };
+    },
+    [sys, isLocked, variantLocked, applied, undoSet, variants],
+  );
+
+  /** « Optimiser et jouer » : confirmation des réglages du preset du jeu, lot, puis lancement du jeu. Tout est déjà
+   * appliqué : le jeu démarre tout de suite. */
+  const optimizeAndPlay = useCallback(
+    (game: { id: string; name: string }, entries: string[]) => {
+      const { ids, vs } = toApply(entries);
+      if (!ids.length) return void launchGame(game.id, game.name);
+      setVariants((m) => ({ ...m, ...vs }));
+      launchAfter.current = { ...game, status: "waiting" };
+      setPlaying(null);
+      setConfirm({ ids: ids.sort(byCatalog), undo: [], single: true, play: game });
+    },
+    [toApply, launchGame, setVariants],
+  );
+
   /** Réapplique un réglage déjà appliqué (Windows en a changé une valeur depuis). */
   const reapply = useCallback(
     (id: string) => {
@@ -419,6 +480,11 @@ function useStoreValue() {
   const runRef = useRef<RunState | null>(null);
   runRef.current = run;
 
+  // confirmation fermée sans lancer le lot : le jeu ne démarre pas plus tard
+  useEffect(() => {
+    if (!confirm && !run) launchAfter.current = null;
+  }, [confirm, run]);
+
   useEffect(() => {
     const subs = [
       api.onItem((e) =>
@@ -435,6 +501,10 @@ function useStoreValue() {
       ),
       api.onDone((e) => {
         setRun((r) => (r ? { ...r, done: e, endedAt: Date.now() } : r));
+        // « Optimiser et jouer » : le jeu démarre une fois les réglages posés, sauf si le joueur a arrêté le lot
+        const play = launchAfter.current;
+        launchAfter.current = null;
+        if (play && !e.cancelled) void launchGameRef.current(play.id, play.name);
         // pas de point de restauration : rien n'a été appliqué, la sélection revient pour réessayer
         const skipped = (runRef.current?.rows ?? []).filter((r) => !r.undo && tweaks.get(r.id)?.kind === "tweak").map((r) => r.id);
         if (e.restoreFailed && skipped.length) setSelection((s) => [...s, ...skipped.filter((id) => !s.includes(id))]);
@@ -481,6 +551,8 @@ function useStoreValue() {
         items.push(item);
       }
       setConfirm(null);
+      // un lancement de jeu d'avant ne s'affiche pas dans ce lot
+      setPlaying(null);
       setRun({
         runId: null,
         rows: items.map((i, n) => ({ id: i.id, variant: i.variant ?? null, undo: !!i.undo, status: "pending", durationMs: null, reboot: rebootAt.has(n) })),
@@ -554,6 +626,7 @@ function useStoreValue() {
     history, lastRun, lastRestore, refreshHistory, refreshApplied,
     mcDir, setMcDir, cleanTrim, setCleanTrim,
     currentSetup, myPresets, savePreset, deletePreset,
+    gamePresets, setGamePresets, playing, setPlaying, launchGame, optimizeAndPlay, toApply,
     confirm, setConfirm, requestApply,
     run, setRun, startRun,
     paletteOpen, setPaletteOpen,

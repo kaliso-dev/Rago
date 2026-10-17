@@ -52,8 +52,10 @@ export function ConfirmDialog() {
   const go = () =>
     startRun(ids, { restorePoint: askRestore && restorePoint, wmic: wmic && needsWmic > 0, clearSelection: !confirm?.single, undo: undoIds });
 
-  const title =
-    confirm?.single && list.length === 1
+  const play = confirm?.play;
+  const title = play
+    ? t("play.confirmTitle", { game: play.name })
+    : confirm?.single && list.length === 1
       ? list[0].name[lang]
       : confirm?.all
         ? t("confirm.undoAllTitle")
@@ -62,8 +64,9 @@ export function ConfirmDialog() {
           : undoList.length
           ? t("confirm.changesTitle", { n: total })
           : t("confirm.title", { n: list.length });
-  const lead =
-    confirm?.single && list.length === 1
+  const lead = play
+    ? t("play.confirmLead", { n: list.length, game: play.name })
+    : confirm?.single && list.length === 1
       ? list[0].desc[lang]
       : confirm?.all
         ? t("confirm.undoAllLead", { n: undoCount })
@@ -96,7 +99,7 @@ export function ConfirmDialog() {
       <h2 className="modal-title">{title}</h2>
       <p className="modal-lead">{lead}</p>
 
-      {!(confirm?.single && list.length === 1) && list.length > 0 && (
+      {!(confirm?.single && list.length === 1 && !play) && list.length > 0 && (
         <>
           {undoList.length > 0 && <div className="rg-overline confirm-group">{t("confirm.applyList")}</div>}
           <ul className="confirm-list">{list.map((tw) => row(tw, variantOf(tw)))}</ul>
@@ -166,7 +169,7 @@ export function ConfirmDialog() {
           {t("confirm.cancel")}
         </Button>
         <Button variant="primary" onClick={go} disabled={mcBlocked}>
-          {confirm?.single ? t("confirm.goOne") : confirm?.all ? t("dash.undoAll") : onlyUndo ? t("confirm.undoGo") : t("confirm.go")}
+          {play ? t("play.go") : confirm?.single ? t("confirm.goOne") : confirm?.all ? t("dash.undoAll") : onlyUndo ? t("confirm.undoGo") : t("confirm.go")}
         </Button>
       </footer>
     </Modal>

@@ -1,5 +1,5 @@
 import {
-  Box, Crosshair, FlaskConical, Gauge, Gpu, LayoutDashboard, Network, Settings, Shield, Undo2, AppWindow, Zap, type LucideIcon,
+  Box, Crosshair, FlaskConical, Gamepad2, Gauge, Globe, Gpu, LayoutDashboard, Network, Settings, Shield, Undo2, AppWindow, Zap, type LucideIcon,
 } from "lucide-react";
 
 export const MODULE_ICONS: Record<string, LucideIcon> = {
@@ -15,4 +15,6 @@ export const MODULE_ICONS: Record<string, LucideIcon> = {
   flask: FlaskConical,
   undo: Undo2,
   settings: Settings,
+  games: Gamepad2,
+  nettest: Globe,
 };

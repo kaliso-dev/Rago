@@ -92,6 +92,20 @@ export interface SupportReport {
   text: string;
 }
 
+/** Jeu de la bibliothèque (games.rs). */
+export interface Game {
+  /** "steam:730", "epic:Fortnite", "riot:valorant", "mc:lunar", "manual:1a2b3c4d"… */
+  id: string;
+  name: string;
+  launcher: "steam" | "epic" | "riot" | "battlenet" | "ubisoft" | "xbox" | "minecraft" | "manual" | string;
+  /** launcher Minecraft (Lunar Client…) */
+  client: string | null;
+  kind: "minecraft" | "shooter" | "other" | string;
+  installDir: string | null;
+  lastPlayed: number | null;
+  running: boolean;
+}
+
 export interface MinecraftStatus {
   dirExists: boolean;
   optifineFile: boolean;
@@ -220,6 +234,19 @@ export interface Api {
   /** Lit un fichier .rago choisi par le joueur ; null : fenêtre fermée sans choisir. */
   openPresetFile(title: string): Promise<string | null>;
   copyText(text: string): Promise<void>;
+  /** Jeux installés (launchers et ajoutés à la main) ; `refresh` : nouvelle recherche sur le PC. */
+  gamesList(refresh: boolean): Promise<Game[]>;
+  /** Image officielle du jeu (data: URL), null s'il n'y en a pas. */
+  gameArt(id: string): Promise<string | null>;
+  /** Lance le jeu par son launcher, sans droits d'administrateur. */
+  gameLaunch(id: string): Promise<void>;
+  /** Ajoute un jeu à la main (choix d'un .exe) ; id du jeu, null si la fenêtre est fermée sans choisir. */
+  gameAdd(title: string): Promise<string | null>;
+  /** Retire un jeu de la bibliothèque (rien n'est désinstallé). */
+  gameRemove(id: string): Promise<void>;
+  gamesUnhide(): Promise<void>;
+  /** Jeux lancés en ce moment (id), à chaque changement. */
+  onGamesRunning(cb: (ids: string[]) => void): Promise<UnlistenFn>;
   openUrl(url: string): Promise<void>;
   onItem(cb: (e: ItemEvent) => void): Promise<UnlistenFn>;
   onLog(cb: (e: LogEvent) => void): Promise<UnlistenFn>;
@@ -275,6 +302,17 @@ const tauriApi: Api = {
     return typeof path === "string" ? invoke<string>("read_preset_file", { path }) : null;
   },
   copyText,
+  gamesList: (refresh) => invoke("games_list", { refresh }),
+  gameArt: (id) => invoke("game_art", { id }),
+  gameLaunch: (id) => invoke("game_launch", { id }),
+  gameAdd: async (title) => {
+    const { open } = await import("@tauri-apps/plugin-dialog");
+    const path = await open({ title, multiple: false, directory: false, filters: [{ name: "Program", extensions: ["exe"] }] });
+    return typeof path === "string" ? invoke<string>("game_add", { path }) : null;
+  },
+  gameRemove: (id) => invoke("game_remove", { id }),
+  gamesUnhide: () => invoke("games_unhide"),
+  onGamesRunning: (cb) => listen<string[]>("games:running", (e) => cb(e.payload)),
   licenseStatus: () => invoke("license_status"),
   licenseLogin: (email, password) => invoke("license_login", { email, password }),
   licenseActivate: () => invoke("license_activate"),
@@ -303,6 +341,16 @@ const emit = <T,>(name: string, detail: T) => bus.dispatchEvent(new CustomEvent(
 const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
 
 const mockHistory: HistoryEntry[] = [];
+const hour = 3_600_000;
+// démo : bibliothèque type d'un joueur de PvP Minecraft ; les images restent des tuiles au nom du jeu
+let mockGames: Game[] = [
+  { id: "mc:lunar", name: "Minecraft", launcher: "minecraft", client: "Lunar Client", kind: "minecraft", installDir: null, lastPlayed: Date.now() - 2 * hour, running: false },
+  { id: "mc:badlion", name: "Minecraft", launcher: "minecraft", client: "Badlion Client", kind: "minecraft", installDir: null, lastPlayed: Date.now() - 50 * hour, running: false },
+  { id: "riot:valorant", name: "VALORANT", launcher: "riot", client: null, kind: "shooter", installDir: null, lastPlayed: Date.now() - 26 * hour, running: false },
+  { id: "steam:730", name: "Counter-Strike 2", launcher: "steam", client: null, kind: "shooter", installDir: null, lastPlayed: null, running: false },
+  { id: "epic:Fortnite", name: "Fortnite", launcher: "epic", client: null, kind: "shooter", installDir: null, lastPlayed: null, running: false },
+  { id: "epic:Sugar", name: "Rocket League", launcher: "epic", client: null, kind: "other", installDir: null, lastPlayed: null, running: false },
+];
 let mockStatsStart = 0;
 const mockLoad = { ram: 47, cpu: 14, gpu: 9 };
 // démo : les réglages appliqués survivent au rechargement de la page, comme applied.json dans l'app
@@ -543,6 +591,21 @@ const mockApi: Api = {
       input.click();
     }),
   copyText,
+  gamesList: async () => {
+    await sleep(400);
+    return [...mockGames].sort((a, b) => (b.lastPlayed ?? 0) - (a.lastPlayed ?? 0) || a.name.localeCompare(b.name));
+  },
+  gameArt: async () => null,
+  gameLaunch: async (id) => {
+    await sleep(500);
+    mockGames = mockGames.map((g) => (g.id === id ? { ...g, lastPlayed: Date.now() } : g));
+  },
+  gameAdd: async () => null,
+  gameRemove: async (id) => {
+    mockGames = mockGames.filter((g) => g.id !== id);
+  },
+  gamesUnhide: async () => {},
+  onGamesRunning: (cb) => on("games:running", cb),
   licenseStatus: async () => {
     await sleep(300);
     return mockLicense();

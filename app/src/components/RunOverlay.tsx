@@ -9,7 +9,7 @@ import { Pulse } from "./Logo";
 import { Button } from "./ui";
 
 export function RunOverlay() {
-  const { t, lang, run, setRun, premium, license, setUpsell } = useStore();
+  const { t, lang, run, setRun, premium, license, setUpsell, playing } = useStore();
   const consoleRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -78,6 +78,12 @@ export function RunOverlay() {
                     {restoreFailed && <div className="error-text run-restore-failed">{t(restoreKey, { n: skipped })}</div>}
                     {otherFailed > 0 && <div className="error-text">{t("run.failed", { n: otherFailed })}</div>}
                     {reboot && <div className="muted">{t("run.rebootNeeded")}</div>}
+                    {/* « Optimiser et jouer » : le jeu démarre à la fin du lot */}
+                    {playing && !cancelled && (
+                      <div className={playing.status === "failed" ? "error-text" : "run-play"}>
+                        {t(playing.status === "failed" ? "play.failed" : playing.status === "started" ? "play.started" : "play.starting", { game: playing.name })}
+                      </div>
+                    )}
                     {license && !premium && !cancelled && (
                       <button
                         type="button"
