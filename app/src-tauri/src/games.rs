@@ -1063,6 +1063,9 @@ fn agent() -> ureq::Agent {
     ureq::Agent::config_builder()
         .timeout_global(Some(std::time::Duration::from_secs(12)))
         .user_agent(concat!("RagoOptimizer/", env!("CARGO_PKG_VERSION")))
+        // TLS de Windows (schannel), comme license.rs et account.rs : le TLS par défaut de ureq (rustls) n'est pas
+        // compilé, et une adresse https le ferait paniquer, ce qui ferme l'app (panic = "abort")
+        .tls_config(ureq::tls::TlsConfig::builder().provider(ureq::tls::TlsProvider::NativeTls).build())
         .build()
         .into()
 }
@@ -1363,6 +1366,20 @@ mod tests {
     fn quotes_command_lines() {
         let line = launch::command_line(Path::new("C:\\Riot Games\\Riot Client\\RiotClientServices.exe"), &["--launch-product=valorant".into(), "a b".into()]);
         assert_eq!(line, "\"C:\\Riot Games\\Riot Client\\RiotClientServices.exe\" --launch-product=valorant \"a b\"");
+    }
+
+    #[test]
+    fn images_download_over_https_without_crashing() {
+        // un serveur qui accepte la connexion sans répondre : la poignée de main TLS échoue, sans panique
+        let l = std::net::TcpListener::bind("127.0.0.1:0").unwrap();
+        let port = l.local_addr().unwrap().port();
+        std::thread::spawn(move || {
+            let _c = l.accept();
+            std::thread::sleep(std::time::Duration::from_secs(2));
+        });
+        assert_eq!(agent().config().tls_config().provider(), ureq::tls::TlsProvider::NativeTls);
+        let local = agent().get(format!("https://127.0.0.1:{port}/x.jpg")).config().proxy(None).build().call();
+        assert!(local.is_err());
     }
 
     #[test]
