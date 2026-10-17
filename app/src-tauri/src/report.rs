@@ -83,11 +83,23 @@ pub fn mask(text: &str, users: &[String], hosts: &[String]) -> String {
 /// Remplace `needle` là où c'est un mot entier (ni lettre ni chiffre juste avant ou après) : « Tom » ne touche pas à
 /// « Custom ».
 fn replace_word_ci(text: &str, needle: &str, with: &str) -> String {
-    let lower = text.to_lowercase();
-    let n = needle.to_lowercase();
-    // to_lowercase peut changer la longueur de certains caractères : on ne remplace que si elle est gardée
-    if lower.len() != text.len() || n.is_empty() {
-        return text.replace(needle, with);
+    // minuscules caractère par caractère, sauf ceux dont la minuscule n'a pas la même longueur (« İ », « Ω ») : les
+    // positions trouvées dans `lower` restent celles de `text`
+    let lower_same_len = |s: &str| -> String {
+        s.chars()
+            .map(|c| {
+                let mut l = c.to_lowercase();
+                match (l.next(), l.next()) {
+                    (Some(x), None) if x.len_utf8() == c.len_utf8() => x,
+                    _ => c,
+                }
+            })
+            .collect()
+    };
+    let lower = lower_same_len(text);
+    let n = lower_same_len(needle);
+    if n.is_empty() {
+        return text.to_string();
     }
     let alnum_before = |at: usize| text[..at].chars().next_back().is_some_and(char::is_alphanumeric);
     let alnum_after = |at: usize| text[at..].chars().next().is_some_and(char::is_alphanumeric);
@@ -395,6 +407,9 @@ mod tests {
         assert!(out.contains("10.0.26100.1") && out.contains("v1.2.0"), "{out}");
         // mot entier seulement
         assert_eq!(mask("Custom tom", &["Tom".into()], &[]), "Custom <user>");
+        // « İ » s'allonge en minuscule et le signe ohm « Ω » raccourcit : les positions ne doivent pas se décaler
+        assert_eq!(mask("\u{130}x\u{e9} \u{2126} zo\u{e9}", &["Zo\u{e9}".into()], &[]), "\u{130}x\u{e9} \u{2126} <user>");
+        assert_eq!(replace_word_ci("\u{130}x \u{e9} \u{2126}", "\u{c9}", "<x>"), "\u{130}x <x> \u{2126}");
     }
 
     #[test]
