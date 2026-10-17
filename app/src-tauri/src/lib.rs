@@ -1,7 +1,10 @@
 mod account;
 mod assets;
+mod background;
 mod backup;
 mod catalog;
+mod fps;
+mod gameping;
 mod games;
 mod history;
 mod instance;
@@ -9,6 +12,7 @@ mod license;
 mod memory;
 mod minecraft;
 mod nettest;
+mod overlay;
 mod repair;
 mod report;
 mod reset;
@@ -25,6 +29,7 @@ use std::sync::{Arc, Mutex};
 use tauri::{AppHandle, Emitter, Manager, State};
 
 use account::Account;
+use background::Background;
 use backup::Ledger;
 use history::History;
 use license::License;
@@ -621,6 +626,103 @@ fn update_install(state: State<'_, AppState>) -> Result<(), String> {
     state.updates.install(true)
 }
 
+/// « Quitter » (icône près de l'horloge) : comme une fermeture, sans le mode arrière-plan.
+fn quit(app: &AppHandle) {
+    if let Some(state) = app.try_state::<AppState>() {
+        if state.reset.hold_exit() {
+            if let Some(w) = app.get_webview_window("main") {
+                let _ = w.hide();
+            }
+            return;
+        }
+        if state.updates.ready().is_some() && !state.runner.is_running() {
+            let _ = state.updates.install(false);
+        }
+    }
+    app.exit(0);
+}
+
+#[derive(serde::Serialize)]
+#[serde(rename_all = "camelCase")]
+struct BackgroundState {
+    prefs: background::Prefs,
+    /// la tâche de lancement avec Windows existe
+    autostart: bool,
+    shortcut_taken: bool,
+    fps_available: bool,
+}
+
+fn background_state(app: &AppHandle) -> BackgroundState {
+    let bg = app.state::<Arc<Background>>();
+    let info = app.state::<Arc<overlay::Overlay>>().info();
+    BackgroundState {
+        prefs: bg.prefs(),
+        autostart: background::autostart_exists(&app.package_info().name),
+        shortcut_taken: info.shortcut_taken,
+        fps_available: info.fps_available,
+    }
+}
+
+#[tauri::command]
+async fn background_get(app: AppHandle) -> Result<BackgroundState, String> {
+    tauri::async_runtime::spawn_blocking(move || background_state(&app)).await.map_err(|e| e.to_string())
+}
+
+/// Enregistre les réglages du mode arrière-plan et de la barre en jeu, et les applique (icône, tâche planifiée).
+#[tauri::command]
+async fn background_set(app: AppHandle, prefs: background::Prefs) -> Result<BackgroundState, String> {
+    tauri::async_runtime::spawn_blocking(move || {
+        let mut prefs = prefs;
+        prefs.shortcut = prefs.shortcut.trim().to_string();
+        if prefs.shortcut.parse::<tauri_plugin_global_shortcut::Shortcut>().is_err() {
+            return Err("shortcut".to_string());
+        }
+        prefs.lang = if prefs.lang == "en" { "en".into() } else { "fr".into() };
+        let bg = Arc::clone(&app.state::<Arc<Background>>());
+        let name = app.package_info().name.clone();
+        let old = bg.prefs();
+        if prefs.autostart != old.autostart || prefs.autostart != background::autostart_exists(&name) {
+            let temp = app.state::<AppState>().data_dir.clone();
+            background::set_autostart(&name, prefs.autostart, &temp).map_err(|e| format!("autostart:{e}"))?;
+        }
+        bg.save(prefs.clone());
+        background::sync_tray(&app, prefs.keeps_running() || bg.started_hidden, &prefs.lang, quit);
+        Ok(background_state(&app))
+    })
+    .await
+    .map_err(|e| e.to_string())?
+}
+
+#[tauri::command]
+fn overlay_info(overlay: State<'_, Arc<overlay::Overlay>>) -> overlay::Info {
+    overlay.info()
+}
+
+#[tauri::command]
+fn overlay_live(overlay: State<'_, Arc<overlay::Overlay>>) -> overlay::Live {
+    overlay.live()
+}
+
+#[tauri::command]
+fn overlay_close(app: AppHandle, overlay: State<'_, Arc<overlay::Overlay>>) {
+    overlay.close(&app, true);
+}
+
+#[tauri::command]
+fn overlay_set_pin(bg: State<'_, Arc<Background>>, pin: bool) {
+    bg.save(background::Prefs { pin, ..bg.prefs() });
+}
+
+/// Depuis la barre en jeu : ferme la barre et ouvre l'app, sur une page (`premium` : l'offre Premium).
+#[tauri::command]
+fn overlay_open_app(app: AppHandle, overlay: State<'_, Arc<overlay::Overlay>>, page: Option<String>) {
+    overlay.close(&app, false);
+    background::show_main(&app);
+    if let Some(page) = page {
+        let _ = app.emit_to("main", "app:goto", page);
+    }
+}
+
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
     // une seule Rago Optimizer à la fois (instance.rs) : le verrou est gardé jusqu'à la fin du processus
@@ -640,6 +742,15 @@ pub fn run() {
         .plugin(tauri_plugin_dialog::init())
         .plugin(tauri_plugin_opener::init())
         .plugin(tauri_plugin_updater::Builder::new().build())
+        .plugin(
+            tauri_plugin_global_shortcut::Builder::new()
+                .with_handler(|app, _shortcut, event| {
+                    if event.state == tauri_plugin_global_shortcut::ShortcutState::Pressed {
+                        overlay::on_shortcut(app);
+                    }
+                })
+                .build(),
+        )
         .setup(|app| {
             let resource_dir = app
                 .path()
@@ -680,6 +791,18 @@ pub fn run() {
                         std::thread::sleep(std::time::Duration::from_secs(4));
                     }
                 });
+            }
+            // mode arrière-plan et barre en jeu (RAG-82) : lancée avec Windows, la fenêtre reste cachée près de l'horloge
+            let started_hidden = std::env::args_os().any(|a| a == background::BACKGROUND_ARG);
+            let background = Arc::new(Background::load(&data_dir, started_hidden));
+            let prefs = background.prefs();
+            background::sync_tray(app.handle(), prefs.keeps_running() || started_hidden, &prefs.lang, quit);
+            let overlay = Arc::new(overlay::Overlay::new(resource_dir.clone(), Arc::clone(&library), Arc::clone(&background)));
+            overlay::watch(app.handle().clone(), Arc::clone(&overlay));
+            app.manage(background);
+            app.manage(overlay);
+            if !started_hidden {
+                background::show_main(app.handle());
             }
             // mise à jour de l'app : cherchée et téléchargée en arrière-plan, installée quand le joueur le décide
             let (license, updates) = (Arc::new(License::new()), Arc::new(update::Updates::default()));
@@ -722,17 +845,45 @@ pub fn run() {
             Ok(())
         })
         .on_window_event(|window, event| {
-            if let tauri::WindowEvent::CloseRequested { api, .. } = event {
-                // remise en cours : la fenêtre se cache, la remise continue et l'app quitte quand elle est finie
-                if window.try_state::<AppState>().is_some_and(|s| s.reset.hold_exit()) {
-                    api.prevent_close();
-                    let _ = window.hide();
-                } else if let Some(state) = window.try_state::<AppState>() {
-                    // mise à jour téléchargée : elle s'installe à la fermeture, sans rouvrir l'app (pas pendant un lot)
-                    if state.updates.ready().is_some() && !state.runner.is_running() {
-                        let _ = state.updates.install(false);
+            // barre en jeu : jamais fermée (Alt+F4), seulement cachée ; un clic dans le jeu la ferme
+            if window.label() == overlay::LABEL {
+                let ov = window.try_state::<Arc<overlay::Overlay>>();
+                match event {
+                    tauri::WindowEvent::CloseRequested { api, .. } => {
+                        api.prevent_close();
+                        if let Some(ov) = ov {
+                            ov.close(window.app_handle(), true);
+                        }
+                    }
+                    tauri::WindowEvent::Focused(false) => {
+                        if let Some(ov) = ov {
+                            ov.close(window.app_handle(), false);
+                        }
+                    }
+                    _ => {}
+                }
+                return;
+            }
+            match event {
+                tauri::WindowEvent::CloseRequested { api, .. } => {
+                    // remise en cours : la fenêtre se cache, la remise continue et l'app quitte quand elle est finie
+                    if window.try_state::<AppState>().is_some_and(|s| s.reset.hold_exit()) {
+                        api.prevent_close();
+                        let _ = window.hide();
+                    } else if window.try_state::<Arc<Background>>().is_some_and(|b| b.hides_on_close()) {
+                        // mode arrière-plan : Rago reste près de l'horloge
+                        api.prevent_close();
+                        let _ = window.hide();
+                    } else if let Some(state) = window.try_state::<AppState>() {
+                        // mise à jour téléchargée : elle s'installe à la fermeture, sans rouvrir l'app (pas pendant un lot)
+                        if state.updates.ready().is_some() && !state.runner.is_running() {
+                            let _ = state.updates.install(false);
+                        }
                     }
                 }
+                // fenêtre principale fermée : l'app quitte, même si la barre en jeu (cachée) existe encore
+                tauri::WindowEvent::Destroyed => window.app_handle().exit(0),
+                _ => {}
             }
         })
         .invoke_handler(tauri::generate_handler![
@@ -757,6 +908,13 @@ pub fn run() {
             games_unhide,
             update_ready,
             update_install,
+            background_get,
+            background_set,
+            overlay_info,
+            overlay_live,
+            overlay_close,
+            overlay_set_pin,
+            overlay_open_app,
             open_task_manager,
             minecraft_status,
             minecraft_restore,

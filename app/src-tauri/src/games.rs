@@ -870,6 +870,17 @@ impl Library {
         self.games.lock().unwrap().iter().flatten().filter_map(|g| g.install_dir.as_ref().map(PathBuf::from)).collect()
     }
 
+    /// Nom du jeu dont le dossier contient cet exe (barre en jeu).
+    pub fn name_for(&self, exe: &Path) -> Option<String> {
+        let norm = |s: &str| s.to_lowercase().replace('/', "\\");
+        let p = norm(&exe.to_string_lossy());
+        let games = self.games.lock().unwrap();
+        games.iter().flatten().find_map(|g| {
+            let dir = format!("{}\\", norm(g.install_dir.as_deref()?).trim_end_matches('\\'));
+            (dir.len() > 4 && p.starts_with(&dir)).then(|| g.name.clone())
+        })
+    }
+
     pub fn launch(&self, id: &str) -> Result<(), String> {
         let g = self.find(id).ok_or("Unknown game")?;
         let r = match &g.launch {
@@ -1366,6 +1377,9 @@ mod tests {
         assert_eq!(lib.poll(&[cs.clone()]), Some(vec!["steam:730".to_string()]));
         assert_eq!(lib.poll(&[cs]), None);
         assert_eq!(lib.poll(&[PathBuf::from("C:\\Windows\\explorer.exe")]), Some(vec![]));
+        // barre en jeu : le nom du jeu d'après son exe, sans confondre un dossier voisin au nom plus long
+        assert_eq!(lib.name_for(Path::new("d:/steamlibrary/steamapps/common/Counter-Strike Global Offensive/game/bin/win64/cs2.exe")).as_deref(), Some("Counter-Strike 2"));
+        assert_eq!(lib.name_for(Path::new("D:\\SteamLibrary\\steamapps\\common\\Counter-Strike Global Offensive 2\\x.exe")), None);
         let listed = lib.list(false);
         assert!(listed[0].last_played.is_some() && !listed[0].running);
         // gardée sur disque

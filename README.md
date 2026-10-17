@@ -201,6 +201,14 @@ Le test complet est l'étape 9 de `licensing/docs/MISE-EN-LIGNE.md`. En résumé
 
 Quand tout est bon : refais en **live** les prix, la clé `sk_live_`, le portail et le webhook `whsec_`, puis remplace-les dans Railway (étape 10 de `MISE-EN-LIGNE.md`).
 
+### 5.1 La barre en jeu et le mode arrière-plan (depuis la 1.2.0)
+
+**Ctrl+Maj+R** (modifiable dans Paramètres) ouvre une barre par-dessus le jeu : FPS, ping, CPU, GPU, RAM, nettoyage de la RAM et une vingtaine de réglages à activer ou couper en pleine partie (Premium ; les mesures sont gratuites). Le raccourci n'est pris que quand un jeu est au premier plan. Le jeu doit être en plein écran fenêtré ou en fenêtre : en plein écran exclusif, Windows ne laisse rien s'afficher par-dessus. Les FPS viennent de PresentMon (Intel, MIT), téléchargé à chaque fabrication (étape « PresentMon » du build) ; s'il manque, l'exe marche et les FPS affichent « — ». Le ping est lu sur la connexion TCP du jeu : les jeux en UDP (Valorant, CS2, Fortnite) affichent « — ».
+
+Dans Paramètres, carte « Barre en jeu et arrière-plan » : rester près de l'horloge à la fermeture, et lancer avec Windows (tâche planifiée au nom de l'app, retirée à la désinstallation). La vérification de la licence continue pendant ce temps. Les réglages appliqués restent en place à la fermeture du jeu : on les coupe dans l'app ou dans la barre.
+
+À tester sur un vrai PC Windows avant de diffuser une version : la barre sur Minecraft et un jeu Steam ou Epic, les FPS, le ping, la pastille gardée à l'écran, l'icône près de l'horloge, le lancement avec Windows après un redémarrage, et la mise à jour automatique depuis la version d'avant.
+
 ---
 
 ## 6. Le support au quotidien

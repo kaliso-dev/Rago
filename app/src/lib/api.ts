@@ -124,6 +124,38 @@ export interface UpdateReady {
   notes: string | null;
 }
 
+/** Mode arrière-plan et barre en jeu (background.rs, overlay.rs). */
+export interface BackgroundPrefs {
+  tray: boolean;
+  autostart: boolean;
+  overlay: boolean;
+  shortcut: string;
+  pin: boolean;
+  lang: string;
+}
+export interface BackgroundState {
+  prefs: BackgroundPrefs;
+  /** la tâche de lancement avec Windows existe */
+  autostart: boolean;
+  /** raccourci refusé par Windows (déjà pris par une autre app) */
+  shortcutTaken: boolean;
+  /** FPS mesurables (PresentMon livré avec l'app) */
+  fpsAvailable: boolean;
+}
+export type OverlayMode = "hidden" | "panel" | "pill";
+export interface OverlayInfo {
+  mode: OverlayMode;
+  game: string | null;
+  shortcut: string;
+  pin: boolean;
+  fpsAvailable: boolean;
+  shortcutTaken: boolean;
+}
+export interface OverlayLive {
+  fps: number | null;
+  ping: number | null;
+}
+
 export interface MinecraftStatus {
   dirExists: boolean;
   optifineFile: boolean;
@@ -273,6 +305,19 @@ export interface Api {
   onUpdateReady(cb: (u: UpdateReady) => void): Promise<UnlistenFn>;
   /** Installe la mise à jour et rouvre l'app (l'app se ferme : ne revient qu'en cas d'échec). */
   updateInstall(): Promise<void>;
+  backgroundGet(): Promise<BackgroundState>;
+  /** Erreurs : "shortcut" (raccourci illisible), "autostart:…" (tâche planifiée refusée). */
+  backgroundSet(prefs: BackgroundPrefs): Promise<BackgroundState>;
+  /** Barre en jeu (fenêtre « overlay ») */
+  overlayInfo(): Promise<OverlayInfo>;
+  overlayLive(): Promise<OverlayLive>;
+  overlayClose(): Promise<void>;
+  overlaySetPin(pin: boolean): Promise<void>;
+  /** Ferme la barre et ouvre l'app (page : id de page, ou "premium" pour l'offre). */
+  overlayOpenApp(page?: string): Promise<void>;
+  onOverlayMode(cb: (mode: OverlayMode) => void): Promise<UnlistenFn>;
+  /** Fenêtre principale : page demandée depuis la barre en jeu. */
+  onGoto(cb: (page: string) => void): Promise<UnlistenFn>;
   openUrl(url: string): Promise<void>;
   onItem(cb: (e: ItemEvent) => void): Promise<UnlistenFn>;
   onLog(cb: (e: LogEvent) => void): Promise<UnlistenFn>;
@@ -344,6 +389,15 @@ const tauriApi: Api = {
   updateReady: () => invoke("update_ready"),
   onUpdateReady: (cb) => listen<UpdateReady>("update:ready", (e) => cb(e.payload)),
   updateInstall: () => invoke("update_install"),
+  backgroundGet: () => invoke("background_get"),
+  backgroundSet: (prefs) => invoke("background_set", { prefs }),
+  overlayInfo: () => invoke("overlay_info"),
+  overlayLive: () => invoke("overlay_live"),
+  overlayClose: () => invoke("overlay_close"),
+  overlaySetPin: (pin) => invoke("overlay_set_pin", { pin }),
+  overlayOpenApp: (page) => invoke("overlay_open_app", { page: page ?? null }),
+  onOverlayMode: (cb) => listen<OverlayMode>("overlay:mode", (e) => cb(e.payload)),
+  onGoto: (cb) => listen<string>("app:goto", (e) => cb(e.payload)),
   licenseStatus: () => invoke("license_status"),
   licenseLogin: (email, password) => invoke("license_login", { email, password }),
   licenseActivate: () => invoke("license_activate"),
@@ -434,6 +488,7 @@ function mockLicense(): LicenseStatus {
 }
 
 let demoPending: string | null = null;
+let mockBackground: BackgroundPrefs = { tray: false, autostart: false, overlay: true, shortcut: "Ctrl+Shift+R", pin: false, lang: "fr" };
 
 /** Démo : la remise du moteur à la fin de la licence (tous les réglages remis en arrière-plan). */
 function mockReset() {
@@ -658,6 +713,30 @@ const mockApi: Api = {
     await sleep(1200);
     location.reload();
   },
+  backgroundGet: async () => ({ prefs: mockBackground, autostart: mockBackground.autostart, shortcutTaken: false, fpsAvailable: true }),
+  backgroundSet: async (prefs) => {
+    await sleep(250);
+    if (!/^((Ctrl|Alt|Shift|Super)\+)*(F\d{1,2}|[A-Z0-9]|[A-Za-z]+)$/.test(prefs.shortcut) || /\+$/.test(prefs.shortcut)) throw "shortcut";
+    mockBackground = { ...prefs };
+    return { prefs: mockBackground, autostart: prefs.autostart, shortcutTaken: false, fpsAvailable: true };
+  },
+  // démo de la barre : overlay.html?pill pour la pastille
+  overlayInfo: async () => ({
+    mode: new URLSearchParams(location.search).has("pill") ? "pill" : "panel",
+    game: "Minecraft",
+    shortcut: mockBackground.shortcut,
+    pin: mockBackground.pin,
+    fpsAvailable: true,
+    shortcutTaken: false,
+  }),
+  overlayLive: async () => ({ fps: Math.round(238 + Math.random() * 14), ping: Math.round(21 + Math.random() * 4) }),
+  overlayClose: async () => {},
+  overlaySetPin: async (pin) => {
+    mockBackground = { ...mockBackground, pin };
+  },
+  overlayOpenApp: async () => {},
+  onOverlayMode: (cb) => on("overlay:mode", cb),
+  onGoto: (cb) => on("app:goto", cb),
   licenseStatus: async () => {
     await sleep(300);
     return mockLicense();

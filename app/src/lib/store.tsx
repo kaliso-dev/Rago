@@ -1,5 +1,5 @@
 import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState, type ReactNode } from "react";
-import { api, asLicenseError, type AppliedView, type DoneEvent, type HistoryEntry, type ItemStatus, type LicenseError, type LicenseStatus, type ResetDone, type RunItem, type SystemInfo } from "./api";
+import { api, asLicenseError, isTauri, type AppliedView, type DoneEvent, type HistoryEntry, type ItemStatus, type LicenseError, type LicenseStatus, type ResetDone, type RunItem, type SystemInfo } from "./api";
 import { autoVariant, availability, catalog, retired, tweakModule, tweaks, type Lang, type Tweak, needsReboot } from "./catalog";
 import { translate, type Key } from "./i18n";
 import free from "../data/free.json";
@@ -486,10 +486,11 @@ function useStoreValue() {
   }, [confirm, run]);
 
   useEffect(() => {
+    // lot terminé encore affiché : un lot lancé depuis la barre en jeu ne vient pas s'y mélanger
     const subs = [
       api.onItem((e) =>
         setRun((r) => {
-          if (!r) return r;
+          if (!r || r.done) return r;
           const rows = r.rows.slice();
           if (rows[e.index]) rows[e.index] = { ...rows[e.index], status: e.status, durationMs: e.durationMs };
           const logs = e.status === "error" && e.message ? [...r.logs, { id: e.id, line: `! ${e.message}` }] : r.logs;
@@ -497,10 +498,10 @@ function useStoreValue() {
         }),
       ),
       api.onLog((e) =>
-        setRun((r) => (r ? { ...r, logs: r.logs.length > 600 ? [...r.logs.slice(-500), e] : [...r.logs, e] } : r)),
+        setRun((r) => (r && !r.done ? { ...r, logs: r.logs.length > 600 ? [...r.logs.slice(-500), e] : [...r.logs, e] } : r)),
       ),
       api.onDone((e) => {
-        setRun((r) => (r ? { ...r, done: e, endedAt: Date.now() } : r));
+        setRun((r) => (r && !r.done ? { ...r, done: e, endedAt: Date.now() } : r));
         // « Optimiser et jouer » : le jeu démarre une fois les réglages posés, sauf si le joueur a arrêté le lot
         const play = launchAfter.current;
         launchAfter.current = null;
@@ -613,6 +614,21 @@ function useStoreValue() {
     setFocusTweak(tweakId ?? null);
     if (tweakId) setFocusSeq((n) => n + 1);
   }, []);
+  // barre en jeu : « Ouvrir Rago Optimizer » ou l'offre Premium, depuis la partie
+  useEffect(() => {
+    const sub = api.onGoto((page) => (page === "premium" ? setUpsell("plan") : goTo(page)));
+    return () => void sub.then((un) => un());
+  }, [goTo, setUpsell]);
+  // langue du menu de l'icône près de l'horloge
+  useEffect(() => {
+    if (!isTauri) return;
+    void api.backgroundGet().then(
+      (st) => {
+        if (st.prefs.lang !== lang) void api.backgroundSet({ ...st.prefs, lang });
+      },
+      () => {},
+    );
+  }, [lang]);
 
   return {
     lang, setLang, motion, setMotion, t,

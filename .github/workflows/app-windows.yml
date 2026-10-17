@@ -7,6 +7,7 @@
 # Mises à jour automatiques (RAG-24) : avec le secret TAURI_SIGNING_PRIVATE_KEY (et TAURI_SIGNING_PRIVATE_KEY_PASSWORD
 # s'il a un mot de passe) et la variable RAGO_UPDATER_PUBKEY, l'exe sait se mettre à jour et le build signe
 # l'installateur : le fichier .exe.sig est dans l'artefact, à déposer à côté de l'exe. Sans eux, exe sans mise à jour.
+# Barre en jeu (RAG-82) : PresentMon, l'outil d'Intel qui mesure les FPS, est téléchargé à chaque build (pas dans git).
 name: app-windows
 
 on:
@@ -114,6 +115,31 @@ jobs:
           fi
           node -e "const f='src-tauri/tauri.conf.json', fs=require('fs'), c=JSON.parse(fs.readFileSync(f, 'utf8')); c.bundle.createUpdaterArtifacts=true; c.plugins.updater.pubkey=process.env.UPDATER_PUBKEY.trim(); fs.writeFileSync(f, JSON.stringify(c, null, 2))"
           echo "Exe avec mise à jour automatique"
+      - name: PresentMon (FPS de la barre en jeu)
+        # outil d'Intel (licence MIT) livré dans resources\ : sans lui l'exe marche, les FPS restent « — ». Gardé
+        # seulement s'il est signé par Intel.
+        shell: bash
+        env:
+          GH_TOKEN: ${{ github.token }}
+          PRESENTMON_TAG: v2.3.0
+        run: |
+          dir=$(mktemp -d)
+          gh release download "$PRESENTMON_TAG" --repo GameTechDev/PresentMon --pattern 'PresentMon-*-x64.exe' --dir "$dir" \
+            || gh release download --repo GameTechDev/PresentMon --pattern 'PresentMon-*-x64.exe' --dir "$dir" \
+            || true
+          exe=$(ls "$dir" 2>/dev/null | grep -E '^PresentMon-[0-9.]+-x64\.exe$' | sort -V | tail -1)
+          if [ -z "$exe" ]; then echo "::warning::PresentMon introuvable : exe sans FPS dans la barre en jeu"; exit 0; fi
+          signer=$(pwsh -NoProfile -Command "\$s = Get-AuthenticodeSignature '$(cygpath -w "$dir/$exe")'; if (\$s.Status -eq 'Valid') { \$s.SignerCertificate.Subject }")
+          case "$signer" in
+            *"O=Intel Corporation"*) ;;
+            *) echo "::warning::$exe n'est pas signé par Intel ($signer) : exe sans FPS dans la barre en jeu"; exit 0 ;;
+          esac
+          cp "$dir/$exe" src-tauri/resources/PresentMon.exe
+          for f in LICENSE.txt LICENSE; do
+            gh api "repos/GameTechDev/PresentMon/contents/$f" -H "Accept: application/vnd.github.raw" > src-tauri/resources/PresentMon-LICENSE.txt 2>/dev/null && break
+          done
+          [ -s src-tauri/resources/PresentMon-LICENSE.txt ] || { rm -f src-tauri/resources/PresentMon-LICENSE.txt; echo "::warning::licence de PresentMon introuvable"; }
+          echo "PresentMon livré : $exe ($signer)"
       - run: npm ci
       - name: Tests du moteur
         run: cargo test --manifest-path src-tauri/Cargo.toml

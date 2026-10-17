@@ -1,0 +1,359 @@
+/* Barre en jeu (RAG-82) : fenêtre transparente posée sur le jeu. Seule la barre (ou la pastille) est peinte. */
+@font-face {
+  font-family: "Geist";
+  src: url("../assets/fonts/Geist-Variable.woff2") format("woff2");
+  font-weight: 100 900;
+  font-display: swap;
+}
+@font-face {
+  font-family: "Geist Mono";
+  src: url("../assets/fonts/GeistMono-Variable.woff2") format("woff2");
+  font-weight: 100 900;
+  font-display: swap;
+}
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+html,
+body.overlay-body,
+#root {
+  margin: 0;
+  height: 100%;
+  background: transparent;
+  overflow: hidden;
+}
+body.overlay-body {
+  font-family: var(--rg-font-sans);
+  font-size: 13px;
+  color: var(--rg-text-1);
+  -webkit-font-smoothing: antialiased;
+  user-select: none;
+  cursor: default;
+}
+button {
+  font: inherit;
+  color: inherit;
+  background: none;
+  border: 0;
+  padding: 0;
+  cursor: pointer;
+}
+button:disabled {
+  cursor: default;
+}
+.spin {
+  animation: ov-spin 0.9s linear infinite;
+}
+@keyframes ov-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* verre sombre : le jeu reste lisible derrière, le texte reste lisible devant (pas de flou sous la fenêtre) */
+.ov-panel,
+.ov-pill {
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.07), rgba(255, 255, 255, 0.02) 40%),
+    rgba(12, 12, 14, 0.88);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.08);
+}
+
+/* ---------- barre ouverte ---------- */
+.ov-stage {
+  height: 100%;
+  display: flex;
+  justify-content: center;
+  align-items: flex-start;
+  padding: 2px 12px 16px;
+}
+/* l'ombre tient dans la marge de la fenêtre : coupée au bord, elle dessinerait un rectangle sur le jeu */
+.ov-panel {
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.08),
+    0 6px 16px -8px rgba(0, 0, 0, 0.7);
+  width: 100%;
+  max-height: 100%;
+  display: flex;
+  flex-direction: column;
+  border-radius: 22px;
+  padding: 14px 16px 12px;
+  overflow: hidden;
+}
+.ov-head {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 0 2px 12px;
+}
+.ov-title {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+}
+.ov-overline {
+  font-family: var(--rg-font-mono);
+  font-size: 10px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--rg-text-3);
+}
+.ov-game {
+  font-size: 15px;
+  font-weight: 620;
+  letter-spacing: -0.01em;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.ov-actions {
+  display: flex;
+  gap: 4px;
+}
+.ov-icon {
+  width: 30px;
+  height: 30px;
+  display: grid;
+  place-items: center;
+  border-radius: 50%;
+  color: var(--rg-text-2);
+  transition: background var(--rg-dur-fast), color var(--rg-dur-fast);
+}
+.ov-icon:hover {
+  background: rgba(255, 255, 255, 0.08);
+  color: var(--rg-text-1);
+}
+.ov-icon.on {
+  color: var(--rg-red-500);
+}
+
+.ov-tiles {
+  display: grid;
+  grid-template-columns: repeat(5, 1fr) auto;
+  gap: 8px;
+}
+.ov-tile {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 10px 12px;
+  border-radius: 14px;
+  background: rgba(255, 255, 255, 0.045);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+}
+.ov-tile-v {
+  font-size: 24px;
+  font-weight: 560;
+  line-height: 1.05;
+}
+.ov-tile-v small {
+  margin-left: 3px;
+  font-size: 12px;
+  color: var(--rg-text-3);
+}
+.rg-metric {
+  font-family: var(--rg-font-mono);
+  font-variant-numeric: tabular-nums;
+  letter-spacing: -0.02em;
+}
+.ov-clean {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  min-width: 86px;
+  padding: 8px 10px;
+  border-radius: 14px;
+  background: rgba(255, 255, 255, 0.07);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  font-size: 12px;
+  font-weight: 600;
+  transition: background var(--rg-dur-fast);
+}
+.ov-clean:hover:not(:disabled) {
+  background: rgba(255, 255, 255, 0.12);
+}
+.ov-note {
+  margin: 8px 2px 0;
+  font-size: 12px;
+  color: var(--rg-text-2);
+}
+.ov-cleaned {
+  color: var(--rg-success);
+}
+.ov-error {
+  color: var(--rg-warning);
+}
+
+.ov-section-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin: 16px 2px 8px;
+}
+.ov-premium {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  height: 24px;
+  padding: 0 10px;
+  border-radius: 999px;
+  background: var(--rg-red-500);
+  color: var(--rg-text-inverse);
+  font-size: 11.5px;
+  font-weight: 650;
+}
+/* défilement vertical sur l'ensemble ; les deux colonnes s'équilibrent à l'intérieur */
+.ov-list {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  padding-right: 2px;
+  mask-image: linear-gradient(180deg, #000 calc(100% - 18px), transparent);
+}
+.ov-cols {
+  columns: 2;
+  column-gap: 10px;
+  padding-bottom: 10px;
+}
+.ov-list::-webkit-scrollbar {
+  width: 6px;
+}
+.ov-list::-webkit-scrollbar-thumb {
+  border-radius: 3px;
+  background: rgba(255, 255, 255, 0.12);
+}
+.ov-group {
+  break-inside: avoid;
+  margin-bottom: 8px;
+  padding: 4px;
+  border-radius: 14px;
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(255, 255, 255, 0.05);
+}
+.ov-group-label {
+  display: block;
+  padding: 6px 10px 4px;
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--rg-text-3);
+}
+.ov-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  min-height: 36px;
+  padding: 4px 6px 4px 10px;
+  border-radius: 10px;
+  cursor: pointer;
+  transition: background var(--rg-dur-fast);
+}
+.ov-row:hover {
+  background: rgba(255, 255, 255, 0.05);
+}
+.ov-list.locked .ov-row {
+  cursor: default;
+}
+.ov-list.locked .ov-row:hover {
+  background: none;
+}
+.ov-row-name {
+  font-size: 12.5px;
+  line-height: 1.3;
+}
+.ov-row-busy {
+  margin-right: 11px;
+  color: var(--rg-text-2);
+}
+
+/* interrupteur (même dessin que dans l'app) */
+.switch {
+  position: relative;
+  width: 38px;
+  height: 22px;
+  flex: none;
+  display: flex;
+  align-items: center;
+  padding: 3px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.14);
+  box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.35);
+  transition: background var(--rg-dur-fast);
+}
+.switch.on {
+  background: var(--rg-red-500);
+  justify-content: flex-end;
+}
+.switch-thumb {
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  background: var(--rg-text-1);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.4);
+}
+.switch.on .switch-thumb {
+  background: var(--rg-text-inverse);
+}
+.switch:disabled {
+  opacity: 0.35;
+}
+
+.ov-foot {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-top: 10px;
+  padding: 10px 4px 0;
+  border-top: 1px solid rgba(255, 255, 255, 0.06);
+  font-size: 11.5px;
+  color: var(--rg-text-3);
+}
+.ov-foot-sep {
+  width: 3px;
+  height: 3px;
+  border-radius: 50%;
+  background: currentColor;
+  opacity: 0.6;
+}
+
+/* ---------- pastille gardée à l'écran : ne prend ni le focus ni les clics ---------- */
+.ov-pill {
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  padding: 0 14px;
+  border-radius: 999px;
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.07), rgba(255, 255, 255, 0.02)),
+    rgba(12, 12, 14, 0.72);
+}
+.ov-pill-v {
+  font-size: 15px;
+  font-weight: 600;
+}
+.ov-pill-u {
+  font-size: 10.5px;
+  color: var(--rg-text-3);
+}
+.ov-pill-sep {
+  width: 1px;
+  height: 14px;
+  margin: 0 4px;
+  background: rgba(255, 255, 255, 0.16);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .spin {
+    animation-duration: 2s;
+  }
+}

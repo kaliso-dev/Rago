@@ -7,11 +7,13 @@ import { FREE, useStore } from "../lib/store";
 import { ACCOUNT_URL, SITE_URL, SUPPORT_URL } from "../components/LicenseGate";
 import { Modal } from "../components/Modal";
 import { ProfileCard } from "../components/ProfileCard";
+import { BackgroundCard } from "../components/BackgroundCard";
 import { Button, Card, Segmented, Switch } from "../components/ui";
 import { Wordmark } from "../components/Logo";
 
 const LICENCES = [
   { name: "NVIDIA Profile Inspector", licence: "MIT", url: "https://github.com/Orbmu2k/nvidiaProfileInspector" },
+  { name: "PresentMon (Intel)", licence: "MIT", url: "https://github.com/GameTechDev/PresentMon" },
   { name: "Geist, Geist Mono", licence: "SIL OFL 1.1", url: "https://vercel.com/font" },
   { name: "Tauri", licence: "MIT / Apache 2.0", url: "https://tauri.app" },
   { name: "React", licence: "MIT", url: "https://react.dev" },
@@ -134,6 +136,7 @@ export function Settings() {
             <ChevronRight size={16} className="setting-link-chevron" />
           </button>
         </Card>
+        <BackgroundCard />
         <Card title={t("settings.memory")}>
           <div className="setting">
             <div>
