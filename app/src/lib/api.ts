@@ -75,6 +75,23 @@ export interface Cleaned {
   apps: number;
 }
 
+/** Parties du rapport pour le support (page « Partage et support »). */
+export interface ReportParts {
+  pc: boolean;
+  tweaks: boolean;
+  history: boolean;
+  logs: boolean;
+  network: boolean;
+}
+
+/** Rapport écrit dans le dossier reports de l'app (report.rs), déjà masqué. */
+export interface SupportReport {
+  path: string;
+  name: string;
+  size: number;
+  text: string;
+}
+
 export interface MinecraftStatus {
   dirExists: boolean;
   optifineFile: boolean;
@@ -152,6 +169,25 @@ export interface ResetDone {
 
 export const isTauri = typeof window !== "undefined" && "__TAURI_INTERNALS__" in window;
 
+/** Presse-papiers de WebView2 ; à défaut (page sans focus), l'ancienne méthode du champ caché. */
+async function copyText(text: string): Promise<void> {
+  try {
+    await navigator.clipboard.writeText(text);
+    return;
+  } catch {
+    /* on essaie l'autre méthode */
+  }
+  const area = document.createElement("textarea");
+  area.value = text;
+  area.setAttribute("readonly", "");
+  area.style.cssText = "position:fixed;opacity:0;pointer-events:none";
+  document.body.appendChild(area);
+  area.select();
+  const ok = document.execCommand("copy");
+  area.remove();
+  if (!ok) throw new Error("clipboard");
+}
+
 export interface Api {
   systemInfo(refresh?: boolean): Promise<SystemInfo>;
   runTweaks(items: RunItem[]): Promise<string>;
@@ -175,6 +211,15 @@ export interface Api {
   restartPc(): Promise<void>;
   openFolder(kind: "logs" | "resources" | "data"): Promise<void>;
   pickFolder(title: string): Promise<string | null>;
+  /** Rapport pour le support : écrit sur ce PC, rien n'est envoyé. */
+  supportReport(parts: ReportParts): Promise<SupportReport>;
+  /** Montre le rapport dans l'Explorateur (fichier sélectionné). */
+  showReport(name: string): Promise<void>;
+  /** Enregistre un code de preset dans un fichier .rago choisi par le joueur ; false : fenêtre fermée sans choisir. */
+  savePresetFile(code: string, fileName: string, title: string): Promise<boolean>;
+  /** Lit un fichier .rago choisi par le joueur ; null : fenêtre fermée sans choisir. */
+  openPresetFile(title: string): Promise<string | null>;
+  copyText(text: string): Promise<void>;
   openUrl(url: string): Promise<void>;
   onItem(cb: (e: ItemEvent) => void): Promise<UnlistenFn>;
   onLog(cb: (e: LogEvent) => void): Promise<UnlistenFn>;
@@ -215,6 +260,21 @@ const tauriApi: Api = {
     const { openUrl } = await import("@tauri-apps/plugin-opener");
     await openUrl(url);
   },
+  supportReport: (parts) => invoke("support_report", { parts }),
+  showReport: (name) => invoke("show_report", { name }),
+  savePresetFile: async (code, fileName, title) => {
+    const { save } = await import("@tauri-apps/plugin-dialog");
+    const path = await save({ title, defaultPath: fileName, filters: [{ name: "Rago preset", extensions: ["rago"] }] });
+    if (!path) return false;
+    await invoke("save_preset_file", { path: /\.rago$/i.test(path) ? path : `${path}.rago`, code });
+    return true;
+  },
+  openPresetFile: async (title) => {
+    const { open } = await import("@tauri-apps/plugin-dialog");
+    const path = await open({ title, multiple: false, directory: false, filters: [{ name: "Rago preset", extensions: ["rago"] }] });
+    return typeof path === "string" ? invoke<string>("read_preset_file", { path }) : null;
+  },
+  copyText,
   licenseStatus: () => invoke("license_status"),
   licenseLogin: (email, password) => invoke("license_login", { email, password }),
   licenseActivate: () => invoke("license_activate"),
@@ -443,6 +503,46 @@ const mockApi: Api = {
   openUrl: async (url) => {
     window.open(url, "_blank", "noopener");
   },
+  supportReport: async (parts) => {
+    await sleep(700);
+    const d = new Date();
+    const pad = (n: number) => String(n).padStart(2, "0");
+    const stamp = `${d.getUTCFullYear()}-${pad(d.getUTCMonth() + 1)}-${pad(d.getUTCDate())}-${pad(d.getUTCHours())}${pad(d.getUTCMinutes())}`;
+    const sections = [
+      "Rago Optimizer support report (demo)",
+      parts.pc ? "\n== PC ==\nWindows: Windows 11 Pro 24H2 (build 26100, Windows 11)" : "",
+      parts.network ? "\n== Network adapter ==\nModel: Realtek PCIe 2.5GbE Family Controller" : "",
+      parts.tweaks ? `\n== Tweaks applied (${mockApplied.size}) ==\n${[...mockApplied.keys()].join("\n")}` : "",
+      parts.history ? `\n== Last 50 changes ==\n${mockHistory.length} in this demo` : "",
+      parts.logs ? "\n== Last 3 optimization logs ==\nNo optimization yet" : "",
+    ].filter(Boolean);
+    const text = sections.join("\n");
+    return { path: `C:\\Users\\<user>\\AppData\\Roaming\\gg.rago.optimizer\\reports\\rago-report-${stamp}.txt`, name: `rago-report-${stamp}.txt`, size: text.length + 9_000, text };
+  },
+  showReport: async (name) => {
+    console.info(`[démo] rapport ${name}`);
+  },
+  savePresetFile: async (code, fileName) => {
+    const a = document.createElement("a");
+    a.href = URL.createObjectURL(new Blob([code], { type: "text/plain" }));
+    a.download = fileName;
+    a.click();
+    setTimeout(() => URL.revokeObjectURL(a.href), 1000);
+    return true;
+  },
+  openPresetFile: () =>
+    new Promise((resolve) => {
+      const input = document.createElement("input");
+      input.type = "file";
+      input.accept = ".rago";
+      input.onchange = () => {
+        const f = input.files?.[0];
+        if (!f) return resolve(null);
+        void f.text().then((s) => resolve(s.trim()));
+      };
+      input.click();
+    }),
+  copyText,
   licenseStatus: async () => {
     await sleep(300);
     return mockLicense();

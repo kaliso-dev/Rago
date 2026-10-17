@@ -35,7 +35,8 @@ export function Sidebar() {
   const item = (id: string, label: string, icon: string) => {
     const Icon = MODULE_ICONS[icon];
     const n = countIn(id);
-    const active = page === id;
+    // Partage et support s'ouvre depuis les paramètres : la barre reste sur Paramètres
+    const active = page === id || (id === "settings" && page === "share");
     return (
       <button key={id} type="button" className={`nav-item${active ? " active" : ""}`} onClick={() => goTo(id)}>
         {active && <motion.span layoutId="nav-active" className="nav-active" transition={{ type: "spring", stiffness: 500, damping: 42 }} />}

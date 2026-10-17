@@ -1,10 +1,13 @@
 import { motion } from "motion/react";
-import { Check, Cpu, Gpu, HardDrive, MemoryStick, Network, Plus, RefreshCw, Lock, RotateCcw, TriangleAlert } from "lucide-react";
-import { availability, catalog, distinctKey, retired, totalTweaks, tweaks, type Preset } from "../lib/catalog";
-import { useStore } from "../lib/store";
+import { Check, Copy, Cpu, Gpu, HardDrive, MemoryStick, Network, Plus, RefreshCw, Lock, RotateCcw, Trash2, TriangleAlert } from "lucide-react";
+import { availability, catalog, distinctKey, retired, totalTweaks, tweaks } from "../lib/catalog";
+import { api } from "../lib/api";
+import { formatDate } from "../lib/i18n";
+import { encodePreset, MAX_NAME } from "../lib/share";
+import { useStore, type MyPreset } from "../lib/store";
 import { LiveStatsCard } from "../components/LiveStatsCard";
 import { Button, Card } from "../components/ui";
-import type { ReactNode } from "react";
+import { useState, type ReactNode } from "react";
 
 /** Interrupteurs du catalogue (les actions ponctuelles ne restent jamais « appliquées »), jumeaux comptés une fois. */
 const totalSwitches = new Set([...tweaks.values()].filter((tw) => tw.kind === "tweak").map((tw) => distinctKey(tw.id))).size;
@@ -28,14 +31,15 @@ function Spec({ icon, label, value, sub }: { icon: ReactNode; label: string; val
 }
 
 export function Dashboard() {
-  const { t, lang, sys, sysLoading, refreshSys, isOn, selected, variantOf, selectMany, lastRestore, requestApply, premium, setUpsell, applied: appliedMap, retiredApplied, requestUndo, requestUndoAll, run } = useStore();
+  const { t, lang, sys, sysLoading, refreshSys, isOn, selected, variantOf, selectMany, lastRestore, requestApply, premium, setUpsell, applied: appliedMap, retiredApplied, requestUndo, requestUndoAll, run, myPresets, currentSetup, savePreset } = useStore();
+  const [naming, setNaming] = useState<string | null>(null);
   // réglages appliqués en ce moment (ceux qu'on a décochés depuis ne comptent plus), jumeaux comptés une fois
   const applied = new Set([...appliedMap.values()].filter((a) => a.ok && tweaks.get(a.id)?.kind === "tweak").map((a) => distinctKey(a.id))).size;
 
   /** Réglages d'un preset utilisables sur ce PC (comme selectMany : pas les pilotes d'une autre marque de carte graphique
    * ou de processeur), et preset complet : chacun allumé, avec la variante du preset. */
-  const presetState = (p: Preset) => {
-    const usable = p.tweaks.flatMap((e) => {
+  const presetState = (entries: string[]) => {
+    const usable = entries.flatMap((e) => {
       const [id, v] = e.split(":");
       const tw = tweaks.get(id);
       return tw && tw.kind === "tweak" && availability(tw, sys).ok ? [{ tw, v }] : [];
@@ -160,7 +164,7 @@ export function Dashboard() {
         <h2 className="section-title rg-overline">{t("dash.presets")}</h2>
         <div className="presets">
           {catalog.presets.map((p, i) => {
-            const { n, on: all } = presetState(p);
+            const { n, on: all } = presetState(p.tweaks);
             return (
               <motion.button
                 key={p.id}
@@ -185,6 +189,114 @@ export function Dashboard() {
           })}
         </div>
       </motion.section>
+
+      {/* presets enregistrés par le joueur, ouverts en gratuit (seuls les réglages de son plan sont ajoutés) */}
+      <motion.section variants={rise} className="mine">
+        <h2 className="section-title rg-overline">{t("dash.mine")}</h2>
+        <div className="presets">
+          {myPresets.map((p) => (
+            <MyPresetCard key={p.id} preset={p} state={presetState(p.t)} />
+          ))}
+          {naming == null ? (
+            <motion.button
+              type="button"
+              className="preset mine-new"
+              whileHover={{ y: -2 }}
+              whileTap={{ scale: 0.985 }}
+              disabled={!currentSetup.length}
+              onClick={() => setNaming("")}
+            >
+              <span className="mine-plus">
+                <Plus size={16} />
+              </span>
+              <span className="preset-name">{t("dash.mine.save")}</span>
+              <span className="preset-desc">{currentSetup.length ? t("dash.mine.saveHint") : t("dash.mine.empty")}</span>
+              <span className="preset-foot">
+                <span className="rg-metric">{t("dash.preset.count", { n: currentSetup.length })}</span>
+              </span>
+            </motion.button>
+          ) : (
+            <form
+              className="preset mine-new naming"
+              onSubmit={(e) => {
+                e.preventDefault();
+                if (!naming.trim() || !currentSetup.length) return;
+                savePreset(naming, currentSetup);
+                setNaming(null);
+              }}
+            >
+              <label htmlFor="mine-name" className="preset-index rg-metric">
+                {t("dash.mine.name")}
+              </label>
+              <input
+                id="mine-name"
+                className="input"
+                autoFocus
+                maxLength={MAX_NAME}
+                value={naming}
+                placeholder={t("dash.mine.namePh")}
+                onChange={(e) => setNaming(e.target.value)}
+                onKeyDown={(e) => e.key === "Escape" && setNaming(null)}
+              />
+              <span className="preset-desc">{t("dash.mine.saveHint")}</span>
+              <span className="preset-foot">
+                <button type="button" className="link" onClick={() => setNaming(null)}>
+                  {t("dash.mine.cancel")}
+                </button>
+                <Button size="sm" variant="primary" type="submit" disabled={!naming.trim()}>
+                  {t("dash.mine.ok")}
+                </Button>
+              </span>
+            </form>
+          )}
+        </div>
+      </motion.section>
+    </motion.div>
+  );
+}
+
+function MyPresetCard({ preset, state }: { preset: MyPreset; state: { n: number; on: boolean } }) {
+  const { t, lang, selectMany, deletePreset } = useStore();
+  const [copied, setCopied] = useState(false);
+  const [asking, setAsking] = useState(false);
+  const copy = async () => {
+    try {
+      await api.copyText(await encodePreset({ n: preset.name, t: preset.t }));
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2200);
+    } catch {
+      /* presse-papiers indisponible : la page Partage et support reste là */
+    }
+  };
+  return (
+    <motion.div className={`preset mine-card${state.on ? " on" : ""}`} whileHover={{ y: -2 }}>
+      <button type="button" className="preset-hit" aria-label={preset.name} onClick={() => selectMany(preset.t)} />
+      <span className="preset-index rg-metric">{formatDate(lang, preset.at)}</span>
+      <span className="preset-name">{preset.name}</span>
+      <span className="preset-desc mine-tools">
+        <button type="button" className="icon-btn" title={copied ? t("dash.mine.copied") : t("dash.mine.copy")} aria-label={t("dash.mine.copy")} onClick={() => void copy()}>
+          {copied ? <Check size={13} /> : <Copy size={13} />}
+        </button>
+        <button
+          type="button"
+          className={`icon-btn${asking ? " danger" : ""}`}
+          title={asking ? t("dash.mine.deleteAsk", { name: preset.name }) : t("dash.mine.delete")}
+          aria-label={t("dash.mine.delete")}
+          onBlur={() => setAsking(false)}
+          onClick={() => (asking ? deletePreset(preset.id) : setAsking(true))}
+        >
+          <Trash2 size={13} />
+        </button>
+        {asking && <span className="mine-ask small">{t("dash.mine.deleteAsk", { name: preset.name })}</span>}
+        {copied && !asking && <span className="mine-ask ok small">{t("dash.mine.copied")}</span>}
+      </span>
+      <span className="preset-foot">
+        <span className="rg-metric">{t("dash.preset.count", { n: state.n })}</span>
+        <span className="preset-cta">
+          {state.on ? <Check size={13} /> : <Plus size={13} />}
+          {state.on ? t("dash.preset.added") : t("dash.preset.add")}
+        </span>
+      </span>
     </motion.div>
   );
 }

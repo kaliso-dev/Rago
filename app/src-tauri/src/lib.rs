@@ -8,6 +8,7 @@ mod license;
 mod memory;
 mod minecraft;
 mod repair;
+mod report;
 mod reset;
 mod runner;
 mod seal;
@@ -275,9 +276,6 @@ fn restart_pc() -> Result<(), String> {
         .map_err(|e| e.to_string())
 }
 
-/// Gestionnaire des tâches de Windows, depuis l'utilisation en direct : voir quelle appli prend la RAM, le processeur
-/// ou la carte graphique, et la fermer soi-même. Rago ne ferme aucun processus (« Nettoyer » vide seulement le cache
-/// de Windows, voir memory.rs).
 /// « Nettoyer » sous la RAM (tableau de bord) : cache de Windows vidé, et applis en arrière-plan réduites si l'option
 /// des paramètres est cochée. Les dossiers des jeux de la bibliothèque ne sont jamais touchés.
 #[tauri::command]
@@ -285,6 +283,9 @@ async fn clean_ram(trim: bool) -> Result<memory::Cleaned, String> {
     tauri::async_runtime::spawn_blocking(move || memory::clean(trim, &[])).await.map_err(|e| e.to_string())?
 }
 
+/// Gestionnaire des tâches de Windows, depuis l'utilisation en direct : voir quelle appli prend la RAM, le processeur
+/// ou la carte graphique, et la fermer soi-même. Rago ne ferme aucun processus (« Nettoyer » vide seulement le cache
+/// de Windows, voir memory.rs).
 #[tauri::command]
 fn open_task_manager() -> Result<(), String> {
     std::process::Command::new("taskmgr.exe").spawn().map(|_| ()).map_err(|e| e.to_string())
@@ -302,6 +303,104 @@ fn open_folder(state: State<'_, AppState>, kind: String) -> Result<(), String> {
     };
     runner::ensure_dir(&path);
     std::process::Command::new("explorer.exe").arg(&path).spawn().map(|_| ()).map_err(|e| e.to_string())
+}
+
+fn now_ms() -> u64 {
+    std::time::SystemTime::now().duration_since(std::time::UNIX_EPOCH).map(|d| d.as_millis() as u64).unwrap_or(0)
+}
+
+/// Exe de test (identifiant fusionné par la CI depuis tauri.staging.conf.json) ou vrai Rago Optimizer.
+fn server_name() -> &'static str {
+    if env!("RAGO_IDENTIFIER").ends_with(".staging") {
+        "staging"
+    } else {
+        "production"
+    }
+}
+
+/// Rapport pour le support (page « Partage et support ») : écrit dans reports\, ce qui identifie le joueur masqué. Rien
+/// n'est envoyé : le joueur le joint lui-même à son ticket.
+#[tauri::command]
+async fn support_report(state: State<'_, AppState>, parts: report::Parts) -> Result<report::Report, String> {
+    let sys = state.system.lock().unwrap().clone();
+    let (ledger, history, lic, data_dir) = (Arc::clone(&state.ledger), Arc::clone(&state.history), Arc::clone(&state.license), state.data_dir.clone());
+    tauri::async_runtime::spawn_blocking(move || {
+        let applied = {
+            let backups = backup::Sys::new(data_dir.join("backup"));
+            let l = ledger.lock().unwrap();
+            l.views(&|p| backups.read(p))
+        };
+        // l'offre seulement : ni l'e-mail ni la clé ne sont lus
+        let license = match lic.status().state {
+            "active" => "Premium",
+            "expired" => "Premium, to renew",
+            _ => "Free",
+        };
+        let now = now_ms();
+        let input = report::Input {
+            version: env!("CARGO_PKG_VERSION"),
+            server: server_name(),
+            license,
+            sys: sys.as_ref(),
+            applied: &applied,
+            history: &history.all(),
+            logs_dir: &data_dir.join("logs"),
+        };
+        let text = report::build(&input, parts, now);
+        let env = |k: &str| std::env::var(k).ok().filter(|v| !v.trim().is_empty());
+        // nom du compte, et celui du dossier de profil (différent pour un compte Microsoft)
+        let users: Vec<String> = [env("USERNAME"), env("USERPROFILE").and_then(|p| PathBuf::from(p).file_name().map(|n| n.to_string_lossy().into_owned()))]
+            .into_iter()
+            .flatten()
+            .collect();
+        let hosts: Vec<String> = [env("COMPUTERNAME"), sys.as_ref().map(|s| s.hostname.clone())].into_iter().flatten().collect();
+        let text = report::mask(&text, &users, &hosts);
+        report::write(&data_dir.join("reports"), &text, now)
+    })
+    .await
+    .map_err(|e| e.to_string())?
+}
+
+/// Montre un rapport dans l'Explorateur, sélectionné. Seulement un fichier de reports\ (nom écrit par report::write).
+#[tauri::command]
+fn show_report(state: State<'_, AppState>, name: String) -> Result<(), String> {
+    let ok_name = name.starts_with("rago-report-") && name.ends_with(".txt") && !name.contains(['/', '\\', ':']) && !name.contains("..");
+    let path = state.data_dir.join("reports").join(&name);
+    if !ok_name || !path.is_file() {
+        return Err("Unknown report".into());
+    }
+    std::process::Command::new("explorer.exe").arg(format!("/select,{}", path.display())).spawn().map(|_| ()).map_err(|e| e.to_string())
+}
+
+/// Fichier de preset partagé (.rago) : le code RAGO1-… en texte, 64 Ko au plus.
+const PRESET_FILE_MAX: u64 = 64 * 1024;
+
+fn preset_path(path: &str) -> Result<PathBuf, String> {
+    let p = PathBuf::from(path);
+    if !p.extension().is_some_and(|e| e.eq_ignore_ascii_case("rago")) {
+        return Err("Not a .rago file".into());
+    }
+    Ok(p)
+}
+
+#[tauri::command]
+fn save_preset_file(path: String, code: String) -> Result<(), String> {
+    let p = preset_path(&path)?;
+    if !code.starts_with("RAGO") || code.len() as u64 > PRESET_FILE_MAX {
+        return Err("Not a preset code".into());
+    }
+    std::fs::write(p, code).map_err(|e| e.to_string())
+}
+
+#[tauri::command]
+fn read_preset_file(path: String) -> Result<String, String> {
+    let p = preset_path(&path)?;
+    let len = std::fs::metadata(&p).map_err(|e| e.to_string())?.len();
+    if len > PRESET_FILE_MAX {
+        return Err("File too large".into());
+    }
+    let bytes = std::fs::read(&p).map_err(|e| e.to_string())?;
+    Ok(String::from_utf8_lossy(&bytes).trim_start_matches('\u{feff}').trim().to_string())
 }
 
 #[tauri::command]
@@ -539,6 +638,10 @@ pub fn run() {
             minecraft_restore,
             restart_pc,
             open_folder,
+            support_report,
+            show_report,
+            save_preset_file,
+            read_preset_file,
             license_status,
             license_login,
             license_activate,

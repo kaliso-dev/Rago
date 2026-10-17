@@ -15,6 +15,7 @@ import { useStore } from "./lib/store";
 import { Dashboard } from "./pages/Dashboard";
 import { ModulePage } from "./pages/ModulePage";
 import { Settings } from "./pages/Settings";
+import { Share } from "./pages/Share";
 
 export function App() {
   const { page, motion: motionPref, lang } = useStore();
@@ -52,7 +53,7 @@ export function App() {
                 exit={{ opacity: 0, x: -8 }}
                 transition={{ duration: 0.16, ease: [0.16, 1, 0.3, 1] }}
               >
-                {page === "dashboard" ? <Dashboard /> : page === "settings" ? <Settings /> : <ModulePage id={page} />}
+                {page === "dashboard" ? <Dashboard /> : page === "settings" ? <Settings /> : page === "share" ? <Share /> : <ModulePage id={page} />}
               </motion.div>
             </AnimatePresence>
           </main>

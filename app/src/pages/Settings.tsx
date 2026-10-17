@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { ExternalLink, FolderOpen, LifeBuoy, LogOut, UserRound } from "lucide-react";
+import { ChevronRight, ExternalLink, FolderOpen, LifeBuoy, LogOut, Share2, UserRound } from "lucide-react";
 import { formatDate } from "../lib/i18n";
 import { api, isTauri } from "../lib/api";
 import { totalTweaks } from "../lib/catalog";
@@ -20,7 +20,7 @@ const LICENCES = [
 ];
 
 export function Settings() {
-  const { t, lang, setLang, motion, setMotion, license, signOut, setUpsell, activatedAt, sys, cleanTrim, setCleanTrim } = useStore();
+  const { t, lang, setLang, motion, setMotion, license, signOut, setUpsell, activatedAt, sys, cleanTrim, setCleanTrim, goTo } = useStore();
   const [confirmOut, setConfirmOut] = useState(false);
   /** Réglages que la déconnexion remettra comme avant (liste du moteur), lue à l'ouverture de la confirmation. */
   const [outPlan, setOutPlan] = useState(0);
@@ -123,6 +123,16 @@ export function Settings() {
               ]}
             />
           </div>
+        </Card>
+        <Card>
+          <button type="button" className="setting setting-link" onClick={() => goTo("share")}>
+            <Share2 size={16} className="setting-link-icon" />
+            <div>
+              <div>{t("settings.share")}</div>
+              <div className="muted small">{t("settings.shareHint")}</div>
+            </div>
+            <ChevronRight size={16} className="setting-link-chevron" />
+          </button>
         </Card>
         <Card title={t("settings.memory")}>
           <div className="setting">

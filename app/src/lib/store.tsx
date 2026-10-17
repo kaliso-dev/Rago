@@ -51,6 +51,14 @@ export function itemName(id: string, lang: Lang): string {
 /** Un point de restauration réussi depuis moins longtemps que ça : la case n'est plus cochée d'office. */
 export const RESTORE_FRESH_MS = 24 * 3600 * 1000;
 
+/** Preset enregistré par le joueur (« Mes presets » du tableau de bord), entrées "id" ou "id:variante". */
+export interface MyPreset {
+  id: string;
+  name: string;
+  t: string[];
+  at: number;
+}
+
 export interface RunRow {
   id: string;
   variant: string | null;
@@ -126,6 +134,7 @@ function useStoreValue() {
   const [mcDirOverride, setMcDir] = usePersisted<string | null>("mcDir", null);
   /** « Nettoyer » la RAM réduit aussi les applis en arrière-plan (paramètres, désactivé par défaut) */
   const [cleanTrim, setCleanTrim] = usePersisted<boolean>("cleanTrim", false);
+  const [myPresets, setMyPresets] = usePersisted<MyPreset[]>("myPresets", []);
   const [history, setHistory] = useState<HistoryEntry[]>([]);
   const [run, setRun] = useState<RunState | null>(null);
   const [confirm, setConfirm] = useState<ConfirmState | null>(null);
@@ -332,6 +341,26 @@ function useStoreValue() {
     [setVariants, variantLocked, setUpsell, applied, setSelection, setPendingUndo],
   );
 
+  /** Réglages allumés en ce moment (appliqués ou cochés), avec leur variante, dans l'ordre du catalogue : ce que
+   * garde un code de partage ou « Enregistrer ma sélection ». Les actions ponctuelles n'en font pas partie. */
+  const currentSetup = useMemo(() => {
+    const out: string[] = [];
+    for (const id of catalogOrder.keys()) {
+      const tw = tweaks.get(id);
+      if (!tw || tw.kind !== "tweak" || !isOn(id)) continue;
+      const v = selected.has(id) ? variantOf(tw) : (applied.get(id)?.variant ?? null);
+      out.push(v ? `${id}:${v}` : id);
+    }
+    return out;
+  }, [isOn, selected, variantOf, applied]);
+
+  const savePreset = useCallback(
+    (name: string, entries: string[]) =>
+      setMyPresets((list) => [...list, { id: `p${Date.now().toString(36)}`, name: name.trim(), t: entries, at: Date.now() }]),
+    [setMyPresets],
+  );
+  const deletePreset = useCallback((id: string) => setMyPresets((list) => list.filter((p) => p.id !== id)), [setMyPresets]);
+
   /** Ajoute une liste "id" ou "id:variante" à la sélection (presets). */
   const selectMany = useCallback(
     (entries: string[]) => {
@@ -524,6 +553,7 @@ function useStoreValue() {
     retiredApplied, requestUndo, requestUndoAll,
     history, lastRun, lastRestore, refreshHistory, refreshApplied,
     mcDir, setMcDir, cleanTrim, setCleanTrim,
+    currentSetup, myPresets, savePreset, deletePreset,
     confirm, setConfirm, requestApply,
     run, setRun, startRun,
     paletteOpen, setPaletteOpen,
