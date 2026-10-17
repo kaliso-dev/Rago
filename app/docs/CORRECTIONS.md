@@ -659,3 +659,12 @@ fait supprimer le fichier à la remise ; un optionsof.txt illisible n'est plus r
 (avant, seulement sur un onglet sans aucun réglage gratuit). Mode jeu : « Désactivé depuis… » après Désactiver ou Tout
 annuler. Bouton « Tout annuler » dans la carte État (RAG-43), une seule Rago Optimizer à la fois, et les petites
 corrections reprises de la 1.1.13 (dates, historique, fenêtres superposées, messages de fin d'exécution).
+
+# Version 1.2.0 (construite sur la 1.1.14, 2026-10-17)
+
+Demande de Sofiene : refonte en verre et nouvelles fonctions, sans rien changer aux optimisations. Vérifié avec
+`git diff origin/staging -- app/src-tauri/scripts app/src/data app/src-tauri/src/runner.rs` : aucun changement dans
+`scripts.json`, `probes.json`, `undo.json`, `catalog.json` ni dans le moteur qui les lance. Nouveau dans cette version :
+refonte visuelle (CSS), Nettoyer la RAM (RAG-48), partage de presets et rapport support, bibliothèque de jeux avec
+images officielles (RAG-57), test réseau (RAG-50), mises à jour automatiques signées (RAG-24), barre en jeu et mode
+arrière-plan (RAG-82). La barre en jeu ne lance que des réglages déjà au catalogue, par le même moteur que l'app.
