@@ -17,6 +17,7 @@ mod seal;
 mod shell;
 mod stats;
 mod system;
+mod update;
 
 use std::path::PathBuf;
 use std::sync::atomic::{AtomicBool, Ordering};
@@ -41,6 +42,7 @@ struct AppState {
     system: Arc<Mutex<Option<SystemInfo>>>,
     stats: stats::Sampler,
     library: Arc<games::Library>,
+    updates: Arc<update::Updates>,
     resource_dir: PathBuf,
     data_dir: PathBuf,
     /// la réparation de ce lancement a supprimé une valeur (repair::at_startup) : l'interface le dit une fois
@@ -604,6 +606,21 @@ async fn account_remove_photo(state: State<'_, AppState>) -> Result<account::Acc
     with_account(&state, |acc, lic| acc.remove_photo(lic)).await
 }
 
+/// Mise à jour téléchargée et vérifiée, prête à installer (null : rien en attente).
+#[tauri::command]
+fn update_ready(state: State<'_, AppState>) -> Option<update::Ready> {
+    state.updates.ready()
+}
+
+/// Installe la mise à jour et rouvre l'app. Pas pendant un lot ni une remise : la fenêtre se fermerait au milieu.
+#[tauri::command]
+fn update_install(state: State<'_, AppState>) -> Result<(), String> {
+    if state.runner.is_running() || state.reset.is_running() {
+        return Err("busy".into());
+    }
+    state.updates.install(true)
+}
+
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
     // une seule Rago Optimizer à la fois (instance.rs) : le verrou est gardé jusqu'à la fin du processus
@@ -622,6 +639,7 @@ pub fn run() {
     tauri::Builder::default()
         .plugin(tauri_plugin_dialog::init())
         .plugin(tauri_plugin_opener::init())
+        .plugin(tauri_plugin_updater::Builder::new().build())
         .setup(|app| {
             let resource_dir = app
                 .path()
@@ -663,16 +681,26 @@ pub fn run() {
                     }
                 });
             }
+            // mise à jour de l'app : cherchée et téléchargée en arrière-plan, installée quand le joueur le décide
+            let (license, updates) = (Arc::new(License::new()), Arc::new(update::Updates::default()));
+            {
+                let license = Arc::clone(&license);
+                update::watch(app.handle().clone(), Arc::clone(&updates), move || {
+                    let d = license.device();
+                    d.fingerprint.machine_guid.clone().unwrap_or_else(|| d.name.clone())
+                });
+            }
             app.manage(AppState {
                 runner: Arc::new(Runner::default()),
                 history,
                 ledger: Arc::new(Mutex::new(ledger)),
-                license: Arc::new(License::new()),
+                license,
                 account: Arc::new(Account::new()),
                 reset: Arc::new(Reset::default()),
                 system: Arc::new(Mutex::new(None)),
                 stats: stats::Sampler::default(),
                 library,
+                updates,
                 resource_dir,
                 data_dir,
                 repaired: AtomicBool::new(!removed.is_empty()),
@@ -699,6 +727,11 @@ pub fn run() {
                 if window.try_state::<AppState>().is_some_and(|s| s.reset.hold_exit()) {
                     api.prevent_close();
                     let _ = window.hide();
+                } else if let Some(state) = window.try_state::<AppState>() {
+                    // mise à jour téléchargée : elle s'installe à la fermeture, sans rouvrir l'app (pas pendant un lot)
+                    if state.updates.ready().is_some() && !state.runner.is_running() {
+                        let _ = state.updates.install(false);
+                    }
                 }
             }
         })
@@ -722,6 +755,8 @@ pub fn run() {
             game_add,
             game_remove,
             games_unhide,
+            update_ready,
+            update_install,
             open_task_manager,
             minecraft_status,
             minecraft_restore,

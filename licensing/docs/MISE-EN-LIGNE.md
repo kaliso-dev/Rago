@@ -178,6 +178,29 @@ C'est ce qui prévient le serveur qu'un paiement est passé.
 
 Le bouton **Download** marche pour tous les comptes, avec ou sans Premium : sans licence, l'app tourne en version gratuite. Le lien public `https://account.ragohub.com/download` sert au bouton gratuit du site.
 
+### Les mises à jour automatiques (depuis la 1.2.0)
+
+L'app cherche une nouvelle version au lancement puis toutes les 4 heures, la télécharge en arrière-plan et affiche « Mise à jour » en bas du menu : **Redémarrer** l'installe tout de suite, sinon elle s'installe quand le joueur ferme l'app. Elle n'installe qu'un fichier signé avec ta clé de mise à jour. Les versions d'avant la 1.2.0 ne savent pas se mettre à jour : les joueurs installent la 1.2.0 une fois à la main.
+
+**Une seule fois, avant de fabriquer la 1.2.0** (sur ton PC, personne d'autre ne doit voir la clé privée) :
+
+1. Dans le dossier `app` du dépôt : `npx tauri signer generate -w "$env:USERPROFILE\.tauri\rago-updater.key"` (PowerShell). Choisis un mot de passe. Deux fichiers sont créés : `rago-updater.key` (privée) et `rago-updater.key.pub` (publique).
+2. GitHub → **Settings → Secrets and variables → Actions** :
+   - Secret `TAURI_SIGNING_PRIVATE_KEY` = le contenu de `rago-updater.key`
+   - Secret `TAURI_SIGNING_PRIVATE_KEY_PASSWORD` = ton mot de passe
+   - Variable (onglet **Variables**) `RAGO_UPDATER_PUBKEY` = le contenu de `rago-updater.key.pub`
+3. Garde une copie de `rago-updater.key` et du mot de passe dans ton gestionnaire de mots de passe. Sans eux, les apps installées ne pourront plus jamais se mettre à jour toutes seules. Ne change jamais cette clé.
+
+Le run vert de **app-windows** affiche alors « Exe avec mise à jour automatique » à l'étape « Mises à jour signées », et l'artefact contient deux fichiers : l'exe et `<même nom>.exe.sig`.
+
+**À chaque nouvelle version :**
+
+1. Dans Railway, mets `UPDATE_ROLLOUT=20` : la version n'est proposée qu'à 1 PC sur 5 pour commencer.
+2. Dépose **les deux fichiers** de l'artefact dans **Storage → downloads**, sans les renommer. Sans le `.sig`, la version est téléchargeable sur le site mais n'est pas proposée en mise à jour.
+3. Vérifie `https://account.ragohub.com/api/v1/update/status` : `"ok":true` et le bon numéro. Sinon `error` dit quoi corriger.
+4. Un ou deux jours plus tard, sans retour de bug sur Discord : `UPDATE_ROLLOUT=100`.
+5. Un problème avec la nouvelle version : `UPDATE_PAUSED=1` arrête de la proposer (les PC qui l'ont déjà téléchargée l'installent quand même). La correction part ensuite dans une version suivante (par exemple 1.2.1), proposée de la même façon.
+
 ## Étape 9 : le test complet (toujours en mode test)
 
 Fais-le de bout en bout, comme un vrai client, dans une fenêtre de navigation privée :
@@ -369,6 +392,9 @@ Le bot compte à partir du moment où il est connecté : rien avant. Un test (st
 | `DISCORD_COMMUNITY`, `DISCORD_WELCOME_CHANNEL_ID`, `DISCORD_WELCOME_TEXT`, `DISCORD_INVITE_ROLES`, `DISCORD_VIP_INVITES`, `DISCORD_MVP_INVITES` | Le bot communauté (« Le bot communauté »). Facultatives : sans `DISCORD_COMMUNITY=1`, rien ne change |
 | `ADMIN_KEY` | Une clé d'au moins 16 lettres et chiffres que tu choisis : elle ouvre `/admin`, où se règle le pop-up du site (« Le pop-up du site »). Sans elle, `/admin` n'existe pas |
 | `INSTALLER_VERSION` | Le numéro de l'exe déposé dans le bucket, lu dans son nom `Rago Optimizer_<numéro>_x64-setup.exe` (ex. `1.1.5`). Affiché à côté du bouton de téléchargement, et sous celui de la page Tweaks du site, qui le lit sur `/api/v1/installer`. `INSTALLER_OBJECT` est facultatif (il donne le bucket et le dossier) : le `.exe` le plus récent du dossier est toujours servi |
+| `UPDATE_ROLLOUT` | Part des PC à qui la nouvelle version est proposée en mise à jour automatique, de 0 à 100 (100 si vide). `20` les premiers jours (« Les mises à jour automatiques », étape 8) |
+| `UPDATE_PAUSED` | `1` : plus aucune mise à jour proposée. Facultative |
+| `UPDATE_NOTES` | Une phrase sur la nouvelle version, affichée au survol de « Mise à jour » dans l'app. Facultative |
 
 À retirer s'il est encore là : `STRIPE_PRICE_ID` (ancien prix unique, plus vendu).
 

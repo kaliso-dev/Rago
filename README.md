@@ -173,7 +173,7 @@ Le bouton « Download free » du site et le bouton « Download Rago Optimizer »
 1. Décompresse l'artefact et dépose le **`.exe`** (pas le zip) dans Supabase → **Storage → downloads**. Le serveur prend le `.exe` le plus récent du bucket.
 2. Vérifie sur `https://account.<ton-domaine>/download/status` : tu dois voir `"ok":true` et le nom de ton fichier.
 
-Pour chaque nouvelle version : dans `app/`, lance `npm run bump 1.2.0` (avec le nouveau numéro ; il met à jour `package.json` et `Cargo.toml`, ne modifie pas `tauri.conf.json` à la main), pousse, laisse la fabrication tourner, dépose le nouvel exe et mets à jour `INSTALLER_VERSION` dans Railway. Le détail est à l'étape 8 de [`licensing/docs/MISE-EN-LIGNE.md`](licensing/docs/MISE-EN-LIGNE.md).
+Pour chaque nouvelle version : dans `app/`, lance `npm run bump 1.2.0` (avec le nouveau numéro ; il met à jour `package.json` et `Cargo.toml`, ne modifie pas `tauri.conf.json` à la main), pousse, laisse la fabrication tourner, dépose le nouvel exe **et son `.exe.sig`** (mise à jour automatique des apps installées) et mets à jour `INSTALLER_VERSION` dans Railway. Le détail est à l'étape 8 de [`licensing/docs/MISE-EN-LIGNE.md`](licensing/docs/MISE-EN-LIGNE.md).
 
 ### 4.2 L'alerte SmartScreen
 

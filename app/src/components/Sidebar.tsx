@@ -5,6 +5,7 @@ import { catalog } from "../lib/catalog";
 import { FREE, useStore } from "../lib/store";
 import { totalTweaks } from "../lib/catalog";
 import { MODULE_ICONS } from "./icons";
+import { UpdateCard } from "./UpdateCard";
 import type { Key } from "../lib/i18n";
 
 /** Pages de la 1.2.0 : badge « Nouveau » jusqu'à la première visite. */
@@ -89,6 +90,7 @@ export function Sidebar() {
         </div>
       ))}
       <div className="nav-spacer" />
+      <UpdateCard />
       {license && !premium && (
         <button type="button" className="nav-upgrade" onClick={() => setUpsell("plan")}>
           <span className="nav-upgrade-top">

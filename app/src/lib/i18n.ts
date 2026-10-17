@@ -418,6 +418,12 @@ const fr = {
   "net.virginia.desc": "Virginie",
   "net.internet": "Internet",
   "net.internet.desc": "Serveur Cloudflare le plus proche",
+  "update.ready": "Mise à jour",
+  "update.sub": "Version {version} : elle s'installe quand tu fermes l'app, ou tout de suite avec Redémarrer.",
+  "update.restart": "Redémarrer",
+  "update.busy": "Disponible à la fin de l'optimisation en cours",
+  "update.failed": "Impossible de lancer l'installation : elle se fera à la fermeture.",
+  "update.version": "{version} prête",
 };
 
 export type Key = keyof typeof fr;
@@ -826,6 +832,12 @@ const en: Record<Key, string> = {
   "net.virginia.desc": "Virginia",
   "net.internet": "Internet",
   "net.internet.desc": "Nearest Cloudflare server",
+  "update.ready": "Update",
+  "update.sub": "Version {version}: it installs when you close the app, or right away with Restart.",
+  "update.restart": "Restart",
+  "update.busy": "Available when the current run ends",
+  "update.failed": "Couldn't start the install. It will run when you close the app.",
+  "update.version": "{version} ready",
 };
 
 const dicts: Record<Lang, Record<Key, string>> = { fr, en };

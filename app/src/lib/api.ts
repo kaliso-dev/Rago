@@ -118,6 +118,12 @@ export interface NetMeasure {
   error: string | null;
 }
 
+/** Mise à jour de l'app téléchargée et vérifiée, prête à installer (update.rs). */
+export interface UpdateReady {
+  version: string;
+  notes: string | null;
+}
+
 export interface MinecraftStatus {
   dirExists: boolean;
   optifineFile: boolean;
@@ -262,6 +268,11 @@ export interface Api {
   gamesUnhide(): Promise<void>;
   /** Jeux lancés en ce moment (id), à chaque changement. */
   onGamesRunning(cb: (ids: string[]) => void): Promise<UnlistenFn>;
+  /** Mise à jour prête (null : rien en attente). */
+  updateReady(): Promise<UpdateReady | null>;
+  onUpdateReady(cb: (u: UpdateReady) => void): Promise<UnlistenFn>;
+  /** Installe la mise à jour et rouvre l'app (l'app se ferme : ne revient qu'en cas d'échec). */
+  updateInstall(): Promise<void>;
   openUrl(url: string): Promise<void>;
   onItem(cb: (e: ItemEvent) => void): Promise<UnlistenFn>;
   onLog(cb: (e: LogEvent) => void): Promise<UnlistenFn>;
@@ -330,6 +341,9 @@ const tauriApi: Api = {
   gameRemove: (id) => invoke("game_remove", { id }),
   gamesUnhide: () => invoke("games_unhide"),
   onGamesRunning: (cb) => listen<string[]>("games:running", (e) => cb(e.payload)),
+  updateReady: () => invoke("update_ready"),
+  onUpdateReady: (cb) => listen<UpdateReady>("update:ready", (e) => cb(e.payload)),
+  updateInstall: () => invoke("update_install"),
   licenseStatus: () => invoke("license_status"),
   licenseLogin: (email, password) => invoke("license_login", { email, password }),
   licenseActivate: () => invoke("license_activate"),
@@ -637,6 +651,13 @@ const mockApi: Api = {
   },
   gamesUnhide: async () => {},
   onGamesRunning: (cb) => on("games:running", cb),
+  // démo : une mise à jour attend avec ?update dans l'adresse
+  updateReady: async () => (new URLSearchParams(location.search).has("update") ? { version: "1.2.1", notes: null } : null),
+  onUpdateReady: (cb) => on("update:ready", cb),
+  updateInstall: async () => {
+    await sleep(1200);
+    location.reload();
+  },
   licenseStatus: async () => {
     await sleep(300);
     return mockLicense();

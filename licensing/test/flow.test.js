@@ -440,6 +440,77 @@ test('installer from Supabase Storage: signed link, any file name, clear reason 
   assert.doesNotMatch(nofile + offText, /\.bat|rago-optimizer-free/);
 });
 
+test('automatic update: newest installer with its .sig, newer versions only, rollout and pause', async () => {
+  const sig = 'dW50cnVzdGVkIGNvbW1lbnQ6IHNpZ25hdHVyZQ==';
+  const storage = {
+    'downloads/Rago Optimizer_1.2.0_x64-setup.exe': true,
+    'downloads/Rago Optimizer_1.2.0_x64-setup.exe.sig': `${sig}\n`,
+  };
+  const calls = [];
+  const fetchImpl = async (url, init) => {
+    calls.push(url);
+    const signed = url.match(/\/object\/sign\/downloads\/(.+)$/);
+    if (signed) return storage[`downloads/${decodeURIComponent(signed[1])}`] ? new Response(JSON.stringify({ signedURL: `/object/sign/downloads/${signed[1]}?token=t0k` })) : new Response('{}', { status: 400 });
+    if (url.endsWith('/object/list/downloads')) {
+      return new Response(JSON.stringify(Object.keys(storage).map((k, i) => ({ name: k.split('/').pop(), id: String(i), created_at: '2026-10-17T10:00:00.123+00:00' }))));
+    }
+    const object = url.match(/\/object\/downloads\/(.+)$/);
+    if (object && typeof storage[`downloads/${decodeURIComponent(object[1])}`] === 'string') return new Response(storage[`downloads/${decodeURIComponent(object[1])}`]);
+    return new Response('{"error":"not_found"}', { status: 400 });
+  };
+  const env = { SUPABASE_URL: 'https://abc.supabase.co', SUPABASE_SERVICE_ROLE_KEY: 'sb_secret_x', PUBLIC_URL: 'https://account.example.com' };
+  const t = await setup(env, { fetchImpl, log: { info() {}, error() {} } });
+  const check = (v, device = 'pc-1', app = t.app) => app.request(`/api/v1/update/windows/x86_64/${v}`, { headers: { 'X-Rago-Device': device } });
+
+  const res = await check('1.1.14');
+  assert.equal(res.status, 200);
+  assert.equal(res.headers.get('cache-control'), 'no-store');
+  assert.deepEqual(await res.json(), {
+    version: '1.2.0', notes: '', pub_date: '2026-10-17T10:00:00.123Z',
+    url: 'https://account.example.com/api/v1/update/file/1.2.0', signature: sig,
+  });
+  // Same or later version, another OS, a version that isn't one: nothing to install.
+  for (const path of ['windows/x86_64/1.2.0', 'windows/x86_64/1.3.0', 'darwin/aarch64/1.0.0', 'windows/x86_64/abc']) {
+    assert.equal((await t.app.request(`/api/v1/update/${path}`)).status, 204, path);
+  }
+  assert.equal((await check('1.2.0-beta.1')).status, 200);
+  // The bucket is read once, then the answer is kept a few minutes.
+  assert.equal(calls.filter((u) => u.endsWith('/object/list/downloads')).length, 1);
+
+  // The download link is the signed one, for the version offered only.
+  const file = await t.app.request('/api/v1/update/file/1.2.0');
+  assert.equal(file.status, 302);
+  assert.equal(file.headers.get('location'), 'https://abc.supabase.co/storage/v1/object/sign/downloads/Rago%20Optimizer_1.2.0_x64-setup.exe?token=t0k&download=RagoOptimizer-Setup.exe');
+  assert.equal((await t.app.request('/api/v1/update/file/1.1.0')).status, 404);
+
+  const status = await (await t.app.request('/api/v1/update/status')).json();
+  assert.deepEqual(status, { ok: true, version: '1.2.0', file: 'Rago Optimizer_1.2.0_x64-setup.exe', paused: false, rollout: 100 });
+
+  // Rollout: about one PC in five at 20%, always the same ones for a version.
+  const t20 = await setup({ ...env, UPDATE_ROLLOUT: '20' }, { fetchImpl });
+  const offered = [];
+  for (let i = 0; i < 100; i++) if ((await check('1.1.14', `pc-${i}`, t20.app)).status === 200) offered.push(i);
+  assert.ok(offered.length > 8 && offered.length < 35, `${offered.length} PCs of 100`);
+  assert.equal((await check('1.1.14', `pc-${offered[0]}`, t20.app)).status, 200);
+  const t0 = await setup({ ...env, UPDATE_ROLLOUT: '0' }, { fetchImpl });
+  assert.equal((await check('1.1.14', 'pc-1', t0.app)).status, 204);
+  const paused = await setup({ ...env, UPDATE_PAUSED: '1' }, { fetchImpl });
+  assert.equal((await check('1.1.14', 'pc-1', paused.app)).status, 204);
+
+  // Installer uploaded without its .sig: not offered, and the status says what to upload.
+  delete storage['downloads/Rago Optimizer_1.2.0_x64-setup.exe.sig'];
+  const nosig = await setup(env, { fetchImpl, log: { info() {}, error() {} } });
+  assert.equal((await check('1.1.14', 'pc-1', nosig.app)).status, 204);
+  assert.equal((await nosig.app.request('/api/v1/update/file/1.2.0')).status, 404);
+  const why = await (await nosig.app.request('/api/v1/update/status')).json();
+  assert.equal(why.ok, false);
+  assert.match(why.error, /upload "Rago Optimizer_1\.2\.0_x64-setup\.exe\.sig"/);
+  // An installer renamed without its version can't be offered either.
+  const renamed = await setup(env, { fetchImpl: async (url) => (url.endsWith('/object/list/downloads')
+    ? new Response(JSON.stringify([{ name: 'RagoOptimizer-Setup.exe', id: 'a', created_at: '2026-10-17' }])) : new Response('x')), log: { info() {}, error() {} } });
+  assert.match((await (await renamed.app.request('/api/v1/update/status')).json()).error, /No version in the installer's name/);
+});
+
 test('installer version: the site reads INSTALLER_VERSION from /api/v1/installer, null while it is not set', async () => {
   const t = await setup({ INSTALLER_VERSION: ' v1.2.0 ' });
   const res = await t.app.request('/api/v1/installer');
