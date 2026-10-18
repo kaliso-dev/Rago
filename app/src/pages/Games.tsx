@@ -41,7 +41,13 @@ function Art({ game, src, className }: { game: Game; src: string | null | undefi
     <div className={`game-art${className ? ` ${className}` : ""}`} style={{ "--h": h } as React.CSSProperties}>
       <span className="game-art-initials">{game.kind === "minecraft" ? "MC" : initials(title)}</span>
       <AnimatePresence>
-        {src && <motion.img key="img" src={src} alt="" draggable={false} initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: 0.3 }} />}
+        {src && (
+          // l'image entière, jamais rognée : ce qui manque autour est rempli par la même image, floutée
+          <motion.div key="img" className="game-art-img" initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: 0.3 }}>
+            <img className="game-art-fill" src={src} alt="" draggable={false} />
+            <img src={src} alt="" draggable={false} />
+          </motion.div>
+        )}
       </AnimatePresence>
     </div>
   );
@@ -254,6 +260,17 @@ export function Games() {
                 </AnimatePresence>
               </div>
               {hero.launcher !== "minecraft" && <span className="chip">{hero.launcher === "manual" ? t("games.manual") : LAUNCHERS[hero.launcher]}</span>}
+              <button
+                type="button"
+                className={`chip chip-btn games-remove${asking ? " danger" : ""}`}
+                title={asking ? t("games.removeAsk") : t("games.remove")}
+                aria-label={t("games.remove")}
+                onBlur={() => setAsking(false)}
+                onClick={() => (asking ? void remove(hero) : setAsking(true))}
+              >
+                <Trash2 size={12} />
+                {asking && <span>{t("games.removeConfirm")}</span>}
+              </button>
             </div>
           </div>
           <div className="games-hero-actions">
@@ -289,17 +306,6 @@ export function Games() {
               <p className="games-note small muted">{t("games.applyFirst", { n: heroPending })}</p>
             ) : null}
           </div>
-          <button
-            type="button"
-            className={`icon-btn games-remove${asking ? " danger" : ""}`}
-            title={asking ? t("games.removeAsk") : t("games.remove")}
-            aria-label={t("games.remove")}
-            onBlur={() => setAsking(false)}
-            onClick={() => (asking ? void remove(hero) : setAsking(true))}
-          >
-            <Trash2 size={13} />
-          </button>
-          {asking && <span className="games-remove-ask small">{t("games.removeAsk")}</span>}
         </motion.section>
       )}
 
