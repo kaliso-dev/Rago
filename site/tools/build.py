@@ -58,6 +58,13 @@ try:
     s = s.replace('<div class="faq rv" id="faqs"></div>', '<div class="faq rv" id="faqs"></div>\n    <noscript><div class="faq">' + static + '</div></noscript>', 1)
 except (OSError, subprocess.CalledProcessError) as e:
     print('warning: static FAQ skipped (node not available):', e)
+# Discord buttons and the Community section (class js-discord): with CONFIG.discord set they are baked in for visitors
+# without JavaScript; empty, they stay hidden (the page's JS removes them)
+DISCORD = cfg('discord')
+if DISCORD:
+    s = s.replace('href="#discord"', f'href="{DISCORD}" target="_blank" rel="noopener"')
+    s, n = re.subn(r'(<[a-z]+ [^>]*\bjs-discord\b[^>]*?) hidden>', r'\1>', s)
+    assert n >= 1, 'no js-discord element found in page.html'
 # Share image: its address changes with its content, so Discord, WhatsApp and social networks fetch the new one
 import hashlib
 OG = f"{SITE}/og-image.png?v={hashlib.sha256(open(os.path.join(ROOT, 'og-image.png'), 'rb').read()).hexdigest()[:10]}"
