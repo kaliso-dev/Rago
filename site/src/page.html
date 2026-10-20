@@ -633,11 +633,12 @@ footer.foot p{max-width:80ch}
 .gl{width:100%;display:grid;gap:12px}
 .gl-found{display:flex;flex-wrap:wrap;align-items:center;gap:6px;font-size:12px;color:var(--t3)}
 .gl-found span{margin-right:4px}
-.gl-found b{font-weight:500;color:var(--t2);padding:5px 10px;border-radius:var(--r-full);background:var(--ink);border:1px solid var(--l1);transition:opacity .35s,transform .45s var(--spring)}
-.gl.scan .gl-found b{opacity:0;transform:scale(.85)}
+.gl-found b{--d:calc(var(--i,0) * .12s);font-weight:500;color:var(--t2);padding:5px 10px;border-radius:var(--r-full);background:var(--ink);border:1px solid var(--l1);transition:opacity .35s var(--d),transform .45s var(--spring) var(--d)}
+/* .scan empties the library all at once; the launchers and games then come back one by one (--i) */
+.gl.scan .gl-found b{opacity:0;transform:scale(.85);--d:0s}
 .gl-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px}
-.gt{position:relative;border-radius:var(--r-md);overflow:hidden;background:var(--ink);border:1px solid var(--l1);transition:border-color .3s,box-shadow .3s,opacity .4s,transform .5s var(--out)}
-.gl.scan .gt{opacity:0;transform:translateY(8px)}
+.gt{--d:calc(.5s + var(--i,0) * .1s);position:relative;border-radius:var(--r-md);overflow:hidden;background:var(--ink);border:1px solid var(--l1);transition:border-color .3s,box-shadow .3s,opacity .4s var(--d),transform .5s var(--out) var(--d)}
+.gl.scan .gt{opacity:0;transform:translateY(8px);--d:0s}
 .gt.sel{border-color:var(--red);box-shadow:0 0 0 3px var(--red-a14)}
 .gt-c{position:relative;aspect-ratio:16/10;background:var(--ink-2)}
 .gt-c img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}
@@ -1916,8 +1917,8 @@ const MODS = [
 
   // Game library: launchers found, games appear, Optimize and play
   const gl = $("#gl"), go = $("#gl-go"), gt = $$(".gt", gl);
-  $$(".gl-found b", gl).forEach((b, i) => b.style.transitionDelay = i * .12 + "s");
-  gt.forEach((t, i) => t.style.transitionDelay = .5 + i * .1 + "s");
+  $$(".gl-found b", gl).forEach((b, i) => b.style.setProperty("--i", i));
+  gt.forEach((t, i) => t.style.setProperty("--i", i));
   loop(gl, async () => {
     gl.classList.add("scan"); gt[0].classList.remove("sel"); go.className = "gl-go"; $("#gl-t").textContent = "Optimize and play";
     await sleep(900); gl.classList.remove("scan");
