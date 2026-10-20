@@ -580,16 +580,13 @@ footer.foot p{max-width:80ch}
 /* Demos only move while .live (on screen) and never with reduced motion */
 .nw:not(.live) *,.nw:not(.live) *::before,.nw:not(.live) *::after{animation-play-state:paused!important}
 
-/* In-game bar: a game, Ctrl+Shift+R, the glass bar drops in, tweaks switch, Esc */
+/* In-game bar: a game clip, Ctrl+Shift+R when the player stops, the glass bar drops in, tweaks switch, Esc */
 .ig{position:relative;width:100%;height:100%;min-height:440px;border-radius:var(--r-lg);overflow:hidden;border:1px solid var(--l1);background:var(--ink-0)}
-.ig-scene{position:absolute;inset:0;background:radial-gradient(70% 60% at 70% 18%,rgba(255,59,48,.16),transparent 70%),linear-gradient(180deg,#121218 0%,#0d0d11 55%,#09090b 100%);transition:filter .6s var(--out),transform .9s var(--out)}
-.ig-scene::before,.ig-scene::after{content:"";position:absolute;left:-2%;right:-2%;bottom:0}
-.ig-scene::before{height:46%;background:var(--ink-3);clip-path:polygon(0 38%,8% 38%,8% 26%,17% 26%,17% 44%,29% 44%,29% 18%,38% 18%,38% 32%,51% 32%,51% 12%,60% 12%,60% 36%,71% 36%,71% 22%,83% 22%,83% 40%,92% 40%,92% 28%,100% 28%,100% 100%,0 100%)}
-.ig-scene::after{height:30%;background:linear-gradient(180deg,var(--ink-4),var(--ink-2));clip-path:polygon(0 30%,12% 30%,12% 14%,24% 14%,24% 40%,40% 40%,40% 22%,57% 22%,57% 46%,69% 46%,69% 10%,81% 10%,81% 34%,100% 34%,100% 100%,0 100%)}
-.ig-cross{position:absolute;left:50%;top:52%;width:18px;height:18px;margin:-9px 0 0 -9px;opacity:.7}
-.ig-cross::before,.ig-cross::after{content:"";position:absolute;background:var(--t1);border-radius:1px}
-.ig-cross::before{left:8px;top:0;width:2px;height:18px}.ig-cross::after{top:8px;left:0;width:18px;height:2px}
-.ig.open .ig-scene{filter:blur(3px) brightness(.55);transform:scale(1.03)}
+.ig-scene{position:absolute;inset:0;background:var(--ink-0);transition:filter .6s var(--out),transform .9s var(--out)}
+.ig-scene video{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;transition:opacity .45s}
+.ig-scene::after{content:"";position:absolute;inset:0;background:linear-gradient(180deg,rgba(9,9,11,.4),transparent 26%,transparent 64%,rgba(9,9,11,.62))}
+.ig.cut .ig-scene video{opacity:0}
+.ig.open .ig-scene{filter:blur(4px) brightness(.5);transform:scale(1.04)}
 .ig-pill{position:absolute;top:14px;right:14px;display:flex;gap:10px;align-items:center;padding:7px 12px;border-radius:var(--r-full);font:500 11.5px/1 var(--mono);color:var(--t2);opacity:0;transform:translateY(-6px);transition:opacity .4s,transform .5s var(--out)}
 .ig-pill b{color:var(--t1);font-weight:600}
 .ig.pin .ig-pill{opacity:1;transform:none}
@@ -671,8 +668,8 @@ footer.foot p{max-width:80ch}
 .gt{position:relative;border-radius:var(--r-md);overflow:hidden;background:var(--ink);border:1px solid var(--l1);transition:border-color .3s,box-shadow .3s,opacity .4s,transform .5s var(--out)}
 .gl.scan .gt{opacity:0;transform:translateY(8px)}
 .gt.sel{border-color:var(--red);box-shadow:0 0 0 3px var(--red-a14)}
-.gt-c{aspect-ratio:16/10;display:grid;place-items:center;padding:8px;text-align:center;font:600 clamp(10px,1vw,13px)/1.1 var(--sans);letter-spacing:.06em;text-transform:uppercase;color:var(--t1);background:radial-gradient(90% 90% at 30% 10%,rgba(255,255,255,.09),transparent 60%),linear-gradient(160deg,var(--ink-4),var(--ink-2))}
-.gt:nth-child(2) .gt-c{background:radial-gradient(90% 90% at 70% 10%,rgba(255,59,48,.22),transparent 60%),linear-gradient(160deg,var(--ink-4),var(--ink-2))}
+.gt-c{position:relative;aspect-ratio:16/10;background:var(--ink-2)}
+.gt-c img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}
 .gt-n{padding:8px 10px;font-size:11.5px;font-weight:560;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .gt-n small{display:block;font-weight:400;color:var(--t3);font-size:10.5px;margin-top:2px}
 .gl-act{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;padding:10px 10px 10px 14px;border-radius:var(--r-full);background:var(--ink);border:1px solid var(--l1);font-size:12px;color:var(--t2)}
@@ -1077,7 +1074,7 @@ footer.foot p{max-width:80ch}
       <article class="nw c8 rv">
         <div class="nw-vis">
           <div class="ig open" id="ig" aria-hidden="true">
-            <div class="ig-scene"><i class="ig-cross"></i></div>
+            <div class="ig-scene"><video id="ig-v" poster="media/in-game-bar.webp" muted playsinline preload="none" disablepictureinpicture disableremoteplayback><source src="media/in-game-bar.mp4" type="video/mp4; codecs=avc1.64002a"><source src="media/in-game-bar.webm" type="video/webm; codecs=vp9"></video></div>
             <div class="ig-pill glassy mono"><span><b id="ig-pf">240</b> FPS</span><span><b id="ig-pp">24</b> ms</span></div>
             <div class="ig-bar glassy">
               <div class="ig-h"><svg viewBox="0 0 164 180"><use href="#i-mark"/></svg><div><small>In-game bar</small><b>Minecraft</b></div><span class="ig-x"><i></i><i></i></span></div>
@@ -1147,10 +1144,10 @@ footer.foot p{max-width:80ch}
           <div class="gl" id="gl" aria-hidden="true">
             <div class="gl-found"><span>Found on this PC</span><b>Steam</b><b>Epic Games</b><b>Riot Client</b><b>Lunar Client</b><b>Battle.net</b></div>
             <div class="gl-grid">
-              <div class="gt sel"><div class="gt-c">Minecraft</div><div class="gt-n">Lunar Client<small>Minecraft</small></div></div>
-              <div class="gt"><div class="gt-c">Valorant</div><div class="gt-n">VALORANT<small>Riot Client</small></div></div>
-              <div class="gt"><div class="gt-c">Counter&#8209;Strike 2</div><div class="gt-n">Counter-Strike 2<small>Steam</small></div></div>
-              <div class="gt"><div class="gt-c">Fortnite</div><div class="gt-n">Fortnite<small>Epic Games</small></div></div>
+              <div class="gt sel"><div class="gt-c"><img src="img/games/minecraft.webp" alt="" width="640" height="400" loading="lazy" decoding="async"></div><div class="gt-n">Lunar Client<small>Minecraft</small></div></div>
+              <div class="gt"><div class="gt-c"><img src="img/games/valorant.webp" alt="" width="640" height="400" loading="lazy" decoding="async"></div><div class="gt-n">VALORANT<small>Riot Client</small></div></div>
+              <div class="gt"><div class="gt-c"><img src="img/games/cs2.webp" alt="" width="640" height="400" loading="lazy" decoding="async"></div><div class="gt-n">Counter-Strike 2<small>Steam</small></div></div>
+              <div class="gt"><div class="gt-c"><img src="img/games/fortnite.webp" alt="" width="640" height="400" loading="lazy" decoding="async"></div><div class="gt-n">Fortnite<small>Epic Games</small></div></div>
             </div>
             <div class="gl-act"><span>Preset: Minecraft PvP · 12 tweaks</span><span class="gl-go" id="gl-go"><i class="spin"></i><svg><use href="#i-play"/></svg><span id="gl-t">Optimize and play</span></span></div>
           </div>
@@ -1899,20 +1896,32 @@ const MODS = [
   const count = (el, from, to, ms, fmt) => new Promise(r => { const t0 = performance.now(); const f = t => { const p = Math.min(1, (t - t0) / ms), k = 1 - Math.pow(1 - p, 3); el.textContent = fmt(from + (to - from) * k); p < 1 ? requestAnimationFrame(f) : r(); }; requestAnimationFrame(f); });
   const loop = (el, fn) => { (async () => { for (;;) { await shown(el); await fn(); } })(); };
 
-  // In-game bar: Ctrl+Shift+R, the bar drops in, tweaks switch, Clean, then back to the game with FPS and ping pinned
-  const ig = $("#ig"), keys = $$(".ig-keys kbd", ig), rows = $$(".ig-r", ig), cl = $("#ig-cl"), ram = $("#ig-r");
-  const jig = (q, base, amp) => { const v = base + Math.round((Math.random() * 2 - 1) * amp); $(q).textContent = v; return v; };
+  // In-game bar: the clip walks into the lobby; when the player stops, Ctrl+Shift+R, the bar drops in, tweaks switch, Clean,
+  // then back to the game with FPS and ping pinned, and the clip starts again
+  const ig = $("#ig"), v = $("#ig-v"), last = $("source:last-child", v), keys = $$(".ig-keys kbd", ig), rows = $$(".ig-r", ig), cl = $("#ig-cl"), ram = $("#ig-r");
+  const jig = (q, base, amp) => { const n = base + Math.round((Math.random() * 2 - 1) * amp); $(q).textContent = n; return n; };
   setInterval(() => { if (!ig.closest(".nw").classList.contains("live")) return; $("#ig-pf").textContent = jig("#ig-f", 240, 4); $("#ig-pp").textContent = jig("#ig-p", 24, 1); jig("#ig-c", 17, 3); jig("#ig-g", 6, 2); }, 800);
   const press = async () => { for (const k of keys) { k.classList.add("dn"); await sleep(160); } await sleep(140); keys.forEach(k => k.classList.remove("dn")); };
+  // back to the first frame (hidden while .cut), then play to the end: the clip stops where the player stops.
+  // A clip that can't load or play (blocked, offline) never holds the demo: it then runs over the poster.
+  const rewind = () => new Promise(r => { if (!v.currentTime) return r(); v.addEventListener("seeked", r, { once: true }); setTimeout(r, 600); v.currentTime = 0; });
+  const walk = () => new Promise(r => {
+    const end = () => { clearTimeout(t); v.removeEventListener("ended", end); last.removeEventListener("error", end); r(); };
+    const t = setTimeout(end, 12000);
+    v.addEventListener("ended", end); last.addEventListener("error", end);
+    const p = v.play(); if (p) p.catch(end);
+  });
+  if ("IntersectionObserver" in window) new IntersectionObserver((es, o) => { if (es[0].isIntersecting) { v.preload = "auto"; o.disconnect(); } }, { rootMargin: "600px" }).observe(ig);
   loop(ig, async () => {
     ig.classList.remove("open", "pin"); rows.forEach(r => r.classList.remove("on")); ram.textContent = 47;
-    await sleep(1100); await press(); ig.classList.add("open");
+    await rewind(); ig.classList.remove("cut");
+    await walk(); await press(); ig.classList.add("open");
     await sleep(900);
     for (const i of [0, 2, 5, 3]) { rows[i].classList.add("on"); await sleep(620); }
     await sleep(250); cl.classList.add("hit"); await sleep(260); cl.classList.remove("hit");
     await count(ram, 47, 38, 900, Math.round);
-    await sleep(1700); await press(); ig.classList.remove("open"); ig.classList.add("pin");
-    await sleep(3000);
+    await sleep(1500); await press(); ig.classList.remove("open"); ig.classList.add("pin");
+    await sleep(2200); ig.classList.add("cut"); await sleep(500);
   });
 
   // Network test: each server is measured in turn, then the verdict
