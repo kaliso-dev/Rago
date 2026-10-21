@@ -1017,3 +1017,112 @@
     justify-self: start;
   }
 }
+
+/* RBW Mod : ce que lit le vérificateur de Ranked Bedwars */
+.rbw-status {
+  margin-top: 18px;
+  padding: 18px 20px;
+}
+.rbw-head {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  align-items: start;
+  gap: 14px;
+}
+.rbw-badge {
+  display: grid;
+  place-items: center;
+  width: 40px;
+  height: 40px;
+  border-radius: var(--rg-radius-sm);
+  color: var(--rg-text-2);
+  background: var(--rg-glass-2);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.08);
+}
+.rbw-status.ready .rbw-badge {
+  color: var(--rg-success);
+  background: rgba(61, 220, 151, 0.1);
+}
+.rbw-status.red .rbw-badge {
+  color: var(--rg-red-400);
+  background: var(--rg-red-a12);
+}
+.rbw-status.red::after {
+  background: linear-gradient(150deg, rgba(255, 94, 85, 0.4), rgba(255, 59, 48, 0.08) 35%, rgba(255, 255, 255, 0.03) 65%, rgba(255, 255, 255, 0.07));
+}
+.rbw-status.ready::after {
+  background: linear-gradient(150deg, rgba(61, 220, 151, 0.35), rgba(61, 220, 151, 0.06) 35%, rgba(255, 255, 255, 0.03) 65%, rgba(255, 255, 255, 0.07));
+}
+.rbw-verdict h2 {
+  margin: 4px 0 4px;
+  font-size: 18px;
+  font-weight: 600;
+  letter-spacing: -0.015em;
+}
+.rbw-verdict p {
+  margin: 0;
+  max-width: 620px;
+}
+.rbw-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.rbw-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1.4fr) minmax(0, 1fr);
+  gap: 18px;
+  margin-top: 16px;
+  padding-top: 14px;
+  border-top: 1px solid var(--rg-line-1);
+}
+.rbw-group {
+  margin-bottom: 8px;
+}
+.rbw-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(210px, 1fr));
+  gap: 6px;
+}
+.rbw-list li {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 32px;
+  padding: 0 10px;
+  border-radius: var(--rg-radius-sm);
+  background: var(--rg-glass-1);
+  border: 1px solid var(--rg-line-1);
+  font-size: 12.5px;
+}
+.rbw-list li.bad {
+  background: var(--rg-red-a12);
+  border-color: rgba(255, 59, 48, 0.25);
+}
+.rbw-name {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: 12px;
+}
+.rbw-state {
+  color: var(--rg-text-2);
+}
+.rbw-list li.bad .rbw-state {
+  color: var(--rg-red-300);
+}
+.rbw-start {
+  font-size: 11px;
+  color: var(--rg-text-3);
+  font-family: var(--rg-font-mono);
+}
+@media (max-width: 1180px) {
+  .rbw-grid {
+    grid-template-columns: 1fr;
+  }
+}

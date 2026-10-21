@@ -14,6 +14,8 @@ mod memory;
 mod minecraft;
 mod nettest;
 mod overlay;
+mod rbw;
+mod reg;
 mod repair;
 mod report;
 mod reset;
@@ -695,6 +697,12 @@ async fn background_set(app: AppHandle, prefs: background::Prefs) -> Result<Back
     .map_err(|e| e.to_string())?
 }
 
+/// État de ce que lit le vérificateur de Ranked Bedwars (affiché sous RBW Mod).
+#[tauri::command]
+async fn rbw_status() -> Result<Vec<rbw::Check>, String> {
+    tauri::async_runtime::spawn_blocking(rbw::status).await.map_err(|e| e.to_string())
+}
+
 #[tauri::command]
 fn overlay_info(overlay: State<'_, Arc<overlay::Overlay>>) -> overlay::Info {
     overlay.info()
@@ -899,6 +907,7 @@ pub fn run() {
         })
         .invoke_handler(tauri::generate_handler![
             get_system_info,
+            rbw_status,
             run_tweaks,
             cancel_run,
             is_running,

@@ -160,6 +160,15 @@ export interface OverlayLive {
   ping: number | null;
 }
 
+/** Ce que lit le vérificateur de Ranked Bedwars (rbw.rs). */
+export interface RbwCheck {
+  name: string;
+  kind: "service" | "setting";
+  ok: boolean;
+  state: "running" | "stopped" | "starting" | "stopping" | "paused" | "missing" | "on" | "off";
+  start: "auto" | "manual" | "disabled" | "boot" | "system" | null;
+}
+
 export interface MinecraftStatus {
   dirExists: boolean;
   optifineFile: boolean;
@@ -275,6 +284,7 @@ export interface Api {
   /** Vide le cache mémoire de Windows ; `trim` : réduit aussi les applis en arrière-plan (option des paramètres). */
   cleanRam(trim: boolean): Promise<Cleaned>;
   minecraftStatus(dir?: string | null): Promise<MinecraftStatus>;
+  rbwStatus(): Promise<RbwCheck[]>;
   minecraftRestore(dir?: string | null): Promise<string>;
   restartPc(): Promise<void>;
   openFolder(kind: "logs" | "resources" | "data"): Promise<void>;
@@ -350,6 +360,7 @@ const tauriApi: Api = {
   openTaskManager: () => invoke("open_task_manager"),
   cleanRam: (trim) => invoke("clean_ram", { trim }),
   minecraftStatus: (dir) => invoke("minecraft_status", { dir: dir ?? null }),
+  rbwStatus: () => invoke("rbw_status"),
   minecraftRestore: (dir) => invoke("minecraft_restore", { dir: dir ?? null }),
   restartPc: () => invoke("restart_pc"),
   openFolder: (kind) => invoke("open_folder", { kind }),
@@ -634,6 +645,25 @@ const mockApi: Api = {
     return { standby: (1.2 + Math.random() * 1.6) * gb, trimmed: trim ? 0.4 * gb : 0, apps: trim ? 7 : 0 };
   },
   minecraftStatus: async () => ({ dirExists: true, optifineFile: true, backups: 1 }),
+  // démo : SysMain et PcaSvc arrêtés, Prefetch coupé (ce que le RBW Mod « Activé » corrige)
+  rbwStatus: async () => {
+    const svc = (name: string, state: RbwCheck["state"], start: RbwCheck["start"]): RbwCheck => ({ name, kind: "service", ok: state === "running", state, start });
+    const set = (name: string, ok: boolean): RbwCheck => ({ name, kind: "setting", ok, state: ok ? "on" : "off", start: null });
+    const fixed = mockApplied.get("rbw_mode")?.variant === "on";
+    return [
+      svc("SysMain", fixed ? "running" : "stopped", fixed ? "auto" : "disabled"),
+      svc("PcaSvc", fixed ? "running" : "stopped", fixed ? "auto" : "manual"),
+      ...["DPS", "BAM", "EventLog", "WSearch", "DusmSvc", "BFE", "AppInfo", "DCOMLaunch", "PlugPlay", "CDPUserSvc_4f1a2"].map((n) =>
+        svc(n, "running", n === "BAM" ? "system" : n === "AppInfo" || n === "PlugPlay" ? "manual" : "auto"),
+      ),
+      set("CMD", true),
+      set("PowerShell Scriptblock Logging", true),
+      set("Activities Cache", true),
+      set("Prefetch", fixed),
+      set("Jump Lists", true),
+      set("PCA Logging", true),
+    ];
+  },
   minecraftRestore: async () => "optionsof.txt restored (demo)",
   restartPc: async () => {},
   openFolder: async () => {},

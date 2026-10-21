@@ -414,9 +414,9 @@ function useStoreValue() {
   );
 
   /** Réglages d'une liste "id" ou "id:variante" à appliquer sur ce PC (mêmes règles que selectMany), sans toucher à
-   * la sélection : variante voulue de chacun, déjà appliqués avec cette variante exclus. */
+   * la sélection : variante voulue de chacun, déjà appliqués avec cette variante exclus (sauf `again` : relancés). */
   const toApply = useCallback(
-    (entries: string[]) => {
+    (entries: string[], again = false) => {
       const ids: string[] = [];
       const vs: Record<string, string> = {};
       for (const e of entries) {
@@ -425,7 +425,7 @@ function useStoreValue() {
         if (!tw || !availability(tw, sys).ok || tw.kind === "action" || isLocked(id) || (v && variantLocked(id, v))) continue;
         const variant = v && tw.variants?.some((x) => x.id === v) ? v : undefined;
         const a = applied.get(id);
-        if (a && !undoSet.has(id) && (a.variant ?? null) === (variant || (variants[id] ?? autoVariant(tw, sys) ?? null))) continue;
+        if (!again && a && !undoSet.has(id) && (a.variant ?? null) === (variant || (variants[id] ?? autoVariant(tw, sys) ?? null))) continue;
         ids.push(id);
         if (variant) vs[id] = variant;
       }
@@ -451,8 +451,8 @@ function useStoreValue() {
   /** Lot préparé par un bouton (optimisations gratuites, outils) : confirmation, sans toucher à la sélection. 0 : tout
    * est déjà appliqué. */
   const requestApplyEntries = useCallback(
-    (entries: string[], text?: { title: string; lead: string }) => {
-      const { ids, vs } = toApply(entries);
+    (entries: string[], text?: { title: string; lead: string }, again = false) => {
+      const { ids, vs } = toApply(entries, again);
       if (!ids.length) return 0;
       setVariants((m) => ({ ...m, ...vs }));
       setConfirm({ ids: ids.sort(byCatalog), undo: [], single: true, ...text });

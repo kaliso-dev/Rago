@@ -5,6 +5,7 @@ import { api, type MinecraftStatus } from "../lib/api";
 import { availability, catalog, sectionTweaks, tweaks } from "../lib/catalog";
 import { formatDate } from "../lib/i18n";
 import { itemName, useStore } from "../lib/store";
+import { RbwStatus } from "../components/RbwStatus";
 import { TweakRow } from "../components/TweakRow";
 import { Button, Card } from "../components/ui";
 
@@ -250,6 +251,7 @@ export function ModulePage({ id }: { id: string }) {
         );
       })}
 
+      {id === "rbw" && <RbwStatus />}
       {id === "restore" && <HistoryList />}
     </div>
   );
