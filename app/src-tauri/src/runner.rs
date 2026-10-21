@@ -69,7 +69,7 @@ struct DoneEvent<'a> {
 /// Un seul lot à la fois sur Windows : un lot lancé depuis l'interface attend la fin d'une remise à zéro en cours.
 static EXCLUSIVE: Mutex<()> = Mutex::new(());
 
-fn exclusive() -> MutexGuard<'static, ()> {
+pub(crate) fn exclusive() -> MutexGuard<'static, ()> {
     EXCLUSIVE.lock().unwrap_or_else(PoisonError::into_inner)
 }
 
@@ -721,7 +721,7 @@ fn sanitize(s: &str) -> String {
     s.chars().map(|c| if c.is_ascii_alphanumeric() || "-_.".contains(c) { c } else { '_' }).collect()
 }
 
-const RESTORE_POINT_PS: &str = r#"$ErrorActionPreference = 'Stop'
+pub(crate) const RESTORE_POINT_PS: &str = r#"$ErrorActionPreference = 'Stop'
 try { Enable-ComputerRestore -Drive "$env:SystemDrive\" } catch { Write-Output "- System Restore already on or locked" }
 New-ItemProperty -Path 'HKLM:\SOFTWARE\Microsoft\Windows NT\CurrentVersion\SystemRestore' -Name 'SystemRestorePointCreationFrequency' -Value 0 -PropertyType DWord -Force | Out-Null
 Write-Output "- Creating the Rago Optimizer restore point"

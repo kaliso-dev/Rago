@@ -19,6 +19,7 @@ import { Settings } from "./pages/Settings";
 import { Share } from "./pages/Share";
 import { Games } from "./pages/Games";
 import { NetTest } from "./pages/NetTest";
+import { RagoOs } from "./pages/RagoOs";
 
 export function App() {
   const { page, motion: motionPref, lang } = useStore();
@@ -57,7 +58,7 @@ export function App() {
                 transition={{ duration: 0.16, ease: [0.16, 1, 0.3, 1] }}
               >
                 <PageBoundary lang={lang}>
-                  {page === "dashboard" ? <Dashboard /> : page === "settings" ? <Settings /> : page === "share" ? <Share /> : page === "games" ? <Games /> : page === "nettest" ? <NetTest /> : <ModulePage id={page} />}
+                  {page === "dashboard" ? <Dashboard /> : page === "settings" ? <Settings /> : page === "share" ? <Share /> : page === "games" ? <Games /> : page === "nettest" ? <NetTest /> : page === "os" ? <RagoOs /> : <ModulePage id={page} />}
                 </PageBoundary>
               </motion.div>
             </AnimatePresence>

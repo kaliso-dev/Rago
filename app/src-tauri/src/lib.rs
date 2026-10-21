@@ -12,6 +12,7 @@ mod license;
 mod memory;
 mod minecraft;
 mod nettest;
+mod os;
 mod overlay;
 mod repair;
 mod report;
@@ -48,6 +49,7 @@ struct AppState {
     stats: stats::Sampler,
     library: Arc<games::Library>,
     updates: Arc<update::Updates>,
+    os: Arc<os::Os>,
     resource_dir: PathBuf,
     data_dir: PathBuf,
     /// la réparation de ce lancement a supprimé une valeur (repair::at_startup) : l'interface le dit une fois
@@ -111,8 +113,18 @@ fn reset_after_license(app: &AppHandle, bundle: Option<Arc<catalog::Bundle>>) {
         let (mut ok, mut failed) = (0, 0);
         // chaque réglage n'est essayé qu'une fois par remise : un échec reste noté appliqué, sans boucler
         let mut tried = std::collections::HashSet::new();
+        let mut os_tried = false;
         let quit = loop {
             if due().is_some() {
+                // Rago OS (Premium) d'abord, sans fenêtre : tout revient comme avant son activation
+                if !os_tried && state.os.needs_restore(&state.ledger.lock().unwrap()) {
+                    os_tried = true;
+                    let lic = Arc::clone(&state.license);
+                    let _one = runner::exclusive();
+                    let d = state.os.restore_now(&state.ledger, None, &move || lic.status().state == "active");
+                    (ok, failed) = (ok + d.ok, failed + d.failed);
+                    continue;
+                }
                 let ids: Vec<String> = reset::targets(&state.ledger.lock().unwrap(), reset::Scope::LicenseEnd, bundle.as_deref())
                     .into_iter()
                     .filter(|id| !tried.contains(id))
@@ -198,7 +210,8 @@ async fn get_applied(state: State<'_, AppState>) -> Result<Vec<backup::AppliedVi
         keep_undo(&ledger, lic.scripts_key().and_then(|key| catalog::premium(&key)).as_deref());
         let sys = backup::Sys::new(dir);
         let l = ledger.lock().unwrap();
-        l.views(&|p| sys.read(p))
+        // Rago OS a sa propre page
+        l.views(&|p| sys.read(p)).into_iter().filter(|v| !os::engine::is_os(&v.id)).collect()
     })
     .await
     .map_err(|e| e.to_string())
@@ -233,6 +246,113 @@ async fn sign_out_plan(state: State<'_, AppState>) -> Result<Vec<String>, String
 #[tauri::command]
 fn take_repair_notice(state: State<'_, AppState>) -> bool {
     state.repaired.swap(false, Ordering::SeqCst)
+}
+
+// ---------- Rago OS ----------
+
+fn os_emit(app: &AppHandle) -> os::Emit {
+    let app = app.clone();
+    Arc::new(move |event: &str, payload: serde_json::Value| {
+        let _ = app.emit(event, payload);
+    })
+}
+
+fn premium(state: &AppState) -> bool {
+    state.license.status().state == "active"
+}
+
+#[tauri::command]
+async fn os_overview(state: State<'_, AppState>) -> Result<os::Overview, String> {
+    let (os, ledger) = (Arc::clone(&state.os), Arc::clone(&state.ledger));
+    tauri::async_runtime::spawn_blocking(move || os.overview(&ledger)).await.map_err(|e| e.to_string())
+}
+
+#[tauri::command]
+async fn os_preflight(state: State<'_, AppState>, selection: Vec<String>) -> Result<Vec<os::preflight::Check>, String> {
+    let os = Arc::clone(&state.os);
+    let busy = state.runner.is_running() || state.reset.is_running();
+    tauri::async_runtime::spawn_blocking(move || os.preflight(&selection, busy)).await.map_err(|e| e.to_string())
+}
+
+/// Activation, ou changement de la sélection pendant que Rago OS est actif (Premium). Suivi par `os:progress` puis
+/// `os:done`.
+#[tauri::command]
+async fn os_apply(app: AppHandle, state: State<'_, AppState>, request: os::Request) -> Result<(), String> {
+    if !premium(&state) {
+        return Err("premium_required".into());
+    }
+    if state.reset.is_running() {
+        return Err("reset_running".into());
+    }
+    let (os, ledger, busy) = (Arc::clone(&state.os), Arc::clone(&state.ledger), state.runner.is_running());
+    let emit = os_emit(&app);
+    tauri::async_runtime::spawn_blocking(move || os.start_apply(ledger, request, emit, busy)).await.map_err(|e| e.to_string())?
+}
+
+/// « Désactiver et tout restaurer » : possible sans licence.
+#[tauri::command]
+fn os_restore(app: AppHandle, state: State<'_, AppState>) -> Result<(), String> {
+    state.os.start_restore(Arc::clone(&state.ledger), os_emit(&app))
+}
+
+#[tauri::command]
+fn os_cancel(state: State<'_, AppState>) {
+    state.os.cancel();
+}
+
+#[tauri::command]
+async fn os_set_feature(state: State<'_, AppState>, id: String, on: bool) -> Result<(), String> {
+    if on && !premium(&state) {
+        return Err("premium_required".into());
+    }
+    let os = Arc::clone(&state.os);
+    tauri::async_runtime::spawn_blocking(move || os.set_feature(&id, on)).await.map_err(|e| e.to_string())?
+}
+
+/// Fond d'écran de Rago OS : une teinte (« graphite »…) ou « custom » avec l'image choisie par le joueur.
+#[tauri::command]
+async fn os_set_wallpaper(state: State<'_, AppState>, choice: String, path: Option<String>) -> Result<(), String> {
+    let os = Arc::clone(&state.os);
+    tauri::async_runtime::spawn_blocking(move || os.set_wallpaper(&choice, path.as_deref())).await.map_err(|e| e.to_string())?
+}
+
+/// Aperçu de l'animation de démarrage (aussi pour le plan gratuit) : Rago Shell la joue une fois par-dessus le bureau.
+#[tauri::command]
+fn os_preview(state: State<'_, AppState>) -> Result<(), String> {
+    os::resident::send(&state.resource_dir, &["--preview"])
+}
+
+/// Minuteur de la Dynamic Island (secondes ; 0 l'arrête).
+#[tauri::command]
+fn os_timer(state: State<'_, AppState>, seconds: u32) -> Result<(), String> {
+    os::resident::send(&state.resource_dir, &["--timer", &seconds.to_string()])
+}
+
+/// Consommation de Rago Shell, mesurée.
+#[tauri::command]
+fn os_usage(state: State<'_, AppState>) -> os::resident::Usage {
+    state.os.usage()
+}
+
+#[tauri::command]
+fn os_forget_job(state: State<'_, AppState>) {
+    state.os.forget_job();
+}
+
+#[tauri::command]
+fn os_clear_restart(state: State<'_, AppState>) {
+    state.os.clear_restart();
+}
+
+/// Page du Store : TranslucentTB, ou une application retirée que Windows n'a pas pu réinscrire.
+#[tauri::command]
+fn os_open_store(family: Option<String>) -> Result<(), String> {
+    let url = match family {
+        Some(f) if f.chars().all(|c| c.is_ascii_alphanumeric() || "._-".contains(c)) => format!("ms-windows-store://pdp/?PFN={f}"),
+        Some(_) => return Err("bad package".into()),
+        None => os::translucenttb::STORE.to_string(),
+    };
+    games::launch::unelevated(std::path::Path::new("explorer.exe"), &[url], None)
 }
 
 #[tauri::command]
@@ -824,10 +944,18 @@ pub fn run() {
                 stats: stats::Sampler::default(),
                 library,
                 updates,
+                os: Arc::new(os::Os::new(data_dir.clone(), resource_dir.clone())),
                 resource_dir,
                 data_dir,
                 repaired: AtomicBool::new(!removed.is_empty()),
             });
+            // « Tout restaurer » de Rago OS coupé (PC éteint, app fermée) : la remise reprend d'elle-même
+            {
+                let state = app.state::<AppState>();
+                if state.os.interrupted_restore() {
+                    let _ = state.os.start_restore(Arc::clone(&state.ledger), os_emit(app.handle()));
+                }
+            }
             // Rago Optimizer relancée pendant qu'elle finit une remise, fenêtre cachée : la fenêtre revient
             let handle = app.handle().clone();
             instance::on_show_request(move || {
@@ -937,6 +1065,19 @@ pub fn run() {
             account_set_name,
             account_set_photo,
             account_remove_photo,
+            os_overview,
+            os_preflight,
+            os_apply,
+            os_restore,
+            os_cancel,
+            os_set_feature,
+            os_set_wallpaper,
+            os_preview,
+            os_timer,
+            os_usage,
+            os_forget_job,
+            os_clear_restart,
+            os_open_store,
         ])
         .run(tauri::generate_context!())
         .expect("erreur au lancement de Rago Optimizer");

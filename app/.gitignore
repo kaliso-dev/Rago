@@ -5,3 +5,5 @@ src-tauri/gen/
 *.log
 src-tauri/resources/PresentMon.exe
 src-tauri/resources/PresentMon-LICENSE.txt
+src-tauri/resources/rago-shell.exe
+shell/target/

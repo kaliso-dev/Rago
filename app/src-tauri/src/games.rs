@@ -1115,7 +1115,7 @@ fn epic_hero(slug: &str) -> Option<String> {
 
 // ---------------------------------------------------------------- lancement sans droits d'administrateur
 
-mod launch {
+pub(crate) mod launch {
     use std::path::Path;
 
     /// Lance `program` avec le jeton de l'Explorateur (session du joueur, sans élévation). Rago Optimizer pas en

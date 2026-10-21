@@ -4,6 +4,7 @@ import "./styles/tokens.css";
 import "./styles/app.css";
 import "./styles/account.css";
 import "./styles/features.css";
+import "./styles/os.css";
 import { App } from "./App";
 import { StoreProvider } from "./lib/store";
 import { AccountProvider } from "./lib/account";

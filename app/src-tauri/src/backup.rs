@@ -919,6 +919,17 @@ mod win {
             }
         }
 
+        /// Écrit une valeur de registre (Rago OS). Clé créée au besoin, avec le seul droit d'y écrire des valeurs.
+        pub fn write(&self, key: &str, name: &str, kind: u32, data: &[u8]) -> Result<(), String> {
+            let k = create(key).ok_or("couldn't open the registry key")?;
+            let r = unsafe { RegSetValueExW(k.0, wide(name).as_ptr(), 0, kind, data.as_ptr(), data.len() as u32) };
+            if r == ERROR_SUCCESS {
+                Ok(())
+            } else {
+                Err(format!("couldn't write {name} (error {r})"))
+            }
+        }
+
         pub fn restore(&self, probe: &Probe, saved: &Saved) -> Result<(), String> {
             match (probe, saved) {
                 (_, Saved::Unknown) => Ok(()),
@@ -1006,6 +1017,9 @@ mod win {
 
 #[cfg(not(windows))]
 impl Sys {
+    pub fn write(&self, _key: &str, _name: &str, _kind: u32, _data: &[u8]) -> Result<(), String> {
+        Ok(())
+    }
     pub fn read(&self, _probe: &Probe) -> Saved {
         Saved::Unknown
     }

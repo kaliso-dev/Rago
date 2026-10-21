@@ -1,0 +1,2499 @@
+{
+ "version": 1,
+ "categories": [
+  {
+   "id": "privacy",
+   "icon": "shield",
+   "name": {
+    "en": "Telemetry and privacy",
+    "fr": "Télémétrie et confidentialité"
+   },
+   "lead": {
+    "en": "Windows sends the minimum your edition allows and stops building an ad profile.",
+    "fr": "Windows envoie le minimum que ton édition permet et ne construit plus de profil publicitaire."
+   }
+  },
+  {
+   "id": "ads",
+   "icon": "megaphone",
+   "name": {
+    "en": "Ads and suggestions",
+    "fr": "Publicités et suggestions"
+   },
+   "lead": {
+    "en": "No more sponsored apps, tips or promotions in Start, Settings and the lock screen.",
+    "fr": "Plus d'applis sponsorisées, d'astuces ni de promotions dans Démarrer, les Paramètres et l'écran de verrouillage."
+   }
+  },
+  {
+   "id": "ai",
+   "icon": "sparkles",
+   "name": {
+    "en": "AI and intrusive features",
+    "fr": "IA et fonctionnalités intrusives"
+   },
+   "lead": {
+    "en": "Copilot, Recall, Click to Do and Widgets stay off until you turn them back on.",
+    "fr": "Copilot, Recall, Cliquer pour faire et les Widgets restent coupés tant que tu ne les rallumes pas."
+   }
+  },
+  {
+   "id": "apps",
+   "icon": "package",
+   "name": {
+    "en": "Preinstalled apps",
+    "fr": "Applications préinstallées"
+   },
+   "lead": {
+    "en": "Removed for your account only, so each one can come back. The Store, Xbox, Calculator, Camera, Photos and media extensions stay.",
+    "fr": "Retirées de ton compte seulement, pour pouvoir revenir. Le Store, Xbox, la Calculatrice, l'Appareil photo, Photos et les extensions média restent."
+   }
+  },
+  {
+   "id": "services",
+   "icon": "cog",
+   "name": {
+    "en": "Services and scheduled tasks",
+    "fr": "Services et tâches planifiées"
+   },
+   "lead": {
+    "en": "Only what has no use on a gaming PC. Every service is listed with what it does.",
+    "fr": "Seulement ce qui ne sert à rien sur un PC de jeu. Chaque service est listé avec ce qu'il fait."
+   }
+  },
+  {
+   "id": "performance",
+   "icon": "gauge",
+   "name": {
+    "en": "Performance and gaming",
+    "fr": "Performances et jeu"
+   },
+   "lead": {
+    "en": "Settings Microsoft documents for games. Tweaks that are often placebo wait for a real before/after benchmark.",
+    "fr": "Les réglages que Microsoft documente pour les jeux. Ceux qui sont souvent du placebo attendent un vrai test avant/après."
+   }
+  },
+  {
+   "id": "explorer",
+   "icon": "folder",
+   "name": {
+    "en": "Explorer and taskbar",
+    "fr": "Explorateur et barre des tâches"
+   },
+   "lead": {
+    "en": "File extensions visible, a cleaner taskbar, and the classic right-click menu if you want it.",
+    "fr": "Extensions de fichiers visibles, barre des tâches épurée et menu clic droit classique si tu le veux."
+   }
+  },
+  {
+   "id": "brand",
+   "icon": "palette",
+   "name": {
+    "en": "Rago look",
+    "fr": "Look Rago"
+   },
+   "lead": {
+    "en": "Dark mode, graphite accent, glass, a plain wallpaper of your choice and the lock screen, applied through Windows settings only.",
+    "fr": "Mode sombre, accent graphite, verre, un fond uni au choix et l'écran de verrouillage, uniquement par les réglages de Windows."
+   }
+  }
+ ],
+ "profiles": [
+  {
+   "id": "competitive",
+   "icon": "crosshair",
+   "name": {
+    "en": "Competitive",
+    "fr": "Compétitif"
+   },
+   "lead": {
+    "en": "Everything that helps a desktop gaming PC, including the Rago power plan.",
+    "fr": "Tout ce qui aide un PC de jeu fixe, plan d'alimentation Rago compris."
+   }
+  },
+  {
+   "id": "balanced",
+   "icon": "scale",
+   "name": {
+    "en": "Balanced",
+    "fr": "Équilibré"
+   },
+   "lead": {
+    "en": "Clean and fast for gaming and everyday use, without touching power or background apps.",
+    "fr": "Propre et rapide pour jouer et pour tous les jours, sans toucher à l'alimentation ni aux applis en arrière-plan."
+   }
+  },
+  {
+   "id": "streaming",
+   "icon": "radio",
+   "name": {
+    "en": "Streaming",
+    "fr": "Streaming"
+   },
+   "lead": {
+    "en": "Like Balanced, and keeps Xbox Game Bar recording and Phone Link for your setup.",
+    "fr": "Comme Équilibré, en gardant l'enregistrement de la Xbox Game Bar et Lien avec Windows."
+   }
+  },
+  {
+   "id": "minimal",
+   "icon": "laptop",
+   "name": {
+    "en": "Minimal / laptop",
+    "fr": "Minimal / portable"
+   },
+   "lead": {
+    "en": "Privacy, cleanup and the Rago look, nothing that costs battery.",
+    "fr": "Confidentialité, nettoyage et look Rago, rien qui coûte de la batterie."
+   }
+  }
+ ],
+ "features": [
+  {
+   "id": "boot",
+   "default": true,
+   "name": {
+    "en": "Rago OS startup animation",
+    "fr": "Animation de démarrage Rago OS"
+   },
+   "desc": {
+    "en": "When you sign in, Rago OS covers the desktop while Windows loads, then reveals it. About 3 seconds; click or Esc to skip.",
+    "fr": "À l'ouverture de session, Rago OS couvre le bureau pendant que Windows charge, puis le dévoile. Environ 3 secondes ; un clic ou Échap pour passer."
+   }
+  },
+  {
+   "id": "bar",
+   "default": true,
+   "name": {
+    "en": "Rago OS bar",
+    "fr": "Barre Rago OS"
+   },
+   "desc": {
+    "en": "A glass bar along the top of the screen, like on a Mac: the Rago menu (sleep, restart, lock…), the app in front and its menu, then Wi‑Fi, sound, battery, search, the control center and the clock. Maximized windows stop below it.",
+    "fr": "Une barre de verre en haut de l'écran, comme sur un Mac : le menu Rago (veille, redémarrer, verrouiller…), l'appli au premier plan et son menu, puis le Wi‑Fi, le son, la batterie, la recherche, le centre de contrôle et l'heure. Les fenêtres agrandies s'arrêtent dessous."
+   }
+  },
+  {
+   "id": "dock",
+   "default": true,
+   "name": {
+    "en": "Rago OS Dock",
+    "fr": "Dock Rago OS"
+   },
+   "desc": {
+    "en": "Replaces the Windows taskbar with a rounded glass Dock: all your apps, the ones you keep, the open ones (a dot below), Downloads and the Recycle Bin. Right-click an icon for its windows. The taskbar comes back as it was when the Dock is off.",
+    "fr": "Remplace la barre des tâches de Windows par un Dock de verre arrondi : toutes tes applis, celles que tu gardes, celles qui sont ouvertes (un point dessous), Téléchargements et la corbeille. Clic droit sur une icône pour ses fenêtres. La barre des tâches revient comme avant quand le Dock est coupé."
+   }
+  },
+  {
+   "id": "search",
+   "default": true,
+   "name": {
+    "en": "Rago Search (Alt+Space)",
+    "fr": "Recherche Rago (Alt+Espace)"
+   },
+   "desc": {
+    "en": "Alt+Space opens a search field in the middle of the screen: apps, Windows settings, recent files, calculations, timers, PC actions and web search. Empty, it shows all your apps. The shortcut is left to the game while you play.",
+    "fr": "Alt+Espace ouvre un champ de recherche au milieu de l'écran : applis, réglages de Windows, fichiers récents, calculs, minuteurs, actions du PC et recherche sur le web. Vide, il montre toutes tes applis. Le raccourci est laissé au jeu pendant que tu joues."
+   }
+  },
+  {
+   "id": "island",
+   "default": true,
+   "name": {
+    "en": "Dynamic Island",
+    "fr": "Dynamic Island"
+   },
+   "desc": {
+    "en": "A black pill in the middle of the top of the screen that opens when something happens: music with play/pause/next, volume, and a timer. Hover the middle of the Rago OS bar to open it. Hidden while a game or a full-screen app is in front.",
+    "fr": "Une pastille noire au milieu du haut de l'écran, qui s'ouvre quand il se passe quelque chose : musique avec lecture/pause/suivant, volume et minuteur. Passe la souris au milieu de la barre Rago OS pour l'ouvrir. Cachée quand un jeu ou une appli plein écran est devant."
+   }
+  },
+  {
+   "id": "translucenttb",
+   "default": false,
+   "name": {
+    "en": "Fully transparent taskbar",
+    "fr": "Barre des tâches entièrement transparente"
+   },
+   "desc": {
+    "en": "For those who keep the Windows taskbar instead of the Dock. Uses TranslucentTB (free, from the Microsoft Store). Turned off automatically if Explorer restarts in a loop.",
+    "fr": "Pour qui garde la barre des tâches de Windows à la place du Dock. Utilise TranslucentTB (gratuit, sur le Microsoft Store). Coupé automatiquement si l'Explorateur redémarre en boucle."
+   }
+  }
+ ],
+ "tweaks": [
+  {
+   "id": "privacy.telemetry",
+   "category": "privacy",
+   "profiles": [
+    "competitive",
+    "balanced",
+    "streaming",
+    "minimal"
+   ],
+   "reboot": "restart",
+   "source": "https://learn.microsoft.com/windows/client-management/mdm/policy-csp-system",
+   "name": {
+    "en": "Diagnostic data at the minimum",
+    "fr": "Données de diagnostic au minimum"
+   },
+   "desc": {
+    "en": "Sets diagnostic data to \"Required\", the lowest level Home and Pro accept, limits log and crash dump uploads, and stops feedback prompts.",
+    "fr": "Règle les données de diagnostic sur « Obligatoires », le niveau le plus bas accepté par Home et Pro, limite l'envoi des journaux et des vidages mémoire, et coupe les demandes d'avis."
+   },
+   "actions": [
+    {
+     "do": "reg",
+     "key": "HKLM\\SOFTWARE\\Policies\\Microsoft\\Windows\\DataCollection",
+     "name": "AllowTelemetry",
+     "type": "dword",
+     "value": 1
+    },
+    {
+     "do": "reg",
+     "key": "HKLM\\SOFTWARE\\Policies\\Microsoft\\Windows\\DataCollection",
+     "name": "LimitDiagnosticLogCollection",
+     "type": "dword",
+     "value": 1
+    },
+    {
+     "do": "reg",
+     "key": "HKLM\\SOFTWARE\\Policies\\Microsoft\\Windows\\DataCollection",
+     "name": "LimitDumpCollection",
+     "type": "dword",
+     "value": 1
+    },
+    {
+     "do": "reg",
+     "key": "HKLM\\SOFTWARE\\Policies\\Microsoft\\Windows\\DataCollection",
+     "name": "DoNotShowFeedbackNotifications",
+     "type": "dword",
+     "value": 1
+    },
+    {
+     "do": "reg",
+     "key": "HKCU\\Software\\Microsoft\\Siuf\\Rules",
+     "name": "NumberOfSIUFInPeriod",
+     "type": "dword",
+     "value": 0
+    }
+   ]
+  },
+  {
+   "id": "privacy.diagtrack",
+   "category": "privacy",
+   "profiles": [
+    "competitive",
+    "balanced",
+    "streaming",
+    "minimal"
+   ],
+   "reboot": "restart",
+   "source": "https://learn.microsoft.com/windows/privacy/configure-windows-diagnostic-data-in-your-organization",
+   "name": {
+    "en": "Telemetry service off",
+    "fr": "Service de télémétrie coupé"
+   },
+   "desc": {
+    "en": "Disables \"Connected User Experiences and Telemetry\" (DiagTrack), the service that uploads diagnostic data. Windows Update, Defender and the Store don't use it.",
+    "fr": "Désactive « Expériences des utilisateurs connectés et télémétrie » (DiagTrack), le service qui envoie les données de diagnostic. Windows Update, Defender et le Store ne s'en servent pas."
+   },
+   "actions": [
+    {
+     "do": "service",
+     "name": "DiagTrack",
+     "start": "disabled"
+    }
+   ]
+  },
+  {
+   "id": "privacy.ceip",
+   "category": "privacy",
+   "profiles": [
+    "competitive",
+    "balanced",
+    "streaming",
+    "minimal"
+   ],
+   "reboot": "none",
+   "source": "https://learn.microsoft.com/windows/privacy/manage-connections-from-windows-operating-system-components-to-microsoft-services",
+   "name": {
+    "en": "Experience improvement tasks off",
+    "fr": "Tâches du programme d'amélioration coupées"
+   },
+   "desc": {
+    "en": "Turns off the Customer Experience Improvement Program and the scheduled tasks that collect app compatibility and disk diagnostic data. Missing tasks are skipped.",
+    "fr": "Coupe le programme d'amélioration de l'expérience utilisateur et les tâches planifiées qui collectent la compatibilité des applis et le diagnostic du disque. Les tâches absentes sont ignorées."
+   },
+   "actions": [
+    {
+     "do": "reg",
+     "key": "HKLM\\SOFTWARE\\Policies\\Microsoft\\SQMClient\\Windows",
+     "name": "CEIPEnable",
+     "type": "dword",
+     "value": 0
+    },
+    {
+     "do": "task",
+     "path": "\\Microsoft\\Windows\\Application Experience\\Microsoft Compatibility Appraiser",
+     "enabled": false
+    },
+    {
+     "do": "task",
+     "path": "\\Microsoft\\Windows\\Application Experience\\ProgramDataUpdater",
+     "enabled": false
+    },
+    {
+     "do": "task",
+     "path": "\\Microsoft\\Windows\\Customer Experience Improvement Program\\Consolidator",
+     "enabled": false
+    },
+    {
+     "do": "task",
+     "path": "\\Microsoft\\Windows\\Customer Experience Improvement Program\\UsbCeip",
+     "enabled": false
+    },
+    {
+     "do": "task",
+     "path": "\\Microsoft\\Windows\\Autochk\\Proxy",
+     "enabled": false
+    },
+    {
+     "do": "task",
+     "path": "\\Microsoft\\Windows\\DiskDiagnostic\\Microsoft-Windows-DiskDiagnosticDataCollector",
+     "enabled": false
+    },
+    {
+     "do": "task",
+     "path": "\\Microsoft\\Windows\\Feedback\\Siuf\\DmClient",
+     "enabled": false
+    },
+    {
+     "do": "task",
+     "path": "\\Microsoft\\Windows\\Feedback\\Siuf\\DmClientOnScenarioDownload",
+     "enabled": false
+    }
+   ]
+  },
+  {
+   "id": "privacy.advertising-id",
+   "category": "privacy",
+   "profiles": [
+    "competitive",
+    "balanced",
+    "streaming",
+    "minimal"
+   ],
+   "reboot": "none",
+   "source": "https://learn.microsoft.com/windows/client-management/mdm/policy-csp-privacy",
+   "name": {
+    "en": "Advertising ID off",
+    "fr": "Identifiant publicitaire coupé"
+   },
+   "desc": {
+    "en": "Apps can no longer use your advertising ID to show you targeted ads.",
+    "fr": "Les applis ne peuvent plus utiliser ton identifiant publicitaire pour te cibler."
+   },
+   "actions": [
+    {
+     "do": "reg",
+     "key": "HKCU\\Software\\Microsoft\\Windows\\CurrentVersion\\AdvertisingInfo",
+     "name": "Enabled",
+     "type": "dword",
+     "value": 0
+    },
+    {
+     "do": "reg",
+     "key": "HKLM\\SOFTWARE\\Policies\\Microsoft\\Windows\\AdvertisingInfo",
+     "name": "DisabledByGroupPolicy",
+     "type": "dword",
+     "value": 1
+    }
+   ]
+  },
+  {
+   "id": "privacy.activity",
+   "category": "privacy",
+   "profiles": [
+    "competitive",
+    "balanced",
+    "streaming",
+    "minimal"
+   ],
+   "reboot": "none",
+   "source": "https://learn.microsoft.com/windows/client-management/mdm/policy-csp-privacy",
+   "name": {
+    "en": "Activity history off",
+    "fr": "Historique d'activité coupé"
+   },
+   "desc": {
+    "en": "Windows stops recording and uploading the apps, files and sites you open.",
+    "fr": "Windows n'enregistre plus et n'envoie plus les applis, fichiers et sites que tu ouvres."
+   },
+   "actions": [
+    {
+     "do": "reg",
+     "key": "HKLM\\SOFTWARE\\Policies\\Microsoft\\Windows\\System",
+     "name": "EnableActivityFeed",
+     "type": "dword",
+     "value": 0
+    },
+    {
+     "do": "reg",
+     "key": "HKLM\\SOFTWARE\\Policies\\Microsoft\\Windows\\System",
+     "name": "PublishUserActivities",
+     "type": "dword",
+     "value": 0
+    },
+    {
+     "do": "reg",
+     "key": "HKLM\\SOFTWARE\\Policies\\Microsoft\\Windows\\System",
+     "name": "UploadUserActivities",
+     "type": "dword",
+     "value": 0
+    }
+   ]
+  },
+  {
+   "id": "privacy.tailored",
+   "category": "privacy",
+   "profiles": [
+    "competitive",
+    "balanced",
+    "streaming",
+    "minimal"
+   ],
+   "reboot": "none",
+   "source": "https://learn.microsoft.com/windows/client-management/mdm/policy-csp-experience",
+   "name": {
+    "en": "No suggestions based on your usage",
+    "fr": "Pas de suggestions d'après ton usage"
+   },
+   "desc": {
+    "en": "Microsoft no longer uses your diagnostic data to personalize tips and offers, and Start no longer tracks which apps you launch.",
+    "fr": "Microsoft n'utilise plus tes données de diagnostic pour personnaliser astuces et offres, et Démarrer ne suit plus les applis que tu lances."
+   },
+   "actions": [
+    {
+     "do": "reg",
+     "key": "HKCU\\Software\\Microsoft\\Windows\\CurrentVersion\\Privacy",
+     "name": "TailoredExperiencesWithDiagnosticDataEnabled",
+     "type": "dword",
+     "value": 0
+    },
+    {
+     "do": "reg",
+     "key": "HKCU\\Software\\Policies\\Microsoft\\Windows\\CloudContent",
+     "name": "DisableTailoredExperiencesWithDiagnosticData",
+     "type": "dword",
+     "value": 1
+    },
+    {
+     "do": "reg",
+     "key": "HKCU\\Software\\Microsoft\\Windows\\CurrentVersion\\Explorer\\Advanced",
+     "name": "Start_TrackProgs",
+     "type": "dword",
+     "value": 0
+    }
+   ]
+  },
+  {
+   "id": "privacy.typing",
+   "category": "privacy",
+   "profiles": [
+    "competitive",
+    "balanced",
+    "streaming",
+    "minimal"
+   ],
+   "reboot": "none",
+   "source": "https://learn.microsoft.com/windows/client-management/mdm/policy-csp-privacy",
+   "name": {
+    "en": "Typing and inking data kept on the PC",
+    "fr": "Saisie et écriture manuscrite gardées sur le PC"
+   },
+   "desc": {
+    "en": "Windows stops collecting what you type and write to build a personal dictionary in the cloud, and turns off online speech recognition.",
+    "fr": "Windows ne collecte plus ce que tu tapes et écris pour un dictionnaire personnel en ligne, et coupe la reconnaissance vocale en ligne."
+   },
+   "actions": [
+    {
+     "do": "reg",
+     "key": "HKCU\\Software\\Microsoft\\InputPersonalization",
+     "name": "RestrictImplicitInkCollection",
+     "type": "dword",
+     "value": 1
+    },
+    {
+     "do": "reg",
+     "key": "HKCU\\Software\\Microsoft\\InputPersonalization",
+     "name": "RestrictImplicitTextCollection",
+     "type": "dword",
+     "value": 1
+    },
+    {
+     "do": "reg",
+     "key": "HKCU\\Software\\Microsoft\\InputPersonalization\\TrainedDataStore",
+     "name": "HarvestContacts",
+     "type": "dword",
+     "value": 0
+    },
+    {
+     "do": "reg",
+     "key": "HKCU\\Software\\Microsoft\\Personalization\\Settings",
+     "name": "AcceptedPrivacyPolicy",
+     "type": "dword",
+     "value": 0
+    },
+    {
+     "do": "reg",
+     "key": "HKCU\\Software\\Microsoft\\Speech_OneCore\\Settings\\OnlineSpeechPrivacy",
+     "name": "HasAccepted",
+     "type": "dword",
+     "value": 0
+    }
+   ]
+  },
+  {
+   "id": "privacy.search",
+   "category": "privacy",
+   "profiles": [
+    "competitive",
+    "balanced",
+    "streaming",
+    "minimal"
+   ],
+   "reboot": "explorer",
+   "source": "https://learn.microsoft.com/windows/client-management/mdm/policy-csp-search",
+   "name": {
+    "en": "Start search stays on your PC",
+    "fr": "La recherche de Démarrer reste sur ton PC"
+   },
+   "desc": {
+    "en": "No more Bing results, search highlights or cloud content in Start search. Your files, apps and settings are still found.",
+    "fr": "Plus de résultats Bing, de « temps forts » ni de contenu en ligne dans la recherche de Démarrer. Tes fichiers, applis et paramètres sont toujours trouvés."
+   },
+   "actions": [
+    {
+     "do": "reg",
+     "key": "HKCU\\Software\\Policies\\Microsoft\\Windows\\Explorer",
+     "name": "DisableSearchBoxSuggestions",
+     "type": "dword",
+     "value": 1
+    },
+    {
+     "do": "reg",
+     "key": "HKCU\\Software\\Microsoft\\Windows\\CurrentVersion\\SearchSettings",
+     "name": "IsDynamicSearchBoxEnabled",
+     "type": "dword",
+     "value": 0
+    },
+    {
+     "do": "reg",
+     "key": "HKCU\\Software\\Microsoft\\Windows\\CurrentVersion\\SearchSettings",
+     "name": "IsMSACloudSearchEnabled",
+     "type": "dword",
+     "value": 0
+    },
+    {
+     "do": "reg",
+     "key": "HKCU\\Software\\Microsoft\\Windows\\CurrentVersion\\SearchSettings",
+     "name": "IsAADCloudSearchEnabled",
+     "type": "dword",
+     "value": 0
+    },
+    {
+     "do": "reg",
+     "key": "HKCU\\Software\\Microsoft\\Windows\\CurrentVersion\\SearchSettings",
+     "name": "IsDeviceSearchHistoryEnabled",
+     "type": "dword",
+     "value": 0
+    }
+   ]
+  },
+  {
+   "id": "ads.start",
+   "category": "ads",
+   "profiles": [
+    "competitive",
+    "balanced",
+    "streaming",
+    "minimal"
+   ],
+   "reboot": "explorer",
+   "source": "https://learn.microsoft.com/windows/client-management/mdm/policy-csp-start",
+   "name": {
+    "en": "No recommendations or promotions in Start",
+    "fr": "Pas de recommandations ni de promotions dans Démarrer"
+   },
+   "desc": {
+    "en": "Removes suggested apps, tips, new app promotions and account notifications from Start.",
+    "fr": "Retire de Démarrer les applis suggérées, les astuces, les nouvelles applis mises en avant et les notifications de compte."
+   },
+   "actions": [
+    {
+     "do": "reg",
+     "key": "HKCU\\Software\\Microsoft\\Windows\\CurrentVersion\\ContentDeliveryManager",
+     "name": "SubscribedContent-338388Enabled",
+     "type": "dword",
+     "value": 0
+    },
+    {
+     "do": "reg",
+     "key": "HKCU\\Software\\Microsoft\\Windows\\CurrentVersion\\ContentDeliveryManager",
+     "name": "SystemPaneSuggestionsEnabled",
+     "type": "dword",
+     "value": 0
+    },
+    {
+     "do": "reg",
+     "key": "HKCU\\Software\\Microsoft\\Windows\\CurrentVersion\\Explorer\\Advanced",
+     "name": "Start_IrisRecommendations",
+     "type": "dword",
+     "value": 0
+    },
+    {
+     "do": "reg",
+     "key": "HKCU\\Software\\Microsoft\\Windows\\CurrentVersion\\Explorer\\Advanced",
+     "name": "Start_AccountNotifications",
+     "type": "dword",
+     "value": 0
+    }
+   ]
+  },
+  {
+   "id": "ads.tips",
+   "category": "ads",
+   "profiles": [
+    "competitive",
+    "balanced",
+    "streaming",
+    "minimal"
+   ],
+   "reboot": "none",
+   "source": "https://learn.microsoft.com/windows/client-management/mdm/policy-csp-experience",
+   "name": {
+    "en": "No tips and \"finish setting up\" screens",
+    "fr": "Pas d'astuces ni d'écrans « terminer la configuration »"
+   },
+   "desc": {
+    "en": "Stops tips notifications, the welcome screen after updates and the reminders to finish setting up your PC with Microsoft services.",
+    "fr": "Coupe les notifications d'astuces, l'écran d'accueil après les mises à jour et les rappels pour « terminer la configuration » avec les services Microsoft."
+   },
+   "actions": [
+    {
+     "do": "reg",
+     "key": "HKCU\\Software\\Microsoft\\Windows\\CurrentVersion\\ContentDeliveryManager",
+     "name": "SubscribedContent-338389Enabled",
+     "type": "dword",
+     "value": 0
+    },
+    {
+     "do": "reg",
+     "key": "HKCU\\Software\\Microsoft\\Windows\\CurrentVersion\\ContentDeliveryManager",
+     "name": "SubscribedContent-310093Enabled",
+     "type": "dword",
+     "value": 0
+    },
+    {
+     "do": "reg",
+     "key": "HKCU\\Software\\Microsoft\\Windows\\CurrentVersion\\ContentDeliveryManager",
+     "name": "SoftLandingEnabled",
+     "type": "dword",
+     "value": 0
+    },
+    {
+     "do": "reg",
+     "key": "HKCU\\Software\\Microsoft\\Windows\\CurrentVersion\\UserProfileEngagement",
+     "name": "ScoobeSystemSettingEnabled",
+     "type": "dword",
+     "value": 0
+    }
+   ]
+  },
+  {
+   "id": "ads.settings",
+   "category": "ads",
+   "profiles": [
+    "competitive",
+    "balanced",
+    "streaming",
+    "minimal"
+   ],
+   "reboot": "none",
+   "source": "https://learn.microsoft.com/windows/client-management/mdm/policy-csp-experience",
+   "name": {
+    "en": "No suggested content in Settings",
+    "fr": "Pas de contenu suggéré dans les Paramètres"
+   },
+   "desc": {
+    "en": "Settings stops showing suggestions and offers at the top of its pages.",
+    "fr": "Les Paramètres n'affichent plus de suggestions ni d'offres en haut des pages."
+   },
+   "actions": [
+    {
+     "do": "reg",
+     "key": "HKCU\\Software\\Microsoft\\Windows\\CurrentVersion\\ContentDeliveryManager",
+     "name": "SubscribedContent-338393Enabled",
+     "type": "dword",
+     "value": 0
+    },
+    {
+     "do": "reg",
+     "key": "HKCU\\Software\\Microsoft\\Windows\\CurrentVersion\\ContentDeliveryManager",
+     "name": "SubscribedContent-353694Enabled",
+     "type": "dword",
+     "value": 0
+    },
+    {
+     "do": "reg",
+     "key": "HKCU\\Software\\Microsoft\\Windows\\CurrentVersion\\ContentDeliveryManager",
+     "name": "SubscribedContent-353696Enabled",
+     "type": "dword",
+     "value": 0
+    }
+   ]
+  },
+  {
+   "id": "ads.silent-apps",
+   "category": "ads",
+   "profiles": [
+    "competitive",
+    "balanced",
+    "streaming",
+    "minimal"
+   ],
+   "reboot": "none",
+   "source": "https://learn.microsoft.com/windows/client-management/mdm/policy-csp-experience",
+   "name": {
+    "en": "No sponsored apps installed by themselves",
+    "fr": "Pas d'applis sponsorisées installées toutes seules"
+   },
+   "desc": {
+    "en": "Windows stops downloading promoted apps and games (the ones that appear in Start without asking).",
+    "fr": "Windows ne télécharge plus les applis et jeux mis en avant (ceux qui apparaissent dans Démarrer sans rien demander)."
+   },
+   "actions": [
+    {
+     "do": "reg",
+     "key": "HKCU\\Software\\Microsoft\\Windows\\CurrentVersion\\ContentDeliveryManager",
+     "name": "SilentInstalledAppsEnabled",
+     "type": "dword",
+     "value": 0
+    },
+    {
+     "do": "reg",
+     "key": "HKCU\\Software\\Microsoft\\Windows\\CurrentVersion\\ContentDeliveryManager",
+     "name": "OemPreInstalledAppsEnabled",
+     "type": "dword",
+     "value": 0
+    },
+    {
+     "do": "reg",
+     "key": "HKCU\\Software\\Microsoft\\Windows\\CurrentVersion\\ContentDeliveryManager",
+     "name": "PreInstalledAppsEnabled",
+     "type": "dword",
+     "value": 0
+    },
+    {
+     "do": "reg",
+     "key": "HKCU\\Software\\Microsoft\\Windows\\CurrentVersion\\ContentDeliveryManager",
+     "name": "PreInstalledAppsEverEnabled",
+     "type": "dword",
+     "value": 0
+    }
+   ]
+  },
+  {
+   "id": "ads.lockscreen",
+   "category": "ads",
+   "profiles": [
+    "competitive",
+    "balanced",
+    "streaming",
+    "minimal"
+   ],
+   "reboot": "none",
+   "source": "https://learn.microsoft.com/windows/client-management/mdm/policy-csp-experience",
+   "name": {
+    "en": "No ads or \"fun facts\" on the lock screen",
+    "fr": "Pas de pubs ni d'« anecdotes » sur l'écran de verrouillage"
+   },
+   "desc": {
+    "en": "Removes the tips, fun facts and promotions Windows Spotlight adds over the lock screen picture.",
+    "fr": "Retire les astuces, anecdotes et promotions que Windows à la une ajoute sur l'image de l'écran de verrouillage."
+   },
+   "actions": [
+    {
+     "do": "reg",
+     "key": "HKCU\\Software\\Microsoft\\Windows\\CurrentVersion\\ContentDeliveryManager",
+     "name": "RotatingLockScreenOverlayEnabled",
+     "type": "dword",
+     "value": 0
+    },
+    {
+     "do": "reg",
+     "key": "HKCU\\Software\\Microsoft\\Windows\\CurrentVersion\\ContentDeliveryManager",
+     "name": "SubscribedContent-338387Enabled",
+     "type": "dword",
+     "value": 0
+    }
+   ]
+  },
+  {
+   "id": "ads.explorer",
+   "category": "ads",
+   "profiles": [
+    "competitive",
+    "balanced",
+    "streaming",
+    "minimal"
+   ],
+   "reboot": "explorer",
+   "source": "https://learn.microsoft.com/windows/win32/shell/folder-options",
+   "name": {
+    "en": "No OneDrive and Microsoft 365 ads in Explorer",
+    "fr": "Pas de pubs OneDrive et Microsoft 365 dans l'Explorateur"
+   },
+   "desc": {
+    "en": "Explorer stops showing banners that push OneDrive and Microsoft 365. OneDrive keeps syncing if you use it.",
+    "fr": "L'Explorateur n'affiche plus les bandeaux qui poussent OneDrive et Microsoft 365. OneDrive continue de synchroniser si tu l'utilises."
+   },
+   "actions": [
+    {
+     "do": "reg",
+     "key": "HKCU\\Software\\Microsoft\\Windows\\CurrentVersion\\Explorer\\Advanced",
+     "name": "ShowSyncProviderNotifications",
+     "type": "dword",
+     "value": 0
+    }
+   ]
+  },
+  {
+   "id": "ads.edge",
+   "category": "ads",
+   "profiles": [],
+   "reboot": "none",
+   "source": "https://learn.microsoft.com/deployedge/microsoft-edge-policies",
+   "name": {
+    "en": "Fewer Edge prompts",
+    "fr": "Moins de sollicitations d'Edge"
+   },
+   "desc": {
+    "en": "Edge stops its first-run screens, its \"make Edge your default\" campaigns, shopping pop-ups and recommendations. Edge keeps working normally.",
+    "fr": "Edge arrête ses écrans de premier lancement, ses campagnes « fais d'Edge ton navigateur par défaut », les fenêtres d'achat et les recommandations. Edge fonctionne normalement."
+   },
+   "actions": [
+    {
+     "do": "reg",
+     "key": "HKLM\\SOFTWARE\\Policies\\Microsoft\\Edge",
+     "name": "HideFirstRunExperience",
+     "type": "dword",
+     "value": 1
+    },
+    {
+     "do": "reg",
+     "key": "HKLM\\SOFTWARE\\Policies\\Microsoft\\Edge",
+     "name": "DefaultBrowserSettingsCampaignEnabled",
+     "type": "dword",
+     "value": 0
+    },
+    {
+     "do": "reg",
+     "key": "HKLM\\SOFTWARE\\Policies\\Microsoft\\Edge",
+     "name": "ShowRecommendationsEnabled",
+     "type": "dword",
+     "value": 0
+    },
+    {
+     "do": "reg",
+     "key": "HKLM\\SOFTWARE\\Policies\\Microsoft\\Edge",
+     "name": "EdgeShoppingAssistantEnabled",
+     "type": "dword",
+     "value": 0
+    },
+    {
+     "do": "reg",
+     "key": "HKLM\\SOFTWARE\\Policies\\Microsoft\\Edge",
+     "name": "SpotlightExperiencesAndRecommendationsEnabled",
+     "type": "dword",
+     "value": 0
+    }
+   ]
+  },
+  {
+   "id": "ai.copilot",
+   "category": "ai",
+   "profiles": [
+    "competitive",
+    "balanced",
+    "streaming",
+    "minimal"
+   ],
+   "reboot": "explorer",
+   "source": "https://learn.microsoft.com/windows/client-management/mdm/policy-csp-windowsai",
+   "name": {
+    "en": "Copilot off",
+    "fr": "Copilot coupé"
+   },
+   "desc": {
+    "en": "Turns off Windows Copilot and its taskbar button. The Copilot app itself can be removed in Preinstalled apps.",
+    "fr": "Coupe Copilot dans Windows et son bouton dans la barre des tâches. L'appli Copilot peut être retirée dans Applications préinstallées."
+   },
+   "actions": [
+    {
+     "do": "reg",
+     "key": "HKCU\\Software\\Policies\\Microsoft\\Windows\\WindowsCopilot",
+     "name": "TurnOffWindowsCopilot",
+     "type": "dword",
+     "value": 1
+    },
+    {
+     "do": "reg",
+     "key": "HKLM\\SOFTWARE\\Policies\\Microsoft\\Windows\\WindowsCopilot",
+     "name": "TurnOffWindowsCopilot",
+     "type": "dword",
+     "value": 1
+    },
+    {
+     "do": "reg",
+     "key": "HKCU\\Software\\Microsoft\\Windows\\CurrentVersion\\Explorer\\Advanced",
+     "name": "ShowCopilotButton",
+     "type": "dword",
+     "value": 0
+    }
+   ]
+  },
+  {
+   "id": "ai.recall",
+   "category": "ai",
+   "profiles": [
+    "competitive",
+    "balanced",
+    "streaming",
+    "minimal"
+   ],
+   "reboot": "restart",
+   "minBuild": 26100,
+   "source": "https://learn.microsoft.com/windows/client-management/mdm/policy-csp-windowsai",
+   "name": {
+    "en": "Recall off",
+    "fr": "Recall coupé"
+   },
+   "desc": {
+    "en": "Recall no longer takes snapshots of your screen and can't be turned on. Only Copilot+ PCs have it.",
+    "fr": "Recall ne prend plus de captures de ton écran et ne peut plus être activé. Seuls les PC Copilot+ l'ont."
+   },
+   "actions": [
+    {
+     "do": "reg",
+     "key": "HKLM\\SOFTWARE\\Policies\\Microsoft\\Windows\\WindowsAI",
+     "name": "DisableAIDataAnalysis",
+     "type": "dword",
+     "value": 1
+    },
+    {
+     "do": "reg",
+     "key": "HKLM\\SOFTWARE\\Policies\\Microsoft\\Windows\\WindowsAI",
+     "name": "AllowRecallEnablement",
+     "type": "dword",
+     "value": 0
+    }
+   ]
+  },
+  {
+   "id": "ai.clicktodo",
+   "category": "ai",
+   "profiles": [
+    "competitive",
+    "balanced",
+    "streaming",
+    "minimal"
+   ],
+   "reboot": "none",
+   "minBuild": 26100,
+   "source": "https://learn.microsoft.com/windows/client-management/mdm/policy-csp-windowsai",
+   "name": {
+    "en": "Click to Do off",
+    "fr": "Cliquer pour faire coupé"
+   },
+   "desc": {
+    "en": "Turns off Click to Do, which analyzes what's on your screen to suggest actions.",
+    "fr": "Coupe « Cliquer pour faire », qui analyse ce qui est à l'écran pour proposer des actions."
+   },
+   "actions": [
+    {
+     "do": "reg",
+     "key": "HKLM\\SOFTWARE\\Policies\\Microsoft\\Windows\\WindowsAI",
+     "name": "DisableClickToDo",
+     "type": "dword",
+     "value": 1
+    }
+   ]
+  },
+  {
+   "id": "ai.widgets",
+   "category": "ai",
+   "profiles": [
+    "competitive",
+    "balanced",
+    "streaming",
+    "minimal"
+   ],
+   "reboot": "explorer",
+   "source": "https://learn.microsoft.com/windows/client-management/mdm/policy-csp-newsandinterests",
+   "name": {
+    "en": "Widgets off",
+    "fr": "Widgets coupés"
+   },
+   "desc": {
+    "en": "Removes the Widgets board, its news feed and its taskbar button. The Rago widgets don't depend on it.",
+    "fr": "Retire le panneau Widgets, son fil d'actualités et son bouton de la barre des tâches. Les widgets Rago n'en dépendent pas."
+   },
+   "actions": [
+    {
+     "do": "reg",
+     "key": "HKLM\\SOFTWARE\\Policies\\Microsoft\\Dsh",
+     "name": "AllowNewsAndInterests",
+     "type": "dword",
+     "value": 0
+    }
+   ]
+  },
+  {
+   "id": "services.maps",
+   "category": "services",
+   "profiles": [
+    "competitive",
+    "balanced",
+    "streaming",
+    "minimal"
+   ],
+   "reboot": "none",
+   "source": "https://learn.microsoft.com/windows-server/security/windows-services/security-guidelines-for-disabling-system-services-in-windows-server",
+   "name": {
+    "en": "Offline maps service off",
+    "fr": "Service des cartes hors ligne coupé"
+   },
+   "desc": {
+    "en": "Disables \"Downloaded Maps Manager\" (MapsBroker) and its update tasks. Only the Maps app uses it.",
+    "fr": "Désactive « Gestionnaire des cartes téléchargées » (MapsBroker) et ses tâches de mise à jour. Seule l'appli Cartes s'en sert."
+   },
+   "actions": [
+    {
+     "do": "service",
+     "name": "MapsBroker",
+     "start": "disabled"
+    },
+    {
+     "do": "task",
+     "path": "\\Microsoft\\Windows\\Maps\\MapsUpdateTask",
+     "enabled": false
+    },
+    {
+     "do": "task",
+     "path": "\\Microsoft\\Windows\\Maps\\MapsToastTask",
+     "enabled": false
+    }
+   ]
+  },
+  {
+   "id": "services.retaildemo",
+   "category": "services",
+   "profiles": [
+    "competitive",
+    "balanced",
+    "streaming",
+    "minimal"
+   ],
+   "reboot": "none",
+   "source": "https://learn.microsoft.com/windows-server/security/windows-services/security-guidelines-for-disabling-system-services-in-windows-server",
+   "name": {
+    "en": "Store demo mode service off",
+    "fr": "Service du mode démo des magasins coupé"
+   },
+   "desc": {
+    "en": "Disables \"Retail Demo Service\", used only by PCs on display in shops.",
+    "fr": "Désactive « Service de démonstration de vente au détail », utilisé seulement par les PC exposés en magasin."
+   },
+   "actions": [
+    {
+     "do": "service",
+     "name": "RetailDemo",
+     "start": "disabled"
+    }
+   ]
+  },
+  {
+   "id": "services.fax",
+   "category": "services",
+   "profiles": [
+    "competitive",
+    "balanced",
+    "streaming",
+    "minimal"
+   ],
+   "reboot": "none",
+   "source": "https://learn.microsoft.com/windows-server/security/windows-services/security-guidelines-for-disabling-system-services-in-windows-server",
+   "name": {
+    "en": "Fax service off",
+    "fr": "Service de fax coupé"
+   },
+   "desc": {
+    "en": "Disables the Fax service when it's there. Printing and scanning keep working.",
+    "fr": "Désactive le service Fax s'il est présent. L'impression et la numérisation continuent de marcher."
+   },
+   "actions": [
+    {
+     "do": "service",
+     "name": "Fax",
+     "start": "disabled"
+    }
+   ]
+  },
+  {
+   "id": "services.wap",
+   "category": "services",
+   "profiles": [
+    "competitive",
+    "balanced",
+    "streaming",
+    "minimal"
+   ],
+   "reboot": "restart",
+   "source": "https://learn.microsoft.com/windows-server/security/windows-services/security-guidelines-for-disabling-system-services-in-windows-server",
+   "name": {
+    "en": "Device management push service off",
+    "fr": "Service de messages de gestion coupé"
+   },
+   "desc": {
+    "en": "Disables \"Device Management Wireless Application Protocol Push\" (dmwappushservice), used by company device management. Leave it on if your PC is managed by an employer or a school.",
+    "fr": "Désactive « Service de routage de messages Push WAP » (dmwappushservice), utilisé par la gestion des PC d'entreprise. Garde-le si ton PC est géré par un employeur ou une école."
+   },
+   "actions": [
+    {
+     "do": "service",
+     "name": "dmwappushservice",
+     "start": "disabled"
+    }
+   ]
+  },
+  {
+   "id": "perf.gamemode",
+   "category": "performance",
+   "profiles": [
+    "competitive",
+    "balanced",
+    "streaming",
+    "minimal"
+   ],
+   "reboot": "none",
+   "source": "https://support.microsoft.com/windows/use-game-mode-while-gaming-on-your-pc-2a2a3a8d-2a2b-4f6d-9d73-46a2c71a6e8c",
+   "name": {
+    "en": "Game Mode on",
+    "fr": "Mode Jeu activé"
+   },
+   "desc": {
+    "en": "Windows gives the game priority and holds Windows Update installs and notifications while you play.",
+    "fr": "Windows donne la priorité au jeu et retient les installations de Windows Update et les notifications pendant la partie."
+   },
+   "actions": [
+    {
+     "do": "reg",
+     "key": "HKCU\\Software\\Microsoft\\GameBar",
+     "name": "AutoGameModeEnabled",
+     "type": "dword",
+     "value": 1
+    },
+    {
+     "do": "reg",
+     "key": "HKCU\\Software\\Microsoft\\GameBar",
+     "name": "AllowAutoGameMode",
+     "type": "dword",
+     "value": 1
+    }
+   ]
+  },
+  {
+   "id": "perf.hags",
+   "category": "performance",
+   "profiles": [
+    "competitive",
+    "balanced",
+    "streaming"
+   ],
+   "reboot": "restart",
+   "minBuild": 19041,
+   "source": "https://devblogs.microsoft.com/directx/hardware-accelerated-gpu-scheduling/",
+   "name": {
+    "en": "Hardware-accelerated GPU scheduling",
+    "fr": "Planification GPU accélérée"
+   },
+   "desc": {
+    "en": "Lets the graphics card schedule its own work (needed for DLSS Frame Generation). Ignored by Windows on cards that don't support it.",
+    "fr": "La carte graphique planifie elle-même son travail (nécessaire à DLSS Frame Generation). Ignoré par Windows sur les cartes qui ne le gèrent pas."
+   },
+   "actions": [
+    {
+     "do": "reg",
+     "key": "HKLM\\SYSTEM\\CurrentControlSet\\Control\\GraphicsDrivers",
+     "name": "HwSchMode",
+     "type": "dword",
+     "value": 2
+    }
+   ]
+  },
+  {
+   "id": "perf.dvr-background",
+   "category": "performance",
+   "profiles": [
+    "competitive",
+    "balanced",
+    "streaming",
+    "minimal"
+   ],
+   "reboot": "none",
+   "source": "https://learn.microsoft.com/windows/client-management/mdm/policy-csp-applicationmanagement",
+   "name": {
+    "en": "No background recording",
+    "fr": "Pas d'enregistrement en arrière-plan"
+   },
+   "desc": {
+    "en": "Xbox Game Bar stops recording the last minutes of your games in the background. Manual screenshots and clips still work.",
+    "fr": "La Xbox Game Bar n'enregistre plus en continu les dernières minutes de tes parties. Les captures et clips manuels marchent toujours."
+   },
+   "actions": [
+    {
+     "do": "reg",
+     "key": "HKCU\\Software\\Microsoft\\Windows\\CurrentVersion\\GameDVR",
+     "name": "HistoricalCaptureEnabled",
+     "type": "dword",
+     "value": 0
+    }
+   ]
+  },
+  {
+   "id": "perf.dvr-off",
+   "category": "performance",
+   "profiles": [
+    "competitive",
+    "minimal"
+   ],
+   "reboot": "none",
+   "source": "https://learn.microsoft.com/windows/client-management/mdm/policy-csp-applicationmanagement",
+   "name": {
+    "en": "Game Bar capture off",
+    "fr": "Capture de la Game Bar coupée"
+   },
+   "desc": {
+    "en": "Turns off game capture in Xbox Game Bar. Keep it if you record with Game Bar instead of OBS or your GPU app.",
+    "fr": "Coupe la capture des jeux dans la Xbox Game Bar. Garde-la si tu enregistres avec la Game Bar plutôt qu'avec OBS ou l'appli de ta carte graphique."
+   },
+   "actions": [
+    {
+     "do": "reg",
+     "key": "HKCU\\Software\\Microsoft\\Windows\\CurrentVersion\\GameDVR",
+     "name": "AppCaptureEnabled",
+     "type": "dword",
+     "value": 0
+    },
+    {
+     "do": "reg",
+     "key": "HKCU\\System\\GameConfigStore",
+     "name": "GameDVR_Enabled",
+     "type": "dword",
+     "value": 0
+    }
+   ]
+  },
+  {
+   "id": "perf.background-apps",
+   "category": "performance",
+   "profiles": [
+    "competitive"
+   ],
+   "reboot": "none",
+   "source": "https://learn.microsoft.com/windows/client-management/mdm/policy-csp-privacy#letappsruninbackground",
+   "name": {
+    "en": "Store apps stay closed in the background",
+    "fr": "Applis du Store fermées en arrière-plan"
+   },
+   "desc": {
+    "en": "Store apps no longer run when you don't use them. Desktop programs (Discord, Steam) aren't affected.",
+    "fr": "Les applis du Store ne tournent plus quand tu ne t'en sers pas. Les programmes classiques (Discord, Steam) ne sont pas concernés."
+   },
+   "warn": {
+    "en": "Store apps like WhatsApp or Spotify (Store version) won't notify you until you open them.",
+    "fr": "Les applis du Store comme WhatsApp ou Spotify (version Store) ne t'envoient plus de notification tant que tu ne les ouvres pas."
+   },
+   "actions": [
+    {
+     "do": "reg",
+     "key": "HKCU\\Software\\Microsoft\\Windows\\CurrentVersion\\BackgroundAccessApplications",
+     "name": "GlobalUserDisabled",
+     "type": "dword",
+     "value": 1
+    }
+   ]
+  },
+  {
+   "id": "perf.mouse",
+   "category": "performance",
+   "profiles": [
+    "competitive",
+    "balanced",
+    "streaming",
+    "minimal"
+   ],
+   "reboot": "none",
+   "refresh": [
+    "mouse"
+   ],
+   "source": "https://learn.microsoft.com/windows/win32/api/winuser/nf-winuser-systemparametersinfow",
+   "name": {
+    "en": "Mouse acceleration off",
+    "fr": "Accélération de la souris coupée"
+   },
+   "desc": {
+    "en": "Turns off \"Enhance pointer precision\": the pointer moves exactly as far as your hand, for consistent aim.",
+    "fr": "Coupe « Améliorer la précision du pointeur » : le pointeur bouge exactement autant que ta main, pour une visée constante."
+   },
+   "actions": [
+    {
+     "do": "reg",
+     "key": "HKCU\\Control Panel\\Mouse",
+     "name": "MouseSpeed",
+     "type": "sz",
+     "value": "0"
+    },
+    {
+     "do": "reg",
+     "key": "HKCU\\Control Panel\\Mouse",
+     "name": "MouseThreshold1",
+     "type": "sz",
+     "value": "0"
+    },
+    {
+     "do": "reg",
+     "key": "HKCU\\Control Panel\\Mouse",
+     "name": "MouseThreshold2",
+     "type": "sz",
+     "value": "0"
+    }
+   ]
+  },
+  {
+   "id": "perf.sticky-keys",
+   "category": "performance",
+   "profiles": [
+    "competitive",
+    "balanced",
+    "streaming",
+    "minimal"
+   ],
+   "reboot": "none",
+   "refresh": [
+    "accessibility"
+   ],
+   "source": "https://learn.microsoft.com/windows/win32/winauto/stickykeys",
+   "name": {
+    "en": "No Sticky Keys pop-up in game",
+    "fr": "Plus de fenêtre Touches rémanentes en jeu"
+   },
+   "desc": {
+    "en": "Pressing Shift five times (or holding it) no longer opens the Sticky, Filter and Toggle Keys pop-ups that pull you out of the game. The features stay available in Settings.",
+    "fr": "Appuyer cinq fois sur Maj (ou la maintenir) n'ouvre plus les fenêtres Touches rémanentes, filtres et bascule qui te sortent du jeu. Les fonctions restent dans les Paramètres."
+   },
+   "actions": [
+    {
+     "do": "reg",
+     "key": "HKCU\\Control Panel\\Accessibility\\StickyKeys",
+     "name": "Flags",
+     "type": "sz",
+     "value": "506"
+    },
+    {
+     "do": "reg",
+     "key": "HKCU\\Control Panel\\Accessibility\\Keyboard Response",
+     "name": "Flags",
+     "type": "sz",
+     "value": "122"
+    },
+    {
+     "do": "reg",
+     "key": "HKCU\\Control Panel\\Accessibility\\ToggleKeys",
+     "name": "Flags",
+     "type": "sz",
+     "value": "58"
+    }
+   ]
+  },
+  {
+   "id": "perf.powerplan",
+   "category": "performance",
+   "profiles": [
+    "competitive"
+   ],
+   "reboot": "none",
+   "source": "https://learn.microsoft.com/windows-hardware/design/device-experiences/powercfg-command-line-options",
+   "name": {
+    "en": "Rago OS power plan",
+    "fr": "Plan d'alimentation Rago OS"
+   },
+   "desc": {
+    "en": "Creates and turns on a \"Rago OS\" plan based on Windows' High performance plan: the processor stays ready instead of waking up for each frame. Your previous plan comes back when Rago OS is turned off.",
+    "fr": "Crée et active un plan « Rago OS » basé sur le plan Performances élevées de Windows : le processeur reste prêt au lieu de se réveiller à chaque image. Ton plan d'avant revient quand Rago OS est désactivé."
+   },
+   "warn": {
+    "en": "Uses more power. Not for laptops on battery.",
+    "fr": "Consomme plus. Pas pour un portable sur batterie."
+   },
+   "actions": [
+    {
+     "do": "native",
+     "what": "powerplan"
+    }
+   ]
+  },
+  {
+   "id": "perf.fast-startup",
+   "category": "performance",
+   "profiles": [],
+   "reboot": "restart",
+   "source": "https://learn.microsoft.com/troubleshoot/windows-client/setup-upgrade-and-drivers/disable-and-re-enable-hibernation",
+   "name": {
+    "en": "Fast startup off",
+    "fr": "Démarrage rapide coupé"
+   },
+   "desc": {
+    "en": "\"Shut down\" then really shuts down: drivers and Windows start fresh each time. Startup can take a few seconds longer.",
+    "fr": "« Arrêter » arrête alors vraiment le PC : pilotes et Windows repartent de zéro à chaque fois. Le démarrage peut prendre quelques secondes de plus."
+   },
+   "actions": [
+    {
+     "do": "reg",
+     "key": "HKLM\\SYSTEM\\CurrentControlSet\\Control\\Session Manager\\Power",
+     "name": "HiberbootEnabled",
+     "type": "dword",
+     "value": 0
+    }
+   ]
+  },
+  {
+   "id": "explorer.extensions",
+   "category": "explorer",
+   "profiles": [
+    "competitive",
+    "balanced",
+    "streaming",
+    "minimal"
+   ],
+   "reboot": "explorer",
+   "source": "https://learn.microsoft.com/windows/win32/shell/folder-options",
+   "name": {
+    "en": "File extensions visible",
+    "fr": "Extensions de fichiers visibles"
+   },
+   "desc": {
+    "en": "Shows .exe, .zip, .png… so you can tell a real file from a disguised one.",
+    "fr": "Affiche .exe, .zip, .png… pour distinguer un vrai fichier d'un fichier déguisé."
+   },
+   "actions": [
+    {
+     "do": "reg",
+     "key": "HKCU\\Software\\Microsoft\\Windows\\CurrentVersion\\Explorer\\Advanced",
+     "name": "HideFileExt",
+     "type": "dword",
+     "value": 0
+    }
+   ]
+  },
+  {
+   "id": "explorer.hidden-files",
+   "category": "explorer",
+   "profiles": [],
+   "reboot": "explorer",
+   "source": "https://learn.microsoft.com/windows/win32/shell/folder-options",
+   "name": {
+    "en": "Hidden files visible",
+    "fr": "Fichiers cachés visibles"
+   },
+   "desc": {
+    "en": "Shows hidden files and folders, like AppData. Windows system files stay hidden.",
+    "fr": "Affiche les fichiers et dossiers cachés, comme AppData. Les fichiers système de Windows restent cachés."
+   },
+   "actions": [
+    {
+     "do": "reg",
+     "key": "HKCU\\Software\\Microsoft\\Windows\\CurrentVersion\\Explorer\\Advanced",
+     "name": "Hidden",
+     "type": "dword",
+     "value": 1
+    }
+   ]
+  },
+  {
+   "id": "explorer.this-pc",
+   "category": "explorer",
+   "profiles": [],
+   "reboot": "explorer",
+   "source": "https://learn.microsoft.com/windows/win32/shell/folder-options",
+   "name": {
+    "en": "Explorer opens on This PC",
+    "fr": "L'Explorateur s'ouvre sur Ce PC"
+   },
+   "desc": {
+    "en": "Explorer opens on your drives instead of Home.",
+    "fr": "L'Explorateur s'ouvre sur tes disques au lieu de l'Accueil."
+   },
+   "actions": [
+    {
+     "do": "reg",
+     "key": "HKCU\\Software\\Microsoft\\Windows\\CurrentVersion\\Explorer\\Advanced",
+     "name": "LaunchTo",
+     "type": "dword",
+     "value": 1
+    }
+   ]
+  },
+  {
+   "id": "explorer.gallery",
+   "category": "explorer",
+   "profiles": [],
+   "reboot": "explorer",
+   "minBuild": 22621,
+   "source": "https://learn.microsoft.com/windows/win32/shell/folder-options",
+   "name": {
+    "en": "No Gallery in Explorer",
+    "fr": "Pas de Galerie dans l'Explorateur"
+   },
+   "desc": {
+    "en": "Removes Gallery from Explorer's left pane. Your pictures don't move.",
+    "fr": "Retire Galerie du volet gauche de l'Explorateur. Tes images ne bougent pas."
+   },
+   "actions": [
+    {
+     "do": "reg",
+     "key": "HKCU\\Software\\Classes\\CLSID\\{e88865ea-0e1c-4e20-9aa6-edcd0212c87c}",
+     "name": "System.IsPinnedToNameSpaceTree",
+     "type": "dword",
+     "value": 0
+    }
+   ]
+  },
+  {
+   "id": "explorer.context-menu",
+   "category": "explorer",
+   "profiles": [],
+   "reboot": "explorer",
+   "minBuild": 22000,
+   "source": "https://learn.microsoft.com/windows/win32/shell/folder-options",
+   "name": {
+    "en": "Classic right-click menu",
+    "fr": "Menu clic droit classique"
+   },
+   "desc": {
+    "en": "Right-click shows the full menu at once, without \"Show more options\".",
+    "fr": "Le clic droit affiche tout le menu d'un coup, sans « Afficher d'autres options »."
+   },
+   "actions": [
+    {
+     "do": "reg",
+     "key": "HKCU\\Software\\Classes\\CLSID\\{86ca1aa0-34aa-4e8b-a509-50c905bae2a2}\\InprocServer32",
+     "name": "",
+     "type": "sz",
+     "value": ""
+    }
+   ]
+  },
+  {
+   "id": "explorer.taskbar",
+   "category": "explorer",
+   "profiles": [
+    "competitive",
+    "balanced",
+    "streaming",
+    "minimal"
+   ],
+   "reboot": "explorer",
+   "source": "https://learn.microsoft.com/windows/configuration/taskbar/policy-settings",
+   "name": {
+    "en": "Clean taskbar",
+    "fr": "Barre des tâches épurée"
+   },
+   "desc": {
+    "en": "Hides the search box, Task View and Chat buttons. Search still opens with the Windows key or Win+S.",
+    "fr": "Masque la zone de recherche et les boutons Vue des tâches et Conversation. La recherche s'ouvre toujours avec la touche Windows ou Win+S."
+   },
+   "actions": [
+    {
+     "do": "reg",
+     "key": "HKCU\\Software\\Microsoft\\Windows\\CurrentVersion\\Search",
+     "name": "SearchboxTaskbarMode",
+     "type": "dword",
+     "value": 0
+    },
+    {
+     "do": "reg",
+     "key": "HKCU\\Software\\Microsoft\\Windows\\CurrentVersion\\Explorer\\Advanced",
+     "name": "ShowTaskViewButton",
+     "type": "dword",
+     "value": 0
+    },
+    {
+     "do": "reg",
+     "key": "HKCU\\Software\\Microsoft\\Windows\\CurrentVersion\\Explorer\\Advanced",
+     "name": "TaskbarMn",
+     "type": "dword",
+     "value": 0
+    }
+   ]
+  },
+  {
+   "id": "explorer.taskbar-left",
+   "category": "explorer",
+   "profiles": [],
+   "reboot": "explorer",
+   "minBuild": 22000,
+   "source": "https://learn.microsoft.com/windows/configuration/taskbar/policy-settings",
+   "name": {
+    "en": "Taskbar icons on the left",
+    "fr": "Icônes de la barre des tâches à gauche"
+   },
+   "desc": {
+    "en": "Aligns the Start button and apps to the left, like before Windows 11.",
+    "fr": "Aligne Démarrer et les applis à gauche, comme avant Windows 11."
+   },
+   "actions": [
+    {
+     "do": "reg",
+     "key": "HKCU\\Software\\Microsoft\\Windows\\CurrentVersion\\Explorer\\Advanced",
+     "name": "TaskbarAl",
+     "type": "dword",
+     "value": 0
+    }
+   ]
+  },
+  {
+   "id": "explorer.end-task",
+   "category": "explorer",
+   "profiles": [
+    "competitive",
+    "balanced",
+    "streaming",
+    "minimal"
+   ],
+   "reboot": "none",
+   "minBuild": 22631,
+   "source": "https://support.microsoft.com/windows/end-task-from-the-taskbar-in-windows-11",
+   "name": {
+    "en": "\"End task\" in the taskbar",
+    "fr": "« Fin de tâche » dans la barre des tâches"
+   },
+   "desc": {
+    "en": "Right-click a frozen game in the taskbar to close it, without opening Task Manager.",
+    "fr": "Clic droit sur un jeu figé dans la barre des tâches pour le fermer, sans ouvrir le Gestionnaire des tâches."
+   },
+   "actions": [
+    {
+     "do": "reg",
+     "key": "HKCU\\Software\\Microsoft\\Windows\\CurrentVersion\\Explorer\\Advanced\\TaskbarDeveloperSettings",
+     "name": "TaskbarEndTask",
+     "type": "dword",
+     "value": 1
+    }
+   ]
+  },
+  {
+   "id": "brand.dark",
+   "category": "brand",
+   "profiles": [
+    "competitive",
+    "balanced",
+    "streaming",
+    "minimal"
+   ],
+   "reboot": "none",
+   "refresh": [
+    "immersive"
+   ],
+   "source": "https://learn.microsoft.com/windows/apps/desktop/modernize/apply-windows-themes",
+   "name": {
+    "en": "Dark mode everywhere",
+    "fr": "Mode sombre partout"
+   },
+   "desc": {
+    "en": "Windows and apps switch to dark mode, with transparency effects on for the glass look.",
+    "fr": "Windows et les applis passent en mode sombre, avec les effets de transparence activés pour le verre."
+   },
+   "actions": [
+    {
+     "do": "reg",
+     "key": "HKCU\\Software\\Microsoft\\Windows\\CurrentVersion\\Themes\\Personalize",
+     "name": "AppsUseLightTheme",
+     "type": "dword",
+     "value": 0
+    },
+    {
+     "do": "reg",
+     "key": "HKCU\\Software\\Microsoft\\Windows\\CurrentVersion\\Themes\\Personalize",
+     "name": "SystemUsesLightTheme",
+     "type": "dword",
+     "value": 0
+    },
+    {
+     "do": "reg",
+     "key": "HKCU\\Software\\Microsoft\\Windows\\CurrentVersion\\Themes\\Personalize",
+     "name": "EnableTransparency",
+     "type": "dword",
+     "value": 1
+    }
+   ]
+  },
+  {
+   "id": "brand.accent",
+   "category": "brand",
+   "profiles": [
+    "competitive",
+    "balanced",
+    "streaming",
+    "minimal"
+   ],
+   "reboot": "explorer",
+   "refresh": [
+    "immersive"
+   ],
+   "source": "https://learn.microsoft.com/windows/apps/design/style/color",
+   "name": {
+    "en": "Graphite accent",
+    "fr": "Accent graphite"
+   },
+   "desc": {
+    "en": "A neutral graphite becomes the Windows accent color: buttons, links, toggles, selection. Start, the taskbar and title bars stay plain black, with no colored tint.",
+    "fr": "Un graphite neutre devient la couleur d'accent de Windows : boutons, liens, interrupteurs, sélection. Démarrer, la barre des tâches et les barres de titre restent d'un noir uni, sans teinte de couleur."
+   },
+   "actions": [
+    {
+     "do": "reg",
+     "key": "HKCU\\Software\\Microsoft\\Windows\\CurrentVersion\\Explorer\\Accent",
+     "name": "AccentPalette",
+     "type": "binary",
+     "value": "e3e5e800c4c7cc00a2a6ad008a8e96006b6f770045484e002b2d310022232700"
+    },
+    {
+     "do": "reg",
+     "key": "HKCU\\Software\\Microsoft\\Windows\\CurrentVersion\\Explorer\\Accent",
+     "name": "AccentColorMenu",
+     "type": "dword",
+     "value": 4288056970
+    },
+    {
+     "do": "reg",
+     "key": "HKCU\\Software\\Microsoft\\Windows\\CurrentVersion\\Explorer\\Accent",
+     "name": "StartColorMenu",
+     "type": "dword",
+     "value": 4281412907
+    },
+    {
+     "do": "reg",
+     "key": "HKCU\\Software\\Microsoft\\Windows\\DWM",
+     "name": "AccentColor",
+     "type": "dword",
+     "value": 4288056970
+    },
+    {
+     "do": "reg",
+     "key": "HKCU\\Software\\Microsoft\\Windows\\DWM",
+     "name": "ColorizationColor",
+     "type": "dword",
+     "value": 3297414806
+    },
+    {
+     "do": "reg",
+     "key": "HKCU\\Software\\Microsoft\\Windows\\DWM",
+     "name": "ColorizationAfterglow",
+     "type": "dword",
+     "value": 3297414806
+    },
+    {
+     "do": "reg",
+     "key": "HKCU\\Software\\Microsoft\\Windows\\DWM",
+     "name": "ColorPrevalence",
+     "type": "dword",
+     "value": 0
+    },
+    {
+     "do": "reg",
+     "key": "HKCU\\Control Panel\\Desktop",
+     "name": "AutoColorization",
+     "type": "dword",
+     "value": 0
+    },
+    {
+     "do": "reg",
+     "key": "HKCU\\Software\\Microsoft\\Windows\\CurrentVersion\\Themes\\Personalize",
+     "name": "ColorPrevalence",
+     "type": "dword",
+     "value": 0
+    }
+   ]
+  },
+  {
+   "id": "brand.wallpaper",
+   "category": "brand",
+   "profiles": [
+    "competitive",
+    "balanced",
+    "streaming",
+    "minimal"
+   ],
+   "reboot": "none",
+   "source": "https://learn.microsoft.com/windows/win32/api/shobjidl_core/nn-shobjidl_core-idesktopwallpaper",
+   "name": {
+    "en": "Plain Rago OS wallpaper",
+    "fr": "Fond d'écran uni Rago OS"
+   },
+   "desc": {
+    "en": "Sets a plain, logo-free wallpaper on every screen: graphite by default, another tone or your own picture, chosen on the Rago OS page. Your wallpaper, slideshow and its settings come back when you turn Rago OS off.",
+    "fr": "Pose un fond uni, sans logo, sur tous les écrans : graphite par défaut, une autre teinte ou ta propre image, au choix dans la page Rago OS. Ton fond, ton diaporama et leurs réglages reviennent quand tu désactives Rago OS."
+   },
+   "actions": [
+    {
+     "do": "native",
+     "what": "wallpaper"
+    }
+   ]
+  },
+  {
+   "id": "brand.lockscreen",
+   "category": "brand",
+   "profiles": [
+    "competitive",
+    "balanced",
+    "streaming",
+    "minimal"
+   ],
+   "reboot": "none",
+   "source": "https://learn.microsoft.com/uwp/api/windows.system.userprofile.lockscreen",
+   "name": {
+    "en": "Rago OS lock screen",
+    "fr": "Écran de verrouillage Rago OS"
+   },
+   "desc": {
+    "en": "The lock screen shows the same wallpaper as the desktop instead of Windows Spotlight.",
+    "fr": "L'écran de verrouillage affiche le même fond que le bureau au lieu de Windows à la une."
+   },
+   "actions": [
+    {
+     "do": "reg",
+     "key": "HKCU\\Software\\Microsoft\\Windows\\CurrentVersion\\ContentDeliveryManager",
+     "name": "RotatingLockScreenEnabled",
+     "type": "dword",
+     "value": 0
+    },
+    {
+     "do": "native",
+     "what": "lockscreen"
+    }
+   ]
+  },
+  {
+   "id": "brand.theme",
+   "category": "brand",
+   "profiles": [
+    "competitive",
+    "balanced",
+    "streaming",
+    "minimal"
+   ],
+   "reboot": "none",
+   "source": "https://learn.microsoft.com/windows/win32/controls/themesfileformat-overview",
+   "name": {
+    "en": "\"Rago OS\" theme in Settings",
+    "fr": "Thème « Rago OS » dans les Paramètres"
+   },
+   "desc": {
+    "en": "Adds a Rago OS theme to Settings > Personalization > Themes, to pick it again later in one click.",
+    "fr": "Ajoute un thème Rago OS dans Paramètres > Personnalisation > Thèmes, pour le reprendre plus tard en un clic."
+   },
+   "actions": [
+    {
+     "do": "native",
+     "what": "theme"
+    }
+   ]
+  },
+  {
+   "id": "brand.oem",
+   "category": "brand",
+   "profiles": [
+    "competitive",
+    "balanced",
+    "streaming",
+    "minimal"
+   ],
+   "reboot": "none",
+   "source": "https://learn.microsoft.com/windows-hardware/customize/desktop/unattend/microsoft-windows-shell-setup-oeminformation",
+   "name": {
+    "en": "Rago support in Settings",
+    "fr": "Assistance Rago dans les Paramètres"
+   },
+   "desc": {
+    "en": "Settings > System > About shows Rago and its website in the Support section. Your PC maker's details come back when you turn Rago OS off.",
+    "fr": "Paramètres > Système > Informations système affiche Rago et son site dans la partie Assistance. Les infos de ton constructeur reviennent quand tu désactives Rago OS."
+   },
+   "actions": [
+    {
+     "do": "reg",
+     "key": "HKLM\\SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\OEMInformation",
+     "name": "Manufacturer",
+     "type": "sz",
+     "value": "Rago"
+    },
+    {
+     "do": "reg",
+     "key": "HKLM\\SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\OEMInformation",
+     "name": "SupportURL",
+     "type": "sz",
+     "value": "https://rago-optimizer.com"
+    }
+   ]
+  },
+  {
+   "id": "apps.microsoft.bingnews",
+   "category": "apps",
+   "profiles": [
+    "competitive",
+    "balanced",
+    "streaming",
+    "minimal"
+   ],
+   "reboot": "none",
+   "source": "https://learn.microsoft.com/powershell/module/appx/remove-appxpackage",
+   "name": {
+    "en": "Microsoft News",
+    "fr": "Actualités Microsoft"
+   },
+   "desc": {
+    "en": "Removes Microsoft News from your account (Microsoft.BingNews). It comes back when you turn Rago OS off.",
+    "fr": "Retire Actualités Microsoft de ton compte (Microsoft.BingNews). Elle revient quand tu désactives Rago OS."
+   },
+   "actions": [
+    {
+     "do": "appx",
+     "name": "Microsoft.BingNews"
+    }
+   ]
+  },
+  {
+   "id": "apps.microsoft.bingweather",
+   "category": "apps",
+   "profiles": [
+    "competitive",
+    "balanced",
+    "streaming",
+    "minimal"
+   ],
+   "reboot": "none",
+   "source": "https://learn.microsoft.com/powershell/module/appx/remove-appxpackage",
+   "name": {
+    "en": "Weather",
+    "fr": "Météo"
+   },
+   "desc": {
+    "en": "Removes Weather from your account (Microsoft.BingWeather). It comes back when you turn Rago OS off.",
+    "fr": "Retire Météo de ton compte (Microsoft.BingWeather). Elle revient quand tu désactives Rago OS."
+   },
+   "actions": [
+    {
+     "do": "appx",
+     "name": "Microsoft.BingWeather"
+    }
+   ]
+  },
+  {
+   "id": "apps.microsoft.bingsearch",
+   "category": "apps",
+   "profiles": [
+    "competitive",
+    "balanced",
+    "streaming",
+    "minimal"
+   ],
+   "reboot": "none",
+   "source": "https://learn.microsoft.com/powershell/module/appx/remove-appxpackage",
+   "name": {
+    "en": "Bing Search",
+    "fr": "Recherche Bing"
+   },
+   "desc": {
+    "en": "Removes Bing Search from your account (Microsoft.BingSearch). It comes back when you turn Rago OS off.",
+    "fr": "Retire Recherche Bing de ton compte (Microsoft.BingSearch). Elle revient quand tu désactives Rago OS."
+   },
+   "actions": [
+    {
+     "do": "appx",
+     "name": "Microsoft.BingSearch"
+    }
+   ]
+  },
+  {
+   "id": "apps.microsoft.getstarted",
+   "category": "apps",
+   "profiles": [
+    "competitive",
+    "balanced",
+    "streaming",
+    "minimal"
+   ],
+   "reboot": "none",
+   "source": "https://learn.microsoft.com/powershell/module/appx/remove-appxpackage",
+   "name": {
+    "en": "Tips",
+    "fr": "Astuces"
+   },
+   "desc": {
+    "en": "Removes Tips from your account (Microsoft.Getstarted). It comes back when you turn Rago OS off.",
+    "fr": "Retire Astuces de ton compte (Microsoft.Getstarted). Elle revient quand tu désactives Rago OS."
+   },
+   "actions": [
+    {
+     "do": "appx",
+     "name": "Microsoft.Getstarted"
+    }
+   ]
+  },
+  {
+   "id": "apps.microsoft.microsoftofficehub",
+   "category": "apps",
+   "profiles": [
+    "competitive",
+    "balanced",
+    "streaming",
+    "minimal"
+   ],
+   "reboot": "none",
+   "source": "https://learn.microsoft.com/powershell/module/appx/remove-appxpackage",
+   "name": {
+    "en": "Microsoft 365 (Office) hub",
+    "fr": "Microsoft 365 (Office)"
+   },
+   "desc": {
+    "en": "Removes Microsoft 365 (Office) hub from your account (Microsoft.MicrosoftOfficeHub). It comes back when you turn Rago OS off.",
+    "fr": "Retire Microsoft 365 (Office) de ton compte (Microsoft.MicrosoftOfficeHub). Elle revient quand tu désactives Rago OS."
+   },
+   "actions": [
+    {
+     "do": "appx",
+     "name": "Microsoft.MicrosoftOfficeHub"
+    }
+   ]
+  },
+  {
+   "id": "apps.microsoft.microsoftsolitairecollection",
+   "category": "apps",
+   "profiles": [
+    "competitive",
+    "balanced",
+    "streaming",
+    "minimal"
+   ],
+   "reboot": "none",
+   "source": "https://learn.microsoft.com/powershell/module/appx/remove-appxpackage",
+   "name": {
+    "en": "Solitaire Collection",
+    "fr": "Solitaire Collection"
+   },
+   "desc": {
+    "en": "Removes Solitaire Collection from your account (Microsoft.MicrosoftSolitaireCollection). It comes back when you turn Rago OS off.",
+    "fr": "Retire Solitaire Collection de ton compte (Microsoft.MicrosoftSolitaireCollection). Elle revient quand tu désactives Rago OS."
+   },
+   "actions": [
+    {
+     "do": "appx",
+     "name": "Microsoft.MicrosoftSolitaireCollection"
+    }
+   ]
+  },
+  {
+   "id": "apps.microsoft.people",
+   "category": "apps",
+   "profiles": [
+    "competitive",
+    "balanced",
+    "streaming",
+    "minimal"
+   ],
+   "reboot": "none",
+   "source": "https://learn.microsoft.com/powershell/module/appx/remove-appxpackage",
+   "name": {
+    "en": "People",
+    "fr": "Contacts"
+   },
+   "desc": {
+    "en": "Removes People from your account (Microsoft.People). It comes back when you turn Rago OS off.",
+    "fr": "Retire Contacts de ton compte (Microsoft.People). Elle revient quand tu désactives Rago OS."
+   },
+   "actions": [
+    {
+     "do": "appx",
+     "name": "Microsoft.People"
+    }
+   ]
+  },
+  {
+   "id": "apps.microsoft.powerautomatedesktop",
+   "category": "apps",
+   "profiles": [
+    "competitive",
+    "balanced",
+    "streaming",
+    "minimal"
+   ],
+   "reboot": "none",
+   "source": "https://learn.microsoft.com/powershell/module/appx/remove-appxpackage",
+   "name": {
+    "en": "Power Automate",
+    "fr": "Power Automate"
+   },
+   "desc": {
+    "en": "Removes Power Automate from your account (Microsoft.PowerAutomateDesktop). It comes back when you turn Rago OS off.",
+    "fr": "Retire Power Automate de ton compte (Microsoft.PowerAutomateDesktop). Elle revient quand tu désactives Rago OS."
+   },
+   "actions": [
+    {
+     "do": "appx",
+     "name": "Microsoft.PowerAutomateDesktop"
+    }
+   ]
+  },
+  {
+   "id": "apps.microsoft.todos",
+   "category": "apps",
+   "profiles": [
+    "competitive",
+    "balanced",
+    "streaming",
+    "minimal"
+   ],
+   "reboot": "none",
+   "source": "https://learn.microsoft.com/powershell/module/appx/remove-appxpackage",
+   "name": {
+    "en": "Microsoft To Do",
+    "fr": "Microsoft To Do"
+   },
+   "desc": {
+    "en": "Removes Microsoft To Do from your account (Microsoft.Todos). It comes back when you turn Rago OS off.",
+    "fr": "Retire Microsoft To Do de ton compte (Microsoft.Todos). Elle revient quand tu désactives Rago OS."
+   },
+   "actions": [
+    {
+     "do": "appx",
+     "name": "Microsoft.Todos"
+    }
+   ]
+  },
+  {
+   "id": "apps.microsoft.windowsfeedbackhub",
+   "category": "apps",
+   "profiles": [
+    "competitive",
+    "balanced",
+    "streaming",
+    "minimal"
+   ],
+   "reboot": "none",
+   "source": "https://learn.microsoft.com/powershell/module/appx/remove-appxpackage",
+   "name": {
+    "en": "Feedback Hub",
+    "fr": "Hub de commentaires"
+   },
+   "desc": {
+    "en": "Removes Feedback Hub from your account (Microsoft.WindowsFeedbackHub). It comes back when you turn Rago OS off.",
+    "fr": "Retire Hub de commentaires de ton compte (Microsoft.WindowsFeedbackHub). Elle revient quand tu désactives Rago OS."
+   },
+   "actions": [
+    {
+     "do": "appx",
+     "name": "Microsoft.WindowsFeedbackHub"
+    }
+   ]
+  },
+  {
+   "id": "apps.microsoft.windowsmaps",
+   "category": "apps",
+   "profiles": [
+    "competitive",
+    "balanced",
+    "streaming",
+    "minimal"
+   ],
+   "reboot": "none",
+   "source": "https://learn.microsoft.com/powershell/module/appx/remove-appxpackage",
+   "name": {
+    "en": "Maps",
+    "fr": "Cartes"
+   },
+   "desc": {
+    "en": "Removes Maps from your account (Microsoft.WindowsMaps). It comes back when you turn Rago OS off.",
+    "fr": "Retire Cartes de ton compte (Microsoft.WindowsMaps). Elle revient quand tu désactives Rago OS."
+   },
+   "actions": [
+    {
+     "do": "appx",
+     "name": "Microsoft.WindowsMaps"
+    }
+   ]
+  },
+  {
+   "id": "apps.microsoft.zunevideo",
+   "category": "apps",
+   "profiles": [
+    "competitive",
+    "balanced",
+    "streaming",
+    "minimal"
+   ],
+   "reboot": "none",
+   "source": "https://learn.microsoft.com/powershell/module/appx/remove-appxpackage",
+   "name": {
+    "en": "Films & TV",
+    "fr": "Films et TV"
+   },
+   "desc": {
+    "en": "Removes Films & TV from your account (Microsoft.ZuneVideo). It comes back when you turn Rago OS off.",
+    "fr": "Retire Films et TV de ton compte (Microsoft.ZuneVideo). Elle revient quand tu désactives Rago OS."
+   },
+   "actions": [
+    {
+     "do": "appx",
+     "name": "Microsoft.ZuneVideo"
+    }
+   ]
+  },
+  {
+   "id": "apps.clipchamp.clipchamp",
+   "category": "apps",
+   "profiles": [
+    "competitive",
+    "balanced",
+    "streaming",
+    "minimal"
+   ],
+   "reboot": "none",
+   "source": "https://learn.microsoft.com/powershell/module/appx/remove-appxpackage",
+   "name": {
+    "en": "Clipchamp",
+    "fr": "Clipchamp"
+   },
+   "desc": {
+    "en": "Removes Clipchamp from your account (Clipchamp.Clipchamp). It comes back when you turn Rago OS off.",
+    "fr": "Retire Clipchamp de ton compte (Clipchamp.Clipchamp). Elle revient quand tu désactives Rago OS."
+   },
+   "actions": [
+    {
+     "do": "appx",
+     "name": "Clipchamp.Clipchamp"
+    }
+   ]
+  },
+  {
+   "id": "apps.microsoft.549981c3f5f10",
+   "category": "apps",
+   "profiles": [
+    "competitive",
+    "balanced",
+    "streaming",
+    "minimal"
+   ],
+   "reboot": "none",
+   "source": "https://learn.microsoft.com/powershell/module/appx/remove-appxpackage",
+   "name": {
+    "en": "Cortana",
+    "fr": "Cortana"
+   },
+   "desc": {
+    "en": "Removes Cortana from your account (Microsoft.549981C3F5F10). It comes back when you turn Rago OS off.",
+    "fr": "Retire Cortana de ton compte (Microsoft.549981C3F5F10). Elle revient quand tu désactives Rago OS."
+   },
+   "actions": [
+    {
+     "do": "appx",
+     "name": "Microsoft.549981C3F5F10"
+    }
+   ]
+  },
+  {
+   "id": "apps.microsoftcorporationii.microsoftfamily",
+   "category": "apps",
+   "profiles": [
+    "competitive",
+    "balanced",
+    "streaming",
+    "minimal"
+   ],
+   "reboot": "none",
+   "source": "https://learn.microsoft.com/powershell/module/appx/remove-appxpackage",
+   "name": {
+    "en": "Microsoft Family",
+    "fr": "Microsoft Family"
+   },
+   "desc": {
+    "en": "Removes Microsoft Family from your account (MicrosoftCorporationII.MicrosoftFamily). It comes back when you turn Rago OS off.",
+    "fr": "Retire Microsoft Family de ton compte (MicrosoftCorporationII.MicrosoftFamily). Elle revient quand tu désactives Rago OS."
+   },
+   "actions": [
+    {
+     "do": "appx",
+     "name": "MicrosoftCorporationII.MicrosoftFamily"
+    }
+   ]
+  },
+  {
+   "id": "apps.microsoftteams",
+   "category": "apps",
+   "profiles": [
+    "competitive",
+    "balanced",
+    "streaming",
+    "minimal"
+   ],
+   "reboot": "none",
+   "source": "https://learn.microsoft.com/powershell/module/appx/remove-appxpackage",
+   "name": {
+    "en": "Teams (personal, old version)",
+    "fr": "Teams (personnel, ancienne version)"
+   },
+   "desc": {
+    "en": "Removes Teams (personal, old version) from your account (MicrosoftTeams). It comes back when you turn Rago OS off.",
+    "fr": "Retire Teams (personnel, ancienne version) de ton compte (MicrosoftTeams). Elle revient quand tu désactives Rago OS."
+   },
+   "actions": [
+    {
+     "do": "appx",
+     "name": "MicrosoftTeams"
+    }
+   ]
+  },
+  {
+   "id": "apps.msteams",
+   "category": "apps",
+   "profiles": [],
+   "reboot": "none",
+   "source": "https://learn.microsoft.com/powershell/module/appx/remove-appxpackage",
+   "name": {
+    "en": "Teams (personal)",
+    "fr": "Teams (personnel)"
+   },
+   "desc": {
+    "en": "Removes Teams (personal) from your account (MSTeams). It comes back when you turn Rago OS off.",
+    "fr": "Retire Teams (personnel) de ton compte (MSTeams). Elle revient quand tu désactives Rago OS."
+   },
+   "actions": [
+    {
+     "do": "appx",
+     "name": "MSTeams"
+    }
+   ]
+  },
+  {
+   "id": "apps.microsoft.windows.devhome",
+   "category": "apps",
+   "profiles": [
+    "competitive",
+    "balanced",
+    "streaming",
+    "minimal"
+   ],
+   "reboot": "none",
+   "source": "https://learn.microsoft.com/powershell/module/appx/remove-appxpackage",
+   "name": {
+    "en": "Dev Home",
+    "fr": "Dev Home"
+   },
+   "desc": {
+    "en": "Removes Dev Home from your account (Microsoft.Windows.DevHome). It comes back when you turn Rago OS off.",
+    "fr": "Retire Dev Home de ton compte (Microsoft.Windows.DevHome). Elle revient quand tu désactives Rago OS."
+   },
+   "actions": [
+    {
+     "do": "appx",
+     "name": "Microsoft.Windows.DevHome"
+    }
+   ]
+  },
+  {
+   "id": "apps.microsoft.copilot",
+   "category": "apps",
+   "profiles": [
+    "competitive",
+    "balanced",
+    "streaming",
+    "minimal"
+   ],
+   "reboot": "none",
+   "source": "https://learn.microsoft.com/powershell/module/appx/remove-appxpackage",
+   "name": {
+    "en": "Copilot app",
+    "fr": "Appli Copilot"
+   },
+   "desc": {
+    "en": "Removes Copilot app from your account (Microsoft.Copilot). It comes back when you turn Rago OS off.",
+    "fr": "Retire Appli Copilot de ton compte (Microsoft.Copilot). Elle revient quand tu désactives Rago OS."
+   },
+   "actions": [
+    {
+     "do": "appx",
+     "name": "Microsoft.Copilot"
+    }
+   ]
+  },
+  {
+   "id": "apps.microsoft.outlookforwindows",
+   "category": "apps",
+   "profiles": [],
+   "reboot": "none",
+   "source": "https://learn.microsoft.com/powershell/module/appx/remove-appxpackage",
+   "name": {
+    "en": "Outlook (new)",
+    "fr": "Outlook (nouveau)"
+   },
+   "desc": {
+    "en": "Removes Outlook (new) from your account (Microsoft.OutlookForWindows). It comes back when you turn Rago OS off.",
+    "fr": "Retire Outlook (nouveau) de ton compte (Microsoft.OutlookForWindows). Elle revient quand tu désactives Rago OS."
+   },
+   "actions": [
+    {
+     "do": "appx",
+     "name": "Microsoft.OutlookForWindows"
+    }
+   ]
+  },
+  {
+   "id": "apps.microsoft.yourphone",
+   "category": "apps",
+   "profiles": [
+    "competitive",
+    "balanced",
+    "minimal"
+   ],
+   "reboot": "none",
+   "source": "https://learn.microsoft.com/powershell/module/appx/remove-appxpackage",
+   "name": {
+    "en": "Phone Link",
+    "fr": "Lien avec Windows"
+   },
+   "desc": {
+    "en": "Removes Phone Link from your account (Microsoft.YourPhone). It comes back when you turn Rago OS off.",
+    "fr": "Retire Lien avec Windows de ton compte (Microsoft.YourPhone). Elle revient quand tu désactives Rago OS."
+   },
+   "actions": [
+    {
+     "do": "appx",
+     "name": "Microsoft.YourPhone"
+    }
+   ]
+  }
+ ]
+}
