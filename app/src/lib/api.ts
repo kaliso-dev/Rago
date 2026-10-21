@@ -274,7 +274,20 @@ export interface OsOverview {
   translucenttb: { installed: boolean; applied: boolean; stoppedAt: number | null };
   appsToReinstall: OsAppx[];
   restorePoint: number | null;
+  /** fond choisi : une teinte de OS_WALLS ou « custom » (image du joueur) */
+  wallpaper: string;
+  /** nom de l'image du joueur, si elle a déjà été choisie */
+  wallpaperCustom: string | null;
 }
+/** Fonds unis livrés avec Rago OS (resources/os/wall-<id>.jpg) et leur teinte pour l'aperçu. */
+export const OS_WALLS: { id: string; top: string; bottom: string }[] = [
+  { id: "graphite", top: "#33353b", bottom: "#1a1b1f" },
+  { id: "nuit", top: "#1f2a40", bottom: "#0d1220" },
+  { id: "ardoise", top: "#465160", bottom: "#232a34" },
+  { id: "brume", top: "#dadde3", bottom: "#b7bcc5" },
+  { id: "sauge", top: "#47564c", bottom: "#242c27" },
+  { id: "prune", top: "#4a3b50", bottom: "#231b27" },
+];
 /** Vérification avant activation (os/preflight.rs). */
 export interface OsCheck {
   id: "windows" | "edition" | "activation" | "disk" | "reboot" | "admin" | "battery" | "busy" | string;
@@ -420,6 +433,10 @@ export interface Api {
   osRestore(): Promise<void>;
   osCancel(): Promise<void>;
   osSetFeature(id: string, on: boolean): Promise<void>;
+  /** Fond de Rago OS : une teinte de OS_WALLS, ou « custom » (la dernière image choisie). */
+  osSetWallpaper(choice: string): Promise<void>;
+  /** Choisit une image du PC comme fond (false : fenêtre fermée sans choix). */
+  osPickWallpaper(title: string): Promise<boolean>;
   /** Joue l'animation de démarrage par-dessus le bureau (aussi en plan gratuit). */
   osPreview(): Promise<void>;
   /** Minuteur de la Dynamic Island, en secondes (0 : arrêté). */
@@ -512,6 +529,14 @@ const tauriApi: Api = {
   osRestore: () => invoke("os_restore"),
   osCancel: () => invoke("os_cancel"),
   osSetFeature: (id, on) => invoke("os_set_feature", { id, on }),
+  osSetWallpaper: (choice) => invoke("os_set_wallpaper", { choice, path: null }),
+  osPickWallpaper: async (title) => {
+    const { open } = await import("@tauri-apps/plugin-dialog");
+    const path = await open({ title, multiple: false, directory: false, filters: [{ name: "Image", extensions: ["jpg", "jpeg", "png", "bmp"] }] });
+    if (typeof path !== "string") return false;
+    await invoke("os_set_wallpaper", { choice: "custom", path });
+    return true;
+  },
   osPreview: () => invoke("os_preview"),
   osTimer: (seconds) => invoke("os_timer", { seconds }),
   osUsage: () => invoke("os_usage"),
@@ -629,10 +654,12 @@ interface MockOs {
   applied: string[];
   restartPending: boolean;
   restorePoint: number | null;
+  wallpaper: string;
+  wallpaperCustom: string | null;
 }
 const demoFlag = (k: string) => typeof location !== "undefined" && new URLSearchParams(location.search).has(k);
 let mockOs: MockOs = (() => {
-  const empty: MockOs = { active: false, profile: null, selection: [], features: featureDefaults(), activatedAt: null, applied: [], restartPending: false, restorePoint: null };
+  const empty: MockOs = { active: false, profile: null, selection: [], features: featureDefaults(), activatedAt: null, applied: [], restartPending: false, restorePoint: null, wallpaper: "graphite", wallpaperCustom: null };
   try {
     const raw = localStorage.getItem("rago.demoOs");
     return raw ? { ...empty, ...(JSON.parse(raw) as Partial<MockOs>) } : empty;
@@ -1030,6 +1057,8 @@ const mockApi: Api = {
       translucenttb: { installed: demoFlag("osttb"), applied: demoFlag("osttb") && !!mockOs.features.translucenttb, stoppedAt: null },
       appsToReinstall: [],
       restorePoint: mockOs.restorePoint,
+      wallpaper: mockOs.wallpaper,
+      wallpaperCustom: mockOs.wallpaperCustom,
     };
   },
   osPreflight: async () => {
@@ -1066,6 +1095,20 @@ const mockApi: Api = {
     if (id === "translucenttb" && on && !demoFlag("osttb")) throw "translucenttb_missing";
     mockOs = { ...mockOs, features: { ...mockOs.features, [id]: on } };
     saveMockOs();
+  },
+  osSetWallpaper: async (choice) => {
+    await sleep(150);
+    if (mockOsRunning) throw "os_running";
+    if (choice === "custom" && !mockOs.wallpaperCustom) throw "no custom wallpaper";
+    mockOs = { ...mockOs, wallpaper: choice };
+    saveMockOs();
+  },
+  osPickWallpaper: async () => {
+    // démo : pas de fenêtre de fichiers, une image fictive est notée
+    await sleep(150);
+    mockOs = { ...mockOs, wallpaper: "custom", wallpaperCustom: "wall-custom-demo.jpg" };
+    saveMockOs();
+    return true;
   },
   osPreview: async () => {
     // démo : l'animation de Rago Shell ne se joue que sous Windows

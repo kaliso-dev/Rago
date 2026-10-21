@@ -309,6 +309,13 @@ async fn os_set_feature(state: State<'_, AppState>, id: String, on: bool) -> Res
     tauri::async_runtime::spawn_blocking(move || os.set_feature(&id, on)).await.map_err(|e| e.to_string())?
 }
 
+/// Fond d'écran de Rago OS : une teinte (« graphite »…) ou « custom » avec l'image choisie par le joueur.
+#[tauri::command]
+async fn os_set_wallpaper(state: State<'_, AppState>, choice: String, path: Option<String>) -> Result<(), String> {
+    let os = Arc::clone(&state.os);
+    tauri::async_runtime::spawn_blocking(move || os.set_wallpaper(&choice, path.as_deref())).await.map_err(|e| e.to_string())?
+}
+
 /// Aperçu de l'animation de démarrage (aussi pour le plan gratuit) : Rago Shell la joue une fois par-dessus le bureau.
 #[tauri::command]
 fn os_preview(state: State<'_, AppState>) -> Result<(), String> {
@@ -1064,6 +1071,7 @@ pub fn run() {
             os_restore,
             os_cancel,
             os_set_feature,
+            os_set_wallpaper,
             os_preview,
             os_timer,
             os_usage,

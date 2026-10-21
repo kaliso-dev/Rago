@@ -1,6 +1,8 @@
 //! Rago OS sur Windows : écritures du registre, services, tâches, applications du Store (gestionnaire de paquets de
 //! Windows, pour le compte du joueur seulement) et actions natives (fond d'écran par IDesktopWallpaper, écran de
 //! verrouillage par l'API LockScreen, thème, plan d'alimentation par powercfg). Aucune DLL ni fichier de Windows modifié.
+//! Le fond est un des fonds unis de Rago OS (resources/os/wall-*.jpg) ou l'image du joueur ; l'écran de verrouillage
+//! et le thème le suivent.
 
 use serde::{Deserialize, Serialize};
 use std::path::{Path, PathBuf};
@@ -20,11 +22,13 @@ pub struct WinHost {
     pub resource_dir: PathBuf,
     /// %APPDATA%\gg.rago.optimizer\os : copies des images d'avant (fond, écran de verrouillage)
     pub keep_dir: PathBuf,
+    /// fond choisi dans Rago OS (bureau et écran de verrouillage)
+    pub wall: super::Wall,
 }
 
 impl WinHost {
-    pub fn new(data_dir: &Path, resource_dir: &Path) -> Self {
-        WinHost { sys: Sys::new(data_dir.join("backup")), resource_dir: resource_dir.to_path_buf(), keep_dir: data_dir.join("os") }
+    pub fn new(data_dir: &Path, resource_dir: &Path, wall: super::Wall) -> Self {
+        WinHost { sys: Sys::new(data_dir.join("backup")), resource_dir: resource_dir.to_path_buf(), keep_dir: data_dir.join("os"), wall }
     }
 
     /// Image de Rago OS copiée dans %LOCALAPPDATA%\Rago OS (le dossier de l'app est remplacé à chaque mise à jour).
@@ -35,6 +39,15 @@ impl WinHost {
         let dst = dst_dir.join(name);
         std::fs::copy(&src, &dst).map_err(|e| format!("{}: {e}", src.display()))?;
         Ok(dst)
+    }
+
+    /// Fichier du fond choisi : une teinte de Rago OS, ou l'image du joueur (déjà copiée par `Os::set_wallpaper`).
+    fn wall_file(&self) -> Result<PathBuf, String> {
+        match &self.wall {
+            super::Wall::Custom(p) if p.is_file() => Ok(p.clone()),
+            super::Wall::Builtin(id) => self.image(&format!("wall-{id}.jpg")),
+            super::Wall::Custom(_) => self.image(&format!("wall-{}.jpg", super::WALLS[0])),
+        }
     }
 }
 
@@ -142,6 +155,21 @@ impl Host for WinHost {
             Native::Theme => theme::revert(&serde_json::from_value(saved.clone()).map_err(bad)?),
             Native::Powerplan => power::revert(&serde_json::from_value(saved.clone()).map_err(bad)?),
         }
+    }
+
+    fn native_update(&self, what: Native, saved: &serde_json::Value) -> Result<serde_json::Value, String> {
+        let bad = |e: serde_json::Error| format!("saved state unreadable: {e}");
+        let v = match what {
+            Native::Wallpaper => serde_json::to_value(wallpaper::update(self, &serde_json::from_value(saved.clone()).map_err(bad)?)?),
+            Native::Lockscreen => serde_json::to_value(lockscreen::update(self, &serde_json::from_value(saved.clone()).map_err(bad)?)?),
+            Native::Theme => serde_json::to_value(theme::update(self, &serde_json::from_value(saved.clone()).map_err(bad)?)?),
+            // le plan d'avant reste celui d'origine
+            Native::Powerplan => {
+                power::apply()?;
+                return Ok(saved.clone());
+            }
+        };
+        v.map_err(|e| e.to_string())
     }
 
     fn native_in_place(&self, what: Native, saved: &serde_json::Value) -> bool {
@@ -460,7 +488,7 @@ mod wallpaper {
     }
 
     pub fn apply(host: &WinHost) -> Result<Saved, String> {
-        let ours = host.image("wallpaper.jpg")?;
+        let ours = host.wall_file()?;
         let mut regs = Regs::take(&host.sys, REGS);
         match apply_com(host, &ours, regs.clone()) {
             Ok(s) => Ok(s),
@@ -514,6 +542,23 @@ mod wallpaper {
             let _ = dw.SetPosition(DWPOS_FILL);
             Ok(Saved { monitors, position, color, slideshow, options: options.0, tick, copy, ours: ours_s, regs })
         })
+    }
+
+    /// Autre fond choisi dans Rago OS : posé à la place du précédent, le fond d'avant Rago OS reste noté.
+    pub fn update(host: &WinHost, s: &Saved) -> Result<Saved, String> {
+        let ours = host.wall_file()?.to_string_lossy().into_owned();
+        if s.position < 0 {
+            spi(&ours)?;
+        } else {
+            let file = ours.clone();
+            com(move || unsafe {
+                let dw = desktop()?;
+                dw.SetWallpaper(PCWSTR::null(), &HSTRING::from(&file)).map_err(err)?;
+                let _ = dw.SetPosition(DWPOS_FILL);
+                Ok(())
+            })?;
+        }
+        Ok(Saved { ours, ..s.clone() })
     }
 
     fn current() -> Option<String> {
@@ -631,8 +676,13 @@ mod lockscreen {
         .flatten()
     }
 
+    fn sz(s: &str) -> Vec<u8> {
+        s.encode_utf16().chain(std::iter::once(0)).flat_map(u16::to_le_bytes).collect()
+    }
+
+    /// Même image que le bureau.
     pub fn apply(host: &WinHost) -> Result<Saved, String> {
-        let ours = host.image("lockscreen.jpg")?;
+        let ours = host.wall_file()?;
         let ours = ours.to_string_lossy().into_owned();
         let before = copy_current(&host.keep_dir);
         match set(&ours) {
@@ -640,13 +690,24 @@ mod lockscreen {
             Err(api_err) => {
                 // API refusée : la stratégie que Paramètres affiche comme « gérée par ton organisation »
                 let regs = Regs::take(&host.sys, &[(CSP, "LockScreenImagePath"), (CSP, "LockScreenImageUrl"), (CSP, "LockScreenImageStatus")]);
-                let sz = |s: &str| s.encode_utf16().chain(std::iter::once(0)).flat_map(u16::to_le_bytes).collect::<Vec<u8>>();
                 host.sys.write(CSP, "LockScreenImagePath", 1, &sz(&ours)).map_err(|e| format!("{api_err}; {e}"))?;
                 host.sys.write(CSP, "LockScreenImageUrl", 1, &sz(&ours))?;
                 host.sys.write(CSP, "LockScreenImageStatus", 4, &1u32.to_le_bytes())?;
                 Ok(Saved { mode: "csp".into(), before, ours_uri: None, regs })
             }
         }
+    }
+
+    /// Le fond du bureau a changé : l'écran de verrouillage le suit.
+    pub fn update(host: &WinHost, s: &Saved) -> Result<Saved, String> {
+        let ours = host.wall_file()?.to_string_lossy().into_owned();
+        if s.mode == "csp" {
+            host.sys.write(CSP, "LockScreenImagePath", 1, &sz(&ours))?;
+            host.sys.write(CSP, "LockScreenImageUrl", 1, &sz(&ours))?;
+            return Ok(s.clone());
+        }
+        set(&ours)?;
+        Ok(Saved { ours_uri: uri(), ..s.clone() })
     }
 
     pub fn revert(host: &WinHost, s: &Saved) -> Result<(), String> {
@@ -677,22 +738,32 @@ mod theme {
 
     pub fn body(wallpaper: &Path) -> String {
         format!(
-            "; Rago OS (Rago Optimizer)\r\n[Theme]\r\nDisplayName=Rago OS\r\n\r\n[Control Panel\\Desktop]\r\nWallpaper={}\r\nTileWallpaper=0\r\nWallpaperStyle=10\r\nPattern=\r\n\r\n[VisualStyles]\r\nPath=%SystemRoot%\\resources\\themes\\Aero\\Aero.msstyles\r\nColorStyle=NormalColor\r\nSize=NormalSize\r\nAutoColorization=0\r\nColorizationColor=0XC4FF3B30\r\nSystemMode=Dark\r\nAppMode=Dark\r\nVisualStyleVersion=10\r\n\r\n[Sounds]\r\nSchemeName=@%SystemRoot%\\System32\\mmres.dll,-800\r\n\r\n[MasterThemeSelector]\r\nMTSM=RJSPBS\r\n",
+            "; Rago OS (Rago Optimizer)\r\n[Theme]\r\nDisplayName=Rago OS\r\n\r\n[Control Panel\\Desktop]\r\nWallpaper={}\r\nTileWallpaper=0\r\nWallpaperStyle=10\r\nPattern=\r\n\r\n[VisualStyles]\r\nPath=%SystemRoot%\\resources\\themes\\Aero\\Aero.msstyles\r\nColorStyle=NormalColor\r\nSize=NormalSize\r\nAutoColorization=0\r\nColorizationColor=0XC48A8E96\r\nSystemMode=Dark\r\nAppMode=Dark\r\nVisualStyleVersion=10\r\n\r\n[Sounds]\r\nSchemeName=@%SystemRoot%\\System32\\mmres.dll,-800\r\n\r\n[MasterThemeSelector]\r\nMTSM=RJSPBS\r\n",
             wallpaper.display()
         )
     }
 
+    fn write(path: &Path, wall: &Path) -> Result<(), String> {
+        // UTF-16 avec BOM, comme les thèmes de Windows
+        let bytes: Vec<u8> = [0xFF, 0xFE].into_iter().chain(body(wall).encode_utf16().flat_map(u16::to_le_bytes)).collect();
+        std::fs::write(path, bytes).map_err(|e| e.to_string())
+    }
+
     pub fn apply(host: &WinHost) -> Result<Saved, String> {
-        let wall = host.image("wallpaper.jpg")?;
+        let wall = host.wall_file()?;
         let local = std::env::var("LOCALAPPDATA").map_err(|e| e.to_string())?;
         let dir = Path::new(&local).join(r"Microsoft\Windows\Themes");
         std::fs::create_dir_all(&dir).map_err(|e| e.to_string())?;
         let path = dir.join("Rago OS.theme");
         let before = std::fs::read_to_string(&path).ok();
-        // UTF-16 avec BOM, comme les thèmes de Windows
-        let bytes: Vec<u8> = [0xFF, 0xFE].into_iter().chain(body(&wall).encode_utf16().flat_map(u16::to_le_bytes)).collect();
-        std::fs::write(&path, bytes).map_err(|e| e.to_string())?;
+        write(&path, &wall)?;
         Ok(Saved { path: path.to_string_lossy().into_owned(), before })
+    }
+
+    /// Le thème suit le fond choisi.
+    pub fn update(host: &WinHost, s: &Saved) -> Result<Saved, String> {
+        write(Path::new(&s.path), &host.wall_file()?)?;
+        Ok(s.clone())
     }
 
     pub fn revert(s: &Saved) -> Result<(), String> {
@@ -758,6 +829,6 @@ mod tests {
     fn theme_points_to_the_wallpaper_and_dark_mode() {
         let b = super::theme::body(std::path::Path::new(r"C:\Users\Tom\AppData\Local\Rago OS\wallpaper.jpg"));
         assert!(b.contains(r"Wallpaper=C:\Users\Tom\AppData\Local\Rago OS\wallpaper.jpg"));
-        assert!(b.contains("SystemMode=Dark") && b.contains("ColorizationColor=0XC4FF3B30"));
+        assert!(b.contains("SystemMode=Dark") && b.contains("ColorizationColor=0XC48A8E96"));
     }
 }

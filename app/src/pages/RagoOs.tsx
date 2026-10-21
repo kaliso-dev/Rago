@@ -1,15 +1,15 @@
 import { AnimatePresence, motion } from "motion/react";
 import {
-  AlertTriangle, ArrowRight, Check, ChevronDown, Cog, Crosshair, ExternalLink, Folder, Gauge, Laptop, Lock, Megaphone, Minus, Package, Palette,
-  Play, Power, Radio, RefreshCw, RotateCcw, Scale, Shield, ShieldCheck, Sparkles, Square, Timer, Undo2, X, type LucideIcon,
+  AlertTriangle, ArrowRight, BatteryMedium, Check, ChevronDown, Cog, Crosshair, Download, ExternalLink, Folder, Gamepad2, Gauge, Globe, ImageIcon,
+  Laptop, Lock, Megaphone, MessageCircle, Minus, Music2, Package, Palette, Play, Plus, Power, Radio, RefreshCw, RotateCcw, Scale, Search, Shield,
+  ShieldCheck, SlidersHorizontal, Sparkles, Square, Timer, Trash2, Undo2, Volume2, Wifi, X, type LucideIcon,
 } from "lucide-react";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { createPortal } from "react-dom";
-import { Mark, Pulse } from "../components/Logo";
+import { MarkIcon, Pulse } from "../components/Logo";
 import { Modal } from "../components/Modal";
 import { Badge, Button, Switch } from "../components/ui";
-import { MARK } from "../components/logoPaths";
-import { api, type OsCheck, type OsDone, type OsOverview, type OsProgress, type OsRequest, type OsUsage } from "../lib/api";
+import { api, OS_WALLS, type OsCheck, type OsDone, type OsOverview, type OsProgress, type OsRequest, type OsUsage } from "../lib/api";
 import { formatDate, formatNumber, type Key } from "../lib/i18n";
 import { featureDefaults, matchingProfile, osCatalog, osTweaks, profileSelection, runsOn } from "../lib/os";
 import { useStore } from "../lib/store";
@@ -75,6 +75,8 @@ export function RagoOs() {
   const [error, setError] = useState<string | null>(null);
   const [notice, setNotice] = useState<string | null>(null);
   const [timer, setTimer] = useState<number | null>(null);
+  const [wall, setWall] = useState("graphite");
+  const [wallError, setWallError] = useState<string | null>(null);
   const live = useRef(true);
   const build = ov?.build ?? 0;
 
@@ -101,6 +103,7 @@ export function RagoOs() {
         setSelection(profileSelection("balanced", o.build));
       }
       setFeatures({ ...featureDefaults(), ...o.features });
+      setWall(o.wallpaper);
       check(o.selection.length ? o.selection : profileSelection("balanced", o.build));
       if (o.running) setRun({ kind: "apply", rows: [], phase: "tweak", current: null, done: null, request: null });
     });
@@ -227,6 +230,35 @@ export function RagoOs() {
     }
     void refresh();
   };
+  const wallFailed = (e: unknown) => {
+    const code = String(e);
+    if (code === "os_running") return setWallError(t("os.error.running"));
+    if (code === "wallpaper_type") return setWallError(t("os.error.wallpaperType"));
+    if (code === "wallpaper_size") return setWallError(t("os.error.wallpaperSize"));
+    setWallError(t("os.error.wallpaper", { error: code }));
+  };
+  // Rago OS actif : le bureau change tout de suite ; sinon le choix est gardé pour l'activation
+  const chooseWall = async (id: string) => {
+    const before = wall;
+    setWallError(null);
+    setWall(id);
+    try {
+      await api.osSetWallpaper(id);
+    } catch (e) {
+      setWall(before);
+      wallFailed(e);
+    }
+    void refresh();
+  };
+  const pickWall = async () => {
+    setWallError(null);
+    try {
+      if (await api.osPickWallpaper(t("os.wall.pickTitle"))) setWall("custom");
+    } catch (e) {
+      wallFailed(e);
+    }
+    void refresh();
+  };
   const startTimer = (min: number) => {
     void api.osTimer(min * 60);
     setTimer(min);
@@ -300,7 +332,7 @@ export function RagoOs() {
           {!premium && <p className="os-free muted small">{t("os.free")}</p>}
           {error && <p className="error-text os-error">{error}</p>}
         </div>
-        <OsPreview active={active} island={features.island} />
+        <OsPreview active={active} features={features} wall={wall} />
       </motion.section>
 
       {/* ce qui demande l'attention du joueur, du plus urgent au moins urgent */}
@@ -429,6 +461,52 @@ export function RagoOs() {
         </div>
       </motion.section>
 
+      <motion.section variants={rise} className="os-block">
+        <div className="os-block-head">
+          <h2 className="section-title">{t("os.wall")}</h2>
+        </div>
+        <p className="muted small os-wall-lead">{selection.includes("brand.wallpaper") ? t("os.wallLead") : t("os.wallOff")}</p>
+        <div className="os-walls" role="radiogroup" aria-label={t("os.wall")}>
+          {OS_WALLS.map((w) => (
+            <button
+              key={w.id}
+              type="button"
+              role="radio"
+              aria-checked={wall === w.id}
+              className={`os-swatch${wall === w.id ? " on" : ""}`}
+              disabled={running}
+              onClick={() => void chooseWall(w.id)}
+            >
+              <span className={`os-swatch-tone${w.id === "brume" ? " light" : ""}`} style={{ background: `linear-gradient(180deg, ${w.top}, ${w.bottom})` }}>
+                {wall === w.id && <Check size={14} />}
+              </span>
+              <span className="os-swatch-name">{t(`os.wall.${w.id}` as Key)}</span>
+            </button>
+          ))}
+          {ov.wallpaperCustom && (
+            <button
+              type="button"
+              role="radio"
+              aria-checked={wall === "custom"}
+              className={`os-swatch${wall === "custom" ? " on" : ""}`}
+              disabled={running}
+              title={ov.wallpaperCustom}
+              onClick={() => void chooseWall("custom")}
+            >
+              <span className="os-swatch-tone custom">{wall === "custom" ? <Check size={14} /> : <ImageIcon size={15} />}</span>
+              <span className="os-swatch-name">{t("os.wall.custom")}</span>
+            </button>
+          )}
+          <button type="button" className="os-swatch add" disabled={running} onClick={() => void pickWall()}>
+            <span className="os-swatch-tone add">
+              <Plus size={16} />
+            </span>
+            <span className="os-swatch-name">{t("os.wall.pick")}</span>
+          </button>
+        </div>
+        {wallError && <p className="error-text small os-wall-error">{wallError}</p>}
+      </motion.section>
+
       <div className="os-grid">
         <motion.section variants={rise} className="card os-features">
           <header className="card-head">
@@ -478,7 +556,7 @@ export function RagoOs() {
                   {f.id === "translucenttb" && ttb.stoppedAt && !on && <div className="os-feature-note small">{t("os.ttbStopped", { date: formatDate(lang, ttb.stoppedAt) })}</div>}
                   {f.id === "translucenttb" && notice && <div className="os-feature-note small">{notice}</div>}
                 </div>
-                <Switch checked={on} disabled={running || (f.id !== "boot" && f.id !== "island" && !ttb.installed && !on)} label={f.name[lang]} onChange={(v) => void setFeature(f.id, v)} />
+                <Switch checked={on} disabled={running || (f.id === "translucenttb" && !ttb.installed && !on)} label={f.name[lang]} onChange={(v) => void setFeature(f.id, v)} />
               </div>
             );
           })}
@@ -578,6 +656,20 @@ export function RagoOs() {
         </AnimatePresence>
       </motion.section>
 
+      <motion.section variants={rise} className="card os-tips">
+        <header className="card-head">
+          <h3 className="rg-overline">{t("os.tips")}</h3>
+        </header>
+        <ul>
+          {(["search", "menu", "status", "dock", "island", "game"] as const).map((k) => (
+            <li key={k}>
+              <b>{t(`os.tip.${k}.key`)}</b>
+              {t(`os.tip.${k}`)}
+            </li>
+          ))}
+        </ul>
+      </motion.section>
+
       <motion.section variants={rise} className="card os-never">
         <header className="card-head">
           <h3 className="rg-overline">{t("os.never")}</h3>
@@ -619,23 +711,57 @@ export function RagoOs() {
   );
 }
 
-/** Aperçu du bureau Rago OS : fond, île et barre des tâches de verre, dessinés en CSS (rien n'est chargé). */
-function OsPreview({ active, island }: { active: boolean; island: boolean }) {
-  const { t } = useStore();
+/** Icônes du Dock de l'aperçu : Rago Optimizer, puis des applis courantes ; un point sous celles qui sont ouvertes. */
+const DOCK: { icon: LucideIcon; tone: string; open?: boolean }[] = [
+  { icon: Folder, tone: "linear-gradient(180deg, #6aa8ff, #2f6fe0)", open: true },
+  { icon: Globe, tone: "linear-gradient(180deg, #52d3c5, #13908a)", open: true },
+  { icon: Gamepad2, tone: "linear-gradient(180deg, #3b4c6b, #1b2538)" },
+  { icon: MessageCircle, tone: "linear-gradient(180deg, #7f89ff, #4c55d8)", open: true },
+  { icon: Music2, tone: "linear-gradient(180deg, #ff7a9a, #e0365d)" },
+  { icon: Cog, tone: "linear-gradient(180deg, #8f939b, #5a5e66)" },
+];
+
+/** Aperçu du bureau Rago OS, dessiné en CSS (rien n'est chargé) : le fond choisi, la barre en haut avec l'île, une
+ * fenêtre et le Dock, ou la barre des tâches de Windows quand le Dock est coupé. */
+function OsPreview({ active, features, wall }: { active: boolean; features: Record<string, boolean>; wall: string }) {
+  const { t, lang } = useStore();
+  const tone = OS_WALLS.find((w) => w.id === wall);
+  const [clock, setClock] = useState(() => new Date());
+  useEffect(() => {
+    const id = setInterval(() => setClock(new Date()), 30_000);
+    return () => clearInterval(id);
+  }, []);
+  const time = clock.toLocaleTimeString(lang === "fr" ? "fr-FR" : "en-US", { hour: "2-digit", minute: "2-digit" });
+  const bar = !!features.bar;
   return (
     <div className={`os-preview${active ? " on" : ""}`} aria-hidden>
       <div className="os-screen">
-        <div className="os-wall">
+        <div className={`os-wall${tone ? "" : " custom"}`} style={tone ? { background: `linear-gradient(180deg, ${tone.top}, ${tone.bottom})` } : undefined}>
           <span className="os-wall-glow" />
-          {[0, 1, 2, 3].map((i) => (
-            <span key={i} className="os-wall-ring" style={{ animationDelay: `${i * 0.9}s` }} />
-          ))}
-          <svg className="os-wall-mark" viewBox="0 0 164 180">
-            <path d={MARK} />
-          </svg>
+          {!tone && (
+            <span className="os-wall-label">
+              <ImageIcon /> {t("os.wall.custom")}
+            </span>
+          )}
         </div>
-        {island && (
-          <div className="os-island">
+        {bar && (
+          <div className="os-bar">
+            <span className="os-bar-side">
+              <MarkIcon size="1em" />
+              <b>Rago Optimizer</b>
+            </span>
+            <span className="os-bar-side">
+              <Wifi />
+              <Volume2 />
+              <BatteryMedium />
+              <Search />
+              <SlidersHorizontal />
+              <span className="os-bar-clock">{time}</span>
+            </span>
+          </div>
+        )}
+        {features.island && (
+          <div className={`os-island${bar ? " notch" : ""}`}>
             <span className="os-island-art" />
             <span className="os-island-text">
               <b>{t("os.preview.song")}</b>
@@ -660,14 +786,31 @@ function OsPreview({ active, island }: { active: boolean; island: boolean }) {
             <i />
           </div>
         </div>
-        <div className="os-taskbar">
-          <span className="os-start">
-            <Mark size={11} />
-          </span>
-          {[0, 1, 2, 3, 4].map((i) => (
-            <span key={i} className={`os-app${i === 1 ? " on" : ""}`} />
-          ))}
-        </div>
+        {features.dock ? (
+          <div className="os-dock">
+            <span className="os-dock-icon rago on">
+              <MarkIcon size="1em" />
+            </span>
+            {DOCK.map(({ icon: Icon, tone: bg, open }, i) => (
+              <span key={i} className={`os-dock-icon${open ? " on" : ""}`} style={{ background: bg }}>
+                <Icon />
+              </span>
+            ))}
+            <i className="os-dock-sep" />
+            <span className="os-dock-icon glass">
+              <Download />
+            </span>
+            <span className="os-dock-icon glass">
+              <Trash2 />
+            </span>
+          </div>
+        ) : (
+          <div className="os-taskbar">
+            {[0, 1, 2, 3, 4, 5].map((i) => (
+              <span key={i} className={`os-app${i === 1 ? " on" : ""}`} />
+            ))}
+          </div>
+        )}
       </div>
     </div>
   );

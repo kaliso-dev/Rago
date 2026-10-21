@@ -52,6 +52,7 @@ const PEEK_VOLUME: u32 = 1600;
 const PEEK_DONE: u32 = 6000;
 const LINGER: u32 = 650;
 const DWELL: u32 = 180;
+const DWELL_BAR: u32 = 320;
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 enum View {
@@ -217,6 +218,8 @@ pub struct Island {
     hot: HWND,
     hot_rect: RECT,
     hot_on: bool,
+    /// la barre de Rago OS est là : l'île sort de son centre, qui remplace la zone de survol
+    bar: Option<RECT>,
     fonts: Fonts,
     wic: Option<IWICImagingFactory>,
     media: Snapshot,
@@ -269,6 +272,7 @@ impl Island {
             hot,
             hot_rect: RECT::default(),
             hot_on: false,
+            bar: None,
             fonts: Fonts::new(dev)?,
             wic,
             media: Snapshot::default(),
@@ -302,7 +306,9 @@ impl Island {
         let scale = m.scale;
         let cx = (m.work.left + m.work.right) / 2;
         let (pw, ph) = ((CW * scale).round() as i32, (CH * scale).round() as i32);
-        let (left, top) = (cx - pw / 2, m.work.top);
+        // sous la barre de Rago OS, l'île part du haut de l'écran et passe par-dessus la barre
+        let top = if self.bar.is_some() { m.rect.top } else { m.work.top };
+        let (left, top) = (cx - pw / 2, top);
         let same = self.win.as_ref().is_some_and(|w| w.scale == scale && w.left == left && w.top == top);
         if !same {
             if let Some(old) = self.win.take() {
@@ -320,7 +326,7 @@ impl Island {
             }
         }
         let hw = (HOT_W * scale).round() as i32;
-        self.hot_rect = RECT { left: cx - hw / 2, top: m.work.top, right: cx + hw / 2, bottom: m.work.top + 2 };
+        self.hot_rect = self.bar.unwrap_or(RECT { left: cx - hw / 2, top: m.work.top, right: cx + hw / 2, bottom: m.work.top + 2 });
         let r = self.hot_rect;
         unsafe {
             let _ = SetWindowPos(self.hot, Some(HWND_TOPMOST), r.left, r.top, r.right - r.left, r.bottom - r.top, SWP_NOACTIVATE);
@@ -331,7 +337,7 @@ impl Island {
     /// La zone de survol n'existe que là où elle ne prend les clics de personne (voir `screen::top_free`).
     fn update_hot(&mut self) {
         let r = self.hot_rect;
-        let on = !self.busy && screen::top_free((r.left + r.right) / 2, r.top);
+        let on = self.bar.is_none() && !self.busy && screen::top_free((r.left + r.right) / 2, r.top);
         if on != self.hot_on {
             self.hot_on = on;
             unsafe {
@@ -354,6 +360,15 @@ impl Island {
                 let _ = SetWindowPos(w.hwnd, Some(HWND_TOPMOST), 0, 0, 0, 0, SWP_NOMOVE | SWP_NOSIZE | SWP_NOACTIVATE | SWP_SHOWWINDOW);
             }
             self.shown = true;
+        }
+    }
+
+    /// Remet l'île devant la barre, quand celle-ci vient d'être (re)montrée.
+    pub fn raise(&self) {
+        if let (true, Some(w)) = (self.shown, &self.win) {
+            unsafe {
+                let _ = SetWindowPos(w.hwnd, Some(HWND_TOPMOST), 0, 0, 0, 0, SWP_NOMOVE | SWP_NOSIZE | SWP_NOACTIVATE);
+            }
         }
     }
 
@@ -471,6 +486,60 @@ impl Island {
         self.update_hot();
     }
 
+    /// Barre de Rago OS allumée (`zone` : son centre, en pixels physiques) ou éteinte.
+    pub fn set_bar(&mut self, zone: Option<RECT>) {
+        if zone != self.bar {
+            self.bar = zone;
+            if let Err(e) = self.layout() {
+                if lost(&e) {
+                    let _ = self.rebuild();
+                }
+            }
+            self.update_hot();
+        }
+    }
+
+    /// Souris dans le centre de la barre (`inside`) ou sortie de là : comme la zone de survol.
+    pub fn bar_hover(&mut self, inside: bool) {
+        if inside {
+            self.hot_enter();
+        } else if self.hot_tracked {
+            self.hot_leave();
+        }
+    }
+
+    /// Un minuteur tourne (le centre de contrôle propose alors de l'arrêter).
+    pub fn timer_running(&self) -> bool {
+        self.timer_end.is_some()
+    }
+
+    /// Clic au centre de la barre.
+    pub fn open(&mut self) {
+        if !self.busy {
+            self.go(View::Open);
+        }
+    }
+
+    fn hot_enter(&mut self) {
+        self.hot_tracked = true;
+        if !self.dwell && self.view != View::Open && !self.busy {
+            self.dwell = true;
+            // dans la barre, la souris passe souvent par le centre : il faut s'y arrêter un peu plus
+            self.timer(TIMER_DWELL, if self.bar.is_some() { DWELL_BAR } else { DWELL });
+        }
+    }
+
+    fn hot_leave(&mut self) {
+        self.hot_tracked = false;
+        if self.dwell {
+            self.dwell = false;
+            self.stop_timer(TIMER_DWELL);
+        }
+        if self.view == View::Open && !self.hovered {
+            self.timer(TIMER_HIDE, LINGER);
+        }
+    }
+
     pub fn set_fr(&mut self, fr: bool) {
         if fr != self.fr {
             self.fr = fr;
@@ -584,13 +653,9 @@ impl Island {
             }
             Event::Mouse { hwnd, .. } if hwnd == hot => {
                 if !self.hot_tracked {
-                    self.hot_tracked = true;
                     self.track(hwnd);
                 }
-                if !self.dwell && self.view != View::Open {
-                    self.dwell = true;
-                    self.timer(TIMER_DWELL, DWELL);
-                }
+                self.hot_enter();
             }
             Event::Leave { hwnd } if Some(hwnd) == island => {
                 self.hovered = false;
@@ -600,16 +665,7 @@ impl Island {
                     self.timer(TIMER_HIDE, LINGER);
                 }
             }
-            Event::Leave { hwnd } if hwnd == hot => {
-                self.hot_tracked = false;
-                if self.dwell {
-                    self.dwell = false;
-                    self.stop_timer(TIMER_DWELL);
-                }
-                if self.view == View::Open && !self.hovered {
-                    self.timer(TIMER_HIDE, LINGER);
-                }
-            }
+            Event::Leave { hwnd } if hwnd == hot => self.hot_leave(),
             Event::Click { hwnd, x, y } if Some(hwnd) == island => {
                 if self.view != View::Open {
                     self.go(View::Open);

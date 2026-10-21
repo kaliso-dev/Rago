@@ -1,5 +1,6 @@
 //! Volume du son : Windows prévient Rago Shell à chaque changement (touches du clavier, mélangeur, casque…) et quand la
-//! sortie par défaut change. Rien n'est lu en boucle, rien n'est modifié : l'île ne fait qu'afficher le niveau.
+//! sortie par défaut change. Rien n'est lu en boucle. L'île ne fait qu'afficher le niveau ; le centre de contrôle le
+//! règle, comme le curseur de Windows.
 
 use windows::core::{implement, Result, PCWSTR};
 use windows::Win32::Foundation::PROPERTYKEY;
@@ -75,6 +76,33 @@ impl Volume {
                 .and_then(|d| d.Activate::<IAudioEndpointVolume>(CLSCTX_ALL, None).ok())
                 .filter(|e| e.RegisterControlChangeNotify(&on_volume).is_ok());
             Some(Volume { enumerator, endpoint, on_volume, on_device })
+        }
+    }
+}
+
+impl Volume {
+    /// Niveau (0 à 1) et son coupé, de la sortie par défaut.
+    pub fn get(&self) -> Option<(f32, bool)> {
+        let e = self.endpoint.as_ref()?;
+        unsafe { Some((e.GetMasterVolumeLevelScalar().ok()?, e.GetMute().ok()?.as_bool())) }
+    }
+
+    pub fn set_level(&self, level: f32) {
+        if let Some(e) = &self.endpoint {
+            unsafe {
+                let _ = e.SetMasterVolumeLevelScalar(level.clamp(0.0, 1.0), std::ptr::null());
+                if level > 0.0 {
+                    let _ = e.SetMute(false, std::ptr::null());
+                }
+            }
+        }
+    }
+
+    pub fn set_mute(&self, muted: bool) {
+        if let Some(e) = &self.endpoint {
+            unsafe {
+                let _ = e.SetMute(muted, std::ptr::null());
+            }
         }
     }
 }

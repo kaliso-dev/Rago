@@ -8,7 +8,7 @@
 //! - state.rs : choix du joueur, ce qui a été retiré ou posé hors d'applied.json, journal de l'opération en cours
 //! - preflight.rs : vérifications avant l'activation
 //! - win.rs : actions sur Windows
-//! - resident.rs : Rago Shell (animation de démarrage, Dynamic Island)
+//! - resident.rs : Rago Shell (animation de démarrage, barre, Dock, recherche, centre de contrôle, Dynamic Island)
 //! - translucenttb.rs : barre des tâches transparente, en option
 
 pub mod catalog;
@@ -94,12 +94,36 @@ impl Host for Nothing {
     fn refresh(&self, _w: catalog::Refresh) {}
 }
 
-fn host(data_dir: &Path, resource_dir: &Path) -> Box<dyn Host> {
+/// Fonds unis livrés avec Rago OS (resources/os/wall-<id>.jpg), le premier par défaut.
+pub const WALLS: [&str; 6] = ["graphite", "nuit", "ardoise", "brume", "sauge", "prune"];
+
+/// Formats d'image que Windows sait poser en fond d'écran.
+const WALL_TYPES: [&str; 4] = ["jpg", "jpeg", "png", "bmp"];
+
+/// Fond d'écran de Rago OS choisi par le joueur.
+#[derive(Debug, Clone, PartialEq)]
+pub enum Wall {
+    Builtin(String),
+    /// image du joueur, copiée dans %LOCALAPPDATA%\Rago OS
+    Custom(PathBuf),
+}
+
+impl Wall {
+    fn of(s: &OsState) -> Wall {
+        match (s.wallpaper.as_deref(), &s.wallpaper_custom) {
+            (Some("custom"), Some(p)) => Wall::Custom(PathBuf::from(p)),
+            (Some(id), _) if WALLS.contains(&id) => Wall::Builtin(id.to_string()),
+            _ => Wall::Builtin(WALLS[0].to_string()),
+        }
+    }
+}
+
+fn host(data_dir: &Path, resource_dir: &Path, wall: Wall) -> Box<dyn Host> {
     #[cfg(windows)]
     if !cfg!(test) {
-        return Box::new(win::WinHost::new(data_dir, resource_dir));
+        return Box::new(win::WinHost::new(data_dir, resource_dir, wall));
     }
-    let _ = (data_dir, resource_dir);
+    let _ = (data_dir, resource_dir, wall);
     Box::new(Nothing)
 }
 
@@ -182,6 +206,10 @@ pub struct Overview {
     /// applications retirées que Windows n'a pas pu réinscrire : à réinstaller depuis le Store
     pub apps_to_reinstall: Vec<engine::Appx>,
     pub restore_point: Option<u64>,
+    /// fond choisi : une des `WALLS` ou « custom »
+    pub wallpaper: String,
+    /// nom de l'image du joueur, si elle a été choisie une fois
+    pub wallpaper_custom: Option<String>,
 }
 
 #[derive(Debug, Clone, Serialize)]
@@ -227,7 +255,7 @@ fn emit<S: Serialize>(e: Option<&Emit>, event: &str, payload: S) {
     }
 }
 
-pub const FEATURES: [&str; 3] = ["boot", "island", "translucenttb"];
+pub const FEATURES: [&str; 6] = ["boot", "island", "bar", "dock", "search", "translucenttb"];
 
 impl Os {
     pub fn new(data_dir: PathBuf, resource_dir: PathBuf) -> Self {
@@ -236,7 +264,8 @@ impl Os {
     }
 
     fn host(&self) -> Box<dyn Host> {
-        host(&self.data_dir, &self.resource_dir)
+        let wall = Wall::of(&self.state.lock().unwrap());
+        host(&self.data_dir, &self.resource_dir, wall)
     }
 
     pub fn is_running(&self) -> bool {
@@ -316,6 +345,11 @@ impl Os {
             },
             apps_to_reinstall,
             restore_point: s.restore_point,
+            wallpaper: match Wall::of(&s) {
+                Wall::Builtin(id) => id,
+                Wall::Custom(_) => "custom".into(),
+            },
+            wallpaper_custom: s.wallpaper_custom.as_deref().and_then(|p| Path::new(p).file_name()).map(|n| n.to_string_lossy().into_owned()),
         }
     }
 
@@ -498,7 +532,7 @@ impl Os {
 
         // Rago Shell et la barre transparente d'abord : plus rien de Rago OS à l'écran
         progress("features", 0, 0, None, "running", None);
-        resident::stop();
+        resident::stop(&self.resource_dir);
         let _ = resident::set_autostart(&self.resource_dir, false, &self.data_dir.join("run"));
         {
             let mut s = self.state.lock().unwrap();
@@ -600,17 +634,20 @@ impl Os {
         done
     }
 
-    /// Met les options (animation, Dynamic Island, barre transparente) en accord avec l'état : Rago Shell configuré et
-    /// lancé à l'ouverture de session s'il a quelque chose à faire, TranslucentTB réglé ou remis.
+    /// Met les options (animation, Dynamic Island, barre, Dock, recherche, barre transparente) en accord avec l'état :
+    /// Rago Shell configuré et lancé à l'ouverture de session s'il a quelque chose à faire, TranslucentTB réglé ou remis.
     pub fn sync_features(&self) -> Result<(), String> {
-        let (active, boot, island, ttb, ttb_saved) = {
+        let (active, ttb_saved, on) = {
             let s = self.state.lock().unwrap();
-            (s.active, s.feature("boot"), s.feature("island"), s.feature("translucenttb"), s.translucenttb.clone())
+            let on = |id: &str| s.active && s.feature(id);
+            let flags = resident::Config { boot: on("boot"), island: on("island"), bar: on("bar"), dock: on("dock"), search: on("search"), ttb_guard: on("translucenttb"), lang: String::new() };
+            (s.active, s.translucenttb.clone(), flags)
         };
+        let ttb = on.ttb_guard;
         let mut errors = Vec::new();
-        let shell = active && (boot || island);
+        let shell = on.boot || on.island || on.bar || on.dock || on.search;
         let lang = crate::background::Background::load(&self.data_dir, false).prefs().lang;
-        if let Err(e) = resident::write_config(&resident::Config { boot: active && boot, island: active && island, ttb_guard: active && ttb, lang }) {
+        if let Err(e) = resident::write_config(&resident::Config { lang, ..on }) {
             errors.push(e);
         }
         if resident::installed(&self.resource_dir) {
@@ -621,7 +658,7 @@ impl Os {
                 // déjà lancé : il relit ses options
                 let _ = resident::send(&self.resource_dir, &["--reload"]);
             } else {
-                resident::stop();
+                resident::stop(&self.resource_dir);
             }
         }
         match (active && ttb, ttb_saved) {
@@ -677,6 +714,67 @@ impl Os {
         r
     }
 
+    /// Fond d'écran choisi : une teinte de Rago OS, ou « custom » avec l'image du joueur (`path`, copiée). Rago OS actif :
+    /// le bureau, l'écran de verrouillage et le thème changent tout de suite ; le fond d'avant Rago OS reste noté.
+    pub fn set_wallpaper(&self, choice: &str, path: Option<&str>) -> Result<(), String> {
+        if choice != "custom" && !WALLS.contains(&choice) {
+            return Err("unknown wallpaper".into());
+        }
+        // une activation ou une restauration en cours pose ou remet déjà le fond
+        if self.is_running() {
+            return Err("os_running".into());
+        }
+        let custom = match (choice, path) {
+            ("custom", Some(p)) => Some(copy_custom_wall(Path::new(p))?),
+            ("custom", None) => {
+                let kept = self.state.lock().unwrap().wallpaper_custom.clone();
+                Some(kept.filter(|p| Path::new(p).is_file()).ok_or("no custom wallpaper")?)
+            }
+            _ => None,
+        };
+        let active = {
+            let mut s = self.state.lock().unwrap();
+            s.wallpaper = Some(choice.to_string());
+            if let Some(c) = &custom {
+                s.wallpaper_custom = Some(c.clone());
+            }
+            s.save();
+            s.active
+        };
+        let mut errors = Vec::new();
+        if active {
+            let host = self.host();
+            for what in [catalog::Native::Wallpaper, catalog::Native::Lockscreen, catalog::Native::Theme] {
+                let saved = self.state.lock().unwrap().natives.get(&what).cloned();
+                let Some(saved) = saved else { continue };
+                match host.native_update(what, &saved) {
+                    Ok(kept) => {
+                        let mut s = self.state.lock().unwrap();
+                        s.natives.insert(what, kept);
+                        s.save();
+                    }
+                    Err(e) => errors.push(format!("{what:?} : {e}")),
+                }
+            }
+        }
+        // les images du joueur choisies avant celle-ci ne servent plus
+        let keep = self.state.lock().unwrap().wallpaper_custom.clone();
+        if let Ok(rd) = std::fs::read_dir(resident::dir()) {
+            for e in rd.flatten() {
+                let p = e.path();
+                let name = e.file_name().to_string_lossy().into_owned();
+                if name.starts_with("wall-custom-") && keep.as_deref() != Some(&*p.to_string_lossy()) {
+                    let _ = std::fs::remove_file(&p);
+                }
+            }
+        }
+        if errors.is_empty() {
+            Ok(())
+        } else {
+            Err(errors.join(" ; "))
+        }
+    }
+
     /// Opération coupée abandonnée par le joueur : son journal est oublié (ce qui a été appliqué reste noté et se remet
     /// avec « Tout restaurer »).
     pub fn forget_job(&self) {
@@ -698,6 +796,23 @@ impl Os {
     pub fn interrupted_restore(&self) -> bool {
         self.state.lock().unwrap().job.as_ref().is_some_and(|j| j.kind == JobKind::Restore)
     }
+}
+
+/// Image du joueur copiée dans %LOCALAPPDATA%\Rago OS (elle peut être déplacée ou supprimée ensuite sans effet).
+fn copy_custom_wall(src: &Path) -> Result<String, String> {
+    let ext = src.extension().map(|e| e.to_string_lossy().to_ascii_lowercase()).unwrap_or_default();
+    if !WALL_TYPES.contains(&ext.as_str()) {
+        return Err("wallpaper_type".into());
+    }
+    let meta = std::fs::metadata(src).map_err(|e| e.to_string())?;
+    if !meta.is_file() || meta.len() == 0 || meta.len() > 64 * 1024 * 1024 {
+        return Err("wallpaper_size".into());
+    }
+    let dir = resident::dir();
+    std::fs::create_dir_all(&dir).map_err(|e| e.to_string())?;
+    let dst = dir.join(format!("wall-custom-{}.{ext}", now_ms()));
+    std::fs::copy(src, &dst).map_err(|e| e.to_string())?;
+    Ok(dst.to_string_lossy().into_owned())
 }
 
 /// Point de restauration système avant la première activation (même script que les réglages classiques).
@@ -723,7 +838,7 @@ pub fn uninstall(data_dir: &Path, resource_dir: &Path, ledger: &Mutex<Ledger>) {
     if os.needs_restore(&ledger.lock().unwrap()) {
         os.restore_now(ledger, None, &|| false);
     }
-    resident::stop();
+    resident::stop(resource_dir);
     let _ = resident::set_autostart(resource_dir, false, &data_dir.join("run"));
 }
 
@@ -758,6 +873,31 @@ mod tests {
         assert_eq!(d.failed, 0);
         assert!(!os.needs_restore(&ledger.lock().unwrap()));
         assert!(ledger.lock().unwrap().tweaks.is_empty());
+        let _ = std::fs::remove_dir_all(&dir);
+    }
+
+    #[test]
+    fn wallpaper_choice_is_kept_and_checked() {
+        let dir = temp("wall");
+        let os = Os::new(dir.clone(), dir.join("resources"));
+        let ledger = Mutex::new(Ledger::default());
+        assert_eq!(os.overview(&ledger).wallpaper, "graphite");
+        os.set_wallpaper("nuit", None).unwrap();
+        assert_eq!(os.overview(&ledger).wallpaper, "nuit");
+        assert!(os.set_wallpaper("rouge", None).is_err());
+        assert!(os.set_wallpaper("custom", None).is_err());
+        let img = dir.join("photo.png");
+        std::fs::write(&img, [0x89, b'P', b'N', b'G']).unwrap();
+        assert_eq!(os.set_wallpaper("custom", Some(&dir.join("notes.txt").to_string_lossy())), Err("wallpaper_type".into()));
+        os.set_wallpaper("custom", Some(&img.to_string_lossy())).unwrap();
+        let ov = os.overview(&ledger);
+        assert_eq!(ov.wallpaper, "custom");
+        let copy = os.state.lock().unwrap().wallpaper_custom.clone().unwrap();
+        assert!(Path::new(&copy).is_file() && ov.wallpaper_custom.is_some_and(|n| n.starts_with("wall-custom-")));
+        // retour à une teinte : l'image du joueur reste connue pour « Ton image »
+        os.set_wallpaper("graphite", None).unwrap();
+        assert!(Path::new(&copy).is_file());
+        let _ = std::fs::remove_file(&copy);
         let _ = std::fs::remove_dir_all(&dir);
     }
 

@@ -58,6 +58,12 @@ pub fn primary() -> Monitor {
     info(m).unwrap_or(Monitor { rect: r, work: r, scale: 1.0, primary: true })
 }
 
+/// Écran sous ce point (pixels physiques), ou le plus proche.
+pub fn monitor_at(x: i32, y: i32) -> Monitor {
+    let m = unsafe { MonitorFromPoint(POINT { x, y }, MONITOR_DEFAULTTONEAREST) };
+    info(m).unwrap_or_else(primary)
+}
+
 fn class(hwnd: HWND) -> String {
     let mut buf = [0u16; 64];
     let n = unsafe { GetClassNameW(hwnd, &mut buf) } as usize;

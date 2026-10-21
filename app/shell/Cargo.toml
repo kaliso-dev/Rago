@@ -1,7 +1,7 @@
 [package]
 name = "rago-shell"
 version = "1.2.0"
-description = "Rago Shell : animation de démarrage et Dynamic Island de Rago OS (Rago Optimizer)"
+description = "Rago Shell : bureau de Rago OS (barre, Dock, recherche, centre de contrôle, Dynamic Island, animation de démarrage)"
 authors = ["Rago"]
 edition = "2021"
 rust-version = "1.85"
@@ -15,10 +15,13 @@ windows-future = "0.3"
 windows-core = "0.62"
 windows-numerics = "0.3"
 windows = { version = "0.62", features = [
+    "Devices_Radios",
     "Foundation",
+    "Foundation_Collections",
     "Media_Control",
     "Storage_Streams",
     "Win32_Foundation",
+    "Win32_Globalization",
     "Win32_Graphics_Direct2D",
     "Win32_Graphics_Direct2D_Common",
     "Win32_Graphics_Direct3D",
@@ -29,19 +32,29 @@ windows = { version = "0.62", features = [
     "Win32_Graphics_Dxgi",
     "Win32_Graphics_Dxgi_Common",
     "Win32_Graphics_Gdi",
-    "Win32_Globalization",
     "Win32_Graphics_Imaging",
     "Win32_Media_Audio",
     "Win32_Media_Audio_Endpoints",
+    "Win32_NetworkManagement_IpHelper",
+    "Win32_NetworkManagement_Ndis",
+    "Win32_Networking_WinSock",
     "Win32_Security",
+    "Win32_Storage_EnhancedStorage",
+    "Win32_Storage_Packaging_Appx",
     "Win32_System_Com",
     "Win32_System_Com_StructuredStorage",
     "Win32_System_DataExchange",
     "Win32_System_Diagnostics_Debug",
     "Win32_System_Diagnostics_ToolHelp",
     "Win32_System_LibraryLoader",
+    "Win32_System_Memory",
+    "Win32_System_Ole",
     "Win32_System_Performance",
+    "Win32_System_Power",
+    "Win32_System_Registry",
+    "Win32_System_Shutdown",
     "Win32_System_SystemInformation",
+    "Win32_System_SystemServices",
     "Win32_System_Threading",
     "Win32_System_Variant",
     "Win32_UI_Accessibility",

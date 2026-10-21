@@ -106,10 +106,10 @@ def argb(rgb, alpha='c4'):
     return int(alpha + rgb, 16)
 
 
-# Couleurs de la charte (brand/tokens/tokens.json) : un seul rouge, beaucoup de noir. Les teintes sombres servent à la
-# barre des tâches et au menu Démarrer : un noir légèrement rouge plutôt qu'un aplat rouge.
-RED = 'FF3B30'
-PALETTE = ['FFB4AE', 'FF8A82', 'FF5E55', RED, 'C9221A', '6B130E', '2E0A08', '2A2A30']
+# Accent de Rago OS : un graphite neutre, comme le « Graphite » de macOS. Le rouge de la marque reste dans l'app ; sur
+# le bureau, Démarrer et la barre des tâches gardent le noir de Windows (ColorPrevalence à 0), sans teinte.
+GRAPHITE = '8A8E96'
+PALETTE = ['E3E5E8', 'C4C7CC', 'A2A6AD', GRAPHITE, '6B6F77', '45484E', '2B2D31', '222327']
 
 CATEGORIES = [
     {'id': 'privacy', 'icon': 'shield',
@@ -142,8 +142,8 @@ CATEGORIES = [
                "Extensions de fichiers visibles, barre des tâches épurée et menu clic droit classique si tu le veux.")},
     {'id': 'brand', 'icon': 'palette',
      'name': T('Rago look', 'Look Rago'),
-     'lead': T('Dark mode, Rago red, glass, wallpaper and lock screen, applied through Windows settings only.',
-               "Mode sombre, rouge Rago, verre, fond d'écran et écran de verrouillage, uniquement par les réglages de Windows.")},
+     'lead': T('Dark mode, graphite accent, glass, a plain wallpaper of your choice and the lock screen, applied through Windows settings only.',
+               "Mode sombre, accent graphite, verre, un fond uni au choix et l'écran de verrouillage, uniquement par les réglages de Windows.")},
 ]
 
 PROFILES = [
@@ -443,31 +443,27 @@ TWEAKS = [
                  reg(PERSONALIZE, 'SystemUsesLightTheme', 0),
                  reg(PERSONALIZE, 'EnableTransparency', 1)]},
     {'id': 'brand.accent', 'category': 'brand', 'profiles': ALL, 'reboot': 'explorer', 'refresh': ['immersive'], 'source': DOC['accent'],
-     'name': T('Rago red accent', 'Accent rouge Rago'),
-     'desc': T('Rago red (#FF3B30) becomes the Windows accent color: buttons, links, toggles, selection. Start and the taskbar take a deep red-tinted black.',
-               "Le rouge Rago (#FF3B30) devient la couleur d'accent de Windows : boutons, liens, interrupteurs, sélection. Démarrer et la barre des tâches prennent un noir teinté de rouge."),
+     'name': T('Graphite accent', 'Accent graphite'),
+     'desc': T('A neutral graphite becomes the Windows accent color: buttons, links, toggles, selection. Start, the taskbar and title bars stay plain black, with no colored tint.',
+               "Un graphite neutre devient la couleur d'accent de Windows : boutons, liens, interrupteurs, sélection. Démarrer, la barre des tâches et les barres de titre restent d'un noir uni, sans teinte de couleur."),
      'actions': [reg(r'HKCU\Software\Microsoft\Windows\CurrentVersion\Explorer\Accent', 'AccentPalette', palette(PALETTE), 'binary'),
-                 reg(r'HKCU\Software\Microsoft\Windows\CurrentVersion\Explorer\Accent', 'AccentColorMenu', abgr(RED)),
-                 reg(r'HKCU\Software\Microsoft\Windows\CurrentVersion\Explorer\Accent', 'StartColorMenu', abgr(PALETTE[5])),
-                 reg(r'HKCU\Software\Microsoft\Windows\DWM', 'AccentColor', abgr(RED)),
-                 reg(r'HKCU\Software\Microsoft\Windows\DWM', 'ColorizationColor', argb(RED)),
-                 reg(r'HKCU\Software\Microsoft\Windows\DWM', 'ColorizationAfterglow', argb(RED)),
+                 reg(r'HKCU\Software\Microsoft\Windows\CurrentVersion\Explorer\Accent', 'AccentColorMenu', abgr(GRAPHITE)),
+                 reg(r'HKCU\Software\Microsoft\Windows\CurrentVersion\Explorer\Accent', 'StartColorMenu', abgr(PALETTE[6])),
+                 reg(r'HKCU\Software\Microsoft\Windows\DWM', 'AccentColor', abgr(GRAPHITE)),
+                 reg(r'HKCU\Software\Microsoft\Windows\DWM', 'ColorizationColor', argb(GRAPHITE)),
+                 reg(r'HKCU\Software\Microsoft\Windows\DWM', 'ColorizationAfterglow', argb(GRAPHITE)),
+                 reg(r'HKCU\Software\Microsoft\Windows\DWM', 'ColorPrevalence', 0),
                  reg(r'HKCU\Control Panel\Desktop', 'AutoColorization', 0),
-                 reg(PERSONALIZE, 'ColorPrevalence', 1)]},
-    {'id': 'brand.titlebars', 'category': 'brand', 'profiles': [], 'reboot': 'none', 'refresh': ['immersive'], 'source': DOC['accent'],
-     'name': T('Red title bars and borders', 'Barres de titre et bordures rouges'),
-     'desc': T('Active windows get a Rago red title bar and border. Off by default: the brand is mostly black.',
-               "Les fenêtres actives ont une barre de titre et une bordure rouge Rago. Coupé par défaut : la marque est surtout noire."),
-     'actions': [reg(r'HKCU\Software\Microsoft\Windows\DWM', 'ColorPrevalence', 1)]},
+                 reg(PERSONALIZE, 'ColorPrevalence', 0)]},
     {'id': 'brand.wallpaper', 'category': 'brand', 'profiles': ALL, 'reboot': 'none', 'source': DOC['wallpaper'],
-     'name': T('Rago OS wallpaper', "Fond d'écran Rago OS"),
-     'desc': T('Sets the Rago OS wallpaper on every screen. Your wallpaper, slideshow and its settings come back when you turn Rago OS off.',
-               "Pose le fond d'écran Rago OS sur tous les écrans. Ton fond, ton diaporama et leurs réglages reviennent quand tu désactives Rago OS."),
+     'name': T('Plain Rago OS wallpaper', "Fond d'écran uni Rago OS"),
+     'desc': T('Sets a plain, logo-free wallpaper on every screen: graphite by default, another tone or your own picture, chosen on the Rago OS page. Your wallpaper, slideshow and its settings come back when you turn Rago OS off.',
+               "Pose un fond uni, sans logo, sur tous les écrans : graphite par défaut, une autre teinte ou ta propre image, au choix dans la page Rago OS. Ton fond, ton diaporama et leurs réglages reviennent quand tu désactives Rago OS."),
      'actions': [native('wallpaper')]},
     {'id': 'brand.lockscreen', 'category': 'brand', 'profiles': ALL, 'reboot': 'none', 'source': DOC['lockscreen'],
      'name': T('Rago OS lock screen', 'Écran de verrouillage Rago OS'),
-     'desc': T('The lock screen shows the Rago OS picture instead of Windows Spotlight.',
-               "L'écran de verrouillage affiche l'image Rago OS au lieu de Windows à la une."),
+     'desc': T('The lock screen shows the same wallpaper as the desktop instead of Windows Spotlight.',
+               "L'écran de verrouillage affiche le même fond que le bureau au lieu de Windows à la une."),
      'actions': [reg(CDM, 'RotatingLockScreenEnabled', 0), native('lockscreen')]},
     {'id': 'brand.theme', 'category': 'brand', 'profiles': ALL, 'reboot': 'none', 'source': DOC['theme'],
      'name': T('"Rago OS" theme in Settings', 'Thème « Rago OS » dans les Paramètres'),
@@ -528,14 +524,26 @@ FEATURES = [
      'name': T('Rago OS startup animation', 'Animation de démarrage Rago OS'),
      'desc': T('When you sign in, Rago OS covers the desktop while Windows loads, then reveals it. About 3 seconds; click or Esc to skip.',
                "À l'ouverture de session, Rago OS couvre le bureau pendant que Windows charge, puis le dévoile. Environ 3 secondes ; un clic ou Échap pour passer.")},
+    {'id': 'bar', 'default': True,
+     'name': T('Rago OS bar', 'Barre Rago OS'),
+     'desc': T('A glass bar along the top of the screen, like on a Mac: the Rago menu (sleep, restart, lock…), the app in front and its menu, then Wi‑Fi, sound, battery, search, the control center and the clock. Maximized windows stop below it.',
+               "Une barre de verre en haut de l'écran, comme sur un Mac : le menu Rago (veille, redémarrer, verrouiller…), l'appli au premier plan et son menu, puis le Wi‑Fi, le son, la batterie, la recherche, le centre de contrôle et l'heure. Les fenêtres agrandies s'arrêtent dessous.")},
+    {'id': 'dock', 'default': True,
+     'name': T('Rago OS Dock', 'Dock Rago OS'),
+     'desc': T('Replaces the Windows taskbar with a rounded glass Dock: all your apps, the ones you keep, the open ones (a dot below), Downloads and the Recycle Bin. Right-click an icon for its windows. The taskbar comes back as it was when the Dock is off.',
+               "Remplace la barre des tâches de Windows par un Dock de verre arrondi : toutes tes applis, celles que tu gardes, celles qui sont ouvertes (un point dessous), Téléchargements et la corbeille. Clic droit sur une icône pour ses fenêtres. La barre des tâches revient comme avant quand le Dock est coupé.")},
+    {'id': 'search', 'default': True,
+     'name': T('Rago Search (Alt+Space)', 'Recherche Rago (Alt+Espace)'),
+     'desc': T('Alt+Space opens a search field in the middle of the screen: apps, Windows settings, recent files, calculations, timers, PC actions and web search. Empty, it shows all your apps. The shortcut is left to the game while you play.',
+               "Alt+Espace ouvre un champ de recherche au milieu de l'écran : applis, réglages de Windows, fichiers récents, calculs, minuteurs, actions du PC et recherche sur le web. Vide, il montre toutes tes applis. Le raccourci est laissé au jeu pendant que tu joues.")},
     {'id': 'island', 'default': True,
      'name': T('Dynamic Island', 'Dynamic Island'),
-     'desc': T('A black pill at the top of the screen that opens when something happens: music with play/pause/next, volume, and a timer. Hidden while a game or a full-screen app is in front.',
-               "Une pastille noire en haut de l'écran, qui s'ouvre quand il se passe quelque chose : musique avec lecture/pause/suivant, volume et minuteur. Cachée quand un jeu ou une appli plein écran est devant.")},
+     'desc': T('A black pill in the middle of the top of the screen that opens when something happens: music with play/pause/next, volume, and a timer. Hover the middle of the Rago OS bar to open it. Hidden while a game or a full-screen app is in front.',
+               "Une pastille noire au milieu du haut de l'écran, qui s'ouvre quand il se passe quelque chose : musique avec lecture/pause/suivant, volume et minuteur. Passe la souris au milieu de la barre Rago OS pour l'ouvrir. Cachée quand un jeu ou une appli plein écran est devant.")},
     {'id': 'translucenttb', 'default': False,
      'name': T('Fully transparent taskbar', 'Barre des tâches entièrement transparente'),
-     'desc': T('Uses TranslucentTB (free, from the Microsoft Store) set to Rago colors. Turned off automatically if Explorer restarts in a loop.',
-               "Utilise TranslucentTB (gratuit, sur le Microsoft Store) réglé aux couleurs Rago. Coupé automatiquement si l'Explorateur redémarre en boucle.")},
+     'desc': T('For those who keep the Windows taskbar instead of the Dock. Uses TranslucentTB (free, from the Microsoft Store). Turned off automatically if Explorer restarts in a loop.',
+               "Pour qui garde la barre des tâches de Windows à la place du Dock. Utilise TranslucentTB (gratuit, sur le Microsoft Store). Coupé automatiquement si l'Explorateur redémarre en boucle.")},
 ]
 
 TYPES = {'dword', 'sz', 'binary'}

@@ -55,6 +55,11 @@ pub trait Host {
     fn native_revert(&self, what: Native, saved: &serde_json::Value) -> Result<(), String>;
     /// L'action native est-elle toujours en place ?
     fn native_in_place(&self, what: Native, saved: &serde_json::Value) -> bool;
+    /// Repose l'action native (choix du joueur changé, ou remise par Windows) en gardant l'état d'avant Rago OS ;
+    /// renvoie ce qu'il faut garder désormais.
+    fn native_update(&self, what: Native, saved: &serde_json::Value) -> Result<serde_json::Value, String> {
+        self.native_apply(what).map(|_| saved.clone())
+    }
     fn refresh(&self, what: Refresh);
 }
 
@@ -211,9 +216,12 @@ pub fn apply(host: &dyn Host, save: &dyn Save, ledger: &mut Ledger, state: &mut 
             if !force || host.native_in_place(what, saved) {
                 continue;
             }
-            match host.native_apply(what) {
-                // reposée à la demande : l'état d'avant gardé reste celui d'origine
-                Ok(_) => out.changed += 1,
+            // reposée à la demande : l'état d'avant gardé reste celui d'origine
+            match host.native_update(what, saved) {
+                Ok(kept) => {
+                    state.natives.insert(what, kept);
+                    out.changed += 1;
+                }
                 Err(e) => out.errors.push(format!("{what:?} : {e}")),
             }
             continue;

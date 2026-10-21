@@ -134,6 +134,11 @@ impl Media {
         Some(Media { inner, token })
     }
 
+    /// État du moment sans le marquer comme lu (l'île garde ses « changé »).
+    pub fn peek(&self) -> Snapshot {
+        self.inner.snap.lock().unwrap().clone()
+    }
+
     pub fn snapshot(&self) -> Snapshot {
         let mut s = self.inner.snap.lock().unwrap();
         let out = s.clone();

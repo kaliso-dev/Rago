@@ -32,6 +32,8 @@ pub const INK: u32 = 0x070708;
 pub const TEXT: u32 = 0xF5F5F6;
 pub const TEXT2: u32 = 0xA1A1AA;
 pub const TEXT3: u32 = 0x7C7C86;
+/// teinte du verre (posée sur le flou de Windows)
+pub const GLASS: u32 = 0x1C1C21;
 
 pub fn rect(x: f32, y: f32, w: f32, h: f32) -> D2D_RECT_F {
     D2D_RECT_F { left: x, top: y, right: x + w, bottom: y + h }
@@ -80,6 +82,20 @@ impl Device {
             let trimming = DWRITE_TRIMMING { granularity: DWRITE_TRIMMING_GRANULARITY_CHARACTER, delimiter: 0, delimiterCount: 0 };
             f.SetTrimming(&trimming, &sign)?;
             Ok(f)
+        }
+    }
+
+    /// Largeur du texte posé avec ce format (pour centrer ou coller les éléments de la barre).
+    pub fn measure(&self, s: &str, format: &IDWriteTextFormat) -> f32 {
+        let w: Vec<u16> = s.encode_utf16().collect();
+        unsafe {
+            self.dwrite
+                .CreateTextLayout(&w, format, 4000.0, 200.0)
+                .and_then(|l| {
+                    let mut m = DWRITE_TEXT_METRICS::default();
+                    l.GetMetrics(&mut m).map(|_| m.widthIncludingTrailingWhitespace)
+                })
+                .unwrap_or(0.0)
         }
     }
 
@@ -241,6 +257,69 @@ impl Surface {
     pub fn transform(&self, m: Matrix3x2) {
         unsafe { self.ctx.SetTransform(&m) }
     }
+
+    /// Nouvelle taille (pixels physiques) ou nouvelle échelle : mêmes tampons, redimensionnés.
+    pub fn resize(&self, w: u32, h: u32, scale: f32) -> Result<()> {
+        unsafe {
+            self.ctx.SetTarget(None::<&ID2D1Image>);
+            self.swap.ResizeBuffers(0, w.max(1), h.max(1), DXGI_FORMAT_UNKNOWN, DXGI_SWAP_CHAIN_FLAG(0))?;
+            let surface: IDXGISurface = self.swap.GetBuffer(0)?;
+            let props = D2D1_BITMAP_PROPERTIES1 {
+                pixelFormat: D2D1_PIXEL_FORMAT { format: DXGI_FORMAT_B8G8R8A8_UNORM, alphaMode: D2D1_ALPHA_MODE_PREMULTIPLIED },
+                dpiX: 96.0 * scale,
+                dpiY: 96.0 * scale,
+                bitmapOptions: D2D1_BITMAP_OPTIONS_TARGET | D2D1_BITMAP_OPTIONS_CANNOT_DRAW,
+                colorContext: ManuallyDrop::new(None),
+            };
+            let bitmap = self.ctx.CreateBitmapFromDxgiSurface(&surface, Some(&props))?;
+            self.ctx.SetTarget(&bitmap);
+            self.ctx.SetDpi(96.0 * scale, 96.0 * scale);
+            Ok(())
+        }
+    }
+
+    pub fn outline(&self, r: D2D_RECT_F, radius: f32, brush: &ID2D1Brush, width: f32) {
+        unsafe { self.ctx.DrawRoundedRectangle(&D2D1_ROUNDED_RECT { rect: r, radiusX: radius, radiusY: radius }, brush, width, None) }
+    }
+
+    pub fn line(&self, x0: f32, y0: f32, x1: f32, y1: f32, brush: &ID2D1Brush, width: f32) {
+        unsafe { self.ctx.DrawLine(Vector2 { X: x0, Y: y0 }, Vector2 { X: x1, Y: y1 }, brush, width, None) }
+    }
+
+    pub fn dot(&self, cx: f32, cy: f32, r: f32, brush: &ID2D1Brush) {
+        unsafe { self.ctx.FillEllipse(&D2D1_ELLIPSE { point: Vector2 { X: cx, Y: cy }, radiusX: r, radiusY: r }, brush) }
+    }
+
+    pub fn ring(&self, cx: f32, cy: f32, r: f32, brush: &ID2D1Brush, width: f32) {
+        unsafe { self.ctx.DrawEllipse(&D2D1_ELLIPSE { point: Vector2 { X: cx, Y: cy }, radiusX: r, radiusY: r }, brush, width, None) }
+    }
+
+    /// Verre de Rago OS posé sur le flou de Windows : teinte sombre, reflet léger en haut et liseré clair.
+    pub fn glass(&self, r: D2D_RECT_F, radius: f32, tint: f32) -> Result<()> {
+        let fill = self.brush(GLASS, tint)?;
+        self.pill(r, radius, &fill);
+        unsafe {
+            let stops = [
+                D2D1_GRADIENT_STOP { position: 0.0, color: rgba(0xFFFFFF, 0.07) },
+                D2D1_GRADIENT_STOP { position: 1.0, color: rgba(0xFFFFFF, 0.0) },
+            ];
+            let collection = ID2D1RenderTarget::CreateGradientStopCollection(&self.ctx, &stops, D2D1_GAMMA_2_2, D2D1_EXTEND_MODE_CLAMP)?;
+            let h = (r.bottom - r.top).min(48.0);
+            let props = D2D1_LINEAR_GRADIENT_BRUSH_PROPERTIES { startPoint: Vector2 { X: 0.0, Y: r.top }, endPoint: Vector2 { X: 0.0, Y: r.top + h } };
+            let sheen = self.ctx.CreateLinearGradientBrush(&props, None, &collection)?;
+            self.pill(r, radius, &sheen);
+        }
+        let rim = self.brush(0xFFFFFF, 0.11)?;
+        let inner = D2D_RECT_F { left: r.left + 0.5, top: r.top + 0.5, right: r.right - 0.5, bottom: r.bottom - 0.5 };
+        self.outline(inner, (radius - 0.5).max(0.0), &rim, 1.0);
+        Ok(())
+    }
+}
+
+/// Carte graphique perdue (pilote mis à jour, mise en veille…) : tout est à recréer.
+pub fn lost(e: &windows::core::Error) -> bool {
+    let c = e.code();
+    c == DXGI_ERROR_DEVICE_REMOVED || c == DXGI_ERROR_DEVICE_RESET || c == windows::Win32::Foundation::D2DERR_RECREATE_TARGET
 }
 
 /// Transformation qui pose une forme de `w` × `h` à la taille `scale`, centrée sur (`cx`, `cy`).

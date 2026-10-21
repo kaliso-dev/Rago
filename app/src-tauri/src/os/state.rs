@@ -52,7 +52,7 @@ pub struct OsState {
     /// réglages choisis par le joueur (profil + mode avancé)
     #[serde(default)]
     pub selection: Vec<String>,
-    /// animation de démarrage, Dynamic Island, barre transparente
+    /// animation de démarrage, Dynamic Island, barre, Dock, recherche, barre transparente
     #[serde(default)]
     pub features: BTreeMap<String, bool>,
     #[serde(default)]
@@ -81,6 +81,12 @@ pub struct OsState {
     /// barre des tâches transparente : réglages de TranslucentTB d'avant (None : aucun fichier)
     #[serde(default)]
     pub translucenttb: Option<super::translucenttb::Saved>,
+    /// fond d'écran choisi : une teinte de Rago OS (`WALLS`) ou « custom » (None : graphite)
+    #[serde(default)]
+    pub wallpaper: Option<String>,
+    /// image du joueur, copiée dans %LOCALAPPDATA%\Rago OS
+    #[serde(default)]
+    pub wallpaper_custom: Option<String>,
     #[serde(skip)]
     path: PathBuf,
 }

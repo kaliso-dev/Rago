@@ -9,6 +9,12 @@ use std::path::PathBuf;
 pub struct Config {
     pub boot: bool,
     pub island: bool,
+    /// barre de Rago OS en haut de l'écran
+    pub bar: bool,
+    /// Dock en bas, à la place de la barre des tâches
+    pub dock: bool,
+    /// Recherche Rago (Alt+Espace)
+    pub search: bool,
     pub ttb_guard: bool,
     pub lang: String,
 }
@@ -109,7 +115,8 @@ mod tests {
     fn config_defaults_to_nothing_and_french() {
         let c: Config = serde_json::from_str("{}").unwrap();
         assert!(!c.boot && !c.island && c.fr());
-        let c: Config = serde_json::from_str(r#"{"island":true,"lang":"en"}"#).unwrap();
-        assert!(c.island && !c.fr());
+        assert!(!c.bar && !c.dock && !c.search);
+        let c: Config = serde_json::from_str(r#"{"island":true,"lang":"en","dock":true}"#).unwrap();
+        assert!(c.island && !c.fr() && c.dock && !c.bar);
     }
 }

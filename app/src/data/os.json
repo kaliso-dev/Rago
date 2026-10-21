@@ -93,8 +93,8 @@
     "fr": "Look Rago"
    },
    "lead": {
-    "en": "Dark mode, Rago red, glass, wallpaper and lock screen, applied through Windows settings only.",
-    "fr": "Mode sombre, rouge Rago, verre, fond d'écran et écran de verrouillage, uniquement par les réglages de Windows."
+    "en": "Dark mode, graphite accent, glass, a plain wallpaper of your choice and the lock screen, applied through Windows settings only.",
+    "fr": "Mode sombre, accent graphite, verre, un fond uni au choix et l'écran de verrouillage, uniquement par les réglages de Windows."
    }
   }
  ],
@@ -162,6 +162,42 @@
    }
   },
   {
+   "id": "bar",
+   "default": true,
+   "name": {
+    "en": "Rago OS bar",
+    "fr": "Barre Rago OS"
+   },
+   "desc": {
+    "en": "A glass bar along the top of the screen, like on a Mac: the Rago menu (sleep, restart, lock…), the app in front and its menu, then Wi‑Fi, sound, battery, search, the control center and the clock. Maximized windows stop below it.",
+    "fr": "Une barre de verre en haut de l'écran, comme sur un Mac : le menu Rago (veille, redémarrer, verrouiller…), l'appli au premier plan et son menu, puis le Wi‑Fi, le son, la batterie, la recherche, le centre de contrôle et l'heure. Les fenêtres agrandies s'arrêtent dessous."
+   }
+  },
+  {
+   "id": "dock",
+   "default": true,
+   "name": {
+    "en": "Rago OS Dock",
+    "fr": "Dock Rago OS"
+   },
+   "desc": {
+    "en": "Replaces the Windows taskbar with a rounded glass Dock: all your apps, the ones you keep, the open ones (a dot below), Downloads and the Recycle Bin. Right-click an icon for its windows. The taskbar comes back as it was when the Dock is off.",
+    "fr": "Remplace la barre des tâches de Windows par un Dock de verre arrondi : toutes tes applis, celles que tu gardes, celles qui sont ouvertes (un point dessous), Téléchargements et la corbeille. Clic droit sur une icône pour ses fenêtres. La barre des tâches revient comme avant quand le Dock est coupé."
+   }
+  },
+  {
+   "id": "search",
+   "default": true,
+   "name": {
+    "en": "Rago Search (Alt+Space)",
+    "fr": "Recherche Rago (Alt+Espace)"
+   },
+   "desc": {
+    "en": "Alt+Space opens a search field in the middle of the screen: apps, Windows settings, recent files, calculations, timers, PC actions and web search. Empty, it shows all your apps. The shortcut is left to the game while you play.",
+    "fr": "Alt+Espace ouvre un champ de recherche au milieu de l'écran : applis, réglages de Windows, fichiers récents, calculs, minuteurs, actions du PC et recherche sur le web. Vide, il montre toutes tes applis. Le raccourci est laissé au jeu pendant que tu joues."
+   }
+  },
+  {
    "id": "island",
    "default": true,
    "name": {
@@ -169,8 +205,8 @@
     "fr": "Dynamic Island"
    },
    "desc": {
-    "en": "A black pill at the top of the screen that opens when something happens: music with play/pause/next, volume, and a timer. Hidden while a game or a full-screen app is in front.",
-    "fr": "Une pastille noire en haut de l'écran, qui s'ouvre quand il se passe quelque chose : musique avec lecture/pause/suivant, volume et minuteur. Cachée quand un jeu ou une appli plein écran est devant."
+    "en": "A black pill in the middle of the top of the screen that opens when something happens: music with play/pause/next, volume, and a timer. Hover the middle of the Rago OS bar to open it. Hidden while a game or a full-screen app is in front.",
+    "fr": "Une pastille noire au milieu du haut de l'écran, qui s'ouvre quand il se passe quelque chose : musique avec lecture/pause/suivant, volume et minuteur. Passe la souris au milieu de la barre Rago OS pour l'ouvrir. Cachée quand un jeu ou une appli plein écran est devant."
    }
   },
   {
@@ -181,8 +217,8 @@
     "fr": "Barre des tâches entièrement transparente"
    },
    "desc": {
-    "en": "Uses TranslucentTB (free, from the Microsoft Store) set to Rago colors. Turned off automatically if Explorer restarts in a loop.",
-    "fr": "Utilise TranslucentTB (gratuit, sur le Microsoft Store) réglé aux couleurs Rago. Coupé automatiquement si l'Explorateur redémarre en boucle."
+    "en": "For those who keep the Windows taskbar instead of the Dock. Uses TranslucentTB (free, from the Microsoft Store). Turned off automatically if Explorer restarts in a loop.",
+    "fr": "Pour qui garde la barre des tâches de Windows à la place du Dock. Utilise TranslucentTB (gratuit, sur le Microsoft Store). Coupé automatiquement si l'Explorateur redémarre en boucle."
    }
   }
  ],
@@ -1730,12 +1766,12 @@
    ],
    "source": "https://learn.microsoft.com/windows/apps/design/style/color",
    "name": {
-    "en": "Rago red accent",
-    "fr": "Accent rouge Rago"
+    "en": "Graphite accent",
+    "fr": "Accent graphite"
    },
    "desc": {
-    "en": "Rago red (#FF3B30) becomes the Windows accent color: buttons, links, toggles, selection. Start and the taskbar take a deep red-tinted black.",
-    "fr": "Le rouge Rago (#FF3B30) devient la couleur d'accent de Windows : boutons, liens, interrupteurs, sélection. Démarrer et la barre des tâches prennent un noir teinté de rouge."
+    "en": "A neutral graphite becomes the Windows accent color: buttons, links, toggles, selection. Start, the taskbar and title bars stay plain black, with no colored tint.",
+    "fr": "Un graphite neutre devient la couleur d'accent de Windows : boutons, liens, interrupteurs, sélection. Démarrer, la barre des tâches et les barres de titre restent d'un noir uni, sans teinte de couleur."
    },
    "actions": [
     {
@@ -1743,42 +1779,49 @@
      "key": "HKCU\\Software\\Microsoft\\Windows\\CurrentVersion\\Explorer\\Accent",
      "name": "AccentPalette",
      "type": "binary",
-     "value": "ffb4ae00ff8a8200ff5e5500ff3b3000c9221a006b130e002e0a08002a2a3000"
+     "value": "e3e5e800c4c7cc00a2a6ad008a8e96006b6f770045484e002b2d310022232700"
     },
     {
      "do": "reg",
      "key": "HKCU\\Software\\Microsoft\\Windows\\CurrentVersion\\Explorer\\Accent",
      "name": "AccentColorMenu",
      "type": "dword",
-     "value": 4281351167
+     "value": 4288056970
     },
     {
      "do": "reg",
      "key": "HKCU\\Software\\Microsoft\\Windows\\CurrentVersion\\Explorer\\Accent",
      "name": "StartColorMenu",
      "type": "dword",
-     "value": 4279112555
+     "value": 4281412907
     },
     {
      "do": "reg",
      "key": "HKCU\\Software\\Microsoft\\Windows\\DWM",
      "name": "AccentColor",
      "type": "dword",
-     "value": 4281351167
+     "value": 4288056970
     },
     {
      "do": "reg",
      "key": "HKCU\\Software\\Microsoft\\Windows\\DWM",
      "name": "ColorizationColor",
      "type": "dword",
-     "value": 3305061168
+     "value": 3297414806
     },
     {
      "do": "reg",
      "key": "HKCU\\Software\\Microsoft\\Windows\\DWM",
      "name": "ColorizationAfterglow",
      "type": "dword",
-     "value": 3305061168
+     "value": 3297414806
+    },
+    {
+     "do": "reg",
+     "key": "HKCU\\Software\\Microsoft\\Windows\\DWM",
+     "name": "ColorPrevalence",
+     "type": "dword",
+     "value": 0
     },
     {
      "do": "reg",
@@ -1792,34 +1835,7 @@
      "key": "HKCU\\Software\\Microsoft\\Windows\\CurrentVersion\\Themes\\Personalize",
      "name": "ColorPrevalence",
      "type": "dword",
-     "value": 1
-    }
-   ]
-  },
-  {
-   "id": "brand.titlebars",
-   "category": "brand",
-   "profiles": [],
-   "reboot": "none",
-   "refresh": [
-    "immersive"
-   ],
-   "source": "https://learn.microsoft.com/windows/apps/design/style/color",
-   "name": {
-    "en": "Red title bars and borders",
-    "fr": "Barres de titre et bordures rouges"
-   },
-   "desc": {
-    "en": "Active windows get a Rago red title bar and border. Off by default: the brand is mostly black.",
-    "fr": "Les fenêtres actives ont une barre de titre et une bordure rouge Rago. Coupé par défaut : la marque est surtout noire."
-   },
-   "actions": [
-    {
-     "do": "reg",
-     "key": "HKCU\\Software\\Microsoft\\Windows\\DWM",
-     "name": "ColorPrevalence",
-     "type": "dword",
-     "value": 1
+     "value": 0
     }
    ]
   },
@@ -1835,12 +1851,12 @@
    "reboot": "none",
    "source": "https://learn.microsoft.com/windows/win32/api/shobjidl_core/nn-shobjidl_core-idesktopwallpaper",
    "name": {
-    "en": "Rago OS wallpaper",
-    "fr": "Fond d'écran Rago OS"
+    "en": "Plain Rago OS wallpaper",
+    "fr": "Fond d'écran uni Rago OS"
    },
    "desc": {
-    "en": "Sets the Rago OS wallpaper on every screen. Your wallpaper, slideshow and its settings come back when you turn Rago OS off.",
-    "fr": "Pose le fond d'écran Rago OS sur tous les écrans. Ton fond, ton diaporama et leurs réglages reviennent quand tu désactives Rago OS."
+    "en": "Sets a plain, logo-free wallpaper on every screen: graphite by default, another tone or your own picture, chosen on the Rago OS page. Your wallpaper, slideshow and its settings come back when you turn Rago OS off.",
+    "fr": "Pose un fond uni, sans logo, sur tous les écrans : graphite par défaut, une autre teinte ou ta propre image, au choix dans la page Rago OS. Ton fond, ton diaporama et leurs réglages reviennent quand tu désactives Rago OS."
    },
    "actions": [
     {
@@ -1865,8 +1881,8 @@
     "fr": "Écran de verrouillage Rago OS"
    },
    "desc": {
-    "en": "The lock screen shows the Rago OS picture instead of Windows Spotlight.",
-    "fr": "L'écran de verrouillage affiche l'image Rago OS au lieu de Windows à la une."
+    "en": "The lock screen shows the same wallpaper as the desktop instead of Windows Spotlight.",
+    "fr": "L'écran de verrouillage affiche le même fond que le bureau au lieu de Windows à la une."
    },
    "actions": [
     {

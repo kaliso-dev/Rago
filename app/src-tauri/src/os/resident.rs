@@ -1,5 +1,6 @@
-//! Rago Shell (app/shell) : le seul programme de Rago OS qui reste ouvert. Il dessine l'animation de démarrage et la
-//! Dynamic Island, sans droits d'administrateur, dans la session du joueur. Lancé à l'ouverture de session par une
+//! Rago Shell (app/shell) : le seul programme de Rago OS qui reste ouvert. Il dessine l'animation de démarrage, la
+//! barre, le Dock, la recherche, le centre de contrôle et la Dynamic Island, sans droits d'administrateur, dans la
+//! session du joueur. Lancé à l'ouverture de session par une
 //! tâche planifiée (plus tôt que la clé Run, qui attend que le bureau soit chargé), il lit ses options dans
 //! %LOCALAPPDATA%\Rago OS\shell.json. L'app lui parle en le relançant avec un argument (`--reload`, `--preview`,
 //! `--timer 300`…) : la deuxième copie passe la commande à celle qui tourne et quitte.
@@ -17,6 +18,12 @@ pub const TASK: &str = "Rago OS Shell";
 pub struct Config {
     pub boot: bool,
     pub island: bool,
+    /// barre de Rago OS en haut de l'écran
+    pub bar: bool,
+    /// Dock en bas, à la place de la barre des tâches de Windows
+    pub dock: bool,
+    /// Recherche Rago (Alt+Espace)
+    pub search: bool,
     /// surveiller l'Explorateur et couper TranslucentTB s'il redémarre en boucle
     pub ttb_guard: bool,
     pub lang: String,
@@ -71,12 +78,43 @@ pub fn send(resource_dir: &Path, args: &[&str]) -> Result<(), String> {
     crate::games::launch::unelevated(&exe, &args, resource_dir.parent())
 }
 
-/// Arrête Rago Shell (désactivation, désinstallation).
-pub fn stop() {
+/// Arrête Rago Shell (désactivation, désinstallation). D'abord poliment : il libère le haut et le bas de l'écran et rend
+/// la barre des tâches comme elle était. S'il ne répond pas en 3 secondes, il est arrêté, et l'app remet elle-même la
+/// barre des tâches d'après le fichier qu'il a laissé.
+pub fn stop(resource_dir: &Path) {
     if cfg!(test) {
         return;
     }
+    #[cfg(windows)]
+    if win::find(EXE).is_some() && send(resource_dir, &["--quit"]).is_ok() {
+        for _ in 0..30 {
+            std::thread::sleep(std::time::Duration::from_millis(100));
+            if win::find(EXE).is_none() {
+                break;
+            }
+        }
+    }
+    let _ = resource_dir;
     let _ = crate::shell::hidden("taskkill.exe").args(["/IM", EXE, "/F"]).output();
+    restore_taskbar();
+}
+
+/// Réglage de la barre des tâches noté par Rago Shell avant de la cacher (`{"state":n}`), s'il l'a cachée.
+fn taskbar_saved() -> Option<u32> {
+    let text = std::fs::read_to_string(dir().join("taskbar.json")).ok()?;
+    serde_json::from_str::<serde_json::Value>(&text).ok()?.get("state")?.as_u64().map(|v| v as u32)
+}
+
+/// Remet la barre des tâches de Windows si Rago Shell n'a pas pu le faire (arrêté de force).
+pub fn restore_taskbar() {
+    let Some(state) = taskbar_saved() else { return };
+    // les tests ne touchent pas à la barre des tâches du PC qui les lance
+    #[cfg(windows)]
+    if !cfg!(test) {
+        win::set_taskbar(state);
+    }
+    let _ = state;
+    let _ = std::fs::remove_file(dir().join("taskbar.json"));
 }
 
 /// Tâche de l'ouverture de session : session du joueur, sans élévation, priorité normale le temps de l'animation (Rago
@@ -214,6 +252,25 @@ mod win {
     use windows_sys::Win32::System::ProcessStatus::{K32GetProcessMemoryInfo, PROCESS_MEMORY_COUNTERS_EX};
     use windows_sys::Win32::System::Threading::{GetProcessTimes, OpenProcess, PROCESS_QUERY_LIMITED_INFORMATION};
 
+    /// Barre des tâches remise dans son état d'origine (masquage automatique ou non) et montrée.
+    pub fn set_taskbar(state: u32) {
+        use windows_sys::Win32::UI::Shell::{SHAppBarMessage, ABM_SETSTATE, APPBARDATA};
+        use windows_sys::Win32::UI::WindowsAndMessaging::{FindWindowW, ShowWindow, SW_SHOWNA};
+        let class: Vec<u16> = "Shell_TrayWnd".encode_utf16().chain(std::iter::once(0)).collect();
+        unsafe {
+            let tray = FindWindowW(class.as_ptr(), std::ptr::null());
+            if tray.is_null() {
+                return;
+            }
+            let mut d: APPBARDATA = std::mem::zeroed();
+            d.cbSize = std::mem::size_of::<APPBARDATA>() as u32;
+            d.hWnd = tray;
+            d.lParam = state as isize;
+            SHAppBarMessage(ABM_SETSTATE, &mut d);
+            ShowWindow(tray, SW_SHOWNA);
+        }
+    }
+
     /// (pid, temps processeur total en 100 ns, mémoire privée en octets) de rago-shell.exe.
     pub fn measure() -> Option<(u32, u64, u64)> {
         let pid = find(super::EXE)?;
@@ -234,7 +291,7 @@ mod win {
         }
     }
 
-    fn find(name: &str) -> Option<u32> {
+    pub fn find(name: &str) -> Option<u32> {
         unsafe {
             let snap = CreateToolhelp32Snapshot(TH32CS_SNAPPROCESS, 0);
             if snap.is_null() || snap as isize == -1 {
@@ -275,6 +332,20 @@ mod tests {
     #[test]
     fn config_reads_missing_fields() {
         let c: Config = serde_json::from_str(r#"{"boot":true}"#).unwrap();
-        assert!(c.boot && !c.island && c.lang.is_empty());
+        assert!(c.boot && !c.island && !c.bar && !c.dock && !c.search && c.lang.is_empty());
+        // les noms des champs sont ceux que Rago Shell lit (app/shell/src/config.rs)
+        let json = serde_json::to_string(&Config { dock: true, ttb_guard: true, ..Default::default() }).unwrap();
+        assert!(json.contains(r#""dock":true"#) && json.contains(r#""ttbGuard":true"#));
+    }
+
+    #[test]
+    fn taskbar_is_only_restored_when_the_shell_hid_it() {
+        let _ = std::fs::remove_file(dir().join("taskbar.json"));
+        assert_eq!(taskbar_saved(), None);
+        std::fs::create_dir_all(dir()).unwrap();
+        std::fs::write(dir().join("taskbar.json"), r#"{"state":2}"#).unwrap();
+        assert_eq!(taskbar_saved(), Some(2));
+        restore_taskbar();
+        assert_eq!(taskbar_saved(), None);
     }
 }
