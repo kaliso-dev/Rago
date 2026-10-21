@@ -25,6 +25,7 @@ mod seal;
 mod shell;
 mod stats;
 mod system;
+mod tools;
 mod update;
 
 use std::path::PathBuf;
@@ -724,6 +725,43 @@ async fn rbw_status() -> Result<Vec<rbw::Check>, String> {
     tauri::async_runtime::spawn_blocking(rbw::status).await.map_err(|e| e.to_string())
 }
 
+/// Page Outils : place prise par chaque zone du nettoyage.
+#[tauri::command]
+async fn tools_scan() -> Result<Vec<tools::Area>, String> {
+    tauri::async_runtime::spawn_blocking(tools::scan).await.map_err(|e| e.to_string())
+}
+
+#[tauri::command]
+async fn tools_clean(areas: Vec<String>) -> Result<tools::Cleaned, String> {
+    tauri::async_runtime::spawn_blocking(move || tools::clean_areas(&areas)).await.map_err(|e| e.to_string())
+}
+
+/// Applis préinstallées ou sponsorisées présentes sur ce PC.
+#[tauri::command]
+async fn tools_apps() -> Result<Vec<tools::App>, String> {
+    tauri::async_runtime::spawn_blocking(tools::apps).await.map_err(|e| e.to_string())
+}
+
+/// Désinstallation (Premium) ; renvoie les applis encore là.
+#[tauri::command]
+async fn tools_remove_apps(state: State<'_, AppState>, ids: Vec<String>) -> Result<Vec<tools::App>, String> {
+    if state.license.status().state != "active" {
+        return Err("premium_required:tools_apps".into());
+    }
+    tauri::async_runtime::spawn_blocking(move || tools::remove_apps(&ids)).await.map_err(|e| e.to_string())
+}
+
+#[tauri::command]
+async fn tools_drivers() -> Result<tools::Drivers, String> {
+    tauri::async_runtime::spawn_blocking(tools::drivers).await.map_err(|e| e.to_string())
+}
+
+/// Mises à jour facultatives de Windows Update (pilotes proposés par Windows).
+#[tauri::command]
+fn tools_windows_update() -> Result<(), String> {
+    std::process::Command::new("explorer.exe").arg("ms-settings:windowsupdate-optionalupdates").spawn().map(|_| ()).map_err(|e| e.to_string())
+}
+
 #[tauri::command]
 fn overlay_info(overlay: State<'_, Arc<overlay::Overlay>>) -> overlay::Info {
     overlay.info()
@@ -929,6 +967,12 @@ pub fn run() {
         .invoke_handler(tauri::generate_handler![
             get_system_info,
             rbw_status,
+            tools_scan,
+            tools_clean,
+            tools_apps,
+            tools_remove_apps,
+            tools_drivers,
+            tools_windows_update,
             run_tweaks,
             cancel_run,
             is_running,

@@ -177,6 +177,39 @@ export interface RbwCheck {
   start: "auto" | "manual" | "disabled" | "boot" | "system" | null;
 }
 
+/** Page Outils (tools.rs). */
+export type CleanAreaId = "temp" | "windows_temp" | "update" | "crash" | "browsers" | "discord" | "shaders" | "recycle";
+export interface CleanArea {
+  id: CleanAreaId;
+  bytes: number;
+  files: number;
+}
+export interface CleanResult {
+  bytes: number;
+  files: number;
+  /** fichiers en cours d'utilisation, laissés en place */
+  skipped: number;
+}
+export interface BloatApp {
+  /** nom du paquet */
+  id: string;
+  name: { en: string; fr: string };
+}
+export interface Driver {
+  kind: "gpu" | "network" | "audio";
+  name: string;
+  version: string;
+  /** AAAA-MM-JJ */
+  date: string | null;
+  provider: string;
+}
+export interface DriversInfo {
+  drivers: Driver[];
+  /** fabricant de la carte mère, ou du portable */
+  maker: string | null;
+  model: string | null;
+}
+
 export interface MinecraftStatus {
   dirExists: boolean;
   optifineFile: boolean;
@@ -293,6 +326,14 @@ export interface Api {
   cleanRam(trim: boolean): Promise<Cleaned>;
   minecraftStatus(dir?: string | null): Promise<MinecraftStatus>;
   rbwStatus(): Promise<RbwCheck[]>;
+  toolsScan(): Promise<CleanArea[]>;
+  toolsClean(areas: CleanAreaId[]): Promise<CleanResult>;
+  toolsApps(): Promise<BloatApp[]>;
+  /** Premium ; renvoie les applis encore installées */
+  toolsRemoveApps(ids: string[]): Promise<BloatApp[]>;
+  toolsDrivers(): Promise<DriversInfo>;
+  /** Paramètres Windows, mises à jour facultatives (pilotes) */
+  toolsWindowsUpdate(): Promise<void>;
   minecraftRestore(dir?: string | null): Promise<string>;
   restartPc(): Promise<void>;
   openFolder(kind: "logs" | "resources" | "data"): Promise<void>;
@@ -375,6 +416,12 @@ const tauriApi: Api = {
   cleanRam: (trim) => invoke("clean_ram", { trim }),
   minecraftStatus: (dir) => invoke("minecraft_status", { dir: dir ?? null }),
   rbwStatus: () => invoke("rbw_status"),
+  toolsScan: () => invoke("tools_scan"),
+  toolsClean: (areas) => invoke("tools_clean", { areas }),
+  toolsApps: () => invoke("tools_apps"),
+  toolsRemoveApps: (ids) => invoke("tools_remove_apps", { ids }),
+  toolsDrivers: () => invoke("tools_drivers"),
+  toolsWindowsUpdate: () => invoke("tools_windows_update"),
   minecraftRestore: (dir) => invoke("minecraft_restore", { dir: dir ?? null }),
   restartPc: () => invoke("restart_pc"),
   openFolder: (kind) => invoke("open_folder", { kind }),
@@ -456,6 +503,32 @@ const on = <T,>(name: string, cb: (e: T) => void): Promise<UnlistenFn> => {
 };
 const emit = <T,>(name: string, detail: T) => bus.dispatchEvent(new CustomEvent(name, { detail }));
 const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
+
+const MB = 1024 ** 2;
+const mockAreas: CleanArea[] = [
+  { id: "temp", bytes: 1840 * MB, files: 6214 },
+  { id: "windows_temp", bytes: 412 * MB, files: 893 },
+  { id: "update", bytes: 2630 * MB, files: 148 },
+  { id: "crash", bytes: 96 * MB, files: 23 },
+  { id: "browsers", bytes: 1210 * MB, files: 9431 },
+  { id: "discord", bytes: 388 * MB, files: 1290 },
+  { id: "shaders", bytes: 742 * MB, files: 2051 },
+  { id: "recycle", bytes: 205 * MB, files: 31 },
+];
+let mockBloat: BloatApp[] = [
+  { id: "Microsoft.BingNews", name: { en: "News", fr: "Actualités" } },
+  { id: "Microsoft.BingWeather", name: { en: "Weather", fr: "Météo" } },
+  { id: "Microsoft.GetHelp", name: { en: "Get Help", fr: "Obtenir de l'aide" } },
+  { id: "Microsoft.Getstarted", name: { en: "Tips", fr: "Astuces" } },
+  { id: "Microsoft.MicrosoftSolitaireCollection", name: { en: "Solitaire Collection", fr: "Solitaire Collection" } },
+  { id: "Microsoft.WindowsFeedbackHub", name: { en: "Feedback Hub", fr: "Hub de commentaires" } },
+  { id: "Clipchamp.Clipchamp", name: { en: "Clipchamp", fr: "Clipchamp" } },
+  { id: "MSTeams", name: { en: "Teams (personal)", fr: "Teams (personnel)" } },
+  { id: "Microsoft.OutlookForWindows", name: { en: "Outlook (new)", fr: "Outlook (nouveau)" } },
+  { id: "king.com.CandyCrushSaga", name: { en: "Candy Crush Saga", fr: "Candy Crush Saga" } },
+  { id: "SpotifyAB.SpotifyMusic", name: { en: "Spotify", fr: "Spotify" } },
+  { id: "BytedancePte.Ltd.TikTok", name: { en: "TikTok", fr: "TikTok" } },
+];
 
 const mockHistory: HistoryEntry[] = [];
 const hour = 3_600_000;
@@ -690,6 +763,47 @@ const mockApi: Api = {
       set("PCA Logging", true),
     ];
   },
+  toolsScan: async () => {
+    await sleep(900);
+    return mockAreas.map((a) => ({ ...a }));
+  },
+  toolsClean: async (areas) => {
+    await sleep(1400);
+    let bytes = 0;
+    let files = 0;
+    for (const a of mockAreas) {
+      if (!areas.includes(a.id)) continue;
+      // démo : un peu reste en place (navigateur ouvert)
+      const kept = a.id === "browsers" ? 0.08 : 0;
+      bytes += a.bytes * (1 - kept);
+      files += Math.round(a.files * (1 - kept));
+      a.bytes *= kept;
+      a.files = Math.round(a.files * kept);
+    }
+    return { bytes, files, skipped: areas.includes("browsers") ? 37 : 0 };
+  },
+  toolsApps: async () => {
+    await sleep(700);
+    return [...mockBloat];
+  },
+  toolsRemoveApps: async (ids) => {
+    await sleep(1600);
+    mockBloat = mockBloat.filter((a) => !ids.includes(a.id));
+    return [...mockBloat];
+  },
+  toolsDrivers: async () => {
+    await sleep(1100);
+    return {
+      drivers: [
+        { kind: "gpu", name: "NVIDIA GeForce RTX 4070", version: "32.0.15.6094", date: "2024-08-14", provider: "NVIDIA" },
+        { kind: "network", name: "Realtek PCIe 2.5GbE Family Controller", version: "10.68.1003.2023", date: "2023-10-03", provider: "Realtek" },
+        { kind: "audio", name: "Realtek High Definition Audio", version: "6.0.9235.1", date: "2021-09-10", provider: "Realtek Semiconductor Corp." },
+      ],
+      maker: "ASUSTeK COMPUTER INC.",
+      model: "ROG STRIX B650-A GAMING WIFI",
+    };
+  },
+  toolsWindowsUpdate: async () => {},
   minecraftRestore: async () => "optionsof.txt restored (demo)",
   restartPc: async () => {},
   openFolder: async () => {},
