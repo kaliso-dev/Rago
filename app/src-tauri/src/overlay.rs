@@ -8,8 +8,12 @@
 //! - Barre ouverte : elle prend le clavier et la souris, Échap, le raccourci ou un clic dans le jeu la ferment, et le jeu
 //!   reprend le premier plan. Option « garder les stats à l'écran » : une pastille FPS et ping reste en haut à droite
 //!   pendant la partie, sans prendre ni le focus ni les clics.
+//! - Jeux qui se réduisent dès qu'ils perdent le premier plan (Minecraft Java en plein écran, et ceux qu'on voit se
+//!   réduire à l'ouverture) : la barre s'ouvre sans le leur prendre. Elle prend les clics mais pas le clavier ; le jeu
+//!   garde le premier plan, Échap dans le jeu libère la souris, le raccourci ou ✕ ferment la barre.
 
 use serde::Serialize;
+use std::collections::HashSet;
 use std::path::{Path, PathBuf};
 use std::sync::{Arc, Mutex};
 use std::time::Duration;
@@ -67,6 +71,11 @@ pub struct Target {
     pub hwnd: isize,
     pub pid: u32,
     pub name: String,
+    /// Minecraft Java : ping du jeu, et la barre ne lui prend jamais le premier plan (en plein écran, il se réduit
+    /// dès qu'il le perd)
+    pub minecraft: bool,
+    /// nom de l'exe en minuscules
+    pub exe: String,
 }
 
 #[derive(Serialize)]
@@ -80,6 +89,8 @@ pub struct Info {
     pub fps_available: bool,
     /// raccourci refusé par Windows (déjà pris par une autre app)
     pub shortcut_taken: bool,
+    /// barre ouverte sans prendre le premier plan au jeu : pas de clavier, Échap reste au jeu
+    pub passive: bool,
 }
 
 #[derive(Serialize)]
@@ -96,6 +107,10 @@ struct St {
     /// raccourci actuellement pris à Windows
     registered: Option<String>,
     taken: bool,
+    /// barre ouverte sans prendre le premier plan au jeu
+    passive: bool,
+    /// exes vus se réduire quand la barre leur a pris le premier plan (pour cette session)
+    minimizes: HashSet<String>,
 }
 
 pub struct Overlay {
@@ -145,12 +160,13 @@ impl Overlay {
             pin: prefs.pin,
             fps_available: Fps::available(&self.resource_dir),
             shortcut_taken: st.taken,
+            passive: st.passive,
         }
     }
 
     pub fn live(&self) -> Live {
-        let pid = self.lock().game.as_ref().map(|g| g.pid);
-        let ping = pid.and_then(|p| self.ping.lock().unwrap_or_else(std::sync::PoisonError::into_inner).read(p));
+        let game = self.lock().game.as_ref().map(|g| (g.pid, g.minecraft));
+        let ping = game.and_then(|(p, mc)| self.ping.lock().unwrap_or_else(std::sync::PoisonError::into_inner).read(p, mc));
         Live { fps: self.fps.value().map(|f| (f * 10.0).round() / 10.0), ping }
     }
 
@@ -162,7 +178,13 @@ impl Overlay {
         }
         let exe = win::process_path(pid)?;
         let name = game_name(&exe, win::covers_monitor(hwnd), |p| self.library.name_for(p))?;
-        Some(Target { hwnd, pid, name })
+        let file = exe.file_name().map(|f| f.to_string_lossy().to_lowercase()).unwrap_or_default();
+        Some(Target { hwnd, pid, name, minecraft: matches!(file.as_str(), "javaw.exe" | "java.exe"), exe: file })
+    }
+
+    /// La barre ne doit pas prendre le premier plan à ce jeu.
+    fn keeps_foreground(&self, game: Option<&Target>) -> bool {
+        game.is_some_and(|g| g.minecraft || self.lock().minimizes.contains(&g.exe))
     }
 
     /// Fenêtre de la barre, créée cachée au premier jeu vu (puis gardée : l'ouvrir est instantané).
@@ -234,10 +256,13 @@ impl Overlay {
         }
         let game = self.lock().game.clone();
         let Some(w) = self.window(app) else { return };
+        let passive = self.keeps_foreground(game.as_ref());
+        self.lock().passive = passive;
         let _ = w.set_ignore_cursor_events(false);
+        let _ = w.set_focusable(!passive);
         self.set_mode(app, Mode::Panel);
         self.place(app, &w, game.as_ref(), Mode::Panel);
-        win::show(&w, true);
+        win::show(&w, !passive);
         self.follow();
     }
 
@@ -252,14 +277,39 @@ impl Overlay {
         }
         let game = self.lock().game.clone();
         if let (true, Some(g)) = (refocus, game) {
-            win::focus(g.hwnd);
+            win::bring_back(g.hwnd);
         }
         // la pastille revient au tour suivant si elle est gardée à l'écran
+    }
+
+    /// La fenêtre de la barre a perdu le premier plan : un clic dans le jeu la ferme. Sans effet quand la barre ne
+    /// l'avait pas pris (le jeu l'a toujours).
+    pub fn on_blur(&self, app: &AppHandle) {
+        if !self.lock().passive {
+            self.close(app, false);
+        }
+    }
+
+    /// Le jeu s'est réduit quand la barre lui a pris le premier plan : il revient, et la barre reste ouverte par-dessus
+    /// sans le lui reprendre (cette fois et les suivantes).
+    fn keep_game_up(&self, app: &AppHandle, game: &Target) {
+        {
+            let mut st = self.lock();
+            st.passive = true;
+            st.minimizes.insert(game.exe.clone());
+        }
+        if let Some(w) = app.get_webview_window(LABEL) {
+            let _ = w.set_focusable(false);
+            win::bring_back(game.hwnd);
+            win::show(&w, false);
+        }
+        let _ = app.emit_to(LABEL, "overlay:mode", Mode::Panel);
     }
 
     fn show_pill(&self, app: &AppHandle, game: &Target) {
         let Some(w) = self.window(app) else { return };
         let _ = w.set_ignore_cursor_events(true);
+        let _ = w.set_focusable(false);
         self.set_mode(app, Mode::Pill);
         self.place(app, &w, Some(game), Mode::Pill);
         win::show(&w, false);
@@ -313,6 +363,26 @@ impl Overlay {
         if !prefs.overlay && mode == Mode::Panel {
             self.close(app, true);
         }
+        if mode == Mode::Panel {
+            let (game, passive) = {
+                let st = self.lock();
+                (st.game.clone(), st.passive)
+            };
+            if let Some(g) = game.filter(|g| win::minimized(g.hwnd)) {
+                let ours = win::foreground().is_some_and(|(_, pid)| pid == std::process::id());
+                // réduit pendant que la barre a le premier plan : c'est elle qui le lui a pris (ouverture, ou clic
+                // dans une barre qui ne devait pas le prendre) ; réduit par le joueur, il reste réduit
+                if ours || !passive {
+                    self.keep_game_up(app, &g);
+                }
+            }
+        }
+        // le jeu en plein écran se remet parfois au-dessus de tout : la barre ou la pastille repasse devant
+        if mode != Mode::Hidden {
+            if let Some(w) = app.get_webview_window(LABEL) {
+                win::keep_on_top(&w);
+            }
+        }
         match (mode, &fg) {
             (Mode::Hidden, Some(g)) if prefs.overlay && prefs.pin => self.show_pill(app, g),
             (Mode::Pill, None) => self.hide_pill(app),
@@ -358,8 +428,9 @@ mod win {
     use windows_sys::Win32::Graphics::Gdi::{GetMonitorInfoW, MonitorFromWindow, MONITORINFO, MONITOR_DEFAULTTONEAREST};
     use windows_sys::Win32::System::Threading::{OpenProcess, QueryFullProcessImageNameW, PROCESS_NAME_WIN32, PROCESS_QUERY_LIMITED_INFORMATION};
     use windows_sys::Win32::UI::WindowsAndMessaging::{
-        GetClassNameW, GetForegroundWindow, GetWindowRect, GetWindowThreadProcessId, IsWindow, SetForegroundWindow, SetWindowPos, ShowWindow,
-        HWND_TOPMOST, SWP_NOACTIVATE, SWP_NOMOVE, SWP_NOSIZE, SW_HIDE, SW_SHOW, SW_SHOWNOACTIVATE,
+        GetClassNameW, GetForegroundWindow, GetWindowRect, GetWindowThreadProcessId, IsIconic, IsWindow, IsWindowVisible, SetForegroundWindow,
+        SetWindowPos, ShowWindow, HWND_TOPMOST, SWP_NOACTIVATE, SWP_NOMOVE, SWP_NOOWNERZORDER, SWP_NOSIZE, SW_HIDE, SW_RESTORE, SW_SHOW,
+        SW_SHOWNOACTIVATE,
     };
 
     fn hwnd_of(w: &WebviewWindow) -> Option<HWND> {
@@ -450,9 +521,27 @@ mod win {
         }
     }
 
-    pub fn focus(hwnd: isize) {
+    /// Le jeu reprend le premier plan, rouvert s'il s'était réduit.
+    pub fn bring_back(hwnd: isize) {
         unsafe {
+            if IsIconic(hwnd as HWND) != 0 {
+                ShowWindow(hwnd as HWND, SW_RESTORE);
+            }
             SetForegroundWindow(hwnd as HWND);
+        }
+    }
+
+    pub fn minimized(hwnd: isize) -> bool {
+        unsafe { IsWindow(hwnd as HWND) != 0 && IsIconic(hwnd as HWND) != 0 }
+    }
+
+    /// Repasse devant les autres fenêtres « toujours au-dessus » (dont le jeu en plein écran), sans activer la barre.
+    pub fn keep_on_top(w: &WebviewWindow) {
+        let Some(h) = hwnd_of(w) else { return };
+        unsafe {
+            if IsWindowVisible(h) != 0 {
+                SetWindowPos(h, HWND_TOPMOST, 0, 0, 0, 0, SWP_NOMOVE | SWP_NOSIZE | SWP_NOACTIVATE | SWP_NOOWNERZORDER);
+            }
         }
     }
 }
@@ -482,7 +571,11 @@ mod win {
     pub fn hide(w: &WebviewWindow) {
         let _ = w.hide();
     }
-    pub fn focus(_hwnd: isize) {}
+    pub fn bring_back(_hwnd: isize) {}
+    pub fn minimized(_hwnd: isize) -> bool {
+        false
+    }
+    pub fn keep_on_top(_w: &WebviewWindow) {}
 }
 
 #[cfg(test)]

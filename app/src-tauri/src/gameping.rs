@@ -1,8 +1,14 @@
-//! Ping du jeu en cours (barre en jeu, RAG-82) : temps d'aller-retour de sa connexion TCP au serveur, tel que Windows
-//! le mesure déjà pour cette connexion (statistiques TCP étendues). Aucun paquet n'est envoyé au serveur.
+//! Ping du jeu en cours (barre en jeu, RAG-82).
+//! - Minecraft Java : ping / pong du protocole du jeu vers le serveur où il est connecté, toutes les 3 s, comme sa liste
+//!   des serveurs (mcping.rs). C'est le ping que le serveur affiche : Hypixel est derrière Cloudflare, et l'aller-retour
+//!   TCP ne va que jusqu'au Cloudflare le plus proche.
+//! - Autres jeux en TCP : temps d'aller-retour de leur connexion au serveur, tel que Windows le mesure déjà pour cette
+//!   connexion (statistiques TCP étendues). Aucun paquet n'est envoyé au serveur.
 //! Les jeux qui parlent au serveur en UDP (Valorant, CS2, Fortnite) n'ont pas de connexion à suivre : pas de valeur.
 
-use std::net::Ipv4Addr;
+use std::net::{Ipv4Addr, SocketAddr};
+use std::sync::{Arc, Mutex};
+use std::time::{Duration, Instant};
 
 /// Connexion TCP établie d'un processus : adresses et ports tels que Windows les donne (ports en ordre réseau).
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -20,19 +26,39 @@ impl Conn {
     pub fn port(&self) -> u16 {
         u16::from_be(self.remote_port as u16)
     }
+    pub fn server(&self) -> SocketAddr {
+        SocketAddr::new(self.remote_ip().into(), self.port())
+    }
 }
 
 /// La connexion au serveur de jeu parmi celles du processus : ni la machine elle-même, ni le web (80, 443 : comptes,
-/// skins, launcher), la plus ancienne gardée tant qu'elle existe.
+/// skins, launcher), le port de Minecraft d'abord, la plus ancienne gardée tant qu'elle existe.
 pub fn pick(conns: &[Conn], current: Option<Conn>) -> Option<Conn> {
     if let Some(c) = current.filter(|c| conns.contains(c)) {
         return Some(c);
     }
-    conns.iter().copied().find(|c| {
+    let game = |c: &&Conn| {
         let ip = c.remote_ip();
         !ip.is_loopback() && !ip.is_unspecified() && !matches!(c.port(), 80 | 443 | 8080)
-    })
+    };
+    let found = conns.iter().filter(game);
+    found.clone().find(|c| c.port() == 25565).or_else(|| found.clone().next()).copied()
 }
+
+/// Mesures Minecraft : un fil à la fois, la dernière valeur gardée pour l'affichage.
+#[derive(Default)]
+struct Mc {
+    conn: Option<Conn>,
+    host: Option<String>,
+    value: Option<u32>,
+    at: Option<Instant>,
+    busy: bool,
+    /// échecs d'affilée : le serveur ne répond pas au ping du jeu, on revient à l'aller-retour TCP
+    fails: u8,
+}
+
+const MC_EVERY: Duration = Duration::from_secs(3);
+const MC_TIMEOUT: Duration = Duration::from_secs(2);
 
 #[cfg(windows)]
 mod win {
@@ -126,26 +152,78 @@ mod win {
 pub struct GamePing {
     pid: Option<u32>,
     conn: Option<Conn>,
+    mc: Arc<Mutex<Mc>>,
 }
 
 impl GamePing {
     /// Ping en ms du jeu `pid`, None s'il n'a pas de connexion TCP à un serveur (jeu en UDP, menu, hors ligne).
+    /// `minecraft` : Minecraft Java, mesuré avec le ping du jeu.
     #[cfg(windows)]
-    pub fn read(&mut self, pid: u32) -> Option<u32> {
+    pub fn read(&mut self, pid: u32, minecraft: bool) -> Option<u32> {
         if self.pid != Some(pid) {
-            *self = GamePing { pid: Some(pid), conn: None };
+            *self = GamePing { pid: Some(pid), ..GamePing::default() };
         }
         let next = pick(&win::connections(pid), self.conn);
         if next != self.conn {
-            self.conn = next.filter(win::watch);
+            self.conn = next.filter(|c| minecraft || win::watch(c));
         }
-        self.conn.as_ref().and_then(win::rtt)
+        let conn = self.conn?;
+        if minecraft {
+            if let Some(v) = self.minecraft(conn) {
+                return v;
+            }
+            // pas un serveur Minecraft classique : l'aller-retour TCP, faute de mieux
+            win::watch(&conn);
+        }
+        win::rtt(&conn)
     }
 
     #[cfg(not(windows))]
-    pub fn read(&mut self, _pid: u32) -> Option<u32> {
+    pub fn read(&mut self, _pid: u32, _minecraft: bool) -> Option<u32> {
         let _ = (self.pid, self.conn);
         None
+    }
+
+    /// Dernier ping du jeu mesuré sur `conn` (une mesure lancée en fond toutes les 3 s). None : le serveur ne répond
+    /// pas au ping du jeu, Some(None) : pas encore de valeur.
+    #[cfg_attr(not(windows), allow(dead_code))]
+    fn minecraft(&self, conn: Conn) -> Option<Option<u32>> {
+        let mut mc = self.mc.lock().unwrap_or_else(std::sync::PoisonError::into_inner);
+        if mc.conn != Some(conn) {
+            *mc = Mc { conn: Some(conn), ..Mc::default() };
+        }
+        if mc.fails >= 3 && mc.value.is_none() {
+            return None;
+        }
+        if !mc.busy && mc.at.is_none_or(|t| t.elapsed() >= MC_EVERY) {
+            mc.busy = true;
+            mc.at = Some(Instant::now());
+            let (shared, host) = (Arc::clone(&self.mc), mc.host.clone());
+            std::thread::spawn(move || {
+                let host = host.unwrap_or_else(|| crate::mcping::host_for(conn.server().ip()));
+                let ms = crate::mcping::ping(conn.server(), &host, MC_TIMEOUT);
+                let mut mc = shared.lock().unwrap_or_else(std::sync::PoisonError::into_inner);
+                mc.busy = false;
+                if mc.conn != Some(conn) {
+                    return;
+                }
+                mc.host = Some(host);
+                match ms {
+                    Some(ms) => {
+                        mc.value = Some(ms.round() as u32);
+                        mc.fails = 0;
+                    }
+                    None => {
+                        mc.fails = mc.fails.saturating_add(1);
+                        // une mesure perdue garde la valeur précédente, trois d'affilée l'effacent
+                        if mc.fails >= 3 {
+                            mc.value = None;
+                        }
+                    }
+                }
+            });
+        }
+        Some(mc.value)
     }
 }
 
@@ -169,5 +247,40 @@ mod tests {
         let other = conn([51, 1, 2, 3], 25566);
         assert_eq!(pick(&[other, hypixel], Some(hypixel)), Some(hypixel));
         assert_eq!(pick(&[other], Some(hypixel)), Some(other));
+        // le port de Minecraft passe devant une autre connexion du launcher
+        assert_eq!(pick(&[other, hypixel], None), Some(hypixel));
+        assert_eq!(hypixel.server().to_string(), "172.65.1.2:25565");
+    }
+
+    /// Le ping de Minecraft vient d'un fil à part : pas de valeur au premier appel, puis celle du serveur.
+    #[test]
+    fn minecraft_ping_comes_from_the_game_protocol() {
+        use std::io::{Read, Write};
+        let l = std::net::TcpListener::bind("127.0.0.1:0").unwrap();
+        let port = l.local_addr().unwrap().port();
+        std::thread::spawn(move || {
+            for c in l.incoming().take(4) {
+                let mut c = c.unwrap();
+                let mut buf = [0u8; 256];
+                let n = c.read(&mut buf).unwrap();
+                assert!(n > 4);
+                // état : {"a":1}, puis pong
+                c.write_all(&[9, 0x00, 7, b'{', b'"', b'a', b'"', b':', b'1', b'}']).unwrap();
+                let n = c.read(&mut buf).unwrap();
+                c.write_all(&buf[..n]).unwrap();
+            }
+        });
+        let local = conn([127, 0, 0, 1], port);
+        let gp = GamePing::default();
+        assert_eq!(gp.minecraft(local), Some(None));
+        let mut v = None;
+        for _ in 0..50 {
+            std::thread::sleep(Duration::from_millis(40));
+            if let Some(Some(ms)) = gp.minecraft(local) {
+                v = Some(ms);
+                break;
+            }
+        }
+        assert!(v.is_some_and(|ms| ms < 1000), "{v:?}");
     }
 }

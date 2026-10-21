@@ -1,8 +1,11 @@
 //! Test réseau (RAG-50, étape 0) : ping, gigue et perte de paquets vers les serveurs où l'on joue, mesurés depuis ce
 //! PC. Rien n'est changé sur le PC.
 //!
-//! Mesure : temps d'ouverture d'une connexion TCP (aller-retour SYN / SYN-ACK), 10 fois par serveur. Les serveurs de
-//! jeu et les régions des hébergeurs ne répondent pas toujours au ping ICMP, ils répondent tous sur leur port de jeu.
+//! Mesure, plusieurs fois par serveur :
+//! - serveurs Minecraft : ping / pong du protocole du jeu, comme sa liste des serveurs (mcping.rs). Hypixel est derrière
+//!   Cloudflare : l'ouverture d'une connexion ne mesurerait que le trajet jusqu'au Cloudflare le plus proche ;
+//! - régions et Internet : temps d'ouverture d'une connexion TCP (aller-retour SYN / SYN-ACK). Ces serveurs ne répondent
+//!   pas toujours au ping ICMP, ils répondent tous sur leur port.
 
 use serde::Serialize;
 use std::net::{SocketAddr, TcpStream, ToSocketAddrs};
@@ -25,6 +28,11 @@ pub const TARGETS: &[(&str, &str, u16)] = &[
 const SAMPLES: u32 = 10;
 const TIMEOUT: Duration = Duration::from_millis(1500);
 const GAP: Duration = Duration::from_millis(120);
+/// Port des serveurs Minecraft : mesurés avec le ping du jeu, une connexion par mesure. Moins d'essais et plus
+/// espacés : les proxys Minecraft refusent les connexions trop rapprochées d'une même adresse.
+const MINECRAFT: u16 = 25565;
+const MC_SAMPLES: u32 = 5;
+const MC_GAP: Duration = Duration::from_millis(1000);
 
 #[derive(Debug, Clone, Serialize, PartialEq)]
 #[serde(rename_all = "camelCase")]
@@ -83,10 +91,15 @@ pub fn measure(id: &str) -> Measure {
     let Some(addr) = resolve(host, *port) else {
         return Measure { id: id.into(), ping: None, best: None, jitter: None, loss: 1.0, samples: 0, error: Some("dns".into()) };
     };
-    let mut rtts = Vec::with_capacity(SAMPLES as usize);
-    for i in 0..SAMPLES {
+    let (samples, gap) = if *port == MINECRAFT { (MC_SAMPLES, MC_GAP) } else { (SAMPLES, GAP) };
+    let mut rtts = Vec::with_capacity(samples as usize);
+    for i in 0..samples {
         if i > 0 {
-            std::thread::sleep(GAP);
+            std::thread::sleep(gap);
+        }
+        if *port == MINECRAFT {
+            rtts.push(crate::mcping::ping(addr, host, TIMEOUT * 2));
+            continue;
         }
         let t = Instant::now();
         let r = TcpStream::connect_timeout(&addr, TIMEOUT);

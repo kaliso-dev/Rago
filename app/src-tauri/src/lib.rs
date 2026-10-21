@@ -9,6 +9,7 @@ mod games;
 mod history;
 mod instance;
 mod license;
+mod mcping;
 mod memory;
 mod minecraft;
 mod nettest;
@@ -857,7 +858,7 @@ pub fn run() {
                     }
                     tauri::WindowEvent::Focused(false) => {
                         if let Some(ov) = ov {
-                            ov.close(window.app_handle(), false);
+                            ov.on_blur(window.app_handle());
                         }
                     }
                     _ => {}

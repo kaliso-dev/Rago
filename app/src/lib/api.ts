@@ -150,6 +150,8 @@ export interface OverlayInfo {
   pin: boolean;
   fpsAvailable: boolean;
   shortcutTaken: boolean;
+  /** barre ouverte sans prendre le premier plan au jeu (Minecraft) : le clavier reste au jeu */
+  passive: boolean;
 }
 export interface OverlayLive {
   fps: number | null;
@@ -684,7 +686,7 @@ const mockApi: Api = {
       ids.map(async (id) => {
         await sleep(900 + Math.random() * 1400);
         const ping = Math.round(((base[id] ?? 40) + Math.random() * 4) * 10) / 10;
-        const m: NetMeasure = { id, ping, best: Math.round((ping - 1.5) * 10) / 10, jitter: Math.round((0.6 + Math.random() * 2.4) * 10) / 10, loss: 0, samples: 10, error: null };
+        const m: NetMeasure = { id, ping, best: Math.round((ping - 1.5) * 10) / 10, jitter: Math.round((0.6 + Math.random() * 2.4) * 10) / 10, loss: 0, samples: id === "hypixel" || id === "minemen" ? 5 : 10, error: null };
         emit("nettest:measure", m);
         return m;
       }),
@@ -728,6 +730,7 @@ const mockApi: Api = {
     pin: mockBackground.pin,
     fpsAvailable: true,
     shortcutTaken: false,
+    passive: new URLSearchParams(location.search).has("passive"),
   }),
   overlayLive: async () => ({ fps: Math.round(238 + Math.random() * 14), ping: Math.round(21 + Math.random() * 4) }),
   overlayClose: async () => {},
