@@ -446,16 +446,43 @@
 "full": "@echo off\r\nfor %%i in (FortniteClient-Win64) do (\r\nreg delete \"HKLM\\Software\\Policies\\Microsoft\\Windows\\QoS\\%%i\" /f >nul 2>&1\r\n)\r\nreg delete \"HKLM\\SOFTWARE\\Microsoft\\Windows NT\\CurrentVersion\\Image File Execution Options\\FortniteClient-Win64-Shipping.exe\\PerfOptions\" /f >nul 2>&1\r\nreg delete \"HKLM\\SOFTWARE\\Microsoft\\Windows NT\\CurrentVersion\\Image File Execution Options\\FortniteClient-Win64-Shipping.exe\" /v \"UseLargePages\" /f >nul 2>&1"
 },
 "valorant": {
-"full": "@echo off\r\nfor %%i in (ValorantClient-Win64-Shipping.exe) do (\r\nreg delete \"HKLM\\Software\\Policies\\Microsoft\\Windows\\QoS\\%%i\" /f >nul 2>&1\r\n)\r\nreg delete \"HKLM\\SOFTWARE\\Microsoft\\Windows NT\\CurrentVersion\\Image File Execution Options\\ValorantClient-Win64-Shipping.exe\\PerfOptions\" /f >nul 2>&1\r\nreg delete \"HKLM\\SOFTWARE\\Microsoft\\Windows NT\\CurrentVersion\\Image File Execution Options\\ValorantClient-Win64-Shipping.exe\" /v \"UseLargePages\" /f >nul 2>&1"
+"full": "@echo off\r\nfor %%i in (ValorantClient-Win64-Shipping.exe) do (\r\nreg delete \"HKLM\\Software\\Policies\\Microsoft\\Windows\\QoS\\%%i\" /f >nul 2>&1\r\n)\r\nreg delete \"HKLM\\SOFTWARE\\Microsoft\\Windows NT\\CurrentVersion\\Image File Execution Options\\ValorantClient-Win64-Shipping.exe\\PerfOptions\" /f >nul 2>&1\r\nreg delete \"HKLM\\SOFTWARE\\Microsoft\\Windows NT\\CurrentVersion\\Image File Execution Options\\ValorantClient-Win64-Shipping.exe\" /v \"UseLargePages\" /f >nul 2>&1\r\nreg delete \"HKLM\\Software\\Policies\\Microsoft\\Windows\\QoS\\VALORANT-Win64-Shipping.exe\" /f >nul 2>&1\r\nreg delete \"HKLM\\SOFTWARE\\Microsoft\\Windows NT\\CurrentVersion\\Image File Execution Options\\VALORANT-Win64-Shipping.exe\\PerfOptions\" /f >nul 2>&1"
 },
 "cs2": {
 "full": "@echo off\r\nfor %%i in (cs2.exe) do (\r\nreg delete \"HKLM\\Software\\Policies\\Microsoft\\Windows\\QoS\\%%i\" /f >nul 2>&1\r\n)\r\nreg delete \"HKLM\\SOFTWARE\\Microsoft\\Windows NT\\CurrentVersion\\Image File Execution Options\\cs2.exe\\PerfOptions\" /f >nul 2>&1\r\nreg delete \"HKLM\\SOFTWARE\\Microsoft\\Windows NT\\CurrentVersion\\Image File Execution Options\\cs2.exe\" /v \"UseLargePages\" /f >nul 2>&1"
 },
 "apex": {
-"full": "@echo off\r\nfor %%i in (r5apex.exe) do (\r\nreg delete \"HKLM\\Software\\Policies\\Microsoft\\Windows\\QoS\\%%i\" /f >nul 2>&1\r\n)\r\nreg delete \"HKLM\\SOFTWARE\\Microsoft\\Windows NT\\CurrentVersion\\Image File Execution Options\\r5apex.exe\\PerfOptions\" /f >nul 2>&1\r\nreg delete \"HKLM\\SOFTWARE\\Microsoft\\Windows NT\\CurrentVersion\\Image File Execution Options\\r5apex.exe\" /v \"UseLargePages\" /f >nul 2>&1"
+"full": "@echo off\r\nfor %%i in (r5apex.exe) do (\r\nreg delete \"HKLM\\Software\\Policies\\Microsoft\\Windows\\QoS\\%%i\" /f >nul 2>&1\r\n)\r\nreg delete \"HKLM\\SOFTWARE\\Microsoft\\Windows NT\\CurrentVersion\\Image File Execution Options\\r5apex.exe\\PerfOptions\" /f >nul 2>&1\r\nreg delete \"HKLM\\SOFTWARE\\Microsoft\\Windows NT\\CurrentVersion\\Image File Execution Options\\r5apex.exe\" /v \"UseLargePages\" /f >nul 2>&1\r\nreg delete \"HKLM\\Software\\Policies\\Microsoft\\Windows\\QoS\\r5apex_dx12.exe\" /f >nul 2>&1\r\nreg delete \"HKLM\\SOFTWARE\\Microsoft\\Windows NT\\CurrentVersion\\Image File Execution Options\\r5apex_dx12.exe\\PerfOptions\" /f >nul 2>&1"
 },
 "gta": {
-"full": "@echo off\r\nfor %%i in (GTA5.exe) do (\r\nreg delete \"HKLM\\Software\\Policies\\Microsoft\\Windows\\QoS\\%%i\" /f >nul 2>&1\r\n)\r\nreg delete \"HKLM\\SOFTWARE\\Microsoft\\Windows NT\\CurrentVersion\\Image File Execution Options\\GTA5.exe\\PerfOptions\" /f >nul 2>&1\r\nreg delete \"HKLM\\SOFTWARE\\Microsoft\\Windows NT\\CurrentVersion\\Image File Execution Options\\GTA5.exe\" /v \"UseLargePages\" /f >nul 2>&1"
+"full": "@echo off\r\nfor %%i in (GTA5.exe) do (\r\nreg delete \"HKLM\\Software\\Policies\\Microsoft\\Windows\\QoS\\%%i\" /f >nul 2>&1\r\n)\r\nreg delete \"HKLM\\SOFTWARE\\Microsoft\\Windows NT\\CurrentVersion\\Image File Execution Options\\GTA5.exe\\PerfOptions\" /f >nul 2>&1\r\nreg delete \"HKLM\\SOFTWARE\\Microsoft\\Windows NT\\CurrentVersion\\Image File Execution Options\\GTA5.exe\" /v \"UseLargePages\" /f >nul 2>&1\r\nreg delete \"HKLM\\Software\\Policies\\Microsoft\\Windows\\QoS\\GTA5_Enhanced.exe\" /f >nul 2>&1\r\nreg delete \"HKLM\\SOFTWARE\\Microsoft\\Windows NT\\CurrentVersion\\Image File Execution Options\\GTA5_Enhanced.exe\\PerfOptions\" /f >nul 2>&1"
+},
+"pubg": {
+"full": "@echo off\r\nreg delete \"HKLM\\Software\\Policies\\Microsoft\\Windows\\QoS\\TslGame.exe\" /f >nul 2>&1\r\nreg delete \"HKLM\\SOFTWARE\\Microsoft\\Windows NT\\CurrentVersion\\Image File Execution Options\\TslGame.exe\\PerfOptions\" /f >nul 2>&1"
+},
+"roblox": {
+"full": "@echo off\r\nreg delete \"HKLM\\Software\\Policies\\Microsoft\\Windows\\QoS\\RobloxPlayerBeta.exe\" /f >nul 2>&1\r\nreg delete \"HKLM\\SOFTWARE\\Microsoft\\Windows NT\\CurrentVersion\\Image File Execution Options\\RobloxPlayerBeta.exe\\PerfOptions\" /f >nul 2>&1"
+},
+"r6": {
+"full": "@echo off\r\nreg delete \"HKLM\\Software\\Policies\\Microsoft\\Windows\\QoS\\RainbowSix.exe\" /f >nul 2>&1\r\nreg delete \"HKLM\\SOFTWARE\\Microsoft\\Windows NT\\CurrentVersion\\Image File Execution Options\\RainbowSix.exe\\PerfOptions\" /f >nul 2>&1\r\nreg delete \"HKLM\\Software\\Policies\\Microsoft\\Windows\\QoS\\RainbowSix_Vulkan.exe\" /f >nul 2>&1\r\nreg delete \"HKLM\\SOFTWARE\\Microsoft\\Windows NT\\CurrentVersion\\Image File Execution Options\\RainbowSix_Vulkan.exe\\PerfOptions\" /f >nul 2>&1"
+},
+"overwatch": {
+"full": "@echo off\r\nreg delete \"HKLM\\Software\\Policies\\Microsoft\\Windows\\QoS\\Overwatch.exe\" /f >nul 2>&1\r\nreg delete \"HKLM\\SOFTWARE\\Microsoft\\Windows NT\\CurrentVersion\\Image File Execution Options\\Overwatch.exe\\PerfOptions\" /f >nul 2>&1"
+},
+"rivals": {
+"full": "@echo off\r\nreg delete \"HKLM\\Software\\Policies\\Microsoft\\Windows\\QoS\\Marvel-Win64-Shipping.exe\" /f >nul 2>&1\r\nreg delete \"HKLM\\SOFTWARE\\Microsoft\\Windows NT\\CurrentVersion\\Image File Execution Options\\Marvel-Win64-Shipping.exe\\PerfOptions\" /f >nul 2>&1"
+},
+"finals": {
+"full": "@echo off\r\nreg delete \"HKLM\\Software\\Policies\\Microsoft\\Windows\\QoS\\Discovery.exe\" /f >nul 2>&1\r\nreg delete \"HKLM\\SOFTWARE\\Microsoft\\Windows NT\\CurrentVersion\\Image File Execution Options\\Discovery.exe\\PerfOptions\" /f >nul 2>&1"
+},
+"tarkov": {
+"full": "@echo off\r\nreg delete \"HKLM\\Software\\Policies\\Microsoft\\Windows\\QoS\\EscapeFromTarkov.exe\" /f >nul 2>&1\r\nreg delete \"HKLM\\SOFTWARE\\Microsoft\\Windows NT\\CurrentVersion\\Image File Execution Options\\EscapeFromTarkov.exe\\PerfOptions\" /f >nul 2>&1"
+},
+"rl": {
+"full": "@echo off\r\nreg delete \"HKLM\\Software\\Policies\\Microsoft\\Windows\\QoS\\RocketLeague.exe\" /f >nul 2>&1\r\nreg delete \"HKLM\\SOFTWARE\\Microsoft\\Windows NT\\CurrentVersion\\Image File Execution Options\\RocketLeague.exe\\PerfOptions\" /f >nul 2>&1"
+},
+"lol": {
+"full": "@echo off\r\nreg delete \"HKLM\\Software\\Policies\\Microsoft\\Windows\\QoS\\League of Legends.exe\" /f >nul 2>&1\r\nreg delete \"HKLM\\SOFTWARE\\Microsoft\\Windows NT\\CurrentVersion\\Image File Execution Options\\League of Legends.exe\\PerfOptions\" /f >nul 2>&1"
 }
 },
 "pri_mmcss": {

@@ -3,6 +3,7 @@ import { Check, Copy, Cpu, Gpu, HardDrive, MemoryStick, Network, Plus, RefreshCw
 import { availability, catalog, distinctKey, retired, totalTweaks, tweaks } from "../lib/catalog";
 import { api } from "../lib/api";
 import { formatDate } from "../lib/i18n";
+import { hue } from "../lib/art";
 import { encodePreset, MAX_NAME } from "../lib/share";
 import { FREE, useStore, type MyPreset } from "../lib/store";
 import { LiveStatsCard } from "../components/LiveStatsCard";
@@ -192,7 +193,7 @@ export function Dashboard() {
       <motion.section variants={rise}>
         <h2 className="section-title rg-overline">{t("dash.presets")}</h2>
         <div className="presets">
-          {catalog.presets.map((p, i) => {
+          {catalog.presets.filter((p) => !p.game).map((p, i) => {
             const { n, on: all } = presetState(p.tweaks);
             return (
               <motion.button
@@ -212,6 +213,40 @@ export function Dashboard() {
                     {!premium ? <Lock size={12} /> : all ? <Check size={13} /> : <Plus size={13} />}
                     {!premium ? t("free.lock") : all ? t("dash.preset.added") : t("dash.preset.add")}
                   </span>
+                </span>
+              </motion.button>
+            );
+          })}
+        </div>
+      </motion.section>
+
+      {/* un preset par jeu : la priorité du jeu (pri_game) et son socle ; Minecraft reprend le preset PvP */}
+      <motion.section variants={rise} className="game-presets">
+        <div className="section-head">
+          <h2 className="section-title rg-overline">{t("dash.gamePresets")}</h2>
+          <span className="muted small">{t("dash.gamePresets.lead")}</span>
+        </div>
+        <div className="game-presets-grid">
+          {catalog.presets.filter((p) => p.game || p.id === "mc_pvp").map((p) => {
+            const { n, on } = presetState(p.tweaks);
+            return (
+              <motion.button
+                key={p.id}
+                type="button"
+                className={`game-preset${on ? " on" : ""}${premium ? "" : " locked"}`}
+                whileHover={{ y: -2 }}
+                whileTap={{ scale: 0.985 }}
+                onClick={() => (premium ? selectMany(p.tweaks) : setUpsell("preset"))}
+              >
+                <span className="game-preset-badge" style={{ "--h": hue(p.match?.[0] ?? p.id) } as React.CSSProperties}>
+                  {p.tag}
+                </span>
+                <span className="game-preset-text">
+                  <span className="game-preset-name">{p.id === "mc_pvp" ? "Minecraft" : p.name[lang]}</span>
+                  <span className="game-preset-count rg-metric">{t("dash.preset.count", { n })}</span>
+                </span>
+                <span className="game-preset-cta" aria-label={!premium ? t("free.lock") : on ? t("dash.preset.added") : t("dash.preset.add")}>
+                  {!premium ? <Lock size={12} /> : on ? <Check size={14} /> : <Plus size={14} />}
                 </span>
               </motion.button>
             );

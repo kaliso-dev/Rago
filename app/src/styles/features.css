@@ -1247,3 +1247,128 @@
 .launcher:disabled {
   cursor: progress;
 }
+
+/* ------------------------------------------------------------ presets par jeu (tableau de bord) */
+
+.game-presets {
+  margin-top: 28px;
+}
+.section-head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 16px;
+  margin-bottom: 10px;
+}
+.section-head .section-title {
+  margin: 0;
+}
+.game-presets-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(196px, 1fr));
+  gap: 10px;
+}
+.game-preset {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 12px 10px 10px;
+  text-align: left;
+  border-radius: var(--rg-radius-md);
+  background: var(--rg-glass-fill);
+  border: 1px solid var(--rg-line-1);
+  box-shadow: var(--rg-glass-edge);
+  transition: border-color var(--rg-dur-fast), background var(--rg-dur-fast), box-shadow var(--rg-dur-fast);
+}
+.game-preset::after {
+  content: "";
+  position: absolute;
+  inset: -1px;
+  border-radius: inherit;
+  padding: 1px;
+  background: var(--rg-glass-rim);
+  -webkit-mask:
+    linear-gradient(#000 0 0) content-box,
+    linear-gradient(#000 0 0);
+  -webkit-mask-composite: xor;
+  mask-composite: exclude;
+  pointer-events: none;
+}
+.game-preset:hover {
+  border-color: var(--rg-line-3);
+  background: linear-gradient(rgba(255, 255, 255, 0.03), rgba(255, 255, 255, 0.03)), var(--rg-glass-fill);
+}
+.game-preset:focus-visible {
+  box-shadow: var(--rg-glass-edge), var(--rg-focus);
+}
+.game-preset.on {
+  border-color: rgba(255, 59, 48, 0.5);
+  background: radial-gradient(120% 120% at 100% 0%, var(--rg-red-a12), transparent 65%), var(--rg-glass-fill);
+}
+.game-preset.on::after {
+  background: linear-gradient(150deg, rgba(255, 94, 85, 0.6), rgba(255, 59, 48, 0.12) 40%, rgba(255, 59, 48, 0.05) 65%, rgba(255, 59, 48, 0.3));
+}
+/* même dégradé que la vignette du jeu dans la bibliothèque */
+.game-preset-badge {
+  flex: none;
+  display: grid;
+  place-items: center;
+  width: 42px;
+  height: 42px;
+  border-radius: var(--rg-radius-sm);
+  background: linear-gradient(135deg, hsl(var(--h, 220) 46% 32%), hsl(calc(var(--h, 220) + 28) 40% 13%));
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.14),
+    inset 0 0 0 1px rgba(255, 255, 255, 0.06);
+  font-size: 11.5px;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  color: rgba(255, 255, 255, 0.94);
+}
+.game-preset-text {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+.game-preset-name {
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+  font-size: 13.5px;
+  font-weight: 600;
+  letter-spacing: -0.01em;
+}
+.game-preset-count {
+  font-size: 11px;
+  color: var(--rg-text-3);
+}
+.game-preset-cta {
+  flex: none;
+  display: grid;
+  place-items: center;
+  width: 26px;
+  height: 26px;
+  border-radius: 50%;
+  background: var(--rg-glass-2);
+  color: var(--rg-text-2);
+  transition: background var(--rg-dur-fast), color var(--rg-dur-fast);
+}
+.game-preset:hover .game-preset-cta {
+  color: var(--rg-text-1);
+}
+.game-preset.on .game-preset-cta {
+  background: var(--rg-red-a12);
+  color: var(--rg-red-500);
+}
+.game-preset.locked .game-preset-cta {
+  color: var(--rg-text-3);
+}
+
+/* menu des presets d'un jeu (bibliothèque) : défile quand la liste est longue */
+.games-menu {
+  max-height: min(440px, 62vh);
+  overflow-y: auto;
+}

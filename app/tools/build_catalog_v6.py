@@ -248,17 +248,130 @@ MODULES = [
     ]),
 ]
 
+# Presets enrichis le 2026-10-21 (Sofiene : « ils ont trop peu de tweaks ») : seulement des réglages sûrs sans gros
+# inconvénient (tools/descriptions.json), en plus de ceux d'avant
 PRESETS = [
     ('mc_pvp', I('Minecraft PvP'), I('Hitreg, ping and raw input for Minecraft PvP.', 'Hitreg, ping et entrées brutes pour le PvP Minecraft.'),
      ['ping_hitreg:hypixel', 'ping_packets:hitreg', 'ping_main:config1', 'in_driver', 'in_adapter', 'in_windows', 'in_mouse', 'in_keyboard',
-      'in_queue:low', 'win_gamemode:on', 'win_gamedvr', 'win_fullscreen']),
+      'in_queue:low', 'win_gamemode:on', 'win_gamedvr', 'win_fullscreen',
+      'pri_game:minecraft', 'pri_mmcss', 'pri_w32', 'pri_sysresp', 'exp_nolazy', 'kbm_thread', 'net_throttle', 'net_dnsprio',
+      'pow_throttling', 'cpu_parking']),
     ('fps', I('Max FPS', 'FPS max'), I('Graphics card, CPU and power tuned for frames.', 'Carte graphique, CPU et alimentation réglés pour les FPS.'),
      ['gpu_nvidia', 'gpu_amd', 'gpu_intel', 'gpu_general', 'gpu_directx', 'cpu_amd', 'cpu_intel', 'sys_priority', 'sys_ram',
-      'pow_main', 'pow_saving', 'sys_usb', 'win_visual', 'win_gamemode:on', 'win_gamedvr']),
+      'pow_main', 'pow_saving', 'sys_usb', 'win_visual', 'win_gamemode:on', 'win_gamedvr',
+      'pri_mmcss', 'pri_w32', 'pri_sysresp', 'exp_nolazy', 'pow_throttling', 'cpu_throttle', 'cpu_turbo', 'cpu_device_idle',
+      'win_fullscreen', 'win_background']),
     ('latency', I('Low latency', 'Latence minimale'), I('Input lag first: drivers, timers and input queues.', 'L\'input lag d\'abord : pilotes, minuteurs et files d\'entrée.'),
      ['in_driver', 'in_adapter', 'in_windows', 'in_frames:lowest', 'in_mouse', 'in_keyboard', 'in_queue:ultra', 'sys_latency',
-      'sys_csrss', 'sys_time', 'gpu_directx']),
+      'sys_csrss', 'sys_time', 'gpu_directx',
+      'pri_mmcss', 'pri_w32', 'pri_sysresp', 'exp_nolazy', 'kbm_thread', 'usb_power', 'net_nagle', 'net_throttle',
+      'pow_throttling', 'exp_monitorlat', 'win_gamemode:on', 'win_gamedvr']),
 ]
+# ajouts aux deux presets repris de l'ancien programme (laptop : rien qui coûte de la batterie ni de la chauffe)
+PRESET_EXTRA = {
+    'laptop': ['pri_w32', 'pri_sysresp', 'exp_nolazy', 'net_dnsprio', 'win_popups', 'win_visual', 'win_reinstall', 'win_ai',
+               'win_fullscreen'],
+    'privacy': ['win_search', 'win_sync', 'win_shared', 'win_ai', 'win_reinstall', 'win_autoplay', 'dbl_autologgers'],
+}
+# Le vérificateur de screenshare Ranked Bedwars lit ces services et réglages (tools/rbw.py) : aucun réglage du preset
+# Minecraft ne doit les toucher, sinon le joueur passe en rouge au screenshare
+RBW_TOUCHED = re.compile(r'(?i)SysMain|PcaSvc|\\DPS\b|sc (config|stop) DPS|\\BAM\b|sc (config|stop) bam|EventLog|WSearch|DusmSvc'
+                         r'|\\BFE\b|\\AppInfo\b|DCOMLaunch|PlugPlay|CDPUserSvc|DisableCMD|ScriptBlockLogging'
+                         r'|EnableActivityFeed|EnablePrefetcher|Start_TrackDocs|\\AppCompat"')
+
+# Priorité par jeu (2026-10-21) : ce que les six jeux d'origine font vraiment (stratégie QoS DSCP 46, priorité haute
+# processeur et disque par IFEO), sans leur centaine de valeurs PerfOptions que Windows ne lit pas.
+# (variante, nom affiché, exe du jeu)
+GAMES = [
+    ('pubg', 'PUBG', ['TslGame.exe']),
+    ('roblox', 'Roblox', ['RobloxPlayerBeta.exe']),
+    ('r6', 'Rainbow Six Siege', ['RainbowSix.exe', 'RainbowSix_Vulkan.exe']),
+    ('overwatch', 'Overwatch 2', ['Overwatch.exe']),
+    ('rivals', 'Marvel Rivals', ['Marvel-Win64-Shipping.exe']),
+    ('finals', 'The Finals', ['Discovery.exe']),
+    ('tarkov', 'Escape from Tarkov', ['EscapeFromTarkov.exe']),
+    ('rl', 'Rocket League', ['RocketLeague.exe']),
+    ('lol', 'League of Legends', ['League of Legends.exe']),
+]
+QOS = [('Version', '1.0'), ('Protocol', '*'), ('Local Port', '*'), ('Local IP', '*'), ('Local IP Prefix Length', '*'),
+       ('Remote Port', '*'), ('Remote IP', '*'), ('Remote IP Prefix Length', '*'), ('DSCP Value', '46'), ('Throttle Rate', '-1')]
+
+
+def game_priority(exes):
+    lines = []
+    for exe in exes:
+        q = 'HKLM\\Software\\Policies\\Microsoft\\Windows\\QoS\\' + exe
+        lines.append(f'Reg.exe add "{q}" /v "Application Name" /t REG_SZ /d "{exe}" /f')
+        lines += [f'Reg.exe add "{q}" /v "{k}" /t REG_SZ /d "{v}" /f' for k, v in QOS]
+        p = 'HKLM\\SOFTWARE\\Microsoft\\Windows NT\\CurrentVersion\\Image File Execution Options\\' + exe + '\\PerfOptions'
+        lines.append(f'Reg.exe add "{p}" /v "CpuPriorityClass" /t REG_DWORD /d "3" /f')
+        lines.append(f'Reg.exe add "{p}" /v "IoPriority" /t REG_DWORD /d "3" /f')
+    return '\n'.join(lines)  # comme les scripts d'origine de pri_game
+
+
+# jeux d'origine corrigés : nom d'appli de la stratégie QoS (« cs2.exe.exe », « FortniteClient-Win64.exe ») et exe de
+# Valorant (ValorantClient-Win64-Shipping.exe n'existe pas : le jeu est VALORANT-Win64-Shipping.exe)
+GAME_FIXES = [
+    (('pri_game:fortnite',), r'/d "%%i\.exe"', r'/d "FortniteClient-Win64-Shipping.exe"'),
+    (('pri_game:cs2', 'pri_game:apex', 'pri_game:gta'), r'/d "%%i\.exe"', r'/d "%%i"'),
+]
+# exes ajoutés aux jeux d'origine : Apex en DirectX 12, GTA V Enhanced
+GAME_EXTRA_EXES = {'apex': ['r5apex_dx12.exe'], 'gta': ['GTA5_Enhanced.exe']}
+
+
+def add_games(modules, scripts):
+    sub_lines(scripts, GAME_FIXES)
+    pri = scripts['pri_game']
+    pri['valorant'] = game_priority(['VALORANT-Win64-Shipping.exe'])
+    for vid, exes in GAME_EXTRA_EXES.items():
+        assert '\r\n' not in pri[vid], vid
+        pri[vid] += '\n' + game_priority(exes)
+    entry = next(t for m in modules for sec in m['sections'] for t in sec['tweaks'] if t.get('id') == 'pri_game')
+    for vid, name, exes in GAMES:
+        assert vid not in pri, vid
+        pri[vid] = game_priority(exes)
+        entry['variants'].append({'id': vid, 'label': I(name)})
+
+
+# Presets par jeu (2026-10-21) : la priorité du jeu (pri_game) plus un socle compétitif ou fluide. `match` : mots
+# du nom du jeu (minuscules, lettres et chiffres seuls, comme games.rs) qui font proposer ce preset dans la bibliothèque
+COMPETITIVE = ['pri_mmcss', 'pri_w32', 'pri_sysresp', 'exp_nolazy', 'sys_priority', 'sys_latency', 'kbm_thread', 'net_nagle',
+               'net_throttle', 'net_dnsprio', 'in_driver', 'in_mouse', 'in_keyboard', 'in_queue:low', 'win_gamemode:on',
+               'win_gamedvr', 'win_fullscreen', 'pow_throttling', 'cpu_parking', 'usb_power']
+SMOOTH = ['pri_mmcss', 'pri_w32', 'pri_sysresp', 'exp_nolazy', 'sys_priority', 'net_nagle', 'net_throttle', 'net_dnsprio',
+          'in_mouse', 'win_gamemode:on', 'win_gamedvr', 'win_fullscreen', 'pow_throttling', 'cpu_parking', 'cpu_turbo',
+          'win_background']
+GAME_PRESETS = [
+    # (variante de pri_game, nom, sigle affiché sur la vignette, mots du nom, socle)
+    ('fortnite', 'Fortnite', 'FN', ['fortnite'], COMPETITIVE),
+    ('valorant', 'Valorant', 'VAL', ['valorant'], COMPETITIVE),
+    ('cs2', 'Counter-Strike 2', 'CS2', ['counterstrike'], COMPETITIVE),
+    ('apex', 'Apex Legends', 'APEX', ['apexlegends'], COMPETITIVE),
+    ('pubg', 'PUBG', 'PUBG', ['pubg', 'playerunknown'], COMPETITIVE),
+    ('r6', 'Rainbow Six Siege', 'R6', ['rainbowsix'], COMPETITIVE),
+    ('overwatch', 'Overwatch 2', 'OW2', ['overwatch'], COMPETITIVE),
+    ('rivals', 'Marvel Rivals', 'MR', ['marvelrivals'], COMPETITIVE),
+    ('finals', 'The Finals', 'TF', ['thefinals'], COMPETITIVE),
+    ('tarkov', 'Escape from Tarkov', 'EFT', ['escapefromtarkov'], COMPETITIVE),
+    ('rl', 'Rocket League', 'RL', ['rocketleague'], COMPETITIVE),
+    ('lol', 'League of Legends', 'LoL', ['leagueoflegends'], COMPETITIVE),
+    ('roblox', 'Roblox', 'RBX', ['roblox'], SMOOTH),
+    ('gta', 'GTA V', 'GTA', ['grandtheftauto', 'gtav', 'gta5'], SMOOTH),
+]
+
+
+def game_presets():
+    out = []
+    for vid, name, tag, match, base in GAME_PRESETS:
+        if base is COMPETITIVE:
+            desc = I(f'{name} at high priority, plus input, network and power for competitive play.',
+                     f'{name} en priorité haute, avec entrées, réseau et alimentation réglés pour le compétitif.')
+        else:
+            desc = I(f'{name} at high priority, with power and network tuned for smooth play.',
+                     f'{name} en priorité haute, avec alimentation et réseau réglés pour un jeu fluide.')
+        out.append({'id': 'game_' + vid, 'name': I(name), 'desc': desc, 'tweaks': [f'pri_game:{vid}'] + base,
+                    'game': True, 'tag': tag, 'match': match})
+    return out
 # où vont les modules v6 dans l'ancien catalogue
 INTO = {'network': 'network', 'hitreg': 'hitreg', 'gpu': 'gpu', 'system': 'latency', 'windows': 'windows'}
 # réglages de l'ancien programme remplacés par leur équivalent v6 (même id ou même effet)
@@ -558,6 +671,8 @@ def postprocess(modules, scripts):
     # scripts tels qu'avant l'audit (ce qu'ont lancé les PC jusqu'ici) : leur annulation reste dans undo.json
     before_audit = copy.deepcopy(scripts)
     apply_audit(scripts)
+    # après l'audit (dont les retraits visent chaque variante de pri_game) ; l'annulation couvre l'avant et l'après
+    add_games(modules, scripts)
     sub_lines(scripts, WMIC_SUBS)
     sub_lines(scripts, TEMP_QUOTES)
     # lignes risquées cachées dans les packs (tools/safety.py, 2026-10-08) : retirées avant les avertissements
@@ -864,6 +979,20 @@ l'audit) depuis les scripts d'avant et d'après l'audit, réunis par merge_full.
 quand il n'y a pas de sauvegarde, `rest` ce que la sauvegarde ne relève pas, `rest_avant` (pow_ultimate,
 pow_delete_plans) le lance avant la sauvegarde. Chiffrée dans l'exe avec les scripts Premium ; l'app en garde une copie
 par réglage appliqué, pour annuler après une déconnexion ou une fin de licence.
+
+Priorité par jeu (pri_game), 1.2.0 (`add_games`, après l'audit) :
+- Valorant visait `ValorantClient-Win64-Shipping.exe`, qui n'existe pas : rien ne s'appliquait. La variante écrit
+  maintenant la stratégie QoS et la priorité haute de `VALORANT-Win64-Shipping.exe` ;
+- Fortnite, CS2, Apex et GTA V : nom d'appli de la stratégie QoS faux (`cs2.exe.exe`, `FortniteClient-Win64.exe`),
+  donc marquage réseau sans effet. Corrigé (`GAME_FIXES`) ; Apex DirectX 12 (`r5apex_dx12.exe`) et GTA V Enhanced
+  (`GTA5_Enhanced.exe`) ajoutés ;
+- neuf jeux ajoutés (`GAMES`) : PUBG, Roblox, Rainbow Six Siege, Overwatch 2, Marvel Rivals, The Finals, Escape from
+  Tarkov, Rocket League, League of Legends. Seulement ce que Windows lit : stratégie QoS DSCP 46, `CpuPriorityClass`
+  et `IoPriority` à 3 (haute) dans les PerfOptions de l'exe.
+
+Presets, 1.2.0 : enrichis de réglages sûrs sans gros inconvénient (`PRESETS`, `PRESET_EXTRA`) et un preset par jeu
+(`GAME_PRESETS`) : la priorité du jeu plus un socle compétitif ou fluide. Le preset Minecraft ne touche à rien de ce
+que lit le vérificateur de screenshare RBW (`RBW_TOUCHED`, vérifié au build).
 '''
 
 
@@ -1018,18 +1147,28 @@ def main():
     before_audit = postprocess(modules, scripts)
 
     presets = [{'id': p, 'name': n, 'desc': d, 'tweaks': ts} for p, n, d, ts in PRESETS]
+    presets[0].update(tag='MC', match=['minecraft'])
     for p in old['presets']:
         if p['id'] in ('laptop', 'privacy'):
             p['tweaks'] = [RENAMED.get(e.split(':')[0], e) if e.split(':')[0] in REPLACED else e for e in p['tweaks']]
+            p['tweaks'] += [e for e in PRESET_EXTRA[p['id']] if e not in p['tweaks']]
             presets.append(p)
+    presets += game_presets()
     retired = retire(modules, presets)
     # après le retrait : un jumeau retiré (mem_prefetch) ne doit plus lier ni relever le risque des autres
     twins(modules, scripts)
     describe(modules)
     ids = {t['id'] for m in modules for sec in m['sections'] for t in sec['tweaks'] if 'id' in t}
+    by_id = {t['id']: t for m in modules for sec in m['sections'] for t in sec['tweaks'] if 'id' in t}
     for p in presets:
+        assert len({e.split(':')[0] for e in p['tweaks']}) == len(p['tweaks']), ('réglage en double', p['id'])
         for e in p['tweaks']:
-            assert e.split(':')[0] in ids, (p['id'], e)
+            tid, _, v = e.partition(':')
+            assert tid in ids, (p['id'], e)
+            assert not v or any(x['id'] == v for x in by_id[tid].get('variants') or []), (p['id'], e)
+    mc = next(p for p in presets if p['id'] == 'mc_pvp')
+    rbw = [e for e in mc['tweaks'] if RBW_TOUCHED.search('\n'.join(scripts.get(by_id[e.split(':')[0]].get('twin') or e.split(':')[0], {}).values()))]
+    assert not rbw, ('touche à ce que lit le vérificateur RBW', rbw)
     # origine de chaque réglage dans les .bat (fichier et ligne) : utile ici, pas dans l'interface, où elle donnerait le
     # plan des anciens programmes à qui ouvre l'app
     for m in modules:

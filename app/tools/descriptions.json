@@ -301,12 +301,12 @@
  },
  "pri_game": {
   "fr": {
-   "desc": "Six jeux au choix : le jeu choisi passe en priorité haute et son trafic réseau est marqué comme prioritaire.",
+   "desc": "Quinze jeux au choix (Minecraft et Lunar, Fortnite, Valorant, CS2, PUBG, Roblox…) : le jeu choisi passe en priorité haute et son trafic réseau est marqué comme prioritaire.",
    "gain": "Peut aider si d'autres programmes chargent le processeur ; le marquage réseau n'agit que si ta box le gère.",
    "cons": "Les autres programmes (Discord, stream) peuvent ralentir ; pour Minecraft, tous les programmes Java sont concernés."
   },
   "en": {
-   "desc": "Six games to choose from: the chosen game runs at high priority and its network traffic is marked as priority.",
+   "desc": "Fifteen games to choose from (Minecraft and Lunar, Fortnite, Valorant, CS2, PUBG, Roblox…): the chosen game runs at high priority and its network traffic is marked as priority.",
    "gain": "Can help when other programs load the CPU; network marking only works if your router honors it.",
    "cons": "Other programs (Discord, streaming) may slow down; for Minecraft, all Java programs are affected."
   }

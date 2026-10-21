@@ -462,6 +462,20 @@ quand il n'y a pas de sauvegarde, `rest` ce que la sauvegarde ne relève pas, `r
 pow_delete_plans) le lance avant la sauvegarde. Chiffrée dans l'exe avec les scripts Premium ; l'app en garde une copie
 par réglage appliqué, pour annuler après une déconnexion ou une fin de licence.
 
+Priorité par jeu (pri_game), 1.2.0 (`add_games`, après l'audit) :
+- Valorant visait `ValorantClient-Win64-Shipping.exe`, qui n'existe pas : rien ne s'appliquait. La variante écrit
+  maintenant la stratégie QoS et la priorité haute de `VALORANT-Win64-Shipping.exe` ;
+- Fortnite, CS2, Apex et GTA V : nom d'appli de la stratégie QoS faux (`cs2.exe.exe`, `FortniteClient-Win64.exe`),
+  donc marquage réseau sans effet. Corrigé (`GAME_FIXES`) ; Apex DirectX 12 (`r5apex_dx12.exe`) et GTA V Enhanced
+  (`GTA5_Enhanced.exe`) ajoutés ;
+- neuf jeux ajoutés (`GAMES`) : PUBG, Roblox, Rainbow Six Siege, Overwatch 2, Marvel Rivals, The Finals, Escape from
+  Tarkov, Rocket League, League of Legends. Seulement ce que Windows lit : stratégie QoS DSCP 46, `CpuPriorityClass`
+  et `IoPriority` à 3 (haute) dans les PerfOptions de l'exe.
+
+Presets, 1.2.0 : enrichis de réglages sûrs sans gros inconvénient (`PRESETS`, `PRESET_EXTRA`) et un preset par jeu
+(`GAME_PRESETS`) : la priorité du jeu plus un socle compétitif ou fluide. Le preset Minecraft ne touche à rien de ce
+que lit le vérificateur de screenshare RBW (`RBW_TOUCHED`, vérifié au build).
+
 
 # Réglages risqués retirés (1.1.8)
 

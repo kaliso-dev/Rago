@@ -885,8 +885,8 @@
         "en": "Per-game advanced priority"
        },
        "desc": {
-        "en": "Six games to choose from: the chosen game runs at high priority and its network traffic is marked as priority.",
-        "fr": "Six jeux au choix : le jeu choisi passe en priorité haute et son trafic réseau est marqué comme prioritaire."
+        "en": "Fifteen games to choose from (Minecraft and Lunar, Fortnite, Valorant, CS2, PUBG, Roblox…): the chosen game runs at high priority and its network traffic is marked as priority.",
+        "fr": "Quinze jeux au choix (Minecraft et Lunar, Fortnite, Valorant, CS2, PUBG, Roblox…) : le jeu choisi passe en priorité haute et son trafic réseau est marqué comme prioritaire."
        },
        "risk": "safe",
        "reboot": true,
@@ -914,7 +914,7 @@
           "fr": "Valorant",
           "en": "Valorant"
          },
-         "lines": 124
+         "lines": 13
         },
         {
          "id": "cs2",
@@ -930,7 +930,7 @@
           "fr": "Apex",
           "en": "Apex"
          },
-         "lines": 124
+         "lines": 137
         },
         {
          "id": "gta",
@@ -938,12 +938,84 @@
           "fr": "GTA V",
           "en": "GTA V"
          },
-         "lines": 124
+         "lines": 137
+        },
+        {
+         "id": "pubg",
+         "label": {
+          "en": "PUBG",
+          "fr": "PUBG"
+         },
+         "lines": 13
+        },
+        {
+         "id": "roblox",
+         "label": {
+          "en": "Roblox",
+          "fr": "Roblox"
+         },
+         "lines": 13
+        },
+        {
+         "id": "r6",
+         "label": {
+          "en": "Rainbow Six Siege",
+          "fr": "Rainbow Six Siege"
+         },
+         "lines": 26
+        },
+        {
+         "id": "overwatch",
+         "label": {
+          "en": "Overwatch 2",
+          "fr": "Overwatch 2"
+         },
+         "lines": 13
+        },
+        {
+         "id": "rivals",
+         "label": {
+          "en": "Marvel Rivals",
+          "fr": "Marvel Rivals"
+         },
+         "lines": 13
+        },
+        {
+         "id": "finals",
+         "label": {
+          "en": "The Finals",
+          "fr": "The Finals"
+         },
+         "lines": 13
+        },
+        {
+         "id": "tarkov",
+         "label": {
+          "en": "Escape from Tarkov",
+          "fr": "Escape from Tarkov"
+         },
+         "lines": 13
+        },
+        {
+         "id": "rl",
+         "label": {
+          "en": "Rocket League",
+          "fr": "Rocket League"
+         },
+         "lines": 13
+        },
+        {
+         "id": "lol",
+         "label": {
+          "en": "League of Legends",
+          "fr": "League of Legends"
+         },
+         "lines": 13
         }
        ],
        "requires": [],
        "defaultVariant": "minecraft",
-       "lines": 124,
+       "lines": 137,
        "gain": {
         "en": "Can help when other programs load the CPU; network marking only works if your router honors it.",
         "fr": "Peut aider si d'autres programmes chargent le processeur ; le marquage réseau n'agit que si ta box le gère."
@@ -6518,7 +6590,21 @@
     "in_queue:low",
     "win_gamemode:on",
     "win_gamedvr",
-    "win_fullscreen"
+    "win_fullscreen",
+    "pri_game:minecraft",
+    "pri_mmcss",
+    "pri_w32",
+    "pri_sysresp",
+    "exp_nolazy",
+    "kbm_thread",
+    "net_throttle",
+    "net_dnsprio",
+    "pow_throttling",
+    "cpu_parking"
+   ],
+   "tag": "MC",
+   "match": [
+    "minecraft"
    ]
   },
   {
@@ -6546,7 +6632,17 @@
     "sys_usb",
     "win_visual",
     "win_gamemode:on",
-    "win_gamedvr"
+    "win_gamedvr",
+    "pri_mmcss",
+    "pri_w32",
+    "pri_sysresp",
+    "exp_nolazy",
+    "pow_throttling",
+    "cpu_throttle",
+    "cpu_turbo",
+    "cpu_device_idle",
+    "win_fullscreen",
+    "win_background"
    ]
   },
   {
@@ -6570,7 +6666,19 @@
     "sys_latency",
     "sys_csrss",
     "sys_time",
-    "gpu_directx"
+    "gpu_directx",
+    "pri_mmcss",
+    "pri_w32",
+    "pri_sysresp",
+    "exp_nolazy",
+    "kbm_thread",
+    "usb_power",
+    "net_nagle",
+    "net_throttle",
+    "pow_throttling",
+    "exp_monitorlat",
+    "win_gamemode:on",
+    "win_gamedvr"
    ]
   },
   {
@@ -6593,7 +6701,16 @@
     "win_gamemode:on",
     "win_gamedvr",
     "win_background",
-    "win_notifications"
+    "win_notifications",
+    "pri_w32",
+    "pri_sysresp",
+    "exp_nolazy",
+    "net_dnsprio",
+    "win_popups",
+    "win_visual",
+    "win_reinstall",
+    "win_ai",
+    "win_fullscreen"
    ]
   },
   {
@@ -6615,7 +6732,555 @@
     "win_experiments",
     "win_errors",
     "win_feed",
-    "win_popups"
+    "win_popups",
+    "win_search",
+    "win_sync",
+    "win_shared",
+    "win_ai",
+    "win_reinstall",
+    "win_autoplay",
+    "dbl_autologgers"
+   ]
+  },
+  {
+   "id": "game_fortnite",
+   "name": {
+    "en": "Fortnite",
+    "fr": "Fortnite"
+   },
+   "desc": {
+    "en": "Fortnite at high priority, plus input, network and power for competitive play.",
+    "fr": "Fortnite en priorité haute, avec entrées, réseau et alimentation réglés pour le compétitif."
+   },
+   "tweaks": [
+    "pri_game:fortnite",
+    "pri_mmcss",
+    "pri_w32",
+    "pri_sysresp",
+    "exp_nolazy",
+    "sys_priority",
+    "sys_latency",
+    "kbm_thread",
+    "net_nagle",
+    "net_throttle",
+    "net_dnsprio",
+    "in_driver",
+    "in_mouse",
+    "in_keyboard",
+    "in_queue:low",
+    "win_gamemode:on",
+    "win_gamedvr",
+    "win_fullscreen",
+    "pow_throttling",
+    "cpu_parking",
+    "usb_power"
+   ],
+   "game": true,
+   "tag": "FN",
+   "match": [
+    "fortnite"
+   ]
+  },
+  {
+   "id": "game_valorant",
+   "name": {
+    "en": "Valorant",
+    "fr": "Valorant"
+   },
+   "desc": {
+    "en": "Valorant at high priority, plus input, network and power for competitive play.",
+    "fr": "Valorant en priorité haute, avec entrées, réseau et alimentation réglés pour le compétitif."
+   },
+   "tweaks": [
+    "pri_game:valorant",
+    "pri_mmcss",
+    "pri_w32",
+    "pri_sysresp",
+    "exp_nolazy",
+    "sys_priority",
+    "sys_latency",
+    "kbm_thread",
+    "net_nagle",
+    "net_throttle",
+    "net_dnsprio",
+    "in_driver",
+    "in_mouse",
+    "in_keyboard",
+    "in_queue:low",
+    "win_gamemode:on",
+    "win_gamedvr",
+    "win_fullscreen",
+    "pow_throttling",
+    "cpu_parking",
+    "usb_power"
+   ],
+   "game": true,
+   "tag": "VAL",
+   "match": [
+    "valorant"
+   ]
+  },
+  {
+   "id": "game_cs2",
+   "name": {
+    "en": "Counter-Strike 2",
+    "fr": "Counter-Strike 2"
+   },
+   "desc": {
+    "en": "Counter-Strike 2 at high priority, plus input, network and power for competitive play.",
+    "fr": "Counter-Strike 2 en priorité haute, avec entrées, réseau et alimentation réglés pour le compétitif."
+   },
+   "tweaks": [
+    "pri_game:cs2",
+    "pri_mmcss",
+    "pri_w32",
+    "pri_sysresp",
+    "exp_nolazy",
+    "sys_priority",
+    "sys_latency",
+    "kbm_thread",
+    "net_nagle",
+    "net_throttle",
+    "net_dnsprio",
+    "in_driver",
+    "in_mouse",
+    "in_keyboard",
+    "in_queue:low",
+    "win_gamemode:on",
+    "win_gamedvr",
+    "win_fullscreen",
+    "pow_throttling",
+    "cpu_parking",
+    "usb_power"
+   ],
+   "game": true,
+   "tag": "CS2",
+   "match": [
+    "counterstrike"
+   ]
+  },
+  {
+   "id": "game_apex",
+   "name": {
+    "en": "Apex Legends",
+    "fr": "Apex Legends"
+   },
+   "desc": {
+    "en": "Apex Legends at high priority, plus input, network and power for competitive play.",
+    "fr": "Apex Legends en priorité haute, avec entrées, réseau et alimentation réglés pour le compétitif."
+   },
+   "tweaks": [
+    "pri_game:apex",
+    "pri_mmcss",
+    "pri_w32",
+    "pri_sysresp",
+    "exp_nolazy",
+    "sys_priority",
+    "sys_latency",
+    "kbm_thread",
+    "net_nagle",
+    "net_throttle",
+    "net_dnsprio",
+    "in_driver",
+    "in_mouse",
+    "in_keyboard",
+    "in_queue:low",
+    "win_gamemode:on",
+    "win_gamedvr",
+    "win_fullscreen",
+    "pow_throttling",
+    "cpu_parking",
+    "usb_power"
+   ],
+   "game": true,
+   "tag": "APEX",
+   "match": [
+    "apexlegends"
+   ]
+  },
+  {
+   "id": "game_pubg",
+   "name": {
+    "en": "PUBG",
+    "fr": "PUBG"
+   },
+   "desc": {
+    "en": "PUBG at high priority, plus input, network and power for competitive play.",
+    "fr": "PUBG en priorité haute, avec entrées, réseau et alimentation réglés pour le compétitif."
+   },
+   "tweaks": [
+    "pri_game:pubg",
+    "pri_mmcss",
+    "pri_w32",
+    "pri_sysresp",
+    "exp_nolazy",
+    "sys_priority",
+    "sys_latency",
+    "kbm_thread",
+    "net_nagle",
+    "net_throttle",
+    "net_dnsprio",
+    "in_driver",
+    "in_mouse",
+    "in_keyboard",
+    "in_queue:low",
+    "win_gamemode:on",
+    "win_gamedvr",
+    "win_fullscreen",
+    "pow_throttling",
+    "cpu_parking",
+    "usb_power"
+   ],
+   "game": true,
+   "tag": "PUBG",
+   "match": [
+    "pubg",
+    "playerunknown"
+   ]
+  },
+  {
+   "id": "game_r6",
+   "name": {
+    "en": "Rainbow Six Siege",
+    "fr": "Rainbow Six Siege"
+   },
+   "desc": {
+    "en": "Rainbow Six Siege at high priority, plus input, network and power for competitive play.",
+    "fr": "Rainbow Six Siege en priorité haute, avec entrées, réseau et alimentation réglés pour le compétitif."
+   },
+   "tweaks": [
+    "pri_game:r6",
+    "pri_mmcss",
+    "pri_w32",
+    "pri_sysresp",
+    "exp_nolazy",
+    "sys_priority",
+    "sys_latency",
+    "kbm_thread",
+    "net_nagle",
+    "net_throttle",
+    "net_dnsprio",
+    "in_driver",
+    "in_mouse",
+    "in_keyboard",
+    "in_queue:low",
+    "win_gamemode:on",
+    "win_gamedvr",
+    "win_fullscreen",
+    "pow_throttling",
+    "cpu_parking",
+    "usb_power"
+   ],
+   "game": true,
+   "tag": "R6",
+   "match": [
+    "rainbowsix"
+   ]
+  },
+  {
+   "id": "game_overwatch",
+   "name": {
+    "en": "Overwatch 2",
+    "fr": "Overwatch 2"
+   },
+   "desc": {
+    "en": "Overwatch 2 at high priority, plus input, network and power for competitive play.",
+    "fr": "Overwatch 2 en priorité haute, avec entrées, réseau et alimentation réglés pour le compétitif."
+   },
+   "tweaks": [
+    "pri_game:overwatch",
+    "pri_mmcss",
+    "pri_w32",
+    "pri_sysresp",
+    "exp_nolazy",
+    "sys_priority",
+    "sys_latency",
+    "kbm_thread",
+    "net_nagle",
+    "net_throttle",
+    "net_dnsprio",
+    "in_driver",
+    "in_mouse",
+    "in_keyboard",
+    "in_queue:low",
+    "win_gamemode:on",
+    "win_gamedvr",
+    "win_fullscreen",
+    "pow_throttling",
+    "cpu_parking",
+    "usb_power"
+   ],
+   "game": true,
+   "tag": "OW2",
+   "match": [
+    "overwatch"
+   ]
+  },
+  {
+   "id": "game_rivals",
+   "name": {
+    "en": "Marvel Rivals",
+    "fr": "Marvel Rivals"
+   },
+   "desc": {
+    "en": "Marvel Rivals at high priority, plus input, network and power for competitive play.",
+    "fr": "Marvel Rivals en priorité haute, avec entrées, réseau et alimentation réglés pour le compétitif."
+   },
+   "tweaks": [
+    "pri_game:rivals",
+    "pri_mmcss",
+    "pri_w32",
+    "pri_sysresp",
+    "exp_nolazy",
+    "sys_priority",
+    "sys_latency",
+    "kbm_thread",
+    "net_nagle",
+    "net_throttle",
+    "net_dnsprio",
+    "in_driver",
+    "in_mouse",
+    "in_keyboard",
+    "in_queue:low",
+    "win_gamemode:on",
+    "win_gamedvr",
+    "win_fullscreen",
+    "pow_throttling",
+    "cpu_parking",
+    "usb_power"
+   ],
+   "game": true,
+   "tag": "MR",
+   "match": [
+    "marvelrivals"
+   ]
+  },
+  {
+   "id": "game_finals",
+   "name": {
+    "en": "The Finals",
+    "fr": "The Finals"
+   },
+   "desc": {
+    "en": "The Finals at high priority, plus input, network and power for competitive play.",
+    "fr": "The Finals en priorité haute, avec entrées, réseau et alimentation réglés pour le compétitif."
+   },
+   "tweaks": [
+    "pri_game:finals",
+    "pri_mmcss",
+    "pri_w32",
+    "pri_sysresp",
+    "exp_nolazy",
+    "sys_priority",
+    "sys_latency",
+    "kbm_thread",
+    "net_nagle",
+    "net_throttle",
+    "net_dnsprio",
+    "in_driver",
+    "in_mouse",
+    "in_keyboard",
+    "in_queue:low",
+    "win_gamemode:on",
+    "win_gamedvr",
+    "win_fullscreen",
+    "pow_throttling",
+    "cpu_parking",
+    "usb_power"
+   ],
+   "game": true,
+   "tag": "TF",
+   "match": [
+    "thefinals"
+   ]
+  },
+  {
+   "id": "game_tarkov",
+   "name": {
+    "en": "Escape from Tarkov",
+    "fr": "Escape from Tarkov"
+   },
+   "desc": {
+    "en": "Escape from Tarkov at high priority, plus input, network and power for competitive play.",
+    "fr": "Escape from Tarkov en priorité haute, avec entrées, réseau et alimentation réglés pour le compétitif."
+   },
+   "tweaks": [
+    "pri_game:tarkov",
+    "pri_mmcss",
+    "pri_w32",
+    "pri_sysresp",
+    "exp_nolazy",
+    "sys_priority",
+    "sys_latency",
+    "kbm_thread",
+    "net_nagle",
+    "net_throttle",
+    "net_dnsprio",
+    "in_driver",
+    "in_mouse",
+    "in_keyboard",
+    "in_queue:low",
+    "win_gamemode:on",
+    "win_gamedvr",
+    "win_fullscreen",
+    "pow_throttling",
+    "cpu_parking",
+    "usb_power"
+   ],
+   "game": true,
+   "tag": "EFT",
+   "match": [
+    "escapefromtarkov"
+   ]
+  },
+  {
+   "id": "game_rl",
+   "name": {
+    "en": "Rocket League",
+    "fr": "Rocket League"
+   },
+   "desc": {
+    "en": "Rocket League at high priority, plus input, network and power for competitive play.",
+    "fr": "Rocket League en priorité haute, avec entrées, réseau et alimentation réglés pour le compétitif."
+   },
+   "tweaks": [
+    "pri_game:rl",
+    "pri_mmcss",
+    "pri_w32",
+    "pri_sysresp",
+    "exp_nolazy",
+    "sys_priority",
+    "sys_latency",
+    "kbm_thread",
+    "net_nagle",
+    "net_throttle",
+    "net_dnsprio",
+    "in_driver",
+    "in_mouse",
+    "in_keyboard",
+    "in_queue:low",
+    "win_gamemode:on",
+    "win_gamedvr",
+    "win_fullscreen",
+    "pow_throttling",
+    "cpu_parking",
+    "usb_power"
+   ],
+   "game": true,
+   "tag": "RL",
+   "match": [
+    "rocketleague"
+   ]
+  },
+  {
+   "id": "game_lol",
+   "name": {
+    "en": "League of Legends",
+    "fr": "League of Legends"
+   },
+   "desc": {
+    "en": "League of Legends at high priority, plus input, network and power for competitive play.",
+    "fr": "League of Legends en priorité haute, avec entrées, réseau et alimentation réglés pour le compétitif."
+   },
+   "tweaks": [
+    "pri_game:lol",
+    "pri_mmcss",
+    "pri_w32",
+    "pri_sysresp",
+    "exp_nolazy",
+    "sys_priority",
+    "sys_latency",
+    "kbm_thread",
+    "net_nagle",
+    "net_throttle",
+    "net_dnsprio",
+    "in_driver",
+    "in_mouse",
+    "in_keyboard",
+    "in_queue:low",
+    "win_gamemode:on",
+    "win_gamedvr",
+    "win_fullscreen",
+    "pow_throttling",
+    "cpu_parking",
+    "usb_power"
+   ],
+   "game": true,
+   "tag": "LoL",
+   "match": [
+    "leagueoflegends"
+   ]
+  },
+  {
+   "id": "game_roblox",
+   "name": {
+    "en": "Roblox",
+    "fr": "Roblox"
+   },
+   "desc": {
+    "en": "Roblox at high priority, with power and network tuned for smooth play.",
+    "fr": "Roblox en priorité haute, avec alimentation et réseau réglés pour un jeu fluide."
+   },
+   "tweaks": [
+    "pri_game:roblox",
+    "pri_mmcss",
+    "pri_w32",
+    "pri_sysresp",
+    "exp_nolazy",
+    "sys_priority",
+    "net_nagle",
+    "net_throttle",
+    "net_dnsprio",
+    "in_mouse",
+    "win_gamemode:on",
+    "win_gamedvr",
+    "win_fullscreen",
+    "pow_throttling",
+    "cpu_parking",
+    "cpu_turbo",
+    "win_background"
+   ],
+   "game": true,
+   "tag": "RBX",
+   "match": [
+    "roblox"
+   ]
+  },
+  {
+   "id": "game_gta",
+   "name": {
+    "en": "GTA V",
+    "fr": "GTA V"
+   },
+   "desc": {
+    "en": "GTA V at high priority, with power and network tuned for smooth play.",
+    "fr": "GTA V en priorité haute, avec alimentation et réseau réglés pour un jeu fluide."
+   },
+   "tweaks": [
+    "pri_game:gta",
+    "pri_mmcss",
+    "pri_w32",
+    "pri_sysresp",
+    "exp_nolazy",
+    "sys_priority",
+    "net_nagle",
+    "net_throttle",
+    "net_dnsprio",
+    "in_mouse",
+    "win_gamemode:on",
+    "win_gamedvr",
+    "win_fullscreen",
+    "pow_throttling",
+    "cpu_parking",
+    "cpu_turbo",
+    "win_background"
+   ],
+   "game": true,
+   "tag": "GTA",
+   "match": [
+    "grandtheftauto",
+    "gtav",
+    "gta5"
    ]
   }
  ],

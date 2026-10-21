@@ -2,7 +2,8 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { AnimatePresence, motion } from "motion/react";
 import { ArrowUpRight, Check, ChevronDown, LoaderCircle, Lock, Play, Plus, RefreshCw, RotateCcw, Trash2, Zap } from "lucide-react";
 import { api, type Game, type Launcher } from "../lib/api";
-import { catalog, tweaks } from "../lib/catalog";
+import { hue, initials } from "../lib/art";
+import { catalog, presetForGame, tweaks } from "../lib/catalog";
 import { useStore } from "../lib/store";
 import { Button, Segmented } from "../components/ui";
 
@@ -11,8 +12,13 @@ const rise = { initial: { opacity: 0, y: 10 }, animate: { opacity: 1, y: 0, tran
 
 type Filter = "all" | "minecraft" | "shooter" | "other";
 
-/** Preset proposé d'office : PvP pour Minecraft, latence pour les jeux de tir, FPS pour le reste. */
+/** Preset proposé d'office : celui du jeu s'il en a un (Fortnite, Valorant…), sinon PvP pour Minecraft, latence pour
+ * les jeux de tir, FPS pour le reste. */
 const DEFAULT_PRESET: Record<string, string> = { minecraft: "builtin:mc_pvp", shooter: "builtin:latency", other: "builtin:fps" };
+const defaultPreset = (g: Game) => {
+  const own = g.kind === "minecraft" ? null : presetForGame(g.name);
+  return own ? `builtin:${own.id}` : (DEFAULT_PRESET[g.kind] ?? "builtin:fps");
+};
 
 const LAUNCHERS: Record<string, string> = {
   steam: "Steam",
@@ -22,17 +28,6 @@ const LAUNCHERS: Record<string, string> = {
   ubisoft: "Ubisoft Connect",
   xbox: "Xbox",
 };
-
-/** Deux lettres sur un dégradé propre au jeu, tant que l'image officielle n'est pas là (ou s'il n'y en a pas). */
-function initials(name: string) {
-  const words = name.replace(/[^\p{L}\p{N} ]/gu, " ").split(/\s+/).filter(Boolean);
-  return (words.length > 1 ? words[0][0] + words[1][0] : (words[0] ?? "?").slice(0, 2)).toUpperCase();
-}
-function hue(id: string) {
-  let h = 0;
-  for (const c of id) h = (h * 31 + c.charCodeAt(0)) % 360;
-  return h;
-}
 
 function Art({ game, src, className }: { game: Game; src: string | null | undefined; className?: string }) {
   const title = game.client ?? game.name;
@@ -199,9 +194,10 @@ export function Games() {
   }, [games]);
 
   const presetRef = (g: Game) => {
-    const ref = gamePresets[g.id] ?? DEFAULT_PRESET[g.kind] ?? "builtin:fps";
-    // preset perso supprimé depuis : celui d'office
-    return ref.startsWith("mine:") && !myPresets.some((p) => `mine:${p.id}` === ref) ? (DEFAULT_PRESET[g.kind] ?? "builtin:fps") : ref;
+    const ref = gamePresets[g.id] ?? defaultPreset(g);
+    // preset perso supprimé depuis, ou preset du catalogue qui n'existe plus : celui d'office
+    const gone = ref.startsWith("mine:") ? !myPresets.some((p) => `mine:${p.id}` === ref) : ref.startsWith("builtin:") && !catalog.presets.some((p) => `builtin:${p.id}` === ref);
+    return gone ? defaultPreset(g) : ref;
   };
   const resolve = (ref: string): { name: string; entries: string[] } | null => {
     if (ref.startsWith("builtin:")) {
@@ -476,7 +472,9 @@ function PresetMenu({ value, onPick, onClose }: { value: string; onPick: (ref: s
       transition={{ duration: 0.14 }}
     >
       <div className="rg-overline games-menu-label">{t("dash.presets")}</div>
-      {catalog.presets.map((p) => item(`builtin:${p.id}`, p.name[lang]))}
+      {catalog.presets.filter((p) => !p.game).map((p) => item(`builtin:${p.id}`, p.name[lang]))}
+      <div className="rg-overline games-menu-label">{t("games.menuGames")}</div>
+      {catalog.presets.filter((p) => p.game).map((p) => item(`builtin:${p.id}`, p.name[lang]))}
       {myPresets.length > 0 && <div className="rg-overline games-menu-label">{t("dash.mine")}</div>}
       {myPresets.map((p) => item(`mine:${p.id}`, p.name))}
       <div className="games-menu-sep" />

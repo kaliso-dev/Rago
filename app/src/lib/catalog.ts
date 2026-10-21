@@ -79,7 +79,22 @@ export interface Preset {
   desc: I18n;
   /** "id" ou "id:variante" */
   tweaks: string[];
+  /** preset d'un jeu précis (section « Presets par jeu ») */
+  game?: boolean;
+  /** sigle de la vignette du jeu : "VAL", "CS2" */
+  tag?: string;
+  /** mots du nom du jeu (minuscules, lettres et chiffres seuls) qui le font proposer dans la bibliothèque */
+  match?: string[];
 }
+
+/** Nom de jeu comparé aux `match` des presets : minuscules, lettres et chiffres seuls (comme games.rs). */
+export const normalizeName = (name: string) => name.toLowerCase().replace(/[^\p{L}\p{N}]/gu, "");
+
+/** Preset du catalogue fait pour ce jeu, d'après son nom. */
+export const presetForGame = (name: string): Preset | undefined => {
+  const n = normalizeName(name);
+  return catalog.presets.find((p) => p.match?.some((m) => n.includes(m)));
+};
 
 interface Catalog {
   version: number;
