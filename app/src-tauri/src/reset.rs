@@ -44,6 +44,8 @@ pub fn targets(ledger: &Ledger, scope: Scope, bundle: Option<&catalog::Bundle>) 
     let mut ids: Vec<(&String, u64)> = ledger
         .tweaks
         .iter()
+        // Rago OS se remet lui-même (os/mod.rs), avant les réglages classiques
+        .filter(|(id, _)| !crate::os::engine::is_os(id))
         .filter(|(id, a)| match scope {
             Scope::All => true,
             Scope::LicenseEnd => undoable(id, a, bundle),
@@ -149,7 +151,8 @@ pub fn due(data_dir: &Path, license_state: &str, ledger: &Ledger) -> Option<Pend
     if let Some(p) = Pending::load(data_dir) {
         return Some(p);
     }
-    if license_state == "none" && !targets(ledger, Scope::Premium, None).is_empty() {
+    let os_left = ledger.tweaks.keys().any(|id| crate::os::engine::is_os(id));
+    if license_state == "none" && (!targets(ledger, Scope::Premium, None).is_empty() || os_left) {
         let p = Pending::new("license_gone");
         let _ = p.save(data_dir);
         return Some(p);
@@ -241,14 +244,21 @@ pub fn uninstall() {
     };
     clear_run();
     let (history, ledger) = load_for_uninstall(&data_dir);
-    let ids = targets(&ledger, Scope::All, None);
-    if ids.is_empty() {
-        return;
-    }
     let resource_dir = std::env::current_exe()
         .ok()
         .and_then(|exe| exe.parent().map(|d| d.join("resources")))
         .unwrap_or_else(|| PathBuf::from("resources"));
+    // Rago OS d'abord : Rago Shell arrêté, puis ses réglages remis (ceux qu'il partage avec un réglage classique
+    // restent tenus par celui-ci, remis juste après)
+    let ledger = {
+        let shared = Mutex::new(ledger);
+        crate::os::uninstall(&data_dir, &resource_dir, &shared);
+        shared.into_inner().unwrap_or_else(std::sync::PoisonError::into_inner)
+    };
+    let ids = targets(&ledger, Scope::All, None);
+    if ids.is_empty() {
+        return;
+    }
     // licence encore active : l'annulation des réglages Premium vient des scripts de cette version, sinon de la
     // copie gardée dans applied.json
     let premium = License::new().scripts_key().and_then(|key| catalog::premium(&key));
