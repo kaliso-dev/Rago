@@ -17,6 +17,7 @@ import safety as SAFETY
 import rbw as RBW
 import paths as PATHS
 import corrections_md as CORRECTIONS
+import optis_120 as OPT
 import os
 import re
 import subprocess
@@ -292,13 +293,17 @@ GAMES = [
     ('tarkov', 'Escape from Tarkov', ['EscapeFromTarkov.exe']),
     ('rl', 'Rocket League', ['RocketLeague.exe']),
     ('lol', 'League of Legends', ['League of Legends.exe']),
+    # GAME V1 (2026-10-21) : Minecraft Bedrock, que pri_game:minecraft (javaw.exe) ne couvrait pas
+    ('bedrock', 'Minecraft Bedrock', ['Minecraft.Windows.exe']),
 ]
 QOS = [('Version', '1.0'), ('Protocol', '*'), ('Local Port', '*'), ('Local IP', '*'), ('Local IP Prefix Length', '*'),
        ('Remote Port', '*'), ('Remote IP', '*'), ('Remote IP Prefix Length', '*'), ('DSCP Value', '46'), ('Throttle Rate', '-1')]
 
 
 def game_priority(exes):
-    lines = []
+    # « Do not use NLA » (GAME V1, 2026-10-21) : hors d'un domaine d'entreprise, Windows n'applique la stratégie QoS
+    # qu'avec cette valeur (chaîne, comme Microsoft et Cisco la donnent) ; sans effet si elle ne sert plus
+    lines = [r'Reg.exe add "HKLM\SYSTEM\CurrentControlSet\Services\Tcpip\QoS" /v "Do not use NLA" /t REG_SZ /d "1" /f']
     for exe in exes:
         q = 'HKLM\\Software\\Policies\\Microsoft\\Windows\\QoS\\' + exe
         lines.append(f'Reg.exe add "{q}" /v "Application Name" /t REG_SZ /d "{exe}" /f')
@@ -309,23 +314,25 @@ def game_priority(exes):
     return '\n'.join(lines)  # comme les scripts d'origine de pri_game
 
 
-# jeux d'origine corrigés : nom d'appli de la stratégie QoS (« cs2.exe.exe », « FortniteClient-Win64.exe ») et exe de
-# Valorant (ValorantClient-Win64-Shipping.exe n'existe pas : le jeu est VALORANT-Win64-Shipping.exe)
-GAME_FIXES = [
-    (('pri_game:fortnite',), r'/d "%%i\.exe"', r'/d "FortniteClient-Win64-Shipping.exe"'),
-    (('pri_game:cs2', 'pri_game:apex', 'pri_game:gta'), r'/d "%%i\.exe"', r'/d "%%i"'),
-]
-# exes ajoutés aux jeux d'origine : Apex en DirectX 12, GTA V Enhanced
-GAME_EXTRA_EXES = {'apex': ['r5apex_dx12.exe'], 'gta': ['GTA5_Enhanced.exe']}
+# jeux d'origine réécrits (GAME V1, 2026-10-21) : leurs .bat écrivaient 111 valeurs PerfOptions par exe, que Windows
+# ignore toutes sauf CpuPriorityClass et IoPriority (et d'abord un CpuPriorityClass 8, qui n'existe pas), plus un nom
+# d'appli faux dans la stratégie QoS (« cs2.exe.exe », « FortniteClient-Win64.exe »). Valorant visait
+# ValorantClient-Win64-Shipping.exe, qui n'existe pas. Exes ajoutés : CS:GO, Apex en DirectX 12, GTA V Enhanced.
+LEGACY_GAMES = {
+    'minecraft': ['javaw.exe'],
+    'fortnite': ['FortniteClient-Win64-Shipping.exe'],
+    'valorant': ['VALORANT-Win64-Shipping.exe'],
+    'cs2': ['cs2.exe', 'csgo.exe'],
+    'apex': ['r5apex.exe', 'r5apex_dx12.exe'],
+    'gta': ['GTA5.exe', 'GTA5_Enhanced.exe'],
+}
 
 
 def add_games(modules, scripts):
-    sub_lines(scripts, GAME_FIXES)
     pri = scripts['pri_game']
-    pri['valorant'] = game_priority(['VALORANT-Win64-Shipping.exe'])
-    for vid, exes in GAME_EXTRA_EXES.items():
-        assert '\r\n' not in pri[vid], vid
-        pri[vid] += '\n' + game_priority(exes)
+    for vid, exes in LEGACY_GAMES.items():
+        assert vid in pri, vid
+        pri[vid] = game_priority(exes)
     entry = next(t for m in modules for sec in m['sections'] for t in sec['tweaks'] if t.get('id') == 'pri_game')
     for vid, name, exes in GAMES:
         assert vid not in pri, vid
@@ -357,6 +364,8 @@ GAME_PRESETS = [
     ('lol', 'League of Legends', 'LoL', ['leagueoflegends'], COMPETITIVE),
     ('roblox', 'Roblox', 'RBX', ['roblox'], SMOOTH),
     ('gta', 'GTA V', 'GTA', ['grandtheftauto', 'gtav', 'gta5'], SMOOTH),
+    # avant le preset PvP Java (« minecraft ») : la bibliothèque prend le mot le plus long qui correspond
+    ('bedrock', 'Minecraft Bedrock', 'MCBE', ['minecraftforwindows', 'minecraftwindows', 'minecraftbedrock'], COMPETITIVE),
 ]
 
 
@@ -487,7 +496,7 @@ WARNINGS = [
     (r'Clear-RecycleBin', 'Empties the Recycle Bin.', 'Vide la Corbeille.'),
     (r'RunMRU|TypedPaths|OpenSavePidlMRU', 'Clears your recent files and Run history.', 'Efface tes fichiers récents et l\'historique Exécuter.'),
 ]
-WARNINGS += AUDIT.WARNINGS_PLUS
+WARNINGS += AUDIT.WARNINGS_PLUS + OPT.WARNINGS
 # descriptions qui disent ce que font les commandes (vérification du 2026-10-07, fsutil)
 LASTACCESS_OFF = ('Turns off last-access timestamps (Windows stops recording when each file was last opened) and short 8.3 file names.',
                   'Coupe l\'horodatage du dernier accès (Windows ne note plus quand chaque fichier a été ouvert) et les noms de fichiers courts 8.3.')
@@ -554,6 +563,20 @@ def variants_of(scripts, key):
     tid, _, only = key.partition(':')
     assert tid in scripts and (not only or only in scripts[tid]), key
     return [(tid, v) for v in scripts[tid] if not only or v == only]
+
+
+def fix_scripts(scripts, table):
+    """Remplacements exacts {id ou « id:variante » : [(avant, après ou None)]}, fins de ligne du script gardées."""
+    for key, fixes in table.items():
+        tid, _, vid = key.partition(':')
+        for v in ([vid] if vid else list(scripts[tid])):
+            for before, after in fixes:
+                if after is None:
+                    before += '\r\n' if '\r\n' in scripts[tid][v] else '\n'
+                elif '\r\n' not in scripts[tid][v]:
+                    before, after = before.replace('\r\n', '\n'), after.replace('\r\n', '\n')
+                assert before in scripts[tid][v], (key, before)
+                scripts[tid][v] = scripts[tid][v].replace(before, after or '')
 
 
 def drop_lines(scripts, table):
@@ -656,21 +679,25 @@ def postprocess(modules, scripts):
                     continue
                 out.append(l)
             variants[v] = sep.join(out)
-    for key, fixes in SCRIPT_FIXES.items():
-        tid, _, vid = key.partition(':')
-        for v in ([vid] if vid else list(scripts[tid])):
-            for before, after in fixes:
-                if after is None:
-                    before += '\r\n' if '\r\n' in scripts[tid][v] else '\n'
-                elif '\r\n' not in scripts[tid][v]:
-                    before, after = before.replace('\r\n', '\n'), after.replace('\r\n', '\n')
-                assert before in scripts[tid][v], (key, before)
-                scripts[tid][v] = scripts[tid][v].replace(before, after or '')
+    fix_scripts(scripts, SCRIPT_FIXES)
     drop_lines(scripts, DROP_LINES)
     sub_lines(scripts, SUB_LINES)
     # scripts tels qu'avant l'audit (ce qu'ont lancé les PC jusqu'ici) : leur annulation reste dans undo.json
     before_audit = copy.deepcopy(scripts)
     apply_audit(scripts)
+    # optimisations du 2026-10-21 qui remplacent un réglage existant (tools/optis_120.py) : après l'audit, comme
+    # add_games, pour que l'annulation couvre l'ancienne version et la nouvelle
+    fix_scripts(scripts, OPT.FIXES)
+    drop_lines(scripts, OPT.DROP)
+    sub_lines(scripts, OPT.SUB)
+    for tid, body in OPT.REPLACE.items():
+        assert list(scripts[tid]) == ['_'], tid
+        sep = '\r\n' if '\r\n' in scripts[tid]['_'] else '\n'
+        scripts[tid]['_'] = body.replace('\n', sep)
+    for tid, lines in OPT.APPEND.items():
+        for v, body in scripts[tid].items():
+            sep = '\r\n' if '\r\n' in body else '\n'
+            scripts[tid][v] = body.rstrip('\r\n') + sep + sep.join(lines)
     # après l'audit (dont les retraits visent chaque variante de pri_game) ; l'annulation couvre l'avant et l'après
     add_games(modules, scripts)
     sub_lines(scripts, WMIC_SUBS)
@@ -984,11 +1011,15 @@ Priorité par jeu (pri_game), 1.2.0 (`add_games`, après l'audit) :
 - Valorant visait `ValorantClient-Win64-Shipping.exe`, qui n'existe pas : rien ne s'appliquait. La variante écrit
   maintenant la stratégie QoS et la priorité haute de `VALORANT-Win64-Shipping.exe` ;
 - Fortnite, CS2, Apex et GTA V : nom d'appli de la stratégie QoS faux (`cs2.exe.exe`, `FortniteClient-Win64.exe`),
-  donc marquage réseau sans effet. Corrigé (`GAME_FIXES`) ; Apex DirectX 12 (`r5apex_dx12.exe`) et GTA V Enhanced
-  (`GTA5_Enhanced.exe`) ajoutés ;
-- neuf jeux ajoutés (`GAMES`) : PUBG, Roblox, Rainbow Six Siege, Overwatch 2, Marvel Rivals, The Finals, Escape from
-  Tarkov, Rocket League, League of Legends. Seulement ce que Windows lit : stratégie QoS DSCP 46, `CpuPriorityClass`
-  et `IoPriority` à 3 (haute) dans les PerfOptions de l'exe.
+  donc marquage réseau sans effet ; Apex DirectX 12 (`r5apex_dx12.exe`), GTA V Enhanced (`GTA5_Enhanced.exe`) et
+  CS:GO (`csgo.exe`) ajoutés ;
+- Minecraft, Fortnite, CS2, Apex et GTA V réécrits (`LEGACY_GAMES`, GAME V1 du 2026-10-21) : leurs .bat écrivaient
+  111 valeurs PerfOptions par exe que Windows ignore (et un `CpuPriorityClass` 8, qui n'existe pas) ;
+- dix jeux ajoutés (`GAMES`) : PUBG, Roblox, Rainbow Six Siege, Overwatch 2, Marvel Rivals, The Finals, Escape from
+  Tarkov, Rocket League, League of Legends, Minecraft Bedrock (`Minecraft.Windows.exe`). Seulement ce que Windows lit :
+  stratégie QoS DSCP 46, `CpuPriorityClass` et `IoPriority` à 3 (haute) dans les PerfOptions de l'exe ;
+- chaque variante écrit aussi `Do not use NLA` (chaîne « 1 ») sous `Tcpip\\QoS` : hors d'un domaine d'entreprise,
+  Windows n'appliquait pas la stratégie QoS sans elle (GAME V1).
 
 Presets, 1.2.0 : enrichis de réglages sûrs sans gros inconvénient (`PRESETS`, `PRESET_EXTRA`) et un preset par jeu
 (`GAME_PRESETS`) : la priorité du jeu plus un socle compétitif ou fluide. Le preset Minecraft ne touche à rien de ce
@@ -1139,7 +1170,12 @@ def main():
                 m['sections'] = [{**sec, 'id': 'v6_' + sec['id']} for sec in nm['sections']] + m['sections']
         merged.append(m)
     modules = merged
-    for mid, sid, entry, body in NEW_TWEAKS:
+    for mid, sid, name, after in OPT.NEW_SECTIONS:
+        m = next(m for m in modules if m['id'] == mid)
+        assert all(sec['id'] != sid for sec in m['sections']), sid
+        n = next(n for n, sec in enumerate(m['sections']) if sec['id'] == after)
+        m['sections'].insert(n + 1, {'id': sid, 'name': name, 'tweaks': []})
+    for mid, sid, entry, body in NEW_TWEAKS + OPT.NEW_TWEAKS:
         assert entry['id'] not in scripts, entry['id']
         sec = next(sec for m in modules if m['id'] == mid for sec in m['sections'] if sec['id'] == sid)
         scripts[entry['id']] = {'_': body}
@@ -1205,7 +1241,7 @@ def main():
     # docs/CORRECTIONS.md : section v5.2 (build_catalog.py), puis celles-ci ; les sections écrites à la main, sous la
     # ligne marqueur, restent à la fin telles quelles (tools/corrections_md.py)
     head, manual = CORRECTIONS.parts()
-    CORRECTIONS.write(head + V6_NOTES + SAFETY.notes(SAFETY_REPORT, n, distinct), manual)
+    CORRECTIONS.write(head + V6_NOTES + OPT.NOTES + SAFETY.notes(SAFETY_REPORT, n, distinct), manual)
     assert CORRECTIONS.parts()[1] == manual, 'sections de CORRECTIONS.md écrites à la main perdues'
     print(f'{n} réglages ({distinct} distincts), {len(kept)} scripts, {len(retired)} retirés')
 

@@ -90,10 +90,18 @@ export interface Preset {
 /** Nom de jeu comparé aux `match` des presets : minuscules, lettres et chiffres seuls (comme games.rs). */
 export const normalizeName = (name: string) => name.toLowerCase().replace(/[^\p{L}\p{N}]/gu, "");
 
-/** Preset du catalogue fait pour ce jeu, d'après son nom. */
+/** Preset du catalogue fait pour ce jeu, d'après son nom : le mot le plus long qui correspond (« Minecraft for Windows »
+ * prend le preset Bedrock, pas celui de Minecraft Java). */
 export const presetForGame = (name: string): Preset | undefined => {
   const n = normalizeName(name);
-  return catalog.presets.find((p) => p.match?.some((m) => n.includes(m)));
+  let best: Preset | undefined;
+  let len = 0;
+  for (const p of catalog.presets) {
+    for (const m of p.match ?? []) {
+      if (m.length > len && n.includes(m)) [best, len] = [p, m.length];
+    }
+  }
+  return best;
 };
 
 interface Catalog {

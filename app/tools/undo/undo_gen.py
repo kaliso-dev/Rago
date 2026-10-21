@@ -86,7 +86,8 @@ FatChannelIntolerant FlowControlCap GigaLite IPChecksumOffloadIPv4 JumboPacket L
 NicAutoPowerSaver PMARPOffload PMNSOffload PowerDownPll PowerSavingMode RSS RSSProfile ReceiveBuffers
 ReduceSpeedOnPowerDown RxAbsIntDelay S5NicKeepOverrideMacAddrV2 S5WakeOnLan TCPChecksumOffloadIPv4
 TCPChecksumOffloadIPv6 TransmitBuffers TxAbsIntDelay TxIntDelay UDPChecksumOffloadIPv4 UDPChecksumOffloadIPv6 ULPMode
-WakeOnDisconnect WakeOnLink WolShutdownLinkSpeed *NicAutoPowerSaver AlternateSemaphoreDelay MIMOPowerSaveMode'''.split()}
+WakeOnDisconnect WakeOnLink WolShutdownLinkSpeed *NicAutoPowerSaver AlternateSemaphoreDelay MIMOPowerSaveMode
+*InterruptModeration'''.split()}
 
 LOG = collections.defaultdict(set)
 

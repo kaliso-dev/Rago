@@ -301,12 +301,12 @@
  },
  "pri_game": {
   "fr": {
-   "desc": "Quinze jeux au choix (Minecraft et Lunar, Fortnite, Valorant, CS2, PUBG, Roblox…) : le jeu choisi passe en priorité haute et son trafic réseau est marqué comme prioritaire.",
+   "desc": "Seize jeux au choix (Minecraft Java et Bedrock, Fortnite, Valorant, CS2, PUBG, Roblox…) : le jeu choisi passe en priorité haute et son trafic réseau est marqué comme prioritaire.",
    "gain": "Peut aider si d'autres programmes chargent le processeur ; le marquage réseau n'agit que si ta box le gère.",
    "cons": "Les autres programmes (Discord, stream) peuvent ralentir ; pour Minecraft, tous les programmes Java sont concernés."
   },
   "en": {
-   "desc": "Fifteen games to choose from (Minecraft and Lunar, Fortnite, Valorant, CS2, PUBG, Roblox…): the chosen game runs at high priority and its network traffic is marked as priority.",
+   "desc": "Sixteen games to choose from (Minecraft Java and Bedrock, Fortnite, Valorant, CS2, PUBG, Roblox…): the chosen game runs at high priority and its network traffic is marked as priority.",
    "gain": "Can help when other programs load the CPU; network marking only works if your router honors it.",
    "cons": "Other programs (Discord, streaming) may slow down; for Minecraft, all Java programs are affected."
   }
@@ -1561,12 +1561,12 @@
  },
  "amd_power": {
   "fr": {
-   "desc": "Coupe les économies d'énergie internes de la carte AMD, dont sa mise en veille très basse consommation.",
+   "desc": "Coupe les économies d'énergie internes de chaque carte AMD, dont sa mise en veille très basse consommation.",
    "gain": "Peut éviter de petits à-coups quand la carte se réveille ; effet souvent faible.",
    "cons": "Plus de consommation et de chaleur au repos, surtout sur portable."
   },
   "en": {
-   "desc": "Turns off the AMD card's internal power saving, including its ultra-low-power sleep state.",
+   "desc": "Turns off the internal power saving of every AMD card, including its ultra-low-power sleep state.",
    "gain": "Can avoid small hitches when the card wakes up; often a small effect.",
    "cons": "More power use and heat at idle, especially on laptops."
   }
@@ -1647,12 +1647,12 @@
   "fr": {
    "desc": "Remet les réglages plein écran de Windows par défaut et active l'optimisation des jeux en fenêtre de Windows 11.",
    "gain": "Peut réduire un peu la latence des jeux DirectX en fenêtre ; rarement utile pour Minecraft Java.",
-   "cons": "Écrase tes réglages graphiques de Windows 11 : Auto HDR peut se couper, tout comme le VRR forcé des vieux jeux."
+   "cons": "Coupe le VRR forcé des vieux jeux (optimisation de Windows 11) ; tes autres réglages graphiques, dont Auto HDR, sont gardés."
   },
   "en": {
    "desc": "Resets Windows fullscreen settings to default and turns on Windows 11's optimizations for windowed games.",
    "gain": "May slightly lower latency in windowed DirectX games; rarely helps Minecraft Java.",
-   "cons": "Overwrites your Windows 11 graphics settings: Auto HDR may turn off, and so does forced VRR for older games."
+   "cons": "Turns off forced VRR for older games (a Windows 11 optimization); your other graphics settings, including Auto HDR, are kept."
   }
  },
  "win_gamemode": {
@@ -1681,14 +1681,14 @@
  },
  "win_visual": {
   "fr": {
-   "desc": "Coupe les animations et la transparence de Windows pour une interface plus sobre.",
+   "desc": "Coupe les animations, la transparence, les fondus des menus, les ombres et le contenu des fenêtres pendant leur déplacement ; le lissage du texte reste actif.",
    "gain": "Interface un peu plus vive sur les petits PC ; effet sur les FPS en jeu quasi nul.",
-   "cons": "Windows paraît moins fluide et moins joli : plus d'animations de fenêtres ni de transparence."
+   "cons": "Windows paraît moins fluide et moins joli : plus d'animations, d'ombres ni de transparence, et une fenêtre déplacée n'affiche que son contour."
   },
   "en": {
-   "desc": "Turns off Windows animations and transparency for a plainer interface.",
+   "desc": "Turns off animations, transparency, menu fades, shadows and window contents while dragging; text smoothing stays on.",
    "gain": "Slightly snappier interface on low-end PCs; near-zero effect on in-game FPS.",
-   "cons": "Windows looks less smooth and less polished: no more window animations or transparency."
+   "cons": "Windows looks less smooth and less polished: no animations, shadows or transparency, and a window being moved shows only its outline."
   }
  },
  "win_bluetooth": {
@@ -1755,12 +1755,12 @@
   "fr": {
    "desc": "La recherche du menu Démarrer ne va plus sur le web (Bing) ni n'utilise ta position, et Windows n'apprend plus de ta frappe.",
    "gain": "Plus de vie privée et des résultats limités à ton PC ; effet sur les FPS quasi nul.",
-   "cons": "Plus de résultats web ni de réponses Bing dans le menu Démarrer."
+   "cons": "Plus de résultats web ni de réponses Bing dans le menu Démarrer, et l'Explorateur ne garde plus tes recherches récentes."
   },
   "en": {
    "desc": "Start menu search stops going to the web (Bing) or using your location, and Windows stops learning from your typing.",
    "gain": "More privacy and results limited to your PC; near-zero effect on FPS.",
-   "cons": "No more web results or Bing answers in the Start menu."
+   "cons": "No more web results or Bing answers in the Start menu, and File Explorer stops keeping your recent searches."
   }
  },
  "win_errors": {
@@ -2451,12 +2451,12 @@
   "fr": {
    "desc": "La recherche du menu Démarrer ne va plus sur le web (Bing) ni n'utilise ta position, et Windows n'apprend plus de ta frappe.",
    "gain": "Plus de vie privée et des résultats limités à ton PC ; effet sur les FPS quasi nul.",
-   "cons": "Plus de résultats web ni de réponses Bing dans le menu Démarrer."
+   "cons": "Plus de résultats web ni de réponses Bing dans le menu Démarrer, et l'Explorateur ne garde plus tes recherches récentes."
   },
   "en": {
    "desc": "Start menu search stops going to the web (Bing) or using your location, and Windows stops learning from your typing.",
    "gain": "More privacy and results limited to your PC; near-zero effect on FPS.",
-   "cons": "No more web results or Bing answers in the Start menu."
+   "cons": "No more web results or Bing answers in the Start menu, and File Explorer stops keeping your recent searches."
   }
  },
  "exp_pcie": {
@@ -2529,6 +2529,234 @@
    "desc": "Puts the mouse and keyboard queues back to the normal Windows value.",
    "gain": "Useful if your mouse skips or misses movements after a lower queue setting.",
    "cons": "No known drawback."
+  }
+ },
+ "win_taskbar": {
+  "fr": {
+   "desc": "Retire les boutons Vue des tâches, Rechercher, Conversation et Meet Now de la barre des tâches.",
+   "gain": "Barre des tâches plus propre ; effet sur les FPS quasi nul.",
+   "cons": "Pour chercher, appuie sur la touche Windows et tape ; la Vue des tâches reste sur Windows + Tab."
+  },
+  "en": {
+   "desc": "Hides the Task View, search, Chat and Meet Now buttons from the taskbar.",
+   "gain": "Cleaner taskbar; near-zero effect on FPS.",
+   "cons": "To search, press the Windows key and type; Task View is still on Windows + Tab."
+  }
+ },
+ "win_recent": {
+  "fr": {
+   "desc": "Démarrer n'affiche plus les applis récemment ajoutées ni les plus utilisées, et l'Explorateur ne montre plus tes fichiers récents ni tes dossiers fréquents.",
+   "gain": "Plus de vie privée quand tu streams ou partages ton écran ; aucun effet sur les FPS.",
+   "cons": "Tu ne retrouves plus tes derniers fichiers depuis l'accueil de l'Explorateur."
+  },
+  "en": {
+   "desc": "Start stops listing recently added and most used apps, and File Explorer stops showing your recent files and frequent folders.",
+   "gain": "More privacy when you stream or share your screen; no effect on FPS.",
+   "cons": "You can no longer find your last files from the File Explorer home page."
+  }
+ },
+ "win_highlights": {
+  "fr": {
+   "desc": "Retire les images Bing et les sujets tendance affichés dans la barre et le panneau de recherche de Windows.",
+   "gain": "Recherche plus sobre et moins d'appels vers Bing ; effet sur les FPS quasi nul.",
+   "cons": "Plus d'illustrations ni de tendances dans la recherche."
+  },
+  "en": {
+   "desc": "Removes the Bing pictures and trending topics shown in the Windows search box and search panel.",
+   "gain": "Plainer search and fewer calls to Bing; near-zero effect on FPS.",
+   "cons": "No more pictures or trending topics in search."
+  }
+ },
+ "win_lockscreen": {
+  "fr": {
+   "desc": "Tu arrives directement sur l'écran de connexion, sans l'image d'accueil ni le flou derrière ; le mot de passe reste demandé.",
+   "gain": "Un clic de moins au démarrage et au retour sur le PC ; aucun effet sur les FPS.",
+   "cons": "Plus d'image d'accueil ni d'heure avant la connexion. Certaines éditions Famille peuvent ignorer ce réglage."
+  },
+  "en": {
+   "desc": "Goes straight to the sign-in screen, without the picture screen or the blur behind it; your password is still asked.",
+   "gain": "One click less at startup and when you come back to the PC; no effect on FPS.",
+   "cons": "No more picture screen or clock before you sign in. Some Home editions may ignore this setting."
+  }
+ },
+ "win_classicmenu": {
+  "fr": {
+   "desc": "Sur Windows 11, le clic droit ouvre tout de suite le menu complet, sans passer par « Afficher plus d'options ».",
+   "gain": "Un clic de moins pour les options des fichiers ; aucun effet sur les FPS.",
+   "cons": "Le menu compact de Windows 11 disparaît. Sans effet sur Windows 10."
+  },
+  "en": {
+   "desc": "On Windows 11, right-click opens the full menu right away, without going through \"Show more options\".",
+   "gain": "One click less to reach file options; no effect on FPS.",
+   "cons": "The compact Windows 11 menu goes away. No effect on Windows 10."
+  }
+ },
+ "win_alttab": {
+  "fr": {
+   "desc": "Alt+Tab affiche l'ancienne liste d'icônes, sans aperçu des fenêtres.",
+   "gain": "Sélecteur simple qui n'a pas d'aperçus à dessiner quand tu quittes un jeu ; effet sur les FPS quasi nul.",
+   "cons": "Plus d'aperçus des fenêtres ni d'onglets du navigateur dans Alt+Tab."
+  },
+  "en": {
+   "desc": "Alt+Tab shows the old, simple list of icons, without window previews.",
+   "gain": "A simple switcher with no previews to draw when you leave a game; near-zero effect on FPS.",
+   "cons": "No more window previews or browser tabs in Alt+Tab."
+  }
+ },
+ "win_shortcut": {
+  "fr": {
+   "desc": "Les nouveaux raccourcis gardent le nom du fichier, sans « - Raccourci » ajouté à la fin.",
+   "gain": "Plus besoin de renommer tes raccourcis ; aucun effet sur les FPS.",
+   "cons": "Aucun. Les raccourcis déjà créés ne changent pas."
+  },
+  "en": {
+   "desc": "New shortcuts keep the plain name of the file, without \"- Shortcut\" added at the end.",
+   "gain": "No more renaming your shortcuts; no effect on FPS.",
+   "cons": "None. Shortcuts you already made don't change."
+  }
+ },
+ "dbl_onedrive_off": {
+  "fr": {
+   "desc": "OneDrive ne se lance plus et ne synchronise plus en arrière-plan. Rien n'est supprimé.",
+   "gain": "Moins de processus, d'accès disque et de réseau pendant que tu joues.",
+   "cons": "Tes fichiers ne se synchronisent plus, et ceux gardés seulement en ligne ne s'ouvrent plus tant que tu n'annules pas."
+  },
+  "en": {
+   "desc": "OneDrive stops starting and syncing in the background. Nothing is deleted.",
+   "gain": "Fewer processes, less disk and network activity while you play.",
+   "cons": "Your files stop syncing, and files kept only online won't open until you undo it."
+  }
+ },
+ "win_browserbg": {
+  "fr": {
+   "desc": "Edge, Chrome et Brave se ferment vraiment quand tu fermes leur fenêtre, et Edge ne se précharge plus au démarrage de Windows.",
+   "gain": "Plus de mémoire et de processeur libres pour ton jeu quand ton navigateur est fermé.",
+   "cons": "Les extensions et notifications du navigateur ne tournent plus fenêtre fermée ; les navigateurs affichent « géré par votre organisation »."
+  },
+  "en": {
+   "desc": "Edge, Chrome and Brave fully close when you close their window, and Edge stops preloading when Windows starts.",
+   "gain": "More memory and CPU free for your game when your browser is closed.",
+   "cons": "Browser extensions and notifications stop running once the window is closed; browsers show \"managed by your organization\"."
+  }
+ },
+ "win_suggestions": {
+  "fr": {
+   "desc": "Retire les conseils recommandés dans Démarrer, les rappels « terminer la configuration », les astuces en ligne des Paramètres et les résultats du cloud dans la recherche.",
+   "gain": "Moins de pubs et de rappels dans Windows ; aucun effet sur les FPS.",
+   "cons": "La recherche ne montre plus tes fichiers OneDrive ni tes mails Outlook."
+  },
+  "en": {
+   "desc": "Removes the recommended tips in Start, the \"finish setting up your device\" reminders, online tips in Settings and cloud results in search.",
+   "gain": "Fewer ads and reminders in Windows; no effect on FPS.",
+   "cons": "Search no longer shows your OneDrive files or Outlook mail."
+  }
+ },
+ "win_extensions": {
+  "fr": {
+   "desc": "Affiche les extensions comme .exe ou .zip dans l'Explorateur, pour repérer d'un coup d'œil les faux fichiers.",
+   "gain": "Un « photo.png.exe » piégé se voit tout de suite ; aucun effet sur les FPS.",
+   "cons": "Renommer un fichier peut changer son extension si tu l'effaces par erreur (Windows te prévient)."
+  },
+  "en": {
+   "desc": "Shows extensions like .exe or .zip in File Explorer, so you can spot fake files at a glance.",
+   "gain": "A booby-trapped \"photo.png.exe\" stands out right away; no effect on FPS.",
+   "cons": "Renaming a file can change its extension if you delete it by mistake (Windows warns you)."
+  }
+ },
+ "win_compact": {
+  "fr": {
+   "desc": "Réduit l'espace entre les éléments de l'Explorateur, pour afficher plus de fichiers à l'écran.",
+   "gain": "Plus de fichiers visibles d'un coup ; aucun effet sur les FPS.",
+   "cons": "Les éléments sont plus serrés, un peu moins pratiques au doigt sur un écran tactile."
+  },
+  "en": {
+   "desc": "Tightens the spacing between items in File Explorer, so more files fit on screen.",
+   "gain": "More files visible at once; no effect on FPS.",
+   "cons": "Items are packed tighter, a bit less handy on a touch screen."
+  }
+ },
+ "win_wallpaper": {
+  "fr": {
+   "desc": "Windows ne compresse plus ton fond d'écran JPEG, qui reste net.",
+   "gain": "Fond d'écran sans artefacts de compression ; aucun effet sur les FPS.",
+   "cons": "Prend effet la prochaine fois que tu choisis ton fond d'écran."
+  },
+  "en": {
+   "desc": "Stops Windows from compressing your JPEG wallpaper, so it stays sharp.",
+   "gain": "Wallpaper without compression artifacts; no effect on FPS.",
+   "cons": "Takes effect the next time you set your wallpaper."
+  }
+ },
+ "dbl_browsers": {
+  "fr": {
+   "desc": "Edge, Chrome et Firefox n'envoient plus leurs données d'utilisation ni d'avis ; Edge masque aussi sa barre latérale et ses recommandations.",
+   "gain": "Plus de vie privée et un Edge plus sobre ; effet sur les FPS quasi nul.",
+   "cons": "Les navigateurs affichent « géré par votre organisation » ; plus de barre latérale Copilot dans Edge."
+  },
+  "en": {
+   "desc": "Edge, Chrome and Firefox stop sending usage data and feedback; Edge also hides its sidebar and recommendations.",
+   "gain": "More privacy and a plainer Edge; near-zero effect on FPS.",
+   "cons": "Browsers show \"managed by your organization\"; no more Copilot sidebar in Edge."
+  }
+ },
+ "dbl_vs": {
+  "fr": {
+   "desc": "Visual Studio n'envoie plus de données d'utilisation et ne demande plus ton avis.",
+   "gain": "Plus de vie privée si Visual Studio est installé ; sans effet sinon.",
+   "cons": "Aucun pour jouer. Tu ne peux plus envoyer d'avis à Microsoft depuis Visual Studio."
+  },
+  "en": {
+   "desc": "Stops Visual Studio from sending usage data and turns off its feedback prompts.",
+   "gain": "More privacy if Visual Studio is installed; no effect otherwise.",
+   "cons": "None for gaming. You can no longer send feedback to Microsoft from Visual Studio."
+  }
+ },
+ "net_dscp": {
+  "fr": {
+   "desc": "Marque comme prioritaire le trafic de 12 jeux en ligne (Dota 2, Call of Duty, Destiny 2, Halo Infinite, Rust, Warframe, War Thunder, World of Tanks, Dead by Daylight, Brawlhalla, Battlefield V, Titanfall 2).",
+   "gain": "Peut aider quand quelqu'un télécharge ou streame sur ta connexion ; le marquage n'agit que si ta box le gère.",
+   "cons": "Aucun quand ta box ne lit pas le marquage : rien ne change alors."
+  },
+  "en": {
+   "desc": "Marks the traffic of 12 online games (Dota 2, Call of Duty, Destiny 2, Halo Infinite, Rust, Warframe, War Thunder, World of Tanks, Dead by Daylight, Brawlhalla, Battlefield V, Titanfall 2) as priority.",
+   "gain": "Can help when someone downloads or streams on your connection; marking only works if your router honors it.",
+   "cons": "None when your router ignores the marking: nothing changes then."
+  }
+ },
+ "win_thispc": {
+  "fr": {
+   "desc": "L'Explorateur s'ouvre sur Ce PC, avec tes disques, au lieu de la page Accueil.",
+   "gain": "Tes disques et dossiers tout de suite ; aucun effet sur les FPS.",
+   "cons": "La page Accueil (fichiers récents, favoris) reste à un clic dans la barre de gauche."
+  },
+  "en": {
+   "desc": "File Explorer opens on This PC, with your drives, instead of the Home page.",
+   "gain": "Your drives and folders right away; no effect on FPS.",
+   "cons": "The Home page (recent files, favorites) is one click away in the left pane."
+  }
+ },
+ "net_dns": {
+  "fr": {
+   "desc": "Tes cartes réseau connectées cherchent les adresses avec Cloudflare (1.1.1.1) et Google (8.8.8.8) au lieu de ton fournisseur d'accès.",
+   "gain": "Sites et serveurs trouvés plus vite et plus sûrement quand les DNS de ton fournisseur sont lents ; ça ne baisse pas le ping en jeu.",
+   "cons": "Peut gêner sur un réseau qui impose ses DNS (école, travail, contrôle parental) ; seulement en IPv4."
+  },
+  "en": {
+   "desc": "Your connected network cards look up addresses with Cloudflare (1.1.1.1) and Google (8.8.8.8) instead of your internet provider.",
+   "gain": "Sites and servers are found faster and more reliably when your provider's DNS is slow; it doesn't lower in-game ping.",
+   "cons": "Can cause trouble on networks that enforce their own DNS (school, work, parental control); IPv4 only."
+  }
+ },
+ "net_intmod": {
+  "fr": {
+   "desc": "Ta carte réseau transmet chaque paquet à Windows tout de suite au lieu de les grouper.",
+   "gain": "Latence réseau un peu plus basse et plus régulière, surtout en filaire.",
+   "cons": "Plus de processeur utilisé pendant les gros téléchargements. Le Hitreg Suite fait l'inverse : n'utilise pas les deux."
+  },
+  "en": {
+   "desc": "Your network card hands each packet to Windows right away instead of grouping them.",
+   "gain": "Slightly lower and steadier network latency, especially on a wired connection.",
+   "cons": "More CPU use during large downloads. Hitreg Suite does the opposite: don't use both."
   }
  }
 }

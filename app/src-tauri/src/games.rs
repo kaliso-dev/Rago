@@ -1,5 +1,5 @@
 //! Bibliothèque de jeux (RAG-57) : les jeux installés par les launchers (Steam, Epic, Riot, Battle.net, Ubisoft
-//! Connect, Xbox) et les launchers Minecraft (officiel, Lunar, Badlion, Feather, Prism, Modrinth, CurseForge), plus
+//! Connect, Xbox), Roblox et les launchers Minecraft (officiel, Lunar, Badlion, Feather, Prism, Modrinth, CurseForge), plus
 //! ceux que le joueur ajoute à la main.
 //!
 //! Image de chaque jeu : l'image officielle, celle que le launcher a déjà enregistrée sur le PC d'abord (cache de
@@ -24,7 +24,7 @@ pub struct Game {
     /// "steam:730", "epic:Fortnite", "riot:valorant", "mc:lunar", "manual:1a2b3c4d"…
     pub id: String,
     pub name: String,
-    /// steam, epic, riot, battlenet, ubisoft, xbox, minecraft, manual
+    /// steam, epic, riot, battlenet, ubisoft, xbox, roblox, minecraft, manual
     pub launcher: String,
     /// launcher Minecraft (Lunar Client…), sous le nom du jeu
     pub client: Option<String>,
@@ -663,6 +663,48 @@ fn minecraft(out: &mut Vec<Game>, entries: &[Uninstall]) {
     }
 }
 
+/// Roblox : installé dans `Roblox\Versions\version-<code>` (du profil, ou de Program Files pour une installation
+/// pour tous), un dossier remplacé à chaque mise à jour, chaque semaine. Lancé par l'exe de la version la plus
+/// récente ; dossier du jeu = `Versions`, pour que le jeu en cours et la dernière partie suivent les mises à jour.
+/// Sans installation classique, l'app du Microsoft Store.
+#[cfg(windows)]
+fn roblox(out: &mut Vec<Game>) {
+    let roots = [env_path("LOCALAPPDATA"), env_path("ProgramFiles(x86)"), env_path("ProgramFiles")];
+    for versions in roots.into_iter().flatten().map(|r| r.join("Roblox").join("Versions")) {
+        if let Some(exe) = newest_roblox(&versions) {
+            out.push(Game::new("roblox:player".into(), "Roblox".into(), "roblox", Launch::Exe { path: exe, args: Vec::new() }).dir(Some(versions)));
+            return;
+        }
+    }
+    let packages = "HKCU\\Software\\Classes\\Local Settings\\Software\\Microsoft\\Windows\\CurrentVersion\\AppModel\\Repository\\Packages";
+    if let Some(family) = reg::subkeys(packages).iter().find_map(|k| store_family(k, "ROBLOXCORPORATION.ROBLOX_")) {
+        out.push(Game::new("roblox:store".into(), "Roblox".into(), "roblox", Launch::AppsFolder(format!("{family}!App"))));
+    }
+}
+
+/// `RobloxPlayerBeta.exe` de la version la plus récente (date de l'exe) sous `Versions`.
+#[cfg_attr(not(windows), allow(dead_code))]
+fn newest_roblox(versions: &Path) -> Option<PathBuf> {
+    fs::read_dir(versions)
+        .ok()?
+        .flatten()
+        .filter(|e| e.file_name().to_string_lossy().to_lowercase().starts_with("version-"))
+        .map(|e| e.path().join("RobloxPlayerBeta.exe"))
+        .filter_map(|exe| Some((fs::metadata(&exe).ok()?.modified().ok()?, exe)))
+        .max_by_key(|(t, _)| *t)
+        .map(|(_, exe)| exe)
+}
+
+/// Famille d'un paquet du Store d'après son nom complet (« Nom_version_archi__éditeur » → « Nom_éditeur »).
+#[cfg_attr(not(windows), allow(dead_code))]
+fn store_family(full: &str, prefix: &str) -> Option<String> {
+    if !full.starts_with(prefix) {
+        return None;
+    }
+    let (name, publisher) = (full.split('_').next()?, full.rsplit_once("__")?.1);
+    (!publisher.is_empty()).then(|| format!("{name}_{publisher}"))
+}
+
 /// Image officielle des jeux qu'aucun launcher n'enregistre sur ce PC (Riot, Minecraft) : page du jeu sur l'Epic Games
 /// Store et minecraft.net (relevées le 17/10/2026), puis la page Epic lue à la demande. Une adresse qui ne répond plus
 /// passe à la suivante ; sans aucune, la tuile garde le nom du jeu.
@@ -712,6 +754,7 @@ pub fn detect() -> Vec<Game> {
     battlenet(&mut out, &entries);
     ubisoft(&mut out, &entries);
     xbox(&mut out);
+    roblox(&mut out);
     minecraft(&mut out, &entries);
     // le même jeu par deux launchers (Fortnite sur Epic et dans l'app Xbox…) : le premier trouvé
     let mut seen = HashSet::new();
@@ -1531,6 +1574,32 @@ mod tests {
         assert_eq!(mc_launcher("Lunar Client 3.2.1").map(|l| l.0), Some("lunar"));
         assert_eq!(mc_launcher("Minecraft Launcher").map(|l| l.0), Some("official"));
         assert!(mc_launcher("Minecraft Education").is_none());
+    }
+
+    #[test]
+    fn finds_the_current_roblox_version() {
+        let dir = std::env::temp_dir().join(format!("rago-roblox-{}", std::process::id()));
+        let _ = fs::remove_dir_all(&dir);
+        for (v, wait) in [("version-old", false), ("version-new", true)] {
+            if wait {
+                std::thread::sleep(std::time::Duration::from_millis(20));
+            }
+            fs::create_dir_all(dir.join(v)).unwrap();
+            fs::write(dir.join(v).join("RobloxPlayerBeta.exe"), b"").unwrap();
+        }
+        // dossier d'une version en cours d'installation, sans exe : ignoré
+        fs::create_dir_all(dir.join("version-partial")).unwrap();
+        fs::create_dir_all(dir.join("other")).unwrap();
+        assert_eq!(newest_roblox(&dir), Some(dir.join("version-new").join("RobloxPlayerBeta.exe")));
+        assert_eq!(newest_roblox(&dir.join("missing")), None);
+        let _ = fs::remove_dir_all(&dir);
+
+        assert_eq!(
+            store_family("ROBLOXCORPORATION.ROBLOX_2.689.900.0_x64__55nm5eh3cm0pr", "ROBLOXCORPORATION.ROBLOX_").as_deref(),
+            Some("ROBLOXCORPORATION.ROBLOX_55nm5eh3cm0pr")
+        );
+        assert_eq!(store_family("Microsoft.GamingApp_2.0_x64__8wekyb3d8bbwe", "ROBLOXCORPORATION.ROBLOX_"), None);
+        assert_eq!(store_family("ROBLOXCORPORATION.ROBLOX_broken", "ROBLOXCORPORATION.ROBLOX_"), None);
     }
 
     #[test]

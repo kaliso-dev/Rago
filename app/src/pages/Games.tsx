@@ -12,11 +12,11 @@ const rise = { initial: { opacity: 0, y: 10 }, animate: { opacity: 1, y: 0, tran
 
 type Filter = "all" | "minecraft" | "shooter" | "other";
 
-/** Preset proposé d'office : celui du jeu s'il en a un (Fortnite, Valorant…), sinon PvP pour Minecraft, latence pour
- * les jeux de tir, FPS pour le reste. */
+/** Preset proposé d'office : celui du jeu s'il en a un (Fortnite, Valorant, Minecraft Bedrock…), sinon PvP pour
+ * Minecraft Java et ses clients, latence pour les jeux de tir, FPS pour le reste. */
 const DEFAULT_PRESET: Record<string, string> = { minecraft: "builtin:mc_pvp", shooter: "builtin:latency", other: "builtin:fps" };
 const defaultPreset = (g: Game) => {
-  const own = g.kind === "minecraft" ? null : presetForGame(g.name);
+  const own = presetForGame(g.name);
   return own ? `builtin:${own.id}` : (DEFAULT_PRESET[g.kind] ?? "builtin:fps");
 };
 
@@ -27,6 +27,7 @@ const LAUNCHERS: Record<string, string> = {
   battlenet: "Battle.net",
   ubisoft: "Ubisoft Connect",
   xbox: "Xbox",
+  roblox: "Roblox",
 };
 
 function Art({ game, src, className }: { game: Game; src: string | null | undefined; className?: string }) {
