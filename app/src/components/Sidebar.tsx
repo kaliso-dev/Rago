@@ -1,10 +1,12 @@
 import { motion } from "motion/react";
 import { useState } from "react";
-import { Lock, Sparkles } from "lucide-react";
+import { ArrowUpRight, Lock, Sparkles } from "lucide-react";
 import { catalog } from "../lib/catalog";
 import { FREE, useStore } from "../lib/store";
 import { totalTweaks } from "../lib/catalog";
-import { MODULE_ICONS } from "./icons";
+import { DiscordIcon, MODULE_ICONS } from "./icons";
+import { DISCORD_URL } from "./LicenseGate";
+import { api } from "../lib/api";
 import { UpdateCard } from "./UpdateCard";
 import type { Key } from "../lib/i18n";
 
@@ -101,6 +103,11 @@ export function Sidebar() {
           <span className="nav-upgrade-cta">{t("free.upgrade")}</span>
         </button>
       )}
+      <button type="button" className="nav-item nav-discord" onClick={() => void api.openUrl(DISCORD_URL)}>
+        <DiscordIcon size={16} />
+        <span className="nav-label">{t("nav.discord")}</span>
+        <ArrowUpRight size={13} className="nav-out" />
+      </button>
       {item("settings", t("nav.settings"), "settings")}
       <div className="nav-foot">
         <span className={`dot ${sys?.isAdmin ? "dot-ok" : "dot-warn"}`} />

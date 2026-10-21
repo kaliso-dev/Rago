@@ -682,6 +682,7 @@ async fn background_set(app: AppHandle, prefs: background::Prefs) -> Result<Back
         let bg = Arc::clone(&app.state::<Arc<Background>>());
         let name = app.package_info().name.clone();
         let old = bg.prefs();
+        prefs.autostart_chosen = old.autostart_chosen || prefs.autostart != old.autostart;
         if prefs.autostart != old.autostart || prefs.autostart != background::autostart_exists(&name) {
             let temp = app.state::<AppState>().data_dir.clone();
             background::set_autostart(&name, prefs.autostart, &temp).map_err(|e| format!("autostart:{e}"))?;
@@ -798,6 +799,15 @@ pub fn run() {
             let background = Arc::new(Background::load(&data_dir, started_hidden));
             let prefs = background.prefs();
             background::sync_tray(app.handle(), prefs.keeps_running() || started_hidden, &prefs.lang, quit);
+            // lancement avec Windows d'office (tant que le joueur ne l'a pas coupé) : la tâche est créée au premier lancement
+            if prefs.autostart && !cfg!(debug_assertions) {
+                let (name, temp) = (app.package_info().name.clone(), data_dir.clone());
+                std::thread::spawn(move || {
+                    if !background::autostart_exists(&name) {
+                        let _ = background::set_autostart(&name, true, &temp).map_err(|e| eprintln!("[autostart] {e}"));
+                    }
+                });
+            }
             let overlay = Arc::new(overlay::Overlay::new(resource_dir.clone(), Arc::clone(&library), Arc::clone(&background)));
             overlay::watch(app.handle().clone(), Arc::clone(&overlay));
             app.manage(background);

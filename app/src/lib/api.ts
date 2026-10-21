@@ -127,7 +127,9 @@ export interface UpdateReady {
 /** Mode arrière-plan et barre en jeu (background.rs, overlay.rs). */
 export interface BackgroundPrefs {
   tray: boolean;
+  /** activé d'office tant que le joueur ne l'a pas coupé (autostartChosen) */
   autostart: boolean;
+  autostartChosen?: boolean;
   overlay: boolean;
   shortcut: string;
   pin: boolean;
@@ -490,7 +492,7 @@ function mockLicense(): LicenseStatus {
 }
 
 let demoPending: string | null = null;
-let mockBackground: BackgroundPrefs = { tray: false, autostart: false, overlay: true, shortcut: "Ctrl+Shift+R", pin: false, lang: "fr" };
+let mockBackground: BackgroundPrefs = { tray: true, autostart: true, overlay: true, shortcut: "Ctrl+Shift+R", pin: false, lang: "fr" };
 
 /** Démo : la remise du moteur à la fin de la licence (tous les réglages remis en arrière-plan). */
 function mockReset() {

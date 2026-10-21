@@ -2592,3 +2592,98 @@ svg {
 .confirm-warn p {
   text-wrap: pretty;
 }
+
+/* lien vers le Discord de Rago, au-dessus des paramètres */
+.sidebar > .nav-discord {
+  margin-top: 8px;
+}
+.sidebar > .nav-discord + .nav-item {
+  margin-top: 2px;
+}
+.nav-discord > svg:first-child {
+  color: #8c9eff;
+}
+.nav-discord .nav-out {
+  color: var(--rg-text-3);
+  transition: transform var(--rg-dur-fast) var(--rg-ease-out), color var(--rg-dur-fast);
+}
+.nav-discord:hover .nav-out {
+  color: var(--rg-text-1);
+  transform: translate(1px, -1px);
+}
+
+/* Animation de lancement (Splash.tsx) */
+.splash {
+  position: fixed;
+  inset: 0;
+  z-index: 200;
+  display: grid;
+  place-items: center;
+  overflow: hidden;
+  background: var(--rg-ink-0);
+}
+.splash-glow {
+  position: absolute;
+  width: 760px;
+  height: 760px;
+  border-radius: 50%;
+  background:
+    radial-gradient(closest-side, rgba(255, 59, 48, 0.18), rgba(255, 59, 48, 0.05) 55%, transparent 75%);
+  filter: blur(10px);
+}
+.splash-center {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 22px;
+}
+.splash-mark {
+  position: relative;
+  filter: drop-shadow(0 12px 36px rgba(255, 59, 48, 0.45));
+}
+.splash-mark svg {
+  position: relative;
+  display: block;
+}
+/* ondes « Pulse » depuis le coin haut droit de la marque */
+.splash-wave {
+  position: absolute;
+  left: 93.3%;
+  top: 2%;
+  width: 30%;
+  height: 30%;
+  margin: -15% 0 0 -15%;
+  border: 1.5px solid var(--rg-red-500);
+  border-radius: 50%;
+  opacity: 0;
+  animation: rg-pulse 1400ms var(--rg-ease-out) forwards;
+}
+.reduced .splash-wave {
+  animation-name: rg-pulse-fade;
+}
+@media (prefers-reduced-motion: reduce) {
+  .splash-wave {
+    animation-name: rg-pulse-fade;
+  }
+}
+.splash-word {
+  color: var(--rg-text-1);
+}
+.splash-word svg {
+  display: block;
+}
+.splash-bar {
+  width: 148px;
+  height: 2px;
+  border-radius: var(--rg-radius-full);
+  background: var(--rg-line-2);
+  overflow: hidden;
+}
+.splash-bar > span {
+  display: block;
+  height: 100%;
+  background: var(--rg-red-gradient);
+  transform-origin: left;
+  box-shadow: 0 0 12px rgba(255, 59, 48, 0.6);
+}

@@ -1,5 +1,5 @@
 import { AnimatePresence, MotionConfig, motion } from "motion/react";
-import { useEffect, useRef } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { ApplyBar } from "./components/ApplyBar";
 import { ConfirmDialog } from "./components/ConfirmDialog";
 import { LicenseNotice } from "./components/LicenseNotice";
@@ -9,6 +9,7 @@ import { ResetToast } from "./components/ResetToast";
 import { ReviewPrompt } from "./components/ReviewPrompt";
 import { RunOverlay } from "./components/RunOverlay";
 import { SearchPalette } from "./components/SearchPalette";
+import { Splash } from "./components/Splash";
 import { Upsell } from "./components/Upsell";
 import { Sidebar } from "./components/Sidebar";
 import { TitleBar } from "./components/TitleBar";
@@ -23,6 +24,8 @@ import { NetTest } from "./pages/NetTest";
 export function App() {
   const { page, motion: motionPref, lang } = useStore();
   const scroller = useRef<HTMLElement>(null);
+  const [splash, setSplash] = useState(true);
+  const endSplash = useCallback(() => setSplash(false), []);
 
   useEffect(() => {
     document.documentElement.lang = lang;
@@ -71,6 +74,7 @@ export function App() {
         <ReviewPrompt />
         <ReviewDialog />
         <ResetToast />
+        <AnimatePresence>{splash && <Splash onDone={endSplash} />}</AnimatePresence>
       </div>
     </MotionConfig>
   );

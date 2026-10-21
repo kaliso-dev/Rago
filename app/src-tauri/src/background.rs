@@ -19,8 +19,11 @@ const TRAY_ID: &str = "rago";
 pub struct Prefs {
     /// fermer la fenêtre : Rago reste près de l'horloge
     pub tray: bool,
-    /// lancer Rago au démarrage de Windows (caché, près de l'horloge)
+    /// lancer Rago au démarrage de Windows (caché, près de l'horloge). Activé d'office tant que le joueur ne l'a pas
+    /// coupé lui-même dans les paramètres (`autostart_chosen`).
     pub autostart: bool,
+    /// le joueur a lui-même allumé ou coupé le lancement avec Windows
+    pub autostart_chosen: bool,
     /// barre en jeu : le raccourci l'ouvre par-dessus le jeu
     pub overlay: bool,
     pub shortcut: String,
@@ -32,7 +35,15 @@ pub struct Prefs {
 
 impl Default for Prefs {
     fn default() -> Self {
-        Prefs { tray: false, autostart: false, overlay: true, shortcut: DEFAULT_SHORTCUT.into(), pin: false, lang: "fr".into() }
+        Prefs {
+            tray: true,
+            autostart: true,
+            autostart_chosen: false,
+            overlay: true,
+            shortcut: DEFAULT_SHORTCUT.into(),
+            pin: false,
+            lang: "fr".into(),
+        }
     }
 }
 
@@ -53,7 +64,12 @@ pub struct Background {
 impl Background {
     pub fn load(data_dir: &Path, started_hidden: bool) -> Self {
         let path = data_dir.join("background.json");
-        let prefs = std::fs::read(&path).ok().and_then(|b| serde_json::from_slice(&b).ok()).unwrap_or_default();
+        let mut prefs: Prefs = std::fs::read(&path).ok().and_then(|b| serde_json::from_slice(&b).ok()).unwrap_or_default();
+        // le lancement avec Windows démarre caché : l'icône près de l'horloge va avec (comme dans les paramètres)
+        if !prefs.autostart_chosen {
+            prefs.autostart = true;
+            prefs.tray = true;
+        }
         Background { path, prefs: Mutex::new(prefs), started_hidden }
     }
 
@@ -230,10 +246,17 @@ mod tests {
     #[test]
     fn prefs_fill_missing_fields() {
         let p: Prefs = serde_json::from_str(r#"{"tray":true}"#).unwrap();
-        assert!(p.tray && p.overlay && !p.autostart);
+        assert!(p.tray && p.overlay && p.autostart && !p.autostart_chosen);
         assert_eq!(p.shortcut, DEFAULT_SHORTCUT);
         assert!(p.keeps_running());
-        assert!(!Prefs::default().keeps_running());
+        // lancement avec Windows d'office, sauf s'il a été coupé dans les paramètres
+        let dir = std::env::temp_dir().join(format!("rago-bg-{}", std::process::id()));
+        std::fs::create_dir_all(&dir).unwrap();
+        std::fs::write(dir.join("background.json"), r#"{"autostart":false}"#).unwrap();
+        assert!(Background::load(&dir, false).prefs().autostart);
+        std::fs::write(dir.join("background.json"), r#"{"autostart":false,"autostartChosen":true}"#).unwrap();
+        assert!(!Background::load(&dir, false).prefs().autostart);
+        let _ = std::fs::remove_dir_all(&dir);
     }
 
     #[test]

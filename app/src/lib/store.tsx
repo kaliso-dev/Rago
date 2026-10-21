@@ -90,6 +90,9 @@ export interface ConfirmState {
   all?: boolean;
   /** « Optimiser et jouer » (bibliothèque) : le jeu lancé une fois le lot fini */
   play?: { id: string; name: string };
+  /** titre et texte d'un lot préparé par un bouton (optimisations gratuites, outils) */
+  title?: string;
+  lead?: string;
 }
 
 /** Lancement d'un jeu de la bibliothèque, suivi par la page Jeux et la fenêtre du lot. */
@@ -445,6 +448,19 @@ function useStoreValue() {
     [toApply, launchGame, setVariants],
   );
 
+  /** Lot préparé par un bouton (optimisations gratuites, outils) : confirmation, sans toucher à la sélection. 0 : tout
+   * est déjà appliqué. */
+  const requestApplyEntries = useCallback(
+    (entries: string[], text?: { title: string; lead: string }) => {
+      const { ids, vs } = toApply(entries);
+      if (!ids.length) return 0;
+      setVariants((m) => ({ ...m, ...vs }));
+      setConfirm({ ids: ids.sort(byCatalog), undo: [], single: true, ...text });
+      return ids.length;
+    },
+    [toApply, setVariants],
+  );
+
   /** Réapplique un réglage déjà appliqué (Windows en a changé une valeur depuis). */
   const reapply = useCallback(
     (id: string) => {
@@ -643,7 +659,7 @@ function useStoreValue() {
     mcDir, setMcDir, cleanTrim, setCleanTrim,
     currentSetup, myPresets, savePreset, deletePreset,
     gamePresets, setGamePresets, playing, setPlaying, launchGame, optimizeAndPlay, toApply,
-    confirm, setConfirm, requestApply,
+    confirm, setConfirm, requestApply, requestApplyEntries,
     run, setRun, startRun,
     paletteOpen, setPaletteOpen,
     focusTweak, setFocusTweak, focusSeq,

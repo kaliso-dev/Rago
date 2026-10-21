@@ -1,10 +1,10 @@
 import { motion } from "motion/react";
-import { Check, Copy, Cpu, Gpu, HardDrive, MemoryStick, Network, Plus, RefreshCw, Lock, RotateCcw, Trash2, TriangleAlert } from "lucide-react";
+import { Check, Copy, Cpu, Gpu, HardDrive, MemoryStick, Network, Plus, RefreshCw, Lock, RotateCcw, Trash2, TriangleAlert, Zap } from "lucide-react";
 import { availability, catalog, distinctKey, retired, totalTweaks, tweaks } from "../lib/catalog";
 import { api } from "../lib/api";
 import { formatDate } from "../lib/i18n";
 import { encodePreset, MAX_NAME } from "../lib/share";
-import { useStore, type MyPreset } from "../lib/store";
+import { FREE, useStore, type MyPreset } from "../lib/store";
 import { LiveStatsCard } from "../components/LiveStatsCard";
 import { Button, Card } from "../components/ui";
 import { useState, type ReactNode } from "react";
@@ -13,6 +13,15 @@ import { useState, type ReactNode } from "react";
 const totalSwitches = new Set([...tweaks.values()].filter((tw) => tw.kind === "tweak").map((tw) => distinctKey(tw.id))).size;
 /** Plus aucun réglage ne se sert de WMIC (retiré de Windows 11 24H2) : sans lui, la ligne n'a rien à signaler. */
 const wmicUsed = [...tweaks.values()].some((tw) => tw.requires.includes("wmic"));
+
+/** « Optimisations gratuites » : les interrupteurs du plan gratuit, chacun avec sa variante par défaut (mode jeu
+ * Windows « Activé »). Les outils ponctuels du plan gratuit (point de restauration, réinitialisations) n'en font pas
+ * partie. */
+const FREE_ENTRIES = [...FREE].flatMap((id) => {
+  const tw = tweaks.get(id);
+  if (!tw || tw.kind !== "tweak") return [];
+  return [tw.variants?.length ? `${id}:${tw.defaultVariant ?? tw.variants[0].id}` : id];
+});
 
 const stagger = { animate: { transition: { staggerChildren: 0.04 } } };
 const rise = { initial: { opacity: 0, y: 10 }, animate: { opacity: 1, y: 0, transition: { duration: 0.42, ease: [0.16, 1, 0.3, 1] as const } } };
@@ -31,7 +40,9 @@ function Spec({ icon, label, value, sub }: { icon: ReactNode; label: string; val
 }
 
 export function Dashboard() {
-  const { t, lang, sys, sysLoading, refreshSys, isOn, selected, variantOf, selectMany, lastRestore, requestApply, premium, setUpsell, applied: appliedMap, retiredApplied, requestUndo, requestUndoAll, run, myPresets, currentSetup, savePreset } = useStore();
+  const { t, lang, sys, sysLoading, refreshSys, isOn, selected, variantOf, selectMany, lastRestore, requestApply, premium, setUpsell, applied: appliedMap, retiredApplied, requestUndo, requestUndoAll, run, myPresets, currentSetup, savePreset, toApply, requestApplyEntries } = useStore();
+  // optimisations gratuites encore à appliquer sur ce PC
+  const freeLeft = sys ? toApply(FREE_ENTRIES).ids.length : 0;
   const [naming, setNaming] = useState<string | null>(null);
   // réglages appliqués en ce moment (ceux qu'on a décochés depuis ne comptent plus), jumeaux comptés une fois
   const applied = new Set([...appliedMap.values()].filter((a) => a.ok && tweaks.get(a.id)?.kind === "tweak").map((a) => distinctKey(a.id))).size;
@@ -91,6 +102,24 @@ export function Dashboard() {
         <h1 className="display">{t("dash.title")}</h1>
         <p className="lead">{t("dash.lead", { n: totalTweaks })}</p>
       </motion.header>
+
+      <motion.section variants={rise} className={`card free-boost${sys && freeLeft === 0 ? " done" : ""}`}>
+        <span className="free-boost-icon" aria-hidden="true">
+          {sys && freeLeft === 0 ? <Check size={18} strokeWidth={2.25} /> : <Zap size={18} strokeWidth={2} />}
+        </span>
+        <div className="free-boost-text">
+          <h2 className="free-boost-title">{t("dash.free.title")}</h2>
+          <p className="muted small">{t("dash.free.lead", { n: FREE_ENTRIES.length })}</p>
+        </div>
+        <Button
+          variant={sys && freeLeft === 0 ? "secondary" : "primary"}
+          icon={sys && freeLeft === 0 ? <Check size={14} /> : <Zap size={14} />}
+          disabled={!sys || freeLeft === 0 || !!run}
+          onClick={() => requestApplyEntries(FREE_ENTRIES, { title: t("dash.free.confirmTitle"), lead: t("dash.free.confirmLead") })}
+        >
+          {sys && freeLeft === 0 ? t("dash.free.done") : t("dash.free.go")}
+        </Button>
+      </motion.section>
 
       <div className="dash-grid">
         <motion.div variants={rise} className="dash-system">
