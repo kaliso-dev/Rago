@@ -23,6 +23,10 @@ pub struct Config {
 }
 
 pub fn dir() -> PathBuf {
+    // les tests n'écrivent jamais dans le dossier du joueur
+    if cfg!(test) {
+        return std::env::temp_dir().join("rago-os-tests");
+    }
     std::env::var("LOCALAPPDATA").map(PathBuf::from).unwrap_or_else(|_| std::env::temp_dir()).join("Rago OS")
 }
 
@@ -69,6 +73,9 @@ pub fn send(resource_dir: &Path, args: &[&str]) -> Result<(), String> {
 
 /// Arrête Rago Shell (désactivation, désinstallation).
 pub fn stop() {
+    if cfg!(test) {
+        return;
+    }
     let _ = crate::shell::hidden("taskkill.exe").args(["/IM", EXE, "/F"]).output();
 }
 
@@ -129,6 +136,9 @@ pub fn task_xml(exe: &Path, user: &str) -> String {
 
 /// Crée ou retire la tâche de l'ouverture de session.
 pub fn set_autostart(resource_dir: &Path, on: bool, temp_dir: &Path) -> Result<(), String> {
+    if cfg!(test) {
+        return Ok(());
+    }
     if !on {
         let _ = crate::shell::hidden("schtasks.exe").args(["/Delete", "/TN", TASK, "/F"]).output();
         return Ok(());

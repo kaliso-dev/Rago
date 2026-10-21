@@ -54,11 +54,9 @@ impl Save for Disk {
     }
 }
 
-/// Hors de Windows (tests, démo) : rien n'est lu ni écrit.
-#[cfg(not(windows))]
+/// Hors de Windows (démo) et dans les tests, même sous Windows : rien n'est lu ni écrit sur le PC qui les lance.
 struct Nothing;
 
-#[cfg(not(windows))]
 impl Host for Nothing {
     fn read(&self, _probe: &crate::backup::Probe) -> crate::backup::Saved {
         crate::backup::Saved::Unknown
@@ -98,19 +96,18 @@ impl Host for Nothing {
 
 fn host(data_dir: &Path, resource_dir: &Path) -> Box<dyn Host> {
     #[cfg(windows)]
-    {
-        Box::new(win::WinHost::new(data_dir, resource_dir))
+    if !cfg!(test) {
+        return Box::new(win::WinHost::new(data_dir, resource_dir));
     }
-    #[cfg(not(windows))]
-    {
-        let _ = (data_dir, resource_dir);
-        Box::new(Nothing)
-    }
+    let _ = (data_dir, resource_dir);
+    Box::new(Nothing)
 }
 
 fn restart_explorer() {
     #[cfg(windows)]
-    win::restart_explorer();
+    if !cfg!(test) {
+        win::restart_explorer();
+    }
 }
 
 fn now_ms() -> u64 {
@@ -706,18 +703,17 @@ impl Os {
 /// Point de restauration système avant la première activation (même script que les réglages classiques).
 fn restore_point() -> Result<(), String> {
     #[cfg(windows)]
-    {
+    if !cfg!(test) {
         let out = crate::shell::hidden("powershell.exe")
             .args(["-NoProfile", "-NonInteractive", "-ExecutionPolicy", "Bypass", "-Command", crate::runner::RESTORE_POINT_PS])
             .output()
             .map_err(|e| e.to_string())?;
-        if out.status.success() {
+        return if out.status.success() {
             Ok(())
         } else {
             Err(crate::backup::decode_text(&out.stderr).trim().lines().last().unwrap_or("restore point failed").to_string())
-        }
+        };
     }
-    #[cfg(not(windows))]
     Ok(())
 }
 
@@ -747,7 +743,7 @@ mod tests {
         let dir = temp("cycle");
         let os = Os::new(dir.clone(), dir.join("resources"));
         let ledger = Mutex::new(Ledger::default());
-        let selection = catalog::get().profile("balanced", 26100);
+        let selection = catalog::get().profile("balanced", preflight::read(false).build);
         let req = Request { profile: Some("balanced".into()), selection: selection.clone(), features: BTreeMap::new(), skip_restore_point: false, force: false };
         let d = os.apply_now(&ledger, &req, None);
         assert_eq!((d.ok, d.failed), (selection.len(), 0), "{d:?}");
