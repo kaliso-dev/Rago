@@ -106,6 +106,14 @@ export interface Game {
   running: boolean;
 }
 
+/** Launcher installé (games.rs) : Steam, Epic Games, Lunar Client… */
+export interface Launcher {
+  id: string;
+  name: string;
+  minecraft: boolean;
+  running: boolean;
+}
+
 /** Mesure du test réseau (nettest.rs), en ms ; perte de 0 à 1. */
 export interface NetMeasure {
   id: string;
@@ -307,6 +315,12 @@ export interface Api {
   gameArt(id: string): Promise<string | null>;
   /** Lance le jeu par son launcher, sans droits d'administrateur. */
   gameLaunch(id: string): Promise<void>;
+  /** Launchers installés ; `refresh` : nouvelle recherche sur le PC. */
+  launchersList(refresh: boolean): Promise<Launcher[]>;
+  /** Ouvre le launcher, sans droits d'administrateur. */
+  launcherLaunch(id: string): Promise<void>;
+  /** Icône de l'exe du launcher (data: URL PNG), null s'il n'en a pas. */
+  launcherIcon(id: string): Promise<string | null>;
   /** Ajoute un jeu à la main (choix d'un .exe) ; id du jeu, null si la fenêtre est fermée sans choisir. */
   gameAdd(title: string): Promise<string | null>;
   /** Retire un jeu de la bibliothèque (rien n'est désinstallé). */
@@ -393,6 +407,9 @@ const tauriApi: Api = {
   gamesList: (refresh) => invoke("games_list", { refresh }),
   gameArt: (id) => invoke("game_art", { id }),
   gameLaunch: (id) => invoke("game_launch", { id }),
+  launchersList: (refresh) => invoke("launchers_list", { refresh }),
+  launcherLaunch: (id) => invoke("launcher_launch", { id }),
+  launcherIcon: (id) => invoke("launcher_icon", { id }),
   gameAdd: async (title) => {
     const { open } = await import("@tauri-apps/plugin-dialog");
     const path = await open({ title, multiple: false, directory: false, filters: [{ name: "Program", extensions: ["exe"] }] });
@@ -443,6 +460,15 @@ const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
 const mockHistory: HistoryEntry[] = [];
 const hour = 3_600_000;
 // démo : bibliothèque type d'un joueur de PvP Minecraft ; les images restent des tuiles au nom du jeu
+let mockLaunchers: Launcher[] = [
+  { id: "steam", name: "Steam", minecraft: false, running: true },
+  { id: "epic", name: "Epic Games", minecraft: false, running: false },
+  { id: "riot", name: "Riot Client", minecraft: false, running: false },
+  { id: "battlenet", name: "Battle.net", minecraft: false, running: false },
+  { id: "lunar", name: "Lunar Client", minecraft: true, running: false },
+  { id: "minecraft", name: "Minecraft Launcher", minecraft: true, running: false },
+  { id: "xbox", name: "Xbox", minecraft: false, running: false },
+];
 let mockGames: Game[] = [
   { id: "mc:lunar", name: "Minecraft", launcher: "minecraft", client: "Lunar Client", kind: "minecraft", installDir: null, lastPlayed: Date.now() - 2 * hour, running: false },
   { id: "mc:badlion", name: "Minecraft", launcher: "minecraft", client: "Badlion Client", kind: "minecraft", installDir: null, lastPlayed: Date.now() - 50 * hour, running: false },
@@ -734,6 +760,16 @@ const mockApi: Api = {
     await sleep(500);
     mockGames = mockGames.map((g) => (g.id === id ? { ...g, lastPlayed: Date.now() } : g));
   },
+  launchersList: async () => {
+    await sleep(300);
+    return mockLaunchers;
+  },
+  launcherLaunch: async (id) => {
+    await sleep(400);
+    mockLaunchers = mockLaunchers.map((l) => (l.id === id ? { ...l, running: true } : l));
+  },
+  // démo : pas d'exe à lire ; les captures peuvent fournir des icônes (window.__launcherIcons)
+  launcherIcon: async (id) => (window as unknown as { __launcherIcons?: Record<string, string> }).__launcherIcons?.[id] ?? null,
   gameAdd: async () => null,
   gameRemove: async (id) => {
     mockGames = mockGames.filter((g) => g.id !== id);

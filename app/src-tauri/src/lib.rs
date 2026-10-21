@@ -6,6 +6,7 @@ mod catalog;
 mod fps;
 mod gameping;
 mod games;
+mod icon;
 mod history;
 mod instance;
 mod license;
@@ -341,6 +342,26 @@ async fn game_art(state: State<'_, AppState>, id: String) -> Result<Option<Strin
 async fn game_launch(state: State<'_, AppState>, id: String) -> Result<(), String> {
     let lib = Arc::clone(&state.library);
     tauri::async_runtime::spawn_blocking(move || lib.launch(&id)).await.map_err(|e| e.to_string())?
+}
+
+/// Launchers installés (Steam, Epic Games, Lunar Client…).
+#[tauri::command]
+async fn launchers_list(state: State<'_, AppState>, refresh: bool) -> Result<Vec<games::Launcher>, String> {
+    let lib = Arc::clone(&state.library);
+    tauri::async_runtime::spawn_blocking(move || lib.launchers(refresh)).await.map_err(|e| e.to_string())
+}
+
+#[tauri::command]
+async fn launcher_launch(state: State<'_, AppState>, id: String) -> Result<(), String> {
+    let lib = Arc::clone(&state.library);
+    tauri::async_runtime::spawn_blocking(move || lib.launch_launcher(&id)).await.map_err(|e| e.to_string())?
+}
+
+/// Icône du launcher (data: URL), tirée de son exe une fois puis gardée dans art\.
+#[tauri::command]
+async fn launcher_icon(state: State<'_, AppState>, id: String) -> Result<Option<String>, String> {
+    let lib = Arc::clone(&state.library);
+    tauri::async_runtime::spawn_blocking(move || lib.launcher_icon(&id)).await.map_err(|e| e.to_string())
 }
 
 #[tauri::command]
@@ -923,6 +944,9 @@ pub fn run() {
             games_list,
             game_art,
             game_launch,
+            launchers_list,
+            launcher_launch,
+            launcher_icon,
             game_add,
             game_remove,
             games_unhide,

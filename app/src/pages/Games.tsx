@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { AnimatePresence, motion } from "motion/react";
-import { Check, ChevronDown, Lock, Play, Plus, RefreshCw, RotateCcw, Trash2, Zap } from "lucide-react";
-import { api, type Game } from "../lib/api";
+import { ArrowUpRight, Check, ChevronDown, LoaderCircle, Lock, Play, Plus, RefreshCw, RotateCcw, Trash2, Zap } from "lucide-react";
+import { api, type Game, type Launcher } from "../lib/api";
 import { catalog, tweaks } from "../lib/catalog";
 import { useStore } from "../lib/store";
 import { Button, Segmented } from "../components/ui";
@@ -53,10 +53,97 @@ function Art({ game, src, className }: { game: Game; src: string | null | undefi
   );
 }
 
+/** Launchers installés : leur icône (celle de leur exe) sur un fond flouté de la même icône ; un clic les ouvre. */
+function Launchers({ list }: { list: Launcher[] }) {
+  const { t } = useStore();
+  const [icons, setIcons] = useState<Record<string, string | null>>({});
+  const [opening, setOpening] = useState<string | null>(null);
+  const [open, setOpen] = useState<Set<string>>(new Set());
+  const [failed, setFailed] = useState<string | null>(null);
+  useEffect(() => {
+    let live = true;
+    for (const l of list) {
+      if (l.id in icons) continue;
+      void api.launcherIcon(l.id).then(
+        (src) => live && setIcons((m) => ({ ...m, [l.id]: src })),
+        () => live && setIcons((m) => ({ ...m, [l.id]: null })),
+      );
+    }
+    return () => {
+      live = false;
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [list]);
+
+  const start = async (l: Launcher) => {
+    setOpening(l.id);
+    setFailed(null);
+    try {
+      await api.launcherLaunch(l.id);
+      setOpen((s) => new Set(s).add(l.id));
+    } catch {
+      setFailed(l.id);
+    } finally {
+      setOpening(null);
+    }
+  };
+
+  return (
+    <motion.section variants={rise} className="launchers">
+      <div className="launchers-head">
+        <h2 className="section-title rg-overline">{t("games.launchers")}</h2>
+        <span className="muted small">{t("games.launchersLead")}</span>
+      </div>
+      <div className="launchers-row">
+        {list.map((l) => {
+          const src = icons[l.id];
+          const running = l.running || open.has(l.id);
+          return (
+            <motion.button
+              key={l.id}
+              type="button"
+              className={`launcher${running ? " running" : ""}`}
+              style={{ "--h": hue(l.id) } as React.CSSProperties}
+              whileHover={{ y: -2 }}
+              whileTap={{ scale: 0.98 }}
+              disabled={opening === l.id}
+              onClick={() => void start(l)}
+            >
+              <span className="launcher-glow" style={src ? { backgroundImage: `url(${src})` } : undefined} />
+              <span className="launcher-icon">
+                {src ? <img src={src} alt="" draggable={false} /> : <span className="launcher-initials">{initials(l.name)}</span>}
+              </span>
+              <span className="launcher-name">{l.name}</span>
+              <span className="launcher-state">
+                {opening === l.id ? (
+                  <LoaderCircle size={11} className="spin" />
+                ) : failed === l.id ? (
+                  t("games.launcherFailed")
+                ) : running ? (
+                  <>
+                    <span className="dot dot-ok" />
+                    {t("games.launcherOpen")}
+                  </>
+                ) : (
+                  <>
+                    {t("games.launcherStart")}
+                    <ArrowUpRight size={11} />
+                  </>
+                )}
+              </span>
+            </motion.button>
+          );
+        })}
+      </div>
+    </motion.section>
+  );
+}
+
 export function Games() {
   const { t, lang, premium, setUpsell, applied, gamePresets, setGamePresets, myPresets, optimizeAndPlay, launchGame, playing, requestUndo, run, toApply } =
     useStore();
   const [games, setGames] = useState<Game[] | null>(null);
+  const [launchers, setLaunchers] = useState<Launcher[]>([]);
   const [scanning, setScanning] = useState(false);
   const [filter, setFilter] = useState<Filter>("all");
   const [pick, setPick] = useState<string | null>(null);
@@ -66,6 +153,7 @@ export function Games() {
 
   const load = async (refresh: boolean) => {
     setScanning(true);
+    void api.launchersList(refresh).then(setLaunchers, () => {});
     try {
       setGames(await api.gamesList(refresh));
     } catch {
@@ -308,6 +396,8 @@ export function Games() {
           </div>
         </motion.section>
       )}
+
+      {launchers.length > 0 && <Launchers list={launchers} />}
 
       {sorted.length > 0 && (
         <>

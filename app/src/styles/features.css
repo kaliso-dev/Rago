@@ -1126,3 +1126,124 @@
     grid-template-columns: 1fr;
   }
 }
+
+/* Bibliothèque : launchers détectés */
+.launchers {
+  margin: 4px 0 20px;
+}
+.launchers-head {
+  display: flex;
+  align-items: baseline;
+  gap: 12px;
+  margin-bottom: 10px;
+}
+.launchers-head .section-title {
+  margin: 0;
+}
+.launchers-row {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(128px, 1fr));
+  gap: 10px;
+}
+.launcher {
+  position: relative;
+  isolation: isolate;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  padding: 16px 10px 12px;
+  border-radius: var(--rg-radius-md);
+  border: 1px solid var(--rg-line-1);
+  background: var(--rg-glass-fill);
+  box-shadow: var(--rg-glass-edge), 0 10px 28px -20px rgba(0, 0, 0, 0.8);
+  color: var(--rg-text-1);
+  text-align: center;
+  transition: border-color var(--rg-dur-fast), background var(--rg-dur-fast);
+}
+.launcher::after {
+  content: "";
+  position: absolute;
+  inset: -1px;
+  border-radius: inherit;
+  padding: 1px;
+  background: var(--rg-glass-rim);
+  -webkit-mask:
+    linear-gradient(#000 0 0) content-box,
+    linear-gradient(#000 0 0);
+  -webkit-mask-composite: xor;
+  mask-composite: exclude;
+  pointer-events: none;
+}
+.launcher:hover {
+  border-color: var(--rg-line-2);
+}
+.launcher:focus-visible {
+  outline: none;
+  box-shadow: var(--rg-focus);
+}
+/* le fond : l'icône elle-même, très floutée (ou la teinte du launcher sans icône) */
+.launcher-glow {
+  position: absolute;
+  inset: -30%;
+  z-index: -1;
+  background: radial-gradient(closest-side, hsl(var(--h) 70% 50% / 0.22), transparent);
+  background-size: 70%;
+  background-position: center 30%;
+  background-repeat: no-repeat;
+  filter: blur(26px) saturate(1.6);
+  opacity: 0.45;
+  transition: opacity var(--rg-dur-base) var(--rg-ease-out);
+}
+.launcher:hover .launcher-glow {
+  opacity: 0.85;
+}
+.launcher-icon {
+  display: grid;
+  place-items: center;
+  width: 48px;
+  height: 48px;
+  border-radius: 14px;
+  background: rgba(255, 255, 255, 0.06);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.1), 0 8px 20px -10px rgba(0, 0, 0, 0.9);
+}
+.launcher-icon img {
+  width: 36px;
+  height: 36px;
+  object-fit: contain;
+  filter: drop-shadow(0 4px 10px rgba(0, 0, 0, 0.45));
+}
+.launcher-initials {
+  font-family: var(--rg-font-mono);
+  font-size: 14px;
+  font-weight: 600;
+  color: hsl(var(--h) 80% 78%);
+}
+.launcher-name {
+  max-width: 100%;
+  font-size: 13px;
+  font-weight: 550;
+  letter-spacing: -0.005em;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.launcher-state {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  min-height: 16px;
+  font-size: 11.5px;
+  color: var(--rg-text-3);
+  transition: color var(--rg-dur-fast);
+}
+.launcher:hover .launcher-state {
+  color: var(--rg-text-1);
+}
+.launcher.running .launcher-state {
+  color: var(--rg-success);
+}
+.launcher:disabled {
+  cursor: progress;
+}

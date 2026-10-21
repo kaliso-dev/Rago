@@ -724,6 +724,216 @@ pub fn detect() -> Vec<Game> {
     Vec::new()
 }
 
+// ---------------------------------------------------------------- launchers
+
+/// Un launcher installé (Steam, Epic Games, Lunar Client…), ouvert depuis la bibliothèque. Son image est l'icône de
+/// son exe, celle que Windows affiche (icon.rs).
+#[derive(Debug, Clone, Serialize, PartialEq)]
+#[serde(rename_all = "camelCase")]
+pub struct Launcher {
+    /// steam, epic, riot, battlenet, ea, ubisoft, gog, rockstar, xbox, minecraft, lunar, badlion…
+    pub id: String,
+    pub name: String,
+    /// launcher Minecraft
+    pub minecraft: bool,
+    pub running: bool,
+    #[serde(skip)]
+    exe: Option<PathBuf>,
+    #[serde(skip)]
+    launch: Launch,
+}
+
+/// Launchers reconnus : id, nom affiché, noms dans « Programmes et fonctionnalités », exe relatif au dossier
+/// d'installation, chemins habituels (variable d'environnement, chemin), launcher Minecraft.
+struct LauncherDef {
+    id: &'static str,
+    name: &'static str,
+    uninstall: &'static [&'static str],
+    exe: &'static [&'static str],
+    known: &'static [(&'static str, &'static str)],
+    minecraft: bool,
+}
+
+const fn def(
+    id: &'static str,
+    name: &'static str,
+    uninstall: &'static [&'static str],
+    exe: &'static [&'static str],
+    known: &'static [(&'static str, &'static str)],
+    minecraft: bool,
+) -> LauncherDef {
+    LauncherDef { id, name, uninstall, exe, known, minecraft }
+}
+
+const EPIC_EXE: &str = "Epic Games\\Launcher\\Portal\\Binaries\\Win64\\EpicGamesLauncher.exe";
+const LAUNCHER_DEFS: &[LauncherDef] = &[
+    def("steam", "Steam", &["steam"], &["steam.exe"], &[("ProgramFiles(x86)", "Steam\\steam.exe")], false),
+    def(
+        "epic",
+        "Epic Games",
+        &["epic games launcher"],
+        &["Portal\\Binaries\\Win64\\EpicGamesLauncher.exe", "Launcher\\Portal\\Binaries\\Win64\\EpicGamesLauncher.exe"],
+        &[("ProgramFiles(x86)", EPIC_EXE), ("ProgramFiles", EPIC_EXE)],
+        false,
+    ),
+    def("riot", "Riot Client", &["riot client"], &["RiotClientServices.exe"], &[], false),
+    def(
+        "battlenet",
+        "Battle.net",
+        &["battle.net"],
+        &["Battle.net Launcher.exe", "Battle.net.exe"],
+        &[("ProgramFiles(x86)", "Battle.net\\Battle.net Launcher.exe"), ("ProgramFiles(x86)", "Battle.net\\Battle.net.exe")],
+        false,
+    ),
+    def(
+        "ea",
+        "EA app",
+        &["ea app"],
+        &["EA Desktop\\EADesktop.exe", "EADesktop.exe"],
+        &[("ProgramFiles", "Electronic Arts\\EA Desktop\\EA Desktop\\EADesktop.exe")],
+        false,
+    ),
+    def(
+        "ubisoft",
+        "Ubisoft Connect",
+        &["ubisoft connect"],
+        &["UbisoftConnect.exe", "upc.exe"],
+        &[("ProgramFiles(x86)", "Ubisoft\\Ubisoft Game Launcher\\UbisoftConnect.exe"), ("ProgramFiles(x86)", "Ubisoft\\Ubisoft Game Launcher\\upc.exe")],
+        false,
+    ),
+    def("gog", "GOG Galaxy", &["gog galaxy"], &["GalaxyClient.exe"], &[("ProgramFiles(x86)", "GOG Galaxy\\GalaxyClient.exe")], false),
+    def(
+        "rockstar",
+        "Rockstar Games",
+        &["rockstar games launcher"],
+        &["Launcher.exe"],
+        &[("ProgramFiles", "Rockstar Games\\Launcher\\Launcher.exe")],
+        false,
+    ),
+    def(
+        "minecraft",
+        "Minecraft Launcher",
+        &["minecraft launcher"],
+        &["MinecraftLauncher.exe"],
+        &[("ProgramFiles(x86)", "Minecraft Launcher\\MinecraftLauncher.exe")],
+        true,
+    ),
+    def("lunar", "Lunar Client", &["lunar client"], &["Lunar Client.exe"], &[("LOCALAPPDATA", "Programs\\lunarclient\\Lunar Client.exe")], true),
+    def("badlion", "Badlion Client", &["badlion client"], &["Badlion Client.exe"], &[("ProgramFiles", "Badlion Client\\Badlion Client.exe")], true),
+    def(
+        "feather",
+        "Feather Client",
+        &["feather launcher", "feather client"],
+        &["Feather Launcher.exe"],
+        &[("LOCALAPPDATA", "Programs\\feather-launcher\\Feather Launcher.exe")],
+        true,
+    ),
+    def("prism", "Prism Launcher", &["prism launcher"], &["prismlauncher.exe"], &[("LOCALAPPDATA", "Programs\\PrismLauncher\\prismlauncher.exe")], true),
+    def("modrinth", "Modrinth App", &["modrinth app"], &["Modrinth App.exe"], &[("LOCALAPPDATA", "Modrinth App\\Modrinth App.exe")], true),
+    def("curseforge", "CurseForge", &["curseforge"], &["CurseForge.exe"], &[("LOCALAPPDATA", "Programs\\CurseForge Windows\\CurseForge.exe")], true),
+];
+
+/// Nom de « Programmes et fonctionnalités » qui correspond (« Lunar Client 3.2.1 » pour « lunar client »).
+fn matches_name(display_name: &str, names: &[&str]) -> bool {
+    let n = display_name.to_lowercase();
+    names.iter().any(|m| n == *m || n.starts_with(&format!("{m} ")))
+}
+
+/// Exe d'un launcher d'après son entrée de « Programmes et fonctionnalités » : dans son dossier d'installation, sinon
+/// l'exe de son icône s'il porte le nom attendu.
+fn uninstall_exe(d: &LauncherDef, e: &Uninstall) -> Option<PathBuf> {
+    let in_dir = e.location.as_ref().and_then(|dir| d.exe.iter().map(|x| dir.join(x)).find(|p| p.is_file()));
+    in_dir.or_else(|| {
+        let icon = e.icon.as_deref().and_then(icon_exe)?;
+        let file = icon.file_name()?.to_string_lossy().to_lowercase();
+        let wanted = d.exe.iter().any(|x| Path::new(x).file_name().is_some_and(|f| f.to_string_lossy().to_lowercase() == file));
+        (wanted && icon.is_file()).then_some(icon)
+    })
+}
+
+#[cfg(windows)]
+fn special_exe(id: &str) -> Option<PathBuf> {
+    let p = match id {
+        "steam" => reg::string("HKCU\\Software\\Valve\\Steam", "SteamExe").map(|p| PathBuf::from(p.replace('/', "\\"))),
+        "riot" => env_path("ProgramData")
+            .and_then(|d| fs::read(d.join("Riot Games").join("RiotClientInstalls.json")).ok())
+            .and_then(|b| serde_json::from_slice::<serde_json::Value>(&b).ok())
+            .and_then(|v| v["rc_default"].as_str().or(v["rc_live"].as_str()).map(|p| PathBuf::from(p.replace('/', "\\")))),
+        "ubisoft" => reg::string("HKLM\\SOFTWARE\\WOW6432Node\\Ubisoft\\Launcher", "InstallDir").and_then(|d| {
+            let d = PathBuf::from(d.replace('/', "\\"));
+            ["UbisoftConnect.exe", "upc.exe"].iter().map(|x| d.join(x)).find(|p| p.is_file())
+        }),
+        "gog" => reg::string("HKLM\\SOFTWARE\\WOW6432Node\\GOG.com\\GalaxyClient\\paths", "client").map(|d| PathBuf::from(d).join("GalaxyClient.exe")),
+        _ => None,
+    };
+    p.filter(|p| p.is_file())
+}
+
+/// Un paquet du Microsoft Store installé pour ce compte (« Microsoft.GamingApp_… »).
+#[cfg(windows)]
+fn has_package(prefix: &str) -> bool {
+    let packages = "HKCU\\Software\\Classes\\Local Settings\\Software\\Microsoft\\Windows\\CurrentVersion\\AppModel\\Repository\\Packages";
+    reg::subkeys(packages).iter().any(|k| k.starts_with(prefix))
+}
+
+#[cfg(windows)]
+pub fn detect_launchers() -> Vec<Launcher> {
+    let entries = uninstall_entries();
+    let mut out = Vec::new();
+    for d in LAUNCHER_DEFS {
+        let exe = special_exe(d.id)
+            .or_else(|| d.known.iter().filter_map(|(var, rel)| env_path(var).map(|b| b.join(rel))).find(|p| p.is_file()))
+            .or_else(|| entries.iter().filter(|e| matches_name(&e.name, d.uninstall)).find_map(|e| uninstall_exe(d, e)));
+        if let Some(exe) = exe {
+            let launch = Launch::Exe { path: exe.clone(), args: Vec::new() };
+            out.push(Launcher { id: d.id.into(), name: d.name.into(), minecraft: d.minecraft, running: false, exe: Some(exe), launch });
+        }
+    }
+    // applications du Microsoft Store : l'app Xbox, et le launcher Minecraft s'il n'est pas installé autrement
+    let store = |id: &str, name: &str, app: &str, minecraft: bool| Launcher {
+        id: id.into(),
+        name: name.into(),
+        minecraft,
+        running: false,
+        exe: None,
+        launch: Launch::AppsFolder(app.into()),
+    };
+    if has_package("Microsoft.GamingApp_") {
+        out.push(store("xbox", "Xbox", "Microsoft.GamingApp_8wekyb3d8bbwe!Microsoft.Xbox.App", false));
+    }
+    if !out.iter().any(|l| l.id == "minecraft") && has_package("Microsoft.4297127D64EC6_") {
+        out.push(store("minecraft", "Minecraft Launcher", "Microsoft.4297127D64EC6_8wekyb3d8bbwe!Minecraft", true));
+    }
+    out
+}
+
+#[cfg(not(windows))]
+pub fn detect_launchers() -> Vec<Launcher> {
+    Vec::new()
+}
+
+/// Lance un jeu ou un launcher avec les droits de la session Windows.
+fn start(launch: &Launch) -> Result<(), String> {
+    match launch {
+        Launch::Url(url) => launch::unelevated(Path::new("explorer.exe"), std::slice::from_ref(url), None),
+        Launch::AppsFolder(app) => launch::unelevated(Path::new("explorer.exe"), &[format!("shell:AppsFolder\\{app}")], None),
+        Launch::Exe { path, args } => {
+            if !path.is_file() {
+                return Err("not_found".into());
+            }
+            launch::unelevated(path, args, path.parent())
+        }
+        Launch::None => Err("Nothing to launch".into()),
+    }
+}
+
+/// Launcher ouvert : un processus lancé depuis le dossier même de son exe (pas ses sous-dossiers, où Steam range les
+/// jeux).
+pub fn launcher_running(exe: &Path, procs: &[PathBuf]) -> bool {
+    let Some(dir) = exe.parent().map(|d| d.to_string_lossy().to_lowercase()) else { return false };
+    procs.iter().any(|p| p.parent().is_some_and(|d| d.to_string_lossy().to_lowercase() == dir))
+}
+
 // ---------------------------------------------------------------- bibliothèque
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -748,6 +958,7 @@ pub struct Library {
     saved: Mutex<Saved>,
     games: Mutex<Option<Vec<Game>>>,
     running: Mutex<HashSet<String>>,
+    launchers: Mutex<Option<Vec<Launcher>>>,
 }
 
 fn now_ms() -> u64 {
@@ -758,7 +969,14 @@ impl Library {
     pub fn new(data_dir: &Path) -> Self {
         let path = data_dir.join("games.json");
         let saved = fs::read(&path).ok().and_then(|b| serde_json::from_slice(&b).ok()).unwrap_or_default();
-        Library { path, art_dir: data_dir.join("art"), saved: Mutex::new(saved), games: Mutex::new(None), running: Mutex::new(HashSet::new()) }
+        Library {
+            path,
+            art_dir: data_dir.join("art"),
+            saved: Mutex::new(saved),
+            games: Mutex::new(None),
+            running: Mutex::new(HashSet::new()),
+            launchers: Mutex::new(None),
+        }
     }
 
     fn save(&self, saved: &Saved) {
@@ -821,23 +1039,47 @@ impl Library {
 
     pub fn launch(&self, id: &str) -> Result<(), String> {
         let g = self.find(id).ok_or("Unknown game")?;
-        let r = match &g.launch {
-            Launch::Url(url) => launch::unelevated(Path::new("explorer.exe"), &[url.clone()], None),
-            Launch::AppsFolder(app) => launch::unelevated(Path::new("explorer.exe"), &[format!("shell:AppsFolder\\{app}")], None),
-            Launch::Exe { path, args } => {
-                if !path.is_file() {
-                    return Err("not_found".into());
-                }
-                launch::unelevated(path, args, path.parent())
-            }
-            Launch::None => Err("Nothing to launch".into()),
-        };
+        let r = start(&g.launch);
         if r.is_ok() {
             let mut saved = self.saved.lock().unwrap();
             saved.played.insert(g.id, now_ms());
             self.save(&saved);
         }
         r
+    }
+
+    /// Launchers installés, détectés à nouveau si `refresh` (ou à la première demande), avec ceux ouverts en ce moment.
+    pub fn launchers(&self, refresh: bool) -> Vec<Launcher> {
+        let mut list = {
+            let mut cached = self.launchers.lock().unwrap();
+            if refresh || cached.is_none() {
+                *cached = Some(detect_launchers());
+            }
+            cached.clone().unwrap_or_default()
+        };
+        let procs = process_paths();
+        for l in &mut list {
+            l.running = l.exe.as_deref().is_some_and(|e| launcher_running(e, &procs));
+        }
+        list
+    }
+
+    pub fn launch_launcher(&self, id: &str) -> Result<(), String> {
+        let l = self.launchers(false).into_iter().find(|l| l.id == id).ok_or("Unknown launcher")?;
+        start(&l.launch)
+    }
+
+    /// Icône du launcher en data: URL (PNG), tirée de son exe une fois puis gardée dans art\.
+    pub fn launcher_icon(&self, id: &str) -> Option<String> {
+        let file = self.art_dir.join(format!("launcher-{}.png", art_stem(id)));
+        if let Ok(bytes) = fs::read(&file) {
+            return data_url(&bytes);
+        }
+        let exe = self.launchers(false).into_iter().find(|l| l.id == id)?.exe?;
+        let png = crate::icon::exe_png(&exe, 128)?;
+        let _ = fs::create_dir_all(&self.art_dir);
+        let _ = fs::write(&file, &png);
+        data_url(&png)
     }
 
     /// Jeu ajouté à la main (un .exe choisi par le joueur).
@@ -1341,4 +1583,20 @@ mod tests {
         assert!(Library::new(&dir).saved.lock().unwrap().played.contains_key("steam:730"));
         let _ = fs::remove_dir_all(&dir);
     }
+
+    #[test]
+    fn launchers_are_recognized() {
+        assert!(matches_name("Lunar Client 3.2.1", &["lunar client"]));
+        assert!(matches_name("Steam", &["steam"]));
+        assert!(!matches_name("SteamVR", &["steam"]));
+        assert!(!matches_name("Epic Games Store Helper", &["epic games launcher"]));
+        // ids uniques, un exe attendu pour chacun
+        let mut ids = HashSet::new();
+        assert!(LAUNCHER_DEFS.iter().all(|d| ids.insert(d.id) && !d.exe.is_empty() && !d.uninstall.is_empty()));
+        // Steam ouvert : steam.exe dans son dossier ; un jeu de steamapps n'ouvre pas Steam
+        let steam = Path::new("C:/Program Files (x86)/Steam/steam.exe");
+        assert!(launcher_running(steam, &[PathBuf::from("C:/Program Files (x86)/Steam/steam.exe")]));
+        assert!(!launcher_running(steam, &[PathBuf::from("C:/Program Files (x86)/Steam/steamapps/common/Counter-Strike Global Offensive/game/bin/win64/cs2.exe")]));
+    }
+
 }
