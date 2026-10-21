@@ -117,6 +117,18 @@ fn now_ms() -> u64 {
     crate::history::now_ms()
 }
 
+/// Le PC a redémarré depuis `marked` (ms) : son démarrage est plus récent, à quelques secondes près.
+#[cfg(windows)]
+fn booted_since(marked: u64) -> bool {
+    let up = unsafe { windows_sys::Win32::System::SystemInformation::GetTickCount64() };
+    now_ms().saturating_sub(up) > marked + 5_000
+}
+
+#[cfg(not(windows))]
+fn booted_since(_marked: u64) -> bool {
+    false
+}
+
 /// Ce que l'interface demande à l'activation (ou en changeant la sélection pendant que Rago OS est actif).
 #[derive(Debug, Clone, Deserialize)]
 #[serde(rename_all = "camelCase")]
@@ -261,6 +273,13 @@ impl Os {
             }
             s.features.insert("translucenttb".into(), false);
             s.save();
+        }
+        {
+            let mut s = self.state.lock().unwrap();
+            if s.restart_pending && booted_since(s.restart_marked) {
+                s.restart_pending = false;
+                s.save();
+            }
         }
         let s = self.state.lock().unwrap().clone();
         let l = ledger.lock().unwrap();
@@ -446,7 +465,10 @@ impl Os {
             s.active = true;
             s.activated_at.get_or_insert(now_ms());
             s.build = build;
-            s.restart_pending |= restart;
+            if restart {
+                s.restart_pending = true;
+                s.restart_marked = now_ms();
+            }
             s.job = None;
             s.save();
             s.feature("boot")
@@ -566,6 +588,9 @@ impl Os {
             s.active = false;
             s.activated_at = None;
             s.restart_pending = restart;
+            if restart {
+                s.restart_marked = now_ms();
+            }
             s.job = None;
             s.save();
         }

@@ -3,6 +3,7 @@
 import { invoke } from "@tauri-apps/api/core";
 import { listen, type UnlistenFn } from "@tauri-apps/api/event";
 import { tweaks } from "./catalog";
+import { featureDefaults, osCatalog, osTweaks } from "./os";
 
 export interface Gpu {
   name: string;
@@ -231,6 +232,89 @@ export interface ResetDone {
   failed: number;
 }
 
+/** Rago OS (os/mod.rs) : état d'un réglage du catalogue os.json sur ce PC. */
+export interface OsTweakView {
+  id: string;
+  /** appliqué par Rago OS (noté dans applied.json) */
+  applied: boolean;
+  /** tout ce qu'il pose est en place en ce moment */
+  inPlace: boolean;
+}
+export interface OsFailure {
+  id: string;
+  error: string;
+}
+/** Application du Store retirée par Rago OS que Windows n'a pas pu réinscrire. */
+export interface OsAppx {
+  name: string;
+  fullName: string;
+  family: string;
+  location?: string | null;
+}
+export interface OsOverview {
+  /** build de Windows (26100 : 24H2) */
+  build: number;
+  active: boolean;
+  /** profil choisi ; null : sélection personnalisée */
+  profile: string | null;
+  selection: string[];
+  features: Record<string, boolean>;
+  activatedAt: number | null;
+  tweaks: OsTweakView[];
+  /** appliqués mais plus en place (Windows ou une mise à jour les a remis) */
+  drift: string[];
+  windowsUpdated: boolean;
+  failed: OsFailure[];
+  /** activation ou restauration coupée (PC éteint, app fermée) */
+  interrupted: { kind: "apply" | "restore"; done: number; total: number } | null;
+  running: boolean;
+  restartPending: boolean;
+  /** rago-shell.exe livré avec l'app */
+  shellInstalled: boolean;
+  translucenttb: { installed: boolean; applied: boolean; stoppedAt: number | null };
+  appsToReinstall: OsAppx[];
+  restorePoint: number | null;
+}
+/** Vérification avant activation (os/preflight.rs). */
+export interface OsCheck {
+  id: "windows" | "edition" | "activation" | "disk" | "reboot" | "admin" | "battery" | "busy" | string;
+  level: "ok" | "warn" | "block";
+  detail?: string;
+}
+export interface OsRequest {
+  profile: string | null;
+  selection: string[];
+  features?: Record<string, boolean>;
+  /** « Continuer sans » après un point de restauration raté */
+  skipRestorePoint?: boolean;
+  /** réapplique aussi ce qui est noté comme appliqué (réglages remis par Windows) */
+  force?: boolean;
+}
+export interface OsProgress {
+  kind: "apply" | "restore";
+  phase: "restore_point" | "tweak" | "features" | "explorer" | string;
+  index: number;
+  total: number;
+  id?: string;
+  status: "running" | "ok" | "skipped" | "failed";
+  message?: string;
+}
+export interface OsDone {
+  kind: "apply" | "restore";
+  ok: number;
+  failed: number;
+  cancelled: boolean;
+  restart: boolean;
+  restoreFailed: boolean;
+  error?: string;
+}
+/** Consommation de Rago Shell mesurée par l'app : CPU en % d'un PC entier, mémoire privée en Mo. */
+export interface OsUsage {
+  running: boolean;
+  cpu: number | null;
+  ramMb: number | null;
+}
+
 export const isTauri = typeof window !== "undefined" && "__TAURI_INTERNALS__" in window;
 
 /** Presse-papiers de WebView2 ; à défaut (page sans focus), l'ancienne méthode du champ caché. */
@@ -328,6 +412,25 @@ export interface Api {
   licenseActivate(): Promise<LicenseStatus>;
   licenseRefresh(): Promise<LicenseStatus>;
   licenseSignOut(): Promise<void>;
+  osOverview(): Promise<OsOverview>;
+  osPreflight(selection: string[]): Promise<OsCheck[]>;
+  /** Activation (ou nouvelle sélection) : suivie par onOsProgress puis onOsDone. Premium. */
+  osApply(request: OsRequest): Promise<void>;
+  /** « Désactiver et tout restaurer » : possible sans licence. */
+  osRestore(): Promise<void>;
+  osCancel(): Promise<void>;
+  osSetFeature(id: string, on: boolean): Promise<void>;
+  /** Joue l'animation de démarrage par-dessus le bureau (aussi en plan gratuit). */
+  osPreview(): Promise<void>;
+  /** Minuteur de la Dynamic Island, en secondes (0 : arrêté). */
+  osTimer(seconds: number): Promise<void>;
+  osUsage(): Promise<OsUsage>;
+  osForgetJob(): Promise<void>;
+  osClearRestart(): Promise<void>;
+  /** Page du Store : TranslucentTB (sans famille) ou une application à réinstaller. */
+  osOpenStore(family?: string): Promise<void>;
+  onOsProgress(cb: (p: OsProgress) => void): Promise<UnlistenFn>;
+  onOsDone(cb: (d: OsDone) => void): Promise<UnlistenFn>;
   window: { minimize(): void; toggleMaximize(): void; close(): void };
 }
 
@@ -403,6 +506,20 @@ const tauriApi: Api = {
   licenseActivate: () => invoke("license_activate"),
   licenseRefresh: () => invoke("license_refresh"),
   licenseSignOut: () => invoke("license_sign_out"),
+  osOverview: () => invoke("os_overview"),
+  osPreflight: (selection) => invoke("os_preflight", { selection }),
+  osApply: (request) => invoke("os_apply", { request }),
+  osRestore: () => invoke("os_restore"),
+  osCancel: () => invoke("os_cancel"),
+  osSetFeature: (id, on) => invoke("os_set_feature", { id, on }),
+  osPreview: () => invoke("os_preview"),
+  osTimer: (seconds) => invoke("os_timer", { seconds }),
+  osUsage: () => invoke("os_usage"),
+  osForgetJob: () => invoke("os_forget_job"),
+  osClearRestart: () => invoke("os_clear_restart"),
+  osOpenStore: (family) => invoke("os_open_store", { family: family ?? null }),
+  onOsProgress: (cb) => listen<OsProgress>("os:progress", (e) => cb(e.payload)),
+  onOsDone: (cb) => listen<OsDone>("os:done", (e) => cb(e.payload)),
   onItem: (cb) => listen<ItemEvent>("run:item", (e) => cb(e.payload)),
   onLog: (cb) => listen<LogEvent>("run:log", (e) => cb(e.payload)),
   onDone: (cb) => listen<DoneEvent>("run:done", (e) => cb(e.payload)),
@@ -499,6 +616,99 @@ function mockReset() {
     saveMockApplied();
     emit<ResetDone>("reset:done", { ok: ids.length, failed: 0 });
   }, 1500);
+}
+
+// démo de Rago OS : état gardé dans le navigateur ; ?osdrift simule des réglages remis par Windows, ?osjob une
+// activation coupée, ?osttb TranslucentTB installé
+interface MockOs {
+  active: boolean;
+  profile: string | null;
+  selection: string[];
+  features: Record<string, boolean>;
+  activatedAt: number | null;
+  applied: string[];
+  restartPending: boolean;
+  restorePoint: number | null;
+}
+const demoFlag = (k: string) => typeof location !== "undefined" && new URLSearchParams(location.search).has(k);
+let mockOs: MockOs = (() => {
+  const empty: MockOs = { active: false, profile: null, selection: [], features: featureDefaults(), activatedAt: null, applied: [], restartPending: false, restorePoint: null };
+  try {
+    const raw = localStorage.getItem("rago.demoOs");
+    return raw ? { ...empty, ...(JSON.parse(raw) as Partial<MockOs>) } : empty;
+  } catch {
+    return empty;
+  }
+})();
+let mockOsRunning = false;
+let mockOsCancel = false;
+let mockOsJob = demoFlag("osjob");
+let mockTimer = 0;
+function saveMockOs() {
+  try {
+    localStorage.setItem("rago.demoOs", JSON.stringify(mockOs));
+  } catch {
+    /* démo sans stockage */
+  }
+}
+function mockOsRun(kind: "apply" | "restore", steps: { id: string; apply: boolean }[], skipRestorePoint: boolean) {
+  mockOsRunning = true;
+  mockOsCancel = false;
+  void (async () => {
+    const done: OsDone = { kind, ok: 0, failed: 0, cancelled: false, restart: false, restoreFailed: false };
+    const progress = (p: Omit<OsProgress, "kind">) => emit<OsProgress>("os:progress", { kind, ...p });
+    if (kind === "apply" && !mockOs.restorePoint && !skipRestorePoint) {
+      progress({ phase: "restore_point", index: 0, total: 0, status: "running" });
+      await sleep(1600);
+      // démo : ?osrp fait échouer le point de restauration
+      if (demoFlag("osrp")) {
+        mockOsRunning = false;
+        emit<OsDone>("os:done", { ...done, restoreFailed: true, error: "System Protection is off" });
+        return;
+      }
+      mockOs.restorePoint = Date.now();
+    }
+    if (kind === "restore") {
+      progress({ phase: "features", index: 0, total: 0, status: "running" });
+      await sleep(500);
+    }
+    let explorer = false;
+    for (const [i, st] of steps.entries()) {
+      if (mockOsCancel) {
+        done.cancelled = true;
+        break;
+      }
+      progress({ phase: "tweak", index: i, total: steps.length, id: st.id, status: "running" });
+      await sleep(70 + Math.random() * 110);
+      const t = osTweaks.get(st.id);
+      if (t?.reboot === "restart") done.restart = true;
+      if (t?.reboot === "explorer") explorer = true;
+      mockOs.applied = st.apply ? [...new Set([...mockOs.applied, st.id])] : mockOs.applied.filter((x) => x !== st.id);
+      done.ok++;
+      progress({ phase: "tweak", index: i, total: steps.length, id: st.id, status: "ok" });
+    }
+    if (!done.cancelled) {
+      if (kind === "apply") {
+        progress({ phase: "features", index: steps.length, total: steps.length, status: "running" });
+        await sleep(400);
+        mockOs.active = true;
+        mockOs.activatedAt ??= Date.now();
+      } else {
+        mockOs.active = false;
+        mockOs.activatedAt = null;
+        mockOs.applied = [];
+      }
+      if (explorer) {
+        progress({ phase: "explorer", index: steps.length, total: steps.length, status: "running" });
+        await sleep(900);
+      }
+      mockOs.restartPending = done.restart;
+      mockOsJob = false;
+    }
+    saveMockOs();
+    mockOsRunning = false;
+    emit<OsDone>("os:done", done);
+  })();
 }
 
 const mockApi: Api = {
@@ -796,6 +1006,87 @@ const mockApi: Api = {
     }
     mockReset();
   },
+  osOverview: async () => {
+    await sleep(180);
+    const drift = demoFlag("osdrift") && mockOs.active ? mockOs.applied.slice(0, 3) : [];
+    return {
+      build: 26100,
+      active: mockOs.active,
+      profile: mockOs.profile,
+      selection: mockOs.selection,
+      features: mockOs.features,
+      activatedAt: mockOs.activatedAt,
+      tweaks: osCatalog.tweaks.map((t) => {
+        const applied = mockOs.applied.includes(t.id);
+        return { id: t.id, applied, inPlace: applied && !drift.includes(t.id) };
+      }),
+      drift,
+      windowsUpdated: drift.length > 0,
+      failed: [],
+      interrupted: mockOsJob && !mockOsRunning ? { kind: "apply", done: 23, total: 51 } : null,
+      running: mockOsRunning,
+      restartPending: mockOs.restartPending,
+      shellInstalled: true,
+      translucenttb: { installed: demoFlag("osttb"), applied: demoFlag("osttb") && !!mockOs.features.translucenttb, stoppedAt: null },
+      appsToReinstall: [],
+      restorePoint: mockOs.restorePoint,
+    };
+  },
+  osPreflight: async () => {
+    await sleep(350);
+    return [
+      { id: "windows", level: "ok", detail: "Windows 11 24H2 (26100)" },
+      { id: "edition", level: "ok", detail: "Professional" },
+      { id: "activation", level: "ok" },
+      { id: "disk", level: "ok", detail: "212.4" },
+      { id: "reboot", level: "ok" },
+      { id: "admin", level: "ok" },
+      { id: "busy", level: mockOsRunning ? "block" : "ok" },
+    ];
+  },
+  osApply: async (request) => {
+    if (!demoEmail) throw "premium_required";
+    if (mockOsRunning) throw "os_running";
+    const wanted = request.selection.filter((id) => osTweaks.has(id));
+    const revert = mockOs.applied.filter((id) => !wanted.includes(id));
+    const apply = request.force ? wanted : wanted.filter((id) => !mockOs.applied.includes(id) || !mockOs.active);
+    mockOs = { ...mockOs, profile: request.profile, selection: request.selection, features: { ...mockOs.features, ...request.features } };
+    mockOsRun("apply", [...revert.map((id) => ({ id, apply: false })), ...apply.map((id) => ({ id, apply: true }))], !!request.skipRestorePoint);
+  },
+  osRestore: async () => {
+    if (mockOsRunning) throw "os_running";
+    mockOsRun("restore", [...mockOs.applied].reverse().map((id) => ({ id, apply: false })), true);
+  },
+  osCancel: async () => {
+    mockOsCancel = true;
+  },
+  osSetFeature: async (id, on) => {
+    await sleep(200);
+    if (on && !demoEmail) throw "premium_required";
+    if (id === "translucenttb" && on && !demoFlag("osttb")) throw "translucenttb_missing";
+    mockOs = { ...mockOs, features: { ...mockOs.features, [id]: on } };
+    saveMockOs();
+  },
+  osPreview: async () => {
+    // démo : l'animation de Rago Shell ne se joue que sous Windows
+  },
+  osTimer: async (seconds) => {
+    mockTimer = seconds;
+  },
+  osUsage: async () => {
+    const on = mockOs.active && (mockOs.features.island || mockTimer > 0);
+    return on ? { running: true, cpu: Math.round(Math.random() * 6) / 100, ramMb: Math.round((11.2 + Math.random() * 0.6) * 10) / 10 } : { running: false, cpu: null, ramMb: null };
+  },
+  osForgetJob: async () => {
+    mockOsJob = false;
+  },
+  osClearRestart: async () => {
+    mockOs.restartPending = false;
+    saveMockOs();
+  },
+  osOpenStore: async () => {},
+  onOsProgress: (cb) => on("os:progress", cb),
+  onOsDone: (cb) => on("os:done", cb),
   onItem: (cb) => on("run:item", cb),
   onLog: (cb) => on("run:log", cb),
   onDone: (cb) => on("run:done", cb),

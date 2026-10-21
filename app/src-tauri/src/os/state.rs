@@ -72,6 +72,9 @@ pub struct OsState {
     /// un redémarrage du PC reste à faire pour finir la dernière opération
     #[serde(default)]
     pub restart_pending: bool,
+    /// quand ce redémarrage a été demandé (ms) : un démarrage du PC après lui l'a fait
+    #[serde(default)]
+    pub restart_marked: u64,
     /// point de restauration créé avant la première activation
     #[serde(default)]
     pub restore_point: Option<u64>,

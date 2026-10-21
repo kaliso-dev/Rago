@@ -12,6 +12,16 @@ export function Mark({ size = 20 }: { size?: number }) {
   );
 }
 
+/** Icône de navigation : la marque en couleur du texte, un peu en retrait comme les icônes au trait. */
+export function MarkIcon({ size = 16 }: { size?: number | string }) {
+  const pad = MARK_BOX.h * 0.14;
+  return (
+    <svg width={size} height={size} viewBox={`${-PAD - pad} ${-pad} ${MARK_BOX.h + 2 * pad} ${MARK_BOX.h + 2 * pad}`} aria-hidden="true">
+      <path d={MARK} fill="currentColor" />
+    </svg>
+  );
+}
+
 /** `mark={false}` : le texte seul, quand la marque est déjà affichée à côté. */
 export function Wordmark({ height = 14, mark = true }: { height?: number; mark?: boolean }) {
   const [x, y, w, h] = WORDMARK_VIEWBOX.split(" ").map(Number);
