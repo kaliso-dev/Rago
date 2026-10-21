@@ -22,6 +22,7 @@ mod report;
 mod reset;
 mod runner;
 mod seal;
+mod session;
 mod shell;
 mod stats;
 mod system;
@@ -707,6 +708,8 @@ async fn background_set(app: AppHandle, prefs: background::Prefs) -> Result<Back
         let name = app.package_info().name.clone();
         let old = bg.prefs();
         prefs.autostart_chosen = old.autostart_chosen || prefs.autostart != old.autostart;
+        // options « pendant la partie » : réglées à part (session_set_prefs), jamais écrasées par une copie plus ancienne
+        (prefs.game_gpu, prefs.game_power, prefs.game_checks) = (old.game_gpu, old.game_power, old.game_checks);
         if prefs.autostart != old.autostart || prefs.autostart != background::autostart_exists(&name) {
             let temp = app.state::<AppState>().data_dir.clone();
             background::set_autostart(&name, prefs.autostart, &temp).map_err(|e| format!("autostart:{e}"))?;
@@ -717,6 +720,21 @@ async fn background_set(app: AppHandle, prefs: background::Prefs) -> Result<Back
     })
     .await
     .map_err(|e| e.to_string())?
+}
+
+/// Pendant une partie : mode d'alimentation, carte graphique et vérifications (session.rs).
+#[tauri::command]
+async fn session_state(session: State<'_, Arc<session::Session>>) -> Result<session::State, String> {
+    let session = Arc::clone(&session);
+    tauri::async_runtime::spawn_blocking(move || session.state()).await.map_err(|e| e.to_string())
+}
+
+/// Options « pendant la partie » des paramètres ; prises en compte au prochain passage (4 secondes au plus).
+#[tauri::command]
+fn session_set_prefs(bg: State<'_, Arc<Background>>, gpu: bool, power: bool, checks: bool) -> background::Prefs {
+    let prefs = background::Prefs { game_gpu: gpu, game_power: power, game_checks: checks, ..bg.prefs() };
+    bg.save(prefs.clone());
+    prefs
 }
 
 /// État de ce que lit le vérificateur de Ranked Bedwars (affiché sous RBW Mod).
@@ -848,22 +866,31 @@ pub fn run() {
             // ce qu'une version précédente a laissé et qui fait planter le PC (RAG-67), sans attendre le joueur
             let removed = repair::at_startup(&backup::Sys::new(data_dir.join("backup")), &mut ledger, &data_dir.join("logs"));
             let library = Arc::new(games::Library::new(&data_dir));
-            // jeux lancés : la dernière partie de chacun est notée, l'interface suit ceux en cours
+            // mode arrière-plan et barre en jeu (RAG-82) : lancée avec Windows, la fenêtre reste cachée près de l'horloge
+            let started_hidden = std::env::args_os().any(|a| a == background::BACKGROUND_ARG);
+            let background = Arc::new(Background::load(&data_dir, started_hidden));
+            let session = Arc::new(session::Session::new(&data_dir));
+            // jeux lancés : la dernière partie de chacun est notée, l'interface suit ceux en cours, et l'app fait ce
+            // qu'elle doit pendant la partie (session.rs)
             {
-                let (library, handle) = (Arc::clone(&library), app.handle().clone());
+                let (library, background, session, handle) = (Arc::clone(&library), Arc::clone(&background), Arc::clone(&session), app.handle().clone());
                 std::thread::spawn(move || {
                     library.list(false);
                     loop {
-                        if let Some(running) = library.poll(&games::process_paths()) {
+                        let procs = games::process_paths();
+                        if let Some(running) = library.poll(&procs) {
                             let _ = handle.emit("games:running", running);
+                        }
+                        let mut exes = library.game_exes(&procs);
+                        exes.extend(procs.iter().filter(|p| session::minecraft_exe(p)).cloned());
+                        let playing = library.playing() || !exes.is_empty();
+                        if let Some(state) = session.tick(playing, &exes, &procs, &background.prefs()) {
+                            let _ = handle.emit("games:session", state);
                         }
                         std::thread::sleep(std::time::Duration::from_secs(4));
                     }
                 });
             }
-            // mode arrière-plan et barre en jeu (RAG-82) : lancée avec Windows, la fenêtre reste cachée près de l'horloge
-            let started_hidden = std::env::args_os().any(|a| a == background::BACKGROUND_ARG);
-            let background = Arc::new(Background::load(&data_dir, started_hidden));
             let prefs = background.prefs();
             background::sync_tray(app.handle(), prefs.keeps_running() || started_hidden, &prefs.lang, quit);
             // lancement avec Windows d'office (tant que le joueur ne l'a pas coupé) : la tâche est créée au premier lancement
@@ -879,6 +906,7 @@ pub fn run() {
             overlay::watch(app.handle().clone(), Arc::clone(&overlay));
             app.manage(background);
             app.manage(overlay);
+            app.manage(session);
             if !started_hidden {
                 background::show_main(app.handle());
             }
@@ -998,6 +1026,8 @@ pub fn run() {
             update_install,
             background_get,
             background_set,
+            session_state,
+            session_set_prefs,
             overlay_info,
             overlay_live,
             overlay_close,

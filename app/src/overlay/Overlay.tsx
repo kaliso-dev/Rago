@@ -5,6 +5,7 @@ import { api, type AppliedView, type LiveStats, type OverlayInfo, type OverlayLi
 import { availability, tweaks, type Lang } from "../lib/catalog";
 import { translate, type Key } from "../lib/i18n";
 import { Mark } from "../components/Logo";
+import { SessionChecks, useSession } from "../components/SessionCard";
 import { Switch } from "../components/ui";
 
 /** Réglages qui s'appliquent en pleine partie : sans redémarrage, sans couper la carte réseau ni relancer l'Explorateur,
@@ -50,6 +51,7 @@ export function Overlay() {
   const [error, setError] = useState<string | null>(null);
   const [cleaning, setCleaning] = useState(false);
   const [cleaned, setCleaned] = useState<string | null>(null);
+  const session = useSession();
 
   const refresh = useCallback(async () => {
     const [i, a, l] = await Promise.all([api.overlayInfo(), api.applied().catch(() => []), api.licenseStatus().catch(() => null)]);
@@ -212,6 +214,7 @@ export function Overlay() {
           </button>
         </div>
         {cleaned && <p className="ov-note ov-cleaned">{cleaned}</p>}
+        {session && <SessionChecks session={session} t={t} />}
 
         <div className="ov-section-head">
           <span className="ov-overline">{t("overlay.live")}</span>

@@ -1,5 +1,6 @@
 //! Mode arrière-plan (RAG-82) : à la fermeture, Rago Optimizer peut rester près de l'horloge Windows au lieu de
-//! quitter, et se lancer avec Windows (caché, près de l'horloge). La barre en jeu (overlay.rs) lit ses réglages ici.
+//! quitter, et se lancer avec Windows (caché, près de l'horloge). La barre en jeu (overlay.rs) et ce que l'app fait
+//! pendant une partie (session.rs) lisent leurs réglages ici.
 //! Réglages gardés dans background.json, dans le dossier de données de l'app.
 
 use serde::{Deserialize, Serialize};
@@ -31,6 +32,12 @@ pub struct Prefs {
     pub pin: bool,
     /// langue de l'interface, pour le menu de l'icône
     pub lang: String,
+    /// pendant une partie (session.rs) : carte graphique performante pour les jeux, sur un PC à deux cartes
+    pub game_gpu: bool,
+    /// mode Performances élevées le temps de jouer
+    pub game_power: bool,
+    /// vérifications au lancement d'un jeu (conseils, rien n'est fermé)
+    pub game_checks: bool,
 }
 
 impl Default for Prefs {
@@ -43,6 +50,9 @@ impl Default for Prefs {
             shortcut: DEFAULT_SHORTCUT.into(),
             pin: false,
             lang: "fr".into(),
+            game_gpu: true,
+            game_power: true,
+            game_checks: true,
         }
     }
 }

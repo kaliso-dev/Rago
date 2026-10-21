@@ -142,6 +142,10 @@ export interface BackgroundPrefs {
   shortcut: string;
   pin: boolean;
   lang: string;
+  /** pendant une partie (session.rs) : carte graphique performante, mode Performances élevées, vérifications */
+  gameGpu: boolean;
+  gamePower: boolean;
+  gameChecks: boolean;
 }
 export interface BackgroundState {
   prefs: BackgroundPrefs;
@@ -151,6 +155,24 @@ export interface BackgroundState {
   shortcutTaken: boolean;
   /** FPS mesurables (PresentMon livré avec l'app) */
   fpsAvailable: boolean;
+}
+/** Pendant une partie (session.rs). */
+export interface SessionCheck {
+  id: "battery" | "download" | "sync" | "record";
+  /** applis concernées */
+  apps: string[];
+}
+export interface SessionState {
+  playing: boolean;
+  /** mode Performances élevées mis pour la partie */
+  power: boolean;
+  /** jeux qui ont reçu la carte graphique performante */
+  gpuGames: number;
+  checks: SessionCheck[];
+  /** PC à deux cartes graphiques (null tant que ce n'est pas vérifié) */
+  multiGpu: boolean | null;
+  /** Ryzen X3D à deux CCD : le mode d'alimentation n'est jamais changé */
+  x3d: boolean;
 }
 export type OverlayMode = "hidden" | "panel" | "pill";
 export interface OverlayInfo {
@@ -377,6 +399,10 @@ export interface Api {
   backgroundGet(): Promise<BackgroundState>;
   /** Erreurs : "shortcut" (raccourci illisible), "autostart:…" (tâche planifiée refusée). */
   backgroundSet(prefs: BackgroundPrefs): Promise<BackgroundState>;
+  sessionState(): Promise<SessionState>;
+  /** Options « pendant la partie » des paramètres ; renvoie les réglages enregistrés. */
+  sessionSetPrefs(gpu: boolean, power: boolean, checks: boolean): Promise<BackgroundPrefs>;
+  onSession(cb: (s: SessionState) => void): Promise<UnlistenFn>;
   /** Barre en jeu (fenêtre « overlay ») */
   overlayInfo(): Promise<OverlayInfo>;
   overlayLive(): Promise<OverlayLive>;
@@ -470,6 +496,9 @@ const tauriApi: Api = {
   updateInstall: () => invoke("update_install"),
   backgroundGet: () => invoke("background_get"),
   backgroundSet: (prefs) => invoke("background_set", { prefs }),
+  sessionState: () => invoke("session_state"),
+  sessionSetPrefs: (gpu, power, checks) => invoke("session_set_prefs", { gpu, power, checks }),
+  onSession: (cb) => listen<SessionState>("games:session", (e) => cb(e.payload)),
   overlayInfo: () => invoke("overlay_info"),
   overlayLive: () => invoke("overlay_live"),
   overlayClose: () => invoke("overlay_close"),
@@ -602,7 +631,29 @@ function mockLicense(): LicenseStatus {
 }
 
 let demoPending: string | null = null;
-let mockBackground: BackgroundPrefs = { tray: true, autostart: true, overlay: true, shortcut: "Ctrl+Shift+R", pin: false, lang: "fr" };
+let mockBackground: BackgroundPrefs = {
+  tray: true,
+  autostart: true,
+  overlay: true,
+  shortcut: "Ctrl+Shift+R",
+  pin: false,
+  lang: "fr",
+  gameGpu: true,
+  gamePower: true,
+  gameChecks: true,
+};
+/** Démo : une partie en cours avec ?playing dans l'adresse (barre en jeu : toujours). */
+const mockSession = (): SessionState => {
+  const playing = new URLSearchParams(location.search).has("playing") || location.pathname.includes("overlay");
+  return {
+    playing,
+    power: playing && mockBackground.gamePower,
+    gpuGames: mockBackground.gameGpu ? 2 : 0,
+    checks: playing && mockBackground.gameChecks ? [{ id: "sync", apps: ["OneDrive"] }, { id: "record", apps: ["OBS Studio"] }] : [],
+    multiGpu: true,
+    x3d: false,
+  };
+};
 
 /** Démo : la remise du moteur à la fin de la licence (tous les réglages remis en arrière-plan). */
 function mockReset() {
@@ -867,7 +918,11 @@ const mockApi: Api = {
   onNetMeasure: (cb) => on("nettest:measure", cb),
   gamesList: async () => {
     await sleep(400);
-    return [...mockGames].sort((a, b) => (b.lastPlayed ?? 0) - (a.lastPlayed ?? 0) || a.name.localeCompare(b.name));
+    // ?playing : le dernier jeu joué est en cours (démo de la partie en cours)
+    const playing = new URLSearchParams(location.search).has("playing");
+    return [...mockGames]
+      .sort((a, b) => (b.lastPlayed ?? 0) - (a.lastPlayed ?? 0) || a.name.localeCompare(b.name))
+      .map((g, i) => (playing && i === 0 ? { ...g, running: true } : g));
   },
   gameArt: async () => null,
   gameLaunch: async (id) => {
@@ -901,9 +956,17 @@ const mockApi: Api = {
   backgroundSet: async (prefs) => {
     await sleep(250);
     if (!/^((Ctrl|Alt|Shift|Super)\+)*(F\d{1,2}|[A-Z0-9]|[A-Za-z]+)$/.test(prefs.shortcut) || /\+$/.test(prefs.shortcut)) throw "shortcut";
-    mockBackground = { ...prefs };
+    // comme background_set : les options « pendant la partie » se règlent à part
+    mockBackground = { ...prefs, gameGpu: mockBackground.gameGpu, gamePower: mockBackground.gamePower, gameChecks: mockBackground.gameChecks };
     return { prefs: mockBackground, autostart: prefs.autostart, shortcutTaken: false, fpsAvailable: true };
   },
+  sessionState: async () => mockSession(),
+  sessionSetPrefs: async (gameGpu, gamePower, gameChecks) => {
+    mockBackground = { ...mockBackground, gameGpu, gamePower, gameChecks };
+    emit<SessionState>("games:session", mockSession());
+    return mockBackground;
+  },
+  onSession: (cb) => on("games:session", cb),
   // démo de la barre : overlay.html?pill pour la pastille
   overlayInfo: async () => ({
     mode: new URLSearchParams(location.search).has("pill") ? "pill" : "panel",

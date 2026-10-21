@@ -5,6 +5,7 @@ import { api, type Game, type Launcher } from "../lib/api";
 import { hue, initials } from "../lib/art";
 import { catalog, presetForGame, tweaks } from "../lib/catalog";
 import { useStore } from "../lib/store";
+import { SessionChecks, useSession } from "../components/SessionCard";
 import { Button, Segmented } from "../components/ui";
 
 const stagger = { animate: { transition: { staggerChildren: 0.04 } } };
@@ -146,6 +147,7 @@ export function Games() {
   const [art, setArt] = useState<Record<string, string | null>>({});
   const [menu, setMenu] = useState(false);
   const [asking, setAsking] = useState(false);
+  const session = useSession();
 
   const load = async (refresh: boolean) => {
     setScanning(true);
@@ -357,6 +359,7 @@ export function Games() {
                 {asking && <span>{t("games.removeConfirm")}</span>}
               </button>
             </div>
+            {hero.running && session && <SessionChecks session={session} t={t} />}
           </div>
           <div className="games-hero-actions">
             <div className="games-hero-buttons">

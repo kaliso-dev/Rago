@@ -8,6 +8,7 @@ import { ACCOUNT_URL, SITE_URL, SUPPORT_URL } from "../components/LicenseGate";
 import { Modal } from "../components/Modal";
 import { ProfileCard } from "../components/ProfileCard";
 import { BackgroundCard } from "../components/BackgroundCard";
+import { SessionCard } from "../components/SessionCard";
 import { Button, Card, Segmented, Switch } from "../components/ui";
 import { Wordmark } from "../components/Logo";
 
@@ -137,6 +138,7 @@ export function Settings() {
           </button>
         </Card>
         <BackgroundCard />
+        <SessionCard />
         <Card title={t("settings.memory")}>
           <div className="setting">
             <div>

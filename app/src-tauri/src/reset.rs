@@ -240,6 +240,8 @@ pub fn uninstall() {
         }
     };
     clear_run();
+    // pendant une partie : mode d'alimentation d'avant, choix de carte graphique écrits par Rago retirés
+    crate::session::undo_all(&data_dir);
     let (history, ledger) = load_for_uninstall(&data_dir);
     let ids = targets(&ledger, Scope::All, None);
     if ids.is_empty() {

@@ -1650,3 +1650,38 @@
     grid-row: 1;
   }
 }
+
+/* Pendant la partie (session.rs) : ce que Rago a fait et ce qu'il conseille, dans la bibliothèque */
+.session-checks {
+  display: grid;
+  gap: 6px;
+  margin-top: 12px;
+  padding: 10px 12px;
+  border-radius: var(--rg-radius-sm);
+  background: var(--rg-glass-2);
+  box-shadow: var(--rg-glass-edge);
+}
+.session-line {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  font-size: var(--rg-fs-caption);
+  line-height: 1.45;
+  color: var(--rg-text-2);
+}
+.session-line svg {
+  flex: none;
+  margin-top: 2px;
+}
+.session-line.ok svg {
+  color: var(--rg-success);
+}
+.session-line.warn svg {
+  color: var(--rg-warning);
+}
+.session-head {
+  margin-top: 2px;
+}
+.session-lead {
+  margin: -4px 0 6px;
+}

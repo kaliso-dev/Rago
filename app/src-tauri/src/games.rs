@@ -1224,15 +1224,7 @@ impl Library {
     /// Jeux lancés en ce moment : un processus dont l'exe est dans le dossier du jeu. Renvoie la liste quand elle
     /// change ; la dernière partie de chaque jeu est notée à son lancement et à sa fermeture.
     pub fn poll(&self, procs: &[PathBuf]) -> Option<Vec<String>> {
-        let dirs: Vec<(String, String)> = self
-            .games
-            .lock()
-            .unwrap()
-            .iter()
-            .flatten()
-            .filter_map(|g| g.install_dir.as_ref().map(|d| (g.id.clone(), format!("{}\\", d.to_lowercase().trim_end_matches('\\')))))
-            .filter(|(_, d)| d.len() > 4)
-            .collect();
+        let dirs = self.dirs(true);
         let now: HashSet<String> = procs
             .iter()
             .map(|p| p.to_string_lossy().to_lowercase())
@@ -1252,6 +1244,31 @@ impl Library {
         }
         self.save(&saved);
         Some(now.into_iter().collect())
+    }
+
+    /// Dossier de chaque jeu (minuscules, terminé par \\), sans ceux des launchers Minecraft si `minecraft` est faux.
+    fn dirs(&self, minecraft: bool) -> Vec<(String, String)> {
+        self.games
+            .lock()
+            .unwrap()
+            .iter()
+            .flatten()
+            .filter(|g| minecraft || g.kind != "minecraft")
+            .filter_map(|g| g.install_dir.as_ref().map(|d| (g.id.clone(), format!("{}\\", d.to_lowercase().trim_end_matches('\\')))))
+            .filter(|(_, d)| d.len() > 4)
+            .collect()
+    }
+
+    /// Un jeu de la bibliothèque est lancé (d'après le dernier `poll`).
+    pub fn playing(&self) -> bool {
+        !self.running.lock().unwrap().is_empty()
+    }
+
+    /// Exes lancés depuis le dossier d'un jeu. Pas ceux des launchers Minecraft : leur dossier est celui du launcher,
+    /// le jeu tourne ailleurs (session.rs le reconnaît à son exe).
+    pub fn game_exes(&self, procs: &[PathBuf]) -> Vec<PathBuf> {
+        let dirs = self.dirs(false);
+        procs.iter().filter(|p| dirs.iter().any(|(_, d)| p.to_string_lossy().to_lowercase().starts_with(d.as_str()))).cloned().collect()
     }
 }
 

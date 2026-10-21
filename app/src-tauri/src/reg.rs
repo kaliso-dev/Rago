@@ -1,4 +1,5 @@
-//! Lecture du registre (bibliothèque de jeux, launchers, état des services du RBW Mod). Vue 64 bits, lecture seule.
+//! Lecture du registre (bibliothèque de jeux, launchers, état des services du RBW Mod). Vue 64 bits. Seule écriture :
+//! la carte graphique choisie pour chaque jeu (session.rs), une chaîne sous HKCU.
 #![cfg(windows)]
 
 use windows_sys::Win32::Foundation::ERROR_SUCCESS;
@@ -15,16 +16,47 @@ impl Drop for Key {
     }
 }
 
-pub fn open(path: &str) -> Option<Key> {
+fn root(path: &str) -> Option<(HKEY, &str)> {
     let (root, sub) = path.split_once('\\')?;
     let h = match root {
         "HKLM" => HKEY_LOCAL_MACHINE,
         "HKCU" => HKEY_CURRENT_USER,
         _ => return None,
     };
+    Some((h, sub))
+}
+
+fn open_with(path: &str, access: REG_SAM_FLAGS) -> Option<Key> {
+    let (h, sub) = root(path)?;
     let mut out: HKEY = std::ptr::null_mut();
-    let r = unsafe { RegOpenKeyExW(h, wide(sub).as_ptr(), 0, KEY_READ | KEY_WOW64_64KEY, &mut out) };
+    let r = unsafe { RegOpenKeyExW(h, wide(sub).as_ptr(), 0, access | KEY_WOW64_64KEY, &mut out) };
     (r == ERROR_SUCCESS).then_some(Key(out))
+}
+
+pub fn open(path: &str) -> Option<Key> {
+    open_with(path, KEY_READ)
+}
+
+/// Écrit une chaîne REG_SZ, en créant la clé au besoin.
+pub fn set_string(path: &str, name: &str, value: &str) -> bool {
+    let Some((h, sub)) = root(path) else { return false };
+    let mut out: HKEY = std::ptr::null_mut();
+    let r = unsafe {
+        RegCreateKeyExW(h, wide(sub).as_ptr(), 0, std::ptr::null(), REG_OPTION_NON_VOLATILE, KEY_SET_VALUE | KEY_WOW64_64KEY, std::ptr::null(), &mut out, std::ptr::null_mut())
+    };
+    if r != ERROR_SUCCESS {
+        return false;
+    }
+    let k = Key(out);
+    let data = wide(value);
+    unsafe { RegSetValueExW(k.0, wide(name).as_ptr(), 0, REG_SZ, data.as_ptr().cast(), (data.len() * 2) as u32) == ERROR_SUCCESS }
+}
+
+/// Supprime une valeur ; vrai si elle n'existe plus.
+pub fn delete_value(path: &str, name: &str) -> bool {
+    let Some(k) = open_with(path, KEY_SET_VALUE) else { return true };
+    let r = unsafe { RegDeleteValueW(k.0, wide(name).as_ptr()) };
+    r == ERROR_SUCCESS || r == windows_sys::Win32::Foundation::ERROR_FILE_NOT_FOUND
 }
 
 pub fn subkeys(path: &str) -> Vec<String> {
