@@ -96,7 +96,9 @@ jobs:
       - uses: dtolnay/rust-toolchain@stable
       - uses: swatinem/rust-cache@v2
         with:
-          workspaces: app/src-tauri
+          workspaces: |
+            app/src-tauri
+            app/shell
       - name: Exe de test, nom et identifiant à part
         # « Rago Optimizer Staging » s'installe à côté du vrai et ne remplace pas son installation
         if: env.RAGO_TARGET == 'staging'
@@ -141,6 +143,15 @@ jobs:
           [ -s src-tauri/resources/PresentMon-LICENSE.txt ] || { rm -f src-tauri/resources/PresentMon-LICENSE.txt; echo "::warning::licence de PresentMon introuvable"; }
           echo "PresentMon livré : $exe ($signer)"
       - run: npm ci
+      - name: Rago Shell (animation de démarrage et Dynamic Island de Rago OS)
+        # petit programme à part, lancé sans droits d'administrateur dans la session de l'utilisateur ; livré dans
+        # resources\ à côté de l'exe (sans lui, Rago OS s'applique quand même, sans animation ni île)
+        shell: bash
+        run: |
+          cargo test --manifest-path shell/Cargo.toml
+          cargo build --release --manifest-path shell/Cargo.toml
+          cp shell/target/release/rago-shell.exe src-tauri/resources/rago-shell.exe
+          ls -l src-tauri/resources/rago-shell.exe
       - name: Tests du moteur
         run: cargo test --manifest-path src-tauri/Cargo.toml
       - uses: tauri-apps/tauri-action@v0
