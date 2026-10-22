@@ -72,7 +72,10 @@ export function Sidebar() {
         <span className="nav-label">{label}</span>
         {n > 0 && <span className="nav-count rg-metric">{n}</span>}
         {n === 0 && lockedModule(id) && <Lock size={12} className="nav-lock" />}
-        {id in NEW_PAGES && !seen.includes(id) && <span className="nav-new">{t("nav.new")}</span>}
+        {id in NEW_PAGES &&
+          !seen.includes(id) &&
+          // libellé long (« Optimiseur réseau ») : un point, pour qu'il tienne sur une ligne
+          (label.length > 14 ? <span className="nav-new dot" title={t("nav.new")} aria-label={t("nav.new")} /> : <span className="nav-new">{t("nav.new")}</span>)}
       </button>
     );
   };

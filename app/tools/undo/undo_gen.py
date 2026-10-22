@@ -541,6 +541,9 @@ def h_netsh(raw, c, args, low):
 def h_powershell(raw, c, args, low):
     t = c
     tl = t.lower()
+    # Mode jeu (GAME_FX de tools/optis_120.py) : relit les animations du registre ; relancé après la remise des valeurs
+    if 'systemparametersinfo' in tl and 'userpreferencesmask' in tl:
+        return both(f'{c}{R}')
     if 'remove-appxpackage' in tl:
         m = re.search(r'(?i)Get-AppxPackage\s+(?:-allusers\s+)?\*?([^*|"}]+)\*?', t)
         gone(f'application {m.group(1).strip() if m else "?"} désinstallée (réinstallable depuis le Microsoft Store)')
@@ -650,9 +653,15 @@ def h_auditpol(raw, c, args, low):
     return both(f'auditpol /set /subcategory:{{{g}-69AE-11D9-BED3-505054503030}} /success:{s} /failure:{f}{R}')
 
 
+# Mode jeu : services mis en pause sans toucher à leur démarrage, relancés à la désactivation (tools/optis_120.py)
+PAUSED = {'wsearch', 'diagtrack'}
+
+
 def h_net(raw, c, args, low):
     if low[:1] == ['accounts'] and any(a.startswith('/maxpwage') for a in low):
         return both(f'net accounts /maxpwage:42{R}')
+    if low[:1] == ['stop'] and len(args) == 2 and P.unq(args[1]).lower() in PAUSED:
+        return both(f'net start {P.unq(args[1])}{R}')
     return None
 
 

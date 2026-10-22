@@ -256,6 +256,22 @@ NLA = (r'Reg Add "HKLM\SYSTEM\CurrentControlSet\Services\Tcpip\QoS" /v "Do not u
        r'Reg Add "HKLM\SYSTEM\CurrentControlSet\Services\Tcpip\QoS" /v "Do not use NLA" /t REG_SZ /d "1" /f > NUL 2>&1')
 
 # réglages existants remplacés par la meilleure version : {id ou « id:variante » : [(avant, après)]}, après l'audit
+# Mode jeu : reprend du registre les animations de Windows (UserPreferencesMask, MinAnimate) et les donne à
+# SystemParametersInfo, que Windows ne relit qu'à la connexion. Bit n du masque = SPI_SET 0x1001 + 2n (animation des menus,
+# des listes, défilement doux, fondus, info-bulles, ombres) ; SPIF_SENDCHANGE seul, le registre est déjà écrit. Lancé aussi
+# par l'annulation, après la remise de la sauvegarde (tools/undo : « both »). Ni « " » (fin de l'argument de cmd), ni
+# « % », ni « ! » (variables de cmd) : les guillemets du C# viennent de [char]34
+GAME_FX = ('powershell -NoProfile -ExecutionPolicy Bypass -Command "$q=[char]34; '
+           "Add-Type -Namespace Rago -Name Spi -MemberDefinition ('[DllImport(' + $q + 'user32.dll' + $q + ')] "
+           "public static extern bool SystemParametersInfo(uint a, uint b, System.IntPtr c, uint d);'); "
+           "$m=(Get-ItemProperty -Path 'HKCU:\\Control Panel\\Desktop' -ErrorAction SilentlyContinue).UserPreferencesMask; "
+           "if ($m -and $m.Length -ge 3) { foreach ($n in 1,2,3,9,10,11,12,13,18) { $on=($m[$n -shr 3] -shr ($n -band 7)) -band 1; "
+           "[void][Rago.Spi]::SystemParametersInfo(0x1001 + 2 * $n, 0, [IntPtr]$on, 2) } }; "
+           "$w=(Get-ItemProperty -Path 'HKCU:\\Control Panel\\Desktop\\WindowMetrics' -ErrorAction SilentlyContinue).MinAnimate; "
+           "$p=[Runtime.InteropServices.Marshal]::AllocHGlobal(8); [Runtime.InteropServices.Marshal]::WriteInt32($p, 0, 8); "
+           "[Runtime.InteropServices.Marshal]::WriteInt32($p, 4, [int]([string]$w -ne '0')); "
+           "[void][Rago.Spi]::SystemParametersInfo(0x49, 8, $p, 2); [Runtime.InteropServices.Marshal]::FreeHGlobal($p)\" >nul 2>&1")
+
 FIXES = {
     # « Effets visuels » n'écrivait que les DefaultApplied de VisualEffects\<effet>, des valeurs que Windows note pour
     # lui-même et ne relit pas (Hone, « Set visual effects for performance ») : les valeurs que Windows lit à la place
@@ -311,6 +327,32 @@ FIXES = {
     # « Do not use NLA » est une chaîne (Microsoft, Cisco ; GAME V1) : même type que pri_game, qui l'écrit maintenant aussi
     'ping_main:config2': [NLA],
     'net_server:s4': [NLA],
+    # Mode jeu, « rends-le le plus performant » (Sofiene, 2026-10-22) : pendant la partie, l'indexation de la recherche et
+    # la télémétrie sont mises en pause (leur démarrage ne change pas : elles reviennent à la désactivation, sinon au
+    # redémarrage), l'enregistrement en fond de la Xbox Game Bar est coupé (les captures à la demande restent) et le Mode
+    # jeu de Windows est activé. Les animations sont reprises du registre tout de suite (GAME_FX) : écrites seules, elles
+    # n'étaient lues qu'à la reconnexion suivante, la relance de l'Explorateur ne servant qu'à la barre des tâches
+    'game_mode:on': [('net stop Spooler > nul', '\r\n'.join([
+        'net stop Spooler > nul',
+        'echo - Pausing search indexing and telemetry while you play',
+        'net stop WSearch > nul 2>&1',
+        'net stop DiagTrack > nul 2>&1',
+        'echo - Windows Game Mode on, background recording off',
+        r'reg add "HKCU\Software\Microsoft\GameBar" /v "AllowAutoGameMode" /t REG_DWORD /d "1" /f > nul',
+        r'reg add "HKCU\Software\Microsoft\GameBar" /v "AutoGameModeEnabled" /t REG_DWORD /d "1" /f > nul',
+        r'reg add "HKCU\Software\Microsoft\Windows\CurrentVersion\GameDVR" /v "HistoricalCaptureEnabled" /t REG_DWORD /d "0" /f > nul',
+    ]))],
+    'game_mode:off': [('net start Spooler >nul 2>&1', '\r\n'.join([
+        'net start Spooler >nul 2>&1',
+        'echo - Turning search indexing and telemetry back on',
+        'net start WSearch >nul 2>&1',
+        'net start DiagTrack >nul 2>&1',
+    ]))],
+    'game_mode': [('taskkill /f /im explorer.exe', '\r\n'.join([
+        'echo - Applying the animation settings now',
+        GAME_FX,
+        'taskkill /f /im explorer.exe',
+    ]))],
 }
 
 # réglages réécrits en entier : {id : script}

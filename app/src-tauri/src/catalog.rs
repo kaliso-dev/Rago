@@ -1135,6 +1135,35 @@ mod tests {
     /// Rien de ce que lance le moteur (réglages, relevés, annulations) ne supprime sur un chemin `%VAR%`, sur un
     /// `!VAR!` sans garde ni sur une variable de boucle avec le développement retardé actif (deletion_errors), et
     /// aucune variable de chemin n'y est plus écrite `%VAR%` (revue du 2026-10-13, P1/P2, tools/paths.py).
+    /// Mode jeu (Sofiene, 2026-10-22 : « rends-le le plus performant ») : indexation et télémétrie en pause sans changer
+    /// leur démarrage, enregistrement en fond coupé, et les animations prises tout de suite ; la désactivation et
+    /// l'annulation (après la remise de la sauvegarde) relancent les services et reprennent les animations.
+    #[test]
+    fn game_mode_pauses_background_work_and_puts_it_back() {
+        let on = &SCRIPTS["game_mode"]["on"];
+        let off = &SCRIPTS["game_mode"]["off"];
+        for l in ["net stop WSearch > nul 2>&1", "net stop DiagTrack > nul 2>&1"] {
+            assert!(on.lines().any(|x| x == l), "{l}");
+        }
+        assert!(on.contains(r#"/v "HistoricalCaptureEnabled" /t REG_DWORD /d "0""#) && on.contains(r#"/v "AutoGameModeEnabled" /t REG_DWORD /d "1""#));
+        // la pause ne change pas le démarrage : un service coupé par un autre réglage le reste
+        assert!(!on.to_lowercase().contains("config wsearch") && !on.to_lowercase().contains("config diagtrack"));
+        assert!(off.contains("net start WSearch") && off.contains("net start DiagTrack"));
+        // animations : lues du registre et passées à Windows avant la relance de l'Explorateur, dans les deux variantes
+        for s in [on, off] {
+            let fx = s.lines().position(|l| l.contains("SystemParametersInfo")).expect("animations");
+            let explorer = s.lines().position(|l| l == "taskkill /f /im explorer.exe").unwrap();
+            assert!(fx < explorer);
+            let line = s.lines().nth(fx).unwrap();
+            let code = line.split_once("-Command \"").unwrap().1.rsplit_once('"').unwrap().0;
+            assert!(!code.contains('"') && !line.contains('%') && !line.contains('!') && line.len() < 8191, "{line}");
+        }
+        let undo: HashMap<String, HashMap<String, Undo>> = serde_json::from_str(include_str!("../scripts/undo.json")).unwrap();
+        let rest = undo["game_mode"]["on"].rest.as_deref().expect("rest");
+        let at = |p: &str| rest.find(p).unwrap_or_else(|| panic!("{p} : {rest}"));
+        assert!(at("net start WSearch") < at("SystemParametersInfo") && at("net start DiagTrack") < at("SystemParametersInfo"));
+    }
+
     #[test]
     fn deletions_never_use_a_percent_path() {
         const PATH_VARS: [&str; 16] = [

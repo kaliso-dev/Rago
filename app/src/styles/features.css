@@ -294,6 +294,15 @@
   padding: 0 6px;
   line-height: 16px;
 }
+.nav-new.dot {
+  flex: none;
+  width: 6px;
+  height: 6px;
+  padding: 0;
+  border-radius: 50%;
+  background: var(--rg-red-500);
+  box-shadow: 0 0 0 3px var(--rg-red-a12);
+}
 
 /* ---------- puces ---------- */
 .chip {

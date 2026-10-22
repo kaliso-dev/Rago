@@ -6338,8 +6338,8 @@
         "en": "Rago game mode"
        },
        "desc": {
-        "en": "On clears temp files and turns off printing and Windows animations; Off brings animations and printing back.",
-        "fr": "Activé vide les fichiers temporaires, coupe l'impression et les animations de Windows ; Désactivé remet animations et impression."
+        "en": "On clears temp files, pauses search indexing and telemetry until the next restart, turns off printing, Windows animations and Xbox Game Bar background recording, and turns on Windows Game Mode. Off starts everything again.",
+        "fr": "Activé vide les fichiers temporaires, met en pause l'indexation de la recherche et la télémétrie jusqu'au redémarrage, coupe l'impression, les animations de Windows et l'enregistrement en fond de la Xbox Game Bar, et active le Mode jeu de Windows. Désactivé remet tout en route."
        },
        "risk": "safe",
        "reboot": false,
@@ -6351,7 +6351,7 @@
           "fr": "Activé",
           "en": "On"
          },
-         "lines": 11
+         "lines": 17
         },
         {
          "id": "off",
@@ -6360,19 +6360,19 @@
           "en": "Off"
          },
          "revert": true,
-         "lines": 9
+         "lines": 12
         }
        ],
        "requires": [],
        "defaultVariant": "on",
-       "lines": 11,
+       "lines": 17,
        "gain": {
-        "en": "Windows feels snappier without animations; no FPS gain in games.",
-        "fr": "Windows paraît plus vif sans animations ; aucun gain de FPS en jeu."
+        "en": "Less background work while you play, and Windows feels snappier right away. FPS gain mostly if background recording was on.",
+        "fr": "Moins de travail en fond pendant tes parties, et Windows plus vif tout de suite. Gain de FPS surtout si l'enregistrement en fond était activé."
        },
        "cons": {
-        "en": "Printing doesn't work while it's on, and the taskbar restarts when you switch.",
-        "fr": "L'impression ne marche plus tant que le mode est activé, et la barre des tâches se relance au passage."
+        "en": "File search in Windows is slower and printing doesn't work while it's on; the taskbar restarts when you switch.",
+        "fr": "La recherche de fichiers de Windows est plus lente et l'impression ne marche plus tant que le mode est activé ; la barre des tâches se relance au passage."
        }
       }
      ]
