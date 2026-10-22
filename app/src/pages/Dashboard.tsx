@@ -1,5 +1,5 @@
 import { motion } from "motion/react";
-import { Check, Copy, Cpu, Gpu, HardDrive, MemoryStick, Network, Plus, RefreshCw, Lock, RotateCcw, Trash2, TriangleAlert, Zap } from "lucide-react";
+import { Check, Copy, Cpu, Gpu, HardDrive, MemoryStick, Network, Pencil, Plus, RefreshCw, Lock, RotateCcw, Trash2, TriangleAlert, Zap } from "lucide-react";
 import { availability, catalog, distinctKey, retired, totalTweaks, tweaks } from "../lib/catalog";
 import { api } from "../lib/api";
 import { formatDate } from "../lib/i18n";
@@ -9,6 +9,7 @@ import { encodePreset, MAX_NAME } from "../lib/share";
 import { FREE, useStore, type MyPreset } from "../lib/store";
 import { GameLogo, usePresetIcons } from "../components/GameLogo";
 import { LiveStatsCard } from "../components/LiveStatsCard";
+import { PresetEditor } from "../components/PresetEditor";
 import { Button, Card } from "../components/ui";
 import { useState, type ReactNode } from "react";
 
@@ -48,6 +49,7 @@ export function Dashboard() {
   // optimisations gratuites encore à appliquer sur ce PC
   const freeLeft = sys ? toApply(FREE_ENTRIES).ids.length : 0;
   const [naming, setNaming] = useState<string | null>(null);
+  const [editing, setEditing] = useState<string | null>(null);
   // réglages appliqués en ce moment (ceux qu'on a décochés depuis ne comptent plus), jumeaux comptés une fois
   const applied = new Set([...appliedMap.values()].filter((a) => a.ok && tweaks.get(a.id)?.kind === "tweak").map((a) => distinctKey(a.id))).size;
 
@@ -265,7 +267,7 @@ export function Dashboard() {
         <h2 className="section-title rg-overline">{t("dash.mine")}</h2>
         <div className="presets">
           {myPresets.map((p) => (
-            <MyPresetCard key={p.id} preset={p} state={presetState(p.t)} />
+            <MyPresetCard key={p.id} preset={p} state={presetState(p.t)} onEdit={() => setEditing(p.id)} />
           ))}
           {naming == null ? (
             <motion.button
@@ -300,7 +302,7 @@ export function Dashboard() {
               </label>
               <input
                 id="mine-name"
-                className="input"
+                className="input text"
                 autoFocus
                 maxLength={MAX_NAME}
                 value={naming}
@@ -321,11 +323,12 @@ export function Dashboard() {
           )}
         </div>
       </motion.section>
+      <PresetEditor id={editing} onClose={() => setEditing(null)} />
     </motion.div>
   );
 }
 
-function MyPresetCard({ preset, state }: { preset: MyPreset; state: { n: number; on: boolean } }) {
+function MyPresetCard({ preset, state, onEdit }: { preset: MyPreset; state: { n: number; on: boolean }; onEdit: () => void }) {
   const { t, lang, selectMany, deletePreset } = useStore();
   const [copied, setCopied] = useState(false);
   const [asking, setAsking] = useState(false);
@@ -344,6 +347,9 @@ function MyPresetCard({ preset, state }: { preset: MyPreset; state: { n: number;
       <span className="preset-index rg-metric">{formatDate(lang, preset.at)}</span>
       <span className="preset-name">{preset.name}</span>
       <span className="preset-desc mine-tools">
+        <button type="button" className="icon-btn" title={t("dash.mine.edit")} aria-label={t("dash.mine.edit")} onClick={onEdit}>
+          <Pencil size={13} />
+        </button>
         <button type="button" className="icon-btn" title={copied ? t("dash.mine.copied") : t("dash.mine.copy")} aria-label={t("dash.mine.copy")} onClick={() => void copy()}>
           {copied ? <Check size={13} /> : <Copy size={13} />}
         </button>

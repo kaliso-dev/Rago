@@ -22,6 +22,36 @@ const defaultPreset = (g: Game) => {
   return own ? `builtin:${own.id}` : (DEFAULT_PRESET[g.kind] ?? "builtin:fps");
 };
 
+/** Minecraft Java : une seule tuile, quel que soit le nombre de launchers installés (Lunar Client, Badlion, l'officiel…).
+ * Le launcher se choisit sur la tuile ; c'est lui qui est lancé. */
+const MC_JAVA = "mc:java";
+type Entry = Game & { clients?: Game[]; via?: Game };
+/** Le jeu réellement lancé : pour Minecraft, celui du launcher choisi. */
+const real = (g: Entry): Game => g.via ?? g;
+/** Launcher Minecraft d'un jeu « mc:… » (son icône dans la rangée des launchers). */
+const mcLauncherId = (g: Game) => (g.id === "mc:official" || g.id === "mc:store" ? "minecraft" : g.id.slice(3));
+
+/** Icônes des launchers (celle de leur exe), demandées une fois. */
+function useLauncherIcons(ids: string[]) {
+  const [icons, setIcons] = useState<Record<string, string | null>>({});
+  const key = ids.join(",");
+  useEffect(() => {
+    let live = true;
+    for (const id of ids) {
+      if (id in icons) continue;
+      void api.launcherIcon(id).then(
+        (src) => live && setIcons((m) => ({ ...m, [id]: src })),
+        () => live && setIcons((m) => ({ ...m, [id]: null })),
+      );
+    }
+    return () => {
+      live = false;
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [key]);
+  return icons;
+}
+
 const LAUNCHERS: Record<string, string> = {
   steam: "Steam",
   epic: "Epic Games",
@@ -54,24 +84,10 @@ function Art({ game, src, className }: { game: Game; src: string | null | undefi
 /** Launchers installés : leur icône (celle de leur exe) sur un fond flouté de la même icône ; un clic les ouvre. */
 function Launchers({ list }: { list: Launcher[] }) {
   const { t } = useStore();
-  const [icons, setIcons] = useState<Record<string, string | null>>({});
+  const icons = useLauncherIcons(list.map((l) => l.id));
   const [opening, setOpening] = useState<string | null>(null);
   const [open, setOpen] = useState<Set<string>>(new Set());
   const [failed, setFailed] = useState<string | null>(null);
-  useEffect(() => {
-    let live = true;
-    for (const l of list) {
-      if (l.id in icons) continue;
-      void api.launcherIcon(l.id).then(
-        (src) => live && setIcons((m) => ({ ...m, [l.id]: src })),
-        () => live && setIcons((m) => ({ ...m, [l.id]: null })),
-      );
-    }
-    return () => {
-      live = false;
-    };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [list]);
 
   const start = async (l: Launcher) => {
     setOpening(l.id);
@@ -138,7 +154,7 @@ function Launchers({ list }: { list: Launcher[] }) {
 }
 
 export function Games() {
-  const { t, lang, premium, setUpsell, applied, gamePresets, setGamePresets, myPresets, optimizeAndPlay, launchGame, playing, requestUndo, run, toApply } =
+  const { t, lang, premium, setUpsell, applied, gamePresets, setGamePresets, mcLauncher, setMcLauncher, myPresets, optimizeAndPlay, launchGame, playing, requestUndo, run, toApply } =
     useStore();
   const [games, setGames] = useState<Game[] | null>(null);
   const [launchers, setLaunchers] = useState<Launcher[]>([]);
@@ -197,8 +213,9 @@ export function Games() {
     };
   }, [games]);
 
-  const presetRef = (g: Game) => {
-    const ref = gamePresets[g.id] ?? defaultPreset(g);
+  const presetRef = (g: Entry) => {
+    // Minecraft : le choix fait avant la tuile unique, sur la tuile du launcher, reste valable
+    const ref = gamePresets[g.id] ?? (g.via && gamePresets[g.via.id]) ?? defaultPreset(g);
     // preset perso supprimé depuis, ou preset du catalogue qui n'existe plus : celui d'office
     const gone = ref.startsWith("mine:") ? !myPresets.some((p) => `mine:${p.id}` === ref) : ref.startsWith("builtin:") && !catalog.presets.some((p) => `builtin:${p.id}` === ref);
     return gone ? defaultPreset(g) : ref;
@@ -212,18 +229,31 @@ export function Games() {
     return p ? { name: p.name, entries: p.t } : null;
   };
 
-  const sorted = useMemo(
-    () =>
-      [...(games ?? [])].sort(
-        (a, b) => Number(b.running) - Number(a.running) || (b.lastPlayed ?? 0) - (a.lastPlayed ?? 0) || (a.client ?? a.name).localeCompare(b.client ?? b.name),
-      ),
-    [games],
-  );
+  // les launchers Minecraft ne sont pas des jeux : une tuile « Minecraft », lancée par celui choisi
+  const sorted = useMemo(() => {
+    const clients = (games ?? []).filter((g) => g.launcher === "minecraft");
+    const list: Entry[] = (games ?? []).filter((g) => g.launcher !== "minecraft");
+    if (clients.length) {
+      const byUse = [...clients].sort((a, b) => (b.lastPlayed ?? 0) - (a.lastPlayed ?? 0));
+      const via = clients.find((c) => c.id === mcLauncher) ?? byUse[0];
+      list.push({
+        ...via,
+        id: MC_JAVA,
+        client: null,
+        running: clients.some((c) => c.running),
+        lastPlayed: byUse[0].lastPlayed,
+        clients,
+        via,
+      });
+    }
+    return list.sort((a, b) => Number(b.running) - Number(a.running) || (b.lastPlayed ?? 0) - (a.lastPlayed ?? 0) || a.name.localeCompare(b.name));
+  }, [games, mcLauncher]);
   const hero = sorted.find((g) => g.id === pick) ?? sorted[0] ?? null;
   const counts = { all: sorted.length, minecraft: 0, shooter: 0, other: 0 } as Record<Filter, number>;
   for (const g of sorted) counts[(g.kind in counts ? g.kind : "other") as Filter]++;
   const shown = filter === "all" ? sorted : sorted.filter((g) => (g.kind in counts ? g.kind : "other") === filter);
-  const found = [...new Set(sorted.map((g) => (g.launcher === "minecraft" ? g.client : g.launcher === "manual" ? null : LAUNCHERS[g.launcher])).filter(Boolean))];
+  const found = [...new Set(sorted.map((g) => (g.launcher === "minecraft" || g.launcher === "manual" ? null : LAUNCHERS[g.launcher])).filter(Boolean))];
+  const mcIcons = useLauncherIcons((games ?? []).filter((g) => g.launcher === "minecraft").map(mcLauncherId));
 
   const ago = (ts: number) => {
     const rtf = new Intl.RelativeTimeFormat(lang === "fr" ? "fr-FR" : "en-US", { numeric: "auto", style: "short" });
@@ -241,12 +271,14 @@ export function Games() {
   const heroPending = heroPreset ? toApply(heroPreset.entries).ids.length : 0;
   const busy = !!run;
 
-  const play = (g: Game) => {
+  /** Nom du jeu lancé, dans le suivi du lancement : « Minecraft (Lunar Client) ». */
+  const title = (g: Entry) => (g.via?.client ? `${g.name} (${g.via.client})` : (g.client ?? g.name));
+  const play = (g: Entry) => {
     setAsking(false);
     const preset = resolve(presetRef(g));
-    if (!preset) return void launchGame(g.id, g.client ?? g.name);
+    if (!preset) return void launchGame(real(g).id, title(g));
     if (!premium) return setUpsell("plan");
-    optimizeAndPlay({ id: g.id, name: g.client ?? g.name }, preset.entries);
+    optimizeAndPlay({ id: real(g).id, name: title(g) }, preset.entries);
   };
 
   const add = async () => {
@@ -260,19 +292,17 @@ export function Games() {
     }
   };
 
-  const remove = async (g: Game) => {
-    await api.gameRemove(g.id);
+  const remove = async (g: Entry) => {
+    const ids = (g.clients ?? [g]).map((x) => x.id);
+    for (const id of ids) await api.gameRemove(id);
     setAsking(false);
     setPick(null);
-    setGames((list) => list?.filter((x) => x.id !== g.id) ?? list);
+    setGames((list) => list?.filter((x) => !ids.includes(x.id)) ?? list);
   };
 
-  const status = (g: Game) =>
-    playing?.id === g.id && playing.status === "failed"
-      ? t("games.failed")
-      : playing?.id === g.id && playing.status === "waiting" && !run
-        ? t("games.starting")
-        : null;
+  const mine = (g: Entry) => (g.clients ?? [g]).some((x) => x.id === playing?.id);
+  const status = (g: Entry) =>
+    mine(g) && playing?.status === "failed" ? t("games.failed") : mine(g) && playing?.status === "waiting" && !run ? t("games.starting") : null;
 
   return (
     <motion.div className="page games" variants={stagger} initial="initial" animate="animate">
@@ -312,7 +342,7 @@ export function Games() {
         </motion.div>
       ) : (
         <motion.section variants={rise} className="card games-hero" key={hero.id}>
-          <Art game={hero} src={art[hero.id]} className="hero-art" />
+          <Art game={hero} src={art[real(hero).id]} className="hero-art" />
           <div className="games-hero-body">
             <div className="rg-overline games-when">
               {hero.running ? (
@@ -347,7 +377,11 @@ export function Games() {
                   )}
                 </AnimatePresence>
               </div>
-              {hero.launcher !== "minecraft" && <span className="chip">{hero.launcher === "manual" ? t("games.manual") : LAUNCHERS[hero.launcher]}</span>}
+              {hero.clients?.length === 1 ? (
+                <span className="chip">{hero.clients[0].client}</span>
+              ) : (
+                !hero.clients && <span className="chip">{hero.launcher === "manual" ? t("games.manual") : LAUNCHERS[hero.launcher]}</span>
+              )}
               <button
                 type="button"
                 className={`chip chip-btn games-remove${asking ? " danger" : ""}`}
@@ -360,6 +394,24 @@ export function Games() {
                 {asking && <span>{t("games.removeConfirm")}</span>}
               </button>
             </div>
+            {hero.clients && hero.clients.length > 1 && (
+              <div className="mc-via">
+                <span className="mc-via-label small muted">{t("games.via")}</span>
+                <div className="mc-via-row" role="radiogroup" aria-label={t("games.via")}>
+                  {hero.clients.map((c) => {
+                    const icon = mcIcons[mcLauncherId(c)];
+                    const on = c.id === hero.via?.id;
+                    return (
+                      <button key={c.id} type="button" role="radio" aria-checked={on} className={`mc-via-opt${on ? " on" : ""}`} onClick={() => setMcLauncher(c.id)}>
+                        <span className="mc-via-icon">{icon ? <img src={icon} alt="" draggable={false} /> : initials(c.client ?? c.name)}</span>
+                        <span>{c.client}</span>
+                        {on && <Check size={12} />}
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+            )}
             {hero.running && session && <SessionChecks session={session} t={t} />}
           </div>
           <div className="games-hero-actions">
@@ -376,7 +428,7 @@ export function Games() {
               ) : null}
               {/* tout le preset est déjà appliqué : un seul bouton « Jouer » */}
               {!(heroPreset && premium && heroPending === 0) && (
-                <Button variant={heroPreset ? "secondary" : "primary"} icon={<Play size={13} />} disabled={busy} onClick={() => void launchGame(hero.id, hero.client ?? hero.name)}>
+                <Button variant={heroPreset ? "secondary" : "primary"} icon={<Play size={13} />} disabled={busy} onClick={() => void launchGame(real(hero).id, title(hero))}>
                   {heroPreset ? t("games.playOnly") : t("games.play")}
                 </Button>
               )}
@@ -419,7 +471,7 @@ export function Games() {
               return (
                 <div key={g.id} className={`game-card${hero?.id === g.id ? " on" : ""}`}>
                   <button type="button" className="preset-hit" aria-label={g.client ?? g.name} onClick={() => setPick(g.id)} />
-                  <Art game={g} src={art[g.id]} />
+                  <Art game={g} src={art[real(g).id]} />
                   {g.running && (
                     <span className="game-live">
                       <span className="dot dot-ok" />
@@ -428,10 +480,10 @@ export function Games() {
                   )}
                   <div className="game-body">
                     <div className="game-name">{g.client ?? g.name}</div>
-                    <div className="game-sub muted small">{g.client ? "Minecraft" : g.launcher === "manual" ? t("games.manual") : LAUNCHERS[g.launcher]}</div>
+                    <div className="game-sub muted small">{g.via ? g.via.client : g.launcher === "manual" ? t("games.manual") : LAUNCHERS[g.launcher]}</div>
                     <div className="game-foot">
                       <span className="chip">{preset ? preset.name : t("games.noPresetShort")}</span>
-                      <Button size="sm" disabled={busy} onClick={() => void launchGame(g.id, g.client ?? g.name)}>
+                      <Button size="sm" disabled={busy} onClick={() => void launchGame(real(g).id, title(g))}>
                         {t("games.play")}
                       </Button>
                     </div>

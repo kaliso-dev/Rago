@@ -181,7 +181,9 @@ export function NetOpt() {
               {detect?.connected && (
                 <span className="no-detected">
                   {detect.wifi ? <Wifi size={12} /> : <Cable size={12} />}
-                  {t("no.detected", { name: [detect.alias, detect.desc, detect.speed].filter(Boolean).join(" · ") })}
+                  <span className="no-detected-text" title={[detect.alias, detect.desc, detect.speed].filter(Boolean).join(" · ")}>
+                    {t("no.detected", { name: [detect.alias, detect.desc, detect.speed].filter(Boolean).join(" · ") })}
+                  </span>
                 </span>
               )}
               {applied && dirty && !changing && <span className="no-dirty">{t("no.status.changed")}</span>}

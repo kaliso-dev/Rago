@@ -149,6 +149,8 @@ function useStoreValue() {
   const [myPresets, setMyPresets] = usePersisted<MyPreset[]>("myPresets", []);
   /** preset choisi pour chaque jeu de la bibliothèque : "builtin:<id>", "mine:<id>" ou "none" */
   const [gamePresets, setGamePresets] = usePersisted<Record<string, string>>("gamePresets", {});
+  /** Launcher choisi pour Minecraft Java quand plusieurs sont installés (id du jeu : "mc:lunar", "mc:official"…). */
+  const [mcLauncher, setMcLauncher] = usePersisted<string | null>("mcLauncher", null);
   const [playing, setPlaying] = useState<Playing | null>(null);
   /** jeu à lancer à la fin du lot en cours (« Optimiser et jouer ») */
   const launchAfter = useRef<Playing | null>(null);
@@ -383,9 +385,18 @@ function useStoreValue() {
     return out;
   }, [isOn, selected, variantOf, applied]);
 
+  /** Renvoie l'id du preset créé (pour l'ouvrir dans la fenêtre de modification). */
   const savePreset = useCallback(
-    (name: string, entries: string[]) =>
-      setMyPresets((list) => [...list, { id: `p${Date.now().toString(36)}`, name: name.trim(), t: entries, at: Date.now() }]),
+    (name: string, entries: string[]) => {
+      const id = `p${Date.now().toString(36)}`;
+      setMyPresets((list) => [...list, { id, name: name.trim(), t: entries, at: Date.now() }]);
+      return id;
+    },
+    [setMyPresets],
+  );
+  /** Nom et réglages modifiés ; la date reste celle de l'enregistrement. */
+  const updatePreset = useCallback(
+    (id: string, name: string, entries: string[]) => setMyPresets((list) => list.map((p) => (p.id === id ? { ...p, name: name.trim(), t: entries } : p))),
     [setMyPresets],
   );
   const deletePreset = useCallback((id: string) => setMyPresets((list) => list.filter((p) => p.id !== id)), [setMyPresets]);
@@ -657,8 +668,8 @@ function useStoreValue() {
     retiredApplied, requestUndo, requestUndoAll,
     history, lastRun, lastRestore, refreshHistory, refreshApplied,
     mcDir, setMcDir, cleanTrim, setCleanTrim,
-    currentSetup, myPresets, savePreset, deletePreset,
-    gamePresets, setGamePresets, playing, setPlaying, launchGame, optimizeAndPlay, toApply,
+    currentSetup, myPresets, savePreset, updatePreset, deletePreset,
+    gamePresets, setGamePresets, mcLauncher, setMcLauncher, playing, setPlaying, launchGame, optimizeAndPlay, toApply,
     confirm, setConfirm, requestApply, requestApplyEntries,
     run, setRun, startRun,
     paletteOpen, setPaletteOpen,

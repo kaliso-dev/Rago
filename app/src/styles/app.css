@@ -623,6 +623,14 @@ kbd {
   border-color: var(--rg-red-500);
   box-shadow: 0 0 0 3px var(--rg-red-a12);
 }
+/* champ de texte libre (un nom), pas un code */
+.input.text {
+  font-family: inherit;
+  font-size: 13.5px;
+}
+.input::placeholder {
+  color: var(--rg-text-3);
+}
 
 /* --------------------------------------------------------- switch, segmented */
 
@@ -2474,6 +2482,40 @@ svg {
   }
   .nav-item {
     height: 30px;
+  }
+}
+/* 17 entrées depuis la 1.2.0 : à la hauteur minimale (680 px), Paramètres et l'état admin restent visibles */
+@media (max-height: 720px) {
+  .sidebar {
+    gap: 0;
+    padding: 6px 8px;
+  }
+  .nav-item {
+    height: 28px;
+  }
+  .nav-group-label {
+    padding: 5px 10px 2px;
+  }
+  .sidebar > .nav-item {
+    margin-top: 4px;
+  }
+  /* offre gratuite réduite à son bouton : les cadenas disent déjà ce qui est réservé à Premium */
+  .nav-upgrade {
+    margin: 4px 0 2px;
+    padding: 0;
+    border: 0;
+    background: none;
+    box-shadow: none;
+  }
+  .nav-upgrade-top {
+    display: none;
+  }
+  .nav-upgrade-cta {
+    height: 28px;
+  }
+  /* l'état admin reste sur le tableau de bord : la barre ne défile pas */
+  .nav-upgrade ~ .nav-foot {
+    display: none;
   }
 }
 .dash-retired {

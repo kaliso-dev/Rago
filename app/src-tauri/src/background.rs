@@ -12,7 +12,11 @@ use tauri::{AppHandle, Manager, Runtime};
 
 /// Argument du lancement avec Windows : la fenêtre reste cachée.
 pub const BACKGROUND_ARG: &str = "--background";
-pub const DEFAULT_SHORTCUT: &str = "Ctrl+Shift+R";
+/// Alt+X depuis la 1.2.0 : avec Ctrl+Shift+R, Échap tapé avant de lâcher Ctrl et Shift ouvrait le Gestionnaire des
+/// tâches (Ctrl+Shift+Échap) au lieu de fermer la barre.
+pub const DEFAULT_SHORTCUT: &str = "Alt+X";
+/// Raccourci par défaut avant la 1.2.0, remplacé au chargement par le nouveau.
+const OLD_DEFAULT_SHORTCUT: &str = "Ctrl+Shift+R";
 const TRAY_ID: &str = "rago";
 
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
@@ -79,6 +83,9 @@ impl Background {
         if !prefs.autostart_chosen {
             prefs.autostart = true;
             prefs.tray = true;
+        }
+        if prefs.shortcut == OLD_DEFAULT_SHORTCUT {
+            prefs.shortcut = DEFAULT_SHORTCUT.into();
         }
         Background { path, prefs: Mutex::new(prefs), started_hidden }
     }
@@ -266,6 +273,11 @@ mod tests {
         assert!(Background::load(&dir, false).prefs().autostart);
         std::fs::write(dir.join("background.json"), r#"{"autostart":false,"autostartChosen":true}"#).unwrap();
         assert!(!Background::load(&dir, false).prefs().autostart);
+        // l'ancien raccourci par défaut passe au nouveau, un raccourci choisi reste
+        std::fs::write(dir.join("background.json"), r#"{"shortcut":"Ctrl+Shift+R"}"#).unwrap();
+        assert_eq!(Background::load(&dir, false).prefs().shortcut, DEFAULT_SHORTCUT);
+        std::fs::write(dir.join("background.json"), r#"{"shortcut":"Alt+F9"}"#).unwrap();
+        assert_eq!(Background::load(&dir, false).prefs().shortcut, "Alt+F9");
         let _ = std::fs::remove_dir_all(&dir);
     }
 

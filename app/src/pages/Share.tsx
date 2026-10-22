@@ -1,11 +1,12 @@
 import { useEffect, useState } from "react";
 import { motion } from "motion/react";
-import { Check, ChevronLeft, Copy, Download, FileText, FolderOpen, LoaderCircle, MessagesSquare, Plus, Upload } from "lucide-react";
+import { Check, ChevronLeft, Copy, Download, FileText, FolderOpen, LoaderCircle, MessagesSquare, Pencil, Plus, Upload } from "lucide-react";
 import { api, isTauri, type ReportParts, type SupportReport } from "../lib/api";
 import { autoVariant, availability, needsReboot, tweaks } from "../lib/catalog";
-import { decodePreset, encodePreset, presetFileName, ShareError, type SharedPreset } from "../lib/share";
+import { decodePreset, encodePreset, MAX_NAME, presetFileName, ShareError, type SharedPreset } from "../lib/share";
 import { useStore } from "../lib/store";
 import { SUPPORT_URL } from "../components/LicenseGate";
+import { PresetEditor } from "../components/PresetEditor";
 import { Button } from "../components/ui";
 
 const stagger = { animate: { transition: { staggerChildren: 0.05 } } };
@@ -30,6 +31,7 @@ export function Share() {
 
   // ---------- partager
   const [code, setCode] = useState("");
+  const [shareName, setShareName] = useState("");
   const [copied, setCopied] = useState(false);
   const [shareError, setShareError] = useState(false);
   const setupKey = currentSetup.join(",");
@@ -37,7 +39,7 @@ export function Share() {
     let live = true;
     setCopied(false);
     if (!currentSetup.length) return setCode("");
-    encodePreset({ t: currentSetup }).then(
+    encodePreset({ n: shareName, t: currentSetup }).then(
       (c) => live && (setCode(c), setShareError(false)),
       () => live && setShareError(true),
     );
@@ -45,7 +47,7 @@ export function Share() {
       live = false;
     };
     // la liste change de référence à chaque rendu du store : on suit son contenu
-  }, [setupKey]);
+  }, [setupKey, shareName]);
 
   const copy = async () => {
     try {
@@ -58,7 +60,7 @@ export function Share() {
   };
   const saveFile = async () => {
     try {
-      await api.savePresetFile(code, presetFileName(lang === "fr" ? "mon-preset-rago" : "my-rago-preset"), t("share.saveTitle"));
+      await api.savePresetFile(code, presetFileName(shareName.trim() || (lang === "fr" ? "mon-preset-rago" : "my-rago-preset")), t("share.saveTitle"));
     } catch {
       setShareError(true);
     }
@@ -69,7 +71,10 @@ export function Share() {
   const [preview, setPreview] = useState<Preview | null>(null);
   const [importError, setImportError] = useState<string | null>(null);
   const [added, setAdded] = useState<number | null>(null);
-  const [savedMine, setSavedMine] = useState(false);
+  // nom sous lequel le preset importé est gardé : celui choisi par l'ami, modifiable
+  const [keepName, setKeepName] = useState("");
+  const [savedMine, setSavedMine] = useState<string | null>(null);
+  const [editing, setEditing] = useState<string | null>(null);
 
   const analyse = (preset: SharedPreset): Preview => {
     const p: Preview = { preset, entries: [], fresh: 0, reboot: 0, already: 0, unavailable: 0, locked: 0 };
@@ -102,15 +107,16 @@ export function Share() {
 
   const runPreview = async (text = input) => {
     setAdded(null);
-    setSavedMine(false);
+    setSavedMine(null);
     try {
       const preset = await decodePreset(text);
       setPreview(analyse(preset));
+      setKeepName(preset.n ?? "");
       setImportError(null);
     } catch (e) {
       setPreview(null);
       const why = e instanceof ShareError ? e.message : "format";
-      setImportError(why === "empty" ? null : t(why === "newer" ? "share.import.newer" : "share.import.bad"));
+      setImportError(why === "empty" ? null : t(why === "newer" ? "share.import.newer" : why === "broken" ? "share.import.broken" : "share.import.bad"));
     }
   };
   // le PC, la licence ou les réglages appliqués changent : l'aperçu se recalcule
@@ -184,6 +190,19 @@ export function Share() {
           <p className="muted small share-p">{t("share.presetLead")}</p>
           {currentSetup.length > 0 ? (
             <>
+              <label htmlFor="share-name" className="share-label">
+                {t("share.name")}
+              </label>
+              <input
+                id="share-name"
+                className="input text share-name"
+                maxLength={MAX_NAME}
+                value={shareName}
+                autoComplete="off"
+                placeholder={t("share.namePh")}
+                onChange={(e) => setShareName(e.target.value)}
+              />
+              <p className="muted small share-hint">{t("share.nameHint")}</p>
               <div className="share-well share-code">
                 <span className="rg-metric" title={code}>
                   {code || "…"}
@@ -215,7 +234,7 @@ export function Share() {
               value={input}
               spellCheck={false}
               autoComplete="off"
-              placeholder="RAGO1-…"
+              placeholder="RAGO2_…"
               onChange={(e) => {
                 setInput(e.target.value);
                 setImportError(null);
@@ -250,19 +269,6 @@ export function Share() {
                   {t("free.upgrade")}
                 </Button>
               )}
-              {added != null && !savedMine && (
-                <Button
-                  size="sm"
-                  variant="ghost"
-                  icon={<Plus size={13} />}
-                  onClick={() => {
-                    savePreset(preview.preset.n || t("share.import.unnamed"), preview.preset.t);
-                    setSavedMine(true);
-                  }}
-                >
-                  {t("share.import.keep")}
-                </Button>
-              )}
               {added == null && (
                 <Button size="sm" variant="primary" disabled={preview.fresh === 0} onClick={addAll}>
                   {t("share.import.add")}
@@ -270,6 +276,46 @@ export function Share() {
               )}
             </div>
           )}
+          {/* le preset de l'ami se garde sous son nom, modifiable ici puis dans Mes presets */}
+          {preview && !savedMine && (
+            <label htmlFor="share-keep-name" className="share-label share-keep-label">
+              {t("share.import.keepAs")}
+            </label>
+          )}
+          {preview && (
+            <div className={`share-keep${savedMine ? " saved" : ""}`}>
+              {savedMine ? (
+                <>
+                  <span className="share-added small">
+                    <Check size={13} />
+                    {t("share.import.saved")}
+                  </span>
+                  <Button size="sm" variant="ghost" icon={<Pencil size={12} />} onClick={() => setEditing(savedMine)}>
+                    {t("share.import.edit")}
+                  </Button>
+                </>
+              ) : (
+                <>
+                  <input
+                    id="share-keep-name"
+                    className="input text"
+                    maxLength={MAX_NAME}
+                    value={keepName}
+                    placeholder={t("share.import.unnamed")}
+                    onChange={(e) => setKeepName(e.target.value)}
+                  />
+                  <Button
+                    size="sm"
+                    icon={<Plus size={13} />}
+                    onClick={() => setSavedMine(savePreset(keepName.trim() || t("share.import.unnamed"), preview.preset.t))}
+                  >
+                    {t("share.import.keep")}
+                  </Button>
+                </>
+              )}
+            </div>
+          )}
+          <PresetEditor id={editing} onClose={() => setEditing(null)} />
         </motion.section>
 
         {/* RAG-70 : rapport pour le support */}

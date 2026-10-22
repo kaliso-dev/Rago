@@ -1,12 +1,12 @@
-//! Barre en jeu (RAG-82). Un raccourci (Ctrl+Shift+R par défaut) ouvre par-dessus le jeu une barre en verre : FPS, ping,
+//! Barre en jeu (RAG-82). Un raccourci (Alt+X par défaut) ouvre par-dessus le jeu une barre en verre : FPS, ping,
 //! processeur, carte graphique, mémoire, nettoyage de la RAM et quelques réglages qui s'appliquent sans redémarrer.
 //!
 //! - Le raccourci n'est pris à Windows que pendant qu'un jeu est au premier plan (ou la barre ouverte) : le reste du
-//!   temps, Ctrl+Shift+R reste à l'app au premier plan (rechargement d'une page dans un navigateur).
+//!   temps, le raccourci reste à l'app au premier plan.
 //! - Un jeu : un jeu de la bibliothèque, Minecraft Java (javaw.exe, quel que soit le launcher), ou une fenêtre qui
 //!   couvre tout son écran (plein écran fenêtré). Le plein écran exclusif ne laisse rien s'afficher par-dessus.
 //! - Barre ouverte : elle prend le clavier et la souris, Échap, le raccourci ou un clic dans le jeu la ferment, et le jeu
-//!   reprend le premier plan. Option « garder les stats à l'écran » : une pastille FPS et ping reste en haut à droite
+//!   reprend le premier plan. Option « garder les stats à l'écran » : une pastille FPS et ping reste en haut à gauche
 //!   pendant la partie, sans prendre ni le focus ni les clics.
 //! - Jeux qui se réduisent dès qu'ils perdent le premier plan (Minecraft Java en plein écran, et ceux qu'on voit se
 //!   réduire à l'ouverture) : la barre s'ouvre sans le leur prendre. Elle prend les clics mais pas le clavier ; le jeu
@@ -40,7 +40,7 @@ const ESC: &str = "Escape";
 /// Exes de jeux reconnus sans la bibliothèque : Minecraft Java (tous les launchers) et Bedrock.
 const KNOWN: &[(&str, &str)] = &[("javaw.exe", "Minecraft"), ("java.exe", "Minecraft"), ("minecraft.windows.exe", "Minecraft")];
 /// Jamais un jeu, même en plein écran : le bureau de Windows, les navigateurs et les lecteurs vidéo (une vidéo en plein
-/// écran n'a pas à afficher la pastille, et Ctrl+Shift+R y reste le rechargement de la page).
+/// écran n'a pas à afficher la pastille, et le raccourci y reste à la page).
 const NEVER: &[&str] = &[
     "explorer.exe",
     "searchhost.exe",
@@ -247,7 +247,8 @@ impl Overlay {
             .ok()
     }
 
-    /// Place la fenêtre sur l'écran du jeu : en haut au centre (barre) ou en haut à droite (pastille).
+    /// Place la fenêtre sur l'écran du jeu : en haut au centre (barre) ou en haut à gauche (pastille, loin de la
+    /// minicarte et du compteur de munitions que beaucoup de jeux mettent à droite).
     fn place(&self, app: &AppHandle, w: &WebviewWindow, game: Option<&Target>, mode: Mode) {
         let center = game.and_then(|g| win::window_center(g.hwnd));
         let monitors = app.available_monitors().unwrap_or_default();
@@ -268,7 +269,7 @@ impl Overlay {
         // petit écran (1280 × 720 à 125 %, par exemple) : la barre rétrécit, sa liste de réglages défile
         let pw = ((lw * scale).round() as i32).min(mw - 2 * margin);
         let ph = ((lh * scale).round() as i32).min(mh - 2 * margin);
-        let x = if mode == Mode::Pill { mx + mw - pw - margin } else { mx + (mw - pw) / 2 };
+        let x = if mode == Mode::Pill { mx + margin } else { mx + (mw - pw) / 2 };
         let _ = w.set_position(PhysicalPosition::new(x, my + margin));
         let _ = w.set_size(PhysicalSize::new(pw as u32, ph as u32));
     }

@@ -249,7 +249,7 @@ export function Overlay() {
         </div>
         {error && <p className="ov-note ov-error">{error}</p>}
         <footer className="ov-foot">
-          <span>{t(info?.passive ? "overlay.hintPassive" : "overlay.hint", { key: info?.shortcut ?? "Ctrl+Shift+R" })}</span>
+          <span>{t(info?.passive ? "overlay.hintPassive" : "overlay.hint", { key: info?.shortcut ?? "Alt+X" })}</span>
           <span className="ov-foot-sep" />
           <span>{t("overlay.pingNote")}</span>
         </footer>

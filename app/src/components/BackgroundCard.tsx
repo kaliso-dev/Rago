@@ -4,7 +4,7 @@ import { api, type BackgroundPrefs, type BackgroundState } from "../lib/api";
 import { useStore } from "../lib/store";
 import { Button, Card, Switch } from "./ui";
 
-const DEFAULT_SHORTCUT = "Ctrl+Shift+R";
+const DEFAULT_SHORTCUT = "Alt+X";
 const MODIFIERS = new Set(["Control", "Shift", "Alt", "Meta", "AltGraph"]);
 
 /** Touche tapée → raccourci lisible par le moteur (« Ctrl+Shift+R »), null tant qu'il manque la touche principale. */
