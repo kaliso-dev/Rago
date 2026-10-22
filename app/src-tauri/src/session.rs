@@ -18,7 +18,7 @@ use crate::background::Prefs;
 
 pub const BALANCED: &str = "381b4222-f694-41f0-9685-ff5bb260df2e";
 pub const POWER_SAVER: &str = "a1841308-3541-4fab-bc81-f71556f20b4a";
-pub const HIGH: &str = "8c5e7fda-e8bf-4a96-9a85-cf2a8b6b5ec2";
+pub const HIGH: &str = "8c5e7fda-e8bf-4a96-9a85-a6e23a8c635c";
 #[cfg_attr(not(windows), allow(dead_code))]
 const GPU_KEY: &str = r"HKCU\Software\Microsoft\DirectX\UserGpuPreferences";
 #[cfg_attr(not(windows), allow(dead_code))]
@@ -383,7 +383,7 @@ mod tests {
     fn reads_the_active_scheme_in_any_language() {
         let fr = "GUID du mode de gestion de l'alimentation : 381B4222-F694-41F0-9685-FF5BB260DF2E  (Utilisation normale)";
         assert_eq!(parse_scheme(fr).as_deref(), Some(BALANCED));
-        let en = "Power Scheme GUID: 8c5e7fda-e8bf-4a96-9a85-cf2a8b6b5ec2  (High performance)";
+        let en = "Power Scheme GUID: 8c5e7fda-e8bf-4a96-9a85-a6e23a8c635c  (High performance)";
         assert_eq!(parse_scheme(en).as_deref(), Some(HIGH));
         assert_eq!(parse_scheme("Accès refusé."), None);
     }

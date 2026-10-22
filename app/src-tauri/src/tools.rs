@@ -530,7 +530,9 @@ mod tests {
             }
         }
         assert!(targets("nope").is_empty());
-        assert!(temp_like(Path::new("/home/u/AppData/Local/Temp")) && temp_like(Path::new("/var/tmp")));
+        // un chemin absolu a une lettre de lecteur sous Windows
+        let abs = |p: &str| PathBuf::from(if cfg!(windows) { format!("C:{p}") } else { p.to_string() });
+        assert!(temp_like(&abs("/home/u/AppData/Local/Temp")) && temp_like(&abs("/var/tmp")));
         assert!(!temp_like(Path::new("/")) && !temp_like(Path::new("/home/u")) && !temp_like(Path::new("Temp")) && !temp_like(Path::new("/Temp")));
     }
 
