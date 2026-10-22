@@ -1,6 +1,6 @@
 import { createElement } from "react";
 import {
-  Box, Crosshair, FlaskConical, Gamepad2, Gauge, Globe, Gpu, LayoutDashboard, Network, Settings, Shield, Undo2, AppWindow, Wrench, Zap, type LucideIcon,
+  Box, Crosshair, FlaskConical, Gamepad2, Gauge, Globe, Gpu, LayoutDashboard, Network, Router, Settings, Shield, Undo2, AppWindow, Wrench, Zap, type LucideIcon,
 } from "lucide-react";
 
 export const MODULE_ICONS: Record<string, LucideIcon> = {
@@ -18,6 +18,7 @@ export const MODULE_ICONS: Record<string, LucideIcon> = {
   settings: Settings,
   games: Gamepad2,
   nettest: Globe,
+  netopt: Router,
   tools: Wrench,
 };
 

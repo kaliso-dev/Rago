@@ -3,6 +3,7 @@
 import { invoke } from "@tauri-apps/api/core";
 import { listen, type UnlistenFn } from "@tauri-apps/api/event";
 import { tweaks } from "./catalog";
+import type { NetAction, NetLine, NetOptions, NetOutcome, NetState } from "./netopt";
 
 export interface Gpu {
   name: string;
@@ -386,6 +387,10 @@ export interface Api {
   launcherIcon(id: string): Promise<string | null>;
   /** Logos des jeux des presets installés sur ce PC (icône de leur exe, data: URL), par clé de jeu (« valorant »). */
   presetIcons(): Promise<Record<string, string>>;
+  /** Network Optimizer (netopt.rs) : état, puis une action (appliquer, remettre, test) dont les lignes arrivent par onNetOptLine. */
+  netOptState(): Promise<NetState>;
+  netOptRun(action: NetAction, options?: NetOptions): Promise<NetOutcome>;
+  onNetOptLine(cb: (l: NetLine) => void): Promise<UnlistenFn>;
   /** Ajoute un jeu à la main (choix d'un .exe) ; id du jeu, null si la fenêtre est fermée sans choisir. */
   gameAdd(title: string): Promise<string | null>;
   /** Retire un jeu de la bibliothèque (rien n'est désinstallé). */
@@ -486,6 +491,9 @@ const tauriApi: Api = {
   launcherLaunch: (id) => invoke("launcher_launch", { id }),
   launcherIcon: (id) => invoke("launcher_icon", { id }),
   presetIcons: () => invoke("preset_icons"),
+  netOptState: () => invoke("netopt_state"),
+  netOptRun: (action, options) => invoke("netopt_run", { action, options: options ?? null }),
+  onNetOptLine: (cb) => listen<NetLine>("netopt:line", (e) => cb(e.payload)),
   gameAdd: async (title) => {
     const { open } = await import("@tauri-apps/plugin-dialog");
     const path = await open({ title, multiple: false, directory: false, filters: [{ name: "Program", extensions: ["exe"] }] });
@@ -604,6 +612,20 @@ const saveMockApplied = () => {
 let mockCancel = false;
 let mockRunning = false;
 
+let mockNet: NetState = { applied: null, backup: false, busy: false };
+const MOCK_NET_LINES: Record<string, string[]> = {
+  TCP: ["Receive window tuning: normal", "Initial retransmission timeout, ms: 300", "TCP timestamps: disabled", ".. Minimum retransmission timeout, ms: locked by Windows on this edition, stays 300"],
+  "ACK timing and Nagle (every network interface)": ["ACK every 1 packet, delayed ACK ticks 0, NoDelay 1 on 6 interfaces"],
+  "Latency: buffering in Windows and the network card": ["Network throttling off", "CPU reserve for background tasks: 10 %", "Ethernet: interrupt moderation = Disabled"],
+  "Power saving": ["Ethernet: Energy Efficient Ethernet = Off", "Network power saving features off"],
+  "Wi-Fi Stabilizer": [".. No Wi-Fi card connected, nothing to do"],
+  "Restarting the network card": ["Network card back online"],
+  MTU: ["MTU 1500 on Ethernet, already right"],
+  "Smart Packets": ["Minecraft packets marked DSCP 48 (javaw, java, Minecraft.Windows)", "Big downloaders marked as background, CS1"],
+  "Priority Mode": ["Minecraft starts with High CPU priority"],
+  "Competitive Mode": ["! No High performance plan on this PC (Modern Standby laptop?), current plan kept", "Game Mode on, Game DVR off, foreground boost, game task priority high"],
+  "Background Traffic Guard": ["Windows Update no longer uploads to other PCs"],
+};
 const MOCK_LINES = [
   "Opération réussie.",
   'reg add "HKLM\\SYSTEM\\CurrentControlSet\\Services\\Tcpip\\Parameters" /v TcpAckFrequency /t REG_DWORD /d 1 /f',
@@ -944,6 +966,60 @@ const mockApi: Api = {
   launcherIcon: async (id) => (window as unknown as { __launcherIcons?: Record<string, string> }).__launcherIcons?.[id] ?? null,
   // démo : aucun jeu installé, les glyphes servent de logos (les captures peuvent fournir des icônes, __presetIcons)
   presetIcons: async () => (window as unknown as { __presetIcons?: Record<string, string> }).__presetIcons ?? {},
+  netOptState: async () => ({ ...mockNet }),
+  netOptRun: async (action, options) => {
+    const line = (tag: NetLine["tag"], text: string, step: number | null = null, total: number | null = null) =>
+      emit<NetLine>("netopt:line", { action, tag, text, step, total });
+    if (action === "apply" || action === "restore" || action === "defaults") {
+      const titles = action === "apply"
+        ? ["TCP", "ACK timing and Nagle (every network interface)", "Latency: buffering in Windows and the network card", "Power saving", "Wi-Fi Stabilizer", "Restarting the network card", "MTU", "Smart Packets", "Priority Mode", "Competitive Mode", "Background Traffic Guard"]
+        : ["Restoring the settings saved before the first apply", "Registry values", "Network card", "MTU and power plan"];
+      let ok = 0;
+      for (let i = 0; i < titles.length; i++) {
+        line("title", titles[i]);
+        await sleep(260 + Math.random() * 260);
+        for (const t of MOCK_NET_LINES[titles[i]] ?? ["Done"]) {
+          line(t.startsWith("!") ? "warn" : t.startsWith("..") ? "info" : "ok", t.replace(/^(!|\.\.) /, ""));
+          if (!t.startsWith("..")) ok++;
+          await sleep(90);
+        }
+        line("progress", "", i + 1, titles.length);
+      }
+      if (action === "apply" && options) mockNet = { applied: { options, at: Date.now(), ok, warn: 1, fail: 0 }, backup: true, busy: false };
+      else mockNet = { applied: null, backup: action === "defaults" && mockNet.backup, busy: false };
+      return { code: 0, ok, warn: action === "apply" ? 1 : 0, fail: 0, result: null };
+    }
+    if (action === "detect") return { code: 0, ok: 0, warn: 0, fail: 0, result: { kind: "detect", connected: true, wifi: false, alias: "Ethernet", desc: "Intel(R) Ethernet Controller I225-V", speed: "1 Gbps", backup: mockNet.backup ? "2026-10-22 21:40" : null } };
+    const total = action === "loaded" ? 130 : action === "quality" ? 100 : 20;
+    for (let i = 5; i <= total; i += 5) {
+      line("progress", "", i, total);
+      await sleep(action === "status" ? 20 : 70);
+    }
+    const result: Record<string, unknown> =
+      action === "quality"
+        ? { kind: "quality", ip: "172.65.230.166", min: 18, avg: 19.6, p95: 23, max: 31, jitter: 1.4, loss: 0, spikes: 0, stable: true }
+        : action === "loaded"
+          ? { kind: "loaded", ip: "172.65.230.166", idleMed: 19, idleJitter: 1.2, busyMed: 41, busyJitter: 6.8, busyLoss: 0, delta: 22, grade: "A" }
+          : action === "mtu"
+            ? { kind: "mtu", ip: "172.65.230.166", mtu: 1500, current: 1500, alias: "Ethernet" }
+            : {
+                kind: "status",
+                rows: [
+                  { s: "tcp", k: "Receive window tuning", v: "Normal" },
+                  { s: "tcp", k: "Congestion provider", v: "CUBIC" },
+                  { s: "tcp", k: "Initial RTO, ms", v: "1000" },
+                  { s: "tcp", k: "Minimum RTO, ms", v: "300" },
+                  { s: "tcp", k: "Delayed ACK timeout, ms", v: "40" },
+                  { s: "main", k: "Ethernet", v: "" },
+                  { s: "main", k: "MTU", v: "1500" },
+                  { s: "main", k: "TcpAckFrequency", v: "Windows default" },
+                  { s: "power", k: "Active power plan", v: "Rago Low Latency" },
+                  { s: "power", k: "Network throttling index", v: "10" },
+                ],
+              };
+    return { code: 0, ok: 0, warn: 0, fail: 0, result };
+  },
+  onNetOptLine: (cb) => on("netopt:line", cb),
   gameAdd: async () => null,
   gameRemove: async (id) => {
     mockGames = mockGames.filter((g) => g.id !== id);

@@ -13,6 +13,7 @@ mod license;
 mod mcping;
 mod memory;
 mod minecraft;
+mod netopt;
 mod nettest;
 mod overlay;
 mod rbw;
@@ -130,6 +131,12 @@ fn reset_after_license(app: &AppHandle, bundle: Option<Arc<catalog::Bundle>>) {
                     let (o, f) = Runner::default().run_now(&ctx, &reset::items(ids));
                     (ok, failed) = (ok + o, failed + f);
                     continue;
+                }
+                // Network Optimizer appliqué par Rago : ses valeurs d'avant reviennent aussi
+                match netopt::put_back(&state.data_dir, &state.data_dir.join("run")) {
+                    Some(true) => ok += 1,
+                    Some(false) => failed += 1,
+                    None => {}
                 }
                 // tout ce qui pouvait être remis l'a été
                 reset::Pending::remove(&state.data_dir);
@@ -323,6 +330,48 @@ async fn net_test(app: AppHandle, ids: Vec<String>) -> Result<Vec<nettest::Measu
     })
     .await
     .map_err(|e| e.to_string())
+}
+
+// ---------- Network Optimizer (netopt.rs)
+
+#[tauri::command]
+fn netopt_state(state: State<'_, AppState>) -> netopt::State {
+    netopt::state(&state.data_dir)
+}
+
+/// Une action du Network Optimizer : appliquer (Premium), remettre la sauvegarde ou les valeurs de Windows, un test.
+/// Les lignes du moteur arrivent pendant ce temps (`netopt:line`) ; la fin revient ici.
+#[tauri::command]
+async fn netopt_run(
+    app: AppHandle,
+    state: State<'_, AppState>,
+    action: String,
+    options: Option<netopt::Options>,
+) -> Result<netopt::Outcome, String> {
+    let action = netopt::Action::parse(&action).ok_or("unknown action")?;
+    if action.changes() && (state.reset.is_running() || state.runner.is_running()) {
+        return Err("busy".into());
+    }
+    let bundle = if action == netopt::Action::Apply {
+        if state.license.status().state != "active" {
+            return Err("premium_required:netopt".into());
+        }
+        Some(state.license.scripts_key().and_then(|key| catalog::premium(&key)).ok_or("premium_scripts_unavailable")?)
+    } else {
+        None
+    };
+    let options = options.unwrap_or_default().sanitized();
+    let (data_dir, run_dir) = (state.data_dir.clone(), state.data_dir.join("run"));
+    let (cache, resource_dir) = (Arc::clone(&state.system), state.resource_dir.clone());
+    tauri::async_runtime::spawn_blocking(move || {
+        // Compétitif : jamais Performances élevées sur un Ryzen X3D à deux CCD (comme pendant une partie, session.rs)
+        let x3d = action == netopt::Action::Apply && session::dual_ccd_x3d(&probe_cached(&cache, &resource_dir, false).cpu_name);
+        netopt::run(&data_dir, &run_dir, action, &options, bundle.as_deref(), x3d, &|line| {
+            let _ = app.emit("netopt:line", &line);
+        })
+    })
+    .await
+    .map_err(|e| e.to_string())?
 }
 
 // ---------- bibliothèque de jeux (games.rs)
@@ -1027,6 +1076,8 @@ pub fn run() {
             launcher_launch,
             launcher_icon,
             preset_icons,
+            netopt_state,
+            netopt_run,
             game_add,
             game_remove,
             games_unhide,

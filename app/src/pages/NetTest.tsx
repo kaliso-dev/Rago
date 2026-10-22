@@ -168,7 +168,7 @@ export function NetTest() {
             {busy ? t("net.testing") : last ? t("net.again") : t("net.go")}
           </Button>
           {tip && (
-            <button type="button" className="net-tip" onClick={() => goTo("network")}>
+            <button type="button" className="net-tip" onClick={() => goTo("netopt")}>
               <span>{t("net.tip")}</span>
               <ArrowRight size={13} />
             </button>

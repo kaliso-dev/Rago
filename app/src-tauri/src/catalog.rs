@@ -19,6 +19,20 @@ pub struct Bundle {
     /// annulation (scripts/undo.json) : chiffrée elle aussi pour les réglages Premium
     #[serde(default)]
     undo: HashMap<String, HashMap<String, Undo>>,
+    /// moteur PowerShell du Network Optimizer (netopt/*.ps1) : l'application dans les scripts Premium, le reste ici
+    #[serde(default)]
+    engine: HashMap<String, String>,
+}
+
+impl Bundle {
+    pub fn engine(&self, name: &str) -> Option<&str> {
+        self.engine.get(name).map(String::as_str)
+    }
+}
+
+/// Partie du moteur du Network Optimizer qui tourne sans licence (remise, valeurs de Windows, tests).
+pub fn plain_engine(name: &str) -> Option<&'static str> {
+    PLAIN.engine(name)
 }
 
 /// Scripts du plan gratuit et de retour arrière, préparés par build.rs (embed_scripts.rs). Chiffrés eux aussi,

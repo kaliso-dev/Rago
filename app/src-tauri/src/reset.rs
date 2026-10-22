@@ -149,7 +149,7 @@ pub fn due(data_dir: &Path, license_state: &str, ledger: &Ledger) -> Option<Pend
     if let Some(p) = Pending::load(data_dir) {
         return Some(p);
     }
-    if license_state == "none" && !targets(ledger, Scope::Premium, None).is_empty() {
+    if license_state == "none" && (!targets(ledger, Scope::Premium, None).is_empty() || crate::netopt::applied(data_dir)) {
         let p = Pending::new("license_gone");
         let _ = p.save(data_dir);
         return Some(p);
@@ -242,6 +242,8 @@ pub fn uninstall() {
     clear_run();
     // pendant une partie : mode d'alimentation d'avant, choix de carte graphique écrits par Rago retirés
     crate::session::undo_all(&data_dir);
+    // Network Optimizer : les valeurs d'avant sa première application (délai borné dans netopt.rs)
+    crate::netopt::put_back(&data_dir, &data_dir.join("run"));
     let (history, ledger) = load_for_uninstall(&data_dir);
     let ids = targets(&ledger, Scope::All, None);
     if ids.is_empty() {

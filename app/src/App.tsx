@@ -19,6 +19,7 @@ import { ModulePage } from "./pages/ModulePage";
 import { Settings } from "./pages/Settings";
 import { Share } from "./pages/Share";
 import { Games } from "./pages/Games";
+import { NetOpt } from "./pages/NetOpt";
 import { NetTest } from "./pages/NetTest";
 import { Tools } from "./pages/Tools";
 
@@ -61,7 +62,7 @@ export function App() {
                 transition={{ duration: 0.16, ease: [0.16, 1, 0.3, 1] }}
               >
                 <PageBoundary lang={lang}>
-                  {page === "dashboard" ? <Dashboard /> : page === "settings" ? <Settings /> : page === "share" ? <Share /> : page === "games" ? <Games /> : page === "nettest" ? <NetTest /> : page === "tools" ? <Tools /> : <ModulePage id={page} />}
+                  {page === "dashboard" ? <Dashboard /> : page === "settings" ? <Settings /> : page === "share" ? <Share /> : page === "games" ? <Games /> : page === "nettest" ? <NetTest /> : page === "netopt" ? <NetOpt /> : page === "tools" ? <Tools /> : <ModulePage id={page} />}
                 </PageBoundary>
               </motion.div>
             </AnimatePresence>

@@ -6,7 +6,16 @@
 fn embed_scripts(manifest: &std::path::Path, out: &std::path::Path) {
     use std::collections::{BTreeMap, HashSet};
     type Map = BTreeMap<String, BTreeMap<String, String>>;
-    for f in ["scripts/scripts.json", "scripts/probes.json", "scripts/undo.json", "../src/data/free.json", "../src/data/catalog.json"] {
+    for f in [
+        "scripts/scripts.json",
+        "scripts/probes.json",
+        "scripts/undo.json",
+        "../src/data/free.json",
+        "../src/data/catalog.json",
+        "netopt/common.ps1",
+        "netopt/apply.ps1",
+        "netopt/main.ps1",
+    ] {
         println!("cargo:rerun-if-changed={}", manifest.join(f).display());
     }
     println!("cargo:rerun-if-env-changed=RAGO_SCRIPTS_SECRET");
@@ -71,11 +80,19 @@ fn embed_scripts(manifest: &std::path::Path, out: &std::path::Path) {
         let nonce: [u8; 16] = seal::hmac(key, format!("nonce|{stamp}|{}", body.len()).as_bytes())[..16].try_into().unwrap();
         std::fs::write(out.join(path), seal::seal(key, &nonce, body)).unwrap();
     };
+    // Network Optimizer (netopt.rs) : remise, valeurs de Windows et tests avec le plan gratuit ; l'application avec les
+    // scripts Premium
+    let engine_plain = serde_json::json!({ "netopt": read("netopt/common.ps1"), "netopt.main": read("netopt/main.ps1") });
+    let engine_premium = serde_json::json!({ "netopt.apply": read("netopt/apply.ps1") });
     // Plan gratuit et retour arrière : chiffrés avec une clé reconstruite dans le binaire (obfuscation), car ils
     // doivent tourner sans licence. Plus aucune commande d'optimisation n'est en clair dans l'exe.
-    let plain = serde_json::to_vec(&serde_json::json!({ "scripts": plain_s, "probes": plain_p, "undo": plain_u })).unwrap();
+    let plain =
+        serde_json::to_vec(&serde_json::json!({ "scripts": plain_s, "probes": plain_p, "undo": plain_u, "engine": engine_plain })).unwrap();
     seal_to("scripts.plain.sealed", &seal::offline_key(&version), &plain);
     // Premium : clé propre à la version, qui ne quitte pas le serveur de licences.
-    let premium = serde_json::to_vec(&serde_json::json!({ "scripts": sealed_s, "probes": sealed_p, "undo": sealed_u })).unwrap();
+    let premium = serde_json::to_vec(
+        &serde_json::json!({ "scripts": sealed_s, "probes": sealed_p, "undo": sealed_u, "engine": engine_premium }),
+    )
+    .unwrap();
     seal_to("scripts.sealed", &seal::version_key(&secret, &version), &premium);
 }

@@ -11,7 +11,7 @@ import { UpdateCard } from "./UpdateCard";
 import type { Key } from "../lib/i18n";
 
 /** Pages de la 1.2.0 : badge « Nouveau » jusqu'à la première visite. */
-const NEW_PAGES: Record<string, Key> = { games: "nav.games", nettest: "nav.nettest", tools: "nav.tools" };
+const NEW_PAGES: Record<string, Key> = { games: "nav.games", nettest: "nav.nettest", netopt: "nav.netopt", tools: "nav.tools" };
 
 function loadSeen(): string[] {
   try {
@@ -23,7 +23,7 @@ function loadSeen(): string[] {
 
 const GROUPS: { label: Key | null; ids: string[] }[] = [
   { label: null, ids: ["dashboard"] },
-  { label: "nav.optimize", ids: ["network", "latency", "gpu", "windows", "tools"] },
+  { label: "nav.optimize", ids: ["network", "netopt", "latency", "gpu", "windows", "tools"] },
   { label: "nav.play", ids: ["hitreg", "minecraft", "rbw", "gamemode", "games", "nettest"] },
   { label: "nav.advanced", ids: ["expert", "restore"] },
 ];
