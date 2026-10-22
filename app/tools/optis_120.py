@@ -228,6 +228,18 @@ NEW_TWEAKS = [
         r'do reg add "HKLM\SYSTEM\CurrentControlSet\Services\Tcpip\Parameters\Interfaces\%%g" /v "NameServer" /t REG_SZ /d "1.1.1.1,8.8.8.8" /f >nul',
         'ipconfig /flushdns >nul',
     )),
+    # ------------------------------------------------------------------ envoyé le 2026-10-22 (pack latence, optionnel)
+    # stratégies officielles (les mêmes que gpedit) ; l'annulation les retire, comme « 2 - Annuler » de Sofiene
+    ('windows', 'system', tweak(
+        'win_bgdownloads', 'Stop map and speech downloads', 'Couper les téléchargements de cartes et de voix',
+        'Windows stops downloading offline map updates and new speech recognition models in the background.',
+        'Windows ne télécharge plus en arrière-plan les mises à jour des cartes hors connexion ni les nouveaux modèles '
+        'de reconnaissance vocale.', reboot=False), body(
+        'echo - Stopping background map and speech downloads',
+        r'reg add "HKLM\SOFTWARE\Policies\Microsoft\Windows\Maps" /v "AutoDownloadAndUpdateMapData" /t REG_DWORD /d "0" /f >nul',
+        r'reg add "HKLM\SOFTWARE\Policies\Microsoft\Windows\Maps" /v "AllowUntriggeredNetworkTrafficOnSettingsPage" /t REG_DWORD /d "0" /f >nul',
+        r'reg add "HKLM\SOFTWARE\Policies\Microsoft\Speech" /v "AllowSpeechModelUpdate" /t REG_DWORD /d "0" /f >nul',
+    )),
     # mot-clé standard des pilotes (*InterruptModeration), pas le nom affiché en anglais de network_optimizer
     ('network', 'manual', tweak(
         'net_intmod', 'Disable interrupt moderation', 'Couper la modération des interruptions',
@@ -367,6 +379,11 @@ Les clés des journaux Hone sont reprises des fichiers « Off » quand le journa
 Ajoutés (Hone, Basic) : win_taskbar, win_recent, win_highlights, win_lockscreen, win_classicmenu, win_alttab,
 win_shortcut (section « Interface et confort »), dbl_onedrive_off (stratégie Microsoft, rien n'est supprimé,
 contrairement à dbl_onedrive retiré en 1.1.8), win_browserbg (Edge, Chrome et Brave fermés pour de vrai).
+
+Ajouté le 2026-10-22 (« Pack latence », réglages optionnels) : win_bgdownloads, les stratégies Maps
+(AutoDownloadAndUpdateMapData, AllowUntriggeredNetworkTrafficOnSettingsPage) et Speech (AllowSpeechModelUpdate) à 0 ;
+l'annulation les retire, comme le fichier « 2 - Annuler » envoyé avec. Complète dbl_print, qui coupe le service
+MapsBroker.
 
 Remplacés :
 - win_visual : les 18 lignes `VisualEffects\\<effet>\\DefaultApplied` (valeurs que Windows note, sans les relire) →

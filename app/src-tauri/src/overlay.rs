@@ -10,7 +10,10 @@
 //!   pendant la partie, sans prendre ni le focus ni les clics.
 //! - Jeux qui se réduisent dès qu'ils perdent le premier plan (Minecraft Java en plein écran, et ceux qu'on voit se
 //!   réduire à l'ouverture) : la barre s'ouvre sans le leur prendre. Elle prend les clics mais pas le clavier ; le jeu
-//!   garde le premier plan, Échap dans le jeu libère la souris, le raccourci ou ✕ ferment la barre.
+//!   garde le premier plan, le raccourci, Échap ou ✕ ferment la barre.
+//! - Souris : Minecraft la garde (curseur caché et ramené au centre) tant qu'il est au premier plan en jeu. En fenêtre,
+//!   la barre lui prend le premier plan et il la rend de lui-même ; en plein écran, la barre lui envoie Échap, qui ouvre
+//!   son menu pause et libère le curseur. Pendant ce temps, Échap ferme la barre et le jeu reste en pause.
 
 use serde::Serialize;
 use std::collections::HashSet;
@@ -31,6 +34,8 @@ const PANEL: (f64, f64) = (780.0, 600.0);
 const PILL: (f64, f64) = (236.0, 44.0);
 const MARGIN: f64 = 18.0;
 const TICK: Duration = Duration::from_millis(700);
+/// Pris à Windows tant que la barre est ouverte sans le premier plan : Échap la ferme au lieu d'aller au jeu.
+const ESC: &str = "Escape";
 
 /// Exes de jeux reconnus sans la bibliothèque : Minecraft Java (tous les launchers) et Bedrock.
 const KNOWN: &[(&str, &str)] = &[("javaw.exe", "Minecraft"), ("java.exe", "Minecraft"), ("minecraft.windows.exe", "Minecraft")];
@@ -109,6 +114,8 @@ struct St {
     taken: bool,
     /// barre ouverte sans prendre le premier plan au jeu
     passive: bool,
+    /// Échap pris à Windows (barre ouverte sans le premier plan)
+    esc: bool,
     /// exes vus se réduire quand la barre leur a pris le premier plan (pour cette session)
     minimizes: HashSet<String>,
 }
@@ -182,9 +189,39 @@ impl Overlay {
         Some(Target { hwnd, pid, name, minecraft: matches!(file.as_str(), "javaw.exe" | "java.exe"), exe: file })
     }
 
-    /// La barre ne doit pas prendre le premier plan à ce jeu.
+    /// La barre ne doit pas prendre le premier plan à ce jeu : Minecraft en plein écran (il se réduirait), ou un jeu vu
+    /// se réduire. Minecraft en fenêtre se met en pause et rend la souris quand il perd le premier plan.
     fn keeps_foreground(&self, game: Option<&Target>) -> bool {
-        game.is_some_and(|g| g.minecraft || self.lock().minimizes.contains(&g.exe))
+        game.is_some_and(|g| (g.minecraft && win::covers_monitor(g.hwnd)) || self.lock().minimizes.contains(&g.exe))
+    }
+
+    /// Raccourcis pris à Windows : celui de la barre pendant qu'un jeu est au premier plan (`game_up`) ou que la barre est
+    /// ouverte, et Échap tant que la barre est ouverte sans le premier plan.
+    fn sync_shortcuts(&self, app: &AppHandle, game_up: bool) {
+        let prefs = self.background.prefs();
+        let (mode, passive, registered, had_esc) = {
+            let st = self.lock();
+            (st.mode.unwrap_or(Mode::Hidden), st.passive, st.registered.clone(), st.esc)
+        };
+        let want = (prefs.overlay && (game_up || mode == Mode::Panel)).then(|| prefs.shortcut.clone());
+        let esc = want.is_some() && mode == Mode::Panel && passive;
+        if want == registered && esc == had_esc {
+            return;
+        }
+        let gs = app.global_shortcut();
+        let _ = gs.unregister_all();
+        let mut taken = false;
+        if let Some(sc) = &want {
+            taken = gs.register(sc.as_str()).is_err();
+        }
+        if esc {
+            // refusé (pris par une autre app) : la barre se ferme alors par le raccourci ou ✕, sans réessai à chaque tour
+            let _ = gs.register(ESC);
+        }
+        let mut st = self.lock();
+        st.registered = if taken { None } else { want };
+        st.taken = taken;
+        st.esc = esc;
     }
 
     /// Fenêtre de la barre, créée cachée au premier jeu vu (puis gardée : l'ouvrir est instantané).
@@ -257,12 +294,20 @@ impl Overlay {
         let game = self.lock().game.clone();
         let Some(w) = self.window(app) else { return };
         let passive = self.keeps_foreground(game.as_ref());
+        // relevé avant d'afficher la barre, quand le curseur est encore au-dessus du jeu
+        let free_mouse = passive && game.as_ref().is_some_and(|g| g.minecraft) && win::mouse_captured();
         self.lock().passive = passive;
         let _ = w.set_ignore_cursor_events(false);
         let _ = w.set_focusable(!passive);
         self.set_mode(app, Mode::Panel);
         self.place(app, &w, game.as_ref(), Mode::Panel);
         win::show(&w, !passive);
+        if free_mouse {
+            // menu pause du jeu, qui libère le curseur ; Échap n'est pris à Windows qu'après son passage
+            win::press_escape();
+            std::thread::sleep(Duration::from_millis(80));
+        }
+        self.sync_shortcuts(app, true);
         self.follow();
     }
 
@@ -276,6 +321,8 @@ impl Overlay {
             win::hide(&w);
         }
         let game = self.lock().game.clone();
+        // Échap rendu au jeu tout de suite
+        self.sync_shortcuts(app, game.is_some());
         if let (true, Some(g)) = (refocus, game) {
             win::bring_back(g.hwnd);
         }
@@ -303,6 +350,7 @@ impl Overlay {
             win::bring_back(game.hwnd);
             win::show(&w, false);
         }
+        self.sync_shortcuts(app, true);
         let _ = app.emit_to(LABEL, "overlay:mode", Mode::Panel);
     }
 
@@ -347,19 +395,7 @@ impl Overlay {
             // fenêtre prête avant le premier appui sur le raccourci
             let _ = self.window(app);
         }
-        let want = (prefs.overlay && (fg.is_some() || mode == Mode::Panel)).then(|| prefs.shortcut.clone());
-        let registered = self.lock().registered.clone();
-        if want != registered {
-            let gs = app.global_shortcut();
-            let _ = gs.unregister_all();
-            let mut taken = false;
-            if let Some(sc) = &want {
-                taken = gs.register(sc.as_str()).is_err();
-            }
-            let mut st = self.lock();
-            st.registered = if taken { None } else { want };
-            st.taken = taken;
-        }
+        self.sync_shortcuts(app, fg.is_some());
         if !prefs.overlay && mode == Mode::Panel {
             self.close(app, true);
         }
@@ -427,10 +463,13 @@ mod win {
     use windows_sys::Win32::Foundation::{CloseHandle, HWND, RECT};
     use windows_sys::Win32::Graphics::Gdi::{GetMonitorInfoW, MonitorFromWindow, MONITORINFO, MONITOR_DEFAULTTONEAREST};
     use windows_sys::Win32::System::Threading::{OpenProcess, QueryFullProcessImageNameW, PROCESS_NAME_WIN32, PROCESS_QUERY_LIMITED_INFORMATION};
+    use windows_sys::Win32::UI::Input::KeyboardAndMouse::{SendInput, INPUT, INPUT_0, INPUT_KEYBOARD, KEYBDINPUT, KEYEVENTF_KEYUP, KEYEVENTF_SCANCODE};
     use windows_sys::Win32::UI::WindowsAndMessaging::{
-        GetClassNameW, GetForegroundWindow, GetWindowRect, GetWindowThreadProcessId, IsIconic, IsWindow, IsWindowVisible, SetForegroundWindow,
-        SetWindowPos, ShowWindow, HWND_TOPMOST, SWP_NOACTIVATE, SWP_NOMOVE, SWP_NOOWNERZORDER, SWP_NOSIZE, SW_HIDE, SW_RESTORE, SW_SHOW,
-        SW_SHOWNOACTIVATE,
+        GetClassNameW, GetClipCursor, GetCursorInfo, GetForegroundWindow, GetSystemMetrics, GetWindowRect, GetWindowThreadProcessId, IsIconic,
+        IsWindow, IsWindowVisible, LoadCursorW, SetForegroundWindow, SetWindowPos, ShowWindow, CURSORINFO, CURSOR_SHOWING, HWND_TOPMOST,
+        IDC_APPSTARTING, IDC_ARROW, IDC_CROSS, IDC_HAND, IDC_IBEAM, IDC_NO, IDC_SIZEALL, IDC_SIZENESW, IDC_SIZENS, IDC_SIZENWSE, IDC_SIZEWE,
+        IDC_WAIT, SM_CXVIRTUALSCREEN, SM_CYVIRTUALSCREEN, SM_XVIRTUALSCREEN, SM_YVIRTUALSCREEN, SWP_NOACTIVATE, SWP_NOMOVE, SWP_NOOWNERZORDER,
+        SWP_NOSIZE, SW_HIDE, SW_RESTORE, SW_SHOW, SW_SHOWNOACTIVATE,
     };
 
     fn hwnd_of(w: &WebviewWindow) -> Option<HWND> {
@@ -535,6 +574,49 @@ mod win {
         unsafe { IsWindow(hwnd as HWND) != 0 && IsIconic(hwnd as HWND) != 0 }
     }
 
+    /// Le jeu au premier plan tient la souris : curseur caché ou transparent (Minecraft en jeu : rien avec GLFW, un
+    /// curseur vide avec LWJGL 2 en 1.8.9), ou enfermé dans une partie de l'écran. Dans ses menus, Minecraft montre un
+    /// curseur de Windows et ne l'enferme pas.
+    pub fn mouse_captured() -> bool {
+        unsafe {
+            let mut ci: CURSORINFO = std::mem::zeroed();
+            ci.cbSize = std::mem::size_of::<CURSORINFO>() as u32;
+            if GetCursorInfo(&mut ci) == 0 {
+                return false;
+            }
+            if ci.flags & CURSOR_SHOWING == 0 || ci.hCursor.is_null() {
+                return true;
+            }
+            let standard = [
+                IDC_ARROW, IDC_HAND, IDC_IBEAM, IDC_CROSS, IDC_WAIT, IDC_APPSTARTING, IDC_NO, IDC_SIZEALL, IDC_SIZENS, IDC_SIZEWE, IDC_SIZENWSE,
+                IDC_SIZENESW,
+            ];
+            if !standard.iter().any(|id| LoadCursorW(std::ptr::null_mut(), *id) == ci.hCursor) {
+                return true;
+            }
+            let mut clip: RECT = std::mem::zeroed();
+            if GetClipCursor(&mut clip) == 0 {
+                return false;
+            }
+            let (x, y) = (GetSystemMetrics(SM_XVIRTUALSCREEN), GetSystemMetrics(SM_YVIRTUALSCREEN));
+            let (w, h) = (GetSystemMetrics(SM_CXVIRTUALSCREEN), GetSystemMetrics(SM_CYVIRTUALSCREEN));
+            clip.left > x || clip.top > y || clip.right < x + w || clip.bottom < y + h
+        }
+    }
+
+    /// Appui sur Échap pour la fenêtre au premier plan, par son code de touche (GLFW et LWJGL lisent le code, pas la
+    /// touche virtuelle).
+    pub fn press_escape() {
+        let key = |flags| INPUT {
+            r#type: INPUT_KEYBOARD,
+            Anonymous: INPUT_0 { ki: KEYBDINPUT { wVk: 0, wScan: 0x01, dwFlags: KEYEVENTF_SCANCODE | flags, time: 0, dwExtraInfo: 0 } },
+        };
+        let inputs = [key(0), key(KEYEVENTF_KEYUP)];
+        unsafe {
+            SendInput(inputs.len() as u32, inputs.as_ptr(), std::mem::size_of::<INPUT>() as i32);
+        }
+    }
+
     /// Repasse devant les autres fenêtres « toujours au-dessus » (dont le jeu en plein écran), sans activer la barre.
     pub fn keep_on_top(w: &WebviewWindow) {
         let Some(h) = hwnd_of(w) else { return };
@@ -576,6 +658,10 @@ mod win {
         false
     }
     pub fn keep_on_top(_w: &WebviewWindow) {}
+    pub fn mouse_captured() -> bool {
+        false
+    }
+    pub fn press_escape() {}
 }
 
 #[cfg(test)]
@@ -602,6 +688,7 @@ mod tests {
         use tauri_plugin_global_shortcut::Shortcut;
         assert!(crate::background::DEFAULT_SHORTCUT.parse::<Shortcut>().is_ok());
         assert!("Alt+F9".parse::<Shortcut>().is_ok());
+        assert!(ESC.parse::<Shortcut>().is_ok());
         assert!("Ctrl+Shift+".parse::<Shortcut>().is_err());
     }
 }

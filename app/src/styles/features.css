@@ -1326,6 +1326,20 @@
   letter-spacing: 0.02em;
   color: rgba(255, 255, 255, 0.94);
 }
+/* icône du jeu installé : sur le verre, sans le dégradé (ses couleurs sont celles du jeu) */
+.game-preset-badge.icon {
+  background: var(--rg-glass-2);
+}
+.game-logo-glyph {
+  width: 22px;
+  height: 22px;
+  filter: drop-shadow(0 1px 2px rgba(0, 0, 0, 0.35));
+}
+.game-logo-img {
+  width: 30px;
+  height: 30px;
+  object-fit: contain;
+}
 .game-preset-text {
   flex: 1;
   min-width: 0;
@@ -1371,6 +1385,33 @@
 .games-menu {
   max-height: min(440px, 62vh);
   overflow-y: auto;
+}
+/* logo du jeu devant son preset, comme la pastille du tableau de bord */
+.games-menu-logo {
+  flex: none;
+  display: grid;
+  place-items: center;
+  width: 22px;
+  height: 22px;
+  border-radius: 6px;
+  background: linear-gradient(135deg, hsl(var(--h, 220) 46% 32%), hsl(calc(var(--h, 220) + 28) 40% 13%));
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.08);
+  color: rgba(255, 255, 255, 0.94);
+  font-size: 8.5px;
+  font-weight: 700;
+}
+.games-menu-logo + span {
+  flex: 1;
+}
+.games-menu-logo .game-logo-glyph,
+.games-menu button.on .games-menu-logo .game-logo-glyph {
+  width: 13px;
+  height: 13px;
+  color: rgba(255, 255, 255, 0.94);
+}
+.games-menu-logo .game-logo-img {
+  width: 18px;
+  height: 18px;
 }
 
 /* ------------------------------------------------------------ outils : nettoyage, applis, pilotes */

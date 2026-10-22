@@ -366,6 +366,13 @@ async fn launcher_icon(state: State<'_, AppState>, id: String) -> Result<Option<
     tauri::async_runtime::spawn_blocking(move || lib.launcher_icon(&id)).await.map_err(|e| e.to_string())
 }
 
+/// Logos des jeux des presets installés (icône de leur exe, data: URL), par clé de jeu.
+#[tauri::command]
+async fn preset_icons(state: State<'_, AppState>) -> Result<std::collections::HashMap<String, String>, String> {
+    let lib = Arc::clone(&state.library);
+    tauri::async_runtime::spawn_blocking(move || lib.preset_icons()).await.map_err(|e| e.to_string())
+}
+
 #[tauri::command]
 async fn game_add(state: State<'_, AppState>, path: String) -> Result<String, String> {
     let lib = Arc::clone(&state.library);
@@ -1019,6 +1026,7 @@ pub fn run() {
             launchers_list,
             launcher_launch,
             launcher_icon,
+            preset_icons,
             game_add,
             game_remove,
             games_unhide,

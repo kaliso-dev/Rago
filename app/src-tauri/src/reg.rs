@@ -17,10 +17,11 @@ impl Drop for Key {
 }
 
 fn root(path: &str) -> Option<(HKEY, &str)> {
-    let (root, sub) = path.split_once('\\')?;
+    let (root, sub) = path.split_once('\\').unwrap_or((path, ""));
     let h = match root {
         "HKLM" => HKEY_LOCAL_MACHINE,
         "HKCU" => HKEY_CURRENT_USER,
+        "HKU" => HKEY_USERS,
         _ => return None,
     };
     Some((h, sub))

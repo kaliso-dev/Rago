@@ -1272,6 +1272,11 @@
 "full": "@echo off\r\nfor /f %%g in ('powershell -NoProfile -Command \"(Get-NetAdapter -Physical).Where({$_.Status -eq 'Up'}).InterfaceGuid\"') do reg delete \"HKLM\\SYSTEM\\CurrentControlSet\\Services\\Tcpip\\Parameters\\Interfaces\\%%g\" /v \"NameServer\" /f >nul 2>&1"
 }
 },
+"win_bgdownloads": {
+"_": {
+"full": "@echo off\r\nreg delete \"HKLM\\SOFTWARE\\Policies\\Microsoft\\Windows\\Maps\" /v \"AutoDownloadAndUpdateMapData\" /f >nul 2>&1\r\nreg delete \"HKLM\\SOFTWARE\\Policies\\Microsoft\\Windows\\Maps\" /v \"AllowUntriggeredNetworkTrafficOnSettingsPage\" /f >nul 2>&1\r\nreg delete \"HKLM\\SOFTWARE\\Policies\\Microsoft\\Speech\" /v \"AllowSpeechModelUpdate\" /f >nul 2>&1"
+}
+},
 "net_intmod": {
 "_": {
 "full": "@echo off\r\npowershell -NoProfile -ExecutionPolicy Bypass -Command \"foreach($k in @('*InterruptModeration')){ Reset-NetAdapterAdvancedProperty -Name '*' -RegistryKeyword $k -ErrorAction SilentlyContinue }\" >nul 2>&1"

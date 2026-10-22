@@ -1,10 +1,11 @@
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import { AnimatePresence, motion } from "motion/react";
 import { ArrowUpRight, Check, ChevronDown, LoaderCircle, Lock, Play, Plus, RefreshCw, RotateCcw, Trash2, Zap } from "lucide-react";
 import { api, type Game, type Launcher } from "../lib/api";
 import { hue, initials } from "../lib/art";
 import { catalog, presetForGame, tweaks } from "../lib/catalog";
 import { useStore } from "../lib/store";
+import { GameLogo, usePresetIcons } from "../components/GameLogo";
 import { SessionChecks, useSession } from "../components/SessionCard";
 import { Button, Segmented } from "../components/ui";
 
@@ -459,8 +460,10 @@ function PresetMenu({ value, onPick, onClose }: { value: string; onPick: (ref: s
       window.removeEventListener("keydown", key);
     };
   }, [onClose]);
-  const item = (id: string, label: string) => (
+  const icons = usePresetIcons();
+  const item = (id: string, label: string, logo?: ReactNode) => (
     <button key={id} type="button" role="menuitemradio" aria-checked={value === id} className={value === id ? "on" : undefined} onClick={() => onPick(id)}>
+      {logo}
       <span>{label}</span>
       {value === id && <Check size={13} />}
     </button>
@@ -478,7 +481,17 @@ function PresetMenu({ value, onPick, onClose }: { value: string; onPick: (ref: s
       <div className="rg-overline games-menu-label">{t("dash.presets")}</div>
       {catalog.presets.filter((p) => !p.game).map((p) => item(`builtin:${p.id}`, p.name[lang]))}
       <div className="rg-overline games-menu-label">{t("games.menuGames")}</div>
-      {catalog.presets.filter((p) => p.game).map((p) => item(`builtin:${p.id}`, p.name[lang]))}
+      {catalog.presets
+        .filter((p) => p.game)
+        .map((p) =>
+          item(
+            `builtin:${p.id}`,
+            p.name[lang],
+            <span className="games-menu-logo" style={{ "--h": hue(p.match?.[0] ?? p.id) } as React.CSSProperties}>
+              <GameLogo presetId={p.id} tag={p.tag} icons={icons} />
+            </span>,
+          ),
+        )}
       {myPresets.length > 0 && <div className="rg-overline games-menu-label">{t("dash.mine")}</div>}
       {myPresets.map((p) => item(`mine:${p.id}`, p.name))}
       <div className="games-menu-sep" />

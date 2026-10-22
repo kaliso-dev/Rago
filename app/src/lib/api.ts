@@ -384,6 +384,8 @@ export interface Api {
   launcherLaunch(id: string): Promise<void>;
   /** Icône de l'exe du launcher (data: URL PNG), null s'il n'en a pas. */
   launcherIcon(id: string): Promise<string | null>;
+  /** Logos des jeux des presets installés sur ce PC (icône de leur exe, data: URL), par clé de jeu (« valorant »). */
+  presetIcons(): Promise<Record<string, string>>;
   /** Ajoute un jeu à la main (choix d'un .exe) ; id du jeu, null si la fenêtre est fermée sans choisir. */
   gameAdd(title: string): Promise<string | null>;
   /** Retire un jeu de la bibliothèque (rien n'est désinstallé). */
@@ -483,6 +485,7 @@ const tauriApi: Api = {
   launchersList: (refresh) => invoke("launchers_list", { refresh }),
   launcherLaunch: (id) => invoke("launcher_launch", { id }),
   launcherIcon: (id) => invoke("launcher_icon", { id }),
+  presetIcons: () => invoke("preset_icons"),
   gameAdd: async (title) => {
     const { open } = await import("@tauri-apps/plugin-dialog");
     const path = await open({ title, multiple: false, directory: false, filters: [{ name: "Program", extensions: ["exe"] }] });
@@ -939,6 +942,8 @@ const mockApi: Api = {
   },
   // démo : pas d'exe à lire ; les captures peuvent fournir des icônes (window.__launcherIcons)
   launcherIcon: async (id) => (window as unknown as { __launcherIcons?: Record<string, string> }).__launcherIcons?.[id] ?? null,
+  // démo : aucun jeu installé, les glyphes servent de logos (les captures peuvent fournir des icônes, __presetIcons)
+  presetIcons: async () => (window as unknown as { __presetIcons?: Record<string, string> }).__presetIcons ?? {},
   gameAdd: async () => null,
   gameRemove: async (id) => {
     mockGames = mockGames.filter((g) => g.id !== id);

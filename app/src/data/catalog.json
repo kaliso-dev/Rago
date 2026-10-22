@@ -4714,6 +4714,30 @@
         "en": "You have to open what you plug in yourself.",
         "fr": "Tu dois ouvrir toi-même le contenu de ce que tu branches."
        }
+      },
+      {
+       "id": "win_bgdownloads",
+       "name": {
+        "en": "Stop map and speech downloads",
+        "fr": "Couper les téléchargements de cartes et de voix"
+       },
+       "desc": {
+        "en": "Windows stops downloading offline map updates and new speech recognition models in the background.",
+        "fr": "Windows ne télécharge plus en arrière-plan les mises à jour des cartes hors connexion ni les nouveaux modèles de reconnaissance vocale."
+       },
+       "risk": "safe",
+       "reboot": false,
+       "kind": "tweak",
+       "requires": [],
+       "lines": 3,
+       "gain": {
+        "en": "A little less network and disk activity in the background while you play; very small effect on latency.",
+        "fr": "Un peu moins d'activité réseau et disque en fond pendant que tu joues ; effet sur la latence très faible."
+       },
+       "cons": {
+        "en": "Offline maps and speech recognition no longer update by themselves.",
+        "fr": "Les cartes hors connexion et la reconnaissance vocale ne se mettent plus à jour d'elles-mêmes."
+       }
       }
      ]
     },

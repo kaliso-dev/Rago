@@ -492,6 +492,11 @@ Ajoutés (Hone, Basic) : win_taskbar, win_recent, win_highlights, win_lockscreen
 win_shortcut (section « Interface et confort »), dbl_onedrive_off (stratégie Microsoft, rien n'est supprimé,
 contrairement à dbl_onedrive retiré en 1.1.8), win_browserbg (Edge, Chrome et Brave fermés pour de vrai).
 
+Ajouté le 2026-10-22 (« Pack latence », réglages optionnels) : win_bgdownloads, les stratégies Maps
+(AutoDownloadAndUpdateMapData, AllowUntriggeredNetworkTrafficOnSettingsPage) et Speech (AllowSpeechModelUpdate) à 0 ;
+l'annulation les retire, comme le fichier « 2 - Annuler » envoyé avec. Complète dbl_print, qui coupe le service
+MapsBroker.
+
 Remplacés :
 - win_visual : les 18 lignes `VisualEffects\<effet>\DefaultApplied` (valeurs que Windows note, sans les relire) →
   UserPreferencesMask (masque « meilleures performances », comme game_mode), DragFullWindows, TaskbarAnimations,
@@ -552,7 +557,7 @@ le jeu, vérifications avant de jouer, préréglages graphiques dans les fichier
 
 # Réglages risqués retirés (1.1.8)
 
-Demande de Sofiene (2026-10-08) : `tools/safety.py`. 17 réglages quittent le catalogue, les profils et le plan gratuit. Il reste 230 entrées au catalogue, soit 217 réglages distincts : les 13 autres lancent les mêmes commandes qu'un autre réglage, sous un autre nom ou dans un autre module (champ `twin`), et c'est ce nombre distinct que l'app et le site annoncent. Leur annulation reste dans undo.json : sur un PC où une version précédente les a appliqués, le tableau de bord propose de les remettre comme avant.
+Demande de Sofiene (2026-10-08) : `tools/safety.py`. 17 réglages quittent le catalogue, les profils et le plan gratuit. Il reste 231 entrées au catalogue, soit 218 réglages distincts : les 13 autres lancent les mêmes commandes qu'un autre réglage, sous un autre nom ou dans un autre module (champ `twin`), et c'est ce nombre distinct que l'app et le site annoncent. Leur annulation reste dans undo.json : sur un PC où une version précédente les a appliqués, le tableau de bord propose de les remettre comme avant.
 
 - `win_mitigations` : Il coupait les protections Spectre et Meltdown.
 - `win_coreiso` : Couper l'intégrité de la mémoire baisse la protection de ton PC contre les pilotes malveillants.

@@ -4,8 +4,10 @@ import { availability, catalog, distinctKey, retired, totalTweaks, tweaks } from
 import { api } from "../lib/api";
 import { formatDate } from "../lib/i18n";
 import { hue } from "../lib/art";
+import { presetGameKey } from "../lib/gameLogos";
 import { encodePreset, MAX_NAME } from "../lib/share";
 import { FREE, useStore, type MyPreset } from "../lib/store";
+import { GameLogo, usePresetIcons } from "../components/GameLogo";
 import { LiveStatsCard } from "../components/LiveStatsCard";
 import { Button, Card } from "../components/ui";
 import { useState, type ReactNode } from "react";
@@ -42,6 +44,7 @@ function Spec({ icon, label, value, sub }: { icon: ReactNode; label: string; val
 
 export function Dashboard() {
   const { t, lang, sys, sysLoading, refreshSys, isOn, selected, variantOf, selectMany, lastRestore, requestApply, premium, setUpsell, applied: appliedMap, retiredApplied, requestUndo, requestUndoAll, run, myPresets, currentSetup, savePreset, toApply, requestApplyEntries } = useStore();
+  const presetIcons = usePresetIcons();
   // optimisations gratuites encore à appliquer sur ce PC
   const freeLeft = sys ? toApply(FREE_ENTRIES).ids.length : 0;
   const [naming, setNaming] = useState<string | null>(null);
@@ -238,8 +241,11 @@ export function Dashboard() {
                 whileTap={{ scale: 0.985 }}
                 onClick={() => (premium ? selectMany(p.tweaks) : setUpsell("preset"))}
               >
-                <span className="game-preset-badge" style={{ "--h": hue(p.match?.[0] ?? p.id) } as React.CSSProperties}>
-                  {p.tag}
+                <span
+                  className={`game-preset-badge${presetIcons[presetGameKey(p.id) ?? ""] ? " icon" : ""}`}
+                  style={{ "--h": hue(p.match?.[0] ?? p.id) } as React.CSSProperties}
+                >
+                  <GameLogo presetId={p.id} tag={p.tag} icons={presetIcons} />
                 </span>
                 <span className="game-preset-text">
                   <span className="game-preset-name">{p.id === "mc_pvp" ? "Minecraft" : p.name[lang]}</span>

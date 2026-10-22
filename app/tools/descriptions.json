@@ -1787,6 +1787,18 @@
    "cons": "Your settings and passwords no longer follow you from one PC to another."
   }
  },
+ "win_bgdownloads": {
+  "fr": {
+   "desc": "Windows ne télécharge plus en arrière-plan les mises à jour des cartes hors connexion ni les nouveaux modèles de reconnaissance vocale.",
+   "gain": "Un peu moins d'activité réseau et disque en fond pendant que tu joues ; effet sur la latence très faible.",
+   "cons": "Les cartes hors connexion et la reconnaissance vocale ne se mettent plus à jour d'elles-mêmes."
+  },
+  "en": {
+   "desc": "Windows stops downloading offline map updates and new speech recognition models in the background.",
+   "gain": "A little less network and disk activity in the background while you play; very small effect on latency.",
+   "cons": "Offline maps and speech recognition no longer update by themselves."
+  }
+ },
  "win_tracking": {
   "fr": {
    "desc": "Coupe l'historique d'activité, les suggestions basées sur ton usage et quelques tâches de diagnostic planifiées.",
