@@ -1,6 +1,9 @@
-// Network Optimizer : choix de la page, profils et valeurs exactes affichées sous les curseurs. Les formules sont celles
+// Packet Optimizer : choix de la page, profils et valeurs exactes affichées sous les curseurs. Les formules sont celles
 // de netopt.rs (`compute`, testées là-bas), elles-mêmes reprises du `:compute` de network_optimizer.bat : le moteur
 // reçoit les choix, jamais ces valeurs.
+
+import type { NetMeasure } from "./api";
+import type { Key } from "./i18n";
 
 export interface NetExpert {
   minRto?: number | null;
@@ -96,6 +99,26 @@ export const NET_DEFAULTS: NetOptions = {
   expert: {},
 };
 
+/** Réglages en cours de modification, gardés entre deux visites tant qu'ils ne sont pas appliqués (le test réseau peut
+ * y poser « connexion stable : non »). */
+const DRAFT = "rago.netoptDraft";
+export function loadDraft(): NetOptions | null {
+  try {
+    const raw = localStorage.getItem(DRAFT);
+    return raw ? { ...NET_DEFAULTS, ...(JSON.parse(raw) as Partial<NetOptions>) } : null;
+  } catch {
+    return null;
+  }
+}
+export function saveDraft(o: NetOptions | null) {
+  try {
+    if (o) localStorage.setItem(DRAFT, JSON.stringify(o));
+    else localStorage.removeItem(DRAFT);
+  } catch {
+    /* stockage indisponible : les réglages reviennent au dernier appliqué */
+  }
+}
+
 export type PresetId = "hitreg" | "knockback" | "balanced" | "wifi" | "unstable" | "classic";
 export const PRESETS: PresetId[] = ["hitreg", "knockback", "balanced", "wifi", "unstable", "classic"];
 
@@ -111,6 +134,44 @@ export function applyPreset(o: NetOptions, id: PresetId): NetOptions {
     classic: { smart: true, latency: 0, responsiveness: 100, tuning: 4, stable: true, competitive: false, delay: 0, priority: 0, congestion: 2, priorityMode: true, powerSaving: true, bgGuard: false },
   };
   return { ...base, ...p[id] };
+}
+
+/** Une raison du choix d'« Analyser mon PC », affichée telle quelle. */
+export interface Why {
+  key: Key;
+  vars?: Record<string, string | number>;
+}
+
+/** « Analyser mon PC » : le profil qui va à cette connexion, d'après la carte réseau, le processeur et 40 pings vers
+ * Internet (`m`, null s'il n'a pas répondu). Rien n'est appliqué : les réglages se posent dans la page. */
+export function recommend(o: NetOptions, pc: { wifi: boolean; threads: number }, m: NetMeasure | null): { preset: PresetId; options: NetOptions; why: Why[] } {
+  const ok = !!m && m.ping != null;
+  const jitter = m?.jitter ?? 0;
+  const lost = m?.lost ?? Math.round((m?.loss ?? 0) * (m?.samples ?? 0));
+  const spikes = m?.spikes ?? 0;
+  // les seuils des profils du .bat : 1 % de pertes, 6 ms de gigue ou des pics répétés font une ligne instable
+  const unstable = ok && ((m?.loss ?? 0) >= 0.01 || jitter >= 6 || spikes >= 3);
+  const great = ok && !unstable && m!.ping! <= 40 && jitter <= 2 && lost === 0;
+  const preset: PresetId = pc.wifi ? "wifi" : unstable ? "unstable" : great ? "hitreg" : "balanced";
+  // câble : la ligne choisie reste (fibre, VDSL, 4G par câble…), sauf si elle disait Wi-Fi
+  const line = pc.wifi ? 5 : o.line === 5 ? 1 : o.line;
+  let options = applyPreset({ ...o, line }, preset);
+  if (ok) options = { ...options, stable: !unstable };
+  const why: Why[] = [{ key: pc.wifi ? "an.why.wifi" : "an.why.wired" }];
+  const fmt = (v: number) => Math.round(v * 10) / 10;
+  if (!ok) why.push({ key: "an.why.noTest" });
+  else {
+    const vars = { avg: fmt(m!.ping!), jitter: fmt(jitter), lost, n: m!.samples, spikes };
+    why.push({ key: unstable ? "an.why.bad" : great ? "an.why.great" : "an.why.ok", vars });
+  }
+  // le Wi-Fi s'explique par sa ligne : les autres profils disent ce qu'ils apportent
+  if (preset !== "wifi") why.push({ key: `an.for.${preset}` as Key });
+  // peu de cœurs : la carte garde un peu de modération des interruptions, sinon le processeur en pâtit en jeu
+  if (pc.threads > 0 && pc.threads <= 4 && options.latency < 20) {
+    options = { ...options, latency: 20 };
+    why.push({ key: "an.why.cpu", vars: { threads: pc.threads } });
+  }
+  return { preset, options: { ...options, preset }, why };
 }
 
 export function dscpOf(priority: number): number {
@@ -173,6 +234,8 @@ export function computeNet(o: NetOptions) {
   };
 }
 export type NetValues = ReturnType<typeof computeNet>;
+/** Ce que Windows utilise sans optimiseur : les curseurs au bout « Windows » donnent ces valeurs. */
+export const WINDOWS_VALUES: NetValues = computeNet({ ...NET_DEFAULTS, latency: 100, responsiveness: 0, delay: 100, priority: 0, tuning: 1, stable: true, expert: {} });
 
 // Le moteur écrit en anglais (comme le .bat) : les titres d'étape et le tableau « État actuel » sont traduits ici, le
 // journal détaillé reste tel quel.

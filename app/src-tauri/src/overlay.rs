@@ -8,9 +8,13 @@
 //! - Barre ouverte : elle prend le clavier et la souris, Échap, le raccourci ou un clic dans le jeu la ferment, et le jeu
 //!   reprend le premier plan. Option « garder les stats à l'écran » : une pastille FPS et ping reste en haut à gauche
 //!   pendant la partie, sans prendre ni le focus ni les clics.
-//! - Jeux qui se réduisent dès qu'ils perdent le premier plan (Minecraft Java en plein écran, et ceux qu'on voit se
-//!   réduire à l'ouverture) : la barre s'ouvre sans le leur prendre. Elle prend les clics mais pas le clavier ; le jeu
-//!   garde le premier plan, le raccourci, Échap ou ✕ ferment la barre.
+//! - Jeux qui se réduisent dès qu'ils perdent le premier plan (Minecraft Java en plein écran, un jeu en plein écran
+//!   exclusif, et ceux qu'on a vus se réduire à l'ouverture, retenus d'un lancement à l'autre) : la barre s'ouvre sans
+//!   le leur prendre. Elle prend les clics mais pas le clavier ; le jeu garde le premier plan, le raccourci, Échap ou ✕
+//!   ferment la barre.
+//! - Lancement d'un jeu : la pastille attend que le jeu soit au premier plan depuis 10 s (il change de mode d'affichage
+//!   pendant son chargement), et ne s'affiche jamais par-dessus le plein écran exclusif, où elle ne serait pas visible
+//!   et pourrait le faire sortir de son plein écran.
 //! - Souris : Minecraft la garde (curseur caché et ramené au centre) tant qu'il est au premier plan en jeu. En fenêtre,
 //!   la barre lui prend le premier plan et il la rend de lui-même ; en plein écran, la barre lui envoie Échap, qui ouvre
 //!   son menu pause et libère le curseur. Pendant ce temps, Échap ferme la barre et le jeu reste en pause.
@@ -19,7 +23,7 @@ use serde::Serialize;
 use std::collections::HashSet;
 use std::path::{Path, PathBuf};
 use std::sync::{Arc, Mutex};
-use std::time::Duration;
+use std::time::{Duration, Instant};
 use tauri::{AppHandle, Emitter, Manager, PhysicalPosition, PhysicalSize, WebviewUrl, WebviewWindow, WebviewWindowBuilder};
 use tauri_plugin_global_shortcut::GlobalShortcutExt;
 
@@ -34,6 +38,10 @@ const PANEL: (f64, f64) = (780.0, 600.0);
 const PILL: (f64, f64) = (236.0, 44.0);
 const MARGIN: f64 = 18.0;
 const TICK: Duration = Duration::from_millis(700);
+/// Au lancement d'un jeu, la pastille attend ce temps au premier plan.
+const SETTLE: Duration = Duration::from_secs(10);
+/// Exes des jeux vus se réduire quand la barre leur a pris le premier plan.
+const KEEP_FILE: &str = "overlay-games.json";
 /// Pris à Windows tant que la barre est ouverte sans le premier plan : Échap la ferme au lieu d'aller au jeu.
 const ESC: &str = "Escape";
 
@@ -103,6 +111,8 @@ pub struct Info {
 pub struct Live {
     pub fps: Option<f64>,
     pub ping: Option<u32>,
+    /// le serveur ne répond pas à l'écho : ping mesuré jusqu'au dernier routeur avant lui
+    pub ping_estimate: bool,
 }
 
 #[derive(Default)]
@@ -116,8 +126,10 @@ struct St {
     passive: bool,
     /// Échap pris à Windows (barre ouverte sans le premier plan)
     esc: bool,
-    /// exes vus se réduire quand la barre leur a pris le premier plan (pour cette session)
+    /// exes vus se réduire quand la barre leur a pris le premier plan (gardés dans overlay-games.json)
     minimizes: HashSet<String>,
+    /// jeu au premier plan et depuis quand (la pastille attend la fin de son lancement)
+    since: Option<(u32, Instant)>,
 }
 
 pub struct Overlay {
@@ -125,6 +137,7 @@ pub struct Overlay {
     fps: Fps,
     ping: Mutex<GamePing>,
     resource_dir: PathBuf,
+    data_dir: PathBuf,
     library: Arc<Library>,
     background: Arc<Background>,
 }
@@ -145,8 +158,10 @@ pub fn game_name(exe: &Path, covers_screen: bool, library: impl Fn(&Path) -> Opt
 }
 
 impl Overlay {
-    pub fn new(resource_dir: PathBuf, library: Arc<Library>, background: Arc<Background>) -> Self {
-        Overlay { st: Mutex::default(), fps: Fps::default(), ping: Mutex::default(), resource_dir, library, background }
+    pub fn new(resource_dir: PathBuf, data_dir: PathBuf, library: Arc<Library>, background: Arc<Background>) -> Self {
+        let minimizes = std::fs::read(data_dir.join(KEEP_FILE)).ok().and_then(|b| serde_json::from_slice(&b).ok()).unwrap_or_default();
+        let st = St { minimizes, ..St::default() };
+        Overlay { st: Mutex::new(st), fps: Fps::default(), ping: Mutex::default(), resource_dir, data_dir, library, background }
     }
 
     fn lock(&self) -> std::sync::MutexGuard<'_, St> {
@@ -171,10 +186,22 @@ impl Overlay {
         }
     }
 
+    /// Le jeu est au premier plan depuis assez longtemps pour que son lancement soit fini.
+    fn settled(&self, game: &Target) -> bool {
+        let mut st = self.lock();
+        match st.since {
+            Some((pid, t)) if pid == game.pid => t.elapsed() >= SETTLE,
+            _ => {
+                st.since = Some((game.pid, Instant::now()));
+                false
+            }
+        }
+    }
+
     pub fn live(&self) -> Live {
         let game = self.lock().game.as_ref().map(|g| (g.pid, g.minecraft));
         let ping = game.and_then(|(p, mc)| self.ping.lock().unwrap_or_else(std::sync::PoisonError::into_inner).read(p, mc));
-        Live { fps: self.fps.value().map(|f| (f * 10.0).round() / 10.0), ping }
+        Live { fps: self.fps.value().map(|f| (f * 10.0).round() / 10.0), ping: ping.map(|p| p.ms), ping_estimate: ping.is_some_and(|p| p.estimate) }
     }
 
     /// Le jeu au premier plan, s'il y en a un.
@@ -192,7 +219,7 @@ impl Overlay {
     /// La barre ne doit pas prendre le premier plan à ce jeu : Minecraft en plein écran (il se réduirait), ou un jeu vu
     /// se réduire. Minecraft en fenêtre se met en pause et rend la souris quand il perd le premier plan.
     fn keeps_foreground(&self, game: Option<&Target>) -> bool {
-        game.is_some_and(|g| (g.minecraft && win::covers_monitor(g.hwnd)) || self.lock().minimizes.contains(&g.exe))
+        game.is_some_and(|g| (g.minecraft && win::covers_monitor(g.hwnd)) || win::exclusive_fullscreen() || self.lock().minimizes.contains(&g.exe))
     }
 
     /// Raccourcis pris à Windows : celui de la barre pendant qu'un jeu est au premier plan (`game_up`) ou que la barre est
@@ -341,10 +368,15 @@ impl Overlay {
     /// Le jeu s'est réduit quand la barre lui a pris le premier plan : il revient, et la barre reste ouverte par-dessus
     /// sans le lui reprendre (cette fois et les suivantes).
     fn keep_game_up(&self, app: &AppHandle, game: &Target) {
-        {
+        let keep = {
             let mut st = self.lock();
             st.passive = true;
-            st.minimizes.insert(game.exe.clone());
+            st.minimizes.insert(game.exe.clone()).then(|| st.minimizes.iter().cloned().collect::<Vec<_>>())
+        };
+        if let Some(list) = keep {
+            if let Ok(json) = serde_json::to_vec(&list) {
+                let _ = std::fs::write(self.data_dir.join(KEEP_FILE), json);
+            }
         }
         if let Some(w) = app.get_webview_window(LABEL) {
             let _ = w.set_focusable(false);
@@ -414,16 +446,20 @@ impl Overlay {
                 }
             }
         }
+        // plein écran exclusif : rien ne s'affiche par-dessus, et repasser devant lui pourrait le faire sortir de son
+        // plein écran
+        let exclusive = fg.is_some() && win::exclusive_fullscreen();
         // le jeu en plein écran se remet parfois au-dessus de tout : la barre ou la pastille repasse devant
-        if mode != Mode::Hidden {
+        if mode != Mode::Hidden && !exclusive {
             if let Some(w) = app.get_webview_window(LABEL) {
                 win::keep_on_top(&w);
             }
         }
+        let settled = fg.as_ref().is_some_and(|g| self.settled(g));
         match (mode, &fg) {
-            (Mode::Hidden, Some(g)) if prefs.overlay && prefs.pin => self.show_pill(app, g),
+            (Mode::Hidden, Some(g)) if prefs.overlay && prefs.pin && settled && !exclusive => self.show_pill(app, g),
             (Mode::Pill, None) => self.hide_pill(app),
-            (Mode::Pill, Some(_)) if !prefs.overlay || !prefs.pin => self.hide_pill(app),
+            (Mode::Pill, Some(_)) if !prefs.overlay || !prefs.pin || exclusive => self.hide_pill(app),
             _ => {}
         }
         self.follow();
@@ -618,6 +654,14 @@ mod win {
         }
     }
 
+    /// Un jeu tient l'écran en plein écran exclusif (Direct3D) : rien ne s'affiche par-dessus, et lui prendre le
+    /// premier plan le réduit.
+    pub fn exclusive_fullscreen() -> bool {
+        use windows_sys::Win32::UI::Shell::{SHQueryUserNotificationState, QUNS_RUNNING_D3D_FULL_SCREEN};
+        let mut state = 0;
+        unsafe { SHQueryUserNotificationState(&mut state) == 0 && state == QUNS_RUNNING_D3D_FULL_SCREEN }
+    }
+
     /// Repasse devant les autres fenêtres « toujours au-dessus » (dont le jeu en plein écran), sans activer la barre.
     pub fn keep_on_top(w: &WebviewWindow) {
         let Some(h) = hwnd_of(w) else { return };
@@ -659,6 +703,9 @@ mod win {
         false
     }
     pub fn keep_on_top(_w: &WebviewWindow) {}
+    pub fn exclusive_fullscreen() -> bool {
+        false
+    }
     pub fn mouse_captured() -> bool {
         false
     }

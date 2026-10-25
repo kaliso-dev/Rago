@@ -2,13 +2,31 @@
 //! - Minecraft Java : ping / pong du protocole du jeu vers le serveur où il est connecté, toutes les 3 s, comme sa liste
 //!   des serveurs (mcping.rs). C'est le ping que le serveur affiche : Hypixel est derrière Cloudflare, et l'aller-retour
 //!   TCP ne va que jusqu'au Cloudflare le plus proche.
-//! - Autres jeux en TCP : temps d'aller-retour de leur connexion au serveur, tel que Windows le mesure déjà pour cette
-//!   connexion (statistiques TCP étendues). Aucun paquet n'est envoyé au serveur.
-//! Les jeux qui parlent au serveur en UDP (Valorant, CS2, Fortnite) n'ont pas de connexion à suivre : pas de valeur.
+//! - Autres jeux : le serveur de la partie est l'adresse dont le jeu reçoit le plus de paquets (flows.rs), pas une
+//!   connexion prise au hasard. Avant, PUBG montrait l'aller-retour d'une connexion de son salon, loin du serveur de la
+//!   partie.
+//!   - En TCP : temps d'aller-retour de cette connexion, tel que Windows le mesure déjà (statistiques TCP étendues).
+//!     Aucun paquet n'est envoyé au serveur.
+//!   - En UDP (PUBG, Valorant, CS2, Fortnite) : un écho ICMP toutes les 2 s vers le serveur, médiane des 5 dernières
+//!     mesures. Un serveur qui ne répond pas à l'écho est mesuré jusqu'au dernier routeur avant lui (icmp.rs) : valeur
+//!     estimée, à une ou deux ms près.
+//!   - Journal du noyau illisible : la connexion TCP du jeu, comme avant.
 
+use std::collections::VecDeque;
 use std::net::{Ipv4Addr, SocketAddr};
 use std::sync::{Arc, Mutex};
 use std::time::{Duration, Instant};
+
+#[cfg(windows)]
+use crate::flows::{Proto, Seen};
+use crate::icmp::{Pinger, Reply};
+
+/// Ping affiché ; `estimate` : le serveur ne répond pas à l'écho, mesuré jusqu'au dernier routeur avant lui.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub struct Ping {
+    pub ms: u32,
+    pub estimate: bool,
+}
 
 /// Connexion TCP établie d'un processus : adresses et ports tels que Windows les donne (ports en ordre réseau).
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -59,6 +77,30 @@ struct Mc {
 
 const MC_EVERY: Duration = Duration::from_secs(3);
 const MC_TIMEOUT: Duration = Duration::from_secs(2);
+
+/// Échos vers le serveur UDP du jeu : un fil à la fois, les dernières mesures gardées.
+#[derive(Default)]
+struct Udp {
+    server: Option<Ipv4Addr>,
+    /// point mesuré : le serveur, ou le dernier routeur avant lui une fois le chemin cherché
+    probe: Option<Ipv4Addr>,
+    traced: bool,
+    recent: VecDeque<u32>,
+    at: Option<Instant>,
+    busy: bool,
+    fails: u8,
+}
+
+const UDP_EVERY: Duration = Duration::from_secs(2);
+const UDP_TIMEOUT: Duration = Duration::from_millis(1000);
+const UDP_KEEP: usize = 5;
+
+/// Médiane des dernières mesures : un écho en retard ne fait pas sauter l'affichage.
+fn median(v: &VecDeque<u32>) -> Option<u32> {
+    let mut s: Vec<u32> = v.iter().copied().collect();
+    s.sort_unstable();
+    s.get(s.len() / 2).copied()
+}
 
 #[cfg(windows)]
 mod win {
@@ -147,21 +189,38 @@ mod win {
     }
 }
 
-/// Suit la connexion au serveur du jeu d'un processus.
+/// Suit le serveur du jeu d'un processus.
 #[derive(Default)]
 pub struct GamePing {
     pid: Option<u32>,
     conn: Option<Conn>,
     mc: Arc<Mutex<Mc>>,
+    udp: Arc<Mutex<Udp>>,
 }
 
 impl GamePing {
-    /// Ping en ms du jeu `pid`, None s'il n'a pas de connexion TCP à un serveur (jeu en UDP, menu, hors ligne).
-    /// `minecraft` : Minecraft Java, mesuré avec le ping du jeu.
+    /// Ping du jeu `pid`, None sans partie en cours (menu, salon, hors ligne). `minecraft` : Minecraft Java, mesuré
+    /// avec le ping du jeu.
     #[cfg(windows)]
-    pub fn read(&mut self, pid: u32, minecraft: bool) -> Option<u32> {
+    pub fn read(&mut self, pid: u32, minecraft: bool) -> Option<Ping> {
         if self.pid != Some(pid) {
             *self = GamePing { pid: Some(pid), ..GamePing::default() };
+        }
+        let exact = |ms: u32| Ping { ms, estimate: false };
+        if !minecraft {
+            match crate::flows::server(pid) {
+                Seen::Nothing => return None,
+                Seen::Server(peer) if peer.proto == Proto::Udp => return self.udp(peer.ip),
+                Seen::Server(peer) => {
+                    let conn = win::connections(pid).into_iter().find(|c| c.remote_ip() == peer.ip && c.port() == peer.port)?;
+                    if self.conn != Some(conn) {
+                        self.conn = Some(conn).filter(win::watch);
+                    }
+                    return win::rtt(&conn).map(exact);
+                }
+                // journal du noyau illisible : la connexion TCP du jeu, comme avant
+                Seen::Off => {}
+            }
         }
         let next = pick(&win::connections(pid), self.conn);
         if next != self.conn {
@@ -170,18 +229,74 @@ impl GamePing {
         let conn = self.conn?;
         if minecraft {
             if let Some(v) = self.minecraft(conn) {
-                return v;
+                return v.map(exact);
             }
             // pas un serveur Minecraft classique : l'aller-retour TCP, faute de mieux
             win::watch(&conn);
         }
-        win::rtt(&conn)
+        win::rtt(&conn).map(exact)
     }
 
     #[cfg(not(windows))]
-    pub fn read(&mut self, _pid: u32, _minecraft: bool) -> Option<u32> {
-        let _ = (self.pid, self.conn);
+    pub fn read(&mut self, _pid: u32, _minecraft: bool) -> Option<Ping> {
+        let _ = (self.pid, self.conn, &self.udp);
         None
+    }
+
+    /// Dernier ping mesuré vers le serveur UDP `ip` (un écho lancé en fond toutes les 2 s).
+    #[cfg_attr(not(windows), allow(dead_code))]
+    fn udp(&self, ip: Ipv4Addr) -> Option<Ping> {
+        let mut u = self.udp.lock().unwrap_or_else(std::sync::PoisonError::into_inner);
+        if u.server != Some(ip) {
+            *u = Udp { server: Some(ip), ..Udp::default() };
+        }
+        if !u.busy && u.at.is_none_or(|t| t.elapsed() >= UDP_EVERY) {
+            u.busy = true;
+            u.at = Some(Instant::now());
+            let (shared, probe, traced) = (Arc::clone(&self.udp), u.probe.unwrap_or(ip), u.traced);
+            std::thread::spawn(move || {
+                let lock = || shared.lock().unwrap_or_else(std::sync::PoisonError::into_inner);
+                let Some(p) = Pinger::new() else {
+                    lock().busy = false;
+                    return;
+                };
+                let reply = p.send(probe, None, UDP_TIMEOUT);
+                let mut u = lock();
+                // autre serveur depuis : ses mesures repartent de zéro
+                if u.server != Some(ip) {
+                    return;
+                }
+                if let Reply::Echo(ms) = reply {
+                    u.recent.push_back(ms.round() as u32);
+                    while u.recent.len() > UDP_KEEP {
+                        u.recent.pop_front();
+                    }
+                    u.fails = 0;
+                } else {
+                    u.fails = u.fails.saturating_add(1);
+                    // trois échos perdus d'affilée : la valeur affichée ne vaut plus rien
+                    if u.fails >= 3 {
+                        u.recent.clear();
+                    }
+                }
+                if u.fails >= 3 && !traced {
+                    // le serveur filtre l'écho : le dernier routeur avant lui, cherché une fois
+                    u.traced = true;
+                    drop(u);
+                    let hop = crate::icmp::last_hop(&p, ip);
+                    let mut u = lock();
+                    if u.server == Some(ip) {
+                        u.probe = hop;
+                        u.fails = 0;
+                        u.at = None;
+                        u.busy = false;
+                    }
+                    return;
+                }
+                u.busy = false;
+            });
+        }
+        median(&u.recent).map(|ms| Ping { ms, estimate: u.probe.is_some_and(|p| p != ip) })
     }
 
     /// Dernier ping du jeu mesuré sur `conn` (une mesure lancée en fond toutes les 3 s). None : le serveur ne répond
@@ -250,6 +365,13 @@ mod tests {
         // le port de Minecraft passe devant une autre connexion du launcher
         assert_eq!(pick(&[other, hypixel], None), Some(hypixel));
         assert_eq!(hypixel.server().to_string(), "172.65.1.2:25565");
+    }
+
+    #[test]
+    fn udp_ping_shows_the_median() {
+        let v: VecDeque<u32> = [31, 30, 95, 29, 30].into_iter().collect();
+        assert_eq!(median(&v), Some(30));
+        assert_eq!(median(&VecDeque::new()), None);
     }
 
     /// Le ping de Minecraft vient d'un fil à part : pas de valeur au premier appel, puis celle du serveur.

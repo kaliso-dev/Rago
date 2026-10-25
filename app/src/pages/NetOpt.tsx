@@ -1,45 +1,50 @@
 import { useCallback, useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import { AnimatePresence, motion } from "motion/react";
 import {
-  Activity, ArrowRight, Cable, Check, ChevronDown, CircleX, Info, LoaderCircle, Lock, Power, RotateCcw, ScrollText, SlidersHorizontal,
-  TriangleAlert, Wifi,
+  Activity, ArrowRight, AudioWaveform, Cable, Check, ChevronDown, CircleX, Cpu, Crosshair, Info, LoaderCircle, Lock, Power, RotateCcw,
+  Scale, ScanSearch, ScrollText, SlidersHorizontal, Swords, Trophy, Wifi, X, type LucideIcon,
 } from "lucide-react";
-import { api } from "../lib/api";
+import { api, type NetMeasure } from "../lib/api";
 import type { Key } from "../lib/i18n";
 import {
-  applyPreset, computeNet, engineText, NET_DEFAULTS, PRESETS, type NetAction, type NetExpert, type NetLine, type NetOptions, type NetOutcome,
-  type NetState, type PresetId,
+  applyPreset, computeNet, engineText, loadDraft, NET_DEFAULTS, PRESETS, recommend, saveDraft, WINDOWS_VALUES, type NetAction, type NetExpert,
+  type NetLine, type NetOptions, type NetOutcome, type NetState, type NetValues, type PresetId, type Why,
 } from "../lib/netopt";
 import { useStore } from "../lib/store";
 import { Button, Switch } from "../components/ui";
+import { Tool, validTarget } from "../components/NetTools";
 
 const stagger = { animate: { transition: { staggerChildren: 0.05 } } };
 const rise = { initial: { opacity: 0, y: 10 }, animate: { opacity: 1, y: 0, transition: { duration: 0.42, ease: [0.16, 1, 0.3, 1] as const } } };
 
-/** Réglages en cours de modification, gardés entre deux visites tant qu'ils ne sont pas appliqués. */
-const DRAFT = "rago.netoptDraft";
-function loadDraft(): NetOptions | null {
-  try {
-    const raw = localStorage.getItem(DRAFT);
-    return raw ? { ...NET_DEFAULTS, ...(JSON.parse(raw) as Partial<NetOptions>) } : null;
-  } catch {
-    return null;
-  }
-}
-function saveDraft(o: NetOptions | null) {
-  try {
-    if (o) localStorage.setItem(DRAFT, JSON.stringify(o));
-    else localStorage.removeItem(DRAFT);
-  } catch {
-    /* stockage indisponible : les réglages reviennent au dernier appliqué */
-  }
-}
 const same = (a: NetOptions, b: NetOptions) => JSON.stringify({ ...a, preset: "" }) === JSON.stringify({ ...b, preset: "" });
-const validTarget = (t: string) => /^[A-Za-z0-9][A-Za-z0-9.:-]{0,252}$/.test(t);
 
 type Detect = { connected: boolean; wifi: boolean; alias: string | null; desc: string | null; speed: string | null };
-type ToolId = "quality" | "loaded" | "mtu" | "status";
-const TOOLS: ToolId[] = ["quality", "loaded", "mtu", "status"];
+
+const PRESET_ICONS: Record<PresetId, LucideIcon> = { hitreg: Crosshair, knockback: Swords, balanced: Scale, wifi: Wifi, unstable: AudioWaveform, classic: Trophy };
+
+/** Blocs repliés (Avancé, Valeurs exactes), gardés d'une visite à l'autre. */
+const FOLDS = "rago.netoptFolds";
+type FoldId = "advanced" | "expert";
+function loadFolds(): Record<FoldId, boolean> {
+  try {
+    return { advanced: false, expert: false, ...(JSON.parse(localStorage.getItem(FOLDS) ?? "{}") as Partial<Record<FoldId, boolean>>) };
+  } catch {
+    return { advanced: false, expert: false };
+  }
+}
+
+/** « Analyser mon PC » : carte réseau, processeur et Windows, puis 40 pings vers Internet. */
+interface Scan {
+  step: "card" | "pc" | "line" | "done";
+  before: NetOptions;
+  card?: Detect | null;
+  pc?: { cpu: string; threads: number; win: string };
+  samples: number;
+  measure?: NetMeasure | null;
+  advice?: { preset: PresetId; options: NetOptions; why: Why[] };
+}
+const LINE_SAMPLES = 40;
 
 export function NetOpt() {
   const { t, lang, premium, setUpsell, sys } = useStore();
@@ -51,10 +56,11 @@ export function NetOpt() {
   const [progress, setProgress] = useState<{ step: number; total: number } | null>(null);
   const [done, setDone] = useState<{ action: NetAction; outcome: NetOutcome } | null>(null);
   const [error, setError] = useState<string | null>(null);
-  const [results, setResults] = useState<Partial<Record<ToolId, Record<string, unknown>>>>({});
+  const [status, setStatus] = useState<Record<string, unknown> | undefined>(undefined);
   const [showLog, setShowLog] = useState(false);
   const [restoreMenu, setRestoreMenu] = useState(false);
-  const [expertOpen, setExpertOpen] = useState(false);
+  const [folds, setFolds] = useState(loadFolds);
+  const [scan, setScan] = useState<Scan | null>(null);
   const live = useRef(true);
   const touched = useRef(loadDraft() !== null);
 
@@ -67,11 +73,16 @@ export function NetOpt() {
 
   useEffect(() => {
     live.current = true;
-    const sub = api.onNetOptLine((l) => {
-      if (!live.current) return;
-      if (l.tag === "progress") setProgress({ step: l.step ?? 0, total: l.total ?? 0 });
-      else setLines((ls) => [...ls, l]);
-    });
+    const subs = [
+      api.onNetOptLine((l) => {
+        if (!live.current) return;
+        if (l.tag === "progress") setProgress({ step: l.step ?? 0, total: l.total ?? 0 });
+        else setLines((ls) => [...ls, l]);
+      }),
+      api.onNetSample((s) => {
+        if (live.current && s.id === "internet") setScan((sc) => (sc?.step === "line" ? { ...sc, samples: Math.max(sc.samples, s.i + 1) } : sc));
+      }),
+    ];
     void (async () => {
       const s = await refresh();
       // pas de brouillon : les réglages de la dernière application
@@ -85,7 +96,7 @@ export function NetOpt() {
     })();
     return () => {
       live.current = false;
-      void sub.then((un) => un());
+      for (const sub of subs) void sub.then((un) => un());
     };
   }, [refresh]);
 
@@ -103,6 +114,16 @@ export function NetOpt() {
   };
   const setExpert = (patch: Partial<NetExpert>) => change({ expert: { ...opts.expert, ...patch } });
   const pickPreset = (id: PresetId) => change(applyPreset(opts, id));
+  const fold = (id: FoldId) =>
+    setFolds((f) => {
+      const next = { ...f, [id]: !f[id] };
+      try {
+        localStorage.setItem(FOLDS, JSON.stringify(next));
+      } catch {
+        /* stockage indisponible : les blocs se replient à la prochaine visite */
+      }
+      return next;
+    });
 
   const errorText = (e: unknown) => {
     const m = String(e);
@@ -129,8 +150,8 @@ export function NetOpt() {
         setDone({ action, outcome });
         if (outcome.code === 0) saveDraft(null);
         await refresh();
-      } else if (outcome.result) {
-        setResults((r) => ({ ...r, [action]: outcome.result! }));
+      } else if (action === "status" && outcome.result) {
+        setStatus(outcome.result);
       }
     } catch (e) {
       if (!live.current) return;
@@ -144,6 +165,34 @@ export function NetOpt() {
     }
   };
 
+  const scanning = !!scan && scan.step !== "done";
+  const analyse = async () => {
+    if (busy || scanning) return;
+    const before = opts;
+    setScan({ step: "card", before, samples: 0 });
+    const d = await api.netOptRun("detect").catch(() => null);
+    if (!live.current) return;
+    const card = (d?.result as Detect | undefined) ?? null;
+    if (card) setDetect(card);
+    const pc = { cpu: sys?.cpuName ?? "", threads: sys?.cpuThreads ?? 0, win: sys?.osName ?? "" };
+    setScan((s) => s && { ...s, step: "line", card, pc });
+    const out = await api.netTest(["internet"]).catch(() => [] as NetMeasure[]);
+    if (!live.current) return;
+    const m = out.find((x) => x.id === "internet") ?? null;
+    // carte introuvable : le type de connexion choisi dans la page fait foi
+    const advice = recommend(before, { wifi: card?.connected ? card.wifi : before.line === 5, threads: pc.threads }, m?.ping != null ? m : null);
+    touched.current = true;
+    setOpts(advice.options);
+    saveDraft(advice.options);
+    setScan((s) => s && { ...s, step: "done", measure: m, advice });
+  };
+  const keepMine = () => {
+    if (!scan) return;
+    setOpts(scan.before);
+    saveDraft(applied && same(scan.before, { ...NET_DEFAULTS, ...applied.options }) ? null : scan.before);
+    setScan(null);
+  };
+
   const presetName = (p: string) => (PRESETS.includes(p as PresetId) ? t(`no.preset.${p}` as Key) : t("no.preset.custom"));
   const when = (ts: number) => {
     const d = new Date(ts);
@@ -155,15 +204,17 @@ export function NetOpt() {
   const buffersOff = [v.throttlingOff, v.rscOff, v.coalescingOff, v.flowControlOff, v.lsoOff, v.interruptModeration === 2].filter(Boolean).length;
   const respName = opts.responsiveness < 34 ? t("no.resp.delayed") : opts.responsiveness < 67 ? t("no.resp.balanced") : t("no.resp.responsive");
   const win11 = !!sys?.isWin11;
+  const cardName = (d: Detect | null | undefined) => [d?.alias, d?.desc, d?.speed].filter(Boolean).join(" · ");
+  const advancedSummary = [
+    opts.mtuMode === 1 ? t("no.sum.mtuAuto") : opts.mtuMode === 2 ? `MTU ${opts.mtu}` : t("no.sum.mtuKeep"),
+    opts.delay === 0 ? t("no.delay.none") : `${t("no.delay")} ${opts.delay}`,
+    !opts.smart || v.dscp === 0 ? t("no.prio.none") : `DSCP ${v.dscp}${v.dscpName ? ` ${v.dscpName}` : ""}`,
+    t("no.sum.options", { n: [opts.priorityMode, opts.powerSaving, opts.wifi, opts.bgGuard].filter(Boolean).length }),
+  ].join(" · ");
+  const expertCount = Object.values(opts.expert).filter((x) => x != null).length;
 
   return (
-    <motion.div className="page netopt" variants={stagger} initial="initial" animate="animate">
-      <motion.header className="page-head" variants={rise}>
-        <div className="rg-overline">{t("no.overline")}</div>
-        <h1>{t("no.title")}</h1>
-        <p className="lead">{t("no.lead")}</p>
-      </motion.header>
-
+    <motion.div className="netopt" variants={stagger} initial="initial" animate="animate">
       <motion.section variants={rise} className="card no-hero">
         <div className="no-hero-main">
           <div className={`no-hero-orb${applied ? " on" : ""}${changing ? " busy" : ""}`}>
@@ -181,8 +232,8 @@ export function NetOpt() {
               {detect?.connected && (
                 <span className="no-detected">
                   {detect.wifi ? <Wifi size={12} /> : <Cable size={12} />}
-                  <span className="no-detected-text" title={[detect.alias, detect.desc, detect.speed].filter(Boolean).join(" · ")}>
-                    {t("no.detected", { name: [detect.alias, detect.desc, detect.speed].filter(Boolean).join(" · ") })}
+                  <span className="no-detected-text" title={cardName(detect)}>
+                    {t("no.detected", { name: cardName(detect) })}
                   </span>
                 </span>
               )}
@@ -190,6 +241,9 @@ export function NetOpt() {
             </div>
           </div>
           <div className="no-hero-actions">
+            <Button variant="secondary" size="lg" icon={scanning ? <LoaderCircle size={14} className="spin" /> : <ScanSearch size={15} />} disabled={!!busy || scanning} onClick={() => void analyse()}>
+              {t("an.run")}
+            </Button>
             <div className="no-restore">
               <Button
                 variant="secondary"
@@ -224,7 +278,7 @@ export function NetOpt() {
             <Button
               variant="primary"
               size="lg"
-              disabled={!!busy}
+              disabled={!!busy || scanning}
               icon={busy === "apply" ? <LoaderCircle size={15} className="spin" /> : !premium ? <Lock size={14} /> : undefined}
               onClick={() => void run("apply")}
             >
@@ -268,149 +322,201 @@ export function NetOpt() {
         </AnimatePresence>
       </motion.section>
 
+      <AnimatePresence initial={false}>
+        {scan && (
+          <motion.section
+            key="scan"
+            className="card no-scan"
+            initial={{ opacity: 0, y: -6, height: 0 }}
+            animate={{ opacity: 1, y: 0, height: "auto" }}
+            exit={{ opacity: 0, y: -6, height: 0 }}
+            transition={{ duration: 0.28, ease: [0.16, 1, 0.3, 1] }}
+          >
+            <ScanPanel
+              scan={scan}
+              cardName={cardName}
+              presetName={presetName}
+              premium={premium}
+              onApply={() => {
+                setScan(null);
+                void run("apply");
+              }}
+              onKeep={keepMine}
+              onClose={() => setScan(null)}
+            />
+          </motion.section>
+        )}
+      </AnimatePresence>
+
       <motion.section variants={rise} className="no-presets" role="radiogroup" aria-label={t("no.presets")}>
-        {PRESETS.map((p) => (
-          <button key={p} type="button" role="radio" aria-checked={opts.preset === p} className={`no-preset${opts.preset === p ? " on" : ""}`} onClick={() => pickPreset(p)}>
-            <span className="no-preset-name">{t(`no.preset.${p}` as Key)}</span>
-            <span className="no-preset-desc">{t(`no.preset.${p}.desc` as Key)}</span>
-            {opts.preset === p && <Check size={13} className="no-preset-check" />}
-          </button>
-        ))}
+        {PRESETS.map((p) => {
+          const Icon = PRESET_ICONS[p];
+          const on = opts.preset === p;
+          return (
+            <button key={p} type="button" role="radio" aria-checked={on} className={`no-preset${on ? " on" : ""}`} onClick={() => pickPreset(p)}>
+              <span className="no-preset-icon">
+                <Icon size={17} strokeWidth={1.75} />
+              </span>
+              <span className="no-preset-text">
+                <span className="no-preset-name">
+                  {t(`no.preset.${p}` as Key)}
+                  {scan?.advice?.preset === p && <span className="no-preset-tag">{t("an.tag")}</span>}
+                </span>
+                <span className="no-preset-desc">{t(`no.preset.${p}.desc` as Key)}</span>
+              </span>
+              {on && <Check size={14} className="no-preset-check" />}
+            </button>
+          );
+        })}
       </motion.section>
 
-      <motion.section variants={rise} className="card no-section">
-        <header className="card-head">
-          <h3 className="rg-overline">{t("no.settings")}</h3>
-          {opts.preset === "custom" && <span className="no-custom rg-metric">{t("no.preset.custom")}</span>}
-        </header>
-        <Slider
-          label={t("no.latency")}
-          value={opts.latency}
-          display={String(opts.latency)}
-          onChange={(latency) => change({ latency })}
-          min={t("no.latency.min")}
-          max={t("no.latency.max")}
-          mid={t("no.latency.mid", { n: buffersOff })}
-        />
-        <Slider
-          label={t("no.resp")}
-          value={opts.responsiveness}
-          display={`${respName} · ${opts.responsiveness}`}
-          onChange={(responsiveness) => change({ responsiveness })}
-          min={t("no.resp.min")}
-          max={t("no.resp.max")}
-        >
-          <div className="no-slider-extra">
-            <div className="no-chips">
-              {([
-                [0, "no.resp.delayed"],
-                [50, "no.resp.balanced"],
-                [100, "no.resp.responsive"],
-              ] as const).map(([n, k]) => (
-                <button key={n} type="button" className={`no-chip${opts.responsiveness === n ? " on" : ""}`} onClick={() => change({ responsiveness: n })}>
-                  {t(k)}
-                </button>
-              ))}
-            </div>
-            <span className="muted small no-resp-mid">{t("no.resp.mid", { irto: v.initialRto, sr: v.systemResponsiveness })}</span>
-          </div>
-        </Slider>
-        <div className="no-selects">
-          <Select
-            label={t("no.tuning")}
-            value={opts.tuning}
-            onChange={(tuning) => change({ tuning })}
-            options={[0, 1, 2, 3, 4, 5, 6].map((n) => ({ value: n, label: n === 0 ? `${t("no.tuning.0")} · ${v.autoTuning}` : t(`no.tuning.${n}` as Key) }))}
-          />
-          <Select
-            label={t("no.line")}
-            value={opts.line}
-            onChange={(line) => change({ line, wifi: line === 5 ? true : opts.line === 5 ? false : opts.wifi })}
-            options={[1, 2, 3, 4, 5, 6, 7].map((n) => ({ value: n, label: t(`no.line.${n}` as Key) }))}
-          />
-        </div>
-        <div className="no-toggles">
-          <Toggle title={t("no.smart")} desc={t("no.smart.desc")} checked={opts.smart} onChange={(smart) => change({ smart })} />
-          <Toggle title={t("no.stable")} desc={t("no.stable.desc")} checked={opts.stable} onChange={(stable) => change({ stable })} />
-          <Toggle title={t("no.competitive")} desc={t("no.competitive.desc")} checked={opts.competitive} onChange={(competitive) => change({ competitive })} />
-        </div>
-      </motion.section>
-
-      <motion.section variants={rise} className="card no-section">
-        <header className="card-head">
-          <h3 className="rg-overline">{t("no.advanced")}</h3>
-        </header>
-        <div className="no-toggles">
-          <div className="no-toggle no-mtu">
-            <div className="no-toggle-text">
-              <div className="no-toggle-title">{t("no.mtu")}</div>
-              <div className="no-toggle-desc">{t("no.mtu.desc")}</div>
-            </div>
-            {opts.mtuMode !== 1 && (
-              <input
-                className="input no-mtu-input"
-                inputMode="numeric"
-                placeholder={t("no.mtu.keep")}
-                aria-label={t("no.mtu.manual")}
-                value={opts.mtuMode === 2 ? String(opts.mtu) : ""}
-                onChange={(e) => {
-                  const n = parseInt(e.target.value.replace(/\D/g, ""), 10);
-                  change(Number.isNaN(n) ? { mtuMode: 0 } : { mtuMode: 2, mtu: Math.min(n, 1500) });
-                }}
-                onBlur={() => opts.mtuMode === 2 && opts.mtu < 576 && change({ mtu: 576 })}
+      <div className="no-layout">
+        <div className="no-main">
+          <motion.section variants={rise} className="card no-section">
+            <header className="card-head">
+              <h3 className="rg-overline">{t("no.settings")}</h3>
+              {opts.preset === "custom" && <span className="no-custom rg-metric">{t("no.preset.custom")}</span>}
+            </header>
+            <Slider
+              label={t("no.latency")}
+              value={opts.latency}
+              display={String(opts.latency)}
+              onChange={(latency) => change({ latency })}
+              min={t("no.latency.min")}
+              max={t("no.latency.max")}
+              mid={t("no.latency.mid", { n: buffersOff })}
+            />
+            <Slider
+              label={t("no.resp")}
+              value={opts.responsiveness}
+              display={`${respName} · ${opts.responsiveness}`}
+              onChange={(responsiveness) => change({ responsiveness })}
+              min={t("no.resp.min")}
+              max={t("no.resp.max")}
+            >
+              <div className="no-slider-extra">
+                <div className="no-chips">
+                  {([
+                    [0, "no.resp.delayed"],
+                    [50, "no.resp.balanced"],
+                    [100, "no.resp.responsive"],
+                  ] as const).map(([n, k]) => (
+                    <button key={n} type="button" className={`no-chip${opts.responsiveness === n ? " on" : ""}`} onClick={() => change({ responsiveness: n })}>
+                      {t(k)}
+                    </button>
+                  ))}
+                </div>
+                <span className="muted small no-resp-mid">{t("no.resp.mid", { irto: v.initialRto, sr: v.systemResponsiveness })}</span>
+              </div>
+            </Slider>
+            <div className="no-selects">
+              <Select
+                label={t("no.tuning")}
+                value={opts.tuning}
+                onChange={(tuning) => change({ tuning })}
+                options={[0, 1, 2, 3, 4, 5, 6].map((n) => ({ value: n, label: n === 0 ? `${t("no.tuning.0")} · ${v.autoTuning}` : t(`no.tuning.${n}` as Key) }))}
               />
-            )}
-            <span className="no-mtu-auto muted small">{t("no.mtu.auto")}</span>
-            <Switch checked={opts.mtuMode === 1} onChange={(on) => change({ mtuMode: on ? 1 : 0 })} label={t("no.mtu.auto")} />
-          </div>
-        </div>
-        <Slider
-          label={t("no.delay")}
-          value={opts.delay}
-          display={opts.delay === 0 ? t("no.delay.none") : String(opts.delay)}
-          onChange={(delay) => change({ delay })}
-          min={t("no.delay.min")}
-          max={t("no.delay.max")}
-          mid={t("no.delay.mid", { f: v.ackFrequency, t: v.ackTimeout, nagle: v.noDelay ? t("no.delay.nagleOff") : t("no.delay.nagleOn") })}
-        />
-        <Slider
-          label={t("no.prio")}
-          value={opts.priority}
-          display={v.dscp === 0 ? t("no.prio.none") : `DSCP ${v.dscp}${v.dscpName ? ` ${v.dscpName}` : ""}`}
-          onChange={(priority) => change({ priority })}
-          min={t("no.prio.min")}
-          max={t("no.prio.max")}
-          mid={opts.smart ? t("no.prio.mid") : t("no.prio.off")}
-          warn={!opts.smart}
-        />
-        <div className="no-selects">
-          <Select
-            label={t("no.ccp")}
-            value={opts.congestion}
-            onChange={(congestion) => change({ congestion })}
-            options={[0, 1, 2, 3, 4, 5].filter((n) => n !== 5 || win11 || opts.congestion === 5).map((n) => ({ value: n, label: t(`no.ccp.${n}` as Key) }))}
-          />
-        </div>
-        <div className="no-toggles">
-          <Toggle title={t("no.pmode")} desc={t("no.pmode.desc")} checked={opts.priorityMode} onChange={(priorityMode) => change({ priorityMode })} />
-          <Toggle title={t("no.nps")} desc={t("no.nps.desc")} checked={opts.powerSaving} onChange={(powerSaving) => change({ powerSaving })} />
-          <Toggle title={t("no.wifi")} desc={t("no.wifi.desc")} checked={opts.wifi} onChange={(wifi) => change({ wifi })} />
-          <Toggle title={t("no.bguard")} desc={t("no.bguard.desc")} checked={opts.bgGuard} onChange={(bgGuard) => change({ bgGuard })} />
-        </div>
-      </motion.section>
+              <Select
+                label={t("no.line")}
+                value={opts.line}
+                onChange={(line) => change({ line, wifi: line === 5 ? true : opts.line === 5 ? false : opts.wifi })}
+                options={[1, 2, 3, 4, 5, 6, 7].map((n) => ({ value: n, label: t(`no.line.${n}` as Key) }))}
+              />
+            </div>
+            <div className="no-toggles">
+              <Toggle title={t("no.smart")} desc={t("no.smart.desc")} checked={opts.smart} onChange={(smart) => change({ smart })} />
+              <Toggle title={t("no.stable")} desc={t("no.stable.desc")} checked={opts.stable} onChange={(stable) => change({ stable })} />
+              <Toggle title={t("no.competitive")} desc={t("no.competitive.desc")} checked={opts.competitive} onChange={(competitive) => change({ competitive })} />
+            </div>
+          </motion.section>
 
-      <motion.section variants={rise} className="card no-section no-expert">
-        <button type="button" className="card-head no-expert-head" aria-expanded={expertOpen} onClick={() => setExpertOpen((o) => !o)}>
-          <h3 className="rg-overline">
-            <SlidersHorizontal size={12} />
-            {t("no.expert")}
-          </h3>
-          <ChevronDown size={15} className={expertOpen ? "flip" : undefined} />
-        </button>
-        <AnimatePresence initial={false}>
-          {expertOpen && (
-            <motion.div initial={{ height: 0, opacity: 0 }} animate={{ height: "auto", opacity: 1 }} exit={{ height: 0, opacity: 0 }} className="no-expert-body">
-              <p className="muted small">{t("no.x.note")}</p>
+          <motion.div variants={rise}>
+            <Fold title={t("no.advanced")} summary={advancedSummary} open={folds.advanced} onToggle={() => fold("advanced")}>
+              <div className="no-toggles">
+                <div className="no-toggle no-mtu">
+                  <div className="no-toggle-text">
+                    <div className="no-toggle-title">{t("no.mtu")}</div>
+                    <div className="no-toggle-desc">{t("no.mtu.desc")}</div>
+                  </div>
+                  {opts.mtuMode !== 1 && (
+                    <input
+                      className="input no-mtu-input"
+                      inputMode="numeric"
+                      placeholder={t("no.mtu.keep")}
+                      aria-label={t("no.mtu.manual")}
+                      value={opts.mtuMode === 2 ? String(opts.mtu) : ""}
+                      onChange={(e) => {
+                        const n = parseInt(e.target.value.replace(/\D/g, ""), 10);
+                        change(Number.isNaN(n) ? { mtuMode: 0 } : { mtuMode: 2, mtu: Math.min(n, 1500) });
+                      }}
+                      onBlur={() => opts.mtuMode === 2 && opts.mtu < 576 && change({ mtu: 576 })}
+                    />
+                  )}
+                  <span className="no-mtu-auto muted small">{t("no.mtu.auto")}</span>
+                  <Switch checked={opts.mtuMode === 1} onChange={(on) => change({ mtuMode: on ? 1 : 0 })} label={t("no.mtu.auto")} />
+                </div>
+                {opts.mtuMode === 1 && (
+                  <label className="no-toggle no-target-row">
+                    <div className="no-toggle-text">
+                      <div className="no-toggle-title">{t("no.target")}</div>
+                      <div className="no-toggle-desc">{t("no.target.desc")}</div>
+                      {!validTarget(opts.target) && <div className="no-bad small">{t("no.target.bad")}</div>}
+                    </div>
+                    <input
+                      className={`input no-target-input${validTarget(opts.target) ? "" : " bad"}`}
+                      value={opts.target}
+                      spellCheck={false}
+                      maxLength={253}
+                      onChange={(e) => change({ target: e.target.value.trim(), preset: opts.preset })}
+                    />
+                  </label>
+                )}
+              </div>
+              <Slider
+                label={t("no.delay")}
+                value={opts.delay}
+                display={opts.delay === 0 ? t("no.delay.none") : String(opts.delay)}
+                onChange={(delay) => change({ delay })}
+                min={t("no.delay.min")}
+                max={t("no.delay.max")}
+                mid={t("no.delay.mid", { f: v.ackFrequency, t: v.ackTimeout, nagle: v.noDelay ? t("no.delay.nagleOff") : t("no.delay.nagleOn") })}
+              />
+              <Slider
+                label={t("no.prio")}
+                value={opts.priority}
+                display={v.dscp === 0 ? t("no.prio.none") : `DSCP ${v.dscp}${v.dscpName ? ` ${v.dscpName}` : ""}`}
+                onChange={(priority) => change({ priority })}
+                min={t("no.prio.min")}
+                max={t("no.prio.max")}
+                mid={opts.smart ? t("no.prio.mid") : t("no.prio.off")}
+                warn={!opts.smart}
+              />
+              <div className="no-selects">
+                <Select
+                  label={t("no.ccp")}
+                  value={opts.congestion}
+                  onChange={(congestion) => change({ congestion })}
+                  options={[0, 1, 2, 3, 4, 5].filter((n) => n !== 5 || win11 || opts.congestion === 5).map((n) => ({ value: n, label: t(`no.ccp.${n}` as Key) }))}
+                />
+              </div>
+              <div className="no-toggles">
+                <Toggle title={t("no.pmode")} desc={t("no.pmode.desc")} checked={opts.priorityMode} onChange={(priorityMode) => change({ priorityMode })} />
+                <Toggle title={t("no.nps")} desc={t("no.nps.desc")} checked={opts.powerSaving} onChange={(powerSaving) => change({ powerSaving })} />
+                <Toggle title={t("no.wifi")} desc={t("no.wifi.desc")} checked={opts.wifi} onChange={(wifi) => change({ wifi })} />
+                <Toggle title={t("no.bguard")} desc={t("no.bguard.desc")} checked={opts.bgGuard} onChange={(bgGuard) => change({ bgGuard })} />
+              </div>
+            </Fold>
+          </motion.div>
+
+          <motion.div variants={rise}>
+            <Fold
+              title={t("no.expert")}
+              icon={<SlidersHorizontal size={12} />}
+              summary={expertCount ? t("no.sum.expert", { n: expertCount }) : t("no.sum.expertNone")}
+              open={folds.expert}
+              onToggle={() => fold("expert")}
+            >
+              <p className="muted small no-expert-note">{t("no.x.note")}</p>
               <div className="no-expert-grid">
                 <NumField label={t("no.x.minRto")} value={opts.expert.minRto} auto={`${v.minRto} ms`} min={20} max={300} onChange={(minRto) => setExpert({ minRto })} t={t} />
                 <NumField label={t("no.x.initialRto")} value={opts.expert.initialRto} auto={`${v.initialRto} ms`} min={300} max={3000} onChange={(initialRto) => setExpert({ initialRto })} t={t} />
@@ -428,54 +534,209 @@ export function NetOpt() {
                   t={t}
                 />
               </div>
-              <Button size="sm" variant="ghost" disabled={Object.values(opts.expert).every((x) => x == null)} onClick={() => change({ expert: {} })}>
+              <Button size="sm" variant="ghost" disabled={!expertCount} onClick={() => change({ expert: {} })}>
                 {t("no.x.clear")}
               </Button>
-            </motion.div>
-          )}
-        </AnimatePresence>
-      </motion.section>
+            </Fold>
+          </motion.div>
+        </div>
 
-      <div className="no-bottom">
-        <motion.section variants={rise} className="card no-section no-tools">
-          <header className="card-head">
-            <h3 className="rg-overline">{t("no.tools")}</h3>
-          </header>
-          <label className="no-target">
-            <span className="no-toggle-title">{t("no.target")}</span>
-            <span className="no-toggle-desc">{t("no.target.desc")}</span>
-            <input
-              className={`input${validTarget(opts.target) ? "" : " bad"}`}
-              value={opts.target}
-              spellCheck={false}
-              maxLength={253}
-              onChange={(e) => change({ target: e.target.value.trim(), preset: opts.preset })}
-            />
-            {!validTarget(opts.target) && <span className="no-bad small">{t("no.target.bad")}</span>}
-          </label>
-          {TOOLS.map((id) => (
-            <Tool
-              key={id}
-              id={id}
-              busy={busy}
-              disabled={!!busy || (id !== "status" && !validTarget(opts.target))}
-              result={results[id]}
-              progress={busy === id ? progress : null}
-              onRun={() => void run(id)}
-              onStable={(stable) => change({ stable })}
-              stable={opts.stable}
-              t={t}
-            />
-          ))}
-        </motion.section>
-        <motion.section variants={rise} className="card no-section no-honest">
-          <header className="card-head">
-            <h3 className="rg-overline">{t("no.honest.title")}</h3>
-          </header>
-          <p className="small">{t("no.honest.text")}</p>
-        </motion.section>
+        <aside className="no-aside">
+          <motion.section variants={rise} className="card no-changes">
+            <header className="card-head">
+              <h3 className="rg-overline">{t("no.changes")}</h3>
+              <span className="muted small">{t("no.changes.head")}</span>
+            </header>
+            <Changes o={opts} v={v} buffersOff={buffersOff} t={t} />
+          </motion.section>
+          <motion.section variants={rise} className="card no-section no-state">
+            <Tool id="status" running={busy === "status"} disabled={!!busy} result={status} progress={busy === "status" ? progress : null} onRun={() => void run("status")} />
+          </motion.section>
+          <motion.section variants={rise} className="card no-section no-honest">
+            <header className="card-head">
+              <h3 className="rg-overline">{t("no.honest.title")}</h3>
+            </header>
+            <p className="small">{t("no.honest.text")}</p>
+          </motion.section>
+        </aside>
       </div>
     </motion.div>
+  );
+}
+
+function Fold({ title, icon, summary, open, onToggle, children }: { title: string; icon?: ReactNode; summary: string; open: boolean; onToggle: () => void; children: ReactNode }) {
+  return (
+    <section className={`card no-section no-fold${open ? " open" : ""}`}>
+      <button type="button" className="no-fold-head" aria-expanded={open} onClick={onToggle}>
+        <h3 className="rg-overline">
+          {icon}
+          {title}
+        </h3>
+        {!open && <span className="no-fold-sum muted small">{summary}</span>}
+        <ChevronDown size={15} className={open ? "flip" : undefined} />
+      </button>
+      <AnimatePresence initial={false}>
+        {open && (
+          <motion.div initial={{ height: 0, opacity: 0 }} animate={{ height: "auto", opacity: 1 }} exit={{ height: 0, opacity: 0 }} className="no-fold-body">
+            {children}
+          </motion.div>
+        )}
+      </AnimatePresence>
+    </section>
+  );
+}
+
+/** Ce que ces réglages changent dans Windows : sa valeur à gauche, la nouvelle à droite (netopt.rs, `compute`). */
+function Changes({ o, v, buffersOff, t }: { o: NetOptions; v: NetValues; buffersOff: number; t: T }) {
+  const w = WINDOWS_VALUES;
+  const im = (n: number) => t(`no.v.im.${n}` as Key);
+  const dscp = (x: NetValues, on: boolean) => (!on || x.dscp === 0 ? t("no.v.none") : `${x.dscp}${x.dscpName ? ` ${x.dscpName}` : ""}`);
+  const yes = (b: boolean) => (b ? t("no.x.on") : t("no.x.off"));
+  const tuning = (s: string) => (s === "keep" ? t("no.v.keep") : s);
+  const rows: [Key, string, string][] = [
+    ["no.v.buffers", "0/6", `${buffersOff}/6`],
+    ["no.v.im", im(0), im(v.interruptModeration)],
+    ["no.v.minRto", `${w.minRto} ms`, `${v.minRto} ms`],
+    ["no.v.initialRto", `${w.initialRto} ms`, `${v.initialRto} ms`],
+    ["no.v.ack", t("no.v.ackValue", { f: w.ackFrequency, t: w.ackTimeout }), t("no.v.ackValue", { f: v.ackFrequency, t: v.ackTimeout })],
+    ["no.v.nagle", t("no.delay.nagleOn"), v.noDelay ? t("no.delay.nagleOff") : t("no.delay.nagleOn")],
+    ["no.v.dscp", t("no.v.none"), dscp(v, o.smart)],
+    ["no.v.tuning", w.tuning, tuning(v.tuning)],
+    ["no.v.sysResp", String(w.systemResponsiveness), String(v.systemResponsiveness)],
+    ["no.v.timestamps", yes(w.timestamps), yes(v.timestamps)],
+    ["no.v.mtu", t("no.v.keep"), o.mtuMode === 1 ? t("no.v.auto") : o.mtuMode === 2 ? String(o.mtu) : t("no.v.keep")],
+  ];
+  return (
+    <dl className="no-values">
+      {rows.map(([k, from, to]) => (
+        <div key={k} className={`no-value${from !== to ? " changed" : ""}`}>
+          <dt>{t(k)}</dt>
+          <dd className="rg-metric">
+            {from !== to && <span className="no-value-from">{from}</span>}
+            <span className="no-value-to">{to}</span>
+          </dd>
+        </div>
+      ))}
+    </dl>
+  );
+}
+
+function ScanPanel({
+  scan,
+  cardName,
+  presetName,
+  premium,
+  onApply,
+  onKeep,
+  onClose,
+}: {
+  scan: Scan;
+  cardName: (d: Detect | null | undefined) => string;
+  presetName: (p: string) => string;
+  premium: boolean;
+  onApply: () => void;
+  onKeep: () => void;
+  onClose: () => void;
+}) {
+  const { t, lang } = useStore();
+  const order = ["card", "pc", "line", "done"] as const;
+  const at = order.indexOf(scan.step);
+  const state = (s: (typeof order)[number]) => (order.indexOf(s) < at ? "done" : order.indexOf(s) === at ? "now" : "next");
+  const dec = (x: number | null | undefined) => (x == null ? "—" : (Math.round(x * 10) / 10).toLocaleString(lang === "fr" ? "fr-FR" : "en-US"));
+  const m = scan.measure;
+  const lost = m ? (m.lost ?? Math.round(m.loss * m.samples)) : 0;
+  const advice = scan.advice;
+  const Icon = advice ? PRESET_ICONS[advice.preset] : ScanSearch;
+  const steps: { id: "card" | "pc" | "line"; icon: LucideIcon; title: Key; text: string | null }[] = [
+    {
+      id: "card",
+      icon: scan.card?.wifi ? Wifi : Cable,
+      title: "an.step.card",
+      text: scan.card === undefined ? null : scan.card?.connected ? `${scan.card.wifi ? "Wi-Fi" : t("an.wired")} · ${cardName(scan.card)}` : t("an.card.none"),
+    },
+    {
+      id: "pc",
+      icon: Cpu,
+      title: "an.step.pc",
+      text: scan.pc ? [scan.pc.cpu, scan.pc.threads ? t("an.threads", { n: scan.pc.threads }) : "", scan.pc.win].filter(Boolean).join(" · ") || "—" : null,
+    },
+    {
+      id: "line",
+      icon: Activity,
+      title: "an.step.line",
+      text:
+        m === undefined
+          ? scan.step === "line"
+            ? t("an.line.running", { i: scan.samples, n: LINE_SAMPLES })
+            : null
+          : m?.ping != null
+            ? t("an.line.result", { avg: dec(m.ping), jitter: dec(m.jitter), lost, n: m.samples })
+            : t("an.line.none"),
+    },
+  ];
+  return (
+    <>
+      <header className="card-head">
+        <h3 className="rg-overline">
+          <ScanSearch size={12} />
+          {t("an.title")}
+        </h3>
+        <button type="button" className="icon-btn" aria-label={t("an.close")} onClick={scan.step === "done" ? onKeep : onClose} disabled={scan.step !== "done"}>
+          <X size={14} />
+        </button>
+      </header>
+      <div className="no-scan-body">
+        <ol className="no-scan-steps">
+          {steps.map(({ id, icon: StepIcon, title, text }) => {
+            const s = state(id);
+            return (
+              <li key={id} className={`no-scan-step ${s}`}>
+                <span className="no-scan-mark">{s === "done" ? <Check size={13} /> : s === "now" ? <LoaderCircle size={13} className="spin" /> : <StepIcon size={13} />}</span>
+                <div className="no-scan-text">
+                  <div className="no-scan-title">{t(title)}</div>
+                  {text && <div className="no-scan-desc muted small">{text}</div>}
+                  {id === "line" && s === "now" && (
+                    <div className="no-progress no-scan-progress">
+                      <motion.div className="no-progress-fill" animate={{ width: `${Math.max(4, (scan.samples / LINE_SAMPLES) * 100)}%` }} transition={{ duration: 0.25 }} />
+                    </div>
+                  )}
+                </div>
+              </li>
+            );
+          })}
+        </ol>
+        <div className={`no-scan-result${advice ? " ready" : ""}`}>
+          <div className="no-scan-pick">
+            <span className="no-scan-icon">
+              <Icon size={20} strokeWidth={1.75} />
+            </span>
+            <div>
+              <div className="rg-overline">{t("an.pick")}</div>
+              <div className="no-scan-name">{advice ? presetName(advice.preset) : t("an.wait")}</div>
+            </div>
+          </div>
+          {advice && (
+            <>
+              <ul className="no-scan-why">
+                {advice.why.map((w, i) => (
+                  <li key={i}>{t(w.key, w.vars && Object.fromEntries(Object.entries(w.vars).map(([k, x]) => [k, typeof x === "number" ? dec(x) : x])))}</li>
+                ))}
+              </ul>
+              <p className="muted small">{t("an.note")}</p>
+              <div className="no-scan-actions">
+                <Button variant="primary" icon={!premium ? <Lock size={13} /> : undefined} onClick={onApply}>
+                  {t("an.apply")}
+                  {premium && <ArrowRight size={14} />}
+                </Button>
+                <Button variant="ghost" onClick={onKeep}>
+                  {t("an.keep")}
+                </Button>
+              </div>
+            </>
+          )}
+        </div>
+      </div>
+    </>
   );
 }
 
@@ -662,108 +923,3 @@ function TriField({ label, value, auto, onChange, t }: { label: string; value: b
   );
 }
 
-function Tool({
-  id,
-  busy,
-  disabled,
-  result,
-  progress,
-  onRun,
-  onStable,
-  stable,
-  t,
-}: {
-  id: ToolId;
-  busy: NetAction | null;
-  disabled: boolean;
-  result: Record<string, unknown> | undefined;
-  progress: { step: number; total: number } | null;
-  onRun: () => void;
-  onStable: (v: boolean) => void;
-  stable: boolean;
-  t: T;
-}) {
-  const { lang } = useStore();
-  const [confirm, setConfirm] = useState(false);
-  const running = busy === id;
-  const r = result;
-  const num = (x: unknown) => String(x ?? "—");
-  return (
-    <div className={`no-tool${running ? " running" : ""}`}>
-      <div className="no-tool-row">
-        <div className="no-toggle-text">
-          <div className="no-toggle-title">{t(`no.tool.${id}` as Key)}</div>
-          <div className="no-toggle-desc">{t(`no.tool.${id}.desc` as Key)}</div>
-        </div>
-        <Button
-          size="sm"
-          disabled={disabled}
-          icon={running ? <LoaderCircle size={12} className="spin" /> : undefined}
-          onClick={() => (id === "loaded" && !confirm ? setConfirm(true) : (setConfirm(false), onRun()))}
-        >
-          {running && progress?.total ? `${Math.round((progress.step / progress.total) * 100)} %` : t("no.tool.run")}
-        </Button>
-      </div>
-      {confirm && !running && (
-        <div className="no-tool-confirm small">
-          <TriangleAlert size={13} />
-          <span>{t("no.tool.loaded.confirm")}</span>
-          <Button size="sm" variant="primary" onClick={() => (setConfirm(false), onRun())}>
-            {t("no.tool.run")}
-          </Button>
-        </div>
-      )}
-      {r && !running && (
-        <div className="no-tool-result small">
-          {id === "quality" &&
-            (r.noAnswer ? (
-              <span className="muted">{t("no.q.noAnswer")}</span>
-            ) : (
-              <>
-                <div className={`no-verdict ${r.stable ? "ok" : "warn"}`}>{r.stable ? t("no.q.stable") : t("no.q.unstable")}</div>
-                <div className="muted rg-metric">{t("no.q.line", { min: num(r.min), max: num(r.max), avg: num(r.avg), p95: num(r.p95) })}</div>
-                <div className="muted rg-metric">{t("no.q.line2", { jitter: num(r.jitter), loss: num(r.loss), spikes: num(r.spikes) })}</div>
-                {!!r.stable !== stable && (
-                  <button type="button" className="link no-suggest" onClick={() => onStable(!!r.stable)}>
-                    {r.stable ? t("no.q.setYes") : t("no.q.setNo")}
-                    <ArrowRight size={12} />
-                  </button>
-                )}
-              </>
-            ))}
-          {id === "loaded" &&
-            (r.noAnswer ? (
-              <span className="muted">{t("no.q.noAnswer")}</span>
-            ) : (
-              <>
-                <div className={`no-verdict ${r.grade === "A+" || r.grade === "A" ? "ok" : "warn"}`}>{t("no.l.grade", { grade: num(r.grade) })}</div>
-                <div className="muted rg-metric">{t("no.l.line", { idle: num(r.idleMed), busy: num(r.busyMed), delta: num(r.delta) })}</div>
-                <div className="muted">{r.grade === "A+" || r.grade === "A" ? t("no.l.good") : t("no.l.bad")}</div>
-              </>
-            ))}
-          {id === "mtu" &&
-            (r.mtu ? (
-              <>
-                <div className="no-verdict ok rg-metric">{t("no.m.result", { mtu: num(r.mtu), alias: num(r.alias), cur: num(r.current) })}</div>
-                <div className="muted">{t("no.m.note")}</div>
-              </>
-            ) : (
-              <span className="muted">{t("no.m.fail")}</span>
-            ))}
-          {id === "status" && (
-            <table className="no-status rg-metric">
-              <tbody>
-                {(r.rows as { s: string; k: string; v: string }[]).map((row, i) => (
-                  <tr key={i} className={row.v === "" ? "head" : undefined}>
-                    <td>{engineText(row.k, lang)}</td>
-                    <td>{engineText(row.v, lang)}</td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          )}
-        </div>
-      )}
-    </div>
-  );
-}

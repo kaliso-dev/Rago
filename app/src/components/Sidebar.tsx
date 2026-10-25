@@ -1,5 +1,4 @@
 import { motion } from "motion/react";
-import { useState } from "react";
 import { ArrowUpRight, Lock, Sparkles } from "lucide-react";
 import { catalog } from "../lib/catalog";
 import { FREE, useStore } from "../lib/store";
@@ -9,41 +8,32 @@ import { DISCORD_URL } from "./LicenseGate";
 import { api } from "../lib/api";
 import { UpdateCard } from "./UpdateCard";
 import type { Key } from "../lib/i18n";
+import { markSeen, useSeen } from "../lib/seen";
+import { isNetworkTab } from "../pages/Network";
 
-/** Pages de la 1.2.0 : badge « Nouveau » jusqu'à la première visite. */
-const NEW_PAGES: Record<string, Key> = { games: "nav.games", nettest: "nav.nettest", netopt: "nav.netopt", tools: "nav.tools" };
+/** Pages sans module du catalogue. */
+const LABELS: Record<string, Key> = { games: "nav.games", tools: "nav.tools" };
+/** Nouveautés de la 1.2.0 derrière chaque entrée : badge « Nouveau » tant que l'une n'a pas été ouverte (Réseau :
+ * ses onglets Packet Optimizer et Test réseau). */
+const NEW: Record<string, string[]> = { games: ["games"], tools: ["tools"], network: ["netopt", "nettest"] };
 
-function loadSeen(): string[] {
-  try {
-    return JSON.parse(localStorage.getItem("rago.seenPages") ?? "[]") as string[];
-  } catch {
-    return [];
-  }
-}
-
+// Réseau regroupe le Packet Optimizer et le test réseau dans ses onglets : deux entrées de moins
 const GROUPS: { label: Key | null; ids: string[] }[] = [
   { label: null, ids: ["dashboard"] },
-  { label: "nav.optimize", ids: ["network", "netopt", "latency", "gpu", "windows", "tools"] },
-  { label: "nav.play", ids: ["hitreg", "minecraft", "rbw", "gamemode", "games", "nettest"] },
+  { label: "nav.optimize", ids: ["network", "latency", "gpu", "windows", "tools"] },
+  { label: "nav.play", ids: ["hitreg", "minecraft", "rbw", "gamemode", "games"] },
   { label: "nav.advanced", ids: ["expert", "restore"] },
 ];
 
 export function Sidebar() {
   const { t, lang, page, goTo, selected, sys, license, premium, setUpsell, isLocked, undoOnly } = useStore();
   const modules = new Map(catalog.modules.map((m) => [m.id, m]));
-  const [seen, setSeen] = useState(loadSeen);
+  const seen = useSeen();
   const visit = (id: string) => {
     goTo(id);
-    if (id in NEW_PAGES && !seen.includes(id)) {
-      const next = [...seen, id];
-      setSeen(next);
-      try {
-        localStorage.setItem("rago.seenPages", JSON.stringify(next));
-      } catch {
-        /* stockage indisponible : le badge revient au prochain lancement */
-      }
-    }
+    if (NEW[id]?.includes(id)) markSeen(id);
   };
+  const isNew = (id: string) => !!NEW[id]?.some((p) => !seen.includes(p));
 
   const countIn = (id: string) => {
     const m = modules.get(id);
@@ -63,8 +53,8 @@ export function Sidebar() {
   const item = (id: string, label: string, icon: string) => {
     const Icon = MODULE_ICONS[icon];
     const n = countIn(id);
-    // Partage et support s'ouvre depuis les paramètres : la barre reste sur Paramètres
-    const active = page === id || (id === "settings" && page === "share");
+    // Partage et support s'ouvre depuis les paramètres, les onglets de Réseau depuis Réseau
+    const active = page === id || (id === "settings" && page === "share") || (id === "network" && isNetworkTab(page));
     return (
       <button key={id} type="button" className={`nav-item${active ? " active" : ""}`} onClick={() => visit(id)}>
         {active && <motion.span layoutId="nav-active" className="nav-active" transition={{ type: "spring", stiffness: 500, damping: 42 }} />}
@@ -72,9 +62,8 @@ export function Sidebar() {
         <span className="nav-label">{label}</span>
         {n > 0 && <span className="nav-count rg-metric">{n}</span>}
         {n === 0 && lockedModule(id) && <Lock size={12} className="nav-lock" />}
-        {id in NEW_PAGES &&
-          !seen.includes(id) &&
-          // libellé long (« Optimiseur réseau ») : un point, pour qu'il tienne sur une ligne
+        {isNew(id) &&
+          // libellé long : un point, pour qu'il tienne sur une ligne
           (label.length > 14 ? <span className="nav-new dot" title={t("nav.new")} aria-label={t("nav.new")} /> : <span className="nav-new">{t("nav.new")}</span>)}
       </button>
     );
@@ -88,8 +77,8 @@ export function Sidebar() {
           {g.ids.map((id) =>
             id === "dashboard"
               ? item(id, t("nav.dashboard"), "dashboard")
-              : id in NEW_PAGES
-                ? item(id, t(NEW_PAGES[id]), id)
+              : id in LABELS
+                ? item(id, t(LABELS[id]), id)
                 : item(id, modules.get(id)!.name[lang], modules.get(id)!.icon),
           )}
         </div>

@@ -19,8 +19,7 @@ import { ModulePage } from "./pages/ModulePage";
 import { Settings } from "./pages/Settings";
 import { Share } from "./pages/Share";
 import { Games } from "./pages/Games";
-import { NetOpt } from "./pages/NetOpt";
-import { NetTest } from "./pages/NetTest";
+import { isNetworkTab, Network } from "./pages/Network";
 import { Tools } from "./pages/Tools";
 
 export function App() {
@@ -55,14 +54,15 @@ export function App() {
             <LicenseNotice />
             <AnimatePresence mode="wait" initial={false}>
               <motion.div
-                key={page}
+                // les onglets de Réseau changent dans la page, sans la rejouer
+                key={isNetworkTab(page) ? "network" : page}
                 initial={{ opacity: 0, x: 8 }}
                 animate={{ opacity: 1, x: 0 }}
                 exit={{ opacity: 0, x: -8 }}
                 transition={{ duration: 0.16, ease: [0.16, 1, 0.3, 1] }}
               >
                 <PageBoundary lang={lang}>
-                  {page === "dashboard" ? <Dashboard /> : page === "settings" ? <Settings /> : page === "share" ? <Share /> : page === "games" ? <Games /> : page === "nettest" ? <NetTest /> : page === "netopt" ? <NetOpt /> : page === "tools" ? <Tools /> : <ModulePage id={page} />}
+                  {page === "dashboard" ? <Dashboard /> : page === "settings" ? <Settings /> : page === "share" ? <Share /> : page === "games" ? <Games /> : isNetworkTab(page) ? <Network tab={page} /> : page === "tools" ? <Tools /> : <ModulePage id={page} />}
                 </PageBoundary>
               </motion.div>
             </AnimatePresence>

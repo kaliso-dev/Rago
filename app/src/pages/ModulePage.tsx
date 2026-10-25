@@ -119,7 +119,8 @@ function HistoryList() {
   );
 }
 
-export function ModulePage({ id }: { id: string }) {
+/** `embedded` : dans un onglet (Réseau), sous le titre de la page qui l'accueille. */
+export function ModulePage({ id, embedded = false }: { id: string; embedded?: boolean }) {
   const { t, lang, sys, selected, selectMany, unselectMany, isLocked, undoOnly, premium, setUpsell, focusTweak, setFocusTweak, focusSeq, isOn, pendingUndo } = useStore();
   // dernière recherche vers chaque réglage (focusSeq) : sert de clé à sa ligne
   const focusKeys = useRef(new Map<string, number>());
@@ -158,20 +159,24 @@ export function ModulePage({ id }: { id: string }) {
   };
 
   return (
-    <div className="page module">
+    <div className={embedded ? "module embedded" : "page module"}>
       <motion.header
-        className="page-head module-head"
+        className={embedded ? "module-head module-bar" : "page-head module-head"}
         initial={{ opacity: 0, y: 8 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.32, ease: [0.16, 1, 0.3, 1] }}
       >
-        <div>
-          <div className="rg-overline">
-            {String(index + 1).padStart(2, "0")} / {mod.name[lang].toUpperCase()}
+        {embedded ? (
+          <p className="muted small">{mod.tagline[lang]}</p>
+        ) : (
+          <div>
+            <div className="rg-overline">
+              {String(index + 1).padStart(2, "0")} / {mod.name[lang].toUpperCase()}
+            </div>
+            <h1>{mod.name[lang]}</h1>
+            <p className="lead">{mod.tagline[lang]}</p>
           </div>
-          <h1>{mod.name[lang]}</h1>
-          <p className="lead">{mod.tagline[lang]}</p>
-        </div>
+        )}
         {own.length > 1 && (
           <div className="module-tools">
             <span className="rg-metric muted">{t("module.selected", { n: nOn, total: own.length })}</span>

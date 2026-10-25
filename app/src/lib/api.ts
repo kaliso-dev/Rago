@@ -118,13 +118,31 @@ export interface Launcher {
 /** Mesure du test réseau (nettest.rs), en ms ; perte de 0 à 1. */
 export interface NetMeasure {
   id: string;
+  /** moyenne des allers-retours réussis */
   ping: number | null;
+  /** absents des tests faits avant la 1.2.0 (gardés dans le navigateur) */
+  median?: number | null;
   best: number | null;
+  worst?: number | null;
   jitter: number | null;
   loss: number;
+  lost?: number;
   samples: number;
+  /** mesures nettement au-dessus de la médiane */
+  spikes?: number;
+  /** chaque essai dans l'ordre, null : perdu */
+  series?: (number | null)[];
+  method?: "mc" | "tcp" | "icmp";
   /** "dns" : serveur introuvable ; "timeout" : aucune réponse */
   error: string | null;
+}
+
+/** Un essai du test réseau, envoyé pendant la mesure. */
+export interface NetSample {
+  id: string;
+  i: number;
+  n: number;
+  ms: number | null;
 }
 
 /** Mise à jour de l'app téléchargée et vérifiée, prête à installer (update.rs). */
@@ -189,6 +207,8 @@ export interface OverlayInfo {
 export interface OverlayLive {
   fps: number | null;
   ping: number | null;
+  /** le serveur ne répond pas au ping : mesuré jusqu'au dernier routeur avant lui */
+  pingEstimate?: boolean;
 }
 
 /** Ce que lit le vérificateur de Ranked Bedwars (rbw.rs). */
@@ -373,6 +393,7 @@ export interface Api {
   /** Test réseau vers les serveurs donnés (identifiants de nettest.rs). */
   netTest(ids: string[]): Promise<NetMeasure[]>;
   onNetMeasure(cb: (m: NetMeasure) => void): Promise<UnlistenFn>;
+  onNetSample(cb: (s: NetSample) => void): Promise<UnlistenFn>;
   /** Jeux installés (launchers et ajoutés à la main) ; `refresh` : nouvelle recherche sur le PC. */
   gamesList(refresh: boolean): Promise<Game[]>;
   /** Image officielle du jeu (data: URL), null s'il n'y en a pas. */
@@ -484,6 +505,7 @@ const tauriApi: Api = {
   copyText,
   netTest: (ids) => invoke("net_test", { ids }),
   onNetMeasure: (cb) => listen<NetMeasure>("nettest:measure", (e) => cb(e.payload)),
+  onNetSample: (cb) => listen<NetSample>("nettest:sample", (e) => cb(e.payload)),
   gamesList: (refresh) => invoke("games_list", { refresh }),
   gameArt: (id) => invoke("game_art", { id }),
   gameLaunch: (id) => invoke("game_launch", { id }),
@@ -930,19 +952,50 @@ const mockApi: Api = {
     }),
   copyText,
   netTest: async (ids) => {
-    // démo : valeurs plausibles depuis Paris, chaque serveur fini à son rythme
+    // démo : valeurs plausibles depuis Paris, essai par essai comme nettest.rs (40 en 10 s, 8 pour Minecraft)
     const base: Record<string, number> = { hypixel: 92, minemen: 21, paris: 9, frankfurt: 17, london: 14, stockholm: 33, madrid: 28, virginia: 86, internet: 7 };
+    const fast = new URLSearchParams(location.search).has("fastnet");
     return Promise.all(
       ids.map(async (id) => {
-        await sleep(900 + Math.random() * 1400);
-        const ping = Math.round(((base[id] ?? 40) + Math.random() * 4) * 10) / 10;
-        const m: NetMeasure = { id, ping, best: Math.round((ping - 1.5) * 10) / 10, jitter: Math.round((0.6 + Math.random() * 2.4) * 10) / 10, loss: 0, samples: id === "hypixel" || id === "minemen" ? 5 : 10, error: null };
+        const mc = id === "hypixel" || id === "minemen";
+        const n = mc ? 8 : 40;
+        const series: (number | null)[] = [];
+        for (let i = 0; i < n; i++) {
+          await sleep(fast ? 8 : mc ? 1400 : 250);
+          const b = base[id] ?? 40;
+          const lost = id === "virginia" && i === 17;
+          const ms = lost ? null : Math.round((b + Math.random() * 3 + (i % 13 === 7 ? b * 0.6 : 0)) * 10) / 10;
+          series.push(ms);
+          emit<NetSample>("nettest:sample", { id, i, n, ms });
+        }
+        const ok = series.filter((v): v is number => v != null);
+        const sorted = [...ok].sort((a, b) => a - b);
+        const avg = ok.reduce((a, b) => a + b, 0) / ok.length;
+        const jitter = ok.slice(1).reduce((a, v, i) => a + Math.abs(v - ok[i]), 0) / (ok.length - 1);
+        const med = sorted[Math.floor(sorted.length / 2)];
+        const r = (v: number) => Math.round(v * 10) / 10;
+        const m: NetMeasure = {
+          id,
+          ping: r(avg),
+          median: med,
+          best: sorted[0],
+          worst: sorted[sorted.length - 1],
+          jitter: r(jitter),
+          loss: (n - ok.length) / n,
+          lost: n - ok.length,
+          samples: n,
+          spikes: ok.filter((v) => v > med + Math.max(15, med / 2)).length,
+          series,
+          method: mc ? "mc" : id === "internet" ? "icmp" : "tcp",
+          error: null,
+        };
         emit("nettest:measure", m);
         return m;
       }),
     );
   },
   onNetMeasure: (cb) => on("nettest:measure", cb),
+  onNetSample: (cb) => on("nettest:sample", cb),
   gamesList: async () => {
     await sleep(400);
     // ?playing : le dernier jeu joué est en cours (démo de la partie en cours)
@@ -1060,7 +1113,7 @@ const mockApi: Api = {
     shortcutTaken: false,
     passive: new URLSearchParams(location.search).has("passive"),
   }),
-  overlayLive: async () => ({ fps: Math.round(238 + Math.random() * 14), ping: Math.round(21 + Math.random() * 4) }),
+  overlayLive: async () => ({ fps: Math.round(238 + Math.random() * 14), ping: Math.round(21 + Math.random() * 4), pingEstimate: new URLSearchParams(location.search).has("estimate") }),
   overlayClose: async () => {},
   overlaySetPin: async (pin) => {
     mockBackground = { ...mockBackground, pin };

@@ -151,7 +151,10 @@ export function Overlay() {
         <span className="ov-pill-v rg-metric">{info?.fpsAvailable === false ? "—" : value(live.fps)}</span>
         <span className="ov-pill-u">FPS</span>
         <span className="ov-pill-sep" />
-        <span className="ov-pill-v rg-metric">{value(live.ping)}</span>
+        <span className="ov-pill-v rg-metric">
+          {live.ping != null && live.pingEstimate ? "≈" : ""}
+          {value(live.ping)}
+        </span>
         <span className="ov-pill-u">ms</span>
       </div>
     );
@@ -160,7 +163,14 @@ export function Overlay() {
 
   const tiles: { key: string; label: string; v: string; unit: string; hint?: string }[] = [
     { key: "fps", label: "FPS", v: info?.fpsAvailable === false ? "—" : value(live.fps), unit: "", hint: info?.fpsAvailable === false ? t("overlay.fpsOff") : undefined },
-    { key: "ping", label: t("overlay.ping"), v: value(live.ping), unit: "ms", hint: live.ping == null ? t("overlay.pingUdp") : undefined },
+    {
+      key: "ping",
+      label: t("overlay.ping"),
+      // serveur muet au ping (beaucoup de serveurs UDP) : mesuré au dernier routeur avant lui, d'où le ≈
+      v: `${live.ping != null && live.pingEstimate ? "≈" : ""}${value(live.ping)}`,
+      unit: "ms",
+      hint: live.ping == null ? t("overlay.pingUdp") : live.pingEstimate ? t("overlay.pingEstimate") : undefined,
+    },
     { key: "cpu", label: "CPU", v: value(stats?.cpu), unit: "%" },
     { key: "gpu", label: "GPU", v: value(stats?.gpu), unit: "%" },
     { key: "ram", label: "RAM", v: value(stats?.ram), unit: "%" },

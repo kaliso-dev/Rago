@@ -3,9 +3,11 @@ mod assets;
 mod background;
 mod backup;
 mod catalog;
+mod flows;
 mod fps;
 mod gameping;
 mod games;
+mod icmp;
 mod icon;
 mod history;
 mod instance;
@@ -307,8 +309,8 @@ async fn clean_ram(state: State<'_, AppState>, trim: bool) -> Result<memory::Cle
     tauri::async_runtime::spawn_blocking(move || memory::clean(trim, &keep)).await.map_err(|e| e.to_string())?
 }
 
-/// Test réseau (nettest.rs) : les serveurs demandés mesurés en même temps ; chacun est envoyé à l'interface
-/// (`nettest:measure`) dès qu'il a fini.
+/// Test réseau (nettest.rs) : les serveurs demandés mesurés en même temps ; chaque essai est envoyé à l'interface
+/// (`nettest:sample`), puis chaque serveur (`nettest:measure`) dès qu'il a fini.
 #[tauri::command]
 async fn net_test(app: AppHandle, ids: Vec<String>) -> Result<Vec<nettest::Measure>, String> {
     let ids: Vec<String> = ids.into_iter().filter(|id| nettest::TARGETS.iter().any(|(t, _, _)| t == id)).take(16).collect();
@@ -319,7 +321,9 @@ async fn net_test(app: AppHandle, ids: Vec<String>) -> Result<Vec<nettest::Measu
                 .map(|id| {
                     let app = app.clone();
                     s.spawn(move || {
-                        let m = nettest::measure(id);
+                        let m = nettest::measure(id, &|sample| {
+                            let _ = app.emit("nettest:sample", &sample);
+                        });
                         let _ = app.emit("nettest:measure", &m);
                         m
                     })
@@ -958,7 +962,7 @@ pub fn run() {
                     }
                 });
             }
-            let overlay = Arc::new(overlay::Overlay::new(resource_dir.clone(), Arc::clone(&library), Arc::clone(&background)));
+            let overlay = Arc::new(overlay::Overlay::new(resource_dir.clone(), data_dir.clone(), Arc::clone(&library), Arc::clone(&background)));
             overlay::watch(app.handle().clone(), Arc::clone(&overlay));
             app.manage(background);
             app.manage(overlay);
@@ -1115,6 +1119,12 @@ pub fn run() {
             account_set_photo,
             account_remove_photo,
         ])
-        .run(tauri::generate_context!())
-        .expect("erreur au lancement de Rago Optimizer");
+        .build(tauri::generate_context!())
+        .expect("erreur au lancement de Rago Optimizer")
+        .run(|_, event| {
+            // la session du journal réseau (ping des jeux) ne survit pas à l'app
+            if let tauri::RunEvent::Exit = event {
+                flows::shutdown();
+            }
+        });
 }
