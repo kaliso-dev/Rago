@@ -472,3 +472,13 @@ p{margin:0}
 .rate-quick a:hover svg{transform:scale(1.14)}
 @media (prefers-reduced-motion:reduce){.rate label svg,.rate-quick a svg{transition:none}.rate input:checked + label svg,.review-card .stars .on svg{animation:none}}
 .rate-word.missing{color:var(--rg-red-400)}
+
+/* Sign in with Google or Discord, and the sign-up code (2026-10-25) */
+.oauth{display:flex;flex-direction:column;gap:10px}
+.btn-oauth svg{width:18px;height:18px}
+.btn-oauth:hover svg:last-child{transform:none}
+.or{display:flex;align-items:center;gap:12px;margin:20px 0;color:var(--rg-text-3);font-size:var(--rg-fs-caption);letter-spacing:var(--rg-ls-caption)}
+.or::before,.or::after{content:"";flex:1;height:1px;background:var(--rg-line-2)}
+.field input.otp{font-size:22px;letter-spacing:.4em;text-align:center}
+.linkish{all:unset;cursor:pointer;color:var(--rg-text-1);text-decoration:underline;text-underline-offset:2px}
+.linkish:focus-visible{outline:2px solid var(--rg-red-a24);outline-offset:2px;border-radius:4px}

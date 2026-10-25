@@ -16,6 +16,7 @@ import { billingPortal, createCheckout, endTestLicenses, ensureAffiliatePromo, f
 import * as A from './affiliates.js';
 import { createInstaller } from './installer.js';
 import { createDiscord, DiscordError, discordSetupMissing } from './discord.js';
+import { createOAuth, OAuthError } from './oauth.js';
 import * as L from './licensing.js';
 import * as V from './views.js';
 import * as P from './profile.js';
@@ -65,9 +66,10 @@ function rateLimiter() {
 }
 
 /**
- * @param deps { cfg, db, keys, stripe, mailer, log, discord } (discord: the Pro role bot, null when not configured)
+ * @param deps { cfg, db, keys, stripe, mailer, log, discord, oauth } (discord: the Pro role bot, null when not configured;
+ *   oauth: the Google and Discord sign-in providers that have their keys)
  */
-export function createApp({ cfg, db, keys, stripe, mailer, log = console, fetchImpl = fetch, avatars = P.createAvatarStore(cfg, { fetchImpl, log }), discord = createDiscord(cfg, { db, fetchImpl, log, stripe }) }) {
+export function createApp({ cfg, db, keys, stripe, mailer, log = console, fetchImpl = fetch, avatars = P.createAvatarStore(cfg, { fetchImpl, log }), discord = createDiscord(cfg, { db, fetchImpl, log, stripe }), oauth = createOAuth(cfg, { fetchImpl }) }) {
   const app = new Hono();
   // The Discord role pass started by a webhook runs after the reply to Stripe; tests wait for it here.
   app.idle = () => discord?.idle() ?? Promise.resolve();
@@ -94,7 +96,7 @@ export function createApp({ cfg, db, keys, stripe, mailer, log = console, fetchI
 
   // Strict CSP on our own pages. The marketing site (SITE_DIR) uses inline styles and scripts,
   // so it gets the other security headers without a CSP.
-  const OWN = /^\/(assets|download|buy|checkout|claim|signup|login|logout|forgot|reset|account|affiliate|webhooks|api|healthz|acces|admin)(\/|$)/;
+  const OWN = /^\/(assets|download|buy|checkout|claim|signup|login|logout|forgot|reset|account|affiliate|webhooks|api|healthz|acces|admin|auth)(\/|$)/;
   const strictHeaders = secureHeaders({
     contentSecurityPolicy: {
       defaultSrc: ["'self'"],
@@ -489,6 +491,20 @@ export function createApp({ cfg, db, keys, stripe, mailer, log = console, fetchI
     if (await L.findUserByEmail(db, email)) return exists();
     const { affiliate, error } = await checkReferral(code, email, pending);
     if (error) return fail(error);
+    // The email gets a 6-digit code first, and the account waits for it (2026-10-25). Not for the email a purchase
+    // was paid with: its receipt and claim link already went there.
+    if (cfg.verifyEmail && pending?.email !== email) {
+      if (!allow(`signup-mail:${email}`, 5, 60 * 60 * 1000)) return fail(API_ERRORS.rate_limited[1], 429);
+      const started = await L.startSignup(db, email, password);
+      try {
+        await mailer.signupCode(email, started.code);
+      } catch (err) {
+        log.error('[mail] sign-up code failed', err);
+        return fail("We couldn't send a code to this email right now. Check the address, or try again in a moment.", 503);
+      }
+      setCookie(c, SIGNUP_COOKIE, signValue(started.id, cfg.sessionSecret), signupCookie);
+      return c.redirect(verifyUrl({ next, code }), 303);
+    }
     let user;
     try {
       user = await L.createUser(db, email, password);
@@ -496,6 +512,11 @@ export function createApp({ cfg, db, keys, stripe, mailer, log = console, fetchI
       if (err.code === '23505') return exists(); // the form was sent twice
       throw err;
     }
+    return welcomeNewUser(c, user, { next, affiliate });
+  });
+
+  /** A new account: signed in, the pending purchase attached, then the profile photo step (skippable). */
+  async function welcomeNewUser(c, user, { next, affiliate = null }) {
     await signIn(c, user);
     const n = await settleClaim(c, user);
     deleteCookie(c, 'rg_ref', { path: '/' });
@@ -503,6 +524,81 @@ export function createApp({ cfg, db, keys, stripe, mailer, log = console, fetchI
     // New account: offer a profile photo first (skippable), then where the player was going.
     const to = next && !n ? next : `/account${n ? `?n=${n}` : ''}`;
     return c.redirect(`/account/profile?welcome=1&to=${encodeURIComponent(to)}`, 303);
+  }
+
+  // ---------- sign-up step 2: the code sent by email (2026-10-25) ----------
+  // A signed cookie (limited to /signup) names the sign-up waiting for its code. `next` and the referral code typed
+  // after a purchase travel with the form, and are checked again.
+  const SIGNUP_COOKIE = 'rg_signup';
+  const signupCookie = { ...cookieBase, path: '/signup', maxAge: 24 * 3600 };
+  const verifyUrl = ({ next, code, n }) => {
+    const q = new URLSearchParams({ ...(n ? { n } : {}), ...(next ? { next } : {}), ...(code ? { code } : {}) }).toString();
+    return `/signup/verify${q ? `?${q}` : ''}`;
+  };
+  const waitingSignup = async (c) => {
+    const id = unsignValue(getCookie(c, SIGNUP_COOKIE), cfg.sessionSecret);
+    return id ? L.pendingSignup(db, id) : null;
+  };
+  const verifyForm = async (c, src) => {
+    const purchased = !!(await pendingClaim(c));
+    return { purchased, next: nextPath(src.next), code: purchased ? A.normalizeCode(src.code) : '' };
+  };
+  const backToSignup = (c, next) => c.redirect(`/signup${next ? `?next=${encodeURIComponent(next)}` : ''}`, 303);
+
+  app.get('/signup/verify', async (c) => {
+    const form = await verifyForm(c, c.req.query());
+    const row = await waitingSignup(c);
+    if (!row) return backToSignup(c, form.next);
+    const notice = c.req.query('n') === 'sent' ? 'New code sent. Only the latest code works.' : null;
+    return c.html(V.verifyPage(cfg, { email: row.email, notice, ...form }));
+  });
+
+  app.post('/signup/verify', async (c) => {
+    const body = await c.req.parseBody();
+    const form = await verifyForm(c, body);
+    const row = await waitingSignup(c);
+    if (!row) return backToSignup(c, form.next);
+    const show = (error, status) => c.html(V.verifyPage(cfg, { email: row.email, error, ...form }), status);
+    if (!allow(`signup-verify:${ip(c)}`, 30, 15 * 60 * 1000)) return show(API_ERRORS.rate_limited[1], 429);
+    const out = await L.checkSignupCode(db, row.id, body.otp);
+    if (out.error === 'wrong') return show(`That code isn't right. ${out.left} ${out.left === 1 ? 'try' : 'tries'} left.`, 400);
+    if (out.error === 'expired') return show('This code expired. Send a new one below.', 400);
+    if (out.error === 'locked') return show('Too many wrong codes. Send a new one below.', 429);
+    if (out.error) return backToSignup(c, form.next);
+    deleteCookie(c, SIGNUP_COOKIE, { path: signupCookie.path });
+    const email = out.signup.email;
+    const exists = () => c.html(V.signupPage(cfg, { email, purchased: form.purchased, next: form.next, code: form.code,
+      error: V.html`An account with this email already exists. <a href="/login${form.next ? `?next=${encodeURIComponent(form.next)}` : ''}">Sign in instead</a>.` }), 400);
+    if (await L.findUserByEmail(db, email)) return exists(); // made meanwhile, with Google for example
+    // The code was checked on the first step; if it filled up meanwhile, the account is made without it.
+    const { affiliate } = await checkReferral(form.code, email, (await pendingClaim(c)) || {});
+    let user;
+    try {
+      user = await L.createUser(db, email, null, { passwordHash: out.signup.password_hash });
+    } catch (err) {
+      if (err.code === '23505') return exists();
+      throw err;
+    }
+    await audit(db, 'user.email_verified', { userId: user.id });
+    return welcomeNewUser(c, user, { next: form.next, affiliate });
+  });
+
+  app.post('/signup/resend', async (c) => {
+    const form = await verifyForm(c, await c.req.parseBody());
+    const row = await waitingSignup(c);
+    if (!row) return backToSignup(c, form.next);
+    if (!allow(`signup-mail:${row.email}`, 5, 60 * 60 * 1000) || !allow(`signup-resend:${ip(c)}`, 10, 60 * 60 * 1000)) {
+      return c.html(V.verifyPage(cfg, { email: row.email, error: API_ERRORS.rate_limited[1], ...form }), 429);
+    }
+    const sent = await L.resendSignupCode(db, row.id);
+    if (!sent) return backToSignup(c, form.next);
+    try {
+      await mailer.signupCode(sent.email, sent.code);
+    } catch (err) {
+      log.error('[mail] sign-up code failed', err);
+      return c.html(V.verifyPage(cfg, { email: row.email, error: "We couldn't send a new code right now. Try again in a moment.", ...form }), 503);
+    }
+    return c.redirect(verifyUrl({ ...form, n: 'sent' }), 303);
   });
 
   app.get('/login', async (c) => {
@@ -510,7 +606,8 @@ export function createApp({ cfg, db, keys, stripe, mailer, log = console, fetchI
     if (await currentUser(c)) return c.redirect(next || '/account', 303);
     const n = c.req.query('n');
     const pending = await pendingClaim(c);
-    return c.html(V.loginPage(cfg, { purchased: !!pending, email: pending?.email || '', next, code: pending ? await purchaseCode(c, pending) : '', notice: { reset: 'Password saved. Sign in with your new password.', out: "You're signed out." }[n] || null }));
+    return c.html(V.loginPage(cfg, { purchased: !!pending, email: pending?.email || '', next, code: pending ? await purchaseCode(c, pending) : '',
+      notice: { reset: 'Password saved. Sign in with your new password.', out: "You're signed out." }[n] || null, error: Object.hasOwn(OAUTH_ERRORS, n) ? OAUTH_ERRORS[n] : null }));
   });
 
   app.post('/login', async (c) => {
@@ -574,6 +671,68 @@ export function createApp({ cfg, db, keys, stripe, mailer, log = console, fetchI
     return c.redirect('/login?n=reset', 303);
   });
 
+  // ---------- sign in with Google or Discord (2026-10-25) ----------
+  // The state and the PKCE verifier stay in a signed cookie limited to /auth for 10 minutes. The account is the one
+  // linked to that Google or Discord account, else the one with the same (checked) email, else a new one.
+  const OAUTH_COOKIE = 'rg_oauth';
+  const oauthCookie = { ...cookieBase, path: '/auth' };
+  const OAUTH_ERRORS = {
+    oauthcancel: 'Sign-in canceled. Try again, or use your email and password.',
+    oauthfail: "That sign-in didn't go through. Try again, or use your email and password.",
+    oauthlimit: API_ERRORS.rate_limited[1],
+    googleemail: "Your Google account didn't give us a verified email. Sign up with your email instead.",
+    discordemail: 'Your Discord account has no verified email. Verify it in Discord (User Settings > My Account), or sign up with your email.',
+    googleother: 'This Rago account already signs in with another Google account. Use that one, or your email and password.',
+    discordother: 'This Rago account already signs in with another Discord account. Use that one, or your email and password.',
+  };
+  const providerOf = (c) => (Object.hasOwn(oauth, c.req.param('provider')) ? oauth[c.req.param('provider')] : null);
+
+  app.get('/auth/:provider', (c) => {
+    const p = providerOf(c);
+    if (!p) return c.notFound();
+    const state = randomToken(16);
+    const verifier = randomToken(32);
+    const next = nextPath(c.req.query('next')) || '';
+    setCookie(c, OAUTH_COOKIE, signValue(`${p.id}.${state}.${verifier}.${next}`, cfg.sessionSecret), { ...oauthCookie, maxAge: 10 * 60 });
+    return c.redirect(p.authorizeUrl(state, verifier), 302);
+  });
+
+  app.get('/auth/:provider/callback', async (c) => {
+    const p = providerOf(c);
+    if (!p) return c.notFound();
+    const saved = unsignValue(getCookie(c, OAUTH_COOKIE), cfg.sessionSecret);
+    deleteCookie(c, OAUTH_COOKIE, { path: oauthCookie.path });
+    const [savedId, savedState, verifier, savedNext] = (saved || '').split('.');
+    const next = nextPath(savedNext);
+    const back = (n) => c.redirect(`/login?n=${n}${next ? `&next=${encodeURIComponent(next)}` : ''}`, 303);
+    const { code, state, error } = c.req.query();
+    if (error) return back('oauthcancel'); // Cancel on Google's or Discord's page
+    if (!code || !state || !saved || savedId !== p.id || !sameHash(savedState, state)) return back('oauthfail');
+    if (!allow(`oauth:${ip(c)}`, 30, 60 * 60 * 1000)) return back('oauthlimit');
+    let profile;
+    try {
+      profile = await p.profile(String(code), verifier);
+    } catch (err) {
+      if (!(err instanceof OAuthError)) throw err;
+      log.error(`[oauth] ${p.id} sign-in failed:`, err.message);
+      return back('oauthfail');
+    }
+    let found;
+    try {
+      found = await L.userForIdentity(db, p.id, profile);
+    } catch (err) {
+      if (!(err instanceof L.SignInError)) throw err;
+      return back(`${p.id}${err.code === 'unverified_email' ? 'email' : 'other'}`);
+    }
+    const { user, created } = found;
+    if (created) return welcomeNewUser(c, user, { next });
+    await signIn(c, user);
+    const lic = await pendingClaim(c);
+    const n = lic ? await claimSignedIn(c, user, lic) : null;
+    if (next && !n) return c.redirect(next, 303);
+    return c.redirect(dashWith(n), 303);
+  });
+
   // ---------- dashboard ----------
   const NOTICES = {
     claimed: ['notice', 'License added to your account. Download Rago Optimizer below.'],
@@ -585,6 +744,7 @@ export function createApp({ cfg, db, keys, stripe, mailer, log = console, fetchI
     upgraded: ['notice', 'Premium for life is on your account. Your subscription was canceled, so you won’t be charged again.'],
     upgradefail: ['error', V.html`Premium for life is on your account, but your subscription couldn’t be canceled yet. We’ll keep trying; if it renews, ${V.supportLink(cfg, 'contact support on Discord')} for a refund.`],
     password: ['notice', 'Password changed. Other browsers were signed out.'],
+    passwordset: ['notice', 'Password saved. Use it with your email to sign in to Rago Optimizer for Windows.'],
     nofile: ['error', V.html`The Windows app can't be downloaded right now. Try again a bit later, or ${V.supportLink(cfg, 'ask on Discord')} and we'll tell you when it's back.`],
     nobilling: ['error', V.html`Billing isn't available right now. Try again in a moment, or ${V.supportLink(cfg, 'contact support on Discord')}.`],
     discord: ['notice', 'Discord linked.'],
@@ -612,7 +772,7 @@ export function createApp({ cfg, db, keys, stripe, mailer, log = console, fetchI
     const discordRewards = discord?.rewards.length ? await discord.rewardsOf(user.id) : [];
     const [kind, text] = NOTICES[c.req.query('n')] || [];
     return c.html(V.dashboardPage(cfg, {
-      user, license, device, discordLink, discordRewards, inviteRewards: discord?.rewards || [],
+      user, license, device, discordLink, discordRewards, inviteRewards: discord?.rewards || [], noPassword: !L.hasPassword(user),
       notice: kind === 'notice' ? text : null, error: kind === 'error' ? text : null,
       ...(license ? resetWindow(license, device) : {}),
       affiliate: await A.affiliateSummary(db, cfg, user.id),
@@ -623,18 +783,20 @@ export function createApp({ cfg, db, keys, stripe, mailer, log = console, fetchI
     }));
   });
 
-  app.get('/account/password', requireUser, (c) => c.html(V.passwordPage(cfg, { user: c.get('user') })));
+  // An account made with Google or Discord has no password yet: it sets one here without a current password.
+  app.get('/account/password', requireUser, (c) => c.html(V.passwordPage(cfg, { user: c.get('user'), hasPassword: L.hasPassword(c.get('user')) })));
   app.post('/account/password', requireUser, async (c) => {
     const user = c.get('user');
     const body = await c.req.parseBody();
     const password = String(body.password || '');
-    const fail = (error, status = 400) => c.html(V.passwordPage(cfg, { user, error }), status);
+    const had = L.hasPassword(user);
+    const fail = (error, status = 400) => c.html(V.passwordPage(cfg, { user, error, hasPassword: had }), status);
     if (!allow(`password:${user.id}`, 10, 15 * 60 * 1000)) return fail(API_ERRORS.rate_limited[1], 429);
-    if (!(await verifyPassword(String(body.current || ''), user.password_hash))) return fail('Your current password is wrong.', 401);
-    if (password.length < 8 || password.length > 200) return fail('Use at least 8 characters for your new password.');
+    if (had && !(await verifyPassword(String(body.current || ''), user.password_hash))) return fail('Your current password is wrong.', 401);
+    if (password.length < 8 || password.length > 200) return fail(`Use at least 8 characters for your ${had ? 'new ' : ''}password.`);
     await L.setPassword(db, user.id, password); // signs out every session, this one included
     await signIn(c, user);
-    return c.redirect('/account?n=password', 303);
+    return c.redirect(`/account?n=${had ? 'password' : 'passwordset'}`, 303);
   });
 
   // ---------- public profile: photo and name ----------

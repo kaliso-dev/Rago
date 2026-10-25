@@ -43,7 +43,7 @@ th{color:var(--t1);font-weight:560}
 <div class="wrap">
 <div class="top"><a class="logo" href="./"><img src="rago-wordmark.svg" alt="Rago Optimizer"></a><a class="back" href="./">Back to the site</a></div>
 <h1>Privacy Policy</h1>
-<p class="upd">Last updated: October 16, 2026</p>
+<p class="upd">Last updated: October 25, 2026</p>
 
 <h2>Who is responsible</h2>
 <p>The Rago Optimizer team, in France, is responsible for your data. Contact: <a href="mailto:support@rago-optimizer.com">support@rago-optimizer.com</a>.</p>
@@ -57,6 +57,8 @@ th{color:var(--t1);font-weight:560}
 <tr><td>Affiliate code, which accounts used it, and hashed identifiers of the buyer's first PC</td><td>Running the affiliate program and blocking self-referrals</td></tr>
 <tr><td>Your public name, profile photo (resized to 256 × 256 pixels, with its metadata removed) and your review: rating, comment, app version and dates</td><td>Showing your review on our site and your profile in the app. Your public name, photo, rating and comment are public.</td></tr>
 <tr><td>If you link your Discord account: its Discord user ID and username</td><td>Adding you to our Discord server and giving you the Premium role while your Premium is active, then removing it when Premium ends. We don't keep your Discord sign-in: it's revoked right after linking. You can unlink anytime from your account page.</td></tr>
+<tr><td>If you sign in with Google or Discord: that account's ID and the email it gives us</td><td>Signing you in to the same Rago account each time. We only read who you are; we don't keep your Google or Discord sign-in.</td></tr>
+<tr><td>While you sign up with your email: the email, your password (hashed) and a 6-digit code (hashed), for up to a day</td><td>Checking the email is yours before the account is created</td></tr>
 <tr><td>A log of license events (purchase, activation, refund, blocked activation with IP address)</td><td>Security and support</td></tr>
 <tr><td>IP address, kept briefly in memory</td><td>Limiting sign-in and download attempts</td></tr>
 </table></div>
@@ -70,6 +72,8 @@ th{color:var(--t1);font-weight:560}
 <li><strong>rg_session</strong>: keeps you signed in to your account. Necessary.</li>
 <li><strong>rg_claim</strong>: links a purchase to the account you create right after it, for 2 days. Necessary.</li>
 <li><strong>rg_discord</strong>: checks that the Discord account coming back from Discord's authorization page is linked to your account, for 10 minutes. Only set when you link Discord. Necessary.</li>
+<li><strong>rg_oauth</strong>: checks that the Google or Discord sign-in coming back is the one you started, for 10 minutes. Only set when you use it. Necessary.</li>
+<li><strong>rg_signup</strong>: remembers the sign-up waiting for the code we emailed you, for 1 day. Necessary.</li>
 <li><strong>rago_preview</strong>: lets our team open the site before its launch. Only set for team members. Necessary.</li>
 <li><strong>rg_ref</strong> (cookie on the account server) and <strong>rago_ref</strong> (browser storage on this site): remember an affiliate code from a share link for 30 days.</li>
 <li><strong>rago_promo_seen</strong> and <strong>rago_promo_claimed</strong> (browser storage on this site): remember that the welcome offer was shown, so it isn't shown again for 30 days, and the discount code you claimed, so it is applied at checkout. Clearing your browser data removes them.</li>
@@ -82,9 +86,10 @@ th{color:var(--t1);font-weight:560}
 <li><strong>Supabase</strong>: database, download storage and profile photos</li>
 <li><strong>Railway</strong>: account and license server</li>
 <li><strong>Netlify</strong>: website hosting</li>
-<li><strong>Resend</strong>: account emails (purchase confirmation, password reset)</li>
+<li><strong>Resend</strong>: account emails (sign-up code, purchase confirmation, password reset)</li>
 <li><strong>OVHcloud</strong>: our domain name and the support mailbox</li>
-<li><strong>Discord</strong>: our community server, and the Premium role if you link your Discord account</li>
+<li><strong>Discord</strong>: our community server, the Premium role if you link your Discord account, and sign-in with Discord if you use it</li>
+<li><strong>Google</strong>: sign-in with Google, if you use it</li>
 </ul>
 <p>Some of these providers are in the United States. Transfers rely on the European Commission's standard contractual clauses or an equivalent safeguard.</p>
 

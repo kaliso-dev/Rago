@@ -122,6 +122,14 @@ export function loadConfig(env = process.env) {
     discordMvpRoleId: (env.DISCORD_MVP_ROLE_ID || '').trim(),
     // "2 boosts" reward: a role staff (or a boost bot) give; one boost is seen by the bot itself.
     discordBoost2RoleId: (env.DISCORD_BOOST2_ROLE_ID || '').trim(),
+
+    // Sign in with Google (2026-10-25): an OAuth client of type "Web application" in Google Cloud, with the
+    // redirect URL <PUBLIC_URL>/auth/google/callback. Without both, the Google button doesn't show.
+    // Sign in with Discord uses DISCORD_CLIENT_ID and DISCORD_CLIENT_SECRET above (redirect <PUBLIC_URL>/auth/discord/callback).
+    googleClientId: (env.GOOGLE_CLIENT_ID || '').trim(),
+    googleClientSecret: (env.GOOGLE_CLIENT_SECRET || '').trim(),
+    // The Discord button needs the second redirect URL in the Developer Portal first: it only shows with DISCORD_LOGIN=1.
+    discordLogin: env.DISCORD_LOGIN === '1',
   };
   cfg.subscriptions = !!(cfg.stripePriceMonthly || cfg.stripePriceYearly);
   const DISCORD_VARS = { DISCORD_CLIENT_ID: 'discordClientId', DISCORD_CLIENT_SECRET: 'discordClientSecret', DISCORD_BOT_TOKEN: 'discordBotToken', DISCORD_GUILD_ID: 'discordGuildId', DISCORD_ROLE_ID: 'discordRoleId' };
@@ -197,6 +205,10 @@ export function loadConfig(env = process.env) {
 
   // Emails really go out: pages may promise one.
   cfg.mailEnabled = !!cfg.resendApiKey && !exampleFrom;
+  // Sign-up by email waits for the 6-digit code sent to the address (2026-10-25). On whenever emails go out;
+  // EMAIL_VERIFICATION=1 also turns it on without Resend (npm run local prints the code), =0 turns it off.
+  cfg.verifyEmail = env.EMAIL_VERIFICATION === '0' ? false : cfg.mailEnabled || env.EMAIL_VERIFICATION === '1';
+  if (!!cfg.googleClientId !== !!cfg.googleClientSecret) cfg.warnings.push(`${cfg.googleClientId ? 'GOOGLE_CLIENT_SECRET' : 'GOOGLE_CLIENT_ID'} not set: the "Continue with Google" button stays hidden until both are in.`);
 
   // LICENSE_SIGNING_KEY and SESSION_SECRET are optional: when absent, the server generates them once
   // and keeps them in the database (see ensureKeys in db.js).

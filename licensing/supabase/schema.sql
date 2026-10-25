@@ -204,6 +204,32 @@ CREATE TABLE IF NOT EXISTS discord_rewards (
   UNIQUE (user_id, kind)
 );
 
+-- Email check at sign-up (2026-10-25): the account is only created once the player types the 6-digit code sent to
+-- the address. Until then the sign-up waits here (password already hashed). Hashed code, 15 minutes, 5 tries.
+CREATE TABLE IF NOT EXISTS signup_codes (
+  id TEXT PRIMARY KEY,
+  email TEXT NOT NULL,                            -- lowercase
+  password_hash TEXT NOT NULL,
+  code_hash TEXT NOT NULL,
+  attempts INTEGER NOT NULL DEFAULT 0,
+  sent_at BIGINT NOT NULL,
+  expires_at BIGINT NOT NULL,
+  created_at BIGINT NOT NULL
+);
+CREATE INDEX IF NOT EXISTS signup_codes_email ON signup_codes(email);
+
+-- Sign in with Google or Discord (2026-10-25). One row per outside account; a Rago account can have both.
+-- An account created this way has no password until the player sets one (needed for the Windows app).
+CREATE TABLE IF NOT EXISTS oauth_identities (
+  provider TEXT NOT NULL,                         -- google | discord
+  subject TEXT NOT NULL,                          -- the provider's account id
+  user_id TEXT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  email TEXT,                                     -- as the provider gave it, for support
+  created_at BIGINT NOT NULL,
+  PRIMARY KEY (provider, subject),
+  UNIQUE (user_id, provider)
+);
+
 ALTER TABLE users ENABLE ROW LEVEL SECURITY;
 ALTER TABLE web_sessions ENABLE ROW LEVEL SECURITY;
 ALTER TABLE licenses ENABLE ROW LEVEL SECURITY;
@@ -220,3 +246,5 @@ ALTER TABLE site_settings ENABLE ROW LEVEL SECURITY;
 ALTER TABLE api_sessions ENABLE ROW LEVEL SECURITY;
 ALTER TABLE discord_links ENABLE ROW LEVEL SECURITY;
 ALTER TABLE discord_rewards ENABLE ROW LEVEL SECURITY;
+ALTER TABLE signup_codes ENABLE ROW LEVEL SECURITY;
+ALTER TABLE oauth_identities ENABLE ROW LEVEL SECURITY;

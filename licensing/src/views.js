@@ -122,6 +122,24 @@ function split({ step, aside, form }) {
 
 const qs = (next) => (next ? `?next=${encodeURIComponent(next)}` : '');
 
+// Sign in with Google or Discord (2026-10-25): shown when the provider's two keys are set (same test as oauth.js).
+const BRAND = {
+  google: html`<svg viewBox="0 0 24 24" aria-hidden="true"><path fill="#4285F4" d="M23.5 12.3c0-.8-.1-1.6-.2-2.3H12v4.5h6.5a5.6 5.6 0 0 1-2.4 3.6v3h3.9c2.2-2.1 3.5-5.1 3.5-8.8z"/><path fill="#34A853" d="M12 24c3.2 0 6-1.1 7.9-2.9l-3.9-3c-1 .7-2.4 1.2-4 1.2-3.1 0-5.7-2.1-6.6-4.9h-4v3.1A12 12 0 0 0 12 24z"/><path fill="#FBBC05" d="M5.4 14.4a7.2 7.2 0 0 1 0-4.7V6.6h-4a12 12 0 0 0 0 10.8z"/><path fill="#EA4335" d="M12 4.8c1.8 0 3.3.6 4.6 1.8l3.4-3.4A12 12 0 0 0 1.4 6.6l4 3.1C6.3 6.9 8.9 4.8 12 4.8z"/></svg>`,
+  discord: html`<svg viewBox="0 0 24 24" aria-hidden="true"><path fill="#5865F2" d="M20.3 4.4A19.8 19.8 0 0 0 15.4 3l-.6 1.3a18.4 18.4 0 0 0-5.5 0L8.6 3a19.7 19.7 0 0 0-4.9 1.5C.6 9.1-.3 13.6.1 18.1a19.9 19.9 0 0 0 6 3l1.3-2.1c-.7-.3-1.4-.6-2-1l.5-.4a14.2 14.2 0 0 0 12.2 0l.5.4c-.6.4-1.3.7-2 1l1.3 2.1a19.8 19.8 0 0 0 6-3c.5-5.2-.9-9.7-3.6-13.7zM8 15.3c-1.2 0-2.2-1.1-2.2-2.4s1-2.4 2.2-2.4 2.2 1.1 2.2 2.4-1 2.4-2.2 2.4zm8 0c-1.2 0-2.2-1.1-2.2-2.4s1-2.4 2.2-2.4 2.2 1.1 2.2 2.4-1 2.4-2.2 2.4z"/></svg>`,
+};
+export const signInProviders = (cfg) => [
+  ...(cfg.googleClientId && cfg.googleClientSecret ? [{ id: 'google', name: 'Google' }] : []),
+  ...(cfg.discordLogin && cfg.discordClientId && cfg.discordClientSecret ? [{ id: 'discord', name: 'Discord' }] : []),
+];
+function oauthButtons(cfg, next) {
+  const list = signInProviders(cfg);
+  if (!list.length) return '';
+  return html`<div class="oauth">
+      ${list.map((p) => html`<a class="btn btn-ghost btn-block btn-oauth" href="/auth/${p.id}${qs(next)}">${BRAND[p.id]}<span>Continue with ${p.name}</span></a>`)}
+    </div>
+    <p class="or" role="separator"><span>or with your email</span></p>`;
+}
+
 export function signupPage(cfg, { email = '', error, purchased = false, claimEmail, next, code = '' } = {}) {
   const aside = purchased
     ? html`<p class="overline rise">Rago Optimizer Premium</p>
@@ -137,6 +155,7 @@ export function signupPage(cfg, { email = '', error, purchased = false, claimEma
   const form = html`
     <h2 class="h2">Create account</h2>
     ${alertBox(error)}
+    ${oauthButtons(cfg, next)}
     <form method="post" action="/signup" class="form" data-busy="Creating account…">
       ${field({ label: 'Email', name: 'email', type: 'email', value: email || claimEmail || '', autocomplete: 'email' })}
       ${field({ label: 'Password', name: 'password', type: 'password', autocomplete: 'new-password', hint: 'At least 8 characters.', attrs: 'minlength="8"' })}
@@ -146,6 +165,28 @@ export function signupPage(cfg, { email = '', error, purchased = false, claimEma
     </form>
     <p class="muted small">Already have an account? <a href="/login${qs(next)}">Sign in</a>${purchased ? ' and your license is added to it.' : '.'}</p>`;
   return page({ title: 'Create account', cfg, buy: !purchased, bodyClass: purchased ? 'is-purchase' : '', body: split({ step: purchased ? 1 : null, aside, form }) });
+}
+
+/** Sign-up step 2 (2026-10-25): the 6-digit code mailed to the address. The account is created once it matches. */
+export function verifyPage(cfg, { email, error, notice, purchased = false, next, code = '' } = {}) {
+  const aside = html`<p class="overline rise">Rago Optimizer account</p>
+    <h1 class="display rise d1">Check your inbox.</h1>
+    <p class="lede rise d2">We sent a 6-digit code to <strong>${email}</strong>. Type it here to confirm it's your email and create your account.</p>`;
+  const keep = html`${hidden('next', next)}${hidden('code', code)}`;
+  const form = html`
+    <h2 class="h2">Confirm your email</h2>
+    ${alertBox(error)}${alertBox(notice, 'ok')}
+    <form method="post" action="/signup/verify" class="form" data-busy="Checking…">
+      ${field({ label: 'Code', name: 'otp', autocomplete: 'one-time-code', hint: 'It works for 15 minutes. Nothing? Check your spam folder.',
+        attrs: 'inputmode="numeric" pattern="[0-9 ]{6,7}" maxlength="7" spellcheck="false" class="mono otp" autofocus' })}
+      ${keep}
+      <button class="btn btn-primary btn-block" type="submit">Create account</button>
+    </form>
+    <form method="post" action="/signup/resend" class="inline" data-busy="Sending…">
+      ${keep}
+      <p class="muted small">No code? <button class="linkish" type="submit">Send a new one</button> · Wrong email? <a href="/signup${qs(next)}">Change it</a></p>
+    </form>`;
+  return page({ title: 'Confirm your email', cfg, buy: !purchased, bodyClass: purchased ? 'is-purchase' : '', body: split({ step: purchased ? 1 : null, aside, form }) });
 }
 
 export function loginPage(cfg, { email = '', error, notice, purchased = false, next, code = '' } = {}) {
@@ -163,6 +204,7 @@ export function loginPage(cfg, { email = '', error, notice, purchased = false, n
   const form = html`
     <h2 class="h2">Sign in</h2>
     ${alertBox(error)}${alertBox(notice, 'ok')}
+    ${oauthButtons(cfg, next)}
     <form method="post" action="/login" class="form" data-busy="Signing in…">
       ${field({ label: 'Email', name: 'email', type: 'email', value: email, autocomplete: 'email' })}
       ${field({ label: 'Password', name: 'password', type: 'password', autocomplete: 'current-password' })}
@@ -210,18 +252,22 @@ export function resetPage(cfg, { token, error, email = '' } = {}) {
   return page({ title: 'New password', cfg, body: split({ aside, form }) });
 }
 
-export function passwordPage(cfg, { user, error } = {}) {
-  const aside = html`<p class="overline rise">Your account</p><h1 class="display rise d1">Change your password.</h1>
-    <p class="lede rise d2">You'll be signed out everywhere else. Rago Optimizer stays activated on your PC.</p>`;
-  const form = html`<h2 class="h2">New password</h2>${alertBox(error)}
+/** hasPassword false: an account made with Google or Discord sets its first password (the Windows app asks for one). */
+export function passwordPage(cfg, { user, error, hasPassword = true } = {}) {
+  const aside = hasPassword
+    ? html`<p class="overline rise">Your account</p><h1 class="display rise d1">Change your password.</h1>
+    <p class="lede rise d2">You'll be signed out everywhere else. Rago Optimizer stays activated on your PC.</p>`
+    : html`<p class="overline rise">Your account</p><h1 class="display rise d1">Set a password.</h1>
+    <p class="lede rise d2">Rago Optimizer for Windows signs in with your email and a password. On the website you can keep using Google or Discord.</p>`;
+  const form = html`<h2 class="h2">${hasPassword ? 'New password' : 'Your password'}</h2>${alertBox(error)}
     <form method="post" action="/account/password" class="form" data-busy="Saving…">
       <input type="email" name="email" value="${user.email}" autocomplete="username" hidden>
-      ${field({ label: 'Current password', name: 'current', type: 'password', autocomplete: 'current-password' })}
-      ${field({ label: 'New password', name: 'password', type: 'password', autocomplete: 'new-password', hint: 'At least 8 characters.', attrs: 'minlength="8"' })}
+      ${hasPassword ? field({ label: 'Current password', name: 'current', type: 'password', autocomplete: 'current-password' }) : ''}
+      ${field({ label: hasPassword ? 'New password' : 'Password', name: 'password', type: 'password', autocomplete: 'new-password', hint: 'At least 8 characters.', attrs: 'minlength="8"' })}
       <button class="btn btn-primary btn-block" type="submit">Save password</button>
     </form>
-    <p class="muted small"><a href="/account">Back to your account</a> · <a href="/forgot">Forgot it?</a></p>`;
-  return page({ title: 'Change password', cfg, user, nav: 'account', body: split({ aside, form }) });
+    <p class="muted small"><a href="/account">Back to your account</a>${hasPassword ? html` · <a href="/forgot">Forgot it?</a>` : ''}</p>`;
+  return page({ title: hasPassword ? 'Change password' : 'Set a password', cfg, user, nav: 'account', body: split({ aside, form }) });
 }
 
 /** Information page. Always offers a way out: the main action if any, back to the site, Discord. */
@@ -288,7 +334,7 @@ function affiliateLine(a) {
   return next;
 }
 
-export function dashboardPage(cfg, { user, license, device, notice, error, canReset, nextResetAt, affiliate, discordLink, discordRewards = [], inviteRewards = [], review = null, lifetime = false }) {
+export function dashboardPage(cfg, { user, license, device, notice, error, canReset, nextResetAt, affiliate, discordLink, discordRewards = [], inviteRewards = [], review = null, lifetime = false, noPassword = false }) {
   const active = license?.status === 'active';
   const reason = license?.status_reason;
   const ended = !active && reason === 'subscription_ended';
@@ -575,8 +621,9 @@ export function dashboardPage(cfg, { user, license, device, notice, error, canRe
       ${stepIndex == null ? '' : steps(stepIndex)}
     </div>
     ${alertBox(error)}${alertBox(notice, 'ok')}
+    ${noPassword ? alertBox(html`Rago Optimizer for Windows signs in with your email and a password. <a href="/account/password">Set a password</a> to use it with this account.`, 'ok') : ''}
     <div class="dash-stack">${cards}</div>
-    <p class="dash-foot small muted rise d5">Signed in as ${user.email} · <a href="/account/profile">Profile photo and name</a> · <a href="/account/password">Change password</a></p>
+    <p class="dash-foot small muted rise d5">Signed in as ${user.email} · <a href="/account/profile">Profile photo and name</a> · <a href="/account/password">${noPassword ? 'Set a password' : 'Change password'}</a></p>
   </main>`;
   return page({ title: 'Your account', cfg, user, body, bodyClass: 'is-dash', nav: 'account', buy: !active });
 }
