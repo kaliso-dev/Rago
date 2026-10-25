@@ -2816,7 +2816,7 @@ function fakeProviders(people) {
   };
   return { fetchImpl, calls };
 }
-const OAUTH_ENV = { GOOGLE_CLIENT_ID: 'gid.apps.googleusercontent.com', GOOGLE_CLIENT_SECRET: 'gsecret', DISCORD_CLIENT_ID: '123456789012345678', DISCORD_CLIENT_SECRET: 'dsecret' };
+const OAUTH_ENV = { GOOGLE_CLIENT_ID: 'gid.apps.googleusercontent.com', GOOGLE_CLIENT_SECRET: 'gsecret', DISCORD_CLIENT_ID: '123456789012345678', DISCORD_CLIENT_SECRET: 'dsecret', DISCORD_LOGIN: '1' };
 
 /** Clicks "Continue with …" and comes back from the provider with `code`. */
 async function oauthSignIn(t, provider, code, { next, tamper = false } = {}) {
@@ -2839,6 +2839,10 @@ test('Google and Discord buttons show only with their keys', async () => {
   assert.match(page, /href="\/auth\/google">.*Continue with Google/s);
   assert.match(page, /href="\/auth\/discord">.*Continue with Discord/s);
   assert.equal((await on.browse('/auth/constructor')).status, 404);
+  // Discord waits for DISCORD_LOGIN=1 (its redirect URL added in the Developer Portal).
+  const noDiscord = await setup({ ...OAUTH_ENV, DISCORD_LOGIN: '' });
+  assert.doesNotMatch(await (await noDiscord.browse('/login')).text(), /Continue with Discord/);
+  assert.equal((await noDiscord.browse('/auth/discord')).status, 404);
 });
 
 test('Continue with Google: a new account without a password, then the same account every time', async () => {

@@ -23,7 +23,7 @@ const PROVIDERS = {
     revoke: 'https://discord.com/api/v10/oauth2/token/revoke',
     scope: 'identify email',
     extra: {},
-    keys: (cfg) => [cfg.discordClientId, cfg.discordClientSecret],
+    keys: (cfg) => (cfg.discordLogin ? [cfg.discordClientId, cfg.discordClientSecret] : []),
     profile: (me) => ({ subject: me.id, email: me.email, verified: me.verified === true, name: me.global_name || me.username || null }),
   },
 };

@@ -129,7 +129,7 @@ const BRAND = {
 };
 export const signInProviders = (cfg) => [
   ...(cfg.googleClientId && cfg.googleClientSecret ? [{ id: 'google', name: 'Google' }] : []),
-  ...(cfg.discordClientId && cfg.discordClientSecret ? [{ id: 'discord', name: 'Discord' }] : []),
+  ...(cfg.discordLogin && cfg.discordClientId && cfg.discordClientSecret ? [{ id: 'discord', name: 'Discord' }] : []),
 ];
 function oauthButtons(cfg, next) {
   const list = signInProviders(cfg);

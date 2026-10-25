@@ -299,7 +299,7 @@ Depuis le 25 octobre 2026, les pages **Create account** et **Sign in** proposent
 - Un compte créé par Google ou Discord n'a pas de mot de passe. L'app Windows se connecte avec email + mot de passe : la page compte affiche « Set a password » pour en choisir un (sans ancien mot de passe à taper).
 - **Inscription par email** : le compte n'est créé qu'après le code à 6 chiffres envoyé à l'adresse (valable 15 minutes, 5 essais, bouton « Send a new one »). Un email mal tapé ne crée donc aucun compte. Pas de code pour l'email avec lequel l'achat vient d'être payé (le reçu Stripe y est déjà parti). Le code part dès que Resend est branché ; `EMAIL_VERIFICATION=0` le coupe. En local (`npm run local`), le code s'affiche dans le Terminal.
 
-**Discord** (2 minutes, avec l'application du rôle Pro) : Developer Portal → ton application → **OAuth2** → **Redirects** → **Add Redirect** : `https://account.rago-optimizer.com/auth/discord/callback` (en plus de celle en `/account/discord/callback`), **Save Changes**. `DISCORD_CLIENT_ID` et `DISCORD_CLIENT_SECRET` suffisent pour le bouton ; le bot n'est pas nécessaire.
+**Discord** (2 minutes, avec l'application du rôle Pro) : Developer Portal → ton application → **OAuth2** → **Redirects** → **Add Redirect** : `https://account.rago-optimizer.com/auth/discord/callback` (en plus de celle en `/account/discord/callback`), **Save Changes**. Puis Railway → Variables : `DISCORD_LOGIN` = `1`. Le bouton n'apparaît qu'avec elle (sans l'adresse de retour, la connexion échouerait). `DISCORD_CLIENT_ID` et `DISCORD_CLIENT_SECRET` (déjà là pour le rôle Pro) suffisent ; le bot n'est pas nécessaire.
 
 **Google** (10 minutes) :
 
@@ -365,6 +365,7 @@ Le joueur (gratuit ou Premium) lie son Discord depuis sa page compte : la carte 
 | `SCRIPTS_SECRET` | Une valeur aléatoire que tu génères une fois (étape 8), identique au secret GitHub `RAGO_SCRIPTS_SECRET`. Ne la change jamais |
 | `DISCORD_CLIENT_ID`, `DISCORD_CLIENT_SECRET`, `DISCORD_BOT_TOKEN`, `DISCORD_GUILD_ID`, `DISCORD_ROLE_ID` | Discord Developer Portal et ton serveur (« Le rôle Pro sur Discord »). Facultatives : sans elles, le rôle se donne à la main |
 | `GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET` | Google Cloud → Credentials (« Connexion Google et Discord »). Facultatives : sans elles, le bouton Google ne s'affiche pas |
+| `DISCORD_LOGIN` | `1` une fois l'adresse `/auth/discord/callback` ajoutée dans le Developer Portal : affiche « Continue with Discord ». Vide : bouton caché |
 | `EMAIL_VERIFICATION` | Facultative. Vide : le code à 6 chiffres est demandé à l'inscription dès que Resend est branché. `0` : coupé |
 | `DISCORD_VIP_ROLE_ID`, `DISCORD_MVP_ROLE_ID`, `DISCORD_BOOST2_ROLE_ID` | Clic droit sur les rôles VIP, MVP et 2 boosts → Copier l'identifiant (« Les récompenses Discord »). Facultatives : sans elles, pas de récompense pour ce palier |
 | `ADMIN_KEY` | Une clé d'au moins 16 lettres et chiffres que tu choisis : elle ouvre `/admin`, où se règle le pop-up du site (« Le pop-up du site »). Sans elle, `/admin` n'existe pas |

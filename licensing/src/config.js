@@ -128,6 +128,8 @@ export function loadConfig(env = process.env) {
     // Sign in with Discord uses DISCORD_CLIENT_ID and DISCORD_CLIENT_SECRET above (redirect <PUBLIC_URL>/auth/discord/callback).
     googleClientId: (env.GOOGLE_CLIENT_ID || '').trim(),
     googleClientSecret: (env.GOOGLE_CLIENT_SECRET || '').trim(),
+    // The Discord button needs the second redirect URL in the Developer Portal first: it only shows with DISCORD_LOGIN=1.
+    discordLogin: env.DISCORD_LOGIN === '1',
   };
   cfg.subscriptions = !!(cfg.stripePriceMonthly || cfg.stripePriceYearly);
   const DISCORD_VARS = { DISCORD_CLIENT_ID: 'discordClientId', DISCORD_CLIENT_SECRET: 'discordClientSecret', DISCORD_BOT_TOKEN: 'discordBotToken', DISCORD_GUILD_ID: 'discordGuildId', DISCORD_ROLE_ID: 'discordRoleId' };
