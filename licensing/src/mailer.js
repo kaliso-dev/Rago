@@ -98,6 +98,13 @@ ${discord ? `<p style="${SMALL}">${esc(discord)} <a href="${esc(cfg.supportUrl)}
       ].join('\n');
       return send(to, 'Your Rago Optimizer Premium license', layout(cfg, 'Payment confirmed', html), text);
     },
+    /** The 6-digit code that confirms the email at sign-up (2026-10-25). */
+    signupCode(to, code) {
+      const big = `<p style="margin:8px 0 24px;color:#F5F5F6;font-family:ui-monospace,'SF Mono',Menlo,Consolas,monospace;font-size:34px;font-weight:600;letter-spacing:.3em">${esc(code)}</p>`;
+      return send(to, `${code} is your Rago Optimizer code`,
+        layout(cfg, 'Confirm your email', `<p style="${P}">Type this code on the sign-up page to create your Rago Optimizer account. It works for 15 minutes.</p>${big}<p style="${SMALL}">If you didn't sign up, ignore this email: no account is created without the code.</p>`),
+        `Your Rago Optimizer code: ${code}\nType it on the sign-up page to create your account. It works for 15 minutes. If you didn't sign up, ignore this email.`);
+    },
     passwordReset(to, url) {
       return send(to, 'Reset your Rago Optimizer password',
         layout(cfg, 'Reset your password', `<p style="${P}">Someone asked to reset the password of your Rago Optimizer account. The link works for 1 hour. If it wasn't you, ignore this email: your password stays the same.</p>${button(url, 'Choose a new password')}`),

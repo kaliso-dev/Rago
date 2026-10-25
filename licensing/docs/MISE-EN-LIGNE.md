@@ -291,6 +291,26 @@ Sans les cinq variables ci-dessous, rien ne change : la page compte dit d'ouvrir
 
 La page compte dit « Premium role » (le mot de la charte) ; le bot donne le rôle dont tu as mis l'identifiant, quel que soit son nom sur le serveur.
 
+### Connexion Google et Discord, code de vérification par email
+
+Depuis le 25 octobre 2026, les pages **Create account** et **Sign in** proposent **Continue with Google** et **Continue with Discord** au-dessus du formulaire email.
+
+- Un joueur qui passe par Google ou Discord retrouve toujours le même compte. Si un compte Rago existe déjà avec le même email (vérifié par Google ou Discord), il est relié à ce compte : rien n'est créé en double. Un compte Discord sans email vérifié est refusé, avec un message qui dit de vérifier l'email dans Discord ou de s'inscrire par email.
+- Un compte créé par Google ou Discord n'a pas de mot de passe. L'app Windows se connecte avec email + mot de passe : la page compte affiche « Set a password » pour en choisir un (sans ancien mot de passe à taper).
+- **Inscription par email** : le compte n'est créé qu'après le code à 6 chiffres envoyé à l'adresse (valable 15 minutes, 5 essais, bouton « Send a new one »). Un email mal tapé ne crée donc aucun compte. Pas de code pour l'email avec lequel l'achat vient d'être payé (le reçu Stripe y est déjà parti). Le code part dès que Resend est branché ; `EMAIL_VERIFICATION=0` le coupe. En local (`npm run local`), le code s'affiche dans le Terminal.
+
+**Discord** (2 minutes, avec l'application du rôle Pro) : Developer Portal → ton application → **OAuth2** → **Redirects** → **Add Redirect** : `https://account.rago-optimizer.com/auth/discord/callback` (en plus de celle en `/account/discord/callback`), **Save Changes**. `DISCORD_CLIENT_ID` et `DISCORD_CLIENT_SECRET` suffisent pour le bouton ; le bot n'est pas nécessaire.
+
+**Google** (10 minutes) :
+
+1. **https://console.cloud.google.com** → crée un projet `Rago Optimizer` (ou prends un projet existant).
+2. **APIs & Services → OAuth consent screen** (ou « Google Auth Platform ») : type **External**, nom `Rago Optimizer`, email d'assistance, logo si tu veux, domaine autorisé `rago-optimizer.com`, liens vers `https://rago-optimizer.com/privacy.html` et `/terms.html`. Les scopes `openid`, `email` et `profile` suffisent (aucune vérification Google n'est demandée pour eux). Passe l'application **en production** (sinon seuls les comptes de test peuvent se connecter).
+3. **APIs & Services → Credentials → Create credentials → OAuth client ID** : type **Web application**. **Authorized redirect URIs** : `https://account.rago-optimizer.com/auth/google/callback`. **Create**.
+4. Copie le **Client ID** → `GOOGLE_CLIENT_ID`, le **Client secret** → `GOOGLE_CLIENT_SECRET`, dans Railway → Variables. Railway redéploie tout seul.
+5. Teste sur `/login` : **Continue with Google**.
+
+Sur staging, ajoute aussi les adresses de retour de staging (`https://<adresse staging>/auth/google/callback` et `/auth/discord/callback`).
+
 ### Les récompenses Discord (invitations et boosts)
 
 Un bot d'invitations (InviteLogger) compte qui a invité qui et donne le rôle **VIP** à 10 invitations, **MVP** à 15. Le bot Rago voit ces rôles et les boosts sur les comptes liés, et donne chaque récompense **une seule fois** :
@@ -344,6 +364,8 @@ Le joueur (gratuit ou Premium) lie son Discord depuis sa page compte : la carte 
 | `LICENSE_SIGNING_KEY`, `SESSION_SECRET` | `npm run admin -- export-keys` (étape 5.7) |
 | `SCRIPTS_SECRET` | Une valeur aléatoire que tu génères une fois (étape 8), identique au secret GitHub `RAGO_SCRIPTS_SECRET`. Ne la change jamais |
 | `DISCORD_CLIENT_ID`, `DISCORD_CLIENT_SECRET`, `DISCORD_BOT_TOKEN`, `DISCORD_GUILD_ID`, `DISCORD_ROLE_ID` | Discord Developer Portal et ton serveur (« Le rôle Pro sur Discord »). Facultatives : sans elles, le rôle se donne à la main |
+| `GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET` | Google Cloud → Credentials (« Connexion Google et Discord »). Facultatives : sans elles, le bouton Google ne s'affiche pas |
+| `EMAIL_VERIFICATION` | Facultative. Vide : le code à 6 chiffres est demandé à l'inscription dès que Resend est branché. `0` : coupé |
 | `DISCORD_VIP_ROLE_ID`, `DISCORD_MVP_ROLE_ID`, `DISCORD_BOOST2_ROLE_ID` | Clic droit sur les rôles VIP, MVP et 2 boosts → Copier l'identifiant (« Les récompenses Discord »). Facultatives : sans elles, pas de récompense pour ce palier |
 | `ADMIN_KEY` | Une clé d'au moins 16 lettres et chiffres que tu choisis : elle ouvre `/admin`, où se règle le pop-up du site (« Le pop-up du site »). Sans elle, `/admin` n'existe pas |
 | `INSTALLER_VERSION` | Le numéro de l'exe déposé dans le bucket, lu dans son nom `Rago Optimizer_<numéro>_x64-setup.exe` (ex. `1.1.5`). Affiché à côté du bouton de téléchargement, et sous celui de la page Tweaks du site, qui le lit sur `/api/v1/installer`. `INSTALLER_OBJECT` est facultatif (il donne le bucket et le dossier) : le `.exe` le plus récent du dossier est toujours servi |
