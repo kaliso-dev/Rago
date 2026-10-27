@@ -60,8 +60,8 @@ function Do-Apply {
     $cur = Get-NetTCPSetting -SettingName Internet -ErrorAction SilentlyContinue | Select-Object -First 1
     $tune = EnvStr 'C_TUNE' 'keep'
     if ($tune -ne 'keep') {
-        if (NS @('int', 'tcp', 'set', 'global', ('autotuninglevel=' + $tune))) { Log 'OK' ('Receive window tuning: ' + $tune) }
-        else { Log '!' ('Receive window tuning refused: ' + $script:nsOut) }
+        if (NS @('int', 'tcp', 'set', 'global', ('autotuninglevel=' + $tune))) { Log 'OK' ('TCP receive window: ' + $tune) }
+        else { Log '!' ('TCP receive window refused: ' + $script:nsOut) }
     }
     $g = [ordered]@{
         'initialrto'           = @((EnvStr 'C_IRTO' '1000'), 'Initial retransmission timeout, ms')
@@ -113,7 +113,7 @@ function Do-Apply {
     else { Log 'OK' ('ACK every ' + $f + ' packet, delayed ACK ticks ' + $tk + ', NoDelay ' + $nd + ' on ' + $ni + ' interfaces') }
     Step (++$n) $steps
 
-    Title 'Latency: buffering in Windows and the network card'
+    Title 'Packet buffering in Windows and the network card'
     if ((EnvInt 'C_NTI' 0) -eq 1) { RSet $MM 'NetworkThrottlingIndex' (-1) 'DWord' | Out-Null; Log 'OK' 'Network throttling off' }
     else { Revert-Reg $MM 'NetworkThrottlingIndex' 'DWord'; Log 'OK' 'Network throttling: original value' }
     $sr = EnvInt 'C_SYSRESP' 20
@@ -156,7 +156,7 @@ function Do-Apply {
     if (On 'O_NPS') { Log 'OK' 'Network power saving features off' }
     Step (++$n) $steps
 
-    Title 'Wi-Fi Stabilizer'
+    Title 'Wi-Fi at full power'
     $wifiNics = @($nics | Where-Object { Test-Wifi $_ })
     if ($wifiNics.Count -eq 0) { Log '..' 'No Wi-Fi card connected, nothing to do' }
     foreach ($a in $wifiNics) {
@@ -164,7 +164,7 @@ function Do-Apply {
             Set-KwByLabel $a 'RoamAggressiveness' '^\s*1[\.\)]'
             Set-Kw $a 'uAPSDSupport' @('0')
             Set-KwByLabel $a 'MIMOPowerSaveMode' 'No SMPS'
-            Log 'OK' ($a.Name + ': Wi-Fi Stabilizer on')
+            Log 'OK' ($a.Name + ': Wi-Fi at full power')
         } else {
             foreach ($kw in $KwWifi) { Revert-Kw $a $kw }
         }
@@ -199,7 +199,7 @@ function Do-Apply {
     }
     Step (++$n) $steps
 
-    Title 'Smart Packets'
+    Title 'Game traffic priority'
     Remove-QosOurs
     if (On 'O_SMART') {
         $d = EnvInt 'C_DSCP' 0
@@ -210,7 +210,7 @@ function Do-Apply {
                 if ($pol) { $ok++ }
             }
             if ($ok -gt 0) { Log 'OK' ('Minecraft packets marked DSCP ' + $d + ' (javaw, java, Minecraft.Windows)') } else { Log 'X' 'Could not create the QoS policies' }
-        } else { Log '..' 'Network Priority is 0: Minecraft packets are not marked' }
+        } else { Log '..' 'DSCP level is 0: Minecraft packets are not marked' }
         foreach ($e in $BgApps) {
             New-NetQosPolicy -Name ($QosTag + 'Bg_' + $e) -AppPathNameMatchCondition $e -DSCPAction 8 -NetworkProfile All -ErrorAction SilentlyContinue | Out-Null
         }
@@ -224,11 +224,11 @@ function Do-Apply {
         }
     } else {
         Revert-Reg $QosK 'Do not use NLA' 'String'
-        Log 'OK' 'Smart Packets off, QoS policies removed'
+        Log 'OK' 'Game traffic priority off, QoS policies removed'
     }
     Step (++$n) $steps
 
-    Title 'Priority Mode'
+    Title 'High CPU priority for Minecraft'
     foreach ($e in $Games) {
         $k = $IFEO + '\' + $e + '\PerfOptions'
         if (On 'O_PMODE') { RSet $k 'CpuPriorityClass' 3 'DWord' | Out-Null }
@@ -241,10 +241,10 @@ function Do-Apply {
                 try { $pr.PriorityClass = 'High'; Log 'OK' ('Running ' + $pr.ProcessName + ' (' + $pr.Id + ') set to High now') } catch { }
             }
         }
-    } else { Log 'OK' 'Priority Mode off' }
+    } else { Log 'OK' 'High CPU priority for Minecraft off' }
     Step (++$n) $steps
 
-    Title 'Competitive Mode'
+    Title 'Windows gaming performance'
     $comp = @(
         @($PrioK, 'Win32PrioritySeparation', 38, 'DWord'),
         @($DvrK, 'GameDVR_Enabled', 0, 'DWord'),
@@ -276,16 +276,16 @@ function Do-Apply {
             powercfg /setactive $script:S.scheme 2>$null | Out-Null
             Log 'OK' 'Power plan back to your original plan'
         }
-        Log 'OK' 'Competitive Mode off'
+        Log 'OK' 'Windows gaming performance back to normal'
     }
     Step (++$n) $steps
 
-    Title 'Background Traffic Guard'
+    Title 'Windows Update sharing'
     $doBefore = RGet $DoK 'DownloadMode'
     if (On 'O_BGUARD') {
         if (RSet $DoK 'DownloadMode' 0 'DWord') { Log 'OK' 'Windows Update no longer uploads to other PCs' }
         else { Log '!' 'Delivery Optimization setting not found' }
-    } else { Revert-Reg $DoK 'DownloadMode' 'DWord'; Log 'OK' 'Background Traffic Guard off' }
+    } else { Revert-Reg $DoK 'DownloadMode' 'DWord'; Log 'OK' 'Windows Update sharing back to normal' }
     if ("$doBefore" -ne "$(RGet $DoK 'DownloadMode')") { Restart-Service -Name DoSvc -Force -ErrorAction SilentlyContinue }
     Step (++$n) $steps
 

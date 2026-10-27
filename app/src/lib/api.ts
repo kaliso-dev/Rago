@@ -638,17 +638,17 @@ let mockRunning = false;
 
 let mockNet: NetState = { applied: null, backup: false, busy: false };
 const MOCK_NET_LINES: Record<string, string[]> = {
-  TCP: ["Receive window tuning: normal", "Initial retransmission timeout, ms: 300", "TCP timestamps: disabled", ".. Minimum retransmission timeout, ms: locked by Windows on this edition, stays 300"],
+  TCP: ["TCP receive window: normal", "Initial retransmission timeout, ms: 300", "TCP timestamps: disabled", ".. Minimum retransmission timeout, ms: locked by Windows on this edition, stays 300"],
   "ACK timing and Nagle (every network interface)": ["ACK every 1 packet, delayed ACK ticks 0, NoDelay 1 on 6 interfaces"],
-  "Latency: buffering in Windows and the network card": ["Network throttling off", "CPU reserve for background tasks: 10 %", "Ethernet: interrupt moderation = Disabled"],
+  "Packet buffering in Windows and the network card": ["Network throttling off", "CPU reserve for background tasks: 10 %", "Ethernet: interrupt moderation = Disabled"],
   "Power saving": ["Ethernet: Energy Efficient Ethernet = Off", "Network power saving features off"],
-  "Wi-Fi Stabilizer": [".. No Wi-Fi card connected, nothing to do"],
+  "Wi-Fi at full power": [".. No Wi-Fi card connected, nothing to do"],
   "Restarting the network card": ["Network card back online"],
   MTU: ["MTU 1500 on Ethernet, already right"],
-  "Smart Packets": ["Minecraft packets marked DSCP 48 (javaw, java, Minecraft.Windows)", "Big downloaders marked as background, CS1"],
-  "Priority Mode": ["Minecraft starts with High CPU priority"],
-  "Competitive Mode": ["! No High performance plan on this PC (Modern Standby laptop?), current plan kept", "Game Mode on, Game DVR off, foreground boost, game task priority high"],
-  "Background Traffic Guard": ["Windows Update no longer uploads to other PCs"],
+  "Game traffic priority": ["Minecraft packets marked DSCP 48 (javaw, java, Minecraft.Windows)", "Big downloaders marked as background, CS1"],
+  "High CPU priority for Minecraft": ["Minecraft starts with High CPU priority"],
+  "Windows gaming performance": ["! No High performance plan on this PC (Modern Standby laptop?), current plan kept", "Game Mode on, Game DVR off, foreground boost, game task priority high"],
+  "Windows Update sharing": ["Windows Update no longer uploads to other PCs"],
 };
 const MOCK_LINES = [
   "Opération réussie.",
@@ -1027,7 +1027,7 @@ const mockApi: Api = {
       emit<NetLine>("netopt:line", { action, tag, text, step, total });
     if (action === "apply" || action === "restore" || action === "defaults") {
       const titles = action === "apply"
-        ? ["TCP", "ACK timing and Nagle (every network interface)", "Latency: buffering in Windows and the network card", "Power saving", "Wi-Fi Stabilizer", "Restarting the network card", "MTU", "Smart Packets", "Priority Mode", "Competitive Mode", "Background Traffic Guard"]
+        ? ["TCP", "ACK timing and Nagle (every network interface)", "Packet buffering in Windows and the network card", "Power saving", "Wi-Fi at full power", "Restarting the network card", "MTU", "Game traffic priority", "High CPU priority for Minecraft", "Windows gaming performance", "Windows Update sharing"]
         : ["Restoring the settings saved before the first apply", "Registry values", "Network card", "MTU and power plan"];
       let ok = 0;
       for (let i = 0; i < titles.length; i++) {
@@ -1060,7 +1060,7 @@ const mockApi: Api = {
             : {
                 kind: "status",
                 rows: [
-                  { s: "tcp", k: "Receive window tuning", v: "Normal" },
+                  { s: "tcp", k: "TCP receive window", v: "Normal" },
                   { s: "tcp", k: "Congestion provider", v: "CUBIC" },
                   { s: "tcp", k: "Initial RTO, ms", v: "1000" },
                   { s: "tcp", k: "Minimum RTO, ms", v: "300" },

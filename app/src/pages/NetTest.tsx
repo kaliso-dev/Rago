@@ -363,7 +363,7 @@ function Diagnostic() {
       }
     }
   };
-  // ligne instable : le Packet Optimizer s'ouvre avec « connexion stable » sur Non, à appliquer
+  // ligne instable : le Packet Optimizer s'ouvre avec « tolérance aux pertes » activée, à appliquer
   const markUnstable = async () => {
     const s = await api.netOptState().catch(() => null);
     const base = loadDraft() ?? (s?.applied ? { ...NET_DEFAULTS, ...s.applied.options } : NET_DEFAULTS);

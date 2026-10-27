@@ -25,7 +25,7 @@ use crate::{catalog, shell};
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase", default)]
 pub struct Options {
-    /// Smart Packets : marque QoS sur Minecraft, les gros téléchargeurs en arrière-plan
+    /// Priorité au trafic du jeu : marque QoS sur Minecraft, les gros téléchargeurs en arrière-plan
     pub smart: bool,
     /// 0 = latence la plus basse (tampons coupés), 100 = Windows
     pub latency: u32,

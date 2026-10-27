@@ -394,7 +394,7 @@ SUB = [
     # groupe n'écrit jamais ainsi (Hone, « Optimize DSCP ») ; mêmes chaînes que pri_game
     (('ping_packets:qos', 'net_profile:qos'), r'(/v "DSCP Value" /t )REG_DWORD /d 46\b', r'\g<1>REG_SZ /d "46"'),
     (('ping_packets:qos', 'net_profile:qos'), r'(/v "Throttle Rate" /t REG_SZ /d )"Disabled"', r'\g<1>"-1"'),
-    # tous les serveurs, pas seulement ceux du port 25565 (network_optimizer, « Smart Packets »), comme pri_game:minecraft
+    # tous les serveurs, pas seulement ceux du port 25565 (network_optimizer, « Priorité au trafic du jeu »), comme pri_game:minecraft
     # qui écrit la même stratégie javaw.exe
     (('ping_packets:qos', 'net_profile:qos'), r'(/v "Remote Port" /t REG_SZ /d )"25565"', r'\g<1>"*"'),
     # « HwSchedMode » n'existe pas : la planification GPU accélérée est HwSchMode (OptiCore, « jeux.hags »), comme in_advanced

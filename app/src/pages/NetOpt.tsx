@@ -1,17 +1,17 @@
 import { useCallback, useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import { AnimatePresence, motion } from "motion/react";
 import {
-  Activity, ArrowRight, AudioWaveform, Cable, Check, ChevronDown, CircleX, Cpu, Crosshair, Info, LoaderCircle, Lock, Power, RotateCcw,
-  Scale, ScanSearch, ScrollText, SlidersHorizontal, Swords, Trophy, Wifi, X, type LucideIcon,
+  Activity, ArrowRight, AudioWaveform, Cable, Check, ChevronDown, CircleX, Cpu, Crosshair, Info, LoaderCircle, Lock, Minus, Plus, Power,
+  RotateCcw, Scale, ScanSearch, ScrollText, SlidersHorizontal, Swords, TriangleAlert, Trophy, Wifi, X, type LucideIcon,
 } from "lucide-react";
 import { api, type NetMeasure } from "../lib/api";
 import type { Key } from "../lib/i18n";
 import {
-  applyPreset, computeNet, engineText, loadDraft, NET_DEFAULTS, PRESETS, recommend, saveDraft, WINDOWS_VALUES, type NetAction, type NetExpert,
+  applyPreset, computeNet, DSCP_NAMES, engineText, loadDraft, NET_DEFAULTS, PRESETS, recommend, saveDraft, WINDOWS_VALUES, type NetAction, type NetExpert,
   type NetLine, type NetOptions, type NetOutcome, type NetState, type NetValues, type PresetId, type Why,
 } from "../lib/netopt";
 import { useStore } from "../lib/store";
-import { Button, Switch } from "../components/ui";
+import { Button, Segmented, Switch } from "../components/ui";
 import { Tool, validTarget } from "../components/NetTools";
 
 const stagger = { animate: { transition: { staggerChildren: 0.05 } } };
@@ -23,7 +23,7 @@ type Detect = { connected: boolean; wifi: boolean; alias: string | null; desc: s
 
 const PRESET_ICONS: Record<PresetId, LucideIcon> = { hitreg: Crosshair, knockback: Swords, balanced: Scale, wifi: Wifi, unstable: AudioWaveform, classic: Trophy };
 
-/** Blocs repliés (Avancé, Valeurs exactes), gardés d'une visite à l'autre. */
+/** Blocs repliés (Avancé, Réglages experts), gardés d'une visite à l'autre. */
 const FOLDS = "rago.netoptFolds";
 type FoldId = "advanced" | "expert";
 function loadFolds(): Record<FoldId, boolean> {
@@ -207,7 +207,7 @@ export function NetOpt() {
   const cardName = (d: Detect | null | undefined) => [d?.alias, d?.desc, d?.speed].filter(Boolean).join(" · ");
   const advancedSummary = [
     opts.mtuMode === 1 ? t("no.sum.mtuAuto") : opts.mtuMode === 2 ? `MTU ${opts.mtu}` : t("no.sum.mtuKeep"),
-    opts.delay === 0 ? t("no.delay.none") : `${t("no.delay")} ${opts.delay}`,
+    opts.delay === 0 ? t("no.delay.none") : t("no.sum.delay", { n: opts.delay }),
     !opts.smart || v.dscp === 0 ? t("no.prio.none") : `DSCP ${v.dscp}${v.dscpName ? ` ${v.dscpName}` : ""}`,
     t("no.sum.options", { n: [opts.priorityMode, opts.powerSaving, opts.wifi, opts.bgGuard].filter(Boolean).length }),
   ].join(" · ");
@@ -425,7 +425,7 @@ export function NetOpt() {
             </div>
             <div className="no-toggles">
               <Toggle title={t("no.smart")} desc={t("no.smart.desc")} checked={opts.smart} onChange={(smart) => change({ smart })} />
-              <Toggle title={t("no.stable")} desc={t("no.stable.desc")} checked={opts.stable} onChange={(stable) => change({ stable })} />
+              <Toggle title={t("no.stable")} desc={t("no.stable.desc")} checked={!opts.stable} onChange={(on) => change({ stable: !on })} />
               <Toggle title={t("no.competitive")} desc={t("no.competitive.desc")} checked={opts.competitive} onChange={(competitive) => change({ competitive })} />
             </div>
           </motion.section>
@@ -512,31 +512,11 @@ export function NetOpt() {
             <Fold
               title={t("no.expert")}
               icon={<SlidersHorizontal size={12} />}
-              summary={expertCount ? t("no.sum.expert", { n: expertCount }) : t("no.sum.expertNone")}
+              summary={expertCount ? t("no.x.count", { n: expertCount }) : t("no.x.none")}
               open={folds.expert}
               onToggle={() => fold("expert")}
             >
-              <p className="muted small no-expert-note">{t("no.x.note")}</p>
-              <div className="no-expert-grid">
-                <NumField label={t("no.x.minRto")} value={opts.expert.minRto} auto={`${v.minRto} ms`} min={20} max={300} onChange={(minRto) => setExpert({ minRto })} t={t} />
-                <NumField label={t("no.x.initialRto")} value={opts.expert.initialRto} auto={`${v.initialRto} ms`} min={300} max={3000} onChange={(initialRto) => setExpert({ initialRto })} t={t} />
-                <NumField label={t("no.x.icw")} value={opts.expert.icw} auto="Windows · 10" min={2} max={64} onChange={(icw) => setExpert({ icw })} t={t} />
-                <NumField label={t("no.x.ackFrequency")} value={opts.expert.ackFrequency} auto={String(v.ackFrequency)} min={1} max={255} onChange={(ackFrequency) => setExpert({ ackFrequency })} t={t} />
-                <NumField label={t("no.x.ackTimeout")} value={opts.expert.ackTimeout} auto={`${v.ackTimeout} ms`} min={10} max={600} onChange={(ackTimeout) => setExpert({ ackTimeout })} t={t} />
-                <NumField label={t("no.x.dscp")} value={opts.expert.dscp} auto={String(v.dscp)} min={0} max={63} onChange={(dscp) => setExpert({ dscp })} t={t} />
-                <TriField label={t("no.x.timestamps")} value={opts.expert.timestamps} auto={v.timestamps} onChange={(timestamps) => setExpert({ timestamps })} t={t} />
-                <TriField label={t("no.x.ecn")} value={opts.expert.ecn} auto={v.ecn} onChange={(ecn) => setExpert({ ecn })} t={t} />
-                <TriField
-                  label={t("no.x.interruptModeration")}
-                  value={opts.expert.interruptModeration}
-                  auto={v.interruptModeration !== 2}
-                  onChange={(interruptModeration) => setExpert({ interruptModeration })}
-                  t={t}
-                />
-              </div>
-              <Button size="sm" variant="ghost" disabled={!expertCount} onClick={() => change({ expert: {} })}>
-                {t("no.x.clear")}
-              </Button>
+              <Expert o={opts} v={v} count={expertCount} set={setExpert} clear={() => change({ expert: {} })} t={t} />
             </Fold>
           </motion.div>
         </div>
@@ -868,58 +848,196 @@ function Toggle({ title, desc, checked, onChange }: { title: string; desc: strin
   );
 }
 
-function NumField({
-  label,
-  value,
-  auto,
-  min,
-  max,
-  onChange,
-  t,
-}: {
-  label: string;
-  value: number | null | undefined;
-  auto: string;
-  min: number;
-  max: number;
-  onChange: (v: number | null) => void;
-  t: T;
-}) {
-  const [text, setText] = useState(value == null ? "" : String(value));
-  useEffect(() => setText(value == null ? "" : String(value)), [value]);
-  const commit = () => {
-    const n = parseInt(text, 10);
-    onChange(Number.isNaN(n) ? null : Math.min(max, Math.max(min, n)));
+/** Réglages experts : chaque valeur calculée par les curseurs, laissée en Auto ou remplacée à la main (NetExpert, null = Auto). */
+type NumId = "minRto" | "initialRto" | "icw" | "ackFrequency" | "ackTimeout" | "dscp";
+type BoolId = "timestamps" | "ecn" | "interruptModeration";
+const NUM_ROWS: Record<NumId, { min: number; max: number; step: number; unit: "ms" | "packets" | "" }> = {
+  minRto: { min: 20, max: 300, step: 10, unit: "ms" },
+  initialRto: { min: 300, max: 3000, step: 100, unit: "ms" },
+  icw: { min: 2, max: 64, step: 1, unit: "packets" },
+  ackFrequency: { min: 1, max: 255, step: 1, unit: "packets" },
+  ackTimeout: { min: 10, max: 600, step: 10, unit: "ms" },
+  dscp: { min: 0, max: 63, step: 1, unit: "" },
+};
+const GROUPS: { id: Key; rows: (NumId | BoolId)[] }[] = [
+  { id: "no.x.group.resend", rows: ["minRto", "initialRto"] },
+  { id: "no.x.group.ack", rows: ["ackFrequency", "ackTimeout"] },
+  { id: "no.x.group.send", rows: ["icw", "dscp"] },
+  { id: "no.x.group.card", rows: ["timestamps", "ecn", "interruptModeration"] },
+];
+
+function Expert({ o, v, count, set, clear, t }: { o: NetOptions; v: NetValues; count: number; set: (p: Partial<NetExpert>) => void; clear: () => void; t: T }) {
+  const w = WINDOWS_VALUES;
+  const x = o.expert;
+  const unit = (id: NumId, n: number) => (id === "dscp" ? (DSCP_NAMES[n] ?? "") : NUM_ROWS[id].unit === "packets" ? t("no.x.packets", { n }) : NUM_ROWS[id].unit);
+  const show = (id: NumId, n: number) => `${n} ${unit(id, n)}`.trim();
+  const onOff = (b: boolean) => (b ? t("no.x.on") : t("no.x.off"));
+  const im = (n: number) => (n === 1 ? t("no.v.im.1").replace(/^./, (c) => c.toUpperCase()) : onOff(n !== 2));
+  const autoNum: Record<NumId, string> = {
+    minRto: show("minRto", v.minRto),
+    initialRto: show("initialRto", v.initialRto),
+    icw: show("icw", 10),
+    ackFrequency: show("ackFrequency", v.ackFrequency),
+    ackTimeout: show("ackTimeout", v.ackTimeout),
+    dscp: !o.smart || v.dscp === 0 ? t("no.v.none") : show("dscp", v.dscp),
+  };
+  const winNum: Record<NumId, string> = {
+    minRto: show("minRto", w.minRto),
+    initialRto: show("initialRto", w.initialRto),
+    icw: show("icw", 10),
+    ackFrequency: show("ackFrequency", w.ackFrequency),
+    ackTimeout: show("ackTimeout", w.ackTimeout),
+    dscp: t("no.v.none"),
+  };
+  const autoNumValue: Record<NumId, number> = { minRto: v.minRto, initialRto: v.initialRto, icw: 10, ackFrequency: v.ackFrequency, ackTimeout: v.ackTimeout, dscp: v.dscp };
+  const autoBool: Record<BoolId, string> = { timestamps: onOff(v.timestamps), ecn: onOff(v.ecn), interruptModeration: im(v.interruptModeration) };
+  const winBool: Record<BoolId, string> = { timestamps: onOff(w.timestamps), ecn: onOff(false), interruptModeration: onOff(true) };
+  const warn = (id: NumId | BoolId): Key | null => {
+    const n = x[id];
+    if (n == null) return null;
+    if (id === "minRto") return (n as number) < 60 ? "no.x.warn.minRto" : null;
+    if (id === "icw") return (n as number) > 32 ? "no.x.warn.icw" : null;
+    if (id === "ackFrequency") return (n as number) > 2 ? "no.x.warn.ackFrequency" : null;
+    if (id === "ackTimeout") return (n as number) > 200 ? "no.x.warn.ackTimeout" : null;
+    if (id === "dscp") return o.smart ? null : "no.x.warn.dscp";
+    if (id === "ecn") return n === true ? "no.x.warn.ecn" : null;
+    return null;
   };
   return (
-    <label className="no-field">
-      <span className="no-field-label">{label}</span>
-      <input
-        className="input"
-        inputMode="numeric"
-        placeholder={`${t("no.x.auto")} · ${auto}`}
-        value={text}
-        onChange={(e) => setText(e.target.value.replace(/\D/g, "").slice(0, 4))}
-        onBlur={commit}
-        onKeyDown={(e) => e.key === "Enter" && commit()}
-      />
-    </label>
-  );
-}
-
-function TriField({ label, value, auto, onChange, t }: { label: string; value: boolean | null | undefined; auto: boolean; onChange: (v: boolean | null) => void; t: T }) {
-  const cur = value == null ? "auto" : value ? "on" : "off";
-  return (
-    <div className="no-field">
-      <span className="no-field-label">{label}</span>
-      <div className="no-chips">
-        {(["auto", "on", "off"] as const).map((k) => (
-          <button key={k} type="button" className={`no-chip${cur === k ? " on" : ""}`} onClick={() => onChange(k === "auto" ? null : k === "on")}>
-            {k === "auto" ? `${t("no.x.auto")} · ${auto ? t("no.x.on") : t("no.x.off")}` : t(`no.x.${k}`)}
-          </button>
-        ))}
+    <div className="no-x">
+      <div className="no-x-intro">
+        <Info size={15} />
+        <div>
+          <div className="no-x-intro-title">{t("no.x.introTitle")}</div>
+          <p className="small">{t("no.x.intro")}</p>
+          <p className="muted small">{t("no.x.note")}</p>
+        </div>
+      </div>
+      {GROUPS.map((g) => (
+        <div key={g.id} className="no-x-group">
+          <h4 className="rg-overline">{t(g.id)}</h4>
+          <div className="no-x-list">
+          {g.rows.map((id) => {
+            const manual = x[id] != null;
+            const tip = warn(id);
+            const isNum = id in NUM_ROWS;
+            const r = isNum ? NUM_ROWS[id as NumId] : null;
+            return (
+              <div key={id} className={`no-x-row${manual ? " manual" : ""}`}>
+                <div className="no-x-text">
+                  <div className="no-x-title">
+                    {t(`no.x.${id}` as Key)}
+                    {manual && <span className="no-x-badge">{t("no.x.manual")}</span>}
+                  </div>
+                  <div className="no-x-desc">{t(`no.x.${id}.desc` as Key)}</div>
+                  <div className="no-x-meta rg-metric">
+                    {r && `${t("no.x.range", { min: r.min, max: r.max, unit: id === "dscp" ? "" : unit(id as NumId, r.max) }).trim()} · `}
+                    {t("no.x.windows", { v: isNum ? winNum[id as NumId] : winBool[id as BoolId] })}
+                  </div>
+                </div>
+                <div className="no-x-ctl">
+                  {isNum ? (
+                    <>
+                      <Segmented
+                        value={manual ? "manual" : "auto"}
+                        options={[
+                          { id: "auto", label: t("no.x.auto") },
+                          { id: "manual", label: t("no.x.manual") },
+                        ]}
+                        onChange={(m) => set({ [id]: m === "auto" ? null : autoNumValue[id as NumId] })}
+                        layoutId={`no-x-${id}`}
+                      />
+                      {manual ? (
+                        <Stepper
+                          value={x[id] as number}
+                          {...r!}
+                          unit={(n) => unit(id as NumId, n)}
+                          onChange={(n) => set({ [id]: n })}
+                          t={t}
+                        />
+                      ) : (
+                        <span className="no-x-auto rg-metric">{t("no.x.autoValue", { v: autoNum[id as NumId] })}</span>
+                      )}
+                    </>
+                  ) : (
+                    <>
+                      <Segmented
+                        value={x[id] == null ? "auto" : x[id] ? "on" : "off"}
+                        options={[
+                          { id: "auto", label: t("no.x.auto") },
+                          { id: "on", label: t("no.x.on") },
+                          { id: "off", label: t("no.x.off") },
+                        ]}
+                        onChange={(m) => set({ [id]: m === "auto" ? null : m === "on" })}
+                        layoutId={`no-x-${id}`}
+                      />
+                      {!manual && <span className="no-x-auto rg-metric">{t("no.x.autoValue", { v: autoBool[id as BoolId] })}</span>}
+                    </>
+                  )}
+                </div>
+                {tip && (
+                  <div className="no-x-warn small">
+                    <TriangleAlert size={13} />
+                    <span>{t(tip)}</span>
+                  </div>
+                )}
+              </div>
+            );
+          })}
+          </div>
+        </div>
+      ))}
+      <div className="no-x-foot">
+        <span className={count ? "no-x-count" : "muted small"}>{count ? t("no.x.count", { n: count }) : t("no.x.none")}</span>
+        <Button size="sm" variant="ghost" icon={<RotateCcw size={13} />} disabled={!count} onClick={clear}>
+          {t("no.x.clear")}
+        </Button>
       </div>
     </div>
   );
 }
 
+function Stepper({
+  value,
+  min,
+  max,
+  step,
+  unit,
+  onChange,
+  t,
+}: {
+  value: number;
+  min: number;
+  max: number;
+  step: number;
+  unit: (n: number) => string;
+  onChange: (n: number) => void;
+  t: T;
+}) {
+  const [text, setText] = useState(String(value));
+  useEffect(() => setText(String(value)), [value]);
+  const clamp = (n: number) => Math.min(max, Math.max(min, n));
+  const commit = () => {
+    const n = parseInt(text, 10);
+    if (Number.isNaN(n)) setText(String(value));
+    else onChange(clamp(n));
+  };
+  return (
+    <div className="no-x-stepper">
+      <button type="button" aria-label={t("no.x.less")} disabled={value <= min} onClick={() => onChange(clamp(value - step))}>
+        <Minus size={13} />
+      </button>
+      <input
+        inputMode="numeric"
+        value={text}
+        onChange={(e) => setText(e.target.value.replace(/\D/g, "").slice(0, 4))}
+        onBlur={commit}
+        onKeyDown={(e) => e.key === "Enter" && commit()}
+      />
+      {unit(value) && <span className="no-x-unit">{unit(value)}</span>}
+      <button type="button" aria-label={t("no.x.more")} disabled={value >= max} onClick={() => onChange(clamp(value + step))}>
+        <Plus size={13} />
+      </button>
+    </div>
+  );
+}

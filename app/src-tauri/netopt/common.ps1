@@ -574,7 +574,7 @@ function Do-Status {
     $add = { param($sec, $k, $v) $rows.Add([ordered]@{ s = $sec; k = $k; v = "$v" }) }
     $t = Get-NetTCPSetting -SettingName Internet -ErrorAction SilentlyContinue | Select-Object -First 1
     if ($t) {
-        & $add 'tcp' 'Receive window tuning' $t.AutoTuningLevelLocal
+        & $add 'tcp' 'TCP receive window' $t.AutoTuningLevelLocal
         & $add 'tcp' 'Congestion provider' $t.CongestionProvider
         & $add 'tcp' 'Initial RTO, ms' $t.InitialRtoMs
         & $add 'tcp' 'Minimum RTO, ms' $t.MinRtoMs

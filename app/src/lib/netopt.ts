@@ -100,7 +100,7 @@ export const NET_DEFAULTS: NetOptions = {
 };
 
 /** Réglages en cours de modification, gardés entre deux visites tant qu'ils ne sont pas appliqués (le test réseau peut
- * y poser « connexion stable : non »). */
+ * y activer la tolérance aux pertes). */
 const DRAFT = "rago.netoptDraft";
 export function loadDraft(): NetOptions | null {
   try {
@@ -122,7 +122,7 @@ export function saveDraft(o: NetOptions | null) {
 export type PresetId = "hitreg" | "knockback" | "balanced" | "wifi" | "unstable" | "classic";
 export const PRESETS: PresetId[] = ["hitreg", "knockback", "balanced", "wifi", "unstable", "classic"];
 
-/** Profils du .bat (`:preset`) : la ligne, sa stabilité et le serveur de jeu restent, les valeurs exactes s'effacent. */
+/** Profils du .bat (`:preset`) : la ligne, sa stabilité et le serveur de jeu restent, les réglages experts repassent en Auto. */
 export function applyPreset(o: NetOptions, id: PresetId): NetOptions {
   const base: NetOptions = { ...o, expert: {}, mtuMode: 1, congestion: 0, tuning: 0, wifi: o.line === 5, preset: id };
   const p: Record<PresetId, Partial<NetOptions>> = {
@@ -243,18 +243,18 @@ const FR_EXACT: Record<string, string> = {
   "Saving your current settings (first apply only)": "Sauvegarde de tes réglages actuels (première application)",
   TCP: "TCP",
   "ACK timing and Nagle (every network interface)": "ACK et Nagle (toutes les interfaces)",
-  "Latency: buffering in Windows and the network card": "Latence : tampons de Windows et de la carte réseau",
+  "Packet buffering in Windows and the network card": "Mise en tampon des paquets (Windows et carte réseau)",
   "Power saving": "Économie d'énergie",
-  "Wi-Fi Stabilizer": "Stabilisateur Wi-Fi",
+  "Wi-Fi at full power": "Wi-Fi à pleine puissance",
   MTU: "MTU",
-  "Smart Packets": "Smart Packets",
-  "Priority Mode": "Mode priorité",
-  "Competitive Mode": "Mode compétitif",
-  "Background Traffic Guard": "Garde du trafic en fond",
+  "Game traffic priority": "Priorité au trafic du jeu",
+  "High CPU priority for Minecraft": "Minecraft en priorité processeur haute",
+  "Windows gaming performance": "Performances de Windows pour le jeu",
+  "Windows Update sharing": "Partage des mises à jour Windows",
   "Resetting to Windows defaults": "Retour aux valeurs de Windows",
   "Idle latency, 30 pings": "Ping au repos, 30 pings",
   "Latency while downloading, about 12 seconds": "Ping pendant un téléchargement, environ 12 secondes",
-  "Receive window tuning": "Réglage de la fenêtre de réception",
+  "TCP receive window": "Fenêtre de réception TCP",
   "Congestion provider": "Contrôle de congestion",
   "Initial RTO, ms": "RTO initial, ms",
   "Minimum RTO, ms": "RTO minimum, ms",
