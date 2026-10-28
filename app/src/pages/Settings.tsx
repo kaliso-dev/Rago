@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { ExternalLink, FolderOpen, LifeBuoy, LogOut, UserRound } from "lucide-react";
+import { ChevronRight, ExternalLink, FolderOpen, LifeBuoy, LogOut, Share2, UserRound } from "lucide-react";
 import { formatDate } from "../lib/i18n";
 import { api, isTauri } from "../lib/api";
 import { totalTweaks } from "../lib/catalog";
@@ -7,11 +7,14 @@ import { FREE, useStore } from "../lib/store";
 import { ACCOUNT_URL, SITE_URL, SUPPORT_URL } from "../components/LicenseGate";
 import { Modal } from "../components/Modal";
 import { ProfileCard } from "../components/ProfileCard";
-import { Button, Card, Segmented } from "../components/ui";
+import { BackgroundCard } from "../components/BackgroundCard";
+import { SessionCard } from "../components/SessionCard";
+import { Button, Card, Segmented, Switch } from "../components/ui";
 import { Wordmark } from "../components/Logo";
 
 const LICENCES = [
   { name: "NVIDIA Profile Inspector", licence: "MIT", url: "https://github.com/Orbmu2k/nvidiaProfileInspector" },
+  { name: "PresentMon (Intel)", licence: "MIT", url: "https://github.com/GameTechDev/PresentMon" },
   { name: "Geist, Geist Mono", licence: "SIL OFL 1.1", url: "https://vercel.com/font" },
   { name: "Tauri", licence: "MIT / Apache 2.0", url: "https://tauri.app" },
   { name: "React", licence: "MIT", url: "https://react.dev" },
@@ -20,7 +23,7 @@ const LICENCES = [
 ];
 
 export function Settings() {
-  const { t, lang, setLang, motion, setMotion, license, signOut, setUpsell, activatedAt, sys } = useStore();
+  const { t, lang, setLang, motion, setMotion, license, signOut, setUpsell, activatedAt, sys, cleanTrim, setCleanTrim, goTo } = useStore();
   const [confirmOut, setConfirmOut] = useState(false);
   /** Réglages que la déconnexion remettra comme avant (liste du moteur), lue à l'ouverture de la confirmation. */
   const [outPlan, setOutPlan] = useState(0);
@@ -122,6 +125,27 @@ export function Settings() {
                 { id: "reduced", label: t("settings.motion.reduced") },
               ]}
             />
+          </div>
+        </Card>
+        <Card>
+          <button type="button" className="setting setting-link" onClick={() => goTo("share")}>
+            <Share2 size={16} className="setting-link-icon" />
+            <div>
+              <div>{t("settings.share")}</div>
+              <div className="muted small">{t("settings.shareHint")}</div>
+            </div>
+            <ChevronRight size={16} className="setting-link-chevron" />
+          </button>
+        </Card>
+        <BackgroundCard />
+        <SessionCard />
+        <Card title={t("settings.memory")}>
+          <div className="setting">
+            <div>
+              <div>{t("settings.cleanTrim")}</div>
+              <div className="muted small">{t("settings.cleanTrimHint")}</div>
+            </div>
+            <Switch checked={cleanTrim} onChange={setCleanTrim} label={t("settings.cleanTrim")} />
           </div>
         </Card>
         <Card title={t("settings.folders")}>

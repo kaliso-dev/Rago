@@ -11,6 +11,13 @@
 ; Uninstall et ce crochet ; vide (donc 0) en silencieux (/S) et en passif (/P), où la page n'est pas montrée et où
 ; Tauri n'efface rien. Avec /UPDATE, Tauri n'efface jamais les données : rien n'est remis.
 !macro NSIS_HOOK_PREUNINSTALL
+  ; lancement avec Windows (Paramètres de l'app, src/background.rs) : la tâche planifiée porte le nom de l'app et
+  ; pointerait sur un exe disparu. Gardée pendant une mise à jour, où l'exe reste au même endroit.
+  ${If} $UpdateMode <> 1
+  ${AndIf} $EXEDIR != $INSTDIR
+    nsExec::Exec 'schtasks.exe /Delete /TN "${PRODUCTNAME}" /F'
+    Pop $0
+  ${EndIf}
   ${If} $UpdateMode <> 1
     ${If} $EXEDIR != $INSTDIR
     ${OrIf} $DeleteAppDataCheckboxState = 1

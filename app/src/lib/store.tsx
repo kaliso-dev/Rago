@@ -1,5 +1,5 @@
 import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState, type ReactNode } from "react";
-import { api, asLicenseError, type AppliedView, type DoneEvent, type HistoryEntry, type ItemStatus, type LicenseError, type LicenseStatus, type ResetDone, type RunItem, type SystemInfo } from "./api";
+import { api, asLicenseError, isTauri, type AppliedView, type DoneEvent, type HistoryEntry, type ItemStatus, type LicenseError, type LicenseStatus, type ResetDone, type RunItem, type SystemInfo } from "./api";
 import { autoVariant, availability, catalog, retired, tweakModule, tweaks, type Lang, type Tweak, needsReboot } from "./catalog";
 import { translate, type Key } from "./i18n";
 import free from "../data/free.json";
@@ -51,6 +51,14 @@ export function itemName(id: string, lang: Lang): string {
 /** Un point de restauration réussi depuis moins longtemps que ça : la case n'est plus cochée d'office. */
 export const RESTORE_FRESH_MS = 24 * 3600 * 1000;
 
+/** Preset enregistré par le joueur (« Mes presets » du tableau de bord), entrées "id" ou "id:variante". */
+export interface MyPreset {
+  id: string;
+  name: string;
+  t: string[];
+  at: number;
+}
+
 export interface RunRow {
   id: string;
   variant: string | null;
@@ -80,6 +88,18 @@ export interface ConfirmState {
   single: boolean;
   /** « Tout annuler » du tableau de bord : tous les réglages appliqués sur ce PC */
   all?: boolean;
+  /** « Optimiser et jouer » (bibliothèque) : le jeu lancé une fois le lot fini */
+  play?: { id: string; name: string };
+  /** titre et texte d'un lot préparé par un bouton (optimisations gratuites, outils) */
+  title?: string;
+  lead?: string;
+}
+
+/** Lancement d'un jeu de la bibliothèque, suivi par la page Jeux et la fenêtre du lot. */
+export interface Playing {
+  id: string;
+  name: string;
+  status: "waiting" | "started" | "failed";
 }
 
 function load<T>(key: string, fallback: T): T {
@@ -124,6 +144,28 @@ function useStoreValue() {
   const applied = useMemo(() => new Map((appliedList ?? []).map((a) => [a.id, a])), [appliedList]);
   const [variants, setVariants] = usePersisted<Record<string, string>>("variants", {});
   const [mcDirOverride, setMcDir] = usePersisted<string | null>("mcDir", null);
+  /** « Nettoyer » la RAM réduit aussi les applis en arrière-plan (paramètres, désactivé par défaut) */
+  const [cleanTrim, setCleanTrim] = usePersisted<boolean>("cleanTrim", false);
+  const [myPresets, setMyPresets] = usePersisted<MyPreset[]>("myPresets", []);
+  /** preset choisi pour chaque jeu de la bibliothèque : "builtin:<id>", "mine:<id>" ou "none" */
+  const [gamePresets, setGamePresets] = usePersisted<Record<string, string>>("gamePresets", {});
+  /** Launcher choisi pour Minecraft Java quand plusieurs sont installés (id du jeu : "mc:lunar", "mc:official"…). */
+  const [mcLauncher, setMcLauncher] = usePersisted<string | null>("mcLauncher", null);
+  const [playing, setPlaying] = useState<Playing | null>(null);
+  /** jeu à lancer à la fin du lot en cours (« Optimiser et jouer ») */
+  const launchAfter = useRef<Playing | null>(null);
+
+  const launchGame = useCallback(async (id: string, name: string) => {
+    setPlaying({ id, name, status: "waiting" });
+    try {
+      await api.gameLaunch(id);
+      setPlaying({ id, name, status: "started" });
+    } catch {
+      setPlaying({ id, name, status: "failed" });
+    }
+  }, []);
+  const launchGameRef = useRef(launchGame);
+  launchGameRef.current = launchGame;
   const [history, setHistory] = useState<HistoryEntry[]>([]);
   const [run, setRun] = useState<RunState | null>(null);
   const [confirm, setConfirm] = useState<ConfirmState | null>(null);
@@ -330,6 +372,35 @@ function useStoreValue() {
     [setVariants, variantLocked, setUpsell, applied, setSelection, setPendingUndo],
   );
 
+  /** Réglages allumés en ce moment (appliqués ou cochés), avec leur variante, dans l'ordre du catalogue : ce que
+   * garde un code de partage ou « Enregistrer ma sélection ». Les actions ponctuelles n'en font pas partie. */
+  const currentSetup = useMemo(() => {
+    const out: string[] = [];
+    for (const id of catalogOrder.keys()) {
+      const tw = tweaks.get(id);
+      if (!tw || tw.kind !== "tweak" || !isOn(id)) continue;
+      const v = selected.has(id) ? variantOf(tw) : (applied.get(id)?.variant ?? null);
+      out.push(v ? `${id}:${v}` : id);
+    }
+    return out;
+  }, [isOn, selected, variantOf, applied]);
+
+  /** Renvoie l'id du preset créé (pour l'ouvrir dans la fenêtre de modification). */
+  const savePreset = useCallback(
+    (name: string, entries: string[]) => {
+      const id = `p${Date.now().toString(36)}`;
+      setMyPresets((list) => [...list, { id, name: name.trim(), t: entries, at: Date.now() }]);
+      return id;
+    },
+    [setMyPresets],
+  );
+  /** Nom et réglages modifiés ; la date reste celle de l'enregistrement. */
+  const updatePreset = useCallback(
+    (id: string, name: string, entries: string[]) => setMyPresets((list) => list.map((p) => (p.id === id ? { ...p, name: name.trim(), t: entries } : p))),
+    [setMyPresets],
+  );
+  const deletePreset = useCallback((id: string) => setMyPresets((list) => list.filter((p) => p.id !== id)), [setMyPresets]);
+
   /** Ajoute une liste "id" ou "id:variante" à la sélection (presets). */
   const selectMany = useCallback(
     (entries: string[]) => {
@@ -351,6 +422,54 @@ function useStoreValue() {
       return ids.length;
     },
     [sys, setSelection, setVariants, setPendingUndo, isLocked, variantLocked, applied, undoSet, variants],
+  );
+
+  /** Réglages d'une liste "id" ou "id:variante" à appliquer sur ce PC (mêmes règles que selectMany), sans toucher à
+   * la sélection : variante voulue de chacun, déjà appliqués avec cette variante exclus (sauf `again` : relancés). */
+  const toApply = useCallback(
+    (entries: string[], again = false) => {
+      const ids: string[] = [];
+      const vs: Record<string, string> = {};
+      for (const e of entries) {
+        const [id, v] = e.split(":");
+        const tw = tweaks.get(id);
+        if (!tw || !availability(tw, sys).ok || tw.kind === "action" || isLocked(id) || (v && variantLocked(id, v))) continue;
+        const variant = v && tw.variants?.some((x) => x.id === v) ? v : undefined;
+        const a = applied.get(id);
+        if (!again && a && !undoSet.has(id) && (a.variant ?? null) === (variant || (variants[id] ?? autoVariant(tw, sys) ?? null))) continue;
+        ids.push(id);
+        if (variant) vs[id] = variant;
+      }
+      return { ids, vs };
+    },
+    [sys, isLocked, variantLocked, applied, undoSet, variants],
+  );
+
+  /** « Optimiser et jouer » : confirmation des réglages du preset du jeu, lot, puis lancement du jeu. Tout est déjà
+   * appliqué : le jeu démarre tout de suite. */
+  const optimizeAndPlay = useCallback(
+    (game: { id: string; name: string }, entries: string[]) => {
+      const { ids, vs } = toApply(entries);
+      if (!ids.length) return void launchGame(game.id, game.name);
+      setVariants((m) => ({ ...m, ...vs }));
+      launchAfter.current = { ...game, status: "waiting" };
+      setPlaying(null);
+      setConfirm({ ids: ids.sort(byCatalog), undo: [], single: true, play: game });
+    },
+    [toApply, launchGame, setVariants],
+  );
+
+  /** Lot préparé par un bouton (optimisations gratuites, outils) : confirmation, sans toucher à la sélection. 0 : tout
+   * est déjà appliqué. */
+  const requestApplyEntries = useCallback(
+    (entries: string[], text?: { title: string; lead: string }, again = false) => {
+      const { ids, vs } = toApply(entries, again);
+      if (!ids.length) return 0;
+      setVariants((m) => ({ ...m, ...vs }));
+      setConfirm({ ids: ids.sort(byCatalog), undo: [], single: true, ...text });
+      return ids.length;
+    },
+    [toApply, setVariants],
   );
 
   /** Réapplique un réglage déjà appliqué (Windows en a changé une valeur depuis). */
@@ -388,11 +507,17 @@ function useStoreValue() {
   const runRef = useRef<RunState | null>(null);
   runRef.current = run;
 
+  // confirmation fermée sans lancer le lot : le jeu ne démarre pas plus tard
   useEffect(() => {
+    if (!confirm && !run) launchAfter.current = null;
+  }, [confirm, run]);
+
+  useEffect(() => {
+    // lot terminé encore affiché : un lot lancé depuis la barre en jeu ne vient pas s'y mélanger
     const subs = [
       api.onItem((e) =>
         setRun((r) => {
-          if (!r) return r;
+          if (!r || r.done) return r;
           const rows = r.rows.slice();
           if (rows[e.index]) rows[e.index] = { ...rows[e.index], status: e.status, durationMs: e.durationMs };
           const logs = e.status === "error" && e.message ? [...r.logs, { id: e.id, line: `! ${e.message}` }] : r.logs;
@@ -400,10 +525,14 @@ function useStoreValue() {
         }),
       ),
       api.onLog((e) =>
-        setRun((r) => (r ? { ...r, logs: r.logs.length > 600 ? [...r.logs.slice(-500), e] : [...r.logs, e] } : r)),
+        setRun((r) => (r && !r.done ? { ...r, logs: r.logs.length > 600 ? [...r.logs.slice(-500), e] : [...r.logs, e] } : r)),
       ),
       api.onDone((e) => {
-        setRun((r) => (r ? { ...r, done: e, endedAt: Date.now() } : r));
+        setRun((r) => (r && !r.done ? { ...r, done: e, endedAt: Date.now() } : r));
+        // « Optimiser et jouer » : le jeu démarre une fois les réglages posés, sauf si le joueur a arrêté le lot
+        const play = launchAfter.current;
+        launchAfter.current = null;
+        if (play && !e.cancelled) void launchGameRef.current(play.id, play.name);
         // pas de point de restauration : rien n'a été appliqué, la sélection revient pour réessayer
         const skipped = (runRef.current?.rows ?? []).filter((r) => !r.undo && tweaks.get(r.id)?.kind === "tweak").map((r) => r.id);
         if (e.restoreFailed && skipped.length) setSelection((s) => [...s, ...skipped.filter((id) => !s.includes(id))]);
@@ -450,6 +579,8 @@ function useStoreValue() {
         items.push(item);
       }
       setConfirm(null);
+      // un lancement de jeu d'avant ne s'affiche pas dans ce lot
+      setPlaying(null);
       setRun({
         runId: null,
         rows: items.map((i, n) => ({ id: i.id, variant: i.variant ?? null, undo: !!i.undo, status: "pending", durationMs: null, reboot: rebootAt.has(n) })),
@@ -510,6 +641,21 @@ function useStoreValue() {
     setFocusTweak(tweakId ?? null);
     if (tweakId) setFocusSeq((n) => n + 1);
   }, []);
+  // barre en jeu : « Ouvrir Rago Optimizer » ou l'offre Premium, depuis la partie
+  useEffect(() => {
+    const sub = api.onGoto((page) => (page === "premium" ? setUpsell("plan") : goTo(page)));
+    return () => void sub.then((un) => un());
+  }, [goTo, setUpsell]);
+  // langue du menu de l'icône près de l'horloge
+  useEffect(() => {
+    if (!isTauri) return;
+    void api.backgroundGet().then(
+      (st) => {
+        if (st.prefs.lang !== lang) void api.backgroundSet({ ...st.prefs, lang });
+      },
+      () => {},
+    );
+  }, [lang]);
 
   return {
     lang, setLang, motion, setMotion, t,
@@ -521,8 +667,10 @@ function useStoreValue() {
     repairNotice, setRepairNotice,
     retiredApplied, requestUndo, requestUndoAll,
     history, lastRun, lastRestore, refreshHistory, refreshApplied,
-    mcDir, setMcDir,
-    confirm, setConfirm, requestApply,
+    mcDir, setMcDir, cleanTrim, setCleanTrim,
+    currentSetup, myPresets, savePreset, updatePreset, deletePreset,
+    gamePresets, setGamePresets, mcLauncher, setMcLauncher, playing, setPlaying, launchGame, optimizeAndPlay, toApply,
+    confirm, setConfirm, requestApply, requestApplyEntries,
     run, setRun, startRun,
     paletteOpen, setPaletteOpen,
     focusTweak, setFocusTweak, focusSeq,

@@ -1,0 +1,11 @@
+{
+  "$schema": "../gen/schemas/desktop-schema.json",
+  "identifier": "overlay",
+  "description": "Barre en jeu (RAG-82) : lit les mesures et lance les réglages par les commandes de l'app, rien d'autre",
+  "windows": [
+    "overlay"
+  ],
+  "permissions": [
+    "core:default"
+  ]
+}

@@ -716,6 +716,78 @@
         "en": "Shared files may open a bit more slowly from other PCs.",
         "fr": "Les fichiers partagés peuvent s'ouvrir un peu plus lentement depuis les autres PC."
        }
+      },
+      {
+       "id": "net_dscp",
+       "name": {
+        "en": "Network priority for more online games",
+        "fr": "Priorité réseau d'autres jeux en ligne"
+       },
+       "desc": {
+        "en": "Marks the traffic of 12 online games (Dota 2, Call of Duty, Destiny 2, Halo Infinite, Rust, Warframe, War Thunder, World of Tanks, Dead by Daylight, Brawlhalla, Battlefield V, Titanfall 2) as priority.",
+        "fr": "Marque comme prioritaire le trafic de 12 jeux en ligne (Dota 2, Call of Duty, Destiny 2, Halo Infinite, Rust, Warframe, War Thunder, World of Tanks, Dead by Daylight, Brawlhalla, Battlefield V, Titanfall 2)."
+       },
+       "risk": "safe",
+       "reboot": true,
+       "kind": "tweak",
+       "requires": [],
+       "lines": 133,
+       "gain": {
+        "en": "Can help when someone downloads or streams on your connection; marking only works if your router honors it.",
+        "fr": "Peut aider quand quelqu'un télécharge ou streame sur ta connexion ; le marquage n'agit que si ta box le gère."
+       },
+       "cons": {
+        "en": "None when your router ignores the marking: nothing changes then.",
+        "fr": "Aucun quand ta box ne lit pas le marquage : rien ne change alors."
+       }
+      },
+      {
+       "id": "net_dns",
+       "name": {
+        "en": "Use Cloudflare and Google DNS",
+        "fr": "Utiliser les DNS Cloudflare et Google"
+       },
+       "desc": {
+        "en": "Your connected network cards look up addresses with Cloudflare (1.1.1.1) and Google (8.8.8.8) instead of your internet provider.",
+        "fr": "Tes cartes réseau connectées cherchent les adresses avec Cloudflare (1.1.1.1) et Google (8.8.8.8) au lieu de ton fournisseur d'accès."
+       },
+       "risk": "safe",
+       "reboot": true,
+       "kind": "tweak",
+       "requires": [],
+       "lines": 2,
+       "gain": {
+        "en": "Sites and servers are found faster and more reliably when your provider's DNS is slow; it doesn't lower in-game ping.",
+        "fr": "Sites et serveurs trouvés plus vite et plus sûrement quand les DNS de ton fournisseur sont lents ; ça ne baisse pas le ping en jeu."
+       },
+       "cons": {
+        "en": "Can cause trouble on networks that enforce their own DNS (school, work, parental control); IPv4 only.",
+        "fr": "Peut gêner sur un réseau qui impose ses DNS (école, travail, contrôle parental) ; seulement en IPv4."
+       }
+      },
+      {
+       "id": "net_intmod",
+       "name": {
+        "en": "Disable interrupt moderation",
+        "fr": "Couper la modération des interruptions"
+       },
+       "desc": {
+        "en": "Your network card hands each packet to Windows right away instead of grouping them.",
+        "fr": "Ta carte réseau transmet chaque paquet à Windows tout de suite au lieu de les grouper."
+       },
+       "risk": "safe",
+       "reboot": true,
+       "kind": "tweak",
+       "requires": [],
+       "lines": 3,
+       "gain": {
+        "en": "Slightly lower and steadier network latency, especially on a wired connection.",
+        "fr": "Latence réseau un peu plus basse et plus régulière, surtout en filaire."
+       },
+       "cons": {
+        "en": "More CPU use during large downloads. Hitreg Suite does the opposite: don't use both.",
+        "fr": "Plus de processeur utilisé pendant les gros téléchargements. Le Hitreg Suite fait l'inverse : n'utilise pas les deux."
+       }
       }
      ]
     },
@@ -885,8 +957,8 @@
         "en": "Per-game advanced priority"
        },
        "desc": {
-        "en": "Six games to choose from: the chosen game runs at high priority and its network traffic is marked as priority.",
-        "fr": "Six jeux au choix : le jeu choisi passe en priorité haute et son trafic réseau est marqué comme prioritaire."
+        "en": "Sixteen games to choose from (Minecraft Java and Bedrock, Fortnite, Valorant, CS2, PUBG, Roblox…): the chosen game runs at high priority and its network traffic is marked as priority.",
+        "fr": "Seize jeux au choix (Minecraft Java et Bedrock, Fortnite, Valorant, CS2, PUBG, Roblox…) : le jeu choisi passe en priorité haute et son trafic réseau est marqué comme prioritaire."
        },
        "risk": "safe",
        "reboot": true,
@@ -898,7 +970,7 @@
           "fr": "Minecraft",
           "en": "Minecraft"
          },
-         "lines": 124
+         "lines": 14
         },
         {
          "id": "fortnite",
@@ -906,7 +978,7 @@
           "fr": "Fortnite",
           "en": "Fortnite"
          },
-         "lines": 124
+         "lines": 14
         },
         {
          "id": "valorant",
@@ -914,7 +986,7 @@
           "fr": "Valorant",
           "en": "Valorant"
          },
-         "lines": 124
+         "lines": 14
         },
         {
          "id": "cs2",
@@ -922,7 +994,7 @@
           "fr": "CS2",
           "en": "CS2"
          },
-         "lines": 124
+         "lines": 27
         },
         {
          "id": "apex",
@@ -930,7 +1002,7 @@
           "fr": "Apex",
           "en": "Apex"
          },
-         "lines": 124
+         "lines": 27
         },
         {
          "id": "gta",
@@ -938,12 +1010,92 @@
           "fr": "GTA V",
           "en": "GTA V"
          },
-         "lines": 124
+         "lines": 27
+        },
+        {
+         "id": "pubg",
+         "label": {
+          "en": "PUBG",
+          "fr": "PUBG"
+         },
+         "lines": 14
+        },
+        {
+         "id": "roblox",
+         "label": {
+          "en": "Roblox",
+          "fr": "Roblox"
+         },
+         "lines": 14
+        },
+        {
+         "id": "r6",
+         "label": {
+          "en": "Rainbow Six Siege",
+          "fr": "Rainbow Six Siege"
+         },
+         "lines": 27
+        },
+        {
+         "id": "overwatch",
+         "label": {
+          "en": "Overwatch 2",
+          "fr": "Overwatch 2"
+         },
+         "lines": 14
+        },
+        {
+         "id": "rivals",
+         "label": {
+          "en": "Marvel Rivals",
+          "fr": "Marvel Rivals"
+         },
+         "lines": 14
+        },
+        {
+         "id": "finals",
+         "label": {
+          "en": "The Finals",
+          "fr": "The Finals"
+         },
+         "lines": 14
+        },
+        {
+         "id": "tarkov",
+         "label": {
+          "en": "Escape from Tarkov",
+          "fr": "Escape from Tarkov"
+         },
+         "lines": 14
+        },
+        {
+         "id": "rl",
+         "label": {
+          "en": "Rocket League",
+          "fr": "Rocket League"
+         },
+         "lines": 14
+        },
+        {
+         "id": "lol",
+         "label": {
+          "en": "League of Legends",
+          "fr": "League of Legends"
+         },
+         "lines": 14
+        },
+        {
+         "id": "bedrock",
+         "label": {
+          "en": "Minecraft Bedrock",
+          "fr": "Minecraft Bedrock"
+         },
+         "lines": 14
         }
        ],
        "requires": [],
        "defaultVariant": "minecraft",
-       "lines": 124,
+       "lines": 27,
        "gain": {
         "en": "Can help when other programs load the CPU; network marking only works if your router honors it.",
         "fr": "Peut aider si d'autres programmes chargent le processeur ; le marquage réseau n'agit que si ta box le gère."
@@ -3840,8 +3992,8 @@
         "en": "AMD power saving"
        },
        "desc": {
-        "en": "Turns off the AMD card's internal power saving, including its ultra-low-power sleep state.",
-        "fr": "Coupe les économies d'énergie internes de la carte AMD, dont sa mise en veille très basse consommation."
+        "en": "Turns off the internal power saving of every AMD card, including its ultra-low-power sleep state.",
+        "fr": "Coupe les économies d'énergie internes de chaque carte AMD, dont sa mise en veille très basse consommation."
        },
        "risk": "safe",
        "reboot": true,
@@ -3849,7 +4001,7 @@
        "requires": [
         "gpu:amd"
        ],
-       "lines": 11,
+       "lines": 13,
        "gain": {
         "en": "Can avoid small hitches when the card wakes up; often a small effect.",
         "fr": "Peut éviter de petits à-coups quand la carte se réveille ; effet souvent faible."
@@ -4062,14 +4214,14 @@
        "reboot": true,
        "requires": [],
        "kind": "tweak",
-       "lines": 13,
+       "lines": 15,
        "gain": {
         "en": "May slightly lower latency in windowed DirectX games; rarely helps Minecraft Java.",
         "fr": "Peut réduire un peu la latence des jeux DirectX en fenêtre ; rarement utile pour Minecraft Java."
        },
        "cons": {
-        "en": "Overwrites your Windows 11 graphics settings: Auto HDR may turn off, and so does forced VRR for older games.",
-        "fr": "Écrase tes réglages graphiques de Windows 11 : Auto HDR peut se couper, tout comme le VRR forcé des vieux jeux."
+        "en": "Turns off forced VRR for older games (a Windows 11 optimization); your other graphics settings, including Auto HDR, are kept.",
+        "fr": "Coupe le VRR forcé des vieux jeux (optimisation de Windows 11) ; tes autres réglages graphiques, dont Auto HDR, sont gardés."
        }
       },
       {
@@ -4145,21 +4297,21 @@
         "fr": "Effets visuels"
        },
        "desc": {
-        "en": "Turns off Windows animations and transparency for a plainer interface.",
-        "fr": "Coupe les animations et la transparence de Windows pour une interface plus sobre."
+        "en": "Turns off animations, transparency, menu fades, shadows and window contents while dragging; text smoothing stays on.",
+        "fr": "Coupe les animations, la transparence, les fondus des menus, les ombres et le contenu des fenêtres pendant leur déplacement ; le lissage du texte reste actif."
        },
        "risk": "safe",
        "reboot": false,
        "requires": [],
        "kind": "tweak",
-       "lines": 26,
+       "lines": 10,
        "gain": {
         "en": "Slightly snappier interface on low-end PCs; near-zero effect on in-game FPS.",
         "fr": "Interface un peu plus vive sur les petits PC ; effet sur les FPS en jeu quasi nul."
        },
        "cons": {
-        "en": "Windows looks less smooth and less polished: no more window animations or transparency.",
-        "fr": "Windows paraît moins fluide et moins joli : plus d'animations de fenêtres ni de transparence."
+        "en": "Windows looks less smooth and less polished: no animations, shadows or transparency, and a window being moved shows only its outline.",
+        "fr": "Windows paraît moins fluide et moins joli : plus d'animations, d'ombres ni de transparence, et une fenêtre déplacée n'affiche que son contour."
        }
       }
      ]
@@ -4310,15 +4462,15 @@
        "reboot": true,
        "kind": "tweak",
        "requires": [],
-       "lines": 22,
+       "lines": 23,
        "twin": "win_search",
        "gain": {
         "en": "More privacy and results limited to your PC; near-zero effect on FPS.",
         "fr": "Plus de vie privée et des résultats limités à ton PC ; effet sur les FPS quasi nul."
        },
        "cons": {
-        "en": "No more web results or Bing answers in the Start menu.",
-        "fr": "Plus de résultats web ni de réponses Bing dans le menu Démarrer."
+        "en": "No more web results or Bing answers in the Start menu, and File Explorer stops keeping your recent searches.",
+        "fr": "Plus de résultats web ni de réponses Bing dans le menu Démarrer, et l'Explorateur ne garde plus tes recherches récentes."
        }
       },
       {
@@ -4562,6 +4714,327 @@
         "en": "You have to open what you plug in yourself.",
         "fr": "Tu dois ouvrir toi-même le contenu de ce que tu branches."
        }
+      },
+      {
+       "id": "win_bgdownloads",
+       "name": {
+        "en": "Stop map and speech downloads",
+        "fr": "Couper les téléchargements de cartes et de voix"
+       },
+       "desc": {
+        "en": "Windows stops downloading offline map updates and new speech recognition models in the background.",
+        "fr": "Windows ne télécharge plus en arrière-plan les mises à jour des cartes hors connexion ni les nouveaux modèles de reconnaissance vocale."
+       },
+       "risk": "safe",
+       "reboot": false,
+       "kind": "tweak",
+       "requires": [],
+       "lines": 3,
+       "gain": {
+        "en": "A little less network and disk activity in the background while you play; very small effect on latency.",
+        "fr": "Un peu moins d'activité réseau et disque en fond pendant que tu joues ; effet sur la latence très faible."
+       },
+       "cons": {
+        "en": "Offline maps and speech recognition no longer update by themselves.",
+        "fr": "Les cartes hors connexion et la reconnaissance vocale ne se mettent plus à jour d'elles-mêmes."
+       }
+      }
+     ]
+    },
+    {
+     "id": "comfort",
+     "name": {
+      "en": "Interface and comfort",
+      "fr": "Interface et confort"
+     },
+     "tweaks": [
+      {
+       "id": "win_taskbar",
+       "name": {
+        "en": "Clean up the taskbar",
+        "fr": "Alléger la barre des tâches"
+       },
+       "desc": {
+        "en": "Hides the Task View, search, Chat and Meet Now buttons from the taskbar.",
+        "fr": "Retire les boutons Vue des tâches, Rechercher, Conversation et Meet Now de la barre des tâches."
+       },
+       "risk": "safe",
+       "reboot": true,
+       "kind": "tweak",
+       "requires": [],
+       "lines": 4,
+       "gain": {
+        "en": "Cleaner taskbar; near-zero effect on FPS.",
+        "fr": "Barre des tâches plus propre ; effet sur les FPS quasi nul."
+       },
+       "cons": {
+        "en": "To search, press the Windows key and type; Task View is still on Windows + Tab.",
+        "fr": "Pour chercher, appuie sur la touche Windows et tape ; la Vue des tâches reste sur Windows + Tab."
+       }
+      },
+      {
+       "id": "win_recent",
+       "name": {
+        "en": "Hide recent items",
+        "fr": "Masquer les éléments récents"
+       },
+       "desc": {
+        "en": "Start stops listing recently added and most used apps, and File Explorer stops showing your recent files and frequent folders.",
+        "fr": "Démarrer n'affiche plus les applis récemment ajoutées ni les plus utilisées, et l'Explorateur ne montre plus tes fichiers récents ni tes dossiers fréquents."
+       },
+       "risk": "safe",
+       "reboot": true,
+       "kind": "tweak",
+       "requires": [],
+       "lines": 4,
+       "gain": {
+        "en": "More privacy when you stream or share your screen; no effect on FPS.",
+        "fr": "Plus de vie privée quand tu streams ou partages ton écran ; aucun effet sur les FPS."
+       },
+       "cons": {
+        "en": "You can no longer find your last files from the File Explorer home page.",
+        "fr": "Tu ne retrouves plus tes derniers fichiers depuis l'accueil de l'Explorateur."
+       }
+      },
+      {
+       "id": "win_highlights",
+       "name": {
+        "en": "Turn off search highlights",
+        "fr": "Désactiver les suggestions de la recherche"
+       },
+       "desc": {
+        "en": "Removes the Bing pictures and trending topics shown in the Windows search box and search panel.",
+        "fr": "Retire les images Bing et les sujets tendance affichés dans la barre et le panneau de recherche de Windows."
+       },
+       "risk": "safe",
+       "reboot": true,
+       "kind": "tweak",
+       "requires": [],
+       "lines": 3,
+       "gain": {
+        "en": "Plainer search and fewer calls to Bing; near-zero effect on FPS.",
+        "fr": "Recherche plus sobre et moins d'appels vers Bing ; effet sur les FPS quasi nul."
+       },
+       "cons": {
+        "en": "No more pictures or trending topics in search.",
+        "fr": "Plus d'illustrations ni de tendances dans la recherche."
+       }
+      },
+      {
+       "id": "win_lockscreen",
+       "name": {
+        "en": "Skip the lock screen",
+        "fr": "Passer l'écran de verrouillage"
+       },
+       "desc": {
+        "en": "Goes straight to the sign-in screen, without the picture screen or the blur behind it; your password is still asked.",
+        "fr": "Tu arrives directement sur l'écran de connexion, sans l'image d'accueil ni le flou derrière ; le mot de passe reste demandé."
+       },
+       "risk": "safe",
+       "reboot": false,
+       "kind": "tweak",
+       "requires": [],
+       "lines": 2,
+       "gain": {
+        "en": "One click less at startup and when you come back to the PC; no effect on FPS.",
+        "fr": "Un clic de moins au démarrage et au retour sur le PC ; aucun effet sur les FPS."
+       },
+       "cons": {
+        "en": "No more picture screen or clock before you sign in. Some Home editions may ignore this setting.",
+        "fr": "Plus d'image d'accueil ni d'heure avant la connexion. Certaines éditions Famille peuvent ignorer ce réglage."
+       }
+      },
+      {
+       "id": "win_classicmenu",
+       "name": {
+        "en": "Classic right-click menu",
+        "fr": "Ancien menu du clic droit"
+       },
+       "desc": {
+        "en": "On Windows 11, right-click opens the full menu right away, without going through \"Show more options\".",
+        "fr": "Sur Windows 11, le clic droit ouvre tout de suite le menu complet, sans passer par « Afficher plus d'options »."
+       },
+       "risk": "safe",
+       "reboot": true,
+       "kind": "tweak",
+       "requires": [],
+       "lines": 1,
+       "gain": {
+        "en": "One click less to reach file options; no effect on FPS.",
+        "fr": "Un clic de moins pour les options des fichiers ; aucun effet sur les FPS."
+       },
+       "cons": {
+        "en": "The compact Windows 11 menu goes away. No effect on Windows 10.",
+        "fr": "Le menu compact de Windows 11 disparaît. Sans effet sur Windows 10."
+       }
+      },
+      {
+       "id": "win_alttab",
+       "name": {
+        "en": "Classic Alt+Tab",
+        "fr": "Alt+Tab classique"
+       },
+       "desc": {
+        "en": "Alt+Tab shows the old, simple list of icons, without window previews.",
+        "fr": "Alt+Tab affiche l'ancienne liste d'icônes, sans aperçu des fenêtres."
+       },
+       "risk": "safe",
+       "reboot": true,
+       "kind": "tweak",
+       "requires": [],
+       "lines": 1,
+       "gain": {
+        "en": "A simple switcher with no previews to draw when you leave a game; near-zero effect on FPS.",
+        "fr": "Sélecteur simple qui n'a pas d'aperçus à dessiner quand tu quittes un jeu ; effet sur les FPS quasi nul."
+       },
+       "cons": {
+        "en": "No more window previews or browser tabs in Alt+Tab.",
+        "fr": "Plus d'aperçus des fenêtres ni d'onglets du navigateur dans Alt+Tab."
+       }
+      },
+      {
+       "id": "win_shortcut",
+       "name": {
+        "en": "Remove \"- Shortcut\" from new shortcuts",
+        "fr": "Retirer « - Raccourci » des nouveaux raccourcis"
+       },
+       "desc": {
+        "en": "New shortcuts keep the plain name of the file, without \"- Shortcut\" added at the end.",
+        "fr": "Les nouveaux raccourcis gardent le nom du fichier, sans « - Raccourci » ajouté à la fin."
+       },
+       "risk": "safe",
+       "reboot": false,
+       "kind": "tweak",
+       "requires": [],
+       "lines": 1,
+       "gain": {
+        "en": "No more renaming your shortcuts; no effect on FPS.",
+        "fr": "Plus besoin de renommer tes raccourcis ; aucun effet sur les FPS."
+       },
+       "cons": {
+        "en": "None. Shortcuts you already made don't change.",
+        "fr": "Aucun. Les raccourcis déjà créés ne changent pas."
+       }
+      },
+      {
+       "id": "win_suggestions",
+       "name": {
+        "en": "Turn off Start and Settings suggestions",
+        "fr": "Couper les suggestions de Démarrer et des Paramètres"
+       },
+       "desc": {
+        "en": "Removes the recommended tips in Start, the \"finish setting up your device\" reminders, online tips in Settings and cloud results in search.",
+        "fr": "Retire les conseils recommandés dans Démarrer, les rappels « terminer la configuration », les astuces en ligne des Paramètres et les résultats du cloud dans la recherche."
+       },
+       "risk": "safe",
+       "reboot": true,
+       "kind": "tweak",
+       "requires": [],
+       "lines": 5,
+       "gain": {
+        "en": "Fewer ads and reminders in Windows; no effect on FPS.",
+        "fr": "Moins de pubs et de rappels dans Windows ; aucun effet sur les FPS."
+       },
+       "cons": {
+        "en": "Search no longer shows your OneDrive files or Outlook mail.",
+        "fr": "La recherche ne montre plus tes fichiers OneDrive ni tes mails Outlook."
+       }
+      },
+      {
+       "id": "win_extensions",
+       "name": {
+        "en": "Show file extensions",
+        "fr": "Afficher les extensions de fichiers"
+       },
+       "desc": {
+        "en": "Shows extensions like .exe or .zip in File Explorer, so you can spot fake files at a glance.",
+        "fr": "Affiche les extensions comme .exe ou .zip dans l'Explorateur, pour repérer d'un coup d'œil les faux fichiers."
+       },
+       "risk": "safe",
+       "reboot": false,
+       "kind": "tweak",
+       "requires": [],
+       "lines": 1,
+       "gain": {
+        "en": "A booby-trapped \"photo.png.exe\" stands out right away; no effect on FPS.",
+        "fr": "Un « photo.png.exe » piégé se voit tout de suite ; aucun effet sur les FPS."
+       },
+       "cons": {
+        "en": "Renaming a file can change its extension if you delete it by mistake (Windows warns you).",
+        "fr": "Renommer un fichier peut changer son extension si tu l'effaces par erreur (Windows te prévient)."
+       }
+      },
+      {
+       "id": "win_compact",
+       "name": {
+        "en": "Compact File Explorer",
+        "fr": "Explorateur compact"
+       },
+       "desc": {
+        "en": "Tightens the spacing between items in File Explorer, so more files fit on screen.",
+        "fr": "Réduit l'espace entre les éléments de l'Explorateur, pour afficher plus de fichiers à l'écran."
+       },
+       "risk": "safe",
+       "reboot": false,
+       "kind": "tweak",
+       "requires": [],
+       "lines": 1,
+       "gain": {
+        "en": "More files visible at once; no effect on FPS.",
+        "fr": "Plus de fichiers visibles d'un coup ; aucun effet sur les FPS."
+       },
+       "cons": {
+        "en": "Items are packed tighter, a bit less handy on a touch screen.",
+        "fr": "Les éléments sont plus serrés, un peu moins pratiques au doigt sur un écran tactile."
+       }
+      },
+      {
+       "id": "win_wallpaper",
+       "name": {
+        "en": "Full-quality wallpaper",
+        "fr": "Fond d'écran en pleine qualité"
+       },
+       "desc": {
+        "en": "Stops Windows from compressing your JPEG wallpaper, so it stays sharp.",
+        "fr": "Windows ne compresse plus ton fond d'écran JPEG, qui reste net."
+       },
+       "risk": "safe",
+       "reboot": false,
+       "kind": "tweak",
+       "requires": [],
+       "lines": 1,
+       "gain": {
+        "en": "Wallpaper without compression artifacts; no effect on FPS.",
+        "fr": "Fond d'écran sans artefacts de compression ; aucun effet sur les FPS."
+       },
+       "cons": {
+        "en": "Takes effect the next time you set your wallpaper.",
+        "fr": "Prend effet la prochaine fois que tu choisis ton fond d'écran."
+       }
+      },
+      {
+       "id": "win_thispc",
+       "name": {
+        "en": "Open File Explorer on This PC",
+        "fr": "Ouvrir l'Explorateur sur Ce PC"
+       },
+       "desc": {
+        "en": "File Explorer opens on This PC, with your drives, instead of the Home page.",
+        "fr": "L'Explorateur s'ouvre sur Ce PC, avec tes disques, au lieu de la page Accueil."
+       },
+       "risk": "safe",
+       "reboot": false,
+       "kind": "tweak",
+       "requires": [],
+       "lines": 1,
+       "gain": {
+        "en": "Your drives and folders right away; no effect on FPS.",
+        "fr": "Tes disques et dossiers tout de suite ; aucun effet sur les FPS."
+       },
+       "cons": {
+        "en": "The Home page (recent files, favorites) is one click away in the left pane.",
+        "fr": "La page Accueil (fichiers récents, favoris) reste à un clic dans la barre de gauche."
+       }
       }
      ]
     },
@@ -4610,7 +5083,7 @@
        "reboot": true,
        "kind": "tweak",
        "requires": [],
-       "lines": 30,
+       "lines": 38,
        "gain": {
         "en": "More privacy if you use Office; no effect if it isn't installed.",
         "fr": "Plus de vie privée si tu utilises Office ; sans effet s'il n'est pas installé."
@@ -4766,6 +5239,83 @@
        "cons": {
         "en": "The Copilot button disappears from the taskbar.",
         "fr": "Le bouton Copilot disparaît de la barre des tâches."
+       }
+      },
+      {
+       "id": "dbl_onedrive_off",
+       "name": {
+        "en": "Turn off OneDrive",
+        "fr": "Désactiver OneDrive"
+       },
+       "desc": {
+        "en": "OneDrive stops starting and syncing in the background. Nothing is deleted.",
+        "fr": "OneDrive ne se lance plus et ne synchronise plus en arrière-plan. Rien n'est supprimé."
+       },
+       "risk": "advanced",
+       "reboot": true,
+       "kind": "tweak",
+       "requires": [],
+       "lines": 1,
+       "confirm": {
+        "en": "OneDrive stops syncing: files kept only online won't open until you undo it.",
+        "fr": "OneDrive ne synchronise plus : les fichiers gardés seulement en ligne ne s'ouvrent plus tant que tu n'annules pas."
+       },
+       "gain": {
+        "en": "Fewer processes, less disk and network activity while you play.",
+        "fr": "Moins de processus, d'accès disque et de réseau pendant que tu joues."
+       },
+       "cons": {
+        "en": "Your files stop syncing, and files kept only online won't open until you undo it.",
+        "fr": "Tes fichiers ne se synchronisent plus, et ceux gardés seulement en ligne ne s'ouvrent plus tant que tu n'annules pas."
+       },
+       "restore": true
+      },
+      {
+       "id": "dbl_browsers",
+       "name": {
+        "en": "Disable browser telemetry",
+        "fr": "Désactiver la télémétrie des navigateurs"
+       },
+       "desc": {
+        "en": "Edge, Chrome and Firefox stop sending usage data and feedback; Edge also hides its sidebar and recommendations.",
+        "fr": "Edge, Chrome et Firefox n'envoient plus leurs données d'utilisation ni d'avis ; Edge masque aussi sa barre latérale et ses recommandations."
+       },
+       "risk": "safe",
+       "reboot": false,
+       "kind": "tweak",
+       "requires": [],
+       "lines": 11,
+       "gain": {
+        "en": "More privacy and a plainer Edge; near-zero effect on FPS.",
+        "fr": "Plus de vie privée et un Edge plus sobre ; effet sur les FPS quasi nul."
+       },
+       "cons": {
+        "en": "Browsers show \"managed by your organization\"; no more Copilot sidebar in Edge.",
+        "fr": "Les navigateurs affichent « géré par votre organisation » ; plus de barre latérale Copilot dans Edge."
+       }
+      },
+      {
+       "id": "dbl_vs",
+       "name": {
+        "en": "Disable Visual Studio telemetry",
+        "fr": "Désactiver la télémétrie de Visual Studio"
+       },
+       "desc": {
+        "en": "Stops Visual Studio from sending usage data and turns off its feedback prompts.",
+        "fr": "Visual Studio n'envoie plus de données d'utilisation et ne demande plus ton avis."
+       },
+       "risk": "safe",
+       "reboot": false,
+       "kind": "tweak",
+       "requires": [],
+       "lines": 5,
+       "gain": {
+        "en": "More privacy if Visual Studio is installed; no effect otherwise.",
+        "fr": "Plus de vie privée si Visual Studio est installé ; sans effet sinon."
+       },
+       "cons": {
+        "en": "None for gaming. You can no longer send feedback to Microsoft from Visual Studio.",
+        "fr": "Aucun pour jouer. Tu ne peux plus envoyer d'avis à Microsoft depuis Visual Studio."
        }
       }
      ]
@@ -5081,6 +5631,30 @@
         "fr": "Prend plusieurs minutes et peut avoir besoin d'Internet pour réparer."
        },
        "restore": true
+      },
+      {
+       "id": "win_browserbg",
+       "name": {
+        "en": "No browsers in the background",
+        "fr": "Pas de navigateur en arrière-plan"
+       },
+       "desc": {
+        "en": "Edge, Chrome and Brave fully close when you close their window, and Edge stops preloading when Windows starts.",
+        "fr": "Edge, Chrome et Brave se ferment vraiment quand tu fermes leur fenêtre, et Edge ne se précharge plus au démarrage de Windows."
+       },
+       "risk": "safe",
+       "reboot": false,
+       "kind": "tweak",
+       "requires": [],
+       "lines": 4,
+       "gain": {
+        "en": "More memory and CPU free for your game when your browser is closed.",
+        "fr": "Plus de mémoire et de processeur libres pour ton jeu quand ton navigateur est fermé."
+       },
+       "cons": {
+        "en": "Browser extensions and notifications stop running once the window is closed; browsers show \"managed by your organization\".",
+        "fr": "Les extensions et notifications du navigateur ne tournent plus fenêtre fermée ; les navigateurs affichent « géré par votre organisation »."
+       }
       }
      ]
     }
@@ -5764,8 +6338,8 @@
         "en": "Rago game mode"
        },
        "desc": {
-        "en": "On clears temp files and turns off printing and Windows animations; Off brings animations and printing back.",
-        "fr": "Activé vide les fichiers temporaires, coupe l'impression et les animations de Windows ; Désactivé remet animations et impression."
+        "en": "On clears temp files, pauses search indexing and telemetry until the next restart, turns off printing, Windows animations and Xbox Game Bar background recording, and turns on Windows Game Mode. Off starts everything again.",
+        "fr": "Activé vide les fichiers temporaires, met en pause l'indexation de la recherche et la télémétrie jusqu'au redémarrage, coupe l'impression, les animations de Windows et l'enregistrement en fond de la Xbox Game Bar, et active le Mode jeu de Windows. Désactivé remet tout en route."
        },
        "risk": "safe",
        "reboot": false,
@@ -5777,7 +6351,7 @@
           "fr": "Activé",
           "en": "On"
          },
-         "lines": 11
+         "lines": 17
         },
         {
          "id": "off",
@@ -5786,19 +6360,19 @@
           "en": "Off"
          },
          "revert": true,
-         "lines": 9
+         "lines": 12
         }
        ],
        "requires": [],
        "defaultVariant": "on",
-       "lines": 11,
+       "lines": 17,
        "gain": {
-        "en": "Windows feels snappier without animations; no FPS gain in games.",
-        "fr": "Windows paraît plus vif sans animations ; aucun gain de FPS en jeu."
+        "en": "Less background work while you play, and Windows feels snappier right away. FPS gain mostly if background recording was on.",
+        "fr": "Moins de travail en fond pendant tes parties, et Windows plus vif tout de suite. Gain de FPS surtout si l'enregistrement en fond était activé."
        },
        "cons": {
-        "en": "Printing doesn't work while it's on, and the taskbar restarts when you switch.",
-        "fr": "L'impression ne marche plus tant que le mode est activé, et la barre des tâches se relance au passage."
+        "en": "File search in Windows is slower and printing doesn't work while it's on; the taskbar restarts when you switch.",
+        "fr": "La recherche de fichiers de Windows est plus lente et l'impression ne marche plus tant que le mode est activé ; la barre des tâches se relance au passage."
        }
       }
      ]
@@ -6180,7 +6754,7 @@
        "reboot": true,
        "kind": "tweak",
        "requires": [],
-       "lines": 2,
+       "lines": 3,
        "gain": {
         "en": "Startup apps open sooner after you sign in; no effect in games.",
         "fr": "Les applis de démarrage s'ouvrent plus tôt après la connexion ; aucun effet en jeu."
@@ -6288,15 +6862,15 @@
        "reboot": true,
        "kind": "tweak",
        "requires": [],
-       "lines": 22,
+       "lines": 23,
        "twin": "win_search",
        "gain": {
         "en": "More privacy and results limited to your PC; near-zero effect on FPS.",
         "fr": "Plus de vie privée et des résultats limités à ton PC ; effet sur les FPS quasi nul."
        },
        "cons": {
-        "en": "No more web results or Bing answers in the Start menu.",
-        "fr": "Plus de résultats web ni de réponses Bing dans le menu Démarrer."
+        "en": "No more web results or Bing answers in the Start menu, and File Explorer stops keeping your recent searches.",
+        "fr": "Plus de résultats web ni de réponses Bing dans le menu Démarrer, et l'Explorateur ne garde plus tes recherches récentes."
        }
       }
      ]
@@ -6518,7 +7092,21 @@
     "in_queue:low",
     "win_gamemode:on",
     "win_gamedvr",
-    "win_fullscreen"
+    "win_fullscreen",
+    "pri_game:minecraft",
+    "pri_mmcss",
+    "pri_w32",
+    "pri_sysresp",
+    "exp_nolazy",
+    "kbm_thread",
+    "net_throttle",
+    "net_dnsprio",
+    "pow_throttling",
+    "cpu_parking"
+   ],
+   "tag": "MC",
+   "match": [
+    "minecraft"
    ]
   },
   {
@@ -6546,7 +7134,17 @@
     "sys_usb",
     "win_visual",
     "win_gamemode:on",
-    "win_gamedvr"
+    "win_gamedvr",
+    "pri_mmcss",
+    "pri_w32",
+    "pri_sysresp",
+    "exp_nolazy",
+    "pow_throttling",
+    "cpu_throttle",
+    "cpu_turbo",
+    "cpu_device_idle",
+    "win_fullscreen",
+    "win_background"
    ]
   },
   {
@@ -6570,7 +7168,19 @@
     "sys_latency",
     "sys_csrss",
     "sys_time",
-    "gpu_directx"
+    "gpu_directx",
+    "pri_mmcss",
+    "pri_w32",
+    "pri_sysresp",
+    "exp_nolazy",
+    "kbm_thread",
+    "usb_power",
+    "net_nagle",
+    "net_throttle",
+    "pow_throttling",
+    "exp_monitorlat",
+    "win_gamemode:on",
+    "win_gamedvr"
    ]
   },
   {
@@ -6593,7 +7203,16 @@
     "win_gamemode:on",
     "win_gamedvr",
     "win_background",
-    "win_notifications"
+    "win_notifications",
+    "pri_w32",
+    "pri_sysresp",
+    "exp_nolazy",
+    "net_dnsprio",
+    "win_popups",
+    "win_visual",
+    "win_reinstall",
+    "win_ai",
+    "win_fullscreen"
    ]
   },
   {
@@ -6615,7 +7234,596 @@
     "win_experiments",
     "win_errors",
     "win_feed",
-    "win_popups"
+    "win_popups",
+    "win_search",
+    "win_sync",
+    "win_shared",
+    "win_ai",
+    "win_reinstall",
+    "win_autoplay",
+    "dbl_autologgers"
+   ]
+  },
+  {
+   "id": "game_fortnite",
+   "name": {
+    "en": "Fortnite",
+    "fr": "Fortnite"
+   },
+   "desc": {
+    "en": "Fortnite at high priority, plus input, network and power for competitive play.",
+    "fr": "Fortnite en priorité haute, avec entrées, réseau et alimentation réglés pour le compétitif."
+   },
+   "tweaks": [
+    "pri_game:fortnite",
+    "pri_mmcss",
+    "pri_w32",
+    "pri_sysresp",
+    "exp_nolazy",
+    "sys_priority",
+    "sys_latency",
+    "kbm_thread",
+    "net_nagle",
+    "net_throttle",
+    "net_dnsprio",
+    "in_driver",
+    "in_mouse",
+    "in_keyboard",
+    "in_queue:low",
+    "win_gamemode:on",
+    "win_gamedvr",
+    "win_fullscreen",
+    "pow_throttling",
+    "cpu_parking",
+    "usb_power"
+   ],
+   "game": true,
+   "tag": "FN",
+   "match": [
+    "fortnite"
+   ]
+  },
+  {
+   "id": "game_valorant",
+   "name": {
+    "en": "Valorant",
+    "fr": "Valorant"
+   },
+   "desc": {
+    "en": "Valorant at high priority, plus input, network and power for competitive play.",
+    "fr": "Valorant en priorité haute, avec entrées, réseau et alimentation réglés pour le compétitif."
+   },
+   "tweaks": [
+    "pri_game:valorant",
+    "pri_mmcss",
+    "pri_w32",
+    "pri_sysresp",
+    "exp_nolazy",
+    "sys_priority",
+    "sys_latency",
+    "kbm_thread",
+    "net_nagle",
+    "net_throttle",
+    "net_dnsprio",
+    "in_driver",
+    "in_mouse",
+    "in_keyboard",
+    "in_queue:low",
+    "win_gamemode:on",
+    "win_gamedvr",
+    "win_fullscreen",
+    "pow_throttling",
+    "cpu_parking",
+    "usb_power"
+   ],
+   "game": true,
+   "tag": "VAL",
+   "match": [
+    "valorant"
+   ]
+  },
+  {
+   "id": "game_cs2",
+   "name": {
+    "en": "Counter-Strike 2",
+    "fr": "Counter-Strike 2"
+   },
+   "desc": {
+    "en": "Counter-Strike 2 at high priority, plus input, network and power for competitive play.",
+    "fr": "Counter-Strike 2 en priorité haute, avec entrées, réseau et alimentation réglés pour le compétitif."
+   },
+   "tweaks": [
+    "pri_game:cs2",
+    "pri_mmcss",
+    "pri_w32",
+    "pri_sysresp",
+    "exp_nolazy",
+    "sys_priority",
+    "sys_latency",
+    "kbm_thread",
+    "net_nagle",
+    "net_throttle",
+    "net_dnsprio",
+    "in_driver",
+    "in_mouse",
+    "in_keyboard",
+    "in_queue:low",
+    "win_gamemode:on",
+    "win_gamedvr",
+    "win_fullscreen",
+    "pow_throttling",
+    "cpu_parking",
+    "usb_power"
+   ],
+   "game": true,
+   "tag": "CS2",
+   "match": [
+    "counterstrike"
+   ]
+  },
+  {
+   "id": "game_apex",
+   "name": {
+    "en": "Apex Legends",
+    "fr": "Apex Legends"
+   },
+   "desc": {
+    "en": "Apex Legends at high priority, plus input, network and power for competitive play.",
+    "fr": "Apex Legends en priorité haute, avec entrées, réseau et alimentation réglés pour le compétitif."
+   },
+   "tweaks": [
+    "pri_game:apex",
+    "pri_mmcss",
+    "pri_w32",
+    "pri_sysresp",
+    "exp_nolazy",
+    "sys_priority",
+    "sys_latency",
+    "kbm_thread",
+    "net_nagle",
+    "net_throttle",
+    "net_dnsprio",
+    "in_driver",
+    "in_mouse",
+    "in_keyboard",
+    "in_queue:low",
+    "win_gamemode:on",
+    "win_gamedvr",
+    "win_fullscreen",
+    "pow_throttling",
+    "cpu_parking",
+    "usb_power"
+   ],
+   "game": true,
+   "tag": "APEX",
+   "match": [
+    "apexlegends"
+   ]
+  },
+  {
+   "id": "game_pubg",
+   "name": {
+    "en": "PUBG",
+    "fr": "PUBG"
+   },
+   "desc": {
+    "en": "PUBG at high priority, plus input, network and power for competitive play.",
+    "fr": "PUBG en priorité haute, avec entrées, réseau et alimentation réglés pour le compétitif."
+   },
+   "tweaks": [
+    "pri_game:pubg",
+    "pri_mmcss",
+    "pri_w32",
+    "pri_sysresp",
+    "exp_nolazy",
+    "sys_priority",
+    "sys_latency",
+    "kbm_thread",
+    "net_nagle",
+    "net_throttle",
+    "net_dnsprio",
+    "in_driver",
+    "in_mouse",
+    "in_keyboard",
+    "in_queue:low",
+    "win_gamemode:on",
+    "win_gamedvr",
+    "win_fullscreen",
+    "pow_throttling",
+    "cpu_parking",
+    "usb_power"
+   ],
+   "game": true,
+   "tag": "PUBG",
+   "match": [
+    "pubg",
+    "playerunknown"
+   ]
+  },
+  {
+   "id": "game_r6",
+   "name": {
+    "en": "Rainbow Six Siege",
+    "fr": "Rainbow Six Siege"
+   },
+   "desc": {
+    "en": "Rainbow Six Siege at high priority, plus input, network and power for competitive play.",
+    "fr": "Rainbow Six Siege en priorité haute, avec entrées, réseau et alimentation réglés pour le compétitif."
+   },
+   "tweaks": [
+    "pri_game:r6",
+    "pri_mmcss",
+    "pri_w32",
+    "pri_sysresp",
+    "exp_nolazy",
+    "sys_priority",
+    "sys_latency",
+    "kbm_thread",
+    "net_nagle",
+    "net_throttle",
+    "net_dnsprio",
+    "in_driver",
+    "in_mouse",
+    "in_keyboard",
+    "in_queue:low",
+    "win_gamemode:on",
+    "win_gamedvr",
+    "win_fullscreen",
+    "pow_throttling",
+    "cpu_parking",
+    "usb_power"
+   ],
+   "game": true,
+   "tag": "R6",
+   "match": [
+    "rainbowsix"
+   ]
+  },
+  {
+   "id": "game_overwatch",
+   "name": {
+    "en": "Overwatch 2",
+    "fr": "Overwatch 2"
+   },
+   "desc": {
+    "en": "Overwatch 2 at high priority, plus input, network and power for competitive play.",
+    "fr": "Overwatch 2 en priorité haute, avec entrées, réseau et alimentation réglés pour le compétitif."
+   },
+   "tweaks": [
+    "pri_game:overwatch",
+    "pri_mmcss",
+    "pri_w32",
+    "pri_sysresp",
+    "exp_nolazy",
+    "sys_priority",
+    "sys_latency",
+    "kbm_thread",
+    "net_nagle",
+    "net_throttle",
+    "net_dnsprio",
+    "in_driver",
+    "in_mouse",
+    "in_keyboard",
+    "in_queue:low",
+    "win_gamemode:on",
+    "win_gamedvr",
+    "win_fullscreen",
+    "pow_throttling",
+    "cpu_parking",
+    "usb_power"
+   ],
+   "game": true,
+   "tag": "OW2",
+   "match": [
+    "overwatch"
+   ]
+  },
+  {
+   "id": "game_rivals",
+   "name": {
+    "en": "Marvel Rivals",
+    "fr": "Marvel Rivals"
+   },
+   "desc": {
+    "en": "Marvel Rivals at high priority, plus input, network and power for competitive play.",
+    "fr": "Marvel Rivals en priorité haute, avec entrées, réseau et alimentation réglés pour le compétitif."
+   },
+   "tweaks": [
+    "pri_game:rivals",
+    "pri_mmcss",
+    "pri_w32",
+    "pri_sysresp",
+    "exp_nolazy",
+    "sys_priority",
+    "sys_latency",
+    "kbm_thread",
+    "net_nagle",
+    "net_throttle",
+    "net_dnsprio",
+    "in_driver",
+    "in_mouse",
+    "in_keyboard",
+    "in_queue:low",
+    "win_gamemode:on",
+    "win_gamedvr",
+    "win_fullscreen",
+    "pow_throttling",
+    "cpu_parking",
+    "usb_power"
+   ],
+   "game": true,
+   "tag": "MR",
+   "match": [
+    "marvelrivals"
+   ]
+  },
+  {
+   "id": "game_finals",
+   "name": {
+    "en": "The Finals",
+    "fr": "The Finals"
+   },
+   "desc": {
+    "en": "The Finals at high priority, plus input, network and power for competitive play.",
+    "fr": "The Finals en priorité haute, avec entrées, réseau et alimentation réglés pour le compétitif."
+   },
+   "tweaks": [
+    "pri_game:finals",
+    "pri_mmcss",
+    "pri_w32",
+    "pri_sysresp",
+    "exp_nolazy",
+    "sys_priority",
+    "sys_latency",
+    "kbm_thread",
+    "net_nagle",
+    "net_throttle",
+    "net_dnsprio",
+    "in_driver",
+    "in_mouse",
+    "in_keyboard",
+    "in_queue:low",
+    "win_gamemode:on",
+    "win_gamedvr",
+    "win_fullscreen",
+    "pow_throttling",
+    "cpu_parking",
+    "usb_power"
+   ],
+   "game": true,
+   "tag": "TF",
+   "match": [
+    "thefinals"
+   ]
+  },
+  {
+   "id": "game_tarkov",
+   "name": {
+    "en": "Escape from Tarkov",
+    "fr": "Escape from Tarkov"
+   },
+   "desc": {
+    "en": "Escape from Tarkov at high priority, plus input, network and power for competitive play.",
+    "fr": "Escape from Tarkov en priorité haute, avec entrées, réseau et alimentation réglés pour le compétitif."
+   },
+   "tweaks": [
+    "pri_game:tarkov",
+    "pri_mmcss",
+    "pri_w32",
+    "pri_sysresp",
+    "exp_nolazy",
+    "sys_priority",
+    "sys_latency",
+    "kbm_thread",
+    "net_nagle",
+    "net_throttle",
+    "net_dnsprio",
+    "in_driver",
+    "in_mouse",
+    "in_keyboard",
+    "in_queue:low",
+    "win_gamemode:on",
+    "win_gamedvr",
+    "win_fullscreen",
+    "pow_throttling",
+    "cpu_parking",
+    "usb_power"
+   ],
+   "game": true,
+   "tag": "EFT",
+   "match": [
+    "escapefromtarkov"
+   ]
+  },
+  {
+   "id": "game_rl",
+   "name": {
+    "en": "Rocket League",
+    "fr": "Rocket League"
+   },
+   "desc": {
+    "en": "Rocket League at high priority, plus input, network and power for competitive play.",
+    "fr": "Rocket League en priorité haute, avec entrées, réseau et alimentation réglés pour le compétitif."
+   },
+   "tweaks": [
+    "pri_game:rl",
+    "pri_mmcss",
+    "pri_w32",
+    "pri_sysresp",
+    "exp_nolazy",
+    "sys_priority",
+    "sys_latency",
+    "kbm_thread",
+    "net_nagle",
+    "net_throttle",
+    "net_dnsprio",
+    "in_driver",
+    "in_mouse",
+    "in_keyboard",
+    "in_queue:low",
+    "win_gamemode:on",
+    "win_gamedvr",
+    "win_fullscreen",
+    "pow_throttling",
+    "cpu_parking",
+    "usb_power"
+   ],
+   "game": true,
+   "tag": "RL",
+   "match": [
+    "rocketleague"
+   ]
+  },
+  {
+   "id": "game_lol",
+   "name": {
+    "en": "League of Legends",
+    "fr": "League of Legends"
+   },
+   "desc": {
+    "en": "League of Legends at high priority, plus input, network and power for competitive play.",
+    "fr": "League of Legends en priorité haute, avec entrées, réseau et alimentation réglés pour le compétitif."
+   },
+   "tweaks": [
+    "pri_game:lol",
+    "pri_mmcss",
+    "pri_w32",
+    "pri_sysresp",
+    "exp_nolazy",
+    "sys_priority",
+    "sys_latency",
+    "kbm_thread",
+    "net_nagle",
+    "net_throttle",
+    "net_dnsprio",
+    "in_driver",
+    "in_mouse",
+    "in_keyboard",
+    "in_queue:low",
+    "win_gamemode:on",
+    "win_gamedvr",
+    "win_fullscreen",
+    "pow_throttling",
+    "cpu_parking",
+    "usb_power"
+   ],
+   "game": true,
+   "tag": "LoL",
+   "match": [
+    "leagueoflegends"
+   ]
+  },
+  {
+   "id": "game_roblox",
+   "name": {
+    "en": "Roblox",
+    "fr": "Roblox"
+   },
+   "desc": {
+    "en": "Roblox at high priority, with power and network tuned for smooth play.",
+    "fr": "Roblox en priorité haute, avec alimentation et réseau réglés pour un jeu fluide."
+   },
+   "tweaks": [
+    "pri_game:roblox",
+    "pri_mmcss",
+    "pri_w32",
+    "pri_sysresp",
+    "exp_nolazy",
+    "sys_priority",
+    "net_nagle",
+    "net_throttle",
+    "net_dnsprio",
+    "in_mouse",
+    "win_gamemode:on",
+    "win_gamedvr",
+    "win_fullscreen",
+    "pow_throttling",
+    "cpu_parking",
+    "cpu_turbo",
+    "win_background"
+   ],
+   "game": true,
+   "tag": "RBX",
+   "match": [
+    "roblox"
+   ]
+  },
+  {
+   "id": "game_gta",
+   "name": {
+    "en": "GTA V",
+    "fr": "GTA V"
+   },
+   "desc": {
+    "en": "GTA V at high priority, with power and network tuned for smooth play.",
+    "fr": "GTA V en priorité haute, avec alimentation et réseau réglés pour un jeu fluide."
+   },
+   "tweaks": [
+    "pri_game:gta",
+    "pri_mmcss",
+    "pri_w32",
+    "pri_sysresp",
+    "exp_nolazy",
+    "sys_priority",
+    "net_nagle",
+    "net_throttle",
+    "net_dnsprio",
+    "in_mouse",
+    "win_gamemode:on",
+    "win_gamedvr",
+    "win_fullscreen",
+    "pow_throttling",
+    "cpu_parking",
+    "cpu_turbo",
+    "win_background"
+   ],
+   "game": true,
+   "tag": "GTA",
+   "match": [
+    "grandtheftauto",
+    "gtav",
+    "gta5"
+   ]
+  },
+  {
+   "id": "game_bedrock",
+   "name": {
+    "en": "Minecraft Bedrock",
+    "fr": "Minecraft Bedrock"
+   },
+   "desc": {
+    "en": "Minecraft Bedrock at high priority, plus input, network and power for competitive play.",
+    "fr": "Minecraft Bedrock en priorité haute, avec entrées, réseau et alimentation réglés pour le compétitif."
+   },
+   "tweaks": [
+    "pri_game:bedrock",
+    "pri_mmcss",
+    "pri_w32",
+    "pri_sysresp",
+    "exp_nolazy",
+    "sys_priority",
+    "sys_latency",
+    "kbm_thread",
+    "net_nagle",
+    "net_throttle",
+    "net_dnsprio",
+    "in_driver",
+    "in_mouse",
+    "in_keyboard",
+    "in_queue:low",
+    "win_gamemode:on",
+    "win_gamedvr",
+    "win_fullscreen",
+    "pow_throttling",
+    "cpu_parking",
+    "usb_power"
+   ],
+   "game": true,
+   "tag": "MCBE",
+   "match": [
+    "minecraftforwindows",
+    "minecraftwindows",
+    "minecraftbedrock"
    ]
   }
  ],

@@ -68,7 +68,8 @@ LD = json.dumps({"@context": "https://schema.org", "@graph": [
    "inLanguage": "en", "publisher": {"@id": ORG}},
   {"@type": "Organization", "@id": ORG, "name": "Rago Optimizer", "url": SITE + "/", "logo": SITE + "/apple-touch-icon.png",
    "email": "support@rago-optimizer.com"},
-  {"@type": "SoftwareApplication", "name": "Rago Optimizer", "operatingSystem": "Windows 10, Windows 11",
+  # aggregateRating (Google's stars) is added by the page itself from the published reviews: see "Reviews" in page.html
+  {"@type": "SoftwareApplication", "@id": SITE + "/#app", "name": "Rago Optimizer", "operatingSystem": "Windows 10, Windows 11",
    "applicationCategory": "UtilitiesApplication", "url": SITE + "/", "image": OG, "publisher": {"@id": ORG},
    "description": "The Minecraft PvP optimizer for Windows: steadier ping, smoother frames, less input lag.",
    "offers": [{"@type": "Offer", "name": "Free", "price": "0", "priceCurrency": ISO},

@@ -1452,6 +1452,7 @@ function howFill() {
   // Every card shows 4 lines (CSS). A longer review is cut after a word so that it fits with "…" and "See more", measured
   // on a hidden card of the same width: once per review each time the cards are laid out (new width, fonts loaded).
   const LINES = 4;
+  const RATED_FROM = 10;
   const more = r => `reviews.html${typeof r.id === "string" && /^[a-z0-9]{1,12}$/.test(r.id) ? "#r-" + r.id : ""}`;
   const moreLink = (r, attrs = "") => ` <a class="rq-more" href="${more(r)}"${attrs}>See more</a>`;
   const cutAt = (cps, n) => {
@@ -1506,6 +1507,15 @@ function howFill() {
     pause.addEventListener("click", e => { const on = rev.classList.toggle("paused"); e.currentTarget.setAttribute("aria-pressed", on); e.currentTarget.textContent = on ? "Play" : "Pause"; });
     const n = Number(data.count) || list.length, avg = Number(data.average);
     $("#rev-sum").textContent = `${n} review${n === 1 ? "" : "s"}${avg >= 1 && avg <= 5 ? ` · ${avg.toFixed(1)} out of 5` : ""}`;
+    // Google's stars (RAG-33): the same count and average in the page's structured data (built by tools/build.py),
+    // once there are enough reviews for the rating to mean something. Google reads the page as rendered.
+    if (n >= RATED_FROM && avg >= 1 && avg <= 5) {
+      try {
+        const ld = document.querySelector('script[type="application/ld+json"]'), d = JSON.parse(ld.textContent);
+        const app = (d["@graph"] || []).find(x => x["@type"] === "SoftwareApplication");
+        if (app) { app.aggregateRating = { "@type": "AggregateRating", ratingValue: avg.toFixed(1), ratingCount: n, bestRating: 5, worstRating: 1 }; ld.textContent = JSON.stringify(d); }
+      } catch {}
+    }
     $$(".js-rev").forEach(el => { el.hidden = false; });
     layout();
     // the cuts are measured with the site's font: once it's there, measure again

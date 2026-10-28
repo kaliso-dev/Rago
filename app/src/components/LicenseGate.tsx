@@ -21,8 +21,10 @@ const origin = (u: string) => {
 export const ACCOUNT_URL: string = origin(trim(import.meta.env.VITE_ACCOUNT_URL)) || "http://localhost:8787";
 /** Site de vente (VITE_SITE_URL). Vide : le serveur de comptes, dont la racine redirige vers le site en gardant #pricing. */
 export const SITE_URL: string = trim(import.meta.env.VITE_SITE_URL) || ACCOUNT_URL;
-/** Support (invitation Discord, VITE_SUPPORT_URL). Vide : aucun bouton d'aide n'est affiché. */
-export const SUPPORT_URL: string = trim(import.meta.env.VITE_SUPPORT_URL);
+/** Invitation permanente du Discord de Rago (la même que sur le site). */
+export const DISCORD_URL = "https://discord.gg/cbCxCBx8vJ";
+/** Support (VITE_SUPPORT_URL, sinon le Discord de Rago, où se trouvent les tickets). */
+export const SUPPORT_URL: string = trim(import.meta.env.VITE_SUPPORT_URL) || DISCORD_URL;
 
 type Step = { kind: "signin" } | { kind: "confirm"; email: string; keyHint: string | null } | { kind: "success" };
 

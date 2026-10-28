@@ -4,6 +4,10 @@
 # Exe de test (branche staging, ou « staging » choisi dans Run workflow) : « Rago Optimizer Staging », relié au serveur
 # de test avec les secrets STAGING_RAGO_API_BASE, STAGING_RAGO_LICENSE_PUBKEY et la variable STAGING_SITE_URL.
 # Il s'installe à côté du vrai ; à ne jamais déposer dans le Supabase de production (DEVELOPPEMENT.md).
+# Mises à jour automatiques (RAG-24) : avec le secret TAURI_SIGNING_PRIVATE_KEY (et TAURI_SIGNING_PRIVATE_KEY_PASSWORD
+# s'il a un mot de passe) et la variable RAGO_UPDATER_PUBKEY, l'exe sait se mettre à jour et le build signe
+# l'installateur : le fichier .exe.sig est dans l'artefact, à déposer à côté de l'exe. Sans eux, exe sans mise à jour.
+# Barre en jeu (RAG-82) : PresentMon, l'outil d'Intel qui mesure les FPS, est téléchargé à chaque build (pas dans git).
 name: app-windows
 
 on:
@@ -14,6 +18,10 @@ on:
         type: choice
         options: [production, staging]
         default: production
+      version:
+        description: "Numéro de version de l'exe de test, pour essayer la mise à jour automatique (vide : celui du dépôt). Serveur staging seulement"
+        type: string
+        default: ""
   push:
     # chaque modification de l'app refabrique l'exe ; les tags app-v* publient une release
     # (GitHub n'applique pas le filtre paths aux tags)
@@ -23,9 +31,10 @@ on:
   pull_request:
     paths: ["app/**", ".github/workflows/app-windows.yml"]
 
-# un seul build par branche : un nouveau push annule le précédent
+# un seul build par branche : un nouveau push annule le précédent (un exe de test lancé à la main avec un autre
+# serveur ou un autre numéro de version a son propre groupe)
 concurrency:
-  group: app-windows-${{ github.ref }}
+  group: app-windows-${{ github.ref }}-${{ inputs.server }}-${{ inputs.version }}
   cancel-in-progress: true
 
 # écriture nécessaire au brouillon de release sur les tags app-v*
@@ -98,13 +107,67 @@ jobs:
         if: env.RAGO_TARGET == 'staging'
         shell: bash
         run: node -e "const f='src-tauri/tauri.conf.json', fs=require('fs'); fs.writeFileSync(f, JSON.stringify({ ...JSON.parse(fs.readFileSync(f, 'utf8')), ...JSON.parse(fs.readFileSync('src-tauri/tauri.staging.conf.json', 'utf8')) }, null, 2))"
+      - name: Mises à jour signées
+        # la clé publique va dans l'exe (il refuse tout installateur qui n'est pas signé avec la clé privée)
+        shell: bash
+        env:
+          SIGNING_KEY: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY }}
+          UPDATER_PUBKEY: ${{ vars.RAGO_UPDATER_PUBKEY }}
+        run: |
+          if [ -z "$SIGNING_KEY" ] || [ -z "$UPDATER_PUBKEY" ]; then
+            echo "::warning::Exe sans mise à jour automatique : secret TAURI_SIGNING_PRIVATE_KEY ou variable RAGO_UPDATER_PUBKEY manquant"
+            exit 0
+          fi
+          node -e "const f='src-tauri/tauri.conf.json', fs=require('fs'), c=JSON.parse(fs.readFileSync(f, 'utf8')); c.bundle.createUpdaterArtifacts=true; c.plugins.updater.pubkey=process.env.UPDATER_PUBKEY.trim(); fs.writeFileSync(f, JSON.stringify(c, null, 2))"
+          echo "Exe avec mise à jour automatique"
+      - name: PresentMon (FPS de la barre en jeu)
+        # outil d'Intel (licence MIT) livré dans resources\ : sans lui l'exe marche, les FPS restent « — ». Gardé
+        # seulement s'il est signé par Intel.
+        shell: bash
+        env:
+          GH_TOKEN: ${{ github.token }}
+          PRESENTMON_TAG: v2.3.0
+        run: |
+          dir=$(mktemp -d)
+          gh release download "$PRESENTMON_TAG" --repo GameTechDev/PresentMon --pattern 'PresentMon-*-x64.exe' --dir "$dir" \
+            || gh release download --repo GameTechDev/PresentMon --pattern 'PresentMon-*-x64.exe' --dir "$dir" \
+            || true
+          exe=$(ls "$dir" 2>/dev/null | grep -E '^PresentMon-[0-9.]+-x64\.exe$' | sort -V | tail -1)
+          if [ -z "$exe" ]; then echo "::warning::PresentMon introuvable : exe sans FPS dans la barre en jeu"; exit 0; fi
+          signer=$(pwsh -NoProfile -Command "\$s = Get-AuthenticodeSignature '$(cygpath -w "$dir/$exe")'; if (\$s.Status -eq 'Valid') { \$s.SignerCertificate.Subject }")
+          case "$signer" in
+            *"O=Intel Corporation"*) ;;
+            *) echo "::warning::$exe n'est pas signé par Intel ($signer) : exe sans FPS dans la barre en jeu"; exit 0 ;;
+          esac
+          cp "$dir/$exe" src-tauri/resources/PresentMon.exe
+          for f in LICENSE.txt LICENSE; do
+            gh api "repos/GameTechDev/PresentMon/contents/$f" -H "Accept: application/vnd.github.raw" > src-tauri/resources/PresentMon-LICENSE.txt 2>/dev/null && break
+          done
+          [ -s src-tauri/resources/PresentMon-LICENSE.txt ] || { rm -f src-tauri/resources/PresentMon-LICENSE.txt; echo "::warning::licence de PresentMon introuvable"; }
+          echo "PresentMon livré : $exe ($signer)"
       - run: npm ci
+      - name: Numéro de version de test
+        # Mise à jour automatique (RAG-24) : une 1.2.1 de test, proposée par le serveur de test à une 1.2.0 Staging
+        # installée. Jamais pour le vrai serveur : la version vendue vient du dépôt.
+        if: github.event_name == 'workflow_dispatch' && inputs.version != ''
+        shell: bash
+        env:
+          VERSION: ${{ inputs.version }}
+        run: |
+          if [ "$RAGO_TARGET" != staging ]; then echo "::error::Un numéro de version de test ne se fabrique que pour le serveur staging"; exit 1; fi
+          if ! [[ "$VERSION" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]]; then echo "::error::Numéro de version invalide : $VERSION (exemple : 1.2.1)"; exit 1; fi
+          npm pkg set version="$VERSION"
+          sed -i "0,/^version = \".*\"/s//version = \"$VERSION\"/" src-tauri/Cargo.toml
+          echo "Exe de test en version $VERSION"
       - name: Tests du moteur
         run: cargo test --manifest-path src-tauri/Cargo.toml
       - uses: tauri-apps/tauri-action@v0
         # RAGO_API_BASE, RAGO_LICENSE_PUBKEY, VITE_SITE_URL et VITE_ACCOUNT_URL viennent de l'étape « Choisir le serveur »
         env:
           RAGO_SCRIPTS_SECRET: ${{ secrets.RAGO_SCRIPTS_SECRET }}
+          # signature de l'installateur pour les mises à jour (vides : pas de signature, voir « Mises à jour signées »)
+          TAURI_SIGNING_PRIVATE_KEY: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY }}
+          TAURI_SIGNING_PRIVATE_KEY_PASSWORD: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY_PASSWORD }}
           # invitation Discord du support (facultatif : sans elle, aucun bouton d'aide)
           VITE_SUPPORT_URL: ${{ vars.SUPPORT_URL }}
         with:
@@ -115,4 +178,6 @@ jobs:
       - uses: actions/upload-artifact@v4
         with:
           name: ${{ env.RAGO_TARGET == 'staging' && 'rago-optimizer-setup-STAGING' || 'rago-optimizer-setup' }}
-          path: app/src-tauri/target/release/bundle/nsis/*.exe
+          path: |
+            app/src-tauri/target/release/bundle/nsis/*.exe
+            app/src-tauri/target/release/bundle/nsis/*.exe.sig

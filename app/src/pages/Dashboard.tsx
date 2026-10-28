@@ -1,15 +1,31 @@
 import { motion } from "motion/react";
-import { Check, Cpu, Gpu, HardDrive, MemoryStick, Network, Plus, RefreshCw, Lock, RotateCcw, TriangleAlert } from "lucide-react";
-import { availability, catalog, distinctKey, retired, totalTweaks, tweaks, type Preset } from "../lib/catalog";
-import { useStore } from "../lib/store";
+import { Check, Copy, Cpu, Gpu, HardDrive, MemoryStick, Network, Pencil, Plus, RefreshCw, Lock, RotateCcw, Trash2, TriangleAlert, Zap } from "lucide-react";
+import { availability, catalog, distinctKey, retired, totalTweaks, tweaks } from "../lib/catalog";
+import { api } from "../lib/api";
+import { formatDate } from "../lib/i18n";
+import { hue } from "../lib/art";
+import { presetGameKey } from "../lib/gameLogos";
+import { encodePreset, MAX_NAME } from "../lib/share";
+import { FREE, useStore, type MyPreset } from "../lib/store";
+import { GameLogo, usePresetIcons } from "../components/GameLogo";
 import { LiveStatsCard } from "../components/LiveStatsCard";
+import { PresetEditor } from "../components/PresetEditor";
 import { Button, Card } from "../components/ui";
-import type { ReactNode } from "react";
+import { useState, type ReactNode } from "react";
 
 /** Interrupteurs du catalogue (les actions ponctuelles ne restent jamais « appliquées »), jumeaux comptés une fois. */
 const totalSwitches = new Set([...tweaks.values()].filter((tw) => tw.kind === "tweak").map((tw) => distinctKey(tw.id))).size;
 /** Plus aucun réglage ne se sert de WMIC (retiré de Windows 11 24H2) : sans lui, la ligne n'a rien à signaler. */
 const wmicUsed = [...tweaks.values()].some((tw) => tw.requires.includes("wmic"));
+
+/** « Optimisations gratuites » : les interrupteurs du plan gratuit, chacun avec sa variante par défaut (mode jeu
+ * Windows « Activé »). Les outils ponctuels du plan gratuit (point de restauration, réinitialisations) n'en font pas
+ * partie. */
+const FREE_ENTRIES = [...FREE].flatMap((id) => {
+  const tw = tweaks.get(id);
+  if (!tw || tw.kind !== "tweak") return [];
+  return [tw.variants?.length ? `${id}:${tw.defaultVariant ?? tw.variants[0].id}` : id];
+});
 
 const stagger = { animate: { transition: { staggerChildren: 0.04 } } };
 const rise = { initial: { opacity: 0, y: 10 }, animate: { opacity: 1, y: 0, transition: { duration: 0.42, ease: [0.16, 1, 0.3, 1] as const } } };
@@ -28,14 +44,19 @@ function Spec({ icon, label, value, sub }: { icon: ReactNode; label: string; val
 }
 
 export function Dashboard() {
-  const { t, lang, sys, sysLoading, refreshSys, isOn, selected, variantOf, selectMany, lastRestore, requestApply, premium, setUpsell, applied: appliedMap, retiredApplied, requestUndo, requestUndoAll, run } = useStore();
+  const { t, lang, sys, sysLoading, refreshSys, isOn, selected, variantOf, selectMany, lastRestore, requestApply, premium, setUpsell, applied: appliedMap, retiredApplied, requestUndo, requestUndoAll, run, myPresets, currentSetup, savePreset, toApply, requestApplyEntries } = useStore();
+  const presetIcons = usePresetIcons();
+  // optimisations gratuites encore à appliquer sur ce PC
+  const freeLeft = sys ? toApply(FREE_ENTRIES).ids.length : 0;
+  const [naming, setNaming] = useState<string | null>(null);
+  const [editing, setEditing] = useState<string | null>(null);
   // réglages appliqués en ce moment (ceux qu'on a décochés depuis ne comptent plus), jumeaux comptés une fois
   const applied = new Set([...appliedMap.values()].filter((a) => a.ok && tweaks.get(a.id)?.kind === "tweak").map((a) => distinctKey(a.id))).size;
 
   /** Réglages d'un preset utilisables sur ce PC (comme selectMany : pas les pilotes d'une autre marque de carte graphique
    * ou de processeur), et preset complet : chacun allumé, avec la variante du preset. */
-  const presetState = (p: Preset) => {
-    const usable = p.tweaks.flatMap((e) => {
+  const presetState = (entries: string[]) => {
+    const usable = entries.flatMap((e) => {
       const [id, v] = e.split(":");
       const tw = tweaks.get(id);
       return tw && tw.kind === "tweak" && availability(tw, sys).ok ? [{ tw, v }] : [];
@@ -87,6 +108,24 @@ export function Dashboard() {
         <h1 className="display">{t("dash.title")}</h1>
         <p className="lead">{t("dash.lead", { n: totalTweaks })}</p>
       </motion.header>
+
+      <motion.section variants={rise} className={`card free-boost${sys && freeLeft === 0 ? " done" : ""}`}>
+        <span className="free-boost-icon" aria-hidden="true">
+          {sys && freeLeft === 0 ? <Check size={18} strokeWidth={2.25} /> : <Zap size={18} strokeWidth={2} />}
+        </span>
+        <div className="free-boost-text">
+          <h2 className="free-boost-title">{t("dash.free.title")}</h2>
+          <p className="muted small">{t("dash.free.lead", { n: FREE_ENTRIES.length })}</p>
+        </div>
+        <Button
+          variant={sys && freeLeft === 0 ? "secondary" : "primary"}
+          icon={sys && freeLeft === 0 ? <Check size={14} /> : <Zap size={14} />}
+          disabled={!sys || freeLeft === 0 || !!run}
+          onClick={() => requestApplyEntries(FREE_ENTRIES, { title: t("dash.free.confirmTitle"), lead: t("dash.free.confirmLead") })}
+        >
+          {sys && freeLeft === 0 ? t("dash.free.done") : t("dash.free.go")}
+        </Button>
+      </motion.section>
 
       <div className="dash-grid">
         <motion.div variants={rise} className="dash-system">
@@ -159,8 +198,8 @@ export function Dashboard() {
       <motion.section variants={rise}>
         <h2 className="section-title rg-overline">{t("dash.presets")}</h2>
         <div className="presets">
-          {catalog.presets.map((p, i) => {
-            const { n, on: all } = presetState(p);
+          {catalog.presets.filter((p) => !p.game).map((p, i) => {
+            const { n, on: all } = presetState(p.tweaks);
             return (
               <motion.button
                 key={p.id}
@@ -185,6 +224,155 @@ export function Dashboard() {
           })}
         </div>
       </motion.section>
+
+      {/* un preset par jeu : la priorité du jeu (pri_game) et son socle ; Minecraft reprend le preset PvP */}
+      <motion.section variants={rise} className="game-presets">
+        <div className="section-head">
+          <h2 className="section-title rg-overline">{t("dash.gamePresets")}</h2>
+          <span className="muted small">{t("dash.gamePresets.lead")}</span>
+        </div>
+        <div className="game-presets-grid">
+          {catalog.presets.filter((p) => p.game || p.id === "mc_pvp").map((p) => {
+            const { n, on } = presetState(p.tweaks);
+            return (
+              <motion.button
+                key={p.id}
+                type="button"
+                className={`game-preset${on ? " on" : ""}${premium ? "" : " locked"}`}
+                whileHover={{ y: -2 }}
+                whileTap={{ scale: 0.985 }}
+                onClick={() => (premium ? selectMany(p.tweaks) : setUpsell("preset"))}
+              >
+                <span
+                  className={`game-preset-badge${presetIcons[presetGameKey(p.id) ?? ""] ? " icon" : ""}`}
+                  style={{ "--h": hue(p.match?.[0] ?? p.id) } as React.CSSProperties}
+                >
+                  <GameLogo presetId={p.id} tag={p.tag} icons={presetIcons} />
+                </span>
+                <span className="game-preset-text">
+                  <span className="game-preset-name">{p.id === "mc_pvp" ? "Minecraft" : p.name[lang]}</span>
+                  <span className="game-preset-count rg-metric">{t("dash.preset.count", { n })}</span>
+                </span>
+                <span className="game-preset-cta" aria-label={!premium ? t("free.lock") : on ? t("dash.preset.added") : t("dash.preset.add")}>
+                  {!premium ? <Lock size={12} /> : on ? <Check size={14} /> : <Plus size={14} />}
+                </span>
+              </motion.button>
+            );
+          })}
+        </div>
+      </motion.section>
+
+      {/* presets enregistrés par le joueur, ouverts en gratuit (seuls les réglages de son plan sont ajoutés) */}
+      <motion.section variants={rise} className="mine">
+        <h2 className="section-title rg-overline">{t("dash.mine")}</h2>
+        <div className="presets">
+          {myPresets.map((p) => (
+            <MyPresetCard key={p.id} preset={p} state={presetState(p.t)} onEdit={() => setEditing(p.id)} />
+          ))}
+          {naming == null ? (
+            <motion.button
+              type="button"
+              className="preset mine-new"
+              whileHover={{ y: -2 }}
+              whileTap={{ scale: 0.985 }}
+              disabled={!currentSetup.length}
+              onClick={() => setNaming("")}
+            >
+              <span className="mine-plus">
+                <Plus size={16} />
+              </span>
+              <span className="preset-name">{t("dash.mine.save")}</span>
+              <span className="preset-desc">{currentSetup.length ? t("dash.mine.saveHint") : t("dash.mine.empty")}</span>
+              <span className="preset-foot">
+                <span className="rg-metric">{t("dash.preset.count", { n: currentSetup.length })}</span>
+              </span>
+            </motion.button>
+          ) : (
+            <form
+              className="preset mine-new naming"
+              onSubmit={(e) => {
+                e.preventDefault();
+                if (!naming.trim() || !currentSetup.length) return;
+                savePreset(naming, currentSetup);
+                setNaming(null);
+              }}
+            >
+              <label htmlFor="mine-name" className="preset-index rg-metric">
+                {t("dash.mine.name")}
+              </label>
+              <input
+                id="mine-name"
+                className="input text"
+                autoFocus
+                maxLength={MAX_NAME}
+                value={naming}
+                placeholder={t("dash.mine.namePh")}
+                onChange={(e) => setNaming(e.target.value)}
+                onKeyDown={(e) => e.key === "Escape" && setNaming(null)}
+              />
+              <span className="preset-desc">{t("dash.mine.saveHint")}</span>
+              <span className="preset-foot">
+                <button type="button" className="link" onClick={() => setNaming(null)}>
+                  {t("dash.mine.cancel")}
+                </button>
+                <Button size="sm" variant="primary" type="submit" disabled={!naming.trim()}>
+                  {t("dash.mine.ok")}
+                </Button>
+              </span>
+            </form>
+          )}
+        </div>
+      </motion.section>
+      <PresetEditor id={editing} onClose={() => setEditing(null)} />
+    </motion.div>
+  );
+}
+
+function MyPresetCard({ preset, state, onEdit }: { preset: MyPreset; state: { n: number; on: boolean }; onEdit: () => void }) {
+  const { t, lang, selectMany, deletePreset } = useStore();
+  const [copied, setCopied] = useState(false);
+  const [asking, setAsking] = useState(false);
+  const copy = async () => {
+    try {
+      await api.copyText(await encodePreset({ n: preset.name, t: preset.t }));
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2200);
+    } catch {
+      /* presse-papiers indisponible : la page Partage et support reste là */
+    }
+  };
+  return (
+    <motion.div className={`preset mine-card${state.on ? " on" : ""}`} whileHover={{ y: -2 }}>
+      <button type="button" className="preset-hit" aria-label={preset.name} onClick={() => selectMany(preset.t)} />
+      <span className="preset-index rg-metric">{formatDate(lang, preset.at)}</span>
+      <span className="preset-name">{preset.name}</span>
+      <span className="preset-desc mine-tools">
+        <button type="button" className="icon-btn" title={t("dash.mine.edit")} aria-label={t("dash.mine.edit")} onClick={onEdit}>
+          <Pencil size={13} />
+        </button>
+        <button type="button" className="icon-btn" title={copied ? t("dash.mine.copied") : t("dash.mine.copy")} aria-label={t("dash.mine.copy")} onClick={() => void copy()}>
+          {copied ? <Check size={13} /> : <Copy size={13} />}
+        </button>
+        <button
+          type="button"
+          className={`icon-btn${asking ? " danger" : ""}`}
+          title={asking ? t("dash.mine.deleteAsk", { name: preset.name }) : t("dash.mine.delete")}
+          aria-label={t("dash.mine.delete")}
+          onBlur={() => setAsking(false)}
+          onClick={() => (asking ? deletePreset(preset.id) : setAsking(true))}
+        >
+          <Trash2 size={13} />
+        </button>
+        {asking && <span className="mine-ask small">{t("dash.mine.deleteAsk", { name: preset.name })}</span>}
+        {copied && !asking && <span className="mine-ask ok small">{t("dash.mine.copied")}</span>}
+      </span>
+      <span className="preset-foot">
+        <span className="rg-metric">{t("dash.preset.count", { n: state.n })}</span>
+        <span className="preset-cta">
+          {state.on ? <Check size={13} /> : <Plus size={13} />}
+          {state.on ? t("dash.preset.added") : t("dash.preset.add")}
+        </span>
+      </span>
     </motion.div>
   );
 }

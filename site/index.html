@@ -24,7 +24,7 @@
 <link rel="icon" href="favicon.svg" type="image/svg+xml">
 <link rel="icon" href="favicon.ico" sizes="any">
 <link rel="apple-touch-icon" href="apple-touch-icon.png">
-<script type="application/ld+json">{"@context": "https://schema.org", "@graph": [{"@type": "WebSite", "@id": "https://rago-optimizer.com/#website", "url": "https://rago-optimizer.com/", "name": "Rago Optimizer", "alternateName": "Rago", "inLanguage": "en", "publisher": {"@id": "https://rago-optimizer.com/#organization"}}, {"@type": "Organization", "@id": "https://rago-optimizer.com/#organization", "name": "Rago Optimizer", "url": "https://rago-optimizer.com/", "logo": "https://rago-optimizer.com/apple-touch-icon.png", "email": "support@rago-optimizer.com"}, {"@type": "SoftwareApplication", "name": "Rago Optimizer", "operatingSystem": "Windows 10, Windows 11", "applicationCategory": "UtilitiesApplication", "url": "https://rago-optimizer.com/", "image": "https://rago-optimizer.com/og-image.png?v=153045a26b", "publisher": {"@id": "https://rago-optimizer.com/#organization"}, "description": "The Minecraft PvP optimizer for Windows: steadier ping, smoother frames, less input lag.", "offers": [{"@type": "Offer", "name": "Free", "price": "0", "priceCurrency": "USD"}, {"@type": "Offer", "name": "Premium monthly", "price": "5.99", "priceCurrency": "USD"}, {"@type": "Offer", "name": "Premium yearly", "price": "29.99", "priceCurrency": "USD"}]}]}</script>
+<script type="application/ld+json">{"@context": "https://schema.org", "@graph": [{"@type": "WebSite", "@id": "https://rago-optimizer.com/#website", "url": "https://rago-optimizer.com/", "name": "Rago Optimizer", "alternateName": "Rago", "inLanguage": "en", "publisher": {"@id": "https://rago-optimizer.com/#organization"}}, {"@type": "Organization", "@id": "https://rago-optimizer.com/#organization", "name": "Rago Optimizer", "url": "https://rago-optimizer.com/", "logo": "https://rago-optimizer.com/apple-touch-icon.png", "email": "support@rago-optimizer.com"}, {"@type": "SoftwareApplication", "@id": "https://rago-optimizer.com/#app", "name": "Rago Optimizer", "operatingSystem": "Windows 10, Windows 11", "applicationCategory": "UtilitiesApplication", "url": "https://rago-optimizer.com/", "image": "https://rago-optimizer.com/og-image.png?v=153045a26b", "publisher": {"@id": "https://rago-optimizer.com/#organization"}, "description": "The Minecraft PvP optimizer for Windows: steadier ping, smoother frames, less input lag.", "offers": [{"@type": "Offer", "name": "Free", "price": "0", "priceCurrency": "USD"}, {"@type": "Offer", "name": "Premium monthly", "price": "5.99", "priceCurrency": "USD"}, {"@type": "Offer", "name": "Premium yearly", "price": "29.99", "priceCurrency": "USD"}]}]}</script>
 <title>Rago Optimizer: Minecraft PvP optimizer for Windows</title>
 <meta name="description" content="Rago Optimizer tunes Windows, your network and Minecraft for steadier ping, smoother frames and less input lag. Nearly 200 tweaks, free to start.">
 <link rel="preload" href="fonts/Geist-Variable.woff2" as="font" type="font/woff2" crossorigin>
@@ -1483,6 +1483,7 @@ function howFill() {
   // Every card shows 4 lines (CSS). A longer review is cut after a word so that it fits with "…" and "See more", measured
   // on a hidden card of the same width: once per review each time the cards are laid out (new width, fonts loaded).
   const LINES = 4;
+  const RATED_FROM = 10;
   const more = r => `reviews.html${typeof r.id === "string" && /^[a-z0-9]{1,12}$/.test(r.id) ? "#r-" + r.id : ""}`;
   const moreLink = (r, attrs = "") => ` <a class="rq-more" href="${more(r)}"${attrs}>See more</a>`;
   const cutAt = (cps, n) => {
@@ -1537,6 +1538,15 @@ function howFill() {
     pause.addEventListener("click", e => { const on = rev.classList.toggle("paused"); e.currentTarget.setAttribute("aria-pressed", on); e.currentTarget.textContent = on ? "Play" : "Pause"; });
     const n = Number(data.count) || list.length, avg = Number(data.average);
     $("#rev-sum").textContent = `${n} review${n === 1 ? "" : "s"}${avg >= 1 && avg <= 5 ? ` · ${avg.toFixed(1)} out of 5` : ""}`;
+    // Google's stars (RAG-33): the same count and average in the page's structured data (built by tools/build.py),
+    // once there are enough reviews for the rating to mean something. Google reads the page as rendered.
+    if (n >= RATED_FROM && avg >= 1 && avg <= 5) {
+      try {
+        const ld = document.querySelector('script[type="application/ld+json"]'), d = JSON.parse(ld.textContent);
+        const app = (d["@graph"] || []).find(x => x["@type"] === "SoftwareApplication");
+        if (app) { app.aggregateRating = { "@type": "AggregateRating", ratingValue: avg.toFixed(1), ratingCount: n, bestRating: 5, worstRating: 1 }; ld.textContent = JSON.stringify(d); }
+      } catch {}
+    }
     $$(".js-rev").forEach(el => { el.hidden = false; });
     layout();
     // the cuts are measured with the site's font: once it's there, measure again
