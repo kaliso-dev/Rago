@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { ChevronRight, ExternalLink, FolderOpen, LifeBuoy, LogOut, Share2, UserRound } from "lucide-react";
 import { formatDate } from "../lib/i18n";
 import { api, isTauri } from "../lib/api";
@@ -11,6 +11,9 @@ import { BackgroundCard } from "../components/BackgroundCard";
 import { SessionCard } from "../components/SessionCard";
 import { Button, Card, Segmented, Switch } from "../components/ui";
 import { Wordmark } from "../components/Logo";
+
+/** Exe de test (serveur staging) : Paramètres montre la dernière recherche de mise à jour, et son erreur. */
+const STAGING = import.meta.env.VITE_RAGO_SERVER === "staging";
 
 const LICENCES = [
   { name: "NVIDIA Profile Inspector", licence: "MIT", url: "https://github.com/Orbmu2k/nvidiaProfileInspector" },
@@ -164,6 +167,7 @@ export function Settings() {
             {t("settings.version", { v: __APP_VERSION__ })} · {totalTweaks} {lang === "fr" ? "réglages" : "tweaks"}
           </p>
           {!isTauri && <p className="muted small">{t("settings.demo")}</p>}
+          {STAGING && <UpdateCheck />}
           <div className="rg-overline" style={{ marginTop: 16 }}>
             {t("settings.licences")}
           </div>
@@ -202,4 +206,17 @@ export function Settings() {
       </Modal>
     </div>
   );
+}
+
+function UpdateCheck() {
+  const { t } = useStore();
+  const [status, setStatus] = useState<string | null>(null);
+  useEffect(() => {
+    const read = () => void api.updateStatus().then(setStatus, () => {});
+    read();
+    // la recherche part au lancement : la ligne se remplit quand elle se termine
+    const id = window.setInterval(read, 3000);
+    return () => window.clearInterval(id);
+  }, []);
+  return <p className="rg-metric muted small">{t("settings.updateCheck", { s: status ?? t("settings.updateCheckWaiting") })}</p>;
 }

@@ -38,6 +38,8 @@ pub struct Input<'a> {
     pub version: &'a str,
     pub server: &'a str,
     pub license: &'a str,
+    /// dernière recherche de mise à jour
+    pub update: &'a str,
     pub sys: Option<&'a SystemInfo>,
     pub applied: &'a [AppliedView],
     pub history: &'a [Entry],
@@ -250,6 +252,7 @@ pub fn build(input: &Input, parts: Parts, now_ms: u64) -> String {
     line(format!("Created: {} UTC", utc(now_ms)));
     line(format!("App: {} ({})", input.version, input.server));
     line(format!("License: {}", input.license));
+    line(format!("Update check: {}", input.update));
     line("Hidden in this file: your Windows user name, PC name, emails, license key, IP and MAC addresses.".into());
 
     if parts.pc {
@@ -418,10 +421,11 @@ mod tests {
         let _ = fs::create_dir_all(&dir);
         fs::write(dir.join("1.log"), "==== net_x\nline one\n").unwrap();
         let sys = SystemInfo { os_name: "Windows 11 Pro".into(), os_build: 26100, cpu_name: "CPU".into(), ram_gb: 16, ..Default::default() };
-        let input = Input { version: "1.2.0", server: "production", license: "free", sys: Some(&sys), applied: &[], history: &[], logs_dir: &dir };
+        let input = Input { version: "1.2.0", server: "production", license: "free", update: "no update", sys: Some(&sys), applied: &[], history: &[], logs_dir: &dir };
         let all = Parts { pc: true, tweaks: true, history: true, logs: true, network: false };
         let text = build(&input, all, 0);
         assert!(text.contains("== PC ==") && text.contains("build 26100") && text.contains("line one"));
+        assert!(text.contains("Update check: no update"));
         assert!(!text.contains("== Network adapter =="));
         let r = write(&dir, &text, 0).unwrap();
         assert_eq!(r.name, "rago-report-1970-01-01-0000.txt");
