@@ -18,6 +18,10 @@ on:
         type: choice
         options: [production, staging]
         default: production
+      version:
+        description: "Numéro de version de l'exe de test, pour essayer la mise à jour automatique (vide : celui du dépôt). Serveur staging seulement"
+        type: string
+        default: ""
   push:
     # chaque modification de l'app refabrique l'exe ; les tags app-v* publient une release
     # (GitHub n'applique pas le filtre paths aux tags)
@@ -27,9 +31,10 @@ on:
   pull_request:
     paths: ["app/**", ".github/workflows/app-windows.yml"]
 
-# un seul build par branche : un nouveau push annule le précédent
+# un seul build par branche : un nouveau push annule le précédent (un exe de test lancé à la main avec un autre
+# serveur ou un autre numéro de version a son propre groupe)
 concurrency:
-  group: app-windows-${{ github.ref }}
+  group: app-windows-${{ github.ref }}-${{ inputs.server }}-${{ inputs.version }}
   cancel-in-progress: true
 
 # écriture nécessaire au brouillon de release sur les tags app-v*
@@ -141,6 +146,19 @@ jobs:
           [ -s src-tauri/resources/PresentMon-LICENSE.txt ] || { rm -f src-tauri/resources/PresentMon-LICENSE.txt; echo "::warning::licence de PresentMon introuvable"; }
           echo "PresentMon livré : $exe ($signer)"
       - run: npm ci
+      - name: Numéro de version de test
+        # Mise à jour automatique (RAG-24) : une 1.2.1 de test, proposée par le serveur de test à une 1.2.0 Staging
+        # installée. Jamais pour le vrai serveur : la version vendue vient du dépôt.
+        if: github.event_name == 'workflow_dispatch' && inputs.version != ''
+        shell: bash
+        env:
+          VERSION: ${{ inputs.version }}
+        run: |
+          if [ "$RAGO_TARGET" != staging ]; then echo "::error::Un numéro de version de test ne se fabrique que pour le serveur staging"; exit 1; fi
+          if ! [[ "$VERSION" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]]; then echo "::error::Numéro de version invalide : $VERSION (exemple : 1.2.1)"; exit 1; fi
+          npm pkg set version="$VERSION"
+          sed -i "0,/^version = \".*\"/s//version = \"$VERSION\"/" src-tauri/Cargo.toml
+          echo "Exe de test en version $VERSION"
       - name: Tests du moteur
         run: cargo test --manifest-path src-tauri/Cargo.toml
       - uses: tauri-apps/tauri-action@v0

@@ -193,6 +193,8 @@ L'app cherche une nouvelle version au lancement puis toutes les 4 heures, la té
 
 Le run vert de **app-windows** affiche alors « Exe avec mise à jour automatique » à l'étape « Mises à jour signées », et l'artefact contient deux fichiers : l'exe et `<même nom>.exe.sig`.
 
+**L'essayer sur le serveur de test d'abord** : Actions → app-windows → **Run workflow** sur la branche `staging`, serveur `staging`, une fois sans numéro de version (la version du dépôt, à installer) et une fois avec un numéro plus haut, par exemple `1.2.1` (à déposer dans le bucket `downloads` du Supabase de test, avec son `.exe.sig`). Le champ de version refuse le serveur de production. L'app de test se met alors à jour comme le fera la vraie.
+
 **À chaque nouvelle version :**
 
 1. Dans Railway, mets `UPDATE_ROLLOUT=20` : la version n'est proposée qu'à 1 PC sur 5 pour commencer.
