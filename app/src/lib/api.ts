@@ -422,6 +422,8 @@ export interface Api {
   /** Mise à jour prête (null : rien en attente). */
   updateReady(): Promise<UpdateReady | null>;
   onUpdateReady(cb: (u: UpdateReady) => void): Promise<UnlistenFn>;
+  /** Dernière recherche de mise à jour, datée (null : pas encore faite). */
+  updateStatus(): Promise<string | null>;
   /** Installe la mise à jour et rouvre l'app (l'app se ferme : ne revient qu'en cas d'échec). */
   updateInstall(): Promise<void>;
   backgroundGet(): Promise<BackgroundState>;
@@ -526,6 +528,7 @@ const tauriApi: Api = {
   onGamesRunning: (cb) => listen<string[]>("games:running", (e) => cb(e.payload)),
   updateReady: () => invoke("update_ready"),
   onUpdateReady: (cb) => listen<UpdateReady>("update:ready", (e) => cb(e.payload)),
+  updateStatus: () => invoke("update_status"),
   updateInstall: () => invoke("update_install"),
   backgroundGet: () => invoke("background_get"),
   backgroundSet: (prefs) => invoke("background_set", { prefs }),
@@ -1084,6 +1087,7 @@ const mockApi: Api = {
   // démo : une mise à jour attend avec ?update dans l'adresse
   updateReady: async () => (new URLSearchParams(location.search).has("update") ? { version: "1.2.1", notes: null } : null),
   onUpdateReady: (cb) => on("update:ready", cb),
+  updateStatus: async () => null,
   updateInstall: async () => {
     await sleep(1200);
     location.reload();

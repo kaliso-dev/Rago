@@ -66,9 +66,9 @@ jobs:
           SCRIPTS: ${{ secrets.RAGO_SCRIPTS_SECRET }}
         run: |
           if [ "$TARGET" = staging ]; then
-            API_BASE=$STAGING_API; PUBKEY=$STAGING_PUBKEY; SITE=$STAGING_SITE; NAMES="STAGING_RAGO_API_BASE et STAGING_RAGO_LICENSE_PUBKEY"
+            API_BASE=$STAGING_API; PUBKEY=$STAGING_PUBKEY; SITE=$STAGING_SITE; NAMES="STAGING_RAGO_API_BASE et STAGING_RAGO_LICENSE_PUBKEY"; API_NAME=STAGING_RAGO_API_BASE
           else
-            API_BASE=$PROD_API; PUBKEY=$PROD_PUBKEY; SITE=$PROD_SITE; NAMES="RAGO_API_BASE et RAGO_LICENSE_PUBKEY"
+            API_BASE=$PROD_API; PUBKEY=$PROD_PUBKEY; SITE=$PROD_SITE; NAMES="RAGO_API_BASE et RAGO_LICENSE_PUBKEY"; API_NAME=RAGO_API_BASE
           fi
           echo "Exe pour le serveur : $TARGET"
           missing=""
@@ -80,6 +80,11 @@ jobs:
           fi
           if [ "$TARGET" = staging ] && [ -n "$API_BASE" ] && [ "$API_BASE" = "$PROD_API" ]; then
             echo "::error::STAGING_RAGO_API_BASE est l'adresse du vrai serveur : mets celle du serveur de test"
+            exit 1
+          fi
+          # sans https://, l'exe ne joint ni le compte ni les mises à jour (« relative URL without a base »)
+          if [ -n "$API_BASE" ] && ! [[ "$API_BASE" =~ ^https://[^/[:space:]]+/ ]]; then
+            echo "::error::$API_NAME doit être une adresse complète, avec https:// au début (exemple : https://rago-staging.up.railway.app/api/v1)"
             exit 1
           fi
           {

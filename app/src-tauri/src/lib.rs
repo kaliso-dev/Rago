@@ -484,6 +484,7 @@ fn server_name() -> &'static str {
 async fn support_report(state: State<'_, AppState>, parts: report::Parts) -> Result<report::Report, String> {
     let sys = state.system.lock().unwrap().clone();
     let (ledger, history, lic, data_dir) = (Arc::clone(&state.ledger), Arc::clone(&state.history), Arc::clone(&state.license), state.data_dir.clone());
+    let update = state.updates.last_check().unwrap_or_else(|| "not checked yet".into());
     tauri::async_runtime::spawn_blocking(move || {
         let applied = {
             let backups = backup::Sys::new(data_dir.join("backup"));
@@ -501,6 +502,7 @@ async fn support_report(state: State<'_, AppState>, parts: report::Parts) -> Res
             version: env!("CARGO_PKG_VERSION"),
             server: server_name(),
             license,
+            update: &update,
             sys: sys.as_ref(),
             applied: &applied,
             history: &history.all(),
@@ -701,6 +703,12 @@ async fn account_remove_photo(state: State<'_, AppState>) -> Result<account::Acc
 #[tauri::command]
 fn update_ready(state: State<'_, AppState>) -> Option<update::Ready> {
     state.updates.ready()
+}
+
+/// Résultat de la dernière recherche de mise à jour (null : pas encore faite), affiché dans Paramètres de l'exe de test.
+#[tauri::command]
+fn update_status(state: State<'_, AppState>) -> Option<String> {
+    state.updates.last_check()
 }
 
 /// Installe la mise à jour et rouvre l'app. Pas pendant un lot ni une remise : la fenêtre se fermerait au milieu.
@@ -1086,6 +1094,7 @@ pub fn run() {
             game_remove,
             games_unhide,
             update_ready,
+            update_status,
             update_install,
             background_get,
             background_set,

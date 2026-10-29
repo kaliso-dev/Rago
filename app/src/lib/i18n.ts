@@ -171,6 +171,8 @@ const fr = {
   "settings.open": "Ouvrir",
   "settings.about": "À propos",
   "settings.version": "Version {v}",
+  "settings.updateCheck": "Mise à jour : {s}",
+  "settings.updateCheckWaiting": "recherche en cours",
   "settings.licences": "Licences",
   "settings.demo": "Mode démo : aucune modification n'est faite sur ce PC.",
 
@@ -1018,6 +1020,8 @@ const en: Record<Key, string> = {
   "settings.open": "Open",
   "settings.about": "About",
   "settings.version": "Version {v}",
+  "settings.updateCheck": "Update: {s}",
+  "settings.updateCheckWaiting": "checking",
   "settings.licences": "Open source licenses",
   "settings.demo": "Demo mode. Nothing changes on this PC.",
   "palette.placeholder": "Search {n} tweaks",
