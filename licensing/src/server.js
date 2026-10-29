@@ -7,6 +7,8 @@ import { createMailer } from './mailer.js';
 import { createApp } from './app.js';
 import { createDiscord } from './discord.js';
 import { createCommunity } from './community.js';
+import { createGeo } from './geo.js';
+import { purgeNetworkReports } from './network.js';
 
 const cfg = loadConfig();
 for (const w of cfg.warnings) console.warn(`[warn] ${w}`);
@@ -27,7 +29,10 @@ const stripe = createStripe(cfg);
 const discord = createDiscord(cfg, { db, stripe });
 // The community bot (DISCORD_COMMUNITY=1): the same bot, listening live to the server for joins, invites and commands.
 const community = cfg.discordCommunity ? createCommunity(cfg, { db, discord }) : null;
-const app = createApp({ cfg, db, keys, stripe, mailer: createMailer(cfg), discord, community });
+// Where the app's network tests come from (DB-IP's free databases, about 150 MB in memory): read now, not at the first test.
+const geo = createGeo(cfg);
+geo.load();
+const app = createApp({ cfg, db, keys, stripe, mailer: createMailer(cfg), discord, community, geo });
 
 // Prices, webhook destination and customer portal in the key's Stripe mode (the same list as /admin).
 if (stripe) {
@@ -54,6 +59,8 @@ const sweep = async () => {
   } catch (err) { console.error('[affiliate] sweep failed', err); }
   // A subscription replaced by Lifetime that Stripe didn't let us cancel at the purchase: tried again.
   try { await stopAllReplacedSubscriptions(db, stripe, console); } catch (err) { console.error('[stripe] Lifetime sweep failed', err); }
+  // Network tests older than 12 months (privacy policy).
+  try { await purgeNetworkReports(db); } catch (err) { console.error('[network] purge failed', err); }
 };
 setInterval(sweep, 60 * 60 * 1000).unref();
 setTimeout(sweep, 30 * 1000).unref();

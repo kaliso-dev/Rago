@@ -241,6 +241,37 @@ CREATE TABLE IF NOT EXISTS discord_invite_roles (
   PRIMARY KEY (discord_id, kind)
 );
 
+-- Network tests sent by the app (RAG-50): where players are and their ping to each server, to choose where future
+-- proxies would help (network.js). No IP address: the city, region, country and provider are read from it (geo.js),
+-- then it's forgotten. Kept 12 months.
+CREATE TABLE IF NOT EXISTS network_reports (
+  id TEXT PRIMARY KEY,
+  at BIGINT NOT NULL,
+  device TEXT,                                    -- the app's X-Rago-Device: a hash, the same PC from test to test
+  app_version TEXT,
+  country TEXT,                                   -- ISO code (FR)
+  region TEXT,
+  city TEXT,
+  asn INTEGER,
+  isp TEXT                                        -- the provider's network (Orange, Free…)
+);
+CREATE INDEX IF NOT EXISTS network_reports_at ON network_reports(at);
+CREATE TABLE IF NOT EXISTS network_results (
+  report_id TEXT NOT NULL REFERENCES network_reports(id) ON DELETE CASCADE,
+  target TEXT NOT NULL,                           -- hypixel, paris, frankfurt… (nettest.rs TARGETS)
+  method TEXT,                                    -- mc | tcp | icmp
+  ping DOUBLE PRECISION,                          -- in ms: average, median, best, worst, jitter
+  median DOUBLE PRECISION,
+  best DOUBLE PRECISION,
+  worst DOUBLE PRECISION,
+  jitter DOUBLE PRECISION,
+  loss DOUBLE PRECISION NOT NULL,                 -- 0 to 1
+  samples INTEGER,
+  spikes INTEGER,
+  error TEXT,                                     -- dns | timeout
+  PRIMARY KEY (report_id, target)
+);
+
 ALTER TABLE users ENABLE ROW LEVEL SECURITY;
 ALTER TABLE web_sessions ENABLE ROW LEVEL SECURITY;
 ALTER TABLE licenses ENABLE ROW LEVEL SECURITY;
@@ -261,3 +292,5 @@ ALTER TABLE discord_joins ENABLE ROW LEVEL SECURITY;
 ALTER TABLE discord_invite_links ENABLE ROW LEVEL SECURITY;
 ALTER TABLE discord_invite_bonus ENABLE ROW LEVEL SECURITY;
 ALTER TABLE discord_invite_roles ENABLE ROW LEVEL SECURITY;
+ALTER TABLE network_reports ENABLE ROW LEVEL SECURITY;
+ALTER TABLE network_results ENABLE ROW LEVEL SECURITY;
