@@ -15,6 +15,8 @@ import { signToken, verifyToken } from './tokens.js';
 import { billingPortal, createCheckout, endTestLicenses, ensureAffiliatePromo, findPromotionCode, handleStripeEvent, isRagoCheckout, lifetimePrice, stopReplacedSubscriptions, stripeChecks, stripeMode, syncPromoActive } from './billing.js';
 import * as A from './affiliates.js';
 import { createInstaller } from './installer.js';
+import { createGeo } from './geo.js';
+import * as N from './network.js';
 import { createDiscord, DiscordError, discordSetupMissing } from './discord.js';
 import { createOAuth, OAuthError } from './oauth.js';
 import * as L from './licensing.js';
@@ -66,10 +68,10 @@ function rateLimiter() {
 }
 
 /**
- * @param deps { cfg, db, keys, stripe, mailer, log, discord, oauth } (discord: the Pro role bot, null when not configured;
- *   oauth: the Google and Discord sign-in providers that have their keys)
+ * @param deps { cfg, db, keys, stripe, mailer, log, discord, oauth, geo } (discord: the Pro role bot, null when not configured;
+ *   oauth: the Google and Discord sign-in providers that have their keys; geo: where network tests come from, geo.js)
  */
-export function createApp({ cfg, db, keys, stripe, mailer, log = console, fetchImpl = fetch, avatars = P.createAvatarStore(cfg, { fetchImpl, log }), discord = createDiscord(cfg, { db, fetchImpl, log, stripe }), oauth = createOAuth(cfg, { fetchImpl }) }) {
+export function createApp({ cfg, db, keys, stripe, mailer, log = console, fetchImpl = fetch, avatars = P.createAvatarStore(cfg, { fetchImpl, log }), discord = createDiscord(cfg, { db, fetchImpl, log, stripe }), oauth = createOAuth(cfg, { fetchImpl }), geo = createGeo(cfg, { fetchImpl, log }) }) {
   const app = new Hono();
   // The Discord role pass started by a webhook runs after the reply to Stripe; tests wait for it here.
   app.idle = () => discord?.idle() ?? Promise.resolve();
@@ -1118,6 +1120,21 @@ export function createApp({ cfg, db, keys, stripe, mailer, log = console, fetchI
     discord?.syncAll(); // their Discord role goes too
     return c.redirect(`/admin?n=test-ended&count=${ended}`, 303);
   });
+  // The network tests sent by the app (RAG-50), by city and by provider, to see where future proxies would help.
+  app.get('/admin/reseau', async (c) => {
+    if (!adminPass) return c.notFound();
+    if (!isAdmin(c)) return c.redirect('/admin', 303);
+    const days = [30, 90, 365].includes(Number(c.req.query('jours'))) ? Number(c.req.query('jours')) : 90;
+    return c.html(V.adminNetworkPage(cfg, { summary: await N.networkSummary(db, { days }), geo: geo.state() }));
+  });
+  app.get('/admin/reseau.csv', async (c) => {
+    if (!adminPass) return c.notFound();
+    if (!isAdmin(c)) return c.redirect('/admin', 303);
+    return c.body(await N.networkCsv(db), 200, {
+      'Content-Type': 'text/csv; charset=utf-8',
+      'Content-Disposition': `attachment; filename="rago-tests-reseau-${new Date().toISOString().slice(0, 10)}.csv"`,
+    });
+  });
 
   // ---------- Stripe webhook ----------
   // What /admin shows about the signing secret, which Stripe never shows again: when the last event with a
@@ -1435,6 +1452,74 @@ export function createApp({ cfg, db, keys, stripe, mailer, log = console, fetchI
   api.get('/installer', (c) => {
     const v = cfg.installerVersion.trim().replace(/^v/i, '');
     return c.json({ version: /^\d+(\.\d+){1,3}$/.test(v) ? v : null }, 200, { 'Access-Control-Allow-Origin': '*', 'Cache-Control': 'public, max-age=300' });
+  });
+
+  // ---------- automatic updates of the app (RAG-24) ----------
+  // The app asks GET /api/v1/update/windows/x86_64/<its version> when it starts, then every few hours. 204: nothing to
+  // install. 200: the newest installer of the bucket and the signature the build made for it (<exe>.sig, uploaded next
+  // to it). The app checks that signature with the key it embeds before running anything, so a wrong file is refused.
+  const semver = (v) => {
+    const m = /^(\d{1,9})\.(\d{1,9})\.(\d{1,9})(?:-([0-9A-Za-z.-]+))?$/.exec(String(v || ''));
+    return m && { core: [Number(m[1]), Number(m[2]), Number(m[3])], pre: m[4] || '' };
+  };
+  /** a is a later version than b (1.2.0-beta comes before 1.2.0). */
+  const later = (a, b) => {
+    for (let i = 0; i < 3; i++) if (a.core[i] !== b.core[i]) return a.core[i] > b.core[i];
+    if (!a.pre || !b.pre) return !a.pre && !!b.pre;
+    return a.pre.localeCompare(b.pre, 'en', { numeric: true }) > 0;
+  };
+  // Rollout: the PC's place from 0 to 99, drawn again for each version, so the first 20% aren't always the same PCs.
+  // The app sends a hash of its PC (X-Rago-Device), never the fingerprint used for the license.
+  const rolloutSlot = (c, version) => {
+    const device = (c.req.header('x-rago-device') || '').trim().slice(0, 128) || `ip:${ip(c)}`;
+    return createHash('sha256').update(`rago-update|${version}|${device}`).digest().readUInt32BE(0) % 100;
+  };
+  api.get('/update/:target/:arch/:current', async (c) => {
+    c.header('Cache-Control', 'no-store');
+    if (!allow(`update:${ip(c)}`, 120, 60 * 60 * 1000)) return c.body(null, 204);
+    const current = semver(c.req.param('current'));
+    if (c.req.param('target') !== 'windows' || c.req.param('arch') !== 'x86_64' || !current || cfg.updatePaused) return c.body(null, 204);
+    const next = await installer.latest();
+    const version = semver(next.version);
+    if (next.error || !version || !later(version, current) || rolloutSlot(c, next.version) >= cfg.updateRollout) return c.body(null, 204);
+    return c.json({
+      version: next.version,
+      notes: cfg.updateNotes,
+      ...(next.date ? { pub_date: next.date } : {}),
+      url: `${cfg.publicUrl}/api/v1/update/file/${encodeURIComponent(next.version)}`,
+      signature: next.signature,
+    });
+  });
+  // The installer offered above, through a 5-minute signed link. Only that version: an older link stops working.
+  api.get('/update/file/:version', async (c) => {
+    c.header('Cache-Control', 'no-store');
+    if (!allow(`update-file:${ip(c)}`, 20, 60 * 60 * 1000)) return fail(c, 'rate_limited');
+    const next = await installer.latest();
+    if (next.error || next.version !== c.req.param('version')) return c.json({ error: { code: 'not_found', message: 'This update is no longer offered.' } }, 404);
+    const url = await installer.signedLink(next.path);
+    if (!url) return c.json({ error: { code: 'unavailable', message: 'The update can\'t be downloaded right now. Try again later.' } }, 503);
+    await audit(db, 'update_download', { detail: { version: next.version } });
+    return c.redirect(url, 302);
+  });
+  // For the release guide: whether the app's update is ready (installer and .sig in the bucket), without anything secret.
+  api.get('/update/status', async (c) => {
+    if (!allow(`update-status:${ip(c)}`, 30, 60 * 60 * 1000)) return fail(c, 'rate_limited');
+    const next = await installer.latest({ fresh: true });
+    return c.json(next.error
+      ? { ok: false, error: next.error, paused: cfg.updatePaused, rollout: cfg.updateRollout }
+      : { ok: true, version: next.version, file: next.name, paused: cfg.updatePaused, rollout: cfg.updateRollout }, 200, { 'Cache-Control': 'no-store' });
+  });
+
+  // ---------- network tests (RAG-50) ----------
+  // After each network test, the app sends its results (ping, jitter and losses to each server, no series). The server
+  // adds where they come from (geo.js), then forgets the address. /admin/reseau sums them up.
+  api.post('/network/report', async (c) => {
+    if (!allow(`network:${ip(c)}`, 30, 60 * 60 * 1000)) return fail(c, 'rate_limited');
+    const report = N.parseReport(await readJson(c), (c.req.header('x-rago-device') || '').trim().toLowerCase());
+    if (!report) return fail(c, 'invalid_request');
+    await geo.ready();
+    await N.saveReport(db, report, geo.lookup(ip(c)));
+    return c.body(null, 204);
   });
 
   app.route('/api/v1', api);

@@ -178,6 +178,39 @@ C'est ce qui prévient le serveur qu'un paiement est passé.
 
 Le bouton **Download** marche pour tous les comptes, avec ou sans Premium : sans licence, l'app tourne en version gratuite. Le lien public `https://account.ragohub.com/download` sert au bouton gratuit du site.
 
+### Les mises à jour automatiques (depuis la 1.2.0)
+
+L'app cherche une nouvelle version au lancement puis toutes les 4 heures, la télécharge en arrière-plan et affiche « Mise à jour » en bas du menu : **Redémarrer** l'installe tout de suite, sinon elle s'installe quand le joueur ferme l'app. Elle n'installe qu'un fichier signé avec ta clé de mise à jour. Les versions d'avant la 1.2.0 ne savent pas se mettre à jour : les joueurs installent la 1.2.0 une fois à la main.
+
+**Une seule fois, avant de fabriquer la 1.2.0** (sur ton PC, personne d'autre ne doit voir la clé privée) :
+
+1. Dans le dossier `app` du dépôt : `npx tauri signer generate -w "$env:USERPROFILE\.tauri\rago-updater.key"` (PowerShell). Choisis un mot de passe. Deux fichiers sont créés : `rago-updater.key` (privée) et `rago-updater.key.pub` (publique).
+2. GitHub → **Settings → Secrets and variables → Actions** :
+   - Secret `TAURI_SIGNING_PRIVATE_KEY` = le contenu de `rago-updater.key`
+   - Secret `TAURI_SIGNING_PRIVATE_KEY_PASSWORD` = ton mot de passe
+   - Variable (onglet **Variables**) `RAGO_UPDATER_PUBKEY` = le contenu de `rago-updater.key.pub`
+3. Garde une copie de `rago-updater.key` et du mot de passe dans ton gestionnaire de mots de passe. Sans eux, les apps installées ne pourront plus jamais se mettre à jour toutes seules. Ne change jamais cette clé.
+
+Le run vert de **app-windows** affiche alors « Exe avec mise à jour automatique » à l'étape « Mises à jour signées », et l'artefact contient deux fichiers : l'exe et `<même nom>.exe.sig`.
+
+**L'essayer sur le serveur de test d'abord** : Actions → app-windows → **Run workflow** sur la branche `staging`, serveur `staging`, une fois sans numéro de version (la version du dépôt, à installer) et une fois avec un numéro plus haut, par exemple `1.2.1` (à déposer dans le bucket `downloads` du Supabase de test, avec son `.exe.sig`). Le champ de version refuse le serveur de production. L'app de test se met alors à jour comme le fera la vraie.
+
+**À chaque nouvelle version :**
+
+1. Dans Railway, mets `UPDATE_ROLLOUT=20` : la version n'est proposée qu'à 1 PC sur 5 pour commencer.
+2. Dépose **les deux fichiers** de l'artefact dans **Storage → downloads**, sans les renommer. Sans le `.sig`, la version est téléchargeable sur le site mais n'est pas proposée en mise à jour.
+3. Vérifie `https://account.ragohub.com/api/v1/update/status` : `"ok":true` et le bon numéro. Sinon `error` dit quoi corriger.
+4. Un ou deux jours plus tard, sans retour de bug sur Discord : `UPDATE_ROLLOUT=100`.
+5. Un problème avec la nouvelle version : `UPDATE_PAUSED=1` arrête de la proposer (les PC qui l'ont déjà téléchargée l'installent quand même). La correction part ensuite dans une version suivante (par exemple 1.2.1), proposée de la même façon.
+
+### Les tests réseau des joueurs
+
+Après chaque test réseau, l'app envoie ses résultats au serveur : le ping, la gigue et les pertes vers chaque serveur testé, la version de l'app et un identifiant anonyme du PC. Le serveur y ajoute la ville, la région, le pays et le fournisseur d'accès, lus dans l'adresse IP avec les bases gratuites de DB-IP, puis il oublie l'adresse. Les tests sont gardés 12 mois.
+
+- **Les voir** : `/admin/reseau` (avec `ADMIN_KEY`), par ville et par fournisseur, sur 30, 90 ou 365 jours. **Tout exporter (CSV)** donne chaque mesure pour un tableur.
+- **Les bases des villes** se téléchargent seules au démarrage du serveur, puis chaque mois (environ 150 Mo en mémoire, rien à configurer). Le badge en haut de `/admin/reseau` dit si elles sont chargées. `GEOIP=off` les coupe : les tests sont alors gardés sans la ville.
+- La politique de confidentialité du site le dit, avec le crédit « IP Geolocation by DB-IP » que demande leur licence (CC BY 4.0).
+
 ## Étape 9 : le test complet (toujours en mode test)
 
 Fais-le de bout en bout, comme un vrai client, dans une fenêtre de navigation privée :
@@ -370,6 +403,10 @@ Le joueur (gratuit ou Premium) lie son Discord depuis sa page compte : la carte 
 | `DISCORD_VIP_ROLE_ID`, `DISCORD_MVP_ROLE_ID`, `DISCORD_BOOST2_ROLE_ID` | Clic droit sur les rôles VIP, MVP et 2 boosts → Copier l'identifiant (« Les récompenses Discord »). Facultatives : sans elles, pas de récompense pour ce palier |
 | `ADMIN_KEY` | Une clé d'au moins 16 lettres et chiffres que tu choisis : elle ouvre `/admin`, où se règle le pop-up du site (« Le pop-up du site »). Sans elle, `/admin` n'existe pas |
 | `INSTALLER_VERSION` | Le numéro de l'exe déposé dans le bucket, lu dans son nom `Rago Optimizer_<numéro>_x64-setup.exe` (ex. `1.1.5`). Affiché à côté du bouton de téléchargement, et sous celui de la page Tweaks du site, qui le lit sur `/api/v1/installer`. `INSTALLER_OBJECT` est facultatif (il donne le bucket et le dossier) : le `.exe` le plus récent du dossier est toujours servi |
+| `UPDATE_ROLLOUT` | Part des PC à qui la nouvelle version est proposée en mise à jour automatique, de 0 à 100 (100 si vide). `20` les premiers jours (« Les mises à jour automatiques », étape 8) |
+| `UPDATE_PAUSED` | `1` : plus aucune mise à jour proposée. Facultative |
+| `UPDATE_NOTES` | Une phrase sur la nouvelle version, affichée au survol de « Mise à jour » dans l'app. Facultative |
+| `GEOIP` | `off` : les tests réseau des joueurs sont gardés sans la ville ni le fournisseur (« Les tests réseau des joueurs », étape 8). Facultative |
 
 À retirer s'il est encore là : `STRIPE_PRICE_ID` (ancien prix unique, plus vendu).
 
