@@ -1432,5 +1432,152 @@
   "helps": [
    "Input lag"
   ]
+ },
+ "net_dscp": {
+  "summary": "Flags the traffic of 12 more online games as a priority for your router.",
+  "about": "Windows can put a priority mark on the data of chosen games, and this adds 12 of them, from Dota 2 and Call of Duty to Rust and Brawlhalla. A router that honors those marks sends game data ahead of downloads and streams on the same connection. Many home routers ignore the marks, so the gain depends on yours, and your ping to the server doesn't change. The change applies after a restart.",
+  "helps": [
+   "Connection"
+  ]
+ },
+ "net_dns": {
+  "summary": "Looks up addresses with Cloudflare and Google instead of your internet provider.",
+  "about": "Every time a game or a website connects, your PC first looks up the server's address. This makes your connected network cards ask Cloudflare (1.1.1.1) and Google (8.8.8.8) for it rather than your provider's servers, which can be slow or unreliable. It doesn't lower your ping once you're in a match, because the lookup only happens when you connect. The change applies after a restart.",
+  "helps": [
+   "Connection"
+  ]
+ },
+ "net_intmod": {
+  "summary": "Makes your network card hand over each packet right away instead of grouping them.",
+  "about": "To save work, a network card usually waits for a few packets and hands them to Windows together. Turning that off passes each packet on as soon as it arrives, which can trim a little delay and smooth out game traffic. The processor works a bit harder in exchange, which only matters on older or busy PCs. The change applies after a restart.",
+  "helps": [
+   "Connection",
+   "Input lag"
+  ]
+ },
+ "win_bgdownloads": {
+  "summary": "Stops Windows from downloading map updates and speech models in the background.",
+  "about": "Windows quietly fetches offline map updates and new speech recognition models, even if you never use the Maps app or voice typing. This turns both downloads off, so they don't take bandwidth or disk activity while you play. It won't change your frames, it just removes two background jobs. Turn it off again if you rely on offline maps or Windows speech recognition.",
+  "helps": [
+   "Background",
+   "Connection"
+  ]
+ },
+ "win_taskbar": {
+  "summary": "Hides the Task View, search, Chat and Meet Now buttons from the taskbar.",
+  "about": "The taskbar comes with buttons many players never touch. This removes Task View, the search box, Chat and Meet Now, leaving just your apps. It's a tidier desktop, not a performance gain. Search still works from the Start menu, and the buttons come back when you turn it off.",
+  "helps": [
+   "Background"
+  ]
+ },
+ "win_recent": {
+  "summary": "Stops Start and File Explorer from listing your recent apps, files and folders.",
+  "about": "Start shows the apps you added or use most, and File Explorer lists the files and folders you opened lately. This hides both lists. It's about privacy and a cleaner Start menu, not frames, and it's handy if other people use your PC or you stream your screen. The lists come back when you turn it off.",
+  "helps": [
+   "Privacy"
+  ]
+ },
+ "win_highlights": {
+  "summary": "Removes the Bing pictures and trending topics from Windows search.",
+  "about": "The Windows search box and panel show daily Bing pictures and trending topics. This removes them, so search only shows what you type. It doesn't change your frames, just takes away a bit of online clutter. Turn it off to bring the highlights back.",
+  "helps": [
+   "Privacy",
+   "Background"
+  ]
+ },
+ "win_lockscreen": {
+  "summary": "Goes straight to sign-in, without the picture screen in front of it.",
+  "about": "When your PC wakes up or starts, Windows first shows a lock screen with a picture you have to dismiss. This skips it and takes you right to sign-in, without the blur behind it. Your password or PIN is still asked, so your PC stays as safe as before. It saves a click, not frames.",
+  "helps": [
+   "Background"
+  ]
+ },
+ "win_classicmenu": {
+  "summary": "Brings back the full right-click menu on Windows 11, without Show more options.",
+  "about": "Windows 11 shortens the right-click menu and hides most entries behind Show more options. This opens the full menu straight away, like on Windows 10. It's a comfort change that won't touch your frames, and it does nothing on Windows 10. The change applies after a restart.",
+  "helps": [
+   "Background"
+  ]
+ },
+ "win_alttab": {
+  "summary": "Switches Alt+Tab back to the simple list of icons, without window previews.",
+  "about": "Alt+Tab normally shows a large preview of every open window. This brings back the old, compact list of icons, which some players find quicker to read when tabbing out of a game. It's a matter of taste rather than performance. The change applies after a restart.",
+  "helps": [
+   "Background"
+  ]
+ },
+ "win_shortcut": {
+  "summary": "Stops Windows from adding - Shortcut to the name of new shortcuts.",
+  "about": "When you create a shortcut, Windows adds - Shortcut to its name. This keeps the plain name of the file instead. Shortcuts you made before keep their names. It's a small comfort change with no effect on games.",
+  "helps": [
+   "Background"
+  ]
+ },
+ "win_suggestions": {
+  "summary": "Removes the tips, setup reminders and online suggestions in Start, Settings and search.",
+  "about": "Windows fills Start with recommended tips, nags you to finish setting up your device and mixes online results into search and Settings. This turns all of that off, so you only see your own apps and files. It's about fewer interruptions and less data sent online, not more frames. Turn it off to get the suggestions back.",
+  "helps": [
+   "Privacy",
+   "Background"
+  ]
+ },
+ "win_extensions": {
+  "summary": "Shows file extensions like .exe or .zip in File Explorer.",
+  "about": "File Explorer hides the end of file names by default, so a program can pass for a picture or a document. Showing extensions lets you see at a glance what a file really is, which helps you spot fake mods or cheats before you open them. It changes nothing for your games. Turn it off to hide extensions again.",
+  "helps": [
+   "Privacy"
+  ]
+ },
+ "win_compact": {
+  "summary": "Tightens the spacing in File Explorer so more files fit on screen.",
+  "about": "Windows 11 spreads File Explorer out with extra space between items. This brings back the tighter layout, so you see more files without scrolling. It's purely about comfort and has no effect on games. Turn it off for the roomier look.",
+  "helps": [
+   "Background"
+  ]
+ },
+ "win_wallpaper": {
+  "summary": "Keeps your JPEG wallpaper at full quality instead of compressed.",
+  "about": "Windows compresses JPEG wallpapers, which can leave them slightly blurry or blocky. This keeps them at full quality. It only changes how your desktop looks, so expect no difference in games. Set your wallpaper again after turning it on to see the sharper version.",
+  "helps": [
+   "Background"
+  ]
+ },
+ "win_thispc": {
+  "summary": "Opens File Explorer on This PC, with your drives, instead of the Home page.",
+  "about": "File Explorer opens on Home, with recent and suggested files. This makes it open on This PC, where your drives and main folders are, which is quicker when you're looking for a game folder or a mod. It has no effect on performance. Turn it off to go back to Home.",
+  "helps": [
+   "Privacy"
+  ]
+ },
+ "dbl_onedrive_off": {
+  "summary": "Stops OneDrive from starting and syncing in the background, without deleting anything.",
+  "about": "OneDrive starts with Windows and keeps syncing files in the background, using bandwidth and disk activity. This stops it from starting and syncing. Nothing is deleted and your files stay where they are, but files kept only online won't open until you turn it off again. Leave it alone if you rely on OneDrive to back up or share files.",
+  "helps": [
+   "Background",
+   "Connection"
+  ],
+  "restart": "Needed"
+ },
+ "dbl_browsers": {
+  "summary": "Stops Edge, Chrome and Firefox from sending usage data and feedback.",
+  "about": "Browsers send usage statistics and feedback reports to their makers. This turns that off for Edge, Chrome and Firefox, and also hides Edge's sidebar and recommendations. It's a privacy change, so your frames stay the same. Your history, passwords and extensions aren't touched.",
+  "helps": [
+   "Privacy"
+  ]
+ },
+ "dbl_vs": {
+  "summary": "Stops Visual Studio from sending usage data and asking for feedback.",
+  "about": "Visual Studio, Microsoft's programming tool, sends usage data and shows feedback prompts. This turns both off. It only matters if Visual Studio is installed, and it won't change your frames. Turn it off to put Visual Studio's settings back.",
+  "helps": [
+   "Privacy"
+  ]
+ },
+ "win_browserbg": {
+  "summary": "Makes Edge, Chrome and Brave fully close when you close their window.",
+  "about": "Browsers often keep running after you close them, to open faster and show notifications, and Edge even starts with Windows to preload itself. This makes Edge, Chrome and Brave really close and stops Edge from preloading. That frees memory and background work while you play. Your browser just takes a moment longer to open the first time.",
+  "helps": [
+   "Background",
+   "FPS"
+  ]
  }
 }
