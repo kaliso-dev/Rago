@@ -203,6 +203,14 @@ Le run vert de **app-windows** affiche alors « Exe avec mise à jour automatiqu
 4. Un ou deux jours plus tard, sans retour de bug sur Discord : `UPDATE_ROLLOUT=100`.
 5. Un problème avec la nouvelle version : `UPDATE_PAUSED=1` arrête de la proposer (les PC qui l'ont déjà téléchargée l'installent quand même). La correction part ensuite dans une version suivante (par exemple 1.2.1), proposée de la même façon.
 
+### Les tests réseau des joueurs
+
+Après chaque test réseau, l'app envoie ses résultats au serveur : le ping, la gigue et les pertes vers chaque serveur testé, la version de l'app et un identifiant anonyme du PC. Le serveur y ajoute la ville, la région, le pays et le fournisseur d'accès, lus dans l'adresse IP avec les bases gratuites de DB-IP, puis il oublie l'adresse. Les tests sont gardés 12 mois.
+
+- **Les voir** : `/admin/reseau` (avec `ADMIN_KEY`), par ville et par fournisseur, sur 30, 90 ou 365 jours. **Tout exporter (CSV)** donne chaque mesure pour un tableur.
+- **Les bases des villes** se téléchargent seules au démarrage du serveur, puis chaque mois (environ 150 Mo en mémoire, rien à configurer). Le badge en haut de `/admin/reseau` dit si elles sont chargées. `GEOIP=off` les coupe : les tests sont alors gardés sans la ville.
+- La politique de confidentialité du site le dit, avec le crédit « IP Geolocation by DB-IP » que demande leur licence (CC BY 4.0).
+
 ## Étape 9 : le test complet (toujours en mode test)
 
 Fais-le de bout en bout, comme un vrai client, dans une fenêtre de navigation privée :
@@ -398,6 +406,7 @@ Le joueur (gratuit ou Premium) lie son Discord depuis sa page compte : la carte 
 | `UPDATE_ROLLOUT` | Part des PC à qui la nouvelle version est proposée en mise à jour automatique, de 0 à 100 (100 si vide). `20` les premiers jours (« Les mises à jour automatiques », étape 8) |
 | `UPDATE_PAUSED` | `1` : plus aucune mise à jour proposée. Facultative |
 | `UPDATE_NOTES` | Une phrase sur la nouvelle version, affichée au survol de « Mise à jour » dans l'app. Facultative |
+| `GEOIP` | `off` : les tests réseau des joueurs sont gardés sans la ville ni le fournisseur (« Les tests réseau des joueurs », étape 8). Facultative |
 
 À retirer s'il est encore là : `STRIPE_PRICE_ID` (ancien prix unique, plus vendu).
 

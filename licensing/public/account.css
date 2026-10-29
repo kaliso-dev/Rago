@@ -482,3 +482,20 @@ p{margin:0}
 .field input.otp{font-size:22px;letter-spacing:.4em;text-align:center}
 .linkish{all:unset;cursor:pointer;color:var(--rg-text-1);text-decoration:underline;text-underline-offset:2px}
 .linkish:focus-visible{outline:2px solid var(--rg-red-a24);outline-offset:2px;border-radius:4px}
+
+/* /admin/reseau: the app's network tests by city and by provider */
+.net .dash-head p.muted{margin-top:10px;max-width:760px}
+.net-facts{display:flex;flex-wrap:wrap;gap:12px;margin:0}
+.net-facts div{min-width:120px;padding:14px 18px;background:rgba(17,17,19,.72);-webkit-backdrop-filter:blur(12px);backdrop-filter:blur(12px);border:1px solid var(--rg-line-2);border-radius:var(--rg-radius-lg)}
+.net-facts dt{font:500 10px/1 var(--rg-font-mono);letter-spacing:.1em;text-transform:uppercase;color:var(--rg-text-3);margin-bottom:8px}
+.net-facts dd{margin:0;font-size:22px;font-weight:600}
+.net-panel{padding:clamp(20px,2.4vw,28px);background:rgba(17,17,19,.82);-webkit-backdrop-filter:blur(16px);backdrop-filter:blur(16px);border:1px solid var(--rg-line-2);border-radius:var(--rg-radius-xl);box-shadow:var(--rg-shadow-3)}
+.net-panel .h2{margin-bottom:16px}
+.net-scroll{overflow-x:auto;margin:0 -8px}
+.net-table{width:100%;border-collapse:collapse;font-size:var(--rg-fs-small)}
+.net-table th,.net-table td{padding:9px 8px;text-align:right;white-space:nowrap;border-bottom:1px solid var(--rg-line-1)}
+.net-table thead th{font:500 10px/1 var(--rg-font-mono);letter-spacing:.08em;text-transform:uppercase;color:var(--rg-text-3)}
+.net-table th:first-child{text-align:left;font-weight:500;max-width:320px;overflow:hidden;text-overflow:ellipsis}
+.net-table tbody tr:hover{background:var(--rg-ink-3)}
+.net-table tbody tr:last-child th,.net-table tbody tr:last-child td{border-bottom:0}
+.net-loss{color:var(--rg-red-500)}

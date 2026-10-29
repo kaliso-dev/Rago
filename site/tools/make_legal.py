@@ -155,11 +155,13 @@ page('privacy.html','Privacy Policy','What Rago Optimizer and its account server
 <tr><td>If you link your Discord account: its Discord user ID and username</td><td>Adding you to our Discord server and giving you the Premium role while your Premium is active, then removing it when Premium ends. We don't keep your Discord sign-in: it's revoked right after linking. You can unlink anytime from your account page.</td></tr>
 <tr><td>A log of license events (purchase, activation, refund, blocked activation with IP address)</td><td>Security and support</td></tr>
 <tr><td>IP address, kept briefly in memory</td><td>Limiting sign-in and download attempts</td></tr>
+<tr><td>When you run the app's network test: its results (ping, jitter and lost packets to each test server), the app version, an anonymous ID of your PC (a hash, not linked to your account or license), and the city, region, country and internet provider worked out from your IP address. The IP address itself isn't kept.</td><td>Finding where players are and how their connection reaches game servers, to choose where future Rago servers would lower their ping</td></tr>
 </table></div>
-<p>Used without an account, the app sends nothing to us. It contacts our server only when you sign in, activate Premium, refresh your license, or save your review, public name or photo. Your card number goes to Stripe, never to us.</p>
+<p>The app contacts our server to check for updates (with its version and an anonymous ID of your PC), to send the results of the network test each time you run it, and when you sign in, activate Premium, refresh your license, or save your review, public name or photo. Your card number goes to Stripe, never to us.</p>
+<p>The city and provider come from DB-IP's free database, which runs on our own server: your IP address is never sent to DB-IP. <a href="https://db-ip.com">IP Geolocation by DB-IP</a>.</p>
 
 <h2>Legal basis</h2>
-<p>We use your data to perform our contract with you (account, license, payment), for our legitimate interest in preventing fraud and license sharing, and to meet legal obligations such as keeping accounting records. Your review, public name and photo are published because you choose to post them: you can delete them anytime.</p>
+<p>We use your data to perform our contract with you (account, license, payment), for our legitimate interest in preventing fraud and license sharing and in improving our service (the network test results), and to meet legal obligations such as keeping accounting records. Your review, public name and photo are published because you choose to post them: you can delete them anytime.</p>
 
 <h2>Cookies and local storage</h2>
 <ul>
@@ -190,6 +192,7 @@ page('privacy.html','Privacy Policy','What Rago Optimizer and its account server
 <li>Payment and invoicing records: as long as accounting law requires, 10 years.</li>
 <li>Your review and profile photo: until you delete them or your account. A replaced photo is deleted right away.</li>
 <li>Security log: 12 months.</li>
+<li>Network test results: 12 months.</li>
 </ul>
 
 <h2>Your rights</h2>
@@ -197,7 +200,7 @@ page('privacy.html','Privacy Policy','What Rago Optimizer and its account server
 
 <h2>Changes</h2>
 <p>If we change this policy in a way that matters, we'll update the date above and tell account holders by email.</p>
-''',upd="October 16, 2026")
+''',upd="October 29, 2026")
 print('ok')
 
 # 404: Netlify serves it for any unknown path, so every link is absolute

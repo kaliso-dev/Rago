@@ -93,6 +93,13 @@ export function loadConfig(env = process.env) {
     updateRollout: percent(env.UPDATE_ROLLOUT, 100),
     updatePaused: /^(1|true|yes)$/i.test((env.UPDATE_PAUSED || '').trim()),
     updateNotes: (env.UPDATE_NOTES || '').trim().slice(0, 500),
+    // Network tests sent by the app (RAG-50): their city, region, country and provider come from DB-IP's free
+    // databases (geo.js). GEOIP=off: stored without them. GEOIP_CITY_URL / GEOIP_ASN_URL: another copy (.mmdb or .mmdb.gz).
+    geoip: {
+      on: !/^(0|off|false|no)$/i.test((env.GEOIP || '').trim()),
+      city: (env.GEOIP_CITY_URL || '').trim(),
+      asn: (env.GEOIP_ASN_URL || '').trim(),
+    },
 
     licenseTokenDays: Number(env.LICENSE_TOKEN_DAYS || 30),
     // Days a subscriber keeps working offline past the paid period (renewal retries, clock drift).

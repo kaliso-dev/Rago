@@ -15,6 +15,8 @@ import { signToken, verifyToken } from './tokens.js';
 import { billingPortal, createCheckout, endTestLicenses, ensureAffiliatePromo, findPromotionCode, handleStripeEvent, isRagoCheckout, lifetimePrice, stopReplacedSubscriptions, stripeChecks, stripeMode, syncPromoActive } from './billing.js';
 import * as A from './affiliates.js';
 import { createInstaller } from './installer.js';
+import { createGeo } from './geo.js';
+import * as N from './network.js';
 import { createDiscord, DiscordError, discordSetupMissing } from './discord.js';
 import { createOAuth, OAuthError } from './oauth.js';
 import * as L from './licensing.js';
@@ -66,10 +68,10 @@ function rateLimiter() {
 }
 
 /**
- * @param deps { cfg, db, keys, stripe, mailer, log, discord, oauth } (discord: the Pro role bot, null when not configured;
- *   oauth: the Google and Discord sign-in providers that have their keys)
+ * @param deps { cfg, db, keys, stripe, mailer, log, discord, oauth, geo } (discord: the Pro role bot, null when not configured;
+ *   oauth: the Google and Discord sign-in providers that have their keys; geo: where network tests come from, geo.js)
  */
-export function createApp({ cfg, db, keys, stripe, mailer, log = console, fetchImpl = fetch, avatars = P.createAvatarStore(cfg, { fetchImpl, log }), discord = createDiscord(cfg, { db, fetchImpl, log, stripe }), oauth = createOAuth(cfg, { fetchImpl }) }) {
+export function createApp({ cfg, db, keys, stripe, mailer, log = console, fetchImpl = fetch, avatars = P.createAvatarStore(cfg, { fetchImpl, log }), discord = createDiscord(cfg, { db, fetchImpl, log, stripe }), oauth = createOAuth(cfg, { fetchImpl }), geo = createGeo(cfg, { fetchImpl, log }) }) {
   const app = new Hono();
   // The Discord role pass started by a webhook runs after the reply to Stripe; tests wait for it here.
   app.idle = () => discord?.idle() ?? Promise.resolve();
@@ -1118,6 +1120,21 @@ export function createApp({ cfg, db, keys, stripe, mailer, log = console, fetchI
     discord?.syncAll(); // their Discord role goes too
     return c.redirect(`/admin?n=test-ended&count=${ended}`, 303);
   });
+  // The network tests sent by the app (RAG-50), by city and by provider, to see where future proxies would help.
+  app.get('/admin/reseau', async (c) => {
+    if (!adminPass) return c.notFound();
+    if (!isAdmin(c)) return c.redirect('/admin', 303);
+    const days = [30, 90, 365].includes(Number(c.req.query('jours'))) ? Number(c.req.query('jours')) : 90;
+    return c.html(V.adminNetworkPage(cfg, { summary: await N.networkSummary(db, { days }), geo: geo.state() }));
+  });
+  app.get('/admin/reseau.csv', async (c) => {
+    if (!adminPass) return c.notFound();
+    if (!isAdmin(c)) return c.redirect('/admin', 303);
+    return c.body(await N.networkCsv(db), 200, {
+      'Content-Type': 'text/csv; charset=utf-8',
+      'Content-Disposition': `attachment; filename="rago-tests-reseau-${new Date().toISOString().slice(0, 10)}.csv"`,
+    });
+  });
 
   // ---------- Stripe webhook ----------
   // What /admin shows about the signing secret, which Stripe never shows again: when the last event with a
@@ -1491,6 +1508,18 @@ export function createApp({ cfg, db, keys, stripe, mailer, log = console, fetchI
     return c.json(next.error
       ? { ok: false, error: next.error, paused: cfg.updatePaused, rollout: cfg.updateRollout }
       : { ok: true, version: next.version, file: next.name, paused: cfg.updatePaused, rollout: cfg.updateRollout }, 200, { 'Cache-Control': 'no-store' });
+  });
+
+  // ---------- network tests (RAG-50) ----------
+  // After each network test, the app sends its results (ping, jitter and losses to each server, no series). The server
+  // adds where they come from (geo.js), then forgets the address. /admin/reseau sums them up.
+  api.post('/network/report', async (c) => {
+    if (!allow(`network:${ip(c)}`, 30, 60 * 60 * 1000)) return fail(c, 'rate_limited');
+    const report = N.parseReport(await readJson(c), (c.req.header('x-rago-device') || '').trim().toLowerCase());
+    if (!report) return fail(c, 'invalid_request');
+    await geo.ready();
+    await N.saveReport(db, report, geo.lookup(ip(c)));
+    return c.body(null, 204);
   });
 
   app.route('/api/v1', api);
