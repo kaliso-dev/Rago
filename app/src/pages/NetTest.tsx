@@ -267,6 +267,10 @@ export function NetTest() {
             <ShieldCheck size={13} />
             {t("net.note")}
           </p>
+          <p className="net-note muted small">
+            <Globe size={13} />
+            {t("net.shared")}
+          </p>
         </motion.section>
       </div>
 

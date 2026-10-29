@@ -54,7 +54,7 @@ enum Body<'a> {
     Bytes(&'a [u8]),
 }
 
-fn agent() -> ureq::Agent {
+pub(crate) fn agent() -> ureq::Agent {
     ureq::Agent::config_builder()
         .timeout_global(Some(Duration::from_secs(20)))
         .http_status_as_error(false)

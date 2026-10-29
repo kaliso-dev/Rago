@@ -920,7 +920,8 @@ export function adminPage(cfg, { state, stripe, discord, community, values, erro
     ${stripeSection(stripe)}
     ${discordSection(discord)}
     ${communitySection(community)}
-    <form class="rise d4" method="post" action="/admin/logout"><button class="btn btn-ghost btn-sm" type="submit">Quitter l’admin</button></form>`;
+    <div class="row rise d4"><a class="btn btn-ghost btn-sm" href="/admin/reseau">Tests réseau des joueurs</a>
+      <form method="post" action="/admin/logout"><button class="btn btn-ghost btn-sm" type="submit">Quitter l’admin</button></form></div>`;
   const form = html`<h2 class="h2">Modifier la pop-up</h2>
     ${alertBox(typeof ADMIN_NOTICES[notice] === 'function' ? ADMIN_NOTICES[notice](count) : ADMIN_NOTICES[notice], 'ok')}${alertBox(error)}
     <form method="post" action="/admin/popup" class="form" data-busy="Enregistrement…">
@@ -942,4 +943,59 @@ export function adminPage(cfg, { state, stripe, discord, community, values, erro
       <button class="btn btn-primary btn-block" type="submit">Enregistrer</button>
     </form>`;
   return adminShell(cfg, 'Pop-up du site', split({ aside, form }));
+}
+
+// ---------- /admin/reseau: the app's network tests by city and by provider (network.js), for the future proxies ----------
+const NET_TARGETS = [
+  ['hypixel', 'Hypixel'], ['minemen', 'Minemen'], ['paris', 'Paris'], ['frankfurt', 'Francfort'], ['london', 'Londres'],
+  ['stockholm', 'Stockholm'], ['madrid', 'Madrid'], ['virginia', 'Virginie'], ['internet', 'Internet'],
+];
+const frNumber = (n) => new Intl.NumberFormat('fr-FR').format(n);
+function netTable(rows, place, label) {
+  if (!rows.length) return html`<p class="muted small">Aucun test réseau sur cette période.</p>`;
+  const cell = (g, id) => {
+    const p = g.targets[id];
+    if (!p) return html`<td class="muted">–</td>`;
+    const loss = `${(p.loss * 100).toFixed(1).replace('.', ',')} %`;
+    return html`<td class="mono${p.loss > 0.02 ? ' net-loss' : ''}" title="${frNumber(p.n)} mesure${p.n > 1 ? 's' : ''}, pertes ${loss}">${p.median}</td>`;
+  };
+  return html`<div class="net-scroll"><table class="net-table">
+      <thead><tr><th scope="col">${label}</th><th scope="col">Joueurs</th><th scope="col">Tests</th>${NET_TARGETS.map(([, name]) => html`<th scope="col">${name}</th>`)}</tr></thead>
+      <tbody>${rows.map((g) => html`<tr><th scope="row">${place(g)}</th><td class="mono">${frNumber(g.players)}</td><td class="mono">${frNumber(g.tests)}</td>${NET_TARGETS.map(([id]) => cell(g, id))}</tr>`)}</tbody>
+    </table></div>`;
+}
+
+export function adminNetworkPage(cfg, { summary: s, geo }) {
+  const t = s.total;
+  const [badge, status] = !geo.on ? ['badge-off', 'Villes désactivées (GEOIP=off)']
+    : geo.loaded ? ['badge-ok', `Villes : base DB-IP de ${geo.month}`]
+    : geo.error ? ['badge-red', 'Base des villes introuvable'] : ['badge-wait', 'Base des villes en chargement'];
+  const unknown = html`<span class="muted">Inconnue</span>`;
+  const city = (g) => (g.city ? html`${g.city}<span class="muted small"> · ${[g.region, g.country].filter(Boolean).join(', ')}</span>` : g.country ? html`${unknown}<span class="muted small"> · ${g.country}</span>` : unknown);
+  const isp = (g) => (g.isp ? html`${g.isp}${g.country ? html`<span class="muted small"> · ${g.country}</span>` : ''}` : unknown);
+  const located = t.tests ? Math.round((t.located / t.tests) * 100) : 0;
+  const body = html`<main class="dash net">
+    <div class="dash-head">
+      <div><p class="overline rise">Admin · Tests réseau</p><h1 class="display rise d1">Où jouent les joueurs.</h1>
+        <p class="muted rise d2">Ping médian en ms vers chaque serveur du test réseau de l’app, sur les ${s.days} derniers jours. En rouge : plus de 2 % de paquets perdus. Survole un chiffre pour le nombre de mesures.</p></div>
+      <div class="row rise d2">
+        <nav class="tabs" aria-label="Période">${[30, 90, 365].map((d) => html`<a href="/admin/reseau?jours=${d}" ${d === s.days ? html`aria-current="page"` : ''}>${d} jours</a>`)}</nav>
+        <a class="btn btn-ghost btn-sm" href="/admin/reseau.csv">Tout exporter (CSV)</a>
+        <a class="btn btn-ghost btn-sm" href="/admin">Retour</a>
+      </div>
+    </div>
+    <div class="row rise d2"><span class="badge ${badge}"><i></i>${status}</span>
+      ${geo.error ? html`<span class="muted small">${geo.error}</span>` : ''}</div>
+    <dl class="net-facts rise d3">
+      <div><dt>Joueurs</dt><dd class="mono">${frNumber(t.players)}</dd></div>
+      <div><dt>Tests</dt><dd class="mono">${frNumber(t.tests)}</dd></div>
+      <div><dt>Villes</dt><dd class="mono">${frNumber(t.cities)}</dd></div>
+      <div><dt>Avec la ville</dt><dd class="mono">${located} %</dd></div>
+      <div><dt>Dernier test</dt><dd class="mono">${t.last ? new Date(t.last).toISOString().slice(0, 16).replace('T', ' ') : '–'}</dd></div>
+    </dl>
+    <section class="net-panel rise d3" aria-labelledby="net-city"><h2 class="h2" id="net-city">Par ville</h2>${netTable(s.cities, city, 'Ville')}</section>
+    <section class="net-panel rise d4" aria-labelledby="net-isp"><h2 class="h2" id="net-isp">Par fournisseur d’accès</h2>${netTable(s.isps, isp, 'Fournisseur')}</section>
+    <p class="muted small">Villes et fournisseurs : <a href="https://db-ip.com" rel="noopener">IP Geolocation by DB-IP</a> (CC BY 4.0), déduits de l’adresse IP qui n’est jamais gardée. Tests gardés 12 mois.</p>
+  </main>`;
+  return adminShell(cfg, 'Tests réseau', body);
 }
