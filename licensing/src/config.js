@@ -17,6 +17,13 @@ function launchTime(value, prod) {
   return Number.isNaN(t) ? (prod ? Date.parse(DEFAULT_LAUNCH) : 0) : t;
 }
 
+/** A percentage from 0 to 100, or the default when empty or not a number. */
+const percent = (value, dflt) => {
+  const v = String(value ?? '').trim();
+  const n = Number(v);
+  return v && Number.isFinite(n) ? Math.min(100, Math.max(0, n)) : dflt;
+};
+
 // A test copy of the server: Railway environment named "staging" (or a PR environment, "test", "preview", "dev"),
 // or APP_ENV=staging. It refuses live Stripe keys and says on every page and email that it isn't the real one.
 const STAGING_NAME = /stag|test|preview|^dev$|pr-\d/;
@@ -80,6 +87,12 @@ export function loadConfig(env = process.env) {
     installerVersion: env.INSTALLER_VERSION || '',
     installerFileName: env.INSTALLER_FILENAME || 'RagoOptimizer-Setup.exe',
     installerUrl: env.INSTALLER_URL || '', // optional public link to the .exe, used instead of Storage
+    // Automatic updates of the app (RAG-24): the newest .exe of the bucket, once its .sig is next to it.
+    // UPDATE_ROLLOUT=20 offers it to 20% of PCs first (always the same ones for a version), then 100. UPDATE_PAUSED=1
+    // stops offering it (a version already downloaded on a PC still installs). UPDATE_NOTES: a line shown in the app.
+    updateRollout: percent(env.UPDATE_ROLLOUT, 100),
+    updatePaused: /^(1|true|yes)$/i.test((env.UPDATE_PAUSED || '').trim()),
+    updateNotes: (env.UPDATE_NOTES || '').trim().slice(0, 500),
 
     licenseTokenDays: Number(env.LICENSE_TOKEN_DAYS || 30),
     // Days a subscriber keeps working offline past the paid period (renewal retries, clock drift).
