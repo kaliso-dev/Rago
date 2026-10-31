@@ -15,7 +15,7 @@ Liste priorisée au 31/10. Rien ne se lance sans la demande de Sofiene ([[Règle
 ## Ensuite
 - [[Proxy]] : mesurer le trajet proxy → serveur de jeu depuis chaque ville candidate (proposé le 29/10, en attente du feu vert).
 - Vidéo YouTube principale de l'app après la sortie (voir [[Vidéos YouTube]]) ; version courte verticale du [[Trailer 1.2]] avec les plans Kling.
-- [[Rago OS]] : selon les tests de Sofiene.
+- **OS de Sofiene** (développé sur un autre compte Claude, hors de ce dépôt) : quand Sofiene le demandera, le personnaliser avec la DA de Rago Optimizer ([[Charte graphique]], [[Voix et ton]], [[Refonte glass]]). Rien à faire avant sa demande.
 - Icône Discord « mixée » aux couleurs Rago sur le site (demande du 20/10 restée sans suite).
 - Connexion à l'app Windows directement avec Google/Discord (chantier séparé, voir [[Connexion Google et Discord]]).
 

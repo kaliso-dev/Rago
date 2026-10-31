@@ -22,7 +22,6 @@ Une ligne par événement marquant, la plus récente en haut. Voir [[Historique 
 | 25-28/10 | Connexion Google, Discord et code email à l'inscription (PR #61) | [[Connexion Google et Discord]] |
 | 25/10 | Réseau en trois onglets, Packet Optimizer, Analyser mon PC, ping des jeux | [[Packet Optimizer]] |
 | 22/10 | Retours sur la 1.2.0 : souris libre dans la barre, Lunar trouvé, logos, Network Optimizer, mode jeu renforcé, codes de partage | [[Version 1.2.0]] |
-| 21/10 | Rago OS v2 (PR #60), exe de test hors CI (minutes GitHub Actions épuisées) | [[Rago OS]] |
 | 21/10 | Nouvelles optimisations de Sofiene intégrées (Hone, OptiCore, GAME V1, network_optimizer) | [[Catalogue des tweaks]] |
 | 19/10 | Site : section Nouveautés 1.2 et boutons Discord (PR #59, brouillon jusqu'au 29/10) | [[Site]] |
 | 18/10 | Vidéos Milli #000 à #002 publiées ; étude du style CleanMyMac pour YouTube | [[Vidéos Milli]], [[Vidéos YouTube]] |

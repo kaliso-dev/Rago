@@ -15,7 +15,6 @@ Accessible aux fils du projet Claude, **pas** depuis ce dépôt. Les gros fichie
 - `PROJECT_HANDOFF/` : dossier de transfert du 15/10 (00 à 11 + annexes A à H). Référence la plus détaillée pour l'historique jusqu'au 15/10 ; ce vault le remplace pour l'état courant.
 - `synthese/SYNTHESE_REPRISE.md` : synthèse de reprise du 15/10.
 - `refonte-glass/` : `NOUVEAUTES-1.2.0.md`, `TESTS-1.2.0.md`, `OPTIMISATIONS-1.2.0.md`, `MISE-A-JOUR-AUTO-TEST.md`, `VERSION-1.2.0.md`, `BACKLOG_LINEAR.md`, captures, `optimisations-sources/` (fichiers de Sofiene du 21/10) → [[Version 1.2.0]], [[Refonte glass]].
-- `rago-os/` : exe et kit de test → [[Rago OS]].
 - `site-1.2/` : captures et aperçu de la section Nouveautés → [[Site]].
 - `marketing/` : `plan-visibilite-gratuite.md`, `videos-milli/`, `videos-youtube/`, `trailer-1.2/` → [[Marketing]].
 - `.notes/inputs.md` : fichiers envoyés par Sofiene (stats Instagram, nouvelles optimisations).
@@ -23,5 +22,5 @@ Accessible aux fils du projet Claude, **pas** depuis ce dépôt. Les gros fichie
 
 ## Ailleurs
 - Artefacts GitHub Actions (exe) : expirent après 90 jours ; ceux de la 1.1.10 le 08/01/2027.
-- Docs Claude : script YouTube « What's new » ([[Vidéos YouTube]]), « Rago OS : audit, architecture et plan par phases » ([[Rago OS]]).
+- Docs Claude : script YouTube « What's new » ([[Vidéos YouTube]]).
 - Artefact « Charte Rago » : https://claude.ai/artifact/VQJxXTdYLdRmEPawYzBSwt

@@ -8,9 +8,8 @@ maj: 2026-10-31
 Ce que le vault ne sait pas encore. **Retirer chaque question dès que Sofiene y répond**, et mettre à jour les notes concernées ([[Mettre à jour le vault]]). Voir [[Décisions]] et [[État actuel]].
 
 ## En cours, en pause ou abandonné ? (posées à Sofiene le 31/10)
-1. [[Rago OS]] (PR #60, testé le 21/10, aucun retour) : on continue, en pause, ou abandonné ?
 2. [[Bot communauté Discord]] (sur staging seulement depuis le 15/10) : à tester et passer en prod, ou abandonné ?
-3. Anciennes PR 1.1.10 / 1.1.13 (#16, #50, #51) : on les ferme (en gardant les branches) ?
+3. Anciennes PR 1.1.10 / 1.1.13 (#16, #50, #51), et la #60 de Rago OS abandonné : on les ferme (en gardant les branches) ?
 4. [[Proxy]] : on lance l'étape 1 (mesurer le trajet proxy → serveur de jeu) ?
 5. [[Vidéos Milli]] : la série continue-t-elle (dernière vidéo #005 le 22/10) ? Stats des #003 à #005 ?
 6. [[Trailer 1.2]] : la v4 est-elle la version finale, publiée ? Version courte verticale voulue ?

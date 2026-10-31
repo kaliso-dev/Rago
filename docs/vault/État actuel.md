@@ -20,18 +20,16 @@ La [[Version 1.2.1]] (refonte en verre, barre en jeu, Packet Optimizer, biblioth
 | Site de prod | à jour pour la 1.2.1 : section « New in 1.2 », Discord, prix réécrits, 218 tweaks (PR #59 et #66, 29/10) | CONFIRMÉ (git) |
 | Connexion Google / Discord + code email | en ligne (PR #61, 28/10) | OBSERVÉ (fil) |
 | Offre Lifetime | **59,99 $** (Sofiene, 31/10 : « c'est normal »), vendue seulement si le prix Stripe correspond | DÉCIDÉ / CONFIRMÉ (`site/src/page.html`) |
-| [[Rago OS]] | PR #60 ouverte (vers la branche de la refonte), exe de test livré le 21/10, tests de Sofiene sans retour | OBSERVÉ |
 | [[Proxy]] | collecte des tests réseau en prod ; il manque la mesure proxy → serveur de jeu | OBSERVÉ (29/10) |
 | Marketing | trailer 1.2 (v4 4K) et plans Kling prêts ; vidéos Milli #000 à #005 ; script YouTube « What's new » écrit ; annonces Discord 1.2 rédigées | voir [[Marketing]] |
 | [[Bot communauté Discord]] | sur `staging` seulement depuis le 15/10, jamais testé ni passé en prod | À VÉRIFIER |
 | Vault Obsidian | créé le 31/10 ; règle n°1 : il doit correspondre en tout point à l'état du projet | DÉCIDÉ |
 
 ## PR ouvertes (31/10)
-- #60 [[Rago OS]] (base `claude/app-redesign-glass-z5m1c8`).
+- #60 : Rago OS, **abandonné** le 31/10 (voir [[Décisions]]) ; encore ouverte sur GitHub, à fermer quand Sofiene le dit.
 - #51, #50 (1.1.13, mises de côté) et #16 (1.1.10) : anciennes, gardées comme sources. Ne pas supprimer sans décision. Voir [[Versions 1.1.11 à 1.1.13]].
 
 ## Ce qui attend Sofiene
 1. Vérifier que les 1.2.0 installées reçoivent bien la 1.2.1 (`/api/v1/update/status`, voir [[Mise à jour automatique]]).
 2. Poster les annonces Discord 1.2 (voir [[Discord]]) une fois l'exe en ligne.
-3. Tester [[Rago OS]] et dire la suite.
-4. Ses tests en jeu des profils du [[Packet Optimizer]] pour la vidéo « What's new » (voir [[Vidéos YouTube]]).
+3. Ses tests en jeu des profils du [[Packet Optimizer]] pour la vidéo « What's new » (voir [[Vidéos YouTube]]).

@@ -28,7 +28,7 @@ Vue d'ensemble technique : [[Architecture]].
 - **App, écran par écran** : [[Tableau de bord]] · [[Barre en jeu]] · [[Packet Optimizer]] · [[Test réseau]] · [[Bibliothèque de jeux]] · [[Presets]] · [[Page Outils]] · [[RBW Mod]] · [[Mode jeu]] · [[Partage et support]] · [[Paramètres de l'app]] · [[Licence dans l'app]]
 - **App, fonctionnement** : [[Moteur des tweaks]] · [[Remise à zéro]] · [[Réparations au lancement]] · [[Pendant la partie]] · [[Arrière-plan et démarrage]] · [[Mise à jour automatique]]
 - **Tweaks (générés depuis le code)** : [[Catalogue des tweaks]] · [[Tweaks Réseau]] · [[Tweaks Latence]] · [[Tweaks Carte graphique]] · [[Tweaks Windows]] · [[Tweaks Hitreg]] · [[Tweaks Minecraft]] · [[Tweaks RBW Mod]] · [[Tweaks Mode jeu]] · [[Tweaks Mode expert]] · [[Tweaks Restaurer]] · [[Tweaks Presets]] · [[Tweaks retirés]]
-- **En cours ou en attente** : [[Rago OS]] · [[Proxy]] · [[Bot communauté Discord]]
+- **En cours ou en attente** : [[Proxy]] · [[Bot communauté Discord]]
 - **Technique** : [[Architecture]] · [[App Windows]] · [[Serveur de licences]] · [[Site]] · [[Branches et environnements]] · [[Publier une version]] · [[Connexion Google et Discord]]
 - **Design** : [[Charte graphique]] · [[Voix et ton]] · [[Refonte glass]]
 - **Marketing** : [[Marketing]] · [[Discord]] · [[Partenaires et créateurs]] · [[Promotions et affiliation]] · [[Vidéos Milli]] · [[Trailer 1.2]] · [[Vidéos YouTube]] · [[Plan de visibilité]]

@@ -20,7 +20,6 @@ Développée du 17 au 28/10 sur `claude/app-redesign-glass-z5m1c8` (PR #58, fusi
 - Bouton « Appliquer les optimisations gratuites », lien « Rejoindre le Discord », animation du logo au lancement, démarrage avec Windows activé d'office (icône près de l'horloge).
 - 19 à 20 nouveaux tweaks (Hone, OptiCore, GAME V1, network_optimizer), dont une section « Interface et confort » : **218 tweaks** au total. Voir [[Catalogue des tweaks]].
 - [[Mise à jour automatique]] (RAG-24).
-- Un exe de test « Rago OS » a été construit à part (voir [[Rago OS]]).
 
 ## Tests
 Liste complète : `refonte-glass/TESTS-1.2.0.md` du dossier partagé ([[Sources]]). Beaucoup de points marqués « jamais testé sur Windows » au 28/10. Résultats des tests de Sofiene : « tout fonctionne » le 29/10 (avant la mise en prod).

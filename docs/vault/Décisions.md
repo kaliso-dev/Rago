@@ -11,9 +11,9 @@ Registre daté des décisions de Sofiene. **La plus récente prime.** Citations 
 | Date | Décision | Statut |
 |---|---|---|
 | 31/10 | **Règle n°1 : le vault doit correspondre en tout point à l'état actuel du projet** ; chaque Claude détecte les changements et abandons, met à jour ou supprime, et demande en cas de doute | DÉCIDÉ ([[Mettre à jour le vault]]) |
+| 31/10 | Le futur OS de Sofiene (développé sur un autre compte Claude, hors de ce dépôt) sera personnalisé plus tard avec la DA de Rago Optimizer, sur sa demande | PRÉVU ([[Prochaines étapes]], [[Charte graphique]]) |
 | 31/10 | 1.2.1 déposée dans Supabase par Sofiene | exécuté ([[Version 1.2.1]]) |
 | 29/10 | « ok tout fonctionne push tout sur la prod » : serveur (mises à jour + collecte réseau) en prod, 1.2.1 construite | DÉCIDÉ, exécuté ([[Version 1.2.1]]) |
-| 21/10 | Rago OS : légalité (jamais d'ISO modifiée, jamais toucher à l'activation, pas le mot « Windows » dans la marque), réversibilité totale, aucun fichier système modifié | DÉCIDÉ ([[Rago OS]]) |
 | 17/10 | Bibliothèque : jeux détectés automatiquement avec leur image ; proxy à moindre coût, sinon mis de côté | DÉCIDÉ ([[Bibliothèque de jeux]], [[Proxy]]) |
 | 16/10 | Refonte : rester dans la charte mais s'inspirer d'Apple, beaucoup d'effet verre ; **ne rien changer aux optimisations ni au fonctionnement** | DÉCIDÉ ([[Refonte glass]]) |
 | 16/10 | 3 tweaks de confort passent en gratuit (notifications, bulles et suggestions, Copilot et Recall) → 11 gratuits ; « ne donne pas les meilleurs optimisations » | DÉCIDÉ ([[Offres et prix]]) |
@@ -46,6 +46,7 @@ Registre daté des décisions de Sofiene. **La plus récente prime.** Citations 
 Une ligne par projet ou fonctionnalité arrêtés, pour qu'aucun Claude ne les relance. Le reste du vault n'en parle plus.
 | Date | Quoi | Raison |
 |---|---|---|
+| 31/10 | Rago OS (PR #60, exe de test du 21/10) | « abandonné » (Sofiene travaille sur un autre OS ailleurs, voir [[Prochaines étapes]]) |
 | 13/10 | PR #46 (RBW Mod), et plus de création pour l'app sans demande | « Non annule tout » |
 | 11/10 | PR #26 (astuce de restauration après suppression d'applis) | « inutile » |
 | 07/10 | `.bat` gratuit comme produit d'appel | seule l'app est gratuite |
