@@ -10,6 +10,7 @@ Une ligne par événement marquant, la plus récente en haut. Voir [[Historique 
 ## Octobre 2026
 | Date | Événement | Liens |
 |---|---|---|
+| 31/10 | 1.2.1 en ligne (exe et `.sig` déposés par Sofiene) ; Lifetime 59,99 $ confirmé | [[Version 1.2.1]] |
 | 31/10 | Création de ce vault Obsidian dans `docs/vault/` | [[Mettre à jour le vault]] |
 | 29/10 | Retour joueur : hitreg meilleur, mais curseur perdu en plein écran et ping instable | [[Problèmes joueurs]] |
 | 29/10 | Site mis à jour pour la 1.2.1, plans de prix réécrits (PR #66) ; section « New in 1.2 » (PR #59) | [[Site]] |

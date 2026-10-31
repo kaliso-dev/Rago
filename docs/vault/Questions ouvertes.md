@@ -8,7 +8,6 @@ maj: 2026-10-31
 À poser à Sofiene quand le sujet revient. Voir [[Décisions]] et [[État actuel]].
 
 ## À VÉRIFIER
-- L'exe 1.2.1 et son `.sig` sont-ils dans Supabase prod ? `INSTALLER_VERSION` vaut-il 1.2.1 ? ([[Publier une version]])
 - Railway prod a-t-il bien redéployé avec les bases DB-IP (page `/admin/reseau`) ? ([[Proxy]])
 - La clé de mise à jour Tauri est-elle sauvegardée hors du PC ? Perdue, les apps installées ne se mettent plus jamais à jour seules ([[Clés et secrets]]).
 - Remise du profil NVIDIA à la désinstallation : jamais vérifiée sur un PC NVIDIA ([[Remise à zéro]]).

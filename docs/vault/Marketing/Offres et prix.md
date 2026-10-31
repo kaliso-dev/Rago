@@ -14,6 +14,6 @@ Prix en **USD**, paiement Stripe sur le [[Site]], **1 licence = 1 PC**. Voir [[M
 | **Lifetime** | **59,99 $** une fois | Premium sans renouvellement, versions futures incluses ; vendu seulement si le prix Stripe (`LIFETIME_PRICE`) correspond, sinon « Coming soon » |
 
 - Plan gratuit : `app/src/data/free.json`, vérifié aussi par le moteur Rust. Règle : rien de Latence, Réseau, Hitreg ni Minecraft en gratuit, et pas les meilleurs tweaks (« sinon ils n'ont plus aucune raison d'acheter »).
-- Lifetime : Sofiene a demandé 69,99 $ le 16/10 ; le code livré dit 59,99 $. Prix réel dans Stripe : À VÉRIFIER.
+- Lifetime : demandé à 69,99 $ le 16/10, livré à 59,99 $ ; **59,99 $ confirmé par Sofiene le 31/10** (« c'est normal »).
 - Historique : achat unique (04/10) → abonnement (05/10) → 5,99 / 29,99 (07/10) → Lifetime ajouté (16/10).
 - Codes, affiliation, récompenses : [[Promotions et affiliation]].

@@ -10,6 +10,7 @@ Registre daté des décisions de Sofiene. **La plus récente prime.** Citations 
 ## App et versions
 | Date | Décision | Statut |
 |---|---|---|
+| 31/10 | 1.2.1 déposée dans Supabase par Sofiene | exécuté ([[Version 1.2.1]]) |
 | 29/10 | « ok tout fonctionne push tout sur la prod » : serveur (mises à jour + collecte réseau) en prod, 1.2.1 construite | DÉCIDÉ, exécuté ([[Version 1.2.1]]) |
 | 21/10 | Rago OS : légalité (jamais d'ISO modifiée, jamais toucher à l'activation, pas le mot « Windows » dans la marque), réversibilité totale, aucun fichier système modifié | DÉCIDÉ ([[Rago OS]]) |
 | 17/10 | Bibliothèque : jeux détectés automatiquement avec leur image ; proxy à moindre coût, sinon mis de côté | DÉCIDÉ ([[Bibliothèque de jeux]], [[Proxy]]) |
@@ -28,7 +29,8 @@ Registre daté des décisions de Sofiene. **La plus récente prime.** Citations 
 |---|---|---|
 | 29/10 | Plans de prix réécrits : dire ce que chaque plan apporte vraiment (« full rago app on s'en fou ») | DÉCIDÉ ([[Offres et prix]]) |
 | 17/10 | Plus de visibilité sans budget supplémentaire ce mois-ci | DÉCIDÉ ([[Plan de visibilité]]) |
-| 16/10 | Offre **Lifetime** (demande à 69,99 $, livrée à **59,99 $**) et page Partners | DÉCIDÉ ; prix à confirmer, voir [[Offres et prix]] |
+| 31/10 | Lifetime à **59,99 $** : « le prix est bien à 59,99 c'est normal » | DÉCIDÉ ([[Offres et prix]]) |
+| 16/10 | Offre **Lifetime** et page Partners | DÉCIDÉ |
 | 14/10 | RBW : 230 $, code RBWS820, 30 % de commission, Premium staff (5 max), 30 jours d'exclusivité | DÉCIDÉ ([[Partenaires et créateurs]]) |
 | 14/10 | Un créateur YouTube : accès à vie tant que partenaire, code, 50 % | DÉCIDÉ |
 | 11/10 | −50 % de lancement une seule fois par client | DÉCIDÉ ([[Promotions et affiliation]]) |

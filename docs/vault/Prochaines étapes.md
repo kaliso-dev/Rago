@@ -8,7 +8,7 @@ maj: 2026-10-31
 Liste priorisée au 31/10. Rien ne se lance sans la demande de Sofiene ([[Règles de travail]]). Voir [[État actuel]] et [[Questions ouvertes]].
 
 ## Maintenant
-1. **Mettre la [[Version 1.2.1]] en ligne** (Sofiene : Supabase + Railway), puis vérifier que les 1.2.0 se mettent à jour seules ([[Mise à jour automatique]]).
+1. La [[Version 1.2.1]] est en ligne (31/10) : vérifier que les 1.2.0 se mettent à jour seules ([[Mise à jour automatique]]).
 2. **Annonces Discord 1.2** (FR et EN prêtes dans le fil « Nouvelle version : backlog et refonte », 29/10) : remplacer `@Premium` par le vrai rôle. Voir [[Discord]].
 3. **Retour joueur du 29/10** : curseur perdu en plein écran après « Optimize and play » (suspect : `win_fullscreen` dans le preset Minecraft) et ping instable (preset `ping_packets: hitreg` qui chevauche le [[Packet Optimizer]]). Voir [[Problèmes joueurs]].
 
