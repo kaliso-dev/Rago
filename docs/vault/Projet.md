@@ -5,7 +5,8 @@ maj: 2026-10-31
 ---
 # Rago Optimizer : le projet
 
-> **Nouveau Claude ? Lis cette note, puis [[État actuel]], puis [[Règles de travail]]. Avant de finir une tâche, suis [[Mettre à jour le vault]].**
+> **Nouveau Claude ? Lis cette note, puis [[État actuel]], puis [[Règles de travail]].**
+> **Règle n°1 : ce vault doit correspondre en tout point à l'état actuel du projet. Avant de finir une tâche, suis [[Mettre à jour le vault]] : mets à jour, supprime ce qui est abandonné, demande en cas de doute.**
 
 Rago Optimizer est une app Windows (10 et 11, 64 bits) qui applique des réglages système (« tweaks ») pour les joueurs, d'abord **Minecraft PvP** (Bedwars, Ranked Bedwars « RBW », Lunar Client), et depuis la [[Version 1.2.0]] une quinzaine de jeux compétitifs. Elle remplace l'ancien `.bat` « Rago Hub v5.2 » vendu sur Discord. Slogan : **« Every millisecond counts. »**
 
@@ -24,7 +25,10 @@ Vue d'ensemble technique : [[Architecture]].
 - **Pilotage** : [[État actuel]] · [[Prochaines étapes]] · [[Questions ouvertes]] · [[Journal]]
 - **Règles** : [[Règles de travail]] · [[Décisions]] · [[Clés et secrets]] · [[Mettre à jour le vault]]
 - **Versions** : [[Historique des versions]] · [[Version 1.1.10]] · [[Versions 1.1.11 à 1.1.13]] · [[Version 1.1.14]] · [[Version 1.2.0]] · [[Version 1.2.1]]
-- **Fonctionnalités** : [[Barre en jeu]] · [[Packet Optimizer]] · [[Test réseau]] · [[Bibliothèque de jeux]] · [[Presets]] · [[Page Outils]] · [[RBW Mod]] · [[Mode jeu]] · [[Mise à jour automatique]] · [[Remise à zéro]] · [[Catalogue des tweaks]] · [[Rago OS]] · [[Proxy]]
+- **App, écran par écran** : [[Tableau de bord]] · [[Barre en jeu]] · [[Packet Optimizer]] · [[Test réseau]] · [[Bibliothèque de jeux]] · [[Presets]] · [[Page Outils]] · [[RBW Mod]] · [[Mode jeu]] · [[Partage et support]] · [[Paramètres de l'app]] · [[Licence dans l'app]]
+- **App, fonctionnement** : [[Moteur des tweaks]] · [[Remise à zéro]] · [[Réparations au lancement]] · [[Pendant la partie]] · [[Arrière-plan et démarrage]] · [[Mise à jour automatique]]
+- **Tweaks (générés depuis le code)** : [[Catalogue des tweaks]] · [[Tweaks Réseau]] · [[Tweaks Latence]] · [[Tweaks Carte graphique]] · [[Tweaks Windows]] · [[Tweaks Hitreg]] · [[Tweaks Minecraft]] · [[Tweaks RBW Mod]] · [[Tweaks Mode jeu]] · [[Tweaks Mode expert]] · [[Tweaks Restaurer]] · [[Tweaks Presets]] · [[Tweaks retirés]]
+- **En cours ou en attente** : [[Rago OS]] · [[Proxy]] · [[Bot communauté Discord]]
 - **Technique** : [[Architecture]] · [[App Windows]] · [[Serveur de licences]] · [[Site]] · [[Branches et environnements]] · [[Publier une version]] · [[Connexion Google et Discord]]
 - **Design** : [[Charte graphique]] · [[Voix et ton]] · [[Refonte glass]]
 - **Marketing** : [[Marketing]] · [[Discord]] · [[Partenaires et créateurs]] · [[Promotions et affiliation]] · [[Vidéos Milli]] · [[Trailer 1.2]] · [[Vidéos YouTube]] · [[Plan de visibilité]]

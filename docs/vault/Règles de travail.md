@@ -18,7 +18,7 @@ Règles décidées par Sofiene, toujours en vigueur au 31/10. Détail daté dans
 9. **Numéro de version toujours supérieur** à tout exe déjà distribué (sinon l'installateur ne met pas à jour). Voir [[Publier une version]].
 10. **Catalogue** : ne jamais éditer les JSON générés à la main ; régénérer (voir [[Catalogue des tweaks]]).
 11. **Communication** : répondre en français simple ; questions auxquelles on répond d'un mot, avec une recommandation ; dire ce qui est vérifié et ce qui est déduit. Le public (site, app, Discord) est en anglais US ([[Voix et ton]]).
-12. **Mettre à jour ce vault** à la fin de chaque tâche : [[Mettre à jour le vault]].
+12. **Règle n°1 (31/10) : le vault correspond en tout point à l'état actuel du projet.** Le lire avant, détecter tout changement ou abandon pendant, le mettre à jour (ou supprimer ce qui n'est plus vrai) à la fin de chaque tâche, demander en cas de doute : [[Mettre à jour le vault]].
 
 ## PR et commits
 - Commits : phrases en français qui décrivent l'effet.

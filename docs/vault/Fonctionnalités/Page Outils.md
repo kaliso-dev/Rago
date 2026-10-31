@@ -1,16 +1,21 @@
 ---
 type: fonctionnalité
 tags: [fonctionnalité, app, 1.2]
+version_app: 1.2.1
 maj: 2026-10-31
 ---
 # Page Outils
 
-Arrivée en [[Version 1.2.0]] dans « Optimiser ». Code : `tools.rs`, `memory.rs`, page `Tools.tsx`.
+Page « Outils » du groupe « Optimiser » (« Entretien »). Code natif, hors catalogue : `tools.rs`, page `Tools.tsx`.
 
-- **Nettoyage** (gratuit) : mesure puis libère 8 zones (temporaires, temporaires Windows, Windows Update, rapports de plantage, caches navigateurs, Discord, shaders, corbeille). Corbeille et shaders décochés d'office. Ne touche jamais au Prefetch, aux journaux Windows ni aux dossiers Minecraft (lus par le vérificateur [[RBW Mod]]).
-- **Clean RAM** (gratuit, RAG-48).
-- **Applis préinstallées** (Premium) : une quarantaine d'applis connues (Candy Crush, TikTok, Clipchamp, Teams…). Jamais le Store, Xbox ni la Game Bar.
-- **Pilotes** (gratuit) : GPU, réseau, audio, avec leur âge ; liens vers les sites officiels. Rago n'installe jamais de pilote.
-- À DÉCIDER : nettoyage en Premium ? (une ligne à changer). Voir [[Questions ouvertes]].
+## Nettoyage (gratuit)
+- Analyse puis affiche la place de 8 zones : fichiers temporaires (Temp), temporaires de Windows, téléchargements de Windows Update, rapports de plantage, cache des navigateurs (Chrome, Edge, Brave, Opera, Firefox : **cache seulement**, jamais historique, mots de passe ni cookies), cache de Discord, cache des shaders (décoché d'office), corbeille de tous les disques (décochée d'office ; à éviter juste avant un screenshare).
+- Bouton « Nettoyer X Go » ; les fichiers ouverts restent ; liens jamais suivis ; **suppression définitive**. Jamais le Prefetch, les journaux Windows, les jeux, les documents ni Minecraft.
 
-Liens : [[Offres et prix]], [[Refonte glass]].
+## Applis préinstallées (Premium)
+Une quarantaine d'applis que Windows installe tout seul (Candy Crush, TikTok, Clipchamp, Météo, Teams…), désinstallées pour le compte Windows du joueur. **Jamais le Store, Xbox ni la Game Bar.** Chacune se réinstalle depuis le Microsoft Store.
+
+## Pilotes (gratuit)
+Carte graphique, réseau, audio : version, date, âge (point orange si plus de 6 mois pour le GPU, 2 ans pour le reste). Boutons : site officiel, site du fabricant (carte mère / portable), mises à jour facultatives de Windows. **Rago n'installe jamais de pilote.**
+
+À DÉCIDER : nettoyage en Premium ? (gratuit par défaut). Voir [[Questions ouvertes]]. Liens : [[Offres et prix]], [[Tableau de bord]].

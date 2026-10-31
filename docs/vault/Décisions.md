@@ -10,6 +10,7 @@ Registre daté des décisions de Sofiene. **La plus récente prime.** Citations 
 ## App et versions
 | Date | Décision | Statut |
 |---|---|---|
+| 31/10 | **Règle n°1 : le vault doit correspondre en tout point à l'état actuel du projet** ; chaque Claude détecte les changements et abandons, met à jour ou supprime, et demande en cas de doute | DÉCIDÉ ([[Mettre à jour le vault]]) |
 | 31/10 | 1.2.1 déposée dans Supabase par Sofiene | exécuté ([[Version 1.2.1]]) |
 | 29/10 | « ok tout fonctionne push tout sur la prod » : serveur (mises à jour + collecte réseau) en prod, 1.2.1 construite | DÉCIDÉ, exécuté ([[Version 1.2.1]]) |
 | 21/10 | Rago OS : légalité (jamais d'ISO modifiée, jamais toucher à l'activation, pas le mot « Windows » dans la marque), réversibilité totale, aucun fichier système modifié | DÉCIDÉ ([[Rago OS]]) |
@@ -40,6 +41,15 @@ Registre daté des décisions de Sofiene. **La plus récente prime.** Citations 
 | 09/10 | Aucun gain chiffré promis ; jamais d'avis inventé | DÉCIDÉ ([[Voix et ton]]) |
 | 04-05/10 | Tout en anglais en public ; abonnement plutôt qu'achat unique (assoupli le 16/10 par le Lifetime) | DÉCIDÉ |
 | 05-06/10 | Charte v1.1 (rouge `#FF3B30`, pas d'orange, arrondis) ; nom « Rago Optimizer » | DÉCIDÉ ([[Charte graphique]]) |
+
+## Abandonné
+Une ligne par projet ou fonctionnalité arrêtés, pour qu'aucun Claude ne les relance. Le reste du vault n'en parle plus.
+| Date | Quoi | Raison |
+|---|---|---|
+| 13/10 | PR #46 (RBW Mod), et plus de création pour l'app sans demande | « Non annule tout » |
+| 11/10 | PR #26 (astuce de restauration après suppression d'applis) | « inutile » |
+| 07/10 | `.bat` gratuit comme produit d'appel | seule l'app est gratuite |
+| 07/10 | Point de restauration obligatoire (1.1.7) | retour au fonctionnement 1.1.6 le 08/10 |
 
 ## Obsolètes (pour mémoire)
 - 15/10 « 1.1.10 = référence » : remplacée dans les faits par la 1.1.14 (16/10) puis la 1.2.x.
