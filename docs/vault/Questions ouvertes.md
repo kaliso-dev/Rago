@@ -7,6 +7,8 @@ maj: 2026-10-31
 
 Ce que le vault ne sait pas encore. **Retirer chaque question dès que Sofiene y répond**, et mettre à jour les notes concernées ([[Mettre à jour le vault]]). Voir [[Décisions]] et [[État actuel]].
 
+**Où Sofiene répond** : la page « Questions du vault Rago » (https://claude.ai/artifact/1mqjZuFNVqGT5JhBmG6HPk). Chaque question y est un document de la collection `questions` (`q02`…`q20`) avec `reponse.choix` et `reponse.texte`. Un Claude lit les réponses avec l'outil ArtifactData, met le vault à jour, puis passe la question en `statut: "traitée"` avec une note `traitement` (ce qui a été fait). Pour poser une nouvelle question, ajouter un document à cette collection plutôt que de demander dans le fil.
+
 ## En cours, en pause ou abandonné ? (posées à Sofiene le 31/10)
 2. [[Bot communauté Discord]] (sur staging seulement depuis le 15/10) : à tester et passer en prod, ou abandonné ?
 3. Anciennes PR 1.1.10 / 1.1.13 (#16, #50, #51), et la #60 de Rago OS abandonné : on les ferme (en gardant les branches) ?
