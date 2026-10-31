@@ -1,0 +1,25 @@
+{
+  "search": "",
+  "showTags": false,
+  "showAttachments": false,
+  "hideUnresolved": false,
+  "showOrphans": true,
+  "collapse-color-groups": false,
+  "colorGroups": [
+    { "query": "path:Versions", "color": { "a": 1, "rgb": 16726832 } },
+    { "query": "path:Fonctionnalités", "color": { "a": 1, "rgb": 4054167 } },
+    { "query": "path:Technique", "color": { "a": 1, "rgb": 5945599 } },
+    { "query": "path:Marketing", "color": { "a": 1, "rgb": 16766474 } },
+    { "query": "path:Design", "color": { "a": 1, "rgb": 16747138 } },
+    { "query": "path:Suivi", "color": { "a": 1, "rgb": 10592682 } }
+  ],
+  "showArrow": false,
+  "textFadeMultiplier": 0,
+  "nodeSizeMultiplier": 1.1,
+  "lineSizeMultiplier": 1,
+  "centerStrength": 0.5,
+  "repelStrength": 12,
+  "linkStrength": 1,
+  "linkDistance": 250,
+  "scale": 1
+}
