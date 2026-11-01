@@ -1,7 +1,7 @@
 ---
 type: index
 tags: [index]
-maj: 2026-10-31
+maj: 2026-11-01
 ---
 # Rago Optimizer : le projet
 
@@ -27,7 +27,7 @@ Vue d'ensemble technique : [[Architecture]].
 - **Fonctionnalités** : [[Barre en jeu]] · [[Packet Optimizer]] · [[Test réseau]] · [[Bibliothèque de jeux]] · [[Presets]] · [[Page Outils]] · [[RBW Mod]] · [[Mode jeu]] · [[Mise à jour automatique]] · [[Remise à zéro]] · [[Catalogue des tweaks]] · [[Rago OS]] · [[Proxy]]
 - **Technique** : [[Architecture]] · [[App Windows]] · [[Serveur de licences]] · [[Site]] · [[Branches et environnements]] · [[Publier une version]] · [[Connexion Google et Discord]]
 - **Design** : [[Charte graphique]] · [[Voix et ton]] · [[Refonte glass]]
-- **Marketing** : [[Marketing]] · [[Discord]] · [[Partenaires et créateurs]] · [[Promotions et affiliation]] · [[Vidéos Milli]] · [[Trailer 1.2]] · [[Vidéos YouTube]] · [[Plan de visibilité]]
+- **Marketing** : [[Marketing]] · [[Discord]] · [[Bot communauté Discord]] · [[Partenaires et créateurs]] · [[Promotions et affiliation]] · [[Vidéos Milli]] · [[Trailer 1.2]] · [[Vidéos YouTube]] · [[Plan de visibilité]]
 - **Suivi** : [[Bugs et incidents]] · [[Problèmes joueurs]] · [[Linear]] · [[Personnes et services]] · [[Sources]]
 
 ## Statuts utilisés dans les notes

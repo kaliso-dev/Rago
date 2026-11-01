@@ -1,7 +1,7 @@
 ---
 type: registre
 tags: [décision]
-maj: 2026-10-31
+maj: 2026-11-01
 ---
 # Décisions
 
@@ -27,6 +27,7 @@ Registre daté des décisions de Sofiene. **La plus récente prime.** Citations 
 ## Offre, prix, marketing
 | Date | Décision | Statut |
 |---|---|---|
+| 01/11 | Bot communauté Discord : « Il faut le tester et le passer en prod » ; le test passe par Abel, la prod attend la validation de Sofiene | DÉCIDÉ ([[Bot communauté Discord]]) |
 | 29/10 | Plans de prix réécrits : dire ce que chaque plan apporte vraiment (« full rago app on s'en fou ») | DÉCIDÉ ([[Offres et prix]]) |
 | 17/10 | Plus de visibilité sans budget supplémentaire ce mois-ci | DÉCIDÉ ([[Plan de visibilité]]) |
 | 31/10 | Lifetime à **59,99 $** : « le prix est bien à 59,99 c'est normal » | DÉCIDÉ ([[Offres et prix]]) |
