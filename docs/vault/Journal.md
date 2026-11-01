@@ -10,7 +10,7 @@ Une ligne par événement marquant, la plus récente en haut. Voir [[Historique 
 ## Novembre 2026
 | Date | Événement | Liens |
 |---|---|---|
-| 01/11 | Bot communauté Discord porté sur la branche de prod (PR « (prod) », non fusionnée) ; procédure de test écrite pour Abel | [[Bot communauté Discord]] |
+| 01/11 | Bot communauté Discord porté sur la branche de prod (PR #71 (prod), non fusionnée) ; procédure de test écrite pour Abel | [[Bot communauté Discord]] |
 
 ## Octobre 2026
 | Date | Événement | Liens |

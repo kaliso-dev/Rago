@@ -23,7 +23,7 @@ La [[Version 1.2.1]] (refonte en verre, barre en jeu, Packet Optimizer, biblioth
 | [[Rago OS]] | PR #60 ouverte (vers la branche de la refonte), exe de test livré le 21/10, tests de Sofiene sans retour | OBSERVÉ |
 | [[Proxy]] | collecte des tests réseau en prod ; il manque la mesure proxy → serveur de jeu | OBSERVÉ (29/10) |
 | Marketing | trailer 1.2 (v4 4K) et plans Kling prêts ; vidéos Milli #000 à #005 ; script YouTube « What's new » écrit ; annonces Discord 1.2 rédigées | voir [[Marketing]] |
-| [[Bot communauté Discord]] | sur `staging` depuis le 15/10 (PR #40) ; PR « (prod) » ouverte le 01/11, non fusionnée ; test confié à Abel | CONFIRMÉ (git) |
+| [[Bot communauté Discord]] | sur `staging` depuis le 15/10 (PR #40) ; PR #71 (prod) ouverte le 01/11, non fusionnée ; test confié à Abel | CONFIRMÉ (git) |
 | Vault Obsidian | créé le 31/10 dans `docs/vault/` | ce fil |
 
 ## PR ouvertes (31/10)

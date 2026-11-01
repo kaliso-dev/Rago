@@ -11,7 +11,7 @@ Le bot Rago (le même que pour le rôle Pro, voir [[Discord]]) peut écouter le 
 | Où | État | Statut |
 |---|---|---|
 | `staging` | fusionné le 15/10 (PR #40, commit `e1840d6`) | CONFIRMÉ (git) |
-| Branche de prod | porté par une PR « (prod) » ouverte le 01/11, **non fusionnée** : attend le test puis le « fusionne » de Sofiene | CONFIRMÉ (git) |
+| Branche de prod | porté par une PR #71 (prod) ouverte le 01/11, **non fusionnée** : attend le test puis le « fusionne » de Sofiene | CONFIRMÉ (git) |
 | Variables Railway staging (`DISCORD_COMMUNITY`, serveur Discord de test) | inconnues | À VÉRIFIER |
 | Test sur un serveur Discord de test | pas encore fait ; confié à Abel | OBSERVÉ (01/11) |
 | Allumé en prod (`DISCORD_COMMUNITY=1` sur Railway prod) | non | CONFIRMÉ (le code n'y est pas encore) |
