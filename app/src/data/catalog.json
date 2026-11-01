@@ -7082,7 +7082,6 @@
    },
    "tweaks": [
     "ping_hitreg:hypixel",
-    "ping_packets:hitreg",
     "ping_main:config1",
     "in_driver",
     "in_adapter",
@@ -7092,7 +7091,6 @@
     "in_queue:low",
     "win_gamemode:on",
     "win_gamedvr",
-    "win_fullscreen",
     "pri_game:minecraft",
     "pri_mmcss",
     "pri_w32",

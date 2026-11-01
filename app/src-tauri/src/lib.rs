@@ -835,12 +835,9 @@ async fn tools_apps() -> Result<Vec<tools::App>, String> {
     tauri::async_runtime::spawn_blocking(tools::apps).await.map_err(|e| e.to_string())
 }
 
-/// Désinstallation (Premium) ; renvoie les applis encore là.
+/// Désinstallation (gratuite depuis la 1.2.2) ; renvoie les applis encore là.
 #[tauri::command]
-async fn tools_remove_apps(state: State<'_, AppState>, ids: Vec<String>) -> Result<Vec<tools::App>, String> {
-    if state.license.status().state != "active" {
-        return Err("premium_required:tools_apps".into());
-    }
+async fn tools_remove_apps(ids: Vec<String>) -> Result<Vec<tools::App>, String> {
     tauri::async_runtime::spawn_blocking(move || tools::remove_apps(&ids)).await.map_err(|e| e.to_string())
 }
 
