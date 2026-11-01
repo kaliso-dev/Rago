@@ -1,7 +1,7 @@
 ---
 type: registre
 tags: [bug, suivi]
-maj: 2026-10-31
+maj: 2026-11-01
 ---
 # Bugs et incidents
 
@@ -10,8 +10,8 @@ Registre des bugs de l'app et des incidents. Les retours de joueurs au cas par c
 ## Ouverts ou à surveiller (31/10)
 | Bug | Version | État |
 |---|---|---|
-| Curseur perdu en plein écran / borderless après « Optimize and play » (suspect : `win_fullscreen` dans le preset Minecraft PvP) | 1.2.1 | contournement donné au joueur le 29/10 ; pas de correctif ([[Presets]]) |
-| Preset `ping_packets: hitreg` qui chevauche le [[Packet Optimizer]] (ping qui saute) | 1.2.1 | à arbitrer |
+| Curseur perdu en plein écran / borderless après « Optimize and play » (suspect : `win_fullscreen` dans le preset Minecraft PvP) | 1.2.1 | contournement donné le 29/10 ; **correctif à faire** (Sofiene, 01/11), cause encore à confirmer ([[Presets]]) |
+| Preset `ping_packets: hitreg` qui chevauche le [[Packet Optimizer]] (ping qui saute) | 1.2.1 | à corriger avec le preset (Sofiene, 01/11) |
 | Fonctions Windows de la 1.2 jamais testées sur un vrai PC au 28/10 ([[Barre en jeu]], launchers, outils, démarrage auto) | 1.2.0 | Sofiene : « tout fonctionne » le 29/10 (portée exacte À VÉRIFIER) |
 | Remise du profil NVIDIA | 1.1.14+ | jamais vérifiée sur un PC NVIDIA |
 | Erreur WebView2 chez une cliente (16/10) | 1.1.14 | solution donnée sans modifier l'app |

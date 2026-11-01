@@ -1,9 +1,9 @@
 ---
 type: pilotage
 tags: [état, pilotage]
-maj: 2026-10-31
+maj: 2026-11-01
 ---
-# État actuel (31/10/2026)
+# État actuel (01/11/2026)
 
 Voir aussi [[Prochaines étapes]], [[Questions ouvertes]], [[Journal]]. Retour à [[Projet]].
 
@@ -20,8 +20,9 @@ La [[Version 1.2.1]] (refonte en verre, barre en jeu, Packet Optimizer, biblioth
 | Site de prod | à jour pour la 1.2.1 : section « New in 1.2 », Discord, prix réécrits, 218 tweaks (PR #59 et #66, 29/10) | CONFIRMÉ (git) |
 | Connexion Google / Discord + code email | en ligne (PR #61, 28/10) | OBSERVÉ (fil) |
 | Offre Lifetime | **59,99 $** (Sofiene, 31/10 : « c'est normal »), vendue seulement si le prix Stripe correspond | DÉCIDÉ / CONFIRMÉ (`site/src/page.html`) |
-| [[Proxy]] | collecte des tests réseau en prod ; il manque la mesure proxy → serveur de jeu | OBSERVÉ (29/10) |
-| Marketing | trailer 1.2 (v4 4K) et plans Kling prêts ; vidéos Milli #000 à #005 ; script YouTube « What's new » écrit ; annonces Discord 1.2 rédigées | voir [[Marketing]] |
+| [[Proxy]] | collecte des tests réseau en prod ; la suite (mesure proxy → serveur de jeu) : « pas maintenant » | DÉCIDÉ (Sofiene, 01/11) |
+| Marketing | pas de plan : des vidéos sur TikTok, YouTube et Instagram, faites par un collègue de Sofiene ; trailer 1.2 (v4) sans doute jamais publié ; annonces Discord 1.2 postées, en anglais | Sofiene, 01/11 ([[Marketing]]) |
+| [[Client Minecraft Rago]] | projet à part, en cours, va être lancé (client, launcher, cosmétiques) | Sofiene, 01/11 |
 | [[Bot communauté Discord]] | sur `staging` seulement depuis le 15/10, jamais testé ni passé en prod | À VÉRIFIER |
 | Vault Obsidian | créé le 31/10 ; règle n°1 : il doit correspondre en tout point à l'état du projet | DÉCIDÉ |
 
@@ -31,5 +32,5 @@ La [[Version 1.2.1]] (refonte en verre, barre en jeu, Packet Optimizer, biblioth
 
 ## Ce qui attend Sofiene
 1. Vérifier que les 1.2.0 installées reçoivent bien la 1.2.1 (`/api/v1/update/status`, voir [[Mise à jour automatique]]).
-2. Poster les annonces Discord 1.2 (voir [[Discord]]) une fois l'exe en ligne.
-3. Ses tests en jeu des profils du [[Packet Optimizer]] pour la vidéo « What's new » (voir [[Vidéos YouTube]]).
+2. Les questions en attente sur la page « Questions du vault Rago » ([[Questions ouvertes]]).
+3. Valider l'e-mail sur la collecte des tests réseau avant son envoi, une fois rédigé ([[Prochaines étapes]]).

@@ -1,7 +1,7 @@
 ---
 type: technique
 tags: [technique, app]
-maj: 2026-10-31
+maj: 2026-11-01
 ---
 # App Windows (`app/`)
 
@@ -19,7 +19,7 @@ Contenu des modules : [[Catalogue des tweaks]]. Fonctionnement interne : [[Moteu
 ## Stack
 - **Tauri 2** (Rust, edition 2021) + **React 19 / TypeScript / Vite**, affichée par WebView2. Identifiant `gg.rago.optimizer` (staging : `gg.rago.optimizer.staging`). Installateur **NSIS** en anglais, `perMachine`, droits administrateur à chaque lancement. Fenêtre min 1080×680. Le front n'a pas d'accès réseau (CSP `connect-src ipc:`) : tout passe par les commandes Rust.
 - Version : `npm run bump X.Y.Z` (ne pas éditer `tauri.conf.json`).
-- Pas de signature de code : avertissement SmartScreen (RAG-25).
+- Pas de signature de code : avertissement SmartScreen (RAG-25). Prévue, mais pas avant d'avoir le budget (Sofiene, 01/11).
 
 ## Modules Rust (`app/src-tauri/src/`, 1.2.x)
 - Cœur : `lib.rs` (commandes), `runner.rs` (exécute un lot : `.cmd` caché dans `run\`, journal `logs\run-<ms>.log`), `catalog.rs`, `seal.rs` (scripts chiffrés), `backup.rs` (`applied.json`, état d'avant, chiffré DPAPI), `history.rs`, `reset.rs` / `repair.rs` ([[Remise à zéro]]), `instance.rs`, `license.rs`, `account.rs`, `shell.rs`, `reg.rs`.

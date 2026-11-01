@@ -2,7 +2,7 @@
 type: fonctionnalité
 tags: [fonctionnalité, app, 1.2]
 version_app: 1.2.1
-maj: 2026-10-31
+maj: 2026-11-01
 ---
 # Page Outils
 
@@ -18,4 +18,6 @@ Une quarantaine d'applis que Windows installe tout seul (Candy Crush, TikTok, Cl
 ## Pilotes (gratuit)
 Carte graphique, réseau, audio : version, date, âge (point orange si plus de 6 mois pour le GPU, 2 ans pour le reste). Boutons : site officiel, site du fabricant (carte mère / portable), mises à jour facultatives de Windows. **Rago n'installe jamais de pilote.**
 
-À DÉCIDER : nettoyage en Premium ? (gratuit par défaut). Voir [[Questions ouvertes]]. Liens : [[Offres et prix]], [[Tableau de bord]].
+**Décision (Sofiene, 01/11)** : les outils restent gratuits, « c'est des outils indispensables » qui font de Rago une app qu'on ouvre souvent. Dans la 1.2.1, le nettoyage et les pilotes sont gratuits ; seule la désinstallation des applis préinstallées est Premium (`Tools.tsx`) : à trancher ([[Questions ouvertes]]).
+
+Liens : [[Offres et prix]], [[Tableau de bord]].

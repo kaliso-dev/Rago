@@ -1,7 +1,7 @@
 ---
 type: pilotage
 tags: [journal, chronologie]
-maj: 2026-10-31
+maj: 2026-11-01
 ---
 # Journal
 
@@ -10,6 +10,7 @@ Une ligne par événement marquant, la plus récente en haut. Voir [[Historique 
 ## Octobre 2026
 | Date | Événement | Liens |
 |---|---|---|
+| 01/11 | Sofiene répond aux questions du vault sur la page « Questions du vault Rago » ; vault mis à jour | [[Décisions]], [[Questions ouvertes]] |
 | 31/10 | 1.2.1 en ligne (exe et `.sig` déposés par Sofiene) ; Lifetime 59,99 $ confirmé | [[Version 1.2.1]] |
 | 31/10 | Création de ce vault Obsidian dans `docs/vault/` | [[Mettre à jour le vault]] |
 | 29/10 | Retour joueur : hitreg meilleur, mais curseur perdu en plein écran et ping instable | [[Problèmes joueurs]] |
@@ -24,8 +25,8 @@ Une ligne par événement marquant, la plus récente en haut. Voir [[Historique 
 | 22/10 | Retours sur la 1.2.0 : souris libre dans la barre, Lunar trouvé, logos, Network Optimizer, mode jeu renforcé, codes de partage | [[Version 1.2.0]] |
 | 21/10 | Nouvelles optimisations de Sofiene intégrées (Hone, OptiCore, GAME V1, network_optimizer) | [[Catalogue des tweaks]] |
 | 19/10 | Site : section Nouveautés 1.2 et boutons Discord (PR #59, brouillon jusqu'au 29/10) | [[Site]] |
-| 18/10 | Vidéos Milli #000 à #002 publiées ; étude du style CleanMyMac pour YouTube | [[Vidéos Milli]], [[Vidéos YouTube]] |
-| 17/10 | Plan de visibilité à 0 € ; App 1.2.0 commencée | [[Plan de visibilité]] |
+| 18/10 | Étude du style CleanMyMac pour YouTube | [[Vidéos YouTube]] |
+| 17/10 | App 1.2.0 commencée | [[Version 1.2.0]] |
 | 16/10 | Refonte en verre et backlog Linear demandés | [[Refonte glass]] |
 | 16/10 | **1.1.14 en prod** (PR #57) : base 1.1.10 + correctifs, 11 tweaks gratuits | [[Version 1.1.14]] |
 | 16/10 | Offre Lifetime 59,99 $ et section Partners (PR #54, #55) | [[Offres et prix]] |

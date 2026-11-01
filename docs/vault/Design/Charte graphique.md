@@ -1,7 +1,7 @@
 ---
 type: design
 tags: [design, marque]
-maj: 2026-10-31
+maj: 2026-11-01
 ---
 # Charte graphique
 
@@ -18,4 +18,4 @@ Source de vérité : `brand/tokens/tokens.json` → `brand/tokens/tokens.css` (v
 - Historique : v1 (04/10) rouge `#FF3347` → v1.1 (05/10) `#FF3B30`, plus d'orange → v1.2 (06-07/10) logo et nom « Rago Optimizer ».
 - Écarts à arbitrer : icône éclair du [[Mode jeu]] ; copies de tokens en retard ; alias de couleurs propres au [[Site]].
 
-Liens : [[Site]], [[App Windows]], [[Vidéos Milli]].
+Liens : [[Site]], [[App Windows]], [[Marketing]].

@@ -1,7 +1,7 @@
 ---
 type: technique
 tags: [technique, site, marketing]
-maj: 2026-10-31
+maj: 2026-11-01
 ---
 # Site (rago-optimizer.com)
 
@@ -15,6 +15,6 @@ Site de vente statique sur **Netlify** (branche de prod). Staging : https://stag
 - **État au 29/10** : à jour pour la [[Version 1.2.1]] (PR #59, #66) : 218 tweaks, raccourci Alt+X, ping de tous les jeux, cartes Packet Optimizer et Outils, plans de prix réécrits, FAQ « Which games does it work with? ».
 - Accroche : « Minecraft PvP optimizer for Windows » + « Every millisecond counts. » ; la section « Why » dit que Rago ne change pas la distance au serveur.
 - Netlify edge function `launch-gate` (compte à rebours du lancement, inactive depuis le 10/10).
-- En suspens : icône Discord « mixée » aux couleurs Rago (demande du 20/10).
+- Boutons Discord aux couleurs de Rago : faits (Sofiene, 01/11).
 
 Liens : [[Offres et prix]], [[Charte graphique]], [[Voix et ton]], [[Marketing]], [[Connexion Google et Discord]].

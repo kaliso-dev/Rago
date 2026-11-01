@@ -1,7 +1,7 @@
 ---
 type: référence
 tags: [personnes, services]
-maj: 2026-10-31
+maj: 2026-11-01
 ---
 # Personnes et services
 
@@ -10,6 +10,7 @@ Retour à [[Projet]]. Aucun identifiant ni secret ici ([[Clés et secrets]]).
 ## Personnes
 - **Sofiene** (GitHub `kaliso-dev`) : propriétaire et décideur. Écrit en français, souvent vite ; préfère des réponses courtes, des questions à un mot, et dire « fusionne » / « push » pour lancer une mise en prod. Teste sur son PC Windows ; utilise aussi un Mac (dossier « NOUVELLES OPTIMISATIONS RAGO »).
 - Un **associé**, co-fondateur de la communauté Discord.
+- Un **collègue** de Sofiene qui crée les vidéos ([[Vidéos YouTube]]) et a peut-être travaillé sur le [[Bot communauté Discord]] (Sofiene, 01/11). Nom, et s'il s'agit de l'associé : À VÉRIFIER.
 - Pseudos du serveur Discord historique : « Rago » et « Straight » (auteurs du `.bat` Rago Hub).
 
 ## Services

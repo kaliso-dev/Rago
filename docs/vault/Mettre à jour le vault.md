@@ -1,7 +1,7 @@
 ---
 type: règle
 tags: [règle, vault]
-maj: 2026-10-31
+maj: 2026-11-01
 ---
 # Mettre à jour le vault
 
@@ -12,6 +12,7 @@ Ce vault est la **mémoire du projet** : la mémoire intégrée de Claude est d�
 ## 1. Avant de commencer
 1. Lire [[Projet]], [[État actuel]], [[Règles de travail]], puis toutes les notes du sujet (fonctionnalité, version, marketing…).
 2. **Comparer avec la réalité** (code de la bonne branche, PR, prod, ce que dit Sofiene). Toute différence trouvée est corrigée dans le vault **dans la même tâche**, même si ce n'est pas le sujet demandé.
+3. **Lire les réponses de Sofiene** sur la page « Questions du vault Rago » qui ne sont pas encore traitées, et les appliquer (mode d'emploi dans [[Questions ouvertes]]).
 
 ## 2. Pendant le travail : détecter tout changement
 À chaque info nouvelle, se demander : **est-ce que ça change une note ?**
@@ -36,7 +37,7 @@ Ce vault est la **mémoire du projet** : la mémoire intégrée de Claude est d�
 9. Vérifier qu'aucun lien `[[…]]` n'est cassé et que chaque nouvelle note est reliée depuis [[Projet]] ou une note de carte.
 
 ## 4. En cas de doute
-- **Ne jamais deviner.** Si on ne sait pas si une chose est faite, prévue ou abandonnée : **demander à Sofiene**, et en attendant l'écrire « À VÉRIFIER » dans la note et dans [[Questions ouvertes]].
+- **Ne jamais deviner.** Si on ne sait pas si une chose est faite, prévue ou abandonnée : **ajouter soi-même la question sur la page « Questions du vault Rago »**, automatiquement, sans attendre ni demander la permission (règle de Sofiene du 01/11 ; mode d'emploi dans [[Questions ouvertes]]). En attendant, l'écrire « À VÉRIFIER » dans la note et dans [[Questions ouvertes]], et prévenir Sofiene en une ligne dans le fil.
 - Le code, la prod et la parole la plus récente de Sofiene font foi, dans cet ordre pour les faits, et Sofiene pour les décisions.
 
 ## 5. Règles d'écriture
