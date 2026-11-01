@@ -38,6 +38,8 @@
 //                                and its VIP / MVP invite rewards (given now if the role is there)
 //   discord                      the same for every linked account (the server does it every 5 minutes)
 //   discord-unlink <email>       take the Pro role back and unlink their Discord account
+//   growth [days]                Discord joins of the last 30 days (or [days]) by source: who left within 24 h,
+//                                who stayed 7 days, who linked a Rago account or bought (as /growth on Discord)
 import { loadConfig } from '../src/config.js';
 import { openDb } from '../src/db.js';
 import * as L from '../src/licensing.js';
@@ -45,6 +47,7 @@ import * as A from '../src/affiliates.js';
 import * as P from '../src/profile.js';
 import * as R from '../src/reviews.js';
 import { createDiscord, DiscordError } from '../src/discord.js';
+import { growthStats, growthText } from '../src/community.js';
 import Stripe from 'stripe';
 
 const cfg = loadConfig({ ...process.env, NODE_ENV: 'development' });
@@ -331,6 +334,11 @@ switch (cmd) {
       if (!(err instanceof DiscordError)) throw err;
       console.error(`Discord refused: ${err.message}`); process.exit(1);
     }
+    break;
+  }
+  case 'growth': {
+    const days = Number(email) > 0 ? Math.floor(Number(email)) : 30;
+    console.log(growthText(await growthStats(db, { days }), null).replace(/\*\*/g, '').replace(/```\n?/g, ''));
     break;
   }
   case 'export-keys': {

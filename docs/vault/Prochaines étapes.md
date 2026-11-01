@@ -1,7 +1,7 @@
 ---
 type: pilotage
 tags: [pilotage]
-maj: 2026-10-31
+maj: 2026-11-01
 ---
 # Prochaines étapes
 
@@ -13,6 +13,7 @@ Liste priorisée au 31/10. Rien ne se lance sans la demande de Sofiene ([[Règle
 3. **Retour joueur du 29/10** : curseur perdu en plein écran après « Optimize and play » (suspect : `win_fullscreen` dans le preset Minecraft) et ping instable (preset `ping_packets: hitreg` qui chevauche le [[Packet Optimizer]]). Voir [[Problèmes joueurs]].
 
 ## Ensuite
+- [[Bot communauté Discord]] : test d'Abel sur un serveur Discord de test, puis fusion de la PR (prod) et `DISCORD_COMMUNITY=1` en prod.
 - [[Proxy]] : mesurer le trajet proxy → serveur de jeu depuis chaque ville candidate (proposé le 29/10, en attente du feu vert).
 - Vidéo YouTube principale de l'app après la sortie (voir [[Vidéos YouTube]]) ; version courte verticale du [[Trailer 1.2]] avec les plans Kling.
 - [[Rago OS]] : selon les tests de Sofiene.

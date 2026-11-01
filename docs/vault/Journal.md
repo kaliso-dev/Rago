@@ -1,11 +1,16 @@
 ---
 type: pilotage
 tags: [journal, chronologie]
-maj: 2026-10-31
+maj: 2026-11-01
 ---
 # Journal
 
 Une ligne par événement marquant, la plus récente en haut. Voir [[Historique des versions]] et [[Décisions]].
+
+## Novembre 2026
+| Date | Événement | Liens |
+|---|---|---|
+| 01/11 | Bot communauté Discord porté sur la branche de prod (PR #71 (prod), non fusionnée) ; procédure de test écrite pour Abel | [[Bot communauté Discord]] |
 
 ## Octobre 2026
 | Date | Événement | Liens |

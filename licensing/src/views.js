@@ -925,9 +925,22 @@ function discordSection(d) {
       ${needsInvite ? html`<a class="btn btn-ghost btn-sm" href="${d.inviteUrl}" rel="noopener">Inviter le bot sur le serveur</a>` : ''}
     </section>`;
 }
+/** "Bot communauté" on /admin: the live connection, the invites, the welcome channel (community.js checks). */
+function communitySection(d) {
+  if (!d) return '';
+  const bad = d.checks.filter((c) => c.level === 'error').length;
+  const needsPerms = d.checks.some((c) => c.label === 'Invitations' && c.level === 'error');
+  return html`<section class="checks rise d3" aria-labelledby="community-h">
+      <div class="row"><h2 class="h2" id="community-h">Bot communauté Discord</h2>
+        <span class="badge ${bad ? 'badge-red' : 'badge-ok'}"><i></i>${bad ? `${bad} à corriger` : 'Actif'}</span></div>
+      <ul class="checks-list">${d.checks.map((c) => html`<li><span class="badge ${CHECK_BADGE[c.level][0]}"><i></i>${CHECK_BADGE[c.level][1]}</span>
+        <div><strong class="small">${c.label}</strong><p class="muted small">${c.text}</p></div></li>`)}</ul>
+      ${needsPerms && d.inviteUrl ? html`<a class="btn btn-ghost btn-sm" href="${d.inviteUrl}" rel="noopener">Redonner ses permissions au bot</a>` : ''}
+    </section>`;
+}
 const fill = (t, p) => String(t).replace(/\{(percent|code|total|left)\}/g, (_, k) => String(p[k] ?? ''));
 
-export function adminPage(cfg, { state, stripe, discord, values, error, notice, count }) {
+export function adminPage(cfg, { state, stripe, discord, community, values, error, notice, count }) {
   const { settings: s, promo: p } = state;
   const v = values || { enabled: s.enabled, code: s.code, percent: p?.percent ?? '', limit: p?.total ?? '', eyebrow: s.eyebrow, title: s.title, text: s.text };
   const vals = p ? { percent: p.percent, code: p.code, total: p.total, left: p.left } : {};
@@ -953,6 +966,7 @@ export function adminPage(cfg, { state, stripe, discord, values, error, notice, 
     <div class="rise d3">${preview}</div>
     ${stripeSection(stripe)}
     ${discordSection(discord)}
+    ${communitySection(community)}
     <div class="row rise d4"><a class="btn btn-ghost btn-sm" href="/admin/reseau">Tests réseau des joueurs</a>
       <form method="post" action="/admin/logout"><button class="btn btn-ghost btn-sm" type="submit">Quitter l’admin</button></form></div>`;
   const form = html`<h2 class="h2">Modifier la pop-up</h2>
