@@ -9,7 +9,7 @@ Retour à [[Projet]]. Aucun identifiant ni secret ici ([[Clés et secrets]]).
 
 ## Personnes
 - **Sofiene** (GitHub `kaliso-dev`) : propriétaire et décideur. Écrit en français, souvent vite ; préfère des réponses courtes, des questions à un mot, et dire « fusionne » / « push » pour lancer une mise en prod. Teste sur son PC Windows ; utilise aussi un Mac (dossier « NOUVELLES OPTIMISATIONS RAGO »).
-- **Abel** : associé de Sofiene et co-fondateur de la communauté [[Discord]] (Sofiene, 01/11). Il gère le Discord (salons, rôles, bots, webhooks), trouve les partenariats Discord et YouTube ([[Partenaires et créateurs]]) et fait les vidéos (mots de Sofiene : « il s'occupe des vidéos du client rago et de la gestion du discord »). Sofiene répond aussi à certains clients sur le Discord. Son compte [[Linear]] est peut-être « acerSHOCK » (À VÉRIFIER).
+- **Abel** : associé de Sofiene et co-fondateur de la communauté [[Discord]] (Sofiene, 01/11). Il gère le Discord (salons, rôles, bots, webhooks), trouve les partenariats Discord et YouTube ([[Partenaires et créateurs]]) et fait les vidéos (mots de Sofiene : « il s'occupe des vidéos du client rago et de la gestion du discord »). Sofiene répond aussi à certains clients sur le Discord. Son compte [[Linear]] est « acerSHOCK » (Sofiene, 01/11).
 - Pseudos du serveur Discord historique : « Rago » et « Straight » (auteurs du `.bat` Rago Hub).
 
 ## Services

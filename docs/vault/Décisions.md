@@ -57,6 +57,7 @@ Registre daté des décisions de Sofiene. **La plus récente prime.** Citations 
 Une ligne par projet ou fonctionnalité arrêtés, pour qu'aucun Claude ne les relance. Le reste du vault n'en parle plus.
 | Date | Quoi | Raison |
 |---|---|---|
+| 01/11 | Point après la première semaine de ventes (RAG-16) et logo Rago à côté des e-mails `noreply@` et `support@` (RAG-21) | « On les abandonne » |
 | 01/11 | Série de vidéos courtes « Milli » (mascotte, épisodes #000 à #005) | « arrêtée » |
 | 01/11 | Plan de visibilité écrit du 17/10 (17/10 → 15/11) | « on ne suit pas de plan » |
 | 31/10 | Rago OS (PR #60, exe de test du 21/10) | « abandonné » (Sofiene travaille sur un autre OS ailleurs, voir [[Prochaines étapes]]) |

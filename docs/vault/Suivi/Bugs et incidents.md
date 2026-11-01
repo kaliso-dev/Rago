@@ -14,7 +14,7 @@ Registre des bugs de l'app et des incidents. Les retours de joueurs au cas par c
 | Preset `ping_packets: hitreg` qui chevauche le [[Packet Optimizer]] (ping qui saute) | 1.2.1 | à corriger avec le preset dans la 1.2.2 (RAG-87) |
 | Fonctions Windows de la 1.2 jamais testées sur un vrai PC au 28/10 ([[Barre en jeu]], launchers, outils, démarrage auto) | 1.2.0 | Sofiene : « tout fonctionne » le 29/10 (portée exacte À VÉRIFIER) |
 | Remise du profil NVIDIA | 1.1.14+ | jamais vérifiée sur un PC NVIDIA |
-| **Smart App Control** (Windows 11) bloque l'app au lancement : « could not verify its publisher » (exe non signé). Pas de contournement par app : le joueur doit désactiver Smart App Control | toutes | un joueur le 19/10 (RAG-84, réponse prête à envoyer par Sofiene ; suite À VÉRIFIER) ; vraie solution : signer l'exe (RAG-83, quand il y aura le budget) |
+| **Smart App Control** (Windows 11) bloque l'app au lancement : « could not verify its publisher » (exe non signé). Pas de contournement par app : le joueur doit désactiver Smart App Control | toutes | un joueur le 19/10, plus de nouvelles, suivi arrêté le 01/11 (RAG-84 annulé) ; vraie solution : signer l'exe (RAG-83, quand il y aura le budget) |
 | Priorité par jeu (`pri_game`) : mauvais noms d'exe et 105 valeurs sans effet (1.1.14) | 1.1.14 | **corrigé dans la 1.2** (vérifié le 01/11, RAG-85) ; reste à tester sur un vrai PC |
 | Erreur WebView2 chez une cliente (16/10) | 1.1.14 | solution donnée sans modifier l'app |
 

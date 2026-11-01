@@ -15,15 +15,13 @@ Mode d'emploi (outil ArtifactData, collection `questions`) :
 - **Traiter** : mettre le vault à jour selon la réponse, puis passer la question en `statut: "traitée"` avec `traitement` (ce qui a été fait, en une phrase). Si la réponse demande une précision, réécrire `question` et `contexte`, vider `reponse` et laisser `ouverte`.
 - Dire à Sofiene dans le fil, en une ligne, quand de nouvelles questions l'attendent.
 
-## En attente de réponse sur la page (01/11)
-- q26 Joueur bloqué par Smart App Control (19/10, RAG-84) et crashs Lunar d'un joueur (14/10, RAG-76) : réglés ? ([[Problèmes joueurs]])
-- q27 « acerSHOCK » dans [[Linear]] : c'est Abel ?
-- q28 Tâches marketing d'acerSHOCK dans Linear (GIVEAWAY, YOUTUBE, partner discord, vidéos avant/après, recrutement de créateurs) : encore en cours ?
-- q29 « Faire le point après la première semaine de ventes » (RAG-16) et « logo Rago à côté des e-mails » (RAG-21) : encore à faire ?
+## En attente de réponse sur la page
+Aucune au 01/11 (q01 à q29 traitées).
 
 ## À demander à Abel (Sofiene ne sait pas)
 - Le partenariat avec le créateur YouTube à 50 % est-il arrêté ? ([[Partenaires et créateurs]])
 - État des vidéos : « Rago tour », « What's new », vidéo principale de l'app ([[Vidéos YouTube]]).
+- Tâches marketing dans [[Linear]] : GIVEAWAY (RAG-51), YOUTUBE (RAG-56), partner discord (RAG-54), vidéos YouTube avant/après (RAG-39), recrutement de créateurs Minecraft (RAG-35). Sofiene, 01/11 : « surement toujours en cours ».
 
 ## À vérifier (sans Sofiene)
 - Les 1.2.0 installées reçoivent-elles bien la 1.2.1 ? (`/api/v1/update/status`) ([[Mise à jour automatique]])

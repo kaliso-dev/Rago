@@ -12,11 +12,11 @@ Pour diagnostiquer : demander les logs `%APPDATA%\gg.rago.optimizer\logs` ([[App
 | Date | Joueur / version | Problème | Réponse |
 |---|---|---|---|
 | 29/10 | 1.2.1 | Hitreg meilleur, mais curseur invisible en plein écran et borderless après « Optimize and play » sur Minecraft ; ping plus instable | désactiver « Fullscreen optimizations » (recherche dans Rago) puis redémarrer ; dans le [[Packet Optimizer]], Latence un peu à droite et Réactivité un peu à gauche, ou profil stable |
-| 19/10 | joueur, Windows 11 en anglais | app bloquée au lancement par Smart App Control (exe non signé) | désactiver Smart App Control ; réponse prête, envoi par Sofiene et suite À VÉRIFIER (RAG-84, [[Bugs et incidents]]) |
+| 19/10 | joueur, Windows 11 en anglais | app bloquée au lancement par Smart App Control (exe non signé) | désactiver Smart App Control ; plus de nouvelles du joueur, suivi arrêté le 01/11 (RAG-84 annulé, [[Bugs et incidents]]) |
 | 16/10 | cliente, 1.1.14 | erreur WebView2 au lancement | solution et cause expliquées, app non modifiée (fil « Erreur WebView2 chez une cliente ») |
-| 14/10 | joueur (Lunar Client 1.8.9) | crashs aléatoires du jeu | log reçu sans le crash ; cause probable : vieux pilote NVIDIA (Quadro K2000) et mémoire ; logs du crash demandés, suite À VÉRIFIER (RAG-76) |
 | 15/10 | ami de Sofiene, 1.1.14 de test | preset Network en échec ; 4 tweaks non remis à la désinstallation | corrigé dans la [[Version 1.1.14]] |
 | 15/10 | joueur, 1.1.10 | dossier utilisateur avec `&` : rien ne s'applique | corrigé en 1.1.14 |
+| 14/10 | joueur (Lunar Client 1.8.9) | crashs aléatoires du jeu | log reçu sans le crash ; cause probable : vieux pilote NVIDIA (Quadro K2000) et mémoire ; logs du crash demandés ; plus de nouvelles, suivi arrêté le 01/11 (RAG-76 annulé) |
 | 13/10 | joueurs RBW | services laissés arrêtés par le [[RBW Mod]] | corrigé en 1.1.14 |
 | 12/10 | joueur | écran bleu 0x7E (Windows 11 24H2) | corrigé en 1.1.14 |
 | 11/10 | client | logs Game Mode | réponse sans changer l'app |

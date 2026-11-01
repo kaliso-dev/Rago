@@ -7,12 +7,17 @@ maj: 2026-11-01
 
 Une ligne par événement marquant, la plus récente en haut. Voir [[Historique des versions]] et [[Décisions]].
 
-## Octobre 2026
+## Novembre 2026
 | Date | Événement | Liens |
 |---|---|---|
+| 01/11 | Dernières réponses de Sofiene : acerSHOCK = Abel ; RAG-16, RAG-21 abandonnés ; RAG-76, RAG-84 arrêtés faute de nouvelles des joueurs | [[Linear]], [[Problèmes joueurs]] |
 | 01/11 | Anciennes PR #16, #50, #51, #60 fermées ; [[Linear]] remis à jour (RAG-86 à RAG-91) ; fils « Sortir l'app 1.2.2 » et « Passer le bot Discord en prod » ouverts | [[Prochaines étapes]] |
 | 01/11 | PR #69 (brouillon) : charte « Affiche » v2.2 sur la page d'accueil, pour décider de l'adopter | [[Charte graphique]] |
 | 01/11 | Sofiene répond aux questions du vault sur la page « Questions du vault Rago » ; vault mis à jour | [[Décisions]], [[Questions ouvertes]] |
+
+## Octobre 2026
+| Date | Événement | Liens |
+|---|---|---|
 | 31/10 | 1.2.1 en ligne (exe et `.sig` déposés par Sofiene) ; Lifetime 59,99 $ confirmé | [[Version 1.2.1]] |
 | 31/10 | Création de ce vault Obsidian dans `docs/vault/` | [[Mettre à jour le vault]] |
 | 29/10 | Retour joueur : hitreg meilleur, mais curseur perdu en plein écran et ping instable | [[Problèmes joueurs]] |
