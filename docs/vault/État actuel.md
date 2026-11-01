@@ -29,8 +29,8 @@ La [[Version 1.2.1]] (refonte en verre, barre en jeu, Packet Optimizer, biblioth
 | Vault Obsidian | créé le 31/10 ; règle n°1 : il doit correspondre en tout point à l'état du projet | DÉCIDÉ |
 
 ## PR ouvertes (01/11)
-- #68 : ce vault (attend « fusionne »).
 - #69 : charte « Affiche » v2.2 appliquée à la page d'accueil, **aperçu en brouillon** pour décider d'adopter la charte ; ne pas fusionner sans le feu vert de Sofiene ([[Charte graphique]]).
+- Fusionnée le 01/11 : #68 (ce vault, réponses de Sofiene et Linear remis à jour), sur « fusionne » de Sofiene.
 - Fermées le 01/11 avec l'accord de Sofiene (branches gardées) : #16 (1.1.10), #50 et #51 (1.1.13), dont les fonctions sont dans la 1.2.1, et #60 (Rago OS, abandonné).
 
 ## Ce qui attend Sofiene
