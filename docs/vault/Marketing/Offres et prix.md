@@ -1,7 +1,7 @@
 ---
 type: produit
 tags: [marketing, produit, prix]
-maj: 2026-10-31
+maj: 2026-11-01
 ---
 # Offres et prix
 
@@ -9,7 +9,7 @@ Prix en **USD**, paiement Stripe sur le [[Site]], **1 licence = 1 PC**. Voir [[M
 
 | Offre | Prix | Contenu (site, 29/10) |
 |---|---|---|
-| **Free** | 0 | app entière visible ; **11 tweaks** (module Windows et outils de Restaurer) ; stats de la [[Barre en jeu]], [[Test réseau]], Clean RAM, nettoyage, pilotes, [[Bibliothèque de jeux]], partage de presets |
+| **Free** | 0 | app entière visible ; **11 tweaks** (module Windows et outils de Restaurer) ; stats de la [[Barre en jeu]], [[Test réseau]], Clean RAM, nettoyage, pilotes, [[Bibliothèque de jeux]], partage de presets ; désinstallation des applis préinstallées à partir de la 1.2.2 ([[Page Outils]]) |
 | **Premium** | **5,99 $/mois** ou **29,99 $/an** | les 218 tweaks, [[Packet Optimizer]], 20 [[Presets]] dont 15 de jeux, Optimize and play, 21 tweaks en pleine partie, suppression des applis préinstallées, rôle Discord Pro |
 | **Lifetime** | **59,99 $** une fois | Premium sans renouvellement, versions futures incluses ; vendu seulement si le prix Stripe (`LIFETIME_PRICE`) correspond, sinon « Coming soon » |
 

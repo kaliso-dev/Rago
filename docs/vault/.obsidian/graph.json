@@ -6,12 +6,55 @@
   "showOrphans": true,
   "collapse-color-groups": false,
   "colorGroups": [
-    { "query": "path:Versions", "color": { "a": 1, "rgb": 16726832 } },
-    { "query": "path:Fonctionnalités", "color": { "a": 1, "rgb": 4054167 } },
-    { "query": "path:Technique", "color": { "a": 1, "rgb": 5945599 } },
-    { "query": "path:Marketing", "color": { "a": 1, "rgb": 16766474 } },
-    { "query": "path:Design", "color": { "a": 1, "rgb": 16747138 } },
-    { "query": "path:Suivi", "color": { "a": 1, "rgb": 10592682 } }
+    {
+      "query": "path:Versions",
+      "color": {
+        "a": 1,
+        "rgb": 16726832
+      }
+    },
+    {
+      "query": "path:Fonctionnalités",
+      "color": {
+        "a": 1,
+        "rgb": 4054167
+      }
+    },
+    {
+      "query": "path:Technique",
+      "color": {
+        "a": 1,
+        "rgb": 5945599
+      }
+    },
+    {
+      "query": "path:Marketing",
+      "color": {
+        "a": 1,
+        "rgb": 16766474
+      }
+    },
+    {
+      "query": "path:Design",
+      "color": {
+        "a": 1,
+        "rgb": 16747138
+      }
+    },
+    {
+      "query": "path:Suivi",
+      "color": {
+        "a": 1,
+        "rgb": 10592682
+      }
+    },
+    {
+      "query": "path:Projets",
+      "color": {
+        "a": 1,
+        "rgb": 16777215
+      }
+    }
   ],
   "showArrow": false,
   "textFadeMultiplier": 0,

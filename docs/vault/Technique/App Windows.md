@@ -1,16 +1,25 @@
 ---
 type: technique
 tags: [technique, app]
-maj: 2026-10-31
+maj: 2026-11-01
 ---
 # App Windows (`app/`)
 
 Voir [[Architecture]] et [[Historique des versions]].
 
+## Navigation (barre latérale)
+- **Tableau de bord** ([[Tableau de bord]])
+- **Optimiser** : Réseau (onglets Optimisations, [[Packet Optimizer]], [[Test réseau]]) · Latence · Carte graphique · Windows · [[Page Outils]]
+- **En jeu** : Hitreg · Minecraft · [[RBW Mod]] · [[Mode jeu]] · Jeux ([[Bibliothèque de jeux]])
+- **Avancé** : Mode expert · Restaurer (historique, retour arrière)
+- En bas : carte « Plan gratuit » ([[Licence dans l'app]]), « Rejoindre le Discord », Paramètres ([[Paramètres de l'app]]), état administrateur.
+- Recherche de tweak (palette), [[Barre en jeu]] (fenêtre séparée `overlay.html`), icône près de l'horloge ([[Arrière-plan et démarrage]]).
+Contenu des modules : [[Catalogue des tweaks]]. Fonctionnement interne : [[Moteur des tweaks]], [[Réparations au lancement]], [[Pendant la partie]], [[Partage et support]].
+
 ## Stack
 - **Tauri 2** (Rust, edition 2021) + **React 19 / TypeScript / Vite**, affichée par WebView2. Identifiant `gg.rago.optimizer` (staging : `gg.rago.optimizer.staging`). Installateur **NSIS** en anglais, `perMachine`, droits administrateur à chaque lancement. Fenêtre min 1080×680. Le front n'a pas d'accès réseau (CSP `connect-src ipc:`) : tout passe par les commandes Rust.
 - Version : `npm run bump X.Y.Z` (ne pas éditer `tauri.conf.json`).
-- Pas de signature de code : avertissement SmartScreen (RAG-25).
+- Pas de signature de code : avertissement SmartScreen, et **Smart App Control de Windows 11 bloque l'app au lancement** (RAG-83). Prévue, mais pas avant d'avoir le budget (Sofiene, 01/11).
 
 ## Modules Rust (`app/src-tauri/src/`, 1.2.x)
 - Cœur : `lib.rs` (commandes), `runner.rs` (exécute un lot : `.cmd` caché dans `run\`, journal `logs\run-<ms>.log`), `catalog.rs`, `seal.rs` (scripts chiffrés), `backup.rs` (`applied.json`, état d'avant, chiffré DPAPI), `history.rs`, `reset.rs` / `repair.rs` ([[Remise à zéro]]), `instance.rs`, `license.rs`, `account.rs`, `shell.rs`, `reg.rs`.
