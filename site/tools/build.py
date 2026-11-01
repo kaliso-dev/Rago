@@ -1,7 +1,7 @@
 """Builds site/index.html (what Netlify serves) from site/src/page.html (also the Claude preview), site/reviews.html
 from site/src/reviews.html, site/tweaks.html from site/src/tweaks.html (its tweak list: tools/sync_tweaks.py) and
 site/partners.html from site/src/partners.html (partner cards: src/partners.json, written first by tools/sync_partners.py).
-The source loads Geist from Google Fonts so the preview works; the built page uses the copies in site/fonts/ instead,
+The source loads its fonts from Google Fonts so the preview works; the built page uses the copies in site/fonts/ instead,
 so visitors' IP addresses aren't sent to Google."""
 import os
 SITE = 'https://rago-optimizer.com'  # public site URL
@@ -19,8 +19,26 @@ LOCAL = '''<link rel="preload" href="fonts/Geist-Variable.woff2" as="font" type=
 @font-face{font-family:"Geist";src:url("fonts/Geist-Variable.woff2") format("woff2");font-weight:100 900;font-display:swap}
 @font-face{font-family:"Geist Mono";src:url("fonts/GeistMono-Variable.woff2") format("woff2");font-weight:100 900;font-display:swap}
 </style>'''
-assert GOOGLE in s, 'Google Fonts block changed in page.html: update build.py'
-s = s.replace(GOOGLE, LOCAL)
+# The home page wears the type of the graphic charter 2.2 (Bricolage Grotesque, Instrument Sans, IBM Plex Mono); the other pages still use Geist
+GOOGLE_HOME = '''<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wdth,wght@12..96,75..100,400..800&family=Instrument+Sans:wght@400..700&family=IBM+Plex+Mono:wght@400;500;600&display=swap">'''
+LOCAL_HOME = '''<link rel="preload" href="fonts/Bricolage-latin.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="preload" href="fonts/InstrumentSans-latin.woff2" as="font" type="font/woff2" crossorigin>
+<style>
+@font-face{font-family:"Bricolage Grotesque";font-style:normal;font-weight:400 800;font-stretch:75% 100%;font-display:swap;src:url("fonts/Bricolage-latin-ext.woff2") format("woff2");unicode-range:U+0100-02BA, U+02BD-02C5, U+02C7-02CC, U+02CE-02D7, U+02DD-02FF, U+0304, U+0308, U+0329, U+1D00-1DBF, U+1E00-1E9F, U+1EF2-1EFF, U+2020, U+20A0-20AB, U+20AD-20C4, U+2113, U+2C60-2C7F, U+A720-A7FF}
+@font-face{font-family:"Bricolage Grotesque";font-style:normal;font-weight:400 800;font-stretch:75% 100%;font-display:swap;src:url("fonts/Bricolage-latin.woff2") format("woff2");unicode-range:U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD}
+@font-face{font-family:"Instrument Sans";font-style:normal;font-weight:400 700;font-display:swap;src:url("fonts/InstrumentSans-latin-ext.woff2") format("woff2");unicode-range:U+0100-02BA, U+02BD-02C5, U+02C7-02CC, U+02CE-02D7, U+02DD-02FF, U+0304, U+0308, U+0329, U+1D00-1DBF, U+1E00-1E9F, U+1EF2-1EFF, U+2020, U+20A0-20AB, U+20AD-20C4, U+2113, U+2C60-2C7F, U+A720-A7FF}
+@font-face{font-family:"Instrument Sans";font-style:normal;font-weight:400 700;font-display:swap;src:url("fonts/InstrumentSans-latin.woff2") format("woff2");unicode-range:U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD}
+@font-face{font-family:"IBM Plex Mono";font-style:normal;font-weight:400;font-display:swap;src:url("fonts/PlexMono-400-latin-ext.woff2") format("woff2");unicode-range:U+0100-02BA, U+02BD-02C5, U+02C7-02CC, U+02CE-02D7, U+02DD-02FF, U+0304, U+0308, U+0329, U+1D00-1DBF, U+1E00-1E9F, U+1EF2-1EFF, U+2020, U+20A0-20AB, U+20AD-20C4, U+2113, U+2C60-2C7F, U+A720-A7FF}
+@font-face{font-family:"IBM Plex Mono";font-style:normal;font-weight:400;font-display:swap;src:url("fonts/PlexMono-400-latin.woff2") format("woff2");unicode-range:U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD}
+@font-face{font-family:"IBM Plex Mono";font-style:normal;font-weight:500;font-display:swap;src:url("fonts/PlexMono-500-latin-ext.woff2") format("woff2");unicode-range:U+0100-02BA, U+02BD-02C5, U+02C7-02CC, U+02CE-02D7, U+02DD-02FF, U+0304, U+0308, U+0329, U+1D00-1DBF, U+1E00-1E9F, U+1EF2-1EFF, U+2020, U+20A0-20AB, U+20AD-20C4, U+2113, U+2C60-2C7F, U+A720-A7FF}
+@font-face{font-family:"IBM Plex Mono";font-style:normal;font-weight:500;font-display:swap;src:url("fonts/PlexMono-500-latin.woff2") format("woff2");unicode-range:U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD}
+@font-face{font-family:"IBM Plex Mono";font-style:normal;font-weight:600;font-display:swap;src:url("fonts/PlexMono-600-latin-ext.woff2") format("woff2");unicode-range:U+0100-02BA, U+02BD-02C5, U+02C7-02CC, U+02CE-02D7, U+02DD-02FF, U+0304, U+0308, U+0329, U+1D00-1DBF, U+1E00-1E9F, U+1EF2-1EFF, U+2020, U+20A0-20AB, U+20AD-20C4, U+2113, U+2C60-2C7F, U+A720-A7FF}
+@font-face{font-family:"IBM Plex Mono";font-style:normal;font-weight:600;font-display:swap;src:url("fonts/PlexMono-600-latin.woff2") format("woff2");unicode-range:U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD}
+</style>'''
+assert GOOGLE_HOME in s, 'Google Fonts block changed in page.html: update build.py'
+s = s.replace(GOOGLE_HOME, LOCAL_HOME)
 
 # Without JavaScript the page still works: account links point at the real server and the price shows the default (yearly) plan
 import re, json
@@ -88,7 +106,7 @@ head = ('''<!doctype html>
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<meta name="theme-color" content="#0A0A0B">
+<meta name="theme-color" content="#0C0909">
 <link rel="canonical" href="{SITE}/">
 <meta property="og:site_name" content="Rago Optimizer">
 <meta property="og:type" content="website">
