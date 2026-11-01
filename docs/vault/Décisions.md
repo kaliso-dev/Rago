@@ -10,10 +10,13 @@ Registre daté des décisions de Sofiene. **La plus récente prime.** Citations 
 ## App et versions
 | Date | Décision | Statut |
 |---|---|---|
+| 01/11 | Version 1.2.2 : correctif du preset Minecraft PvP + désinstallation des applis préinstallées gratuite, envoyée par la mise à jour automatique (« il faut lancer la correction avec le passage de la désinstallation des app préinstallées en gratuit et mettre à jour grâce à l'auto update ») | EN COURS ([[Prochaines étapes]]) |
+| 01/11 | Bot communauté Discord : « Il faut le tester et le passer en prod » | EN COURS ([[Bot communauté Discord]]) |
+| 01/11 | Anciennes PR #16, #50, #51 et #60 fermées (« si toutes les fonctionnalités sont déjà présentes sur la version actuelle tu peux les fermer ») ; vérifié, branches gardées | exécuté ([[Branches et environnements]]) |
+| 01/11 | Linear remis à jour à partir du vault (« Oui, fais-le »), et à tenir à jour pour continuer à l'utiliser | exécuté ([[Linear]]) |
 | 01/11 | Les questions à Sofiene se posent **automatiquement** sur la page « Questions du vault Rago » dès qu'un Claude en a, pour tenir le vault à jour (« désormais tu devras le faire automatiquement ») | DÉCIDÉ ([[Mettre à jour le vault]], [[Questions ouvertes]]) |
-| 01/11 | Corriger le preset Minecraft PvP (« il faut le faire, il faut l'ajouter aux tâches ») | À FAIRE ([[Prochaines étapes]]) |
 | 01/11 | Connexion à l'app avec Google ou Discord (« c'est important en effet ») | PRÉVU ([[Connexion Google et Discord]]) |
-| 01/11 | Les outils restent gratuits (« c'est des outils indispensables ») | DÉCIDÉ ([[Page Outils]]) |
+| 01/11 | Les outils restent gratuits (« c'est des outils indispensables »), y compris la désinstallation des applis préinstallées (« Oui, tout gratuit ») | DÉCIDÉ ([[Page Outils]]) |
 | 01/11 | Signature de code de l'exe : prévue, pas avant d'avoir le budget | PRÉVU ([[App Windows]]) |
 | 01/11 | Proxy : pas de mesure proxy → serveur de jeu pour l'instant (« pas maintenant ») | EN PAUSE ([[Proxy]]) |
 | 31/10 | **Règle n°1 : le vault doit correspondre en tout point à l'état actuel du projet** ; chaque Claude détecte les changements et abandons, met à jour ou supprime, et demande en cas de doute | DÉCIDÉ ([[Mettre à jour le vault]]) |

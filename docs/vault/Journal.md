@@ -10,6 +10,8 @@ Une ligne par événement marquant, la plus récente en haut. Voir [[Historique 
 ## Octobre 2026
 | Date | Événement | Liens |
 |---|---|---|
+| 01/11 | Anciennes PR #16, #50, #51, #60 fermées ; [[Linear]] remis à jour (RAG-86 à RAG-91) ; fils « Sortir l'app 1.2.2 » et « Passer le bot Discord en prod » ouverts | [[Prochaines étapes]] |
+| 01/11 | PR #69 (brouillon) : charte « Affiche » v2.2 sur la page d'accueil, pour décider de l'adopter | [[Charte graphique]] |
 | 01/11 | Sofiene répond aux questions du vault sur la page « Questions du vault Rago » ; vault mis à jour | [[Décisions]], [[Questions ouvertes]] |
 | 31/10 | 1.2.1 en ligne (exe et `.sig` déposés par Sofiene) ; Lifetime 59,99 $ confirmé | [[Version 1.2.1]] |
 | 31/10 | Création de ce vault Obsidian dans `docs/vault/` | [[Mettre à jour le vault]] |

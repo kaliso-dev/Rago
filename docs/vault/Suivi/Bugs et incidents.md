@@ -7,13 +7,15 @@ maj: 2026-11-01
 
 Registre des bugs de l'app et des incidents. Les retours de joueurs au cas par cas sont dans [[Problèmes joueurs]]. Référence détaillée au 15/10 : `PROJECT_HANDOFF/05_BUGS_AND_REGRESSIONS.md` ([[Sources]]).
 
-## Ouverts ou à surveiller (31/10)
+## Ouverts ou à surveiller (01/11)
 | Bug | Version | État |
 |---|---|---|
-| Curseur perdu en plein écran / borderless après « Optimize and play » (suspect : `win_fullscreen` dans le preset Minecraft PvP) | 1.2.1 | contournement donné le 29/10 ; **correctif à faire** (Sofiene, 01/11), cause encore à confirmer ([[Presets]]) |
-| Preset `ping_packets: hitreg` qui chevauche le [[Packet Optimizer]] (ping qui saute) | 1.2.1 | à corriger avec le preset (Sofiene, 01/11) |
+| Curseur perdu en plein écran / borderless après « Optimize and play » (suspect : `win_fullscreen` dans le preset Minecraft PvP) | 1.2.1 | contournement donné le 29/10 ; **correctif en cours pour la 1.2.2** (RAG-87), cause encore à confirmer ([[Presets]]) |
+| Preset `ping_packets: hitreg` qui chevauche le [[Packet Optimizer]] (ping qui saute) | 1.2.1 | à corriger avec le preset dans la 1.2.2 (RAG-87) |
 | Fonctions Windows de la 1.2 jamais testées sur un vrai PC au 28/10 ([[Barre en jeu]], launchers, outils, démarrage auto) | 1.2.0 | Sofiene : « tout fonctionne » le 29/10 (portée exacte À VÉRIFIER) |
 | Remise du profil NVIDIA | 1.1.14+ | jamais vérifiée sur un PC NVIDIA |
+| **Smart App Control** (Windows 11) bloque l'app au lancement : « could not verify its publisher » (exe non signé). Pas de contournement par app : le joueur doit désactiver Smart App Control | toutes | un joueur le 19/10 (RAG-84, réponse prête à envoyer par Sofiene ; suite À VÉRIFIER) ; vraie solution : signer l'exe (RAG-83, quand il y aura le budget) |
+| Priorité par jeu (`pri_game`) : mauvais noms d'exe et 105 valeurs sans effet (1.1.14) | 1.1.14 | **corrigé dans la 1.2** (vérifié le 01/11, RAG-85) ; reste à tester sur un vrai PC |
 | Erreur WebView2 chez une cliente (16/10) | 1.1.14 | solution donnée sans modifier l'app |
 
 ## Corrigés en 1.1.14 (présents en 1.1.10)

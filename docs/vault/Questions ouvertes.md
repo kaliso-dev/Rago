@@ -16,13 +16,14 @@ Mode d'emploi (outil ArtifactData, collection `questions`) :
 - Dire à Sofiene dans le fil, en une ligne, quand de nouvelles questions l'attendent.
 
 ## En attente de réponse sur la page (01/11)
-- q02 [[Bot communauté Discord]] : à tester puis passer en prod, en pause, ou abandonné ? (expliqué à Sofiene, qui pense que son collègue était peut-être dessus)
-- q03 Anciennes PR #16, #50, #51 et #60 : les fermer en gardant les branches ? (expliqué à Sofiene)
-- q21 Le collègue de Sofiene (vidéos, peut-être le bot) : nom et rôle ([[Personnes et services]]).
-- q22 [[Linear]] : le remettre entièrement à jour à partir du vault ?
-- q23 [[Page Outils]] : la désinstallation des applis préinstallées passe-t-elle aussi en gratuit ?
-- q24 Correction du preset Minecraft PvP : la lancer maintenant ([[Prochaines étapes]]) ?
-- q25 Le créateur YouTube à 50 % : partenariat arrêté ? ([[Partenaires et créateurs]])
+- q26 Joueur bloqué par Smart App Control (19/10, RAG-84) et crashs Lunar d'un joueur (14/10, RAG-76) : réglés ? ([[Problèmes joueurs]])
+- q27 « acerSHOCK » dans [[Linear]] : c'est Abel ?
+- q28 Tâches marketing d'acerSHOCK dans Linear (GIVEAWAY, YOUTUBE, partner discord, vidéos avant/après, recrutement de créateurs) : encore en cours ?
+- q29 « Faire le point après la première semaine de ventes » (RAG-16) et « logo Rago à côté des e-mails » (RAG-21) : encore à faire ?
+
+## À demander à Abel (Sofiene ne sait pas)
+- Le partenariat avec le créateur YouTube à 50 % est-il arrêté ? ([[Partenaires et créateurs]])
+- État des vidéos : « Rago tour », « What's new », vidéo principale de l'app ([[Vidéos YouTube]]).
 
 ## À vérifier (sans Sofiene)
 - Les 1.2.0 installées reçoivent-elles bien la 1.2.1 ? (`/api/v1/update/status`) ([[Mise à jour automatique]])

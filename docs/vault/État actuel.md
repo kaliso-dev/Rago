@@ -21,14 +21,17 @@ La [[Version 1.2.1]] (refonte en verre, barre en jeu, Packet Optimizer, biblioth
 | Connexion Google / Discord + code email | en ligne (PR #61, 28/10) | OBSERVÉ (fil) |
 | Offre Lifetime | **59,99 $** (Sofiene, 31/10 : « c'est normal »), vendue seulement si le prix Stripe correspond | DÉCIDÉ / CONFIRMÉ (`site/src/page.html`) |
 | [[Proxy]] | collecte des tests réseau en prod ; la suite (mesure proxy → serveur de jeu) : « pas maintenant » | DÉCIDÉ (Sofiene, 01/11) |
-| Marketing | pas de plan : des vidéos sur TikTok, YouTube et Instagram, faites par un collègue de Sofiene ; trailer 1.2 (v4) sans doute jamais publié ; annonces Discord 1.2 postées, en anglais | Sofiene, 01/11 ([[Marketing]]) |
+| Marketing | pas de plan : des vidéos sur TikTok, YouTube et Instagram, faites par Abel ; trailer 1.2 (v4) sans doute jamais publié ; annonces Discord 1.2 postées, en anglais | Sofiene, 01/11 ([[Marketing]]) |
 | [[Client Minecraft Rago]] | projet à part, en cours, va être lancé (client, launcher, cosmétiques) | Sofiene, 01/11 |
-| [[Bot communauté Discord]] | sur `staging` seulement depuis le 15/10, jamais testé ni passé en prod | À VÉRIFIER |
+| [[Bot communauté Discord]] | sur `staging` seulement ; à tester puis passer en prod (fil « Passer le bot Discord en prod », RAG-91) | DÉCIDÉ (Sofiene, 01/11) |
+| Version 1.2.2 | en préparation (fil « Sortir l'app 1.2.2 ») : correctif du preset Minecraft PvP, applis préinstallées gratuites, envoi par la mise à jour automatique (RAG-87, RAG-88) | DÉCIDÉ (Sofiene, 01/11) |
+| [[Linear]] | remis à jour le 01/11 à partir du vault | CONFIRMÉ |
 | Vault Obsidian | créé le 31/10 ; règle n°1 : il doit correspondre en tout point à l'état du projet | DÉCIDÉ |
 
-## PR ouvertes (31/10)
-- #60 : Rago OS, **abandonné** le 31/10 (voir [[Décisions]]) ; encore ouverte sur GitHub, à fermer quand Sofiene le dit.
-- #51, #50 (1.1.13, mises de côté) et #16 (1.1.10) : anciennes, gardées comme sources. Ne pas supprimer sans décision. Voir [[Versions 1.1.11 à 1.1.13]].
+## PR ouvertes (01/11)
+- #68 : ce vault (attend « fusionne »).
+- #69 : charte « Affiche » v2.2 appliquée à la page d'accueil, **aperçu en brouillon** pour décider d'adopter la charte ; ne pas fusionner sans le feu vert de Sofiene ([[Charte graphique]]).
+- Fermées le 01/11 avec l'accord de Sofiene (branches gardées) : #16 (1.1.10), #50 et #51 (1.1.13), dont les fonctions sont dans la 1.2.1, et #60 (Rago OS, abandonné).
 
 ## Ce qui attend Sofiene
 1. Vérifier que les 1.2.0 installées reçoivent bien la 1.2.1 (`/api/v1/update/status`, voir [[Mise à jour automatique]]).

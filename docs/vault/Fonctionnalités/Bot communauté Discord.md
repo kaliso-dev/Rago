@@ -1,7 +1,7 @@
 ---
 type: fonctionnalité
-tags: [fonctionnalité, serveur, discord, à-vérifier]
-maj: 2026-10-31
+tags: [fonctionnalité, serveur, discord, en-cours]
+maj: 2026-11-01
 ---
 # Bot communauté Discord
 
@@ -11,6 +11,6 @@ PR #40, **fusionnée dans `staging` le 15/10, absente de la prod** (vérifié da
 - Message d'accueil en salon ; commandes `/invites`, `/top-invites`, `/partner-link`, `/growth`, `/invites-adjust`.
 - Variables : `DISCORD_COMMUNITY`, `DISCORD_WELCOME_CHANNEL_ID`, `DISCORD_WELCOME_TEXT`, `DISCORD_INVITE_ROLES`, `DISCORD_VIP_INVITES`, `DISCORD_MVP_INVITES`.
 - Tests demandés à Sofiene le 12/10 (Server Members Intent, droits du rôle, variables sur Railway staging, essai avec un 2e compte) : aucun retour.
-- **Statut : À VÉRIFIER** (testé ? à passer en prod ? abandonné ?). Voir [[Questions ouvertes]].
+- **Statut (Sofiene, 01/11)** : « Il faut le tester et le passer en prod ». Travail en cours dans le fil « Passer le bot Discord en prod » (Linear RAG-91). C'est Abel qui gère les bots, rôles et webhooks du Discord ([[Personnes et services]]).
 
 Liens : [[Discord]].

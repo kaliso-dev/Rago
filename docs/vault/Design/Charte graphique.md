@@ -16,6 +16,7 @@ Source de vérité : `brand/tokens/tokens.json` → `brand/tokens/tokens.css` (v
 - **Formes** : arrondis partout (8/12/16/24/32/40/999), actions principales en pilule. Relief par les paliers d'encre, pas les ombres.
 - **Logo** : R rouge de Sofiene vectorisé, icône d'app sans tuile ; interdits : pivoté, déformé, contour, dégradé, néon.
 - Historique : v1 (04/10) rouge `#FF3347` → v1.1 (05/10) `#FF3B30`, plus d'orange → v1.2 (06-07/10) logo et nom « Rago Optimizer ».
+- **En évaluation (01/11)** : une charte « Affiche » v2.2 (polices Bricolage Grotesque, Instrument Sans et IBM Plex Mono ; fond asphalte chaud, un seul rouge, plus de verre ni de dégradé) est appliquée à la page d'accueil dans la PR #69, en **brouillon pour décider de l'adopter**. Rien n'est adopté : la charte en vigueur reste celle ci-dessus jusqu'au feu vert de Sofiene. Dossier `charte-2026/` ([[Sources]]).
 - Écarts à arbitrer : icône éclair du [[Mode jeu]] ; copies de tokens en retard ; alias de couleurs propres au [[Site]].
 
 Liens : [[Site]], [[App Windows]], [[Marketing]].

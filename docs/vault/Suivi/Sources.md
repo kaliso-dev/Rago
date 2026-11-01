@@ -16,6 +16,7 @@ Accessible aux fils du projet Claude, **pas** depuis ce dépôt. Les gros fichie
 - `synthese/SYNTHESE_REPRISE.md` : synthèse de reprise du 15/10.
 - `refonte-glass/` : `NOUVEAUTES-1.2.0.md`, `TESTS-1.2.0.md`, `OPTIMISATIONS-1.2.0.md`, `MISE-A-JOUR-AUTO-TEST.md`, `VERSION-1.2.0.md`, `BACKLOG_LINEAR.md`, captures, `optimisations-sources/` (fichiers de Sofiene du 21/10) → [[Version 1.2.0]], [[Refonte glass]].
 - `site-1.2/` : captures et aperçu de la section Nouveautés → [[Site]].
+- `charte-2026/` : charte « Affiche » (`charte-affiche.html`, `directions.html`, logos, sources), en évaluation au 01/11 → [[Charte graphique]].
 - `marketing/` : `videos-youtube/`, `trailer-1.2/` → [[Marketing]].
 - `.notes/inputs.md` : fichiers envoyés par Sofiene (stats Instagram, nouvelles optimisations).
 - `uploads/hearth/` : fichiers bruts envoyés dans le chat (peuvent contenir des données sensibles).
