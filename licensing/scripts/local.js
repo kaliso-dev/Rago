@@ -20,6 +20,7 @@ env.PORT ||= '8787';
 env.PUBLIC_URL = `http://localhost:${env.PORT}`;
 env.SITE_URL = env.PUBLIC_URL; // the site is served by this server (SITE_DIR)
 env.SITE_DIR = fileURLToPath(new URL('../../site', import.meta.url));
+env.EMAIL_VERIFICATION ||= '1'; // sign-up codes are printed in this Terminal
 env.DEV_SEED ||= 'test@rago.dev:password123';
 delete env.LAUNCH_AT; // no countdown here
 
