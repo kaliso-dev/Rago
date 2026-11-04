@@ -24,6 +24,7 @@ maj: 2026-11-04
 - **33 actifs** : 23 mensuels (5,99 $) et 10 annuels (29,99 $). MRR au prix plein : **162,76 $**.
 - **8 mensuels résiliés** qui s'arrêtent en fin de période (entre le 10/11 et le 22/11). Raisons données : « trop cher » 2, « autre » 2, aucune 4. Après ces départs : 15 mensuels + 10 annuels, MRR **114,84 $**.
 - Aucun annuel résilié.
+- **Renouvellements prévus** (sans compter les 8 résiliés), tous à 5,99 $ plein tarif car les codes ne valent que pour le premier paiement : 10/11 (3), 11/11 (2), 15/11 (1), 16/11 (2), 19/11 (2), 24/11 (1), 27/11 (1), 30/11 (1), 03/12 (2). Total : 15 renouvellements, **89,85 $**. Les 10 annuels se renouvellent entre le 10/10 et le 29/10/2027.
 - **Aucun essai** : aucun prix n'a de période d'essai et aucun abonnement n'est « trialing ». L'essai de 7 jours est seulement une question ouverte (q35, [[Questions ouvertes]]).
 
 ## Lifetime
