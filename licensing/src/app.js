@@ -40,6 +40,8 @@ const API_ERRORS = {
   subscription_ended: [403, 'Your Rago Optimizer Premium subscription ended. Renew it on the website, then sign in again.'],
   rate_limited: [429, 'Too many attempts. Wait a few minutes and try again.'],
   // Sign-in to the app through the browser, with Google or Discord (2026-11-04)
+  no_subscription: [404, 'There is no subscription to change on this account.'],
+  billing_unavailable: [503, "Payments can't be reached right now. Try again in a minute, or cancel from your account page."],
   link_expired: [410, 'This sign-in took too long. Start again from Rago Optimizer.'],
   // Reviews and profile (2026-10-09)
   name_required: [400, 'Add the public name shown with your review.'],
@@ -90,6 +92,8 @@ export function createApp({ cfg, db, keys, stripe, mailer, log = console, fetchI
   let popupCache = null; // { at, body }: same for the discount pop-up (one Stripe call per refresh)
   let lifetimeCache = null; // { at, offer }: the Lifetime price as Stripe has it (the site's card, /buy/lifetime)
   let lifetimeRead = null; // the Stripe call reading it, while one runs
+  let pricesPending = null;
+  let pricesCache = null; // { at, prices }: the monthly and yearly prices as Stripe has them (the app's Premium window)
   const publicDir = relative(process.cwd(), fileURLToPath(new URL('../public', import.meta.url))) || '.';
   const cookieBase = { httpOnly: true, secure: cfg.prod, sameSite: 'Lax', path: '/' };
 
@@ -262,6 +266,34 @@ export function createApp({ cfg, db, keys, stripe, mailer, log = console, fetchI
       .then((offer) => { lifetimeCache = { at: Date.now(), offer }; return offer; })
       .finally(() => { lifetimeRead = null; });
     return lifetimeRead;
+  }
+
+  /**
+   * The subscription prices ({ month, year }: { amount, currency } each, or null) as Stripe has them, for the app's
+   * Premium window (1.3.0). Read at most every 10 minutes; while Stripe doesn't answer, the last answer stands.
+   */
+  async function subscriptionPrices() {
+    if (!stripe || !cfg.subscriptions) return { month: null, year: null };
+    if (pricesCache && Date.now() - pricesCache.at < 10 * 60 * 1000) return pricesCache.prices;
+    const read = async (id) => {
+      if (!id) return null;
+      const p = await stripe.prices.retrieve(id, {}, { timeout: 5000, maxNetworkRetries: 0 });
+      return p.active && p.recurring ? { amount: p.unit_amount, currency: p.currency } : null;
+    };
+    // une seule lecture à la fois : les visiteurs du même instant attendent la même réponse
+    pricesPending ??= (async () => {
+      try {
+        const [month, year] = await Promise.all([read(cfg.stripePriceMonthly), read(cfg.stripePriceYearly)]);
+        pricesCache = { at: Date.now(), prices: { month, year } };
+      } catch (err) {
+        log.error('[stripe] subscription prices not read:', err.message);
+        pricesCache = { at: Date.now(), prices: pricesCache?.prices ?? { month: null, year: null } };
+      } finally {
+        pricesPending = null;
+      }
+    })();
+    await pricesPending;
+    return pricesCache.prices;
   }
 
   /** Records the referral code typed right after a purchase, once the license is on the account. */
@@ -1438,6 +1470,58 @@ export function createApp({ cfg, db, keys, stripe, mailer, log = console, fetchI
 
   api.get('/account/me', async (c) => c.json(await accountReply(c.get('user'))));
 
+  // ---------- App API: the subscription, seen and canceled from the app (1.3.0) ----------
+  // The app's Settings show the plan, its next payment or end date, and cancel in one screen (no discount offered, no
+  // second screen). Canceling stops the renewal: Premium stays until the end of the paid period or of the free trial,
+  // and nothing more is charged. Resume undoes it before that date.
+  const subscriptionOf = async (user) => {
+    const lic = await L.licenseForUser(db, user.id);
+    return lic && lic.status === 'active' && (lic.plan === 'month' || lic.plan === 'year') && lic.stripe_subscription_id ? lic : null;
+  };
+  const subscriptionReply = async (lic) => {
+    const end = lic.current_period_end ? new Date(Number(lic.current_period_end)).toISOString() : null;
+    const trial = await db.get('SELECT 1 FROM trials WHERE subscription_id = ? AND NOT charged_now', [lic.stripe_subscription_id]);
+    const prices = await subscriptionPrices();
+    return {
+      subscription: {
+        interval: lic.plan,
+        trial: !!trial && !!lic.current_period_end && Number(lic.current_period_end) - Date.now() < (cfg.trialDays + 1) * 86400 * 1000,
+        canceled: !!lic.cancel_at_period_end,
+        renews_at: lic.cancel_at_period_end ? null : end,
+        ends_at: lic.cancel_at_period_end ? end : null,
+        price: prices[lic.plan] ?? null,
+      },
+    };
+  };
+  api.get('/account/subscription', async (c) => {
+    const lic = await subscriptionOf(c.get('user'));
+    return c.json(lic ? await subscriptionReply(lic) : { subscription: null });
+  });
+  const setCancel = (cancel) => async (c) => {
+    const user = c.get('user');
+    const lic = await subscriptionOf(user);
+    if (!lic) return fail(c, 'no_subscription');
+    if (!stripe) return fail(c, 'billing_unavailable');
+    let sub;
+    try {
+      sub = await stripe.subscriptions.update(lic.stripe_subscription_id, { cancel_at_period_end: cancel });
+    } catch (err) {
+      log.error('[stripe] subscription update from the app', err.message);
+      return fail(c, 'billing_unavailable');
+    }
+    await L.syncSubscription(db, sub);
+    await db.run('INSERT INTO audit (at, license_id, user_id, type, detail) VALUES (?, ?, ?, ?, ?)',
+      [Date.now(), lic.id, user.id, cancel ? 'subscription.canceled_in_app' : 'subscription.resumed_in_app', null]);
+    const fresh = await L.getLicense(db, lic.id);
+    const reply = await subscriptionReply(fresh);
+    if (cancel) {
+      try { await mailer.subscriptionCanceled(user.email, reply.subscription); } catch (err) { log.error('[mail] cancel confirmation', err.message); }
+    }
+    return c.json(reply);
+  };
+  api.post('/account/subscription/cancel', setCancel(true));
+  api.post('/account/subscription/resume', setCancel(false));
+
   api.post('/account/logout', async (c) => {
     await L.deleteApiSession(db, (c.req.header('authorization') || '').replace(/^Bearer\s+/i, '').trim());
     return c.json({ ok: true });
@@ -1532,7 +1616,8 @@ export function createApp({ cfg, db, keys, stripe, mailer, log = console, fetchI
 
   // Public: whether the site's Lifetime card can sell (2026-10-16). { lifetime: { amount, currency } } once
   // STRIPE_PRICE_LIFETIME is an active one-time price in Stripe, else { lifetime: null } ("Coming soon" on the site).
-  api.get('/plans', async (c) => c.json({ lifetime: await lifetimeOffer() }, 200, { 'Access-Control-Allow-Origin': '*', 'Cache-Control': 'public, max-age=60' }));
+  // 1.3.0: also the monthly and yearly prices and the free trial's length, for the app's Premium window.
+  api.get('/plans', async (c) => c.json({ lifetime: await lifetimeOffer(), ...(await subscriptionPrices()), trial_days: cfg.subscriptions ? cfg.trialDays : 0 }, 200, { 'Access-Control-Allow-Origin': '*', 'Cache-Control': 'public, max-age=60' }));
 
   // Public: the version of the installer /download serves (Railway variable INSTALLER_VERSION), shown under the
   // site's download button. { version: null } while the variable isn't set.

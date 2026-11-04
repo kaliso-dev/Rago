@@ -116,6 +116,15 @@ ${discord ? `<p style="${SMALL}">${esc(discord)} <a href="${esc(cfg.supportUrl)}
         layout(cfg, 'Confirm your email', `<p style="${P}">Type this code on the sign-up page to create your Rago Optimizer account. It works for 15 minutes.</p>${big}<p style="${SMALL}">If you didn't sign up, ignore this email: no account is created without the code.</p>`),
         `Your Rago Optimizer code: ${code}\nType it on the sign-up page to create your account. It works for 15 minutes. If you didn't sign up, ignore this email.`);
     },
+    /** Sent when the subscription is canceled from the app (1.3.0): Premium stays until the end date, nothing more is charged. */
+    subscriptionCanceled(to, sub) {
+      const until = sub.ends_at ? new Date(sub.ends_at).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric', timeZone: 'UTC' }) : null;
+      const what = sub.trial ? 'Your free trial is canceled' : 'Your subscription is canceled';
+      const body = `${what}. ${until ? `Premium stays active until ${until}. ` : ''}No more charges. When it ends, Rago Optimizer puts back the settings its tweaks changed and goes back to the free plan. Changed your mind? Resume from the app's Settings or your account page before that date.`;
+      return send(to, `${what}: Rago Optimizer Premium`,
+        layout(cfg, sub.trial ? 'Free trial canceled' : 'Subscription canceled', `<p style="${P}">${esc(body)}</p>${button(`${cfg.publicUrl}/account`, 'Open your account')}`),
+        `${body}\nYour account: ${cfg.publicUrl}/account`);
+    },
     passwordReset(to, url) {
       return send(to, 'Reset your Rago Optimizer password',
         layout(cfg, 'Reset your password', `<p style="${P}">Someone asked to reset the password of your Rago Optimizer account. The link works for 1 hour. If it wasn't you, ignore this email: your password stays the same.</p>${button(url, 'Choose a new password')}`),

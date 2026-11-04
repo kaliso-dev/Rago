@@ -246,6 +246,28 @@ export interface Driver {
   date: string | null;
   provider: string;
 }
+/** Résumé de la dernière partie suivie par la barre en jeu (fps.rs). */
+export interface MatchSummary {
+  at: number;
+  minutes: number;
+  fps: number;
+  low1: number;
+  stuttersPerMin: number;
+}
+/** « Analyze my PC » : ce que Windows dit du PC (analysis.rs). */
+export interface AnalysisFacts {
+  refresh: number | null;
+  refreshMax: number | null;
+  processes: number | null;
+  memSpeed: number | null;
+  memRated: number | null;
+  wired: boolean | null;
+  gameDvr: boolean | null;
+  notifications: boolean | null;
+  powerScheme: string | null;
+  background: { id: string; apps: string[] }[];
+  lastMatch: MatchSummary | null;
+}
 export interface DriversInfo {
   drivers: Driver[];
   /** fabricant de la carte mère, ou du portable */
@@ -375,6 +397,7 @@ export interface Api {
   /** Premium ; renvoie les applis encore installées */
   toolsRemoveApps(ids: string[]): Promise<BloatApp[]>;
   toolsDrivers(): Promise<DriversInfo>;
+  analysisFacts(): Promise<AnalysisFacts>;
   /** Paramètres Windows, mises à jour facultatives (pilotes) */
   toolsWindowsUpdate(): Promise<void>;
   minecraftRestore(dir?: string | null): Promise<string>;
@@ -481,6 +504,7 @@ const tauriApi: Api = {
   toolsApps: () => invoke("tools_apps"),
   toolsRemoveApps: (ids) => invoke("tools_remove_apps", { ids }),
   toolsDrivers: () => invoke("tools_drivers"),
+  analysisFacts: () => invoke("analysis_facts"),
   toolsWindowsUpdate: () => invoke("tools_windows_update"),
   minecraftRestore: (dir) => invoke("minecraft_restore", { dir: dir ?? null }),
   restartPc: () => invoke("restart_pc"),
@@ -900,6 +924,22 @@ const mockApi: Api = {
     await sleep(1600);
     mockBloat = mockBloat.filter((a) => !ids.includes(a.id));
     return [...mockBloat];
+  },
+  analysisFacts: async () => {
+    await sleep(1500);
+    return {
+      refresh: 60,
+      refreshMax: 144,
+      processes: 212,
+      memSpeed: 4800,
+      memRated: 6000,
+      wired: false,
+      gameDvr: true,
+      notifications: true,
+      powerScheme: "381b4222-f694-41f0-9685-ff5bb260df2e",
+      background: [{ id: "sync", apps: ["OneDrive"] }],
+      lastMatch: { at: Date.now() - 3600000, minutes: 24, fps: 312, low1: 128, stuttersPerMin: 3.4 },
+    };
   },
   toolsDrivers: async () => {
     await sleep(1100);

@@ -10,6 +10,7 @@ Registre daté des décisions de Sofiene. **La plus récente prime.** Citations 
 ## App et versions
 | Date | Décision | Statut |
 |---|---|---|
+| 04/11 | Fonctions de la maquette « Fonctions gardées de la maquette de l'app » : « Il faut rajouter ses fonctionnalités » (analyse du PC, avant/après, fenêtre Premium avec les prix, résiliation dans l'app) | EN COURS, PR #70 ([[Analyse du PC]], [[Abonnement dans l'app]]) |
 | 04/11 | Plan gratuit élargi : « on va ajouter directement la suite : 50 - 100 tweaks gratuit (laisser les meilleur et les plus demandé en premium surtout network et hitreg) mais seulement 30 slot de tweaks disponible gratuitement a activé simultanement » | EN COURS, PR #70 ([[Offres et prix]]) |
 | 04/11 | Connexion à l'app avec Discord ou Google (« Il faut aussi rajouter le login sur l'app avec discord ou google ») | EN COURS, PR #70 ([[Connexion Google et Discord]]) |
 | 04/11 | Essai Premium : « une possibilité d'essai gratuit de 3jours mais il faut renseigner sa carte et au bout de trois 3 jours ça débite directement il doit résilier pendant la période des 3 jours » ; le site doit l'orienter vers cet essai et être vérifié pour le RGPD | EN COURS, PR #70 ([[Offres et prix]], [[Conformité juridique]]) |

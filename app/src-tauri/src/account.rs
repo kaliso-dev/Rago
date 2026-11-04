@@ -54,6 +54,11 @@ enum Body<'a> {
     Bytes(&'a [u8]),
 }
 
+/// Prix des offres pour la fenêtre Premium (1.3.0), tels que Stripe les a : { month, year, lifetime, trial_days }.
+pub fn plans() -> Result<Value, ApiError> {
+    call("GET", "/plans", None, Body::Empty)
+}
+
 pub(crate) fn agent() -> ureq::Agent {
     ureq::Agent::config_builder()
         .timeout_global(Some(Duration::from_secs(20)))
@@ -220,6 +225,27 @@ impl Account {
         let (token, via) = self.bearer(lic).ok_or("invalid_token")?;
         match call(method, path, Some(&token), body) {
             Ok(res) => Ok(self.state(via, &res)),
+            Err(e) => {
+                if e.code == "invalid_token" && via == "account" {
+                    self.clear();
+                }
+                Err(e)
+            }
+        }
+    }
+
+    /// Abonnement du compte (1.3.0) : offre, essai, prochain paiement ou date de fin, prix. `action` :
+    /// None (lire), "cancel" (plus de renouvellement, Premium reste jusqu'à la date) ou "resume".
+    /// Renvoie l'objet `subscription` du serveur, null sans abonnement.
+    pub fn subscription(&self, lic: &License, action: Option<&str>) -> Result<Value, ApiError> {
+        let (token, via) = self.bearer(lic).ok_or("invalid_token")?;
+        let res = match action {
+            None => call("GET", "/account/subscription", Some(&token), Body::Empty),
+            Some(a @ ("cancel" | "resume")) => call("POST", &format!("/account/subscription/{a}"), Some(&token), Body::Empty),
+            Some(_) => return Err("invalid_request".into()),
+        };
+        match res {
+            Ok(v) => Ok(v.get("subscription").cloned().unwrap_or(Value::Null)),
             Err(e) => {
                 if e.code == "invalid_token" && via == "account" {
                     self.clear();

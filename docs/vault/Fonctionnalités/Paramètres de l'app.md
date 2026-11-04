@@ -2,11 +2,11 @@
 type: fonctionnalité
 tags: [fonctionnalité, app]
 version_app: 1.2.1
-maj: 2026-10-31
+maj: 2026-11-04
 ---
 # Paramètres de l'app
 
-Page Paramètres (`Settings.tsx`). Voir [[App Windows]].
+Page Paramètres (`Settings.tsx`). Voir [[App Windows]]. En 1.3.0 (PR #70), la section du compte montre aussi l'abonnement et permet de le résilier : [[Abonnement dans l'app]].
 
 - **Langue** : anglais (défaut) ou français (tutoiement).
 - **Animations** : complètes ou réduites.

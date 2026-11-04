@@ -1,4 +1,5 @@
 mod account;
+mod analysis;
 mod assets;
 mod background;
 mod backup;
@@ -737,6 +738,30 @@ async fn account_remove_photo(state: State<'_, AppState>) -> Result<account::Acc
     with_account(&state, |acc, lic| acc.remove_photo(lic)).await
 }
 
+/// Abonnement du compte : lire (action absente), "cancel" ou "resume" (1.3.0).
+#[tauri::command]
+async fn account_subscription(state: State<'_, AppState>, action: Option<String>) -> Result<serde_json::Value, license::ApiError> {
+    with_account(&state, move |acc, lic| acc.subscription(lic, action.as_deref())).await
+}
+
+/// « Analyze my PC » (1.3.0) : ce que Windows dit du PC, et la dernière partie suivie par la barre en jeu.
+#[tauri::command]
+async fn analysis_facts(overlay: State<'_, Arc<overlay::Overlay>>) -> Result<serde_json::Value, String> {
+    let last = overlay.last_match();
+    let facts = tauri::async_runtime::spawn_blocking(analysis::facts).await.map_err(|e| e.to_string())?;
+    let mut v = serde_json::to_value(facts).map_err(|e| e.to_string())?;
+    v["lastMatch"] = serde_json::to_value(last).map_err(|e| e.to_string())?;
+    Ok(v)
+}
+
+/// Prix des offres et durée de l'essai, pour la fenêtre Premium (1.3.0).
+#[tauri::command]
+async fn plans_info() -> Result<serde_json::Value, license::ApiError> {
+    tauri::async_runtime::spawn_blocking(account::plans)
+        .await
+        .map_err(|_| license::ApiError::from("server_error"))?
+}
+
 /// Mise à jour téléchargée et vérifiée, prête à installer (null : rien en attente).
 #[tauri::command]
 fn update_ready(state: State<'_, AppState>) -> Option<update::Ready> {
@@ -1164,6 +1189,9 @@ pub fn run() {
             account_set_name,
             account_set_photo,
             account_remove_photo,
+            account_subscription,
+            plans_info,
+            analysis_facts,
         ])
         .build(tauri::generate_context!())
         .expect("erreur au lancement de Rago Optimizer")

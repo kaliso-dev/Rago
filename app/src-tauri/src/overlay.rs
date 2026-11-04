@@ -161,7 +161,9 @@ impl Overlay {
     pub fn new(resource_dir: PathBuf, data_dir: PathBuf, library: Arc<Library>, background: Arc<Background>) -> Self {
         let minimizes = std::fs::read(data_dir.join(KEEP_FILE)).ok().and_then(|b| serde_json::from_slice(&b).ok()).unwrap_or_default();
         let st = St { minimizes, ..St::default() };
-        Overlay { st: Mutex::new(st), fps: Fps::default(), ping: Mutex::default(), resource_dir, data_dir, library, background }
+        let fps = Fps::default();
+        fps.keep_matches_in(data_dir.join("last-match.json"));
+        Overlay { st: Mutex::new(st), fps, ping: Mutex::default(), resource_dir, data_dir, library, background }
     }
 
     fn lock(&self) -> std::sync::MutexGuard<'_, St> {
@@ -170,6 +172,11 @@ impl Overlay {
 
     pub fn mode(&self) -> Mode {
         self.lock().mode.unwrap_or(Mode::Hidden)
+    }
+
+    /// Résumé de la dernière partie suivie (analyse du PC).
+    pub fn last_match(&self) -> Option<crate::fps::MatchSummary> {
+        self.fps.last_match()
     }
 
     pub fn info(&self) -> Info {

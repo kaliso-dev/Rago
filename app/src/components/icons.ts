@@ -1,6 +1,6 @@
 import { createElement } from "react";
 import {
-  Box, Crosshair, FlaskConical, Gamepad2, Gauge, Globe, Gpu, LayoutDashboard, Network, Router, Settings, Shield, Undo2, AppWindow, Wrench, Zap, type LucideIcon,
+  Box, Crosshair, FlaskConical, Gamepad2, Gauge, Globe, Gpu, LayoutDashboard, Network, Router, ScanSearch, Settings, Shield, Undo2, AppWindow, Wrench, Zap, type LucideIcon,
 } from "lucide-react";
 
 export const MODULE_ICONS: Record<string, LucideIcon> = {
@@ -20,6 +20,7 @@ export const MODULE_ICONS: Record<string, LucideIcon> = {
   nettest: Globe,
   netopt: Router,
   tools: Wrench,
+  analysis: ScanSearch,
 };
 
 /** Logo de Discord (Simple Icons, CC0), pour le lien vers le serveur de Rago. */

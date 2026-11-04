@@ -1,4 +1,5 @@
 import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState, type ReactNode } from "react";
+import { markChanged } from "./analysis";
 import { api, asLicenseError, isTauri, type AppliedView, type DoneEvent, type HistoryEntry, type ItemStatus, type LicenseError, type LicenseStatus, type ResetDone, type RunItem, type SystemInfo } from "./api";
 import { autoVariant, availability, catalog, retired, tweakModule, tweaks, type Lang, type Tweak, needsReboot } from "./catalog";
 import { translate, type Key } from "./i18n";
@@ -29,7 +30,7 @@ export const REVERT_RUNS_SCRIPT = new Set(["rbw_mode"]);
 export const undoVariant = (id: string, a: AppliedView | undefined): string | null =>
   REVERT_RUNS_SCRIPT.has(id) && a && !a.windowsValues ? (REVERTS.get(id) ?? a.variant) : (a?.variant ?? null);
 /** « plan » : la carte Free plan ou le bouton Premium d'un module, sans réglage précis. */
-export type Upsell = "tweak" | "plan" | "preset" | "signin" | "slots" | null;
+export type Upsell = "tweak" | "plan" | "preset" | "signin" | "slots" | "analysis" | null;
 
 export const BUILTIN_NAMES: Record<string, { fr: string; en: string }> = {
   __wmic: { fr: "Installer WMIC", en: "Install WMIC" },
@@ -556,6 +557,8 @@ function useStoreValue() {
       ),
       api.onDone((e) => {
         setRun((r) => (r && !r.done ? { ...r, done: e, endedAt: Date.now() } : r));
+        // l'analyse du PC attend une nouvelle mesure pour l'avant/après
+        if (e.ok > 0 && !e.cancelled) markChanged();
         // « Optimiser et jouer » : le jeu démarre une fois les réglages posés, sauf si le joueur a arrêté le lot
         const play = launchAfter.current;
         launchAfter.current = null;
