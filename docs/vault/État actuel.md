@@ -25,11 +25,13 @@ La [[Version 1.2.1]] (refonte en verre, barre en jeu, Packet Optimizer, biblioth
 | Marketing | pas de plan : des vidéos sur TikTok, YouTube et Instagram, faites par Abel ; trailer 1.2 (v4) sans doute jamais publié ; annonces Discord 1.2 postées, en anglais | Sofiene, 01/11 ([[Marketing]]) |
 | [[Client Minecraft Rago]] | projet à part, en cours, va être lancé (client, launcher, cosmétiques) | Sofiene, 01/11 |
 | [[Bot communauté Discord]] | sur `staging` seulement ; à tester puis passer en prod (fil « Passer le bot Discord en prod », RAG-91) | DÉCIDÉ (Sofiene, 01/11) |
-| Version 1.2.2 | en préparation (fil « Sortir l'app 1.2.2 ») : correctif du preset Minecraft PvP, applis préinstallées gratuites, envoi par la mise à jour automatique (RAG-87, RAG-88) | DÉCIDÉ (Sofiene, 01/11) |
+| Version 1.3.0 | **PR #70 vers `staging`, pas fusionnée** : contient la 1.2.2 (preset Minecraft PvP corrigé, applis préinstallées gratuites, commit `29123d4`), la fusion de la branche de prod dans staging, 73 réglages gratuits dont 30 actifs à la fois, connexion à l'app avec Google ou Discord, essai de 3 jours avec carte, site et pages légales à jour. Rien testé sur Windows. Sortir la 1.2.2 seule ou tout ensemble : q47 | CONFIRMÉ (git, 04/11) |
+| [[Conformité juridique]] | pages légales à jour pour l'essai et la connexion (04/11) ; **manquent l'identité et l'adresse du vendeur** : Sofiene n'est pas encore inscrit comme vendeur et a 17 ans (q44, q46, q49) | À RÉGLER par Sofiene |
 | [[Linear]] | remis à jour le 01/11 à partir du vault | CONFIRMÉ |
 | Vault Obsidian | créé le 31/10 ; règle n°1 : il doit correspondre en tout point à l'état du projet | DÉCIDÉ |
 
 ## PR ouvertes (04/11)
+- #70 (vers `staging`) : [[Version 1.3.0]], voir le tableau. À valider par Sofiene avant toute sortie.
 - #69 : charte « Affiche » v2.2 appliquée à la page d'accueil, **aperçu en brouillon** pour décider d'adopter la charte ; ne pas fusionner sans le feu vert de Sofiene ([[Charte graphique]]).
 - Fusionnée le 04/11 : #72 (état des lieux Stripe, [[Ventes Stripe]]), sur « fusionne » de Sofiene.
 - Fusionnée le 01/11 : #68 (ce vault, réponses de Sofiene et Linear remis à jour), sur « fusionne » de Sofiene.
@@ -38,3 +40,5 @@ La [[Version 1.2.1]] (refonte en verre, barre en jeu, Packet Optimizer, biblioth
 ## Ce qui attend Sofiene
 1. Vérifier que les 1.2.0 installées reçoivent bien la 1.2.1 (`/api/v1/update/status`, voir [[Mise à jour automatique]]).
 2. Valider l'e-mail sur la collecte des tests réseau avant son envoi, une fois rédigé ([[Prochaines étapes]]).
+3. Répondre à q47 (1.2.2 seule ou avec la 1.3.0) et q48 (offre débitée après l'essai), puis tester la PR #70 sur staging.
+4. Avant la prod de l'essai : régler l'identité du vendeur ([[Conformité juridique]]) ; `TRIAL_DAYS` est à 3 par défaut sur le serveur, rien à créer dans Stripe.

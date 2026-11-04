@@ -1,7 +1,7 @@
 ---
 type: registre
 tags: [décision]
-maj: 2026-11-01
+maj: 2026-11-04
 ---
 # Décisions
 
@@ -10,6 +10,9 @@ Registre daté des décisions de Sofiene. **La plus récente prime.** Citations 
 ## App et versions
 | Date | Décision | Statut |
 |---|---|---|
+| 04/11 | Plan gratuit élargi : « on va ajouter directement la suite : 50 - 100 tweaks gratuit (laisser les meilleur et les plus demandé en premium surtout network et hitreg) mais seulement 30 slot de tweaks disponible gratuitement a activé simultanement » | EN COURS, PR #70 ([[Offres et prix]]) |
+| 04/11 | Connexion à l'app avec Discord ou Google (« Il faut aussi rajouter le login sur l'app avec discord ou google ») | EN COURS, PR #70 ([[Connexion Google et Discord]]) |
+| 04/11 | Essai Premium : « une possibilité d'essai gratuit de 3jours mais il faut renseigner sa carte et au bout de trois 3 jours ça débite directement il doit résilier pendant la période des 3 jours » ; le site doit l'orienter vers cet essai et être vérifié pour le RGPD | EN COURS, PR #70 ([[Offres et prix]], [[Conformité juridique]]) |
 | 01/11 | Version 1.2.2 : correctif du preset Minecraft PvP + désinstallation des applis préinstallées gratuite, envoyée par la mise à jour automatique (« il faut lancer la correction avec le passage de la désinstallation des app préinstallées en gratuit et mettre à jour grâce à l'auto update ») | EN COURS ([[Prochaines étapes]]) |
 | 01/11 | Bot communauté Discord : « Il faut le tester et le passer en prod » | EN COURS ([[Bot communauté Discord]]) |
 | 01/11 | Anciennes PR #16, #50, #51 et #60 fermées (« si toutes les fonctionnalités sont déjà présentes sur la version actuelle tu peux les fermer ») ; vérifié, branches gardées | exécuté ([[Branches et environnements]]) |

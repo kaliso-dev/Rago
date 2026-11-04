@@ -18,6 +18,8 @@ Mode d'emploi (outil ArtifactData, collection `questions`) :
 ## En attente de réponse sur la page
 q30 à q42 (charte finale, tarifs en verre, PR #69, petites formes du site, 8 tweaks gratuits, essai 7 jours, remboursement 14 jours, accord avant l'envoi du test réseau, classe du setup, parrainage dans l'app, même prix au renouvellement, Packet Optimizer en gratuit, réglages automatiques Premium) : sans réponse au 04/11. q01 à q29 traitées.
 
+- q44 à q49 (04/11) : statut du vendeur (traitée : « Pas encore »), partage de l'argent, adresse des mentions légales, vendeur majeur et compte Stripe, sortie de la 1.2.2, offre débitée après l'essai. Voir [[Conformité juridique]].
+
 ## À demander à Abel (Sofiene ne sait pas)
 - Le partenariat avec le créateur YouTube à 50 % est-il arrêté ? ([[Partenaires et créateurs]])
 - État des vidéos : « Rago tour », « What's new », vidéo principale de l'app ([[Vidéos YouTube]]).
@@ -28,4 +30,4 @@ q30 à q42 (charte finale, tarifs en verre, PR #69, petites formes du site, 8 tw
 - Railway prod a-t-il chargé les bases DB-IP (`/admin/reseau`) ? ([[Proxy]])
 - La clé de mise à jour Tauri est-elle sauvegardée hors du PC ? ([[Clés et secrets]])
 - Remise du profil NVIDIA sur un vrai PC NVIDIA ([[Remise à zéro]]).
-- Identité du vendeur absente des conditions de vente ; TVA (RAG-20 annulée sans raison).
+- Identité du vendeur absente des conditions de vente ; TVA (RAG-20 annulée sans raison) : voir [[Conformité juridique]].

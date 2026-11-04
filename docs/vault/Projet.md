@@ -24,7 +24,7 @@ Vue d'ensemble technique : [[Architecture]].
 ## Carte du vault
 - **Pilotage** : [[État actuel]] · [[Prochaines étapes]] · [[Questions ouvertes]] · [[Journal]]
 - **Règles** : [[Règles de travail]] · [[Décisions]] · [[Clés et secrets]] · [[Mettre à jour le vault]]
-- **Versions** : [[Historique des versions]] · [[Version 1.1.10]] · [[Versions 1.1.11 à 1.1.13]] · [[Version 1.1.14]] · [[Version 1.2.0]] · [[Version 1.2.1]]
+- **Versions** : [[Historique des versions]] · [[Version 1.1.10]] · [[Versions 1.1.11 à 1.1.13]] · [[Version 1.1.14]] · [[Version 1.2.0]] · [[Version 1.2.1]] · [[Version 1.3.0]]
 - **App, écran par écran** : [[Tableau de bord]] · [[Barre en jeu]] · [[Packet Optimizer]] · [[Test réseau]] · [[Bibliothèque de jeux]] · [[Presets]] · [[Page Outils]] · [[RBW Mod]] · [[Mode jeu]] · [[Partage et support]] · [[Paramètres de l'app]] · [[Licence dans l'app]]
 - **App, fonctionnement** : [[Moteur des tweaks]] · [[Remise à zéro]] · [[Réparations au lancement]] · [[Pendant la partie]] · [[Arrière-plan et démarrage]] · [[Mise à jour automatique]]
 - **Tweaks (générés depuis le code)** : [[Catalogue des tweaks]] · [[Tweaks Réseau]] · [[Tweaks Latence]] · [[Tweaks Carte graphique]] · [[Tweaks Windows]] · [[Tweaks Hitreg]] · [[Tweaks Minecraft]] · [[Tweaks RBW Mod]] · [[Tweaks Mode jeu]] · [[Tweaks Mode expert]] · [[Tweaks Restaurer]] · [[Tweaks Presets]] · [[Tweaks retirés]]
@@ -33,7 +33,7 @@ Vue d'ensemble technique : [[Architecture]].
 - **Technique** : [[Architecture]] · [[App Windows]] · [[Serveur de licences]] · [[Site]] · [[Branches et environnements]] · [[Publier une version]] · [[Connexion Google et Discord]]
 - **Design** : [[Charte graphique]] · [[Voix et ton]] · [[Refonte glass]]
 - **Marketing** : [[Marketing]] · [[Discord]] · [[Partenaires et créateurs]] · [[Promotions et affiliation]] · [[Trailer 1.2]] · [[Vidéos YouTube]]
-- **Suivi** : [[Ventes Stripe]] · [[Bugs et incidents]] · [[Problèmes joueurs]] · [[Linear]] · [[Personnes et services]] · [[Sources]]
+- **Suivi** : [[Ventes Stripe]] · [[Conformité juridique]] · [[Bugs et incidents]] · [[Problèmes joueurs]] · [[Linear]] · [[Personnes et services]] · [[Sources]]
 
 ## Statuts utilisés dans les notes
 CONFIRMÉ (vérifié dans une source primaire : code, git, réponse HTTP) · DÉCIDÉ (décision datée de Sofiene) · OBSERVÉ (lu dans un fil ou Linear, non revérifié) · À VÉRIFIER · À DÉCIDER · OBSOLÈTE. **La décision la plus récente de Sofiene prime.**
