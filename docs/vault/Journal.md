@@ -1,7 +1,7 @@
 ---
 type: pilotage
 tags: [journal, chronologie]
-maj: 2026-11-01
+maj: 2026-11-04
 ---
 # Journal
 
@@ -10,6 +10,7 @@ Une ligne par événement marquant, la plus récente en haut. Voir [[Historique 
 ## Novembre 2026
 | Date | Événement | Liens |
 |---|---|---|
+| 04/11 | Stripe connecté à Claude : premier état des lieux des ventes (611,02 $, 33 abonnés, 5 Lifetime) ; prix Stripe conformes au vault | [[Ventes Stripe]] |
 | 01/11 | PR #68 (mises à jour du vault du 31/10 et du 01/11) fusionnée sur « fusionne » | [[Mettre à jour le vault]] |
 | 01/11 | Dernières réponses de Sofiene : acerSHOCK = Abel ; RAG-16, RAG-21 abandonnés ; RAG-76, RAG-84 arrêtés faute de nouvelles des joueurs | [[Linear]], [[Problèmes joueurs]] |
 | 01/11 | Anciennes PR #16, #50, #51, #60 fermées ; [[Linear]] remis à jour (RAG-86 à RAG-91) ; fils « Sortir l'app 1.2.2 » et « Passer le bot Discord en prod » ouverts | [[Prochaines étapes]] |

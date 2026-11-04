@@ -1,7 +1,7 @@
 ---
 type: pilotage
 tags: [pilotage, à-décider, à-vérifier]
-maj: 2026-11-01
+maj: 2026-11-04
 ---
 # Questions ouvertes
 
@@ -16,7 +16,7 @@ Mode d'emploi (outil ArtifactData, collection `questions`) :
 - Dire à Sofiene dans le fil, en une ligne, quand de nouvelles questions l'attendent.
 
 ## En attente de réponse sur la page
-Aucune au 01/11 (q01 à q29 traitées).
+q30 à q42 (charte finale, tarifs en verre, PR #69, petites formes du site, 8 tweaks gratuits, essai 7 jours, remboursement 14 jours, accord avant l'envoi du test réseau, classe du setup, parrainage dans l'app, même prix au renouvellement, Packet Optimizer en gratuit, réglages automatiques Premium) : sans réponse au 04/11. q01 à q29 traitées.
 
 ## À demander à Abel (Sofiene ne sait pas)
 - Le partenariat avec le créateur YouTube à 50 % est-il arrêté ? ([[Partenaires et créateurs]])

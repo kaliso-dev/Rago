@@ -19,7 +19,7 @@ Retour à [[Projet]]. Aucun identifiant ni secret ici ([[Clés et secrets]]).
 | Netlify | [[Site]] (prod, staging, aperçus) |
 | Railway | [[Serveur de licences]] prod et staging |
 | Supabase | Postgres + buckets privés `downloads` (exe) et `avatars` ; projet séparé `rago-staging` |
-| Stripe | abonnements, Lifetime, codes promo, portail client (live depuis le 10/10) |
+| Stripe | abonnements, Lifetime, codes promo, portail client (live depuis le 10/10) ; accessible à Claude en lecture depuis le 04/11 ([[Ventes Stripe]]) |
 | Resend | emails `noreply@rago-optimizer.com` |
 | OVH | domaine `rago-optimizer.com`, DNS, boîte Zimbra `support@rago-optimizer.com` |
 | DB-IP | ville et fournisseur des tests réseau ([[Proxy]]) |

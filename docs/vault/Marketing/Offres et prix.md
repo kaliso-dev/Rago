@@ -1,7 +1,7 @@
 ---
 type: produit
 tags: [marketing, produit, prix]
-maj: 2026-11-01
+maj: 2026-11-04
 ---
 # Offres et prix
 
@@ -16,4 +16,6 @@ Prix en **USD**, paiement Stripe sur le [[Site]], **1 licence = 1 PC**. Voir [[M
 - Plan gratuit : `app/src/data/free.json`, vérifié aussi par le moteur Rust. Règle : rien de Latence, Réseau, Hitreg ni Minecraft en gratuit, et pas les meilleurs tweaks (« sinon ils n'ont plus aucune raison d'acheter »).
 - Lifetime : demandé à 69,99 $ le 16/10, livré à 59,99 $ ; **59,99 $ confirmé par Sofiene le 31/10** (« c'est normal »).
 - Historique : achat unique (04/10) → abonnement (05/10) → 5,99 / 29,99 (07/10) → Lifetime ajouté (16/10).
+- **Dans Stripe (04/11, CONFIRMÉ)** : un seul produit actif, « Rago Optimizer Premium », avec trois prix actifs en USD : 5,99 $/mois, 29,99 $/an et 59,99 $ en paiement unique (Lifetime). Aucune période d'essai sur les prix. Le compte garde aussi deux anciens produits archivés de sites web « Kaliso » (sans lien avec Rago).
+- Ventes, abonnés, résiliations : [[Ventes Stripe]].
 - Codes, affiliation, récompenses : [[Promotions et affiliation]].
