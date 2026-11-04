@@ -10,6 +10,7 @@ Une ligne par événement marquant, la plus récente en haut. Voir [[Historique 
 ## Novembre 2026
 | Date | Événement | Liens |
 |---|---|---|
+| 04/11 | Proxy relancé par Sofiene ; analyse des tests réseau et recommandation d'achat chiffrée (Vultr) | [[Proxy]] |
 | 04/11 | PR #72 (état des lieux Stripe) fusionnée sur « fusionne » | [[Ventes Stripe]] |
 | 04/11 | Stripe connecté à Claude : premier état des lieux des ventes (611,02 $, 33 abonnés, 5 Lifetime) ; prix Stripe conformes au vault | [[Ventes Stripe]] |
 | 01/11 | PR #68 (mises à jour du vault du 31/10 et du 01/11) fusionnée sur « fusionne » | [[Mettre à jour le vault]] |

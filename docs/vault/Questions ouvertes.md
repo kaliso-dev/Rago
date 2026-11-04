@@ -16,7 +16,7 @@ Mode d'emploi (outil ArtifactData, collection `questions`) :
 - Dire à Sofiene dans le fil, en une ligne, quand de nouvelles questions l'attendent.
 
 ## En attente de réponse sur la page
-q30 à q42 (charte finale, tarifs en verre, PR #69, petites formes du site, 8 tweaks gratuits, essai 7 jours, remboursement 14 jours, accord avant l'envoi du test réseau, classe du setup, parrainage dans l'app, même prix au renouvellement, Packet Optimizer en gratuit, réglages automatiques Premium) : sans réponse au 04/11. q01 à q29 traitées.
+Ouvertes au 04/11 : q36 (remboursement 14 jours), q37 (accord avant l'envoi du test réseau), q39 (parrainage dans l'app), q40 (même prix au renouvellement), q41 (Packet Optimizer en gratuit), q45 à q50 (partage des ventes, mentions légales, sortie de la 1.2.2, offre après l'essai, vendeur majeur et Stripe, seuils de l'Analyse du PC), q51 (proxy gratuit ou Premium). Les autres sont traitées.
 
 ## À demander à Abel (Sofiene ne sait pas)
 - Le partenariat avec le créateur YouTube à 50 % est-il arrêté ? ([[Partenaires et créateurs]])

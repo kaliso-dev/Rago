@@ -1,7 +1,7 @@
 ---
 type: registre
 tags: [décision]
-maj: 2026-11-01
+maj: 2026-11-04
 ---
 # Décisions
 
@@ -18,7 +18,7 @@ Registre daté des décisions de Sofiene. **La plus récente prime.** Citations 
 | 01/11 | Connexion à l'app avec Google ou Discord (« c'est important en effet ») | PRÉVU ([[Connexion Google et Discord]]) |
 | 01/11 | Les outils restent gratuits (« c'est des outils indispensables »), y compris la désinstallation des applis préinstallées (« Oui, tout gratuit ») | DÉCIDÉ ([[Page Outils]]) |
 | 01/11 | Signature de code de l'exe : prévue, pas avant d'avoir le budget | PRÉVU ([[App Windows]]) |
-| 01/11 | Proxy : pas de mesure proxy → serveur de jeu pour l'instant (« pas maintenant ») | EN PAUSE ([[Proxy]]) |
+| 04/11 | Proxy relancé : « maintenant je veux qu'on développe les proxy » ; l'app propose le meilleur proxy après le test réseau (remplace le « pas maintenant » du 01/11) | EN COURS ([[Proxy]]) |
 | 31/10 | **Règle n°1 : le vault doit correspondre en tout point à l'état actuel du projet** ; chaque Claude détecte les changements et abandons, met à jour ou supprime, et demande en cas de doute | DÉCIDÉ ([[Mettre à jour le vault]]) |
 | 31/10 | Le futur OS de Sofiene (développé sur un autre compte Claude, hors de ce dépôt) sera personnalisé plus tard avec la DA de Rago Optimizer, sur sa demande | PRÉVU ([[Prochaines étapes]], [[Charte graphique]]) |
 | 31/10 | 1.2.1 déposée dans Supabase par Sofiene | exécuté ([[Version 1.2.1]]) |
