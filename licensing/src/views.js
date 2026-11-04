@@ -348,7 +348,7 @@ function affiliateLine(a) {
   return next;
 }
 
-export function dashboardPage(cfg, { user, license, device, notice, error, canReset, nextResetAt, affiliate, discordLink, discordRewards = [], inviteRewards = [], review = null, lifetime = false, noPassword = false }) {
+export function dashboardPage(cfg, { user, license, device, notice, error, canReset, nextResetAt, affiliate, discordLink, discordRewards = [], inviteRewards = [], review = null, lifetime = false, noPassword = false, trial = false }) {
   const active = license?.status === 'active';
   const reason = license?.status_reason;
   const ended = !active && reason === 'subscription_ended';
@@ -578,6 +578,11 @@ export function dashboardPage(cfg, { user, license, device, notice, error, canRe
       line = `Canceled. Premium keeps working until ${end ? fmtDate(end) : 'the end of the period'}, then Rago Optimizer goes back to the free version and puts back its tweaks.`;
       badge = html`<span class="badge badge-wait"><i></i>Ends ${end ? fmtDate(end) : 'soon'}</span>`;
       actions = html`${portalButton('Keep Premium', 'btn-primary')}`;
+    } else if (trial) {
+      // Free trial (2026-11-04): the first payment and how to avoid it, in plain words
+      line = `Free trial. Your card is charged on ${end ? fmtDate(end) : 'the last day'}, unless you cancel before. Cancel anytime: you pay nothing.`;
+      badge = html`<span class="badge badge-wait"><i></i>Trial until ${end ? fmtDate(end) : 'soon'}</span>`;
+      actions = portalButton('Cancel trial or manage');
     } else {
       line = end ? `Renews on ${fmtDate(end)}. Cancel anytime.` : 'Renews automatically. Cancel anytime.';
     }

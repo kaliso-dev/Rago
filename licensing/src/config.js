@@ -61,6 +61,9 @@ export function loadConfig(env = process.env) {
     stripeWebhookSecret: (env.STRIPE_WEBHOOK_SECRET || '').trim(),
     // Subscription prices (recurring). STRIPE_PRICE_ID = the old one-time price, no longer sold (Lifetime has its own below).
     stripePriceMonthly: (env.STRIPE_PRICE_MONTHLY || '').trim(),
+    // Free trial (Sofiene, 2026-11-04): days free before the first payment, card asked at checkout, charged at the end
+    // unless canceled. One per person (card or email). 0 = no trial anywhere.
+    trialDays: (() => { const n = Number(String(env.TRIAL_DAYS ?? '3').trim() || '3'); return Number.isInteger(n) && n >= 0 && n <= 30 ? n : 3; })(),
     stripePriceYearly: (env.STRIPE_PRICE_YEARLY || '').trim(),
     stripePriceId: (env.STRIPE_PRICE_ID || '').trim(),
     // Lifetime (2026-10-16): its own one-time price, Premium for life in one payment. Never one of the prices above.

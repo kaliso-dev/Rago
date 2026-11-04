@@ -298,6 +298,19 @@ CREATE TABLE IF NOT EXISTS network_results (
   PRIMARY KEY (report_id, target)
 );
 
+-- Free trial (2026-11-04): 3 days with a card, charged at the end unless canceled. One per person: a second trial with
+-- the same card or the same email is charged right away (billing.js, settleTrial).
+CREATE TABLE IF NOT EXISTS trials (
+  subscription_id TEXT PRIMARY KEY,
+  email TEXT NOT NULL,                            -- lowercase
+  card_fingerprint TEXT,                          -- Stripe's card fingerprint, the same for the same card everywhere
+  license_id TEXT,
+  started_at BIGINT NOT NULL,
+  charged_now BOOLEAN NOT NULL DEFAULT FALSE      -- already had a trial: no free days
+);
+CREATE INDEX IF NOT EXISTS trials_email ON trials (email);
+CREATE INDEX IF NOT EXISTS trials_card ON trials (card_fingerprint);
+
 ALTER TABLE users ENABLE ROW LEVEL SECURITY;
 ALTER TABLE web_sessions ENABLE ROW LEVEL SECURITY;
 ALTER TABLE licenses ENABLE ROW LEVEL SECURITY;
@@ -322,3 +335,4 @@ ALTER TABLE signup_codes ENABLE ROW LEVEL SECURITY;
 ALTER TABLE oauth_identities ENABLE ROW LEVEL SECURITY;
 ALTER TABLE network_reports ENABLE ROW LEVEL SECURITY;
 ALTER TABLE network_results ENABLE ROW LEVEL SECURITY;
+ALTER TABLE trials ENABLE ROW LEVEL SECURITY;

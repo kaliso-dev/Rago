@@ -12,7 +12,7 @@ import { createHash, createHmac, randomBytes, timingSafeEqual } from 'node:crypt
 import { DUMMY_HASH, maskLicenseKey, randomToken, signValue, unsignValue, verifyPassword } from './crypto.js';
 import { DeviceError, parseDevice, sameDevice } from './fingerprint.js';
 import { signToken, verifyToken } from './tokens.js';
-import { billingPortal, createCheckout, endTestLicenses, ensureAffiliatePromo, findPromotionCode, handleStripeEvent, isRagoCheckout, lifetimePrice, stopReplacedSubscriptions, stripeChecks, stripeMode, syncPromoActive } from './billing.js';
+import { billingPortal, createCheckout, settleTrial, withTrial, endTestLicenses, ensureAffiliatePromo, findPromotionCode, handleStripeEvent, isRagoCheckout, lifetimePrice, stopReplacedSubscriptions, stripeChecks, stripeMode, syncPromoActive } from './billing.js';
 import * as A from './affiliates.js';
 import { createInstaller } from './installer.js';
 import { createGeo } from './geo.js';
@@ -425,7 +425,12 @@ export function createApp({ cfg, db, keys, stripe, mailer, log = console, fetchI
     }
     const interval = c.req.query('interval') === 'year' ? 'year' : c.req.query('interval') === 'month' ? 'month' : undefined;
     const trialEnd = reward ? Math.floor(Number(reward.current_period_end) / 1000) : null;
-    const session = await createCheckout(stripe, cfg, user, { interval, customerId: previous?.stripe_customer_id, ref, promotionCode, trialEnd }, log);
+    // Free trial (?trial=1, 2026-11-04): for a first Premium only. A signed-in account that already had a license or a
+    // trial pays from the start; one that isn't signed in is checked by card and email once the checkout is done.
+    const hadPremium = user && (await db.get('SELECT 1 FROM licenses WHERE user_id = ? LIMIT 1', [user.id])
+      || await db.get('SELECT 1 FROM trials WHERE email = ? LIMIT 1', [user.email]));
+    const trial = c.req.query('trial') === '1' && !reward && !hadPremium;
+    const session = await createCheckout(stripe, cfg, user, { interval, customerId: previous?.stripe_customer_id, ref, promotionCode, trialEnd, trial }, log);
     return c.redirect(session.url, 303);
   }
 
@@ -448,7 +453,9 @@ export function createApp({ cfg, db, keys, stripe, mailer, log = console, fetchI
           : 'Your bank is still confirming the payment. Refresh this page in a few minutes to create your account, or ask on Discord with your receipt.',
         action: { href: c.req.url, label: 'Refresh' } }));
     }
-    if (out.created) await sendClaimEmail(out.license, out.claimToken);
+    // Free trial: one per person, settled here too when the webhook hasn't come yet (the email says when the first payment comes)
+    const trial = await settleTrial(db, stripe, session, session.subscription, out.license, log);
+    if (out.created) await sendClaimEmail(withTrial(out.license, session, session.subscription, trial), out.claimToken);
 
     const user = await currentUser(c);
     if (out.license.user_id) {
@@ -813,6 +820,9 @@ export function createApp({ cfg, db, keys, stripe, mailer, log = console, fetchI
     const [kind, text] = NOTICES[c.req.query('n')] || [];
     return c.html(V.dashboardPage(cfg, {
       user, license, device, discordLink, discordRewards, inviteRewards: discord?.rewards || [], noPassword: !L.hasPassword(user),
+      // free trial running (2026-11-04): until its end, the period end is the first payment
+      trial: !!(license?.stripe_subscription_id && Number(license.current_period_end) > Date.now()
+        && await db.get('SELECT 1 FROM trials WHERE subscription_id = ? AND NOT charged_now AND started_at > ?', [license.stripe_subscription_id, Date.now() - Math.max(cfg.trialDays, 1) * 86400 * 1000 - 3600 * 1000])),
       notice: kind === 'notice' ? text : null, error: kind === 'error' ? text : null,
       ...(license ? resetWindow(license, device) : {}),
       affiliate: await A.affiliateSummary(db, cfg, user.id),

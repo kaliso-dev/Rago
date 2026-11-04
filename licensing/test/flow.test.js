@@ -11,6 +11,7 @@ import { applySchema, claimDatabase, ensureKeys, openDb, openMemoryDb } from '..
 import pg from 'pg';
 import { loadKeys, verifyToken } from '../src/tokens.js';
 import { createApp } from '../src/app.js';
+import { purgeOldRecords } from '../src/retention.js';
 import { createMailer } from '../src/mailer.js';
 import * as L from '../src/licensing.js';
 import * as P from '../src/profile.js';
@@ -3054,4 +3055,87 @@ test('app sign-in through the browser: a free account gets no_license, an old li
   } finally {
     Date.now = realNow;
   }
+});
+
+// ---------- Free trial: 3 days with a card, one per person (2026-11-04) ----------
+
+test('free trial: 3 days with the card asked, first Premium only, a second trial with the same card is charged now', async () => {
+  const SUBS = { STRIPE_PRICE_MONTHLY: 'price_month', STRIPE_PRICE_YEARLY: 'price_year' };
+  const t = await setup(SUBS);
+  t.stripe.paymentMethods = { retrieve: async (id) => ({ id, card: { fingerprint: id === 'pm_b' ? 'fp_other' : 'fp_same' } }) };
+  assert.equal(t.cfg.trialDays, 3);
+
+  // /buy?trial=1: a trial checkout that always asks for the card
+  assert.match((await t.browse('/buy?interval=month&trial=1')).headers.get('location'), /checkout\.stripe\.com/);
+  const params = t.created.at(-1);
+  assert.equal(params.mode, 'subscription');
+  assert.equal(params.payment_method_collection, 'always');
+  assert.equal(params.subscription_data.trial_period_days, 3);
+  assert.deepEqual(params.subscription_data.trial_settings, { end_behavior: { missing_payment_method: 'cancel' } });
+  assert.equal(params.metadata.trial, '3');
+  assert.match(params.custom_text.submit.message, /3 days free, then your card is charged on .+ Cancel anytime before/);
+  // without ?trial=1: paid from the start
+  await t.browse('/buy?interval=month');
+  assert.equal(t.created.at(-1).subscription_data.trial_period_days, undefined);
+
+  // The trial checkout is done: nothing paid, license active, the email says when the first payment comes.
+  const trialSub = (id, pm) => t.subscription(id, 'month', { status: 'trialing', periodDays: 3, default_payment_method: pm,
+    items: { data: [{ price: { id: 'price_month', unit_amount: 599, currency: 'usd', recurring: { interval: 'month' } }, current_period_end: Math.floor(Date.now() / 1000) + 3 * 86400 }] } });
+  const first = t.paidSession('cs_trial1', 'new@trial.io', { mode: 'subscription', payment_status: 'no_payment_required', amount_total: 0, payment_intent: null,
+    subscription: trialSub('sub_t1', 'pm_a'), metadata: { interval: 'month', trial: '3' } });
+  await t.webhook('checkout.session.completed', first);
+  const lic = await t.db.get("SELECT * FROM licenses WHERE stripe_session_id = 'cs_trial1'");
+  assert.equal(lic.status, 'active');
+  assert.equal(t.stripeCalls.filter(([k]) => k === 'update').length, 0);
+  assert.equal((await t.db.get("SELECT COUNT(*)::int AS n FROM trials WHERE email = 'new@trial.io' AND NOT charged_now")).n, 1);
+
+  // Same card, other email: no free days, the trial ends now (Stripe charges the first month).
+  const again = t.paidSession('cs_trial2', 'alt@trial.io', { mode: 'subscription', payment_status: 'no_payment_required', amount_total: 0, payment_intent: null,
+    subscription: trialSub('sub_t2', 'pm_a'), metadata: { interval: 'month', trial: '3' } });
+  await t.webhook('checkout.session.completed', again);
+  assert.deepEqual(t.stripeCalls.find(([k, id]) => k === 'update' && id === 'sub_t2')?.[2], { trial_end: 'now', proration_behavior: 'none' });
+  assert.equal((await t.db.get("SELECT charged_now FROM trials WHERE subscription_id = 'sub_t2'")).charged_now, true);
+
+  // Same email, other card: charged now too.
+  const third = t.paidSession('cs_trial3', 'new@trial.io', { mode: 'subscription', payment_status: 'no_payment_required', amount_total: 0, payment_intent: null,
+    subscription: trialSub('sub_t3', 'pm_b'), metadata: { interval: 'month', trial: '3' } });
+  await t.webhook('checkout.session.completed', third);
+  assert.ok(t.stripeCalls.some(([k, id]) => k === 'update' && id === 'sub_t3'));
+
+  // A signed-in account that had Premium (or a trial) gets no trial at checkout.
+  await t.browse('/signup', { form: { email: 'old@trial.io', password: 'password123' } });
+  await t.db.run("INSERT INTO trials (subscription_id, email, started_at) VALUES ('sub_old', 'old@trial.io', 1)");
+  await t.browse('/buy?interval=year&trial=1');
+  assert.equal(t.created.at(-1).subscription_data.trial_period_days, undefined);
+
+  // TRIAL_DAYS=0: no trial anywhere
+  const off = await setup({ ...SUBS, TRIAL_DAYS: '0' });
+  await off.browse('/buy?interval=month&trial=1');
+  assert.equal(off.created.at(-1).subscription_data.trial_period_days, undefined);
+});
+
+test('free trial: the account page says when the first payment comes', async () => {
+  const t = await setup({ STRIPE_PRICE_MONTHLY: 'price_month' });
+  t.stripe.paymentMethods = { retrieve: async (id) => ({ id, card: { fingerprint: 'fp_dash' } }) };
+  const sub = t.subscription('sub_dash', 'month', { status: 'trialing', periodDays: 3, default_payment_method: 'pm_x' });
+  const s = t.paidSession('cs_dash', 'dash@trial.io', { mode: 'subscription', payment_status: 'no_payment_required', amount_total: 0, payment_intent: null, subscription: sub, metadata: { interval: 'month', trial: '3' } });
+  await t.webhook('checkout.session.completed', s);
+  await t.browse('/checkout/success?session_id=cs_dash');
+  await t.browse('/signup', { form: { email: 'dash@trial.io', password: 'password123' } });
+  const page = await (await t.browse('/account')).text();
+  assert.match(page, /Free trial\. Your card is charged on .+, unless you cancel before/);
+  assert.match(page, /Cancel trial or manage/);
+});
+
+test('retention: security log and Discord leavers after 12 months, free trials after 2 years, subscription markers kept', async () => {
+  const t = await setup();
+  const DAY = 86400000, now = Date.now();
+  await t.db.run("INSERT INTO audit (at, type) VALUES (?, 'device.blocked'), (?, 'license.subscription_stopped'), (?, 'device.activated')", [now - 400 * DAY, now - 400 * DAY, now - 10 * DAY]);
+  await t.db.run("INSERT INTO trials (subscription_id, email, started_at) VALUES ('sub_old', 'a@b.c', ?), ('sub_new', 'd@e.f', ?)", [now - 800 * DAY, now - 100 * DAY]);
+  await t.db.run("INSERT INTO discord_joins (id, discord_id, joined_at, left_at, source, first_join, account_created_at) VALUES ('dj_1', '1', 1, ?, 'unknown', true, 1), ('dj_2', '2', 1, NULL, 'unknown', true, 1)", [now - 400 * DAY]);
+  await purgeOldRecords(t.db, now);
+  assert.deepEqual((await t.db.all('SELECT id FROM discord_joins')).map(r => r.id), ['dj_2']);
+  const types = (await t.db.all("SELECT type FROM audit WHERE type IN ('device.blocked', 'license.subscription_stopped', 'device.activated') ORDER BY type")).map(r => r.type);
+  assert.deepEqual(types, ['device.activated', 'license.subscription_stopped']);
+  assert.deepEqual((await t.db.all('SELECT subscription_id FROM trials')).map(r => r.subscription_id), ['sub_new']);
 });
