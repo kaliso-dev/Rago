@@ -1,7 +1,7 @@
 ---
 type: technique
 tags: [technique, git, déploiement]
-maj: 2026-11-01
+maj: 2026-11-04
 ---
 # Branches et environnements
 
@@ -10,7 +10,7 @@ Règle : **staging d'abord, prod après validation** ([[Règles de travail]]).
 | Branche | Rôle | État 01/11 |
 |---|---|---|
 | `claude/rago-monorepo-initial-eyj6pq` | **Prod et branche par défaut** : Netlify (site) et Railway (serveur) déploient depuis elle | site + serveur à jour pour la 1.2.1 ; code app encore 1.1.14 |
-| `staging` | Pré-production (site staging Netlify, serveur `rago-staging`, Supabase `rago-staging`, Stripe test) | app **1.2.1** |
+| `staging` | Pré-production (site staging Netlify, serveur `rago-staging`, Supabase `rago-staging`, Stripe test) | app **1.3.0** depuis le 04/11 (PR #70), avec le site et le serveur de prod fusionnés |
 | `claude/app-redesign-glass-z5m1c8` | Branche de travail de la 1.2 (PR #58, #62, #63, #66) | fusionnée |
 | `claude/project-thread-vvpy7b` | Rago OS (PR #60), abandonné le 31/10 ([[Décisions]]) | PR fermée le 01/11, branche gardée |
 | `claude/auto-reset-tweaks-3ti5yy`, `claude/project-thread-8oenwk`, `claude/reset-on-signout-uninstall`, `claude/project-thread-uy8yf3` | 1.1.10 et 1.1.11-1.1.13 | PR #16, #50, #51 fermées le 01/11 (fonctions présentes dans la 1.2.1) ; branches à garder ([[Versions 1.1.11 à 1.1.13]]) |

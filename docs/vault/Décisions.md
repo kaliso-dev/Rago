@@ -10,6 +10,7 @@ Registre daté des décisions de Sofiene. **La plus récente prime.** Citations 
 ## App et versions
 | Date | Décision | Statut |
 |---|---|---|
+| 04/11 | Fusionner la PR #70 dans staging pour tout tester (choix « Oui, fusionner dans staging ») | FAIT ([[Version 1.3.0]]) |
 | 04/11 | Fonctions de la maquette « Fonctions gardées de la maquette de l'app » : « Il faut rajouter ses fonctionnalités » (analyse du PC, avant/après, fenêtre Premium avec les prix, résiliation dans l'app) | EN COURS, PR #70 ([[Analyse du PC]], [[Abonnement dans l'app]]) |
 | 04/11 | Plan gratuit élargi : « on va ajouter directement la suite : 50 - 100 tweaks gratuit (laisser les meilleur et les plus demandé en premium surtout network et hitreg) mais seulement 30 slot de tweaks disponible gratuitement a activé simultanement » | EN COURS, PR #70 ([[Offres et prix]]) |
 | 04/11 | Connexion à l'app avec Discord ou Google (« Il faut aussi rajouter le login sur l'app avec discord ou google ») | EN COURS, PR #70 ([[Connexion Google et Discord]]) |

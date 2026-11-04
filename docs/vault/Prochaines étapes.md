@@ -9,8 +9,8 @@ Liste priorisée au 01/11. Rien ne se lance sans la demande de Sofiene ([[Règle
 
 ## Maintenant
 1. La [[Version 1.2.1]] est en ligne (31/10) : vérifier que les 1.2.0 se mettent à jour seules ([[Mise à jour automatique]]).
-2. **[[Version 1.3.0]]** (PR #70, 04/11) : contient la 1.2.2 ci-dessous, plus le plan gratuit à 73 réglages (30 actifs), la connexion à l'app avec Google ou Discord (RAG-90) et l'essai de 3 jours. À tester sur staging par Sofiene ; q47 et q48 en attente.
-   **Version 1.2.2**, incluse dans la PR #70 (Sofiene, 01/11 : « il faut lancer la correction avec le passage de la désinstallation des app préinstallées en gratuit et mettre à jour grâce à l'auto update ») :
+2. **[[Version 1.3.0]]** (sur `staging` depuis le 04/11) : contient la 1.2.2 ci-dessous, plus le plan gratuit à 73 réglages (30 actifs), la connexion à l'app avec Google ou Discord (RAG-90) et l'essai de 3 jours. À tester sur staging par Sofiene ; q47 et q48 en attente.
+   **Version 1.2.2**, incluse dans la 1.3.0 sur staging (Sofiene, 01/11 : « il faut lancer la correction avec le passage de la désinstallation des app préinstallées en gratuit et mettre à jour grâce à l'auto update ») :
    - corriger le preset Minecraft PvP (RAG-87) : curseur perdu en plein écran après « Optimize and play » (suspect : `win_fullscreen`, présent aussi dans les presets FPS max, PC portable et des jeux compétitifs) et ping instable (`ping_packets: hitreg` qui chevauche le [[Packet Optimizer]]). Cause à vérifier d'abord ([[Problèmes joueurs]], [[Presets]]) ;
    - désinstallation des applis préinstallées gratuite (RAG-88, [[Page Outils]]) ;
    - staging, puis prod après validation de Sofiene, distribuée par la [[Mise à jour automatique]].
