@@ -1,6 +1,7 @@
 // Accounts, licenses and the one-device lock. Pure database logic, no HTTP.
 import { audit } from './db.js';
-import { hashPassword, newId, newLicenseKey, randomToken, sha256 } from './crypto.js';
+import { randomInt } from 'node:crypto';
+import { hashPassword, newId, newLicenseKey, randomToken, safeEqual, sha256 } from './crypto.js';
 import { sameDevice } from './fingerprint.js';
 
 const DAY = 24 * 60 * 60 * 1000;
@@ -20,9 +21,10 @@ const normEmail = (email) => String(email).trim().toLowerCase();
 export const findUserByEmail = (db, email) => db.get('SELECT * FROM users WHERE email = ?', [normEmail(email)]);
 export const getUser = (db, id) => db.get('SELECT * FROM users WHERE id = ?', [id]);
 
-export async function createUser(db, email, password) {
+/** passwordHash: already hashed (a sign-up checked by email code), or NO_PASSWORD (Google, Discord). */
+export async function createUser(db, email, password, { passwordHash = null } = {}) {
   const id = newId('usr');
-  const hash = await hashPassword(password);
+  const hash = passwordHash || await hashPassword(password);
   await db.run('INSERT INTO users (id, email, password_hash, created_at) VALUES (?, ?, ?, ?)', [id, normEmail(email), hash, Date.now()]);
   await audit(db, 'user.created', { userId: id });
   return getUser(db, id);
@@ -95,6 +97,99 @@ export async function consumePasswordReset(db, token) {
     WHERE token_hash = ? AND used_at IS NULL AND expires_at > ? RETURNING user_id`,
   [Date.now(), sha256(String(token)), Date.now()]);
   return row?.user_id ?? null;
+}
+
+// ---------- Email check at sign-up (2026-10-25) ----------
+// The account only exists once the 6-digit code mailed to the address is typed: no account on a mistyped email.
+
+export const SIGNUP_CODE_TTL = 15 * 60 * 1000;
+export const SIGNUP_CODE_TRIES = 5;
+const signupCodeHash = (id, code) => sha256(`${id}:${code}`);
+const newSignupCode = () => String(randomInt(0, 1000000)).padStart(6, '0');
+
+/** Waits for the code: returns { id, code }. A new sign-up with the same email replaces the earlier one. */
+export async function startSignup(db, email, password) {
+  const id = newId('sgn');
+  const code = newSignupCode();
+  const passwordHash = await hashPassword(password);
+  const now = Date.now();
+  await db.tx(async (t) => {
+    await t.run('DELETE FROM signup_codes WHERE email = ? OR expires_at < ?', [normEmail(email), now - DAY]);
+    await t.run('INSERT INTO signup_codes (id, email, password_hash, code_hash, sent_at, expires_at, created_at) VALUES (?, ?, ?, ?, ?, ?, ?)',
+      [id, normEmail(email), passwordHash, signupCodeHash(id, code), now, now + SIGNUP_CODE_TTL, now]);
+  });
+  return { id, code };
+}
+
+/** The sign-up waiting for its code, or null (unknown, or over a day old). */
+export const pendingSignup = (db, id) => db.get('SELECT * FROM signup_codes WHERE id = ? AND created_at > ?', [String(id || ''), Date.now() - DAY]);
+
+/** A new code for the same sign-up (the old one stops working, the tries start again). Returns { email, code } or null. */
+export async function resendSignupCode(db, id) {
+  const code = newSignupCode();
+  const now = Date.now();
+  const row = await db.get(`UPDATE signup_codes SET code_hash = ?, attempts = 0, sent_at = ?, expires_at = ?
+    WHERE id = ? AND created_at > ? RETURNING email`, [signupCodeHash(id, code), now, now + SIGNUP_CODE_TTL, String(id || ''), now - DAY]);
+  return row ? { email: row.email, code } : null;
+}
+
+/**
+ * Checks the typed code. Returns { signup } (the row, now used up) or { error }: wrong | expired | locked | gone.
+ * Every try counts before the comparison, so parallel guesses can't go past SIGNUP_CODE_TRIES.
+ */
+export async function checkSignupCode(db, id, code) {
+  const row = await db.get(`UPDATE signup_codes SET attempts = attempts + 1 WHERE id = ? AND created_at > ? RETURNING *`, [String(id || ''), Date.now() - DAY]);
+  if (!row) return { error: 'gone' };
+  if (row.attempts > SIGNUP_CODE_TRIES) return { error: 'locked' };
+  if (row.expires_at < Date.now()) return { error: 'expired' };
+  const typed = String(code || '').replace(/\D/g, '');
+  if (typed.length !== 6 || !safeEqual(signupCodeHash(row.id, typed), row.code_hash)) {
+    return { error: row.attempts >= SIGNUP_CODE_TRIES ? 'locked' : 'wrong', left: SIGNUP_CODE_TRIES - row.attempts };
+  }
+  // Used once: a second post of the same form finds nothing.
+  const used = await db.get('DELETE FROM signup_codes WHERE id = ? RETURNING *', [row.id]);
+  return used ? { signup: used } : { error: 'gone' };
+}
+
+// ---------- Google and Discord sign-in (2026-10-25) ----------
+
+/** password_hash of an account made with Google or Discord: no password matches it (verifyPassword wants scrypt$). */
+export const NO_PASSWORD = 'none';
+export const hasPassword = (user) => String(user?.password_hash || '').startsWith('scrypt$');
+
+export class SignInError extends Error {
+  constructor(code) {
+    super(code);
+    this.code = code;
+  }
+}
+
+/**
+ * The Rago account for a Google or Discord account: the one already linked to it, else the account with the same
+ * email (only an email the provider checked), else a new account without a password. Returns { user, created }.
+ * profile: { subject, email, verified }. Throws SignInError: unverified_email | other_account.
+ */
+export async function userForIdentity(db, provider, profile, { retry = true } = {}) {
+  const linked = await db.get('SELECT u.* FROM oauth_identities i JOIN users u ON u.id = i.user_id WHERE i.provider = ? AND i.subject = ?', [provider, String(profile.subject)]);
+  if (linked) return { user: linked, created: false };
+  const email = normEmail(profile.email || '');
+  if (!email || !profile.verified) throw new SignInError('unverified_email');
+  try {
+    return await db.tx(async (t) => {
+      let user = await findUserByEmail(t, email);
+      const created = !user;
+      if (created) user = await createUser(t, email, null, { passwordHash: NO_PASSWORD });
+      // This Rago account already signs in with another account of the same provider.
+      if (await t.get('SELECT 1 FROM oauth_identities WHERE user_id = ? AND provider = ?', [user.id, provider])) throw new SignInError('other_account');
+      await t.run('INSERT INTO oauth_identities (provider, subject, user_id, email, created_at) VALUES (?, ?, ?, ?, ?)', [provider, String(profile.subject), user.id, email, Date.now()]);
+      await audit(t, 'user.oauth_linked', { userId: user.id, detail: { provider, created } });
+      return { user, created };
+    });
+  } catch (err) {
+    // Two sign-ins at once (double click): the other one made the account or the link, take it.
+    if (err.code === '23505' && retry) return userForIdentity(db, provider, profile, { retry: false });
+    throw err;
+  }
 }
 
 // ---------- Licenses ----------

@@ -61,6 +61,9 @@ export function loadConfig(env = process.env) {
     stripeWebhookSecret: (env.STRIPE_WEBHOOK_SECRET || '').trim(),
     // Subscription prices (recurring). STRIPE_PRICE_ID = the old one-time price, no longer sold (Lifetime has its own below).
     stripePriceMonthly: (env.STRIPE_PRICE_MONTHLY || '').trim(),
+    // Free trial (Sofiene, 2026-11-04): days free before the first payment, card asked at checkout, charged at the end
+    // unless canceled. One per person (card or email). 0 = no trial anywhere.
+    trialDays: (() => { const n = Number(String(env.TRIAL_DAYS ?? '3').trim() || '3'); return Number.isInteger(n) && n >= 0 && n <= 30 ? n : 3; })(),
     stripePriceYearly: (env.STRIPE_PRICE_YEARLY || '').trim(),
     stripePriceId: (env.STRIPE_PRICE_ID || '').trim(),
     // Lifetime (2026-10-16): its own one-time price, Premium for life in one payment. Never one of the prices above.
@@ -159,6 +162,14 @@ export function loadConfig(env = process.env) {
     discordInviteRoles: /^(1|true|yes)$/i.test((env.DISCORD_INVITE_ROLES || '').trim()),
     discordVipInvites: whole(env.DISCORD_VIP_INVITES, 10),
     discordMvpInvites: whole(env.DISCORD_MVP_INVITES, 15),
+
+    // Sign in with Google (2026-10-25): an OAuth client of type "Web application" in Google Cloud, with the
+    // redirect URL <PUBLIC_URL>/auth/google/callback. Without both, the Google button doesn't show.
+    // Sign in with Discord uses DISCORD_CLIENT_ID and DISCORD_CLIENT_SECRET above (redirect <PUBLIC_URL>/auth/discord/callback).
+    googleClientId: (env.GOOGLE_CLIENT_ID || '').trim(),
+    googleClientSecret: (env.GOOGLE_CLIENT_SECRET || '').trim(),
+    // The Discord button needs the second redirect URL in the Developer Portal first: it only shows with DISCORD_LOGIN=1.
+    discordLogin: env.DISCORD_LOGIN === '1',
   };
   cfg.subscriptions = !!(cfg.stripePriceMonthly || cfg.stripePriceYearly);
   const DISCORD_VARS = { DISCORD_CLIENT_ID: 'discordClientId', DISCORD_CLIENT_SECRET: 'discordClientSecret', DISCORD_BOT_TOKEN: 'discordBotToken', DISCORD_GUILD_ID: 'discordGuildId', DISCORD_ROLE_ID: 'discordRoleId' };
@@ -246,6 +257,10 @@ export function loadConfig(env = process.env) {
 
   // Emails really go out: pages may promise one.
   cfg.mailEnabled = !!cfg.resendApiKey && !exampleFrom;
+  // Sign-up by email waits for the 6-digit code sent to the address (2026-10-25). On whenever emails go out;
+  // EMAIL_VERIFICATION=1 also turns it on without Resend (npm run local prints the code), =0 turns it off.
+  cfg.verifyEmail = env.EMAIL_VERIFICATION === '0' ? false : cfg.mailEnabled || env.EMAIL_VERIFICATION === '1';
+  if (!!cfg.googleClientId !== !!cfg.googleClientSecret) cfg.warnings.push(`${cfg.googleClientId ? 'GOOGLE_CLIENT_SECRET' : 'GOOGLE_CLIENT_ID'} not set: the "Continue with Google" button stays hidden until both are in.`);
 
   // LICENSE_SIGNING_KEY and SESSION_SECRET are optional: when absent, the server generates them once
   // and keeps them in the database (see ensureKeys in db.js).

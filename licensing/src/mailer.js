@@ -40,7 +40,11 @@ export function orderLines(license = {}) {
   const lines = [['Plan', `Rago Optimizer Premium · ${PLAN[license.plan] || 'Lifetime'}`]];
   const paid = money(license.amount, license.currency);
   if (paid) lines.push(['Paid', paid]);
-  if (license.plan === 'month' || license.plan === 'year') {
+  if (license.trial && (license.plan === 'month' || license.plan === 'year')) {
+    lines.push(['Free trial', `${license.trial.days} days`]);
+    const price = money(license.trial.amount, license.trial.currency);
+    lines.push(['First payment', `${license.current_period_end ? day(license.current_period_end) : 'When the trial ends'}${price ? `, ${price}` : ''}, unless you cancel before`]);
+  } else if (license.plan === 'month' || license.plan === 'year') {
     lines.push(['Renews', license.current_period_end ? `${day(license.current_period_end)}, unless you cancel` : 'Automatically, unless you cancel']);
   }
   return lines;
@@ -76,7 +80,14 @@ ${lines.map(([k, v]) => `<tr><td style="padding:10px 16px;color:#8E8E98;font-siz
       // Text version: the portal link alone at the end of its line, no punctuation glued to it.
       const cancelText = sub ? ` Cancel anytime from your account (Cancel or manage subscription)${cfg.portalLoginUrl ? `, or cancel with your email at:\n${cfg.portalLoginUrl}` : '.'}` : '';
       const cancelHtml = sub ? ` Cancel anytime from your account (Cancel or manage subscription)${cfg.portalLoginUrl ? `, or <a href="${esc(cfg.portalLoginUrl)}" style="${LINK}">with your email here</a>` : ''}.` : '';
-      const intro = claimUrl
+      // Free trial (2026-11-04): when the first payment comes, and how to cancel before it, in the first lines.
+      const trial = license.trial && (license.plan === 'month' || license.plan === 'year') ? license.trial : null;
+      const firstPay = trial && license.current_period_end ? day(license.current_period_end) : null;
+      const price = trial ? money(trial.amount, trial.currency) : null;
+      const trialLine = trial
+        ? `Your ${trial.days}-day free trial of Rago Optimizer Premium started. ${firstPay ? `On ${firstPay}, your card is charged${price ? ` ${price}` : ''}, then at each renewal` : 'At the end of the trial, your card is charged, then at each renewal'}, unless you cancel before. Cancel anytime from your account: you pay nothing.`
+        : null;
+      const intro = trialLine ? `${trialLine} ${claimUrl ? 'Create your account to get your license and download Rago Optimizer for Windows.' : 'Download Rago Optimizer for Windows from your account, sign in with the same email and click Activate.'}` : claimUrl
         ? 'Thanks for getting Rago Optimizer Premium. Create your account to get your license and download Rago Optimizer for Windows. If you already have an account with this email, just sign in.'
         : 'Thanks for getting Rago Optimizer Premium. Your license is on your account: download Rago Optimizer for Windows, sign in with the same email and click Activate.';
       const href = claimUrl || `${cfg.publicUrl}/account`;
@@ -89,14 +100,30 @@ ${claimUrl ? `<p style="${SMALL}">This link only works for your purchase. Keep i
 <p style="${SMALL}">${esc(waiver)}${cancelHtml} <a href="${esc(cfg.siteUrl)}/terms.html" style="${LINK}">Terms of Sale</a> &middot; <a href="${esc(cfg.siteUrl)}/refunds.html" style="${LINK}">Refunds and cancellation</a></p>
 ${discord ? `<p style="${SMALL}">${esc(discord)} <a href="${esc(cfg.supportUrl)}" style="${LINK}">Join the Discord</a></p>` : ''}`;
       const text = [
-        `Payment confirmed. ${intro}`,
+        `${trial ? 'Free trial started' : 'Payment confirmed'}. ${intro}`,
         ...lines.map(([k, v]) => `${k}: ${v}`),
         `${claimUrl ? 'Create your account' : 'Your account'}: ${href}`,
         `${waiver}${cancelText}`,
         `Terms: ${cfg.siteUrl}/terms.html  Refunds: ${cfg.siteUrl}/refunds.html`,
         ...(discord ? [`${discord} ${cfg.supportUrl}`] : []),
       ].join('\n');
-      return send(to, 'Your Rago Optimizer Premium license', layout(cfg, 'Payment confirmed', html), text);
+      return send(to, trial ? `Your ${trial.days}-day free trial of Rago Optimizer Premium` : 'Your Rago Optimizer Premium license', layout(cfg, trial ? 'Free trial started' : 'Payment confirmed', html), text);
+    },
+    /** The 6-digit code that confirms the email at sign-up (2026-10-25). */
+    signupCode(to, code) {
+      const big = `<p style="margin:8px 0 24px;color:#F5F5F6;font-family:ui-monospace,'SF Mono',Menlo,Consolas,monospace;font-size:34px;font-weight:600;letter-spacing:.3em">${esc(code)}</p>`;
+      return send(to, `${code} is your Rago Optimizer code`,
+        layout(cfg, 'Confirm your email', `<p style="${P}">Type this code on the sign-up page to create your Rago Optimizer account. It works for 15 minutes.</p>${big}<p style="${SMALL}">If you didn't sign up, ignore this email: no account is created without the code.</p>`),
+        `Your Rago Optimizer code: ${code}\nType it on the sign-up page to create your account. It works for 15 minutes. If you didn't sign up, ignore this email.`);
+    },
+    /** Sent when the subscription is canceled from the app (1.3.0): Premium stays until the end date, nothing more is charged. */
+    subscriptionCanceled(to, sub) {
+      const until = sub.ends_at ? new Date(sub.ends_at).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric', timeZone: 'UTC' }) : null;
+      const what = sub.trial ? 'Your free trial is canceled' : 'Your subscription is canceled';
+      const body = `${what}. ${until ? `Premium stays active until ${until}. ` : ''}No more charges. When it ends, Rago Optimizer puts back the settings its tweaks changed and goes back to the free plan. Changed your mind? Resume from the app's Settings or your account page before that date.`;
+      return send(to, `${what}: Rago Optimizer Premium`,
+        layout(cfg, sub.trial ? 'Free trial canceled' : 'Subscription canceled', `<p style="${P}">${esc(body)}</p>${button(`${cfg.publicUrl}/account`, 'Open your account')}`),
+        `${body}\nYour account: ${cfg.publicUrl}/account`);
     },
     passwordReset(to, url) {
       return send(to, 'Reset your Rago Optimizer password',

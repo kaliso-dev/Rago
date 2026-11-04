@@ -55,6 +55,7 @@ total = len({t.get('twin') or i for i, t in T.items()})
 ten = -(-total // 10) * 10
 heading = f'Nearly {ten} tweaks' if 0 < ten - total <= 3 else f'{total} tweaks'
 s = re.sub(r'<h2>(?:Nearly )?\d+ tweaks\. One clear app\.</h2>', lambda m: f'<h2>{heading}. One clear app.</h2>', s)
+s = re.sub(r'(?:Nearly )?\d+ tweaks, free to start', f'{heading}, free to start', s)  # meta description
 s = re.sub(r'(All |unlocks all )\d+( tweaks|<)', lambda m: m.group(1) + str(total) + m.group(2), s)
 # tweaks open in the free plan, like the app (store.tsx FREE.size: the list of free.json, Restore tools included)
 n_free = len(json.load(open(os.path.join(APP, 'data', 'free.json')))['tweaks'])

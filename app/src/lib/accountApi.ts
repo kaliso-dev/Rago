@@ -36,6 +36,59 @@ export function asAccountError(err: unknown): AccountError {
   return { code: e.code ?? "server_error", message: e.message ?? null };
 }
 
+/** Prix tel que Stripe l'a (centimes). */
+export interface Price {
+  amount: number;
+  currency: string;
+}
+
+/** Abonnement du compte (1.3.0), lu sur le serveur. */
+export interface Subscription {
+  interval: "month" | "year";
+  /** pendant l'essai gratuit */
+  trial: boolean;
+  /** résilié : plus de renouvellement, Premium reste jusqu'à endsAt */
+  canceled: boolean;
+  renewsAt: string | null;
+  endsAt: string | null;
+  price: Price | null;
+}
+
+/** Offres pour la fenêtre Premium (1.3.0). null : pas en vente, ou serveur injoignable. */
+export interface Plans {
+  month: Price | null;
+  year: Price | null;
+  lifetime: Price | null;
+  trialDays: number;
+}
+
+const toSub = (v: Record<string, unknown> | null): Subscription | null =>
+  v
+    ? {
+        interval: v.interval === "year" ? "year" : "month",
+        trial: !!v.trial,
+        canceled: !!v.canceled,
+        renewsAt: (v.renews_at as string) ?? null,
+        endsAt: (v.ends_at as string) ?? null,
+        price: (v.price as Price) ?? null,
+      }
+    : null;
+const toPlans = (v: Record<string, unknown>): Plans => ({
+  month: (v.month as Price) ?? null,
+  year: (v.year as Price) ?? null,
+  lifetime: (v.lifetime as Price) ?? null,
+  trialDays: Number(v.trial_days) || 0,
+});
+
+/** « $5.99 » */
+export function formatPrice(p: Price, lang: string): string {
+  try {
+    return new Intl.NumberFormat(lang === "fr" ? "fr-FR" : "en-US", { style: "currency", currency: p.currency.toUpperCase() }).format(p.amount / 100);
+  } catch {
+    return `${(p.amount / 100).toFixed(2)} ${p.currency.toUpperCase()}`;
+  }
+}
+
 export const COMMENT_MAX = 600;
 export const NAME_MAX = 32;
 
@@ -50,6 +103,12 @@ export interface AccountApi {
   /** image en base64 (déjà réduite par l'interface) ; le serveur la recadre en 256 × 256 WebP */
   setPhoto(base64: string): Promise<AccountState>;
   removePhoto(): Promise<AccountState>;
+  /** null : pas d'abonnement (gratuit, Lifetime, offert) */
+  subscription(): Promise<Subscription | null>;
+  /** plus de renouvellement : Premium reste jusqu'à la fin de la période ou de l'essai, rien d'autre n'est débité */
+  cancelSubscription(): Promise<Subscription | null>;
+  resumeSubscription(): Promise<Subscription | null>;
+  plans(): Promise<Plans>;
 }
 
 const tauriAccount: AccountApi = {
@@ -61,6 +120,10 @@ const tauriAccount: AccountApi = {
   setName: (name) => invoke("account_set_name", { name }),
   setPhoto: (data) => invoke("account_set_photo", { data }),
   removePhoto: () => invoke("account_remove_photo"),
+  subscription: async () => toSub(await invoke("account_subscription", { action: null })),
+  cancelSubscription: async () => toSub(await invoke("account_subscription", { action: "cancel" })),
+  resumeSubscription: async () => toSub(await invoke("account_subscription", { action: "resume" })),
+  plans: async () => toPlans(await invoke("plans_info")),
 };
 
 // ------------------------------------------------------------------ démo
@@ -170,6 +233,30 @@ const mockAccount: AccountApi = {
     saveDemo({ ...demo(), photo: null });
     return demoState();
   },
+  subscription: async () => {
+    await sleep(300);
+    return demoLicense() ? demoSub() : null;
+  },
+  cancelSubscription: async () => {
+    await sleep(700);
+    demoCanceled = true;
+    return demoSub();
+  },
+  resumeSubscription: async () => {
+    await sleep(500);
+    demoCanceled = false;
+    return demoSub();
+  },
+  plans: async () => {
+    await sleep(200);
+    return { month: { amount: 599, currency: "usd" }, year: { amount: 2999, currency: "usd" }, lifetime: { amount: 5999, currency: "usd" }, trialDays: 3 };
+  },
 };
+
+let demoCanceled = false;
+function demoSub(): Subscription {
+  const end = new Date(Date.now() + 3 * 86400000).toISOString();
+  return { interval: "year", trial: true, canceled: demoCanceled, renewsAt: demoCanceled ? null : end, endsAt: demoCanceled ? end : null, price: { amount: 2999, currency: "usd" } };
+}
 
 export const accountApi: AccountApi = isTauri ? tauriAccount : mockAccount;

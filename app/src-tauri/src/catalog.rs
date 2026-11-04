@@ -89,6 +89,8 @@ struct Free {
     reverts: Vec<String>,
     #[serde(default)]
     formerly: Vec<String>,
+    #[serde(default)]
+    slots: usize,
 }
 
 fn free_json() -> Free {
@@ -101,6 +103,34 @@ static FREE: LazyLock<Vec<String>> = LazyLock::new(|| free_json().tweaks);
 /// Réglages Premium dont seule la variante de retour arrière est ouverte en gratuit (free.json, « reverts ») : RBW Mod
 /// « Activé » et mode jeu « Désactivé ». Ceux de Réseau et Hitreg restent fermés.
 static FREE_REVERTS: LazyLock<Vec<String>> = LazyLock::new(|| free_json().reverts);
+
+/// Réglages gratuits (des « tweak », pas les actions) appliqués en même temps sans licence (free.json, « slots » : 30
+/// depuis la 1.3.0). 0 : pas de limite.
+static FREE_SLOTS: LazyLock<usize> = LazyLock::new(|| free_json().slots);
+
+/// Sans licence, les réglages qui resteraient appliqués après ce lot dépassent la limite du plan gratuit : renvoie la
+/// limite. `applied` : réglages appliqués sur ce PC ; `items` : (id, variante, annulation) du lot. Seuls les réglages
+/// qu'on allume et qu'on annule comptent, pas leur retour arrière. Un joueur déjà au-dessus (réglages gratuits
+/// appliqués pendant Premium) peut toujours en annuler, jamais en ajouter.
+pub fn over_free_slots<'a>(applied: impl Iterator<Item = &'a str>, items: &[(&str, Option<&str>, bool)]) -> Option<usize> {
+    let max = *FREE_SLOTS;
+    if max == 0 {
+        return None;
+    }
+    let mut active: std::collections::HashSet<&str> = applied.filter(|id| is_switch(id)).collect();
+    let before = active.len();
+    for &(id, variant, undo) in items {
+        if !is_switch(id) {
+            continue;
+        }
+        if undo || is_revert(id, variant) {
+            active.remove(id);
+        } else {
+            active.insert(id);
+        }
+    }
+    (active.len() > max && active.len() > before).then_some(max)
+}
 
 /// Réglages gratuits d'une version d'avant (free.json, « formerly ») : la souris (in_mouse) avant la 1.1.14.
 static FORMERLY_FREE: LazyLock<Vec<String>> = LazyLock::new(|| free_json().formerly);
@@ -313,9 +343,9 @@ mod tests {
         assert!(undo_of("in_mouse", None, None).is_none() && undo_of("in_mouse", None, Some(&bundle)).is_some());
         assert!(script("net_nagle", None, None).is_none(), "Premium sans licence");
         assert!(script("net_nagle", None, Some(&bundle)).is_some());
-        // réglages ajoutés en 1.1.6 : chaque valeur touchée est relevée avant d'appliquer ; win_autoplay est Premium,
-        // win_ai gratuit depuis le 16 octobre 2026
-        assert!(script("win_autoplay", None, None).is_none(), "win_autoplay sans licence");
+        // réglages ajoutés en 1.1.6 : chaque valeur touchée est relevée avant d'appliquer ; win_ai gratuit depuis le
+        // 16 octobre 2026, win_autoplay depuis la 1.3.0
+        assert!(script("win_autoplay", None, None).is_some(), "win_autoplay dans le plan gratuit");
         assert!(script("win_ai", None, None).is_some(), "win_ai dans le plan gratuit");
         for id in ["win_ai", "win_autoplay"] {
             let p = probe(id, None, Some(&bundle)).expect(id);
@@ -1222,6 +1252,18 @@ mod tests {
         assert!(allowed("win_gamedvr", None, false) && allowed("rst_point", None, false) && allowed("__wmic", None, false));
         assert!(!allowed("gpu_nvidia", None, false) && !allowed("in_advanced", None, false));
         assert!(allowed("gpu_nvidia", None, true));
+        // Sofiene, 4 novembre 2026 : une soixantaine de réglages gratuits, 30 appliqués en même temps au plus
+        assert!(FREE.len() >= 50 && *FREE_SLOTS == 30, "{} gratuits", FREE.len());
+        assert!(!allowed("net_nagle", None, false) && !allowed("in_mouse", None, false) && !allowed("gpu_nvidia", None, false));
+        assert!(allowed("win_classicmenu", None, false) && allowed("sto_writecache", None, false));
+        let switches: Vec<&str> = FREE.iter().map(String::as_str).filter(|id| is_switch(id)).collect();
+        assert!(switches.len() > 31);
+        let new = |ids: &[&'static str]| ids.iter().map(|id| (*id, None, false)).collect::<Vec<_>>();
+        assert_eq!(over_free_slots(switches[..29].iter().copied(), &new(&switches[29..30])), None);
+        assert_eq!(over_free_slots(switches[..30].iter().copied(), &new(&switches[30..31])), Some(30));
+        // les actions ne prennent pas de place ; au-dessus de la limite, annuler reste possible
+        assert_eq!(over_free_slots(switches[..30].iter().copied(), &new(&["rst_point"])), None);
+        assert_eq!(over_free_slots(switches[..31].iter().copied(), &[(switches[0], None, true)]), None);
         // Sofiene, 16 octobre 2026 : trois réglages de confort de Windows ouverts en gratuit
         assert!(["win_notifications", "win_popups", "win_ai"].iter().all(|id| allowed(id, None, false)));
         // la souris (Hitreg) : gratuite avant la 1.1.14
@@ -1244,7 +1286,9 @@ mod tests {
                 // « ref » : un réglage d'un autre module, compté dans le sien
                 let Some(id) = t["id"].as_str() else { continue };
                 if is_free(id) {
-                    assert!(["windows", "gpu", "restore"].contains(&module), "{id} gratuit dans {module}");
+                    // 1.3.0 : le stockage (module Latence) et le nettoyage des pilotes ouvrent aussi ; jamais Réseau,
+                    // Hitreg, Minecraft, RBW, mode jeu ni Expert
+                    assert!(["windows", "gpu", "latency", "restore"].contains(&module), "{id} gratuit dans {module}");
                     free += 1;
                 }
                 if FREE_REVERTS.iter().any(|f| f == id) {

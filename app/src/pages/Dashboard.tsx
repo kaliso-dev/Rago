@@ -1,12 +1,12 @@
 import { motion } from "motion/react";
-import { Check, Copy, Cpu, Gpu, HardDrive, MemoryStick, Network, Pencil, Plus, RefreshCw, Lock, RotateCcw, Trash2, TriangleAlert, Zap } from "lucide-react";
-import { availability, catalog, distinctKey, retired, totalTweaks, tweaks } from "../lib/catalog";
+import { Check, Copy, Cpu, Gpu, HardDrive, MemoryStick, Network, Pencil, Plus, RefreshCw, Lock, RotateCcw, Trash2, TriangleAlert, Zap, ScanSearch } from "lucide-react";
+import { availability, catalog, distinctKey, retired, totalTweaks, tweakModule, tweaks } from "../lib/catalog";
 import { api } from "../lib/api";
 import { formatDate } from "../lib/i18n";
 import { hue } from "../lib/art";
 import { presetGameKey } from "../lib/gameLogos";
 import { encodePreset, MAX_NAME } from "../lib/share";
-import { FREE, useStore, type MyPreset } from "../lib/store";
+import { FREE, FREE_SLOTS, useStore, type MyPreset } from "../lib/store";
 import { GameLogo, usePresetIcons } from "../components/GameLogo";
 import { LiveStatsCard } from "../components/LiveStatsCard";
 import { PresetEditor } from "../components/PresetEditor";
@@ -23,7 +23,8 @@ const wmicUsed = [...tweaks.values()].some((tw) => tw.requires.includes("wmic"))
  * partie. */
 const FREE_ENTRIES = [...FREE].flatMap((id) => {
   const tw = tweaks.get(id);
-  if (!tw || tw.kind !== "tweak") return [];
+  // 1.3.0 : les réglages du module Windows seulement, les plus sûrs ; le plan gratuit en garde 30 actifs à la fois
+  if (!tw || tw.kind !== "tweak" || tweakModule.get(id) !== "windows") return [];
   return [tw.variants?.length ? `${id}:${tw.defaultVariant ?? tw.variants[0].id}` : id];
 });
 
@@ -44,10 +45,13 @@ function Spec({ icon, label, value, sub }: { icon: ReactNode; label: string; val
 }
 
 export function Dashboard() {
-  const { t, lang, sys, sysLoading, refreshSys, isOn, selected, variantOf, selectMany, lastRestore, requestApply, premium, setUpsell, applied: appliedMap, retiredApplied, requestUndo, requestUndoAll, run, myPresets, currentSetup, savePreset, toApply, requestApplyEntries } = useStore();
+  const { t, lang, sys, sysLoading, refreshSys, isOn, selected, variantOf, selectMany, lastRestore, requestApply, premium, setUpsell, applied: appliedMap, retiredApplied, requestUndo, requestUndoAll, run, myPresets, currentSetup, savePreset, toApply, requestApplyEntries, slotsUsed, goTo } = useStore();
   const presetIcons = usePresetIcons();
   // optimisations gratuites encore à appliquer sur ce PC
-  const freeLeft = sys ? toApply(FREE_ENTRIES).ids.length : 0;
+  // plan gratuit : pas plus que les emplacements libres (le moteur refuserait tout le lot au-delà de 30)
+  const room = premium || !FREE_SLOTS ? Infinity : Math.max(0, FREE_SLOTS - slotsUsed);
+  const boost = sys ? FREE_ENTRIES.filter((e) => toApply([e]).ids.length > 0).slice(0, room) : [];
+  const freeLeft = boost.length;
   const [naming, setNaming] = useState<string | null>(null);
   const [editing, setEditing] = useState<string | null>(null);
   // réglages appliqués en ce moment (ceux qu'on a décochés depuis ne comptent plus), jumeaux comptés une fois
@@ -115,15 +119,28 @@ export function Dashboard() {
         </span>
         <div className="free-boost-text">
           <h2 className="free-boost-title">{t("dash.free.title")}</h2>
-          <p className="muted small">{t("dash.free.lead", { n: FREE_ENTRIES.length })}</p>
+          <p className="muted small">{t("dash.free.lead", { n: premium ? FREE_ENTRIES.length : Math.min(FREE_ENTRIES.length, FREE_SLOTS || FREE_ENTRIES.length) })}</p>
         </div>
         <Button
           variant={sys && freeLeft === 0 ? "secondary" : "primary"}
           icon={sys && freeLeft === 0 ? <Check size={14} /> : <Zap size={14} />}
           disabled={!sys || freeLeft === 0 || !!run}
-          onClick={() => requestApplyEntries(FREE_ENTRIES, { title: t("dash.free.confirmTitle"), lead: t("dash.free.confirmLead") })}
+          onClick={() => requestApplyEntries(boost, { title: t("dash.free.confirmTitle"), lead: t("dash.free.confirmLead") })}
         >
           {sys && freeLeft === 0 ? t("dash.free.done") : t("dash.free.go")}
+        </Button>
+      </motion.section>
+
+      <motion.section variants={rise} className="card free-boost an-cta">
+        <span className="free-boost-icon" aria-hidden="true">
+          <ScanSearch size={18} strokeWidth={2} />
+        </span>
+        <div className="free-boost-text">
+          <h2 className="free-boost-title">{t("pa.title")}</h2>
+          <p className="muted small">{t("pa.dashLead")}</p>
+        </div>
+        <Button icon={<ScanSearch size={14} />} onClick={() => goTo("analysis")}>
+          {t("pa.start")}
         </Button>
       </motion.section>
 

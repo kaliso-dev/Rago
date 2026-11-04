@@ -9,6 +9,7 @@ import { createDiscord } from './discord.js';
 import { createCommunity } from './community.js';
 import { createGeo } from './geo.js';
 import { purgeNetworkReports } from './network.js';
+import { purgeOldRecords } from './retention.js';
 
 const cfg = loadConfig();
 for (const w of cfg.warnings) console.warn(`[warn] ${w}`);
@@ -61,6 +62,8 @@ const sweep = async () => {
   try { await stopAllReplacedSubscriptions(db, stripe, console); } catch (err) { console.error('[stripe] Lifetime sweep failed', err); }
   // Network tests older than 12 months (privacy policy).
   try { await purgeNetworkReports(db); } catch (err) { console.error('[network] purge failed', err); }
+  // Security log after 12 months, free trials after 2 years (privacy policy).
+  try { await purgeOldRecords(db); } catch (err) { console.error('[retention] purge failed', err); }
 };
 setInterval(sweep, 60 * 60 * 1000).unref();
 setTimeout(sweep, 30 * 1000).unref();

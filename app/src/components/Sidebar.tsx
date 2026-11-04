@@ -1,7 +1,7 @@
 import { motion } from "motion/react";
 import { ArrowUpRight, Lock, Sparkles } from "lucide-react";
 import { catalog } from "../lib/catalog";
-import { FREE, useStore } from "../lib/store";
+import { FREE, FREE_SLOTS, useStore } from "../lib/store";
 import { totalTweaks } from "../lib/catalog";
 import { DiscordIcon, MODULE_ICONS } from "./icons";
 import { DISCORD_URL } from "./LicenseGate";
@@ -12,21 +12,21 @@ import { markSeen, useSeen } from "../lib/seen";
 import { isNetworkTab } from "../pages/Network";
 
 /** Pages sans module du catalogue. */
-const LABELS: Record<string, Key> = { games: "nav.games", tools: "nav.tools" };
+const LABELS: Record<string, Key> = { games: "nav.games", tools: "nav.tools", analysis: "nav.analysis" };
 /** Nouveautés de la 1.2.0 derrière chaque entrée : badge « Nouveau » tant que l'une n'a pas été ouverte (Réseau :
  * ses onglets Packet Optimizer et Test réseau). */
-const NEW: Record<string, string[]> = { games: ["games"], tools: ["tools"], network: ["netopt", "nettest"] };
+const NEW: Record<string, string[]> = { games: ["games"], tools: ["tools"], network: ["netopt", "nettest"], analysis: ["analysis"] };
 
 // Réseau regroupe le Packet Optimizer et le test réseau dans ses onglets : deux entrées de moins
 const GROUPS: { label: Key | null; ids: string[] }[] = [
-  { label: null, ids: ["dashboard"] },
+  { label: null, ids: ["dashboard", "analysis"] },
   { label: "nav.optimize", ids: ["network", "latency", "gpu", "windows", "tools"] },
   { label: "nav.play", ids: ["hitreg", "minecraft", "rbw", "gamemode", "games"] },
   { label: "nav.advanced", ids: ["expert", "restore"] },
 ];
 
 export function Sidebar() {
-  const { t, lang, page, goTo, selected, sys, license, premium, setUpsell, isLocked, undoOnly } = useStore();
+  const { t, lang, page, goTo, selected, sys, license, premium, setUpsell, isLocked, undoOnly, slotsUsed } = useStore();
   const modules = new Map(catalog.modules.map((m) => [m.id, m]));
   const seen = useSeen();
   const visit = (id: string) => {
@@ -92,6 +92,7 @@ export function Sidebar() {
             {t("free.plan")}
           </span>
           <span className="nav-upgrade-sub rg-metric">{t("free.status", { n: FREE.size, total: totalTweaks })}</span>
+          {FREE_SLOTS > 0 && <span className="nav-upgrade-sub rg-metric">{t("free.slots", { used: Math.min(slotsUsed, FREE_SLOTS), n: FREE_SLOTS })}</span>}
           <span className="nav-upgrade-cta">{t("free.upgrade")}</span>
         </button>
       )}

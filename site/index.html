@@ -10,7 +10,7 @@
 <meta property="og:locale" content="en_US">
 <meta property="og:url" content="https://rago-optimizer.com/">
 <meta property="og:title" content="Rago Optimizer: Minecraft PvP optimizer for Windows">
-<meta property="og:description" content="Every millisecond counts. The Minecraft PvP optimizer for Windows: nearly 200 tweaks, free to start, with a restore point offered before advanced tweaks.">
+<meta property="og:description" content="Every millisecond counts. The Minecraft PvP optimizer for Windows: nearly 220 tweaks, free to start, with a restore point offered before advanced tweaks.">
 <meta property="og:image" content="https://rago-optimizer.com/og-image.png?v=153045a26b">
 <meta property="og:image:type" content="image/png">
 <meta property="og:image:width" content="1200">
@@ -18,7 +18,7 @@
 <meta property="og:image:alt" content="Rago Optimizer, the Windows optimizer for Minecraft PvP. Every millisecond counts.">
 <meta name="twitter:card" content="summary_large_image">
 <meta name="twitter:title" content="Rago Optimizer: Minecraft PvP optimizer for Windows">
-<meta name="twitter:description" content="Every millisecond counts. The Minecraft PvP optimizer for Windows: nearly 200 tweaks, free to start, with a restore point offered before advanced tweaks.">
+<meta name="twitter:description" content="Every millisecond counts. The Minecraft PvP optimizer for Windows: nearly 220 tweaks, free to start, with a restore point offered before advanced tweaks.">
 <meta name="twitter:image" content="https://rago-optimizer.com/og-image.png?v=153045a26b">
 <meta name="twitter:image:alt" content="Rago Optimizer, the Windows optimizer for Minecraft PvP. Every millisecond counts.">
 <link rel="icon" href="favicon.svg" type="image/svg+xml">
@@ -26,7 +26,7 @@
 <link rel="apple-touch-icon" href="apple-touch-icon.png">
 <script type="application/ld+json">{"@context": "https://schema.org", "@graph": [{"@type": "WebSite", "@id": "https://rago-optimizer.com/#website", "url": "https://rago-optimizer.com/", "name": "Rago Optimizer", "alternateName": "Rago", "inLanguage": "en", "publisher": {"@id": "https://rago-optimizer.com/#organization"}}, {"@type": "Organization", "@id": "https://rago-optimizer.com/#organization", "name": "Rago Optimizer", "url": "https://rago-optimizer.com/", "logo": "https://rago-optimizer.com/apple-touch-icon.png", "email": "support@rago-optimizer.com"}, {"@type": "SoftwareApplication", "@id": "https://rago-optimizer.com/#app", "name": "Rago Optimizer", "operatingSystem": "Windows 10, Windows 11", "applicationCategory": "UtilitiesApplication", "url": "https://rago-optimizer.com/", "image": "https://rago-optimizer.com/og-image.png?v=153045a26b", "publisher": {"@id": "https://rago-optimizer.com/#organization"}, "description": "The Minecraft PvP optimizer for Windows: steadier ping, smoother frames, less input lag.", "offers": [{"@type": "Offer", "name": "Free", "price": "0", "priceCurrency": "USD"}, {"@type": "Offer", "name": "Premium monthly", "price": "5.99", "priceCurrency": "USD"}, {"@type": "Offer", "name": "Premium yearly", "price": "29.99", "priceCurrency": "USD"}]}]}</script>
 <title>Rago Optimizer: Minecraft PvP optimizer for Windows</title>
-<meta name="description" content="Rago Optimizer tunes Windows, your network and Minecraft for steadier ping, smoother frames and less input lag. Nearly 200 tweaks, free to start.">
+<meta name="description" content="Rago Optimizer tunes Windows, your network and Minecraft for steadier ping, smoother frames and less input lag. Nearly 220 tweaks, free to start.">
 <link rel="preload" href="fonts/Geist-Variable.woff2" as="font" type="font/woff2" crossorigin>
 <style>
 @font-face{font-family:"Geist";src:url("fonts/Geist-Variable.woff2") format("woff2");font-weight:100 900;font-display:swap}
@@ -407,8 +407,10 @@ img.av{object-fit:cover;padding:0}
 .plan ul{list-style:none;padding:0;margin:0;display:grid;gap:10px;font-size:14px;color:var(--t2)}
 .plan li{display:flex;gap:10px;align-items:flex-start}
 .plan li svg{width:15px;height:15px;flex:none;margin-top:4px;color:var(--ok)}
+.plan li b{font-weight:600;color:var(--t1)}
 .plan .btn{width:100%;margin-top:6px}
 .micro{font-size:12px;color:var(--t3);text-align:center}
+.trial-note{font-size:12.5px;line-height:1.5;color:var(--t2);text-align:center;margin:2px 0 4px}
 .pro{position:relative;padding:2px;border-radius:calc(var(--r-xl) + 2px);background:conic-gradient(from var(--a,0deg),transparent 0 55%,rgba(255,59,48,.9) 70%,#fff 75%,rgba(255,59,48,.9) 80%,transparent 95%);animation:rot 5s linear infinite;box-shadow:0 40px 120px -40px rgba(255,59,48,.55)}
 .pro .plan{border:0;background:radial-gradient(120% 60% at 50% 0%,rgba(255,59,48,.14),transparent 60%),var(--ink-2);padding:clamp(32px,3.6vw,52px)}
 .pro .plan h3{font-size:24px}
@@ -546,6 +548,291 @@ footer.foot p{max-width:80ch}
 @keyframes dlgIn{from{opacity:0}}
 .toast.show{opacity:1;transform:none}
 
+/* What's new in 1.2: glass bento, one live demo per feature, played only while it's on screen */
+.news{display:inline-flex;align-items:center;gap:10px;padding:5px 14px 5px 5px;border-radius:var(--r-full);background:linear-gradient(180deg,rgba(255,255,255,.07),rgba(255,255,255,.02));border:1px solid var(--l2);box-shadow:inset 0 1px 0 rgba(255,255,255,.08);backdrop-filter:blur(14px) saturate(150%);-webkit-backdrop-filter:blur(14px) saturate(150%);font-size:13px;color:var(--t2);text-decoration:none;max-width:100%;transition:border-color .2s,background .2s,color .2s}
+.news:hover{color:var(--t1);border-color:var(--l3);background:linear-gradient(180deg,rgba(255,255,255,.1),rgba(255,255,255,.03))}
+.news b{flex:none;padding:5px 9px;border-radius:var(--r-full);background:var(--red);color:var(--ink);font:600 11px/1 var(--sans);letter-spacing:.02em}
+.news span{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.news svg{width:13px;height:13px;flex:none;transition:transform .24s var(--out)}
+.news:hover svg{transform:translateX(2px)}
+.hero h1 .eyebrow{margin-top:18px}
+.hero .band > div:first-child{min-width:0}
+#new{position:relative;isolation:isolate}
+#new::before{content:"";position:absolute;z-index:-1;inset:6% -10% 10%;pointer-events:none;background:radial-gradient(36% 40% at 22% 32%,rgba(255,59,48,.14),transparent 70%),radial-gradient(30% 36% at 82% 74%,rgba(255,59,48,.09),transparent 70%)}
+.bento{display:grid;grid-template-columns:repeat(12,minmax(0,1fr));gap:12px;max-width:1300px;margin-inline:auto}
+.nw{--c:4;grid-column:span var(--c);position:relative;display:flex;flex-direction:column;min-width:0;border-radius:var(--r-xl);background:linear-gradient(180deg,rgba(255,255,255,.05),rgba(255,255,255,.012) 38%),rgba(17,17,19,.7);border:1px solid var(--l1);box-shadow:inset 0 1px 0 rgba(255,255,255,.07),0 30px 60px -34px rgba(0,0,0,.85);backdrop-filter:blur(22px) saturate(140%);-webkit-backdrop-filter:blur(22px) saturate(140%);overflow:hidden;isolation:isolate;transition:border-color .3s,transform .5s var(--out)}
+.nw::after{content:"";position:absolute;inset:0;z-index:-1;background:radial-gradient(340px circle at var(--mx,50%) var(--my,0%),rgba(255,59,48,.10),transparent 60%);opacity:0;transition:opacity .3s;pointer-events:none}
+.nw:hover{border-color:var(--l2);transform:translateY(-3px)}
+.nw:hover::after{opacity:1}
+.nw.c8{--c:8;grid-row:span 2}.nw.c7{--c:7}.nw.c6{--c:6}.nw.c5{--c:5}
+.nw-vis{position:relative;flex:1;display:grid;place-items:center;min-height:210px;padding:24px 24px 6px}
+.nw-txt{display:grid;gap:8px;padding:12px 26px 26px}
+.nw-txt h3{font-size:19px;letter-spacing:-.025em}
+.nw-txt p{font-size:13.5px;color:var(--t3);max-width:42em}
+.nw-k{display:flex;flex-wrap:wrap;gap:6px;margin-top:4px}
+.tag{display:inline-flex;align-items:center;gap:6px;padding:6px 10px;border-radius:var(--r-full);border:1px solid var(--l1);background:var(--ink-3);font:500 11.5px/1 var(--sans);color:var(--t2);white-space:nowrap}
+.tag::before{content:"";width:6px;height:6px;border-radius:50%;background:currentColor}
+.tag.f{color:var(--ok);background:rgba(61,220,151,.07);border-color:rgba(61,220,151,.16)}
+.tag.p{color:var(--red);background:var(--red-a08);border-color:var(--red-a14)}
+.tag i{font-style:normal;color:var(--t2)}
+.nw-foot{display:grid;justify-items:center;gap:22px;margin-top:40px;text-align:center}
+.nw-foot .cta-row{margin-top:0;justify-content:center}
+.nw-note{font-size:12px;color:var(--t3)}
+.glassy{background:linear-gradient(180deg,rgba(255,255,255,.08),rgba(255,255,255,.025));border:1px solid var(--l2);box-shadow:inset 0 1px 0 rgba(255,255,255,.1),0 24px 50px -20px rgba(0,0,0,.8);backdrop-filter:blur(18px) saturate(160%);-webkit-backdrop-filter:blur(18px) saturate(160%)}
+/* Demos only move while .live (on screen) and never with reduced motion */
+.nw:not(.live) *,.nw:not(.live) *::before,.nw:not(.live) *::after{animation-play-state:paused!important}
+
+/* In-game bar: a game clip, Alt+X when the player stops, the glass bar drops in, tweaks switch, Esc */
+.ig{position:relative;width:100%;height:100%;min-height:440px;border-radius:var(--r-lg);overflow:hidden;border:1px solid var(--l1);background:var(--ink-0)}
+.ig-scene{position:absolute;inset:0;background:var(--ink-0);transition:filter .6s var(--out),transform .9s var(--out)}
+.ig-scene video{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;transition:opacity .45s}
+.ig-scene::after{content:"";position:absolute;inset:0;background:linear-gradient(180deg,rgba(9,9,11,.4),transparent 26%,transparent 64%,rgba(9,9,11,.62))}
+.ig.cut .ig-scene video{opacity:0}
+.ig.open .ig-scene{filter:blur(4px) brightness(.5);transform:scale(1.04)}
+.ig-pill{position:absolute;top:14px;right:14px;display:flex;gap:10px;align-items:center;padding:7px 12px;border-radius:var(--r-full);font:500 11.5px/1 var(--mono);color:var(--t2);opacity:0;transform:translateY(-6px);transition:opacity .4s,transform .5s var(--out)}
+.ig-pill b{color:var(--t1);font-weight:600}
+.ig.pin .ig-pill{opacity:1;transform:none}
+.ig-bar{position:absolute;left:4.5%;right:4.5%;top:18px;padding:16px;border-radius:var(--r-lg);display:grid;gap:14px;background:linear-gradient(180deg,rgba(40,40,46,.86),rgba(23,23,26,.9));transform:translateY(-24px) scale(.97);opacity:0;visibility:hidden;transition:transform .55s var(--spring),opacity .25s,visibility 0s .55s}
+.ig.open .ig-bar{transform:none;opacity:1;visibility:visible;transition:transform .55s var(--spring),opacity .25s,visibility 0s}
+.ig-h{display:flex;align-items:center;gap:12px}
+.ig-h svg{width:18px;height:20px;flex:none}
+.ig-h small,.ig-sec{display:block;font:500 9.5px/1 var(--mono);letter-spacing:.14em;text-transform:uppercase;color:var(--t3)}
+.ig-h b{display:block;font-size:15px;font-weight:600;margin-top:4px;letter-spacing:-.01em}
+.ig-h .ig-x{margin-left:auto;display:flex;gap:6px}
+.ig-h .ig-x i{width:26px;height:26px;border-radius:8px;background:rgba(255,255,255,.05);box-shadow:inset 0 0 0 1px var(--l1)}
+.ig-st{display:grid;grid-template-columns:repeat(5,minmax(0,1fr)) auto;gap:8px}
+.ig-st > div{padding:10px 12px;border-radius:var(--r-md);background:rgba(255,255,255,.04);box-shadow:inset 0 0 0 1px var(--l1);min-width:0}
+.ig-st small{display:block;font:500 9.5px/1 var(--mono);letter-spacing:.12em;color:var(--t3)}
+.ig-st b{display:block;font:600 clamp(17px,1.7vw,24px)/1 var(--mono);letter-spacing:-.03em;margin-top:8px;font-variant-numeric:tabular-nums}
+.ig-st b u{text-decoration:none;font-size:.55em;color:var(--t3);margin-left:2px;letter-spacing:0}
+.ig-st .ig-cl{display:grid;place-items:center;gap:6px;align-content:center;padding-inline:14px;font-size:12px;font-weight:560;color:var(--t1);transition:background .2s,box-shadow .2s}
+.ig-st .ig-cl svg{width:15px;height:15px;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
+.ig-st .ig-cl.hit{background:var(--red-a14);box-shadow:inset 0 0 0 1px var(--red-a30);color:var(--red)}
+.ig-tw{display:grid;grid-template-columns:1fr 1fr;gap:6px 18px;padding:12px 14px;border-radius:var(--r-md);background:rgba(255,255,255,.025);box-shadow:inset 0 0 0 1px var(--l1)}
+.ig-tw .ig-sec{grid-column:1/-1;margin-bottom:4px}
+.ig-r{display:flex;align-items:center;justify-content:space-between;gap:10px;font-size:12.5px;color:var(--t2);min-height:28px;transition:color .2s}
+.ig-r span{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.ig-r .sw{width:32px;height:18px}.ig-r .sw::after{width:14px;height:14px}
+.ig-r.on{color:var(--t1)}
+.ig-r.on .sw{background:var(--red)}
+.ig-r.on .sw::after{transform:translateX(14px);background:var(--ink)}
+.ig-foot{font-size:11px;color:var(--t3)}
+.ig-keys{position:absolute;left:50%;bottom:18px;transform:translateX(-50%);display:flex;align-items:center;gap:6px;padding:8px;border-radius:var(--r-md)}
+.ig-keys kbd{min-width:38px;height:34px;padding:0 10px;display:grid;place-items:center;border-radius:9px;background:linear-gradient(180deg,var(--ink-4),var(--ink-3));box-shadow:inset 0 1px 0 rgba(255,255,255,.08),0 3px 0 var(--ink-0),0 0 0 1px var(--l2);font:500 12px/1 var(--sans);color:var(--t2);transition:transform .12s var(--out),box-shadow .12s,color .12s,background .12s}
+.ig-keys kbd.dn{transform:translateY(2px);box-shadow:inset 0 1px 0 rgba(255,255,255,.08),0 1px 0 var(--ink-0),0 0 0 1px var(--red-a30),0 0 24px -4px rgba(255,59,48,.6);color:var(--t1);background:linear-gradient(180deg,#2c1615,#1d1212)}
+.ig-keys em{font-style:normal;color:var(--t3);font-size:12px}
+
+/* Network test */
+.nt{width:100%;max-width:400px;display:grid;gap:12px}
+.nt-top{display:flex;align-items:center;justify-content:space-between;gap:10px;font-size:12.5px}
+.nt-v{display:inline-flex;align-items:center;gap:8px;font-weight:560;color:var(--t1);transition:opacity .4s}
+.nt-v i{width:8px;height:8px;border-radius:50%;background:var(--ok);box-shadow:0 0 10px rgba(61,220,151,.7)}
+.nt.meas .nt-v{opacity:.25}
+.nt-t{font:400 11px/1 var(--mono);color:var(--t3)}
+.nt-m{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}
+.nt-m div{padding:10px 12px;border-radius:var(--r-md);background:var(--ink);border:1px solid var(--l1)}
+.nt-m small{display:block;font-size:11px;color:var(--t3)}
+.nt-m b{display:block;font:600 19px/1 var(--mono);margin-top:6px;letter-spacing:-.03em;font-variant-numeric:tabular-nums}
+.nt-m b u{text-decoration:none;font-size:.6em;color:var(--t3);letter-spacing:0;margin-left:2px}
+.nt-s{list-style:none;margin:0;padding:0;display:grid;gap:4px}
+.nt-s li{display:flex;align-items:center;gap:10px;padding:8px 10px;border-radius:var(--r-sm);font-size:12.5px;transition:background .3s}
+.nt-s li.cur{background:var(--ink-3)}
+.nt-s li span{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.nt-s li em{font-style:normal;font-size:11px;color:var(--t3);margin-left:6px}
+.sig{display:flex;align-items:flex-end;gap:2px;height:12px;flex:none}
+.sig i{width:3px;border-radius:1px;background:var(--ink-5);transition:background .3s}
+.sig i:nth-child(1){height:4px}.sig i:nth-child(2){height:7px}.sig i:nth-child(3){height:10px}.sig i:nth-child(4){height:12px}
+.sig[data-n="4"] i,.sig[data-n="3"] i:nth-child(-n+3){background:var(--ok)}
+.sig[data-n="2"] i:nth-child(-n+2){background:var(--warn)}
+.nt-s b{font:500 12px/1 var(--mono);min-width:44px;text-align:right;color:var(--t2);font-variant-numeric:tabular-nums}
+
+/* Clean RAM */
+.cr{width:100%;max-width:380px;display:grid;gap:12px;padding:18px;border-radius:var(--r-lg);background:var(--ink);border:1px solid var(--l1)}
+.cr-h{display:flex;justify-content:space-between;align-items:baseline;font-size:13px;font-weight:560}
+.cr-h b{font:600 24px/1 var(--mono);letter-spacing:-.03em;font-variant-numeric:tabular-nums}
+.cr-b{position:relative;height:8px;border-radius:var(--r-full);background:var(--ink-4);overflow:hidden}
+.cr-b i{position:absolute;inset:0 auto 0 0;border-radius:var(--r-full);background:var(--red);transition:width 1.1s var(--out)}
+.cr-row{display:flex;justify-content:space-between;align-items:center;gap:10px;font-size:11.5px;color:var(--t3)}
+.cr-btn{display:inline-flex;align-items:center;gap:7px;height:32px;padding:0 14px;border-radius:var(--r-full);background:var(--ink-3);box-shadow:inset 0 0 0 1px var(--l2);font-size:12.5px;font-weight:540;color:var(--t1);transition:transform .15s var(--out),background .2s,box-shadow .2s}
+.cr-btn svg{width:14px;height:14px;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
+.cr-btn.hit{transform:scale(.95);background:var(--red-a14);box-shadow:inset 0 0 0 1px var(--red-a30)}
+.cr-ok{display:flex;align-items:center;gap:8px;font-size:12.5px;color:var(--ok);opacity:0;transform:translateY(4px);transition:opacity .35s,transform .45s var(--out)}
+.cr-ok svg{width:14px;height:14px}
+.cr.done .cr-ok{opacity:1;transform:none}
+
+/* Game library */
+.gl{width:100%;display:grid;gap:12px}
+.gl-found{display:flex;flex-wrap:wrap;align-items:center;gap:6px;font-size:12px;color:var(--t3)}
+.gl-found span{margin-right:4px}
+.gl-found b{--d:calc(var(--i,0) * .12s);font-weight:500;color:var(--t2);padding:5px 10px;border-radius:var(--r-full);background:var(--ink);border:1px solid var(--l1);transition:opacity .35s var(--d),transform .45s var(--spring) var(--d)}
+/* .scan empties the library all at once; the launchers and games then come back one by one (--i) */
+.gl.scan .gl-found b{opacity:0;transform:scale(.85);--d:0s}
+.gl-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px}
+.gt{--d:calc(.5s + var(--i,0) * .1s);position:relative;border-radius:var(--r-md);overflow:hidden;background:var(--ink);border:1px solid var(--l1);transition:border-color .3s,box-shadow .3s,opacity .4s var(--d),transform .5s var(--out) var(--d)}
+.gl.scan .gt{opacity:0;transform:translateY(8px);--d:0s}
+.gt.sel{border-color:var(--red);box-shadow:0 0 0 3px var(--red-a14)}
+.gt-c{position:relative;aspect-ratio:16/10;background:var(--ink-2)}
+.gt-c img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}
+.gt-n{padding:8px 10px;font-size:11.5px;font-weight:560;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.gt-n small{display:block;font-weight:400;color:var(--t3);font-size:10.5px;margin-top:2px}
+.gl-act{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;padding:10px 10px 10px 14px;border-radius:var(--r-full);background:var(--ink);border:1px solid var(--l1);font-size:12px;color:var(--t2)}
+.gl-act > span{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.gl-go{position:relative;display:inline-flex;align-items:center;gap:8px;height:34px;padding:0 16px;border-radius:var(--r-full);background:var(--red);color:var(--ink);font-size:12.5px;font-weight:600;white-space:nowrap;transition:background .3s,color .3s,box-shadow .3s}
+.gl-go svg{width:12px;height:12px;fill:currentColor}
+.gl-go .spin{display:none;width:12px;height:12px;border-radius:50%;border:1.6px solid currentColor;border-top-color:transparent;animation:spin .7s linear infinite}
+.gl-go.wait{background:var(--ink-4);color:var(--t1)}
+.gl-go.wait .spin{display:block}.gl-go.wait svg,.gl-go.ok svg{display:none}
+.gl-go.ok{background:rgba(61,220,151,.12);color:var(--ok)}
+.gl-go.ok::before{content:"";width:7px;height:7px;border-radius:50%;background:var(--ok);box-shadow:0 0 8px rgba(61,220,151,.7)}
+
+/* Share presets */
+.sh{width:100%;max-width:420px;display:grid;gap:10px}
+.sh small{font-size:12px;color:var(--t3)}
+.sh-code{display:flex;align-items:center;gap:6px;height:46px;padding:0 6px 0 16px;border-radius:var(--r-full);background:var(--ink);border:1px solid var(--l2);font:500 13.5px/1 var(--mono);letter-spacing:.04em}
+.sh-code > span:first-child{min-width:0;overflow:hidden;white-space:nowrap}
+.sh-code .caret{width:1.5px;height:17px;background:var(--red);animation:blink 1s steps(1) infinite;flex:none}
+.sh-cp{margin-left:auto;display:inline-flex;align-items:center;gap:6px;height:34px;padding:0 14px;border-radius:var(--r-full);background:var(--ink-3);box-shadow:inset 0 0 0 1px var(--l2);font:540 12.5px/1 var(--sans);letter-spacing:0;color:var(--t1);flex:none;transition:background .25s,color .25s,box-shadow .25s}
+.sh-cp svg{width:13px;height:13px}
+.sh-cp:not(.ok) svg{display:none}
+.sh-cp.ok{background:rgba(61,220,151,.12);color:var(--ok);box-shadow:inset 0 0 0 1px rgba(61,220,151,.25)}
+.sh-row{display:flex;gap:8px;flex-wrap:wrap}
+.sh-row span{display:inline-flex;align-items:center;gap:8px;padding:9px 13px;border-radius:var(--r-full);background:var(--ink);border:1px solid var(--l1);font-size:12.5px;color:var(--t2);transition:opacity .4s,transform .5s var(--out)}
+.sh-row svg{width:14px;height:14px;fill:none;stroke:currentColor;stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round;flex:none}
+.sh-row b{font-weight:500;color:var(--ok)}
+.sh.typing .sh-row span{opacity:0;transform:translateY(6px)}
+
+/* Packet Optimizer: Analyze my PC checks the card, the processor and the line, then picks a preset and sets the sliders */
+.po{width:100%;max-width:440px;display:grid;gap:12px}
+.po-h{display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap}
+.po-run{display:inline-flex;align-items:center;gap:7px;height:32px;padding:0 14px;border-radius:var(--r-full);background:var(--ink-3);box-shadow:inset 0 0 0 1px var(--l2);font-size:12.5px;font-weight:540;color:var(--t1);transition:transform .15s var(--out),background .2s,box-shadow .2s}
+.po-run svg{width:14px;height:14px;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round}
+.po-run.hit{transform:scale(.95);background:var(--red-a14);box-shadow:inset 0 0 0 1px var(--red-a30)}
+.po-st{font:500 11.5px/1 var(--mono);color:var(--t3)}
+.po-st b{font-weight:500;color:var(--ok)}
+.po-steps{list-style:none;margin:0;padding:6px;display:grid;gap:2px;border-radius:var(--r-md);background:var(--ink);border:1px solid var(--l1)}
+.po-steps li{display:flex;align-items:center;gap:10px;padding:7px 8px;border-radius:var(--r-sm);font-size:12.5px;color:var(--t3);transition:background .3s,color .3s}
+.po-steps li i{width:8px;height:8px;flex:none;border-radius:50%;background:var(--ink-5);transition:background .3s,box-shadow .3s}
+.po-steps li span{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.po-steps li em{font:400 11px/1 var(--mono);font-style:normal;color:var(--t2);white-space:nowrap;opacity:0;transition:opacity .3s}
+.po-steps li.cur{background:var(--ink-3);color:var(--t2)}
+.po-steps li.cur i{background:var(--warn);animation:poBlink .7s ease-in-out infinite alternate}
+.po-steps li.ok{color:var(--t1)}
+.po-steps li.ok i{background:var(--ok);box-shadow:0 0 8px rgba(61,220,151,.6)}
+.po-steps li.ok em{opacity:1}
+@keyframes poBlink{to{opacity:.3}}
+.po-ps{display:flex;flex-wrap:wrap;gap:6px}
+.po-ps span{padding:7px 12px;border-radius:var(--r-full);background:var(--ink);border:1px solid var(--l1);font-size:12px;color:var(--t2);transition:background .3s,color .3s,border-color .3s,transform .3s var(--out)}
+.po-ps span.on{background:var(--red);border-color:var(--red);color:var(--ink);font-weight:560;transform:scale(1.04)}
+.po-sl{display:grid;gap:12px;padding:12px 16px;border-radius:var(--r-md);background:rgba(255,255,255,.025);box-shadow:inset 0 0 0 1px var(--l1)}
+.po-sl div{display:grid;grid-template-columns:minmax(0,1fr) 44%;align-items:center;gap:14px;font-size:12px;color:var(--t2)}
+.po-sl span{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.po-sl i{position:relative;height:6px;border-radius:var(--r-full);background:var(--ink-4)}
+.po-sl b{position:absolute;inset:0 auto 0 0;border-radius:var(--r-full);background:var(--red);transition:width 1s var(--out)}
+.po-sl b::after{content:"";position:absolute;right:-7px;top:50%;width:14px;height:14px;margin-top:-7px;border-radius:50%;background:var(--t1);box-shadow:0 2px 6px rgba(0,0,0,.5)}
+
+/* Tools: the cleanup finds what can go, then frees it */
+.tl{width:100%;max-width:420px;display:grid;gap:12px;padding:18px;border-radius:var(--r-lg);background:var(--ink);border:1px solid var(--l1)}
+.tl-h{display:flex;justify-content:space-between;align-items:baseline;font-size:13px;font-weight:560}
+.tl-h b{font:600 24px/1 var(--mono);letter-spacing:-.03em;font-variant-numeric:tabular-nums}
+.tl-l{list-style:none;margin:0;padding:0;display:grid;gap:2px}
+.tl-l li{display:flex;align-items:center;gap:10px;padding:6px 0;font-size:12.5px;color:var(--t2);transition:opacity .35s,transform .45s var(--out)}
+.tl-l li span{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.tl-l li b{font:500 11.5px/1 var(--mono);color:var(--t3);font-variant-numeric:tabular-nums;white-space:nowrap}
+.tl-l .ck{width:16px;height:16px;flex:none;display:grid;place-items:center;border-radius:5px;background:var(--red);color:var(--ink)}
+.tl-l .ck svg{width:10px;height:10px}
+.tl.scan .tl-l li:not(.in){opacity:0;transform:translateY(6px)}
+.tl.gone .tl-l li{opacity:.4}
+.tl.gone .tl-l li b{text-decoration:line-through}
+.tl-row{display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap;font-size:11.5px;color:var(--t3)}
+.tl-dr{display:inline-flex;align-items:center;gap:8px}
+.tl-dr i{width:7px;height:7px;flex:none;border-radius:50%;background:var(--ok);box-shadow:0 0 8px rgba(61,220,151,.6)}
+#tl-btn.ok{background:rgba(61,220,151,.12);color:var(--ok);box-shadow:inset 0 0 0 1px rgba(61,220,151,.25)}
+
+/* Updates */
+.up{width:100%;max-width:330px;display:flex;align-items:center;gap:12px;padding:14px;border-radius:var(--r-lg)}
+.up-ic{width:38px;height:38px;flex:none;border-radius:12px;display:grid;place-items:center;background:var(--red-a14);color:var(--red)}
+.up-ic svg{width:18px;height:18px}
+.up-m{flex:1;min-width:0;display:grid;gap:7px}
+.up-m b{font-size:13px;font-weight:560}
+.up-m small{font:400 11px/1 var(--mono);color:var(--t3);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.up .prog{height:4px}
+.up-r{flex:none;height:30px;padding:0 13px;display:grid;place-items:center;border-radius:var(--r-full);background:var(--red);color:var(--ink);font-size:12px;font-weight:600;transform:scale(.6);opacity:0;transition:transform .45s var(--spring),opacity .2s}
+.up.ready .up-r{transform:none;opacity:1}
+
+/* Background mode */
+.bgm{width:100%;max-width:330px;display:grid;gap:10px}
+.bgm-sw{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:12px 14px;border-radius:var(--r-md);background:var(--ink);border:1px solid var(--l1);font-size:12.5px;color:var(--t2)}
+.bgm-sw .sw{transition:background .25s}
+.bgm-sw.on{color:var(--t1)}
+.bgm-sw.on .sw{background:var(--red)}
+.bgm-sw.on .sw::after{transform:translateX(16px);background:var(--ink)}
+.bgm-tb{display:flex;align-items:center;justify-content:flex-end;gap:14px;height:44px;padding:0 14px;border-radius:var(--r-md);background:rgba(255,255,255,.04);border:1px solid var(--l1);color:var(--t3)}
+.bgm-tb svg{width:15px;height:15px;fill:none;stroke:currentColor;stroke-width:1.6;stroke-linecap:round}
+.bgm-tb .mk{position:relative;width:16px;height:17px;display:grid;place-items:center}
+.bgm-tb .mk svg{width:14px;height:15px;stroke:none}
+.bgm-tb .mk::after{content:"";position:absolute;inset:-6px;border-radius:50%;border:1.5px solid var(--red);opacity:0;animation:mkW 2.4s var(--out) infinite}
+@keyframes mkW{0%{transform:scale(.6);opacity:.9}100%{transform:scale(1.8);opacity:0}}
+.bgm-tb time{font:500 11.5px/1.25 var(--mono);color:var(--t2);text-align:right}
+
+/* Glass design: panes drift over the red glow */
+.gs{position:relative;width:100%;max-width:340px;height:190px}
+.gs::before{content:"";position:absolute;left:18%;top:18%;width:58%;height:64%;border-radius:50%;background:radial-gradient(circle,rgba(255,59,48,.7),transparent 65%);filter:blur(22px);animation:gsGlow 7s ease-in-out infinite alternate}
+.gs i{position:absolute;border-radius:18px;transition:transform .6s var(--out)}
+.gs i:nth-child(1){left:4%;top:8%;width:52%;height:70%;animation:gsF 6s ease-in-out infinite alternate}
+.gs i:nth-child(2){left:34%;top:22%;width:60%;height:66%;animation:gsF 7s ease-in-out -2s infinite alternate-reverse}
+.gs i:nth-child(1)::before,.gs i:nth-child(2)::before{content:"";position:absolute;left:14px;right:14px;top:16px;height:8px;border-radius:4px;background:rgba(255,255,255,.14);box-shadow:0 18px 0 rgba(255,255,255,.08),0 36px 0 rgba(255,255,255,.06)}
+.gs i:nth-child(2)::after{content:"";position:absolute;right:14px;bottom:14px;width:56px;height:22px;border-radius:999px;background:var(--red)}
+@keyframes gsF{to{transform:translateY(-8px)}}
+@keyframes gsGlow{to{transform:translate(14%,6%) scale(1.15)}}
+
+/* Discord */
+.btn-ic{--h:38px;width:38px;padding:0}
+.btn svg.dc-g,.dc-g{fill:currentColor}
+.dc{max-width:1200px;margin-inline:auto;border-radius:var(--r-xl);border:1px solid var(--l1);background:radial-gradient(70% 120% at 0% 50%,rgba(255,59,48,.13),transparent 60%),linear-gradient(180deg,rgba(255,255,255,.04),rgba(255,255,255,.01)),var(--ink-2);box-shadow:inset 0 1px 0 rgba(255,255,255,.06);padding:clamp(28px,4vw,64px);display:grid;grid-template-columns:minmax(0,.9fr) minmax(0,1.1fr);gap:clamp(28px,4vw,72px);align-items:center;overflow:hidden}
+.dc h2{font-size:clamp(28px,3vw,44px);letter-spacing:-.045em;margin-block:14px 12px}
+.dc p{color:var(--t2);max-width:30em}
+.dc ul{list-style:none;padding:0;margin:22px 0 0;display:grid;gap:10px;font-size:14px;color:var(--t2)}
+.dc li{display:flex;gap:10px;align-items:flex-start}
+.dc li svg{width:15px;height:15px;flex:none;margin-top:4px;color:var(--ok)}
+.dc .btn{margin-top:28px}
+.dc-vis{position:relative;aspect-ratio:1;width:min(100%,340px);justify-self:center;display:grid;place-items:center}
+.dc-vis > b{position:absolute;inset:0;border-radius:50%;border:1px solid var(--l1)}
+.dc-vis > b:nth-of-type(2){inset:16%;border-color:var(--l2)}
+.dc-vis > b:nth-of-type(3){inset:32%;border-color:var(--l1)}
+.dc-orbit{position:absolute;inset:0;animation:orbit 26s linear infinite}
+.dc-orbit.o2{inset:16%;animation-duration:18s;animation-direction:reverse}
+.dc-orbit i{position:absolute;width:12px;height:12px;margin:-6px;border-radius:50%;background:var(--ink-5);box-shadow:0 0 0 4px var(--ink-2)}
+.dc-orbit i.r{background:var(--red);box-shadow:0 0 0 4px var(--ink-2),0 0 16px rgba(255,59,48,.8)}
+.dc-orbit i.g{background:var(--ok);box-shadow:0 0 0 4px var(--ink-2),0 0 12px rgba(61,220,151,.6)}
+.dc-core{position:relative;width:34%;aspect-ratio:1;border-radius:30%;display:grid;place-items:center;color:var(--t1)}
+.dc-core svg{width:52%;height:52%}
+.dc-core::after{content:"";position:absolute;inset:-1px;border-radius:inherit;box-shadow:0 0 0 0 rgba(255,59,48,.5);animation:dcPing 2.8s var(--out) infinite}
+@keyframes orbit{to{transform:rotate(360deg)}}
+@keyframes dcPing{0%{box-shadow:0 0 0 0 rgba(255,59,48,.45)}100%{box-shadow:0 0 0 28px rgba(255,59,48,0)}}
+.final .cta-row .btn-ghost svg.dc-g{width:18px;height:18px}
+@media (max-width:1180px){
+  .nw,.nw.c5{--c:6}.nw.c8,.nw.c7{--c:12;grid-row:auto}
+  .dc{grid-template-columns:1fr}.dc-vis{width:min(60%,260px);order:-1}
+}
+@media (max-width:760px){
+  .nw,.nw.c6,.nw.c5{--c:12}
+  .nw-vis{padding:18px 16px 4px;min-height:0}
+  .nw-txt{padding:12px 20px 22px}
+  .ig{min-height:490px}
+  .ig-bar{left:10px;right:10px;top:10px;padding:12px;gap:10px}
+  .ig-st{grid-template-columns:repeat(3,minmax(0,1fr))}
+  .ig-st .ig-cl{grid-auto-flow:column}
+  .ig-tw{grid-template-columns:1fr}.ig-r:nth-of-type(n+5){display:none}
+  .ig-foot{display:none}
+  .gl-grid{grid-template-columns:repeat(2,minmax(0,1fr))}
+  .news{font-size:12.5px}
+}
+@media (prefers-reduced-motion:reduce){
+  .nw:hover{transform:none}
+  .gs i,.gs::before,.dc-orbit,.dc-core::after,.bgm-tb .mk::after{animation:none}
+  .ig-scene{transition:filter .3s}.ig.open .ig-scene{transform:none}
+}
+
 /* Scroll reveal: visible at rest; off-screen items rise and unblur */
 .rv{transition:transform .9s var(--out),filter .9s var(--out)}
 .js .rv.pre{transform:translateY(36px);filter:blur(6px)}
@@ -680,6 +967,9 @@ footer.foot p{max-width:80ch}
   <symbol id="i-down" viewBox="0 0 20 20"><path fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" d="M10 3v10M5.5 8.5L10 13l4.5-4.5M4 17h12"/></symbol>
   <symbol id="i-arrow" viewBox="0 0 20 20"><path fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" d="M4 10h12M11 5l5 5-5 5"/></symbol>
   <symbol id="i-word" viewBox="0 0 1124 180"><path d="M0 0H160V46L93.83 101.42L164 180H114L65.17 125.42L0 180V132L112.24 38H39V78.34L0 111Z" fill="#FF3B30"/><path d="M217.38028169014083 45.0H256.80281690140845Q266.5633802816901 45.0 273.91549295774644 48.29577464788733Q281.2676056338028 51.591549295774655 285.19718309859155 57.676056338028175Q289.1267605633803 63.760563380281695 289.1267605633803 71.87323943661971Q289.1267605633803 79.85915492957747 284.7535211267606 85.69014084507043Q280.38028169014086 91.52112676056339 273.15492957746477 93.67605633802816Q286.59154929577466 95.57746478873239 287.7323943661972 109.14084507042253L290.01408450704224 135.0H270.3661971830986L268.71830985915494 112.1830985915493Q268.3380281690141 106.85915492957747 265.4225352112676 104.45070422535211Q262.50704225352115 102.04225352112675 255.7887323943662 102.04225352112675H236.64788732394365V135.0H217.38028169014083ZM269.3521126760563 73.52112676056339Q269.3521126760563 67.56338028169014 265.4225352112676 64.3943661971831Q261.49295774647885 61.22535211267606 254.01408450704224 61.22535211267606H236.64788732394365V85.94366197183098H254.64788732394368Q261.61971830985914 85.94366197183098 265.4859154929577 82.64788732394365Q269.3521126760563 79.35211267605634 269.3521126760563 73.52112676056339ZM298.76056338028167 118.01408450704226Q298.76056338028167 109.26760563380282 304.2112676056338 104.2605633802817Q309.6619718309859 99.25352112676057 321.07042253521126 96.97183098591549L343.0 92.66197183098592Q343.0 79.35211267605634 331.3380281690141 79.35211267605634Q320.8169014084507 79.35211267605634 318.91549295774644 89.11267605633803L299.9014084507042 88.22535211267606Q301.80281690140845 77.07042253521126 309.91549295774644 71.30281690140845Q318.0281690140845 65.53521126760563 331.3380281690141 65.53521126760563Q346.5492957746479 65.53521126760563 354.28169014084506 72.7605633802817Q362.01408450704224 79.98591549295774 362.01408450704224 93.92957746478874V117.12676056338029Q362.01408450704224 119.91549295774648 362.90140845070425 120.92957746478874Q363.7887323943662 121.94366197183099 365.8169014084507 121.94366197183099H367.71830985915494V135.0Q365.1830985915493 135.7605633802817 360.8732394366197 135.7605633802817Q348.19718309859155 135.7605633802817 346.0422535211267 124.73239436619718Q343.3802816901408 130.1830985915493 337.2323943661971 133.35211267605635Q331.0845070422535 136.5211267605634 322.59154929577466 136.5211267605634Q311.8169014084507 136.5211267605634 305.2887323943662 131.5774647887324Q298.76056338028167 126.63380281690141 298.76056338028167 118.01408450704226ZM343.0 107.87323943661971V104.5774647887324L327.53521126760563 107.87323943661971Q318.28169014084506 109.77464788732394 318.28169014084506 116.2394366197183Q318.28169014084506 119.66197183098592 320.5633802816901 121.56338028169014Q322.8450704225352 123.46478873239437 327.15492957746477 123.46478873239437Q334.3802816901408 123.46478873239437 338.6901408450704 119.28169014084507Q343.0 115.09859154929578 343.0 107.87323943661971ZM375.7042253521127 136.5211267605634 395.22535211267603 135.1267605633803Q396.3661971830986 138.67605633802816 399.21830985915494 140.45070422535213Q402.07042253521126 142.22535211267606 407.77464788732397 142.22535211267606Q421.84507042253523 142.22535211267606 421.84507042253523 128.66197183098592V121.43661971830986Q419.3098591549296 126.25352112676056 414.04929577464793 129.04225352112675Q408.7887323943662 131.83098591549296 402.19718309859155 131.83098591549296Q393.830985915493 131.83098591549296 387.3661971830986 127.77464788732394Q380.90140845070425 123.71830985915493 377.2887323943662 116.17605633802816Q373.67605633802816 108.63380281690141 373.67605633802816 98.74647887323944Q373.67605633802816 89.11267605633803 377.2887323943662 81.57042253521126Q380.90140845070425 74.02816901408451 387.3028169014085 69.78169014084507Q393.7042253521127 65.53521126760563 401.943661971831 65.53521126760563Q409.169014084507 65.53521126760563 414.36619718309856 68.76760563380282Q419.5633802816901 72.0 422.3521126760563 77.57746478873239V67.05633802816901H440.98591549295776V128.28169014084506Q440.98591549295776 141.59154929577466 431.98591549295776 148.56338028169014Q422.98591549295776 155.53521126760563 407.77464788732397 155.53521126760563Q393.830985915493 155.53521126760563 385.9718309859155 150.46478873239437Q378.11267605633805 145.3943661971831 375.7042253521127 136.5211267605634ZM421.9718309859155 98.2394366197183Q421.9718309859155 89.61971830985915 418.0422535211268 84.54929577464789Q414.11267605633805 79.47887323943662 407.6478873239437 79.47887323943662Q400.92957746478874 79.47887323943662 397.0633802816901 84.67605633802816Q393.19718309859155 89.87323943661971 393.19718309859155 98.61971830985915Q393.19718309859155 107.36619718309859 397.1267605633803 112.56338028169014Q401.056338028169 117.7605633802817 407.6478873239437 117.7605633802817Q414.23943661971833 117.7605633802817 418.1056338028169 112.56338028169014Q421.9718309859155 107.36619718309859 421.9718309859155 98.2394366197183ZM451.6338028169014 101.02816901408451Q451.6338028169014 90.38028169014085 455.9436619718309 82.33098591549296Q460.2535211267605 74.28169014084507 468.0492957746478 69.90845070422534Q475.8450704225352 65.53521126760563 486.112676056338 65.53521126760563Q496.3802816901408 65.53521126760563 504.17605633802816 69.90845070422534Q511.97183098591546 74.28169014084507 516.2816901408451 82.33098591549296Q520.5915492957746 90.38028169014085 520.5915492957746 101.02816901408451Q520.5915492957746 111.67605633802816 516.3450704225352 119.72535211267605Q512.0985915492957 127.77464788732394 504.2394366197183 132.14788732394368Q496.3802816901408 136.5211267605634 486.112676056338 136.5211267605634Q475.8450704225352 136.5211267605634 467.9859154929577 132.14788732394368Q460.1267605633803 127.77464788732394 455.8802816901408 119.72535211267605Q451.6338028169014 111.67605633802816 451.6338028169014 101.02816901408451ZM500.943661971831 101.02816901408451Q500.943661971831 91.14084507042253 497.0774647887324 85.62676056338029Q493.2112676056338 80.11267605633803 486.112676056338 80.11267605633803Q479.01408450704224 80.11267605633803 475.0845070422535 85.62676056338029Q471.15492957746477 91.14084507042253 471.15492957746477 101.02816901408451Q471.15492957746477 110.91549295774648 475.0845070422535 116.42957746478874Q479.01408450704224 121.94366197183099 486.112676056338 121.94366197183099Q493.2112676056338 121.94366197183099 497.0774647887324 116.42957746478874Q500.943661971831 110.91549295774648 500.943661971831 101.02816901408451Z" fill="#F5F5F6"/><path d="M562.169014084507 90.12676056338029Q562.169014084507 75.67605633802816 567.1126760563379 65.02816901408451Q572.056338028169 54.38028169014085 581.3098591549295 48.67605633802817Q590.5633802816901 42.97183098591549 603.2394366197183 42.97183098591549Q616.0422535211268 42.97183098591549 625.2957746478874 48.67605633802817Q634.5492957746478 54.38028169014085 639.4929577464789 65.02816901408451Q644.4366197183099 75.67605633802816 644.4366197183099 90.12676056338029Q644.4366197183099 104.5774647887324 639.4929577464789 115.16197183098592Q634.5492957746478 125.74647887323944 625.2957746478874 131.38732394366198Q616.0422535211268 137.0281690140845 603.2394366197183 137.0281690140845Q590.5633802816901 137.0281690140845 581.3098591549295 131.38732394366198Q572.056338028169 125.74647887323944 567.1126760563379 115.16197183098592Q562.169014084507 104.5774647887324 562.169014084507 90.12676056338029ZM633.0281690140845 90.12676056338029Q633.0281690140845 73.01408450704226 625.1056338028169 63.316901408450704Q617.1830985915493 53.61971830985915 603.2394366197183 53.61971830985915Q589.2957746478874 53.61971830985915 581.4366197183099 63.316901408450704Q573.5774647887324 73.01408450704226 573.5774647887324 90.12676056338029Q573.5774647887324 107.2394366197183 581.4366197183099 116.80985915492957Q589.2957746478874 126.38028169014085 603.2394366197183 126.38028169014085Q617.1830985915493 126.38028169014085 625.1056338028169 116.80985915492957Q633.0281690140845 107.2394366197183 633.0281690140845 90.12676056338029ZM658.887323943662 67.8169014084507H668.7746478873239L668.9014084507043 78.08450704225352Q671.9436619718309 72.38028169014085 677.2676056338028 69.33802816901408Q682.5915492957746 66.29577464788733 689.5633802816901 66.29577464788733Q699.1971830985915 66.29577464788733 705.7253521126761 71.04929577464789Q712.2535211267606 75.80281690140845 715.4225352112676 83.78873239436619Q718.5915492957746 91.77464788732394 718.5915492957746 101.40845070422534Q718.5915492957746 111.04225352112675 715.4225352112676 119.02816901408451Q712.2535211267606 127.01408450704226 705.7253521126761 131.76760563380282Q699.1971830985915 136.5211267605634 689.5633802816901 136.5211267605634Q682.9718309859155 136.5211267605634 677.5845070422536 133.73239436619718Q672.1971830985915 130.94366197183098 669.5352112676056 126.12676056338029V154.01408450704224H658.887323943662ZM707.4366197183099 101.40845070422534Q707.4366197183099 89.61971830985915 702.3661971830986 83.02816901408451Q697.2957746478874 76.43661971830986 688.5492957746478 76.43661971830986Q679.6760563380282 76.43661971830986 674.6056338028169 82.83802816901408Q669.5352112676056 89.2394366197183 669.5352112676056 101.40845070422534Q669.5352112676056 113.5774647887324 674.5422535211268 119.97887323943662Q679.5492957746479 126.38028169014085 688.5492957746478 126.38028169014085Q697.2957746478874 126.38028169014085 702.3661971830986 119.7887323943662Q707.4366197183099 113.19718309859155 707.4366197183099 101.40845070422534ZM739.5070422535211 117.7605633802817V77.19718309859155H729.6197183098592V67.8169014084507H739.5070422535211V52.098591549295776H750.1549295774648V67.8169014084507H768.0281690140845V77.19718309859155H750.1549295774648V117.50704225352112Q750.1549295774648 121.94366197183099 752.1197183098592 123.78169014084507Q754.0845070422536 125.61971830985915 758.3943661971831 125.61971830985915H768.0281690140845V135.0H757.3802816901409Q748.2535211267606 135.0 743.8802816901409 130.8169014084507Q739.5070422535211 126.63380281690141 739.5070422535211 117.7605633802817ZM780.9577464788732 67.8169014084507H791.6056338028169V135.0H780.9577464788732ZM780.7042253521126 44.87323943661973H791.8591549295775V57.29577464788733H780.7042253521126ZM809.9859154929577 67.8169014084507H819.7464788732394L820.0 79.6056338028169Q822.5352112676056 73.3943661971831 827.4788732394366 69.84507042253522Q832.4225352112676 66.29577464788733 838.887323943662 66.29577464788733Q846.4929577464789 66.29577464788733 851.6901408450703 69.97183098591549Q856.887323943662 73.64788732394366 859.0422535211267 80.36619718309859Q861.1971830985915 73.52112676056339 866.2676056338028 69.90845070422536Q871.338028169014 66.29577464788733 878.6901408450703 66.29577464788733Q889.338028169014 66.29577464788733 895.1056338028168 72.95070422535211Q900.8732394366197 79.6056338028169 900.8732394366197 91.77464788732394V135.0H890.225352112676V94.05633802816902Q890.225352112676 84.92957746478874 886.676056338028 80.30281690140845Q883.1267605633802 75.67605633802816 876.1549295774647 75.67605633802816Q869.056338028169 75.67605633802816 864.8732394366197 80.74647887323943Q860.6901408450703 85.8169014084507 860.6901408450703 94.8169014084507V135.0H850.0422535211267V94.8169014084507Q850.0422535211267 75.67605633802816 836.225352112676 75.67605633802816Q829.1267605633802 75.67605633802816 824.8802816901408 80.80985915492957Q820.6338028169014 85.94366197183098 820.6338028169014 94.8169014084507V135.0H809.9859154929577ZM919.2535211267605 67.8169014084507H929.9014084507041V135.0H919.2535211267605ZM918.9999999999999 44.87323943661973H930.1549295774647V57.29577464788733H918.9999999999999ZM945.3661971830985 124.35211267605634 987.8309859154929 77.19718309859155H946.6338028169013V67.8169014084507H999.4929577464787V78.46478873239437L957.0281690140844 125.61971830985915H1000.507042253521V135.0H945.3661971830985ZM1011.7887323943661 101.40845070422534Q1011.7887323943661 90.88732394366198 1015.5281690140844 82.90140845070422Q1019.2676056338028 74.91549295774648 1026.112676056338 70.6056338028169Q1032.957746478873 66.29577464788733 1042.0845070422533 66.29577464788733Q1050.8309859154929 66.29577464788733 1057.5492957746478 70.41549295774648Q1064.2676056338028 74.53521126760563 1068.007042253521 82.52112676056338Q1071.7464788732393 90.50704225352112 1071.7464788732393 101.53521126760563V104.70422535211267H1022.9436619718309Q1023.4507042253521 115.35211267605634 1028.5845070422536 120.86619718309859Q1033.718309859155 126.38028169014085 1042.5915492957745 126.38028169014085Q1049.056338028169 126.38028169014085 1053.3028169014083 123.40140845070422Q1057.5492957746478 120.4225352112676 1059.3239436619717 115.09859154929578L1070.732394366197 115.98591549295774Q1068.0704225352113 125.2394366197183 1060.5281690140846 130.88028169014086Q1052.9859154929577 136.5211267605634 1042.5915492957745 136.5211267605634Q1033.2112676056338 136.5211267605634 1026.2394366197182 132.2112676056338Q1019.2676056338028 127.90140845070422 1015.5281690140844 119.97887323943662Q1011.7887323943661 112.05633802816902 1011.7887323943661 101.40845070422534ZM1042.0845070422533 76.43661971830986Q1034.2253521126759 76.43661971830986 1029.218309859155 81.25352112676056Q1024.2112676056338 86.07042253521126 1022.9436619718309 95.32394366197184H1060.0845070422533Q1059.3239436619717 85.94366197183098 1054.570422535211 81.19014084507042Q1049.8169014084506 76.43661971830986 1042.0845070422533 76.43661971830986ZM1085.9436619718308 67.8169014084507H1095.3239436619717L1095.7042253521124 80.2394366197183Q1099.2535211267605 67.8169014084507 1111.676056338028 67.8169014084507H1118.2676056338028V77.95774647887325H1111.8028169014083Q1096.5915492957745 77.95774647887325 1096.5915492957745 94.43661971830986V135.0H1085.9436619718308Z" fill="#F5F5F6"/></symbol>
+  <symbol id="i-discord" viewBox="0 0 24 24"><path d="M20.317 4.37a19.79 19.79 0 0 0-4.885-1.515.074.074 0 0 0-.079.037c-.211.375-.445.865-.608 1.25a18.27 18.27 0 0 0-5.487 0 12.64 12.64 0 0 0-.617-1.25.077.077 0 0 0-.079-.037A19.74 19.74 0 0 0 3.677 4.37a.07.07 0 0 0-.032.027C.533 9.046-.32 13.58.099 18.058a.082.082 0 0 0 .031.056 19.9 19.9 0 0 0 5.993 3.03.078.078 0 0 0 .084-.028c.462-.63.873-1.295 1.226-1.994a.076.076 0 0 0-.042-.106 13.1 13.1 0 0 1-1.872-.892.077.077 0 0 1-.008-.128c.126-.094.252-.192.372-.291a.074.074 0 0 1 .078-.01c3.928 1.793 8.18 1.793 12.062 0a.074.074 0 0 1 .078.009c.12.099.246.198.373.292a.077.077 0 0 1-.007.128 12.3 12.3 0 0 1-1.873.891.077.077 0 0 0-.041.107c.36.698.772 1.363 1.225 1.993a.076.076 0 0 0 .084.029 19.84 19.84 0 0 0 6.002-3.03.077.077 0 0 0 .032-.054c.5-5.177-.838-9.674-3.549-13.66a.061.061 0 0 0-.031-.03zM8.02 15.331c-1.183 0-2.157-1.086-2.157-2.419 0-1.333.956-2.419 2.157-2.419 1.21 0 2.176 1.095 2.157 2.42 0 1.332-.956 2.418-2.157 2.418zm7.975 0c-1.183 0-2.157-1.086-2.157-2.419 0-1.333.955-2.419 2.157-2.419 1.21 0 2.176 1.095 2.157 2.42 0 1.332-.946 2.418-2.157 2.418z"/></symbol>
+  <symbol id="i-play" viewBox="0 0 16 16"><path d="M4.5 2.8v10.4a.6.6 0 0 0 .9.5l8.3-5.2a.6.6 0 0 0 0-1L5.4 2.3a.6.6 0 0 0-.9.5z"/></symbol>
+  <symbol id="i-broom" viewBox="0 0 24 24"><path d="M15 3l-3 7M8.5 10h7l1.5 3H7zM7 13l-2 8M11 13l-.5 8M15 13l1 8M18.5 13l1.5 8"/></symbol>
   <symbol id="i-mark" viewBox="0 0 164 180"><path d="M0 0H160V46L93.83 101.42L164 180H114L65.17 125.42L0 180V132L112.24 38H39V78.34L0 111Z" fill="#FF3B30"/></symbol>
 </svg>
 
@@ -689,22 +979,24 @@ footer.foot p{max-width:80ch}
     <nav class="nav" aria-label="Sections">
       <a href="#why">Why Rago</a>
       <a href="#features">Features</a>
+      <a href="#new">What's new</a>
       <a href="tweaks.html">Tweaks</a>
       <a class="js-rev" href="#reviews" hidden>Reviews</a>
       <a href="#pricing">Pricing</a>
       <a href="#faq">FAQ</a>
     </nav>
     <div class="top-cta">
+      <a class="btn btn-ghost btn-sm btn-ic js-discord" href="https://discord.gg/cbCxCBx8vJ" target="_blank" rel="noopener" aria-label="Join our Discord (opens in a new tab)" title="Discord"><svg class="dc-g"><use href="#i-discord"/></svg></a>
       <a class="btn btn-ghost btn-sm js-account" href="https://account.rago-optimizer.com/login">Sign in</a>
-      <a class="btn btn-red btn-sm" href="#pricing">Get Premium</a>
+      <a class="btn btn-red btn-sm" href="#pricing">Try 3 days free</a>
       <button class="menu-btn" type="button" id="menu-btn" aria-label="Menu" aria-expanded="false" aria-controls="menu"><i></i><i></i></button>
     </div>
   </div>
   <div class="menu" id="menu" hidden>
     <nav aria-label="Menu">
-      <a href="#why">Why Rago</a><a href="#features">Features</a><a href="tweaks.html">Tweaks</a><a class="js-rev" href="#reviews" hidden>Reviews</a><a href="#pricing">Pricing</a><a href="#faq">FAQ</a><a href="#partners">Partners</a><a class="js-affiliate" href="https://account.rago-optimizer.com/affiliate">Affiliate program</a>
+      <a href="#why">Why Rago</a><a href="#features">Features</a><a href="#new">What's new</a><a href="tweaks.html">Tweaks</a><a class="js-rev" href="#reviews" hidden>Reviews</a><a href="#pricing">Pricing</a><a href="#faq">FAQ</a><a href="#partners">Partners</a><a class="js-affiliate" href="https://account.rago-optimizer.com/affiliate">Affiliate program</a>
     </nav>
-    <div class="menu-cta"><a class="btn btn-ghost js-account" href="https://account.rago-optimizer.com/login">Sign in</a><a class="btn btn-ghost js-signup" href="https://account.rago-optimizer.com/signup">Create account</a></div>
+    <div class="menu-cta"><a class="btn btn-ghost js-account" href="https://account.rago-optimizer.com/login">Sign in</a><a class="btn btn-ghost js-signup" href="https://account.rago-optimizer.com/signup">Create account</a><a class="btn btn-ghost js-discord" href="https://discord.gg/cbCxCBx8vJ" target="_blank" rel="noopener" style="grid-column:1/-1"><svg class="dc-g"><use href="#i-discord"/></svg>Join our Discord</a></div>
   </div>
 </header>
 
@@ -714,14 +1006,15 @@ footer.foot p{max-width:80ch}
     <div class="orb a" aria-hidden="true"></div><div class="orb b" aria-hidden="true"></div>
     <div class="band">
       <div>
+        <a class="news fade" href="#pricing"><b>New</b><span>Try Premium free for 3 days</span><svg aria-hidden="true"><use href="#i-arrow"/></svg></a>
         <h1><span class="eyebrow fade">Minecraft PvP optimizer for Windows</span> <span class="h1-t" id="h1">Every millisecond <span class="red">counts.</span></span></h1>
         <p class="lede fade d1">Steadier ping, smoother frames, less input lag. Rago tunes Windows, your network and Minecraft, and puts your settings back when you turn a tweak off.</p>
         <div class="cta-row fade d2">
-          <a class="btn btn-red" href="#pricing">Get Premium<svg><use href="#i-arrow"/></svg></a>
+          <a class="btn btn-red" href="#pricing">Try Premium free<svg><use href="#i-arrow"/></svg></a>
           <a class="btn btn-ghost js-free-app" href="#pricing"><svg><use href="#i-down"/></svg>Download free</a>
         </div>
         <div class="ticks fade d3">
-          <span><svg><use href="#i-check"/></svg>Free to start</span>
+          <span><svg><use href="#i-check"/></svg>Free to start, Premium free for 3 days</span>
           <span><svg><use href="#i-check"/></svg>Restore point offered</span>
           <span><svg><use href="#i-check"/></svg>Windows 10 and 11</span>
         </div>
@@ -798,7 +1091,7 @@ footer.foot p{max-width:80ch}
   <section class="sec band" id="features" style="padding-top:0">
     <div class="head rv">
       <span class="eyebrow">Inside the app</span>
-      <h2>Nearly 200 tweaks. One clear app.</h2>
+      <h2>Nearly 220 tweaks. One clear app.</h2>
       <p><span class="js-only">Pick a section to see what it changes. </span>Every tweak says what it does.</p>
     </div>
     <div class="xp rv">
@@ -810,14 +1103,209 @@ footer.foot p{max-width:80ch}
         <div class="demo-search"><svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="M20 20l-3.5-3.5"/></svg><span id="typed"></span><span class="caret"></span></div>
         <div class="demo-res" id="dres"><div><span>Disable mouse acceleration</span><span>Latency</span></div><div><span>Disable Game DVR</span><span>Windows</span></div><div><span>Disable NIC power saving</span><span>Network</span></div></div>
       </div>
-      <div class="fc rv"><h3>Start from a preset</h3><p>One click selects a tested set.</p>
-        <div class="presets" id="presets"><span>Minecraft PvP</span><span>Max FPS</span><span>Low latency</span><span>Laptop</span><span>Privacy</span></div>
+      <div class="fc rv"><h3>Start from a preset</h3><p>One click selects a tested set: 20 presets, 15 of them made for a game.</p>
+        <div class="presets" id="presets"><span>Minecraft PvP</span><span>Max FPS</span><span>Low latency</span><span>Valorant</span><span>Fortnite</span><span>CS2</span><span>Laptop</span></div>
       </div>
       <div class="fc rv"><h3>Always a way back</h3><p>Turn a tweak off and your settings go back the way they were. A restore point is offered before advanced tweaks.</p>
         <div class="restore-demo"><svg class="ring" id="ring" viewBox="0 0 64 64"><circle class="bg" cx="32" cy="32" r="28"/><circle class="fg" cx="32" cy="32" r="28"/></svg><div><b>Restore point created</b><span>Restore Windows with System Restore.</span></div></div>
       </div>
     </div>
-    <p class="more-tw rv"><a class="rev-all" href="tweaks.html">All 198 tweaks, explained one by one<svg><use href="#i-arrow"/></svg></a></p>
+    <p class="more-tw rv"><a class="rev-all" href="tweaks.html">All 218 tweaks, explained one by one<svg><use href="#i-arrow"/></svg></a></p>
+  </section>
+
+  <!-- What's new in 1.2: one card per new feature, each with a small live demo (illustrations, not measurements) -->
+  <section class="sec band" id="new" style="padding-top:0">
+    <div class="head rv">
+      <span class="eyebrow">New in version 1.2</span>
+      <h2>Now Rago plays with you.</h2>
+      <p>An in-game bar, the Packet Optimizer, your game library, a network test, cleanup tools and a new glass design. Your tweaks work exactly as before.</p>
+    </div>
+    <div class="bento">
+      <article class="nw c8 rv">
+        <div class="nw-vis">
+          <div class="ig open" id="ig" aria-hidden="true">
+            <div class="ig-scene"><video id="ig-v" poster="media/in-game-bar.webp" muted playsinline preload="none" disablepictureinpicture disableremoteplayback><source src="media/in-game-bar.mp4" type="video/mp4; codecs=avc1.64002a"><source src="media/in-game-bar.webm" type="video/webm; codecs=vp9"></video></div>
+            <div class="ig-pill glassy mono"><span><b id="ig-pf">240</b> FPS</span><span><b id="ig-pp">24</b> ms</span></div>
+            <div class="ig-bar glassy">
+              <div class="ig-h"><svg viewBox="0 0 164 180"><use href="#i-mark"/></svg><div><small>In-game bar</small><b>Minecraft</b></div><span class="ig-x"><i></i><i></i></span></div>
+              <div class="ig-st">
+                <div><small>FPS</small><b id="ig-f">240</b></div>
+                <div><small>PING</small><b><span id="ig-p">24</span><u>ms</u></b></div>
+                <div><small>CPU</small><b><span id="ig-c">17</span><u>%</u></b></div>
+                <div><small>GPU</small><b><span id="ig-g">6</span><u>%</u></b></div>
+                <div><small>RAM</small><b><span id="ig-r">47</span><u>%</u></b></div>
+                <div class="ig-cl" id="ig-cl"><svg><use href="#i-broom"/></svg>Clean</div>
+              </div>
+              <div class="ig-tw" id="ig-tw">
+                <span class="ig-sec">Tweaks you can switch mid-game</span>
+                <div class="ig-r on"><span>Disable core parking</span><i class="sw"></i></div>
+                <div class="ig-r"><span>Hardware P-states</span><i class="sw"></i></div>
+                <div class="ig-r on"><span>Configure C-states</span><i class="sw"></i></div>
+                <div class="ig-r"><span>Disable memory compression</span><i class="sw"></i></div>
+                <div class="ig-r"><span>P-states follow C-states</span><i class="sw"></i></div>
+                <div class="ig-r on"><span>Disable page combining</span><i class="sw"></i></div>
+              </div>
+              <div class="ig-foot">Alt+X or Esc to go back to the game</div>
+            </div>
+            <div class="ig-keys glassy"><kbd>Alt</kbd><kbd>X</kbd></div>
+          </div>
+        </div>
+        <div class="nw-txt">
+          <h3>The in-game bar</h3>
+          <p>Press Alt+X in game. FPS, ping, CPU, GPU and RAM show over your game, with 21 tweaks you can switch mid-match. Esc takes you straight back. Ping is measured to the server of your match, in Minecraft, Valorant, CS2, Fortnite and more, and FPS and ping can stay pinned on screen.</p>
+          <div class="nw-k"><span class="tag f">Free <i>live FPS, ping and usage</i></span><span class="tag p">Premium <i>switch tweaks in game</i></span></div>
+        </div>
+      </article>
+      <article class="nw rv">
+        <div class="nw-vis">
+          <div class="nt" id="nt" aria-hidden="true">
+            <div class="nt-top"><span class="nt-v"><i></i>Great connection</span><span class="nt-t" id="nt-t">tested just now</span></div>
+            <div class="nt-m"><div><small>Ping</small><b><span data-v="17">17</span><u>ms</u></b></div><div><small>Jitter</small><b><span data-v="1.2" data-d="1">1.2</span><u>ms</u></b></div><div><small>Packet loss</small><b><span data-v="0">0</span><u>%</u></b></div></div>
+            <ul class="nt-s">
+              <li><span>Minemen Club<em>Europe</em></span><i class="sig" data-n="4"><i></i><i></i><i></i><i></i></i><b data-v="21">21 ms</b></li>
+              <li><span>Hypixel<em>North America</em></span><i class="sig" data-n="2"><i></i><i></i><i></i><i></i></i><b data-v="96">96 ms</b></li>
+              <li><span>Frankfurt<em>Central Europe</em></span><i class="sig" data-n="4"><i></i><i></i><i></i><i></i></i><b data-v="17">17 ms</b></li>
+            </ul>
+          </div>
+        </div>
+        <div class="nw-txt">
+          <h3>Network test</h3>
+          <p>Ping, jitter and packet loss to Hypixel, Minemen Club, game server regions or any server you type. Nothing on your PC is changed.</p>
+          <div class="nw-k"><span class="tag f">Free</span></div>
+        </div>
+      </article>
+      <article class="nw rv">
+        <div class="nw-vis">
+          <div class="cr done" id="cr" aria-hidden="true">
+            <div class="cr-h"><span>Memory (RAM)</span><b><span id="cr-n">58</span>%</b></div>
+            <div class="cr-b"><i id="cr-b" style="width:58%"></i></div>
+            <div class="cr-row"><span class="mono" id="cr-gb">9.3 of 16 GB</span><span class="cr-btn" id="cr-btn"><svg><use href="#i-broom"/></svg>Clean</span></div>
+            <div class="cr-ok"><svg><use href="#i-check"/></svg>2.1 GB of cache cleared</div>
+          </div>
+        </div>
+        <div class="nw-txt">
+          <h3>Clean RAM</h3>
+          <p>One click empties the memory Windows keeps on standby, from the Dashboard or the in-game bar. Your game and anti-cheat are never touched.</p>
+          <div class="nw-k"><span class="tag f">Free</span></div>
+        </div>
+      </article>
+      <article class="nw c7 rv">
+        <div class="nw-vis">
+          <div class="gl" id="gl" aria-hidden="true">
+            <div class="gl-found"><span>Found on this PC</span><b>Steam</b><b>Epic Games</b><b>Riot Client</b><b>Lunar Client</b><b>Battle.net</b></div>
+            <div class="gl-grid">
+              <div class="gt sel"><div class="gt-c"><img src="img/games/minecraft.webp" alt="" width="640" height="400" loading="lazy" decoding="async"></div><div class="gt-n">Lunar Client<small>Minecraft</small></div></div>
+              <div class="gt"><div class="gt-c"><img src="img/games/valorant.webp" alt="" width="640" height="400" loading="lazy" decoding="async"></div><div class="gt-n">VALORANT<small>Riot Client</small></div></div>
+              <div class="gt"><div class="gt-c"><img src="img/games/cs2.webp" alt="" width="640" height="400" loading="lazy" decoding="async"></div><div class="gt-n">Counter-Strike 2<small>Steam</small></div></div>
+              <div class="gt"><div class="gt-c"><img src="img/games/fortnite.webp" alt="" width="640" height="400" loading="lazy" decoding="async"></div><div class="gt-n">Fortnite<small>Epic Games</small></div></div>
+            </div>
+            <div class="gl-act"><span>Preset: Minecraft PvP · 12 tweaks</span><span class="gl-go" id="gl-go"><i class="spin"></i><svg><use href="#i-play"/></svg><span id="gl-t">Optimize and play</span></span></div>
+          </div>
+        </div>
+        <div class="nw-txt">
+          <h3>Your game library</h3>
+          <p>Rago finds your games in Steam, Epic Games, Riot, Battle.net, the EA app, Ubisoft Connect, the Xbox app, Roblox and Minecraft launchers like Lunar, Badlion and Feather. Give each game its preset: one click applies it, then starts the game.</p>
+          <div class="nw-k"><span class="tag f">Free <i>launch your games</i></span><span class="tag p">Premium <i>Optimize and play</i></span></div>
+        </div>
+      </article>
+      <article class="nw c5 rv">
+        <div class="nw-vis">
+          <div class="sh" id="sh" aria-hidden="true">
+            <small>Share a preset · 14 tweaks on</small>
+            <div class="sh-code"><span id="sh-c">RAGO1-K7QX-2M9P-VD4T</span><i class="caret"></i><span class="sh-cp ok" id="sh-cp"><svg><use href="#i-check"/></svg><span>Copied</span></span></div>
+            <div class="sh-row"><span><svg viewBox="0 0 24 24"><path d="M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8z"/><path d="M14 3v5h5"/></svg>pvp-setup.rago</span><span><svg viewBox="0 0 24 24"><path d="M12 4v11M7 10l5 5 5-5M5 20h14"/></svg>Import a friend's preset · <b>9 new for you</b></span></div>
+          </div>
+        </div>
+        <div class="nw-txt">
+          <h3>Share your presets</h3>
+          <p>Turn your setup into a code or a .rago file. A friend sees what changes on their PC before importing it. Save your own presets too, and build a support report in one click: nothing is sent.</p>
+          <div class="nw-k"><span class="tag f">Free</span></div>
+        </div>
+      </article>
+      <article class="nw c6 rv">
+        <div class="nw-vis">
+          <div class="po" id="po" aria-hidden="true">
+            <div class="po-h"><span class="po-run" id="po-run"><svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="M20 20l-3.5-3.5"/></svg>Analyze my PC</span><span class="po-st" id="po-st">Recommended: <b>Hitreg</b></span></div>
+            <ul class="po-steps">
+              <li class="ok"><i></i><span>Network card</span><em>Cable</em></li>
+              <li class="ok"><i></i><span>Processor and Windows</span><em>16 threads</em></li>
+              <li class="ok"><i></i><span>Line quality</span><em>18 ms · 0 of 40 lost</em></li>
+            </ul>
+            <div class="po-ps"><span class="on">Hitreg</span><span>Knockback</span><span>Balanced</span><span>Wi-Fi</span><span>Packet loss</span></div>
+            <div class="po-sl">
+              <div><span>Packet buffering</span><i><b id="po-b1" style="width:0%"></b></i></div>
+              <div><span>Small packet batching</span><i><b id="po-b2" style="width:0%"></b></i></div>
+            </div>
+          </div>
+        </div>
+        <div class="nw-txt">
+          <h3>Packet Optimizer</h3>
+          <p>Changes how Windows sends, receives and re-sends your packets, for fewer stalls in hitreg and knockback. Analyze my PC checks your network card, processor and line, then picks the preset for you.</p>
+          <div class="nw-k"><span class="tag f">Free <i>analysis and tests</i></span><span class="tag p">Premium <i>apply the settings</i></span></div>
+        </div>
+      </article>
+      <article class="nw c6 rv">
+        <div class="nw-vis">
+          <div class="tl" id="tl" aria-hidden="true">
+            <div class="tl-h"><span>Cleanup</span><b><span id="tl-n">3.9</span> GB</b></div>
+            <ul class="tl-l">
+              <li><i class="ck"><svg viewBox="0 0 16 16"><use href="#i-check"/></svg></i><span>Temporary files</span><b>1.2 GB</b></li>
+              <li><i class="ck"><svg viewBox="0 0 16 16"><use href="#i-check"/></svg></i><span>Windows Update downloads</span><b>1.1 GB</b></li>
+              <li><i class="ck"><svg viewBox="0 0 16 16"><use href="#i-check"/></svg></i><span>Shader cache</span><b>860 MB</b></li>
+              <li><i class="ck"><svg viewBox="0 0 16 16"><use href="#i-check"/></svg></i><span>Browser cache</span><b>740 MB</b></li>
+            </ul>
+            <div class="tl-row"><span class="tl-dr"><i></i>Graphics card driver up to date</span><span class="cr-btn" id="tl-btn"><svg><use href="#i-broom"/></svg><span id="tl-t">Clean 3.9 GB</span></span></div>
+          </div>
+        </div>
+        <div class="nw-txt">
+          <h3>Tools</h3>
+          <p>Free up space: temp files, Windows Update downloads, shader, browser and Discord caches, crash reports and the Recycle Bin. Check how old your drivers are, and remove the apps Windows installs on its own.</p>
+          <div class="nw-k"><span class="tag f">Free <i>cleanup, drivers and preinstalled apps</i></span></div>
+        </div>
+      </article>
+      <article class="nw rv">
+        <div class="nw-vis">
+          <div class="up glassy ready" id="up" aria-hidden="true">
+            <span class="up-ic"><svg><use href="#i-down"/></svg></span>
+            <div class="up-m"><b>Update</b><small id="up-t">Ready to install</small><div class="prog"><i style="width:100%"></i></div></div>
+            <span class="up-r">Restart</span>
+          </div>
+        </div>
+        <div class="nw-txt">
+          <h3>Automatic updates</h3>
+          <p>New versions download in the background and install when you close the app, or right away with Restart. Never during a run.</p>
+        </div>
+      </article>
+      <article class="nw rv">
+        <div class="nw-vis">
+          <div class="bgm" id="bgm" aria-hidden="true">
+            <div class="bgm-sw on"><span>Stay by the clock when closed</span><i class="sw"></i></div>
+            <div class="bgm-sw on" id="bgm-a"><span>Start with Windows</span><i class="sw"></i></div>
+            <div class="bgm-tb"><svg viewBox="0 0 24 24"><path d="M5 12.5a10 10 0 0 1 14 0M8 15.5a5.5 5.5 0 0 1 8 0"/><circle cx="12" cy="18.5" r=".8"/></svg><svg viewBox="0 0 24 24"><path d="M4 10v4h4l5 4V6L8 10zM16.5 9a4 4 0 0 1 0 6"/></svg><span class="mk"><svg viewBox="0 0 164 180"><use href="#i-mark"/></svg></span><time>21:42<br>19/10</time></div>
+          </div>
+        </div>
+        <div class="nw-txt">
+          <h3>Ready in the background</h3>
+          <p>Close the window and Rago stays by the clock, ready for the shortcut. Turn on Start with Windows and it's there when you sign in.</p>
+        </div>
+      </article>
+      <article class="nw rv">
+        <div class="nw-vis">
+          <div class="gs" aria-hidden="true"><i class="glassy"></i><i class="glassy"></i></div>
+        </div>
+        <div class="nw-txt">
+          <h3>A new glass design</h3>
+          <p>Lighter and clearer, with room for what comes next. Same tweaks, same engine, same way back.</p>
+        </div>
+      </article>
+    </div>
+    <div class="nw-foot rv">
+      <p class="nw-note">Illustrations of Rago Optimizer 1.2. The numbers are examples, not measurements.</p>
+      <div class="cta-row">
+        <a class="btn btn-red js-free-app" href="#pricing"><svg><use href="#i-down"/></svg>Download free</a>
+        <a class="btn btn-ghost js-discord" href="https://discord.gg/cbCxCBx8vJ" target="_blank" rel="noopener"><svg class="dc-g"><use href="#i-discord"/></svg>Talk about 1.2 on Discord</a>
+      </div>
+    </div>
   </section>
 
   <section class="sec band" id="how" style="padding-top:0">
@@ -828,9 +1316,9 @@ footer.foot p{max-width:80ch}
     <div class="how" id="howwrap">
       <div class="how-line" aria-hidden="true"><i id="howline"></i></div>
       <div class="hs"><span class="ic"><svg viewBox="0 0 24 24"><path d="M12 3v12M7 10l5 5 5-5M4 20h16"/></svg></span><h3>Download free</h3><p>Windows 10 and 11. No account needed.</p></div>
-      <div class="hs"><span class="ic"><svg viewBox="0 0 24 24"><rect x="5" y="10" width="14" height="10" rx="3"/><path d="M8 10V7a4 4 0 0 1 8 0v3"/></svg></span><h3>Try the free tweaks</h3><p>11 tweaks open, the rest shown with a lock.</p></div>
-      <div class="hs"><span class="ic"><svg viewBox="0 0 24 24"><rect x="2" y="5" width="20" height="14" rx="3"/><path d="M2 10h20M6 15h4"/></svg></span><h3>Go Premium</h3><p>Pay with Stripe, then create your account.</p></div>
-      <div class="hs"><span class="ic"><svg viewBox="0 0 24 24"><path d="M13 2L4 14h7l-1 8 9-12h-7z"/></svg></span><h3>Sign in and unlock</h3><p>All 198 tweaks. Apply, restart, play.</p></div>
+      <div class="hs"><span class="ic"><svg viewBox="0 0 24 24"><rect x="5" y="10" width="14" height="10" rx="3"/><path d="M8 10V7a4 4 0 0 1 8 0v3"/></svg></span><h3>Try the free tweaks</h3><p>73 tweaks open, up to 30 on at once. The rest show a lock.</p></div>
+      <div class="hs"><span class="ic"><svg viewBox="0 0 24 24"><rect x="2" y="5" width="20" height="14" rx="3"/><path d="M2 10h20M6 15h4"/></svg></span><h3>Try Premium free</h3><p>3 days free with Stripe. Cancel anytime before day 3 and pay nothing.</p></div>
+      <div class="hs"><span class="ic"><svg viewBox="0 0 24 24"><path d="M13 2L4 14h7l-1 8 9-12h-7z"/></svg></span><h3>Sign in and unlock</h3><p>With Google, Discord or email. All 218 tweaks, no limit.</p></div>
     </div>
   </section>
 
@@ -862,15 +1350,17 @@ footer.foot p{max-width:80ch}
     <div class="plans">
       <div class="plan plan-free rv">
         <h3>Free</h3>
-        <p class="sub">The app, with the essentials open.</p>
+        <p class="sub">Watch, test and clean your PC.</p>
         <div class="price"><b>$0</b><small>forever</small></div>
         <div class="price-note">No license needed</div>
         <ul id="free-list">
-          <li><svg><use href="#i-check"/></svg>The full Rago Optimizer app</li>
-          <li><svg><use href="#i-check"/></svg>7 Windows tweaks: Game Mode, Game DVR off, visual effects, fullscreen, notifications, tips, Copilot and Recall</li>
-          <li><svg><use href="#i-check"/></svg>The 4 Restore tools</li>
-          <li><svg><use href="#i-check"/></svg>Live RAM, GPU and CPU usage</li>
-          <li class="locked"><svg><use href="#i-lock"/></svg>Everything else, presets included, locked (RBW Mod On stays open)</li>
+          <li><svg><use href="#i-check"/></svg><span><b>In-game bar</b>: live FPS, ping, CPU, GPU and RAM</span></li>
+          <li><svg><use href="#i-check"/></svg><span><b>Network test</b> to Hypixel, Minemen Club and game regions</span></li>
+          <li><svg><use href="#i-check"/></svg><span><b>Clean RAM</b> in one click, cleanup and driver check</span></li>
+          <li><svg><use href="#i-check"/></svg><span><b>Game library</b> and preset sharing</span></li>
+          <li><svg><use href="#i-check"/></svg><span><b>73 tweaks open, up to 30 on at once</b>: Windows, storage, graphics card telemetry and Restore</span></li>
+          <li><svg><use href="#i-check"/></svg><span><b>Remove preinstalled apps</b> in Tools</span></li>
+          <li class="locked"><svg><use href="#i-lock"/></svg>Network and hitreg tweaks, presets and Packet Optimizer locked</li>
         </ul>
         <a class="btn btn-ghost js-free-app" href="https://account.rago-optimizer.com/download"><svg><use href="#i-down"/></svg>Download free</a>
         <p class="micro">Windows 10 and 11</p>
@@ -879,31 +1369,36 @@ footer.foot p{max-width:80ch}
         <span class="rec">Recommended</span>
         <div class="plan">
           <h3>Premium</h3>
-          <p class="sub">Every tweak unlocked</p>
+          <p class="sub">Every optimization, for every game.</p>
           <div class="price"><b id="p-amt">$2.50</b><small id="p-per">/ month</small></div>
           <div class="price-note" id="p-note">Billed $29.99 yearly. 6 months free.</div>
           <ul>
-            <li><svg><use href="#i-check"/></svg>All 198 tweaks unlocked</li>
-            <li><svg><use href="#i-check"/></svg>5 one-click presets</li>
-            <li><svg><use href="#i-check"/></svg>Minecraft, RBW Mod, Game mode and Expert mode</li>
-            <li><svg><use href="#i-check"/></svg>New tweaks from future versions</li>
-            <li><svg><use href="#i-check"/></svg>The Premium channel on Discord, after purchase</li>
+            <li><svg><use href="#i-check"/></svg><span><b>All 218 tweaks</b>, with RBW Mod, Game mode and Expert mode</span></li>
+            <li><svg><use href="#i-check"/></svg><span><b>Packet Optimizer</b> for hitreg and knockback, tuned to your line</span></li>
+            <li><svg><use href="#i-check"/></svg><span><b>20 presets</b>, 15 made for a game: Valorant, Fortnite, CS2…</span></li>
+            <li><svg><use href="#i-check"/></svg><span><b>Optimize and play</b>: your preset applied, then your game starts</span></li>
+            <li><svg><use href="#i-check"/></svg><span><b>21 tweaks to switch mid-match</b> from the in-game bar</span></li>
+            <li><svg><use href="#i-check"/></svg><span><b>No limit</b> on the tweaks you keep on</span></li>
+            <li><svg><use href="#i-check"/></svg><span><b>Every new tweak and preset</b> from future versions</span></li>
+            <li><svg><use href="#i-check"/></svg><span><b>The Premium role</b> on Discord</span></li>
           </ul>
           <div class="lic"><svg viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="12" rx="3"/><path d="M8 20h8M12 16v4"/></svg>One license, one PC.</div>
-          <a class="btn btn-red js-checkout" href="https://account.rago-optimizer.com/buy?interval=year">Get Premium<svg><use href="#i-arrow"/></svg></a>
+          <a class="btn btn-red js-trial" href="/buy?interval=year&amp;trial=1">Start 3-day free trial<svg><use href="#i-arrow"/></svg></a>
+          <p class="trial-note" id="trial-note">Card required. Free for 3 days, then $29.99 a year, charged automatically on day 3 unless you cancel before. Cancel in two clicks from your account. One trial per person.</p>
+          <a class="btn btn-ghost js-checkout" href="https://account.rago-optimizer.com/buy?interval=year">Skip the trial and buy now</a>
           <p class="micro">Secure checkout with Stripe · Cancel anytime · <a href="refunds.html">Refund policy</a></p>
         </div>
       </div>
       <div class="plan rv" id="lifetime">
         <h3>Lifetime</h3>
-        <p class="sub">Premium, paid once.</p>
+        <p class="sub">Premium for good, paid once.</p>
         <div class="price"><b id="l-amt">$59.99</b><small>once</small></div>
         <div class="price-note">One-time payment. No renewals.</div>
         <ul>
-          <li><svg><use href="#i-check"/></svg>Everything in Premium</li>
-          <li><svg><use href="#i-check"/></svg>Every tweak and the 5 presets</li>
-          <li><svg><use href="#i-check"/></svg>New tweaks from future versions</li>
-          <li><svg><use href="#i-check"/></svg>The Premium channel on Discord, after purchase</li>
+          <li><svg><use href="#i-check"/></svg><span><b>Everything in Premium</b>, with nothing to renew</span></li>
+          <li><svg><use href="#i-check"/></svg><span><b>Every future version</b>: new tweaks, presets and features</span></li>
+          <li class="life-on"><svg><use href="#i-check"/></svg><span><b>Already subscribed?</b> Switch from your account page</span></li>
+          <li><svg><use href="#i-check"/></svg><span><b>The Premium role</b> on Discord</span></li>
         </ul>
         <div class="lic"><svg viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="12" rx="3"/><path d="M8 20h8M12 16v4"/></svg>One license, one PC.</div>
         <a class="btn btn-ghost js-lifetime" role="link" aria-disabled="true">Coming soon</a>
@@ -913,7 +1408,7 @@ footer.foot p{max-width:80ch}
     <div class="cmp-wrap rv">
       <table class="cmp">
         <thead><tr><th>What you get</th><th>Free</th><th class="pc">Premium</th></tr></thead>
-        <tbody id="cmp"><tr><td>Rago Optimizer app and interface</td><td><span class="yes"><svg viewBox="0 0 16 16"><use href="#i-check"></use></svg></span></td><td class="pcol"><span class="yes"><svg viewBox="0 0 16 16"><use href="#i-check"></use></svg></span></td></tr><tr><td>Tweaks unlocked</td><td><span class="txt">11 of 198</span></td><td class="pcol"><span class="txt">All 198</span></td></tr><tr><td>Restore point before advanced tweaks</td><td><span class="yes"><svg viewBox="0 0 16 16"><use href="#i-check"></use></svg></span></td><td class="pcol"><span class="yes"><svg viewBox="0 0 16 16"><use href="#i-check"></use></svg></span></td></tr><tr><td>Network, latency, hitreg and graphics card tweaks</td><td><span class="lk" title="Locked in Free"><svg viewBox="0 0 16 16"><use href="#i-lock"></use></svg></span></td><td class="pcol"><span class="yes"><svg viewBox="0 0 16 16"><use href="#i-check"></use></svg></span></td></tr><tr><td>Presets: Minecraft PvP, Max FPS, Low latency, Laptop, Privacy</td><td><span class="lk" title="Locked in Free"><svg viewBox="0 0 16 16"><use href="#i-lock"></use></svg></span></td><td class="pcol"><span class="yes"><svg viewBox="0 0 16 16"><use href="#i-check"></use></svg></span></td></tr><tr><td>Minecraft, Expert mode, RBW Mod Off and Game mode On</td><td><span class="lk" title="Locked in Free"><svg viewBox="0 0 16 16"><use href="#i-lock"></use></svg></span></td><td class="pcol"><span class="yes"><svg viewBox="0 0 16 16"><use href="#i-check"></use></svg></span></td></tr><tr><td>Live RAM, GPU and CPU usage</td><td><span class="yes"><svg viewBox="0 0 16 16"><use href="#i-check"></use></svg></span></td><td class="pcol"><span class="yes"><svg viewBox="0 0 16 16"><use href="#i-check"></use></svg></span></td></tr><tr><td>New tweaks from future versions</td><td><span class="lk" title="Locked in Free"><svg viewBox="0 0 16 16"><use href="#i-lock"></use></svg></span></td><td class="pcol"><span class="yes"><svg viewBox="0 0 16 16"><use href="#i-check"></use></svg></span></td></tr><tr><td>Undo the tweaks you applied</td><td><span class="yes"><svg viewBox="0 0 16 16"><use href="#i-check"></use></svg></span></td><td class="pcol"><span class="yes"><svg viewBox="0 0 16 16"><use href="#i-check"></use></svg></span></td></tr><tr><td>Premium Discord channel</td><td><span class="no"><svg viewBox="0 0 16 16"><path d="M4.5 8h7"></path></svg></span></td><td class="pcol"><span class="yes"><svg viewBox="0 0 16 16"><use href="#i-check"></use></svg></span></td></tr><tr><td>How you pay</td><td><span class="txt">Free</span></td><td class="pcol"><span class="txt life-off">Monthly or yearly</span><span class="txt life-on">Monthly, yearly or once</span></td></tr><tr><td>License</td><td><span class="txt">Not needed</span></td><td class="pcol"><span class="txt">1 PC per license</span></td></tr></tbody>
+        <tbody id="cmp"><tr><td>Tweaks unlocked</td><td><span class="txt">73 of 218</span></td><td class="pcol"><span class="txt">All 218</span></td></tr><tr><td>In-game bar: live FPS, ping, CPU, GPU and RAM</td><td><span class="yes"><svg viewBox="0 0 16 16"><use href="#i-check"></use></svg></span></td><td class="pcol"><span class="yes"><svg viewBox="0 0 16 16"><use href="#i-check"></use></svg></span></td></tr><tr><td>In-game bar: switch tweaks mid-match</td><td><span class="lk" title="Locked in Free"><svg viewBox="0 0 16 16"><use href="#i-lock"></use></svg></span></td><td class="pcol"><span class="yes"><svg viewBox="0 0 16 16"><use href="#i-check"></use></svg></span></td></tr><tr><td>Network test</td><td><span class="yes"><svg viewBox="0 0 16 16"><use href="#i-check"></use></svg></span></td><td class="pcol"><span class="yes"><svg viewBox="0 0 16 16"><use href="#i-check"></use></svg></span></td></tr><tr><td>Packet Optimizer</td><td><span class="txt">Analysis and tests</span></td><td class="pcol"><span class="yes"><svg viewBox="0 0 16 16"><use href="#i-check"></use></svg></span></td></tr><tr><td>Presets: Minecraft PvP, Max FPS, Low latency, Laptop, Privacy and 15 games</td><td><span class="lk" title="Locked in Free"><svg viewBox="0 0 16 16"><use href="#i-lock"></use></svg></span></td><td class="pcol"><span class="yes"><svg viewBox="0 0 16 16"><use href="#i-check"></use></svg></span></td></tr><tr><td>Game library</td><td><span class="txt">Launch games</span></td><td class="pcol"><span class="txt">Optimize and play</span></td></tr><tr><td>Clean RAM, cleanup and driver check</td><td><span class="yes"><svg viewBox="0 0 16 16"><use href="#i-check"></use></svg></span></td><td class="pcol"><span class="yes"><svg viewBox="0 0 16 16"><use href="#i-check"></use></svg></span></td></tr><tr><td>Tweaks on at the same time</td><td><span class="txt">Up to 30</span></td><td class="pcol"><span class="txt">No limit</span></td></tr><tr><td>Remove preinstalled apps</td><td><span class="yes"><svg viewBox="0 0 16 16"><use href="#i-check"></use></svg></span></td><td class="pcol"><span class="yes"><svg viewBox="0 0 16 16"><use href="#i-check"></use></svg></span></td></tr><tr><td>Network, hitreg and most latency and graphics card tweaks</td><td><span class="lk" title="Locked in Free"><svg viewBox="0 0 16 16"><use href="#i-lock"></use></svg></span></td><td class="pcol"><span class="yes"><svg viewBox="0 0 16 16"><use href="#i-check"></use></svg></span></td></tr><tr><td>Minecraft, Expert mode, RBW Mod Off and Game mode On</td><td><span class="lk" title="Locked in Free"><svg viewBox="0 0 16 16"><use href="#i-lock"></use></svg></span></td><td class="pcol"><span class="yes"><svg viewBox="0 0 16 16"><use href="#i-check"></use></svg></span></td></tr><tr><td>Share and import presets</td><td><span class="yes"><svg viewBox="0 0 16 16"><use href="#i-check"></use></svg></span></td><td class="pcol"><span class="yes"><svg viewBox="0 0 16 16"><use href="#i-check"></use></svg></span></td></tr><tr><td>Restore point and undo for your tweaks</td><td><span class="yes"><svg viewBox="0 0 16 16"><use href="#i-check"></use></svg></span></td><td class="pcol"><span class="yes"><svg viewBox="0 0 16 16"><use href="#i-check"></use></svg></span></td></tr><tr><td>New tweaks from future versions</td><td><span class="lk" title="Locked in Free"><svg viewBox="0 0 16 16"><use href="#i-lock"></use></svg></span></td><td class="pcol"><span class="yes"><svg viewBox="0 0 16 16"><use href="#i-check"></use></svg></span></td></tr><tr><td>Premium role on Discord</td><td><span class="no"><svg viewBox="0 0 16 16"><path d="M4.5 8h7"></path></svg></span></td><td class="pcol"><span class="yes"><svg viewBox="0 0 16 16"><use href="#i-check"></use></svg></span></td></tr><tr><td>Free trial</td><td><span class="no"><svg viewBox="0 0 16 16"><path d="M4.5 8h7"></path></svg></span></td><td class="pcol"><span class="txt">3 days, card required</span></td></tr><tr><td>How you pay</td><td><span class="txt">Free</span></td><td class="pcol"><span class="txt life-off">Monthly or yearly</span><span class="txt life-on">Monthly, yearly or once</span></td></tr><tr><td>License</td><td><span class="txt">Not needed</span></td><td class="pcol"><span class="txt">1 PC per license</span></td></tr></tbody>
       </table>
     </div>
   </section>
@@ -921,7 +1416,30 @@ footer.foot p{max-width:80ch}
   <section class="sec band" id="faq" style="padding-top:0">
     <div class="head rv"><span class="eyebrow">FAQ</span><h2>Before you buy.</h2></div>
     <div class="faq rv" id="faqs"></div>
-    <noscript><div class="faq"><details class="fq-s"><summary>Can I get banned for using Rago?</summary><p>Rago doesn't modify Minecraft and injects nothing into the game. It changes Windows and network settings, the same ones you could change by hand. Some servers screenshare players and check Windows logs. A few Advanced tweaks change Windows services and settings that staff look at, and the ones that matter most say so. Turn on RBW Mod and restart your PC before a screenshare: it brings those services back.</p></details><details class="fq-s"><summary>Will it lower my ping?</summary><p>It depends where your ping comes from. Distance to the server can't be fixed by any software. Rago cuts the delay your PC adds and makes your timing steadier, which is what matters most for hits.</p></details><details class="fq-s"><summary>What's the difference between Free and Premium?</summary><p>Both are the same Rago Optimizer app. Free opens 11 tweaks, Restore included, and shows everything else with a lock. Both show your live RAM, GPU and CPU usage. Premium unlocks all 198 tweaks, the 5 presets and the new tweaks of future versions. In both, you can undo the tweaks you applied.</p></details><details class="fq-s"><summary>Does it work on laptops?</summary><p>Yes. Rago runs on any Windows 10 or 11 PC, desktop or laptop. Premium includes a Laptop preset: gains without hurting battery life or heat.</p></details><details class="fq-s"><summary>Does it work on Mac or Linux?</summary><p>No. Rago Optimizer tunes Windows, so it only runs on Windows 10 and 11.</p></details><details class="fq-s"><summary>Monthly or yearly?</summary><p>Same app either way. Paying yearly works out to 6 months free compared with paying monthly. You can cancel anytime from your account. When Premium ends, Rago puts back the settings changed by its tweaks, free ones included. Signing out does the same, in the background.</p></details><details class="fq-s"><summary>How do I join the Premium channel on Discord?</summary><p>After you buy, your account page links to our Discord. Open a ticket there with the email of your Rago account. Our staff checks your purchase and gives you the Premium role. It isn't automatic, so it can take a little while.</p></details><details class="fq-s"><summary>Can I use my license on more than one PC?</summary><p>No. Premium works on one device per license. If you change PCs, open a ticket on our Discord (linked from your account page) and support moves your license.</p></details><details class="fq-s"><summary>What if I don't like a change?</summary><p>Turn the tweak off and apply: Rago Optimizer puts those Windows settings back the way they were. One-time actions, like removing apps, have a button instead of a switch and can't be turned off. For those, Rago offers a Windows restore point before applying, ticked by default for the ones it can't undo, like removing apps, unless it made one in the last 24 hours: open Restore in the app and pick Open System Restore to go back to it. Restore also has quick resets for the network and the input queue.</p></details><details class="fq-s"><summary>Windows says “Windows protected your PC”. Is it safe?</summary><p>Windows shows this for apps that don't have a paid code-signing certificate yet, which is our case. Click More info, then Run anyway. Only do it for the installer you downloaded from this site. Rago then asks for administrator rights, because it changes system settings.</p></details><details class="fq-s"><summary>How do I uninstall Rago?</summary><p>Uninstall Rago Optimizer from Windows Settings, Apps, like any other app: before it goes, it puts back the Windows settings its tweaks changed, which can take a few minutes. To undo everything and keep the app, use Undo all on the Dashboard.</p></details><details class="fq-s"><summary>My antivirus flagged Rago. Why?</summary><p>Rago changes system settings, which is what antivirus tools watch for. Only download Rago from this site. Don't disable your antivirus: allow the file if you trust it, or ask us on our Discord (linked from your account page).</p></details><details class="fq-s"><summary>How does the affiliate program work?</summary><p>Join to get your code and share it. Friends who use your code get 5% off their first Premium payment. A friend counts as soon as they activate the app on their PC. 3 friends who activate the app give you 6 months of Premium. You can refer up to 3 friends.</p></details></div></noscript>
+    <noscript><div class="faq"><details class="fq-s"><summary>Can I get banned for using Rago?</summary><p>Rago doesn't modify Minecraft or any other game and injects nothing into them: the in-game bar is a separate window over the game, and FPS are read from Windows. Rago changes Windows and network settings, the same ones you could change by hand. Some servers screenshare players and check Windows logs. A few Advanced tweaks change Windows services and settings that staff look at, and the ones that matter most say so. Turn on RBW Mod and restart your PC before a screenshare: it brings those services back.</p></details><details class="fq-s"><summary>Will it lower my ping?</summary><p>It depends where your ping comes from. Distance to the server can't be fixed by any software. Rago cuts the delay your PC adds and makes your timing steadier, which is what matters most for hits. The free network test shows your ping, jitter and packet loss to the servers you play on.</p></details><details class="fq-s"><summary>What's the difference between Free and Premium?</summary><p>Both are the same Rago Optimizer app. Free opens 73 tweaks, Restore included, and you can keep up to 30 of them on at once. Everything else shows a lock. Free also gives you the live stats of the in-game bar, the network test, Clean RAM, cleanup, the driver check, the removal of preinstalled apps, the game library and preset sharing. Premium unlocks all 218 tweaks with no limit, the network and hitreg tweaks, the Packet Optimizer, the 20 presets, Optimize and play, the tweaks you switch in game and the new tweaks of future versions. In both, you can undo the tweaks you applied.</p></details><details class="fq-s"><summary>Which games does it work with?</summary><p>Rago tunes Windows and your network, so it helps every game you play on that PC, and its game library finds them in your launchers. Premium adds presets made for 15 games: Fortnite, Valorant, Counter-Strike 2, Apex Legends, PUBG, Rainbow Six Siege, Overwatch 2, Marvel Rivals, The Finals, Escape from Tarkov, Rocket League, League of Legends, Roblox, GTA V and Minecraft Bedrock, on top of Minecraft PvP.</p></details><details class="fq-s"><summary>Does it work on laptops?</summary><p>Yes. Rago runs on any Windows 10 or 11 PC, desktop or laptop. Premium includes a Laptop preset: gains without hurting battery life or heat.</p></details><details class="fq-s"><summary>Does it work on Mac or Linux?</summary><p>No. Rago Optimizer tunes Windows, so it only runs on Windows 10 and 11.</p></details><details class="fq-s"><summary>How does the free trial work?</summary><p>Choose Start undefined-day free trial, create your account and enter your card on Stripe. Nothing is charged today and you get all of Premium right away. If you don't cancel, the price of the plan you chose is charged automatically undefined days later, and the email we send you gives the exact date. To stop, cancel from your account page before that date: you pay nothing and Premium ends with the trial. The trial is for new customers, once per person and per card.</p></details><details class="fq-s"><summary>Monthly or yearly?</summary><p>Same app either way. Paying yearly works out to 6 months free compared with paying monthly. You can cancel anytime from your account. When Premium ends, Rago puts back the settings changed by its tweaks, free ones included. Signing out does the same, in the background.</p></details><details class="fq-s"><summary>How do I get the Premium role on Discord?</summary><p>After you buy, open your account page: it shows how to get the Premium role on our <a href="https://discord.gg/cbCxCBx8vJ" rel="noopener">Discord</a>, which opens the Premium channel. If anything goes wrong, open a ticket there with the email of your Rago account.</p></details><details class="fq-s"><summary>Can I use my license on more than one PC?</summary><p>No. Premium works on one device per license. If you change PCs, open a ticket on our <a href="https://discord.gg/cbCxCBx8vJ" rel="noopener">Discord</a> (linked from your account page) and support moves your license.</p></details><details class="fq-s"><summary>What if I don't like a change?</summary><p>Turn the tweak off and apply: Rago Optimizer puts those Windows settings back the way they were. One-time actions, like removing apps, have a button instead of a switch and can't be turned off. For those, Rago offers a Windows restore point before applying, ticked by default for the ones it can't undo, like removing apps, unless it made one in the last 24 hours: open Restore in the app and pick Open System Restore to go back to it. Restore also has quick resets for the network and the input queue.</p></details><details class="fq-s"><summary>Windows says “Windows protected your PC”. Is it safe?</summary><p>Windows shows this for apps that don't have a paid code-signing certificate yet, which is our case. Click More info, then Run anyway. Only do it for the installer you downloaded from this site. Rago then asks for administrator rights, because it changes system settings.</p></details><details class="fq-s"><summary>How do I uninstall Rago?</summary><p>Uninstall Rago Optimizer from Windows Settings, Apps, like any other app: before it goes, it puts back the Windows settings its tweaks changed, which can take a few minutes. To undo everything and keep the app, use Undo all on the Dashboard.</p></details><details class="fq-s"><summary>My antivirus flagged Rago. Why?</summary><p>Rago changes system settings, which is what antivirus tools watch for. Only download Rago from this site. Don't disable your antivirus: allow the file if you trust it, or ask us on our <a href="https://discord.gg/cbCxCBx8vJ" rel="noopener">Discord</a> (linked from your account page).</p></details><details class="fq-s"><summary>How does the affiliate program work?</summary><p>Join to get your code and share it. Friends who use your code get 5% off their first Premium payment. A friend counts as soon as they activate the app on their PC. 3 friends who activate the app give you 6 months of Premium. You can refer up to 3 friends.</p></details></div></noscript>
+  </section>
+
+  <!-- Discord: shown once CONFIG.discord is set (the build bakes the link for visitors without JavaScript) -->
+  <section class="sec band js-discord" id="community" style="padding-top:0">
+    <div class="dc rv">
+      <div class="dc-vis" id="dcvis" aria-hidden="true">
+        <b></b><b></b><b></b>
+        <span class="dc-orbit"><i class="r" style="left:50%;top:0"></i><i style="left:100%;top:50%"></i><i class="g" style="left:15%;top:85%"></i></span>
+        <span class="dc-orbit o2"><i class="g" style="left:85%;top:15%"></i><i style="left:0;top:50%"></i><i class="r" style="left:60%;top:99%"></i></span>
+        <span class="dc-core glassy"><svg class="dc-g"><use href="#i-discord"/></svg></span>
+      </div>
+      <div>
+        <span class="eyebrow">Community</span>
+        <h2>Join the Rago Discord.</h2>
+        <p>Get help, share your presets with other players and hear about new versions first.</p>
+        <ul>
+          <li><svg><use href="#i-check"/></svg>Support tickets, answered by our staff</li>
+          <li><svg><use href="#i-check"/></svg>The Premium channel, after purchase</li>
+          <li><svg><use href="#i-check"/></svg>Update notes as soon as a version ships</li>
+        </ul>
+        <a class="btn btn-red js-discord" href="https://discord.gg/cbCxCBx8vJ" target="_blank" rel="noopener"><svg class="dc-g"><use href="#i-discord"/></svg>Join our Discord<span class="sr-only"> (opens in a new tab)</span></a>
+      </div>
+    </div>
   </section>
 
   <!-- Partners: the servers marked "home" in src/partners.json (cards written by tools/sync_partners.py, which build.py
@@ -972,10 +1490,11 @@ footer.foot p{max-width:80ch}
     <div class="band rv">
       <span class="eyebrow">Your next match</span>
       <h2>Tune your PC once. Feel it on the first combo.</h2>
-      <p>Start free, unlock everything with Premium.</p>
+      <p>Start free, or try Premium free for 3 days.</p>
       <div class="cta-row">
-        <a class="btn btn-red" href="#pricing">Get Premium<svg><use href="#i-arrow"/></svg></a>
+        <a class="btn btn-red" href="#pricing">Try Premium free<svg><use href="#i-arrow"/></svg></a>
         <a class="btn btn-ghost js-free-app" href="#pricing"><svg><use href="#i-down"/></svg>Download free</a>
+        <a class="btn btn-ghost js-discord" href="https://discord.gg/cbCxCBx8vJ" target="_blank" rel="noopener"><svg class="dc-g"><use href="#i-discord"/></svg>Join our Discord</a>
       </div>
     </div>
   </section>
@@ -985,7 +1504,7 @@ footer.foot p{max-width:80ch}
   <div class="band">
     <div class="row">
       <svg viewBox="0 0 1124 180" style="height:22px;width:auto;color:var(--t1)"><use href="#i-word"/></svg>
-      <nav aria-label="Footer"><a href="#features">Features</a><a href="tweaks.html">Tweaks</a><a href="#pricing">Pricing</a><a href="#faq">FAQ</a><a class="js-affiliate" href="https://account.rago-optimizer.com/affiliate">Affiliate program</a><a href="partners.html">Partners</a><a class="js-account" href="https://account.rago-optimizer.com/login">Sign in</a><a class="js-signup" href="https://account.rago-optimizer.com/signup">Create account</a><a class="js-discord" href="#reviews">Discord</a><a href="terms.html">Terms</a><a href="privacy.html">Privacy</a><a href="refunds.html">Refunds</a></nav>
+      <nav aria-label="Footer"><a href="#features">Features</a><a href="tweaks.html">Tweaks</a><a href="#pricing">Pricing</a><a href="#faq">FAQ</a><a class="js-affiliate" href="https://account.rago-optimizer.com/affiliate">Affiliate program</a><a href="partners.html">Partners</a><a class="js-account" href="https://account.rago-optimizer.com/login">Sign in</a><a class="js-signup" href="https://account.rago-optimizer.com/signup">Create account</a><a class="js-discord" href="https://discord.gg/cbCxCBx8vJ" target="_blank" rel="noopener">Discord</a><a href="terms.html">Terms</a><a href="privacy.html">Privacy</a><a href="refunds.html">Refunds</a></nav>
     </div>
     <p>Rago Optimizer changes Windows settings. Results depend on your hardware and connection. A restore point is offered before advanced tweaks. Minecraft is a trademark of Mojang Studios; Rago Optimizer isn't affiliated with Mojang or Microsoft. © 2026 Rago Optimizer, by Rago and Kaliso.</p>
   </div>
@@ -993,7 +1512,7 @@ footer.foot p{max-width:80ch}
 
 <div class="dock" id="dock">
   <a class="btn btn-ghost js-free-app" href="#pricing">Free</a>
-  <a class="btn btn-red" href="#pricing">Get Premium</a>
+  <a class="btn btn-red" href="#pricing">Try Premium free</a>
 </div>
 <div class="toast" id="toast" role="status"></div>
 <div class="dlg" id="send" hidden>
@@ -1023,7 +1542,7 @@ footer.foot p{max-width:80ch}
     <ol>
       <li><b>Open RagoOptimizer-Setup.exe</b><span>From your Downloads folder.</span></li>
       <li><b>If Windows says “Windows protected your PC”</b><span>Click More info, then Run anyway. Windows shows this because Rago doesn't have a paid code-signing certificate yet. Then accept the administrator prompt: Rago needs it to change system settings.</span></li>
-      <li><b>Rago opens in free mode</b><span>No account needed. 11 tweaks are open, the rest show a lock until you go Premium.</span></li>
+      <li><b>Rago opens in free mode</b><span>No account needed. 73 tweaks are open, up to 30 on at once, and the rest show a lock until you go Premium.</span></li>
     </ol>
     <div class="dlg-acts"><button class="btn btn-ghost btn-sm" type="button" id="dlg-ok">Got it</button><a class="btn btn-red btn-sm" href="#pricing" id="dlg-pro">See Premium</a></div>
     <p class="micro">Nothing downloaded? <a class="js-free-app" href="https://account.rago-optimizer.com/download" id="dlg-retry">Try again</a></p>
@@ -1035,13 +1554,14 @@ footer.foot p{max-width:80ch}
 const CONFIG = {
   accountBase: "https://account.rago-optimizer.com", // licensing server URL, no trailing slash. Empty = same domain as this site
   previewAccountBase: "",                           // staging account server for Netlify previews: filled at build by netlify/preview.sh (STAGING_ACCOUNT_URL)
+  trialDays: 3,                                     // free trial of the subscription: same number as TRIAL_DAYS on the account server
   checkoutPath: "/buy",                             // + ?interval=month|year (+ &ref=CODE from an affiliate link). Creates the Stripe Checkout session, 303 redirect
   lifetimePath: "/buy/lifetime",                    // Lifetime checkout (one payment, + ?ref=CODE or ?promo=CODE). Opened only once /api/v1/plans says it's sold at priceLifetime
   loginPath: "/login",
   signupPath: "/signup",
   affiliatePath: "/affiliate",
   freeAppPath: "/download",                         // Free plan: public installer link on the account server, no license needed
-  discord: "",                                      // e.g. "https://discord.gg/yourInvite"
+  discord: "https://discord.gg/cbCxCBx8vJ",          // permanent invite of the Rago Discord
   // The discount pop-up (code, % off, words, number of customers) is set on the account server: /admin there,
   // or npm run admin -- popup. This page reads it from /api/v1/promo on every visit.
   currency: "$",
@@ -1078,7 +1598,8 @@ const wire = (sel, url, msg, ext) => $$(sel).forEach(a => {
 wire(".js-account", acct(CONFIG.loginPath), "", false);
 wire(".js-signup", acct(CONFIG.signupPath), "", false);
 wire(".js-affiliate", acct(CONFIG.affiliatePath), "", false);
-if (CONFIG.discord) wire(".js-discord", CONFIG.discord, "", true); else $$(".js-discord").forEach(a => a.remove());
+/* Discord: its buttons and the Community section appear once CONFIG.discord is set, and stay out of the page until then */
+if (CONFIG.discord) { wire("a.js-discord", CONFIG.discord, "", true); $$(".js-discord").forEach(e => e.hidden = false); } else $$(".js-discord").forEach(e => e.remove());
 $$(".js-free-app").forEach(a => a.href = acct(CONFIG.freeAppPath));
 /* Rago only runs on Windows: phones and Macs get a note instead of an installer they can't open */
 const onWindows = /Windows/i.test(navigator.userAgent) || /Win/i.test(navigator.userAgentData?.platform || "");
@@ -1199,7 +1720,7 @@ function promo() {
 const cue = $("#cue");
 const cueFit = () => {
   const c = cue.getBoundingClientRect();
-  cue.classList.toggle("tight", $$(".hero .eyebrow, .hero h1 .w, .hero .lede, .hero .cta-row > a, .hero .ticks > span, #hub").some(e => { const r = e.getBoundingClientRect(); return r.bottom + 16 > c.top && r.top - 16 < c.bottom && r.right + 24 > c.left && r.left - 24 < c.right; }));
+  cue.classList.toggle("tight", $$(".hero .news, .hero .eyebrow, .hero h1 .w, .hero .lede, .hero .cta-row > a, .hero .ticks > span, #hub").some(e => { const r = e.getBoundingClientRect(); return r.bottom + 16 > c.top && r.top - 16 < c.bottom && r.right + 24 > c.left && r.left - 24 < c.right; }));
 };
 cueFit(); setTimeout(cueFit, 1500);
 let cueRaf = 0; addEventListener("resize", () => { cancelAnimationFrame(cueRaf); cueRaf = requestAnimationFrame(cueFit); });
@@ -1276,8 +1797,8 @@ const ICO = { // small Lucide glyphs used in rows and buttons
 };
 const svg = (d, c = "") => `<svg viewBox="0 0 24 24"${c ? ` class="${c}"` : ""} aria-hidden="true">${d}</svg>`;
 const MODS = [
-  ["network","Network","Ping, stability and hit registration.",20],["latency","Latency","Timers, priorities, CPU, memory and power.",82],
-  ["gpu","Graphics card","NVIDIA, AMD and Intel, each with its own settings.",29],["windows","Windows","What runs for nothing in the background.",33],
+  ["network","Network","Ping, stability and hit registration.",23],["latency","Latency","Timers, priorities, CPU, memory and power.",82],
+  ["gpu","Graphics card","NVIDIA, AMD and Intel, each with its own settings.",29],["windows","Windows","What runs for nothing in the background.",50],
   ["hitreg","Hitreg","The advanced suite so your hits land.",9],["minecraft","Minecraft","OptiFine, javaw priority and game traffic.",1],
   ["rbw","RBW Mod","Ready for a Ranked BedWars screenshare.",1],["gamemode","Game mode","Turn on before playing, off after.",1],
   ["expert","Expert mode","Kernel, boot and security settings. Powerful, use knowingly.",18],["restore","Restore","Always a way back.",0]
@@ -1399,7 +1920,7 @@ const MODS = [
 
 /* Inside the app: click a section, see real tweaks from it */
 (() => {
-  const EX = {"network": [["Hitreg profile", "Six profiles that set TCP receive auto-tuning and incoming packet coalescing; Default puts Windows back as it was.", ""], ["Disable Nagle's algorithm", "Turns off Nagle's algorithm and delayed ACKs, which bundle small network packets before sending them.", "r"], ["Disable NIC power saving", "Turns off network card power saving (Green Ethernet, sleep) and waking the PC over the network.", "r"], ["Restart network adapter", "Restarts your connected network cards to apply network settings without rebooting.", "x"]], "latency": [["Disable mouse acceleration", "Turns off \"Enhance pointer precision\": the cursor moves the same distance however fast you move the mouse.", "r"], ["Disable core parking", "Keeps all CPU cores active when the PC is plugged in, instead of parking some of them.", ""], ["Multimedia scheduler (MMCSS)", "Gives more CPU and GPU priority to tasks that the Windows multimedia scheduler labels as games or low latency.", "r"]], "gpu": [["NVIDIA optimization", "Full NVIDIA pack: low-latency profile for all your games, GPU kept at full speed, telemetry off and driver settings.", "r"], ["AMD power saving", "Turns off the AMD card's internal power saving, including its ultra-low-power sleep state.", "r"], ["General GPU", "Graphics settings for any card: display priority, GPU preemption off, MSI mode and power-saving delays.", "r"]], "windows": [["Windows Game Mode", "Turns Windows Game Mode on or off; it gives the game priority and holds back update installs while you play.", "s"], ["Disable Game DVR", "Turns off Game DVR, the Game Bar's background recording, and adjusts the related fullscreen settings.", "r"], ["Clear temp files", "Deletes the temporary files of Windows and of your account.", "x"]], "hitreg": [["Mouse optimization", "Turns off Windows mouse acceleration so the pointer follows your hand exactly, and shortens the hover delay.", ""], ["Input queue size", "Sets how many mouse and keyboard events the drivers queue; Default puts back the Windows value.", "r"], ["Advanced hitreg suite", "300+ settings: CPU at full speed when plugged in, priorities, timers, memory, privacy; the 4 profiles are almost identical.", "ar"]], "minecraft": [["OptiFine preset", "Writes an OptiFine preset, Performance or Quality, into Minecraft's options; your old file is backed up.", ""], ["Per-game advanced priority", "Six games to choose from: the chosen game runs at high priority and its network traffic is marked as priority.", "r"], ["Network profile", "Three TCP profiles: Hitreg (smaller packets), Knockback (faster resend of lost packets) or QoS (Minecraft traffic first).", ""], ["Clear temp files", "Deletes the temporary files of Windows and of your account.", "x"]], "rbw": [["RBW Mod", "On starts every service and restores every setting the RBW screenshare checker reads, even if other tweaks turned them off; Off puts them back to Windows defaults without stopping anything.", "s"]], "gamemode": [["Rago game mode", "On clears temp files and turns off printing and Windows animations; Off brings animations and printing back.", "s"]], "expert": [["I/O priority", "Lowers the priority of search indexing and Windows updates, and raises the desktop display's priority.", "r"], ["Kernel settings", "Stops Windows from moving interrupts between cores and adjusts a few display delays.", "ar"], ["Faster startup", "Removes the delay Windows waits before launching startup apps.", "r"]], "restore": [["Create a restore point", "Turns on System Protection if needed and creates a Windows restore point.", "x"], ["Open System Restore", "Opens the Windows tool to go back to a restore point.", "x"], ["Reset network", "Resets the Windows network configuration, clears the DNS cache and requests a new IP address.", "arx"], ["Default input queue", "Puts the mouse and keyboard queues back to the normal Windows value.", "rx"]]};
+  const EX = {"network": [["Hitreg profile", "Six profiles that set TCP receive auto-tuning and incoming packet coalescing; Default puts Windows back as it was.", ""], ["Disable Nagle's algorithm", "Turns off Nagle's algorithm and delayed ACKs, which bundle small network packets before sending them.", "r"], ["Disable NIC power saving", "Turns off network card power saving (Green Ethernet, sleep) and waking the PC over the network.", "r"], ["Restart network adapter", "Restarts your connected network cards to apply network settings without rebooting.", "x"]], "latency": [["Disable mouse acceleration", "Turns off \"Enhance pointer precision\": the cursor moves the same distance however fast you move the mouse.", "r"], ["Disable core parking", "Keeps all CPU cores active when the PC is plugged in, instead of parking some of them.", ""], ["Multimedia scheduler (MMCSS)", "Gives more CPU and GPU priority to tasks that the Windows multimedia scheduler labels as games or low latency.", "r"]], "gpu": [["NVIDIA optimization", "Full NVIDIA pack: low-latency profile for all your games, GPU kept at full speed, telemetry off and driver settings.", "r"], ["AMD power saving", "Turns off the internal power saving of every AMD card, including its ultra-low-power sleep state.", "r"], ["General GPU", "Graphics settings for any card: display priority, GPU preemption off, MSI mode and power-saving delays.", "r"]], "windows": [["Windows Game Mode", "Turns Windows Game Mode on or off; it gives the game priority and holds back update installs while you play.", "s"], ["Disable Game DVR", "Turns off Game DVR, the Game Bar's background recording, and adjusts the related fullscreen settings.", "r"], ["Clear temp files", "Deletes the temporary files of Windows and of your account.", "x"]], "hitreg": [["Mouse optimization", "Turns off Windows mouse acceleration so the pointer follows your hand exactly, and shortens the hover delay.", ""], ["Input queue size", "Sets how many mouse and keyboard events the drivers queue; Default puts back the Windows value.", "r"], ["Advanced hitreg suite", "300+ settings: CPU at full speed when plugged in, priorities, timers, memory, privacy; the 4 profiles are almost identical.", "ar"]], "minecraft": [["OptiFine preset", "Writes an OptiFine preset, Performance or Quality, into Minecraft's options; your old file is backed up.", ""], ["Per-game advanced priority", "Sixteen games to choose from (Minecraft Java and Bedrock, Fortnite, Valorant, CS2, PUBG, Roblox…): the chosen game runs at high priority and its network traffic is marked as priority.", "r"], ["Network profile", "Three TCP profiles: Hitreg (smaller packets), Knockback (faster resend of lost packets) or QoS (Minecraft traffic first).", ""], ["Clear temp files", "Deletes the temporary files of Windows and of your account.", "x"]], "rbw": [["RBW Mod", "On starts every service and restores every setting the RBW screenshare checker reads, even if other tweaks turned them off; Off puts them back to Windows defaults without stopping anything.", "s"]], "gamemode": [["Rago game mode", "On clears temp files, pauses search indexing and telemetry until the next restart, turns off printing, Windows animations and Xbox Game Bar background recording, and turns on Windows Game Mode. Off starts everything again.", "s"]], "expert": [["I/O priority", "Lowers the priority of search indexing and Windows updates, and raises the desktop display's priority.", "r"], ["Kernel settings", "Stops Windows from moving interrupts between cores and adjusts a few display delays.", "ar"], ["Faster startup", "Removes the delay Windows waits before launching startup apps.", "r"]], "restore": [["Create a restore point", "Turns on System Protection if needed and creates a Windows restore point.", "x"], ["Open System Restore", "Opens the Windows tool to go back to a restore point.", "x"], ["Reset network", "Resets the Windows network configuration, clears the DNS cache and requests a new IP address.", "arx"], ["Default input queue", "Puts the mouse and keyboard queues back to the normal Windows value.", "rx"]]};
   const DETAIL = {
     rbw: ["Event Log", "SysMain", "Program Compatibility Assistant", "Task Scheduler"],
     gamemode: ["Clears temp files", "Stops printing", "Turns off Windows animations", "Restarts Explorer"]
@@ -1459,6 +1980,138 @@ const MODS = [
   onView($("#ring"), () => $("#ring").classList.add("go"), .6);
 })();
 
+/* What's new: each card plays its demo while it's on screen (.live) and waits off screen; still with reduced motion */
+(() => {
+  const cards = $$("#new .nw");
+  cards.forEach(c => c.addEventListener("pointermove", e => { const r = c.getBoundingClientRect(); c.style.setProperty("--mx", e.clientX - r.left + "px"); c.style.setProperty("--my", e.clientY - r.top + "px"); }));
+  if (reduce) return;
+  const sleep = ms => new Promise(r => setTimeout(r, ms));
+  const waits = new Map();
+  const shown = el => el.closest(".nw").classList.contains("live") ? Promise.resolve() : new Promise(r => waits.set(el.closest(".nw"), r));
+  if ("IntersectionObserver" in window) {
+    const io = new IntersectionObserver(es => es.forEach(e => { e.target.classList.toggle("live", e.isIntersecting); if (e.isIntersecting && waits.has(e.target)) { waits.get(e.target)(); waits.delete(e.target); } }), { threshold: .35 });
+    cards.forEach(c => io.observe(c));
+  } else cards.forEach(c => c.classList.add("live"));
+  const count = (el, from, to, ms, fmt) => new Promise(r => { const t0 = performance.now(); const f = t => { const p = Math.min(1, (t - t0) / ms), k = 1 - Math.pow(1 - p, 3); el.textContent = fmt(from + (to - from) * k); p < 1 ? requestAnimationFrame(f) : r(); }; requestAnimationFrame(f); });
+  const loop = (el, fn) => { (async () => { for (;;) { await shown(el); await fn(); } })(); };
+
+  // In-game bar: the clip walks into the lobby; when the player stops, Alt+X, the bar drops in, tweaks switch, Clean,
+  // then back to the game with FPS and ping pinned, and the clip starts again
+  const ig = $("#ig"), v = $("#ig-v"), last = $("source:last-child", v), keys = $$(".ig-keys kbd", ig), rows = $$(".ig-r", ig), cl = $("#ig-cl"), ram = $("#ig-r");
+  const jig = (q, base, amp) => { const n = base + Math.round((Math.random() * 2 - 1) * amp); $(q).textContent = n; return n; };
+  setInterval(() => { if (!ig.closest(".nw").classList.contains("live")) return; $("#ig-pf").textContent = jig("#ig-f", 240, 4); $("#ig-pp").textContent = jig("#ig-p", 24, 1); jig("#ig-c", 17, 3); jig("#ig-g", 6, 2); }, 800);
+  const press = async () => { for (const k of keys) { k.classList.add("dn"); await sleep(160); } await sleep(140); keys.forEach(k => k.classList.remove("dn")); };
+  // back to the first frame (hidden while .cut), then play to the end: the clip stops where the player stops.
+  // A clip that can't load or play (blocked, offline) never holds the demo: it then runs over the poster.
+  const rewind = () => new Promise(r => { if (!v.currentTime) return r(); v.addEventListener("seeked", r, { once: true }); setTimeout(r, 600); v.currentTime = 0; });
+  const walk = () => new Promise(r => {
+    const end = () => { clearTimeout(t); v.removeEventListener("ended", end); last.removeEventListener("error", end); r(); };
+    const t = setTimeout(end, 12000);
+    v.addEventListener("ended", end); last.addEventListener("error", end);
+    const p = v.play(); if (p) p.catch(end);
+  });
+  if ("IntersectionObserver" in window) new IntersectionObserver((es, o) => { if (es[0].isIntersecting) { v.preload = "auto"; o.disconnect(); } }, { rootMargin: "600px" }).observe(ig);
+  loop(ig, async () => {
+    ig.classList.remove("open", "pin"); rows.forEach(r => r.classList.remove("on")); ram.textContent = 47;
+    await rewind(); ig.classList.remove("cut");
+    await walk(); await press(); ig.classList.add("open");
+    await sleep(900);
+    for (const i of [0, 2, 5, 3]) { rows[i].classList.add("on"); await sleep(620); }
+    await sleep(250); cl.classList.add("hit"); await sleep(260); cl.classList.remove("hit");
+    await count(ram, 47, 38, 900, Math.round);
+    await sleep(1500); await press(); ig.classList.remove("open"); ig.classList.add("pin");
+    await sleep(2200); ig.classList.add("cut"); await sleep(500);
+  });
+
+  // Network test: each server is measured in turn, then the verdict
+  const nt = $("#nt"), li = $$(".nt-s li", nt), met = $$(".nt-m span", nt);
+  loop(nt, async () => {
+    nt.classList.add("meas"); $("#nt-t").textContent = "Measuring…";
+    met.forEach(m => m.textContent = "0"); li.forEach(l => { $(".sig", l).dataset.t ??= $(".sig", l).dataset.n; $(".sig", l).dataset.n = 0; $("b", l).textContent = "— ms"; });
+    await sleep(700);
+    for (const l of li) { l.classList.add("cur"); const b = $("b", l), s = $(".sig", l); await count(b, 0, +b.dataset.v, 650, n => Math.round(n) + " ms"); s.dataset.n = s.dataset.t; await sleep(160); l.classList.remove("cur"); }
+    await Promise.all(met.map(m => count(m, 0, +m.dataset.v, 700, n => n.toFixed(+(m.dataset.d || 0)))));
+    nt.classList.remove("meas"); $("#nt-t").textContent = "tested just now";
+    await sleep(3600);
+  });
+
+  // Clean RAM: the standby cache goes, the bar drops
+  const cr = $("#cr"), crb = $("#cr-b"), crn = $("#cr-n"), btn = $("#cr-btn");
+  loop(cr, async () => {
+    cr.classList.remove("done"); crb.style.width = "71%"; crn.textContent = 71; $("#cr-gb").textContent = "11.4 of 16 GB";
+    await sleep(1500); btn.classList.add("hit"); await sleep(220); btn.classList.remove("hit");
+    crb.style.width = "58%"; $("#cr-gb").textContent = "9.3 of 16 GB"; await count(crn, 71, 58, 1000, Math.round);
+    cr.classList.add("done"); await sleep(3200);
+  });
+
+  // Game library: launchers found, games appear, Optimize and play
+  const gl = $("#gl"), go = $("#gl-go"), gt = $$(".gt", gl);
+  $$(".gl-found b", gl).forEach((b, i) => b.style.setProperty("--i", i));
+  gt.forEach((t, i) => t.style.setProperty("--i", i));
+  loop(gl, async () => {
+    gl.classList.add("scan"); gt[0].classList.remove("sel"); go.className = "gl-go"; $("#gl-t").textContent = "Optimize and play";
+    await sleep(900); gl.classList.remove("scan");
+    await sleep(1800); gt[0].classList.add("sel");
+    await sleep(1000); go.classList.add("wait"); $("#gl-t").textContent = "Starting…";
+    await sleep(1600); go.className = "gl-go ok"; $("#gl-t").textContent = "Playing now";
+    await sleep(3000);
+  });
+
+  // Share: the code builds itself, Copy, then the file and the import
+  const sh = $("#sh"), code = $("#sh-c"), cp = $("#sh-cp"), full = code.textContent;
+  loop(sh, async () => {
+    sh.classList.add("typing"); cp.classList.remove("ok"); $("span", cp).textContent = "Copy"; code.textContent = "";
+    await sleep(600);
+    for (let i = 1; i <= full.length; i++) { code.textContent = full.slice(0, i); await sleep(45); }
+    await sleep(500); cp.classList.add("ok"); $("span", cp).textContent = "Copied";
+    await sleep(500); sh.classList.remove("typing");
+    await sleep(3400);
+  });
+
+  // Packet Optimizer: Analyze my PC checks three things in turn, then picks Hitreg and sets the sliders
+  const po = $("#po"), run = $("#po-run"), steps = $$(".po-steps li", po), chips = $$(".po-ps span", po), b1 = $("#po-b1"), b2 = $("#po-b2");
+  loop(po, async () => {
+    steps.forEach(l => l.className = ""); chips.forEach(c => c.classList.remove("on")); b1.style.width = b2.style.width = "100%"; $("#po-st").textContent = "";
+    await sleep(900); run.classList.add("hit"); await sleep(200); run.classList.remove("hit"); $("#po-st").textContent = "Analyzing…";
+    for (const l of steps) { l.className = "cur"; await sleep(750); l.className = "ok"; await sleep(120); }
+    $("#po-st").innerHTML = "Recommended: <b>Hitreg</b>"; chips[0].classList.add("on");
+    await sleep(300); b1.style.width = b2.style.width = "0%";
+    await sleep(3600);
+  });
+
+  // Tools: the cleanup finds what can go, the total adds up, Clean frees it
+  const tl = $("#tl"), tli = $$(".tl-l li", tl), tn = $("#tl-n"), tb = $("#tl-btn"), tt = $("#tl-t"), sizes = [1.2, 1.1, .86, .74];
+  loop(tl, async () => {
+    tl.classList.remove("gone"); tl.classList.add("scan"); tli.forEach(l => l.classList.remove("in")); tb.classList.remove("ok"); tt.textContent = "Scanning…"; tn.textContent = "0.0";
+    await sleep(700);
+    let sum = 0;
+    for (const [i, l] of tli.entries()) { l.classList.add("in"); await count(tn, sum, sum + sizes[i], 450, n => n.toFixed(1)); sum += sizes[i]; await sleep(150); }
+    tl.classList.remove("scan"); tt.textContent = "Clean 3.9 GB";
+    await sleep(1300); tb.classList.add("hit"); await sleep(220); tb.classList.remove("hit"); tt.textContent = "Cleaning…";
+    tl.classList.add("gone"); await count(tn, sum, 0, 1000, n => n.toFixed(1));
+    tb.classList.add("ok"); tt.textContent = "3.9 GB freed";
+    await sleep(3200);
+  });
+
+  // Updates: downloaded in the background, then Restart
+  const up = $("#up"), bar = $(".prog i", up);
+  loop(up, async () => {
+    up.classList.remove("ready"); bar.style.width = "0%"; $("#up-t").textContent = "Downloading in the background";
+    for (const w of [18, 41, 63, 82, 100]) { await sleep(520); bar.style.width = w + "%"; }
+    await sleep(500); up.classList.add("ready"); $("#up-t").textContent = "Ready to install";
+    await sleep(3400);
+  });
+
+  // Background mode: Start with Windows switches on
+  const bg = $("#bgm-a");
+  loop(bg, async () => { bg.classList.remove("on"); await sleep(1400); bg.classList.add("on"); await sleep(4200); });
+
+  // Glass design: the panes follow the pointer a little
+  const gs = $("#new .gs"), panes = $$("i", gs), gcard = gs.closest(".nw");
+  gcard.addEventListener("pointermove", e => { const r = gcard.getBoundingClientRect(), x = (e.clientX - r.left) / r.width - .5, y = (e.clientY - r.top) / r.height - .5; panes.forEach((p, i) => p.style.transform = `translate(${x * (i ? 14 : -10)}px,${y * (i ? 10 : -8)}px)`); });
+  gcard.addEventListener("pointerleave", () => panes.forEach(p => p.style.transform = ""));
+})();
+
 /* How: line fills with scroll, steps light up */
 function howFill() {
   const w = $("#howwrap"); if (!w) return;
@@ -1483,7 +2136,6 @@ function howFill() {
   // Every card shows 4 lines (CSS). A longer review is cut after a word so that it fits with "…" and "See more", measured
   // on a hidden card of the same width: once per review each time the cards are laid out (new width, fonts loaded).
   const LINES = 4;
-  const RATED_FROM = 10;
   const more = r => `reviews.html${typeof r.id === "string" && /^[a-z0-9]{1,12}$/.test(r.id) ? "#r-" + r.id : ""}`;
   const moreLink = (r, attrs = "") => ` <a class="rq-more" href="${more(r)}"${attrs}>See more</a>`;
   const cutAt = (cps, n) => {
@@ -1538,15 +2190,6 @@ function howFill() {
     pause.addEventListener("click", e => { const on = rev.classList.toggle("paused"); e.currentTarget.setAttribute("aria-pressed", on); e.currentTarget.textContent = on ? "Play" : "Pause"; });
     const n = Number(data.count) || list.length, avg = Number(data.average);
     $("#rev-sum").textContent = `${n} review${n === 1 ? "" : "s"}${avg >= 1 && avg <= 5 ? ` · ${avg.toFixed(1)} out of 5` : ""}`;
-    // Google's stars (RAG-33): the same count and average in the page's structured data (built by tools/build.py),
-    // once there are enough reviews for the rating to mean something. Google reads the page as rendered.
-    if (n >= RATED_FROM && avg >= 1 && avg <= 5) {
-      try {
-        const ld = document.querySelector('script[type="application/ld+json"]'), d = JSON.parse(ld.textContent);
-        const app = (d["@graph"] || []).find(x => x["@type"] === "SoftwareApplication");
-        if (app) { app.aggregateRating = { "@type": "AggregateRating", ratingValue: avg.toFixed(1), ratingCount: n, bestRating: 5, worstRating: 1 }; ld.textContent = JSON.stringify(d); }
-      } catch {}
-    }
     $$(".js-rev").forEach(el => { el.hidden = false; });
     layout();
     // the cuts are measured with the site's font: once it's there, measure again
@@ -1605,23 +2248,34 @@ const REF = (() => {
     $("#p-amt").textContent = fmt(y ? CONFIG.priceYear / 12 : CONFIG.priceMonth);
     $("#p-per").textContent = "/ month";
     $("#p-note").textContent = y ? `Billed ${fmt(CONFIG.priceYear)} yearly.${free >= 1 ? " " + freeTxt + "." : ""}` : "Billed monthly.";
-    $$(".js-checkout").forEach(a => a.href = acct(`${CONFIG.checkoutPath}?interval=${y ? "year" : "month"}${REF ? "&ref=" + encodeURIComponent(REF) : promo() ? "&promo=" + encodeURIComponent(promo()) : ""}`));
+    const tail = REF ? "&ref=" + encodeURIComponent(REF) : promo() ? "&promo=" + encodeURIComponent(promo()) : "";
+    $$(".js-checkout").forEach(a => a.href = acct(`${CONFIG.checkoutPath}?interval=${y ? "year" : "month"}${tail}`));
+    $$(".js-trial").forEach(a => a.href = acct(`${CONFIG.checkoutPath}?interval=${y ? "year" : "month"}&trial=1${tail}`));
+    const tn = $("#trial-note"), d = CONFIG.trialDays;
+    if (tn) tn.textContent = `Card required. Free for ${d} days, then ${fmt(y ? CONFIG.priceYear : CONFIG.priceMonth)} a ${y ? "year" : "month"}, charged automatically on day ${d} unless you cancel before. Cancel in two clicks from your account. One trial per person.`;
     setLife();
     const amt = $("#p-amt"); amt.animate && !reduce && amt.animate([{ transform: "translateY(8px)", opacity: 0 }, { transform: "none", opacity: 1 }], { duration: 400, easing: "cubic-bezier(.16,1,.3,1)" });
   };
   window.__seg($("#billing"), v => { bill = v; setBill(v); }); setBill("year"); window.__bill = () => setBill(bill);
   const Y = '<span class="yes"><svg viewBox="0 0 16 16"><use href="#i-check"/></svg></span>', N = '<span class="no"><svg viewBox="0 0 16 16"><path d="M4.5 8h7"/></svg></span>', L = '<span class="lk" title="Locked in Free"><svg viewBox="0 0 16 16"><use href="#i-lock"/></svg></span>';
   const rows = [
-    ["Rago Optimizer app and interface", Y, Y],
-    ['Tweaks unlocked', '<span class="txt">11 of 198</span>', '<span class="txt">All 198</span>'],
-    ["Restore point before advanced tweaks", Y, Y],
-    ["Network, latency, hitreg and graphics card tweaks", L, Y],
-    ["Presets: Minecraft PvP, Max FPS, Low latency, Laptop, Privacy", L, Y],
+    ['Tweaks unlocked', '<span class="txt">73 of 218</span>', '<span class="txt">All 218</span>'],
+    ["In-game bar: live FPS, ping, CPU, GPU and RAM", Y, Y],
+    ["In-game bar: switch tweaks mid-match", L, Y],
+    ["Network test", Y, Y],
+    ["Packet Optimizer", '<span class="txt">Analysis and tests</span>', Y],
+    ["Presets: Minecraft PvP, Max FPS, Low latency, Laptop, Privacy and 15 games", L, Y],
+    ["Game library", '<span class="txt">Launch games</span>', '<span class="txt">Optimize and play</span>'],
+    ["Clean RAM, cleanup and driver check", Y, Y],
+    ["Tweaks on at the same time", '<span class="txt">Up to 30</span>', '<span class="txt">No limit</span>'],
+    ["Remove preinstalled apps", Y, Y],
+    ["Network, hitreg and most latency and graphics card tweaks", L, Y],
     ["Minecraft, Expert mode, RBW Mod Off and Game mode On", L, Y],
-    ["Live RAM, GPU and CPU usage", Y, Y],
+    ["Share and import presets", Y, Y],
+    ["Restore point and undo for your tweaks", Y, Y],
     ["New tweaks from future versions", L, Y],
-    ["Undo the tweaks you applied", Y, Y],
-    ["Premium Discord channel", N, Y],
+    ["Premium role on Discord", N, Y],
+    ["Free trial", N, '<span class="txt">3 days, card required</span>'],
     ["How you pay", '<span class="txt">Free</span>', '<span class="txt life-off">Monthly or yearly</span><span class="txt life-on">Monthly, yearly or once</span>'],
     ["License", '<span class="txt">Not needed</span>', '<span class="txt">1 PC per license</span>']
   ];
@@ -1635,13 +2289,15 @@ $$(".js-dword").forEach(e => { e.outerHTML = dlink("Discord"); });
 /* FAQ: animated accordion */
 (() => {
   const F = [
-    ["Can I get banned for using Rago?", "Rago doesn't modify Minecraft and injects nothing into the game. It changes Windows and network settings, the same ones you could change by hand. Some servers screenshare players and check Windows logs. A few Advanced tweaks change Windows services and settings that staff look at, and the ones that matter most say so. Turn on RBW Mod and restart your PC before a screenshare: it brings those services back."],
-    ["Will it lower my ping?", "It depends where your ping comes from. Distance to the server can't be fixed by any software. Rago cuts the delay your PC adds and makes your timing steadier, which is what matters most for hits."],
-    ["What's the difference between Free and Premium?", "Both are the same Rago Optimizer app. Free opens 11 tweaks, Restore included, and shows everything else with a lock. Both show your live RAM, GPU and CPU usage. Premium unlocks all 198 tweaks, the 5 presets and the new tweaks of future versions. In both, you can undo the tweaks you applied."],
+    ["Can I get banned for using Rago?", "Rago doesn't modify Minecraft or any other game and injects nothing into them: the in-game bar is a separate window over the game, and FPS are read from Windows. Rago changes Windows and network settings, the same ones you could change by hand. Some servers screenshare players and check Windows logs. A few Advanced tweaks change Windows services and settings that staff look at, and the ones that matter most say so. Turn on RBW Mod and restart your PC before a screenshare: it brings those services back."],
+    ["Will it lower my ping?", "It depends where your ping comes from. Distance to the server can't be fixed by any software. Rago cuts the delay your PC adds and makes your timing steadier, which is what matters most for hits. The free network test shows your ping, jitter and packet loss to the servers you play on."],
+    ["What's the difference between Free and Premium?", "Both are the same Rago Optimizer app. Free opens 73 tweaks, Restore included, and you can keep up to 30 of them on at once. Everything else shows a lock. Free also gives you the live stats of the in-game bar, the network test, Clean RAM, cleanup, the driver check, the removal of preinstalled apps, the game library and preset sharing. Premium unlocks all 218 tweaks with no limit, the network and hitreg tweaks, the Packet Optimizer, the 20 presets, Optimize and play, the tweaks you switch in game and the new tweaks of future versions. In both, you can undo the tweaks you applied."],
+    ["Which games does it work with?", "Rago tunes Windows and your network, so it helps every game you play on that PC, and its game library finds them in your launchers. Premium adds presets made for 15 games: Fortnite, Valorant, Counter-Strike 2, Apex Legends, PUBG, Rainbow Six Siege, Overwatch 2, Marvel Rivals, The Finals, Escape from Tarkov, Rocket League, League of Legends, Roblox, GTA V and Minecraft Bedrock, on top of Minecraft PvP."],
     ["Does it work on laptops?", "Yes. Rago runs on any Windows 10 or 11 PC, desktop or laptop. Premium includes a Laptop preset: gains without hurting battery life or heat."],
     ["Does it work on Mac or Linux?", "No. Rago Optimizer tunes Windows, so it only runs on Windows 10 and 11."],
+    ["How does the free trial work?", `Choose Start ${CONFIG.trialDays}-day free trial, create your account and enter your card on Stripe. Nothing is charged today and you get all of Premium right away. If you don't cancel, the price of the plan you chose is charged automatically ${CONFIG.trialDays} days later, and the email we send you gives the exact date. To stop, cancel from your account page before that date: you pay nothing and Premium ends with the trial. The trial is for new customers, once per person and per card.`],
     ["Monthly or yearly?", MONTHS_FREE >= 1 ? `Same app either way. Paying yearly works out to ${MONTHS_FREE} month${MONTHS_FREE === 1 ? "" : "s"} free compared with paying monthly. You can cancel anytime from your account. When Premium ends, Rago puts back the settings changed by its tweaks, free ones included. Signing out does the same, in the background.` : "Same app either way. You can cancel anytime from your account. When Premium ends, Rago puts back the settings changed by its tweaks, free ones included. Signing out does the same, in the background."],
-    ["How do I join the Premium channel on Discord?", "After you buy, your account page links to our Discord. Open a ticket there with the email of your Rago account. Our staff checks your purchase and gives you the Premium role. It isn't automatic, so it can take a little while."],
+    ["How do I get the Premium role on Discord?", "After you buy, open your account page: it shows how to get the Premium role on our Discord, which opens the Premium channel. If anything goes wrong, open a ticket there with the email of your Rago account."],
     ["What's Lifetime?", `Lifetime is Premium paid once: ${CONFIG.currency}${CONFIG.priceLifetime.toFixed(2)}, with no subscription and nothing to renew. You get everything in Premium on one PC, new tweaks from future versions included.`, "life"],
     ["I'm subscribed. Can I switch to Lifetime?", "Yes. Sign in, then choose Get Lifetime here or Switch to Lifetime on your account page. Right after the payment, your subscription is canceled so it doesn't renew, and Premium stays on the same PC. The time left on your subscription isn't refunded.", "life"],
     ["Can I use my license on more than one PC?", "No. Premium works on one device per license. If you change PCs, open a ticket on our Discord (linked from your account page) and support moves your license."],

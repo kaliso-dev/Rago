@@ -241,6 +241,32 @@ CREATE TABLE IF NOT EXISTS discord_invite_roles (
   PRIMARY KEY (discord_id, kind)
 );
 
+-- Email check at sign-up (2026-10-25): the account is only created once the player types the 6-digit code sent to
+-- the address. Until then the sign-up waits here (password already hashed). Hashed code, 15 minutes, 5 tries.
+CREATE TABLE IF NOT EXISTS signup_codes (
+  id TEXT PRIMARY KEY,
+  email TEXT NOT NULL,                            -- lowercase
+  password_hash TEXT NOT NULL,
+  code_hash TEXT NOT NULL,
+  attempts INTEGER NOT NULL DEFAULT 0,
+  sent_at BIGINT NOT NULL,
+  expires_at BIGINT NOT NULL,
+  created_at BIGINT NOT NULL
+);
+CREATE INDEX IF NOT EXISTS signup_codes_email ON signup_codes(email);
+
+-- Sign in with Google or Discord (2026-10-25). One row per outside account; a Rago account can have both.
+-- An account created this way has no password until the player sets one (needed for the Windows app).
+CREATE TABLE IF NOT EXISTS oauth_identities (
+  provider TEXT NOT NULL,                         -- google | discord
+  subject TEXT NOT NULL,                          -- the provider's account id
+  user_id TEXT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  email TEXT,                                     -- as the provider gave it, for support
+  created_at BIGINT NOT NULL,
+  PRIMARY KEY (provider, subject),
+  UNIQUE (user_id, provider)
+);
+
 -- Network tests sent by the app (RAG-50): where players are and their ping to each server, to choose where future
 -- proxies would help (network.js). No IP address: the city, region, country and provider are read from it (geo.js),
 -- then it's forgotten. Kept 12 months.
@@ -272,6 +298,19 @@ CREATE TABLE IF NOT EXISTS network_results (
   PRIMARY KEY (report_id, target)
 );
 
+-- Free trial (2026-11-04): 3 days with a card, charged at the end unless canceled. One per person: a second trial with
+-- the same card or the same email is charged right away (billing.js, settleTrial).
+CREATE TABLE IF NOT EXISTS trials (
+  subscription_id TEXT PRIMARY KEY,
+  email TEXT NOT NULL,                            -- lowercase
+  card_fingerprint TEXT,                          -- Stripe's card fingerprint, the same for the same card everywhere
+  license_id TEXT,
+  started_at BIGINT NOT NULL,
+  charged_now BOOLEAN NOT NULL DEFAULT FALSE      -- already had a trial: no free days
+);
+CREATE INDEX IF NOT EXISTS trials_email ON trials (email);
+CREATE INDEX IF NOT EXISTS trials_card ON trials (card_fingerprint);
+
 ALTER TABLE users ENABLE ROW LEVEL SECURITY;
 ALTER TABLE web_sessions ENABLE ROW LEVEL SECURITY;
 ALTER TABLE licenses ENABLE ROW LEVEL SECURITY;
@@ -292,5 +331,8 @@ ALTER TABLE discord_joins ENABLE ROW LEVEL SECURITY;
 ALTER TABLE discord_invite_links ENABLE ROW LEVEL SECURITY;
 ALTER TABLE discord_invite_bonus ENABLE ROW LEVEL SECURITY;
 ALTER TABLE discord_invite_roles ENABLE ROW LEVEL SECURITY;
+ALTER TABLE signup_codes ENABLE ROW LEVEL SECURITY;
+ALTER TABLE oauth_identities ENABLE ROW LEVEL SECURITY;
 ALTER TABLE network_reports ENABLE ROW LEVEL SECURITY;
 ALTER TABLE network_results ENABLE ROW LEVEL SECURITY;
+ALTER TABLE trials ENABLE ROW LEVEL SECURITY;

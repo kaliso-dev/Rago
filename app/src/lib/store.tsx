@@ -1,4 +1,5 @@
 import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState, type ReactNode } from "react";
+import { markChanged } from "./analysis";
 import { api, asLicenseError, isTauri, type AppliedView, type DoneEvent, type HistoryEntry, type ItemStatus, type LicenseError, type LicenseStatus, type ResetDone, type RunItem, type SystemInfo } from "./api";
 import { autoVariant, availability, catalog, retired, tweakModule, tweaks, type Lang, type Tweak, needsReboot } from "./catalog";
 import { translate, type Key } from "./i18n";
@@ -6,6 +7,10 @@ import free from "../data/free.json";
 
 /** Réglages ouverts sans licence. Le moteur Rust applique la même liste. */
 export const FREE = new Set<string>(free.tweaks);
+/** Réglages gratuits (des « tweak », pas les actions) appliqués en même temps sans licence (1.3.0 : 30). Le moteur
+ * Rust applique la même limite (catalog::over_free_slots). */
+export const FREE_SLOTS: number = (free as { slots?: number }).slots ?? 0;
+const isSwitch = (id: string) => tweaks.get(id)?.kind === "tweak";
 /** Variante « retour arrière » de chaque réglage qui en a une, pour remettre Windows comme avant. */
 export const REVERTS = new Map<string, string>();
 for (const tw of tweaks.values()) {
@@ -25,7 +30,7 @@ export const REVERT_RUNS_SCRIPT = new Set(["rbw_mode"]);
 export const undoVariant = (id: string, a: AppliedView | undefined): string | null =>
   REVERT_RUNS_SCRIPT.has(id) && a && !a.windowsValues ? (REVERTS.get(id) ?? a.variant) : (a?.variant ?? null);
 /** « plan » : la carte Free plan ou le bouton Premium d'un module, sans réglage précis. */
-export type Upsell = "tweak" | "plan" | "preset" | "signin" | null;
+export type Upsell = "tweak" | "plan" | "preset" | "signin" | "slots" | "analysis" | null;
 
 export const BUILTIN_NAMES: Record<string, { fr: string; en: string }> = {
   __wmic: { fr: "Installer WMIC", en: "Install WMIC" },
@@ -321,6 +326,18 @@ function useStoreValue() {
   const undoSet = useMemo(() => new Set(pendingUndo), [pendingUndo]);
   /** Interrupteur allumé : appliqué (et pas décoché depuis), ou coché pour être appliqué. */
   const isOn = useCallback((id: string) => (applied.has(id) && !undoSet.has(id)) || selected.has(id), [applied, undoSet, selected]);
+  /** Plan gratuit : réglages allumés (appliqués et pas décochés, ou cochés) qui prennent une des FREE_SLOTS places. */
+  const slotsUsed = useMemo(() => {
+    const on = new Set<string>();
+    for (const id of applied.keys()) if (!undoSet.has(id) && isSwitch(id)) on.add(id);
+    for (const id of selection) if (isSwitch(id)) on.add(id);
+    return on.size;
+  }, [applied, undoSet, selection]);
+  /** Plus de place en gratuit pour allumer `id` (déjà allumé : rien ne change). */
+  const slotsFull = useCallback(
+    (id: string, extra = 0) => !premium && FREE_SLOTS > 0 && isSwitch(id) && !isOn(id) && slotsUsed + extra >= FREE_SLOTS,
+    [premium, isOn, slotsUsed],
+  );
   const mcDir = mcDirOverride ?? sys?.minecraftDir ?? null;
 
   const variantOf = useCallback(
@@ -348,13 +365,17 @@ function useStoreValue() {
         setUpsell("tweak", id);
         return;
       }
+      if (want && slotsFull(id)) {
+        setUpsell("slots", id);
+        return;
+      }
       setSelection((s) => {
         const has = s.includes(id);
         if (want === has) return s;
         return want ? [...s, id] : s.filter((x) => x !== id);
       });
     },
-    [setSelection, setPendingUndo, isLocked, isOn, applied],
+    [setSelection, setPendingUndo, isLocked, isOn, applied, slotsFull, setUpsell],
   );
 
   const setVariant = useCallback(
@@ -404,6 +425,7 @@ function useStoreValue() {
   /** Ajoute une liste "id" ou "id:variante" à la sélection (presets). */
   const selectMany = useCallback(
     (entries: string[]) => {
+      let full = false;
       const ids: string[] = [];
       const vs: Record<string, string> = {};
       for (const e of entries) {
@@ -413,15 +435,21 @@ function useStoreValue() {
         // déjà appliqué avec cette variante : rien à refaire
         const a = applied.get(id);
         if (a && !undoSet.has(id) && (a.variant ?? null) === (v || (variants[id] ?? autoVariant(tw, sys) ?? null))) continue;
+        // plan gratuit plein : le reste du lot n'est pas coché
+        if (slotsFull(id, ids.filter((x) => isSwitch(x) && !isOn(x)).length)) {
+          full = true;
+          continue;
+        }
         ids.push(id);
         if (v) vs[id] = v;
       }
+      if (full) setUpsell("slots");
       setVariants((m) => ({ ...m, ...vs }));
       setSelection((s) => [...s, ...ids.filter((id) => !s.includes(id))]);
       setPendingUndo((p) => p.filter((id) => !ids.includes(id)));
       return ids.length;
     },
-    [sys, setSelection, setVariants, setPendingUndo, isLocked, variantLocked, applied, undoSet, variants],
+    [sys, setSelection, setVariants, setPendingUndo, isLocked, variantLocked, applied, undoSet, variants, slotsFull, isOn, setUpsell],
   );
 
   /** Réglages d'une liste "id" ou "id:variante" à appliquer sur ce PC (mêmes règles que selectMany), sans toucher à
@@ -529,6 +557,8 @@ function useStoreValue() {
       ),
       api.onDone((e) => {
         setRun((r) => (r && !r.done ? { ...r, done: e, endedAt: Date.now() } : r));
+        // l'analyse du PC attend une nouvelle mesure pour l'avant/après
+        if (e.ok > 0 && !e.cancelled) markChanged();
         // « Optimiser et jouer » : le jeu démarre une fois les réglages posés, sauf si le joueur a arrêté le lot
         const play = launchAfter.current;
         launchAfter.current = null;
@@ -599,6 +629,8 @@ function useStoreValue() {
         const msg = String(err);
         const error = msg.startsWith("premium_required")
           ? translate(lang, "err.premium_required")
+          : msg.startsWith("free_slots")
+            ? translate(lang, "err.free_slots", { n: FREE_SLOTS })
           : msg.startsWith("premium_scripts_unavailable")
             ? translate(lang, "err.premium_scripts_unavailable")
             : msg.startsWith("reset_running")
@@ -675,7 +707,7 @@ function useStoreValue() {
     paletteOpen, setPaletteOpen,
     focusTweak, setFocusTweak, focusSeq,
     license, setLicense, signOut, activated, activatedAt, licenseNotice, setLicenseNotice,
-    premium, isLocked, variantLocked, undoOnly, upsell, upsellTweak, setUpsell,
+    premium, isLocked, variantLocked, undoOnly, upsell, upsellTweak, setUpsell, slotsUsed,
   };
 }
 

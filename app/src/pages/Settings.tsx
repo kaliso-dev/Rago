@@ -7,6 +7,7 @@ import { FREE, useStore } from "../lib/store";
 import { ACCOUNT_URL, SITE_URL, SUPPORT_URL } from "../components/LicenseGate";
 import { Modal } from "../components/Modal";
 import { ProfileCard } from "../components/ProfileCard";
+import { SubscriptionRows } from "../components/SubscriptionCard";
 import { BackgroundCard } from "../components/BackgroundCard";
 import { SessionCard } from "../components/SessionCard";
 import { Button, Card, Segmented, Switch } from "../components/ui";
@@ -71,6 +72,7 @@ export function Settings() {
                   {license.expiresAt && <span className="muted"> · {t("account.renews", { date: formatDate(lang, license.expiresAt) })}</span>}
                 </span>
               </div>
+              <SubscriptionRows />
               {license.keyHint && (
                 <div className="setting">
                   <span>{t("account.key")}</span>

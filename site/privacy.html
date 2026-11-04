@@ -43,7 +43,7 @@ th{color:var(--t1);font-weight:560}
 <div class="wrap">
 <div class="top"><a class="logo" href="./"><img src="rago-wordmark.svg" alt="Rago Optimizer"></a><a class="back" href="./">Back to the site</a></div>
 <h1>Privacy Policy</h1>
-<p class="upd">Last updated: October 29, 2026</p>
+<p class="upd">Last updated: November 4, 2026</p>
 
 <h2>Who is responsible</h2>
 <p>The Rago Optimizer team, in France, is responsible for your data. Contact: <a href="mailto:support@rago-optimizer.com">support@rago-optimizer.com</a>.</p>
@@ -52,29 +52,35 @@ th{color:var(--t1);font-weight:560}
 <div class="tbl"><table>
 <tr><th>Data</th><th>Why</th></tr>
 <tr><td>Email, password and sign-in sessions (stored hashed, never readable)</td><td>Your account and sign-in, on the site and in the app</td></tr>
+<tr><td>When you create an account with an email: the 6-digit code we email you (stored hashed) and your number of tries, deleted within a day</td><td>Checking that the email is yours</td></tr>
+<tr><td>If you sign in with Google or Discord: the ID of that account and the email it gives us. We don't keep your Google or Discord sign-in.</td><td>Signing you in to the same Rago account each time, on the site and in the app</td></tr>
 <tr><td>Payment references from Stripe: customer and payment IDs, amount, currency, subscription status</td><td>Selling and renewing Premium, refunds, accounting</td></tr>
 <tr><td>Hashed identifiers of your PC (from the Windows machine ID, the PC's hardware UUID and motherboard serial number), PC name, Windows version, app version, activation dates and last IP address</td><td>Linking your license to one PC and preventing license sharing</td></tr>
 <tr><td>Affiliate code, which accounts used it, and hashed identifiers of the buyer's first PC</td><td>Running the affiliate program and blocking self-referrals</td></tr>
 <tr><td>Your public name, profile photo (resized to 256 × 256 pixels, with its metadata removed) and your review: rating, comment, app version and dates</td><td>Showing your review on our site and your profile in the app. Your public name, photo, rating and comment are public.</td></tr>
 <tr><td>If you link your Discord account: its Discord user ID and username</td><td>Adding you to our Discord server and giving you the Premium role while your Premium is active, then removing it when Premium ends. We don't keep your Discord sign-in: it's revoked right after linking. You can unlink anytime from your account page.</td></tr>
+<tr><td>If you start a free trial: your email, the subscription ID and Stripe's fingerprint of your card (a code that recognizes the same card, not its number)</td><td>Giving each person and each card one free trial</td></tr>
+<tr><td>If you join our Discord server: your Discord ID, when your Discord account was created, when you joined and left, and which invite you used (and so who invited you)</td><td>Counting the friends each member invites, to give the VIP and MVP roles and their rewards, and not counting accounts created to cheat</td></tr>
 <tr><td>A log of license events (purchase, activation, refund, blocked activation with IP address)</td><td>Security and support</td></tr>
 <tr><td>IP address, kept briefly in memory</td><td>Limiting sign-in and download attempts</td></tr>
 <tr><td>When you run the app's network test: its results (ping, jitter and lost packets to each test server), the app version, an anonymous ID of your PC (a hash, not linked to your account or license), and the city, region, country and internet provider worked out from your IP address. The IP address itself isn't kept.</td><td>Finding where players are and how their connection reaches game servers, to choose where future Rago servers would lower their ping</td></tr>
 </table></div>
-<p>The app contacts our server to check for updates (with its version and an anonymous ID of your PC), to send the results of the network test each time you run it, and when you sign in, activate Premium, refresh your license, or save your review, public name or photo. Your card number goes to Stripe, never to us.</p>
+<p>The app contacts our server to check for updates (with its version and an anonymous ID of your PC), to send the results of the network test each time you run it, and when you sign in, activate Premium, refresh your license, or save your review, public name or photo. When you sign in to the app with Google or Discord, the app opens your browser on our site with a short code, and the sign-in finishes there: the app never sees your Google or Discord password. Your card number goes to Stripe, never to us.</p>
 <p>The city and provider come from DB-IP's free database, which runs on our own server: your IP address is never sent to DB-IP. <a href="https://db-ip.com">IP Geolocation by DB-IP</a>.</p>
 
 <h2>Legal basis</h2>
-<p>We use your data to perform our contract with you (account, license, payment), for our legitimate interest in preventing fraud and license sharing and in improving our service (the network test results), and to meet legal obligations such as keeping accounting records. Your review, public name and photo are published because you choose to post them: you can delete them anytime.</p>
+<p>We use your data to perform our contract with you (account, license, payment, free trial), for our legitimate interest in preventing fraud, license sharing and repeated free trials, in running our Discord community and in improving our service (the network test results), and to meet legal obligations such as keeping accounting records. Your review, public name and photo are published because you choose to post them: you can delete them anytime.</p>
 
 <h2>Cookies and local storage</h2>
 <ul>
 <li><strong>rg_session</strong>: keeps you signed in to your account. Necessary.</li>
 <li><strong>rg_claim</strong>: links a purchase to the account you create right after it, for 2 days. Necessary.</li>
+<li><strong>rg_signup</strong>: remembers the account you're creating while you type the code we emailed you, for 24 hours. Necessary.</li>
+<li><strong>rg_oauth</strong>: checks that the Google or Discord account coming back to our site is the sign-in you started, for 10 minutes. Only set when you sign in with Google or Discord. Necessary.</li>
 <li><strong>rg_discord</strong>: checks that the Discord account coming back from Discord's authorization page is linked to your account, for 10 minutes. Only set when you link Discord. Necessary.</li>
-<li><strong>rago_preview</strong>: lets our team open the site before its launch. Only set for team members. Necessary.</li>
+<li><strong>rago_preview</strong> and <strong>rago_admin</strong>: let our team open the site before a launch and the admin pages. Only set for team members. Necessary.</li>
 <li><strong>rg_ref</strong> (cookie on the account server) and <strong>rago_ref</strong> (browser storage on this site): remember an affiliate code from a share link for 30 days.</li>
-<li><strong>rago_promo_seen</strong> and <strong>rago_promo_claimed</strong> (browser storage on this site): remember that the welcome offer was shown, so it isn't shown again for 30 days, and the discount code you claimed, so it is applied at checkout. Clearing your browser data removes them.</li>
+<li><strong>rago_promo_seen</strong>, <strong>rago_promo_seen_code</strong> and <strong>rago_promo_claimed</strong> (browser storage on this site): remember that the welcome offer was shown, so it isn't shown again for 30 days, and the discount code you claimed, so it is applied at checkout. Clearing your browser data removes them.</li>
 </ul>
 <p>We don't use advertising or analytics cookies, and the site loads no third-party fonts or trackers.</p>
 
@@ -84,9 +90,10 @@ th{color:var(--t1);font-weight:560}
 <li><strong>Supabase</strong>: database, download storage and profile photos</li>
 <li><strong>Railway</strong>: account and license server</li>
 <li><strong>Netlify</strong>: website hosting</li>
-<li><strong>Resend</strong>: account emails (purchase confirmation, password reset)</li>
+<li><strong>Resend</strong>: account emails (sign-up code, purchase and trial confirmation, password reset)</li>
 <li><strong>OVHcloud</strong>: our domain name and the support mailbox</li>
-<li><strong>Discord</strong>: our community server, and the Premium role if you link your Discord account</li>
+<li><strong>Discord</strong>: our community server, sign-in with Discord, and the Premium role if you link your Discord account</li>
+<li><strong>Google</strong>: sign-in with Google, only if you choose it</li>
 </ul>
 <p>Some of these providers are in the United States. Transfers rely on the European Commission's standard contractual clauses or an equivalent safeguard.</p>
 
@@ -96,6 +103,9 @@ th{color:var(--t1);font-weight:560}
 <li>Payment and invoicing records: as long as accounting law requires, 10 years.</li>
 <li>Your review and profile photo: until you delete them or your account. A replaced photo is deleted right away.</li>
 <li>Security log: 12 months.</li>
+<li>Free trial records (email, card fingerprint): 2 years after the trial started.</li>
+<li>Discord server records: while you're a member, then 12 months after you leave.</li>
+<li>Sign-up codes: deleted within a day.</li>
 <li>Network test results: 12 months.</li>
 </ul>
 

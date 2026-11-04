@@ -253,8 +253,12 @@ MODULES = [
 # inconvénient (tools/descriptions.json), en plus de ceux d'avant
 PRESETS = [
     ('mc_pvp', I('Minecraft PvP'), I('Hitreg, ping and raw input for Minecraft PvP.', 'Hitreg, ping et entrées brutes pour le PvP Minecraft.'),
-     ['ping_hitreg:hypixel', 'ping_packets:hitreg', 'ping_main:config1', 'in_driver', 'in_adapter', 'in_windows', 'in_mouse', 'in_keyboard',
-      'in_queue:low', 'win_gamemode:on', 'win_gamedvr', 'win_fullscreen',
+     # 1.2.2 (retour joueur du 29/10 : curseur perdu en plein écran et borderless après « Optimize and play », ping
+     # instable) : sans win_fullscreen (optimisation des jeux en fenêtre de Windows 11, peu utile à Minecraft Java et
+     # contraire des valeurs plein écran de win_gamedvr) ni ping_packets:hitreg (RSS coupé, MTU 1400, fenêtre TCP
+     # bridée, en double avec le Packet Optimizer, qui règle les paquets lui-même)
+     ['ping_hitreg:hypixel', 'ping_main:config1', 'in_driver', 'in_adapter', 'in_windows', 'in_mouse', 'in_keyboard',
+      'in_queue:low', 'win_gamemode:on', 'win_gamedvr',
       'pri_game:minecraft', 'pri_mmcss', 'pri_w32', 'pri_sysresp', 'exp_nolazy', 'kbm_thread', 'net_throttle', 'net_dnsprio',
       'pow_throttling', 'cpu_parking']),
     ('fps', I('Max FPS', 'FPS max'), I('Graphics card, CPU and power tuned for frames.', 'Carte graphique, CPU et alimentation réglés pour les FPS.'),

@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useMemo, useState, type ReactNode } from "react";
 import { AnimatePresence, motion } from "motion/react";
 import {
-  ArrowUpRight, AudioLines, Check, CircuitBoard, Clock, Download, FileWarning, Globe, Gpu, Layers, LoaderCircle, Lock, Network, PackageX,
+  ArrowUpRight, AudioLines, Check, CircuitBoard, Clock, Download, FileWarning, Globe, Gpu, Layers, LoaderCircle, Network, PackageX,
   RefreshCw, Sparkles, Trash2, Wrench,
 } from "lucide-react";
 import { api, type BloatApp, type CleanArea, type CleanAreaId, type CleanResult, type Driver, type DriversInfo } from "../lib/api";
@@ -190,7 +190,7 @@ function Cleaner() {
 }
 
 function Apps() {
-  const { t, lang, premium, setUpsell } = useStore();
+  const { t, lang } = useStore();
   const [apps, setApps] = useState<BloatApp[] | null>(null);
   const [picked, setPicked] = useState<Set<string>>(new Set());
   const [busy, setBusy] = useState(false);
@@ -282,10 +282,10 @@ function Apps() {
             ) : (
               <motion.div key="go" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
                 <Button
-                  variant={premium ? "primary" : "secondary"}
-                  icon={busy ? <LoaderCircle size={14} className="spin" /> : premium ? <PackageX size={14} /> : <Lock size={13} />}
+                  variant="primary"
+                  icon={busy ? <LoaderCircle size={14} className="spin" /> : <PackageX size={14} />}
                   disabled={busy || chosen.length === 0}
-                  onClick={() => (premium ? setAsking(true) : setUpsell("plan"))}
+                  onClick={() => setAsking(true)}
                 >
                   {busy ? t("tools.apps.running") : t("tools.apps.go", { n: chosen.length })}
                 </Button>

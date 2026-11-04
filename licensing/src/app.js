@@ -7,17 +7,18 @@ import { createReadStream } from 'node:fs';
 import { Readable } from 'node:stream';
 import { fileURLToPath } from 'node:url';
 import { relative } from 'node:path';
-import { createHash, createHmac, timingSafeEqual } from 'node:crypto';
+import { createHash, createHmac, randomBytes, timingSafeEqual } from 'node:crypto';
 
 import { DUMMY_HASH, maskLicenseKey, randomToken, signValue, unsignValue, verifyPassword } from './crypto.js';
 import { DeviceError, parseDevice, sameDevice } from './fingerprint.js';
 import { signToken, verifyToken } from './tokens.js';
-import { billingPortal, createCheckout, endTestLicenses, ensureAffiliatePromo, findPromotionCode, handleStripeEvent, isRagoCheckout, lifetimePrice, stopReplacedSubscriptions, stripeChecks, stripeMode, syncPromoActive } from './billing.js';
+import { billingPortal, createCheckout, settleTrial, withTrial, endTestLicenses, ensureAffiliatePromo, findPromotionCode, handleStripeEvent, isRagoCheckout, lifetimePrice, stopReplacedSubscriptions, stripeChecks, stripeMode, syncPromoActive } from './billing.js';
 import * as A from './affiliates.js';
 import { createInstaller } from './installer.js';
 import { createGeo } from './geo.js';
 import * as N from './network.js';
 import { createDiscord, DiscordError, discordSetupMissing } from './discord.js';
+import { createOAuth, OAuthError } from './oauth.js';
 import * as L from './licensing.js';
 import * as V from './views.js';
 import * as P from './profile.js';
@@ -38,6 +39,10 @@ const API_ERRORS = {
   revoked: [403, 'This license is no longer active. Contact support on Discord if you think that\'s a mistake.'],
   subscription_ended: [403, 'Your Rago Optimizer Premium subscription ended. Renew it on the website, then sign in again.'],
   rate_limited: [429, 'Too many attempts. Wait a few minutes and try again.'],
+  // Sign-in to the app through the browser, with Google or Discord (2026-11-04)
+  no_subscription: [404, 'There is no subscription to change on this account.'],
+  billing_unavailable: [503, "Payments can't be reached right now. Try again in a minute, or cancel from your account page."],
+  link_expired: [410, 'This sign-in took too long. Start again from Rago Optimizer.'],
   // Reviews and profile (2026-10-09)
   name_required: [400, 'Add the public name shown with your review.'],
   invalid_name: [400, "Use 2 to 32 letters, numbers, spaces and _ . ' - for your public name. No email or link."],
@@ -48,6 +53,10 @@ const API_ERRORS = {
   image_too_large: [413, 'This picture is over 5 MB. Choose a smaller one.'],
   storage_unavailable: [503, "Your photo couldn't be saved right now. Try again in a moment."],
 };
+
+// Sign-in from the app through the browser: 10 minutes, and a code without 0/O or 1/I to compare by eye.
+const LINK_TTL = 10 * 60 * 1000;
+const LINK_ALPHABET = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
 
 function rateLimiter() {
   const hits = new Map();
@@ -67,19 +76,24 @@ function rateLimiter() {
 }
 
 /**
- * @param deps { cfg, db, keys, stripe, mailer, log, discord, community } (discord: the Pro role bot, null when not configured;
- *   community: the community bot of community.js, for /admin; geo: where network tests come from, geo.js)
+ * @param deps { cfg, db, keys, stripe, mailer, log, discord, community, oauth, geo } (discord: the Pro role bot, null when not
+ *   configured; community: the community bot of community.js, for /admin; oauth: the Google and Discord sign-in providers
+ *   that have their keys; geo: where network tests come from, geo.js)
  */
-export function createApp({ cfg, db, keys, stripe, mailer, log = console, fetchImpl = fetch, avatars = P.createAvatarStore(cfg, { fetchImpl, log }), discord = createDiscord(cfg, { db, fetchImpl, log, stripe }), community = null, geo = createGeo(cfg, { fetchImpl, log }) }) {
+export function createApp({ cfg, db, keys, stripe, mailer, log = console, fetchImpl = fetch, avatars = P.createAvatarStore(cfg, { fetchImpl, log }), discord = createDiscord(cfg, { db, fetchImpl, log, stripe }), community = null, oauth = createOAuth(cfg, { fetchImpl }), geo = createGeo(cfg, { fetchImpl, log }) }) {
   const app = new Hono();
   // The Discord role pass started by a webhook runs after the reply to Stripe; tests wait for it here.
   app.idle = () => discord?.idle() ?? Promise.resolve();
   const installer = createInstaller(cfg, { fetchImpl, log });
   const allow = rateLimiter();
+  // App sign-ins waiting in the browser (/app/link/<id>, 2026-11-04): id -> { pollHash, code, userId, expiresAt }
+  const appLinks = new Map();
   let reviewsCache = null; // { at, bodies }: the site asks for the reviews on every visit (home page, reviews page)
   let popupCache = null; // { at, body }: same for the discount pop-up (one Stripe call per refresh)
   let lifetimeCache = null; // { at, offer }: the Lifetime price as Stripe has it (the site's card, /buy/lifetime)
   let lifetimeRead = null; // the Stripe call reading it, while one runs
+  let pricesPending = null;
+  let pricesCache = null; // { at, prices }: the monthly and yearly prices as Stripe has them (the app's Premium window)
   const publicDir = relative(process.cwd(), fileURLToPath(new URL('../public', import.meta.url))) || '.';
   const cookieBase = { httpOnly: true, secure: cfg.prod, sameSite: 'Lax', path: '/' };
 
@@ -97,7 +111,7 @@ export function createApp({ cfg, db, keys, stripe, mailer, log = console, fetchI
 
   // Strict CSP on our own pages. The marketing site (SITE_DIR) uses inline styles and scripts,
   // so it gets the other security headers without a CSP.
-  const OWN = /^\/(assets|download|buy|checkout|claim|signup|login|logout|forgot|reset|account|affiliate|webhooks|api|healthz|acces|admin)(\/|$)/;
+  const OWN = /^\/(assets|download|buy|checkout|claim|signup|login|logout|forgot|reset|account|affiliate|webhooks|api|healthz|acces|admin|auth)(\/|$)/;
   const strictHeaders = secureHeaders({
     contentSecurityPolicy: {
       defaultSrc: ["'self'"],
@@ -254,6 +268,34 @@ export function createApp({ cfg, db, keys, stripe, mailer, log = console, fetchI
     return lifetimeRead;
   }
 
+  /**
+   * The subscription prices ({ month, year }: { amount, currency } each, or null) as Stripe has them, for the app's
+   * Premium window (1.3.0). Read at most every 10 minutes; while Stripe doesn't answer, the last answer stands.
+   */
+  async function subscriptionPrices() {
+    if (!stripe || !cfg.subscriptions) return { month: null, year: null };
+    if (pricesCache && Date.now() - pricesCache.at < 10 * 60 * 1000) return pricesCache.prices;
+    const read = async (id) => {
+      if (!id) return null;
+      const p = await stripe.prices.retrieve(id, {}, { timeout: 5000, maxNetworkRetries: 0 });
+      return p.active && p.recurring ? { amount: p.unit_amount, currency: p.currency } : null;
+    };
+    // une seule lecture à la fois : les visiteurs du même instant attendent la même réponse
+    pricesPending ??= (async () => {
+      try {
+        const [month, year] = await Promise.all([read(cfg.stripePriceMonthly), read(cfg.stripePriceYearly)]);
+        pricesCache = { at: Date.now(), prices: { month, year } };
+      } catch (err) {
+        log.error('[stripe] subscription prices not read:', err.message);
+        pricesCache = { at: Date.now(), prices: pricesCache?.prices ?? { month: null, year: null } };
+      } finally {
+        pricesPending = null;
+      }
+    })();
+    await pricesPending;
+    return pricesCache.prices;
+  }
+
   /** Records the referral code typed right after a purchase, once the license is on the account. */
   async function settleReferral(user, affiliate) {
     if (!affiliate) return null;
@@ -324,7 +366,9 @@ export function createApp({ cfg, db, keys, stripe, mailer, log = console, fetchI
   }
   // Where to go after signing in. Only our own pages.
   const NEXT = new Set(['/affiliate', '/account/review']);
-  const nextPath = (v) => (NEXT.has(String(v || '')) ? String(v) : null);
+  // and the page that signs the Windows app in (/app/link/<id>, 2026-11-04)
+  const APP_LINK_PATH = /^\/app\/link\/[A-Za-z0-9_-]{16,64}$/;
+  const nextPath = (v) => (NEXT.has(String(v || '')) || APP_LINK_PATH.test(String(v || '')) ? String(v) : null);
 
   const settleAffiliate = async (userId) => {
     const out = await A.settleAffiliate(db, cfg, stripe, log, userId);
@@ -413,7 +457,12 @@ export function createApp({ cfg, db, keys, stripe, mailer, log = console, fetchI
     }
     const interval = c.req.query('interval') === 'year' ? 'year' : c.req.query('interval') === 'month' ? 'month' : undefined;
     const trialEnd = reward ? Math.floor(Number(reward.current_period_end) / 1000) : null;
-    const session = await createCheckout(stripe, cfg, user, { interval, customerId: previous?.stripe_customer_id, ref, promotionCode, trialEnd }, log);
+    // Free trial (?trial=1, 2026-11-04): for a first Premium only. A signed-in account that already had a license or a
+    // trial pays from the start; one that isn't signed in is checked by card and email once the checkout is done.
+    const hadPremium = user && (await db.get('SELECT 1 FROM licenses WHERE user_id = ? LIMIT 1', [user.id])
+      || await db.get('SELECT 1 FROM trials WHERE email = ? LIMIT 1', [user.email]));
+    const trial = c.req.query('trial') === '1' && !reward && !hadPremium;
+    const session = await createCheckout(stripe, cfg, user, { interval, customerId: previous?.stripe_customer_id, ref, promotionCode, trialEnd, trial }, log);
     return c.redirect(session.url, 303);
   }
 
@@ -436,7 +485,9 @@ export function createApp({ cfg, db, keys, stripe, mailer, log = console, fetchI
           : 'Your bank is still confirming the payment. Refresh this page in a few minutes to create your account, or ask on Discord with your receipt.',
         action: { href: c.req.url, label: 'Refresh' } }));
     }
-    if (out.created) await sendClaimEmail(out.license, out.claimToken);
+    // Free trial: one per person, settled here too when the webhook hasn't come yet (the email says when the first payment comes)
+    const trial = await settleTrial(db, stripe, session, session.subscription, out.license, log);
+    if (out.created) await sendClaimEmail(withTrial(out.license, session, session.subscription, trial), out.claimToken);
 
     const user = await currentUser(c);
     if (out.license.user_id) {
@@ -492,6 +543,20 @@ export function createApp({ cfg, db, keys, stripe, mailer, log = console, fetchI
     if (await L.findUserByEmail(db, email)) return exists();
     const { affiliate, error } = await checkReferral(code, email, pending);
     if (error) return fail(error);
+    // The email gets a 6-digit code first, and the account waits for it (2026-10-25). Not for the email a purchase
+    // was paid with: its receipt and claim link already went there.
+    if (cfg.verifyEmail && pending?.email !== email) {
+      if (!allow(`signup-mail:${email}`, 5, 60 * 60 * 1000)) return fail(API_ERRORS.rate_limited[1], 429);
+      const started = await L.startSignup(db, email, password);
+      try {
+        await mailer.signupCode(email, started.code);
+      } catch (err) {
+        log.error('[mail] sign-up code failed', err);
+        return fail("We couldn't send a code to this email right now. Check the address, or try again in a moment.", 503);
+      }
+      setCookie(c, SIGNUP_COOKIE, signValue(started.id, cfg.sessionSecret), signupCookie);
+      return c.redirect(verifyUrl({ next, code }), 303);
+    }
     let user;
     try {
       user = await L.createUser(db, email, password);
@@ -499,6 +564,11 @@ export function createApp({ cfg, db, keys, stripe, mailer, log = console, fetchI
       if (err.code === '23505') return exists(); // the form was sent twice
       throw err;
     }
+    return welcomeNewUser(c, user, { next, affiliate });
+  });
+
+  /** A new account: signed in, the pending purchase attached, then the profile photo step (skippable). */
+  async function welcomeNewUser(c, user, { next, affiliate = null }) {
     await signIn(c, user);
     const n = await settleClaim(c, user);
     deleteCookie(c, 'rg_ref', { path: '/' });
@@ -506,6 +576,81 @@ export function createApp({ cfg, db, keys, stripe, mailer, log = console, fetchI
     // New account: offer a profile photo first (skippable), then where the player was going.
     const to = next && !n ? next : `/account${n ? `?n=${n}` : ''}`;
     return c.redirect(`/account/profile?welcome=1&to=${encodeURIComponent(to)}`, 303);
+  }
+
+  // ---------- sign-up step 2: the code sent by email (2026-10-25) ----------
+  // A signed cookie (limited to /signup) names the sign-up waiting for its code. `next` and the referral code typed
+  // after a purchase travel with the form, and are checked again.
+  const SIGNUP_COOKIE = 'rg_signup';
+  const signupCookie = { ...cookieBase, path: '/signup', maxAge: 24 * 3600 };
+  const verifyUrl = ({ next, code, n }) => {
+    const q = new URLSearchParams({ ...(n ? { n } : {}), ...(next ? { next } : {}), ...(code ? { code } : {}) }).toString();
+    return `/signup/verify${q ? `?${q}` : ''}`;
+  };
+  const waitingSignup = async (c) => {
+    const id = unsignValue(getCookie(c, SIGNUP_COOKIE), cfg.sessionSecret);
+    return id ? L.pendingSignup(db, id) : null;
+  };
+  const verifyForm = async (c, src) => {
+    const purchased = !!(await pendingClaim(c));
+    return { purchased, next: nextPath(src.next), code: purchased ? A.normalizeCode(src.code) : '' };
+  };
+  const backToSignup = (c, next) => c.redirect(`/signup${next ? `?next=${encodeURIComponent(next)}` : ''}`, 303);
+
+  app.get('/signup/verify', async (c) => {
+    const form = await verifyForm(c, c.req.query());
+    const row = await waitingSignup(c);
+    if (!row) return backToSignup(c, form.next);
+    const notice = c.req.query('n') === 'sent' ? 'New code sent. Only the latest code works.' : null;
+    return c.html(V.verifyPage(cfg, { email: row.email, notice, ...form }));
+  });
+
+  app.post('/signup/verify', async (c) => {
+    const body = await c.req.parseBody();
+    const form = await verifyForm(c, body);
+    const row = await waitingSignup(c);
+    if (!row) return backToSignup(c, form.next);
+    const show = (error, status) => c.html(V.verifyPage(cfg, { email: row.email, error, ...form }), status);
+    if (!allow(`signup-verify:${ip(c)}`, 30, 15 * 60 * 1000)) return show(API_ERRORS.rate_limited[1], 429);
+    const out = await L.checkSignupCode(db, row.id, body.otp);
+    if (out.error === 'wrong') return show(`That code isn't right. ${out.left} ${out.left === 1 ? 'try' : 'tries'} left.`, 400);
+    if (out.error === 'expired') return show('This code expired. Send a new one below.', 400);
+    if (out.error === 'locked') return show('Too many wrong codes. Send a new one below.', 429);
+    if (out.error) return backToSignup(c, form.next);
+    deleteCookie(c, SIGNUP_COOKIE, { path: signupCookie.path });
+    const email = out.signup.email;
+    const exists = () => c.html(V.signupPage(cfg, { email, purchased: form.purchased, next: form.next, code: form.code,
+      error: V.html`An account with this email already exists. <a href="/login${form.next ? `?next=${encodeURIComponent(form.next)}` : ''}">Sign in instead</a>.` }), 400);
+    if (await L.findUserByEmail(db, email)) return exists(); // made meanwhile, with Google for example
+    // The code was checked on the first step; if it filled up meanwhile, the account is made without it.
+    const { affiliate } = await checkReferral(form.code, email, (await pendingClaim(c)) || {});
+    let user;
+    try {
+      user = await L.createUser(db, email, null, { passwordHash: out.signup.password_hash });
+    } catch (err) {
+      if (err.code === '23505') return exists();
+      throw err;
+    }
+    await audit(db, 'user.email_verified', { userId: user.id });
+    return welcomeNewUser(c, user, { next: form.next, affiliate });
+  });
+
+  app.post('/signup/resend', async (c) => {
+    const form = await verifyForm(c, await c.req.parseBody());
+    const row = await waitingSignup(c);
+    if (!row) return backToSignup(c, form.next);
+    if (!allow(`signup-mail:${row.email}`, 5, 60 * 60 * 1000) || !allow(`signup-resend:${ip(c)}`, 10, 60 * 60 * 1000)) {
+      return c.html(V.verifyPage(cfg, { email: row.email, error: API_ERRORS.rate_limited[1], ...form }), 429);
+    }
+    const sent = await L.resendSignupCode(db, row.id);
+    if (!sent) return backToSignup(c, form.next);
+    try {
+      await mailer.signupCode(sent.email, sent.code);
+    } catch (err) {
+      log.error('[mail] sign-up code failed', err);
+      return c.html(V.verifyPage(cfg, { email: row.email, error: "We couldn't send a new code right now. Try again in a moment.", ...form }), 503);
+    }
+    return c.redirect(verifyUrl({ ...form, n: 'sent' }), 303);
   });
 
   app.get('/login', async (c) => {
@@ -513,7 +658,8 @@ export function createApp({ cfg, db, keys, stripe, mailer, log = console, fetchI
     if (await currentUser(c)) return c.redirect(next || '/account', 303);
     const n = c.req.query('n');
     const pending = await pendingClaim(c);
-    return c.html(V.loginPage(cfg, { purchased: !!pending, email: pending?.email || '', next, code: pending ? await purchaseCode(c, pending) : '', notice: { reset: 'Password saved. Sign in with your new password.', out: "You're signed out." }[n] || null }));
+    return c.html(V.loginPage(cfg, { purchased: !!pending, email: pending?.email || '', next, code: pending ? await purchaseCode(c, pending) : '',
+      notice: { reset: 'Password saved. Sign in with your new password.', out: "You're signed out." }[n] || null, error: Object.hasOwn(OAUTH_ERRORS, n) ? OAUTH_ERRORS[n] : null }));
   });
 
   app.post('/login', async (c) => {
@@ -544,7 +690,9 @@ export function createApp({ cfg, db, keys, stripe, mailer, log = console, fetchI
   app.post('/logout', async (c) => {
     await L.deleteWebSession(db, getCookie(c, 'rg_session'));
     deleteCookie(c, 'rg_session', { path: '/' });
-    return c.redirect('/login?n=out', 303);
+    // "Use another account" on the app sign-in page: back to it once signed in again
+    const next = nextPath((await c.req.parseBody()).next);
+    return c.redirect(`/login?n=out${next ? `&next=${encodeURIComponent(next)}` : ''}`, 303);
   });
 
   app.get('/forgot', (c) => c.html(V.forgotPage(cfg)));
@@ -577,6 +725,93 @@ export function createApp({ cfg, db, keys, stripe, mailer, log = console, fetchI
     return c.redirect('/login?n=reset', 303);
   });
 
+  // ---------- sign in with Google or Discord (2026-10-25) ----------
+  // The state and the PKCE verifier stay in a signed cookie limited to /auth for 10 minutes. The account is the one
+  // linked to that Google or Discord account, else the one with the same (checked) email, else a new one.
+  const OAUTH_COOKIE = 'rg_oauth';
+  const oauthCookie = { ...cookieBase, path: '/auth' };
+  const OAUTH_ERRORS = {
+    oauthcancel: 'Sign-in canceled. Try again, or use your email and password.',
+    oauthfail: "That sign-in didn't go through. Try again, or use your email and password.",
+    oauthlimit: API_ERRORS.rate_limited[1],
+    googleemail: "Your Google account didn't give us a verified email. Sign up with your email instead.",
+    discordemail: 'Your Discord account has no verified email. Verify it in Discord (User Settings > My Account), or sign up with your email.',
+    googleother: 'This Rago account already signs in with another Google account. Use that one, or your email and password.',
+    discordother: 'This Rago account already signs in with another Discord account. Use that one, or your email and password.',
+  };
+  const providerOf = (c) => (Object.hasOwn(oauth, c.req.param('provider')) ? oauth[c.req.param('provider')] : null);
+
+  app.get('/auth/:provider', (c) => {
+    const p = providerOf(c);
+    if (!p) return c.notFound();
+    const state = randomToken(16);
+    const verifier = randomToken(32);
+    const next = nextPath(c.req.query('next')) || '';
+    setCookie(c, OAUTH_COOKIE, signValue(`${p.id}.${state}.${verifier}.${next}`, cfg.sessionSecret), { ...oauthCookie, maxAge: 10 * 60 });
+    return c.redirect(p.authorizeUrl(state, verifier), 302);
+  });
+
+  app.get('/auth/:provider/callback', async (c) => {
+    const p = providerOf(c);
+    if (!p) return c.notFound();
+    const saved = unsignValue(getCookie(c, OAUTH_COOKIE), cfg.sessionSecret);
+    deleteCookie(c, OAUTH_COOKIE, { path: oauthCookie.path });
+    const [savedId, savedState, verifier, savedNext] = (saved || '').split('.');
+    const next = nextPath(savedNext);
+    const back = (n) => c.redirect(`/login?n=${n}${next ? `&next=${encodeURIComponent(next)}` : ''}`, 303);
+    const { code, state, error } = c.req.query();
+    if (error) return back('oauthcancel'); // Cancel on Google's or Discord's page
+    if (!code || !state || !saved || savedId !== p.id || !sameHash(savedState, state)) return back('oauthfail');
+    if (!allow(`oauth:${ip(c)}`, 30, 60 * 60 * 1000)) return back('oauthlimit');
+    let profile;
+    try {
+      profile = await p.profile(String(code), verifier);
+    } catch (err) {
+      if (!(err instanceof OAuthError)) throw err;
+      log.error(`[oauth] ${p.id} sign-in failed:`, err.message);
+      return back('oauthfail');
+    }
+    let found;
+    try {
+      found = await L.userForIdentity(db, p.id, profile);
+    } catch (err) {
+      if (!(err instanceof L.SignInError)) throw err;
+      return back(`${p.id}${err.code === 'unverified_email' ? 'email' : 'other'}`);
+    }
+    const { user, created } = found;
+    if (created) return welcomeNewUser(c, user, { next });
+    await signIn(c, user);
+    const lic = await pendingClaim(c);
+    const n = lic ? await claimSignedIn(c, user, lic) : null;
+    if (next && !n) return c.redirect(next, 303);
+    return c.redirect(dashWith(n), 303);
+  });
+
+  // ---------- the page the app opens to sign in (2026-11-04) ----------
+  const linkOf = (c) => {
+    const link = appLinks.get(c.req.param('id'));
+    return link && link.expiresAt > Date.now() && !link.done ? link : null;
+  };
+  const expiredLink = (c) => c.html(V.messagePage(cfg, { overline: 'Rago Optimizer for Windows', title: 'This sign-in expired.', text: 'Sign-in links from the app work for 10 minutes. Click “Continue with Google” or “Continue with Discord” in Rago Optimizer again.' }), 410);
+  app.get('/app/link/:id', async (c) => {
+    const link = linkOf(c);
+    if (!link) return expiredLink(c);
+    const path = `/app/link/${c.req.param('id')}`;
+    const user = await currentUser(c);
+    if (!user) {
+      const p = c.req.query('p');
+      return c.redirect(Object.hasOwn(oauth, p) ? `/auth/${p}?next=${encodeURIComponent(path)}` : `/login?next=${encodeURIComponent(path)}`, 303);
+    }
+    return c.html(V.appLinkPage(cfg, { user, code: link.code, action: path }));
+  });
+  app.post('/app/link/:id', requireUser, async (c) => {
+    const link = linkOf(c);
+    if (!link) return expiredLink(c);
+    link.userId = c.get('user').id;
+    link.done = true;
+    return c.html(V.messagePage(cfg, { user: c.get('user'), overline: 'Rago Optimizer for Windows', title: 'You’re signed in.', text: 'Go back to Rago Optimizer: it finishes signing in on its own. You can close this tab.' }));
+  });
+
   // ---------- dashboard ----------
   const NOTICES = {
     claimed: ['notice', 'License added to your account. Download Rago Optimizer below.'],
@@ -588,6 +823,7 @@ export function createApp({ cfg, db, keys, stripe, mailer, log = console, fetchI
     upgraded: ['notice', 'Premium for life is on your account. Your subscription was canceled, so you won’t be charged again.'],
     upgradefail: ['error', V.html`Premium for life is on your account, but your subscription couldn’t be canceled yet. We’ll keep trying; if it renews, ${V.supportLink(cfg, 'contact support on Discord')} for a refund.`],
     password: ['notice', 'Password changed. Other browsers were signed out.'],
+    passwordset: ['notice', 'Password saved. Use it with your email to sign in to Rago Optimizer for Windows.'],
     nofile: ['error', V.html`The Windows app can't be downloaded right now. Try again a bit later, or ${V.supportLink(cfg, 'ask on Discord')} and we'll tell you when it's back.`],
     nobilling: ['error', V.html`Billing isn't available right now. Try again in a moment, or ${V.supportLink(cfg, 'contact support on Discord')}.`],
     discord: ['notice', 'Discord linked.'],
@@ -615,7 +851,10 @@ export function createApp({ cfg, db, keys, stripe, mailer, log = console, fetchI
     const discordRewards = discord?.rewards.length ? await discord.rewardsOf(user.id) : [];
     const [kind, text] = NOTICES[c.req.query('n')] || [];
     return c.html(V.dashboardPage(cfg, {
-      user, license, device, discordLink, discordRewards, inviteRewards: discord?.rewards || [],
+      user, license, device, discordLink, discordRewards, inviteRewards: discord?.rewards || [], noPassword: !L.hasPassword(user),
+      // free trial running (2026-11-04): until its end, the period end is the first payment
+      trial: !!(license?.stripe_subscription_id && Number(license.current_period_end) > Date.now()
+        && await db.get('SELECT 1 FROM trials WHERE subscription_id = ? AND NOT charged_now AND started_at > ?', [license.stripe_subscription_id, Date.now() - Math.max(cfg.trialDays, 1) * 86400 * 1000 - 3600 * 1000])),
       notice: kind === 'notice' ? text : null, error: kind === 'error' ? text : null,
       ...(license ? resetWindow(license, device) : {}),
       affiliate: await A.affiliateSummary(db, cfg, user.id),
@@ -626,18 +865,20 @@ export function createApp({ cfg, db, keys, stripe, mailer, log = console, fetchI
     }));
   });
 
-  app.get('/account/password', requireUser, (c) => c.html(V.passwordPage(cfg, { user: c.get('user') })));
+  // An account made with Google or Discord has no password yet: it sets one here without a current password.
+  app.get('/account/password', requireUser, (c) => c.html(V.passwordPage(cfg, { user: c.get('user'), hasPassword: L.hasPassword(c.get('user')) })));
   app.post('/account/password', requireUser, async (c) => {
     const user = c.get('user');
     const body = await c.req.parseBody();
     const password = String(body.password || '');
-    const fail = (error, status = 400) => c.html(V.passwordPage(cfg, { user, error }), status);
+    const had = L.hasPassword(user);
+    const fail = (error, status = 400) => c.html(V.passwordPage(cfg, { user, error, hasPassword: had }), status);
     if (!allow(`password:${user.id}`, 10, 15 * 60 * 1000)) return fail(API_ERRORS.rate_limited[1], 429);
-    if (!(await verifyPassword(String(body.current || ''), user.password_hash))) return fail('Your current password is wrong.', 401);
-    if (password.length < 8 || password.length > 200) return fail('Use at least 8 characters for your new password.');
+    if (had && !(await verifyPassword(String(body.current || ''), user.password_hash))) return fail('Your current password is wrong.', 401);
+    if (password.length < 8 || password.length > 200) return fail(`Use at least 8 characters for your ${had ? 'new ' : ''}password.`);
     await L.setPassword(db, user.id, password); // signs out every session, this one included
     await signIn(c, user);
-    return c.redirect('/account?n=password', 303);
+    return c.redirect(`/account?n=${had ? 'password' : 'passwordset'}`, 303);
   });
 
   // ---------- public profile: photo and name ----------
@@ -1085,6 +1326,11 @@ export function createApp({ cfg, db, keys, stripe, mailer, log = console, fetchI
     const ok = await verifyPassword(body.password, user ? user.password_hash : DUMMY_HASH);
     loginResult(c, email, user && ok);
     if (!user || !ok) return fail(c, 'invalid_credentials');
+    return appSignIn(c, user, device);
+  });
+
+  /** The player is known (password, or Google/Discord through the browser): their license on this PC. */
+  async function appSignIn(c, user, device) {
     await A.rememberDevice(db, user.id, device);
     await settleAffiliate(user.id);
     const license = await L.current(db, await L.licenseForUser(db, user.id));
@@ -1102,6 +1348,39 @@ export function createApp({ cfg, db, keys, stripe, mailer, log = console, fetchI
     const iat = now();
     const access = signToken({ typ: 'access', sub: user.id, lic: license.id, iat, exp: iat + 900 }, keys);
     return c.json({ status: 'activation_required', access_token: access, expires_in: 900, account: { email: user.email }, license: licenseInfo(license, null) });
+  }
+
+  // ---------- Sign in to the app with Google or Discord (2026-11-04) ----------
+  // The app asks for a link, opens /app/link/<id> in the browser and asks every 2 s whether it was confirmed. On the
+  // site, the player signs in (Google, Discord or email) and confirms, after checking that the app shows the same
+  // 4-character code: a link sent by someone else can't sign their app in to this account. Links live 10 minutes,
+  // in memory (one server); a restart only means starting again from the app.
+  const startLink = (c) => {
+    if (!allow(`applink:${ip(c)}`, 30, 60 * 60 * 1000)) return null;
+    const t = Date.now();
+    for (const [k, v] of appLinks) if (v.expiresAt < t) appLinks.delete(k);
+    const id = randomToken(18);
+    const poll = randomToken(32);
+    const code = Array.from(randomBytes(4), (b) => LINK_ALPHABET[b % LINK_ALPHABET.length]).join('');
+    appLinks.set(id, { pollHash: createHash('sha256').update(poll).digest('hex'), code, userId: null, expiresAt: t + LINK_TTL });
+    return { link_id: id, poll_token: poll, code, url: `${cfg.publicUrl}/app/link/${id}`, interval: 2, expires_in: LINK_TTL / 1000 };
+  };
+  api.post('/auth/app-link/start', (c) => {
+    const out = startLink(c);
+    return out ? c.json(out) : fail(c, 'rate_limited');
+  });
+  api.post('/auth/app-link/poll', async (c) => {
+    const body = await readJson(c);
+    if (!body || typeof body.link_id !== 'string' || typeof body.poll_token !== 'string') return fail(c, 'invalid_request');
+    let device;
+    try { device = parseDevice(body.device); } catch (e) { return fail(c, 'invalid_request', { detail: e instanceof DeviceError ? e.message : undefined }); }
+    const link = appLinks.get(body.link_id);
+    if (!link || link.expiresAt < Date.now() || !sameHash(link.pollHash, createHash('sha256').update(body.poll_token).digest('hex'))) return fail(c, 'link_expired');
+    if (!link.userId) return c.json({ status: 'pending' });
+    appLinks.delete(body.link_id);
+    const user = await L.getUser(db, link.userId);
+    if (!user) return fail(c, 'link_expired');
+    return appSignIn(c, user, device);
   });
 
   api.post('/licenses/activate', async (c) => {
@@ -1190,6 +1469,58 @@ export function createApp({ cfg, db, keys, stripe, mailer, log = console, fetchI
   });
 
   api.get('/account/me', async (c) => c.json(await accountReply(c.get('user'))));
+
+  // ---------- App API: the subscription, seen and canceled from the app (1.3.0) ----------
+  // The app's Settings show the plan, its next payment or end date, and cancel in one screen (no discount offered, no
+  // second screen). Canceling stops the renewal: Premium stays until the end of the paid period or of the free trial,
+  // and nothing more is charged. Resume undoes it before that date.
+  const subscriptionOf = async (user) => {
+    const lic = await L.licenseForUser(db, user.id);
+    return lic && lic.status === 'active' && (lic.plan === 'month' || lic.plan === 'year') && lic.stripe_subscription_id ? lic : null;
+  };
+  const subscriptionReply = async (lic) => {
+    const end = lic.current_period_end ? new Date(Number(lic.current_period_end)).toISOString() : null;
+    const trial = await db.get('SELECT 1 FROM trials WHERE subscription_id = ? AND NOT charged_now', [lic.stripe_subscription_id]);
+    const prices = await subscriptionPrices();
+    return {
+      subscription: {
+        interval: lic.plan,
+        trial: !!trial && !!lic.current_period_end && Number(lic.current_period_end) - Date.now() < (cfg.trialDays + 1) * 86400 * 1000,
+        canceled: !!lic.cancel_at_period_end,
+        renews_at: lic.cancel_at_period_end ? null : end,
+        ends_at: lic.cancel_at_period_end ? end : null,
+        price: prices[lic.plan] ?? null,
+      },
+    };
+  };
+  api.get('/account/subscription', async (c) => {
+    const lic = await subscriptionOf(c.get('user'));
+    return c.json(lic ? await subscriptionReply(lic) : { subscription: null });
+  });
+  const setCancel = (cancel) => async (c) => {
+    const user = c.get('user');
+    const lic = await subscriptionOf(user);
+    if (!lic) return fail(c, 'no_subscription');
+    if (!stripe) return fail(c, 'billing_unavailable');
+    let sub;
+    try {
+      sub = await stripe.subscriptions.update(lic.stripe_subscription_id, { cancel_at_period_end: cancel });
+    } catch (err) {
+      log.error('[stripe] subscription update from the app', err.message);
+      return fail(c, 'billing_unavailable');
+    }
+    await L.syncSubscription(db, sub);
+    await db.run('INSERT INTO audit (at, license_id, user_id, type, detail) VALUES (?, ?, ?, ?, ?)',
+      [Date.now(), lic.id, user.id, cancel ? 'subscription.canceled_in_app' : 'subscription.resumed_in_app', null]);
+    const fresh = await L.getLicense(db, lic.id);
+    const reply = await subscriptionReply(fresh);
+    if (cancel) {
+      try { await mailer.subscriptionCanceled(user.email, reply.subscription); } catch (err) { log.error('[mail] cancel confirmation', err.message); }
+    }
+    return c.json(reply);
+  };
+  api.post('/account/subscription/cancel', setCancel(true));
+  api.post('/account/subscription/resume', setCancel(false));
 
   api.post('/account/logout', async (c) => {
     await L.deleteApiSession(db, (c.req.header('authorization') || '').replace(/^Bearer\s+/i, '').trim());
@@ -1285,7 +1616,8 @@ export function createApp({ cfg, db, keys, stripe, mailer, log = console, fetchI
 
   // Public: whether the site's Lifetime card can sell (2026-10-16). { lifetime: { amount, currency } } once
   // STRIPE_PRICE_LIFETIME is an active one-time price in Stripe, else { lifetime: null } ("Coming soon" on the site).
-  api.get('/plans', async (c) => c.json({ lifetime: await lifetimeOffer() }, 200, { 'Access-Control-Allow-Origin': '*', 'Cache-Control': 'public, max-age=60' }));
+  // 1.3.0: also the monthly and yearly prices and the free trial's length, for the app's Premium window.
+  api.get('/plans', async (c) => c.json({ lifetime: await lifetimeOffer(), ...(await subscriptionPrices()), trial_days: cfg.subscriptions ? cfg.trialDays : 0 }, 200, { 'Access-Control-Allow-Origin': '*', 'Cache-Control': 'public, max-age=60' }));
 
   // Public: the version of the installer /download serves (Railway variable INSTALLER_VERSION), shown under the
   // site's download button. { version: null } while the variable isn't set.

@@ -78,9 +78,11 @@ const lifetimeText = (user, replaces) => ['One payment: Rago Optimizer Premium f
   ...(replaces ? ['Your current subscription stops right after this payment.'] : []),
   ...(user ? [] : ['You create your account right after paying.'])].join(' ');
 
-async function buildCheckout(stripe, cfg, user, { interval, customerId, terms, ref, promotionCode, trialEnd, replaces } = {}) {
+async function buildCheckout(stripe, cfg, user, { interval, customerId, terms, ref, promotionCode, trialEnd, replaces, trial = false } = {}) {
   const choice = priceFor(cfg, interval);
-  const metadata = { product: RAGO_PRODUCT, ...(choice.interval ? { interval: choice.interval } : {}), ...(choice.plan ? { plan: choice.plan } : {}), ...(ref ? { ref } : {}) };
+  // Free trial (2026-11-04): only on a subscription, never with a reward still running (trialEnd)
+  const trialDays = trial && choice.interval && !trialEnd && cfg.trialDays > 0 ? cfg.trialDays : 0;
+  const metadata = { product: RAGO_PRODUCT, ...(choice.interval ? { interval: choice.interval } : {}), ...(choice.plan ? { plan: choice.plan } : {}), ...(ref ? { ref } : {}), ...(trialDays ? { trial: String(trialDays) } : {}) };
   const common = {
     line_items: [{ price: choice.price, quantity: 1 }],
     success_url: `${cfg.publicUrl}/checkout/success?session_id={CHECKOUT_SESSION_ID}`,
@@ -103,6 +105,18 @@ async function buildCheckout(stripe, cfg, user, { interval, customerId, terms, r
         : 'Rago Optimizer Premium works on one Windows PC per license. You create your account right after paying.'),
     });
   }
+  if (trialDays) {
+    // The card is asked now and charged when the trial ends, unless the player cancels before (Stripe shows "N days
+    // free, then <price>" above the button). No card on file at the end: the subscription stops instead.
+    const ends = new Date(Date.now() + trialDays * 86400 * 1000).toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric', timeZone: 'UTC' });
+    return stripe.checkout.sessions.create({
+      ...common,
+      mode: 'subscription',
+      payment_method_collection: 'always',
+      subscription_data: { metadata, trial_period_days: trialDays, trial_settings: { end_behavior: { missing_payment_method: 'cancel' } } },
+      custom_text: custom(`${trialDays} days free, then your card is charged on ${ends} and at each renewal. Cancel anytime before ${ends} from your account and you pay nothing. One free trial per person. Rago Optimizer Premium works on one Windows PC. You create your account right after.`),
+    });
+  }
   return stripe.checkout.sessions.create({
     ...common,
     mode: 'subscription',
@@ -110,6 +124,50 @@ async function buildCheckout(stripe, cfg, user, { interval, customerId, terms, r
     subscription_data: { metadata, ...(trialEnd && trialEnd > Date.now() / 1000 + 2 * 86400 ? { trial_end: trialEnd } : {}) },
     custom_text: custom('Rago Optimizer Premium works on one Windows PC. Cancel anytime from your account. You create your account right after paying.'),
   });
+}
+
+/**
+ * A free trial just started (checkout with metadata.trial): one per person. The same card or the same email had a trial
+ * before: the trial ends now and Stripe charges the first period right away. Noted in `trials` either way. Returns
+ * 'trial', 'charged_now' or null (not a trial). Never throws for a Stripe error: logged, the trial stays.
+ */
+export async function settleTrial(db, stripe, session, sub, license, log = console) {
+  if (!session?.metadata?.trial || !sub || typeof sub !== 'object') return null;
+  // Settled already (the webhook and the success page both call this)
+  const done = await db.get('SELECT charged_now FROM trials WHERE subscription_id = ?', [sub.id]);
+  if (done) return done.charged_now ? 'charged_now' : 'trial';
+  if (sub.status !== 'trialing') return null;
+  const email = String(session.customer_details?.email || session.customer_email || license?.email || '').toLowerCase();
+  let card = null;
+  try {
+    const pmId = idOf(sub.default_payment_method) || idOf(session.payment_method);
+    const pm = pmId && (typeof sub.default_payment_method === 'object' ? sub.default_payment_method : await stripe.paymentMethods.retrieve(pmId));
+    card = pm?.card?.fingerprint || null;
+  } catch (err) {
+    log.error?.('[stripe] trial card not read:', err.message);
+  }
+  const before = await db.get(`SELECT subscription_id FROM trials WHERE subscription_id <> ? AND (email = ?${card ? ' OR card_fingerprint = ?' : ''}) LIMIT 1`,
+    card ? [sub.id, email, card] : [sub.id, email]);
+  let chargedNow = false;
+  if (before) {
+    try {
+      await stripe.subscriptions.update(sub.id, { trial_end: 'now', proration_behavior: 'none' });
+      chargedNow = true;
+    } catch (err) {
+      log.error?.(`[stripe] second trial ${sub.id} not ended:`, err.message);
+    }
+  }
+  await db.run(`INSERT INTO trials (subscription_id, email, card_fingerprint, license_id, started_at, charged_now) VALUES (?, ?, ?, ?, ?, ?)
+    ON CONFLICT (subscription_id) DO NOTHING`, [sub.id, email, card, license?.id || null, Date.now(), chargedNow]);
+  await audit(db, chargedNow ? 'trial.refused' : 'trial.started', { licenseId: license?.id || null, userId: license?.user_id || null, detail: { subscription: sub.id, ...(before ? { earlier: before.subscription_id } : {}) } });
+  return chargedNow ? 'charged_now' : 'trial';
+}
+
+/** The license as the purchase email needs it for a trial that started (days, price of the first payment). */
+export function withTrial(license, session, sub, result) {
+  if (result !== 'trial') return license;
+  const price = sub?.items?.data?.[0]?.price;
+  return { ...license, trial: { days: Number(session.metadata.trial), amount: price?.unit_amount ?? null, currency: price?.currency ?? null } };
 }
 
 /** Creates the coupon `id` once (test and live mode each have their own). */
@@ -302,7 +360,9 @@ export async function handleStripeEvent(db, event, { stripe, onLicense, log } = 
       const sub = obj.mode === 'subscription' && obj.subscription && stripe
         ? await stripe.subscriptions.retrieve(idOf(obj.subscription)) : null;
       const out = await fulfillCheckoutSession(db, obj, sub);
-      if (out.created && onLicense) await onLicense(out.license, out.claimToken);
+      // Free trial: one per person; the email says when the first payment comes (or that it was charged now).
+      const trial = out.license && stripe ? await settleTrial(db, stripe, obj, sub, out.license, log) : null;
+      if (out.created && onLicense) await onLicense(withTrial(out.license, obj, sub, trial), out.claimToken);
       // Lifetime bought while subscribed: the subscription it replaced stops now.
       if (out.license?.plan === 'lifetime' && out.license.status === 'active' && out.license.user_id && stripe) await stopReplacedSubscriptions(db, stripe, out.license.user_id, log, out.license.id);
       label = out.created ? 'license_created' : out.license ? 'license_exists' : 'unpaid';
