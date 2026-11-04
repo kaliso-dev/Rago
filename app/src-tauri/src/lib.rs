@@ -194,6 +194,13 @@ fn run_tweaks(app: AppHandle, state: State<'_, AppState>, items: Vec<RunItem>) -
     if let Some(it) = applying().find(|it| !catalog::allowed(&it.id, it.variant.as_deref(), premium)) {
         return Err(format!("premium_required:{}", it.id));
     }
+    if !premium {
+        let items: Vec<(&str, Option<&str>, bool)> = items.iter().map(|it| (it.id.as_str(), it.variant.as_deref(), it.undo)).collect();
+        let ledger = state.ledger.lock().unwrap();
+        if let Some(max) = catalog::over_free_slots(ledger.tweaks.keys().map(String::as_str), &items) {
+            return Err(format!("free_slots:{max}"));
+        }
+    }
     let needs_premium = applying().any(|it| !catalog::is_plain(&it.id, it.variant.as_deref()) && !runner::is_native(&it.id));
     // ouverts dès qu'une licence active a la clé : l'annulation des réglages Premium s'y trouve aussi
     let bundle = state.license.scripts_key().and_then(|key| catalog::premium(&key));
@@ -582,6 +589,30 @@ async fn license_status(state: State<'_, AppState>) -> Result<license::Status, S
 async fn license_login(state: State<'_, AppState>, email: String, password: String) -> Result<license::LoginResult, license::ApiError> {
     let lic = Arc::clone(&state.license);
     tauri::async_runtime::spawn_blocking(move || lic.login(email.trim(), &password))
+        .await
+        .map_err(|_| license::ApiError::from("server_error"))?
+}
+
+/// Connexion avec Google ou Discord (1.3.0) : ouvre la page du compte dans le navigateur (`provider` : google,
+/// discord), et renvoie le code que la page affiche aussi.
+#[tauri::command]
+async fn license_link_start(app: AppHandle, state: State<'_, AppState>, provider: String) -> Result<license::Link, license::ApiError> {
+    let lic = Arc::clone(&state.license);
+    let link = tauri::async_runtime::spawn_blocking(move || lic.link_start())
+        .await
+        .map_err(|_| license::ApiError::from("server_error"))??;
+    let p = if matches!(provider.as_str(), "google" | "discord") { provider.as_str() } else { "" };
+    let url = if p.is_empty() { link.url.clone() } else { format!("{}?p={p}", link.url) };
+    use tauri_plugin_opener::OpenerExt;
+    app.opener().open_url(url, None::<&str>).map_err(|_| license::ApiError::from("server_error"))?;
+    Ok(link)
+}
+
+/// Le joueur a-t-il confirmé dans le navigateur ? null : pas encore.
+#[tauri::command]
+async fn license_link_poll(state: State<'_, AppState>, link_id: String, poll_token: String) -> Result<Option<license::LoginResult>, license::ApiError> {
+    let lic = Arc::clone(&state.license);
+    tauri::async_runtime::spawn_blocking(move || lic.link_poll(&link_id, &poll_token))
         .await
         .map_err(|_| license::ApiError::from("server_error"))?
 }
@@ -1120,6 +1151,8 @@ pub fn run() {
             read_preset_file,
             license_status,
             license_login,
+            license_link_start,
+            license_link_poll,
             license_activate,
             license_refresh,
             license_sign_out,

@@ -450,6 +450,10 @@ export interface Api {
   onReset(cb: (e: ResetDone) => void): Promise<UnlistenFn>;
   licenseStatus(): Promise<LicenseStatus>;
   licenseLogin(email: string, password: string): Promise<LoginResult>;
+  /** Connexion avec Google ou Discord : ouvre le navigateur, renvoie le code affiché aussi sur la page du compte. */
+  licenseLinkStart(provider: "google" | "discord"): Promise<{ linkId: string; pollToken: string; code: string }>;
+  /** null : pas encore confirmé dans le navigateur. */
+  licenseLinkPoll(linkId: string, pollToken: string): Promise<LoginResult | null>;
   licenseActivate(): Promise<LicenseStatus>;
   licenseRefresh(): Promise<LicenseStatus>;
   licenseSignOut(): Promise<void>;
@@ -544,6 +548,8 @@ const tauriApi: Api = {
   onGoto: (cb) => listen<string>("app:goto", (e) => cb(e.payload)),
   licenseStatus: () => invoke("license_status"),
   licenseLogin: (email, password) => invoke("license_login", { email, password }),
+  licenseLinkStart: (provider) => invoke("license_link_start", { provider }),
+  licenseLinkPoll: (linkId, pollToken) => invoke("license_link_poll", { linkId, pollToken }),
   licenseActivate: () => invoke("license_activate"),
   licenseRefresh: () => invoke("license_refresh"),
   licenseSignOut: () => invoke("license_sign_out"),
@@ -683,6 +689,7 @@ function mockLicense(): LicenseStatus {
 }
 
 let demoPending: string | null = null;
+let demoLinkAt = 0;
 let mockBackground: BackgroundPrefs = {
   tray: true,
   autostart: true,
@@ -1143,6 +1150,17 @@ const mockApi: Api = {
       throw { code: "no_license", message: "This account doesn't have Rago Optimizer Premium yet.", buyUrl: `${import.meta.env.VITE_SITE_URL || location.origin}/#pricing` };
     demoPending = email;
     return { kind: "activationRequired", email, keyHint: "RAGO-9EGJN-•••••-•••••-VKXDS" };
+  },
+  licenseLinkStart: async () => {
+    await sleep(400);
+    demoLinkAt = Date.now();
+    return { linkId: "demo", pollToken: "demo", code: "K7QX" };
+  },
+  licenseLinkPoll: async () => {
+    await sleep(300);
+    if (Date.now() - demoLinkAt < 5000) return null;
+    demoPending = "player@gmail.com";
+    return { kind: "activationRequired", email: demoPending, keyHint: "RAGO-9EGJN-•••••-•••••-VKXDS" };
   },
   licenseActivate: async () => {
     await sleep(900);

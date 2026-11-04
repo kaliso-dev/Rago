@@ -2990,3 +2990,68 @@ test('Google sign-in after a purchase attaches the license', async () => {
   assert.equal(res.headers.get('location'), '/account/profile?welcome=1&to=%2Faccount%3Fn%3Dclaimed');
   assert.match(await (await t.browse('/account')).text(), /RAGO-/);
 });
+
+// ---------- Sign in to the app with Google or Discord, through the browser (2026-11-04) ----------
+
+test('app sign-in through the browser: Google, code shown on both sides, then the license on this PC', async () => {
+  const { fetchImpl } = fakeProviders({ g1: { sub: 'google-7', email: 'pro@gmail.com', email_verified: true, name: 'Pro' } });
+  const t = await setup(OAUTH_ENV, { fetchImpl });
+  await t.webhook('checkout.session.completed', t.paidSession('cs_link', 'pro@gmail.com'));
+  await t.browse('/checkout/success?session_id=cs_link');
+  await oauthSignIn(t, 'google', 'g1'); // account created with Google, purchase claimed, no password
+  t.jar.clear();
+
+  const start = await (await t.api('/auth/app-link/start', {})).json();
+  assert.match(start.code, /^[A-HJ-NP-Z2-9]{4}$/);
+  assert.equal(start.url, `http://localhost/app/link/${start.link_id}`);
+  const poll = () => t.api('/auth/app-link/poll', { link_id: start.link_id, poll_token: start.poll_token, device: device('L1') });
+  assert.equal((await (await poll()).json()).status, 'pending');
+  // a wrong poll token learns nothing
+  const forged = await t.api('/auth/app-link/poll', { link_id: start.link_id, poll_token: 'x'.repeat(43), device: device('L1') });
+  assert.equal((await forged.json()).error.code, 'link_expired');
+
+  // The browser: not signed in, ?p=google goes straight to Google and comes back to the link page.
+  const path = `/app/link/${start.link_id}`;
+  const go = await t.browse(`${path}?p=google`);
+  assert.equal(go.headers.get('location'), `/auth/google?next=${encodeURIComponent(path)}`);
+  const back = await oauthSignIn(t, 'google', 'g1', { next: path });
+  assert.equal(back.headers.get('location'), path);
+  const page = await (await t.browse(path)).text();
+  assert.match(page, new RegExp(`>${start.code}<`));
+  assert.match(page, /pro@gmail\.com/);
+  assert.equal((await (await poll()).json()).status, 'pending'); // nothing before the click
+  const ok = await t.browse(path, { form: {} });
+  assert.match(await ok.text(), /signed in/);
+
+  const r = await poll();
+  const j = await r.json();
+  assert.equal(r.status, 200, JSON.stringify(j));
+  assert.equal(j.status, 'activation_required');
+  assert.equal(j.account.email, 'pro@gmail.com');
+  // used once
+  assert.equal((await (await poll()).json()).error.code, 'link_expired');
+  assert.equal((await t.browse(path)).status, 410);
+});
+
+test('app sign-in through the browser: a free account gets no_license, an old link expires', async () => {
+  const t = await setup();
+  await t.browse('/signup', { form: { email: 'free@x.io', password: 'password123' } });
+  const start = await (await t.api('/auth/app-link/start', {})).json();
+  const path = `/app/link/${start.link_id}`;
+  // already signed in on the site: the confirmation page right away
+  assert.match(await (await t.browse(path)).text(), /Sign in to the app\?/);
+  await t.browse(path, { form: {} });
+  const r = await t.api('/auth/app-link/poll', { link_id: start.link_id, poll_token: start.poll_token, device: device('F1') });
+  assert.equal((await r.json()).error.code, 'no_license');
+
+  const old = await (await t.api('/auth/app-link/start', {})).json();
+  const realNow = Date.now;
+  Date.now = () => realNow() + 11 * 60 * 1000;
+  try {
+    assert.equal((await t.browse(`/app/link/${old.link_id}`)).status, 410);
+    const late = await t.api('/auth/app-link/poll', { link_id: old.link_id, poll_token: old.poll_token, device: device('F1') });
+    assert.equal(late.status, 410);
+  } finally {
+    Date.now = realNow;
+  }
+});

@@ -7,7 +7,7 @@ import { createReadStream } from 'node:fs';
 import { Readable } from 'node:stream';
 import { fileURLToPath } from 'node:url';
 import { relative } from 'node:path';
-import { createHash, createHmac, timingSafeEqual } from 'node:crypto';
+import { createHash, createHmac, randomBytes, timingSafeEqual } from 'node:crypto';
 
 import { DUMMY_HASH, maskLicenseKey, randomToken, signValue, unsignValue, verifyPassword } from './crypto.js';
 import { DeviceError, parseDevice, sameDevice } from './fingerprint.js';
@@ -39,6 +39,8 @@ const API_ERRORS = {
   revoked: [403, 'This license is no longer active. Contact support on Discord if you think that\'s a mistake.'],
   subscription_ended: [403, 'Your Rago Optimizer Premium subscription ended. Renew it on the website, then sign in again.'],
   rate_limited: [429, 'Too many attempts. Wait a few minutes and try again.'],
+  // Sign-in to the app through the browser, with Google or Discord (2026-11-04)
+  link_expired: [410, 'This sign-in took too long. Start again from Rago Optimizer.'],
   // Reviews and profile (2026-10-09)
   name_required: [400, 'Add the public name shown with your review.'],
   invalid_name: [400, "Use 2 to 32 letters, numbers, spaces and _ . ' - for your public name. No email or link."],
@@ -49,6 +51,10 @@ const API_ERRORS = {
   image_too_large: [413, 'This picture is over 5 MB. Choose a smaller one.'],
   storage_unavailable: [503, "Your photo couldn't be saved right now. Try again in a moment."],
 };
+
+// Sign-in from the app through the browser: 10 minutes, and a code without 0/O or 1/I to compare by eye.
+const LINK_TTL = 10 * 60 * 1000;
+const LINK_ALPHABET = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
 
 function rateLimiter() {
   const hits = new Map();
@@ -78,6 +84,8 @@ export function createApp({ cfg, db, keys, stripe, mailer, log = console, fetchI
   app.idle = () => discord?.idle() ?? Promise.resolve();
   const installer = createInstaller(cfg, { fetchImpl, log });
   const allow = rateLimiter();
+  // App sign-ins waiting in the browser (/app/link/<id>, 2026-11-04): id -> { pollHash, code, userId, expiresAt }
+  const appLinks = new Map();
   let reviewsCache = null; // { at, bodies }: the site asks for the reviews on every visit (home page, reviews page)
   let popupCache = null; // { at, body }: same for the discount pop-up (one Stripe call per refresh)
   let lifetimeCache = null; // { at, offer }: the Lifetime price as Stripe has it (the site's card, /buy/lifetime)
@@ -326,7 +334,9 @@ export function createApp({ cfg, db, keys, stripe, mailer, log = console, fetchI
   }
   // Where to go after signing in. Only our own pages.
   const NEXT = new Set(['/affiliate', '/account/review']);
-  const nextPath = (v) => (NEXT.has(String(v || '')) ? String(v) : null);
+  // and the page that signs the Windows app in (/app/link/<id>, 2026-11-04)
+  const APP_LINK_PATH = /^\/app\/link\/[A-Za-z0-9_-]{16,64}$/;
+  const nextPath = (v) => (NEXT.has(String(v || '')) || APP_LINK_PATH.test(String(v || '')) ? String(v) : null);
 
   const settleAffiliate = async (userId) => {
     const out = await A.settleAffiliate(db, cfg, stripe, log, userId);
@@ -641,7 +651,9 @@ export function createApp({ cfg, db, keys, stripe, mailer, log = console, fetchI
   app.post('/logout', async (c) => {
     await L.deleteWebSession(db, getCookie(c, 'rg_session'));
     deleteCookie(c, 'rg_session', { path: '/' });
-    return c.redirect('/login?n=out', 303);
+    // "Use another account" on the app sign-in page: back to it once signed in again
+    const next = nextPath((await c.req.parseBody()).next);
+    return c.redirect(`/login?n=out${next ? `&next=${encodeURIComponent(next)}` : ''}`, 303);
   });
 
   app.get('/forgot', (c) => c.html(V.forgotPage(cfg)));
@@ -734,6 +746,31 @@ export function createApp({ cfg, db, keys, stripe, mailer, log = console, fetchI
     const n = lic ? await claimSignedIn(c, user, lic) : null;
     if (next && !n) return c.redirect(next, 303);
     return c.redirect(dashWith(n), 303);
+  });
+
+  // ---------- the page the app opens to sign in (2026-11-04) ----------
+  const linkOf = (c) => {
+    const link = appLinks.get(c.req.param('id'));
+    return link && link.expiresAt > Date.now() && !link.done ? link : null;
+  };
+  const expiredLink = (c) => c.html(V.messagePage(cfg, { overline: 'Rago Optimizer for Windows', title: 'This sign-in expired.', text: 'Sign-in links from the app work for 10 minutes. Click “Continue with Google” or “Continue with Discord” in Rago Optimizer again.' }), 410);
+  app.get('/app/link/:id', async (c) => {
+    const link = linkOf(c);
+    if (!link) return expiredLink(c);
+    const path = `/app/link/${c.req.param('id')}`;
+    const user = await currentUser(c);
+    if (!user) {
+      const p = c.req.query('p');
+      return c.redirect(Object.hasOwn(oauth, p) ? `/auth/${p}?next=${encodeURIComponent(path)}` : `/login?next=${encodeURIComponent(path)}`, 303);
+    }
+    return c.html(V.appLinkPage(cfg, { user, code: link.code, action: path }));
+  });
+  app.post('/app/link/:id', requireUser, async (c) => {
+    const link = linkOf(c);
+    if (!link) return expiredLink(c);
+    link.userId = c.get('user').id;
+    link.done = true;
+    return c.html(V.messagePage(cfg, { user: c.get('user'), overline: 'Rago Optimizer for Windows', title: 'You’re signed in.', text: 'Go back to Rago Optimizer: it finishes signing in on its own. You can close this tab.' }));
   });
 
   // ---------- dashboard ----------
@@ -1247,6 +1284,11 @@ export function createApp({ cfg, db, keys, stripe, mailer, log = console, fetchI
     const ok = await verifyPassword(body.password, user ? user.password_hash : DUMMY_HASH);
     loginResult(c, email, user && ok);
     if (!user || !ok) return fail(c, 'invalid_credentials');
+    return appSignIn(c, user, device);
+  });
+
+  /** The player is known (password, or Google/Discord through the browser): their license on this PC. */
+  async function appSignIn(c, user, device) {
     await A.rememberDevice(db, user.id, device);
     await settleAffiliate(user.id);
     const license = await L.current(db, await L.licenseForUser(db, user.id));
@@ -1264,6 +1306,39 @@ export function createApp({ cfg, db, keys, stripe, mailer, log = console, fetchI
     const iat = now();
     const access = signToken({ typ: 'access', sub: user.id, lic: license.id, iat, exp: iat + 900 }, keys);
     return c.json({ status: 'activation_required', access_token: access, expires_in: 900, account: { email: user.email }, license: licenseInfo(license, null) });
+  }
+
+  // ---------- Sign in to the app with Google or Discord (2026-11-04) ----------
+  // The app asks for a link, opens /app/link/<id> in the browser and asks every 2 s whether it was confirmed. On the
+  // site, the player signs in (Google, Discord or email) and confirms, after checking that the app shows the same
+  // 4-character code: a link sent by someone else can't sign their app in to this account. Links live 10 minutes,
+  // in memory (one server); a restart only means starting again from the app.
+  const startLink = (c) => {
+    if (!allow(`applink:${ip(c)}`, 30, 60 * 60 * 1000)) return null;
+    const t = Date.now();
+    for (const [k, v] of appLinks) if (v.expiresAt < t) appLinks.delete(k);
+    const id = randomToken(18);
+    const poll = randomToken(32);
+    const code = Array.from(randomBytes(4), (b) => LINK_ALPHABET[b % LINK_ALPHABET.length]).join('');
+    appLinks.set(id, { pollHash: createHash('sha256').update(poll).digest('hex'), code, userId: null, expiresAt: t + LINK_TTL });
+    return { link_id: id, poll_token: poll, code, url: `${cfg.publicUrl}/app/link/${id}`, interval: 2, expires_in: LINK_TTL / 1000 };
+  };
+  api.post('/auth/app-link/start', (c) => {
+    const out = startLink(c);
+    return out ? c.json(out) : fail(c, 'rate_limited');
+  });
+  api.post('/auth/app-link/poll', async (c) => {
+    const body = await readJson(c);
+    if (!body || typeof body.link_id !== 'string' || typeof body.poll_token !== 'string') return fail(c, 'invalid_request');
+    let device;
+    try { device = parseDevice(body.device); } catch (e) { return fail(c, 'invalid_request', { detail: e instanceof DeviceError ? e.message : undefined }); }
+    const link = appLinks.get(body.link_id);
+    if (!link || link.expiresAt < Date.now() || !sameHash(link.pollHash, createHash('sha256').update(body.poll_token).digest('hex'))) return fail(c, 'link_expired');
+    if (!link.userId) return c.json({ status: 'pending' });
+    appLinks.delete(body.link_id);
+    const user = await L.getUser(db, link.userId);
+    if (!user) return fail(c, 'link_expired');
+    return appSignIn(c, user, device);
   });
 
   api.post('/licenses/activate', async (c) => {

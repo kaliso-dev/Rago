@@ -1,7 +1,7 @@
 import { ArrowRight, Check, Lock } from "lucide-react";
 import { api } from "../lib/api";
 import { totalTweaks, tweaks } from "../lib/catalog";
-import { FREE, FREE_REVERTS, useStore } from "../lib/store";
+import { FREE, FREE_REVERTS, FREE_SLOTS, useStore } from "../lib/store";
 import { LicenseGate, SITE_URL } from "./LicenseGate";
 import { Pulse } from "./Logo";
 import { Modal } from "./Modal";
@@ -13,11 +13,18 @@ export function Upsell() {
   const close = () => setUpsell(null);
   const vars = { n: FREE.size, total: totalTweaks };
   const tw = upsell === "tweak" && upsellTweak ? tweaks.get(upsellTweak) : undefined;
-  const title = tw ? t("upsell.tweakNamed", { name: tw.name[lang] }) : upsell === "plan" ? t("upsell.plan") : t("upsell.title", vars);
-  const kicker = upsell === "preset" ? t("upsell.preset") : upsell === "plan" ? t("free.plan") : t("upsell.tweak");
+  const slots = upsell === "slots";
+  const title = slots
+    ? t("upsell.slots", { n: FREE_SLOTS })
+    : tw
+      ? t("upsell.tweakNamed", { name: tw.name[lang] })
+      : upsell === "plan"
+        ? t("upsell.plan")
+        : t("upsell.title", vars);
+  const kicker = upsell === "preset" ? t("upsell.preset") : upsell === "plan" || slots ? t("free.plan") : t("upsell.tweak");
   return (
     <>
-      <Modal open={upsell === "tweak" || upsell === "preset" || upsell === "plan"} onClose={close} className="upsell">
+      <Modal open={upsell === "tweak" || upsell === "preset" || upsell === "plan" || slots} onClose={close} className="upsell">
         <div className="upsell-head">
           <Pulse size={40} active />
           <span className="upsell-kicker rg-overline">
@@ -26,7 +33,7 @@ export function Upsell() {
         </div>
         <h2>{title}</h2>
         <p className="muted">
-          {t("upsell.lead", vars)}
+          {slots ? t("upsell.slotsLead", { n: FREE_SLOTS }) : t("upsell.lead", vars)}
           {tw && FREE_REVERTS.has(tw.id) && ` ${t("upsell.revertFree")}`}
         </p>
         <ul className="upsell-list">

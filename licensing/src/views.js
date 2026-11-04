@@ -271,6 +271,20 @@ export function passwordPage(cfg, { user, error, hasPassword = true } = {}) {
 }
 
 /** Information page. Always offers a way out: the main action if any, back to the site, Discord. */
+/** The app asked to sign in through the browser (2026-11-04): the player checks the code the app shows, then confirms. */
+export function appLinkPage(cfg, { user, code, action }) {
+  const aside = html`<p class="overline rise">Rago Optimizer for Windows</p>
+    <h1 class="display rise d1">Sign in to the app?</h1>
+    <p class="lede rise d2">Rago Optimizer on your PC will be signed in as <strong>${user.email}</strong>. Check that the app shows this code:</p>
+    <p class="display rise d2 app-code" aria-label="Code">${code}</p>
+    <div class="row rise d3">
+      <form method="post" action="${action}" data-busy="Signing in…"><button class="btn btn-primary" type="submit">Yes, sign in the app</button></form>
+      <form method="post" action="/logout">${hidden('next', action)}<button class="btn btn-ghost" type="submit">Use another account</button></form>
+    </div>
+    <p class="muted small rise d4">Different code, or you didn't click “Continue with Google” or “Continue with Discord” in the app? Close this page.</p>`;
+  return page({ title: 'Sign in to the app', cfg, user, body: html`<main class="split split-solo"><section class="split-aside">${pulse}${aside}</section></main>` });
+}
+
 export function messagePage(cfg, { title, text, action, user, step, overline = 'Rago Optimizer' }) {
   const aside = html`<p class="overline rise">${overline}</p><h1 class="display rise d1">${title}</h1><p class="lede rise d2">${text}</p>
     <div class="row rise d3">

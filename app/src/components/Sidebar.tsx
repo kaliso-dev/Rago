@@ -1,7 +1,7 @@
 import { motion } from "motion/react";
 import { ArrowUpRight, Lock, Sparkles } from "lucide-react";
 import { catalog } from "../lib/catalog";
-import { FREE, useStore } from "../lib/store";
+import { FREE, FREE_SLOTS, useStore } from "../lib/store";
 import { totalTweaks } from "../lib/catalog";
 import { DiscordIcon, MODULE_ICONS } from "./icons";
 import { DISCORD_URL } from "./LicenseGate";
@@ -26,7 +26,7 @@ const GROUPS: { label: Key | null; ids: string[] }[] = [
 ];
 
 export function Sidebar() {
-  const { t, lang, page, goTo, selected, sys, license, premium, setUpsell, isLocked, undoOnly } = useStore();
+  const { t, lang, page, goTo, selected, sys, license, premium, setUpsell, isLocked, undoOnly, slotsUsed } = useStore();
   const modules = new Map(catalog.modules.map((m) => [m.id, m]));
   const seen = useSeen();
   const visit = (id: string) => {
@@ -92,6 +92,7 @@ export function Sidebar() {
             {t("free.plan")}
           </span>
           <span className="nav-upgrade-sub rg-metric">{t("free.status", { n: FREE.size, total: totalTweaks })}</span>
+          {FREE_SLOTS > 0 && <span className="nav-upgrade-sub rg-metric">{t("free.slots", { used: Math.min(slotsUsed, FREE_SLOTS), n: FREE_SLOTS })}</span>}
           <span className="nav-upgrade-cta">{t("free.upgrade")}</span>
         </button>
       )}
