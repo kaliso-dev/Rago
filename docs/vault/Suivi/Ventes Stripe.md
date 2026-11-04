@@ -30,7 +30,7 @@ maj: 2026-11-04
 - **5 ventes** (287,95 $) : 4 à 59,99 $ et 1 à 47,99 $ (code −20 %). Paiement unique, sans facture, marqué `plan: lifetime` dans Stripe.
 
 ## Clients
-- **38 clients payants** (33 abonnés + 5 Lifetime), dans plus de 20 pays (le plus : États-Unis).
+- **38 clients payants** (33 abonnés + 5 Lifetime), dans au moins 18 pays (8 paiements sans pays ; le plus : États-Unis, 7).
 - 64 fiches client en tout : Stripe crée une fiche à chaque tentative de paiement, donc un même e-mail a souvent 2 ou 3 fiches.
 - **27 paiements refusés sur 66 tentatives** : surtout refus de la banque (« transaction non autorisée », fonds insuffisants), dont des clients de Chine et du Pérou qui ont réessayé plusieurs fois sans succès ; 3 bloqués par Radar (risque le plus élevé).
 
