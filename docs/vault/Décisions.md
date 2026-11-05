@@ -59,7 +59,7 @@ Une ligne par projet ou fonctionnalité arrêtés, pour qu'aucun Claude ne les r
 | Date | Quoi | Raison |
 |---|---|---|
 | 05/11 | Proxy chez OVHcloud | VPS-1 indisponible, VPS-2 (7 €) seulement en Amérique du Nord : « faut pas prendre chez ovh » ([[Proxy]]) |
-| 05/11 | Proxy : journée de test sur 6 serveurs Vultr loués à l'heure | « je veux pas ta journée de test » ; OVHcloud configuré directement ([[Proxy]]) |
+| 05/11 | Proxy : journée de test sur 6 serveurs Vultr loués à l'heure | « je veux pas ta journée de test » ; serveurs configurés directement ([[Proxy]]) |
 | 01/11 | Point après la première semaine de ventes (RAG-16) et logo Rago à côté des e-mails `noreply@` et `support@` (RAG-21) | « On les abandonne » |
 | 01/11 | Série de vidéos courtes « Milli » (mascotte, épisodes #000 à #005) | « arrêtée » |
 | 01/11 | Plan de visibilité écrit du 17/10 (17/10 → 15/11) | « on ne suit pas de plan » |
