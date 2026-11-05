@@ -19,14 +19,14 @@ Linear RAG-50 : nouveau produit, d'abord en Europe, à intégrer à l'app. Consi
 - Gain réaliste estimé d'un proxy vers Hypixel : **Inde ~70 ms** (Airtel, Jio), Bangladesh ~35, Europe 0 à 20, Amérique du Nord et Asie de l'Est 0 ou pire. Minemen (Europe) : déjà 15 à 46 ms en Europe, pas de gain.
 - Un joueur dans un centre de données à Londres (UXHOST) a 170 ms vers Hypixel : un serveur loué peut router plus mal qu'une box. D'où le ping vers Hypixel mesuré par `install.sh` dès l'installation.
 
-## Lancement sur OVHcloud (décidé par Sofiene le 05/11)
-Sofiene, 05/11 : « refait moi le document pour ovh cloud et je veux pas ta journée de test là je veux tout config maintenant ».
-Document : « Proxys Minecraft Rago sur OVHcloud » (https://claude.ai/artifact/Et2sE49sDo7QKJgeTELUqj).
-- **2 VPS-1 OVHcloud** (2 vCPU, 4 Go, trafic illimité, anti-DDoS inclus), sans engagement : **Francfort** (sinon Strasbourg) et **Mumbai**. 3,81 € HT soit 4,57 € TTC par mois chacun (prix de Mumbai à vérifier au panier). Sofiene commande lui-même ; rien acheté au 05/11.
-- Vultr écarté : anti-DDoS payant et limité à 11 villes, sans Mumbai ; reste le plan B pour une ville absente chez OVHcloud.
+## Lancement sur Vultr (Sofiene, 05/11)
+Sofiene, 05/11 : « je veux tout config maintenant » (pas de journée de test). OVHcloud écarté le même jour (VPS-1 indisponible, VPS-2 à 7 € proposé seulement en Amérique du Nord).
+Document : « Proxys Minecraft Rago sur Vultr » (https://claude.ai/artifact/Et2sE49sDo7QKJgeTELUqj).
+- **2 serveurs Vultr** Cloud Compute Regular Performance (1 vCPU, 1 Go, 25 Go, 1 To de trafic), Ubuntu 24.04 : **Frankfurt** (`rago-frankfurt`) et **Mumbai** (`rago-mumbai`). 5 $ par mois chacun hors taxes, facturés à l'heure (0,007 $/h). Sans l'option anti-DDoS (payante, 11 villes seulement, pas Mumbai). Sofiene commande lui-même ; rien acheté au 05/11 (À VÉRIFIER au prochain message).
+- Installation : `scp install.sh root@IP:`, `ssh root@IP`, `sh install.sh` (utilisateur `root` chez Vultr).
 - **Logiciel** : `proxy/` du dépôt (copie dans le dossier du projet) : `relay.py` (relais TCP Python sans dépendance ; port 25565 → `mc.hypixel.net`, 25566 → `eu.minemen.club` ; réécrit le nom du serveur dans le handshake ; TCP_NODELAY ; 8 connexions max par IP ; journal sans IP), `mcping.py` (ping Minecraft), `install.sh` (généré par `fabriquer-install.py` : service systemd `rago-proxy`, BBR, pare-feu ufw SSH + 25565 + 25566, ping vers Hypixel et Minemen à la fin). Testé sur un faux serveur Minecraft ; **jamais testé sur un vrai VPS ni contre Hypixel**.
 - Les joueurs utilisent le proxy en ajoutant `IP` (Hypixel) ou `IP:25566` (Minemen) dans Minecraft, sans nouvelle version de l'app.
 - Proxy **ouvert à tous** pour l'instant (pas de jeton) ; jeton prévu avec l'intégration dans l'app.
 - Ensuite (après les mesures des VPS) : test réseau qui mesure les proxys, trajet proxy → Hypixel connu du serveur de licences, proposition du meilleur proxy si gain ≥ 10 ms ; sur `staging`, sans toucher à la 1.3.0 en test.
-- À VÉRIFIER : que fait Hypixel de nombreux joueurs derrière une même adresse ? Compte OVHcloud au nom d'un majeur ?
+- À VÉRIFIER : que fait Hypixel de nombreux joueurs derrière une même adresse ? (Conditions Vultr : avoir l'âge légal pour signer un contrat.)
 - À DÉCIDER : proxy gratuit, Premium ou option payante (question q51).

@@ -18,7 +18,7 @@ Registre daté des décisions de Sofiene. **La plus récente prime.** Citations 
 | 01/11 | Connexion à l'app avec Google ou Discord (« c'est important en effet ») | PRÉVU ([[Connexion Google et Discord]]) |
 | 01/11 | Les outils restent gratuits (« c'est des outils indispensables »), y compris la désinstallation des applis préinstallées (« Oui, tout gratuit ») | DÉCIDÉ ([[Page Outils]]) |
 | 01/11 | Signature de code de l'exe : prévue, pas avant d'avoir le budget | PRÉVU ([[App Windows]]) |
-| 05/11 | Proxy : OVHcloud plutôt que Vultr, et tout configurer tout de suite, sans journée de test (« je veux tout config maintenant 5$ c'est rien ») | EN COURS ([[Proxy]]) |
+| 05/11 | Proxy : 2 serveurs Vultr (Frankfurt, Mumbai), tout configurés tout de suite, sans journée de test (« je veux tout config maintenant 5$ c'est rien ») | EN COURS ([[Proxy]]) |
 | 04/11 | Proxy relancé : « maintenant je veux qu'on développe les proxy » ; l'app propose le meilleur proxy après le test réseau (remplace le « pas maintenant » du 01/11) | EN COURS ([[Proxy]]) |
 | 31/10 | **Règle n°1 : le vault doit correspondre en tout point à l'état actuel du projet** ; chaque Claude détecte les changements et abandons, met à jour ou supprime, et demande en cas de doute | DÉCIDÉ ([[Mettre à jour le vault]]) |
 | 31/10 | Le futur OS de Sofiene (développé sur un autre compte Claude, hors de ce dépôt) sera personnalisé plus tard avec la DA de Rago Optimizer, sur sa demande | PRÉVU ([[Prochaines étapes]], [[Charte graphique]]) |
@@ -58,6 +58,7 @@ Registre daté des décisions de Sofiene. **La plus récente prime.** Citations 
 Une ligne par projet ou fonctionnalité arrêtés, pour qu'aucun Claude ne les relance. Le reste du vault n'en parle plus.
 | Date | Quoi | Raison |
 |---|---|---|
+| 05/11 | Proxy chez OVHcloud | VPS-1 indisponible, VPS-2 (7 €) seulement en Amérique du Nord : « faut pas prendre chez ovh » ([[Proxy]]) |
 | 05/11 | Proxy : journée de test sur 6 serveurs Vultr loués à l'heure | « je veux pas ta journée de test » ; OVHcloud configuré directement ([[Proxy]]) |
 | 01/11 | Point après la première semaine de ventes (RAG-16) et logo Rago à côté des e-mails `noreply@` et `support@` (RAG-21) | « On les abandonne » |
 | 01/11 | Série de vidéos courtes « Milli » (mascotte, épisodes #000 à #005) | « arrêtée » |
