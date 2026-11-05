@@ -24,6 +24,7 @@ Document : « Proxys Minecraft Rago : quoi acheter » (https://claude.ai/artifac
 1. Test d'une journée : 6 serveurs **Vultr** à l'heure (Francfort, Paris, Londres, Madrid, Mumbai, New Jersey), script `proxy/mcping.py` + `proxy/test-proxy.sh` dans le dossier du projet ; ~1 $. Script jamais essayé contre un vrai serveur Minecraft.
 2. Lancement : 2 proxys (Francfort + Mumbai ou Delhi), Vultr 1 vCPU / 1 Go, 5 $ par mois chacun (1 To de trafic).
 3. Prix relevés le 04/11 : Vultr 5 $/mois (0,007 $/h) ; Hetzner dès 5,99 € HT/mois, pas d'Inde ; OVHcloud VPS-1 3,81 € HT (à vérifier) ; DigitalOcean 6 $/mois.
+- **Choix pour le lancement (05/11, recommandé à Sofiene, en attente de son achat)** : **OVHcloud VPS-1** à Francfort + Mumbai, 4,57 € TTC par mois chacun (2 vCPU, 4 Go, trafic illimité, anti-DDoS inclus). Vultr = plan B (villes absentes chez OVHcloud, test à l'heure) ; son anti-DDoS est payant et limité à 11 villes, sans Mumbai. À VÉRIFIER à la commande : Francfort et Mumbai proposés pour le VPS, facture au mois sans engagement.
 - Rien n'est acheté ; Sofiene achète lui-même. Compte Vultr sans doute au nom d'un majeur (À VÉRIFIER).
 - À VÉRIFIER : Hypixel exige-t-il le nom `mc.hypixel.net` dans la connexion ? Que fait Hypixel de nombreux joueurs derrière une même adresse ?
 - À DÉCIDER : proxy gratuit, Premium ou option payante (question q51).
