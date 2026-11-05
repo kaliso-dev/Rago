@@ -17,7 +17,7 @@ Liste priorisée au 01/11. Rien ne se lance sans la demande de Sofiene ([[Règle
 4. **E-mail aux titulaires de compte sur la collecte des tests réseau** (Sofiene, 01/11 : « oui il faudrait les envoyer »), comme le promet la politique de confidentialité : texte à rédiger, puis à faire valider par Sofiene avant l'envoi (RAG-89, [[Test réseau]], [[Serveur de licences]]).
 5. **Connexion à l'app Windows avec Google ou Discord** (Sofiene, 01/11 : prévue, « c'est important ») : RAG-90, voir [[Connexion Google et Discord]].
 
-6. **[[Proxy]]** (relancé le 04/11, RAG-50) : Sofiene lit la recommandation, loue les 6 serveurs de test Vultr (~1 $) et envoie les mesures ; ensuite choix des 2 villes et code sur `staging`.
+6. **[[Proxy]]** (RAG-50) : Sofiene commande 2 VPS-1 OVHcloud (Francfort, Mumbai), lance `install.sh` et envoie les lignes affichées ; ensuite intégration dans l'app sur `staging`.
 
 ## Ensuite
 - **OS de Sofiene** (développé sur un autre compte Claude, hors de ce dépôt) : quand Sofiene le demandera, le personnaliser avec la DA de Rago Optimizer ([[Charte graphique]], [[Voix et ton]], [[Refonte glass]]). Rien à faire avant sa demande.
