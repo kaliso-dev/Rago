@@ -4,7 +4,8 @@ import pathlib
 ici = pathlib.Path(__file__).parent
 relay = (ici / "relay.py").read_text()
 mcping = (ici / "mcping.py").read_text()
-assert "RAGO_EOF" not in relay + mcping
+route = (ici / "rago-route.py").read_text()
+assert "RAGO_EOF" not in relay + mcping + route
 script = f'''#!/bin/sh
 # Installation du proxy Rago sur un VPS Ubuntu (OVHcloud).
 # Usage : sudo sh install.sh
@@ -24,7 +25,9 @@ cat > /opt/rago-proxy/relay.py <<'RAGO_EOF'
 {relay}RAGO_EOF
 cat > /opt/rago-proxy/mcping.py <<'RAGO_EOF'
 {mcping}RAGO_EOF
-chmod 755 /opt/rago-proxy/relay.py /opt/rago-proxy/mcping.py
+cat > /opt/rago-proxy/rago-route.py <<'RAGO_EOF'
+{route}RAGO_EOF
+chmod 755 /opt/rago-proxy/relay.py /opt/rago-proxy/mcping.py /opt/rago-proxy/rago-route.py
 
 echo "3/5 Réglages réseau (BBR, files d'attente)"
 cat > /etc/sysctl.d/90-rago-proxy.conf <<'RAGO_EOF'
@@ -57,19 +60,41 @@ PrivateTmp=true
 [Install]
 WantedBy=multi-user.target
 RAGO_EOF
-systemctl daemon-reload
-systemctl enable --now rago-proxy
-systemctl restart rago-proxy
+cat > /etc/systemd/system/rago-route.service <<'RAGO_EOF'
+[Unit]
+Description=Rago Route (sortie et relais du tunnel)
+After=network-online.target
+Wants=network-online.target
 
-echo "5/5 Pare-feu : SSH + ports 25565 (Hypixel) et 25566 (Minemen)"
+[Service]
+User=rago-proxy
+ExecStart=/usr/bin/python3 -I /opt/rago-proxy/rago-route.py sortie
+Restart=always
+RestartSec=2
+LimitNOFILE=65536
+NoNewPrivileges=true
+ProtectSystem=strict
+ProtectHome=true
+PrivateTmp=true
+
+[Install]
+WantedBy=multi-user.target
+RAGO_EOF
+systemctl daemon-reload
+systemctl enable --now rago-proxy rago-route
+systemctl restart rago-proxy rago-route
+
+echo "5/5 Pare-feu : SSH + ports 25565 (Hypixel), 25566 (Minemen) et 25600/udp (Rago Route)"
 ufw allow OpenSSH >/dev/null
 ufw allow 25565/tcp >/dev/null
 ufw allow 25566/tcp >/dev/null
+ufw allow 25600/udp >/dev/null
 ufw --force enable >/dev/null
 
 sleep 2
 echo
 systemctl is-active --quiet rago-proxy && echo "Proxy Rago : EN MARCHE" || {{ echo "Proxy Rago : ERREUR"; journalctl -u rago-proxy -n 20 --no-pager; exit 1; }}
+systemctl is-active --quiet rago-route && echo "Rago Route : EN MARCHE" || {{ echo "Rago Route : ERREUR"; journalctl -u rago-route -n 20 --no-pager; exit 1; }}
 echo "Ping depuis ce serveur :"
 python3 -I /opt/rago-proxy/mcping.py mc.hypixel.net 25565 10 || true
 python3 -I /opt/rago-proxy/mcping.py eu.minemen.club 25565 10 || true
