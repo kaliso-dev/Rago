@@ -17,7 +17,7 @@ Liste priorisée au 01/11. Rien ne se lance sans la demande de Sofiene ([[Règle
 4. **E-mail aux titulaires de compte sur la collecte des tests réseau** (Sofiene, 01/11 : « oui il faudrait les envoyer »), comme le promet la politique de confidentialité : texte à rédiger, puis à faire valider par Sofiene avant l'envoi (RAG-89, [[Test réseau]], [[Serveur de licences]]).
 5. **Connexion à l'app Windows avec Google ou Discord** (Sofiene, 01/11 : prévue, « c'est important ») : RAG-90, voir [[Connexion Google et Discord]].
 
-6. **[[Proxy]]** (RAG-50) : serveurs Vultr en marche (Frankfurt, Chicago, New York ; Mumbai à détruire) ; le direct reste le plus rapide depuis la France. Prototype Rago Route (tunnel anti-lag) écrit le 06/11 : Sofiene loue Paris, réinstalle Paris et Frankfurt avec le nouveau `install.sh` et teste depuis son Mac ; ensuite version Windows dans l'app (sur `staging`).
+6. **[[Proxy]]** (RAG-50) : serveurs Vultr Paris (sortie) et Frankfurt (relais). Prototype Rago Route testé le 06/11 depuis le Mac de Sofiene (tunnel ≤ direct) ; reste une vraie partie et le test des pertes simulées, puis la version Windows dans l'app (sur `staging`).
 
 ## Ensuite
 - **OS de Sofiene** (développé sur un autre compte Claude, hors de ce dépôt) : quand Sofiene le demandera, le personnaliser avec la DA de Rago Optimizer ([[Charte graphique]], [[Voix et ton]], [[Refonte glass]]). Rien à faire avant sa demande.

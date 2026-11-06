@@ -10,6 +10,7 @@ Une ligne par événement marquant, la plus récente en haut. Voir [[Historique 
 ## Novembre 2026
 | Date | Événement | Liens |
 |---|---|---|
+| 06/11 | Premier test réel de Rago Route depuis le Mac de Sofiene : 114,8 ms par le tunnel (sortie Paris) contre 120,1 ms en direct | [[Proxy]] |
 | 06/11 | Prototype Rago Route écrit (`proxy/rago-route.py`) et testé en local ; test réel prévu avec une sortie à Paris | [[Proxy]] |
 | 05/11 | Test de Sofiene depuis la France : direct 104,8 ms, Chicago 112, New York 111, Frankfurt 127 | [[Proxy]] |
 | 05/11 | Proxys New York et Chicago installés ; Chicago → Hypixel 4,8 ms (Hypixel est à Chicago) | [[Proxy]] |

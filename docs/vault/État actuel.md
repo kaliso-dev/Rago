@@ -21,7 +21,7 @@ La [[Version 1.2.1]] (refonte en verre, barre en jeu, Packet Optimizer, biblioth
 | Connexion Google / Discord + code email | en ligne (PR #61, 28/10) | OBSERVÉ (fil) |
 | Offre Lifetime | **59,99 $** (Sofiene, 31/10 : « c'est normal »), vendue seulement si le prix Stripe correspond | DÉCIDÉ / CONFIRMÉ (`site/src/page.html`) |
 | Ventes (Stripe, 04/11) | 611,02 $ payés depuis le 10/10 (505,08 € reçus après frais) ; 33 abonnés actifs (23 mensuels, 10 annuels) dont 8 mensuels résiliés en fin de période ; 5 Lifetime ; aucun essai ; premiers renouvellements le 10/11 ([[Ventes Stripe]]) | CONFIRMÉ (Stripe) |
-| [[Proxy]] | serveurs Vultr en marche (05/11, 5 $/mois chacun) : Frankfurt (→ Hypixel 99,6 ms), New York (20,7 ms), Chicago (4,8 ms) ; Mumbai (239 ms) à détruire ; depuis le Mac de Sofiene, le direct (104,8 ms) bat tous les proxys ; prototype Rago Route (tunnel anti-lag) écrit le 06/11, test avec une sortie à Paris en cours | DÉCIDÉ (Sofiene, 05/11) |
+| [[Proxy]] | 2 serveurs Vultr (Paris = sortie, Frankfurt = relais, 5 $/mois chacun) ; prototype Rago Route (tunnel anti-lag) testé le 06/11 depuis le Mac de Sofiene : 114,8 ms par le tunnel contre 120,1 ms en direct | DÉCIDÉ (Sofiene, 05/11) |
 | Marketing | pas de plan : des vidéos sur TikTok, YouTube et Instagram, faites par Abel ; trailer 1.2 (v4) sans doute jamais publié ; annonces Discord 1.2 postées, en anglais | Sofiene, 01/11 ([[Marketing]]) |
 | [[Client Minecraft Rago]] | projet à part, en cours, va être lancé (client, launcher, cosmétiques) | Sofiene, 01/11 |
 | [[Bot communauté Discord]] | sur `staging` seulement ; à tester puis passer en prod (fil « Passer le bot Discord en prod », RAG-91) | DÉCIDÉ (Sofiene, 01/11) |
