@@ -356,6 +356,38 @@ class Reecriture:
         return reecrire_handshake(premier, *self.cible) + reste
 
 
+async def ping_minecraft(hote, port, nom=None, delai=5.0):
+    """Ping Minecraft (protocole status ping/pong), en ms ; None si échec."""
+    async def lire_vi(r):
+        n = 0
+        for i in range(5):
+            b = (await r.readexactly(1))[0]
+            n |= (b & 0x7F) << (7 * i)
+            if not b & 0x80:
+                return n
+        raise ValueError
+    writer = None
+    try:
+        reader, writer = await asyncio.wait_for(asyncio.open_connection(hote, port), delai)
+        sock = writer.get_extra_info("socket")
+        if sock is not None:
+            sock.setsockopt(socket.IPPROTO_TCP, socket.TCP_NODELAY, 1)
+        h = (nom or hote).encode()
+        p = ecrire_varint(0) + ecrire_varint(47) + ecrire_varint(len(h)) + h + struct.pack(">H", port) + ecrire_varint(1)
+        writer.write(ecrire_varint(len(p)) + p + b"\x01\x00")
+        await asyncio.wait_for(reader.readexactly(await asyncio.wait_for(lire_vi(reader), delai)), delai)
+        p = b"\x01" + struct.pack(">q", 1)
+        t0 = time.perf_counter()
+        writer.write(ecrire_varint(len(p)) + p)
+        await asyncio.wait_for(reader.readexactly(await asyncio.wait_for(lire_vi(reader), delai)), delai)
+        return (time.perf_counter() - t0) * 1000
+    except Exception:
+        return None
+    finally:
+        if writer is not None:
+            writer.close()
+
+
 # --- flux fiable sur UDP ------------------------------------------------------
 
 class Emetteur:
@@ -396,7 +428,7 @@ class Emetteur:
         return not self.attente and not self.en_vol
 
     def rto(self, nb):
-        base = 200.0 if self.srtt is None else max(20.0, self.srtt + 4 * self.rttvar)
+        base = 200.0 if self.srtt is None else max(self.srtt + 30.0, self.srtt * 1.5, self.srtt + 4 * self.rttvar)
         return min(1000.0, base * (2 ** max(0, nb - 1)))
 
     def _envoyer(self, num, morceau, nb):
@@ -429,7 +461,7 @@ class Emetteur:
         for num, (morceau, envoi, nb) in sorted(self.en_vol.items()):
             age = ecart_ms(now, envoi)
             # perdu si un paquet envoyé après lui est déjà confirmé (renvoi rapide), ou délai dépassé
-            rapide = num < self.plus_haut_confirme and age > srtt * 1.25 + 3
+            rapide = num < self.plus_haut_confirme and age > srtt * 1.25 + 10
             if rapide or age > self.rto(nb):
                 if self.jetons <= 0:
                     break
@@ -553,7 +585,8 @@ class SessionSortie:
         elif type_ == T_ACK and len(corps) >= ACK.size:
             self.emetteur.recu_ack(*ACK.unpack_from(corps))
         elif type_ == T_PING and len(corps) >= PING.size:
-            self.serveur.transport.sendto(paquet(T_PONG, self.sid, corps[: PING.size]), adresse)
+            mesure = self.serveur.ping_cible.get(self.cible[0]) or 0
+            self.serveur.transport.sendto(paquet(T_PONG, self.sid, corps[: PING.size] + struct.pack(">H", min(65535, int(mesure)))), adresse)
         elif type_ == T_CLOSE:
             self.fermer()
 
@@ -583,6 +616,7 @@ class Sortie(asyncio.DatagramProtocol):
         self.sessions = {}
         self.relais = {}  # session -> (adresse du joueur, adresse de la sortie, dernière fois vue)
         self.transport = None
+        self.ping_cible = {}  # nom du serveur de jeu -> dernier ping Minecraft mesuré depuis la sortie (ms)
 
     def connection_made(self, transport):
         self.transport = transport
@@ -617,7 +651,17 @@ class Sortie(asyncio.DatagramProtocol):
             log.info("nouvelle session %s vers %s", sid.hex()[:8], session.cible[0])
         session.recu(type_, corps, adresse)
 
+    async def mesurer_cibles(self):
+        while True:
+            for hote, port in set(CIBLES.values()):
+                if any(s.cible[0] == hote for s in self.sessions.values()):
+                    m = await ping_minecraft(hote, port)
+                    if m is not None:
+                        self.ping_cible[hote] = m
+            await asyncio.sleep(5)
+
     async def boucle(self):
+        asyncio.ensure_future(self.mesurer_cibles())
         while True:
             await asyncio.sleep(TICK)
             for s in list(self.sessions.values()):
@@ -728,7 +772,7 @@ class SessionClient:
     def recu(self, trajet, type_, corps):
         if type_ == T_OPEN_OK:
             if not self.ouverte:
-                log.info("tunnel ouvert vers %s", CIBLES[self.cible][0])
+                log.debug("tunnel ouvert vers %s", CIBLES[self.cible][0])
             self.ouverte = True
         elif type_ == T_DATA and len(corps) >= DATA.size:
             num, ts = DATA.unpack_from(corps)
@@ -758,8 +802,9 @@ class SessionClient:
             for tr in self.client.trajets:
                 if not masque >> tr.num & 1:
                     self.manques[tr.num] += 1
-            if len(self.client.trajets) > 1 and bin(masque & tous).count("1") == 1:
-                self.sauves += 1
+            meilleur = self.client.meilleur_trajet()
+            if meilleur is not None and not masque >> meilleur.num & 1 and masque & tous:
+                self.sauves += 1  # perdu par le meilleur trajet, rattrapé par un autre
 
     def tick(self):
         if not self.ouverte:
@@ -792,6 +837,25 @@ class Client:
         self.debit = args.debit * 125000
         self.trajets = []
         self.sessions = {}
+        self.ping_sortie = None       # ping Minecraft mesuré par la sortie elle-même
+        self.comparaison = None       # (par le tunnel, direct) en ms
+        self.retard_max = 0.0         # pire retard du programme lui-même (ms)
+
+    def meilleur_trajet(self):
+        vivants = [t for t in self.trajets if t.rtt is not None and time.monotonic() - t.dernier_pong < 2]
+        return min(vivants, key=lambda t: t.rtt) if vivants else None
+
+    async def comparer(self):
+        """Toutes les 15 s pendant une partie : ping Minecraft par le tunnel et en direct, au même moment."""
+        while True:
+            await asyncio.sleep(15)
+            if not any(s.uniques > 50 for s in self.sessions.values()):
+                continue
+            hote, port = CIBLES[0]
+            local = 25565 + self.args.decalage
+            tunnel, direct = await asyncio.gather(ping_minecraft("127.0.0.1", local, nom=hote),
+                                                  ping_minecraft(hote, port))
+            self.comparaison = (tunnel, direct)
 
     async def preparer(self):
         loop = asyncio.get_running_loop()
@@ -819,6 +883,8 @@ class Client:
     def recu(self, trajet, type_, sid, corps):
         if type_ == T_PONG and len(corps) >= PING.size:
             ts, _ = PING.unpack_from(corps)
+            if len(corps) >= PING.size + 2:
+                self.ping_sortie = struct.unpack_from(">H", corps, PING.size)[0] or None
             rtt = ecart_ms(maintenant_ms(), ts)
             if 0 <= rtt < 5000:
                 trajet.rtt = rtt if trajet.rtt is None else 0.8 * trajet.rtt + 0.2 * rtt
@@ -838,9 +904,14 @@ class Client:
 
     async def boucle(self):
         dernier_ping = dernier_affichage = 0.0
+        if not self.args.sans_comparer:
+            asyncio.ensure_future(self.comparer())
+        avant = time.monotonic()
         while True:
             await asyncio.sleep(TICK)
             t = time.monotonic()
+            self.retard_max = max(self.retard_max, (t - avant - TICK) * 1000)
+            avant = t
             for s in list(self.sessions.values()):
                 s.tick()
             if t - dernier_ping > 0.5 and self.sessions:
@@ -863,9 +934,19 @@ class Client:
         sauves = sum(s.sauves for s in self.sessions.values())
         renvois = sum(s.emetteur.renvois for s in self.sessions.values())
         print(" | ".join(morceaux) + f" | sauvés par un autre trajet : {sauves} | renvois : {renvois}", flush=True)
+        details = []
+        if self.ping_sortie:
+            details.append(f"sortie -> Hypixel : {self.ping_sortie} ms")
+        if self.comparaison:
+            tunnel, direct = self.comparaison
+            f = lambda v: f"{v:.0f} ms" if v is not None else "échec"
+            details.append(f"ping Minecraft au même moment : Rago Route {f(tunnel)} | direct {f(direct)}")
+        details.append(f"retard du programme : {self.retard_max:.0f} ms max")
+        self.retard_max = 0.0
+        print("   " + " | ".join(details), flush=True)
 
     def bilan(self, s):
-        if s.uniques:
+        if s.uniques >= 100:
             log.info("partie terminée : %d paquets reçus, %d sauvés par un autre trajet, %d renvois",
                      s.uniques, s.sauves, s.emetteur.renvois)
 
@@ -906,6 +987,7 @@ def principal():
     c.add_argument("--debit", type=float, default=30, help="débit max par trajet, en Mbit/s")
     c.add_argument("--perte-test", type=float, action="append", help="simule des pertes sur un trajet (0.2 = 20 %%), pour tester")
     c.add_argument("--decalage", type=int, default=0, help="décale les ports locaux (si 25565 est déjà pris)")
+    c.add_argument("--sans-comparer", action="store_true", help="ne mesure pas le ping direct pendant la partie")
     args = p.parse_args()
     logging.basicConfig(level=os.environ.get("RAGO_LOG", "INFO"), format="%(asctime)s %(message)s")
     try:
