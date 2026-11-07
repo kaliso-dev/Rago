@@ -9,6 +9,7 @@ Registre daté des décisions de Sofiene. **La plus récente prime.** Citations 
 
 ## App et versions
 | Date | Décision | Statut |
+|---|---|---|
 | 07/11 | Rago Route dans l'app : « tu peux push sur staging » (moteur Windows et onglet de l'exe de test) | DÉCIDÉ, fait ([[Proxy]]) |
 | 07/11 | Rago Route : « Encore des tests sur le Mac » avant la version Windows dans l'app (carte de choix) : câble seul, puis 4G de l'iPhone en plus du Wi-Fi | DÉCIDÉ, en cours ([[Proxy]]) |
 | 07/11 | [[Rago OS]] prend la charte de l'app 1.2.1 (carte de choix) | DÉCIDÉ, fait ([[Charte graphique]]) |
