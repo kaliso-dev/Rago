@@ -1,7 +1,7 @@
 ---
 type: pilotage
 tags: [pilotage]
-maj: 2026-11-04
+maj: 2026-11-07
 ---
 # Prochaines étapes
 
@@ -19,7 +19,7 @@ Liste priorisée au 01/11. Rien ne se lance sans la demande de Sofiene ([[Règle
 5. **Identité du vendeur** sur le site (mentions légales, CGV) : bloquant pour être en règle, voir [[Conformité juridique]].
 
 ## Ensuite
-- **OS de Sofiene** (développé sur un autre compte Claude, hors de ce dépôt) : quand Sofiene le demandera, le personnaliser avec la DA de Rago Optimizer ([[Charte graphique]], [[Voix et ton]], [[Refonte glass]]). Rien à faire avant sa demande.
+- **[[Rago OS]]** (EN COURS depuis le 07/11) : charte Rago, thèmes et lien avec l'app faits sur la branche `rago-design` du Mac de Sofiene. Reste : le tester sur Windows, mettre le pont et le Mode jeu total de l'app sur GitHub (staging) avec l'accord de Sofiene, réponses à q52 et q53.
 - Charte « Affiche » v2.2 : aperçu sur la page d'accueil (PR #69, brouillon), en attente de la décision de Sofiene ([[Charte graphique]]).
 - [[Client Minecraft Rago]] : projet à part, en cours dans un projet isolé ; rien à faire ici sans demande.
 

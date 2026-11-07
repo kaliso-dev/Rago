@@ -9,6 +9,10 @@ Registre daté des décisions de Sofiene. **La plus récente prime.** Citations 
 
 ## App et versions
 | Date | Décision | Statut |
+| 07/11 | [[Rago OS]] prend la charte de l'app 1.2.1 (carte de choix) | DÉCIDÉ, fait ([[Charte graphique]]) |
+| 07/11 | Rago OS doit être l'extension de l'app : « essaie de vraiment connecter l'app et l'os », avec une interface « épuré et simplifié » | DÉCIDÉ, en cours ([[Rago OS]]) |
+| 07/11 | Thème Rago par défaut à l'installation de Rago OS, mais « tout personnalisable » (thème clair gardé) et d'autres thèmes Rago | DÉCIDÉ, fait ([[Rago OS]]) |
+| 07/11 | Services Windows : « Les deux », coupés en permanence par l'app pour les sûrs, et le reste en pause à chaque partie lancée depuis Rago OS (Mode jeu total) | DÉCIDÉ, codé ([[Rago OS]], [[Mode jeu]]) |
 |---|---|---|
 | 04/11 | Fonctions de la maquette « Fonctions gardées de la maquette de l'app » : « Il faut rajouter ses fonctionnalités » (analyse du PC, avant/après, fenêtre Premium avec les prix, résiliation dans l'app) | EN COURS, PR #70 ([[Analyse du PC]], [[Abonnement dans l'app]]) |
 | 04/11 | Plan gratuit élargi : « on va ajouter directement la suite : 50 - 100 tweaks gratuit (laisser les meilleur et les plus demandé en premium surtout network et hitreg) mais seulement 30 slot de tweaks disponible gratuitement a activé simultanement » | EN COURS, PR #70 ([[Offres et prix]]) |
@@ -24,7 +28,6 @@ Registre daté des décisions de Sofiene. **La plus récente prime.** Citations 
 | 01/11 | Signature de code de l'exe : prévue, pas avant d'avoir le budget | PRÉVU ([[App Windows]]) |
 | 01/11 | Proxy : pas de mesure proxy → serveur de jeu pour l'instant (« pas maintenant ») | EN PAUSE ([[Proxy]]) |
 | 31/10 | **Règle n°1 : le vault doit correspondre en tout point à l'état actuel du projet** ; chaque Claude détecte les changements et abandons, met à jour ou supprime, et demande en cas de doute | DÉCIDÉ ([[Mettre à jour le vault]]) |
-| 31/10 | Le futur OS de Sofiene (développé sur un autre compte Claude, hors de ce dépôt) sera personnalisé plus tard avec la DA de Rago Optimizer, sur sa demande | PRÉVU ([[Prochaines étapes]], [[Charte graphique]]) |
 | 31/10 | 1.2.1 déposée dans Supabase par Sofiene | exécuté ([[Version 1.2.1]]) |
 | 29/10 | « ok tout fonctionne push tout sur la prod » : serveur (mises à jour + collecte réseau) en prod, 1.2.1 construite | DÉCIDÉ, exécuté ([[Version 1.2.1]]) |
 | 17/10 | Bibliothèque : jeux détectés automatiquement avec leur image ; proxy à moindre coût, sinon mis de côté | DÉCIDÉ ([[Bibliothèque de jeux]], [[Proxy]]) |
@@ -64,7 +67,7 @@ Une ligne par projet ou fonctionnalité arrêtés, pour qu'aucun Claude ne les r
 | 01/11 | Point après la première semaine de ventes (RAG-16) et logo Rago à côté des e-mails `noreply@` et `support@` (RAG-21) | « On les abandonne » |
 | 01/11 | Série de vidéos courtes « Milli » (mascotte, épisodes #000 à #005) | « arrêtée » |
 | 01/11 | Plan de visibilité écrit du 17/10 (17/10 → 15/11) | « on ne suit pas de plan » |
-| 31/10 | Rago OS (PR #60, exe de test du 21/10) | « abandonné » (Sofiene travaille sur un autre OS ailleurs, voir [[Prochaines étapes]]) |
+| 31/10 | Rago OS (PR #60, exe de test du 21/10) | « abandonné » (remplacé par le nouveau [[Rago OS]] fait ailleurs) |
 | 13/10 | PR #46 (RBW Mod), et plus de création pour l'app sans demande | « Non annule tout » |
 | 11/10 | PR #26 (astuce de restauration après suppression d'applis) | « inutile » |
 | 07/10 | `.bat` gratuit comme produit d'appel | seule l'app est gratuite |
