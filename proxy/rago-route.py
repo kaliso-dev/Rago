@@ -1063,6 +1063,7 @@ async def lancer_client(args):
     if not args.sans_anti_veille and garder_eveille_mac():
         print("Mac : Rago Route ne sera pas ralenti quand le Terminal est en arrière-plan.", flush=True)
     await client.preparer()
+    client.horloge = Horloge()  # la préparation (ping de la 4G) bloque quelques secondes : ne pas la compter comme un retard
     for port, cible in PORTS_LOCAUX.items():
         await asyncio.start_server(lambda r, w, c=cible: client.connexion_minecraft(r, w, c), "127.0.0.1", port + args.decalage)
     print(f"Rago Route prêt. Dans Minecraft, ajoute le serveur  localhost{'' if not args.decalage else ':' + str(25565 + args.decalage)}"
