@@ -1,7 +1,7 @@
 ---
 type: pilotage
 tags: [pilotage]
-maj: 2026-11-04
+maj: 2026-11-07
 ---
 # Prochaines étapes
 
@@ -17,7 +17,7 @@ Liste priorisée au 01/11. Rien ne se lance sans la demande de Sofiene ([[Règle
 4. **E-mail aux titulaires de compte sur la collecte des tests réseau** (Sofiene, 01/11 : « oui il faudrait les envoyer »), comme le promet la politique de confidentialité : texte à rédiger, puis à faire valider par Sofiene avant l'envoi (RAG-89, [[Test réseau]], [[Serveur de licences]]).
 5. **Connexion à l'app Windows avec Google ou Discord** (Sofiene, 01/11 : prévue, « c'est important ») : RAG-90, voir [[Connexion Google et Discord]].
 
-6. **[[Proxy]]** (RAG-50) : serveurs Vultr Paris (sortie) et Frankfurt (relais). Prototype Rago Route testé le 06/11 depuis le Mac de Sofiene (tunnel ≤ direct) ; reste une vraie partie et le test des pertes simulées, puis la version Windows dans l'app (sur `staging`).
+6. **[[Proxy]]** (RAG-50) : serveurs Vultr Paris (sortie) et Frankfurt (relais). Prototype Rago Route testé en partie depuis le Mac de Sofiene (tunnel ~5 ms mieux que le direct au même moment, 07/11). Prochaine étape : installer la version du 07/11 sur les deux serveurs et le Mac, rejouer (en câble si possible) et regarder le ping Tab et le retard du programme ; puis la version Windows dans l'app (sur `staging`).
 
 ## Ensuite
 - **OS de Sofiene** (développé sur un autre compte Claude, hors de ce dépôt) : quand Sofiene le demandera, le personnaliser avec la DA de Rago Optimizer ([[Charte graphique]], [[Voix et ton]], [[Refonte glass]]). Rien à faire avant sa demande.

@@ -1,7 +1,7 @@
 ---
 type: pilotage
 tags: [journal, chronologie]
-maj: 2026-11-04
+maj: 2026-11-07
 ---
 # Journal
 
@@ -10,6 +10,8 @@ Une ligne par événement marquant, la plus récente en haut. Voir [[Historique 
 ## Novembre 2026
 | Date | Événement | Liens |
 |---|---|---|
+| 07/11 | Rago Route, version du 07/11 : renvois inutiles supprimés, reprise en 10 à 20 ms après une coupure, retard du programme mesuré aussi sur la sortie ; testée en local | [[Proxy]] |
+| 07/11 | Partie normale par Rago Route (Wi-Fi) : au même moment, tunnel 111–115 ms contre 116–118 ms en direct ; pics dus en partie au programme Python qui se fige sur le Mac | [[Proxy]] |
 | 06/11 | Premier test réel de Rago Route depuis le Mac de Sofiene : 114,8 ms par le tunnel (sortie Paris) contre 120,1 ms en direct | [[Proxy]] |
 | 06/11 | Prototype Rago Route écrit (`proxy/rago-route.py`) et testé en local ; test réel prévu avec une sortie à Paris | [[Proxy]] |
 | 05/11 | Test de Sofiene depuis la France : direct 104,8 ms, Chicago 112, New York 111, Frankfurt 127 | [[Proxy]] |

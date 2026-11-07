@@ -36,6 +36,8 @@ net.ipv4.tcp_congestion_control = bbr
 net.ipv4.tcp_fastopen = 3
 net.ipv4.tcp_slow_start_after_idle = 0
 net.core.somaxconn = 1024
+net.core.rmem_max = 4194304
+net.core.wmem_max = 4194304
 RAGO_EOF
 sysctl --system >/dev/null || true
 
