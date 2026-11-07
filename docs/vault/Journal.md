@@ -10,6 +10,7 @@ Une ligne par événement marquant, la plus récente en haut. Voir [[Historique 
 ## Novembre 2026
 | Date | Événement | Liens |
 |---|---|---|
+| 07/11 | Site : page `route.html` « Rago Route » entièrement animée + section et liens sur l'accueil, faite à la demande de Sofiene ; pas encore poussée | [[Site]] |
 | 07/11 | [[Rago OS]] (dossier `nimbus` du Mac de Sofiene) passe à la charte Rago, reçoit 7 thèmes Rago et devient l'extension de l'app : pont local, FPS et ping dans l'île, Mode jeu total, page, widget et Spotlight Rago. Pont et Mode jeu total de l'app codés en local, pas encore sur GitHub | [[Rago OS]] |
 | 07/11 | Partie avec la version du 07/11 : tunnel médiane 116 ms contre 119 ms en direct ; aucune perte, pics venant du premier tronçon (Wi-Fi ou Mac) ; ajout de « arrivé premier » et des Mo reçus par trajet pour tester la 4G | [[Proxy]] |
 | 07/11 | Rago Route, version du 07/11 : renvois inutiles supprimés, reprise en 10 à 20 ms après une coupure, retard du programme mesuré aussi sur la sortie ; testée en local | [[Proxy]] |

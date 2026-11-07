@@ -51,6 +51,7 @@ h1,h2,h3{font-weight:600;letter-spacing:-.035em;line-height:1.05;text-wrap:balan
 .nav{display:flex;gap:2px;margin-left:auto;font-size:13.5px}
 .nav a{text-decoration:none;color:var(--t2);padding:8px 14px;border-radius:var(--r-full);transition:color .16s,background .16s}
 .nav a:hover{color:var(--t1);background:var(--l1)}
+@media (max-width:1279px){.nav .nav-rt{display:none}} /* below that the bar runs out of room: Rago Route stays in the menu, the footer and its section */
 .top-cta{display:flex;gap:8px;align-items:center}
 .menu-btn{display:none;width:40px;height:40px;border-radius:var(--r-full);border:0;background:rgba(255,255,255,.05);box-shadow:inset 0 0 0 1px var(--l2);cursor:pointer;flex-direction:column;align-items:center;justify-content:center;gap:5px;padding:0}
 .menu-btn i{display:block;width:16px;height:1.6px;border-radius:2px;background:var(--t1);transition:transform .3s var(--out)}
@@ -804,6 +805,38 @@ footer.foot p{max-width:80ch}
   .ig-scene{transition:filter .3s}.ig.open .ig-scene{transform:none}
 }
 
+/* Rago Route teaser (full page: route.html): two roads in SVG, moving only while .live (on screen) and never with reduced motion */
+.rt{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.12fr);gap:clamp(28px,4vw,64px);align-items:center;max-width:1300px;margin-inline:auto;padding:clamp(24px,4vw,64px);border-radius:var(--r-2xl);background:radial-gradient(80% 110% at 100% 50%,rgba(255,59,48,.10),transparent 62%),linear-gradient(180deg,rgba(255,255,255,.05),rgba(255,255,255,.012) 38%),rgba(17,17,19,.7);border:1px solid var(--l1);box-shadow:inset 0 1px 0 rgba(255,255,255,.07),0 30px 60px -34px rgba(0,0,0,.85);overflow:hidden;isolation:isolate}
+.rt-txt{display:grid;gap:18px;justify-items:start;min-width:0}
+.rt h2{font-size:clamp(30px,3.4vw,52px);letter-spacing:-.045em}
+.rt h2 .red{color:var(--red)}
+.rt-txt p{color:var(--t2);font-size:clamp(15px,1.1vw,17px);max-width:34em}
+.rt-pts{list-style:none;margin:0;padding:0;display:grid;gap:10px}
+.rt-pts li{display:flex;align-items:center;gap:10px;font-size:14.5px}
+.rt-pts svg{width:20px;height:20px;padding:4px;border-radius:50%;background:var(--red-a14);color:var(--red);flex:none}
+.rt-txt .cta-row{margin-top:8px}
+.rt-vis{margin:0;min-width:0;border-radius:var(--r-xl);border:1px solid var(--l1);background:radial-gradient(70% 60% at 69% 50%,rgba(255,59,48,.08),transparent 70%),var(--ink-0);overflow:hidden}
+.rt-vis > svg{display:block;width:100%;height:auto;padding:6px 6px 0}
+.rt-l{font:500 12px var(--mono);letter-spacing:.04em;fill:var(--t3)}
+.rt-l.r{fill:var(--red-hover)}
+.rt-t{font:500 13px var(--sans);fill:var(--t2)}
+.rt-road{fill:none;stroke:rgba(255,255,255,.16);stroke-width:2;stroke-linecap:round;stroke-dasharray:1 9;animation:rtFlow .9s linear infinite}
+.rt-road.r{stroke:rgba(255,59,48,.5)}
+@keyframes rtFlow{to{stroke-dashoffset:-10}}
+.rt-pk{fill:var(--t1)}
+.rt-pk.r{fill:var(--red);filter:drop-shadow(0 0 5px rgba(255,59,48,.8))}
+.rt-burst{fill:none;stroke:var(--red);stroke-width:2;opacity:0}
+.rt-ring{fill:none;stroke:var(--red);stroke-width:2;opacity:0}
+.rt-n{fill:var(--ink-3);stroke:var(--l3);stroke-width:1}
+.rt-n.rago{fill:#1a0f0f;stroke:var(--red-a30)}
+.rt-ic{fill:none;stroke:var(--t1);stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
+.rt-cap{display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap;padding:12px 18px;border-top:1px solid var(--l1);font:400 11px/1.4 var(--mono);color:var(--t3)}
+.rt-cap b{font-weight:500;color:var(--ok)}
+.rt:not(.live) .rt-road{animation-play-state:paused}
+@media (max-width:980px){.rt{grid-template-columns:minmax(0,1fr)}}
+@media (max-width:620px){.rt-l{font-size:21px;letter-spacing:0}.rt-t{font-size:23px}}
+@media (prefers-reduced-motion:reduce){.rt-road{animation:none}}
+
 /* Scroll reveal: visible at rest; off-screen items rise and unblur */
 .rv{transition:transform .9s var(--out),filter .9s var(--out)}
 .js .rv.pre{transform:translateY(36px);filter:blur(6px)}
@@ -950,6 +983,7 @@ footer.foot p{max-width:80ch}
       <a href="#why">Why Rago</a>
       <a href="#features">Features</a>
       <a href="#new">What's new</a>
+      <a class="nav-rt" href="route.html">Rago Route</a>
       <a href="tweaks.html">Tweaks</a>
       <a class="js-rev" href="#reviews" hidden>Reviews</a>
       <a href="#pricing">Pricing</a>
@@ -964,7 +998,7 @@ footer.foot p{max-width:80ch}
   </div>
   <div class="menu" id="menu" hidden>
     <nav aria-label="Menu">
-      <a href="#why">Why Rago</a><a href="#features">Features</a><a href="#new">What's new</a><a href="tweaks.html">Tweaks</a><a class="js-rev" href="#reviews" hidden>Reviews</a><a href="#pricing">Pricing</a><a href="#faq">FAQ</a><a href="#partners">Partners</a><a class="js-affiliate" href="/affiliate">Affiliate program</a>
+      <a href="#why">Why Rago</a><a href="#features">Features</a><a href="#new">What's new</a><a href="route.html">Rago Route</a><a href="tweaks.html">Tweaks</a><a class="js-rev" href="#reviews" hidden>Reviews</a><a href="#pricing">Pricing</a><a href="#faq">FAQ</a><a href="#partners">Partners</a><a class="js-affiliate" href="/affiliate">Affiliate program</a>
     </nav>
     <div class="menu-cta"><a class="btn btn-ghost js-account" href="/login">Sign in</a><a class="btn btn-ghost js-signup" href="/signup">Create account</a><a class="btn btn-ghost js-discord" href="#discord" style="grid-column:1/-1" hidden><svg class="dc-g"><use href="#i-discord"/></svg>Join our Discord</a></div>
   </div>
@@ -1278,6 +1312,65 @@ footer.foot p{max-width:80ch}
     </div>
   </section>
 
+  <!-- Rago Route (in testing): a teaser of route.html. The SVG moves only while on screen (.live), still with reduced motion. -->
+  <section class="sec band" id="route" style="padding-top:0">
+    <div class="rt rv">
+      <div class="rt-txt">
+        <span class="eyebrow">Rago Route · in testing</span>
+        <h2>Your PC is tuned. <span class="red">Now Rago takes the road.</span></h2>
+        <p>A ping spike mid-fight, a freeze right before a clutch, a Wi-Fi drop that kicks you from the match: often it isn't your PC, it's the road to the server. Rago Route sends every packet down two roads at once, repairs the ones that get lost and holds your match through a short drop.</p>
+        <ul class="rt-pts">
+          <li><svg><use href="#i-check"/></svg>Two roads for every packet</li>
+          <li><svg><use href="#i-check"/></svg>Lost packets repaired on the spot</li>
+          <li><svg><use href="#i-check"/></svg>Your match held through a short drop</li>
+        </ul>
+        <div class="cta-row">
+          <a class="btn btn-red" href="route.html">Discover Rago Route<svg><use href="#i-arrow"/></svg></a>
+          <a class="btn btn-ghost js-discord" href="#discord" hidden><svg class="dc-g"><use href="#i-discord"/></svg>Get notified on Discord</a>
+        </div>
+      </div>
+      <figure class="rt-vis" aria-label="Illustration: every packet leaves your PC on two roads. When road 1 drops one, its copy on road 2 still reaches the server.">
+        <svg id="rt-svg" viewBox="0 0 600 330" aria-hidden="true">
+          <text class="rt-l" x="300" y="44" text-anchor="middle">Road 1 · your usual route</text>
+          <text class="rt-l r" x="300" y="300" text-anchor="middle">Road 2 · through Rago</text>
+          <path class="rt-road" id="rt-a" d="M61 163 L92 150 C170 70 300 64 382 150 L414 163"/>
+          <path class="rt-road r" id="rt-b" d="M61 163 L92 176 C170 262 300 268 382 176 L414 163"/>
+          <path class="rt-road" id="rt-c" d="M414 163 L543 163"/>
+          <circle class="rt-pk" r="4.5"><animateMotion dur="3.6s" begin="-0s" repeatCount="indefinite" keyPoints="0;1;1" keyTimes="0;0.4167;1" calcMode="linear"><mpath href="#rt-a"/></animateMotion></circle>
+          <circle class="rt-pk r" r="4.5"><animateMotion dur="3.6s" begin="-0s" repeatCount="indefinite" keyPoints="0;1;1" keyTimes="0;0.4861;1" calcMode="linear"><mpath href="#rt-b"/></animateMotion></circle>
+          <circle class="rt-pk" r="4.5"><animateMotion dur="3.6s" begin="-0s" repeatCount="indefinite" keyPoints="0;0;1;1" keyTimes="0;0.4167;0.5417;1" calcMode="linear"><mpath href="#rt-c"/></animateMotion></circle>
+          <circle class="rt-pk" r="4.5"><animateMotion dur="3.6s" begin="-0.6s" repeatCount="indefinite" keyPoints="0;1;1" keyTimes="0;0.4167;1" calcMode="linear"><mpath href="#rt-a"/></animateMotion></circle>
+          <circle class="rt-pk r" r="4.5"><animateMotion dur="3.6s" begin="-0.6s" repeatCount="indefinite" keyPoints="0;1;1" keyTimes="0;0.4861;1" calcMode="linear"><mpath href="#rt-b"/></animateMotion></circle>
+          <circle class="rt-pk" r="4.5"><animateMotion dur="3.6s" begin="-0.6s" repeatCount="indefinite" keyPoints="0;0;1;1" keyTimes="0;0.4167;0.5417;1" calcMode="linear"><mpath href="#rt-c"/></animateMotion></circle>
+          <circle class="rt-pk" r="4.5"><animateMotion dur="3.6s" begin="-1.2s" repeatCount="indefinite" keyPoints="0;1;1" keyTimes="0;0.4167;1" calcMode="linear"><mpath href="#rt-a"/></animateMotion><animate attributeName="opacity" dur="3.6s" begin="-1.2s" repeatCount="indefinite" values="1;1;0;0" keyTimes="0;0.1875;0.1995;1"/></circle>
+          <circle class="rt-burst" r="5"><animateMotion dur="3.6s" begin="-1.2s" repeatCount="indefinite" keyPoints=".45;.45" keyTimes="0;1" calcMode="linear"><mpath href="#rt-a"/></animateMotion><animate attributeName="r" dur="3.6s" begin="-1.2s" repeatCount="indefinite" values="5;5;20;20" keyTimes="0;0.1875;0.2975;1"/><animate attributeName="opacity" dur="3.6s" begin="-1.2s" repeatCount="indefinite" values="0;0;.9;0;0" keyTimes="0;0.1865;0.1875;0.2975;1"/></circle>
+          <circle class="rt-pk r" r="4.5"><animateMotion dur="3.6s" begin="-1.2s" repeatCount="indefinite" keyPoints="0;1;1" keyTimes="0;0.4861;1" calcMode="linear"><mpath href="#rt-b"/></animateMotion></circle>
+          <circle class="rt-pk r" r="4.5"><animateMotion dur="3.6s" begin="-1.2s" repeatCount="indefinite" keyPoints="0;0;1;1" keyTimes="0;0.4861;0.6111;1" calcMode="linear"><mpath href="#rt-c"/></animateMotion></circle>
+          <circle class="rt-ring" cx="414" cy="163" r="36"><animate attributeName="r" dur="3.6s" begin="-1.2s" repeatCount="indefinite" values="36;36;58;58" keyTimes="0;0.4861;0.6261;1"/><animate attributeName="opacity" dur="3.6s" begin="-1.2s" repeatCount="indefinite" values="0;0;.85;0;0" keyTimes="0;0.4851;0.4861;0.6261;1"/></circle>
+          <circle class="rt-pk" r="4.5"><animateMotion dur="3.6s" begin="-1.8s" repeatCount="indefinite" keyPoints="0;1;1" keyTimes="0;0.4167;1" calcMode="linear"><mpath href="#rt-a"/></animateMotion></circle>
+          <circle class="rt-pk r" r="4.5"><animateMotion dur="3.6s" begin="-1.8s" repeatCount="indefinite" keyPoints="0;1;1" keyTimes="0;0.4861;1" calcMode="linear"><mpath href="#rt-b"/></animateMotion></circle>
+          <circle class="rt-pk" r="4.5"><animateMotion dur="3.6s" begin="-1.8s" repeatCount="indefinite" keyPoints="0;0;1;1" keyTimes="0;0.4167;0.5417;1" calcMode="linear"><mpath href="#rt-c"/></animateMotion></circle>
+          <circle class="rt-pk" r="4.5"><animateMotion dur="3.6s" begin="-2.4s" repeatCount="indefinite" keyPoints="0;1;1" keyTimes="0;0.4167;1" calcMode="linear"><mpath href="#rt-a"/></animateMotion></circle>
+          <circle class="rt-pk r" r="4.5"><animateMotion dur="3.6s" begin="-2.4s" repeatCount="indefinite" keyPoints="0;1;1" keyTimes="0;0.4861;1" calcMode="linear"><mpath href="#rt-b"/></animateMotion></circle>
+          <circle class="rt-pk" r="4.5"><animateMotion dur="3.6s" begin="-2.4s" repeatCount="indefinite" keyPoints="0;0;1;1" keyTimes="0;0.4167;0.5417;1" calcMode="linear"><mpath href="#rt-c"/></animateMotion></circle>
+          <circle class="rt-pk" r="4.5"><animateMotion dur="3.6s" begin="-3s" repeatCount="indefinite" keyPoints="0;1;1" keyTimes="0;0.4167;1" calcMode="linear"><mpath href="#rt-a"/></animateMotion></circle>
+          <circle class="rt-pk r" r="4.5"><animateMotion dur="3.6s" begin="-3s" repeatCount="indefinite" keyPoints="0;1;1" keyTimes="0;0.4861;1" calcMode="linear"><mpath href="#rt-b"/></animateMotion></circle>
+          <circle class="rt-pk" r="4.5"><animateMotion dur="3.6s" begin="-3s" repeatCount="indefinite" keyPoints="0;0;1;1" keyTimes="0;0.4167;0.5417;1" calcMode="linear"><mpath href="#rt-c"/></animateMotion></circle>
+          <rect class="rt-n" x="30" y="132" width="62" height="62" rx="18"/>
+          <g class="rt-ic" transform="translate(47 149)"><rect x="2" y="4" width="24" height="15" rx="3"/><path d="M10 24h8M14 19v5"/></g>
+          <text class="rt-t" x="61" y="218" text-anchor="middle">Your PC</text>
+          <rect class="rt-n rago" x="382" y="131" width="64" height="64" rx="19"/>
+          <svg x="402" y="150" width="24" height="26" viewBox="0 0 164 180"><use href="#i-mark"/></svg>
+          <text class="rt-t" x="414" y="219" text-anchor="middle">Rago exit</text>
+          <rect class="rt-n" x="512" y="132" width="62" height="62" rx="18"/>
+          <g class="rt-ic" transform="translate(529 149)"><rect x="3" y="3" width="22" height="9" rx="2.5"/><rect x="3" y="16" width="22" height="9" rx="2.5"/><path d="M8 7.5h2M8 20.5h2"/></g>
+          <text class="rt-t" x="543" y="218" text-anchor="middle">Hypixel</text>
+        </svg>
+        <figcaption class="rt-cap"><span>Illustration</span><span>Missing in your game: <b>0</b></span></figcaption>
+      </figure>
+    </div>
+  </section>
+
   <section class="sec band" id="how" style="padding-top:0">
     <div class="head rv">
       <span class="eyebrow">How it works</span>
@@ -1473,7 +1566,7 @@ footer.foot p{max-width:80ch}
   <div class="band">
     <div class="row">
       <svg viewBox="0 0 1124 180" style="height:22px;width:auto;color:var(--t1)"><use href="#i-word"/></svg>
-      <nav aria-label="Footer"><a href="#features">Features</a><a href="tweaks.html">Tweaks</a><a href="#pricing">Pricing</a><a href="#faq">FAQ</a><a class="js-affiliate" href="/affiliate">Affiliate program</a><a href="partners.html">Partners</a><a class="js-account" href="/login">Sign in</a><a class="js-signup" href="/signup">Create account</a><a class="js-discord" href="#discord" hidden>Discord</a><a href="terms.html">Terms</a><a href="privacy.html">Privacy</a><a href="refunds.html">Refunds</a></nav>
+      <nav aria-label="Footer"><a href="#features">Features</a><a href="tweaks.html">Tweaks</a><a href="route.html">Rago Route</a><a href="#pricing">Pricing</a><a href="#faq">FAQ</a><a class="js-affiliate" href="/affiliate">Affiliate program</a><a href="partners.html">Partners</a><a class="js-account" href="/login">Sign in</a><a class="js-signup" href="/signup">Create account</a><a class="js-discord" href="#discord" hidden>Discord</a><a href="terms.html">Terms</a><a href="privacy.html">Privacy</a><a href="refunds.html">Refunds</a></nav>
     </div>
     <p>Rago Optimizer changes Windows settings. Results depend on your hardware and connection. A restore point is offered before advanced tweaks. Minecraft is a trademark of Mojang Studios; Rago Optimizer isn't affiliated with Mojang or Microsoft. © 2026 Rago Optimizer, by Rago and Kaliso.</p>
   </div>
@@ -2304,6 +2397,16 @@ $$(".pts").forEach(g => g.addEventListener("pointermove", e => { const c = e.tar
     await new Promise(r => setTimeout(r, 400)); un.classList.add("on");
   };
   onView($("#affvis"), reduce ? once : play, .5);
+})();
+
+/* Rago Route teaser: the SVG's packets run only while it's on screen; with reduced motion, one still frame */
+(() => {
+  const card = $("#route .rt"), svg = $("#rt-svg");
+  if (!svg || !svg.pauseAnimations) return;
+  if (reduce) { svg.pauseAnimations(); svg.setCurrentTime(2.1); return; }
+  if (!("IntersectionObserver" in window)) return card.classList.add("live");
+  svg.pauseAnimations();
+  new IntersectionObserver(([e]) => { card.classList.toggle("live", e.isIntersecting); e.isIntersecting ? svg.unpauseAnimations() : svg.pauseAnimations(); }, { threshold: .2 }).observe(svg);
 })();
 
 onScroll();

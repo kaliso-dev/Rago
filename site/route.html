@@ -1,0 +1,912 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#0A0A0B">
+<!-- Rago Route: the network engine for Minecraft (in testing). Source of site/route.html (built by tools/build.py, like partners.html).
+     Every figure on this page was measured (Rago's network test, tests on Hypixel, lab tests); the animations are labelled as illustrations. -->
+<title>Rago Route · Rago Optimizer</title>
+<meta name="description" content="Rago Route sends your Minecraft connection down two roads at once, repairs lost packets on the spot and holds your match through a Wi-Fi drop. Now in testing on Hypixel.">
+<link rel="canonical" href="https://rago-optimizer.com/route.html">
+<meta property="og:site_name" content="Rago Optimizer">
+<meta property="og:type" content="website">
+<meta property="og:url" content="https://rago-optimizer.com/route.html">
+<meta property="og:title" content="Rago Route: two roads for every packet">
+<meta property="og:description" content="Dual path, instant repair, a match that holds through a Wi-Fi drop. Rago's network engine for Minecraft, now in testing.">
+<meta property="og:image" content="https://rago-optimizer.com/og-image.png">
+<link rel="icon" href="favicon.svg" type="image/svg+xml">
+<link rel="icon" href="favicon.ico" sizes="any">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
+<link rel="preload" href="fonts/Geist-Variable.woff2" as="font" type="font/woff2" crossorigin>
+<style>
+@font-face{font-family:"Geist";src:url("fonts/Geist-Variable.woff2") format("woff2");font-weight:100 900;font-display:swap}
+@font-face{font-family:"Geist Mono";src:url("fonts/GeistMono-Variable.woff2") format("woff2");font-weight:100 900;font-display:swap}
+</style>
+<style>
+/* Same tokens and pieces as the home page (page.html): rounded everywhere, one red, no orange. */
+:root{
+  --ink-0:#070708; --ink:#0A0A0B; --ink-2:#111113; --ink-3:#17171A; --ink-4:#1F1F23; --ink-5:#2A2A30;
+  --t1:#F5F5F6; --t2:#A1A1AA; --t3:#7C7C86;
+  --l1:rgba(255,255,255,.06); --l2:rgba(255,255,255,.10); --l3:rgba(255,255,255,.16);
+  --red:#FF3B30; --red-hover:#FF5E55; --red-press:#F2352B;
+  --red-a08:rgba(255,59,48,.08); --red-a14:rgba(255,59,48,.14); --red-a30:rgba(255,59,48,.30);
+  --ok:#3DDC97; --ok-a:rgba(61,220,151,.14); --warn:#FFD60A;
+  --sans:"Geist","Segoe UI Variable","Segoe UI",system-ui,-apple-system,sans-serif;
+  --mono:"Geist Mono","Cascadia Mono",ui-monospace,Consolas,monospace;
+  --out:cubic-bezier(.16,1,.3,1); --spring:cubic-bezier(.34,1.56,.64,1);
+  --r-xs:8px; --r-sm:12px; --r-md:16px; --r-lg:24px; --r-xl:32px; --r-full:999px;
+  --g:clamp(16px,6vw,120px);
+  color-scheme:dark;
+}
+*{box-sizing:border-box}
+html{overflow-x:clip;background:var(--ink);scroll-behavior:smooth}
+body{margin:0;background:var(--ink);color:var(--t1);font:400 15px/1.65 var(--sans);-webkit-font-smoothing:antialiased;overflow-x:clip}
+a{color:inherit}
+h1,h2,h3,p{margin:0}
+h1,h2,h3{font-weight:600;letter-spacing:-.035em;line-height:1.05;text-wrap:balance}
+[hidden]{display:none!important}
+:focus-visible{outline:2px solid var(--red);outline-offset:3px;border-radius:var(--r-sm)}
+.band{padding-inline:var(--g)}
+.wrap{max-width:1240px;margin-inline:auto}
+.mono{font-family:var(--mono);font-variant-numeric:tabular-nums}
+.red{color:var(--red)}
+.sr-only{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0}
+.eyebrow{display:inline-flex;align-items:center;gap:8px;padding:6px 12px 6px 10px;border-radius:var(--r-full);background:var(--ink-2);border:1px solid var(--l1);font:500 12px/1 var(--sans);color:var(--t2)}
+.eyebrow::before{content:"";width:6px;height:6px;border-radius:50%;background:var(--red);box-shadow:0 0 10px var(--red);animation:beat 2s var(--out) infinite}
+@keyframes beat{0%,100%{box-shadow:0 0 10px var(--red)}50%{box-shadow:0 0 0 5px var(--red-a14),0 0 14px var(--red)}}
+
+.btn{--h:48px;display:inline-flex;align-items:center;justify-content:center;gap:9px;height:var(--h);padding-inline:24px;border-radius:var(--r-full);font:600 14.5px/1 var(--sans);text-decoration:none;border:0;cursor:pointer;white-space:nowrap;transition:transform .2s var(--out),background .2s,box-shadow .25s}
+.btn svg{width:17px;height:17px;flex:none}
+.btn-red{background:var(--red);color:var(--ink);box-shadow:0 8px 30px -10px rgba(255,59,48,.6)}
+.btn-red:hover{background:var(--red-hover);transform:translateY(-1px);box-shadow:0 0 0 6px var(--red-a14),0 14px 40px -10px rgba(255,59,48,.7)}
+.btn-red:active{background:var(--red-press);transform:none}
+.btn-ghost{background:rgba(255,255,255,.04);color:var(--t1);box-shadow:inset 0 0 0 1px var(--l2)}
+.btn-ghost:hover{background:rgba(255,255,255,.08);box-shadow:inset 0 0 0 1px var(--l3)}
+.btn-sm{--h:38px;padding-inline:16px;font-size:13.5px}
+.btn:hover svg.go{transform:translateX(2px)}
+.btn svg.go{transition:transform .24s var(--out)}
+.cta-row{display:flex;flex-wrap:wrap;gap:10px}
+
+/* Header */
+.top{position:sticky;top:0;z-index:40;background:linear-gradient(180deg,rgba(10,10,11,.92),rgba(10,10,11,.6) 70%,transparent);backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px)}
+.top .wrap{display:flex;align-items:center;justify-content:space-between;gap:16px;padding-top:max(16px,env(safe-area-inset-top,0px));padding-bottom:16px}
+.logo{display:flex;align-items:center;border-radius:var(--r-sm)}
+.logo img{display:block;height:24px;width:auto}
+.top-cta{display:flex;gap:8px;align-items:center}
+
+/* Reveal on scroll (same feel as the home page) */
+.rv{transition:transform .9s var(--out),filter .9s var(--out),opacity .9s var(--out)}
+.js .rv.pre{transform:translateY(36px);filter:blur(6px);opacity:0}
+
+/* Glass card */
+.glass{position:relative;border-radius:var(--r-xl);background:linear-gradient(180deg,rgba(255,255,255,.05),rgba(255,255,255,.012) 38%),rgba(17,17,19,.72);border:1px solid var(--l1);box-shadow:inset 0 1px 0 rgba(255,255,255,.07),0 30px 60px -34px rgba(0,0,0,.85);overflow:hidden;isolation:isolate}
+.cap{display:flex;justify-content:space-between;gap:12px;padding:14px 20px;border-top:1px solid var(--l1);font:400 11.5px/1.4 var(--mono);color:var(--t3)}
+.cap b{font-weight:500;color:var(--t2)}
+
+/* Hero */
+.hero{position:relative;isolation:isolate;padding-block:clamp(24px,5vw,64px) clamp(72px,9vw,140px)}
+.hero::before{content:"";position:absolute;z-index:-1;width:min(900px,95vw);height:min(900px,95vw);right:-18vw;top:-28vw;border-radius:50%;background:radial-gradient(circle,rgba(255,59,48,.2),transparent 62%);filter:blur(40px);pointer-events:none}
+.hero .wrap{display:grid;gap:clamp(36px,5vw,72px);align-items:center}
+.hero h1{font-size:clamp(44px,6.4vw,92px);letter-spacing:-.055em;line-height:.98;margin:22px 0 22px}
+.lede{font-size:clamp(15.5px,1.15vw,18px);color:var(--t2);max-width:33em}
+.hero .cta-row{margin-top:30px}
+.checks{display:flex;flex-wrap:wrap;gap:8px;margin-top:26px}
+.chk{display:inline-flex;align-items:center;gap:8px;padding:8px 13px;border-radius:var(--r-full);border:1px solid var(--l1);background:rgba(255,255,255,.02);font-size:12.5px;color:var(--t2)}
+.chk svg{width:13px;height:13px;color:var(--ok)}
+@media (min-width:1000px){.hero .wrap{grid-template-columns:minmax(0,1fr) minmax(0,1.08fr)}}
+
+/* Diagrams (SVG) */
+.dia{display:block;width:100%;height:auto}
+.dia text{font-family:var(--sans);fill:var(--t2);font-size:13px}
+.dia .lbl{font:500 11px var(--mono);letter-spacing:.06em;text-transform:uppercase;fill:var(--t3)}
+.dia .node{fill:var(--ink-3);stroke:var(--l3);stroke-width:1.2}
+.dia .node.rago{fill:rgba(255,59,48,.1);stroke:var(--red)}
+.dia .node.ok{stroke:var(--ok)}
+.dia .road{fill:none;stroke:var(--l2);stroke-width:2;stroke-linecap:round}
+.dia .road.rago{stroke:rgba(255,59,48,.45)}
+.dia .road.flowing{stroke-dasharray:2 10;animation:dash 1.2s linear infinite}
+.dia .road.cut{stroke:var(--red);stroke-dasharray:6 8;animation:none}
+.dia .road.best{stroke:var(--red);stroke-width:2.6}
+.dia .road.dim{stroke:rgba(255,255,255,.05)}
+.dia .road.stall{stroke:rgba(255,214,10,.55)}
+@keyframes dash{to{stroke-dashoffset:-24}}
+.dia use{color:var(--t1)} /* the icons below draw in currentColor: page styles don't reach inside <use> */
+.dia .pk{fill:var(--t1)}
+.dia .pk.r{fill:var(--red)}
+.dia .pk.y{fill:var(--warn)}
+.dia .pk,.dia .burst,.dia .ring{transform-box:fill-box;transform-origin:center}
+.dia .pk.gone{transition:transform .45s var(--out),opacity .45s;transform:scale(.2);opacity:0}
+.dia .burst{fill:none;stroke:var(--red);stroke-width:1.6;animation:burst .6s var(--out) forwards}
+.dia .burst.g{stroke:var(--ok)}
+@keyframes burst{from{transform:scale(.4);opacity:1}to{transform:scale(2.6);opacity:0}}
+.dia .ring{fill:none;stroke:var(--ok);stroke-width:2;opacity:0}
+.dia .ring.on{animation:ring .9s var(--out)}
+@keyframes ring{from{transform:scale(.9);opacity:.9}to{transform:scale(1.5);opacity:0}}
+.dia .tag-t{font:500 11px var(--mono);fill:var(--t2)}
+.dia .tag-t.ok{fill:var(--ok)}
+.dia .tag-t.red{fill:var(--red)}
+.dia .tag-t.y{fill:var(--warn)}
+/* Phones: the diagrams shrink to about half size, so their words grow to stay readable */
+@media (max-width:620px){.dia text{font-size:17px}.dia .lbl,.dia .tag-t{font-size:14px;letter-spacing:0}}
+
+.hud{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;padding:0 20px 18px}
+.hud div{padding:12px 14px;border-radius:var(--r-md);background:rgba(255,255,255,.03);border:1px solid var(--l1)}
+.hud small{display:block;font-size:11.5px;color:var(--t3)}
+.hud b{font:500 22px/1.2 var(--mono);font-variant-numeric:tabular-nums;letter-spacing:-.02em}
+.hud b.ok{color:var(--ok)}
+
+/* Sections */
+.sec{padding-block:clamp(80px,10vw,160px)}
+.head{display:grid;gap:16px;justify-items:center;text-align:center;max-width:760px;margin:0 auto clamp(44px,6vw,88px)}
+.head h2{font-size:clamp(32px,3.8vw,58px);letter-spacing:-.045em}
+.head p{color:var(--t2);font-size:clamp(15px,1.1vw,17px);max-width:36em}
+
+/* Problems */
+.probs{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,250px),1fr));gap:12px}
+.prob{padding:0 0 22px}
+.prob .pv{height:132px;display:grid;place-items:center;border-bottom:1px solid var(--l1);background:radial-gradient(240px 120px at 50% 100%,rgba(255,59,48,.07),transparent 70%)}
+.prob h3{font-size:18px;letter-spacing:-.025em;padding:18px 22px 6px}
+.prob p{font-size:13.5px;color:var(--t3);padding:0 22px}
+.stat{display:grid;gap:18px;align-items:center;margin-top:12px;padding:clamp(24px,3vw,36px)}
+.stat .big{font:600 clamp(48px,6vw,84px)/1 var(--sans);letter-spacing:-.05em;font-variant-numeric:tabular-nums}
+.stat .big span + span{color:var(--t3)}
+.stat p{color:var(--t2);max-width:40em}
+.stat small{display:block;color:var(--t3);font-size:12.5px;margin-top:8px}
+@media (min-width:820px){.stat{grid-template-columns:auto 1fr;gap:40px}}
+
+/* Problem mini animations (CSS only) */
+.spark{width:200px;height:72px;overflow:hidden;position:relative;-webkit-mask-image:linear-gradient(90deg,transparent,#000 18%,#000 82%,transparent);mask-image:linear-gradient(90deg,transparent,#000 18%,#000 82%,transparent)}
+.spark svg{position:absolute;left:0;top:0;width:400px;height:72px;animation:scroll 4s linear infinite}
+.spark path{fill:none;stroke-width:2;stroke-linejoin:round;stroke-linecap:round}
+@keyframes scroll{to{transform:translateX(-200px)}}
+.freeze{display:flex;gap:10px}
+.freeze i{width:16px;height:16px;border-radius:5px;background:var(--t1);animation:fz 3s var(--out) infinite}
+.freeze i:nth-child(2){animation-delay:.08s}.freeze i:nth-child(3){background:transparent;box-shadow:inset 0 0 0 1.5px var(--red);animation:gap 3s infinite}.freeze i:nth-child(4){animation-delay:.16s}.freeze i:nth-child(5){animation-delay:.24s}
+@keyframes fz{0%{transform:translateX(-30px);opacity:0}20%{transform:none;opacity:1}55%,100%{transform:none;opacity:.35}}
+@keyframes gap{0%,20%{opacity:0}30%,90%{opacity:1}100%{opacity:0}}
+.wifi{position:relative;width:64px;height:52px}
+.wifi svg{width:64px;height:52px}
+.wifi .a{fill:none;stroke:var(--t1);stroke-width:4;stroke-linecap:round;animation:wf 3.2s infinite}
+.wifi .a2{animation-delay:.1s}.wifi .a3{animation-delay:.2s}
+@keyframes wf{0%,45%{stroke:var(--t1);opacity:1}50%,85%{stroke:var(--red);opacity:.15}100%{stroke:var(--t1);opacity:1}}
+.toast{position:absolute;left:50%;top:100%;transform:translate(-50%,8px);white-space:nowrap;font:500 11px var(--mono);color:var(--red);opacity:0;animation:tt 3.2s infinite}
+@keyframes tt{0%,50%{opacity:0}55%,82%{opacity:1}90%,100%{opacity:0}}
+.detour{width:200px;height:90px}
+.detour path{fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+.detour .long{stroke:var(--t1);stroke-dasharray:420;stroke-dashoffset:420;animation:draw 3.6s var(--out) infinite}
+.detour .short{stroke:var(--red);stroke-dasharray:4 7;opacity:.7}
+@keyframes draw{0%{stroke-dashoffset:420}60%,100%{stroke-dashoffset:0}}
+
+/* Feature rows */
+.feats{display:grid;gap:clamp(64px,9vw,140px)}
+.feat{display:grid;gap:clamp(28px,4vw,64px);align-items:center}
+@media (min-width:960px){.feat{grid-template-columns:minmax(0,.92fr) minmax(0,1.08fr)}.feat.flip .ft{order:2}}
+.ft{display:grid;gap:16px;align-content:start}
+.idx{display:flex;align-items:center;gap:12px;font:500 12px/1 var(--mono);letter-spacing:.08em;text-transform:uppercase;color:var(--t3)}
+.idx b{font-weight:500;color:var(--red)}
+.idx::after{content:"";flex:1;max-width:120px;height:1px;background:linear-gradient(90deg,var(--l3),transparent)}
+.ft h3{font-size:clamp(28px,3vw,44px);letter-spacing:-.045em}
+.pb{display:grid;gap:10px;margin-top:4px}
+.pb div{display:grid;grid-template-columns:86px 1fr;gap:12px;font-size:15px;color:var(--t2)}
+.pb dt,.pb .k{font:500 11px/1.9 var(--mono);letter-spacing:.06em;text-transform:uppercase;color:var(--t3)}
+.pb .k.fix{color:var(--red)}
+.proof{display:flex;gap:10px;align-items:flex-start;margin-top:6px;padding:12px 14px;border-radius:var(--r-md);background:rgba(61,220,151,.05);border:1px solid rgba(61,220,151,.16);font-size:13px;color:var(--t2)}
+.proof svg{width:16px;height:16px;flex:none;margin-top:2px;color:var(--ok)}
+.proof b{color:var(--t1);font-weight:600}
+.soon{display:inline-flex;align-items:center;gap:7px;justify-self:start;padding:6px 11px;border-radius:var(--r-full);border:1px solid rgba(255,214,10,.2);background:rgba(255,214,10,.06);font:500 11.5px/1 var(--sans);color:var(--warn)}
+.soon::before{content:"";width:6px;height:6px;border-radius:50%;background:currentColor;animation:blink 1.6s infinite}
+.soon.next{border-color:var(--l2);background:var(--ink-2);color:var(--t2)}
+.soon.next::before{animation:none}
+@keyframes blink{50%{opacity:.25}}
+.strip{display:flex;gap:5px;padding:0 20px 18px;flex-wrap:wrap}
+.strip i{width:18px;height:8px;border-radius:4px;background:var(--t1);opacity:.85;animation:pop .35s var(--spring)}
+.strip i.r{background:var(--red)}
+@keyframes pop{from{transform:scale(.3);opacity:0}}
+.meter{display:grid;gap:8px;padding:0 20px 18px}
+.meter div{display:grid;grid-template-columns:62px 1fr 40px;gap:10px;align-items:center;font-size:12px;color:var(--t2)}
+.meter span.bar{height:8px;border-radius:4px;background:var(--ink-4);overflow:hidden}
+.meter span.bar i{display:block;height:100%;width:0;border-radius:4px;background:var(--t1);transition:width .5s var(--out)}
+.meter div.p span.bar i{background:var(--red)}
+.meter b{font:500 12px var(--mono);text-align:right;color:var(--t1)}
+
+/* Fair play */
+.fair{display:grid;gap:clamp(28px,4vw,56px);align-items:center;padding:clamp(28px,4vw,56px)}
+@media (min-width:960px){.fair{grid-template-columns:1fr 1fr}}
+.fair h2{font-size:clamp(30px,3.4vw,50px);letter-spacing:-.045em}
+.fair p{color:var(--t2);margin-top:14px;max-width:34em}
+.pills{display:flex;flex-wrap:wrap;gap:8px;margin-top:22px}
+.pill{display:inline-flex;align-items:center;gap:8px;padding:9px 14px;border-radius:var(--r-full);background:var(--ink-3);border:1px solid var(--l1);font-size:13px}
+.pill svg{width:14px;height:14px;color:var(--ok)}
+.tube{position:relative;height:150px;border-radius:var(--r-lg);background:var(--ink-2);border:1px solid var(--l1);overflow:hidden;display:grid;align-items:center}
+.tube .row{display:flex;gap:14px;white-space:nowrap;font:500 15px/1 var(--mono);color:var(--t3);animation:flow 14s linear infinite;width:max-content}
+.tube .row span:nth-child(5n){color:var(--t1)}
+@keyframes flow{to{transform:translateX(-50%)}}
+.tube .mid{position:absolute;left:50%;top:14px;bottom:14px;width:min(180px,46%);transform:translateX(-50%);border-radius:var(--r-md);border:1px solid var(--red-a30);background:rgba(255,59,48,.06);display:grid;place-items:end center;padding-bottom:10px;font:500 10.5px var(--mono);letter-spacing:.06em;text-transform:uppercase;color:var(--red)}
+.tube .lock{position:absolute;left:50%;top:22px;transform:translateX(-50%);width:22px;height:22px;color:var(--red)}
+
+/* FAQ */
+.faq{display:grid;gap:10px;max-width:860px;margin-inline:auto}
+.faq details{border-radius:var(--r-lg);background:var(--ink-2);border:1px solid var(--l1);transition:border-color .2s}
+.faq details[open]{border-color:var(--l3)}
+.faq summary{list-style:none;cursor:pointer;display:flex;justify-content:space-between;gap:16px;align-items:center;padding:20px 22px;font-weight:600;font-size:16px;letter-spacing:-.015em}
+.faq summary::-webkit-details-marker{display:none}
+.faq summary::after{content:"";width:10px;height:10px;flex:none;border-right:1.8px solid var(--t2);border-bottom:1.8px solid var(--t2);transform:rotate(45deg) translate(-2px,-2px);transition:transform .3s var(--out)}
+.faq details[open] summary::after{transform:rotate(-135deg)}
+.faq p{padding:0 22px 22px;color:var(--t2);max-width:62em}
+
+/* Status and final call */
+.steps{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,240px),1fr));gap:12px;position:relative}
+.step{padding:24px}
+.step .dot{width:30px;height:30px;border-radius:50%;display:grid;place-items:center;margin-bottom:16px;background:var(--ink-3);border:1px solid var(--l2);font:500 12px var(--mono);color:var(--t2)}
+.step.done .dot{background:var(--ok-a);border-color:rgba(61,220,151,.4);color:var(--ok)}
+.step.now .dot{background:var(--red-a14);border-color:var(--red);color:var(--red);animation:beat 2s var(--out) infinite}
+.step h3{font-size:18px;letter-spacing:-.02em}
+.step p{font-size:13.5px;color:var(--t3);margin-top:6px}
+.step small{display:inline-block;margin-top:12px;font:500 11px var(--mono);letter-spacing:.06em;text-transform:uppercase;color:var(--t3)}
+.step.now small{color:var(--red)}
+.step.done small{color:var(--ok)}
+.final{position:relative;overflow:hidden;isolation:isolate;padding-block:clamp(110px,13vw,220px);text-align:center}
+.final::before{content:"";position:absolute;z-index:-1;left:50%;top:60%;width:min(1100px,110vw);height:min(1100px,110vw);transform:translate(-50%,-50%);border-radius:50%;background:radial-gradient(circle,rgba(255,59,48,.22),transparent 60%);filter:blur(30px)}
+.final .wrap{display:grid;gap:22px;justify-items:center}
+.final h2{font-size:clamp(38px,5vw,80px);letter-spacing:-.05em;max-width:13ch}
+.final p{color:var(--t2);max-width:30em}
+.final .cta-row{justify-content:center;margin-top:8px}
+
+footer.foot{border-top:1px solid var(--l1);padding-block:36px;font-size:12.5px;color:var(--t3)}
+footer.foot .wrap{display:grid;gap:16px}
+footer.foot nav{display:flex;flex-wrap:wrap;gap:6px;margin-left:-12px}
+footer.foot nav a{text-decoration:none;color:var(--t2);padding:6px 12px;border-radius:var(--r-full)}
+footer.foot nav a:hover{color:var(--t1);background:var(--l1)}
+footer.foot p{max-width:80ch}
+
+@media (max-width:560px){
+  .top-cta .btn-ghost{display:none}
+  .logo img{height:20px}
+  .btn{--h:46px;padding-inline:20px}
+  .hero .cta-row .btn{flex:1 1 100%}
+  .pb div{grid-template-columns:1fr;gap:2px}
+  .hud b{font-size:19px}
+  footer.foot nav a{padding:10px 12px}
+}
+@media (prefers-reduced-motion:reduce){
+  html{scroll-behavior:auto}
+  .rv{transition:opacity .6s var(--out)}
+  .js .rv.pre{transform:none;filter:none}
+  *,*::before,*::after{animation-duration:.01ms!important;animation-iteration-count:1!important}
+  .tube .row{transform:translateX(-12%)}
+}
+</style>
+</head>
+<body>
+<script>document.documentElement.classList.add("js")</script>
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <symbol id="i-arrow" viewBox="0 0 20 20"><path fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" d="M4 10h12M11 5l5 5-5 5"/></symbol>
+  <symbol id="i-back" viewBox="0 0 20 20"><path fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" d="M16 10H4M9 5l-5 5 5 5"/></symbol>
+  <symbol id="i-check" viewBox="0 0 20 20"><path fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" d="M4 10.5l4 4 8-9"/></symbol>
+  <symbol id="i-lab" viewBox="0 0 20 20"><path fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" d="M8 2.5h4M8.6 2.5v5.2L4 15.6A1.3 1.3 0 0 0 5.1 17.5h9.8a1.3 1.3 0 0 0 1.1-1.9l-4.6-7.9V2.5M6.3 12.5h7.4"/></symbol>
+  <symbol id="i-lock" viewBox="0 0 20 20"><g fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="9" width="12" height="8.5" rx="2.4"/><path d="M6.8 9V6.6a3.2 3.2 0 0 1 6.4 0V9"/></g></symbol>
+  <symbol id="i-discord" viewBox="0 0 24 24"><path fill="currentColor" d="M19.3 5.3A16.6 16.6 0 0 0 15.2 4l-.5 1a15.4 15.4 0 0 0-5.4 0L8.8 4a16.5 16.5 0 0 0-4.1 1.3C2.1 9.2 1.4 13 1.7 16.7a16.7 16.7 0 0 0 5 2.6l1.1-1.7a10.8 10.8 0 0 1-1.7-.8l.4-.3a11.9 11.9 0 0 0 11 0l.4.3c-.5.3-1.1.6-1.7.8l1.1 1.7a16.6 16.6 0 0 0 5-2.6c.4-4.3-.7-8-3-11.4ZM8.7 14.5c-1 0-1.8-.9-1.8-2s.8-2 1.8-2 1.8.9 1.8 2-.8 2-1.8 2Zm6.6 0c-1 0-1.8-.9-1.8-2s.8-2 1.8-2 1.8.9 1.8 2-.8 2-1.8 2Z"/></symbol>
+  <symbol id="s-pc" viewBox="0 0 28 28"><g fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="22" height="14" rx="2.5"/><path d="M10 23h8M14 19v4"/></g></symbol>
+  <symbol id="s-srv" viewBox="0 0 28 28"><g fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="4" width="20" height="8" rx="2"/><rect x="4" y="16" width="20" height="8" rx="2"/><path d="M8 8h.01M8 20h.01"/></g></symbol>
+  <symbol id="s-phone" viewBox="0 0 28 28"><g fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><rect x="8" y="3" width="12" height="22" rx="3"/><path d="M12.5 21h3"/></g></symbol>
+  <symbol id="s-mark" viewBox="0 0 164 180"><path d="M0 0H160V46L93.83 101.42L164 180H114L65.17 125.42L0 180V132L112.24 38H39V78.34L0 111Z" fill="#FF3B30"/></symbol>
+</svg>
+
+<header class="top band">
+  <div class="wrap">
+    <a class="logo" href="./" aria-label="Rago Optimizer home"><img src="rago-wordmark.svg" alt="" height="24"></a>
+    <div class="top-cta">
+      <a class="btn btn-ghost btn-sm" href="./"><svg><use href="#i-back"/></svg>Back to the site</a>
+      <a class="btn btn-red btn-sm" href="https://discord.gg/cbCxCBx8vJ" target="_blank" rel="noopener">Get notified</a>
+    </div>
+  </div>
+</header>
+
+<main>
+  <!-- Hero -->
+  <section class="hero band">
+    <div class="wrap">
+      <div class="rv">
+        <span class="eyebrow">Rago Route · in testing on Hypixel</span>
+        <h1>Two roads for <span class="red">every packet.</span></h1>
+        <p class="lede">Rago Route is Rago's new network engine for Minecraft. It sends your connection down two roads at once, repairs lost packets on the spot and holds your match when your Wi-Fi drops.</p>
+        <div class="cta-row">
+          <a class="btn btn-red" href="https://discord.gg/cbCxCBx8vJ" target="_blank" rel="noopener"><svg><use href="#i-discord"/></svg>Get notified on Discord</a>
+          <a class="btn btn-ghost" href="#fixes">See how it works<svg class="go"><use href="#i-arrow"/></svg></a>
+        </div>
+        <div class="checks">
+          <span class="chk"><svg><use href="#i-check"/></svg>Built for Minecraft Java</span>
+          <span class="chk"><svg><use href="#i-check"/></svg>Hypixel and Minemen first</span>
+          <span class="chk"><svg><use href="#i-check"/></svg>Your game is never changed</span>
+        </div>
+      </div>
+
+      <figure class="glass rv" style="margin:0" aria-label="Illustration: every packet leaves your PC on two roads. When road 1 drops one, the copy on road 2 still reaches the server.">
+        <svg class="dia" id="hero-dia" viewBox="0 0 600 330" aria-hidden="true">
+          <defs><linearGradient id="g-rago" x1="0" x2="1"><stop offset="0" stop-color="#FF3B30" stop-opacity=".25"/><stop offset=".5" stop-color="#FF3B30" stop-opacity=".7"/><stop offset="1" stop-color="#FF3B30" stop-opacity=".25"/></linearGradient></defs>
+          <text class="lbl" x="300" y="44" text-anchor="middle">Road 1 · your usual route</text>
+          <text class="lbl" x="300" y="300" text-anchor="middle" style="fill:#FF5E55">Road 2 · through Rago</text>
+          <path class="road flowing" id="h-a" d="M92 150 C170 70 300 64 382 150"/>
+          <path class="road flowing" id="h-b" d="M92 176 C170 262 300 268 382 176" style="stroke:url(#g-rago)"/>
+          <path class="road flowing" id="h-c" d="M446 163 L512 163"/>
+          <g class="pkl"></g>
+          <rect class="node" x="30" y="132" width="62" height="62" rx="18"/>
+          <use href="#s-pc" x="47" y="149" width="28" height="28"/>
+          <text x="61" y="218" text-anchor="middle">Your PC</text>
+          <rect class="node rago" x="382" y="131" width="64" height="64" rx="19"/>
+          <use href="#s-mark" x="402" y="150" width="24" height="26"/>
+          <circle class="ring" id="h-ring" cx="414" cy="163" r="40"/>
+          <text x="414" y="219" text-anchor="middle">Rago exit</text>
+          <rect class="node" x="512" y="132" width="62" height="62" rx="18"/>
+          <use href="#s-srv" x="529" y="149" width="28" height="28"/>
+          <text x="543" y="218" text-anchor="middle">Hypixel</text>
+        </svg>
+        <div class="hud">
+          <div><small>Dropped on road 1</small><b id="h-lost">0</b></div>
+          <div><small>Missing in your game</small><b class="ok">0</b></div>
+        </div>
+        <figcaption class="cap"><span>Illustration</span><b>Each packet travels both roads. The first copy in wins.</b></figcaption>
+      </figure>
+    </div>
+  </section>
+
+  <!-- The problems -->
+  <section class="sec band" id="problems" style="padding-top:0">
+    <div class="wrap">
+      <div class="head rv">
+        <span class="eyebrow">Sound familiar?</span>
+        <h2>Lag isn't always your PC. Often, it's the road.</h2>
+        <p>Before it reaches the server, every packet you send crosses your Wi-Fi, your provider and hundreds of miles of cable. One bad hop and the whole match feels it.</p>
+      </div>
+      <div class="probs">
+        <article class="glass prob rv">
+          <div class="pv" aria-hidden="true">
+            <div class="spark"><svg viewBox="0 0 400 72"><path d="M0 50 L20 48 L40 50 L60 47 L80 49 L100 50 L120 48 L130 46 L140 12 L150 46 L170 49 L190 48 L200 50 L220 48 L240 50 L260 47 L280 49 L300 50 L320 48 L330 46 L340 12 L350 46 L370 49 L390 48 L400 50" stroke="#F5F5F6"/><path d="M128 47 L140 12 L152 47 M328 47 L340 12 L352 47" stroke="#FF3B30"/></svg></div>
+          </div>
+          <h3>Your ping spikes mid-fight.</h3>
+          <p>You land the hit on your screen. The server gets it too late and the trade goes the other way.</p>
+        </article>
+        <article class="glass prob rv">
+          <div class="pv" aria-hidden="true"><div class="freeze"><i></i><i></i><i></i><i></i><i></i></div></div>
+          <h3>One lost packet freezes everything.</h3>
+          <p>Minecraft plays its packets in order. When one goes missing, everything behind it waits. That's the rubberband on the bridge.</p>
+        </article>
+        <article class="glass prob rv">
+          <div class="pv" aria-hidden="true">
+            <div class="wifi"><svg viewBox="0 0 64 52"><path class="a a3" d="M6 18a37 37 0 0 1 52 0"/><path class="a a2" d="M15 28a24 24 0 0 1 34 0"/><path class="a" d="M24 38a11 11 0 0 1 16 0"/><circle cx="32" cy="46" r="3.2" fill="#F5F5F6"/></svg><span class="toast">signal lost</span></div>
+          </div>
+          <h3>Your Wi-Fi blinks. Your match stalls.</h3>
+          <p>A second without signal, then several more while the connection catches up. Long enough to lose the fight.</p>
+        </article>
+        <article class="glass prob rv">
+          <div class="pv" aria-hidden="true">
+            <svg class="detour" viewBox="0 0 200 90"><path class="short" d="M18 70 L182 70"/><path class="long" d="M18 70 L50 70 L62 22 L104 22 L118 58 L150 58 L160 30 L182 30 L182 70"/><circle cx="18" cy="70" r="5" fill="#F5F5F6"/><circle cx="182" cy="70" r="5" fill="#FF3B30"/></svg>
+          </div>
+          <h3>Your provider takes the long way.</h3>
+          <p>Your internet provider picks your route to the server, and it isn't always the shortest one.</p>
+        </article>
+      </div>
+      <div class="glass stat rv">
+        <div class="big"><span id="st-a" data-to="34">34</span><span> / 88</span></div>
+        <p>Of the 88 Hypixel measurements taken by Rago's network test, 34 showed packet loss, ping spikes or jitter of 10 ms or more. More than one connection in three.<small>Rago network test, players' PCs, Oct 29 to Nov 4, 2026.</small></p>
+      </div>
+    </div>
+  </section>
+
+  <!-- The five fixes -->
+  <section class="sec band" id="fixes" style="padding-top:0">
+    <div class="wrap">
+      <div class="head rv">
+        <span class="eyebrow">How it works</span>
+        <h2>Rago Optimizer tunes your PC. Rago Route takes the road.</h2>
+        <p>Five fixes that start where your PC ends, built together into one engine.</p>
+      </div>
+
+      <div class="feats">
+        <!-- 01 Dual path -->
+        <article class="feat">
+          <div class="ft rv">
+            <span class="idx"><b>01</b>Dual path</span>
+            <h3>Two roads. First one wins.</h3>
+            <div class="pb">
+              <div><span class="k">Problem</span><span>One lost packet on your road and the game waits while it's sent again.</span></div>
+              <div><span class="k fix">Fix</span><span>Every packet leaves on two roads at once. The first copy to arrive is used, the other is dropped. One road can stumble and your game never knows.</span></div>
+            </div>
+            <div class="proof"><svg><use href="#i-lab"/></svg><span><b>Tested on Hypixel:</b> with 30% of packets dropped on purpose on one road, the other road rescued 2,246 of them in about two minutes. The match went on.</span></div>
+          </div>
+          <figure class="glass rv" style="margin:0" aria-label="Illustration: two copies of each packet race on two roads; the first to arrive is kept.">
+            <svg class="dia" id="race" viewBox="0 0 560 230" aria-hidden="true">
+              <text class="lbl" x="34" y="58">Road 1</text>
+              <text class="lbl" x="34" y="152" style="fill:#FF5E55">Road 2</text>
+              <path class="road" id="r-a" d="M34 80 L450 80"/>
+              <path class="road rago" id="r-b" d="M34 174 L450 174"/>
+              <path d="M450 56 L450 198" stroke="rgba(255,255,255,.18)" stroke-width="1.5" stroke-dasharray="3 5"/>
+              <g class="pkl"></g>
+              <rect class="node ok" x="474" y="96" width="62" height="62" rx="18"/>
+              <use href="#s-pc" x="491" y="113" width="28" height="28"/>
+              <text x="505" y="184" text-anchor="middle">Your game</text>
+            </svg>
+            <div class="strip" id="r-strip" aria-hidden="true"></div>
+            <figcaption class="cap"><span>Illustration</span><b>White: road 1 first · Red: road 2 first</b></figcaption>
+          </figure>
+        </article>
+
+        <!-- 02 Instant repair -->
+        <article class="feat flip">
+          <div class="ft rv">
+            <span class="idx"><b>02</b>Instant repair</span>
+            <h3>A lost packet is back in one round trip.</h3>
+            <div class="pb">
+              <div><span class="k">Problem</span><span>When Wi-Fi drops a burst of packets, everything behind the gap waits for them, sometimes for a long time.</span></div>
+              <div><span class="k fix">Fix</span><span>Rago Route numbers every packet. As soon as a later one lands, the gap is spotted and the missing packet is sent again, without waiting for a timeout.</span></div>
+            </div>
+            <div class="proof"><svg><use href="#i-lab"/></svg><span><b>Lab test:</b> 20 MB sent through 20% packet loss on both roads arrived intact, byte for byte.</span></div>
+          </div>
+          <figure class="glass rv" style="margin:0" aria-label="Illustration: packet 4 is lost; when packet 5 arrives the gap is spotted, packet 4 is sent again and everything reaches the game in order.">
+            <svg class="dia" id="repair" viewBox="0 0 560 230" aria-hidden="true">
+              <rect class="node rago" x="20" y="84" width="62" height="62" rx="18"/>
+              <use href="#s-mark" x="40" y="102" width="22" height="25"/>
+              <text x="51" y="172" text-anchor="middle">Rago exit</text>
+              <path class="road" d="M82 115 L462 115"/>
+              <rect class="node ok" x="478" y="84" width="62" height="62" rx="18"/>
+              <use href="#s-pc" x="495" y="101" width="28" height="28"/>
+              <text x="509" y="172" text-anchor="middle">Your game</text>
+              <g class="pkl"></g>
+              <text class="tag-t red" id="rp-msg" x="300" y="66" text-anchor="middle"></text>
+            </svg>
+            <figcaption class="cap"><span>Illustration</span><b>Packets are played in order: a gap holds everything behind it.</b></figcaption>
+          </figure>
+        </article>
+
+        <!-- 03 Session hold -->
+        <article class="feat">
+          <div class="ft rv">
+            <span class="idx"><b>03</b>Session hold</span>
+            <h3>Your Wi-Fi drops. Your match holds.</h3>
+            <div class="pb">
+              <div><span class="k">Problem</span><span>When the signal cuts out, your connection freezes. When it comes back, it can take several more seconds to catch up.</span></div>
+              <div><span class="k fix">Fix</span><span>Rago's exit keeps your connection to the server open for up to a minute while your PC is silent. The moment your network is back, what's missing is sent straight away.</span></div>
+            </div>
+            <div class="proof"><svg><use href="#i-lab"/></svg><span><b>Lab test:</b> an 8-second total cut, nothing lost, traffic flowing again within 20 ms of the network coming back.</span></div>
+          </div>
+          <figure class="glass rv" style="margin:0" aria-label="Illustration: the link between your PC and the Rago exit breaks for a few seconds while the exit keeps your connection to the server; when the link returns, everything resumes.">
+            <svg class="dia" id="hold" viewBox="0 0 560 230" aria-hidden="true">
+              <path class="road flowing" id="ho-a" d="M90 120 L272 120"/>
+              <path class="road flowing" id="ho-b" d="M336 120 L470 120"/>
+              <g class="pkl"></g>
+              <rect class="node" x="28" y="89" width="62" height="62" rx="18"/>
+              <use href="#s-pc" x="45" y="106" width="28" height="28"/>
+              <text x="59" y="177" text-anchor="middle">Your PC</text>
+              <rect class="node rago" x="272" y="88" width="64" height="64" rx="19"/>
+              <use href="#s-mark" x="292" y="107" width="24" height="26"/>
+              <circle class="ring" id="ho-ring" cx="304" cy="120" r="40"/>
+              <text x="304" y="177" text-anchor="middle">Rago exit</text>
+              <rect class="node" x="470" y="89" width="62" height="62" rx="18"/>
+              <use href="#s-srv" x="487" y="106" width="28" height="28"/>
+              <text x="501" y="177" text-anchor="middle">Hypixel</text>
+              <text class="tag-t" id="ho-l" x="181" y="96" text-anchor="middle">connected</text>
+              <text class="tag-t ok" id="ho-r" x="403" y="96" text-anchor="middle">connected</text>
+            </svg>
+            <figcaption class="cap"><span>Illustration</span><b id="ho-cap">Your match never leaves the exit.</b></figcaption>
+          </figure>
+        </article>
+
+        <!-- 04 Phone backup -->
+        <article class="feat flip">
+          <div class="ft rv">
+            <span class="idx"><b>04</b>Phone backup</span>
+            <h3>Your phone becomes your backup road.</h3>
+            <span class="soon">Testing now</span>
+            <div class="pb">
+              <div><span class="k">Problem</span><span>Wi-Fi is the weakest link in most setups. A wall, a busy channel or a neighbor's router is enough for a spike.</span></div>
+              <div><span class="k fix">Fix</span><span>Plug in your phone and Rago Route uses its mobile data as a second road, at the same time as your Wi-Fi. When the Wi-Fi stalls, the phone's copy gets there first. You see the mobile data it uses, live.</span></div>
+            </div>
+          </div>
+          <figure class="glass rv" style="margin:0" aria-label="Illustration: packets travel over Wi-Fi and over a phone's mobile data; when the Wi-Fi stalls, the phone's copies arrive first.">
+            <svg class="dia" id="phone" viewBox="0 0 560 250" aria-hidden="true">
+              <path class="road" id="ph-a" d="M96 74 C190 74 230 125 318 125"/>
+              <path class="road rago" id="ph-b" d="M96 188 C190 188 230 137 318 137"/>
+              <path class="road flowing" d="M382 131 L468 131"/>
+              <path d="M59 108 L59 154" stroke="rgba(255,255,255,.22)" stroke-width="2" stroke-dasharray="2 4"/>
+              <g class="pkl"></g>
+              <rect class="node" x="28" y="44" width="62" height="62" rx="18"/>
+              <use href="#s-pc" x="45" y="61" width="28" height="28"/>
+              <text class="tag-t" id="ph-wl" x="59" y="34" text-anchor="middle">Wi-Fi</text>
+              <rect class="node" x="28" y="157" width="62" height="62" rx="18"/>
+              <use href="#s-phone" x="45" y="174" width="28" height="28"/>
+              <text class="tag-t red" x="59" y="236" text-anchor="middle">Phone · 4G</text>
+              <rect class="node rago" x="318" y="99" width="64" height="64" rx="19"/>
+              <use href="#s-mark" x="338" y="118" width="24" height="26"/>
+              <text x="350" y="186" text-anchor="middle">Rago exit</text>
+              <rect class="node" x="468" y="100" width="62" height="62" rx="18"/>
+              <use href="#s-srv" x="485" y="117" width="28" height="28"/>
+              <text x="499" y="186" text-anchor="middle">Hypixel</text>
+            </svg>
+            <div class="meter" aria-hidden="true">
+              <div><span>Wi-Fi first</span><span class="bar"><i id="ph-mw"></i></span><b id="ph-w">0%</b></div>
+              <div class="p"><span>Phone first</span><span class="bar"><i id="ph-mp"></i></span><b id="ph-p">0%</b></div>
+            </div>
+            <figcaption class="cap"><span>Illustration</span><b>Last 20 packets: which road brought them first</b></figcaption>
+          </figure>
+        </article>
+
+        <!-- 05 Smart route -->
+        <article class="feat">
+          <div class="ft rv">
+            <span class="idx"><b>05</b>Smart route</span>
+            <h3>The best road, picked for you.</h3>
+            <span class="soon next">Coming with the app</span>
+            <div class="pb">
+              <div><span class="k">Problem</span><span>Picking a proxy by hand means guessing, and the best road changes from one evening to the next.</span></div>
+              <div><span class="k fix">Fix</span><span>Rago measures the roads from your PC to your server, direct and through each Rago exit, and sends you down the fastest one. When your direct road is already the best, Rago keeps it.</span></div>
+            </div>
+          </div>
+          <figure class="glass rv" style="margin:0" aria-label="Illustration: three roads to the server are measured and the fastest one is chosen.">
+            <svg class="dia" id="smart" viewBox="0 0 560 250" aria-hidden="true">
+              <path class="road" id="sm-0" d="M92 125 C170 125 190 48 280 48 S390 125 468 125"/>
+              <path class="road" id="sm-1" d="M92 125 L468 125"/>
+              <path class="road" id="sm-2" d="M92 125 C170 125 190 202 280 202 S390 125 468 125"/>
+              <g class="pkl"></g>
+              <rect class="node rago" x="258" y="27" width="44" height="42" rx="13"/><use href="#s-mark" x="272" y="38" width="16" height="18"/>
+              <rect class="node" x="258" y="104" width="44" height="42" rx="13"/><text class="tag-t" x="280" y="129" text-anchor="middle">ISP</text>
+              <rect class="node rago" x="258" y="181" width="44" height="42" rx="13"/><use href="#s-mark" x="272" y="193" width="16" height="18"/>
+              <text class="tag-t" id="sm-t0" x="280" y="18" text-anchor="middle">Rago exit A</text>
+              <text class="tag-t" id="sm-t1" x="330" y="112">Direct</text>
+              <text class="tag-t" id="sm-t2" x="280" y="243" text-anchor="middle">Rago exit B</text>
+              <rect class="node" x="30" y="94" width="62" height="62" rx="18"/>
+              <use href="#s-pc" x="47" y="111" width="28" height="28"/>
+              <rect class="node" x="468" y="94" width="62" height="62" rx="18"/>
+              <use href="#s-srv" x="485" y="111" width="28" height="28"/>
+            </svg>
+            <figcaption class="cap"><span>Illustration</span><b id="sm-cap">Measuring the roads…</b></figcaption>
+          </figure>
+        </article>
+      </div>
+    </div>
+  </section>
+
+  <!-- Fair play -->
+  <section class="sec band" style="padding-top:0">
+    <div class="wrap">
+      <div class="glass fair rv">
+        <div>
+          <span class="eyebrow">Fair play</span>
+          <h2 style="margin-top:18px">Faster delivery. The same game.</h2>
+          <p>Rago Route only carries your connection. It never fakes your ping and never holds packets back for an edge. It can't read your match either: once you're logged in, Minecraft encrypts everything between your game and the server, and Rago Route passes it along untouched.</p>
+          <div class="pills">
+            <span class="pill"><svg><use href="#i-check"/></svg>No fake ping</span>
+            <span class="pill"><svg><use href="#i-check"/></svg>No lag switch</span>
+            <span class="pill"><svg><use href="#i-check"/></svg>Encrypted by Minecraft, end to end</span>
+          </div>
+        </div>
+        <div class="tube" aria-hidden="true">
+          <div class="row" id="tube-row"></div>
+          <div class="mid">Rago Route</div>
+          <svg class="lock"><use href="#i-lock"/></svg>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- FAQ -->
+  <section class="sec band" id="faq" style="padding-top:0">
+    <div class="wrap">
+      <div class="head rv"><span class="eyebrow">Questions</span><h2>Straight answers.</h2></div>
+      <div class="faq rv">
+        <details><summary>Will it lower my ping?</summary><p>Sometimes, but that's not the main goal. Rago Route removes spikes, packet loss and freezes. Your average ping only goes down when your usual route takes a detour. In our first tests from France, Rago Route was a few milliseconds faster than the direct route to Hypixel.</p></details>
+        <details><summary>Is it a VPN?</summary><p>No. Rago Route carries your Minecraft connection and nothing else from your PC. It's built for low delay, not for hiding where you are.</p></details>
+        <details><summary>Which games and servers does it work with?</summary><p>Minecraft Java first, starting with Hypixel and Minemen Club. More servers are planned.</p></details>
+        <details><summary>When can I use it?</summary><p>Rago Route is in testing on Hypixel and will come to Rago Optimizer for Windows. Join the Rago Discord to hear the moment it opens.</p></details>
+      </div>
+    </div>
+  </section>
+
+  <!-- Where it stands -->
+  <section class="sec band" style="padding-top:0">
+    <div class="wrap">
+      <div class="head rv"><span class="eyebrow">Where it stands</span><h2>Built. Now proving itself in real matches.</h2></div>
+      <div class="steps">
+        <div class="glass step done rv"><span class="dot"><svg width="14" height="14"><use href="#i-check"/></svg></span><h3>The engine</h3><p>Dual path, instant repair and session hold run on Rago servers in Europe.</p><small>Done</small></div>
+        <div class="glass step now rv"><span class="dot">2</span><h3>Real matches</h3><p>Full Bedwars games played through Rago Route on Hypixel, plus the phone backup.</p><small>Testing now</small></div>
+        <div class="glass step rv"><span class="dot">3</span><h3>In Rago Optimizer</h3><p>Rago Route comes to the Windows app, with the best road picked for you.</p><small>Next</small></div>
+      </div>
+    </div>
+  </section>
+
+  <section class="final band">
+    <div class="wrap rv">
+      <span class="eyebrow">Rago Route</span>
+      <h2>Be first on the road.</h2>
+      <p>Join the Rago Discord to hear the moment Rago Route opens.</p>
+      <div class="cta-row">
+        <a class="btn btn-red" href="https://discord.gg/cbCxCBx8vJ" target="_blank" rel="noopener"><svg><use href="#i-discord"/></svg>Join the Discord</a>
+        <a class="btn btn-ghost" href="./">Discover Rago Optimizer<svg class="go"><use href="#i-arrow"/></svg></a>
+      </div>
+    </div>
+  </section>
+</main>
+
+<footer class="foot band">
+  <div class="wrap">
+    <nav aria-label="Footer"><a href="./">Rago Optimizer</a><a href="./#pricing">Pricing</a><a href="./#faq">FAQ</a><a href="partners.html">Partners</a><a href="reviews.html">Reviews</a><a href="terms.html">Terms</a><a href="privacy.html">Privacy</a><a href="refunds.html">Refunds</a></nav>
+    <p>Rago Route is in testing: features and results may change before it opens. Results depend on your connection. Hypixel and Minemen Club are run by their own teams and aren't affiliated with Rago. Minecraft is a trademark of Mojang Studios; Rago Optimizer isn't affiliated with Mojang or Microsoft. © 2026 Rago Optimizer.</p>
+  </div>
+</footer>
+
+<script>
+/* Animations of the page. Each scene runs only while it's on screen; with "reduce motion", it shows one still frame. */
+(() => {
+const REDUCE = matchMedia("(prefers-reduced-motion: reduce)").matches;
+const NS = "http://www.w3.org/2000/svg";
+const $ = (s, r = document) => r.querySelector(s);
+const mk = (tag, a, parent) => { const e = document.createElementNS(NS, tag); for (const k in a) e.setAttribute(k, a[k]); if (parent) parent.appendChild(e); return e; };
+const rnd = (a, b) => a + Math.random() * (b - a);
+
+// Reveal on scroll
+const rv = document.querySelectorAll(".rv");
+if ("IntersectionObserver" in window) {
+  rv.forEach(e => e.classList.add("pre"));
+  const io = new IntersectionObserver(es => es.forEach(e => { if (e.isIntersecting) { e.target.classList.remove("pre"); io.unobserve(e.target); } }), { rootMargin: "0px 0px -8% 0px" });
+  rv.forEach(e => io.observe(e));
+}
+
+// Runs scene.step(dt) on every frame while the element is visible
+function run(el, make) {
+  if (!el) return;
+  let s = null, raf = 0, last = 0;
+  const frame = t => { s.step(Math.min(48, last ? t - last : 16)); last = t; raf = requestAnimationFrame(frame); };
+  const start = () => { if (!s) s = make(el); if (REDUCE) { for (let i = 0; i < 260; i++) s.step(16); return; } last = 0; cancelAnimationFrame(raf); raf = requestAnimationFrame(frame); };
+  if (!("IntersectionObserver" in window)) return start();
+  new IntersectionObserver(([e]) => { if (e.isIntersecting) start(); else cancelAnimationFrame(raf); }, { threshold: .12 }).observe(el);
+}
+
+// A packet moving along an SVG path
+function packet(layer, path, cls, v) {
+  const len = path.getTotalLength();
+  const el = mk("circle", { r: 4.6, class: "pk " + (cls || "") }, layer);
+  const p = { el, path, len, d: 0, v, dead: false, done: false };
+  p.place = () => { const q = path.getPointAtLength(Math.min(p.d, len)); el.setAttribute("cx", q.x); el.setAttribute("cy", q.y); };
+  p.place();
+  return p;
+}
+function kill(p, burstCls) {
+  p.dead = true;
+  const x = p.el.getAttribute("cx"), y = p.el.getAttribute("cy");
+  if (burstCls !== null) { const b = mk("circle", { cx: x, cy: y, r: 6, class: "burst " + (burstCls || "") }, p.el.parentNode); setTimeout(() => b.remove(), 700); }
+  p.el.classList.add("gone"); setTimeout(() => p.el.remove(), 500);
+}
+function ring(el) { if (!el) return; el.classList.remove("on"); void el.getBBox(); el.classList.add("on"); }
+
+// Hero: twin packets on two roads, road 1 drops some, road 2 rescues them
+run($("#hero-dia"), svg => {
+  const A = $("#h-a", svg), B = $("#h-b", svg), C = $("#h-c", svg), L = $(".pkl", svg), R = $("#h-ring", svg), out = $("#h-lost");
+  let t = 0, next = 0, n = 0, lost = 0; const live = [], twins = new Map();
+  return { step(dt) {
+    t += dt;
+    if (t >= next) {
+      next = t + 380; n++;
+      const drop = Math.random() < .2;
+      const a = packet(L, A, "", .2); a.twin = n; a.road = 1; a.drop = drop; a.at = a.len * rnd(.3, .65);
+      const b = packet(L, B, "r", .165); b.twin = n; b.road = 2;
+      twins.set(n, { first: 0, drop }); live.push(a, b);
+    }
+    for (const p of live) {
+      if (p.dead || p.done) continue;
+      p.d += p.v * dt;
+      if (p.drop && p.d >= p.at) { kill(p); lost++; out.textContent = lost; continue; }
+      p.place();
+      if (p.d >= p.len) {
+        p.done = true; p.el.remove();
+        if (p.road === undefined) continue;
+        const tw = twins.get(p.twin);
+        if (!tw.first) {
+          tw.first = p.road;
+          const c = packet(L, C, p.road === 2 ? "r" : "", .2); live.push(c);
+          if (p.road === 2 && tw.drop) ring(R);
+        }
+      }
+    }
+    for (let i = live.length - 1; i >= 0; i--) if (live[i].dead || live[i].done) live.splice(i, 1);
+    if (twins.size > 60) twins.delete(twins.keys().next().value);
+  } };
+});
+
+// 01: the race. Road 1 is usually faster but jittery and lossy; road 2 is steady.
+run($("#race"), svg => {
+  const A = $("#r-a", svg), B = $("#r-b", svg), L = $(".pkl", svg), strip = $("#r-strip");
+  let t = 0, next = 0, n = 0; const live = [], twins = new Map();
+  const mark = road => { const i = document.createElement("i"); if (road === 2) i.className = "r"; strip.appendChild(i); while (strip.children.length > 24) strip.firstChild.remove(); };
+  return { step(dt) {
+    t += dt;
+    if (t >= next) {
+      next = t + 520; n++;
+      const slow = Math.random() < .28;
+      const a = packet(L, A, "", slow ? rnd(.09, .13) : rnd(.2, .26)); a.twin = n; a.road = 1; a.drop = Math.random() < .14; a.at = a.len * rnd(.25, .7);
+      const b = packet(L, B, "r", .165); b.twin = n; b.road = 2;
+      twins.set(n, 0); live.push(a, b);
+    }
+    for (const p of live) {
+      if (p.dead || p.done) continue;
+      p.d += p.v * dt;
+      if (p.drop && p.d >= p.at) { kill(p); continue; }
+      p.place();
+      if (p.d >= p.len) {
+        p.done = true;
+        if (!twins.get(p.twin)) { twins.set(p.twin, p.road); mark(p.road); p.el.remove(); }
+        else kill(p, null);  // the later copy is simply dropped
+      }
+    }
+    for (let i = live.length - 1; i >= 0; i--) if (live[i].dead || live[i].done) live.splice(i, 1);
+    if (twins.size > 60) twins.delete(twins.keys().next().value);
+  } };
+});
+
+// 02: repair. Packets 1 to 7 leave in order; 4 is lost; when 5 lands, 4 is sent again; 4 to 7 then reach the game together.
+run($("#repair"), svg => {
+  const L = $(".pkl", svg), msg = $("#rp-msg", svg);
+  const X0 = 96, X1 = 452, GAME = 509, V = .2, GAP = 380, LOSE_X = 250, CYCLE = 7600;
+  let t = 0, els = [];
+  const make = () => {
+    L.textContent = ""; els = [];
+    for (let i = 1; i <= 8; i++) {
+      const g = mk("g", {}, L);
+      mk("rect", { x: -13, y: -11, width: 26, height: 22, rx: 7, class: "pk" + (i === 8 ? " r" : "") }, g);
+      const tx = mk("text", { x: 0, y: 4.5, "text-anchor": "middle", style: "font:600 12px var(--mono);fill:#0A0A0B" }, g); tx.textContent = i === 8 ? "4" : i;
+      g.style.transition = "opacity .4s"; els.push(g);
+    }
+  };
+  make();
+  const start = i => (i - 1) * GAP;               // packet i leaves the exit
+  const arrive = i => start(i) + (X1 - X0) / V;   // and reaches your PC
+  const resendAt = arrive(5) + 150, back = resendAt + (X1 - X0) / V;
+  return { step(dt) {
+    t += dt; if (t > CYCLE) { t = 0; make(); }
+    let say = "";
+    for (let k = 0; k < 8; k++) {
+      const g = els[k], i = k + 1; let x, y = 115, op = 1;
+      if (i === 8) {  // packet 4, sent again
+        if (t < resendAt) { op = 0; x = X0; } else x = Math.min(X1, X0 + (t - resendAt) * V);
+        if (t >= back) x = Math.min(GAME, X1 + (t - back) * .3);
+        if (x >= GAME) op = 0;
+      } else if (i === 4) {
+        x = Math.min(LOSE_X, X0 + Math.max(0, t - start(4)) * V);
+        op = t < start(4) ? 0 : x >= LOSE_X ? 0 : 1;
+      } else {
+        x = X0 + Math.max(0, t - start(i)) * V; op = t < start(i) ? 0 : 1;
+        if (x >= X1) {
+          const free = i < 4 ? arrive(i) : back;  // 1 to 3 go straight in; 5 to 7 wait for 4
+          if (t < free) { x = X1 - (i - 5) * 30 - 30; y = 115; } else { x = Math.min(GAME, X1 + (t - free) * .3); if (x >= GAME) op = 0; }
+        }
+      }
+      g.setAttribute("transform", `translate(${x},${y})`); g.style.opacity = op;
+    }
+    if (t > start(4) + (LOSE_X - X0) / V && t < arrive(5)) say = "packet 4 lost";
+    else if (t >= arrive(5) && t < back) say = "gap spotted · sending 4 again";
+    else if (t >= back && t < back + 1600) say = "4, 5, 6, 7 played in order";
+    msg.textContent = say; msg.setAttribute("class", "tag-t " + (t >= back ? "ok" : "red"));
+  } };
+});
+
+// 03: session hold. The PC–exit link cuts for a few seconds; the exit keeps the server side open and buffers.
+run($("#hold"), svg => {
+  const A = $("#ho-a", svg), B = $("#ho-b", svg), L = $(".pkl", svg), lt = $("#ho-l", svg), rt = $("#ho-r", svg), R = $("#ho-ring", svg), cap = $("#ho-cap");
+  const CUT0 = 1800, CUT1 = 5600, CYCLE = 8600;
+  let t = 0, nextA = 0, nextB = 0, held = 0; const live = [];
+  return { step(dt) {
+    t += dt;
+    if (t > CYCLE) { t = 0; nextA = nextB = 0; }
+    const cut = t >= CUT0 && t < CUT1;
+    A.setAttribute("class", "road " + (cut ? "cut" : "flowing"));
+    if (cut) { lt.textContent = `signal lost · ${((t - CUT0) / 1000).toFixed(1)} s`; lt.setAttribute("class", "tag-t red"); rt.textContent = `held · ${held} waiting`; cap.textContent = "Your connection to the server stays open at the exit."; }
+    else if (t >= CUT1 && t < CUT1 + 1800) { lt.textContent = "back · nothing lost"; lt.setAttribute("class", "tag-t ok"); rt.textContent = "connected"; cap.textContent = "The network is back: the waiting packets go out at once."; }
+    else { lt.textContent = "connected"; lt.setAttribute("class", "tag-t"); rt.textContent = "connected"; cap.textContent = "Your match never leaves the exit."; }
+    // server -> exit: always flowing
+    if (t >= nextB) { nextB = t + 420; const p = packet(L, B, "", -.16); p.d = p.len; p.kind = "b"; live.push(p); }
+    // exit -> PC: flowing when connected; during the cut, packets wait at the exit
+    if (!cut && t >= nextA) { nextA = t + 420; const p = packet(L, A, "r", -.18); p.d = p.len; p.kind = "a"; live.push(p); }
+    if (t >= CUT1 && held > 0 && t < CUT1 + 900) { if (Math.random() < .5) { const p = packet(L, A, "r", -.3); p.d = p.len; p.kind = "a"; live.push(p); held--; } }
+    if (t >= CUT1 + 900) held = 0;
+    for (const p of live) {
+      if (p.dead || p.done) continue;
+      p.d += p.v * dt;
+      if (cut && p.kind === "a") { kill(p, null); continue; }  // in flight when the signal went: resent after
+      if (p.d <= 0) {
+        p.done = true; p.el.remove();
+        if (p.kind === "b" && cut) { held++; if (held % 3 === 1) ring(R); }
+        continue;
+      }
+      p.place();
+    }
+    for (let i = live.length - 1; i >= 0; i--) if (live[i].dead || live[i].done) live.splice(i, 1);
+  } };
+});
+
+// 04: phone backup. Wi-Fi is faster, until it stalls; then the phone's copies arrive first.
+run($("#phone"), svg => {
+  const A = $("#ph-a", svg), B = $("#ph-b", svg), L = $(".pkl", svg), wl = $("#ph-wl", svg);
+  const mw = $("#ph-mw"), mp = $("#ph-mp"), w = $("#ph-w"), pp = $("#ph-p");
+  let t = 0, next = 0, n = 0; const live = [], twins = new Map(), last = [];
+  const CYCLE = 9000, S0 = 3000, S1 = 6200;
+  const show = () => { const k = last.filter(x => x === 2).length, tot = last.length || 1; const p = Math.round(100 * k / tot); w.textContent = (100 - p) + "%"; pp.textContent = p + "%"; mw.style.width = (100 - p) + "%"; mp.style.width = p + "%"; };
+  return { step(dt) {
+    t += dt; if (t > CYCLE) t = 0;
+    const stall = t >= S0 && t < S1;
+    A.setAttribute("class", "road" + (stall ? " stall" : ""));
+    wl.textContent = stall ? "Wi-Fi · stalled" : "Wi-Fi"; wl.setAttribute("class", "tag-t" + (stall ? " y" : ""));
+    if (t >= next) {
+      next = t + 330; n++;
+      const a = packet(L, A, stall ? "y" : "", stall ? .045 : .24); a.twin = n; a.road = 1;
+      const b = packet(L, B, "r", .17); b.twin = n; b.road = 2;
+      twins.set(n, 0); live.push(a, b);
+    }
+    for (const p of live) {
+      if (p.dead || p.done) continue;
+      if (p.road === 1 && !stall && p.v < .1) p.v = .24;
+      p.d += p.v * dt; p.place();
+      if (p.d >= p.len) {
+        p.done = true; p.el.remove();
+        if (!twins.get(p.twin)) { twins.set(p.twin, p.road); last.push(p.road); if (last.length > 20) last.shift(); show(); }
+      }
+    }
+    for (let i = live.length - 1; i >= 0; i--) if (live[i].dead || live[i].done) live.splice(i, 1);
+    if (twins.size > 80) twins.delete(twins.keys().next().value);
+  } };
+});
+
+// 05: smart route. Probes measure three roads, the fastest wins, the game flows on it. A new measure each round.
+run($("#smart"), svg => {
+  const P = [0, 1, 2].map(i => $("#sm-" + i, svg)), T = [0, 1, 2].map(i => $("#sm-t" + i, svg)), L = $(".pkl", svg), cap = $("#sm-cap");
+  const NAMES = ["Rago exit A", "Direct", "Rago exit B"];
+  const CYCLE = 7000, PICK = 2600;
+  let t = CYCLE, speeds = [], best = 0, next = 0; const live = [];
+  return { step(dt) {
+    t += dt;
+    if (t > CYCLE) {
+      t = 0; next = 0;
+      // each round the roads change a little, as they do in real life
+      speeds = [rnd(.2, .34), rnd(.22, .3), rnd(.2, .34)];
+      best = speeds.indexOf(Math.max(...speeds.map((v, i) => v * (P[1].getTotalLength() / P[i].getTotalLength()))));
+      best = speeds.reduce((b, v, i, a) => (a[i] / P[i].getTotalLength() > a[b] / P[b].getTotalLength() ? i : b), 0);
+      P.forEach((p, i) => { p.setAttribute("class", "road"); T[i].setAttribute("class", "tag-t"); T[i].textContent = NAMES[i]; });
+      cap.textContent = "Measuring the roads…";
+    }
+    const picked = t >= PICK;
+    if (picked && !P[best].classList.contains("best")) {
+      P.forEach((p, i) => p.setAttribute("class", "road " + (i === best ? "best" : "dim")));
+      T.forEach((x, i) => x.setAttribute("class", "tag-t" + (i === best ? " red" : "")));
+      T[best].textContent = NAMES[best] + " · fastest";
+      cap.textContent = best === 1 ? "Your direct road is the fastest right now: Rago keeps it." : NAMES[best] + " is the fastest right now: your match goes this way.";
+    }
+    if (t >= next) {
+      if (!picked) { next = t + 700; P.forEach((p, i) => { const q = packet(L, p, "", speeds[i]); q.probe = true; live.push(q); }); }
+      else { next = t + 240; live.push(packet(L, P[best], "r", .3)); }
+    }
+    for (const p of live) {
+      if (p.done) continue;
+      p.d += p.v * dt; p.place();
+      if (p.d >= p.len) { p.done = true; p.el.remove(); }
+    }
+    for (let i = live.length - 1; i >= 0; i--) if (live[i].done) live.splice(i, 1);
+  } };
+});
+
+// Fair play: an encrypted stream that passes through untouched
+const row = $("#tube-row");
+if (row) {
+  const hex = () => Array.from({ length: 4 }, () => "0123456789abcdef"[Math.floor(Math.random() * 16)]).join("");
+  const half = Array.from({ length: 28 }, () => `<span>${hex()}</span>`).join("");
+  row.innerHTML = half + half;  // twice, so the loop is seamless
+}
+
+// The stat counts up when it comes into view
+const st = $("#st-a");
+if (st && !REDUCE && "IntersectionObserver" in window) {
+  const to = +st.dataset.to; st.textContent = "0";
+  const o = new IntersectionObserver(([e]) => { if (!e.isIntersecting) return; o.disconnect(); const t0 = performance.now(); const f = now => { const k = Math.min(1, (now - t0) / 1200); st.textContent = Math.round(to * (1 - Math.pow(1 - k, 3))); if (k < 1) requestAnimationFrame(f); }; requestAnimationFrame(f); }, { threshold: .5 });
+  o.observe(st);
+}
+})();
+</script>
+</body>
+</html>
