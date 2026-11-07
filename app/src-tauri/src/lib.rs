@@ -3,6 +3,8 @@ mod analysis;
 mod assets;
 mod background;
 mod backup;
+mod boost;
+mod bridge;
 mod catalog;
 mod flows;
 mod fps;
@@ -182,6 +184,11 @@ pub(crate) fn keep_undo(ledger: &Mutex<backup::Ledger>, bundle: Option<&catalog:
 
 #[tauri::command]
 fn run_tweaks(app: AppHandle, state: State<'_, AppState>, items: Vec<RunItem>) -> Result<String, String> {
+    start_tweaks(&app, &state, items)
+}
+
+/// Lance un lot de réglages (interface de l'app, ou Rago OS par le pont) avec les règles de l'offre.
+fn start_tweaks(app: &AppHandle, state: &AppState, items: Vec<RunItem>) -> Result<String, String> {
     if items.is_empty() {
         return Err("No tweak selected".into());
     }
@@ -209,7 +216,7 @@ fn run_tweaks(app: AppHandle, state: State<'_, AppState>, items: Vec<RunItem>) -
         return Err("premium_scripts_unavailable".into());
     }
     keep_undo(&state.ledger, bundle.as_deref());
-    state.runner.start(state.context(Some(app), bundle), items)
+    state.runner.start(state.context(Some(app.clone()), bundle), items)
 }
 
 /// Réglages appliqués, et ceux dont Windows a changé une valeur depuis.
@@ -343,6 +350,7 @@ async fn net_test(app: AppHandle, state: State<'_, AppState>, ids: Vec<String>) 
                 .collect();
             jobs.into_iter().filter_map(|j| j.join().ok()).collect()
         });
+        *LAST_NET_TEST.lock().unwrap_or_else(std::sync::PoisonError::into_inner) = Some((now_ms(), results.clone()));
         let device = license.device();
         netshare::send(device.fingerprint.machine_guid.as_deref().unwrap_or(&device.name), &version, &results);
         results
@@ -938,6 +946,119 @@ fn overlay_open_app(app: AppHandle, overlay: State<'_, Arc<overlay::Overlay>>, p
     }
 }
 
+
+// ---------- pont avec Rago OS (bridge.rs)
+
+/// Dernier test réseau (app ou Rago OS) : Rago OS l'affiche sans relancer 10 s de mesures.
+static LAST_NET_TEST: Mutex<Option<(u64, Vec<nettest::Measure>)>> = Mutex::new(None);
+
+/// Presets du catalogue, pour Spotlight et les suggestions de Rago OS (noms en français).
+fn bridge_presets() -> Vec<serde_json::Value> {
+    let catalog: serde_json::Value = serde_json::from_str(include_str!("../../src/data/catalog.json")).unwrap_or_default();
+    catalog["presets"]
+        .as_array()
+        .map(|list| {
+            list.iter()
+                .map(|p| {
+                    serde_json::json!({
+                        "id": p["id"],
+                        "name": p["name"]["fr"],
+                        "desc": p["desc"]["fr"],
+                        "match": p["match"],
+                        "tweaks": p["tweaks"].as_array().map_or(0, Vec::len),
+                    })
+                })
+                .collect()
+        })
+        .unwrap_or_default()
+}
+
+/// Ce que Rago OS peut demander. Rien de plus que ce que l'interface de l'app sait déjà faire, avec les mêmes règles
+/// (Premium, lot déjà en cours, remise de fin de licence).
+fn bridge_handler(app: AppHandle) -> bridge::Handler {
+    use serde_json::{json, Value};
+    Arc::new(move |req: Value| -> Result<Value, String> {
+        let state = app.try_state::<AppState>().ok_or("starting")?;
+        let arg = |k: &str| req.get(k).cloned().unwrap_or(Value::Null);
+        match req["cmd"].as_str().unwrap_or("") {
+            "hello" => Ok(json!({ "app": "Rago Optimizer", "version": app.package_info().version.to_string(), "bridge": 1 })),
+            "status" => {
+                let lic = state.license.status();
+                let (applied, game_mode) = {
+                    let l = state.ledger.lock().unwrap_or_else(std::sync::PoisonError::into_inner);
+                    let gm = l.tweaks.get("game_mode").is_some_and(|a| a.ok && a.variant.as_deref() != Some("off"));
+                    (l.tweaks.values().filter(|a| a.ok).count(), gm)
+                };
+                let boost = app.try_state::<Arc<boost::Boost>>().map(|b| b.state()).unwrap_or_default();
+                let playing = app.try_state::<Arc<session::Session>>().is_some_and(|s| s.state().playing);
+                let net = LAST_NET_TEST.lock().unwrap_or_else(std::sync::PoisonError::into_inner).clone();
+                Ok(json!({
+                    "version": app.package_info().version.to_string(),
+                    // offre seulement : ni e-mail ni clé ne passent par le pont
+                    "license": { "state": lic.state, "plan": lic.plan, "expiresAt": lic.expires_at },
+                    "applied": applied,
+                    "running": state.runner.is_running(),
+                    "gameMode": game_mode,
+                    "boost": boost,
+                    "playing": playing,
+                    "update": state.updates.ready().map(|r| r.version),
+                    "lastNetTest": net.map(|(at, m)| json!({ "at": at, "results": m })),
+                }))
+            }
+            "live" => {
+                let ov = app.try_state::<Arc<overlay::Overlay>>().ok_or("starting")?;
+                let info = ov.info();
+                Ok(json!({ "game": info.game, "live": ov.live(), "fpsAvailable": info.fps_available }))
+            }
+            "stats" => Ok(serde_json::to_value(state.stats.latest()).unwrap_or_default()),
+            "clean_ram" => {
+                let keep = state.library.install_dirs();
+                memory::clean(false, &keep).map(|c| serde_json::to_value(c).unwrap_or_default())
+            }
+            "net_test" => {
+                let ids: Vec<String> = arg("ids")
+                    .as_array()
+                    .map(|a| a.iter().filter_map(|v| v.as_str().map(String::from)).collect())
+                    .filter(|v: &Vec<String>| !v.is_empty())
+                    .unwrap_or_else(|| vec!["hypixel".into(), "paris".into(), "internet".into()]);
+                let ids: Vec<String> = ids.into_iter().filter(|id| nettest::TARGETS.iter().any(|(t, _, _)| t == id)).take(6).collect();
+                let results: Vec<nettest::Measure> = std::thread::scope(|s| {
+                    let jobs: Vec<_> = ids.iter().map(|id| s.spawn(move || nettest::measure(id, &|_| {}))).collect();
+                    jobs.into_iter().filter_map(|j| j.join().ok()).collect()
+                });
+                *LAST_NET_TEST.lock().unwrap_or_else(std::sync::PoisonError::into_inner) = Some((now_ms(), results.clone()));
+                Ok(serde_json::to_value(results).unwrap_or_default())
+            }
+            "games" => Ok(serde_json::to_value(state.library.list(false)).unwrap_or_default()),
+            "game_launch" => state.library.launch(arg("id").as_str().ok_or("id")?).map(|_| Value::Null),
+            "presets" => Ok(Value::Array(bridge_presets())),
+            "open" => {
+                background::show_main(&app);
+                if let Some(page) = arg("page").as_str() {
+                    let _ = app.emit_to("main", "app:goto", page.to_string());
+                }
+                Ok(Value::Null)
+            }
+            // Mode jeu Rago (réglage game_mode) : même moteur et mêmes règles que le bouton de l'app
+            "game_mode" => {
+                let on = arg("on").as_bool().ok_or("on")?;
+                let item = RunItem { id: "game_mode".into(), variant: Some(if on { "on" } else { "off" }.into()), params: None, undo: !on };
+                start_tweaks(&app, &state, vec![item]).map(Value::String)
+            }
+            // Mode jeu total : services non essentiels arrêtés le temps de la partie (boost.rs), réservé à Premium
+            "boost" => {
+                let b = app.try_state::<Arc<boost::Boost>>().ok_or("starting")?;
+                let on = arg("on").as_bool().ok_or("on")?;
+                if on && state.license.status().state != "active" {
+                    return Err("premium_required:boost".into());
+                }
+                Ok(serde_json::to_value(if on { b.on() } else { b.off() }).unwrap_or_default())
+            }
+            _ => Err("unknown_command".into()),
+        }
+    })
+}
+
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
     // une seule Rago Optimizer à la fois (instance.rs) : le verrou est gardé jusqu'à la fin du processus
@@ -998,12 +1119,17 @@ pub fn run() {
             let started_hidden = std::env::args_os().any(|a| a == background::BACKGROUND_ARG);
             let background = Arc::new(Background::load(&data_dir, started_hidden));
             let session = Arc::new(session::Session::new(&data_dir));
+            // Mode jeu total demandé par Rago OS : relance ce qu'une partie interrompue a laissé arrêté (boost.rs)
+            let boost = Arc::new(boost::Boost::new(&data_dir));
             // jeux lancés : la dernière partie de chacun est notée, l'interface suit ceux en cours, et l'app fait ce
             // qu'elle doit pendant la partie (session.rs)
             {
                 let (library, background, session, handle) = (Arc::clone(&library), Arc::clone(&background), Arc::clone(&session), app.handle().clone());
+                let boost = Arc::clone(&boost);
                 std::thread::spawn(move || {
                     library.list(false);
+                    // parties de suite sans jeu : le Mode jeu total se rend (Rago OS fermé ou planté en pleine partie)
+                    let mut idle_ticks = 0u32;
                     loop {
                         let procs = games::process_paths();
                         if let Some(running) = library.poll(&procs) {
@@ -1014,6 +1140,11 @@ pub fn run() {
                         let playing = library.playing() || !exes.is_empty();
                         if let Some(state) = session.tick(playing, &exes, &procs, &background.prefs()) {
                             let _ = handle.emit("games:session", state);
+                        }
+                        idle_ticks = if playing { 0 } else { idle_ticks + 1 };
+                        // ~20 s sans jeu : laisse le temps à un lanceur de passer la main au vrai exe
+                        if idle_ticks >= 5 && boost.is_active() {
+                            boost.off();
                         }
                         std::thread::sleep(std::time::Duration::from_secs(4));
                     }
@@ -1035,6 +1166,7 @@ pub fn run() {
             app.manage(background);
             app.manage(overlay);
             app.manage(session);
+            app.manage(boost);
             if !started_hidden {
                 background::show_main(app.handle());
             }
@@ -1076,6 +1208,8 @@ pub fn run() {
             });
             // fin de licence depuis le dernier lancement, ou remise coupée en cours de route : elle reprend ici
             reset_after_license(app.handle(), None);
+            // pont avec Rago OS (bridge.rs)
+            bridge::serve(bridge_handler(app.handle().clone()));
             Ok(())
         })
         .on_window_event(|window, event| {
