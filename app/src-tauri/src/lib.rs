@@ -27,6 +27,7 @@ mod reg;
 mod repair;
 mod report;
 mod reset;
+mod route;
 mod runner;
 mod seal;
 mod session;
@@ -357,6 +358,26 @@ async fn net_test(app: AppHandle, state: State<'_, AppState>, ids: Vec<String>) 
     })
     .await
     .map_err(|e| e.to_string())
+}
+
+// ---------- Rago Route (route.rs) : tunnel anti-lag, en test (exe staging seulement pour l'instant)
+
+/// Allume Rago Route : le jeu se connecte ensuite à localhost (Hypixel) ou localhost:25566 (Minemen).
+/// Erreurs : "port:25565" (port déjà pris, par exemple par un autre Rago Route ou un serveur local), "udp:…", "listen:…".
+#[tauri::command]
+async fn route_start() -> Result<route::Status, String> {
+    tauri::async_runtime::spawn_blocking(route::turn_on).await.map_err(|e| e.to_string())?
+}
+
+#[tauri::command]
+async fn route_stop() -> Result<(), String> {
+    tauri::async_runtime::spawn_blocking(route::turn_off).await.map_err(|e| e.to_string())
+}
+
+/// État en direct (recopié deux fois par seconde par le moteur).
+#[tauri::command]
+fn route_status() -> route::Status {
+    route::current()
 }
 
 // ---------- Network Optimizer (netopt.rs)
@@ -1326,6 +1347,9 @@ pub fn run() {
             account_subscription,
             plans_info,
             analysis_facts,
+            route_start,
+            route_stop,
+            route_status,
         ])
         .build(tauri::generate_context!())
         .expect("erreur au lancement de Rago Optimizer")
@@ -1333,6 +1357,7 @@ pub fn run() {
             // la session du journal réseau (ping des jeux) ne survit pas à l'app
             if let tauri::RunEvent::Exit = event {
                 flows::shutdown();
+                route::turn_off(); // ferme les sessions proprement (la sortie lâche la connexion au serveur)
             }
         });
 }

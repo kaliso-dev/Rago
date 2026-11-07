@@ -1,6 +1,6 @@
 import { useEffect } from "react";
 import { AnimatePresence, motion } from "motion/react";
-import { Activity, Gauge, SlidersHorizontal, type LucideIcon } from "lucide-react";
+import { Activity, Gauge, Route, SlidersHorizontal, type LucideIcon } from "lucide-react";
 import { catalog } from "../lib/catalog";
 import type { Key } from "../lib/i18n";
 import { useStore } from "../lib/store";
@@ -8,10 +8,11 @@ import { markSeen, useSeen } from "../lib/seen";
 import { ModulePage } from "./ModulePage";
 import { NetOpt } from "./NetOpt";
 import { NetTest } from "./NetTest";
+import { RouteTab } from "./RouteTab";
 
-/** Les trois onglets de Réseau : les réglages du module, le Packet Optimizer et le test réseau. Chacun garde sa page
- * (« network », « netopt », « nettest ») : la recherche et les liens y mènent directement. */
-export const NETWORK_TABS = ["network", "netopt", "nettest"] as const;
+/** Les onglets de Réseau : les réglages du module, le Packet Optimizer, le test réseau et Rago Route. Chacun garde sa page
+ * (« network », « netopt », « nettest », « route ») : la recherche et les liens y mènent directement. */
+export const NETWORK_TABS = ["network", "netopt", "nettest", "route"] as const;
 export type NetworkTab = (typeof NETWORK_TABS)[number];
 export const isNetworkTab = (p: string): p is NetworkTab => (NETWORK_TABS as readonly string[]).includes(p);
 
@@ -19,7 +20,11 @@ const TABS: { id: NetworkTab; label: Key; icon: LucideIcon }[] = [
   { id: "network", label: "hub.tab.tweaks", icon: SlidersHorizontal },
   { id: "netopt", label: "hub.tab.packet", icon: Activity },
   { id: "nettest", label: "hub.tab.test", icon: Gauge },
+  { id: "route", label: "hub.tab.route", icon: Route },
 ];
+// Rago Route : seulement dans l'exe de test tant qu'il n'a pas été essayé sur Windows et que les serveurs n'ont pas de jeton d'accès
+const ROUTE_ON = import.meta.env.VITE_RAGO_SERVER === "staging";
+const SHOWN = TABS.filter((x) => x.id !== "route" || ROUTE_ON);
 
 export function Network({ tab }: { tab: NetworkTab }) {
   const { t, goTo, selected, pendingUndo } = useStore();
@@ -40,7 +45,7 @@ export function Network({ tab }: { tab: NetworkTab }) {
 
       <div className="hub-bar">
         <div className="hub-tabs" role="tablist" aria-label={t("hub.title")}>
-          {TABS.map(({ id, label, icon: Icon }) => {
+          {SHOWN.map(({ id, label, icon: Icon }) => {
             const on = tab === id;
             return (
               <button key={id} type="button" role="tab" aria-selected={on} className={`hub-tab${on ? " on" : ""}`} onClick={() => goTo(id)}>
@@ -65,7 +70,7 @@ export function Network({ tab }: { tab: NetworkTab }) {
           exit={{ opacity: 0, y: -4 }}
           transition={{ duration: 0.18, ease: [0.16, 1, 0.3, 1] }}
         >
-          {tab === "network" ? <ModulePage id="network" embedded /> : tab === "netopt" ? <NetOpt /> : <NetTest />}
+          {tab === "network" ? <ModulePage id="network" embedded /> : tab === "netopt" ? <NetOpt /> : tab === "route" && ROUTE_ON ? <RouteTab /> : <NetTest />}
         </motion.div>
       </AnimatePresence>
     </div>

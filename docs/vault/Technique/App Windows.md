@@ -1,7 +1,7 @@
 ---
 type: technique
 tags: [technique, app]
-maj: 2026-11-01
+maj: 2026-11-07
 ---
 # App Windows (`app/`)
 
@@ -9,7 +9,7 @@ Voir [[Architecture]] et [[Historique des versions]].
 
 ## Navigation (barre latérale)
 - **Tableau de bord** ([[Tableau de bord]])
-- **Optimiser** : Réseau (onglets Optimisations, [[Packet Optimizer]], [[Test réseau]]) · Latence · Carte graphique · Windows · [[Page Outils]]
+- **Optimiser** : Réseau (onglets Optimisations, [[Packet Optimizer]], [[Test réseau]], et « Rago Route » seulement dans l'exe de test, sur la branche `claude/project-thread-iesde9` : voir [[Proxy]]) · Latence · Carte graphique · Windows · [[Page Outils]]
 - **En jeu** : Hitreg · Minecraft · [[RBW Mod]] · [[Mode jeu]] · Jeux ([[Bibliothèque de jeux]])
 - **Avancé** : Mode expert · Restaurer (historique, retour arrière)
 - En bas : carte « Plan gratuit » ([[Licence dans l'app]]), « Rejoindre le Discord », Paramètres ([[Paramètres de l'app]]), état administrateur.

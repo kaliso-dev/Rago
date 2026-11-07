@@ -10,6 +10,8 @@ Une ligne par événement marquant, la plus récente en haut. Voir [[Historique 
 ## Novembre 2026
 | Date | Événement | Liens |
 |---|---|---|
+| 07/11 | Rago Route dans l'app Windows : moteur Rust `route.rs` + onglet « Rago Route » dans Réseau (exe de test seulement), testé en labo ; commit local, pas poussé, jamais lancé sur Windows | [[Proxy]] |
+| 07/11 | Test de coupure du Wi-Fi (~30 s, 14 h 05) : la partie tient, la 4G prend tout, mais monte à 1,2–1,5 s ; cause À VÉRIFIER (test `ping -b en8` demandé) | [[Proxy]] |
 | 07/11 | Partie de 10 min avec Wi-Fi + Frankfurt + 4G de l'iPhone : `--telephone` marche sur le vrai Mac ; tunnel 107–125 ms contre 116–137 ms en direct ; 4G jamais utile (Wi-Fi parfait), ≈ 67 Mo/h reçus | [[Proxy]] |
 | 07/11 | Rago Route : option `--telephone` (Mac) qui prépare et vérifie seule le trajet 4G de l'iPhone, à la demande de Sofiene ; testée par simulation, pas encore sur son Mac | [[Proxy]] |
 | 07/11 | Essai d'1 min à 06 h 51 en câble seul (Wi-Fi coupé) : tunnel 108–109 ms contre 115 ms en direct, 0 perte ; trajet direct 11–14 ms comme à 06 h 27 ; le programme se fige encore jusqu'à 99 ms : les pics viennent du Mac, pas du Wi-Fi | [[Proxy]] |

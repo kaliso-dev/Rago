@@ -621,12 +621,18 @@ async def lancer_sortie(args):
 
 _COUPURE = None
 if os.environ.get("RAGO_TEST_LOCAL") == "1" and os.environ.get("RAGO_COUPURE_TEST"):  # tests seulement
-    _d, _l = map(float, os.environ["RAGO_COUPURE_TEST"].split(","))
-    _COUPURE = (time.monotonic() + _d, time.monotonic() + _d + _l)
+    # "début,durée" coupe tous les trajets ; "début,durée,0+1" seulement les trajets 1 et 2
+    _d, _l, *_t = os.environ["RAGO_COUPURE_TEST"].split(",")
+    _COUPURE = (time.monotonic() + float(_d), time.monotonic() + float(_d) + float(_l),
+                {int(x) for x in _t[0].split("+")} if _t else None)
 
 
-def coupe():
-    return _COUPURE is not None and _COUPURE[0] <= time.monotonic() < _COUPURE[1]
+def coupe(num=None):
+    if _COUPURE is None or not _COUPURE[0] <= time.monotonic() < _COUPURE[1]:
+        return False
+    return _COUPURE[2] is None or num is None or num in _COUPURE[2]
+
+
 
 
 class Trajet:
@@ -649,14 +655,14 @@ class Trajet:
     def envoyer(self, p):
         if self.transport is None:
             return
-        if (self.perte_test and random.random() < self.perte_test) or coupe():
+        if (self.perte_test and random.random() < self.perte_test) or coupe(self.num):
             return
         if self.passe_par_relais:
             p = paquet(T_FWD, bytes(16), FWD.pack(socket.inet_aton(self.sortie[0]), self.sortie[1]) + p)
         self.transport.sendto(p, self.destination)  # réseau coupé sur ce trajet : les autres prennent le relais
 
     def datagram_received(self, data, adresse):
-        if (self.perte_test and random.random() < self.perte_test) or coupe():
+        if (self.perte_test and random.random() < self.perte_test) or coupe(self.num):
             return
         self.octets += len(data)
         lu = lire_entete(data)

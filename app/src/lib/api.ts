@@ -115,6 +115,39 @@ export interface Launcher {
   running: boolean;
 }
 
+/** Trajet de Rago Route (route.rs) : direct vers la sortie de Paris, ou par un relais. */
+export interface RoutePath {
+  kind: "direct" | "relay";
+  /** ville du serveur par lequel passe le trajet (Paris pour le direct) */
+  via: string;
+  rttMs: number | null;
+  alive: boolean;
+  /** paquets du serveur de jeu qui ne sont pas arrivés par ce trajet (%) */
+  lossPct: number;
+  /** part des paquets arrivés par ce trajet avant les autres (%) */
+  firstPct: number;
+  mb: number;
+}
+/** État de Rago Route (route.rs). */
+export interface RouteStatus {
+  running: boolean;
+  error: string | null;
+  /** le jeu est connecté par Rago Route */
+  playing: boolean;
+  paths: RoutePath[];
+  /** paquets perdus par le meilleur trajet et rattrapés par un autre */
+  saved: number;
+  packets: number;
+  resendsHere: number;
+  resendsExit: number;
+  /** ping Minecraft mesuré par la sortie elle-même */
+  exitPingMs: number | null;
+  lagHereMs: number;
+  lagExitMs: number;
+  /** ports où le jeu se connecte : 25565 (localhost, Hypixel), 25566 (Minemen) */
+  ports: number[];
+}
+
 /** Mesure du test réseau (nettest.rs), en ms ; perte de 0 à 1. */
 export interface NetMeasure {
   id: string;
@@ -417,6 +450,10 @@ export interface Api {
   netTest(ids: string[]): Promise<NetMeasure[]>;
   onNetMeasure(cb: (m: NetMeasure) => void): Promise<UnlistenFn>;
   onNetSample(cb: (s: NetSample) => void): Promise<UnlistenFn>;
+  /** Rago Route (route.rs) : allume le tunnel vers la sortie de Paris ; erreur « port:25565 » si le port est pris. */
+  routeStart(): Promise<RouteStatus>;
+  routeStop(): Promise<void>;
+  routeStatus(): Promise<RouteStatus>;
   /** Jeux installés (launchers et ajoutés à la main) ; `refresh` : nouvelle recherche sur le PC. */
   gamesList(refresh: boolean): Promise<Game[]>;
   /** Image officielle du jeu (data: URL), null s'il n'y en a pas. */
@@ -536,6 +573,9 @@ const tauriApi: Api = {
   netTest: (ids) => invoke("net_test", { ids }),
   onNetMeasure: (cb) => listen<NetMeasure>("nettest:measure", (e) => cb(e.payload)),
   onNetSample: (cb) => listen<NetSample>("nettest:sample", (e) => cb(e.payload)),
+  routeStart: () => invoke("route_start"),
+  routeStop: () => invoke("route_stop"),
+  routeStatus: () => invoke("route_status"),
   gamesList: (refresh) => invoke("games_list", { refresh }),
   gameArt: (id) => invoke("game_art", { id }),
   gameLaunch: (id) => invoke("game_launch", { id }),
@@ -598,6 +638,34 @@ const on = <T,>(name: string, cb: (e: T) => void): Promise<UnlistenFn> => {
 };
 const emit = <T,>(name: string, detail: T) => bus.dispatchEvent(new CustomEvent(name, { detail }));
 const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
+
+// démo de Rago Route : allumé depuis `on`, une partie en cours après 3 s, valeurs proches des tests sur le Mac
+const mockRoute = { on: 0 };
+function mockRouteStatus(): RouteStatus {
+  const idle: RouteStatus = { running: false, error: null, playing: false, paths: [], saved: 0, packets: 0, resendsHere: 0, resendsExit: 0, exitPingMs: null, lagHereMs: 0, lagExitMs: 0, ports: [] };
+  if (!mockRoute.on) return idle;
+  const s = (Date.now() - mockRoute.on) / 1000;
+  const playing = s > 3;
+  const j = () => Math.random() * 4;
+  const packets = playing ? Math.round((s - 3) * 140) : 0;
+  return {
+    ...idle,
+    running: true,
+    playing,
+    ports: [25565, 25566],
+    paths: [
+      { kind: "direct", via: "Paris", rttMs: 17 + j(), alive: true, lossPct: playing ? 0.1 : 0, firstPct: playing ? 97 : 0, mb: packets * 0.0011 },
+      { kind: "relay", via: "Frankfurt", rttMs: 38 + j(), alive: true, lossPct: 0, firstPct: playing ? 3 : 0, mb: packets * 0.0011 },
+    ],
+    saved: Math.floor(packets / 2500),
+    packets,
+    resendsHere: Math.floor(packets / 900),
+    resendsExit: Math.floor(packets / 600),
+    exitPingMs: playing ? 93 : null,
+    lagHereMs: 4 + j(),
+    lagExitMs: 1 + j() / 2,
+  };
+}
 
 const MB = 1024 ** 2;
 const mockAreas: CleanArea[] = [
@@ -1046,6 +1114,16 @@ const mockApi: Api = {
   },
   onNetMeasure: (cb) => on("nettest:measure", cb),
   onNetSample: (cb) => on("nettest:sample", cb),
+  routeStart: async () => {
+    await sleep(500);
+    mockRoute.on = Date.now();
+    return mockRouteStatus();
+  },
+  routeStop: async () => {
+    await sleep(200);
+    mockRoute.on = 0;
+  },
+  routeStatus: async () => mockRouteStatus(),
   gamesList: async () => {
     await sleep(400);
     // ?playing : le dernier jeu joué est en cours (démo de la partie en cours)
