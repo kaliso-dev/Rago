@@ -10,6 +10,7 @@ Une ligne par événement marquant, la plus récente en haut. Voir [[Historique 
 ## Novembre 2026
 | Date | Événement | Liens |
 |---|---|---|
+| 07/11 | Partie avec la version du 07/11 : tunnel médiane 116 ms contre 119 ms en direct ; aucune perte, pics venant du premier tronçon (Wi-Fi ou Mac) ; ajout de « arrivé premier » et des Mo reçus par trajet pour tester la 4G | [[Proxy]] |
 | 07/11 | Rago Route, version du 07/11 : renvois inutiles supprimés, reprise en 10 à 20 ms après une coupure, retard du programme mesuré aussi sur la sortie ; testée en local | [[Proxy]] |
 | 07/11 | Partie normale par Rago Route (Wi-Fi) : au même moment, tunnel 111–115 ms contre 116–118 ms en direct ; pics dus en partie au programme Python qui se fige sur le Mac | [[Proxy]] |
 | 06/11 | Premier test réel de Rago Route depuis le Mac de Sofiene : 114,8 ms par le tunnel (sortie Paris) contre 120,1 ms en direct | [[Proxy]] |

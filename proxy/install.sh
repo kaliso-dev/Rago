@@ -838,6 +838,9 @@ class Trajet:
         self.rtt = None
         self.dernier_pong = 0.0
         self.recus = 0
+        self.premiers = 0                # paquets arrivés par ce trajet avant les autres (toute la partie)
+        self.premiers_fenetre = 0        # idem depuis le dernier affichage
+        self.octets = 0                  # octets reçus par ce trajet (data consommée, utile pour la 4G)
 
     def envoyer(self, p):
         if self.transport is None:
@@ -851,6 +854,7 @@ class Trajet:
     def datagram_received(self, data, adresse):
         if (self.perte_test and random.random() < self.perte_test) or coupe():
             return
+        self.octets += len(data)
         lu = lire_entete(data)
         if lu is not None:
             self.client.recu(self, *lu)
@@ -907,6 +911,8 @@ class SessionClient:
             nouveau = self.recepteur.recu(num, corps[DATA.size:])
             masque = self.chemins_par_num.get(num)
             if nouveau:
+                trajet.premiers += 1
+                trajet.premiers_fenetre += 1
                 self.chemins_par_num[num] = [1 << trajet.num, time.monotonic()]
             elif masque is not None:
                 masque[0] |= 1 << trajet.num
@@ -1068,12 +1074,14 @@ class Client:
 
     def afficher(self):
         morceaux = []
+        fenetre = sum(tr.premiers_fenetre for tr in self.trajets) or 1
         for tr in self.trajets:
             vivant = time.monotonic() - tr.dernier_pong < 2
             rtt = f"{tr.rtt:.0f} ms" if tr.rtt is not None and vivant else "coupé"
             manques = sum(s.manques[tr.num] for s in self.sessions.values())
             uniques = sum(s.uniques for s in self.sessions.values()) or 1
-            morceaux.append(f"{tr.nom} : {rtt}, pertes {100 * manques / uniques:.1f} %")
+            morceaux.append(f"{tr.nom} : {rtt}, pertes {100 * manques / uniques:.1f} %, arrivé premier {100 * tr.premiers_fenetre / fenetre:.0f} %, {tr.octets / 1e6:.1f} Mo reçus")
+            tr.premiers_fenetre = 0
         sauves = sum(s.sauves for s in self.sessions.values())
         renvois = sum(s.emetteur.renvois for s in self.sessions.values())
         renvois_sortie = sum(s.renvois_sortie for s in self.sessions.values())
@@ -1092,6 +1100,8 @@ class Client:
 
     def bilan(self, s):
         if s.uniques >= 100:
+            total = sum(tr.premiers for tr in self.trajets) or 1
+            log.info("arrivés en premier depuis le lancement : %s", ", ".join(f"{tr.nom} {100 * tr.premiers / total:.0f} %" for tr in self.trajets))
             e = s.emetteur
             log.info("partie terminée : %d paquets reçus, %d sauvés par un autre trajet, "
                      "renvois d'ici %d (%d après délai, %d rapides), de la sortie %d",
