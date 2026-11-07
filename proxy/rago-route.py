@@ -985,11 +985,16 @@ def preparer_telephone(ip_sortie):
         return "" if ip.startswith("169.254.") else ip
     tel = next((d for d in telephones if actif(d)), None)
     if not tel:
+        etat = ""
+        for d in telephones:  # pour le diagnostic : l'état de l'interface vu par le Mac
+            lignes = [l.strip() for l in _commande("ifconfig", d).splitlines() if l.strip().startswith(("status:", "inet "))]
+            etat += f"\n  ({d} : {', '.join(lignes) or 'interface absente'})"
         raise SystemExit(
-            "Téléphone : " + ("l'iPhone est vu par le Mac mais ne partage pas sa connexion." if telephones else "aucun iPhone branché en USB.") + "\n"
-            "  1. Sur l'iPhone : Réglages > Partage de connexion > active « Autoriser d'autres utilisateurs ».\n"
-            "  2. Branche l'iPhone au Mac avec le câble USB, déverrouille-le et accepte « Faire confiance à cet ordinateur ».\n"
-            "  3. Attends 10 secondes, puis relance la même commande.")
+            "Téléphone : " + ("l'iPhone est vu par le Mac mais n'a pas d'adresse : il ne partage pas encore sa connexion." if telephones else "aucun iPhone branché en USB.") + etat + "\n"
+            "  1. Sur l'iPhone : Réglages > Partage de connexion > active « Autoriser d'autres utilisateurs » (garde cet écran ouvert).\n"
+            "  2. Branche l'iPhone au Mac avec le câble USB et déverrouille-le. La question « Faire confiance à cet ordinateur ? » s'affiche sur l'iPhone, pas sur le Mac.\n"
+            "  3. Sur le Mac : Réglages Système > Réseau. « iPhone USB » doit être « Connecté ». S'il n'y est pas : menu « … » > Ajouter un service > iPhone USB.\n"
+            "  4. Attends 10 secondes, puis relance la même commande.")
     print(f"Téléphone : iPhone trouvé ({tel}, adresse {actif(tel)}).", flush=True)
     route = interface_de_route(_commande("route", "-n", "get", ip_sortie))
     if route and route != tel:
