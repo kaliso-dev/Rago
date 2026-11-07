@@ -9,6 +9,7 @@ Registre daté des décisions de Sofiene. **La plus récente prime.** Citations 
 
 ## App et versions
 | Date | Décision | Statut |
+| 07/11 | Rago Route : « Encore des tests sur le Mac » avant la version Windows dans l'app (carte de choix) : câble seul, puis 4G de l'iPhone en plus du Wi-Fi | DÉCIDÉ, en cours ([[Proxy]]) |
 | 07/11 | [[Rago OS]] prend la charte de l'app 1.2.1 (carte de choix) | DÉCIDÉ, fait ([[Charte graphique]]) |
 | 07/11 | Rago OS doit être l'extension de l'app : « essaie de vraiment connecter l'app et l'os », avec une interface « épuré et simplifié » | DÉCIDÉ, en cours ([[Rago OS]]) |
 | 07/11 | Thème Rago par défaut à l'installation de Rago OS, mais « tout personnalisable » (thème clair gardé) et d'autres thèmes Rago | DÉCIDÉ, fait ([[Rago OS]]) |
