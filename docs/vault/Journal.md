@@ -10,6 +10,7 @@ Une ligne par événement marquant, la plus récente en haut. Voir [[Historique 
 ## Novembre 2026
 | Date | Événement | Liens |
 |---|---|---|
+| 07/11 | Premier essai de Rago Route dans l'exe de test sur un PC Windows (soir) : marche ; direct 13 ms, Frankfurt 35 ms, 0 perte, retard du moteur 12 ms au pire | [[Proxy]] |
 | 07/11 | Rago Route dans l'app Windows : moteur Rust `route.rs` + onglet « Rago Route » dans Réseau (exe de test seulement), testé en labo ; poussé sur `staging` à la demande de Sofiene (exe de test refabriqué), jamais lancé sur un PC Windows | [[Proxy]] |
 | 07/11 | Test de coupure du Wi-Fi (~30 s, 14 h 05) : la partie tient, la 4G prend tout, mais monte à 1,2–1,5 s : mauvaise réception 4G chez la grand-mère de Sofiene (sa réponse) | [[Proxy]] |
 | 07/11 | Partie de 10 min avec Wi-Fi + Frankfurt + 4G de l'iPhone : `--telephone` marche sur le vrai Mac ; tunnel 107–125 ms contre 116–137 ms en direct ; 4G jamais utile (Wi-Fi parfait), ≈ 67 Mo/h reçus | [[Proxy]] |
