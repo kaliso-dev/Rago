@@ -10,6 +10,7 @@ Une ligne par événement marquant, la plus récente en haut. Voir [[Historique 
 ## Novembre 2026
 | Date | Événement | Liens |
 |---|---|---|
+| 07/11 | Essai de 2 min à 06 h 27 avec un câble RJ45 branché au Mac (interface réellement utilisée À VÉRIFIER, le Wi-Fi restait allumé) : au même moment, tunnel 105–110 ms contre 113–115 ms en direct ; 0 perte, trajet direct premier à 99 % ; pics restants = programme figé sur le Mac (jusqu'à 191 ms) | [[Proxy]] |
 | 07/11 | Site : page `route.html` « Rago Route » entièrement animée + section et liens sur l'accueil, faite à la demande de Sofiene ; pas encore poussée | [[Site]] |
 | 07/11 | [[Rago OS]] (dossier `nimbus` du Mac de Sofiene) passe à la charte Rago, reçoit 7 thèmes Rago et devient l'extension de l'app : pont local, FPS et ping dans l'île, Mode jeu total, page, widget et Spotlight Rago. Pont et Mode jeu total de l'app codés en local, pas encore sur GitHub | [[Rago OS]] |
 | 07/11 | Partie avec la version du 07/11 : tunnel médiane 116 ms contre 119 ms en direct ; aucune perte, pics venant du premier tronçon (Wi-Fi ou Mac) ; ajout de « arrivé premier » et des Mo reçus par trajet pour tester la 4G | [[Proxy]] |
