@@ -1,7 +1,7 @@
 ---
 type: pilotage
 tags: [pilotage, à-décider, à-vérifier]
-maj: 2026-11-04
+maj: 2026-11-07
 ---
 # Questions ouvertes
 
@@ -20,6 +20,7 @@ q30 à q42 (charte finale, tarifs en verre, PR #69, petites formes du site, 8 tw
 
 - q44 à q49 (04/11) : statut du vendeur (traitée : « Pas encore »), partage de l'argent, adresse des mentions légales, vendeur majeur et compte Stripe, sortie de la 1.2.2, offre débitée après l'essai. Voir [[Conformité juridique]].
 - q50 (04/11) : seuils de l'[[Analyse du PC]], À VÉRIFIER.
+- q52 et q53 (07/11) : Mode jeu total gratuit ou Premium ; garder ou non l'optimiseur d'installation de [[Rago OS]] quand l'app est là.
 
 ## À demander à Abel (Sofiene ne sait pas)
 - Le partenariat avec le créateur YouTube à 50 % est-il arrêté ? ([[Partenaires et créateurs]])
@@ -30,5 +31,6 @@ q30 à q42 (charte finale, tarifs en verre, PR #69, petites formes du site, 8 tw
 - Les 1.2.0 installées reçoivent-elles bien la 1.2.1 ? (`/api/v1/update/status`) ([[Mise à jour automatique]])
 - Railway prod a-t-il chargé les bases DB-IP (`/admin/reseau`) ? ([[Proxy]])
 - La clé de mise à jour Tauri est-elle sauvegardée hors du PC ? ([[Clés et secrets]])
+- [[Rago OS]] : la tâche « Rago Optimizer » se lance-t-elle sans droits administrateur depuis Rago OS ? Rien n'est encore testé sur Windows.
 - Remise du profil NVIDIA sur un vrai PC NVIDIA ([[Remise à zéro]]).
 - Identité du vendeur absente des conditions de vente ; TVA (RAG-20 annulée sans raison) : voir [[Conformité juridique]].
