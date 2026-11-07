@@ -19,7 +19,7 @@ paquet (handshake), comme le fait déjà relay.py.
 
 Modes :
   python3 rago-route.py sortie                       (sur un serveur Rago, port UDP 25600)
-  python3 rago-route.py client --sortie IP [--via IP] [--interface en5]
+  python3 rago-route.py client --sortie IP [--via IP] [--interface en5] [--telephone]
 
 Aucune dépendance : Python 3.8+ seulement.
 """
@@ -150,8 +150,8 @@ class Reecriture:
         return reecrire_handshake(premier, *self.cible) + reste
 
 
-async def ping_minecraft(hote, port, nom=None, delai=5.0):
-    """Ping Minecraft (protocole status ping/pong), en ms ; None si échec."""
+async def ping_minecraft(hote, port, nom=None, delai=5.0, interface=None):
+    """Ping Minecraft (protocole status ping/pong), en ms ; None si échec. interface : force la sortie par cette interface."""
     async def lire_vi(r):
         n = 0
         for i in range(5):
@@ -162,7 +162,20 @@ async def ping_minecraft(hote, port, nom=None, delai=5.0):
         raise ValueError
     writer = None
     try:
-        reader, writer = await asyncio.wait_for(asyncio.open_connection(hote, port), delai)
+        if interface:
+            loop = asyncio.get_running_loop()
+            infos = await loop.getaddrinfo(hote, port, family=socket.AF_INET, type=socket.SOCK_STREAM)
+            s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+            try:
+                lier_interface(s, interface)
+                s.setblocking(False)
+                await asyncio.wait_for(loop.sock_connect(s, infos[0][4]), delai)
+            except BaseException:
+                s.close()
+                raise
+            reader, writer = await asyncio.open_connection(sock=s)
+        else:
+            reader, writer = await asyncio.wait_for(asyncio.open_connection(hote, port), delai)
         sock = writer.get_extra_info("socket")
         if sock is not None:
             sock.setsockopt(socket.IPPROTO_TCP, socket.TCP_NODELAY, 1)
@@ -774,6 +787,7 @@ class Client:
         self.comparaison = None       # (par le tunnel, direct) en ms
         self.horloge = Horloge()      # retard du programme ici
         self.retard_sortie_max = 0.0  # pire retard du programme sur la sortie, depuis le dernier affichage (ms)
+        self.principale = None        # --telephone : interface du Wi-Fi ou du câble, imposée aux trajets non 4G
 
     def meilleur_trajet(self):
         vivants = [t for t in self.trajets if t.rtt is not None and time.monotonic() - t.dernier_pong < 2]
@@ -788,16 +802,21 @@ class Client:
             hote, port = CIBLES[0]
             local = 25565 + self.args.decalage
             tunnel, direct = await asyncio.gather(ping_minecraft("127.0.0.1", local, nom=hote),
-                                                  ping_minecraft(hote, port))
+                                                  ping_minecraft(hote, port, interface=self.principale))
             self.comparaison = (tunnel, direct)
 
     async def preparer(self):
         sortie = adresse(self.args.sortie)
-        specs = [("direct", sortie, None)]
+        tel = None
+        if self.args.telephone:
+            tel, self.principale = preparer_telephone(sortie[0])
+        specs = [("direct", sortie, self.principale)]
         for via in self.args.via or []:
-            specs.append(("par " + via, adresse(via), None))
+            specs.append(("par " + via, adresse(via), self.principale))
         for itf in self.args.interface or []:
             specs.append(("par " + itf, sortie, itf))
+        if tel:
+            specs.append((f"4G du téléphone ({tel})", sortie, tel))
         if self.args.sans_direct:
             specs = specs[1:]
         pertes = self.args.perte_test or []
@@ -911,6 +930,90 @@ def lier_interface(sock, nom):
         raise SystemExit("--interface n'est pas géré sur ce système")
 
 
+def _commande(*cmd, delai=15):
+    """Lance une commande du système et rend sa sortie (texte vide si elle échoue)."""
+    import subprocess
+    try:
+        r = subprocess.run(cmd, capture_output=True, text=True, timeout=delai)
+        return r.stdout if r.returncode == 0 else ""
+    except (OSError, subprocess.SubprocessError):
+        return ""
+
+
+def ports_reseau(texte):
+    """Lit `networksetup -listallhardwareports` : [(nom du port, interface), ...]."""
+    ports, nom = [], None
+    for ligne in texte.splitlines():
+        if ligne.startswith("Hardware Port:"):
+            nom = ligne.split(":", 1)[1].strip()
+        elif ligne.startswith("Device:") and nom:
+            ports.append((nom, ligne.split(":", 1)[1].strip()))
+            nom = None
+    return ports
+
+
+def interface_de_route(texte):
+    """Lit `route -n get IP` : l'interface par laquelle le Mac envoie vers cette adresse."""
+    for ligne in texte.splitlines():
+        ligne = ligne.strip()
+        if ligne.startswith("interface:"):
+            return ligne.split(":", 1)[1].strip()
+    return None
+
+
+def ping_moyen(texte):
+    """Lit la sortie de `ping` (Mac ou Linux) : temps moyen en ms, ou None."""
+    for ligne in texte.splitlines():
+        if "min/avg/max" in ligne and "=" in ligne:
+            try:
+                return float(ligne.split("=", 1)[1].strip().split("/")[1])
+            except (IndexError, ValueError):
+                return None
+    return None
+
+
+def preparer_telephone(ip_sortie):
+    """--telephone (Mac) : trouve l'iPhone branché en USB, vérifie qu'il partage sa 4G et qu'elle atteint la sortie,
+    et garde le Wi-Fi ou le câble pour les autres trajets, même si le Mac a pris l'iPhone comme connexion principale.
+    Rend (interface de l'iPhone, interface du Wi-Fi ou du câble)."""
+    if sys.platform != "darwin":
+        raise SystemExit("--telephone ne marche que sur Mac pour l'instant. Ailleurs, utilise --interface avec le nom de l'interface 4G.")
+    ports = ports_reseau(_commande("networksetup", "-listallhardwareports"))
+    telephones = [d for n, d in ports if "iphone" in n.lower() or "ipad" in n.lower()]
+    def actif(d):  # adresse IPv4 de l'interface, vide si elle n'est pas connectée (169.254 = pas de réseau)
+        ip = _commande("ipconfig", "getifaddr", d).strip()
+        return "" if ip.startswith("169.254.") else ip
+    tel = next((d for d in telephones if actif(d)), None)
+    if not tel:
+        raise SystemExit(
+            "Téléphone : " + ("l'iPhone est vu par le Mac mais ne partage pas sa connexion." if telephones else "aucun iPhone branché en USB.") + "\n"
+            "  1. Sur l'iPhone : Réglages > Partage de connexion > active « Autoriser d'autres utilisateurs ».\n"
+            "  2. Branche l'iPhone au Mac avec le câble USB, déverrouille-le et accepte « Faire confiance à cet ordinateur ».\n"
+            "  3. Attends 10 secondes, puis relance la même commande.")
+    print(f"Téléphone : iPhone trouvé ({tel}, adresse {actif(tel)}).", flush=True)
+    route = interface_de_route(_commande("route", "-n", "get", ip_sortie))
+    if route and route != tel:
+        principale = route
+    else:
+        # Le Mac envoie tout par l'iPhone : les autres trajets sont forcés sur le câble ou le Wi-Fi.
+        autres = [(n, d) for n, d in ports if d not in telephones and actif(d)]
+        autres.sort(key=lambda nd: "wi-fi" in nd[0].lower())  # le câble d'abord, puis le Wi-Fi
+        if not autres:
+            raise SystemExit("Téléphone : ni Wi-Fi ni câble connecté. Rago Route a besoin de ta connexion habituelle en plus de la 4G.")
+        principale = autres[0][1]
+        print("Téléphone : le Mac passait par l'iPhone ; les trajets habituels sont gardés sur ta connexion habituelle.", flush=True)
+    nom = next((n for n, d in ports if d == principale), principale)
+    print(f"Connexion habituelle : {nom}{'' if principale in nom else f' ({principale})'}.", flush=True)
+    print("Téléphone : je vérifie que la 4G atteint le serveur Rago…", flush=True)
+    ms = ping_moyen(_commande("ping", "-c", "4", "-t", "8", "-b", tel, ip_sortie, delai=12))
+    if ms is None:
+        print("Téléphone : pas de réponse au ping par la 4G (le réseau mobile bloque peut-être le ping). Je lance quand même : "
+              "regarde la ligne « 4G du téléphone » ci-dessous.", flush=True)
+    else:
+        print(f"Téléphone : la 4G atteint le serveur Rago en {ms:.0f} ms. Elle reçoit une copie de tout : regarde ses « Mo reçus ».", flush=True)
+    return tel, principale
+
+
 _ACTIVITE_MAC = None
 
 
@@ -972,6 +1075,7 @@ def principal():
     c.add_argument("--sortie", required=True, help="adresse du serveur de sortie (ville d'entrée Cloudflare)")
     c.add_argument("--via", action="append", help="ajoute un trajet qui passe par ce serveur Rago")
     c.add_argument("--interface", action="append", help="ajoute un trajet par cette interface (ex. en5 pour le partage 4G)")
+    c.add_argument("--telephone", action="store_true", help="Mac : ajoute la 4G de l'iPhone branché en USB comme trajet de secours (trouvée et vérifiée toute seule)")
     c.add_argument("--sans-direct", action="store_true", help="n'utilise pas le trajet direct")
     c.add_argument("--debit", type=float, default=30, help="débit max par trajet, en Mbit/s")
     c.add_argument("--perte-test", type=float, action="append", help="simule des pertes sur un trajet (0.2 = 20 %%), pour tester")

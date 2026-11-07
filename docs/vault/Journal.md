@@ -10,6 +10,7 @@ Une ligne par événement marquant, la plus récente en haut. Voir [[Historique 
 ## Novembre 2026
 | Date | Événement | Liens |
 |---|---|---|
+| 07/11 | Rago Route : option `--telephone` (Mac) qui prépare et vérifie seule le trajet 4G de l'iPhone, à la demande de Sofiene ; testée par simulation, pas encore sur son Mac | [[Proxy]] |
 | 07/11 | Essai d'1 min à 06 h 51 en câble seul (Wi-Fi coupé) : tunnel 108–109 ms contre 115 ms en direct, 0 perte ; trajet direct 11–14 ms comme à 06 h 27 ; le programme se fige encore jusqu'à 99 ms : les pics viennent du Mac, pas du Wi-Fi | [[Proxy]] |
 | 07/11 | Essai de 2 min à 06 h 27 avec un câble RJ45 branché au Mac (interface réellement utilisée À VÉRIFIER, le Wi-Fi restait allumé) : au même moment, tunnel 105–110 ms contre 113–115 ms en direct ; 0 perte, trajet direct premier à 99 % ; pics restants = programme figé sur le Mac (jusqu'à 191 ms) | [[Proxy]] |
 | 07/11 | Site : page `route.html` « Rago Route » entièrement animée + section et liens sur l'accueil, poussée sur `staging` (Sofiene : « tu peux push sur staging les modif du site ») | [[Site]] |
