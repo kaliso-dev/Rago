@@ -10,6 +10,7 @@ Une ligne par événement marquant, la plus récente en haut. Voir [[Historique 
 ## Novembre 2026
 | Date | Événement | Liens |
 |---|---|---|
+| 07/11 | [[Rago OS]] (dossier `nimbus` du Mac de Sofiene) passe à la charte Rago, reçoit 7 thèmes Rago et devient l'extension de l'app : pont local, FPS et ping dans l'île, Mode jeu total, page, widget et Spotlight Rago. Pont et Mode jeu total de l'app codés en local, pas encore sur GitHub | [[Rago OS]] |
 | 07/11 | Partie avec la version du 07/11 : tunnel médiane 116 ms contre 119 ms en direct ; aucune perte, pics venant du premier tronçon (Wi-Fi ou Mac) ; ajout de « arrivé premier » et des Mo reçus par trajet pour tester la 4G | [[Proxy]] |
 | 07/11 | Rago Route, version du 07/11 : renvois inutiles supprimés, reprise en 10 à 20 ms après une coupure, retard du programme mesuré aussi sur la sortie ; testée en local | [[Proxy]] |
 | 07/11 | Partie normale par Rago Route (Wi-Fi) : au même moment, tunnel 111–115 ms contre 116–118 ms en direct ; pics dus en partie au programme Python qui se fige sur le Mac | [[Proxy]] |
@@ -20,6 +21,8 @@ Une ligne par événement marquant, la plus récente en haut. Voir [[Historique 
 | 05/11 | Proxys Vultr Frankfurt et Mumbai installés et en marche ; Frankfurt → Hypixel 99,6 ms, Mumbai → Hypixel 239 ms | [[Proxy]] |
 | 05/11 | Proxy : OVHcloud écarté (pas de VPS en Europe), Vultr retenu ; relais Minecraft, ping et script d'installation écrits (`proxy/`) ; document refait pour OVHcloud | [[Proxy]] |
 | 04/11 | Proxy relancé par Sofiene ; analyse des tests réseau et recommandation d'achat chiffrée (Vultr) | [[Proxy]] |
+| 04/11 | Ajoutés à la 1.3.0 (PR #70) : Analyse du PC avec avant/après, fenêtre Premium avec les prix, résiliation dans l'app | [[Analyse du PC]], [[Abonnement dans l'app]] |
+| 04/11 | PR #70 passe en 1.3.0 : 73 réglages gratuits (30 actifs), connexion à l'app avec Google/Discord, essai de 3 jours, site et pages légales à jour, fusion prod → staging | [[Version 1.3.0]], [[Conformité juridique]] |
 | 04/11 | PR #72 (état des lieux Stripe) fusionnée sur « fusionne » | [[Ventes Stripe]] |
 | 04/11 | Stripe connecté à Claude : premier état des lieux des ventes (611,02 $, 33 abonnés, 5 Lifetime) ; prix Stripe conformes au vault | [[Ventes Stripe]] |
 | 01/11 | PR #68 (mises à jour du vault du 31/10 et du 01/11) fusionnée sur « fusionne » | [[Mettre à jour le vault]] |

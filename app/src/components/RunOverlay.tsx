@@ -5,11 +5,16 @@ import { api } from "../lib/api";
 import { formatNumber } from "../lib/i18n";
 import { totalTweaks } from "../lib/catalog";
 import { FREE, itemName, useStore } from "../lib/store";
+import { findings, saved } from "../lib/analysis";
 import { Pulse } from "./Logo";
 import { Button } from "./ui";
 
 export function RunOverlay() {
-  const { t, lang, run, setRun, premium, license, setUpsell } = useStore();
+  const { t, lang, run, setRun, premium, license, setUpsell, playing, goTo } = useStore();
+  // une analyse du PC existe : l'avant/après, et en gratuit ce que Premium règlerait encore parmi ce qu'elle a trouvé
+  const an = saved();
+  const anBase = an.after ?? an.before;
+  const premiumLeft = anBase ? findings(anBase).filter((f) => f.issue && f.fix.kind === "premium").length : 0;
   const consoleRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -78,17 +83,37 @@ export function RunOverlay() {
                     {restoreFailed && <div className="error-text run-restore-failed">{t(restoreKey, { n: skipped })}</div>}
                     {otherFailed > 0 && <div className="error-text">{t("run.failed", { n: otherFailed })}</div>}
                     {reboot && <div className="muted">{t("run.rebootNeeded")}</div>}
+                    {/* « Optimiser et jouer » : le jeu démarre à la fin du lot */}
+                    {playing && !cancelled && (
+                      <div className={playing.status === "failed" ? "error-text" : "run-play"}>
+                        {t(playing.status === "failed" ? "play.failed" : playing.status === "started" ? "play.started" : "play.starting", { game: playing.name })}
+                      </div>
+                    )}
+                    {!cancelled && (run.done?.ok ?? 0) > 0 && anBase && (
+                      <button
+                        type="button"
+                        className="run-upsell"
+                        onClick={() => {
+                          close();
+                          goTo("analysis");
+                        }}
+                      >
+                        <Check size={13} />
+                        <span>{t("pa.measureDiff")}</span>
+                        <ArrowRight size={13} />
+                      </button>
+                    )}
                     {license && !premium && !cancelled && (
                       <button
                         type="button"
                         className="run-upsell"
                         onClick={() => {
                           close();
-                          setUpsell("plan");
+                          setUpsell(premiumLeft > 0 ? "analysis" : "plan");
                         }}
                       >
                         <Sparkles size={13} />
-                        <span>{t("done.upsell", { n: totalTweaks - FREE.size })}</span>
+                        <span>{premiumLeft > 0 ? t("pa.premiumLeft", { n: premiumLeft }) : t("done.upsell", { n: totalTweaks - FREE.size })}</span>
                         <ArrowRight size={13} />
                       </button>
                     )}

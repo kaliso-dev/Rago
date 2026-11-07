@@ -17,6 +17,12 @@ function launchTime(value, prod) {
   return Number.isNaN(t) ? (prod ? Date.parse(DEFAULT_LAUNCH) : 0) : t;
 }
 
+/** A whole number from 1 up, or the default (DISCORD_VIP_INVITES=abc keeps 10). */
+const whole = (value, dflt) => {
+  const n = Number(String(value ?? '').trim());
+  return Number.isInteger(n) && n >= 1 ? n : dflt;
+};
+
 /** A percentage from 0 to 100, or the default when empty or not a number. */
 const percent = (value, dflt) => {
   const v = String(value ?? '').trim();
@@ -55,6 +61,9 @@ export function loadConfig(env = process.env) {
     stripeWebhookSecret: (env.STRIPE_WEBHOOK_SECRET || '').trim(),
     // Subscription prices (recurring). STRIPE_PRICE_ID = the old one-time price, no longer sold (Lifetime has its own below).
     stripePriceMonthly: (env.STRIPE_PRICE_MONTHLY || '').trim(),
+    // Free trial (Sofiene, 2026-11-04): days free before the first payment, card asked at checkout, charged at the end
+    // unless canceled. One per person (card or email). 0 = no trial anywhere.
+    trialDays: (() => { const n = Number(String(env.TRIAL_DAYS ?? '3').trim() || '3'); return Number.isInteger(n) && n >= 0 && n <= 30 ? n : 3; })(),
     stripePriceYearly: (env.STRIPE_PRICE_YEARLY || '').trim(),
     stripePriceId: (env.STRIPE_PRICE_ID || '').trim(),
     // Lifetime (2026-10-16): its own one-time price, Premium for life in one payment. Never one of the prices above.
@@ -142,6 +151,17 @@ export function loadConfig(env = process.env) {
     discordMvpRoleId: (env.DISCORD_MVP_ROLE_ID || '').trim(),
     // "2 boosts" reward: a role staff (or a boost bot) give; one boost is seen by the bot itself.
     discordBoost2RoleId: (env.DISCORD_BOOST2_ROLE_ID || '').trim(),
+    // Community bot (2026-10-12, community.js): the same bot listens to the server live, counts invites itself (a
+    // friend counts after 7 days), welcomes new members in a channel, and adds /invites, /top-invites, /partner-link,
+    // /growth. Off until DISCORD_COMMUNITY=1: it needs « Server Members Intent » and « Manage Server » first.
+    discordCommunity: /^(1|true|yes)$/i.test((env.DISCORD_COMMUNITY || '').trim()),
+    discordWelcomeChannelId: (env.DISCORD_WELCOME_CHANNEL_ID || '').trim(),
+    // \n in the Railway variable for a line break.
+    discordWelcomeText: (env.DISCORD_WELCOME_TEXT || '').replace(/\\n/g, '\n').trim(),
+    // VIP and MVP given by the Rago bot from its own count, instead of the invite bot. Turn the other bot's off first.
+    discordInviteRoles: /^(1|true|yes)$/i.test((env.DISCORD_INVITE_ROLES || '').trim()),
+    discordVipInvites: whole(env.DISCORD_VIP_INVITES, 10),
+    discordMvpInvites: whole(env.DISCORD_MVP_INVITES, 15),
 
     // Sign in with Google (2026-10-25): an OAuth client of type "Web application" in Google Cloud, with the
     // redirect URL <PUBLIC_URL>/auth/google/callback. Without both, the Google button doesn't show.
@@ -220,7 +240,19 @@ export function loadConfig(env = process.env) {
       cfg[key] = '';
     }
   }
-  if (cfg.staging && cfg.discord) cfg.warnings.push(`Test server with the Discord bot on: it gives and removes roles on the Discord server ${cfg.discordGuildId}. Use a test Discord server, or remove the DISCORD_ variables from this environment.`);
+  if (cfg.discordWelcomeChannelId && !/^\d{17,20}$/.test(cfg.discordWelcomeChannelId)) {
+    cfg.warnings.push('DISCORD_WELCOME_CHANNEL_ID is not a Discord id (17 to 20 digits): no welcome message.');
+    cfg.discordWelcomeChannelId = '';
+  }
+  if (cfg.discordCommunity && !cfg.discord) {
+    cfg.warnings.push('DISCORD_COMMUNITY=1 but the Discord bot is not configured (the five DISCORD_ variables): the community bot stays off.');
+    cfg.discordCommunity = false;
+  }
+  if (cfg.discordInviteRoles && !cfg.discordCommunity) {
+    cfg.warnings.push('DISCORD_INVITE_ROLES=1 needs DISCORD_COMMUNITY=1: VIP and MVP stay with the invite bot.');
+    cfg.discordInviteRoles = false;
+  }
+  if (cfg.staging && cfg.discord) cfg.warnings.push(`Test server with the Discord bot on: it gives and removes roles${cfg.discordCommunity ? ', posts welcome messages and adds slash commands' : ''} on the Discord server ${cfg.discordGuildId}. Use a test Discord server, or remove the DISCORD_ variables from this environment.`);
   if (cfg.staging && cfg.signingKeyPem) cfg.warnings.push('Test server with LICENSE_SIGNING_KEY set: if it is the live key, licenses from this test server unlock the real app. Remove it from this environment: the test server then makes its own key.');
 
   // Emails really go out: pages may promise one.

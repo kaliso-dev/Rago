@@ -13,6 +13,8 @@ export default defineConfig({
   define: { __APP_VERSION__: JSON.stringify(pkg.version) },
   build: {
     target: "es2022",
+    // deux pages : l'app, et la barre en jeu (fenêtre « overlay », RAG-82)
+    rollupOptions: { input: { main: "index.html", overlay: "overlay.html" } },
     sourcemap: false,
     chunkSizeWarningLimit: 900,
   },

@@ -7,12 +7,12 @@ import { createReadStream } from 'node:fs';
 import { Readable } from 'node:stream';
 import { fileURLToPath } from 'node:url';
 import { relative } from 'node:path';
-import { createHash, createHmac, timingSafeEqual } from 'node:crypto';
+import { createHash, createHmac, randomBytes, timingSafeEqual } from 'node:crypto';
 
 import { DUMMY_HASH, maskLicenseKey, randomToken, signValue, unsignValue, verifyPassword } from './crypto.js';
 import { DeviceError, parseDevice, sameDevice } from './fingerprint.js';
 import { signToken, verifyToken } from './tokens.js';
-import { billingPortal, createCheckout, endTestLicenses, ensureAffiliatePromo, findPromotionCode, handleStripeEvent, isRagoCheckout, lifetimePrice, stopReplacedSubscriptions, stripeChecks, stripeMode, syncPromoActive } from './billing.js';
+import { billingPortal, createCheckout, settleTrial, withTrial, endTestLicenses, ensureAffiliatePromo, findPromotionCode, handleStripeEvent, isRagoCheckout, lifetimePrice, stopReplacedSubscriptions, stripeChecks, stripeMode, syncPromoActive } from './billing.js';
 import * as A from './affiliates.js';
 import { createInstaller } from './installer.js';
 import { createGeo } from './geo.js';
@@ -39,6 +39,10 @@ const API_ERRORS = {
   revoked: [403, 'This license is no longer active. Contact support on Discord if you think that\'s a mistake.'],
   subscription_ended: [403, 'Your Rago Optimizer Premium subscription ended. Renew it on the website, then sign in again.'],
   rate_limited: [429, 'Too many attempts. Wait a few minutes and try again.'],
+  // Sign-in to the app through the browser, with Google or Discord (2026-11-04)
+  no_subscription: [404, 'There is no subscription to change on this account.'],
+  billing_unavailable: [503, "Payments can't be reached right now. Try again in a minute, or cancel from your account page."],
+  link_expired: [410, 'This sign-in took too long. Start again from Rago Optimizer.'],
   // Reviews and profile (2026-10-09)
   name_required: [400, 'Add the public name shown with your review.'],
   invalid_name: [400, "Use 2 to 32 letters, numbers, spaces and _ . ' - for your public name. No email or link."],
@@ -49,6 +53,10 @@ const API_ERRORS = {
   image_too_large: [413, 'This picture is over 5 MB. Choose a smaller one.'],
   storage_unavailable: [503, "Your photo couldn't be saved right now. Try again in a moment."],
 };
+
+// Sign-in from the app through the browser: 10 minutes, and a code without 0/O or 1/I to compare by eye.
+const LINK_TTL = 10 * 60 * 1000;
+const LINK_ALPHABET = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
 
 function rateLimiter() {
   const hits = new Map();
@@ -68,19 +76,24 @@ function rateLimiter() {
 }
 
 /**
- * @param deps { cfg, db, keys, stripe, mailer, log, discord, oauth, geo } (discord: the Pro role bot, null when not configured;
- *   oauth: the Google and Discord sign-in providers that have their keys; geo: where network tests come from, geo.js)
+ * @param deps { cfg, db, keys, stripe, mailer, log, discord, community, oauth, geo } (discord: the Pro role bot, null when not
+ *   configured; community: the community bot of community.js, for /admin; oauth: the Google and Discord sign-in providers
+ *   that have their keys; geo: where network tests come from, geo.js)
  */
-export function createApp({ cfg, db, keys, stripe, mailer, log = console, fetchImpl = fetch, avatars = P.createAvatarStore(cfg, { fetchImpl, log }), discord = createDiscord(cfg, { db, fetchImpl, log, stripe }), oauth = createOAuth(cfg, { fetchImpl }), geo = createGeo(cfg, { fetchImpl, log }) }) {
+export function createApp({ cfg, db, keys, stripe, mailer, log = console, fetchImpl = fetch, avatars = P.createAvatarStore(cfg, { fetchImpl, log }), discord = createDiscord(cfg, { db, fetchImpl, log, stripe }), community = null, oauth = createOAuth(cfg, { fetchImpl }), geo = createGeo(cfg, { fetchImpl, log }) }) {
   const app = new Hono();
   // The Discord role pass started by a webhook runs after the reply to Stripe; tests wait for it here.
   app.idle = () => discord?.idle() ?? Promise.resolve();
   const installer = createInstaller(cfg, { fetchImpl, log });
   const allow = rateLimiter();
+  // App sign-ins waiting in the browser (/app/link/<id>, 2026-11-04): id -> { pollHash, code, userId, expiresAt }
+  const appLinks = new Map();
   let reviewsCache = null; // { at, bodies }: the site asks for the reviews on every visit (home page, reviews page)
   let popupCache = null; // { at, body }: same for the discount pop-up (one Stripe call per refresh)
   let lifetimeCache = null; // { at, offer }: the Lifetime price as Stripe has it (the site's card, /buy/lifetime)
   let lifetimeRead = null; // the Stripe call reading it, while one runs
+  let pricesPending = null;
+  let pricesCache = null; // { at, prices }: the monthly and yearly prices as Stripe has them (the app's Premium window)
   const publicDir = relative(process.cwd(), fileURLToPath(new URL('../public', import.meta.url))) || '.';
   const cookieBase = { httpOnly: true, secure: cfg.prod, sameSite: 'Lax', path: '/' };
 
@@ -255,6 +268,34 @@ export function createApp({ cfg, db, keys, stripe, mailer, log = console, fetchI
     return lifetimeRead;
   }
 
+  /**
+   * The subscription prices ({ month, year }: { amount, currency } each, or null) as Stripe has them, for the app's
+   * Premium window (1.3.0). Read at most every 10 minutes; while Stripe doesn't answer, the last answer stands.
+   */
+  async function subscriptionPrices() {
+    if (!stripe || !cfg.subscriptions) return { month: null, year: null };
+    if (pricesCache && Date.now() - pricesCache.at < 10 * 60 * 1000) return pricesCache.prices;
+    const read = async (id) => {
+      if (!id) return null;
+      const p = await stripe.prices.retrieve(id, {}, { timeout: 5000, maxNetworkRetries: 0 });
+      return p.active && p.recurring ? { amount: p.unit_amount, currency: p.currency } : null;
+    };
+    // une seule lecture à la fois : les visiteurs du même instant attendent la même réponse
+    pricesPending ??= (async () => {
+      try {
+        const [month, year] = await Promise.all([read(cfg.stripePriceMonthly), read(cfg.stripePriceYearly)]);
+        pricesCache = { at: Date.now(), prices: { month, year } };
+      } catch (err) {
+        log.error('[stripe] subscription prices not read:', err.message);
+        pricesCache = { at: Date.now(), prices: pricesCache?.prices ?? { month: null, year: null } };
+      } finally {
+        pricesPending = null;
+      }
+    })();
+    await pricesPending;
+    return pricesCache.prices;
+  }
+
   /** Records the referral code typed right after a purchase, once the license is on the account. */
   async function settleReferral(user, affiliate) {
     if (!affiliate) return null;
@@ -325,7 +366,9 @@ export function createApp({ cfg, db, keys, stripe, mailer, log = console, fetchI
   }
   // Where to go after signing in. Only our own pages.
   const NEXT = new Set(['/affiliate', '/account/review']);
-  const nextPath = (v) => (NEXT.has(String(v || '')) ? String(v) : null);
+  // and the page that signs the Windows app in (/app/link/<id>, 2026-11-04)
+  const APP_LINK_PATH = /^\/app\/link\/[A-Za-z0-9_-]{16,64}$/;
+  const nextPath = (v) => (NEXT.has(String(v || '')) || APP_LINK_PATH.test(String(v || '')) ? String(v) : null);
 
   const settleAffiliate = async (userId) => {
     const out = await A.settleAffiliate(db, cfg, stripe, log, userId);
@@ -414,7 +457,12 @@ export function createApp({ cfg, db, keys, stripe, mailer, log = console, fetchI
     }
     const interval = c.req.query('interval') === 'year' ? 'year' : c.req.query('interval') === 'month' ? 'month' : undefined;
     const trialEnd = reward ? Math.floor(Number(reward.current_period_end) / 1000) : null;
-    const session = await createCheckout(stripe, cfg, user, { interval, customerId: previous?.stripe_customer_id, ref, promotionCode, trialEnd }, log);
+    // Free trial (?trial=1, 2026-11-04): for a first Premium only. A signed-in account that already had a license or a
+    // trial pays from the start; one that isn't signed in is checked by card and email once the checkout is done.
+    const hadPremium = user && (await db.get('SELECT 1 FROM licenses WHERE user_id = ? LIMIT 1', [user.id])
+      || await db.get('SELECT 1 FROM trials WHERE email = ? LIMIT 1', [user.email]));
+    const trial = c.req.query('trial') === '1' && !reward && !hadPremium;
+    const session = await createCheckout(stripe, cfg, user, { interval, customerId: previous?.stripe_customer_id, ref, promotionCode, trialEnd, trial }, log);
     return c.redirect(session.url, 303);
   }
 
@@ -437,7 +485,9 @@ export function createApp({ cfg, db, keys, stripe, mailer, log = console, fetchI
           : 'Your bank is still confirming the payment. Refresh this page in a few minutes to create your account, or ask on Discord with your receipt.',
         action: { href: c.req.url, label: 'Refresh' } }));
     }
-    if (out.created) await sendClaimEmail(out.license, out.claimToken);
+    // Free trial: one per person, settled here too when the webhook hasn't come yet (the email says when the first payment comes)
+    const trial = await settleTrial(db, stripe, session, session.subscription, out.license, log);
+    if (out.created) await sendClaimEmail(withTrial(out.license, session, session.subscription, trial), out.claimToken);
 
     const user = await currentUser(c);
     if (out.license.user_id) {
@@ -640,7 +690,9 @@ export function createApp({ cfg, db, keys, stripe, mailer, log = console, fetchI
   app.post('/logout', async (c) => {
     await L.deleteWebSession(db, getCookie(c, 'rg_session'));
     deleteCookie(c, 'rg_session', { path: '/' });
-    return c.redirect('/login?n=out', 303);
+    // "Use another account" on the app sign-in page: back to it once signed in again
+    const next = nextPath((await c.req.parseBody()).next);
+    return c.redirect(`/login?n=out${next ? `&next=${encodeURIComponent(next)}` : ''}`, 303);
   });
 
   app.get('/forgot', (c) => c.html(V.forgotPage(cfg)));
@@ -735,6 +787,31 @@ export function createApp({ cfg, db, keys, stripe, mailer, log = console, fetchI
     return c.redirect(dashWith(n), 303);
   });
 
+  // ---------- the page the app opens to sign in (2026-11-04) ----------
+  const linkOf = (c) => {
+    const link = appLinks.get(c.req.param('id'));
+    return link && link.expiresAt > Date.now() && !link.done ? link : null;
+  };
+  const expiredLink = (c) => c.html(V.messagePage(cfg, { overline: 'Rago Optimizer for Windows', title: 'This sign-in expired.', text: 'Sign-in links from the app work for 10 minutes. Click “Continue with Google” or “Continue with Discord” in Rago Optimizer again.' }), 410);
+  app.get('/app/link/:id', async (c) => {
+    const link = linkOf(c);
+    if (!link) return expiredLink(c);
+    const path = `/app/link/${c.req.param('id')}`;
+    const user = await currentUser(c);
+    if (!user) {
+      const p = c.req.query('p');
+      return c.redirect(Object.hasOwn(oauth, p) ? `/auth/${p}?next=${encodeURIComponent(path)}` : `/login?next=${encodeURIComponent(path)}`, 303);
+    }
+    return c.html(V.appLinkPage(cfg, { user, code: link.code, action: path }));
+  });
+  app.post('/app/link/:id', requireUser, async (c) => {
+    const link = linkOf(c);
+    if (!link) return expiredLink(c);
+    link.userId = c.get('user').id;
+    link.done = true;
+    return c.html(V.messagePage(cfg, { user: c.get('user'), overline: 'Rago Optimizer for Windows', title: 'You’re signed in.', text: 'Go back to Rago Optimizer: it finishes signing in on its own. You can close this tab.' }));
+  });
+
   // ---------- dashboard ----------
   const NOTICES = {
     claimed: ['notice', 'License added to your account. Download Rago Optimizer below.'],
@@ -775,6 +852,9 @@ export function createApp({ cfg, db, keys, stripe, mailer, log = console, fetchI
     const [kind, text] = NOTICES[c.req.query('n')] || [];
     return c.html(V.dashboardPage(cfg, {
       user, license, device, discordLink, discordRewards, inviteRewards: discord?.rewards || [], noPassword: !L.hasPassword(user),
+      // free trial running (2026-11-04): until its end, the period end is the first payment
+      trial: !!(license?.stripe_subscription_id && Number(license.current_period_end) > Date.now()
+        && await db.get('SELECT 1 FROM trials WHERE subscription_id = ? AND NOT charged_now AND started_at > ?', [license.stripe_subscription_id, Date.now() - Math.max(cfg.trialDays, 1) * 86400 * 1000 - 3600 * 1000])),
       notice: kind === 'notice' ? text : null, error: kind === 'error' ? text : null,
       ...(license ? resetWindow(license, device) : {}),
       affiliate: await A.affiliateSummary(db, cfg, user.id),
@@ -1072,7 +1152,8 @@ export function createApp({ cfg, db, keys, stripe, mailer, log = console, fetchI
   const adminPage = async (c, extra = {}, status = 200) => {
     const [state, stripeState, discordState] = await Promise.all([Promo.popupState(db, stripe, cfg), stripeChecks(stripe, cfg, { db, webhook: hookSeen }),
       discord ? discord.checks() : { missing: discordSetupMissing(cfg) }]);
-    return c.html(V.adminPage(cfg, { state, stripe: stripeState, discord: discordState, ...extra }), status);
+    const communityState = community ? { checks: community.checks(), inviteUrl: discord?.inviteUrl } : null;
+    return c.html(V.adminPage(cfg, { state, stripe: stripeState, discord: discordState, community: communityState, ...extra }), status);
   };
 
   app.get('/admin', async (c) => {
@@ -1245,6 +1326,11 @@ export function createApp({ cfg, db, keys, stripe, mailer, log = console, fetchI
     const ok = await verifyPassword(body.password, user ? user.password_hash : DUMMY_HASH);
     loginResult(c, email, user && ok);
     if (!user || !ok) return fail(c, 'invalid_credentials');
+    return appSignIn(c, user, device);
+  });
+
+  /** The player is known (password, or Google/Discord through the browser): their license on this PC. */
+  async function appSignIn(c, user, device) {
     await A.rememberDevice(db, user.id, device);
     await settleAffiliate(user.id);
     const license = await L.current(db, await L.licenseForUser(db, user.id));
@@ -1262,6 +1348,39 @@ export function createApp({ cfg, db, keys, stripe, mailer, log = console, fetchI
     const iat = now();
     const access = signToken({ typ: 'access', sub: user.id, lic: license.id, iat, exp: iat + 900 }, keys);
     return c.json({ status: 'activation_required', access_token: access, expires_in: 900, account: { email: user.email }, license: licenseInfo(license, null) });
+  }
+
+  // ---------- Sign in to the app with Google or Discord (2026-11-04) ----------
+  // The app asks for a link, opens /app/link/<id> in the browser and asks every 2 s whether it was confirmed. On the
+  // site, the player signs in (Google, Discord or email) and confirms, after checking that the app shows the same
+  // 4-character code: a link sent by someone else can't sign their app in to this account. Links live 10 minutes,
+  // in memory (one server); a restart only means starting again from the app.
+  const startLink = (c) => {
+    if (!allow(`applink:${ip(c)}`, 30, 60 * 60 * 1000)) return null;
+    const t = Date.now();
+    for (const [k, v] of appLinks) if (v.expiresAt < t) appLinks.delete(k);
+    const id = randomToken(18);
+    const poll = randomToken(32);
+    const code = Array.from(randomBytes(4), (b) => LINK_ALPHABET[b % LINK_ALPHABET.length]).join('');
+    appLinks.set(id, { pollHash: createHash('sha256').update(poll).digest('hex'), code, userId: null, expiresAt: t + LINK_TTL });
+    return { link_id: id, poll_token: poll, code, url: `${cfg.publicUrl}/app/link/${id}`, interval: 2, expires_in: LINK_TTL / 1000 };
+  };
+  api.post('/auth/app-link/start', (c) => {
+    const out = startLink(c);
+    return out ? c.json(out) : fail(c, 'rate_limited');
+  });
+  api.post('/auth/app-link/poll', async (c) => {
+    const body = await readJson(c);
+    if (!body || typeof body.link_id !== 'string' || typeof body.poll_token !== 'string') return fail(c, 'invalid_request');
+    let device;
+    try { device = parseDevice(body.device); } catch (e) { return fail(c, 'invalid_request', { detail: e instanceof DeviceError ? e.message : undefined }); }
+    const link = appLinks.get(body.link_id);
+    if (!link || link.expiresAt < Date.now() || !sameHash(link.pollHash, createHash('sha256').update(body.poll_token).digest('hex'))) return fail(c, 'link_expired');
+    if (!link.userId) return c.json({ status: 'pending' });
+    appLinks.delete(body.link_id);
+    const user = await L.getUser(db, link.userId);
+    if (!user) return fail(c, 'link_expired');
+    return appSignIn(c, user, device);
   });
 
   api.post('/licenses/activate', async (c) => {
@@ -1350,6 +1469,58 @@ export function createApp({ cfg, db, keys, stripe, mailer, log = console, fetchI
   });
 
   api.get('/account/me', async (c) => c.json(await accountReply(c.get('user'))));
+
+  // ---------- App API: the subscription, seen and canceled from the app (1.3.0) ----------
+  // The app's Settings show the plan, its next payment or end date, and cancel in one screen (no discount offered, no
+  // second screen). Canceling stops the renewal: Premium stays until the end of the paid period or of the free trial,
+  // and nothing more is charged. Resume undoes it before that date.
+  const subscriptionOf = async (user) => {
+    const lic = await L.licenseForUser(db, user.id);
+    return lic && lic.status === 'active' && (lic.plan === 'month' || lic.plan === 'year') && lic.stripe_subscription_id ? lic : null;
+  };
+  const subscriptionReply = async (lic) => {
+    const end = lic.current_period_end ? new Date(Number(lic.current_period_end)).toISOString() : null;
+    const trial = await db.get('SELECT 1 FROM trials WHERE subscription_id = ? AND NOT charged_now', [lic.stripe_subscription_id]);
+    const prices = await subscriptionPrices();
+    return {
+      subscription: {
+        interval: lic.plan,
+        trial: !!trial && !!lic.current_period_end && Number(lic.current_period_end) - Date.now() < (cfg.trialDays + 1) * 86400 * 1000,
+        canceled: !!lic.cancel_at_period_end,
+        renews_at: lic.cancel_at_period_end ? null : end,
+        ends_at: lic.cancel_at_period_end ? end : null,
+        price: prices[lic.plan] ?? null,
+      },
+    };
+  };
+  api.get('/account/subscription', async (c) => {
+    const lic = await subscriptionOf(c.get('user'));
+    return c.json(lic ? await subscriptionReply(lic) : { subscription: null });
+  });
+  const setCancel = (cancel) => async (c) => {
+    const user = c.get('user');
+    const lic = await subscriptionOf(user);
+    if (!lic) return fail(c, 'no_subscription');
+    if (!stripe) return fail(c, 'billing_unavailable');
+    let sub;
+    try {
+      sub = await stripe.subscriptions.update(lic.stripe_subscription_id, { cancel_at_period_end: cancel });
+    } catch (err) {
+      log.error('[stripe] subscription update from the app', err.message);
+      return fail(c, 'billing_unavailable');
+    }
+    await L.syncSubscription(db, sub);
+    await db.run('INSERT INTO audit (at, license_id, user_id, type, detail) VALUES (?, ?, ?, ?, ?)',
+      [Date.now(), lic.id, user.id, cancel ? 'subscription.canceled_in_app' : 'subscription.resumed_in_app', null]);
+    const fresh = await L.getLicense(db, lic.id);
+    const reply = await subscriptionReply(fresh);
+    if (cancel) {
+      try { await mailer.subscriptionCanceled(user.email, reply.subscription); } catch (err) { log.error('[mail] cancel confirmation', err.message); }
+    }
+    return c.json(reply);
+  };
+  api.post('/account/subscription/cancel', setCancel(true));
+  api.post('/account/subscription/resume', setCancel(false));
 
   api.post('/account/logout', async (c) => {
     await L.deleteApiSession(db, (c.req.header('authorization') || '').replace(/^Bearer\s+/i, '').trim());
@@ -1445,7 +1616,8 @@ export function createApp({ cfg, db, keys, stripe, mailer, log = console, fetchI
 
   // Public: whether the site's Lifetime card can sell (2026-10-16). { lifetime: { amount, currency } } once
   // STRIPE_PRICE_LIFETIME is an active one-time price in Stripe, else { lifetime: null } ("Coming soon" on the site).
-  api.get('/plans', async (c) => c.json({ lifetime: await lifetimeOffer() }, 200, { 'Access-Control-Allow-Origin': '*', 'Cache-Control': 'public, max-age=60' }));
+  // 1.3.0: also the monthly and yearly prices and the free trial's length, for the app's Premium window.
+  api.get('/plans', async (c) => c.json({ lifetime: await lifetimeOffer(), ...(await subscriptionPrices()), trial_days: cfg.subscriptions ? cfg.trialDays : 0 }, 200, { 'Access-Control-Allow-Origin': '*', 'Cache-Control': 'public, max-age=60' }));
 
   // Public: the version of the installer /download serves (Railway variable INSTALLER_VERSION), shown under the
   // site's download button. { version: null } while the variable isn't set.

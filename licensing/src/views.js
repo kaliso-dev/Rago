@@ -271,6 +271,20 @@ export function passwordPage(cfg, { user, error, hasPassword = true } = {}) {
 }
 
 /** Information page. Always offers a way out: the main action if any, back to the site, Discord. */
+/** The app asked to sign in through the browser (2026-11-04): the player checks the code the app shows, then confirms. */
+export function appLinkPage(cfg, { user, code, action }) {
+  const aside = html`<p class="overline rise">Rago Optimizer for Windows</p>
+    <h1 class="display rise d1">Sign in to the app?</h1>
+    <p class="lede rise d2">Rago Optimizer on your PC will be signed in as <strong>${user.email}</strong>. Check that the app shows this code:</p>
+    <p class="display rise d2 app-code" aria-label="Code">${code}</p>
+    <div class="row rise d3">
+      <form method="post" action="${action}" data-busy="Signing in…"><button class="btn btn-primary" type="submit">Yes, sign in the app</button></form>
+      <form method="post" action="/logout">${hidden('next', action)}<button class="btn btn-ghost" type="submit">Use another account</button></form>
+    </div>
+    <p class="muted small rise d4">Different code, or you didn't click “Continue with Google” or “Continue with Discord” in the app? Close this page.</p>`;
+  return page({ title: 'Sign in to the app', cfg, user, body: html`<main class="split split-solo"><section class="split-aside">${pulse}${aside}</section></main>` });
+}
+
 export function messagePage(cfg, { title, text, action, user, step, overline = 'Rago Optimizer' }) {
   const aside = html`<p class="overline rise">${overline}</p><h1 class="display rise d1">${title}</h1><p class="lede rise d2">${text}</p>
     <div class="row rise d3">
@@ -334,7 +348,7 @@ function affiliateLine(a) {
   return next;
 }
 
-export function dashboardPage(cfg, { user, license, device, notice, error, canReset, nextResetAt, affiliate, discordLink, discordRewards = [], inviteRewards = [], review = null, lifetime = false, noPassword = false }) {
+export function dashboardPage(cfg, { user, license, device, notice, error, canReset, nextResetAt, affiliate, discordLink, discordRewards = [], inviteRewards = [], review = null, lifetime = false, noPassword = false, trial = false }) {
   const active = license?.status === 'active';
   const reason = license?.status_reason;
   const ended = !active && reason === 'subscription_ended';
@@ -564,6 +578,11 @@ export function dashboardPage(cfg, { user, license, device, notice, error, canRe
       line = `Canceled. Premium keeps working until ${end ? fmtDate(end) : 'the end of the period'}, then Rago Optimizer goes back to the free version and puts back its tweaks.`;
       badge = html`<span class="badge badge-wait"><i></i>Ends ${end ? fmtDate(end) : 'soon'}</span>`;
       actions = html`${portalButton('Keep Premium', 'btn-primary')}`;
+    } else if (trial) {
+      // Free trial (2026-11-04): the first payment and how to avoid it, in plain words
+      line = `Free trial. Your card is charged on ${end ? fmtDate(end) : 'the last day'}, unless you cancel before. Cancel anytime: you pay nothing.`;
+      badge = html`<span class="badge badge-wait"><i></i>Trial until ${end ? fmtDate(end) : 'soon'}</span>`;
+      actions = portalButton('Cancel trial or manage');
     } else {
       line = end ? `Renews on ${fmtDate(end)}. Cancel anytime.` : 'Renews automatically. Cancel anytime.';
     }
@@ -925,9 +944,22 @@ function discordSection(d) {
       ${needsInvite ? html`<a class="btn btn-ghost btn-sm" href="${d.inviteUrl}" rel="noopener">Inviter le bot sur le serveur</a>` : ''}
     </section>`;
 }
+/** "Bot communauté" on /admin: the live connection, the invites, the welcome channel (community.js checks). */
+function communitySection(d) {
+  if (!d) return '';
+  const bad = d.checks.filter((c) => c.level === 'error').length;
+  const needsPerms = d.checks.some((c) => c.label === 'Invitations' && c.level === 'error');
+  return html`<section class="checks rise d3" aria-labelledby="community-h">
+      <div class="row"><h2 class="h2" id="community-h">Bot communauté Discord</h2>
+        <span class="badge ${bad ? 'badge-red' : 'badge-ok'}"><i></i>${bad ? `${bad} à corriger` : 'Actif'}</span></div>
+      <ul class="checks-list">${d.checks.map((c) => html`<li><span class="badge ${CHECK_BADGE[c.level][0]}"><i></i>${CHECK_BADGE[c.level][1]}</span>
+        <div><strong class="small">${c.label}</strong><p class="muted small">${c.text}</p></div></li>`)}</ul>
+      ${needsPerms && d.inviteUrl ? html`<a class="btn btn-ghost btn-sm" href="${d.inviteUrl}" rel="noopener">Redonner ses permissions au bot</a>` : ''}
+    </section>`;
+}
 const fill = (t, p) => String(t).replace(/\{(percent|code|total|left)\}/g, (_, k) => String(p[k] ?? ''));
 
-export function adminPage(cfg, { state, stripe, discord, values, error, notice, count }) {
+export function adminPage(cfg, { state, stripe, discord, community, values, error, notice, count }) {
   const { settings: s, promo: p } = state;
   const v = values || { enabled: s.enabled, code: s.code, percent: p?.percent ?? '', limit: p?.total ?? '', eyebrow: s.eyebrow, title: s.title, text: s.text };
   const vals = p ? { percent: p.percent, code: p.code, total: p.total, left: p.left } : {};
@@ -953,6 +985,7 @@ export function adminPage(cfg, { state, stripe, discord, values, error, notice, 
     <div class="rise d3">${preview}</div>
     ${stripeSection(stripe)}
     ${discordSection(discord)}
+    ${communitySection(community)}
     <div class="row rise d4"><a class="btn btn-ghost btn-sm" href="/admin/reseau">Tests réseau des joueurs</a>
       <form method="post" action="/admin/logout"><button class="btn btn-ghost btn-sm" type="submit">Quitter l’admin</button></form></div>`;
   const form = html`<h2 class="h2">Modifier la pop-up</h2>

@@ -13,8 +13,16 @@ const API = 'https://discord.com/api/v10';
 const MANAGE_ROLES = 1n << 28n;
 const ADMINISTRATOR = 1n << 3n;
 const CREATE_INSTANT_INVITE = 1n;
+const MANAGE_GUILD = 1n << 5n;
+const VIEW_CHANNEL = 1n << 10n;
+const SEND_MESSAGES = 1n << 11n;
 /** What the bot needs on the server: Manage Roles, and Create Invite to add players who aren't on it yet. */
 export const BOT_PERMISSIONS = String(MANAGE_ROLES | CREATE_INSTANT_INVITE);
+/**
+ * With the community bot (community.js): Manage Server too, without which Discord hides the invites and their use
+ * counts from bots, and View Channel + Send Messages for the welcome channel.
+ */
+export const COMMUNITY_PERMISSIONS = String(MANAGE_ROLES | CREATE_INSTANT_INVITE | MANAGE_GUILD | VIEW_CHANNEL | SEND_MESSAGES);
 // A change Discord refused is tried again after this long (the account page's button tries right away).
 const RETRY_MS = 15 * 60 * 1000;
 const RETRY_NOT_MEMBER_MS = 60 * 60 * 1000; // left the server: retried hourly, in case they come back
@@ -37,8 +45,13 @@ export const REWARDS = [
 ];
 /** The reward that replaces `r` when both are earned (2 boosts for 1 boost), or null. */
 export const replacedBy = (r, list = REWARDS) => list.find((x) => x.replaces === r.kind) || null;
-/** The rewards on: VIP / MVP / 2 boosts when their role is set, 1 boost always (with the bot configured). */
-export const rewardsOn = (cfg) => (cfg.discord ? REWARDS.filter((r) => r.boost || cfg[r.cfgKey]) : []);
+/**
+ * The rewards on: VIP / MVP / 2 boosts when their role is set, 1 boost always (with the bot configured). When the
+ * Rago bot gives VIP and MVP itself (DISCORD_INVITE_ROLES=1), the account page says its numbers of invites.
+ */
+const INVITES_NEEDED = { vip: 'discordVipInvites', mvp: 'discordMvpInvites' };
+export const rewardsOn = (cfg) => (cfg.discord ? REWARDS.filter((r) => r.boost || cfg[r.cfgKey])
+  .map((r) => (cfg.discordInviteRoles && INVITES_NEEDED[r.kind] ? { ...r, need: `${cfg[INVITES_NEEDED[r.kind]]} invites` } : r)) : []);
 const REWARD_RECHECK_MS = 30 * 60 * 1000; // the background pass looks at each linked account's roles this often
 const CODE_LETTERS = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
 
@@ -354,7 +367,9 @@ export function createDiscord(cfg, { db, fetchImpl = fetch, log = console, strip
 
   const authorizeUrl = (state) => `https://discord.com/oauth2/authorize?${new URLSearchParams({
     response_type: 'code', client_id: cfg.discordClientId, scope: 'identify guilds.join', redirect_uri: redirectUri, state })}`;
-  const inviteUrl = `https://discord.com/oauth2/authorize?${new URLSearchParams({ client_id: cfg.discordClientId, scope: 'bot', permissions: BOT_PERMISSIONS, guild_id: cfg.discordGuildId })}`;
+  const inviteUrl = `https://discord.com/oauth2/authorize?${new URLSearchParams(cfg.discordCommunity
+    ? { client_id: cfg.discordClientId, scope: 'bot applications.commands', permissions: COMMUNITY_PERMISSIONS, guild_id: cfg.discordGuildId }
+    : { client_id: cfg.discordClientId, scope: 'bot', permissions: BOT_PERMISSIONS, guild_id: cfg.discordGuildId })}`;
 
   /** What /admin shows: bot, server, role, the bot's place above the role, redirect URL, linked accounts. Never throws. */
   async function checks() {
@@ -431,7 +446,8 @@ export function createDiscord(cfg, { db, fetchImpl = fetch, log = console, strip
     return { checks: list, inviteUrl, redirectUri };
   }
 
-  return { authorizeUrl, inviteUrl, redirectUri, link, unlink, linkOf, syncUser, syncAll, idle: () => running || Promise.resolve(), checks, checkRewards, rewardsOf, rewards };
+  // call: the bot's REST client, shared with the community bot (community.js).
+  return { authorizeUrl, inviteUrl, redirectUri, link, unlink, linkOf, syncUser, syncAll, idle: () => running || Promise.resolve(), checks, checkRewards, rewardsOf, rewards, call };
 }
 
 /** /admin without the bot: the variables missing, or not a Discord id. */

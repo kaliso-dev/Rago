@@ -204,6 +204,43 @@ CREATE TABLE IF NOT EXISTS discord_rewards (
   UNIQUE (user_id, kind)
 );
 
+-- Community bot (2026-10-12, community.js): every join to the Discord server and the invite it came through.
+CREATE TABLE IF NOT EXISTS discord_joins (
+  id TEXT PRIMARY KEY,                            -- dj_<discord id>_<joined at>
+  discord_id TEXT NOT NULL,
+  joined_at BIGINT NOT NULL,                      -- 0: was on the server before the bot (seen leaving)
+  left_at BIGINT,
+  invite_code TEXT,
+  inviter_id TEXT,                                -- the member whose invite it was (null: vanity, unknown, a bot's)
+  source TEXT NOT NULL,                           -- invite | vanity | unknown | before_bot
+  first_join BOOLEAN NOT NULL,                    -- false for a rejoin: it never counts again
+  account_created_at BIGINT NOT NULL              -- read from the Discord id: alts under a week old don't count
+);
+CREATE INDEX IF NOT EXISTS discord_joins_inviter ON discord_joins (inviter_id);
+CREATE INDEX IF NOT EXISTS discord_joins_member ON discord_joins (discord_id);
+CREATE INDEX IF NOT EXISTS discord_joins_at ON discord_joins (joined_at);
+-- Tracked partner links (/partner-link): joins through them show up in /growth and count for no member.
+CREATE TABLE IF NOT EXISTS discord_invite_links (
+  code TEXT PRIMARY KEY,
+  label TEXT NOT NULL,
+  created_by TEXT,
+  created_at BIGINT NOT NULL
+);
+-- Invites counted before the Rago bot (Invite Tracker), added by staff with /invites-adjust.
+CREATE TABLE IF NOT EXISTS discord_invite_bonus (
+  discord_id TEXT PRIMARY KEY,
+  bonus INTEGER NOT NULL,
+  set_by TEXT,
+  set_at BIGINT NOT NULL
+);
+-- VIP / MVP given by the Rago bot from its count (DISCORD_INVITE_ROLES=1), once per member.
+CREATE TABLE IF NOT EXISTS discord_invite_roles (
+  discord_id TEXT NOT NULL,
+  kind TEXT NOT NULL,                             -- vip | mvp
+  given_at BIGINT NOT NULL,
+  PRIMARY KEY (discord_id, kind)
+);
+
 -- Email check at sign-up (2026-10-25): the account is only created once the player types the 6-digit code sent to
 -- the address. Until then the sign-up waits here (password already hashed). Hashed code, 15 minutes, 5 tries.
 CREATE TABLE IF NOT EXISTS signup_codes (
@@ -261,6 +298,19 @@ CREATE TABLE IF NOT EXISTS network_results (
   PRIMARY KEY (report_id, target)
 );
 
+-- Free trial (2026-11-04): 3 days with a card, charged at the end unless canceled. One per person: a second trial with
+-- the same card or the same email is charged right away (billing.js, settleTrial).
+CREATE TABLE IF NOT EXISTS trials (
+  subscription_id TEXT PRIMARY KEY,
+  email TEXT NOT NULL,                            -- lowercase
+  card_fingerprint TEXT,                          -- Stripe's card fingerprint, the same for the same card everywhere
+  license_id TEXT,
+  started_at BIGINT NOT NULL,
+  charged_now BOOLEAN NOT NULL DEFAULT FALSE      -- already had a trial: no free days
+);
+CREATE INDEX IF NOT EXISTS trials_email ON trials (email);
+CREATE INDEX IF NOT EXISTS trials_card ON trials (card_fingerprint);
+
 ALTER TABLE users ENABLE ROW LEVEL SECURITY;
 ALTER TABLE web_sessions ENABLE ROW LEVEL SECURITY;
 ALTER TABLE licenses ENABLE ROW LEVEL SECURITY;
@@ -277,7 +327,12 @@ ALTER TABLE site_settings ENABLE ROW LEVEL SECURITY;
 ALTER TABLE api_sessions ENABLE ROW LEVEL SECURITY;
 ALTER TABLE discord_links ENABLE ROW LEVEL SECURITY;
 ALTER TABLE discord_rewards ENABLE ROW LEVEL SECURITY;
+ALTER TABLE discord_joins ENABLE ROW LEVEL SECURITY;
+ALTER TABLE discord_invite_links ENABLE ROW LEVEL SECURITY;
+ALTER TABLE discord_invite_bonus ENABLE ROW LEVEL SECURITY;
+ALTER TABLE discord_invite_roles ENABLE ROW LEVEL SECURITY;
 ALTER TABLE signup_codes ENABLE ROW LEVEL SECURITY;
 ALTER TABLE oauth_identities ENABLE ROW LEVEL SECURITY;
 ALTER TABLE network_reports ENABLE ROW LEVEL SECURITY;
 ALTER TABLE network_results ENABLE ROW LEVEL SECURITY;
+ALTER TABLE trials ENABLE ROW LEVEL SECURITY;

@@ -11,6 +11,7 @@ import { applySchema, claimDatabase, ensureKeys, openDb, openMemoryDb } from '..
 import pg from 'pg';
 import { loadKeys, verifyToken } from '../src/tokens.js';
 import { createApp } from '../src/app.js';
+import { purgeOldRecords } from '../src/retention.js';
 import { createMailer } from '../src/mailer.js';
 import * as L from '../src/licensing.js';
 import * as P from '../src/profile.js';
@@ -84,7 +85,7 @@ async function setup(env = {}, extra = {}) {
   stripe.promotionCodes.list = async ({ code, active }) => ({ data: promos.filter((x) => (active === undefined || x.active === active) && x.code.toUpperCase() === String(code).toUpperCase()) });
   stripe.billingPortal.sessions.create = async (p) => { stripeCalls.push(['portal', p.customer]); return { url: 'https://billing.stripe.com/p/session/x' }; };
   const mails = [];
-  const mailer = { purchase: async (to, url) => mails.push({ to, url }), passwordReset: async (to, url) => mails.push({ to, url }), signupCode: async (to, code) => mails.push({ to, code }) };
+  const mailer = { purchase: async (to, url) => mails.push({ to, url }), passwordReset: async (to, url) => mails.push({ to, url }), signupCode: async (to, code) => mails.push({ to, code }), subscriptionCanceled: async (to, sub) => mails.push({ to, sub }) };
   const app = createApp({ cfg, db, keys, stripe, mailer, log: { info() {}, error: console.error }, ...extra });
 
   // Minimal browser: keeps cookies, sends same-origin form posts.
@@ -2108,7 +2109,9 @@ test('Discord: linked from the account page, Pro role while Premium is active, t
 test('Discord: one Discord account per Rago account, refused changes retried, /admin checks the bot, manual without it', async () => {
   const KEY = 'admin-key-0123456789abcdef';
   const d = fakeDiscord();
-  const t = await setup({ ...SUBS, ...DISCORD, ADMIN_KEY: KEY }, { fetchImpl: d.fetchImpl, log: quiet });
+  // The community bot's lines (community.js, tested in community.test.js) get their own section on /admin.
+  const community = { checks: () => [{ label: 'Invitations', level: 'error', text: 'Le bot n’a pas la permission « Gérer le serveur »' }] };
+  const t = await setup({ ...SUBS, ...DISCORD, ADMIN_KEY: KEY }, { fetchImpl: d.fetchImpl, log: quiet, community });
   const X = '333333333333333333';
   t.paidSubscription('cs_a', 'a@rago.gg');
   await t.browse('/checkout/success?session_id=cs_a');
@@ -2155,6 +2158,9 @@ test('Discord: one Discord account per Rago account, refused changes retried, /a
   assert.match(page, /Connecté en tant que ragobot/);
   assert.match(page, /« Rago Bot » est au-dessus de « Pro »/);
   assert.match(page, /2 comptes liés, 1 avec le rôle/);
+  assert.match(page, /Bot communauté Discord/);
+  assert.match(page, /Gérer le serveur/);
+  assert.match(page, /Redonner ses permissions au bot/);
   // The usual mistakes: the bot's role under Pro, the redirect URL not added in the Developer Portal.
   d.state.roles[2].position = 2;
   d.state.redirects = [];
@@ -2420,7 +2426,7 @@ test('lifetime: one payment at its own price, codes like Premium, Premium for li
   // The site's card asks whether Lifetime can be bought, and at what price.
   const plans = await t.app.request('/api/v1/plans');
   assert.equal(plans.headers.get('access-control-allow-origin'), '*');
-  assert.deepEqual(await plans.json(), { lifetime: { amount: 5999, currency: 'usd' } });
+  assert.deepEqual((await plans.json()).lifetime, { amount: 5999, currency: 'usd' });
   // A free account is told about it too.
   await t.browse('/signup', { form: { email: 'free@rago.gg', password: 'password123' } });
   assert.match(await (await t.browse('/account')).text(), /or Lifetime in one payment/);
@@ -2588,7 +2594,7 @@ test('lifetime: a pending referral follows the player who switches, an affiliate
 test('lifetime: not for sale until its own one-time price works in Stripe; a second Lifetime is not added', async () => {
   // Not set up: the site's card says "Coming soon", the checkout link says so too, nothing opens at Stripe.
   const t = await setup(SUBS);
-  assert.deepEqual(await (await t.app.request('/api/v1/plans')).json(), { lifetime: null });
+  assert.equal((await (await t.app.request('/api/v1/plans')).json()).lifetime, null);
   const res = await t.browse('/buy/lifetime');
   assert.equal(res.status, 503);
   const page = await res.text();
@@ -2615,7 +2621,7 @@ test('lifetime: not for sale until its own one-time price works in Stripe; a sec
   ]) {
     const v = await setup(LIFE, { log: quiet });
     v.stripe.prices.retrieve = retrieve;
-    assert.deepEqual(await (await v.app.request('/api/v1/plans')).json(), { lifetime: null });
+    assert.equal((await (await v.app.request('/api/v1/plans')).json()).lifetime, null);
     assert.equal((await v.browse('/buy/lifetime')).status, 503);
     assert.equal(v.created.length, 0);
   }
@@ -2758,11 +2764,12 @@ test('lifetime: the webhook and the success page at the same time cancel the sub
 test('lifetime: Stripe is asked for the price once a minute at most, even while it fails', async () => {
   const t = await setup(LIFE, { log: quiet });
   let calls = 0;
-  t.stripe.prices.retrieve = async () => { calls++; await new Promise((r) => setTimeout(r, 50)); throw new Error('Stripe is down'); };
+  // only the Lifetime price is counted: the monthly and yearly prices have their own cache (the app's Premium window)
+  t.stripe.prices.retrieve = async (id) => { if (id === 'price_life') calls++; await new Promise((r) => setTimeout(r, 50)); throw new Error('Stripe is down'); };
   // Visitors at the same time, then more: one call, and Lifetime stays "Coming soon".
   const answers = await Promise.all([1, 2, 3].map(async () => (await t.app.request('/api/v1/plans')).json()));
   for (let i = 0; i < 3; i++) answers.push(await (await t.app.request('/api/v1/plans')).json());
-  assert.deepEqual(answers, Array(6).fill({ lifetime: null }));
+  assert.deepEqual(answers.map((a) => a.lifetime), Array(6).fill(null));
   await t.browse('/signup', { form: { email: 'free@rago.gg', password: 'password123' } });
   assert.doesNotMatch(await (await t.browse('/account')).text(), /Lifetime in one payment/);
   assert.equal(calls, 1);
@@ -2984,4 +2991,193 @@ test('Google sign-in after a purchase attaches the license', async () => {
   const res = await oauthSignIn(t, 'google', 'g1');
   assert.equal(res.headers.get('location'), '/account/profile?welcome=1&to=%2Faccount%3Fn%3Dclaimed');
   assert.match(await (await t.browse('/account')).text(), /RAGO-/);
+});
+
+// ---------- Sign in to the app with Google or Discord, through the browser (2026-11-04) ----------
+
+test('app sign-in through the browser: Google, code shown on both sides, then the license on this PC', async () => {
+  const { fetchImpl } = fakeProviders({ g1: { sub: 'google-7', email: 'pro@gmail.com', email_verified: true, name: 'Pro' } });
+  const t = await setup(OAUTH_ENV, { fetchImpl });
+  await t.webhook('checkout.session.completed', t.paidSession('cs_link', 'pro@gmail.com'));
+  await t.browse('/checkout/success?session_id=cs_link');
+  await oauthSignIn(t, 'google', 'g1'); // account created with Google, purchase claimed, no password
+  t.jar.clear();
+
+  const start = await (await t.api('/auth/app-link/start', {})).json();
+  assert.match(start.code, /^[A-HJ-NP-Z2-9]{4}$/);
+  assert.equal(start.url, `http://localhost/app/link/${start.link_id}`);
+  const poll = () => t.api('/auth/app-link/poll', { link_id: start.link_id, poll_token: start.poll_token, device: device('L1') });
+  assert.equal((await (await poll()).json()).status, 'pending');
+  // a wrong poll token learns nothing
+  const forged = await t.api('/auth/app-link/poll', { link_id: start.link_id, poll_token: 'x'.repeat(43), device: device('L1') });
+  assert.equal((await forged.json()).error.code, 'link_expired');
+
+  // The browser: not signed in, ?p=google goes straight to Google and comes back to the link page.
+  const path = `/app/link/${start.link_id}`;
+  const go = await t.browse(`${path}?p=google`);
+  assert.equal(go.headers.get('location'), `/auth/google?next=${encodeURIComponent(path)}`);
+  const back = await oauthSignIn(t, 'google', 'g1', { next: path });
+  assert.equal(back.headers.get('location'), path);
+  const page = await (await t.browse(path)).text();
+  assert.match(page, new RegExp(`>${start.code}<`));
+  assert.match(page, /pro@gmail\.com/);
+  assert.equal((await (await poll()).json()).status, 'pending'); // nothing before the click
+  const ok = await t.browse(path, { form: {} });
+  assert.match(await ok.text(), /signed in/);
+
+  const r = await poll();
+  const j = await r.json();
+  assert.equal(r.status, 200, JSON.stringify(j));
+  assert.equal(j.status, 'activation_required');
+  assert.equal(j.account.email, 'pro@gmail.com');
+  // used once
+  assert.equal((await (await poll()).json()).error.code, 'link_expired');
+  assert.equal((await t.browse(path)).status, 410);
+});
+
+test('app sign-in through the browser: a free account gets no_license, an old link expires', async () => {
+  const t = await setup();
+  await t.browse('/signup', { form: { email: 'free@x.io', password: 'password123' } });
+  const start = await (await t.api('/auth/app-link/start', {})).json();
+  const path = `/app/link/${start.link_id}`;
+  // already signed in on the site: the confirmation page right away
+  assert.match(await (await t.browse(path)).text(), /Sign in to the app\?/);
+  await t.browse(path, { form: {} });
+  const r = await t.api('/auth/app-link/poll', { link_id: start.link_id, poll_token: start.poll_token, device: device('F1') });
+  assert.equal((await r.json()).error.code, 'no_license');
+
+  const old = await (await t.api('/auth/app-link/start', {})).json();
+  const realNow = Date.now;
+  Date.now = () => realNow() + 11 * 60 * 1000;
+  try {
+    assert.equal((await t.browse(`/app/link/${old.link_id}`)).status, 410);
+    const late = await t.api('/auth/app-link/poll', { link_id: old.link_id, poll_token: old.poll_token, device: device('F1') });
+    assert.equal(late.status, 410);
+  } finally {
+    Date.now = realNow;
+  }
+});
+
+// ---------- Free trial: 3 days with a card, one per person (2026-11-04) ----------
+
+test('free trial: 3 days with the card asked, first Premium only, a second trial with the same card is charged now', async () => {
+  const SUBS = { STRIPE_PRICE_MONTHLY: 'price_month', STRIPE_PRICE_YEARLY: 'price_year' };
+  const t = await setup(SUBS);
+  t.stripe.paymentMethods = { retrieve: async (id) => ({ id, card: { fingerprint: id === 'pm_b' ? 'fp_other' : 'fp_same' } }) };
+  assert.equal(t.cfg.trialDays, 3);
+
+  // /buy?trial=1: a trial checkout that always asks for the card
+  assert.match((await t.browse('/buy?interval=month&trial=1')).headers.get('location'), /checkout\.stripe\.com/);
+  const params = t.created.at(-1);
+  assert.equal(params.mode, 'subscription');
+  assert.equal(params.payment_method_collection, 'always');
+  assert.equal(params.subscription_data.trial_period_days, 3);
+  assert.deepEqual(params.subscription_data.trial_settings, { end_behavior: { missing_payment_method: 'cancel' } });
+  assert.equal(params.metadata.trial, '3');
+  assert.match(params.custom_text.submit.message, /3 days free, then your card is charged on .+ Cancel anytime before/);
+  // without ?trial=1: paid from the start
+  await t.browse('/buy?interval=month');
+  assert.equal(t.created.at(-1).subscription_data.trial_period_days, undefined);
+
+  // The trial checkout is done: nothing paid, license active, the email says when the first payment comes.
+  const trialSub = (id, pm) => t.subscription(id, 'month', { status: 'trialing', periodDays: 3, default_payment_method: pm,
+    items: { data: [{ price: { id: 'price_month', unit_amount: 599, currency: 'usd', recurring: { interval: 'month' } }, current_period_end: Math.floor(Date.now() / 1000) + 3 * 86400 }] } });
+  const first = t.paidSession('cs_trial1', 'new@trial.io', { mode: 'subscription', payment_status: 'no_payment_required', amount_total: 0, payment_intent: null,
+    subscription: trialSub('sub_t1', 'pm_a'), metadata: { interval: 'month', trial: '3' } });
+  await t.webhook('checkout.session.completed', first);
+  const lic = await t.db.get("SELECT * FROM licenses WHERE stripe_session_id = 'cs_trial1'");
+  assert.equal(lic.status, 'active');
+  assert.equal(t.stripeCalls.filter(([k]) => k === 'update').length, 0);
+  assert.equal((await t.db.get("SELECT COUNT(*)::int AS n FROM trials WHERE email = 'new@trial.io' AND NOT charged_now")).n, 1);
+
+  // Same card, other email: no free days, the trial ends now (Stripe charges the first month).
+  const again = t.paidSession('cs_trial2', 'alt@trial.io', { mode: 'subscription', payment_status: 'no_payment_required', amount_total: 0, payment_intent: null,
+    subscription: trialSub('sub_t2', 'pm_a'), metadata: { interval: 'month', trial: '3' } });
+  await t.webhook('checkout.session.completed', again);
+  assert.deepEqual(t.stripeCalls.find(([k, id]) => k === 'update' && id === 'sub_t2')?.[2], { trial_end: 'now', proration_behavior: 'none' });
+  assert.equal((await t.db.get("SELECT charged_now FROM trials WHERE subscription_id = 'sub_t2'")).charged_now, true);
+
+  // Same email, other card: charged now too.
+  const third = t.paidSession('cs_trial3', 'new@trial.io', { mode: 'subscription', payment_status: 'no_payment_required', amount_total: 0, payment_intent: null,
+    subscription: trialSub('sub_t3', 'pm_b'), metadata: { interval: 'month', trial: '3' } });
+  await t.webhook('checkout.session.completed', third);
+  assert.ok(t.stripeCalls.some(([k, id]) => k === 'update' && id === 'sub_t3'));
+
+  // A signed-in account that had Premium (or a trial) gets no trial at checkout.
+  await t.browse('/signup', { form: { email: 'old@trial.io', password: 'password123' } });
+  await t.db.run("INSERT INTO trials (subscription_id, email, started_at) VALUES ('sub_old', 'old@trial.io', 1)");
+  await t.browse('/buy?interval=year&trial=1');
+  assert.equal(t.created.at(-1).subscription_data.trial_period_days, undefined);
+
+  // TRIAL_DAYS=0: no trial anywhere
+  const off = await setup({ ...SUBS, TRIAL_DAYS: '0' });
+  await off.browse('/buy?interval=month&trial=1');
+  assert.equal(off.created.at(-1).subscription_data.trial_period_days, undefined);
+});
+
+test('free trial: the account page says when the first payment comes', async () => {
+  const t = await setup({ STRIPE_PRICE_MONTHLY: 'price_month' });
+  t.stripe.paymentMethods = { retrieve: async (id) => ({ id, card: { fingerprint: 'fp_dash' } }) };
+  const sub = t.subscription('sub_dash', 'month', { status: 'trialing', periodDays: 3, default_payment_method: 'pm_x' });
+  const s = t.paidSession('cs_dash', 'dash@trial.io', { mode: 'subscription', payment_status: 'no_payment_required', amount_total: 0, payment_intent: null, subscription: sub, metadata: { interval: 'month', trial: '3' } });
+  await t.webhook('checkout.session.completed', s);
+  await t.browse('/checkout/success?session_id=cs_dash');
+  await t.browse('/signup', { form: { email: 'dash@trial.io', password: 'password123' } });
+  const page = await (await t.browse('/account')).text();
+  assert.match(page, /Free trial\. Your card is charged on .+, unless you cancel before/);
+  assert.match(page, /Cancel trial or manage/);
+});
+
+test('retention: security log and Discord leavers after 12 months, free trials after 2 years, subscription markers kept', async () => {
+  const t = await setup();
+  const DAY = 86400000, now = Date.now();
+  await t.db.run("INSERT INTO audit (at, type) VALUES (?, 'device.blocked'), (?, 'license.subscription_stopped'), (?, 'device.activated')", [now - 400 * DAY, now - 400 * DAY, now - 10 * DAY]);
+  await t.db.run("INSERT INTO trials (subscription_id, email, started_at) VALUES ('sub_old', 'a@b.c', ?), ('sub_new', 'd@e.f', ?)", [now - 800 * DAY, now - 100 * DAY]);
+  await t.db.run("INSERT INTO discord_joins (id, discord_id, joined_at, left_at, source, first_join, account_created_at) VALUES ('dj_1', '1', 1, ?, 'unknown', true, 1), ('dj_2', '2', 1, NULL, 'unknown', true, 1)", [now - 400 * DAY]);
+  await purgeOldRecords(t.db, now);
+  assert.deepEqual((await t.db.all('SELECT id FROM discord_joins')).map(r => r.id), ['dj_2']);
+  const types = (await t.db.all("SELECT type FROM audit WHERE type IN ('device.blocked', 'license.subscription_stopped', 'device.activated') ORDER BY type")).map(r => r.type);
+  assert.deepEqual(types, ['device.activated', 'license.subscription_stopped']);
+  assert.deepEqual((await t.db.all('SELECT subscription_id FROM trials')).map(r => r.subscription_id), ['sub_new']);
+});
+
+test('subscription from the app: plan and next payment shown, canceled in one call, resumed, prices for the Premium window', async () => {
+  const SUBS = { STRIPE_PRICE_MONTHLY: 'price_month', STRIPE_PRICE_YEARLY: 'price_year' };
+  const t = await setup(SUBS);
+  t.stripe.paymentMethods = { retrieve: async (id) => ({ id, card: { fingerprint: 'fp_x' } }) };
+  t.stripe.prices.retrieve = async (id) => ({ id, active: true, recurring: { interval: id === 'price_year' ? 'year' : 'month' }, unit_amount: id === 'price_year' ? 2999 : 599, currency: 'usd' });
+  const plans = await (await call(t, 'GET', '/plans')).json();
+  assert.deepEqual([plans.month, plans.year, plans.trial_days], [{ amount: 599, currency: 'usd' }, { amount: 2999, currency: 'usd' }, 3]);
+
+  const sub = t.subscription('sub_app', 'month', { status: 'trialing', periodDays: 3, default_payment_method: 'pm_x',
+    items: { data: [{ price: { id: 'price_month', unit_amount: 599, currency: 'usd', recurring: { interval: 'month' } }, current_period_end: Math.floor(Date.now() / 1000) + 3 * 86400 }] } });
+  await t.webhook('checkout.session.completed', t.paidSession('cs_app', 'app@sub.io', { mode: 'subscription', payment_status: 'no_payment_required', amount_total: 0, payment_intent: null,
+    subscription: sub, metadata: { interval: 'month', trial: '3' } }));
+  const user = await L.createUser(t.db, 'app@sub.io', 'password123');
+  await t.db.run("UPDATE licenses SET user_id = ? WHERE stripe_session_id = 'cs_app'", [user.id]);
+  const token = (await (await call(t, 'POST', '/account/login', { json: { email: 'app@sub.io', password: 'password123' } })).json()).account_token;
+
+  const seen = (await (await call(t, 'GET', '/account/subscription', { token })).json()).subscription;
+  assert.equal(seen.interval, 'month');
+  assert.equal(seen.trial, true);
+  assert.equal(seen.canceled, false);
+  assert.ok(seen.renews_at);
+  assert.deepEqual(seen.price, { amount: 599, currency: 'usd' });
+
+  const canceled = (await (await call(t, 'POST', '/account/subscription/cancel', { token })).json()).subscription;
+  assert.deepEqual(t.stripeCalls.at(-1), ['update', 'sub_app', { cancel_at_period_end: true }]);
+  assert.equal(canceled.canceled, true);
+  assert.equal(canceled.renews_at, null);
+  assert.ok(canceled.ends_at);
+  assert.equal(t.mails.at(-1).to, 'app@sub.io');
+  assert.equal((await t.db.get("SELECT status FROM licenses WHERE stripe_session_id = 'cs_app'")).status, 'active');
+
+  const resumed = (await (await call(t, 'POST', '/account/subscription/resume', { token })).json()).subscription;
+  assert.equal(resumed.canceled, false);
+
+  // A free account has nothing to cancel.
+  await L.createUser(t.db, 'free@sub.io', 'password123');
+  const free = (await (await call(t, 'POST', '/account/login', { json: { email: 'free@sub.io', password: 'password123' } })).json()).account_token;
+  assert.equal((await (await call(t, 'GET', '/account/subscription', { token: free })).json()).subscription, null);
+  assert.equal(await errCode(await call(t, 'POST', '/account/subscription/cancel', { token: free })), 'no_subscription');
 });

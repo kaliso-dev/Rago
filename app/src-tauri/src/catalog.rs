@@ -19,6 +19,20 @@ pub struct Bundle {
     /// annulation (scripts/undo.json) : chiffrée elle aussi pour les réglages Premium
     #[serde(default)]
     undo: HashMap<String, HashMap<String, Undo>>,
+    /// moteur PowerShell du Network Optimizer (netopt/*.ps1) : l'application dans les scripts Premium, le reste ici
+    #[serde(default)]
+    engine: HashMap<String, String>,
+}
+
+impl Bundle {
+    pub fn engine(&self, name: &str) -> Option<&str> {
+        self.engine.get(name).map(String::as_str)
+    }
+}
+
+/// Partie du moteur du Network Optimizer qui tourne sans licence (remise, valeurs de Windows, tests).
+pub fn plain_engine(name: &str) -> Option<&'static str> {
+    PLAIN.engine(name)
 }
 
 /// Scripts du plan gratuit et de retour arrière, préparés par build.rs (embed_scripts.rs). Chiffrés eux aussi,
@@ -75,6 +89,8 @@ struct Free {
     reverts: Vec<String>,
     #[serde(default)]
     formerly: Vec<String>,
+    #[serde(default)]
+    slots: usize,
 }
 
 fn free_json() -> Free {
@@ -87,6 +103,34 @@ static FREE: LazyLock<Vec<String>> = LazyLock::new(|| free_json().tweaks);
 /// Réglages Premium dont seule la variante de retour arrière est ouverte en gratuit (free.json, « reverts ») : RBW Mod
 /// « Activé » et mode jeu « Désactivé ». Ceux de Réseau et Hitreg restent fermés.
 static FREE_REVERTS: LazyLock<Vec<String>> = LazyLock::new(|| free_json().reverts);
+
+/// Réglages gratuits (des « tweak », pas les actions) appliqués en même temps sans licence (free.json, « slots » : 30
+/// depuis la 1.3.0). 0 : pas de limite.
+static FREE_SLOTS: LazyLock<usize> = LazyLock::new(|| free_json().slots);
+
+/// Sans licence, les réglages qui resteraient appliqués après ce lot dépassent la limite du plan gratuit : renvoie la
+/// limite. `applied` : réglages appliqués sur ce PC ; `items` : (id, variante, annulation) du lot. Seuls les réglages
+/// qu'on allume et qu'on annule comptent, pas leur retour arrière. Un joueur déjà au-dessus (réglages gratuits
+/// appliqués pendant Premium) peut toujours en annuler, jamais en ajouter.
+pub fn over_free_slots<'a>(applied: impl Iterator<Item = &'a str>, items: &[(&str, Option<&str>, bool)]) -> Option<usize> {
+    let max = *FREE_SLOTS;
+    if max == 0 {
+        return None;
+    }
+    let mut active: std::collections::HashSet<&str> = applied.filter(|id| is_switch(id)).collect();
+    let before = active.len();
+    for &(id, variant, undo) in items {
+        if !is_switch(id) {
+            continue;
+        }
+        if undo || is_revert(id, variant) {
+            active.remove(id);
+        } else {
+            active.insert(id);
+        }
+    }
+    (active.len() > max && active.len() > before).then_some(max)
+}
 
 /// Réglages gratuits d'une version d'avant (free.json, « formerly ») : la souris (in_mouse) avant la 1.1.14.
 static FORMERLY_FREE: LazyLock<Vec<String>> = LazyLock::new(|| free_json().formerly);
@@ -299,9 +343,9 @@ mod tests {
         assert!(undo_of("in_mouse", None, None).is_none() && undo_of("in_mouse", None, Some(&bundle)).is_some());
         assert!(script("net_nagle", None, None).is_none(), "Premium sans licence");
         assert!(script("net_nagle", None, Some(&bundle)).is_some());
-        // réglages ajoutés en 1.1.6 : chaque valeur touchée est relevée avant d'appliquer ; win_autoplay est Premium,
-        // win_ai gratuit depuis le 16 octobre 2026
-        assert!(script("win_autoplay", None, None).is_none(), "win_autoplay sans licence");
+        // réglages ajoutés en 1.1.6 : chaque valeur touchée est relevée avant d'appliquer ; win_ai gratuit depuis le
+        // 16 octobre 2026, win_autoplay depuis la 1.3.0
+        assert!(script("win_autoplay", None, None).is_some(), "win_autoplay dans le plan gratuit");
         assert!(script("win_ai", None, None).is_some(), "win_ai dans le plan gratuit");
         for id in ["win_ai", "win_autoplay"] {
             let p = probe(id, None, Some(&bundle)).expect(id);
@@ -1121,6 +1165,35 @@ mod tests {
     /// Rien de ce que lance le moteur (réglages, relevés, annulations) ne supprime sur un chemin `%VAR%`, sur un
     /// `!VAR!` sans garde ni sur une variable de boucle avec le développement retardé actif (deletion_errors), et
     /// aucune variable de chemin n'y est plus écrite `%VAR%` (revue du 2026-10-13, P1/P2, tools/paths.py).
+    /// Mode jeu (Sofiene, 2026-10-22 : « rends-le le plus performant ») : indexation et télémétrie en pause sans changer
+    /// leur démarrage, enregistrement en fond coupé, et les animations prises tout de suite ; la désactivation et
+    /// l'annulation (après la remise de la sauvegarde) relancent les services et reprennent les animations.
+    #[test]
+    fn game_mode_pauses_background_work_and_puts_it_back() {
+        let on = &SCRIPTS["game_mode"]["on"];
+        let off = &SCRIPTS["game_mode"]["off"];
+        for l in ["net stop WSearch > nul 2>&1", "net stop DiagTrack > nul 2>&1"] {
+            assert!(on.lines().any(|x| x == l), "{l}");
+        }
+        assert!(on.contains(r#"/v "HistoricalCaptureEnabled" /t REG_DWORD /d "0""#) && on.contains(r#"/v "AutoGameModeEnabled" /t REG_DWORD /d "1""#));
+        // la pause ne change pas le démarrage : un service coupé par un autre réglage le reste
+        assert!(!on.to_lowercase().contains("config wsearch") && !on.to_lowercase().contains("config diagtrack"));
+        assert!(off.contains("net start WSearch") && off.contains("net start DiagTrack"));
+        // animations : lues du registre et passées à Windows avant la relance de l'Explorateur, dans les deux variantes
+        for s in [on, off] {
+            let fx = s.lines().position(|l| l.contains("SystemParametersInfo")).expect("animations");
+            let explorer = s.lines().position(|l| l == "taskkill /f /im explorer.exe").unwrap();
+            assert!(fx < explorer);
+            let line = s.lines().nth(fx).unwrap();
+            let code = line.split_once("-Command \"").unwrap().1.rsplit_once('"').unwrap().0;
+            assert!(!code.contains('"') && !line.contains('%') && !line.contains('!') && line.len() < 8191, "{line}");
+        }
+        let undo: HashMap<String, HashMap<String, Undo>> = serde_json::from_str(include_str!("../scripts/undo.json")).unwrap();
+        let rest = undo["game_mode"]["on"].rest.as_deref().expect("rest");
+        let at = |p: &str| rest.find(p).unwrap_or_else(|| panic!("{p} : {rest}"));
+        assert!(at("net start WSearch") < at("SystemParametersInfo") && at("net start DiagTrack") < at("SystemParametersInfo"));
+    }
+
     #[test]
     fn deletions_never_use_a_percent_path() {
         const PATH_VARS: [&str; 16] = [
@@ -1179,6 +1252,18 @@ mod tests {
         assert!(allowed("win_gamedvr", None, false) && allowed("rst_point", None, false) && allowed("__wmic", None, false));
         assert!(!allowed("gpu_nvidia", None, false) && !allowed("in_advanced", None, false));
         assert!(allowed("gpu_nvidia", None, true));
+        // Sofiene, 4 novembre 2026 : une soixantaine de réglages gratuits, 30 appliqués en même temps au plus
+        assert!(FREE.len() >= 50 && *FREE_SLOTS == 30, "{} gratuits", FREE.len());
+        assert!(!allowed("net_nagle", None, false) && !allowed("in_mouse", None, false) && !allowed("gpu_nvidia", None, false));
+        assert!(allowed("win_classicmenu", None, false) && allowed("sto_writecache", None, false));
+        let switches: Vec<&str> = FREE.iter().map(String::as_str).filter(|id| is_switch(id)).collect();
+        assert!(switches.len() > 31);
+        let new = |ids: &[&'static str]| ids.iter().map(|id| (*id, None, false)).collect::<Vec<_>>();
+        assert_eq!(over_free_slots(switches[..29].iter().copied(), &new(&switches[29..30])), None);
+        assert_eq!(over_free_slots(switches[..30].iter().copied(), &new(&switches[30..31])), Some(30));
+        // les actions ne prennent pas de place ; au-dessus de la limite, annuler reste possible
+        assert_eq!(over_free_slots(switches[..30].iter().copied(), &new(&["rst_point"])), None);
+        assert_eq!(over_free_slots(switches[..31].iter().copied(), &[(switches[0], None, true)]), None);
         // Sofiene, 16 octobre 2026 : trois réglages de confort de Windows ouverts en gratuit
         assert!(["win_notifications", "win_popups", "win_ai"].iter().all(|id| allowed(id, None, false)));
         // la souris (Hitreg) : gratuite avant la 1.1.14
@@ -1201,7 +1286,9 @@ mod tests {
                 // « ref » : un réglage d'un autre module, compté dans le sien
                 let Some(id) = t["id"].as_str() else { continue };
                 if is_free(id) {
-                    assert!(["windows", "gpu", "restore"].contains(&module), "{id} gratuit dans {module}");
+                    // 1.3.0 : le stockage (module Latence) et le nettoyage des pilotes ouvrent aussi ; jamais Réseau,
+                    // Hitreg, Minecraft, RBW, mode jeu ni Expert
+                    assert!(["windows", "gpu", "latency", "restore"].contains(&module), "{id} gratuit dans {module}");
                     free += 1;
                 }
                 if FREE_REVERTS.iter().any(|f| f == id) {

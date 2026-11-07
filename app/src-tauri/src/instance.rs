@@ -185,7 +185,7 @@ Try again in a few minutes (restart your PC if it keeps happening).";
 fn other_window() -> Option<windows_sys::Win32::Foundation::HWND> {
     use windows_sys::core::BOOL;
     use windows_sys::Win32::Foundation::{HWND, LPARAM};
-    use windows_sys::Win32::UI::WindowsAndMessaging::{EnumWindows, GetWindow, GetWindowThreadProcessId, IsWindowVisible, GW_OWNER};
+    use windows_sys::Win32::UI::WindowsAndMessaging::{EnumWindows, GetWindow, GetWindowLongW, GetWindowThreadProcessId, IsWindowVisible, GWL_EXSTYLE, GW_OWNER, WS_EX_TOOLWINDOW};
     struct Search {
         exe: String,
         me: u32,
@@ -193,7 +193,8 @@ fn other_window() -> Option<windows_sys::Win32::Foundation::HWND> {
     }
     unsafe extern "system" fn each(hwnd: HWND, lparam: LPARAM) -> BOOL {
         let s = &mut *(lparam as *mut Search);
-        if IsWindowVisible(hwnd) == 0 || !GetWindow(hwnd, GW_OWNER).is_null() {
+        // fenêtre outil : la pastille de la barre en jeu (overlay.rs), pas la fenêtre de l'app
+        if IsWindowVisible(hwnd) == 0 || !GetWindow(hwnd, GW_OWNER).is_null() || GetWindowLongW(hwnd, GWL_EXSTYLE) as u32 & WS_EX_TOOLWINDOW != 0 {
             return 1;
         }
         let mut pid = 0u32;

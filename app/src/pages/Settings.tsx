@@ -1,5 +1,5 @@
-import { useState } from "react";
-import { ExternalLink, FolderOpen, LifeBuoy, LogOut, UserRound } from "lucide-react";
+import { useEffect, useState } from "react";
+import { ChevronRight, ExternalLink, FolderOpen, LifeBuoy, LogOut, Share2, UserRound } from "lucide-react";
 import { formatDate } from "../lib/i18n";
 import { api, isTauri } from "../lib/api";
 import { totalTweaks } from "../lib/catalog";
@@ -7,11 +7,18 @@ import { FREE, useStore } from "../lib/store";
 import { ACCOUNT_URL, SITE_URL, SUPPORT_URL } from "../components/LicenseGate";
 import { Modal } from "../components/Modal";
 import { ProfileCard } from "../components/ProfileCard";
-import { Button, Card, Segmented } from "../components/ui";
+import { SubscriptionRows } from "../components/SubscriptionCard";
+import { BackgroundCard } from "../components/BackgroundCard";
+import { SessionCard } from "../components/SessionCard";
+import { Button, Card, Segmented, Switch } from "../components/ui";
 import { Wordmark } from "../components/Logo";
+
+/** Exe de test (serveur staging) : Paramètres montre la dernière recherche de mise à jour, et son erreur. */
+const STAGING = import.meta.env.VITE_RAGO_SERVER === "staging";
 
 const LICENCES = [
   { name: "NVIDIA Profile Inspector", licence: "MIT", url: "https://github.com/Orbmu2k/nvidiaProfileInspector" },
+  { name: "PresentMon (Intel)", licence: "MIT", url: "https://github.com/GameTechDev/PresentMon" },
   { name: "Geist, Geist Mono", licence: "SIL OFL 1.1", url: "https://vercel.com/font" },
   { name: "Tauri", licence: "MIT / Apache 2.0", url: "https://tauri.app" },
   { name: "React", licence: "MIT", url: "https://react.dev" },
@@ -20,7 +27,7 @@ const LICENCES = [
 ];
 
 export function Settings() {
-  const { t, lang, setLang, motion, setMotion, license, signOut, setUpsell, activatedAt, sys } = useStore();
+  const { t, lang, setLang, motion, setMotion, license, signOut, setUpsell, activatedAt, sys, cleanTrim, setCleanTrim, goTo } = useStore();
   const [confirmOut, setConfirmOut] = useState(false);
   /** Réglages que la déconnexion remettra comme avant (liste du moteur), lue à l'ouverture de la confirmation. */
   const [outPlan, setOutPlan] = useState(0);
@@ -65,6 +72,7 @@ export function Settings() {
                   {license.expiresAt && <span className="muted"> · {t("account.renews", { date: formatDate(lang, license.expiresAt) })}</span>}
                 </span>
               </div>
+              <SubscriptionRows />
               {license.keyHint && (
                 <div className="setting">
                   <span>{t("account.key")}</span>
@@ -124,6 +132,27 @@ export function Settings() {
             />
           </div>
         </Card>
+        <Card>
+          <button type="button" className="setting setting-link" onClick={() => goTo("share")}>
+            <Share2 size={16} className="setting-link-icon" />
+            <div>
+              <div>{t("settings.share")}</div>
+              <div className="muted small">{t("settings.shareHint")}</div>
+            </div>
+            <ChevronRight size={16} className="setting-link-chevron" />
+          </button>
+        </Card>
+        <BackgroundCard />
+        <SessionCard />
+        <Card title={t("settings.memory")}>
+          <div className="setting">
+            <div>
+              <div>{t("settings.cleanTrim")}</div>
+              <div className="muted small">{t("settings.cleanTrimHint")}</div>
+            </div>
+            <Switch checked={cleanTrim} onChange={setCleanTrim} label={t("settings.cleanTrim")} />
+          </div>
+        </Card>
         <Card title={t("settings.folders")}>
           {(["logs", "resources", "data"] as const).map((k) => (
             <div className="setting" key={k}>
@@ -140,6 +169,7 @@ export function Settings() {
             {t("settings.version", { v: __APP_VERSION__ })} · {totalTweaks} {lang === "fr" ? "réglages" : "tweaks"}
           </p>
           {!isTauri && <p className="muted small">{t("settings.demo")}</p>}
+          {STAGING && <UpdateCheck />}
           <div className="rg-overline" style={{ marginTop: 16 }}>
             {t("settings.licences")}
           </div>
@@ -178,4 +208,17 @@ export function Settings() {
       </Modal>
     </div>
   );
+}
+
+function UpdateCheck() {
+  const { t } = useStore();
+  const [status, setStatus] = useState<string | null>(null);
+  useEffect(() => {
+    const read = () => void api.updateStatus().then(setStatus, () => {});
+    read();
+    // la recherche part au lancement : la ligne se remplit quand elle se termine
+    const id = window.setInterval(read, 3000);
+    return () => window.clearInterval(id);
+  }, []);
+  return <p className="rg-metric muted small">{t("settings.updateCheck", { s: status ?? t("settings.updateCheckWaiting") })}</p>;
 }
