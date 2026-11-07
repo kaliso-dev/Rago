@@ -9,6 +9,7 @@ Une ligne par événement marquant, la plus récente en haut. Voir [[Historique 
 
 ## Novembre 2026
 | Date | Événement | Liens |
+| 07/11 | Site : page `route.html` « Rago Route » entièrement animée + section et liens sur l'accueil, poussée sur `staging` (Sofiene : « tu peux push sur staging les modif du site ») | [[Site]] |
 | 07/11 | [[Rago OS]] (dossier `nimbus` du Mac de Sofiene) passe à la charte Rago, reçoit 7 thèmes Rago et devient l'extension de l'app : pont local, FPS et ping dans l'île, Mode jeu total, page, widget et Spotlight Rago. Pont et Mode jeu total de l'app codés en local, pas encore sur GitHub | [[Rago OS]] |
 |---|---|---|
 | 04/11 | Ajoutés à la 1.3.0 (PR #70) : Analyse du PC avec avant/après, fenêtre Premium avec les prix, résiliation dans l'app | [[Analyse du PC]], [[Abonnement dans l'app]] |

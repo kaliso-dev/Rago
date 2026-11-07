@@ -156,3 +156,9 @@ pa = open(os.path.join(ROOT, 'src/partners.html')).read()
 assert GOOGLE in pa, 'Google Fonts block changed in partners.html: update build.py'
 open(os.path.join(ROOT, 'partners.html'), 'w').write(pa.replace(GOOGLE, LOCAL))
 print('partners.html built')
+
+# Rago Route page (site/route.html, from src/route.html): local fonts too. Static: no account server.
+ro = open(os.path.join(ROOT, 'src/route.html')).read()
+assert GOOGLE in ro, 'Google Fonts block changed in route.html: update build.py'
+open(os.path.join(ROOT, 'route.html'), 'w').write(ro.replace(GOOGLE, LOCAL))
+print('route.html built')
