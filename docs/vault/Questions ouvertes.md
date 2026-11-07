@@ -21,7 +21,6 @@ Ouvertes au 04/11 : q36 (remboursement 14 jours), q37 (accord avant l'envoi du t
 - q44 à q49 (04/11) : statut du vendeur (traitée : « Pas encore »), partage de l'argent, adresse des mentions légales, vendeur majeur et compte Stripe, sortie de la 1.2.2, offre débitée après l'essai. Voir [[Conformité juridique]].
 - q50 (04/11) : seuils de l'[[Analyse du PC]], À VÉRIFIER.
 - q52 et q53 (07/11) : Mode jeu total gratuit ou Premium ; garder ou non l'optimiseur d'installation de [[Rago OS]] quand l'app est là.
-- q54 (07/11) : [[Proxy]] Rago Route, pourquoi la 4G de l'iPhone monte à 1,2–1,5 s pendant une coupure du Wi-Fi (test `ping -b en8` demandé à Sofiene). À VÉRIFIER.
 
 ## À demander à Abel (Sofiene ne sait pas)
 - Le partenariat avec le créateur YouTube à 50 % est-il arrêté ? ([[Partenaires et créateurs]])
