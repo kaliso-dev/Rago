@@ -3417,3 +3417,9 @@
 .rt-note {
   margin-top: 10px;
 }
+.rt-phone {
+  margin-top: 12px;
+  border: 1px solid var(--rg-line-1);
+  border-radius: var(--rg-radius-md);
+  background: rgba(0, 0, 0, 0.22);
+}

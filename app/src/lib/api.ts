@@ -117,7 +117,7 @@ export interface Launcher {
 
 /** Trajet de Rago Route (route.rs) : direct vers la sortie de Paris, ou par un relais. */
 export interface RoutePath {
-  kind: "direct" | "relay";
+  kind: "direct" | "relay" | "phone";
   /** ville du serveur par lequel passe le trajet (Paris pour le direct) */
   via: string;
   rttMs: number | null;
@@ -453,7 +453,9 @@ export interface Api {
   onNetMeasure(cb: (m: NetMeasure) => void): Promise<UnlistenFn>;
   onNetSample(cb: (s: NetSample) => void): Promise<UnlistenFn>;
   /** Rago Route (route.rs) : allume le tunnel vers la sortie de Paris ; erreur « port:25565 » si le port est pris. */
-  routeStart(): Promise<RouteStatus>;
+  routeStart(phone?: boolean): Promise<RouteStatus>;
+  /** téléphone branché en USB avec la 4G partagée (nom de sa carte réseau), sinon null */
+  routePhone(): Promise<string | null>;
   routeStop(): Promise<void>;
   routeStatus(): Promise<RouteStatus>;
   /** Jeton Rago Route (6 h) pour le script du Mac ; erreurs « premium:no_license », « premium:route_closed »… */
@@ -577,7 +579,8 @@ const tauriApi: Api = {
   netTest: (ids) => invoke("net_test", { ids }),
   onNetMeasure: (cb) => listen<NetMeasure>("nettest:measure", (e) => cb(e.payload)),
   onNetSample: (cb) => listen<NetSample>("nettest:sample", (e) => cb(e.payload)),
-  routeStart: () => invoke("route_start"),
+  routeStart: (phone) => invoke("route_start", { phone: !!phone }),
+  routePhone: () => invoke("route_phone"),
   routeStop: () => invoke("route_stop"),
   routeStatus: () => invoke("route_status"),
   routeToken: () => invoke("route_token"),
@@ -645,7 +648,7 @@ const emit = <T,>(name: string, detail: T) => bus.dispatchEvent(new CustomEvent(
 const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
 
 // démo de Rago Route : allumé depuis `on`, une partie en cours après 3 s, valeurs proches des tests sur le Mac
-const mockRoute = { on: 0 };
+const mockRoute = { on: 0, phone: false };
 function mockRouteStatus(): RouteStatus {
   const idle: RouteStatus = { running: false, error: null, playing: false, paths: [], saved: 0, repaired: 0, packets: 0, resendsHere: 0, resendsExit: 0, exitPingMs: null, lagHereMs: 0, lagExitMs: 0, ports: [] };
   if (!mockRoute.on) return idle;
@@ -661,6 +664,9 @@ function mockRouteStatus(): RouteStatus {
     paths: [
       { kind: "direct", via: "Paris", rttMs: 17 + j(), alive: true, lossPct: playing ? 0.1 : 0, firstPct: playing ? 97 : 0, mb: packets * 0.0011 },
       { kind: "relay", via: "Frankfurt", rttMs: 38 + j(), alive: true, lossPct: 0, firstPct: playing ? 3 : 0, mb: packets * 0.0011 },
+      ...(mockRoute.phone
+        ? [{ kind: "phone" as const, via: "Paris", rttMs: 55 + 3 * j(), alive: true, lossPct: playing ? 1.2 : 0, firstPct: playing ? 0 : 0, mb: packets * 0.0011 }]
+        : []),
     ],
     saved: Math.floor(packets / 2500),
     repaired: Math.floor(packets / 4000),
@@ -1120,9 +1126,11 @@ const mockApi: Api = {
   },
   onNetMeasure: (cb) => on("nettest:measure", cb),
   onNetSample: (cb) => on("nettest:sample", cb),
-  routeStart: async () => {
+  routePhone: async () => "Ethernet 3",
+  routeStart: async (phone) => {
     await sleep(500);
     mockRoute.on = Date.now();
+    mockRoute.phone = !!phone;
     return mockRouteStatus();
   },
   routeStop: async () => {

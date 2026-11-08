@@ -4,7 +4,7 @@ import { Check, Copy, LoaderCircle, Lock, Power, Route } from "lucide-react";
 import { api, type RoutePath, type RouteStatus } from "../lib/api";
 import type { Key } from "../lib/i18n";
 import { useStore } from "../lib/store";
-import { Button } from "../components/ui";
+import { Button, Switch } from "../components/ui";
 
 const stagger = { animate: { transition: { staggerChildren: 0.05 } } };
 const rise = { initial: { opacity: 0, y: 10 }, animate: { opacity: 1, y: 0, transition: { duration: 0.42, ease: [0.16, 1, 0.3, 1] as const } } };
@@ -32,6 +32,15 @@ export function RouteTab() {
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [copied, setCopied] = useState(false);
+  // 4G du téléphone branché en USB : proposée seulement quand Windows le voit ; le choix est retenu sur ce PC
+  const [phone, setPhone] = useState<string | null>(null);
+  const [usePhone, setUsePhone] = useState(() => {
+    try {
+      return localStorage.getItem("rago.route.phone") === "1";
+    } catch {
+      return false;
+    }
+  });
 
   useEffect(() => {
     let alive = true;
@@ -48,6 +57,30 @@ export function RouteTab() {
     };
   }, []);
 
+  useEffect(() => {
+    let alive = true;
+    const look = () =>
+      api
+        .routePhone()
+        .then((p) => alive && setPhone(p))
+        .catch(() => {});
+    look();
+    const id = setInterval(look, 3000);
+    return () => {
+      alive = false;
+      clearInterval(id);
+    };
+  }, []);
+
+  function choosePhone(on: boolean) {
+    setUsePhone(on);
+    try {
+      localStorage.setItem("rago.route.phone", on ? "1" : "0");
+    } catch {
+      /* le choix ne sera pas retenu */
+    }
+  }
+
   const running = !!st?.running;
   const playing = running && !!st?.playing;
   // pas de Premium (licence lue) : l'offre à la place du bouton ; si Rago Route tourne déjà, on peut toujours l'éteindre
@@ -63,7 +96,7 @@ export function RouteTab() {
         await api.routeStop();
         setSt(await api.routeStatus());
       } else {
-        setSt(await api.routeStart());
+        setSt(await api.routeStart(usePhone && !!phone));
       }
     } catch (e) {
       setError(String(e));
@@ -115,6 +148,15 @@ export function RouteTab() {
         )}
 
         {locked && <p className="muted small rt-note">{t("route.premium")}</p>}
+        {!locked && !running && phone && (
+          <div className="no-toggle rt-phone" onClick={() => choosePhone(!usePhone)}>
+            <div className="no-toggle-text">
+              <div className="no-toggle-title">{t("route.phone")}</div>
+              <div className="no-toggle-desc">{t("route.phone.desc")}</div>
+            </div>
+            <Switch checked={usePhone} onChange={choosePhone} label={t("route.phone")} />
+          </div>
+        )}
         {shown && (
           <p className="rt-error small">{shown === "token" ? t("route.err.token") : t(errorKey(shown), { e: shown.replace(/^\w+:/, "") })}</p>
         )}
@@ -167,7 +209,12 @@ export function RouteTab() {
 }
 
 function PathRow({ p, t }: { p: RoutePath; t: (k: Key, v?: Record<string, string | number>) => string }) {
-  const name = p.kind === "direct" ? t("route.path.direct", { city: p.via }) : t("route.path.relay", { city: p.via });
+  const name =
+    p.kind === "direct"
+      ? t("route.path.direct", { city: p.via })
+      : p.kind === "phone"
+        ? t("route.path.phone", { city: p.via })
+        : t("route.path.relay", { city: p.via });
   return (
     <div className={`rt-path${p.alive ? "" : " down"}`}>
       <span className="rt-dot" aria-hidden />

@@ -680,6 +680,8 @@ pub struct Config {
     pub test_loss: Vec<f64>,
     /// coupure simulée de tous les trajets : (début après le lancement, durée) (tests seulement)
     pub test_cut: Option<(Duration, Duration)>,
+    /// ajoute un trajet par la 4G du téléphone branché en USB (partage de connexion), s'il y en a un
+    pub phone: bool,
 }
 
 /// Jeton Rago Route du serveur de licences (comptes Premium, valable 6 h), envoyé à la sortie à chaque nouvelle
@@ -702,7 +704,7 @@ static REFUSED: AtomicBool = AtomicBool::new(false);
 
 impl Default for Config {
     fn default() -> Self {
-        Config { exit: EXIT_PARIS, relays: vec![RELAY_FRANKFURT], no_direct: false, rate: 30.0 * 125_000.0, port_offset: 0, test_loss: Vec::new(), test_cut: None }
+        Config { exit: EXIT_PARIS, relays: vec![RELAY_FRANKFURT], no_direct: false, rate: 30.0 * 125_000.0, port_offset: 0, test_loss: Vec::new(), test_cut: None, phone: false }
     }
 }
 
@@ -710,7 +712,7 @@ impl Default for Config {
 #[derive(Clone, Debug, Default, Serialize)]
 #[serde(rename_all = "camelCase")]
 pub struct PathView {
-    /// "direct" ou "relay"
+    /// "direct", "relay" ou "phone" (4G du téléphone, directe vers la sortie)
     pub kind: String,
     /// ville du serveur par lequel passe le trajet (Paris pour le direct)
     pub via: String,
@@ -821,11 +823,55 @@ struct Engine {
     started: Instant,
 }
 
-fn bind_udp() -> std::io::Result<UdpSocket> {
-    let s = UdpSocket::bind((Ipv4Addr::UNSPECIFIED, 0))?;
+/// `local` : carte réseau imposée (adresse, numéro d'interface Windows) ; sinon celle choisie par Windows.
+fn bind_udp(local: Option<(Ipv4Addr, u32)>) -> std::io::Result<UdpSocket> {
+    let s = UdpSocket::bind((local.map_or(Ipv4Addr::UNSPECIFIED, |l| l.0), 0))?;
     #[cfg(windows)]
-    win::big_buffers(&s);
+    {
+        win::big_buffers(&s);
+        if let Some((_, index)) = local {
+            win::pin_to_interface(&s, index);
+        }
+    }
     Ok(s)
+}
+
+/// Carte réseau du PC, vue par Rago Route.
+#[derive(Clone, Debug)]
+pub struct Nic {
+    pub name: String,
+    pub ip: Ipv4Addr,
+    pub index: u32,
+    /// partage de connexion d'un téléphone en USB, ou modem 4G/5G du PC
+    pub cellular: bool,
+    /// a une passerelle (donc un accès à Internet)
+    pub gateway: bool,
+    pub metric: u32,
+}
+
+/// Partage de connexion USB (Android : « Remote NDIS », iPhone : « Apple Mobile Device Ethernet ») ou modem cellulaire,
+/// d'après la description de la carte ou son type (243 et 244 : haut débit mobile).
+pub fn is_cellular(description: &str, if_type: u32) -> bool {
+    let d = description.to_lowercase();
+    matches!(if_type, 243 | 244)
+        || ["remote ndis", "rndis", "apple mobile device ethernet", "iphone", "android", "usb tethering", "mobile broadband"].iter().any(|k| d.contains(k))
+}
+
+/// Cartes réseau actives avec une adresse IPv4 (Windows ; vide ailleurs).
+pub fn nics() -> Vec<Nic> {
+    #[cfg(windows)]
+    {
+        win::nics()
+    }
+    #[cfg(not(windows))]
+    {
+        Vec::new()
+    }
+}
+
+/// Téléphone branché avec la 4G partagée (avec une passerelle), pour l'onglet : son nom, ou None.
+pub fn phone_name() -> Option<String> {
+    nics().into_iter().find(|n| n.cellular && n.gateway).map(|n| n.name)
 }
 
 impl Engine {
@@ -1382,17 +1428,30 @@ pub fn start(cfg: Config) -> Result<Running, String> {
         })?;
         listeners.push((l, target));
     }
-    let mut specs: Vec<(&'static str, String, SocketAddrV4)> = Vec::new();
+    // 4G du téléphone : un trajet de plus, direct vers la sortie, collé à la carte du téléphone ; les autres trajets
+    // restent collés à la carte principale (Wi-Fi ou câble), même si Windows préfère le téléphone pour Internet
+    let (mut main, mut phone) = (None, None);
+    if cfg.phone {
+        let all = nics();
+        phone = all.iter().find(|n| n.cellular && n.gateway).map(|n| (n.ip, n.index));
+        if phone.is_some() {
+            main = all.iter().filter(|n| !n.cellular && n.gateway).min_by_key(|n| n.metric).map(|n| (n.ip, n.index));
+        }
+    }
+    let mut specs: Vec<(&'static str, String, SocketAddrV4, Option<(Ipv4Addr, u32)>)> = Vec::new();
     if !cfg.no_direct {
-        specs.push(("direct", city(cfg.exit), cfg.exit));
+        specs.push(("direct", city(cfg.exit), cfg.exit, main));
     }
     for r in &cfg.relays {
-        specs.push(("relay", city(*r), *r));
+        specs.push(("relay", city(*r), *r, main));
+    }
+    if let Some(p) = phone {
+        specs.push(("phone", city(cfg.exit), cfg.exit, Some(p)));
     }
     let mut paths = Vec::new();
     let mut helpers = Vec::new();
-    for (i, (kind, via, dest)) in specs.into_iter().enumerate() {
-        let sock = bind_udp().map_err(|e| format!("udp:{e}"))?;
+    for (i, (kind, via, dest, local)) in specs.into_iter().enumerate() {
+        let sock = bind_udp(local).map_err(|e| format!("udp:{e}"))?;
         let reader = sock.try_clone().map_err(|e| format!("udp:{e}"))?;
         let (tx2, stop2) = (tx.clone(), stop.clone());
         helpers.push(thread::Builder::new().name("rago-route-udp".into()).spawn(move || read_udp(reader, i, tx2, stop2)).map_err(|e| e.to_string())?);
@@ -1465,11 +1524,11 @@ fn slot() -> &'static Mutex<Option<Running>> {
 }
 
 /// Allume Rago Route avec les serveurs Rago et le jeton du compte (sans effet s'il tourne déjà, sauf le jeton).
-pub fn turn_on(token: &str) -> Result<Status, String> {
+pub fn turn_on(token: &str, phone: bool) -> Result<Status, String> {
     set_token(token);
     let mut s = slot().lock().map_err(|_| "lock")?;
     if s.is_none() {
-        *s = Some(start(Config::default())?);
+        *s = Some(start(Config { phone, ..Config::default() })?);
     }
     Ok(s.as_ref().map(|r| r.status()).unwrap_or_default())
 }
@@ -1487,9 +1546,95 @@ pub fn current() -> Status {
 
 #[cfg(windows)]
 mod win {
-    use std::net::UdpSocket;
+    use super::Nic;
+    use std::net::{Ipv4Addr, UdpSocket};
     use std::os::windows::io::AsRawSocket;
-    use windows_sys::Win32::Networking::WinSock::{setsockopt, SOL_SOCKET, SO_RCVBUF, SO_SNDBUF};
+    use windows_sys::Win32::Networking::WinSock::{setsockopt, IPPROTO_IP, IP_UNICAST_IF, SOL_SOCKET, SO_RCVBUF, SO_SNDBUF};
+
+    /// Fait sortir les paquets de cette prise par une carte donnée (téléphone, ou Wi-Fi/câble), quelle que soit la
+    /// route par défaut de Windows.
+    pub fn pin_to_interface(s: &UdpSocket, index: u32) {
+        let v: u32 = index.to_be();
+        unsafe {
+            setsockopt(s.as_raw_socket() as usize, IPPROTO_IP, IP_UNICAST_IF, &v as *const u32 as *const u8, 4);
+        }
+    }
+
+    fn wide(p: windows_sys::core::PWSTR) -> String {
+        if p.is_null() {
+            return String::new();
+        }
+        unsafe {
+            let mut n = 0;
+            while *p.add(n) != 0 {
+                n += 1;
+            }
+            String::from_utf16_lossy(std::slice::from_raw_parts(p, n))
+        }
+    }
+
+    pub fn nics() -> Vec<Nic> {
+        use windows_sys::Win32::NetworkManagement::IpHelper::{
+            GetAdaptersAddresses, GAA_FLAG_INCLUDE_GATEWAYS, GAA_FLAG_SKIP_ANYCAST, GAA_FLAG_SKIP_DNS_SERVER, GAA_FLAG_SKIP_MULTICAST,
+            IF_TYPE_SOFTWARE_LOOPBACK, IP_ADAPTER_ADDRESSES_LH,
+        };
+        use windows_sys::Win32::NetworkManagement::Ndis::IfOperStatusUp;
+        use windows_sys::Win32::Networking::WinSock::{AF_INET, SOCKADDR_IN};
+        let flags = GAA_FLAG_INCLUDE_GATEWAYS | GAA_FLAG_SKIP_ANYCAST | GAA_FLAG_SKIP_MULTICAST | GAA_FLAG_SKIP_DNS_SERVER;
+        let mut size: u32 = 32 * 1024;
+        let mut buf: Vec<u64> = Vec::new();
+        let mut ok = false;
+        for _ in 0..3 {
+            buf = vec![0u64; size as usize / 8 + 1];
+            let r = unsafe { GetAdaptersAddresses(AF_INET as u32, flags, std::ptr::null(), buf.as_mut_ptr() as *mut IP_ADAPTER_ADDRESSES_LH, &mut size) };
+            if r == 0 {
+                ok = true;
+                break;
+            }
+            if r != 111 {
+                break; // 111 : tampon trop petit, size donne la bonne taille
+            }
+        }
+        let mut out = Vec::new();
+        if !ok {
+            return out;
+        }
+        let mut p = buf.as_ptr() as *const IP_ADAPTER_ADDRESSES_LH;
+        while !p.is_null() {
+            let a = unsafe { &*p };
+            p = a.Next;
+            if a.OperStatus != IfOperStatusUp || a.IfType == IF_TYPE_SOFTWARE_LOOPBACK {
+                continue;
+            }
+            let mut ip = None;
+            let mut u = a.FirstUnicastAddress;
+            while !u.is_null() {
+                let ua = unsafe { &*u };
+                u = ua.Next;
+                let sa = ua.Address.lpSockaddr;
+                if sa.is_null() || unsafe { (*sa).sa_family } != AF_INET {
+                    continue;
+                }
+                let sin = unsafe { &*(sa as *const SOCKADDR_IN) };
+                let v = Ipv4Addr::from(u32::from_be(unsafe { sin.sin_addr.S_un.S_addr }));
+                if !v.is_link_local() && !v.is_loopback() {
+                    ip = Some(v);
+                    break;
+                }
+            }
+            let Some(ip) = ip else { continue };
+            let description = wide(a.Description);
+            out.push(Nic {
+                name: wide(a.FriendlyName),
+                ip,
+                index: unsafe { a.Anonymous1.Anonymous.IfIndex },
+                cellular: super::is_cellular(&description, a.IfType),
+                gateway: !a.FirstGatewayAddress.is_null(),
+                metric: a.Ipv4Metric,
+            });
+        }
+        out
+    }
 
     /// Tampons d'1 Mo : une rafale (chargement des chunks) ne déborde pas pendant que le moteur est occupé.
     pub fn big_buffers(s: &UdpSocket) {
@@ -1635,6 +1780,15 @@ mod tests {
         assert_eq!(out.len(), 1);
         assert_eq!(be32(&out[0], 0), 0);
         assert_eq!(s.resends_fast, 1);
+    }
+
+    #[test]
+    fn phones_are_recognised() {
+        assert!(is_cellular("Remote NDIS based Internet Sharing Device", 6));
+        assert!(is_cellular("Apple Mobile Device Ethernet", 6));
+        assert!(is_cellular("Generic Mobile Broadband Adapter", 243));
+        assert!(!is_cellular("Intel(R) Wi-Fi 6 AX201 160MHz", 71));
+        assert!(!is_cellular("Realtek PCIe GbE Family Controller", 6));
     }
 
     #[test]
