@@ -930,8 +930,10 @@ class Sortie:
         if len(self.sessions) > 500:
             return
         if type_ == T_OPEN and len(corps) >= CLE_PUB:
-            # rien n'est gardé ici : la clé publique du joueur revient dans l'AUTH
-            self.transport.sendto(paquet(T_HELLO, sid, pub_brute(self.cle)), adresse)
+            # rien n'est gardé ici : la clé publique du joueur revient dans l'AUTH. Après la clé : le ping Minecraft
+            # de la sortie vers chaque cible (ms, 0 = inconnu), pour qu'une app qui a plusieurs sorties choisisse la meilleure
+            pings = b"".join(struct.pack(">H", min(65535, int(self.ping_cible.get(CIBLES[c][0]) or 0))) for c in sorted(CIBLES))
+            self.transport.sendto(paquet(T_HELLO, sid, pub_brute(self.cle) + pings), adresse)
         elif type_ == T_AUTH and len(corps) >= CLE_PUB + CHIFFRE.size + 17 and self._autoriser(adresse):
             self._ouvrir(sid, entete, corps, adresse)
 
@@ -990,9 +992,13 @@ class Sortie:
         return self.cles.licence(jeton)
 
     async def mesurer_cibles(self):
+        """Toutes les 5 s pour les serveurs où l'on joue, toutes les minutes pour les autres (annoncé dans le HELLO)."""
+        derniere = {}
         while True:
             for hote, port in set(CIBLES.values()):
-                if any(s.cible[0] == hote for s in self.sessions.values()):
+                en_jeu = any(s.cible[0] == hote for s in self.sessions.values())
+                if en_jeu or time.monotonic() - derniere.get(hote, -1e9) > 60:
+                    derniere[hote] = time.monotonic()
                     m = await ping_minecraft(hote, port)
                     if m is not None:
                         self.ping_cible[hote] = m

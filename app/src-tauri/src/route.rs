@@ -86,6 +86,12 @@ pub const LOCAL_PORTS: [(u16, u8); 2] = [(25565, 0), (25566, 1)];
 pub const EXIT_PARIS: SocketAddrV4 = SocketAddrV4::new(Ipv4Addr::new(217, 69, 12, 94), ROUTE_PORT);
 /// Relais Rago de Frankfurt : un deuxième trajet, par un autre chemin, vers la même sortie.
 pub const RELAY_FRANKFURT: SocketAddrV4 = SocketAddrV4::new(Ipv4Addr::new(209, 250, 233, 192), ROUTE_PORT);
+/// Sorties Rago, par ville. Pour un nouveau serveur : une ligne ici, et son adresse dans `SORTIES_RAGO` de
+/// `proxy/rago-route.py` (le relais ne fait suivre que vers les sorties Rago). Avec plusieurs sorties, l'app prend la
+/// plus rapide jusqu'au serveur de jeu (`pick_exit`).
+pub const EXITS: &[(&str, SocketAddrV4)] = &[("Paris", EXIT_PARIS)];
+/// Relais Rago, par ville : chacun ajoute un trajet vers la sortie choisie.
+pub const RELAYS: &[(&str, SocketAddrV4)] = &[("Frankfurt", RELAY_FRANKFURT)];
 
 fn epoch() -> Instant {
     static E: OnceLock<Instant> = OnceLock::new();
@@ -704,7 +710,7 @@ static REFUSED: AtomicBool = AtomicBool::new(false);
 
 impl Default for Config {
     fn default() -> Self {
-        Config { exit: EXIT_PARIS, relays: vec![RELAY_FRANKFURT], no_direct: false, rate: 30.0 * 125_000.0, port_offset: 0, test_loss: Vec::new(), test_cut: None, phone: false }
+        Config { exit: EXIT_PARIS, relays: RELAYS.iter().map(|(_, a)| *a).collect(), no_direct: false, rate: 30.0 * 125_000.0, port_offset: 0, test_loss: Vec::new(), test_cut: None, phone: false }
     }
 }
 
@@ -1509,11 +1515,52 @@ pub fn start(cfg: Config) -> Result<Running, String> {
 
 /// Ville d'un serveur Rago connu (affichage).
 fn city(a: SocketAddrV4) -> String {
-    match *a.ip() {
-        ip if ip == *EXIT_PARIS.ip() => "Paris".into(),
-        ip if ip == *RELAY_FRANKFURT.ip() => "Frankfurt".into(),
-        ip => ip.to_string(),
+    EXITS.iter().chain(RELAYS).find(|(_, s)| s.ip() == a.ip()).map_or_else(|| a.ip().to_string(), |(c, _)| c.to_string())
+}
+
+/// Choisit la sortie. Avec plusieurs, sonde chacune 3 fois (OPEN -> HELLO, sans ouvrir de session, 600 ms au plus) et
+/// garde la plus rapide jusqu'à Hypixel : aller-retour jusqu'à la sortie + ping Minecraft de la sortie (dans le HELLO).
+/// Aucune réponse : la première de la liste.
+pub fn pick_exit(exits: &[SocketAddrV4]) -> SocketAddrV4 {
+    if exits.len() < 2 {
+        return exits.first().copied().unwrap_or(EXIT_PARIS);
     }
+    let Ok(sock) = bind_udp(None) else { return exits[0] };
+    let _ = sock.set_read_timeout(Some(Duration::from_millis(20)));
+    let base = new_sid();
+    let mut sent: Vec<[Option<Instant>; 3]> = vec![[None; 3]; exits.len()];
+    let mut score: Vec<Option<f64>> = vec![None; exits.len()];
+    let start = Instant::now();
+    let mut buf = [0u8; 1500];
+    for round in 0..3usize {
+        for (i, exit) in exits.iter().enumerate() {
+            let mut sid = base;
+            sid[14] = i as u8;
+            sid[15] = round as u8;
+            let mut key = [0u8; 32];
+            let _ = getrandom::getrandom(&mut key);
+            sent[i][round] = Some(Instant::now());
+            let _ = sock.send_to(&packet(T_OPEN, &sid, &key), exit);
+        }
+        let until = start + Duration::from_millis(200 * (round as u64 + 1));
+        while Instant::now() < until {
+            let Ok((n, _)) = sock.recv_from(&mut buf) else { continue };
+            let Some((kind, sid, body)) = read_header(&buf[..n]) else { continue };
+            let (i, r) = (sid[14] as usize, sid[15] as usize);
+            if kind != T_HELLO || sid[..14] != base[..14] || i >= exits.len() || r >= 3 || body.len() < 32 {
+                continue;
+            }
+            let Some(t) = sent[i][r] else { continue };
+            let rtt = t.elapsed().as_secs_f64() * 1000.0;
+            let mc = if body.len() >= 34 { be16(body, 32) } else { 0 };
+            let s = rtt + if mc > 0 { mc as f64 } else { 500.0 }; // ping inconnu : à départager sur l'aller-retour
+            score[i] = Some(score[i].map_or(s, |b: f64| b.min(s)));
+        }
+    }
+    (0..exits.len())
+        .filter_map(|i| score[i].map(|s| (i, s)))
+        .min_by(|a, b| a.1.partial_cmp(&b.1).unwrap_or(std::cmp::Ordering::Equal))
+        .map_or(exits[0], |(i, _)| exits[i])
 }
 
 // --- Rago Route dans l'app : un seul lancement à la fois ---------------------------------------------------------
@@ -1528,7 +1575,8 @@ pub fn turn_on(token: &str, phone: bool) -> Result<Status, String> {
     set_token(token);
     let mut s = slot().lock().map_err(|_| "lock")?;
     if s.is_none() {
-        *s = Some(start(Config { phone, ..Config::default() })?);
+        let exits: Vec<SocketAddrV4> = EXITS.iter().map(|(_, a)| *a).collect();
+        *s = Some(start(Config { exit: pick_exit(&exits), phone, ..Config::default() })?);
     }
     Ok(s.as_ref().map(|r| r.status()).unwrap_or_default())
 }
