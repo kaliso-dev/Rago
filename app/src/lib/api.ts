@@ -454,6 +454,8 @@ export interface Api {
   routeStart(): Promise<RouteStatus>;
   routeStop(): Promise<void>;
   routeStatus(): Promise<RouteStatus>;
+  /** Jeton Rago Route (6 h) pour le script du Mac ; erreurs « premium:no_license », « premium:route_closed »… */
+  routeToken(): Promise<string>;
   /** Jeux installés (launchers et ajoutés à la main) ; `refresh` : nouvelle recherche sur le PC. */
   gamesList(refresh: boolean): Promise<Game[]>;
   /** Image officielle du jeu (data: URL), null s'il n'y en a pas. */
@@ -576,6 +578,7 @@ const tauriApi: Api = {
   routeStart: () => invoke("route_start"),
   routeStop: () => invoke("route_stop"),
   routeStatus: () => invoke("route_status"),
+  routeToken: () => invoke("route_token"),
   gamesList: (refresh) => invoke("games_list", { refresh }),
   gameArt: (id) => invoke("game_art", { id }),
   gameLaunch: (id) => invoke("game_launch", { id }),
@@ -1124,6 +1127,7 @@ const mockApi: Api = {
     mockRoute.on = 0;
   },
   routeStatus: async () => mockRouteStatus(),
+  routeToken: async () => "demo.route.token",
   gamesList: async () => {
     await sleep(400);
     // ?playing : le dernier jeu joué est en cours (démo de la partie en cours)

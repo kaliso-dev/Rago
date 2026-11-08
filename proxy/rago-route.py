@@ -15,17 +15,24 @@ où le joueur entre chez Cloudflare (Paris pour la France).
 
 Rago Route ne lit ni ne modifie le jeu : après la connexion, le flux Minecraft est
 chiffré entre le jeu et Hypixel. Seul le nom du serveur est remis dans le premier
-paquet (handshake), comme le fait déjà relay.py.
+paquet (handshake).
+
+Accès (08/11) : la sortie n'ouvre une session qu'avec un jeton Rago Route valable, signé
+par le serveur de licences pour les comptes Premium (6 h), vérifié ici avec sa clé publique.
+Le relais ne fait suivre que vers les sorties Rago.
 
 Modes :
   python3 rago-route.py sortie                       (sur un serveur Rago, port UDP 25600)
-  python3 rago-route.py client --sortie IP [--via IP] [--interface en5] [--telephone]
+  python3 rago-route.py client --sortie IP [--via IP] [--interface en5] [--telephone] [--jeton JETON]
 
 Aucune dépendance : Python 3.8+ seulement.
 """
 import argparse
 import asyncio
+import base64
+import hashlib
 import ipaddress
+import json
 import logging
 import os
 import random
@@ -34,11 +41,12 @@ import socket
 import struct
 import sys
 import time
+import urllib.request
 
 VERSION = 1
 MAGIC = b"RR"
 PORT_ROUTE = 25600
-T_OPEN, T_OPEN_OK, T_DATA, T_ACK, T_PING, T_PONG, T_CLOSE, T_FWD = range(1, 9)
+T_OPEN, T_OPEN_OK, T_DATA, T_ACK, T_PING, T_PONG, T_CLOSE, T_FWD, T_REFUS = range(1, 10)  # REFUS : jeton refusé (08/11)
 ENTETE = struct.Struct(">2sBB16s")  # magie, version, type, session
 DATA = struct.Struct(">II")         # numéro, horodatage d'envoi (ms)
 ACK = struct.Struct(">IQI")         # tout reçu avant ce numéro, 64 suivants (bits), horodatage renvoyé
@@ -56,6 +64,12 @@ if os.environ.get("RAGO_TEST_LOCAL") == "1" and os.environ.get("RAGO_CIBLE_TEST"
 TICK = 0.005
 RETARD_FIGE = 20.0                  # ms : au-delà, le programme a été figé (on ne déclare pas de pertes ce tour-là)
 SESSION_MAX_SILENCE = 60.0
+# Accès (08/11) : clés publiques du serveur de licences (production et test) et sorties vers lesquelles un relais
+# fait suivre. Les clés sont relues toutes les heures et gardées sur le disque si le serveur ne répond pas.
+CLES_URLS = ["https://account.rago-optimizer.com/api/v1/public-key?format=pem",
+             "https://rago-staging.up.railway.app/api/v1/public-key?format=pem"]
+SORTIES_RAGO = {"217.69.12.94"}  # Paris
+SESSIONS_PAR_LICENCE = 8         # connexions du jeu ouvertes à la fois avec la même licence
 ADRESSE_ACTIVE = 3.0
 
 log = logging.getLogger("rago-route")
@@ -83,7 +97,7 @@ def lire_entete(data):
     return type_, session, data[ENTETE.size:]
 
 
-# --- handshake Minecraft (même logique que relay.py) -------------------------
+# --- handshake Minecraft ---------------------------------------------------------
 
 def lire_varint(buf, pos):
     n = 0
@@ -430,6 +444,164 @@ class Recepteur:
         return ACK.pack(self.attendu, bits, ts)
 
 
+# --- jetons Rago Route (Ed25519) ------------------------------------------------
+
+# Vérification Ed25519 (RFC 8032, section 6) en Python pur, pour un serveur sans la bibliothèque cryptography.
+# Seulement à l'ouverture d'une session, jamais par paquet.
+_P = 2 ** 255 - 19
+_Q = 2 ** 252 + 27742317777372353535851937790883648493
+_D = -121665 * pow(121666, _P - 2, _P) % _P
+_RACINE_M1 = pow(2, (_P - 1) // 4, _P)
+
+
+def _ed_add(a, b):
+    x = (a[1] - a[0]) * (b[1] - b[0]) % _P
+    y = (a[1] + a[0]) * (b[1] + b[0]) % _P
+    c = 2 * a[3] * b[3] * _D % _P
+    d = 2 * a[2] * b[2] % _P
+    e, f, g, h = y - x, d - c, d + c, y + x
+    return (e * f % _P, g * h % _P, f * g % _P, e * h % _P)
+
+
+def _ed_mul(n, pt):
+    r = (0, 1, 1, 0)
+    while n:
+        if n & 1:
+            r = _ed_add(r, pt)
+        pt = _ed_add(pt, pt)
+        n >>= 1
+    return r
+
+
+def _ed_x(y, signe):
+    if y >= _P:
+        return None
+    x2 = (y * y - 1) * pow(_D * y * y + 1, _P - 2, _P) % _P
+    if x2 == 0:
+        return None if signe else 0
+    x = pow(x2, (_P + 3) // 8, _P)
+    if (x * x - x2) % _P:
+        x = x * _RACINE_M1 % _P
+    if (x * x - x2) % _P:
+        return None
+    return _P - x if (x & 1) != signe else x
+
+
+def _ed_point(b):
+    y = int.from_bytes(b, "little")
+    signe, y = y >> 255, y & ((1 << 255) - 1)
+    x = _ed_x(y, signe)
+    return None if x is None else (x, y, 1, x * y % _P)
+
+
+_ED_Y = 4 * pow(5, _P - 2, _P) % _P
+_ED_G = (_ed_x(_ED_Y, 0), _ED_Y, 1, _ed_x(_ED_Y, 0) * _ED_Y % _P)
+
+
+def _ed_egaux(a, b):
+    return (a[0] * b[2] - b[0] * a[2]) % _P == 0 and (a[1] * b[2] - b[1] * a[2]) % _P == 0
+
+
+def ed25519_valide(cle, message, signature):
+    """cle : 32 octets bruts ; signature : 64 octets."""
+    try:
+        from cryptography.hazmat.primitives.asymmetric.ed25519 import Ed25519PublicKey
+        from cryptography.exceptions import InvalidSignature
+        try:
+            Ed25519PublicKey.from_public_bytes(cle).verify(signature, message)
+            return True
+        except InvalidSignature:
+            return False
+    except ImportError:
+        pass
+    if len(cle) != 32 or len(signature) != 64:
+        return False
+    a, r = _ed_point(cle), _ed_point(signature[:32])
+    s = int.from_bytes(signature[32:], "little")
+    if a is None or r is None or s >= _Q:
+        return False
+    h = int.from_bytes(hashlib.sha512(signature[:32] + cle + message).digest(), "little") % _Q
+    return _ed_egaux(_ed_mul(s, _ED_G), _ed_add(r, _ed_mul(h, a)))
+
+
+def cle_depuis_pem(pem):
+    """Clé publique Ed25519 (PEM SPKI du serveur de licences) -> 32 octets bruts."""
+    lignes = [l for l in pem.strip().splitlines() if l and not l.startswith("-----")]
+    der = base64.b64decode("".join(lignes))
+    if len(der) != 44 or not der.startswith(bytes.fromhex("302a300506032b6570032100")):
+        raise ValueError("pas une clé publique Ed25519")
+    return der[12:]
+
+
+def _b64url(texte):
+    return base64.urlsafe_b64decode(texte + "=" * (-len(texte) % 4))
+
+
+class Cles:
+    """Clés publiques du serveur de licences, relues toutes les heures, gardées dans un fichier."""
+
+    def __init__(self, urls, fichier):
+        self.urls = urls
+        self.fichier = fichier
+        self.cles = []
+        self.vus = {}  # jeton -> (licence, expiration) déjà vérifiés : un OPEN arrive par chaque trajet
+        try:
+            with open(fichier) as f:
+                self.cles = [bytes.fromhex(c) for c in json.load(f)]
+        except (OSError, ValueError):
+            pass
+
+    def _lire(self):
+        cles = []
+        for url in self.urls:
+            try:
+                with urllib.request.urlopen(url, timeout=10) as r:
+                    cles.append(cle_depuis_pem(r.read().decode()))
+            except Exception as e:
+                log.warning("clé publique illisible (%s) : %s", url, e)
+        return cles
+
+    async def tenir_a_jour(self):
+        while True:
+            cles = await asyncio.get_running_loop().run_in_executor(None, self._lire)
+            if cles:
+                nouvelles = set(cles) | (set(self.cles) if len(cles) < len(self.urls) else set())
+                log.info("clés publiques du serveur de licences : %d", len(nouvelles))
+                self.cles = sorted(nouvelles)
+                try:
+                    os.makedirs(os.path.dirname(self.fichier) or ".", exist_ok=True)
+                    with open(self.fichier, "w") as f:
+                        json.dump([c.hex() for c in self.cles], f)
+                except OSError:
+                    pass
+            await asyncio.sleep(3600)
+
+    def licence(self, jeton):
+        """Licence d'un jeton Rago Route valable (signé, type « route », pas expiré), sinon None."""
+        t = time.time()
+        vu = self.vus.get(jeton)
+        if vu is not None:
+            return vu[0] if vu[1] > t else None
+        try:
+            tete, corps, sig = jeton.split(".")
+            entete = json.loads(_b64url(tete))
+            donnees = json.loads(_b64url(corps))
+            signature = _b64url(sig)
+        except (ValueError, UnicodeDecodeError):
+            return None
+        if entete.get("alg") != "EdDSA" or donnees.get("typ") != "route" or not isinstance(donnees.get("lic"), str):
+            return None
+        if not isinstance(donnees.get("exp"), (int, float)) or donnees["exp"] <= t:
+            return None
+        message = f"{tete}.{corps}".encode()
+        if not any(ed25519_valide(c, message, signature) for c in self.cles):
+            return None
+        if len(self.vus) > 10000:
+            self.vus = {k: v for k, v in self.vus.items() if v[1] > t}
+        self.vus[jeton] = (donnees["lic"], donnees["exp"])
+        return donnees["lic"]
+
+
 # --- sortie (sur les serveurs Rago) -----------------------------------------
 
 def ip_publique(ip):
@@ -449,9 +621,10 @@ def adresse(texte):
 
 
 class SessionSortie:
-    def __init__(self, serveur, sid, cible):
+    def __init__(self, serveur, sid, cible, licence=None):
         self.serveur = serveur
         self.sid = sid
+        self.licence = licence
         self.cible = CIBLES[cible]
         self.adresses = {}  # adresse du joueur (ou d'un relais) -> dernière fois vue
         self.dernier_contact = time.monotonic()
@@ -547,8 +720,11 @@ class SessionSortie:
 
 
 class Sortie:
-    def __init__(self, debit):
+    def __init__(self, debit, cles=None, sorties=None):
         self.debit = debit
+        self.cles = cles          # None : sans contrôle d'accès (tests seulement)
+        self.sorties = sorties    # adresses vers lesquelles le relais fait suivre ; None : toutes (tests)
+        self.refus = {}           # adresse -> (vérifications, début de la seconde) : limite le coût des faux jetons
         self.sessions = {}
         self.relais = {}  # session -> (adresse du joueur, adresse de la sortie, dernière fois vue)
         self.transport = None  # Prise UDP
@@ -569,6 +745,8 @@ class Sortie:
             lu2 = lire_entete(interieur)
             if (port != PORT_ROUTE and os.environ.get("RAGO_TEST_LOCAL") != "1") or not ip_publique(ip) or lu2 is None or lu2[0] == T_FWD:
                 return
+            if self.sorties is not None and ip not in self.sorties:
+                return  # seulement vers les sorties Rago
             self.relais[lu2[1]] = (adresse, (ip, port), time.monotonic())
             self.transport.sendto(interieur, (ip, port))
             return
@@ -581,9 +759,39 @@ class Sortie:
         if session is None:
             if type_ != T_OPEN or len(corps) < 1 or corps[0] not in CIBLES or len(self.sessions) > 500:
                 return
-            session = self.sessions[sid] = SessionSortie(self, sid, corps[0])
+            licence = None
+            if self.cles is not None:
+                licence = self._verifier(corps[1:], adresse)
+                if licence is None:
+                    self.transport.sendto(paquet(T_REFUS, sid), adresse)
+                    return
+                if sum(1 for x in self.sessions.values() if x.licence == licence) >= SESSIONS_PAR_LICENCE:
+                    log.info("licence %s : trop de sessions à la fois", licence[-6:])
+                    self.transport.sendto(paquet(T_REFUS, sid), adresse)
+                    return
+            session = self.sessions[sid] = SessionSortie(self, sid, corps[0], licence)
             log.info("nouvelle session %s vers %s", sid.hex()[:8], session.cible[0])
         session.recu(type_, corps, adresse)
+
+    def _verifier(self, brut, adresse):
+        """Licence du jeton de l'OPEN, ou None. Au plus 50 vérifications par seconde et par adresse (un relais en porte plusieurs joueurs)."""
+        try:
+            jeton = brut.decode("ascii")
+        except UnicodeDecodeError:
+            return None
+        if not jeton or len(jeton) > 1000:
+            return None
+        if jeton not in self.cles.vus:
+            t = time.monotonic()
+            n, debut = self.refus.get(adresse[0], (0, t))
+            if t - debut > 1.0:
+                n, debut = 0, t
+            if n >= 50:
+                return None
+            self.refus[adresse[0]] = (n + 1, debut)
+            if len(self.refus) > 10000:
+                self.refus.clear()
+        return self.cles.licence(jeton)
 
     async def mesurer_cibles(self):
         while True:
@@ -596,6 +804,8 @@ class Sortie:
 
     async def boucle(self):
         asyncio.ensure_future(self.mesurer_cibles())
+        if self.cles is not None:
+            asyncio.ensure_future(self.cles.tenir_a_jour())
         dernier_menage = 0.0
         while True:
             await asyncio.sleep(TICK)
@@ -609,7 +819,11 @@ class Sortie:
 
 
 async def lancer_sortie(args):
-    proto = Sortie(args.debit * 125000)
+    if args.sans_jeton and os.environ.get("RAGO_TEST_LOCAL") != "1":
+        raise SystemExit("--sans-jeton ne sert qu'aux tests (RAGO_TEST_LOCAL=1)")
+    cles = None if args.sans_jeton else Cles(args.cle_url or CLES_URLS, args.fichier_cles)
+    sorties = None if os.environ.get("RAGO_TEST_LOCAL") == "1" and not args.sortie_rago else set(args.sortie_rago or SORTIES_RAGO)
+    proto = Sortie(args.debit * 125000, cles, sorties)
     sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
     sock.bind(("0.0.0.0", args.port))
     proto.transport = Prise(sock, proto.datagram_received)
@@ -734,6 +948,9 @@ class SessionClient:
             self.emetteur.recu_ack(*ACK.unpack_from(corps))
         elif type_ == T_CLOSE:
             self.fermer()
+        elif type_ == T_REFUS and not self.ouverte and not self.ferme:
+            log.error("La sortie refuse l'accès : il faut un jeton Rago Route valable (--jeton, compte Premium, 6 h).")
+            self.fermer()
 
     def compter(self):
         """Toutes les 100 ms : pour les paquets arrivés il y a plus d'1 s, regarde par quels trajets ils sont venus."""
@@ -762,7 +979,7 @@ class SessionClient:
         if not self.ouverte:
             if time.monotonic() - self.dernier_open > 0.2:
                 self.dernier_open = time.monotonic()
-                self.envoyer(T_OPEN, bytes([self.cible]))
+                self.envoyer(T_OPEN, bytes([self.cible]) + (self.client.args.jeton or "").encode())
             return
         self.emetteur.tick(fige)
         self.compter()
@@ -1083,6 +1300,10 @@ def principal():
     s = sous.add_parser("sortie", help="sur un serveur Rago")
     s.add_argument("--port", type=int, default=PORT_ROUTE)
     s.add_argument("--debit", type=float, default=50, help="débit max par joueur, en Mbit/s")
+    s.add_argument("--cle-url", action="append", help="adresse d'une clé publique du serveur de licences (remplace celles par défaut)")
+    s.add_argument("--fichier-cles", default="/var/lib/rago-route/cles.json", help="copie des clés publiques, si le serveur de licences ne répond pas")
+    s.add_argument("--sortie-rago", action="append", help="relais : sortie Rago vers laquelle faire suivre (remplace la liste par défaut)")
+    s.add_argument("--sans-jeton", action="store_true", help="tests seulement : accepte les sessions sans jeton")
     c = sous.add_parser("client", help="sur le PC ou le Mac du joueur")
     c.add_argument("--sortie", required=True, help="adresse du serveur de sortie (ville d'entrée Cloudflare)")
     c.add_argument("--via", action="append", help="ajoute un trajet qui passe par ce serveur Rago")
@@ -1094,6 +1315,7 @@ def principal():
     c.add_argument("--decalage", type=int, default=0, help="décale les ports locaux (si 25565 est déjà pris)")
     c.add_argument("--sans-comparer", action="store_true", help="ne mesure pas le ping direct pendant la partie")
     c.add_argument("--sans-anti-veille", action="store_true", help="Mac : laisse le système ralentir le programme en arrière-plan")
+    c.add_argument("--jeton", help="jeton Rago Route d'un compte Premium (bouton « Copier un jeton » de l'exe de test, valable 6 h)")
     args = p.parse_args()
     logging.basicConfig(level=os.environ.get("RAGO_LOG", "INFO"), format="%(asctime)s %(message)s")
     if sys.platform == "win32" and hasattr(asyncio, "WindowsSelectorEventLoopPolicy"):

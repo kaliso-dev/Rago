@@ -362,11 +362,54 @@ async fn net_test(app: AppHandle, state: State<'_, AppState>, ids: Vec<String>) 
 
 // ---------- Rago Route (route.rs) : tunnel anti-lag, en test (exe staging seulement pour l'instant)
 
-/// Allume Rago Route : le jeu se connecte ensuite à localhost (Hypixel) ou localhost:25566 (Minemen).
-/// Erreurs : "port:25565" (port déjà pris, par exemple par un autre Rago Route ou un serveur local), "udp:…", "listen:…".
+/// Allume Rago Route (Premium) : le jeu se connecte ensuite à localhost (Hypixel) ou localhost:25566 (Minemen).
+/// Erreurs : "premium:<code>" (pas de jeton Rago Route : "no_license", "revoked", "route_closed", "network"…),
+/// "port:25565" (port déjà pris, par exemple par un autre Rago Route ou un serveur local), "udp:…", "listen:…".
 #[tauri::command]
-async fn route_start() -> Result<route::Status, String> {
-    tauri::async_runtime::spawn_blocking(route::turn_on).await.map_err(|e| e.to_string())?
+async fn route_start(state: State<'_, AppState>) -> Result<route::Status, String> {
+    let lic = Arc::clone(&state.license);
+    tauri::async_runtime::spawn_blocking(move || {
+        let token = lic.route_token().map_err(|e| format!("premium:{}", e.code))?;
+        let st = route::turn_on(&token)?;
+        keep_route_token(lic);
+        Ok(st)
+    })
+    .await
+    .map_err(|e| e.to_string())?
+}
+
+/// Tant que Rago Route tourne, un nouveau jeton toutes les 2 h (il en dure 6) : une partie lancée après des heures
+/// passe encore. Un seul fil à la fois.
+fn keep_route_token(lic: Arc<License>) {
+    static ON: std::sync::atomic::AtomicBool = std::sync::atomic::AtomicBool::new(false);
+    if ON.swap(true, std::sync::atomic::Ordering::SeqCst) {
+        return;
+    }
+    std::thread::spawn(move || {
+        let mut waited = std::time::Duration::ZERO;
+        while route::current().running {
+            std::thread::sleep(std::time::Duration::from_secs(30));
+            waited += std::time::Duration::from_secs(30);
+            if waited >= std::time::Duration::from_secs(2 * 3600) {
+                if let Ok(t) = lic.route_token() {
+                    route::set_token(&t);
+                    waited = std::time::Duration::ZERO;
+                } else {
+                    waited = std::time::Duration::from_secs(2 * 3600 - 300); // nouvel essai dans 5 min
+                }
+            }
+        }
+        ON.store(false, std::sync::atomic::Ordering::SeqCst);
+    });
+}
+
+/// Jeton Rago Route seul (6 h), pour le script du Mac (`--jeton`) pendant les essais. Mêmes erreurs que route_start.
+#[tauri::command]
+async fn route_token(state: State<'_, AppState>) -> Result<String, String> {
+    let lic = Arc::clone(&state.license);
+    tauri::async_runtime::spawn_blocking(move || lic.route_token().map_err(|e| format!("premium:{}", e.code)))
+        .await
+        .map_err(|e| e.to_string())?
 }
 
 #[tauri::command]
@@ -1350,6 +1393,7 @@ pub fn run() {
             route_start,
             route_stop,
             route_status,
+            route_token,
         ])
         .build(tauri::generate_context!())
         .expect("erreur au lancement de Rago Optimizer")

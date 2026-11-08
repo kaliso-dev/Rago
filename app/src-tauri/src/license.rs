@@ -551,6 +551,14 @@ impl License {
         *self.access.lock().unwrap() = None;
     }
 
+    /// Jeton Rago Route (6 h) pour les serveurs Rago, seulement avec une licence Premium active sur ce PC.
+    /// Erreurs : "no_license" (pas de Premium ici), puis celles du serveur ("revoked", "route_closed", "network"…).
+    pub fn route_token(&self) -> Result<String, ApiError> {
+        let bearer = self.bearer().ok_or("no_license")?;
+        let res = post("/route/token", Some(&bearer), json!({}))?;
+        field(&res, &["route_token"]).ok_or_else(|| "server_error".into())
+    }
+
     /// Jeton de licence de ce PC tant qu'il est valable : il ouvre aussi l'API du compte (avis, photo).
     pub(crate) fn bearer(&self) -> Option<String> {
         if self.status().state != "active" {

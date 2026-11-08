@@ -36,6 +36,8 @@ const T_PING: u8 = 5;
 const T_PONG: u8 = 6;
 const T_CLOSE: u8 = 7;
 const T_FWD: u8 = 8;
+/// réponse de la sortie à un OPEN sans jeton valable (sorties du 08/11 et après)
+const T_REFUSE: u8 = 9;
 /// magie (2), version (1), type (1), session (16)
 const HEADER: usize = 20;
 /// numéro (u32), horodatage d'envoi en ms (u32)
@@ -443,6 +445,24 @@ pub struct Config {
     pub test_cut: Option<(Duration, Duration)>,
 }
 
+/// Jeton Rago Route du serveur de licences (comptes Premium, valable 6 h), envoyé à la sortie à chaque nouvelle
+/// connexion du jeu. L'app le renouvelle pendant que Rago Route tourne.
+fn token() -> &'static Mutex<String> {
+    static T: OnceLock<Mutex<String>> = OnceLock::new();
+    T.get_or_init(|| Mutex::new(String::new()))
+}
+
+/// Un nouveau jeton : les prochaines connexions du jeu l'utilisent, et l'accès refusé est oublié.
+pub fn set_token(t: &str) {
+    if let Ok(mut g) = token().lock() {
+        *g = t.to_string();
+    }
+    REFUSED.store(false, Ordering::Relaxed);
+}
+
+/// La sortie a refusé le jeton (expiré, ou plus de Premium).
+static REFUSED: AtomicBool = AtomicBool::new(false);
+
 impl Default for Config {
     fn default() -> Self {
         Config { exit: EXIT_PARIS, relays: vec![RELAY_FRANKFURT], no_direct: false, rate: 30.0 * 125_000.0, port_offset: 0, test_loss: Vec::new(), test_cut: None }
@@ -753,6 +773,11 @@ impl Engine {
                 s.sender.on_ack(cumul, bits, ts);
             }
             T_CLOSE => self.close(&sid),
+            T_REFUSE if !s.open => {
+                // le jeu voit la connexion se fermer ; l'app affiche pourquoi
+                REFUSED.store(true, Ordering::Relaxed);
+                self.close(&sid);
+            }
             _ => {}
         }
     }
@@ -804,8 +829,9 @@ impl Engine {
             if !s.open {
                 if s.last_open.map_or(true, |t| t.elapsed() > Duration::from_millis(200)) {
                     s.last_open = Some(Instant::now());
-                    let target = s.target;
-                    self.send_all(T_OPEN, &sid, &[target]);
+                    let mut body = vec![s.target];
+                    body.extend_from_slice(token().lock().map(|t| t.clone()).unwrap_or_default().as_bytes());
+                    self.send_all(T_OPEN, &sid, &body);
                 }
                 continue;
             }
@@ -863,7 +889,7 @@ impl Engine {
             .collect();
         let st = Status {
             running: true,
-            error: None,
+            error: REFUSED.load(Ordering::Relaxed).then(|| "token".into()),
             playing: self.sessions.values().any(|s| s.open),
             paths,
             saved: self.saved,
@@ -1109,8 +1135,9 @@ fn slot() -> &'static Mutex<Option<Running>> {
     S.get_or_init(|| Mutex::new(None))
 }
 
-/// Allume Rago Route avec les serveurs Rago (sans effet s'il tourne déjà).
-pub fn turn_on() -> Result<Status, String> {
+/// Allume Rago Route avec les serveurs Rago et le jeton du compte (sans effet s'il tourne déjà, sauf le jeton).
+pub fn turn_on(token: &str) -> Result<Status, String> {
+    set_token(token);
     let mut s = slot().lock().map_err(|_| "lock")?;
     if s.is_none() {
         *s = Some(start(Config::default())?);

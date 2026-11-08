@@ -1,7 +1,7 @@
 ---
 type: pilotage
 tags: [pilotage, à-décider, à-vérifier]
-maj: 2026-11-07
+maj: 2026-11-08
 ---
 # Questions ouvertes
 
@@ -16,7 +16,7 @@ Mode d'emploi (outil ArtifactData, collection `questions`) :
 - Dire à Sofiene dans le fil, en une ligne, quand de nouvelles questions l'attendent.
 
 ## En attente de réponse sur la page
-Ouvertes au 04/11 : q36 (remboursement 14 jours), q37 (accord avant l'envoi du test réseau), q39 (parrainage dans l'app), q40 (même prix au renouvellement), q41 (Packet Optimizer en gratuit), q45 à q50 (partage des ventes, mentions légales, sortie de la 1.2.2, offre après l'essai, vendeur majeur et Stripe, seuils de l'Analyse du PC), q51 (proxy gratuit ou Premium). Les autres sont traitées.
+Ouvertes au 04/11 : q36 (remboursement 14 jours), q37 (accord avant l'envoi du test réseau), q39 (parrainage dans l'app), q40 (même prix au renouvellement), q41 (Packet Optimizer en gratuit), q45 à q50 (partage des ventes, mentions légales, sortie de la 1.2.2, offre après l'essai, vendeur majeur et Stripe, seuils de l'Analyse du PC). Les autres sont traitées (q51 traitée le 08/11 : Rago Route réservé au Premium).
 
 - q44 à q49 (04/11) : statut du vendeur (traitée : « Pas encore »), partage de l'argent, adresse des mentions légales, vendeur majeur et compte Stripe, sortie de la 1.2.2, offre débitée après l'essai. Voir [[Conformité juridique]].
 - q50 (04/11) : seuils de l'[[Analyse du PC]], À VÉRIFIER.

@@ -1,7 +1,7 @@
 ---
 type: registre
 tags: [décision]
-maj: 2026-11-04
+maj: 2026-11-08
 ---
 # Décisions
 
@@ -10,6 +10,7 @@ Registre daté des décisions de Sofiene. **La plus récente prime.** Citations 
 ## App et versions
 | Date | Décision | Statut |
 |---|---|---|
+| 08/11 | Rago Route réservé au Premium : « Oui, tout de suite » (carte de choix) : jeton signé par le serveur de licences, vérifié par la sortie Paris, relais limité à la sortie Rago, ancien proxy simple fermé ; sur `staging` d'abord, Sofiene réinstalle les 2 serveurs ensuite. Tranche q51 | DÉCIDÉ, codé, pas encore poussé ([[Proxy]]) |
 | 07/11 | Rago Route dans l'app : « tu peux push sur staging » (moteur Windows et onglet de l'exe de test) | DÉCIDÉ, fait ([[Proxy]]) |
 | 07/11 | Rago Route : « Encore des tests sur le Mac » avant la version Windows dans l'app (carte de choix) : câble seul, puis 4G de l'iPhone en plus du Wi-Fi | DÉCIDÉ, en cours ([[Proxy]]) |
 | 07/11 | [[Rago OS]] prend la charte de l'app 1.2.1 (carte de choix) | DÉCIDÉ, fait ([[Charte graphique]]) |
@@ -68,6 +69,7 @@ Registre daté des décisions de Sofiene. **La plus récente prime.** Citations 
 Une ligne par projet ou fonctionnalité arrêtés, pour qu'aucun Claude ne les relance. Le reste du vault n'en parle plus.
 | Date | Quoi | Raison |
 |---|---|---|
+| 08/11 | Ancien proxy simple (`relay.py`, TCP 25565 et 25566, sans compte) | Remplacé par Rago Route réservé au Premium (« Oui, tout de suite ») ; retiré par le nouveau `install.sh` ([[Proxy]]) |
 | 05/11 | Proxy chez OVHcloud | VPS-1 indisponible, VPS-2 (7 €) seulement en Amérique du Nord : « faut pas prendre chez ovh » ([[Proxy]]) |
 | 05/11 | Proxy : journée de test sur 6 serveurs Vultr loués à l'heure | « je veux pas ta journée de test » ; serveurs configurés directement ([[Proxy]]) |
 | 01/11 | Point après la première semaine de ventes (RAG-16) et logo Rago à côté des e-mails `noreply@` et `support@` (RAG-21) | « On les abandonne » |

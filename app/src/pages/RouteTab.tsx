@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { motion } from "motion/react";
-import { LoaderCircle, Power, Route } from "lucide-react";
+import { Check, Copy, LoaderCircle, Lock, Power, Route } from "lucide-react";
 import { api, type RoutePath, type RouteStatus } from "../lib/api";
 import type { Key } from "../lib/i18n";
 import { useStore } from "../lib/store";
@@ -11,19 +11,27 @@ const rise = { initial: { opacity: 0, y: 10 }, animate: { opacity: 1, y: 0, tran
 
 const ms = (v: number | null | undefined) => (v == null ? "—" : String(Math.round(v)));
 
-/** Message affiché quand Rago Route ne démarre pas (erreurs de route.rs : « port:25565 », « listen:… », « udp:… »). */
+/** Message affiché quand Rago Route ne démarre pas : erreurs de route.rs (« port:25565 », « listen:… », « udp:… »)
+ *  et du jeton demandé au serveur de licences (« premium:no_license », « premium:route_closed »…, lib.rs). */
 function errorKey(e: string): Key {
   if (e.startsWith("port:")) return "route.err.port";
   if (e.startsWith("udp:")) return "route.err.udp";
+  if (e === "premium:no_license") return "route.err.premium";
+  if (e === "premium:route_closed") return "route.err.closed";
+  if (e === "premium:network") return "route.err.network";
+  if (e === "premium:rate_limited") return "route.err.busy";
+  if (e.startsWith("premium:")) return "route.err.account";
   return "route.err.other";
 }
 
-/** Rago Route dans Réseau : le tunnel anti-lag vers la sortie de Paris (route.rs). Exe de test seulement pour l'instant. */
+/** Rago Route dans Réseau : le tunnel anti-lag vers la sortie de Paris (route.rs). Exe de test seulement pour l'instant.
+ *  Réservé au Premium : la sortie de Paris refuse toute partie sans jeton signé par le serveur de licences. */
 export function RouteTab() {
-  const { t } = useStore();
+  const { t, license, premium, setUpsell } = useStore();
   const [st, setSt] = useState<RouteStatus | null>(null);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [copied, setCopied] = useState(false);
 
   useEffect(() => {
     let alive = true;
@@ -42,6 +50,10 @@ export function RouteTab() {
 
   const running = !!st?.running;
   const playing = running && !!st?.playing;
+  // pas de Premium (licence lue) : l'offre à la place du bouton ; si Rago Route tourne déjà, on peut toujours l'éteindre
+  const locked = license !== null && !premium && !running;
+  // la sortie a refusé le jeton (fin de Premium, jeton plus valable) : route.rs le dit dans l'état
+  const shown = error ?? (running && st?.error === "token" ? "token" : null);
 
   async function toggle() {
     setBusy(true);
@@ -57,6 +69,18 @@ export function RouteTab() {
       setError(String(e));
     } finally {
       setBusy(false);
+    }
+  }
+
+  /** Essais sur le Mac : le jeton du compte, à coller après --jeton dans le script (il dure 6 h). */
+  async function copyToken() {
+    setError(null);
+    try {
+      await api.copyText(await api.routeToken());
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    } catch (e) {
+      setError(String(e));
     }
   }
 
@@ -90,17 +114,31 @@ export function RouteTab() {
           </div>
         )}
 
-        {error && <p className="rt-error small">{t(errorKey(error), { e: error.replace(/^\w+:/, "") })}</p>}
+        {locked && <p className="muted small rt-note">{t("route.premium")}</p>}
+        {shown && (
+          <p className="rt-error small">{shown === "token" ? t("route.err.token") : t(errorKey(shown), { e: shown.replace(/^\w+:/, "") })}</p>
+        )}
 
         <div className="nt-actions">
-          <Button
-            variant={running ? "secondary" : "primary"}
-            icon={busy ? <LoaderCircle size={16} className="spin" /> : <Power size={16} />}
-            disabled={busy}
-            onClick={toggle}
-          >
-            {running ? t("route.stop") : t("route.start")}
-          </Button>
+          {locked ? (
+            <Button variant="primary" icon={<Lock size={16} />} onClick={() => setUpsell("plan")}>
+              {t("free.upgrade")}
+            </Button>
+          ) : (
+            <Button
+              variant={running ? "secondary" : "primary"}
+              icon={busy ? <LoaderCircle size={16} className="spin" /> : <Power size={16} />}
+              disabled={busy || license === null}
+              onClick={toggle}
+            >
+              {running ? t("route.stop") : t("route.start")}
+            </Button>
+          )}
+          {premium && (
+            <Button variant="ghost" icon={copied ? <Check size={16} /> : <Copy size={16} />} onClick={copyToken}>
+              {copied ? t("route.copied") : t("route.copyToken")}
+            </Button>
+          )}
         </div>
       </motion.section>
 

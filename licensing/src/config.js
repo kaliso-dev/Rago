@@ -111,6 +111,9 @@ export function loadConfig(env = process.env) {
     },
 
     licenseTokenDays: Number(env.LICENSE_TOKEN_DAYS || 30),
+    // Rago Route on the test server: emails of the accounts that get a token (comma-separated). Ignored in production,
+    // where every active Premium license gets one.
+    routeTesters: (env.ROUTE_TESTERS || '').split(',').map((e) => e.trim().toLowerCase()).filter(Boolean),
     // Days a subscriber keeps working offline past the paid period (renewal retries, clock drift).
     subscriptionGraceDays: Number(env.SUBSCRIPTION_GRACE_DAYS || 3),
 

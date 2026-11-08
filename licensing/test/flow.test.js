@@ -345,6 +345,54 @@ test('self-service reset is off by default and limited when on', async () => {
   assert.doesNotMatch(await (await off.browse('/account')).text(), /Use on another PC/);
 });
 
+test('Rago Route token: active Premium only, 6 hours, no personal data, checked offline; test server: ROUTE_TESTERS only', async () => {
+  const premiumToken = async (t, email, sid) => {
+    await t.webhook('checkout.session.completed', t.paidSession(sid, email));
+    await t.browse(`/checkout/success?session_id=${sid}`);
+    await t.browse('/signup', { form: { email, password: 'correct horse' } });
+    let j = await (await t.api('/auth/login', { email, password: 'correct horse', device: device('R1') })).json();
+    j = await (await t.api('/licenses/activate', { device: device('R1') }, { authorization: `Bearer ${j.access_token}` })).json();
+    assert.ok(j.license_token, `${email}: ${JSON.stringify(j)}`);
+    return j.license_token;
+  };
+  const t = await setup();
+  const lic = await premiumToken(t, 'route@rago.gg', 'cs_route');
+
+  let r = await t.api('/route/token', {});
+  assert.equal(r.status, 401);
+  r = await t.api('/route/token', {}, { authorization: `Bearer ${lic}` });
+  const j = await r.json();
+  assert.equal(r.status, 200, JSON.stringify(j));
+  // The Rago Route servers only have the public key.
+  const pub = await (await t.app.request('/api/v1/public-key')).json();
+  const claims = verifyToken(j.route_token, { publicKey: createPublicKey(pub.public_key_pem) }, { typ: 'route' });
+  assert.ok(claims);
+  assert.equal(claims.lic, verifyToken(lic, t.keys, { typ: 'license' }).lic);
+  assert.ok(claims.exp - claims.iat <= 6 * 3600 && claims.exp - claims.iat > 5 * 3600);
+  assert.deepEqual(Object.keys(claims).sort(), ['exp', 'iat', 'lic', 'typ']);
+  // Not a license token, and a route token doesn't open another one.
+  assert.equal(verifyToken(j.route_token, t.keys, { typ: 'license' }), null);
+  r = await t.api('/route/token', {}, { authorization: `Bearer ${j.route_token}` });
+  assert.equal(r.status, 401);
+
+  // Refunded: no more tokens.
+  await t.webhook('charge.refunded', { id: 'ch_r', object: 'charge', refunded: true, payment_intent: 'pi_cs_route' });
+  r = await t.api('/route/token', {}, { authorization: `Bearer ${lic}` });
+  assert.equal(r.status, 403);
+  assert.equal((await r.json()).error.code, 'revoked');
+
+  // Test server: a test card must not open Rago Route, only the listed testers.
+  const s = await setup({ APP_ENV: 'staging', ROUTE_TESTERS: ' Tester@rago.gg ,other@rago.gg' });
+  const outsider = await premiumToken(s, 'buyer@rago.gg', 'cs_route2');
+  r = await s.api('/route/token', {}, { authorization: `Bearer ${outsider}` });
+  assert.equal(r.status, 403);
+  assert.equal((await r.json()).error.code, 'route_closed');
+  const s2 = await setup({ APP_ENV: 'staging', ROUTE_TESTERS: ' Tester@rago.gg ,other@rago.gg' });
+  const tester = await premiumToken(s2, 'tester@rago.gg', 'cs_route3');
+  r = await s2.api('/route/token', {}, { authorization: `Bearer ${tester}` });
+  assert.equal(r.status, 200);
+});
+
 test('account without a license sees the offer', async () => {
   const t = await setup();
   await t.browse('/signup', { form: { email: 'free@x.io', password: 'password123' } });

@@ -1,7 +1,7 @@
 ---
 type: règle
 tags: [technique, sécurité, règle]
-maj: 2026-10-31
+maj: 2026-11-08
 ---
 # Clés et secrets
 
@@ -16,7 +16,7 @@ maj: 2026-10-31
 
 ## Noms des variables
 - **GitHub secrets** : `RAGO_API_BASE`, `RAGO_LICENSE_PUBKEY`, `RAGO_SCRIPTS_SECRET`, `STAGING_RAGO_API_BASE`, `STAGING_RAGO_LICENSE_PUBKEY`, `TAURI_SIGNING_PRIVATE_KEY`, `TAURI_SIGNING_PRIVATE_KEY_PASSWORD`. **Variables** : `SITE_URL`, `SUPPORT_URL`, `STAGING_SITE_URL`, `RAGO_UPDATER_PUBKEY`.
-- **Railway** : `NODE_ENV`, `PUBLIC_URL`, `DATABASE_URL`, `STRIPE_SECRET_KEY`, `STRIPE_WEBHOOK_SECRET`, `SCRIPTS_SECRET`, `INSTALLER_VERSION`, `INSTALLER_OBJECT`, `UPDATE_ROLLOUT`, `UPDATE_PAUSED`, `LIFETIME_PRICE`, `DISCORD_*` (dont `DISCORD_LOGIN=1`), clés Google OAuth ; staging : `APP_ENV=staging`. Liste complète : `licensing/.env.example`.
+- **Railway** : `NODE_ENV`, `PUBLIC_URL`, `DATABASE_URL`, `STRIPE_SECRET_KEY`, `STRIPE_WEBHOOK_SECRET`, `SCRIPTS_SECRET`, `INSTALLER_VERSION`, `INSTALLER_OBJECT`, `UPDATE_ROLLOUT`, `UPDATE_PAUSED`, `LIFETIME_PRICE`, `DISCORD_*` (dont `DISCORD_LOGIN=1`), clés Google OAuth ; staging : `APP_ENV=staging`, `ROUTE_TESTERS` (e-mails autorisés à avoir un jeton Rago Route sur le serveur de test, séparés par des virgules ; pas un secret, 08/11, [[Proxy]]). Liste complète : `licensing/.env.example`.
 - **Netlify** : `PREVIEW_KEY`, `LAUNCH_AT`, `STAGING_ACCOUNT_URL`.
 - Sauvegarde hors ligne de la clé de signature : `npm run admin -- export-keys`.
 

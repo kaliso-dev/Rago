@@ -38,6 +38,8 @@ const API_ERRORS = {
   bound_to_other_device: [403, 'This license is already active on another PC. Rago Optimizer works on one device per license. Contact support on Discord if you changed PCs.'],
   revoked: [403, 'This license is no longer active. Contact support on Discord if you think that\'s a mistake.'],
   subscription_ended: [403, 'Your Rago Optimizer Premium subscription ended. Renew it on the website, then sign in again.'],
+  // Rago Route (2026-11-08)
+  route_closed: [403, "Rago Route isn't open to this account yet."],
   rate_limited: [429, 'Too many attempts. Wait a few minutes and try again.'],
   // Sign-in to the app through the browser, with Google or Discord (2026-11-04)
   no_subscription: [404, 'There is no subscription to change on this account.'],
@@ -53,6 +55,9 @@ const API_ERRORS = {
   image_too_large: [413, 'This picture is over 5 MB. Choose a smaller one.'],
   storage_unavailable: [503, "Your photo couldn't be saved right now. Try again in a moment."],
 };
+
+// Rago Route: a token lasts 6 hours (the app asks for a new one each time it turns Rago Route on).
+const ROUTE_TOKEN_SECONDS = 6 * 3600;
 
 // Sign-in from the app through the browser: 10 minutes, and a code without 0/O or 1/I to compare by eye.
 const LINK_TTL = 10 * 60 * 1000;
@@ -1427,6 +1432,27 @@ export function createApp({ cfg, db, keys, stripe, mailer, log = console, fetchI
     if (!bound || bound.id !== claims.did || (!replaced && claims.tv !== license.token_version)) return fail(c, 'invalid_token');
     const out = await L.activate(db, license.id, device, ip(c));
     return c.json(tokenReply(user, out.license, out.device, device.appVersion));
+  });
+
+  // ---------- Rago Route (2026-11-08) ----------
+  // A short token for the Rago Route servers, for an active Premium license only (the license token of this PC).
+  // The servers check it offline with /public-key; it names the license and nothing else. On the test server, only
+  // the accounts in ROUTE_TESTERS get one: a test card there must not open the real Rago Route servers.
+  api.post('/route/token', async (c) => {
+    const bearer = (c.req.header('authorization') || '').replace(/^Bearer\s+/i, '').trim();
+    const claims = verifyToken(bearer, keys, { typ: 'license' });
+    if (!claims) return fail(c, 'invalid_token');
+    if (!allow(`route:${claims.lic}`, 60, 60 * 60 * 1000)) return fail(c, 'rate_limited');
+    const license = await L.current(db, await L.getLicense(db, claims.lic));
+    const user = license && await L.getUser(db, claims.sub);
+    if (!license || !user || license.user_id !== user.id) return fail(c, 'invalid_token');
+    if (license.status !== 'active') return failLicense(c, license, 'revoked');
+    // Device freed or re-bound since this license token was issued.
+    if (license.token_version !== claims.tv) return fail(c, 'invalid_token');
+    if (cfg.staging && !cfg.routeTesters.includes(user.email)) return fail(c, 'route_closed');
+    const iat = now();
+    const exp = Math.min(iat + ROUTE_TOKEN_SECONDS, tokenExp(license, iat));
+    return c.json({ route_token: signToken({ typ: 'route', lic: license.id, iat, exp }, keys), expires_at: new Date(exp * 1000).toISOString() });
   });
 
   // ---------- App API: account, review and profile photo (2026-10-09) ----------

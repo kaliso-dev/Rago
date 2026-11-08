@@ -1,7 +1,7 @@
 ---
 type: pilotage
 tags: [journal, chronologie]
-maj: 2026-11-07
+maj: 2026-11-08
 ---
 # Journal
 
@@ -10,6 +10,8 @@ Une ligne par événement marquant, la plus récente en haut. Voir [[Historique 
 ## Novembre 2026
 | Date | Événement | Liens |
 |---|---|---|
+| 08/11 | Rago Route réservé au Premium (choix de Sofiene) : jeton signé par le serveur de licences, vérifié par la sortie, relais limité à Paris, onglet de l'app avec l'offre Premium, ancien proxy simple retiré de `install.sh` ; testé en labo, pas encore poussé ni installé | [[Proxy]] |
+| 08/11 | Compte rendu des performances de Rago Route écrit pour le collègue de Sofiene | [[Proxy]] |
 | 07/11 | Premier essai de Rago Route dans l'exe de test sur un PC Windows (soir) : marche ; direct 13 ms, Frankfurt 35 ms, 0 perte, retard du moteur 12 ms au pire | [[Proxy]] |
 | 07/11 | Rago Route dans l'app Windows : moteur Rust `route.rs` + onglet « Rago Route » dans Réseau (exe de test seulement), testé en labo ; poussé sur `staging` à la demande de Sofiene (exe de test refabriqué), jamais lancé sur un PC Windows | [[Proxy]] |
 | 07/11 | Test de coupure du Wi-Fi (~30 s, 14 h 05) : la partie tient, la 4G prend tout, mais monte à 1,2–1,5 s : mauvaise réception 4G chez la grand-mère de Sofiene (sa réponse) | [[Proxy]] |
