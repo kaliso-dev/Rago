@@ -21,16 +21,22 @@ Accès (08/11) : la sortie n'ouvre une session qu'avec un jeton Rago Route valab
 par le serveur de licences pour les comptes Premium (6 h), vérifié ici avec sa clé publique.
 Le relais ne fait suivre que vers les sorties Rago.
 
+Chiffrement (protocole 2, 08/11) : à l'ouverture, le joueur et la sortie s'accordent une clé (X25519) ;
+ensuite tout est chiffré et signé (ChaCha20-Poly1305) : jeton, nom du serveur, pseudo du handshake,
+confirmations. Un paquet modifié, rejoué ou forgé est jeté sans réponse. Le relais ne voit que des octets
+chiffrés. Paquets de secours (même date) : pour 4 paquets du jeu, un paquet XOR qui répare une perte
+sans attendre de renvoi.
+
 Modes :
   python3 rago-route.py sortie                       (sur un serveur Rago, port UDP 25600)
   python3 rago-route.py client --sortie IP [--via IP] [--interface en5] [--telephone] [--jeton JETON]
 
-Aucune dépendance : Python 3.8+ seulement.
+Dépendance : la bibliothèque cryptography (Mac : pip3 install cryptography ; serveurs : install.sh
+installe python3-cryptography).
 """
 import argparse
 import asyncio
 import base64
-import hashlib
 import ipaddress
 import json
 import logging
@@ -43,17 +49,35 @@ import sys
 import time
 import urllib.request
 
-VERSION = 1
+try:
+    from cryptography.exceptions import InvalidSignature, InvalidTag
+    from cryptography.hazmat.primitives import hashes, serialization
+    from cryptography.hazmat.primitives.asymmetric.ed25519 import Ed25519PublicKey
+    from cryptography.hazmat.primitives.asymmetric.x25519 import X25519PrivateKey, X25519PublicKey
+    from cryptography.hazmat.primitives.ciphers.aead import ChaCha20Poly1305
+    from cryptography.hazmat.primitives.kdf.hkdf import HKDF
+except ImportError:
+    raise SystemExit("Rago Route a besoin de la bibliothèque cryptography : pip3 install cryptography")
+
+VERSION = 2  # 08/11 : tunnel chiffré et paquets de secours (les sorties de la version 1 ne comprennent plus)
 MAGIC = b"RR"
 PORT_ROUTE = 25600
-T_OPEN, T_OPEN_OK, T_DATA, T_ACK, T_PING, T_PONG, T_CLOSE, T_FWD, T_REFUS = range(1, 10)  # REFUS : jeton refusé (08/11)
+T_OPEN, T_OPEN_OK, T_DATA, T_ACK, T_PING, T_PONG, T_CLOSE, T_FWD, T_REFUS, T_HELLO, T_AUTH, T_FEC = range(1, 13)
+# En clair : OPEN (clé publique du joueur), HELLO (clé publique de la sortie), FWD (enveloppe du relais).
+# AUTH : clé publique du joueur en clair, puis cible et jeton chiffrés. Tout le reste est chiffré.
 ENTETE = struct.Struct(">2sBB16s")  # magie, version, type, session
 DATA = struct.Struct(">II")         # numéro, horodatage d'envoi (ms)
 ACK = struct.Struct(">IQI")         # tout reçu avant ce numéro, 64 suivants (bits), horodatage renvoyé
 PING = struct.Struct(">IB")         # horodatage, numéro du trajet
 PONG_INFOS = struct.Struct(">HHI")  # après le PING renvoyé : ping Minecraft de la sortie, retard de la sortie (ms), renvois de la sortie
 FWD = struct.Struct(">4sH")         # adresse et port de la sortie
-TAILLE_MAX = 1150                   # octets de jeu par paquet (tient sous la MTU, même en 4G)
+CHIFFRE = struct.Struct(">BQ")      # trajet, compteur : le nonce du paquet (jamais deux fois le même par clé)
+FEC = struct.Struct(">IBIH")        # paquet de secours : premier numéro, nombre, horodatage, longueurs XOR
+FEC_K = 4                           # un paquet de secours pour 4 paquets du jeu
+FEC_ATTENTE = 15                    # ms : un groupe incomplet (au moins 2 paquets) part quand même après ce délai
+FENETRE_REJEU = 1024                # compteurs retenus par trajet pour refuser un paquet rejoué
+CLE_PUB = 32
+TAILLE_MAX = 1150                   # octets de jeu par paquet (avec chiffrement et relais : 1 257 octets, sous la MTU)
 FENETRE = 2048                      # paquets en vol au maximum
 SONDES_MAX = 2                      # paquets renvoyés à la fois quand plus rien ne revient
 CIBLES = {0: ("mc.hypixel.net", 25565), 1: ("eu.minemen.club", 25565)}
@@ -95,6 +119,63 @@ def lire_entete(data):
     if magie != MAGIC or version != VERSION:
         return None
     return type_, session, data[ENTETE.size:]
+
+
+# --- chiffrement du tunnel -------------------------------------------------------
+
+def cles_session(prive, pub_autre, sid, pub_joueur, pub_sortie):
+    """Clés (joueur -> sortie, sortie -> joueur) tirées de l'échange X25519. ValueError si la clé reçue est invalide."""
+    commun = prive.exchange(X25519PublicKey.from_public_bytes(pub_autre))
+    k = HKDF(algorithm=hashes.SHA256(), length=64, salt=sid, info=b"rago-route 2" + pub_joueur + pub_sortie).derive(commun)
+    return k[:32], k[32:]
+
+
+def pub_brute(prive):
+    return prive.public_key().public_bytes(serialization.Encoding.Raw, serialization.PublicFormat.Raw)
+
+
+class Sens:
+    """Un sens du tunnel. Chaque trajet a son compteur (le nonce) et sa fenêtre anti-rejeu : une copie arrivée
+    tard par un trajet lent n'est jamais confondue avec un rejeu."""
+
+    def __init__(self, cle):
+        self.aead = ChaCha20Poly1305(cle)
+        self.compteurs = {}  # trajet -> prochain compteur à envoyer
+        self.recus = {}      # trajet -> [plus haut compteur reçu, bits des 1024 précédents]
+
+    def sceller(self, trajet, aad, clair):
+        n = self.compteurs.get(trajet, 0)
+        self.compteurs[trajet] = n + 1
+        tete = CHIFFRE.pack(trajet, n)
+        return tete + self.aead.encrypt(bytes(3) + tete, clair, aad + tete)
+
+    def ouvrir(self, aad, corps):
+        """Texte clair, ou None (trop court, modifié, forgé ou rejoué)."""
+        if len(corps) < CHIFFRE.size + 16:
+            return None
+        trajet, n = CHIFFRE.unpack_from(corps)
+        if trajet >= 16:
+            return None
+        haut, bits = self.recus.get(trajet, (-1, 0))
+        if n <= haut - FENETRE_REJEU or (n <= haut and bits >> (haut - n) & 1):
+            return None
+        tete = corps[:CHIFFRE.size]
+        try:
+            clair = self.aead.decrypt(bytes(3) + tete, corps[CHIFFRE.size:], aad + tete)
+        except InvalidTag:
+            return None
+        if n > haut:
+            bits = 1 if n - haut >= FENETRE_REJEU else ((bits << (n - haut)) | 1) & ((1 << FENETRE_REJEU) - 1)
+            haut = n
+        else:
+            bits |= 1 << (haut - n)
+        self.recus[trajet] = (haut, bits)
+        return clair
+
+
+def chiffre(type_, sid, sens, trajet, corps):
+    e = paquet(type_, sid)
+    return e + sens.sceller(trajet, e, corps)
 
 
 # --- handshake Minecraft ---------------------------------------------------------
@@ -280,8 +361,12 @@ class Horloge:
 class Emetteur:
     """Découpe un flux d'octets en paquets numérotés et les renvoie jusqu'à confirmation."""
 
-    def __init__(self, envoyer, debit_octets_s):
+    def __init__(self, envoyer, debit_octets_s, envoyer_secours=None):
         self.envoyer = envoyer          # fonction(bytes) qui part sur tous les trajets
+        self.envoyer_secours = envoyer_secours  # idem pour les paquets de secours (FEC)
+        self.groupe = []                # paquets neufs pas encore couverts par un paquet de secours
+        self.groupe_debut = 0           # heure du premier (ms)
+        self.groupe_premier = 0         # numéro du premier
         self.attente = bytearray()      # octets pas encore mis en paquets
         self.suivant = 0
         self.en_vol = {}                # numéro -> [données, dernier envoi (ms), nb envois], dans l'ordre des numéros
@@ -318,7 +403,29 @@ class Emetteur:
             morceau = bytes(self.attente[:TAILLE_MAX])
             del self.attente[:TAILLE_MAX]
             self._envoyer(self.suivant, morceau, 1)
+            if self.envoyer_secours is not None:
+                if not self.groupe:
+                    self.groupe_debut = maintenant_ms()
+                    self.groupe_premier = self.suivant
+                self.groupe.append(morceau)
+                if len(self.groupe) >= FEC_K:
+                    self._secours()
             self.suivant += 1
+
+    def _secours(self):
+        """Paquet de secours : XOR des paquets du groupe (et de leurs longueurs). L'autre bout répare
+        tout seul un paquet manquant du groupe, sans attendre de renvoi."""
+        groupe, self.groupe = self.groupe, []
+        if len(groupe) < 2:
+            return  # un paquet seul : le renvoi rapide suffit
+        taille = max(len(m) for m in groupe)
+        x = longueurs = 0
+        for m in groupe:
+            longueurs ^= len(m)
+            x ^= int.from_bytes(m.ljust(taille, b"\0"), "big")
+        self.envoyer_secours(FEC.pack(self.groupe_premier & 0xFFFFFFFF, len(groupe), maintenant_ms(), longueurs)
+                             + x.to_bytes(taille, "big"))
+        self.jetons -= taille + 40
 
     def vide(self):
         return not self.attente and not self.en_vol
@@ -411,6 +518,8 @@ class Emetteur:
                     self.renvois_delai += 1
                 self._envoyer(num, morceau, nb + 1)
         self._envoyer_nouveaux()
+        if self.groupe and ecart_ms(maintenant_ms(), self.groupe_debut) >= FEC_ATTENTE:
+            self._secours()
 
 
 class Recepteur:
@@ -421,6 +530,8 @@ class Recepteur:
         self.attendu = 0
         self.tampon = {}
         self.doublons = 0
+        self.recents = {}  # numéro -> données des derniers paquets reçus, pour les paquets de secours
+        self.repares = 0   # paquets refaits avec un paquet de secours
 
     def recu(self, num, data):
         """Renvoie True si le paquet est nouveau."""
@@ -430,10 +541,38 @@ class Recepteur:
         if num - self.attendu > FENETRE * 2:
             return False
         self.tampon[num] = data
+        self.recents[num] = data
+        if len(self.recents) > 512:
+            for n in sorted(self.recents)[:256]:
+                del self.recents[n]
         while self.attendu in self.tampon:
             self.livrer(self.tampon.pop(self.attendu))
             self.attendu += 1
         return True
+
+    def secours(self, corps):
+        """Paquet de secours reçu : refait le paquet du groupe s'il en manque exactement un. True si réparé."""
+        if len(corps) < FEC.size:
+            return False
+        premier, nombre, _, longueurs = FEC.unpack_from(corps)
+        taille = len(corps) - FEC.size
+        x = int.from_bytes(corps[FEC.size:], "big")
+        manquants = [n for n in range(premier, premier + nombre) if n not in self.recents]
+        if len(manquants) != 1 or manquants[0] < self.attendu:
+            return False
+        for n in range(premier, premier + nombre):
+            if n != manquants[0]:
+                d = self.recents[n]
+                if len(d) > taille:
+                    return False
+                longueurs ^= len(d)
+                x ^= int.from_bytes(d.ljust(taille, b"\0"), "big")
+        if not 0 < longueurs <= taille:
+            return False
+        if self.recu(manquants[0], x.to_bytes(taille, "big")[:longueurs]):
+            self.repares += 1
+            return True
+        return False
 
     def ack(self, ts):
         bits = 0
@@ -446,82 +585,13 @@ class Recepteur:
 
 # --- jetons Rago Route (Ed25519) ------------------------------------------------
 
-# Vérification Ed25519 (RFC 8032, section 6) en Python pur, pour un serveur sans la bibliothèque cryptography.
-# Seulement à l'ouverture d'une session, jamais par paquet.
-_P = 2 ** 255 - 19
-_Q = 2 ** 252 + 27742317777372353535851937790883648493
-_D = -121665 * pow(121666, _P - 2, _P) % _P
-_RACINE_M1 = pow(2, (_P - 1) // 4, _P)
-
-
-def _ed_add(a, b):
-    x = (a[1] - a[0]) * (b[1] - b[0]) % _P
-    y = (a[1] + a[0]) * (b[1] + b[0]) % _P
-    c = 2 * a[3] * b[3] * _D % _P
-    d = 2 * a[2] * b[2] % _P
-    e, f, g, h = y - x, d - c, d + c, y + x
-    return (e * f % _P, g * h % _P, f * g % _P, e * h % _P)
-
-
-def _ed_mul(n, pt):
-    r = (0, 1, 1, 0)
-    while n:
-        if n & 1:
-            r = _ed_add(r, pt)
-        pt = _ed_add(pt, pt)
-        n >>= 1
-    return r
-
-
-def _ed_x(y, signe):
-    if y >= _P:
-        return None
-    x2 = (y * y - 1) * pow(_D * y * y + 1, _P - 2, _P) % _P
-    if x2 == 0:
-        return None if signe else 0
-    x = pow(x2, (_P + 3) // 8, _P)
-    if (x * x - x2) % _P:
-        x = x * _RACINE_M1 % _P
-    if (x * x - x2) % _P:
-        return None
-    return _P - x if (x & 1) != signe else x
-
-
-def _ed_point(b):
-    y = int.from_bytes(b, "little")
-    signe, y = y >> 255, y & ((1 << 255) - 1)
-    x = _ed_x(y, signe)
-    return None if x is None else (x, y, 1, x * y % _P)
-
-
-_ED_Y = 4 * pow(5, _P - 2, _P) % _P
-_ED_G = (_ed_x(_ED_Y, 0), _ED_Y, 1, _ed_x(_ED_Y, 0) * _ED_Y % _P)
-
-
-def _ed_egaux(a, b):
-    return (a[0] * b[2] - b[0] * a[2]) % _P == 0 and (a[1] * b[2] - b[1] * a[2]) % _P == 0
-
-
 def ed25519_valide(cle, message, signature):
     """cle : 32 octets bruts ; signature : 64 octets."""
     try:
-        from cryptography.hazmat.primitives.asymmetric.ed25519 import Ed25519PublicKey
-        from cryptography.exceptions import InvalidSignature
-        try:
-            Ed25519PublicKey.from_public_bytes(cle).verify(signature, message)
-            return True
-        except InvalidSignature:
-            return False
-    except ImportError:
-        pass
-    if len(cle) != 32 or len(signature) != 64:
+        Ed25519PublicKey.from_public_bytes(cle).verify(signature, message)
+        return True
+    except (InvalidSignature, ValueError):
         return False
-    a, r = _ed_point(cle), _ed_point(signature[:32])
-    s = int.from_bytes(signature[32:], "little")
-    if a is None or r is None or s >= _Q:
-        return False
-    h = int.from_bytes(hashlib.sha512(signature[:32] + cle + message).digest(), "little") % _Q
-    return _ed_egaux(_ed_mul(s, _ED_G), _ed_add(r, _ed_mul(h, a)))
 
 
 def cle_depuis_pem(pem):
@@ -621,14 +691,19 @@ def adresse(texte):
 
 
 class SessionSortie:
-    def __init__(self, serveur, sid, cible, licence=None):
+    def __init__(self, serveur, sid, cible, licence, pub_joueur, recu_sens, envoi_sens):
         self.serveur = serveur
         self.sid = sid
         self.licence = licence
         self.cible = CIBLES[cible]
-        self.adresses = {}  # adresse du joueur (ou d'un relais) -> dernière fois vue
+        self.pub_joueur = pub_joueur
+        self.recu_sens = recu_sens    # joueur -> sortie
+        self.envoi_sens = envoi_sens  # sortie -> joueur
+        self.adresses = {}  # adresse du joueur (ou d'un relais) -> [dernière fois vue, numéro de trajet pour le chiffrement]
+        self.trajets_donnes = 0
         self.dernier_contact = time.monotonic()
-        self.emetteur = Emetteur(lambda corps: self.envoyer(T_DATA, corps), serveur.debit)
+        self.emetteur = Emetteur(lambda corps: self.envoyer(T_DATA, corps), serveur.debit,
+                                 lambda corps: self.envoyer(T_FEC, corps))
         self.recepteur = Recepteur(self._vers_minecraft)
         self.reecriture = Reecriture(*self.cible)
         self.writer = None
@@ -667,20 +742,42 @@ class SessionSortie:
         else:
             self.writer.write(data)
 
+    def envoyer_a(self, adresse, type_, corps):
+        a = self.adresses.get(adresse)
+        if a is not None:
+            self.serveur.transport.sendto(chiffre(type_, self.sid, self.envoi_sens, a[1], corps), adresse)
+
     def envoyer(self, type_, corps):
-        p = paquet(type_, self.sid, corps)
         t = time.monotonic()
-        for adresse, vu in list(self.adresses.items()):
+        for adresse, (vu, trajet) in list(self.adresses.items()):
             if t - vu < ADRESSE_ACTIVE:
-                self.serveur.transport.sendto(p, adresse)
+                self.serveur.transport.sendto(chiffre(type_, self.sid, self.envoi_sens, trajet, corps), adresse)
+
+    def dechiffrer(self, type_, entete, corps):
+        """Texte clair d'un paquet du joueur, ou None (forgé, modifié ou rejoué : ignoré)."""
+        if type_ == T_AUTH:
+            if corps[:CLE_PUB] != self.pub_joueur:
+                return None
+            return self.recu_sens.ouvrir(entete + self.pub_joueur, corps[CLE_PUB:])
+        if type_ in (T_OPEN, T_HELLO, T_FWD):
+            return None
+        return self.recu_sens.ouvrir(entete, corps)
 
     def recu(self, type_, corps, adresse):
+        """Paquet déjà déchiffré et authentifié : seule une vraie adresse du joueur est retenue."""
         t = time.monotonic()
         if t - self.dernier_contact > 1.0:
             self.emetteur.relancer()  # le joueur revient après une coupure
-        self.adresses[adresse] = self.dernier_contact = t
-        if type_ == T_OPEN:
-            self.serveur.transport.sendto(paquet(T_OPEN_OK, self.sid), adresse)
+        a = self.adresses.get(adresse)
+        if a is None:
+            if len(self.adresses) >= 16:  # le joueur a changé de réseau souvent : on oublie les anciennes adresses
+                for vieille in sorted(self.adresses, key=lambda k: self.adresses[k][0])[:8]:
+                    del self.adresses[vieille]
+            a = self.adresses[adresse] = [t, self.trajets_donnes % 16]
+            self.trajets_donnes += 1
+        a[0] = self.dernier_contact = t
+        if type_ == T_AUTH:
+            self.envoyer_a(adresse, T_OPEN_OK, b"")
         elif type_ == T_DATA and len(corps) >= DATA.size:
             num, ts = DATA.unpack_from(corps)
             nouveau = self.recepteur.recu(num, corps[DATA.size:])
@@ -695,7 +792,10 @@ class SessionSortie:
             mesure = self.serveur.ping_cible.get(self.cible[0]) or 0
             infos = PONG_INFOS.pack(min(65535, int(mesure)), min(65535, int(self.serveur.horloge.recent())),
                                     self.emetteur.renvois & 0xFFFFFFFF)
-            self.serveur.transport.sendto(paquet(T_PONG, self.sid, corps[: PING.size] + infos), adresse)
+            self.envoyer_a(adresse, T_PONG, corps[: PING.size] + infos)
+        elif type_ == T_FEC:
+            if self.recepteur.secours(corps):
+                self.envoyer(T_ACK, self.recepteur.ack(FEC.unpack_from(corps)[2]))
         elif type_ == T_CLOSE:
             self.fermer()
 
@@ -730,6 +830,9 @@ class Sortie:
         self.transport = None  # Prise UDP
         self.ping_cible = {}  # nom du serveur de jeu -> dernier ping Minecraft mesuré depuis la sortie (ms)
         self.horloge = Horloge()
+        # clés X25519 de la sortie : changées toutes les heures, l'ancienne reste valable pour les ouvertures en cours
+        self.cle = self.cle_avant = X25519PrivateKey.generate()
+        self.cle_depuis = time.monotonic()
 
     def datagram_received(self, data, adresse):
         lu = lire_entete(data)
@@ -755,42 +858,73 @@ class Sortie:
             self.transport.sendto(data, r[0])
             self.relais[sid] = (r[0], r[1], time.monotonic())
             return
+        entete = data[:ENTETE.size]
         session = self.sessions.get(sid)
-        if session is None:
-            if type_ != T_OPEN or len(corps) < 1 or corps[0] not in CIBLES or len(self.sessions) > 500:
-                return
-            licence = None
-            if self.cles is not None:
-                licence = self._verifier(corps[1:], adresse)
-                if licence is None:
-                    self.transport.sendto(paquet(T_REFUS, sid), adresse)
-                    return
-                if sum(1 for x in self.sessions.values() if x.licence == licence) >= SESSIONS_PAR_LICENCE:
-                    log.info("licence %s : trop de sessions à la fois", licence[-6:])
-                    self.transport.sendto(paquet(T_REFUS, sid), adresse)
-                    return
-            session = self.sessions[sid] = SessionSortie(self, sid, corps[0], licence)
-            log.info("nouvelle session %s vers %s", sid.hex()[:8], session.cible[0])
-        session.recu(type_, corps, adresse)
+        if session is not None:
+            clair = session.dechiffrer(type_, entete, corps)
+            if clair is not None:
+                session.recu(type_, clair, adresse)
+            return
+        if len(self.sessions) > 500:
+            return
+        if type_ == T_OPEN and len(corps) >= CLE_PUB:
+            # rien n'est gardé ici : la clé publique du joueur revient dans l'AUTH
+            self.transport.sendto(paquet(T_HELLO, sid, pub_brute(self.cle)), adresse)
+        elif type_ == T_AUTH and len(corps) >= CLE_PUB + CHIFFRE.size + 17 and self._autoriser(adresse):
+            self._ouvrir(sid, entete, corps, adresse)
 
-    def _verifier(self, brut, adresse):
-        """Licence du jeton de l'OPEN, ou None. Au plus 50 vérifications par seconde et par adresse (un relais en porte plusieurs joueurs)."""
+    def _autoriser(self, adresse):
+        """Au plus 50 ouvertures par seconde et par adresse (un relais en porte plusieurs joueurs) : limite le coût
+        des faux AUTH (échange de clés, vérification du jeton)."""
+        t = time.monotonic()
+        n, debut = self.refus.get(adresse[0], (0, t))
+        if t - debut > 1.0:
+            n, debut = 0, t
+        if n >= 50:
+            return False
+        self.refus[adresse[0]] = (n + 1, debut)
+        if len(self.refus) > 10000:
+            self.refus.clear()
+        return True
+
+    def _ouvrir(self, sid, entete, corps, adresse):
+        pub_joueur = corps[:CLE_PUB]
+        for cle in (self.cle, self.cle_avant):
+            try:
+                vers_sortie, vers_joueur = cles_session(cle, pub_joueur, sid, pub_joueur, pub_brute(cle))
+            except ValueError:
+                return
+            recu_sens = Sens(vers_sortie)
+            clair = recu_sens.ouvrir(entete + pub_joueur, corps[CLE_PUB:])
+            if clair is not None:
+                break
+        else:
+            return  # pas chiffré pour cette sortie : ignoré sans réponse
+        if not clair or clair[0] not in CIBLES:
+            return
+        envoi_sens = Sens(vers_joueur)
+        licence = None
+        if self.cles is not None:
+            licence = self._licence(clair[1:])
+            refus = licence is None
+            if not refus and sum(1 for x in self.sessions.values() if x.licence == licence) >= SESSIONS_PAR_LICENCE:
+                log.info("licence %s : trop de sessions à la fois", licence[-6:])
+                refus = True
+            if refus:
+                self.transport.sendto(chiffre(T_REFUS, sid, envoi_sens, 0, b""), adresse)
+                return
+        session = self.sessions[sid] = SessionSortie(self, sid, clair[0], licence, pub_joueur, recu_sens, envoi_sens)
+        log.info("nouvelle session %s vers %s", sid.hex()[:8], session.cible[0])
+        session.recu(T_AUTH, b"", adresse)
+
+    def _licence(self, brut):
+        """Licence du jeton reçu dans l'AUTH, ou None."""
         try:
             jeton = brut.decode("ascii")
         except UnicodeDecodeError:
             return None
         if not jeton or len(jeton) > 1000:
             return None
-        if jeton not in self.cles.vus:
-            t = time.monotonic()
-            n, debut = self.refus.get(adresse[0], (0, t))
-            if t - debut > 1.0:
-                n, debut = 0, t
-            if n >= 50:
-                return None
-            self.refus[adresse[0]] = (n + 1, debut)
-            if len(self.refus) > 10000:
-                self.refus.clear()
         return self.cles.licence(jeton)
 
     async def mesurer_cibles(self):
@@ -814,6 +948,8 @@ class Sortie:
                 s.tick(fige)
             if t - dernier_menage > 1.0:
                 dernier_menage = t
+                if t - self.cle_depuis > 3600:
+                    self.cle_avant, self.cle, self.cle_depuis = self.cle, X25519PrivateKey.generate(), t
                 for sid in [k for k, v in self.relais.items() if t - v[2] > SESSION_MAX_SILENCE]:
                     del self.relais[sid]
 
@@ -881,7 +1017,7 @@ class Trajet:
         self.octets += len(data)
         lu = lire_entete(data)
         if lu is not None:
-            self.client.recu(self, *lu)
+            self.client.recu(self, *lu, data[:ENTETE.size])
 
 
 class SessionClient:
@@ -892,8 +1028,12 @@ class SessionClient:
         self.reader = reader
         self.writer = writer
         self.ouverte = False
-        self.emetteur = Emetteur(lambda corps: self.envoyer(T_DATA, corps), client.debit)
+        self.emetteur = Emetteur(lambda corps: self.envoyer(T_DATA, corps), client.debit,
+                                 lambda corps: self.envoyer(T_FEC, corps))
         self.recepteur = Recepteur(self.writer.write)
+        self.prive = X25519PrivateKey.generate()  # clé de cette session seulement
+        self.pub = pub_brute(self.prive)
+        self.envoi_sens = self.recu_sens = None   # connus après le HELLO de la sortie
         self.fin_minecraft = False
         self.ferme = False
         self.dernier_open = 0.0
@@ -906,9 +1046,27 @@ class SessionClient:
         self.renvois_sortie = 0    # renvois de la sortie vers ce joueur, annoncés dans ses réponses au ping
 
     def envoyer(self, type_, corps=b""):
-        p = paquet(type_, self.sid, corps)
+        """Chiffré pour chaque trajet (chaque trajet a ses compteurs)."""
         for t in self.client.trajets:
-            t.envoyer(p)
+            t.envoyer(chiffre(type_, self.sid, self.envoi_sens, t.num, corps))
+
+    def hello(self, corps):
+        """Clé publique de la sortie : on en tire les clés de la session, puis on envoie la cible et le jeton (chiffrés)."""
+        if self.envoi_sens is not None or len(corps) < CLE_PUB:
+            return
+        try:
+            vers_sortie, vers_joueur = cles_session(self.prive, corps[:CLE_PUB], self.sid, self.pub, corps[:CLE_PUB])
+        except ValueError:
+            return
+        self.envoi_sens, self.recu_sens = Sens(vers_sortie), Sens(vers_joueur)
+        self.dernier_open = 0.0
+        self.tick()
+
+    def auth(self):
+        corps = bytes([self.cible]) + (self.client.args.jeton or "").encode()
+        e = paquet(T_AUTH, self.sid)
+        for t in self.client.trajets:
+            t.envoyer(e + self.pub + self.envoi_sens.sceller(t.num, e + self.pub, corps))
 
     async def lire_minecraft(self):
         try:
@@ -946,6 +1104,9 @@ class SessionClient:
                 self.envoyer(T_ACK, self.recepteur.ack(ts))
         elif type_ == T_ACK and len(corps) >= ACK.size:
             self.emetteur.recu_ack(*ACK.unpack_from(corps))
+        elif type_ == T_FEC:
+            if self.recepteur.secours(corps):
+                self.envoyer(T_ACK, self.recepteur.ack(FEC.unpack_from(corps)[2]))
         elif type_ == T_CLOSE:
             self.fermer()
         elif type_ == T_REFUS and not self.ouverte and not self.ferme:
@@ -979,7 +1140,11 @@ class SessionClient:
         if not self.ouverte:
             if time.monotonic() - self.dernier_open > 0.2:
                 self.dernier_open = time.monotonic()
-                self.envoyer(T_OPEN, bytes([self.cible]) + (self.client.args.jeton or "").encode())
+                if self.envoi_sens is None:
+                    for t in self.client.trajets:
+                        t.envoyer(paquet(T_OPEN, self.sid, self.pub))
+                else:
+                    self.auth()
             return
         self.emetteur.tick(fige)
         self.compter()
@@ -1055,7 +1220,18 @@ class Client:
             self.trajets.append(trajet)
             log.info("trajet %d : %s%s", i + 1, nom, f" (pertes simulées {perte:.0%})" if perte else "")
 
-    def recu(self, trajet, type_, sid, corps):
+    def recu(self, trajet, type_, sid, corps, entete):
+        s = self.sessions.get(sid)
+        if s is None:
+            return
+        if type_ == T_HELLO:
+            s.hello(corps)
+            return
+        if s.recu_sens is None or type_ in (T_OPEN, T_AUTH, T_FWD):
+            return
+        corps = s.recu_sens.ouvrir(entete, corps)
+        if corps is None:
+            return  # pas de la sortie (forgé, modifié ou rejoué)
         if type_ == T_PONG and len(corps) >= PING.size:
             ts, _ = PING.unpack_from(corps)
             if len(corps) >= PING.size + 2:
@@ -1063,9 +1239,7 @@ class Client:
             if len(corps) >= PING.size + PONG_INFOS.size:
                 _, retard, renvois = PONG_INFOS.unpack_from(corps, PING.size)
                 self.retard_sortie_max = max(self.retard_sortie_max, retard)
-                s = self.sessions.get(sid)
-                if s is not None:
-                    s.renvois_sortie = renvois
+                s.renvois_sortie = renvois
             rtt = ecart_ms(maintenant_ms(), ts)
             if 0 <= rtt < 5000:
                 tout_coupe = self.meilleur_trajet() is None
@@ -1075,9 +1249,7 @@ class Client:
                     for s in self.sessions.values():
                         s.emetteur.relancer()
             return
-        s = self.sessions.get(sid)
-        if s is not None:
-            s.recu(trajet, type_, corps)
+        s.recu(trajet, type_, corps)
 
     async def connexion_minecraft(self, reader, writer, cible):
         sock = writer.get_extra_info("socket")
@@ -1098,9 +1270,10 @@ class Client:
                 s.tick(fige)
             if t - dernier_ping > 0.5 and self.sessions:
                 dernier_ping = t
-                sid = max(self.sessions.values(), key=lambda s: s.uniques).sid  # la partie en cours
-                for tr in self.trajets:
-                    tr.envoyer(paquet(T_PING, sid, PING.pack(maintenant_ms(), tr.num)))
+                s = max(self.sessions.values(), key=lambda s: s.uniques)  # la partie en cours
+                if s.envoi_sens is not None:
+                    for tr in self.trajets:
+                        tr.envoyer(chiffre(T_PING, s.sid, s.envoi_sens, tr.num, PING.pack(maintenant_ms(), tr.num)))
             if t - dernier_affichage > 5 and self.sessions:
                 dernier_affichage = t
                 self.afficher()
@@ -1116,9 +1289,10 @@ class Client:
             morceaux.append(f"{tr.nom} : {rtt}, pertes {100 * manques / uniques:.1f} %, arrivé premier {100 * tr.premiers_fenetre / fenetre:.0f} %, {tr.octets / 1e6:.1f} Mo reçus")
             tr.premiers_fenetre = 0
         sauves = sum(s.sauves for s in self.sessions.values())
+        repares = sum(s.recepteur.repares for s in self.sessions.values())
         renvois = sum(s.emetteur.renvois for s in self.sessions.values())
         renvois_sortie = sum(s.renvois_sortie for s in self.sessions.values())
-        print(" | ".join(morceaux) + f" | sauvés par un autre trajet : {sauves}"
+        print(" | ".join(morceaux) + f" | sauvés par un autre trajet : {sauves} | réparés par les paquets de secours : {repares}"
               f" | renvois : d'ici {renvois}, de la sortie {renvois_sortie}", flush=True)
         details = []
         if self.ping_sortie:
@@ -1136,9 +1310,9 @@ class Client:
             total = sum(tr.premiers for tr in self.trajets) or 1
             log.info("arrivés en premier depuis le lancement : %s", ", ".join(f"{tr.nom} {100 * tr.premiers / total:.0f} %" for tr in self.trajets))
             e = s.emetteur
-            log.info("partie terminée : %d paquets reçus, %d sauvés par un autre trajet, "
+            log.info("partie terminée : %d paquets reçus, %d sauvés par un autre trajet, %d réparés par les paquets de secours, "
                      "renvois d'ici %d (%d après délai, %d rapides), de la sortie %d",
-                     s.uniques, s.sauves, e.renvois, e.renvois_delai, e.renvois_rapides, s.renvois_sortie)
+                     s.uniques, s.sauves, s.recepteur.repares, e.renvois, e.renvois_delai, e.renvois_rapides, s.renvois_sortie)
 
 
 def lier_interface(sock, nom):

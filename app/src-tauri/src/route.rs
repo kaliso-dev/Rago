@@ -10,6 +10,10 @@
 //! Le jeu n'est jamais modifié : Rago Route ne fait que transporter les octets (chiffrés par Minecraft après la
 //! connexion). Rien n'est stocké ni envoyé ailleurs que vers les serveurs Rago.
 //!
+//! Protocole 2 (08/11) : à chaque connexion du jeu, une clé X25519 jetable ; la sortie répond avec la sienne et tout le
+//! reste est chiffré et signé (ChaCha20-Poly1305), jeton et handshake compris. Chaque trajet a son compteur (le nonce)
+//! et sa fenêtre anti-rejeu. Paquets de secours : pour 4 paquets, un XOR qui répare une perte sans renvoi.
+//!
 //! Fils : un fil moteur (toutes les décisions, toutes les 5 ms ou à chaque paquet), un fil de lecture par trajet UDP,
 //! un par port local d'écoute et un par connexion du jeu. Ils parlent au moteur par un seul canal : pas de verrou dans
 //! le chemin des paquets. L'état affiché par l'app est recopié deux fois par seconde.
@@ -27,7 +31,7 @@ use std::time::{Duration, Instant};
 // --- protocole (identique à proxy/rago-route.py) ------------------------------------------------------------------
 
 const MAGIC: &[u8; 2] = b"RR";
-const VERSION: u8 = 1;
+const VERSION: u8 = 2;
 const T_OPEN: u8 = 1;
 const T_OPEN_OK: u8 = 2;
 const T_DATA: u8 = 3;
@@ -36,8 +40,24 @@ const T_PING: u8 = 5;
 const T_PONG: u8 = 6;
 const T_CLOSE: u8 = 7;
 const T_FWD: u8 = 8;
-/// réponse de la sortie à un OPEN sans jeton valable (sorties du 08/11 et après)
+/// réponse de la sortie à un AUTH sans jeton valable (chiffrée)
 const T_REFUSE: u8 = 9;
+/// réponse de la sortie à l'OPEN : sa clé publique X25519 (en clair)
+const T_HELLO: u8 = 10;
+/// clé publique du joueur (en clair), puis cible et jeton (chiffrés)
+const T_AUTH: u8 = 11;
+/// paquet de secours : XOR d'un groupe de paquets DATA
+const T_FEC: u8 = 12;
+/// trajet (u8), compteur (u64) devant chaque paquet chiffré ; étiquette Poly1305 à la fin
+const SEAL_HEAD: usize = 9;
+const TAG: usize = 16;
+/// premier numéro (u32), nombre (u8), horodatage (u32), longueurs XOR (u16)
+const FEC_HEAD: usize = 11;
+/// un paquet de secours pour 4 paquets du jeu ; un groupe incomplet (au moins 2) part après 15 ms
+const FEC_K: usize = 4;
+const FEC_WAIT_MS: i64 = 15;
+/// compteurs retenus par trajet pour refuser un paquet rejoué (16 × 64 bits)
+const REPLAY_WORDS: usize = 16;
 /// magie (2), version (1), type (1), session (16)
 const HEADER: usize = 20;
 /// numéro (u32), horodatage d'envoi en ms (u32)
@@ -109,23 +129,146 @@ fn be16(b: &[u8], at: usize) -> u16 {
     u16::from_be_bytes([b[at], b[at + 1]])
 }
 
-/// Identifiant de session : 16 octets imprévisibles (heure fine, processus, compteur, adresse en mémoire, hachés).
+/// Identifiant de session : 16 octets aléatoires du système.
 fn new_sid() -> [u8; 16] {
-    use sha2::{Digest, Sha256};
-    use std::sync::atomic::AtomicU64;
-    static COUNTER: AtomicU64 = AtomicU64::new(0);
-    let mut h = Sha256::new();
-    let nanos = std::time::SystemTime::now().duration_since(std::time::UNIX_EPOCH).map(|d| d.as_nanos()).unwrap_or(0);
-    h.update(nanos.to_le_bytes());
-    h.update(std::process::id().to_le_bytes());
-    h.update(COUNTER.fetch_add(1, Ordering::Relaxed).to_le_bytes());
-    let local = 0u8;
-    h.update((&local as *const u8 as usize).to_le_bytes());
-    h.update(epoch().elapsed().as_nanos().to_le_bytes());
-    let d = h.finalize();
     let mut sid = [0u8; 16];
-    sid.copy_from_slice(&d[..16]);
+    if getrandom::getrandom(&mut sid).is_err() {
+        // jamais vu : le hasard du système manque ; l'heure fine suffit à rendre l'identifiant unique
+        let n = std::time::SystemTime::now().duration_since(std::time::UNIX_EPOCH).map(|d| d.as_nanos()).unwrap_or(0);
+        sid.copy_from_slice(&n.to_le_bytes());
+    }
     sid
+}
+
+// --- chiffrement du tunnel ------------------------------------------------------------------------------------------
+
+/// Fenêtre anti-rejeu d'un trajet : le plus haut compteur reçu et les 1 024 précédents (bit i = haut - i).
+#[derive(Clone)]
+struct Replay {
+    high: Option<u64>,
+    bits: [u64; REPLAY_WORDS],
+}
+
+impl Replay {
+    const SIZE: u64 = (REPLAY_WORDS * 64) as u64;
+
+    fn new() -> Self {
+        Replay { high: None, bits: [0; REPLAY_WORDS] }
+    }
+
+    fn bit(&self, i: u64) -> bool {
+        self.bits[(i / 64) as usize] >> (i % 64) & 1 == 1
+    }
+
+    /// Déjà vu ou trop vieux ?
+    fn rejects(&self, n: u64) -> bool {
+        match self.high {
+            None => false,
+            Some(h) if n > h => false,
+            Some(h) => h - n >= Self::SIZE || self.bit(h - n),
+        }
+    }
+
+    fn mark(&mut self, n: u64) {
+        match self.high {
+            Some(h) if n <= h => {
+                let i = h - n;
+                self.bits[(i / 64) as usize] |= 1 << (i % 64);
+            }
+            _ => {
+                let d = self.high.map_or(Self::SIZE, |h| n - h);
+                if d >= Self::SIZE {
+                    self.bits = [0; REPLAY_WORDS];
+                } else {
+                    // décale toute la fenêtre de d bits vers les anciens
+                    let (words, shift) = ((d / 64) as usize, (d % 64) as u32);
+                    for w in (0..REPLAY_WORDS).rev() {
+                        let lo = if w >= words { self.bits[w - words] } else { 0 };
+                        let carry = if shift > 0 && w > words { self.bits[w - words - 1] >> (64 - shift) } else { 0 };
+                        self.bits[w] = if shift > 0 { lo << shift | carry } else { lo };
+                    }
+                }
+                self.bits[0] |= 1;
+                self.high = Some(n);
+            }
+        }
+    }
+}
+
+/// Un sens du tunnel : ChaCha20-Poly1305, un compteur par trajet (jamais deux fois le même nonce), une fenêtre
+/// anti-rejeu par trajet (une copie arrivée tard par un trajet lent n'est pas un rejeu).
+struct Dir {
+    aead: chacha20poly1305::ChaCha20Poly1305,
+    sent: [u64; 16],
+    seen: [Replay; 16],
+}
+
+impl Dir {
+    fn new(key: &[u8]) -> Self {
+        use chacha20poly1305::KeyInit;
+        Dir {
+            aead: chacha20poly1305::ChaCha20Poly1305::new(chacha20poly1305::Key::from_slice(key)),
+            sent: [0; 16],
+            seen: std::array::from_fn(|_| Replay::new()),
+        }
+    }
+
+    fn nonce(head: &[u8]) -> chacha20poly1305::Nonce {
+        let mut n = [0u8; 12];
+        n[3..].copy_from_slice(head);
+        n.into()
+    }
+
+    /// `aad` : ce qui précède (en-tête, et clé publique pour l'AUTH) ; renvoie trajet, compteur, chiffré + étiquette.
+    fn seal(&mut self, path: usize, aad: &[u8], plain: &[u8]) -> Vec<u8> {
+        use chacha20poly1305::aead::{Aead, Payload};
+        let p = path % 16;
+        let n = self.sent[p];
+        self.sent[p] += 1;
+        let mut head = [0u8; SEAL_HEAD];
+        head[0] = p as u8;
+        head[1..].copy_from_slice(&n.to_be_bytes());
+        let mut full_aad = aad.to_vec();
+        full_aad.extend_from_slice(&head);
+        let ct = self.aead.encrypt(&Self::nonce(&head), Payload { msg: plain, aad: &full_aad }).unwrap_or_default();
+        let mut out = Vec::with_capacity(SEAL_HEAD + ct.len());
+        out.extend_from_slice(&head);
+        out.extend_from_slice(&ct);
+        out
+    }
+
+    /// Texte clair, ou None (trop court, modifié, forgé ou rejoué).
+    fn open(&mut self, aad: &[u8], body: &[u8]) -> Option<Vec<u8>> {
+        use chacha20poly1305::aead::{Aead, Payload};
+        if body.len() < SEAL_HEAD + TAG || body[0] >= 16 {
+            return None;
+        }
+        let p = body[0] as usize;
+        let n = u64::from_be_bytes(body[1..SEAL_HEAD].try_into().ok()?);
+        if self.seen[p].rejects(n) {
+            return None;
+        }
+        let mut full_aad = aad.to_vec();
+        full_aad.extend_from_slice(&body[..SEAL_HEAD]);
+        let plain = self.aead.decrypt(&Self::nonce(&body[..SEAL_HEAD]), Payload { msg: &body[SEAL_HEAD..], aad: &full_aad }).ok()?;
+        self.seen[p].mark(n);
+        Some(plain)
+    }
+}
+
+/// Clés de la session (joueur -> sortie, sortie -> joueur), tirées de l'échange X25519 ; None si la clé reçue est
+/// invalide (échange sans contribution).
+fn session_keys(secret: x25519_dalek::EphemeralSecret, ours: &[u8; 32], exit_pub: &[u8; 32], sid: &[u8; 16]) -> Option<(Dir, Dir)> {
+    let shared = secret.diffie_hellman(&x25519_dalek::PublicKey::from(*exit_pub));
+    if !shared.was_contributory() {
+        return None;
+    }
+    let mut info = b"rago-route 2".to_vec();
+    info.extend_from_slice(ours);
+    info.extend_from_slice(exit_pub);
+    let mut k = [0u8; 64];
+    hkdf::Hkdf::<sha2::Sha256>::new(Some(sid), shared.as_bytes()).expand(&info, &mut k).ok()?;
+    Some((Dir::new(&k[..32]), Dir::new(&k[32..])))
 }
 
 /// Petit tirage pseudo-aléatoire (pertes simulées des tests seulement).
@@ -166,6 +309,12 @@ struct Sender_ {
     rate: f64,
     tokens: f64,
     last_refill: Instant,
+    /// paquets neufs pas encore couverts par un paquet de secours : numéro du premier, heure, données
+    fec_group: Vec<Vec<u8>>,
+    fec_first: u32,
+    fec_start: u32,
+    /// paquets de secours prêts à partir (corps T_FEC)
+    fec_out: Vec<Vec<u8>>,
 }
 
 impl Sender_ {
@@ -187,7 +336,37 @@ impl Sender_ {
             rate: rate_bytes_s,
             tokens: 64.0 * 1024.0,
             last_refill: Instant::now(),
+            fec_group: Vec::new(),
+            fec_first: 0,
+            fec_start: t,
+            fec_out: Vec::new(),
         }
+    }
+
+    /// Paquet de secours : XOR des paquets du groupe (et de leurs longueurs) ; l'autre bout répare tout seul un paquet
+    /// manquant du groupe. Un paquet seul n'en a pas (le renvoi rapide suffit).
+    fn make_fec(&mut self) {
+        let group = std::mem::take(&mut self.fec_group);
+        if group.len() < 2 {
+            return;
+        }
+        let size = group.iter().map(|d| d.len()).max().unwrap_or(0);
+        let mut x = vec![0u8; size];
+        let mut lens = 0u16;
+        for d in &group {
+            lens ^= d.len() as u16;
+            for (a, b) in x.iter_mut().zip(d) {
+                *a ^= b;
+            }
+        }
+        let mut body = Vec::with_capacity(FEC_HEAD + size);
+        body.extend_from_slice(&self.fec_first.to_be_bytes());
+        body.push(group.len() as u8);
+        body.extend_from_slice(&now_ms().to_be_bytes());
+        body.extend_from_slice(&lens.to_be_bytes());
+        body.extend_from_slice(&x);
+        self.tokens -= (size + 40) as f64;
+        self.fec_out.push(body);
     }
 
     fn resends(&self) -> u64 {
@@ -229,8 +408,16 @@ impl Sender_ {
             let n = self.waiting.len().min(MAX_CHUNK);
             let chunk: Vec<u8> = self.waiting.drain(..n).collect();
             let num = self.next;
+            if self.fec_group.is_empty() {
+                self.fec_first = num;
+                self.fec_start = now_ms();
+            }
+            self.fec_group.push(chunk.clone());
             self.send(num, chunk, 1, out);
             self.next += 1;
+            if self.fec_group.len() >= FEC_K {
+                self.make_fec();
+            }
         }
     }
 
@@ -342,6 +529,9 @@ impl Sender_ {
             }
         }
         self.send_new(out);
+        if !self.fec_group.is_empty() && diff_ms(now_ms(), self.fec_start) >= FEC_WAIT_MS {
+            self.make_fec();
+        }
     }
 }
 
@@ -349,11 +539,53 @@ impl Sender_ {
 struct Receiver_ {
     expected: u32,
     buffer: BTreeMap<u32, Vec<u8>>,
+    /// derniers paquets reçus (pour les paquets de secours)
+    recent: BTreeMap<u32, Vec<u8>>,
+    /// paquets refaits avec un paquet de secours
+    repaired: u64,
 }
 
 impl Receiver_ {
     fn new() -> Self {
-        Receiver_ { expected: 0, buffer: BTreeMap::new() }
+        Receiver_ { expected: 0, buffer: BTreeMap::new(), recent: BTreeMap::new(), repaired: 0 }
+    }
+
+    /// Paquet de secours : refait le paquet du groupe s'il en manque exactement un. Renvoie (réparé ?, octets à livrer).
+    fn on_fec(&mut self, body: &[u8]) -> (bool, Vec<Vec<u8>>) {
+        if body.len() < FEC_HEAD {
+            return (false, Vec::new());
+        }
+        let first = be32(body, 0);
+        let count = body[4] as u32;
+        let mut lens = be16(body, 9) as usize;
+        let mut x = body[FEC_HEAD..].to_vec();
+        let missing: Vec<u32> = (0..count).map(|i| first.wrapping_add(i)).filter(|n| !self.recent.contains_key(n)).collect();
+        if missing.len() != 1 || missing[0] < self.expected {
+            return (false, Vec::new());
+        }
+        for i in 0..count {
+            let n = first.wrapping_add(i);
+            if n == missing[0] {
+                continue;
+            }
+            let d = &self.recent[&n];
+            if d.len() > x.len() {
+                return (false, Vec::new());
+            }
+            lens ^= d.len();
+            for (a, b) in x.iter_mut().zip(d) {
+                *a ^= b;
+            }
+        }
+        if lens == 0 || lens > x.len() {
+            return (false, Vec::new());
+        }
+        x.truncate(lens);
+        let (new, out) = self.on_data(missing[0], &x);
+        if new {
+            self.repaired += 1;
+        }
+        (new, out)
     }
 
     /// Renvoie (nouveau ?, octets à livrer au jeu dans l'ordre).
@@ -365,6 +597,11 @@ impl Receiver_ {
             return (false, Vec::new());
         }
         self.buffer.insert(num, data.to_vec());
+        self.recent.insert(num, data.to_vec());
+        if self.recent.len() > 512 {
+            let keep = self.recent.split_off(&(num.saturating_sub(256)));
+            self.recent = keep;
+        }
         let mut out = Vec::new();
         while let Some(d) = self.buffer.remove(&self.expected) {
             out.push(d);
@@ -497,6 +734,8 @@ pub struct Status {
     pub paths: Vec<PathView>,
     /// paquets perdus par le meilleur trajet et rattrapés par un autre
     pub saved: u64,
+    /// paquets perdus par tous les trajets et refaits avec un paquet de secours
+    pub repaired: u64,
     /// paquets reçus du serveur de jeu (sans les doublons)
     pub packets: u64,
     pub resends_here: u64,
@@ -547,6 +786,12 @@ struct Session {
     last_count: Instant,
     uniques: u64,
     exit_resends: u64,
+    /// clé X25519 jetable de cette connexion (consommée au HELLO de la sortie) et sa partie publique
+    secret: Option<x25519_dalek::EphemeralSecret>,
+    public: [u8; 32],
+    /// joueur -> sortie et sortie -> joueur, connus après le HELLO
+    tx: Option<Dir>,
+    rx: Option<Dir>,
 }
 
 enum Event {
@@ -569,6 +814,7 @@ struct Engine {
     exit_ping: Option<u32>,
     lag_exit_max: f64,
     saved: u64,
+    repaired_done: u64,
     packets: u64,
     resends_here_done: u64,
     resends_exit_done: u64,
@@ -607,9 +853,41 @@ impl Engine {
         let _ = r; // réseau coupé sur ce trajet : les autres prennent le relais
     }
 
+    /// Chiffré pour chaque trajet (chaque trajet a ses compteurs). Rien tant que la sortie n'a pas répondu.
     fn send_all(&mut self, kind: u8, sid: &[u8; 16], body: &[u8]) {
-        let p = packet(kind, sid, body);
         for i in 0..self.paths.len() {
+            if let Some(p) = self.seal(kind, sid, i, body) {
+                self.send_on(i, &p);
+            }
+        }
+    }
+
+    fn seal(&mut self, kind: u8, sid: &[u8; 16], path: usize, body: &[u8]) -> Option<Vec<u8>> {
+        let tx = self.sessions.get_mut(sid)?.tx.as_mut()?;
+        let mut p = packet(kind, sid, &[]);
+        let sealed = tx.seal(path, &p, body);
+        p.extend_from_slice(&sealed);
+        Some(p)
+    }
+
+    /// Ouverture : OPEN (clé publique, en clair) tant que la sortie n'a pas répondu, puis AUTH (cible et jeton chiffrés).
+    fn send_open(&mut self, sid: &[u8; 16]) {
+        let Some(s) = self.sessions.get_mut(sid) else { return };
+        let public = s.public;
+        if s.tx.is_none() {
+            let p = packet(T_OPEN, sid, &public);
+            for i in 0..self.paths.len() {
+                self.send_on(i, &p);
+            }
+            return;
+        }
+        let mut plain = vec![s.target];
+        plain.extend_from_slice(token().lock().map(|t| t.clone()).unwrap_or_default().as_bytes());
+        for i in 0..self.paths.len() {
+            let Some(tx) = self.sessions.get_mut(sid).and_then(|s| s.tx.as_mut()) else { return };
+            let mut p = packet(T_AUTH, sid, &public);
+            let sealed = tx.seal(i, &p, &plain);
+            p.extend_from_slice(&sealed);
             self.send_on(i, &p);
         }
     }
@@ -617,6 +895,10 @@ impl Engine {
     fn flush(&mut self, sid: &[u8; 16], out: Vec<Vec<u8>>) {
         for body in out {
             self.send_all(T_DATA, sid, &body);
+        }
+        let fec = self.sessions.get_mut(sid).map(|s| std::mem::take(&mut s.sender.fec_out)).unwrap_or_default();
+        for body in fec {
+            self.send_all(T_FEC, sid, &body);
         }
     }
 
@@ -642,6 +924,8 @@ impl Engine {
                     .spawn(move || read_game(reader, conn, tx, stop))
                     .ok();
                 let sid = new_sid();
+                let secret = x25519_dalek::EphemeralSecret::random();
+                let public = *x25519_dalek::PublicKey::from(&secret).as_bytes();
                 self.by_conn.insert(conn, sid);
                 self.sessions.insert(
                     sid,
@@ -661,6 +945,10 @@ impl Engine {
                         last_count: Instant::now(),
                         uniques: 0,
                         exit_resends: 0,
+                        secret: Some(secret),
+                        public,
+                        tx: None,
+                        rx: None,
                     },
                 );
             }
@@ -688,7 +976,30 @@ impl Engine {
             return;
         }
         self.paths[i].bytes += data.len() as u64;
-        let Some((kind, sid, body)) = read_header(data) else { return };
+        let Some((kind, sid, raw)) = read_header(data) else { return };
+        let Some(s) = self.sessions.get_mut(&sid) else { return };
+        if kind == T_HELLO {
+            // clé publique de la sortie : clés de la session, puis tout de suite la cible et le jeton (chiffrés)
+            if s.tx.is_some() || raw.len() < 32 {
+                return;
+            }
+            let Some(secret) = s.secret.take() else { return };
+            let mut exit_pub = [0u8; 32];
+            exit_pub.copy_from_slice(&raw[..32]);
+            let Some((tx, rx)) = session_keys(secret, &s.public, &exit_pub, &sid) else { return };
+            s.tx = Some(tx);
+            s.rx = Some(rx);
+            s.last_open = Some(Instant::now());
+            self.send_open(&sid);
+            return;
+        }
+        if matches!(kind, T_OPEN | T_AUTH | T_FWD) {
+            return;
+        }
+        let Some(rx) = s.rx.as_mut() else { return };
+        // l'en-tête est signé avec le reste : un paquet modifié, forgé ou rejoué est ignoré
+        let Some(plain) = rx.open(&data[..HEADER], raw) else { return };
+        let body = &plain[..];
         if kind == T_PONG {
             if body.len() < PING_LEN {
                 return;
@@ -702,9 +1013,7 @@ impl Engine {
                 let lag = be16(body, PING_LEN + 2) as f64;
                 let resends = be32(body, PING_LEN + 4) as u64;
                 self.lag_exit_max = self.lag_exit_max.max(lag);
-                if let Some(s) = self.sessions.get_mut(&sid) {
-                    s.exit_resends = resends;
-                }
+                s.exit_resends = resends;
             }
             let rtt = diff_ms(now_ms(), ts);
             if (0..5000).contains(&rtt) {
@@ -772,6 +1081,24 @@ impl Engine {
                 let ts = be32(body, 12);
                 s.sender.on_ack(cumul, bits, ts);
             }
+            T_FEC if body.len() >= FEC_HEAD => {
+                let (new, deliver) = s.receiver.on_fec(body);
+                let mut broken = false;
+                for d in deliver {
+                    if s.stream.write_all(&d).is_err() {
+                        broken = true;
+                        break;
+                    }
+                }
+                if broken {
+                    s.game_ended = true;
+                    let _ = s.stream.shutdown(Shutdown::Both);
+                }
+                if new {
+                    let ack = s.receiver.ack(be32(body, 5));
+                    self.send_all(T_ACK, &sid, &ack);
+                }
+            }
             T_CLOSE => self.close(&sid),
             T_REFUSE if !s.open => {
                 // le jeu voit la connexion se fermer ; l'app affiche pourquoi
@@ -819,6 +1146,7 @@ impl Engine {
             self.by_conn.remove(&s.conn);
             self.resends_here_done += s.sender.resends();
             self.resends_exit_done += s.exit_resends;
+            self.repaired_done += s.receiver.repaired;
         }
     }
 
@@ -829,9 +1157,7 @@ impl Engine {
             if !s.open {
                 if s.last_open.map_or(true, |t| t.elapsed() > Duration::from_millis(200)) {
                     s.last_open = Some(Instant::now());
-                    let mut body = vec![s.target];
-                    body.extend_from_slice(token().lock().map(|t| t.clone()).unwrap_or_default().as_bytes());
-                    self.send_all(T_OPEN, &sid, &body);
+                    self.send_open(&sid);
                 }
                 continue;
             }
@@ -866,8 +1192,9 @@ impl Engine {
             let mut b = Vec::with_capacity(PING_LEN);
             b.extend_from_slice(&now_ms().to_be_bytes());
             b.push(i as u8);
-            let p = packet(T_PING, &sid, &b);
-            self.send_on(i, &p);
+            if let Some(p) = self.seal(T_PING, &sid, i, &b) {
+                self.send_on(i, &p);
+            }
         }
     }
 
@@ -893,6 +1220,7 @@ impl Engine {
             playing: self.sessions.values().any(|s| s.open),
             paths,
             saved: self.saved,
+            repaired: self.repaired_done + self.sessions.values().map(|s| s.receiver.repaired).sum::<u64>(),
             packets: self.packets,
             resends_here: self.resends_here_done + self.sessions.values().map(|s| s.sender.resends()).sum::<u64>(),
             resends_exit: self.resends_exit_done + self.sessions.values().map(|s| s.exit_resends).sum::<u64>(),
@@ -1108,6 +1436,7 @@ pub fn start(cfg: Config) -> Result<Running, String> {
         exit_ping: None,
         lag_exit_max: 0.0,
         saved: 0,
+        repaired_done: 0,
         packets: 0,
         resends_here_done: 0,
         resends_exit_done: 0,
@@ -1188,6 +1517,70 @@ mod win {
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn sealed_packets_refuse_replay_and_tampering() {
+        let mut a = Dir::new(&[1u8; 32]);
+        let mut b = Dir::new(&[1u8; 32]);
+        let head = packet(T_DATA, &[0u8; 16], &[]);
+        let p0 = a.seal(0, &head, b"bonjour");
+        let p1 = a.seal(1, &head, b"salut");
+        assert_eq!(b.open(&head, &p1).as_deref(), Some(&b"salut"[..]));
+        assert_eq!(b.open(&head, &p0).as_deref(), Some(&b"bonjour"[..])); // autre trajet, arrivé après : accepté
+        assert!(b.open(&head, &p0).is_none()); // rejoué
+        let mut bad = a.seal(0, &head, b"x");
+        *bad.last_mut().unwrap() ^= 1;
+        assert!(b.open(&head, &bad).is_none()); // modifié
+        let other = packet(T_ACK, &[0u8; 16], &[]);
+        assert!(b.open(&other, &a.seal(0, &head, b"y")).is_none()); // en-tête changé
+    }
+
+    #[test]
+    fn replay_window_slides() {
+        let mut w = Replay::new();
+        for n in [5u64, 3, 70, 1100] {
+            assert!(!w.rejects(n));
+            w.mark(n);
+            assert!(w.rejects(n));
+        }
+        assert!(w.rejects(5)); // trop vieux (plus de 1 024 derrière)
+        assert!(!w.rejects(1099));
+        w.mark(1099);
+        assert!(w.rejects(1099));
+        // décalages qui traversent les mots de 64 bits
+        for n in [1150u64, 1290, 1500] {
+            w.mark(n);
+        }
+        for n in [1099u64, 1100, 1150, 1290, 1500] {
+            assert!(w.rejects(n), "{n}");
+        }
+        for n in [1101u64, 1149, 1151, 1289, 1499] {
+            assert!(!w.rejects(n), "{n}");
+        }
+    }
+
+    #[test]
+    fn fec_repairs_one_lost_packet() {
+        let mut s = Sender_::new(1e9);
+        let mut out = Vec::new();
+        let data: Vec<u8> = (0..4000u32).map(|i| (i * 7 % 251) as u8).collect();
+        s.push(&data, &mut out);
+        assert_eq!(out.len(), 4);
+        assert_eq!(s.fec_out.len(), 1);
+        let mut r = Receiver_::new();
+        let mut got = Vec::new();
+        for (k, body) in out.iter().enumerate() {
+            if k == 2 {
+                continue; // perdu
+            }
+            got.extend(r.on_data(be32(body, 0), &body[DATA_LEN..]).1.concat());
+        }
+        let (new, deliver) = r.on_fec(&s.fec_out[0]);
+        assert!(new);
+        got.extend(deliver.concat());
+        assert_eq!(got, data);
+        assert_eq!(r.repaired, 1);
+    }
 
     #[test]
     fn header_roundtrip() {

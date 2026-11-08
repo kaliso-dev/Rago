@@ -137,6 +137,8 @@ export interface RouteStatus {
   paths: RoutePath[];
   /** paquets perdus par le meilleur trajet et rattrapés par un autre */
   saved: number;
+  /** paquets perdus par tous les trajets et refaits avec un paquet de secours */
+  repaired: number;
   packets: number;
   resendsHere: number;
   resendsExit: number;
@@ -645,7 +647,7 @@ const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
 // démo de Rago Route : allumé depuis `on`, une partie en cours après 3 s, valeurs proches des tests sur le Mac
 const mockRoute = { on: 0 };
 function mockRouteStatus(): RouteStatus {
-  const idle: RouteStatus = { running: false, error: null, playing: false, paths: [], saved: 0, packets: 0, resendsHere: 0, resendsExit: 0, exitPingMs: null, lagHereMs: 0, lagExitMs: 0, ports: [] };
+  const idle: RouteStatus = { running: false, error: null, playing: false, paths: [], saved: 0, repaired: 0, packets: 0, resendsHere: 0, resendsExit: 0, exitPingMs: null, lagHereMs: 0, lagExitMs: 0, ports: [] };
   if (!mockRoute.on) return idle;
   const s = (Date.now() - mockRoute.on) / 1000;
   const playing = s > 3;
@@ -661,6 +663,7 @@ function mockRouteStatus(): RouteStatus {
       { kind: "relay", via: "Frankfurt", rttMs: 38 + j(), alive: true, lossPct: 0, firstPct: playing ? 3 : 0, mb: packets * 0.0011 },
     ],
     saved: Math.floor(packets / 2500),
+    repaired: Math.floor(packets / 4000),
     packets,
     resendsHere: Math.floor(packets / 900),
     resendsExit: Math.floor(packets / 600),

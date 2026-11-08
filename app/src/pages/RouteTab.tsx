@@ -155,6 +155,7 @@ export function RouteTab() {
           <div className="nt-stats rt-stats">
             <Stat label={t("route.exitPing")} value={ms(st?.exitPingMs)} unit="ms" />
             <Stat label={t("route.saved")} value={String(st?.saved ?? 0)} />
+            <Stat label={t("route.repaired")} value={String(st?.repaired ?? 0)} />
             <Stat label={t("route.resends")} value={String((st?.resendsHere ?? 0) + (st?.resendsExit ?? 0))} />
             <Stat label={t("route.lag")} value={ms(lag)} unit="ms" warn={lag != null && lag > 50} />
           </div>
