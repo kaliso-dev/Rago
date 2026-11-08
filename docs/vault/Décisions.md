@@ -10,7 +10,7 @@ Registre daté des décisions de Sofiene. **La plus récente prime.** Citations 
 ## App et versions
 | Date | Décision | Statut |
 |---|---|---|
-| 08/11 | Rago Route : « j'ai pas besoin de tester en vrai je sais que c'est bon tu peux push sur staging il faut développer le reste des feature maintenant » (accès Premium poussé sur `staging` ; chiffrement, paquets de secours, 4G sur Windows et choix de la sortie développés) | DÉCIDÉ, poussé pour l'accès ; reste codé, pas poussé ([[Proxy]]) |
+| 08/11 | Rago Route : « j'ai pas besoin de tester en vrai je sais que c'est bon tu peux push sur staging il faut développer le reste des feature maintenant » (accès Premium poussé sur `staging` ; chiffrement, paquets de secours, 4G sur Windows et choix de la sortie développés) | DÉCIDÉ, sur `staging` ; protocole 2 poussé le 08/11 au soir (« Oui, je réinstalle juste après ») ([[Proxy]]) |
 | 08/11 | Rago Route réservé au Premium : « Oui, tout de suite » (carte de choix) : jeton signé par le serveur de licences, vérifié par la sortie Paris, relais limité à la sortie Rago, ancien proxy simple fermé ; sur `staging` d'abord, Sofiene réinstalle les 2 serveurs ensuite. Tranche q51 | DÉCIDÉ, sur `staging` (serveurs pas encore réinstallés) ([[Proxy]]) |
 | 07/11 | Rago Route dans l'app : « tu peux push sur staging » (moteur Windows et onglet de l'exe de test) | DÉCIDÉ, fait ([[Proxy]]) |
 | 07/11 | Rago Route : « Encore des tests sur le Mac » avant la version Windows dans l'app (carte de choix) : câble seul, puis 4G de l'iPhone en plus du Wi-Fi | DÉCIDÉ, en cours ([[Proxy]]) |

@@ -10,7 +10,7 @@ Une ligne par événement marquant, la plus récente en haut. Voir [[Historique 
 ## Novembre 2026
 | Date | Événement | Liens |
 |---|---|---|
-| 08/11 | Rago Route, protocole 2 : tunnel chiffré, paquets de secours, 4G du téléphone sur Windows, choix de la sortie la plus rapide ; testé en labo, pas encore poussé | [[Proxy]] |
+| 08/11 | Rago Route, protocole 2 : tunnel chiffré, paquets de secours, 4G du téléphone sur Windows, choix de la sortie la plus rapide ; testé en labo, poussé sur `staging` (Sofiene réinstalle les 2 serveurs) | [[Proxy]] |
 | 08/11 | Accès Premium de Rago Route poussé sur `staging` (commit `7ba0250`) à la demande de Sofiene | [[Proxy]] |
 | 08/11 | Rago Route réservé au Premium (choix de Sofiene) : jeton signé par le serveur de licences, vérifié par la sortie, relais limité à Paris, onglet de l'app avec l'offre Premium, ancien proxy simple retiré de `install.sh` ; testé en labo, pas encore poussé ni installé | [[Proxy]] |
 | 08/11 | Compte rendu des performances de Rago Route écrit pour le collègue de Sofiene | [[Proxy]] |

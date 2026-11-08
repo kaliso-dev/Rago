@@ -9,7 +9,7 @@ Voir [[Architecture]] et [[Historique des versions]].
 
 ## Navigation (barre latérale)
 - **Tableau de bord** ([[Tableau de bord]])
-- **Optimiser** : Réseau (onglets Optimisations, [[Packet Optimizer]], [[Test réseau]], et « Rago Route » seulement dans l'exe de test, sur `staging`, réservé au Premium (sur `staging` le 08/11 ; protocole 2 avec chiffrement, paquets de secours et 4G du téléphone codé le 08/11, pas encore poussé) : voir [[Proxy]]) · Latence · Carte graphique · Windows · [[Page Outils]]
+- **Optimiser** : Réseau (onglets Optimisations, [[Packet Optimizer]], [[Test réseau]], et « Rago Route » seulement dans l'exe de test, sur `staging`, réservé au Premium (sur `staging` le 08/11 ; protocole 2 avec chiffrement, paquets de secours et 4G du téléphone sur `staging` le 08/11) : voir [[Proxy]]) · Latence · Carte graphique · Windows · [[Page Outils]]
 - **En jeu** : Hitreg · Minecraft · [[RBW Mod]] · [[Mode jeu]] · Jeux ([[Bibliothèque de jeux]])
 - **Avancé** : Mode expert · Restaurer (historique, retour arrière)
 - En bas : carte « Plan gratuit » ([[Licence dans l'app]]), « Rejoindre le Discord », Paramètres ([[Paramètres de l'app]]), état administrateur.
