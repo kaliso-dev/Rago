@@ -1,7 +1,7 @@
 ---
 type: registre
 tags: [décision]
-maj: 2026-11-08
+maj: 2026-11-09
 ---
 # Décisions
 
@@ -10,15 +10,22 @@ Registre daté des décisions de Sofiene. **La plus récente prime.** Citations 
 ## App et versions
 | Date | Décision | Statut |
 |---|---|---|
+| 09/11 | Rago OS : plus d'optimisation durable à l'installation, « Oui, tout en session » (carte de décision, q53) : les services ne sont en pause que pendant que Rago OS tourne | DÉCIDÉ, fait dans test4 ([[Rago OS]]) |
+| 08/11 | Rago OS (soir) : « quand j'appuie sur ma touche windows seul le dock touchpad doit s'ouvrir » ; « stopper le plus de services inutiles possible mais ne pas toucher à des paramètre que rago optimizer touche déjà » ; « personnalisé un peu plus pour ne pas perdre en crédibilité » (moins Apple) ; « supprimer complétement l'écran de veille […] et d'ailleurs renomme le écran de veille » (l'écran de verrouillage) ; Rago OS « se lance instantanément au démarrage du pc […] par défaut » ; « si je quitte rago os tout les paramètre doivent revenir comme ceux d'origine et quand je lance tout se réactive pendant l'animation de chargement » | DÉCIDÉ, fait dans test4 ([[Rago OS]]) |
+| 08/11 | Rago OS : « garde uniquement le premier thème et le deuxième [...] ainsi que le dernier » (Rago, Tournoi, Pétale), coins arrondis « sur chaque thème » ; textes toujours visibles « quelques soit le mode sombre ou clair » ; Dock qui apparaît seulement « quand la souris reste vraiment contre le bord de l'écran » ; île : « pas besoin d'afficher le ping ou les fps car la game bar de l'app rago optimizer l'affiche déjà », sauf « à la fin quand on ferme le jeux [...] les moyenne et le temps de jeux », sinon « épuré » | DÉCIDÉ, fait ([[Rago OS]]) |
 | 08/11 | Rago Route : « j'ai pas besoin de tester en vrai je sais que c'est bon tu peux push sur staging il faut développer le reste des feature maintenant » (accès Premium poussé sur `staging` ; chiffrement, paquets de secours, 4G sur Windows et choix de la sortie développés) | DÉCIDÉ, sur `staging` ; protocole 2 poussé le 08/11 au soir (« Oui, je réinstalle juste après ») ([[Proxy]]) |
 | 08/11 | Rago Route réservé au Premium : « Oui, tout de suite » (carte de choix) : jeton signé par le serveur de licences, vérifié par la sortie Paris, relais limité à la sortie Rago, ancien proxy simple fermé ; sur `staging` d'abord, Sofiene réinstalle les 2 serveurs ensuite. Tranche q51 | DÉCIDÉ, sur `staging` (serveurs pas encore réinstallés) ([[Proxy]]) |
 | 07/11 | Rago Route dans l'app : « tu peux push sur staging » (moteur Windows et onglet de l'exe de test) | DÉCIDÉ, fait ([[Proxy]]) |
 | 07/11 | Rago Route : « Encore des tests sur le Mac » avant la version Windows dans l'app (carte de choix) : câble seul, puis 4G de l'iPhone en plus du Wi-Fi | DÉCIDÉ, en cours ([[Proxy]]) |
+| 07/11 | Rago OS est réservé aux joueurs Premium : « ceux qui auront l'os auront forcément rago premium [...] ce sera forcement des permium agit en conséquence » ; sécuriser cet accès est à trouver plus tard (« il faudra trouver le moyen de sécuriser ») | DÉCIDÉ, appliqué dans l'OS ; sécurisation À FAIRE ([[Rago OS]]) |
+| 07/11 | Rago OS : « remplacer le logo par celui de l'os » (icône de l'exe et de l'installeur) | DÉCIDÉ, fait : le R de Rago ([[Rago OS]]) |
+| 07/11 | Rago OS : « chercher n'importe quelle tweaks depuis spotlight et l'activer », « rechercher des onglet genre network et que ça les ouvre directement dans l'app », applis « en full screen en auto », barre des tâches qui s'ouvre « en approchant la souris » | DÉCIDÉ, fait ([[Rago OS]]) |
+| 07/11 | Rago OS : « je veux des thèmes beaucoup plus travailler et personnalisé », passer l'OS « en revu complétement », améliorer « le dynamic island et les widget » | DÉCIDÉ, en cours ([[Rago OS]]) |
+| 07/11 | Pont Rago OS et Mode jeu total : « fusionne » (PR #73 dans `staging`) | DÉCIDÉ, fait ([[Rago OS]]) |
 | 07/11 | [[Rago OS]] prend la charte de l'app 1.2.1 (carte de choix) | DÉCIDÉ, fait ([[Charte graphique]]) |
 | 07/11 | Rago OS doit être l'extension de l'app : « essaie de vraiment connecter l'app et l'os », avec une interface « épuré et simplifié » | DÉCIDÉ, en cours ([[Rago OS]]) |
 | 07/11 | Thème Rago par défaut à l'installation de Rago OS, mais « tout personnalisable » (thème clair gardé) et d'autres thèmes Rago | DÉCIDÉ, fait ([[Rago OS]]) |
 | 07/11 | Services Windows : « Les deux », coupés en permanence par l'app pour les sûrs, et le reste en pause à chaque partie lancée depuis Rago OS (Mode jeu total) | DÉCIDÉ, codé ([[Rago OS]], [[Mode jeu]]) |
-|---|---|---|
 | 04/11 | Fonctions de la maquette « Fonctions gardées de la maquette de l'app » : « Il faut rajouter ses fonctionnalités » (analyse du PC, avant/après, fenêtre Premium avec les prix, résiliation dans l'app) | EN COURS, PR #70 ([[Analyse du PC]], [[Abonnement dans l'app]]) |
 | 04/11 | Plan gratuit élargi : « on va ajouter directement la suite : 50 - 100 tweaks gratuit (laisser les meilleur et les plus demandé en premium surtout network et hitreg) mais seulement 30 slot de tweaks disponible gratuitement a activé simultanement » | EN COURS, PR #70 ([[Offres et prix]]) |
 | 04/11 | Connexion à l'app avec Discord ou Google (« Il faut aussi rajouter le login sur l'app avec discord ou google ») | EN COURS, PR #70 ([[Connexion Google et Discord]]) |
@@ -70,6 +77,8 @@ Registre daté des décisions de Sofiene. **La plus récente prime.** Citations 
 Une ligne par projet ou fonctionnalité arrêtés, pour qu'aucun Claude ne les relance. Le reste du vault n'en parle plus.
 | Date | Quoi | Raison |
 |---|---|---|
+| 08/11 | Rago OS : économiseur d'écran (Horloge, Aurore, Diaporama) | « supprimer complétement l'écran de veille car l'écran de vérouillage sert déjà d'écran de veille » |
+| 08/11 | Rago OS : 12 thèmes sur 15 (Signal, Néon, Piste, Abysse, Aurore, Magma, Terminal, Horizon, Affiche, Graphite, Rago Clair, Papier) et leurs fonds d'écran ; FPS et ping en direct dans la Dynamic Island, et son coup d'œil enrichi (météo, ping, CPU, RAM, boutons) | « garde uniquement le premier thème et le deuxième [...] ainsi que le dernier » ; la barre en jeu de l'app affiche déjà FPS et ping, île « épuré » |
 | 08/11 | Ancien proxy simple (`relay.py`, TCP 25565 et 25566, sans compte) | Remplacé par Rago Route réservé au Premium (« Oui, tout de suite ») ; retiré par le nouveau `install.sh` ([[Proxy]]) |
 | 05/11 | Proxy chez OVHcloud | VPS-1 indisponible, VPS-2 (7 €) seulement en Amérique du Nord : « faut pas prendre chez ovh » ([[Proxy]]) |
 | 05/11 | Proxy : journée de test sur 6 serveurs Vultr loués à l'heure | « je veux pas ta journée de test » ; serveurs configurés directement ([[Proxy]]) |

@@ -1,7 +1,7 @@
 ---
 type: pilotage
 tags: [pilotage, à-décider, à-vérifier]
-maj: 2026-11-08
+maj: 2026-11-09
 ---
 # Questions ouvertes
 
@@ -20,7 +20,7 @@ Ouvertes au 04/11 : q36 (remboursement 14 jours), q37 (accord avant l'envoi du t
 
 - q44 à q49 (04/11) : statut du vendeur (traitée : « Pas encore »), partage de l'argent, adresse des mentions légales, vendeur majeur et compte Stripe, sortie de la 1.2.2, offre débitée après l'essai. Voir [[Conformité juridique]].
 - q50 (04/11) : seuils de l'[[Analyse du PC]], À VÉRIFIER.
-- q52 et q53 (07/11) : Mode jeu total gratuit ou Premium ; garder ou non l'optimiseur d'installation de [[Rago OS]] quand l'app est là.
+- q52 et q53 traitées (07/11 et 09/11) : Rago OS est réservé aux joueurs Premium ; plus d'optimisation durable à l'installation, « tout en session ».
 - q55 (08/11) : variable `ROUTE_TESTERS` ajoutée sur Railway staging ? (sans elle, l'exe de test refuse Rago Route ; voir [[Proxy]]).
 
 ## À demander à Abel (Sofiene ne sait pas)
@@ -32,6 +32,6 @@ Ouvertes au 04/11 : q36 (remboursement 14 jours), q37 (accord avant l'envoi du t
 - Les 1.2.0 installées reçoivent-elles bien la 1.2.1 ? (`/api/v1/update/status`) ([[Mise à jour automatique]])
 - Railway prod a-t-il chargé les bases DB-IP (`/admin/reseau`) ? ([[Proxy]])
 - La clé de mise à jour Tauri est-elle sauvegardée hors du PC ? ([[Clés et secrets]])
-- [[Rago OS]] : la tâche « Rago Optimizer » se lance-t-elle sans droits administrateur depuis Rago OS ? Rien n'est encore testé sur Windows.
+- [[Rago OS]] : la tâche « Rago Optimizer » se lance-t-elle sans droits administrateur depuis Rago OS ? Sofiene a essayé l'exe de test le 07/11, sans le dire.
 - Remise du profil NVIDIA sur un vrai PC NVIDIA ([[Remise à zéro]]).
 - Identité du vendeur absente des conditions de vente ; TVA (RAG-20 annulée sans raison) : voir [[Conformité juridique]].

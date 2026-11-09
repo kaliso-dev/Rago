@@ -10,10 +10,16 @@ Une ligne par événement marquant, la plus récente en haut. Voir [[Historique 
 ## Novembre 2026
 | Date | Événement | Liens |
 |---|---|---|
+| 08/11 | Rago OS test4 : touche Windows → Applis, Dock rangé dès que la souris part, lancement instantané par défaut, session légère (47 services en pause), Windows remis comme avant en quittant, économiseur supprimé, noms moins « Apple » | [[Rago OS]] |
+| 08/11 | [[Rago OS]], retours de Sofiene traités : 3 thèmes gardés (Rago, Tournoi, Pétale) aux coins arrondis, contraste vérifié texte par texte en sombre et en clair, Dock qui ne s'ouvre que souris plaquée au bord et se range dès qu'elle part, île sans FPS ni ping en jeu (résumé de fin gardé). Nouvel exe de test | [[Rago OS]] |
 | 08/11 | Rago Route, protocole 2 : tunnel chiffré, paquets de secours, 4G du téléphone sur Windows, choix de la sortie la plus rapide ; testé en labo, poussé sur `staging` (Sofiene réinstalle les 2 serveurs) | [[Proxy]] |
 | 08/11 | Accès Premium de Rago Route poussé sur `staging` (commit `7ba0250`) à la demande de Sofiene | [[Proxy]] |
 | 08/11 | Rago Route réservé au Premium (choix de Sofiene) : jeton signé par le serveur de licences, vérifié par la sortie, relais limité à Paris, onglet de l'app avec l'offre Premium, ancien proxy simple retiré de `install.sh` ; testé en labo, pas encore poussé ni installé | [[Proxy]] |
 | 08/11 | Compte rendu des performances de Rago Route écrit pour le collègue de Sofiene | [[Proxy]] |
+| 07/11 | [[Rago OS]], suite : Spotlight cherche et active n'importe quel réglage de l'app, applis ouvertes en plein écran, Dock masqué par défaut, logo R, thèmes v2 (15 thèmes complets, éditeur, thèmes enregistrés), île et widgets enrichis. Commits sur `rago-design` (Mac de Sofiene) ; côté app, commandes `tweaks` et `tweak` du pont en local seulement | [[Rago OS]] |
+| 07/11 | Sofiene essaie l'exe de test de Rago OS sur son PC Windows : « plein de bug » (liste pas encore donnée) | [[Rago OS]] |
+| 07/11 | PR #73 fusionnée dans `staging` sur « fusionne » de Sofiene : pont Rago OS et Mode jeu total dans l'app, vault | [[Rago OS]], [[Mode jeu]] |
+| 07/11 | [[Rago OS]] (dossier `nimbus` du Mac de Sofiene) passe à la charte Rago, reçoit 7 thèmes Rago et devient l'extension de l'app : pont local, FPS et ping dans l'île, Mode jeu total, page, widget et Spotlight Rago | [[Rago OS]] |
 | 07/11 | Premier essai de Rago Route dans l'exe de test sur un PC Windows (soir) : marche ; direct 13 ms, Frankfurt 35 ms, 0 perte, retard du moteur 12 ms au pire | [[Proxy]] |
 | 07/11 | Rago Route dans l'app Windows : moteur Rust `route.rs` + onglet « Rago Route » dans Réseau (exe de test seulement), testé en labo ; poussé sur `staging` à la demande de Sofiene (exe de test refabriqué), jamais lancé sur un PC Windows | [[Proxy]] |
 | 07/11 | Test de coupure du Wi-Fi (~30 s, 14 h 05) : la partie tient, la 4G prend tout, mais monte à 1,2–1,5 s : mauvaise réception 4G chez la grand-mère de Sofiene (sa réponse) | [[Proxy]] |
@@ -22,7 +28,6 @@ Une ligne par événement marquant, la plus récente en haut. Voir [[Historique 
 | 07/11 | Essai d'1 min à 06 h 51 en câble seul (Wi-Fi coupé) : tunnel 108–109 ms contre 115 ms en direct, 0 perte ; trajet direct 11–14 ms comme à 06 h 27 ; le programme se fige encore jusqu'à 99 ms : les pics viennent du Mac, pas du Wi-Fi | [[Proxy]] |
 | 07/11 | Essai de 2 min à 06 h 27 avec un câble RJ45 branché au Mac (interface réellement utilisée À VÉRIFIER, le Wi-Fi restait allumé) : au même moment, tunnel 105–110 ms contre 113–115 ms en direct ; 0 perte, trajet direct premier à 99 % ; pics restants = programme figé sur le Mac (jusqu'à 191 ms) | [[Proxy]] |
 | 07/11 | Site : page `route.html` « Rago Route » entièrement animée + section et liens sur l'accueil, poussée sur `staging` (Sofiene : « tu peux push sur staging les modif du site ») | [[Site]] |
-| 07/11 | [[Rago OS]] (dossier `nimbus` du Mac de Sofiene) passe à la charte Rago, reçoit 7 thèmes Rago et devient l'extension de l'app : pont local, FPS et ping dans l'île, Mode jeu total, page, widget et Spotlight Rago. Pont et Mode jeu total de l'app codés en local, pas encore sur GitHub | [[Rago OS]] |
 | 07/11 | Partie avec la version du 07/11 : tunnel médiane 116 ms contre 119 ms en direct ; aucune perte, pics venant du premier tronçon (Wi-Fi ou Mac) ; ajout de « arrivé premier » et des Mo reçus par trajet pour tester la 4G | [[Proxy]] |
 | 07/11 | Rago Route, version du 07/11 : renvois inutiles supprimés, reprise en 10 à 20 ms après une coupure, retard du programme mesuré aussi sur la sortie ; testée en local | [[Proxy]] |
 | 07/11 | Partie normale par Rago Route (Wi-Fi) : au même moment, tunnel 111–115 ms contre 116–118 ms en direct ; pics dus en partie au programme Python qui se fige sur le Mac | [[Proxy]] |

@@ -1,7 +1,7 @@
 ---
 type: fonctionnalité
 tags: [fonctionnalité, app]
-maj: 2026-11-07
+maj: 2026-11-08
 ---
 # Mode jeu
 
@@ -14,4 +14,4 @@ Réglage « Game mode » de Rago (gratuit, `win_gamemode`).
 
 Liens : [[Catalogue des tweaks]], [[Offres et prix]].
 
-Depuis le 07/11 (branche locale, pas encore sur GitHub), [[Rago OS]] peut allumer et éteindre ce mode à chaque partie par le pont, et demander en plus le « Mode jeu total » (services inutiles en pause, `boost.rs`).
+Depuis le 07/11 (dans `staging`, PR #73), [[Rago OS]] peut allumer et éteindre ce mode à chaque partie par le pont, et demander en plus le « Mode jeu total » (services inutiles en pause, `boost.rs`).
