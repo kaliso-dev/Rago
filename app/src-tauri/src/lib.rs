@@ -1043,6 +1043,46 @@ fn bridge_presets() -> Vec<serde_json::Value> {
         .unwrap_or_default()
 }
 
+/// Réglages que Rago OS propose dans Spotlight : ceux qui s'appliquent d'un clic dans l'app. Pas les réglages natifs
+/// à paramètres (OptiFine, profil NVIDIA) : ils se règlent dans l'app. `confirm` : l'avertissement que l'app montre
+/// avant de l'appliquer, que Rago OS montre aussi.
+static BRIDGE_TWEAKS: std::sync::LazyLock<Vec<serde_json::Value>> = std::sync::LazyLock::new(|| {
+    let catalog: serde_json::Value = serde_json::from_str(include_str!("../../src/data/catalog.json")).unwrap_or_default();
+    let mut out = Vec::new();
+    for m in catalog["modules"].as_array().into_iter().flatten() {
+        for s in m["sections"].as_array().into_iter().flatten() {
+            for t in s["tweaks"].as_array().into_iter().flatten() {
+                let (Some(id), Some(kind)) = (t["id"].as_str(), t["kind"].as_str()) else { continue };
+                if t.get("native").is_some() || runner::is_native(id) || !(kind == "tweak" || kind == "action") {
+                    continue;
+                }
+                let variants: Vec<serde_json::Value> = t["variants"]
+                    .as_array()
+                    .into_iter()
+                    .flatten()
+                    .map(|v| serde_json::json!({ "id": v["id"], "label": v["label"]["fr"], "revert": v["revert"].as_bool().unwrap_or(false) }))
+                    .collect();
+                out.push(serde_json::json!({
+                    "id": id,
+                    "name": t["name"]["fr"],
+                    "nameEn": t["name"]["en"],
+                    "desc": t["desc"]["fr"],
+                    "module": m["id"],
+                    "moduleName": m["name"]["fr"],
+                    "section": s["name"]["fr"],
+                    "kind": kind,
+                    "risk": t["risk"],
+                    "reboot": t["reboot"].as_bool().unwrap_or(false),
+                    "confirm": t["confirm"]["fr"],
+                    "variants": variants,
+                    "defaultVariant": t["defaultVariant"],
+                }));
+            }
+        }
+    }
+    out
+});
+
 /// Ce que Rago OS peut demander. Rien de plus que ce que l'interface de l'app sait déjà faire, avec les mêmes règles
 /// (Premium, lot déjà en cours, remise de fin de licence).
 fn bridge_handler(app: AppHandle) -> bridge::Handler {
@@ -1102,10 +1142,59 @@ fn bridge_handler(app: AppHandle) -> bridge::Handler {
             "games" => Ok(serde_json::to_value(state.library.list(false)).unwrap_or_default()),
             "game_launch" => state.library.launch(arg("id").as_str().ok_or("id")?).map(|_| Value::Null),
             "presets" => Ok(Value::Array(bridge_presets())),
+            // tout le catalogue cherchable depuis Spotlight, avec l'état de chaque réglage et ce que l'offre ouvre
+            "tweaks" => {
+                let premium = state.license.status().state == "active";
+                let l = state.ledger.lock().unwrap_or_else(std::sync::PoisonError::into_inner);
+                let list: Vec<Value> = BRIDGE_TWEAKS
+                    .iter()
+                    .map(|t| {
+                        let id = t["id"].as_str().unwrap_or("");
+                        let applied = l.tweaks.get(id).filter(|a| a.ok);
+                        let mut t = t.clone();
+                        t["applied"] = json!(applied.is_some());
+                        t["variant"] = json!(applied.and_then(|a| a.variant.clone()));
+                        t["locked"] = json!(!catalog::allowed(id, t["defaultVariant"].as_str(), premium));
+                        t
+                    })
+                    .collect();
+                Ok(Value::Array(list))
+            }
+            // un réglage allumé ou éteint depuis Spotlight : même moteur et mêmes règles que le bouton de l'app
+            // (Premium, places du plan gratuit, lot déjà en cours)
+            "tweak" => {
+                let id = arg("id").as_str().ok_or("id")?.to_string();
+                let t = BRIDGE_TWEAKS.iter().find(|t| t["id"] == id.as_str()).ok_or("unknown_tweak")?;
+                let on = arg("on").as_bool().ok_or("on")?;
+                let item = if on {
+                    let variants: Vec<&str> = t["variants"].as_array().into_iter().flatten().filter_map(|v| v["id"].as_str()).collect();
+                    let variant = match arg("variant").as_str() {
+                        Some(v) if variants.contains(&v) => Some(v.to_string()),
+                        Some(_) => return Err("unknown_variant".into()),
+                        None => t["defaultVariant"].as_str().map(String::from).or_else(|| variants.first().map(|v| v.to_string())),
+                    };
+                    RunItem { id, variant, params: None, undo: false }
+                } else {
+                    if t["kind"] == "action" {
+                        return Err("not_a_switch".into());
+                    }
+                    let variant = {
+                        let l = state.ledger.lock().unwrap_or_else(std::sync::PoisonError::into_inner);
+                        l.tweaks.get(&id).filter(|a| a.ok).ok_or("not_applied")?.variant.clone()
+                    };
+                    RunItem { id, variant, params: None, undo: true }
+                };
+                start_tweaks(&app, &state, vec![item]).map(Value::String)
+            }
             "open" => {
                 background::show_main(&app);
                 if let Some(page) = arg("page").as_str() {
-                    let _ = app.emit_to("main", "app:goto", page.to_string());
+                    // « réseau#ping_main » : la page, puis le réglage mis en avant (comme la recherche de l'app)
+                    let target = match arg("tweak").as_str() {
+                        Some(t) => format!("{page}#{t}"),
+                        None => page.to_string(),
+                    };
+                    let _ = app.emit_to("main", "app:goto", target);
                 }
                 Ok(Value::Null)
             }
@@ -1123,6 +1212,37 @@ fn bridge_handler(app: AppHandle) -> bridge::Handler {
                     return Err("premium_required:boost".into());
                 }
                 Ok(serde_json::to_value(if on { b.on() } else { b.off() }).unwrap_or_default())
+            }
+            // Rago Route (route.rs), comme l'onglet de l'app : seulement dans l'exe de test pour l'instant
+            "route" => {
+                if server_name() != "staging" {
+                    return Ok(json!({ "available": false }));
+                }
+                let mut v = serde_json::to_value(route::current()).unwrap_or_default();
+                v["available"] = json!(true);
+                v["premium"] = json!(state.license.status().state == "active");
+                Ok(v)
+            }
+            "route_servers" => {
+                if server_name() != "staging" {
+                    return Err("route_unavailable".into());
+                }
+                Ok(serde_json::to_value(route::probe_servers()).unwrap_or_default())
+            }
+            // mêmes règles que le bouton de l'app : jeton Premium, renouvelé tant que Rago Route tourne
+            "route_start" => {
+                if server_name() != "staging" {
+                    return Err("route_unavailable".into());
+                }
+                let lic = Arc::clone(&state.license);
+                let token = lic.route_token().map_err(|e| format!("premium:{}", e.code))?;
+                let st = route::turn_on(&token, arg("phone").as_bool().unwrap_or(false))?;
+                keep_route_token(lic);
+                Ok(serde_json::to_value(st).unwrap_or_default())
+            }
+            "route_stop" => {
+                route::turn_off();
+                Ok(Value::Null)
             }
             _ => Err("unknown_command".into()),
         }
@@ -1411,4 +1531,26 @@ pub fn run() {
                 route::turn_off(); // ferme les sessions proprement (la sortie lâche la connexion au serveur)
             }
         });
+}
+
+#[cfg(test)]
+mod bridge_tests {
+    use super::BRIDGE_TWEAKS;
+
+    /// Spotlight de Rago OS : tout le catalogue cliquable, sans les réglages natifs à paramètres.
+    #[test]
+    fn reglages_proposes_a_rago_os() {
+        assert!(BRIDGE_TWEAKS.len() > 150, "{}", BRIDGE_TWEAKS.len());
+        for t in BRIDGE_TWEAKS.iter() {
+            let id = t["id"].as_str().unwrap();
+            assert!(!super::runner::is_native(id), "{id}");
+            assert!(t["name"].as_str().is_some_and(|n| !n.is_empty()), "{id}");
+            assert!(t["module"].as_str().is_some(), "{id}");
+            if let Some(d) = t["defaultVariant"].as_str() {
+                assert!(t["variants"].as_array().unwrap().iter().any(|v| v["id"] == d), "{id}");
+            }
+        }
+        assert!(BRIDGE_TWEAKS.iter().any(|t| t["id"] == "game_mode"));
+        assert!(!BRIDGE_TWEAKS.iter().any(|t| t["id"] == "mc_optifine" || t["id"] == "nv_profile"));
+    }
 }

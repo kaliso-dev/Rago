@@ -675,7 +675,12 @@ function useStoreValue() {
   }, []);
   // barre en jeu : « Ouvrir Rago Optimizer » ou l'offre Premium, depuis la partie
   useEffect(() => {
-    const sub = api.onGoto((page) => (page === "premium" ? setUpsell("plan") : goTo(page)));
+    // « network#ping_main » (Rago OS) : la page, puis le réglage mis en avant
+    const sub = api.onGoto((target) => {
+      const [page, tweak] = target.split("#");
+      if (page === "premium") setUpsell("plan");
+      else goTo(page, tweak || undefined);
+    });
     return () => void sub.then((un) => un());
   }, [goTo, setUpsell]);
   // langue du menu de l'icône près de l'horloge
