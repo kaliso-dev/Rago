@@ -1213,6 +1213,37 @@ fn bridge_handler(app: AppHandle) -> bridge::Handler {
                 }
                 Ok(serde_json::to_value(if on { b.on() } else { b.off() }).unwrap_or_default())
             }
+            // Rago Route (route.rs), comme l'onglet de l'app : seulement dans l'exe de test pour l'instant
+            "route" => {
+                if server_name() != "staging" {
+                    return Ok(json!({ "available": false }));
+                }
+                let mut v = serde_json::to_value(route::current()).unwrap_or_default();
+                v["available"] = json!(true);
+                v["premium"] = json!(state.license.status().state == "active");
+                Ok(v)
+            }
+            "route_servers" => {
+                if server_name() != "staging" {
+                    return Err("route_unavailable".into());
+                }
+                Ok(serde_json::to_value(route::probe_servers()).unwrap_or_default())
+            }
+            // mêmes règles que le bouton de l'app : jeton Premium, renouvelé tant que Rago Route tourne
+            "route_start" => {
+                if server_name() != "staging" {
+                    return Err("route_unavailable".into());
+                }
+                let lic = Arc::clone(&state.license);
+                let token = lic.route_token().map_err(|e| format!("premium:{}", e.code))?;
+                let st = route::turn_on(&token, arg("phone").as_bool().unwrap_or(false))?;
+                keep_route_token(lic);
+                Ok(serde_json::to_value(st).unwrap_or_default())
+            }
+            "route_stop" => {
+                route::turn_off();
+                Ok(Value::Null)
+            }
             _ => Err("unknown_command".into()),
         }
     })
