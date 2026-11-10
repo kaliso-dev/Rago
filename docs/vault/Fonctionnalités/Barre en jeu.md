@@ -2,7 +2,7 @@
 type: fonctionnalité
 tags: [fonctionnalité, app, 1.2]
 version_app: 1.2.1
-maj: 2026-10-31
+maj: 2026-11-10
 ---
 # Barre en jeu
 
@@ -32,4 +32,4 @@ Tweaks qui s'appliquent sans redémarrage, sans couper le réseau ni relancer l'
 - **Réseau, Windows, carte graphique** : `net_dca`, `win_visual`, `win_transparency`, `win_autoplay`, `nv_profile`.
 Détail de chacun : [[Tweaks Latence]], [[Tweaks Windows]], [[Tweaks Carte graphique]], [[Tweaks Réseau]]. Mode jeu, Hitreg, OptiFine et RBW Mod restent dans l'app. Un tweak changé depuis la barre apparaît dans l'app.
 
-Liens : [[Test réseau]], [[Offres et prix]], [[Trailer 1.2]].
+Liens : [[Test réseau]], [[Offres et prix]].

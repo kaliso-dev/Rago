@@ -36,7 +36,7 @@ Vue d'ensemble technique : [[Architecture]]. **Pour coder ou dépanner : commenc
   - Hébergement et CI : [[Supabase]] · [[Railway]] · [[Netlify]] · [[CI GitHub Actions]] · [[Variables d'environnement]] · [[Clés et secrets]]
   - Site : [[Site]] · Rago Route : [[Infrastructure Rago Route]]
 - **Design** : [[Charte graphique]] · [[Voix et ton]] · [[Refonte glass]]
-- **Marketing** : [[Marketing]] · [[Discord]] · [[Partenaires et créateurs]] · [[Promotions et affiliation]] · [[Trailer 1.2]] · [[Vidéos YouTube]]
+- **Marketing** : [[Marketing]] · [[Discord]] · [[Partenaires et créateurs]] · [[Promotions et affiliation]] · [[Vidéos YouTube]]
 - **Suivi** : [[Ventes Stripe]] · [[Conformité juridique]] · [[Bugs et incidents]] · [[Problèmes joueurs]] · [[Historique des problèmes]] · [[Linear]] · [[Personnes et services]] · [[Sources]]
 
 ## Statuts utilisés dans les notes

@@ -25,5 +25,4 @@ Retour à [[Projet]]. Aucun identifiant ni secret ici ([[Clés et secrets]]).
 | DB-IP | ville et fournisseur des tests réseau ([[Proxy]]) |
 | Discord | communauté, rôle Pro, connexion ([[Discord]]) |
 | Linear | tickets et documents ([[Linear]]) |
-| Kling AI | plans vidéo générés ([[Trailer 1.2]]) |
 | Claude (projet « Rago optimizer (suite) ») | fils de travail, dossier partagé ([[Sources]]) |

@@ -13,4 +13,4 @@ Dossier `marketing/videos-youtube/` ([[Sources]]). **Les vidéos sont faites par
 - **Vidéo principale de l'app** : prévue après la sortie de la 1.2.1 (29/10) ; état À VÉRIFIER auprès d'Abel.
 - Rappel : la description YouTube contenait `[PASTE YOUR DISCORD INVITE]` (17/10) ; à vérifier.
 
-Liens : [[Trailer 1.2]], [[Marketing]], [[Discord]].
+Liens : [[Marketing]], [[Discord]].

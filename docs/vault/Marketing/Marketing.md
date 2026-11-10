@@ -15,6 +15,6 @@ Carte des sujets marketing. Retour à [[Projet]].
 ## Sujets
 - [[Offres et prix]] · [[Promotions et affiliation]]
 - [[Discord]] · [[Partenaires et créateurs]]
-- Contenus : [[Vidéos YouTube]] · [[Trailer 1.2]]
+- Contenus : [[Vidéos YouTube]]
 - Projet lié : [[Client Minecraft Rago]]
 - [[Site]] (tunnel d'achat)

@@ -67,9 +67,7 @@ Une ligne par événement marquant, la plus récente en haut. Voir [[Historique 
 | 29/10 | Site mis à jour pour la 1.2.1, plans de prix réécrits (PR #66) ; section « New in 1.2 » (PR #59) | [[Site]] |
 | 29/10 | Serveur de prod : mises à jour auto + collecte des tests réseau (PR #63) ; exe 1.2.1 de prod signé ; 1.2.1 fusionnée dans `staging` (PR #64, #65) | [[Version 1.2.1]], [[Proxy]] |
 | 29/10 | Annonces Discord 1.2 rédigées (FR, EN) ; script YouTube « What's new » écrit | [[Discord]], [[Vidéos YouTube]] |
-| 29/10 | 8 plans cinématiques Kling (660 crédits) pour le trailer | [[Trailer 1.2]] |
 | 28/10 | PR #58 (refonte et 1.2.0) fusionnée dans `staging` ; mise à jour auto vérifiée dès le lancement | [[Version 1.2.0]] |
-| 27/10 | Trailer 1.2 demandé (v1 à v4 en 4K ensuite) | [[Trailer 1.2]] |
 | 25-28/10 | Connexion Google, Discord et code email à l'inscription (PR #61) | [[Connexion Google et Discord]] |
 | 25/10 | Réseau en trois onglets, Packet Optimizer, Analyser mon PC, ping des jeux | [[Packet Optimizer]] |
 | 22/10 | Retours sur la 1.2.0 : souris libre dans la barre, Lunar trouvé, logos, Network Optimizer, mode jeu renforcé, codes de partage | [[Version 1.2.0]] |

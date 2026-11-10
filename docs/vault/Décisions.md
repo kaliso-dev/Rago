@@ -83,6 +83,7 @@ Registre daté des décisions de Sofiene. **La plus récente prime.** Citations 
 Une ligne par projet ou fonctionnalité arrêtés, pour qu'aucun Claude ne les relance. Le reste du vault n'en parle plus.
 | Date | Quoi | Raison |
 |---|---|---|
+| 10/11 | Trailer de la 1.2 (versions v1 à v4, plans Kling) | « finalement on a pas sorti de trailer pour la 1.2 » ; jamais publié |
 | 10/11 | Partenariats YouTube et questions marketing à Abel (vidéos, RAG-35, 39, 51, 54, 56) | « il faut supprimer tout ça » ; Abel a dit au partenaire YouTube d'attendre la version avec Rago Route dans l'app |
 | 10/11 | Ancien Rago OS sur lequel on démarrait le PC (PR #60) | « il faut le supprimer l'oublié » ; le nouveau [[Rago OS]] sera vendu une fois fini |
 | 09/11 | Rago OS : styles d'horloge Classique et Chronographe, choix de la police (thème et écran de veille), animation d'ouverture de la Météo | « je garde le 2,4,5,6 » ; « ne propose plus le fait de changer de police » ; « enlève l'animation d'ouverture de l'app météo » |
