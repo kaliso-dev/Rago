@@ -5,6 +5,8 @@ name: site-check
 on:
   workflow_dispatch:
   push:
+    # staging et la branche de prod seulement : les autres branches sont testées par leur pull request
+    branches: ["staging", "claude/rago-monorepo-initial-eyj6pq"]
     paths: ["site/**", ".github/workflows/site-check.yml"]
   pull_request:
     paths: ["site/**", ".github/workflows/site-check.yml"]
