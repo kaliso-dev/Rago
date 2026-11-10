@@ -10,6 +10,7 @@ Registre daté des décisions de Sofiene. **La plus récente prime.** Citations 
 ## App et versions
 | Date | Décision | Statut |
 |---|---|---|
+| 10/11 | Interface de `/admin` à refaire : « l'interface est baclé remplis de bug pas optmisé dégeulasse applique toi et fait la meilleur interface possible comme si ça devait etre commercialisé après » | fait, PR #82 ouverte vers `staging`, attend « fusionne » ([[Tableau de bord admin]]) |
 | 10/11 | Un outil admin qui centralise tout : « un tableau de bord qui permets de tout voir le max d'info et de possibilité de gestion des utilisateurs au meme endroit », « sans passer par les commandes railways », avec « les vente stripe du jour du mois et sur la totalité du projet », tous les services et les tests réseau | fait, PR #77 fusionnée dans `staging` sur « fusionne » (10/11) ([[Tableau de bord admin]]) |
 | 10/11 | Minutes GitHub Actions : rendre le dépôt privé `network-server-rago` public (choix « Le rendre public » sur la carte du fil), plutôt qu'alléger sa CI, un runner sur son PC ou GitLab | DÉCIDÉ, à faire par Sofiene dans Settings ([[CI GitHub Actions]]) |
 | 10/11 | « rago doit passer en privé mais y a plus de minutes ducoup » puis « je ne peux pas payer je le passerai en public et je mettrai en privé moi meme quand j'ai besoin pendant ce mois » : `rago` public en novembre (privé à la main par Sofiene au besoin), privé à partir de décembre ; pas de budget Actions | DÉCIDÉ ([[CI GitHub Actions]]) |

@@ -10,6 +10,7 @@ Une ligne par événement marquant, la plus récente en haut. Voir [[Historique 
 ## Novembre 2026
 | Date | Événement | Liens |
 |---|---|---|
+| 10/11 | Interface du tableau de bord `/admin` refaite à la demande de Sofiene (« comme si ça devait etre commercialisé ») : menu fixe et tiroir sur téléphone, cartes et graphiques (30 jours, 12 mois), « À traiter », recherche `/`, confirmations, export CSV des joueurs, bandeau « Stripe en mode test » sur staging ; ventes et services relus en arrière-plan pour ne plus attendre Stripe ; PR #82 ouverte vers `staging` | [[Tableau de bord admin]] |
 | 10/11 | Nouvelle note d'archive [[Historique des problèmes]] (demande de Sofiene) : tous les problèmes rencontrés, avec cause et solution, pour déboguer plus tard ; ajout du bug d'`availability()` (tweaks AMD appliqués sur un PC Intel) | [[Bugs et incidents]] |
 | 10/11 | Tableau de bord `/admin` complet demandé par Sofiene et codé : joueurs et accès (dont bannissement), ventes Stripe du jour, du mois et totales, état des services, journal ; PR #77 fusionnée dans `staging` sur « fusionne » de Sofiene | [[Tableau de bord admin]] |
 | 10/11 | Étude des minutes GitHub Actions : `rago` est public (minutes gratuites) ; le quota est vidé par la CI de `network-server-rago` (151 runs en deux jours) ; Sofiene décide de rendre ce dépôt public, pas GitLab | [[CI GitHub Actions]] |
