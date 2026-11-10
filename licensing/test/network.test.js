@@ -171,9 +171,9 @@ test('network test: /admin/reseau by city and provider, CSV export, gone after 1
   // London: 2 players, 3 tests, median to Paris 12 (11.9, 15.9, 11.9), lossy (2.5 %), Hypixel 91, nothing to Virginia.
   const london = page.slice(page.indexOf('London'), page.indexOf('</tr>', page.indexOf('London')));
   assert.match(london, /England, GB/);
-  assert.match(london, /<td class="mono">2<\/td><td class="mono">3<\/td><td class="mono" title="3 mesures, pertes 0,0 %">91<\/td>/);
-  assert.match(london, /<td class="mono net-loss" title="3 mesures, pertes 2,5 %">12<\/td>/);
-  assert.match(page, /Orange<span class="muted small"> · FR/);
+  assert.match(london, /<td class="r num">2<\/td><td class="r num">3<\/td><td class="r ping p-3" title="3 mesures, pertes 0,0 %">91<\/td>/);
+  assert.match(london, /<td class="r ping p-1 net-loss" title="3 mesures, pertes 2,5 %">12<\/td>/);
+  assert.match(page, /Orange<span class="dim small"> · FR/);
   assert.match(page, /IP Geolocation by DB-IP/);
   assert.match(await (await t.admin('/admin')).text(), /href="\/admin\/reseau"/);
 

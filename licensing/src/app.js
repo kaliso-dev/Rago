@@ -12,12 +12,12 @@ import { createHash, createHmac, timingSafeEqual } from 'node:crypto';
 import { DUMMY_HASH, maskLicenseKey, randomToken, signValue, unsignValue, verifyPassword } from './crypto.js';
 import { DeviceError, parseDevice, sameDevice } from './fingerprint.js';
 import { signToken, verifyToken } from './tokens.js';
-import { billingPortal, createCheckout, endTestLicenses, ensureAffiliatePromo, findPromotionCode, handleStripeEvent, isRagoCheckout, lifetimePrice, stopReplacedSubscriptions, stripeChecks, stripeMode, syncPromoActive } from './billing.js';
+import { billingPortal, createCheckout, ensureAffiliatePromo, findPromotionCode, handleStripeEvent, isRagoCheckout, lifetimePrice, stopReplacedSubscriptions, stripeMode, syncPromoActive } from './billing.js';
 import * as A from './affiliates.js';
 import { createInstaller } from './installer.js';
 import { createGeo } from './geo.js';
 import * as N from './network.js';
-import { createDiscord, DiscordError, discordSetupMissing } from './discord.js';
+import { createDiscord, DiscordError } from './discord.js';
 import { createOAuth, OAuthError } from './oauth.js';
 import * as L from './licensing.js';
 import * as V from './views.js';
@@ -25,6 +25,7 @@ import * as P from './profile.js';
 import * as R from './reviews.js';
 import * as Promo from './promo.js';
 import { audit } from './db.js';
+import { mountAdmin } from './admin.js';
 
 const DAY = 86400000;
 const EMAIL = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
@@ -37,6 +38,7 @@ const API_ERRORS = {
   no_license: [403, "This account doesn't have Rago Optimizer Premium yet. Get it on the website, then sign in again."],
   bound_to_other_device: [403, 'This license is already active on another PC. Rago Optimizer works on one device per license. Contact support on Discord if you changed PCs.'],
   revoked: [403, 'This license is no longer active. Contact support on Discord if you think that\'s a mistake.'],
+  account_banned: [403, 'This account is suspended. Contact support on Discord if you think that\'s a mistake.'],
   subscription_ended: [403, 'Your Rago Optimizer Premium subscription ended. Renew it on the website, then sign in again.'],
   rate_limited: [429, 'Too many attempts. Wait a few minutes and try again.'],
   // Reviews and profile (2026-10-09)
@@ -68,11 +70,13 @@ function rateLimiter() {
 }
 
 /**
- * @param deps { cfg, db, keys, stripe, mailer, log, discord, oauth, geo } (discord: the Pro role bot, null when not configured;
- *   oauth: the Google and Discord sign-in providers that have their keys; geo: where network tests come from, geo.js)
+ * @param deps { cfg, db, keys, stripe, mailer, log, discord, community, oauth, geo } (discord: the Pro role bot, null when not
+ *   configured; community: the community bot of community.js, for /admin; oauth: the Google and Discord sign-in providers
+ *   that have their keys; geo: where network tests come from, geo.js)
  */
-export function createApp({ cfg, db, keys, stripe, mailer, log = console, fetchImpl = fetch, avatars = P.createAvatarStore(cfg, { fetchImpl, log }), discord = createDiscord(cfg, { db, fetchImpl, log, stripe }), oauth = createOAuth(cfg, { fetchImpl }), geo = createGeo(cfg, { fetchImpl, log }) }) {
+export function createApp({ cfg, db, keys, stripe, mailer, log = console, fetchImpl = fetch, avatars = P.createAvatarStore(cfg, { fetchImpl, log }), discord = createDiscord(cfg, { db, fetchImpl, log, stripe }), community = null, oauth = createOAuth(cfg, { fetchImpl }), geo = createGeo(cfg, { fetchImpl, log }) }) {
   const app = new Hono();
+  const startedAt = Date.now();
   // The Discord role pass started by a webhook runs after the reply to Stripe; tests wait for it here.
   app.idle = () => discord?.idle() ?? Promise.resolve();
   const installer = createInstaller(cfg, { fetchImpl, log });
@@ -627,6 +631,7 @@ export function createApp({ cfg, db, keys, stripe, mailer, log = console, fetchI
     const ok = await verifyPassword(password, user ? user.password_hash : DUMMY_HASH);
     loginResult(c, email, user && ok);
     if (!user || !ok) return fail(API_ERRORS.invalid_credentials[1], 401);
+    if (L.isBanned(user)) return fail(API_ERRORS.account_banned[1], 403);
     const { affiliate, error } = await checkReferral(code, email, pending || {});
     if (error) return fail(error, 400);
     await signIn(c, user);
@@ -682,6 +687,7 @@ export function createApp({ cfg, db, keys, stripe, mailer, log = console, fetchI
     oauthcancel: 'Sign-in canceled. Try again, or use your email and password.',
     oauthfail: "That sign-in didn't go through. Try again, or use your email and password.",
     oauthlimit: API_ERRORS.rate_limited[1],
+    banned: API_ERRORS.account_banned[1],
     googleemail: "Your Google account didn't give us a verified email. Sign up with your email instead.",
     discordemail: 'Your Discord account has no verified email. Verify it in Discord (User Settings > My Account), or sign up with your email.',
     googleother: 'This Rago account already signs in with another Google account. Use that one, or your email and password.',
@@ -727,6 +733,7 @@ export function createApp({ cfg, db, keys, stripe, mailer, log = console, fetchI
       return back(`${p.id}${err.code === 'unverified_email' ? 'email' : 'other'}`);
     }
     const { user, created } = found;
+    if (L.isBanned(user)) return back('banned');
     if (created) return welcomeNewUser(c, user, { next });
     await signIn(c, user);
     const lic = await pendingClaim(c);
@@ -1060,81 +1067,10 @@ export function createApp({ cfg, db, keys, stripe, mailer, log = console, fetchI
     return c.redirect('/account?n=reset', 303);
   });
 
-  // ---------- admin: the site's discount pop-up ----------
-  // Opened with ADMIN_KEY (Railway variable, 16 characters at least): typed once, then a cookie for 7 days,
-  // limited to /admin. Changing the key closes every open admin session. Without the key, /admin is a 404.
-  const ADMIN_COOKIE = 'rago_admin';
-  const adminPass = cfg.adminKey.length >= 16 ? createHmac('sha256', cfg.adminKey).update('rago-admin-v1').digest('base64url') : null;
-  const isAdmin = (c) => !!adminPass && sameHash(getCookie(c, ADMIN_COOKIE) || '', adminPass);
-  const adminCookie = { httpOnly: true, secure: cfg.prod, sameSite: 'Strict', path: '/admin' };
-  app.use('/admin/*', async (c, next) => { c.header('Cache-Control', 'no-store'); await next(); });
-  app.use('/admin', async (c, next) => { c.header('Cache-Control', 'no-store'); await next(); });
-  const adminPage = async (c, extra = {}, status = 200) => {
-    const [state, stripeState, discordState] = await Promise.all([Promo.popupState(db, stripe, cfg), stripeChecks(stripe, cfg, { db, webhook: hookSeen }),
-      discord ? discord.checks() : { missing: discordSetupMissing(cfg) }]);
-    return c.html(V.adminPage(cfg, { state, stripe: stripeState, discord: discordState, ...extra }), status);
-  };
-
-  app.get('/admin', async (c) => {
-    if (!adminPass) return c.notFound();
-    if (!isAdmin(c)) return c.html(V.adminLoginPage(cfg));
-    return adminPage(c, { notice: c.req.query('n'), count: Number(c.req.query('count')) || 0 });
-  });
-  app.post('/admin/login', async (c) => {
-    if (!adminPass) return c.notFound();
-    if (!allow(`admin-login:${ip(c)}`, 10, 60 * 60 * 1000)) return c.html(V.adminLoginPage(cfg, { error: 'Trop d’essais. Réessaie dans une heure.' }), 429);
-    const body = await c.req.parseBody();
-    if (!sameHash(String(body.key || '').trim(), cfg.adminKey)) {
-      await audit(db, 'admin.login_failed', { detail: { ip: ip(c) } });
-      return c.html(V.adminLoginPage(cfg, { error: 'Cette clé ne correspond pas à ADMIN_KEY.' }), 401);
-    }
-    setCookie(c, ADMIN_COOKIE, adminPass, { ...adminCookie, maxAge: 7 * 86400 });
-    return c.redirect('/admin', 303);
-  });
-  app.post('/admin/logout', (c) => {
-    deleteCookie(c, ADMIN_COOKIE, adminCookie);
-    return c.redirect('/admin', 303);
-  });
-  app.post('/admin/popup', async (c) => {
-    if (!adminPass) return c.notFound();
-    if (!isAdmin(c)) return c.redirect('/admin', 303);
-    const body = await c.req.parseBody();
-    const input = { enabled: body.enabled === 'on' };
-    for (const k of ['code', 'percent', 'limit', 'eyebrow', 'title', 'text']) input[k] = String(body[k] ?? '');
-    try {
-      const out = await Promo.savePopup(db, stripe, input);
-      popupCache = null;
-      await audit(db, 'admin.popup', { detail: { ...out.settings, created: out.created } });
-      return c.redirect(`/admin?n=${out.created ? 'created' : 'saved'}`, 303);
-    } catch (err) {
-      if (!(err instanceof Promo.PopupError)) throw err;
-      return adminPage(c, { error: err.message, values: input }, 400);
-    }
-  });
-
-  app.post('/admin/test-licenses', async (c) => {
-    if (!adminPass) return c.notFound();
-    if (!isAdmin(c)) return c.redirect('/admin', 303);
-    const ended = await endTestLicenses(db, cfg);
-    await audit(db, 'admin.test_licenses_ended', { detail: { count: ended } });
-    discord?.syncAll(); // their Discord role goes too
-    return c.redirect(`/admin?n=test-ended&count=${ended}`, 303);
-  });
-  // The network tests sent by the app (RAG-50), by city and by provider, to see where future proxies would help.
-  app.get('/admin/reseau', async (c) => {
-    if (!adminPass) return c.notFound();
-    if (!isAdmin(c)) return c.redirect('/admin', 303);
-    const days = [30, 90, 365].includes(Number(c.req.query('jours'))) ? Number(c.req.query('jours')) : 90;
-    return c.html(V.adminNetworkPage(cfg, { summary: await N.networkSummary(db, { days }), geo: geo.state() }));
-  });
-  app.get('/admin/reseau.csv', async (c) => {
-    if (!adminPass) return c.notFound();
-    if (!isAdmin(c)) return c.redirect('/admin', 303);
-    return c.body(await N.networkCsv(db), 200, {
-      'Content-Type': 'text/csv; charset=utf-8',
-      'Content-Disposition': `attachment; filename="rago-tests-reseau-${new Date().toISOString().slice(0, 10)}.csv"`,
-    });
-  });
+  // ---------- /admin: the dashboard (admin.js, 2026-11-10) ----------
+  mountAdmin(app, { cfg, db, stripe, discord, community, geo, installer, avatars, allow, ip, sameHash, log, fetchImpl, startedAt,
+    webhookState: () => hookSeen,
+    onPopupChange: (what) => { if (what === 'reviews') reviewsCache = null; else popupCache = null; } });
 
   // ---------- Stripe webhook ----------
   // What /admin shows about the signing secret, which Stripe never shows again: when the last event with a
@@ -1245,6 +1181,7 @@ export function createApp({ cfg, db, keys, stripe, mailer, log = console, fetchI
     const ok = await verifyPassword(body.password, user ? user.password_hash : DUMMY_HASH);
     loginResult(c, email, user && ok);
     if (!user || !ok) return fail(c, 'invalid_credentials');
+    if (L.isBanned(user)) return fail(c, 'account_banned');
     await A.rememberDevice(db, user.id, device);
     await settleAffiliate(user.id);
     const license = await L.current(db, await L.licenseForUser(db, user.id));
@@ -1274,6 +1211,7 @@ export function createApp({ cfg, db, keys, stripe, mailer, log = console, fetchI
     const user = await L.getUser(db, claims.sub);
     const license = user && await L.current(db, await L.getLicense(db, claims.lic));
     if (!license || license.user_id !== user.id) return fail(c, 'invalid_token');
+    if (L.isBanned(user)) return fail(c, 'account_banned');
     try {
       const out = await L.activate(db, license.id, device, ip(c));
       await settleReferrer(license.id);
@@ -1294,6 +1232,7 @@ export function createApp({ cfg, db, keys, stripe, mailer, log = console, fetchI
     let license = await L.current(db, await L.getLicense(db, claims.lic));
     const user = license && await L.getUser(db, claims.sub);
     if (!license || !user || license.user_id !== user.id) return fail(c, 'invalid_token');
+    if (L.isBanned(user)) return fail(c, 'account_banned');
     // A license replaced by a purchase (an affiliate reward, or a subscription replaced by Lifetime): the same PC
     // moved to the new license.
     const replaced = license.status === 'revoked' && license.status_reason === 'replaced';
@@ -1321,7 +1260,8 @@ export function createApp({ cfg, db, keys, stripe, mailer, log = console, fetchI
       if (!claims) return null;
       const lic = await L.getLicense(db, claims.lic);
       if (!lic || lic.status !== 'active' || lic.user_id !== claims.sub || lic.token_version !== claims.tv) return null;
-      return L.getUser(db, claims.sub);
+      const user = await L.getUser(db, claims.sub);
+      return L.isBanned(user) ? null : user;
     }
     return L.userForApiSession(db, bearer);
   }
@@ -1337,6 +1277,7 @@ export function createApp({ cfg, db, keys, stripe, mailer, log = console, fetchI
     const ok = await verifyPassword(body.password, user ? user.password_hash : DUMMY_HASH);
     loginResult(c, email, user && ok);
     if (!user || !ok) return fail(c, 'invalid_credentials');
+    if (L.isBanned(user)) return fail(c, 'account_banned');
     const { token, expiresAt } = await L.createApiSession(db, user.id);
     return c.json({ account_token: token, expires_at: new Date(expiresAt).toISOString(), ...(await accountReply(user)) });
   });

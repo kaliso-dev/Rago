@@ -55,6 +55,9 @@ export function loadConfig(env = process.env) {
     stripeWebhookSecret: (env.STRIPE_WEBHOOK_SECRET || '').trim(),
     // Subscription prices (recurring). STRIPE_PRICE_ID = the old one-time price, no longer sold (Lifetime has its own below).
     stripePriceMonthly: (env.STRIPE_PRICE_MONTHLY || '').trim(),
+    // Free trial (Sofiene, 2026-11-04): days free before the first payment, card asked at checkout, charged at the end
+    // unless canceled. One per person (card or email). 0 = no trial anywhere.
+    trialDays: (() => { const n = Number(String(env.TRIAL_DAYS ?? '3').trim() || '3'); return Number.isInteger(n) && n >= 0 && n <= 30 ? n : 3; })(),
     stripePriceYearly: (env.STRIPE_PRICE_YEARLY || '').trim(),
     stripePriceId: (env.STRIPE_PRICE_ID || '').trim(),
     // Lifetime (2026-10-16): its own one-time price, Premium for life in one payment. Never one of the prices above.
@@ -127,6 +130,14 @@ export function loadConfig(env = process.env) {
     previewKey: (env.PREVIEW_KEY || '').trim(),
     // Opens /admin (the site's discount pop-up). Shorter than 16 characters: /admin stays closed.
     adminKey: (env.ADMIN_KEY || '').trim(),
+    // The brain (/admin/cerveau, brain.js, 2026-11-10): the vault docs/vault read from GitHub, branch staging by
+    // default. CERVEAU_GITHUB_TOKEN (read-only "Contents") is needed once the repository is private.
+    // Locally the working copy is read from disk (CERVEAU_DIR, or the repository around licensing/).
+    brainRepo: (env.CERVEAU_REPO || 'kaliso-dev/rago').trim(),
+    brainBranch: (env.CERVEAU_BRANCH || 'staging').trim(),
+    brainToken: (env.CERVEAU_GITHUB_TOKEN || '').trim(),
+    brainDir: (env.CERVEAU_DIR || '').trim(),
+    brainSource: (env.CERVEAU_SOURCE || '').trim().toLowerCase(), // "github" forces GitHub even next to a working copy
 
     // Pro role on the Rago Discord (2026-10-10): Premium players link their Discord from /account, a bot gives
     // them the role and takes it back when Premium stops. Without all five, the role stays manual (ticket).
