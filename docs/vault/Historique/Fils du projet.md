@@ -189,7 +189,7 @@ Fils cités ailleurs mais absents de la liste : un fil « Créer le profil Linke
 `cmsg_01Mb4hMYwRFctv5wE2NGiASi8ZccweFkjra8kxXEdp31Pv` · 10/11 14:04 → 14:34 · **bloqué**.
 - **Fait** : l'e-mail de Supabase du 04/11 relu : **ce n'est pas une suppression** ; l'organisation a dépassé le quota gratuit de bande passante (plus de 5,5 Go téléchargés, sans doute les installateurs et les mises à jour) ; tolérance jusqu'au 05/12, puis restriction possible (site, licences et téléchargements pourraient casser). Guide pour sauvegarder les clés (gestionnaire de mots de passe, `server_secrets`, variables Railway prod et staging, clé de signature Tauri, codes 2FA) ; rappel des réglages Railway de q65 (Watch Paths `licensing/**`, Wait for CI, Healthcheck `/healthz`, moniteur externe).
 - **Décision** (14:33) : « je passerai en pro avant décembre ou alors on migrera de supabase vers un autre service je te tiendrai au courant avant le 5 décembre ». Rappel prévu le 30/11.
-- **Reste** : la sauvegarde des clés (non confirmée) et le choix Supabase. La correction du vault de ce fil (branche `claude/project-thread-tzbch5`, jamais proposée en PR) est reprise par la PR du [[Cerveau du vault]] (10/11) : voir [[Pull requests]]. Voir [[Clés et secrets]], [[Supabase]].
+- **Reste** : la sauvegarde des clés (non confirmée) et le choix Supabase. La correction du vault de ce fil (branche `claude/project-thread-tzbch5`, jamais proposée en PR) est reprise par la PR #85 du [[Cerveau du vault]] (10/11) : voir [[Pull requests]]. Voir [[Clés et secrets]], [[Supabase]].
 
 ## 25. Coder la sortie 1.3.0 avec Rago Route
 `cmsg_01Mb4hMYwRFctv5wE2NGiASiG5qkHFhNRYZmSG92FMevTK` · 10/11 14:04 → 14:33 · terminé.

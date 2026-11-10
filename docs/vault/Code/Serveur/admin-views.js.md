@@ -9,7 +9,7 @@ maj: 2026-11-10
 
 Les pages HTML du tableau de bord `/admin`, en français : menu latéral, cartes, chiffres clés, tableaux, graphiques en HTML/SVG. Les données viennent de [[admin.js (serveur)]]. Fiche parente : [[Code du serveur]]. Fonctionnalité : [[Tableau de bord admin]].
 
-(code de `staging` @ `9f65eac`, PR #83 comprise, 10/11 ; l'entrée « Cerveau » du menu : PR du Cerveau, pas encore fusionnée)
+(code de `staging` @ `9f65eac`, PR #83 comprise, 10/11 ; l'entrée « Cerveau » du menu : PR #85 du Cerveau, pas encore fusionnée)
 
 ## Rôle et place dans l'ensemble
 
@@ -33,7 +33,7 @@ Refait le 10/11/2026 (PR #82) « comme un produit ». Réutilise le gabarit `htm
 
 ## Fonctionnement détaillé
 
-**Cadre** (`doc`, `shell`) : `noindex, nofollow`, titre « … · Rago Admin », polices Geist et Geist Mono préchargées. Menu `NAV` en 4 groupes : **Pilotage** (Vue d'ensemble, Ventes), **Joueurs** (Joueurs, Offrir et achats), **Produit** (Site et promos, Tests réseau), **Système** (Services, Journal), et avec la PR du Cerveau **Projet** (Cerveau, icône `I.brain`, vers `/admin/cerveau`, page à part dessinée par [[brain-views.js]]). Sur téléphone, le menu est un tiroir ouvert par une case à cocher (sans JavaScript). Hors prod, bandeau « Serveur de test … : Stripe en mode test ». Message de succès en bas (`toast`).
+**Cadre** (`doc`, `shell`) : `noindex, nofollow`, titre « … · Rago Admin », polices Geist et Geist Mono préchargées. Menu `NAV` en 4 groupes : **Pilotage** (Vue d'ensemble, Ventes), **Joueurs** (Joueurs, Offrir et achats), **Produit** (Site et promos, Tests réseau), **Système** (Services, Journal), et avec la PR #85 du Cerveau **Projet** (Cerveau, icône `I.brain`, vers `/admin/cerveau`, page à part dessinée par [[brain-views.js]]). Sur téléphone, le menu est un tiroir ouvert par une case à cocher (sans JavaScript). Hors prod, bandeau « Serveur de test … : Stripe en mode test ». Message de succès en bas (`toast`).
 
 **Pages** :
 - **Vue d'ensemble** (« Activité récente » : 30 événements dans une liste qui défile) : chiffres « Encaissé aujourd'hui » (comparé à hier à la même heure), « Ce mois-ci » (comparé au mois dernier à la même date), « Revenu mensuel récurrent », « Joueurs Premium » ; « Ventes des 30 derniers jours » ; « À traiter » (services en panne, achats non rattachés, paiements échoués, abonnements Stripe illisibles, licences de test, variables à vérifier) ; Joueurs et communauté ; Derniers paiements ; répartition Premium (abonnés, en essai, résiliés, offerts) ; Activité récente ; Services ; Derniers inscrits.

@@ -5,7 +5,7 @@ maj: 2026-11-10
 ---
 # Pull requests
 
-Liste de **toutes les pull requests** du dépôt `kaliso-dev/rago`, de la #1 (08/10) à la #84 (10/11). Source : l'API GitHub, lue le 10/11 vers 16:30 UTC, et les fils du projet Claude ([[Fils du projet]]). Statut : CONFIRMÉ (API GitHub et fils), sauf mention contraire. Voir aussi [[Chronologie du projet]], [[Branches et environnements]], [[Historique des versions]] et [[CI GitHub Actions]].
+Liste de **toutes les pull requests** du dépôt `kaliso-dev/rago`, de la #1 (08/10) à la #85 (10/11). Source : l'API GitHub, lue le 10/11 vers 16:30 UTC, et les fils du projet Claude ([[Fils du projet]]). Statut : CONFIRMÉ (API GitHub et fils), sauf mention contraire. Voir aussi [[Chronologie du projet]], [[Branches et environnements]], [[Historique des versions]] et [[CI GitHub Actions]].
 
 ## Comment lire ce tableau
 - **Heures en UTC**, comme GitHub. Paris avait 2 heures d'avance jusqu'au 24/10, puis 1 heure à partir du 25/10.
@@ -14,8 +14,8 @@ Liste de **toutes les pull requests** du dépôt `kaliso-dev/rago`, de la #1 (08
 - **Fil d'origine** : le fil du projet Claude qui a ouvert la PR. Les PR #1 à #51 viennent d'un projet Claude plus ancien, d'avant le 15/10 : ses fils ne sont pas consultables depuis le projet actuel. Le passage d'un projet à l'autre est raconté dans [[Synthèse de reprise du 15-10]].
 
 ## Chiffres au 10/11
-- **84 PR** : 71 fusionnées, 11 fermées sans fusion, 2 ouvertes (#71 et #84).
-- Cible : 46 vers la prod, 37 vers `staging`, 1 vers une autre branche (#60, vers la branche de la refonte 1.2.0).
+- **85 PR** : 71 fusionnées, 11 fermées sans fusion, 3 ouvertes (#71, #84 et #85).
+- Cible : 46 vers la prod, 38 vers `staging`, 1 vers une autre branche (#60, vers la branche de la refonte 1.2.0).
 - Fermées sans fusion : #16, #21, #24, #26, #28, #46, #47, #50, #51, #60, #69. Les branches de ces PR sont gardées (décision du 01/11, [[Branches et environnements]]).
 - Jusqu'au 12/10, une PR vers `staging` était souvent suivie d'une PR « port en prod » qui reprenait le même travail (#25 → #27, #29 → #30, #31 + #32 → #33, #34 à #37 → #38, #39 + #41 + #42 → #43, #44 → #45). Depuis la 1.2, la prod n'a plus reçu que des PR ciblées (#59, #61, #63, #66 à #68, #72, #81) : le 10/11, `staging` avait environ 160 commits de plus que la prod, et **le code de l'app sur la branche de prod était encore la 1.1.14** (les exe sont construits depuis `staging`).
 
@@ -106,6 +106,7 @@ Liste de **toutes les pull requests** du dépôt `kaliso-dev/rago`, de la #1 (08
 | 82 | Admin : nouvelle interface du tableau de bord, plus rapide et sans les bugs | `claude/project-thread-49sqc3` → `staging` | 10/11 15:24 | 10/11 15:32 | fusionnée | Nouvelle interface du tableau de bord admin (menu, graphiques 30 jours et 12 mois, « À traiter », recherche, export CSV, cache). | [[Fil - Créer le tableau de bord admin complet\|Créer le tableau de bord admin complet]] |
 | 83 | Admin : plus de trous dans la mise en page, Stripe seulement dans Services | `claude/project-thread-49sqc3` → `staging` | 10/11 15:58 | 10/11 16:06 | fusionnée | Admin sans trous dans la mise en page ; contrôles Stripe seulement dans Services ; éditeur de la pop-up avec aperçu. | [[Fil - Créer le tableau de bord admin complet\|Créer le tableau de bord admin complet]] |
 | 84 | Admin : les ventes dans une seule devise (les $US convertis par Stripe comptent en €) | `claude/project-thread-49sqc3` → `staging` | 10/11 16:25 |  | **ouverte** | Ventes de l'admin dans une seule devise : les paiements en $US convertis par Stripe comptent pour leur montant en €. | [[Fil - Créer le tableau de bord admin complet\|Créer le tableau de bord admin complet]] |
+| 85 | Cerveau du vault dans l'admin (/admin/cerveau) + vault détaillé fichier par fichier | `claude/project-thread-jyh9u0` → `staging` | 10/11 17:07 |  | **ouverte** | Le vault en graphe animé dans l'admin, lecteur de chaque fichier du dépôt ; une fiche par fichier de code et l'histoire du projet dans le vault. | « Vault détaillé et Cerveau » (10/11) |
 
 ## Ce qui est arrivé sur `staging` sans PR
 Certains fils ont poussé leurs commits directement sur `staging`, après un accord de Sofiene dans le fil (CONFIRMÉ par `git branch -r --contains`) :
@@ -113,7 +114,7 @@ Certains fils ont poussé leurs commits directement sur `staging`, après un acc
 - **Vault** : des commits de vault seuls, poussés par les fils sur `staging` (règle du 10/11, q57 : Claude peut pousser seul ce qui ne touche que le vault, [[Décisions]]). Exemple : `9d63ce8` (10/11).
 
 ## Branches poussées mais jamais fusionnées
-- `claude/project-thread-tzbch5` (fil « Sauvegarder les clés et régler Supabase », 10/11) : 2 commits de vault **jamais arrivés sur `staging`** (`8246bd4` : l'e-mail de Supabase parle d'un dépassement de quota, pas d'une suppression ; `803b9d6` : décision de Sofiene sur Supabase). Le contenu est repris dans [[Journal]], [[Décisions]], [[Supabase]], [[Clés et secrets]], [[Prochaines étapes]] et [[État actuel]] (PR du [[Cerveau du vault]], 10/11).
+- `claude/project-thread-tzbch5` (fil « Sauvegarder les clés et régler Supabase », 10/11) : 2 commits de vault **jamais arrivés sur `staging`** (`8246bd4` : l'e-mail de Supabase parle d'un dépassement de quota, pas d'une suppression ; `803b9d6` : décision de Sofiene sur Supabase). Le contenu est repris dans [[Journal]], [[Décisions]], [[Supabase]], [[Clés et secrets]], [[Prochaines étapes]] et [[État actuel]] (PR #85 du [[Cerveau du vault]], 10/11).
 - `claude/project-thread-vvpy7b` (premier Rago OS, PR #60 fermée) et `claude/project-thread-8teqin` (charte 2.2, PR #69 fermée) : gardées, travail abandonné ([[Décisions]]).
 - Les branches des versions non retenues 1.1.11 à 1.1.13 : voir [[Versions 1.1.11 à 1.1.13]].
 - Une branche temporaire sans préfixe `claude/` existe encore sur GitHub (4 commits du 29/10) ; elle servait au trailer de la 1.2, abandonné le 10/11 (voir [[Décisions]]). La supprimer revient à Sofiene.

@@ -80,7 +80,7 @@ Source : `git ls-remote` (liste et têtes des branches, lecture seule), `git log
 |---|---|---|
 | `claude/project-thread-49sqc3` | 3 commits de la PR #84 (ventes de l'admin dans une seule devise, `c61dc68`, et 2 commits du vault) | PR ouverte vers `staging` |
 | `claude/project-thread-rulzwj` | portage en prod du bot communauté Discord (`25ba75e`) et 2 commits du vault | PR #71 ouverte vers la prod depuis le 01/11 ([[Bot communauté Discord]]) |
-| `claude/project-thread-tzbch5` | 2 commits du vault sur Supabase (`8246bd4`, `803b9d6` : e-mail de dépassement de quota relu, décision « Pro ou migration avant le 05/12 ») | jamais proposés en PR ; leur contenu est repris dans le vault par la PR du [[Cerveau du vault]] (10/11) : la branche n'a plus rien à garder (suppression : q81) |
+| `claude/project-thread-tzbch5` | 2 commits du vault sur Supabase (`8246bd4`, `803b9d6` : e-mail de dépassement de quota relu, décision « Pro ou migration avant le 05/12 ») | jamais proposés en PR ; leur contenu est repris dans le vault par la PR #85 du [[Cerveau du vault]] (10/11) : la branche n'a plus rien à garder (suppression : q81) |
 | `claude/project-thread-s0m3ex` | 1 commit du vault (`edfc795`, « la 1.3.0 est sur staging », 04/11) | sans doute dépassé par les notes suivantes (À VÉRIFIER) |
 | `claude/project-thread-vvpy7b` | 5 commits de [[Rago OS]] (bureau complet), PR #60 fermée le 01/11 | abandonné le 31/10 ([[Décisions]]), branche gardée |
 | `claude/project-thread-8oenwk`, `claude/project-thread-uy8yf3`, `claude/reset-on-signout-uninstall`, `claude/auto-reset-tweaks-3ti5yy` | travail des versions 1.1.10 à 1.1.13 (74, 55, 2 et 1 commits) ; PR #51, #50, #16 fermées le 01/11 | à garder ([[Versions 1.1.11 à 1.1.13]], [[Version 1.1.10]]) |

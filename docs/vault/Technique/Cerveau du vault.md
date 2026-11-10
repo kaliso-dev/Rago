@@ -9,7 +9,7 @@ Le vault Obsidian du projet (`docs/vault/`) dessiné comme un cerveau : chaque n
 
 Demandé par Sofiene le 10/11 : « une vision graphique du cerveau comme obsidian avec un schéma ou on voir les connexcion neuronale on pourra aussi ouvrir n'importe quel fichier et le lire tout l'animation de schéma des connexion doit etre parfaite et fluide […] il faudrait meme que ça soit juste accessible depuis l'interface admin ».
 
-**Statut (10/11)** : code fini et testé, dans une PR vers `staging`, **pas encore fusionné** (fusion seulement sur « fusionne » de Sofiene). Pas en prod.
+**Statut (10/11)** : code fini et testé, dans la **PR #85** vers `staging`, **pas encore fusionnée** (fusion seulement sur « fusionne » de Sofiene). Pas en prod.
 
 ## Accès
 - Menu de `/admin` → section **Projet** → **Cerveau**. Adresse : `https://account.rago-optimizer.com/admin/cerveau` (staging : `rago-staging.up.railway.app/admin/cerveau`).

@@ -40,7 +40,7 @@ Les routes marquées **(staging)** n'existent que sur `staging`, pas encore sur 
 | `GET /admin/site`, `POST /admin/popup`, `POST /admin/code-promo` | Pop-up de réduction, codes promo, avis (sur `staging` ; en prod la pop-up est sur `/admin`) |
 | `POST /admin/test-licenses` | Arrête les licences de test, puis renvoie vers `/admin/services` (PR #83, `staging`) |
 | `GET /admin/reseau`, `GET /admin/reseau.csv` | Résumé et export des tests réseau ([[Proxy]]) |
-| `GET /admin/cerveau`, `GET /admin/cerveau/donnees.json` (`?frais=1`), `GET /admin/cerveau/fichier?chemin=` | [[Cerveau du vault]] : la page, le vault en graphe (gzip, `ETag`), un fichier du dépôt ; PR du Cerveau, pas encore fusionnée |
+| `GET /admin/cerveau`, `GET /admin/cerveau/donnees.json` (`?frais=1`), `GET /admin/cerveau/fichier?chemin=` | [[Cerveau du vault]] : la page, le vault en graphe (gzip, `ETag`), un fichier du dépôt ; PR #85 du Cerveau, pas encore fusionnée |
 | `POST /webhooks/stripe` | Webhook Stripe (signature vérifiée, idempotent par `stripe_events`) |
 | `GET /` | Redirige vers `SITE_URL` (le site est sur Netlify) |
 

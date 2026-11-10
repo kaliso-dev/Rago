@@ -80,7 +80,7 @@ Un seul export utile : `loadConfig(env = process.env)` → objet `cfg`, passé �
 | `LAUNCH_AT` | `launchAt` | voir `launchTime`. |
 | `PREVIEW_KEY` | `previewKey` | ignorée sous 16 caractères. |
 | `ADMIN_KEY` | `adminKey` | `/admin` fermé sous 16 caractères. |
-| `CERVEAU_REPO`, `CERVEAU_BRANCH`, `CERVEAU_GITHUB_TOKEN`, `CERVEAU_DIR`, `CERVEAU_SOURCE` | `brainRepo` (`kaliso-dev/rago`), `brainBranch` (`staging`), `brainToken`, `brainDir`, `brainSource` (en minuscules) | le [[Cerveau du vault]] ([[brain.js]]) ; jeton nécessaire quand le dépôt est privé (PR du Cerveau). |
+| `CERVEAU_REPO`, `CERVEAU_BRANCH`, `CERVEAU_GITHUB_TOKEN`, `CERVEAU_DIR`, `CERVEAU_SOURCE` | `brainRepo` (`kaliso-dev/rago`), `brainBranch` (`staging`), `brainToken`, `brainDir`, `brainSource` (en minuscules) | le [[Cerveau du vault]] ([[brain.js]]) ; jeton nécessaire quand le dépôt est privé (PR #85 du Cerveau). |
 | `DISCORD_CLIENT_ID`, `DISCORD_CLIENT_SECRET`, `DISCORD_GUILD_ID`, `DISCORD_ROLE_ID` | `discordClientId`… | les 5 variables du rôle Pro (avec le token). |
 | `DISCORD_BOT_TOKEN` | `discordBotToken` | le préfixe `Bot ` collé depuis le Developer Portal est retiré. |
 | `DISCORD_VIP_ROLE_ID`, `DISCORD_MVP_ROLE_ID`, `DISCORD_BOOST2_ROLE_ID` | `discordVipRoleId`, `discordMvpRoleId`, `discordBoost2RoleId` | récompenses Discord. |

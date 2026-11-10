@@ -9,7 +9,7 @@ maj: 2026-11-10
 
 Tout le [[Cerveau du vault]] dans le navigateur : le graphe animé des notes (simulation de forces, dessin sur `canvas`, caméra, impulsions le long des liens), l'explorateur, le panneau d'affichage, le lecteur de notes et de fichiers avec coloration du code, la recherche et la navigation par l'adresse. Sans aucune bibliothèque. Fiche parente : [[Code du serveur]]. Données : [[brain.js]] ; page : [[brain-views.js]] ; styles : [[cerveau.css]].
 
-(code de la PR du Cerveau, 10/11, pas encore dans `staging`)
+(code de la PR #85 du Cerveau, 10/11, pas encore dans `staging`)
 
 ## Rôle et place dans l'ensemble
 Servi en fichier statique (`/assets/cerveau.js?v=<ASSETS>`), chargé par la page de [[brain-views.js]]. Il lit `/admin/cerveau/donnees.json` (tout le vault en une fois, compressé, revalidé par `ETag`) et `/admin/cerveau/fichier?chemin=` (un fichier à la demande). La CSP de l'admin interdit le code et les styles en ligne : les couleurs des pastilles passent par `data-c` puis `style.setProperty('--c', …)` (fonction `paint`), autorisé par la CSP.
