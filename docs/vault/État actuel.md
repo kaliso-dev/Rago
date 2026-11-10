@@ -34,6 +34,7 @@ La [[Version 1.2.1]] (refonte en verre, barre en jeu, Packet Optimizer, biblioth
 | Vault Obsidian | créé le 31/10 ; règle n°1 : il doit correspondre en tout point à l'état du projet | DÉCIDÉ |
 
 ## PR (10/11)
+- Fusionnée le 10/11 dans la branche de prod : #81 (seulement les déclencheurs CI de la #78), sur « il faut en prod » de Sofiene.
 - Fusionnée le 10/11 dans `staging` : #79 (vault seulement : archive [[Historique des problèmes]], bug d'`availability()` dans [[Bugs et incidents]]), sur demande de Sofiene (« fusionner push et tout »).
 - Fusionnée le 10/11 dans `staging` : #77 ([[Tableau de bord admin]] : joueurs, accès, bannissement, ventes Stripe, services, journal), sur « fusionne » de Sofiene. Pas en prod.
 - Fusionnée le 10/11 dans `staging` : #78 (moins de builds en double dans la CI, vault des minutes GitHub Actions, [[CI GitHub Actions]]), sur « fusionne » de Sofiene.
