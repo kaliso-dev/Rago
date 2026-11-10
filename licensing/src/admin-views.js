@@ -95,6 +95,7 @@ const I = {
   tag: ic('M2.5 2.5h5l6 6-5 5-6-6zM5.5 5.5h.01'),
   user: ic('M8 7.5a2.8 2.8 0 1 0 0-5.6 2.8 2.8 0 0 0 0 5.6zM2.8 14c.5-2.8 2.6-4.3 5.2-4.3s4.7 1.5 5.2 4.3'),
   stack: ic('M8 2l6 3-6 3-6-3zM2 8l6 3 6-3M2 11l6 3 6-3'),
+  brain: ic('M8 9.2a1.2 1.2 0 1 0 0-2.4 1.2 1.2 0 0 0 0 2.4zM3.2 4.6a1.1 1.1 0 1 0 0-2.2 1.1 1.1 0 0 0 0 2.2zM12.8 5.4a1.1 1.1 0 1 0 0-2.2 1.1 1.1 0 0 0 0 2.2zM4 13.6a1.1 1.1 0 1 0 0-2.2 1.1 1.1 0 0 0 0 2.2zM12.4 13a1.1 1.1 0 1 0 0-2.2 1.1 1.1 0 0 0 0 2.2zM7 7.3L4.1 4.3M9.1 7.3l2.8-2.6M7.1 8.9l-2.3 2.8M9 8.8l2.5 2.4M4.3 3.6l7.4.9'),
 };
 // The Rago mark (public/mark.svg), inline so it needs no extra request.
 const MARK = html`<svg viewBox="0 0 164 180" aria-hidden="true"><path d="M0 0H160V46L93.83 101.42L164 180H114L65.17 125.42L0 180V132L112.24 38H39V78.34L0 111Z" fill="#FF3B30"/></svg>`;
@@ -217,6 +218,7 @@ const NAV = [
   ['Joueurs', [['joueurs', '/admin/utilisateurs', 'Joueurs', I.users], ['achats', '/admin/achats', 'Offrir et achats', I.gift]]],
   ['Produit', [['site', '/admin/site', 'Site et promos', I.globe], ['reseau', '/admin/reseau', 'Tests réseau', I.wifi]]],
   ['Système', [['services', '/admin/services', 'Services', I.pulse], ['journal', '/admin/journal', 'Journal', I.list]]],
+  ['Projet', [['cerveau', '/admin/cerveau', 'Cerveau', I.brain]]],
 ];
 const isProd = (nav) => nav.cfg.envName === 'production';
 

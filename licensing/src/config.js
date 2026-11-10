@@ -139,6 +139,14 @@ export function loadConfig(env = process.env) {
     previewKey: (env.PREVIEW_KEY || '').trim(),
     // Opens /admin (the site's discount pop-up). Shorter than 16 characters: /admin stays closed.
     adminKey: (env.ADMIN_KEY || '').trim(),
+    // The brain (/admin/cerveau, brain.js, 2026-11-10): the vault docs/vault read from GitHub, branch staging by
+    // default. CERVEAU_GITHUB_TOKEN (read-only "Contents") is needed once the repository is private.
+    // Locally the working copy is read from disk (CERVEAU_DIR, or the repository around licensing/).
+    brainRepo: (env.CERVEAU_REPO || 'kaliso-dev/rago').trim(),
+    brainBranch: (env.CERVEAU_BRANCH || 'staging').trim(),
+    brainToken: (env.CERVEAU_GITHUB_TOKEN || '').trim(),
+    brainDir: (env.CERVEAU_DIR || '').trim(),
+    brainSource: (env.CERVEAU_SOURCE || '').trim().toLowerCase(), // "github" forces GitHub even next to a working copy
 
     // Pro role on the Rago Discord (2026-10-10): Premium players link their Discord from /account, a bot gives
     // them the role and takes it back when Premium stops. Without all five, the role stays manual (ticket).
