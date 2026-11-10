@@ -1,7 +1,7 @@
 ---
 type: carte
 tags: [technique, reprise, index]
-maj: 2026-11-10
+maj: 2026-11-11
 ---
 # Reprendre le développement
 
@@ -16,6 +16,7 @@ Monorepo privé `kaliso-dev/rago` (GitHub l'affiche aussi `kaliso-dev/Rago`). Ci
 | Serveur de comptes, licences, paiements, bot Discord | `licensing/` | Node ≥ 22.5 (ESM), Hono, Postgres | Railway (`account.rago-optimizer.com`) | [[Architecture du serveur]], [[API du serveur]] |
 | Base de données et fichiers | `licensing/supabase/schema.sql` | Postgres + Storage | Supabase | [[Supabase]] |
 | Site de vente | `site/`, `netlify/` | HTML statique généré par Python | Netlify (`rago-optimizer.com`) | [[Netlify]], [[Site]] |
+| Domaine, DNS, e-mails, surveillance | (hors code, sauf `licensing/src/mailer.js`) | OVH, Zimbra, Resend, UptimeRobot | OVH | [[Domaine et e-mails]], [[Surveillance]] |
 | Rago Route (tunnel anti-lag) | `proxy/` + `app/src-tauri/src/route.rs` | Python (serveurs), Rust (PC) | 2 VPS Vultr (Paris, Frankfurt) | [[Infrastructure Rago Route]], [[Proxy]] |
 
 Hors dépôt : [[Rago OS]] (bureau Windows, sur le Mac de Sofiene, dossier `nimbus`) parle à l'app par un canal nommé ; [[Client Minecraft Rago]] est un projet à part.

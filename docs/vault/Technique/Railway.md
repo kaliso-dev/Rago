@@ -1,7 +1,7 @@
 ---
 type: technique
 tags: [technique, railway, déploiement, serveur]
-maj: 2026-11-10
+maj: 2026-11-11
 ---
 # Railway
 
@@ -27,7 +27,7 @@ L'environnement `staging` est une copie de `production` (Duplicate) avec ses pro
 - **Watch Paths** = `licensing/**` : un push qui ne touche que l'app ou le site ne redéploie pas le serveur.
 - **Wait for CI** : Railway attend les vérifications GitHub du commit (dont `licensing-tests`). Revers : si une autre vérification du commit échoue (build de l'app, `site-check`), le déploiement peut être **sauté** (*Skipped*) et un commit suivant qui ne touche pas `licensing/` ne le relance pas. Après chaque fusion qui touche `licensing/`, regarder **Deployments** et cliquer **Redeploy** si besoin.
 - **Healthcheck Path** = `/healthz` (répond `{"ok":true}` seulement si la base répond) : un déploiement cassé ne remplace pas celui qui marche.
-- Moniteur externe (UptimeRobot, Better Stack) sur `https://account.rago-optimizer.com/healthz` conseillé par le guide : **pas encore créé** (11/11).
+- Moniteur externe (UptimeRobot) sur `https://account.rago-optimizer.com/healthz` : **pas encore créé** (11/11), voir [[Surveillance]].
 
 ## Déployer
 - Prod : fusion d'une PR dans la branche de prod qui touche `licensing/` (sur « fusionne » de Sofiene). Staging : fusion dans `staging`.

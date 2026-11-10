@@ -1,7 +1,7 @@
 ---
 type: pilotage
 tags: [journal, chronologie]
-maj: 2026-11-10
+maj: 2026-11-11
 ---
 # Journal
 
@@ -10,6 +10,7 @@ Une ligne par événement marquant, la plus récente en haut. Voir [[Historique 
 ## Novembre 2026
 | Date | Événement | Liens |
 |---|---|---|
+| 11/11 | Réglages Railway de prod vérifiés avec Sofiene (q65) : Wait for CI et Healthcheck en place, Watch Paths et moniteur à ajouter. Nouvelles fiches [[Domaine et e-mails]] (OVH, DNS lus en public, Zimbra, Resend) et [[Surveillance]] (UptimeRobot) ; Vultr, Google Cloud, Discord Developer et UptimeRobot ajoutés à [[Personnes et services]] | [[Railway]] |
 | 10/11 | Sofiene sauvegarde toutes les clés dans son gestionnaire de mots de passe (clé des licences, variables Railway, clé Tauri et son mot de passe, codes de secours, identifiants de `/admin`) | [[Clés et secrets]] |
 | 10/11 | E-mail Supabase du 04/11 relu : ce n'est **pas une suppression** mais un dépassement de quota (egress > 5,5 Go) avec restrictions possibles dès le 05/12. Guide pas à pas envoyé à Sofiene pour sauvegarder ses clés (gestionnaire de mots de passe, `server_secrets`, variables Railway, clé Tauri) et rappel des réglages Railway (q65) | [[Supabase]], [[Clés et secrets]], [[Railway]] |
 | 10/11 | Vault technique complété pour qu'un nouveau Claude puisse développer sans contexte : porte d'entrée [[Reprendre le développement]], fiches [[Architecture de l'app]], [[Architecture du serveur]], [[API du serveur]], [[Paiements Stripe]], [[Supabase]], [[Railway]], [[Netlify]], [[CI GitHub Actions]], [[Variables d'environnement]], [[Infrastructure Rago Route]], [[Développer et tester]] ; un `CLAUDE.md` court dans `app/`, `licensing/`, `site/` et `proxy/` | [[Reprendre le développement]] |

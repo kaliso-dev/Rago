@@ -1,7 +1,7 @@
 ---
 type: index
 tags: [index]
-maj: 2026-11-10
+maj: 2026-11-11
 ---
 # Rago Optimizer : le projet
 
@@ -33,7 +33,7 @@ Vue d'ensemble technique : [[Architecture]]. **Pour coder ou dépanner : commenc
 - **Technique** : [[Reprendre le développement]] · [[Architecture]] · [[Développer et tester]] · [[Branches et environnements]] · [[Publier une version]]
   - App : [[App Windows]] · [[Architecture de l'app]]
   - Serveur : [[Serveur de licences]] · [[Architecture du serveur]] · [[API du serveur]] · [[Paiements Stripe]] · [[Connexion Google et Discord]]
-  - Hébergement et CI : [[Supabase]] · [[Railway]] · [[Netlify]] · [[CI GitHub Actions]] · [[Variables d'environnement]] · [[Clés et secrets]]
+  - Hébergement et CI : [[Supabase]] · [[Railway]] · [[Netlify]] · [[CI GitHub Actions]] · [[Variables d'environnement]] · [[Clés et secrets]] · [[Domaine et e-mails]] · [[Surveillance]]
   - Site : [[Site]] · Rago Route : [[Infrastructure Rago Route]]
 - **Design** : [[Charte graphique]] · [[Voix et ton]] · [[Refonte glass]]
 - **Marketing** : [[Marketing]] · [[Discord]] · [[Partenaires et créateurs]] · [[Promotions et affiliation]] · [[Trailer 1.2]] · [[Vidéos YouTube]]
