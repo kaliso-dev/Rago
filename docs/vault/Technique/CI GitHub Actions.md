@@ -5,7 +5,14 @@ maj: 2026-11-10
 ---
 # CI GitHub Actions
 
-Les trois workflows de `.github/workflows/`. Secrets et variables : [[Variables d'environnement]], [[Clés et secrets]]. Les minutes GitHub Actions peuvent s'épuiser (vu le 21/10, et **100 % des 3 000 minutes de novembre utilisées**, e-mail GitHub du 10/11) : vérifier Settings → Billing and plans si un run ne démarre pas. Sofiene veut une solution durable (q60 : « peut etre passer sur gitlab ») : à étudier ([[Prochaines étapes]]).
+Les trois workflows de `.github/workflows/`. Secrets et variables : [[Variables d'environnement]], [[Clés et secrets]]. ## Minutes GitHub Actions (étude du 10/11)
+- **Le dépôt `kaliso-dev/rago` est public** (constaté le 10/11 par l'API GitHub ; Sofiene, q60 : « on build en public »). Sur un dépôt public, les machines standard de GitHub (Ubuntu, Windows) sont **gratuites et illimitées** : les trois workflows ci-dessous **ne consomment aucune des 3 000 minutes**.
+- Les 3 000 minutes du compte `kaliso-dev` (offre Pro) ne servent qu'aux **dépôts privés**. Le 10/11, **100 % des minutes de novembre étaient utilisées** (e-mail GitHub). Responsable : la CI du dépôt privé **`kaliso-dev/network-server-rago`** (serveur Minecraft Rago : moteur de combat, lobby, practice, Bed Wars), workflow `ci.yml`, fil Claude de la branche `claude/project-thread-nukjdk`. Chaque push sur sa PR lance **9 jobs** (build, 2 tests KB, 2 tests lobby, 4 lancements du serveur de test dont 2 sous Windows, comptés double) : ≈ **27 minutes facturées** pour un run de 5 minutes. **151 runs du 08/11 au 10/11** (dont 25 annulés) : de quoi vider le quota en deux jours. Depuis le 10/11 vers 00:25, ses jobs échouent en 2 secondes (quota vide).
+- Pistes comparées le 10/11 :
+  - **GitLab** : non. L'offre gratuite donne 400 minutes par mois (moins que les 3 000 de GitHub), et Netlify, Railway, les PR et Claude sont branchés sur GitHub.
+  - **Runner sur le PC de Sofiene** : gratuit (le péage de 0,002 $/min annoncé par GitHub pour mars 2026 est reporté), mais le PC doit être allumé et ce runner exécute le code de chaque push. **Jamais sur `rago`** (public : une PR d'inconnu pourrait lancer du code sur le PC) ; possible pour `network-server-rago` seulement.
+  - **Moins de builds** sur `network-server-rago` : sur les PR, garder seulement le job `build` (≈ 3 min) et lancer les tests lourds (KB, lobby, serveur de test Windows) à la main ou sur `main` : ≈ 90 % de minutes en moins. **Recommandé**. Rendre ce dépôt public réglerait aussi tout : À VÉRIFIER avec Sofiene.
+- **Décision de Sofiene (10/11, carte du fil « Régler le manque de minutes GitHub Actions ») : rendre `network-server-rago` public.** C'est à lui de le faire (Settings → Danger Zone → Change visibility). Une fois public, sa CI ne consomme plus de minutes. Fait ou non : À VÉRIFIER.
 
 ## `app-windows.yml` : fabrique l'installateur
 - **Déclencheurs** : push sur toute branche qui touche `app/**` ou le workflow ; tags `app-v*` (brouillon de release) ; PR qui touche `app/**` ; à la main (**Run workflow**) avec `server` = `production` ou `staging` et `version` (numéro de test, staging seulement).

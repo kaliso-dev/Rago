@@ -25,7 +25,7 @@ Liste priorisée au 01/11. Rien ne se lance sans la demande de Sofiene ([[Règle
 - [[Client Minecraft Rago]] : projet à part, en cours dans un projet isolé ; rien à faire ici sans demande.
 
 ## Plus tard
-- Minutes GitHub Actions épuisées chaque mois (10/11) : trouver une solution durable (Sofiene évoque GitLab ; à comparer avec un runner sur son PC ou moins de builds automatiques).
+- Minutes GitHub Actions épuisées (10/11) : la cause est la CI du dépôt privé `network-server-rago` (≈ 27 min par push), pas `rago` (public, donc gratuit). Décision de Sofiene (10/11) : rendre `network-server-rago` public, à faire par lui dans Settings ; GitLab écarté (400 min gratuites) ([[CI GitHub Actions]]).
 - Avant la signature de code (RAG-83) : décider de l'accord du joueur pour l'envoi du test réseau (q37).
 - Signature de code de l'exe (RAG-83) : enlèverait l'avertissement SmartScreen et le blocage par Smart App Control ; prévue, quand il y aura le budget (01/11, voir [[App Windows]]).
 - Note moyenne des avis dans Google (RAG-33).

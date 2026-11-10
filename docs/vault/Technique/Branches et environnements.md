@@ -19,4 +19,4 @@ Règle : **staging d'abord, prod après validation** ([[Règles de travail]]).
 - L'exe de l'app ne part **pas** d'une branche : il est construit par la CI (`app-windows.yml`, cible prod ou staging) puis **déposé à la main** par Sofiene. Voir [[Publier une version]].
 - Les PR de Claude visent `staging` (branche `claude/…` par fil). Environnements, adresses et commandes : [[Développer et tester]], [[Railway]], [[Netlify]], [[Supabase]].
 - Supabase `rago-staging` (offre gratuite) se met en pause après une semaine d'inactivité.
-- Les minutes GitHub Actions peuvent s'épuiser (21/10) : vérifier Billing and plans.
+- Minutes GitHub Actions : `rago` est public, donc ses builds sont gratuits ; le quota de 3 000 minutes sert aux dépôts privés (voir [[CI GitHub Actions]]).

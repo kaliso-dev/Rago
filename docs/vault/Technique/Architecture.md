@@ -5,7 +5,7 @@ maj: 2026-11-10
 ---
 # Architecture
 
-Monorepo privé GitHub `kaliso-dev/rago` (aussi écrit `kaliso-dev/Rago`). Retour à [[Projet]]. Pour savoir quoi lire avant de coder : [[Reprendre le développement]].
+Monorepo GitHub `kaliso-dev/rago`, **public** (constaté le 10/11 ; Sofiene : « on build en public ») (aussi écrit `kaliso-dev/Rago`). Retour à [[Projet]]. Pour savoir quoi lire avant de coder : [[Reprendre le développement]].
 
 ## Dossiers du dépôt
 | Chemin | Rôle | Fiche |

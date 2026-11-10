@@ -32,4 +32,5 @@ Voir [[Version 1.1.14]].
 - Netlify ne publiait plus (appli Netlify désinstallée de GitHub, 10-11/10) : résolu.
 - 14/10 : Claude a affirmé à tort que la 1.1.12 contenait « tout le travail » → règle « jamais sans preuve » ([[Règles de travail]]).
 - 21/10 : minutes GitHub Actions épuisées, plus de build Windows ([[Branches et environnements]]).
+- 10/11 : 3 000 minutes de novembre épuisées en deux jours par la CI du dépôt privé `network-server-rago` ; `rago`, public, n'est pas touché ([[CI GitHub Actions]]).
 - `wmic` absent de Windows 11 24H2 (corrigé en 1.1.6).
