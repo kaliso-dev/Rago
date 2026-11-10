@@ -21,7 +21,7 @@ Ouvertes au 10/11, rangées par sujet sur la page (champ `theme` : Organisation,
 - **Version 1.3.0** : q47 (1.2.2 seule ou avec la 1.3.0), q48 (offre débitée après l'essai), q50 (seuils de l'[[Analyse du PC]], À VÉRIFIER).
 - **Offre et app** : q36 (remboursement 14 jours), q37 (accord avant l'envoi du test réseau), q39 (parrainage dans la fenêtre Premium), q40 (même prix au renouvellement), q41 (Packet Optimizer en gratuit).
 - **Juridique et argent** : q45 (partage des ventes), q46 (adresse des mentions légales), q49 (vendeur majeur et compte Stripe). Voir [[Conformité juridique]].
-- **Technique** : q59 (correctif de site-check, Ubuntu 26.04 sur GitHub), q60 (minutes GitHub Actions de novembre épuisées, vu dans un e-mail du 10/11, non revérifié), q65 (réglages Railway de prod : Wait for CI, Watch Paths, Healthcheck, moniteur ; [[Railway]]), q66 (offre et sauvegardes du Supabase de prod ; [[Supabase]]), q67 (clés du serveur sauvegardées avec `export-keys` ; [[Clés et secrets]]).
+- **Technique** : q59 (correctif de site-check, Ubuntu 26.04 sur GitHub ; inclus dans la PR #75), q60 (minutes GitHub Actions de novembre épuisées, vu dans un e-mail du 10/11, non revérifié), q65 (réglages Railway de prod : Wait for CI, Watch Paths, Healthcheck, moniteur ; [[Railway]]), q66 (offre et sauvegardes du Supabase de prod ; [[Supabase]]), q67 (clés du serveur sauvegardées avec `export-keys` ; [[Clés et secrets]]).
 - **Rago Route** : q55 (`ROUTE_TESTERS` sur Railway staging), q63 (4G du téléphone vue par Windows). Voir [[Proxy]].
 - **Rago OS** : q62 (test de l'exe test5). Voir [[Rago OS]].
 - **Support** : q61 (2 semaines offertes au client dont le Discord a déjà eu la récompense boost).

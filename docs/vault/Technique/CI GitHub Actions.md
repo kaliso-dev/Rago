@@ -30,6 +30,7 @@ Les trois workflows de `.github/workflows/`. Secrets et variables : [[Variables 
 
 ## `site-check.yml` : vérifie les pages générées
 - **Déclencheurs** : push ou PR qui touche `site/**` ; à la main.
+- Machine fixée sur `ubuntu-24.04` dans la PR #75 (pas encore sur `staging`) : depuis le 09/11, `ubuntu-latest` est Ubuntu 26.04, où Playwright 1.56.1 ne s'installe pas, et le contrôle échouait à chaque changement de `site/` (q59).
 - Installe Playwright 1.56.1 + Chromium (même version que celle qui a fabriqué les pages), lance `python3 site/tools/build.py`, échoue si `prerender.js` n'a pas tourné ou si `index.html`, `reviews.html`, `tweaks.html`, `partners.html` ou `route.html` diffèrent de ceux poussés. Correction : lancer `build.py` et commiter ([[Netlify]]).
 
 ## Lire un échec
