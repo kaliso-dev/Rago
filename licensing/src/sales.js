@@ -1,5 +1,6 @@
 // Sales for /admin (2026-11-10): read from Stripe in the mode of STRIPE_SECRET_KEY, never stored here. Days and months
-// are counted in Paris time. Cached 5 minutes (the dashboard's "Actualiser" reads them again).
+// are counted in Paris time. Kept 5 minutes; after that the page shows the kept figures at once and Stripe is read
+// again in the background ("Actualiser" waits for fresh ones).
 
 export const SALES_TTL = 5 * 60 * 1000;
 const DAY = 86400000;
@@ -134,9 +135,13 @@ export function createSales(stripe, { now = Date.now, log = console } = {}) {
     const periods = {
       today: sumSales(between(today)),
       yesterday: sumSales(between(today - DAY, today)),
+      // the same stretch of time one day / one month earlier, to compare a day or a month that isn't over
+      yesterdaySoFar: sumSales(between(today - DAY, t - DAY)),
       week: sumSales(between(today - 6 * DAY)),
+      lastWeek: sumSales(between(today - 13 * DAY, today - 6 * DAY)),
       month: sumSales(between(month)),
       lastMonth: sumSales(between(lastMonth, month)),
+      lastMonthSoFar: sumSales(between(lastMonth, Math.min(month, lastMonth + (t - month)))),
       total: sumSales(sales),
     };
     // Main currency: the one most payments use; the 30-day chart is drawn in it.
@@ -150,9 +155,17 @@ export function createSales(stripe, { now = Date.now, log = console } = {}) {
       const s = sumSales(between(from, to).filter((x) => x.currency === currency));
       days.push({ day: parisDay(from + 3600000), count: s.count, amount: s.net[currency] || 0 });
     }
+    // The last 12 months, this one included.
+    const months = [];
+    for (let i = 11; i >= 0; i--) {
+      const from = parisMonthStart(t, i);
+      const to = i ? parisMonthStart(t, i - 1) : Infinity;
+      const s = sumSales(between(from, to).filter((x) => x.currency === currency));
+      months.push({ month: parisDay(from + 3600000).slice(0, 7), count: s.count, amount: s.net[currency] || 0 });
+    }
     return {
-      at: t, currency, periods, days,
-      sales: sales.slice(0, 200),
+      at: t, currency, periods, days, months,
+      sales: sales.slice(0, 500),
       failed: sales.filter((x) => x.failed && x.at >= today - 6 * DAY).length,
       byKind: { abonnement: sumSales(sales.filter((x) => x.kind === 'abonnement')), unique: sumSales(sales.filter((x) => x.kind === 'unique')) },
       received: balance ? { total: balanceSums(balance), month: balanceSums(balance, month), today: balanceSums(balance, today) } : null,
@@ -161,15 +174,20 @@ export function createSales(stripe, { now = Date.now, log = console } = {}) {
     };
   }
 
-  /** The sales, from the cache unless `fresh` or older than 5 minutes. Never throws: { error } instead. */
+  const refresh = () => (running ||= load().then((v) => (cache = v)).catch((err) => {
+    log.error?.('[admin] Stripe sales', err.message);
+    return cache ? { ...cache, stale: err.message } : { error: `Stripe n’a pas répondu : ${err.message}` };
+  }).finally(() => { running = null; }));
+
+  /**
+   * The sales. `fresh`: read Stripe now. Otherwise the kept figures, read again in the background once older than
+   * 5 minutes (only the very first read waits for Stripe). Never throws: { error } instead.
+   */
   async function read({ fresh = false } = {}) {
     if (!stripe) return { error: 'Stripe n’est pas configuré sur ce serveur (STRIPE_SECRET_KEY).' };
-    if (!fresh && cache && now() - cache.at < SALES_TTL) return cache;
-    running ||= load().then((v) => (cache = v)).catch((err) => {
-      log.error?.('[admin] Stripe sales', err.message);
-      return { error: `Stripe n’a pas répondu : ${err.message}` };
-    }).finally(() => { running = null; });
-    return running;
+    if (fresh || !cache) return refresh();
+    if (now() - cache.at >= SALES_TTL) refresh();
+    return cache;
   }
   return { read, cached: () => cache };
 }
