@@ -50,7 +50,7 @@ La [[Version 1.2.1]] (refonte en verre, barre en jeu, Packet Optimizer, biblioth
 ## Ce qui attend Sofiene
 1. **URGENT, avant le 05/12** : Supabase menace de supprimer le projet de prod (offre gratuite). Il contient la clé de signature des licences, sauvegardée nulle part ([[Supabase]], [[Clés et secrets]]). D'abord `npm run admin -- export-keys` et un gestionnaire de mots de passe, puis décider : passer en Pro (25 $/mois) ou autre solution.
 2. **Clés** : aucune n'est sauvegardée (Railway, Stripe, GitHub, clé de mise à jour Tauri) ; Stripe va bientôt masquer ses clés secrètes.
-3. Répondre à q46 (adresse des mentions légales). Tester la 1.3.0 (exe de test de `staging`) sur Windows avant la sortie.
+3. Prendre une domiciliation pour l'adresse des mentions légales, quand le budget le permet (q46). Tester la 1.3.0 (exe de test de `staging`) sur Windows avant la sortie.
 4. Vérifier que les 1.2.0 installées reçoivent bien la 1.2.1 (`/api/v1/update/status`, voir [[Mise à jour automatique]]).
 5. Valider l'e-mail sur la collecte des tests réseau avant son envoi, une fois rédigé ([[Prochaines étapes]]).
 6. Avant la prod de l'essai : inscrire sa mère comme vendeuse et régler l'adresse ([[Conformité juridique]]).

@@ -16,8 +16,7 @@ Mode d'emploi (outil ArtifactData, collection `questions`) :
 - Dire à Sofiene dans le fil, en une ligne, quand de nouvelles questions l'attendent.
 
 ## En attente de réponse sur la page
-Au 10/11, après les réponses de Sofiene du jour (q36 à q68 traitées, voir [[Décisions]]) :
-- q46 (reformulée) : quelle adresse dans les mentions légales, sans domiciliation payante ni adresse personnelle. Voir [[Conformité juridique]].
+Au 10/11, après les réponses de Sofiene du jour (q36 à q68 traitées, q46 le 10/11 à 15 h, voir [[Décisions]]) :
 - q65 : réglages Railway de prod (Wait for CI, Watch Paths, Healthcheck, moniteur) ; Sofiene demande à Claude de vérifier et de le lui rappeler ([[Railway]]).
 
 ## À vérifier (sans Sofiene)
