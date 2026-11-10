@@ -135,6 +135,7 @@ a.kpi:hover{border-color:var(--line-2);background:#131316}
 .kpi .l .ic{color:var(--t3)}
 .kpi .v{font:600 26px/1.15 var(--mono);font-variant-numeric:tabular-nums;letter-spacing:-.03em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .kpi .v small{font-size:15px;color:var(--t2);font-weight:500;letter-spacing:0}
+.kpi .also{margin-top:-3px;font:500 13px/1.3 var(--mono);font-variant-numeric:tabular-nums;color:var(--t2);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .kpi .s{display:flex;flex-wrap:wrap;align-items:center;gap:4px 8px;color:var(--t3);font-size:12.5px}
 .kpi .spark{height:34px;margin:4px -18px -14px;width:calc(100% + 36px)}
 .delta{display:inline-flex;align-items:center;gap:2px;height:20px;padding:0 6px;border-radius:6px;font:500 12px/1 var(--mono);white-space:nowrap}
@@ -169,6 +170,9 @@ a.kpi:hover{border-color:var(--line-2);background:#131316}
 .lines{display:flex;flex-direction:column;margin:0;padding:0;list-style:none}
 .lines > li,.lines > div{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:9px 0;border-bottom:1px solid var(--line);font-size:13.5px;min-width:0}
 .lines > :last-child{border-bottom:0}
+/* a list that fills its card when the card beside it is taller (rows grow evenly) */
+.card-b > .lines.fill{flex:1 1 auto}
+.card-b > .lines.fill > *{flex:1 1 auto}
 .lines dt{color:var(--t2)}
 .lines dd{text-align:right;min-width:0;overflow-wrap:anywhere}
 
@@ -282,6 +286,7 @@ input.in[type=number]{font-family:var(--mono)}
 .t th:last-child,.t td:last-child{padding-right:18px}
 .t thead th{height:36px;position:sticky;top:0;z-index:1;background:var(--card);color:var(--t3);font-size:12px;font-weight:500;border-bottom:1px solid var(--line-2)}
 .t tbody th{font-weight:500}
+.t td .conv{display:block;margin-top:2px;font-size:11.5px;color:var(--t3)}
 .t tbody tr:last-child > *{border-bottom:0}
 .t tbody tr{transition:background .08s}
 .t tbody tr:hover{background:rgba(255,255,255,.025)}
@@ -334,6 +339,8 @@ input.in[type=number]{font-family:var(--mono)}
 .bar span.f{display:block;width:100%;min-height:0;border-radius:4px 4px 1px 1px;background:linear-gradient(180deg,#FF5E55,#D92B21);opacity:.85;transition:opacity .1s}
 .bar.zero span.f{height:2px;background:var(--rg-ink-5);opacity:1}
 .bar.now span.f{opacity:1;box-shadow:0 0 0 1px rgba(255,94,85,.6)}
+.bar.now.zero span.f{box-shadow:none;background:var(--t3)}
+.chart-empty{position:absolute;top:50%;left:50%;z-index:2;transform:translate(-50%,-50%);max-width:calc(100% - 16px);margin:0;padding:4px 12px;border-radius:8px;background:var(--card);text-align:center;color:var(--t3);font-size:13px;pointer-events:none}
 .bar:hover span.f{opacity:1}
 .bar .tip{position:absolute;bottom:calc(100% + 8px);left:50%;transform:translateX(-50%);z-index:3;display:none;padding:7px 10px;background:var(--rg-ink-5);border:1px solid var(--line-3);border-radius:8px;box-shadow:0 10px 30px -8px rgba(0,0,0,.7);font-size:12px;line-height:1.4;white-space:nowrap;pointer-events:none}
 .bar .tip b{display:block;font-weight:600}
