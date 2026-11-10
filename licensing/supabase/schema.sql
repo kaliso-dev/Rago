@@ -311,6 +311,10 @@ CREATE TABLE IF NOT EXISTS trials (
 CREATE INDEX IF NOT EXISTS trials_email ON trials (email);
 CREATE INDEX IF NOT EXISTS trials_card ON trials (card_fingerprint);
 
+-- Banned accounts (2026-11-10, /admin): can't sign in anywhere (site, app), their licenses are revoked ('banned').
+ALTER TABLE users ADD COLUMN IF NOT EXISTS banned_at BIGINT;
+ALTER TABLE users ADD COLUMN IF NOT EXISTS banned_reason TEXT;
+
 ALTER TABLE users ENABLE ROW LEVEL SECURITY;
 ALTER TABLE web_sessions ENABLE ROW LEVEL SECURITY;
 ALTER TABLE licenses ENABLE ROW LEVEL SECURITY;

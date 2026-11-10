@@ -29,6 +29,7 @@ Ce document fait foi entre le serveur de licences (`/mnt/project-files/licensing
 | `no_license` | 403 | Compte sans Premium. Contient `buy_url` (la section prix du site, où l'on choisit mensuel ou annuel) | Bouton vers `buy_url` |
 | `bound_to_other_device` | 403 | Licence déjà active sur un autre PC | Effacer le token, afficher le message, lien support |
 | `revoked` | 403 | Remboursé, litige, désactivé par le support, ou abonnement terminé. Dans ce dernier cas : `reason: "subscription_ended"`, `buy_url`, et un `message` dédié | Effacer le token, afficher le message (et un bouton vers `buy_url` s'il est là) |
+| `account_banned` | 403 | Compte banni depuis `/admin` (2026-11-10) : connexion refusée partout, licence révoquée | Effacer le token, afficher le message |
 | `rate_limited` | 429 | Trop d'essais. Par 15 min : 10 connexions par email et IP, 50 par IP ; et après 20 mauvais mots de passe sur un email (toutes IP), seule une IP qui n'a pas encore échoué sur cet email, ou qui s'y est déjà connectée, peut essayer | Afficher le message, réessayer plus tard |
 | `server_error` | 500 | Panne serveur | Garder le token existant, mode hors ligne |
 
@@ -111,7 +112,7 @@ L'app affiche alors : « Activate Rago Optimizer on this PC? Your license will b
 
 Réponse 200, ce PC est déjà celui de la licence (réinstallation de l'app, nouveau login) : directement la réponse `active` décrite sous `/licenses/activate`, sans étape d'activation.
 
-Erreurs : `invalid_request`, `invalid_credentials`, `no_license`, `bound_to_other_device`, `revoked`, `rate_limited`.
+Erreurs : `invalid_request`, `invalid_credentials`, `account_banned`, `no_license`, `bound_to_other_device`, `revoked`, `rate_limited`.
 
 ### `POST /licenses/activate`
 
