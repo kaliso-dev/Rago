@@ -116,8 +116,15 @@ export interface Launcher {
 }
 
 /** Trajet de Rago Route (route.rs) : direct vers la sortie de Paris, ou par un relais. */
+/** 2e connexion possible pour Rago Route (route.rs `Link`). */
+export interface RouteLink {
+  name: string;
+  /** partage de connexion d'un téléphone (USB ou Wi-Fi) */
+  phone: boolean;
+}
+
 export interface RoutePath {
-  kind: "direct" | "relay" | "phone";
+  kind: "direct" | "relay" | "phone" | "second";
   /** ville du serveur par lequel passe le trajet (Paris pour le direct) */
   via: string;
   rttMs: number | null;
@@ -453,9 +460,9 @@ export interface Api {
   onNetMeasure(cb: (m: NetMeasure) => void): Promise<UnlistenFn>;
   onNetSample(cb: (s: NetSample) => void): Promise<UnlistenFn>;
   /** Rago Route (route.rs) : allume le tunnel vers la sortie de Paris ; erreur « port:25565 » si le port est pris. */
-  routeStart(phone?: boolean): Promise<RouteStatus>;
-  /** téléphone branché en USB avec la 4G partagée (nom de sa carte réseau), sinon null */
-  routePhone(): Promise<string | null>;
+  routeStart(second?: string | null): Promise<RouteStatus>;
+  /** 2e connexions possibles (téléphone en USB ou en Wi-Fi, 2e box…) ; vide s'il n'y a qu'une connexion */
+  routeLinks(): Promise<RouteLink[]>;
   routeStop(): Promise<void>;
   routeStatus(): Promise<RouteStatus>;
   /** Jeton Rago Route (6 h) pour le script du Mac ; erreurs « premium:no_license », « premium:route_closed »… */
@@ -579,8 +586,8 @@ const tauriApi: Api = {
   netTest: (ids) => invoke("net_test", { ids }),
   onNetMeasure: (cb) => listen<NetMeasure>("nettest:measure", (e) => cb(e.payload)),
   onNetSample: (cb) => listen<NetSample>("nettest:sample", (e) => cb(e.payload)),
-  routeStart: (phone) => invoke("route_start", { phone: !!phone }),
-  routePhone: () => invoke("route_phone"),
+  routeStart: (second) => invoke("route_start", { second: second ?? null }),
+  routeLinks: () => invoke("route_links"),
   routeStop: () => invoke("route_stop"),
   routeStatus: () => invoke("route_status"),
   routeToken: () => invoke("route_token"),
@@ -649,6 +656,8 @@ const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
 
 // démo de Rago Route : allumé depuis `on`, une partie en cours après 3 s, valeurs proches des tests sur le Mac
 const mockRoute = { on: 0, phone: false };
+// ?nolink : aucune 2e connexion (démo de l'astuce)
+const mockLinks = (): RouteLink[] => (new URLSearchParams(location.search).has("nolink") ? [] : [{ name: "Wi-Fi 3", phone: true }]);
 function mockRouteStatus(): RouteStatus {
   const idle: RouteStatus = { running: false, error: null, playing: false, paths: [], saved: 0, repaired: 0, packets: 0, resendsHere: 0, resendsExit: 0, exitPingMs: null, lagHereMs: 0, lagExitMs: 0, ports: [] };
   if (!mockRoute.on) return idle;
@@ -1126,11 +1135,11 @@ const mockApi: Api = {
   },
   onNetMeasure: (cb) => on("nettest:measure", cb),
   onNetSample: (cb) => on("nettest:sample", cb),
-  routePhone: async () => "Ethernet 3",
-  routeStart: async (phone) => {
+  routeLinks: async () => mockLinks(),
+  routeStart: async (second) => {
     await sleep(500);
     mockRoute.on = Date.now();
-    mockRoute.phone = !!phone;
+    mockRoute.phone = !!second;
     return mockRouteStatus();
   },
   routeStop: async () => {

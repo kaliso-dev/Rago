@@ -686,8 +686,9 @@ pub struct Config {
     pub test_loss: Vec<f64>,
     /// coupure simulée de tous les trajets : (début après le lancement, durée) (tests seulement)
     pub test_cut: Option<(Duration, Duration)>,
-    /// ajoute un trajet par la 4G du téléphone branché en USB (partage de connexion), s'il y en a un
-    pub phone: bool,
+    /// 2e connexion choisie dans l'onglet (nom de la carte : partage de connexion du téléphone en USB ou en Wi-Fi,
+    /// 2e box…) : un trajet de plus, direct vers la sortie, s'il y a bien Internet par cette carte
+    pub second: Option<String>,
 }
 
 /// Jeton Rago Route du serveur de licences (comptes Premium, valable 6 h), envoyé à la sortie à chaque nouvelle
@@ -710,7 +711,7 @@ static REFUSED: AtomicBool = AtomicBool::new(false);
 
 impl Default for Config {
     fn default() -> Self {
-        Config { exit: EXIT_PARIS, relays: RELAYS.iter().map(|(_, a)| *a).collect(), no_direct: false, rate: 30.0 * 125_000.0, port_offset: 0, test_loss: Vec::new(), test_cut: None, phone: false }
+        Config { exit: EXIT_PARIS, relays: RELAYS.iter().map(|(_, a)| *a).collect(), no_direct: false, rate: 30.0 * 125_000.0, port_offset: 0, test_loss: Vec::new(), test_cut: None, second: None }
     }
 }
 
@@ -718,7 +719,7 @@ impl Default for Config {
 #[derive(Clone, Debug, Default, Serialize)]
 #[serde(rename_all = "camelCase")]
 pub struct PathView {
-    /// "direct", "relay" ou "phone" (4G du téléphone, directe vers la sortie)
+    /// "direct", "relay", "phone" (4G du téléphone, directe vers la sortie) ou "second" (autre 2e connexion)
     pub kind: String,
     /// ville du serveur par lequel passe le trajet (Paris pour le direct)
     pub via: String,
@@ -848,11 +849,42 @@ pub struct Nic {
     pub name: String,
     pub ip: Ipv4Addr,
     pub index: u32,
-    /// partage de connexion d'un téléphone en USB, ou modem 4G/5G du PC
+    /// partage de connexion d'un téléphone (USB, ou Wi-Fi reconnu par sa passerelle), ou modem 4G/5G du PC
     pub cellular: bool,
     /// a une passerelle (donc un accès à Internet)
     pub gateway: bool,
     pub metric: u32,
+}
+
+/// Partage de connexion d'un téléphone en Wi-Fi, d'après l'adresse de sa passerelle : 172.20.10.1 pour tous les
+/// iPhone, 192.168.43.1 pour beaucoup d'Android (les Android récents tirent une adresse au hasard : pas reconnus,
+/// mais proposés quand même comme 2e connexion).
+pub fn is_phone_hotspot(gateway: Ipv4Addr) -> bool {
+    gateway == Ipv4Addr::new(172, 20, 10, 1) || gateway == Ipv4Addr::new(192, 168, 43, 1)
+}
+
+/// 2e connexion possible, pour l'onglet : une carte avec Internet autre que la principale.
+#[derive(Clone, Debug, Serialize, PartialEq)]
+pub struct Link {
+    pub name: String,
+    /// partage de connexion d'un téléphone (USB ou Wi-Fi) ou modem 4G/5G
+    pub phone: bool,
+}
+
+/// Carte principale (Wi-Fi ou câble de la box) : celle avec Internet que Windows préfère, sans compter `skip`
+/// (la 2e connexion) ni, s'il y a mieux, un téléphone.
+fn main_nic<'a>(all: &'a [Nic], skip: Option<&str>) -> Option<&'a Nic> {
+    let with_internet = || all.iter().filter(move |n| n.gateway && Some(n.name.as_str()) != skip);
+    with_internet().filter(|n| !n.cellular).min_by_key(|n| n.metric).or_else(|| with_internet().min_by_key(|n| n.metric))
+}
+
+/// Les 2e connexions possibles (téléphones d'abord) : vide s'il n'y a qu'une connexion à Internet.
+pub fn links_of(all: &[Nic]) -> Vec<Link> {
+    let Some(main) = main_nic(all, None) else { return Vec::new() };
+    let mut v: Vec<Link> =
+        all.iter().filter(|n| n.gateway && n.name != main.name).map(|n| Link { name: n.name.clone(), phone: n.cellular }).collect();
+    v.sort_by_key(|l| !l.phone);
+    v
 }
 
 /// Partage de connexion USB (Android : « Remote NDIS », iPhone : « Apple Mobile Device Ethernet ») ou modem cellulaire,
@@ -875,9 +907,9 @@ pub fn nics() -> Vec<Nic> {
     }
 }
 
-/// Téléphone branché avec la 4G partagée (avec une passerelle), pour l'onglet : son nom, ou None.
-pub fn phone_name() -> Option<String> {
-    nics().into_iter().find(|n| n.cellular && n.gateway).map(|n| n.name)
+/// Les 2e connexions possibles de ce PC, pour l'onglet.
+pub fn links() -> Vec<Link> {
+    links_of(&nics())
 }
 
 impl Engine {
@@ -1434,14 +1466,14 @@ pub fn start(cfg: Config) -> Result<Running, String> {
         })?;
         listeners.push((l, target));
     }
-    // 4G du téléphone : un trajet de plus, direct vers la sortie, collé à la carte du téléphone ; les autres trajets
-    // restent collés à la carte principale (Wi-Fi ou câble), même si Windows préfère le téléphone pour Internet
-    let (mut main, mut phone) = (None, None);
-    if cfg.phone {
+    // 2e connexion (téléphone en USB ou en Wi-Fi, 2e box…) : un trajet de plus, direct vers la sortie, collé à sa
+    // carte ; les autres trajets restent collés à la carte principale, même si Windows préfère la 2e pour Internet
+    let (mut main, mut second) = (None, None);
+    if let Some(name) = &cfg.second {
         let all = nics();
-        phone = all.iter().find(|n| n.cellular && n.gateway).map(|n| (n.ip, n.index));
-        if phone.is_some() {
-            main = all.iter().filter(|n| !n.cellular && n.gateway).min_by_key(|n| n.metric).map(|n| (n.ip, n.index));
+        if let Some(n) = all.iter().find(|n| n.gateway && &n.name == name) {
+            second = Some(((n.ip, n.index), if n.cellular { "phone" } else { "second" }));
+            main = main_nic(&all, Some(name)).map(|n| (n.ip, n.index));
         }
     }
     let mut specs: Vec<(&'static str, String, SocketAddrV4, Option<(Ipv4Addr, u32)>)> = Vec::new();
@@ -1451,8 +1483,8 @@ pub fn start(cfg: Config) -> Result<Running, String> {
     for r in &cfg.relays {
         specs.push(("relay", city(*r), *r, main));
     }
-    if let Some(p) = phone {
-        specs.push(("phone", city(cfg.exit), cfg.exit, Some(p)));
+    if let Some((local, kind)) = second {
+        specs.push((kind, city(cfg.exit), cfg.exit, Some(local)));
     }
     let mut paths = Vec::new();
     let mut helpers = Vec::new();
@@ -1646,12 +1678,12 @@ fn slot() -> &'static Mutex<Option<Running>> {
 }
 
 /// Allume Rago Route avec les serveurs Rago et le jeton du compte (sans effet s'il tourne déjà, sauf le jeton).
-pub fn turn_on(token: &str, phone: bool) -> Result<Status, String> {
+pub fn turn_on(token: &str, second: Option<String>) -> Result<Status, String> {
     set_token(token);
     let mut s = slot().lock().map_err(|_| "lock")?;
     if s.is_none() {
         let exits: Vec<SocketAddrV4> = EXITS.iter().map(|(_, a)| *a).collect();
-        *s = Some(start(Config { exit: pick_exit(&exits), phone, ..Config::default() })?);
+        *s = Some(start(Config { exit: pick_exit(&exits), second, ..Config::default() })?);
     }
     Ok(s.as_ref().map(|r| r.status()).unwrap_or_default())
 }
@@ -1747,11 +1779,23 @@ mod win {
             }
             let Some(ip) = ip else { continue };
             let description = wide(a.Description);
+            // passerelle IPv4 : celle d'un partage de connexion en Wi-Fi reconnaît le téléphone
+            let mut hotspot = false;
+            let mut g = a.FirstGatewayAddress;
+            while !g.is_null() {
+                let ga = unsafe { &*g };
+                g = ga.Next;
+                let sa = ga.Address.lpSockaddr;
+                if !sa.is_null() && unsafe { (*sa).sa_family } == AF_INET {
+                    let sin = unsafe { &*(sa as *const SOCKADDR_IN) };
+                    hotspot |= super::is_phone_hotspot(Ipv4Addr::from(u32::from_be(unsafe { sin.sin_addr.S_un.S_addr })));
+                }
+            }
             out.push(Nic {
                 name: wide(a.FriendlyName),
                 ip,
                 index: unsafe { a.Anonymous1.Anonymous.IfIndex },
-                cellular: super::is_cellular(&description, a.IfType),
+                cellular: super::is_cellular(&description, a.IfType) || hotspot,
                 gateway: !a.FirstGatewayAddress.is_null(),
                 metric: a.Ipv4Metric,
             });
@@ -1912,6 +1956,26 @@ mod tests {
         assert!(is_cellular("Generic Mobile Broadband Adapter", 243));
         assert!(!is_cellular("Intel(R) Wi-Fi 6 AX201 160MHz", 71));
         assert!(!is_cellular("Realtek PCIe GbE Family Controller", 6));
+        assert!(is_phone_hotspot(Ipv4Addr::new(172, 20, 10, 1)));
+        assert!(!is_phone_hotspot(Ipv4Addr::new(192, 168, 1, 254)));
+    }
+
+    #[test]
+    fn second_links() {
+        let nic = |name: &str, cellular, gateway, metric| Nic { name: name.into(), ip: Ipv4Addr::new(10, 0, 0, 1), index: 1, cellular, gateway, metric };
+        // Wi-Fi seul (ou avec des cartes sans Internet) : rien à proposer
+        assert!(links_of(&[nic("Wi-Fi 3", false, true, 35), nic("Ethernet", false, false, 25)]).is_empty());
+        // téléphone en USB, même si Windows le préfère : le Wi-Fi reste la carte principale
+        let usb = [nic("Wi-Fi 3", false, true, 35), nic("Ethernet 2", true, true, 25)];
+        assert_eq!(links_of(&usb), vec![Link { name: "Ethernet 2".into(), phone: true }]);
+        assert_eq!(main_nic(&usb, None).unwrap().name, "Wi-Fi 3");
+        // câble vers la box + Wi-Fi sur le partage de l'iPhone
+        let wifi = [nic("Ethernet", false, true, 25), nic("Wi-Fi 3", true, true, 35)];
+        assert_eq!(links_of(&wifi), vec![Link { name: "Wi-Fi 3".into(), phone: true }]);
+        // deux box : la moins prioritaire pour Windows est proposée ; choisie, l'autre devient la principale
+        let two = [nic("Ethernet", false, true, 25), nic("Wi-Fi 3", false, true, 35)];
+        assert_eq!(links_of(&two), vec![Link { name: "Wi-Fi 3".into(), phone: false }]);
+        assert_eq!(main_nic(&two, Some("Ethernet")).unwrap().name, "Wi-Fi 3");
     }
 
     #[test]

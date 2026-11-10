@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { motion } from "motion/react";
 import { Check, Copy, LoaderCircle, Lock, Power, Route } from "lucide-react";
-import { api, type RoutePath, type RouteStatus } from "../lib/api";
+import { api, type RouteLink, type RoutePath, type RouteStatus } from "../lib/api";
 import type { Key } from "../lib/i18n";
 import { useStore } from "../lib/store";
 import { Button, Switch } from "../components/ui";
@@ -35,13 +35,14 @@ export function RouteTab() {
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [copied, setCopied] = useState(false);
-  // 4G du téléphone branché en USB : proposée seulement quand Windows le voit ; le choix est retenu sur ce PC
-  const [phone, setPhone] = useState<string | null>(null);
-  const [usePhone, setUsePhone] = useState(() => {
+  // 2e connexion (téléphone en USB ou en Wi-Fi, 2e box…) : proposée seulement quand Windows la voit ;
+  // le choix (nom de la carte) est retenu sur ce PC
+  const [links, setLinks] = useState<RouteLink[]>([]);
+  const [chosen, setChosen] = useState<string | null>(() => {
     try {
-      return localStorage.getItem("rago.route.phone") === "1";
+      return localStorage.getItem("rago.route.link") || null;
     } catch {
-      return false;
+      return null;
     }
   });
 
@@ -64,8 +65,8 @@ export function RouteTab() {
     let alive = true;
     const look = () =>
       api
-        .routePhone()
-        .then((p) => alive && setPhone(p))
+        .routeLinks()
+        .then((l) => alive && setLinks(l))
         .catch(() => {});
     look();
     const id = setInterval(look, 3000);
@@ -75,10 +76,10 @@ export function RouteTab() {
     };
   }, []);
 
-  function choosePhone(on: boolean) {
-    setUsePhone(on);
+  function chooseLink(name: string | null) {
+    setChosen(name);
     try {
-      localStorage.setItem("rago.route.phone", on ? "1" : "0");
+      localStorage.setItem("rago.route.link", name ?? "");
     } catch {
       /* le choix ne sera pas retenu */
     }
@@ -99,7 +100,7 @@ export function RouteTab() {
         await api.routeStop();
         setSt(await api.routeStatus());
       } else {
-        setSt(await api.routeStart(usePhone && !!phone));
+        setSt(await api.routeStart(links.some((l) => l.name === chosen) ? chosen : null));
       }
     } catch (e) {
       setError(String(e));
@@ -151,15 +152,22 @@ export function RouteTab() {
         )}
 
         {locked && <p className="muted small rt-note">{t("route.premium")}</p>}
-        {!locked && !running && phone && (
-          <div className="no-toggle rt-phone" onClick={() => choosePhone(!usePhone)}>
-            <div className="no-toggle-text">
-              <div className="no-toggle-title">{t("route.phone")}</div>
-              <div className="no-toggle-desc">{t("route.phone.desc")}</div>
-            </div>
-            <Switch checked={usePhone} onChange={choosePhone} label={t("route.phone")} />
-          </div>
-        )}
+        {!locked &&
+          !running &&
+          links.map((l) => {
+            const on = chosen === l.name;
+            const title = l.phone ? t("route.phone") : t("route.second", { name: l.name });
+            return (
+              <div key={l.name} className="no-toggle rt-phone" onClick={() => chooseLink(on ? null : l.name)}>
+                <div className="no-toggle-text">
+                  <div className="no-toggle-title">{title}</div>
+                  <div className="no-toggle-desc">{l.phone ? t("route.phone.desc") : t("route.second.desc")}</div>
+                </div>
+                <Switch checked={on} onChange={(v) => chooseLink(v ? l.name : null)} label={title} />
+              </div>
+            );
+          })}
+        {!locked && !running && links.length === 0 && <p className="muted small rt-note">{t("route.link.hint")}</p>}
         {shown && (
           <p className="rt-error small">{shown === "token" ? t("route.err.token") : t(errorKey(shown), { e: shown.replace(/^\w+:/, "") })}</p>
         )}
@@ -217,7 +225,9 @@ function PathRow({ p, t }: { p: RoutePath; t: (k: Key, v?: Record<string, string
       ? t("route.path.direct", { city: p.via })
       : p.kind === "phone"
         ? t("route.path.phone", { city: p.via })
-        : t("route.path.relay", { city: p.via });
+        : p.kind === "second"
+          ? t("route.path.second", { city: p.via })
+          : t("route.path.relay", { city: p.via });
   return (
     <div className={`rt-path${p.alive ? "" : " down"}`}>
       <span className="rt-dot" aria-hidden />

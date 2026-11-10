@@ -366,11 +366,11 @@ async fn net_test(app: AppHandle, state: State<'_, AppState>, ids: Vec<String>) 
 /// Erreurs : "premium:<code>" (pas de jeton Rago Route : "no_license", "revoked", "route_closed", "network"…),
 /// "port:25565" (port déjà pris, par exemple par un autre Rago Route ou un serveur local), "udp:…", "listen:…".
 #[tauri::command]
-async fn route_start(state: State<'_, AppState>, phone: Option<bool>) -> Result<route::Status, String> {
+async fn route_start(state: State<'_, AppState>, second: Option<String>) -> Result<route::Status, String> {
     let lic = Arc::clone(&state.license);
     tauri::async_runtime::spawn_blocking(move || {
         let token = lic.route_token().map_err(|e| format!("premium:{}", e.code))?;
-        let st = route::turn_on(&token, phone.unwrap_or(false))?;
+        let st = route::turn_on(&token, second.filter(|s| !s.is_empty()))?;
         keep_route_token(lic);
         Ok(st)
     })
@@ -417,10 +417,10 @@ async fn route_stop() -> Result<(), String> {
     tauri::async_runtime::spawn_blocking(route::turn_off).await.map_err(|e| e.to_string())
 }
 
-/// Téléphone branché en USB avec la 4G partagée (son nom), pour proposer le trajet 4G dans l'onglet.
+/// 2e connexions possibles (téléphone en USB ou en Wi-Fi, 2e box…), pour proposer un trajet de plus dans l'onglet.
 #[tauri::command]
-async fn route_phone() -> Option<String> {
-    tauri::async_runtime::spawn_blocking(route::phone_name).await.ok().flatten()
+async fn route_links() -> Vec<route::Link> {
+    tauri::async_runtime::spawn_blocking(route::links).await.unwrap_or_default()
 }
 
 /// État en direct (recopié deux fois par seconde par le moteur).
@@ -1511,7 +1511,7 @@ pub fn run() {
             route_stop,
             route_status,
             route_token,
-            route_phone,
+            route_links,
         ])
         .build(tauri::generate_context!())
         .expect("erreur au lancement de Rago Optimizer")
