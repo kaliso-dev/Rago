@@ -33,6 +33,7 @@ La [[Version 1.2.1]] (refonte en verre, barre en jeu, Packet Optimizer, biblioth
 | Vault Obsidian | créé le 31/10 ; règle n°1 : il doit correspondre en tout point à l'état du projet | DÉCIDÉ |
 
 ## PR (10/11)
+- #78 (vers `staging`, **ouverte**) : moins de builds en double dans la CI + vault des minutes GitHub Actions ([[CI GitHub Actions]]) ; ne pas fusionner sans « fusionne » de Sofiene.
 - Fusionnée le 10/11 dans `staging` : #76 (sortie 1.3.0 avec Rago Route, décisions du 10/11), sur « tu peux tout push » de Sofiene ; elle contenait aussi les commits de la #75 (vault technique), fusionnés du même coup.
 - #75 (vault technique complet : [[Reprendre le développement]] et fiches par brique, `CLAUDE.md` par dossier) : son contenu est dans `staging` par la #76 (10/11).
 - Fusionnée le 09/11 dans `staging` : #74 (commandes du pont pour [[Rago OS]] : recherche des réglages et Rago Route ; Rago OS jamais pris pour un jeu par la [[Barre en jeu|barre en jeu]] ; vault réuni avec celui de Rago Route), sur l'accord de Sofiene du 09/11 (« 8 oui c'est parfait »).
@@ -52,3 +53,4 @@ La [[Version 1.2.1]] (refonte en verre, barre en jeu, Packet Optimizer, biblioth
 5. Valider l'e-mail sur la collecte des tests réseau avant son envoi, une fois rédigé ([[Prochaines étapes]]).
 6. Avant la prod de l'essai : inscrire sa mère comme vendeuse et régler l'adresse ([[Conformité juridique]]).
 7. Rago Route : faire voir la 4G du téléphone à Windows (en cours, 10/11). [[Rago OS]] : confirmer le test de l'exe test5 (« je crois avoir testé hier »).
+8. GitHub : passer `network-server-rago` en public (libère les minutes) ; en novembre, `rago` doit être public pendant les builds ; `rago` en privé pour de bon le 1er décembre ([[CI GitHub Actions]]).

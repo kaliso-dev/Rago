@@ -8,7 +8,7 @@ maj: 2026-11-10
 > **Nouveau Claude qui doit toucher au code ?** Lis [[Projet]], [[État actuel]] et [[Règles de travail]], puis cette note. Elle dit, pour chaque type de tâche, quelle fiche lire, quels fichiers ouvrir, quelles commandes lancer et quels pièges éviter. Tout ce qui est écrit ici a été vérifié dans le code de `staging` le 10/11/2026.
 
 ## 1. Le dépôt en 30 secondes
-Monorepo privé `kaliso-dev/rago` (GitHub l'affiche aussi `kaliso-dev/Rago`). Cinq briques :
+Monorepo **public** `kaliso-dev/rago` (GitHub l'affiche aussi `kaliso-dev/Rago`). Cinq briques :
 
 | Brique | Dossier | Techno | Hébergement | Fiche |
 |---|---|---|---|---|

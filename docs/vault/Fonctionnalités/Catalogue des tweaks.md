@@ -2,7 +2,7 @@
 type: fonctionnalité
 tags: [fonctionnalité, app, tweaks]
 version_app: 1.2.1
-maj: 2026-10-31
+maj: 2026-11-10
 ---
 # Catalogue des tweaks
 
@@ -32,7 +32,7 @@ Presets : [[Tweaks Presets]] · retirés : [[Tweaks retirés]].
 - Généré par `cd app && python3 tools/build_catalog_v6.py` (`npm run catalog`) à partir du `.bat` v5.2 et des `.bat` v6 (`app/legacy/`), avec `audit_fixes.py` (audit du 07/10), `safety.py` (tweaks retirés), `tools/descriptions.json` (textes), `optis_120.py` (optimisations du 21/10). Sorties : `app/src/data/catalog.json`, `app/src-tauri/scripts/scripts.json`, `probes.json`, `undo.json`. **Ne jamais éditer ces JSON à la main.** Historique : `app/docs/CORRECTIONS.md`.
 - Plan gratuit : `app/src/data/free.json` (`tweaks` = 11 gratuits, `reverts` = Premium dont le retour est gratuit, `formerly` = anciens gratuits).
 - Sources du 21/10 (Sofiene) : `[RAGO APP] GAME V1.bat`, `OptiCore-Tweaks.ps1`, `Hone-Optimizations.ps1`, `network_optimizer.bat`, dump Hone.gg. Ce qui a été pris ou écarté : `refonte-glass/OPTIMISATIONS-1.2.0.md` ([[Sources]]).
-- Les JSON sont en clair dans le dépôt : **le dépôt doit rester privé**. Dans l'exe, les scripts sont chiffrés ([[Moteur des tweaks]]).
+- Les JSON (scripts Premium compris) sont en clair dans le dépôt, qui est **public** depuis une date inconnue (constaté le 10/11) : tout le monde peut les lire, ainsi que ce vault. Sofiene, 10/11 : public en novembre pour les builds, privé à partir de décembre ([[CI GitHub Actions]]). Dans l'exe, les scripts sont chiffrés ([[Moteur des tweaks]]).
 
 ## Régénérer les notes « Tweaks … »
 Sur la branche qui porte la dernière version de l'app (aujourd'hui `staging`) : `python3 docs/tools/catalogue_vault.py`. À faire **à chaque changement du catalogue** ([[Mettre à jour le vault]]).
