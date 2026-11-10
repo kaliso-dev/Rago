@@ -2,7 +2,7 @@
 type: fonctionnalité
 tags: [fonctionnalité, app, gratuit, 1.3]
 version_app: 1.3.0
-maj: 2026-11-04
+maj: 2026-11-10
 ---
 # Analyse du PC
 
@@ -19,6 +19,6 @@ Page « Analyze my PC » ajoutée en 1.3.0 (PR #70, pas sortie), demandée par S
 `app/src-tauri/src/analysis.rs` (ce que Windows dit : script PowerShell et fréquence de l'écran), `fps.rs` (résumé de la dernière partie : au moins 60 s et 600 images, une saccade = une image de plus de 2,5 fois la médiane et de plus de 20 ms), commande `analysis_facts` ; `app/src/lib/analysis.ts` (étapes, normes, avant/après) ; `app/src/pages/Analysis.tsx`. Réutilise le [[Test réseau]] et la charge du processeur de la [[Barre en jeu]].
 
 ## Limites (04/11)
-- **Rien testé sur Windows.** Les seuils sont des choix de Claude : À VÉRIFIER (q50).
+- **Rien testé sur Windows.** Les seuils sont des choix de Claude. Sofiene, 10/11 (q50) : « il faut que les normes soit personnalisé en fonction de chaque utilisateur » (un joueur habitué à des chiffres moins bons qu'un Européen ne doit pas tout voir « au-dessus de la normale ») : à coder, pas encore fait.
 - Pas mesurés, car impossibles sans droits admin ou traces Windows : délai des interruptions, température du processeur, ping quand la connexion est chargée.
 - Pas d'estimation du gain avec Premium : aucune donnée ne permet une fourchette honnête, et la règle de la maquette est « toujours une fourchette ».

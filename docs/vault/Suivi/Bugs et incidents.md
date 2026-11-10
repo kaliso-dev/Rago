@@ -1,11 +1,11 @@
 ---
 type: registre
 tags: [bug, suivi]
-maj: 2026-11-01
+maj: 2026-11-10
 ---
 # Bugs et incidents
 
-Registre des bugs de l'app et des incidents. Les retours de joueurs au cas par cas sont dans [[Problèmes joueurs]]. Référence détaillée au 15/10 : `PROJECT_HANDOFF/05_BUGS_AND_REGRESSIONS.md` ([[Sources]]).
+Registre des bugs de l'app et des incidents. Les retours de joueurs au cas par cas sont dans [[Problèmes joueurs]].
 
 ## Ouverts ou à surveiller (01/11)
 | Bug | Version | État |

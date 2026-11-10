@@ -14,6 +14,9 @@ maj: 2026-11-10
 - Ne jamais copier `server_secrets` de la prod vers le staging.
 - Ne jamais ajouter les MX Google dans OVH (couperait la boîte Zimbra `support@`).
 
+## État des sauvegardes (10/11)
+**Aucune clé n'est sauvegardée** (Sofiene, q67 : « je me noie sous les clé et j'ai aucun export ») : ni `export-keys` du serveur, ni les clés Railway, Stripe ou GitHub. Stripe l'a prévenu qu'il ne pourra bientôt plus revoir ses clés secrètes. Le projet Supabase de prod, seul endroit où est la clé de signature des licences, risque d'être supprimé le 05/12 ([[Supabase]]). À faire : un gestionnaire de mots de passe, puis y ranger chaque clé (sans jamais l'écrire dans un chat ou un fichier du projet).
+
 ## Noms des variables
 Liste complète, rangée par service avec leurs défauts : [[Variables d'environnement]].
 - **GitHub secrets** : `RAGO_API_BASE`, `RAGO_LICENSE_PUBKEY`, `RAGO_SCRIPTS_SECRET`, `STAGING_RAGO_API_BASE`, `STAGING_RAGO_LICENSE_PUBKEY`, `TAURI_SIGNING_PRIVATE_KEY`, `TAURI_SIGNING_PRIVATE_KEY_PASSWORD`. **Variables** : `SITE_URL`, `SUPPORT_URL`, `STAGING_SITE_URL`, `RAGO_UPDATER_PUBKEY`.

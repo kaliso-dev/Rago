@@ -1,11 +1,11 @@
 ---
 type: marketing
 tags: [marketing, vidéo, youtube]
-maj: 2026-11-01
+maj: 2026-11-10
 ---
 # Vidéos YouTube
 
-Dossier `marketing/videos-youtube/` ([[Sources]]). **Les vidéos sont faites par Abel**, l'associé de Sofiene (Sofiene, 01/11) : l'état de chaque vidéo est à lui demander (À VÉRIFIER). Voir [[Personnes et services]].
+Dossier `marketing/videos-youtube/` ([[Sources]]). **Les vidéos sont faites par Abel**, l'associé de Sofiene (Sofiene, 01/11) : Sofiene ne suit pas leur état et ne veut plus de questions à ce sujet (10/11 : « il faut supprimer tout ça »). Voir [[Personnes et services]].
 
 - **Étude de style** (18/10) : la pub CleanMyMac de MacPaw décortiquée plan par plan (`ETUDE-STYLE.md`) pour en tirer une grammaire de vidéos Rago (mondes en verre, transitions par la caméra, son très compressé).
 - **#001 « Rago tour »** : `episodes/001-rago-tour.mp4`, `v1`, `v2`, miniatures et planches ; preuve de lancement en 4K dans `launch-4k/`.

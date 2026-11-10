@@ -5,7 +5,7 @@ maj: 2026-11-10
 ---
 # CI GitHub Actions
 
-Les trois workflows de `.github/workflows/`. Secrets et variables : [[Variables d'environnement]], [[Clés et secrets]]. Les minutes GitHub Actions peuvent s'épuiser (vu le 21/10) : vérifier Settings → Billing and plans si un run ne démarre pas.
+Les trois workflows de `.github/workflows/`. Secrets et variables : [[Variables d'environnement]], [[Clés et secrets]]. Les minutes GitHub Actions peuvent s'épuiser (vu le 21/10, et **100 % des 3 000 minutes de novembre utilisées**, e-mail GitHub du 10/11) : vérifier Settings → Billing and plans si un run ne démarre pas. Sofiene veut une solution durable (q60 : « peut etre passer sur gitlab ») : à étudier ([[Prochaines étapes]]).
 
 ## `app-windows.yml` : fabrique l'installateur
 - **Déclencheurs** : push sur toute branche qui touche `app/**` ou le workflow ; tags `app-v*` (brouillon de release) ; PR qui touche `app/**` ; à la main (**Run workflow**) avec `server` = `production` ou `staging` et `version` (numéro de test, staging seulement).

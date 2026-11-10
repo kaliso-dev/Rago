@@ -2,7 +2,7 @@
 type: fonctionnalité
 tags: [fonctionnalité, app, premium, 1.3]
 version_app: 1.3.0
-maj: 2026-11-04
+maj: 2026-11-10
 ---
 # Abonnement dans l'app
 
@@ -22,4 +22,4 @@ Ajouté en 1.3.0 (PR #70, pas sortie), demandé par Sofiene le 04/11 avec la maq
 
 ## Pas faits, en attente d'une réponse de Sofiene
 - Rappel 7 jours avant le renouvellement et « même prix au renouvellement » : q40.
-- Remboursement sous 14 jours : q36. Parrainage : q39. Variante Packet Optimizer en gratuit : q41.
+- Réponses du 10/11 : pas de remboursement (q36), pas de parrainage dans l'app (q39), même prix au renouvellement (q40), [[Packet Optimizer]] entièrement Premium (q41), offre débitée après l'essai : mensuel (q48).

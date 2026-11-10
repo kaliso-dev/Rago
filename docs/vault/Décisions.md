@@ -1,7 +1,7 @@
 ---
 type: registre
 tags: [décision]
-maj: 2026-11-09
+maj: 2026-11-10
 ---
 # Décisions
 
@@ -10,6 +10,8 @@ Registre daté des décisions de Sofiene. **La plus récente prime.** Citations 
 ## App et versions
 | Date | Décision | Statut |
 |---|---|---|
+| 10/11 | Réponses de Sofiene sur la page de questions (q36 à q67) : **pas de remboursement** (« il faut modifier pour dire qu'on rembourse pas car maintenant y a l'essaie gratuit ») ; test réseau envoyé sans demander, mais « garder ce point avant de soumettre l'app à la signature » ; parrainage « depuis le site comme avant », pas dans l'app ; **même prix au renouvellement** « sauf si nos prix change », futur plan Ultimate à prix d'appel puis plus cher (« comme norton ») ; **[[Packet Optimizer]] en Premium** (« mets le en premium dans la prochaine version de prod ») ; **une seule grosse sortie** : « l'app avec les 30 opti 15 slots essaie gratuit connexion google/discord et proxy va sortir en une fois » (pas de 1.2.2 seule) ; après l'essai, **mensuel seulement** (5,99 $) ; seuils de l'[[Analyse du PC]] « personnalisé en fonction de chaque utilisateur » ; code à modifier « pour enlever straigh et signé par KALISO et RAGO » | DÉCIDÉ, à coder dans la prochaine version ([[Offres et prix]], [[Conformité juridique]]) |
+| 10/11 | Organisation du travail avec Claude : un seul projet, un fil par tâche, une fiche technique par brique (q56) ; Claude peut pousser le vault seul sur `staging` (« Oui, le vault seulement », q57) ; anciens dossiers du dossier partagé supprimés (« Non, supprime-les », q58) | DÉCIDÉ, fait ([[Règles de travail]], [[Sources]]) |
 | 09/11 | Rago OS, retours du soir puis réponses aux questions : Win après relance qui ouvre le menu Démarrer à corriger ; Rago Notes « accessible de puis le spotlight » ; boutons et Météo « moins apple », Météo sans animation d'ouverture ; widget Météo en mode clair ; barre en jeu « désactiver dans les paramètres pour avoir son jeu en full screen » ; « il faut bien garder deux bouton mais il faut qu'on comprenne la différence » (modes jeu) ; animations du Dock « désactiver ses animations dans les paramètres » ; « transforme le widget heure en app » (« 4 oui c'est parfait » : alarmes, minuteur, chronomètre, villes) ; « un widget pour pouvoir lancer rago route en un clic et voir l'était des serveurs » ; styles d'horloge « je garde le 2,4,5,6 » ; « ne propose plus le fait de changer de police » ; Minecraft détecté une fois ; widgets et pastille de l'app à ne plus montrer sur Rago OS ni sur Minecraft ; commandes Rago Route de l'app et `RagoOS.exe` ignoré par la barre en jeu, envoyés sur `staging` (« 8 oui c'est parfait ») | DÉCIDÉ, fait dans test5 et dans `staging` (PR #74) ([[Rago OS]]) |
 | 09/11 | Rago OS : plus d'optimisation durable à l'installation, « Oui, tout en session » (carte de décision, q53) : les services ne sont en pause que pendant que Rago OS tourne | DÉCIDÉ, fait dans test4 ([[Rago OS]]) |
 | 08/11 | Rago OS (soir) : « quand j'appuie sur ma touche windows seul le dock touchpad doit s'ouvrir » ; « stopper le plus de services inutiles possible mais ne pas toucher à des paramètre que rago optimizer touche déjà » ; « personnalisé un peu plus pour ne pas perdre en crédibilité » (moins Apple) ; « supprimer complétement l'écran de veille […] et d'ailleurs renomme le écran de veille » (l'écran de verrouillage) ; Rago OS « se lance instantanément au démarrage du pc […] par défaut » ; « si je quitte rago os tout les paramètre doivent revenir comme ceux d'origine et quand je lance tout se réactive pendant l'animation de chargement » | DÉCIDÉ, fait dans test4 ([[Rago OS]]) |
@@ -78,6 +80,8 @@ Registre daté des décisions de Sofiene. **La plus récente prime.** Citations 
 Une ligne par projet ou fonctionnalité arrêtés, pour qu'aucun Claude ne les relance. Le reste du vault n'en parle plus.
 | Date | Quoi | Raison |
 |---|---|---|
+| 10/11 | Partenariats YouTube et questions marketing à Abel (vidéos, RAG-35, 39, 51, 54, 56) | « il faut supprimer tout ça » ; Abel a dit au partenaire YouTube d'attendre la version avec Rago Route dans l'app |
+| 10/11 | Ancien Rago OS sur lequel on démarrait le PC (PR #60) | « il faut le supprimer l'oublié » ; le nouveau [[Rago OS]] sera vendu une fois fini |
 | 09/11 | Rago OS : styles d'horloge Classique et Chronographe, choix de la police (thème et écran de veille), animation d'ouverture de la Météo | « je garde le 2,4,5,6 » ; « ne propose plus le fait de changer de police » ; « enlève l'animation d'ouverture de l'app météo » |
 | 08/11 | Rago OS : économiseur d'écran (Horloge, Aurore, Diaporama) | « supprimer complétement l'écran de veille car l'écran de vérouillage sert déjà d'écran de veille » |
 | 08/11 | Rago OS : 12 thèmes sur 15 (Signal, Néon, Piste, Abysse, Aurore, Magma, Terminal, Horizon, Affiche, Graphite, Rago Clair, Papier) et leurs fonds d'écran ; FPS et ping en direct dans la Dynamic Island, et son coup d'œil enrichi (météo, ping, CPU, RAM, boutons) | « garde uniquement le premier thème et le deuxième [...] ainsi que le dernier » ; la barre en jeu de l'app affiche déjà FPS et ping, île « épuré » |

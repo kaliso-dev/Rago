@@ -1,7 +1,7 @@
 ---
 type: suivi
 tags: [juridique, rgpd, site]
-maj: 2026-11-04
+maj: 2026-11-10
 ---
 # Conformité juridique
 
@@ -16,7 +16,8 @@ Ce que le [[Site]] et le [[Serveur de licences]] font pour être en règle (RGPD
 - Droit de rétractation : les CGV demandent l'accès immédiat et la renonciation aux 14 jours au paiement.
 
 ## Manque (À RÉGLER par Sofiene)
-- **Identité du vendeur** : la loi demande le nom, l'adresse et le SIREN du vendeur sur le site (mentions légales et CGV). Les CGV disent seulement « the Rago Optimizer team ». Sofiene n'est pas encore inscrit comme vendeur (q44, 04/11) et a 17 ans : il faut une personne majeure inscrite, titulaire du compte Stripe (q49). Adresse : q46. Partage de l'argent : q45.
+- **Identité du vendeur** : la loi demande le nom, l'adresse et le SIREN du vendeur sur le site (mentions légales et CGV). Les CGV disent seulement « the Rago Optimizer team ». Sofiene n'est pas encore inscrit comme vendeur (q44, 04/11) et a 17 ans : **sa mère sera inscrite comme vendeuse** (q49, 10/11) ; à qui est le compte Stripe aujourd'hui : non dit. Adresse : pas de domiciliation (trop cher pour l'instant) et Sofiene ne veut pas mettre une adresse personnelle (q46, reformulée). Argent : Sofiene et Abel doivent partager à deux, sans accord écrit ni société pour l'instant (q45) ; Straight n'a aucun droit.
 - **TVA** : les CGV disent « TVA non applicable, art. 293 B du CGI », ce qui suppose une micro-entreprise inscrite. Faux tant que personne n'est inscrit.
-- **Collecte des tests réseau** : base « intérêt légitime », sans accord demandé dans l'app ; q37 (demander l'accord ?) sans réponse ; e-mail aux titulaires de compte à envoyer ([[Test réseau]]).
+- **Collecte des tests réseau** : base « intérêt légitime », sans accord demandé dans l'app. Sofiene, 10/11 (q37) : on continue d'envoyer sans prévenir, mais ce point est **à régler avant de soumettre l'app à la signature de code** (RAG-83). E-mail aux titulaires de compte à envoyer ([[Test réseau]]).
+- **Remboursement** : Sofiene ne rembourse plus (q36, 10/11) ; `refunds.html` et les CGV sont à réécrire dans ce sens, en gardant la renonciation à la rétractation au paiement.
 - À VÉRIFIER : la règle européenne du « bouton de rétractation » (directive 2023/2673, applicable depuis le 19/06/2026) s'applique-t-elle quand le client a renoncé à la rétractation ? Pas vérifié auprès d'un juriste.

@@ -10,7 +10,7 @@ Base de données Postgres et fichiers (Storage) du [[Serveur de licences]]. Seul
 ## Projets
 | Projet | Pour | Remarques |
 |---|---|---|
-| Projet de prod (nommé `rago` dans le guide) | serveur Railway de prod | région conseillée par le guide : West EU (Paris), `aws-0-eu-west-3` ; offre et sauvegardes : **À VÉRIFIER** (q66) (le guide conseillait de passer en Pro dès les premiers revenus pour les sauvegardes quotidiennes) |
+| Projet de prod (nommé `rago` dans le guide) | serveur Railway de prod | région conseillée par le guide : West EU (Paris), `aws-0-eu-west-3` ; **offre gratuite** (Sofiene, 10/11, q66), donc sans sauvegarde quotidienne. **URGENT** : Sofiene a reçu un e-mail de Supabase demandant de passer à l'offre payante (25 $/mois) sous peine de **suppression du projet le 05/12/2026**. La suppression perdrait toute la base, dont `server_secrets` (clé de signature des licences) : voir [[Clés et secrets]] (le guide conseillait de passer en Pro dès les premiers revenus pour les sauvegardes quotidiennes) |
 | `rago-staging` | serveur Railway de staging | offre gratuite : **se met en pause après une semaine sans activité** (le serveur de staging ne démarre plus : relancer le projet dans Supabase). Ne jamais y copier la base de prod |
 
 Connexion : `DATABASE_URL` = URI du **Session pooler** (port 5432). Clés : `SUPABASE_URL` (`https://<ref>.supabase.co`) et `SUPABASE_SERVICE_ROLE_KEY` (clé legacy `eyJ…` ou nouvelle `sb_secret_…`, les deux marchent). Valeurs : seulement dans Railway, jamais ici ([[Clés et secrets]]).
@@ -57,4 +57,4 @@ Connexion : `DATABASE_URL` = URI du **Session pooler** (port 5432). Clés : `SUP
 Préférer `npm run admin -- show <email>` (depuis `licensing/`, avec le `DATABASE_URL` voulu dans le terminal) au SQL Editor : il croise compte, licence, PC, événements et achats non rattachés. Le SQL Editor de Supabase sert à lire ; toute écriture passe par une commande `admin` ou une PR.
 
 ## Sauvegarde de la clé de signature
-`npm run admin -- export-keys` affiche `LICENSE_SIGNING_KEY` et `SESSION_SECRET` : à garder dans le gestionnaire de mots de passe de Sofiene et en variables Railway, pour ne plus dépendre de la base. Fait ou non : **À VÉRIFIER** (q67, [[Questions ouvertes]]).
+`npm run admin -- export-keys` affiche `LICENSE_SIGNING_KEY` et `SESSION_SECRET` : à garder dans le gestionnaire de mots de passe de Sofiene et en variables Railway, pour ne plus dépendre de la base. **Pas fait au 10/11** (q67) : la clé de signature n'existe que dans la base Supabase de prod. À faire avant toute autre chose.

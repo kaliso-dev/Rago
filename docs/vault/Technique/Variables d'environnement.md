@@ -26,7 +26,7 @@ Obligatoires en prod (sinon le serveur refuse de démarrer) : `DATABASE_URL`, `S
 | Discord, récompenses | `DISCORD_VIP_ROLE_ID`, `DISCORD_MVP_ROLE_ID`, `DISCORD_BOOST2_ROLE_ID` | |
 | Discord, bot communauté | `DISCORD_COMMUNITY=1`, `DISCORD_WELCOME_CHANNEL_ID`, `DISCORD_WELCOME_TEXT`, `DISCORD_INVITE_ROLES=1`, `DISCORD_VIP_INVITES` (10), `DISCORD_MVP_INVITES` (15) | code sur `staging` et dans la PR #71 ([[Bot communauté Discord]]) |
 | Tests réseau | `GEOIP` (`off` pour couper), `GEOIP_CITY_URL`, `GEOIP_ASN_URL` | [[Test réseau]] |
-| Rago Route | `ROUTE_TESTERS` (e-mails, staging seulement ; ignorée en prod) | [[Infrastructure Rago Route]] ; valeur réelle sur Railway staging : À VÉRIFIER (q55) |
+| Rago Route | `ROUTE_TESTERS` (e-mails, staging seulement ; ignorée en prod) | [[Infrastructure Rago Route]] ; ajoutée par Sofiene sur Railway staging (10/11, q55) |
 | Variante un seul domaine | `SITE_DIR` | non utilisée |
 | Développement | `DEV_SEED=email:motdepasse` (compte Premium au démarrage, base en mémoire), `TEST_DATABASE_URL` (tests sur vrai Postgres) | jamais en prod |
 
