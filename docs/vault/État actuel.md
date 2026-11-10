@@ -8,12 +8,12 @@ maj: 2026-11-10
 Voir aussi [[Prochaines étapes]], [[Questions ouvertes]], [[Journal]]. Retour à [[Projet]].
 
 ## En une phrase
-La [[Version 1.2.1]] (refonte en verre, barre en jeu, Packet Optimizer, bibliothèque, mises à jour automatiques) est **construite, signée et fusionnée dans `staging`** ; le serveur et le site de prod sont prêts pour elle depuis le 29/10. Sofiene a **déposé l'exe et son `.sig` dans Supabase** (confirmé par lui le 31/10) : la 1.2.1 est en ligne.
+Les joueurs ont la [[Version 1.2.1]] (en ligne depuis le 31/10). La [[Version 1.3.0]] (plan gratuit à 73 réglages dont 30 actifs, essai de 3 jours, connexion Google ou Discord, Rago Route dans tous les exe) est **dans `staging`** et sortira **en une seule fois** avec le serveur et le site, après les tests de Sofiene sur Windows. `staging` a 175 commits de plus que la branche de prod (10/11).
 
 ## Tableau
 | Sujet | État | Statut |
 |---|---|---|
-| Dernière version de l'app | [[Version 1.2.1]] (`staging` @ `fc3de16`, PR #65) | CONFIRMÉ (git) |
+| Dernière version de l'app | [[Version 1.3.0]] dans `staging` (PR #70 du 04/11 et #76 du 10/11, `app/package.json` = 1.3.0) ; dernière publiée : [[Version 1.2.1]] | CONFIRMÉ (git) |
 | Version servie aux joueurs | **1.2.1** (exe + `.sig` déposés dans Supabase) | OBSERVÉ (Sofiene, 31/10) ; `INSTALLER_VERSION` non revérifié |
 | Code app sur la branche de prod | encore **1.1.14** (`app/package.json`) : la prod ne reçoit que site + serveur, l'app part de `staging` | CONFIRMÉ |
 | Serveur de prod | mises à jour auto (RAG-24) + collecte des tests réseau (RAG-50), PR #63 fusionnée le 29/10 | CONFIRMÉ (git) ; déploiement Railway À VÉRIFIER |
@@ -29,14 +29,18 @@ La [[Version 1.2.1]] (refonte en verre, barre en jeu, Packet Optimizer, biblioth
 | [[Bot communauté Discord]] | sur `staging` seulement ; à tester puis passer en prod (fil « Passer le bot Discord en prod », RAG-91) | DÉCIDÉ (Sofiene, 01/11) |
 | Version 1.3.0 | **PR #70 fusionnée dans `staging` le 04/11 au soir** (pas en prod) : contient la 1.2.2 (preset Minecraft PvP corrigé, applis préinstallées gratuites, commit `29123d4`), la fusion de la branche de prod dans staging, 73 réglages gratuits dont 30 actifs à la fois, connexion à l'app avec Google ou Discord, essai de 3 jours avec carte, [[Analyse du PC]] avec avant/après, fenêtre Premium avec les prix et résiliation dans l'app ([[Abonnement dans l'app]]), site et pages légales à jour. Rien testé sur Windows. Sofiene, 10/11 (q47) : pas de 1.2.2 seule, tout sort en une fois avec Rago Route. **PR #76 (10/11, ouverte vers `staging`)** code les décisions du 10/11 : Rago Route dans tous les exe, [[Packet Optimizer]] entièrement Premium, essai sur le mensuel, plus de remboursement, normes de l'[[Analyse du PC]] par joueur, signature « KALISO and RAGO ». Plan gratuit confirmé par Sofiene le 10/11 : 73 réglages dont 30 actifs (q68, « ah nan oui c'est bien ça 73 réglages gratuits dont 30 actifs pardon »). **#76 fusionnée dans `staging` le 10/11** (« tu peux tout push ») ; prochaine étape : tester l'exe de test sur Windows | CONFIRMÉ (git) |
 | [[Conformité juridique]] | pages légales à jour pour l'essai et la connexion (04/11) ; **manquent l'identité et l'adresse du vendeur** : Sofiene n'est pas encore inscrit comme vendeur et a 17 ans (q44, q46, q49) | À RÉGLER par Sofiene |
-| [[Tableau de bord admin]] | `/admin` complet (joueurs, accès, bannissement, ventes Stripe, services, journal) : **dans `staging` depuis le 10/11** (PR #77) ; en prod, `/admin` reste l'ancienne page. Interface refaite à la demande de Sofiene (bugs, rapidité, menu, graphiques, export CSV) : **PR #82 dans `staging` depuis le 10/11**, pas en prod | CONFIRMÉ (git) |
+| [[Tableau de bord admin]] | `/admin` complet (joueurs, accès, bannissement, ventes Stripe, services, journal) : **dans `staging` depuis le 10/11** (PR #77) ; en prod, `/admin` reste l'ancienne page. Interface refaite à la demande de Sofiene (bugs, rapidité, menu, graphiques, export CSV) : **PR #82 dans `staging` depuis le 10/11**, puis la #83 (mise en page sans trous, Stripe seulement dans Services) ; la #84 (ventes dans une seule devise) est ouverte ; pas en prod | CONFIRMÉ (git) |
+| [[Cerveau du vault]] | `/admin/cerveau` : le vault en graphe animé façon Obsidian, lecteur de notes et de n'importe quel fichier du dépôt, derrière la clé admin (Abel s'en sert avec la même clé, choix de Sofiene du 10/11). Code fini et testé le 10/11, **PR #85 vers `staging` pas encore fusionnée** ; `CERVEAU_GITHUB_TOKEN` à mettre dans Railway avant que le dépôt passe en privé | EN COURS (10/11) |
 | [[Linear]] | remis à jour le 01/11 à partir du vault | CONFIRMÉ |
-| Vault Obsidian | créé le 31/10 ; règle n°1 : il doit correspondre en tout point à l'état du projet | DÉCIDÉ |
+| Vault Obsidian | créé le 31/10 ; règle n°1 : il doit correspondre en tout point à l'état du projet. **Détaillé le 10/11** (demande de Sofiene) : 341 notes, dont une fiche par fichier de code (230 notes dans `Code/`, 7 cartes), l'histoire du projet (`Historique/`, 11 notes) et l'étude de marché ; 24 nouvelles questions (q70 à q93) | DÉCIDÉ |
 
 ## PR (10/11)
+- #85 ([[Cerveau du vault]] et vault détaillé), vers `staging` (10/11) : **ouverte**, attend « fusionne » de Sofiene.
+- #84 ([[Tableau de bord admin]] : ventes dans une seule devise, les dollars convertis par Stripe comptés en euros) : **ouverte** vers `staging` depuis le 10/11.
 - Fusionnée le 10/11 dans `staging` : #83 ([[Tableau de bord admin]] sans trous de mise en page, contrôles Stripe seulement dans Services), sur « fusionne » de Sofiene. Pas en prod.
 - Fusionnée le 10/11 dans `staging` : #82 (refonte de l'interface du [[Tableau de bord admin]], bugs corrigés, pages plus rapides), sur « fusionne et push sur staging » de Sofiene. Pas en prod.
 - Fusionnée le 10/11 dans la branche de prod : #81 (seulement les déclencheurs CI de la #78), sur « il faut en prod » de Sofiene.
+- Fusionnée le 10/11 dans `staging` : #80 (vault seulement : la #79 notée dans cette page).
 - Fusionnée le 10/11 dans `staging` : #79 (vault seulement : archive [[Historique des problèmes]], bug d'`availability()` dans [[Bugs et incidents]]), sur demande de Sofiene (« fusionner push et tout »).
 - Fusionnée le 10/11 dans `staging` : #77 ([[Tableau de bord admin]] : joueurs, accès, bannissement, ventes Stripe, services, journal), sur « fusionne » de Sofiene. Pas en prod.
 - Fusionnée le 10/11 dans `staging` : #78 (moins de builds en double dans la CI, vault des minutes GitHub Actions, [[CI GitHub Actions]]), sur « fusionne » de Sofiene.
@@ -52,7 +56,7 @@ La [[Version 1.2.1]] (refonte en verre, barre en jeu, Packet Optimizer, biblioth
 - Fermées le 01/11 avec l'accord de Sofiene (branches gardées) : #16 (1.1.10), #50 et #51 (1.1.13), dont les fonctions sont dans la 1.2.1, et #60 (Rago OS, abandonné).
 
 ## Ce qui attend Sofiene
-1. **URGENT, avant le 05/12** : Supabase menace de supprimer le projet de prod (offre gratuite). Il contient la clé de signature des licences, sauvegardée nulle part ([[Supabase]], [[Clés et secrets]]). D'abord `npm run admin -- export-keys` et un gestionnaire de mots de passe, puis décider : passer en Pro (25 $/mois) ou autre solution.
+1. **URGENT, avant le 05/12** : l'organisation Supabase (offre gratuite) a dépassé son quota de bande passante (e-mail du 04/11) ; restrictions possibles à partir du 05/12, pas de suppression annoncée. La base contient la clé de signature des licences, sauvegardée nulle part ([[Supabase]], [[Clés et secrets]]). D'abord un gestionnaire de mots de passe et la sauvegarde des clés (guide envoyé le 10/11 dans le fil « Sauvegarder les clés »), puis Sofiene passe en Pro (25 $/mois) ou migre vers un autre service, et le dit avant le 05/12 (10/11).
 2. **Clés** : aucune n'est sauvegardée (Railway, Stripe, GitHub, clé de mise à jour Tauri) ; Stripe va bientôt masquer ses clés secrètes.
 3. Prendre une domiciliation pour l'adresse des mentions légales, quand le budget le permet (q46). Tester la 1.3.0 (exe de test de `staging`) sur Windows avant la sortie.
 4. Vérifier que les 1.2.0 installées reçoivent bien la 1.2.1 (`/api/v1/update/status`, voir [[Mise à jour automatique]]).
@@ -61,3 +65,5 @@ La [[Version 1.2.1]] (refonte en verre, barre en jeu, Packet Optimizer, biblioth
 7. Rago Route : faire voir la 4G du téléphone à Windows (en cours, 10/11). [[Rago OS]] : confirmer le test de l'exe test5 (« je crois avoir testé hier »).
 8. GitHub : passer `network-server-rago` en public (libère les minutes) ; en novembre, `rago` doit être public pendant les builds ; `rago` en privé pour de bon le 1er décembre ([[CI GitHub Actions]]).
 9. Essayer le [[Tableau de bord admin]] avec sa nouvelle interface (PR #82, dans `staging` depuis le 10/11) sur `rago-staging.up.railway.app/admin` ; la prod suivra par une PR « (prod) ».
+10. [[Cerveau du vault]] : relire la PR et dire « fusionne » ; puis créer le jeton GitHub en lecture seule et le mettre dans Railway (`CERVEAU_GITHUB_TOKEN`) avant le passage du dépôt en privé.
+11. Répondre aux questions q70 à q93 sur la page « Questions du vault Rago » ([[Questions ouvertes]]).

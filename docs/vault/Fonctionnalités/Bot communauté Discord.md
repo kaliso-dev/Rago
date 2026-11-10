@@ -13,4 +13,14 @@ PR #40, **fusionnée dans `staging` le 15/10, absente de la prod** (vérifié da
 - Tests demandés à Sofiene le 12/10 (Server Members Intent, droits du rôle, variables sur Railway staging, essai avec un 2e compte) : aucun retour.
 - **Statut (Sofiene, 01/11)** : « Il faut le tester et le passer en prod ». Travail en cours dans le fil « Passer le bot Discord en prod » (Linear RAG-91). C'est Abel qui gère les bots, rôles et webhooks du Discord ([[Personnes et services]]).
 
+## Fonctionnement (code de `staging`, 10/11)
+- **Attribution** : le bot garde en mémoire le nombre d'utilisations de chaque invitation ; à chaque arrivée, celle dont le compteur a monté est la bonne (URL personnalisée → `vanity` ; deux à la fois ou aucune → `unknown`). Après un redémarrage, la première arrivée peut être `unknown`. Le bot doit avoir « Gérer le serveur » pour voir les invitations, et « Server Members Intent » doit être activé.
+- **VIP / MVP par le bot** (`DISCORD_INVITE_ROLES=1`) : paliers `DISCORD_VIP_INVITES` (10) et `DISCORD_MVP_INVITES` (15) ; passe 2 min après le démarrage puis toutes les heures ; rôle donné une fois par membre et par palier, annonce dans le salon, récompense Premium + code promo si le compte Rago est lié ([[discord.js]]). Couper d'abord la remise des rôles par l'autre bot d'invitations.
+- `/invites-adjust` (staff) ajoute de 0 à 1000 invitations comptées avant le bot ; `/partner-link` (staff) crée un lien partenaire suivi dans `/growth` et qui ne compte pour personne ; `/growth` (staff) donne arrivées, départs en moins de 24 h, restés 7 jours, comptes Rago liés et acheteurs par source, plus le nombre de membres portant le tag du serveur. Le même rapport : `npm run admin -- growth`.
+- Accueil seulement dans `DISCORD_WELCOME_CHANNEL_ID` (jamais en message privé).
+- Données : arrivées gardées 12 mois après le départ.
+
+## Code
+[[community.js]] (comptage, accueil, commandes, rôles), [[gateway.js]] (WebSocket), [[discord.js]] (client REST, récompenses), [[config.js]] (variables). Tables : [[Table discord_joins]], [[Table discord_invite_links]], [[Table discord_invite_bonus]], [[Table discord_invite_roles]]. Tests : `community.test.js` ([[Tests du serveur]]).
+
 Liens : [[Discord]].

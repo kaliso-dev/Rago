@@ -15,6 +15,7 @@ Carte des sujets marketing. Retour à [[Projet]].
 ## Sujets
 - [[Offres et prix]] · [[Promotions et affiliation]]
 - [[Discord]] · [[Partenaires et créateurs]]
-- Contenus : [[Vidéos YouTube]]
+- Contenus : [[Vidéos YouTube]] · [[Logo création d'Adam]]
+- Concurrence et conversion : [[Étude de marché de novembre 2026]] (7 études du 03/11)
 - Projet lié : [[Client Minecraft Rago]]
 - [[Site]] (tunnel d'achat)

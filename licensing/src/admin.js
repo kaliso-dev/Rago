@@ -17,6 +17,8 @@ import { discordSetupMissing, DiscordError } from './discord.js';
 import { createSales } from './sales.js';
 import { deleteAccount } from './support.js';
 import * as AV from './admin-views.js';
+import { BrainError, createBrain } from './brain.js';
+import { brainPage } from './brain-views.js';
 
 const DAY = 86400000;
 const EMAIL = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
@@ -683,5 +685,39 @@ export function mountAdmin(app, deps) {
     'Content-Disposition': `attachment; filename="rago-tests-reseau-${new Date().toISOString().slice(0, 10)}.csv"`,
   }));
 
-  return { sales, services };
+  // ---------- the brain: the vault as a graph, and a reader for every file (brain.js, 2026-11-10) ----------
+  const brain = createBrain(cfg, { fetchImpl, log });
+  app.get('/admin/cerveau', (c) => c.html(brainPage(cfg)));
+  app.get('/admin/cerveau/donnees.json', async (c) => {
+    // ?frais=1 (the page's refresh button) looks at GitHub now instead of within the minute.
+    const fresh = c.req.query('frais') === '1' && allow(`cerveau:${ip(c)}`, 60, 60 * 60 * 1000);
+    let s;
+    try { s = await brain.read({ fresh }); } catch (err) {
+      if (err instanceof BrainError) return c.json({ error: err.message }, 503);
+      throw err;
+    }
+    // Revalidated with its ETag instead of downloaded again: the build only changes with the vault.
+    c.header('Cache-Control', 'private, no-cache');
+    c.header('ETag', s.etag);
+    const stale = brain.error();
+    if (stale) c.header('X-Cerveau-Erreur', encodeURIComponent(stale));
+    if (c.req.header('if-none-match') === s.etag) return c.body(null, 304);
+    if (/\bgzip\b/.test(c.req.header('accept-encoding') || '')) {
+      c.header('Content-Encoding', 'gzip');
+      c.header('Vary', 'Accept-Encoding');
+      return c.body(s.gzip, 200, { 'Content-Type': 'application/json; charset=utf-8' });
+    }
+    return c.body(s.json, 200, { 'Content-Type': 'application/json; charset=utf-8' });
+  });
+  app.get('/admin/cerveau/fichier', async (c) => {
+    try {
+      const f = await brain.file(String(c.req.query('chemin') || ''));
+      return f ? c.json(f) : c.json({ error: 'Ce fichier n’est pas dans le dépôt.' }, 404);
+    } catch (err) {
+      if (err instanceof BrainError) return c.json({ error: err.message }, 503);
+      throw err;
+    }
+  });
+
+  return { sales, services, brain };
 }

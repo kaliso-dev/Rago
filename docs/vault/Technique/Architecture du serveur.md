@@ -15,7 +15,7 @@ Node ≥ 22.5 en modules ES, **sans framework de pages** : Hono 4 (routes) + `@h
 |---|---|
 | `server.js` | Démarrage : config, base, clés, Stripe, Discord, bot communauté, géolocalisation, tâches périodiques, `serve()` |
 | `config.js` | **Toutes les variables d'environnement**, leurs valeurs par défaut et les avertissements (`cfg.warnings`) ; refuse de démarrer en prod sans `DATABASE_URL`, `STRIPE_SECRET_KEY`, `STRIPE_WEBHOOK_SECRET`, `PUBLIC_URL` en https ; refuse une clé Stripe live sur staging |
-| `app.js` | `createApp()` : middlewares et **toutes les routes** (≈1 750 lignes) : pages de compte, achat, webhook, admin, API `/api/v1` |
+| `app.js` | `createApp()` : middlewares et **toutes les routes** (1 686 lignes) : pages de compte, achat, webhook, API `/api/v1` ; monte `/admin` (`mountAdmin` d'`admin.js`) |
 | `db.js` | Connexion `pg.Pool` (ou PGlite), rejoue `supabase/schema.sql` au démarrage (6 essais), `claimDatabase` (une base = un environnement), `ensureKeys` (génère la clé de signature et le secret de session s'ils manquent, dans `server_secrets`), `audit()` |
 | `licensing.js` | Comptes, sessions, codes d'inscription, identités Google/Discord, licences (création, réclamation, révocation, synchronisation d'abonnement, temps offert), activation sur un PC |
 | `billing.js` | Stripe : Checkout, essai, Lifetime, codes promo d'affiliés, portail, traitement des webhooks, vérifications de `/admin` |
@@ -32,6 +32,7 @@ Node ≥ 22.5 en modules ES, **sans framework de pages** : Hono 4 (routes) + `@h
 | `retention.js` | Purges promises par la politique de confidentialité |
 | `views.js` | Toutes les pages HTML (compte, achat, connexion admin, messages) |
 | `admin.js` + `admin-views.js` | [[Tableau de bord admin]] (`/admin/*`) : garde `ADMIN_KEY`, données, actions, pages (`staging` depuis le 10/11) ; son style et son script sont à part : `public/admin.css`, `public/admin.js` (PR #82) |
+| `brain.js` + `brain-views.js` | [[Cerveau du vault]] (`/admin/cerveau`) : lit le dépôt sur GitHub (ou le disque en local), met le vault en graphe, sert les fichiers ; page dessinée par `public/cerveau.js` et `public/cerveau.css` (PR #85 du Cerveau, pas encore fusionnée) |
 | `sales.js` | Ventes lues dans Stripe pour `/admin` (gardées 5 min puis relues en arrière-plan, jours et mois en heure de Paris) |
 | `support.js` | Suppression RGPD partagée par `/admin` et `npm run admin -- delete-user` |
 
@@ -51,9 +52,9 @@ Autres dossiers : `scripts/admin.js` (`npm run admin -- <commande>`, support), `
 - **Contrôle d'origine** des POST de formulaires (pas l'API ni le webhook) : refus 403 si `Origin` n'est pas le serveur.
 - **Limite de taille** : 64 Ko par requête, 1 Mo pour le webhook, 5 Mo + 64 Ko pour une photo.
 - Verrou d'avant lancement sur `/signup`, `/buy`, `/download`, `/affiliate` jusqu'à `LAUNCH_AT` (passé depuis le 10/10, donc inactif), contourné par le cookie `rago_preview` (`/acces/<PREVIEW_KEY>`).
-- **Limites de débit en mémoire** (`rateLimiter`, une `Map` par processus, remise à zéro au redémarrage) : connexion 10 par email et IP et 50 par IP en 15 min, blocage après 20 échecs sur un email sauf pour une IP déjà connue ; refresh 30/h par licence ; jeton Rago Route 60/h ; mises à jour 120/h par IP ; tests réseau 30/h par IP…
-- IP lue dans `X-Forwarded-For` seulement si `TRUST_PROXY=1` (Railway).
-- Cookies : `rg_session` (session web, 30 jours, `httpOnly`, `SameSite=Lax`, `Secure` en prod), `rg_claim` (achat à rattacher, 2 jours, signé avec `SESSION_SECRET`), `rg_ref` (code d'affilié, 30 jours), `rg_signup` (inscription en attente du code), `rago_preview`.
+- **Limites de débit en mémoire** (`rateLimiter`, une `Map` par processus, remise à zéro au redémarrage) : connexion 10 par email et IP et 50 par IP en 15 min, blocage après 20 échecs sur un email sauf pour une IP déjà connue ; inscription 10/h par IP et 5 e-mails de code/h par adresse ; code d'inscription 30 essais / 15 min ; mot de passe oublié 5/h par IP et 3/h par e-mail ; retour Google/Discord 30/h ; changement de mot de passe 10 / 15 min ; photo et avis 20/h ; Discord 10/h ; téléchargement 30/h ; connexion de l'app par le navigateur 30/h ; refresh 30/h par licence ; jeton Rago Route 60/h ; API compte 300/h ; mises à jour 120/h par IP (fichier 20/h) ; tests réseau 30/h par IP ; admin 10 essais/h. Tableau complet : [[app.js]].
+- Adresse du visiteur : avec `TRUST_PROXY=1` (Railway), `X-Real-IP`, sinon le **dernier** saut de `X-Forwarded-For` (les précédents sont écrits par le client) ; sans, l'adresse de la connexion.
+- Cookies : `rg_session` (session web, 30 jours, `httpOnly`, `SameSite=Lax`, `Secure` en prod), `rg_claim` (achat à rattacher, 2 jours, signé avec `SESSION_SECRET`), `rg_ref` (code d'affilié, 30 jours), `rg_signup` (inscription en attente du code, 24 h, chemin `/signup`), `rg_oauth` (connexion Google/Discord en cours : fournisseur, `state`, vérificateur PKCE, page de retour ; 10 min, chemin `/auth`), `rg_discord` (liaison du Discord en cours, 10 min, chemin `/account/discord`), `rago_preview` (30 jours), `rago_admin` (admin, 7 jours, chemin `/admin`, `SameSite=Strict`).
 - Erreurs : sous `/api/` toujours au format `{ "error": { "code", "message" } }` (contrat de l'app) ; ailleurs une page HTML.
 
 ## 5. Tâches périodiques
@@ -63,7 +64,9 @@ Autres dossiers : `scripts/admin.js` (`npm run admin -- <commande>`, support), `
 | Toutes les 5 min (avec les 5 variables Discord) | Rôle Pro remis en accord avec Premium pour les comptes qui ont changé |
 | 1 min après le démarrage puis toutes les 24 h | Rôle Pro redonné à tous les comptes Premium liés (joueurs revenus sur le serveur) |
 | Après chaque webhook Stripe | Synchronisation Discord |
-| En continu (`DISCORD_COMMUNITY=1`) | Gateway Discord : arrivées, départs, invitations, commandes ; rôles VIP/MVP toutes les heures si `DISCORD_INVITE_ROLES=1` |
+| En continu (`DISCORD_COMMUNITY=1`) | Gateway Discord : arrivées, départs, invitations, commandes ; rôles VIP/MVP 2 min après le démarrage puis toutes les heures si `DISCORD_INVITE_ROLES=1` |
+| 5 s après le démarrage (avec `ADMIN_KEY` et `DATABASE_URL`) | Préchargement des ventes Stripe et des contrôles de services de `/admin` |
+| Au premier rapport réseau d'un nouveau mois | Rechargement des bases DB-IP (pas de minuteur) |
 
 Ces tâches tournent **dans le processus web** : un seul réplica Railway doit tourner, sinon elles seraient faites deux fois et les limites de débit seraient partagées en deux.
 
@@ -85,3 +88,7 @@ Autres secrets d'accès : session web (hash en base, `web_sessions`), jeton de c
 
 ## 8. Tests
 `npm test` = `node --test --test-concurrency=1 test/*.test.js` : parcours complets avec Stripe simulé, sur PGlite, puis en CI aussi sur un vrai Postgres 16 (`TEST_DATABASE_URL`). La CI construit aussi l'image Docker et vérifie que `sharp` y produit un WebP. Voir [[CI GitHub Actions]] et [[Développer et tester]].
+
+## Code
+
+Une note par fichier, le graphe des imports, le trajet complet d'une requête et la liste des tables : [[Code du serveur]]. Routes et middlewares : [[app.js]] ; démarrage : [[server.js]] ; base : [[db.js]] et [[schema.sql]] ; variables : [[config.js]] ; tests : [[Tests du serveur]].

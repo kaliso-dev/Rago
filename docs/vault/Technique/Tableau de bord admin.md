@@ -9,7 +9,7 @@ L'outil où Sofiene voit tout le projet et gère les joueurs sans passer par les
 Le même jour, Sofiene a trouvé l'interface « baclé remplis de bug pas optmisé » et demandé « la meilleur interface possible comme si ça devait etre commercialisé » : refonte complète dans la **PR #82, fusionnée dans `staging` le 10/11 sur « fusionne et push sur staging » de Sofiene**, puis retouchée par la **PR #83** (pas de trous, Stripe seulement dans Services, fusionnée le 10/11 sur « fusionne »), pas encore en prod (voir « Interface » plus bas).
 
 ## Accès
-- `https://account.rago-optimizer.com/admin` (staging : `rago-staging.up.railway.app/admin`), avec la clé `ADMIN_KEY` (variable Railway, 16 caractères au moins ; sans elle, `/admin` n'existe pas). Cookie de 7 jours limité à `/admin`. Pages en français.
+- `https://account.rago-optimizer.com/admin` (staging : `rago-staging.up.railway.app/admin`), avec la clé `ADMIN_KEY` (variable Railway, 16 caractères au moins ; sans elle, `/admin` n'existe pas). Cookie de 7 jours limité à `/admin`. Pages en français. **Abel utilise la même clé** (choix de Sofiene du 10/11 pour qu'il ouvre le [[Cerveau du vault]] : « La clé admin complète », donc tout l'admin).
 - Chaque action est un formulaire de même origine et est notée dans le journal (`audit`, types `admin.*`). Aucun secret n'arrive dans la page ; les liens (mot de passe, création de compte) sont affichés une seule fois.
 
 ## Pages
@@ -23,7 +23,8 @@ Le même jour, Sofiene a trouvé l'interface « baclé remplis de bug pas optmis
 | Services | `/admin/services` | serveur Railway (environnement, commit, depuis quand, mémoire, avertissements du démarrage), base Supabase (temps de réponse, taille), stockage et [[Mise à jour automatique]], site Netlify, ancienne adresse `rago-production.up.railway.app` (en prod), Stripe, e-mails Resend, rôle Pro Discord, [[Bot communauté Discord]], villes DB-IP. Résultat gardé 1 minute. Dessous : le détail des contrôles Stripe (avec le bouton qui arrête les licences de test), du rôle Pro Discord et du bot communauté. **Stripe n'est que là** depuis le 10/11 (Sofiene : « pas besoin de les avoir aussi dans sites et promo ») |
 | Tests réseau | `/admin/reseau` | la page des [[Test réseau|tests réseau]] ([[Proxy]]) |
 | Site et promos | `/admin/site` | pop-up de réduction (formulaire à gauche, état et aperçu à droite), création de codes promo Stripe, avis du site ([[Promotions et affiliation]]) |
-| Journal | `/admin/journal` | tous les événements, filtrables (actions admin, licences, comptes, PC, abonnements, affiliation) |
+| Journal | `/admin/journal` | tous les événements, filtrables (actions admin, licences, comptes, PC, abonnements, affiliation), 100 par page ; le filtre « affiliation » ne montre pas `referral.created`, et les types `discord.*`, `affiliate.*`, `trial.*`, `review.*`, `profile.photo`, `update_download`, `license.duplicate`, `license.subscription_stopped`, `user.email_verified` s'affichent sans libellé |
+| Cerveau | `/admin/cerveau` | le vault du projet en graphe animé, avec un lecteur pour chaque note et chaque fichier du dépôt ; section « Projet » du menu ; PR #85 du Cerveau, pas encore fusionnée. Détail : [[Cerveau du vault]] |
 
 ## Interface (refonte, PR #82)
 - Menu fixe à gauche groupé en Pilotage, Joueurs, Produit, Système, avec le nombre de joueurs, une pastille rouge pour les achats non rattachés et un point vert, orange ou rouge pour l'état des services ; sur téléphone, un tiroir qui s'ouvre sans JavaScript. Mode Stripe (live, test, absent) et environnement visibles dans le menu.
@@ -42,7 +43,11 @@ Offrir des jours ou des mois (un abonné Stripe voit ses prochains paiements dé
 Un compte banni (`users.banned_at`, `banned_reason`) ne se connecte plus nulle part (site, Google, Discord, app, compte de l'app), ses sessions sont fermées, sa licence est révoquée (raison `banned`), son abonnement Stripe est arrêté et le rôle Pro retiré. L'app reçoit l'erreur `account_banned` et affiche le message du serveur : **jamais testé sur Windows**. Lever le bannissement rend la licence si elle est encore valable (à vie, temps offert pas fini, abonnement encore actif dans Stripe).
 
 ## Ce qui reste dans le terminal
-`npm run admin -- export-keys` (clés à sauvegarder, jamais affichées dans une page) et les commandes de test (`create-user`). Toutes les autres commandes ont leur bouton ; elles marchent toujours.
+`npm run admin -- export-keys` (clés à sauvegarder, jamais affichées dans une page), les commandes de test (`create-user`), `growth` (le même rapport que `/growth` sur Discord) et `discord` sans e-mail (resynchronise tous les comptes ; le serveur le fait seul toutes les 5 min). Toutes les autres commandes ont leur bouton ; elles marchent toujours ([[admin.js (script serveur)]]).
 
 ## Pas encore surveillé
 Serveurs Rago Route (Vultr) et facturation de Railway, Supabase et Netlify.
+
+## Code
+
+[[admin.js (serveur)]] (routes, garde `ADMIN_KEY`, données, actions, contrôles des services), [[admin-views.js]] (pages), [[admin.js (page admin)]] (script du navigateur), `admin.css` ([[Styles du serveur (CSS)]]), [[sales.js]] (ventes), [[support.js]] (suppression). Carte : [[Code du serveur]].
