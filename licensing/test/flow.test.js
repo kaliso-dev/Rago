@@ -1286,7 +1286,7 @@ test('going live: /admin checks prices, webhook and portal in the live mode, tes
 
   await t.browse('/admin/login', { form: { key: KEY } });
   let page = await (await t.browse('/admin/site')).text();
-  assert.match(page, /Admin · Stripe live/);
+  assert.match(page, /pill ok"><i><\/i>Stripe live/);
   assert.match(page, /Clé live : les paiements sont réels/);
   assert.match(page, /Paiements activés\. Libellé sur le relevé bancaire : RAGO OPTIMIZER/);
   assert.match(page, /price_month n’existe pas en mode live : c’est un prix du mode test\. Mets dans STRIPE_PRICE_MONTHLY le price_ créé en mode live/);
@@ -1296,7 +1296,7 @@ test('going live: /admin checks prices, webhook and portal in the live mode, tes
   assert.match(page, /STRIPE_PORTAL_LOGIN_URL est le lien du mode test/);
   assert.match(page, /Aucun événement live reçu pour l’instant/);
   assert.match(page, /1 licence active vient<\/strong>|1 licence active vient d’un achat fait en mode test/);
-  assert.match(page, /badge-red"><i><\/i>\d+ à corriger/);
+  assert.match(page, /pill err"><i><\/i>\d+ à corriger/);
 
   // Fixed in Stripe: the page says so.
   hook.enabled_events = ['*'];
@@ -3272,8 +3272,8 @@ test('/admin dashboard: players, Premium time, revoke, ban, gifts, sales, journa
   t.balance.push({ id: 'txn_1', type: 'charge', currency: 'eur', fee: 60, net: 450, created: Math.floor(Date.now() / 1000) });
   let page = await (await t.browse('/admin?frais=1')).text();
   assert.match(page, /Tout Rago au même endroit/);
-  assert.match(page, /Aujourd’hui<\/dt><dd class="mono">5,99\s\$US/);
-  assert.match(page, /Depuis le début<\/dt><dd class="mono">5,99\s\$US/); // the refunded one counts for nothing
+  assert.match(page, /Encaissé aujourd’hui<\/p><p class="v">5,99\s\$US/);
+  assert.match(page, /Depuis le début : 5,99\s\$US/); // the refunded one counts for nothing
   assert.match(page, /4,50\s€ reçus après frais/);
   page = await (await t.browse('/admin/utilisateurs?filtre=premium')).text();
   assert.match(page, /buyer@example\.com/);
