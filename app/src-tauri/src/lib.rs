@@ -417,10 +417,10 @@ async fn route_stop() -> Result<(), String> {
     tauri::async_runtime::spawn_blocking(route::turn_off).await.map_err(|e| e.to_string())
 }
 
-/// 2e connexions possibles (téléphone en USB ou en Wi-Fi, 2e box…), pour proposer un trajet de plus dans l'onglet.
+/// 2e connexions possibles (téléphone en USB ou en Wi-Fi, 2e box…) et, sans téléphone, quoi faire, pour l'onglet.
 #[tauri::command]
-async fn route_links() -> Vec<route::Link> {
-    tauri::async_runtime::spawn_blocking(route::links).await.unwrap_or_default()
+async fn route_links() -> Option<route::LinksView> {
+    tauri::async_runtime::spawn_blocking(route::links).await.ok()
 }
 
 /// État en direct (recopié deux fois par seconde par le moteur).

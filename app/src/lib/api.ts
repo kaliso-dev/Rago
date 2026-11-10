@@ -123,6 +123,14 @@ export interface RouteLink {
   phone: boolean;
 }
 
+/** Ce qui manque pour la 4G du téléphone (route.rs `phone_help_of`) ; null quand un téléphone partage déjà. */
+export type RouteHelp = "iphone_share" | "iphone_driver" | "iphone_setup" | "android_share" | "plug";
+
+export interface RouteLinks {
+  links: RouteLink[];
+  help: RouteHelp | null;
+}
+
 export interface RoutePath {
   kind: "direct" | "relay" | "phone" | "second";
   /** ville du serveur par lequel passe le trajet (Paris pour le direct) */
@@ -461,8 +469,8 @@ export interface Api {
   onNetSample(cb: (s: NetSample) => void): Promise<UnlistenFn>;
   /** Rago Route (route.rs) : allume le tunnel vers la sortie de Paris ; erreur « port:25565 » si le port est pris. */
   routeStart(second?: string | null): Promise<RouteStatus>;
-  /** 2e connexions possibles (téléphone en USB ou en Wi-Fi, 2e box…) ; vide s'il n'y a qu'une connexion */
-  routeLinks(): Promise<RouteLink[]>;
+  /** 2e connexions possibles (téléphone en USB ou en Wi-Fi, 2e box…) et, sans téléphone, ce qui manque ; null hors Windows */
+  routeLinks(): Promise<RouteLinks | null>;
   routeStop(): Promise<void>;
   routeStatus(): Promise<RouteStatus>;
   /** Jeton Rago Route (6 h) pour le script du Mac ; erreurs « premium:no_license », « premium:route_closed »… */
@@ -656,8 +664,11 @@ const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
 
 // démo de Rago Route : allumé depuis `on`, une partie en cours après 3 s, valeurs proches des tests sur le Mac
 const mockRoute = { on: 0, phone: false };
-// ?nolink : aucune 2e connexion (démo de l'astuce)
-const mockLinks = (): RouteLink[] => (new URLSearchParams(location.search).has("nolink") ? [] : [{ name: "Wi-Fi 3", phone: true }]);
+// ?help=iphone_setup (etc.) : aucun téléphone ne partage encore, l'onglet dit quoi faire
+function mockLinks(): RouteLinks {
+  const help = new URLSearchParams(location.search).get("help") as RouteHelp | null;
+  return help ? { links: [], help } : { links: [{ name: "Ethernet 2", phone: true }], help: null };
+}
 function mockRouteStatus(): RouteStatus {
   const idle: RouteStatus = { running: false, error: null, playing: false, paths: [], saved: 0, repaired: 0, packets: 0, resendsHere: 0, resendsExit: 0, exitPingMs: null, lagHereMs: 0, lagExitMs: 0, ports: [] };
   if (!mockRoute.on) return idle;

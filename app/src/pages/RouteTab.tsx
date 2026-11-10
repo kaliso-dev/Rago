@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { motion } from "motion/react";
 import { Check, Copy, LoaderCircle, Lock, Power, Route } from "lucide-react";
-import { api, type RouteLink, type RoutePath, type RouteStatus } from "../lib/api";
+import { api, type RouteLinks, type RoutePath, type RouteStatus } from "../lib/api";
 import type { Key } from "../lib/i18n";
 import { useStore } from "../lib/store";
 import { Button, Switch } from "../components/ui";
@@ -35,16 +35,18 @@ export function RouteTab() {
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [copied, setCopied] = useState(false);
-  // 2e connexion (téléphone en USB ou en Wi-Fi, 2e box…) : proposée seulement quand Windows la voit ;
-  // le choix (nom de la carte) est retenu sur ce PC
-  const [links, setLinks] = useState<RouteLink[]>([]);
-  const [chosen, setChosen] = useState<string | null>(() => {
+  // 2e connexion (téléphone en USB ou en Wi-Fi, 2e box…) : proposée seulement quand Windows la voit. Un téléphone
+  // est pris tout seul tant que le joueur n'a rien choisi ; son choix (nom de la carte, "" = aucune) est retenu sur ce PC
+  const [found, setFound] = useState<RouteLinks | null>(null);
+  const [stored, setStored] = useState<string | null>(() => {
     try {
-      return localStorage.getItem("rago.route.link") || null;
+      return localStorage.getItem("rago.route.link");
     } catch {
       return null;
     }
   });
+  const links = found?.links ?? [];
+  const chosen = stored === null ? (links.find((l) => l.phone)?.name ?? null) : stored || null;
 
   useEffect(() => {
     let alive = true;
@@ -66,7 +68,7 @@ export function RouteTab() {
     const look = () =>
       api
         .routeLinks()
-        .then((l) => alive && setLinks(l))
+        .then((l) => alive && setFound(l))
         .catch(() => {});
     look();
     const id = setInterval(look, 3000);
@@ -77,7 +79,7 @@ export function RouteTab() {
   }, []);
 
   function chooseLink(name: string | null) {
-    setChosen(name);
+    setStored(name ?? "");
     try {
       localStorage.setItem("rago.route.link", name ?? "");
     } catch {
@@ -167,7 +169,16 @@ export function RouteTab() {
               </div>
             );
           })}
-        {!locked && !running && links.length === 0 && <p className="muted small rt-note">{t("route.link.hint")}</p>}
+        {!locked && !running && found?.help && (
+          <div className="rt-help small">
+            <p>{t(`route.help.${found.help}`)}</p>
+            {(found.help === "iphone_driver" || found.help === "iphone_setup") && (
+              <button type="button" className="rt-help-link" onClick={() => api.openUrl(ITUNES).catch(() => {})}>
+                {t("route.help.itunes")}
+              </button>
+            )}
+          </div>
+        )}
         {shown && (
           <p className="rt-error small">{shown === "token" ? t("route.err.token") : t(errorKey(shown), { e: shown.replace(/^\w+:/, "") })}</p>
         )}
@@ -218,6 +229,9 @@ export function RouteTab() {
     </motion.div>
   );
 }
+
+/** Installeur d'iTunes sur le site d'Apple : il apporte le pilote « Apple Mobile Device Ethernet » du partage USB. */
+const ITUNES = "https://www.apple.com/itunes/download/win64";
 
 function PathRow({ p, t }: { p: RoutePath; t: (k: Key, v?: Record<string, string | number>) => string }) {
   const name =

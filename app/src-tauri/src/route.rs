@@ -907,9 +907,89 @@ pub fn nics() -> Vec<Nic> {
     }
 }
 
-/// Les 2e connexions possibles de ce PC, pour l'onglet.
-pub fn links() -> Vec<Link> {
-    links_of(&nics())
+/// Carte réseau, même débranchée (pour savoir si le pilote de partage de connexion est là).
+#[derive(Clone, Debug)]
+pub struct Adapter {
+    pub description: String,
+}
+
+/// Appareil USB branché, vu par le gestionnaire de périphériques.
+#[derive(Clone, Debug, Default)]
+pub struct UsbDev {
+    /// par exemple `USB\VID_05AC&PID_12A8\…` ou `USB\VID_05AC&PID_12A8&MI_02\…`
+    pub id: String,
+    pub class: String,
+    pub service: String,
+    /// pilote absent ou en erreur
+    pub problem: bool,
+}
+
+/// Fabricants de téléphones Android (identifiant USB) : Samsung, Google, Xiaomi, OnePlus, Huawei, Motorola,
+/// Oppo/Realme, Sony, LG, HTC, Vivo, Asus, ZTE, Lenovo, Nothing, Honor.
+const ANDROID_VIDS: [u16; 16] = [0x04E8, 0x18D1, 0x2717, 0x2A70, 0x12D1, 0x22B8, 0x22D9, 0x0FCE, 0x1004, 0x0BB4, 0x2D95, 0x0B05, 0x19D2, 0x17EF, 0x2B0E, 0x339B];
+
+fn vid_pid(id: &str) -> Option<(u16, u16)> {
+    let u = id.to_uppercase();
+    let hex = |key: &str| u.find(key).and_then(|i| u.get(i + 4..i + 8)).and_then(|h| u16::from_str_radix(h, 16).ok());
+    Some((hex("VID_")?, hex("PID_")?))
+}
+
+/// Ce que l'onglet dit quand aucun téléphone ne partage encore sa 4G (codes traduits dans l'app) :
+/// - "iphone_share" : iPhone branché, pilote Apple présent, partage de connexion pas activé ;
+/// - "iphone_driver" : iPhone branché, une partie a un pilote manquant ou en erreur (pilote Apple à installer) ;
+/// - "iphone_setup" : iPhone branché sans carte réseau Apple (partage pas activé, ou pilote Apple manquant) ;
+/// - "android_share" : Android branché, « Partage via USB » pas activé ;
+/// - "plug" : aucun téléphone vu (pas branché, ou câble qui ne fait que charger).
+/// None : un téléphone partage déjà sa connexion (l'interrupteur s'affiche).
+pub fn phone_help_of(usb: &[UsbDev], adapters: &[Adapter], links: &[Link]) -> Option<&'static str> {
+    if links.iter().any(|l| l.phone) {
+        return None;
+    }
+    let ids: Vec<(u16, u16)> = usb.iter().filter_map(|d| vid_pid(&d.id)).collect();
+    if ids.iter().any(|&(v, p)| v == 0x05AC && (0x1290..=0x12AF).contains(&p)) {
+        let apple_net = adapters.iter().any(|a| a.description.to_lowercase().contains("apple mobile device ethernet"));
+        let broken = usb.iter().any(|d| d.problem && vid_pid(&d.id).is_some_and(|(v, _)| v == 0x05AC));
+        return Some(if apple_net {
+            "iphone_share"
+        } else if broken {
+            "iphone_driver"
+        } else {
+            "iphone_setup"
+        });
+    }
+    // un disque ou une clé du même fabricant (Samsung fait aussi des SSD) n'est pas un téléphone
+    let storage = |v: u16, p: u16| {
+        usb.iter().any(|d| {
+            vid_pid(&d.id) == Some((v, p)) && {
+                let (c, s) = (d.class.to_lowercase(), d.service.to_lowercase());
+                c == "diskdrive" || c == "scsiadapter" || s == "usbstor" || s == "uaspstor"
+            }
+        })
+    };
+    if ids.iter().any(|&(v, p)| ANDROID_VIDS.contains(&v) && !storage(v, p)) {
+        return Some("android_share");
+    }
+    Some("plug")
+}
+
+/// Les 2e connexions possibles de ce PC et, s'il n'y a pas encore de téléphone, quoi faire (pour l'onglet).
+#[derive(Clone, Debug, Serialize)]
+pub struct LinksView {
+    pub links: Vec<Link>,
+    pub help: Option<&'static str>,
+}
+
+pub fn links() -> LinksView {
+    #[cfg(windows)]
+    let (nics, adapters, usb) = {
+        let (n, a) = win::scan();
+        (n, a, win::usb_devices())
+    };
+    #[cfg(not(windows))]
+    let (nics, adapters, usb): (Vec<Nic>, Vec<Adapter>, Vec<UsbDev>) = (Vec::new(), Vec::new(), Vec::new());
+    let links = links_of(&nics);
+    let help = phone_help_of(&usb, &adapters, &links);
+    LinksView { links, help }
 }
 
 impl Engine {
@@ -1701,7 +1781,7 @@ pub fn current() -> Status {
 
 #[cfg(windows)]
 mod win {
-    use super::Nic;
+    use super::{Adapter, Nic, UsbDev};
     use std::net::{Ipv4Addr, UdpSocket};
     use std::os::windows::io::AsRawSocket;
     use windows_sys::Win32::Networking::WinSock::{setsockopt, IPPROTO_IP, IP_UNICAST_IF, SOL_SOCKET, SO_RCVBUF, SO_SNDBUF};
@@ -1729,6 +1809,11 @@ mod win {
     }
 
     pub fn nics() -> Vec<Nic> {
+        scan().0
+    }
+
+    /// Cartes actives avec IPv4, et toutes les cartes (même débranchées : partage de connexion pas encore activé).
+    pub fn scan() -> (Vec<Nic>, Vec<Adapter>) {
         use windows_sys::Win32::NetworkManagement::IpHelper::{
             GetAdaptersAddresses, GAA_FLAG_INCLUDE_GATEWAYS, GAA_FLAG_SKIP_ANYCAST, GAA_FLAG_SKIP_DNS_SERVER, GAA_FLAG_SKIP_MULTICAST,
             IF_TYPE_SOFTWARE_LOOPBACK, IP_ADAPTER_ADDRESSES_LH,
@@ -1750,14 +1835,16 @@ mod win {
                 break; // 111 : tampon trop petit, size donne la bonne taille
             }
         }
-        let mut out = Vec::new();
+        let (mut out, mut all) = (Vec::new(), Vec::new());
         if !ok {
-            return out;
+            return (out, all);
         }
         let mut p = buf.as_ptr() as *const IP_ADAPTER_ADDRESSES_LH;
         while !p.is_null() {
             let a = unsafe { &*p };
             p = a.Next;
+            let description = wide(a.Description);
+            all.push(Adapter { description: description.clone() });
             if a.OperStatus != IfOperStatusUp || a.IfType == IF_TYPE_SOFTWARE_LOOPBACK {
                 continue;
             }
@@ -1778,7 +1865,6 @@ mod win {
                 }
             }
             let Some(ip) = ip else { continue };
-            let description = wide(a.Description);
             // passerelle IPv4 : celle d'un partage de connexion en Wi-Fi reconnaît le téléphone
             let mut hotspot = false;
             let mut g = a.FirstGatewayAddress;
@@ -1798,6 +1884,53 @@ mod win {
                 cellular: super::is_cellular(&description, a.IfType) || hotspot,
                 gateway: !a.FirstGatewayAddress.is_null(),
                 metric: a.Ipv4Metric,
+            });
+        }
+        (out, all)
+    }
+
+    /// Appareils USB branchés (identifiant, classe, service, problème de pilote), par le gestionnaire de périphériques.
+    pub fn usb_devices() -> Vec<UsbDev> {
+        use windows_sys::Win32::Devices::DeviceAndDriverInstallation::{
+            CM_Get_DevNode_Registry_PropertyW, CM_Get_DevNode_Status, CM_Get_Device_ID_ListW, CM_Get_Device_ID_List_SizeW, CM_Locate_DevNodeW,
+            CM_DRP_CLASS, CM_DRP_SERVICE, CM_GETIDLIST_FILTER_ENUMERATOR, CM_GETIDLIST_FILTER_PRESENT, CM_LOCATE_DEVNODE_NORMAL, CR_SUCCESS,
+            DN_HAS_PROBLEM,
+        };
+        let filter: Vec<u16> = "USB\0".encode_utf16().collect();
+        let flags = CM_GETIDLIST_FILTER_ENUMERATOR | CM_GETIDLIST_FILTER_PRESENT;
+        let mut len = 0u32;
+        if unsafe { CM_Get_Device_ID_List_SizeW(&mut len, filter.as_ptr(), flags) } != CR_SUCCESS || len == 0 {
+            return Vec::new();
+        }
+        let mut buf = vec![0u16; len as usize];
+        if unsafe { CM_Get_Device_ID_ListW(filter.as_ptr(), buf.as_mut_ptr(), len, flags) } != CR_SUCCESS {
+            return Vec::new();
+        }
+        let prop = |dev: u32, which: u32| -> String {
+            let mut b = [0u16; 256];
+            let mut n = (b.len() * 2) as u32;
+            let r = unsafe { CM_Get_DevNode_Registry_PropertyW(dev, which, std::ptr::null_mut(), b.as_mut_ptr() as *mut _, &mut n, 0) };
+            if r != CR_SUCCESS {
+                return String::new();
+            }
+            let end = b.iter().position(|&c| c == 0).unwrap_or(b.len());
+            String::from_utf16_lossy(&b[..end])
+        };
+        let mut out = Vec::new();
+        for id in buf.split(|&c| c == 0).filter(|x| !x.is_empty()) {
+            let mut z = id.to_vec();
+            z.push(0);
+            let mut dev = 0u32;
+            if unsafe { CM_Locate_DevNodeW(&mut dev, z.as_ptr(), CM_LOCATE_DEVNODE_NORMAL) } != CR_SUCCESS {
+                continue;
+            }
+            let (mut status, mut problem) = (0u32, 0u32);
+            let ok = unsafe { CM_Get_DevNode_Status(&mut status, &mut problem, dev, 0) } == CR_SUCCESS;
+            out.push(UsbDev {
+                id: String::from_utf16_lossy(id),
+                class: prop(dev, CM_DRP_CLASS),
+                service: prop(dev, CM_DRP_SERVICE),
+                problem: !ok || status & DN_HAS_PROBLEM != 0,
             });
         }
         out
@@ -1958,6 +2091,24 @@ mod tests {
         assert!(!is_cellular("Realtek PCIe GbE Family Controller", 6));
         assert!(is_phone_hotspot(Ipv4Addr::new(172, 20, 10, 1)));
         assert!(!is_phone_hotspot(Ipv4Addr::new(192, 168, 1, 254)));
+    }
+
+    #[test]
+    fn phone_help() {
+        let dev = |id: &str, class: &str, service: &str| UsbDev { id: id.into(), class: class.into(), service: service.into(), problem: false };
+        let ad = |d: &str| Adapter { description: d.into() };
+        let iphone = [dev(r"USB\VID_05AC&PID_12A8\00008110", "USB", "usbccgp")];
+        assert_eq!(phone_help_of(&iphone, &[], &[]), Some("iphone_setup"));
+        assert_eq!(phone_help_of(&iphone, &[ad("Apple Mobile Device Ethernet")], &[]), Some("iphone_share"));
+        let no_driver = [iphone[0].clone(), UsbDev { problem: true, ..dev(r"USB\VID_05AC&PID_12A8&MI_02\7&2", "", "") }];
+        assert_eq!(phone_help_of(&no_driver, &[], &[]), Some("iphone_driver"));
+        assert_eq!(phone_help_of(&iphone, &[], &[Link { name: "Ethernet 2".into(), phone: true }]), None);
+        let samsung_phone = [dev(r"USB\VID_04E8&PID_6860\R58M", "USB", "usbccgp"), dev(r"USB\VID_04E8&PID_6860&MI_00\6&1", "WPD", "WUDFWpdMtp")];
+        assert_eq!(phone_help_of(&samsung_phone, &[], &[]), Some("android_share"));
+        let samsung_ssd = [dev(r"USB\VID_04E8&PID_4001\0123", "SCSIAdapter", "UASPStor")];
+        assert_eq!(phone_help_of(&samsung_ssd, &[], &[]), Some("plug"));
+        let mouse = [dev(r"USB\VID_046D&PID_C52B\5&1", "USB", "usbccgp")];
+        assert_eq!(phone_help_of(&mouse, &[], &[]), Some("plug"));
     }
 
     #[test]
