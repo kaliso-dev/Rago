@@ -1,0 +1,98 @@
+---
+type: carte
+tags: [code, git, branches, dépôt]
+maj: 2026-11-10
+---
+# Branches du dépôt
+
+Inventaire de **toutes** les branches du dépôt GitHub au 10/11/2026 vers 16 h 30 UTC : date et message du dernier commit, pull requests, commits pas encore dans `staging` ni dans la prod, et ce que chaque branche portait. Fiche parente : [[Code de la CI et du dépôt]]. Règles et environnements : [[Branches et environnements]].
+
+Source : `git ls-remote` (liste et têtes des branches, lecture seule), `git log` / `git rev-list` pour les dates et les écarts, API GitHub (REST) pour les 84 pull requests. Statut : OBSERVÉ le 10/11. Aucune branche n'a été supprimée ni modifiée.
+
+## Repères
+- **55 branches** sur GitHub. **Prod** = `claude/rago-monorepo-initial-eyj6pq` (branche par défaut, [[Netlify]] et [[Railway]] déploient depuis elle). **Pré-production** = `staging`. Les autres sont des branches de travail de Claude (`claude/<sujet>-<code>` ou `claude/project-thread-<code>`, une par fil) et une branche de transfert de vidéos (`trailer-4k-footage`).
+- `staging` (tête `9f65eac`, fusion de la PR #83 le 10/11 à 16:06 UTC) a **175 commits** que la prod n'a pas (la 1.3.0, Rago Route, l'admin, le site de la 1.3.0…). La prod a **2 commits** que `staging` n'a pas : la fusion de la PR #81 et son commit (`0d6dc6f`, CI : moins de builds), dont l'équivalent est déjà sur `staging` par la PR #78.
+- La branche `claude/project-thread-jyh9u0` (tête = fusion de la PR #81), présente plus tôt dans la journée, n'existe plus sur GitHub.
+- **Pull requests ouvertes** : #84 (`claude/project-thread-49sqc3` → `staging`, ventes de l'admin dans une seule devise, ouverte le 10/11) et **#71** (`claude/project-thread-rulzwj` → prod, bot communauté Discord en prod, ouverte depuis le 01/11).
+- Colonne « Hors staging / hors prod » : nombre de commits de la branche absents de `staging` (`9f65eac`) puis de la prod. **Une PR fusionnée laisse souvent 1 à 4 commits « absents »** : les fusions vers la prod étaient faites par écrasement (« squash », titres en « (prod, #54) (#55) ») ou des commits ont été ajoutés après la fusion. Le contenu est alors bien en place ; c'est l'état de la PR qui compte.
+
+## Tableau (du plus récent au plus ancien)
+| Branche | Dernier commit | Message du dernier commit | Pull requests | Hors staging / hors prod | Ce qu'elle portait (titre de sa 1re PR, sinon du commit) |
+|---|---|---|---|---|---|
+| `staging` | 10/11 | Merge pull request #83 from kaliso-dev/claude/project-thread-49sqc3 | aucune | 0 / 175 | Merge pull request #83 from kaliso-dev/claude/project-thread-49sqc3 |
+| `claude/rago-monorepo-initial-eyj6pq` | 10/11 | Merge pull request #81 from kaliso-dev/claude/ci-prod-moins-de-builds | aucune | 2 / 0 | Merge pull request #81 from kaliso-dev/claude/ci-prod-moins-de-builds |
+| `claude/project-thread-voewre` | 10/11 | Vault : correctif site-check maintenant sur staging | #75 fusionnée → staging (10/11) | 0 / 142 | Vault : fiches techniques complètes pour reprendre le développement |
+| `claude/project-thread-v3d507` | 10/11 | Vault : PR #81 (CI en prod) | #78 fusionnée → staging (10/11) | 0 / 161 | Minutes GitHub Actions : moins de builds en double + vault |
+| `claude/project-thread-tzbch5` | 10/11 | Vault : décision de Sofiene sur Supabase (Pro ou migration avant le 05/12) | aucune | 2 / 138 | Vault : décision de Sofiene sur Supabase (Pro ou migration avant le 05/12) |
+| `claude/project-thread-tb9u7i` | 10/11 | Vault : plan gratuit confirmé (q68), PR #76 fusionnée dans staging | #76 fusionnée → staging (10/11) | 0 / 140 | Sortie 1.3.0 avec Rago Route : décisions du 10/11 |
+| `claude/project-thread-iesde9` | 10/11 | Rago Route : pont Rago OS avec la 2e connexion, vault à jour (exe de test) | aucune | 0 / 167 | Rago Route : pont Rago OS avec la 2e connexion, vault à jour (exe de test) |
+| `claude/project-thread-bhprt3` | 10/11 | Vault : adresse des mentions légales, domiciliation plus tard (q46) | aucune | 0 / 155 | Vault : adresse des mentions légales, domiciliation plus tard (q46) |
+| `claude/project-thread-ayd1at` | 10/11 | Vault : PR #79 dans État actuel | #79 fusionnée → staging (10/11)<br>#80 fusionnée → staging (10/11) | 0 / 158 | Vault : archive « Historique des problèmes » |
+| `claude/project-thread-49sqc3` | 10/11 | Vault : PR #84 ouverte (ventes de l'admin dans une seule devise) | #77 fusionnée → staging (10/11)<br>#82 fusionnée → staging (10/11)<br>#83 fusionnée → staging (10/11)<br>#84 ouverte → staging | 3 / 178 | Tableau de bord /admin : joueurs, accès, ventes Stripe, services, journal |
+| `claude/ci-prod-moins-de-builds` | 10/11 | CI : push construit seulement staging (et prod pour les tests), les autres branches pas… | #81 fusionnée → prod (10/11) | 1 / 0 | Prod : moins de builds en double dans la CI (port de la #78) |
+| `claude/project-thread-r4qi8b` | 09/11 | Vault : PR #74 fusionnée dans staging | #73 fusionnée → staging (07/11)<br>#74 fusionnée → staging (09/11) | 0 / 130 | Pont avec Rago OS et Mode jeu total |
+| `claude/project-thread-v7otam` | 04/11 | Vault : PR #72 fusionnée (04/11) | #72 fusionnée → prod (04/11) | 0 / 0 | Vault : état des lieux Stripe du 04/11 |
+| `claude/project-thread-s0m3ex` | 04/11 | Vault : la 1.3.0 est sur staging | #70 fusionnée → staging (04/11) | 1 / 79 | App 1.3.0 : 73 réglages gratuits (30 actifs), connexion Google/Discord, essai 3 jours, analyse du PC, résiliation dan… |
+| `claude/project-thread-rulzwj` | 01/11 | Vault : numéro de la PR prod du bot communauté (#71) | #71 ouverte → prod | 3 / 3 | Bot communauté Discord (prod) : invitations après 7 jours, accueil, liens partenaires, /growth |
+| `claude/project-thread-i5pq4g` | 01/11 | Vault : PR #68 fusionnée (01/11) | #67 fusionnée → prod (31/10)<br>#68 fusionnée → prod (01/11) | 0 / 0 | Vault Obsidian du projet (docs/vault) et CLAUDE.md |
+| `claude/project-thread-8teqin` | 01/11 | Site : charte graphique 2.2 appliquée à la page d'accueil (aperçu) | #69 fermée → prod (04/11) | 1 / 1 | Site : charte graphique 2.2 appliquée à la page d'accueil (aperçu) |
+| `trailer-4k-footage` | 29/10 | Trailer 1.2: 4K footage clips (temporary transfer) 4/4 | aucune | 4 / 4 | Trailer 1.2: 4K footage clips (temporary transfer) 4/4 |
+| `claude/stats-reseau` | 29/10 | App 1.2.1 | #64 fusionnée → staging (29/10)<br>#65 fusionnée → staging (29/10) | 0 / 68 | Tests réseau des joueurs : résultats, ville et fournisseur envoyés au serveur (RAG-50) |
+| `claude/app-redesign-glass-z5m1c8` | 29/10 | Site : mis à jour pour l'app 1.2.1, plans de prix réécrits | #58 fusionnée → staging (28/10)<br>#62 fusionnée → staging (29/10)<br>#63 fusionnée → prod (29/10)<br>#66 fusionnée → prod (29/10) | 0 / 0 | App 1.2.0 : refonte en verre, bibliothèque, test réseau, mises à jour automatiques, barre en jeu |
+| `claude/project-thread-c7kp1c` | 25/10 | Show the Discord sign-in button only with DISCORD_LOGIN=1 | #61 fusionnée → prod (25/10) | 0 / 0 | Connexion Google et Discord, code de vérification par email à l'inscription |
+| `claude/project-thread-vvpy7b` | 21/10 | Rago OS : un vrai bureau (barre, Dock, recherche, centre de contrôle) et des fonds unis | #60 fermée → app-redesign-glass-z5m1c8 (01/11) | 5 / 49 | Rago OS : un bureau Rago complet (barre, Dock, recherche, centre de contrôle) en un clic |
+| `claude/site-nouveautes-1-2-0-discord-vg01q1` | 20/10 | Site : la bibliothèque de jeux ne se fige plus au redémarrage de la démo | #59 fusionnée → prod (29/10) | 0 / 0 | Site : section Nouveautés 1.2 animée et boutons Discord |
+| `claude/lifetime-plan-partners-dutm1k` | 16/10 | Site et paiement : offre Lifetime à 59,99 $ et section Partners (#54) | #54 fusionnée → staging (16/10)<br>#55 fusionnée → prod (16/10) | 1 / 1 | Site et paiement : offre Lifetime à 59,99 $ et section Partners |
+| `claude/free-tweaks-site-sync-prod` | 16/10 | App 1.1.14 et site en production : plan gratuit à 11 réglages, site aligné sur l'app (#… | aucune | 0 / 0 | App 1.1.14 et site en production : plan gratuit à 11 réglages, site aligné sur l'app (#53, #56) |
+| `claude/free-tweaks-site-sync-le8nlb` | 16/10 | App 1.1.14 et site en production : plan gratuit à 11 réglages, site aligné sur l'app (#… | #56 fusionnée → staging (16/10)<br>#57 fusionnée → prod (16/10) | 0 / 0 | Plan gratuit : 3 réglages de confort en plus, et site aligné sur l'app 1.1.14 |
+| `claude/app-1.1.14` | 16/10 | Déconnexion : le profil NVIDIA et OptiFine sont remis aussi | #52 fusionnée → staging (15/10)<br>#53 fusionnée → staging (16/10) | 0 / 20 | App 1.1.14 : la 1.1.10 avec le RBW Mod, l'écran bleu, les chemins, la remise en arrière-plan et history.json chiffré |
+| `claude/project-thread-8oenwk` | 15/10 | Dernières corrections de la relecture avant staging | #51 fermée → staging (01/11) | 74 / 88 | App 1.1.13 : sécurité complète, déconnexion qui remet tout, corrections de l'audit |
+| `claude/secure-scripts-prod-1.1.11` | 14/10 | App 1.1.11 : chiffrer aussi les scripts gratuits et de retour arrière embarqués | #48 fusionnée → prod (14/10) | 1 / 1 | App 1.1.11 (prod) : chiffrer aussi les scripts gratuits et de retour arrière embarqués |
+| `claude/secure-scripts-1.1.11` | 14/10 | App 1.1.11 : chiffrer aussi les scripts gratuits et de retour arrière embarqués | #47 fermée → staging (14/10) | 1 / 15 | App 1.1.11 : chiffrer aussi les scripts gratuits et de retour arrière embarqués |
+| `claude/secure-applied-json` | 14/10 | Corrige le bras d'erreur de Ledger::load (Err au lieu de None sur un Result) | #49 fusionnée → prod (14/10) | 0 / 0 | App 1.1.12 : chiffrer applied.json au repos + plus aucun script en clair laissé sur le disque |
+| `claude/reset-on-signout-uninstall` | 14/10 | CI : garder le test de revert_all hors Windows (le binaire de test ne se charge pas sur… | #50 fermée → prod (01/11) | 2 / 2 | App 1.1.13 : tout remettre à zéro à la déconnexion et à la désinstallation |
+| `claude/project-thread-uy8yf3` | 14/10 | Tests Windows : le moteur ne garde plus de fenêtre Tauri dans ses lots | aucune | 55 / 55 | Tests Windows : le moteur ne garde plus de fenêtre Tauri dans ses lots |
+| `claude/fix-rbw-mod-services-vk0n2t` | 13/10 | RBW Mod : « Activé » fait comme le script de test validé, « Désactivé » remet Windows p… | #46 fermée → staging (13/10) | 2 / 16 | RBW Mod : « Activé » passe le vérificateur officiel de RBW, « Désactivé » remet Windows par défaut |
+| `claude/product-page-wpo7v3` | 12/10 | Page d'accueil : première section plein écran, avec l'animation qui invite à défiler (#44) | #39 fusionnée → staging (12/10)<br>#41 fusionnée → staging (12/10)<br>#42 fusionnée → staging (12/10)<br>#43 fusionnée → prod (12/10)<br>#44 fusionnée → staging (12/10)<br>#45 fusionnée → prod (12/10) | 1 / 1 | Nouvelle page Tweaks : téléchargement gratuit et les 199 réglages expliqués |
+| `claude/discord-growth-satipp` | 12/10 | Bot communauté Discord : invitations comptées après 7 jours, accueil, liens partenaires… | #40 fusionnée → staging (15/10) | 1 / 11 | Bot communauté Discord : invitations comptées après 7 jours, accueil, liens partenaires, /growth |
+| `claude/site-reviews-vsdsbi` | 11/10 | Page compte redessinée : carte de téléchargement, puis lignes pleine largeur sans trou … | #34 fusionnée → staging (11/10)<br>#35 fusionnée → staging (11/10)<br>#36 fusionnée → staging (11/10)<br>#37 fusionnée → staging (11/10)<br>#38 fusionnée → prod (11/10) | 4 / 4 | Avis : formulaire sur la page compte (Premium), avis longs coupés avec « See more », page de tous les avis |
+| `claude/project-thread-o1kjte` | 11/10 | Récompenses de boost : 2 boosts après 1 complète à 1 mois au lieu d'ajouter 1 mois | #23 fusionnée → prod (10/10)<br>#25 fusionnée → staging (11/10)<br>#27 fusionnée → prod (11/10) | 1 / 1 | Récompenses de boost : 2 boosts donne 1 mois + 30 % à la place de 2 semaines + 10 % |
+| `claude/project-thread-irhc93` | 11/10 | App : astuce pour restaurer depuis le démarrage avancé après la suppression d'applis | #26 fermée → staging (11/10) | 1 / 4 | App : astuce pour restaurer depuis le démarrage avancé après la suppression d'applis |
+| `claude/local-dev-staging-oy4wlg` | 11/10 | Netlify : ne republier le site que quand il change | #22 fusionnée → prod (10/10)<br>#24 fermée → prod (11/10) | 1 / 1 | Développer sans toucher à la prod : app sur Mac, copie locale sûre, serveur de staging |
+| `claude/admin-grant-days-1t4j7g` | 11/10 | Admin : grant-days, Premium offert pour quelques jours puis arrêté tout seul | #28 fermée → prod (11/10)<br>#29 fusionnée → staging (11/10)<br>#30 fusionnée → prod (11/10) | 1 / 1 | Add grant-days command and boost2 top-up reward logic |
+| `claude/account-page-layout-iyr1qb` | 11/10 | Page compte : « Link Discord » et « Open Discord » côte à côte en bas de la carte Disco… | #31 fusionnée → staging (11/10)<br>#32 fusionnée → staging (11/10)<br>#33 fusionnée → prod (11/10) | 2 / 2 | Page compte : les cartes gardent leur hauteur, Discord dans sa propre carte |
+| `claude/project-thread-3xfdo7` | 10/10 | Admin : grant-months, Premium offert pour quelques mois puis arrêté tout seul | #18 fusionnée → prod (10/10) | 1 / 1 | Admin : grant-months, Premium offert pour quelques mois puis arrêté tout seul |
+| `claude/low-latency-power-plan-ne38fh` | 10/10 | Test du plan Rago : échoue sur la CI s'il n'a pas pu importer le plan, au lieu de passe… | #15 fusionnée → prod (10/10) | 2 / 2 | App 1.1.9 : plan d'alimentation Rago Low Latency fourni et sécurisé à l'import |
+| `claude/fix-discord-screenshare-ko1vyb` | 10/10 | Packs GPU Safe : retire les avertissements Discord non établis | #21 fermée → prod (10/10) | 2 / 2 | Packs GPU Safe : ne coupent plus le MPO ni la préemption du GPU |
+| `claude/discord-pro-role-4v6sp7` | 10/10 | Récompenses Discord : VIP 1 mois, MVP 3 mois, et récompenses de boost | #17 fusionnée → prod (10/10)<br>#19 fusionnée → prod (10/10)<br>#20 fusionnée → prod (10/10) | 1 / 1 | Rôle Pro sur Discord : donné à la liaison du compte, retiré quand Premium s'arrête |
+| `claude/auto-reset-tweaks-3ti5yy` | 10/10 | App 1.1.10 : remise à zéro automatique et invisible des tweaks à la fin de Premium et à… | #16 fermée → prod (01/11) | 1 / 1 | App 1.1.10 : remise à zéro automatique et invisible des tweaks à la fin de Premium et à la désinstallation |
+| `claude/tweaks-restore-1-1-8-tcuyhj` | 09/10 | Installateur en anglais pour tout le monde, conditions d'utilisation à jour | #6 fusionnée → prod (09/10)<br>#11 fusionnée → prod (09/10) | 1 / 1 | App 1.1.8 : point de restauration comme en 1.1.6, tweaks risqués retirés, chaque réglage expliqué, RAM/GPU/CPU en direct |
+| `claude/reviews-avatars-afvxy7` | 09/10 | Avis : l'invitation suit l'avis réel du compte, et l'état des versions de test est oublié | #5 fusionnée → prod (09/10)<br>#7 fusionnée → prod (09/10)<br>#8 fusionnée → prod (09/10) | 1 / 1 | Avis des joueurs et photos de profil (serveur de comptes, site et app) |
+| `claude/project-thread-r7gr4d` | 09/10 | Aperçu des liens avant le lancement : les balises de partage du site sur le compte à re… | #12 fusionnée → prod (09/10)<br>#13 fusionnée → prod (09/10) | 1 / 1 | Aperçu des liens partagés et SEO : nouvelle image, balises de partage, pages légales indexables |
+| `claude/project-thread-lh6mw1` | 09/10 | Stripe en live : vérification sur /admin, achats de test arrêtables, webhook et clés du… | #14 fusionnée → prod (09/10) | 1 / 1 | Stripe en live : vérification sur /admin, achats de test arrêtables, webhook et clés du bon mode |
+| `claude/project-thread-8jxv9z` | 09/10 | Pages légales : Rago Optimizer comme vendeur, bandeau Draft retiré, date du 9 octobre | #9 fusionnée → prod (09/10) | 4 / 4 | Pages légales : CGV, confidentialité et remboursements remplies, bandeau Draft retiré |
+| `claude/project-thread-2ar1he` | 09/10 | Pop-up du site réglable depuis /admin : code, réduction, texte, et places limitées | #10 fusionnée → prod (09/10) | 1 / 1 | Pop-up du site réglable depuis /admin : code, réduction, texte et places limitées |
+| `claude/project-thread-8253ab` | 08/10 | Site : logo BIMI (bimi.svg) pour l'avatar des mails | #1 fusionnée → prod (08/10)<br>#4 fusionnée → prod (08/10) | 1 / 1 | Domaine rago-optimizer.com : site, redirections, contact et réponses aux mails |
+| `claude/countdown-launch-3yh36e` | 08/10 | Lien d'accès de l'équipe : /accès/ et / final acceptés, raison du refus dans les logs N… | #2 fusionnée → prod (08/10)<br>#3 fusionnée → prod (08/10) | 1 / 1 | Compte à rebours jusqu'au lancement de samedi, accès réservé à l'équipe |
+
+## Branches qui portent encore du travail non fusionné
+| Branche | Ce qui n'est nulle part ailleurs | À décider |
+|---|---|---|
+| `claude/project-thread-49sqc3` | 3 commits de la PR #84 (ventes de l'admin dans une seule devise, `c61dc68`, et 2 commits du vault) | PR ouverte vers `staging` |
+| `claude/project-thread-rulzwj` | portage en prod du bot communauté Discord (`25ba75e`) et 2 commits du vault | PR #71 ouverte vers la prod depuis le 01/11 ([[Bot communauté Discord]]) |
+| `claude/project-thread-tzbch5` | 2 commits du vault sur Supabase (`8246bd4`, `803b9d6` : e-mail de dépassement de quota relu, décision « Pro ou migration avant le 05/12 ») | jamais proposés en PR ; leur contenu est repris dans le vault par la PR du [[Cerveau du vault]] (10/11) : la branche n'a plus rien à garder (suppression : q81) |
+| `claude/project-thread-s0m3ex` | 1 commit du vault (`edfc795`, « la 1.3.0 est sur staging », 04/11) | sans doute dépassé par les notes suivantes (À VÉRIFIER) |
+| `claude/project-thread-vvpy7b` | 5 commits de [[Rago OS]] (bureau complet), PR #60 fermée le 01/11 | abandonné le 31/10 ([[Décisions]]), branche gardée |
+| `claude/project-thread-8oenwk`, `claude/project-thread-uy8yf3`, `claude/reset-on-signout-uninstall`, `claude/auto-reset-tweaks-3ti5yy` | travail des versions 1.1.10 à 1.1.13 (74, 55, 2 et 1 commits) ; PR #51, #50, #16 fermées le 01/11 | à garder ([[Versions 1.1.11 à 1.1.13]], [[Version 1.1.10]]) |
+| `claude/project-thread-8teqin` | « charte graphique 2.2 » appliquée à l'accueil (aperçu), PR #69 fermée | abandonné ([[Charte graphique]]) |
+| `claude/fix-rbw-mod-services-vk0n2t`, `claude/fix-discord-screenshare-ko1vyb`, `claude/project-thread-irhc93`, `claude/secure-scripts-1.1.11` | corrections dont la PR a été fermée sans fusion (#46, #21, #26, #47) ; le sujet a été repris ailleurs (par exemple #48 pour les scripts) | rien à faire, gardées comme trace |
+| `trailer-4k-footage` | 17 vidéos MP4 dans `trailer-4k/` (« Trailer 1.2: 4K footage clips (temporary transfer) », 29/10, 4 commits), aucune PR | transfert temporaire de rushes pour la bande-annonce ([[Vidéos YouTube]]) ; à supprimer quand Sofiene les a récupérés (À VÉRIFIER) |
+
+## Liens avec le reste
+- Comment on travaille avec ces branches (staging d'abord, prod après validation) : [[Branches et environnements]], [[Règles de travail]].
+- Ce que la CI lance selon la branche : [[app-windows.yml]], [[licensing-tests.yml]], [[site-check.yml]].
+- Versions livrées par ces branches : [[Historique des versions]].
+
+## À savoir
+- Ne jamais renommer ni supprimer la branche de prod sans suivre l'ordre GitHub → Netlify → Railway (voir [[Fichiers de la racine du dépôt]], section README).
+- Pour mettre ce tableau à jour : `git ls-remote --heads origin`, `git log -1 <sha>`, `git rev-list --count staging..<sha>`, et la liste des PR par l'API REST de GitHub (`repos/<dépôt>/pulls?state=all`).

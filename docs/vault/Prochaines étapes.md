@@ -5,11 +5,14 @@ maj: 2026-11-10
 ---
 # Prochaines étapes
 
-Liste priorisée au 01/11. Rien ne se lance sans la demande de Sofiene ([[Règles de travail]]). Voir [[État actuel]] et [[Questions ouvertes]]. Chaque tâche a son ticket [[Linear]].
+Liste priorisée au 01/11, mise à jour le 10/11. Rien ne se lance sans la demande de Sofiene ([[Règles de travail]]). Voir [[État actuel]] et [[Questions ouvertes]]. Chaque tâche a son ticket [[Linear]].
 
 ## Maintenant
-0. **Urgent (10/11)** : sauvegarder les clés (`export-keys`, gestionnaire de mots de passe) et régler Supabase avant le 05/12 ([[Supabase]], [[Clés et secrets]]).
+0. **Urgent (10/11)** : sauvegarder les clés (`export-keys`, gestionnaire de mots de passe) et régler le dépassement de quota Supabase avant le 05/12 (restrictions possibles ensuite) ([[Supabase]], [[Clés et secrets]]).
 0. [[Tableau de bord admin]] (PR #77, dans `staging` depuis le 10/11 ; nouvelle interface de la PR #82, dans `staging` depuis le 10/11) : test par Sofiene sur `rago-staging.up.railway.app/admin`, puis PR « (prod) » vers la branche de prod.
+0. **[[Cerveau du vault]]** (`/admin/cerveau`, 10/11) : PR vers `staging` à fusionner sur « fusionne » de Sofiene ; ensuite mettre `CERVEAU_GITHUB_TOKEN` dans Railway (staging puis prod) **avant que le dépôt passe en privé**, sinon la page affiche « Le dépôt kaliso-dev/rago n'est pas lisible sans jeton » ([[Variables d'environnement]], mode d'emploi dans `licensing/docs/MISE-EN-LIGNE.md`). Abel l'ouvre avec la clé admin.
+0. **`site-check` rouge sur la branche de prod** depuis le 09/11 : le correctif `ubuntu-24.04` (`98181fb`) n'est que sur `staging` ; à porter dans la prochaine PR « (prod) », sinon toute PR de prod qui touche `site/` sera rouge ([[CI GitHub Actions]], [[site-check.yml]]).
+0. PR #84 (ventes de l'admin dans une seule devise) ouverte vers `staging` le 10/11 : attend « fusionne » ([[Tableau de bord admin]]).
 1. La [[Version 1.2.1]] est en ligne (31/10) : vérifier que les 1.2.0 se mettent à jour seules ([[Mise à jour automatique]]).
 2. **[[Version 1.3.0]]** (PR #70, 04/11) : contient la 1.2.2 ci-dessous, plus le plan gratuit à 73 réglages (30 actifs), la connexion à l'app avec Google ou Discord (RAG-90) et l'essai de 3 jours. À tester sur staging par Sofiene. **Une seule grosse sortie** (Sofiene, 10/11) : 1.3.0 + Rago Route dans l'app. Changements décidés le 10/11 : **codés dans la PR #76, fusionnée dans `staging` le 10/11** : Rago Route dans tous les exe, [[Packet Optimizer]] entièrement Premium, mensuel seulement après l'essai, plus de remboursement (site, CGV, e-mails, Stripe), seuils de l'[[Analyse du PC]] adaptés à chaque joueur, Straight retiré du code et signature « KALISO and RAGO ». Plan gratuit confirmé : 73 réglages dont 30 actifs (q68, 10/11). **Reste** : test sur Windows, puis serveur de licences et site en prod en même temps que l'app.
    **Version 1.2.2**, incluse dans la PR #70 (Sofiene, 01/11 : « il faut lancer la correction avec le passage de la désinstallation des app préinstallées en gratuit et mettre à jour grâce à l'auto update ») :
@@ -29,4 +32,5 @@ Liste priorisée au 01/11. Rien ne se lance sans la demande de Sofiene ([[Règle
 - Minutes GitHub Actions épuisées (10/11) : la cause est la CI du dépôt privé `network-server-rago` (≈ 27 min par push), pas `rago` (public, donc gratuit). Décision de Sofiene (10/11) : rendre `network-server-rago` public, à faire par lui dans Settings ; GitLab écarté (400 min gratuites) ([[CI GitHub Actions]]).
 - Avant la signature de code (RAG-83) : décider de l'accord du joueur pour l'envoi du test réseau (q37).
 - Signature de code de l'exe (RAG-83) : enlèverait l'avertissement SmartScreen et le blocage par Smart App Control ; prévue, quand il y aura le budget (01/11, voir [[App Windows]]).
-- Note moyenne des avis dans Google (RAG-33).
+- Note moyenne des avis dans Google (RAG-33) : le code du 17/10 a été perdu dans une fusion, il n'est plus sur le site (q77, [[page.html]]).
+- Invitation Discord temporaire d'un serveur partenaire qui expirerait le 15/11 : à remplacer dans `site/src/partners.json` (À VÉRIFIER, [[Fils du projet]]).

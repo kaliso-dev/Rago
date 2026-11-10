@@ -1,11 +1,14 @@
 ---
 type: suivi
 tags: [suivi, ventes, stripe]
-maj: 2026-11-04
+source: /mnt/project-files/stripe/ventes-stripe-2026-11-04.md
+maj: 2026-11-10
 ---
 # Ventes Stripe
 
 État des lieux lu dans Stripe (compte live « Rago Optimizer », lecture seule) le **04/11/2026 à 10 h (UTC)**. Ces chiffres bougent tous les jours : relire Stripe avant de les réutiliser. Voir [[Offres et prix]], [[Promotions et affiliation]], [[Serveur de licences]] et [[État actuel]]. Aucune donnée personnelle de client ici (noms et e-mails restent dans Stripe).
+
+Une copie de cette note, du même jour, est dans le dossier partagé : `stripe/ventes-stripe-2026-11-04.md` ([[Sources]]). Le 10/11, elle était identique à cette note : elle n'apporte aucun chiffre de plus. Stripe n'a pas été relu depuis le 04/11 : les renouvellements du 10/11 et les résiliations en fin de période ne sont pas comptés (À VÉRIFIER dans Stripe).
 
 ## Revenus (montants payés, en USD)
 | Période | Paiements réussis | Montant | Détail |
@@ -25,10 +28,10 @@ maj: 2026-11-04
 - **8 mensuels résiliés** qui s'arrêtent en fin de période (entre le 10/11 et le 22/11). Raisons données : « trop cher » 2, « autre » 2, aucune 4. Après ces départs : 15 mensuels + 10 annuels, MRR **114,84 $**.
 - Aucun annuel résilié.
 - **Renouvellements prévus** (sans compter les 8 résiliés), tous à 5,99 $ plein tarif car les codes ne valent que pour le premier paiement : 10/11 (3), 11/11 (2), 15/11 (1), 16/11 (2), 19/11 (2), 24/11 (1), 27/11 (1), 30/11 (1), 03/12 (2). Total : 15 renouvellements, **89,85 $**. Les 10 annuels se renouvellent entre le 10/10 et le 29/10/2027.
-- **Aucun essai** : aucun prix n'a de période d'essai et aucun abonnement n'est « trialing ». L'essai de 7 jours est seulement une question ouverte (q35, [[Questions ouvertes]]).
+- **Aucun essai au 04/11** : aucun prix n'a de période d'essai et aucun abonnement n'est « trialing ». Depuis, l'essai a été décidé : **3 jours avec carte**, puis le mensuel à 5,99 $ (Sofiene, 04/11 et 10/11). C'est un réglage du Checkout, pas un nouveau prix. Il est sur `staging` seulement, pas encore en prod ([[Offres et prix]], [[Version 1.3.0]]).
 
 ## Lifetime
-- **5 ventes** (287,95 $) : 4 à 59,99 $ et 1 à 47,99 $ (code −20 %). Paiement unique, sans facture, marqué `plan: lifetime` dans Stripe.
+- **5 ventes** (287,95 $), soit **47 % de tout le chiffre** (287,95 $ sur 611,02 $) : 4 à 59,99 $ et 1 à 47,99 $ (code −20 %). Paiement unique, sans facture, marqué `plan: lifetime` dans Stripe.
 
 ## Clients
 - **38 clients payants** (33 abonnés + 5 Lifetime), dans au moins 18 pays (8 paiements sans pays ; le plus : États-Unis, 7).

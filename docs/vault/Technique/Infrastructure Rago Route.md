@@ -10,7 +10,7 @@ Partie technique de Rago Route (tunnel anti-lag pour Minecraft Java), état de `
 ## Les pièces
 | Pièce | Où | Rôle |
 |---|---|---|
-| Client Windows | `app/src-tauri/src/route.rs` (Rust, ≈1 900 lignes), onglet `app/src/pages/RouteTab.tsx` | ouvre `localhost:25565` (Hypixel) et `localhost:25566` (Minemen) pour le jeu, envoie chaque paquet par tous les trajets |
+| Client Windows | `app/src-tauri/src/route.rs` (Rust, 2 228 lignes), onglet `app/src/pages/RouteTab.tsx` | ouvre `localhost:25565` (Hypixel) et `localhost:25566` (Minemen) pour le jeu, envoie chaque paquet par tous les trajets |
 | Client prototype | `proxy/rago-route.py client …` (Python, Mac de Sofiene) | même protocole, options `--sortie`, `--via`, `--interface`, `--telephone`, `--jeton`, `--perte-test` |
 | Sortie et relais | `proxy/rago-route.py sortie` sur les VPS | sortie : se connecte au serveur de jeu ; relais : fait suivre seulement vers les sorties de `SORTIES_RAGO` |
 | Installation des VPS | `proxy/install.sh`, **généré** par `python3 proxy/fabriquer-install.py` (embarque `rago-route.py` et `mcping.py`) | un seul fichier à coller sur un VPS Ubuntu : `sudo sh install.sh` |
@@ -38,10 +38,15 @@ Cloud Compute Regular Performance (1 vCPU, 1 Go), Ubuntu 24.04, 5 $ par mois cha
 ## Ajouter une sortie ou un relais
 1. Sofiene commande le VPS et lance `install.sh`.
 2. Ajouter l'adresse dans `EXITS` ou `RELAYS` de `route.rs`, **et** dans `SORTIES_RAGO` de `rago-route.py` pour une sortie ; régénérer `install.sh` (`python3 proxy/fabriquer-install.py`) et le relancer sur **tous** les relais.
-3. Nouvel exe de test. Les adresses sont compilées dans l'app : un changement d'adresse demande une nouvelle version.
+3. Nouvelle version de l'app (exe de test d'abord, puis prod) : les adresses sont compilées dans l'app, un changement d'adresse demande une nouvelle version.
 
 ## Accès sur staging
-`POST /api/v1/route/token` ne répond sur staging qu'aux e-mails de `ROUTE_TESTERS` (sinon `route_closed`), parce que les sorties acceptent aussi les jetons de staging : une carte de test ne doit pas ouvrir les vrais serveurs. Valeur réelle : À VÉRIFIER (q55). Les commandes Rago Route de l'app et du pont [[Rago OS]] ne marchent que dans l'exe de test (`server_name() == "staging"`).
+`POST /api/v1/route/token` ne répond sur staging qu'aux e-mails de `ROUTE_TESTERS` (sinon `route_closed`), parce que les sorties acceptent aussi les jetons de staging : une carte de test ne doit pas ouvrir les vrais serveurs. Valeur réelle : À VÉRIFIER (q55). Depuis la PR #76 (1.3.0), les commandes Rago Route de l'app et du pont [[Rago OS]] n'ont **plus de condition « exe de test »** : le pont répond `available: true` dans tous les exe, et c'est le serveur qui ouvre ou refuse le jeton. Seul le bouton « copier le jeton » de l'onglet reste réservé à l'exe de test (`VITE_RAGO_SERVER === "staging"`).
 
 ## Tester
 `cargo test --manifest-path app/src-tauri/Cargo.toml` (tests de `route.rs`), `cargo check --target x86_64-pc-windows-msvc` pour la compilation Windows ; tests en labo contre les serveurs Python sur Linux (variable `RAGO_CIBLE_TEST=hôte:port` pour viser un faux serveur de jeu), décrits dans [[Proxy]].
+
+## Code
+Carte de bout en bout (chemin des paquets, format des messages, chiffrement, états, versions, tests) : [[Code de Rago Route]].
+- App : [[route.rs]] (client et protocole), [[RouteTab.tsx]] (onglet), [[license.rs]] (`route_token`), [[lib.rs]] (commandes `route_*`, renouvellement du jeton), [[bridge.rs]] (commandes `route*` du pont).
+- Serveurs : [[rago-route.py]] (sortie, relais, client prototype), [[mcping.py]], [[fabriquer-install.py]], [[install.sh]], consignes [[CLAUDE.md (proxy)]].

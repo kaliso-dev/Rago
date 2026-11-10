@@ -13,14 +13,14 @@ Monorepo GitHub `kaliso-dev/rago`, **public** (constaté le 10/11 ; Sofiene : «
 | `app/` | App Windows : Tauri 2 (Rust, `src-tauri/`) + React/TypeScript (`src/`), générateur du catalogue (`tools/`), anciens `.bat` (`legacy/`) | [[Architecture de l'app]], [[App Windows]] |
 | `licensing/` | Serveur Node : comptes, licences, Stripe, mises à jour de l'app, tests réseau, bot Discord, pages de compte | [[Architecture du serveur]], [[API du serveur]] |
 | `licensing/supabase/schema.sql` | Schéma Postgres complet, rejoué à chaque démarrage | [[Supabase]] |
-| `site/` | Site de vente statique ; sources dans `site/src/`, pages publiées générées par `site/tools/build.py` | [[Netlify]], [[Site]] |
-| `netlify/`, `netlify.toml` | Fonction edge `launch-gate` (compte à rebours du lancement, inactive), script des aperçus `preview.sh`, redirections | [[Netlify]] |
+| `site/` | Site de vente statique ; sources dans `site/src/`, pages publiées générées par `site/tools/build.py` | [[Netlify]], [[Site]], code : [[Code du site]], [[Fichiers publiés du site]] |
+| `netlify/`, `netlify.toml` | Fonction edge `launch-gate` (compte à rebours du lancement, inactive), script des aperçus `preview.sh`, redirections | [[Netlify]], code : [[netlify.toml]], [[preview.sh]], [[launch-gate.js]] |
 | `proxy/` | Rago Route côté serveurs : `rago-route.py` (sortie et relais), `mcping.py`, `install.sh` généré par `fabriquer-install.py` | [[Infrastructure Rago Route]] |
-| `brand/` | Kit de marque : `tokens/` (CSS, JSON), `logo/`, `charte.html`, `voice-en.md` | [[Charte graphique]], [[Voix et ton]] |
-| `.github/workflows/` | `app-windows.yml`, `licensing-tests.yml`, `site-check.yml` | [[CI GitHub Actions]] |
-| `Dockerfile` (racine) | Variante site + serveur sur un seul domaine, **non utilisée** (Railway utilise `licensing/Dockerfile`) | [[Railway]] |
-| `docs/vault/`, `docs/tools/catalogue_vault.py` | Ce vault et le générateur des notes `Tweaks/` | [[Mettre à jour le vault]] |
-| `README.md`, `DEVELOPPEMENT.md`, `app/README.md`, `licensing/README.md`, `licensing/docs/API.md`, `licensing/docs/MISE-EN-LIGNE.md` | Guides en français écrits pour Sofiene ; certains chiffres (198 réglages, 11 gratuits) sont en retard sur le code, le vault fait foi | [[Sources]] |
+| `brand/` | Kit de marque : `tokens/` (CSS, JSON), `logo/`, `charte.html`, `voice-en.md`, `tools/export-logo.js` | [[Charte graphique]], [[Voix et ton]], code : [[Kit de marque (brand)]], [[tokens.css (marque)]], [[export-logo.js]] |
+| `.github/workflows/` | `app-windows.yml`, `licensing-tests.yml`, `site-check.yml` | [[CI GitHub Actions]], code : [[Code de la CI et du dépôt]] |
+| `Dockerfile`, `_config.yml`, `.gitignore`, `.dockerignore` (racine) | `Dockerfile` : variante site + serveur sur un seul domaine, **non utilisée** (Railway utilise `licensing/Dockerfile`) ; `_config.yml` : réglage de GitHub Pages, **encore actif** et qui publie `docs/` (OBSERVÉ le 10/11) | [[Railway]], [[Fichiers de la racine du dépôt]] |
+| `docs/vault/`, `docs/tools/catalogue_vault.py` | Ce vault et le générateur des notes `Tweaks/` ; `docs/vault/Code/` : une note par fichier de code, rangées par brique, chacune avec sa note carte | [[Mettre à jour le vault]], [[Code du site]], [[Code de la CI et du dépôt]] |
+| `README.md`, `DEVELOPPEMENT.md`, `CLAUDE.md`, `app/README.md`, `licensing/README.md`, `licensing/docs/API.md`, `licensing/docs/MISE-EN-LIGNE.md` | Guides en français écrits pour Sofiene (et consignes pour Claude) ; certains chiffres (198 réglages, 11 gratuits) et le raccourci de la barre en jeu (Ctrl+Maj+R au lieu d'Alt+X) sont en retard sur le code, le vault fait foi | [[Sources]], [[Fichiers de la racine du dépôt]] |
 
 ## Schéma
 ```
@@ -59,4 +59,4 @@ Monorepo GitHub `kaliso-dev/rago`, **public** (constaté le 10/11 ; Sofiene : «
 | Stripe | live | mode test (carte `4242 4242 4242 4242`) |
 | App | « Rago Optimizer » `gg.rago.optimizer` | « Rago Optimizer Staging » `gg.rago.optimizer.staging`, s'installe à côté |
 
-Détail : [[Branches et environnements]]. Services externes : [[Personnes et services]].
+Détail : [[Branches et environnements]], inventaire des branches : [[Branches du dépôt]]. Services externes : [[Personnes et services]].

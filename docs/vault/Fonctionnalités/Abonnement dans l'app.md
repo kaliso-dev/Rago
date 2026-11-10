@@ -18,7 +18,13 @@ Ajouté en 1.3.0 (PR #70, pas sortie), demandé par Sofiene le 04/11 avec la maq
 - Les [[Paramètres de l'app]] montrent l'offre (essai, mensuel, annuel), le prochain paiement avec son prix et sa date, ou la date de fin si c'est résilié. Bouton « Cancel subscription » (« Cancel free trial » pendant l'essai) ou « Resume ».
 - Un seul écran « Before you cancel » : la date de fin, le nombre de tweaks Premium qui reviendront comme avant ce jour-là, le gain mesuré sur ce PC (dernier avant/après de l'[[Analyse du PC]]), « Undo stays free ». Deux boutons de même taille, « Keep Premium » et « Cancel subscription ». Pas de remise, pas de second écran.
 - Puis un message de confirmation, et un email « Your subscription is canceled » / « Your free trial is canceled ». Premium reste jusqu'à la fin de la période payée.
-- Serveur : `GET /api/v1/account/subscription`, `POST /api/v1/account/subscription/cancel` et `/resume` (fin de période dans Stripe, `cancel_at_period_end`), traces `subscription.canceled_in_app` / `resumed_in_app` (`licensing/src/app.js`, `mailer.js`). App : `SubscriptionCard.tsx`, `Upsell.tsx`, `account.rs`.
+- Serveur : `GET /api/v1/account/subscription`, `POST /api/v1/account/subscription/cancel` et `/resume` (fin de période dans Stripe, `cancel_at_period_end`), traces `subscription.canceled_in_app` / `resumed_in_app` (`licensing/src/app.js`, `mailer.js`). App : voir la section « Code » plus bas.
+
+## Code
+- Fenêtre Premium et ses variantes (`tweak`, `preset`, `plan`, `slots`, `analysis`), essai, achat dans le navigateur : [[Upsell.tsx]]. Connexion qui l'accompagne : [[LicenseGate.tsx]].
+- Ligne d'abonnement et résiliation dans les Paramètres : [[SubscriptionCard.tsx]] (dans [[Settings.tsx]]). Gain mesuré cité avant de résilier : `lastGain` de [[analysis.ts]].
+- Appels au serveur : [[accountApi.ts]] (`plans_info`, `account_subscription*`), qui passent par le moteur : [[account.rs]]. Serveur : [[API du serveur]].
+- Carte d'ensemble de l'interface : [[Code de l'app (interface)]].
 
 ## Pas faits, en attente d'une réponse de Sofiene
 - Rappel 7 jours avant le renouvellement et « même prix au renouvellement » : q40.

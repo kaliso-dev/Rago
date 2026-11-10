@@ -6,7 +6,7 @@ maj: 2026-11-10
 ---
 # Packet Optimizer
 
-Onglet « Packet Optimizer » de la page Réseau (page « Optimiseur réseau » / Network Optimizer à l'origine, 22/10 ; refait le 25 et le 27/10). Portage de `network_optimizer.bat` v2 de Sofiene. Code : `netopt.rs` (formules `compute`), moteur PowerShell `app/src-tauri/netopt/*.ps1` (chiffré dans l'exe), page `NetOpt.tsx`, `lib/netopt.ts`.
+Onglet « Packet Optimizer » de la page Réseau (page « Optimiseur réseau » / Network Optimizer à l'origine, 22/10 ; refait le 25 et le 27/10). Portage de `network_optimizer.bat` v2 de Sofiene. Code : [[netopt.rs]] (formules `compute`), moteur PowerShell `app/src-tauri/netopt/*.ps1` (scellé dans l'exe : [[common.ps1]] et [[main.ps1]] dans la partie gratuite, [[apply.ps1]] dans la partie Premium), page [[NetOpt.tsx]], [[netopt.ts]] (détail dans « Code » plus bas).
 
 **Principe** : aucun réglage ne raccourcit la route, **le ping ne baisse pas**. Ça change la façon dont Windows envoie, reçoit, confirme et renvoie les paquets (tampons de la carte, reprise TCP après une perte, délai des ACK, QoS, économies d'énergie, trafic de fond) : moins d'à-coups au hitreg et au knockback.
 
@@ -31,12 +31,18 @@ Trois étapes : carte réseau (câble/Wi-Fi), processeur et Windows (threads), q
 
 ## Appliquer, restaurer
 - Dans la 1.2.1 (en ligne) : **Appliquer = Premium** ; l'analyse, les presets, **Restaurer** et les 4 outils (stabilité, bufferbloat, MTU, état actuel) sont gratuits.
-- **Dans la [[Version 1.3.0]] (PR #76, sur `staging`, pas sortie)** : **entièrement Premium** (Sofiene, 10/11, q41 : « mets le en premium dans la prochaine version de prod »). En gratuit, l'onglet montre seulement « The Packet Optimizer is part of Premium », ce qu'il fait (3 lignes) et « Get Premium » ; **Restaurer reste gratuit** quand une application faite en Premium est encore là, pour remettre la connexion comme avant (`NetOpt.tsx`). Le moteur refusait déjà Appliquer sans Premium (`premium_required:netopt`, `lib.rs`). Les 4 outils réseau restent gratuits dans le [[Test réseau]]. Jamais testé sur Windows.
+- **Dans la [[Version 1.3.0]] (PR #76, sur `staging`, pas sortie)** : **entièrement Premium** (Sofiene, 10/11, q41 : « mets le en premium dans la prochaine version de prod »). En gratuit, l'onglet montre seulement « The Packet Optimizer is part of Premium », ce qu'il fait (3 lignes) et « Get Premium » ; **Restaurer reste gratuit** quand une application faite en Premium est encore là, pour remettre la connexion comme avant (`NetOpt.tsx`). Le moteur refusait déjà Appliquer sans Premium (`premium_required:netopt`, `lib.rs`). Les outils stabilité, bufferbloat et MTU restent gratuits dans le « Diagnostic avancé » du [[Test réseau]] ; « État actuel » n'est que dans la vue Premium de l'onglet (le moteur le ferait sans licence, mais l'écran gratuit ne le montre pas). Jamais testé sur Windows.
 - La connexion coupe quelques secondes à l'application.
-- Valeurs d'avant gardées à la première application (`snapshot.json`) ; **Restaurer** propose cette sauvegarde ou les valeurs de Windows. Désinstallation et fin de Premium remettent la sauvegarde. Pas dans « Tout annuler » (bouton à part).
+- Valeurs d'avant gardées à la première application (`snapshot.json`) ; **Restaurer** propose cette sauvegarde ou les valeurs de Windows. Désinstallation et fin de Premium remettent la sauvegarde, ou à défaut les valeurs de Windows (`put_back`, sans licence). Pas dans « Tout annuler » (bouton à part).
 - Pas repris du .bat : la « Wi-Fi game session » (Windows ne se reconnecterait plus seul).
 
 ## Problème connu (29/10)
 Le preset Minecraft PvP applique `ping_packets: hitreg`, qui réécrit une partie des mêmes valeurs (MTU 1400, RSS, congestion, autotuning) : les deux se marchent dessus. Curseurs extrêmes = ping qui saute. Voir [[Problèmes joueurs]], [[Tweaks Presets]].
 
 Liens : [[Test réseau]], [[Tweaks Réseau]], [[Vidéos YouTube]], [[Proxy]].
+
+## Code
+- [[netopt.rs]] : options et bornes, formules du `.bat` (`compute`, `dscp_of`), assemblage et lancement du moteur, lecture des lignes `@@NO|…`, `applied.json`, remise `put_back`.
+- [[common.ps1]] (gratuit) : sauvegarde lue, `Do-Restore` (sauvegarde exacte), `Do-Defaults` (valeurs de Windows), outils `quality`, `loaded`, `mtu`, `detect`, `status`.
+- [[apply.ps1]] (Premium) : `Take-Snapshot` et `Do-Apply` en 11 étapes, avec toutes les valeurs écrites.
+- [[main.ps1]] : point d'entrée. [[session.rs]] : détection des Ryzen X3D à deux CCD. Interface : [[NetOpt.tsx]], [[netopt.ts]].

@@ -35,7 +35,11 @@ L'environnement `staging` est une copie de `production` (Duplicate) avec ses pro
 - Vérifier après coup : `/healthz`, `/admin` (Stripe : prix, webhook, portail « OK »), `/download/status`, `/api/v1/update/status`.
 
 ## Lire les logs
-Railway → service → **Deployments** → **View logs**. Préfixes : `[warn]`, `[stripe]`, `[discord]`, `[community]`, `[affiliate]`, `[network]`, `[retention]`, `[db]`, `[mail]` (e-mails écrits dans les logs quand Resend n'est pas configuré, c'est le cas normal en local).
+Railway → service → **Deployments** → **View logs**. Préfixes : `[warn]`, `[env]`, `[stripe]`, `[discord]`, `[community]`, `[affiliate]`, `[network]`, `[retention]`, `[db]`, `[admin]`, `[avatars]`, `[update]`, `[mail]` (e-mails écrits dans les logs quand Resend n'est pas configuré, c'est le cas normal en local).
 
 ## Support depuis un terminal
 `cd licensing && DATABASE_URL=<celle de Railway> npm run admin -- <commande>` (liste dans [[Serveur de licences]]). Seul Sofiene a ces valeurs ; Claude ne les demande pas et ne les écrit nulle part.
+
+## Code
+
+Image : `licensing/Dockerfile` et `package.json` ([[Documentation et configuration du serveur]]). Démarrage et tâches de fond : [[server.js]] ; variables lues : [[config.js]] (Railway fournit `RAILWAY_ENVIRONMENT_NAME` ; la page Services de `/admin` lit aussi `RAILWAY_GIT_COMMIT_SHA` et `RAILWAY_GIT_BRANCH`, voir [[admin.js (serveur)]]) ; `/healthz` : [[app.js]] ; commandes du terminal : [[admin.js (script serveur)]]. Carte : [[Code du serveur]].
