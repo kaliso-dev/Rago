@@ -18,9 +18,11 @@ https://account.rago-optimizer.com (aussi `rago-production.up.railway.app`, qui 
 - **Achat** : `/buy` (abonnement, `?promo=CODE`, `?ref=CODE`), `/buy/lifetime`, `/checkout/success`, webhook Stripe.
 - **API de l'app** (`/api/v1/…`) : licence (connexion, activation, rafraîchissement), compte, `/plans`, `/promo`, `/public-key`, `/installer`, `/update/:target/:arch/:current` + `/update/file/:version` + `/update/status` ([[Mise à jour automatique]]), envoi des tests réseau ([[Test réseau]]), jeton Rago Route `POST /route/token` (08/11, Premium actif seulement, 6 h ; sur staging, e-mails de `ROUTE_TESTERS` seulement ; voir [[Proxy]] ; sur `staging` depuis le 08/11, pas en prod).
 - **Téléchargement** : `/download` (lien signé 5 min vers l'exe le plus récent du bucket `downloads`), `/download/status`.
-- **Admin** (`/admin`, en français) : pop-up promo, vérification Stripe, `/admin/reseau` + `/admin/reseau.csv` ([[Proxy]]). `/acces/:key` : accès de l'équipe. `/healthz`.
+- **Admin** (`/admin`, en français) : en prod, pop-up promo, vérification Stripe et Discord, `/admin/reseau` + `/admin/reseau.csv` ([[Proxy]]). Sur `staging` depuis le 10/11 (PR #77), pas encore en prod : le [[Tableau de bord admin]] complet (joueurs, accès, bannissement, ventes Stripe, services, journal). `/acces/:key` : accès de l'équipe. `/healthz`.
 
 ## Commandes support (`npm run admin -- <commande>`)
+Avec la PR #77, chacune a son bouton dans le [[Tableau de bord admin]] (sauf `export-keys` et `create-user`).
+
 `show <email>` (compte, licence, PC, événements, achats non rattachés) · `attach` · `claim-link` · `reset-link` (mot de passe, 1 h) · `reset-device` (libère le PC pour changer d'ordinateur) · `revoke` / `restore` · `grant` · `grant-months <n> <emails>` · `grant-days <n> <emails>` · `create-user` · `affiliate <email>` · `create-promo <CODE> <pourcent> [once|forever]` · `popup` (code, titre, texte, on/off, places) · `delete-user` (RGPD) · `export-keys` · `reviews` / `hide-review` / `show-review` · `remove-photo` · `set-name` · `discord [email]` / `discord-unlink`. `revoke` n'arrête pas l'abonnement Stripe.
 
 Liens : [[Offres et prix]], [[Licence dans l'app]], [[Bot communauté Discord]], [[Discord]], [[Publier une version]].

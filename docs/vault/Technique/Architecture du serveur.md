@@ -30,7 +30,10 @@ Node ≥ 22.5 en modules ES, **sans framework de pages** : Hono 4 (routes) + `@h
 | `mailer.js` | E-mails par l'API Resend : achat (lien de réclamation), code d'inscription, abonnement annulé, mot de passe oublié. Sans clé : écrits dans les logs. Sur staging, sujet préfixé `[Test]` |
 | `tokens.js`, `crypto.js`, `fingerprint.js` | JWT EdDSA, mots de passe scrypt (`scrypt$N$r$p$sel$hash`, NFKC), clés de licence, valeurs signées, empreinte PC et règle « 2 sur 3 » |
 | `retention.js` | Purges promises par la politique de confidentialité |
-| `views.js` | Toutes les pages HTML (compte, achat, admin, messages) |
+| `views.js` | Toutes les pages HTML (compte, achat, connexion admin, messages) |
+| `admin.js` + `admin-views.js` | [[Tableau de bord admin]] (`/admin/*`) : garde `ADMIN_KEY`, données, actions, pages (`staging` depuis le 10/11) |
+| `sales.js` | Ventes lues dans Stripe pour `/admin` (cache 5 min, jours en heure de Paris) |
+| `support.js` | Suppression RGPD partagée par `/admin` et `npm run admin -- delete-user` |
 
 Autres dossiers : `scripts/admin.js` (`npm run admin -- <commande>`, support), `scripts/local.js` (`npm run local`), `scripts/keys.js` (`npm run keys`, **à ne jamais lancer en prod**), `public/` (CSS, `account.js`, images des e-mails), `test/` (`flow.test.js`, `community.test.js`, `network.test.js`), `docs/API.md` (contrat avec l'app), `docs/MISE-EN-LIGNE.md` (pas-à-pas de Sofiene), `docs/test/` (clé de test publique, utilisable seulement en local).
 

@@ -34,8 +34,10 @@ Les routes marquées **(staging)** n'existent que sur `staging`, pas encore sur 
 | `GET /account/download`, `GET /download` | Lien signé 5 min vers l'exe le plus récent du bucket `downloads` (`/download` public, 30 par heure et par IP) |
 | `GET /download/status` | Fichier servi et état, sans secret |
 | `GET /admin`, `POST /admin/login`, `POST /admin/logout` | Tableau de bord admin en français, clé `ADMIN_KEY` (≥ 16 caractères) |
-| `POST /admin/popup` | Pop-up de réduction du site |
-| `POST /admin/test-licenses` | Couper les licences issues d'achats en mode test une fois en live |
+| `GET /admin/utilisateurs`, `GET /admin/utilisateurs/:id`, `POST /admin/utilisateurs/:id/:action` | Joueurs et toutes les actions de support (`temps`, `vie`, `revoquer`, `retablir`, `liberer-pc`, `lien-mdp`, `rattacher`, `resilier`, `bannir`, `debannir`, `discord-sync`, `discord-delier`, `avis`, `photo`, `nom`, `affilie`, `supprimer`) ; `staging` seulement (10/11), [[Tableau de bord admin]] |
+| `GET /admin/achats`, `POST /admin/achats/:id/lien`, `POST /admin/offrir` | Achats sans compte, Premium pour des e-mails ; `staging` seulement |
+| `GET /admin/ventes`, `GET /admin/services`, `GET /admin/journal` | Ventes Stripe, état des services, journal ; `staging` seulement |
+| `GET /admin/site`, `POST /admin/popup`, `POST /admin/code-promo`, `POST /admin/test-licenses` | Pop-up de réduction, codes promo, avis, licences de test (sur `staging` ; en prod la pop-up est sur `/admin`) |
 | `GET /admin/reseau`, `GET /admin/reseau.csv` | Résumé et export des tests réseau ([[Proxy]]) |
 | `POST /webhooks/stripe` | Webhook Stripe (signature vérifiée, idempotent par `stripe_events`) |
 | `GET /` | Redirige vers `SITE_URL` (le site est sur Netlify) |

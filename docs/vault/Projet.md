@@ -32,7 +32,7 @@ Vue d'ensemble technique : [[Architecture]]. **Pour coder ou dépanner : commenc
 - **Autres projets** : [[Rago OS]] (bureau Windows, extension de l'app), [[Client Minecraft Rago]]
 - **Technique** : [[Reprendre le développement]] · [[Architecture]] · [[Développer et tester]] · [[Branches et environnements]] · [[Publier une version]]
   - App : [[App Windows]] · [[Architecture de l'app]]
-  - Serveur : [[Serveur de licences]] · [[Architecture du serveur]] · [[API du serveur]] · [[Paiements Stripe]] · [[Connexion Google et Discord]]
+  - Serveur : [[Serveur de licences]] · [[Tableau de bord admin]] · [[Architecture du serveur]] · [[API du serveur]] · [[Paiements Stripe]] · [[Connexion Google et Discord]]
   - Hébergement et CI : [[Supabase]] · [[Railway]] · [[Netlify]] · [[CI GitHub Actions]] · [[Variables d'environnement]] · [[Clés et secrets]]
   - Site : [[Site]] · Rago Route : [[Infrastructure Rago Route]]
 - **Design** : [[Charte graphique]] · [[Voix et ton]] · [[Refonte glass]]

@@ -10,6 +10,7 @@ Une ligne par événement marquant, la plus récente en haut. Voir [[Historique 
 ## Novembre 2026
 | Date | Événement | Liens |
 |---|---|---|
+| 10/11 | Tableau de bord `/admin` complet demandé par Sofiene et codé : joueurs et accès (dont bannissement), ventes Stripe du jour, du mois et totales, état des services, journal ; PR #77 fusionnée dans `staging` sur « fusionne » de Sofiene | [[Tableau de bord admin]] |
 | 10/11 | Étude des minutes GitHub Actions : `rago` est public (minutes gratuites) ; le quota est vidé par la CI de `network-server-rago` (151 runs en deux jours) ; Sofiene décide de rendre ce dépôt public, pas GitLab | [[CI GitHub Actions]] |
 | 10/11 | PR #76 fusionnée dans `staging` (« tu peux tout push ») ; plan gratuit confirmé à 73 réglages dont 30 actifs (q68). | [[Version 1.3.0]] |
 | 10/11 | PR #76 ouverte vers `staging` : la 1.3.0 devient la grosse sortie avec Rago Route (onglet dans tous les exe), Packet Optimizer entièrement Premium, essai sur le mensuel, plus de remboursement (`refunds.html` supprimée, CGV), normes de l'Analyse du PC par joueur, Straight retiré et signature « KALISO and RAGO » ; « 30 opti 15 slots » attend q68 | [[Version 1.3.0]], [[Proxy]], [[Offres et prix]] |

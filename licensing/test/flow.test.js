@@ -83,6 +83,12 @@ async function setup(env = {}, extra = {}) {
   };
   stripe.promotionCodes.update = async (id, p) => { stripeCalls.push(['promo', id, p]); const x = promos.find((q) => q.id === id); Object.assign(x, p); return x; };
   stripe.promotionCodes.list = async ({ code, active }) => ({ data: promos.filter((x) => (active === undefined || x.active === active) && x.code.toUpperCase() === String(code).toUpperCase()) });
+  // Sales on /admin (2026-11-10): payments, balance and subscriptions as Stripe lists them.
+  const charges = [];
+  const balance = [];
+  stripe.charges.list = async () => ({ data: charges, has_more: false });
+  stripe.balanceTransactions.list = async () => ({ data: balance, has_more: false });
+  stripe.subscriptions.list = async () => ({ data: Object.values(subs), has_more: false });
   stripe.billingPortal.sessions.create = async (p) => { stripeCalls.push(['portal', p.customer]); return { url: 'https://billing.stripe.com/p/session/x' }; };
   const mails = [];
   const mailer = { purchase: async (to, url) => mails.push({ to, url }), passwordReset: async (to, url) => mails.push({ to, url }), signupCode: async (to, code) => mails.push({ to, code }), subscriptionCanceled: async (to, sub) => mails.push({ to, sub }) };
@@ -129,7 +135,7 @@ async function setup(env = {}, extra = {}) {
     const sub = subscription(`sub_${id}`, interval);
     return paidSession(id, email, { mode: 'subscription', payment_intent: null, subscription: sub, metadata: { interval }, ...extra });
   };
-  return { cfg, db, keys, app, browse, api, webhook, paidSession, paidSubscription, subscription, subs, stripeCalls, created, mails, jar, sessions, promos, coupons, stripe };
+  return { cfg, db, keys, app, browse, api, webhook, paidSession, paidSubscription, subscription, subs, stripeCalls, created, mails, jar, sessions, promos, coupons, stripe, charges, balance };
 }
 
 const h = (name, v) => createHash('sha256').update(`rago-fp-v1|${name}|${v}`).digest('hex');
@@ -1187,7 +1193,7 @@ test('site pop-up: set from /admin with ADMIN_KEY, code created in Stripe for th
   assert.equal(login.status, 303);
   assert.match(login.headers.get('set-cookie'), /rago_admin=.*Path=\/admin.*HttpOnly.*SameSite=Strict/i);
   await t.browse('/admin/login', { form: { key: KEY } });
-  const page = await (await t.browse('/admin')).text();
+  const page = await (await t.browse('/admin/site')).text();
   assert.match(page, /Masquée/);
   assert.match(page, /RAGO15 n’existe pas dans Stripe/);
   assert.equal((await t.browse('/admin')).headers.get('cache-control'), 'no-store');
@@ -1201,14 +1207,14 @@ test('site pop-up: set from /admin with ADMIN_KEY, code created in Stripe for th
 
   // With 50 %: created in Stripe, 15 uses, new customers only, on the first payment.
   res = await t.browse('/admin/popup', { form: { ...typed, percent: '50' } });
-  assert.equal(res.headers.get('location'), '/admin?n=created');
+  assert.equal(res.headers.get('location'), '/admin/site?n=created');
   assert.deepEqual(t.coupons['rago-promo-50-once'], { object: 'coupon', id: 'rago-promo-50-once', percent_off: 50, duration: 'once', name: '50% off' });
   const made = t.promos.find((p) => p.code === 'RAGO50');
   assert.equal(made.max_redemptions, 15);
   assert.equal(made.restrictions.first_time_transaction, true);
   assert.deepEqual(made.promotion, { type: 'coupon', coupon: 'rago-promo-50-once' });
   assert.deepEqual(await promo(), { code: 'RAGO50', percent: 50, eyebrow: 'Launch offer', title: 'Get {percent}% off now!', text: 'For the first {total} players, on your first payment.', total: 15, left: 15 });
-  assert.match(await (await t.browse('/admin?n=created')).text(), /Affichée sur le site[\s\S]*0 sur 15[\s\S]*Get <span>50<\/span>% off now!/);
+  assert.match(await (await t.browse('/admin/site?n=created')).text(), /Affichée sur le site[\s\S]*0 sur 15[\s\S]*Get <span>50<\/span>% off now!/);
 
   // Stripe can't change the percent or the limit of an existing code: a new code is asked for.
   res = await t.browse('/admin/popup', { form: { ...typed, percent: '40' } });
@@ -1217,7 +1223,7 @@ test('site pop-up: set from /admin with ADMIN_KEY, code created in Stripe for th
   assert.match(await res.text(), /RAGO50 existe déjà dans Stripe pour 15 clients/);
   // The words change freely; the site sees it at once (the cache is cleared on save).
   res = await t.browse('/admin/popup', { form: { ...typed, percent: '50', text: 'Only {left} left.' } });
-  assert.equal(res.headers.get('location'), '/admin?n=saved');
+  assert.equal(res.headers.get('location'), '/admin/site?n=saved');
   assert.equal((await promo()).text, 'Only {left} left.');
   assert.equal(t.promos.length, 1);
 
@@ -1230,7 +1236,7 @@ test('site pop-up: set from /admin with ADMIN_KEY, code created in Stripe for th
   made.times_redeemed = 15;
   await t.webhook('checkout.session.completed', t.paidSubscription('cs_pop2', 'pop2@example.com', 'year'));
   assert.equal(await promo(), null);
-  assert.match(await (await t.browse('/admin')).text(), /Les 15 utilisations de RAGO50 sont prises/);
+  assert.match(await (await t.browse('/admin/site')).text(), /Les 15 utilisations de RAGO50 sont prises/);
   await t.browse('/buy?interval=year&promo=RAGO50');
   assert.equal(t.created.at(-1).discounts, undefined);
   assert.equal(t.created.at(-1).allow_promotion_codes, true);
@@ -1238,9 +1244,9 @@ test('site pop-up: set from /admin with ADMIN_KEY, code created in Stripe for th
   // Turned off: hidden, even with Stripe out of reach.
   t.stripe.promotionCodes.list = async () => { throw new Error('Stripe down'); };
   res = await t.browse('/admin/popup', { form: { ...typed, enabled: '' } });
-  assert.equal(res.headers.get('location'), '/admin?n=saved');
+  assert.equal(res.headers.get('location'), '/admin/site?n=saved');
   assert.equal(await promo(), null);
-  assert.match(await (await t.browse('/admin')).text(), /Tu l’as désactivée/);
+  assert.match(await (await t.browse('/admin/site')).text(), /Tu l’as désactivée/);
 
   // Signed out of /admin: the form is closed again.
   await t.browse('/admin/logout', { form: {} });
@@ -1279,7 +1285,7 @@ test('going live: /admin checks prices, webhook and portal in the live mode, tes
   await L.claimLicense(t.db, old.id, tester.id);
 
   await t.browse('/admin/login', { form: { key: KEY } });
-  let page = await (await t.browse('/admin')).text();
+  let page = await (await t.browse('/admin/site')).text();
   assert.match(page, /Admin · Stripe live/);
   assert.match(page, /Clé live : les paiements sont réels/);
   assert.match(page, /Paiements activés\. Libellé sur le relevé bancaire : RAGO OPTIMIZER/);
@@ -1295,7 +1301,7 @@ test('going live: /admin checks prices, webhook and portal in the live mode, tes
   // Fixed in Stripe: the page says so.
   hook.enabled_events = ['*'];
   portals.push({ active: true, features: { subscription_cancel: { enabled: true } }, business_profile: { terms_of_service_url: 'https://rago.test/terms.html', privacy_policy_url: 'https://rago.test/privacy.html' } });
-  page = await (await t.browse('/admin')).text();
+  page = await (await t.browse('/admin/site')).text();
   assert.match(page, /Destination vers localhost, avec les 10 événements/);
   assert.match(page, /Enregistré, résiliation proposée/);
 
@@ -1310,7 +1316,7 @@ test('going live: /admin checks prices, webhook and portal in the live mode, tes
   assert.equal(ignored.status, 200);
   assert.deepEqual(await ignored.json(), { received: true, ignored: 'other_mode' });
   assert.equal(await t.db.get("SELECT 1 FROM licenses WHERE stripe_session_id = 'cs_test_late'"), null);
-  assert.match(await (await t.browse('/admin')).text(), /Un événement du mode test est arrivé .*: STRIPE_WEBHOOK_SECRET est celui de la destination test/);
+  assert.match(await (await t.browse('/admin/site')).text(), /Un événement du mode test est arrivé .*: STRIPE_WEBHOOK_SECRET est celui de la destination test/);
 
   // A wrong signature is noted too (and logged), until a good event arrives.
   const bad = await t.app.request('/webhooks/stripe', { method: 'POST', headers: { 'stripe-signature': 't=1,v1=00', 'content-type': 'application/json' }, body: '{}' });
@@ -1321,19 +1327,19 @@ test('going live: /admin checks prices, webhook and portal in the live mode, tes
   assert.equal((await send({ id: 'evt_live', type: 'checkout.session.completed', livemode: true, data: { object: live } })).status, 200);
   assert.ok(await t.db.get("SELECT 1 FROM licenses WHERE stripe_session_id = 'cs_live_first' AND status = 'active'"));
   assert.equal((await t.db.get("SELECT livemode FROM stripe_events WHERE id = 'evt_live'")).livemode, true);
-  page = await (await t.browse('/admin')).text();
+  page = await (await t.browse('/admin/site')).text();
   assert.match(page, /Dernier événement live reçu : checkout\.session\.completed/);
   assert.doesNotMatch(page, /est celui de la destination test/);
 
   // Stopping the test purchases: the tester goes back to free, the live buyer keeps Premium.
   let res = await t.browse('/admin/test-licenses', { form: {} });
-  assert.equal(res.headers.get('location'), '/admin?n=test-ended&count=1');
+  assert.equal(res.headers.get('location'), '/admin/site?n=test-ended&count=1');
   assert.deepEqual({ ...(await t.db.get("SELECT status, status_reason FROM licenses WHERE stripe_session_id = 'cs_test_before'")) }, { status: 'revoked', status_reason: 'test_mode' });
   assert.ok(await t.db.get("SELECT 1 FROM licenses WHERE stripe_session_id = 'cs_live_first' AND status = 'active'"));
   page = await (await t.browse(res.headers.get('location'))).text();
   assert.match(page, /La licence de test ne donne plus Premium/);
   assert.doesNotMatch(page, /achat fait en mode test/);
-  assert.equal((await t.browse('/admin/test-licenses', { form: {} })).headers.get('location'), '/admin?n=test-ended&count=0');
+  assert.equal((await t.browse('/admin/test-licenses', { form: {} })).headers.get('location'), '/admin/site?n=test-ended&count=0');
 
   // The tester buys for real: their test customer doesn't exist in live, the checkout opens with their email.
   await t.browse('/admin/logout', { form: {} });
@@ -1357,7 +1363,7 @@ test('test keys: /admin says payments are not real, and events from test mode ar
   t.stripe.webhookEndpoints.list = async () => { throw new Error('This API key does not have the permission to read webhook endpoints'); };
   t.stripe.billingPortal.configurations.list = async () => ({ data: [] });
   await t.browse('/admin/login', { form: { key: KEY } });
-  const page = await (await t.browse('/admin')).text();
+  const page = await (await t.browse('/admin/site')).text();
   assert.match(page, /Clé de test : aucun paiement n’est réel/);
   assert.match(page, /5,99 USD par mois/);
   assert.match(page, /Stripe ne laisse pas lire les webhooks avec cette clé/);
@@ -2200,7 +2206,7 @@ test('Discord: one Discord account per Rago account, refused changes retried, /a
 
   // /admin: bot, redirect URL, server, role, permissions, the bot's role above Pro, linked accounts.
   await t.browse('/admin/login', { form: { key: KEY } });
-  let page = await (await t.browse('/admin')).text();
+  let page = await (await t.browse('/admin/services?frais=1')).text();
   assert.match(page, /Rôle Pro sur Discord/);
   assert.match(page, /Automatique/);
   assert.match(page, /Connecté en tant que ragobot/);
@@ -2212,7 +2218,7 @@ test('Discord: one Discord account per Rago account, refused changes retried, /a
   // The usual mistakes: the bot's role under Pro, the redirect URL not added in the Developer Portal.
   d.state.roles[2].position = 2;
   d.state.redirects = [];
-  page = await (await t.browse('/admin')).text();
+  page = await (await t.browse('/admin/services?frais=1')).text();
   assert.match(page, /2 à corriger/);
   assert.match(page, /glisse le rôle du bot \(« Rago Bot »\) au-dessus de « Pro »/);
   assert.match(page, /Ajoute http:\/\/localhost\/account\/discord\/callback dans Developer Portal/);
@@ -2225,7 +2231,7 @@ test('Discord: one Discord account per Rago account, refused changes retried, /a
   assert.match(await (await manual.browse('/account')).text(), /open a ticket with your account email/);
   assert.equal((await manual.browse('/account/discord')).headers.get('location'), '/account');
   await manual.browse('/admin/login', { form: { key: KEY } });
-  assert.match(await (await manual.browse('/admin')).text(), /À régler dans Railway : DISCORD_CLIENT_ID, DISCORD_CLIENT_SECRET, DISCORD_BOT_TOKEN, DISCORD_GUILD_ID, DISCORD_ROLE_ID/);
+  assert.match(await (await manual.browse('/admin/services?frais=1')).text(), /À régler dans Railway : DISCORD_CLIENT_ID, DISCORD_CLIENT_SECRET, DISCORD_BOT_TOKEN, DISCORD_GUILD_ID, DISCORD_ROLE_ID/);
   const half = loadConfig({ DISCORD_BOT_TOKEN: 'x', DISCORD_GUILD_ID: 'not-an-id' });
   assert.equal(half.discord, false);
   assert.ok(half.warnings.some((w) => /DISCORD_CLIENT_ID, DISCORD_CLIENT_SECRET, DISCORD_ROLE_ID not set/.test(w)));
@@ -2381,7 +2387,7 @@ test('Discord rewards: VIP, MVP and boosts give Premium time and a one-use code,
 
   // /admin: both roles found, rewards counted. A role id that isn't one is flagged in the config.
   await t.browse('/admin/login', { form: { key: KEY } });
-  const page = await (await t.browse('/admin')).text();
+  const page = await (await t.browse('/admin/services?frais=1')).text();
   assert.match(page, /« VIP » donne 1 mois de Premium et un code 10 % à usage unique au compte Rago lié\. 2 données\./);
   assert.match(page, /« MVP » donne 3 mois de Premium et un code 30 % à usage unique au compte Rago lié\. 1 donnée\./);
   assert.match(page, /Booster le serveur donne 14 jours de Premium et un code 10 % à usage unique au compte Rago lié\. 2 données\./);
@@ -2719,11 +2725,11 @@ test('/admin checks the Lifetime price: one payment, in USD, and its amount', as
   t.stripe.webhookEndpoints.list = async () => ({ data: [] });
   t.stripe.billingPortal.configurations.list = async () => ({ data: [] });
   await t.browse('/admin/login', { form: { key: KEY } });
-  assert.match(await (await t.browse('/admin')).text(), /Rago Optimizer Premium · 59,99 USD une fois, le prix affiché sur le site\./);
+  assert.match(await (await t.browse('/admin/site')).text(), /Rago Optimizer Premium · 59,99 USD une fois, le prix affiché sur le site\./);
   Object.assign(life, { unit_amount: 4999 });
-  assert.match(await (await t.browse('/admin')).text(), /price_life : il vaut 49,99 USD au lieu de 59,99 USD, le prix affiché sur le site\. Lifetime n’est pas vendu\./);
+  assert.match(await (await t.browse('/admin/site')).text(), /price_life : il vaut 49,99 USD au lieu de 59,99 USD, le prix affiché sur le site\. Lifetime n’est pas vendu\./);
   Object.assign(life, { type: 'recurring', currency: 'eur' });
-  assert.match(await (await t.browse('/admin')).text(), /price_life : ce n’est pas un prix en paiement unique, il n’est pas en USD alors que le site affiche des dollars\. Lifetime n’est pas vendu\./);
+  assert.match(await (await t.browse('/admin/site')).text(), /price_life : ce n’est pas un prix en paiement unique, il n’est pas en USD alors que le site affiche des dollars\. Lifetime n’est pas vendu\./);
 });
 
 test('lifetime: refunded, it replaces nothing when claimed later; refunded after a refused cancel, the subscription still stops', async () => {
@@ -3235,4 +3241,104 @@ test('subscription from the app: plan and next payment shown, canceled in one ca
   const free = (await (await call(t, 'POST', '/account/login', { json: { email: 'free@sub.io', password: 'password123' } })).json()).account_token;
   assert.equal((await (await call(t, 'GET', '/account/subscription', { token: free })).json()).subscription, null);
   assert.equal(await errCode(await call(t, 'POST', '/account/subscription/cancel', { token: free })), 'no_subscription');
+});
+
+test('/admin dashboard: players, Premium time, revoke, ban, gifts, sales, journal (2026-11-10)', async () => {
+  const KEY = 'admin-key-0123456789abcdef';
+  const t = await setup({ ADMIN_KEY: KEY });
+  // Signed out, every dashboard page and action goes back to the key form.
+  assert.equal((await t.browse('/admin/utilisateurs')).headers.get('location'), '/admin');
+  assert.equal((await t.browse('/admin/offrir', { form: { emails: 'x@example.com', nombre: '7', unite: 'jours' } })).headers.get('location'), '/admin');
+  assert.equal(await t.db.get("SELECT 1 FROM licenses WHERE email = 'x@example.com'"), null);
+  await t.browse('/admin/login', { form: { key: KEY } });
+
+  // A buyer with an account and a PC, and a free player.
+  await t.webhook('checkout.session.completed', t.paidSession('cs_adm', 'buyer@example.com'));
+  await t.browse('/checkout/success?session_id=cs_adm');
+  await t.browse('/signup', { form: { email: 'buyer@example.com', password: 'correct horse' } });
+  await t.browse('/logout', { form: {} });
+  await t.browse('/signup', { form: { email: 'free@example.com', password: 'correct horse' } });
+  await t.browse('/logout', { form: {} });
+  await t.browse('/admin/login', { form: { key: KEY } });
+  let r = await t.api('/auth/login', { email: 'buyer@example.com', password: 'correct horse', device: device('ADM') });
+  r = await t.api('/licenses/activate', { device: device('ADM') }, { authorization: `Bearer ${(await r.json()).access_token}` });
+  assert.equal(r.status, 200);
+  const buyer = await L.findUserByEmail(t.db, 'buyer@example.com');
+  const free = await L.findUserByEmail(t.db, 'free@example.com');
+
+  // Overview and the list, with filters and search.
+  t.charges.push({ id: 'ch_1', status: 'succeeded', paid: true, amount: 599, amount_refunded: 0, currency: 'usd', created: Math.floor(Date.now() / 1000), description: 'Subscription creation', billing_details: { email: 'buyer@example.com' } },
+    { id: 'ch_2', status: 'succeeded', paid: true, amount: 5999, amount_refunded: 5999, currency: 'usd', created: Math.floor(Date.now() / 1000) - 40 * 86400, billing_details: { email: 'old@example.com' } });
+  t.balance.push({ id: 'txn_1', type: 'charge', currency: 'eur', fee: 60, net: 450, created: Math.floor(Date.now() / 1000) });
+  let page = await (await t.browse('/admin?frais=1')).text();
+  assert.match(page, /Tout Rago au même endroit/);
+  assert.match(page, /Aujourd’hui<\/dt><dd class="mono">5,99\s\$US/);
+  assert.match(page, /Depuis le début<\/dt><dd class="mono">5,99\s\$US/); // the refunded one counts for nothing
+  assert.match(page, /4,50\s€ reçus après frais/);
+  page = await (await t.browse('/admin/utilisateurs?filtre=premium')).text();
+  assert.match(page, /buyer@example\.com/);
+  assert.doesNotMatch(page, /free@example\.com/);
+  page = await (await t.browse('/admin/utilisateurs?q=FREE@')).text();
+  assert.match(page, /free@example\.com/);
+  // An exact email opens the player's page.
+  assert.equal((await t.browse('/admin/utilisateurs?q=buyer%40example.com')).headers.get('location'), `/admin/utilisateurs/${buyer.id}`);
+  page = await (await t.browse(`/admin/utilisateurs/${buyer.id}`)).text();
+  assert.match(page, /GAMING-PC/);
+  assert.match(page, /Libérer le PC/);
+
+  // A week of Premium for the free player, then revoked, then given back.
+  const act = (who, a, form = {}) => t.browse(`/admin/utilisateurs/${who.id}/${a}`, { form });
+  r = await act(free, 'temps', { nombre: '7', unite: 'jours' });
+  assert.equal(r.headers.get('location'), `/admin/utilisateurs/${free.id}?n=temps`);
+  let lic = await L.licenseForUser(t.db, free.id);
+  assert.equal(lic.status, 'active');
+  assert.equal(lic.plan, 'reward');
+  assert.ok(Math.abs(Number(lic.current_period_end) - (Date.now() + 7 * 86400000)) < 60000);
+  await act(free, 'revoquer', { licence: lic.id, raison: 'test' });
+  assert.equal((await L.getLicense(t.db, lic.id)).status, 'revoked');
+  // Another account's license can't be touched from this page.
+  assert.equal((await act(buyer, 'revoquer', { licence: lic.id })).status, 400);
+  await act(free, 'retablir', { licence: lic.id });
+  assert.equal((await L.getLicense(t.db, lic.id)).status, 'active');
+  // The password link is shown once on the page and works.
+  page = await (await act(free, 'lien-mdp')).text();
+  const reset = page.match(/http:\/\/localhost\/reset\/[A-Za-z0-9_-]+/)[0];
+  assert.equal((await t.browse(reset.replace('http://localhost', ''))).status, 200);
+
+  // Banned: no sign-in on the site or in the app, Premium off, the session closed; lifted: the license comes back.
+  r = await act(buyer, 'bannir', { raison: 'chargeback abuse' });
+  assert.equal(r.headers.get('location'), `/admin/utilisateurs/${buyer.id}?n=banni`);
+  const blic = await L.licenseForUser(t.db, buyer.id);
+  assert.deepEqual({ status: blic.status, reason: blic.status_reason }, { status: 'revoked', reason: 'banned' });
+  r = await t.api('/auth/login', { email: 'buyer@example.com', password: 'correct horse', device: device('ADM') });
+  assert.equal((await r.json()).error.code, 'account_banned');
+  r = await t.app.request('/login', { method: 'POST', headers: { origin: 'http://localhost', 'content-type': 'application/x-www-form-urlencoded' }, body: 'email=buyer%40example.com&password=correct+horse' });
+  assert.equal(r.status, 403);
+  assert.match(await r.text(), /This account is suspended/);
+  page = await (await t.browse(`/admin/utilisateurs?filtre=bannis`)).text();
+  assert.match(page, /buyer@example\.com/);
+  await act(buyer, 'debannir');
+  assert.equal((await L.getLicense(t.db, blic.id)).status, 'active');
+  r = await t.api('/auth/login', { email: 'buyer@example.com', password: 'correct horse', device: device('ADM') });
+  assert.equal(r.status, 200);
+
+  // Premium for emails without an account: a claim link each, shown once; an email with Premium is skipped.
+  page = await (await t.browse('/admin/offrir', { form: { emails: 'new@example.com, buyer@example.com', nombre: '1', unite: 'mois' } })).text();
+  assert.match(page, /http:\/\/localhost\/claim\/[A-Za-z0-9_-]+/);
+  assert.match(page, /buyer@example\.com<\/a><\/span><span class="muted small">déjà Premium/);
+  const gift = (await L.unclaimedLicenses(t.db, 'new@example.com'))[0];
+  assert.equal(gift.plan, 'reward');
+  assert.match(await (await t.browse('/admin/achats')).text(), /new@example\.com/);
+
+  // Sales, services and the journal open; every action is in the journal.
+  assert.match(await (await t.browse('/admin/ventes')).text(), /Remboursé/);
+  assert.equal((await t.browse('/admin/services')).status, 200);
+  page = await (await t.browse('/admin/journal?type=admin')).text();
+  for (const label of ['Compte banni \\(admin\\)', 'Bannissement levé \\(admin\\)', 'Temps Premium offert \\(admin\\)', 'Licence révoquée \\(admin\\)', 'Premium offert à un e-mail \\(admin\\)']) assert.match(page, new RegExp(label));
+
+  // Deleting asks for the email typed again.
+  assert.equal((await act(free, 'supprimer', { confirmation: 'nope' })).status, 400);
+  r = await act(free, 'supprimer', { confirmation: 'free@example.com' });
+  assert.equal(r.headers.get('location'), '/admin/utilisateurs?n=supprime');
+  assert.equal(await L.findUserByEmail(t.db, 'free@example.com'), null);
 });

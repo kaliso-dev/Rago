@@ -3,6 +3,7 @@ import { maskLicenseKey } from './crypto.js';
 import { COMMENT_MAX } from './reviews.js';
 
 class Raw { constructor(s) { this.s = s; } toString() { return this.s; } }
+export const raw = (s) => new Raw(String(s));
 const escape = (v) => String(v).replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[c]);
 const render = (v) => (v == null || v === false ? '' : v instanceof Raw ? v.s : Array.isArray(v) ? v.map(render).join('') : escape(v));
 export const html = (strings, ...vals) => new Raw(strings.reduce((out, s, i) => out + s + (i < vals.length ? render(vals[i]) : ''), ''));
@@ -10,7 +11,7 @@ export const html = (strings, ...vals) => new Raw(strings.reduce((out, s, i) => 
 const WORDMARK = html`<img class="wordmark" src="/assets/wordmark.svg?v=2" alt="Rago Optimizer" width="150" height="24">`;
 
 const svg = (d, w = 1.6) => html`<svg viewBox="0 0 16 16" aria-hidden="true"><path d="${d}" fill="none" stroke="currentColor" stroke-width="${w}" stroke-linecap="round" stroke-linejoin="round"/></svg>`;
-const ICON = {
+export const ICON = {
   check: svg('M3.5 8.5l3 3 6-7'),
   download: svg('M8 2.5v7.5m0 0L4.8 6.8M8 10l3.2-3.2M3 13.2h10'),
   copy: svg('M6 5.5h6a1.5 1.5 0 0 1 1.5 1.5v5A1.5 1.5 0 0 1 12 13.5H7A1.5 1.5 0 0 1 5.5 12V6M3.5 10V4A1.5 1.5 0 0 1 5 2.5h5', 1.4),
@@ -50,7 +51,7 @@ export const supportLink = (cfg, label = 'Contact support on Discord') =>
 /**
  * @param buy show Pricing and "Get Premium" in the header (visitors and free accounts)
  */
-function page({ title, body, user, cfg, bodyClass = '', nav = '', cta = { href: '/login', label: 'Sign in' }, buy = !user, lang = 'en' }) {
+export function page({ title, body, user, cfg, bodyClass = '', nav = '', cta = { href: '/login', label: 'Sign in' }, buy = !user, lang = 'en' }) {
   const pricing = `${cfg.siteUrl}/#pricing`;
   return `<!doctype html>
 <html lang="${lang}">
@@ -92,7 +93,7 @@ ${render(body)}
 </html>`;
 }
 
-const field = ({ label, name, type = 'text', value = '', autocomplete, hint, attrs = '', required = true }) => html`
+export const field = ({ label, name, type = 'text', value = '', autocomplete, hint, attrs = '', required = true }) => html`
   <div class="field">
     <label class="field-label" for="f-${name}">${label}</label>
     <span class="field-box">
@@ -106,7 +107,7 @@ const referralField = (code) => field({ label: 'Referral code (optional)', name:
 
 const hidden = (name, value) => (value ? html`<input type="hidden" name="${name}" value="${value}">` : '');
 
-const alertBox = (msg, kind = 'error') => msg ? html`<div class="alert alert-${kind}" role="${kind === 'error' ? 'alert' : 'status'}">${kind === 'error' ? ICON.alert : ICON.check}<span>${msg}</span></div>` : '';
+export const alertBox = (msg, kind = 'error') => msg ? html`<div class="alert alert-${kind}" role="${kind === 'error' ? 'alert' : 'status'}">${kind === 'error' ? ICON.alert : ICON.check}<span>${msg}</span></div>` : '';
 
 // Two-column layout for the sign-up / sign-in flow: story on the left, form on the right.
 function split({ step, aside, form }) {
@@ -887,11 +888,12 @@ export function affiliatePage(cfg, { user, summary, joined }) {
 }
 
 // ---------- /admin: the site's discount pop-up. In French, only Sofiene uses it. ----------
-const adminShell = (cfg, title, body) => page({ title, cfg, body, buy: false, lang: 'fr', bodyClass: 'is-admin', cta: { href: `${cfg.siteUrl}/`, label: 'Voir le site' } });
+// `nav`: the dashboard's menu (admin-views.js), above the page.
+export const adminShell = (cfg, title, body, nav = '') => page({ title, cfg, body: html`${nav}${body}`, buy: false, lang: 'fr', bodyClass: 'is-admin', cta: { href: `${cfg.siteUrl}/`, label: 'Voir le site' } });
 
 export function adminLoginPage(cfg, { error } = {}) {
-  const aside = html`<p class="overline rise">Admin</p><h1 class="display rise d1">Pop-up du site.</h1>
-    <p class="lede rise d2">Entre la clé ADMIN_KEY (dans les variables Railway) pour changer la réduction, le code et le texte de la pop-up.</p>`;
+  const aside = html`<p class="overline rise">Admin</p><h1 class="display rise d1">Tableau de bord.</h1>
+    <p class="lede rise d2">Entre la clé ADMIN_KEY (dans les variables Railway) pour ouvrir le tableau de bord : joueurs, ventes, services, tests réseau et pop-up du site.</p>`;
   const form = html`<h2 class="h2">Accès admin</h2>${alertBox(error)}
     <form method="post" action="/admin/login" class="form" data-busy="Vérification…">
       ${field({ label: 'Clé admin', name: 'key', type: 'password', autocomplete: 'current-password' })}
@@ -911,7 +913,7 @@ const ADMIN_NOTICES = {
 const CHECK_BADGE = { ok: ['badge-ok', 'OK'], warn: ['badge-wait', 'À vérifier'], error: ['badge-red', 'À corriger'] };
 
 /** "Paiements Stripe" on /admin: is everything set up in the key's mode (billing.js stripeChecks). */
-function stripeSection(s) {
+export function stripeSection(s) {
   if (!s) return '';
   const bad = s.checks.filter((c) => c.level === 'error').length;
   return html`<section class="checks rise d3" aria-labelledby="checks-h">
@@ -926,7 +928,7 @@ function stripeSection(s) {
     </section>`;
 }
 /** "Rôle Pro sur Discord" on /admin: the bot, the server, the role and its place (discord.js checks). */
-function discordSection(d) {
+export function discordSection(d) {
   if (!d) return '';
   if (d.missing) {
     return html`<section class="checks rise d3" aria-labelledby="discord-h">
@@ -945,7 +947,7 @@ function discordSection(d) {
     </section>`;
 }
 /** "Bot communauté" on /admin: the live connection, the invites, the welcome channel (community.js checks). */
-function communitySection(d) {
+export function communitySection(d) {
   if (!d) return '';
   const bad = d.checks.filter((c) => c.level === 'error').length;
   const needsPerms = d.checks.some((c) => c.label === 'Invitations' && c.level === 'error');
@@ -959,7 +961,12 @@ function communitySection(d) {
 }
 const fill = (t, p) => String(t).replace(/\{(percent|code|total|left)\}/g, (_, k) => String(p[k] ?? ''));
 
-export function adminPage(cfg, { state, stripe, discord, community, values, error, notice, count }) {
+export function adminPage(cfg, opts) {
+  return adminShell(cfg, 'Pop-up du site', split(adminPopupParts(cfg, opts)));
+}
+
+/** The pop-up's state and its form, for /admin/site (admin-views.js). */
+export function adminPopupParts(cfg, { state, stripe, discord, community, values, error, notice, count }) {
   const { settings: s, promo: p } = state;
   const v = values || { enabled: s.enabled, code: s.code, percent: p?.percent ?? '', limit: p?.total ?? '', eyebrow: s.eyebrow, title: s.title, text: s.text };
   const vals = p ? { percent: p.percent, code: p.code, total: p.total, left: p.left } : {};
@@ -985,9 +992,7 @@ export function adminPage(cfg, { state, stripe, discord, community, values, erro
     <div class="rise d3">${preview}</div>
     ${stripeSection(stripe)}
     ${discordSection(discord)}
-    ${communitySection(community)}
-    <div class="row rise d4"><a class="btn btn-ghost btn-sm" href="/admin/reseau">Tests réseau des joueurs</a>
-      <form method="post" action="/admin/logout"><button class="btn btn-ghost btn-sm" type="submit">Quitter l’admin</button></form></div>`;
+    ${communitySection(community)}`;
   const form = html`<h2 class="h2">Modifier la pop-up</h2>
     ${alertBox(typeof ADMIN_NOTICES[notice] === 'function' ? ADMIN_NOTICES[notice](count) : ADMIN_NOTICES[notice], 'ok')}${alertBox(error)}
     <form method="post" action="/admin/popup" class="form" data-busy="Enregistrement…">
@@ -1008,7 +1013,7 @@ export function adminPage(cfg, { state, stripe, discord, community, values, erro
       </div>
       <button class="btn btn-primary btn-block" type="submit">Enregistrer</button>
     </form>`;
-  return adminShell(cfg, 'Pop-up du site', split({ aside, form }));
+  return { aside, form };
 }
 
 // ---------- /admin/reseau: the app's network tests by city and by provider (network.js), for the future proxies ----------
@@ -1031,7 +1036,7 @@ function netTable(rows, place, label) {
     </table></div>`;
 }
 
-export function adminNetworkPage(cfg, { summary: s, geo }) {
+export function adminNetworkPage(cfg, { summary: s, geo, nav = '' }) {
   const t = s.total;
   const [badge, status] = !geo.on ? ['badge-off', 'Villes désactivées (GEOIP=off)']
     : geo.loaded ? ['badge-ok', `Villes : base DB-IP de ${geo.month}`]
@@ -1047,7 +1052,6 @@ export function adminNetworkPage(cfg, { summary: s, geo }) {
       <div class="row rise d2">
         <nav class="tabs" aria-label="Période">${[30, 90, 365].map((d) => html`<a href="/admin/reseau?jours=${d}" ${d === s.days ? html`aria-current="page"` : ''}>${d} jours</a>`)}</nav>
         <a class="btn btn-ghost btn-sm" href="/admin/reseau.csv">Tout exporter (CSV)</a>
-        <a class="btn btn-ghost btn-sm" href="/admin">Retour</a>
       </div>
     </div>
     <div class="row rise d2"><span class="badge ${badge}"><i></i>${status}</span>
@@ -1063,5 +1067,5 @@ export function adminNetworkPage(cfg, { summary: s, geo }) {
     <section class="net-panel rise d4" aria-labelledby="net-isp"><h2 class="h2" id="net-isp">Par fournisseur d’accès</h2>${netTable(s.isps, isp, 'Fournisseur')}</section>
     <p class="muted small">Villes et fournisseurs : <a href="https://db-ip.com" rel="noopener">IP Geolocation by DB-IP</a> (CC BY 4.0), déduits de l’adresse IP qui n’est jamais gardée. Tests gardés 12 mois.</p>
   </main>`;
-  return adminShell(cfg, 'Tests réseau', body);
+  return adminShell(cfg, 'Tests réseau', body, nav);
 }
