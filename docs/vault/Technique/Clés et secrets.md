@@ -14,8 +14,14 @@ maj: 2026-11-10
 - Ne jamais copier `server_secrets` de la prod vers le staging.
 - Ne jamais ajouter les MX Google dans OVH (couperait la boîte Zimbra `support@`).
 
-## État des sauvegardes (10/11)
-**Aucune clé n'est sauvegardée** (Sofiene, q67 : « je me noie sous les clé et j'ai aucun export ») : ni `export-keys` du serveur, ni les clés Railway, Stripe ou GitHub. Stripe l'a prévenu qu'il ne pourra bientôt plus revoir ses clés secrètes. Le projet Supabase de prod, seul endroit où est la clé de signature des licences, a dépassé son quota gratuit : restrictions possibles à partir du 05/12 ([[Supabase]]). Les secrets GitHub ne se relisent pas : `TAURI_SIGNING_PRIVATE_KEY` et son mot de passe sont sur le Mac de Sofiene : `~/.tauri/rago-updater.key` (et `.key.pub`), créés le 28/10 (trouvés par Claude le 10/11, sans lire le contenu) ; mot de passe retrouvé et vérifié par Sofiene le 10/11 (test de signature) ; copie hors du Mac **pas encore faite** ; `RAGO_SCRIPTS_SECRET` a la même valeur que `SCRIPTS_SECRET` de Railway. Les variables Railway se copient d'un coup (onglet Variables → Raw Editor), ce qui sauvegarde aussi la clé Stripe secrète. À faire : un gestionnaire de mots de passe, puis y ranger chaque clé (sans jamais l'écrire dans un chat ou un fichier du projet).
+## État des sauvegardes (11/11)
+**Toutes les clés sont sauvegardées** dans le gestionnaire de mots de passe de Sofiene (Sofiene, 11/11 : « j'ai finis d'enregistrer toute les clé que tu m'a dis d'enregistré ») :
+- clé de signature des licences et secret de session (`server_secrets` de Supabase prod) ;
+- variables Railway (prod et staging), dont la clé Stripe secrète, `SCRIPTS_SECRET` (= `RAGO_SCRIPTS_SECRET` de GitHub), `DATABASE_URL`, Discord, Google ;
+- clé de [[Mise à jour automatique]] : fichier `~/.tauri/rago-updater.key` (et `.key.pub`) du Mac de Sofiene, créé le 28/10, avec son mot de passe (vérifié par un test de signature le 10/11) ;
+- codes de secours de double authentification des comptes (GitHub, Stripe, Supabase, Railway, OVH, Google) ;
+- identifiants de l'interface admin du serveur (`/admin`).
+Les valeurs ne sont écrites nulle part ailleurs (ni chat, ni vault). La clé des licences n'est **pas** mise en variable Railway : elle reste lue dans la base ; ne pas l'y ajouter sans Claude (une valeur mal collée remplacerait la clé en service).
 
 ## Noms des variables
 Liste complète, rangée par service avec leurs défauts : [[Variables d'environnement]].
