@@ -1196,6 +1196,7 @@ test('site pop-up: set from /admin with ADMIN_KEY, code created in Stripe for th
   const page = await (await t.browse('/admin/site')).text();
   assert.match(page, /Masquée/);
   assert.match(page, /RAGO15 n’existe pas dans Stripe/);
+  assert.doesNotMatch(page, /Paiements Stripe/); // the Stripe checks are on /admin/services only
   assert.equal((await t.browse('/admin')).headers.get('cache-control'), 'no-store');
 
   // A new code without a percent: refused, nothing created.
@@ -1285,7 +1286,7 @@ test('going live: /admin checks prices, webhook and portal in the live mode, tes
   await L.claimLicense(t.db, old.id, tester.id);
 
   await t.browse('/admin/login', { form: { key: KEY } });
-  let page = await (await t.browse('/admin/site')).text();
+  let page = await (await t.browse('/admin/services?frais=1')).text();
   assert.match(page, /pill ok"><i><\/i>Stripe live/);
   assert.match(page, /Clé live : les paiements sont réels/);
   assert.match(page, /Paiements activés\. Libellé sur le relevé bancaire : RAGO OPTIMIZER/);
@@ -1301,7 +1302,7 @@ test('going live: /admin checks prices, webhook and portal in the live mode, tes
   // Fixed in Stripe: the page says so.
   hook.enabled_events = ['*'];
   portals.push({ active: true, features: { subscription_cancel: { enabled: true } }, business_profile: { terms_of_service_url: 'https://rago.test/terms.html', privacy_policy_url: 'https://rago.test/privacy.html' } });
-  page = await (await t.browse('/admin/site')).text();
+  page = await (await t.browse('/admin/services?frais=1')).text();
   assert.match(page, /Destination vers localhost, avec les 10 événements/);
   assert.match(page, /Enregistré, résiliation proposée/);
 
@@ -1316,7 +1317,7 @@ test('going live: /admin checks prices, webhook and portal in the live mode, tes
   assert.equal(ignored.status, 200);
   assert.deepEqual(await ignored.json(), { received: true, ignored: 'other_mode' });
   assert.equal(await t.db.get("SELECT 1 FROM licenses WHERE stripe_session_id = 'cs_test_late'"), null);
-  assert.match(await (await t.browse('/admin/site')).text(), /Un événement du mode test est arrivé .*: STRIPE_WEBHOOK_SECRET est celui de la destination test/);
+  assert.match(await (await t.browse('/admin/services?frais=1')).text(), /Un événement du mode test est arrivé .*: STRIPE_WEBHOOK_SECRET est celui de la destination test/);
 
   // A wrong signature is noted too (and logged), until a good event arrives.
   const bad = await t.app.request('/webhooks/stripe', { method: 'POST', headers: { 'stripe-signature': 't=1,v1=00', 'content-type': 'application/json' }, body: '{}' });
@@ -1327,19 +1328,19 @@ test('going live: /admin checks prices, webhook and portal in the live mode, tes
   assert.equal((await send({ id: 'evt_live', type: 'checkout.session.completed', livemode: true, data: { object: live } })).status, 200);
   assert.ok(await t.db.get("SELECT 1 FROM licenses WHERE stripe_session_id = 'cs_live_first' AND status = 'active'"));
   assert.equal((await t.db.get("SELECT livemode FROM stripe_events WHERE id = 'evt_live'")).livemode, true);
-  page = await (await t.browse('/admin/site')).text();
+  page = await (await t.browse('/admin/services?frais=1')).text();
   assert.match(page, /Dernier événement live reçu : checkout\.session\.completed/);
   assert.doesNotMatch(page, /est celui de la destination test/);
 
   // Stopping the test purchases: the tester goes back to free, the live buyer keeps Premium.
   let res = await t.browse('/admin/test-licenses', { form: {} });
-  assert.equal(res.headers.get('location'), '/admin/site?n=test-ended&count=1');
+  assert.equal(res.headers.get('location'), '/admin/services?n=test-ended&count=1');
   assert.deepEqual({ ...(await t.db.get("SELECT status, status_reason FROM licenses WHERE stripe_session_id = 'cs_test_before'")) }, { status: 'revoked', status_reason: 'test_mode' });
   assert.ok(await t.db.get("SELECT 1 FROM licenses WHERE stripe_session_id = 'cs_live_first' AND status = 'active'"));
   page = await (await t.browse(res.headers.get('location'))).text();
   assert.match(page, /La licence de test ne donne plus Premium/);
   assert.doesNotMatch(page, /achat fait en mode test/);
-  assert.equal((await t.browse('/admin/test-licenses', { form: {} })).headers.get('location'), '/admin/site?n=test-ended&count=0');
+  assert.equal((await t.browse('/admin/test-licenses', { form: {} })).headers.get('location'), '/admin/services?n=test-ended&count=0');
 
   // The tester buys for real: their test customer doesn't exist in live, the checkout opens with their email.
   await t.browse('/admin/logout', { form: {} });
@@ -1363,7 +1364,7 @@ test('test keys: /admin says payments are not real, and events from test mode ar
   t.stripe.webhookEndpoints.list = async () => { throw new Error('This API key does not have the permission to read webhook endpoints'); };
   t.stripe.billingPortal.configurations.list = async () => ({ data: [] });
   await t.browse('/admin/login', { form: { key: KEY } });
-  const page = await (await t.browse('/admin/site')).text();
+  const page = await (await t.browse('/admin/services?frais=1')).text();
   assert.match(page, /Clé de test : aucun paiement n’est réel/);
   assert.match(page, /5,99 USD par mois/);
   assert.match(page, /Stripe ne laisse pas lire les webhooks avec cette clé/);
@@ -2725,11 +2726,11 @@ test('/admin checks the Lifetime price: one payment, in USD, and its amount', as
   t.stripe.webhookEndpoints.list = async () => ({ data: [] });
   t.stripe.billingPortal.configurations.list = async () => ({ data: [] });
   await t.browse('/admin/login', { form: { key: KEY } });
-  assert.match(await (await t.browse('/admin/site')).text(), /Rago Optimizer Premium · 59,99 USD une fois, le prix affiché sur le site\./);
+  assert.match(await (await t.browse('/admin/services?frais=1')).text(), /Rago Optimizer Premium · 59,99 USD une fois, le prix affiché sur le site\./);
   Object.assign(life, { unit_amount: 4999 });
-  assert.match(await (await t.browse('/admin/site')).text(), /price_life : il vaut 49,99 USD au lieu de 59,99 USD, le prix affiché sur le site\. Lifetime n’est pas vendu\./);
+  assert.match(await (await t.browse('/admin/services?frais=1')).text(), /price_life : il vaut 49,99 USD au lieu de 59,99 USD, le prix affiché sur le site\. Lifetime n’est pas vendu\./);
   Object.assign(life, { type: 'recurring', currency: 'eur' });
-  assert.match(await (await t.browse('/admin/site')).text(), /price_life : ce n’est pas un prix en paiement unique, il n’est pas en USD alors que le site affiche des dollars\. Lifetime n’est pas vendu\./);
+  assert.match(await (await t.browse('/admin/services?frais=1')).text(), /price_life : ce n’est pas un prix en paiement unique, il n’est pas en USD alors que le site affiche des dollars\. Lifetime n’est pas vendu\./);
 });
 
 test('lifetime: refunded, it replaces nothing when claimed later; refunded after a refused cancel, the subscription still stops', async () => {

@@ -149,12 +149,12 @@ document.addEventListener('keydown', (e) => {
 }
 
 // ---------- one-time notices ----------
-// Success notices fade out; errors stay. ?n=… leaves the address so a reload doesn't show them again.
+// Success notices fade out; errors stay. ?n=… (and ?frais=1) leave the address so a reload doesn't show them or read Stripe again.
 for (const t of document.querySelectorAll('.toast')) autoHide(t, 7000);
 {
   const url = new URL(location.href);
-  if (url.searchParams.has('n')) {
-    for (const k of ['n', 'count', 'code']) url.searchParams.delete(k);
+  if (url.searchParams.has('n') || url.searchParams.has('frais')) {
+    for (const k of ['n', 'count', 'code', 'frais']) url.searchParams.delete(k);
     history.replaceState(null, '', url.pathname + url.search + url.hash);
   }
 }

@@ -273,7 +273,7 @@ export function mountAdmin(app, deps) {
         const bad = s.checks.filter((x) => x.level === 'error').length;
         const warn = s.checks.filter((x) => x.level === 'warn').length;
         return { id: 'stripe', group: 'Stripe', label: `Paiements (mode ${s.mode || 'non configuré'})`, level: bad ? 'error' : warn ? 'warn' : 'ok',
-          text: bad ? `${bad} point${bad > 1 ? 's' : ''} à corriger : détail plus bas et dans « Site et promos ».` : s.checks.map((x) => x.label).join(', ') + ' : OK.', stripe: s };
+          text: bad ? `${bad} point${bad > 1 ? 's' : ''} à corriger : détail plus bas.` : s.checks.map((x) => x.label).join(', ') + ' : OK.', stripe: s };
       }),
       timed(async () => {
         if (!cfg.mailEnabled) return { id: 'mail', group: 'Resend', label: 'E-mails', level: cfg.prod ? 'error' : 'warn', text: 'RESEND_API_KEY manque (ou MAIL_FROM est l’exemple) : les e-mails sont écrits dans les logs au lieu de partir.' };
@@ -328,7 +328,7 @@ export function mountAdmin(app, deps) {
         FROM users u ${LATEST_LICENSE} ORDER BY u.created_at DESC LIMIT 6`),
       db.all(`SELECT a.*, COALESCE(u.email, lu.email, l.email) AS email, COALESCE(a.user_id, l.user_id) AS owner FROM audit a
         LEFT JOIN users u ON u.id = a.user_id LEFT JOIN licenses l ON l.id = a.license_id LEFT JOIN users lu ON lu.id = l.user_id
-        ORDER BY a.id DESC LIMIT 12`),
+        ORDER BY a.id DESC LIMIT 30`),
     ]);
     return view(c, AV.overviewPage, { counts: k, sales: s, services: sv, recentUsers, recentEvents, dashboard: stripeDashboard() });
   });
@@ -610,7 +610,8 @@ export function mountAdmin(app, deps) {
     const [s, k] = await Promise.all([sales.read({ fresh: c.req.query('frais') === '1' }), counts()]);
     return view(c, AV.salesPage, { sales: s, counts: k, dashboard: stripeDashboard(), etat, page, per: 50 });
   });
-  app.get('/admin/services', async (c) => view(c, AV.servicesPage, { services: await services({ fresh: c.req.query('frais') === '1' }) }));
+  app.get('/admin/services', async (c) => view(c, AV.servicesPage, {
+    services: await services({ fresh: c.req.query('frais') === '1' }), notice: c.req.query('n'), count: Number(c.req.query('count')) || 0 }));
 
   const JOURNAL_TYPES = { tout: null, admin: 'admin.%', achats: 'license.%', comptes: 'user.%', pc: 'device.%', abonnements: 'subscription.%', affiliation: 'affiliate.%' };
   app.get('/admin/journal', async (c) => {
@@ -624,11 +625,11 @@ export function mountAdmin(app, deps) {
     return view(c, AV.journalPage, { rows, type, types: Object.keys(JOURNAL_TYPES), before });
   });
 
-  // ---------- the site: discount pop-up, promotion codes, reviews, test licenses ----------
+  // ---------- the site: discount pop-up, promotion codes, reviews (the Stripe checks are on Services) ----------
   const sitePage = async (c, extra = {}, status = 200) => {
-    const [state, stripeState, reviews] = await Promise.all([Promo.popupState(db, stripe, cfg), stripeChecks(stripe, cfg, { db, webhook: webhookState() }),
+    const [state, reviews] = await Promise.all([Promo.popupState(db, stripe, cfg),
       db.all(`SELECT r.*, u.email, u.display_name, u.avatar_key, u.id AS uid FROM reviews r JOIN users u ON u.id = r.user_id ORDER BY r.updated_at DESC LIMIT 100`)]);
-    return view(c, AV.sitePage, { state, stripe: stripeState, reviews, notice: c.req.query('n'), count: Number(c.req.query('count')) || 0, code: c.req.query('code'), ...extra }, status);
+    return view(c, AV.sitePage, { state, reviews, notice: c.req.query('n'), code: c.req.query('code'), ...extra }, status);
   };
   app.get('/admin/site', (c) => sitePage(c));
   app.post('/admin/popup', async (c) => {
@@ -666,7 +667,10 @@ export function mountAdmin(app, deps) {
     const ended = await endTestLicenses(db, cfg);
     await audit(db, 'admin.test_licenses_ended', { detail: { count: ended } });
     discord?.syncAll(); // their Discord role goes too
-    return c.redirect(`/admin/site?n=test-ended&count=${ended}`, 303);
+    // Services shows the Stripe checks: read them again so the page no longer lists these licenses.
+    await servicesRun?.catch(() => {});
+    await refreshServices();
+    return c.redirect(`/admin/services?n=test-ended&count=${ended}`, 303);
   });
 
   // ---------- the app's network tests (RAG-50) ----------
