@@ -38,6 +38,41 @@ export async function setPassword(db, userId, password) {
   await db.run('UPDATE password_resets SET used_at = ? WHERE user_id = ? AND used_at IS NULL', [Date.now(), userId]);
 }
 
+/** A banned account (/admin, 2026-11-10) signs in nowhere: site, app, Google, Discord. */
+export const isBanned = (user) => !!user?.banned_at;
+
+/**
+ * Bans the account: no more sign-in, every open session closed, its active licenses revoked ('banned'). Returns the
+ * licenses it revoked, so the caller can stop their Stripe subscriptions and take the Discord role back.
+ */
+export function banUser(db, userId, reason) {
+  return db.tx(async (t) => {
+    await t.run('UPDATE users SET banned_at = ?, banned_reason = ? WHERE id = ?', [Date.now(), reason || null, userId]);
+    await t.run('DELETE FROM web_sessions WHERE user_id = ?', [userId]);
+    await t.run('DELETE FROM api_sessions WHERE user_id = ?', [userId]);
+    const active = await t.all("SELECT * FROM licenses WHERE user_id = ? AND status = 'active' FOR UPDATE", [userId]);
+    for (const l of active) await setLicenseStatus(t, l.id, 'revoked', 'banned');
+    await audit(t, 'user.banned', { userId, detail: { reason: reason || null, licenses: active.map((l) => l.id) } });
+    return active;
+  });
+}
+
+/** Lifts the ban. Licenses revoked by it come back when still valid: keep(license) says which. */
+export function unbanUser(db, userId, keep = () => true) {
+  return db.tx(async (t) => {
+    await t.run('UPDATE users SET banned_at = NULL, banned_reason = NULL WHERE id = ?', [userId]);
+    const revoked = await t.all("SELECT * FROM licenses WHERE user_id = ? AND status = 'revoked' AND status_reason = 'banned' ORDER BY created_at DESC FOR UPDATE", [userId]);
+    const back = [];
+    for (const l of revoked) {
+      if (back.length || !(await keep(l))) continue; // one active license per account
+      await setLicenseStatus(t, l.id, 'active', null);
+      back.push(l);
+    }
+    await audit(t, 'user.unbanned', { userId, detail: { restored: back.map((l) => l.id) } });
+    return back;
+  });
+}
+
 export async function createWebSession(db, userId) {
   const token = randomToken();
   const now = Date.now();
@@ -49,7 +84,7 @@ export async function createWebSession(db, userId) {
 export async function userForWebSession(db, token) {
   if (!token) return null;
   return db.get(`SELECT u.* FROM web_sessions s JOIN users u ON u.id = s.user_id
-    WHERE s.token_hash = ? AND s.expires_at > ?`, [sha256(token), Date.now()]);
+    WHERE s.token_hash = ? AND s.expires_at > ? AND u.banned_at IS NULL`, [sha256(token), Date.now()]);
 }
 
 export async function deleteWebSession(db, token) {
@@ -71,7 +106,7 @@ export async function createApiSession(db, userId) {
 export async function userForApiSession(db, token) {
   if (!token) return null;
   return db.get(`SELECT u.* FROM api_sessions s JOIN users u ON u.id = s.user_id
-    WHERE s.token_hash = ? AND s.expires_at > ?`, [sha256(String(token)), Date.now()]);
+    WHERE s.token_hash = ? AND s.expires_at > ? AND u.banned_at IS NULL`, [sha256(String(token)), Date.now()]);
 }
 
 export async function deleteApiSession(db, token) {

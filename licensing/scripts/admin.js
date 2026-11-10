@@ -45,6 +45,7 @@ import * as A from '../src/affiliates.js';
 import * as P from '../src/profile.js';
 import * as R from '../src/reviews.js';
 import { createDiscord, DiscordError } from '../src/discord.js';
+import { deleteAccount } from '../src/support.js';
 import Stripe from 'stripe';
 
 const cfg = loadConfig({ ...process.env, NODE_ENV: 'development' });
@@ -244,36 +245,14 @@ switch (cmd) {
   }
   case 'create-user': await L.createUser(db, email, rest[0]); console.log('User created.'); break;
   case 'delete-user': {
-    const target = String(email || '').toLowerCase();
-    const user = await L.findUserByEmail(db, target);
-    const lics = await db.all('SELECT * FROM licenses WHERE email = ? OR (user_id IS NOT NULL AND user_id = ?)', [target, user?.id ?? '']);
-    if (!user && !lics.length) { console.error(`Nothing stored for ${target}`); process.exit(1); }
-    // The profile photo goes first (Storage); the review goes with the account below.
-    if (user?.avatar_key) await P.removeAvatar(db, photoStore(), user.id);
-    // The Discord Pro role too (the link itself goes with the account).
-    if (user && (await db.get('SELECT role FROM discord_links WHERE user_id = ?', [user.id]))?.role) await discordBot().unlink(user.id);
+    // Same as the "Supprimer le compte" button of /admin (src/support.js).
     const stripe = cfg.stripeSecretKey ? new Stripe(cfg.stripeSecretKey) : null;
-    for (const l of lics) {
-      if (l.stripe_subscription_id && l.status === 'active') {
-        if (!stripe) { console.error('Active subscription: set STRIPE_SECRET_KEY so it can be canceled first.'); process.exit(1); }
-        try { await stripe.subscriptions.cancel(l.stripe_subscription_id); console.log(`Subscription ${l.stripe_subscription_id} canceled.`); }
-        catch (err) { if (!/No such subscription|canceled/i.test(err.message)) throw err; }
-      }
-    }
-    await db.tx(async (t) => {
-      for (const l of lics) {
-        await t.run('DELETE FROM devices WHERE license_id = ?', [l.id]);
-        // Kept for accounting (amount, Stripe ids), without the person.
-        await t.run(`UPDATE licenses SET user_id = NULL, email = ?, claim_token_hash = NULL, status = 'revoked', status_reason = 'deleted' WHERE id = ?`,
-          [`deleted-${l.id}@deleted.invalid`, l.id]);
-        await t.run('UPDATE audit SET detail = NULL WHERE license_id = ?', [l.id]);
-      }
-      if (user) {
-        await t.run('UPDATE audit SET detail = NULL WHERE user_id = ?', [user.id]);
-        await t.run('DELETE FROM users WHERE id = ?', [user.id]); // sessions, resets, affiliate, referrals, review follow
-      }
-    });
-    console.log(`Deleted ${target}: account ${user ? 'removed' : 'none'}, ${lics.length} license(s) anonymized.`);
+    const discord = createDiscord(cfg, { db, stripe });
+    let out;
+    try { out = await deleteAccount(db, { stripe, avatars: P.createAvatarStore(cfg), discord }, email); } catch (err) { console.error(err.message); process.exit(1); }
+    if (!out) { console.error(`Nothing stored for ${email}`); process.exit(1); }
+    for (const id of out.canceled) console.log(`Subscription ${id} canceled.`);
+    console.log(`Deleted ${String(email).toLowerCase()}: account ${out.user ? 'removed' : 'none'}, ${out.licenses.length} license(s) anonymized.`);
     break;
   }
   case 'reviews': {
