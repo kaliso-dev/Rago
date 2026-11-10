@@ -1,13 +1,14 @@
 ---
 type: pilotage
 tags: [pilotage]
-maj: 2026-11-09
+maj: 2026-11-10
 ---
 # Prochaines étapes
 
 Liste priorisée au 01/11. Rien ne se lance sans la demande de Sofiene ([[Règles de travail]]). Voir [[État actuel]] et [[Questions ouvertes]]. Chaque tâche a son ticket [[Linear]].
 
 ## Maintenant
+0. [[Tableau de bord admin]] (PR #77) : test par Sofiene sur staging, fusion, puis PR « (prod) » vers la branche de prod.
 1. La [[Version 1.2.1]] est en ligne (31/10) : vérifier que les 1.2.0 se mettent à jour seules ([[Mise à jour automatique]]).
 2. **[[Version 1.3.0]]** (PR #70, 04/11) : contient la 1.2.2 ci-dessous, plus le plan gratuit à 73 réglages (30 actifs), la connexion à l'app avec Google ou Discord (RAG-90) et l'essai de 3 jours. À tester sur staging par Sofiene ; q47 et q48 en attente.
    **Version 1.2.2**, incluse dans la PR #70 (Sofiene, 01/11 : « il faut lancer la correction avec le passage de la désinstallation des app préinstallées en gratuit et mettre à jour grâce à l'auto update ») :

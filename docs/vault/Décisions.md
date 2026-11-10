@@ -1,7 +1,7 @@
 ---
 type: registre
 tags: [décision]
-maj: 2026-11-09
+maj: 2026-11-10
 ---
 # Décisions
 
@@ -10,6 +10,7 @@ Registre daté des décisions de Sofiene. **La plus récente prime.** Citations 
 ## App et versions
 | Date | Décision | Statut |
 |---|---|---|
+| 10/11 | Un outil admin qui centralise tout : « un tableau de bord qui permets de tout voir le max d'info et de possibilité de gestion des utilisateurs au meme endroit », « sans passer par les commandes railways », avec « les vente stripe du jour du mois et sur la totalité du projet », tous les services et les tests réseau | EN COURS, PR #77 vers `staging` ([[Tableau de bord admin]]) |
 | 09/11 | Rago OS, retours du soir puis réponses aux questions : Win après relance qui ouvre le menu Démarrer à corriger ; Rago Notes « accessible de puis le spotlight » ; boutons et Météo « moins apple », Météo sans animation d'ouverture ; widget Météo en mode clair ; barre en jeu « désactiver dans les paramètres pour avoir son jeu en full screen » ; « il faut bien garder deux bouton mais il faut qu'on comprenne la différence » (modes jeu) ; animations du Dock « désactiver ses animations dans les paramètres » ; « transforme le widget heure en app » (« 4 oui c'est parfait » : alarmes, minuteur, chronomètre, villes) ; « un widget pour pouvoir lancer rago route en un clic et voir l'était des serveurs » ; styles d'horloge « je garde le 2,4,5,6 » ; « ne propose plus le fait de changer de police » ; Minecraft détecté une fois ; widgets et pastille de l'app à ne plus montrer sur Rago OS ni sur Minecraft ; commandes Rago Route de l'app et `RagoOS.exe` ignoré par la barre en jeu, envoyés sur `staging` (« 8 oui c'est parfait ») | DÉCIDÉ, fait dans test5 et dans `staging` (PR #74) ([[Rago OS]]) |
 | 09/11 | Rago OS : plus d'optimisation durable à l'installation, « Oui, tout en session » (carte de décision, q53) : les services ne sont en pause que pendant que Rago OS tourne | DÉCIDÉ, fait dans test4 ([[Rago OS]]) |
 | 08/11 | Rago OS (soir) : « quand j'appuie sur ma touche windows seul le dock touchpad doit s'ouvrir » ; « stopper le plus de services inutiles possible mais ne pas toucher à des paramètre que rago optimizer touche déjà » ; « personnalisé un peu plus pour ne pas perdre en crédibilité » (moins Apple) ; « supprimer complétement l'écran de veille […] et d'ailleurs renomme le écran de veille » (l'écran de verrouillage) ; Rago OS « se lance instantanément au démarrage du pc […] par défaut » ; « si je quitte rago os tout les paramètre doivent revenir comme ceux d'origine et quand je lance tout se réactive pendant l'animation de chargement » | DÉCIDÉ, fait dans test4 ([[Rago OS]]) |

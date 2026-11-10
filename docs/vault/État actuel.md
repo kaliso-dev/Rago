@@ -1,9 +1,9 @@
 ---
 type: pilotage
 tags: [état, pilotage]
-maj: 2026-11-09
+maj: 2026-11-10
 ---
-# État actuel (07/11/2026)
+# État actuel (10/11/2026)
 
 Voir aussi [[Prochaines étapes]], [[Questions ouvertes]], [[Journal]]. Retour à [[Projet]].
 
@@ -29,10 +29,12 @@ La [[Version 1.2.1]] (refonte en verre, barre en jeu, Packet Optimizer, biblioth
 | [[Bot communauté Discord]] | sur `staging` seulement ; à tester puis passer en prod (fil « Passer le bot Discord en prod », RAG-91) | DÉCIDÉ (Sofiene, 01/11) |
 | Version 1.3.0 | **PR #70 fusionnée dans `staging` le 04/11 au soir** (pas en prod) : contient la 1.2.2 (preset Minecraft PvP corrigé, applis préinstallées gratuites, commit `29123d4`), la fusion de la branche de prod dans staging, 73 réglages gratuits dont 30 actifs à la fois, connexion à l'app avec Google ou Discord, essai de 3 jours avec carte, [[Analyse du PC]] avec avant/après, fenêtre Premium avec les prix et résiliation dans l'app ([[Abonnement dans l'app]]), site et pages légales à jour. Rien testé sur Windows. Sortir la 1.2.2 seule ou tout ensemble : q47 | CONFIRMÉ (git, 04/11) |
 | [[Conformité juridique]] | pages légales à jour pour l'essai et la connexion (04/11) ; **manquent l'identité et l'adresse du vendeur** : Sofiene n'est pas encore inscrit comme vendeur et a 17 ans (q44, q46, q49) | À RÉGLER par Sofiene |
+| [[Tableau de bord admin]] | `/admin` complet (joueurs, accès, bannissement, ventes Stripe, services, journal) : **PR #77 vers `staging`**, ouverte le 10/11, pas fusionnée ; en prod, `/admin` reste l'ancienne page | CONFIRMÉ (git) |
 | [[Linear]] | remis à jour le 01/11 à partir du vault | CONFIRMÉ |
 | Vault Obsidian | créé le 31/10 ; règle n°1 : il doit correspondre en tout point à l'état du projet | DÉCIDÉ |
 
-## PR (09/11)
+## PR (10/11)
+- #77 (vers `staging`, ouverte le 10/11) : [[Tableau de bord admin]]. À essayer sur `rago-staging.up.railway.app/admin`, puis « fusionne » de Sofiene.
 - Fusionnée le 09/11 dans `staging` : #74 (commandes du pont pour [[Rago OS]] : recherche des réglages et Rago Route ; Rago OS jamais pris pour un jeu par la [[Barre en jeu|barre en jeu]] ; vault réuni avec celui de Rago Route), sur l'accord de Sofiene du 09/11 (« 8 oui c'est parfait »).
 - Fusionnée le 07/11 dans `staging` : #73 (pont [[Rago OS]] et Mode jeu total, vault), sur « fusionne » de Sofiene.
 - Fusionnée le 04/11 dans `staging` : #70 ([[Version 1.3.0]]), à tester sur staging avant toute sortie.
@@ -42,6 +44,7 @@ La [[Version 1.2.1]] (refonte en verre, barre en jeu, Packet Optimizer, biblioth
 - Fermées le 01/11 avec l'accord de Sofiene (branches gardées) : #16 (1.1.10), #50 et #51 (1.1.13), dont les fonctions sont dans la 1.2.1, et #60 (Rago OS, abandonné).
 
 ## Ce qui attend Sofiene
+0. Essayer le [[Tableau de bord admin]] sur staging (PR #77) et dire s'il manque quelque chose, avant « fusionne ».
 1. Vérifier que les 1.2.0 installées reçoivent bien la 1.2.1 (`/api/v1/update/status`, voir [[Mise à jour automatique]]).
 2. Valider l'e-mail sur la collecte des tests réseau avant son envoi, une fois rédigé ([[Prochaines étapes]]).
 3. Répondre à q47 (1.2.2 seule ou avec la 1.3.0) et q48 (offre débitée après l'essai), puis tester la 1.3.0 sur staging.

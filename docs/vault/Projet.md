@@ -1,7 +1,7 @@
 ---
 type: index
 tags: [index]
-maj: 2026-11-04
+maj: 2026-11-10
 ---
 # Rago Optimizer : le projet
 
@@ -30,7 +30,7 @@ Vue d'ensemble technique : [[Architecture]].
 - **Tweaks (générés depuis le code)** : [[Catalogue des tweaks]] · [[Tweaks Réseau]] · [[Tweaks Latence]] · [[Tweaks Carte graphique]] · [[Tweaks Windows]] · [[Tweaks Hitreg]] · [[Tweaks Minecraft]] · [[Tweaks RBW Mod]] · [[Tweaks Mode jeu]] · [[Tweaks Mode expert]] · [[Tweaks Restaurer]] · [[Tweaks Presets]] · [[Tweaks retirés]]
 - **En cours ou en attente** : [[Proxy]] · [[Bot communauté Discord]]
 - **Autres projets** : [[Rago OS]] (bureau Windows, extension de l'app), [[Client Minecraft Rago]]
-- **Technique** : [[Architecture]] · [[App Windows]] · [[Serveur de licences]] · [[Site]] · [[Branches et environnements]] · [[Publier une version]] · [[Connexion Google et Discord]]
+- **Technique** : [[Architecture]] · [[App Windows]] · [[Serveur de licences]] · [[Site]] · [[Branches et environnements]] · [[Publier une version]] · [[Connexion Google et Discord]] · [[Tableau de bord admin]]
 - **Design** : [[Charte graphique]] · [[Voix et ton]] · [[Refonte glass]]
 - **Marketing** : [[Marketing]] · [[Discord]] · [[Partenaires et créateurs]] · [[Promotions et affiliation]] · [[Trailer 1.2]] · [[Vidéos YouTube]]
 - **Suivi** : [[Ventes Stripe]] · [[Conformité juridique]] · [[Bugs et incidents]] · [[Problèmes joueurs]] · [[Linear]] · [[Personnes et services]] · [[Sources]]

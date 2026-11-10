@@ -1,7 +1,7 @@
 ---
 type: technique
 tags: [technique, site, marketing]
-maj: 2026-11-07
+maj: 2026-11-10
 ---
 # Site (rago-optimizer.com)
 
@@ -12,7 +12,7 @@ Site de vente statique sur **Netlify** (branche de prod). Staging : https://stag
 - **Page Rago Route** (`site/src/route.html` → `route.html`, écrite le 07/11, **sur `staging` depuis le 07/11** à la demande de Sofiene, pas encore en prod) : présente le tunnel « Rago Route » (voir [[Proxy]]) comme une nouveauté en test. Héros « Two roads for every packet. » ; problèmes concrets (pics, gel après une perte, Wi-Fi qui coupe, détour du fournisseur) et le chiffre réel 34/88 du [[Test réseau]] ; cinq fonctionnalités animées (double trajet, réparation immédiate, session gardée, téléphone en secours « Testing now », meilleure route « Coming with the app ») avec les seuls chiffres mesurés (2 246 paquets sauvés sur Hypixel, 20 Mo intacts à 20 % de pertes, coupure de 8 s sans perte) ; fair-play (pas de faux ping ni lag switch) ; FAQ ; étapes ; bouton Discord (pas de prix tant que q51 n'est pas tranchée). Lien « Rago Route » dans le menu (barre du haut à partir de 1 280 px de large), le menu mobile et le pied de page ; dans `build.py`, `site-check.yml` et `sitemap.xml`.
 - **Autres pages** : `tweaks.html` (téléchargement gratuit + tous les tweaks expliqués, textes dans `tweaks-copy.json`), `partners.html` (tous les partenaires, `partners.json`), `reviews.html`, pages légales `terms.html`, `privacy.html`, `refunds.html`, `404.html`. Le compte est servi par le [[Serveur de licences]].
 - **Partenaires affichés** (`site/src/partners.json`) : Pika Ranked Bedwars, Ranked Bedwars, Ranked Bedwars [SEASON 8], Axora Ranked Bedwars (accueil) ; Ranked Bedwars 2v2s [SEASON 1], Ayor Ranked Bedwars (page Partners). Voir [[Partenaires et créateurs]].
-- **Pop-up promo** : réglé dans `/admin` du serveur ([[Promotions et affiliation]]).
+- **Pop-up promo** : réglé dans `/admin` du serveur (`/admin/site` avec la PR #77, [[Tableau de bord admin]]) ([[Promotions et affiliation]]).
 - **État au 29/10** : à jour pour la [[Version 1.2.1]] (PR #59, #66) : 218 tweaks, raccourci Alt+X, ping de tous les jeux, cartes Packet Optimizer et Outils, plans de prix réécrits, FAQ « Which games does it work with? ».
 - Accroche : « Minecraft PvP optimizer for Windows » + « Every millisecond counts. » ; la section « Why » dit que Rago ne change pas la distance au serveur.
 - Netlify edge function `launch-gate` (compte à rebours du lancement, inactive depuis le 10/10).
