@@ -51,6 +51,16 @@ En local (`npm run local`) et dans les tests, le Cerveau lit le dossier sur le d
 - Routes dans [[admin.js (serveur)]] : `GET /admin/cerveau` (la page), `GET /admin/cerveau/donnees.json` (tout le vault, compressé, avec `ETag`), `GET /admin/cerveau/fichier?chemin=` (un fichier du dépôt) ([[API du serveur]]).
 - Tests : `licensing/test/brain.test.js`, 7 tests ([[Tests du serveur]]).
 
+## Version publique (dépôt `cerveau`)
+Demandé par Sofiene le 10/11 : « mon cousin aimerai avoir cette vu il faudrait extraire le projet du cerveau le mettre dans un nouveau repo public il faut qu'il puisse donner le repo à son claude et que claude lui installe l'interface mais il faut retirer le design rago il faut un design classique […] ça serait bien que ça soit dans un format qu'il peut heberger sur github page ».
+
+- **Un kit à part**, sans rien de Rago : `kaliso-dev/cerveau` (public, licence MIT choisie par Claude par défaut). Il ne dépend pas du serveur de licences : `cerveau/build.mjs` (Node 18+, aucune dépendance) construit un **site statique** (`_site/` : la page, `data.json`, une copie des pièces jointes) et une action GitHub le publie sur **GitHub Pages** à chaque push sur `main`. `cerveau/serve.mjs` donne un aperçu local ; `node cerveau/build.mjs --check` liste liens cassés, notes isolées, dossiers sans note d'index, notes hors d'atteinte depuis l'accueil.
+- **Design classique** : thème clair et sombre (celui de l'appareil, ou choisi dans Affichage), polices du système, accent bleu, plus de rouge ni de Geist ni de logo R. Couleurs des dossiers données par taille (ou par `cerveau.config.json`).
+- **Pour tout domaine** : le dossier du vault, le titre, ce qui est publié (`"fichiers"` : pièces jointes du vault, tout le dépôt ou rien) et les dossiers exclus se règlent dans `cerveau.config.json`. Ajouts par rapport à la page Rago : images et pièces jointes affichées (`![[image.png]]`), propriétés de l'en-tête (avec leurs liens), alias, `#tags` dans le texte, commentaires `%%…%%` masqués.
+- **`INSTALLER.md`** : la marche à suivre pour le Claude de la personne (questions à poser, créer le dépôt, copier l'outil, créer le vault avec une note d'index par dossier, relier les notes, vérifier, publier, régler Pages). Un vault d'exemple (`exemple/`, 20 notes) sert de démo et de guide, avec des structures par domaine et des modèles de notes.
+- **Statut (10/11)** : construit et testé (Chromium : clair, sombre, téléphone, et le vault Rago de 341 notes en mode dépôt, 0 erreur). **En attente du dépôt** : Claude ne peut pas créer de dépôt, Sofiene doit créer `kaliso-dev/cerveau` vide et public, puis activer Pages (Settings → Pages → Source : GitHub Actions). Une copie du kit est dans les fichiers du projet (`cerveau/cerveau.bundle`).
+- Les deux versions sont séparées : une amélioration de la page Rago n'arrive pas toute seule dans le kit, et inversement.
+
 ## À savoir
 - Les notes du vault sont lues telles quelles : un lien vers une note qui n'existe pas apparaît comme lien cassé (pastille jaune en haut du graphe et liste dans Affichage). C'est un bon moyen de vérifier la règle « aucun lien cassé » de [[Mettre à jour le vault]].
 - Le dépôt étant public tant qu'il n'est pas privé, le Cerveau ne montre rien de plus que GitHub ; il ne montre jamais de `.env`.

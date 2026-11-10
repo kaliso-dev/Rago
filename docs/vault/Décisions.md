@@ -10,6 +10,7 @@ Registre daté des décisions de Sofiene. **La plus récente prime.** Citations 
 ## App et versions
 | Date | Décision | Statut |
 |---|---|---|
+| 10/11 | Version publique du Cerveau pour le cousin de Sofiene : « extraire le projet du cerveau le mettre dans un nouveau repo public », « retirer le design rago il faut un design classique », que son Claude puisse l'installer et créer le vault, « quelque soit le domaine », hébergeable sur GitHub Pages | kit prêt et testé, en attente du dépôt `kaliso-dev/cerveau` à créer par Sofiene ([[Cerveau du vault]]) |
 | 10/11 | Mettre l'admin et le Cerveau en prod tout de suite, sans attendre la 1.3.0 : « il faut le push sur la prod maintenant et qu'il soit fonctionnel normalement tu as du voir mais j'ai ajouté une page cerveau il faut push avec » | fait, PR #87 fusionnée dans la branche de prod le 10/11 ; la 1.3.0 reste dans `staging` ([[Tableau de bord admin]]) |
 | 10/11 | Admin : corriger l'affichage des ventes en plusieurs devises (« ok donc ça aussi », sur sa capture de la page Ventes) | fait, PR #84 fusionnée dans `staging` le 10/11, en prod par la #87 ([[Tableau de bord admin]]) |
 | 10/11 | Cerveau du vault : une « vision graphique du cerveau comme obsidian » où l'on voit les « connexions neuronales », qui ouvre et lit n'importe quel fichier, « juste accessible depuis l'interface admin » ; Abel y accède avec **la clé admin complète** (choix de Sofiene sur la carte : pas de clé à part, pas de sous-domaine) | fait, PR #85 fusionnée dans `staging` le 10/11, en prod par la #87 ([[Cerveau du vault]]) |
