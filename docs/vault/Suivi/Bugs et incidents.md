@@ -5,11 +5,12 @@ maj: 2026-11-10
 ---
 # Bugs et incidents
 
-Registre des bugs de l'app et des incidents. Les retours de joueurs au cas par cas sont dans [[Problèmes joueurs]].
+Registre des bugs de l'app et des incidents. Les retours de joueurs au cas par cas sont dans [[Problèmes joueurs]]. Archive complète, avec causes et solutions, pour déboguer plus tard : [[Historique des problèmes]].
 
 ## Ouverts ou à surveiller (01/11)
 | Bug | Version | État |
 |---|---|---|
+| **Tweaks d'une autre marque appliqués** : `availability()` (`app/src/lib/catalog.ts`) dit « ok » tant que les infos du PC ne sont pas chargées (`if (!sys) return { ok: true }`), et le moteur Rust ne revérifie pas. Un preset choisi trop tôt applique `cpu_amd`/`gpu_amd` sur un PC Intel/NVIDIA et la variante par défaut (`sys_ram:16` sur 8 Go) | 1.2.1, toujours sur `staging` le 10/11 | vu le 02/11 dans les logs d'un joueur RBW (crashs et ping, [[Historique des problèmes]]) ; pas de ticket ni de correctif |
 | Curseur perdu en plein écran / borderless après « Optimize and play » (suspect : `win_fullscreen` dans le preset Minecraft PvP) | 1.2.1 | contournement donné le 29/10 ; **correctif en cours pour la 1.2.2** (RAG-87), cause encore à confirmer ([[Presets]]) |
 | Preset `ping_packets: hitreg` qui chevauche le [[Packet Optimizer]] (ping qui saute) | 1.2.1 | à corriger avec le preset dans la 1.2.2 (RAG-87) |
 | Fonctions Windows de la 1.2 jamais testées sur un vrai PC au 28/10 ([[Barre en jeu]], launchers, outils, démarrage auto) | 1.2.0 | Sofiene : « tout fonctionne » le 29/10 (portée exacte À VÉRIFIER) |
