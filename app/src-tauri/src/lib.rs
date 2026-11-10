@@ -360,7 +360,7 @@ async fn net_test(app: AppHandle, state: State<'_, AppState>, ids: Vec<String>) 
     .map_err(|e| e.to_string())
 }
 
-// ---------- Rago Route (route.rs) : tunnel anti-lag, en test (exe staging seulement pour l'instant)
+// ---------- Rago Route (route.rs) : tunnel anti-lag, Premium, dans tous les exe depuis la 1.3.0
 
 /// Allume Rago Route (Premium) : le jeu se connecte ensuite à localhost (Hypixel) ou localhost:25566 (Minemen).
 /// Erreurs : "premium:<code>" (pas de jeton Rago Route : "no_license", "revoked", "route_closed", "network"…),
@@ -1213,27 +1213,18 @@ fn bridge_handler(app: AppHandle) -> bridge::Handler {
                 }
                 Ok(serde_json::to_value(if on { b.on() } else { b.off() }).unwrap_or_default())
             }
-            // Rago Route (route.rs), comme l'onglet de l'app : seulement dans l'exe de test pour l'instant
+            // Rago Route (route.rs), comme l'onglet de l'app
             "route" => {
-                if server_name() != "staging" {
-                    return Ok(json!({ "available": false }));
-                }
                 let mut v = serde_json::to_value(route::current()).unwrap_or_default();
                 v["available"] = json!(true);
                 v["premium"] = json!(state.license.status().state == "active");
                 Ok(v)
             }
             "route_servers" => {
-                if server_name() != "staging" {
-                    return Err("route_unavailable".into());
-                }
                 Ok(serde_json::to_value(route::probe_servers()).unwrap_or_default())
             }
             // mêmes règles que le bouton de l'app : jeton Premium, renouvelé tant que Rago Route tourne
             "route_start" => {
-                if server_name() != "staging" {
-                    return Err("route_unavailable".into());
-                }
                 let lic = Arc::clone(&state.license);
                 let token = lic.route_token().map_err(|e| format!("premium:{}", e.code))?;
                 let st = route::turn_on(&token, arg("phone").as_bool().unwrap_or(false))?;

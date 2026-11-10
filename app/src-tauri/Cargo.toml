@@ -2,7 +2,7 @@
 name = "rago-hub"
 version = "1.3.0"
 description = "Rago Optimizer, the Windows optimizer for Minecraft PvP and competitive games"
-authors = ["Rago"]
+authors = ["KALISO", "RAGO"]
 edition = "2021"
 rust-version = "1.80"
 

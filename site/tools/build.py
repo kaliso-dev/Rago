@@ -48,7 +48,7 @@ if os.path.isfile(srv):
 # FAQ without JavaScript: the same questions, rendered once here into a <noscript> block
 a = s.index('  const F = ['); b = s.index('\n  ];', a) + len('\n  ];')
 try:
-    faq = json.loads(subprocess.run(['node', '-e', f'const MONTHS_FREE = {FREE}; const CONFIG = {json.dumps({"currency": CUR, "priceLifetime": PL})};' + s[a:b] + ';process.stdout.write(JSON.stringify(F))'],
+    faq = json.loads(subprocess.run(['node', '-e', f'const MONTHS_FREE = {FREE}; const CONFIG = {json.dumps({"currency": CUR, "priceLifetime": PL, "priceMonth": PM, "trialDays": int(cfg("trialDays"))})};' + s[a:b] + ';process.stdout.write(JSON.stringify(F))'],
                                     capture_output=True, text=True, check=True).stdout)
     esc = lambda t: t.replace('&', '&amp;').replace('<', '&lt;').replace('>', '&gt;')
     DISCORD = cfg('discord')

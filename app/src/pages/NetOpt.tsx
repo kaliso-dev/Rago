@@ -213,6 +213,54 @@ export function NetOpt() {
   ].join(" · ");
   const expertCount = Object.values(opts.expert).filter((x) => x != null).length;
 
+  // 1.3.0 (Sofiene, 10/11) : le Packet Optimizer est entièrement Premium. En gratuit, la page le présente et ne garde que
+  // Restaurer, pour remettre la connexion comme avant après une application faite en Premium.
+  if (!premium) {
+    return (
+      <motion.div className="netopt" variants={stagger} initial="initial" animate="animate">
+        <motion.section variants={rise} className="card no-hero">
+          <div className="no-hero-main">
+            <div className="no-hero-orb">
+              <Lock size={20} />
+            </div>
+            <div className="no-hero-text">
+              <div className="no-hero-title">{t("no.locked.title")}</div>
+              <div className="no-hero-sub muted small">{t("no.lead")}</div>
+            </div>
+            <div className="no-hero-actions">
+              {(applied || state?.backup) && (
+                <Button variant="secondary" size="lg" icon={busy ? <LoaderCircle size={14} className="spin" /> : <RotateCcw size={14} />} disabled={!!busy} onClick={() => void run(state?.backup ? "restore" : "defaults")}>
+                  {t("no.restore")}
+                </Button>
+              )}
+              <Button variant="primary" size="lg" icon={<Lock size={14} />} onClick={() => setUpsell("plan")}>
+                {t("free.upgrade")}
+              </Button>
+            </div>
+          </div>
+          <ul className="no-locked-list muted small">
+            {(["no.locked.b1", "no.locked.b2", "no.locked.b3"] as const).map((k) => (
+              <li key={k}>
+                <Check size={13} /> {t(k)}
+              </li>
+            ))}
+          </ul>
+          {(done || error) && (
+            <div className="no-run">
+              {done && <Summary done={done} t={t} />}
+              {error && (
+                <div className="no-error">
+                  <CircleX size={14} />
+                  {error}
+                </div>
+              )}
+            </div>
+          )}
+        </motion.section>
+      </motion.div>
+    );
+  }
+
   return (
     <motion.div className="netopt" variants={stagger} initial="initial" animate="animate">
       <motion.section variants={rise} className="card no-hero">
@@ -290,7 +338,6 @@ export function NetOpt() {
         <div className="no-hero-foot muted small">
           <Info size={12} />
           <span>{t("no.drop")}</span>
-          {!premium && <span className="no-free">{t("no.free")}</span>}
         </div>
 
         <AnimatePresence initial={false}>

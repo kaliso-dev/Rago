@@ -131,7 +131,7 @@ echo.                                                %w% You can find tutorials,
 echo                                                     (This Program is update every weeks)
 echo.  
 echo.  
-echo.                                                                 %p%Made by Rago and Straight and Menu inspired by EXM © 2024. Rago Optimizer
+echo.                                                                 %p%Made by KALISO and RAGO and Menu inspired by EXM © 2024. Rago Optimizer
 echo. 
 echo.                                  %b%"╚═══════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════╝"%w%
 echo.                                 %v%╚══                                                                                                                                   %v%══╝ 
@@ -309,7 +309,7 @@ echo.                                                                           
 echo.                                                                                                   
 echo.
 echo.                                                                                                %b% ©2024. Rago Optimizer  
-echo.                                                                                 %b%  Made by Rago and Straight and Menu inspired by EXM 
+echo.                                                                                 %b%  Made by KALISO and RAGO and Menu inspired by EXM 
 echo.                                          %b%╚══════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════╝%w%
 echo.                                        %v%╚══                                                                                                                                      %v%══╝  
 echo.                                                                 
@@ -2158,7 +2158,7 @@ echo.                                                  %p%[%w%16%p%]%w% Bios Opt
 echo.
 echo.
 echo.                                                                                                  %b% ©2024. Rago Optimizer  
-echo.                                                                                    %b%  Made by Rago and Straight and Menu inspired by EXM 
+echo.                                                                                    %b%  Made by KALISO and RAGO and Menu inspired by EXM 
 echo.                                          %b%╚══════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════╝%w%
 echo.                                        %v%╚══                                                                                                                                      %v%══╝  
 echo.                                                                 
@@ -10298,7 +10298,7 @@ cls
 goto :nv
 
 :nv3
-echo You can find the Profil and NvidiaInspector in the file ! (Profil by Straight)
+echo You can find the Profil and NvidiaInspector in the file !
 echo.
 echo.
 echo.
@@ -13006,7 +13006,7 @@ echo.                                                                           
 echo.
 echo.                                                                                                                                                                                                                   
 echo.                                                                                                  %b% ©2024. Rago Optimizer  
-echo.                                                                                      %b%  Made by Rago and Straight and Menu inspired by EXM 
+echo.                                                                                      %b%  Made by KALISO and RAGO and Menu inspired by EXM 
 echo.                                          %b%╚══════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════╝%w%
 echo.                                        %v%╚══                                                                                                                                      %v%══╝  
 echo.                                                           %W% I recommend you to use the manual Hitreg optimization of the Premium Pack to max your result.
@@ -13754,7 +13754,7 @@ echo.                                                                           
 echo.
 echo.                                                                                                                                                                                                                   
 echo.                                                                                                  %b% ©2024. Rago Optimizer  
-echo.                                                                                      %b%  Made by Rago and Straight and Menu inspired by EXM 
+echo.                                                                                      %b%  Made by KALISO and RAGO and Menu inspired by EXM 
 echo.                                          %b%╚══════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════╝%w%
 echo.                                        %v%╚══                                                                                                                                      %v%══╝  
 echo.                                                                 
@@ -14023,7 +14023,7 @@ echo.                                                                           
 echo.
 echo.                                                                                                                                                                                                                   
 echo.                                                                                                  %b% ©2024. Rago Optimizer  
-echo.                                                                                      %b%  Made by Rago and Straight and Menu inspired by EXM 
+echo.                                                                                      %b%  Made by KALISO and RAGO and Menu inspired by EXM 
 echo.                                          %b%╚══════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════╝%w%
 echo.                                        %v%╚══                                                                                                                                      %v%══╝  
 echo.                                                                 
@@ -14148,7 +14148,7 @@ echo.                                                                           
 echo.
 echo.                                                                                                                                                                                                                   
 echo.                                                                                                  %b% ©2024. Rago Optimizer  
-echo.                                                                                      %b%  Made by Rago and Straight and Menu inspired by EXM 
+echo.                                                                                      %b%  Made by KALISO and RAGO and Menu inspired by EXM 
 echo.                                          %b%╚══════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════╝%w%
 echo.                                        %v%╚══                                                                                                                                      %v%══╝  
 echo.                                                                 
@@ -14234,7 +14234,7 @@ echo.                                                                           
 echo.
 echo.                                                                                                                                                                                                                   
 echo.                                                                                                  %b% ©2024. Rago Optimizer  
-echo.                                                                                      %b%  Made by Rago and Straight and Menu inspired by EXM 
+echo.                                                                                      %b%  Made by KALISO and RAGO and Menu inspired by EXM 
 echo.                                          %b%╚══════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════╝%w%
 echo.                                        %v%╚══                                                                                                                                      %v%══╝  
 echo.                                                        %W% Game mod is a mod that allows you to boost your game. Activate it before playing and deactivate it after. 
@@ -14377,7 +14377,7 @@ echo.
 echo.                                                                                                    %p%[%w%M%p%]%w% Go back to Menu
 echo.                                                                            
 echo.                                                                                                  %b% ©2024. Rago Optimizer  
-echo.                                                                                      %b%  Made by Rago and Straight and Menu inspired by EXM 
+echo.                                                                                      %b%  Made by KALISO and RAGO and Menu inspired by EXM 
 echo.                                          %b%╚══════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════╝%w%
 echo.                                        %v%╚══                                                                                                                                      %v%══╝  
 echo.                                                                            %W% If the restore point don't work, you can use the revert option.                                                            

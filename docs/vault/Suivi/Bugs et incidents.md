@@ -1,11 +1,11 @@
 ---
 type: registre
 tags: [bug, suivi]
-maj: 2026-11-01
+maj: 2026-11-10
 ---
 # Bugs et incidents
 
-Registre des bugs de l'app et des incidents. Les retours de joueurs au cas par cas sont dans [[Problèmes joueurs]]. Référence détaillée au 15/10 : `PROJECT_HANDOFF/05_BUGS_AND_REGRESSIONS.md` ([[Sources]]).
+Registre des bugs de l'app et des incidents. Les retours de joueurs au cas par cas sont dans [[Problèmes joueurs]].
 
 ## Ouverts ou à surveiller (01/11)
 | Bug | Version | État |
@@ -32,4 +32,5 @@ Voir [[Version 1.1.14]].
 - Netlify ne publiait plus (appli Netlify désinstallée de GitHub, 10-11/10) : résolu.
 - 14/10 : Claude a affirmé à tort que la 1.1.12 contenait « tout le travail » → règle « jamais sans preuve » ([[Règles de travail]]).
 - 21/10 : minutes GitHub Actions épuisées, plus de build Windows ([[Branches et environnements]]).
+- 10/11 : 3 000 minutes de novembre épuisées en deux jours par la CI du dépôt privé `network-server-rago` ; `rago`, public, n'est pas touché ([[CI GitHub Actions]]).
 - `wmic` absent de Windows 11 24H2 (corrigé en 1.1.6).

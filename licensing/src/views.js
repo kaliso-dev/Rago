@@ -87,8 +87,8 @@ ${cfg.staging ? render(html`<div class="staging-bar" role="note"><b>Test server 
 </header>
 ${render(body)}
 <footer class="foot">
-  <span class="foot-links"><a href="/affiliate">Affiliate program</a><a href="${escape(cfg.siteUrl)}/terms.html">Terms</a><a href="${escape(cfg.siteUrl)}/privacy.html">Privacy</a><a href="${escape(cfg.siteUrl)}/refunds.html">Refunds</a>${cfg.portalLoginUrl ? render(html`<a href="${cfg.portalLoginUrl}" rel="noopener">Cancel subscription</a>`) : ''}${cfg.supportUrl ? render(html`<a href="${cfg.supportUrl}" rel="noopener">Support on Discord</a>`) : ''}</span>
-  <p class="foot-legal">© ${new Date().getUTCFullYear()} Rago Optimizer. Every millisecond counts. Rago Optimizer changes Windows settings on your PC. It isn't affiliated with Mojang or Microsoft.</p></footer>
+  <span class="foot-links"><a href="/affiliate">Affiliate program</a><a href="${escape(cfg.siteUrl)}/terms.html">Terms</a><a href="${escape(cfg.siteUrl)}/privacy.html">Privacy</a><a href="${escape(cfg.siteUrl)}/terms.html#cancel">Cancellation</a>${cfg.portalLoginUrl ? render(html`<a href="${cfg.portalLoginUrl}" rel="noopener">Cancel subscription</a>`) : ''}${cfg.supportUrl ? render(html`<a href="${cfg.supportUrl}" rel="noopener">Support on Discord</a>`) : ''}</span>
+  <p class="foot-legal">© ${new Date().getUTCFullYear()} Rago Optimizer, by KALISO and RAGO. Every millisecond counts. Rago Optimizer changes Windows settings on your PC. It isn't affiliated with Mojang or Microsoft.</p></footer>
 </body>
 </html>`;
 }

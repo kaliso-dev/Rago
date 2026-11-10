@@ -9,7 +9,7 @@ const LINK = 'color:#FF5E55;text-decoration:underline';
 
 function layout(cfg, title, bodyHtml) {
   const footLinks = [
-    [`${cfg.siteUrl}/terms.html`, 'Terms'], [`${cfg.siteUrl}/privacy.html`, 'Privacy'], [`${cfg.siteUrl}/refunds.html`, 'Refunds'],
+    [`${cfg.siteUrl}/terms.html`, 'Terms'], [`${cfg.siteUrl}/privacy.html`, 'Privacy'], [`${cfg.siteUrl}/terms.html#cancel`, 'Cancellation'],
     ...(cfg.supportUrl ? [[cfg.supportUrl, 'Support on Discord']] : []),
   ].map(([h, l]) => `<a href="${esc(h)}" style="color:#8E8E98;text-decoration:underline">${l}</a>`).join(' &middot; ');
   return `<!doctype html>
@@ -75,7 +75,7 @@ export function createMailer(cfg, { log = console.log, fetchImpl = fetch } = {})
       const lines = orderLines(license);
       const table = `<table role="presentation" cellspacing="0" cellpadding="0" border="0" width="100%" style="margin:8px 0 20px;border:1px solid #26262B;border-radius:16px">
 ${lines.map(([k, v]) => `<tr><td style="padding:10px 16px;color:#8E8E98;font-size:13px;width:90px">${esc(k)}</td><td style="padding:10px 16px;color:#F5F5F6;font-size:14px">${esc(v)}</td></tr>`).join('\n')}</table>`;
-      const waiver = 'You asked for immediate access to Premium and agreed that your 14-day right of withdrawal ends once the license is delivered.';
+      const waiver = 'You asked for immediate access to Premium and agreed that your 14-day right of withdrawal ends once the license is delivered. Payments aren\'t refunded.';
       const sub = license.plan === 'month' || license.plan === 'year';
       // Text version: the portal link alone at the end of its line, no punctuation glued to it.
       const cancelText = sub ? ` Cancel anytime from your account (Cancel or manage subscription)${cfg.portalLoginUrl ? `, or cancel with your email at:\n${cfg.portalLoginUrl}` : '.'}` : '';
@@ -97,14 +97,14 @@ ${lines.map(([k, v]) => `<tr><td style="padding:10px 16px;color:#8E8E98;font-siz
       const html = `<p style="${P}">${esc(intro)}</p>
 ${table}${button(href, claimUrl ? 'Create your account' : 'Open your account')}
 ${claimUrl ? `<p style="${SMALL}">This link only works for your purchase. Keep it private.</p>` : ''}
-<p style="${SMALL}">${esc(waiver)}${cancelHtml} <a href="${esc(cfg.siteUrl)}/terms.html" style="${LINK}">Terms of Sale</a> &middot; <a href="${esc(cfg.siteUrl)}/refunds.html" style="${LINK}">Refunds and cancellation</a></p>
+<p style="${SMALL}">${esc(waiver)}${cancelHtml} <a href="${esc(cfg.siteUrl)}/terms.html" style="${LINK}">Terms of Sale</a> &middot; <a href="${esc(cfg.siteUrl)}/terms.html#cancel" style="${LINK}">Cancellation</a></p>
 ${discord ? `<p style="${SMALL}">${esc(discord)} <a href="${esc(cfg.supportUrl)}" style="${LINK}">Join the Discord</a></p>` : ''}`;
       const text = [
         `${trial ? 'Free trial started' : 'Payment confirmed'}. ${intro}`,
         ...lines.map(([k, v]) => `${k}: ${v}`),
         `${claimUrl ? 'Create your account' : 'Your account'}: ${href}`,
         `${waiver}${cancelText}`,
-        `Terms: ${cfg.siteUrl}/terms.html  Refunds: ${cfg.siteUrl}/refunds.html`,
+        `Terms: ${cfg.siteUrl}/terms.html  Cancellation: ${cfg.siteUrl}/terms.html#cancel`,
         ...(discord ? [`${discord} ${cfg.supportUrl}`] : []),
       ].join('\n');
       return send(to, trial ? `Your ${trial.days}-day free trial of Rago Optimizer Premium` : 'Your Rago Optimizer Premium license', layout(cfg, trial ? 'Free trial started' : 'Payment confirmed', html), text);

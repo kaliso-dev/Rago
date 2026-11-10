@@ -5,6 +5,8 @@ name: site-check
 on:
   workflow_dispatch:
   push:
+    # staging et la branche de prod seulement : les autres branches sont testées par leur pull request
+    branches: ["staging", "claude/rago-monorepo-initial-eyj6pq"]
     paths: ["site/**", ".github/workflows/site-check.yml"]
   pull_request:
     paths: ["site/**", ".github/workflows/site-check.yml"]
@@ -18,7 +20,7 @@ permissions:
 
 jobs:
   index-html:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04   # Playwright 1.56.1 ne gère pas Ubuntu 26.04 (ubuntu-latest depuis le 09/11)
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
