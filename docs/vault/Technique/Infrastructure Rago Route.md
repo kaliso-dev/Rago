@@ -5,7 +5,7 @@ maj: 2026-11-10
 ---
 # Infrastructure Rago Route
 
-Partie technique de Rago Route (tunnel anti-lag pour Minecraft Java), état de `staging` au 10/11. Historique, mesures et décisions : [[Proxy]]. Rago Route est **en bêta**, réservé au Premium : sur `staging`, l'onglet est dans **tous les exe** depuis la PR #PRNUM (sortie 1.3.0) ; pas encore en prod (l'app 1.3.0 n'est pas sortie et le serveur de prod n'a pas encore la route du jeton).
+Partie technique de Rago Route (tunnel anti-lag pour Minecraft Java), état de `staging` au 10/11. Historique, mesures et décisions : [[Proxy]]. Rago Route est **en bêta**, réservé au Premium : sur `staging`, l'onglet est dans **tous les exe** depuis la PR #76 (sortie 1.3.0) ; pas encore en prod (l'app 1.3.0 n'est pas sortie et le serveur de prod n'a pas encore la route du jeton).
 
 ## Les pièces
 | Pièce | Où | Rôle |

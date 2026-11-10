@@ -9,7 +9,7 @@ Vue produit de l'app (écrans, stack, fichiers). Fonctionnement interne précis 
 
 ## Navigation (barre latérale)
 - **Tableau de bord** ([[Tableau de bord]]) · **Analyse du PC** ([[Analyse du PC]], 1.3.0 sur `staging`)
-- **Optimiser** : Réseau (onglets Optimisations, [[Packet Optimizer]], [[Test réseau]], et « Rago Route » (badge « Beta »), dans tous les exe sur `staging` depuis la PR #PRNUM, réservé au Premium (sur `staging` le 08/11 ; protocole 2 avec chiffrement, paquets de secours et 4G du téléphone sur `staging` le 08/11) : voir [[Proxy]]) · Latence · Carte graphique · Windows · [[Page Outils]]
+- **Optimiser** : Réseau (onglets Optimisations, [[Packet Optimizer]], [[Test réseau]], et « Rago Route » (badge « Beta »), dans tous les exe sur `staging` depuis la PR #76, réservé au Premium (sur `staging` le 08/11 ; protocole 2 avec chiffrement, paquets de secours et 4G du téléphone sur `staging` le 08/11) : voir [[Proxy]]) · Latence · Carte graphique · Windows · [[Page Outils]]
 - **En jeu** : Hitreg · Minecraft · [[RBW Mod]] · [[Mode jeu]] · Jeux ([[Bibliothèque de jeux]])
 - **Avancé** : Mode expert · Restaurer (historique, retour arrière)
 - En bas : carte « Plan gratuit » ([[Licence dans l'app]]), « Rejoindre le Discord », Paramètres ([[Paramètres de l'app]]), état administrateur.

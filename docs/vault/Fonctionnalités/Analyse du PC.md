@@ -10,7 +10,7 @@ Page « Analyze my PC » ajoutée en 1.3.0 (PR #70, pas sortie), demandée par S
 
 ## Ce qu'elle fait
 - Mesure le PC en 5 étapes (matériel et Windows, pilote graphique, réseau, processeur, dernière partie), puis montre chaque point avec sa valeur, sa norme et ce qui le règle : **Free** (un tweak gratuit), **Premium** ([[Packet Optimizer]] ou les tweaks de latence) ou **Do it yourself** (le joueur, avec la marche à suivre). **Pas de note globale.**
-- **Normes du réseau propres à chaque joueur** (Sofiene, 10/11, q50 : « il faut que les normes soit personnalisé en fonction de chaque utilisateur » ; codé dans la PR #PRNUM, `netNorms` de `app/src/lib/analysis.ts`). Un joueur loin des serveurs ne voit plus tout « au-dessus de la normale » :
+- **Normes du réseau propres à chaque joueur** (Sofiene, 10/11, q50 : « il faut que les normes soit personnalisé en fonction de chaque utilisateur » ; codé dans la PR #76, `netNorms` de `app/src/lib/analysis.ts`). Un joueur loin des serveurs ne voit plus tout « au-dessus de la normale » :
   - **gigue** : 5 ms, ou 10 % du ping si c'est plus (130 ms de ping : 13 ms) ;
   - **perte de paquets** : aucune sous 100 ms de ping, 0,5 % au-delà ;
   - **pics de ping** : 1, ou 2 à partir de 100 ms de ping ;
