@@ -21,7 +21,6 @@ Liste priorisée au 01/11. Rien ne se lance sans la demande de Sofiene ([[Règle
 
 ## Ensuite
 - **[[Rago OS]]** (EN COURS depuis le 07/11) : charte, 3 thèmes, Recherche des réglages, plein écran, Dock masqué, Pastille Live épurée, widgets, touche Windows, lancement instantané, session légère et retour à Windows d'origine faits sur la branche `rago-design` du Mac de Sofiene, avec ses retours du 08/11 (test4) et du 09/11 (test5 : appli Horloge, widget Rago Route, jeu sur tout l'écran, touche Windows fiable). Reste : retours de Sofiene sur test5 (dont le nombre de processus atteint), trouver comment réserver l'OS aux joueurs Premium.
-- Charte « Affiche » v2.2 : aperçu sur la page d'accueil (PR #69, brouillon), en attente de la décision de Sofiene ([[Charte graphique]]).
 - [[Client Minecraft Rago]] : projet à part, en cours dans un projet isolé ; rien à faire ici sans demande.
 
 ## Plus tard

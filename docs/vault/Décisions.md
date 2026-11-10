@@ -84,6 +84,7 @@ Une ligne par projet ou fonctionnalité arrêtés, pour qu'aucun Claude ne les r
 | 08/11 | Ancien proxy simple (`relay.py`, TCP 25565 et 25566, sans compte) | Remplacé par Rago Route réservé au Premium (« Oui, tout de suite ») ; retiré par le nouveau `install.sh` ([[Proxy]]) |
 | 05/11 | Proxy chez OVHcloud | VPS-1 indisponible, VPS-2 (7 €) seulement en Amérique du Nord : « faut pas prendre chez ovh » ([[Proxy]]) |
 | 05/11 | Proxy : journée de test sur 6 serveurs Vultr loués à l'heure | « je veux pas ta journée de test » ; serveurs configurés directement ([[Proxy]]) |
+| 04/11 | Nouvelle charte graphique : chartes « Affiche » 2.0 à 2.2 et charte finale, sites 2.0 et 2.2, maquettes de l'app (01/11 au 03/11), PR #69 | « on abandonne ce projet » ; q30 : « Non, on garde l'actuelle » ; PR #69 fermée le 04/11 (q32). De la maquette, seules l'analyse du PC, l'avant/après, la fenêtre Premium avec les prix et la résiliation dans l'app sont gardées, construites dans la [[Version 1.3.0]] |
 | 01/11 | Point après la première semaine de ventes (RAG-16) et logo Rago à côté des e-mails `noreply@` et `support@` (RAG-21) | « On les abandonne » |
 | 01/11 | Série de vidéos courtes « Milli » (mascotte, épisodes #000 à #005) | « arrêtée » |
 | 01/11 | Plan de visibilité écrit du 17/10 (17/10 → 15/11) | « on ne suit pas de plan » |
