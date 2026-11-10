@@ -52,5 +52,5 @@ La [[Version 1.2.1]] (refonte en verre, barre en jeu, Packet Optimizer, biblioth
 4. Vérifier que les 1.2.0 installées reçoivent bien la 1.2.1 (`/api/v1/update/status`, voir [[Mise à jour automatique]]).
 5. Valider l'e-mail sur la collecte des tests réseau avant son envoi, une fois rédigé ([[Prochaines étapes]]).
 6. Avant la prod de l'essai : inscrire sa mère comme vendeuse et régler l'adresse ([[Conformité juridique]]).
-8. GitHub : passer `network-server-rago` en public (libère les minutes) ; en novembre, `rago` doit être public pendant les builds ; `rago` en privé pour de bon le 1er décembre ([[CI GitHub Actions]]).
 7. Rago Route : faire voir la 4G du téléphone à Windows (en cours, 10/11). [[Rago OS]] : confirmer le test de l'exe test5 (« je crois avoir testé hier »).
+8. GitHub : passer `network-server-rago` en public (libère les minutes) ; en novembre, `rago` doit être public pendant les builds ; `rago` en privé pour de bon le 1er décembre ([[CI GitHub Actions]]).
