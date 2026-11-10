@@ -1,7 +1,7 @@
 ---
 type: pilotage
 tags: [état, pilotage]
-maj: 2026-11-09
+maj: 2026-11-10
 ---
 # État actuel (07/11/2026)
 
@@ -32,7 +32,8 @@ La [[Version 1.2.1]] (refonte en verre, barre en jeu, Packet Optimizer, biblioth
 | [[Linear]] | remis à jour le 01/11 à partir du vault | CONFIRMÉ |
 | Vault Obsidian | créé le 31/10 ; règle n°1 : il doit correspondre en tout point à l'état du projet | DÉCIDÉ |
 
-## PR (09/11)
+## PR (10/11)
+- #75 (vault technique complet : [[Reprendre le développement]] et fiches par brique, `CLAUDE.md` par dossier) : **ouverte** vers `staging` ; ne pas fusionner sans « fusionne » de Sofiene.
 - Fusionnée le 09/11 dans `staging` : #74 (commandes du pont pour [[Rago OS]] : recherche des réglages et Rago Route ; Rago OS jamais pris pour un jeu par la [[Barre en jeu|barre en jeu]] ; vault réuni avec celui de Rago Route), sur l'accord de Sofiene du 09/11 (« 8 oui c'est parfait »).
 - Fusionnée le 07/11 dans `staging` : #73 (pont [[Rago OS]] et Mode jeu total, vault), sur « fusionne » de Sofiene.
 - Fusionnée le 04/11 dans `staging` : #70 ([[Version 1.3.0]]), à tester sur staging avant toute sortie.
