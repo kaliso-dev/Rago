@@ -22,9 +22,6 @@ const TABS: { id: NetworkTab; label: Key; icon: LucideIcon }[] = [
   { id: "nettest", label: "hub.tab.test", icon: Gauge },
   { id: "route", label: "hub.tab.route", icon: Route },
 ];
-// Rago Route : seulement dans l'exe de test tant qu'il n'a pas été essayé sur Windows et que les serveurs n'ont pas de jeton d'accès
-const ROUTE_ON = import.meta.env.VITE_RAGO_SERVER === "staging";
-const SHOWN = TABS.filter((x) => x.id !== "route" || ROUTE_ON);
 
 export function Network({ tab }: { tab: NetworkTab }) {
   const { t, goTo, selected, pendingUndo } = useStore();
@@ -45,7 +42,7 @@ export function Network({ tab }: { tab: NetworkTab }) {
 
       <div className="hub-bar">
         <div className="hub-tabs" role="tablist" aria-label={t("hub.title")}>
-          {SHOWN.map(({ id, label, icon: Icon }) => {
+          {TABS.map(({ id, label, icon: Icon }) => {
             const on = tab === id;
             return (
               <button key={id} type="button" role="tab" aria-selected={on} className={`hub-tab${on ? " on" : ""}`} onClick={() => goTo(id)}>
@@ -70,7 +67,7 @@ export function Network({ tab }: { tab: NetworkTab }) {
           exit={{ opacity: 0, y: -4 }}
           transition={{ duration: 0.18, ease: [0.16, 1, 0.3, 1] }}
         >
-          {tab === "network" ? <ModulePage id="network" embedded /> : tab === "netopt" ? <NetOpt /> : tab === "route" && ROUTE_ON ? <RouteTab /> : <NetTest />}
+          {tab === "network" ? <ModulePage id="network" embedded /> : tab === "netopt" ? <NetOpt /> : tab === "route" ? <RouteTab /> : <NetTest />}
         </motion.div>
       </AnimatePresence>
     </div>

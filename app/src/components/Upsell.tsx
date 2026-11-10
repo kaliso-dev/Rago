@@ -62,7 +62,8 @@ export function Upsell() {
   const kicker = upsell === "preset" ? t("upsell.preset") : upsell === "plan" || slots || found ? t("free.plan") : t("upsell.tweak");
 
   const price = plans ? (plan === "lifetime" ? plans.lifetime : plans[plan]) : null;
-  const trial = plans && plan !== "lifetime" && plans.trialDays > 0 ? plans.trialDays : 0;
+  // Essai : toujours sur le mensuel (Sofiene, 10/11 : après l'essai, mensuel seulement), quel que soit le plan choisi
+  const trial = plans && plan !== "lifetime" && plans.month && plans.trialDays > 0 ? plans.trialDays : 0;
   const options: { id: Plan; label: Key; sub: string }[] = plans
     ? ([
         plans.year && { id: "year" as Plan, label: "upsell.yearly" as Key, sub: t("upsell.yearlySub", { month: formatPrice({ ...plans.year, amount: Math.round(plans.year.amount / 12) }, lang), year: formatPrice(plans.year, lang) }) },
@@ -71,7 +72,7 @@ export function Upsell() {
       ].filter(Boolean) as { id: Plan; label: Key; sub: string }[])
     : [];
   const checkout = (withTrial: boolean) => {
-    const url = plan === "lifetime" ? `${ACCOUNT_URL}/buy/lifetime` : `${ACCOUNT_URL}/buy?interval=${plan}${withTrial ? "&trial=1" : ""}`;
+    const url = plan === "lifetime" ? `${ACCOUNT_URL}/buy/lifetime` : withTrial ? `${ACCOUNT_URL}/buy?interval=month&trial=1` : `${ACCOUNT_URL}/buy?interval=${plan}`;
     void api.openUrl(url);
     setSent(true);
   };
@@ -154,7 +155,7 @@ export function Upsell() {
                     <Button variant="primary" size="lg" className="upsell-cta" onClick={() => checkout(true)}>
                       {t("upsell.trial", { n: trial })} <ArrowRight size={16} />
                     </Button>
-                    <p className="muted small upsell-trial-note">{t("upsell.trialNote", { n: trial, price: formatPrice(price, lang), per: t(plan === "year" ? "upsell.perYear" : "upsell.perMonth") })}</p>
+                    <p className="muted small upsell-trial-note">{t("upsell.trialNote", { n: trial, price: formatPrice(plans!.month!, lang), per: t("upsell.perMonth") })}</p>
                     <button type="button" className="link upsell-have" onClick={() => checkout(false)}>
                       {t("upsell.payNow")}
                     </button>

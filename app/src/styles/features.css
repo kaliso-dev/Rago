@@ -2184,8 +2184,19 @@
   padding-top: 12px;
   border-top: 1px solid var(--rg-line-1);
 }
-.no-free {
-  margin-left: auto;
+/* gratuit (1.3.0) : ce que le Packet Optimizer Premium apporte */
+.no-locked-list {
+  display: grid;
+  gap: 8px;
+  margin: 14px 0 0;
+  padding: 12px 0 0;
+  list-style: none;
+  border-top: 1px solid var(--rg-line-1);
+}
+.no-locked-list li {
+  display: flex;
+  align-items: center;
+  gap: 8px;
 }
 .no-run {
   overflow: hidden;
@@ -3181,9 +3192,6 @@
   }
   .no-hero-foot {
     flex-wrap: wrap;
-  }
-  .no-free {
-    margin-left: 0;
   }
 }
 
