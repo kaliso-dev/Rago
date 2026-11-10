@@ -164,7 +164,8 @@ export function Analysis() {
                     <div>
                       <div>{t(`pa.${f.id}` as Key)}</div>
                       <div className="muted small">
-                        {t(f.norm as Key, { max: current.refreshMax ?? "", rated: current.memRated ?? "", half: current.fps != null ? Math.round(current.fps / 2) : "" })}
+                        {t(f.norm as Key, { max: current.refreshMax ?? "", rated: current.memRated ?? "", half: current.fps != null ? Math.round(current.fps / 2) : "", ...f.vars })}
+                        {f.vars?.why ? ` ${t(f.vars.why as Key, f.vars)}` : ""}
                         {f.issue && f.fix.kind === "diy" && <> · {t(f.fix.how as Key, { max: current.refreshMax ?? "" })}</>}
                       </div>
                     </div>

@@ -39,6 +39,12 @@
 # Les pages de compte vivent sur le serveur de comptes. Le site réécrit déjà ces liens en JavaScript ;
 # ces redirections couvrent les navigateurs sans JavaScript et les anciens liens partagés.
 # Même adresse que CONFIG.accountBase (site/src/page.html). rago-production.up.railway.app reste active pour les apps installées.
+# The refunds page was removed on 2026-11-10 (no refunds): old links (emails, Stripe) open the cancellation terms
+[[redirects]]
+  from = "/refunds.html"
+  to = "/terms.html#cancel"
+  status = 301
+  force = true
 [[redirects]]
   from = "/buy"
   to = "https://account.rago-optimizer.com/buy"

@@ -1,13 +1,13 @@
 ---
 type: règle
 tags: [règle]
-maj: 2026-11-01
+maj: 2026-11-10
 ---
 # Règles de travail
 
 Règles décidées par Sofiene, toujours en vigueur au 31/10. Détail daté dans [[Décisions]]. Retour à [[Projet]].
 
-1. **Rien sur GitHub ni dans l'app sans demande explicite** (13/10) : « Non annule tout ne créer plus rien pour l'app sans que je te le dise ». Préparer est permis ; publier, non.
+1. **Rien sur GitHub ni dans l'app sans demande explicite** (13/10) : « Non annule tout ne créer plus rien pour l'app sans que je te le dise ». Préparer est permis ; publier, non. **Exception (10/11, q57)** : Claude pousse lui-même les changements du vault (`docs/vault` seulement) sur `staging`, sans attendre « fusionne ».
 2. **Staging d'abord, prod ensuite après validation de Sofiene** (11/10), pour l'app comme pour le site. Voir [[Branches et environnements]].
 3. **« fusionne » / « push »** de Sofiene = accord pour fusionner la PR concernée. Sans ce mot, la PR reste ouverte.
 4. **Un seul fil** pour les problèmes signalés par les joueurs, et tout noter dans [[Linear]] (13/10). Voir [[Problèmes joueurs]].

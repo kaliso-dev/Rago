@@ -3123,7 +3123,14 @@ test('free trial: 3 days with the card asked, first Premium only, a second trial
   assert.deepEqual(params.subscription_data.trial_settings, { end_behavior: { missing_payment_method: 'cancel' } });
   assert.equal(params.metadata.trial, '3');
   assert.match(params.custom_text.submit.message, /3 days free, then your card is charged on .+ Cancel anytime before/);
-  // without ?trial=1: paid from the start
+  // After the trial, monthly only (2026-11-10): a trial asked on the yearly plan opens on the monthly price.
+  await t.browse('/buy?interval=year&trial=1');
+  assert.deepEqual(t.created.at(-1).line_items, [{ price: 'price_month', quantity: 1 }]);
+  assert.equal(t.created.at(-1).subscription_data.trial_period_days, 3);
+  assert.equal(t.created.at(-1).metadata.interval, 'month');
+  // without ?trial=1: paid from the start, on the plan picked
+  await t.browse('/buy?interval=year');
+  assert.deepEqual(t.created.at(-1).line_items, [{ price: 'price_year', quantity: 1 }]);
   await t.browse('/buy?interval=month');
   assert.equal(t.created.at(-1).subscription_data.trial_period_days, undefined);
 

@@ -2,7 +2,9 @@
 // chaque point ce qui le règle : le plan gratuit (avec les tweaks à appliquer), Premium (et quel module), ou le
 // joueur lui-même. Pas de note de santé : un PC bien réglé voit « things are fine ».
 // Les mesures restent sur ce PC (stockage du navigateur de l'app) : la première sert d'« avant », la dernière d'« après ».
-// Les normes viennent de la maquette de l'app : à revoir avec de vraies mesures.
+// Normes du réseau propres à chaque joueur (Sofiene, 10/11 : « personnalisé en fonction de chaque utilisateur ») : elles
+// suivent la distance au serveur (le ping) et ce que ce PC mesure d'habitude, pour qu'un joueur loin des serveurs ne voie
+// pas tout « au-dessus de la normale ». Les autres normes viennent de la maquette de l'app.
 import { api, type AnalysisFacts, type DriversInfo, type NetMeasure } from "./api";
 
 /** Mesures d'une analyse. null : pas mesuré sur ce PC. */
@@ -45,6 +47,8 @@ export interface Finding {
   value: string;
   /** clé de traduction de la norme */
   norm: string;
+  /** valeurs de la norme pour ce joueur (seuil, habitude), insérées dans son texte */
+  vars?: Record<string, string | number>;
   issue: boolean;
   fix: Fix;
 }
@@ -104,15 +108,51 @@ export async function analyze(onStep: (s: Step) => void): Promise<Values> {
   };
 }
 
+/** Mesures réseau d'une analyse passée, gardées sur ce PC pour connaître l'habitude du joueur. */
+export interface Past {
+  at: number;
+  ping: number | null;
+  jitter: number | null;
+  loss: number | null;
+  spikes: number | null;
+}
+const HISTORY = 10;
+const median = (xs: number[]) => {
+  const a = [...xs].sort((x, y) => x - y);
+  return a.length ? (a.length % 2 ? a[(a.length - 1) / 2] : (a[a.length / 2 - 1] + a[a.length / 2]) / 2) : null;
+};
+
+/** Seuils réseau de ce joueur. Sans habitude (moins de 2 analyses avant celle-ci) : d'après son ping seul.
+ *  - gigue : 5 ms, ou 10 % du ping si plus (130 ms de ping : 13 ms) ; avec une habitude, jusqu'à 1,5 fois sa gigue habituelle ;
+ *  - perte : aucune sous 100 ms de ping, 0,5 % au-delà ; avec une habitude, sa perte habituelle + 0,5 % ;
+ *  - pics : 1, ou 2 à partir de 100 ms de ping ; avec une habitude, ses pics habituels + 1.
+ *  Les seuils ne descendent jamais sous ceux d'un joueur proche des serveurs. */
+export function netNorms(v: Pick<Values, "at" | "ping">, past: Past[] = history()) {
+  const before = past.filter((p) => p.at < v.at).slice(-HISTORY);
+  const far = (v.ping ?? 0) >= 100;
+  const usual = (k: "jitter" | "loss" | "spikes") => (before.length >= 2 ? median(before.flatMap((p) => (p[k] == null ? [] : [p[k] as number]))) : null);
+  const uJ = usual("jitter"), uL = usual("loss"), uS = usual("spikes");
+  const jitter = Math.max(5, Math.round((v.ping ?? 0) * 0.1), uJ != null ? round(uJ * 1.5)! : 0);
+  const lossPct = Math.max(far ? 0.5 : 0, uL != null ? round(uL * 100 + 0.5)! : 0);
+  const spikes = Math.max(far ? 2 : 1, uS != null ? Math.round(uS) + 1 : 0);
+  return { jitter, lossPct, spikes, usual: { jitter: uJ != null ? round(uJ) : null, lossPct: uL != null ? round(uL * 100) : null, spikes: uS != null ? Math.round(uS) : null } };
+}
+
 /** Ce que l'analyse a trouvé : un point par valeur mesurée, dans l'ordre des groupes. */
 export function findings(v: Values): Finding[] {
+  const n = netNorms(v);
   const out: Finding[] = [];
   const add = (f: Finding) => out.push(f);
   const packets: Fix = { kind: "premium", module: "netopt" };
   const latency: Fix = { kind: "premium", module: "latency" };
-  if (v.jitter != null) add({ id: "jitter", group: "network", value: `${v.jitter} ms`, norm: "pa.norm.jitter", issue: v.jitter > 5, fix: packets });
-  if (v.loss != null) add({ id: "loss", group: "network", value: `${round(v.loss * 100)} %`, norm: "pa.norm.loss", issue: v.loss > 0, fix: packets });
-  if (v.spikes != null) add({ id: "spikes", group: "network", value: `${v.spikes}`, norm: "pa.norm.spikes", issue: v.spikes > 1, fix: packets });
+  // la norme dit d'où vient le seuil : l'habitude de ce PC, sinon le ping, sinon la norme d'un joueur proche des serveurs
+  const why = (u: number | null, unit: string): Record<string, string | number> => (u != null ? { why: "pa.norm.usual", usual: `${u}${unit}` } : (v.ping ?? 0) >= 50 ? { why: "pa.norm.atPing", ping: v.ping! } : { why: "" });
+  if (v.jitter != null)
+    add({ id: "jitter", group: "network", value: `${v.jitter} ms`, norm: "pa.norm.jitter", vars: { n: n.jitter, ...why(n.usual.jitter, " ms") }, issue: v.jitter > n.jitter, fix: packets });
+  if (v.loss != null)
+    add({ id: "loss", group: "network", value: `${round(v.loss * 100)} %`, norm: n.lossPct > 0 ? "pa.norm.lossUpTo" : "pa.norm.loss", vars: { n: n.lossPct, ...why(n.usual.lossPct, " %") }, issue: (round(v.loss * 100) ?? 0) > n.lossPct, fix: packets });
+  if (v.spikes != null)
+    add({ id: "spikes", group: "network", value: `${v.spikes}`, norm: "pa.norm.spikes", vars: { n: n.spikes, ...why(n.usual.spikes, "") }, issue: v.spikes > n.spikes, fix: packets });
   if (v.wired != null) add({ id: "wired", group: "network", value: v.wired ? "pa.v.cable" : "pa.v.wifi", norm: "pa.norm.wired", issue: !v.wired, fix: { kind: "diy", how: "pa.diy.cable" } });
   if (v.ping != null) add({ id: "ping", group: "network", value: `${v.ping} ms`, norm: "pa.norm.ping", issue: false, fix: { kind: "none" } });
   if (v.refresh != null && v.refreshMax != null)
@@ -139,6 +179,8 @@ const KEY = "rago.analysis";
 interface Saved {
   before: Values | null;
   after: Values | null;
+  /** mesures réseau des dernières analyses (10 au plus) : l'habitude du joueur ; gardées même après « Start over » */
+  history?: Past[];
   /** des tweaks ont été appliqués depuis la dernière mesure : l'avant/après attend une nouvelle mesure */
   changed: boolean;
 }
@@ -158,12 +200,18 @@ function save(s: Saved) {
   }
 }
 
+/** L'habitude réseau du joueur sur ce PC (analyses passées). */
+export function history(): Past[] {
+  return saved().history ?? [];
+}
+
 /** Range une analyse : la première devient l'« avant » ; celles faites après des tweaks, l'« après ». */
 export function record(v: Values) {
   const s = saved();
-  if (!s.before) save({ before: v, after: null, changed: false });
-  else if (s.changed || s.after) save({ ...s, after: v, changed: false });
-  else save({ before: v, after: null, changed: false });
+  const history = [...(s.history ?? []), { at: v.at, ping: v.ping, jitter: v.jitter, loss: v.loss, spikes: v.spikes }].slice(-HISTORY);
+  if (!s.before) save({ before: v, after: null, changed: false, history });
+  else if (s.changed || s.after) save({ ...s, after: v, changed: false, history });
+  else save({ before: v, after: null, changed: false, history });
 }
 
 /** Des tweaks viennent d'être appliqués (fin d'une application réussie). */
@@ -174,7 +222,7 @@ export function markChanged() {
 
 /** Repartir de zéro : la prochaine analyse devient l'« avant ». */
 export function resetBaseline() {
-  save({ before: null, after: null, changed: false });
+  save({ before: null, after: null, changed: false, history: saved().history });
 }
 
 export interface Delta {

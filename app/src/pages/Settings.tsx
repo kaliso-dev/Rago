@@ -168,6 +168,7 @@ export function Settings() {
           <p className="rg-metric muted">
             {t("settings.version", { v: __APP_VERSION__ })} · {totalTweaks} {lang === "fr" ? "réglages" : "tweaks"}
           </p>
+          <p className="muted small">{t("settings.madeBy")}</p>
           {!isTauri && <p className="muted small">{t("settings.demo")}</p>}
           {STAGING && <UpdateCheck />}
           <div className="rg-overline" style={{ marginTop: 16 }}>

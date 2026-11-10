@@ -1,7 +1,7 @@
 ---
 type: pilotage
 tags: [pilotage, à-décider, à-vérifier]
-maj: 2026-11-09
+maj: 2026-11-10
 ---
 # Questions ouvertes
 
@@ -16,17 +16,9 @@ Mode d'emploi (outil ArtifactData, collection `questions`) :
 - Dire à Sofiene dans le fil, en une ligne, quand de nouvelles questions l'attendent.
 
 ## En attente de réponse sur la page
-Ouvertes au 04/11 : q36 (remboursement 14 jours), q37 (accord avant l'envoi du test réseau), q39 (parrainage dans l'app), q40 (même prix au renouvellement), q41 (Packet Optimizer en gratuit), q45 à q50 (partage des ventes, mentions légales, sortie de la 1.2.2, offre après l'essai, vendeur majeur et Stripe, seuils de l'Analyse du PC). Les autres sont traitées (q51 traitée le 08/11 : Rago Route réservé au Premium).
-
-- q44 à q49 (04/11) : statut du vendeur (traitée : « Pas encore »), partage de l'argent, adresse des mentions légales, vendeur majeur et compte Stripe, sortie de la 1.2.2, offre débitée après l'essai. Voir [[Conformité juridique]].
-- q50 (04/11) : seuils de l'[[Analyse du PC]], À VÉRIFIER.
-- q52 et q53 traitées (07/11 et 09/11) : Rago OS est réservé aux joueurs Premium ; plus d'optimisation durable à l'installation, « tout en session ».
-- q55 (08/11) : variable `ROUTE_TESTERS` ajoutée sur Railway staging ? (sans elle, l'exe de test refuse Rago Route ; voir [[Proxy]]).
-
-## À demander à Abel (Sofiene ne sait pas)
-- Le partenariat avec le créateur YouTube à 50 % est-il arrêté ? ([[Partenaires et créateurs]])
-- État des vidéos : « Rago tour », « What's new », vidéo principale de l'app ([[Vidéos YouTube]]).
-- Tâches marketing dans [[Linear]] : GIVEAWAY (RAG-51), YOUTUBE (RAG-56), partner discord (RAG-54), vidéos YouTube avant/après (RAG-39), recrutement de créateurs Minecraft (RAG-35). Sofiene, 01/11 : « surement toujours en cours ».
+Au 10/11, après les réponses de Sofiene du jour (q36 à q68 traitées, voir [[Décisions]]) :
+- q46 (reformulée) : quelle adresse dans les mentions légales, sans domiciliation payante ni adresse personnelle. Voir [[Conformité juridique]].
+- q65 : réglages Railway de prod (Wait for CI, Watch Paths, Healthcheck, moniteur) ; Sofiene demande à Claude de vérifier et de le lui rappeler ([[Railway]]).
 
 ## À vérifier (sans Sofiene)
 - Les 1.2.0 installées reçoivent-elles bien la 1.2.1 ? (`/api/v1/update/status`) ([[Mise à jour automatique]])

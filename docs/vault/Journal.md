@@ -1,7 +1,7 @@
 ---
 type: pilotage
 tags: [journal, chronologie]
-maj: 2026-11-09
+maj: 2026-11-10
 ---
 # Journal
 
@@ -10,6 +10,11 @@ Une ligne par événement marquant, la plus récente en haut. Voir [[Historique 
 ## Novembre 2026
 | Date | Événement | Liens |
 |---|---|---|
+| 10/11 | PR #76 fusionnée dans `staging` (« tu peux tout push ») ; plan gratuit confirmé à 73 réglages dont 30 actifs (q68). | [[Version 1.3.0]] |
+| 10/11 | PR #76 ouverte vers `staging` : la 1.3.0 devient la grosse sortie avec Rago Route (onglet dans tous les exe), Packet Optimizer entièrement Premium, essai sur le mensuel, plus de remboursement (`refunds.html` supprimée, CGV), normes de l'Analyse du PC par joueur, Straight retiré et signature « KALISO and RAGO » ; « 30 opti 15 slots » attend q68 | [[Version 1.3.0]], [[Proxy]], [[Offres et prix]] |
+| 10/11 | Vault technique complété pour qu'un nouveau Claude puisse développer sans contexte : porte d'entrée [[Reprendre le développement]], fiches [[Architecture de l'app]], [[Architecture du serveur]], [[API du serveur]], [[Paiements Stripe]], [[Supabase]], [[Railway]], [[Netlify]], [[CI GitHub Actions]], [[Variables d'environnement]], [[Infrastructure Rago Route]], [[Développer et tester]] ; un `CLAUDE.md` court dans `app/`, `licensing/`, `site/` et `proxy/` | [[Reprendre le développement]] |
+| 10/11 | Sofiene répond aux questions q36 à q67 ([[Décisions]]) : une seule grosse sortie avec Rago Route, pas de remboursement, Packet Optimizer en Premium, mensuel après l'essai, sa mère vendeuse ; Supabase de prod menacé de suppression le 05/12 et aucune clé sauvegardée ; anciens dossiers du dossier partagé supprimés | [[État actuel]], [[Supabase]], [[Clés et secrets]] |
+| 10/11 | Point du projet : la page « Questions du vault Rago » montre en haut l'état du projet et la recommandation d'organisation (un seul projet Claude, un fil par tâche, une fiche technique par brique, CLAUDE.md par dossier du code), et range les questions par sujet ; 9 nouvelles questions (q56 à q64). LinkedIn automatisé arrêté à la demande de Sofiene (fil « Créer le profil LinkedIn de Sofiene ») | [[Questions ouvertes]], [[Mettre à jour le vault]] |
 | 09/11 | [[Rago OS]] test5 : appli Horloge (alarmes, minuteur, chronomètre, villes), widget Rago Route, Rago Notes, Météo et Horloge dans la Recherche, « Jeu sur tout l'écran », widgets cachés en jeu, touche Windows fiable après une relance, animations du Dock réglables, Météo et boutons de Rago Notes moins « Apple », widgets revus. Côté app, PR #74 fusionnée dans `staging` (commandes `tweaks`, `tweak` et Rago Route du pont, Rago OS jamais pris pour un jeu) | [[Rago OS]], [[Proxy]] |
 | 08/11 | Rago OS test4 : touche Windows → Applis, Dock rangé dès que la souris part, lancement instantané par défaut, session légère (47 services en pause), Windows remis comme avant en quittant, économiseur supprimé, noms moins « Apple » | [[Rago OS]] |
 | 08/11 | [[Rago OS]], retours de Sofiene traités : 3 thèmes gardés (Rago, Tournoi, Pétale) aux coins arrondis, contraste vérifié texte par texte en sombre et en clair, Dock qui ne s'ouvre que souris plaquée au bord et se range dès qu'elle part, île sans FPS ni ping en jeu (résumé de fin gardé). Nouvel exe de test | [[Rago OS]] |

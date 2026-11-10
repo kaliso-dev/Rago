@@ -1,7 +1,7 @@
 ---
 type: règle
 tags: [règle, vault]
-maj: 2026-11-01
+maj: 2026-11-10
 ---
 # Mettre à jour le vault
 
@@ -33,9 +33,10 @@ Ce vault est la **mémoire du projet** : la mémoire intégrée de Claude est d�
 5. [[Décisions]] : chaque décision de Sofiene, datée, avec ses mots entre « ».
 6. [[Bugs et incidents]] / [[Problèmes joueurs]] ; [[Questions ouvertes]] (retirer les questions répondues).
 7. [[Linear]] : mettre à jour le ticket du sujet (statut, commentaire court) et créer un ticket pour chaque nouvelle tâche décidée (Sofiene veut continuer à utiliser Linear, 01/11).
-8. Si le catalogue de l'app a changé : régénérer les notes « Tweaks … » avec `python3 docs/tools/catalogue_vault.py` sur la branche qui porte la dernière version de l'app.
-9. Mettre `maj:` à la date du jour (et `version_app:` si la note décrit l'app) dans l'en-tête des notes touchées.
-10. Vérifier qu'aucun lien `[[…]]` n'est cassé et que chaque nouvelle note est reliée depuis [[Projet]] ou une note de carte.
+8. **Fiches techniques** : si le code change (route, commande Tauri, module, table, variable, workflow, procédure), mettre à jour la fiche de la brique ([[Reprendre le développement]] dit laquelle) : [[Architecture de l'app]], [[Architecture du serveur]], [[API du serveur]], [[Paiements Stripe]], [[Supabase]], [[Railway]], [[Netlify]], [[CI GitHub Actions]], [[Variables d'environnement]], [[Infrastructure Rago Route]], [[Développer et tester]]. Elles décrivent `staging` et précisent ce qui n'est pas encore en prod.
+9. Si le catalogue de l'app a changé : régénérer les notes « Tweaks … » avec `python3 docs/tools/catalogue_vault.py` sur la branche qui porte la dernière version de l'app.
+10. Mettre `maj:` à la date du jour (et `version_app:` si la note décrit l'app) dans l'en-tête des notes touchées.
+11. Vérifier qu'aucun lien `[[…]]` n'est cassé et que chaque nouvelle note est reliée depuis [[Projet]] ou une note de carte.
 
 ## 4. En cas de doute
 - **Ne jamais deviner.** Si on ne sait pas si une chose est faite, prévue ou abandonnée : **ajouter soi-même la question sur la page « Questions du vault Rago »**, automatiquement, sans attendre ni demander la permission (règle de Sofiene du 01/11 ; mode d'emploi dans [[Questions ouvertes]]). En attendant, l'écrire « À VÉRIFIER » dans la note et dans [[Questions ouvertes]], et prévenir Sofiene en une ligne dans le fil.

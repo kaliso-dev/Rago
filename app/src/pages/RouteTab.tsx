@@ -24,7 +24,10 @@ function errorKey(e: string): Key {
   return "route.err.other";
 }
 
-/** Rago Route dans Réseau : le tunnel anti-lag vers la sortie de Paris (route.rs). Exe de test seulement pour l'instant.
+// Exe de test (serveur staging) : le bouton qui copie le jeton pour le script du Mac
+const STAGING = import.meta.env.VITE_RAGO_SERVER === "staging";
+
+/** Rago Route dans Réseau : le tunnel anti-lag vers la sortie de Paris (route.rs). Dans tous les exe depuis la 1.3.0.
  *  Réservé au Premium : la sortie de Paris refuse toute partie sans jeton signé par le serveur de licences. */
 export function RouteTab() {
   const { t, license, premium, setUpsell } = useStore();
@@ -105,7 +108,7 @@ export function RouteTab() {
     }
   }
 
-  /** Essais sur le Mac : le jeton du compte, à coller après --jeton dans le script (il dure 6 h). */
+  /** Exe de test seulement. Essais sur le Mac : le jeton du compte, à coller après --jeton dans le script (il dure 6 h). */
   async function copyToken() {
     setError(null);
     try {
@@ -176,7 +179,7 @@ export function RouteTab() {
               {running ? t("route.stop") : t("route.start")}
             </Button>
           )}
-          {premium && (
+          {premium && STAGING && (
             <Button variant="ghost" icon={copied ? <Check size={16} /> : <Copy size={16} />} onClick={copyToken}>
               {copied ? t("route.copied") : t("route.copyToken")}
             </Button>
