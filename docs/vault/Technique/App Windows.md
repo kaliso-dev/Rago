@@ -1,14 +1,14 @@
 ---
 type: technique
 tags: [technique, app]
-maj: 2026-11-08
+maj: 2026-11-10
 ---
 # App Windows (`app/`)
 
-Voir [[Architecture]] et [[Historique des versions]].
+Vue produit de l'app (écrans, stack, fichiers). Fonctionnement interne précis (démarrage, 76 commandes, événements, scellement) : [[Architecture de l'app]]. Voir aussi [[Architecture]], [[Historique des versions]], [[Développer et tester]].
 
 ## Navigation (barre latérale)
-- **Tableau de bord** ([[Tableau de bord]])
+- **Tableau de bord** ([[Tableau de bord]]) · **Analyse du PC** ([[Analyse du PC]], 1.3.0 sur `staging`)
 - **Optimiser** : Réseau (onglets Optimisations, [[Packet Optimizer]], [[Test réseau]], et « Rago Route » seulement dans l'exe de test, sur `staging`, réservé au Premium (sur `staging` le 08/11 ; protocole 2 avec chiffrement, paquets de secours et 4G du téléphone sur `staging` le 08/11) : voir [[Proxy]]) · Latence · Carte graphique · Windows · [[Page Outils]]
 - **En jeu** : Hitreg · Minecraft · [[RBW Mod]] · [[Mode jeu]] · Jeux ([[Bibliothèque de jeux]])
 - **Avancé** : Mode expert · Restaurer (historique, retour arrière)
@@ -21,11 +21,12 @@ Contenu des modules : [[Catalogue des tweaks]]. Fonctionnement interne : [[Moteu
 - Version : `npm run bump X.Y.Z` (ne pas éditer `tauri.conf.json`).
 - Pas de signature de code : avertissement SmartScreen, et **Smart App Control de Windows 11 bloque l'app au lancement** (RAG-83). Prévue, mais pas avant d'avoir le budget (Sofiene, 01/11).
 
-## Modules Rust (`app/src-tauri/src/`, 1.2.x)
+## Modules Rust (`app/src-tauri/src/`, `staging` 1.3.0)
 - Cœur : `lib.rs` (commandes), `runner.rs` (exécute un lot : `.cmd` caché dans `run\`, journal `logs\run-<ms>.log`), `catalog.rs`, `seal.rs` (scripts chiffrés), `backup.rs` (`applied.json`, état d'avant, chiffré DPAPI), `history.rs`, `reset.rs` / `repair.rs` ([[Remise à zéro]]), `instance.rs`, `license.rs`, `account.rs`, `shell.rs`, `reg.rs`.
 - Système : `system.rs`, `stats.rs`, `memory.rs`, `minecraft.rs` (OptiFine), `tools.rs` ([[Page Outils]]), `rbw.rs` ([[RBW Mod]]), `background.rs` (icône près de l'horloge, démarrage avec Windows).
 - 1.2 : `overlay.rs`, `fps.rs`, `gameping.rs`, `mcping.rs`, `session.rs` ([[Barre en jeu]]) ; `games.rs`, `icon.rs`, `assets.rs` ([[Bibliothèque de jeux]]) ; `netopt.rs` ([[Packet Optimizer]]) ; `nettest.rs`, `icmp.rs`, `netshare.rs` ([[Test réseau]]) ; `flows.rs`, `report.rs` ; `update.rs` ([[Mise à jour automatique]]).
-- Pages React : `Dashboard`, `Games`, `ModulePage`, `Network`, `NetOpt`, `NetTest`, `Share`, `Tools`, `Settings`. FR/EN (`lib/i18n.ts`, anglais par défaut, tutoiement en français).
+- 1.3 et `staging` : `analysis.rs` ([[Analyse du PC]]), `boost.rs` (Mode jeu total), `bridge.rs` (pont local avec [[Rago OS]]), `route.rs` (Rago Route, [[Infrastructure Rago Route]]). `main.rs` ne fait qu'appeler `lib.rs`.
+- Pages React (`app/src/pages/`) : `Dashboard`, `Analysis`, `Games`, `ModulePage`, `Network`, `NetOpt`, `NetTest`, `RouteTab`, `Share`, `Tools`, `Settings`. FR/EN (`lib/i18n.ts`, anglais par défaut, tutoiement en français).
 
 ## Fichiers écrits sur le PC
 `%LOCALAPPDATA%\Rago\license.bin`, `scripts.bin`, `account.bin` (DPAPI) ; `%APPDATA%\gg.rago.optimizer\applied.json`, `history.json`, `logs\`, `backup\*.reg`. Les logs d'un joueur : `%APPDATA%\gg.rago.optimizer\logs` ([[Problèmes joueurs]]).
@@ -37,4 +38,4 @@ Jeton JWT EdDSA de 30 jours vérifié hors ligne, rafraîchi s'il expire dans mo
 Plan d'alimentation `LowLatency.pow` (Rago Low Latency), profil NVIDIA `.nip` + `nvidiaProfileInspector.exe` (provenance non documentée), PresentMon (ajouté par la CI).
 
 ## Tests
-`cargo test --manifest-path src-tauri/Cargo.toml`, `npm run build`, CI `app-windows` (tests Windows + build). Les vrais tests se font sur le PC de Sofiene ou une VM.
+`cargo test --manifest-path src-tauri/Cargo.toml`, `npm run build`, démo navigateur `npm run window`, CI `app-windows` (tests Windows + build) : [[Développer et tester]], [[CI GitHub Actions]]. Les vrais tests se font sur le PC de Sofiene ou une VM.
