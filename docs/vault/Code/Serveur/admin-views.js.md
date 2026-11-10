@@ -2,14 +2,14 @@
 type: code
 tags: [code, serveur, javascript, admin, html]
 fichier: licensing/src/admin-views.js
-lignes: 914
+lignes: 943
 maj: 2026-11-10
 ---
 # admin-views.js
 
 Les pages HTML du tableau de bord `/admin`, en français : menu latéral, cartes, chiffres clés, tableaux, graphiques en HTML/SVG. Les données viennent de [[admin.js (serveur)]]. Fiche parente : [[Code du serveur]]. Fonctionnalité : [[Tableau de bord admin]].
 
-(code de `staging` @ `9f65eac`, PR #83 comprise, 10/11 ; l'entrée « Cerveau » du menu : PR #85 du Cerveau, fusionnée dans `staging` le 10/11, pas en prod)
+(code de `staging` @ `30f36e3`, PR #84 comprise, 10/11 ; le même fichier est en prod depuis la PR #87 du 10/11, entrée « Cerveau » du menu comprise)
 
 ## Rôle et place dans l'ensemble
 

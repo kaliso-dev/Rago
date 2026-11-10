@@ -2,7 +2,7 @@
 type: code
 tags: [code, serveur, css]
 fichier: licensing/public/tokens.css, licensing/public/account.css, licensing/public/admin.css
-lignes: 105 + 459 + 538
+lignes: 105 + 465 + 545
 maj: 2026-11-10
 ---
 # Styles du serveur (CSS)
@@ -23,18 +23,18 @@ Servies par `serveStatic` d'[[app.js]] depuis `licensing/public/`. Les pages de 
 - Classes utilitaires `.rg-metric`, `.rg-overline` ; animations `rg-pulse`, `rg-pixel-blink`.
 - **Copies** : `brand/tokens/tokens.css` (v1.2 du 07/10, avec en plus les fonds d'avertissement `--rg-warning-a06/a10/a18` et les jetons « verre » `--rg-glass-*` du 16/10) et `app/src/styles/tokens.css` (avec les jetons « verre »). La copie du serveur n'a pas ces ajouts (elle ne s'en sert pas). Voir [[Charte graphique]].
 
-## account.css (459 lignes)
+## account.css (465 lignes)
 
 Pages du site de compte, charte v1.1 :
 - fond : deux halos rouges sur un champ de points ; bandeau jaune « Test server » sur staging ;
 - en-tête (marque, Pricing, onglets Account / Profile / Affiliate, avatar), boutons en pilule (`btn-primary`, `btn-ghost`, `btn-sm`, `btn-block`, boutons Google/Discord) ;
 - pages d'accès en deux colonnes (`split`, texte + formulaire), onde « pulse », étapes d'achat (`steps`), champs, encadrés d'alerte ;
 - tableau de bord `/account` (grille avec `subgrid`, refait le 11/10/2026), cartes licence, PC, téléchargement, Discord, affiliation (anneau SVG et places), badges d'état ;
-- profil et photo (09/10), avis avec étoiles en boutons radio (11/10), code d'inscription à 6 chiffres et boutons Google/Discord (25/10), page de connexion de l'app (code à 4 caractères) ;
+- profil et photo (09/10), avis avec étoiles en boutons radio (11/10) et champ de texte de l'avis (`.field textarea`, remis le 10/11 : il avait perdu son style quand la PR #82 a retiré les styles de l'ancien admin), code d'inscription à 6 chiffres et boutons Google/Discord (25/10), page de connexion de l'app (code à 4 caractères) ;
 - animations d'entrée (`rise`, `d1`…`d4`) coupées par `prefers-reduced-motion` ;
 - adaptations : 1000, 900, 760, 720, 560, 420, 360 px ; champs en 16 px sur téléphone (pas de zoom iOS), iPhone SE (320 px).
 
-## admin.css (538 lignes)
+## admin.css (545 lignes)
 
 Feuille propre à `/admin` (10/11/2026), sans fond animé ni flou pour que les longues tables défilent bien ; couleurs et polices de `tokens.css` :
 - variables locales (`--bg`, `--side`, `--card`, `--side-w: 244px`…) ;

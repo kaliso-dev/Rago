@@ -40,5 +40,6 @@ Voir [[Version 1.1.14]].
 - 22/10 : Railway bloque les déploiements (cyberattaque chez Railway), rétabli le soir même ; sans effet sur la 1.2.0.
 - 28/10 : signature des mises à jour en échec (secret `TAURI_SIGNING_PRIVATE_KEY` collé avec un retour à la ligne, puis `RAGO_UPDATER_PUBKEY` avec un `%` en trop) ; mise à jour de test invisible (déploiement Railway de staging sauté, `PUBLIC_URL` de staging égal à la prod, `STAGING_RAGO_API_BASE` sans `https://`). Tout corrigé le 28-29/10 ([[Mise à jour automatique]]).
 - 09/11 : site-check en échec (GitHub passé à Ubuntu 26.04, que Playwright 1.56.1 ne gère pas) ; corrigé le 10/11 (PR #75, Ubuntu 24.04 fixé) ([[CI GitHub Actions]]).
+- 10/11 : sur `staging`, le champ « Your review » de la page compte avait perdu son style (la PR #82 avait retiré, avec les styles de l'ancien admin, celui des zones de texte) ; corrigé le 10/11 (commit `5fa5f06`, PR #84) ; jamais arrivé en prod ([[Styles du serveur (CSS)]], [[Tableau de bord admin]]).
 - 10/11 : 3 000 minutes de novembre épuisées en deux jours par la CI du dépôt privé `network-server-rago` ; `rago`, public, n'est pas touché ([[CI GitHub Actions]]).
 - `wmic` absent de Windows 11 24H2 (corrigé en 1.1.6).

@@ -9,7 +9,7 @@ maj: 2026-11-10
 
 Les styles du [[Cerveau du vault]] : mise en page plein écran, colonne de l'explorateur, barres sur le graphe, lecteur, palette de recherche, version téléphone. Fiche parente : [[Code du serveur]]. Page : [[brain-views.js]] ; comportement : [[cerveau.js]]. Les autres styles du serveur sont décrits dans [[Styles du serveur (CSS)]].
 
-(code de la PR #85 du Cerveau, dans `staging` depuis le 10/11, pas en prod)
+(code de la PR #85 du Cerveau, dans `staging` depuis le 10/11 et en prod depuis la PR #87 du 10/11)
 
 ## Fonctionnement détaillé
 - **Jetons** : utilise ceux de `/assets/tokens.css` (couleurs `--rg-*`, polices Geist, rayons, ombres) et définit les siens sur `.cv` : fonds `--bg` `#070708`, surfaces, lignes, textes `--t1` à `--t3`, `--sw: 288px` (largeur de l'explorateur), `--rw: min(620px, 46vw)` (largeur du lecteur, remplacée par la largeur choisie à la souris), courbe `--ease`.

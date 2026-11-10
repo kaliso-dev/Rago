@@ -9,7 +9,7 @@ maj: 2026-11-10
 
 Lit **toutes** les variables d'environnement du serveur, applique les valeurs par défaut, refuse de démarrer quand la configuration de production est incomplète ou dangereuse, et produit la liste des avertissements affichés au démarrage et sur `/admin`. Fiche parente : [[Code du serveur]]. Fonctionnalité : [[Variables d'environnement]].
 
-(code de `staging` @ `ee77d4f`, 10/11. Les variables `CERVEAU_*` en cours d'ajout par la personne qui coordonne ne sont pas décrites ici.)
+(code de `staging` @ `9fe6ab4`, 10/11 ; les clés `brain*` du [[Cerveau du vault]] sont aussi en prod depuis la PR #87 du 10/11)
 
 ## Rôle et place dans l'ensemble
 
@@ -71,6 +71,9 @@ Un seul export utile : `loadConfig(env = process.env)` → objet `cfg`, passé �
 | `ROUTE_TESTERS` | `routeTesters` | e-mails séparés par des virgules, en minuscules ; utilisé seulement sur un serveur de test. |
 | `SUBSCRIPTION_GRACE_DAYS` | `subscriptionGraceDays` | 3. |
 | `AFFILIATE_GOAL` | `affiliateGoal` | 3. |
+| `CERVEAU_REPO`, `CERVEAU_BRANCH` | `brainRepo`, `brainBranch` | `kaliso-dev/rago`, `staging` : le dépôt et la branche que lit le [[Cerveau du vault]] sur GitHub (même sur le serveur de prod). |
+| `CERVEAU_GITHUB_TOKEN` | `brainToken` | vide = le Cerveau ne lit le dépôt que tant qu'il est public ; jeton en lecture seule (« Contents ») à mettre avant le passage en privé. |
+| `CERVEAU_DIR`, `CERVEAU_SOURCE` | `brainDir`, `brainSource` | en local, le dossier lu sur le disque (par défaut le dépôt autour de `licensing/`) ; `github` force GitHub même à côté d'une copie locale. |
 | `AFFILIATE_HOLD_DAYS` | `affiliateHoldDays` | 0 (choix de Sofiene, 07/10/2026 : compte dès l'activation). |
 | `AFFILIATE_REWARD_MONTHS` | `affiliateRewardMonths` | 6. |
 | `AFFILIATE_REWARD_MAX` | `affiliateRewardMax` | 1 (`??` : `0` est accepté et veut dire « sans limite »). |
