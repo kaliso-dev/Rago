@@ -5,7 +5,7 @@ maj: 2026-11-10
 ---
 # API du serveur
 
-Toutes les routes de `licensing/src/app.js` sur `staging` au 10/11, avec leur usage. Contrat détaillé avec l'app (corps, réponses, codes d'erreur) : `licensing/docs/API.md`, qui **fait foi** : `/api/v1` ne change jamais de façon incompatible (une rupture = `/api/v2`). Organisation du code : [[Architecture du serveur]].
+Toutes les routes de `licensing/src/app.js` sur `staging` au 10/11, avec leur usage. Contrat détaillé avec l'app (corps, réponses, codes d'erreur) : `licensing/docs/API.md`, qui **fait foi** : `/api/v1` ne change jamais de façon incompatible (une rupture = `/api/v2`). Attention : au 10/11, `API.md` ne décrit pas encore `app-link`, `route/token`, `account/subscription`, `installer`, `update/*` ni `network/report`, et donne `/plans` avec seulement `lifetime` (voir [[Documentation et configuration du serveur]]). Organisation du code : [[Architecture du serveur]].
 
 Les routes marquées **(staging)** n'existent que sur `staging`, pas encore sur la branche de prod.
 
@@ -37,8 +37,10 @@ Les routes marquées **(staging)** n'existent que sur `staging`, pas encore sur 
 | `GET /admin/utilisateurs` (`?q=`, `?filtre=`, `?tri=`, `?page=`), `GET /admin/utilisateurs.csv` (export, PR #82), `GET /admin/utilisateurs/:id`, `POST /admin/utilisateurs/:id/:action` | Joueurs et toutes les actions de support (`temps`, `vie`, `revoquer`, `retablir`, `liberer-pc`, `lien-mdp`, `rattacher`, `resilier`, `bannir`, `debannir`, `discord-sync`, `discord-delier`, `avis`, `photo`, `nom`, `affilie`, `supprimer`) ; `staging` seulement (10/11), [[Tableau de bord admin]] |
 | `GET /admin/achats`, `POST /admin/achats/:id/lien`, `POST /admin/offrir` | Achats sans compte, Premium pour des e-mails ; `staging` seulement |
 | `GET /admin/ventes` (`?etat=`, `?page=`, `?frais=1`), `GET /admin/services`, `GET /admin/journal` | Ventes Stripe, état des services, journal ; `staging` seulement |
-| `GET /admin/site`, `POST /admin/popup`, `POST /admin/code-promo`, `POST /admin/test-licenses` | Pop-up de réduction, codes promo, avis, licences de test (sur `staging` ; en prod la pop-up est sur `/admin`) |
+| `GET /admin/site`, `POST /admin/popup`, `POST /admin/code-promo` | Pop-up de réduction, codes promo, avis (sur `staging` ; en prod la pop-up est sur `/admin`) |
+| `POST /admin/test-licenses` | Arrête les licences de test, puis renvoie vers `/admin/services` (PR #83, `staging`) |
 | `GET /admin/reseau`, `GET /admin/reseau.csv` | Résumé et export des tests réseau ([[Proxy]]) |
+| `GET /admin/cerveau`, `GET /admin/cerveau/donnees.json` (`?frais=1`), `GET /admin/cerveau/fichier?chemin=` | [[Cerveau du vault]] : la page, le vault en graphe (gzip, `ETag`), un fichier du dépôt ; PR #85 du Cerveau, fusionnée dans `staging` le 10/11, pas en prod |
 | `POST /webhooks/stripe` | Webhook Stripe (signature vérifiée, idempotent par `stripe_events`) |
 | `GET /` | Redirige vers `SITE_URL` (le site est sur Netlify) |
 
@@ -70,10 +72,14 @@ JSON en entrée et en sortie. Chaque appel de licence envoie l'objet `device` (n
 | `GET /update/status` | public | `ok`, version, fichier, pause, pourcentage : à vérifier après chaque dépôt |
 | `POST /network/report` | `X-Rago-Device` | Résultats d'un [[Test réseau]] (204) |
 
-Codes d'erreur stables : `invalid_request`, `invalid_credentials`, `invalid_token`, `no_license`, `bound_to_other_device`, `revoked`, `rate_limited`, `server_error`, `link_expired`, `route_closed`, `invalid_rating`, `empty_comment`, `comment_too_long`, `name_required`, `invalid_name`, `invalid_image`, `image_too_large`, `storage_unavailable`. Le `message` anglais est affiché tel quel par l'app.
+Codes d'erreur stables (`API_ERRORS` d'[[app.js]]) : `invalid_request` (400), `invalid_credentials` (401), `invalid_token` (401), `no_license` (403, avec `buy_url`), `bound_to_other_device` (403), `revoked` (403 ; avec `reason: subscription_ended`, le message de `subscription_ended` et `buy_url` quand l'abonnement est fini), `account_banned` (403, compte banni), `route_closed` (403), `rate_limited` (429), `no_subscription` (404, résiliation depuis l'app sans abonnement), `billing_unavailable` (503, Stripe injoignable), `link_expired` (410), `name_required`, `invalid_name`, `invalid_rating`, `empty_comment`, `comment_too_long`, `invalid_image` (400), `image_too_large` (413), `storage_unavailable` (503), `server_error` (500, toute exception). Le fichier de mise à jour répond aussi `not_found` (404, version plus proposée) et `unavailable` (503). Le `message` anglais est affiché tel quel par l'app.
 
 ## Ajouter une route
 1. La logique dans le module du domaine (`licensing.js`, `billing.js`…), la route dans `app.js`, la page dans `views.js`.
 2. Une route d'API : erreur par `fail(c, code)` avec un code de `API_ERRORS` ; limite de débit avec `allow()` ; jamais de changement incompatible de `/api/v1`.
 3. Un test dans `test/flow.test.js`, puis `npm test`.
 4. Mettre à jour `licensing/docs/API.md` si l'app l'appelle, et cette note.
+
+## Code
+
+Chaque route avec son accès, sa réponse et ses limites : [[app.js]] ; pages : [[views.js]] ; admin : [[admin.js (serveur)]] et [[admin-views.js]] ; jetons : [[tokens.js]] ; empreinte du PC : [[fingerprint.js]]. Carte : [[Code du serveur]].

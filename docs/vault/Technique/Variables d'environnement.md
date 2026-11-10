@@ -18,8 +18,9 @@ Obligatoires en prod (sinon le serveur refuse de démarrer) : `DATABASE_URL`, `S
 | Stripe | `STRIPE_SECRET_KEY`, `STRIPE_WEBHOOK_SECRET`, `STRIPE_PRICE_MONTHLY`, `STRIPE_PRICE_YEARLY`, `STRIPE_PRICE_LIFETIME`, `STRIPE_PRICE_ID` (ancien, plus vendu), `STRIPE_PORTAL_LOGIN_URL`, `TRIAL_DAYS` (3 ; 0 = sans essai ; staging), `CHECKOUT_CANCEL_URL`, `PRICE_LABEL`, `SUBSCRIPTION_GRACE_DAYS` (3) | [[Paiements Stripe]] |
 | Clés | `LICENSE_SIGNING_KEY`, `SESSION_SECRET` (générées et gardées dans `server_secrets` si absentes), `SCRIPTS_SECRET` (= secret GitHub `RAGO_SCRIPTS_SECRET`), `LICENSE_TOKEN_DAYS` (30) | **immuables** |
 | E-mails | `RESEND_API_KEY`, `MAIL_FROM`, `MAIL_REPLY_TO`, `EMAIL_VERIFICATION` (vide = code à l'inscription quand les e-mails partent ; 0 = coupé ; 1 = forcé) | sans clé : e-mails dans les logs |
-| Support et admin | `SUPPORT_URL`, `ADMIN_KEY` (≥ 16 caractères, ouvre `/admin`), `SELF_SERVICE_RESET_DAYS` (0 = PC libéré par le support seulement), `FREE_TWEAKS`, `PREMIUM_TWEAKS` (chiffres affichés sur le tableau de bord gratuit) | |
+| Support et admin | `SUPPORT_URL`, `ADMIN_KEY` (≥ 16 caractères, ouvre `/admin`), `SELF_SERVICE_RESET_DAYS` (0 = PC libéré par le support seulement), `FREE_TWEAKS` (11), `PREMIUM_TWEAKS` (198) (chiffres affichés sur la page compte) | défaut de `FREE_TWEAKS` (11) différent des 73 réglages gratuits décidés le 04/11 ; valeur sur Railway **À VÉRIFIER** |
 | Affiliation | `AFFILIATE_GOAL` (3), `AFFILIATE_HOLD_DAYS` (0), `AFFILIATE_REWARD_MONTHS` (6), `AFFILIATE_REWARD_MAX` (1), `AFFILIATE_MAX_REFERRALS` (3), `AFFILIATE_DISCOUNT_PERCENT` (5), `AFFILIATE_DISCOUNT_DURATION` (`once`) | [[Promotions et affiliation]] |
+| Cerveau du vault | `CERVEAU_GITHUB_TOKEN` (jeton GitHub « fine-grained », dépôt `kaliso-dev/rago` seulement, **Contents : Read-only**), `CERVEAU_BRANCH` (`staging`), `CERVEAU_REPO` (`kaliso-dev/rago`), `CERVEAU_SOURCE`, `CERVEAU_DIR` (local) | sans jeton, le [[Cerveau du vault]] ne lit le dépôt que tant qu'il est public ; **à mettre dans Railway avant que le dépôt passe en privé** (PR #85 du Cerveau) |
 | Lancement | `LAUNCH_AT`, `PREVIEW_KEY` | inutiles depuis le 10/10 |
 | Connexion Google/Discord | `GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET`, `DISCORD_LOGIN=1` (bouton Discord ; utilise `DISCORD_CLIENT_ID`/`SECRET`) | [[Connexion Google et Discord]] |
 | Discord, rôle Pro (les 5 ensemble) | `DISCORD_CLIENT_ID`, `DISCORD_CLIENT_SECRET`, `DISCORD_BOT_TOKEN`, `DISCORD_GUILD_ID`, `DISCORD_ROLE_ID` | **à retirer du staging** (sinon rôles donnés sur le vrai Discord) |
@@ -31,6 +32,8 @@ Obligatoires en prod (sinon le serveur refuse de démarrer) : `DATABASE_URL`, `S
 | Développement | `DEV_SEED=email:motdepasse` (compte Premium au démarrage, base en mémoire), `TEST_DATABASE_URL` (tests sur vrai Postgres) | jamais en prod |
 
 Sur staging, à **ne pas** mettre : `LICENSE_SIGNING_KEY`, `SESSION_SECRET` (le staging fabrique les siennes), toutes les `DISCORD_*` (sauf serveur Discord de test), `INSTALLER_OBJECT`. Clés Stripe : toujours `sk_test_` et les prix/webhook de test.
+
+**Absentes de `licensing/.env.example`** (lues par `config.js` mais pas dans le modèle, au 10/11) : `ADMIN_KEY`, `APP_ENV`, `AVATAR_BUCKET`, `FREE_TWEAKS`, `GEOIP_ASN_URL`, `GEOIP_CITY_URL`, `INSTALLER_FILENAME`, `INSTALLER_PATH`, `INSTALLER_URL`, `PORT`, `PREMIUM_TWEAKS`, `RAILWAY_ENVIRONMENT_NAME`, `STRIPE_PRICE_ID`, `UPDATE_NOTES`, `UPDATE_PAUSED`, `UPDATE_ROLLOUT`. Lues hors de `config.js` : `DEV_SEED` ([[server.js]]), `RAILWAY_GIT_COMMIT_SHA` et `RAILWAY_GIT_BRANCH` ([[admin.js (serveur)]]), `TEST_DATABASE_URL` ([[Tests du serveur]]). `npm run local` retire les variables réelles ([[local.js]]).
 
 ## GitHub (Settings → Secrets and variables → Actions)
 | Type | Nom | Usage |
@@ -49,3 +52,7 @@ Sur staging, à **ne pas** mettre : `LICENSE_SIGNING_KEY`, `SESSION_SECRET` (le 
 
 ## Serveurs Rago Route (Vultr)
 Aucune variable : `install.sh` installe tout, la sortie lit la clé publique sur `/api/v1/public-key` ([[Infrastructure Rago Route]]).
+
+## Code
+
+Lecture, défauts et avertissements de chaque variable du serveur : [[config.js]] ; modèle commenté : `.env.example` ([[Documentation et configuration du serveur]]). Carte : [[Code du serveur]].

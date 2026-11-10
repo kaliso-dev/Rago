@@ -6,7 +6,7 @@ maj: 2026-11-10
 ---
 # Barre en jeu
 
-Linear RAG-82. Arrivée en [[Version 1.2.0]]. Code : `overlay.rs`, `fps.rs`, `gameping.rs`, `mcping.rs`, `flows.rs`, `icmp.rs`, interface `src/overlay/Overlay.tsx`. Nécessite que Rago tourne ([[Arrière-plan et démarrage]]).
+Linear RAG-82. Arrivée en [[Version 1.2.0]]. Code : [[overlay.rs]], [[fps.rs]], [[gameping.rs]], [[mcping.rs]], [[flows.rs]], [[icmp.rs]], interface [[Overlay.tsx]] (détail dans « Code » plus bas). Nécessite que Rago tourne ([[Arrière-plan et démarrage]]).
 
 ## Ouvrir et fermer
 - **Alt+X** (par défaut, modifiable dans les [[Paramètres de l'app]] ; c'était Ctrl+Maj+R avant le 22/10). Le raccourci n'est pris à Windows **que quand un jeu est au premier plan** (ou la barre ouverte) : ailleurs il reste à l'app active (ex. Ctrl+Maj+R recharge toujours Chrome).
@@ -16,11 +16,12 @@ Linear RAG-82. Arrivée en [[Version 1.2.0]]. Code : `overlay.rs`, `fps.rs`, `ga
 - **Souris sur Minecraft** : en fenêtre, la barre prend le premier plan et le jeu rend la souris ; en plein écran, la barre envoie Échap au jeu (menu pause, curseur libéré).
 
 ## Ce qu'elle affiche (gratuit)
-- **FPS** : mesurés par **PresentMon 2.3.0** (Intel, signé), ajouté seulement par la CI GitHub (un exe compilé ailleurs affiche « — »).
+- **FPS** : mesurés par **PresentMon 2.3.0** (Intel, signé), ajouté seulement par la CI GitHub (un exe compilé ailleurs affiche « — » ; si la version 2.3.0 ne se télécharge pas, la CI prend la dernière publiée).
 - **Ping du serveur de la partie** :
   - Minecraft Java : ping/pong du protocole du jeu toutes les 3 s, comme la liste des serveurs (Hypixel est derrière Cloudflare).
   - Autres jeux : le serveur est l'adresse dont le jeu reçoit le plus de paquets (journal réseau du noyau Windows, ETW). En TCP : aller-retour mesuré par Windows. En UDP (PUBG, Valorant, CS2, Fortnite) : écho ICMP toutes les 2 s, médiane des 5 dernières ; si le serveur ne répond pas, mesure au dernier routeur avant lui, affichée avec **« ≈ »** (à 1-2 ms près).
   - Pas de serveur repéré (menu, salon, hors ligne) : pas de ping.
+  - Partie par [[Proxy|Rago Route]] : le jeu est connecté à `localhost`, que la barre écarte ; elle n'affiche donc sans doute **pas de ping** (l'onglet Rago Route montre le sien). À VÉRIFIER (déduit du code de [[gameping.rs]], pas observé).
 - CPU, GPU, RAM ; bouton Nettoyer la RAM ([[Tableau de bord]]) ; vérifications de [[Pendant la partie]] ; bouton « Ouvrir Rago Optimizer ».
 - **Pastille** « FPS et ping à l'écran » (option) : en haut à gauche, ne prend ni le focus ni les clics ; attend que le jeu soit au premier plan depuis 10 s ; jamais par-dessus le plein écran exclusif.
 
@@ -33,3 +34,8 @@ Tweaks qui s'appliquent sans redémarrage, sans couper le réseau ni relancer l'
 Détail de chacun : [[Tweaks Latence]], [[Tweaks Windows]], [[Tweaks Carte graphique]], [[Tweaks Réseau]]. Mode jeu, Hitreg, OptiFine et RBW Mod restent dans l'app. Un tweak changé depuis la barre apparaît dans l'app.
 
 Liens : [[Test réseau]], [[Offres et prix]].
+
+## Code
+- [[overlay.rs]] : fenêtres de la barre et de la pastille, raccourci, détection du jeu au premier plan, mode passif, commandes `overlay_*`.
+- [[fps.rs]] : FPS par PresentMon et résumé de la dernière partie. [[gameping.rs]] : choix du serveur et ping. [[mcping.rs]] : ping Minecraft. [[flows.rs]] : journal réseau du noyau (ETW). [[icmp.rs]] : écho ICMP et dernier routeur.
+- [[session.rs]] : vérifications affichées dans la barre. [[lib.rs]] : boucle de fond et commandes. Interface : [[Overlay.tsx]].

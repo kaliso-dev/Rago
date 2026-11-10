@@ -2,13 +2,13 @@
 type: catalogue
 tags: [tweaks, catalogue, généré]
 généré: docs/tools/catalogue_vault.py
-version_app: 1.2.1
-maj: 2026-10-31
+version_app: 1.3.0
+maj: 2026-11-10
 ---
 
 # Tweaks Latence
 
-Module **Latence** (`latency`) de l'app 1.2.1 : Timers, priorités, processeur, mémoire et alimentation.
+Module **Latence** (`latency`) de l'app 1.3.0 : Timers, priorités, processeur, mémoire et alimentation.
 Note **générée** depuis `app/src/data/catalog.json` : ne pas l'éditer à la main, voir [[Catalogue des tweaks]].
 
 Légende : 🆓 gratuit · 🔒 Premium (voir [[Offres et prix]]) · ↩️ seul le retour arrière est gratuit · ⚠️ avancé · 🔁 redémarrage nécessaire · ⚙️ action ponctuelle. Comment un tweak est appliqué : [[Moteur des tweaks]].
@@ -408,51 +408,51 @@ Supprime les plans d'alimentation Équilibré, Performances élevées et Économ
 
 ## Stockage
 
-### Optimisation du stockage `sto_general` 🔒 ⚠️ 🔁
+### Optimisation du stockage `sto_general` 🆓 ⚠️ 🔁
 Active le cache d'écriture des disques internes et vide les fichiers temporaires, caches des navigateurs et de Windows Update.
 - Gain : Libère de l'espace disque ; aucun gain de FPS.
 - Inconvénient : Sites et miniatures un peu plus lents à recharger la première fois ; le nettoyage peut prendre plusieurs minutes.
 
-### Réglages NTFS `sto_ntfs` 🔒 🔁
+### Réglages NTFS `sto_ntfs` 🆓 🔁
 Agrandit le cache des fichiers, coupe la date de dernier accès, garde le TRIM actif et ne chiffre plus le fichier d'échange.
 - Gain : Effet rarement mesurable : Windows gère déjà bien ces réglages.
 - Inconvénient : La date de dernier accès des fichiers n'est plus mise à jour, et le système de fichiers utilise un peu plus de RAM.
 
-### Réglages FSUTIL `sto_fsutil_v6` 🔒 🔁
+### Réglages FSUTIL `sto_fsutil_v6` 🆓 🔁
 Windows ne note plus quand chaque fichier a été ouvert et ne crée plus d'anciens noms courts (format DOS) pour les fichiers.
 - Gain : Peut réduire un peu les écritures sur le disque ; effet rarement mesurable.
 - Inconvénient : La date de dernier accès n'est plus mise à jour, et de très vieux programmes peuvent mal gérer les nouveaux fichiers.
 - Jumeau de `sys_time` (même script, compté une fois).
 
-### Réglages de fichiers FSUTIL `sto_fsutil2` 🔒 🔁
+### Réglages de fichiers FSUTIL `sto_fsutil2` 🆓 🔁
 Windows ne note plus quand chaque fichier a été ouvert et ne crée plus d'anciens noms courts (format DOS) pour les fichiers.
 - Gain : Peut réduire un peu les écritures sur le disque ; effet rarement mesurable.
 - Inconvénient : La date de dernier accès n'est plus mise à jour, et de très vieux programmes peuvent mal gérer les nouveaux fichiers.
 - Jumeau de `sys_time` (même script, compté une fois).
 
-### Optimiser le disque `sto_defrag` 🔒 ⚙️
+### Optimiser le disque `sto_defrag` 🆓 ⚙️
 Lance tout de suite un TRIM du disque C, qui signale au SSD ses espaces libres ; Windows le fait normalement chaque semaine.
 - Gain : Peut aider un SSD à garder ses vitesses d'écriture ; sans effet sur un disque dur.
 - Inconvénient : Aucun inconvénient connu.
 
-### Réglages NTFS selon ton disque `sto_fsutil` 🔒
+### Réglages NTFS selon ton disque `sto_fsutil` 🆓
 SSD : coupe la date de dernier accès et les noms courts DOS. Disque dur : laisse Windows gérer la date, garde les noms courts.
 - Variantes : SSD (`ssd`), Disque dur (`hdd`) ; par défaut `ssd`.
 - Gain : Peut réduire un peu les écritures sur le disque ; effet rarement mesurable.
 - Inconvénient : Avec SSD, la date de dernier accès n'est plus mise à jour ; de très vieux programmes peuvent être gênés.
 
-### Activer le cache d'écriture `sto_writecache` 🔒 🔁
+### Activer le cache d'écriture `sto_writecache` 🆓 🔁
 Active le cache d'écriture de tes disques internes ; les clés et disques USB ne sont pas touchés.
 - Gain : Peut accélérer les écritures, mais Windows l'active souvent déjà par défaut.
 - Inconvénient : En cas de coupure de courant brutale, les dernières données écrites peuvent être perdues.
 
-### Économie d'énergie des SSD `sto_ssdpower` 🔒 🔁
+### Économie d'énergie des SSD `sto_ssdpower` 🆓 🔁
 Modifie les valeurs de veille des SSD et cartes SD que Windows utilise pour estimer leur consommation.
 - Gain : Effet rarement mesurable : ces valeurs servent surtout à estimer la consommation, pas à gérer la veille.
 - Inconvénient : Aucun inconvénient connu.
 - Jumeau de `pow_saving` (même script, compté une fois).
 
-### TRIM du disque système `sto_trim` 🔒 ⚙️
+### TRIM du disque système `sto_trim` 🆓 ⚙️
 Lance tout de suite un TRIM du disque C, qui signale au SSD ses espaces libres ; Windows le fait normalement chaque semaine.
 - Gain : Peut aider un SSD à garder ses vitesses d'écriture ; sans effet sur un disque dur.
 - Inconvénient : Aucun inconvénient connu.

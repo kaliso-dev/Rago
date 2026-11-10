@@ -1,7 +1,7 @@
 ---
 type: projet
 tags: [projet, rago-os, en-cours]
-maj: 2026-11-09
+maj: 2026-11-10
 version_app: 1.3.0
 ---
 # Rago OS
@@ -52,13 +52,13 @@ Sofiene, 09/11 : « transforme le widget heure en app ». Code : `src/overlay/Cl
 Rago OS parle à l'app par un canal nommé local, `\\.\pipe\gg.rago.optimizer.bridge` (`gg.rago.optimizer.staging.bridge` pour l'exe de test). Code : `app/src-tauri/src/bridge.rs` côté app (commandes dans `bridge_handler`, `lib.rs`), `src-tauri/src/win/rago.rs` et `src/lib/rago.svelte.ts` côté Rago OS.
 - Garde-fous : canal fermé au réseau, ouvert aux seuls utilisateurs de la session ; l'exe client doit s'appeler `RagoOS.exe` (ou `rago-os.exe` en développement) ; ni e-mail, ni clé, ni identifiant ne passent, la licence se résume à l'offre.
 - Commandes dans `staging` depuis la PR #73 (07/11) : `hello`, `status`, `live` (FPS et ping du [[Barre en jeu|jeu en cours]]), `stats`, `clean_ram`, `net_test` ([[Test réseau]]), `games` et `game_launch` ([[Bibliothèque de jeux]]), `presets`, `open` (ouvre une page de l'app), `game_mode` ([[Mode jeu]]), `boost` (Mode jeu total).
-- Commandes ajoutées dans `staging` par la PR #74 (fusionnée le 09/11 sur l'accord de Sofiene : « 8 oui c'est parfait ») : `tweaks` (tout le catalogue proposé à Rago OS, avec l'état de chaque réglage), `tweak` (activer, désactiver ou changer de profil un réglage, par le même chemin que l'app : licence, emplacements et lot en cours vérifiés), `open` avec un réglage à mettre en avant, et pour [[Proxy|Rago Route]] : `route` (état), `route_servers` (sortie de Paris et relais de Frankfurt sondés, sans jeton ni session), `route_start` (jeton Premium, renouvelé comme dans l'onglet) et `route_stop`. Rago Route ne répond que dans l'exe de test, comme son onglet. Sans `tweaks` et `tweak`, la recherche de réglages ne marche pas avec l'app installée.
+- Commandes ajoutées dans `staging` par la PR #74 (fusionnée le 09/11 sur l'accord de Sofiene : « 8 oui c'est parfait ») : `tweaks` (tout le catalogue proposé à Rago OS, avec l'état de chaque réglage), `tweak` (activer, désactiver ou changer de profil un réglage, par le même chemin que l'app : licence, emplacements et lot en cours vérifiés), `open` avec un réglage à mettre en avant, et pour [[Proxy|Rago Route]] : `route` (état), `route_servers` (sortie de Paris et relais de Frankfurt sondés, sans jeton ni session), `route_start` (jeton Premium, renouvelé comme dans l'onglet) et `route_stop`. Depuis la PR #76, les commandes Rago Route du pont répondent dans les deux exe (`available: true` partout, [[bridge.rs]]) ; seul le bouton « copier le jeton » de l'onglet reste réservé à l'exe de test. Sans `tweaks` et `tweak`, la recherche de réglages ne marche pas avec l'app installée.
 - App fermée : Rago OS la démarre en arrière-plan par sa tâche « Rago Optimizer » ([[Arrière-plan et démarrage]]), sinon par son exe. Que la tâche se lance sans droits administrateur depuis Rago OS : À VÉRIFIER sur Windows. Le dossier d'installation de l'app est relu au plus toutes les 10 minutes.
 
 ## Ce que Rago OS fait avec l'app
 - Recherche (Alt + Espace) : cherche **n'importe quel réglage** de l'app (nom français ou anglais, module, profils) et l'active ou le désactive, avec l'avertissement de l'app quand il en a un ; Maj + Entrée l'ouvre dans l'app. Il ouvre aussi les onglets de l'app par leur nom français ou anglais (« network » ouvre Réseau).
 - Pastille Live : rien pendant la partie (la [[Barre en jeu|barre en jeu]] de l'app affiche déjà FPS et ping, décision du 08/11). À la fin, un résumé : temps de jeu, FPS et ping moyens, relevés en silence pendant la partie par la commande `live`.
-- Mode jeu total, à chaque partie détectée : les services Windows inutiles en jeu (indexation, impression, SysMain, télémétrie, rapports d'erreurs, partage des mises à jour, cartes, géolocalisation, diagnostics, mises à jour Edge et Google…) sont arrêtés par l'app puis relancés à la fin (`app/src-tauri/src/boost.rs`). Jamais la sécurité, le réseau, le son, les périphériques, les anti-triches ni Xbox ; le type de démarrage n'est jamais changé et un redémarrage remet tout. Réservé à Premium dans l'app, ce qui convient puisque tout joueur de l'OS est Premium (q52 traitée le 07/11).
+- Mode jeu total, à chaque partie détectée : les 22 services Windows inutiles en jeu de la liste `SERVICES` de `boost.rs` (indexation, impression, SysMain, télémétrie, rapports d'erreurs, partage des mises à jour, cartes, géolocalisation, diagnostics, mises à jour Edge et Google…) sont arrêtés par l'app puis relancés à la fin (`app/src-tauri/src/boost.rs`). Jamais la sécurité, le réseau, le son, les périphériques, les anti-triches ni Xbox ; le type de démarrage n'est jamais changé et un redémarrage remet tout. Réservé à Premium dans l'app, ce qui convient puisque tout joueur de l'OS est Premium (q52 traitée le 07/11).
 - Option : allumer le [[Mode jeu]] de l'app au début de la partie et l'éteindre à la fin.
 - Widget **Rago Route** (09/11, Sofiene : « un widget pour pouvoir lancer rago route en un clic et voir l'état des serveurs ») : « Allumer » ou « Couper » en un clic, ping estimé jusqu'à Hypixel ; en M, l'état de la sortie de Paris et du relais de Frankfurt (sondés toutes les minutes), puis les trajets en marche et l'adresse à rejoindre (`localhost`, `localhost:25566` pour Minemen). Code : `src/lib/widgets/RouteWidget.svelte`.
 - Deux boutons de mode jeu, expliqués depuis le 09/11 (Sofiene : « il faut bien garder deux bouton mais il faut qu'on comprenne la différence ») : « Mode jeu » règle Windows pour jouer et reste actif jusqu'à ce qu'on le coupe ; « Mode jeu total » met en pause les services inutiles le temps d'une partie.
@@ -76,4 +76,13 @@ Sofiene, 08/11 : « il faut que rago se lance instantanément au démarrage du p
 
 Décision de Sofiene (07/11) sur les services : « Les deux », c'est-à-dire les services sûrs coupés en permanence par les réglages de l'app (Services Windows, diagnostics…) et le reste en pause pendant chaque partie.
 
-Liens : [[Prochaines étapes]], [[Client Minecraft Rago]].
+## Histoire
+Racontée en détail dans [[Fil - Améliorer Rago OS avec le design Rago]] (heures en UTC).
+- **Avant** : un premier Rago OS, fait dans l'app (fil « Section Rago OS », 21/10, PR #60 : 68 réglages, Dock et barre façon macOS), a été **abandonné le 31/10 (voir [[Décisions]])**. Sofiene développait déjà « un os sur un autre compte claude » (31/10).
+- **06/11** : « j'ai besoin de le stylisé dans le desygn de rago optimizer et surtout de l'améliorer en ajoutant des fonctionnalité lié à l'app ». Le projet trouvé le 07/11 était violet et rose, police Inter, très proche de macOS, avec son propre optimiseur de 51 réglages.
+- **07/11** : charte de l'app 1.2.1 choisie ; « Les deux » pour les services ; PR #73 (pont, Mode jeu total) fusionnée dans `staging` ; premier exe de test (« plein de bug ») ; demandes du matin (recherche de tout réglage, plein écran, Dock au bord, logo, « ceux qui auront l'os auront forcément rago premium ») → **test2** (15 thèmes, éditeur).
+- **08/11** : 3 thèmes gardés → **test3** (« Wow cette version est vraiment mieux ») ; demandes du soir (touche Windows, services, moins « Apple », plus d'économiseur, lancement au démarrage, tout remettre en quittant).
+- **09/11** : « Oui, tout en session » → **test4** (47 services en pause tant que Rago OS tourne) ; longue liste de retours → **test5** et PR #74 (pont : Rago Route, recherche des réglages).
+- **10/11** : en attente des retours de Sofiene sur test5.
+
+Liens : [[Prochaines étapes]], [[Client Minecraft Rago]], [[Chronologie du projet]].

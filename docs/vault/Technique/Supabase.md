@@ -10,7 +10,7 @@ Base de données Postgres et fichiers (Storage) du [[Serveur de licences]]. Seul
 ## Projets
 | Projet | Pour | Remarques |
 |---|---|---|
-| Projet de prod (nommé `rago` dans le guide) | serveur Railway de prod | région conseillée par le guide : West EU (Paris), `aws-0-eu-west-3` ; **offre gratuite** (Sofiene, 10/11, q66), donc sans sauvegarde quotidienne. **URGENT** : Sofiene a reçu un e-mail de Supabase demandant de passer à l'offre payante (25 $/mois) sous peine de **suppression du projet le 05/12/2026**. La suppression perdrait toute la base, dont `server_secrets` (clé de signature des licences) : voir [[Clés et secrets]] (le guide conseillait de passer en Pro dès les premiers revenus pour les sauvegardes quotidiennes) |
+| Projet de prod (nommé `rago` dans le guide) | serveur Railway de prod | région conseillée par le guide : West EU (Paris), `aws-0-eu-west-3` ; **offre gratuite** (Sofiene, 10/11, q66), donc sans sauvegarde quotidienne. **URGENT** : e-mail de Supabase du 04/11 (« Your org Rago Optimizer exceeded its usage quota », lu par Claude le 10/11) : l'organisation **Rago Optimizer** a dépassé son quota, surtout la **bande passante sortante (egress) au-delà de 5,5 Go** ; tolérance jusqu'au **05/12/2026**, puis « Fair Use Policy » : **restrictions du service possibles** (pas une suppression annoncée). Cause probable : les installateurs et les mises à jour automatiques sont téléchargés depuis le Storage. Solutions : passer l'organisation en **Pro** (25 $/mois, quota bien plus grand, sauvegardes quotidiennes) ou baisser l'egress (servir l'exe ailleurs). Choix de Sofiene (10/11) : « je passerai en pro avant décembre ou alors on migrera de supabase vers un autre service je te tiendrai au courant avant le 5 décembre » ; option retenue pas encore connue. Voir aussi [[Clés et secrets]] |
 | `rago-staging` | serveur Railway de staging | offre gratuite : **se met en pause après une semaine sans activité** (le serveur de staging ne démarre plus : relancer le projet dans Supabase). Ne jamais y copier la base de prod |
 
 Connexion : `DATABASE_URL` = URI du **Session pooler** (port 5432). Clés : `SUPABASE_URL` (`https://<ref>.supabase.co`) et `SUPABASE_SERVICE_ROLE_KEY` (clé legacy `eyJ…` ou nouvelle `sb_secret_…`, les deux marchent). Valeurs : seulement dans Railway, jamais ici ([[Clés et secrets]]).
@@ -35,11 +35,11 @@ Connexion : `DATABASE_URL` = URI du **Session pooler** (port 5432). Clés : `SUP
 ### Tables
 | Table | Contenu |
 |---|---|
-| `users` | compte : e-mail unique, `password_hash` (scrypt, ou `none` pour un compte Google/Discord sans mot de passe), `display_name`, `avatar_key` |
+| `users` | compte : e-mail unique, `password_hash` (scrypt, ou `none` pour un compte Google/Discord sans mot de passe), `display_name`, `avatar_key`, `banned_at` / `banned_reason` (bannissement, 10/11) |
 | `web_sessions`, `api_sessions` | sessions du site (30 jours) et jetons de compte de l'app (180 jours), stockés hachés |
 | `password_resets`, `signup_codes` | liens de mot de passe (1 h) ; inscriptions en attente du code à 6 chiffres (15 min, 5 essais) |
 | `oauth_identities` | comptes Google et Discord reliés (provider, subject) |
-| `licenses` | une ligne par achat ou don : `key`, `status` (`active`/`revoked`), `status_reason` (`refunded`, `disputed`, `manual`, `subscription_ended`, `replaced`, `test_mode`), `source` (`stripe`, `grant`, `affiliate`…), `plan` (`month`, `year`, `lifetime`, `reward`), ids Stripe, `current_period_end`, `cancel_at_period_end`, `token_version` (à incrémenter = tous les jetons de cette licence invalides), `claim_token_hash`, `referral_code` |
+| `licenses` | une ligne par achat ou don : `key`, `status` (`active`/`revoked`), `status_reason` (`refunded`, `disputed`, `manual`, `subscription_ended`, `replaced`, `duplicate`, `banned`, `deleted`, `test_mode`), `source` (`stripe`, `grant`, `affiliate`, `discord`), `plan` (`month`, `year`, `lifetime`, `reward`), ids Stripe, `current_period_end`, `cancel_at_period_end`, `token_version` (à incrémenter = tous les jetons de cette licence invalides), `claim_token_hash`, `referral_code` |
 | `devices` | **le** PC lié à une licence (empreintes hachées, nom, OS, version, dernière vue, dernière IP) |
 | `account_devices` | PC où un compte s'est connecté (même gratuit), pour l'anti-fraude de l'affiliation |
 | `stripe_events` | événements webhook déjà traités (idempotence), avec `livemode` |
@@ -53,8 +53,14 @@ Connexion : `DATABASE_URL` = URI du **Session pooler** (port 5432). Clés : `SUP
 | `network_reports`, `network_results` | tests réseau de l'app (ville, région, pays, fournisseur, sans IP ; 12 mois) |
 | `trials` | essais gratuits (e-mail, empreinte de carte ; 2 ans) |
 
+Une note par table (chaque colonne, son type, son défaut, qui l'écrit et qui la lit, index, durée de vie) : voir la liste dans [[schema.sql]]. Points à connaître : les sessions et liens de mot de passe expirés ne sont jamais purgés ; `trials` et `signup_codes` ne sont pas effacés à la suppression d'un compte (purgés après 2 ans et 1 jour).
+
 ## Requêtes utiles (support)
 Préférer `npm run admin -- show <email>` (depuis `licensing/`, avec le `DATABASE_URL` voulu dans le terminal) au SQL Editor : il croise compte, licence, PC, événements et achats non rattachés. Le SQL Editor de Supabase sert à lire ; toute écriture passe par une commande `admin` ou une PR.
 
 ## Sauvegarde de la clé de signature
-`npm run admin -- export-keys` affiche `LICENSE_SIGNING_KEY` et `SESSION_SECRET` : à garder dans le gestionnaire de mots de passe de Sofiene et en variables Railway, pour ne plus dépendre de la base. **Pas fait au 10/11** (q67) : la clé de signature n'existe que dans la base Supabase de prod. À faire avant toute autre chose.
+`npm run admin -- export-keys` affiche `LICENSE_SIGNING_KEY` et `SESSION_SECRET` : à garder dans le gestionnaire de mots de passe de Sofiene et en variables Railway, pour ne plus dépendre de la base. **Pas fait au 10/11** (q67) : la clé de signature n'existe que dans la base Supabase de prod. À faire avant toute autre chose. Sans terminal, la même chose se lit dans Supabase → SQL Editor (`server_secrets`, lignes `license_signing_key` et `session_secret`) ; la valeur ne sort jamais de l'écran de Sofiene vers un chat ou un fichier. Ne **pas** la mettre dans les variables Railway sans Claude : une valeur mal collée y remplacerait la clé en service.
+
+## Code
+
+[[schema.sql]] (les 25 tables, chacune avec sa note `Table …`), [[db.js]] (connexion, schéma rejoué, garde-fou d'environnement, secrets), [[installer.js]] (bucket `downloads`), [[profile.js]] (bucket `avatars`), [[retention.js]] (purges). Carte : [[Code du serveur]].

@@ -2,13 +2,13 @@
 type: catalogue
 tags: [tweaks, catalogue, généré]
 généré: docs/tools/catalogue_vault.py
-version_app: 1.2.1
-maj: 2026-10-31
+version_app: 1.3.0
+maj: 2026-11-10
 ---
 
 # Tweaks Mode jeu
 
-Module **Mode jeu** (`gamemode`) de l'app 1.2.1 : Active avant de jouer, désactive après.
+Module **Mode jeu** (`gamemode`) de l'app 1.3.0 : Active avant de jouer, désactive après.
 Note **générée** depuis `app/src/data/catalog.json` : ne pas l'éditer à la main, voir [[Catalogue des tweaks]].
 
 Légende : 🆓 gratuit · 🔒 Premium (voir [[Offres et prix]]) · ↩️ seul le retour arrière est gratuit · ⚠️ avancé · 🔁 redémarrage nécessaire · ⚙️ action ponctuelle. Comment un tweak est appliqué : [[Moteur des tweaks]].

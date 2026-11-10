@@ -20,6 +20,8 @@ Monorepo **public** `kaliso-dev/rago` (GitHub l'affiche aussi `kaliso-dev/Rago`)
 
 Hors dépôt : [[Rago OS]] (bureau Windows, sur le Mac de Sofiene, dossier `nimbus`) parle à l'app par un canal nommé ; [[Client Minecraft Rago]] est un projet à part.
 
+**Une note par fichier de code** (dossier `Code/` du vault) : chaque fichier y a sa fiche (rôle, fonctions, données touchées, pièges). Partir de la carte de la brique : [[Code de l'app (Rust)]], [[Code de l'app (interface)]], [[Code du générateur de catalogue]], [[Code du serveur]], [[Code du site]], [[Code de Rago Route]], [[Code de la CI et du dépôt]]. Pour voir tout le vault en graphe et ouvrir n'importe quel fichier du dépôt : [[Cerveau du vault]] (`/admin/cerveau`).
+
 Vue d'ensemble et flux entre les briques : [[Architecture]]. Paiement : [[Paiements Stripe]]. Toutes les variables : [[Variables d'environnement]]. Fabrication et tests automatiques : [[CI GitHub Actions]]. Lancer en local : [[Développer et tester]].
 
 ## 2. Branches : où travailler
@@ -31,7 +33,7 @@ Vue d'ensemble et flux entre les briques : [[Architecture]]. Paiement : [[Paieme
 
 | Tâche | Fiches | Fichiers principaux | Vérifier avec |
 |---|---|---|---|
-| Ajouter ou corriger un tweak | [[Catalogue des tweaks]], [[Moteur des tweaks]] | `app/tools/*.py` (jamais les JSON générés), `app/src/data/free.json` | `npm run catalog`, `cargo test`, puis `python3 docs/tools/catalogue_vault.py` |
+| Ajouter ou corriger un tweak | [[Catalogue des tweaks]], [[Moteur des tweaks]], [[Code du générateur de catalogue]] | `app/tools/*.py`, les textes dans `app/tools/descriptions.json` (jamais les JSON générés), `app/src/data/free.json` | `npm run catalog`, `cargo test`, puis `python3 docs/tools/catalogue_vault.py` |
 | Changer un écran de l'app | [[Architecture de l'app]], la note de l'écran (ex. [[Tableau de bord]]) | `app/src/pages/*.tsx`, `app/src/components/*.tsx`, textes dans `app/src/lib/i18n.ts` (EN + FR) | `npm run window` (démo navigateur), `npm run build` |
 | Ajouter une commande Rust appelée par l'interface | [[Architecture de l'app]] | `#[tauri::command]` dans `app/src-tauri/src/lib.rs` + `generate_handler!`, appel dans `app/src/lib/api.ts` **et son simulateur** | `cargo test`, `npm run build` |
 | Toucher à la licence, au compte, à l'essai | [[Licence dans l'app]], [[API du serveur]], [[Paiements Stripe]] | `app/src-tauri/src/license.rs`, `licensing/src/app.js`, `licensing.js`, `billing.js`, contrat `licensing/docs/API.md` | `cd licensing && npm test` |

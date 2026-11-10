@@ -65,3 +65,7 @@ Les 10 événements à cocher dans la destination Stripe (`WEBHOOK_EVENTS`) :
 
 ## Tester un paiement
 Uniquement sur staging (clés `sk_test_`) : carte `4242 4242 4242 4242`, date future, CVC quelconque. Un serveur de staging refuse de démarrer avec une clé live. Claude peut lire Stripe (live) depuis le 04/11 mais **n'y écrit jamais** sans demande explicite de Sofiene.
+
+## Code
+
+[[billing.js]] (Checkout, webhooks, essai, Lifetime, codes promo, contrôles), [[licensing.js]] (licences, `syncSubscription`, temps offert), [[app.js]] (`/buy`, `/checkout/success`, webhook, résiliation depuis l'app), [[promo.js]] (pop-up), [[sales.js]] (ventes lues dans Stripe pour `/admin`, jamais stockées). Tables : [[Table licenses]], [[Table stripe_events]], [[Table trials]], [[Table affiliates]]. Carte : [[Code du serveur]].
