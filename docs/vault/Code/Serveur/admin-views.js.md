@@ -9,7 +9,7 @@ maj: 2026-11-10
 
 Les pages HTML du tableau de bord `/admin`, en français : menu latéral, cartes, chiffres clés, tableaux, graphiques en HTML/SVG. Les données viennent de [[admin.js (serveur)]]. Fiche parente : [[Code du serveur]]. Fonctionnalité : [[Tableau de bord admin]].
 
-(code de `staging` @ `9f65eac`, PR #83 comprise, 10/11 ; l'entrée « Cerveau » du menu : PR #85 du Cerveau, pas encore fusionnée)
+(code de `staging` @ `9f65eac`, PR #83 comprise, 10/11 ; l'entrée « Cerveau » du menu : PR #85 du Cerveau, fusionnée dans `staging` le 10/11, pas en prod)
 
 ## Rôle et place dans l'ensemble
 

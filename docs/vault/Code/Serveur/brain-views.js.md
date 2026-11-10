@@ -9,7 +9,7 @@ maj: 2026-11-10
 
 La page HTML du [[Cerveau du vault]] (`GET /admin/cerveau`) : une application plein écran, vide au départ, que [[cerveau.js]] remplit avec les données de `/admin/cerveau/donnees.json` ([[brain.js]]). Fiche parente : [[Code du serveur]]. Voisine de [[admin-views.js]], qui dessine le reste de l'admin.
 
-(code de la PR #85 du Cerveau, 10/11, pas encore dans `staging`)
+(code de la PR #85 du Cerveau, dans `staging` depuis le 10/11, pas en prod)
 
 ## Ce que le fichier expose
 - `brainPage(cfg)` → le document HTML complet, en français (`lang="fr"`), `noindex`. `cfg.envName` est posé en `data-env` (prod ou staging).

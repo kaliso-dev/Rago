@@ -68,6 +68,6 @@ Sources : l'historique Git et les PR de `kaliso-dev/rago` ([[Pull requests]]), l
 ## Où en était le projet le 10/11 au soir
 - **En prod** : l'exe 1.2.1 (depuis le 31/10), le site et le serveur de la 1.2.1. Sur la branche de prod, le code de l'app est resté celui de la 1.1.14.
 - **Sur `staging`, pas sorti** : la 1.3.0 avec Rago Route (Beta), l'essai de 3 jours, le gratuit à 73 réglages dont 30 actifs, le tableau de bord admin, le pont Rago OS. Sofiene doit tester l'exe de staging sur Windows avant une mise en prod groupée (app, serveur, site).
-- **En attente de Sofiene** : tests de Rago Route (partage USB), retours sur Rago OS test5, sauvegarde des clés, choix Supabase avant le 05/12, `network-server-rago` à rendre public, test du bot Discord (PR #71), PR #84, PR #85 ([[Cerveau du vault]] et vault détaillé).
+- **En attente de Sofiene** : tests de Rago Route (partage USB), retours sur Rago OS test5, sauvegarde des clés, choix Supabase avant le 05/12, `network-server-rago` à rendre public, test du bot Discord (PR #71), PR #84 ; `CERVEAU_GITHUB_TOKEN` dans Railway ([[Cerveau du vault]], PR #85 fusionnée dans `staging` le 10/11 à 17:16 UTC).
 
 Liens : [[Journal]] · [[Décisions]] · [[Pull requests]] · [[Fils du projet]] · [[Historique des versions]] · [[Projet]]
