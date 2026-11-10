@@ -60,18 +60,64 @@ export function saleOf(ch) {
     // Stripe writes "Subscription creation" / "Subscription update" on subscription invoices' payments.
     kind: /subscription/i.test(ch.description || '') ? 'abonnement' : 'unique',
     livemode: !!ch.livemode,
+    txn: typeof ch.balance_transaction === 'string' ? ch.balance_transaction : ch.balance_transaction?.id || null,
   };
 }
 
-/** Sums a list of payments: { count, gross: {cur: cents}, refunded, net } (net = paid minus refunds, before fees). */
+/**
+ * A payment in another currency than the Stripe account's (a $ payment on a € account) is converted by Stripe; its
+ * balance line holds the converted amount. Puts it on the payment as `settled` ({ amount, refunded, currency }, refunds
+ * at the same rate) so the sums add up in one currency, like Stripe's dashboard. Returns the rate of the latest
+ * conversion of each currency ({ usd: { to: 'eur', rate: 0.89 } }), for the subscriptions' monthly revenue.
+ */
+export function settle(sales, lines) {
+  const lineOf = new Map();
+  for (const b of lines || []) {
+    if (b.type !== 'charge' && b.type !== 'payment') continue;
+    lineOf.set(b.id, b);
+    const src = typeof b.source === 'string' ? b.source : b.source?.id;
+    if (src) lineOf.set(src, b);
+  }
+  const rates = {};
+  for (const x of [...sales].sort((a, b) => b.at - a.at)) {
+    const b = (x.txn && lineOf.get(x.txn)) || lineOf.get(x.id);
+    const cur = String(b?.currency || '').toLowerCase();
+    if (!b || !cur || cur === x.currency || !Number.isFinite(b.amount) || !x.amount) continue;
+    const rate = b.amount / x.amount;
+    x.settled = { amount: b.amount, refunded: Math.round(x.refunded * rate), currency: cur };
+    rates[x.currency] ||= { to: cur, rate }; // in cents to cents, right for currencies without cents too
+  }
+  return rates;
+}
+
+/** A { cur: cents } map with the currencies Stripe converts put in the account's currency at their latest rate. */
+export function convert(map, rates) {
+  const out = {};
+  for (const [cur, v] of Object.entries(map || {})) {
+    const r = rates?.[cur];
+    if (r) add(out, r.to, Math.round(v * r.rate));
+    else add(out, cur, v);
+  }
+  return out;
+}
+
+/** The amount, refunds and currency a payment counts for: converted by Stripe when it was (`settled`). */
+export const valueOf = (x) => x.settled || x;
+
+/**
+ * Sums a list of payments: { count, counts: {cur: payments}, gross: {cur: cents}, refunded, net } (net = paid minus
+ * refunds, before fees), in the account's currency for the payments Stripe converted.
+ */
 export function sumSales(sales) {
-  const s = { count: 0, gross: {}, refunded: {}, net: {} };
+  const s = { count: 0, counts: {}, gross: {}, refunded: {}, net: {} };
   for (const x of sales) {
     if (!x.paid) continue;
+    const v = valueOf(x);
     s.count++;
-    add(s.gross, x.currency, x.amount);
-    add(s.refunded, x.currency, x.refunded);
-    add(s.net, x.currency, x.amount - x.refunded);
+    add(s.counts, v.currency, 1);
+    add(s.gross, v.currency, v.amount);
+    add(s.refunded, v.currency, v.refunded);
+    add(s.net, v.currency, v.amount - v.refunded);
   }
   return s;
 }
@@ -128,6 +174,7 @@ export function createSales(stripe, { now = Date.now, log = console } = {}) {
       listAll((p) => stripe.subscriptions.list(p), { status: 'all' }).catch((err) => { log.error?.('[admin] Stripe subscriptions', err.message); return null; }),
     ]);
     const sales = charges.map(saleOf).sort((a, b) => b.at - a.at);
+    const rates = settle(sales, balance);
     const today = parisDayStart(t);
     const month = parisMonthStart(t);
     const lastMonth = parisMonthStart(t, 1);
@@ -144,15 +191,15 @@ export function createSales(stripe, { now = Date.now, log = console } = {}) {
       lastMonthSoFar: sumSales(between(lastMonth, Math.min(month, lastMonth + (t - month)))),
       total: sumSales(sales),
     };
-    // Main currency: the one most payments use; the 30-day chart is drawn in it.
-    const counts = {};
-    for (const x of sales) if (x.paid) add(counts, x.currency, 1);
+    // Main currency: the one most payments count in (the account's, once Stripe converted them); the charts are in it.
+    const counts = periods.total.counts;
     const currency = Object.keys(counts).sort((a, b) => counts[b] - counts[a])[0] || 'usd';
+    const inMain = (x) => valueOf(x).currency === currency;
     const days = [];
     for (let i = 29; i >= 0; i--) {
       const from = parisDayStart(today - i * DAY + 12 * 3600000);
       const to = parisDayStart(from + 36 * 3600000);
-      const s = sumSales(between(from, to).filter((x) => x.currency === currency));
+      const s = sumSales(between(from, to).filter(inMain));
       days.push({ day: parisDay(from + 3600000), count: s.count, amount: s.net[currency] || 0 });
     }
     // The last 12 months, this one included.
@@ -160,16 +207,22 @@ export function createSales(stripe, { now = Date.now, log = console } = {}) {
     for (let i = 11; i >= 0; i--) {
       const from = parisMonthStart(t, i);
       const to = i ? parisMonthStart(t, i - 1) : Infinity;
-      const s = sumSales(between(from, to).filter((x) => x.currency === currency));
+      const s = sumSales(between(from, to).filter(inMain));
       months.push({ month: parisDay(from + 3600000).slice(0, 7), count: s.count, amount: s.net[currency] || 0 });
     }
+    // Subscriptions are priced in their own currency: their monthly revenue is converted at the latest rate.
+    const stats = subs ? subscriptionStats(subs, t) : null;
+    const subscriptions = stats && { ...stats, mrr: convert(stats.mrr, rates), converted: Object.keys(stats.mrr).filter((c) => rates[c]) };
     return {
       at: t, currency, periods, days, months,
+      // currencies Stripe didn't convert (old payments past the 5,000 balance lines, or no Balance access): apart
+      others: Object.keys(counts).filter((c) => c !== currency),
+      converted: Object.keys(rates),
       sales: sales.slice(0, 500),
       failed: sales.filter((x) => x.failed && x.at >= today - 6 * DAY).length,
       byKind: { abonnement: sumSales(sales.filter((x) => x.kind === 'abonnement')), unique: sumSales(sales.filter((x) => x.kind === 'unique')) },
       received: balance ? { total: balanceSums(balance), month: balanceSums(balance, month), today: balanceSums(balance, today) } : null,
-      subscriptions: subs ? subscriptionStats(subs, t) : null,
+      subscriptions,
       truncated: charges.length >= 5000,
     };
   }

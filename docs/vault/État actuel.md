@@ -35,8 +35,8 @@ Les joueurs ont la [[Version 1.2.1]] (en ligne depuis le 31/10). La [[Version 1.
 | Vault Obsidian | créé le 31/10 ; règle n°1 : il doit correspondre en tout point à l'état du projet. **Détaillé le 10/11** (demande de Sofiene) : 341 notes, dont une fiche par fichier de code (230 notes dans `Code/`, 7 cartes), l'histoire du projet (`Historique/`, 11 notes) et l'étude de marché ; 24 nouvelles questions (q70 à q93) | DÉCIDÉ |
 
 ## PR (10/11)
+- Fusionnée le 10/11 dans `staging` : #84 (ventes du [[Tableau de bord admin]] dans une seule devise : les paiements en $US convertis par Stripe comptent en €), avec la demande de Sofiene de mettre l'admin en prod.
 - Fusionnée le 10/11 dans `staging` : #85 ([[Cerveau du vault]] et vault détaillé), sur « fusionne » de Sofiene. Pas en prod.
-- #84 ([[Tableau de bord admin]] : ventes dans une seule devise, les dollars convertis par Stripe comptés en euros) : **ouverte** vers `staging` depuis le 10/11.
 - Fusionnée le 10/11 dans `staging` : #83 ([[Tableau de bord admin]] sans trous de mise en page, contrôles Stripe seulement dans Services), sur « fusionne » de Sofiene. Pas en prod.
 - Fusionnée le 10/11 dans `staging` : #82 (refonte de l'interface du [[Tableau de bord admin]], bugs corrigés, pages plus rapides), sur « fusionne et push sur staging » de Sofiene. Pas en prod.
 - Fusionnée le 10/11 dans la branche de prod : #81 (seulement les déclencheurs CI de la #78), sur « il faut en prod » de Sofiene.

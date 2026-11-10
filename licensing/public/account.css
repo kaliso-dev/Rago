@@ -393,6 +393,12 @@ p{margin:0}
 .stars svg{width:15px;height:15px;fill:currentColor;display:block}
 .review-text{white-space:pre-line;overflow-wrap:anywhere}
 
+/* Text areas (the review form): like the inputs */
+.field textarea{width:100%;min-height:96px;padding:12px 16px;background:var(--rg-ink-3);color:var(--rg-text-1);border:1px solid var(--rg-line-2);border-radius:var(--rg-radius-md);
+  font:400 14px/1.5 var(--rg-font-sans);resize:vertical;transition:border-color var(--rg-dur-fast),box-shadow var(--rg-dur-base) var(--rg-ease-out),background var(--rg-dur-fast)}
+.field textarea:hover{border-color:var(--rg-line-3)}
+.field textarea:focus{outline:none;border-color:var(--rg-red-500);box-shadow:0 0 0 4px var(--rg-red-a12);background:var(--rg-ink-2)}
+
 /* Review from the account page (2026-10-11): the form, the preview of the card shown on the site, the dashboard card */
 .is-review .panel{max-width:480px}
 .review-card{width:100%;max-width:460px;display:flex;flex-direction:column;gap:16px;margin:0;padding:22px;background:var(--rg-ink-2);border:1px solid var(--rg-line-2);border-radius:var(--rg-radius-lg);box-shadow:var(--rg-shadow-2);transition:border-color var(--rg-dur-base)}

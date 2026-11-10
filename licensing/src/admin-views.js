@@ -6,7 +6,7 @@ import { parisDay } from './sales.js';
 
 const TZ = 'Europe/Paris';
 export const DAY = 86400000;
-const ASSETS = '20261110c'; // bumped when admin.css / admin.js change, so browsers don't keep the old ones
+const ASSETS = '20261110d'; // bumped when admin.css / admin.js change, so browsers don't keep the old ones
 
 // ---------- formatting ----------
 const fmt = (o) => new Intl.DateTimeFormat('fr-FR', { timeZone: TZ, ...o });
@@ -26,11 +26,15 @@ const pct = (part, total) => (total ? Math.round((part / total) * 100) : 0);
 export function money(cents, cur = 'usd') {
   return new Intl.NumberFormat('fr-FR', { style: 'currency', currency: String(cur || 'usd').toUpperCase() }).format((Number(cents) || 0) / 100);
 }
-/** { usd: 1234, eur: 500 } as "12,34 $US + 5,00 €", main currency first. */
-export function moneyMap(map, main = 'usd') {
+/** { usd: 1234, eur: 500 } as ['12,34 $US', '5,00 €'], main currency first, the empty ones left out. */
+function moneyList(map, main = 'usd') {
   const keys = Object.keys(map || {}).filter((k) => map[k]).sort((a, b) => (a === main ? -1 : b === main ? 1 : a.localeCompare(b)));
-  return keys.length ? keys.map((k) => money(map[k], k)).join(' + ') : money(0, main);
+  return keys.length ? keys.map((k) => money(map[k], k)) : [money(0, main)];
 }
+/** { usd: 1234, eur: 500 } as "12,34 $US + 5,00 €", main currency first. */
+export const moneyMap = (map, main = 'usd') => moneyList(map, main).join(' + ');
+/** Whether a { cur: cents } map holds something in another currency than `main`. */
+const hasOther = (map, main) => Object.keys(map || {}).some((k) => k !== main && map[k]);
 const moneyAxis = (cents, cur) => new Intl.NumberFormat('fr-FR', { style: 'currency', currency: String(cur || 'usd').toUpperCase(), maximumFractionDigits: 0, notation: 'compact' }).format(cents / 100);
 function ago(ms, now = Date.now()) {
   if (!ms) return 'jamais';
@@ -164,7 +168,7 @@ function delta(now, before, title) {
 }
 let sparkId = 0;
 function spark(values) {
-  if (values.length < 2) return '';
+  if (values.length < 2 || !values.some((v) => v > 0)) return ''; // a flat line at the bottom reads as a red border
   const max = Math.max(1, ...values);
   const W = 100; const H = 30;
   const pts = values.map((v, i) => `${((i / (values.length - 1)) * W).toFixed(2)} ${(H - (v / max) * (H - 4) - 2).toFixed(2)}`);
@@ -173,8 +177,12 @@ function spark(values) {
   return html`<svg class="spark" viewBox="0 0 ${W} ${H}" preserveAspectRatio="none" aria-hidden="true"><defs><linearGradient id="${id}" x1="0" y1="0" x2="0" y2="1"><stop offset="0" class="f0"/><stop offset="1" class="f1"/></linearGradient></defs>
     <path class="a" d="${line}L${W} ${H}L0 ${H}Z" fill="url(#${id})"/><path class="l" d="${line}"/></svg>`;
 }
-function kpi({ label, icon = '', value, sub = '', chart = '', href = '' }) {
-  const inner = html`<p class="l">${icon}${label}</p><p class="v">${value}</p>${sub ? html`<p class="s">${sub}</p>` : ''}${chart}`;
+// `amounts` + `cur`: a { cur: cents } map shown in the main currency, what's in other currencies on a line below.
+function kpi({ label, icon = '', value, amounts = null, cur = 'usd', sub = '', chart = '', href = '' }) {
+  // the main currency first; when it has nothing and another one has, that one leads
+  const [v, ...rest] = amounts ? moneyList(amounts, cur) : [value];
+  const also = rest.join(' + ');
+  const inner = html`<p class="l">${icon}${label}</p><p class="v">${v}</p>${also ? html`<p class="also" title="Non converti par Stripe">+ ${also}</p>` : ''}${sub ? html`<p class="s">${sub}</p>` : ''}${chart}`;
   return href ? html`<a class="kpi" href="${href}">${inner}</a>` : html`<div class="kpi">${inner}</div>`;
 }
 const facts = (list) => html`<div class="facts-wrap"><dl class="facts">${list.filter(Boolean).map(([dt, dd, small]) => html`<div><dt>${dt}</dt><dd>${dd}${small ? html`<small>${small}</small>` : ''}</dd></div>`)}</dl></div>`;
@@ -187,11 +195,11 @@ function niceMax(v) {
   const f = v / e;
   return (f <= 1 ? 1 : f <= 2 ? 2 : f <= 2.5 ? 2.5 : f <= 5 ? 5 : 10) * e;
 }
-function barChart(points, { cur, label, few = false }) {
+function barChart(points, { cur, label, few = false, none = 'Aucune vente sur cette période.' }) {
   const top = niceMax(Math.max(0, ...points.map((p) => p.amount)));
-  return html`<figure class="chart" role="img" aria-label="${label}">
+  return html`<figure class="chart" role="img" aria-label="${top ? label : none}">
     <div class="chart-y" aria-hidden="true"><span>${top ? moneyAxis(top, cur) : ''}</span><span>${top ? moneyAxis(top / 2, cur) : ''}</span><span>0</span></div>
-    <div class="chart-plot"><ol class="bars${few ? ' few' : ''}">${points.map((p) => {
+    <div class="chart-plot">${top ? '' : html`<p class="chart-empty">${none}</p>`}<ol class="bars${few ? ' few' : ''}">${points.map((p) => {
       const h = top && p.amount > 0 ? Math.max(2, Math.round((p.amount / top) * 100)) : 0;
       return html`<li class="bar${p.amount > 0 ? '' : ' zero'}${p.now ? ' now' : ''}"><span class="f h-${h}"></span>
         <span class="tip"><b>${p.title}</b><span>${money(p.amount, cur)} · ${plural(p.count, 'paiement')}</span></span>${p.x ? html`<span class="xl">${p.x}</span>` : ''}</li>`;
@@ -202,14 +210,30 @@ const dayLabel = (d) => `${d.slice(8)}/${d.slice(5, 7)}`;
 function daysChart(s) {
   const n = s.days.length;
   return barChart(s.days.map((d, i) => ({ amount: d.amount, count: d.count, now: i === n - 1, title: i === n - 1 ? `Aujourd’hui (${dayLabel(d.day)})` : fLong.format(new Date(`${d.day}T12:00:00Z`)),
-    x: i === n - 1 ? 'Auj.' : (n - 1 - i) % 7 === 0 ? dayLabel(d.day) : '' })), { cur: s.currency, label: `Encaissé par jour sur 30 jours, en ${s.currency.toUpperCase()}. Plus haut : ${money(Math.max(0, ...s.days.map((d) => d.amount)), s.currency)}.` });
+    x: i === n - 1 ? 'Auj.' : (n - 1 - i) % 7 === 0 ? dayLabel(d.day) : '' })), { cur: s.currency, label: `Encaissé par jour sur 30 jours, en ${s.currency.toUpperCase()}. Plus haut : ${money(Math.max(0, ...s.days.map((d) => d.amount)), s.currency)}.`, none: 'Aucune vente ces 30 derniers jours.' });
 }
 function monthsChart(s) {
   const n = s.months.length;
   return barChart(s.months.map((m, i) => {
     const date = new Date(`${m.month}-15T12:00:00Z`);
     return { amount: m.amount, count: m.count, now: i === n - 1, title: fMonthLong.format(date), x: fMonth.format(date).replace('.', '') };
-  }), { cur: s.currency, label: `Encaissé par mois sur 12 mois, en ${s.currency.toUpperCase()}.`, few: true });
+  }), { cur: s.currency, label: `Encaissé par mois sur 12 mois, en ${s.currency.toUpperCase()}.`, few: true, none: 'Aucune vente ces 12 derniers mois.' });
+}
+
+/** Under a chart: its currency, and what it leaves out or converts. */
+function chartNote(s) {
+  const cur = s.currency.toUpperCase();
+  const list = (l) => l.map((c) => c.toUpperCase()).join(', ');
+  const conv = s.converted?.length ? `, paiements en ${list(s.converted)} convertis par Stripe` : '';
+  if (!s.others?.length) return `En ${cur}${conv}.`;
+  return conv ? `En ${cur}${conv} ; ceux qu’il n’a pas convertis n’y sont pas.` : `En ${cur} : les paiements en ${list(s.others)} n’y sont pas.`;
+}
+
+/** Stripe's fees as a share of what it took in ("2,4 %"), in the main currency. */
+function feeShare(r, cur) {
+  const fee = r.fee?.[cur] || 0;
+  const gross = fee + (r.net?.[cur] || 0);
+  return gross > 0 ? `${new Intl.NumberFormat('fr-FR', { maximumFractionDigits: 1 }).format((fee / gross) * 100)} %` : '–';
 }
 
 // ---------- the page around every screen ----------
@@ -367,7 +391,7 @@ function salesRows(rows, { dashboard, compact = false } = {}) {
       ${compact ? '' : html`<td class="hide-sm muted">${x.kind === 'abonnement' ? 'Abonnement' : 'Paiement unique'}</td>`}
       <td>${x.failed ? pill('err', 'Échoué') : x.disputed ? pill('err', 'Litige') : x.refunded >= x.amount ? pill('off', 'Remboursé')
         : x.refunded ? pill('warn', `Remb. ${money(x.refunded, x.currency)}`) : pill('ok', 'Payé')}</td>
-      <td class="r num">${money(x.amount, x.currency)}</td>
+      <td class="r num">${money(x.amount, x.currency)}${x.settled ? html`<span class="conv" title="Converti par Stripe">${money(x.settled.amount, x.settled.currency)}</span>` : ''}</td>
       <td class="r num muted${compact ? ' hide-sm' : ''}" title="${when(x.at)}">${short(x.at)}</td>
       ${dashboard && !compact ? html`<td class="w1"><a class="btn btn-ghost btn-sm" href="${dashboard}/payments/${x.id}" rel="noopener" aria-label="Ouvrir dans Stripe">Stripe${I.external}</a></td>` : ''}
     </tr>`)}</tbody></table></div>`;
@@ -404,19 +428,19 @@ export function overviewPage(nav, { counts: k, sales: s, services: sv, recentUse
       actions: html`${ok ? stamp(s.at, 'Ventes lues') : ''}<a class="btn btn-sm" href="/admin?frais=1">${I.refresh}Actualiser</a>` })}
     ${s?.error ? alertBox(s.error) : s?.stale ? alertBox(`Stripe n’a pas répondu (${s.stale}) : chiffres de ${ago(s.at)}.`, 'warn') : ''}
     <div class="kpis">
-      ${kpi({ label: 'Encaissé aujourd’hui', icon: I.card, href: '/admin/ventes', value: ok ? moneyMap(p.today.net, cur) : '–',
+      ${kpi({ label: 'Encaissé aujourd’hui', icon: I.card, href: '/admin/ventes', value: '–', amounts: ok ? p.today.net : null, cur,
         sub: ok ? html`${plural(p.today.count, 'paiement')} ${delta(main(p.today), main(p.yesterdaySoFar), 'Comparé à hier à la même heure')}` : '' })}
-      ${kpi({ label: 'Ce mois-ci', icon: I.sales, href: '/admin/ventes', value: ok ? moneyMap(p.month.net, cur) : '–',
+      ${kpi({ label: 'Ce mois-ci', icon: I.sales, href: '/admin/ventes', value: '–', amounts: ok ? p.month.net : null, cur,
         sub: ok ? html`${plural(p.month.count, 'paiement')} ${delta(main(p.month), main(p.lastMonthSoFar), 'Comparé au mois dernier à la même date')}` : '',
         chart: ok ? spark(s.days.map((d) => d.amount)) : '' })}
-      ${kpi({ label: 'Revenu mensuel récurrent', icon: I.refresh, href: '/admin/ventes#abonnements', value: sub ? moneyMap(sub.mrr, cur) : '–',
+      ${kpi({ label: 'Revenu mensuel récurrent', icon: I.refresh, href: '/admin/ventes#abonnements', value: '–', amounts: sub ? sub.mrr : null, cur,
         sub: sub ? `${plural(sub.active, 'abonnement actif', 'abonnements actifs')}${sub.trialing ? ` · ${num(sub.trialing)} en essai` : ''}` : 'Abonnements Stripe illisibles' })}
       ${kpi({ label: 'Joueurs Premium', icon: I.users, href: '/admin/utilisateurs?filtre=premium', value: num(k.lic.active),
         sub: html`sur ${plural(k.users.n, 'compte')} ${k.users.d7 ? html`<span class="delta up" title="Comptes créés ces 7 derniers jours">${I.up}+${num(k.users.d7)} en 7 j</span>` : ''}` })}
     </div>
     <div class="g g21 eq">
       ${card({ title: 'Ventes des 30 derniers jours', icon: I.sales, actions: more('/admin/ventes', 'Détail'),
-        sub: ok ? `Encaissé par jour (heure de Paris), remboursements déduits, en ${cur.toUpperCase()}. Depuis le début : ${moneyMap(p.total.net, cur)}${s.received ? `, soit ${moneyMap(s.received.total.net, 'eur')} reçus après frais` : ''}.` : '',
+        sub: ok ? `Encaissé par jour (heure de Paris), remboursements déduits. Depuis le début : ${moneyMap(p.total.net, cur)}${s.received ? `, soit ${moneyMap(s.received.total.net, cur)} reçus après frais` : ''}. ${chartNote(s)}` : '',
         body: ok ? daysChart(s) : empty(s?.error || 'Ventes indisponibles.', { icon: I.card }) })}
       ${card({ title: 'À traiter', icon: I.inbox, body: todoList(todo), flush: true })}
     </div>
@@ -652,39 +676,44 @@ export function salesPage(nav, { sales: s, counts: k, dashboard, etat, page, per
   const rows = filtered.slice((page - 1) * per, page * per);
   const url = (o) => `/admin/ventes?${new URLSearchParams(Object.entries({ etat: etat !== 'tous' ? etat : '', ...o }).filter(([, v]) => v))}#paiements`;
   const kinds = [['Abonnements', s.byKind.abonnement, 'k1'], ['Paiements uniques (à vie)', s.byKind.unique, 'k3']];
-  const kindTotal = kinds.reduce((t, [, x]) => t + (x.net[cur] || 0), 0);
+  // The bar weighs the amounts when they're all in the main currency, else the number of payments.
+  const kindsMixed = kinds.some(([, x]) => hasOther(x.net, cur));
+  const weight = (x) => (kindsMixed ? x.count : x.net[cur] || 0);
+  const kindTotal = kinds.reduce((t, [, x]) => t + weight(x), 0);
   const body = html`
     ${head({ title: 'Ventes', sub: `Encaissé dans Stripe (mode ${nav.mode || 'non configuré'}), remboursements déduits, avant frais. Jours et mois en heure de Paris.`,
       actions: html`${stamp(s.at, 'Lu dans Stripe')}<a class="btn btn-sm" href="/admin/ventes?frais=1">${I.refresh}Actualiser</a><a class="btn btn-sm" href="${dashboard}/payments" rel="noopener">Stripe${I.external}</a>` })}
     ${s.stale ? alertBox(`Stripe n’a pas répondu (${s.stale}) : chiffres de ${ago(s.at)}.`, 'warn') : ''}
     ${s.truncated ? alertBox('Plus de 5 000 paiements : seuls les 5 000 plus récents sont comptés.', 'warn') : ''}
     <div class="kpis">
-      ${kpi({ label: 'Aujourd’hui', icon: I.card, value: moneyMap(p.today.net, cur), sub: html`${plural(p.today.count, 'paiement')} ${delta(main(p.today), main(p.yesterdaySoFar), 'Comparé à hier à la même heure')}` })}
-      ${kpi({ label: '7 derniers jours', icon: I.sales, value: moneyMap(p.week.net, cur), sub: html`${plural(p.week.count, 'paiement')} ${delta(main(p.week), main(p.lastWeek), 'Comparé aux 7 jours d’avant')}` })}
-      ${kpi({ label: 'Ce mois-ci', icon: I.sales, value: moneyMap(p.month.net, cur), sub: html`${plural(p.month.count, 'paiement')} ${delta(main(p.month), main(p.lastMonthSoFar), 'Comparé au mois dernier à la même date')}`, chart: spark(s.days.map((d) => d.amount)) })}
-      ${kpi({ label: 'Depuis le début', icon: I.stack, value: moneyMap(p.total.net, cur), sub: `${plural(p.total.count, 'paiement')} · ${moneyMap(p.total.refunded, cur)} remboursés` })}
+      ${kpi({ label: 'Aujourd’hui', icon: I.card, amounts: p.today.net, cur, sub: html`${plural(p.today.count, 'paiement')} ${delta(main(p.today), main(p.yesterdaySoFar), 'Comparé à hier à la même heure')}` })}
+      ${kpi({ label: '7 derniers jours', icon: I.sales, amounts: p.week.net, cur, sub: html`${plural(p.week.count, 'paiement')} ${delta(main(p.week), main(p.lastWeek), 'Comparé aux 7 jours d’avant')}` })}
+      ${kpi({ label: 'Ce mois-ci', icon: I.sales, amounts: p.month.net, cur, sub: html`${plural(p.month.count, 'paiement')} ${delta(main(p.month), main(p.lastMonthSoFar), 'Comparé au mois dernier à la même date')}`, chart: spark(s.days.map((d) => d.amount)) })}
+      ${kpi({ label: 'Depuis le début', icon: I.stack, amounts: p.total.net, cur, sub: `${plural(p.total.count, 'paiement')} · ${moneyMap(p.total.refunded, cur)} remboursés` })}
     </div>
     <div class="g g2">
-      ${card({ title: '30 derniers jours', icon: I.sales, sub: `Par jour, en ${cur.toUpperCase()}. Hier : ${moneyMap(p.yesterday.net, cur)} (${plural(p.yesterday.count, 'paiement')}).`, body: daysChart(s) })}
-      ${card({ title: '12 derniers mois', icon: I.sales, sub: `Par mois, en ${cur.toUpperCase()}. Mois dernier : ${moneyMap(p.lastMonth.net, cur)} (${plural(p.lastMonth.count, 'paiement')}).`, body: monthsChart(s) })}
+      ${card({ title: '30 derniers jours', icon: I.sales, sub: `Hier : ${moneyMap(p.yesterday.net, cur)} (${plural(p.yesterday.count, 'paiement')}). ${chartNote(s)}`, body: daysChart(s) })}
+      ${card({ title: '12 derniers mois', icon: I.sales, sub: `Mois dernier : ${moneyMap(p.lastMonth.net, cur)} (${plural(p.lastMonth.count, 'paiement')}). ${chartNote(s)}`, body: monthsChart(s) })}
     </div>
     <div class="g g2">
-      ${card({ title: 'Reçu sur le compte Stripe', icon: I.download, sub: 'Après les frais Stripe, dans la devise du compte.', body: s.received ? html`<dl class="lines">
-          <div><dt>Aujourd’hui</dt><dd class="num">${moneyMap(s.received.today.net, 'eur')}</dd></div>
-          <div><dt>Ce mois-ci</dt><dd class="num">${moneyMap(s.received.month.net, 'eur')}</dd></div>
-          <div><dt>Depuis le début</dt><dd class="num">${moneyMap(s.received.total.net, 'eur')}</dd></div>
-          <div><dt>Frais Stripe (total)</dt><dd class="num muted">${moneyMap(s.received.total.fee, 'eur')}</dd></div></dl>`
+      ${card({ title: 'Reçu sur le compte Stripe', icon: I.download, sub: 'Après les frais Stripe, dans la devise du compte.', body: s.received ? html`<dl class="lines fill">
+          <div><dt>Aujourd’hui</dt><dd class="num">${moneyMap(s.received.today.net, cur)}</dd></div>
+          <div><dt>Ce mois-ci</dt><dd class="num">${moneyMap(s.received.month.net, cur)}</dd></div>
+          <div><dt>Depuis le début</dt><dd class="num">${moneyMap(s.received.total.net, cur)}</dd></div>
+          <div><dt>Frais Stripe (total)</dt><dd class="num muted">${moneyMap(s.received.total.fee, cur)}</dd></div>
+          <div><dt>Part des frais</dt><dd class="num muted">${feeShare(s.received.total, cur)}</dd></div></dl>`
         : html`<p class="hint">Solde Stripe illisible avec cette clé (une clé restreinte doit pouvoir lire Balance).</p>` })}
-      ${card({ title: 'Par type', icon: I.stack, sub: 'Abonnements et paiements uniques, depuis le début.', body: html`${kindTotal ? html`<div class="split-bar">${kinds.filter(([, x]) => x.net[cur]).map(([, x, kc]) => html`<span class="${kc} w-${Math.max(1, pct(x.net[cur] || 0, kindTotal))}"></span>`)}</div>` : ''}
+      ${card({ title: 'Par type', icon: I.stack, sub: 'Abonnements et paiements uniques, depuis le début.', body: html`${kindTotal ? html`<div class="split-bar">${kinds.filter(([, x]) => weight(x) > 0).map(([, x, kc]) => html`<span class="${kc} w-${Math.max(1, pct(weight(x), kindTotal))}"></span>`)}</div>` : ''}
+        ${kindsMixed ? html`<p class="hint">Plusieurs devises : la barre compte les paiements, pas les montants.</p>` : ''}
         <ul class="key">${kinds.map(([label, x, kc]) => html`<li><span><i class="${kc}"></i>${label}</span><span><b>${moneyMap(x.net, cur)}</b><em>${plural(x.count, 'paiement')}</em></span></li>`)}</ul>
         <dl class="lines">
-          <div><dt>Panier moyen</dt><dd class="num">${p.total.count ? money(Math.round((p.total.gross?.[cur] || 0) / p.total.count), cur) : '–'}</dd></div>
+          <div><dt>Panier moyen</dt><dd class="num">${p.total.counts?.[cur] ? money(Math.round((p.total.gross[cur] || 0) / p.total.counts[cur]), cur) : '–'}</dd></div>
           <div><dt>Remboursé</dt><dd class="num">${moneyMap(p.total.refunded, cur)}</dd></div>
           <div><dt>Paiements ratés (7 jours)</dt><dd class="num">${s.failed ? html`<a href="${url({ etat: 'echoues' })}">${num(s.failed)}</a>` : '0'}</dd></div></dl>` })}
     </div>
     ${sub ? html`<section class="card" id="abonnements"><div class="card-h"><h2>${I.refresh}Abonnements</h2><div class="row"><a class="more" href="${dashboard}/subscriptions" rel="noopener">Stripe${I.external}</a></div></div>
       ${facts([
-        ['Revenu mensuel récurrent', moneyMap(sub.mrr, cur), 'abonnements actifs non résiliés, ramenés au mois'],
+        ['Revenu mensuel récurrent', moneyMap(sub.mrr, cur), `abonnements actifs non résiliés, ramenés au mois${sub.converted?.length ? `, en ${cur.toUpperCase()} au dernier taux Stripe` : ''}`],
         ['Sur un an', moneyMap(Object.fromEntries(Object.entries(sub.mrr).map(([c, v]) => [c, v * 12])), cur), 'revenu mensuel × 12'],
         ['Actifs', num(sub.active), `${num(k.lic.month)} mensuels · ${num(k.lic.year)} annuels dans la base`],
         ['En essai', num(sub.trialing)], ['Impayés', num(sub.pastDue), sub.pastDue ? 'Stripe réessaie la carte' : ''], ['Résiliés', num(sub.canceling), 'Premium jusqu’à la fin de la période'],

@@ -3333,6 +3333,13 @@ test('/admin dashboard: players, Premium time, revoke, ban, gifts, sales, journa
 
   // Sales, services and the journal open; every action is in the journal.
   assert.match(await (await t.browse('/admin/ventes')).text(), /Remboursé/);
+  // A € payment beside the $ one Stripe converted to €: the figures are in € only, the $ amount stays on its row.
+  t.charges.push({ id: 'ch_3', status: 'succeeded', paid: true, amount: 3000, amount_refunded: 0, currency: 'eur', created: Math.floor(Date.now() / 1000), billing_details: { email: 'eu@example.com' } });
+  t.balance.push({ id: 'txn_ch1', type: 'charge', source: 'ch_1', amount: 535, currency: 'eur', fee: 50, net: 485, created: Math.floor(Date.now() / 1000) });
+  page = await (await t.browse('/admin/ventes?frais=1')).text();
+  assert.match(page, /Aujourd’hui<\/p><p class="v">35,35\s€<\/p><p class="s">/);
+  assert.match(page, /5,99\s\$US<span class="conv" title="Converti par Stripe">5,35\s€/);
+  assert.match(page, /paiements en USD convertis par Stripe/);
   assert.equal((await t.browse('/admin/services')).status, 200);
   page = await (await t.browse('/admin/journal?type=admin')).text();
   for (const label of ['Compte banni \\(admin\\)', 'Bannissement levé \\(admin\\)', 'Temps Premium offert \\(admin\\)', 'Licence révoquée \\(admin\\)', 'Premium offert à un e-mail \\(admin\\)']) assert.match(page, new RegExp(label));

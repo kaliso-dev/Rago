@@ -20,7 +20,7 @@ Refait le 10/11/2026 (PR #82) « comme un produit ». Réutilise le gabarit `htm
 | Nom | Rôle |
 |---|---|
 | `DAY`, `day(ms)`, `when(ms)` | Dates au format français, fuseau `Europe/Paris`. |
-| `money(cents, cur)`, `moneyMap(map, main)` | Montants (« 12,34 $US + 5,00 € », devise principale d'abord). |
+| `money(cents, cur)`, `moneyMap(map, main)` | Montants (« 12,34 $US + 5,00 € », devise principale d'abord). Un chiffre clé (`kpi({amounts, cur})`) montre la devise principale en gros et le reste (ce que Stripe n'a pas converti) sur une petite ligne dessous ; `chartNote` dit sous les graphiques en quelle devise ils sont ; un graphique sans vente l'écrit (PR #84). |
 | `PLAN` | `month` Mensuel, `year` Annuel, `lifetime` À vie, `reward` Offert. |
 | `REASON` | Raisons de révocation : remboursée, litige bancaire, à la main, abonnement terminé, remplacée par un autre achat, compte banni, compte supprimé, fraude à l'affiliation, achat de test. |
 | `SORT_LABEL`, `SALE_FILTERS` | Tris de la liste des joueurs ; filtres des ventes (`tous`, `payes`, `rembourses`, `echoues`, `litiges`). |
@@ -29,7 +29,7 @@ Refait le 10/11/2026 (PR #82) « comme un produit ». Réutilise le gabarit `htm
 | `popupLeftLine(total, left)` | « Limited to the first N players · M left » (aperçu du pop-up). |
 | `raw` | Réexporté de [[views.js]]. |
 
-`ASSETS = '20261110c'` (depuis la PR #83) : à changer quand `admin.css` ou `public/admin.js` changent (les navigateurs gardent sinon l'ancienne version).
+`ASSETS = '20261110d'` (depuis la PR #84) : à changer quand `admin.css` ou `public/admin.js` changent (les navigateurs gardent sinon l'ancienne version).
 
 ## Fonctionnement détaillé
 

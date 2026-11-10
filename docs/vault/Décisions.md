@@ -10,6 +10,7 @@ Registre daté des décisions de Sofiene. **La plus récente prime.** Citations 
 ## App et versions
 | Date | Décision | Statut |
 |---|---|---|
+| 10/11 | Admin : corriger l'affichage des ventes en plusieurs devises (« ok donc ça aussi », sur sa capture de la page Ventes) | fait, PR #84 fusionnée dans `staging` le 10/11 ([[Tableau de bord admin]]) |
 | 10/11 | Cerveau du vault : une « vision graphique du cerveau comme obsidian » où l'on voit les « connexions neuronales », qui ouvre et lit n'importe quel fichier, « juste accessible depuis l'interface admin » ; Abel y accède avec **la clé admin complète** (choix de Sofiene sur la carte : pas de clé à part, pas de sous-domaine) | code fini, PR vers `staging` en attente de « fusionne » ([[Cerveau du vault]]) |
 | 10/11 | Le vault doit être « le plus détaillé possible » et « absolument tout expliquer du projet dans les moindres détails » : une note par fichier de code (dossier `Code/`), l'histoire complète (dossier `Historique/`) | fait le 10/11 ([[Projet]], [[Mettre à jour le vault]]) |
 | 10/11 | Admin : les contrôles Stripe seulement dans Services (« dans services y a tout les services y compris ceux de stripe donc pas besoin de les avoir aussi dans sites et promo ») et aucun trou dans l'interface (« fait en sorte que y a pas de trou dans l'interface que les élément soit bien disposé ») | fait, PR #83 fusionnée dans `staging` le 10/11 sur « fusionne » de Sofiene ([[Tableau de bord admin]]) |
