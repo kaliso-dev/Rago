@@ -72,7 +72,7 @@ Fermeture de la fenêtre principale : cachée si une remise est en cours ou si l
 | `RAGO_API_BASE` | `license.rs` (`option_env!`) | adresse de l'API ; absente en release = app non reliée (gratuit seulement) |
 | `RAGO_LICENSE_PUBKEY` | `license.rs` | clé publique Ed25519 qui valide les jetons ; `build.rs` **refuse la clé de test** en release |
 | `RAGO_SCRIPTS_SECRET` | `build.rs` / `embed_scripts.rs` | chiffre les scripts Premium avec `HMAC-SHA256(secret, "rago-scripts-v1|<version>")` ; release connectée sans lui = build refusé |
-| `VITE_SITE_URL`, `VITE_ACCOUNT_URL`, `VITE_SUPPORT_URL`, `VITE_RAGO_SERVER=staging` | interface | liens Premium, compte, Discord ; `staging` affiche le bandeau de test et l'onglet Rago Route |
+| `VITE_SITE_URL`, `VITE_ACCOUNT_URL`, `VITE_SUPPORT_URL`, `VITE_RAGO_SERVER=staging` | interface | liens Premium, compte, Discord ; `staging` affiche le bandeau de test, la recherche de mise à jour des Paramètres et le bouton qui copie le jeton Rago Route |
 | `plugins.updater.pubkey` (de `RAGO_UPDATER_PUBKEY`) | `update.rs` | sans elle, pas de mise à jour automatique |
 | `identifier` (`tauri.conf.json`, fusionné avec `tauri.staging.conf.json` pour l'exe de test) | `build.rs` → `RAGO_IDENTIFIER` | dossier `%APPDATA%\<identifiant>`, nom du canal nommé, `server_name()` = `staging` ou `production` |
 
@@ -87,7 +87,7 @@ Fermeture de la fenêtre principale : cachée si une remise est en cours ou si l
 - Jeton de licence vérifié hors ligne (signature, `exp`, empreinte « 2 sur 3 »), rafraîchi quand il reste moins de 7 jours ; requêtes HTTP `ureq` avec 15 s de délai.
 - Plan gratuit revérifié par le moteur avant chaque lot (73 réglages gratuits, 30 actifs à la fois en 1.3.0).
 - Jeux lancés avec le jeton de l'Explorateur, jamais en administrateur (`games.rs`).
-- Pont Rago OS : canal refusé aux autres PC, limité à la session ouverte, client qui doit s'appeler `RagoOS.exe`, demandes de 64 Ko au plus ; les commandes Rago Route du pont ne marchent que dans l'exe de test.
+- Pont Rago OS : canal refusé aux autres PC, limité à la session ouverte, client qui doit s'appeler `RagoOS.exe`, demandes de 64 Ko au plus ; les commandes Rago Route du pont marchent dans tous les exe (1.3.0).
 
 ## 8. Tests et commandes
 `cargo test --manifest-path src-tauri/Cargo.toml` (tests du moteur, aussi lancés par la CI sur Windows), `npm run build` (TypeScript + Vite), `npm run window` (démo navigateur), `npm run tauri dev` (Windows, terminal administrateur, serveur `localhost:8787`). Voir [[Développer et tester]] et [[CI GitHub Actions]].
