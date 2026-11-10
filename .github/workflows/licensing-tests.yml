@@ -4,6 +4,8 @@ name: licensing-tests
 on:
   workflow_dispatch:
   push:
+    # staging et la branche de prod seulement : les autres branches sont testées par leur pull request
+    branches: ["staging", "claude/rago-monorepo-initial-eyj6pq"]
     paths: ["licensing/**", ".github/workflows/licensing-tests.yml"]
   pull_request:
     paths: ["licensing/**", ".github/workflows/licensing-tests.yml"]
