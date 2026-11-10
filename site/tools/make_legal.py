@@ -1,6 +1,7 @@
 import os
 OUT=os.path.join(os.path.dirname(os.path.abspath(__file__)),'..')
-# Builds site/terms.html, privacy.html, refunds.html (and 404.html, which shares their header).
+# Builds site/terms.html, privacy.html (and 404.html, which shares their header).
+# No refunds page since 2026-11-10 (Sofiene: no refunds, the free trial replaces them): cancellation is in the Terms.
 MAIL='<a href="mailto:support@rago-optimizer.com">support@rago-optimizer.com</a>'; UPD="October 9, 2026"
 SITE='https://rago-optimizer.com'  # same as build.py
 HEAD='''<!doctype html>
@@ -49,7 +50,7 @@ th{{color:var(--t1);font-weight:560}}
 <h1>{title}</h1>
 <p class="upd">Last updated: {upd}</p>
 '''
-FOOT='''<div class="foot"><a href="terms.html">Terms of Sale</a><a href="privacy.html">Privacy Policy</a><a href="refunds.html">Refunds and Cancellation</a><a href="./">Rago Optimizer</a></div>
+FOOT='''<div class="foot"><a href="terms.html">Terms of Sale</a><a href="privacy.html">Privacy Policy</a><a href="terms.html#cancel">Cancellation</a><a href="./">Rago Optimizer</a></div>
 </div>
 </body>
 </html>
@@ -59,7 +60,7 @@ def page(name,title,desc,body,upd=UPD):
     meta=f'<meta name="description" content="{desc}">\n<link rel="canonical" href="{SITE}/{name}">'
     open(os.path.join(OUT,name),'w').write(HEAD.format(title=title,upd=upd,meta=meta)+body+FOOT)
 
-page('terms.html','Terms of Sale','Terms of sale for Rago Optimizer: the Free, Premium and Lifetime plans, the free trial, prices, your one-PC license, renewal and cancellation.',f'''
+page('terms.html','Terms of Sale','Terms of sale for Rago Optimizer: the Free, Premium and Lifetime plans, the free trial, prices, your one-PC license, renewal, cancellation and the no-refund policy.',f'''
 <h2>1. Who we are</h2>
 <p>Rago Optimizer is an independent project, run and sold from France by the Rago Optimizer team. Contact: {MAIL}, or our Discord server.</p>
 <p>This site is hosted by Netlify, Inc., 101 2nd Street, San Francisco, CA 94105, USA. Account pages and the license server are hosted by Railway Corporation, San Francisco, CA, USA.</p>
@@ -80,12 +81,13 @@ page('terms.html','Terms of Sale','Terms of sale for Rago Optimizer: the Free, P
 <p>If you have a Premium subscription, you can switch to Lifetime. As soon as Lifetime is on your account (right after the payment if you pay while signed in), your subscription is canceled so it doesn't renew, and your license stays on the same PC. The time left on your subscription isn't refunded.</p>
 
 <h2>4. Free trial</h2>
-<p>New customers can start Premium with a <strong>3-day free trial</strong>, monthly or yearly. You enter your card on Stripe when you start it. Nothing is charged during the trial, and you get all of Premium right away.</p>
+<p>New customers can start Premium with a <strong>3-day free trial</strong> of the monthly plan. You enter your card on Stripe when you start it. Nothing is charged during the trial, and you get all of Premium right away.</p>
 <ul>
-<li><strong>If you don't cancel</strong>, the price of the plan you chose is charged automatically at the end of the trial, then the subscription renews like any other. The checkout page, the confirmation email and your account page show the exact date of the first payment.</li>
+<li><strong>If you don't cancel</strong>, the monthly plan is charged automatically at the end of the trial, then renews each month like any other subscription. The checkout page, the confirmation email and your account page show the exact date of the first payment.</li>
 <li><strong>To stop</strong>, cancel from your account page (Cancel trial or manage) before that date. You pay nothing, and Premium ends with the trial.</li>
 <li><strong>One trial per person.</strong> We keep the email and Stripe's fingerprint of the card used for a trial (not the card number). An account that already had Premium or a trial, or a card already used for one, gets no new trial: the subscription is then charged when it starts.</li>
-<li>Lifetime has no trial.</li>
+<li>The yearly plan and Lifetime have no trial: they are paid when you buy them.</li>
+<li>The trial is there so you can try all of Premium before paying. That's why payments aren't refunded (section 6).</li>
 </ul>
 <h2>5. Your license</h2>
 <ul>
@@ -95,15 +97,19 @@ page('terms.html','Terms of Sale','Terms of sale for Rago Optimizer: the Free, P
 <li>If a renewal payment fails, Stripe tries it again over the following days and Premium stays on meanwhile. If it still fails, Premium stops. The app keeps working in free mode.</li>
 </ul>
 
-<h2>6. Right of withdrawal (EU and UK customers)</h2>
-<p>Premium, by subscription or Lifetime, is digital content supplied right after payment. By completing checkout, you ask for immediate access and acknowledge that you lose your 14-day right of withdrawal once the license is delivered. With a free trial, the license is delivered when the trial starts: cancel before the trial ends and nothing is charged. Our <a href="refunds.html">Refunds and Cancellation</a> policy explains when we refund anyway.</p>
+<h2 id="cancel">6. Cancellation, no refunds</h2>
+<p><strong>Cancel anytime</strong> from your account page (Cancel or manage subscription). You keep Premium until the end of the period you already paid for, then the app goes back to free mode. Nothing else is charged. Lifetime is a single payment: there is nothing to cancel and nothing renews.</p>
+<p><strong>During a free trial</strong>, choose Cancel trial or manage on your account page before the date of the first payment (shown there and in your confirmation email). Nothing is charged, and Premium ends with the trial.</p>
+<p><strong>Payments aren't refunded</strong>, for a subscription, a renewal or Lifetime, and canceling doesn't refund the period already paid. The free trial lets you try all of Premium before paying. If you're charged twice or by mistake (for example a renewal after you switched to Lifetime), we give back the extra payment: contact {MAIL} or our Discord server with the email of your Rago account.</p>
+<p><strong>Payment disputes:</strong> please contact us before opening a dispute with your bank: it's faster. A dispute turns Premium off automatically, and it stays off.</p>
+<p><strong>Right of withdrawal (EU and UK customers):</strong> Premium, by subscription or Lifetime, is digital content supplied right after payment. By completing checkout, you ask for immediate access and acknowledge that you lose your 14-day right of withdrawal once the license is delivered. With a free trial, the license is delivered when the trial starts: cancel before the trial ends and nothing is charged.</p>
 
 <h2>7. Using the app safely</h2>
 <p>Before applying changes, Rago offers to create a Windows restore point (ticked by default before Advanced tweaks), and its Restore section opens System Restore so you can go back to it. Turning a tweak off puts back the Windows settings it changed. One-time actions, like removing apps, can't be turned off. When Premium ends or you sign out, Rago puts back the settings of every tweak it can undo by itself, free tweaks included. Uninstalling the app does the same. Some tweaks are marked <strong>Advanced</strong>: they change deeper Windows settings or turn off services, and ask for confirmation. You choose which tweaks to apply, and you are responsible for that choice.</p>
 <p>Rago doesn't modify Minecraft or inject anything into games. Server rules are set by each server: check them before you play. We aren't responsible for decisions a server's staff makes about your account.</p>
 
 <h2>8. Affiliate program</h2>
-<p>Affiliates get a personal code. New customers who use an affiliate code get 5% off their first Premium payment. A referral counts as soon as the buyer has activated the app on their PC, and stops counting if the purchase is refunded or disputed. Your own purchases and activations on your own PC don't count. Each affiliate can refer up to 3 buyers. Once those 3 referrals count, the affiliate gets 6 months of Premium for one PC. We can cancel a reward obtained by fraud.</p>
+<p>Affiliates get a personal code. New customers who use an affiliate code get 5% off their first Premium payment. A referral counts as soon as the buyer has activated the app on their PC, and stops counting if the purchase is disputed or paid back. Your own purchases and activations on your own PC don't count. Each affiliate can refer up to 3 buyers. Once those 3 referrals count, the affiliate gets 6 months of Premium for one PC. We can cancel a reward obtained by fraud.</p>
 
 <h2>9. Reviews</h2>
 <p>Once signed in to the app with a Rago account, free or Premium, you can rate Rago Optimizer from 1 to 5 stars and write a comment. With Premium, you can also write it from your account page on our site. Your review is shown on our site with your public name and your profile photo, if you added one. Long reviews are shortened on the home page, with a link to read them in full on our reviews page. You can change your review anytime from the app, or from your account page with Premium, and delete it from either.</p>
@@ -113,42 +119,11 @@ page('terms.html','Terms of Sale','Terms of sale for Rago Optimizer: the Free, P
 <p>The app is provided as is. To the extent the law allows, we aren't liable for indirect damage such as lost data, lost games or lost time, and our total liability is limited to the amount you paid us in the last 12 months. Nothing in these terms limits your statutory rights as a consumer.</p>
 
 <h2>11. Suspension</h2>
-<p>We may suspend a license in case of fraud, a chargeback, a refund, or sharing of the license. A full refund or a payment dispute turns Premium off automatically.</p>
+<p>We may suspend a license in case of fraud, a chargeback, or sharing of the license. A payment dispute, or a payment given back in full, turns Premium off automatically.</p>
 
 <h2>12. Changes and law</h2>
 <p>We may update these terms. The version accepted at checkout applies to that purchase. These terms are governed by French law, which doesn't take away the protection the mandatory consumer law of your country gives you. If a dispute isn't solved with our support, you can also use the mediation services and the courts of your own country.</p>
-''',upd="November 4, 2026")
-
-page('refunds.html','Refunds and Cancellation','How to cancel a Rago Optimizer Premium subscription or free trial, when you can get a refund, Lifetime included, and what it does to your license.',f'''
-<h2>Cancel anytime</h2>
-<p>Cancel from your account page (Cancel or manage subscription). You keep Premium until the end of the period you already paid for, then the app goes back to free mode. Nothing else is charged.</p>
-<p>Lifetime is a single payment: there is nothing to cancel and nothing renews.</p>
-<h2>Cancel a free trial</h2>
-<p>During a free trial, choose Cancel trial or manage on your account page before the date of the first payment (shown there and in your confirmation email). Nothing is charged, and Premium ends with the trial. If the first payment already went through, see Refunds below.</p>
-
-<h2>Switching to Lifetime</h2>
-<p>When a subscriber buys Lifetime, their subscription is canceled as soon as Lifetime is on their account (right after the payment if they pay while signed in), so it doesn't renew. The time left on the subscription isn't refunded. If the subscription renews anyway, we refund that renewal.</p>
-
-<h2>Refunds</h2>
-<ul>
-<li><strong>Before you activate the app:</strong> if you haven't signed in to the app and activated Premium on a PC, we refund your first payment, or your Lifetime payment, if you ask within 14 days.</li>
-<li><strong>Charged twice or by mistake:</strong> we refund the extra payment.</li>
-<li><strong>After activation:</strong> Premium is digital content delivered right away, so we don't refund by default. If something doesn't work on your PC, contact us first: we'll try to fix it, and refund when we can't.</li>
-</ul>
-<p>Refunds go back to your original payment method through Stripe. Your bank may take 5 to 10 days to show it.</p>
-
-<h2>What a refund does to your license</h2>
-<p>A full refund turns Premium off on your PC automatically and stops future renewals. A partial refund, such as a goodwill discount, keeps your license active.</p>
-
-<h2>Payment disputes</h2>
-<p>Please contact us before opening a dispute with your bank: it's faster. Opening a dispute turns Premium off automatically, and it stays off.</p>
-
-<h2>Affiliate referrals</h2>
-<p>A refunded or disputed purchase doesn't count toward the affiliate program.</p>
-
-<h2>Contact</h2>
-<p>{MAIL}, or our Discord server. Include the email of your Rago account.</p>
-''',upd="November 4, 2026")
+''',upd="November 10, 2026")
 
 page('privacy.html','Privacy Policy','What Rago Optimizer and its account server collect, why, who processes it, how long it is kept and how to delete it.',f'''
 <h2>Who is responsible</h2>
@@ -160,14 +135,14 @@ page('privacy.html','Privacy Policy','What Rago Optimizer and its account server
 <tr><td>Email, password and sign-in sessions (stored hashed, never readable)</td><td>Your account and sign-in, on the site and in the app</td></tr>
 <tr><td>When you create an account with an email: the 6-digit code we email you (stored hashed) and your number of tries, deleted within a day</td><td>Checking that the email is yours</td></tr>
 <tr><td>If you sign in with Google or Discord: the ID of that account and the email it gives us. We don't keep your Google or Discord sign-in.</td><td>Signing you in to the same Rago account each time, on the site and in the app</td></tr>
-<tr><td>Payment references from Stripe: customer and payment IDs, amount, currency, subscription status</td><td>Selling and renewing Premium, refunds, accounting</td></tr>
+<tr><td>Payment references from Stripe: customer and payment IDs, amount, currency, subscription status</td><td>Selling and renewing Premium, accounting</td></tr>
 <tr><td>Hashed identifiers of your PC (from the Windows machine ID, the PC's hardware UUID and motherboard serial number), PC name, Windows version, app version, activation dates and last IP address</td><td>Linking your license to one PC and preventing license sharing</td></tr>
 <tr><td>Affiliate code, which accounts used it, and hashed identifiers of the buyer's first PC</td><td>Running the affiliate program and blocking self-referrals</td></tr>
 <tr><td>Your public name, profile photo (resized to 256 × 256 pixels, with its metadata removed) and your review: rating, comment, app version and dates</td><td>Showing your review on our site and your profile in the app. Your public name, photo, rating and comment are public.</td></tr>
 <tr><td>If you link your Discord account: its Discord user ID and username</td><td>Adding you to our Discord server and giving you the Premium role while your Premium is active, then removing it when Premium ends. We don't keep your Discord sign-in: it's revoked right after linking. You can unlink anytime from your account page.</td></tr>
 <tr><td>If you start a free trial: your email, the subscription ID and Stripe's fingerprint of your card (a code that recognizes the same card, not its number)</td><td>Giving each person and each card one free trial</td></tr>
 <tr><td>If you join our Discord server: your Discord ID, when your Discord account was created, when you joined and left, and which invite you used (and so who invited you)</td><td>Counting the friends each member invites, to give the VIP and MVP roles and their rewards, and not counting accounts created to cheat</td></tr>
-<tr><td>A log of license events (purchase, activation, refund, blocked activation with IP address)</td><td>Security and support</td></tr>
+<tr><td>A log of license events (purchase, activation, dispute, blocked activation with IP address)</td><td>Security and support</td></tr>
 <tr><td>IP address, kept briefly in memory</td><td>Limiting sign-in and download attempts</td></tr>
 <tr><td>When you run the app's network test: its results (ping, jitter and lost packets to each test server), the app version, an anonymous ID of your PC (a hash, not linked to your account or license), and the city, region, country and internet provider worked out from your IP address. The IP address itself isn't kept.</td><td>Finding where players are and how their connection reaches game servers, to choose where future Rago servers would lower their ping</td></tr>
 </table></div>
@@ -220,7 +195,7 @@ page('privacy.html','Privacy Policy','What Rago Optimizer and its account server
 
 <h2>Changes</h2>
 <p>If we change this policy in a way that matters, we'll update the date above and tell account holders by email.</p>
-''',upd="November 4, 2026")
+''',upd="November 10, 2026")
 print('ok')
 
 # 404: Netlify serves it for any unknown path, so every link is absolute

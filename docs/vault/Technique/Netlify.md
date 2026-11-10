@@ -37,7 +37,7 @@ Ce que fait `build.py` : remplace Google Fonts par les polices locales `site/fon
 
 Autres outils :
 - `sync_app.py` : recopie dans `page.html` l'aperçu de l'app depuis `app/src/data/catalog.json` et `app/src/lib/i18n.ts`, puis lance `sync_tweaks.py` (liste des tweaks de `tweaks.html`, depuis `catalog.json`, `free.json` et `tweaks-copy.json`). **À lancer quand le catalogue de l'app change**, avant `build.py`.
-- `make_legal.py` : génère `terms.html`, `privacy.html`, `refunds.html` et `404.html` (identité du vendeur à compléter : [[Conformité juridique]]).
+- `make_legal.py` : génère `terms.html`, `privacy.html` et `404.html` (plus de `refunds.html` sur `staging` : redirection 301 vers `terms.html#cancel`) (identité du vendeur à compléter : [[Conformité juridique]]).
 
 La CI `site-check` relance `build.py` et échoue si les pages commitées diffèrent ([[CI GitHub Actions]]) : toujours commiter les pages régénérées.
 

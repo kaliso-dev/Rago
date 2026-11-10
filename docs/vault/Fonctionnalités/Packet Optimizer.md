@@ -30,8 +30,8 @@ Onglet « Packet Optimizer » de la page Réseau (page « Optimiseur réseau » 
 Trois étapes : carte réseau (câble/Wi-Fi), processeur et Windows (threads), qualité de la ligne (40 pings). Conseille un profil avec ses raisons (ex. Wi-Fi → profil Wi-Fi ; ligne qui perd → tolérance aux pertes ; peu de threads → un peu de modération des interruptions). « Appliquer ces réglages » ou « Garder les miens ».
 
 ## Appliquer, restaurer
-- **Appliquer = Premium**. **Restaurer et les 4 outils** (stabilité, bufferbloat, MTU, état actuel) = gratuits dans la 1.2.1.
-- **Décidé le 10/11 (q41)** : « mets le en premium dans la prochaine version de prod ». Ce qui reste gratuit (au moins Restaurer, pour défaire) : à préciser au moment de le coder.
+- Dans la 1.2.1 (en ligne) : **Appliquer = Premium** ; l'analyse, les presets, **Restaurer** et les 4 outils (stabilité, bufferbloat, MTU, état actuel) sont gratuits.
+- **Dans la [[Version 1.3.0]] (PR #76, sur `staging`, pas sortie)** : **entièrement Premium** (Sofiene, 10/11, q41 : « mets le en premium dans la prochaine version de prod »). En gratuit, l'onglet montre seulement « The Packet Optimizer is part of Premium », ce qu'il fait (3 lignes) et « Get Premium » ; **Restaurer reste gratuit** quand une application faite en Premium est encore là, pour remettre la connexion comme avant (`NetOpt.tsx`). Le moteur refusait déjà Appliquer sans Premium (`premium_required:netopt`, `lib.rs`). Les 4 outils réseau restent gratuits dans le [[Test réseau]]. Jamais testé sur Windows.
 - La connexion coupe quelques secondes à l'application.
 - Valeurs d'avant gardées à la première application (`snapshot.json`) ; **Restaurer** propose cette sauvegarde ou les valeurs de Windows. Désinstallation et fin de Premium remettent la sauvegarde. Pas dans « Tout annuler » (bouton à part).
 - Pas repris du .bat : la « Wi-Fi game session » (Windows ne se reconnecterait plus seul).

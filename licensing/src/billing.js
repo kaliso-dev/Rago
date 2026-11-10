@@ -31,7 +31,7 @@ export function priceFor(cfg, interval) {
  * @param customerId a Stripe customer from an earlier license of this account (resubscribing)
  */
 // EU law: immediate access only waives the 14-day withdrawal right if the buyer asks for it explicitly.
-const termsText = (cfg) => `I agree to the [Terms of Sale](${cfg.siteUrl}/terms.html) and ask for immediate access to Premium. I understand I lose my 14-day right of withdrawal once the license is delivered.`;
+const termsText = (cfg) => `I agree to the [Terms of Sale](${cfg.siteUrl}/terms.html) and ask for immediate access to Premium. I understand I lose my 14-day right of withdrawal once the license is delivered, and that payments aren't refunded.`;
 
 /**
  * Creates the Checkout Session with the required terms checkbox. Stripe refuses that checkbox until
@@ -79,9 +79,11 @@ const lifetimeText = (user, replaces) => ['One payment: Rago Optimizer Premium f
   ...(user ? [] : ['You create your account right after paying.'])].join(' ');
 
 async function buildCheckout(stripe, cfg, user, { interval, customerId, terms, ref, promotionCode, trialEnd, replaces, trial = false } = {}) {
-  const choice = priceFor(cfg, interval);
-  // Free trial (2026-11-04): only on a subscription, never with a reward still running (trialEnd)
-  const trialDays = trial && choice.interval && !trialEnd && cfg.trialDays > 0 ? cfg.trialDays : 0;
+  // Free trial (2026-11-04): only on a subscription, never with a reward still running (trialEnd). After the trial, the
+  // player pays monthly (decision of 2026-11-10): a trial checkout always takes the monthly price, whatever was picked.
+  const trialOk = trial && interval !== 'lifetime' && !trialEnd && cfg.trialDays > 0 && !!cfg.stripePriceMonthly;
+  const choice = priceFor(cfg, trialOk ? 'month' : interval);
+  const trialDays = trialOk && choice?.interval === 'month' ? cfg.trialDays : 0;
   const metadata = { product: RAGO_PRODUCT, ...(choice.interval ? { interval: choice.interval } : {}), ...(choice.plan ? { plan: choice.plan } : {}), ...(ref ? { ref } : {}), ...(trialDays ? { trial: String(trialDays) } : {}) };
   const common = {
     line_items: [{ price: choice.price, quantity: 1 }],

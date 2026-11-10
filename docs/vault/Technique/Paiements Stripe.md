@@ -20,7 +20,7 @@ Un produit « Rago Optimizer Premium », en **dollars US**, trois prix (les mêm
 - Le site affiche ses prix depuis le `CONFIG` de `site/src/page.html` (`priceMonth`, `priceYear`, `priceLifetime`) : **à changer en même temps que Stripe**.
 
 ## Parcours d'achat
-1. Le site envoie vers `GET /buy?interval=month|year` (ou `/buy/lifetime`). Options : `ref=CODE` (affilié, aussi gardé 30 jours dans le cookie `rg_ref`), `promo=CODE` (pop-up du site), `trial=1` (essai, **staging seulement** au 10/11).
+1. Le site envoie vers `GET /buy?interval=month|year` (ou `/buy/lifetime`). Options : `ref=CODE` (affilié, aussi gardé 30 jours dans le cookie `rg_ref`), `promo=CODE` (pop-up du site), `trial=1` (essai, **staging seulement** au 10/11 ; toujours sur le prix mensuel).
 2. `createCheckout` crée une **session Stripe Checkout** :
    - `metadata.product = RAGO_PRODUCT` : seules ces sessions sont traitées par le webhook (les autres produits du compte Stripe sont ignorés) ; aussi `interval`, `plan`, `ref`, `trial` ;
    - case « conditions de vente + renonciation au droit de rétractation de 14 jours » (`consent_collection`), qui exige l'URL des conditions dans Stripe (Settings > Public details) ; si Stripe la refuse, le paiement s'ouvre quand même et l'erreur est journalisée ;
@@ -31,7 +31,7 @@ Un produit « Rago Optimizer Premium », en **dollars US**, trois prix (les mêm
 5. L'achat remplace une **récompense d'affiliation** en cours ; un **Lifetime payé** remplace un abonnement (le PC passe sur la nouvelle licence, l'abonnement Stripe est annulé tout de suite par `stopReplacedSubscriptions`, retenté chaque heure s'il échoue). Un compte qui a déjà Premium et rachète un abonnement : l'achat n'est pas ajouté, son abonnement est arrêté et la page compte demande de contacter le support pour le remboursement (avis « duplicate »).
 
 ## Essai gratuit de 3 jours (staging, PR #70)
-Décidé par Sofiene le 04/11. `GET /buy?trial=1` : carte demandée (`payment_method_collection: always`), `trial_period_days = TRIAL_DAYS` (3 par défaut, 0 = coupé), prélèvement à la fin sauf résiliation ; sans carte valable à la fin, l'abonnement s'arrête. **Un essai par personne** : `settleTrial` compare l'e-mail et l'empreinte de carte Stripe (`card.fingerprint`) à la table `trials` ; un deuxième essai est facturé tout de suite (`trial_end: 'now'`). Gardé 2 ans. Rien à créer dans Stripe. Avant la prod : identité du vendeur ([[Conformité juridique]]) et question q48 (offre débitée).
+Décidé par Sofiene le 04/11. `GET /buy?trial=1` : carte demandée (`payment_method_collection: always`), `trial_period_days = TRIAL_DAYS` (3 par défaut, 0 = coupé), prélèvement à la fin sauf résiliation ; sans carte valable à la fin, l'abonnement s'arrête. **Un essai par personne** : `settleTrial` compare l'e-mail et l'empreinte de carte Stripe (`card.fingerprint`) à la table `trials` ; un deuxième essai est facturé tout de suite (`trial_end: 'now'`). Gardé 2 ans. Rien à créer dans Stripe. **Toujours sur le mensuel** (q48, PR #76) : `buildCheckout` remplace l'intervalle demandé par `month` dès que l'essai s'applique (sans prix mensuel, pas d'essai). La case des CGV du Checkout dit aussi « payments aren't refunded ». Avant la prod : identité du vendeur ([[Conformité juridique]]).
 
 ## Webhook (`POST /webhooks/stripe`)
 Les 10 événements à cocher dans la destination Stripe (`WEBHOOK_EVENTS`) :
