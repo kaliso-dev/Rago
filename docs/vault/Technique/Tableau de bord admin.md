@@ -6,7 +6,7 @@ maj: 2026-11-10
 # Tableau de bord admin (`/admin`)
 
 L'outil où Sofiene voit tout le projet et gère les joueurs sans passer par les commandes Railway. Demandé par Sofiene le 10/11 : « un tableau de bord qui permets de tout voir le max d'info et de possibilité de gestion des utilisateurs au meme endroit ». Code dans le [[Serveur de licences]] (`licensing/src/admin.js`, `admin-views.js`, `sales.js`, `support.js`). **Dans `staging` depuis le 10/11 (PR #77, « fusionne » de Sofiene), pas encore en prod** : en prod, `/admin` reste l'ancienne page (pop-up, contrôles Stripe et Discord, tests réseau).
-Le même jour, Sofiene a trouvé l'interface « baclé remplis de bug pas optmisé » et demandé « la meilleur interface possible comme si ça devait etre commercialisé » : refonte complète dans la **PR #82, ouverte vers `staging`, pas encore fusionnée** (voir « Interface » plus bas).
+Le même jour, Sofiene a trouvé l'interface « baclé remplis de bug pas optmisé » et demandé « la meilleur interface possible comme si ça devait etre commercialisé » : refonte complète dans la **PR #82, fusionnée dans `staging` le 10/11 sur « fusionne et push sur staging » de Sofiene**, pas encore en prod (voir « Interface » plus bas).
 
 ## Accès
 - `https://account.rago-optimizer.com/admin` (staging : `rago-staging.up.railway.app/admin`), avec la clé `ADMIN_KEY` (variable Railway, 16 caractères au moins ; sans elle, `/admin` n'existe pas). Cookie de 7 jours limité à `/admin`. Pages en français.
