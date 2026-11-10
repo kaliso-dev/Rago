@@ -34,6 +34,7 @@ La [[Version 1.2.1]] (refonte en verre, barre en jeu, Packet Optimizer, biblioth
 | Vault Obsidian | créé le 31/10 ; règle n°1 : il doit correspondre en tout point à l'état du projet | DÉCIDÉ |
 
 ## PR (10/11)
+- Ouverte le 10/11 vers `staging` : #84 (ventes du [[Tableau de bord admin]] dans une seule devise : les paiements en $US convertis par Stripe comptent en €), après la capture de Sofiene (« ok donc ça aussi »). Attend son « fusionne ».
 - Fusionnée le 10/11 dans `staging` : #83 ([[Tableau de bord admin]] sans trous de mise en page, contrôles Stripe seulement dans Services), sur « fusionne » de Sofiene. Pas en prod.
 - Fusionnée le 10/11 dans `staging` : #82 (refonte de l'interface du [[Tableau de bord admin]], bugs corrigés, pages plus rapides), sur « fusionne et push sur staging » de Sofiene. Pas en prod.
 - Fusionnée le 10/11 dans la branche de prod : #81 (seulement les déclencheurs CI de la #78), sur « il faut en prod » de Sofiene.

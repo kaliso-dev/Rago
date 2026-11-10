@@ -10,6 +10,7 @@ Registre daté des décisions de Sofiene. **La plus récente prime.** Citations 
 ## App et versions
 | Date | Décision | Statut |
 |---|---|---|
+| 10/11 | Admin : corriger l'affichage des ventes en plusieurs devises (« ok donc ça aussi », sur sa capture de la page Ventes) | en cours, PR #84 ouverte vers `staging` ([[Tableau de bord admin]]) |
 | 10/11 | Admin : les contrôles Stripe seulement dans Services (« dans services y a tout les services y compris ceux de stripe donc pas besoin de les avoir aussi dans sites et promo ») et aucun trou dans l'interface (« fait en sorte que y a pas de trou dans l'interface que les élément soit bien disposé ») | fait, PR #83 fusionnée dans `staging` le 10/11 sur « fusionne » de Sofiene ([[Tableau de bord admin]]) |
 | 10/11 | Interface de `/admin` à refaire : « l'interface est baclé remplis de bug pas optmisé dégeulasse applique toi et fait la meilleur interface possible comme si ça devait etre commercialisé après » | fait, PR #82 fusionnée dans `staging` le 10/11 sur « fusionne et push sur staging » de Sofiene ([[Tableau de bord admin]]) |
 | 10/11 | Un outil admin qui centralise tout : « un tableau de bord qui permets de tout voir le max d'info et de possibilité de gestion des utilisateurs au meme endroit », « sans passer par les commandes railways », avec « les vente stripe du jour du mois et sur la totalité du projet », tous les services et les tests réseau | fait, PR #77 fusionnée dans `staging` sur « fusionne » (10/11) ([[Tableau de bord admin]]) |
