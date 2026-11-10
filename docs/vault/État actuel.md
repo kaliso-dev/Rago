@@ -44,7 +44,7 @@ La [[Version 1.2.1]] (refonte en verre, barre en jeu, Packet Optimizer, biblioth
 - Fermées le 01/11 avec l'accord de Sofiene (branches gardées) : #16 (1.1.10), #50 et #51 (1.1.13), dont les fonctions sont dans la 1.2.1, et #60 (Rago OS, abandonné).
 
 ## Ce qui attend Sofiene
-1. **URGENT, avant le 05/12** : Supabase menace de supprimer le projet de prod (offre gratuite). Il contient la clé de signature des licences, sauvegardée nulle part ([[Supabase]], [[Clés et secrets]]). D'abord `npm run admin -- export-keys` et un gestionnaire de mots de passe, puis décider : passer en Pro (25 $/mois) ou autre solution.
+1. **URGENT, avant le 05/12** : l'organisation Supabase (offre gratuite) a dépassé son quota de bande passante (e-mail du 04/11) ; restrictions possibles à partir du 05/12, pas de suppression annoncée. La base contient la clé de signature des licences, sauvegardée nulle part ([[Supabase]], [[Clés et secrets]]). D'abord un gestionnaire de mots de passe et la sauvegarde des clés (guide envoyé le 10/11 dans le fil « Sauvegarder les clés »), puis décider : Pro (25 $/mois) ou baisser la bande passante.
 2. **Clés** : aucune n'est sauvegardée (Railway, Stripe, GitHub, clé de mise à jour Tauri) ; Stripe va bientôt masquer ses clés secrètes.
 3. Répondre à q46 (adresse des mentions légales) et q68 (« 30 opti 15 slots »).
 4. Vérifier que les 1.2.0 installées reçoivent bien la 1.2.1 (`/api/v1/update/status`, voir [[Mise à jour automatique]]).

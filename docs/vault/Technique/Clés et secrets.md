@@ -15,7 +15,7 @@ maj: 2026-11-10
 - Ne jamais ajouter les MX Google dans OVH (couperait la boîte Zimbra `support@`).
 
 ## État des sauvegardes (10/11)
-**Aucune clé n'est sauvegardée** (Sofiene, q67 : « je me noie sous les clé et j'ai aucun export ») : ni `export-keys` du serveur, ni les clés Railway, Stripe ou GitHub. Stripe l'a prévenu qu'il ne pourra bientôt plus revoir ses clés secrètes. Le projet Supabase de prod, seul endroit où est la clé de signature des licences, risque d'être supprimé le 05/12 ([[Supabase]]). À faire : un gestionnaire de mots de passe, puis y ranger chaque clé (sans jamais l'écrire dans un chat ou un fichier du projet).
+**Aucune clé n'est sauvegardée** (Sofiene, q67 : « je me noie sous les clé et j'ai aucun export ») : ni `export-keys` du serveur, ni les clés Railway, Stripe ou GitHub. Stripe l'a prévenu qu'il ne pourra bientôt plus revoir ses clés secrètes. Le projet Supabase de prod, seul endroit où est la clé de signature des licences, a dépassé son quota gratuit : restrictions possibles à partir du 05/12 ([[Supabase]]). Les secrets GitHub ne se relisent pas : `TAURI_SIGNING_PRIVATE_KEY` et son mot de passe doivent être retrouvés sur le PC où la clé a été créée (emplacement **À VÉRIFIER**) ; `RAGO_SCRIPTS_SECRET` a la même valeur que `SCRIPTS_SECRET` de Railway. Les variables Railway se copient d'un coup (onglet Variables → Raw Editor), ce qui sauvegarde aussi la clé Stripe secrète. À faire : un gestionnaire de mots de passe, puis y ranger chaque clé (sans jamais l'écrire dans un chat ou un fichier du projet).
 
 ## Noms des variables
 Liste complète, rangée par service avec leurs défauts : [[Variables d'environnement]].
