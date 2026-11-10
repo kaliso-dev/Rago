@@ -32,7 +32,7 @@ Node ≥ 22.5 en modules ES, **sans framework de pages** : Hono 4 (routes) + `@h
 | `retention.js` | Purges promises par la politique de confidentialité |
 | `views.js` | Toutes les pages HTML (compte, achat, connexion admin, messages) |
 | `admin.js` + `admin-views.js` | [[Tableau de bord admin]] (`/admin/*`) : garde `ADMIN_KEY`, données, actions, pages (`staging` depuis le 10/11) ; son style et son script sont à part : `public/admin.css`, `public/admin.js` (PR #82) |
-| `sales.js` | Ventes lues dans Stripe pour `/admin` (gardées 5 min puis relues en arrière-plan, jours et mois en heure de Paris) |
+| `sales.js` | Ventes lues dans Stripe pour `/admin` (gardées 5 min puis relues en arrière-plan, jours et mois en heure de Paris ; paiements convertis par Stripe comptés dans la devise du compte) |
 | `support.js` | Suppression RGPD partagée par `/admin` et `npm run admin -- delete-user` |
 
 Autres dossiers : `scripts/admin.js` (`npm run admin -- <commande>`, support), `scripts/local.js` (`npm run local`), `scripts/keys.js` (`npm run keys`, **à ne jamais lancer en prod**), `public/` (CSS, `account.js`, `admin.css` et `admin.js` de `/admin`, images des e-mails), `test/` (`flow.test.js`, `community.test.js`, `network.test.js`, `sales.test.js`), `docs/API.md` (contrat avec l'app), `docs/MISE-EN-LIGNE.md` (pas-à-pas de Sofiene), `docs/test/` (clé de test publique, utilisable seulement en local).
