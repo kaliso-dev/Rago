@@ -35,6 +35,7 @@ Les joueurs ont la [[Version 1.2.1]] (en ligne depuis le 31/10). La [[Version 1.
 | Vault Obsidian | créé le 31/10 ; règle n°1 : il doit correspondre en tout point à l'état du projet. **Détaillé le 10/11** (demande de Sofiene) : 341 notes, dont une fiche par fichier de code (230 notes dans `Code/`, 7 cartes), l'histoire du projet (`Historique/`, 11 notes) et l'étude de marché ; 24 nouvelles questions (q70 à q93) | DÉCIDÉ |
 
 ## PR (10/11)
+- #86 (profil hitreg : « Best hitreg » par défaut au lieu de « Better hitreg », qui bridait le débit d'un joueur à 15 Mbit/s sur Steam) : **ouverte** vers `staging` depuis le 10/11 ([[Problèmes joueurs]]).
 - Fusionnée le 10/11 dans `staging` : #85 ([[Cerveau du vault]] et vault détaillé), sur « fusionne » de Sofiene. Pas en prod.
 - #84 ([[Tableau de bord admin]] : ventes dans une seule devise, les dollars convertis par Stripe comptés en euros) : **ouverte** vers `staging` depuis le 10/11.
 - Fusionnée le 10/11 dans `staging` : #83 ([[Tableau de bord admin]] sans trous de mise en page, contrôles Stripe seulement dans Services), sur « fusionne » de Sofiene. Pas en prod.
