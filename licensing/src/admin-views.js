@@ -6,7 +6,7 @@ import { parisDay } from './sales.js';
 
 const TZ = 'Europe/Paris';
 export const DAY = 86400000;
-const ASSETS = '20261110b'; // bumped when admin.css / admin.js change, so browsers don't keep the old ones
+const ASSETS = '20261110c'; // bumped when admin.css / admin.js change, so browsers don't keep the old ones
 
 // ---------- formatting ----------
 const fmt = (o) => new Intl.DateTimeFormat('fr-FR', { timeZone: TZ, ...o });
@@ -136,8 +136,8 @@ const hidden = (name, value) => html`<input type="hidden" name="${name}" value="
 const actionForm = (action, label, { fields = '', confirm = '', kind = '', busy = 'En cours…', icon = '' } = {}) => html`<form method="post" action="${action}" class="inline" data-busy="${busy}" ${confirm ? html`data-confirm="${confirm}"` : ''}>${fields}<button class="btn btn-sm${kind ? ` btn-${kind}` : ''}" type="submit">${icon}${label}</button></form>`;
 const copyBtn = (text, label = 'Copier', copied = 'Copié.') => html`<button class="btn btn-ghost btn-sm btn-icon" type="button" data-copy="${text}" data-copied="${copied}" aria-label="${label}" title="${label}">${I.copy}</button>`;
 
-function card({ title, icon = '', actions = '', sub = '', body, foot = '', flush = false, cls = '' }) {
-  return html`<section class="card${cls ? ` ${cls}` : ''}">
+function card({ title, icon = '', actions = '', sub = '', body, foot = '', flush = false, cls = '', id = '' }) {
+  return html`<section class="card${cls ? ` ${cls}` : ''}"${id ? html` id="${id}"` : ''}>
     ${title ? html`<div class="card-h"><h2>${icon}${title}</h2>${actions ? html`<div class="row">${actions}</div>` : ''}${sub ? html`<p>${sub}</p>` : ''}</div>` : ''}
     <div class="card-b${flush ? ' flush' : ''}">${body}</div>
     ${foot ? html`<div class="card-f">${foot}</div>` : ''}
@@ -376,6 +376,7 @@ function servicesGrid(list, { compact = false } = {}) {
     <div>${compact ? '' : html`<small>${x.group}</small>`}<b>${compact ? `${x.group} · ${x.label}` : x.label}</b>${compact ? '' : html`<p>${x.text}</p>`}</div>
     ${x.ms != null && !compact ? html`<span class="ms">${x.ms} ms</span>` : compact ? html`<span class="sr-only">${LEVEL[x.level]?.[1]}</span>` : ''}</li>`)}</ul></div>`;
 }
+const scrollFill = (body) => html`<div class="scroll-fill"><div class="sf">${body}</div></div>`;
 const stamp = (at, what) => html`<span class="stamp"><i></i>${what} ${ago(at)}</span>`;
 
 export function overviewPage(nav, { counts: k, sales: s, services: sv, recentUsers, recentEvents, dashboard }) {
@@ -392,7 +393,7 @@ export function overviewPage(nav, { counts: k, sales: s, services: sv, recentUse
     k.unclaimed && { icon: I.gift, kind: 'warn', title: `${plural(k.unclaimed, 'achat payé', 'achats payés')} sans compte`, text: 'Le joueur n’a pas encore créé son compte : renvoie-lui un lien.', href: '/admin/achats', action: 'Voir' },
     ok && s.failed && { icon: I.card, kind: 'warn', title: `${plural(s.failed, 'paiement raté', 'paiements ratés')} cette semaine`, text: 'Carte refusée ou 3-D Secure abandonné.', href: '/admin/ventes?etat=echoues', action: 'Voir' },
     sub?.pastDue && { icon: I.clock, kind: 'warn', title: `${plural(sub.pastDue, 'abonnement impayé', 'abonnements impayés')}`, text: 'Stripe réessaie la carte ; Premium reste tant que l’abonnement n’est pas arrêté.', href: `${dashboard}/subscriptions?status=past_due`, action: 'Stripe', external: true },
-    testLicenses && { icon: I.info, kind: 'info', title: `${plural(testLicenses, 'licence de test active', 'licences de test actives')}`, text: 'Achats faits en mode test qui donnent encore Premium.', href: '/admin/site', action: 'Gérer' },
+    testLicenses && { icon: I.info, kind: 'info', title: `${plural(testLicenses, 'licence de test active', 'licences de test actives')}`, text: 'Achats faits en mode test qui donnent encore Premium.', href: '/admin/services#stripe', action: 'Gérer' },
     sv?.warnings?.length && { icon: I.info, kind: 'info', title: `${plural(sv.warnings.length, 'avertissement')} au démarrage`, text: 'Variables Railway à vérifier.', href: '/admin/services', action: 'Voir' },
   ].filter(Boolean);
 
@@ -431,7 +432,7 @@ export function overviewPage(nav, { counts: k, sales: s, services: sv, recentUse
       ${card({ title: 'Premium', icon: I.star, actions: more('/admin/utilisateurs?filtre=premium', 'Voir'), body: premiumMix(k) })}
     </div>
     <div class="g g21">
-      ${card({ title: 'Activité récente', icon: I.list, actions: more('/admin/journal', 'Journal complet'), flush: true, body: feed(recentEvents) })}
+      ${card({ title: 'Activité récente', icon: I.list, actions: more('/admin/journal', 'Journal complet'), flush: true, body: scrollFill(feed(recentEvents)) })}
       <div class="side-col">
         ${card({ title: 'Services', icon: I.pulse, actions: more('/admin/services', 'Détail'), flush: true, body: servicesGrid(list, { compact: true }) })}
         ${card({ title: 'Derniers inscrits', icon: I.user, actions: more('/admin/utilisateurs', 'Tous'), flush: true,
@@ -547,7 +548,7 @@ export function userPage(nav, d) {
     ${u.banned_at ? alertBox(`Banni le ${when(u.banned_at)}${u.banned_reason ? ` : ${u.banned_reason}` : ''}. Il ne peut plus se connecter ni utiliser Premium.`) : ''}
     ${alertBox(error)}${secret(link)}
     <div class="g g21">
-      <div class="stack">
+      <div class="side-col">
         ${card({ title: 'Premium', icon: I.star, sub: licenses.length > 1 ? `${plural(licenses.length, 'licence')} sur ce compte, la plus récente en premier.` : '',
           body: html`${licenses.length ? licenses.map((l) => licenseBlock(l, devices.find((x) => x.license_id === l.id), u.id, dash)) : empty('Aucune licence : version gratuite. Offre du temps ou Premium à vie avec les actions.', { icon: I.star, small: true })}
             ${loose.length ? html`<div class="stack"><p class="sub">Achats faits avec cet e-mail, pas encore sur le compte</p>
@@ -555,7 +556,7 @@ export function userPage(nav, d) {
                 <dd>${actionForm(act('rattacher'), 'Rattacher à ce compte', { fields: hidden('licence', l.id) })}</dd></div>`)}</dl></div>` : ''}
             <details class="more-box"><summary>${I.right}Rattacher un achat payé avec un autre e-mail</summary>
               ${actionForm(act('rattacher'), 'Rattacher', { fields: html`<input class="in in-sm" name="licence" placeholder="lic_… (voir Offrir et achats)" required aria-label="Identifiant de la licence">` })}</details>` })}
-        ${card({ title: 'Historique', icon: I.list, flush: true, body: feed(events, { withUser: false }) })}
+        ${card({ title: 'Historique', icon: I.list, flush: true, body: scrollFill(feed(events, { withUser: false })) })}
       </div>
       <div class="side-col">
         ${card({ title: 'Gérer l’accès', icon: I.shield, flush: true, body: html`
@@ -571,6 +572,12 @@ export function userPage(nav, d) {
               ? html`<p>Sa licence revient si elle est encore valable (à vie, temps offert pas fini, abonnement encore actif dans Stripe).</p>${actionForm(act('debannir'), 'Lever le bannissement', { confirm: 'Lever le bannissement ?' })}`
               : html`<p>Plus de connexion au site ni à l’app, sessions fermées, licence coupée, abonnement Stripe arrêté (sans remboursement), rôle Discord retiré.</p>
                 ${actionForm(act('bannir'), 'Bannir', { kind: 'danger', fields: html`<input class="in in-sm" name="raison" placeholder="Raison" maxlength="120" aria-label="Raison du bannissement">`, confirm: `Bannir ${u.email} ? Il ne pourra plus se connecter ni utiliser Premium.` })}`}</div>` })}
+        ${card({ title: 'Essais et PC', icon: I.pc, body: html`${trials.length ? html`<dl class="lines">${trials.map((t) => html`<div><dt>Essai ${t.charged_now ? 'refusé (déjà eu un essai, payé tout de suite)' : 'gratuit'}</dt><dd class="num small">${day(t.started_at)}</dd></div>`)}</dl>` : html`<p class="hint">Aucun essai.</p>`}
+          <p class="hint">${plural(accountDevices.length, 'PC vu', 'PC vus')} dans l’app avec ce compte${accountDevices.length ? `, dernier ${ago(accountDevices[0].seen_at)}` : ''}.</p>` })}
+      </div>
+    </div>
+    <div class="g g2">
+      <div class="side-col">
         ${card({ title: 'Discord', icon: I.chat, body: dl ? html`${kv([
             ['Compte', html`@${dl.discord_name || '?'}<br><span class="dim num">${dl.discord_id}</span>`],
             ['Rôle Pro', html`${dl.role ? 'Donné' : 'Pas donné'}${dl.error ? html` ${pill('err', dl.error)}` : ''}`],
@@ -579,23 +586,21 @@ export function userPage(nav, d) {
           ${rewards.length ? html`<p class="hint">${rewards.map((r) => `${r.kind.toUpperCase()} le ${day(r.given_at)}${r.until ? ` (Premium jusqu’au ${day(r.until)})` : ''}`).join(' · ')}</p>` : ''}
           <div class="row">${actionForm(act('discord-sync'), 'Remettre le rôle à jour', { icon: I.refresh })}${actionForm(act('discord-delier'), 'Délier', { confirm: 'Délier son Discord et retirer le rôle Pro ?' })}</div>`
           : html`<p class="hint">Pas de Discord lié (il le fait depuis sa page compte).</p>` })}
-        ${card({ title: 'Avis et profil', icon: I.user, body: html`${review ? html`<div class="stack">
+        ${card({ title: 'Affiliation', icon: I.link, body: html`${af ? html`${kv([['Code', html`<span class="num">${af.code}</span>`], ['Filleuls comptés', num(af.counted)],
+            ['Prochaine récompense', `${af.progress} / ${af.goal}`], ['Récompenses', `${af.rewards} × ${af.months} mois`]], 'tight')}
+          ${actionForm(act('affilie'), 'Recalculer', { icon: I.refresh })}` : html`<p class="hint">Pas dans le programme d’affiliation.</p>`}
+          ${referredBy ? html`<p class="hint">Venu par <a href="${userHref(referredBy.id)}">${referredBy.email}</a> (${referredBy.status}).</p>` : ''}` })}
+      </div>
+      ${card({ title: 'Avis et profil', icon: I.user, body: html`${review ? html`<div class="stack">
             <div class="spread"><span class="stars" aria-label="${review.rating} sur 5">${'★'.repeat(review.rating)}<s>${'★'.repeat(5 - review.rating)}</s></span>${review.status === 'published' ? pill('ok', 'Affiché sur le site') : pill('off', 'Masqué')}</div>
             <p class="quote">${review.comment}</p><p class="hint">${day(review.updated_at)}${review.app_version ? ` · app ${review.app_version}` : ''}</p>
             ${actionForm(act('avis'), review.status === 'published' ? 'Masquer l’avis' : 'Afficher l’avis', { fields: hidden('statut', review.status === 'published' ? 'masquer' : 'afficher') })}</div>` : html`<p class="hint">Pas d’avis.</p>`}
           <hr class="sep">
           ${actionForm(act('nom'), 'Changer', { fields: html`<input class="in in-sm" name="nom" value="${u.display_name || ''}" placeholder="Nom public" maxlength="32" aria-label="Nom public">` })}
           ${u.avatar_key ? actionForm(act('photo'), 'Retirer la photo', { confirm: 'Retirer sa photo de profil ?' }) : ''}` })}
-        ${card({ title: 'Affiliation', icon: I.link, body: html`${af ? html`${kv([['Code', html`<span class="num">${af.code}</span>`], ['Filleuls comptés', num(af.counted)],
-            ['Prochaine récompense', `${af.progress} / ${af.goal}`], ['Récompenses', `${af.rewards} × ${af.months} mois`]], 'tight')}
-          ${actionForm(act('affilie'), 'Recalculer', { icon: I.refresh })}` : html`<p class="hint">Pas dans le programme d’affiliation.</p>`}
-          ${referredBy ? html`<p class="hint">Venu par <a href="${userHref(referredBy.id)}">${referredBy.email}</a> (${referredBy.status}).</p>` : ''}` })}
-        ${card({ title: 'Essais et PC', icon: I.pc, body: html`${trials.length ? html`<dl class="lines">${trials.map((t) => html`<div><dt>Essai ${t.charged_now ? 'refusé (déjà eu un essai, payé tout de suite)' : 'gratuit'}</dt><dd class="num small">${day(t.started_at)}</dd></div>`)}</dl>` : html`<p class="hint">Aucun essai.</p>`}
-          <p class="hint">${plural(accountDevices.length, 'PC vu', 'PC vus')} dans l’app avec ce compte${accountDevices.length ? `, dernier ${ago(accountDevices[0].seen_at)}` : ''}.</p>` })}
-        ${card({ title: 'Supprimer le compte', icon: I.trash, cls: 'danger', body: html`<p class="hint">Arrête l’abonnement Stripe, efface le compte, le PC, les sessions, la photo et l’avis. Les licences restent, sans nom, pour la comptabilité. Irréversible (RGPD).</p>
-          ${actionForm(act('supprimer'), 'Supprimer définitivement', { kind: 'danger', fields: html`<input class="in in-sm" name="confirmation" placeholder="Recopie ${u.email}" required autocomplete="off" spellcheck="false" aria-label="Recopie l’e-mail du compte">`, confirm: `Supprimer définitivement ${u.email} ? Rien ne pourra être récupéré.` })}` })}
-      </div>
-    </div>`;
+    </div>
+    ${card({ title: 'Supprimer le compte', icon: I.trash, cls: 'danger', body: html`<div class="zone"><p class="hint">Arrête l’abonnement Stripe, efface le compte, le PC, les sessions, la photo et l’avis. Les licences restent, sans nom, pour la comptabilité. Irréversible (RGPD).</p>
+      ${actionForm(act('supprimer'), 'Supprimer définitivement', { kind: 'danger', fields: html`<input class="in in-sm" name="confirmation" placeholder="Recopie ${u.email}" required autocomplete="off" spellcheck="false" aria-label="Recopie l’e-mail du compte">`, confirm: `Supprimer définitivement ${u.email} ? Rien ne pourra être récupéré.` })}</div>` })}`;
   return shell(nav, 'joueurs', u.email, body, { notice: USER_NOTICE[notice], path: userHref(u.id) });
 }
 
@@ -657,20 +662,23 @@ export function salesPage(nav, { sales: s, counts: k, dashboard, etat, page, per
       ${kpi({ label: 'Ce mois-ci', icon: I.sales, value: moneyMap(p.month.net, cur), sub: html`${plural(p.month.count, 'paiement')} ${delta(main(p.month), main(p.lastMonthSoFar), 'Comparé au mois dernier à la même date')}`, chart: spark(s.days.map((d) => d.amount)) })}
       ${kpi({ label: 'Depuis le début', icon: I.stack, value: moneyMap(p.total.net, cur), sub: `${plural(p.total.count, 'paiement')} · ${moneyMap(p.total.refunded, cur)} remboursés` })}
     </div>
-    <div class="g g21">
+    <div class="g g2">
       ${card({ title: '30 derniers jours', icon: I.sales, sub: `Par jour, en ${cur.toUpperCase()}. Hier : ${moneyMap(p.yesterday.net, cur)} (${plural(p.yesterday.count, 'paiement')}).`, body: daysChart(s) })}
+      ${card({ title: '12 derniers mois', icon: I.sales, sub: `Par mois, en ${cur.toUpperCase()}. Mois dernier : ${moneyMap(p.lastMonth.net, cur)} (${plural(p.lastMonth.count, 'paiement')}).`, body: monthsChart(s) })}
+    </div>
+    <div class="g g2">
       ${card({ title: 'Reçu sur le compte Stripe', icon: I.download, sub: 'Après les frais Stripe, dans la devise du compte.', body: s.received ? html`<dl class="lines">
           <div><dt>Aujourd’hui</dt><dd class="num">${moneyMap(s.received.today.net, 'eur')}</dd></div>
           <div><dt>Ce mois-ci</dt><dd class="num">${moneyMap(s.received.month.net, 'eur')}</dd></div>
           <div><dt>Depuis le début</dt><dd class="num">${moneyMap(s.received.total.net, 'eur')}</dd></div>
           <div><dt>Frais Stripe (total)</dt><dd class="num muted">${moneyMap(s.received.total.fee, 'eur')}</dd></div></dl>`
         : html`<p class="hint">Solde Stripe illisible avec cette clé (une clé restreinte doit pouvoir lire Balance).</p>` })}
-    </div>
-    <div class="g g21">
-      ${card({ title: '12 derniers mois', icon: I.sales, sub: `Par mois, en ${cur.toUpperCase()}. Mois dernier : ${moneyMap(p.lastMonth.net, cur)} (${plural(p.lastMonth.count, 'paiement')}).`, body: monthsChart(s) })}
-      ${card({ title: 'Par type', icon: I.stack, body: html`${kindTotal ? html`<div class="split-bar">${kinds.filter(([, x]) => x.net[cur]).map(([, x, kc]) => html`<span class="${kc} w-${Math.max(1, pct(x.net[cur] || 0, kindTotal))}"></span>`)}</div>` : ''}
+      ${card({ title: 'Par type', icon: I.stack, sub: 'Abonnements et paiements uniques, depuis le début.', body: html`${kindTotal ? html`<div class="split-bar">${kinds.filter(([, x]) => x.net[cur]).map(([, x, kc]) => html`<span class="${kc} w-${Math.max(1, pct(x.net[cur] || 0, kindTotal))}"></span>`)}</div>` : ''}
         <ul class="key">${kinds.map(([label, x, kc]) => html`<li><span><i class="${kc}"></i>${label}</span><span><b>${moneyMap(x.net, cur)}</b><em>${plural(x.count, 'paiement')}</em></span></li>`)}</ul>
-        ${s.failed ? html`<p class="hint">${plural(s.failed, 'paiement raté', 'paiements ratés')} ces 7 derniers jours. <a href="${url({ etat: 'echoues' })}">Voir</a></p>` : ''}` })}
+        <dl class="lines">
+          <div><dt>Panier moyen</dt><dd class="num">${p.total.count ? money(Math.round((p.total.gross?.[cur] || 0) / p.total.count), cur) : '–'}</dd></div>
+          <div><dt>Remboursé</dt><dd class="num">${moneyMap(p.total.refunded, cur)}</dd></div>
+          <div><dt>Paiements ratés (7 jours)</dt><dd class="num">${s.failed ? html`<a href="${url({ etat: 'echoues' })}">${num(s.failed)}</a>` : '0'}</dd></div></dl>` })}
     </div>
     ${sub ? html`<section class="card" id="abonnements"><div class="card-h"><h2>${I.refresh}Abonnements</h2><div class="row"><a class="more" href="${dashboard}/subscriptions" rel="noopener">Stripe${I.external}</a></div></div>
       ${facts([
@@ -695,12 +703,12 @@ export function salesPage(nav, { sales: s, counts: k, dashboard, etat, page, per
 }
 
 // ---------- the setup checks (Stripe, Discord, community bot), on Services and Site ----------
-const checkItems = (checks) => html`<ul class="checks">${checks.map((c) => html`<li>${pill(CHECK[c.level][0], CHECK[c.level][1])}<div><b>${c.label}</b><p>${c.text}</p></div></li>`)}</ul>`;
+const checkItems = (checks, cls = '') => html`<ul class="checks${cls ? ` ${cls}` : ''}">${checks.map((c) => html`<li>${pill(CHECK[c.level][0], CHECK[c.level][1])}<div><b>${c.label}</b><p>${c.text}</p></div></li>`)}</ul>`;
 function stripeCard(s) {
   if (!s) return '';
   const bad = s.checks.filter((c) => c.level === 'error').length;
-  return card({ title: 'Paiements Stripe', icon: I.card, actions: bad ? pill('err', `${bad} à corriger`) : s.mode === 'live' ? pill('ok', 'Prêt pour le live') : pill('warn', `Mode ${s.mode || 'non configuré'}`), flush: true,
-    body: html`${checkItems(s.checks)}
+  return card({ title: 'Paiements Stripe', icon: I.card, id: 'stripe', actions: bad ? pill('err', `${bad} à corriger`) : s.mode === 'live' ? pill('ok', 'Prêt pour le live') : pill('warn', `Mode ${s.mode || 'non configuré'}`), flush: true,
+    body: html`<div class="checks-wrap">${checkItems(s.checks, 'two')}</div>
       ${s.testLicenses ? html`<div class="callout"><p><strong>${s.testLicenses === 1 ? '1 licence active vient' : `${s.testLicenses} licences actives viennent`} d’un achat fait en mode test</strong> (rien n’a été payé). Elles donnent encore Premium, comptent pour les affiliés, et bloquent un nouvel achat sur ces comptes.</p>
         <form method="post" action="/admin/test-licenses" class="inline" data-busy="Arrêt…" data-danger data-confirm="Arrêter ${s.testLicenses === 1 ? 'la licence de test' : `les ${s.testLicenses} licences de test`} ? Ces joueurs repassent en version gratuite."><button class="btn btn-sm btn-danger" type="submit">Arrêter les licences de test</button></form></div>` : ''}` });
 }
@@ -724,7 +732,10 @@ function communityCard(d) {
 }
 
 // ---------- services ----------
-export function servicesPage(nav, { services: sv }) {
+const SERVICES_NOTICE = {
+  'test-ended': (n) => (n ? `${n === 1 ? 'La licence de test ne donne' : `Les ${n} licences de test ne donnent`} plus Premium.` : 'Aucune licence de test à arrêter.'),
+};
+export function servicesPage(nav, { services: sv, notice, count: ended }) {
   const stripe = sv.list.find((x) => x.id === 'stripe')?.stripe;
   const discord = sv.list.find((x) => x.id === 'discord')?.discord;
   const community = sv.list.find((x) => x.id === 'community')?.community;
@@ -741,9 +752,11 @@ export function servicesPage(nav, { services: sv }) {
     ${card({ title: 'État des services', icon: I.pulse, flush: true, body: servicesGrid(sv.list) })}
     ${sv.warnings.length ? card({ title: 'Avertissements du démarrage', icon: I.alert, sub: 'Les mêmes lignes [warn] que dans les logs Railway.', flush: true,
       body: html`<ul class="checks">${sv.warnings.map((w) => html`<li>${pill('warn', 'À vérifier')}<div><p>${w}</p></div></li>`)}</ul>` }) : ''}
-    <div class="g g2">${stripeCard(stripe)}${discordCard(discord)}${communityCard(community)}</div>
+    ${stripeCard(stripe)}
+    ${discord && community ? html`<div class="g g2">${discordCard(discord)}${communityCard(community)}</div>` : html`${discordCard(discord)}${communityCard(community)}`}
     <p class="hint">Pas encore surveillés d’ici : les serveurs Rago Route (Vultr) et la facturation de Railway, Supabase et Netlify (à voir sur leurs sites).</p>`;
-  return shell(nav, 'services', 'Services', body);
+  const n = SERVICES_NOTICE[notice];
+  return shell(nav, 'services', 'Services', body, { notice: n ? n(ended) : '', path: '/admin/services' });
 }
 
 // ---------- journal ----------
@@ -785,8 +798,7 @@ const DURATION = { once: 'sur le premier paiement', forever: 'sur chaque paiemen
 const SITE_NOTICE = {
   saved: 'Enregistré. Le site affiche la nouvelle version de la pop-up en moins d’une minute.',
   created: 'Code créé dans Stripe et enregistré. Le site l’affiche en moins d’une minute.',
-  'test-ended': (n) => (n ? `${n === 1 ? 'La licence de test ne donne' : `Les ${n} licences de test ne donnent`} plus Premium.` : 'Aucune licence de test à arrêter.'),
-  code: (n, code) => `Code ${code || ''} créé dans Stripe. À taper au paiement, ou à partager avec un lien /buy?promo=CODE.`,
+  code: (code) => `Code ${code || ''} créé dans Stripe. À taper au paiement, ou à partager avec un lien /buy?promo=CODE.`,
 };
 /** The line under the code, same words as the site's pop-up (site/src/page.html). */
 export const popupLeftLine = (total, left) => `Limited to the first ${total} players · ${left} left`;
@@ -803,20 +815,16 @@ function popupPreview(s, p) {
     <p class="text">${fill(s.text, vals)}</p><p class="code">${p.code}</p>${p.total != null ? html`<p class="left">${popupLeftLine(p.total, p.left)}</p>` : ''}</div>`;
 }
 
-export function sitePage(nav, { state, stripe, reviews, notice, count, code, error, values, promoError }) {
+export function sitePage(nav, { state, reviews, notice, code, error, values, promoError }) {
   const { settings: s, promo: p } = state;
   const v = values || { enabled: s.enabled, code: s.code, percent: p?.percent ?? '', limit: p?.total ?? '', eyebrow: s.eyebrow, title: s.title, text: s.text };
   const n = SITE_NOTICE[notice];
   const shown = reviews.filter((r) => r.status === 'published').length;
   const body = html`
     ${head({ title: 'Site et promos', sub: `La pop-up de réduction du site, les codes promo Stripe (mode ${state.mode || 'non configuré'}) et les avis affichés sur le site.` })}
-    <div class="g g2">
-      ${card({ title: 'Pop-up de réduction', icon: I.tag, actions: html`${state.shown ? pill('ok', 'Affichée sur le site') : pill('off', 'Masquée')}`, sub: state.reason || '',
-        body: html`${p ? kv([['Code', html`<span class="num">${p.code}</span>`], ['Réduction', `${p.percent == null ? 'Montant fixe' : `${p.percent} %`} ${DURATION[p.duration] || ''}${p.firstTime ? ', nouveaux clients' : ''}`],
-            ['Utilisations', p.total == null ? `${p.used}, sans limite` : `${p.used} sur ${p.total}`], ['Restantes', p.total == null ? 'Illimité' : String(p.left)]], 'tight') : ''}
-          ${p?.total ? html`<div class="meter${p.left ? '' : ' ok'}"><span class="w-${Math.min(100, pct(p.used, p.total))}"></span></div>` : ''}
-          ${p && p.percent > 0 ? popupPreview(s, p) : html`<p class="hint">Pas d’aperçu : aucun code en pourcentage enregistré.</p>`}` })}
-      ${card({ title: 'Modifier la pop-up', icon: I.tag, body: html`${alertBox(error)}
+    ${card({ title: 'Pop-up de réduction', icon: I.tag, actions: html`${state.shown ? pill('ok', 'Affichée sur le site') : pill('off', 'Masquée')}`, sub: state.reason || '', flush: true,
+      body: html`<div class="editor">
+        <div class="editor-main">${alertBox(error)}
         <form method="post" action="/admin/popup" class="form" data-busy="Enregistrement…">
           <label class="switch"><span><b>Afficher la pop-up sur le site</b><span>Masquée d’elle-même quand le code est épuisé.</span></span><input type="checkbox" name="enabled" ${v.enabled ? html`checked` : ''}></label>
           <div class="fld"><label for="f-code">Code</label><input class="in code" id="f-code" name="code" value="${v.code}" maxlength="40" spellcheck="false" autocapitalize="characters" autocomplete="off" required>
@@ -831,18 +839,19 @@ export function sitePage(nav, { state, stripe, reviews, notice, count, code, err
           <div class="fld"><label for="f-text">Texte</label><textarea class="in" id="f-text" name="text" rows="3" maxlength="280" required>${v.text}</textarea>
             <p class="hint">En anglais, comme le site. {percent} devient la réduction, {code} le code, {total} le nombre de clients et {left} les places restantes.</p></div>
           <div class="row"><button class="btn btn-primary" type="submit">Enregistrer</button></div>
-        </form>` })}
-    </div>
-    <div class="g g2">
-      ${card({ title: 'Créer un code promo', icon: I.tag, sub: `Réservé aux nouveaux clients, dans le mode de la clé Stripe (${nav.mode || 'non configuré'}).`, body: html`${alertBox(promoError)}
-        <form method="post" action="/admin/code-promo" class="form" data-busy="Création…">
-          <div class="pair"><div class="fld"><label for="f-pcode">Code</label><input class="in code" id="f-pcode" name="code" placeholder="RAGO15" maxlength="40" required spellcheck="false" autocomplete="off"></div>
-            <div class="fld"><label for="f-pct">Réduction (%)</label><input class="in" id="f-pct" name="pourcent" type="number" min="1" max="99" step="any" placeholder="15" required></div></div>
-          <div class="fld"><label for="f-duree">S’applique</label><select class="in" id="f-duree" name="duree"><option value="once">au premier paiement</option><option value="forever">à chaque paiement</option></select></div>
-          <div class="row"><button class="btn btn-primary" type="submit">Créer dans Stripe</button></div>
-        </form>` })}
-      ${stripeCard(stripe)}
-    </div>
+        </form></div>
+        <aside class="editor-side" aria-label="État et aperçu">${p ? kv([['Code', html`<span class="num">${p.code}</span>`], ['Réduction', `${p.percent == null ? 'Montant fixe' : `${p.percent} %`} ${DURATION[p.duration] || ''}${p.firstTime ? ', nouveaux clients' : ''}`],
+            ['Utilisations', p.total == null ? `${p.used}, sans limite` : `${p.used} sur ${p.total}`], ['Restantes', p.total == null ? 'Illimité' : String(p.left)]], 'tight') : ''}
+          ${p?.total ? html`<div class="meter${p.left ? '' : ' ok'}"><span class="w-${Math.min(100, pct(p.used, p.total))}"></span></div>` : ''}
+          ${p && p.percent > 0 ? popupPreview(s, p) : html`${popupPreview({ ...s, eyebrow: v.eyebrow, title: v.title, text: v.text }, { percent: v.percent ? `${v.percent}` : '?', code: v.code || s.code, total: null })}<p class="hint">${p ? 'Ce code n’est pas une réduction en pourcentage : la pop-up ne peut pas l’afficher.' : 'Aperçu avec les valeurs du formulaire : ce code n’existe pas encore dans Stripe, il sera créé en enregistrant.'}</p>`}</aside>
+      </div>` })}
+    ${card({ title: 'Créer un code promo', icon: I.tag, sub: `Réservé aux nouveaux clients, dans le mode de la clé Stripe (${nav.mode || 'non configuré'}). Pour la pop-up, tape plutôt le code dans le formulaire au-dessus.`, body: html`${alertBox(promoError)}
+      <form method="post" action="/admin/code-promo" class="form-line" data-busy="Création…">
+        <div class="fld"><label for="f-pcode">Code</label><input class="in code" id="f-pcode" name="code" placeholder="RAGO15" maxlength="40" required spellcheck="false" autocomplete="off"></div>
+        <div class="fld"><label for="f-pct">Réduction (%)</label><input class="in" id="f-pct" name="pourcent" type="number" min="1" max="99" step="any" placeholder="15" required></div>
+        <div class="fld"><label for="f-duree">S’applique</label><select class="in" id="f-duree" name="duree"><option value="once">au premier paiement</option><option value="forever">à chaque paiement</option></select></div>
+        <button class="btn btn-primary" type="submit">Créer dans Stripe</button>
+      </form>` })}
     ${card({ title: 'Avis', icon: I.star, actions: reviews.length ? pill('line', `${num(shown)} affiché${shown > 1 ? 's' : ''} sur ${num(reviews.length)}`) : '', flush: true,
       body: reviews.length ? html`<div class="tw"><table class="t">
         <thead><tr><th scope="col">Joueur</th><th scope="col">Note</th><th scope="col">Avis</th><th scope="col" class="r hide-sm">Date</th><th scope="col" class="w1">Site</th></tr></thead>
@@ -851,7 +860,7 @@ export function sitePage(nav, { state, stripe, reviews, notice, count, code, err
           <td class="wraps">${r.comment}</td><td class="r num muted hide-sm">${day(r.updated_at)}</td>
           <td class="w1">${actionForm(`/admin/utilisateurs/${r.uid}/avis`, r.status === 'published' ? 'Masquer' : 'Afficher', { fields: hidden('statut', r.status === 'published' ? 'masquer' : 'afficher') })}</td></tr>`)}</tbody></table></div>`
         : empty('Pas encore d’avis : le site cache sa section Avis.', { icon: I.star }) })}`;
-  return shell(nav, 'site', 'Site et promos', body, { notice: typeof n === 'function' ? n(count, code) : n, path: '/admin/site' });
+  return shell(nav, 'site', 'Site et promos', body, { notice: typeof n === 'function' ? n(code) : n, path: '/admin/site' });
 }
 
 // ---------- the app's network tests by city and by provider (network.js) ----------
