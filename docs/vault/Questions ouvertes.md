@@ -16,10 +16,9 @@ Mode d'emploi (outil ArtifactData, collection `questions`) :
 - Dire à Sofiene dans le fil, en une ligne, quand de nouvelles questions l'attendent.
 
 ## En attente de réponse sur la page
-Au 10/11, après les réponses de Sofiene du jour (q36 à q67 traitées, voir [[Décisions]]) :
+Au 10/11, après les réponses de Sofiene du jour (q36 à q68 traitées, voir [[Décisions]]) :
 - q46 (reformulée) : quelle adresse dans les mentions légales, sans domiciliation payante ni adresse personnelle. Voir [[Conformité juridique]].
 - q65 : réglages Railway de prod (Wait for CI, Watch Paths, Healthcheck, moniteur) ; Sofiene demande à Claude de vérifier et de le lui rappeler ([[Railway]]).
-- q68 : « 30 opti 15 slots » pour la prochaine version, alors que le code de la 1.3.0 a 73 réglages gratuits et 30 actifs ([[Offres et prix]]).
 
 ## À vérifier (sans Sofiene)
 - Les 1.2.0 installées reçoivent-elles bien la 1.2.1 ? (`/api/v1/update/status`) ([[Mise à jour automatique]])
