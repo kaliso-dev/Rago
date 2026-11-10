@@ -1227,7 +1227,13 @@ fn bridge_handler(app: AppHandle) -> bridge::Handler {
             "route_start" => {
                 let lic = Arc::clone(&state.license);
                 let token = lic.route_token().map_err(|e| format!("premium:{}", e.code))?;
-                let st = route::turn_on(&token, arg("phone").as_bool().unwrap_or(false))?;
+                // "second" : nom de la carte (comme l'onglet) ; "phone": true : le premier téléphone qui partage
+                let second = match arg("second").as_str() {
+                    Some(n) if !n.is_empty() => Some(n.to_string()),
+                    _ if arg("phone").as_bool().unwrap_or(false) => route::links().links.into_iter().find(|l| l.phone).map(|l| l.name),
+                    _ => None,
+                };
+                let st = route::turn_on(&token, second)?;
                 keep_route_token(lic);
                 Ok(serde_json::to_value(st).unwrap_or_default())
             }

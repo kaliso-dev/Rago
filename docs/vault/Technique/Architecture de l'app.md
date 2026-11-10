@@ -46,7 +46,7 @@ Fermeture de la fenêtre principale : cachée si une remise est en cours ou si l
 ### Commandes exposées à l'interface (`generate_handler!`, 76 au 10/11)
 - Système et outils : `get_system_info`, `rbw_status`, `tools_scan`, `tools_clean`, `tools_apps`, `tools_remove_apps`, `tools_drivers`, `tools_windows_update`, `live_stats`, `clean_ram`, `open_task_manager`, `restart_pc`, `open_folder`, `analysis_facts`.
 - Réglages : `run_tweaks`, `cancel_run`, `is_running`, `get_history`, `clear_history`, `get_applied`, `undo_all_plan`, `sign_out_plan`, `take_repair_notice`, `minecraft_status`, `minecraft_restore`, `save_preset_file`, `read_preset_file`.
-- Réseau : `net_test`, `netopt_state`, `netopt_run`, `route_start`, `route_stop`, `route_status`, `route_token`, `route_phone`.
+- Réseau : `net_test`, `netopt_state`, `netopt_run`, `route_start`, `route_stop`, `route_status`, `route_token`, `route_links` (2e connexions possibles et diagnostic du partage de connexion du téléphone).
 - Jeux : `games_list`, `game_art`, `game_launch`, `game_add`, `game_remove`, `games_unhide`, `launchers_list`, `launcher_launch`, `launcher_icon`, `preset_icons`.
 - Barre en jeu et arrière-plan : `overlay_info`, `overlay_live`, `overlay_close`, `overlay_set_pin`, `overlay_open_app`, `background_get`, `background_set`, `session_state`, `session_set_prefs`.
 - Mise à jour : `update_ready`, `update_status`, `update_install`.
