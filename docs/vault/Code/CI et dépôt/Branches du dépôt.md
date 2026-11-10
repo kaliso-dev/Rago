@@ -5,22 +5,25 @@ maj: 2026-11-10
 ---
 # Branches du dépôt
 
-Inventaire de **toutes** les branches du dépôt GitHub au 10/11/2026 vers 16 h 30 UTC : date et message du dernier commit, pull requests, commits pas encore dans `staging` ni dans la prod, et ce que chaque branche portait. Fiche parente : [[Code de la CI et du dépôt]]. Règles et environnements : [[Branches et environnements]].
+Inventaire de **toutes** les branches du dépôt GitHub au 10/11/2026 vers 16 h 30 UTC, complété vers 18 h 50 UTC (PR #84 à #87, 3 nouvelles branches ; les autres lignes du tableau datent de 16 h 30) : date et message du dernier commit, pull requests, commits pas encore dans `staging` ni dans la prod, et ce que chaque branche portait. Fiche parente : [[Code de la CI et du dépôt]]. Règles et environnements : [[Branches et environnements]].
 
-Source : `git ls-remote` (liste et têtes des branches, lecture seule), `git log` / `git rev-list` pour les dates et les écarts, API GitHub (REST) pour les 84 pull requests. Statut : OBSERVÉ le 10/11. Aucune branche n'a été supprimée ni modifiée.
+Source : `git ls-remote` (liste et têtes des branches, lecture seule), `git log` / `git rev-list` pour les dates et les écarts, API GitHub (REST) pour les 87 pull requests. Statut : OBSERVÉ le 10/11. Aucune branche n'a été supprimée ni modifiée.
 
 ## Repères
-- **55 branches** sur GitHub. **Prod** = `claude/rago-monorepo-initial-eyj6pq` (branche par défaut, [[Netlify]] et [[Railway]] déploient depuis elle). **Pré-production** = `staging`. Les autres sont des branches de travail de Claude (`claude/<sujet>-<code>` ou `claude/project-thread-<code>`, une par fil) et une branche de transfert de vidéos (`trailer-4k-footage`).
-- `staging` (tête `9f65eac`, fusion de la PR #83 le 10/11 à 16:06 UTC) a **175 commits** que la prod n'a pas (la 1.3.0, Rago Route, l'admin, le site de la 1.3.0…). La prod a **2 commits** que `staging` n'a pas : la fusion de la PR #81 et son commit (`0d6dc6f`, CI : moins de builds), dont l'équivalent est déjà sur `staging` par la PR #78.
-- La branche `claude/project-thread-jyh9u0` (tête = fusion de la PR #81), présente plus tôt dans la journée, n'existe plus sur GitHub.
-- **Pull requests ouvertes** : #84 (`claude/project-thread-49sqc3` → `staging`, ventes de l'admin dans une seule devise, ouverte le 10/11) et **#71** (`claude/project-thread-rulzwj` → prod, bot communauté Discord en prod, ouverte depuis le 01/11).
-- Colonne « Hors staging / hors prod » : nombre de commits de la branche absents de `staging` (`9f65eac`) puis de la prod. **Une PR fusionnée laisse souvent 1 à 4 commits « absents »** : les fusions vers la prod étaient faites par écrasement (« squash », titres en « (prod, #54) (#55) ») ou des commits ont été ajoutés après la fusion. Le contenu est alors bien en place ; c'est l'état de la PR qui compte.
+- **58 branches** sur GitHub (18 h 50). **Prod** = `claude/rago-monorepo-initial-eyj6pq` (branche par défaut, [[Netlify]] et [[Railway]] déploient depuis elle). **Pré-production** = `staging`. Les autres sont des branches de travail de Claude (`claude/<sujet>-<code>` ou `claude/project-thread-<code>`, une par fil) et une branche de transfert de vidéos (`trailer-4k-footage`).
+- `staging` (tête `30f36e3`, fusion de la PR #84 le 10/11 à 18:40 UTC) a **186 commits** que la prod n'a pas (la 1.3.0, Rago Route, le site de la 1.3.0…). La prod (tête `fa22e35`, fusion de la PR #87 à 18:49 UTC) a **4 commits** que `staging` n'a pas : la PR #81 (`0d6dc6f`, CI : moins de builds, déjà sur `staging` par la PR #78) et la PR #87 (`94e30b7`, l'admin et le [[Cerveau du vault]] portés depuis `staging`), avec leurs fusions.
+- La branche `claude/project-thread-jyh9u0`, absente vers 16 h 30, a été recréée par le fil du [[Cerveau du vault]] (PR #85).
+- **Pull requests ouvertes** (18 h 50) : #86 (`claude/project-thread-0ij01e` → `staging`, « Best hitreg » par défaut, ouverte le 10/11) et **#71** (`claude/project-thread-rulzwj` → prod, bot communauté Discord en prod, ouverte depuis le 01/11).
+- Colonne « Hors staging / hors prod » : nombre de commits de la branche absents de `staging` (`9f65eac`) puis de la prod (`3d665f3`) ; pour les lignes complétées à 18 h 50 (`staging`, la prod, `49sqc3`, `49sqc3-prod`, `jyh9u0`, `0ij01e`) : `staging` `30f36e3` et la prod `fa22e35`. **Une PR fusionnée laisse souvent 1 à 4 commits « absents »** : les fusions vers la prod étaient faites par écrasement (« squash », titres en « (prod, #54) (#55) ») ou des commits ont été ajoutés après la fusion. Le contenu est alors bien en place ; c'est l'état de la PR qui compte.
 
 ## Tableau (du plus récent au plus ancien)
 | Branche | Dernier commit | Message du dernier commit | Pull requests | Hors staging / hors prod | Ce qu'elle portait (titre de sa 1re PR, sinon du commit) |
 |---|---|---|---|---|---|
-| `staging` | 10/11 | Merge pull request #83 from kaliso-dev/claude/project-thread-49sqc3 | aucune | 0 / 175 | Merge pull request #83 from kaliso-dev/claude/project-thread-49sqc3 |
-| `claude/rago-monorepo-initial-eyj6pq` | 10/11 | Merge pull request #81 from kaliso-dev/claude/ci-prod-moins-de-builds | aucune | 2 / 0 | Merge pull request #81 from kaliso-dev/claude/ci-prod-moins-de-builds |
+| `staging` | 10/11 | Admin : les ventes dans une seule devise (les $US convertis par Stripe comptent en €) | aucune | 0 / 186 | Admin : les ventes dans une seule devise (fusion de la PR #84) |
+| `claude/rago-monorepo-initial-eyj6pq` | 10/11 | (prod) Le nouveau tableau de bord /admin et le Cerveau du vault (#87) | aucune | 4 / 0 | (prod) Le nouveau tableau de bord /admin et le Cerveau du vault (fusion de la PR #87) |
+| `claude/project-thread-49sqc3-prod` | 10/11 | (prod) Le nouveau tableau de bord /admin et le Cerveau du vault arrivent en prod | #87 fusionnée → prod (10/11) | 3 / 0 | (prod) Le nouveau tableau de bord /admin et le Cerveau du vault |
+| `claude/project-thread-0ij01e` | 10/11 | Vault : cas du débit Steam bridé par le profil hitreg (PR #86) | #86 ouverte → staging | 2 / 182 | Profil hitreg : « Best hitreg » par défaut (débit Steam bridé à 15 Mbit/s) |
+| `claude/project-thread-jyh9u0` | 10/11 | Vault : PR #85 (Cerveau du vault et vault détaillé) fusionnée dans staging | #85 fusionnée → staging (10/11) | 0 / 180 | Cerveau du vault dans l'admin (/admin/cerveau) + vault détaillé fichier par fichier |
 | `claude/project-thread-voewre` | 10/11 | Vault : correctif site-check maintenant sur staging | #75 fusionnée → staging (10/11) | 0 / 142 | Vault : fiches techniques complètes pour reprendre le développement |
 | `claude/project-thread-v3d507` | 10/11 | Vault : PR #81 (CI en prod) | #78 fusionnée → staging (10/11) | 0 / 161 | Minutes GitHub Actions : moins de builds en double + vault |
 | `claude/project-thread-tzbch5` | 10/11 | Vault : décision de Sofiene sur Supabase (Pro ou migration avant le 05/12) | aucune | 2 / 138 | Vault : décision de Sofiene sur Supabase (Pro ou migration avant le 05/12) |
@@ -28,7 +31,7 @@ Source : `git ls-remote` (liste et têtes des branches, lecture seule), `git log
 | `claude/project-thread-iesde9` | 10/11 | Rago Route : pont Rago OS avec la 2e connexion, vault à jour (exe de test) | aucune | 0 / 167 | Rago Route : pont Rago OS avec la 2e connexion, vault à jour (exe de test) |
 | `claude/project-thread-bhprt3` | 10/11 | Vault : adresse des mentions légales, domiciliation plus tard (q46) | aucune | 0 / 155 | Vault : adresse des mentions légales, domiciliation plus tard (q46) |
 | `claude/project-thread-ayd1at` | 10/11 | Vault : PR #79 dans État actuel | #79 fusionnée → staging (10/11)<br>#80 fusionnée → staging (10/11) | 0 / 158 | Vault : archive « Historique des problèmes » |
-| `claude/project-thread-49sqc3` | 10/11 | Vault : PR #84 ouverte (ventes de l'admin dans une seule devise) | #77 fusionnée → staging (10/11)<br>#82 fusionnée → staging (10/11)<br>#83 fusionnée → staging (10/11)<br>#84 ouverte → staging | 3 / 178 | Tableau de bord /admin : joueurs, accès, ventes Stripe, services, journal |
+| `claude/project-thread-49sqc3` | 10/11 | Le champ « Your review » de la page compte retrouve son style, et le guide dit où sont les contrôles Stripe | #77 fusionnée → staging (10/11)<br>#82 fusionnée → staging (10/11)<br>#83 fusionnée → staging (10/11)<br>#84 fusionnée → staging (10/11) | 0 / 185 | Tableau de bord /admin : joueurs, accès, ventes Stripe, services, journal |
 | `claude/ci-prod-moins-de-builds` | 10/11 | CI : push construit seulement staging (et prod pour les tests), les autres branches pas… | #81 fusionnée → prod (10/11) | 1 / 0 | Prod : moins de builds en double dans la CI (port de la #78) |
 | `claude/project-thread-r4qi8b` | 09/11 | Vault : PR #74 fusionnée dans staging | #73 fusionnée → staging (07/11)<br>#74 fusionnée → staging (09/11) | 0 / 130 | Pont avec Rago OS et Mode jeu total |
 | `claude/project-thread-v7otam` | 04/11 | Vault : PR #72 fusionnée (04/11) | #72 fusionnée → prod (04/11) | 0 / 0 | Vault : état des lieux Stripe du 04/11 |
@@ -78,7 +81,7 @@ Source : `git ls-remote` (liste et têtes des branches, lecture seule), `git log
 ## Branches qui portent encore du travail non fusionné
 | Branche | Ce qui n'est nulle part ailleurs | À décider |
 |---|---|---|
-| `claude/project-thread-49sqc3` | 3 commits de la PR #84 (ventes de l'admin dans une seule devise, `c61dc68`, et 2 commits du vault) | PR ouverte vers `staging` |
+| `claude/project-thread-0ij01e` | 2 commits de la PR #86 (« Best hitreg » par défaut et le vault du cas) | PR ouverte vers `staging` (fil « Régler les problèmes des clients ») |
 | `claude/project-thread-rulzwj` | portage en prod du bot communauté Discord (`25ba75e`) et 2 commits du vault | PR #71 ouverte vers la prod depuis le 01/11 ([[Bot communauté Discord]]) |
 | `claude/project-thread-tzbch5` | 2 commits du vault sur Supabase (`8246bd4`, `803b9d6` : e-mail de dépassement de quota relu, décision « Pro ou migration avant le 05/12 ») | jamais proposés en PR ; leur contenu est repris dans le vault par la PR #85 du [[Cerveau du vault]] (10/11) : la branche n'a plus rien à garder (suppression : q81) |
 | `claude/project-thread-s0m3ex` | 1 commit du vault (`edfc795`, « la 1.3.0 est sur staging », 04/11) | sans doute dépassé par les notes suivantes (À VÉRIFIER) |

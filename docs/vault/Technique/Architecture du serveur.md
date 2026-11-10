@@ -32,7 +32,7 @@ Node ≥ 22.5 en modules ES, **sans framework de pages** : Hono 4 (routes) + `@h
 | `retention.js` | Purges promises par la politique de confidentialité |
 | `views.js` | Toutes les pages HTML (compte, achat, connexion admin, messages) |
 | `admin.js` + `admin-views.js` | [[Tableau de bord admin]] (`/admin/*`) : garde `ADMIN_KEY`, données, actions, pages (`staging` depuis le 10/11) ; son style et son script sont à part : `public/admin.css`, `public/admin.js` (PR #82) |
-| `brain.js` + `brain-views.js` | [[Cerveau du vault]] (`/admin/cerveau`) : lit le dépôt sur GitHub (ou le disque en local), met le vault en graphe, sert les fichiers ; page dessinée par `public/cerveau.js` et `public/cerveau.css` (PR #85 du Cerveau, fusionnée dans `staging` le 10/11, pas en prod) |
+| `brain.js` + `brain-views.js` | [[Cerveau du vault]] (`/admin/cerveau`) : lit le dépôt sur GitHub (ou le disque en local), met le vault en graphe, sert les fichiers ; page dessinée par `public/cerveau.js` et `public/cerveau.css` (PR #85 du Cerveau, `staging` le 10/11 ; en prod par la PR #87, 10/11) |
 | `sales.js` | Ventes lues dans Stripe pour `/admin` (gardées 5 min puis relues en arrière-plan, jours et mois en heure de Paris ; paiements convertis par Stripe comptés dans la devise du compte) |
 | `support.js` | Suppression RGPD partagée par `/admin` et `npm run admin -- delete-user` |
 

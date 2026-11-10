@@ -5,7 +5,7 @@ maj: 2026-11-10
 ---
 # Fils du projet
 
-Résumé de **chaque fil** du projet Claude « Rago optimizer (suite) », ouvert le 15/10 : ce que Sofiene a demandé (ses mots entre « », avec ses fautes), ce qui a été fait, ce qu'il a décidé, le résultat et ce qui reste. 28 fils au 10/11. Source : lecture des fils le 10/11 (CONFIRMÉ), croisée avec [[Pull requests]] et le dépôt. Voir aussi [[Chronologie du projet]], [[Journal]] et [[Décisions]].
+Résumé de **chaque fil** du projet Claude « Rago optimizer (suite) », ouvert le 15/10 : ce que Sofiene a demandé (ses mots entre « », avec ses fautes), ce qui a été fait, ce qu'il a décidé, le résultat et ce qui reste. 29 fils au 10/11 (liste revue à 18 h 50 UTC). Source : lecture des fils le 10/11 (CONFIRMÉ), croisée avec [[Pull requests]] et le dépôt. Voir aussi [[Chronologie du projet]], [[Journal]] et [[Décisions]].
 
 Les fils les plus riches ont leur propre note : [[Fil - Nouvelle version backlog et refonte]], [[Fil - Lister les fonctionnalités de la maquette]], [[Fil - Lancer l'essai 3 jours et le gratuit élargi]], [[Fil - Développer les proxys Minecraft]], [[Fil - Améliorer Rago OS avec le design Rago]], [[Fil - Créer le tableau de bord admin complet]].
 
@@ -45,8 +45,9 @@ Les fils les plus riches ont leur propre note : [[Fil - Nouvelle version backlog
 | 24 | Sauvegarder les clés et régler Supabase | 10/11 14:04 | 10/11 14:34 | **bloqué** : sauvegarde des clés et choix Supabase |
 | 25 | Coder la sortie 1.3.0 avec Rago Route | 10/11 14:04 | 10/11 14:33 | terminé, rangé |
 | 26 | Régler le manque de minutes GitHub Actions | 10/11 14:04 | 10/11 15:06 | terminé, rangé |
-| 27 | Créer le tableau de bord admin complet | 10/11 14:08 | 10/11 16:26 | **bloqué** : PR #84 attend « fusionne » |
-| 28 | Créer le cerveau visuel du vault | 10/11 16:04 | 10/11 | en cours (fil qui écrit cette note) |
+| 27 | Créer le tableau de bord admin complet | 10/11 14:08 | 10/11 18:49 | admin et Cerveau en prod (PR #87) ; attend le retour de Sofiene sur la prod |
+| 28 | Créer le cerveau visuel du vault | 10/11 16:04 | 10/11 17:18 | terminé, rangé (PR #85 fusionnée) |
+| 29 | Régler les problèmes des clients | 10/11 17:17 | 10/11 17:58 | attend Sofiene ; PR #86 ouverte vers `staging` |
 
 Fils cités ailleurs mais absents de la liste : un fil « Créer le profil LinkedIn de Sofiene » (personnel, hors projet Rago) ; un fil dédié au client Minecraft, fermé le 29/10 parce que le message qui l'avait lancé était une erreur ([[Client Minecraft Rago]]). Aucun fil « Mettre le site en règle juridiquement » n'a existé : le RGPD a été traité dans le fil 15.
 
@@ -204,10 +205,13 @@ Fils cités ailleurs mais absents de la liste : un fil « Créer le profil Linke
 - **Résultat** : PR #78 (le push ne construit plus que `staging`) fusionnée à 14:35. 15:04 : « hein pourquoi staging il faut en prod […] j'espère que y a pas plein de truc en staging qui ont jamais été poussé en prod » → PR #81, port du seul correctif CI en prod (15:05). Constat : `staging` a environ 160 commits de plus que la prod ; le code de l'app en prod est encore la 1.1.14. Voir [[CI GitHub Actions]].
 
 ## 27. Créer le tableau de bord admin complet
-`cmsg_01Mb4hMYwRFctv5wE2NGiASi8hPR2cwTfeEfEKYMb6dDMD` · 10/11 14:08 → 16:26 · **bloqué**. **Note complète : [[Fil - Créer le tableau de bord admin complet]].**
+`cmsg_01Mb4hMYwRFctv5wE2NGiASi8hPR2cwTfeEfEKYMb6dDMD` · 10/11 14:08 → 18:49 · l'admin complet et le [[Cerveau du vault]] sont en prod depuis la PR #87 ; attend le retour de Sofiene. **Note complète : [[Fil - Créer le tableau de bord admin complet]].**
 - Un `/admin` qui centralise tout (PR #77), refait en interface « comme si ça devait etre commercialisé » (PR #82), sans trous (PR #83), puis les ventes dans une seule devise (PR #84, ouverte). Voir [[Tableau de bord admin]].
 
 ## 28. Créer le cerveau visuel du vault
-`cmsg_01Mb4hMYwRFctv5wE2NGiASiA8Y9j1LQKyiW77QavAC9eF` · ouvert le 10/11 à 16:04 · en cours. C'est le fil qui a fait écrire cette note ; il n'est pas résumé ici.
+`cmsg_01Mb4hMYwRFctv5wE2NGiASiA8Y9j1LQKyiW77QavAC9eF` · 10/11 16:04 → 17:18 · terminé, rangé. C'est le fil qui a fait écrire cette note et le [[Cerveau du vault]] (PR #85, fusionnée dans `staging` à 17:16, en prod par la PR #87) ; il n'est pas résumé ici.
+
+## 29. Régler les problèmes des clients
+`cmsg_01Mb4hMYwRFctv5wE2NGiASiETPM3XTWkow2kGEWba4pX8` · ouvert le 10/11 à 17:17 · attend Sofiene. A ouvert la PR #86 (« Best hitreg » par défaut : « Better hitreg » bridait le débit Steam d'un joueur à 15 Mbit/s). Pas encore résumé ici.
 
 Liens : [[Chronologie du projet]] · [[Pull requests]] · [[Journal]] · [[Décisions]] · [[Personnes et services]]

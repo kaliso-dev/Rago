@@ -8,7 +8,7 @@ maj: 2026-11-10
 Voir aussi [[Prochaines étapes]], [[Questions ouvertes]], [[Journal]]. Retour à [[Projet]].
 
 ## En une phrase
-Les joueurs ont la [[Version 1.2.1]] (en ligne depuis le 31/10). La [[Version 1.3.0]] (plan gratuit à 73 réglages dont 30 actifs, essai de 3 jours, connexion Google ou Discord, Rago Route dans tous les exe) est **dans `staging`** et sortira **en une seule fois** avec le serveur et le site, après les tests de Sofiene sur Windows. `staging` a 175 commits de plus que la branche de prod (10/11).
+Les joueurs ont la [[Version 1.2.1]] (en ligne depuis le 31/10). La [[Version 1.3.0]] (plan gratuit à 73 réglages dont 30 actifs, essai de 3 jours, connexion Google ou Discord, Rago Route dans tous les exe) est **dans `staging`** et sortira **en une seule fois** avec le serveur et le site, après les tests de Sofiene sur Windows. `staging` a 186 commits de plus que la branche de prod (10/11 au soir) ; seuls le [[Tableau de bord admin]] et le [[Cerveau du vault]] ont été portés en prod (PR #87).
 
 ## Tableau
 | Sujet | État | Statut |
@@ -16,7 +16,7 @@ Les joueurs ont la [[Version 1.2.1]] (en ligne depuis le 31/10). La [[Version 1.
 | Dernière version de l'app | [[Version 1.3.0]] dans `staging` (PR #70 du 04/11 et #76 du 10/11, `app/package.json` = 1.3.0) ; dernière publiée : [[Version 1.2.1]] | CONFIRMÉ (git) |
 | Version servie aux joueurs | **1.2.1** (exe + `.sig` déposés dans Supabase) | OBSERVÉ (Sofiene, 31/10) ; `INSTALLER_VERSION` non revérifié |
 | Code app sur la branche de prod | encore **1.1.14** (`app/package.json`) : la prod ne reçoit que site + serveur, l'app part de `staging` | CONFIRMÉ |
-| Serveur de prod | mises à jour auto (RAG-24) + collecte des tests réseau (RAG-50), PR #63 fusionnée le 29/10 | CONFIRMÉ (git) ; déploiement Railway À VÉRIFIER |
+| Serveur de prod | mises à jour auto (RAG-24) + collecte des tests réseau (RAG-50), PR #63 fusionnée le 29/10 ; nouveau [[Tableau de bord admin]] et [[Cerveau du vault]], PR #87 fusionnée le 10/11 | CONFIRMÉ (git) ; déploiement Railway À VÉRIFIER |
 | Site de prod | à jour pour la 1.2.1 : section « New in 1.2 », Discord, prix réécrits, 218 tweaks (PR #59 et #66, 29/10) | CONFIRMÉ (git) |
 | Connexion Google / Discord + code email | en ligne (PR #61, 28/10) | OBSERVÉ (fil) |
 | Offre Lifetime | **59,99 $** (Sofiene, 31/10 : « c'est normal »), vendue seulement si le prix Stripe correspond | DÉCIDÉ / CONFIRMÉ (`site/src/page.html`) |
@@ -29,20 +29,21 @@ Les joueurs ont la [[Version 1.2.1]] (en ligne depuis le 31/10). La [[Version 1.
 | [[Bot communauté Discord]] | sur `staging` seulement ; à tester puis passer en prod (fil « Passer le bot Discord en prod », RAG-91) | DÉCIDÉ (Sofiene, 01/11) |
 | Version 1.3.0 | **PR #70 fusionnée dans `staging` le 04/11 au soir** (pas en prod) : contient la 1.2.2 (preset Minecraft PvP corrigé, applis préinstallées gratuites, commit `29123d4`), la fusion de la branche de prod dans staging, 73 réglages gratuits dont 30 actifs à la fois, connexion à l'app avec Google ou Discord, essai de 3 jours avec carte, [[Analyse du PC]] avec avant/après, fenêtre Premium avec les prix et résiliation dans l'app ([[Abonnement dans l'app]]), site et pages légales à jour. Rien testé sur Windows. Sofiene, 10/11 (q47) : pas de 1.2.2 seule, tout sort en une fois avec Rago Route. **PR #76 (10/11, ouverte vers `staging`)** code les décisions du 10/11 : Rago Route dans tous les exe, [[Packet Optimizer]] entièrement Premium, essai sur le mensuel, plus de remboursement, normes de l'[[Analyse du PC]] par joueur, signature « KALISO and RAGO ». Plan gratuit confirmé par Sofiene le 10/11 : 73 réglages dont 30 actifs (q68, « ah nan oui c'est bien ça 73 réglages gratuits dont 30 actifs pardon »). **#76 fusionnée dans `staging` le 10/11** (« tu peux tout push ») ; prochaine étape : tester l'exe de test sur Windows | CONFIRMÉ (git) |
 | [[Conformité juridique]] | pages légales à jour pour l'essai et la connexion (04/11) ; **manquent l'identité et l'adresse du vendeur** : Sofiene n'est pas encore inscrit comme vendeur et a 17 ans (q44, q46, q49) | À RÉGLER par Sofiene |
-| [[Tableau de bord admin]] | `/admin` complet (joueurs, accès, bannissement, ventes Stripe, services, journal) : **dans `staging` depuis le 10/11** (PR #77) ; en prod, `/admin` reste l'ancienne page. Interface refaite à la demande de Sofiene (bugs, rapidité, menu, graphiques, export CSV) : **PR #82 dans `staging` depuis le 10/11**, puis la #83 (mise en page sans trous, Stripe seulement dans Services) ; la #84 (ventes dans une seule devise) est ouverte ; pas en prod | CONFIRMÉ (git) |
-| [[Cerveau du vault]] | `/admin/cerveau` : le vault en graphe animé façon Obsidian, lecteur de notes et de n'importe quel fichier du dépôt, derrière la clé admin (Abel s'en sert avec la même clé, choix de Sofiene du 10/11). Code fini et testé, **dans `staging` depuis le 10/11** (PR #85), pas en prod ; `CERVEAU_GITHUB_TOKEN` à mettre dans Railway avant que le dépôt passe en privé | CONFIRMÉ (git) |
+| [[Tableau de bord admin]] | `/admin` complet (joueurs, accès, bannissement, ventes Stripe dans une seule devise, services, site et promos, tests réseau, journal) : **en prod depuis le 10/11 au soir** (PR #87, « il faut le push sur la prod maintenant »), avec la nouvelle interface (#82), la mise en page sans trous (#83) et les ventes en une devise (#84), toutes passées par `staging` le 10/11 ; l'ancienne page `/admin` n'existe plus. Seulement l'admin : la 1.3.0 reste dans `staging` | CONFIRMÉ (git) ; déploiement Railway : voir « Serveur de prod » |
+| [[Cerveau du vault]] | `/admin/cerveau` : le vault en graphe animé façon Obsidian, lecteur de notes et de n'importe quel fichier du dépôt, derrière la clé admin (Abel s'en sert avec la même clé, choix de Sofiene du 10/11). **Dans `staging` depuis le 10/11** (PR #85) et **en prod depuis le 10/11 au soir** (PR #87, « j'ai ajouté une page cerveau il faut push avec ») ; lit le vault de `staging` sur GitHub ; `CERVEAU_GITHUB_TOKEN` à mettre dans Railway (staging et prod) avant que le dépôt passe en privé | CONFIRMÉ (git) |
 | [[Linear]] | remis à jour le 01/11 à partir du vault | CONFIRMÉ |
 | Vault Obsidian | créé le 31/10 ; règle n°1 : il doit correspondre en tout point à l'état du projet. **Détaillé le 10/11** (demande de Sofiene) : 341 notes, dont une fiche par fichier de code (230 notes dans `Code/`, 7 cartes), l'histoire du projet (`Historique/`, 11 notes) et l'étude de marché ; 24 nouvelles questions (q70 à q93) | DÉCIDÉ |
 
 ## PR (10/11)
-- Fusionnée le 10/11 dans `staging` : #84 (ventes du [[Tableau de bord admin]] dans une seule devise : les paiements en $US convertis par Stripe comptent en €), avec la demande de Sofiene de mettre l'admin en prod.
-- Fusionnée le 10/11 dans `staging` : #85 ([[Cerveau du vault]] et vault détaillé), sur « fusionne » de Sofiene. Pas en prod.
-- Fusionnée le 10/11 dans `staging` : #83 ([[Tableau de bord admin]] sans trous de mise en page, contrôles Stripe seulement dans Services), sur « fusionne » de Sofiene. Pas en prod.
-- Fusionnée le 10/11 dans `staging` : #82 (refonte de l'interface du [[Tableau de bord admin]], bugs corrigés, pages plus rapides), sur « fusionne et push sur staging » de Sofiene. Pas en prod.
+- Fusionnée le 10/11 dans la branche de prod : #87 ([[Tableau de bord admin]] et [[Cerveau du vault]] en prod, sans rien de la 1.3.0), sur « il faut le push sur la prod maintenant et qu'il soit fonctionnel normalement […] j'ai ajouté une page cerveau il faut push avec » de Sofiene.
+- Fusionnée le 10/11 dans `staging` : #84 (ventes du [[Tableau de bord admin]] dans une seule devise : les paiements en $US convertis par Stripe comptent en €), avec la demande de Sofiene de mettre l'admin en prod. En prod par la #87.
+- Fusionnée le 10/11 dans `staging` : #85 ([[Cerveau du vault]] et vault détaillé), sur « fusionne » de Sofiene. Le Cerveau est en prod par la #87.
+- Fusionnée le 10/11 dans `staging` : #83 ([[Tableau de bord admin]] sans trous de mise en page, contrôles Stripe seulement dans Services), sur « fusionne » de Sofiene. En prod par la #87.
+- Fusionnée le 10/11 dans `staging` : #82 (refonte de l'interface du [[Tableau de bord admin]], bugs corrigés, pages plus rapides), sur « fusionne et push sur staging » de Sofiene. En prod par la #87.
 - Fusionnée le 10/11 dans la branche de prod : #81 (seulement les déclencheurs CI de la #78), sur « il faut en prod » de Sofiene.
 - Fusionnée le 10/11 dans `staging` : #80 (vault seulement : la #79 notée dans cette page).
 - Fusionnée le 10/11 dans `staging` : #79 (vault seulement : archive [[Historique des problèmes]], bug d'`availability()` dans [[Bugs et incidents]]), sur demande de Sofiene (« fusionner push et tout »).
-- Fusionnée le 10/11 dans `staging` : #77 ([[Tableau de bord admin]] : joueurs, accès, bannissement, ventes Stripe, services, journal), sur « fusionne » de Sofiene. Pas en prod.
+- Fusionnée le 10/11 dans `staging` : #77 ([[Tableau de bord admin]] : joueurs, accès, bannissement, ventes Stripe, services, journal), sur « fusionne » de Sofiene. En prod par la #87.
 - Fusionnée le 10/11 dans `staging` : #78 (moins de builds en double dans la CI, vault des minutes GitHub Actions, [[CI GitHub Actions]]), sur « fusionne » de Sofiene.
 - Fusionnée le 10/11 dans `staging` : #76 (sortie 1.3.0 avec Rago Route, décisions du 10/11), sur « tu peux tout push » de Sofiene ; elle contenait aussi les commits de la #75 (vault technique), fusionnés du même coup.
 - #75 (vault technique complet : [[Reprendre le développement]] et fiches par brique, `CLAUDE.md` par dossier) : son contenu est dans `staging` par la #76 (10/11).
@@ -64,6 +65,6 @@ Les joueurs ont la [[Version 1.2.1]] (en ligne depuis le 31/10). La [[Version 1.
 6. Avant la prod de l'essai : inscrire sa mère comme vendeuse et régler l'adresse ([[Conformité juridique]]).
 7. Rago Route : faire voir la 4G du téléphone à Windows (en cours, 10/11). [[Rago OS]] : confirmer le test de l'exe test5 (« je crois avoir testé hier »).
 8. GitHub : passer `network-server-rago` en public (libère les minutes) ; en novembre, `rago` doit être public pendant les builds ; `rago` en privé pour de bon le 1er décembre ([[CI GitHub Actions]]).
-9. Essayer le [[Tableau de bord admin]] avec sa nouvelle interface (PR #82, dans `staging` depuis le 10/11) sur `rago-staging.up.railway.app/admin` ; la prod suivra par une PR « (prod) ».
-10. [[Cerveau du vault]] (dans `staging` depuis le 10/11) : créer le jeton GitHub en lecture seule et le mettre dans Railway (`CERVEAU_GITHUB_TOKEN`) avant le passage du dépôt en privé.
+9. Essayer le [[Tableau de bord admin]] en prod (`account.rago-optimizer.com/admin`, même clé `ADMIN_KEY`, PR #87 du 10/11) : vraies ventes, joueurs, Services, Cerveau. Si Railway n'a pas redéployé tout seul, « Redeploy » sur le service de prod ([[Railway]]).
+10. [[Cerveau du vault]] (en prod depuis le 10/11) : créer le jeton GitHub en lecture seule et le mettre dans Railway, staging **et** prod (`CERVEAU_GITHUB_TOKEN`), avant le passage du dépôt en privé.
 11. Répondre aux questions q70 à q93 sur la page « Questions du vault Rago » ([[Questions ouvertes]]).

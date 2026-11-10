@@ -9,7 +9,7 @@ maj: 2026-11-10
 
 Les routes du tableau de bord `/admin` : connexion par `ADMIN_KEY`, données des pages (comptes, joueurs, ventes, services, journal, site, tests réseau, Cerveau) et toutes les actions sur un joueur. L'affichage est dans [[admin-views.js]]. Ne pas confondre avec [[admin.js (page admin)]] (script du navigateur) et [[admin.js (script serveur)]] (`npm run admin`). Fiche parente : [[Code du serveur]]. Fonctionnalité : [[Tableau de bord admin]].
 
-(code de `staging` @ `9f65eac`, PR #83 comprise, 10/11 ; routes du Cerveau : PR #85 du Cerveau, fusionnée dans `staging` le 10/11, pas en prod)
+(code de `staging` @ `30f36e3`, 10/11 ; le même fichier est en prod depuis la PR #87 du 10/11, routes du Cerveau comprises. En prod, `community` vaut `null` : la ligne « Bot communauté » de Services dit « Éteint »)
 
 ## Rôle et place dans l'ensemble
 

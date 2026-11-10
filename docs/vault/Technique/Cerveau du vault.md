@@ -9,7 +9,7 @@ Le vault Obsidian du projet (`docs/vault/`) dessiné comme un cerveau : chaque n
 
 Demandé par Sofiene le 10/11 : « une vision graphique du cerveau comme obsidian avec un schéma ou on voir les connexcion neuronale on pourra aussi ouvrir n'importe quel fichier et le lire tout l'animation de schéma des connexion doit etre parfaite et fluide […] il faudrait meme que ça soit juste accessible depuis l'interface admin ».
 
-**Statut (10/11)** : code fini et testé, **dans `staging` depuis le 10/11** (PR #85, fusionnée sur « fusionne » de Sofiene). Pas en prod : la prod suivra par une PR « (prod) ». Pour que la page lise le dépôt une fois privé, il faut `CERVEAU_GITHUB_TOKEN` dans Railway.
+**Statut (10/11)** : **dans `staging` depuis le 10/11** (PR #85, fusionnée sur « fusionne » de Sofiene) et **en prod depuis le 10/11 au soir** (PR #87 du [[Tableau de bord admin]], sur « il faut le push sur la prod maintenant […] j'ai ajouté une page cerveau il faut push avec »). Pour que la page lise le dépôt une fois privé, il faut `CERVEAU_GITHUB_TOKEN` dans Railway, staging et prod.
 
 ## Accès
 - Menu de `/admin` → section **Projet** → **Cerveau**. Adresse : `https://account.rago-optimizer.com/admin/cerveau` (staging : `rago-staging.up.railway.app/admin/cerveau`).

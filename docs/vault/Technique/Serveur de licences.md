@@ -18,7 +18,7 @@ https://account.rago-optimizer.com (aussi `rago-production.up.railway.app`, qui 
 - **Achat** : `/buy` (abonnement, `?promo=CODE`, `?ref=CODE`), `/buy/lifetime`, `/checkout/success`, webhook Stripe.
 - **API de l'app** (`/api/v1/…`) : licence (connexion, activation, rafraîchissement), compte, `/plans`, `/promo`, `/public-key`, `/installer`, `/update/:target/:arch/:current` + `/update/file/:version` + `/update/status` ([[Mise à jour automatique]]), envoi des tests réseau ([[Test réseau]]), jeton Rago Route `POST /route/token` (08/11, Premium actif seulement, 6 h ; sur staging, e-mails de `ROUTE_TESTERS` seulement ; voir [[Proxy]] ; sur `staging` depuis le 08/11, pas en prod).
 - **Téléchargement** : `/download` (lien signé 5 min vers l'exe le plus récent du bucket `downloads`), `/download/status`.
-- **Admin** (`/admin`, en français) : en prod, pop-up promo, vérification Stripe et Discord, `/admin/reseau` + `/admin/reseau.csv` ([[Proxy]]). Sur `staging` depuis le 10/11 (PR #77), pas encore en prod : le [[Tableau de bord admin]] complet (joueurs, accès, bannissement, ventes Stripe, services, journal). `/acces/:key` : accès de l'équipe. `/healthz`.
+- **Admin** (`/admin`, en français) : le [[Tableau de bord admin]] complet (joueurs, accès, bannissement, ventes Stripe, services avec la vérification Stripe et Discord, site et promos avec la pop-up, tests réseau `/admin/reseau` + `/admin/reseau.csv` ([[Proxy]]), journal, [[Cerveau du vault]]) ; dans `staging` depuis le 10/11 (PR #77 à #85), en prod depuis le 10/11 (PR #87). `/acces/:key` : accès de l'équipe. `/healthz`.
 
 ## Commandes support (`npm run admin -- <commande>`)
 Avec la PR #77, chacune a son bouton dans le [[Tableau de bord admin]] (sauf `export-keys` et `create-user`).
