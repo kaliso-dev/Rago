@@ -37,7 +37,7 @@ Vue d'ensemble technique : [[Architecture]]. **Pour coder ou dépanner : commenc
   - Site : [[Site]] · Rago Route : [[Infrastructure Rago Route]]
 - **Design** : [[Charte graphique]] · [[Voix et ton]] · [[Refonte glass]]
 - **Marketing** : [[Marketing]] · [[Discord]] · [[Partenaires et créateurs]] · [[Promotions et affiliation]] · [[Trailer 1.2]] · [[Vidéos YouTube]]
-- **Suivi** : [[Ventes Stripe]] · [[Conformité juridique]] · [[Bugs et incidents]] · [[Problèmes joueurs]] · [[Linear]] · [[Personnes et services]] · [[Sources]]
+- **Suivi** : [[Ventes Stripe]] · [[Conformité juridique]] · [[Bugs et incidents]] · [[Problèmes joueurs]] · [[Historique des problèmes]] · [[Linear]] · [[Personnes et services]] · [[Sources]]
 
 ## Statuts utilisés dans les notes
 CONFIRMÉ (vérifié dans une source primaire : code, git, réponse HTTP) · DÉCIDÉ (décision datée de Sofiene) · OBSERVÉ (lu dans un fil ou Linear, non revérifié) · À VÉRIFIER · À DÉCIDER · OBSOLÈTE. **La décision la plus récente de Sofiene prime.**

@@ -1,7 +1,7 @@
 ---
 type: registre
 tags: [support, suivi]
-maj: 2026-11-01
+maj: 2026-11-10
 ---
 # Problèmes joueurs
 
@@ -11,6 +11,10 @@ Pour diagnostiquer : demander les logs `%APPDATA%\gg.rago.optimizer\logs` ([[App
 
 | Date | Joueur / version | Problème | Réponse |
 |---|---|---|---|
+| 03/11 | joueur, compte gratuit | boost du serveur sans Premium | son Discord avait déjà eu la récompense boost le 11/10 sur un autre compte Rago (une fois par compte Discord) ; détails dans [[Historique des problèmes]] |
+| 02/11 | joueur RBW, 1.2.1 | ping de 65 à 220 ms et Minecraft qui crashe toutes les 2 min | logs : tweaks AMD et profil mémoire 16 Go appliqués sur un PC Intel/NVIDIA 8 Go (bug d'`availability()`, [[Bugs et incidents]]) ; « Undo all » puis redémarrer |
+| 02/11 | joueur, 1.2.1 | clavier filaire qui ne répond plus après des tweaks | « Undo all » au clavier visuel puis redémarrer, sinon `rst_queue`, sinon point de restauration ; cause non confirmée (suspects `in_queue`, `kbm_thread`, `usb_msi`) |
+| 02/11 | nouveau client, portable Intel Core Ultra | app jugée compliquée ; « Optimize and play » verrouillé | parcours gratuit en 3 étapes ; « Optimize and play » est Premium, utiliser « Play » |
 | 29/10 | 1.2.1 | Hitreg meilleur, mais curseur invisible en plein écran et borderless après « Optimize and play » sur Minecraft ; ping plus instable | désactiver « Fullscreen optimizations » (recherche dans Rago) puis redémarrer ; dans le [[Packet Optimizer]], Latence un peu à droite et Réactivité un peu à gauche, ou profil stable |
 | 19/10 | joueur, Windows 11 en anglais | app bloquée au lancement par Smart App Control (exe non signé) | désactiver Smart App Control ; plus de nouvelles du joueur, suivi arrêté le 01/11 (RAG-84 annulé, [[Bugs et incidents]]) |
 | 16/10 | cliente, 1.1.14 | erreur WebView2 au lancement | solution et cause expliquées, app non modifiée (fil « Erreur WebView2 chez une cliente ») |
