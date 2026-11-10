@@ -887,12 +887,13 @@ pub fn links_of(all: &[Nic]) -> Vec<Link> {
     v
 }
 
-/// Partage de connexion USB (Android : « Remote NDIS », iPhone : « Apple Mobile Device Ethernet ») ou modem cellulaire,
+/// Partage de connexion USB (Android : « Remote NDIS », iPhone : « Apple Mobile Device Ethernet »), par Bluetooth
+/// (« Bluetooth Device (Personal Area Network) ») ou modem cellulaire,
 /// d'après la description de la carte ou son type (243 et 244 : haut débit mobile).
 pub fn is_cellular(description: &str, if_type: u32) -> bool {
     let d = description.to_lowercase();
     matches!(if_type, 243 | 244)
-        || ["remote ndis", "rndis", "apple mobile device ethernet", "iphone", "android", "usb tethering", "mobile broadband"].iter().any(|k| d.contains(k))
+        || ["remote ndis", "rndis", "apple mobile device ethernet", "iphone", "android", "usb tethering", "mobile broadband", "personal area network"].iter().any(|k| d.contains(k))
 }
 
 /// Cartes réseau actives avec une adresse IPv4 (Windows ; vide ailleurs).
@@ -911,6 +912,9 @@ pub fn nics() -> Vec<Nic> {
 #[derive(Clone, Debug)]
 pub struct Adapter {
     pub description: String,
+    /// connectée (pour un téléphone : partage activé)
+    pub up: bool,
+    pub gateway: bool,
 }
 
 /// Appareil USB branché, vu par le gestionnaire de périphériques.
@@ -934,28 +938,75 @@ fn vid_pid(id: &str) -> Option<(u16, u16)> {
     Some((hex("VID_")?, hex("PID_")?))
 }
 
-/// Ce que l'onglet dit quand aucun téléphone ne partage encore sa 4G (codes traduits dans l'app) :
-/// - "iphone_share" : iPhone branché, pilote Apple présent, partage de connexion pas activé ;
-/// - "iphone_driver" : iPhone branché, une partie a un pilote manquant ou en erreur (pilote Apple à installer) ;
-/// - "iphone_setup" : iPhone branché sans carte réseau Apple (partage pas activé, ou pilote Apple manquant) ;
-/// - "android_share" : Android branché, « Partage via USB » pas activé ;
-/// - "plug" : aucun téléphone vu (pas branché, ou câble qui ne fait que charger).
-/// None : un téléphone partage déjà sa connexion (l'interrupteur s'affiche).
-pub fn phone_help_of(usb: &[UsbDev], adapters: &[Adapter], links: &[Link]) -> Option<&'static str> {
+/// Une étape du diagnostic du partage de connexion USB (code traduit dans l'app) et son résultat.
+#[derive(Clone, Debug, Serialize, PartialEq)]
+pub struct Step {
+    pub code: &'static str,
+    pub ok: bool,
+}
+
+/// Diagnostic du partage de connexion USB, quand aucun téléphone ne donne encore sa 4G.
+#[derive(Clone, Debug, Serialize, PartialEq)]
+pub struct PhoneCheck {
+    /// "iphone", "android", ou None : aucun téléphone vu sur l'USB
+    pub phone: Option<&'static str>,
+    /// étapes dans l'ordre ; on s'arrête à la première ratée
+    pub steps: Vec<Step>,
+    /// pourquoi ça ne marche pas (première étape ratée) : "usb", "apple_usb", "apple_net", "share_iphone",
+    /// "share_android" ou "internet"
+    pub why: &'static str,
+    /// ce que Windows voit (appareils USB sans leur numéro de série, cartes de partage, pilote Apple), à copier
+    /// pour l'assistance
+    pub details: Vec<String>,
+}
+
+/// Le diagnostic, à partir de ce que Windows voit : appareils USB branchés, cartes réseau (même débranchées), et si
+/// le pilote de partage d'Apple (« Apple Mobile Device Ethernet », `netaapl`) est installé. None : un téléphone
+/// donne déjà sa 4G (l'interrupteur s'affiche).
+pub fn phone_check_of(usb: &[UsbDev], adapters: &[Adapter], links: &[Link], apple_net_driver: bool) -> Option<PhoneCheck> {
     if links.iter().any(|l| l.phone) {
         return None;
     }
-    let ids: Vec<(u16, u16)> = usb.iter().filter_map(|d| vid_pid(&d.id)).collect();
-    if ids.iter().any(|&(v, p)| v == 0x05AC && (0x1290..=0x12AF).contains(&p)) {
-        let apple_net = adapters.iter().any(|a| a.description.to_lowercase().contains("apple mobile device ethernet"));
-        let broken = usb.iter().any(|d| d.problem && vid_pid(&d.id).is_some_and(|(v, _)| v == 0x05AC));
-        return Some(if apple_net {
-            "iphone_share"
-        } else if broken {
-            "iphone_driver"
-        } else {
-            "iphone_setup"
-        });
+    let mut details: Vec<String> = usb
+        .iter()
+        .map(|d| {
+            // USB\VID_05AC&PID_12A8&MI_02\<numéro> : le numéro de série reste sur le PC
+            let id: String = d.id.splitn(3, '\\').take(2).collect::<Vec<_>>().join("\\");
+            format!("{id} · {} · {}{}", d.class, d.service, if d.problem { " · PROBLÈME" } else { "" })
+        })
+        .collect();
+    for a in adapters.iter().filter(|a| is_cellular(&a.description, 0) || a.description.to_lowercase().contains("apple")) {
+        details.push(format!("carte « {} » · {} · {}", a.description, if a.up { "connectée" } else { "déconnectée" }, if a.gateway { "Internet" } else { "sans Internet" }));
+    }
+    details.push(format!("pilote de partage Apple (netaapl) : {}", if apple_net_driver { "installé" } else { "absent" }));
+    let mut steps = Vec::new();
+    // déroule les étapes jusqu'à la première ratée
+    let mut run = |list: &[(&'static str, bool, &'static str)], phone: Option<&'static str>| {
+        for &(code, ok, why) in list {
+            steps.push(Step { code, ok });
+            if !ok {
+                return PhoneCheck { phone, steps: std::mem::take(&mut steps), why, details: details.clone() };
+            }
+        }
+        // tout passe mais pas de 4G : la carte n'a pas d'Internet
+        PhoneCheck { phone, steps: std::mem::take(&mut steps), why: "internet", details: details.clone() }
+    };
+    let apple = |d: &&UsbDev| vid_pid(&d.id).is_some_and(|(v, _)| v == 0x05AC);
+    let iphone = usb.iter().any(|d| vid_pid(&d.id).is_some_and(|(v, p)| v == 0x05AC && (0x1290..=0x12AF).contains(&p)));
+    if iphone {
+        let apple_devs: Vec<&UsbDev> = usb.iter().filter(apple).collect();
+        let usb_driver = apple_devs.iter().any(|d| d.service.to_lowercase().starts_with("usbaapl")) && !apple_devs.iter().any(|d| d.problem);
+        let net = adapters.iter().find(|a| a.description.to_lowercase().contains("apple mobile device ethernet"));
+        return Some(run(
+            &[
+                ("usb", true, "usb"),
+                ("apple_usb", usb_driver, "apple_usb"),
+                ("apple_net", apple_net_driver || net.is_some(), "apple_net"),
+                ("share", net.is_some_and(|a| a.up), "share_iphone"),
+                ("internet", net.is_some_and(|a| a.up && a.gateway), "internet"),
+            ],
+            Some("iphone"),
+        ));
     }
     // un disque ou une clé du même fabricant (Samsung fait aussi des SSD) n'est pas un téléphone
     let storage = |v: u16, p: u16| {
@@ -966,30 +1017,41 @@ pub fn phone_help_of(usb: &[UsbDev], adapters: &[Adapter], links: &[Link]) -> Op
             }
         })
     };
-    if ids.iter().any(|&(v, p)| ANDROID_VIDS.contains(&v) && !storage(v, p)) {
-        return Some("android_share");
+    let android = usb.iter().any(|d| {
+        let c = d.class.to_lowercase();
+        vid_pid(&d.id).is_some_and(|(v, p)| (ANDROID_VIDS.contains(&v) && !storage(v, p)) || (v != 0x05AC && (c == "wpd" || c == "androidusbdeviceclass")))
+    });
+    if android {
+        let net = adapters.iter().find(|a| {
+            let d = a.description.to_lowercase();
+            d.contains("remote ndis") || d.contains("rndis") || d.contains("usb tethering")
+        });
+        return Some(run(
+            &[("usb", true, "usb"), ("share", net.is_some_and(|a| a.up), "share_android"), ("internet", net.is_some_and(|a| a.up && a.gateway), "internet")],
+            Some("android"),
+        ));
     }
-    Some("plug")
+    Some(run(&[("usb", false, "usb")], None))
 }
 
-/// Les 2e connexions possibles de ce PC et, s'il n'y a pas encore de téléphone, quoi faire (pour l'onglet).
+/// Les 2e connexions possibles de ce PC et, s'il n'y a pas encore de téléphone, le diagnostic (pour l'onglet).
 #[derive(Clone, Debug, Serialize)]
 pub struct LinksView {
     pub links: Vec<Link>,
-    pub help: Option<&'static str>,
+    pub check: Option<PhoneCheck>,
 }
 
 pub fn links() -> LinksView {
     #[cfg(windows)]
-    let (nics, adapters, usb) = {
+    let (nics, adapters, usb, apple_net) = {
         let (n, a) = win::scan();
-        (n, a, win::usb_devices())
+        (n, a, win::usb_devices(), win::driver_installed("netaapl"))
     };
     #[cfg(not(windows))]
-    let (nics, adapters, usb): (Vec<Nic>, Vec<Adapter>, Vec<UsbDev>) = (Vec::new(), Vec::new(), Vec::new());
+    let (nics, adapters, usb, apple_net): (Vec<Nic>, Vec<Adapter>, Vec<UsbDev>, bool) = (Vec::new(), Vec::new(), Vec::new(), false);
     let links = links_of(&nics);
-    let help = phone_help_of(&usb, &adapters, &links);
-    LinksView { links, help }
+    let check = phone_check_of(&usb, &adapters, &links, apple_net);
+    LinksView { links, check }
 }
 
 impl Engine {
@@ -1844,7 +1906,7 @@ mod win {
             let a = unsafe { &*p };
             p = a.Next;
             let description = wide(a.Description);
-            all.push(Adapter { description: description.clone() });
+            all.push(Adapter { description: description.clone(), up: a.OperStatus == IfOperStatusUp, gateway: !a.FirstGatewayAddress.is_null() });
             if a.OperStatus != IfOperStatusUp || a.IfType == IF_TYPE_SOFTWARE_LOOPBACK {
                 continue;
             }
@@ -1887,6 +1949,14 @@ mod win {
             });
         }
         (out, all)
+    }
+
+    /// Pilote installé dans Windows (magasin des pilotes), d'après le début du nom de son .inf (par exemple `netaapl`).
+    pub fn driver_installed(prefix: &str) -> bool {
+        let root = std::env::var("SystemRoot").unwrap_or_else(|_| "C:\\Windows".into());
+        std::fs::read_dir(format!("{root}\\System32\\DriverStore\\FileRepository"))
+            .map(|r| r.flatten().any(|e| e.file_name().to_string_lossy().to_lowercase().starts_with(prefix)))
+            .unwrap_or(false)
     }
 
     /// Appareils USB branchés (identifiant, classe, service, problème de pilote), par le gestionnaire de périphériques.
@@ -2089,26 +2159,47 @@ mod tests {
         assert!(is_cellular("Generic Mobile Broadband Adapter", 243));
         assert!(!is_cellular("Intel(R) Wi-Fi 6 AX201 160MHz", 71));
         assert!(!is_cellular("Realtek PCIe GbE Family Controller", 6));
+        assert!(is_cellular("Bluetooth Device (Personal Area Network)", 6));
         assert!(is_phone_hotspot(Ipv4Addr::new(172, 20, 10, 1)));
         assert!(!is_phone_hotspot(Ipv4Addr::new(192, 168, 1, 254)));
     }
 
     #[test]
-    fn phone_help() {
+    fn phone_check() {
         let dev = |id: &str, class: &str, service: &str| UsbDev { id: id.into(), class: class.into(), service: service.into(), problem: false };
-        let ad = |d: &str| Adapter { description: d.into() };
-        let iphone = [dev(r"USB\VID_05AC&PID_12A8\00008110", "USB", "usbccgp")];
-        assert_eq!(phone_help_of(&iphone, &[], &[]), Some("iphone_setup"));
-        assert_eq!(phone_help_of(&iphone, &[ad("Apple Mobile Device Ethernet")], &[]), Some("iphone_share"));
-        let no_driver = [iphone[0].clone(), UsbDev { problem: true, ..dev(r"USB\VID_05AC&PID_12A8&MI_02\7&2", "", "") }];
-        assert_eq!(phone_help_of(&no_driver, &[], &[]), Some("iphone_driver"));
-        assert_eq!(phone_help_of(&iphone, &[], &[Link { name: "Ethernet 2".into(), phone: true }]), None);
-        let samsung_phone = [dev(r"USB\VID_04E8&PID_6860\R58M", "USB", "usbccgp"), dev(r"USB\VID_04E8&PID_6860&MI_00\6&1", "WPD", "WUDFWpdMtp")];
-        assert_eq!(phone_help_of(&samsung_phone, &[], &[]), Some("android_share"));
-        let samsung_ssd = [dev(r"USB\VID_04E8&PID_4001\0123", "SCSIAdapter", "UASPStor")];
-        assert_eq!(phone_help_of(&samsung_ssd, &[], &[]), Some("plug"));
+        let ad = |d: &str, up, gateway| Adapter { description: d.into(), up, gateway };
+        let why = |c: Option<PhoneCheck>| c.map(|c| c.why);
+        // rien de branché (ou câble qui ne fait que charger)
         let mouse = [dev(r"USB\VID_046D&PID_C52B\5&1", "USB", "usbccgp")];
-        assert_eq!(phone_help_of(&mouse, &[], &[]), Some("plug"));
+        assert_eq!(why(phone_check_of(&mouse, &[], &[], false)), Some("usb"));
+        // iPhone sans le pilote USB d'Apple (vu seulement comme appareil photo)
+        let bare = [dev(r"USB\VID_05AC&PID_12A8\0000", "USB", "usbccgp"), dev(r"USB\VID_05AC&PID_12A8&MI_00\7&1", "WPD", "WUDFWpdMtp")];
+        let c = phone_check_of(&bare, &[], &[], false).unwrap();
+        assert_eq!((c.phone, c.why, c.steps.len()), (Some("iphone"), "apple_usb", 2));
+        assert_eq!(c.details[0], r"USB\VID_05AC&PID_12A8 · USB · usbccgp");
+        // pilote USB d'Apple, mais pas le pilote de partage
+        let aapl = [dev(r"USB\VID_05AC&PID_12A8\0000", "USB", "usbccgp"), dev(r"USB\VID_05AC&PID_12A8&MI_01\7&2", "USB", "usbaapl64")];
+        assert_eq!(why(phone_check_of(&aapl, &[], &[], false)), Some("apple_net"));
+        // pilotes là, partage pas activé
+        assert_eq!(why(phone_check_of(&aapl, &[], &[], true)), Some("share_iphone"));
+        assert_eq!(why(phone_check_of(&aapl, &[ad("Apple Mobile Device Ethernet", false, false)], &[], false)), Some("share_iphone"));
+        // partage activé mais pas d'Internet
+        assert_eq!(why(phone_check_of(&aapl, &[ad("Apple Mobile Device Ethernet", true, false)], &[], true)), Some("internet"));
+        // ça marche : plus de diagnostic
+        assert_eq!(phone_check_of(&aapl, &[], &[Link { name: "Ethernet 2".into(), phone: true }], true), None);
+        // pilote en erreur
+        let broken = [aapl[0].clone(), UsbDev { problem: true, ..aapl[1].clone() }];
+        assert_eq!(why(phone_check_of(&broken, &[], &[], true)), Some("apple_usb"));
+        // Android : partage USB pas activé, puis activé
+        let samsung = [dev(r"USB\VID_04E8&PID_6860\R58M", "USB", "usbccgp"), dev(r"USB\VID_04E8&PID_6860&MI_00\6&1", "WPD", "WUDFWpdMtp")];
+        assert_eq!(why(phone_check_of(&samsung, &[], &[], false)), Some("share_android"));
+        assert_eq!(why(phone_check_of(&samsung, &[ad("Remote NDIS based Internet Sharing Device", true, false)], &[], false)), Some("internet"));
+        // fabricant inconnu, mais vu comme téléphone (MTP)
+        let other = [dev(r"USB\VID_1EBF&PID_7F29&MI_00\6&1", "WPD", "WUDFWpdMtp")];
+        assert_eq!(why(phone_check_of(&other, &[], &[], false)), Some("share_android"));
+        // un SSD Samsung n'est pas un téléphone
+        let ssd = [dev(r"USB\VID_04E8&PID_4001\0123", "SCSIAdapter", "UASPStor")];
+        assert_eq!(why(phone_check_of(&ssd, &[], &[], false)), Some("usb"));
     }
 
     #[test]

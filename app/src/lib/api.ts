@@ -123,12 +123,23 @@ export interface RouteLink {
   phone: boolean;
 }
 
-/** Ce qui manque pour la 4G du téléphone (route.rs `phone_help_of`) ; null quand un téléphone partage déjà. */
-export type RouteHelp = "iphone_share" | "iphone_driver" | "iphone_setup" | "android_share" | "plug";
+/** Étapes du diagnostic du partage USB (route.rs `phone_check_of`). */
+export type RouteStep = "usb" | "apple_usb" | "apple_net" | "share" | "internet";
+export type RouteWhy = "usb" | "apple_usb" | "apple_net" | "share_iphone" | "share_android" | "internet";
+
+/** Diagnostic quand aucun téléphone ne donne encore sa 4G : étapes jusqu'à la première ratée, et pourquoi. */
+export interface RouteCheck {
+  phone: "iphone" | "android" | null;
+  steps: { code: RouteStep; ok: boolean }[];
+  why: RouteWhy;
+  /** ce que Windows voit, à copier pour l'assistance */
+  details: string[];
+}
 
 export interface RouteLinks {
   links: RouteLink[];
-  help: RouteHelp | null;
+  /** null quand un téléphone donne déjà sa 4G */
+  check: RouteCheck | null;
 }
 
 export interface RoutePath {
@@ -664,10 +675,15 @@ const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
 
 // démo de Rago Route : allumé depuis `on`, une partie en cours après 3 s, valeurs proches des tests sur le Mac
 const mockRoute = { on: 0, phone: false };
-// ?help=iphone_setup (etc.) : aucun téléphone ne partage encore, l'onglet dit quoi faire
+// ?why=apple_net (etc.) : aucun téléphone ne partage encore, l'onglet montre le diagnostic
 function mockLinks(): RouteLinks {
-  const help = new URLSearchParams(location.search).get("help") as RouteHelp | null;
-  return help ? { links: [], help } : { links: [{ name: "Ethernet 2", phone: true }], help: null };
+  const why = new URLSearchParams(location.search).get("why") as RouteWhy | null;
+  if (!why) return { links: [{ name: "Ethernet 2", phone: true }], check: null };
+  const order: RouteWhy[] = why === "share_android" ? ["usb", "share_android", "internet"] : ["usb", "apple_usb", "apple_net", "share_iphone", "internet"];
+  const upTo = why === "internet" ? order.length : order.indexOf(why) + 1;
+  const steps = order.slice(0, upTo).map((w, i) => ({ code: (w.startsWith("share") ? "share" : w) as RouteStep, ok: i < upTo - 1 }));
+  const phone = why === "usb" ? null : why === "share_android" ? "android" : "iphone";
+  return { links: [], check: { phone, steps, why, details: ["USB\\VID_05AC&PID_12A8 · USB · usbaapl64", "pilote de partage Apple (netaapl) : absent"] } };
 }
 function mockRouteStatus(): RouteStatus {
   const idle: RouteStatus = { running: false, error: null, playing: false, paths: [], saved: 0, repaired: 0, packets: 0, resendsHere: 0, resendsExit: 0, exitPingMs: null, lagHereMs: 0, lagExitMs: 0, ports: [] };

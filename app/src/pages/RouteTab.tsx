@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { motion } from "motion/react";
-import { Check, Copy, LoaderCircle, Lock, Power, Route } from "lucide-react";
-import { api, type RouteLinks, type RoutePath, type RouteStatus } from "../lib/api";
+import { Check, Copy, LoaderCircle, Lock, Power, Route, X } from "lucide-react";
+import { api, type RouteCheck, type RouteLinks, type RoutePath, type RouteStatus } from "../lib/api";
 import type { Key } from "../lib/i18n";
 import { useStore } from "../lib/store";
 import { Button, Switch } from "../components/ui";
@@ -169,16 +169,7 @@ export function RouteTab() {
               </div>
             );
           })}
-        {!locked && !running && found?.help && (
-          <div className="rt-help small">
-            <p>{t(`route.help.${found.help}`)}</p>
-            {(found.help === "iphone_driver" || found.help === "iphone_setup") && (
-              <button type="button" className="rt-help-link" onClick={() => api.openUrl(ITUNES).catch(() => {})}>
-                {t("route.help.itunes")}
-              </button>
-            )}
-          </div>
-        )}
+        {!locked && !running && found?.check && <PhoneCheckBox c={found.check} t={t} />}
         {shown && (
           <p className="rt-error small">{shown === "token" ? t("route.err.token") : t(errorKey(shown), { e: shown.replace(/^\w+:/, "") })}</p>
         )}
@@ -230,8 +221,46 @@ export function RouteTab() {
   );
 }
 
-/** Installeur d'iTunes sur le site d'Apple : il apporte le pilote « Apple Mobile Device Ethernet » du partage USB. */
+/** Installeur d'iTunes sur le site d'Apple : il apporte les pilotes USB et de partage de l'iPhone. */
 const ITUNES = "https://www.apple.com/itunes/download/win64";
+
+/** Diagnostic du partage de connexion USB : chaque étape vérifiée, la première ratée explique quoi faire. */
+function PhoneCheckBox({ c, t }: { c: RouteCheck; t: (k: Key, v?: Record<string, string | number>) => string }) {
+  const [copied, setCopied] = useState(false);
+  async function copy() {
+    try {
+      await api.copyText(c.details.join("\n"));
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    } catch {
+      /* rien à copier */
+    }
+  }
+  return (
+    <div className="rt-check small">
+      <div className="rt-check-title">{t(c.phone === "iphone" ? "route.check.iphone" : c.phone === "android" ? "route.check.android" : "route.check.none")}</div>
+      <ul className="rt-check-steps">
+        {c.steps.map((s) => (
+          <li key={s.code} className={s.ok ? "ok" : "ko"}>
+            {s.ok ? <Check size={14} aria-hidden /> : <X size={14} aria-hidden />}
+            <span>{t(`route.step.${s.code}`)}</span>
+          </li>
+        ))}
+      </ul>
+      <p className="rt-check-why">{t(`route.why.${c.why}`)}</p>
+      <div className="rt-check-actions">
+        {(c.why === "apple_usb" || c.why === "apple_net") && (
+          <button type="button" className="rt-help-link" onClick={() => api.openUrl(ITUNES).catch(() => {})}>
+            {t("route.check.itunes")}
+          </button>
+        )}
+        <button type="button" className="rt-help-link muted" onClick={copy}>
+          {copied ? t("route.check.copied") : t("route.check.copy")}
+        </button>
+      </div>
+    </div>
+  );
+}
 
 function PathRow({ p, t }: { p: RoutePath; t: (k: Key, v?: Record<string, string | number>) => string }) {
   const name =
