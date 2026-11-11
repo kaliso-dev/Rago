@@ -1,7 +1,7 @@
 ---
 type: registre
 tags: [décision]
-maj: 2026-11-10
+maj: 2026-11-11
 ---
 # Décisions
 
@@ -10,6 +10,8 @@ Registre daté des décisions de Sofiene. **La plus récente prime.** Citations 
 ## App et versions
 | Date | Décision | Statut |
 |---|---|---|
+| 11/11 | Sortie : « je compte release la nouvelle version avec les Free Slot, les correctif des retour client, la conexion google et discord fixe, analyse my pc et avant apres et les nouveaux proxy demain voir apres demain MAX » (message de 01:17, heure de Paris) ; « Actuellement tout est finit mais j'aimerais rajouter de nouvelle features » | prévu ; les six nouvelles fonctions sont chacune dans un fil et une PR à part vers `staging`, pas fusionnées ([[Version 1.3.0]]) |
+| 11/11 | Page Outils « Tools new et centralisé » : « toutes les opti avec écrit RUN c'est des tools il faut que tu les recupere tous et en plus de les laisser dans les onglet ou ils sont ajoute les dans la page tools pour tout centraliser », puis « reanalyse internet et le marché des optimization et les autre optimiser comme Hone et ajoute de nouveaux Tools safe et utile qu'on pourrait rajouter pour simplifier la vie de l'utilisateru améliorer ces perf et ce rapprocher d'une app que tu utilise quotdiennement » | codé : PR #90 ouverte vers `staging` le 11/11, jamais testée sur Windows ; sortie avec la 1.3.0 ou après : À DÉCIDER ([[Page Outils]]) |
 | 10/11 | Version publique du Cerveau pour le cousin de Sofiene : « extraire le projet du cerveau le mettre dans un nouveau repo public », « retirer le design rago il faut un design classique », que son Claude puisse l'installer et créer le vault, « quelque soit le domaine », hébergeable sur GitHub Pages | fait : nom **Synapse** (choix de Sofiene sur la carte), dépôt public `kaliso-dev/Synapse` poussé le 10/11 ; reste à activer Pages ([[Cerveau du vault]]) |
 | 10/11 | Mettre l'admin et le Cerveau en prod tout de suite, sans attendre la 1.3.0 : « il faut le push sur la prod maintenant et qu'il soit fonctionnel normalement tu as du voir mais j'ai ajouté une page cerveau il faut push avec » | fait, PR #87 fusionnée dans la branche de prod le 10/11 ; la 1.3.0 reste dans `staging` ([[Tableau de bord admin]]) |
 | 10/11 | Admin : corriger l'affichage des ventes en plusieurs devises (« ok donc ça aussi », sur sa capture de la page Ventes) | fait, PR #84 fusionnée dans `staging` le 10/11, en prod par la #87 ([[Tableau de bord admin]]) |

@@ -2,14 +2,14 @@
 type: code
 tags: [code, app, rust]
 fichier: app/src-tauri/src/lib.rs
-lignes: 1553
-maj: 2026-11-10
+lignes: 1594
+maj: 2026-11-11
 ---
 # lib.rs
 
-Point d'entrée de toute l'app côté Rust : il déclare les 38 modules, construit l'état partagé `AppState`, enregistre les **76 commandes Tauri** que l'interface React appelle, lance les fils permanents au démarrage (`run()`) et répond au pont de [[Rago OS]]. Fiche parente : [[Code de l'app (Rust)]]. Fonctionnement d'ensemble : [[Architecture de l'app]], [[App Windows]].
+Point d'entrée de toute l'app côté Rust : il déclare les 38 modules, construit l'état partagé `AppState`, enregistre les **82 commandes Tauri** que l'interface React appelle (76 sur `staging`, 6 de plus dans la PR #90 pour la page Outils), lance les fils permanents au démarrage (`run()`) et répond au pont de [[Rago OS]]. Fiche parente : [[Code de l'app (Rust)]]. Fonctionnement d'ensemble : [[Architecture de l'app]], [[App Windows]].
 
-Tout ce qui suit est CONFIRMÉ (code de `staging`, 10/11, commit `ee77d4f`). Fichier créé le 07/10 (1.1.5), 37 commits depuis : c'est le fichier le plus modifié du cœur.
+Tout ce qui suit est CONFIRMÉ (code de `staging`, 10/11, commit `ee77d4f`), sauf les 6 commandes `tools_startup`, `tools_set_startup`, `tools_power_plans`, `tools_set_power_plan`, `tools_flush_dns` et `tools_open`, ajoutées par la **PR #90** (11/11, ouverte vers `staging`, pas encore fusionnée, jamais testée sur Windows). Fichier créé le 07/10 (1.1.5), 37 commits depuis : c'est le fichier le plus modifié du cœur.
 
 ## Rôle et place dans l'ensemble
 - `main.rs` ([[main.rs]]) n'appelle que `rago_hub_lib::run()`, défini ici.
@@ -53,7 +53,7 @@ Méthodes : `AppState::system(refresh)` (sonde mise en cache par `probe_cached`)
 - `bridge_presets()`, `BRIDGE_TWEAKS`, `bridge_handler(app)` : le pont avec Rago OS.
 - `pub fn run()` : le démarrage.
 
-### Les 76 commandes Tauri
+### Les 82 commandes Tauri
 Ordre de `generate_handler!`. Côté interface, chaque commande est appelée par `invoke("<nom>")` depuis `app/src/lib/api.ts`. Les erreurs sont des `String`, sauf les commandes de licence et de compte qui renvoient un `license::ApiError {code, message, buy_url}`.
 
 **Système, RBW, Outils** ([[Page Outils]], [[RBW Mod]])
@@ -67,6 +67,12 @@ Ordre de `generate_handler!`. Côté interface, chaque commande est appelée par
 | `tools_remove_apps` | `ids` → `Vec<tools::App>` | les désinstalle (gratuit depuis 1.2.2), renvoie celles encore là |
 | `tools_drivers` | → `tools::Drivers` | pilotes graphiques, réseau, son et fabricant |
 | `tools_windows_update` | → `()` | ouvre `ms-settings:windowsupdate-optionalupdates` par `explorer.exe` |
+| `tools_startup` | → `Vec<tools::StartupApp>` | programmes lancés avec Windows, comme le Gestionnaire des tâches (PR #90) |
+| `tools_set_startup` | `id, enabled` → `Vec<tools::StartupApp>` | active ou coupe une entrée de la liste (même valeur `StartupApproved` que le Gestionnaire des tâches), renvoie la liste à jour ; refuse de couper une entrée gardée (PR #90) |
+| `tools_power_plans` | → `Vec<tools::PowerPlan>` | modes d'alimentation de Windows et mode actif (PR #90) |
+| `tools_set_power_plan` | `guid` → `Vec<tools::PowerPlan>` | `powercfg /setactive` sur un mode de la liste, renvoie la liste à jour (PR #90) |
+| `tools_flush_dns` | → `()` | `ipconfig /flushdns` (PR #90) |
+| `tools_open` | `id` → `()` | ouvre un réglage de Windows de la liste fermée `tools::PANELS` ; comme `tools_windows_update`, sans `spawn_blocking` (le programme est lancé sans l'attendre) (PR #90) |
 
 **Moteur des tweaks** ([[Moteur des tweaks]])
 | Commande | Arguments → retour | Ce qu'elle fait |
@@ -237,4 +243,4 @@ Un test dans le fichier : `bridge_tests::reglages_proposes_a_rago_os` (plus de 1
 - Toute nouvelle façon de lancer des réglages doit passer par `start_tweaks` pour garder les règles de l'offre.
 - Une action qui change Windows doit refuser pendant un lot ou une remise (`"busy"`), comme `netopt_run` et `update_install`.
 - Ne jamais faire passer l'e-mail ou la clé par le pont ni dans le rapport : seulement l'offre.
-- Le nombre de commandes (76) est cité dans [[Architecture de l'app]] : le mettre à jour si on en ajoute.
+- Le nombre de commandes (82 avec la PR #90, 76 sur `staging`) est cité dans [[Architecture de l'app]] : le mettre à jour si on en ajoute.

@@ -2,8 +2,8 @@
 type: code
 tags: [code, app, react, carte]
 fichier: app/src/
-lignes: 29270
-maj: 2026-11-10
+lignes: 30056
+maj: 2026-11-11
 ---
 # Code de l'app (interface)
 
@@ -32,13 +32,14 @@ Tout ce qui suit est CONFIRMÉ (code de `staging`, 10/11, commit `ee77d4f`), sau
   - [[api.ts]] et [[accountApi.ts]] sont les deux seules portes vers le moteur.
 - **Pas de routeur** : la page affichée est une simple valeur `page` dans le store. Pas de Redux non plus : un seul contexte React, [[store.tsx]], plus le contexte du compte, [[account.tsx]].
 - **Mode démo** : hors de Tauri (`isTauri` faux), les mêmes fonctions sont simulées dans le navigateur. Cela sert au simulateur `npm run window`, aux captures et aux tests de l'interface.
-- Taille : 29 270 lignes dans `app/src/` (fichiers `.ts`, `.tsx`, `.css` et `.json`). Les plus gros fichiers sont :
+- Taille : 30 056 lignes dans `app/src/` (fichiers `.ts`, `.tsx`, `.css` et `.json`) avec la page Outils refaite de la PR #90 (11/11, pas encore fusionnée) ; 29 270 sur `staging`. Les plus gros fichiers sont :
   - `catalog.json` (8050 lignes) ;
-  - `features.css` (3492 lignes) ;
+  - `features.css` (3730 lignes) ;
   - `app.css` (2935 lignes) ;
-  - `i18n.ts` (2140 lignes) ;
-  - `api.ts` (1381 lignes) ;
+  - `i18n.ts` (2246 lignes) ;
+  - `api.ts` (1460 lignes) ;
   - `NetOpt.tsx` (1090 lignes) ;
+  - `Tools.tsx` (760 lignes) ;
   - `store.tsx` (731 lignes).
 
 ## Arbre des composants (fenêtre principale)

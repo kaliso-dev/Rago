@@ -3,7 +3,7 @@ type: code
 tags: [code, app, typescript, react, catalogue]
 fichier: app/src/components/TweakRow.tsx
 lignes: 234
-maj: 2026-11-10
+maj: 2026-11-11
 ---
 # TweakRow.tsx
 
@@ -12,7 +12,7 @@ maj: 2026-11-10
 Tout ce qui suit est CONFIRMÉ (code de `staging`, 10/11, commit `ee77d4f`).
 
 ## Ce que le fichier expose
-- `TweakRow({ tweak })` : rendue par [[ModulePage.tsx]] pour chaque réglage.
+- `TweakRow({ tweak })` : rendue par [[ModulePage.tsx]] pour chaque réglage, et depuis la PR #90 (11/11, pas encore fusionnée) par [[Tools.tsx]] pour chaque action (`kind: "action"`) de la liste « Tous les outils de l'app » : même ligne, même cadenas, même « Lancer ».
 - `twinNames(tweak, lang)` (interne) : noms des réglages jumeaux (même script, champ `twin`) avec leur module, ex. « Nom » (Module).
 
 ## Les quatre formes de la ligne

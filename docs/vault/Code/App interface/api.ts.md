@@ -2,14 +2,14 @@
 type: code
 tags: [code, app, typescript, interface]
 fichier: app/src/lib/api.ts
-lignes: 1381
-maj: 2026-11-10
+lignes: 1460
+maj: 2026-11-11
 ---
 # api.ts
 
 Le **pont unique** entre l'interface React et le moteur Rust : un objet `api` dont chaque fonction appelle une commande Tauri (`invoke`) ou écoute un événement (`listen`). Hors de Tauri (navigateur, `npm run window`), le même objet est remplacé par un **simulateur** complet qui ne touche à rien. Fiche parente : [[Code de l'app (interface)]]. Côté Rust : [[lib.rs]] (enregistre les commandes). Fonctionnement d'ensemble : [[Architecture de l'app]].
 
-Tout ce qui suit est CONFIRMÉ (code de `staging`, 10/11, commit `ee77d4f`).
+Tout ce qui suit est CONFIRMÉ (code de `staging`, 10/11, commit `ee77d4f`), sauf ce qui est marqué « PR #90 » : page Outils refaite le 11/11 (PR ouverte vers `staging`, pas encore fusionnée).
 
 ## Rôle et place dans l'ensemble
 - Aucune page n'appelle `invoke` directement : toutes passent par `api` (seule exception, le compte, qui a son propre pont [[accountApi.ts]], bâti sur le même modèle).
@@ -42,7 +42,7 @@ Tout ce qui suit est CONFIRMÉ (code de `staging`, 10/11, commit `ee77d4f`).
 | `SessionCheck`, `SessionState` | pendant la partie : `playing`, `power`, `gpuGames`, `checks` (`battery`, `download`, `sync`, `record` + applis), `multiGpu`, `x3d` | [[session.rs]] |
 | `OverlayMode`, `OverlayInfo`, `OverlayLive` | barre en jeu : mode `hidden`/`panel`/`pill`, jeu, raccourci, épingle, `fpsAvailable`, `shortcutTaken`, `passive` ; mesures `fps`, `ping`, `pingEstimate?` | [[overlay.rs]], [[fps.rs]] |
 | `RbwCheck` | une ligne du vérificateur Ranked Bedwars : `name`, `kind` service/setting, `ok`, `state`, `start` | [[rbw.rs]] |
-| `CleanAreaId`, `CleanArea`, `CleanResult`, `BloatApp`, `Driver`, `DriversInfo` | page Outils : zones `temp`, `windows_temp`, `update`, `crash`, `browsers`, `discord`, `shaders`, `recycle` ; applis préinstallées (nom en/fr) ; pilotes `gpu`/`network`/`audio` avec date `AAAA-MM-JJ` ; fabricant et modèle de la carte mère | [[tools.rs]] |
+| `CleanAreaId`, `CleanArea`, `CleanResult`, `BloatApp`, `StartupApp`, `PowerPlan`, `WindowsPanel`, `Driver`, `DriversInfo` | page Outils : zones `temp`, `windows_temp`, `update`, `crash`, `browsers`, `discord`, `launchers` (PR #90), `shaders`, `recycle` ; applis préinstallées (nom en/fr) ; programmes au démarrage (`id` « source\|nom », `name`, `publisher`, `command`, `scope` `user`/`machine`, `enabled`, `keep`) et modes d'alimentation (`guid`, `name`, `active`) (PR #90) ; réglages de Windows ouvrables `graphics`, `display`, `gamemode`, `sound`, `mouse`, `network`, `power`, `devices`, `visual`, `taskmgr` (PR #90) ; pilotes `gpu`/`network`/`audio` avec date `AAAA-MM-JJ` ; fabricant et modèle de la carte mère | [[tools.rs]] |
 | `MatchSummary`, `AnalysisFacts` | « Analyze my PC » : écran (`refresh`, `refreshMax`), `processes`, mémoire (`memSpeed`, `memRated`), `wired`, `gameDvr`, `notifications`, `powerScheme` (GUID), applis de fond, dernière partie suivie (`minutes`, `fps`, `low1`, `stuttersPerMin`) | [[analysis.rs]] |
 | `MinecraftStatus` | `dirExists`, `optifineFile`, `backups` | [[minecraft.rs]] |
 | `RunItem` | un élément d'un lot : `id`, `variant?`, `params?`, `undo?` | [[runner.rs]] |
@@ -78,12 +78,18 @@ Chaque ligne : nom dans `api` → commande Rust (paramètres) → ce que fait le
 **Page Outils et analyse**
 | Fonction | Commande | Simulateur |
 |---|---|---|
-| `toolsScan()` | `tools_scan` | 900 ms, 8 zones (environ 7,4 Gio au total, la plus grosse `update` 2 630 Mio) |
+| `toolsScan()` | `tools_scan` | 900 ms, 9 zones (8 437 Mio au total, la plus grosse `update` 2 630 Mio ; `launchers` 914 Mio) |
 | `toolsClean(areas)` | `tools_clean { areas }` | 1,4 s ; vide les zones choisies, garde 8 % de `browsers` (navigateur ouvert) et compte 37 fichiers laissés |
 | `toolsApps()` | `tools_apps` | 700 ms, 12 applis (Actualités, Météo, Teams, Candy Crush, TikTok…) |
-| `toolsRemoveApps(ids)` | `tools_remove_apps { ids }` → applis encore installées | 1,6 s, retire les ids. Le commentaire de l'interface dit encore « Premium » : c'est faux depuis la 1.3.0, la suppression est gratuite (voir [[Tools.tsx]]) |
+| `toolsRemoveApps(ids)` | `tools_remove_apps { ids }` → applis encore installées | 1,6 s, retire les ids. Gratuit (le commentaire « Premium » de l'interface, périmé, a été corrigé dans la PR #90) |
 | `toolsDrivers()` | `tools_drivers` | 1,1 s, 3 pilotes (carte graphique 08/2024, réseau 10/2023, audio 09/2021) et une carte mère ASUS |
 | `toolsWindowsUpdate()` | `tools_windows_update` | rien |
+| `toolsStartup()` | `tools_startup` | 800 ms, 9 programmes : Discord, EpicGamesLauncher, Microsoft Edge, OneDrive, Steam (allumés), Spotify (coupé), Riot Vanguard, RtkAudUService, SecurityHealth (gardés) (PR #90) |
+| `toolsSetStartup(id, enabled)` | `tools_set_startup { id, enabled }` → liste à jour | 350 ms ; refuse un id inconnu et la coupure d'un programme gardé, comme le moteur (PR #90) |
+| `toolsPowerPlans()` | `tools_power_plans` | 500 ms, 3 modes : Balanced (actif), High performance, Ultimate Performance (PR #90) |
+| `toolsSetPowerPlan(guid)` | `tools_set_power_plan { guid }` → liste à jour | 400 ms ; refuse un GUID inconnu (PR #90) |
+| `toolsFlushDns()` | `tools_flush_dns` | 600 ms (PR #90) |
+| `toolsOpen(panel)` | `tools_open { id: panel }` | écrit « [démo] réglage Windows : <id> » dans la console (PR #90) |
 | `analysisFacts()` | `analysis_facts` | 1,5 s ; écran à 60 Hz sur 144 possibles, 212 processus, mémoire à 4 800 sur 6 000 MT/s, Wi-Fi, Game DVR et notifications actifs, plan Équilibré, OneDrive en fond, dernière partie de 24 min à 312 FPS (1 % bas 128, 3,4 saccades/min) |
 
 **Partage et support**
@@ -193,4 +199,3 @@ Aucun test automatique côté front. Le simulateur sert de banc d'essai manuel a
 - **Ajouter une commande** : (1) la commande dans le module Rust et son enregistrement dans [[lib.rs]] ; (2) la signature dans `interface Api` ; (3) la ligne dans `tauriApi` ; (4) une version simulée dans `mockApi` (TypeScript refuse de compiler sinon, `mockApi` étant typé `Api`).
 - Les types doivent rester identiques aux structures Rust (`serde(rename_all = "camelCase")`) : un champ renommé d'un seul côté donne `undefined` sans erreur.
 - Le simulateur doit **imiter les règles du moteur** (annulations, point de restauration raté, RBW Mod) : sinon la démo et les captures d'écran mentent.
-- Le commentaire « Premium » sur `toolsRemoveApps` est périmé (À CORRIGER dans le code, sans conséquence).

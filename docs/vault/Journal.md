@@ -1,7 +1,7 @@
 ---
 type: pilotage
 tags: [journal, chronologie]
-maj: 2026-11-10
+maj: 2026-11-11
 ---
 # Journal
 
@@ -10,6 +10,7 @@ Une ligne par événement marquant, la plus récente en haut. Voir [[Historique 
 ## Novembre 2026
 | Date | Événement | Liens |
 |---|---|---|
+| 11/11 | Sofiene annonce la sortie de la 1.3.0 « demain voir apres demain MAX » (message de 01:17, heure de Paris) et demande six nouvelles fonctions, un fil chacune. Point 6, « Tools new et centralisé » : [[Page Outils]] refaite, avec les 17 actions « Lancer » des onglets réunies (15 lignes, deux jumelles comptées une fois) et de nouveaux outils choisis après l'analyse de Hone, Microsoft PC Manager et WinUtil (cache de la RAM et cache DNS en un clic, mode d'alimentation, test réseau, applis au démarrage, cache des launchers Steam et Epic, 10 raccourcis vers les réglages de Windows). PR #90 ouverte vers `staging` (CI Windows verte : exe et tests du moteur), jamais testée sur Windows ; ticket RAG-93 | [[Page Outils]], [[Pull requests]] |
 | 10/11 | Version publique du [[Cerveau du vault]] construite pour le cousin de Sofiene : kit sans design Rago (thème clair et sombre), site statique pour GitHub Pages, `INSTALLER.md` pour que son Claude crée le dépôt et le vault, vault d'exemple qui sert de guide ; nommé **Synapse** par Sofiene, poussé dans le dépôt public `kaliso-dev/Synapse` | [[Cerveau du vault]] |
 | 10/11 | [[Tableau de bord admin]] et [[Cerveau du vault]] **en prod** (PR #87, portage depuis une branche partie de la prod), sur « il faut le push sur la prod maintenant et qu'il soit fonctionnel normalement […] j'ai ajouté une page cerveau il faut push avec » ; rien de la 1.3.0 n'est parti ; l'ancienne page `/admin` n'existe plus | [[Tableau de bord admin]], [[Branches et environnements]] |
 | 10/11 | Admin, ventes en € et en $US mal affichées sur staging (capture de Sofiene : « 420,00 € + 122,95… », barre « Par type » fausse) : chaque paiement converti par Stripe compte pour son montant en €, comme dans Stripe ; PR #84 fusionnée dans `staging` le 10/11 (demande de Sofiene de tout mettre en prod) | [[Tableau de bord admin]] |

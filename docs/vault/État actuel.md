@@ -1,9 +1,9 @@
 ---
 type: pilotage
 tags: [état, pilotage]
-maj: 2026-11-10
+maj: 2026-11-11
 ---
-# État actuel (10/11/2026)
+# État actuel (11/11/2026)
 
 Voir aussi [[Prochaines étapes]], [[Questions ouvertes]], [[Journal]]. Retour à [[Projet]].
 
@@ -31,10 +31,14 @@ Les joueurs ont la [[Version 1.2.1]] (en ligne depuis le 31/10). La [[Version 1.
 | [[Conformité juridique]] | pages légales à jour pour l'essai et la connexion (04/11) ; **manquent l'identité et l'adresse du vendeur** : Sofiene n'est pas encore inscrit comme vendeur et a 17 ans (q44, q46, q49) | À RÉGLER par Sofiene |
 | [[Tableau de bord admin]] | `/admin` complet (joueurs, accès, bannissement, ventes Stripe dans une seule devise, services, site et promos, tests réseau, journal) : **en prod depuis le 10/11 au soir** (PR #87, « il faut le push sur la prod maintenant »), avec la nouvelle interface (#82), la mise en page sans trous (#83) et les ventes en une devise (#84), toutes passées par `staging` le 10/11 ; l'ancienne page `/admin` n'existe plus. Seulement l'admin : la 1.3.0 reste dans `staging` | CONFIRMÉ (git) ; servi en prod depuis 18:54 UTC (OBSERVÉ : page de connexion, `/admin/cerveau` renvoie vers elle sans clé) |
 | [[Cerveau du vault]] | `/admin/cerveau` : le vault en graphe animé façon Obsidian, lecteur de notes et de n'importe quel fichier du dépôt, derrière la clé admin (Abel s'en sert avec la même clé, choix de Sofiene du 10/11). **Dans `staging` depuis le 10/11** (PR #85) et **en prod depuis le 10/11 au soir** (PR #87, « j'ai ajouté une page cerveau il faut push avec ») ; lit le vault de `staging` sur GitHub ; `CERVEAU_GITHUB_TOKEN` à mettre dans Railway (staging et prod) avant que le dépôt passe en privé | CONFIRMÉ (git) |
-| [[Linear]] | remis à jour le 01/11 à partir du vault | CONFIRMÉ |
+| [[Page Outils]] | refaite à la demande de Sofiene (11/11, « Tools new et centralisé ») : les 17 actions « Lancer » des onglets réunies, plus de nouveaux outils (cache de la RAM et cache DNS en un clic, mode d'alimentation, applis au démarrage, cache des launchers, raccourcis vers les réglages de Windows) ; **PR #90 ouverte vers `staging`**, CI Windows verte, jamais testée sur Windows ; sortie avec la 1.3.0 ou après : À DÉCIDER | EN COURS (Sofiene, 11/11) |
+| [[Linear]] | remis à jour le 01/11 à partir du vault ; RAG-93 (page Outils) créé le 11/11 | CONFIRMÉ |
 | Vault Obsidian | créé le 31/10 ; règle n°1 : il doit correspondre en tout point à l'état du projet. **Détaillé le 10/11** (demande de Sofiene) : 341 notes, dont une fiche par fichier de code (230 notes dans `Code/`, 7 cartes), l'histoire du projet (`Historique/`, 11 notes) et l'étude de marché ; 24 nouvelles questions (q70 à q93) | DÉCIDÉ |
 
-## PR (10/11)
+## PR (11/11)
+- **Ouverte le 11/11 vers `staging` : #90** ([[Page Outils]] : tous les outils de l'app réunis, et de nouveaux outils du quotidien ; point 6 de la demande de Sofiene du 11/11). CI Windows verte, jamais testée sur Windows ; ne pas fusionner sans « fusionne » de Sofiene. Ouvertes le même soir vers `staging` par d'autres fils : #89 (jeu en priorité haute pendant la partie) et #91 (conseils au lancement du jeu).
+- Fusionnée le 10/11 dans `staging` : #88 (vault seulement : admin et Cerveau notés en prod après la #87).
+- **Ouverte le 10/11 vers `staging` : #86** (« Best hitreg » par défaut : « Better hitreg » bridait le débit Steam à 15 Mbit/s chez un joueur), fil « Régler les problèmes des clients » ; attend « fusionne » de Sofiene.
 - Fusionnée le 10/11 dans la branche de prod : #87 ([[Tableau de bord admin]] et [[Cerveau du vault]] en prod, sans rien de la 1.3.0), sur « il faut le push sur la prod maintenant et qu'il soit fonctionnel normalement […] j'ai ajouté une page cerveau il faut push avec » de Sofiene.
 - Fusionnée le 10/11 dans `staging` : #84 (ventes du [[Tableau de bord admin]] dans une seule devise : les paiements en $US convertis par Stripe comptent en €), avec la demande de Sofiene de mettre l'admin en prod. En prod par la #87.
 - Fusionnée le 10/11 dans `staging` : #85 ([[Cerveau du vault]] et vault détaillé), sur « fusionne » de Sofiene. Le Cerveau est en prod par la #87.
@@ -68,3 +72,4 @@ Les joueurs ont la [[Version 1.2.1]] (en ligne depuis le 31/10). La [[Version 1.
 9. Essayer le [[Tableau de bord admin]] en prod (`account.rago-optimizer.com/admin`, même clé `ADMIN_KEY`, PR #87 du 10/11) : vraies ventes, joueurs, Services, Cerveau.
 10. [[Cerveau du vault]] (en prod depuis le 10/11) : créer le jeton GitHub en lecture seule et le mettre dans Railway, staging **et** prod (`CERVEAU_GITHUB_TOKEN`), avant le passage du dépôt en privé.
 11. Répondre aux questions q70 à q93 sur la page « Questions du vault Rago » ([[Questions ouvertes]]).
+12. [[Page Outils]] refaite (PR #90) : essayer l'exe de test de la PR sur Windows, dire « fusionne », et choisir si elle part avec la 1.3.0 ou après.

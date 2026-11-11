@@ -475,7 +475,7 @@ export interface Api {
   toolsScan(): Promise<CleanArea[]>;
   toolsClean(areas: CleanAreaId[]): Promise<CleanResult>;
   toolsApps(): Promise<BloatApp[]>;
-  /** Premium ; renvoie les applis encore installées */
+  /** Gratuit, comme toute la page Outils ; renvoie les applis encore installées */
   toolsRemoveApps(ids: string[]): Promise<BloatApp[]>;
   toolsDrivers(): Promise<DriversInfo>;
   analysisFacts(): Promise<AnalysisFacts>;
