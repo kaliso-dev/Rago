@@ -9,7 +9,7 @@ import {
   api, type BloatApp, type CleanArea, type CleanAreaId, type CleanResult, type Driver, type DriversInfo, type PowerPlan, type StartupApp,
   type WindowsPanel,
 } from "../lib/api";
-import { catalog, sectionTweaks, type Tweak } from "../lib/catalog";
+import { catalog, distinctKey, sectionTweaks, type Tweak } from "../lib/catalog";
 import { markSeen } from "../lib/seen";
 import { useStore } from "../lib/store";
 import { Button, Switch } from "../components/ui";
@@ -378,8 +378,9 @@ function Panels() {
 
 // ---------------------------------------------------------------------------------------------------- tous les outils
 
-/** Les réglages à bouton « Lancer » (kind « action ») de tous les onglets, chacun une seule fois : même ligne, même
- * verrou Premium et même lancement que dans leur onglet, où ils restent. */
+/** Les réglages à bouton « Lancer » (kind « action ») de tous les onglets, chacun une seule fois (deux jumeaux, même
+ * script sous deux noms, ne comptent qu'une fois : le premier du catalogue) : même ligne, même verrou Premium et même
+ * lancement que dans leur onglet, où ils restent. */
 function AllTools() {
   const { t, lang, goTo } = useStore();
   const groups = useMemo(() => {
@@ -388,8 +389,8 @@ function AllTools() {
       .map((m) => {
         const list: Tweak[] = [];
         for (const tw of m.sections.flatMap((s) => sectionTweaks(s))) {
-          if (tw.kind !== "action" || seen.has(tw.id)) continue;
-          seen.add(tw.id);
+          if (tw.kind !== "action" || seen.has(distinctKey(tw.id))) continue;
+          seen.add(distinctKey(tw.id));
           list.push(tw);
         }
         return { m, list };
