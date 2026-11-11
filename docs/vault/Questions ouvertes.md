@@ -48,6 +48,7 @@ Posées le 11/11 (q78 traitée le même jour : Sofiene a demandé la page de ven
 - q94 : [[Graphismes des jeux]] gratuits pour tous ou Premium ? (le code les laisse gratuits)
 - q96 : [[Page Souris]] gratuite pour tous ? (codée gratuite ; le réglage « Souris 1:1 » reste Premium)
 - q97 : d'autres sorties que Paris, pour que la page Rago Route les annonce ? ([[Page de vente Rago Route]], [[Infrastructure Rago Route]]).
+- q98 : `CERVEAU_GITHUB_TOKEN` mis dans Railway, et dans quels environnements ? ([[Cerveau du vault]], [[Variables d'environnement]]).
 
 ## À vérifier (sans Sofiene)
 - Rago Route : tous les joueurs sortent par la même adresse à Paris ; Hypixel coupe déjà les connexions venant de Frankfurt (09/11, sans effet tant que Frankfurt n'est qu'un relais). À surveiller dès les premiers joueurs ([[Proxy]], [[Page de vente Rago Route]]).

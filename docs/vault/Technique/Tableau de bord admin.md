@@ -1,11 +1,11 @@
 ---
 type: technique
 tags: [technique, serveur, admin]
-maj: 2026-11-10
+maj: 2026-11-11
 ---
 # Tableau de bord admin (`/admin`)
 
-L'outil où Sofiene voit tout le projet et gère les joueurs sans passer par les commandes Railway. Demandé par Sofiene le 10/11 : « un tableau de bord qui permets de tout voir le max d'info et de possibilité de gestion des utilisateurs au meme endroit ». Code dans le [[Serveur de licences]] (`licensing/src/admin.js`, `admin-views.js`, `sales.js`, `support.js`). **Dans `staging` depuis le 10/11 (PR #77, « fusionne » de Sofiene) et en prod depuis le 10/11 au soir (PR #87, « il faut le push sur la prod maintenant et qu'il soit fonctionnel »)** : l'ancienne page `/admin` (pop-up, contrôles Stripe et Discord, tests réseau) n'existe plus nulle part. Railway a redéployé la prod tout seul : nouvelle page de connexion servie à 18:54 UTC (OBSERVÉ le 10/11 ; l'intérieur, derrière la clé, est à essayer par Sofiene).
+L'outil où Sofiene voit tout le projet et gère les joueurs sans passer par les commandes Railway. Demandé par Sofiene le 10/11 : « un tableau de bord qui permets de tout voir le max d'info et de possibilité de gestion des utilisateurs au meme endroit ». Code dans le [[Serveur de licences]] (`licensing/src/admin.js`, `admin-views.js`, `sales.js`, `support.js`). **Dans `staging` depuis le 10/11 (PR #77, « fusionne » de Sofiene) et en prod depuis le 10/11 au soir (PR #87, « il faut le push sur la prod maintenant et qu'il soit fonctionnel »)** : l'ancienne page `/admin` (pop-up, contrôles Stripe et Discord, tests réseau) n'existe plus nulle part. Railway a redéployé la prod tout seul : nouvelle page de connexion servie à 18:54 UTC (OBSERVÉ le 10/11). Sofiene l'a essayé le 11/11 : « ok tout est bon le dashboard est bien en ligne ».
 Le même jour, Sofiene a trouvé l'interface « baclé remplis de bug pas optmisé » et demandé « la meilleur interface possible comme si ça devait etre commercialisé » : refonte complète dans la **PR #82, fusionnée dans `staging` le 10/11 sur « fusionne et push sur staging » de Sofiene**, puis retouchée par la **PR #83** (pas de trous, Stripe seulement dans Services, fusionnée le 10/11 sur « fusionne ») et la **PR #84** (ventes dans une seule devise, fusionnée le 10/11) ; le tout est en prod par la PR #87 (voir « Interface » plus bas).
 **En prod, seulement l'admin** : la [[Version 1.3.0]] (essai, connexion de l'app, Rago Route, [[Bot communauté Discord]]) reste dans `staging`. Sur l'admin de prod, la ligne « Bot communauté » de Services dit donc « Éteint » : le bot n'est pas dans le code de prod, quelle que soit `DISCORD_COMMUNITY`. La table `trials` existe en prod (créée au démarrage) mais reste vide tant que l'essai n'y est pas.
 

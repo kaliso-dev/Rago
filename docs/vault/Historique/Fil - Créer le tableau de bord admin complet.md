@@ -1,11 +1,11 @@
 ---
 type: historique
 tags: [historique]
-maj: 2026-11-10
+maj: 2026-11-11
 ---
 # Fil - Créer le tableau de bord admin complet
 
-Histoire du fil « Créer le tableau de bord admin complet » (`cmsg_01Mb4hMYwRFctv5wE2NGiASi8hPR2cwTfeEfEKYMb6dDMD`), ouvert le 10/11 à 14:08 UTC, dernière activité le 10/11 vers 18:49. **État au 10/11 au soir : l'admin et le Cerveau sont en prod** (PR #87) ; le fil attend le retour de Sofiene sur la prod. L'outil lui-même est décrit dans [[Tableau de bord admin]]. Retour à [[Fils du projet]]. Heures en UTC. Statut : CONFIRMÉ (fil et API GitHub lus le 10/11).
+Histoire du fil « Créer le tableau de bord admin complet » (`cmsg_01Mb4hMYwRFctv5wE2NGiASi8hPR2cwTfeEfEKYMb6dDMD`), ouvert le 10/11 à 14:08 UTC, dernière activité le 11/11 vers 09:51. **Terminé** : l'admin et le Cerveau sont en prod (PR #87), confirmé par Sofiene le 11/11. L'outil lui-même est décrit dans [[Tableau de bord admin]]. Retour à [[Fils du projet]]. Heures en UTC. Statut : CONFIRMÉ (fil et API GitHub lus le 10/11).
 
 ## La demande (14:08)
 « il y a la page admin qui permet d'accéder au resultat des test réseau et qui donne l'état des services mais c'est pas suffisant. Il faut créer un outil qui permet de tout gérer les accès des utilisateurs de tout faire sans passer par les commandes railways avoir les vente stripe du jour du mois et sur la totalité du projet voir tout les services accéder au test réseau bref un tableau de bord qui permets de tout voir le max d'info et de possibilité de gestion des utilisateurs au meme endroit. Il faut un outil qui centralise toute les donnée du projet au meme endroit et qui permet de gérer les utilisateurs ».
@@ -36,9 +36,13 @@ Avant, le support passait par des commandes dans le shell Railway (`npm run admi
 - Lecture retenue : seulement l'admin et le [[Cerveau du vault]] (PR #85, d'un autre fil) ; la [[Version 1.3.0]] qui attend dans `staging` (essai, connexion de l'app, Rago Route, bot communauté, nouveaux e-mails) ne part pas, comme décidé le 10/11 (une seule sortie).
 - Portage sur une branche partie de la prod (`claude/project-thread-49sqc3-prod`) : fichiers de l'admin et du Cerveau repris de `staging`, bannissement (refusé aussi par l'app et le site), table `trials` et colonnes `banned_at`/`banned_reason` ajoutées au démarrage sans rien supprimer, ancienne page `/admin` retirée ; 93 tests serveur (90 passés, 3 sautés), les 10 pages vérifiées en local. PR #87 ouverte à 18:44, fusionnée à 18:49 ; Railway a redéployé la prod après les tests GitHub, nouvelle page `/admin` servie à 18:54 (vérifiée sans la clé : page de connexion, `/admin/cerveau` renvoie vers elle, styles et scripts servis).
 
+## Étape 6 : confirmation (11/11)
+- 09:41 : « oui mais je mets quoi comme valeur pour lCERVEAU_GITHUB_TOKEN » → mode d'emploi du jeton GitHub « fine-grained » (`kaliso-dev/rago` seulement, Contents en lecture seule), à mettre dans Railway en prod et en staging.
+- 09:51 : « ok tout est bon le dashboard est bien en ligne ». Jeton mis ou non : À VÉRIFIER (q98).
+
 ## Ce qu'il faut retenir
 - L'admin complet et le Cerveau sont **en prod** depuis la PR #87 (10/11) ; l'ancienne page admin n'existe plus. Le bot communauté n'est pas en prod, d'où « Éteint » dans Services.
-- `CERVEAU_GITHUB_TOKEN` est à mettre dans Railway (staging et prod) avant que le dépôt passe en privé.
+- `CERVEAU_GITHUB_TOKEN` doit être dans Railway (staging et prod) avant que le dépôt passe en privé ; fait ou non : À VÉRIFIER (q98).
 - Sur staging, les chiffres de ventes sont ceux du mode test de Stripe ; ne pas les prendre pour des vrais.
 - Les lignes de [[Journal]] et [[Décisions]] des PR #83, #84 et #87 sont écrites par ce fil sur sa branche.
 
