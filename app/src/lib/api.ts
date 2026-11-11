@@ -3,6 +3,7 @@
 import { invoke } from "@tauri-apps/api/core";
 import { listen, type UnlistenFn } from "@tauri-apps/api/event";
 import { tweaks } from "./catalog";
+import tipsData from "../data/tips.json";
 import type { NetAction, NetLine, NetOptions, NetOutcome, NetState } from "./netopt";
 
 export interface Gpu {
@@ -240,8 +241,9 @@ export interface BackgroundState {
 }
 /** Pendant une partie (session.rs). */
 export interface SessionCheck {
-  id: "battery" | "download" | "sync" | "record";
-  /** applis concernées */
+  /** processus lancés : battery, download, sync, record, wallpaper ; Windows : refresh, gamedvr ; applis gourmandes : cpu, ram */
+  id: "battery" | "download" | "sync" | "record" | "wallpaper" | "refresh" | "gamedvr" | "cpu" | "ram";
+  /** applis concernées ; pour "refresh" : la fréquence actuelle puis la plus haute (Hz) */
   apps: string[];
 }
 export interface SessionState {
@@ -257,6 +259,10 @@ export interface SessionState {
   multiGpu: boolean | null;
   /** Ryzen X3D à deux CCD : le mode d'alimentation n'est jamais changé */
   x3d: boolean;
+  /** jeu de la partie qui a des réglages conseillés (clé de tips.json), null sinon */
+  game: string | null;
+  /** ses réglages conseillés pas encore cochés « fait » */
+  tipsLeft: number;
 }
 export type OverlayMode = "hidden" | "panel" | "pill";
 export interface OverlayInfo {
@@ -268,6 +274,8 @@ export interface OverlayInfo {
   shortcutTaken: boolean;
   /** barre ouverte sans prendre le premier plan au jeu (Minecraft) : le clavier reste au jeu */
   passive: boolean;
+  /** la pastille montre le rappel des conseils au lancement du jeu */
+  nudge: boolean;
 }
 export interface OverlayLive {
   fps: number | null;
@@ -556,6 +564,11 @@ export interface Api {
   /** Options « pendant la partie » des paramètres ; renvoie les réglages enregistrés. */
   sessionSetPrefs(gpu: boolean, power: boolean, checks: boolean, priority: boolean): Promise<BackgroundPrefs>;
   onSession(cb: (s: SessionState) => void): Promise<UnlistenFn>;
+  /** Réglages en jeu conseillés cochés « fait » (tips.rs). */
+  tipsDone(): Promise<string[]>;
+  /** Coche ou décoche un réglage conseillé ; renvoie la liste cochée. */
+  tipsMark(id: string, done: boolean): Promise<string[]>;
+  onTipsDone(cb: (ids: string[]) => void): Promise<UnlistenFn>;
   /** Barre en jeu (fenêtre « overlay ») */
   overlayInfo(): Promise<OverlayInfo>;
   overlayLive(): Promise<OverlayLive>;
@@ -564,6 +577,8 @@ export interface Api {
   /** Ferme la barre et ouvre l'app (page : id de page, ou "premium" pour l'offre). */
   overlayOpenApp(page?: string): Promise<void>;
   onOverlayMode(cb: (mode: OverlayMode) => void): Promise<UnlistenFn>;
+  /** La pastille commence ou finit le rappel des conseils. */
+  onOverlayNudge(cb: (on: boolean) => void): Promise<UnlistenFn>;
   /** Fenêtre principale : page demandée depuis la barre en jeu. */
   onGoto(cb: (page: string) => void): Promise<UnlistenFn>;
   openUrl(url: string): Promise<void>;
@@ -674,12 +689,16 @@ const tauriApi: Api = {
   sessionState: () => invoke("session_state"),
   sessionSetPrefs: (gpu, power, checks, priority) => invoke("session_set_prefs", { gpu, power, checks, priority }),
   onSession: (cb) => listen<SessionState>("games:session", (e) => cb(e.payload)),
+  tipsDone: () => invoke("tips_done"),
+  tipsMark: (id, done) => invoke("tips_mark", { id, done }),
+  onTipsDone: (cb) => listen<string[]>("tips:done", (e) => cb(e.payload)),
   overlayInfo: () => invoke("overlay_info"),
   overlayLive: () => invoke("overlay_live"),
   overlayClose: () => invoke("overlay_close"),
   overlaySetPin: (pin) => invoke("overlay_set_pin", { pin }),
   overlayOpenApp: (page) => invoke("overlay_open_app", { page: page ?? null }),
   onOverlayMode: (cb) => listen<OverlayMode>("overlay:mode", (e) => cb(e.payload)),
+  onOverlayNudge: (cb) => listen<boolean>("overlay:nudge", (e) => cb(e.payload)),
   onGoto: (cb) => listen<string>("app:goto", (e) => cb(e.payload)),
   licenseStatus: () => invoke("license_status"),
   licenseLogin: (email, password) => invoke("license_login", { email, password }),
@@ -897,17 +916,33 @@ let mockBackground: BackgroundPrefs = {
   gameChecks: true,
   gamePriority: true,
 };
-/** Démo : une partie en cours avec ?playing dans l'adresse (barre en jeu : toujours). */
+/** Démo : réglages conseillés cochés « fait ». */
+let mockTipsDone: string[] = [];
+/** Démo : une partie en cours avec ?playing dans l'adresse (barre en jeu : toujours) ; ?game=fortnite change le jeu
+ * des réglages conseillés (VALORANT par défaut). */
 const mockSession = (): SessionState => {
-  const playing = new URLSearchParams(location.search).has("playing") || location.pathname.includes("overlay");
+  const q = new URLSearchParams(location.search);
+  const playing = q.has("playing") || location.pathname.includes("overlay");
+  const game = playing ? (q.get("game") ?? "valorant") : null;
+  const ids = game ? (tipsData.games[game as keyof typeof tipsData.games]?.tips.map((x) => x.id) ?? []) : [];
   return {
     playing,
     power: playing && mockBackground.gamePower,
     priority: playing && mockBackground.gamePriority ? 1 : 0,
     gpuGames: mockBackground.gameGpu ? 2 : 0,
-    checks: playing && mockBackground.gameChecks ? [{ id: "sync", apps: ["OneDrive"] }, { id: "record", apps: ["OBS Studio"] }] : [],
+    checks:
+      playing && mockBackground.gameChecks
+        ? [
+            { id: "sync", apps: ["OneDrive"] },
+            { id: "record", apps: ["OBS Studio"] },
+            { id: "refresh", apps: ["60", "144"] },
+            { id: "cpu", apps: ["Google Chrome"] },
+          ]
+        : [],
     multiGpu: true,
     x3d: false,
+    game: ids.length ? game : null,
+    tipsLeft: ids.filter((id) => !mockTipsDone.includes(id)).length,
   };
 };
 
@@ -1368,7 +1403,15 @@ const mockApi: Api = {
     return mockBackground;
   },
   onSession: (cb) => on("games:session", cb),
-  // démo de la barre : overlay.html?pill pour la pastille
+  tipsDone: async () => mockTipsDone,
+  tipsMark: async (id, done) => {
+    mockTipsDone = done ? [...new Set([...mockTipsDone, id])] : mockTipsDone.filter((x) => x !== id);
+    emit<string[]>("tips:done", mockTipsDone);
+    emit<SessionState>("games:session", mockSession());
+    return mockTipsDone;
+  },
+  onTipsDone: (cb) => on("tips:done", cb),
+  // démo de la barre : overlay.html?pill pour la pastille, ?pill&nudge pour le rappel des conseils
   overlayInfo: async () => ({
     mode: new URLSearchParams(location.search).has("pill") ? "pill" : "panel",
     game: "Minecraft",
@@ -1377,6 +1420,7 @@ const mockApi: Api = {
     fpsAvailable: true,
     shortcutTaken: false,
     passive: new URLSearchParams(location.search).has("passive"),
+    nudge: new URLSearchParams(location.search).has("nudge"),
   }),
   overlayLive: async () => ({ fps: Math.round(238 + Math.random() * 14), ping: Math.round(21 + Math.random() * 4), pingEstimate: new URLSearchParams(location.search).has("estimate") }),
   overlayClose: async () => {},
@@ -1385,6 +1429,7 @@ const mockApi: Api = {
   },
   overlayOpenApp: async () => {},
   onOverlayMode: (cb) => on("overlay:mode", cb),
+  onOverlayNudge: (cb) => on("overlay:nudge", cb),
   onGoto: (cb) => on("app:goto", cb),
   licenseStatus: async () => {
     await sleep(300);

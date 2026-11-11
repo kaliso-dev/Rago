@@ -34,6 +34,7 @@ mod session;
 mod shell;
 mod stats;
 mod system;
+mod tips;
 mod tools;
 mod update;
 
@@ -948,6 +949,21 @@ fn session_set_prefs(bg: State<'_, Arc<Background>>, gpu: bool, power: bool, che
     prefs
 }
 
+/// Conseils au lancement du jeu : réglages en jeu cochés « fait » (tips.rs).
+#[tauri::command]
+fn tips_done(session: State<'_, Arc<session::Session>>) -> Vec<String> {
+    session.tips_done()
+}
+
+/// Coche ou décoche un réglage en jeu conseillé ; la barre en jeu et l'app suivent (`tips:done`, `games:session`).
+#[tauri::command]
+fn tips_mark(app: AppHandle, session: State<'_, Arc<session::Session>>, id: String, done: bool) -> Vec<String> {
+    let (list, state) = session.tips_mark(&id, done);
+    let _ = app.emit("tips:done", list.clone());
+    let _ = app.emit("games:session", state);
+    list
+}
+
 /// État de ce que lit le vérificateur de Ranked Bedwars (affiché sous RBW Mod).
 #[tauri::command]
 async fn rbw_status() -> Result<Vec<rbw::Check>, String> {
@@ -1354,6 +1370,8 @@ pub fn run() {
                     library.list(false);
                     // parties de suite sans jeu : le Mode jeu total se rend (Rago OS fermé ou planté en pleine partie)
                     let mut idle_ticks = 0u32;
+                    // applis gourmandes pendant la partie (conseils au lancement, tips.rs)
+                    let mut hogs = tips::Hogs::default();
                     loop {
                         let procs = games::process_paths();
                         if let Some(running) = library.poll(&procs) {
@@ -1362,7 +1380,14 @@ pub fn run() {
                         let mut exes = library.game_exes(&procs);
                         exes.extend(procs.iter().filter(|p| session::minecraft_exe(p)).cloned());
                         let playing = library.playing() || !exes.is_empty();
-                        if let Some(state) = session.tick(playing, &exes, &procs, &background.prefs()) {
+                        let prefs = background.prefs();
+                        let busy = if playing && prefs.game_checks {
+                            hogs.tick(&exes)
+                        } else {
+                            hogs.reset();
+                            Vec::new()
+                        };
+                        if let Some(state) = session.tick(playing, &exes, &procs, &prefs, busy) {
                             let _ = handle.emit("games:session", state);
                         }
                         idle_ticks = if playing { 0 } else { idle_ticks + 1 };
@@ -1385,7 +1410,13 @@ pub fn run() {
                     }
                 });
             }
-            let overlay = Arc::new(overlay::Overlay::new(resource_dir.clone(), data_dir.clone(), Arc::clone(&library), Arc::clone(&background)));
+            let overlay = Arc::new(overlay::Overlay::new(
+                resource_dir.clone(),
+                data_dir.clone(),
+                Arc::clone(&library),
+                Arc::clone(&background),
+                Arc::clone(&session),
+            ));
             overlay::watch(app.handle().clone(), Arc::clone(&overlay));
             app.manage(background);
             app.manage(overlay);
@@ -1524,6 +1555,8 @@ pub fn run() {
             background_set,
             session_state,
             session_set_prefs,
+            tips_done,
+            tips_mark,
             overlay_info,
             overlay_live,
             overlay_close,

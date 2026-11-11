@@ -2,8 +2,8 @@
 type: code
 tags: [code, app, typescript, react, overlay]
 fichier: app/src/overlay/Overlay.tsx
-lignes: 269
-maj: 2026-11-10
+lignes: 297
+maj: 2026-11-11
 ---
 # Overlay.tsx
 
@@ -56,6 +56,11 @@ Logo + FPS + ping, rien d'autre (`aria-live="off"`). La pastille ne prend ni le 
 6. **Pied** : « Alt+X ou Échap pour revenir au jeu » (raccourci réel des préférences, `Alt+X` par défaut) ; en mode `passive` (barre ouverte sans prendre le premier plan au jeu, Minecraft) : « Alt+X, Échap ou ✕ ferment la barre » ; puis « Ping du serveur où tu joues (Minecraft : mesuré comme dans le jeu) ».
 - **Échap** ou clic hors de la barre (sur `.ov-stage`) : `overlayClose()`.
 - Animation d'ouverture : fondu, glissement de 10 px et échelle 0,98 → 1 en 0,22 s.
+
+### Conseils au lancement du jeu (PR #91, 11/11, pas encore dans `staging`)
+- **Rappel** : quand le moteur le demande (`nudge` de `overlayInfo`, puis l'événement `overlay:nudge`, [[overlay.rs]]), la pastille élargie montre le logo, une ampoule, le texte « {n} conseils pour {jeu} » (n = réglages pas faits + points à vérifier) ou « {n} points à vérifier », un séparateur et « Alt+X pour voir » (raccourci réel des préférences), avec `aria-live="polite"`. Nom du jeu : [[tips.ts]] `tipsFor`.
+- **Barre ouverte** : `SessionChecks` et le bloc [[GameTips.tsx]] (`compact` : 3 réglages, ouvert s'il en reste à faire) sont réunis dans `.ov-advice`, qui défile à part (258 px au plus, fondu en bas) pour laisser leur place aux réglages en pleine partie. Affiché quand une partie est en cours ou qu'un jeu à conseils est connu (`session.game`).
+- Commandes et événements en plus : `tips_done`, `tips_mark`, `tips:done` (par [[GameTips.tsx]]), `overlay:nudge`. Démo : `overlay.html?pill&nudge` (`&game=cs2` pour un autre jeu). Fonctionnalité : [[Conseils au lancement du jeu]].
 
 ## Données touchées
 - Lit `localStorage` `rago.lang` et `rago.cleanTrim` (écrits par la fenêtre principale).

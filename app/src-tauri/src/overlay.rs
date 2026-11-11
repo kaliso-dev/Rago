@@ -15,6 +15,9 @@
 //! - Lancement d'un jeu : la pastille attend que le jeu soit au premier plan depuis 10 s (il change de mode d'affichage
 //!   pendant son chargement), et ne s'affiche jamais par-dessus le plein écran exclusif, où elle ne serait pas visible
 //!   et pourrait le faire sortir de son plein écran.
+//! - Rappel des conseils (tips.rs) : une fois par lancement, quand le jeu est installé au premier plan et que Rago a
+//!   quelque chose à signaler (réglage en jeu pas fait, vérification), la pastille s'élargit quelques secondes pour le
+//!   dire, même si elle n'est pas gardée à l'écran. Elle ne prend ni le focus ni les clics ; le raccourci ouvre la barre.
 //! - Souris : Minecraft la garde (curseur caché et ramené au centre) tant qu'il est au premier plan en jeu. En fenêtre,
 //!   la barre lui prend le premier plan et il la rend de lui-même ; en plein écran, la barre lui envoie Échap, qui ouvre
 //!   son menu pause et libère le curseur. Pendant ce temps, Échap ferme la barre et le jeu reste en pause.
@@ -31,11 +34,18 @@ use crate::background::Background;
 use crate::fps::Fps;
 use crate::gameping::GamePing;
 use crate::games::Library;
+use crate::session::Session;
 
 pub const LABEL: &str = "overlay";
 /// Tailles en points (multipliées par l'échelle de l'écran du jeu).
 const PANEL: (f64, f64) = (780.0, 600.0);
 const PILL: (f64, f64) = (236.0, 44.0);
+/// Pastille élargie pour le rappel des conseils.
+const NUDGE_SIZE: (f64, f64) = (380.0, 44.0);
+/// Durée du rappel des conseils, et délai après l'arrivée du jeu au premier plan au-delà duquel il ne s'affiche plus
+/// (pas en pleine partie).
+const NUDGE: Duration = Duration::from_secs(12);
+const NUDGE_WINDOW: Duration = Duration::from_secs(120);
 const MARGIN: f64 = 18.0;
 const TICK: Duration = Duration::from_millis(700);
 /// Au lancement d'un jeu, la pastille attend ce temps au premier plan.
@@ -106,6 +116,8 @@ pub struct Info {
     pub shortcut_taken: bool,
     /// barre ouverte sans prendre le premier plan au jeu : pas de clavier, Échap reste au jeu
     pub passive: bool,
+    /// la pastille montre le rappel des conseils
+    pub nudge: bool,
 }
 
 #[derive(Serialize)]
@@ -132,6 +144,11 @@ struct St {
     minimizes: HashSet<String>,
     /// jeu au premier plan et depuis quand (la pastille attend la fin de son lancement)
     since: Option<(u32, Instant)>,
+    /// rappel des conseils : processus du jeu pour lequel il a été montré, et jusqu'à quand
+    nudged: Option<u32>,
+    nudge_until: Option<Instant>,
+    /// la pastille affiche le rappel (taille et contenu)
+    nudge_shown: bool,
 }
 
 pub struct Overlay {
@@ -142,6 +159,7 @@ pub struct Overlay {
     data_dir: PathBuf,
     library: Arc<Library>,
     background: Arc<Background>,
+    session: Arc<Session>,
 }
 
 /// Nom affiché du jeu d'après son exe, None si ce n'est pas un jeu.
@@ -160,12 +178,12 @@ pub fn game_name(exe: &Path, covers_screen: bool, library: impl Fn(&Path) -> Opt
 }
 
 impl Overlay {
-    pub fn new(resource_dir: PathBuf, data_dir: PathBuf, library: Arc<Library>, background: Arc<Background>) -> Self {
+    pub fn new(resource_dir: PathBuf, data_dir: PathBuf, library: Arc<Library>, background: Arc<Background>, session: Arc<Session>) -> Self {
         let minimizes = std::fs::read(data_dir.join(KEEP_FILE)).ok().and_then(|b| serde_json::from_slice(&b).ok()).unwrap_or_default();
         let st = St { minimizes, ..St::default() };
         let fps = Fps::default();
         fps.keep_matches_in(data_dir.join("last-match.json"));
-        Overlay { st: Mutex::new(st), fps, ping: Mutex::default(), resource_dir, data_dir, library, background }
+        Overlay { st: Mutex::new(st), fps, ping: Mutex::default(), resource_dir, data_dir, library, background, session }
     }
 
     fn lock(&self) -> std::sync::MutexGuard<'_, St> {
@@ -192,6 +210,7 @@ impl Overlay {
             fps_available: Fps::available(&self.resource_dir),
             shortcut_taken: st.taken,
             passive: st.passive,
+            nudge: st.nudge_shown,
         }
     }
 
@@ -299,7 +318,11 @@ impl Overlay {
             .or_else(|| app.primary_monitor().ok().flatten());
         let Some(m) = monitor else { return };
         let scale = m.scale_factor();
-        let (lw, lh) = if mode == Mode::Pill { PILL } else { PANEL };
+        let (lw, lh) = match mode {
+            Mode::Pill if self.lock().nudge_shown => NUDGE_SIZE,
+            Mode::Pill => PILL,
+            _ => PANEL,
+        };
         let (mx, my, mw, mh) = (m.position().x, m.position().y, m.size().width as i32, m.size().height as i32);
         let margin = (MARGIN * scale).round() as i32;
         // petit écran (1280 × 720 à 125 %, par exemple) : la barre rétrécit, sa liste de réglages défile
@@ -328,7 +351,12 @@ impl Overlay {
         if let Some(g) = self.foreground_game() {
             self.lock().game = Some(g);
         }
-        let game = self.lock().game.clone();
+        let game = {
+            let mut st = self.lock();
+            // le joueur ouvre la barre : le rappel des conseils a servi
+            st.nudge_until = None;
+            st.game.clone()
+        };
         let Some(w) = self.window(app) else { return };
         let passive = self.keeps_foreground(game.as_ref());
         // relevé avant d'afficher la barre, quand le curseur est encore au-dessus du jeu
@@ -398,6 +426,12 @@ impl Overlay {
 
     fn show_pill(&self, app: &AppHandle, game: &Target) {
         let Some(w) = self.window(app) else { return };
+        let nudge = {
+            let mut st = self.lock();
+            st.nudge_shown = st.nudge_until.is_some_and(|t| Instant::now() < t);
+            st.nudge_shown
+        };
+        let _ = app.emit_to(LABEL, "overlay:nudge", nudge);
         let _ = w.set_ignore_cursor_events(true);
         let _ = w.set_focusable(false);
         self.set_mode(app, Mode::Pill);
@@ -406,6 +440,7 @@ impl Overlay {
     }
 
     fn hide_pill(&self, app: &AppHandle) {
+        self.lock().nudge_shown = false;
         self.set_mode(app, Mode::Hidden);
         if let Some(w) = app.get_webview_window(LABEL) {
             win::hide(&w);
@@ -465,10 +500,29 @@ impl Overlay {
             }
         }
         let settled = fg.as_ref().is_some_and(|g| self.settled(g));
+        // rappel des conseils : une fois par lancement du jeu, dans les deux minutes après son arrivée au premier plan
+        if let Some(g) = fg.as_ref().filter(|_| settled && !exclusive && prefs.overlay) {
+            let fresh = {
+                let st = self.lock();
+                st.nudged != Some(g.pid) && st.since.is_some_and(|(pid, t)| pid == g.pid && t.elapsed() < SETTLE + NUDGE_WINDOW)
+            };
+            if fresh && self.session.has_advice(&prefs) {
+                let mut st = self.lock();
+                st.nudged = Some(g.pid);
+                st.nudge_until = Some(Instant::now() + NUDGE);
+            }
+        }
+        let (nudging, shown) = {
+            let st = self.lock();
+            (st.nudge_until.is_some_and(|t| Instant::now() < t), st.nudge_shown)
+        };
+        let wanted = prefs.overlay && (prefs.pin || nudging) && !exclusive;
         match (mode, &fg) {
-            (Mode::Hidden, Some(g)) if prefs.overlay && prefs.pin && settled && !exclusive => self.show_pill(app, g),
+            (Mode::Hidden, Some(g)) if wanted && settled => self.show_pill(app, g),
             (Mode::Pill, None) => self.hide_pill(app),
-            (Mode::Pill, Some(_)) if !prefs.overlay || !prefs.pin || exclusive => self.hide_pill(app),
+            (Mode::Pill, Some(_)) if !wanted => self.hide_pill(app),
+            // le rappel commence ou finit pendant que la pastille est gardée à l'écran : nouvelle taille, nouveau contenu
+            (Mode::Pill, Some(g)) if nudging != shown => self.show_pill(app, g),
             _ => {}
         }
         self.follow();
