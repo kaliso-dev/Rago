@@ -8,7 +8,7 @@ maj: 2026-11-11
 
 Carte **« Graphismes du jeu »** de la page « Jeux », sous la carte du jeu choisi : comme le préréglage OptiFine de Minecraft, **trois niveaux en un clic**, écrits dans les réglages du jeu lui-même. Demandée par Sofiene le 11/11/2026 (feature 3 de son message : « Tu vois l'optimization Optifine dans Minecraft […] Il faut la meme pour tout les jeux valorant fortnite csgo etc etc, avec un choix qualité max, un choix le plus utiliser et optimiser entre performance et agreabilité et enfin le settings avec tout au plus bas »). Code : [[gamecfg.rs]] (moteur), [[GameGraphics.tsx]] (carte), [[graphics.ts]] (textes). Page : [[Bibliothèque de jeux]].
 
-**Statut (11/11)** : codée sur la branche `claude/project-thread-5ln7f8` (partie de `staging`), **pas encore poussée** sur GitHub (accord de Sofiene demandé dans le fil pour la pousser et ouvrir une PR brouillon vers `staging`), à sortir après la grosse sortie en cours ([[Version 1.3.0]]). **Jamais testée sur Windows** ([[Règles de travail]]) : les clés de Valorant, Fortnite et Apex viennent de fichiers publiés par des joueurs, pas d'une documentation des éditeurs. **Gratuit ou Premium : À DÉCIDER** par Sofiene (q94 sur la page « Questions du vault Rago », 11/11 ; pour l'instant le code la laisse gratuite, sans verrou). Ticket [[Linear]] : RAG-92 (« In Review »).
+**Statut (11/11)** : codée sur la branche `claude/project-thread-5ln7f8` (partie de `staging`), **PR #94 vers `staging`** ouverte le 11/11 sur la demande de Sofiene (« Push toutes les modification vers stagging pour que je puisse test la version test »), à fusionner avec les autres nouveautés du 11/11 par le fil « Passer les 6 features sur staging », pas encore fusionnée ; à sortir après la grosse sortie en cours ([[Version 1.3.0]]). **Jamais testée sur Windows** ([[Règles de travail]]) : les clés de Valorant, Fortnite et Apex viennent de fichiers publiés par des joueurs, pas d'une documentation des éditeurs. **Gratuit ou Premium : À DÉCIDER** par Sofiene (q94 sur la page « Questions du vault Rago », 11/11 ; pour l'instant le code la laisse gratuite, sans verrou). Ticket [[Linear]] : RAG-92 (« In Review »).
 
 ## Les trois niveaux
 | Niveau (app en anglais) | Sous-titre | Idée |
@@ -52,6 +52,6 @@ Valeurs exactes de chaque niveau : [[gamecfg.rs]]. Pas touché : les options du 
 
 ## À faire
 - **Test sur Windows par Sofiene** : pour chaque jeu, choisir un niveau, lancer le jeu, regarder le menu Vidéo ; puis « Restore my settings ».
-- Pousser la branche et ouvrir la PR brouillon vers `staging` (accord de Sofiene demandé dans le fil le 11/11).
+- PR #94 : fusion dans `staging` pour la version test (11/11).
 - Gratuit ou Premium (q94). Si Premium : verrou à ajouter côté Rust et dans la carte.
 - Plus tard : PUBG, Overwatch 2, Rainbow Six Siege, Rocket League, Roblox (formats différents, pas encore faits) ; Minecraft Java dans la même carte (OptiFine, un troisième niveau « Équilibré »).

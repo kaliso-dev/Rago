@@ -15,9 +15,6 @@ Mode d'emploi (outil ArtifactData, collection `questions`) :
 - **Traiter** : mettre le vault à jour selon la réponse, puis passer la question en `statut: "traitée"` avec `traitement` (ce qui a été fait, en une phrase). Si la réponse demande une précision, réécrire `question` et `contexte`, vider `reponse` et laisser `ouverte`.
 - Dire à Sofiene dans le fil, en une ligne, quand de nouvelles questions l'attendent.
 
-## Posées dans le fil « Ajouter les presets graphiques par jeu » (11/11)
-- Pousser la branche `claude/project-thread-5ln7f8` et ouvrir la PR brouillon vers `staging` (refusé sans accord explicite, règle « rien sur GitHub sans demande » ; carte de décision dans le fil).
-
 ## En attente de réponse sur la page
 Au 10/11, après les réponses de Sofiene du jour (q36 à q68 traitées, q46 le 10/11 à 15 h, voir [[Décisions]]) :
 - q65 : réglages Railway de prod (Wait for CI, Watch Paths, Healthcheck, moniteur) ; Sofiene demande à Claude de vérifier et de le lui rappeler ([[Railway]]).
