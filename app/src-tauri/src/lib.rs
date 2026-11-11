@@ -6,6 +6,7 @@ mod backup;
 mod boost;
 mod bridge;
 mod catalog;
+mod display;
 mod flows;
 mod fps;
 mod gameping;
@@ -487,9 +488,21 @@ async fn game_art(state: State<'_, AppState>, id: String) -> Result<Option<Strin
 }
 
 #[tauri::command]
-async fn game_launch(state: State<'_, AppState>, id: String) -> Result<(), String> {
+async fn game_launch(app: AppHandle, state: State<'_, AppState>, display: State<'_, Arc<display::Display>>, id: String) -> Result<(), String> {
     let lib = Arc::clone(&state.library);
-    tauri::async_runtime::spawn_blocking(move || lib.launch(&id)).await.map_err(|e| e.to_string())?
+    let display = Arc::clone(&display);
+    tauri::async_runtime::spawn_blocking(move || {
+        // résolution du jeu posée avant son lancement, et écrite dans son fichier de réglages (display.rs)
+        let st = display.prepare(&id);
+        let _ = app.emit("display:state", st);
+        let r = lib.launch(&id);
+        if r.is_err() {
+            display.cancel_prepare(&id);
+        }
+        r
+    })
+    .await
+    .map_err(|e| e.to_string())?
 }
 
 /// Launchers installés (Steam, Epic Games, Lunar Client…).
@@ -931,6 +944,50 @@ async fn background_set(app: AppHandle, prefs: background::Prefs) -> Result<Back
     .map_err(|e| e.to_string())?
 }
 
+/// Couleurs et résolution par jeu (display.rs) : ce que la carte graphique de l'écran principal sait faire, et ses
+/// résolutions.
+#[tauri::command]
+async fn display_info() -> Result<display::Info, String> {
+    tauri::async_runtime::spawn_blocking(display::info).await.map_err(|e| e.to_string())
+}
+
+#[tauri::command]
+fn display_profiles(display: State<'_, Arc<display::Display>>) -> std::collections::BTreeMap<String, display::Profile> {
+    display.profiles()
+}
+
+#[tauri::command]
+fn display_state(display: State<'_, Arc<display::Display>>) -> display::State {
+    display.state()
+}
+
+/// Enregistre (ou retire, `profile` absent) les couleurs et la résolution d'un jeu. Importer les réglages d'un pro
+/// (`pro` nouveau) demande le Premium (Sofiene, 11/11) ; le réglage à la main est gratuit.
+#[tauri::command]
+async fn display_set_profile(
+    app: AppHandle,
+    state: State<'_, AppState>,
+    display: State<'_, Arc<display::Display>>,
+    id: String,
+    profile: Option<display::Profile>,
+) -> Result<display::State, String> {
+    let pro = profile.as_ref().and_then(|p| p.pro.clone());
+    let had = display.profiles().get(&display::profile_key(&id)).and_then(|p| p.pro.clone());
+    if pro.is_some() && pro != had && state.license.status().state != "active" {
+        return Err("premium:no_license".into());
+    }
+    let display = Arc::clone(&display);
+    let st = tauri::async_runtime::spawn_blocking(move || display.set_profile(&id, profile)).await.map_err(|e| e.to_string())?;
+    let _ = app.emit("display:state", st.clone());
+    Ok(st)
+}
+
+/// Aperçu des couleurs sur l'écran principal pendant quelques secondes (`colors` absent : fin de l'aperçu).
+#[tauri::command]
+fn display_preview(display: State<'_, Arc<display::Display>>, colors: Option<display::Colors>) {
+    display.preview(colors);
+}
+
 /// Pendant une partie : mode d'alimentation, carte graphique et vérifications (session.rs).
 #[tauri::command]
 async fn session_state(session: State<'_, Arc<session::Session>>) -> Result<session::State, String> {
@@ -1306,6 +1363,14 @@ pub fn run() {
             let started_hidden = std::env::args_os().any(|a| a == background::BACKGROUND_ARG);
             let background = Arc::new(Background::load(&data_dir, started_hidden));
             let session = Arc::new(session::Session::new(&data_dir));
+            // couleurs et résolution par jeu : ce qu'un plantage a laissé est remis tout de suite (display.rs)
+            let display = display::Display::new(&data_dir);
+            {
+                let handle = app.handle().clone();
+                display.spawn(move |state| {
+                    let _ = handle.emit("display:state", state);
+                });
+            }
             // Mode jeu total demandé par Rago OS : relance ce qu'une partie interrompue a laissé arrêté (boost.rs)
             let boost = Arc::new(boost::Boost::new(&data_dir));
             // jeux lancés : la dernière partie de chacun est notée, l'interface suit ceux en cours, et l'app fait ce
@@ -1313,6 +1378,7 @@ pub fn run() {
             {
                 let (library, background, session, handle) = (Arc::clone(&library), Arc::clone(&background), Arc::clone(&session), app.handle().clone());
                 let boost = Arc::clone(&boost);
+                let display = Arc::clone(&display);
                 std::thread::spawn(move || {
                     library.list(false);
                     // parties de suite sans jeu : le Mode jeu total se rend (Rago OS fermé ou planté en pleine partie)
@@ -1327,6 +1393,11 @@ pub fn run() {
                         let playing = library.playing() || !exes.is_empty();
                         if let Some(state) = session.tick(playing, &exes, &procs, &background.prefs()) {
                             let _ = handle.emit("games:session", state);
+                        }
+                        // couleurs et résolution par jeu : posées au lancement, rendues à la fin (display.rs)
+                        let minecraft = procs.iter().any(|p| session::minecraft_exe(p));
+                        if let Some(state) = display.tick(library.running_dirs(), minecraft) {
+                            let _ = handle.emit("display:state", state);
                         }
                         idle_ticks = if playing { 0 } else { idle_ticks + 1 };
                         // ~20 s sans jeu : laisse le temps à un lanceur de passer la main au vrai exe
@@ -1353,6 +1424,7 @@ pub fn run() {
             app.manage(background);
             app.manage(overlay);
             app.manage(session);
+            app.manage(display);
             app.manage(boost);
             if !started_hidden {
                 background::show_main(app.handle());
@@ -1481,6 +1553,11 @@ pub fn run() {
             background_set,
             session_state,
             session_set_prefs,
+            display_info,
+            display_profiles,
+            display_state,
+            display_set_profile,
+            display_preview,
             overlay_info,
             overlay_live,
             overlay_close,
@@ -1521,11 +1598,15 @@ pub fn run() {
         ])
         .build(tauri::generate_context!())
         .expect("erreur au lancement de Rago Optimizer")
-        .run(|_, event| {
+        .run(|app, event| {
             // la session du journal réseau (ping des jeux) ne survit pas à l'app
             if let tauri::RunEvent::Exit = event {
                 flows::shutdown();
                 route::turn_off(); // ferme les sessions proprement (la sortie lâche la connexion au serveur)
+                // couleurs et résolution d'un jeu en cours rendues avant de partir (display.rs)
+                if let Some(display) = app.try_state::<Arc<display::Display>>() {
+                    display.shutdown();
+                }
             }
         });
 }

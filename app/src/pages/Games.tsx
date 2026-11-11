@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import { AnimatePresence, motion } from "motion/react";
-import { ArrowUpRight, Check, ChevronDown, LoaderCircle, Lock, Play, Plus, RefreshCw, RotateCcw, Trash2, Zap } from "lucide-react";
-import { api, type Game, type Launcher } from "../lib/api";
+import { ArrowUpRight, Check, ChevronDown, LoaderCircle, Lock, Palette, Play, Plus, RefreshCw, RotateCcw, Trash2, Zap } from "lucide-react";
+import { api, type DisplayProfile, type Game, type Launcher } from "../lib/api";
 import { hue, initials } from "../lib/art";
 import { catalog, presetForGame, tweaks } from "../lib/catalog";
 import { useStore } from "../lib/store";
@@ -154,7 +154,7 @@ function Launchers({ list }: { list: Launcher[] }) {
 }
 
 export function Games() {
-  const { t, lang, premium, setUpsell, applied, gamePresets, setGamePresets, mcLauncher, setMcLauncher, myPresets, optimizeAndPlay, launchGame, playing, requestUndo, run, toApply } =
+  const { t, lang, premium, setUpsell, applied, gamePresets, setGamePresets, mcLauncher, setMcLauncher, myPresets, optimizeAndPlay, launchGame, playing, requestUndo, run, toApply, goTo } =
     useStore();
   const [games, setGames] = useState<Game[] | null>(null);
   const [launchers, setLaunchers] = useState<Launcher[]>([]);
@@ -164,7 +164,12 @@ export function Games() {
   const [art, setArt] = useState<Record<string, string | null>>({});
   const [menu, setMenu] = useState(false);
   const [asking, setAsking] = useState(false);
+  /** couleurs et résolution réglées par jeu (page Couleurs et résolution) */
+  const [display, setDisplay] = useState<Record<string, DisplayProfile>>({});
   const session = useSession();
+  useEffect(() => {
+    void api.displayProfiles().then(setDisplay, () => {});
+  }, []);
 
   const load = async (refresh: boolean) => {
     setScanning(true);
@@ -300,6 +305,16 @@ export function Games() {
     setGames((list) => list?.filter((x) => !ids.includes(x.id)) ?? list);
   };
 
+  /** Puce des couleurs et de la résolution du jeu : ce qui est réglé, sinon le nom de la page. */
+  const displayChip = (g: Entry) => {
+    const p = display[g.id];
+    const parts = [
+      p?.colors && p.colors.vibrance !== 50 ? t("display.chipVibrance", { n: p.colors.vibrance }) : null,
+      p?.resolution ? `${p.resolution.width}×${p.resolution.height}` : null,
+    ].filter(Boolean);
+    return parts.length ? parts.join(" · ") : t("display.chip");
+  };
+
   const mine = (g: Entry) => (g.clients ?? [g]).some((x) => x.id === playing?.id);
   const status = (g: Entry) =>
     mine(g) && playing?.status === "failed" ? t("games.failed") : mine(g) && playing?.status === "waiting" && !run ? t("games.starting") : null;
@@ -377,6 +392,10 @@ export function Games() {
                   )}
                 </AnimatePresence>
               </div>
+              <button type="button" className="chip chip-btn" onClick={() => goTo("display", hero.id)}>
+                <Palette size={12} />
+                {displayChip(hero)}
+              </button>
               {hero.clients?.length === 1 ? (
                 <span className="chip">{hero.clients[0].client}</span>
               ) : (

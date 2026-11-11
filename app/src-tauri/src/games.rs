@@ -412,7 +412,7 @@ fn expand_vars(s: &str, var: impl Fn(&str) -> Option<String>) -> String {
 /// comptes du PC. Rago tourne en administrateur : élevé avec un autre compte que celui du joueur, son %LOCALAPPDATA%
 /// n'est pas celui où Lunar Client, Feather ou Prism se sont installés.
 #[cfg(windows)]
-fn local_dirs() -> Vec<PathBuf> {
+pub(crate) fn local_dirs() -> Vec<PathBuf> {
     let mut out: Vec<PathBuf> = env_path("LOCALAPPDATA").into_iter().collect();
     let list = "HKLM\\SOFTWARE\\Microsoft\\Windows NT\\CurrentVersion\\ProfileList";
     for sid in reg::subkeys(list).into_iter().filter(|s| user_sid(s)) {
@@ -1384,6 +1384,13 @@ impl Library {
             .filter_map(|g| g.install_dir.as_ref().map(|d| (g.id.clone(), format!("{}\\", d.to_lowercase().trim_end_matches('\\')))))
             .filter(|(_, d)| d.len() > 4)
             .collect()
+    }
+
+    /// Jeux lancés (d'après le dernier `poll`) et leur dossier (minuscules, terminé par \\) : display.rs y reconnaît le
+    /// jeu au premier plan.
+    pub fn running_dirs(&self) -> Vec<(String, String)> {
+        let running = self.running.lock().unwrap().clone();
+        self.dirs(true).into_iter().filter(|(id, _)| running.contains(id)).collect()
     }
 
     /// Un jeu de la bibliothèque est lancé (d'après le dernier `poll`).
