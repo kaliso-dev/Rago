@@ -4,17 +4,26 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="theme-color" content="#0A0A0B">
-<!-- Rago Route: the network engine for Minecraft (in beta in Premium since the app 1.3.0). Source of site/route.html (built by tools/build.py, like partners.html).
-     Every figure on this page was measured (Rago's network test, tests on Hypixel, lab tests); the animations are labelled as illustrations. -->
-<title>Rago Route · Rago Optimizer</title>
-<meta name="description" content="Rago Route sends your Minecraft connection down two roads at once, repairs lost packets on the spot and holds your match through a Wi-Fi drop. Now in beta in Rago Optimizer Premium.">
+<!-- Rago Route: the anti-lag engine for Minecraft Java, in Rago Optimizer Premium (beta since the app 1.3.0).
+     Source of site/route.html (built by tools/build.py, which also copies prices, trial and account server from page.html).
+     The sales page of Rago Route, in this order: the player's problem, why it happens, what each part of the engine does about it
+     (one animation each), the measured results and what it won't do, why Rago, who it's for, how to start, the price, the FAQ.
+     Every figure on this page was measured (Rago's network test, tests on Hypixel, lab tests), with its date; the animations are
+     labelled as illustrations. -->
+<title>Rago Route: less lag from packet loss in Minecraft · Rago Optimizer</title>
+<meta name="description" content="Rago Route sends your Minecraft connection down two roads at once, repairs lost packets on arrival and holds your match through a short Wi-Fi drop. Every result measured. In Rago Optimizer Premium, with a free trial.">
 <link rel="canonical" href="https://rago-optimizer.com/route.html">
 <meta property="og:site_name" content="Rago Optimizer">
 <meta property="og:type" content="website">
+<meta property="og:locale" content="en_US">
 <meta property="og:url" content="https://rago-optimizer.com/route.html">
-<meta property="og:title" content="Rago Route: two roads for every packet">
-<meta property="og:description" content="Dual path, instant repair, a match that holds through a Wi-Fi drop. Rago's network engine for Minecraft, now in beta in Rago Optimizer Premium.">
+<meta property="og:title" content="Rago Route: lose packets, not fights">
+<meta property="og:description" content="Two roads for every packet, backup packets that repair a loss on arrival and a match that holds through a Wi-Fi drop. The anti-lag engine for Minecraft Java, in Rago Optimizer Premium.">
 <meta property="og:image" content="https://rago-optimizer.com/og-image.png">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="Rago Route: lose packets, not fights">
+<meta name="twitter:description" content="The anti-lag engine for Minecraft Java, in Rago Optimizer Premium. Every result measured.">
+<meta name="twitter:image" content="https://rago-optimizer.com/og-image.png">
 <link rel="icon" href="favicon.svg" type="image/svg+xml">
 <link rel="icon" href="favicon.ico" sizes="any">
 <link rel="apple-touch-icon" href="apple-touch-icon.png">
@@ -40,21 +49,24 @@
   color-scheme:dark;
 }
 *{box-sizing:border-box}
-html{overflow-x:clip;background:var(--ink);scroll-behavior:smooth}
+html{overflow-x:clip;background:var(--ink);scroll-behavior:smooth;scroll-padding-top:76px}
 body{margin:0;background:var(--ink);color:var(--t1);font:400 15px/1.65 var(--sans);-webkit-font-smoothing:antialiased;overflow-x:clip}
 a{color:inherit}
 h1,h2,h3,p{margin:0}
 h1,h2,h3{font-weight:600;letter-spacing:-.035em;line-height:1.05;text-wrap:balance}
+p{text-wrap:pretty}
 [hidden]{display:none!important}
 :focus-visible{outline:2px solid var(--red);outline-offset:3px;border-radius:var(--r-sm)}
 .band{padding-inline:var(--g)}
 .wrap{max-width:1240px;margin-inline:auto}
 .mono{font-family:var(--mono);font-variant-numeric:tabular-nums}
 .red{color:var(--red)}
+.okc{color:var(--ok)}
 .sr-only{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0}
 .eyebrow{display:inline-flex;align-items:center;gap:8px;padding:6px 12px 6px 10px;border-radius:var(--r-full);background:var(--ink-2);border:1px solid var(--l1);font:500 12px/1 var(--sans);color:var(--t2)}
 .eyebrow::before{content:"";width:6px;height:6px;border-radius:50%;background:var(--red);box-shadow:0 0 10px var(--red);animation:beat 2s var(--out) infinite}
 @keyframes beat{0%,100%{box-shadow:0 0 10px var(--red)}50%{box-shadow:0 0 0 5px var(--red-a14),0 0 14px var(--red)}}
+code{font:500 .92em/1 var(--mono);padding:3px 8px;border-radius:8px;background:var(--ink-3);border:1px solid var(--l2);color:var(--t1);white-space:nowrap}
 
 .btn{--h:48px;display:inline-flex;align-items:center;justify-content:center;gap:9px;height:var(--h);padding-inline:24px;border-radius:var(--r-full);font:600 14.5px/1 var(--sans);text-decoration:none;border:0;cursor:pointer;white-space:nowrap;transition:transform .2s var(--out),background .2s,box-shadow .25s}
 .btn svg{width:17px;height:17px;flex:none}
@@ -64,16 +76,23 @@ h1,h2,h3{font-weight:600;letter-spacing:-.035em;line-height:1.05;text-wrap:balan
 .btn-ghost{background:rgba(255,255,255,.04);color:var(--t1);box-shadow:inset 0 0 0 1px var(--l2)}
 .btn-ghost:hover{background:rgba(255,255,255,.08);box-shadow:inset 0 0 0 1px var(--l3)}
 .btn-sm{--h:38px;padding-inline:16px;font-size:13.5px}
+.btn-lg{--h:54px;padding-inline:28px;font-size:15.5px}
 .btn:hover svg.go{transform:translateX(2px)}
 .btn svg.go{transition:transform .24s var(--out)}
 .cta-row{display:flex;flex-wrap:wrap;gap:10px}
+.micro{font-size:12.5px;line-height:1.55;color:var(--t3)}
+.micro a{color:var(--t2)}
+.micro b{color:var(--t2);font-weight:500}
 
 /* Header */
-.top{position:sticky;top:0;z-index:40;background:linear-gradient(180deg,rgba(10,10,11,.92),rgba(10,10,11,.6) 70%,transparent);backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px)}
-.top .wrap{display:flex;align-items:center;justify-content:space-between;gap:16px;padding-top:max(16px,env(safe-area-inset-top,0px));padding-bottom:16px}
-.logo{display:flex;align-items:center;border-radius:var(--r-sm)}
+.top{position:sticky;top:0;z-index:40;background:linear-gradient(180deg,rgba(10,10,11,.94),rgba(10,10,11,.66) 70%,transparent);backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px)}
+.top .wrap{display:flex;align-items:center;gap:16px;padding-top:max(14px,env(safe-area-inset-top,0px));padding-bottom:14px}
+.logo{display:flex;align-items:center;border-radius:var(--r-sm);margin-right:auto}
 .logo img{display:block;height:24px;width:auto}
-.top-cta{display:flex;gap:8px;align-items:center}
+.nav{display:flex;gap:2px}
+.nav a{padding:8px 12px;border-radius:var(--r-full);font-size:13.5px;color:var(--t2);text-decoration:none;transition:color .16s,background .16s}
+.nav a:hover{color:var(--t1);background:var(--l1)}
+@media (max-width:980px){.nav{display:none}}
 
 /* Reveal on scroll (same feel as the home page) */
 .rv{transition:transform .9s var(--out),filter .9s var(--out),opacity .9s var(--out)}
@@ -82,16 +101,18 @@ h1,h2,h3{font-weight:600;letter-spacing:-.035em;line-height:1.05;text-wrap:balan
 /* Glass card */
 .glass{position:relative;border-radius:var(--r-xl);background:linear-gradient(180deg,rgba(255,255,255,.05),rgba(255,255,255,.012) 38%),rgba(17,17,19,.72);border:1px solid var(--l1);box-shadow:inset 0 1px 0 rgba(255,255,255,.07),0 30px 60px -34px rgba(0,0,0,.85);overflow:hidden;isolation:isolate}
 .cap{display:flex;justify-content:space-between;gap:12px;padding:14px 20px;border-top:1px solid var(--l1);font:400 11.5px/1.4 var(--mono);color:var(--t3)}
-.cap b{font-weight:500;color:var(--t2)}
+.cap b{font-weight:500;color:var(--t2);text-align:right}
 
 /* Hero */
-.hero{position:relative;isolation:isolate;padding-block:clamp(24px,5vw,64px) clamp(72px,9vw,140px)}
+.hero{position:relative;isolation:isolate;padding-block:clamp(20px,4vw,56px) clamp(72px,9vw,130px)}
 .hero::before{content:"";position:absolute;z-index:-1;width:min(900px,95vw);height:min(900px,95vw);right:-18vw;top:-28vw;border-radius:50%;background:radial-gradient(circle,rgba(255,59,48,.2),transparent 62%);filter:blur(40px);pointer-events:none}
 .hero .wrap{display:grid;gap:clamp(36px,5vw,72px);align-items:center}
-.hero h1{font-size:clamp(44px,6.4vw,92px);letter-spacing:-.055em;line-height:.98;margin:22px 0 22px}
+.hero h1{font-size:clamp(46px,6.6vw,96px);letter-spacing:-.055em;line-height:.96;margin:22px 0 22px}
 .lede{font-size:clamp(15.5px,1.15vw,18px);color:var(--t2);max-width:33em}
+.lede b{color:var(--t1);font-weight:500}
 .hero .cta-row{margin-top:30px}
-.checks{display:flex;flex-wrap:wrap;gap:8px;margin-top:26px}
+.hero .micro{margin-top:14px;max-width:31em}
+.checks{display:flex;flex-wrap:wrap;gap:8px;margin-top:24px}
 .chk{display:inline-flex;align-items:center;gap:8px;padding:8px 13px;border-radius:var(--r-full);border:1px solid var(--l1);background:rgba(255,255,255,.02);font-size:12.5px;color:var(--t2)}
 .chk svg{width:13px;height:13px;color:var(--ok)}
 @media (min-width:1000px){.hero .wrap{grid-template-columns:minmax(0,1fr) minmax(0,1.08fr)}}
@@ -100,6 +121,7 @@ h1,h2,h3{font-weight:600;letter-spacing:-.035em;line-height:1.05;text-wrap:balan
 .dia{display:block;width:100%;height:auto}
 .dia text{font-family:var(--sans);fill:var(--t2);font-size:13px}
 .dia .lbl{font:500 11px var(--mono);letter-spacing:.06em;text-transform:uppercase;fill:var(--t3)}
+.dia .lbl.r{fill:#FF5E55}
 .dia .node{fill:var(--ink-3);stroke:var(--l3);stroke-width:1.2}
 .dia .node.rago{fill:rgba(255,59,48,.1);stroke:var(--red)}
 .dia .node.ok{stroke:var(--ok)}
@@ -107,14 +129,16 @@ h1,h2,h3{font-weight:600;letter-spacing:-.035em;line-height:1.05;text-wrap:balan
 .dia .road.rago{stroke:rgba(255,59,48,.45)}
 .dia .road.flowing{stroke-dasharray:2 10;animation:dash 1.2s linear infinite}
 .dia .road.cut{stroke:var(--red);stroke-dasharray:6 8;animation:none}
-.dia .road.best{stroke:var(--red);stroke-width:2.6}
-.dia .road.dim{stroke:rgba(255,255,255,.05)}
 .dia .road.stall{stroke:rgba(255,214,10,.55)}
 @keyframes dash{to{stroke-dashoffset:-24}}
 .dia use{color:var(--t1)} /* the icons below draw in currentColor: page styles don't reach inside <use> */
 .dia .pk{fill:var(--t1)}
 .dia .pk.r{fill:var(--red)}
 .dia .pk.y{fill:var(--warn)}
+.dia .pk.g{fill:var(--ok)}
+.dia .pk.b{fill:rgba(255,59,48,.12);stroke:var(--red);stroke-width:1.6}
+.dia .pkn{font:600 11px var(--mono);fill:#0A0A0B}
+.dia .pkn.r{fill:var(--red)}
 .dia .pk,.dia .burst,.dia .ring{transform-box:fill-box;transform-origin:center}
 .dia .pk.gone{transition:transform .45s var(--out),opacity .45s;transform:scale(.2);opacity:0}
 .dia .burst{fill:none;stroke:var(--red);stroke-width:1.6;animation:burst .6s var(--out) forwards}
@@ -127,20 +151,27 @@ h1,h2,h3{font-weight:600;letter-spacing:-.035em;line-height:1.05;text-wrap:balan
 .dia .tag-t.ok{fill:var(--ok)}
 .dia .tag-t.red{fill:var(--red)}
 .dia .tag-t.y{fill:var(--warn)}
+.dia .win{fill:rgba(255,255,255,.025);stroke:var(--l2);stroke-width:1.2}
+.dia .slot{fill:none;stroke:var(--red);stroke-width:1.4;stroke-dasharray:3 3}
+.dia .xl{fill:none;stroke:var(--red);stroke-width:1.4;stroke-linecap:round;opacity:.8}
+.dia .sep{stroke:var(--l1);stroke-width:1;stroke-dasharray:4 6}
 /* Phones: the diagrams shrink to about half size, so their words grow to stay readable */
-@media (max-width:620px){.dia text{font-size:17px}.dia .lbl,.dia .tag-t{font-size:14px;letter-spacing:0}}
+@media (max-width:620px){.dia text{font-size:17px}.dia .lbl,.dia .tag-t{font-size:14px;letter-spacing:0}.dia .pkn{font-size:12px}
+  #lag .lbl,#lag .tag-t{font-size:17px}#lag .gl{display:none} /* the widest diagram: bigger words, and the game window speaks for itself */}
 
 .hud{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;padding:0 20px 18px}
+.hud.h3{grid-template-columns:repeat(3,minmax(0,1fr))}
 .hud div{padding:12px 14px;border-radius:var(--r-md);background:rgba(255,255,255,.03);border:1px solid var(--l1)}
-.hud small{display:block;font-size:11.5px;color:var(--t3)}
+.hud small{display:block;font-size:11.5px;color:var(--t3);line-height:1.35}
 .hud b{font:500 22px/1.2 var(--mono);font-variant-numeric:tabular-nums;letter-spacing:-.02em}
 .hud b.ok{color:var(--ok)}
+.hud b.red{color:var(--red)}
 
 /* Sections */
-.sec{padding-block:clamp(80px,10vw,160px)}
-.head{display:grid;gap:16px;justify-items:center;text-align:center;max-width:760px;margin:0 auto clamp(44px,6vw,88px)}
+.sec{padding-block:clamp(80px,10vw,150px)}
+.head{display:grid;gap:16px;justify-items:center;text-align:center;max-width:780px;margin:0 auto clamp(44px,6vw,80px)}
 .head h2{font-size:clamp(32px,3.8vw,58px);letter-spacing:-.045em}
-.head p{color:var(--t2);font-size:clamp(15px,1.1vw,17px);max-width:36em}
+.head p{color:var(--t2);font-size:clamp(15px,1.1vw,17px);max-width:38em}
 
 /* Problems */
 .probs{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,250px),1fr));gap:12px}
@@ -170,13 +201,36 @@ h1,h2,h3{font-weight:600;letter-spacing:-.035em;line-height:1.05;text-wrap:balan
 .wifi .a{fill:none;stroke:var(--t1);stroke-width:4;stroke-linecap:round;animation:wf 3.2s infinite}
 .wifi .a2{animation-delay:.1s}.wifi .a3{animation-delay:.2s}
 @keyframes wf{0%,45%{stroke:var(--t1);opacity:1}50%,85%{stroke:var(--red);opacity:.15}100%{stroke:var(--t1);opacity:1}}
-.toast{position:absolute;left:50%;top:100%;transform:translate(-50%,8px);white-space:nowrap;font:500 11px var(--mono);color:var(--red);opacity:0;animation:tt 3.2s infinite}
+.toastw{position:absolute;left:50%;top:100%;transform:translate(-50%,8px);white-space:nowrap;font:500 11px var(--mono);color:var(--red);opacity:0;animation:tt 3.2s infinite}
 @keyframes tt{0%,50%{opacity:0}55%,82%{opacity:1}90%,100%{opacity:0}}
-.detour{width:200px;height:90px}
-.detour path{fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
-.detour .long{stroke:var(--t1);stroke-dasharray:420;stroke-dashoffset:420;animation:draw 3.6s var(--out) infinite}
-.detour .short{stroke:var(--red);stroke-dasharray:4 7;opacity:.7}
-@keyframes draw{0%{stroke-dashoffset:420}60%,100%{stroke-dashoffset:0}}
+/* Evening: a busy road, where some packets fall off */
+.crowd{position:relative;width:210px;height:76px;overflow:hidden;-webkit-mask-image:linear-gradient(90deg,transparent,#000 14%,#000 86%,transparent);mask-image:linear-gradient(90deg,transparent,#000 14%,#000 86%,transparent)}
+.crowd i{position:absolute;left:0;width:9px;height:9px;border-radius:3px;background:var(--t1);opacity:.8;animation:run 2.6s linear infinite}
+.crowd i.x{background:var(--red);opacity:1;animation-name:runx}
+@keyframes run{from{transform:translateX(-14px)}to{transform:translateX(220px)}}
+@keyframes runx{0%{transform:translateX(-14px);opacity:1}46%{transform:translateX(96px);opacity:1}62%{transform:translate(112px,18px);opacity:0}100%{transform:translate(112px,18px);opacity:0}}
+.moon{position:absolute;right:26px;top:4px;width:16px;height:16px;border-radius:50%;box-shadow:inset -5px 3px 0 0 var(--t2)}
+
+/* The real problem */
+.why{display:grid;gap:clamp(28px,4vw,64px);align-items:center}
+@media (min-width:1000px){.why{grid-template-columns:minmax(0,.82fr) minmax(0,1.18fr)}}
+.why h2{font-size:clamp(32px,3.6vw,54px);letter-spacing:-.045em;margin-top:18px}
+.why .txt p{color:var(--t2);margin-top:16px;max-width:34em}
+.why .txt p b{color:var(--t1);font-weight:500}
+.why ul{list-style:none;padding:0;margin:22px 0 0;display:grid;gap:10px}
+.why li{display:grid;grid-template-columns:22px 1fr;gap:10px;font-size:14px;color:var(--t2)}
+.why li svg{width:16px;height:16px;margin-top:3px;color:var(--red)}
+
+/* Three ways back */
+.layers{display:grid;gap:12px;margin-bottom:clamp(64px,8vw,120px);counter-reset:ly}
+@media (min-width:900px){.layers{grid-template-columns:repeat(3,minmax(0,1fr))}}
+.layer{padding:24px;display:grid;gap:8px;align-content:start;position:relative;overflow:visible}
+.layer .n{display:flex;align-items:center;gap:10px;font:500 11px/1 var(--mono);letter-spacing:.08em;text-transform:uppercase;color:var(--red)}
+.layer .n i{width:26px;height:26px;border-radius:50%;display:grid;place-items:center;font-style:normal;background:var(--red-a14);border:1px solid var(--red-a30)}
+.layer h3{font-size:19px;letter-spacing:-.02em}
+.layer p{font-size:13.5px;color:var(--t3)}
+.layer .then{font:500 11px var(--mono);color:var(--t3);letter-spacing:.04em}
+@media (min-width:900px){.layer:not(:last-child)::after{content:"";position:absolute;right:-12px;top:50%;width:12px;height:2px;background:linear-gradient(90deg,var(--red-a30),transparent)}}
 
 /* Feature rows */
 .feats{display:grid;gap:clamp(64px,9vw,140px)}
@@ -187,28 +241,68 @@ h1,h2,h3{font-weight:600;letter-spacing:-.035em;line-height:1.05;text-wrap:balan
 .idx b{font-weight:500;color:var(--red)}
 .idx::after{content:"";flex:1;max-width:120px;height:1px;background:linear-gradient(90deg,var(--l3),transparent)}
 .ft h3{font-size:clamp(28px,3vw,44px);letter-spacing:-.045em}
+.tags{display:flex;flex-wrap:wrap;gap:6px}
+.tag{display:inline-flex;align-items:center;gap:7px;padding:6px 11px;border-radius:var(--r-full);font:500 11.5px/1 var(--sans)}
+.tag.new{border:1px solid var(--red-a30);background:var(--red-a08);color:#FF6B62}
+.tag.beta{border:1px solid rgba(255,214,10,.2);background:rgba(255,214,10,.06);color:var(--warn)}
+.tag.beta::before{content:"";width:6px;height:6px;border-radius:50%;background:currentColor;animation:blink 1.6s infinite}
+@keyframes blink{50%{opacity:.25}}
 .pb{display:grid;gap:10px;margin-top:4px}
 .pb div{display:grid;grid-template-columns:86px 1fr;gap:12px;font-size:15px;color:var(--t2)}
-.pb dt,.pb .k{font:500 11px/1.9 var(--mono);letter-spacing:.06em;text-transform:uppercase;color:var(--t3)}
+.pb .k{font:500 11px/1.9 var(--mono);letter-spacing:.06em;text-transform:uppercase;color:var(--t3)}
 .pb .k.fix{color:var(--red)}
 .proof{display:flex;gap:10px;align-items:flex-start;margin-top:6px;padding:12px 14px;border-radius:var(--r-md);background:rgba(61,220,151,.05);border:1px solid rgba(61,220,151,.16);font-size:13px;color:var(--t2)}
 .proof svg{width:16px;height:16px;flex:none;margin-top:2px;color:var(--ok)}
 .proof b{color:var(--t1);font-weight:600}
-.soon{display:inline-flex;align-items:center;gap:7px;justify-self:start;padding:6px 11px;border-radius:var(--r-full);border:1px solid rgba(255,214,10,.2);background:rgba(255,214,10,.06);font:500 11.5px/1 var(--sans);color:var(--warn)}
-.soon::before{content:"";width:6px;height:6px;border-radius:50%;background:currentColor;animation:blink 1.6s infinite}
-.soon.next{border-color:var(--l2);background:var(--ink-2);color:var(--t2)}
-.soon.next::before{animation:none}
-@keyframes blink{50%{opacity:.25}}
-.strip{display:flex;gap:5px;padding:0 20px 18px;flex-wrap:wrap}
+.strip{display:flex;gap:5px;padding:0 20px 18px;flex-wrap:wrap;min-height:26px}
 .strip i{width:18px;height:8px;border-radius:4px;background:var(--t1);opacity:.85;animation:pop .35s var(--spring)}
 .strip i.r{background:var(--red)}
 @keyframes pop{from{transform:scale(.3);opacity:0}}
 .meter{display:grid;gap:8px;padding:0 20px 18px}
-.meter div{display:grid;grid-template-columns:62px 1fr 40px;gap:10px;align-items:center;font-size:12px;color:var(--t2)}
+.meter div{display:grid;grid-template-columns:78px 1fr 40px;gap:10px;align-items:center;font-size:12px;color:var(--t2)}
 .meter span.bar{height:8px;border-radius:4px;background:var(--ink-4);overflow:hidden}
 .meter span.bar i{display:block;height:100%;width:0;border-radius:4px;background:var(--t1);transition:width .5s var(--out)}
 .meter div.p span.bar i{background:var(--red)}
 .meter b{font:500 12px var(--mono);text-align:right;color:var(--t1)}
+
+/* Phone backup: the step-by-step check, as in the app */
+.diag{display:grid;gap:9px;padding:16px 18px;border-radius:var(--r-md);background:rgba(255,255,255,.025);border:1px solid var(--l1);font-size:13px;color:var(--t2)}
+.diag .dh{font:500 11px/1 var(--mono);letter-spacing:.06em;text-transform:uppercase;color:var(--t3);margin-bottom:2px}
+.diag .s{display:flex;align-items:center;gap:10px;transition:color .3s}
+.diag .s i{width:18px;height:18px;border-radius:50%;flex:none;display:grid;place-items:center;border:1.5px solid var(--l3);transition:background .3s,border-color .3s}
+.diag .s.ok{color:var(--t1)}
+.diag .s.ok i{background:var(--ok-a);border-color:var(--ok)}
+.diag .s.ok i::after{content:"";width:7px;height:4px;border-left:1.8px solid var(--ok);border-bottom:1.8px solid var(--ok);transform:translateY(-1px) rotate(-45deg)}
+.diag .s.bad{color:var(--t1)}
+.diag .s.bad i{border-color:var(--warn);background:rgba(255,214,10,.08)}
+.diag .s.bad i::after{content:"!";font:700 11px/1 var(--sans);color:var(--warn)}
+.diag .fx{margin-left:28px;padding:8px 11px;border-radius:10px;background:rgba(255,214,10,.06);border:1px solid rgba(255,214,10,.18);font-size:12.5px;color:var(--warn)}
+.diag .done{display:flex;align-items:center;gap:8px;margin-top:2px;font-weight:500;color:var(--ok)}
+.diag .done svg{width:15px;height:15px}
+
+/* Live counters: a drawing of the app's Rago Route tab */
+.app{margin:18px 18px 0;border-radius:var(--r-lg);background:var(--ink-0);border:1px solid var(--l2);overflow:hidden;font-size:12.5px}
+.app-top{display:flex;align-items:center;gap:10px;padding:12px 16px;border-bottom:1px solid var(--l1)}
+.app-top b{font-weight:600;font-size:13.5px}
+.app-top .on{width:8px;height:8px;border-radius:50%;background:var(--ok);box-shadow:0 0 10px var(--ok)}
+.app-top .bd{font:500 10px/1 var(--mono);padding:4px 7px;border-radius:6px;color:var(--warn);background:rgba(255,214,10,.08);border:1px solid rgba(255,214,10,.2)}
+.app-top em{margin-left:auto;font-style:normal;color:var(--ok);font-size:12px}
+.app-rows{display:grid;gap:10px;padding:14px 16px}
+.app-rows .hd{font:500 10.5px/1 var(--mono);letter-spacing:.06em;text-transform:uppercase;color:var(--t3)}
+.app-row{display:grid;grid-template-columns:minmax(0,1.25fr) 52px minmax(0,1fr) 62px;gap:10px;align-items:center;color:var(--t2)}
+.app-row .nm{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.app-row b{font:500 12.5px var(--mono);color:var(--t1);text-align:right;font-variant-numeric:tabular-nums}
+.app-row .bar{height:6px;border-radius:3px;background:var(--ink-4);overflow:hidden}
+.app-row .bar i{display:block;height:100%;width:0;background:var(--t1);border-radius:3px;transition:width .6s var(--out)}
+.app-row.ph .bar i{background:var(--red)}
+.app-row small{font:400 11px var(--mono);color:var(--t3);text-align:right;white-space:nowrap}
+.app-k{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));border-top:1px solid var(--l1)}
+.app-k div{padding:12px 14px;border-right:1px solid var(--l1)}
+.app-k div:last-child{border-right:0}
+.app-k small{display:block;font-size:11px;color:var(--t3);white-space:nowrap}
+.app-k b{display:block;font:500 18px/1.3 var(--mono);font-variant-numeric:tabular-nums;transition:color .4s}
+.app-k b.flash{color:var(--ok);transition:none}
+@media (max-width:560px){.app{margin:14px 12px 0}.app-top{flex-wrap:wrap}.app-top em{flex-basis:100%;margin-left:0}.app-row{grid-template-columns:minmax(0,1fr) 48px 58px}.app-row .bar{display:none}.app-k{grid-template-columns:repeat(2,minmax(0,1fr))}.app-k div:nth-child(2){border-right:0}.app-k div:nth-child(-n+2){border-bottom:1px solid var(--l1)}}
 
 /* Fair play */
 .fair{display:grid;gap:clamp(28px,4vw,56px);align-items:center;padding:clamp(28px,4vw,56px)}
@@ -225,6 +319,99 @@ h1,h2,h3{font-weight:600;letter-spacing:-.035em;line-height:1.05;text-wrap:balan
 .tube .mid{position:absolute;left:50%;top:14px;bottom:14px;width:min(180px,46%);transform:translateX(-50%);border-radius:var(--r-md);border:1px solid var(--red-a30);background:rgba(255,59,48,.06);display:grid;place-items:end center;padding-bottom:10px;font:500 10.5px var(--mono);letter-spacing:.06em;text-transform:uppercase;color:var(--red)}
 .tube .lock{position:absolute;left:50%;top:22px;transform:translateX(-50%);width:22px;height:22px;color:var(--red)}
 
+/* Results */
+.res{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,320px),1fr));gap:12px}
+.rc{padding:28px 26px 22px;display:grid;gap:12px;align-content:start}
+.rc .num{font:600 clamp(42px,4.4vw,62px)/1 var(--sans);letter-spacing:-.05em;font-variant-numeric:tabular-nums}
+.rc .num small{font-size:.42em;letter-spacing:-.02em;color:var(--t2);margin-left:6px;font-weight:500}
+.rc .num .vs{color:var(--t3)}
+.rc p{color:var(--t2);font-size:14.5px}
+.rc .src{display:flex;gap:8px;align-items:flex-start;font:400 11.5px/1.5 var(--mono);color:var(--t3);border-top:1px solid var(--l1);padding-top:12px;margin-top:2px}
+.rc .src svg{width:13px;height:13px;flex:none;margin-top:2px}
+.limits{margin-top:12px;padding:clamp(26px,3.2vw,40px);display:grid;gap:24px}
+@media (min-width:900px){.limits{grid-template-columns:minmax(0,.72fr) minmax(0,1.28fr);gap:48px}}
+.limits h3{font-size:clamp(26px,2.6vw,36px);letter-spacing:-.04em}
+.limits .lt p{color:var(--t2);margin-top:12px;font-size:14.5px}
+.limits ul{list-style:none;margin:0;padding:0;display:grid;gap:16px}
+.limits li{display:grid;grid-template-columns:24px 1fr;gap:12px;font-size:14.5px;color:var(--t2)}
+.limits li b{color:var(--t1);font-weight:600}
+.limits li .x{width:22px;height:22px;border-radius:50%;display:grid;place-items:center;background:var(--ink-3);border:1px solid var(--l2);margin-top:1px}
+.limits li .x::after{content:"";width:9px;height:1.8px;border-radius:1px;background:var(--t2)}
+
+/* Why Rago Route */
+.diff{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,300px),1fr));gap:12px}
+@media (min-width:1000px){.diff{grid-template-columns:repeat(3,minmax(0,1fr))}}
+.dc{padding:26px;display:grid;gap:10px;align-content:start}
+.dc .ic{width:42px;height:42px;border-radius:13px;display:grid;place-items:center;background:var(--red-a08);border:1px solid var(--red-a30);color:var(--red);margin-bottom:6px}
+.dc .ic svg{width:20px;height:20px}
+.dc h3{font-size:18.5px;letter-spacing:-.02em}
+.dc p{font-size:13.5px;color:var(--t3)}
+
+/* Is it for you */
+.fit{display:grid;gap:12px}
+@media (min-width:860px){.fit{grid-template-columns:1fr 1fr}}
+.fit .glass{padding:clamp(24px,3vw,36px)}
+.fit h3{font-size:21px;letter-spacing:-.025em;margin-bottom:18px}
+.fit ul{list-style:none;margin:0;padding:0;display:grid;gap:13px}
+.fit li{display:grid;grid-template-columns:24px 1fr;gap:10px;font-size:14.5px;color:var(--t2)}
+.fit li svg{width:16px;height:16px;margin-top:3px}
+.fit .yes li svg{color:var(--ok)}
+.fit .no li svg{color:var(--t3)}
+.fit .no h3{color:var(--t2)}
+.freebox{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:16px 28px;margin-top:12px;padding:22px 26px}
+.freebox p{color:var(--t2);font-size:14.5px;max-width:44em}
+.freebox p b{color:var(--t1);font-weight:600}
+
+/* Start in three steps */
+.start{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,260px),1fr));gap:12px}
+.st{padding:26px;display:grid;gap:10px;align-content:start}
+.st .dot{width:32px;height:32px;border-radius:50%;display:grid;place-items:center;background:var(--red);color:var(--ink);font:600 13px var(--mono);margin-bottom:8px}
+.st h3{font-size:19px;letter-spacing:-.02em}
+.st p{font-size:14px;color:var(--t2)}
+.start-note{text-align:center;margin-top:18px}
+
+/* Reviews (the real ones, from the account server; hidden until there's one) */
+.revs{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,300px),1fr));gap:12px;margin-bottom:clamp(40px,5vw,64px)}
+.rq{border-radius:var(--r-lg);background:var(--ink-2);border:1px solid var(--l1);padding:22px;display:flex;flex-direction:column;gap:14px;margin:0}
+.rq .stars{display:flex;gap:3px;color:var(--red)}
+.rq .stars svg{width:14px;height:14px;fill:currentColor}
+.rq .stars .off{display:flex;color:var(--ink-4)}
+.rq p{font-size:14px;color:var(--t1);line-height:1.6;white-space:pre-line;overflow-wrap:anywhere;display:-webkit-box;-webkit-line-clamp:4;-webkit-box-orient:vertical;overflow:hidden}
+.rq footer{display:flex;align-items:center;gap:10px;font-size:13px;color:var(--t2);margin-top:auto}
+.rq footer .rn{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.rq footer small{margin-left:auto;font-size:11px;color:var(--t3);white-space:nowrap}
+.av{width:30px;height:30px;border-radius:50%;display:grid;place-items:center;font:600 12px/1 var(--sans);color:var(--t1);background:var(--ink-4);border:1px solid var(--l2);flex:none}
+img.av{object-fit:cover;padding:0}
+.rev-sum{display:flex;flex-wrap:wrap;justify-content:center;align-items:center;gap:6px 14px;font-size:13px;color:var(--t3)}
+.rev-all{display:inline-flex;align-items:center;gap:6px;color:var(--t1);font-weight:500;text-decoration:none;padding:4px 12px;border-radius:var(--r-full);box-shadow:inset 0 0 0 1px var(--l2);transition:box-shadow .16s,background .16s}
+.rev-all:hover{background:var(--l1);box-shadow:inset 0 0 0 1px var(--l3)}
+.rev-all svg{width:13px;height:13px}
+
+/* Pricing */
+.buy{display:grid;gap:12px;max-width:1040px;margin-inline:auto;align-items:start}
+@media (min-width:900px){.buy{grid-template-columns:minmax(0,1.05fr) minmax(0,.95fr)}}
+.plan{padding:clamp(26px,3.4vw,42px);display:grid;gap:16px;align-content:start;border-color:var(--red-a30);box-shadow:inset 0 1px 0 rgba(255,255,255,.07),0 0 0 1px var(--red-a14),0 40px 90px -40px rgba(255,59,48,.35)}
+.plan .rec{justify-self:start;padding:6px 11px;border-radius:var(--r-full);background:var(--red);color:var(--ink);font:600 11.5px/1 var(--sans)}
+.plan h3{font-size:26px;letter-spacing:-.03em}
+.plan .sub{color:var(--t2);font-size:14.5px;margin-top:-6px}
+.amt{display:flex;align-items:baseline;gap:8px;flex-wrap:wrap}
+.amt b{font:600 clamp(46px,5vw,66px)/1 var(--sans);letter-spacing:-.05em;font-variant-numeric:tabular-nums}
+.amt small{color:var(--t2);font-size:15px}
+.alt{font-size:13.5px;color:var(--t2);margin-top:-6px}
+.plan .btn{width:100%}
+.trial-note{font-size:12.5px;line-height:1.5;color:var(--t2);text-align:center}
+.plan .micro{text-align:center}
+.side{padding:clamp(24px,3vw,36px);display:grid;gap:18px;align-content:start}
+.side h3{font-size:19px;letter-spacing:-.02em}
+.side ul{list-style:none;margin:0;padding:0;display:grid;gap:11px}
+.side li{display:grid;grid-template-columns:22px 1fr;gap:10px;font-size:14px;color:var(--t2)}
+.side li b{color:var(--t1);font-weight:500}
+.side li svg{width:15px;height:15px;margin-top:3px;color:var(--ok)}
+.side li.rt svg{color:var(--red)}
+.side hr{border:0;border-top:1px solid var(--l1);margin:2px 0}
+.side .lic{display:flex;gap:10px;align-items:center;font-size:13px;color:var(--t3)}
+.side .lic svg{width:16px;height:16px;flex:none;color:var(--t2)}
+
 /* FAQ */
 .faq{display:grid;gap:10px;max-width:860px;margin-inline:auto}
 .faq details{border-radius:var(--r-lg);background:var(--ink-2);border:1px solid var(--l1);transition:border-color .2s}
@@ -235,39 +422,60 @@ h1,h2,h3{font-weight:600;letter-spacing:-.035em;line-height:1.05;text-wrap:balan
 .faq details[open] summary::after{transform:rotate(-135deg)}
 .faq p{padding:0 22px 22px;color:var(--t2);max-width:62em}
 
-/* Status and final call */
-.steps{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,240px),1fr));gap:12px;position:relative}
-.step{padding:24px}
-.step .dot{width:30px;height:30px;border-radius:50%;display:grid;place-items:center;margin-bottom:16px;background:var(--ink-3);border:1px solid var(--l2);font:500 12px var(--mono);color:var(--t2)}
-.step.done .dot{background:var(--ok-a);border-color:rgba(61,220,151,.4);color:var(--ok)}
-.step.now .dot{background:var(--red-a14);border-color:var(--red);color:var(--red);animation:beat 2s var(--out) infinite}
-.step h3{font-size:18px;letter-spacing:-.02em}
-.step p{font-size:13.5px;color:var(--t3);margin-top:6px}
-.step small{display:inline-block;margin-top:12px;font:500 11px var(--mono);letter-spacing:.06em;text-transform:uppercase;color:var(--t3)}
-.step.now small{color:var(--red)}
-.step.done small{color:var(--ok)}
-.final{position:relative;overflow:hidden;isolation:isolate;padding-block:clamp(110px,13vw,220px);text-align:center}
+/* Final call */
+.final{position:relative;overflow:hidden;isolation:isolate;padding-block:clamp(110px,13vw,200px);text-align:center}
 .final::before{content:"";position:absolute;z-index:-1;left:50%;top:60%;width:min(1100px,110vw);height:min(1100px,110vw);transform:translate(-50%,-50%);border-radius:50%;background:radial-gradient(circle,rgba(255,59,48,.22),transparent 60%);filter:blur(30px)}
 .final .wrap{display:grid;gap:22px;justify-items:center}
-.final h2{font-size:clamp(38px,5vw,80px);letter-spacing:-.05em;max-width:13ch}
-.final p{color:var(--t2);max-width:30em}
+.final h2{font-size:clamp(38px,5vw,80px);letter-spacing:-.05em;max-width:14ch}
+.final p{color:var(--t2);max-width:32em}
 .final .cta-row{justify-content:center;margin-top:8px}
+.final .micro{max-width:34em}
 
-footer.foot{border-top:1px solid var(--l1);padding-block:36px;font-size:12.5px;color:var(--t3)}
+footer.foot{border-top:1px solid var(--l1);padding-block:36px calc(36px + env(safe-area-inset-bottom,0px));font-size:12.5px;color:var(--t3)}
 footer.foot .wrap{display:grid;gap:16px}
 footer.foot nav{display:flex;flex-wrap:wrap;gap:6px;margin-left:-12px}
 footer.foot nav a{text-decoration:none;color:var(--t2);padding:6px 12px;border-radius:var(--r-full)}
 footer.foot nav a:hover{color:var(--t1);background:var(--l1)}
 footer.foot p{max-width:80ch}
 
+/* Phones: a bar with the trial button once the hero's button is off screen */
+.dock{position:fixed;left:12px;right:12px;bottom:calc(12px + env(safe-area-inset-bottom,0px));z-index:50;display:none;align-items:center;gap:12px;padding:8px 8px 8px 18px;border-radius:var(--r-full);background:rgba(23,23,26,.94);backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);border:1px solid var(--l2);box-shadow:0 20px 50px -20px #000;transform:translateY(160%);transition:transform .45s var(--out)}
+.dock.on{transform:none}
+.dock span{flex:1;min-width:0;font-size:11.5px;line-height:1.3;color:var(--t2)}
+.dock span b{display:block;color:var(--t1);font-size:13px;font-weight:600}
+.dock .btn{--h:42px;padding-inline:18px;font-size:13.5px}
+@media (max-width:760px){.dock{display:flex}footer.foot{padding-bottom:calc(100px + env(safe-area-inset-bottom,0px))}}
+
+/* Toast and dialogs (download of the free app, as on the Tweaks page) */
+.toast{position:fixed;left:16px;right:16px;bottom:calc(24px + env(safe-area-inset-bottom,0px));margin-inline:auto;width:fit-content;max-width:560px;transform:translateY(16px);background:var(--t1);color:var(--ink);padding:12px 18px;border-radius:20px;font-size:13.5px;line-height:1.4;font-weight:500;opacity:0;pointer-events:none;transition:opacity .3s var(--out),transform .3s var(--out);z-index:90;text-align:center}
+.toast.show{opacity:1;transform:none}
+.dlg{position:fixed;inset:0;z-index:85;display:grid;place-items:center;padding:16px;background:rgba(5,5,6,.7);backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px)}
+.dlg-card{width:min(520px,100%);max-height:calc(100svh - 32px);overflow:auto;border-radius:var(--r-xl);background:var(--ink-2);border:1px solid var(--l2);padding:clamp(22px,4vw,34px);display:grid;gap:16px;box-shadow:0 40px 80px -20px rgba(0,0,0,.9)}
+.dlg-card .eyebrow{justify-self:start}
+.dlg-card h3{font-size:22px;letter-spacing:-.03em}
+.dlg-card ol{list-style:none;padding:0;margin:0;display:grid;gap:12px;counter-reset:s}
+.dlg-card li{display:grid;grid-template-columns:28px 1fr;column-gap:12px;row-gap:3px;counter-increment:s}
+.dlg-card li::before{content:counter(s);grid-row:span 2;width:28px;height:28px;border-radius:50%;display:grid;place-items:center;background:var(--red);color:var(--ink);font:600 13px/1 var(--mono)}
+.dlg-card li b{font-size:14.5px;font-weight:560}
+.dlg-card li span{font-size:13px;color:var(--t2)}
+.dlg-acts{display:flex;gap:8px;justify-content:flex-end;flex-wrap:wrap}
+.send-p{font-size:14px;color:var(--t2)}
+.send-url{font:500 13px/1.3 var(--mono);color:var(--t1);padding:12px 14px;border-radius:var(--r-md);background:var(--ink);border:1px solid var(--l1);word-break:break-all}
+
 @media (max-width:560px){
-  .top-cta .btn-ghost{display:none}
   .logo img{height:20px}
   .btn{--h:46px;padding-inline:20px}
+  .btn-lg{--h:52px}
   .hero .cta-row .btn{flex:1 1 100%}
   .pb div{grid-template-columns:1fr;gap:2px}
   .hud b{font-size:19px}
+  .hud.h3{gap:8px;padding:0 14px 16px}
+  .hud.h3 div{padding:10px}
+  .hud.h3 b{font-size:17px}
+  .cap{flex-direction:column;gap:4px}
+  .cap b{text-align:left}
   footer.foot nav a{padding:10px 12px}
+  .freebox .btn{width:100%}
 }
 @media (prefers-reduced-motion:reduce){
   html{scroll-behavior:auto}
@@ -275,6 +483,7 @@ footer.foot p{max-width:80ch}
   .js .rv.pre{transform:none;filter:none}
   *,*::before,*::after{animation-duration:.01ms!important;animation-iteration-count:1!important}
   .tube .row{transform:translateX(-12%)}
+  .dock{transition:none}
 }
 </style>
 </head>
@@ -282,10 +491,18 @@ footer.foot p{max-width:80ch}
 <script>document.documentElement.classList.add("js")</script>
 <svg width="0" height="0" style="position:absolute" aria-hidden="true">
   <symbol id="i-arrow" viewBox="0 0 20 20"><path fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" d="M4 10h12M11 5l5 5-5 5"/></symbol>
-  <symbol id="i-back" viewBox="0 0 20 20"><path fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" d="M16 10H4M9 5l-5 5 5 5"/></symbol>
   <symbol id="i-check" viewBox="0 0 20 20"><path fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" d="M4 10.5l4 4 8-9"/></symbol>
+  <symbol id="i-minus" viewBox="0 0 20 20"><path fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" d="M5 10h10"/></symbol>
+  <symbol id="i-dot" viewBox="0 0 20 20"><circle cx="10" cy="10" r="3.2" fill="currentColor"/></symbol>
   <symbol id="i-lab" viewBox="0 0 20 20"><path fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" d="M8 2.5h4M8.6 2.5v5.2L4 15.6A1.3 1.3 0 0 0 5.1 17.5h9.8a1.3 1.3 0 0 0 1.1-1.9l-4.6-7.9V2.5M6.3 12.5h7.4"/></symbol>
   <symbol id="i-lock" viewBox="0 0 20 20"><g fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="9" width="12" height="8.5" rx="2.4"/><path d="M6.8 9V6.6a3.2 3.2 0 0 1 6.4 0V9"/></g></symbol>
+  <symbol id="i-down" viewBox="0 0 20 20"><path fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" d="M10 3v10M6 9l4 4 4-4M4 16.5h12"/></symbol>
+  <symbol id="i-cube" viewBox="0 0 20 20"><path fill="none" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round" d="M10 2.5l6.5 3.7v7.6L10 17.5l-6.5-3.7V6.2zM3.5 6.2L10 10l6.5-3.8M10 10v7.5"/></symbol>
+  <symbol id="i-roads" viewBox="0 0 20 20"><path fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" d="M2.5 4.5c5.5 0 5.5 5.5 11 5.5M2.5 15.5c5.5 0 5.5-5.5 11-5.5"/><circle cx="16.4" cy="10" r="2" fill="currentColor"/></symbol>
+  <symbol id="i-phone" viewBox="0 0 20 20"><g fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><rect x="5.5" y="2.5" width="9" height="15" rx="2.2"/><path d="M8.8 14.6h2.4"/></g></symbol>
+  <symbol id="i-eye" viewBox="0 0 20 20"><g fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M1.8 10S5 4.2 10 4.2 18.2 10 18.2 10 15 15.8 10 15.8 1.8 10 1.8 10z"/><circle cx="10" cy="10" r="2.6"/></g></symbol>
+  <symbol id="i-card" viewBox="0 0 20 20"><g fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><rect x="2.5" y="4.5" width="15" height="11" rx="2.5"/><path d="M2.5 8.3h15M5.8 12.3h3"/></g></symbol>
+  <symbol id="i-pc" viewBox="0 0 20 20"><g fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><rect x="2.5" y="3.5" width="15" height="10" rx="2"/><path d="M7 16.5h6M10 13.5v3"/></g></symbol>
   <symbol id="i-discord" viewBox="0 0 24 24"><path fill="currentColor" d="M19.3 5.3A16.6 16.6 0 0 0 15.2 4l-.5 1a15.4 15.4 0 0 0-5.4 0L8.8 4a16.5 16.5 0 0 0-4.1 1.3C2.1 9.2 1.4 13 1.7 16.7a16.7 16.7 0 0 0 5 2.6l1.1-1.7a10.8 10.8 0 0 1-1.7-.8l.4-.3a11.9 11.9 0 0 0 11 0l.4.3c-.5.3-1.1.6-1.7.8l1.1 1.7a16.6 16.6 0 0 0 5-2.6c.4-4.3-.7-8-3-11.4ZM8.7 14.5c-1 0-1.8-.9-1.8-2s.8-2 1.8-2 1.8.9 1.8 2-.8 2-1.8 2Zm6.6 0c-1 0-1.8-.9-1.8-2s.8-2 1.8-2 1.8.9 1.8 2-.8 2-1.8 2Z"/></symbol>
   <symbol id="s-pc" viewBox="0 0 28 28"><g fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="22" height="14" rx="2.5"/><path d="M10 23h8M14 19v4"/></g></symbol>
   <symbol id="s-srv" viewBox="0 0 28 28"><g fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="4" width="20" height="8" rx="2"/><rect x="4" y="16" width="20" height="8" rx="2"/><path d="M8 8h.01M8 20h.01"/></g></symbol>
@@ -296,37 +513,37 @@ footer.foot p{max-width:80ch}
 <header class="top band">
   <div class="wrap">
     <a class="logo" href="./" aria-label="Rago Optimizer home"><img src="rago-wordmark.svg" alt="" height="24"></a>
-    <div class="top-cta">
-      <a class="btn btn-ghost btn-sm" href="./"><svg><use href="#i-back"/></svg>Back to the site</a>
-      <a class="btn btn-red btn-sm" href="https://discord.gg/cbCxCBx8vJ" target="_blank" rel="noopener">Get notified</a>
-    </div>
+    <nav class="nav" aria-label="On this page"><a href="#how">How it works</a><a href="#results">Results</a><a href="#pricing">Pricing</a><a href="#faq">FAQ</a></nav>
+    <a class="btn btn-red btn-sm js-trial" href="https://account.rago-optimizer.com/buy?interval=month&amp;trial=1">Start free trial</a>
   </div>
 </header>
 
 <main>
-  <!-- Hero -->
+  <!-- Hero: the promise, the button, what the trial costs, the engine in one picture -->
   <section class="hero band">
     <div class="wrap">
       <div class="rv">
-        <span class="eyebrow">Rago Route · in beta in Premium</span>
-        <h1>Two roads for <span class="red">every packet.</span></h1>
-        <p class="lede">Rago Route is Rago's new network engine for Minecraft. It sends your connection down two roads at once, repairs lost packets on the spot and holds your match when your Wi-Fi drops.</p>
+        <span class="eyebrow">Rago Route · new in Premium, in beta</span>
+        <h1>Lose packets, <span class="red">not fights.</span></h1>
+        <p class="lede">Rago Route is the anti-lag engine built for Minecraft Java. It sends every packet down two roads at once, repairs the ones that get lost and holds your match through a short Wi-Fi drop. <b>Fewer freezes and rubberbands when your connection drops packets.</b></p>
         <div class="cta-row">
-          <a class="btn btn-red" href="./#pricing">Try it with Premium<svg class="go"><use href="#i-arrow"/></svg></a>
-          <a class="btn btn-ghost" href="#fixes">See how it works<svg class="go"><use href="#i-arrow"/></svg></a>
+          <a class="btn btn-red btn-lg js-trial" href="https://account.rago-optimizer.com/buy?interval=month&amp;trial=1" id="hero-cta"><span>Start <span class="js-td">3</span>-day free trial</span><svg class="go"><use href="#i-arrow"/></svg></a>
+          <a class="btn btn-ghost btn-lg" href="#why">Why you lag<svg class="go"><use href="#i-arrow"/></svg></a>
         </div>
+        <p class="micro">Included in Premium. Card required: free for <span class="js-td">3</span> days, then <span class="js-pm">$5.99</span> a month unless you cancel. Cancel in two clicks from your account.</p>
         <div class="checks">
           <span class="chk"><svg><use href="#i-check"/></svg>Built for Minecraft Java</span>
-          <span class="chk"><svg><use href="#i-check"/></svg>Hypixel and Minemen first</span>
+          <span class="chk"><svg><use href="#i-check"/></svg>Hypixel and Minemen Club</span>
           <span class="chk"><svg><use href="#i-check"/></svg>Your game is never changed</span>
+          <span class="chk"><svg><use href="#i-check"/></svg>Every result measured</span>
         </div>
       </div>
 
       <figure class="glass rv" style="margin:0" aria-label="Illustration: every packet leaves your PC on two roads. When road 1 drops one, the copy on road 2 still reaches the server.">
         <svg class="dia" id="hero-dia" viewBox="0 0 600 330" aria-hidden="true">
           <defs><linearGradient id="g-rago" x1="0" x2="1"><stop offset="0" stop-color="#FF3B30" stop-opacity=".25"/><stop offset=".5" stop-color="#FF3B30" stop-opacity=".7"/><stop offset="1" stop-color="#FF3B30" stop-opacity=".25"/></linearGradient></defs>
-          <text class="lbl" x="300" y="44" text-anchor="middle">Road 1 · your usual route</text>
-          <text class="lbl" x="300" y="300" text-anchor="middle" style="fill:#FF5E55">Road 2 · through Rago</text>
+          <text class="lbl" x="237" y="44" text-anchor="middle">Road 1 · straight to the exit</text>
+          <text class="lbl r" x="237" y="300" text-anchor="middle">Road 2 · through a Rago relay</text>
           <path class="road flowing" id="h-a" d="M92 150 C170 70 300 64 382 150"/>
           <path class="road flowing" id="h-b" d="M92 176 C170 262 300 268 382 176" style="stroke:url(#g-rago)"/>
           <path class="road flowing" id="h-c" d="M446 163 L512 163"/>
@@ -351,13 +568,13 @@ footer.foot p{max-width:80ch}
     </div>
   </section>
 
-  <!-- The problems -->
+  <!-- The problems, in the player's words -->
   <section class="sec band" id="problems" style="padding-top:0">
     <div class="wrap">
       <div class="head rv">
         <span class="eyebrow">Sound familiar?</span>
         <h2>Lag isn't always your PC. Often, it's the road.</h2>
-        <p>Before it reaches the server, every packet you send crosses your Wi-Fi, your provider and hundreds of miles of cable. One bad hop and the whole match feels it.</p>
+        <p>Before it reaches the server, every packet you send crosses your Wi-Fi, your provider and thousands of miles of cable. One bad stretch and the whole match feels it.</p>
       </div>
       <div class="probs">
         <article class="glass prob rv">
@@ -365,26 +582,30 @@ footer.foot p{max-width:80ch}
             <div class="spark"><svg viewBox="0 0 400 72"><path d="M0 50 L20 48 L40 50 L60 47 L80 49 L100 50 L120 48 L130 46 L140 12 L150 46 L170 49 L190 48 L200 50 L220 48 L240 50 L260 47 L280 49 L300 50 L320 48 L330 46 L340 12 L350 46 L370 49 L390 48 L400 50" stroke="#F5F5F6"/><path d="M128 47 L140 12 L152 47 M328 47 L340 12 L352 47" stroke="#FF3B30"/></svg></div>
           </div>
           <h3>Your ping spikes mid-fight.</h3>
-          <p>You land the hit on your screen. The server gets it too late and the trade goes the other way.</p>
+          <p>You swing first on your screen. The hit reaches the server late and the trade goes the other way.</p>
         </article>
         <article class="glass prob rv">
           <div class="pv" aria-hidden="true"><div class="freeze"><i></i><i></i><i></i><i></i><i></i></div></div>
-          <h3>One lost packet freezes everything.</h3>
-          <p>Minecraft plays its packets in order. When one goes missing, everything behind it waits. That's the rubberband on the bridge.</p>
+          <h3>Everything freezes, then jumps.</h3>
+          <p>One packet goes missing and everything behind it waits. That's the rubberband on the bridge.</p>
         </article>
         <article class="glass prob rv">
           <div class="pv" aria-hidden="true">
-            <div class="wifi"><svg viewBox="0 0 64 52"><path class="a a3" d="M6 18a37 37 0 0 1 52 0"/><path class="a a2" d="M15 28a24 24 0 0 1 34 0"/><path class="a" d="M24 38a11 11 0 0 1 16 0"/><circle cx="32" cy="46" r="3.2" fill="#F5F5F6"/></svg><span class="toast">signal lost</span></div>
+            <div class="wifi"><svg viewBox="0 0 64 52"><path class="a a3" d="M6 18a37 37 0 0 1 52 0"/><path class="a a2" d="M15 28a24 24 0 0 1 34 0"/><path class="a" d="M24 38a11 11 0 0 1 16 0"/><circle cx="32" cy="46" r="3.2" fill="#F5F5F6"/></svg><span class="toastw">signal lost</span></div>
           </div>
           <h3>Your Wi-Fi blinks. Your match stalls.</h3>
-          <p>A second without signal, then several more while the connection catches up. Long enough to lose the fight.</p>
+          <p>A second without signal, then more while the connection catches up. Sometimes it ends with “Timed out”.</p>
         </article>
         <article class="glass prob rv">
           <div class="pv" aria-hidden="true">
-            <svg class="detour" viewBox="0 0 200 90"><path class="short" d="M18 70 L182 70"/><path class="long" d="M18 70 L50 70 L62 22 L104 22 L118 58 L150 58 L160 30 L182 30 L182 70"/><circle cx="18" cy="70" r="5" fill="#F5F5F6"/><circle cx="182" cy="70" r="5" fill="#FF3B30"/></svg>
+            <div class="crowd"><span class="moon"></span>
+              <i style="top:22px;animation-delay:-.2s"></i><i style="top:22px;animation-delay:-1.1s"></i><i class="x" style="top:22px;animation-delay:-1.9s"></i>
+              <i style="top:38px;animation-delay:-.6s;animation-duration:2.2s"></i><i class="x" style="top:38px;animation-delay:-1.4s;animation-duration:2.2s"></i><i style="top:38px;animation-delay:-2s;animation-duration:2.2s"></i>
+              <i style="top:54px;animation-delay:-.1s;animation-duration:2.9s"></i><i style="top:54px;animation-delay:-1s;animation-duration:2.9s"></i><i style="top:54px;animation-delay:-2.2s;animation-duration:2.9s"></i>
+            </div>
           </div>
-          <h3>Your provider takes the long way.</h3>
-          <p>Your internet provider picks your route to the server, and it isn't always the shortest one.</p>
+          <h3>It gets worse in the evening.</h3>
+          <p>When everyone's online, busy networks start dropping packets. Same PC, same plan, more lag.</p>
         </article>
       </div>
       <div class="glass stat rv">
@@ -394,13 +615,76 @@ footer.foot p{max-width:80ch}
     </div>
   </section>
 
-  <!-- The five fixes -->
-  <section class="sec band" id="fixes" style="padding-top:0">
+  <!-- The real problem: an ordered stream, where one loss holds everything behind it -->
+  <section class="sec band" id="why" style="padding-top:0">
+    <div class="wrap why">
+      <div class="txt rv">
+        <span class="eyebrow">The real problem</span>
+        <h2>One lost packet stops everything behind it.</h2>
+        <p>Minecraft Java plays every packet <b>in order</b>. If packet 4 goes missing, packets 5, 6 and 7 still arrive, but your game can't use them until 4 is sent again. So it sits still, then catches up all at once.</p>
+        <p>A faster internet plan doesn't change that. The wait comes from the loss, not from your speed. To stop the freeze, the missing packet has to be there before your game needs it.</p>
+        <ul>
+          <li><svg><use href="#i-dot"/></svg>A single loss is usually sent again quickly, and you barely see it.</li>
+          <li><svg><use href="#i-dot"/></svg>A burst of losses, like a Wi-Fi hiccup, stalls the game much longer.</li>
+          <li><svg><use href="#i-dot"/></svg>That's what Rago Route goes after: the losses, before they reach your game.</li>
+        </ul>
+      </div>
+      <figure class="glass rv" style="margin:0" aria-label="Illustration: two games receive the same packets. Without Rago Route, packet 4 is lost, packets 5 to 8 wait, the player freezes, then jumps forward when 4 is sent again. With Rago Route, the copy of packet 4 arrives on a second road and the player keeps moving.">
+        <svg class="dia" id="lag" viewBox="0 -10 640 310" aria-hidden="true">
+          <line class="sep" x1="16" y1="150" x2="624" y2="150"/>
+          <g id="lag-0">
+            <text class="lbl" x="24" y="20">Without Rago Route</text>
+            <path class="road" d="M76 83 L360 83"/>
+            <path class="r1" d="M76 83 L360 83" fill="none" stroke="none"/>
+            <rect class="node" x="20" y="57" width="52" height="52" rx="16"/>
+            <use href="#s-srv" x="32" y="69" width="28" height="28"/>
+            <text x="46" y="128" text-anchor="middle">Server</text>
+            <text class="tag-t red tg" x="76" y="140"></text>
+            <rect class="win" x="360" y="30" width="264" height="106" rx="16"/>
+            <text class="lbl gl" x="612" y="48" text-anchor="end">Your game</text>
+            <text class="tag-t ok lst" x="376" y="50">smooth</text>
+            <g class="q"></g>
+            <g class="br"></g>
+            <g class="avt"></g>
+            <g class="pkl"></g>
+          </g>
+          <g id="lag-1" transform="translate(0 150)">
+            <text class="lbl r" x="24" y="20">With Rago Route</text>
+            <path class="road" d="M76 83 L360 83"/>
+            <path class="road rago" d="M76 92 C150 138 286 138 360 96"/>
+            <path class="r1" d="M76 83 L360 83" fill="none" stroke="none"/>
+            <path class="r2" d="M76 92 C150 138 286 138 360 96" fill="none" stroke="none"/>
+            <rect class="node" x="20" y="57" width="52" height="52" rx="16"/>
+            <use href="#s-srv" x="32" y="69" width="28" height="28"/>
+            <text x="46" y="128" text-anchor="middle">Server</text>
+            <text class="tag-t ok tg" x="220" y="146" text-anchor="middle"></text>
+            <rect class="win" x="360" y="30" width="264" height="106" rx="16"/>
+            <text class="lbl gl" x="612" y="48" text-anchor="end">Your game</text>
+            <text class="tag-t ok lst" x="376" y="50">smooth</text>
+            <g class="q"></g>
+            <g class="br"></g>
+            <g class="avt"></g>
+            <g class="pkl"></g>
+          </g>
+        </svg>
+        <figcaption class="cap"><span>Illustration</span><b>Same packets, same loss. Only the second road changes.</b></figcaption>
+      </figure>
+    </div>
+  </section>
+
+  <!-- How it works: three ways back for a lost packet, then each part of the engine -->
+  <section class="sec band" id="how" style="padding-top:0">
     <div class="wrap">
       <div class="head rv">
         <span class="eyebrow">How it works</span>
-        <h2>Rago Optimizer tunes your PC. Rago Route takes the road.</h2>
-        <p>Five fixes that start where your PC ends, built together into one engine.</p>
+        <h2>Rago Optimizer tunes your PC. Rago Route takes care of the road.</h2>
+        <p>A lost packet gets three ways back, and your match gets two more protections. Six parts, built into one engine.</p>
+      </div>
+
+      <div class="layers">
+        <div class="glass layer rv"><span class="n"><i>1</i>A second road</span><h3>Its copy is already on the way.</h3><p>Every packet travels two roads. If one loses it, the other one brings it.</p><span class="then">Both lost? ↓</span></div>
+        <div class="glass layer rv"><span class="n"><i>2</i>A backup packet</span><h3>It's rebuilt on arrival.</h3><p>One backup packet for every four can rebuild any one of them, with no round trip.</p><span class="then">Still missing? ↓</span></div>
+        <div class="glass layer rv"><span class="n"><i>3</i>An instant resend</span><h3>It's sent again at once.</h3><p>The gap is spotted as soon as a later packet lands, and the missing one is sent again.</p><span class="then">Back in one round trip.</span></div>
       </div>
 
       <div class="feats">
@@ -408,17 +692,17 @@ footer.foot p{max-width:80ch}
         <article class="feat">
           <div class="ft rv">
             <span class="idx"><b>01</b>Dual path</span>
-            <h3>Two roads. First one wins.</h3>
+            <h3>Two roads. The first copy wins.</h3>
             <div class="pb">
-              <div><span class="k">Problem</span><span>One lost packet on your road and the game waits while it's sent again.</span></div>
-              <div><span class="k fix">Fix</span><span>Every packet leaves on two roads at once. The first copy to arrive is used, the other is dropped. One road can stumble and your game never knows.</span></div>
+              <div><span class="k">Problem</span><span>One lost or late packet on your road and your game waits for it.</span></div>
+              <div><span class="k fix">Fix</span><span>Every packet leaves on two roads at once: straight to Rago's exit, and through a Rago relay. The first copy in is used, the other is dropped. One road can stumble and your game never waits for it.</span></div>
             </div>
-            <div class="proof"><svg><use href="#i-lab"/></svg><span><b>Tested on Hypixel:</b> with 30% of packets dropped on purpose on one road, the other road rescued 2,246 of them in about two minutes. The match went on.</span></div>
+            <div class="proof"><svg><use href="#i-lab"/></svg><span><b>Tested on Hypixel:</b> with 30% of packets dropped on purpose on one road, the other road rescued 2,246 of them in about two minutes. None went missing in the game.</span></div>
           </div>
           <figure class="glass rv" style="margin:0" aria-label="Illustration: two copies of each packet race on two roads; the first to arrive is kept.">
             <svg class="dia" id="race" viewBox="0 0 560 230" aria-hidden="true">
               <text class="lbl" x="34" y="58">Road 1</text>
-              <text class="lbl" x="34" y="152" style="fill:#FF5E55">Road 2</text>
+              <text class="lbl r" x="34" y="152">Road 2</text>
               <path class="road" id="r-a" d="M34 80 L450 80"/>
               <path class="road rago" id="r-b" d="M34 174 L450 174"/>
               <path d="M450 56 L450 198" stroke="rgba(255,255,255,.18)" stroke-width="1.5" stroke-dasharray="3 5"/>
@@ -428,18 +712,52 @@ footer.foot p{max-width:80ch}
               <text x="505" y="184" text-anchor="middle">Your game</text>
             </svg>
             <div class="strip" id="r-strip" aria-hidden="true"></div>
-            <figcaption class="cap"><span>Illustration</span><b>White: road 1 first · Red: road 2 first</b></figcaption>
+            <figcaption class="cap"><span>Illustration</span><b>White: road 1 got there first · Red: road 2 did</b></figcaption>
           </figure>
         </article>
 
-        <!-- 02 Instant repair -->
+        <!-- 02 Backup packets -->
         <article class="feat flip">
           <div class="ft rv">
-            <span class="idx"><b>02</b>Instant repair</span>
-            <h3>A lost packet is back in one round trip.</h3>
+            <span class="idx"><b>02</b>Backup packets</span>
+            <h3>A lost packet, rebuilt on arrival.</h3>
+            <div class="tags"><span class="tag new">New</span></div>
             <div class="pb">
-              <div><span class="k">Problem</span><span>When Wi-Fi drops a burst of packets, everything behind the gap waits for them, sometimes for a long time.</span></div>
-              <div><span class="k fix">Fix</span><span>Rago Route numbers every packet. As soon as a later one lands, the gap is spotted and the missing packet is sent again, without waiting for a timeout.</span></div>
+              <div><span class="k">Problem</span><span>When a packet is lost, asking for it again costs a full round trip, and your game waits all that time.</span></div>
+              <div><span class="k fix">Fix</span><span>For every 4 packets, Rago Route adds one backup packet made from all 4. If one of them goes missing, it's rebuilt on the spot from the other 3 and the backup. No asking, no waiting.</span></div>
+            </div>
+            <div class="proof"><svg><use href="#i-lab"/></svg><span><b>Lab test:</b> 20 MB sent through 20% packet loss on each road arrived intact, with 1,413 packets repaired on arrival, never sent again.</span></div>
+          </div>
+          <figure class="glass rv" style="margin:0" aria-label="Illustration: four packets travel with one backup packet. Packet 3 is lost; at arrival it is rebuilt from packets 1, 2, 4 and the backup, with no resend.">
+            <svg class="dia" id="fec" viewBox="0 0 560 230" aria-hidden="true">
+              <rect class="node rago" x="20" y="84" width="62" height="62" rx="18"/>
+              <use href="#s-mark" x="40" y="102" width="22" height="25"/>
+              <text x="51" y="172" text-anchor="middle">Rago exit</text>
+              <path class="road" d="M82 115 L478 115"/>
+              <rect class="node ok" x="478" y="84" width="62" height="62" rx="18"/>
+              <use href="#s-pc" x="495" y="101" width="28" height="28"/>
+              <text x="509" y="172" text-anchor="middle">Your game</text>
+              <g class="xg"></g>
+              <g class="pkl"></g>
+              <text class="tag-t red" id="fec-msg" x="300" y="44" text-anchor="middle"></text>
+            </svg>
+            <div class="hud h3">
+              <div><small>Lost on the way</small><b class="red" id="fec-lost">0</b></div>
+              <div><small>Repaired on arrival</small><b class="ok" id="fec-fix">0</b></div>
+              <div><small>Sent again</small><b>0</b></div>
+            </div>
+            <figcaption class="cap"><span>Illustration</span><b>Red outline: the backup packet</b></figcaption>
+          </figure>
+        </article>
+
+        <!-- 03 Instant resend -->
+        <article class="feat">
+          <div class="ft rv">
+            <span class="idx"><b>03</b>Instant resend</span>
+            <h3>Still missing? Back in one round trip.</h3>
+            <div class="pb">
+              <div><span class="k">Problem</span><span>Normally a lost packet is sent again only once your connection notices it's gone, and a burst of losses can stall your game for a long time.</span></div>
+              <div><span class="k fix">Fix</span><span>Rago Route numbers every packet. The moment a later one lands, the gap is spotted and the missing packet is sent again, without waiting for a timeout.</span></div>
             </div>
             <div class="proof"><svg><use href="#i-lab"/></svg><span><b>Lab test:</b> 20 MB sent through 20% packet loss on both roads arrived intact, byte for byte.</span></div>
           </div>
@@ -459,16 +777,16 @@ footer.foot p{max-width:80ch}
           </figure>
         </article>
 
-        <!-- 03 Session hold -->
-        <article class="feat">
+        <!-- 04 Session hold -->
+        <article class="feat flip">
           <div class="ft rv">
-            <span class="idx"><b>03</b>Session hold</span>
-            <h3>Your Wi-Fi drops. Your match holds.</h3>
+            <span class="idx"><b>04</b>Session hold</span>
+            <h3>Your Wi-Fi blinks. Your match stays.</h3>
             <div class="pb">
-              <div><span class="k">Problem</span><span>When the signal cuts out, your connection freezes. When it comes back, it can take several more seconds to catch up.</span></div>
-              <div><span class="k fix">Fix</span><span>Rago's exit keeps your connection to the server open for up to a minute while your PC is silent. The moment your network is back, what's missing is sent straight away.</span></div>
+              <div><span class="k">Problem</span><span>When the signal cuts out, your connection freezes, and when it comes back it can take seconds more to catch up.</span></div>
+              <div><span class="k fix">Fix</span><span>Rago's exit keeps your connection to the server open while your PC is cut off. The moment your network is back, everything that's missing goes out at once.</span></div>
             </div>
-            <div class="proof"><svg><use href="#i-lab"/></svg><span><b>Lab test:</b> an 8-second total cut, nothing lost, traffic flowing again within 20 ms of the network coming back.</span></div>
+            <div class="proof"><svg><use href="#i-lab"/></svg><span><b>Lab test:</b> an 8-second total cut, nothing lost, and traffic flowing again within 20 ms of the network coming back.</span></div>
           </div>
           <figure class="glass rv" style="margin:0" aria-label="Illustration: the link between your PC and the Rago exit breaks for a few seconds while the exit keeps your connection to the server; when the link returns, everything resumes.">
             <svg class="dia" id="hold" viewBox="0 0 560 230" aria-hidden="true">
@@ -492,15 +810,25 @@ footer.foot p{max-width:80ch}
           </figure>
         </article>
 
-        <!-- 04 Phone backup -->
-        <article class="feat flip">
+        <!-- 05 Phone backup -->
+        <article class="feat">
           <div class="ft rv">
-            <span class="idx"><b>04</b>Phone backup</span>
-            <h3>Your phone becomes your backup road.</h3>
-            <span class="soon">Testing now</span>
+            <span class="idx"><b>05</b>Phone backup</span>
+            <h3>Your phone becomes a backup road.</h3>
+            <div class="tags"><span class="tag new">New</span><span class="tag beta">Beta</span></div>
             <div class="pb">
-              <div><span class="k">Problem</span><span>Wi-Fi is the weakest link in most setups. A wall, a busy channel or a neighbor's router is enough for a spike.</span></div>
-              <div><span class="k fix">Fix</span><span>Plug in your phone and Rago Route uses its mobile data as a second road, at the same time as your Wi-Fi. When the Wi-Fi stalls, the phone's copy gets there first. You see the mobile data it uses, live.</span></div>
+              <div><span class="k">Problem</span><span>Both roads start on your Wi-Fi, the weakest link in most setups. A wall, a busy channel or a neighbor's router is enough for a spike.</span></div>
+              <div><span class="k fix">Fix</span><span>Share your phone's connection over USB, Bluetooth or Wi-Fi and Rago Route adds its mobile data as one more road, at the same time as your home connection. When your Wi-Fi stalls, the phone's copy gets there first.</span></div>
+            </div>
+            <div class="proof"><svg><use href="#i-lab"/></svg><span><b>Prototype test on Hypixel:</b> Wi-Fi switched off for about 30 seconds mid-match, and the match stayed connected over the phone's 4G. How smooth it stays depends on your phone's signal.</span></div>
+            <div class="diag" id="diag" aria-label="Illustration of the phone check in the app">
+              <span class="dh">Rago checks every step for you</span>
+              <span class="s" data-i="0"><i></i>Phone seen on the USB port</span>
+              <span class="s" data-i="1"><i></i>Drivers ready</span>
+              <span class="s" data-i="2"><i></i>Hotspot turned on</span>
+              <span class="fx" hidden>On your phone, turn on Personal Hotspot or USB tethering.</span>
+              <span class="s" data-i="3"><i></i>Internet through the phone</span>
+              <span class="done" hidden><svg><use href="#i-check"/></svg>Phone 4G added as a backup road</span>
             </div>
           </div>
           <figure class="glass rv" style="margin:0" aria-label="Illustration: packets travel over Wi-Fi and over a phone's mobile data; when the Wi-Fi stalls, the phone's copies arrive first.">
@@ -515,7 +843,7 @@ footer.foot p{max-width:80ch}
               <text class="tag-t" id="ph-wl" x="59" y="34" text-anchor="middle">Wi-Fi</text>
               <rect class="node" x="28" y="157" width="62" height="62" rx="18"/>
               <use href="#s-phone" x="45" y="174" width="28" height="28"/>
-              <text class="tag-t red" x="59" y="236" text-anchor="middle">Phone · 4G</text>
+              <text class="tag-t red" id="ph-pl" x="59" y="236" text-anchor="middle">Phone · USB</text>
               <rect class="node rago" x="318" y="99" width="64" height="64" rx="19"/>
               <use href="#s-mark" x="338" y="118" width="24" height="26"/>
               <text x="350" y="186" text-anchor="middle">Rago exit</text>
@@ -531,35 +859,34 @@ footer.foot p{max-width:80ch}
           </figure>
         </article>
 
-        <!-- 05 Smart route -->
-        <article class="feat">
+        <!-- 06 Live counters -->
+        <article class="feat flip">
           <div class="ft rv">
-            <span class="idx"><b>05</b>Smart route</span>
-            <h3>The best road, picked for you.</h3>
-            <span class="soon next">Coming with the app</span>
+            <span class="idx"><b>06</b>Live counters</span>
+            <h3>See every packet it saves.</h3>
             <div class="pb">
-              <div><span class="k">Problem</span><span>Picking a proxy by hand means guessing, and the best road changes from one evening to the next.</span></div>
-              <div><span class="k fix">Fix</span><span>Rago measures the roads from your PC to your server, direct and through each Rago exit, and sends you down the fastest one. When your direct road is already the best, Rago keeps it.</span></div>
+              <div><span class="k">Problem</span><span>Lag you can't see is lag you can't fix. You're left guessing whether your connection or your tools are to blame.</span></div>
+              <div><span class="k fix">Fix</span><span>The Rago Route tab shows each road live: its round trip, how often it arrived first, its losses and the data it used. Plus every packet saved by the other road, repaired on arrival or sent again.</span></div>
             </div>
+            <div class="proof"><svg><use href="#i-eye"/></svg><span><b>It shows a clean line too.</b> In our first test on Windows, the direct road arrived first 100% of the time, with no loss: nothing to save that evening, and the tab said so.</span></div>
           </div>
-          <figure class="glass rv" style="margin:0" aria-label="Illustration: three roads to the server are measured and the fastest one is chosen.">
-            <svg class="dia" id="smart" viewBox="0 0 560 250" aria-hidden="true">
-              <path class="road" id="sm-0" d="M92 125 C170 125 190 48 280 48 S390 125 468 125"/>
-              <path class="road" id="sm-1" d="M92 125 L468 125"/>
-              <path class="road" id="sm-2" d="M92 125 C170 125 190 202 280 202 S390 125 468 125"/>
-              <g class="pkl"></g>
-              <rect class="node rago" x="258" y="27" width="44" height="42" rx="13"/><use href="#s-mark" x="272" y="38" width="16" height="18"/>
-              <rect class="node" x="258" y="104" width="44" height="42" rx="13"/><text class="tag-t" x="280" y="129" text-anchor="middle">ISP</text>
-              <rect class="node rago" x="258" y="181" width="44" height="42" rx="13"/><use href="#s-mark" x="272" y="193" width="16" height="18"/>
-              <text class="tag-t" id="sm-t0" x="280" y="18" text-anchor="middle">Rago exit A</text>
-              <text class="tag-t" id="sm-t1" x="330" y="112">Direct</text>
-              <text class="tag-t" id="sm-t2" x="280" y="243" text-anchor="middle">Rago exit B</text>
-              <rect class="node" x="30" y="94" width="62" height="62" rx="18"/>
-              <use href="#s-pc" x="47" y="111" width="28" height="28"/>
-              <rect class="node" x="468" y="94" width="62" height="62" rx="18"/>
-              <use href="#s-srv" x="485" y="111" width="28" height="28"/>
-            </svg>
-            <figcaption class="cap"><span>Illustration</span><b id="sm-cap">Measuring the roads…</b></figcaption>
+          <figure class="glass rv" style="margin:0" aria-label="Illustration of the Rago Route tab in the app: three roads with their round trip and share, and counters of packets saved, repaired and sent again.">
+            <div class="app" id="appmock" aria-hidden="true">
+              <div class="app-top"><span class="on"></span><b>Rago Route</b><span class="bd">Beta</span><em>Your game is going through Rago Route</em></div>
+              <div class="app-rows">
+                <span class="hd">Paths</span>
+                <div class="app-row"><span class="nm">Direct to Paris</span><b data-ms="13" data-j="2">13 ms</b><span class="bar"><i></i></span><small>first <span class="fp">96</span>%</small></div>
+                <div class="app-row"><span class="nm">Through Frankfurt</span><b data-ms="35" data-j="3">35 ms</b><span class="bar"><i></i></span><small>first <span class="fp">3</span>%</small></div>
+                <div class="app-row ph"><span class="nm">Phone 4G to Paris</span><b data-ms="52" data-j="14">52 ms</b><span class="bar"><i></i></span><small>first <span class="fp">1</span>%</small></div>
+              </div>
+              <div class="app-k">
+                <div><small>Packets saved</small><b id="ap-s">0</b></div>
+                <div><small>Packets repaired</small><b id="ap-f">0</b></div>
+                <div><small>Resends</small><b id="ap-r">0</b></div>
+                <div><small>Exit → server</small><b id="ap-x">91 ms</b></div>
+              </div>
+            </div>
+            <figcaption class="cap" style="margin-top:18px"><span>Illustration</span><b>The Rago Route tab, in the app's Network page</b></figcaption>
           </figure>
         </article>
       </div>
@@ -573,11 +900,12 @@ footer.foot p{max-width:80ch}
         <div>
           <span class="eyebrow">Fair play</span>
           <h2 style="margin-top:18px">Faster delivery. The same game.</h2>
-          <p>Rago Route only carries your connection. It never fakes your ping and never holds packets back for an edge. It can't read your match either: once you're logged in, Minecraft encrypts everything between your game and the server, and Rago Route passes it along untouched.</p>
+          <p>Rago Route only carries your connection. It doesn't touch Minecraft, never fakes your ping, never holds a packet back and never reads or changes your match. Every packet between your PC and Rago's exit is encrypted and signed, so a forged or replayed one is thrown away. Inside, your match stays encrypted by Minecraft itself, end to end with the server.</p>
           <div class="pills">
             <span class="pill"><svg><use href="#i-check"/></svg>No fake ping</span>
             <span class="pill"><svg><use href="#i-check"/></svg>No lag switch</span>
-            <span class="pill"><svg><use href="#i-check"/></svg>Encrypted by Minecraft, end to end</span>
+            <span class="pill"><svg><use href="#i-check"/></svg>Encrypted and signed</span>
+            <span class="pill"><svg><use href="#i-check"/></svg>Your game never modified</span>
           </div>
         </div>
         <div class="tube" aria-hidden="true">
@@ -589,27 +917,175 @@ footer.foot p{max-width:80ch}
     </div>
   </section>
 
+  <!-- Results: measured, with method and date. And what it won't do. -->
+  <section class="sec band" id="results" style="padding-top:0">
+    <div class="wrap">
+      <div class="head rv">
+        <span class="eyebrow">Results</span>
+        <h2>Measured, not promised.</h2>
+        <p>On Hypixel, in our lab and on players' PCs, each with its method and date. Your results depend on your connection.</p>
+      </div>
+      <div class="res">
+        <div class="glass rc rv"><div class="num"><span class="cu" data-to="2246">2,246</span></div><p>packets rescued by the second road in about two minutes, with none missing in the game.</p><span class="src"><svg><use href="#i-lab"/></svg>Hypixel, 30% loss forced on one road · Nov 6, 2026</span></div>
+        <div class="glass rc rv"><div class="num"><span class="cu" data-to="1413">1,413</span></div><p>packets repaired on arrival from backup packets, never sent again.</p><span class="src"><svg><use href="#i-lab"/></svg>Lab, 20 MB through 20% loss on each road · Nov 8, 2026</span></div>
+        <div class="glass rc rv"><div class="num"><span class="cu" data-to="20">20</span><small>MB</small></div><p>arrived intact, byte for byte, through 20% packet loss on both roads.</p><span class="src"><svg><use href="#i-lab"/></svg>Lab, Rago Route's engine · Nov 8, 2026</span></div>
+        <div class="glass rc rv"><div class="num"><span class="cu" data-to="20">20</span><small>ms</small></div><p>to flow again after an 8-second total cut, with nothing lost.</p><span class="src"><svg><use href="#i-lab"/></svg>Lab, total cut of the network · Nov 7, 2026</span></div>
+        <div class="glass rc rv"><div class="num"><span class="cu" data-to="30">30</span><small>s</small></div><p>of Wi-Fi switched off mid-match, about. The match stayed connected over the phone's 4G, slowly on a weak signal.</p><span class="src"><svg><use href="#i-lab"/></svg>Hypixel, phone backup prototype · Nov 7, 2026</span></div>
+        <div class="glass rc rv"><div class="num"><span class="cu" data-to="116">116</span><span class="vs"> / 119</span><small>ms</small></div><p>median ping to Hypixel from France, through Rago Route and direct, measured at the same time. Going through Rago didn't cost ping.</p><span class="src"><svg><use href="#i-lab"/></svg>14 measurements, France · Nov 7, 2026</span></div>
+      </div>
+      <div class="glass limits rv">
+        <div class="lt">
+          <h3>What it won't do.</h3>
+          <p>We'd rather tell you now than after you pay. Rago Route is made for connections that drop packets.</p>
+        </div>
+        <ul>
+          <li><span class="x"></span><span><b>Shorten the distance.</b> Hypixel's servers are in North America. From Europe, your ping stays about the same: 116 against 119 ms in our test from France.</span></li>
+          <li><span class="x"></span><span><b>Raise your FPS.</b> That's the job of Rago Optimizer's tweaks, also in Premium.</span></li>
+          <li><span class="x"></span><span><b>Change much on a clean wired line.</b> In our own test with simulated packet loss, the difference was hard to feel at 5% loss and obvious at 25%.</span></li>
+          <li><span class="x"></span><span><b>Help outside Europe.</b> Rago's exit is in Paris: from farther away, going through it would make your road longer.</span></li>
+        </ul>
+      </div>
+    </div>
+  </section>
+
+  <!-- Why Rago Route -->
+  <section class="sec band" id="different" style="padding-top:0">
+    <div class="wrap">
+      <div class="head rv">
+        <span class="eyebrow">Why Rago Route</span>
+        <h2>Built for one game. Included in Premium.</h2>
+      </div>
+      <div class="diff">
+        <div class="glass dc rv"><span class="ic"><svg><use href="#i-cube"/></svg></span><h3>Made for Minecraft Java</h3><p>One ordered stream, where a single loss stops everything behind it. Rago Route is built around that, from the way it repairs to the way it holds your match.</p></div>
+        <div class="glass dc rv"><span class="ic"><svg><use href="#i-roads"/></svg></span><h3>Three ways back for a lost packet</h3><p>A second road, a backup packet and an instant resend, working together. If one misses, the next one catches it.</p></div>
+        <div class="glass dc rv"><span class="ic"><svg><use href="#i-phone"/></svg></span><h3>Your phone as a backup road</h3><p>USB, Bluetooth or Wi-Fi. Rago finds it by itself, and when it can't, it tells you which step is missing and how to fix it.</p></div>
+        <div class="glass dc rv"><span class="ic"><svg><use href="#i-lock"/></svg></span><h3>Encrypted and signed</h3><p>Every packet between your PC and Rago's exit. Your Rago pass names your license and nothing else.</p></div>
+        <div class="glass dc rv"><span class="ic"><svg><use href="#i-eye"/></svg></span><h3>Proof you can check</h3><p>Live counters in the app, and every number on this page measured, with its date. No “up to” we can't back.</p></div>
+        <div class="glass dc rv"><span class="ic"><svg><use href="#i-card"/></svg></span><h3>One subscription for all of it</h3><p>Rago Route comes with Premium, next to all 218 tweaks and the Packet Optimizer. No second subscription for your connection.</p></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Is it for you: the honest filter, and the free network test for the unsure -->
+  <section class="sec band" id="fit" style="padding-top:0">
+    <div class="wrap">
+      <div class="head rv">
+        <span class="eyebrow">Is it for you?</span>
+        <h2>Made for lag that comes from the road.</h2>
+      </div>
+      <div class="fit">
+        <div class="glass yes rv">
+          <h3>Rago Route is for you if</h3>
+          <ul>
+            <li><svg><use href="#i-check"/></svg><span>You play on Wi-Fi, or your connection drops packets.</span></li>
+            <li><svg><use href="#i-check"/></svg><span>Your ping spikes or you rubberband, often in the evening.</span></li>
+            <li><svg><use href="#i-check"/></svg><span>Your match freezes or stalls when your signal blinks.</span></li>
+            <li><svg><use href="#i-check"/></svg><span>You play Hypixel or Minemen Club from Europe, on Windows.</span></li>
+          </ul>
+        </div>
+        <div class="glass no rv">
+          <h3>Not the right fit if</h3>
+          <ul>
+            <li><svg><use href="#i-minus"/></svg><span>You want a lower ping to a server far away.</span></li>
+            <li><svg><use href="#i-minus"/></svg><span>You play from outside Europe.</span></li>
+            <li><svg><use href="#i-minus"/></svg><span>You play other servers or other games.</span></li>
+            <li><svg><use href="#i-minus"/></svg><span>Your lag comes from low FPS: start with the tweaks.</span></li>
+          </ul>
+        </div>
+      </div>
+      <div class="glass freebox rv">
+        <p><b>Not sure?</b> The free network test in Rago Optimizer measures your ping, spikes and packet loss to Hypixel and Minemen Club. Loss or spikes there: Rago Route is made for that.</p>
+        <a class="btn btn-ghost js-free-app" href="https://account.rago-optimizer.com/download"><svg><use href="#i-down"/></svg>Test my connection for free</a>
+      </div>
+    </div>
+  </section>
+
+  <!-- Start in three steps -->
+  <section class="sec band" id="start" style="padding-top:0">
+    <div class="wrap">
+      <div class="head rv">
+        <span class="eyebrow">Get started</span>
+        <h2>Three steps, then play.</h2>
+      </div>
+      <div class="start">
+        <div class="glass st rv"><span class="dot">1</span><h3>Start your free trial</h3><p><span class="js-td">3</span> days of all of Premium, Rago Route included. Card required, cancel in two clicks.</p></div>
+        <div class="glass st rv"><span class="dot">2</span><h3>Turn on Rago Route</h3><p>In Rago Optimizer, open Network, then Rago Route, and turn it on. Plug in your phone if you want a backup road.</p></div>
+        <div class="glass st rv"><span class="dot">3</span><h3>Join localhost</h3><p>In Minecraft, add the server <code>localhost</code> for Hypixel, or <code>localhost:25566</code> for Minemen Club, and play.</p></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Reviews of Rago Optimizer (real ones, newest first, from the account server). Hidden until there's one. -->
+  <section class="band js-rev" id="reviews" style="padding-bottom:clamp(80px,10vw,150px)" hidden>
+    <div class="wrap">
+      <div class="head rv" style="margin-bottom:clamp(28px,4vw,48px)">
+        <span class="eyebrow">Reviews</span>
+        <h2>What players say about Rago Optimizer.</h2>
+        <p class="rev-sum"><span id="rev-sum"></span><a class="rev-all" href="reviews.html">See all reviews<svg><use href="#i-arrow"/></svg></a></p>
+      </div>
+      <div class="revs" id="revs"></div>
+    </div>
+  </section>
+
+  <!-- Pricing: Rago Route comes with Premium -->
+  <section class="sec band" id="pricing" style="padding-top:0">
+    <div class="wrap">
+      <div class="head rv">
+        <span class="eyebrow">Pricing</span>
+        <h2>Rago Route comes with Premium.</h2>
+        <p>Try all of Premium free for <span class="js-td">3</span> days. Keep it or cancel in two clicks.</p>
+      </div>
+      <div class="buy">
+        <div class="glass plan rv">
+          <span class="rec">Rago Route included</span>
+          <h3>Premium</h3>
+          <p class="sub">Every optimization, and the road to the server.</p>
+          <div class="amt"><b class="js-pm">$5.99</b><small>/ month</small></div>
+          <p class="alt">Or <span class="js-py">$29.99</span> a year, <span class="js-free">6 months free</span>.</p>
+          <a class="btn btn-red btn-lg js-trial" href="https://account.rago-optimizer.com/buy?interval=month&amp;trial=1"><span>Start <span class="js-td">3</span>-day free trial</span><svg class="go"><use href="#i-arrow"/></svg></a>
+          <p class="trial-note" id="trial-note">Card required. Free for <span class="js-td">3</span> days, then the monthly plan at <span class="js-pm">$5.99</span> a month, charged automatically on day <span class="js-td">3</span> unless you cancel before. Cancel in two clicks from your account. One trial per person.</p>
+          <a class="btn btn-ghost js-year" href="https://account.rago-optimizer.com/buy?interval=year"><span>Skip the trial: <span class="js-py">$29.99</span> a year</span></a>
+          <p class="micro">Secure checkout with Stripe · Cancel anytime · <a href="terms.html#cancel">No refunds: try it free first</a></p>
+        </div>
+        <div class="glass side rv">
+          <h3>Everything in Premium</h3>
+          <ul>
+            <li class="rt"><svg><use href="#i-check"/></svg><span><b>Rago Route</b>, in beta: two roads, backup packets, instant resend, session hold and phone backup</span></li>
+            <li><svg><use href="#i-check"/></svg><span><b>All 218 tweaks</b>, with RBW Mod, Game mode and Expert mode</span></li>
+            <li><svg><use href="#i-check"/></svg><span><b>Packet Optimizer</b> for hitreg and knockback, tuned to your line</span></li>
+            <li><svg><use href="#i-check"/></svg><span><b>20 presets</b>, and Optimize and play</span></li>
+            <li><svg><use href="#i-check"/></svg><span><b>21 tweaks to switch mid-match</b> from the in-game bar</span></li>
+            <li><svg><use href="#i-check"/></svg><span><b>Every new tweak and preset</b> from future versions</span></li>
+          </ul>
+          <hr>
+          <div class="lic"><svg><use href="#i-pc"/></svg>One license, one PC. Windows 10 and 11.</div>
+          <p class="micro">Prefer to pay once? <a href="./#lifetime">Lifetime</a> includes Rago Route too.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
   <!-- FAQ -->
   <section class="sec band" id="faq" style="padding-top:0">
     <div class="wrap">
       <div class="head rv"><span class="eyebrow">Questions</span><h2>Clear answers.</h2></div>
       <div class="faq rv">
-        <details><summary>Will it lower my ping?</summary><p>Sometimes, but that's not the main goal. Rago Route removes spikes, packet loss and freezes. Your average ping only goes down when your usual route takes a detour. In our first tests from France, Rago Route was a few milliseconds faster than the direct route to Hypixel.</p></details>
-        <details><summary>Is it a VPN?</summary><p>No. Rago Route carries your Minecraft connection and nothing else from your PC. It's built for low delay, not for hiding where you are.</p></details>
-        <details><summary>Which games and servers does it work with?</summary><p>Minecraft Java first, starting with Hypixel and Minemen Club. More servers are planned.</p></details>
-        <details><summary>When can I use it?</summary><p>Now, with Premium, the free trial included. In Rago Optimizer 1.3, open Network, then Rago Route, and turn it on. It's in beta, on Hypixel and Minemen Club, through Rago's servers in Europe.</p></details>
-      </div>
-    </div>
-  </section>
-
-  <!-- Where it stands -->
-  <section class="sec band" style="padding-top:0">
-    <div class="wrap">
-      <div class="head rv"><span class="eyebrow">Where it stands</span><h2>Built, and now in the app.</h2></div>
-      <div class="steps">
-        <div class="glass step done rv"><span class="dot"><svg width="14" height="14"><use href="#i-check"/></svg></span><h3>The engine</h3><p>Dual path, instant repair and session hold run on Rago servers in Europe.</p><small>Done</small></div>
-        <div class="glass step done rv"><span class="dot"><svg width="14" height="14"><use href="#i-check"/></svg></span><h3>Real matches</h3><p>Full Bedwars games played through Rago Route on Hypixel.</p><small>Done</small></div>
-        <div class="glass step now rv"><span class="dot">3</span><h3>In Rago Optimizer</h3><p>Rago Route is in the Windows app for Premium, in beta. Next: the phone backup and the best road picked for you.</p><small>In beta</small></div>
+        <details><summary>Will it lower my ping?</summary><p>Usually not by much, and that isn't its job. Rago Route removes the spikes, losses and freezes on the way to the server. Your average ping depends mostly on distance: Hypixel's servers are in North America, so from Europe it stays about the same. In our test from France, the median was 116 ms through Rago Route against 119 ms direct, measured at the same time.</p></details>
+        <details><summary>When will I feel a difference?</summary><p>When your connection drops packets: on Wi-Fi, at busy hours, or on a line that spikes. On a clean wired line there's little to fix, so you'll feel little. In our own test with simulated packet loss, the difference was hard to feel at 5% loss and obvious at 25%. Rago Optimizer's free network test shows your loss and spikes to Hypixel and Minemen Club.</p></details>
+        <details><summary>Is it a VPN?</summary><p>No. Rago Route carries your Minecraft connection and nothing else from your PC. It's built for steady delivery and low delay, not for hiding where you are.</p></details>
+        <details><summary>Is it fair play?</summary><p>Yes. Rago Route doesn't touch Minecraft: no mod, nothing injected, no fake ping, no lag switch, and it never holds a packet back. It only carries your packets, the same ones, by more than one road. Your match stays encrypted by Minecraft, end to end with the server, so Rago Route can't read it or change it.</p></details>
+        <details><summary>Which servers does it work with?</summary><p>Hypixel and Minemen Club, on Minecraft Java, from Windows 10 and 11. Tell us on our Discord which server you want next.</p></details>
+        <details><summary>Does it work outside Europe?</summary><p>Not well. Rago's exit is in Paris, so it's made for players in Europe. From farther away, going through Paris would make your road longer.</p></details>
+        <details><summary>How do I use it?</summary><p>Start your trial and install Rago Optimizer. Open Network, then Rago Route, and turn it on. In Minecraft, add the server localhost for Hypixel, or localhost:25566 for Minemen Club, and join it. The tab shows your roads and counters while you play.</p></details>
+        <details><summary>How do I add my phone?</summary><p>Share your phone's connection with your PC: plug it in with a USB cable and turn on Personal Hotspot (iPhone) or USB tethering (Android), or pair it over Bluetooth. If your PC is wired to your router, it can also join the phone's hotspot over Wi-Fi. Rago Route finds the phone and adds it as a road. If it can't, the tab shows which step is missing, like a driver or a setting, and how to fix it. A cable that only charges can't work: it has no data wires.</p></details>
+        <details><summary>How much mobile data does the phone use?</summary><p>About 70 to 90 MB per hour of play. In our test, the phone road used 11.2 MB in 10 minutes on Hypixel, before backup packets were added, and they add up to a quarter more. The app shows the data used, live.</p></details>
+        <details><summary>What if my phone's signal is weak?</summary><p>Then that road is slow. While your Wi-Fi works, it barely matters: the fastest copy wins. When your Wi-Fi cuts out completely, your game can only go as fast as your phone. In our Wi-Fi cut test with a weak 4G signal, the match stayed connected, but ping rose above one second until the Wi-Fi came back.</p></details>
+        <details><summary>What happens if my internet cuts out completely?</summary><p>Rago's exit keeps your connection to the server open while your PC is cut off, and sends what's missing the moment you're back. In our lab test, an 8-second total cut lost nothing. A long cut can still end your match: the server expects your game to answer now and then.</p></details>
+        <details><summary>What does Rago see?</summary><p>Rago Route encrypts and signs every packet between your PC and Rago's exit. It doesn't read your match, which Minecraft encrypts end to end with the server. To let you in, Rago's servers check a short pass from your account that names your license and nothing else.</p></details>
+        <details><summary>Is Rago Route in the Free plan?</summary><p>No, it's part of Premium, the free trial included, and of Lifetime. The Free plan keeps the network test, so you can check your connection first.</p></details>
+        <details><summary>It's in beta. What does that mean?</summary><p>It works and it's tested, on Hypixel and in our lab, but it's new: features and results may still change, and the phone backup is the newest part. Tell us on our Discord what you see.</p></details>
+        <details><summary>How does the free trial work?</summary><p id="faq-trial">Choose Start <span class="js-td">3</span>-day free trial, create your account and enter your card on Stripe. Nothing is charged today and you get all of Premium right away, Rago Route included. If you don't cancel, the monthly plan (<span class="js-pm">$5.99</span> a month) starts automatically <span class="js-td">3</span> days later, and the email we send you gives the exact date. To stop, cancel from your account page before that date: you pay nothing and Premium ends with the trial. The trial is for new customers, once per person and per card.</p></details>
+        <details><summary>Can I get a refund?</summary><p id="faq-refund">No, payments aren't refunded. That's what the free trial is for: <span class="js-td">3</span> days of all of Premium before you pay anything. You can cancel anytime from your account page, and you keep Premium until the end of the period you paid for. If you're charged twice or by mistake, contact us and we give back the extra payment.</p></details>
       </div>
     </div>
   </section>
@@ -617,22 +1093,184 @@ footer.foot p{max-width:80ch}
   <section class="final band">
     <div class="wrap rv">
       <span class="eyebrow">Rago Route</span>
-      <h2>Be first on the road.</h2>
-      <p>Join the Rago Discord to hear the moment Rago Route opens.</p>
+      <h2>Give every packet a second road.</h2>
+      <p>Try Rago Route and all of Premium free for <span class="js-td">3</span> days, on your own connection, in your own matches.</p>
       <div class="cta-row">
-        <a class="btn btn-red" href="https://discord.gg/cbCxCBx8vJ" target="_blank" rel="noopener"><svg><use href="#i-discord"/></svg>Join the Discord</a>
-        <a class="btn btn-ghost" href="./">Discover Rago Optimizer<svg class="go"><use href="#i-arrow"/></svg></a>
+        <a class="btn btn-red btn-lg js-trial" href="https://account.rago-optimizer.com/buy?interval=month&amp;trial=1" id="final-cta"><span>Start <span class="js-td">3</span>-day free trial</span><svg class="go"><use href="#i-arrow"/></svg></a>
+        <a class="btn btn-ghost btn-lg" href="./">Discover Rago Optimizer<svg class="go"><use href="#i-arrow"/></svg></a>
       </div>
+      <p class="micro">Card required: free for <span class="js-td">3</span> days, then <span class="js-pm">$5.99</span> a month unless you cancel. Cancel in two clicks from your account.</p>
     </div>
   </section>
 </main>
 
 <footer class="foot band">
   <div class="wrap">
-    <nav aria-label="Footer"><a href="./">Rago Optimizer</a><a href="./#pricing">Pricing</a><a href="./#faq">FAQ</a><a href="partners.html">Partners</a><a href="reviews.html">Reviews</a><a href="terms.html">Terms</a><a href="privacy.html">Privacy</a><a href="terms.html#cancel">Cancellation</a></nav>
+    <nav aria-label="Footer"><a href="./">Rago Optimizer</a><a href="./#pricing">Pricing</a><a href="./#faq">FAQ</a><a href="tweaks.html">Tweaks</a><a href="reviews.html">Reviews</a><a href="partners.html">Partners</a><a href="https://discord.gg/cbCxCBx8vJ" target="_blank" rel="noopener">Discord</a><a href="terms.html">Terms</a><a href="privacy.html">Privacy</a><a href="terms.html#cancel">Cancellation</a></nav>
     <p>Rago Route is in beta: features and results may change. Results depend on your connection. Hypixel and Minemen Club are run by their own teams and aren't affiliated with Rago. Minecraft is a trademark of Mojang Studios; Rago Optimizer isn't affiliated with Mojang or Microsoft. © 2026 Rago Optimizer, by KALISO and RAGO.</p>
   </div>
 </footer>
+
+<div class="dock" id="dock" aria-hidden="true">
+  <span><b>Rago Route, in Premium</b><span class="js-td">3</span> days free, then <span class="js-pm">$5.99</span>/month</span>
+  <a class="btn btn-red js-trial" href="https://account.rago-optimizer.com/buy?interval=month&amp;trial=1" tabindex="-1">Start free trial</a>
+</div>
+<div class="toast" id="toast" role="status"></div>
+<div class="dlg" id="send" hidden>
+  <div class="dlg-card" role="dialog" aria-modal="true" aria-labelledby="send-t">
+    <span class="eyebrow">Windows 10 and 11</span>
+    <h3 id="send-t">Rago runs on your PC. Send it there.</h3>
+    <p class="send-p">Open this link on your Windows PC to download Rago Optimizer for free and run the network test.</p>
+    <div class="send-url" id="send-url"></div>
+    <div class="dlg-acts"><button class="btn btn-ghost btn-sm" type="button" id="send-x">Close</button><button class="btn btn-ghost btn-sm" type="button" id="send-copy">Copy link</button><button class="btn btn-red btn-sm" type="button" id="send-share">Share</button></div>
+    <p class="micro">On this device anyway? <a class="js-free-app" href="https://account.rago-optimizer.com/download" id="send-dl">Download the installer</a></p>
+  </div>
+</div>
+<div class="dlg" id="dlg" hidden>
+  <div class="dlg-card" role="dialog" aria-modal="true" aria-labelledby="dlg-t">
+    <span class="eyebrow">Download started</span>
+    <h3 id="dlg-t">Three steps to your network test.</h3>
+    <ol>
+      <li><b>Open RagoOptimizer-Setup.exe</b><span>From your Downloads folder.</span></li>
+      <li><b>If Windows says “Windows protected your PC”</b><span>Click More info, then Run anyway. Windows shows this because Rago doesn't have a paid code-signing certificate yet. Then accept the administrator prompt: Rago needs it to change system settings.</span></li>
+      <li><b>Open Network, then Network test</b><span>No account needed. Test Hypixel or Minemen Club: you see your ping, spikes and lost packets.</span></li>
+    </ol>
+    <div class="dlg-acts"><button class="btn btn-ghost btn-sm" type="button" id="dlg-ok">Got it</button><a class="btn btn-red btn-sm" href="#pricing" id="dlg-pro">See Premium</a></div>
+    <p class="micro">Nothing downloaded? <a class="js-free-app" href="https://account.rago-optimizer.com/download" id="dlg-retry">Try again</a></p>
+  </div>
+</div>
+
+<script>
+/* Same account server, prices and trial as the home page: build.py copies them from page.html (CONFIG there);
+   netlify/preview.sh fills previewAccountBase on Netlify previews. A copy on this computer uses the local account
+   server (licensing: npm run local). */
+const CONFIG = {
+  accountBase: "https://account.rago-optimizer.com",
+  previewAccountBase: "",
+  trialDays: 3,
+  checkoutPath: "/buy",
+  freeAppPath: "/download",
+  currency: "$",
+  priceMonth: 5.99,
+  priceYear: 29.99
+};
+const $ = (s, r = document) => r.querySelector(s);
+const $$ = (s, r = document) => [...r.querySelectorAll(s)];
+const REDUCE = matchMedia("(prefers-reduced-motion: reduce)").matches;
+const esc = s => String(s).replace(/[&<>"]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
+const toast = m => { const t = $("#toast"); t.textContent = m; t.classList.add("show"); clearTimeout(t._h); t._h = setTimeout(() => t.classList.remove("show"), 2800); };
+/* Only the live site talks to the live account server (same rules as the home page) */
+const HOST = location.hostname;
+if (!HOST || /^(localhost|127\.0\.0\.1|\[::1\]|10(\.\d+){3}|192\.168(\.\d+){2}|172\.(1[6-9]|2\d|3[01])(\.\d+){2})$|\.local$/.test(HOST))
+  CONFIG.accountBase = `http://${HOST && HOST !== "[::1]" ? HOST : "localhost"}:8787`;
+else if (/\.netlify\.app$/.test(HOST)) CONFIG.accountBase = CONFIG.previewAccountBase || null;
+const ACCOUNT_OFF = "#account-off";
+if (CONFIG.accountBase === null) document.addEventListener("click", e => {
+  if (!e.target.closest || !e.target.closest(`a[href="${ACCOUNT_OFF}"]`)) return;
+  e.preventDefault(); e.stopPropagation(); toast("Account pages are off on this preview (STAGING_ACCOUNT_URL isn't set on Netlify).");
+}, true);
+const acct = p => CONFIG.accountBase === null ? ACCOUNT_OFF : CONFIG.accountBase.replace(/\/+$/, "") + p;
+
+/* Affiliate code: kept from ?ref=CODE for 30 days, like the home page, and passed to checkout */
+const REF = (() => {
+  const ok = v => typeof v === "string" && /^[A-Za-z0-9_-]{2,40}$/.test(v), KEY = "rago_ref", TTL = 30 * 864e5;
+  let ref = null;
+  try { ref = new URLSearchParams(location.search).get("ref"); } catch (e) {}
+  if (ok(ref)) {
+    try { localStorage.setItem(KEY, JSON.stringify({ c: ref, t: Date.now() })); } catch (e) {}
+    try { sessionStorage.setItem(KEY, ref); } catch (e) {}
+    return ref;
+  }
+  try { const s = sessionStorage.getItem(KEY); if (ok(s)) return s; } catch (e) {}
+  try { const l = JSON.parse(localStorage.getItem(KEY) || "null"); if (l && ok(l.c) && Date.now() - l.t < TTL) return l.c; } catch (e) {}
+  return null;
+})();
+
+/* Prices, trial and checkout links, from CONFIG (build.py bakes the same values into the HTML for visitors without
+   JavaScript). The trial always starts on the monthly plan, as on the home page. */
+(() => {
+  const c = CONFIG.currency, fmt = n => c + (Math.round(n * 100) / 100).toFixed(2), d = CONFIG.trialDays;
+  const free = Math.floor(1e-9 + 12 - CONFIG.priceYear / CONFIG.priceMonth);
+  const set = (sel, v) => $$(sel).forEach(e => { e.textContent = v; });
+  set(".js-td", d); set(".js-pm", fmt(CONFIG.priceMonth)); set(".js-py", fmt(CONFIG.priceYear));
+  set(".js-free", free >= 1 ? `${free} month${free === 1 ? "" : "s"} free` : `${fmt(CONFIG.priceYear / 12)} a month`);
+  const tail = REF ? "&ref=" + encodeURIComponent(REF) : "";
+  $$(".js-trial").forEach(a => a.href = acct(`${CONFIG.checkoutPath}?interval=month&trial=1${tail}`));
+  $$(".js-year").forEach(a => a.href = acct(`${CONFIG.checkoutPath}?interval=year${tail}`));
+})();
+
+/* Keep Tab inside an open dialog */
+function trap(d) {
+  d.addEventListener("keydown", e => {
+    if (e.key !== "Tab") return;
+    const f = $$("a[href],button:not([disabled])", d).filter(x => !x.hidden && x.offsetParent !== null);
+    if (!f.length) return;
+    const a = f[0], z = f[f.length - 1];
+    if (e.shiftKey && (document.activeElement === a || !d.contains(document.activeElement))) { e.preventDefault(); z.focus(); }
+    else if (!e.shiftKey && document.activeElement === z) { e.preventDefault(); a.focus(); }
+  });
+}
+/* Free app (for the network test): Rago only runs on Windows, so phones and Macs get a link to send to their PC,
+   and Windows gets what to expect after the download (SmartScreen included: the installer isn't code-signed yet). */
+$$(".js-free-app").forEach(a => a.href = acct(CONFIG.freeAppPath));
+const onWindows = /Windows/i.test(navigator.userAgent) || /Win/i.test(navigator.userAgentData?.platform || "");
+const sendUrl = () => location.origin + location.pathname + (REF ? "?ref=" + encodeURIComponent(REF) : "") + "#fit";
+(() => {
+  const d = $("#send"); let back = null; trap(d);
+  const open = () => { back = document.activeElement; d.hidden = false; $("#send-url").textContent = sendUrl().replace(/^https?:\/\//, ""); setTimeout(() => (navigator.share ? $("#send-share") : $("#send-copy")).focus(), 30); };
+  const close = () => { d.hidden = true; $("#send-copy").textContent = "Copy link"; back && back.focus && back.focus(); };
+  if (!navigator.share) $("#send-share").hidden = true;
+  $("#send-share").addEventListener("click", () => { if (navigator.share) navigator.share({ title: "Rago Optimizer", text: "Rago Optimizer for my PC", url: sendUrl() }).catch(() => {}); });
+  $("#send-copy").addEventListener("click", async () => { const url = sendUrl(); try { await navigator.clipboard.writeText(url); $("#send-copy").textContent = "Link copied"; } catch (e) { toast(url); } });
+  $("#send-x").addEventListener("click", close); d.addEventListener("click", e => { if (e.target === d) close(); });
+  addEventListener("keydown", e => { if (e.key === "Escape" && !d.hidden) close(); });
+  $$(".js-free-app").forEach(a => a.addEventListener("click", e => { if (!onWindows && a.id !== "send-dl") { e.preventDefault(); open(); } }));
+  $("#send-dl").addEventListener("click", () => setTimeout(close, 300));
+})();
+(() => {
+  const d = $("#dlg"); let back = null; trap(d);
+  const close = () => { d.hidden = true; back && back.focus && back.focus(); };
+  $$(".js-free-app").forEach(a => a.addEventListener("click", () => { if (!onWindows || a.id === "dlg-retry" || a.getAttribute("href") === ACCOUNT_OFF) return; back = a; d.hidden = false; setTimeout(() => $("#dlg-ok").focus(), 30); }));
+  $("#dlg-ok").addEventListener("click", close); $("#dlg-pro").addEventListener("click", () => { d.hidden = true; });
+  d.addEventListener("click", e => { if (e.target === d) close(); });
+  addEventListener("keydown", e => { if (e.key === "Escape" && !d.hidden) close(); });
+})();
+
+/* Reviews: the real ones, left by players in Rago Optimizer or from their account, newest first, read from the account
+   server on every visit. They're about Rago Optimizer as a whole, and the section says so. None (or no server): hidden. */
+(() => {
+  const STAR = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2.5l2.9 6.1 6.6.8-4.9 4.6 1.3 6.6L12 17.3l-5.9 3.3 1.3-6.6-4.9-4.6 6.6-.8z"/></svg>';
+  const PHOTO = /^https?:\/\/[a-z0-9.-]+(:\d+)?\/avatars\/[A-Za-z0-9_-]{20,40}\.webp$/i;
+  const ok = r => r && Number.isInteger(r.rating) && r.rating >= 1 && r.rating <= 5 && typeof r.comment === "string" && r.comment.trim() && typeof r.name === "string" && r.name.trim();
+  const first = n => ([...n.trim()][0] || "?").toUpperCase();
+  const when = d => { const t = Date.parse(d); return isNaN(t) ? "" : new Date(t).toLocaleDateString("en-US", { month: "short", year: "numeric", timeZone: "UTC" }); };
+  const face = r => typeof r.avatar_url === "string" && PHOTO.test(r.avatar_url)
+    ? `<img class="av" src="${esc(r.avatar_url)}" alt="" width="30" height="30" loading="lazy" decoding="async" referrerpolicy="no-referrer" data-i="${esc(first(r.name))}">`
+    : `<span class="av" aria-hidden="true">${esc(first(r.name))}</span>`;
+  const card = r => `<figure class="rq"><span class="stars" role="img" aria-label="${r.rating} out of 5 stars">${STAR.repeat(r.rating)}${`<span class="off">${STAR}</span>`.repeat(5 - r.rating)}</span><p>“${esc(r.comment.trim())}”</p><footer>${face(r)}<span class="rn">${esc(r.name.trim())}</span><small>${when(r.date)}</small></footer></figure>`;
+  const show = data => {
+    const list = (data && Array.isArray(data.reviews) ? data.reviews : []).filter(ok).slice(0, 6);
+    if (!list.length) return;
+    $("#revs").innerHTML = list.map(card).join("");
+    $$("#revs img.av").forEach(img => img.addEventListener("error", () => img.replaceWith(Object.assign(document.createElement("span"), { className: "av", textContent: img.dataset.i })), { once: true }));
+    const n = Number(data.count) || list.length, avg = Number(data.average);
+    $("#rev-sum").textContent = `${n} review${n === 1 ? "" : "s"}${avg >= 1 && avg <= 5 ? ` · ${avg.toFixed(1)} out of 5` : ""}`;
+    $$(".js-rev").forEach(el => { el.hidden = false; });
+  };
+  if (!("fetch" in window) || CONFIG.accountBase === null) return;
+  fetch(acct("/api/v1/reviews"), { credentials: "omit", cache: "no-cache" }).then(r => (r.ok ? r.json() : null)).then(show).catch(() => {});
+})();
+
+/* Phones: the trial bar shows once the hero's button is off screen, and steps aside for the pricing and the final call */
+(() => {
+  const dock = $("#dock"); if (!dock || !("IntersectionObserver" in window)) return;
+  const seen = new Map();
+  const upd = () => { const on = !seen.get("hero") && !seen.get("pricing") && !seen.get("final"); dock.classList.toggle("on", on); dock.setAttribute("aria-hidden", !on); $("a", dock).tabIndex = on ? 0 : -1; };
+  const watch = (el, k) => el && new IntersectionObserver(([e]) => { seen.set(k, e.isIntersecting); upd(); }).observe(el);
+  seen.set("hero", true);
+  watch($("#hero-cta"), "hero"); watch($("#pricing .plan"), "pricing"); watch($("#final-cta"), "final");
+})();
+</script>
 
 <script>
 /* Animations of the page. Each scene runs only while it's on screen; with "reduce motion", it shows one still frame. */
@@ -652,11 +1290,11 @@ if ("IntersectionObserver" in window) {
 }
 
 // Runs scene.step(dt) on every frame while the element is visible
-function run(el, make) {
+function run(el, make, still = 260) {
   if (!el) return;
   let s = null, raf = 0, last = 0;
   const frame = t => { s.step(Math.min(48, last ? t - last : 16)); last = t; raf = requestAnimationFrame(frame); };
-  const start = () => { if (!s) s = make(el); if (REDUCE) { for (let i = 0; i < 260; i++) s.step(16); return; } last = 0; cancelAnimationFrame(raf); raf = requestAnimationFrame(frame); };
+  const start = () => { if (!s) s = make(el); if (REDUCE) { if (!s.still) { s.still = true; for (let i = 0; i < still; i++) s.step(16); } return; } last = 0; cancelAnimationFrame(raf); raf = requestAnimationFrame(frame); };
   if (!("IntersectionObserver" in window)) return start();
   new IntersectionObserver(([e]) => { if (e.isIntersecting) start(); else cancelAnimationFrame(raf); }, { threshold: .12 }).observe(el);
 }
@@ -677,6 +1315,15 @@ function kill(p, burstCls) {
   p.el.classList.add("gone"); setTimeout(() => p.el.remove(), 500);
 }
 function ring(el) { if (!el) return; el.classList.remove("on"); void el.getBBox(); el.classList.add("on"); }
+function burstAt(layer, x, y, cls) { const b = mk("circle", { cx: x, cy: y, r: 7, class: "burst " + (cls || "") }, layer); setTimeout(() => b.remove(), 700); }
+// A numbered packet (rounded square): white, red (a copy on road 2), green (repaired) or the red outline of a backup packet
+function box(layer, n, kind, w = 24, h = 18) {
+  const g = mk("g", {}, layer);
+  g.r = mk("rect", { x: -w / 2, y: -h / 2, width: w, height: h, rx: 6, class: "pk" + (kind ? " " + kind : "") }, g);
+  g.t = mk("text", { x: 0, y: 4, "text-anchor": "middle", class: "pkn" + (kind === "b" ? " r" : "") }, g); g.t.textContent = n;
+  g.at = (x, y) => g.setAttribute("transform", `translate(${x},${y})`);
+  return g;
+}
 
 // Hero: twin packets on two roads, road 1 drops some, road 2 rescues them
 run($("#hero-dia"), svg => {
@@ -712,6 +1359,97 @@ run($("#hero-dia"), svg => {
   } };
 });
 
+// The real problem. Two games get packets 1 to 8 from the server; packet 4 is lost on the way in both.
+// Top: 5 to 8 wait in the game, the player freezes, 4 is sent again, then everything jumps (the rubberband).
+// Bottom: the copy of 4 on road 2 arrives in time and the player never stops.
+run($("#lag"), svg => {
+  const STEP = 21, X0 = 392, DOOR = 360, GAP = 300, T0 = 500, V1 = .2, LATE = 120, LOSE = 214, CYCLE = 7200;
+  const lane = k => {
+    const g = $("#lag-" + k, svg), o = { k, L: $(".pkl", g), q: $(".q", g), av: $(".avt", g), st: $(".lst", g), tg: $(".tg", g), r1: $(".r1", g), r2: $(".r2", g) };
+    o.len1 = o.r1.getTotalLength(); o.len2 = o.r2 ? o.r2.getTotalLength() : 0;
+    // the bridge, and a blocky player on it (head, eyes, red shirt, legs)
+    const br = $(".br", g);
+    for (let x = 368; x < 616; x += 17) mk("rect", { x, y: 113, width: 16, height: 10, rx: 2, fill: (x / 17) % 2 < 1 ? "#26262B" : "#1E1E22" }, br);
+    mk("rect", { x: -7, y: 84, width: 14, height: 13, rx: 2.5, fill: "#F5F5F6" }, o.av);
+    mk("rect", { x: -4.4, y: 88.5, width: 2.6, height: 2.6, fill: "#0A0A0B" }, o.av);
+    mk("rect", { x: 1.8, y: 88.5, width: 2.6, height: 2.6, fill: "#0A0A0B" }, o.av);
+    mk("rect", { x: -6, y: 97, width: 12, height: 10, rx: 2, fill: "#FF3B30" }, o.av);
+    o.legA = mk("rect", { x: -5, y: 107, width: 4, height: 6, rx: 1, fill: "#7C7C86" }, o.av);
+    o.legB = mk("rect", { x: 1, y: 107, width: 4, height: 6, rx: 1, fill: "#7C7C86" }, o.av);
+    return o;
+  };
+  const A = [lane(0), lane(1)];
+  const dep = i => T0 + (i - 1) * GAP;
+  let t = 0;
+  const reset = () => {
+    for (const o of A) {
+      o.L.textContent = ""; o.q.textContent = "";
+      o.pk = []; o.have = new Set(); o.next = 1; o.queue = []; o.flush = []; o.x = X0; o.tx = X0; o.walk = 0;
+      o.lastPlay = -1e9; o.resent = false; o.tgUntil = 0; o.catchUntil = 0; o.tg.textContent = "";
+      o.av.style.opacity = 0;
+    }
+    for (let i = 1; i <= 8; i++) for (const o of A) {
+      o.pk.push({ n: i, road: 1, t0: dep(i), v: V1, len: o.len1, path: o.r1, lost: i === 4 });
+      if (o.k === 1) o.pk.push({ n: i, road: 2, t0: dep(i), v: o.len2 / (o.len1 / V1 + LATE), len: o.len2, path: o.r2 });
+    }
+  };
+  reset();
+  const drawQueue = o => {
+    o.q.textContent = "";
+    if (!o.queue.length) return;
+    const s = mk("rect", { x: 368, y: 59, width: 20, height: 16, rx: 5, class: "slot" }, o.q);
+    const st = mk("text", { x: 378, y: 71, "text-anchor": "middle", class: "tag-t red" }, o.q); st.textContent = o.next;
+    o.queue.slice().sort((a, b) => a - b).forEach((n, j) => { const b = box(o.q, n, "", 20, 16); b.at(404 + j * 23, 67); b.r.setAttribute("opacity", ".55"); });
+  };
+  const play = (o, n, now) => { o.next = n + 1; o.tx += STEP; o.lastPlay = now; };
+  const arrive = (o, p, now) => {
+    if (o.have.has(p.n)) return;  // the later copy is simply dropped
+    o.have.add(p.n);
+    if (p.road === 2 && p.n === 4) { o.tg.textContent = "4 came by road 2: no wait"; o.tgUntil = now + 1800; burstAt(o.L, DOOR, 96, "g"); }
+    if (p.n === o.next) {
+      play(o, p.n, now);
+      // what was waiting behind it goes straight in, one after the other
+      const waiting = o.queue.slice().sort((a, b) => a - b);
+      o.queue = []; waiting.forEach((n, j) => o.flush.push({ n, at: now + 70 * (j + 1) }));
+      if (waiting.length) { o.catchUntil = now + 70 * waiting.length + 500; drawQueue(o); }
+    } else { o.queue.push(p.n); drawQueue(o); }
+  };
+  return { step(dt) {
+    t += dt;
+    if (t > CYCLE) { t = 0; reset(); }
+    for (const o of A) {
+      if (o.av.style.opacity === "0" && t > 60) o.av.style.opacity = 1;
+      // top lane: the server sends 4 again, late (it only knows once later packets got through)
+      if (o.k === 0 && !o.resent && o.have.has(5) && t > dep(5) + o.len1 / V1 + 380) {
+        o.resent = true; o.pk.push({ n: 4, road: 1, t0: t, v: V1, len: o.len1, path: o.r1, again: true });
+        o.tg.textContent = "sending 4 again…"; o.tgUntil = t + 1700;
+      }
+      for (const p of o.pk) {
+        if (p.done || t < p.t0) continue;
+        if (!p.el) { p.el = box(o.L, p.n, p.road === 2 ? "r" : p.again ? "y" : "", p.road === 2 ? 18 : 24, p.road === 2 ? 14 : 18); }
+        const d = (t - p.t0) * p.v;
+        if (p.lost && d >= LOSE - 76) { p.done = true; const q = p.path.getPointAtLength(d); burstAt(o.L, q.x, q.y); p.el.remove(); continue; }
+        if (d >= p.len) { p.done = true; p.el.remove(); arrive(o, p, t); continue; }
+        const q = p.path.getPointAtLength(d); p.el.at(q.x, q.y);
+      }
+      while (o.flush.length && t >= o.flush[0].at) { const f = o.flush.shift(); play(o, f.n, t); drawQueue(o); }
+      if (o.tgUntil && t > o.tgUntil) { o.tg.textContent = ""; o.tgUntil = 0; }
+      // the player: walks while packets come in, stops when the game waits, snaps forward when it catches up
+      const gap = o.tx - o.x, fast = gap > STEP * 1.6;
+      const move = gap * (1 - Math.exp(-dt / (fast ? 60 : 240)));
+      o.x += move; o.walk += Math.abs(move);
+      const ph = Math.sin(o.walk / 3.2) * (Math.abs(move) > .02 ? 1.6 : 0);
+      o.legA.setAttribute("y", 107 + Math.max(0, ph)); o.legB.setAttribute("y", 107 + Math.max(0, -ph));
+      o.av.setAttribute("transform", `translate(${o.x.toFixed(1)},0)`);
+      // what the player sees
+      let s = "smooth", c = "tag-t ok lst";
+      if (o.queue.length && t - o.lastPlay > 260) { s = `frozen · waiting for ${o.next}`; c = "tag-t y lst"; }
+      else if (t < o.catchUntil) { s = "catching up: rubberband"; c = "tag-t red lst"; }
+      if (o.st.textContent !== s) { o.st.textContent = s; o.st.setAttribute("class", c); }
+    }
+  } };
+}, 281);  // still frame (reduced motion): the top game frozen, waiting for 4; the bottom one already past it
+
 // 01: the race. Road 1 is usually faster but jittery and lossy; road 2 is steady.
 run($("#race"), svg => {
   const A = $("#r-a", svg), B = $("#r-b", svg), L = $(".pkl", svg), strip = $("#r-strip");
@@ -742,7 +1480,66 @@ run($("#race"), svg => {
   } };
 });
 
-// 02: repair. Packets 1 to 7 leave in order; 4 is lost; when 5 lands, 4 is sent again; 4 to 7 then reach the game together.
+// 02: backup packets. Four packets travel with one backup packet made from them; one of the four is lost on the way;
+// at arrival it's rebuilt from the other three and the backup, with nothing sent again. A different one is lost each round.
+run($("#fec"), svg => {
+  const L = $(".pkl", svg), X = $(".xg", svg), msg = $("#fec-msg", svg), lostEl = $("#fec-lost"), fixEl = $("#fec-fix");
+  const START = 96, SP = 34, FRONT = 446, V = .16, LOSE_X = 250, Y = 115, CYCLE = 6200, ORDER = [3, 1, 4, 2];
+  const STOP = (FRONT - START) / V + 250;
+  let t = 0, round = -1, els = [], LI = 3, lost = 0, fixed = 0, phase = 0, rebuilt = null;
+  const fin = k => FRONT - SP * k;                       // where packet k (0 to 3) and the backup (k = 4) stop
+  const begin = () => {
+    round++; LI = ORDER[round % ORDER.length]; phase = 0; t = 0;
+    L.textContent = ""; X.textContent = ""; msg.textContent = ""; rebuilt = null;
+    els = [0, 1, 2, 3, 4].map(k => box(L, k < 4 ? k + 1 : "+", k < 4 ? "" : "b"));
+  };
+  begin();
+  return { step(dt) {
+    t += dt;
+    if (t > CYCLE) begin();
+    els.forEach((g, k) => {
+      const x = Math.min(START + V * (t - 250) - SP * k, fin(k));
+      if (k === LI - 1 && phase >= 1) return;  // the lost one
+      if (phase < 4) { g.at(x, Y); g.style.opacity = x < START ? 0 : 1; }
+    });
+    const xl = Math.min(START + V * (t - 250) - SP * (LI - 1), fin(LI - 1));
+    if (phase === 0 && xl >= LOSE_X) {
+      phase = 1; const g = els[LI - 1]; burstAt(L, LOSE_X, Y); g.style.transition = "opacity .35s"; g.style.opacity = 0;
+      lost++; lostEl.textContent = lost; msg.textContent = `packet ${LI} lost on the way`; msg.setAttribute("class", "tag-t red");
+    }
+    if (phase === 1 && t > STOP) {
+      phase = 2; const sx = fin(LI - 1);
+      mk("rect", { x: sx - 12, y: Y - 9, width: 24, height: 18, rx: 6, class: "slot" }, X);
+      // lines from the other three and the backup into the empty slot
+      [0, 1, 2, 3, 4].filter(k => k !== LI - 1).forEach((k, j) => {
+        const x0 = fin(k), mid = (x0 + sx) / 2, h = 34 + Math.abs(x0 - sx) * .35;
+        const p = mk("path", { d: `M${x0} ${Y - 10} Q${mid} ${Y - 10 - h} ${sx} ${Y - 11}`, class: "xl" }, X);
+        const len = p.getTotalLength(); p.style.strokeDasharray = len; p.style.strokeDashoffset = len;
+        p.style.transition = `stroke-dashoffset .7s ${.08 * j}s cubic-bezier(.16,1,.3,1)`;
+        requestAnimationFrame(() => requestAnimationFrame(() => { p.style.strokeDashoffset = 0; }));
+      });
+      msg.textContent = `rebuilt from the others and the backup`; msg.setAttribute("class", "tag-t");
+    }
+    if (phase === 2 && t > STOP + 1100) {
+      phase = 3; rebuilt = box(L, LI, "g"); rebuilt.at(fin(LI - 1), Y); burstAt(L, fin(LI - 1), Y, "g");
+      fixed++; fixEl.textContent = fixed; msg.textContent = `packet ${LI} repaired · nothing sent again`; msg.setAttribute("class", "tag-t ok");
+      X.querySelectorAll(".xl").forEach(p => { p.style.transition = "opacity .6s"; p.style.opacity = 0; });
+    }
+    if (phase === 3 && t > STOP + 2200) { phase = 4; X.textContent = ""; }
+    if (phase === 4) {
+      // all four go into the game, in order; the backup has done its job
+      const k0 = t - (STOP + 2200);
+      els.forEach((g, k) => {
+        const el = k === LI - 1 ? rebuilt : g; if (!el) return;
+        if (k === 4) { el.style.transition = "opacity .4s"; el.style.opacity = 0; return; }
+        const x = Math.min(509, fin(k) + Math.max(0, k0 - k * 90) * .32);  // the front one first, so they never overlap el.at(x, Y); if (x >= 500) el.style.opacity = 0;
+      });
+      if (k0 > 600) { msg.textContent = "1, 2, 3, 4 played in order"; msg.setAttribute("class", "tag-t ok"); }
+    }
+  } };
+}, 240);  // still frame: the lost packet rebuilt in place
+
+// 03: instant resend. Packets 1 to 7 leave in order; 4 is lost; when 5 lands, 4 is sent again; 4 to 7 then reach the game together.
 run($("#repair"), svg => {
   const L = $(".pkl", svg), msg = $("#rp-msg", svg);
   const X0 = 96, X1 = 452, GAME = 509, V = .2, GAP = 380, LOSE_X = 250, CYCLE = 7600;
@@ -788,7 +1585,7 @@ run($("#repair"), svg => {
   } };
 });
 
-// 03: session hold. The PC–exit link cuts for a few seconds; the exit keeps the server side open and buffers.
+// 04: session hold. The PC–exit link cuts for a few seconds; the exit keeps the server side open and buffers.
 run($("#hold"), svg => {
   const A = $("#ho-a", svg), B = $("#ho-b", svg), L = $(".pkl", svg), lt = $("#ho-l", svg), rt = $("#ho-r", svg), R = $("#ho-ring", svg), cap = $("#ho-cap");
   const CUT0 = 1800, CUT1 = 5600, CYCLE = 8600;
@@ -822,15 +1619,16 @@ run($("#hold"), svg => {
   } };
 });
 
-// 04: phone backup. Wi-Fi is faster, until it stalls; then the phone's copies arrive first.
+// 05: phone backup. Wi-Fi is faster, until it stalls; then the phone's copies arrive first. The phone's link changes each round.
 run($("#phone"), svg => {
-  const A = $("#ph-a", svg), B = $("#ph-b", svg), L = $(".pkl", svg), wl = $("#ph-wl", svg);
+  const A = $("#ph-a", svg), B = $("#ph-b", svg), L = $(".pkl", svg), wl = $("#ph-wl", svg), pl = $("#ph-pl", svg);
   const mw = $("#ph-mw"), mp = $("#ph-mp"), w = $("#ph-w"), pp = $("#ph-p");
-  let t = 0, next = 0, n = 0; const live = [], twins = new Map(), last = [];
+  const LINKS = ["Phone · USB", "Phone · Bluetooth", "Phone · Wi-Fi"];
+  let t = 0, next = 0, n = 0, round = 0; const live = [], twins = new Map(), last = [];
   const CYCLE = 9000, S0 = 3000, S1 = 6200;
   const show = () => { const k = last.filter(x => x === 2).length, tot = last.length || 1; const p = Math.round(100 * k / tot); w.textContent = (100 - p) + "%"; pp.textContent = p + "%"; mw.style.width = (100 - p) + "%"; mp.style.width = p + "%"; };
   return { step(dt) {
-    t += dt; if (t > CYCLE) t = 0;
+    t += dt; if (t > CYCLE) { t = 0; round++; pl.textContent = LINKS[round % LINKS.length]; }
     const stall = t >= S0 && t < S1;
     A.setAttribute("class", "road" + (stall ? " stall" : ""));
     wl.textContent = stall ? "Wi-Fi · stalled" : "Wi-Fi"; wl.setAttribute("class", "tag-t" + (stall ? " y" : ""));
@@ -852,44 +1650,41 @@ run($("#phone"), svg => {
     for (let i = live.length - 1; i >= 0; i--) if (live[i].dead || live[i].done) live.splice(i, 1);
     if (twins.size > 80) twins.delete(twins.keys().next().value);
   } };
-});
+}, 340);  // still frame: the Wi-Fi stalled and the phone bringing the packets
 
-// 05: smart route. Probes measure three roads, the fastest wins, the game flows on it. A new measure each round.
-run($("#smart"), svg => {
-  const P = [0, 1, 2].map(i => $("#sm-" + i, svg)), T = [0, 1, 2].map(i => $("#sm-t" + i, svg)), L = $(".pkl", svg), cap = $("#sm-cap");
-  const NAMES = ["Rago exit A", "Direct", "Rago exit B"];
-  const CYCLE = 7000, PICK = 2600;
-  let t = CYCLE, speeds = [], best = 0, next = 0; const live = [];
+// 05: the phone check, step by step: three steps pass, the hotspot is off (with what to do), then it's on and the phone is added
+run($("#diag"), el => {
+  const S = [...el.querySelectorAll(".s")], fx = $(".fx", el), done = $(".done", el);
+  const CYCLE = 8000;
+  let t = 0;
+  const set = (i, c) => { S[i].className = "s" + (c ? " " + c : ""); };
   return { step(dt) {
-    t += dt;
-    if (t > CYCLE) {
-      t = 0; next = 0;
-      // each round the roads change a little, as they do in real life
-      speeds = [rnd(.2, .34), rnd(.22, .3), rnd(.2, .34)];
-      best = speeds.indexOf(Math.max(...speeds.map((v, i) => v * (P[1].getTotalLength() / P[i].getTotalLength()))));
-      best = speeds.reduce((b, v, i, a) => (a[i] / P[i].getTotalLength() > a[b] / P[b].getTotalLength() ? i : b), 0);
-      P.forEach((p, i) => { p.setAttribute("class", "road"); T[i].setAttribute("class", "tag-t"); T[i].textContent = NAMES[i]; });
-      cap.textContent = "Measuring the roads…";
-    }
-    const picked = t >= PICK;
-    if (picked && !P[best].classList.contains("best")) {
-      P.forEach((p, i) => p.setAttribute("class", "road " + (i === best ? "best" : "dim")));
-      T.forEach((x, i) => x.setAttribute("class", "tag-t" + (i === best ? " red" : "")));
-      T[best].textContent = NAMES[best] + " · fastest";
-      cap.textContent = best === 1 ? "Your direct road is the fastest right now: Rago keeps it." : NAMES[best] + " is the fastest right now: your match goes this way.";
-    }
-    if (t >= next) {
-      if (!picked) { next = t + 700; P.forEach((p, i) => { const q = packet(L, p, "", speeds[i]); q.probe = true; live.push(q); }); }
-      else { next = t + 240; live.push(packet(L, P[best], "r", .3)); }
-    }
-    for (const p of live) {
-      if (p.done) continue;
-      p.d += p.v * dt; p.place();
-      if (p.d >= p.len) { p.done = true; p.el.remove(); }
-    }
-    for (let i = live.length - 1; i >= 0; i--) if (live[i].done) live.splice(i, 1);
+    t += dt; if (t > CYCLE) t = 0;
+    set(0, t > 500 ? "ok" : ""); set(1, t > 1100 ? "ok" : "");
+    set(2, t > 4200 ? "ok" : t > 1700 ? "bad" : "");
+    fx.hidden = !(t > 1900 && t <= 4200);
+    set(3, t > 4900 ? "ok" : "");
+    done.hidden = !(t > 5500);
   } };
-});
+}, 380);
+
+// 06: the app's Rago Route tab. The numbers move like they do in a match (illustration).
+run($("#appmock"), el => {
+  const rows = [...el.querySelectorAll(".app-row")], s = $("#ap-s"), f = $("#ap-f"), r = $("#ap-r"), x = $("#ap-x");
+  let t = 0, next = 0, share = [96, 3, 1], cs = 0, cf = 0, cr = 0;
+  const bump = (b, v) => { b.textContent = v; b.classList.add("flash"); setTimeout(() => b.classList.remove("flash"), 60); };
+  const paint = () => rows.forEach((row, i) => { $(".fp", row).textContent = share[i]; $(".bar i", row).style.width = share[i] + "%"; });
+  paint();
+  return { step(dt) {
+    t += dt; if (t < next) return; next = t + 700;
+    rows.forEach(row => { const b = $("b", row), m = +b.dataset.ms, j = +b.dataset.j; b.textContent = Math.max(1, Math.round(m + rnd(-j, j))) + " ms"; });
+    const a = Math.round(rnd(93, 98)), c = Math.round(rnd(1, 99 - a)); share = [a, c, 100 - a - c]; paint();
+    if (Math.random() < .45) bump(s, cs += 1 + Math.floor(Math.random() * 3));
+    if (Math.random() < .3) bump(f, cf += 1);
+    if (Math.random() < .2) bump(r, cr += 1);
+    x.textContent = Math.round(rnd(89, 94)) + " ms";
+  } };
+}, 60);
 
 // Fair play: an encrypted stream that passes through untouched
 const row = $("#tube-row");
@@ -899,13 +1694,14 @@ if (row) {
   row.innerHTML = half + half;  // twice, so the loop is seamless
 }
 
-// The stat counts up when it comes into view
-const st = $("#st-a");
-if (st && !REDUCE && "IntersectionObserver" in window) {
-  const to = +st.dataset.to; st.textContent = "0";
-  const o = new IntersectionObserver(([e]) => { if (!e.isIntersecting) return; o.disconnect(); const t0 = performance.now(); const f = now => { const k = Math.min(1, (now - t0) / 1200); st.textContent = Math.round(to * (1 - Math.pow(1 - k, 3))); if (k < 1) requestAnimationFrame(f); }; requestAnimationFrame(f); }, { threshold: .5 });
-  o.observe(st);
-}
+// Numbers count up when they come into view (the real figure is in the HTML for everyone else)
+const fmt = n => n.toLocaleString("en-US");
+document.querySelectorAll("#st-a, .cu").forEach(el => {
+  if (REDUCE || !("IntersectionObserver" in window)) return;
+  const to = +el.dataset.to; el.textContent = "0";
+  const o = new IntersectionObserver(([e]) => { if (!e.isIntersecting) return; o.disconnect(); const t0 = performance.now(); const f = now => { const k = Math.min(1, (now - t0) / 1200); el.textContent = fmt(Math.round(to * (1 - Math.pow(1 - k, 3)))); if (k < 1) requestAnimationFrame(f); }; requestAnimationFrame(f); }, { threshold: .5 });
+  o.observe(el);
+});
 })();
 </script>
 </body>

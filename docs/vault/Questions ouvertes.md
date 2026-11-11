@@ -28,7 +28,6 @@ Posées le 10/11 au soir (q70 à q93), après la relecture complète du code pou
 - q75 : 73 ou 68 réglages gratuits affichés ; `FREE_TWEAKS` sur Railway ([[sync_tweaks.py]], [[config.js]]).
 - q76 : image de partage du site à « 199 tweaks » ([[export-logo.js]]).
 - q77 : étoiles Google des avis perdues (RAG-33, [[page.html]]).
-- q78 : textes d'attente de la page Rago Route du site ([[route.html]]).
 - q79 : retirer la protection d'avant lancement ([[launch-gate.js]]).
 - q80 : GitHub Pages publie le vault ([[Fichiers de la racine du dépôt]]).
 - q81 : supprimer les branches `claude/project-thread-tzbch5` et `trailer-4k-footage` ([[Branches du dépôt]]).
@@ -45,11 +44,14 @@ Posées le 10/11 au soir (q70 à q93), après la relecture complète du code pou
 - q92 : une idée de l'[[Étude de marché de novembre 2026]] est-elle prévue ?
 - q93 : passer en « Canceled » les 5 tâches d'Abel dans [[Linear]] ?
 
-Posées le 11/11 :
+Posées le 11/11 (q78 traitée le même jour : Sofiene a demandé la page de vente, voir [[Page de vente Rago Route]]) :
 - q94 : [[Graphismes des jeux]] gratuits pour tous ou Premium ? (le code les laisse gratuits)
 - q96 : [[Page Souris]] gratuite pour tous ? (codée gratuite ; le réglage « Souris 1:1 » reste Premium)
+- q97 : d'autres sorties que Paris, pour que la page Rago Route les annonce ? ([[Page de vente Rago Route]], [[Infrastructure Rago Route]]).
 
 ## À vérifier (sans Sofiene)
+- Rago Route : tous les joueurs sortent par la même adresse à Paris ; Hypixel coupe déjà les connexions venant de Frankfurt (09/11, sans effet tant que Frankfurt n'est qu'un relais). À surveiller dès les premiers joueurs ([[Proxy]], [[Page de vente Rago Route]]).
+- Prix officiels d'ExitLag, NoPing et WTFast, et fonctionnement des modes Multi Path et SimpleFEC de Mudfish : pages illisibles le 11/11, chiffres d'un comparatif tiers ([[Page de vente Rago Route]]).
 - [[Couleurs et résolution]] (11/11, jamais testé sur Windows) : saturation NVIDIA (NVAPI) et AMD (ADL), rampe gamma, retour des couleurs au Alt+Tab, résolution étirée (`DMDFO_STRETCH`) et retour à la fin de la partie, écriture des fichiers de Valorant, Fortnite et CS2 ; comportement avec le HDR de Windows.
 - Valorant en 4:3 étiré (1440×1080) : les sources lues le 11/11 ne confirment pas que le jeu remplit l'écran sans réglage de plus ; à vérifier en jeu ([[Couleurs et résolution]]).
 - CS2 : valeurs de `setting.aspectratiomode` dans `cs2_video.txt` (0 = 4:3 ou 5:4, 1 = 16:9, 2 = 16:10, d'après la doc de la communauté) à confirmer dans un vrai fichier ([[Couleurs et résolution]]).

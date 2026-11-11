@@ -157,8 +157,24 @@ assert GOOGLE in pa, 'Google Fonts block changed in partners.html: update build.
 open(os.path.join(ROOT, 'partners.html'), 'w').write(pa.replace(GOOGLE, LOCAL))
 print('partners.html built')
 
-# Rago Route page (site/route.html, from src/route.html): local fonts too. Static: no account server.
+# Rago Route page (site/route.html, from src/route.html): its sales page, so local fonts, the same account server as
+# the home page, and the home page's prices, trial and currency (CONFIG of page.html), also baked into the text and
+# the links for visitors without JavaScript.
 ro = open(os.path.join(ROOT, 'src/route.html')).read()
 assert GOOGLE in ro, 'Google Fonts block changed in route.html: update build.py'
-open(os.path.join(ROOT, 'route.html'), 'w').write(ro.replace(GOOGLE, LOCAL))
+ro = ro.replace(GOOGLE, LOCAL)
+TD = int(cfg('trialDays'))
+for key, val in (('accountBase', f'"{BASE}"'), ('trialDays', str(TD)), ('currency', f'"{CUR}"'),
+                 ('priceMonth', cfg('priceMonth')), ('priceYear', cfg('priceYear'))):
+    ro, n = re.subn(key + r': (?:"[^"]*"|[\d.]+)', lambda m: f'{key}: {val}', ro, count=1)
+    assert n == 1, f'{key} not found in the CONFIG of route.html'
+money = lambda n: f'{CUR}{jsround(n):.2f}'
+for cls, val in (('js-td', str(TD)), ('js-pm', money(PM)), ('js-py', money(PY)),
+                 ('js-free', free_txt if FREE >= 1 else f'{money(PY / 12)} a month')):  # same texts as the page's JS
+    ro, n = re.subn(rf'(<span class="{cls}">)[^<]*(</span>)', lambda m: m.group(1) + val + m.group(2), ro)
+    assert n >= 1, f'no {cls} in route.html'
+for path in ('/buy?interval=month&amp;trial=1', '/buy?interval=year', '/download'):
+    ro, n = re.subn(re.escape(f'href="{path}"'), f'href="{BASE}{path}"', ro)
+    assert n >= 1, f'no link to {path} in route.html'
+open(os.path.join(ROOT, 'route.html'), 'w').write(ro)
 print('route.html built')

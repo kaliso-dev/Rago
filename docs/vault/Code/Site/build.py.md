@@ -2,8 +2,8 @@
 type: code
 tags: [code, site, python]
 fichier: site/tools/build.py
-lignes: 164
-maj: 2026-11-10
+lignes: 180
+maj: 2026-11-11
 ---
 # build.py
 
@@ -68,8 +68,16 @@ Polices locales (`assert`), `accountBase: "…"` remplacé par `BASE` (`assert n
 ### 4. Page Tweaks (`src/tweaks.html` → `tweaks.html`)
 Exactement le même traitement que la page des avis (messages `… in tweaks.html`). La liste des tweaks est déjà dans la source (écrite par [[sync_tweaks.py]]). Message `tweaks.html built`.
 
-### 5. Partenaires et Rago Route
-`src/partners.html` → `partners.html` et `src/route.html` → `route.html` : seulement les polices locales (pages statiques, aucun lien vers le serveur de comptes). Messages `partners.html built`, `route.html built`.
+### 5. Partenaires
+`src/partners.html` → `partners.html` : seulement les polices locales (page statique, aucun lien vers le serveur de comptes). Message `partners.html built`.
+
+### 6. Rago Route (`src/route.html` → `route.html`, depuis le 11/11)
+Page de vente de Rago Route ([[route.html]]), traitée comme une page de l'accueil (depuis le 11/11, sur `staging` ; avant, seulement les polices locales) :
+1. Polices locales (`assert`, message `Google Fonts block changed in route.html: update build.py`).
+2. Recopie dans son `CONFIG` les valeurs du `CONFIG` de [[page.html]] : `accountBase` (`BASE`), `trialDays`, `currency`, `priceMonth`, `priceYear` (une seule occurrence chacune, `assert n == 1`, message `<clé> not found in the CONFIG of route.html`).
+3. Écrit les mêmes textes que le JavaScript de la page dans les `<span>` `js-td` (jours d'essai), `js-pm` (prix mensuel, ex. `$5.99`), `js-py` (prix annuel) et `js-free` (« 6 months free », ou le prix par mois si l'annuel n'offre aucun mois) ; au moins une occurrence de chaque (`assert n >= 1`, message `no <classe> in route.html`).
+4. Met l'adresse du serveur de comptes devant les liens `/buy?interval=month&trial=1`, `/buy?interval=year` et `/download` (au moins un de chaque, message `no link to <chemin> in route.html`), pour les visiteurs sans JavaScript.
+5. Message `route.html built`.
 
 ## Données touchées
 - **Lit** : `site/src/page.html`, `reviews.html`, `tweaks.html`, `partners.html`, `route.html`, `site/og-image.png`, `licensing/src/billing.js`.

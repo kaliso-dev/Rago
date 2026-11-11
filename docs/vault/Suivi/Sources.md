@@ -1,7 +1,7 @@
 ---
 type: référence
 tags: [sources]
-maj: 2026-11-10
+maj: 2026-11-11
 ---
 # Sources
 
@@ -13,7 +13,7 @@ Où trouver le détail que ce vault résume. Retour à [[Projet]].
 ## Dossier partagé du projet Claude (`/mnt/project-files/`)
 Les fils du projet Claude y ont accès, mais pas ce dépôt. Le dossier est en **lecture seule** et les gros fichiers y restent.
 
-Liste complète au **10/11/2026**, dossier par dossier. Chaque dossier renvoie à la note qui l'exploite.
+Liste complète au **10/11/2026**, dossier par dossier, plus `rago-route-page/` (11/11) ; les dossiers `admin/`, `cerveau/` et `synapse/` (modifiés le 10/11) et `conseils-jeu/`, `couleurs-resolution/`, `presets-graphiques/` et `souris/` (11/11) n'y sont pas encore décrits. Chaque dossier renvoie à la note qui l'exploite.
 
 | Dossier ou fichier | Ce qu'il contient | Note du vault |
 |---|---|---|
@@ -27,6 +27,7 @@ Liste complète au **10/11/2026**, dossier par dossier. Chaque dossier renvoie �
 | `marketing/videos-youtube/` | étude de style (18/10), épisode 001 « Rago tour » en 3 versions, film de lancement 4K (preuve en 720p), sources | [[Vidéos YouTube]] |
 | `proxy/` | **ancienne copie** (07/11) des scripts de Rago Route : `rago-route.py` et `install.sh` plus anciens que ceux du dépôt, `mcping.py` identique, `relay.py` (l'ancien proxy simple, retiré des serveurs le 09/11). Le dépôt (`proxy/`) fait foi | [[Infrastructure Rago Route]], [[Proxy]] |
 | `rago-os/` | à la racine : l'ancien Rago OS du 21/10 (zips de test, aperçu), **abandonné le 31/10** (voir [[Décisions]]). `logo/` (01/11) : logos « Rago OS ». `nouveau-rago-os/` : le Rago OS actuel (aperçus, exe test2 à test5 du 07 au 09/11, copies git `.bundle` de la branche `rago-design`) | [[Rago OS]] |
+| `rago-route-page/` | vidéo de la page de vente Rago Route (1 min 38, 11/11) et 4 captures (haut de page, « The real problem », téléphone) | [[Page de vente Rago Route]] |
 | `rago-route/` | `install.sh` du 08/11, **identique** à `proxy/install.sh` du dépôt au 10/11 | [[Infrastructure Rago Route]] |
 | `refonte-glass/` | les 6 documents de la 1.2.0, captures, `installateur-test/`, `optimisations-sources/` (fichiers de Sofiene du 21/10) | [[Documents de la 1.2.0]], [[Version 1.2.0]], [[Refonte glass]] |
 | `site/` | `rago-route/` : captures de la page et de la section Rago Route du site (07/11) | [[Site]] |

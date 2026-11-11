@@ -3,7 +3,7 @@ type: code
 tags: [code, site, netlify, fichiers]
 fichier: site/
 lignes: 5192
-maj: 2026-11-10
+maj: 2026-11-11
 ---
 # Fichiers publiés du site
 
@@ -18,14 +18,14 @@ Tout ce qui suit est CONFIRMÉ (fichiers de `staging`, 10/11). Le chiffre « lig
 | `tweaks.html` | [[build.py]] | [[tweaks.html]] (liste écrite par [[sync_tweaks.py]]) | 1 037 lignes, 580 Ko | la plus lourde (218 fiches dépliables) |
 | `reviews.html` | [[build.py]] | [[reviews.html]] | 347 lignes | avis lus en direct sur le serveur |
 | `partners.html` | [[build.py]] | [[partners.html]] (cartes de [[sync_partners.py]]) | 163 lignes | statique |
-| `route.html` | [[build.py]] | [[route.html]] | 912 lignes, 61 Ko | statique ; **sur `staging` seulement** tant que la 1.3.0 n'est pas en prod |
+| `route.html` | [[build.py]] | [[route.html]] | 1 708 lignes, 125 Ko (11/11) | page de vente : liens de compte et avis ; **sur `staging` seulement** tant que la 1.3.0 n'est pas en prod |
 | `terms.html` | [[make_legal.py]] | texte dans le script | 113 lignes | conditions de vente ; ancre `#cancel` |
 | `privacy.html` | [[make_legal.py]] | texte dans le script | 120 lignes | confidentialité |
 | `404.html` | [[make_legal.py]] | texte dans le script | 51 lignes | servie par Netlify pour toute adresse inconnue ; liens absolus ; `noindex` |
 
 Plus de `refunds.html` sur `staging` depuis le 10/11 (redirigée en 301 vers `/terms.html#cancel` par [[netlify.toml]]) ; la branche de prod l'a encore.
 
-Ce que [[build.py]] change entre une source et sa page : polices Google remplacées par `fonts/` (toutes les pages), `accountBase` et liens absolus du serveur de comptes (`index`, `reviews`, `tweaks`), et pour l'accueil seulement : `<head>` complet, prix et FAQ sans JavaScript, liens Discord, JSON-LD, blocs pré-rendus. Sur les aperçus, [[preview.sh]] retouche encore `index.html`, `reviews.html` et `tweaks.html`.
+Ce que [[build.py]] change entre une source et sa page : polices Google remplacées par `fonts/` (toutes les pages), `accountBase` et liens absolus du serveur de comptes (`index`, `reviews`, `tweaks`), et pour l'accueil seulement : `<head>` complet, prix et FAQ sans JavaScript, liens Discord, JSON-LD, blocs pré-rendus. Sur les aperçus, [[preview.sh]] retouche encore `index.html`, `reviews.html` et `tweaks.html`. Depuis la page de vente du 11/11, `route` reçoit aussi le `CONFIG` de l'accueil (serveur, essai, devise, prix), les prix écrits et les liens de compte, et [[preview.sh]] la retouche.
 
 ## Fichiers posés à la main
 | Fichier | Rôle | Origine |

@@ -91,6 +91,7 @@ Registre daté des décisions de Sofiene. **La plus récente prime.** Citations 
 ## Offre, prix, marketing
 | Date | Décision | Statut |
 |---|---|---|
+| 11/11 | Page dédiée à Rago Route pour annoncer sa sortie après le test : « il faut créer une page dédier sur le site web pour expliquer ce que ca fait sans faire de fausse promesse, les nouveauté, sur quoi on se differencie mais surtout les résultats » ; « cibler le probleme du client, présenter nos solution sans fausse promesse et le pousser a l'achat », avec des animations explicatives et des prompts « image 1 / image 2 » pour ChatGPT | FAIT, sur `staging` depuis le 11/11 (carte de choix : « Oui, pousse sur staging »), pas en prod ([[Page de vente Rago Route]]) |
 | 01/11 | Pas de plan de visibilité : « le but est de faire des vidéos et de poster sur TikTok, YouTube et Insta » | DÉCIDÉ ([[Marketing]]) |
 | 01/11 | Annonces Discord uniquement en anglais | DÉCIDÉ ([[Discord]]) |
 | 01/11 | Code RAGO50 supprimé : « la période de lancement est terminée » ; pas de code suivant | DÉCIDÉ ([[Promotions et affiliation]]) |

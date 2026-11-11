@@ -1,7 +1,7 @@
 ---
 type: carte
 tags: [code, site, netlify, marque, carte]
-maj: 2026-11-10
+maj: 2026-11-11
 ---
 # Code du site
 
@@ -17,7 +17,7 @@ Tout est CONFIRMÉ d'après le code de `staging` (10/11, commit `ee77d4f`).
 | [[tweaks.html]] | source de la page Tweaks : téléchargement gratuit et les 218 tweaks avec recherche, filtres, fiche détaillée |
 | [[reviews.html]] | source de la page de tous les avis (lus en direct sur le serveur) |
 | [[partners.html]] | source de la page des serveurs partenaires |
-| [[route.html]] | source de la page Rago Route (bêta Premium), schémas animés |
+| [[route.html]] | source de la page de vente de Rago Route (bêta Premium) : schémas animés, prix et liens de l'accueil |
 | [[partners.json]] | liste des partenaires (nom, invitation Discord, logo, accueil ou non) |
 | [[tweaks-copy.json]] | textes du site pour chacun des 218 tweaks |
 
@@ -72,7 +72,7 @@ python3 site/tools/build.py
   3. src/reviews.html  ──> reviews.html   (polices, accountBase)
   4. src/tweaks.html   ──> tweaks.html    (polices, accountBase)
   5. src/partners.html ──> partners.html  (polices)
-  6. src/route.html    ──> route.html     (polices)
+  6. src/route.html    ──> route.html     (polices, CONFIG de l'accueil, prix et liens sans JS)
 python3 site/tools/make_legal.py ──> terms.html, privacy.html, 404.html
 ```
 Puis on commite sources **et** pages : Netlify ne lance aucun de ces outils.
@@ -100,6 +100,6 @@ Les pages appellent seulement les routes publiques du serveur de comptes ([[API 
 - Deux chiffres du plan gratuit coexistent : **73** sur l'accueil (taille brute de `free.json`) et **68** sur la page Tweaks (tweaks distincts). À VÉRIFIER.
 - `og-image.png` dit encore « 199 tweaks » ([[export-logo.js]]).
 - Les étoiles Google (`aggregateRating`, RAG-33, ajoutées le 17/10) ne sont plus dans [[page.html]] alors que [[build.py]] dit qu'elles y sont. À VÉRIFIER.
-- [[route.html]] garde « Get notified » et « hear the moment Rago Route opens » alors que Rago Route est en bêta dans Premium.
+- La section `#route` de [[page.html]] garde son bouton « Get notified on Discord » alors que Rago Route est en bêta dans Premium ; [[route.html]] n'a plus de texte d'attente depuis la page de vente du 11/11.
 - [[tweaks.html]], [[reviews.html]] et [[partners.html]] n'ont aucun lien vers Rago Route (seul l'accueil en a).
 - Le test de [[launch-gate.js]] échoue depuis la date du lancement (test daté, hors CI).
