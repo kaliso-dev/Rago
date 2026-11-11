@@ -585,6 +585,126 @@
 .games-note.error {
   color: var(--rg-warning);
 }
+/* Graphismes du jeu : trois niveaux façon OptiFine, sous la carte du jeu */
+.games-gfx {
+  padding: 16px 18px 18px;
+  margin-bottom: 18px;
+}
+.games-gfx-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+  margin-bottom: 12px;
+}
+.games-gfx-head p {
+  margin: 0;
+  max-width: 640px;
+}
+.games-gfx-head .section-title {
+  margin-bottom: 4px;
+}
+.games-gfx-warn {
+  color: var(--rg-warning);
+}
+.games-gfx-state {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex: none;
+}
+.games-gfx-state .link {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  color: var(--rg-text-1);
+  font-weight: 540;
+}
+.games-gfx-state .link:hover:not(:disabled) {
+  color: var(--rg-red-400);
+}
+.games-gfx-levels {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 10px;
+}
+.games-gfx-level {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 6px;
+  padding: 12px 14px 14px;
+  border-radius: var(--rg-radius-md);
+  background: rgba(255, 255, 255, 0.035);
+  border: 1px solid var(--rg-line-1);
+  text-align: left;
+  color: var(--rg-text-1);
+  transition: background var(--rg-dur-fast), border-color var(--rg-dur-fast), transform var(--rg-dur-fast);
+}
+.games-gfx-level:hover:not(:disabled) {
+  background: rgba(255, 255, 255, 0.07);
+  transform: translateY(-1px);
+}
+.games-gfx-level:disabled {
+  cursor: default;
+  opacity: 0.55;
+}
+.games-gfx-level.on {
+  background: var(--rg-red-a12);
+  border-color: rgba(255, 59, 48, 0.45);
+}
+.games-gfx-level.on:disabled {
+  opacity: 0.8;
+}
+.games-gfx-level-top {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+}
+.games-gfx-icon {
+  display: grid;
+  place-items: center;
+  width: 28px;
+  height: 28px;
+  border-radius: 9px;
+  background: rgba(255, 255, 255, 0.07);
+  color: var(--rg-text-1);
+}
+.games-gfx-level.on .games-gfx-icon {
+  background: rgba(255, 59, 48, 0.2);
+  color: var(--rg-red-400);
+}
+.games-gfx-name {
+  font-size: 14px;
+  font-weight: 600;
+}
+.games-gfx-check {
+  margin-left: auto;
+  color: var(--rg-red-400);
+}
+.games-gfx-tag {
+  color: var(--rg-text-2);
+  font-weight: 540;
+}
+.games-gfx-detail {
+  line-height: 1.45;
+}
+.games-gfx-note {
+  margin: 12px 0 0;
+  color: var(--rg-text-2);
+}
+.games-gfx-note.warn {
+  color: var(--rg-warning);
+}
+@media (max-width: 900px) {
+  .games-gfx-levels {
+    grid-template-columns: 1fr;
+  }
+  .games-gfx-head {
+    flex-direction: column;
+  }
+}
 .games-remove {
   background: transparent;
   color: var(--rg-text-3);

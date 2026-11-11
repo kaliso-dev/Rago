@@ -6,6 +6,8 @@ import { hue, initials } from "../lib/art";
 import { catalog, presetForGame, tweaks } from "../lib/catalog";
 import { useStore } from "../lib/store";
 import { GameLogo, usePresetIcons } from "../components/GameLogo";
+import { GameGraphics } from "../components/GameGraphics";
+import { graphicsForGame } from "../lib/graphics";
 import { SessionChecks, useSession } from "../components/SessionCard";
 import { Button, Segmented } from "../components/ui";
 
@@ -448,6 +450,10 @@ export function Games() {
             ) : null}
           </div>
         </motion.section>
+      )}
+
+      {hero && graphicsForGame(hero.name) && (
+        <GameGraphics key={`gfx:${hero.id}`} game={graphicsForGame(hero.name)!} title={hero.client ?? hero.name} running={hero.running} />
       )}
 
       {launchers.length > 0 && <Launchers list={launchers} />}

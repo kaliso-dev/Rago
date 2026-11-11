@@ -412,7 +412,7 @@ fn expand_vars(s: &str, var: impl Fn(&str) -> Option<String>) -> String {
 /// comptes du PC. Rago tourne en administrateur : élevé avec un autre compte que celui du joueur, son %LOCALAPPDATA%
 /// n'est pas celui où Lunar Client, Feather ou Prism se sont installés.
 #[cfg(windows)]
-fn local_dirs() -> Vec<PathBuf> {
+pub(crate) fn local_dirs() -> Vec<PathBuf> {
     let mut out: Vec<PathBuf> = env_path("LOCALAPPDATA").into_iter().collect();
     let list = "HKLM\\SOFTWARE\\Microsoft\\Windows NT\\CurrentVersion\\ProfileList";
     for sid in reg::subkeys(list).into_iter().filter(|s| user_sid(s)) {
