@@ -2,7 +2,7 @@
 type: technique
 tags: [technique, app, architecture]
 version_app: 1.3.0
-maj: 2026-11-10
+maj: 2026-11-11
 ---
 # Architecture de l'app
 
@@ -37,7 +37,7 @@ Fermeture de la fenêtre principale : cachée si une remise est en cours ou si l
 | Licence et compte | `license.rs` (contrat `/api/v1`, jeton EdDSA vérifié hors ligne, empreinte PC, lien navigateur Google/Discord, jeton Rago Route), `account.rs` (avis, photo, nom, abonnement) | [[Licence dans l'app]], [[Abonnement dans l'app]] |
 | PC et outils | `system.rs`, `stats.rs`, `memory.rs`, `analysis.rs` (1.3.0), `tools.rs`, `minecraft.rs` (OptiFine), `rbw.rs` | [[Analyse du PC]], [[Page Outils]], [[RBW Mod]] |
 | En jeu | `overlay.rs`, `fps.rs` (PresentMon), `gameping.rs`, `mcping.rs`, `flows.rs` (ETW, ping des jeux UDP), `session.rs`, `background.rs` | [[Barre en jeu]], [[Pendant la partie]], [[Arrière-plan et démarrage]] |
-| Jeux | `games.rs` (launchers Steam, Epic, Riot, Battle.net, Ubisoft, Xbox, Roblox, launchers Minecraft), `icon.rs` | [[Bibliothèque de jeux]] |
+| Jeux | `games.rs` (launchers Steam, Epic, Riot, Battle.net, Ubisoft, Xbox, Roblox, launchers Minecraft), `icon.rs`, `gamecfg.rs` (graphismes des jeux, branche du 11/11) | [[Bibliothèque de jeux]], [[Graphismes des jeux]] |
 | Réseau | `netopt.rs` + `src-tauri/netopt/*.ps1` (moteur PowerShell chiffré), `nettest.rs`, `icmp.rs`, `netshare.rs`, `route.rs` (Rago Route, ≈2 230 lignes) | [[Packet Optimizer]], [[Test réseau]], [[Infrastructure Rago Route]] |
 | Support | `report.rs` (rapport anonymisé dans `reports\`) | [[Partage et support]] |
 | Mise à jour | `update.rs` | [[Mise à jour automatique]] |
@@ -46,6 +46,7 @@ Fermeture de la fenêtre principale : cachée si une remise est en cours ou si l
 ### Commandes exposées à l'interface (`generate_handler!`, 76 au 10/11)
 - Système et outils : `get_system_info`, `rbw_status`, `tools_scan`, `tools_clean`, `tools_apps`, `tools_remove_apps`, `tools_drivers`, `tools_windows_update`, `live_stats`, `clean_ram`, `open_task_manager`, `restart_pc`, `open_folder`, `analysis_facts`.
 - Réglages : `run_tweaks`, `cancel_run`, `is_running`, `get_history`, `clear_history`, `get_applied`, `undo_all_plan`, `sign_out_plan`, `take_repair_notice`, `minecraft_status`, `minecraft_restore`, `save_preset_file`, `read_preset_file`.
+- Graphismes des jeux (branche du 11/11, [[gamecfg.rs]]) : `graphics_status`, `graphics_apply`, `graphics_restore`.
 - Réseau : `net_test`, `netopt_state`, `netopt_run`, `route_start`, `route_stop`, `route_status`, `route_token`, `route_links` (2e connexions possibles et diagnostic du partage de connexion du téléphone).
 - Jeux : `games_list`, `game_art`, `game_launch`, `game_add`, `game_remove`, `games_unhide`, `launchers_list`, `launcher_launch`, `launcher_icon`, `preset_icons`.
 - Barre en jeu et arrière-plan : `overlay_info`, `overlay_live`, `overlay_close`, `overlay_set_pin`, `overlay_open_app`, `background_get`, `background_set`, `session_state`, `session_set_prefs`.

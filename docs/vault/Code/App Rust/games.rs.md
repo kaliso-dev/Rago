@@ -3,7 +3,7 @@ type: code
 tags: [code, app, rust, jeux, bibliothèque]
 fichier: app/src-tauri/src/games.rs
 lignes: 1929
-maj: 2026-11-10
+maj: 2026-11-11
 ---
 # games.rs
 
@@ -63,7 +63,7 @@ Ordre : Steam, Epic, Riot, Battle.net, Ubisoft, Xbox, Roblox, Minecraft. Ensuite
 
 ### Comptes Windows multiples
 
-Rago tourne en administrateur, parfois élevé avec un autre compte que celui du joueur. `local_dirs()` ajoute donc le `AppData\Local` de chaque compte de `HKLM\…\ProfileList` (SID `S-1-5-21-…`), et `uninstall_entries()` lit `Uninstall` dans `HKLM`, `HKLM\…\WOW6432Node`, `HKCU` et `HKU\<SID>` de chaque compte ouvert.
+Rago tourne en administrateur, parfois élevé avec un autre compte que celui du joueur. `local_dirs()` (`pub(crate)` depuis le 11/11 : [[gamecfg.rs]] s'en sert pour trouver les réglages des jeux dans chaque compte) ajoute donc le `AppData\Local` de chaque compte de `HKLM\…\ProfileList` (SID `S-1-5-21-…`), et `uninstall_entries()` lit `Uninstall` dans `HKLM`, `HKLM\…\WOW6432Node`, `HKCU` et `HKU\<SID>` de chaque compte ouvert.
 
 ### Launchers (`detect_launchers`)
 

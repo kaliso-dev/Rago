@@ -2,7 +2,7 @@
 type: fonctionnalité
 tags: [fonctionnalité, app, 1.2]
 version_app: 1.2.1
-maj: 2026-11-10
+maj: 2026-11-11
 ---
 # Bibliothèque de jeux
 
@@ -14,11 +14,13 @@ Page « Jeux » (groupe « En jeu »). RAG-57. Code : [[games.rs]], [[icon.rs]],
 - **Minecraft Java : une seule tuile** ; « Lancer avec » propose Lunar, le launcher officiel… et retient le choix.
 - **Chaque jeu reçoit un preset** : le preset de son jeu s'il est reconnu (ex. Valorant → « Valorant »), modifiable ou « Sans preset ». Voir [[Presets]].
 - **Optimiser et jouer** (Premium) : applique les tweaks du preset puis lance le jeu par son launcher, **avec les droits de la session Windows** (jamais en administrateur). **Les tweaks restent allumés après la partie** ; « Les retirer » depuis la page. « Jouer » / « Jouer sans optimiser » lance seulement.
+- **Graphismes du jeu** (branche du 11/11, pas encore dans `staging`) : sous la carte de Valorant, Fortnite, CS2, Apex, Marvel Rivals et The Finals, trois niveaux Performance, Équilibré, Qualité écrits dans les réglages du jeu, comme OptiFine. Voir [[Graphismes des jeux]].
 - « En cours » / « Dernière partie » : processus lancés depuis le dossier du jeu, regardés toutes les 4 s.
 - « Retirer de la bibliothèque » (deux clics) ne désinstalle rien.
 
 Liens : [[Barre en jeu]], [[Pendant la partie]], [[Problèmes joueurs]] (curseur perdu après Optimiser et jouer).
 
 ## Code
+- [[gamecfg.rs]], [[GameGraphics.tsx]], [[graphics.ts]] : graphismes des jeux (branche du 11/11).
 - [[games.rs]] : détection par launcher (Steam, Epic, Riot, Battle.net, Ubisoft, Xbox, Roblox, Minecraft), comptes Windows multiples, 15 launchers, lancement sans droits administrateur (jeton de l'Explorateur), images dans `art\`, suivi des parties (`games.json`).
 - [[icon.rs]] (icône PNG d'un exe : logos des launchers et des jeux), [[session.rs]] (ce que l'app fait pendant la partie), [[lib.rs]] (boucle de fond toutes les 4 s, événements `games:running` et `games:session`), [[bridge.rs]] (commandes `games` et `game_launch` pour [[Rago OS]]).

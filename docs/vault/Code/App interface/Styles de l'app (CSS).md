@@ -3,7 +3,7 @@ type: code
 tags: [code, app, css, design]
 fichier: app/src/styles/ (tokens.css, app.css, features.css, account.css, overlay.css)
 lignes: 7195
-maj: 2026-11-10
+maj: 2026-11-11
 ---
 # Styles de l'app (CSS)
 
@@ -18,7 +18,7 @@ Tout ce qui suit est CONFIRMÉ (code de `staging`, 10/11, commit `ee77d4f`).
 | `tokens.css` | 119 | les deux fenêtres | jetons `--rg-*`, classes `.rg-metric` et `.rg-overline`, animations `rg-pulse` et `rg-pixel-blink` |
 | `app.css` | 2935 | fenêtre principale | polices, cadre, barre de titre, navigation, pages, cartes, boutons, réglages, barre « Appliquer », fenêtres, exécution, tableau de bord, Minecraft, paramètres, licence, plan gratuit, verre, finitions, 1.3.0 |
 | `account.css` | 257 | fenêtre principale | avatar, invitation à laisser un avis, formulaire d'avis, carte Profil |
-| `features.css` | 3492 | fenêtre principale | fonctionnalités de la 1.2.0 et après (liste plus bas) |
+| `features.css` | 3612 | fenêtre principale | fonctionnalités de la 1.2.0 et après (liste plus bas) |
 | `overlay.css` | 392 | barre en jeu | toute la barre en jeu (RAG-82) |
 
 - Ordre d'import dans [[main.tsx (app)]] : `tokens.css`, `app.css`, `account.css`, `features.css`. L'ordre compte : une règle plus bas l'emporte à égalité.
@@ -128,7 +128,7 @@ Tout ce qui suit est CONFIRMÉ (code de `staging`, 10/11, commit `ee77d4f`).
   - `rt-` : Rago Route ;
   - `tools-` et `driver-` : outils ;
   - `share-` : partage ;
-  - `games-`, `game-` et `launcher-` : bibliothèque ;
+  - `games-`, `game-` et `launcher-` : bibliothèque ; `games-gfx` : graphismes des jeux ([[GameGraphics.tsx]], branche du 11/11) ;
   - `pe-` : modifier un preset ;
   - `profile-` et `review-` : compte.
 

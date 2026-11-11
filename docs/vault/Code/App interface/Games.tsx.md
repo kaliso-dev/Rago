@@ -2,8 +2,8 @@
 type: code
 tags: [code, app, react, page, jeux]
 fichier: app/src/pages/Games.tsx
-lignes: 553
-maj: 2026-11-10
+lignes: 559
+maj: 2026-11-11
 ---
 # Games.tsx
 
@@ -12,6 +12,7 @@ La page **« Jeux »** (bibliothèque) : jeux trouvés sur le PC, un preset par 
 Tout ce qui suit est CONFIRMÉ (code de `staging`, 10/11, commit `ee77d4f`).
 
 ## Rôle et place dans l'ensemble
+- Branche du 11/11 (pas encore dans `staging`) : sous la carte du jeu, la carte [[GameGraphics.tsx]] quand `graphicsForGame(hero.name)` ([[graphics.ts]]) reconnaît le jeu ([[Graphismes des jeux]]).
 - Affichée par [[App.tsx]] quand `page === "games"`. Entrée « Jeux » de la [[Sidebar.tsx]], avec une puce « Nouveau » tant que la page n'a pas été vue ([[seen.ts]]).
 - Lit et écrit dans [[store.tsx]] :
   - `gamePresets` : preset choisi pour chaque jeu ;

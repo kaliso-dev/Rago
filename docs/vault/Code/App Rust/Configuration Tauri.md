@@ -3,7 +3,7 @@ type: code
 tags: [code, app, config, tauri]
 fichier: app/src-tauri/tauri.conf.json, tauri.staging.conf.json, capabilities/default.json, capabilities/overlay.json, app.manifest, keys/, assets/, icons/, resources/
 lignes: 71 (tauri.conf.json), 5 (staging), 29 + 12 (capabilities), 30 (app.manifest)
-maj: 2026-11-10
+maj: 2026-11-11
 ---
 # Configuration Tauri
 
@@ -37,7 +37,7 @@ Tout est CONFIRMÉ (fichiers de `staging`, 10/11), sauf ce qui est marqué OBSER
 ## `capabilities/` (permissions des fenêtres)
 - `default.json` (fenêtre `main`) : `core:default` ; fenêtre : `allow-minimize`, `allow-toggle-maximize`, `allow-is-maximized`, `allow-close`, `allow-start-dragging` (barre de titre maison) ; `dialog:allow-open`, `dialog:allow-save`, `dialog:allow-ask` ; `opener:allow-open-url` limité à `https://*` et `http://localhost:*`.
 - `overlay.json` (fenêtre `overlay`, la [[Barre en jeu]], créée par [[overlay.rs]]) : `core:default` seulement. « Lit les mesures et lance les réglages par les commandes de l'app, rien d'autre. »
-- Les 76 commandes de l'app ([[lib.rs]]) n'ont pas besoin d'être listées ici : seules les commandes des plugins le sont.
+- Les 79 commandes de l'app ([[lib.rs]]) n'ont pas besoin d'être listées ici : seules les commandes des plugins le sont.
 
 ## `app.manifest` (30 lignes)
 Intégré à l'exe par [[build.rs]] :

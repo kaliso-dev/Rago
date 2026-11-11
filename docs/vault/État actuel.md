@@ -3,7 +3,7 @@ type: pilotage
 tags: [état, pilotage]
 maj: 2026-11-11
 ---
-# État actuel (10/11/2026)
+# État actuel (11/11/2026)
 
 Voir aussi [[Prochaines étapes]], [[Questions ouvertes]], [[Journal]]. Retour à [[Projet]].
 
@@ -32,10 +32,12 @@ Les joueurs ont la [[Version 1.2.1]] (en ligne depuis le 31/10). La [[Version 1.
 | [[Conformité juridique]] | pages légales à jour pour l'essai et la connexion (04/11) ; **manquent l'identité et l'adresse du vendeur** : Sofiene n'est pas encore inscrit comme vendeur et a 17 ans (q44, q46, q49) | À RÉGLER par Sofiene |
 | [[Tableau de bord admin]] | `/admin` complet (joueurs, accès, bannissement, ventes Stripe dans une seule devise, services, site et promos, tests réseau, journal) : **en prod depuis le 10/11 au soir** (PR #87, « il faut le push sur la prod maintenant »), avec la nouvelle interface (#82), la mise en page sans trous (#83) et les ventes en une devise (#84), toutes passées par `staging` le 10/11 ; l'ancienne page `/admin` n'existe plus. Seulement l'admin : la 1.3.0 reste dans `staging` | CONFIRMÉ (git) ; servi en prod depuis 18:54 UTC (OBSERVÉ : page de connexion, `/admin/cerveau` renvoie vers elle sans clé) |
 | [[Cerveau du vault]] | `/admin/cerveau` : le vault en graphe animé façon Obsidian, lecteur de notes et de n'importe quel fichier du dépôt, derrière la clé admin (Abel s'en sert avec la même clé, choix de Sofiene du 10/11). **Dans `staging` depuis le 10/11** (PR #85) et **en prod depuis le 10/11 au soir** (PR #87, « j'ai ajouté une page cerveau il faut push avec ») ; lit le vault de `staging` sur GitHub ; `CERVEAU_GITHUB_TOKEN` à mettre dans Railway (staging et prod) avant que le dépôt passe en privé | CONFIRMÉ (git) |
+| [[Graphismes des jeux]] | Performance, Équilibré ou Qualité en un clic pour Valorant, Fortnite, CS2, Apex, Marvel Rivals et The Finals (demande de Sofiene du 11/11, façon OptiFine) : codés et testés hors Windows sur la branche `claude/project-thread-5ln7f8`, **pas encore poussée** (accord demandé) ; gratuit ou Premium à décider ; jamais testés sur Windows | CONFIRMÉ (code local, 11/11) |
 | [[Linear]] | remis à jour le 01/11 à partir du vault | CONFIRMÉ |
 | Vault Obsidian | créé le 31/10 ; règle n°1 : il doit correspondre en tout point à l'état du projet. **Détaillé le 10/11** (demande de Sofiene) : 341 notes, dont une fiche par fichier de code (230 notes dans `Code/`, 7 cartes), l'histoire du projet (`Historique/`, 11 notes) et l'étude de marché ; 24 nouvelles questions (q70 à q93) | DÉCIDÉ |
 
-## PR (10/11)
+## PR (11/11)
+- #86 (« Best hitreg » par défaut, débit Steam bridé à 15 Mbit/s, fil « Régler les problèmes des clients ») : **ouverte** vers `staging` depuis le 10/11 ([[Branches du dépôt]]).
 - Fusionnée le 10/11 dans la branche de prod : #87 ([[Tableau de bord admin]] et [[Cerveau du vault]] en prod, sans rien de la 1.3.0), sur « il faut le push sur la prod maintenant et qu'il soit fonctionnel normalement […] j'ai ajouté une page cerveau il faut push avec » de Sofiene.
 - Fusionnée le 10/11 dans `staging` : #84 (ventes du [[Tableau de bord admin]] dans une seule devise : les paiements en $US convertis par Stripe comptent en €), avec la demande de Sofiene de mettre l'admin en prod. En prod par la #87.
 - Fusionnée le 10/11 dans `staging` : #85 ([[Cerveau du vault]] et vault détaillé), sur « fusionne » de Sofiene. Le Cerveau est en prod par la #87.
@@ -70,3 +72,4 @@ Les joueurs ont la [[Version 1.2.1]] (en ligne depuis le 31/10). La [[Version 1.
 10. [[Cerveau du vault]] (en prod depuis le 10/11) : créer le jeton GitHub en lecture seule et le mettre dans Railway, staging **et** prod (`CERVEAU_GITHUB_TOKEN`), avant le passage du dépôt en privé.
 11. Répondre aux questions q70 à q93 sur la page « Questions du vault Rago » ([[Questions ouvertes]]).
 12. [[Couleurs et résolution]] (11/11) : dire si Claude envoie la branche sur GitHub et ouvre sa PR vers `staging` (sans fusion), puis la tester sur Windows (NVIDIA ou AMD, Valorant, CS2, Fortnite).
+13. [[Graphismes des jeux]] : dire si la branche peut être poussée (PR brouillon vers `staging`) et si la carte est gratuite ou Premium ; puis la tester sur Windows.
