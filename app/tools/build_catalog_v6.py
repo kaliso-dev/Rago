@@ -59,7 +59,7 @@ MODULES = [
             T('ping', 10, 'ping_hitreg', 'Hitreg profile', 'Profil hitreg',
               'TTL, TCP auto-tuning and receive coalescing, in six profiles. Default puts Windows back as it was.',
               'TTL, auto-tuning TCP et regroupement des paquets, en six profils. Default remet Windows comme avant.',
-              reboot=False, default='better', revert='default',
+              reboot=False, default='besthitreg', revert='default',
               variants=[('better', 'Better hitreg', 'Meilleur hitreg', r'^:BETTERHITREG'),
                         ('besthitreg', 'Best hitreg', 'Hitreg maximal', r'^:\s*BESTHITREG'),
                         ('balanced', 'Balanced', 'Équilibré', r'^:\s*BALANCED'),

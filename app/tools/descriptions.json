@@ -8,7 +8,7 @@
   "en": {
    "desc": "Six profiles that set TCP receive auto-tuning and incoming packet coalescing; Default puts Windows back as it was.",
    "gain": "Rarely measurable: hit registration is decided by the server and mostly depends on your ping.",
-   "cons": "Any profile other than Max hitreg or Default can slow down large downloads."
+   "cons": "Any profile other than Best hitreg or Default can slow down large downloads."
   }
  },
  "ping_packets": {

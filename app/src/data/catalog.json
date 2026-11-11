@@ -85,14 +85,14 @@
          "lines": 3
         }
        ],
-       "defaultVariant": "better",
+       "defaultVariant": "besthitreg",
        "lines": 3,
        "gain": {
         "en": "Rarely measurable: hit registration is decided by the server and mostly depends on your ping.",
         "fr": "Effet rarement mesurable : le hitreg est calculé par le serveur et dépend surtout de ton ping."
        },
        "cons": {
-        "en": "Any profile other than Max hitreg or Default can slow down large downloads.",
+        "en": "Any profile other than Best hitreg or Default can slow down large downloads.",
         "fr": "Les profils autres que « Hitreg maximal » et « Par défaut » peuvent ralentir les gros téléchargements."
        }
       },

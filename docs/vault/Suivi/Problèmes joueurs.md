@@ -11,6 +11,7 @@ Pour diagnostiquer : demander les logs `%APPDATA%\gg.rago.optimizer\logs` ([[App
 
 | Date | Joueur / version | Problème | Réponse |
 |---|---|---|---|
+| 10/11 | joueur, après la mise à jour | Steam télécharge à 15 Mbit/s au lieu de 200+ | cause : « Hitreg profile » en « Better hitreg » (auto-tuning TCP `HighlyRestricted`) avec « Packet optimization » Hitreg (fenêtre TCP 64 Ko) ; réponse : choisir « Best hitreg » ou « Default » et redémarrer, sinon couper « Packet optimization » ; « Best hitreg » par défaut dans la PR #86 ([[Historique des problèmes]]) |
 | 03/11 | joueur, compte gratuit | boost du serveur sans Premium | son Discord avait déjà eu la récompense boost le 11/10 sur un autre compte Rago (une fois par compte Discord) ; détails dans [[Historique des problèmes]] |
 | 03/11 | joueur | veut envoyer ses scripts `.bat` et un pack de scripts acheté, qui peuvent « avoir un effet très négatif sur le système » | ne rien exécuter, ne pas reprendre un pack payant, rien qui ressemble à de la triche ; Sofiene lui offre l'app ([[Historique des problèmes]]) |
 | 03/11 | client | demande à Sofiene d'installer AnyDesk pour réparer son PC | conseil : partage d'écran Discord ; si AnyDesk, c'est le client qui donne son code, jamais d'accès sans surveillance |
