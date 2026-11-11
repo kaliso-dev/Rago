@@ -1,9 +1,11 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { motion } from "motion/react";
-import { AppWindow, BrushCleaning, Lock, LoaderCircle, Pin, PinOff, X } from "lucide-react";
+import { AppWindow, BrushCleaning, Lightbulb, Lock, LoaderCircle, Pin, PinOff, X } from "lucide-react";
 import { api, type AppliedView, type LiveStats, type OverlayInfo, type OverlayLive, type OverlayMode, type SystemInfo } from "../lib/api";
 import { availability, tweaks, type Lang } from "../lib/catalog";
 import { translate, type Key } from "../lib/i18n";
+import { tipsFor } from "../lib/tips";
+import { GameTips } from "../components/GameTips";
 import { Mark } from "../components/Logo";
 import { SessionChecks, useSession } from "../components/SessionCard";
 import { Switch } from "../components/ui";
@@ -51,11 +53,14 @@ export function Overlay() {
   const [error, setError] = useState<string | null>(null);
   const [cleaning, setCleaning] = useState(false);
   const [cleaned, setCleaned] = useState<string | null>(null);
+  // rappel des conseils au lancement du jeu (pastille élargie quelques secondes)
+  const [nudge, setNudge] = useState(false);
   const session = useSession();
 
   const refresh = useCallback(async () => {
     const [i, a, l] = await Promise.all([api.overlayInfo(), api.applied().catch(() => []), api.licenseStatus().catch(() => null)]);
     setInfo(i);
+    setNudge(i.nudge);
     setMode((m) => (m === "hidden" ? i.mode : m));
     setApplied(new Map(a.map((x) => [x.id, x])));
     setPremium(l?.state === "active");
@@ -71,6 +76,7 @@ export function Overlay() {
         setError(null);
         if (m !== "hidden") void refresh();
       }),
+      api.onOverlayNudge(setNudge),
       api.onDone(() => {
         setBusy(null);
         void api.applied().then((a) => setApplied(new Map(a.map((x) => [x.id, x]))), () => {});
@@ -144,6 +150,22 @@ export function Overlay() {
     }
   };
 
+  if (mode === "pill" && nudge && session) {
+    const def = tipsFor(session.game);
+    const label =
+      def && session.tipsLeft > 0
+        ? t("tips.nudge", { n: session.tipsLeft + session.checks.length, game: def.name })
+        : t("tips.nudgeChecks", { n: session.checks.length });
+    return (
+      <div className="ov-pill ov-nudge" aria-live="polite">
+        <Mark size={14} />
+        <Lightbulb size={13} className="ov-nudge-icon" />
+        <span className="ov-nudge-text">{label}</span>
+        <span className="ov-pill-sep" />
+        <span className="ov-nudge-key">{t("tips.nudgeKey", { key: info?.shortcut ?? "Alt+X" })}</span>
+      </div>
+    );
+  }
   if (mode === "pill") {
     return (
       <div className="ov-pill" aria-live="off">
@@ -224,7 +246,13 @@ export function Overlay() {
           </button>
         </div>
         {cleaned && <p className="ov-note ov-cleaned">{cleaned}</p>}
-        {session && <SessionChecks session={session} t={t} />}
+        {/* conseils de la partie : défilent à part, la place reste aux réglages en direct */}
+        {session && (session.playing || session.game) && (
+          <div className="ov-advice">
+            <SessionChecks session={session} t={t} />
+            {session.game && <GameTips game={session.game} t={t} lang={lang} open={session.tipsLeft > 0} compact className="ov-tips" />}
+          </div>
+        )}
 
         <div className="ov-section-head">
           <span className="ov-overline">{t("overlay.live")}</span>

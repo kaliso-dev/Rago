@@ -7,6 +7,8 @@ import { catalog, presetForGame, tweaks } from "../lib/catalog";
 import { useStore } from "../lib/store";
 import { GameLogo, usePresetIcons } from "../components/GameLogo";
 import { SessionChecks, useSession } from "../components/SessionCard";
+import { GameTips } from "../components/GameTips";
+import { tipsKeyForGame } from "../lib/tips";
 import { Button, Segmented } from "../components/ui";
 
 const stagger = { animate: { transition: { staggerChildren: 0.04 } } };
@@ -265,6 +267,8 @@ export function Games() {
   };
 
   const heroPreset = hero ? resolve(presetRef(hero)) : null;
+  // réglages en jeu conseillés pour le jeu en avant (VALORANT, Fortnite…), repliés tant que le jeu n'est pas lancé
+  const heroTips = hero && hero.kind !== "minecraft" ? tipsKeyForGame(hero.name) : null;
   const heroUsable = heroPreset ? heroPreset.entries.filter((e) => tweaks.get(e.split(":")[0])?.kind === "tweak") : [];
   // réglages du preset encore appliqués sur ce PC : ils restent après la fermeture du jeu, on les retire d'ici
   const heroApplied = heroUsable.map((e) => e.split(":")[0]).filter((id) => applied.has(id));
@@ -447,6 +451,7 @@ export function Games() {
               <p className="games-note small muted">{t("games.applyFirst", { n: heroPending })}</p>
             ) : null}
           </div>
+          {heroTips && <GameTips key={`${hero.id}-${hero.running}`} game={heroTips} t={t} lang={lang} open={hero.running} className="games-hero-tips" />}
         </motion.section>
       )}
 

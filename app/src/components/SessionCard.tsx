@@ -10,7 +10,11 @@ type T = (key: Key, vars?: Record<string, string | number>) => string;
 /** Ce que Rago a fait pour la partie en cours et ce qu'il conseille (barre en jeu, bibliothèque). */
 export function SessionChecks({ session, t }: { session: SessionState; t: T }) {
   if (!session.playing || (!session.power && !session.checks.length)) return null;
-  const line = (c: SessionCheck) => t(`session.check.${c.id}` as Key, { apps: c.apps.join(", ") });
+  const line = (c: SessionCheck) => {
+    // mémoire presque pleine sans grosse appli à nommer : la phrase sans liste
+    if (c.id === "ram" && !c.apps.length) return t("session.check.ramBare");
+    return t(`session.check.${c.id}` as Key, { apps: c.apps.join(", "), cur: c.apps[0] ?? "", max: c.apps[1] ?? "" });
+  };
   return (
     <div className="session-checks">
       {session.power && (

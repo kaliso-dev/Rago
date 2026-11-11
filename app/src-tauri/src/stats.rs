@@ -151,7 +151,7 @@ fn busiest_engine<'a>(items: impl IntoIterator<Item = (&'a str, f64)>) -> Option
 /// Compteurs de performance de Windows (PDH), une requête par compteur : un compteur absent
 /// (carte graphique sans pilote WDDM 2, compteurs désactivés) ne bloque pas les autres.
 #[cfg(windows)]
-mod pdh {
+pub(crate) mod pdh {
     use std::ptr::{null, null_mut};
     use windows_sys::Win32::System::Performance::{
         PdhAddEnglishCounterW, PdhCloseQuery, PdhCollectQueryData, PdhGetFormattedCounterArrayW,
@@ -159,6 +159,10 @@ mod pdh {
         PDH_FMT_COUNTERVALUE, PDH_FMT_COUNTERVALUE_ITEM_W, PDH_FMT_DOUBLE, PDH_HCOUNTER, PDH_HQUERY,
         PDH_MORE_DATA,
     };
+
+    /// Pourcentages au-delà de 100 (un processus sur plusieurs cœurs) : PDH les plafonne à 100 sans ce drapeau (pdh.h,
+    /// absent de windows-sys).
+    const PDH_FMT_NOCAP100: u32 = 0x0000_8000;
 
     pub struct Counter {
         query: PDH_HQUERY,
@@ -208,13 +212,22 @@ mod pdh {
 
         /// Compteur à instances (`*`) : nom et valeur de chaque instance mesurée.
         pub fn values(&self) -> Option<Vec<(String, f64)>> {
+            self.values_as(PDH_FMT_DOUBLE)
+        }
+
+        /// Comme `values`, sans plafonner les pourcentages à 100 (`\Process(*)\% Processor Time` : 100 par cœur).
+        pub fn values_uncapped(&self) -> Option<Vec<(String, f64)>> {
+            self.values_as(PDH_FMT_DOUBLE | PDH_FMT_NOCAP100)
+        }
+
+        fn values_as(&self, fmt: u32) -> Option<Vec<(String, f64)>> {
             if !self.collect() {
                 return None;
             }
             // la liste des instances peut grandir entre la demande de taille et la lecture
             for _ in 0..3 {
                 let (mut size, mut count) = (0u32, 0u32);
-                let r = unsafe { PdhGetFormattedCounterArrayW(self.counter, PDH_FMT_DOUBLE, &mut size, &mut count, null_mut()) };
+                let r = unsafe { PdhGetFormattedCounterArrayW(self.counter, fmt, &mut size, &mut count, null_mut()) };
                 if r == 0 {
                     return Some(Vec::new());
                 }
@@ -224,7 +237,7 @@ mod pdh {
                 // tampon aligné sur 8 octets : il commence par les éléments (avec des f64), puis les noms
                 let mut buf = vec![0u64; (size as usize).div_ceil(8)];
                 let items = buf.as_mut_ptr() as *mut PDH_FMT_COUNTERVALUE_ITEM_W;
-                let r = unsafe { PdhGetFormattedCounterArrayW(self.counter, PDH_FMT_DOUBLE, &mut size, &mut count, items) };
+                let r = unsafe { PdhGetFormattedCounterArrayW(self.counter, fmt, &mut size, &mut count, items) };
                 if r == PDH_MORE_DATA {
                     continue;
                 }

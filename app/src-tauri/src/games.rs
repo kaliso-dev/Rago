@@ -1422,6 +1422,18 @@ const PRESET_EXES: &[(&str, &[&str])] = &[
     ("bedrock", &["minecraft.windows.exe"]),
 ];
 
+/// Clé du jeu des presets (variante de pri_game) d'après le nom de son exe en minuscules : « valorant.exe » →
+/// « valorant ». Sert aux conseils au lancement du jeu (tips.rs).
+pub fn preset_key(file: &str) -> Option<&'static str> {
+    PRESET_EXES.iter().find(|(_, names)| names.contains(&file)).map(|(k, _)| *k)
+}
+
+/// Toutes les clés de jeu connues par leur exe.
+#[cfg(test)]
+pub fn preset_keys() -> Vec<&'static str> {
+    PRESET_EXES.iter().map(|(k, _)| *k).collect()
+}
+
 /// Exe de chaque jeu de `keys` parmi les jeux de la bibliothèque : l'exe qui le lance, sinon dans son dossier.
 fn preset_exes(games: &[Game], keys: &[&str]) -> Vec<(&'static str, PathBuf)> {
     let wanted: Vec<(&'static str, &'static [&'static str])> = PRESET_EXES.iter().filter(|(k, _)| keys.contains(k)).copied().collect();

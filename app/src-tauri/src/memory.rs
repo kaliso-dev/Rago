@@ -26,8 +26,7 @@ pub struct Cleaned {
 
 /// Processus jamais réduits, en minuscules : Windows lui-même, l'Explorateur (le bureau ralentirait), les anti-cheat
 /// (ouvrir leur processus peut les alerter) et les jeux connus, même hors de la bibliothèque.
-#[cfg_attr(not(windows), allow(dead_code))]
-const PROTECTED: &[&str] = &[
+pub(crate) const PROTECTED: &[&str] = &[
     "system", "registry", "smss.exe", "csrss.exe", "wininit.exe", "winlogon.exe", "services.exe", "lsass.exe",
     "lsaiso.exe", "svchost.exe", "dwm.exe", "fontdrvhost.exe", "audiodg.exe", "explorer.exe", "sihost.exe",
     "ctfmon.exe", "taskmgr.exe", "memcompression", "secure system", "msmpeng.exe", "nissrv.exe",
