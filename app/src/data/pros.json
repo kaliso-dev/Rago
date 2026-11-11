@@ -1,0 +1,30 @@
+{
+  "_doc": "Réglages d'écran des pros, importables en 1 clic dans la page « Couleurs et résolution » (Premium, Sofiene 11/11/2026). vibrance : Digital Vibrance du panneau NVIDIA (50 = Windows, 100 = maximum), null = non publiée, les couleurs restent celles de Windows. resolution : [largeur, hauteur], null = résolution native de l'écran. checked : date de mise à jour de la page source. monitor / ingame : réglages à faire soi-même sur l'écran ou dans le jeu (affichés, jamais appliqués). Relevé le 11/11/2026 ; à revérifier avant chaque sortie (les pros changent souvent).",
+  "updated": "2026-11-11",
+  "pros": [
+    { "id": "tenz", "name": "TenZ", "game": "valorant", "vibrance": 100, "resolution": null, "stretch": false, "source": "specs.gg", "url": "https://specs.gg/TenZ", "checked": "2026-11", "monitor": "Sony INZONE M10S : Brightness 100, Contrast 50, Color Vibrance 20" },
+    { "id": "kaajak", "name": "kaajak", "game": "valorant", "vibrance": 55, "resolution": [1440, 1080], "stretch": true, "source": "prosettings.net", "url": "https://prosettings.net/players/kaajak", "checked": "2026-10-26", "monitor": "Sony INZONE M10S : Color Vibrance 12, Brightness 72, Contrast 52, Gamma 3" },
+    { "id": "demon1", "name": "Demon1", "game": "valorant", "vibrance": 50, "resolution": null, "stretch": false, "source": "prosettings.net", "url": "https://prosettings.net/players/demon1", "checked": "2026-05-18", "monitor": "ZOWIE XL2586X+ : Color Vibrance 10, Brightness 100, Contrast 60, Gamma 3", "ingame": "Enemy Highlight Color : Purple (Tritanopia)" },
+    { "id": "derke", "name": "Derke", "game": "valorant", "vibrance": 50, "resolution": null, "stretch": false, "source": "prosettings.net", "url": "https://prosettings.net/players/derke", "checked": "2026-11-09", "monitor": "ZOWIE XL2566X+ : Brightness 100, Contrast 75, Gamma 2.2", "ingame": "Enemy Highlight Color : Red" },
+    { "id": "less", "name": "Less", "game": "valorant", "vibrance": 50, "resolution": null, "stretch": false, "source": "prosettings.net", "url": "https://prosettings.net/players/less", "checked": "2026-05-11", "ingame": "Enemy Highlight Color : Yellow (Deuteranopia)" },
+
+    { "id": "zywoo", "name": "ZywOo", "game": "cs2", "vibrance": 50, "resolution": [1024, 768], "stretch": true, "source": "prosettings.net", "url": "https://prosettings.net/players/zywoo", "checked": "2026-11-08" },
+    { "id": "donk", "name": "donk", "game": "cs2", "vibrance": 50, "resolution": [1280, 960], "stretch": true, "source": "prosettings.net", "url": "https://prosettings.net/players/donk", "checked": "2026-10-28" },
+    { "id": "m0nesy", "name": "m0NESY", "game": "cs2", "vibrance": 50, "resolution": [1280, 960], "stretch": true, "source": "prosettings.net", "url": "https://prosettings.net/players/m0nesy", "checked": "2026-11-04" },
+    { "id": "niko", "name": "NiKo", "game": "cs2", "vibrance": 60, "resolution": [1280, 960], "stretch": true, "source": "prosettings.net", "url": "https://prosettings.net/players/niko", "checked": "2026-11-04" },
+    { "id": "s1mple", "name": "s1mple", "game": "cs2", "vibrance": 50, "resolution": [1280, 960], "stretch": true, "source": "prosettings.net", "url": "https://prosettings.net/players/s1mple", "checked": "2026-10-31" },
+    { "id": "ropz", "name": "ropz", "game": "cs2", "vibrance": 100, "resolution": null, "stretch": false, "source": "prosettings.net", "url": "https://prosettings.net/players/ropz", "checked": "2026-10-31" },
+    { "id": "device", "name": "device", "game": "cs2", "vibrance": null, "resolution": [1280, 960], "stretch": true, "source": "prosettings.net", "url": "https://prosettings.net/players/device", "checked": "2026-11-02" },
+    { "id": "sh1ro", "name": "sh1ro", "game": "cs2", "vibrance": 50, "resolution": [1280, 960], "stretch": true, "source": "prosettings.net", "url": "https://prosettings.net/players/sh1ro", "checked": "2026-10-28" },
+    { "id": "b1t", "name": "b1t", "game": "cs2", "vibrance": 50, "resolution": [1280, 960], "stretch": true, "source": "prosettings.net", "url": "https://prosettings.net/players/b1t", "checked": "2026-11-08" },
+    { "id": "twistzz", "name": "Twistzz", "game": "cs2", "vibrance": 50, "resolution": [1280, 960], "stretch": true, "source": "prosettings.net", "url": "https://prosettings.net/players/twistzz", "checked": "2026-11-03" },
+    { "id": "xantares", "name": "XANTARES", "game": "cs2", "vibrance": 100, "resolution": [1024, 768], "stretch": true, "source": "prosettings.net", "url": "https://prosettings.net/players/xantares", "checked": "2026-11-04" },
+    { "id": "frozen", "name": "frozen", "game": "cs2", "vibrance": 60, "resolution": [1280, 960], "stretch": true, "source": "prosettings.net", "url": "https://prosettings.net/players/frozen", "checked": "2026-11-03" },
+    { "id": "jl", "name": "jL", "game": "cs2", "vibrance": 100, "resolution": [1280, 960], "stretch": true, "source": "prosettings.net", "url": "https://prosettings.net/players/jl", "checked": "2026-11-02" },
+
+    { "id": "peterbot", "name": "Peterbot", "game": "fortnite", "vibrance": 70, "resolution": null, "stretch": false, "source": "prosettings.net", "url": "https://prosettings.net/players/peterbot", "checked": "2026-10-12", "ingame": "Brightness 150 %, Color Blind Mode : Tritanope 4" },
+    { "id": "veno", "name": "Veno", "game": "fortnite", "vibrance": 70, "resolution": null, "stretch": false, "source": "prosettings.net", "url": "https://prosettings.net/players/veno", "checked": "2026-10-26", "ingame": "Brightness 150 %" },
+    { "id": "malibuca", "name": "Malibuca", "game": "fortnite", "vibrance": 65, "resolution": null, "stretch": false, "source": "prosettings.net", "url": "https://prosettings.net/players/malibuca", "checked": "2026-09-28", "ingame": "Brightness 111 %" },
+    { "id": "bugha", "name": "Bugha", "game": "fortnite", "vibrance": 75, "resolution": null, "stretch": false, "source": "prosettings.net", "url": "https://prosettings.net/players/bugha", "checked": "2025-09-15", "ingame": "Brightness 100 %" }
+  ]
+}

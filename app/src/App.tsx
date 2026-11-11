@@ -22,6 +22,7 @@ import { Games } from "./pages/Games";
 import { isNetworkTab, Network } from "./pages/Network";
 import { Tools } from "./pages/Tools";
 import { Analysis } from "./pages/Analysis";
+import { Display } from "./pages/Display";
 
 export function App() {
   const { page, motion: motionPref, lang } = useStore();
@@ -63,7 +64,7 @@ export function App() {
                 transition={{ duration: 0.16, ease: [0.16, 1, 0.3, 1] }}
               >
                 <PageBoundary lang={lang}>
-                  {page === "dashboard" ? <Dashboard /> : page === "settings" ? <Settings /> : page === "share" ? <Share /> : page === "games" ? <Games /> : isNetworkTab(page) ? <Network tab={page} /> : page === "tools" ? <Tools /> : page === "analysis" ? <Analysis /> : <ModulePage id={page} />}
+                  {page === "dashboard" ? <Dashboard /> : page === "settings" ? <Settings /> : page === "share" ? <Share /> : page === "games" ? <Games /> : page === "display" ? <Display /> : isNetworkTab(page) ? <Network tab={page} /> : page === "tools" ? <Tools /> : page === "analysis" ? <Analysis /> : <ModulePage id={page} />}
                 </PageBoundary>
               </motion.div>
             </AnimatePresence>

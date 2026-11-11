@@ -2,8 +2,8 @@
 type: code
 tags: [code, app, react, composant]
 fichier: app/src/components/ (ui.tsx, Modal.tsx, Logo.tsx, logoPaths.ts, icons.ts, Avatar.tsx, GameLogo.tsx, PageBoundary.tsx) et app/src/vite-env.d.ts
-lignes: 341
-maj: 2026-11-10
+lignes: 343
+maj: 2026-11-11
 ---
 # Petits composants de l'interface
 
@@ -17,7 +17,7 @@ Tout ce qui suit est CONFIRMÉ (code de `staging`, 10/11, commit `ee77d4f`).
 | `components/Modal.tsx` | 53 | `Modal` (fenêtre par-dessus la page, avec pile d'Échap) |
 | `components/Logo.tsx` | 45 | `Mark`, `Wordmark`, `Pulse` |
 | `components/logoPaths.ts` | 8 | tracés SVG du logo |
-| `components/icons.ts` | 35 | `MODULE_ICONS`, `DiscordIcon` |
+| `components/icons.ts` | 37 | `MODULE_ICONS`, `DiscordIcon` |
 | `components/Avatar.tsx` | 9 | `Avatar` |
 | `components/GameLogo.tsx` | 37 | `usePresetIcons`, `GameLogo` |
 | `components/PageBoundary.tsx` | 34 | `PageBoundary` |
@@ -50,7 +50,7 @@ Utilisé par 31 fichiers.
 - **`Pulse({ size, active })`** : la signature « Pulse », 4 ondes qui partent du coin haut droit de la marque, décalées de 400 ms ([[RunOverlay.tsx]], [[Upsell.tsx]], [[LicenseGate.tsx]]). Animation dans `app.css` (section Pulse, voir [[Styles de l'app (CSS)]]).
 
 ## `icons.ts`
-- **`MODULE_ICONS`** : l'icône lucide de chaque module ou page, par nom d'icône du catalogue ou id de page. Par exemple : `network` (réseau), `gauge` (latence), `gpu`, `windows`, `crosshair` (hitreg), `cube` (Minecraft), `shield`, `bolt`, `flask` (expert), `undo` (restaurer), `settings`, `games`, `nettest`, `netopt`, `tools`, `analysis`. Utilisé par [[Sidebar.tsx]].
+- **`MODULE_ICONS`** : l'icône lucide de chaque module ou page, par nom d'icône du catalogue ou id de page. Par exemple : `network` (réseau), `gauge` (latence), `gpu`, `windows`, `crosshair` (hitreg), `cube` (Minecraft), `shield`, `bolt`, `flask` (expert), `undo` (restaurer), `settings`, `games`, `display` (palette, page [[Display.tsx]], ajoutée le 11/11 sur la branche `claude/project-thread-7n0ikn`), `nettest`, `netopt`, `tools`, `analysis`. Utilisé par [[Sidebar.tsx]].
 - **`DiscordIcon({ size })`** : le logo de Discord (Simple Icons, licence CC0), pour les liens vers le Discord de Rago ([[Sidebar.tsx]], [[Settings.tsx]], [[Tools.tsx]] pour le cache de Discord).
 
 ## `Avatar.tsx`

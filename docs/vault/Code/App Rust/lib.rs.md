@@ -3,13 +3,16 @@ type: code
 tags: [code, app, rust]
 fichier: app/src-tauri/src/lib.rs
 lignes: 1555
+lignes: 1634
 maj: 2026-11-11
 ---
 # lib.rs
 
-Point d'entrée de toute l'app côté Rust : il déclare les 38 modules, construit l'état partagé `AppState`, enregistre les **76 commandes Tauri** que l'interface React appelle, lance les fils permanents au démarrage (`run()`) et répond au pont de [[Rago OS]]. Fiche parente : [[Code de l'app (Rust)]]. Fonctionnement d'ensemble : [[Architecture de l'app]], [[App Windows]].
+Point d'entrée de toute l'app côté Rust : il déclare les 39 modules, construit l'état partagé `AppState`, enregistre les **81 commandes Tauri** que l'interface React appelle, lance les fils permanents au démarrage (`run()`) et répond au pont de [[Rago OS]]. Fiche parente : [[Code de l'app (Rust)]]. Fonctionnement d'ensemble : [[Architecture de l'app]], [[App Windows]].
 
 Tout ce qui suit est CONFIRMÉ (code de `staging`, 10/11, commit `ee77d4f`). Fichier créé le 07/10 (1.1.5), 37 commits depuis : c'est le fichier le plus modifié du cœur.
+
+Ajouts du 11/11 pour [[Couleurs et résolution]] (module `display`, 5 commandes `display_*`, résolution posée par `game_launch`, fil des jeux, `RunEvent::Exit`) : code de la branche `claude/project-thread-7n0ikn`, **jamais testé sur Windows**.
 
 ## Rôle et place dans l'ensemble
 - `main.rs` ([[main.rs]]) n'appelle que `rago_hub_lib::run()`, défini ici.
@@ -38,7 +41,7 @@ Tout ce qui suit est CONFIRMÉ (code de `staging`, 10/11, commit `ee77d4f`). Fic
 | `data_dir` | `PathBuf` | `%APPDATA%\gg.rago.optimizer` (staging : `gg.rago.optimizer.staging`) |
 | `repaired` | `AtomicBool` | vrai si [[repair.rs]] a supprimé une valeur à ce lancement |
 
-Sont aussi gérés à part (par `app.manage`) : `Arc<Background>` ([[background.rs]]), `Arc<overlay::Overlay>` ([[overlay.rs]]), `Arc<session::Session>` ([[session.rs]]), `Arc<boost::Boost>` ([[boost.rs]]).
+Sont aussi gérés à part (par `app.manage`) : `Arc<Background>` ([[background.rs]]), `Arc<overlay::Overlay>` ([[overlay.rs]]), `Arc<session::Session>` ([[session.rs]]), `Arc<display::Display>` ([[display.rs]]), `Arc<boost::Boost>` ([[boost.rs]]).
 
 Méthodes : `AppState::system(refresh)` (sonde mise en cache par `probe_cached`) et `AppState::context(app, premium)`, qui fabrique le `runner::Context` d'un lot : `logs_dir = data_dir\logs`, `run_dir = data_dir\run`, `backup_dir = data_dir\backup`, `adapter` = carte réseau active de la sonde, `stop_when = None`. Quand `app` est `None` (remise à zéro), aucun événement n'est émis.
 
@@ -53,7 +56,7 @@ Méthodes : `AppState::system(refresh)` (sonde mise en cache par `probe_cached`)
 - `bridge_presets()`, `BRIDGE_TWEAKS`, `bridge_handler(app)` : le pont avec Rago OS.
 - `pub fn run()` : le démarrage.
 
-### Les 76 commandes Tauri
+### Les 81 commandes Tauri
 Ordre de `generate_handler!`. Côté interface, chaque commande est appelée par `invoke("<nom>")` depuis `app/src/lib/api.ts`. Les erreurs sont des `String`, sauf les commandes de licence et de compte qui renvoient un `license::ApiError {code, message, buy_url}`.
 
 **Système, RBW, Outils** ([[Page Outils]], [[RBW Mod]])
@@ -90,7 +93,7 @@ Ordre de `generate_handler!`. Côté interface, chaque commande est appelée par
 | `netopt_run` | `action`, `options?` → `netopt::Outcome` | voir plus bas |
 
 **Bibliothèque de jeux** ([[Bibliothèque de jeux]], [[games.rs]])
-`games_list(refresh)`, `game_art(id)` (image en `data:` URL, gardée dans `art\`), `game_launch(id)`, `launchers_list(refresh)`, `launcher_launch(id)`, `launcher_icon(id)` (`data:` URL tirée de l'exe), `preset_icons()` (logo des jeux des [[Presets]] installés, par clé de jeu), `game_add(path)` → id, `game_remove(id)`, `games_unhide()`.
+`games_list(refresh)`, `game_art(id)` (image en `data:` URL, gardée dans `art\`), `game_launch(id)` (pose d'abord la résolution du jeu et l'écrit dans son fichier de réglages, `display.prepare` ; `cancel_prepare` si le lancement échoue ; émet `display:state`), `launchers_list(refresh)`, `launcher_launch(id)`, `launcher_icon(id)` (`data:` URL tirée de l'exe), `preset_icons()` (logo des jeux des [[Presets]] installés, par clé de jeu), `game_add(path)` → id, `game_remove(id)`, `games_unhide()`.
 
 **Mise à jour** ([[Mise à jour automatique]])
 | Commande | Arguments → retour | Ce qu'elle fait |
@@ -111,6 +114,15 @@ Ordre de `generate_handler!`. Côté interface, chaque commande est appelée par
 | `overlay_set_pin` | `pin: bool` | garde la barre épinglée (champ `pin` des préférences) |
 | `overlay_open_app` | `page?` | ferme la barre, `show_main`, puis émet `app:goto` vers la fenêtre `main` (`premium` : l'offre Premium) |
 | `open_task_manager` | → `()` | lance `taskmgr.exe` (Rago ne ferme aucun processus) |
+
+**Couleurs et résolution** ([[Couleurs et résolution]], [[display.rs]])
+| Commande | Arguments → retour | Ce qu'elle fait |
+|---|---|---|
+| `display_info` | → `display::Info` | qui fait la saturation sur l'écran principal (`nvidia`, `amd` ou rien), l'écran et ses résolutions |
+| `display_profiles` | → profils par jeu | couleurs et résolution enregistrées (`mc:java` pour Minecraft Java) |
+| `display_state` | → `display::State` | ce qui est posé en ce moment, dernière erreur |
+| `display_set_profile` | `id, profile?` → `display::State` | enregistre ou retire (`profile` absent) ; erreur `premium:no_license` si le profil porte un pro **nouveau** sans licence active (import des pros en Premium, Sofiene 11/11) ; émet `display:state` |
+| `display_preview` | `colors?` | aperçu des couleurs sur l'écran principal (rendu tout seul après 8 s) ; absent : fin de l'aperçu |
 
 **Minecraft, PC, dossiers, support** ([[Partage et support]])
 | Commande | Arguments → retour | Ce qu'elle fait |
@@ -199,10 +211,10 @@ Si `reset.hold_exit()` (remise en cours) : cache la fenêtre et ne quitte pas. S
    - supprime `data_dir\run\` (scripts en clair laissés par un arrêt brutal) et le dossier de repli `%SystemRoot%\Temp\<identifiant>` ([[assets.rs]]) ;
    - `History::load(history.json)` ; `Ledger::load(applied.json)`. S'il n'existait pas : `import_history` puis `save` ; s'il est encore en clair (`needs_migration`) : `save` le réécrit chiffré ;
    - `repair::at_startup` (RAG-67) ; le résultat remplit `repaired` ;
-   - `games::Library::new` ; `started_hidden` = argument `--background` ; `Background::load` ; `Session::new` ; `Boost::new` (relance ce qu'une partie interrompue a laissé arrêté) ;
-   - **fil des jeux** (toutes les 4 s) : `library.list(false)` une fois, puis en boucle `games::process_paths()`, `library.poll` → `games:running` si changement, exes des jeux + `javaw` de Minecraft (`session::minecraft_exe`), `session.tick(playing, exes, procs, prefs)` → `games:session` si changement. Après 5 tours sans jeu (≈ 20 s) avec le Mode jeu total actif : `boost.off()` ;
+   - `games::Library::new` ; `started_hidden` = argument `--background` ; `Background::load` ; `Session::new` ; `Display::new` (remet ce qu'un plantage a laissé) et `display.spawn` (fil qui regarde le jeu au premier plan, émet `display:state`) ; `Boost::new` (relance ce qu'une partie interrompue a laissé arrêté) ;
+   - **fil des jeux** (toutes les 4 s) : `library.list(false)` une fois, puis en boucle `games::process_paths()`, `library.poll` → `games:running` si changement, exes des jeux + `javaw` de Minecraft (`session::minecraft_exe`), `session.tick(playing, exes, procs, prefs)` → `games:session` si changement, `display.tick(library.running_dirs(), minecraft)` → `display:state` si changement. Après 5 tours sans jeu (≈ 20 s) avec le Mode jeu total actif : `boost.off()` ;
    - `sync_tray` ; si `prefs.autostart` et pas en debug, crée la tâche de démarrage dans un fil si elle manque ;
-   - `Overlay::new` + `overlay::watch` (fil `rago-overlay`) ; `manage` de `background`, `overlay`, `session`, `boost` ;
+   - `Overlay::new` + `overlay::watch` (fil `rago-overlay`) ; `manage` de `background`, `overlay`, `session`, `display`, `boost` ;
    - `show_main` si pas lancé caché ;
    - `License::new()`, `Updates::default()`, `update::watch(app, updates, machine_guid ou nom du PC)` ;
    - `manage(AppState)` ;
@@ -212,7 +224,7 @@ Si `reset.hold_exit()` (remise en cours) : cache la fenêtre et ne quitte pas. S
    - fenêtre `overlay` : `CloseRequested` est empêché puis `overlay.close` (Alt+F4 ne la détruit jamais) ; `Focused(false)` → `on_blur` ;
    - fenêtre `main`, `CloseRequested` : remise en cours → cache ; sinon mode arrière-plan (`hides_on_close`) → cache ; sinon, mise à jour prête et aucun lot → `install(false)` ;
    - `main` `Destroyed` → `exit(0)`, même si la barre en jeu cachée existe.
-6. `RunEvent::Exit` : `flows::shutdown()` (session ETW du ping des jeux, [[flows.rs]]) et `route::turn_off()`.
+6. `RunEvent::Exit` : `flows::shutdown()` (session ETW du ping des jeux, [[flows.rs]]), `route::turn_off()` et `display.shutdown()` (couleurs et résolution d'un jeu en cours rendues, [[display.rs]]).
 
 ### Le pont avec Rago OS (résumé)
 `bridge_handler` répond aux demandes JSON reçues par [[bridge.rs]] (`{"cmd": …}`), avec **les mêmes règles** que l'interface. Commandes : `hello` (`bridge: 1`), `status` (offre seulement, nombre de réglages appliqués, lot en cours, `gameMode`, boost, partie en cours, mise à jour, dernier test réseau), `live`, `stats`, `clean_ram` (sans réduction des applis), `net_test` (6 serveurs au plus, par défaut `hypixel`, `paris`, `internet`), `games`, `game_launch`, `presets` (noms en français), `tweaks` (tout `BRIDGE_TWEAKS` avec `applied`, `variant`, `locked`), `tweak` (allume ou éteint un réglage par `start_tweaks` ; erreurs `unknown_tweak`, `unknown_variant`, `not_a_switch`, `not_applied`), `open` (montre l'app et émet `app:goto`, éventuellement `page#tweak`), `game_mode` (réglage `game_mode` on/off), `boost` (Premium, `premium_required:boost`), `route`, `route_servers`, `route_start` (`second` ou `phone: true`), `route_stop`. Sinon `unknown_command` ; avant la fin du démarrage, `starting`.
@@ -221,7 +233,7 @@ Si `reset.hold_exit()` (remise en cours) : cache la fenêtre et ne quitte pas. S
 
 ## Données touchées
 - Disque : suppression de `run\` et du dossier de repli au démarrage ; fichiers `.rago` choisis par le joueur ; `reports\`.
-- Événements émis ici : `reset:done`, `nettest:sample`, `nettest:measure`, `netopt:line`, `games:running`, `games:session`, `app:goto`. Les autres (`run:*`, `update:ready`, `overlay:mode`) viennent de [[runner.rs]], [[update.rs]] et [[overlay.rs]].
+- Événements émis ici : `reset:done`, `nettest:sample`, `nettest:measure`, `netopt:line`, `games:running`, `games:session`, `display:state`, `app:goto`. Les autres (`run:*`, `update:ready`, `overlay:mode`) viennent de [[runner.rs]], [[update.rs]] et [[overlay.rs]].
 - `static LAST_NET_TEST: Mutex<Option<(u64, Vec<Measure>)>>` : dernier test réseau (app ou Rago OS), pour que Rago OS l'affiche sans relancer 10 s de mesures.
 
 ## Erreurs et cas limites
@@ -237,4 +249,4 @@ Un test dans le fichier : `bridge_tests::reglages_proposes_a_rago_os` (plus de 1
 - Toute nouvelle façon de lancer des réglages doit passer par `start_tweaks` pour garder les règles de l'offre.
 - Une action qui change Windows doit refuser pendant un lot ou une remise (`"busy"`), comme `netopt_run` et `update_install`.
 - Ne jamais faire passer l'e-mail ou la clé par le pont ni dans le rapport : seulement l'offre.
-- Le nombre de commandes (76) est cité dans [[Architecture de l'app]] : le mettre à jour si on en ajoute.
+- Le nombre de commandes (81) est cité dans [[Architecture de l'app]] : le mettre à jour si on en ajoute.

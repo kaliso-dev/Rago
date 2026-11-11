@@ -3,6 +3,7 @@ type: code
 tags: [code, app, typescript, interface]
 fichier: app/src/lib/api.ts
 lignes: 1387
+lignes: 1485
 maj: 2026-11-11
 ---
 # api.ts
@@ -40,6 +41,7 @@ Tout ce qui suit est CONFIRMÉ (code de `staging`, 10/11, commit `ee77d4f`).
 | `UpdateReady` | `version`, `notes` | [[update.rs]] |
 | `BackgroundPrefs`, `BackgroundState` | préférences (`tray`, `autostart`, `autostartChosen?`, `overlay`, `shortcut`, `pin`, `lang`, `gameGpu`, `gamePower`, `gameChecks`, `gamePriority`) ; état (`autostart` réel, `shortcutTaken`, `fpsAvailable`) | [[background.rs]] |
 | `SessionCheck`, `SessionState` | pendant la partie : `playing`, `power`, `gpuGames`, `checks` (`battery`, `download`, `sync`, `record` + applis), `multiGpu`, `x3d` | [[session.rs]] |
+| `DisplayColors`, `DisplayResolution`, `DisplayProfile`, `DisplayMonitor`, `DisplayInfo`, `DisplayState` | couleurs et résolution par jeu (ajout du 11/11, branche `claude/project-thread-7n0ikn`) : `vibrance` 50–100, `brightness` et `contrast` −30 à +30, `gamma` × 100 ; `width`, `height`, `stretch`, `gameFile` ; profil `colors`, `resolution`, `pro` ; écran principal (`device`, `name`, `width`, `height`, `hz`, `modes`) et `vibrance` `nvidia`/`amd`/`null` ; état posé (`colors`, `resolution`, `error`) | [[display.rs]] |
 | `OverlayMode`, `OverlayInfo`, `OverlayLive` | barre en jeu : mode `hidden`/`panel`/`pill`, jeu, raccourci, épingle, `fpsAvailable`, `shortcutTaken`, `passive` ; mesures `fps`, `ping`, `pingEstimate?` | [[overlay.rs]], [[fps.rs]] |
 | `RbwCheck` | une ligne du vérificateur Ranked Bedwars : `name`, `kind` service/setting, `ok`, `state`, `start` | [[rbw.rs]] |
 | `CleanAreaId`, `CleanArea`, `CleanResult`, `BloatApp`, `Driver`, `DriversInfo` | page Outils : zones `temp`, `windows_temp`, `update`, `crash`, `browsers`, `discord`, `shaders`, `recycle` ; applis préinstallées (nom en/fr) ; pilotes `gpu`/`network`/`audio` avec date `AAAA-MM-JJ` ; fabricant et modèle de la carte mère | [[tools.rs]] |
@@ -49,7 +51,7 @@ Tout ce qui suit est CONFIRMÉ (code de `staging`, 10/11, commit `ee77d4f`).
 | `LicenseState`, `LicenseStatus`, `LoginResult`, `LicenseError` | état `active`/`none`/`expired`/`unconfigured`, e-mail, offre, indice de clé, échéance, `needsRefresh`, `deviceName` ; connexion `activationRequired` ou `active` | [[license.rs]] |
 | `ItemStatus`, `ItemEvent`, `LogEvent`, `DoneEvent`, `ResetDone` | événements d'un lot (statut par élément, ligne de journal, fin avec `ok`, `failed`, `skipped`, `restoreFailed`, `cancelled`, `logFile`) ; remise à zéro en arrière-plan (`ok`, `failed`) | [[runner.rs]], [[reset.rs]] |
 
-### L'interface `Api` : 82 membres, 66 commandes Tauri, 12 événements
+### L'interface `Api` : 88 membres, 71 commandes Tauri, 13 événements
 Chaque ligne : nom dans `api` → commande Rust (paramètres) → ce que fait le simulateur.
 
 **Système et moteur des tweaks**
@@ -129,6 +131,9 @@ Chaque ligne : nom dans `api` → commande Rust (paramètres) → ce que fait le
 | `updateInstall()` | `update_install` (l'app se ferme) | 1,2 s puis recharge la page |
 | `backgroundGet()` / `backgroundSet(prefs)` | `background_get` / `background_set { prefs }` ; erreurs `shortcut` et `autostart:…` | préférences par défaut : zone de notification oui, lancement avec Windows oui, barre oui, `Alt+X`, pas épinglée, langue `fr`, les 3 options de partie oui ; `backgroundSet` vérifie le raccourci par l'expression `^((Ctrl|Alt|Shift|Super)\+)*(F\d{1,2}|[A-Z0-9]|[A-Za-z]+)$` et ne change pas les 3 options de partie (comme le vrai `background_set`) |
 | `sessionState()` / `sessionSetPrefs(gpu, power, checks, priority)` / `onSession(cb)` | `session_state` / `session_set_prefs` / événement `games:session` | partie en cours avec `?playing` ou dans `overlay.html` ; vérifications OneDrive et OBS ; 2 jeux sur la carte performante ; `multiGpu: true` |
+| `sessionState()` / `sessionSetPrefs(gpu, power, checks)` / `onSession(cb)` | `session_state` / `session_set_prefs` / événement `games:session` | partie en cours avec `?playing` ou dans `overlay.html` ; vérifications OneDrive et OBS ; 2 jeux sur la carte performante ; `multiGpu: true` |
+| `displayInfo()` / `displayProfiles()` / `displayState()` | `display_info` / `display_profiles` / `display_state` | carte NVIDIA (`?amd` : AMD, `?intel` : pas de saturation), écran « ZOWIE XL LCD » 1920×1080 à 240 Hz avec 10 résolutions ; profils gardés dans `localStorage` `rago.demoDisplay` ; rien de posé |
+| `displaySetProfile(id, profile)` / `displayPreview(colors)` / `onDisplayState(cb)` | `display_set_profile { id, profile }` / `display_preview { colors }` / événement `display:state` | enregistre (clé `mc:java` pour Minecraft Java) ; refuse `premium:no_license` pour un pro nouveau sans licence de démo, comme le vrai moteur ; l'aperçu émet `display:state` avec `colors: "preview"` |
 | `overlayInfo()` | `overlay_info` | mode `panel` (`pill` avec `?pill`), jeu « Minecraft », `passive` avec `?passive` |
 | `overlayLive()` | `overlay_live` | FPS 238–252, ping 21–25, `pingEstimate` avec `?estimate` |
 | `overlayClose()` / `overlaySetPin(pin)` / `overlayOpenApp(page?)` | `overlay_close` / `overlay_set_pin` / `overlay_open_app { page }` | rien / note l'épingle / rien |
@@ -167,13 +172,13 @@ Les **12 événements** écoutés par l'interface sont donc : `run:item`, `run:l
   2. une variante marquée `revert` dans le catalogue sur un réglage déjà appliqué est notée comme une annulation, **sauf** pour `rbw_mode` (son « Désactivé » lance un script complet) ;
   3. `rbw_mode` appliqué est noté `windowsValues: true` et `backup: false`.
   Le lot se termine par `run:done` avec un faux chemin de journal.
-- **Persistance de la démo** dans le `localStorage` du navigateur : `rago.demoApplied` (réglages appliqués), `rago.demoLicense` (adresse Premium). Les autres réglages de démo sont des interrupteurs à poser à la main dans la console : `rago.demoRestoreFail`, `rago.demoRepair`, `rago.demoNoGpu`, `rago.demoSim` = `revoked`.
-- **Paramètres d'adresse de démo** : `?why=<étape>` (diagnostic Rago Route), `?playing` (partie en cours), `?fastnet` (test réseau rapide), `?update` (mise à jour prête), `?pill`, `?passive`, `?estimate` (barre en jeu, avec `overlay.html`).
+- **Persistance de la démo** dans le `localStorage` du navigateur : `rago.demoApplied` (réglages appliqués), `rago.demoLicense` (adresse Premium), `rago.demoDisplay` (couleurs et résolution par jeu). Les autres réglages de démo sont des interrupteurs à poser à la main dans la console : `rago.demoRestoreFail`, `rago.demoRepair`, `rago.demoNoGpu`, `rago.demoSim` = `revoked`.
+- **Paramètres d'adresse de démo** : `?why=<étape>` (diagnostic Rago Route), `?playing` (partie en cours), `?fastnet` (test réseau rapide), `?update` (mise à jour prête), `?pill`, `?passive`, `?estimate` (barre en jeu, avec `overlay.html`), `?amd`, `?intel` (page Couleurs et résolution : carte AMD, écran sans saturation).
 - **Remise à zéro simulée** (`mockReset`) : 1,5 s après une déconnexion ou un abonnement révoqué, vide les réglages appliqués et émet `reset:done`.
 
 ## Données touchées
 - Vraie app : rien directement ; tout passe par les commandes Rust.
-- Démo : `localStorage` (`rago.demoApplied`, `rago.demoLicense`, et les interrupteurs ci-dessus), presse-papiers, téléchargements de fichiers `.rago`.
+- Démo : `localStorage` (`rago.demoApplied`, `rago.demoLicense`, `rago.demoDisplay`, et les interrupteurs ci-dessus), presse-papiers, téléchargements de fichiers `.rago`.
 
 ## Erreurs et cas limites
 - Chaque accès à `localStorage` est dans un `try/catch` (navigateur sans stockage).
@@ -182,9 +187,9 @@ Les **12 événements** écoutés par l'interface sont donc : `run:item`, `run:l
 - `asLicenseError` ne lève jamais : un rejet inconnu devient `server_error`.
 
 ## Liens avec le reste
-- Appelé par : [[store.tsx]] (lots, licence, historique, événements), toutes les pages ([[Dashboard.tsx]], [[Games.tsx]], [[Tools.tsx]], [[NetOpt.tsx]], [[NetTest.tsx]], [[RouteTab.tsx]], [[Settings.tsx]], [[Share.tsx]], [[Analysis.tsx]]), les composants ([[LicenseGate.tsx]], [[LiveStatsCard.tsx]], [[BackgroundCard.tsx]], [[SessionCard.tsx]], [[RbwStatus.tsx]], [[UpdateCard.tsx]], [[TitleBar.tsx]], [[ResetToast.tsx]]) et la barre en jeu [[Overlay.tsx]].
+- Appelé par : [[store.tsx]] (lots, licence, historique, événements), toutes les pages ([[Dashboard.tsx]], [[Games.tsx]], [[Display.tsx]], [[Tools.tsx]], [[NetOpt.tsx]], [[NetTest.tsx]], [[RouteTab.tsx]], [[Settings.tsx]], [[Share.tsx]], [[Analysis.tsx]]), les composants ([[LicenseGate.tsx]], [[LiveStatsCard.tsx]], [[BackgroundCard.tsx]], [[SessionCard.tsx]], [[RbwStatus.tsx]], [[UpdateCard.tsx]], [[TitleBar.tsx]], [[ResetToast.tsx]]) et la barre en jeu [[Overlay.tsx]].
 - Côté Rust : commandes déclarées dans [[lib.rs]], qui délègue aux modules cités dans le tableau des types.
-- Fonctionnalités : [[Moteur des tweaks]], [[Licence dans l'app]], [[Barre en jeu]], [[Proxy|Rago Route]], [[Test réseau]], [[Packet Optimizer]], [[Page Outils]].
+- Fonctionnalités : [[Moteur des tweaks]], [[Licence dans l'app]], [[Barre en jeu]], [[Couleurs et résolution]], [[Proxy|Rago Route]], [[Test réseau]], [[Packet Optimizer]], [[Page Outils]].
 
 ## Tests
 Aucun test automatique côté front. Le simulateur sert de banc d'essai manuel avec `npm run window` (voir [[Configuration du front (Vite, npm)]] et [[Développer et tester]]).

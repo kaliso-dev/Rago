@@ -3,13 +3,14 @@ type: code
 tags: [code, app, react, page, jeux]
 fichier: app/src/pages/Games.tsx
 lignes: 558
+lignes: 572
 maj: 2026-11-11
 ---
 # Games.tsx
 
 La page **« Jeux »** (bibliothèque) : jeux trouvés sur le PC, un preset par jeu, « Optimiser et jouer », launchers installés. Fiche parente : [[Code de l'app (interface)]]. Fonctionnalité : [[Bibliothèque de jeux]] (RAG-57). Côté Rust : [[games.rs]].
 
-Tout ce qui suit est CONFIRMÉ (code de `staging`, 10/11, commit `ee77d4f`).
+Tout ce qui suit est CONFIRMÉ (code de `staging`, 10/11, commit `ee77d4f`). Ajout du 11/11 (puce « Couleurs et résolution », [[Couleurs et résolution]]) : branche `claude/project-thread-7n0ikn`.
 
 ## Rôle et place dans l'ensemble
 - Affichée par [[App.tsx]] quand `page === "games"`. Entrée « Jeux » de la [[Sidebar.tsx]], avec une puce « Nouveau » tant que la page n'a pas été vue ([[seen.ts]]).
@@ -69,6 +70,7 @@ Les jeux dont `launcher === "minecraft"` sont les launchers et clients Minecraft
 - Image, état (« En cours », « Dernière partie · il y a 2 h », « Pas encore lancé »), nom (« Minecraft · Lunar Client » pour un client).
 - Puces :
   - le preset ;
+  - **« Couleurs et résolution »** : ce qui est réglé pour ce jeu (« Saturation 55 % · 1440×1080 » ; une saturation de 50 % n'est pas montrée), sinon le nom de la page. Un clic ouvre [[Display.tsx]] sur ce jeu (`goTo("display", id)`). Les profils sont lus une fois au montage (`api.displayProfiles()`, commande `display_profiles`) ;
   - le launcher (ou « Ajouté par toi ») ;
   - la corbeille « Retirer de la bibliothèque ». Elle demande deux clics, et le texte précise que le jeu reste installé. Elle appelle `api.gameRemove` pour le jeu, ou pour chaque client de la tuile Minecraft.
 - Pendant une partie, les vérifications de la session sont affichées (`SessionChecks` et `useSession` de [[SessionCard.tsx]]).

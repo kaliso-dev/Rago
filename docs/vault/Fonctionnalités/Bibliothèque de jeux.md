@@ -17,6 +17,7 @@ Page « Jeux » (groupe « En jeu »). RAG-57. Code : [[games.rs]], [[icon.rs]],
 - « En cours » / « Dernière partie » : processus lancés depuis le dossier du jeu, regardés toutes les 4 s.
 - **Réglages conseillés** (PR #91 du 11/11, pas encore dans `staging`) : sous le jeu en avant, les réglages à changer dans le jeu que conseillent les pros (VALORANT, Fortnite, Counter-Strike 2, Apex Legends, PUBG, League of Legends, Marvel Rivals, THE FINALS), à cocher « fait » ; ouvert quand le jeu tourne. Voir [[Conseils au lancement du jeu]].
 - « Retirer de la bibliothèque » (deux clics) ne désinstalle rien.
+- **Couleurs et résolution** (codée le 11/11 sur la branche `claude/project-thread-7n0ikn`, **pas encore dans une version**) : une puce sur la fiche du jeu (« Saturation 55 % · 1440×1080 », ou « Couleurs et résolution » quand rien n'est réglé) ouvre la page [[Couleurs et résolution]] sur ce jeu ; lancé depuis Jeux, le jeu démarre déjà dans sa résolution.
 
 Liens : [[Barre en jeu]], [[Pendant la partie]], [[Problèmes joueurs]] (curseur perdu après Optimiser et jouer).
 
@@ -24,3 +25,4 @@ Liens : [[Barre en jeu]], [[Pendant la partie]], [[Problèmes joueurs]] (curseur
 - [[games.rs]] : détection par launcher (Steam, Epic, Riot, Battle.net, Ubisoft, Xbox, Roblox, Minecraft), comptes Windows multiples, 15 launchers, lancement sans droits administrateur (jeton de l'Explorateur), images dans `art\`, suivi des parties (`games.json`).
 - [[icon.rs]] (icône PNG d'un exe : logos des launchers et des jeux), [[session.rs]] (ce que l'app fait pendant la partie), [[lib.rs]] (boucle de fond toutes les 4 s, événements `games:running` et `games:session`), [[bridge.rs]] (commandes `games` et `game_launch` pour [[Rago OS]]).
 - [[GameTips.tsx]] et [[tips.ts]] (PR #91) : réglages conseillés sous le jeu en avant.
+- Couleurs et résolution (branche du 11/11) : [[display.rs]] (`game_launch` y pose la résolution avant le lancement), [[Display.tsx]] ; puce dans [[Games.tsx]].

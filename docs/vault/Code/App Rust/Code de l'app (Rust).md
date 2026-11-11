@@ -3,16 +3,18 @@ type: code
 tags: [code, app, rust, carte]
 fichier: app/src-tauri/
 lignes: 19 890 (40 fichiers .rs de src/), plus build.rs 66, embed_scripts.rs 98, netopt/*.ps1 932
+lignes: 21 081 (41 fichiers .rs de src/), plus build.rs 66, embed_scripts.rs 98, netopt/*.ps1 932
 maj: 2026-11-11
 ---
 # Code de l'app (Rust)
 
 Carte du **cœur Rust de Rago Optimizer** (`app/src-tauri/`) : chaque module en une ligne, qui appelle qui, l'état partagé, les fils qui tournent en permanence, les événements envoyés à l'interface, les fichiers écrits sur disque et les clés de registre que l'app touche elle-même. Une note par fichier détaille le reste. Vue d'ensemble : [[Architecture de l'app]], [[App Windows]]. Interface React : [[Code de l'app (interface)]]. Scripts des réglages : [[Code du générateur de catalogue]].
 
-Tout est CONFIRMÉ (code de `staging`, 10/11, commit `ee77d4f`).
+Tout est CONFIRMÉ (code de `staging`, 10/11, commit `ee77d4f`). Ajouts du 11/11 ([[display.rs]] pour [[Couleurs et résolution]]) : branche `claude/project-thread-7n0ikn`, jamais testés sur Windows.
 
 ## Comment lire ce code
 - Point d'entrée : [[main.rs]] appelle `run()` de [[lib.rs]], qui déclare les **38 modules**, crée l'état partagé et enregistre les **82 commandes** que l'interface appelle par `invoke` ([[api.ts]]) : 76 sur `staging`, 6 de plus pour la page Outils dans la PR #90 (11/11, pas encore fusionnée).
+- Point d'entrée : [[main.rs]] appelle `run()` de [[lib.rs]], qui déclare les **39 modules**, crée l'état partagé et enregistre les **81 commandes** que l'interface appelle par `invoke` ([[api.ts]]).
 - L'interface n'a **aucun accès réseau** (CSP, [[Configuration Tauri]]) : tout appel au serveur passe par une commande Rust.
 - L'app tourne **en administrateur** (`app.manifest`) : presque tous les réglages écrivent dans `HKLM`, les services ou le BCD.
 - Les scripts des réglages ne sont **jamais en clair** dans l'exe : chiffrés à la compilation ([[build.rs]], [[embed_scripts.rs]], [[seal.rs]]), le paquet Premium s'ouvre avec la clé donnée par le serveur à une licence active ([[license.rs]]).
@@ -24,6 +26,7 @@ Tout est CONFIRMÉ (code de `staging`, 10/11, commit `ee77d4f`).
 |---|---|---|
 | [[main.rs]] | 6 | lance `rago_hub_lib::run()`, sans console en release |
 | [[lib.rs]] | 1 594 | état partagé, 82 commandes, démarrage (`run()`), réponses au pont de Rago OS |
+| [[lib.rs]] | 1 634 | état partagé, 81 commandes, démarrage (`run()`), réponses au pont de Rago OS |
 | [[instance.rs]] | 283 | une seule instance : mutex Windows, réveil de la fenêtre déjà ouverte, attente de la désinstallation |
 | [[background.rs]] | 294 | préférences d'arrière-plan, icône près de l'horloge, tâche planifiée de lancement avec Windows |
 | [[icon.rs]] | 189 | extrait l'icône d'un exe en PNG (bibliothèque de jeux) |
@@ -37,7 +40,7 @@ Tout est CONFIRMÉ (code de `staging`, 10/11, commit `ee77d4f`).
 | [[runner.rs]] | 995 | lance un lot de réglages un par un (relevé, script, annulation), journal et événements |
 | [[backup.rs]] | 1 347 | relève et remet l'état d'avant (registre, BCD, tâches, alimentation), `applied.json` chiffré |
 | [[history.rs]] | 292 | historique chiffré des réglages lancés (`history.json`) |
-| [[reset.rs]] | 520 | remise à zéro : fin de licence, désinstallation (`--reset-tweaks`) |
+| [[reset.rs]] | 522 | remise à zéro : fin de licence, désinstallation (`--reset-tweaks`) |
 | [[seal.rs]] | 156 | chiffrement des scripts et des fichiers natifs (HMAC-SHA256), clés hors ligne et par version |
 | [[assets.rs]] | 139 | déchiffre `LowLatency.pow` et `extremelatencylow.nip` dans un dossier temporaire (`%RAGO_RES%`) |
 | [[shell.rs]] | 65 | lance un programme sans fenêtre, droits administrateur |
@@ -63,8 +66,9 @@ Tout est CONFIRMÉ (code de `staging`, 10/11, commit `ee77d4f`).
 ### Jeux et parties
 | Module | Lignes | Rôle |
 |---|---|---|
-| [[games.rs]] | 1 929 | bibliothèque de jeux : jeux et launchers installés, images, lancement, jeux en cours |
+| [[games.rs]] | 1 936 | bibliothèque de jeux : jeux et launchers installés, images, lancement, jeux en cours |
 | [[overlay.rs]] | 751 | barre en jeu : jeu au premier plan, raccourci Alt+X, fenêtre de la barre |
+| [[display.rs]] | 1 560 | [[Couleurs et résolution]] : saturation (NVIDIA, AMD), luminosité, contraste et gamma quand le jeu est au premier plan, résolution étirée le temps de la partie, résolution dans les fichiers de Valorant, Fortnite et CS2 |
 | [[session.rs]] | 432 | [[Pendant la partie]] : carte graphique performante, plan d'alimentation, défait après |
 | [[boost.rs]] | 224 | Mode jeu total demandé par Rago OS : services non essentiels arrêtés puis relancés |
 | [[fps.rs]] | 286 | FPS du jeu par PresentMon, résumé de la dernière partie |
@@ -102,12 +106,13 @@ Réglages     runner ─► catalog, backup, history, assets, shell, minecraft, 
              catalog ─► seal, assets, backup (type Undo), shell
              backup  ─► catalog, history, license (chiffrement DPAPI), seal, shell
              reset   ─► runner, backup, catalog, history, license, netopt (put_back),
-                        session (undo_all), minecraft, repair, system, assets
+                        session (undo_all), display (undo_all), minecraft, repair, system, assets
              repair  ─► backup, catalog, history, shell
 Licence      license ─► history, shell          account ─► license
 PC           system ─► assets, shell   tools ─► shell   analysis ─► games, session, shell
 Jeux         games ─► icon, reg, shell
              overlay ─► games, fps, gameping, background
+             display ─► games, session, reg
              session ─► reg, shell, system, background
              gameping ─► flows, icmp, mcping        flows ─► icmp     fps ─► shell
 Réseau       netopt ─► catalog, runner, seal, history, shell
@@ -122,12 +127,13 @@ Sans dépendance interne : shell, reg, seal, icmp, mcping, icon, memory, stats, 
 Seuls [[overlay.rs]], [[background.rs]] et [[update.rs]] reçoivent un `AppHandle` de Tauri ; [[runner.rs]] émet ses événements par une fonction passée en paramètre, ce qui permet de le tester sans fenêtre.
 
 ## L'état partagé
-`AppState` (détail dans [[lib.rs]]) : `runner`, `history`, `ledger` (`applied.json`), `license`, `account`, `reset`, `system` (cache de la sonde), `stats`, `library` (jeux), `updates`, `resource_dir`, `data_dir`, `repaired`. Gérés à part : `Background`, `Overlay`, `Session`, `Boost`.
+`AppState` (détail dans [[lib.rs]]) : `runner`, `history`, `ledger` (`applied.json`), `license`, `account`, `reset`, `system` (cache de la sonde), `stats`, `library` (jeux), `updates`, `resource_dir`, `data_dir`, `repaired`. Gérés à part : `Background`, `Overlay`, `Session`, `Display`, `Boost`.
 
 ## Les fils qui tournent
 | Fil | Lancé par | Rythme | Rôle |
 |---|---|---|---|
-| fil des jeux | `run()` de [[lib.rs]] | 4 s | jeux en cours, [[session.rs]], fin du Mode jeu total après ≈ 20 s sans jeu |
+| fil des jeux | `run()` de [[lib.rs]] | 4 s | jeux en cours, [[session.rs]], résolution des jeux ([[display.rs]]), fin du Mode jeu total après ≈ 20 s sans jeu |
+| fil des couleurs | [[display.rs]] (`spawn`) | 250 ms tant qu'un jeu lancé a des couleurs (sinon endormi) | couleurs du jeu au premier plan, aperçu |
 | `rago-overlay` | [[overlay.rs]] | 700 ms | jeu au premier plan, barre en jeu |
 | `rago-stats` | [[stats.rs]] | 1 s | mesures en direct ; s'arrête 5 s après la dernière demande |
 | `update::watch` | [[update.rs]] | 4 h (30 min après un échec) | cherche une mise à jour ; s'arrête une fois la mise à jour téléchargée |
@@ -152,6 +158,7 @@ Seuls [[overlay.rs]], [[background.rs]] et [[update.rs]] reçoivent un `AppHandl
 | `app:goto` | [[lib.rs]] | page à ouvrir (demande de Rago OS ou de la barre en jeu) |
 | `update:ready` | [[update.rs]] | mise à jour téléchargée |
 | `overlay:mode` | [[overlay.rs]] | mode de la barre en jeu (panneau, pastille) |
+| `display:state` | [[lib.rs]] (fil des jeux, fil des couleurs de [[display.rs]], `game_launch`, `display_set_profile`) | couleurs et résolution posées en ce moment, dernière erreur |
 
 Ils sont écoutés par [[store.tsx]] et les pages de l'interface.
 
@@ -168,6 +175,7 @@ Ils sont écoutés par [[store.tsx]] et les pages de l'interface.
 | `<data>\games.json`, `<data>\art\` | [[games.rs]] | jeux ajoutés à la main, images des jeux |
 | `<data>\overlay-games.json`, `<data>\last-match.json` | [[overlay.rs]], [[fps.rs]] | jeux de la barre, résumé de la dernière partie |
 | `<data>\session.json` | [[session.rs]] | ce que l'app a changé le temps d'une partie |
+| `<data>\display.json`, `<data>\display-restore.json` | [[display.rs]] | couleurs et résolution par jeu, valeurs d'avant Rago des fichiers des jeux ; ce qu'il faut remettre (couleurs, rampes, résolution) |
 | `<data>\boost.json` | [[boost.rs]] | services arrêtés par le Mode jeu total |
 | `<data>\netopt\` (`applied.json`, `snapshot.json`) | [[netopt.rs]] | dernière application du Packet Optimizer et valeurs d'avant |
 | `<data>\reports\rago-report-AAAA-MM-JJ-HHMM.txt` | [[report.rs]] | rapports pour le support (les 10 derniers) |
@@ -185,6 +193,7 @@ Ils sont écoutés par [[store.tsx]] et les pages de l'interface.
 En dehors des scripts des réglages ([[Scripts embarqués (JSON)]]) :
 - **Écrit** : `HKCU\Software\Microsoft\DirectX\UserGpuPreferences` (carte graphique performante par jeu, [[session.rs]]) ; `HKLM\SOFTWARE\Microsoft\Windows NT\CurrentVersion\SystemRestore` `SystemRestorePointCreationFrequency` = 0 (point de restauration, [[runner.rs]]) ; `CoalescingTimerInterval` supprimé de 8 clés (`Session Manager\kernel`, `Executive`, `Memory Management`…, [[repair.rs]]).
 - **Lu** : `HKLM\SOFTWARE\Microsoft\Cryptography` `MachineGuid` (empreinte, [[license.rs]]) ; `HKLM\SYSTEM\Select` `Current` et `…\Control\Power` `HibernateEnabled` ([[backup.rs]]) ; `GameConfigStore`, `GameDVR`, `PushNotifications` ([[analysis.rs]]) ; clés des launchers et `Uninstall` ([[games.rs]]) ; clés lues par le vérificateur RBW ([[rbw.rs]]).
+- **Pilotes, écran et fichiers des jeux** ([[display.rs]]) : saturation NVIDIA (NVAPI) et AMD (ADL), rampe gamma, mode d'affichage temporaire (jamais écrit dans le registre), clés de résolution des fichiers de réglages de Valorant, Fortnite et CS2 ; lit `HKCU\Software\Valve\Steam` `SteamPath` et `HKLM\SOFTWARE\WOW6432Node\Valve\Steam` `InstallPath`.
 - **Tâche planifiée** « Rago Optimizer » (ou « Rago Optimizer Staging ») : lancement avec Windows ([[background.rs]]), supprimée à la désinstallation ([[Installateur NSIS]]).
 - **Objets nommés** : `Local\<identifiant>.instance` et `Local\<identifiant>.show` ([[instance.rs]]) ; canal `\\.\pipe\<identifiant>.bridge` ([[bridge.rs]]) ; session ETW « Rago-GamePing » ([[flows.rs]]) ; session PresentMon « RagoOptimizerFps » ([[fps.rs]]).
 

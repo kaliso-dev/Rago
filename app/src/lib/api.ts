@@ -246,6 +246,55 @@ export interface SessionCheck {
   /** applis concernées ; pour "refresh" : la fréquence actuelle puis la plus haute (Hz) */
   apps: string[];
 }
+/** Couleurs d'un jeu (display.rs) : posées seulement quand le jeu est au premier plan. */
+export interface DisplayColors {
+  /** Digital Vibrance façon panneau NVIDIA : 50 (Windows) à 100 %. AMD : saturation 100 à 200. */
+  vibrance: number;
+  /** -30 à 30, 0 = Windows */
+  brightness: number;
+  /** -30 à 30, 0 = Windows */
+  contrast: number;
+  /** gamma × 100 : 70 à 150, 100 = Windows */
+  gamma: number;
+}
+/** Résolution d'un jeu : posée sur l'écran principal le temps de la partie. */
+export interface DisplayResolution {
+  width: number;
+  height: number;
+  /** étirée sur tout l'écran (sinon bandes noires) */
+  stretch: boolean;
+  /** aussi écrite dans le fichier de réglages du jeu (Valorant, Fortnite, CS2) */
+  gameFile: boolean;
+}
+export interface DisplayProfile {
+  colors: DisplayColors | null;
+  resolution: DisplayResolution | null;
+  /** preset de pro importé (id de data/pros.json) ; Premium */
+  pro: string | null;
+}
+export interface DisplayMonitor {
+  device: string;
+  name: string;
+  width: number;
+  height: number;
+  hz: number;
+  /** résolutions que l'écran accepte, de la plus grande à la plus petite */
+  modes: [number, number][];
+}
+export interface DisplayInfo {
+  /** qui fait la saturation sur l'écran principal ; null : pas de saturation (luminosité, contraste, gamma restent) */
+  vibrance: "nvidia" | "amd" | null;
+  monitor: DisplayMonitor | null;
+}
+export interface DisplayState {
+  /** jeu dont les couleurs sont posées en ce moment (« preview » pendant un aperçu) */
+  colors: string | null;
+  /** jeu dont la résolution est posée */
+  resolution: string | null;
+  /** "vibrance", "ramp", "mode", "file:read_only", "file:missing", "file:write" */
+  error: string | null;
+}
+
 export interface SessionState {
   playing: boolean;
   /** mode Performances élevées mis pour la partie */
@@ -569,6 +618,16 @@ export interface Api {
   /** Coche ou décoche un réglage conseillé ; renvoie la liste cochée. */
   tipsMark(id: string, done: boolean): Promise<string[]>;
   onTipsDone(cb: (ids: string[]) => void): Promise<UnlistenFn>;
+  /** Couleurs et résolution par jeu (display.rs) */
+  displayInfo(): Promise<DisplayInfo>;
+  /** Profils par jeu (« mc:java » pour Minecraft Java). */
+  displayProfiles(): Promise<Record<string, DisplayProfile>>;
+  displayState(): Promise<DisplayState>;
+  /** Enregistre (null : retire) ; erreur « premium:no_license » pour un preset de pro sans Premium. */
+  displaySetProfile(id: string, profile: DisplayProfile | null): Promise<DisplayState>;
+  /** Aperçu des couleurs sur l'écran principal (rendu tout seul après 8 s) ; null : fin de l'aperçu. */
+  displayPreview(colors: DisplayColors | null): Promise<void>;
+  onDisplayState(cb: (s: DisplayState) => void): Promise<UnlistenFn>;
   /** Barre en jeu (fenêtre « overlay ») */
   overlayInfo(): Promise<OverlayInfo>;
   overlayLive(): Promise<OverlayLive>;
@@ -692,6 +751,12 @@ const tauriApi: Api = {
   tipsDone: () => invoke("tips_done"),
   tipsMark: (id, done) => invoke("tips_mark", { id, done }),
   onTipsDone: (cb) => listen<string[]>("tips:done", (e) => cb(e.payload)),
+  displayInfo: () => invoke("display_info"),
+  displayProfiles: () => invoke("display_profiles"),
+  displayState: () => invoke("display_state"),
+  displaySetProfile: (id, profile) => invoke("display_set_profile", { id, profile }),
+  displayPreview: (colors) => invoke("display_preview", { colors }),
+  onDisplayState: (cb) => listen<DisplayState>("display:state", (e) => cb(e.payload)),
   overlayInfo: () => invoke("overlay_info"),
   overlayLive: () => invoke("overlay_live"),
   overlayClose: () => invoke("overlay_close"),
@@ -837,6 +902,15 @@ let mockGames: Game[] = [
   { id: "epic:Fortnite", name: "Fortnite", launcher: "epic", client: null, kind: "shooter", installDir: null, lastPlayed: null, running: false },
   { id: "epic:Sugar", name: "Rocket League", launcher: "epic", client: null, kind: "other", installDir: null, lastPlayed: null, running: false },
 ];
+// démo des couleurs et de la résolution par jeu : les profils survivent au rechargement, comme display.json
+const mockDisplay: Record<string, DisplayProfile> = (() => {
+  try {
+    return JSON.parse(localStorage.getItem("rago.demoDisplay") ?? "{}") as Record<string, DisplayProfile>;
+  } catch {
+    return {};
+  }
+})();
+let mockDisplayState: DisplayState = { colors: null, resolution: null, error: null };
 let mockStatsStart = 0;
 const mockLoad = { ram: 47, cpu: 14, gpu: 9 };
 // démo : les réglages appliqués survivent au rechargement de la page, comme applied.json dans l'app
@@ -1403,6 +1477,36 @@ const mockApi: Api = {
     return mockBackground;
   },
   onSession: (cb) => on("games:session", cb),
+  displayInfo: async () => {
+    await sleep(200);
+    // ?amd / ?intel : la démo montre une carte AMD, ou un écran sans saturation
+    const q = new URLSearchParams(location.search);
+    const modes: [number, number][] = [[1920, 1080], [1680, 1050], [1600, 900], [1440, 1080], [1366, 768], [1280, 1024], [1280, 960], [1280, 720], [1024, 768], [800, 600]];
+    return {
+      vibrance: q.has("intel") ? null : q.has("amd") ? "amd" : "nvidia",
+      monitor: { device: "\\\\.\\DISPLAY1", name: "ZOWIE XL LCD", width: 1920, height: 1080, hz: 240, modes },
+    };
+  },
+  displayProfiles: async () => ({ ...mockDisplay }),
+  displayState: async () => ({ ...mockDisplayState }),
+  displaySetProfile: async (id, profile) => {
+    await sleep(120);
+    const key = id.startsWith("mc:") && id !== "mc:bedrock" ? "mc:java" : id;
+    if (profile?.pro && profile.pro !== mockDisplay[key]?.pro && mockLicense().state !== "active") throw "premium:no_license";
+    if (profile && (profile.colors || profile.resolution || profile.pro)) mockDisplay[key] = profile;
+    else delete mockDisplay[key];
+    try {
+      localStorage.setItem("rago.demoDisplay", JSON.stringify(mockDisplay));
+    } catch {
+      /* démo sans stockage */
+    }
+    return { ...mockDisplayState };
+  },
+  displayPreview: async (colors) => {
+    mockDisplayState = { ...mockDisplayState, colors: colors ? "preview" : null };
+    emit("display:state", { ...mockDisplayState });
+  },
+  onDisplayState: (cb) => on("display:state", cb),
   tipsDone: async () => mockTipsDone,
   tipsMark: async (id, done) => {
     mockTipsDone = done ? [...new Set([...mockTipsDone, id])] : mockTipsDone.filter((x) => x !== id);
