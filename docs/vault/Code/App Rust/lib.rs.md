@@ -115,7 +115,7 @@ Ordre de `generate_handler!`. Côté interface, chaque commande est appelée par
 | `session_state` | → `session::State` | mode d'alimentation, carte graphique, vérifications pendant la partie |
 | `session_set_prefs` | `gpu, power, checks, priority?` → `Prefs` | enregistre les 4 options (`priority` absent = inchangé) « pendant la partie » ; prises en compte au prochain tour du fil des jeux (4 s au plus) |
 | `tips_done` | → `Vec<String>` | réglages en jeu cochés « fait » ([[Conseils au lancement du jeu]]) |
-| `mouse_apps` | → `Vec<mouse::MouseApp>` | logiciels lancés entre la souris et le jeu ([[Page Souris]], [[mouse.rs]]), lecture seule, dans un fil à part (`spawn_blocking`) ; PR #NN |
+| `mouse_apps` | → `Vec<mouse::MouseApp>` | logiciels lancés entre la souris et le jeu ([[Page Souris]], [[mouse.rs]]), lecture seule, dans un fil à part (`spawn_blocking`) ; PR #96 |
 | `tips_mark` | `id, done` → `Vec<String>` | coche ou décoche un réglage en jeu (`Session::tips_mark`), puis émet `tips:done` (la liste) et `games:session` (l'état, `tipsLeft` recalculé) |
 | `overlay_info` / `overlay_live` | → `Info` / `Live` | état de la barre en jeu |
 | `overlay_close` | → `()` | ferme la barre |

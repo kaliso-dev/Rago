@@ -9,7 +9,7 @@ maj: 2026-11-11
 
 La [[Page Souris]] (page `mouse` de [[App.tsx]], entrée « Souris » de [[Sidebar.tsx]]). Styles dans `app/src/styles/mouse.css` (40 lignes, importé par [[main.tsx (app)]]). Fiche parente : [[Code de l'app (interface)]].
 
-**Fichier ajouté le 11/11 (PR #NN vers `staging`), jamais testé sur Windows.** Textes en anglais et en français dans le fichier (fonction `L(en, fr)`, comme [[Display.tsx]]), sauf le libellé `nav.mouse` de [[i18n.ts]].
+**Fichier ajouté le 11/11 (PR #96 vers `staging`), jamais testé sur Windows.** Textes en anglais et en français dans le fichier (fonction `L(en, fr)`, comme [[Display.tsx]]), sauf le libellé `nav.mouse` de [[i18n.ts]].
 
 ## Composants
 - `Mouse` : en-tête et deux grilles `.mouse-grid` de deux cartes (`card tools-tile`, comme [[Tools.tsx]]).

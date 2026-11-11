@@ -9,7 +9,7 @@ maj: 2026-11-11
 
 Le moteur de la carte « Entre ta souris et le jeu » de la [[Page Souris]] : quels logiciels de remappage, de macro, de clic automatique ou du fabricant de la souris tournent. **Lecture seule** : il ne ferme rien, n'installe aucun crochet, n'envoie aucune entrée. Fiche parente : [[Code de l'app (Rust)]].
 
-**Fichier ajouté le 11/11 (PR #NN vers `staging`), jamais testé sur Windows.** CONFIRMÉ (code de la branche, 11/11).
+**Fichier ajouté le 11/11 (PR #96 vers `staging`), jamais testé sur Windows.** CONFIRMÉ (code de la branche, 11/11).
 
 ## Ce que le fichier expose
 - `Kind` (sérialisé en minuscules) : `remap` (X-Mouse Button Control), `script` (AutoHotkey), `autoclick` (clic automatique), `vendor` (logiciel du fabricant).

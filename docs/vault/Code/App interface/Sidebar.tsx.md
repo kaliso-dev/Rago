@@ -18,7 +18,7 @@ Tout ce qui suit est CONFIRMÉ (code de `staging`, 10/11, commit `ee77d4f`), sau
 |---|---|
 | (sans titre) | Tableau de bord (`dashboard`), Analyse du PC (`analysis`) |
 | Optimiser | Réseau (`network`), Latence (`latency`), Carte graphique (`gpu`), Windows (`windows`), Outils (`tools`) |
-| En jeu | Hitreg (`hitreg`), Minecraft (`minecraft`), RBW Mod (`rbw`), Mode jeu (`gamemode`), Jeux (`games`), Couleurs et résolution (`display`, ajoutée le 11/11, PR #93), Souris (`mouse`, PR #NN, [[Page Souris]]) |
+| En jeu | Hitreg (`hitreg`), Minecraft (`minecraft`), RBW Mod (`rbw`), Mode jeu (`gamemode`), Jeux (`games`), Couleurs et résolution (`display`, ajoutée le 11/11, PR #93), Souris (`mouse`, PR #96, [[Page Souris]]) |
 | Avancé | Mode expert (`expert`), Restaurer (`restore`) |
 | (bas) | carte de mise à jour, carte du plan gratuit, « Rejoindre le Discord », Paramètres (`settings`) |
 
