@@ -7,7 +7,7 @@ maj: 2026-11-11
 
 Résumé de **chaque fil** du projet Claude « Rago optimizer (suite) », ouvert le 15/10 : ce que Sofiene a demandé (ses mots entre « », avec ses fautes), ce qui a été fait, ce qu'il a décidé, le résultat et ce qui reste. 29 fils au 10/11 (liste revue à 18 h 50 UTC), puis 5 fils ouverts le 11/11 à 00:17 UTC, un par fonction demandée par Sofiene (lus le 11/11 à 00:50 UTC). Source : lecture des fils le 10/11 (CONFIRMÉ), croisée avec [[Pull requests]] et le dépôt. Voir aussi [[Chronologie du projet]], [[Journal]] et [[Décisions]].
 
-Les fils les plus riches ont leur propre note : [[Fil - Nouvelle version backlog et refonte]], [[Fil - Lister les fonctionnalités de la maquette]], [[Fil - Lancer l'essai 3 jours et le gratuit élargi]], [[Fil - Développer les proxys Minecraft]], [[Fil - Améliorer Rago OS avec le design Rago]], [[Fil - Créer le tableau de bord admin complet]].
+Les fils les plus riches ont leur propre note : [[Fil - Nouvelle version backlog et refonte]], [[Fil - Lister les fonctionnalités de la maquette]], [[Fil - Lancer l'essai 3 jours et le gratuit élargi]], [[Fil - Développer les proxys Minecraft]], [[Fil - Créer le tableau de bord admin complet]].
 
 ## Comment lire cette note
 - **Heures en UTC** (Paris : +2 h jusqu'au 24/10, +1 h à partir du 25/10).
@@ -27,7 +27,6 @@ Les fils les plus riches ont leur propre note : [[Fil - Nouvelle version backlog
 | 6 | Visibilité et image de marque sans budget | 17/10 16:44 | 21/10 19:10 | terminé, rangé le 09/11 |
 | 7 | Vidéo YouTube style CleanMyMac | 18/10 22:26 | 19/10 16:45 | terminé, rangé |
 | 8 | Site : nouveautés 1.2.0 et Discord | 19/10 14:44 | 29/10 13:11 | terminé, rangé |
-| 9 | Section Rago OS | 21/10 09:25 | 01/11 17:33 | terminé, rangé le 09/11 |
 | 10 | Ajouter connexion Google, Discord et vérification email | 25/10 21:20 | 28/10 09:39 | terminé, rangé |
 | 11 | Écrire le script du showcase YouTube | 27/10 17:59 | 10/11 14:59 | terminé, rangé |
 | 12 | Generate Kling opening shots for trailer | 28/10 18:00 | 29/10 11:18 | terminé, rangé |
@@ -39,7 +38,6 @@ Les fils les plus riches ont leur propre note : [[Fil - Nouvelle version backlog
 | 18 | Refaire la vidéo TikTok avec le logo Rago | 02/11 18:50 | 02/11 19:06 | terminé, rangé |
 | 19 | Analyser les données Stripe de Rago | 04/11 10:03 | 04/11 14:49 | terminé, rangé |
 | 20 | Développer les proxys Minecraft | 04/11 23:18 | 11/11 | page de vente Rago Route revenue à la version du matin avec des emplacements de gameplay et sur `staging` (11/11) ; attend les clips et les tests de Sofiene |
-| 21 | Améliorer Rago OS avec le design Rago | 06/11 20:59 | 09/11 21:53 | **bloqué** : attend les retours sur test5 |
 | 22 | Faire le point et organiser le contexte | 10/11 13:06 | 10/11 14:43 | terminé, rangé |
 | 23 | Compléter le vault technique de Rago | 10/11 13:06 | 10/11 14:35 | terminé, rangé |
 | 24 | Sauvegarder les clés et régler Supabase | 10/11 14:04 | 10/11 14:34 | **bloqué** : sauvegarde des clés et choix Supabase |
@@ -117,12 +115,6 @@ Fils cités ailleurs mais absents de la liste : un fil « Créer le profil Linke
 - **Résultat** : PR #59 fusionnée en prod le 29/10 à 13:11, depuis le fil 5 (« nickel mais le site avec la section pour la nouvelle feature n'as pas été push »). Voir [[Site]], [[Discord]].
 - **Jamais traité** : « Je veux que tu mixe cette emoji discord avec ces couleurs » (20/10).
 
-## 9. Section Rago OS
-`cmsg_01Mb4hMYwRFctv5wE2NGiASiPzx5QbQxjnPXprEqdrbwGw` · 21/10 09:25 → 01/11 17:33 · terminé. **Premier Rago OS, abandonné le 31/10 (voir [[Décisions]]).**
-- **Demande** (21/10) : un long brief « Mission : concevoir et développer « Rago OS », la section de transformation Windows de notre app » (réversibilité totale, aucun fichier système modifié, compatible anti-triche, consommation quasi nulle) ; 11:00 : « développe moi rago OS et il faut une animation au lancement de l'os sur le bureau comme si c'était vraiment un nouvelle os ». Carte : « Premium, aperçu gratuit ».
-- **Fait** : 68 réglages, 4 profils, moteur qui applique et défait, Rago Shell natif (animation de démarrage, Dynamic Island) ; PR #60 (21/10, vers la branche de la 1.2.0). Après le test de Sofiene (« il n'y a pas assez de changement visuel les menu en rouge sont moche […] qu'il se sente comme chez macos »), une v2 façon macOS (barre en haut, Dock, recherche, centre de contrôle, fonds unis). Les machines Windows de GitHub n'étant plus attribuées (minutes épuisées), l'exe a été compilé dans le conteneur de Claude pour la première fois.
-- **Résultat** : abandonné le 31/10 (« Celui là est abandonné »), PR #60 fermée le 01/11. Le 01/11, logo Rago OS livré en PNG et SVG. Le nouveau [[Rago OS]] est un autre projet (fil 21).
-
 ## 10. Ajouter connexion Google, Discord et vérification email
 `cmsg_01Mb4hMYwRFctv5wE2NGiASi8dkKnQ31qfYoDxSHNBANSB` · 25/10 21:20 → 28/10 09:39 · terminé.
 - **Demande** : « Sur le site j'aimerai intégrer le fait de pouvoir s'inscrire avec google ou discord et aussi à l'inscription sans passer par google ou discord si ils renseigne juste leur mail il faut leur envoyer un mail avec un code de vérification ».
@@ -140,7 +132,7 @@ Fils cités ailleurs mais absents de la liste : un fil « Créer le profil Linke
 ## 13. Créer le vault Obsidian du projet
 `cmsg_01Mb4hMYwRFctv5wE2NGiASiBSeF2GJYTAstDMZ1w4XiHm` · 31/10 16:22 → 01/11 18:13 · terminé.
 - **Fait** : le vault `docs/vault/` et `CLAUDE.md` (PR #67, prod, 31/10 18:04). Sofiene confirme le même jour : « j'ai bien tout déposer dans supabase et le prix est bien à 59,99 c'est normal » (1.2.1 en ligne).
-- **Décisions** : 31/10 18:27, la **règle n°1** : « il faut instorer une règle plus qu'importante A chaque fois qu'un claude travaille sur le projet il doit doit détecter si une infos à changer une parti du projet une feature abandonnée ect et supprimé ou mettre à jours correctement […] tout dois correspondre à l'état acutelle du projet en tout point » ; 18:47, l'ancien Rago OS « est abandonné mais je travaille toujours sur un os sur un autre compte claude » ; 18:49, une page de questions au lieu de messages (« fait moi un fichier modifiable ou interactif en html ») → la page « Questions du vault Rago » ; 01/11 03:16 : « désormais tu devras le faire automatiquement ».
+- **Décisions** : 31/10 18:27, la **règle n°1** : « il faut instorer une règle plus qu'importante A chaque fois qu'un claude travaille sur le projet il doit doit détecter si une infos à changer une parti du projet une feature abandonnée ect et supprimé ou mettre à jours correctement […] tout dois correspondre à l'état acutelle du projet en tout point » ; 18:49, une page de questions au lieu de messages (« fait moi un fichier modifiable ou interactif en html ») → la page « Questions du vault Rago » ; 01/11 03:16 : « désormais tu devras le faire automatiquement ».
 - **Résultat** : PR #68 (règle n°1, notes par fonctionnalité, catalogue généré) fusionnée le 01/11 à 16:07 ; PR #16, #50, #51 et #60 fermées ; [[Linear]] remis à jour (RAG-86 à 91 créés, RAG-16, 21, 76 et 84 annulés) ; Abel ajouté (« acerSHOCK ») ; fils 15 et 16 ouverts par le coordinateur. Voir [[Mettre à jour le vault]], [[Questions ouvertes]].
 
 ## 14. Lister les fonctionnalités de la maquette
@@ -177,10 +169,6 @@ Fils cités ailleurs mais absents de la liste : un fil « Créer le profil Linke
 ## 20. Développer les proxys Minecraft
 `cmsg_01Mb4hMYwRFctv5wE2NGiASiF1ZGcXwk5kz3XBNz7gsfsS` · 04/11 23:18 → 11/11 · attend Sofiene (clips de gameplay à enregistrer pour la page de vente, puis les tests). **Note complète : [[Fil - Développer les proxys Minecraft]].**
 - Des proxys simples (OVHcloud écarté, 4 serveurs Vultr testés) à l'invention de **Rago Route** (double trajet anti-lag, sortie à Paris), du prototype Python au moteur Windows dans l'app, réservé au Premium. Attend les tests de Sofiene sur l'exe de test du 10/11 (partage de connexion du téléphone en USB). Voir [[Proxy]].
-
-## 21. Améliorer Rago OS avec le design Rago
-`cmsg_01Mb4hMYwRFctv5wE2NGiASi3jg4zPcEoa2GEHab3TN9ex` · 06/11 20:59 → 09/11 21:53 · **bloqué**. **Note complète : [[Fil - Améliorer Rago OS avec le design Rago]].**
-- Le nouveau [[Rago OS]] (dépôt `nimbus` du Mac de Sofiene) prend la charte Rago et devient l'extension de l'app (pont local, PR #73 et #74). 5 exe de test du 07/11 au 09/11. Attend les retours de Sofiene sur test5.
 
 ## 22. Faire le point et organiser le contexte
 `cmsg_01Mb4hMYwRFctv5wE2NGiASiH8MyrMxHK4P417NhLMzHKw` · 10/11 13:06 → 14:43 · terminé. Ouvert par le coordinateur.

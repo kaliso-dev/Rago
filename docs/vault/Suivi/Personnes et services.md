@@ -30,5 +30,4 @@ Retour à [[Projet]]. Aucun identifiant ni secret ici ([[Clés et secrets]]).
 | Vultr | serveurs de [[Proxy\|Rago Route]] : sortie à Paris et relais à Frankfurt (environ 5 $ par mois chacun, depuis le 06/11) ; serveurs de test du 05/11 (Frankfurt, Mumbai, New York, Chicago) qui ne servent plus. OVHcloud a été écarté le 05/11 ([[Infrastructure Rago Route]]) |
 | Cloudflare | pas un service de Rago : Hypixel passe par Cloudflare, dont l'entrée la plus proche de la France est à Paris ; c'est pour cela que Rago Route sort à Paris ([[Fil - Développer les proxys Minecraft]]) |
 | GitHub `network-server-rago` | dépôt séparé du serveur Minecraft (combat, lobby, practice, Bed Wars) ; privé, sa CI a vidé les minutes de novembre ; Sofiene doit le rendre public (décision du 10/11, [[CI GitHub Actions]]) ; lien avec le [[Client Minecraft Rago]] : À VÉRIFIER |
-| Dépôt `nimbus` (Mac de Sofiene) | code de [[Rago OS]], branche `rago-design` ; pas sur le GitHub de Rago |
 | Gestionnaire de mots de passe, moniteur de disponibilité | conseillés le 10/11 (Bitwarden pour les clés, un moniteur externe sur `/healthz`) ; adoptés ou non : À VÉRIFIER ([[Clés et secrets]]) |

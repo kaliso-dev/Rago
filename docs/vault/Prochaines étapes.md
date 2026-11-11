@@ -29,7 +29,6 @@ Liste priorisée au 01/11, mise à jour le 11/11. Rien ne se lance sans la deman
 ## Ensuite
 - **[[Page Souris]]** (11/11) : dans `staging` par la PR #96, part avec la 1.3.0 ; la tester sur Windows (fréquence mesurée avec une vraie souris, test de double clic, logiciels repérés) ; confirmer gratuit (q96).
 - **[[Couleurs et résolution]]** (11/11, RAG-95) : dans `staging` depuis le 11/11 (PR #93 fusionnée par la PR #92, demande de Sofiene du 11/11 au matin) ; la tester sur Windows avec la build de test, puis la mettre dans une version quand Sofiene le dit.
-- **[[Rago OS]]** (EN COURS depuis le 07/11) : charte, 3 thèmes, Recherche des réglages, plein écran, Dock masqué, Pastille Live épurée, widgets, touche Windows, lancement instantané, session légère et retour à Windows d'origine faits sur la branche `rago-design` du Mac de Sofiene, avec ses retours du 08/11 (test4) et du 09/11 (test5 : appli Horloge, widget Rago Route, jeu sur tout l'écran, touche Windows fiable). Reste : retours de Sofiene sur test5 (dont le nombre de processus atteint), trouver comment réserver l'OS aux joueurs Premium.
 - [[Client Minecraft Rago]] : projet à part, en cours dans un projet isolé ; rien à faire ici sans demande.
 
 ## Plus tard

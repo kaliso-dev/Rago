@@ -53,7 +53,7 @@ maj: 2026-11-10
 - **Optimizer (hellzerg)** : portable, open source, plus de 20 langues, modèles de configuration.
 - **O&O ShutUp10++** : **feu tricolore par réglage** (vert recommandé, jaune sous conditions, rouge déconseillé), « appliquer seulement les recommandés », point de restauration au premier changement, « tout annuler ».
 - **Process Lasso** : graphique temps réel avec un repère à chaque intervention.
-- **AME Wizard + Atlas OS** : assistant par étapes, FAQ d'erreurs ; idée reprise pour [[Rago OS]].
+- **AME Wizard + Atlas OS** : assistant par étapes, FAQ d'erreurs .
 - **Win11Debloat** : « par défaut » ou « personnalisé », deux choix seulement.
 
 ## D. Optimiseurs joueurs récents (2024-2026)

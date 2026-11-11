@@ -60,7 +60,7 @@ Fermeture de la fenêtre principale : cachée si une remise est en cours ou si l
 - Support : `support_report`, `show_report`.
 
 ### Événements émis vers l'interface
-`run:item`, `run:log`, `run:done` (lot de réglages, [[runner.rs]]), `reset:done`, `netopt:line`, `nettest:sample`, `nettest:measure`, `games:running`, `games:session`, `display:state` (couleurs et résolution posées, dernière erreur), `tips:done` (réglages conseillés cochés), `app:goto` (page à ouvrir, demandée par Rago OS ou la barre en jeu) ([[lib.rs]]), `update:ready` ([[update.rs]]), `overlay:mode` et `overlay:nudge` (rappel des conseils dans la pastille), vers la fenêtre de la barre en jeu ([[overlay.rs]]).
+`run:item`, `run:log`, `run:done` (lot de réglages, [[runner.rs]]), `reset:done`, `netopt:line`, `nettest:sample`, `nettest:measure`, `games:running`, `games:session`, `display:state` (couleurs et résolution posées, dernière erreur), `tips:done` (réglages conseillés cochés), `app:goto` (page à ouvrir, demandée par la barre en jeu) ([[lib.rs]]), `update:ready` ([[update.rs]]), `overlay:mode` et `overlay:nudge` (rappel des conseils dans la pastille), vers la fenêtre de la barre en jeu ([[overlay.rs]]).
 
 ## 4. Interface React (`app/src/`)
 - `main.tsx` → `App.tsx` : barre de titre maison (`decorations: false`), `Sidebar`, page courante, `ApplyBar` (barre « Apply » des changements en attente), `RunOverlay` (suivi d'un lot), fenêtres `Upsell`, `ReviewPrompt`, `ReviewDialog`, `ConfirmDialog`, `SearchPalette`, `ResetToast`, `Splash`.

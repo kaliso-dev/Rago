@@ -35,7 +35,6 @@ Monorepo GitHub `kaliso-dev/rago`, **public** (constaté le 10/11 ; Sofiene : «
    │  e-mails ──► Resend                                   │
    ▼                                                        │
  Rago Optimizer.exe (PC Windows, app/) ── HTTPS ───────────┘ (jamais Stripe directement)
-   │  canal nommé local ◄── Rago OS (bureau, autre programme)
    └─ UDP 25600 chiffré ──► sorties Rago Route (Vultr Paris, relais Frankfurt) ──► Hypixel / Minemen
 ```
 

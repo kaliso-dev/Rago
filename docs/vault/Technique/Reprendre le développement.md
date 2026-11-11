@@ -18,7 +18,7 @@ Monorepo **public** `kaliso-dev/rago` (GitHub l'affiche aussi `kaliso-dev/Rago`)
 | Site de vente | `site/`, `netlify/` | HTML statique généré par Python | Netlify (`rago-optimizer.com`) | [[Netlify]], [[Site]] |
 | Rago Route (tunnel anti-lag) | `proxy/` + `app/src-tauri/src/route.rs` | Python (serveurs), Rust (PC) | 2 VPS Vultr (Paris, Frankfurt) | [[Infrastructure Rago Route]], [[Proxy]] |
 
-Hors dépôt : [[Rago OS]] (bureau Windows, sur le Mac de Sofiene, dossier `nimbus`) parle à l'app par un canal nommé ; [[Client Minecraft Rago]] est un projet à part.
+Hors dépôt : [[Client Minecraft Rago]] est un projet à part.
 
 **Une note par fichier de code** (dossier `Code/` du vault) : chaque fichier y a sa fiche (rôle, fonctions, données touchées, pièges). Partir de la carte de la brique : [[Code de l'app (Rust)]], [[Code de l'app (interface)]], [[Code du générateur de catalogue]], [[Code du serveur]], [[Code du site]], [[Code de Rago Route]], [[Code de la CI et du dépôt]]. Pour voir tout le vault en graphe et ouvrir n'importe quel fichier du dépôt : [[Cerveau du vault]] (`/admin/cerveau`).
 

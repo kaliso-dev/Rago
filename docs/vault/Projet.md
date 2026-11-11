@@ -29,7 +29,7 @@ Vue d'ensemble technique : [[Architecture]]. **Pour coder ou dépanner : commenc
 - **App, fonctionnement** : [[Moteur des tweaks]] · [[Remise à zéro]] · [[Réparations au lancement]] · [[Pendant la partie]] · [[Arrière-plan et démarrage]] · [[Mise à jour automatique]]
 - **Tweaks (générés depuis le code)** : [[Catalogue des tweaks]] · [[Tweaks Réseau]] · [[Tweaks Latence]] · [[Tweaks Carte graphique]] · [[Tweaks Windows]] · [[Tweaks Hitreg]] · [[Tweaks Minecraft]] · [[Tweaks RBW Mod]] · [[Tweaks Mode jeu]] · [[Tweaks Mode expert]] · [[Tweaks Restaurer]] · [[Tweaks Presets]] · [[Tweaks retirés]]
 - **En cours ou en attente** : [[Proxy]] · [[Bot communauté Discord]]
-- **Autres projets** : [[Rago OS]] (bureau Windows, extension de l'app), [[Client Minecraft Rago]]
+- **Autres projets** : [[Client Minecraft Rago]]
 - **Technique** : [[Reprendre le développement]] · [[Architecture]] · [[Développer et tester]] · [[Branches et environnements]] · [[Publier une version]]
   - App : [[App Windows]] · [[Architecture de l'app]]
   - Serveur : [[Serveur de licences]] · [[Tableau de bord admin]] · [[Architecture du serveur]] · [[API du serveur]] · [[Paiements Stripe]] · [[Connexion Google et Discord]]

@@ -68,9 +68,6 @@ Posées le 11/11 (q78 traitée le même jour : Sofiene a demandé la page de ven
 - Les 1.2.0 installées reçoivent-elles bien la 1.2.1 ? (`/api/v1/update/status`) ([[Mise à jour automatique]])
 - Railway prod a-t-il chargé les bases DB-IP (`/admin/reseau`) ? ([[Proxy]])
 - La clé de mise à jour Tauri est-elle sauvegardée hors du PC ? ([[Clés et secrets]])
-- [[Rago OS]] : la tâche « Rago Optimizer » se lance-t-elle sans droits administrateur depuis Rago OS ? Sofiene a essayé l'exe de test le 07/11, sans le dire.
 - Remise du profil NVIDIA sur un vrai PC NVIDIA ([[Remise à zéro]]).
 - Identité du vendeur absente des conditions de vente ; TVA (RAG-20 annulée sans raison) : voir [[Conformité juridique]].
 - Barre en jeu pendant une partie par Rago Route : pas de ping affiché, le jeu étant connecté à `127.0.0.1` (déduit du code, [[gameping.rs]]) ; à voir sur Windows.
-- Pont [[Rago OS]] : la limite de 30 s annoncée n'est pas imposée par l'app ([[bridge.rs]]) ; voir avec le code de Rago OS.
-- Retours de Sofiene sur l'exe test5 de [[Rago OS]] (touche Windows après une relance, widgets cachés en jeu) : à revoir sur Windows.
