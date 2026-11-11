@@ -2,11 +2,11 @@
 type: marketing
 tags: [marketing, étude, concurrence, réseau]
 source: /mnt/project-files/etude-marche-2026-11/2-reseau.md
-maj: 2026-11-10
+maj: 2026-11-11
 ---
 # Étude - Outils réseau et ping
 
-Étude n° 2 de l'[[Étude de marché de novembre 2026]] : les outils réseau et ping des joueurs (15 outils + les statistiques des jeux). Fichier `etude-marche-2026-11/2-reseau.md` (46 Ko, 03/11/2026). **Statut : OBSERVÉ.** Écrite pour la refonte des jauges, du [[Test réseau]] et du [[Packet Optimizer]], et la conversion gratuit → Premium. Voir aussi [[Proxy]] (Rago Route), [[Barre en jeu]].
+Étude n° 2 de l'[[Étude de marché de novembre 2026]] : les outils réseau et ping des joueurs (15 outils + les statistiques des jeux). Fichier `etude-marche-2026-11/2-reseau.md` (46 Ko, 03/11/2026). **Statut : OBSERVÉ.** Écrite pour la refonte des jauges, du [[Test réseau]] et du [[Packet Optimizer]], et la conversion gratuit → Premium. Voir aussi [[Proxy]] (Rago Route), [[Barre en jeu]]. Les boosters de route ont été relus le 11/11 pour la [[Page de vente Rago Route]] (tableau des concurrents) : les cellules marquées « 11/11 » viennent de cette relecture.
 
 ## Méthode
 - Grille en 11 points (disposition, premier lancement, un clic ou expert, compréhension, jauges, preuve du gain, sécurité, argent, ce qui marche, plaintes, idée pour Rago).
@@ -20,13 +20,13 @@ maj: 2026-11-10
 ## Les outils, un par un
 | Outil | Essentiel retenu | Essai | Prix relevé |
 |---|---|---|---|
-| **ExitLag** | interrupteur de routage avec effet en direct ; mélange routes et « FPS Boost » ; test : Valorant 71 → 44 ms, perte « dropped altogether », mais l'auteur doute du chiffre en jeu ; Trustpilot **3,5/5 sur 610 avis**, 52 % de 5 étoiles, 37 % de 1 étoile ; plaintes : « 3 months free… billed yearly », remboursements refusés, « ping still the same », support « 11 days and counting » | **3 jours sur PC, 7 sur mobile, sans carte**, nouveaux comptes seulement | dès 6,50 $/mois, 6,17 $ (trimestre), 5,83 $ (semestre) ; « Black Friday 12+3 », prix régionaux « Black November » |
-| **NoPing** | modules empilés (Boost FPS, Aim Trainer, Audiopad, Pro Settings), multipath et deux connexions ; promesses « up to 80% » de ping, « up to 60% » de FPS, « over 2000 servers » sans méthode ; jours offerts aux abonnés GearUP qui changent | « Free Trial » (durée non vérifiée) | clés de 30 jours chez Nuuvem, Eneba |
-| **WTFast** | « over 1000 games », « over 230 servers » sur 7 régions ; GTA V 210 → 90 ms ; distribution par **routeurs ASUS, TP-Link, MSI, opérateur Singtel** ; **pas de remboursement**, résiliation 72 h avant ; enregistre IP, jeux et durée | **7 jours sans carte** | « relatively pricey » |
+| **ExitLag** | interrupteur de routage avec effet en direct ; mélange routes et « FPS Boost » ; test : Valorant 71 → 44 ms, perte « dropped altogether », mais l'auteur doute du chiffre en jeu ; Trustpilot **3,5/5 sur 610 avis**, 52 % de 5 étoiles, 37 % de 1 étoile (11/11 : 3,6/5 sur 575 avis, dans une copie de mi-septembre) ; plaintes : « 3 months free… billed yearly », remboursements refusés, « ping still the same », support « 11 days and counting » | **3 jours sur PC, 7 sur mobile, sans carte**, nouveaux comptes seulement | 11/11 : 9,99 $/mois et 75 $/an (App Store, États-Unis ; prix du site d'ExitLag pas lus) ; les 6,50 $/mois, 6,17 $ (trimestre) et 5,83 $ (semestre) de l'étude datent de 2022 ; « Black Friday 12+3 », prix régionaux « Black November » |
+| **NoPing** | modules empilés (Boost FPS, Aim Trainer, Audiopad, Pro Settings), multipath et deux connexions ; promesses « up to 80% » de ping, « up to 60% » de FPS, « over 2000 servers » sans méthode ; jours offerts aux abonnés GearUP qui changent | « Free Trial » sans carte ; durée 24 h ou 7 jours selon les tiers (11/11, contradictoire) | clés de 30 jours chez Nuuvem, Eneba ; 11/11 : 8,99 $/mois, 59,99 $/an (tiers, pages de NoPing illisibles) |
+| **WTFast** | « over 1000 games », « over 230 servers » sur 7 régions ; GTA V 210 → 90 ms ; distribution par **routeurs ASUS, TP-Link, MSI, opérateur Singtel** ; **pas de remboursement**, résiliation 72 h avant ; enregistre IP, jeux et durée | **7 jours sans carte** ; 11/11 : contradictoire (3 jours gratuits dans l'aide, une semaine payante sur l'accueil) | « relatively pricey » ; 11/11 : « Regular price $ 14.99 » par mois |
 | **GearUP Booster** | technologie « AIR » ; essai qui **passe seul en payant** ; plaintes « charged me early for a yearly plan » ; environ 3 000 à 3 126 avis Trustpilot | 3 jours | passes de 1 à 7 jours dès 1 $, environ 4 $/mois, 9 $ / 3 mois, 12 $/an (site tiers) ; mobile 6,99 $/mois ; routeur 9,99 $/mois |
-| **LagoFast** | multi-plateformes, outils annexes ; fonctions de lobby (« Warzone Easy Lobby ») qui flirtent avec les règles des jeux | limité | environ 9,90 $/mois |
-| **Mudfish** | paiement à l'usage par crédits, mal compris (« Can someone explain to me how the credits work? ») | crédits d'essai | à l'usage |
-| **Haste** (2022) | détecte le jeu tout seul ; anecdote 50-100 → 20 ms avec prudence ; l'entreprise disait franchement que ça peut ne pas marcher | **14 jours sans carte** | 15 $/mois, 24 jeux |
+| **LagoFast** | multi-plateformes, outils annexes ; fonctions de lobby (« Warzone Easy Lobby ») qui flirtent avec les règles des jeux | limité ; 11/11 : 3 heures dès la création du compte | environ 9,90 $/mois |
+| **Mudfish** | paiement à l'usage par crédits, mal compris (« Can someone explain to me how the credits work? ») ; 11/11 : « Multi Path » (jusqu'à 3 chemins, trafic jusqu'à ×3) et « Simple FEC » (2 ou 3 copies identiques de chaque paquet) | crédits d'essai | à l'usage ; 11/11 : 135 KRW/Go depuis le 01/09/2025 (≈ 0,12 $/Go) |
+| **Haste** (2022) | produit arrêté depuis (racheté par ExitLag en 07/2021, relecture du 11/11) ; détecte le jeu tout seul ; anecdote 50-100 → 20 ms avec prudence ; l'entreprise disait franchement que ça peut ne pas marcher | **14 jours sans carte** | 15 $/mois, 24 jeux |
 | **cFosSpeed** | « traffic shaping » : priorité aux petits paquets du jeu pendant les téléchargements ; livré avec ASUS, GIGABYTE, ASRock, MSI | — | non lu |
 | **TCP Optimizer** (SpeedGuide) | **sauvegarde automatique au premier lancement** (`sg_backup_….spg`) et **4 niveaux de retour** (sauvegarde, valeurs Windows, Reset TCP/IP, Reset Winsock) ; débutants perdus | — | gratuit |
 | **NetLimiter** | débit par programme, limites et blocage | éditions payantes | non lu |
@@ -63,4 +63,4 @@ maj: 2026-11-10
 ## Sources citées comme les plus utiles
 Trustpilot ExitLag ; règles d'essai ExitLag (KB 105) ; Gigazine sur la grille Waveform ; liste bufferbloat sur le retrait des notes de Waveform ; blog Cloudflare sur son test ; Netgraph Overwatch (Blizzard 7779) ; manuel PingPlotter ; FAQ de restauration de TCP Optimizer. Adresses exactes dans le fichier source.
 
-Reste à vérifier selon l'étude : écrans exacts des boosters, notes Trustpilot de GearUP, NoPing, WTFast, LagoFast, prix officiels actuels, libellés des stats de Valorant, CS2, Fortnite, seuils de la note AIM de Cloudflare.
+Reste à vérifier selon l'étude : écrans exacts des boosters, notes Trustpilot de GearUP, NoPing, WTFast, LagoFast (lues le 11/11 : voir [[Page de vente Rago Route]]), prix officiels actuels (en partie lus le 11/11 ; restent le site d'ExitLag, l'essai et les prix de NoPing, l'essai de WTFast : [[Questions ouvertes]]), libellés des stats de Valorant, CS2, Fortnite, seuils de la note AIM de Cloudflare.

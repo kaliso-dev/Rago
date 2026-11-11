@@ -3,7 +3,7 @@ type: code
 tags: [code, site, html, javascript]
 fichier: site/src/page.html
 lignes: 2415
-maj: 2026-11-10
+maj: 2026-11-11
 ---
 # page.html
 
@@ -85,10 +85,10 @@ Pastilles qui défilent : « Built for Minecraft PvP », BedWars, Ranked BedWars
 Bas de section : « Illustrations of Rago Optimizer 1.2. The numbers are examples, not measurements. » ; boutons **Download free** et « Talk about 1.2 on Discord ».
 
 ### Rago Route (`#route`)
-- Ajoutée le 07/11 (commit `9658716`), texte passé de « in testing » à « **Rago Route · new in Premium, in beta** » le 10/11 (commit `a190565`, PR #76). Pas en prod.
-- « Your PC is tuned. Now Rago takes the road. » ; trois points (Two roads for every packet, Lost packets repaired on the spot, Your match held through a short drop).
-- Boutons : **Discover Rago Route** → `route.html` ; « Get notified on Discord » (`js-discord`).
-- Schéma SVG `#rt-svg` (Your PC → deux routes → Rago exit → Hypixel) animé en SMIL (`animateMotion`, cycle 3,6 s ; un paquet perdu sur la route 1 éclate, sa copie de la route 2 arrive, anneau autour de la sortie). Légende « Missing in your game: 0 ». Voir [[route.html]], [[Proxy]].
+- Ajoutée le 07/11 (commit `9658716`), texte passé de « in testing » à « **Rago Route · new in Premium, in beta** » le 10/11 (commit `a190565`, PR #76). Mots alignés le 11/11 sur la page de vente refaite (sur `staging` depuis le 11/11 après-midi). Pas en prod.
+- « Your PC is tuned. Now Rago takes the road. » ; texte : « … Rago Route sends every packet on two paths and quickly rebuilds or resends what's lost, so your game waits less. » ; trois points (Two paths for every packet, Lost packets rebuilt or sent again, fast, Your connection held open through a short cut).
+- Boutons : **Discover Rago Route** → `route.html` ; « Get notified on Discord » (`js-discord`), à garder ou remplacer selon la question q100 ([[Questions ouvertes]]).
+- Schéma SVG `#rt-svg` (Your PC → « Path 1 · straight to Paris » et « Path 2 · through Frankfurt » → Paris → Hypixel) animé en SMIL (`animateMotion`, cycle 3,6 s ; un paquet perdu sur le chemin 1 éclate, sa copie du chemin 2 arrive, anneau autour de Paris). Légende « Lost on path 1, delivered by path 2 ». Voir [[route.html]], [[Proxy]].
 
 ### How (`#how`)
 « Four steps to your next match. » Ligne qui se remplit au défilement (`howFill`) : Download free (« Windows 10 and 11. No account needed. ») · Try the free tweaks (« 73 tweaks open, up to 30 on at once. The rest show a lock. ») · Try Premium free (« 3 days free with Stripe. Cancel anytime before day 3 and pay nothing. ») · Sign in and unlock (« With Google, Discord or email. All 218 tweaks, no limit. »).

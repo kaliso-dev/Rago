@@ -3,7 +3,7 @@ type: code
 tags: [code, rago-route, serveur, python, outil]
 fichier: proxy/fabriquer-install.py
 lignes: 92
-maj: 2026-11-10
+maj: 2026-11-11
 ---
 # fabriquer-install.py
 
@@ -18,7 +18,7 @@ Tout ce qui suit est CONFIRMÉ (code de `staging`, 10/11).
 
 ## Ce que le fichier expose
 
-Aucune fonction : c'est un script. Lancement : `python3 proxy/fabriquer-install.py`. Sortie : `install.sh écrit, N octets` (74 651 octets le 10/11).
+Aucune fonction : c'est un script. Lancement : `python3 proxy/fabriquer-install.py`. Sortie : `install.sh écrit, N octets` (74 651 le 10/11). Ce nombre vient de `len(script)` : ce sont des caractères, pas des octets ; le fichier fait 75 068 octets (lettres accentuées sur 2 octets).
 
 ## Fonctionnement détaillé
 

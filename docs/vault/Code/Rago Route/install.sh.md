@@ -3,7 +3,7 @@ type: code
 tags: [code, rago-route, serveur, shell, généré]
 fichier: proxy/install.sh
 lignes: 1628
-maj: 2026-11-10
+maj: 2026-11-11
 ---
 # install.sh
 
@@ -15,7 +15,7 @@ Tout ce qui suit est CONFIRMÉ (code de `staging`, 10/11).
 
 - Usage : `sudo sh install.sh` sur le VPS (Sofiene le colle et le lance lui-même). Le même script sert pour la première installation et pour chaque mise à jour du programme.
 - Ses 1 628 lignes sont presque toutes le code de [[rago-route.py]] (1 510) et [[mcping.py]] (36) ; le reste (environ 80 lignes) est le modèle de [[fabriquer-install.py]].
-- État le 10/11 : identique à ce que produit le générateur avec les sources actuelles (vérifié en comparant le texte), 74 651 octets.
+- État le 10/11 : identique à ce que produit le générateur avec les sources actuelles (vérifié en comparant le texte), 75 068 octets (74 651 caractères : le générateur affiche `len(script)`, qui compte les caractères, et les lettres accentuées prennent 2 octets).
 
 ## Fonctionnement détaillé
 

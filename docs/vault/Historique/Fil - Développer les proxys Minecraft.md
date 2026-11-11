@@ -1,7 +1,7 @@
 ---
 type: historique
 tags: [historique]
-maj: 2026-11-10
+maj: 2026-11-11
 ---
 # Fil - Développer les proxys Minecraft
 
@@ -31,7 +31,7 @@ Histoire détaillée du fil « Développer les proxys Minecraft » (`cmsg_01Mb4h
 - 20:10 : « Bon c'est partie développons ça ce soir ». 20:17 : prototype Python `proxy/rago-route.py` ([[rago-route.py]]) : double trajet, renvoi rapide des pertes, survie aux coupures. Test local : 30 % de pertes sur un trajet, 2 Mo sans erreur ; coupure totale de 8 s sans perte.
 - 20:23 : Sofiene avait supprimé les anciens serveurs → 2 nouveaux serveurs Vultr : **Paris** (`rago-paris`, sortie du tunnel) et **Frankfurt** (`rago-frankfurt`, 2e trajet). `install.sh` passe d'environ 9 Ko à 37 Ko.
 - 21:46, premier test depuis le Mac : 114,8 ms par le tunnel contre 120,1 ms en direct : **le tunnel ne coûte rien**.
-- 22:12 : une vraie partie de Bedwars par le tunnel tient sans déconnexion ni lag ressenti, mais le ping de la touche Tab affiche 178 ms (tunnel) contre 129 ms (direct). Compteur « sauvés » corrigé, renvois moins nerveux, mesure toutes les 15 s.
+- 22:12 : une vraie partie par le tunnel (mode de jeu non dit) tient sans déconnexion ni lag ressenti, mais le ping de la touche Tab affiche 178 ms (tunnel) contre 129 ms (direct). Compteur « sauvés » corrigé, renvois moins nerveux, mesure toutes les 15 s.
 - 22:16 : test avec 30 % de pertes simulées sur le direct : 0 % de pertes à l'arrivée, 2 246 paquets sauvés en 2 minutes environ.
 
 ## 07/11 : mesures, site, version Windows
@@ -39,8 +39,8 @@ Histoire détaillée du fil « Développer les proxys Minecraft » (`cmsg_01Mb4h
 - 03:39 : nouvelle version (plus de renvoi inutile, reprise en 10 à 20 ms après une coupure au lieu d'environ 1 s, protection contre la mise en veille de macOS). 04:09 : sur 14 mesures simultanées, tunnel médiane 116 ms contre 119 ms ; les pics viennent du premier tronçon (Wi-Fi).
 - 05:14 : « il faut une section dans le site avec un call to action qui redirige vers une page dédié je veux une page dans le design de rago avec full animation pour expliqué chaque fonctionnalité présente ça comme des révolutions » → page `route.html` et section de l'accueil « Your PC is tuned. Now Rago takes the road. », chiffres mesurés seulement, bouton vers Discord, aucun prix ([[Site]]). 05:40 : « tu peux push sur staging les modif du site » → en ligne sur le site de staging à 05:41.
 - 05:39 et 05:53 : essais au câble (tunnel 105 à 110 ms contre 113 à 115 ms ; câble seul 108 à 109 contre 115). Les pics restants viennent du programme figé sur le Mac.
-- 05:46 : carte « Quelle prochaine étape ? » → « Encore des tests sur le Mac ». 12:12 : « tu peux pas me faire un programmes qui fait tout ça » → option `--telephone` (trouve l'iPhone et vérifie son partage 4G). 12:54 : 10 min avec la 4G en 3e trajet : tunnel 107 à 125 ms contre 116 à 137 ms en direct ; la 4G arrive première 1 % du temps ; environ 67 Mo par heure.
-- 12:58 : « OK let's go » → version Windows. 13:09 : coupure du Wi-Fi de 30 s : la partie tient, la 4G prend tout, mais monte à 1,2 à 1,5 s. Sofiene : c'était sa mauvaise réception 4G sur place, « tu peux push sur staging ».
+- 05:46 : carte « Quelle prochaine étape ? » → « Encore des tests sur le Mac ». 12:12 : « tu peux pas me faire un programmes qui fait tout ça » → option `--telephone` (trouve l'iPhone et vérifie son partage 4G). 12:54 : 9 min 38 s avec la 4G en 3e trajet : tunnel 107 à 125 ms contre 116 à 137 ms en direct ; la 4G arrive première 1 % du temps ; environ 70 Mo par heure reçus.
+- 12:58 : « OK let's go » → version Windows. 13:09 : coupure du Wi-Fi de 30 à 38 s : la connexion tient (une partie en cours n'est pas établie), la 4G prend tout, mais monte à 1,2 à 1,5 s. Sofiene : c'était sa mauvaise réception 4G sur place, « tu peux push sur staging ».
 - 13:33 : onglet « Rago Route » dans Réseau de l'app Windows (exe de test seulement), moteur Rust `route.rs` ([[route.rs]]) ; poussé sur `staging` à 14:44, exe de test prêt à 15:00. 22:49, premier essai sur un PC Windows : direct vers Paris 13 ms, Frankfurt 35 ms, 0 % de pertes, retard du moteur 12 ms au pire (394 ms avec le Python du Mac), sortie → Hypixel 91 ms.
 
 ## 08/11 : réservé au Premium, protocole 2
@@ -51,6 +51,7 @@ Histoire détaillée du fil « Développer les proxys Minecraft » (`cmsg_01Mb4h
 - 22:09, **protocole 2** : tunnel chiffré (paquet forgé ou rejoué jeté), paquets de secours (plus de 1 300 réparés sans renvoi avec 20 % de pertes par trajet), 4G du téléphone sur Windows, plusieurs sorties avec choix de la plus rapide. 23:04, carte « Je pousse ? » → « Oui, je réinstalle juste après ».
 
 ## 09/11 : réinstallation et tests de Sofiene
+Heures UTC dans cette partie et la suivante (heure de Paris = UTC + 1).
 - 17:35 : « ou est le .exe ? comment je peut créer un compte premium staging facilement pour mes test » → carte de test Stripe ou `ROUTE_TESTERS` ; 17:50 : « explique moi comment config dans railways » (projet `rago-staging`).
 - 18:14 à 18:29 : Frankfurt puis Paris réinstallés en protocole 2 ; Hypixel coupe les connexions venant de Frankfurt (« Connection reset by peer », sans gravité : c'est un relais) ; Paris → Hypixel 94,3 ms, Minemen 10,4 ms ; port 25600 en UDP ; serveurs fermés à tout sans jeton ; ancien proxy arrêté.
 - 18:40 : « donne moi la commande pour perdre des packet volontairement » → l'outil clumsy, 3 filtres (sans Rago Route, avec Rago Route sur le port 25600, trajet direct seul).
@@ -63,9 +64,15 @@ Histoire détaillée du fil « Développer les proxys Minecraft » (`cmsg_01Mb4h
 - 15:10 : « faut que le diagnostic disent exactement pourquoi ça ne marche pas et si je n'ai pas de cable comment testé ducoup ? » → 15:13, diagnostic en 5 étapes (téléphone vu en USB, pilote USB Apple, pilote de partage Apple, partage activé, Internet par le téléphone), bouton « Copier les détails », partage Bluetooth reconnu.
 - 15:16 : « ok fait un exe de test pour tout ça que je testerai en rentrant » → poussé sur `staging` à 15:18, exe prêt à 15:29.
 
+## 11/11 : la page de vente, puis sa refonte
+- 08:30 : « pour annoncer sa sortie apres le test il faut créer une page dédier sur le site web pour expliquer ce que ca fait sans faire de fausse promesse, les nouveauté, sur quoi on se differencie mais surtout les résultats » → page de vente écrite (« Lose packets, not fights. »), dossier, vidéo et captures.
+- 09:40 : carte de choix « Oui, pousse sur staging » → commit `f9fdc24` sur `staging` (site-check vert à 09:43). Pas en prod.
+- 10:01 : long brief « Aborde ce projet comme un Product Designer senior spécialisé en landing pages, storytelling produit et optimisation de la conversion », puis « passe en max juste » → refonte complète : 8 analyses, page en 12 sections dans la charte du site, scène du haut et simulateur de pertes animés, résultats datés, 19 blocs cachés en prod tant qu'un test manque, encart de l'accueil aligné ; dossier Claude Doc et 4 captures ; questions q99 à q104 ([[Page de vente Rago Route]], [[Décisions]]).
+- 13:41 : carte de choix « Pousser la refonte de la page Rago Route sur staging ? », réponse « Oui, pousse sur staging » → refonte sur `staging`. Pas en prod.
+
 ## État et suite (10/11)
 - Rago Route est dans l'exe de test de `staging` et, depuis la PR #76 (10/11), prévu dans tous les exe de la [[Version 1.3.0]] avec un badge « Beta ». Pas en prod.
 - Serveurs : Paris (sortie) et Frankfurt (relais) chez Vultr, environ 10 $ par mois. Les serveurs Mumbai, New York et Chicago du 05/11 ne servent plus (Sofiene a dit le 06/11 avoir supprimé les serveurs ; destruction de chacun À VÉRIFIER).
-- Reste : les tests de Sofiene sur l'exe du 10/11 ; q55 (`ROUTE_TESTERS` réglé ?) ; ticket [[Linear]] RAG-50 jamais mis à jour (écriture refusée au fil).
+- Reste : les tests de Sofiene sur l'exe du 10/11 ; q55 (`ROUTE_TESTERS` ajoutée par Sofiene le 10/11) ; ticket [[Linear]] RAG-50 jamais mis à jour (écriture refusée au fil).
 
 Liens : [[Proxy]] · [[Infrastructure Rago Route]] · [[Test réseau]] · [[Rago OS]] (widget Rago Route) · [[Chronologie du projet]]

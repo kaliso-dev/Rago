@@ -49,10 +49,16 @@ Posées le 11/11 (q78 traitée le même jour : Sofiene a demandé la page de ven
 - q96 : [[Page Souris]] gratuite pour tous ? (codée gratuite ; le réglage « Souris 1:1 » reste Premium)
 - q97 : d'autres sorties que Paris, pour que la page Rago Route les annonce ? ([[Page de vente Rago Route]], [[Infrastructure Rago Route]]).
 - q98 : `CERVEAU_GITHUB_TOKEN` mis dans Railway, et dans quels environnements ? ([[Cerveau du vault]], [[Variables d'environnement]]).
+- q99 : avant d'annoncer Rago Route, test P0-9 (3 à 5 comptes de l'équipe par Paris en même temps, puis une semaine normale), message à Hypixel, ou les deux ? La réponse de la FAQ sur les blocages reste cachée en attendant ([[Page de vente Rago Route]], [[Proxy]]).
+- q100 : à la sortie de la 1.3.0, le bouton « Get notified on Discord » de l'encart Rago Route de l'accueil devient « Try 3 days free », disparaît ou reste ? ([[page.html]])
+- q101 : Lifetime inclut-il Rago Route ? Le serveur le donne aujourd'hui à toute licence active ; la page cache « Lifetime includes Rago Route too » en attendant ([[route.html]], [[Paiements Stripe]]).
+- q102 : résilier l'essai depuis le site en 2 clics (lien direct vers la résiliation du portail Stripe, en fin de période), ou écrire « two clicks in the app, or anytime from your account » sur les deux pages ? ([[route.html]], [[page.html]], [[Abonnement dans l'app]])
+- q103 : un abonné Premium non connecté au site peut payer un 2e abonnement, essai compris : le bloquer côté serveur (même e-mail ou même carte), ou la ligne « Already Premium? » de la page suffit ? (lu dans le code, pas vérifié sur staging ; [[Paiements Stripe]])
+- q104 : « Card required » ou « Card or PayPal required » sous les boutons d'essai ? PayPal sur le paiement de l'essai pas encore vu ; avec PayPal, « un essai par personne » ne compare que l'e-mail ([[Paiements Stripe]], [[route.html]]).
 
 ## À vérifier (sans Sofiene)
 - Rago Route : tous les joueurs sortent par la même adresse à Paris ; Hypixel coupe déjà les connexions venant de Frankfurt (09/11, sans effet tant que Frankfurt n'est qu'un relais). À surveiller dès les premiers joueurs ([[Proxy]], [[Page de vente Rago Route]]).
-- Prix officiels d'ExitLag, NoPing et WTFast, et fonctionnement des modes Multi Path et SimpleFEC de Mudfish : pages illisibles le 11/11, chiffres d'un comparatif tiers ([[Page de vente Rago Route]]).
+- Concurrents, lus le 11/11 sans navigateur : prix d'ExitLag sur son propre site (seuls ceux de l'App Store, États-Unis, ont été lus : 9,99 $ par mois, 75 $ par an) ; durée de l'essai (24 h ou 7 jours), prix et remboursement de NoPing (chiffres de tiers) ; durée de l'essai WTFast (3 jours dans l'aide, une semaine payante sur l'accueil). À revoir dans un navigateur avant d'en citer un ; la page ne nomme aucun concurrent ([[Page de vente Rago Route]], [[Étude - Outils réseau et ping]]).
 - [[Couleurs et résolution]] (11/11, jamais testé sur Windows) : saturation NVIDIA (NVAPI) et AMD (ADL), rampe gamma, retour des couleurs au Alt+Tab, résolution étirée (`DMDFO_STRETCH`) et retour à la fin de la partie, écriture des fichiers de Valorant, Fortnite et CS2 ; comportement avec le HDR de Windows.
 - Valorant en 4:3 étiré (1440×1080) : les sources lues le 11/11 ne confirment pas que le jeu remplit l'écran sans réglage de plus ; à vérifier en jeu ([[Couleurs et résolution]]).
 - CS2 : valeurs de `setting.aspectratiomode` dans `cs2_video.txt` (0 = 4:3 ou 5:4, 1 = 16:9, 2 = 16:10, d'après la doc de la communauté) à confirmer dans un vrai fichier ([[Couleurs et résolution]]).

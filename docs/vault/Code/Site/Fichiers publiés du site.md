@@ -18,7 +18,7 @@ Tout ce qui suit est CONFIRMÉ (fichiers de `staging`, 10/11). Le chiffre « lig
 | `tweaks.html` | [[build.py]] | [[tweaks.html]] (liste écrite par [[sync_tweaks.py]]) | 1 037 lignes, 580 Ko | la plus lourde (218 fiches dépliables) |
 | `reviews.html` | [[build.py]] | [[reviews.html]] | 347 lignes | avis lus en direct sur le serveur |
 | `partners.html` | [[build.py]] | [[partners.html]] (cartes de [[sync_partners.py]]) | 163 lignes | statique |
-| `route.html` | [[build.py]] | [[route.html]] | 1 708 lignes, 125 Ko (11/11) | page de vente : liens de compte et avis ; **sur `staging` seulement** tant que la 1.3.0 n'est pas en prod |
+| `route.html` | [[build.py]] | [[route.html]] | 2 063 lignes, 169 Ko (11/11) | page de vente, refaite le 11/11 après-midi : liens de compte, plus d'avis ; sur `staging` depuis le 11/11 ; pas en prod tant que la 1.3.0 n'y est pas |
 | `terms.html` | [[make_legal.py]] | texte dans le script | 113 lignes | conditions de vente ; ancre `#cancel` |
 | `privacy.html` | [[make_legal.py]] | texte dans le script | 120 lignes | confidentialité |
 | `404.html` | [[make_legal.py]] | texte dans le script | 51 lignes | servie par Netlify pour toute adresse inconnue ; liens absolus ; `noindex` |
@@ -41,6 +41,7 @@ Ce que [[build.py]] change entre une source et sa page : polices Google remplac�
 | `img/games/{minecraft,valorant,cs2,fortnite}.webp` | vignettes de la section bibliothèque de jeux de l'accueil (Lunar Client, VALORANT, Counter-Strike 2, Fortnite) | ajoutées le 20/10 (`4e0914e`) ; voir [[Bibliothèque de jeux]] |
 | `img/partners/*.webp` (7 fichiers) | logos des partenaires | listés dans [[partners.json]] |
 | `media/in-game-bar.mp4` (865 Ko), `.webm` (601 Ko), `.webp` (86 Ko, image d'attente) | vidéo derrière la démonstration de la barre en jeu sur l'accueil (`<video id="ig-v" preload="none">`) | ajoutées le 20/10 ; voir [[Barre en jeu]] |
+| `media/og-route.png` | image de partage de [[route.html]], 1 200 × 630 (112 007 octets) : « Rago Route: lost packets shouldn't freeze your game », un paquet perdu sur le chemin 1 et sa copie qui arrive par le chemin 2 | faite le 11/11 en HTML avec les polices du site (Geist), dans le style de `og-image.png` ; sur `staging` depuis le 11/11 après-midi |
 
 ## Fichiers présents dans `site/` mais jamais publiés
 La commande de [[netlify.toml]] (et [[preview.sh]]) supprime avant publication :

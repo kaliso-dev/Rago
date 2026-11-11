@@ -31,7 +31,7 @@ On modifie **les sources** `site/src/*.html` (et `partners.json`, `tweaks-copy.j
 | `src/reviews.html` | `reviews.html` |
 | `src/tweaks.html` (+ `tweaks-copy.json`) | `tweaks.html` |
 | `src/partners.html` + `src/partners.json` | `partners.html` (et la section Partners de l'accueil) |
-| `src/route.html` | `route.html` (staging ; depuis le 11/11 sur la branche du fil, avec le `CONFIG`, les prix et les liens de l'accueil) |
+| `src/route.html` | `route.html` (sur `staging` ; depuis le 11/11 avec le `CONFIG`, les prix et les liens de l'accueil ; refaite le 11/11 après-midi) |
 
 Ce que fait `build.py` ([[build.py]]) : remplace Google Fonts par les polices locales `site/fonts/` (aucune IP envoyée à Google), lit le `CONFIG` de `page.html` (`accountBase`, prix, devise, Discord), écrit les liens et prix pour les visiteurs sans JavaScript, **vérifie que le prix Lifetime du site = `LIFETIME_PRICE` du serveur**, rend la FAQ en `<noscript>`, ajoute les données structurées, versionne l'image de partage, puis lance `prerender.js` (Chromium par Playwright, hors ligne) pour figer le tableau comparatif, la bande de jeux et les aperçus de l'app. `sync_partners.py` est lancé en premier et s'arrête sur une entrée incomplète.
 
