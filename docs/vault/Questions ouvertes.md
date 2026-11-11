@@ -63,7 +63,7 @@ Posées le 11/11 (q78 traitée le même jour : Sofiene a demandé la page de ven
 - Valorant en 4:3 étiré (1440×1080) : les sources lues le 11/11 ne confirment pas que le jeu remplit l'écran sans réglage de plus ; à vérifier en jeu ([[Couleurs et résolution]]).
 - CS2 : valeurs de `setting.aspectratiomode` dans `cs2_video.txt` (0 = 4:3 ou 5:4, 1 = 16:9, 2 = 16:10, d'après la doc de la communauté) à confirmer dans un vrai fichier ([[Couleurs et résolution]]).
 - `app/src/data/pros.json` : quelques saturations de pros CS2 viennent de pages lues en résumé (prosettings.net coupé) ; à relire page par page avant la sortie ([[Couleurs et résolution]]).
-- Les 1.2.0 installées reçoivent-elles bien la 1.2.1 ? (`/api/v1/update/status`) ([[Mise à jour automatique]])
+- Les 1.2.0 installées reçoivent-elles bien la 1.2.1 ? Le serveur la propose à 100 % (vérifié le 11/11 sur `/api/v1/update/status`) ; reste à le voir sur un PC en 1.2.0 ([[Mise à jour automatique]])
 - Railway prod a-t-il chargé les bases DB-IP (`/admin/reseau`) ? ([[Proxy]])
 - La clé de mise à jour Tauri est-elle sauvegardée hors du PC ? ([[Clés et secrets]])
 - Remise du profil NVIDIA sur un vrai PC NVIDIA ([[Remise à zéro]]).

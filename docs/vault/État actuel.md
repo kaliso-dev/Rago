@@ -14,7 +14,7 @@ Les joueurs ont la [[Version 1.2.1]] (en ligne depuis le 31/10). La [[Version 1.
 | Sujet | État | Statut |
 |---|---|---|
 | Dernière version de l'app | [[Version 1.3.0]] dans `staging` (PR #70 du 04/11 et #76 du 10/11, `app/package.json` = 1.3.0) ; dernière publiée : [[Version 1.2.1]] | CONFIRMÉ (git) |
-| Version servie aux joueurs | **1.2.1** (exe + `.sig` déposés dans Supabase) | OBSERVÉ (Sofiene, 31/10) ; `INSTALLER_VERSION` non revérifié |
+| Version servie aux joueurs | **1.2.1** (exe + `.sig` dans Supabase) : téléchargement `Rago Optimizer_1.2.1_x64-setup.exe`, mise à jour automatique proposée à 100 % des joueurs, sans pause | CONFIRMÉ (HTTP, 11/11 : `/download/status`, `/api/v1/installer`, `/api/v1/update/status` → `ok: true`, `version: 1.2.1`, `rollout: 100`) |
 | Code app sur la branche de prod | encore **1.1.14** (`app/package.json`) : la prod ne reçoit que site + serveur, l'app part de `staging` | CONFIRMÉ |
 | Serveur de prod | mises à jour auto (RAG-24) + collecte des tests réseau (RAG-50), PR #63 fusionnée le 29/10 ; nouveau [[Tableau de bord admin]] et [[Cerveau du vault]], PR #87 fusionnée le 10/11 à 18:49 UTC | CONFIRMÉ (git) ; redéployé par Railway, nouvelle page `/admin` servie à 18:54 UTC (OBSERVÉ le 10/11) |
 | Site de prod | à jour pour la 1.2.1 : section « New in 1.2 », Discord, prix réécrits, 218 tweaks (PR #59 et #66, 29/10) | CONFIRMÉ (git) |
@@ -66,7 +66,7 @@ Les joueurs ont la [[Version 1.2.1]] (en ligne depuis le 31/10). La [[Version 1.
 1. **URGENT, avant le 05/12** : l'organisation Supabase (offre gratuite) a dépassé son quota de bande passante (e-mail du 04/11) ; restrictions possibles à partir du 05/12, pas de suppression annoncée. La base contient la clé de signature des licences, sauvegardée nulle part ([[Supabase]], [[Clés et secrets]]). D'abord un gestionnaire de mots de passe et la sauvegarde des clés (guide envoyé le 10/11 dans le fil « Sauvegarder les clés »), puis Sofiene passe en Pro (25 $/mois) ou migre vers un autre service, et le dit avant le 05/12 (10/11).
 2. **Clés** : aucune n'est sauvegardée (Railway, Stripe, GitHub, clé de mise à jour Tauri) ; Stripe va bientôt masquer ses clés secrètes.
 3. Prendre une domiciliation pour l'adresse des mentions légales, quand le budget le permet (q46). Tester la 1.3.0 (exe de test de `staging`) sur Windows avant la sortie.
-4. Vérifier que les 1.2.0 installées reçoivent bien la 1.2.1 (`/api/v1/update/status`, voir [[Mise à jour automatique]]).
+4. Côté serveur c'est bon (11/11 : `/api/v1/update/status` propose la 1.2.1 à 100 %) ; reste à voir sur un PC encore en 1.2.0 que la mise à jour arrive ([[Mise à jour automatique]]).
 5. Valider l'e-mail sur la collecte des tests réseau avant son envoi, une fois rédigé ([[Prochaines étapes]]).
 6. Avant la prod de l'essai : inscrire sa mère comme vendeuse et régler l'adresse ([[Conformité juridique]]).
 7. Rago Route : faire voir la 4G du téléphone à Windows (en cours, 10/11).
