@@ -25,7 +25,7 @@ Retour à [[Projet]]. Aucun identifiant ni secret ici ([[Clés et secrets]]).
 | Vultr | 2 VPS Rago Route, Paris et Frankfurt, 5 $/mois chacun ([[Infrastructure Rago Route]]) |
 | Google Cloud | connexion « Continue with Google » (clés OAuth) ([[Connexion Google et Discord]]) |
 | Discord Developer Portal | application du bot et connexion Discord ([[Connexion Google et Discord]], [[Discord]]) |
-| UptimeRobot | moniteur de `/healthz`, **à créer** ([[Surveillance]]) |
+| UptimeRobot | moniteur de `/healthz`, alertes par e-mail à Sofiene, depuis le 11/11 ([[Surveillance]]) |
 | Gestionnaire de mots de passe | toutes les clés et identifiants (11/11, [[Clés et secrets]]) |
 | DB-IP | ville et fournisseur des tests réseau ([[Proxy]]) |
 | Discord | communauté, rôle Pro, connexion ([[Discord]]) |

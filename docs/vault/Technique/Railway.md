@@ -23,11 +23,11 @@ L'environnement `staging` est une copie de `production` (Duplicate) avec ses pro
 - Au démarrage, les lignes `[warn]` des logs disent ce qui manque (variables, prix Stripe, webhook, Discord). Un serveur de prod sans `DATABASE_URL`, `STRIPE_SECRET_KEY`, `STRIPE_WEBHOOK_SECRET` ou avec un `PUBLIC_URL` non https **refuse de démarrer**, comme un staging avec une clé Stripe live ou la base d'un autre environnement.
 
 ## Réglages conseillés du service
-Écrits dans `licensing/docs/MISE-EN-LIGNE.md` (étape 5) ; état réel en prod vu par Sofiene le 11/11 (q65) : **Wait for CI activé**, **Healthcheck Path = `/healthz`** (délai 300 s par défaut), **Watch Paths vide** (à remplir : `/licensing/**`), **aucun moniteur externe** (à créer). Claude n'a pas accès à Railway.
+Écrits dans `licensing/docs/MISE-EN-LIGNE.md` (étape 5) ; état réel en prod vu par Sofiene le 11/11 (q65) : **Wait for CI activé**, **Healthcheck Path = `/healthz`** (délai 300 s par défaut), **Watch Paths vide** (à remplir : `/licensing/**`), moniteur UptimeRobot créé le 11/11 ([[Surveillance]]). Claude n'a pas accès à Railway.
 - **Watch Paths** = `licensing/**` : un push qui ne touche que l'app ou le site ne redéploie pas le serveur.
 - **Wait for CI** : Railway attend les vérifications GitHub du commit (dont `licensing-tests`). Revers : si une autre vérification du commit échoue (build de l'app, `site-check`), le déploiement peut être **sauté** (*Skipped*) et un commit suivant qui ne touche pas `licensing/` ne le relance pas. Après chaque fusion qui touche `licensing/`, regarder **Deployments** et cliquer **Redeploy** si besoin.
 - **Healthcheck Path** = `/healthz` (répond `{"ok":true}` seulement si la base répond) : un déploiement cassé ne remplace pas celui qui marche.
-- Moniteur externe (UptimeRobot) sur `https://account.rago-optimizer.com/healthz` : **pas encore créé** (11/11), voir [[Surveillance]].
+- Moniteur externe UptimeRobot sur `https://account.rago-optimizer.com/healthz` : en place depuis le 11/11, voir [[Surveillance]].
 
 ## Déployer
 - Prod : fusion d'une PR dans la branche de prod qui touche `licensing/` (sur « fusionne » de Sofiene). Staging : fusion dans `staging`.
