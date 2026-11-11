@@ -69,6 +69,12 @@ Ordre de `generate_handler!`. Côté interface, chaque commande est appelée par
 | `tools_remove_apps` | `ids` → `Vec<tools::App>` | les désinstalle (gratuit depuis 1.2.2), renvoie celles encore là |
 | `tools_drivers` | → `tools::Drivers` | pilotes graphiques, réseau, son et fabricant |
 | `tools_windows_update` | → `()` | ouvre `ms-settings:windowsupdate-optionalupdates` par `explorer.exe` |
+| `tools_startup` | → `Vec<tools::StartupApp>` | programmes lancés avec Windows, comme le Gestionnaire des tâches (PR #90) |
+| `tools_set_startup` | `id, enabled` → `Vec<tools::StartupApp>` | active ou coupe une entrée de la liste (même valeur `StartupApproved` que le Gestionnaire des tâches), renvoie la liste à jour ; refuse de couper une entrée gardée (PR #90) |
+| `tools_power_plans` | → `Vec<tools::PowerPlan>` | modes d'alimentation de Windows et mode actif (PR #90) |
+| `tools_set_power_plan` | `guid` → `Vec<tools::PowerPlan>` | `powercfg /setactive` sur un mode de la liste, renvoie la liste à jour (PR #90) |
+| `tools_flush_dns` | → `()` | `ipconfig /flushdns` (PR #90) |
+| `tools_open` | `id` → `()` | ouvre un réglage de Windows de la liste fermée `tools::PANELS` ; comme `tools_windows_update`, sans `spawn_blocking` (le programme est lancé sans l'attendre) (PR #90) |
 
 **Moteur des tweaks** ([[Moteur des tweaks]])
 | Commande | Arguments → retour | Ce qu'elle fait |

@@ -55,7 +55,7 @@ Les fichiers de réglages des six jeux ci-dessus et leurs copies `.rago-original
 - [[lib.rs]] (commandes), [[games.rs]] (comptes Windows, processus), [[reg.rs]] (Steam).
 - Fonctionnalité : [[Graphismes des jeux]], page [[Bibliothèque de jeux]].
 
-## Tests (12, tous verts le 11/11 sous Linux ; `cargo check` pour Windows propre)
+## Tests (12, tous verts le 11/11 sous Linux et sous Windows dans la CI de la PR #94)
 - `ini_edit_changes_only_known_keys_and_keeps_the_rest`, `kv_edit_keeps_tabs_and_quotes`, `missing_keys_are_never_added_except_render_mode`, `utf16_and_bom_are_written_back_as_they_were`.
 - `apply_keeps_the_original_once_and_restore_puts_it_back`, `refuses_while_running_or_when_nothing_is_found`, `read_only_files_are_left_alone`, `levels_are_told_apart`.
 - `finds_the_files_of_every_account`, `expand_follows_stars`, `running_matches_exe_names_and_prefixes`.
