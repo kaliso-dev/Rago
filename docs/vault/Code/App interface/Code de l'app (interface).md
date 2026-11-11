@@ -84,6 +84,7 @@ main.tsx
 | `display` | `Display` | [[Display.tsx]] |
 | `network`, `netopt`, `nettest`, `route` | `Network` (onglet = page) | [[Network.tsx]] → [[ModulePage.tsx]], [[NetOpt.tsx]], [[NetTest.tsx]], [[RouteTab.tsx]] |
 | `tools` | `Tools` | [[Tools.tsx]] |
+| `mouse` | `Mouse` | [[Mouse.tsx]] |
 | `analysis` | `Analysis` | [[Analysis.tsx]] |
 | tout autre id (module du catalogue : `latency`, `gpu`, `windows`, `hitreg`, `minecraft`, `expert`, `restore`…) | `ModulePage` | [[ModulePage.tsx]] |
 

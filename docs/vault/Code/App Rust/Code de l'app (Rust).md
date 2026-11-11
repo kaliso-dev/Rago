@@ -12,7 +12,7 @@ Carte du **cœur Rust de Rago Optimizer** (`app/src-tauri/`) : chaque module en 
 Tout est CONFIRMÉ (code de `staging`, 11/11 : les 6 fonctionnalités de la PR #92 fusionnées, dont [[display.rs]], [[gamecfg.rs]], [[tips.rs]] et la page Outils ; pas encore testées sur Windows par Sofiene).
 
 ## Comment lire ce code
-- Point d'entrée : [[main.rs]] appelle `run()` de [[lib.rs]], qui déclare les **41 modules**, crée l'état partagé et enregistre les **92 commandes** que l'interface appelle par `invoke` ([[api.ts]]).
+- Point d'entrée : [[main.rs]] appelle `run()` de [[lib.rs]], qui déclare les **42 modules**, crée l'état partagé et enregistre les **92 commandes** que l'interface appelle par `invoke` ([[api.ts]]).
 - L'interface n'a **aucun accès réseau** (CSP, [[Configuration Tauri]]) : tout appel au serveur passe par une commande Rust.
 - L'app tourne **en administrateur** (`app.manifest`) : presque tous les réglages écrivent dans `HKLM`, les services ou le BCD.
 - Les scripts des réglages ne sont **jamais en clair** dans l'exe : chiffrés à la compilation ([[build.rs]], [[embed_scripts.rs]], [[seal.rs]]), le paquet Premium s'ouvre avec la clé donnée par le serveur à une licence active ([[license.rs]]).
@@ -23,7 +23,7 @@ Tout est CONFIRMÉ (code de `staging`, 11/11 : les 6 fonctionnalités de la PR #
 | Module | Lignes | Rôle |
 |---|---|---|
 | [[main.rs]] | 6 | lance `rago_hub_lib::run()`, sans console en release |
-| [[lib.rs]] | 1 759 | état partagé, 92 commandes, démarrage (`run()`), réponses au pont de Rago OS |
+| [[lib.rs]] | 1 767 | état partagé, 93 commandes, démarrage (`run()`), réponses au pont de Rago OS |
 | [[instance.rs]] | 283 | une seule instance : mutex Windows, réveil de la fenêtre déjà ouverte, attente de la désinstallation |
 | [[background.rs]] | 294 | préférences d'arrière-plan, icône près de l'horloge, tâche planifiée de lancement avec Windows |
 | [[icon.rs]] | 189 | extrait l'icône d'un exe en PNG (bibliothèque de jeux) |
@@ -68,6 +68,7 @@ Tout est CONFIRMÉ (code de `staging`, 11/11 : les 6 fonctionnalités de la PR #
 | [[overlay.rs]] | 805 | barre en jeu : jeu au premier plan, raccourci Alt+X, fenêtre de la barre, rappel des conseils |
 | [[display.rs]] | 1 560 | [[Couleurs et résolution]] : saturation (NVIDIA, AMD), luminosité, contraste et gamma quand le jeu est au premier plan, résolution étirée le temps de la partie, résolution dans les fichiers de Valorant, Fortnite et CS2 |
 | [[session.rs]] | 665 | [[Pendant la partie]] : carte graphique performante, plan d'alimentation, jeu en priorité haute, défait après ; vérifications et conseils |
+| [[mouse.rs]] | 107 | [[Page Souris]] : logiciels de remappage, de macro, de clic automatique ou du fabricant lancés (lecture seule) |
 | [[tips.rs]] | 416 | [[Conseils au lancement du jeu]] : jeu à conseils, réglages cochés, applis gourmandes, écran, Game DVR |
 | [[boost.rs]] | 224 | Mode jeu total demandé par Rago OS : services non essentiels arrêtés puis relancés |
 | [[fps.rs]] | 286 | FPS du jeu par PresentMon, résumé de la dernière partie |

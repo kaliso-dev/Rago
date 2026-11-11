@@ -1,7 +1,7 @@
 ---
 type: code
 tags: [code, app, css, design]
-fichier: app/src/styles/ (tokens.css, app.css, features.css, account.css, overlay.css, tips.css)
+fichier: app/src/styles/ (tokens.css, app.css, features.css, account.css, overlay.css, tips.css, mouse.css)
 lignes: 8125
 maj: 2026-11-11
 ---
@@ -21,6 +21,7 @@ Tout ce qui suit est CONFIRMÉ (code de `staging`, 10/11, commit `ee77d4f`), ave
 | `features.css` | 4208 | fenêtre principale | fonctionnalités de la 1.2.0 et après (liste plus bas) |
 | `overlay.css` | 392 | barre en jeu | toute la barre en jeu (RAG-82) |
 | `tips.css` | 214 | fenêtre principale et barre en jeu (importé par [[GameTips.tsx]]) | bloc des réglages conseillés (`.game-tips*`, `.game-tip*`), place sous le jeu en avant de la bibliothèque (`.games-hero-tips`), bloc des conseils de la barre en jeu qui défile à part (`.ov-advice`, 258 px au plus, fondu en bas ; `.ov-tips`), pastille élargie du rappel (`.ov-nudge*`). Voir [[Conseils au lancement du jeu]] |
+| `mouse.css` | 40 | fenêtre principale (importé par [[main.tsx (app)]]) | [[Page Souris]] : zone de mesure, pastilles du test de clics, liste des logiciels, formulaire de sensibilité (`.mouse-*`) ; PR #NN |
 
 - Ordre d'import dans [[main.tsx (app)]] : `tokens.css`, `app.css`, `account.css`, `features.css`. L'ordre compte : une règle plus bas l'emporte à égalité.
 - La barre en jeu ([[main.tsx (barre en jeu)]]) charge seulement `tokens.css` et `overlay.css`.

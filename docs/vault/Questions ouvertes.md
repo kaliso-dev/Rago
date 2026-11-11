@@ -47,7 +47,7 @@ Posées le 10/11 au soir (q70 à q93), après la relecture complète du code pou
 
 Posées le 11/11 :
 - q94 : [[Graphismes des jeux]] gratuits pour tous ou Premium ? (le code les laisse gratuits)
-- q96 : [[Idées souris]] : lesquelles faire, et gratuites ou Premium ?
+- q96 : [[Page Souris]] gratuite pour tous ? (codée gratuite ; le réglage « Souris 1:1 » reste Premium)
 
 ## À vérifier (sans Sofiene)
 - [[Couleurs et résolution]] (11/11, jamais testé sur Windows) : saturation NVIDIA (NVAPI) et AMD (ADL), rampe gamma, retour des couleurs au Alt+Tab, résolution étirée (`DMDFO_STRETCH`) et retour à la fin de la partie, écriture des fichiers de Valorant, Fortnite et CS2 ; comportement avec le HDR de Windows.
