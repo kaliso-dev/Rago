@@ -2,7 +2,7 @@
 type: code
 tags: [code, app, rust, jeux, alimentation, carte-graphique]
 fichier: app/src-tauri/src/session.rs
-lignes: 578
+lignes: 665
 maj: 2026-11-11
 ---
 # session.rs
@@ -48,7 +48,7 @@ Tout ce qui suit est CONFIRMÉ (code de `staging`, 10/11).
 - Les exes écrits sont notés dans `session.json` (`gpu`) ; ils restent après la partie (l'effet vaut au lancement suivant du jeu).
 - Option coupée : chaque choix écrit par Rago est supprimé **s'il vaut toujours `GpuPreference=2;`**.
 
-### Jeu en priorité haute (`game_priority`, 11/11, branche `claude/project-thread-k6pmox`, pas encore dans `staging`, **jamais testé sur Windows**)
+### Jeu en priorité haute (`game_priority`, 11/11, PR #89, **jamais testé sur Windows**)
 - Pendant une partie, chaque nouvel exe de jeu (`prio_fresh`) : ses processus (liste ToolHelp, chemin comparé en minuscules) sont ouverts avec `PROCESS_QUERY_LIMITED_INFORMATION | PROCESS_SET_INFORMATION` ; si leur priorité est `NORMAL_PRIORITY_CLASS` ou `ABOVE_NORMAL_PRIORITY_CLASS`, `SetPriorityClass(HIGH_PRIORITY_CLASS)` puis `SetProcessInformation(ProcessPowerThrottling)` avec `ControlMask = EXECUTION_SPEED`, `StateMask = 0` (EcoQoS coupé). Jamais Temps réel.
 - Mémoire seulement (`raised` : pid → chemin et priorité d'avant), rien dans `session.json` : la priorité meurt avec le processus.
 - Option coupée pendant la partie : chaque processus encore lancé, au même chemin et toujours en priorité haute, retrouve sa priorité d'avant, et EcoQoS est rendu à Windows (`ControlMask = 0`).

@@ -9,7 +9,7 @@ maj: 2026-11-11
 
 Carte **« In-game graphics » / « Graphismes du jeu »** de la page « Jeux » : trois tuiles Performance, Équilibré, Qualité ; un clic écrit le niveau dans les réglages du jeu. Fiche parente : [[Code de l'app (interface)]]. Fonctionnalité : [[Graphismes des jeux]]. Côté Rust : [[gamecfg.rs]].
 
-Statut : branche `claude/project-thread-5ln7f8` (11/11), PR #94 vers `staging`, pas encore fusionnée.
+Statut : PR #94 (11/11), fusionnée dans `staging` le 11/11 par la PR #92.
 
 ## Rôle et place dans l'ensemble
 - Affichée par [[Games.tsx]] sous la carte du jeu choisi, seulement si `graphicsForGame(nom)` ([[graphics.ts]]) reconnaît le jeu. Clé React `gfx:<id du jeu>` (une clé égale à celle de la carte du jeu dupliquait la carte, corrigé le 11/11).

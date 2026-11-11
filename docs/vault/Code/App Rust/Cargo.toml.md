@@ -63,7 +63,7 @@ Liaisons brutes vers l'API Windows. Une feature par partie de l'API :
 | `Win32_System_Diagnostics_Etw` | [[flows.rs]] (journal réseau du ping des jeux) |
 | `Win32_System_Pipes`, `Win32_Storage_FileSystem` | [[bridge.rs]] (canal nommé avec Rago OS) ; [[display.rs]] pour FileSystem (fichier du jeu en lecture seule) |
 | `Win32_Graphics_Gdi` | [[icon.rs]], [[analysis.rs]], [[overlay.rs]], [[display.rs]] (écrans, résolution) |
-| `Win32_UI_ColorSystem`, `Win32_System_Memory` | [[display.rs]] : rampe gamma (`GetDeviceGammaRamp`, `SetDeviceGammaRamp`) et mémoire demandée par le pilote AMD (`HeapAlloc`) ; ajoutées le 11/11 (branche `claude/project-thread-7n0ikn`) |
+| `Win32_UI_ColorSystem`, `Win32_System_Memory` | [[display.rs]] : rampe gamma (`GetDeviceGammaRamp`, `SetDeviceGammaRamp`) et mémoire demandée par le pilote AMD (`HeapAlloc`) ; ajoutées le 11/11 (PR #93) |
 | `Win32_UI_WindowsAndMessaging` | [[instance.rs]], [[icon.rs]], [[memory.rs]], [[games.rs]], [[overlay.rs]], [[display.rs]] |
 | `Win32_UI_Shell` | [[tools.rs]] (corbeille), [[overlay.rs]] |
 | `Win32_UI_Input_KeyboardAndMouse` | [[overlay.rs]] |

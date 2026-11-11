@@ -9,7 +9,7 @@ maj: 2026-11-11
 
 Les **couleurs et la résolution par jeu** côté Rust : saturation (Digital Vibrance NVIDIA, saturation AMD), luminosité, contraste et gamma posés quand le jeu est au premier plan, résolution étirée posée le temps de la partie, et résolution écrite dans les fichiers de réglages de Valorant, Fortnite et CS2. Fiche parente : [[Code de l'app (Rust)]]. Fonctionnalité : [[Couleurs et résolution]] (Linear RAG-95).
 
-Tout ce qui suit est CONFIRMÉ (code de la branche `claude/project-thread-7n0ikn`, 11/11). **Jamais testé sur Windows** : les appels aux pilotes et à Windows sont seulement compilés (`cargo check` pour Windows), les tests tournent sous Linux.
+Tout ce qui suit est CONFIRMÉ (code de `staging`, 11/11 : PR #93 fusionnée par la PR #92). **Jamais testé sur Windows** : les appels aux pilotes et à Windows sont seulement compilés (`cargo check` pour Windows), les tests tournent sous Linux.
 
 ## Rôle et place dans l'ensemble
 - Créé dans le `setup` de [[lib.rs]] : `Display::new(data_dir)` remet tout de suite ce qu'un plantage a laissé, puis `display.spawn(…)` lance le fil qui regarde le jeu au premier plan (il émet `display:state`). Géré par `app.manage` (`Arc<display::Display>`).

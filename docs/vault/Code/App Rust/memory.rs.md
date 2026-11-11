@@ -2,7 +2,7 @@
 type: code
 tags: [code, app, rust, windows]
 fichier: app/src-tauri/src/memory.rs
-lignes: 291
+lignes: 290
 maj: 2026-11-11
 ---
 # memory.rs
@@ -12,7 +12,7 @@ Bouton **« Nettoyer »** sous la jauge de RAM : vide la liste « standby » de 
 Tout est CONFIRMÉ (code de `staging`, 10/11). Créé le 17/10 (RAG-48, décidé le 17/10/2026).
 
 ## Rôle et place dans l'ensemble
-- Appelé par la commande `clean_ram(trim)` de [[lib.rs]], qui passe les dossiers d'installation des jeux de la bibliothèque (`library.install_dirs()`, [[games.rs]]), et par la commande `clean_ram` du pont [[Rago OS]] (sans réduction). Dans l'interface, `clean_ram` est lancé par « Nettoyer » du [[Tableau de bord]] et, depuis la PR #90 (11/11, pas encore fusionnée), par la tuile « Vider le cache de la RAM » de la [[Page Outils]] ([[Tools.tsx]]), avec la même option de réduction.
+- Appelé par la commande `clean_ram(trim)` de [[lib.rs]], qui passe les dossiers d'installation des jeux de la bibliothèque (`library.install_dirs()`, [[games.rs]]), et par la commande `clean_ram` du pont [[Rago OS]] (sans réduction). Dans l'interface, `clean_ram` est lancé par « Nettoyer » du [[Tableau de bord]] et, depuis la PR #90 (11/11), par la tuile « Vider le cache de la RAM » de la [[Page Outils]] ([[Tools.tsx]]), avec la même option de réduction.
 - Aucune appli n'est fermée et aucune donnée n'est perdue : le cache se reconstruit tout seul.
 
 ## Ce que le fichier expose

@@ -9,7 +9,7 @@ maj: 2026-11-11
 
 La **liste des réglages en jeu conseillés** des [[Conseils au lancement du jeu]] : pour 8 jeux, les réglages à changer dans le jeu, leur valeur, la raison et les sources. Écrit à la main (aucun générateur), lu par l'interface ([[tips.ts]]) et par le moteur ([[tips.rs]], seulement les identifiants). Fiche parente : [[Code de l'app (interface)]].
 
-**Fichier ajouté le 11/11 par la PR #91 (brouillon, pas encore dans `staging`).** Tout ce qui suit est CONFIRMÉ (code de la branche `claude/project-thread-g3od2h`, 11/11).
+**Fichier ajouté le 11/11 par la PR #91 (fusionnée dans `staging` le 11/11 par la PR #92).** Tout ce qui suit est CONFIRMÉ (code de `staging`, 11/11).
 
 ## Format
 ```json

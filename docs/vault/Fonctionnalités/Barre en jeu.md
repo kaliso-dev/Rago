@@ -24,7 +24,7 @@ Linear RAG-82. Arrivée en [[Version 1.2.0]]. Code : [[overlay.rs]], [[fps.rs]],
   - Partie par [[Proxy|Rago Route]] : le jeu est connecté à `localhost`, que la barre écarte ; elle n'affiche donc sans doute **pas de ping** (l'onglet Rago Route montre le sien). À VÉRIFIER (déduit du code de [[gameping.rs]], pas observé).
 - CPU, GPU, RAM ; bouton Nettoyer la RAM ([[Tableau de bord]]) ; vérifications de [[Pendant la partie]] ; bouton « Ouvrir Rago Optimizer ».
 - **Pastille** « FPS et ping à l'écran » (option) : en haut à gauche, ne prend ni le focus ni les clics ; attend que le jeu soit au premier plan depuis 10 s ; jamais par-dessus le plein écran exclusif.
-- **Conseils au lancement du jeu** (PR #91 du 11/11, pas encore dans `staging`, jamais testé sur Windows) : au lancement, la pastille s'élargit 12 s pour dire « 9 conseils pour VALORANT · Alt+X pour voir » (même si la pastille FPS/ping n'est pas gardée) ; dans la barre, les points à vérifier et les 3 premiers réglages en jeu conseillés défilent dans un bloc à part. Voir [[Conseils au lancement du jeu]].
+- **Conseils au lancement du jeu** (PR #91 du 11/11, jamais testé sur Windows) : au lancement, la pastille s'élargit 12 s pour dire « 9 conseils pour VALORANT · Alt+X pour voir » (même si la pastille FPS/ping n'est pas gardée) ; dans la barre, les points à vérifier et les 3 premiers réglages en jeu conseillés défilent dans un bloc à part. Voir [[Conseils au lancement du jeu]].
 
 ## Réglages en pleine partie (Premium, 21 tweaks)
 Tweaks qui s'appliquent sans redémarrage, sans couper le réseau ni relancer l'Explorateur :

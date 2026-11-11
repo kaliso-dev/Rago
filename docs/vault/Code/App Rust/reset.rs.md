@@ -15,7 +15,7 @@ Tout est CONFIRMÉ (code de `staging`, 10/11). Créé le 15/10 ([[Version 1.1.14
 - La boucle de remise de fin de licence est dans [[lib.rs]] (`reset_after_license`) ; ce fichier fournit la liste des réglages (`targets`), la note sur disque (`Pending`), la décision (`due`) et l'état partagé (`Reset`).
 - La remise de désinstallation (`uninstall`) est entièrement ici, appelée par `run()` de [[lib.rs]] quand l'installateur lance l'exe avec `--reset-tweaks` ([[Installateur NSIS]]).
 - Le travail lui-même est fait par [[runner.rs]] (`run_now`, annulations), à partir de [[backup.rs]] (`applied.json`).
-- Remet aussi ce qui n'est pas dans `applied.json` : [[netopt.rs]] (`put_back`, Packet Optimizer), [[session.rs]] (`undo_all`, réglages posés pendant une partie) et, à la désinstallation, [[display.rs]] (`undo_all`, couleurs, résolution et fichiers des jeux ; ajouté le 11/11, branche `claude/project-thread-7n0ikn`).
+- Remet aussi ce qui n'est pas dans `applied.json` : [[netopt.rs]] (`put_back`, Packet Optimizer), [[session.rs]] (`undo_all`, réglages posés pendant une partie) et, à la désinstallation, [[display.rs]] (`undo_all`, couleurs, résolution et fichiers des jeux ; ajouté le 11/11, PR #93).
 
 ## Ce que le fichier expose
 | Élément | Description |

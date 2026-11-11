@@ -9,7 +9,7 @@ maj: 2026-11-11
 
 Les **réglages d'écran des pros** proposés dans la page « Couleurs et résolution » : saturation et résolution de 22 joueurs (5 Valorant, 13 CS2, 4 Fortnite), importables en un clic avec Premium. Fichier écrit **à la main** (aucun générateur), lu seulement par l'interface. Fiche parente : [[Code de l'app (interface)]]. Fonctionnalité : [[Couleurs et résolution]]. Page : [[Display.tsx]].
 
-Tout ce qui suit est CONFIRMÉ (code de la branche `claude/project-thread-7n0ikn`, 11/11). Relevé fait le 11/11/2026 sur prosettings.net et specs.gg.
+Tout ce qui suit est CONFIRMÉ (code de `staging`, 11/11 : PR #93 fusionnée par la PR #92). Relevé fait le 11/11/2026 sur prosettings.net et specs.gg.
 
 ## Format
 Un objet JSON : `_doc` (explication en français), `updated` (`2026-11-11`, date du relevé, affichée dans la page) et `pros`, une liste. Chaque pro :

@@ -2,21 +2,17 @@
 type: code
 tags: [code, app, rust, carte]
 fichier: app/src-tauri/
-lignes: 19 890 (40 fichiers .rs de src/), plus build.rs 66, embed_scripts.rs 98, netopt/*.ps1 932
-lignes: 21 081 (41 fichiers .rs de src/), plus build.rs 66, embed_scripts.rs 98, netopt/*.ps1 932
-lignes: 19 431 (40 fichiers .rs de src/), plus build.rs 66, embed_scripts.rs 98, netopt/*.ps1 932
+lignes: 23 431 (43 fichiers .rs de src/), plus build.rs 66, embed_scripts.rs 98, netopt/*.ps1 932
 maj: 2026-11-11
 ---
 # Code de l'app (Rust)
 
 Carte du **cœur Rust de Rago Optimizer** (`app/src-tauri/`) : chaque module en une ligne, qui appelle qui, l'état partagé, les fils qui tournent en permanence, les événements envoyés à l'interface, les fichiers écrits sur disque et les clés de registre que l'app touche elle-même. Une note par fichier détaille le reste. Vue d'ensemble : [[Architecture de l'app]], [[App Windows]]. Interface React : [[Code de l'app (interface)]]. Scripts des réglages : [[Code du générateur de catalogue]].
 
-Tout est CONFIRMÉ (code de `staging`, 10/11, commit `ee77d4f`). Ajouts du 11/11 ([[display.rs]] pour [[Couleurs et résolution]]) : branche `claude/project-thread-7n0ikn`, jamais testés sur Windows.
+Tout est CONFIRMÉ (code de `staging`, 11/11 : les 6 fonctionnalités de la PR #92 fusionnées, dont [[display.rs]], [[gamecfg.rs]], [[tips.rs]] et la page Outils ; pas encore testées sur Windows par Sofiene).
 
 ## Comment lire ce code
-- Point d'entrée : [[main.rs]] appelle `run()` de [[lib.rs]], qui déclare les **38 modules**, crée l'état partagé et enregistre les **82 commandes** que l'interface appelle par `invoke` ([[api.ts]]) : 76 sur `staging`, 6 de plus pour la page Outils dans la PR #90 (11/11, pas encore fusionnée).
-- Point d'entrée : [[main.rs]] appelle `run()` de [[lib.rs]], qui déclare les **39 modules**, crée l'état partagé et enregistre les **81 commandes** que l'interface appelle par `invoke` ([[api.ts]]).
-- Point d'entrée : [[main.rs]] appelle `run()` de [[lib.rs]], qui déclare les **39 modules**, crée l'état partagé et enregistre les **79 commandes** que l'interface appelle par `invoke` ([[api.ts]]).
+- Point d'entrée : [[main.rs]] appelle `run()` de [[lib.rs]], qui déclare les **41 modules**, crée l'état partagé et enregistre les **92 commandes** que l'interface appelle par `invoke` ([[api.ts]]).
 - L'interface n'a **aucun accès réseau** (CSP, [[Configuration Tauri]]) : tout appel au serveur passe par une commande Rust.
 - L'app tourne **en administrateur** (`app.manifest`) : presque tous les réglages écrivent dans `HKLM`, les services ou le BCD.
 - Les scripts des réglages ne sont **jamais en clair** dans l'exe : chiffrés à la compilation ([[build.rs]], [[embed_scripts.rs]], [[seal.rs]]), le paquet Premium s'ouvre avec la clé donnée par le serveur à une licence active ([[license.rs]]).
@@ -27,9 +23,7 @@ Tout est CONFIRMÉ (code de `staging`, 10/11, commit `ee77d4f`). Ajouts du 11/11
 | Module | Lignes | Rôle |
 |---|---|---|
 | [[main.rs]] | 6 | lance `rago_hub_lib::run()`, sans console en release |
-| [[lib.rs]] | 1 594 | état partagé, 82 commandes, démarrage (`run()`), réponses au pont de Rago OS |
-| [[lib.rs]] | 1 634 | état partagé, 81 commandes, démarrage (`run()`), réponses au pont de Rago OS |
-| [[lib.rs]] | 1 602 | état partagé, 79 commandes, démarrage (`run()`), réponses au pont de Rago OS |
+| [[lib.rs]] | 1 759 | état partagé, 92 commandes, démarrage (`run()`), réponses au pont de Rago OS |
 | [[instance.rs]] | 283 | une seule instance : mutex Windows, réveil de la fenêtre déjà ouverte, attente de la désinstallation |
 | [[background.rs]] | 294 | préférences d'arrière-plan, icône près de l'horloge, tâche planifiée de lancement avec Windows |
 | [[icon.rs]] | 189 | extrait l'icône d'un exe en PNG (bibliothèque de jeux) |
@@ -71,7 +65,7 @@ Tout est CONFIRMÉ (code de `staging`, 10/11, commit `ee77d4f`). Ajouts du 11/11
 |---|---|---|
 | [[games.rs]] | 1 936 | bibliothèque de jeux : jeux et launchers installés, images, lancement, jeux en cours |
 | [[games.rs]] | 1 929 | bibliothèque de jeux : jeux et launchers installés, images, lancement, jeux en cours |
-| [[gamecfg.rs]] | 1 071 | [[Graphismes des jeux]] : Performance, Équilibré, Qualité écrits dans les réglages de 6 jeux, copie d'origine gardée (branche du 11/11) |
+| [[gamecfg.rs]] | 1 071 | [[Graphismes des jeux]] : Performance, Équilibré, Qualité écrits dans les réglages de 6 jeux, copie d'origine gardée |
 | [[overlay.rs]] | 751 | barre en jeu : jeu au premier plan, raccourci Alt+X, fenêtre de la barre |
 | [[display.rs]] | 1 560 | [[Couleurs et résolution]] : saturation (NVIDIA, AMD), luminosité, contraste et gamma quand le jeu est au premier plan, résolution étirée le temps de la partie, résolution dans les fichiers de Valorant, Fortnite et CS2 |
 | [[session.rs]] | 432 | [[Pendant la partie]] : carte graphique performante, plan d'alimentation, défait après |
@@ -191,7 +185,7 @@ Ils sont écoutés par [[store.tsx]] et les pages de l'interface.
 | `%LOCALAPPDATA%\Rago\license.bin`, `scripts.bin` | [[license.rs]] | jeton de licence et clé des scripts, chiffrés (DPAPI) |
 | `%LOCALAPPDATA%\Rago\account.bin` | [[account.rs]] | compte en cache, chiffré |
 | `optionsof.txt.rago-<horodatage>(.bak, .none)` à côté d'`optionsof.txt` | [[minecraft.rs]] | copie avant les préréglages OptiFine |
-| `<fichier de réglages du jeu>.rago-original` (GameUserSettings.ini, cs2_video.txt, videoconfig.txt) | [[gamecfg.rs]] | copie avant les graphismes des jeux (branche du 11/11) |
+| `<fichier de réglages du jeu>.rago-original` (GameUserSettings.ini, cs2_video.txt, videoconfig.txt) | [[gamecfg.rs]] | copie avant les graphismes des jeux |
 
 À VÉRIFIER : `%LOCALAPPDATA%\Rago\` n'a pas de suffixe staging, alors que `<data>` en a un : l'exe de test et le vrai partagent donc la licence et le compte (voir [[license.rs]]).
 

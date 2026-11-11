@@ -9,7 +9,7 @@ maj: 2026-11-11
 
 **Graphismes des jeux** : écrit Performance, Équilibré ou Qualité dans les fichiers de réglages des jeux, comme le préréglage OptiFine ([[minecraft.rs]]) pour Minecraft. Fiche parente : [[Code de l'app (Rust)]]. Fonctionnalité : [[Graphismes des jeux]]. Interface : [[GameGraphics.tsx]], textes [[graphics.ts]].
 
-Statut : branche `claude/project-thread-5ln7f8` (11/11), PR #94 vers `staging`, pas encore fusionnée. Jamais testé sur Windows. Ticket RAG-92.
+Statut : PR #94 (11/11), fusionnée dans `staging` le 11/11 par la PR #92. Jamais testé sur Windows. Ticket RAG-92.
 
 ## Rôle et place dans l'ensemble
 - Commandes de [[lib.rs]] : `graphics_status(game)`, `graphics_apply(game, level)`, `graphics_restore(game)`, toutes dans un fil à part (`spawn_blocking`). Chacune trouve les fichiers (`files`) et regarde si le jeu tourne (`running`, à partir de `games::process_paths()` de [[games.rs]]).

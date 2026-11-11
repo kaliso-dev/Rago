@@ -9,7 +9,7 @@ maj: 2026-11-11
 
 Le moteur des **[[Conseils au lancement du jeu]]** : quel jeu à conseils tourne, quels réglages en jeu le joueur a cochés « fait », et ce que le PC montre pendant la partie (applis gourmandes, mémoire presque pleine, écran sous sa meilleure fréquence, Game DVR). Il ne change rien et ne ferme rien. Fiche parente : [[Code de l'app (Rust)]].
 
-**Fichier ajouté le 11/11 par la PR #91 (brouillon, pas encore dans `staging`), jamais testé sur Windows.** Tout ce qui suit est CONFIRMÉ (code de la branche `claude/project-thread-g3od2h`, 11/11).
+**Fichier ajouté le 11/11 par la PR #91 (fusionnée dans `staging` le 11/11 par la PR #92), jamais testé sur Windows.** Tout ce qui suit est CONFIRMÉ (code de `staging`, 11/11).
 
 ## Rôle et place dans l'ensemble
 - [[session.rs]] l'appelle à chaque tour de 4 s : `game_of` (jeu de la partie), `Done` (réglages cochés, garde `tips-done.json`), `pc_checks` (écran et Game DVR, toutes les minutes).

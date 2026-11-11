@@ -9,7 +9,7 @@ maj: 2026-11-11
 
 La page **« Couleurs et résolution »** : pour chaque jeu de la bibliothèque, la saturation, la luminosité, le contraste, le gamma et la résolution (étirée ou avec bandes noires) posés seulement pendant la partie, et les réglages de 22 pros à importer en un clic (Premium). Fiche parente : [[Code de l'app (interface)]]. Fonctionnalité : [[Couleurs et résolution]] (Linear RAG-95). Côté Rust : [[display.rs]].
 
-Tout ce qui suit est CONFIRMÉ (code de la branche `claude/project-thread-7n0ikn`, 11/11). Vu dans la démo du navigateur, **jamais testé sur Windows**.
+Tout ce qui suit est CONFIRMÉ (code de `staging`, 11/11 : PR #93 fusionnée par la PR #92). Vu dans la démo du navigateur, **jamais testé sur Windows**.
 
 ## Rôle et place dans l'ensemble
 - Affichée par [[App.tsx]] quand `page === "display"`. Entrée « Couleurs et résolution » de la [[Sidebar.tsx]] (groupe « En jeu », sous Jeux, icône palette), avec « Nouveau » tant que la page n'a pas été ouverte ([[seen.ts]]).

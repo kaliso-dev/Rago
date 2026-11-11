@@ -8,7 +8,7 @@ maj: 2026-11-11
 
 Comment le code de l'app Windows (`app/`) est organisé, état de `staging` (1.3.0) au 10/11. Résumé produit et liste des écrans : [[App Windows]]. Porte d'entrée : [[Reprendre le développement]]. Détail fichier par fichier : [[Code de l'app (Rust)]] et [[Code de l'app (interface)]].
 
-Ajouts du 11/11 pour [[Couleurs et résolution]] (module `display.rs`, 5 commandes, événement `display:state`, page `Display.tsx`) : code de la branche `claude/project-thread-7n0ikn`, pas encore dans `staging`.
+Ajouts du 11/11, fusionnés dans `staging` par la PR #92 (pas encore testés sur Windows) : [[Couleurs et résolution]] (`display.rs`, 5 commandes, événement `display:state`, page `Display.tsx`), [[Graphismes des jeux]] (`gamecfg.rs`, 3 commandes), [[Conseils au lancement du jeu]] (`tips.rs`, `tips_done`, `tips_mark`), jeu en priorité haute ([[Pendant la partie]]) et [[Page Outils]] (6 commandes `tools_*`).
 
 ## 1. Deux moitiés qui ne se parlent que par IPC
 - **Moteur Rust** (`app/src-tauri/`, crate `rago-hub`, lib `rago_hub_lib`) : tout ce qui touche Windows, le réseau et le disque. Tourne **en administrateur** (`app.manifest`, `requireAdministrator`).
@@ -41,28 +41,26 @@ Fermeture de la fenêtre principale : cachée si une remise est en cours ou si l
 | En jeu | `overlay.rs`, `fps.rs` (PresentMon), `gameping.rs`, `mcping.rs`, `flows.rs` (ETW, ping des jeux UDP), `session.rs`, `background.rs` | [[Barre en jeu]], [[Pendant la partie]], [[Arrière-plan et démarrage]] |
 | Jeux | `games.rs` (launchers Steam, Epic, Riot, Battle.net, Ubisoft, Xbox, Roblox, launchers Minecraft), `icon.rs` | [[Bibliothèque de jeux]] |
 | Couleurs et résolution | `display.rs` (saturation NVIDIA par NVAPI et AMD par ADL, rampe gamma, résolution temporaire de l'écran principal, fichiers de réglages de Valorant, Fortnite et CS2 ; `display.json`, `display-restore.json`) | [[Couleurs et résolution]] |
-| Jeux | `games.rs` (launchers Steam, Epic, Riot, Battle.net, Ubisoft, Xbox, Roblox, launchers Minecraft), `icon.rs`, `gamecfg.rs` (graphismes des jeux, branche du 11/11) | [[Bibliothèque de jeux]], [[Graphismes des jeux]] |
+| Jeux | `games.rs` (launchers Steam, Epic, Riot, Battle.net, Ubisoft, Xbox, Roblox, launchers Minecraft), `icon.rs`, `gamecfg.rs` (graphismes des jeux) | [[Bibliothèque de jeux]], [[Graphismes des jeux]] |
 | Réseau | `netopt.rs` + `src-tauri/netopt/*.ps1` (moteur PowerShell chiffré), `nettest.rs`, `icmp.rs`, `netshare.rs`, `route.rs` (Rago Route, ≈2 230 lignes) | [[Packet Optimizer]], [[Test réseau]], [[Infrastructure Rago Route]] |
 | Support | `report.rs` (rapport anonymisé dans `reports\`) | [[Partage et support]] |
 | Mise à jour | `update.rs` | [[Mise à jour automatique]] |
 | Rago OS | `bridge.rs` (canal nommé), `boost.rs` (Mode jeu total : services Windows arrêtés le temps d'une partie, notés dans `boost.json`) | [[Rago OS]] |
 
-### Commandes exposées à l'interface (`generate_handler!`, 76 sur `staging` au 10/11, 82 avec la PR #90)
-- Système et outils : `get_system_info`, `rbw_status`, `tools_scan`, `tools_clean`, `tools_apps`, `tools_remove_apps`, `tools_drivers`, `tools_windows_update`, et dans la PR #90 (page Outils, 11/11, pas encore fusionnée) `tools_startup`, `tools_set_startup`, `tools_power_plans`, `tools_set_power_plan`, `tools_flush_dns`, `tools_open` ; puis `live_stats`, `clean_ram`, `open_task_manager`, `restart_pc`, `open_folder`, `analysis_facts`.
-### Commandes exposées à l'interface (`generate_handler!`, 81 avec la branche du 11/11)
-- Système et outils : `get_system_info`, `rbw_status`, `tools_scan`, `tools_clean`, `tools_apps`, `tools_remove_apps`, `tools_drivers`, `tools_windows_update`, `live_stats`, `clean_ram`, `open_task_manager`, `restart_pc`, `open_folder`, `analysis_facts`.
+### Commandes exposées à l'interface (`generate_handler!`, 92 sur `staging` au 11/11)
+- Système et outils : `get_system_info`, `rbw_status`, `tools_scan`, `tools_clean`, `tools_apps`, `tools_remove_apps`, `tools_drivers`, `tools_windows_update`, `tools_startup`, `tools_set_startup`, `tools_power_plans`, `tools_set_power_plan`, `tools_flush_dns`, `tools_open` ([[Page Outils]]), `live_stats`, `clean_ram`, `open_task_manager`, `restart_pc`, `open_folder`, `analysis_facts`.
 - Réglages : `run_tweaks`, `cancel_run`, `is_running`, `get_history`, `clear_history`, `get_applied`, `undo_all_plan`, `sign_out_plan`, `take_repair_notice`, `minecraft_status`, `minecraft_restore`, `save_preset_file`, `read_preset_file`.
-- Graphismes des jeux (branche du 11/11, [[gamecfg.rs]]) : `graphics_status`, `graphics_apply`, `graphics_restore`.
+- Graphismes des jeux ([[gamecfg.rs]]) : `graphics_status`, `graphics_apply`, `graphics_restore`.
 - Réseau : `net_test`, `netopt_state`, `netopt_run`, `route_start`, `route_stop`, `route_status`, `route_token`, `route_links` (2e connexions possibles et diagnostic du partage de connexion du téléphone).
 - Jeux : `games_list`, `game_art`, `game_launch`, `game_add`, `game_remove`, `games_unhide`, `launchers_list`, `launcher_launch`, `launcher_icon`, `preset_icons`.
 - Couleurs et résolution : `display_info`, `display_profiles`, `display_state`, `display_set_profile` (refus `premium:no_license` pour l'import d'un pro sans Premium), `display_preview`.
-- Barre en jeu et arrière-plan : `overlay_info`, `overlay_live`, `overlay_close`, `overlay_set_pin`, `overlay_open_app`, `background_get`, `background_set`, `session_state`, `session_set_prefs`.
+- Barre en jeu et arrière-plan : `overlay_info`, `overlay_live`, `overlay_close`, `overlay_set_pin`, `overlay_open_app`, `background_get`, `background_set`, `session_state`, `session_set_prefs`, `tips_done`, `tips_mark` (réglages conseillés cochés, [[tips.rs]]).
 - Mise à jour : `update_ready`, `update_status`, `update_install`.
 - Licence et compte : `license_status`, `license_login`, `license_link_start`, `license_link_poll`, `license_activate`, `license_refresh`, `license_sign_out`, `account_me`, `account_login`, `account_sign_out`, `account_save_review`, `account_delete_review`, `account_set_name`, `account_set_photo`, `account_remove_photo`, `account_subscription`, `plans_info`.
 - Support : `support_report`, `show_report`.
 
 ### Événements émis vers l'interface
-`run:item`, `run:log`, `run:done` (lot de réglages, [[runner.rs]]), `reset:done`, `netopt:line`, `nettest:sample`, `nettest:measure`, `games:running`, `games:session`, `display:state` (couleurs et résolution posées, dernière erreur), `app:goto` (page à ouvrir, demandée par Rago OS ou la barre en jeu) ([[lib.rs]]), `update:ready` ([[update.rs]]), `overlay:mode` (vers la fenêtre de la barre en jeu, [[overlay.rs]]).
+`run:item`, `run:log`, `run:done` (lot de réglages, [[runner.rs]]), `reset:done`, `netopt:line`, `nettest:sample`, `nettest:measure`, `games:running`, `games:session`, `display:state` (couleurs et résolution posées, dernière erreur), `tips:done` (réglages conseillés cochés), `app:goto` (page à ouvrir, demandée par Rago OS ou la barre en jeu) ([[lib.rs]]), `update:ready` ([[update.rs]]), `overlay:mode` (vers la fenêtre de la barre en jeu, [[overlay.rs]]).
 
 ## 4. Interface React (`app/src/`)
 - `main.tsx` → `App.tsx` : barre de titre maison (`decorations: false`), `Sidebar`, page courante, `ApplyBar` (barre « Apply » des changements en attente), `RunOverlay` (suivi d'un lot), fenêtres `Upsell`, `ReviewPrompt`, `ReviewDialog`, `ConfirmDialog`, `SearchPalette`, `ResetToast`, `Splash`.

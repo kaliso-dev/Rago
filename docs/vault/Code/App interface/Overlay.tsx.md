@@ -57,7 +57,7 @@ Logo + FPS + ping, rien d'autre (`aria-live="off"`). La pastille ne prend ni le 
 - **Échap** ou clic hors de la barre (sur `.ov-stage`) : `overlayClose()`.
 - Animation d'ouverture : fondu, glissement de 10 px et échelle 0,98 → 1 en 0,22 s.
 
-### Conseils au lancement du jeu (PR #91, 11/11, pas encore dans `staging`)
+### Conseils au lancement du jeu (PR #91, 11/11)
 - **Rappel** : quand le moteur le demande (`nudge` de `overlayInfo`, puis l'événement `overlay:nudge`, [[overlay.rs]]), la pastille élargie montre le logo, une ampoule, le texte « {n} conseils pour {jeu} » (n = réglages pas faits + points à vérifier) ou « {n} points à vérifier », un séparateur et « Alt+X pour voir » (raccourci réel des préférences), avec `aria-live="polite"`. Nom du jeu : [[tips.ts]] `tipsFor`.
 - **Barre ouverte** : `SessionChecks` et le bloc [[GameTips.tsx]] (`compact` : 3 réglages, ouvert s'il en reste à faire) sont réunis dans `.ov-advice`, qui défile à part (258 px au plus, fondu en bas) pour laisser leur place aux réglages en pleine partie. Affiché quand une partie est en cours ou qu'un jeu à conseils est connu (`session.game`).
 - Commandes et événements en plus : `tips_done`, `tips_mark`, `tips:done` (par [[GameTips.tsx]]), `overlay:nudge`. Démo : `overlay.html?pill&nudge` (`&game=cs2` pour un autre jeu). Fonctionnalité : [[Conseils au lancement du jeu]].

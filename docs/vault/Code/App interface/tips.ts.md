@@ -9,7 +9,7 @@ maj: 2026-11-11
 
 Lecture de la liste des **réglages en jeu conseillés** ([[tips.json]]) et suivi des réglages cochés « fait », pour les [[Conseils au lancement du jeu]]. Fiche parente : [[Code de l'app (interface)]].
 
-**Fichier ajouté le 11/11 par la PR #91 (brouillon, pas encore dans `staging`).** Tout ce qui suit est CONFIRMÉ (code de la branche `claude/project-thread-g3od2h`, 11/11).
+**Fichier ajouté le 11/11 par la PR #91 (fusionnée dans `staging` le 11/11 par la PR #92).** Tout ce qui suit est CONFIRMÉ (code de `staging`, 11/11).
 
 ## Ce que le fichier expose
 - Types : `TipTag` (`see`, `lag`, `fps`, `build`, `aim`), `Tip { id, tag, setting, value: {en, fr}, why: {en, fr} }`, `TipSource { name, url, date }`, `GameTips { name, sources, tips }`.

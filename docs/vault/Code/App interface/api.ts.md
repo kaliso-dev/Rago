@@ -2,9 +2,7 @@
 type: code
 tags: [code, app, typescript, interface]
 fichier: app/src/lib/api.ts
-lignes: 1387
-lignes: 1485
-lignes: 1431
+lignes: 1665
 maj: 2026-11-11
 ---
 # api.ts
@@ -42,7 +40,7 @@ Tout ce qui suit est CONFIRMÉ (code de `staging`, 10/11, commit `ee77d4f`).
 | `UpdateReady` | `version`, `notes` | [[update.rs]] |
 | `BackgroundPrefs`, `BackgroundState` | préférences (`tray`, `autostart`, `autostartChosen?`, `overlay`, `shortcut`, `pin`, `lang`, `gameGpu`, `gamePower`, `gameChecks`, `gamePriority`) ; état (`autostart` réel, `shortcutTaken`, `fpsAvailable`) | [[background.rs]] |
 | `SessionCheck`, `SessionState` | pendant la partie : `playing`, `power`, `gpuGames`, `checks` (`battery`, `download`, `sync`, `record` + applis), `multiGpu`, `x3d` | [[session.rs]] |
-| `DisplayColors`, `DisplayResolution`, `DisplayProfile`, `DisplayMonitor`, `DisplayInfo`, `DisplayState` | couleurs et résolution par jeu (ajout du 11/11, branche `claude/project-thread-7n0ikn`) : `vibrance` 50–100, `brightness` et `contrast` −30 à +30, `gamma` × 100 ; `width`, `height`, `stretch`, `gameFile` ; profil `colors`, `resolution`, `pro` ; écran principal (`device`, `name`, `width`, `height`, `hz`, `modes`) et `vibrance` `nvidia`/`amd`/`null` ; état posé (`colors`, `resolution`, `error`) | [[display.rs]] |
+| `DisplayColors`, `DisplayResolution`, `DisplayProfile`, `DisplayMonitor`, `DisplayInfo`, `DisplayState` | couleurs et résolution par jeu (ajout du 11/11, PR #93) : `vibrance` 50–100, `brightness` et `contrast` −30 à +30, `gamma` × 100 ; `width`, `height`, `stretch`, `gameFile` ; profil `colors`, `resolution`, `pro` ; écran principal (`device`, `name`, `width`, `height`, `hz`, `modes`) et `vibrance` `nvidia`/`amd`/`null` ; état posé (`colors`, `resolution`, `error`) | [[display.rs]] |
 | `OverlayMode`, `OverlayInfo`, `OverlayLive` | barre en jeu : mode `hidden`/`panel`/`pill`, jeu, raccourci, épingle, `fpsAvailable`, `shortcutTaken`, `passive` ; mesures `fps`, `ping`, `pingEstimate?` | [[overlay.rs]], [[fps.rs]] |
 | `RbwCheck` | une ligne du vérificateur Ranked Bedwars : `name`, `kind` service/setting, `ok`, `state`, `start` | [[rbw.rs]] |
 | `CleanAreaId`, `CleanArea`, `CleanResult`, `BloatApp`, `Driver`, `DriversInfo` | page Outils : zones `temp`, `windows_temp`, `update`, `crash`, `browsers`, `discord`, `shaders`, `recycle` ; applis préinstallées (nom en/fr) ; pilotes `gpu`/`network`/`audio` avec date `AAAA-MM-JJ` ; fabricant et modèle de la carte mère | [[tools.rs]] |
@@ -135,7 +133,6 @@ Chaque ligne : nom dans `api` → commande Rust (paramètres) → ce que fait le
 | `updateInstall()` | `update_install` (l'app se ferme) | 1,2 s puis recharge la page |
 | `backgroundGet()` / `backgroundSet(prefs)` | `background_get` / `background_set { prefs }` ; erreurs `shortcut` et `autostart:…` | préférences par défaut : zone de notification oui, lancement avec Windows oui, barre oui, `Alt+X`, pas épinglée, langue `fr`, les 3 options de partie oui ; `backgroundSet` vérifie le raccourci par l'expression `^((Ctrl|Alt|Shift|Super)\+)*(F\d{1,2}|[A-Z0-9]|[A-Za-z]+)$` et ne change pas les 3 options de partie (comme le vrai `background_set`) |
 | `sessionState()` / `sessionSetPrefs(gpu, power, checks, priority)` / `onSession(cb)` | `session_state` / `session_set_prefs` / événement `games:session` | partie en cours avec `?playing` ou dans `overlay.html` ; vérifications OneDrive et OBS ; 2 jeux sur la carte performante ; `multiGpu: true` |
-| `sessionState()` / `sessionSetPrefs(gpu, power, checks)` / `onSession(cb)` | `session_state` / `session_set_prefs` / événement `games:session` | partie en cours avec `?playing` ou dans `overlay.html` ; vérifications OneDrive et OBS ; 2 jeux sur la carte performante ; `multiGpu: true` |
 | `displayInfo()` / `displayProfiles()` / `displayState()` | `display_info` / `display_profiles` / `display_state` | carte NVIDIA (`?amd` : AMD, `?intel` : pas de saturation), écran « ZOWIE XL LCD » 1920×1080 à 240 Hz avec 10 résolutions ; profils gardés dans `localStorage` `rago.demoDisplay` ; rien de posé |
 | `displaySetProfile(id, profile)` / `displayPreview(colors)` / `onDisplayState(cb)` | `display_set_profile { id, profile }` / `display_preview { colors }` / événement `display:state` | enregistre (clé `mc:java` pour Minecraft Java) ; refuse `premium:no_license` pour un pro nouveau sans licence de démo, comme le vrai moteur ; l'aperçu émet `display:state` avec `colors: "preview"` |
 | `overlayInfo()` | `overlay_info` | mode `panel` (`pill` avec `?pill`), jeu « Minecraft », `passive` avec `?passive` |

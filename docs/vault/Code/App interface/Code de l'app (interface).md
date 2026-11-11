@@ -2,9 +2,7 @@
 type: code
 tags: [code, app, react, carte]
 fichier: app/src/
-lignes: 30056
-lignes: 30663
-lignes: 29270
+lignes: 33402
 maj: 2026-11-11
 ---
 # Code de l'app (interface)
@@ -19,7 +17,7 @@ La **carte du code de l'interface React** de l'app Windows (`app/src/`). Elle pr
 
 Côté moteur : [[Code de l'app (Rust)]]. Vue produit : [[App Windows]]. Architecture d'ensemble : [[Architecture de l'app]]. Reprendre le travail : [[Reprendre le développement]].
 
-Tout ce qui suit est CONFIRMÉ (code de `staging`, 10/11, commit `ee77d4f`), sauf mention contraire. Ajouts du 11/11 pour [[Couleurs et résolution]] ([[Display.tsx]], [[pros.json]], puce de [[Games.tsx]]) : branche `claude/project-thread-7n0ikn`, jamais testés sur Windows.
+Tout ce qui suit est CONFIRMÉ (code de `staging`, 10/11, commit `ee77d4f`), sauf mention contraire. Ajouts du 11/11 pour [[Couleurs et résolution]] ([[Display.tsx]], [[pros.json]], puce de [[Games.tsx]]) : PR #93 ; aussi [[GameGraphics.tsx]] (PR #94), [[GameTips.tsx]] (PR #91) et la page Outils refaite (PR #90), tous dans `staging` depuis le 11/11 (PR #92), jamais testés sur Windows.
 
 ## En bref
 - **Pile** :
@@ -34,21 +32,16 @@ Tout ce qui suit est CONFIRMÉ (code de `staging`, 10/11, commit `ee77d4f`), sau
   - [[api.ts]] et [[accountApi.ts]] sont les deux seules portes vers le moteur.
 - **Pas de routeur** : la page affichée est une simple valeur `page` dans le store. Pas de Redux non plus : un seul contexte React, [[store.tsx]], plus le contexte du compte, [[account.tsx]].
 - **Mode démo** : hors de Tauri (`isTauri` faux), les mêmes fonctions sont simulées dans le navigateur. Cela sert au simulateur `npm run window`, aux captures et aux tests de l'interface.
-- Taille : 30 056 lignes dans `app/src/` (fichiers `.ts`, `.tsx`, `.css` et `.json`) avec la page Outils refaite de la PR #90 (11/11, pas encore fusionnée) ; 29 270 sur `staging`. Les plus gros fichiers sont :
+- Taille : 33 402 lignes dans `app/src/` (fichiers `.ts`, `.tsx`, `.css` et `.json`). Les plus gros fichiers sont :
   - `catalog.json` (8050 lignes) ;
-  - `features.css` (3730 lignes) ;
+  - `features.css` (4208 lignes) ;
   - `app.css` (2935 lignes) ;
-  - `i18n.ts` (2246 lignes) ;
-  - `api.ts` (1460 lignes) ;
-- Taille : 30 663 lignes dans `app/src/` (fichiers `.ts`, `.tsx`, `.css` et `.json`). Les plus gros fichiers sont :
-  - `catalog.json` (8050 lignes) ;
-  - `features.css` (3850 lignes) ;
-  - `app.css` (2935 lignes) ;
-  - `i18n.ts` (2274 lignes) ;
-  - `api.ts` (1485 lignes) ;
+  - `i18n.ts` (2478 lignes) ;
+  - `api.ts` (1665 lignes) ;
   - `NetOpt.tsx` (1090 lignes) ;
+  - `tips.json` (971 lignes) ;
   - `Tools.tsx` (760 lignes) ;
-  - `store.tsx` (731 lignes).
+  - `Display.tsx` (745 lignes).
 
 ## Arbre des composants (fenêtre principale)
 ```
@@ -206,7 +199,7 @@ Les 13 événements Tauri que l'interface écoute, tous déclarés dans [[api.ts
 - Compte et avis : [[ProfileCard.tsx]], [[ReviewDialog.tsx]], [[ReviewPrompt.tsx]].
 - Cartes : [[UpdateCard.tsx]], [[BackgroundCard.tsx]], [[SessionCard.tsx]], [[LiveStatsCard.tsx]], [[RbwStatus.tsx]].
 - Réseau et presets : [[NetTools.tsx]], [[PresetEditor.tsx]].
-- Jeux : [[GameGraphics.tsx]] (graphismes des jeux, branche du 11/11).
+- Jeux : [[GameGraphics.tsx]] (graphismes des jeux).
 - Petites briques (`ui.tsx`, `Modal`, `Logo`, `icons.ts`, `Avatar`, `GameLogo`, `PageBoundary`, `vite-env.d.ts`) : [[Petits composants de l'interface]].
 
 ### Logique (`app/src/lib/`)

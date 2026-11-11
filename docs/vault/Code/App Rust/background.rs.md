@@ -45,7 +45,7 @@ Tout est CONFIRMÉ (code de `staging`, 10/11). Créé le 17/10 (RAG-82) ; le 21/
 | `game_gpu` | `true` | carte graphique performante pour les jeux (PC à deux cartes) |
 | `game_power` | `true` | mode Performances élevées le temps de jouer |
 | `game_checks` | `true` | vérifications au lancement d'un jeu (conseils, rien n'est fermé) |
-| `game_priority` | `true` | processus du jeu en priorité haute le temps de jouer (11/11, pas encore dans `staging`) |
+| `game_priority` | `true` | processus du jeu en priorité haute le temps de jouer (11/11) |
 
 ## Fonctionnement détaillé
 

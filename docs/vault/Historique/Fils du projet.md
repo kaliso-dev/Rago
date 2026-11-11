@@ -47,12 +47,13 @@ Les fils les plus riches ont leur propre note : [[Fil - Nouvelle version backlog
 | 26 | Régler le manque de minutes GitHub Actions | 10/11 14:04 | 10/11 15:06 | terminé, rangé |
 | 27 | Créer le tableau de bord admin complet | 10/11 14:08 | 10/11 18:49 | admin et Cerveau en prod (PR #87) ; attend le retour de Sofiene sur la prod |
 | 28 | Créer le cerveau visuel du vault | 10/11 16:04 | 10/11 17:18 | terminé, rangé (PR #85 fusionnée) |
-| 29 | Régler les problèmes des clients | 10/11 17:17 | 10/11 17:58 | attend Sofiene ; PR #86 ouverte vers `staging` |
-| 30 | Ajouter saturation et résolution des pros | 11/11 00:17 | 11/11 00:47 | en cours (11/11) |
-| 31 | Ajouter les presets graphiques par jeu | 11/11 00:17 | 11/11 00:46 | **bloqué** : attend Sofiene (11/11) |
-| 32 | Ajouter les conseils au lancement du jeu | 11/11 00:17 | 11/11 00:48 | en cours ; PR #91 ouverte vers `staging` (11/11) |
-| 33 | Mettre le jeu en priorité maximale | 11/11 00:17 | 11/11 00:35 | attend Sofiene ; PR #89 ouverte vers `staging` (11/11) |
-| 34 | Centraliser et enrichir la page Tools | 11/11 00:17 | 11/11 | attend Sofiene ; PR #90 ouverte vers `staging` (11/11) |
+| 29 | Régler les problèmes des clients | 10/11 17:17 | 10/11 17:58 | PR #86 dans `staging` (11/11, par la PR #92) ; attend le test de Sofiene |
+| 30 | Ajouter saturation et résolution des pros | 11/11 00:17 | 11/11 08:21 | PR #93 dans `staging` (11/11, par la PR #92) ; attend le test de Sofiene |
+| 31 | Ajouter les presets graphiques par jeu | 11/11 00:17 | 11/11 08:21 | PR #94 dans `staging` (11/11, par la PR #92) ; attend le test de Sofiene et le choix gratuit ou Premium (q94) |
+| 32 | Ajouter les conseils au lancement du jeu | 11/11 00:17 | 11/11 00:48 | PR #91 dans `staging` (11/11, par la PR #92) ; attend le test de Sofiene |
+| 33 | Mettre le jeu en priorité maximale | 11/11 00:17 | 11/11 00:35 | PR #89 dans `staging` (11/11, par la PR #92) ; attend le test de Sofiene |
+| 34 | Centraliser et enrichir la page Tools | 11/11 00:17 | 11/11 | PR #90 dans `staging` (11/11, par la PR #92) ; attend le test de Sofiene |
+| 35 | Passer les 6 features sur staging | 11/11 08:16 | 11/11 | PR #92 : les 6 nouveautés du 11/11 réunies dans `staging` pour la version test |
 
 Fils cités ailleurs mais absents de la liste : un fil « Créer le profil LinkedIn de Sofiene » (personnel, hors projet Rago) ; un fil dédié au client Minecraft, fermé le 29/10 parce que le message qui l'avait lancé était une erreur ([[Client Minecraft Rago]]). Aucun fil « Mettre le site en règle juridiquement » n'a existé : le RGPD a été traité dans le fil 15.
 

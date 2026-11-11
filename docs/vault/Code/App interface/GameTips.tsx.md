@@ -9,7 +9,7 @@ maj: 2026-11-11
 
 Le bloc **« Réglages conseillés pour <jeu> »** des [[Conseils au lancement du jeu]] : la liste des réglages à changer dans le jeu, chacun avec sa valeur, sa catégorie, la raison et une case « Marquer comme fait ». Utilisé dans la barre en jeu ([[Overlay.tsx]]) et la bibliothèque ([[Games.tsx]]). Fiche parente : [[Code de l'app (interface)]].
 
-**Fichier ajouté le 11/11 par la PR #91 (brouillon, pas encore dans `staging`).** Tout ce qui suit est CONFIRMÉ (code de la branche `claude/project-thread-g3od2h`, 11/11).
+**Fichier ajouté le 11/11 par la PR #91 (fusionnée dans `staging` le 11/11 par la PR #92).** Tout ce qui suit est CONFIRMÉ (code de `staging`, 11/11).
 
 ## Ce que le fichier expose
 - `GameTips({ game, t, lang, open = true, compact = false, className })` :

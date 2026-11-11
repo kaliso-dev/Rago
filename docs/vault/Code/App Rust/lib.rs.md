@@ -2,19 +2,16 @@
 type: code
 tags: [code, app, rust]
 fichier: app/src-tauri/src/lib.rs
-lignes: 1555
-lignes: 1634
-lignes: 1602
+lignes: 1759
 maj: 2026-11-11
 ---
 # lib.rs
 
-Point d'entrée de toute l'app côté Rust : il déclare les 39 modules, construit l'état partagé `AppState`, enregistre les **81 commandes Tauri** que l'interface React appelle, lance les fils permanents au démarrage (`run()`) et répond au pont de [[Rago OS]]. Fiche parente : [[Code de l'app (Rust)]]. Fonctionnement d'ensemble : [[Architecture de l'app]], [[App Windows]].
-Point d'entrée de toute l'app côté Rust : il déclare les 39 modules, construit l'état partagé `AppState`, enregistre les **79 commandes Tauri** que l'interface React appelle, lance les fils permanents au démarrage (`run()`) et répond au pont de [[Rago OS]]. Fiche parente : [[Code de l'app (Rust)]]. Fonctionnement d'ensemble : [[Architecture de l'app]], [[App Windows]].
+Point d'entrée de toute l'app côté Rust : il déclare les 41 modules, construit l'état partagé `AppState`, enregistre les **92 commandes Tauri** que l'interface React appelle, lance les fils permanents au démarrage (`run()`) et répond au pont de [[Rago OS]]. Fiche parente : [[Code de l'app (Rust)]]. Fonctionnement d'ensemble : [[Architecture de l'app]], [[App Windows]].
 
 Tout ce qui suit est CONFIRMÉ (code de `staging`, 10/11, commit `ee77d4f`). Fichier créé le 07/10 (1.1.5), 37 commits depuis : c'est le fichier le plus modifié du cœur.
 
-Ajouts du 11/11 pour [[Couleurs et résolution]] (module `display`, 5 commandes `display_*`, résolution posée par `game_launch`, fil des jeux, `RunEvent::Exit`) : code de la branche `claude/project-thread-7n0ikn`, **jamais testé sur Windows**.
+Ajouts du 11/11 pour [[Couleurs et résolution]] (module `display`, 5 commandes `display_*`, résolution posée par `game_launch`, fil des jeux, `RunEvent::Exit`) : PR #93. Aussi le 11/11 : `gamecfg` et 3 commandes `graphics_*` (PR #94), `tips` et `tips_done`, `tips_mark` (PR #91), 6 commandes `tools_*` (PR #90), la priorité haute du jeu dans le fil des jeux (PR #89). Tout est dans `staging` depuis la PR #92, **jamais testé sur Windows**.
 
 ## Rôle et place dans l'ensemble
 - `main.rs` ([[main.rs]]) n'appelle que `rago_hub_lib::run()`, défini ici.
@@ -58,8 +55,7 @@ Méthodes : `AppState::system(refresh)` (sonde mise en cache par `probe_cached`)
 - `bridge_presets()`, `BRIDGE_TWEAKS`, `bridge_handler(app)` : le pont avec Rago OS.
 - `pub fn run()` : le démarrage.
 
-### Les 81 commandes Tauri
-### Les 79 commandes Tauri
+### Les 92 commandes Tauri
 Ordre de `generate_handler!`. Côté interface, chaque commande est appelée par `invoke("<nom>")` depuis `app/src/lib/api.ts`. Les erreurs sont des `String`, sauf les commandes de licence et de compte qui renvoient un `license::ApiError {code, message, buy_url}`.
 
 **Système, RBW, Outils** ([[Page Outils]], [[RBW Mod]])
@@ -131,7 +127,7 @@ Ordre de `generate_handler!`. Côté interface, chaque commande est appelée par
 | Commande | Arguments → retour | Ce qu'elle fait |
 |---|---|---|
 | `minecraft_status` / `minecraft_restore` | `dir?` | état et restauration d'`optionsof.txt` ([[minecraft.rs]]) |
-| `graphics_status` | `game` → `gamecfg::Status` | fichiers de réglages du jeu trouvés, en lecture seule, niveau actuel, copie d'avant, jeu en cours ([[gamecfg.rs]], branche du 11/11) |
+| `graphics_status` | `game` → `gamecfg::Status` | fichiers de réglages du jeu trouvés, en lecture seule, niveau actuel, copie d'avant, jeu en cours ([[gamecfg.rs]]) |
 | `graphics_apply` | `game, level` → `gamecfg::Outcome` | écrit Performance, Équilibré ou Qualité ; erreurs `running`, `not_found`, `locked`, `unknown_format`, `unknown_game`, `unknown_level` |
 | `graphics_restore` | `game` → nombre de fichiers remis | remet les copies `.rago-original` ; erreurs `running`, `no_backup`, `locked` |
 | `restart_pc` | → `()` | `shutdown.exe /r /t 5 /c "Rago Optimizer: restarting to apply your tweaks"` (fenêtre cachée, [[shell.rs]]) |

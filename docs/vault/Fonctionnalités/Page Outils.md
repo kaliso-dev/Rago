@@ -8,7 +8,7 @@ maj: 2026-11-11
 
 Page « Outils » du groupe « Optimiser » (« Entretien »). Code natif, hors catalogue : [[tools.rs]], page [[Tools.tsx]]. **Toute la page est gratuite** (décision de Sofiene du 01/11 : les outils sont « indispensables » et font de Rago une app qu'on ouvre souvent).
 
-**Refonte du 11/11 (PR #90, ouverte vers `staging`, pas encore fusionnée)** : demande de Sofiene du 11/11 (point 6, « Tools new et centralisé ») : réunir dans cette page **tous les outils à bouton « Lancer »** de l'app, en les laissant aussi dans leur onglet, et ajouter de nouveaux outils sûrs et utiles au quotidien après une analyse de Hone et des autres optimiseurs. Tout ce qui suit décrit la branche de la PR #90 ; la CI Windows a construit l'exe et passé les tests du moteur, mais la page n'a **jamais été testée sur Windows** (règle 8 de [[Règles de travail]]). Ticket [[Linear]] : RAG-93. Avant la PR #90, la page n'avait que les cartes Nettoyage, Applis préinstallées et Pilotes.
+**Refonte du 11/11 (PR #90, fusionnée dans `staging` le 11/11 par la PR #92)** : demande de Sofiene du 11/11 (point 6, « Tools new et centralisé ») : réunir dans cette page **tous les outils à bouton « Lancer »** de l'app, en les laissant aussi dans leur onglet, et ajouter de nouveaux outils sûrs et utiles au quotidien après une analyse de Hone et des autres optimiseurs. Tout ce qui suit décrit la branche de la PR #90 ; la CI Windows a construit l'exe et passé les tests du moteur, mais la page n'a **jamais été testée sur Windows** (règle 8 de [[Règles de travail]]). Ticket [[Linear]] : RAG-93. Avant la PR #90, la page n'avait que les cartes Nettoyage, Applis préinstallées et Pilotes.
 
 ## Ordre de la page
 1. **En un clic** (quatre tuiles)

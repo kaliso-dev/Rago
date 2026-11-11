@@ -71,7 +71,7 @@ Utilisée par la palette Ctrl+K ([[SearchPalette.tsx]]).
 
 ## Liens avec le reste
 - Lit [[catalog.json]], produit par [[build_catalog_v6.py]].
-- Utilisé par [[store.tsx]] (verrous, variantes, lots, `itemName`), [[ModulePage.tsx]], [[TweakRow.tsx]], [[SearchPalette.tsx]], [[Games.tsx]] (`presetForGame`, `normalizeName`), [[Dashboard.tsx]], [[Share.tsx]], [[PresetEditor.tsx]], [[Overlay.tsx]], [[api.ts]] (simulateur), et depuis la PR #90 (11/11, pas encore fusionnée) [[Tools.tsx]] (`catalog`, `sectionTweaks`, `distinctKey` : les actions de tous les onglets, jumeaux comptés une fois).
+- Utilisé par [[store.tsx]] (verrous, variantes, lots, `itemName`), [[ModulePage.tsx]], [[TweakRow.tsx]], [[SearchPalette.tsx]], [[Games.tsx]] (`presetForGame`, `normalizeName`), [[Dashboard.tsx]], [[Share.tsx]], [[PresetEditor.tsx]], [[Overlay.tsx]], [[api.ts]] (simulateur), et depuis la PR #90 (11/11) [[Tools.tsx]] (`catalog`, `sectionTweaks`, `distinctKey` : les actions de tous les onglets, jumeaux comptés une fois).
 - Miroir Rust : [[catalog.rs]].
 
 ## À savoir avant de modifier

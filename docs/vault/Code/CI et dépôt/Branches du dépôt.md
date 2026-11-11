@@ -79,11 +79,10 @@ Source : `git ls-remote` (liste et têtes des branches, lecture seule), `git log
 | `claude/countdown-launch-3yh36e` | 08/10 | Lien d'accès de l'équipe : /accès/ et / final acceptés, raison du refus dans les logs N… | #2 fusionnée → prod (08/10)<br>#3 fusionnée → prod (08/10) | 1 / 1 | Compte à rebours jusqu'au lancement de samedi, accès réservé à l'équipe |
 
 ## Branches qui portent encore du travail non fusionné
+Les branches des PR #86, #89, #90, #91, #93 et #94 (hitreg, priorité haute, page Outils, conseils, couleurs et résolution, graphismes des jeux) sont fusionnées dans `staging` depuis le 11/11 par la PR #92 (branche `claude/project-thread-0z6ufn`, demande de Sofiene de tout passer sur staging pour la version test).
+
 | Branche | Ce qui n'est nulle part ailleurs | À décider |
 |---|---|---|
-| `claude/project-thread-u6htp7` | commits de la PR #90 ([[Page Outils]] refaite, code et vault, 11/11) | PR ouverte vers `staging` (fil « Centraliser et enrichir la page Tools ») ; fusion sur « fusionne » de Sofiene |
-| `claude/project-thread-5ln7f8` | 4 commits de la PR #94 ([[Graphismes des jeux]] et le vault), 11/11 | PR ouverte vers `staging` le 11/11 (fil « Ajouter les presets graphiques par jeu »), à fusionner pour la version test |
-| `claude/project-thread-0ij01e` | 2 commits de la PR #86 (« Best hitreg » par défaut et le vault du cas) | PR ouverte vers `staging` (fil « Régler les problèmes des clients ») |
 | `claude/project-thread-rulzwj` | portage en prod du bot communauté Discord (`25ba75e`) et 2 commits du vault | PR #71 ouverte vers la prod depuis le 01/11 ([[Bot communauté Discord]]) |
 | `claude/project-thread-tzbch5` | 2 commits du vault sur Supabase (`8246bd4`, `803b9d6` : e-mail de dépassement de quota relu, décision « Pro ou migration avant le 05/12 ») | jamais proposés en PR ; leur contenu est repris dans le vault par la PR #85 du [[Cerveau du vault]] (10/11) : la branche n'a plus rien à garder (suppression : q81) |
 | `claude/project-thread-s0m3ex` | 1 commit du vault (`edfc795`, « la 1.3.0 est sur staging », 04/11) | sans doute dépassé par les notes suivantes (À VÉRIFIER) |

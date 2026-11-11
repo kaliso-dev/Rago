@@ -49,7 +49,7 @@ MotionConfig (reducedMotion)
 | `settings` | [[Settings.tsx]] |
 | `share` | [[Share.tsx]] (ouverte depuis les paramètres) |
 | `games` | [[Games.tsx]] |
-| `display` | [[Display.tsx]] (ajoutée le 11/11 sur la branche `claude/project-thread-7n0ikn`) |
+| `display` | [[Display.tsx]] (ajoutée le 11/11, PR #93) |
 | `network`, `netopt`, `nettest`, `route` | [[Network.tsx]] avec l'onglet `tab={page}` |
 | `tools` | [[Tools.tsx]] |
 | `analysis` | [[Analysis.tsx]] |
