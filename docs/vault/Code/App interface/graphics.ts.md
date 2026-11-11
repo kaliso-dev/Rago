@@ -9,7 +9,7 @@ maj: 2026-11-11
 
 Textes des [[Graphismes des jeux]] : quels jeux ont la carte et ce que chaque niveau change, en anglais et en français. Les clés et valeurs écrites sont dans [[gamecfg.rs]] (seul à écrire). Fiche parente : [[Code de l'app (interface)]]. Utilisé par [[GameGraphics.tsx]] et [[Games.tsx]].
 
-Statut : branche `claude/project-thread-5ln7f8` (11/11), pas fusionnée.
+Statut : branche `claude/project-thread-5ln7f8` (11/11), pas encore poussée (accord de Sofiene demandé).
 
 ## Ce que le fichier expose
 - `GFX_LEVELS` : `performance`, `balanced`, `quality` (ordre des tuiles).

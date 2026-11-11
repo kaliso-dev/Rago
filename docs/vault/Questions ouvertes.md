@@ -16,8 +16,7 @@ Mode d'emploi (outil ArtifactData, collection `questions`) :
 - Dire à Sofiene dans le fil, en une ligne, quand de nouvelles questions l'attendent.
 
 ## Posées dans le fil « Ajouter les presets graphiques par jeu » (11/11)
-- [[Graphismes des jeux]] : gratuits pour tous ou Premium ? (À DÉCIDER ; le code les laisse gratuits)
-- Pousser la branche `claude/project-thread-5ln7f8` et ouvrir la PR brouillon vers `staging` (refusé sans accord explicite, règle « rien sur GitHub sans demande »).
+- Pousser la branche `claude/project-thread-5ln7f8` et ouvrir la PR brouillon vers `staging` (refusé sans accord explicite, règle « rien sur GitHub sans demande » ; carte de décision dans le fil).
 
 ## En attente de réponse sur la page
 Au 10/11, après les réponses de Sofiene du jour (q36 à q68 traitées, q46 le 10/11 à 15 h, voir [[Décisions]]) :
@@ -48,6 +47,9 @@ Posées le 10/11 au soir (q70 à q93), après la relecture complète du code pou
 - q91 : Cloudflare Web Analytics installé ? ([[Fils du projet]]).
 - q92 : une idée de l'[[Étude de marché de novembre 2026]] est-elle prévue ?
 - q93 : passer en « Canceled » les 5 tâches d'Abel dans [[Linear]] ?
+
+Posée le 11/11 :
+- q94 : [[Graphismes des jeux]] gratuits pour tous ou Premium ? (le code les laisse gratuits)
 
 ## À vérifier (sans Sofiene)
 - [[Couleurs et résolution]] (11/11, jamais testé sur Windows) : saturation NVIDIA (NVAPI) et AMD (ADL), rampe gamma, retour des couleurs au Alt+Tab, résolution étirée (`DMDFO_STRETCH`) et retour à la fin de la partie, écriture des fichiers de Valorant, Fortnite et CS2 ; comportement avec le HDR de Windows.
