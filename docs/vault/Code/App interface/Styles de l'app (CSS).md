@@ -1,7 +1,7 @@
 ---
 type: code
 tags: [code, app, css, design]
-fichier: app/src/styles/ (tokens.css, app.css, features.css, account.css, overlay.css)
+fichier: app/src/styles/ (tokens.css, app.css, features.css, account.css, overlay.css, tips.css)
 lignes: 8125
 maj: 2026-11-11
 ---
@@ -20,10 +20,11 @@ Tout ce qui suit est CONFIRMÉ (code de `staging`, 10/11, commit `ee77d4f`), ave
 | `account.css` | 257 | fenêtre principale | avatar, invitation à laisser un avis, formulaire d'avis, carte Profil |
 | `features.css` | 4208 | fenêtre principale | fonctionnalités de la 1.2.0 et après (liste plus bas) |
 | `overlay.css` | 392 | barre en jeu | toute la barre en jeu (RAG-82) |
-| `tips.css` | 214 | fenêtre principale et barre en jeu (importé par [[GameTips.tsx]]) | réglages conseillés pour le jeu lancé ([[Conseils au lancement du jeu]]) |
+| `tips.css` | 214 | fenêtre principale et barre en jeu (importé par [[GameTips.tsx]]) | bloc des réglages conseillés (`.game-tips*`, `.game-tip*`), place sous le jeu en avant de la bibliothèque (`.games-hero-tips`), bloc des conseils de la barre en jeu qui défile à part (`.ov-advice`, 258 px au plus, fondu en bas ; `.ov-tips`), pastille élargie du rappel (`.ov-nudge*`). Voir [[Conseils au lancement du jeu]] |
 
 - Ordre d'import dans [[main.tsx (app)]] : `tokens.css`, `app.css`, `account.css`, `features.css`. L'ordre compte : une règle plus bas l'emporte à égalité.
 - La barre en jeu ([[main.tsx (barre en jeu)]]) charge seulement `tokens.css` et `overlay.css`.
+- Exception : `tips.css` est importée par le composant [[GameTips.tsx]], pas par les `main.tsx`, parce que ce bloc sert dans les deux fenêtres (la barre en jeu ne charge pas `features.css`).
 - **Polices** : Geist et Geist Mono, en fichiers variables `woff2` dans `app/src/assets/fonts/` (graisses 100 à 900, `font-display: swap`). Elles sont déclarées dans `app.css` et à nouveau dans `overlay.css`. Rien n'est chargé depuis Internet : la CSP de la fenêtre l'interdirait (voir [[Configuration Tauri]]).
 
 ## `tokens.css` : les jetons de design

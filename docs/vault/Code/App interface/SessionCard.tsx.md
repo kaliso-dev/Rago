@@ -25,9 +25,13 @@ Tout ce qui suit est CONFIRMÉ (code de `staging`, 10/11, commit `ee77d4f`).
   1. **« Carte graphique performante pour les jeux »** (`gameGpu`) : sur un PC à deux cartes, chaque jeu reçoit la carte la plus puissante dans les réglages de Windows, à partir de son lancement suivant ; « Jeux réglés jusqu'ici : {n}. ». PC à une seule carte (`multiGpu === false`) : interrupteur grisé et « Ton PC n'a qu'une carte graphique : rien à faire ici. »
   2. **« Mode Performances élevées le temps de jouer »** (`gamePower`) : depuis Équilibré ou Économie d'énergie, sur secteur seulement ; le mode revient à la fin. Ryzen X3D à deux CCD (`x3d`) : interrupteur grisé et « Ton Ryzen X3D garde le mode Équilibré : AMD le demande pour que le jeu reste sur les cœurs à cache 3D. »
   3. **« Jeu en priorité haute »** (`gamePriority`, 11/11) : « Le jeu passe en priorité haute et Windows ne le bride plus quand tu changes de fenêtre. Seulement le temps de la partie : rien n'est gardé après. Les jeux protégés par leur anti-triche peuvent refuser. »
-  4. **« Vérifications au lancement d'un jeu »** (`gameChecks`) : batterie, téléchargements, synchronisation et enregistrement en fond, signalés dans la barre en jeu et la bibliothèque. « Rien n'est fermé. »
+  4. **« Conseils au lancement d'un jeu »** (`gameChecks`, nom du 11/11, PR #91 ; avant : « Vérifications au lancement d'un jeu ») : « Réglages du jeu conseillés par les pros, applis gourmandes, fréquence de l'écran, batterie, téléchargements et synchronisation en fond : un rappel en haut à gauche au lancement, puis le détail dans la barre en jeu et la bibliothèque. Rien n'est changé ni fermé. » ([[Conseils au lancement du jeu]]).
 
 ## Liens avec le reste
 - Monté par [[Settings.tsx]] ; `SessionChecks` et `useSession` utilisés par [[Overlay.tsx]] et [[Games.tsx]].
 - [[api.ts]] (`sessionState`, `sessionSetPrefs`, `onSession`, `backgroundGet`) ; [[session.rs]], [[background.rs]].
 - Fonctionnalités : [[Barre en jeu]], [[Bibliothèque de jeux]].
+
+## Conseils au lancement du jeu (PR #91, 11/11)
+- Nouvelles lignes de « À vérifier » : fond d'écran animé (« Fond d'écran animé ouvert ({applis}) : dans ses réglages de performance, mets « Other application fullscreen » sur « Stop (free memory) »… »), écran (« Ton écran tourne à {cur} Hz alors qu'il peut monter à {max} Hz… »), Game DVR (renvoie au réglage gratuit « Couper Game DVR »), processeur (« Gros consommateur de processeur en fond ({applis})… ») et mémoire (« Ta mémoire est presque pleine. Ce qui en prend le plus : {applis}… »).
+- `line()` passe `cur` et `max` (les deux valeurs de `refresh`) et, pour `ram` sans appli à nommer, utilise la phrase sans liste (`session.check.ramBare`).

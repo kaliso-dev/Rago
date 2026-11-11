@@ -60,7 +60,7 @@ Fermeture de la fenêtre principale : cachée si une remise est en cours ou si l
 - Support : `support_report`, `show_report`.
 
 ### Événements émis vers l'interface
-`run:item`, `run:log`, `run:done` (lot de réglages, [[runner.rs]]), `reset:done`, `netopt:line`, `nettest:sample`, `nettest:measure`, `games:running`, `games:session`, `display:state` (couleurs et résolution posées, dernière erreur), `tips:done` (réglages conseillés cochés), `app:goto` (page à ouvrir, demandée par Rago OS ou la barre en jeu) ([[lib.rs]]), `update:ready` ([[update.rs]]), `overlay:mode` (vers la fenêtre de la barre en jeu, [[overlay.rs]]).
+`run:item`, `run:log`, `run:done` (lot de réglages, [[runner.rs]]), `reset:done`, `netopt:line`, `nettest:sample`, `nettest:measure`, `games:running`, `games:session`, `display:state` (couleurs et résolution posées, dernière erreur), `tips:done` (réglages conseillés cochés), `app:goto` (page à ouvrir, demandée par Rago OS ou la barre en jeu) ([[lib.rs]]), `update:ready` ([[update.rs]]), `overlay:mode` et `overlay:nudge` (rappel des conseils dans la pastille), vers la fenêtre de la barre en jeu ([[overlay.rs]]).
 
 ## 4. Interface React (`app/src/`)
 - `main.tsx` → `App.tsx` : barre de titre maison (`decorations: false`), `Sidebar`, page courante, `ApplyBar` (barre « Apply » des changements en attente), `RunOverlay` (suivi d'un lot), fenêtres `Upsell`, `ReviewPrompt`, `ReviewDialog`, `ConfirmDialog`, `SearchPalette`, `ResetToast`, `Splash`.
@@ -86,7 +86,7 @@ Fermeture de la fenêtre principale : cachée si une remise est en cours ou si l
 
 ## 6. Fichiers sur le PC du joueur
 - `%LOCALAPPDATA%\Rago\` : `license.bin` (jeton), `scripts.bin` (clé des scripts Premium), `account.bin` (jeton de compte), tous chiffrés DPAPI.
-- `%APPDATA%\gg.rago.optimizer\` (staging : `gg.rago.optimizer.staging`) : `applied.json` et `history.json` (chiffrés), `background.json`, `boost.json`, `session.json`, `display.json`, `display-restore.json`, `reset-pending.json`, `games.json`, `overlay-games.json`, `last-match.json`, `netopt\` (dernière application du [[Packet Optimizer]]), `backup\*.reg`, `logs\` (`run-<ms>.log` des lots, `reset-<ms>.log`, `repairs.log` : à demander au joueur), `run\` (scripts temporaires, vidé), `art\` (images des jeux), `reports\`. Liste complète avec le module qui écrit chaque fichier : [[Code de l'app (Rust)]].
+- `%APPDATA%\gg.rago.optimizer\` (staging : `gg.rago.optimizer.staging`) : `applied.json` et `history.json` (chiffrés), `background.json`, `boost.json`, `session.json`, `tips-done.json`, `display.json`, `display-restore.json`, `reset-pending.json`, `games.json`, `overlay-games.json`, `last-match.json`, `netopt\` (dernière application du [[Packet Optimizer]]), `backup\*.reg`, `logs\` (`run-<ms>.log` des lots, `reset-<ms>.log`, `repairs.log` : à demander au joueur), `run\` (scripts temporaires, vidé), `art\` (images des jeux), `reports\`. Liste complète avec le module qui écrit chaque fichier : [[Code de l'app (Rust)]].
 - Installé : `Program Files\Rago Optimizer\` avec `resources\` (`nvidiaProfileInspector.exe`, `PresentMon.exe` ajouté par la CI).
 
 ## 7. Sécurité et garde-fous

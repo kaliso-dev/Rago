@@ -133,7 +133,7 @@ main.tsx
 - **Remise à zéro en arrière-plan** (fin de Premium, déconnexion) : le moteur la lance seul, sans fenêtre, puis envoie **`reset:done`**. Le store relit les réglages appliqués et affiche [[ResetToast.tsx]].
 
 ## Tous les événements écoutés
-Les 13 événements Tauri que l'interface écoute, tous déclarés dans [[api.ts]] :
+Les 15 événements Tauri que l'interface écoute, tous déclarés dans [[api.ts]] :
 
 | Événement | Envoyé par | Écouté par | Contenu |
 |---|---|---|---|
@@ -150,6 +150,8 @@ Les 13 événements Tauri que l'interface écoute, tous déclarés dans [[api.ts
 | `overlay:mode` | [[overlay.rs]] | [[Overlay.tsx]] | barre ouverte ou pastille |
 | `display:state` | [[lib.rs]] ([[display.rs]]) | [[Display.tsx]] | couleurs et résolution posées en ce moment, dernière erreur |
 | `app:goto` | [[lib.rs]] (barre en jeu, pont de [[Rago OS]]) | [[store.tsx]] | page à ouvrir (`page#réglage`, `premium`) |
+| `tips:done` | [[lib.rs]] ([[tips.rs]]) | [[tips.ts]] (`useTipsDone`, donc [[GameTips.tsx]]) | réglages en jeu cochés « fait » |
+| `overlay:nudge` | [[overlay.rs]] | [[Overlay.tsx]] | rappel des conseils dans la pastille, commencé ou fini |
 
 - Chaque écouteur renvoie une promesse de désinscription, appelée quand le composant disparaît.
 - Les écouteurs des pages ignorent ce qui arrive après leur fermeture (garde `live`).
@@ -165,6 +167,7 @@ Les 13 événements Tauri que l'interface écoute, tous déclarés dans [[api.ts
   - `?update` : une mise à jour prête ;
   - `?pill` et `?passive` : la barre en jeu en pastille ou passive ;
   - `?estimate` : ping estimé dans la barre en jeu ;
+  - `?nudge` (avec `?pill`) : rappel des conseils dans la pastille, et `?game=fortnite` (ou `cs2`…) : jeu de la partie de démo, VALORANT par défaut ;
   - `?amd` et `?intel` : page Couleurs et résolution avec une carte AMD, ou un écran sans saturation.
 - **`npm run window`** ([[window.mjs]]) :
   - lance le serveur Vite ;
@@ -199,14 +202,14 @@ Les 13 événements Tauri que l'interface écoute, tous déclarés dans [[api.ts
 - Compte et avis : [[ProfileCard.tsx]], [[ReviewDialog.tsx]], [[ReviewPrompt.tsx]].
 - Cartes : [[UpdateCard.tsx]], [[BackgroundCard.tsx]], [[SessionCard.tsx]], [[LiveStatsCard.tsx]], [[RbwStatus.tsx]].
 - Réseau et presets : [[NetTools.tsx]], [[PresetEditor.tsx]].
-- Jeux : [[GameGraphics.tsx]] (graphismes des jeux).
+- Jeux : [[GameGraphics.tsx]] (graphismes des jeux), [[GameTips.tsx]] (réglages conseillés, [[Conseils au lancement du jeu]]).
 - Petites briques (`ui.tsx`, `Modal`, `Logo`, `icons.ts`, `Avatar`, `GameLogo`, `PageBoundary`, `vite-env.d.ts`) : [[Petits composants de l'interface]].
 
 ### Logique (`app/src/lib/`)
-[[api.ts]], [[store.tsx]], [[catalog.ts]], [[i18n.ts]], [[account.tsx]], [[accountApi.ts]], [[accountText.ts]], [[analysis.ts]], [[netopt.ts]], [[share.ts]], [[art.ts]], [[gameLogos.ts]], [[graphics.ts]], [[seen.ts]].
+[[api.ts]], [[store.tsx]], [[catalog.ts]], [[i18n.ts]], [[account.tsx]], [[accountApi.ts]], [[accountText.ts]], [[analysis.ts]], [[netopt.ts]], [[share.ts]], [[art.ts]], [[gameLogos.ts]], [[graphics.ts]], [[seen.ts]], [[tips.ts]].
 
 ### Données (`app/src/data/`)
-[[catalog.json]] (généré, voir [[Code du générateur de catalogue]]), [[free.json]] et [[pros.json]] (écrits à la main).
+[[catalog.json]] (généré, voir [[Code du générateur de catalogue]]), [[free.json]], [[pros.json]] et [[tips.json]] (écrits à la main).
 
 ## À savoir avant de modifier
 - Une nouvelle commande Rust demande trois choses :

@@ -55,20 +55,20 @@ Tout est CONFIRMÉ (code de `staging`, 11/11 : les 6 fonctionnalités de la PR #
 | Module | Lignes | Rôle |
 |---|---|---|
 | [[system.rs]] | 171 | sonde du matériel : Windows, processeur, RAM, cartes graphiques, carte réseau active, droits administrateur |
-| [[stats.rs]] | 326 | RAM, processeur et carte graphique en direct (compteurs PDH) |
-| [[memory.rs]] | 291 | bouton « Nettoyer » de la RAM (liste standby, réduction des applis en option) |
-| [[analysis.rs]] | 163 | réglages de jeu de Windows lus pour l'[[Analyse du PC]] |
+| [[stats.rs]] | 339 | RAM, processeur et carte graphique en direct (compteurs PDH) |
+| [[memory.rs]] | 290 | bouton « Nettoyer » de la RAM (liste standby, réduction des applis en option) |
+| [[analysis.rs]] | 169 | réglages de jeu de Windows lus pour l'[[Analyse du PC]] |
 | [[tools.rs]] | 997 | [[Page Outils]] : nettoyage des fichiers inutiles (9 zones), applis préinstallées (38 paquets), pilotes ; PR #90 : applis au démarrage, modes d'alimentation, cache DNS, raccourcis vers 10 réglages de Windows |
 
 ### Jeux et parties
 | Module | Lignes | Rôle |
 |---|---|---|
-| [[games.rs]] | 1 936 | bibliothèque de jeux : jeux et launchers installés, images, lancement, jeux en cours |
-| [[games.rs]] | 1 929 | bibliothèque de jeux : jeux et launchers installés, images, lancement, jeux en cours |
+| [[games.rs]] | 1 948 | bibliothèque de jeux : jeux et launchers installés, images, lancement, jeux en cours |
 | [[gamecfg.rs]] | 1 071 | [[Graphismes des jeux]] : Performance, Équilibré, Qualité écrits dans les réglages de 6 jeux, copie d'origine gardée |
-| [[overlay.rs]] | 751 | barre en jeu : jeu au premier plan, raccourci Alt+X, fenêtre de la barre |
+| [[overlay.rs]] | 805 | barre en jeu : jeu au premier plan, raccourci Alt+X, fenêtre de la barre, rappel des conseils |
 | [[display.rs]] | 1 560 | [[Couleurs et résolution]] : saturation (NVIDIA, AMD), luminosité, contraste et gamma quand le jeu est au premier plan, résolution étirée le temps de la partie, résolution dans les fichiers de Valorant, Fortnite et CS2 |
-| [[session.rs]] | 432 | [[Pendant la partie]] : carte graphique performante, plan d'alimentation, défait après |
+| [[session.rs]] | 665 | [[Pendant la partie]] : carte graphique performante, plan d'alimentation, jeu en priorité haute, défait après ; vérifications et conseils |
+| [[tips.rs]] | 416 | [[Conseils au lancement du jeu]] : jeu à conseils, réglages cochés, applis gourmandes, écran, Game DVR |
 | [[boost.rs]] | 224 | Mode jeu total demandé par Rago OS : services non essentiels arrêtés puis relancés |
 | [[fps.rs]] | 286 | FPS du jeu par PresentMon, résumé de la dernière partie |
 | [[flows.rs]] | 382 | serveur du jeu en cours trouvé dans le journal réseau du noyau (ETW) |
@@ -110,9 +110,10 @@ Réglages     runner ─► catalog, backup, history, assets, shell, minecraft, 
 Licence      license ─► history, shell          account ─► license
 PC           system ─► assets, shell   tools ─► shell   analysis ─► games, session, shell
 Jeux         games ─► icon, reg, shell
-             overlay ─► games, fps, gameping, background
+             overlay ─► games, fps, gameping, background, session
              display ─► games, session, reg
-             session ─► reg, shell, system, background
+             session ─► reg, shell, system, background, tips
+             tips ─► games, analysis, memory, stats, reg, session
              gameping ─► flows, icmp, mcping        flows ─► icmp     fps ─► shell
 Réseau       netopt ─► catalog, runner, seal, history, shell
              nettest ─► icmp, mcping     netshare ─► account, license, nettest, update
@@ -131,7 +132,7 @@ Seuls [[overlay.rs]], [[background.rs]] et [[update.rs]] reçoivent un `AppHandl
 ## Les fils qui tournent
 | Fil | Lancé par | Rythme | Rôle |
 |---|---|---|---|
-| fil des jeux | `run()` de [[lib.rs]] | 4 s | jeux en cours, [[session.rs]], résolution des jeux ([[display.rs]]), fin du Mode jeu total après ≈ 20 s sans jeu |
+| fil des jeux | `run()` de [[lib.rs]] | 4 s | jeux en cours, [[session.rs]], applis gourmandes pendant la partie ([[tips.rs]]), résolution des jeux ([[display.rs]]), fin du Mode jeu total après ≈ 20 s sans jeu |
 | fil des couleurs | [[display.rs]] (`spawn`) | 250 ms tant qu'un jeu lancé a des couleurs (sinon endormi) | couleurs du jeu au premier plan, aperçu |
 | `rago-overlay` | [[overlay.rs]] | 700 ms | jeu au premier plan, barre en jeu |
 | `rago-stats` | [[stats.rs]] | 1 s | mesures en direct ; s'arrête 5 s après la dernière demande |
@@ -157,6 +158,8 @@ Seuls [[overlay.rs]], [[background.rs]] et [[update.rs]] reçoivent un `AppHandl
 | `app:goto` | [[lib.rs]] | page à ouvrir (demande de Rago OS ou de la barre en jeu) |
 | `update:ready` | [[update.rs]] | mise à jour téléchargée |
 | `overlay:mode` | [[overlay.rs]] | mode de la barre en jeu (panneau, pastille) |
+| `overlay:nudge` | [[overlay.rs]] | rappel des conseils dans la pastille commencé ou fini |
+| `tips:done` | [[lib.rs]] | réglages en jeu cochés « fait » |
 | `display:state` | [[lib.rs]] (fil des jeux, fil des couleurs de [[display.rs]], `game_launch`, `display_set_profile`) | couleurs et résolution posées en ce moment, dernière erreur |
 
 Ils sont écoutés par [[store.tsx]] et les pages de l'interface.
@@ -174,6 +177,7 @@ Ils sont écoutés par [[store.tsx]] et les pages de l'interface.
 | `<data>\games.json`, `<data>\art\` | [[games.rs]] | jeux ajoutés à la main, images des jeux |
 | `<data>\overlay-games.json`, `<data>\last-match.json` | [[overlay.rs]], [[fps.rs]] | jeux de la barre, résumé de la dernière partie |
 | `<data>\session.json` | [[session.rs]] | ce que l'app a changé le temps d'une partie |
+| `<data>\tips-done.json` | [[tips.rs]] | réglages en jeu cochés « fait » |
 | `<data>\display.json`, `<data>\display-restore.json` | [[display.rs]] | couleurs et résolution par jeu, valeurs d'avant Rago des fichiers des jeux ; ce qu'il faut remettre (couleurs, rampes, résolution) |
 | `<data>\boost.json` | [[boost.rs]] | services arrêtés par le Mode jeu total |
 | `<data>\netopt\` (`applied.json`, `snapshot.json`) | [[netopt.rs]] | dernière application du Packet Optimizer et valeurs d'avant |
@@ -192,7 +196,7 @@ Ils sont écoutés par [[store.tsx]] et les pages de l'interface.
 ## Le registre et les objets Windows que l'app touche elle-même
 En dehors des scripts des réglages ([[Scripts embarqués (JSON)]]) :
 - **Écrit** : `HKCU\Software\Microsoft\DirectX\UserGpuPreferences` (carte graphique performante par jeu, [[session.rs]]) ; `HKLM\SOFTWARE\Microsoft\Windows NT\CurrentVersion\SystemRestore` `SystemRestorePointCreationFrequency` = 0 (point de restauration, [[runner.rs]]) ; `CoalescingTimerInterval` supprimé de 8 clés (`Session Manager\kernel`, `Executive`, `Memory Management`…, [[repair.rs]]).
-- **Lu** : `HKLM\SOFTWARE\Microsoft\Cryptography` `MachineGuid` (empreinte, [[license.rs]]) ; `HKLM\SYSTEM\Select` `Current` et `…\Control\Power` `HibernateEnabled` ([[backup.rs]]) ; `GameConfigStore`, `GameDVR`, `PushNotifications` ([[analysis.rs]]) ; clés des launchers et `Uninstall` ([[games.rs]]) ; clés lues par le vérificateur RBW ([[rbw.rs]]).
+- **Lu** : `HKLM\SOFTWARE\Microsoft\Cryptography` `MachineGuid` (empreinte, [[license.rs]]) ; `HKLM\SYSTEM\Select` `Current` et `…\Control\Power` `HibernateEnabled` ([[backup.rs]]) ; `GameConfigStore`, `GameDVR`, `PushNotifications` ([[analysis.rs]] ; les deux premiers aussi par [[tips.rs]] pendant une partie) ; clés des launchers et `Uninstall` ([[games.rs]]) ; clés lues par le vérificateur RBW ([[rbw.rs]]).
 - **Pilotes, écran et fichiers des jeux** ([[display.rs]]) : saturation NVIDIA (NVAPI) et AMD (ADL), rampe gamma, mode d'affichage temporaire (jamais écrit dans le registre), clés de résolution des fichiers de réglages de Valorant, Fortnite et CS2 ; lit `HKCU\Software\Valve\Steam` `SteamPath` et `HKLM\SOFTWARE\WOW6432Node\Valve\Steam` `InstallPath`.
 - **Tâche planifiée** « Rago Optimizer » (ou « Rago Optimizer Staging ») : lancement avec Windows ([[background.rs]]), supprimée à la désinstallation ([[Installateur NSIS]]).
 - **Objets nommés** : `Local\<identifiant>.instance` et `Local\<identifiant>.show` ([[instance.rs]]) ; canal `\\.\pipe\<identifiant>.bridge` ([[bridge.rs]]) ; session ETW « Rago-GamePing » ([[flows.rs]]) ; session PresentMon « RagoOptimizerFps » ([[fps.rs]]).

@@ -205,3 +205,10 @@ Aucun test automatique côté front. Le simulateur sert de banc d'essai manuel a
 - **Ajouter une commande** : (1) la commande dans le module Rust et son enregistrement dans [[lib.rs]] ; (2) la signature dans `interface Api` ; (3) la ligne dans `tauriApi` ; (4) une version simulée dans `mockApi` (TypeScript refuse de compiler sinon, `mockApi` étant typé `Api`).
 - Les types doivent rester identiques aux structures Rust (`serde(rename_all = "camelCase")`) : un champ renommé d'un seul côté donne `undefined` sans erreur.
 - Le simulateur doit **imiter les règles du moteur** (annulations, point de restauration raté, RBW Mod) : sinon la démo et les captures d'écran mentent.
+
+## Conseils au lancement du jeu (PR #91, 11/11, dans `staging` par la PR #92)
+- Importe `../data/tips.json` ([[tips.json]]) pour la démo.
+- Types : `SessionCheck.id` vaut aussi `wallpaper`, `refresh`, `gamedvr`, `cpu`, `ram` (pour `refresh`, `apps` = fréquence actuelle puis la plus haute) ; `SessionState` gagne `game` (clé du jeu à conseils ou `null`) et `tipsLeft` ; `OverlayInfo` gagne `nudge` (la pastille montre le rappel).
+- Fonctions : `tipsDone()` → `tips_done` ; `tipsMark(id, done)` → `tips_mark { id, done }` ; `onTipsDone(cb)` → événement `tips:done` ; `onOverlayNudge(cb)` → événement `overlay:nudge`.
+- Démo : `mockTipsDone` garde les cases cochées le temps de la page ; `tipsMark` émet `tips:done` et `games:session`. La partie de démo (`?playing`, ou `overlay.html`) joue à VALORANT, ou au jeu de `?game=` (`fortnite`, `cs2`…), avec les points OneDrive, OBS Studio, écran à 60 Hz sur 144 Hz et Google Chrome gourmand. `overlay.html?pill&nudge` montre le rappel.
+- Fonctionnalité : [[Conseils au lancement du jeu]] ; composants : [[GameTips.tsx]], [[tips.ts]].

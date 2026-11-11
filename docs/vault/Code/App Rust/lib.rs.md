@@ -114,6 +114,8 @@ Ordre de `generate_handler!`. Côté interface, chaque commande est appelée par
 | `background_set` | `prefs` → `BackgroundState` | voir plus bas |
 | `session_state` | → `session::State` | mode d'alimentation, carte graphique, vérifications pendant la partie |
 | `session_set_prefs` | `gpu, power, checks, priority?` → `Prefs` | enregistre les 4 options (`priority` absent = inchangé) « pendant la partie » ; prises en compte au prochain tour du fil des jeux (4 s au plus) |
+| `tips_done` | → `Vec<String>` | réglages en jeu cochés « fait » ([[Conseils au lancement du jeu]]) |
+| `tips_mark` | `id, done` → `Vec<String>` | coche ou décoche un réglage en jeu (`Session::tips_mark`), puis émet `tips:done` (la liste) et `games:session` (l'état, `tipsLeft` recalculé) |
 | `overlay_info` / `overlay_live` | → `Info` / `Live` | état de la barre en jeu |
 | `overlay_close` | → `()` | ferme la barre |
 | `overlay_set_pin` | `pin: bool` | garde la barre épinglée (champ `pin` des préférences) |
@@ -220,9 +222,9 @@ Si `reset.hold_exit()` (remise en cours) : cache la fenêtre et ne quitte pas. S
    - `History::load(history.json)` ; `Ledger::load(applied.json)`. S'il n'existait pas : `import_history` puis `save` ; s'il est encore en clair (`needs_migration`) : `save` le réécrit chiffré ;
    - `repair::at_startup` (RAG-67) ; le résultat remplit `repaired` ;
    - `games::Library::new` ; `started_hidden` = argument `--background` ; `Background::load` ; `Session::new` ; `Display::new` (remet ce qu'un plantage a laissé) et `display.spawn` (fil qui regarde le jeu au premier plan, émet `display:state`) ; `Boost::new` (relance ce qu'une partie interrompue a laissé arrêté) ;
-   - **fil des jeux** (toutes les 4 s) : `library.list(false)` une fois, puis en boucle `games::process_paths()`, `library.poll` → `games:running` si changement, exes des jeux + `javaw` de Minecraft (`session::minecraft_exe`), `session.tick(playing, exes, procs, prefs)` → `games:session` si changement, `display.tick(library.running_dirs(), minecraft)` → `display:state` si changement. Après 5 tours sans jeu (≈ 20 s) avec le Mode jeu total actif : `boost.off()` ;
+   - **fil des jeux** (toutes les 4 s) : `library.list(false)` une fois, puis en boucle `games::process_paths()`, `library.poll` → `games:running` si changement, exes des jeux + `javaw` de Minecraft (`session::minecraft_exe`), `session.tick(playing, exes, procs, prefs, hogs)` → `games:session` si changement (`hogs` : pendant une partie, option `game_checks` active, `tips::Hogs::tick(exes)` mesure les applis gourmandes, [[tips.rs]], gardé dans ce fil car les compteurs de Windows ne changent pas de fil ; sinon `reset` et liste vide), `display.tick(library.running_dirs(), minecraft)` → `display:state` si changement. Après 5 tours sans jeu (≈ 20 s) avec le Mode jeu total actif : `boost.off()` ;
    - `sync_tray` ; si `prefs.autostart` et pas en debug, crée la tâche de démarrage dans un fil si elle manque ;
-   - `Overlay::new` + `overlay::watch` (fil `rago-overlay`) ; `manage` de `background`, `overlay`, `session`, `display`, `boost` ;
+   - `Overlay::new` (avec la `Session`, pour le rappel des conseils) + `overlay::watch` (fil `rago-overlay`) ; `manage` de `background`, `overlay`, `session`, `display`, `boost` ;
    - `show_main` si pas lancé caché ;
    - `License::new()`, `Updates::default()`, `update::watch(app, updates, machine_guid ou nom du PC)` ;
    - `manage(AppState)` ;
@@ -241,7 +243,7 @@ Si `reset.hold_exit()` (remise en cours) : cache la fenêtre et ne quitte pas. S
 
 ## Données touchées
 - Disque : suppression de `run\` et du dossier de repli au démarrage ; fichiers `.rago` choisis par le joueur ; `reports\`.
-- Événements émis ici : `reset:done`, `nettest:sample`, `nettest:measure`, `netopt:line`, `games:running`, `games:session`, `display:state`, `app:goto`. Les autres (`run:*`, `update:ready`, `overlay:mode`) viennent de [[runner.rs]], [[update.rs]] et [[overlay.rs]].
+- Événements émis ici : `reset:done`, `nettest:sample`, `nettest:measure`, `netopt:line`, `games:running`, `games:session`, `display:state`, `app:goto`, `tips:done`. Les autres (`run:*`, `update:ready`, `overlay:mode`, `overlay:nudge`) viennent de [[runner.rs]], [[update.rs]] et [[overlay.rs]].
 - `static LAST_NET_TEST: Mutex<Option<(u64, Vec<Measure>)>>` : dernier test réseau (app ou Rago OS), pour que Rago OS l'affiche sans relancer 10 s de mesures.
 
 ## Erreurs et cas limites
@@ -257,4 +259,4 @@ Un test dans le fichier : `bridge_tests::reglages_proposes_a_rago_os` (plus de 1
 - Toute nouvelle façon de lancer des réglages doit passer par `start_tweaks` pour garder les règles de l'offre.
 - Une action qui change Windows doit refuser pendant un lot ou une remise (`"busy"`), comme `netopt_run` et `update_install`.
 - Ne jamais faire passer l'e-mail ou la clé par le pont ni dans le rapport : seulement l'offre.
-- Le nombre de commandes (81) est cité dans [[Architecture de l'app]] : le mettre à jour si on en ajoute.
+- Le nombre de commandes (92) est cité dans [[Architecture de l'app]] : le mettre à jour si on en ajoute.
