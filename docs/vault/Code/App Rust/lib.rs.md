@@ -2,12 +2,12 @@
 type: code
 tags: [code, app, rust]
 fichier: app/src-tauri/src/lib.rs
-lignes: 1759
+lignes: 1767
 maj: 2026-11-11
 ---
 # lib.rs
 
-Point d'entrée de toute l'app côté Rust : il déclare les 41 modules, construit l'état partagé `AppState`, enregistre les **92 commandes Tauri** que l'interface React appelle, lance les fils permanents au démarrage (`run()`) et répond au pont de [[Rago OS]]. Fiche parente : [[Code de l'app (Rust)]]. Fonctionnement d'ensemble : [[Architecture de l'app]], [[App Windows]].
+Point d'entrée de toute l'app côté Rust : il déclare les 42 modules, construit l'état partagé `AppState`, enregistre les **93 commandes Tauri** que l'interface React appelle, lance les fils permanents au démarrage (`run()`) et répond au pont de [[Rago OS]]. Fiche parente : [[Code de l'app (Rust)]]. Fonctionnement d'ensemble : [[Architecture de l'app]], [[App Windows]].
 
 Tout ce qui suit est CONFIRMÉ (code de `staging`, 10/11, commit `ee77d4f`). Fichier créé le 07/10 (1.1.5), 37 commits depuis : c'est le fichier le plus modifié du cœur.
 
@@ -55,7 +55,7 @@ Méthodes : `AppState::system(refresh)` (sonde mise en cache par `probe_cached`)
 - `bridge_presets()`, `BRIDGE_TWEAKS`, `bridge_handler(app)` : le pont avec Rago OS.
 - `pub fn run()` : le démarrage.
 
-### Les 92 commandes Tauri
+### Les 93 commandes Tauri
 Ordre de `generate_handler!`. Côté interface, chaque commande est appelée par `invoke("<nom>")` depuis `app/src/lib/api.ts`. Les erreurs sont des `String`, sauf les commandes de licence et de compte qui renvoient un `license::ApiError {code, message, buy_url}`.
 
 **Système, RBW, Outils** ([[Page Outils]], [[RBW Mod]])
@@ -115,6 +115,7 @@ Ordre de `generate_handler!`. Côté interface, chaque commande est appelée par
 | `session_state` | → `session::State` | mode d'alimentation, carte graphique, vérifications pendant la partie |
 | `session_set_prefs` | `gpu, power, checks, priority?` → `Prefs` | enregistre les 4 options (`priority` absent = inchangé) « pendant la partie » ; prises en compte au prochain tour du fil des jeux (4 s au plus) |
 | `tips_done` | → `Vec<String>` | réglages en jeu cochés « fait » ([[Conseils au lancement du jeu]]) |
+| `mouse_apps` | → `Vec<mouse::MouseApp>` | logiciels lancés entre la souris et le jeu ([[Page Souris]], [[mouse.rs]]), lecture seule, dans un fil à part (`spawn_blocking`) ; PR #96 |
 | `tips_mark` | `id, done` → `Vec<String>` | coche ou décoche un réglage en jeu (`Session::tips_mark`), puis émet `tips:done` (la liste) et `games:session` (l'état, `tipsLeft` recalculé) |
 | `overlay_info` / `overlay_live` | → `Info` / `Live` | état de la barre en jeu |
 | `overlay_close` | → `()` | ferme la barre |
@@ -259,4 +260,4 @@ Un test dans le fichier : `bridge_tests::reglages_proposes_a_rago_os` (plus de 1
 - Toute nouvelle façon de lancer des réglages doit passer par `start_tweaks` pour garder les règles de l'offre.
 - Une action qui change Windows doit refuser pendant un lot ou une remise (`"busy"`), comme `netopt_run` et `update_install`.
 - Ne jamais faire passer l'e-mail ou la clé par le pont ni dans le rapport : seulement l'offre.
-- Le nombre de commandes (92) est cité dans [[Architecture de l'app]] : le mettre à jour si on en ajoute.
+- Le nombre de commandes (93) est cité dans [[Architecture de l'app]] : le mettre à jour si on en ajoute.

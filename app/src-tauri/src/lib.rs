@@ -19,6 +19,7 @@ mod instance;
 mod license;
 mod mcping;
 mod memory;
+mod mouse;
 mod minecraft;
 mod netopt;
 mod netshare;
@@ -1052,6 +1053,12 @@ fn session_set_prefs(bg: State<'_, Arc<Background>>, gpu: bool, power: bool, che
     prefs
 }
 
+/// Page Souris : logiciels lancés qui se placent entre la souris et le jeu (mouse.rs). Lecture seule.
+#[tauri::command]
+async fn mouse_apps() -> Result<Vec<mouse::MouseApp>, String> {
+    tauri::async_runtime::spawn_blocking(mouse::running).await.map_err(|e| e.to_string())
+}
+
 /// Conseils au lancement du jeu : réglages en jeu cochés « fait » (tips.rs).
 #[tauri::command]
 fn tips_done(session: State<'_, Arc<session::Session>>) -> Vec<String> {
@@ -1675,6 +1682,7 @@ pub fn run() {
             session_set_prefs,
             tips_done,
             tips_mark,
+            mouse_apps,
             display_info,
             display_profiles,
             display_state,

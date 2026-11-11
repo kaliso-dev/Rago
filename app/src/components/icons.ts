@@ -1,6 +1,6 @@
 import { createElement } from "react";
 import {
-  Box, Crosshair, FlaskConical, Gamepad2, Gauge, Globe, Gpu, LayoutDashboard, Network, Palette, Router, ScanSearch, Settings, Shield, Undo2, AppWindow, Wrench, Zap,
+  Box, Crosshair, FlaskConical, Mouse, Gamepad2, Gauge, Globe, Gpu, LayoutDashboard, Network, Palette, Router, ScanSearch, Settings, Shield, Undo2, AppWindow, Wrench, Zap,
   type LucideIcon,
 } from "lucide-react";
 
@@ -19,6 +19,7 @@ export const MODULE_ICONS: Record<string, LucideIcon> = {
   settings: Settings,
   games: Gamepad2,
   display: Palette,
+  mouse: Mouse,
   nettest: Globe,
   netopt: Router,
   tools: Wrench,

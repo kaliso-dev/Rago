@@ -209,6 +209,7 @@ Aucun test automatique côté front. Le simulateur sert de banc d'essai manuel a
 ## Conseils au lancement du jeu (PR #91, 11/11, dans `staging` par la PR #92)
 - Importe `../data/tips.json` ([[tips.json]]) pour la démo.
 - Types : `SessionCheck.id` vaut aussi `wallpaper`, `refresh`, `gamedvr`, `cpu`, `ram` (pour `refresh`, `apps` = fréquence actuelle puis la plus haute) ; `SessionState` gagne `game` (clé du jeu à conseils ou `null`) et `tipsLeft` ; `OverlayInfo` gagne `nudge` (la pastille montre le rappel).
+- Page Souris : `mouseApps()` → `mouse_apps` (type `MouseApp { name, kind: remap | script | autoclick | vendor }`) ; démo : X-Mouse Button Control et Logitech G HUB ([[Page Souris]]).
 - Fonctions : `tipsDone()` → `tips_done` ; `tipsMark(id, done)` → `tips_mark { id, done }` ; `onTipsDone(cb)` → événement `tips:done` ; `onOverlayNudge(cb)` → événement `overlay:nudge`.
 - Démo : `mockTipsDone` garde les cases cochées le temps de la page ; `tipsMark` émet `tips:done` et `games:session`. La partie de démo (`?playing`, ou `overlay.html`) joue à VALORANT, ou au jeu de `?game=` (`fortnite`, `cs2`…), avec les points OneDrive, OBS Studio, écran à 60 Hz sur 144 Hz et Google Chrome gourmand. `overlay.html?pill&nudge` montre le rappel.
 - Fonctionnalité : [[Conseils au lancement du jeu]] ; composants : [[GameTips.tsx]], [[tips.ts]].

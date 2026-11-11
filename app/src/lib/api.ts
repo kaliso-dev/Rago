@@ -6,6 +6,13 @@ import { tweaks } from "./catalog";
 import tipsData from "../data/tips.json";
 import type { NetAction, NetLine, NetOptions, NetOutcome, NetState } from "./netopt";
 
+/** Logiciel trouvé par la page Souris (mouse.rs `MouseApp`). */
+export interface MouseApp {
+  name: string;
+  /** remap : X-Mouse Button Control ; script : AutoHotkey ; autoclick : clic auto ; vendor : logiciel du fabricant */
+  kind: "remap" | "script" | "autoclick" | "vendor";
+}
+
 export interface Gpu {
   name: string;
   vendor: "nvidia" | "amd" | "intel" | "other" | string;
@@ -642,6 +649,8 @@ export interface Api {
   /** Coche ou décoche un réglage conseillé ; renvoie la liste cochée. */
   tipsMark(id: string, done: boolean): Promise<string[]>;
   onTipsDone(cb: (ids: string[]) => void): Promise<UnlistenFn>;
+  /** Page Souris : logiciels lancés entre la souris et le jeu (mouse.rs), lecture seule. */
+  mouseApps(): Promise<MouseApp[]>;
   /** Couleurs et résolution par jeu (display.rs) */
   displayInfo(): Promise<DisplayInfo>;
   /** Profils par jeu (« mc:java » pour Minecraft Java). */
@@ -776,6 +785,7 @@ const tauriApi: Api = {
   sessionSetPrefs: (gpu, power, checks, priority) => invoke("session_set_prefs", { gpu, power, checks, priority }),
   onSession: (cb) => listen<SessionState>("games:session", (e) => cb(e.payload)),
   tipsDone: () => invoke("tips_done"),
+  mouseApps: () => invoke("mouse_apps"),
   tipsMark: (id, done) => invoke("tips_mark", { id, done }),
   onTipsDone: (cb) => listen<string[]>("tips:done", (e) => cb(e.payload)),
   displayInfo: () => invoke("display_info"),
@@ -1558,6 +1568,11 @@ const mockApi: Api = {
   },
   onDisplayState: (cb) => on("display:state", cb),
   tipsDone: async () => mockTipsDone,
+  // démo : un logiciel de remappage et celui du fabricant, pour montrer les deux cas
+  mouseApps: async () => [
+    { name: "X-Mouse Button Control", kind: "remap" },
+    { name: "Logitech G HUB", kind: "vendor" },
+  ],
   tipsMark: async (id, done) => {
     mockTipsDone = done ? [...new Set([...mockTipsDone, id])] : mockTipsDone.filter((x) => x !== id);
     emit<string[]>("tips:done", mockTipsDone);
