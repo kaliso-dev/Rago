@@ -32,9 +32,19 @@ static TIPS: LazyLock<HashMap<String, Vec<String>>> = LazyLock::new(|| {
     file.games.into_iter().map(|(k, g)| (k, g.tips.into_iter().map(|t| t.id).collect())).collect()
 });
 
-/// Le jeu des conseils qui tourne : la clé du premier exe connu (games.rs) qui a des conseils.
-pub fn game_of(procs: &[PathBuf]) -> Option<&'static str> {
-    procs.iter().filter_map(|p| crate::games::preset_key(&file_of(p))).find(|k| TIPS.contains_key(*k))
+/// Le jeu des conseils qui tourne, d'après les exes des jeux en cours (lib.rs) : la clé du premier exe connu
+/// (games.rs) qui a des conseils. Un client ou un launcher resté ouvert (client de League of Legends pendant une
+/// partie de VALORANT) passe après l'exe d'un jeu.
+pub fn game_of(exes: &[PathBuf]) -> Option<&'static str> {
+    let side = |file: &str| file.contains("launcher") || file.starts_with("leagueclient");
+    let mut found: Vec<(bool, &'static str)> = exes
+        .iter()
+        .map(|p| file_of(p))
+        .filter_map(|f| crate::games::preset_key(&f).filter(|k| TIPS.contains_key(*k)).map(|k| (side(&f), k)))
+        .collect();
+    // tri stable : l'ordre des processus est gardé entre deux exes du même rang
+    found.sort_by_key(|(side, _)| *side);
+    found.first().map(|(_, k)| *k)
 }
 
 /// Conseils cochés « fait » par le joueur, gardés d'une partie à l'autre.
@@ -320,6 +330,14 @@ mod tests {
         // jeu connu mais sans conseils
         assert_eq!(game_of(&[PathBuf::from(r"C:\Roblox\RobloxPlayerBeta.exe")]), None);
         assert_eq!(game_of(&[]), None);
+        // le client de League of Legends resté ouvert ne cache pas la partie de VALORANT, quel que soit l'ordre
+        let client = PathBuf::from(r"C:\Riot Games\League of Legends\LeagueClient.exe");
+        let valorant = PathBuf::from(r"C:\Riot Games\VALORANT\live\VALORANT.exe");
+        assert_eq!(game_of(&[client.clone(), valorant.clone()]), Some("valorant"));
+        assert_eq!(game_of(&[valorant, client.clone()]), Some("valorant"));
+        // le client et la partie de League of Legends : LoL ; le client seul aussi (le joueur est dans ses menus)
+        assert_eq!(game_of(&[client.clone(), PathBuf::from(r"C:\Riot Games\League of Legends\Game\League of Legends.exe")]), Some("lol"));
+        assert_eq!(game_of(&[client]), Some("lol"));
     }
 
     #[test]

@@ -263,7 +263,7 @@ impl Session {
         g.state.gpu_games = g.saved.gpu.len();
 
         // conseils : le jeu lancé et ses réglages pas encore faits, puis ce que le PC montre
-        let game = if playing { tips::game_of(procs) } else { None };
+        let game = if playing { tips::game_of(exes) } else { None };
         g.state.game = game.map(str::to_string);
         g.state.tips_left = game.map_or(0, |k| self.done.left(k));
         if watch {
