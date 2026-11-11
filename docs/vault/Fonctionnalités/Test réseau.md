@@ -6,7 +6,7 @@ maj: 2026-11-11
 ---
 # Test réseau
 
-Onglet « Test réseau » de la page Réseau (avec Optimisations et [[Packet Optimizer]]). RAG-50 étape 0. Code : [[nettest.rs]], [[mcping.rs]], [[icmp.rs]], [[netshare.rs]], page [[NetTest.tsx]] ; Diagnostic avancé : [[netopt.rs]] et [[common.ps1]] (détail dans « Code » plus bas). **Gratuit. Ne change rien sur le PC.** Aussi ouvert par la tuile « Tester ma connexion » de la [[Page Outils]] (PR #90 du 11/11, pas encore fusionnée).
+Onglet « Test réseau » de la page Réseau (avec Optimisations et [[Packet Optimizer]]). RAG-50 étape 0. Code : [[nettest.rs]], [[mcping.rs]], [[icmp.rs]], [[netshare.rs]], page [[NetTest.tsx]] ; Diagnostic avancé : [[netopt.rs]] et [[common.ps1]] (détail dans « Code » plus bas). **Gratuit. Ne change rien sur le PC.** Aussi ouvert par la tuile « Tester ma connexion » de la [[Page Outils]] (PR #90 du 11/11, dans `staging` par la PR #92).
 
 - **Serveurs testés** :
   - Minecraft : Hypixel (Amérique du Nord), Minemen Club (PvP, Europe) → ping/pong du protocole Minecraft, 8 essais (même ping que dans le jeu).
