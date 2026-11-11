@@ -2,8 +2,8 @@
 type: code
 tags: [code, app, css, design]
 fichier: app/src/styles/ (tokens.css, app.css, features.css, account.css, overlay.css)
-lignes: 7195
-maj: 2026-11-10
+lignes: 7553
+maj: 2026-11-11
 ---
 # Styles de l'app (CSS)
 
@@ -18,7 +18,7 @@ Tout ce qui suit est CONFIRMÉ (code de `staging`, 10/11, commit `ee77d4f`).
 | `tokens.css` | 119 | les deux fenêtres | jetons `--rg-*`, classes `.rg-metric` et `.rg-overline`, animations `rg-pulse` et `rg-pixel-blink` |
 | `app.css` | 2935 | fenêtre principale | polices, cadre, barre de titre, navigation, pages, cartes, boutons, réglages, barre « Appliquer », fenêtres, exécution, tableau de bord, Minecraft, paramètres, licence, plan gratuit, verre, finitions, 1.3.0 |
 | `account.css` | 257 | fenêtre principale | avatar, invitation à laisser un avis, formulaire d'avis, carte Profil |
-| `features.css` | 3492 | fenêtre principale | fonctionnalités de la 1.2.0 et après (liste plus bas) |
+| `features.css` | 3850 | fenêtre principale | fonctionnalités de la 1.2.0 et après (liste plus bas) |
 | `overlay.css` | 392 | barre en jeu | toute la barre en jeu (RAG-82) |
 
 - Ordre d'import dans [[main.tsx (app)]] : `tokens.css`, `app.css`, `account.css`, `features.css`. L'ordre compte : une règle plus bas l'emporte à égalité.
@@ -103,7 +103,8 @@ Tout ce qui suit est CONFIRMÉ (code de `staging`, 10/11, commit `ee77d4f`).
   - 2618 et 2665 : Avancé et Réglages experts ;
   - 2931 : Analyser mon PC ;
   - 3198 : modifier un preset ;
-  - 3360 : Rago Route.
+  - 3360 : Rago Route ;
+  - 3494 : couleurs et résolution par jeu (`.display-*`, page [[Display.tsx]] ; ajoutée le 11/11 sur la branche `claude/project-thread-7n0ikn`, elle réutilise les curseurs `.no-slider` du Packet Optimizer et les puces `.chip-btn`).
 - Le titre de la section Rago Route dit encore « exe de test » : en retard, l'onglet est dans tous les exe depuis le 10/11 (voir [[RouteTab.tsx]]).
 
 ## `account.css` et `overlay.css`

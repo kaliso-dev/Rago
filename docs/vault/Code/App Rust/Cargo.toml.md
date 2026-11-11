@@ -3,7 +3,7 @@ type: code
 tags: [code, app, rust, build]
 fichier: app/src-tauri/Cargo.toml
 lignes: 45
-maj: 2026-11-10
+maj: 2026-11-11
 ---
 # Cargo.toml
 
@@ -55,15 +55,16 @@ Liaisons brutes vers l'API Windows. Une feature par partie de l'API :
 | `Win32_System_Registry` | [[backup.rs]], [[reg.rs]] |
 | `Win32_Security`, `Win32_Security_Authorization` | [[shell.rs]] (administrateur), [[memory.rs]] (privilège), [[games.rs]], [[bridge.rs]] (droits du canal nommé) |
 | `Win32_Security_Cryptography` | [[license.rs]] (DPAPI, `BCryptGenRandom`) |
-| `Win32_System_Threading` | [[instance.rs]], [[shell.rs]], [[memory.rs]], [[games.rs]], [[overlay.rs]], [[bridge.rs]] |
-| `Win32_System_Diagnostics_ToolHelp`, `Win32_System_ProcessStatus`, `Win32_System_LibraryLoader`, `Win32_System_RemoteDesktop` | [[memory.rs]] (et [[games.rs]] pour ToolHelp) |
+| `Win32_System_Threading` | [[instance.rs]], [[shell.rs]], [[memory.rs]], [[games.rs]], [[overlay.rs]], [[bridge.rs]], [[display.rs]] |
+| `Win32_System_Diagnostics_ToolHelp`, `Win32_System_ProcessStatus`, `Win32_System_LibraryLoader`, `Win32_System_RemoteDesktop` | [[memory.rs]] (et [[games.rs]] pour ToolHelp, [[display.rs]] pour LibraryLoader : pilotes NVIDIA et AMD chargés depuis `System32`) |
 | `Win32_System_Performance` | [[stats.rs]] (compteurs PDH) |
 | `Win32_System_Power` | [[session.rs]] |
 | `Win32_System_Services` | [[boost.rs]], [[rbw.rs]] |
 | `Win32_System_Diagnostics_Etw` | [[flows.rs]] (journal réseau du ping des jeux) |
-| `Win32_System_Pipes`, `Win32_Storage_FileSystem` | [[bridge.rs]] (canal nommé avec Rago OS) |
-| `Win32_Graphics_Gdi` | [[icon.rs]], [[analysis.rs]], [[overlay.rs]] |
-| `Win32_UI_WindowsAndMessaging` | [[instance.rs]], [[icon.rs]], [[memory.rs]], [[games.rs]], [[overlay.rs]] |
+| `Win32_System_Pipes`, `Win32_Storage_FileSystem` | [[bridge.rs]] (canal nommé avec Rago OS) ; [[display.rs]] pour FileSystem (fichier du jeu en lecture seule) |
+| `Win32_Graphics_Gdi` | [[icon.rs]], [[analysis.rs]], [[overlay.rs]], [[display.rs]] (écrans, résolution) |
+| `Win32_UI_ColorSystem`, `Win32_System_Memory` | [[display.rs]] : rampe gamma (`GetDeviceGammaRamp`, `SetDeviceGammaRamp`) et mémoire demandée par le pilote AMD (`HeapAlloc`) ; ajoutées le 11/11 (branche `claude/project-thread-7n0ikn`) |
+| `Win32_UI_WindowsAndMessaging` | [[instance.rs]], [[icon.rs]], [[memory.rs]], [[games.rs]], [[overlay.rs]], [[display.rs]] |
 | `Win32_UI_Shell` | [[tools.rs]] (corbeille), [[overlay.rs]] |
 | `Win32_UI_Input_KeyboardAndMouse` | [[overlay.rs]] |
 | `Win32_NetworkManagement_IpHelper`, `Win32_Networking_WinSock` | [[icmp.rs]], [[gameping.rs]], [[route.rs]] |
