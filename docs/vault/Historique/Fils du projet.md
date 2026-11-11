@@ -45,7 +45,7 @@ Les fils les plus riches ont leur propre note : [[Fil - Nouvelle version backlog
 | 24 | Sauvegarder les clés et régler Supabase | 10/11 14:04 | 10/11 14:34 | **bloqué** : sauvegarde des clés et choix Supabase |
 | 25 | Coder la sortie 1.3.0 avec Rago Route | 10/11 14:04 | 10/11 14:33 | terminé, rangé |
 | 26 | Régler le manque de minutes GitHub Actions | 10/11 14:04 | 10/11 15:06 | terminé, rangé |
-| 27 | Créer le tableau de bord admin complet | 10/11 14:08 | 10/11 18:49 | admin et Cerveau en prod (PR #87) ; attend le retour de Sofiene sur la prod |
+| 27 | Créer le tableau de bord admin complet | 10/11 14:08 | 11/11 09:51 | terminé : admin et Cerveau en prod (PR #87), confirmé par Sofiene |
 | 28 | Créer le cerveau visuel du vault | 10/11 16:04 | 10/11 17:18 | terminé, rangé (PR #85 fusionnée) |
 | 29 | Régler les problèmes des clients | 10/11 17:17 | 10/11 17:58 | PR #86 dans `staging` (11/11, par la PR #92) ; attend le test de Sofiene |
 | 30 | Ajouter saturation et résolution des pros | 11/11 00:17 | 11/11 08:21 | PR #93 dans `staging` (11/11, par la PR #92) ; attend le test de Sofiene |
@@ -211,7 +211,7 @@ Fils cités ailleurs mais absents de la liste : un fil « Créer le profil Linke
 - **Résultat** : PR #78 (le push ne construit plus que `staging`) fusionnée à 14:35. 15:04 : « hein pourquoi staging il faut en prod […] j'espère que y a pas plein de truc en staging qui ont jamais été poussé en prod » → PR #81, port du seul correctif CI en prod (15:05). Constat : `staging` a environ 160 commits de plus que la prod ; le code de l'app en prod est encore la 1.1.14. Voir [[CI GitHub Actions]].
 
 ## 27. Créer le tableau de bord admin complet
-`cmsg_01Mb4hMYwRFctv5wE2NGiASi8hPR2cwTfeEfEKYMb6dDMD` · 10/11 14:08 → 18:49 · l'admin complet et le [[Cerveau du vault]] sont en prod depuis la PR #87 ; attend le retour de Sofiene. **Note complète : [[Fil - Créer le tableau de bord admin complet]].**
+`cmsg_01Mb4hMYwRFctv5wE2NGiASi8hPR2cwTfeEfEKYMb6dDMD` · 10/11 14:08 → 11/11 09:51 · terminé : l'admin complet et le [[Cerveau du vault]] sont en prod depuis la PR #87 ; Sofiene, 11/11 : « ok tout est bon le dashboard est bien en ligne ». **Note complète : [[Fil - Créer le tableau de bord admin complet]].**
 - Un `/admin` qui centralise tout (PR #77), refait en interface « comme si ça devait etre commercialisé » (PR #82), sans trous (PR #83), puis les ventes dans une seule devise (PR #84, ouverte). Voir [[Tableau de bord admin]].
 
 ## 28. Créer le cerveau visuel du vault
