@@ -2,7 +2,7 @@
 type: technique
 tags: [technique, app, architecture]
 version_app: 1.3.0
-maj: 2026-11-10
+maj: 2026-11-11
 ---
 # Architecture de l'app
 
@@ -43,18 +43,18 @@ Fermeture de la fenêtre principale : cachée si une remise est en cours ou si l
 | Mise à jour | `update.rs` | [[Mise à jour automatique]] |
 | Rago OS | `bridge.rs` (canal nommé), `boost.rs` (Mode jeu total : services Windows arrêtés le temps d'une partie, notés dans `boost.json`) | [[Rago OS]] |
 
-### Commandes exposées à l'interface (`generate_handler!`, 76 au 10/11)
+### Commandes exposées à l'interface (`generate_handler!`, 76 au 10/11 ; 78 avec la PR #91)
 - Système et outils : `get_system_info`, `rbw_status`, `tools_scan`, `tools_clean`, `tools_apps`, `tools_remove_apps`, `tools_drivers`, `tools_windows_update`, `live_stats`, `clean_ram`, `open_task_manager`, `restart_pc`, `open_folder`, `analysis_facts`.
 - Réglages : `run_tweaks`, `cancel_run`, `is_running`, `get_history`, `clear_history`, `get_applied`, `undo_all_plan`, `sign_out_plan`, `take_repair_notice`, `minecraft_status`, `minecraft_restore`, `save_preset_file`, `read_preset_file`.
 - Réseau : `net_test`, `netopt_state`, `netopt_run`, `route_start`, `route_stop`, `route_status`, `route_token`, `route_links` (2e connexions possibles et diagnostic du partage de connexion du téléphone).
 - Jeux : `games_list`, `game_art`, `game_launch`, `game_add`, `game_remove`, `games_unhide`, `launchers_list`, `launcher_launch`, `launcher_icon`, `preset_icons`.
-- Barre en jeu et arrière-plan : `overlay_info`, `overlay_live`, `overlay_close`, `overlay_set_pin`, `overlay_open_app`, `background_get`, `background_set`, `session_state`, `session_set_prefs`.
+- Barre en jeu et arrière-plan : `overlay_info`, `overlay_live`, `overlay_close`, `overlay_set_pin`, `overlay_open_app`, `background_get`, `background_set`, `session_state`, `session_set_prefs` ; `tips_done`, `tips_mark` ([[Conseils au lancement du jeu]], PR #91, pas encore dans `staging`).
 - Mise à jour : `update_ready`, `update_status`, `update_install`.
 - Licence et compte : `license_status`, `license_login`, `license_link_start`, `license_link_poll`, `license_activate`, `license_refresh`, `license_sign_out`, `account_me`, `account_login`, `account_sign_out`, `account_save_review`, `account_delete_review`, `account_set_name`, `account_set_photo`, `account_remove_photo`, `account_subscription`, `plans_info`.
 - Support : `support_report`, `show_report`.
 
 ### Événements émis vers l'interface
-`run:item`, `run:log`, `run:done` (lot de réglages, [[runner.rs]]), `reset:done`, `netopt:line`, `nettest:sample`, `nettest:measure`, `games:running`, `games:session`, `app:goto` (page à ouvrir, demandée par Rago OS ou la barre en jeu) ([[lib.rs]]), `update:ready` ([[update.rs]]), `overlay:mode` (vers la fenêtre de la barre en jeu, [[overlay.rs]]).
+`run:item`, `run:log`, `run:done` (lot de réglages, [[runner.rs]]), `reset:done`, `netopt:line`, `nettest:sample`, `nettest:measure`, `games:running`, `games:session`, `app:goto` (page à ouvrir, demandée par Rago OS ou la barre en jeu) ([[lib.rs]]), `update:ready` ([[update.rs]]), `overlay:mode` (vers la fenêtre de la barre en jeu, [[overlay.rs]]). PR #91 (pas encore dans `staging`) : `tips:done` ([[lib.rs]]) et `overlay:nudge` ([[overlay.rs]]).
 
 ## 4. Interface React (`app/src/`)
 - `main.tsx` → `App.tsx` : barre de titre maison (`decorations: false`), `Sidebar`, page courante, `ApplyBar` (barre « Apply » des changements en attente), `RunOverlay` (suivi d'un lot), fenêtres `Upsell`, `ReviewPrompt`, `ReviewDialog`, `ConfirmDialog`, `SearchPalette`, `ResetToast`, `Splash`.
@@ -80,7 +80,7 @@ Fermeture de la fenêtre principale : cachée si une remise est en cours ou si l
 
 ## 6. Fichiers sur le PC du joueur
 - `%LOCALAPPDATA%\Rago\` : `license.bin` (jeton), `scripts.bin` (clé des scripts Premium), `account.bin` (jeton de compte), tous chiffrés DPAPI.
-- `%APPDATA%\gg.rago.optimizer\` (staging : `gg.rago.optimizer.staging`) : `applied.json` et `history.json` (chiffrés), `background.json`, `boost.json`, `session.json`, `reset-pending.json`, `games.json`, `overlay-games.json`, `last-match.json`, `netopt\` (dernière application du [[Packet Optimizer]]), `backup\*.reg`, `logs\` (`run-<ms>.log` des lots, `reset-<ms>.log`, `repairs.log` : à demander au joueur), `run\` (scripts temporaires, vidé), `art\` (images des jeux), `reports\`. Liste complète avec le module qui écrit chaque fichier : [[Code de l'app (Rust)]].
+- `%APPDATA%\gg.rago.optimizer\` (staging : `gg.rago.optimizer.staging`) : `applied.json` et `history.json` (chiffrés), `background.json`, `boost.json`, `session.json`, `tips-done.json` (PR #91), `reset-pending.json`, `games.json`, `overlay-games.json`, `last-match.json`, `netopt\` (dernière application du [[Packet Optimizer]]), `backup\*.reg`, `logs\` (`run-<ms>.log` des lots, `reset-<ms>.log`, `repairs.log` : à demander au joueur), `run\` (scripts temporaires, vidé), `art\` (images des jeux), `reports\`. Liste complète avec le module qui écrit chaque fichier : [[Code de l'app (Rust)]].
 - Installé : `Program Files\Rago Optimizer\` avec `resources\` (`nvidiaProfileInspector.exe`, `PresentMon.exe` ajouté par la CI).
 
 ## 7. Sécurité et garde-fous

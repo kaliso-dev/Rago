@@ -2,8 +2,8 @@
 type: code
 tags: [code, app, rust, carte]
 fichier: app/src-tauri/
-lignes: 19 431 (40 fichiers .rs de src/), plus build.rs 66, embed_scripts.rs 98, netopt/*.ps1 932
-maj: 2026-11-10
+lignes: 20 033 (41 fichiers .rs de src/ avec la PR #91 ; 19 431 et 40 dans `staging`), plus build.rs 66, embed_scripts.rs 98, netopt/*.ps1 932
+maj: 2026-11-11
 ---
 # Code de l'app (Rust)
 
@@ -12,7 +12,7 @@ Carte du **cœur Rust de Rago Optimizer** (`app/src-tauri/`) : chaque module en 
 Tout est CONFIRMÉ (code de `staging`, 10/11, commit `ee77d4f`).
 
 ## Comment lire ce code
-- Point d'entrée : [[main.rs]] appelle `run()` de [[lib.rs]], qui déclare les **38 modules**, crée l'état partagé et enregistre les **76 commandes** que l'interface appelle par `invoke` ([[api.ts]]).
+- Point d'entrée : [[main.rs]] appelle `run()` de [[lib.rs]], qui déclare les **38 modules**, crée l'état partagé et enregistre les **76 commandes** (39 et 78 avec la PR #91, pas encore dans `staging` : [[tips.rs]], `tips_done`, `tips_mark`) que l'interface appelle par `invoke` ([[api.ts]]).
 - L'interface n'a **aucun accès réseau** (CSP, [[Configuration Tauri]]) : tout appel au serveur passe par une commande Rust.
 - L'app tourne **en administrateur** (`app.manifest`) : presque tous les réglages écrivent dans `HKLM`, les services ou le BCD.
 - Les scripts des réglages ne sont **jamais en clair** dans l'exe : chiffrés à la compilation ([[build.rs]], [[embed_scripts.rs]], [[seal.rs]]), le paquet Premium s'ouvre avec la clé donnée par le serveur à une licence active ([[license.rs]]).
@@ -23,7 +23,7 @@ Tout est CONFIRMÉ (code de `staging`, 10/11, commit `ee77d4f`).
 | Module | Lignes | Rôle |
 |---|---|---|
 | [[main.rs]] | 6 | lance `rago_hub_lib::run()`, sans console en release |
-| [[lib.rs]] | 1 553 | état partagé, 76 commandes, démarrage (`run()`), réponses au pont de Rago OS |
+| [[lib.rs]] | 1 586 | état partagé, 78 commandes (PR #91), démarrage (`run()`), réponses au pont de Rago OS |
 | [[instance.rs]] | 283 | une seule instance : mutex Windows, réveil de la fenêtre déjà ouverte, attente de la désinstallation |
 | [[background.rs]] | 294 | préférences d'arrière-plan, icône près de l'horloge, tâche planifiée de lancement avec Windows |
 | [[icon.rs]] | 189 | extrait l'icône d'un exe en PNG (bibliothèque de jeux) |
@@ -55,17 +55,18 @@ Tout est CONFIRMÉ (code de `staging`, 10/11, commit `ee77d4f`).
 | Module | Lignes | Rôle |
 |---|---|---|
 | [[system.rs]] | 171 | sonde du matériel : Windows, processeur, RAM, cartes graphiques, carte réseau active, droits administrateur |
-| [[stats.rs]] | 326 | RAM, processeur et carte graphique en direct (compteurs PDH) |
-| [[memory.rs]] | 291 | bouton « Nettoyer » de la RAM (liste standby, réduction des applis en option) |
-| [[analysis.rs]] | 163 | réglages de jeu de Windows lus pour l'[[Analyse du PC]] |
+| [[stats.rs]] | 339 | RAM, processeur et carte graphique en direct (compteurs PDH) |
+| [[memory.rs]] | 290 | bouton « Nettoyer » de la RAM (liste standby, réduction des applis en option) |
+| [[analysis.rs]] | 169 | réglages de jeu de Windows lus pour l'[[Analyse du PC]] |
 | [[tools.rs]] | 579 | [[Page Outils]] : nettoyage des fichiers inutiles, applis préinstallées (38 paquets), pilotes |
 
 ### Jeux et parties
 | Module | Lignes | Rôle |
 |---|---|---|
-| [[games.rs]] | 1 929 | bibliothèque de jeux : jeux et launchers installés, images, lancement, jeux en cours |
-| [[overlay.rs]] | 751 | barre en jeu : jeu au premier plan, raccourci Alt+X, fenêtre de la barre |
-| [[session.rs]] | 432 | [[Pendant la partie]] : carte graphique performante, plan d'alimentation, défait après |
+| [[games.rs]] | 1 941 | bibliothèque de jeux : jeux et launchers installés, images, lancement, jeux en cours |
+| [[overlay.rs]] | 805 | barre en jeu : jeu au premier plan, raccourci Alt+X, fenêtre de la barre, rappel des conseils (PR #91) |
+| [[session.rs]] | 519 | [[Pendant la partie]] : carte graphique performante, plan d'alimentation, défait après ; vérifications et conseils |
+| [[tips.rs]] | 416 | [[Conseils au lancement du jeu]] (PR #91, pas encore dans `staging`) : jeu à conseils, réglages cochés, applis gourmandes, écran, Game DVR |
 | [[boost.rs]] | 224 | Mode jeu total demandé par Rago OS : services non essentiels arrêtés puis relancés |
 | [[fps.rs]] | 286 | FPS du jeu par PresentMon, résumé de la dernière partie |
 | [[flows.rs]] | 382 | serveur du jeu en cours trouvé dans le journal réseau du noyau (ETW) |
@@ -107,8 +108,9 @@ Réglages     runner ─► catalog, backup, history, assets, shell, minecraft, 
 Licence      license ─► history, shell          account ─► license
 PC           system ─► assets, shell   tools ─► shell   analysis ─► games, session, shell
 Jeux         games ─► icon, reg, shell
-             overlay ─► games, fps, gameping, background
-             session ─► reg, shell, system, background
+             overlay ─► games, fps, gameping, background, session (PR #91)
+             session ─► reg, shell, system, background, tips (PR #91)
+             tips ─► games, analysis, memory, stats, reg, session (PR #91)
              gameping ─► flows, icmp, mcping        flows ─► icmp     fps ─► shell
 Réseau       netopt ─► catalog, runner, seal, history, shell
              nettest ─► icmp, mcping     netshare ─► account, license, nettest, update
@@ -127,7 +129,7 @@ Seuls [[overlay.rs]], [[background.rs]] et [[update.rs]] reçoivent un `AppHandl
 ## Les fils qui tournent
 | Fil | Lancé par | Rythme | Rôle |
 |---|---|---|---|
-| fil des jeux | `run()` de [[lib.rs]] | 4 s | jeux en cours, [[session.rs]], fin du Mode jeu total après ≈ 20 s sans jeu |
+| fil des jeux | `run()` de [[lib.rs]] | 4 s | jeux en cours, [[session.rs]], applis gourmandes pendant la partie ([[tips.rs]], PR #91), fin du Mode jeu total après ≈ 20 s sans jeu |
 | `rago-overlay` | [[overlay.rs]] | 700 ms | jeu au premier plan, barre en jeu |
 | `rago-stats` | [[stats.rs]] | 1 s | mesures en direct ; s'arrête 5 s après la dernière demande |
 | `update::watch` | [[update.rs]] | 4 h (30 min après un échec) | cherche une mise à jour ; s'arrête une fois la mise à jour téléchargée |
@@ -152,6 +154,8 @@ Seuls [[overlay.rs]], [[background.rs]] et [[update.rs]] reçoivent un `AppHandl
 | `app:goto` | [[lib.rs]] | page à ouvrir (demande de Rago OS ou de la barre en jeu) |
 | `update:ready` | [[update.rs]] | mise à jour téléchargée |
 | `overlay:mode` | [[overlay.rs]] | mode de la barre en jeu (panneau, pastille) |
+| `overlay:nudge` | [[overlay.rs]] | rappel des conseils dans la pastille commencé ou fini (PR #91) |
+| `tips:done` | [[lib.rs]] | réglages en jeu cochés « fait » (PR #91) |
 
 Ils sont écoutés par [[store.tsx]] et les pages de l'interface.
 
@@ -168,6 +172,7 @@ Ils sont écoutés par [[store.tsx]] et les pages de l'interface.
 | `<data>\games.json`, `<data>\art\` | [[games.rs]] | jeux ajoutés à la main, images des jeux |
 | `<data>\overlay-games.json`, `<data>\last-match.json` | [[overlay.rs]], [[fps.rs]] | jeux de la barre, résumé de la dernière partie |
 | `<data>\session.json` | [[session.rs]] | ce que l'app a changé le temps d'une partie |
+| `<data>\tips-done.json` | [[tips.rs]] | réglages en jeu cochés « fait » (PR #91) |
 | `<data>\boost.json` | [[boost.rs]] | services arrêtés par le Mode jeu total |
 | `<data>\netopt\` (`applied.json`, `snapshot.json`) | [[netopt.rs]] | dernière application du Packet Optimizer et valeurs d'avant |
 | `<data>\reports\rago-report-AAAA-MM-JJ-HHMM.txt` | [[report.rs]] | rapports pour le support (les 10 derniers) |
@@ -184,7 +189,7 @@ Ils sont écoutés par [[store.tsx]] et les pages de l'interface.
 ## Le registre et les objets Windows que l'app touche elle-même
 En dehors des scripts des réglages ([[Scripts embarqués (JSON)]]) :
 - **Écrit** : `HKCU\Software\Microsoft\DirectX\UserGpuPreferences` (carte graphique performante par jeu, [[session.rs]]) ; `HKLM\SOFTWARE\Microsoft\Windows NT\CurrentVersion\SystemRestore` `SystemRestorePointCreationFrequency` = 0 (point de restauration, [[runner.rs]]) ; `CoalescingTimerInterval` supprimé de 8 clés (`Session Manager\kernel`, `Executive`, `Memory Management`…, [[repair.rs]]).
-- **Lu** : `HKLM\SOFTWARE\Microsoft\Cryptography` `MachineGuid` (empreinte, [[license.rs]]) ; `HKLM\SYSTEM\Select` `Current` et `…\Control\Power` `HibernateEnabled` ([[backup.rs]]) ; `GameConfigStore`, `GameDVR`, `PushNotifications` ([[analysis.rs]]) ; clés des launchers et `Uninstall` ([[games.rs]]) ; clés lues par le vérificateur RBW ([[rbw.rs]]).
+- **Lu** : `HKLM\SOFTWARE\Microsoft\Cryptography` `MachineGuid` (empreinte, [[license.rs]]) ; `HKLM\SYSTEM\Select` `Current` et `…\Control\Power` `HibernateEnabled` ([[backup.rs]]) ; `GameConfigStore`, `GameDVR`, `PushNotifications` ([[analysis.rs]] ; les deux premiers aussi par [[tips.rs]] pendant une partie, PR #91) ; clés des launchers et `Uninstall` ([[games.rs]]) ; clés lues par le vérificateur RBW ([[rbw.rs]]).
 - **Tâche planifiée** « Rago Optimizer » (ou « Rago Optimizer Staging ») : lancement avec Windows ([[background.rs]]), supprimée à la désinstallation ([[Installateur NSIS]]).
 - **Objets nommés** : `Local\<identifiant>.instance` et `Local\<identifiant>.show` ([[instance.rs]]) ; canal `\\.\pipe\<identifiant>.bridge` ([[bridge.rs]]) ; session ETW « Rago-GamePing » ([[flows.rs]]) ; session PresentMon « RagoOptimizerFps » ([[fps.rs]]).
 

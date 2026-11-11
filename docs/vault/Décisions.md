@@ -1,7 +1,7 @@
 ---
 type: registre
 tags: [décision]
-maj: 2026-11-10
+maj: 2026-11-11
 ---
 # Décisions
 
@@ -10,6 +10,7 @@ Registre daté des décisions de Sofiene. **La plus récente prime.** Citations 
 ## App et versions
 | Date | Décision | Statut |
 |---|---|---|
+| 11/11 | Des optimisations plus propres à chaque jeu (« ces optimization seront plus spécifique au jeu masi surtout nous ramenerons du monde et des nouveaux joueurs »), à ajouter après la sortie de la 1.3.0 prévue « demain voir apres demain MAX ». Feature 4, **Tips** : « pour chaque jeux ca analyse et detect si le joueur pourrait appliquer un settings ou une option sur son pc sur son app ou sur son jeux qui pourrait l'aider […] fait une liste des option et settings important a activer ou pas qu'on pourras signaler au jouer quand son jeu sera lancer. Et biensur au dela du jeu il faut que ca detect par exemple si j'ai one drive obs en arriere plan ca notifi le joueur que ca prend des perf » | codé, PR #91 brouillon vers `staging`, pas fusionnée, à tester sur Windows ([[Conseils au lancement du jeu]], RAG-94) |
 | 10/11 | Version publique du Cerveau pour le cousin de Sofiene : « extraire le projet du cerveau le mettre dans un nouveau repo public », « retirer le design rago il faut un design classique », que son Claude puisse l'installer et créer le vault, « quelque soit le domaine », hébergeable sur GitHub Pages | fait : nom **Synapse** (choix de Sofiene sur la carte), dépôt public `kaliso-dev/Synapse` poussé le 10/11 ; reste à activer Pages ([[Cerveau du vault]]) |
 | 10/11 | Mettre l'admin et le Cerveau en prod tout de suite, sans attendre la 1.3.0 : « il faut le push sur la prod maintenant et qu'il soit fonctionnel normalement tu as du voir mais j'ai ajouté une page cerveau il faut push avec » | fait, PR #87 fusionnée dans la branche de prod le 10/11 ; la 1.3.0 reste dans `staging` ([[Tableau de bord admin]]) |
 | 10/11 | Admin : corriger l'affichage des ventes en plusieurs devises (« ok donc ça aussi », sur sa capture de la page Ventes) | fait, PR #84 fusionnée dans `staging` le 10/11, en prod par la #87 ([[Tableau de bord admin]]) |

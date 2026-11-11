@@ -1,7 +1,7 @@
 ---
 type: pilotage
 tags: [journal, chronologie]
-maj: 2026-11-10
+maj: 2026-11-11
 ---
 # Journal
 
@@ -10,6 +10,7 @@ Une ligne par événement marquant, la plus récente en haut. Voir [[Historique 
 ## Novembre 2026
 | Date | Événement | Liens |
 |---|---|---|
+| 11/11 | Feature 4 de la liste de Sofiene (« Tips ») : **conseils au lancement du jeu** codés sur la branche `claude/project-thread-g3od2h` (PR #91, brouillon vers `staging`, RAG-94), hors de la release en cours : 65 réglages en jeu conseillés par les pros pour 8 jeux (dont le contour des ennemis de VALORANT et le Turbo Building de Fortnite), applis gourmandes mesurées sans ouvrir de processus, écran sous sa meilleure fréquence, Game DVR, Wallpaper Engine et Medal ; rappel de 12 s dans la pastille au lancement ; jamais testé sur Windows | [[Conseils au lancement du jeu]], [[tips.rs]] |
 | 10/11 | Version publique du [[Cerveau du vault]] construite pour le cousin de Sofiene : kit sans design Rago (thème clair et sombre), site statique pour GitHub Pages, `INSTALLER.md` pour que son Claude crée le dépôt et le vault, vault d'exemple qui sert de guide ; nommé **Synapse** par Sofiene, poussé dans le dépôt public `kaliso-dev/Synapse` | [[Cerveau du vault]] |
 | 10/11 | [[Tableau de bord admin]] et [[Cerveau du vault]] **en prod** (PR #87, portage depuis une branche partie de la prod), sur « il faut le push sur la prod maintenant et qu'il soit fonctionnel normalement […] j'ai ajouté une page cerveau il faut push avec » ; rien de la 1.3.0 n'est parti ; l'ancienne page `/admin` n'existe plus | [[Tableau de bord admin]], [[Branches et environnements]] |
 | 10/11 | Admin, ventes en € et en $US mal affichées sur staging (capture de Sofiene : « 420,00 € + 122,95… », barre « Par type » fausse) : chaque paiement converti par Stripe compte pour son montant en €, comme dans Stripe ; PR #84 fusionnée dans `staging` le 10/11 (demande de Sofiene de tout mettre en prod) | [[Tableau de bord admin]] |

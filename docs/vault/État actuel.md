@@ -1,7 +1,7 @@
 ---
 type: pilotage
 tags: [état, pilotage]
-maj: 2026-11-10
+maj: 2026-11-11
 ---
 # État actuel (10/11/2026)
 
@@ -52,6 +52,7 @@ Les joueurs ont la [[Version 1.2.1]] (en ligne depuis le 31/10). La [[Version 1.
 - Fusionnée le 04/11 dans `staging` : #70 ([[Version 1.3.0]]), à tester sur staging avant toute sortie.
 - #69 (charte « Affiche » sur la page d'accueil) : **fermée le 04/11** sans fusion, la nouvelle charte est abandonnée ([[Décisions]]).
 - #71 (bot communauté Discord en prod, vers la branche de prod) : **ouverte** ; ne pas fusionner sans « fusionne » de Sofiene ([[Bot communauté Discord]]).
+- **Ouverte le 11/11, en brouillon** vers `staging` : #91, [[Conseils au lancement du jeu]] (feature 4 « Tips » de la liste du 11/11, RAG-94), hors de la release 1.3.0 ; jamais testé sur Windows ; ne pas fusionner sans « fusionne » de Sofiene. Touche aussi `session.rs`, `lib.rs`, `SessionCard.tsx`, `api.ts` et `i18n.ts`, comme la #89 : la seconde fusionnée devra reprendre ces fichiers.
 - Fusionnée le 04/11 : #72 (état des lieux Stripe, [[Ventes Stripe]]), sur « fusionne » de Sofiene.
 - Fusionnée le 01/11 : #68 (ce vault, réponses de Sofiene et Linear remis à jour), sur « fusionne » de Sofiene.
 - Fermées le 01/11 avec l'accord de Sofiene (branches gardées) : #16 (1.1.10), #50 et #51 (1.1.13), dont les fonctions sont dans la 1.2.1, et #60 (Rago OS, abandonné).
@@ -68,3 +69,4 @@ Les joueurs ont la [[Version 1.2.1]] (en ligne depuis le 31/10). La [[Version 1.
 9. Essayer le [[Tableau de bord admin]] en prod (`account.rago-optimizer.com/admin`, même clé `ADMIN_KEY`, PR #87 du 10/11) : vraies ventes, joueurs, Services, Cerveau.
 10. [[Cerveau du vault]] (en prod depuis le 10/11) : créer le jeton GitHub en lecture seule et le mettre dans Railway, staging **et** prod (`CERVEAU_GITHUB_TOKEN`), avant le passage du dépôt en privé.
 11. Répondre aux questions q70 à q93 sur la page « Questions du vault Rago » ([[Questions ouvertes]]).
+12. [[Conseils au lancement du jeu]] (PR #91, brouillon) : l'essayer sur Windows (exe de test : « Run workflow » d'`app-windows` sur la branche `claude/project-thread-g3od2h`, serveur `staging`), puis dire « fusionne » quand il doit aller dans `staging`.

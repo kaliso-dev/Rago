@@ -2,8 +2,8 @@
 type: code
 tags: [code, app, rust, windows]
 fichier: app/src-tauri/src/memory.rs
-lignes: 291
-maj: 2026-11-10
+lignes: 290
+maj: 2026-11-11
 ---
 # memory.rs
 
@@ -20,7 +20,7 @@ Tout est CONFIRMÉ (code de `staging`, 10/11). Créé le 17/10 (RAG-48, décidé
 |---|---|
 | `struct Cleaned {standby, trimmed, apps}` | cache vidé (octets), mémoire rendue par les applis réduites (octets), nombre d'applis réduites |
 | `clean(trim, keep) -> Result<Cleaned, String>` | réduit d'abord si `trim` (les pages rendues passent par la liste standby), puis vide la liste standby. Hors Windows : `Err("Windows only")` |
-| `PROTECTED` | processus jamais réduits (en minuscules) |
+| `PROTECTED` | processus jamais réduits (en minuscules) ; `pub(crate)` depuis la PR #91 (11/11, pas encore dans `staging`) : [[tips.rs]] ne signale jamais ces processus comme gourmands |
 
 ## Fonctionnement détaillé
 

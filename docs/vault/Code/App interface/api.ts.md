@@ -2,8 +2,8 @@
 type: code
 tags: [code, app, typescript, interface]
 fichier: app/src/lib/api.ts
-lignes: 1381
-maj: 2026-11-10
+lignes: 1426
+maj: 2026-11-11
 ---
 # api.ts
 
@@ -194,3 +194,10 @@ Aucun test automatique côté front. Le simulateur sert de banc d'essai manuel a
 - Les types doivent rester identiques aux structures Rust (`serde(rename_all = "camelCase")`) : un champ renommé d'un seul côté donne `undefined` sans erreur.
 - Le simulateur doit **imiter les règles du moteur** (annulations, point de restauration raté, RBW Mod) : sinon la démo et les captures d'écran mentent.
 - Le commentaire « Premium » sur `toolsRemoveApps` est périmé (À CORRIGER dans le code, sans conséquence).
+
+## Conseils au lancement du jeu (PR #91, 11/11, pas encore dans `staging`)
+- Importe `../data/tips.json` ([[tips.json]]) pour la démo.
+- Types : `SessionCheck.id` vaut aussi `wallpaper`, `refresh`, `gamedvr`, `cpu`, `ram` (pour `refresh`, `apps` = fréquence actuelle puis la plus haute) ; `SessionState` gagne `game` (clé du jeu à conseils ou `null`) et `tipsLeft` ; `OverlayInfo` gagne `nudge` (la pastille montre le rappel).
+- Fonctions : `tipsDone()` → `tips_done` ; `tipsMark(id, done)` → `tips_mark { id, done }` ; `onTipsDone(cb)` → événement `tips:done` ; `onOverlayNudge(cb)` → événement `overlay:nudge`. Avec ces deux événements, l'interface en écoute **14**.
+- Démo : `mockTipsDone` garde les cases cochées le temps de la page ; `tipsMark` émet `tips:done` et `games:session`. La partie de démo (`?playing`, ou `overlay.html`) joue à VALORANT, ou au jeu de `?game=` (`fortnite`, `cs2`…), avec les points OneDrive, OBS Studio, écran à 60 Hz sur 144 Hz et Google Chrome gourmand. `overlay.html?pill&nudge` montre le rappel.
+- Fonctionnalité : [[Conseils au lancement du jeu]] ; composants : [[GameTips.tsx]], [[tips.ts]].

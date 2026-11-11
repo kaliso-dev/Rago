@@ -1,7 +1,7 @@
 ---
 type: outil
 tags: [outil, suivi]
-maj: 2026-11-01
+maj: 2026-11-11
 ---
 # Linear
 
@@ -15,3 +15,4 @@ Espace `rago-optimizer`, équipe **RAG** (https://linear.app/rago-optimizer). Me
 - **À tenir à jour avec le vault** : Sofiene veut continuer à utiliser Linear (01/11). À la fin d'une tâche, mettre à jour le ticket du sujet (statut, commentaire court) et créer un ticket pour chaque nouvelle tâche décidée. Le vault et le code font foi en cas d'écart.
 - Réponses de Sofiene du 01/11 : RAG-16 (point après la première semaine de ventes) et RAG-21 (logo dans les e-mails) **annulés**, « On les abandonne » ; RAG-76 (crashs Lunar) et RAG-84 (joueur bloqué par Smart App Control) **annulés**, « Plus de nouvelles, on arrête » ([[Problèmes joueurs]]).
 - Tâches marketing d'Abel (RAG-35, 39, 51, 54, 56) : Sofiene, 10/11 : « il faut supprimer tout ça » (voir [[Décisions]] > Abandonné). Lu dans Linear le 10/11 au soir : RAG-35 et RAG-39 « In Progress », RAG-51, 54 et 56 « Todo », aucune touchée depuis le 11/10. Les passer en « Canceled » : À VÉRIFIER (q93, la réponse de Sofiene visait peut-être seulement les questions du vault).
+- RAG-94 [[Conseils au lancement du jeu]] (11/11, « In Review » : codé dans la PR #91, brouillon, pas encore dans `staging`), créé pour la feature 4 (« Tips ») de la liste de Sofiene du 11/11.

@@ -2,7 +2,7 @@
 type: fonctionnalité
 tags: [fonctionnalité, app, 1.2]
 version_app: 1.2.1
-maj: 2026-11-10
+maj: 2026-11-11
 ---
 # Bibliothèque de jeux
 
@@ -15,6 +15,7 @@ Page « Jeux » (groupe « En jeu »). RAG-57. Code : [[games.rs]], [[icon.rs]],
 - **Chaque jeu reçoit un preset** : le preset de son jeu s'il est reconnu (ex. Valorant → « Valorant »), modifiable ou « Sans preset ». Voir [[Presets]].
 - **Optimiser et jouer** (Premium) : applique les tweaks du preset puis lance le jeu par son launcher, **avec les droits de la session Windows** (jamais en administrateur). **Les tweaks restent allumés après la partie** ; « Les retirer » depuis la page. « Jouer » / « Jouer sans optimiser » lance seulement.
 - « En cours » / « Dernière partie » : processus lancés depuis le dossier du jeu, regardés toutes les 4 s.
+- **Réglages conseillés** (PR #91 du 11/11, pas encore dans `staging`) : sous le jeu en avant, les réglages à changer dans le jeu que conseillent les pros (VALORANT, Fortnite, Counter-Strike 2, Apex Legends, PUBG, League of Legends, Marvel Rivals, THE FINALS), à cocher « fait » ; ouvert quand le jeu tourne. Voir [[Conseils au lancement du jeu]].
 - « Retirer de la bibliothèque » (deux clics) ne désinstalle rien.
 
 Liens : [[Barre en jeu]], [[Pendant la partie]], [[Problèmes joueurs]] (curseur perdu après Optimiser et jouer).
@@ -22,3 +23,4 @@ Liens : [[Barre en jeu]], [[Pendant la partie]], [[Problèmes joueurs]] (curseur
 ## Code
 - [[games.rs]] : détection par launcher (Steam, Epic, Riot, Battle.net, Ubisoft, Xbox, Roblox, Minecraft), comptes Windows multiples, 15 launchers, lancement sans droits administrateur (jeton de l'Explorateur), images dans `art\`, suivi des parties (`games.json`).
 - [[icon.rs]] (icône PNG d'un exe : logos des launchers et des jeux), [[session.rs]] (ce que l'app fait pendant la partie), [[lib.rs]] (boucle de fond toutes les 4 s, événements `games:running` et `games:session`), [[bridge.rs]] (commandes `games` et `game_launch` pour [[Rago OS]]).
+- [[GameTips.tsx]] et [[tips.ts]] (PR #91) : réglages conseillés sous le jeu en avant.

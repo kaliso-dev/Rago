@@ -2,8 +2,8 @@
 type: code
 tags: [code, app, react, page, jeux]
 fichier: app/src/pages/Games.tsx
-lignes: 553
-maj: 2026-11-10
+lignes: 558
+maj: 2026-11-11
 ---
 # Games.tsx
 
@@ -72,6 +72,7 @@ Les jeux dont `launcher === "minecraft"` sont les launchers et clients Minecraft
   - le launcher (ou « Ajouté par toi ») ;
   - la corbeille « Retirer de la bibliothèque ». Elle demande deux clics, et le texte précise que le jeu reste installé. Elle appelle `api.gameRemove` pour le jeu, ou pour chaque client de la tuile Minecraft.
 - Pendant une partie, les vérifications de la session sont affichées (`SessionChecks` et `useSession` de [[SessionCard.tsx]]).
+- **PR #91** (11/11, pas encore dans `staging`) : en bas de la grande carte, le bloc « Réglages conseillés pour {jeu} » ([[GameTips.tsx]]) si le jeu a une liste (`tipsKeyForGame` de [[tips.ts]], d'après son nom ; jamais pour Minecraft) ; ouvert si le jeu tourne, replié sinon (`key` = jeu + en cours : il se rouvre au lancement). Voir [[Conseils au lancement du jeu]].
 - **Boutons** :
   - Preset choisi, avec des réglages à appliquer, ou joueur sans licence : **« Optimiser et jouer »**. Avec une licence, cela appelle `optimizeAndPlay(jeu, entrées)` : fenêtre de confirmation ([[ConfirmDialog.tsx]]) avec les réglages du preset encore à appliquer (`toApply`), lot, puis lancement du jeu à la fin du lot. Si tout est déjà appliqué, le jeu démarre tout de suite.
   - À côté : « Jouer sans optimiser » (`launchGame`).

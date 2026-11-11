@@ -2,8 +2,8 @@
 type: code
 tags: [code, app, react, carte]
 fichier: app/src/
-lignes: 29270
-maj: 2026-11-10
+lignes: 30760
+maj: 2026-11-11
 ---
 # Code de l'app (interface)
 
@@ -32,12 +32,12 @@ Tout ce qui suit est CONFIRMÉ (code de `staging`, 10/11, commit `ee77d4f`), sau
   - [[api.ts]] et [[accountApi.ts]] sont les deux seules portes vers le moteur.
 - **Pas de routeur** : la page affichée est une simple valeur `page` dans le store. Pas de Redux non plus : un seul contexte React, [[store.tsx]], plus le contexte du compte, [[account.tsx]].
 - **Mode démo** : hors de Tauri (`isTauri` faux), les mêmes fonctions sont simulées dans le navigateur. Cela sert au simulateur `npm run window`, aux captures et aux tests de l'interface.
-- Taille : 29 270 lignes dans `app/src/` (fichiers `.ts`, `.tsx`, `.css` et `.json`). Les plus gros fichiers sont :
+- Taille : 29 270 lignes dans `app/src/` (fichiers `.ts`, `.tsx`, `.css` et `.json`) ; 30 760 avec la PR #91 ([[Conseils au lancement du jeu]], pas encore dans `staging`). Les plus gros fichiers sont :
   - `catalog.json` (8050 lignes) ;
   - `features.css` (3492 lignes) ;
   - `app.css` (2935 lignes) ;
-  - `i18n.ts` (2140 lignes) ;
-  - `api.ts` (1381 lignes) ;
+  - `i18n.ts` (2140 lignes ; 2188 avec la PR #91) ;
+  - `api.ts` (1381 lignes ; 1426 avec la PR #91) ;
   - `NetOpt.tsx` (1090 lignes) ;
   - `store.tsx` (731 lignes).
 
@@ -129,7 +129,7 @@ main.tsx
 - **Remise à zéro en arrière-plan** (fin de Premium, déconnexion) : le moteur la lance seul, sans fenêtre, puis envoie **`reset:done`**. Le store relit les réglages appliqués et affiche [[ResetToast.tsx]].
 
 ## Tous les événements écoutés
-Les 12 événements Tauri que l'interface écoute, tous déclarés dans [[api.ts]] :
+Les 12 événements Tauri que l'interface écoute (14 avec les deux de la PR #91, en fin de tableau), tous déclarés dans [[api.ts]] :
 
 | Événement | Envoyé par | Écouté par | Contenu |
 |---|---|---|---|
@@ -145,6 +145,8 @@ Les 12 événements Tauri que l'interface écoute, tous déclarés dans [[api.ts
 | `update:ready` | [[update.rs]] | [[UpdateCard.tsx]] | mise à jour téléchargée, prête |
 | `overlay:mode` | [[overlay.rs]] | [[Overlay.tsx]] | barre ouverte ou pastille |
 | `app:goto` | [[lib.rs]] (barre en jeu, pont de [[Rago OS]]) | [[store.tsx]] | page à ouvrir (`page#réglage`, `premium`) |
+| `tips:done` (PR #91) | [[lib.rs]] ([[tips.rs]]) | [[tips.ts]] (`useTipsDone`, donc [[GameTips.tsx]]) | réglages en jeu cochés « fait » |
+| `overlay:nudge` (PR #91) | [[overlay.rs]] | [[Overlay.tsx]] | rappel des conseils dans la pastille, commencé ou fini |
 
 - Chaque écouteur renvoie une promesse de désinscription, appelée quand le composant disparaît.
 - Les écouteurs des pages ignorent ce qui arrive après leur fermeture (garde `live`).
@@ -159,7 +161,8 @@ Les 12 événements Tauri que l'interface écoute, tous déclarés dans [[api.ts
   - `?fastnet` : test réseau instantané ;
   - `?update` : une mise à jour prête ;
   - `?pill` et `?passive` : la barre en jeu en pastille ou passive ;
-  - `?estimate` : ping estimé dans la barre en jeu.
+  - `?estimate` : ping estimé dans la barre en jeu ;
+  - `?nudge` (avec `?pill`) : rappel des conseils dans la pastille, et `?game=fortnite` (ou `cs2`…) : jeu de la partie de démo, VALORANT par défaut (PR #91).
 - **`npm run window`** ([[window.mjs]]) :
   - lance le serveur Vite ;
   - ouvre Chrome, Edge ou Brave en mode application, à la taille de la fenêtre de l'app (1280 × 820), avec un profil à part qui garde l'état de la démo ;
@@ -191,14 +194,15 @@ Les 12 événements Tauri que l'interface écoute, tous déclarés dans [[api.ts
 - Licence et Premium : [[LicenseGate.tsx]], [[LicenseNotice.tsx]], [[Upsell.tsx]], [[SubscriptionCard.tsx]].
 - Compte et avis : [[ProfileCard.tsx]], [[ReviewDialog.tsx]], [[ReviewPrompt.tsx]].
 - Cartes : [[UpdateCard.tsx]], [[BackgroundCard.tsx]], [[SessionCard.tsx]], [[LiveStatsCard.tsx]], [[RbwStatus.tsx]].
+- Conseils au lancement du jeu (PR #91) : [[GameTips.tsx]].
 - Réseau et presets : [[NetTools.tsx]], [[PresetEditor.tsx]].
 - Petites briques (`ui.tsx`, `Modal`, `Logo`, `icons.ts`, `Avatar`, `GameLogo`, `PageBoundary`, `vite-env.d.ts`) : [[Petits composants de l'interface]].
 
 ### Logique (`app/src/lib/`)
-[[api.ts]], [[store.tsx]], [[catalog.ts]], [[i18n.ts]], [[account.tsx]], [[accountApi.ts]], [[accountText.ts]], [[analysis.ts]], [[netopt.ts]], [[share.ts]], [[art.ts]], [[gameLogos.ts]], [[seen.ts]].
+[[api.ts]], [[store.tsx]], [[catalog.ts]], [[i18n.ts]], [[account.tsx]], [[accountApi.ts]], [[accountText.ts]], [[analysis.ts]], [[netopt.ts]], [[share.ts]], [[art.ts]], [[gameLogos.ts]], [[seen.ts]], [[tips.ts]] (PR #91).
 
 ### Données (`app/src/data/`)
-[[catalog.json]] (généré, voir [[Code du générateur de catalogue]]), [[free.json]] (écrit à la main).
+[[catalog.json]] (généré, voir [[Code du générateur de catalogue]]), [[free.json]] (écrit à la main), [[tips.json]] (écrit à la main, PR #91).
 
 ## À savoir avant de modifier
 - Une nouvelle commande Rust demande trois choses :

@@ -2,8 +2,8 @@
 type: code
 tags: [code, app, typescript, react]
 fichier: app/src/components/SessionCard.tsx
-lignes: 97
-maj: 2026-11-10
+lignes: 101
+maj: 2026-11-11
 ---
 # SessionCard.tsx
 
@@ -30,3 +30,8 @@ Tout ce qui suit est CONFIRMÉ (code de `staging`, 10/11, commit `ee77d4f`).
 - Monté par [[Settings.tsx]] ; `SessionChecks` et `useSession` utilisés par [[Overlay.tsx]] et [[Games.tsx]].
 - [[api.ts]] (`sessionState`, `sessionSetPrefs`, `onSession`, `backgroundGet`) ; [[session.rs]], [[background.rs]].
 - Fonctionnalités : [[Barre en jeu]], [[Bibliothèque de jeux]].
+
+## Conseils au lancement du jeu (PR #91, 11/11, pas encore dans `staging`)
+- L'interrupteur `gameChecks` s'appelle « **Conseils au lancement d'un jeu** » : « Réglages du jeu conseillés par les pros, applis gourmandes, fréquence de l'écran, batterie, téléchargements et synchronisation en fond : un rappel en haut à gauche au lancement, puis le détail dans la barre en jeu et la bibliothèque. Rien n'est changé ni fermé. » ([[Conseils au lancement du jeu]]).
+- Nouvelles lignes de « À vérifier » : fond d'écran animé (« Fond d'écran animé ouvert ({applis}) : dans ses réglages de performance, mets « Other application fullscreen » sur « Stop (free memory) »… »), écran (« Ton écran tourne à {cur} Hz alors qu'il peut monter à {max} Hz… »), Game DVR (renvoie au réglage gratuit « Couper Game DVR »), processeur (« Gros consommateur de processeur en fond ({applis})… ») et mémoire (« Ta mémoire est presque pleine. Ce qui en prend le plus : {applis}… »).
+- `line()` passe `cur` et `max` (les deux valeurs de `refresh`) et, pour `ram` sans appli à nommer, utilise la phrase sans liste (`session.check.ramBare`).

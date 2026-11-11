@@ -2,8 +2,8 @@
 type: code
 tags: [code, app, rust, barre-en-jeu]
 fichier: app/src-tauri/src/overlay.rs
-lignes: 751
-maj: 2026-11-10
+lignes: 805
+maj: 2026-11-11
 ---
 # overlay.rs
 
@@ -66,6 +66,10 @@ La fenêtre de l'app elle-même n'est jamais un jeu.
 - Un clic dans le jeu (la fenêtre de la barre perd le focus) la ferme sans redonner le focus (le jeu l'a déjà) ; sans effet en mode passif.
 - La pastille revient au tour suivant si l'option est active.
 - Le raccourci est traité **sur un autre fil** (`on_shortcut`) : créer ou montrer une fenêtre depuis le fil principal pendant un événement peut bloquer sous Windows.
+
+### Rappel des conseils (PR #91, 11/11, pas encore dans `staging`, jamais testé sur Windows)
+- `Overlay::new` reçoit aussi la `Session` ([[session.rs]]). À chaque tour, quand le jeu est installé au premier plan (`SETTLE`, 10 s), que la barre est activée et qu'il n'y a pas de plein écran exclusif : si ce processus du jeu n'a pas encore eu son rappel (`nudged` ≠ son pid), qu'il est arrivé au premier plan il y a moins de `SETTLE + NUDGE_WINDOW` (10 s + 120 s) et que `session.has_advice(prefs)` dit qu'il y a quelque chose à signaler, le rappel dure `NUDGE` (**12 s**, `nudge_until`).
+- Pendant le rappel, la pastille est montrée même si le joueur ne la garde pas à l'écran (`wanted = overlay && (pin || rappel) && !exclusif`), à la taille `NUDGE_SIZE` (**380 × 44** points au lieu de 236 × 44) ; début et fin du rappel replacent la pastille (`show_pill`), qui envoie `overlay:nudge` (vrai ou faux) à la fenêtre ; `Info.nudge` donne l'état à l'ouverture. Ouvrir la barre (`open`) arrête le rappel. Texte affiché : [[Overlay.tsx]]. Fonctionnalité : [[Conseils au lancement du jeu]].
 
 ## Données touchées
 

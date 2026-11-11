@@ -2,12 +2,12 @@
 type: code
 tags: [code, app, rust]
 fichier: app/src-tauri/src/lib.rs
-lignes: 1553
-maj: 2026-11-10
+lignes: 1586
+maj: 2026-11-11
 ---
 # lib.rs
 
-Point d'entrée de toute l'app côté Rust : il déclare les 38 modules, construit l'état partagé `AppState`, enregistre les **76 commandes Tauri** que l'interface React appelle, lance les fils permanents au démarrage (`run()`) et répond au pont de [[Rago OS]]. Fiche parente : [[Code de l'app (Rust)]]. Fonctionnement d'ensemble : [[Architecture de l'app]], [[App Windows]].
+Point d'entrée de toute l'app côté Rust : il déclare les 39 modules (38 dans `staging` : [[tips.rs]] vient de la PR #91), construit l'état partagé `AppState`, enregistre les **78 commandes Tauri** (76 dans `staging`) que l'interface React appelle, lance les fils permanents au démarrage (`run()`) et répond au pont de [[Rago OS]]. Fiche parente : [[Code de l'app (Rust)]]. Fonctionnement d'ensemble : [[Architecture de l'app]], [[App Windows]].
 
 Tout ce qui suit est CONFIRMÉ (code de `staging`, 10/11, commit `ee77d4f`). Fichier créé le 07/10 (1.1.5), 37 commits depuis : c'est le fichier le plus modifié du cœur.
 
@@ -53,7 +53,7 @@ Méthodes : `AppState::system(refresh)` (sonde mise en cache par `probe_cached`)
 - `bridge_presets()`, `BRIDGE_TWEAKS`, `bridge_handler(app)` : le pont avec Rago OS.
 - `pub fn run()` : le démarrage.
 
-### Les 76 commandes Tauri
+### Les 78 commandes Tauri (76 dans `staging`)
 Ordre de `generate_handler!`. Côté interface, chaque commande est appelée par `invoke("<nom>")` depuis `app/src/lib/api.ts`. Les erreurs sont des `String`, sauf les commandes de licence et de compte qui renvoient un `license::ApiError {code, message, buy_url}`.
 
 **Système, RBW, Outils** ([[Page Outils]], [[RBW Mod]])
@@ -110,6 +110,8 @@ Ordre de `generate_handler!`. Côté interface, chaque commande est appelée par
 | `overlay_close` | → `()` | ferme la barre |
 | `overlay_set_pin` | `pin: bool` | garde la barre épinglée (champ `pin` des préférences) |
 | `overlay_open_app` | `page?` | ferme la barre, `show_main`, puis émet `app:goto` vers la fenêtre `main` (`premium` : l'offre Premium) |
+| `tips_done` | → `Vec<String>` | réglages en jeu cochés « fait » ([[Conseils au lancement du jeu]], PR #91, pas encore dans `staging`) |
+| `tips_mark` | `id, done` → `Vec<String>` | coche ou décoche un réglage en jeu (`Session::tips_mark`), puis émet `tips:done` (la liste) et `games:session` (l'état, `tipsLeft` recalculé) ; PR #91 |
 | `open_task_manager` | → `()` | lance `taskmgr.exe` (Rago ne ferme aucun processus) |
 
 **Minecraft, PC, dossiers, support** ([[Partage et support]])
@@ -200,9 +202,9 @@ Si `reset.hold_exit()` (remise en cours) : cache la fenêtre et ne quitte pas. S
    - `History::load(history.json)` ; `Ledger::load(applied.json)`. S'il n'existait pas : `import_history` puis `save` ; s'il est encore en clair (`needs_migration`) : `save` le réécrit chiffré ;
    - `repair::at_startup` (RAG-67) ; le résultat remplit `repaired` ;
    - `games::Library::new` ; `started_hidden` = argument `--background` ; `Background::load` ; `Session::new` ; `Boost::new` (relance ce qu'une partie interrompue a laissé arrêté) ;
-   - **fil des jeux** (toutes les 4 s) : `library.list(false)` une fois, puis en boucle `games::process_paths()`, `library.poll` → `games:running` si changement, exes des jeux + `javaw` de Minecraft (`session::minecraft_exe`), `session.tick(playing, exes, procs, prefs)` → `games:session` si changement. Après 5 tours sans jeu (≈ 20 s) avec le Mode jeu total actif : `boost.off()` ;
+   - **fil des jeux** (toutes les 4 s) : `library.list(false)` une fois, puis en boucle `games::process_paths()`, `library.poll` → `games:running` si changement, exes des jeux + `javaw` de Minecraft (`session::minecraft_exe`), `session.tick(playing, exes, procs, prefs, hogs)` → `games:session` si changement. `hogs` (PR #91) : pendant une partie, option `game_checks` active, `tips::Hogs::tick(exes)` mesure les applis gourmandes ([[tips.rs]], gardé dans ce fil car les compteurs de Windows ne changent pas de fil) ; sinon `reset` et liste vide. Après 5 tours sans jeu (≈ 20 s) avec le Mode jeu total actif : `boost.off()` ;
    - `sync_tray` ; si `prefs.autostart` et pas en debug, crée la tâche de démarrage dans un fil si elle manque ;
-   - `Overlay::new` + `overlay::watch` (fil `rago-overlay`) ; `manage` de `background`, `overlay`, `session`, `boost` ;
+   - `Overlay::new` (avec la `Session` depuis la PR #91, pour le rappel des conseils) + `overlay::watch` (fil `rago-overlay`) ; `manage` de `background`, `overlay`, `session`, `boost` ;
    - `show_main` si pas lancé caché ;
    - `License::new()`, `Updates::default()`, `update::watch(app, updates, machine_guid ou nom du PC)` ;
    - `manage(AppState)` ;
@@ -221,7 +223,7 @@ Si `reset.hold_exit()` (remise en cours) : cache la fenêtre et ne quitte pas. S
 
 ## Données touchées
 - Disque : suppression de `run\` et du dossier de repli au démarrage ; fichiers `.rago` choisis par le joueur ; `reports\`.
-- Événements émis ici : `reset:done`, `nettest:sample`, `nettest:measure`, `netopt:line`, `games:running`, `games:session`, `app:goto`. Les autres (`run:*`, `update:ready`, `overlay:mode`) viennent de [[runner.rs]], [[update.rs]] et [[overlay.rs]].
+- Événements émis ici : `reset:done`, `nettest:sample`, `nettest:measure`, `netopt:line`, `games:running`, `games:session`, `app:goto`, et `tips:done` (PR #91). Les autres (`run:*`, `update:ready`, `overlay:mode`, `overlay:nudge` de la PR #91) viennent de [[runner.rs]], [[update.rs]] et [[overlay.rs]].
 - `static LAST_NET_TEST: Mutex<Option<(u64, Vec<Measure>)>>` : dernier test réseau (app ou Rago OS), pour que Rago OS l'affiche sans relancer 10 s de mesures.
 
 ## Erreurs et cas limites
@@ -237,4 +239,4 @@ Un test dans le fichier : `bridge_tests::reglages_proposes_a_rago_os` (plus de 1
 - Toute nouvelle façon de lancer des réglages doit passer par `start_tweaks` pour garder les règles de l'offre.
 - Une action qui change Windows doit refuser pendant un lot ou une remise (`"busy"`), comme `netopt_run` et `update_install`.
 - Ne jamais faire passer l'e-mail ou la clé par le pont ni dans le rapport : seulement l'offre.
-- Le nombre de commandes (76) est cité dans [[Architecture de l'app]] : le mettre à jour si on en ajoute.
+- Le nombre de commandes (78 avec la PR #91) est cité dans [[Architecture de l'app]] : le mettre à jour si on en ajoute.
