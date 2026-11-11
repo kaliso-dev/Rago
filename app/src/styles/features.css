@@ -2018,9 +2018,247 @@
   border-top: 1px solid var(--rg-line-1);
   line-height: 1.5;
 }
+/* en un clic : RAM, DNS, mode d'alimentation, test réseau */
+.tools-quick-wrap {
+  margin-bottom: 14px;
+}
+.tools-quick {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 12px;
+  align-items: stretch;
+}
+.tools-tile {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+.tools-tile-head {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 8px;
+}
+.tools-tile-head h3 {
+  margin: 0;
+  font-size: 14px;
+  font-weight: 600;
+  letter-spacing: var(--rg-ls-h3);
+}
+.tools-tile-icon {
+  flex: none;
+  display: grid;
+  place-items: center;
+  width: 32px;
+  height: 32px;
+  border-radius: 10px;
+  color: var(--rg-red-500);
+  background: var(--rg-red-a12);
+  box-shadow: inset 0 0 0 1px rgba(255, 59, 48, 0.25);
+}
+.tools-tile-desc {
+  margin: 0 0 10px;
+  line-height: 1.5;
+  text-wrap: pretty;
+}
+.tools-tile-foot {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  margin-top: auto;
+}
+.tools-tile-foot .btn {
+  flex: none;
+}
+.tools-tile-status {
+  margin: 0;
+  min-width: 0;
+  line-height: 1.4;
+  color: var(--rg-text-3);
+}
+.tools-tile-status.ok {
+  color: var(--rg-text-1);
+}
+.tools-tile-status.ok svg {
+  vertical-align: -2px;
+  margin-right: 4px;
+  color: var(--rg-success);
+}
+.tools-tile-status.bad,
+.tools-error {
+  color: var(--rg-red-500);
+}
+.tools-plans {
+  list-style: none;
+  margin: 0 0 10px;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+.tools-plan {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+  padding: 5px 8px;
+  border-radius: var(--rg-radius-sm);
+  background: var(--rg-glass-2);
+  border: 1px solid var(--rg-line-1);
+  color: var(--rg-text-2);
+  font-size: 12.5px;
+  text-align: left;
+  transition: border-color var(--rg-dur-fast), color var(--rg-dur-fast);
+}
+.tools-plan:hover:not(:disabled) {
+  border-color: var(--rg-line-3);
+  color: var(--rg-text-1);
+}
+.tools-plan.active {
+  color: var(--rg-text-1);
+  border-color: rgba(255, 59, 48, 0.35);
+  background: linear-gradient(var(--rg-red-a12), var(--rg-red-a12)), var(--rg-glass-2);
+}
+.tools-plan-dot {
+  flex: none;
+  display: grid;
+  place-items: center;
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  border: 1px solid var(--rg-line-3);
+  color: var(--rg-red-500);
+}
+.tools-plan.active .tools-plan-dot {
+  border-color: rgba(255, 59, 48, 0.5);
+}
+.tools-plan-name {
+  min-width: 0;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+/* applis au démarrage */
+/* la liste prend la hauteur que laisse le nettoyage à côté, et défile au-delà */
+.tools-startup-list {
+  list-style: none;
+  flex: 1 1 0;
+  min-height: 240px;
+  margin: 0 0 10px;
+  padding: 0 4px 0 0;
+  overflow-y: auto;
+}
+.tools-startup-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 7px 8px;
+  border-radius: var(--rg-radius-sm);
+  transition: background var(--rg-dur-fast), opacity var(--rg-dur-fast);
+}
+.tools-startup-row:hover {
+  background: var(--rg-glass-2);
+}
+.tools-startup-row.off .tools-startup-text {
+  opacity: 0.6;
+}
+.tools-startup-row .tools-row-icon,
+.tools-panel .tools-row-icon {
+  flex: none;
+  display: grid;
+  place-items: center;
+  width: 28px;
+  height: 28px;
+  border-radius: 8px;
+  color: var(--rg-text-2);
+  background: var(--rg-glass-2);
+  border: 1px solid var(--rg-line-1);
+}
+.tools-startup-text,
+.tools-panel-text {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+}
+.tools-startup-text .tools-row-name {
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+.tools-startup-text small,
+.tools-panel-text small {
+  font-size: 11.5px;
+  color: var(--rg-text-3);
+  line-height: 1.4;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+.tools-startup-text small svg {
+  vertical-align: -1px;
+}
+/* réglages Windows utiles */
+.tools-panels {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+.tools-panel {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  padding: 8px;
+  border-radius: var(--rg-radius-sm);
+  border: 1px solid transparent;
+  text-align: left;
+  color: var(--rg-text-1);
+  transition: background var(--rg-dur-fast), border-color var(--rg-dur-fast);
+}
+.tools-panel:hover {
+  background: var(--rg-glass-2);
+  border-color: var(--rg-line-1);
+}
+.tools-panel-go {
+  flex: none;
+  color: var(--rg-text-3);
+}
+.tools-panel:hover .tools-panel-go {
+  color: var(--rg-text-1);
+}
+/* tous les outils de l'app : les lignes « Lancer » des autres onglets */
+.tools-all {
+  margin-top: 26px;
+}
+.tools-all-head {
+  margin-bottom: 14px;
+}
+.tools-all-head .section-title {
+  align-items: center;
+  margin-bottom: 4px;
+}
+.tools-all-head p {
+  margin: 0;
+}
+.tools-all-group .section-title {
+  align-items: center;
+}
+.tools-all-open {
+  margin-left: auto;
+  font-weight: 400;
+}
 @media (max-width: 1100px) {
   .tools-grid {
     grid-template-columns: minmax(0, 1fr);
+  }
+  .tools-quick {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
   }
   .driver {
     grid-template-columns: 36px minmax(0, 1fr) auto;

@@ -2,14 +2,14 @@
 type: code
 tags: [code, app, typescript, react]
 fichier: app/src/components/Sidebar.tsx
-lignes: 112
-maj: 2026-11-10
+lignes: 113
+maj: 2026-11-11
 ---
 # Sidebar.tsx
 
 La **barre latérale** : navigation entre les pages, compteurs, cadenas, badges « Nouveau », carte de mise à jour, carte du plan gratuit, lien Discord, Paramètres et état administrateur. Fiche parente : [[Code de l'app (interface)]]. Vue produit : [[App Windows]].
 
-Tout ce qui suit est CONFIRMÉ (code de `staging`, 10/11, commit `ee77d4f`).
+Tout ce qui suit est CONFIRMÉ (code de `staging`, 10/11, commit `ee77d4f`), sauf la clé `tools.v2` du badge d'Outils, ajoutée par la **PR #90** (11/11, ouverte vers `staging`, pas encore fusionnée).
 
 ## Fonctionnement détaillé
 
@@ -30,7 +30,7 @@ Tout ce qui suit est CONFIRMÉ (code de `staging`, 10/11, commit `ee77d4f`).
 - Pastille animée de l'entrée active (`layoutId="nav-active"`, ressort 500/42).
 - **Compteur** : nombre de réglages du module cochés (pas encore appliqués).
 - **Cadenas** (si compteur à 0) : en gratuit, dès qu'au moins un réglage du module est Premium ou « retour seul », même si d'autres sont gratuits (Windows, Hitreg) ; pas de cadenas pour un module entièrement gratuit (Restaurer).
-- **« Nouveau »** (nouveautés de la 1.2.0) : table `NEW` = `games` → `games`, `tools` → `tools`, `network` → `netopt` et `nettest`, `analysis` → `analysis`. Le badge reste tant qu'une des pages listées n'a pas été ouverte ([[seen.ts]]). Visiter `games`, `tools` ou `analysis` les marque vues ; les onglets de Réseau sont marqués par [[Network.tsx]]. Libellé de plus de 14 caractères : un point au lieu du mot.
+- **« Nouveau »** (nouveautés de la 1.2.0, et page Outils refaite par la PR #90) : table `NEW` = `games` → `games`, `tools` → `tools` et `tools.v2` (`TOOLS_SEEN`, importé de [[Tools.tsx]]), `network` → `netopt` et `nettest`, `analysis` → `analysis`. Le badge reste tant qu'une des clés listées n'a pas été vue ([[seen.ts]]). Visiter `games`, `tools` ou `analysis` marque la clé du même nom ; `tools.v2` est marquée par la page Outils elle-même, et les onglets de Réseau par [[Network.tsx]]. Un joueur qui avait déjà ouvert Outils revoit donc le badge une fois. Libellé de plus de 14 caractères : un point au lieu du mot.
 
 ### Bas de la barre
 - [[UpdateCard.tsx]] : mise à jour prête.

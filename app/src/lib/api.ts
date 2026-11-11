@@ -286,7 +286,7 @@ export interface RbwCheck {
 }
 
 /** Page Outils (tools.rs). */
-export type CleanAreaId = "temp" | "windows_temp" | "update" | "crash" | "browsers" | "discord" | "shaders" | "recycle";
+export type CleanAreaId = "temp" | "windows_temp" | "update" | "crash" | "browsers" | "discord" | "launchers" | "shaders" | "recycle";
 export interface CleanArea {
   id: CleanAreaId;
   bytes: number;
@@ -303,6 +303,26 @@ export interface BloatApp {
   id: string;
   name: { en: string; fr: string };
 }
+/** Programme lancé avec Windows (clés Run et dossiers Démarrage), tel que le Gestionnaire des tâches le montre. */
+export interface StartupApp {
+  /** « source|nom » */
+  id: string;
+  name: string;
+  publisher: string;
+  command: string;
+  scope: "user" | "machine";
+  enabled: boolean;
+  /** sécurité, audio, pavé tactile, anti-cheat, Rago : ne se coupe pas depuis Rago */
+  keep: boolean;
+}
+export interface PowerPlan {
+  guid: string;
+  /** nom donné par Windows, dans sa langue */
+  name: string;
+  active: boolean;
+}
+/** Réglages de Windows ouverts par la page Outils (liste fermée de tools.rs). */
+export type WindowsPanel = "graphics" | "display" | "gamemode" | "sound" | "mouse" | "network" | "power" | "devices" | "visual" | "taskmgr";
 export interface Driver {
   kind: "gpu" | "network" | "audio";
   name: string;
@@ -459,12 +479,19 @@ export interface Api {
   toolsScan(): Promise<CleanArea[]>;
   toolsClean(areas: CleanAreaId[]): Promise<CleanResult>;
   toolsApps(): Promise<BloatApp[]>;
-  /** Premium ; renvoie les applis encore installées */
+  /** Gratuit, comme toute la page Outils ; renvoie les applis encore installées */
   toolsRemoveApps(ids: string[]): Promise<BloatApp[]>;
   toolsDrivers(): Promise<DriversInfo>;
   analysisFacts(): Promise<AnalysisFacts>;
   /** Paramètres Windows, mises à jour facultatives (pilotes) */
   toolsWindowsUpdate(): Promise<void>;
+  toolsStartup(): Promise<StartupApp[]>;
+  /** Active ou coupe un programme au démarrage, comme le Gestionnaire des tâches ; renvoie la liste à jour. */
+  toolsSetStartup(id: string, enabled: boolean): Promise<StartupApp[]>;
+  toolsPowerPlans(): Promise<PowerPlan[]>;
+  toolsSetPowerPlan(guid: string): Promise<PowerPlan[]>;
+  toolsFlushDns(): Promise<void>;
+  toolsOpen(panel: WindowsPanel): Promise<void>;
   minecraftRestore(dir?: string | null): Promise<string>;
   restartPc(): Promise<void>;
   openFolder(kind: "logs" | "resources" | "data"): Promise<void>;
@@ -579,6 +606,12 @@ const tauriApi: Api = {
   toolsDrivers: () => invoke("tools_drivers"),
   analysisFacts: () => invoke("analysis_facts"),
   toolsWindowsUpdate: () => invoke("tools_windows_update"),
+  toolsStartup: () => invoke("tools_startup"),
+  toolsSetStartup: (id, enabled) => invoke("tools_set_startup", { id, enabled }),
+  toolsPowerPlans: () => invoke("tools_power_plans"),
+  toolsSetPowerPlan: (guid) => invoke("tools_set_power_plan", { guid }),
+  toolsFlushDns: () => invoke("tools_flush_dns"),
+  toolsOpen: (panel) => invoke("tools_open", { id: panel }),
   minecraftRestore: (dir) => invoke("minecraft_restore", { dir: dir ?? null }),
   restartPc: () => invoke("restart_pc"),
   openFolder: (kind) => invoke("open_folder", { kind }),
@@ -727,6 +760,7 @@ const mockAreas: CleanArea[] = [
   { id: "crash", bytes: 96 * MB, files: 23 },
   { id: "browsers", bytes: 1210 * MB, files: 9431 },
   { id: "discord", bytes: 388 * MB, files: 1290 },
+  { id: "launchers", bytes: 914 * MB, files: 3377 },
   { id: "shaders", bytes: 742 * MB, files: 2051 },
   { id: "recycle", bytes: 205 * MB, files: 31 },
 ];
@@ -743,6 +777,23 @@ let mockBloat: BloatApp[] = [
   { id: "king.com.CandyCrushSaga", name: { en: "Candy Crush Saga", fr: "Candy Crush Saga" } },
   { id: "SpotifyAB.SpotifyMusic", name: { en: "Spotify", fr: "Spotify" } },
   { id: "BytedancePte.Ltd.TikTok", name: { en: "TikTok", fr: "TikTok" } },
+];
+
+let mockStartup: StartupApp[] = [
+  { id: "hkcu|Discord", name: "Discord", publisher: "Discord Inc.", command: "C:\\Users\\demo\\AppData\\Local\\Discord\\Update.exe --processStart Discord.exe", scope: "user", enabled: true, keep: false },
+  { id: "hkcu|EpicGamesLauncher", name: "EpicGamesLauncher", publisher: "Epic Games, Inc.", command: "C:\\Program Files (x86)\\Epic Games\\Launcher\\Portal\\Binaries\\Win32\\EpicGamesLauncher.exe -silent", scope: "user", enabled: true, keep: false },
+  { id: "hkcu|MicrosoftEdgeAutoLaunch_0A1B", name: "Microsoft Edge", publisher: "Microsoft Corporation", command: "C:\\Program Files (x86)\\Microsoft\\Edge\\Application\\msedge.exe --no-startup-window", scope: "user", enabled: true, keep: false },
+  { id: "hkcu|OneDrive", name: "OneDrive", publisher: "Microsoft Corporation", command: "C:\\Users\\demo\\AppData\\Local\\Microsoft\\OneDrive\\OneDrive.exe /background", scope: "user", enabled: true, keep: false },
+  { id: "hkcu|Riot Vanguard", name: "Riot Vanguard", publisher: "Riot Games, Inc.", command: "C:\\Program Files\\Riot Vanguard\\vgtray.exe", scope: "user", enabled: true, keep: true },
+  { id: "hklm32|RtkAudUService", name: "RtkAudUService", publisher: "Realtek Semiconductor", command: "C:\\Windows\\System32\\DriverStore\\FileRepository\\RtkAudUService64.exe -background", scope: "machine", enabled: true, keep: true },
+  { id: "hklm|SecurityHealth", name: "SecurityHealth", publisher: "Microsoft Corporation", command: "C:\\Windows\\system32\\SecurityHealthSystray.exe", scope: "machine", enabled: true, keep: true },
+  { id: "startup|Spotify.lnk", name: "Spotify", publisher: "Spotify Ltd", command: "C:\\Users\\demo\\AppData\\Roaming\\Spotify\\Spotify.exe", scope: "user", enabled: false, keep: false },
+  { id: "hkcu|Steam", name: "Steam", publisher: "Valve Corporation", command: "C:\\Program Files (x86)\\Steam\\steam.exe -silent", scope: "user", enabled: true, keep: false },
+];
+let mockPlans: PowerPlan[] = [
+  { guid: "381b4222-f694-41f0-9685-ff5bb260df2e", name: "Balanced", active: true },
+  { guid: "8c5e7fda-e8bf-4a96-9a85-a6e23a8c635c", name: "High performance", active: false },
+  { guid: "e9a42b02-d5df-448d-aa00-03f14749eb61", name: "Ultimate Performance", active: false },
 ];
 
 const mockHistory: HistoryEntry[] = [];
@@ -1076,6 +1127,34 @@ const mockApi: Api = {
     };
   },
   toolsWindowsUpdate: async () => {},
+  toolsStartup: async () => {
+    await sleep(800);
+    return mockStartup.map((a) => ({ ...a }));
+  },
+  toolsSetStartup: async (id, enabled) => {
+    await sleep(350);
+    const app = mockStartup.find((a) => a.id === id);
+    if (!app) throw new Error("Unknown startup entry");
+    if (app.keep && !enabled) throw new Error("This program is needed by Windows or your hardware");
+    mockStartup = mockStartup.map((a) => (a.id === id ? { ...a, enabled } : a));
+    return mockStartup.map((a) => ({ ...a }));
+  },
+  toolsPowerPlans: async () => {
+    await sleep(500);
+    return mockPlans.map((p) => ({ ...p }));
+  },
+  toolsSetPowerPlan: async (guid) => {
+    await sleep(400);
+    if (!mockPlans.some((p) => p.guid === guid)) throw new Error("Unknown power plan");
+    mockPlans = mockPlans.map((p) => ({ ...p, active: p.guid === guid }));
+    return mockPlans.map((p) => ({ ...p }));
+  },
+  toolsFlushDns: async () => {
+    await sleep(600);
+  },
+  toolsOpen: async (panel) => {
+    console.info(`[démo] réglage Windows : ${panel}`);
+  },
   minecraftRestore: async () => "optionsof.txt restored (demo)",
   restartPc: async () => {},
   openFolder: async () => {},

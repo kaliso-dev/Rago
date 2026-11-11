@@ -2,8 +2,8 @@
 type: code
 tags: [code, app, rust, carte]
 fichier: app/src-tauri/
-lignes: 19 431 (40 fichiers .rs de src/), plus build.rs 66, embed_scripts.rs 98, netopt/*.ps1 932
-maj: 2026-11-10
+lignes: 19 890 (40 fichiers .rs de src/), plus build.rs 66, embed_scripts.rs 98, netopt/*.ps1 932
+maj: 2026-11-11
 ---
 # Code de l'app (Rust)
 
@@ -12,7 +12,7 @@ Carte du **cœur Rust de Rago Optimizer** (`app/src-tauri/`) : chaque module en 
 Tout est CONFIRMÉ (code de `staging`, 10/11, commit `ee77d4f`).
 
 ## Comment lire ce code
-- Point d'entrée : [[main.rs]] appelle `run()` de [[lib.rs]], qui déclare les **38 modules**, crée l'état partagé et enregistre les **76 commandes** que l'interface appelle par `invoke` ([[api.ts]]).
+- Point d'entrée : [[main.rs]] appelle `run()` de [[lib.rs]], qui déclare les **38 modules**, crée l'état partagé et enregistre les **82 commandes** que l'interface appelle par `invoke` ([[api.ts]]) : 76 sur `staging`, 6 de plus pour la page Outils dans la PR #90 (11/11, pas encore fusionnée).
 - L'interface n'a **aucun accès réseau** (CSP, [[Configuration Tauri]]) : tout appel au serveur passe par une commande Rust.
 - L'app tourne **en administrateur** (`app.manifest`) : presque tous les réglages écrivent dans `HKLM`, les services ou le BCD.
 - Les scripts des réglages ne sont **jamais en clair** dans l'exe : chiffrés à la compilation ([[build.rs]], [[embed_scripts.rs]], [[seal.rs]]), le paquet Premium s'ouvre avec la clé donnée par le serveur à une licence active ([[license.rs]]).
@@ -23,7 +23,7 @@ Tout est CONFIRMÉ (code de `staging`, 10/11, commit `ee77d4f`).
 | Module | Lignes | Rôle |
 |---|---|---|
 | [[main.rs]] | 6 | lance `rago_hub_lib::run()`, sans console en release |
-| [[lib.rs]] | 1 553 | état partagé, 76 commandes, démarrage (`run()`), réponses au pont de Rago OS |
+| [[lib.rs]] | 1 594 | état partagé, 82 commandes, démarrage (`run()`), réponses au pont de Rago OS |
 | [[instance.rs]] | 283 | une seule instance : mutex Windows, réveil de la fenêtre déjà ouverte, attente de la désinstallation |
 | [[background.rs]] | 294 | préférences d'arrière-plan, icône près de l'horloge, tâche planifiée de lancement avec Windows |
 | [[icon.rs]] | 189 | extrait l'icône d'un exe en PNG (bibliothèque de jeux) |
@@ -58,7 +58,7 @@ Tout est CONFIRMÉ (code de `staging`, 10/11, commit `ee77d4f`).
 | [[stats.rs]] | 326 | RAM, processeur et carte graphique en direct (compteurs PDH) |
 | [[memory.rs]] | 291 | bouton « Nettoyer » de la RAM (liste standby, réduction des applis en option) |
 | [[analysis.rs]] | 163 | réglages de jeu de Windows lus pour l'[[Analyse du PC]] |
-| [[tools.rs]] | 579 | [[Page Outils]] : nettoyage des fichiers inutiles, applis préinstallées (38 paquets), pilotes |
+| [[tools.rs]] | 997 | [[Page Outils]] : nettoyage des fichiers inutiles (9 zones), applis préinstallées (38 paquets), pilotes ; PR #90 : applis au démarrage, modes d'alimentation, cache DNS, raccourcis vers 10 réglages de Windows |
 
 ### Jeux et parties
 | Module | Lignes | Rôle |

@@ -1,11 +1,11 @@
 ---
 type: historique
 tags: [historique]
-maj: 2026-11-10
+maj: 2026-11-11
 ---
 # Fils du projet
 
-Résumé de **chaque fil** du projet Claude « Rago optimizer (suite) », ouvert le 15/10 : ce que Sofiene a demandé (ses mots entre « », avec ses fautes), ce qui a été fait, ce qu'il a décidé, le résultat et ce qui reste. 29 fils au 10/11 (liste revue à 18 h 50 UTC). Source : lecture des fils le 10/11 (CONFIRMÉ), croisée avec [[Pull requests]] et le dépôt. Voir aussi [[Chronologie du projet]], [[Journal]] et [[Décisions]].
+Résumé de **chaque fil** du projet Claude « Rago optimizer (suite) », ouvert le 15/10 : ce que Sofiene a demandé (ses mots entre « », avec ses fautes), ce qui a été fait, ce qu'il a décidé, le résultat et ce qui reste. 29 fils au 10/11 (liste revue à 18 h 50 UTC), puis 5 fils ouverts le 11/11 à 00:17 UTC, un par fonction demandée par Sofiene (lus le 11/11 à 00:50 UTC). Source : lecture des fils le 10/11 (CONFIRMÉ), croisée avec [[Pull requests]] et le dépôt. Voir aussi [[Chronologie du projet]], [[Journal]] et [[Décisions]].
 
 Les fils les plus riches ont leur propre note : [[Fil - Nouvelle version backlog et refonte]], [[Fil - Lister les fonctionnalités de la maquette]], [[Fil - Lancer l'essai 3 jours et le gratuit élargi]], [[Fil - Développer les proxys Minecraft]], [[Fil - Améliorer Rago OS avec le design Rago]], [[Fil - Créer le tableau de bord admin complet]].
 
@@ -48,6 +48,11 @@ Les fils les plus riches ont leur propre note : [[Fil - Nouvelle version backlog
 | 27 | Créer le tableau de bord admin complet | 10/11 14:08 | 10/11 18:49 | admin et Cerveau en prod (PR #87) ; attend le retour de Sofiene sur la prod |
 | 28 | Créer le cerveau visuel du vault | 10/11 16:04 | 10/11 17:18 | terminé, rangé (PR #85 fusionnée) |
 | 29 | Régler les problèmes des clients | 10/11 17:17 | 10/11 17:58 | attend Sofiene ; PR #86 ouverte vers `staging` |
+| 30 | Ajouter saturation et résolution des pros | 11/11 00:17 | 11/11 00:47 | en cours (11/11) |
+| 31 | Ajouter les presets graphiques par jeu | 11/11 00:17 | 11/11 00:46 | **bloqué** : attend Sofiene (11/11) |
+| 32 | Ajouter les conseils au lancement du jeu | 11/11 00:17 | 11/11 00:48 | en cours ; PR #91 ouverte vers `staging` (11/11) |
+| 33 | Mettre le jeu en priorité maximale | 11/11 00:17 | 11/11 00:35 | attend Sofiene ; PR #89 ouverte vers `staging` (11/11) |
+| 34 | Centraliser et enrichir la page Tools | 11/11 00:17 | 11/11 | attend Sofiene ; PR #90 ouverte vers `staging` (11/11) |
 
 Fils cités ailleurs mais absents de la liste : un fil « Créer le profil LinkedIn de Sofiene » (personnel, hors projet Rago) ; un fil dédié au client Minecraft, fermé le 29/10 parce que le message qui l'avait lancé était une erreur ([[Client Minecraft Rago]]). Aucun fil « Mettre le site en règle juridiquement » n'a existé : le RGPD a été traité dans le fil 15.
 
@@ -213,5 +218,10 @@ Fils cités ailleurs mais absents de la liste : un fil « Créer le profil Linke
 
 ## 29. Régler les problèmes des clients
 `cmsg_01Mb4hMYwRFctv5wE2NGiASiETPM3XTWkow2kGEWba4pX8` · ouvert le 10/11 à 17:17 · attend Sofiene. A ouvert la PR #86 (« Best hitreg » par défaut : « Better hitreg » bridait le débit Steam d'un joueur à 15 Mbit/s). Pas encore résumé ici.
+
+## 30 à 34. Les six fonctions du 11/11
+Le 11/11 à 00:17 UTC (01:17 à Paris), Sofiene annonce la sortie « demain voir apres demain MAX » et demande six nouvelles fonctions : « 1 - custom saturation », « 2 - Custom resolution », « 3 - Custom Settings », « 4 - Tips », « 5 - Priority optimization », « 6 - Tools new et centralisé ». Le coordinateur ouvre cinq fils (saturation et résolution ensemble), chacun sur sa branche, sans bloquer la sortie.
+- **34. Centraliser et enrichir la page Tools** (`cmsg_01Mb4hMYwRFctv5wE2NGiASiGq3HxXmaX67pc1Wu5yaG7a`, point 6) : « il faut que tu les recupere tous et en plus de les laisser dans les onglet ou ils sont ajoute les dans la page tools pour tout centraliser », puis de nouveaux outils « safe et utile » après une analyse de Hone et des autres optimiseurs. Fait : [[Page Outils]] refaite (PR #90 vers `staging`, ticket RAG-93), jamais testée sur Windows.
+- Les fils 30 à 33 ne sont pas encore résumés ici (voir leurs PR dans [[Pull requests]]).
 
 Liens : [[Chronologie du projet]] · [[Pull requests]] · [[Journal]] · [[Décisions]] · [[Personnes et services]]

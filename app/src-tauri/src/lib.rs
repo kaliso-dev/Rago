@@ -988,6 +988,41 @@ fn tools_windows_update() -> Result<(), String> {
     std::process::Command::new("explorer.exe").arg("ms-settings:windowsupdate-optionalupdates").spawn().map(|_| ()).map_err(|e| e.to_string())
 }
 
+/// Programmes lancés avec Windows (clés Run et dossiers Démarrage), avec leur état dans le Gestionnaire des tâches.
+#[tauri::command]
+async fn tools_startup() -> Result<Vec<tools::StartupApp>, String> {
+    tauri::async_runtime::spawn_blocking(tools::startup).await.map_err(|e| e.to_string())
+}
+
+/// Active ou coupe un programme au démarrage, comme le Gestionnaire des tâches ; renvoie la liste à jour.
+#[tauri::command]
+async fn tools_set_startup(id: String, enabled: bool) -> Result<Vec<tools::StartupApp>, String> {
+    tauri::async_runtime::spawn_blocking(move || tools::set_startup(&id, enabled)).await.map_err(|e| e.to_string())?
+}
+
+/// Modes d'alimentation de Windows, avec celui qui est actif.
+#[tauri::command]
+async fn tools_power_plans() -> Result<Vec<tools::PowerPlan>, String> {
+    tauri::async_runtime::spawn_blocking(tools::power_plans).await.map_err(|e| e.to_string())
+}
+
+#[tauri::command]
+async fn tools_set_power_plan(guid: String) -> Result<Vec<tools::PowerPlan>, String> {
+    tauri::async_runtime::spawn_blocking(move || tools::set_power_plan(&guid)).await.map_err(|e| e.to_string())?
+}
+
+/// Vide le cache DNS de Windows.
+#[tauri::command]
+async fn tools_flush_dns() -> Result<(), String> {
+    tauri::async_runtime::spawn_blocking(tools::flush_dns).await.map_err(|e| e.to_string())?
+}
+
+/// Ouvre un réglage de Windows de la liste fermée `tools::PANELS`.
+#[tauri::command]
+fn tools_open(id: String) -> Result<(), String> {
+    tools::open_panel(&id)
+}
+
 #[tauri::command]
 fn overlay_info(overlay: State<'_, Arc<overlay::Overlay>>) -> overlay::Info {
     overlay.info()
@@ -1452,6 +1487,12 @@ pub fn run() {
             tools_remove_apps,
             tools_drivers,
             tools_windows_update,
+            tools_startup,
+            tools_set_startup,
+            tools_power_plans,
+            tools_set_power_plan,
+            tools_flush_dns,
+            tools_open,
             run_tweaks,
             cancel_run,
             is_running,
