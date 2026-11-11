@@ -1,9 +1,13 @@
-//! Page Outils : nettoyage des fichiers inutiles, applis préinstallées, pilotes du PC. Natif, hors catalogue : le
-//! nettoyage supprime pour de bon, une appli désinstallée se réinstalle depuis le Microsoft Store.
+//! Page Outils : nettoyage des fichiers inutiles, applis préinstallées, pilotes du PC, programmes lancés avec Windows,
+//! cache DNS, mode d'alimentation et raccourcis vers les réglages de Windows. Natif, hors catalogue : le nettoyage
+//! supprime pour de bon, une appli désinstallée se réinstalle depuis le Microsoft Store, un programme coupé au
+//! démarrage se rallume ici ou dans le Gestionnaire des tâches.
 
+use base64::Engine;
 use serde::{Deserialize, Serialize};
 use std::collections::HashSet;
 use std::path::{Path, PathBuf};
+use std::process::Stdio;
 
 use crate::shell;
 
@@ -11,7 +15,7 @@ use crate::shell;
 
 /// Zones du nettoyage, dans l'ordre affiché. Ni Prefetch ni journaux de Windows ni dossiers de Minecraft : le
 /// vérificateur de screenshare RBW les regarde, les vider passerait pour un effacement de traces.
-pub const AREAS: &[&str] = &["temp", "windows_temp", "update", "crash", "browsers", "discord", "shaders", "recycle"];
+pub const AREAS: &[&str] = &["temp", "windows_temp", "update", "crash", "browsers", "discord", "launchers", "shaders", "recycle"];
 
 #[derive(Debug, Clone, Serialize, PartialEq)]
 #[serde(rename_all = "camelCase")]
@@ -107,6 +111,23 @@ pub fn targets(id: &str) -> Vec<Target> {
                 }
             }
         }
+        // pages web des launchers (boutique, actus, pubs), recréées au besoin : jamais les jeux, la bibliothèque
+        // d'images de Steam (librarycache) ni les réglages
+        "launchers" => {
+            if let Some(l) = &local {
+                out.push(Target::Dir(l.join("Steam\\htmlcache")));
+                // Epic : webcache, webcache_4147, webcache_4430… selon la version du launcher
+                if let Ok(rd) = std::fs::read_dir(l.join("EpicGamesLauncher\\Saved")) {
+                    out.extend(
+                        rd.flatten()
+                            .filter(|e| e.file_name().to_str().is_some_and(|n| n.to_ascii_lowercase().starts_with("webcache")))
+                            .filter(|e| e.file_type().is_ok_and(|t| t.is_dir()))
+                            .map(|e| Target::Dir(e.path())),
+                    );
+                }
+            }
+            out.extend(steam_root().map(|s| Target::Dir(s.join("appcache\\httpcache"))));
+        }
         "shaders" => {
             if let Some(l) = &local {
                 for sub in ["NVIDIA\\DXCache", "NVIDIA\\GLCache", "D3DSCache", "AMD\\DxCache", "AMD\\DxcCache", "AMD\\GLCache", "AMD\\VkCache"] {
@@ -120,6 +141,20 @@ pub fn targets(id: &str) -> Vec<Target> {
         _ => {}
     }
     out
+}
+
+/// Dossier d'installation de Steam (comme la bibliothèque de jeux), seulement s'il est absolu.
+#[cfg(windows)]
+fn steam_root() -> Option<PathBuf> {
+    crate::reg::string("HKCU\\Software\\Valve\\Steam", "SteamPath")
+        .or_else(|| crate::reg::string("HKLM\\SOFTWARE\\WOW6432Node\\Valve\\Steam", "InstallPath"))
+        .map(|p| PathBuf::from(p.replace('/', "\\")))
+        .filter(|p| p.is_absolute())
+}
+
+#[cfg(not(windows))]
+fn steam_root() -> Option<PathBuf> {
+    None
 }
 
 /// Le dossier temporaire tel que Windows le donne, seulement s'il s'appelle bien Temp ou Tmp : une variable TEMP mal
@@ -449,6 +484,302 @@ pub fn drivers() -> Drivers {
     shell::powershell(DRIVERS).map(|s| parse_drivers(&s)).unwrap_or_default()
 }
 
+// ---------------------------------------------------------------------------------------------------- démarrage
+
+/// Programme lancé avec Windows, comme le Gestionnaire des tâches les montre : clés Run (compte, PC, PC en 32 bits) et
+/// dossiers Démarrage (compte, tous les comptes).
+#[derive(Debug, Clone, Serialize, PartialEq)]
+#[serde(rename_all = "camelCase")]
+pub struct StartupApp {
+    /// « source|nom » : seul moyen de désigner une entrée pour l'activer ou la couper
+    pub id: String,
+    pub name: String,
+    /// éditeur du programme (vide s'il n'est pas connu)
+    pub publisher: String,
+    /// commande lancée, ou cible du raccourci
+    pub command: String,
+    /// "user" (ce compte) ou "machine" (tous les comptes)
+    pub scope: &'static str,
+    pub enabled: bool,
+    /// sécurité, pilotes audio ou du pavé tactile, anti-cheat, Rago : ne se coupe pas depuis Rago
+    pub keep: bool,
+}
+
+/// Où chaque source garde son état activé/coupé : les valeurs binaires que le Gestionnaire des tâches écrit
+/// (StartupApproved). Couper un programme n'efface rien : sa clé Run ou son raccourci restent en place.
+const STARTUP_SOURCES: &[(&str, &str)] = &[
+    ("hkcu", r"HKCU:\Software\Microsoft\Windows\CurrentVersion\Explorer\StartupApproved\Run"),
+    ("hklm", r"HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\StartupApproved\Run"),
+    ("hklm32", r"HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\StartupApproved\Run32"),
+    ("startup", r"HKCU:\Software\Microsoft\Windows\CurrentVersion\Explorer\StartupApproved\StartupFolder"),
+    ("commonstartup", r"HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\StartupApproved\StartupFolder"),
+];
+
+/// Liste les entrées de démarrage en JSON : source, nom, commande, description et éditeur de l'exe, premier octet de
+/// l'état StartupApproved (absent = activé).
+const STARTUP_LIST: &str = r#"$ok = @{ hkcu = 'HKCU:\Software\Microsoft\Windows\CurrentVersion\Explorer\StartupApproved\Run'; hklm = 'HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\StartupApproved\Run'; hklm32 = 'HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\StartupApproved\Run32'; startup = 'HKCU:\Software\Microsoft\Windows\CurrentVersion\Explorer\StartupApproved\StartupFolder'; commonstartup = 'HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\StartupApproved\StartupFolder' };
+function St($src, $name) { $k = Get-Item -LiteralPath $ok[$src] -ErrorAction SilentlyContinue; if ($k) { $v = $k.GetValue($name); if ($v -is [byte[]] -and $v.Length -gt 0) { return [int]$v[0] } }; return $null }
+function ExeOf($c) { $c = [Environment]::ExpandEnvironmentVariables([string]$c); if ($c -match '^\s*"([^"]+)"') { return $Matches[1] }; if ($c -match '^\s*(.+?\.exe)(\s|$)') { return $Matches[1] }; return $c.Trim() }
+function Info($p) { if ($p) { try { $vi = (Get-Item -LiteralPath $p -ErrorAction Stop).VersionInfo; return @([string]$vi.FileDescription, [string]$vi.CompanyName) } catch {} }; return @('', '') }
+$out = New-Object System.Collections.ArrayList;
+foreach ($s in @(@('hkcu', 'HKCU:\Software\Microsoft\Windows\CurrentVersion\Run'), @('hklm', 'HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\Run'), @('hklm32', 'HKLM:\SOFTWARE\WOW6432Node\Microsoft\Windows\CurrentVersion\Run'))) {
+  $k = Get-Item -LiteralPath $s[1] -ErrorAction SilentlyContinue; if (-not $k) { continue }
+  foreach ($n in $k.GetValueNames()) { if (-not $n) { continue }; $cmd = [string]$k.GetValue($n); $i = Info (ExeOf $cmd); [void]$out.Add([pscustomobject]@{ src = $s[0]; name = $n; cmd = $cmd; desc = $i[0]; company = $i[1]; state = (St $s[0] $n) }) }
+}
+foreach ($s in @(@('startup', [Environment]::GetFolderPath('Startup')), @('commonstartup', [Environment]::GetFolderPath('CommonStartup')))) {
+  if (-not $s[1] -or -not (Test-Path -LiteralPath $s[1])) { continue }
+  foreach ($f in Get-ChildItem -LiteralPath $s[1] -File -Force -ErrorAction SilentlyContinue) {
+    if ($f.Name -ieq 'desktop.ini') { continue }
+    $target = $f.FullName; if ($f.Extension -ieq '.lnk') { try { $t = (New-Object -ComObject WScript.Shell).CreateShortcut($f.FullName).TargetPath; if ($t) { $target = $t } } catch {} }
+    $i = Info $target; [void]$out.Add([pscustomobject]@{ src = $s[0]; name = $f.Name; cmd = $target; desc = $i[0]; company = $i[1]; state = (St $s[0] $f.Name) })
+  }
+}
+ConvertTo-Json -InputObject @($out) -Compress -Depth 3"#;
+
+#[derive(Deserialize)]
+struct PsStartup {
+    src: Option<String>,
+    name: Option<String>,
+    cmd: Option<String>,
+    desc: Option<String>,
+    company: Option<String>,
+    state: Option<i64>,
+}
+
+/// Ce qu'on ne coupe pas depuis Rago : la sécurité de Windows et les antivirus, les consoles audio et les pilotes du
+/// pavé tactile (sinon plus de son ou de gestes après un redémarrage), les anti-cheat (le jeu peut refuser de se lancer)
+/// et Rago lui-même.
+const STARTUP_KEEP: &[&str] = &[
+    "securityhealth", "windows security", "windowsdefender", "windows defender", "msascui", "avast", "avgui", "avira",
+    "bitdefender", "kaspersky", "norton", "mcafee", "eset", "malwarebytes", "sophos", "trend micro", "f-secure",
+    "webroot", "rtkaud", "rthdvcpl", "ravcpl", "realtek", "nahimic", "maxxaudio", "dolby", "synaptics", "syntp",
+    "elantech", "etdctrl", "vgtray", "vanguard", "faceit", "easyanticheat", "battleye", "rago optimizer",
+    "rago-optimizer", "rago hub",
+];
+
+fn startup_keep(name: &str, command: &str, desc: &str, company: &str) -> bool {
+    let all = format!("{name} {command} {desc} {company}").to_ascii_lowercase();
+    STARTUP_KEEP.iter().any(|w| all.contains(w)) || name.to_ascii_lowercase().starts_with("rago")
+}
+
+/// Nom lisible : le nom de l'entrée (ou du raccourci, sans « .lnk »), sauf s'il ressemble à un identifiant
+/// (« com.squirrel.Teams.Teams », « {GUID} ») et que l'exe a une description.
+fn startup_name(name: &str, desc: &str) -> String {
+    let base = name.strip_suffix(".lnk").or_else(|| name.strip_suffix(".LNK")).unwrap_or(name).trim();
+    let id_like = !base.contains(' ') && (base.contains('.') || base.contains('{') || base.contains('_'));
+    if (id_like || base.is_empty()) && !desc.trim().is_empty() {
+        desc.trim().to_string()
+    } else {
+        base.to_string()
+    }
+}
+
+pub fn parse_startup(json: &str) -> Vec<StartupApp> {
+    let list: Vec<PsStartup> = match serde_json::from_str::<serde_json::Value>(json) {
+        Ok(serde_json::Value::Array(a)) => a.into_iter().filter_map(|v| serde_json::from_value(v).ok()).collect(),
+        Ok(v @ serde_json::Value::Object(_)) => serde_json::from_value(v).ok().into_iter().collect(),
+        _ => vec![],
+    };
+    let mut seen = HashSet::new();
+    let mut out: Vec<StartupApp> = list
+        .into_iter()
+        .filter_map(|e| {
+            let src = e.src?;
+            let scope = match src.as_str() {
+                "hkcu" | "startup" => "user",
+                "hklm" | "hklm32" | "commonstartup" => "machine",
+                _ => return None,
+            };
+            let raw = e.name?;
+            if raw.trim().is_empty() || raw.contains('|') {
+                return None;
+            }
+            let id = format!("{src}|{raw}");
+            if !seen.insert(id.to_lowercase()) {
+                return None;
+            }
+            let (command, desc, company) = (e.cmd.unwrap_or_default(), e.desc.unwrap_or_default(), e.company.unwrap_or_default());
+            Some(StartupApp {
+                keep: startup_keep(&raw, &command, &desc, &company),
+                name: startup_name(&raw, &desc),
+                publisher: company.trim().to_string(),
+                command: command.trim().to_string(),
+                scope,
+                // premier octet pair (2, 6) : activé ; impair (3, 7) : coupé ; pas de valeur : activé
+                enabled: e.state.map_or(true, |b| b % 2 == 0),
+                id,
+            })
+        })
+        .collect();
+    out.sort_by_key(|a| a.name.to_lowercase());
+    out
+}
+
+pub fn startup() -> Vec<StartupApp> {
+    shell::powershell(STARTUP_LIST).map(|s| parse_startup(&s)).unwrap_or_default()
+}
+
+/// Chaîne PowerShell qui redonne exactement `s`, quelles que soient ses apostrophes ou guillemets : le nom d'une entrée
+/// vient du registre ou du disque, jamais collé tel quel dans un script.
+fn ps_text(s: &str) -> String {
+    let utf16: Vec<u8> = s.encode_utf16().flat_map(|u| u.to_le_bytes()).collect();
+    format!("[Text.Encoding]::Unicode.GetString([Convert]::FromBase64String('{}'))", base64::engine::general_purpose::STANDARD.encode(utf16))
+}
+
+/// Script qui active ou coupe une entrée comme le Gestionnaire des tâches : 02 00… pour activée, 03 00 00 00 suivi de
+/// la date (FILETIME) pour coupée.
+fn startup_script(key: &str, name: &str, enabled: bool) -> String {
+    let value = if enabled {
+        "([byte[]](2,0,0,0,0,0,0,0,0,0,0,0))"
+    } else {
+        "([byte[]]((3,0,0,0) + [BitConverter]::GetBytes([DateTime]::Now.ToFileTime())))"
+    };
+    format!(
+        "$p = '{key}'; $n = {}; if (-not (Test-Path -LiteralPath $p)) {{ New-Item -Path $p -Force | Out-Null }}; New-ItemProperty -LiteralPath $p -Name $n -PropertyType Binary -Value {value} -Force | Out-Null; 'ok'",
+        ps_text(name)
+    )
+}
+
+/// Active ou coupe une entrée de la liste actuelle (jamais une valeur inventée) ; renvoie la liste à jour.
+pub fn set_startup(id: &str, enabled: bool) -> Result<Vec<StartupApp>, String> {
+    let list = startup();
+    let app = list.iter().find(|a| a.id == id).ok_or("Unknown startup entry")?;
+    if app.keep && !enabled {
+        return Err("This program is needed by Windows or your hardware".into());
+    }
+    let (src, name) = id.split_once('|').ok_or("Unknown startup entry")?;
+    let key = STARTUP_SOURCES.iter().find(|(s, _)| *s == src).map(|(_, k)| *k).ok_or("Unknown startup entry")?;
+    shell::powershell(&startup_script(key, name, enabled));
+    let list = startup();
+    if list.iter().any(|a| a.id == id && a.enabled == enabled) {
+        Ok(list)
+    } else {
+        Err("Windows refused the change".into())
+    }
+}
+
+// ---------------------------------------------------------------------------------------------------- alimentation
+
+/// Mode d'alimentation de Windows (powercfg).
+#[derive(Debug, Clone, Serialize, PartialEq)]
+#[serde(rename_all = "camelCase")]
+pub struct PowerPlan {
+    pub guid: String,
+    /// nom donné par Windows, dans sa langue
+    pub name: String,
+    pub active: bool,
+}
+
+/// Modes d'alimentation par WMI : les noms arrivent en UTF-8, quelle que soit la langue de Windows.
+const POWER_PLANS: &str = r#"$p = @(Get-CimInstance -Namespace root\cimv2\power -ClassName Win32_PowerPlan -ErrorAction SilentlyContinue | ForEach-Object { [pscustomobject]@{ id = [string]$_.InstanceID; name = [string]$_.ElementName; active = [bool]$_.IsActive } }); ConvertTo-Json -InputObject $p -Compress"#;
+
+#[derive(Deserialize)]
+struct PsPlan {
+    id: Option<String>,
+    name: Option<String>,
+    active: Option<bool>,
+}
+
+pub fn parse_power_plans(json: &str) -> Vec<PowerPlan> {
+    let list: Vec<PsPlan> = match serde_json::from_str::<serde_json::Value>(json) {
+        Ok(serde_json::Value::Array(a)) => a.into_iter().filter_map(|v| serde_json::from_value(v).ok()).collect(),
+        Ok(v @ serde_json::Value::Object(_)) => serde_json::from_value(v).ok().into_iter().collect(),
+        _ => vec![],
+    };
+    let mut seen = HashSet::new();
+    list.into_iter()
+        .filter_map(|p| {
+            let guid = crate::session::parse_scheme(&p.id?)?;
+            let name = p.name.map(|n| n.trim().to_string()).filter(|n| !n.is_empty()).unwrap_or_else(|| guid.clone());
+            seen.insert(guid.clone()).then_some(PowerPlan { guid, name, active: p.active.unwrap_or(false) })
+        })
+        .collect()
+}
+
+/// Repli sans WMI : `powercfg /list`, une ligne par mode (« GUID … : <guid>  (Nom) * », le texte autour change avec la
+/// langue de Windows ; l'astérisque marque le mode actif).
+pub fn parse_powercfg_list(out: &str) -> Vec<PowerPlan> {
+    let mut seen = HashSet::new();
+    out.lines()
+        .filter_map(|line| {
+            let guid = crate::session::parse_scheme(line)?;
+            // minuscules ASCII seulement : mêmes positions d'octets que la ligne d'origine
+            let after = &line[line.to_ascii_lowercase().find(&guid)? + guid.len()..];
+            let name = after.split_once('(').and_then(|(_, r)| r.rsplit_once(')')).map(|(n, _)| n.trim().to_string()).filter(|n| !n.is_empty());
+            seen.insert(guid.clone()).then(|| PowerPlan { name: name.unwrap_or_else(|| guid.clone()), active: after.trim_end().ends_with('*'), guid })
+        })
+        .collect()
+}
+
+pub fn power_plans() -> Vec<PowerPlan> {
+    let plans = shell::powershell(POWER_PLANS).map(|s| parse_power_plans(&s)).unwrap_or_default();
+    if !plans.is_empty() {
+        return plans;
+    }
+    shell::hidden("powercfg.exe")
+        .arg("/list")
+        .stdout(Stdio::piped())
+        .stderr(Stdio::null())
+        .output()
+        .map(|o| parse_powercfg_list(&String::from_utf8_lossy(&o.stdout)))
+        .unwrap_or_default()
+}
+
+/// Passe sur un mode de la liste (jamais un GUID venu d'ailleurs) ; renvoie la liste à jour.
+pub fn set_power_plan(guid: &str) -> Result<Vec<PowerPlan>, String> {
+    let guid = guid.to_ascii_lowercase();
+    if !power_plans().iter().any(|p| p.guid == guid) {
+        return Err("Unknown power plan".into());
+    }
+    let _ = shell::hidden("powercfg.exe").args(["/setactive", &guid]).stdout(Stdio::null()).stderr(Stdio::null()).status();
+    let plans = power_plans();
+    if plans.iter().any(|p| p.guid == guid && p.active) {
+        Ok(plans)
+    } else {
+        // mode imposé par l'entreprise ou l'école (stratégie de groupe), ou refus de Windows
+        Err("Windows refused the change".into())
+    }
+}
+
+// ---------------------------------------------------------------------------------------------------- réseau
+
+/// Vide le cache DNS de Windows (`ipconfig /flushdns`) : les adresses des sites et des serveurs de jeu sont redemandées
+/// au prochain accès. Utile après un changement de DNS ou quand un site ou un serveur ne répond plus à la bonne adresse.
+pub fn flush_dns() -> Result<(), String> {
+    let status = shell::hidden("ipconfig.exe").arg("/flushdns").stdout(Stdio::null()).stderr(Stdio::null()).status().map_err(|e| e.to_string())?;
+    if status.success() {
+        Ok(())
+    } else {
+        Err("ipconfig /flushdns failed".into())
+    }
+}
+
+// ---------------------------------------------------------------------------------------------------- raccourcis
+
+/// Réglages de Windows qu'un joueur cherche souvent : (identifiant, programme, argument). Liste fermée : l'app tourne
+/// en administrateur, l'interface ne choisit jamais le programme lancé.
+pub const PANELS: &[(&str, &str, &str)] = &[
+    ("graphics", "explorer.exe", "ms-settings:display-advancedgraphics"),
+    ("display", "explorer.exe", "ms-settings:display-advanced"),
+    ("gamemode", "explorer.exe", "ms-settings:gaming-gamemode"),
+    ("sound", "control.exe", "mmsys.cpl"),
+    ("mouse", "control.exe", "main.cpl"),
+    ("network", "control.exe", "ncpa.cpl"),
+    ("power", "control.exe", "powercfg.cpl"),
+    ("devices", "mmc.exe", "devmgmt.msc"),
+    ("visual", "SystemPropertiesPerformance.exe", ""),
+    ("taskmgr", "taskmgr.exe", ""),
+];
+
+pub fn open_panel(id: &str) -> Result<(), String> {
+    let (_, program, arg) = PANELS.iter().find(|(p, _, _)| *p == id).ok_or("Unknown panel")?;
+    let mut cmd = std::process::Command::new(program);
+    if !arg.is_empty() {
+        cmd.arg(arg);
+    }
+    cmd.spawn().map(|_| ()).map_err(|e| e.to_string())
+}
+
 // ---------------------------------------------------------------------------------------------------- Windows
 
 #[cfg(windows)]
@@ -575,5 +906,92 @@ mod tests {
         assert_eq!(d.drivers.len(), 1);
         assert_eq!((d.maker.as_deref(), d.model.as_deref()), (Some("LENOVO"), Some("82RK")));
         assert_eq!(parse_drivers("pas du json"), Drivers::default());
+    }
+
+    #[test]
+    fn reads_startup_entries_like_task_manager() {
+        let json = r#"[
+            {"src":"hkcu","name":"Discord","cmd":"\"C:\\Users\\u\\AppData\\Local\\Discord\\Update.exe\" --processStart Discord.exe","desc":"Update","company":"Discord Inc.","state":null},
+            {"src":"hkcu","name":"com.squirrel.Teams.Teams","cmd":"C:\\Users\\u\\AppData\\Local\\Microsoft\\Teams\\Update.exe --processStart \"Teams.exe\"","desc":"Microsoft Teams","company":"Microsoft Corporation","state":3},
+            {"src":"hklm","name":"SecurityHealth","cmd":"%windir%\\system32\\SecurityHealthSystray.exe","desc":"Windows Security notification icon","company":"Microsoft Corporation","state":6},
+            {"src":"hklm32","name":"RtkAudUService","cmd":"\"C:\\Windows\\System32\\DriverStore\\FileRepository\\RtkAudUService64.exe\" -background","desc":"Realtek HD Audio Universal Service","company":"Realtek Semiconductor","state":2},
+            {"src":"startup","name":"Spotify.lnk","cmd":"C:\\Users\\u\\AppData\\Roaming\\Spotify\\Spotify.exe","desc":"Spotify","company":"Spotify Ltd","state":7},
+            {"src":"commonstartup","name":"Paragon Backup.lnk","cmd":"C:\\Program Files\\Paragon\\backup.exe","desc":"","company":"Paragon Software","state":null},
+            {"src":"hkcu","name":"Riot Vanguard","cmd":"\"C:\\Program Files\\Riot Vanguard\\vgtray.exe\"","desc":"Vanguard tray notification.","company":"Riot Games, Inc.","state":2},
+            {"src":"hkcu","name":"Discord","cmd":"again","desc":"","company":"","state":null},
+            {"src":"services","name":"Nope","cmd":"x","desc":"","company":"","state":null},
+            {"src":"hkcu","name":"a|b","cmd":"x","desc":"","company":"","state":null},
+            {"src":"hkcu","name":"  ","cmd":"x","desc":"","company":"","state":null}
+        ]"#;
+        let list = parse_startup(json);
+        let view: Vec<_> = list.iter().map(|a| (a.name.as_str(), a.scope, a.enabled, a.keep)).collect();
+        assert_eq!(
+            view,
+            [
+                ("Discord", "user", true, false),
+                ("Microsoft Teams", "user", false, false),
+                ("Paragon Backup", "machine", true, false),
+                ("Riot Vanguard", "user", true, true),
+                ("RtkAudUService", "machine", true, true),
+                ("SecurityHealth", "machine", true, true),
+                ("Spotify", "user", false, false),
+            ]
+        );
+        assert_eq!(list[0].id, "hkcu|Discord");
+        assert_eq!(list[0].publisher, "Discord Inc.");
+        assert_eq!(list[6].id, "startup|Spotify.lnk");
+        // une seule entrée : PowerShell peut rendre un objet au lieu d'un tableau
+        assert_eq!(parse_startup(r#"{"src":"hkcu","name":"Steam","cmd":"steam.exe -silent","desc":"Steam","company":"Valve","state":2}"#).len(), 1);
+        assert!(parse_startup("").is_empty() && parse_startup("pas du json").is_empty());
+    }
+
+    #[test]
+    fn startup_script_never_pastes_the_name() {
+        let name = "Bob's app'; Remove-Item C:\\ -Recurse; '";
+        for enabled in [true, false] {
+            let s = startup_script(STARTUP_SOURCES[0].1, name, enabled);
+            assert!(!s.contains("Remove-Item"), "{s}");
+            assert!(s.contains(if enabled { "(2,0,0,0," } else { "(3,0,0,0)" }));
+            // le nom se retrouve exactement après décodage
+            let b64 = s.split("FromBase64String('").nth(1).unwrap().split('\'').next().unwrap();
+            let bytes = base64::engine::general_purpose::STANDARD.decode(b64).unwrap();
+            let utf16: Vec<u16> = bytes.chunks(2).map(|c| u16::from_le_bytes([c[0], c[1]])).collect();
+            assert_eq!(String::from_utf16(&utf16).unwrap(), name);
+        }
+        // chaque source a sa clé StartupApproved, et seulement celles que liste le script
+        for (src, key) in STARTUP_SOURCES {
+            assert!(STARTUP_LIST.contains(key), "{src}");
+        }
+    }
+
+    #[test]
+    fn reads_power_plans_in_any_language() {
+        let json = r#"[{"id":"Microsoft:PowerPlan\\{381B4222-F694-41F0-9685-FF5BB260DF2E}","name":"Équilibré","active":false},
+            {"id":"Microsoft:PowerPlan\\{8c5e7fda-e8bf-4a96-9a85-a6e23a8c635c}","name":"Performances élevées","active":true},
+            {"id":"Microsoft:PowerPlan\\{8c5e7fda-e8bf-4a96-9a85-a6e23a8c635c}","name":"doublon","active":false},
+            {"id":"pas un guid","name":"x","active":false}]"#;
+        let plans = parse_power_plans(json);
+        assert_eq!(
+            plans,
+            [
+                PowerPlan { guid: "381b4222-f694-41f0-9685-ff5bb260df2e".into(), name: "Équilibré".into(), active: false },
+                PowerPlan { guid: "8c5e7fda-e8bf-4a96-9a85-a6e23a8c635c".into(), name: "Performances élevées".into(), active: true },
+            ]
+        );
+        assert_eq!(parse_power_plans(r#"{"id":"Microsoft:PowerPlan\\{381b4222-f694-41f0-9685-ff5bb260df2e}","name":"","active":true}"#)[0].name, "381b4222-f694-41f0-9685-ff5bb260df2e");
+
+        let out = "Existing Power Schemes (* Active)\r\n-----------------------------------\r\nPower Scheme GUID: 381b4222-f694-41f0-9685-ff5bb260df2e  (Balanced)\r\nPower Scheme GUID: 8C5E7FDA-E8BF-4A96-9A85-A6E23A8C635C  (High performance) *\r\nPower Scheme GUID: a1841308-3541-4fab-bc81-f71556f20b4a  (Rago (Low Latency))\r\n";
+        let plans = parse_powercfg_list(out);
+        let view: Vec<_> = plans.iter().map(|p| (p.name.as_str(), p.active)).collect();
+        assert_eq!(view, [("Balanced", false), ("High performance", true), ("Rago (Low Latency)", false)]);
+        assert_eq!(plans[1].guid, "8c5e7fda-e8bf-4a96-9a85-a6e23a8c635c");
+        assert_eq!(parse_powercfg_list("GUID du mode de gestion de l'alimentation : 381b4222-f694-41f0-9685-ff5bb260df2e  (Utilisation normale) *")[0].active, true);
+    }
+
+    #[test]
+    fn opens_only_known_panels() {
+        let ids: HashSet<_> = PANELS.iter().map(|(id, _, _)| *id).collect();
+        assert_eq!(ids.len(), PANELS.len());
+        assert!(open_panel("cmd").is_err() && open_panel("").is_err());
     }
 }

@@ -1,14 +1,21 @@
 import { useCallback, useEffect, useMemo, useState, type ReactNode } from "react";
 import { AnimatePresence, motion } from "motion/react";
 import {
-  ArrowUpRight, AudioLines, Check, CircuitBoard, Clock, Download, FileWarning, Globe, Gpu, Layers, LoaderCircle, Network, PackageX,
-  RefreshCw, Sparkles, Trash2, Wrench,
+  AppWindow, ArrowRight, ArrowUpRight, AudioLines, BatteryCharging, Check, CircuitBoard, Clock, Download, FileWarning, Gamepad2, Gauge, Globe,
+  Gpu, Layers, ListTree, LoaderCircle, Lock, MemoryStick, Monitor, MonitorCog, Mouse, Network, PackageX, Power, RefreshCw, Sparkles, Trash2,
+  Volume2, Wifi, Wrench,
 } from "lucide-react";
-import { api, type BloatApp, type CleanArea, type CleanAreaId, type CleanResult, type Driver, type DriversInfo } from "../lib/api";
+import {
+  api, type BloatApp, type CleanArea, type CleanAreaId, type CleanResult, type Driver, type DriversInfo, type PowerPlan, type StartupApp,
+  type WindowsPanel,
+} from "../lib/api";
+import { catalog, sectionTweaks, type Tweak } from "../lib/catalog";
+import { markSeen } from "../lib/seen";
 import { useStore } from "../lib/store";
-import { Button } from "../components/ui";
+import { Button, Switch } from "../components/ui";
 import { DiscordIcon } from "../components/icons";
-import type { Key } from "../lib/i18n";
+import { TweakRow } from "../components/TweakRow";
+import { formatNumber, type Key } from "../lib/i18n";
 
 const stagger = { animate: { transition: { staggerChildren: 0.05 } } };
 const rise = { initial: { opacity: 0, y: 10 }, animate: { opacity: 1, y: 0, transition: { duration: 0.42, ease: [0.16, 1, 0.3, 1] as const } } };
@@ -20,11 +27,12 @@ const AREA_ICONS: Record<CleanAreaId, ReactNode> = {
   crash: <FileWarning size={15} />,
   browsers: <Globe size={15} />,
   discord: <DiscordIcon size={15} />,
+  launchers: <Gamepad2 size={15} />,
   shaders: <Layers size={15} />,
   recycle: <Trash2 size={15} />,
 };
 /** Cochées d'office : tout sauf les shaders (saccades au premier lancement des jeux) et la corbeille. */
-const AREA_DEFAULT: CleanAreaId[] = ["temp", "windows_temp", "update", "crash", "browsers", "discord"];
+const AREA_DEFAULT: CleanAreaId[] = ["temp", "windows_temp", "update", "crash", "browsers", "discord", "launchers"];
 /** Applis qu'on peut vraiment utiliser : décochées d'office. */
 const APP_KEEP = new Set(["MSTeams", "MicrosoftTeams", "Microsoft.OutlookForWindows", "microsoft.windowscommunicationsapps", "Microsoft.MicrosoftOfficeHub", "Microsoft.YourPhone", "SpotifyAB.SpotifyMusic", "Microsoft.Todos"]);
 
@@ -49,8 +57,13 @@ const MAKERS: [RegExp, string][] = [
 ];
 const linkFor = (re: [RegExp, string][], s: string | null | undefined) => (s ? re.find(([r]) => r.test(s))?.[1] : undefined);
 
+/** Badge « Nouveau » de la barre latérale tant que la page Outils n'a pas été rouverte depuis l'arrivée des outils réunis
+ * (Sidebar.tsx). */
+export const TOOLS_SEEN = "tools.v2";
+
 export function Tools() {
   const { t } = useStore();
+  useEffect(() => markSeen(TOOLS_SEEN), []);
   return (
     <motion.div className="page tools" variants={stagger} initial="initial" animate="animate">
       <motion.header className="page-head" variants={rise}>
@@ -58,12 +71,360 @@ export function Tools() {
         <h1>{t("tools.title")}</h1>
         <p className="lead">{t("tools.lead")}</p>
       </motion.header>
+      <QuickTools />
       <div className="tools-grid">
         <Cleaner />
+        <Startup />
         <Apps />
+        <Panels />
         <Drivers />
       </div>
+      <AllTools />
     </motion.div>
+  );
+}
+
+// ---------------------------------------------------------------------------------------------------- en un clic
+
+type Status = { tone: "ok" | "muted" | "bad"; text: string } | null;
+
+function Tile({
+  icon,
+  title,
+  desc,
+  action,
+  status,
+  children,
+}: {
+  icon: ReactNode;
+  title: string;
+  desc: string;
+  action?: ReactNode;
+  status?: Status;
+  children?: ReactNode;
+}) {
+  return (
+    <motion.section variants={rise} className="card tools-tile">
+      <header className="tools-tile-head">
+        <span className="tools-tile-icon">{icon}</span>
+        <h3>{title}</h3>
+      </header>
+      <p className="muted small tools-tile-desc">{desc}</p>
+      {children}
+      <footer className="tools-tile-foot">
+        <p className={`small tools-tile-status ${status?.tone ?? "muted"}`} aria-live="polite">
+          {status?.tone === "ok" && <Check size={13} />}
+          {status?.text}
+        </p>
+        {action}
+      </footer>
+    </motion.section>
+  );
+}
+
+/** Outils immédiats : cache de la RAM (memory.rs, comme « Nettoyer » du tableau de bord), cache DNS, mode
+ * d'alimentation et test réseau. */
+function QuickTools() {
+  const { t, lang, cleanTrim, goTo } = useStore();
+  const gb = (bytes: number) => formatNumber(lang, bytes / 1024 ** 3, 1);
+
+  const [ramBusy, setRamBusy] = useState(false);
+  const [ram, setRam] = useState<Status>(null);
+  const cleanRam = async () => {
+    setRamBusy(true);
+    setRam(null);
+    try {
+      const c = await api.cleanRam(cleanTrim);
+      // moins de 50 Mo : rien à annoncer, comme sur le tableau de bord
+      const parts = [c.standby >= 50 * 1024 ** 2 ? t("live.cleaned", { n: gb(c.standby) }) : t("live.cleanedEmpty")];
+      if (c.apps > 0) parts.push(t("live.cleanedApps", { gb: gb(c.trimmed), n: c.apps }));
+      setRam({ tone: c.standby >= 50 * 1024 ** 2 || c.apps > 0 ? "ok" : "muted", text: parts.join(" · ") });
+    } catch {
+      setRam({ tone: "bad", text: t("live.cleanFailed") });
+    } finally {
+      setRamBusy(false);
+    }
+  };
+
+  const [dnsBusy, setDnsBusy] = useState(false);
+  const [dns, setDns] = useState<Status>(null);
+  const flushDns = async () => {
+    setDnsBusy(true);
+    setDns(null);
+    try {
+      await api.toolsFlushDns();
+      setDns({ tone: "ok", text: t("tools.dns.done") });
+    } catch {
+      setDns({ tone: "bad", text: t("tools.dns.failed") });
+    } finally {
+      setDnsBusy(false);
+    }
+  };
+
+  const [plans, setPlans] = useState<PowerPlan[] | null>(null);
+  const [planBusy, setPlanBusy] = useState<string | null>(null);
+  const [plan, setPlan] = useState<Status>(null);
+  useEffect(() => {
+    let live = true;
+    void api.toolsPowerPlans().then(
+      (p) => live && setPlans(p),
+      () => live && setPlans([]),
+    );
+    return () => {
+      live = false;
+    };
+  }, []);
+  const choosePlan = async (p: PowerPlan) => {
+    if (p.active || planBusy) return;
+    setPlanBusy(p.guid);
+    setPlan(null);
+    try {
+      setPlans(await api.toolsSetPowerPlan(p.guid));
+    } catch {
+      setPlan({ tone: "bad", text: t("tools.power.failed") });
+      void api.toolsPowerPlans().then(setPlans, () => undefined);
+    } finally {
+      setPlanBusy(null);
+    }
+  };
+
+  const run = (busy: boolean, label: string, onClick: () => void) => (
+    <Button size="sm" icon={busy ? <LoaderCircle size={12} className="spin" /> : undefined} disabled={busy} onClick={onClick}>
+      {label}
+    </Button>
+  );
+
+  return (
+    <section className="tools-quick-wrap">
+      <motion.h2 variants={rise} className="section-title rg-overline">
+        {t("tools.quick.title")}
+      </motion.h2>
+      <div className="tools-quick">
+        <Tile icon={<MemoryStick size={16} />} title={t("tools.ram.title")} desc={t("tools.ram.desc")} status={ram} action={run(ramBusy, t("tools.ram.go"), () => void cleanRam())} />
+        <Tile icon={<Globe size={16} />} title={t("tools.dns.title")} desc={t("tools.dns.desc")} status={dns} action={run(dnsBusy, t("tools.dns.go"), () => void flushDns())} />
+        <Tile icon={<BatteryCharging size={16} />} title={t("tools.power.title")} desc={t("tools.power.desc")} status={plan}>
+          {!plans ? (
+            <p className="tools-wait muted small">
+              <LoaderCircle size={14} className="spin" /> {t("tools.power.loading")}
+            </p>
+          ) : plans.length === 0 ? (
+            <p className="muted small">{t("tools.power.none")}</p>
+          ) : (
+            <ul className="tools-plans" role="radiogroup" aria-label={t("tools.power.title")}>
+              {plans.map((p) => (
+                <li key={p.guid}>
+                  <button
+                    type="button"
+                    role="radio"
+                    aria-checked={p.active}
+                    className={`tools-plan${p.active ? " active" : ""}`}
+                    disabled={!!planBusy}
+                    onClick={() => void choosePlan(p)}
+                  >
+                    <span className="tools-plan-dot">{planBusy === p.guid ? <LoaderCircle size={11} className="spin" /> : p.active && <Check size={11} />}</span>
+                    <span className="tools-plan-name">{p.name}</span>
+                  </button>
+                </li>
+              ))}
+            </ul>
+          )}
+        </Tile>
+        <Tile
+          icon={<Gauge size={16} />}
+          title={t("tools.net.title")}
+          desc={t("tools.net.desc")}
+          action={
+            <Button size="sm" icon={<ArrowRight size={12} />} onClick={() => goTo("nettest")}>
+              {t("tools.net.go")}
+            </Button>
+          }
+        />
+      </div>
+    </section>
+  );
+}
+
+// ---------------------------------------------------------------------------------------------------- démarrage
+
+/** Programmes lancés avec Windows (tools.rs) : couper un programme écrit le même état que le Gestionnaire des tâches. */
+function Startup() {
+  const { t } = useStore();
+  const [apps, setApps] = useState<StartupApp[] | null>(null);
+  const [busy, setBusy] = useState<string | null>(null);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    let live = true;
+    void api.toolsStartup().then(
+      (list) => live && setApps(list),
+      () => live && setApps([]),
+    );
+    return () => {
+      live = false;
+    };
+  }, []);
+
+  // ordre alphabétique (tools.rs), ceux qu'on garde à la fin : une ligne ne saute pas quand on la coupe
+  const list = useMemo(() => [...(apps ?? [])].sort((a, b) => Number(a.keep) - Number(b.keep)), [apps]);
+  const on = (apps ?? []).filter((a) => a.enabled).length;
+
+  const set = async (a: StartupApp, enabled: boolean) => {
+    setBusy(a.id);
+    setError(null);
+    try {
+      setApps(await api.toolsSetStartup(a.id, enabled));
+    } catch {
+      setError(t("tools.startup.failed", { name: a.name }));
+    } finally {
+      setBusy(null);
+    }
+  };
+
+  return (
+    <motion.section variants={rise} className="card tools-card tools-startup">
+      <header className="card-head">
+        <h3 className="rg-overline">{t("tools.startup.title")}</h3>
+        {apps && apps.length > 0 && <span className="rg-metric muted small">{t("tools.startup.count", { on, n: apps.length })}</span>}
+      </header>
+      <p className="muted small tools-lead">{t("tools.startup.lead")}</p>
+      {!apps ? (
+        <p className="tools-wait muted small">
+          <LoaderCircle size={14} className="spin" /> {t("tools.startup.loading")}
+        </p>
+      ) : apps.length === 0 ? (
+        <div className="tools-empty">
+          <span className="tools-empty-icon">
+            <Check size={16} />
+          </span>
+          <span>{t("tools.startup.none")}</span>
+        </div>
+      ) : (
+        <ul className="tools-startup-list">
+          {list.map((a) => (
+            <li key={a.id} className={`tools-startup-row${a.enabled ? "" : " off"}`} title={a.command}>
+              <span className="tools-row-icon">
+                <AppWindow size={15} />
+              </span>
+              <span className="tools-startup-text">
+                <span className="tools-row-name">{a.name}</span>
+                <small>
+                  {a.keep ? (
+                    <>
+                      <Lock size={10} /> {t("tools.startup.keep")}
+                    </>
+                  ) : (
+                    [a.publisher, a.scope === "machine" ? t("tools.startup.machine") : null].filter(Boolean).join(" · ")
+                  )}
+                </small>
+              </span>
+              {busy === a.id ? (
+                <LoaderCircle size={14} className="spin muted" />
+              ) : (
+                <Switch checked={a.enabled} disabled={!!busy || (a.keep && a.enabled)} onChange={(v) => void set(a, v)} label={a.name} />
+              )}
+            </li>
+          ))}
+        </ul>
+      )}
+      <footer className="tools-foot">
+        <p className={`small${error ? " tools-error" : " muted"}`} aria-live="polite">
+          {error ?? t("tools.startup.note")}
+        </p>
+      </footer>
+    </motion.section>
+  );
+}
+
+// ---------------------------------------------------------------------------------------------------- réglages Windows
+
+const PANELS: { id: WindowsPanel; icon: ReactNode }[] = [
+  { id: "graphics", icon: <MonitorCog size={15} /> },
+  { id: "display", icon: <Monitor size={15} /> },
+  { id: "gamemode", icon: <Gamepad2 size={15} /> },
+  { id: "sound", icon: <Volume2 size={15} /> },
+  { id: "mouse", icon: <Mouse size={15} /> },
+  { id: "network", icon: <Wifi size={15} /> },
+  { id: "power", icon: <Power size={15} /> },
+  { id: "devices", icon: <CircuitBoard size={15} /> },
+  { id: "visual", icon: <Sparkles size={15} /> },
+  { id: "taskmgr", icon: <ListTree size={15} /> },
+];
+
+function Panels() {
+  const { t } = useStore();
+  return (
+    <motion.section variants={rise} className="card tools-card tools-panels-card">
+      <header className="card-head">
+        <h3 className="rg-overline">{t("tools.panels.title")}</h3>
+      </header>
+      <p className="muted small tools-lead">{t("tools.panels.lead")}</p>
+      <ul className="tools-panels">
+        {PANELS.map((p) => (
+          <li key={p.id}>
+            <button type="button" className="tools-panel" onClick={() => void api.toolsOpen(p.id).catch(() => undefined)}>
+              <span className="tools-row-icon">{p.icon}</span>
+              <span className="tools-panel-text">
+                <span className="tools-row-name">{t(`tools.panel.${p.id}` as Key)}</span>
+                <small>{t(`tools.panel.${p.id}.hint` as Key)}</small>
+              </span>
+              <ArrowUpRight size={13} className="tools-panel-go" />
+            </button>
+          </li>
+        ))}
+      </ul>
+    </motion.section>
+  );
+}
+
+// ---------------------------------------------------------------------------------------------------- tous les outils
+
+/** Les réglages à bouton « Lancer » (kind « action ») de tous les onglets, chacun une seule fois : même ligne, même
+ * verrou Premium et même lancement que dans leur onglet, où ils restent. */
+function AllTools() {
+  const { t, lang, goTo } = useStore();
+  const groups = useMemo(() => {
+    const seen = new Set<string>();
+    return catalog.modules
+      .map((m) => {
+        const list: Tweak[] = [];
+        for (const tw of m.sections.flatMap((s) => sectionTweaks(s))) {
+          if (tw.kind !== "action" || seen.has(tw.id)) continue;
+          seen.add(tw.id);
+          list.push(tw);
+        }
+        return { m, list };
+      })
+      .filter((g) => g.list.length > 0);
+  }, []);
+
+  return (
+    <motion.section variants={rise} className="tools-all">
+      <header className="tools-all-head">
+        <h2 className="section-title">
+          <Wrench size={15} />
+          <span>{t("tools.all.title")}</span>
+          <span className="rg-metric muted">{groups.reduce((n, g) => n + g.list.length, 0)}</span>
+        </h2>
+        <p className="muted small">{t("tools.all.lead")}</p>
+      </header>
+      {groups.map(({ m, list }) => (
+        <section key={m.id} className="tweak-section tools-all-group">
+          <h3 className="section-title">
+            <span>{m.name[lang]}</span>
+            <span className="rg-metric muted">{list.length}</span>
+            <button type="button" className="link tools-all-open" onClick={() => goTo(m.id)}>
+              {t("tools.all.open", { name: m.name[lang] })}
+              <ArrowRight size={12} />
+            </button>
+          </h3>
+          <div className="tweak-list">
+            {list.map((tw) => (
+              <TweakRow key={tw.id} tweak={tw} />
+            ))}
+          </div>
+        </section>
+      ))}
+    </motion.section>
   );
 }
 
