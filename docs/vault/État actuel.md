@@ -72,4 +72,4 @@ Les joueurs ont la [[Version 1.2.1]] (en ligne depuis le 31/10). La [[Version 1.
 9. Essayer le [[Tableau de bord admin]] en prod (`account.rago-optimizer.com/admin`, même clé `ADMIN_KEY`, PR #87 du 10/11) : vraies ventes, joueurs, Services, Cerveau.
 10. [[Cerveau du vault]] (en prod depuis le 10/11) : créer le jeton GitHub en lecture seule et le mettre dans Railway, staging **et** prod (`CERVEAU_GITHUB_TOKEN`), avant le passage du dépôt en privé.
 11. Répondre aux questions q70 à q93 sur la page « Questions du vault Rago » ([[Questions ouvertes]]).
-12. [[Page Outils]] refaite (PR #90) : essayer l'exe de test de la PR sur Windows, dire « fusionne », et choisir si elle part avec la 1.3.0 ou après.
+12. [[Page Outils]] refaite (PR #90) : choisir si elle part avec la 1.3.0 ou après (carte dans le fil « Centraliser et enrichir la page Tools »), puis l'essayer sur Windows avec l'exe de test de `staging` après « fusionne », ou avec un exe « Staging » à part (l'exe du build de la PR vise la prod et remplace le Rago installé).
