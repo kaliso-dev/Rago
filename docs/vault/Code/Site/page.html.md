@@ -85,8 +85,8 @@ Pastilles qui défilent : « Built for Minecraft PvP », BedWars, Ranked BedWars
 Bas de section : « Illustrations of Rago Optimizer 1.2. The numbers are examples, not measurements. » ; boutons **Download free** et « Talk about 1.2 on Discord ».
 
 ### Rago Route (`#route`)
-- Ajoutée le 07/11 (commit `9658716`), texte passé de « in testing » à « **Rago Route · new in Premium, in beta** » le 10/11 (commit `a190565`, PR #76). Mots alignés le 11/11 sur la page de vente refaite (sur `staging` depuis le 11/11 après-midi). Pas en prod.
-- « Your PC is tuned. Now Rago takes the road. » ; texte : « … Rago Route sends every packet on two paths and quickly rebuilds or resends what's lost, so your game waits less. » ; trois points (Two paths for every packet, Lost packets rebuilt or sent again, fast, Your connection held open through a short cut).
+- Ajoutée le 07/11 (commit `9658716`), texte passé de « in testing » à « **Rago Route · new in Premium, in beta** » le 10/11 (commit `a190565`, PR #76). Mots alignés le 11/11 sur la page de vente : « roads » au lieu de « paths » (commit local du 11/11, pas encore sur `staging`). Pas en prod.
+- « Your PC is tuned. Now Rago takes the road. » ; texte : « … Rago Route sends every packet on two roads and quickly rebuilds or resends what's lost, so your game waits less. » ; schéma « Road 1 · straight to Paris », « Road 2 · through Frankfurt », légende « Lost on road 1, delivered by road 2 » ; trois points (Two roads for every packet, Lost packets rebuilt or sent again, fast, Your connection held open through a short cut).
 - Boutons : **Discover Rago Route** → `route.html` ; « Get notified on Discord » (`js-discord`), à garder ou remplacer selon la question q100 ([[Questions ouvertes]]).
 - Schéma SVG `#rt-svg` (Your PC → « Path 1 · straight to Paris » et « Path 2 · through Frankfurt » → Paris → Hypixel) animé en SMIL (`animateMotion`, cycle 3,6 s ; un paquet perdu sur le chemin 1 éclate, sa copie du chemin 2 arrive, anneau autour de Paris). Légende « Lost on path 1, delivered by path 2 ». Voir [[route.html]], [[Proxy]].
 

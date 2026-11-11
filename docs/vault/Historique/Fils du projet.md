@@ -38,7 +38,7 @@ Les fils les plus riches ont leur propre note : [[Fil - Nouvelle version backlog
 | 17 | Répondre au client sur laptop i7 Ultra | 02/11 12:11 | 10/11 14:49 | terminé, rangé |
 | 18 | Refaire la vidéo TikTok avec le logo Rago | 02/11 18:50 | 02/11 19:06 | terminé, rangé |
 | 19 | Analyser les données Stripe de Rago | 04/11 10:03 | 04/11 14:49 | terminé, rangé |
-| 20 | Développer les proxys Minecraft | 04/11 23:18 | 11/11 | page de vente Rago Route refaite et sur `staging` (11/11) ; attend la relecture et les tests de Sofiene |
+| 20 | Développer les proxys Minecraft | 04/11 23:18 | 11/11 | page de vente Rago Route revenue à la version du matin avec des emplacements de gameplay (commit local, 11/11) ; attend l'accord pour `staging`, les clips et les tests de Sofiene |
 | 21 | Améliorer Rago OS avec le design Rago | 06/11 20:59 | 09/11 21:53 | **bloqué** : attend les retours sur test5 |
 | 22 | Faire le point et organiser le contexte | 10/11 13:06 | 10/11 14:43 | terminé, rangé |
 | 23 | Compléter le vault technique de Rago | 10/11 13:06 | 10/11 14:35 | terminé, rangé |
@@ -175,7 +175,7 @@ Fils cités ailleurs mais absents de la liste : un fil « Créer le profil Linke
 - **Résultat** : premier état des lieux : 611,02 $ encaissés depuis le lancement, 33 abonnements actifs (23 mensuels, 10 annuels), 8 mensuels résiliés, 5 Lifetime (47 % du chiffre), 27 paiements refusés sur 66, aucune TVA prélevée ; 15 renouvellements en novembre pour 89,85 $. Note [[Ventes Stripe]], PR #72 fusionnée en prod à 14:49 (« fusionne »).
 
 ## 20. Développer les proxys Minecraft
-`cmsg_01Mb4hMYwRFctv5wE2NGiASiF1ZGcXwk5kz3XBNz7gsfsS` · 04/11 23:18 → 11/11 · attend Sofiene (relecture de la page de vente sur `staging`, puis les tests). **Note complète : [[Fil - Développer les proxys Minecraft]].**
+`cmsg_01Mb4hMYwRFctv5wE2NGiASiF1ZGcXwk5kz3XBNz7gsfsS` · 04/11 23:18 → 11/11 · attend Sofiene (accord pour pousser la page de vente sur `staging`, clips de gameplay à enregistrer, puis les tests). **Note complète : [[Fil - Développer les proxys Minecraft]].**
 - Des proxys simples (OVHcloud écarté, 4 serveurs Vultr testés) à l'invention de **Rago Route** (double trajet anti-lag, sortie à Paris), du prototype Python au moteur Windows dans l'app, réservé au Premium. Attend les tests de Sofiene sur l'exe de test du 10/11 (partage de connexion du téléphone en USB). Voir [[Proxy]].
 
 ## 21. Améliorer Rago OS avec le design Rago

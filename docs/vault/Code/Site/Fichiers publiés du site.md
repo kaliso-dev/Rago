@@ -41,7 +41,7 @@ Ce que [[build.py]] change entre une source et sa page : polices Google remplac�
 | `img/games/{minecraft,valorant,cs2,fortnite}.webp` | vignettes de la section bibliothèque de jeux de l'accueil (Lunar Client, VALORANT, Counter-Strike 2, Fortnite) | ajoutées le 20/10 (`4e0914e`) ; voir [[Bibliothèque de jeux]] |
 | `img/partners/*.webp` (7 fichiers) | logos des partenaires | listés dans [[partners.json]] |
 | `media/in-game-bar.mp4` (865 Ko), `.webm` (601 Ko), `.webp` (86 Ko, image d'attente) | vidéo derrière la démonstration de la barre en jeu sur l'accueil (`<video id="ig-v" preload="none">`) | ajoutées le 20/10 ; voir [[Barre en jeu]] |
-| `media/og-route.png` | image de partage de [[route.html]], 1 200 × 630 (112 007 octets) : « Rago Route: lost packets shouldn't freeze your game », un paquet perdu sur le chemin 1 et sa copie qui arrive par le chemin 2 | faite le 11/11 en HTML avec les polices du site (Geist), dans le style de `og-image.png` ; sur `staging` depuis le 11/11 après-midi |
+| `media/og-route.png` | image de partage de [[route.html]], 1 200 × 630 (104 838 octets) : « Lose packets, not fights. », un paquet perdu sur la route 1 et sa copie qui arrive par la route 2 | faite le 11/11 en HTML avec les polices du site (Geist), dans le style de `og-image.png`, refaite le même jour avec le titre de la version actuelle ; la version de `staging` porte encore le titre de la refonte |
 
 ## Fichiers présents dans `site/` mais jamais publiés
 La commande de [[netlify.toml]] (et [[preview.sh]]) supprime avant publication :
