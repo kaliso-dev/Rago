@@ -918,7 +918,7 @@ async fn background_set(app: AppHandle, prefs: background::Prefs) -> Result<Back
         let old = bg.prefs();
         prefs.autostart_chosen = old.autostart_chosen || prefs.autostart != old.autostart;
         // options « pendant la partie » : réglées à part (session_set_prefs), jamais écrasées par une copie plus ancienne
-        (prefs.game_gpu, prefs.game_power, prefs.game_checks) = (old.game_gpu, old.game_power, old.game_checks);
+        (prefs.game_gpu, prefs.game_power, prefs.game_checks, prefs.game_priority) = (old.game_gpu, old.game_power, old.game_checks, old.game_priority);
         if prefs.autostart != old.autostart || prefs.autostart != background::autostart_exists(&name) {
             let temp = app.state::<AppState>().data_dir.clone();
             background::set_autostart(&name, prefs.autostart, &temp).map_err(|e| format!("autostart:{e}"))?;
@@ -931,7 +931,7 @@ async fn background_set(app: AppHandle, prefs: background::Prefs) -> Result<Back
     .map_err(|e| e.to_string())?
 }
 
-/// Pendant une partie : mode d'alimentation, carte graphique et vérifications (session.rs).
+/// Pendant une partie : mode d'alimentation, carte graphique, priorité du jeu et vérifications (session.rs).
 #[tauri::command]
 async fn session_state(session: State<'_, Arc<session::Session>>) -> Result<session::State, String> {
     let session = Arc::clone(&session);
@@ -940,8 +940,10 @@ async fn session_state(session: State<'_, Arc<session::Session>>) -> Result<sess
 
 /// Options « pendant la partie » des paramètres ; prises en compte au prochain passage (4 secondes au plus).
 #[tauri::command]
-fn session_set_prefs(bg: State<'_, Arc<Background>>, gpu: bool, power: bool, checks: bool) -> background::Prefs {
-    let prefs = background::Prefs { game_gpu: gpu, game_power: power, game_checks: checks, ..bg.prefs() };
+fn session_set_prefs(bg: State<'_, Arc<Background>>, gpu: bool, power: bool, checks: bool, priority: Option<bool>) -> background::Prefs {
+    let old = bg.prefs();
+    let game_priority = priority.unwrap_or(old.game_priority);
+    let prefs = background::Prefs { game_gpu: gpu, game_power: power, game_checks: checks, game_priority, ..old };
     bg.save(prefs.clone());
     prefs
 }

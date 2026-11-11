@@ -42,6 +42,8 @@ pub struct Prefs {
     pub game_power: bool,
     /// vérifications au lancement d'un jeu (conseils, rien n'est fermé)
     pub game_checks: bool,
+    /// processus du jeu en priorité haute le temps de jouer
+    pub game_priority: bool,
 }
 
 impl Default for Prefs {
@@ -57,6 +59,7 @@ impl Default for Prefs {
             game_gpu: true,
             game_power: true,
             game_checks: true,
+            game_priority: true,
         }
     }
 }

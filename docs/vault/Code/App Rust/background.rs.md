@@ -2,8 +2,8 @@
 type: code
 tags: [code, app, rust, windows]
 fichier: app/src-tauri/src/background.rs
-lignes: 294
-maj: 2026-11-10
+lignes: 297
+maj: 2026-11-11
 ---
 # background.rs
 
@@ -13,7 +13,7 @@ Tout est CONFIRMÉ (code de `staging`, 10/11). Créé le 17/10 (RAG-82) ; le 21/
 
 ## Rôle et place dans l'ensemble
 - [[lib.rs]] : `Background::load` dans `setup`, `sync_tray`, création de la tâche au premier lancement, `hides_on_close` à la fermeture, commandes `background_get`, `background_set`, `session_set_prefs`, `overlay_set_pin`, `show_main` (icône, raccourci, 2e lancement, pont Rago OS).
-- [[overlay.rs]] lit `overlay`, `shortcut`, `pin` ; [[session.rs]] lit `game_gpu`, `game_power`, `game_checks` à chaque tour du fil des jeux.
+- [[overlay.rs]] lit `overlay`, `shortcut`, `pin` ; [[session.rs]] lit `game_gpu`, `game_power`, `game_checks`, `game_priority` à chaque tour du fil des jeux.
 - L'[[Installateur NSIS]] supprime la tâche planifiée à la désinstallation.
 
 ## Ce que le fichier expose
@@ -45,6 +45,7 @@ Tout est CONFIRMÉ (code de `staging`, 10/11). Créé le 17/10 (RAG-82) ; le 21/
 | `game_gpu` | `true` | carte graphique performante pour les jeux (PC à deux cartes) |
 | `game_power` | `true` | mode Performances élevées le temps de jouer |
 | `game_checks` | `true` | vérifications au lancement d'un jeu (conseils, rien n'est fermé) |
+| `game_priority` | `true` | processus du jeu en priorité haute le temps de jouer (11/11, pas encore dans `staging`) |
 
 ## Fonctionnement détaillé
 
@@ -67,5 +68,5 @@ Au démarrage ([[lib.rs]]) : si `prefs.autostart` et pas en debug, la tâche est
 `prefs_fill_missing_fields` (défauts, autostart forcé sauf choix du joueur, ancien raccourci migré, raccourci choisi gardé), `task_runs_hidden_elevated_without_time_limit` (chemin avec espaces, `--background`, `HighestAvailable`, `PT0S`, batterie, échappement de `&`).
 
 ## À savoir avant de modifier
-- `background_set` ([[lib.rs]]) ne doit jamais écraser `game_gpu`, `game_power`, `game_checks` (réglés à part) : il recopie ceux de l'ancienne copie.
+- `background_set` ([[lib.rs]]) ne doit jamais écraser `game_gpu`, `game_power`, `game_checks`, `game_priority` (réglés à part) : il recopie ceux de l'ancienne copie.
 - Changer le nom de l'app change le nom de la tâche : l'ancienne resterait. L'installateur supprime la tâche par `${PRODUCTNAME}`.

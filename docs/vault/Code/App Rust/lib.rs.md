@@ -2,8 +2,8 @@
 type: code
 tags: [code, app, rust]
 fichier: app/src-tauri/src/lib.rs
-lignes: 1553
-maj: 2026-11-10
+lignes: 1555
+maj: 2026-11-11
 ---
 # lib.rs
 
@@ -105,7 +105,7 @@ Ordre de `generate_handler!`. Côté interface, chaque commande est appelée par
 | `background_get` | → `BackgroundState` | `{prefs, autostart (la tâche existe), shortcutTaken, fpsAvailable}` |
 | `background_set` | `prefs` → `BackgroundState` | voir plus bas |
 | `session_state` | → `session::State` | mode d'alimentation, carte graphique, vérifications pendant la partie |
-| `session_set_prefs` | `gpu, power, checks` → `Prefs` | enregistre les 3 options « pendant la partie » ; prises en compte au prochain tour du fil des jeux (4 s au plus) |
+| `session_set_prefs` | `gpu, power, checks, priority?` → `Prefs` | enregistre les 4 options (`priority` absent = inchangé) « pendant la partie » ; prises en compte au prochain tour du fil des jeux (4 s au plus) |
 | `overlay_info` / `overlay_live` | → `Info` / `Live` | état de la barre en jeu |
 | `overlay_close` | → `()` | ferme la barre |
 | `overlay_set_pin` | `pin: bool` | garde la barre épinglée (champ `pin` des préférences) |
@@ -179,7 +179,7 @@ Garde seulement les id connus de `nettest::TARGETS`, 16 au plus. Un fil par serv
 `Action::parse(action)` sinon `"unknown action"`. Une action qui change Windows (`changes()`) pendant un lot ou une remise → `"busy"`. `Apply` exige Premium (`premium_required:netopt`) et le paquet ouvert (`premium_scripts_unavailable`). Les options passent par `sanitized()`. `x3d = session::dual_ccd_x3d(cpu_name)` : jamais « Performances élevées » sur un Ryzen X3D à deux CCD. Chaque ligne du moteur est émise en `netopt:line`.
 
 ### `background_set`
-Raccourci nettoyé puis validé par `parse::<Shortcut>()` (sinon erreur `"shortcut"`). Langue forcée à `en` ou `fr`. `autostart_chosen` devient vrai dès que le joueur a changé l'option. Les options de partie (`game_gpu`, `game_power`, `game_checks`) sont gardées de l'ancienne copie (réglées à part par `session_set_prefs`). Si l'option de démarrage a changé ou ne correspond plus à la tâche réelle : `background::set_autostart` (erreur `autostart:<e>`). Puis `save` et `sync_tray(keeps_running() || started_hidden, lang, quit)`.
+Raccourci nettoyé puis validé par `parse::<Shortcut>()` (sinon erreur `"shortcut"`). Langue forcée à `en` ou `fr`. `autostart_chosen` devient vrai dès que le joueur a changé l'option. Les options de partie (`game_gpu`, `game_power`, `game_checks`, `game_priority`) sont gardées de l'ancienne copie (réglées à part par `session_set_prefs`). Si l'option de démarrage a changé ou ne correspond plus à la tâche réelle : `background::set_autostart` (erreur `autostart:<e>`). Puis `save` et `sync_tray(keeps_running() || started_hidden, lang, quit)`.
 
 ### `support_report`
 Construit un `report::Input` : version (`CARGO_PKG_VERSION`), serveur (`server_name()`), offre réduite à `"Premium"`, `"Premium, to renew"` ou `"Free"` (ni e-mail ni clé), dernière recherche de mise à jour, sonde, réglages appliqués (`views`), historique, `logs\`. Puis `report::mask` remplace le nom du compte (`USERNAME`), le nom du dossier de profil (différent pour un compte Microsoft), `COMPUTERNAME` et le `hostname`. Écrit par `report::write(data_dir\reports)` ([[report.rs]]). Rien n'est envoyé.
