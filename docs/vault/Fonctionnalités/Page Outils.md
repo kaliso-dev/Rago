@@ -34,6 +34,6 @@ La barre latérale remet le badge « Nouveau » sur Outils jusqu'à la prochaine
 
 ## À faire
 - Tester sur Windows (applis au démarrage surtout : lecture, coupure, remise, entrées gardées) : exe de test de `staging` après la fusion sur « fusionne » de Sofiene, ou exe « Staging » construit à la main depuis la branche de la PR (l'exe du build de la PR, lui, vise le serveur de prod et remplace le Rago installé, voir [[CI GitHub Actions]]) ([[Prochaines étapes]]).
-- Sortie : avec la [[Version 1.3.0]] ou après ? À DÉCIDER par Sofiene (carte du fil « Centraliser et enrichir la page Tools », 11/11).
+- Sortie : **avec la [[Version 1.3.0]]** (Sofiene, 11/11 à 08:24 UTC, sur la carte du fil « Centraliser et enrichir la page Tools » : « Oui, fusionne dans staging »).
 
 Liens : [[Offres et prix]], [[Tableau de bord]], [[Étude de marché de novembre 2026]].
