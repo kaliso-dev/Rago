@@ -8,7 +8,7 @@ maj: 2026-11-11
 
 Page « Couleurs et résolution » de l'app (groupe « En jeu », sous Jeux) : la saturation, la luminosité et la résolution **propres à chaque jeu**, posées seulement pendant la partie. Demandée par Sofiene le 11/11 : fonctionnalités 1 (« custom saturation ») et 2 (« custom resolution ») de son message, voir [[Décisions]]. Ticket [[Linear]] RAG-95. Retour à [[Projet]].
 
-**Statut (11/11)** : codée sur la branche `claude/project-thread-7n0ikn` (commit du 11/11), **pas encore envoyée sur GitHub** : l'accord de Sofiene est demandé dans le fil (carte « Envoyer la branche sur GitHub et ouvrir la PR vers staging ? »). Ni dans `staging`, ni dans une version, et pas dans la sortie de la semaine du 11/11 (consigne : ne pas la bloquer). **Jamais testé sur Windows** ([[Règles de travail]]). CONFIRMÉ (git local).
+**Statut (11/11)** : PR #93 vers `staging` (branche `claude/project-thread-7n0ikn`), ouverte le 11/11 au matin à la demande de Sofiene : « Push toutes les modification vers stagging pour que je puisse test la version test ». Elle part dans la branche d'intégration des 6 nouveautés du 11/11 (PR #92) pour une build de test. Pas encore dans une version. **Jamais testé sur Windows** ([[Règles de travail]]). CONFIRMÉ (GitHub, 11/11).
 
 ## Ce que voit le joueur
 - Choix du jeu parmi ceux de la [[Bibliothèque de jeux]] (Minecraft Java : une seule entrée pour tous ses launchers, comme dans Jeux). Depuis Jeux, une puce sur la fiche du jeu (« Saturation 55 % · 1440×1080 », ou « Couleurs et résolution » quand rien n'est réglé) ouvre la page sur ce jeu.
