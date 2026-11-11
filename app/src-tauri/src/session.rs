@@ -7,10 +7,14 @@
 //!   stratégie d'entreprise, et jamais sur un Ryzen X3D à deux CCD (AMD y veut Équilibré, qui garde le jeu sur le cache
 //!   3D). Le mode d'avant est noté sur le disque avant le changement, puis rendu à la fin de la partie, ou au lancement
 //!   suivant de l'app si elle a été fermée entre-temps ; pas si le joueur a lui-même changé de mode pendant la partie.
+//! - Jeu en priorité haute : chaque processus du jeu passe en priorité « Haute » (jamais « Temps réel ») et Windows
+//!   ne le bride plus (EcoQoS) même quand la fenêtre n'est pas au premier plan. Seulement depuis la priorité normale
+//!   (ou supérieure à la normale) : un choix du joueur n'est pas touché. Ça ne vit que le temps du processus, rien
+//!   n'est écrit sur le disque ; couper l'option rend la priorité d'avant aux processus encore lancés.
 //! - Vérifications : batterie, téléchargements, synchronisation et enregistrement en fond. Des conseils, rien n'est fermé.
 
 use serde::{Deserialize, Serialize};
-use std::collections::HashSet;
+use std::collections::{HashMap, HashSet};
 use std::path::{Path, PathBuf};
 use std::sync::Mutex;
 
@@ -49,6 +53,8 @@ pub struct State {
     pub playing: bool,
     /// mode Performances élevées mis pour la partie
     pub power: bool,
+    /// processus du jeu passés en priorité haute par Rago pour la partie en cours
+    pub priority: usize,
     /// jeux qui ont reçu la carte graphique performante (depuis toujours)
     pub gpu_games: usize,
     pub checks: Vec<Check>,
@@ -65,6 +71,10 @@ struct Inner {
     tried: bool,
     /// exes déjà regardés pour la carte graphique
     seen: HashSet<String>,
+    /// exes du jeu déjà passés par la priorité, tant qu'ils tournent
+    prio_seen: HashSet<String>,
+    /// processus mis en priorité haute par Rago : pid -> (chemin, priorité d'avant)
+    raised: HashMap<u32, (String, u32)>,
 }
 
 pub struct Session {
@@ -134,6 +144,15 @@ pub fn wants_gpu(p: &Path) -> bool {
     file.ends_with(".exe") && !["unins", "crash", "report", "setup", "redist", "vc_redist", "dxsetup"].iter().any(|w| file.contains(w))
 }
 
+/// Priorité : les exes du jeu pas encore vus (à passer en priorité haute), et ceux à retenir, c'est-à-dire ceux qui
+/// tournent encore. Un exe fermé puis relancé est donc revu.
+pub fn prio_fresh(seen: &HashSet<String>, exes: &[PathBuf]) -> (Vec<String>, HashSet<String>) {
+    let now: HashSet<String> = exes.iter().filter(|p| wants_gpu(p)).map(|p| p.to_string_lossy().to_lowercase()).collect();
+    let mut fresh: Vec<String> = now.difference(seen).cloned().collect();
+    fresh.sort();
+    (fresh, now)
+}
+
 /// Premier GUID de la sortie de `powercfg /getactivescheme` (le texte autour change avec la langue de Windows).
 #[cfg_attr(not(windows), allow(dead_code))]
 pub fn parse_scheme(out: &str) -> Option<String> {
@@ -171,7 +190,7 @@ impl Session {
         let path = data_dir.join("session.json");
         let saved: Saved = std::fs::read(&path).ok().and_then(|b| serde_json::from_slice(&b).ok()).unwrap_or_default();
         let state = State { gpu_games: saved.gpu.len(), x3d: dual_ccd_x3d(&win::cpu_name()), ..State::default() };
-        Session { path, inner: Mutex::new(Inner { saved, state, tried: false, seen: HashSet::new() }) }
+        Session { path, inner: Mutex::new(Inner { saved, state, tried: false, seen: HashSet::new(), prio_seen: HashSet::new(), raised: HashMap::new() }) }
     }
 
     fn lock(&self) -> std::sync::MutexGuard<'_, Inner> {
@@ -236,6 +255,26 @@ impl Session {
             self.save(&g.saved);
         }
         g.state.gpu_games = g.saved.gpu.len();
+
+        // priorité haute : chaque processus du jeu, une fois par lancement ; rien à défaire quand il se ferme
+        if prefs.game_priority && playing {
+            let (fresh, now) = prio_fresh(&g.prio_seen, exes);
+            if !fresh.is_empty() {
+                for (pid, path, before) in win::raise(&fresh) {
+                    g.raised.insert(pid, (path, before));
+                }
+            }
+            g.prio_seen = now;
+            let Inner { prio_seen, raised, .. } = &mut *g;
+            raised.retain(|_, (path, _)| prio_seen.contains(path));
+        } else {
+            if !prefs.game_priority && !g.raised.is_empty() {
+                win::restore(&g.raised);
+            }
+            g.raised.clear();
+            g.prio_seen.clear();
+        }
+        g.state.priority = g.raised.len();
 
         g.state.checks = if playing && prefs.game_checks { checks(procs, win::on_battery()) } else { Vec::new() };
         (g.state != before).then(|| g.state.clone())
@@ -342,6 +381,95 @@ mod win {
     pub fn delete_gpu_pref(path: &str) -> bool {
         reg::delete_value(GPU_KEY, path)
     }
+
+    use windows_sys::Win32::Foundation::{CloseHandle, HANDLE, INVALID_HANDLE_VALUE};
+    use windows_sys::Win32::System::Threading::{
+        GetPriorityClass, OpenProcess, ProcessPowerThrottling, QueryFullProcessImageNameW, SetPriorityClass, SetProcessInformation,
+        ABOVE_NORMAL_PRIORITY_CLASS, HIGH_PRIORITY_CLASS, NORMAL_PRIORITY_CLASS, PROCESS_POWER_THROTTLING_CURRENT_VERSION,
+        PROCESS_POWER_THROTTLING_EXECUTION_SPEED, PROCESS_POWER_THROTTLING_STATE, PROCESS_QUERY_LIMITED_INFORMATION, PROCESS_SET_INFORMATION,
+    };
+
+    /// Ouvre un processus pour changer sa priorité ; renvoie aussi son chemin en minuscules.
+    unsafe fn open(pid: u32) -> Option<(HANDLE, String)> {
+        let h = OpenProcess(PROCESS_QUERY_LIMITED_INFORMATION | PROCESS_SET_INFORMATION, 0, pid);
+        if h.is_null() {
+            return None; // processus protégé (anti-triche) ou d'un autre compte : laissé tel quel
+        }
+        let mut buf = [0u16; 1024];
+        let mut len = buf.len() as u32;
+        if QueryFullProcessImageNameW(h, 0, buf.as_mut_ptr(), &mut len) == 0 {
+            CloseHandle(h);
+            return None;
+        }
+        Some((h, String::from_utf16_lossy(&buf[..len as usize]).to_lowercase()))
+    }
+
+    /// EcoQoS : `throttle` false = jamais bridé ; true = Windows décide (son réglage par défaut).
+    unsafe fn throttling(h: HANDLE, throttle: bool) {
+        let state = PROCESS_POWER_THROTTLING_STATE {
+            Version: PROCESS_POWER_THROTTLING_CURRENT_VERSION,
+            ControlMask: if throttle { 0 } else { PROCESS_POWER_THROTTLING_EXECUTION_SPEED },
+            StateMask: 0,
+        };
+        SetProcessInformation(h, ProcessPowerThrottling, &state as *const _ as *const _, std::mem::size_of::<PROCESS_POWER_THROTTLING_STATE>() as u32);
+    }
+
+    /// Pid de chaque processus lancé.
+    fn pids() -> Vec<u32> {
+        use windows_sys::Win32::System::Diagnostics::ToolHelp::{CreateToolhelp32Snapshot, Process32FirstW, Process32NextW, PROCESSENTRY32W, TH32CS_SNAPPROCESS};
+        let mut out = Vec::new();
+        unsafe {
+            let snap = CreateToolhelp32Snapshot(TH32CS_SNAPPROCESS, 0);
+            if snap == INVALID_HANDLE_VALUE {
+                return out;
+            }
+            let mut e: PROCESSENTRY32W = std::mem::zeroed();
+            e.dwSize = std::mem::size_of::<PROCESSENTRY32W>() as u32;
+            let mut more = Process32FirstW(snap, &mut e) != 0;
+            while more {
+                if e.th32ProcessID > 4 {
+                    out.push(e.th32ProcessID);
+                }
+                more = Process32NextW(snap, &mut e) != 0;
+            }
+            CloseHandle(snap);
+        }
+        out
+    }
+
+    /// Passe en priorité haute les processus de ces exes (chemins en minuscules), s'ils sont en priorité normale ou
+    /// supérieure à la normale. Renvoie ceux changés : (pid, chemin, priorité d'avant).
+    pub fn raise(paths: &[String]) -> Vec<(u32, String, u32)> {
+        let mut out = Vec::new();
+        for pid in pids() {
+            unsafe {
+                let Some((h, path)) = open(pid) else { continue };
+                if paths.contains(&path) {
+                    let before = GetPriorityClass(h);
+                    if (before == NORMAL_PRIORITY_CLASS || before == ABOVE_NORMAL_PRIORITY_CLASS) && SetPriorityClass(h, HIGH_PRIORITY_CLASS) != 0 {
+                        throttling(h, false);
+                        out.push((pid, path, before));
+                    }
+                }
+                CloseHandle(h);
+            }
+        }
+        out
+    }
+
+    /// Rend la priorité d'avant aux processus encore lancés, s'ils sont toujours en priorité haute.
+    pub fn restore(raised: &std::collections::HashMap<u32, (String, u32)>) {
+        for (&pid, (path, before)) in raised {
+            unsafe {
+                let Some((h, now)) = open(pid) else { continue };
+                if &now == path && GetPriorityClass(h) == HIGH_PRIORITY_CLASS {
+                    SetPriorityClass(h, *before);
+                    throttling(h, true);
+                }
+                CloseHandle(h);
+            }
+        }
+    }
 }
 
 #[cfg(not(windows))]
@@ -373,6 +501,10 @@ mod win {
     pub fn delete_gpu_pref(_path: &str) -> bool {
         true
     }
+    pub fn raise(_paths: &[String]) -> Vec<(u32, String, u32)> {
+        Vec::new()
+    }
+    pub fn restore(_raised: &std::collections::HashMap<u32, (String, u32)>) {}
 }
 
 #[cfg(test)]
@@ -398,6 +530,20 @@ mod tests {
         assert!(wants_gpu(Path::new(r"D:\SteamLibrary\steamapps\common\Counter-Strike Global Offensive\game\bin\win64\cs2.exe")));
         assert!(!wants_gpu(Path::new(r"D:\Games\Fortnite\unins000.exe")));
         assert!(!wants_gpu(Path::new(r"D:\Games\Fortnite\CrashReportClient.exe")));
+    }
+
+    #[test]
+    fn raises_each_game_exe_once_per_launch() {
+        let cs2 = PathBuf::from(r"D:\Steam\steamapps\common\Counter-Strike Global Offensive\game\bin\win64\cs2.exe");
+        let crash = PathBuf::from(r"D:\Games\Fortnite\CrashReportClient.exe");
+        let (fresh, seen) = prio_fresh(&HashSet::new(), &[cs2.clone(), crash]);
+        assert_eq!(fresh, [cs2.to_string_lossy().to_lowercase()]);
+        // toujours lancé : pas revu
+        let (fresh, seen) = prio_fresh(&seen, &[cs2.clone()]);
+        assert!(fresh.is_empty());
+        // fermé puis relancé : revu
+        let (_, seen) = prio_fresh(&seen, &[]);
+        assert_eq!(prio_fresh(&seen, &[cs2]).0.len(), 1);
     }
 
     #[test]

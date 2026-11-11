@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { AlertTriangle, Zap } from "lucide-react";
+import { AlertTriangle, Gauge, Zap } from "lucide-react";
 import { api, type BackgroundPrefs, type SessionCheck, type SessionState } from "../lib/api";
 import type { Key } from "../lib/i18n";
 import { useStore } from "../lib/store";
@@ -9,13 +9,18 @@ type T = (key: Key, vars?: Record<string, string | number>) => string;
 
 /** Ce que Rago a fait pour la partie en cours et ce qu'il conseille (barre en jeu, bibliothèque). */
 export function SessionChecks({ session, t }: { session: SessionState; t: T }) {
-  if (!session.playing || (!session.power && !session.checks.length)) return null;
+  if (!session.playing || (!session.power && !session.priority && !session.checks.length)) return null;
   const line = (c: SessionCheck) => t(`session.check.${c.id}` as Key, { apps: c.apps.join(", ") });
   return (
     <div className="session-checks">
       {session.power && (
         <div className="session-line ok">
           <Zap size={13} /> {t("session.power")}
+        </div>
+      )}
+      {session.priority > 0 && (
+        <div className="session-line ok">
+          <Gauge size={13} /> {t("session.priority")}
         </div>
       )}
       {session.checks.length > 0 && (
@@ -54,11 +59,11 @@ export function SessionCard() {
   }, []);
 
   if (!prefs) return null;
-  const save = async (patch: Partial<Pick<BackgroundPrefs, "gameGpu" | "gamePower" | "gameChecks">>) => {
+  const save = async (patch: Partial<Pick<BackgroundPrefs, "gameGpu" | "gamePower" | "gameChecks" | "gamePriority">>) => {
     const next = { ...prefs, ...patch };
     setPrefs(next);
     try {
-      setPrefs(await api.sessionSetPrefs(next.gameGpu, next.gamePower, next.gameChecks));
+      setPrefs(await api.sessionSetPrefs(next.gameGpu, next.gamePower, next.gameChecks, next.gamePriority));
     } catch {
       void api.backgroundGet().then((s) => setPrefs(s.prefs), () => {});
     }
@@ -84,6 +89,13 @@ export function SessionCard() {
           <div className="muted small">{session?.x3d ? t("settings.session.x3d") : t("settings.session.powerHint")}</div>
         </div>
         <Switch checked={prefs.gamePower && !session?.x3d} disabled={session?.x3d} onChange={(v) => void save({ gamePower: v })} label={t("settings.session.power")} />
+      </div>
+      <div className="setting">
+        <div>
+          <div>{t("settings.session.priority")}</div>
+          <div className="muted small">{t("settings.session.priorityHint")}</div>
+        </div>
+        <Switch checked={prefs.gamePriority} onChange={(v) => void save({ gamePriority: v })} label={t("settings.session.priority")} />
       </div>
       <div className="setting">
         <div>

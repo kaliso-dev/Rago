@@ -226,6 +226,8 @@ export interface BackgroundPrefs {
   gameGpu: boolean;
   gamePower: boolean;
   gameChecks: boolean;
+  /** processus du jeu en priorité haute le temps de jouer */
+  gamePriority: boolean;
 }
 export interface BackgroundState {
   prefs: BackgroundPrefs;
@@ -246,6 +248,8 @@ export interface SessionState {
   playing: boolean;
   /** mode Performances élevées mis pour la partie */
   power: boolean;
+  /** processus du jeu passés en priorité haute pour la partie en cours */
+  priority: number;
   /** jeux qui ont reçu la carte graphique performante */
   gpuGames: number;
   checks: SessionCheck[];
@@ -523,7 +527,7 @@ export interface Api {
   backgroundSet(prefs: BackgroundPrefs): Promise<BackgroundState>;
   sessionState(): Promise<SessionState>;
   /** Options « pendant la partie » des paramètres ; renvoie les réglages enregistrés. */
-  sessionSetPrefs(gpu: boolean, power: boolean, checks: boolean): Promise<BackgroundPrefs>;
+  sessionSetPrefs(gpu: boolean, power: boolean, checks: boolean, priority: boolean): Promise<BackgroundPrefs>;
   onSession(cb: (s: SessionState) => void): Promise<UnlistenFn>;
   /** Barre en jeu (fenêtre « overlay ») */
   overlayInfo(): Promise<OverlayInfo>;
@@ -635,7 +639,7 @@ const tauriApi: Api = {
   backgroundGet: () => invoke("background_get"),
   backgroundSet: (prefs) => invoke("background_set", { prefs }),
   sessionState: () => invoke("session_state"),
-  sessionSetPrefs: (gpu, power, checks) => invoke("session_set_prefs", { gpu, power, checks }),
+  sessionSetPrefs: (gpu, power, checks, priority) => invoke("session_set_prefs", { gpu, power, checks, priority }),
   onSession: (cb) => listen<SessionState>("games:session", (e) => cb(e.payload)),
   overlayInfo: () => invoke("overlay_info"),
   overlayLive: () => invoke("overlay_live"),
@@ -840,6 +844,7 @@ let mockBackground: BackgroundPrefs = {
   gameGpu: true,
   gamePower: true,
   gameChecks: true,
+  gamePriority: true,
 };
 /** Démo : une partie en cours avec ?playing dans l'adresse (barre en jeu : toujours). */
 const mockSession = (): SessionState => {
@@ -847,6 +852,7 @@ const mockSession = (): SessionState => {
   return {
     playing,
     power: playing && mockBackground.gamePower,
+    priority: playing && mockBackground.gamePriority ? 1 : 0,
     gpuGames: mockBackground.gameGpu ? 2 : 0,
     checks: playing && mockBackground.gameChecks ? [{ id: "sync", apps: ["OneDrive"] }, { id: "record", apps: ["OBS Studio"] }] : [],
     multiGpu: true,
@@ -1273,12 +1279,12 @@ const mockApi: Api = {
     await sleep(250);
     if (!/^((Ctrl|Alt|Shift|Super)\+)*(F\d{1,2}|[A-Z0-9]|[A-Za-z]+)$/.test(prefs.shortcut) || /\+$/.test(prefs.shortcut)) throw "shortcut";
     // comme background_set : les options « pendant la partie » se règlent à part
-    mockBackground = { ...prefs, gameGpu: mockBackground.gameGpu, gamePower: mockBackground.gamePower, gameChecks: mockBackground.gameChecks };
+    mockBackground = { ...prefs, gameGpu: mockBackground.gameGpu, gamePower: mockBackground.gamePower, gameChecks: mockBackground.gameChecks, gamePriority: mockBackground.gamePriority };
     return { prefs: mockBackground, autostart: prefs.autostart, shortcutTaken: false, fpsAvailable: true };
   },
   sessionState: async () => mockSession(),
-  sessionSetPrefs: async (gameGpu, gamePower, gameChecks) => {
-    mockBackground = { ...mockBackground, gameGpu, gamePower, gameChecks };
+  sessionSetPrefs: async (gameGpu, gamePower, gameChecks, gamePriority) => {
+    mockBackground = { ...mockBackground, gameGpu, gamePower, gameChecks, gamePriority };
     emit<SessionState>("games:session", mockSession());
     return mockBackground;
   },

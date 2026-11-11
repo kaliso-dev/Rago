@@ -2,8 +2,8 @@
 type: code
 tags: [code, app, typescript, interface]
 fichier: app/src/lib/api.ts
-lignes: 1381
-maj: 2026-11-10
+lignes: 1387
+maj: 2026-11-11
 ---
 # api.ts
 
@@ -38,7 +38,7 @@ Tout ce qui suit est CONFIRMÉ (code de `staging`, 10/11, commit `ee77d4f`).
 | `RouteLink`, `RouteStep`, `RouteWhy`, `RouteCheck`, `RouteLinks`, `RoutePath`, `RouteStatus` | Rago Route : 2e connexions, diagnostic du partage du téléphone, trajets (`direct`, `relay`, `phone`, `second`) avec `rttMs`, `lossPct`, `firstPct`, `mb` ; compteurs `saved`, `repaired`, `packets`, `resendsHere`, `resendsExit`, `exitPingMs`, `lagHereMs`, `lagExitMs`, `ports` | [[route.rs]] |
 | `NetMeasure`, `NetSample` | mesure du test réseau (`ping` moyenne, `median`, `best`, `worst`, `jitter`, `loss` 0–1, `lost`, `samples`, `spikes`, `series`, `method` mc/tcp/icmp, `error` `dns`/`timeout`) ; un essai en direct (`i`, `n`, `ms`) | [[nettest.rs]] |
 | `UpdateReady` | `version`, `notes` | [[update.rs]] |
-| `BackgroundPrefs`, `BackgroundState` | préférences (`tray`, `autostart`, `autostartChosen?`, `overlay`, `shortcut`, `pin`, `lang`, `gameGpu`, `gamePower`, `gameChecks`) ; état (`autostart` réel, `shortcutTaken`, `fpsAvailable`) | [[background.rs]] |
+| `BackgroundPrefs`, `BackgroundState` | préférences (`tray`, `autostart`, `autostartChosen?`, `overlay`, `shortcut`, `pin`, `lang`, `gameGpu`, `gamePower`, `gameChecks`, `gamePriority`) ; état (`autostart` réel, `shortcutTaken`, `fpsAvailable`) | [[background.rs]] |
 | `SessionCheck`, `SessionState` | pendant la partie : `playing`, `power`, `gpuGames`, `checks` (`battery`, `download`, `sync`, `record` + applis), `multiGpu`, `x3d` | [[session.rs]] |
 | `OverlayMode`, `OverlayInfo`, `OverlayLive` | barre en jeu : mode `hidden`/`panel`/`pill`, jeu, raccourci, épingle, `fpsAvailable`, `shortcutTaken`, `passive` ; mesures `fps`, `ping`, `pingEstimate?` | [[overlay.rs]], [[fps.rs]] |
 | `RbwCheck` | une ligne du vérificateur Ranked Bedwars : `name`, `kind` service/setting, `ok`, `state`, `start` | [[rbw.rs]] |
@@ -128,7 +128,7 @@ Chaque ligne : nom dans `api` → commande Rust (paramètres) → ce que fait le
 | `updateStatus()` | `update_status` (date de la dernière recherche) | `null` |
 | `updateInstall()` | `update_install` (l'app se ferme) | 1,2 s puis recharge la page |
 | `backgroundGet()` / `backgroundSet(prefs)` | `background_get` / `background_set { prefs }` ; erreurs `shortcut` et `autostart:…` | préférences par défaut : zone de notification oui, lancement avec Windows oui, barre oui, `Alt+X`, pas épinglée, langue `fr`, les 3 options de partie oui ; `backgroundSet` vérifie le raccourci par l'expression `^((Ctrl|Alt|Shift|Super)\+)*(F\d{1,2}|[A-Z0-9]|[A-Za-z]+)$` et ne change pas les 3 options de partie (comme le vrai `background_set`) |
-| `sessionState()` / `sessionSetPrefs(gpu, power, checks)` / `onSession(cb)` | `session_state` / `session_set_prefs` / événement `games:session` | partie en cours avec `?playing` ou dans `overlay.html` ; vérifications OneDrive et OBS ; 2 jeux sur la carte performante ; `multiGpu: true` |
+| `sessionState()` / `sessionSetPrefs(gpu, power, checks, priority)` / `onSession(cb)` | `session_state` / `session_set_prefs` / événement `games:session` | partie en cours avec `?playing` ou dans `overlay.html` ; vérifications OneDrive et OBS ; 2 jeux sur la carte performante ; `multiGpu: true` |
 | `overlayInfo()` | `overlay_info` | mode `panel` (`pill` avec `?pill`), jeu « Minecraft », `passive` avec `?passive` |
 | `overlayLive()` | `overlay_live` | FPS 238–252, ping 21–25, `pingEstimate` avec `?estimate` |
 | `overlayClose()` / `overlaySetPin(pin)` / `overlayOpenApp(page?)` | `overlay_close` / `overlay_set_pin` / `overlay_open_app { page }` | rien / note l'épingle / rien |

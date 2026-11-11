@@ -2,7 +2,7 @@
 type: fonctionnalité
 tags: [fonctionnalité, app]
 version_app: 1.3.0
-maj: 2026-11-10
+maj: 2026-11-11
 ---
 # Paramètres de l'app
 
@@ -11,7 +11,7 @@ Page Paramètres, en bas de la barre latérale. Voir [[App Windows]]. En 1.3.0 (
 - **Langue** : anglais (défaut) ou français (tutoiement).
 - **Animations** : complètes ou réduites.
 - **Barre en jeu et arrière-plan** : activer la [[Barre en jeu]] ; **raccourci** (Alt+X par défaut, modifiable : Ctrl, Alt ou Maj + lettre, chiffre ou touche F ; refusé s'il est déjà pris) ; « FPS et ping à l'écran pendant la partie » ; « Rester près de l'horloge à la fermeture » ; « Lancer avec Windows » ([[Arrière-plan et démarrage]]).
-- **Pendant la partie** : carte graphique performante, mode Performances élevées, vérifications ([[Pendant la partie]]).
+- **Pendant la partie** : carte graphique performante, mode Performances élevées, jeu en priorité haute (11/11, pas encore dans `staging`), vérifications ([[Pendant la partie]]).
 - **Mémoire** : « Nettoyer » réduit aussi les applis en arrière-plan (coupé par défaut, voir [[Tableau de bord]]).
 - **Partage et support** : ouvre [[Partage et support]].
 - **Dossiers** : ouvrir Journaux, Ressources, Données.
