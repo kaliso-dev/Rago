@@ -417,6 +417,25 @@ export interface DriversInfo {
   model: string | null;
 }
 
+/** Graphismes d'un jeu (gamecfg.rs) : Performance, Équilibré ou Qualité, écrits dans les réglages du jeu. */
+export type GraphicsLevel = "performance" | "balanced" | "quality";
+export interface GraphicsStatus {
+  /** fichiers de réglages trouvés (un par compte du jeu) ; 0 : le jeu n'a jamais été lancé */
+  files: number;
+  /** dont en lecture seule (laissés tels quels) */
+  locked: number;
+  /** niveau que les réglages ont en ce moment, s'il correspond à l'un des trois */
+  level: GraphicsLevel | null;
+  /** une copie d'avant Rago existe : « Remettre mes réglages » */
+  saved: boolean;
+  running: boolean;
+}
+export interface GraphicsOutcome {
+  files: number;
+  changed: number;
+  locked: number;
+}
+
 export interface MinecraftStatus {
   dirExists: boolean;
   optifineFile: boolean;
@@ -532,6 +551,11 @@ export interface Api {
   /** Vide le cache mémoire de Windows ; `trim` : réduit aussi les applis en arrière-plan (option des paramètres). */
   cleanRam(trim: boolean): Promise<Cleaned>;
   minecraftStatus(dir?: string | null): Promise<MinecraftStatus>;
+  graphicsStatus(game: string): Promise<GraphicsStatus>;
+  /** erreurs : "running", "not_found", "locked", "unknown_format" */
+  graphicsApply(game: string, level: GraphicsLevel): Promise<GraphicsOutcome>;
+  /** erreurs : "running", "no_backup", "locked" ; renvoie les fichiers remis */
+  graphicsRestore(game: string): Promise<number>;
   rbwStatus(): Promise<RbwCheck[]>;
   toolsScan(): Promise<CleanArea[]>;
   toolsClean(areas: CleanAreaId[]): Promise<CleanResult>;
@@ -672,6 +696,9 @@ const tauriApi: Api = {
   openTaskManager: () => invoke("open_task_manager"),
   cleanRam: (trim) => invoke("clean_ram", { trim }),
   minecraftStatus: (dir) => invoke("minecraft_status", { dir: dir ?? null }),
+  graphicsStatus: (game) => invoke("graphics_status", { game }),
+  graphicsApply: (game, level) => invoke("graphics_apply", { game, level }),
+  graphicsRestore: (game) => invoke("graphics_restore", { game }),
   rbwStatus: () => invoke("rbw_status"),
   toolsScan: () => invoke("tools_scan"),
   toolsClean: (areas) => invoke("tools_clean", { areas }),
@@ -911,6 +938,7 @@ const mockDisplay: Record<string, DisplayProfile> = (() => {
   }
 })();
 let mockDisplayState: DisplayState = { colors: null, resolution: null, error: null };
+const mockGraphics = new Map<string, { level: GraphicsLevel | null; saved: boolean }>();
 let mockStatsStart = 0;
 const mockLoad = { ram: 47, cpu: 14, gpu: 9 };
 // démo : les réglages appliqués survivent au rechargement de la page, comme applied.json dans l'app
@@ -1160,6 +1188,28 @@ const mockApi: Api = {
     return { standby: (1.2 + Math.random() * 1.6) * gb, trimmed: trim ? 0.4 * gb : 0, apps: trim ? 7 : 0 };
   },
   minecraftStatus: async () => ({ dirExists: true, optifineFile: true, backups: 1 }),
+  // démo : Valorant a deux comptes sur le PC, Apex n'a jamais été lancé (pas de fichier de réglages)
+  graphicsStatus: async (game) => {
+    await sleep(150);
+    if (game === "apex") return { files: 0, locked: 0, level: null, saved: false, running: false };
+    const s = mockGraphics.get(game) ?? { level: null, saved: false };
+    return { files: game === "valorant" ? 2 : 1, locked: 0, level: s.level, saved: s.saved, running: false };
+  },
+  graphicsApply: async (game, level) => {
+    await sleep(600);
+    if (game === "apex") throw "not_found";
+    const s = mockGraphics.get(game) ?? { level: null, saved: false };
+    const changed = s.level === level ? 0 : 12;
+    mockGraphics.set(game, { level, saved: true });
+    const files = changed ? (game === "valorant" ? 2 : 1) : 0;
+    return { files, changed: changed * files, locked: 0 };
+  },
+  graphicsRestore: async (game) => {
+    await sleep(400);
+    if (!mockGraphics.get(game)?.saved) throw "no_backup";
+    mockGraphics.delete(game);
+    return game === "valorant" ? 2 : 1;
+  },
   // démo : SysMain et PcaSvc arrêtés, Prefetch coupé (ce que le RBW Mod « Activé » corrige)
   rbwStatus: async () => {
     const svc = (name: string, state: RbwCheck["state"], start: RbwCheck["start"]): RbwCheck => ({ name, kind: "service", ok: state === "running", state, start });

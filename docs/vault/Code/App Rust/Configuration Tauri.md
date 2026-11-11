@@ -38,6 +38,7 @@ Tout est CONFIRMÉ (fichiers de `staging`, 10/11), sauf ce qui est marqué OBSER
 - `default.json` (fenêtre `main`) : `core:default` ; fenêtre : `allow-minimize`, `allow-toggle-maximize`, `allow-is-maximized`, `allow-close`, `allow-start-dragging` (barre de titre maison) ; `dialog:allow-open`, `dialog:allow-save`, `dialog:allow-ask` ; `opener:allow-open-url` limité à `https://*` et `http://localhost:*`.
 - `overlay.json` (fenêtre `overlay`, la [[Barre en jeu]], créée par [[overlay.rs]]) : `core:default` seulement. « Lit les mesures et lance les réglages par les commandes de l'app, rien d'autre. »
 - Les commandes de l'app (76 sur `staging`, 82 avec la PR #90 ; [[lib.rs]]) n'ont pas besoin d'être listées ici : seules les commandes des plugins le sont.
+- Les 79 commandes de l'app ([[lib.rs]]) n'ont pas besoin d'être listées ici : seules les commandes des plugins le sont.
 
 ## `app.manifest` (30 lignes)
 Intégré à l'exe par [[build.rs]] :

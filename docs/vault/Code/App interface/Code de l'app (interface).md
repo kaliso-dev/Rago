@@ -4,6 +4,7 @@ tags: [code, app, react, carte]
 fichier: app/src/
 lignes: 30056
 lignes: 30663
+lignes: 29270
 maj: 2026-11-11
 ---
 # Code de l'app (interface)
@@ -205,10 +206,11 @@ Les 13 événements Tauri que l'interface écoute, tous déclarés dans [[api.ts
 - Compte et avis : [[ProfileCard.tsx]], [[ReviewDialog.tsx]], [[ReviewPrompt.tsx]].
 - Cartes : [[UpdateCard.tsx]], [[BackgroundCard.tsx]], [[SessionCard.tsx]], [[LiveStatsCard.tsx]], [[RbwStatus.tsx]].
 - Réseau et presets : [[NetTools.tsx]], [[PresetEditor.tsx]].
+- Jeux : [[GameGraphics.tsx]] (graphismes des jeux, branche du 11/11).
 - Petites briques (`ui.tsx`, `Modal`, `Logo`, `icons.ts`, `Avatar`, `GameLogo`, `PageBoundary`, `vite-env.d.ts`) : [[Petits composants de l'interface]].
 
 ### Logique (`app/src/lib/`)
-[[api.ts]], [[store.tsx]], [[catalog.ts]], [[i18n.ts]], [[account.tsx]], [[accountApi.ts]], [[accountText.ts]], [[analysis.ts]], [[netopt.ts]], [[share.ts]], [[art.ts]], [[gameLogos.ts]], [[seen.ts]].
+[[api.ts]], [[store.tsx]], [[catalog.ts]], [[i18n.ts]], [[account.tsx]], [[accountApi.ts]], [[accountText.ts]], [[analysis.ts]], [[netopt.ts]], [[share.ts]], [[art.ts]], [[gameLogos.ts]], [[graphics.ts]], [[seen.ts]].
 
 ### Données (`app/src/data/`)
 [[catalog.json]] (généré, voir [[Code du générateur de catalogue]]), [[free.json]] et [[pros.json]] (écrits à la main).

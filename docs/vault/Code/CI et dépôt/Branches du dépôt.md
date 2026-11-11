@@ -82,6 +82,7 @@ Source : `git ls-remote` (liste et têtes des branches, lecture seule), `git log
 | Branche | Ce qui n'est nulle part ailleurs | À décider |
 |---|---|---|
 | `claude/project-thread-u6htp7` | commits de la PR #90 ([[Page Outils]] refaite, code et vault, 11/11) | PR ouverte vers `staging` (fil « Centraliser et enrichir la page Tools ») ; fusion sur « fusionne » de Sofiene |
+| `claude/project-thread-5ln7f8` | 4 commits de la PR #94 ([[Graphismes des jeux]] et le vault), 11/11 | PR ouverte vers `staging` le 11/11 (fil « Ajouter les presets graphiques par jeu »), à fusionner pour la version test |
 | `claude/project-thread-0ij01e` | 2 commits de la PR #86 (« Best hitreg » par défaut et le vault du cas) | PR ouverte vers `staging` (fil « Régler les problèmes des clients ») |
 | `claude/project-thread-rulzwj` | portage en prod du bot communauté Discord (`25ba75e`) et 2 commits du vault | PR #71 ouverte vers la prod depuis le 01/11 ([[Bot communauté Discord]]) |
 | `claude/project-thread-tzbch5` | 2 commits du vault sur Supabase (`8246bd4`, `803b9d6` : e-mail de dépassement de quota relu, décision « Pro ou migration avant le 05/12 ») | jamais proposés en PR ; leur contenu est repris dans le vault par la PR #85 du [[Cerveau du vault]] (10/11) : la branche n'a plus rien à garder (suppression : q81) |

@@ -10,6 +10,7 @@ mod display;
 mod flows;
 mod fps;
 mod gameping;
+mod gamecfg;
 mod games;
 mod icmp;
 mod icon;
@@ -309,6 +310,51 @@ fn minecraft_status(dir: Option<String>) -> Result<minecraft::Status, String> {
 #[tauri::command]
 fn minecraft_restore(dir: Option<String>) -> Result<String, String> {
     minecraft::restore_latest(&minecraft_dir(dir)?)
+}
+
+/// Graphismes des jeux (gamecfg.rs) : fichiers du jeu trouvés sur ce PC, et s'il tourne en ce moment.
+fn graphics_target(game: &str) -> Result<(&'static gamecfg::Def, Vec<(PathBuf, gamecfg::Format)>, bool), String> {
+    let def = gamecfg::def(game).ok_or("unknown_game")?;
+    let files = gamecfg::files(def, &gamecfg::Roots::detect());
+    let exes: Vec<String> = games::process_paths()
+        .iter()
+        .filter_map(|p| p.file_name().map(|n| n.to_string_lossy().to_lowercase()))
+        .collect();
+    let running = gamecfg::running(def, &exes);
+    Ok((def, files, running))
+}
+
+#[tauri::command]
+async fn graphics_status(game: String) -> Result<gamecfg::Status, String> {
+    tauri::async_runtime::spawn_blocking(move || {
+        let (def, files, running) = graphics_target(&game)?;
+        Ok(gamecfg::status(def, &files, running))
+    })
+    .await
+    .map_err(|e| e.to_string())?
+}
+
+/// Écrit Performance, Équilibré ou Qualité dans les réglages du jeu (jeu fermé, copie d'origine gardée).
+#[tauri::command]
+async fn graphics_apply(game: String, level: String) -> Result<gamecfg::Outcome, String> {
+    let level = gamecfg::Level::parse(&level).ok_or("unknown_level")?;
+    tauri::async_runtime::spawn_blocking(move || {
+        let (def, files, running) = graphics_target(&game)?;
+        gamecfg::apply(def, level, &files, running)
+    })
+    .await
+    .map_err(|e| e.to_string())?
+}
+
+/// Remet les réglages du jeu d'avant Rago.
+#[tauri::command]
+async fn graphics_restore(game: String) -> Result<usize, String> {
+    tauri::async_runtime::spawn_blocking(move || {
+        let (_, files, running) = graphics_target(&game)?;
+        gamecfg::restore(&files, running)
+    })
+    .await
+    .map_err(|e| e.to_string())?
 }
 
 #[tauri::command]
@@ -1642,6 +1688,9 @@ pub fn run() {
             open_task_manager,
             minecraft_status,
             minecraft_restore,
+            graphics_status,
+            graphics_apply,
+            graphics_restore,
             restart_pc,
             open_folder,
             support_report,

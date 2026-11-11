@@ -6,6 +6,7 @@ maj: 2026-11-11
 # App Windows (`app/`)
 
 Vue produit de l'app (écrans, stack, fichiers). Fonctionnement interne précis (démarrage, 76 commandes sur `staging` et 82 avec la PR #90 de la page Outils, événements, scellement) : [[Architecture de l'app]]. Code fichier par fichier : [[Code de l'app (Rust)]]. Voir aussi [[Architecture]], [[Historique des versions]], [[Développer et tester]].
+Vue produit de l'app (écrans, stack, fichiers). Fonctionnement interne précis (démarrage, 79 commandes, événements, scellement) : [[Architecture de l'app]]. Code fichier par fichier : [[Code de l'app (Rust)]]. Voir aussi [[Architecture]], [[Historique des versions]], [[Développer et tester]].
 
 ## Navigation (barre latérale)
 - **Tableau de bord** ([[Tableau de bord]]) · **Analyse du PC** ([[Analyse du PC]], 1.3.0 sur `staging`)

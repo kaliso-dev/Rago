@@ -4,6 +4,7 @@ tags: [code, app, typescript, interface]
 fichier: app/src/lib/api.ts
 lignes: 1387
 lignes: 1485
+lignes: 1431
 maj: 2026-11-11
 ---
 # api.ts
@@ -71,6 +72,9 @@ Chaque ligne : nom dans `api` → commande Rust (paramètres) → ce que fait le
 | `cleanRam(trim)` | `clean_ram { trim }` | 900 ms, 1,2 à 2,8 Gio de cache vidé ; avec `trim`, 0,4 Gio et 7 applis |
 | `minecraftStatus(dir?)` | `minecraft_status { dir }` | dossier présent, fichier OptiFine présent, 1 sauvegarde |
 | `minecraftRestore(dir?)` | `minecraft_restore { dir }` | texte fixe |
+| `graphicsStatus(game)` | `graphics_status { game }` | Valorant : 2 fichiers ; Apex : aucun fichier ; niveau et copie gardés en mémoire (`mockGraphics`) |
+| `graphicsApply(game, level)` | `graphics_apply { game, level }` | 600 ms ; Apex → `not_found` ; 0 changement si déjà à ce niveau |
+| `graphicsRestore(game)` | `graphics_restore { game }` | `no_backup` sans copie, sinon remet « tes propres réglages » |
 | `rbwStatus()` | `rbw_status` | 12 services et 6 réglages ; `SysMain`, `PcaSvc` et `Prefetch` sont KO tant que `rbw_mode` n'est pas appliqué en variante `on` |
 | `restartPc()` | `restart_pc` | rien |
 | `openFolder(kind)` | `open_folder { kind }` (`logs`, `resources`, `data`) | rien |

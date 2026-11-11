@@ -45,6 +45,9 @@ Posées le 10/11 au soir (q70 à q93), après la relecture complète du code pou
 - q92 : une idée de l'[[Étude de marché de novembre 2026]] est-elle prévue ?
 - q93 : passer en « Canceled » les 5 tâches d'Abel dans [[Linear]] ?
 
+Posée le 11/11 :
+- q94 : [[Graphismes des jeux]] gratuits pour tous ou Premium ? (le code les laisse gratuits)
+
 ## À vérifier (sans Sofiene)
 - [[Couleurs et résolution]] (11/11, jamais testé sur Windows) : saturation NVIDIA (NVAPI) et AMD (ADL), rampe gamma, retour des couleurs au Alt+Tab, résolution étirée (`DMDFO_STRETCH`) et retour à la fin de la partie, écriture des fichiers de Valorant, Fortnite et CS2 ; comportement avec le HDR de Windows.
 - Valorant en 4:3 étiré (1440×1080) : les sources lues le 11/11 ne confirment pas que le jeu remplit l'écran sans réglage de plus ; à vérifier en jeu ([[Couleurs et résolution]]).
