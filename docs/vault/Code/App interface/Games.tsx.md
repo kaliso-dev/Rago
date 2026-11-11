@@ -2,16 +2,17 @@
 type: code
 tags: [code, app, react, page, jeux]
 fichier: app/src/pages/Games.tsx
-lignes: 553
-maj: 2026-11-10
+lignes: 583
+maj: 2026-11-11
 ---
 # Games.tsx
 
 La page **« Jeux »** (bibliothèque) : jeux trouvés sur le PC, un preset par jeu, « Optimiser et jouer », launchers installés. Fiche parente : [[Code de l'app (interface)]]. Fonctionnalité : [[Bibliothèque de jeux]] (RAG-57). Côté Rust : [[games.rs]].
 
-Tout ce qui suit est CONFIRMÉ (code de `staging`, 10/11, commit `ee77d4f`).
+Tout ce qui suit est CONFIRMÉ (code de `staging`, 10/11, commit `ee77d4f`). Ajout du 11/11 (puce « Couleurs et résolution », [[Couleurs et résolution]]) : PR #93, dans `staging` depuis le 11/11 (PR #92).
 
 ## Rôle et place dans l'ensemble
+- Depuis le 11/11 (PR #94) : sous la carte du jeu, la carte [[GameGraphics.tsx]] quand `graphicsForGame(hero.name)` ([[graphics.ts]]) reconnaît le jeu ([[Graphismes des jeux]]).
 - Affichée par [[App.tsx]] quand `page === "games"`. Entrée « Jeux » de la [[Sidebar.tsx]], avec une puce « Nouveau » tant que la page n'a pas été vue ([[seen.ts]]).
 - Lit et écrit dans [[store.tsx]] :
   - `gamePresets` : preset choisi pour chaque jeu ;
@@ -69,9 +70,11 @@ Les jeux dont `launcher === "minecraft"` sont les launchers et clients Minecraft
 - Image, état (« En cours », « Dernière partie · il y a 2 h », « Pas encore lancé »), nom (« Minecraft · Lunar Client » pour un client).
 - Puces :
   - le preset ;
+  - **« Couleurs et résolution »** : ce qui est réglé pour ce jeu (« Saturation 55 % · 1440×1080 » ; une saturation de 50 % n'est pas montrée), sinon le nom de la page. Un clic ouvre [[Display.tsx]] sur ce jeu (`goTo("display", id)`). Les profils sont lus une fois au montage (`api.displayProfiles()`, commande `display_profiles`) ;
   - le launcher (ou « Ajouté par toi ») ;
   - la corbeille « Retirer de la bibliothèque ». Elle demande deux clics, et le texte précise que le jeu reste installé. Elle appelle `api.gameRemove` pour le jeu, ou pour chaque client de la tuile Minecraft.
 - Pendant une partie, les vérifications de la session sont affichées (`SessionChecks` et `useSession` de [[SessionCard.tsx]]).
+- **PR #91** (11/11) : en bas de la grande carte, le bloc « Réglages conseillés pour {jeu} » ([[GameTips.tsx]]) si le jeu a une liste (`tipsKeyForGame` de [[tips.ts]], d'après son nom ; jamais pour Minecraft) ; ouvert si le jeu tourne, replié sinon (`key` = jeu + en cours : il se rouvre au lancement). Voir [[Conseils au lancement du jeu]].
 - **Boutons** :
   - Preset choisi, avec des réglages à appliquer, ou joueur sans licence : **« Optimiser et jouer »**. Avec une licence, cela appelle `optimizeAndPlay(jeu, entrées)` : fenêtre de confirmation ([[ConfirmDialog.tsx]]) avec les réglages du preset encore à appliquer (`toApply`), lot, puis lancement du jeu à la fin du lot. Si tout est déjà appliqué, le jeu démarre tout de suite.
   - À côté : « Jouer sans optimiser » (`launchGame`).

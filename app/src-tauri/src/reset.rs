@@ -242,6 +242,8 @@ pub fn uninstall() {
     clear_run();
     // pendant une partie : mode d'alimentation d'avant, choix de carte graphique écrits par Rago retirés
     crate::session::undo_all(&data_dir);
+    // couleurs et résolution par jeu : niveaux de couleur, résolution et fichiers des jeux d'avant Rago (display.rs)
+    crate::display::undo_all(&data_dir);
     // Network Optimizer : les valeurs d'avant sa première application (délai borné dans netopt.rs)
     crate::netopt::put_back(&data_dir, &data_dir.join("run"));
     let (history, ledger) = load_for_uninstall(&data_dir);

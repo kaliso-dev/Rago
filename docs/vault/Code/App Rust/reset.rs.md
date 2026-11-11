@@ -2,8 +2,8 @@
 type: code
 tags: [code, app, rust, moteur, licence]
 fichier: app/src-tauri/src/reset.rs
-lignes: 520
-maj: 2026-11-10
+lignes: 522
+maj: 2026-11-11
 ---
 # reset.rs
 
@@ -15,7 +15,7 @@ Tout est CONFIRMÉ (code de `staging`, 10/11). Créé le 15/10 ([[Version 1.1.14
 - La boucle de remise de fin de licence est dans [[lib.rs]] (`reset_after_license`) ; ce fichier fournit la liste des réglages (`targets`), la note sur disque (`Pending`), la décision (`due`) et l'état partagé (`Reset`).
 - La remise de désinstallation (`uninstall`) est entièrement ici, appelée par `run()` de [[lib.rs]] quand l'installateur lance l'exe avec `--reset-tweaks` ([[Installateur NSIS]]).
 - Le travail lui-même est fait par [[runner.rs]] (`run_now`, annulations), à partir de [[backup.rs]] (`applied.json`).
-- Remet aussi ce qui n'est pas dans `applied.json` : [[netopt.rs]] (`put_back`, Packet Optimizer) et [[session.rs]] (`undo_all`, réglages posés pendant une partie).
+- Remet aussi ce qui n'est pas dans `applied.json` : [[netopt.rs]] (`put_back`, Packet Optimizer), [[session.rs]] (`undo_all`, réglages posés pendant une partie) et, à la désinstallation, [[display.rs]] (`undo_all`, couleurs, résolution et fichiers des jeux ; ajouté le 11/11, PR #93).
 
 ## Ce que le fichier expose
 | Élément | Description |
@@ -65,7 +65,7 @@ Un joueur du plan gratuit qui n'a que des réglages gratuits n'est donc jamais r
 ### `uninstall()` : la remise de la désinstallation
 1. `data_dir` = `%APPDATA%\<IDENTIFIER>` (repli `%TEMP%\RagoOptimizer`).
 2. `clear_run` : supprime `run\` et `%SystemRoot%\Temp\<IDENTIFIER>` ([[assets.rs]]), avant, en cas de délai, et à la fin.
-3. `session::undo_all` (mode d'alimentation d'avant, choix de carte graphique retirés) ; `netopt::put_back` (valeurs d'avant le Packet Optimizer, délai borné dans [[netopt.rs]]).
+3. `session::undo_all` (mode d'alimentation d'avant, choix de carte graphique retirés) ; `display::undo_all` (niveaux de couleur, rampe gamma et résolution d'avant, valeurs d'avant Rago dans les fichiers de Valorant, Fortnite et CS2, profils effacés) ; `netopt::put_back` (valeurs d'avant le Packet Optimizer, délai borné dans [[netopt.rs]]).
 4. `load_for_uninstall` : charge `history.json` et `applied.json` **comme au lancement de l'app** : `import_history` si `applied.json` n'existait pas, puis `repair::at_startup` ([[repair.rs]]). Sans ça, une version jamais lancée avant d'être désinstallée garderait un état d'avant à 0 pour `CoalescingTimerInterval` (PC passé par l'ancien `.bat`) et la remise l'écrirait : écran bleu 0x7E, et plus d'app pour réparer (RAG-67).
 5. `targets(All)` ; si vide, fin.
 6. `resource_dir` = `<dossier de l'exe>\resources`. Paquet Premium ouvert si la licence est encore active (`License::new().scripts_key()`), sinon les copies gardées dans `applied.json` ; `keep_undo`.

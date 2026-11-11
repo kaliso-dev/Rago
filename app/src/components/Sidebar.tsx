@@ -10,18 +10,19 @@ import { UpdateCard } from "./UpdateCard";
 import type { Key } from "../lib/i18n";
 import { markSeen, useSeen } from "../lib/seen";
 import { isNetworkTab } from "../pages/Network";
+import { TOOLS_SEEN } from "../pages/Tools";
 
 /** Pages sans module du catalogue. */
-const LABELS: Record<string, Key> = { games: "nav.games", tools: "nav.tools", analysis: "nav.analysis" };
-/** Nouveautés de la 1.2.0 derrière chaque entrée : badge « Nouveau » tant que l'une n'a pas été ouverte (Réseau :
- * ses onglets Packet Optimizer et Test réseau). */
-const NEW: Record<string, string[]> = { games: ["games"], tools: ["tools"], network: ["netopt", "nettest"], analysis: ["analysis"] };
+const LABELS: Record<string, Key> = { games: "nav.games", display: "nav.display", tools: "nav.tools", analysis: "nav.analysis" };
+/** Nouveautés derrière chaque entrée : badge « Nouveau » tant que l'une n'a pas été ouverte (Réseau : ses onglets
+ * Packet Optimizer et Test réseau ; Couleurs et résolution : nouvelle après la 1.3.0). */
+const NEW: Record<string, string[]> = { games: ["games"], display: ["display"], tools: ["tools", TOOLS_SEEN], network: ["netopt", "nettest"], analysis: ["analysis"] };
 
 // Réseau regroupe le Packet Optimizer et le test réseau dans ses onglets : deux entrées de moins
 const GROUPS: { label: Key | null; ids: string[] }[] = [
   { label: null, ids: ["dashboard", "analysis"] },
   { label: "nav.optimize", ids: ["network", "latency", "gpu", "windows", "tools"] },
-  { label: "nav.play", ids: ["hitreg", "minecraft", "rbw", "gamemode", "games"] },
+  { label: "nav.play", ids: ["hitreg", "minecraft", "rbw", "gamemode", "games", "display"] },
   { label: "nav.advanced", ids: ["expert", "restore"] },
 ];
 

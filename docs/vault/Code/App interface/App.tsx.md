@@ -2,8 +2,8 @@
 type: code
 tags: [code, app, typescript, react]
 fichier: app/src/App.tsx
-lignes: 84
-maj: 2026-11-10
+lignes: 85
+maj: 2026-11-11
 ---
 # App.tsx
 
@@ -49,6 +49,7 @@ MotionConfig (reducedMotion)
 | `settings` | [[Settings.tsx]] |
 | `share` | [[Share.tsx]] (ouverte depuis les paramètres) |
 | `games` | [[Games.tsx]] |
+| `display` | [[Display.tsx]] (ajoutée le 11/11, PR #93) |
 | `network`, `netopt`, `nettest`, `route` | [[Network.tsx]] avec l'onglet `tab={page}` |
 | `tools` | [[Tools.tsx]] |
 | `analysis` | [[Analysis.tsx]] |

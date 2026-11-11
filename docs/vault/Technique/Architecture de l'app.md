@@ -2,11 +2,13 @@
 type: technique
 tags: [technique, app, architecture]
 version_app: 1.3.0
-maj: 2026-11-10
+maj: 2026-11-11
 ---
 # Architecture de l'app
 
 Comment le code de l'app Windows (`app/`) est organisé, état de `staging` (1.3.0) au 10/11. Résumé produit et liste des écrans : [[App Windows]]. Porte d'entrée : [[Reprendre le développement]]. Détail fichier par fichier : [[Code de l'app (Rust)]] et [[Code de l'app (interface)]].
+
+Ajouts du 11/11, fusionnés dans `staging` par la PR #92 (pas encore testés sur Windows) : [[Couleurs et résolution]] (`display.rs`, 5 commandes, événement `display:state`, page `Display.tsx`), [[Graphismes des jeux]] (`gamecfg.rs`, 3 commandes), [[Conseils au lancement du jeu]] (`tips.rs`, `tips_done`, `tips_mark`), jeu en priorité haute ([[Pendant la partie]]) et [[Page Outils]] (6 commandes `tools_*`).
 
 ## 1. Deux moitiés qui ne se parlent que par IPC
 - **Moteur Rust** (`app/src-tauri/`, crate `rago-hub`, lib `rago_hub_lib`) : tout ce qui touche Windows, le réseau et le disque. Tourne **en administrateur** (`app.manifest`, `requireAdministrator`).
@@ -17,49 +19,53 @@ Comment le code de l'app Windows (`app/`) est organisé, état de `staging` (1.3
 1. `instance::acquire` : mutex nommé `Local\<identifiant>.instance`. Une deuxième fenêtre ramène la première au premier plan et s'arrête.
 2. Argument `--reset-tweaks` (lancé par le désinstallateur, `installer/hooks.nsh`) : `reset::uninstall()` remet tous les réglages sans fenêtre, puis quitte (15 min au plus).
 3. Plugins Tauri : `dialog`, `opener`, `updater`, `global-shortcut` (raccourci de la [[Barre en jeu]], Alt+X par défaut).
-4. `setup` : vide `run\` (scripts temporaires) et le dossier de repli `%SystemRoot%\Temp\<identifiant>` (fichiers natifs en clair, [[assets.rs]]) ; charge `history.json` et `applied.json` (chiffrés) ; `repair::at_startup` ([[Réparations au lancement]]) ; bibliothèque de jeux ; `Background` (argument `--background` = lancé avec Windows, fenêtre cachée) ; `Session` ; `Boost` (Mode jeu total de [[Rago OS]]).
-5. **Fil de fond toutes les 4 s** : liste les processus, détecte les jeux (bibliothèque + `javaw.exe` Minecraft), émet `games:running` et `games:session`, applique ce que l'app fait pendant la partie ([[Pendant la partie]]), rend le Mode jeu total après ~20 s sans jeu.
+4. `setup` : vide `run\` (scripts temporaires) et le dossier de repli `%SystemRoot%\Temp\<identifiant>` (fichiers natifs en clair, [[assets.rs]]) ; charge `history.json` et `applied.json` (chiffrés) ; `repair::at_startup` ([[Réparations au lancement]]) ; bibliothèque de jeux ; `Background` (argument `--background` = lancé avec Windows, fenêtre cachée) ; `Session` ; `Display` (couleurs et résolution par jeu : remet d'abord ce qu'un plantage a laissé, puis lance le fil qui regarde le jeu au premier plan toutes les 250 ms tant qu'un jeu à couleurs tourne) ; `Boost` (Mode jeu total de [[Rago OS]]).
+5. **Fil de fond toutes les 4 s** : liste les processus, détecte les jeux (bibliothèque + `javaw.exe` Minecraft), émet `games:running` et `games:session`, applique ce que l'app fait pendant la partie ([[Pendant la partie]]), pose et rend la résolution des jeux ([[Couleurs et résolution]], `display:state`), rend le Mode jeu total après ~20 s sans jeu.
 6. Icône près de l'horloge et tâche planifiée de démarrage ([[Arrière-plan et démarrage]]) ; fenêtre de la barre en jeu (`overlay.html`) surveillée.
 7. `update::watch` : cherche une mise à jour au lancement puis toutes les 4 h, 30 min après un échec ; le fil s'arrête une fois une mise à jour téléchargée ([[Mise à jour automatique]], [[update.rs]]).
 8. État partagé `AppState` (runner, history, ledger, license, account, reset, system, stats, library, updates, dossiers).
 9. `reset_after_license` : reprend une [[Remise à zéro]] interrompue ou due à une fin de licence.
 10. `bridge::serve` : ouvre le canal nommé pour [[Rago OS]].
-11. À la sortie (`RunEvent::Exit`) : `flows::shutdown()` (session ETW) et `route::turn_off()` (Rago Route).
+11. À la sortie (`RunEvent::Exit`) : `flows::shutdown()` (session ETW), `route::turn_off()` (Rago Route) et `display.shutdown()` (couleurs et résolution d'un jeu en cours rendues).
 
 Fermeture de la fenêtre principale : cachée si une remise est en cours ou si le mode arrière-plan est actif ; sinon une mise à jour prête s'installe ; `Destroyed` quitte l'app. La barre en jeu n'est jamais fermée, seulement cachée.
 
 ## 3. Modules Rust (`app/src-tauri/src/`)
 | Domaine | Fichiers | Notes du vault |
 |---|---|---|
-| Commandes et démarrage | `lib.rs` (≈1 550 lignes : toutes les `#[tauri::command]`, `bridge_handler`), `main.rs` | [[lib.rs]], [[main.rs]] |
+| Commandes et démarrage | `lib.rs` (≈1 630 lignes : toutes les `#[tauri::command]`, `bridge_handler`), `main.rs` | [[lib.rs]], [[main.rs]] |
 | Réglages | `catalog.rs` (scripts embarqués, plan gratuit, `over_free_slots`), `runner.rs` (un lot à la fois, `.cmd` dans `run\`, journal `logs\run-<ms>.log`), `backup.rs` (`applied.json`, état d'avant), `history.rs`, `seal.rs` (chiffrement), `assets.rs` (plan d'alimentation `LowLatency.pow`, profil NVIDIA `.nip`, chiffrés dans l'exe), `reg.rs`, `shell.rs` | [[Moteur des tweaks]], [[Catalogue des tweaks]] |
 | Remise et réparations | `reset.rs`, `repair.rs`, `instance.rs` | [[Remise à zéro]], [[Réparations au lancement]] |
 | Licence et compte | `license.rs` (contrat `/api/v1`, jeton EdDSA vérifié hors ligne, empreinte PC, lien navigateur Google/Discord, jeton Rago Route), `account.rs` (avis, photo, nom, abonnement) | [[Licence dans l'app]], [[Abonnement dans l'app]] |
 | PC et outils | `system.rs`, `stats.rs`, `memory.rs`, `analysis.rs` (1.3.0), `tools.rs`, `minecraft.rs` (OptiFine), `rbw.rs` | [[Analyse du PC]], [[Page Outils]], [[RBW Mod]] |
 | En jeu | `overlay.rs`, `fps.rs` (PresentMon), `gameping.rs`, `mcping.rs`, `flows.rs` (ETW, ping des jeux UDP), `session.rs`, `background.rs` | [[Barre en jeu]], [[Pendant la partie]], [[Arrière-plan et démarrage]] |
 | Jeux | `games.rs` (launchers Steam, Epic, Riot, Battle.net, Ubisoft, Xbox, Roblox, launchers Minecraft), `icon.rs` | [[Bibliothèque de jeux]] |
+| Couleurs et résolution | `display.rs` (saturation NVIDIA par NVAPI et AMD par ADL, rampe gamma, résolution temporaire de l'écran principal, fichiers de réglages de Valorant, Fortnite et CS2 ; `display.json`, `display-restore.json`) | [[Couleurs et résolution]] |
+| Jeux | `games.rs` (launchers Steam, Epic, Riot, Battle.net, Ubisoft, Xbox, Roblox, launchers Minecraft), `icon.rs`, `gamecfg.rs` (graphismes des jeux) | [[Bibliothèque de jeux]], [[Graphismes des jeux]] |
 | Réseau | `netopt.rs` + `src-tauri/netopt/*.ps1` (moteur PowerShell chiffré), `nettest.rs`, `icmp.rs`, `netshare.rs`, `route.rs` (Rago Route, ≈2 230 lignes) | [[Packet Optimizer]], [[Test réseau]], [[Infrastructure Rago Route]] |
 | Support | `report.rs` (rapport anonymisé dans `reports\`) | [[Partage et support]] |
 | Mise à jour | `update.rs` | [[Mise à jour automatique]] |
 | Rago OS | `bridge.rs` (canal nommé), `boost.rs` (Mode jeu total : services Windows arrêtés le temps d'une partie, notés dans `boost.json`) | [[Rago OS]] |
 
-### Commandes exposées à l'interface (`generate_handler!`, 76 au 10/11)
-- Système et outils : `get_system_info`, `rbw_status`, `tools_scan`, `tools_clean`, `tools_apps`, `tools_remove_apps`, `tools_drivers`, `tools_windows_update`, `live_stats`, `clean_ram`, `open_task_manager`, `restart_pc`, `open_folder`, `analysis_facts`.
+### Commandes exposées à l'interface (`generate_handler!`, 92 sur `staging` au 11/11)
+- Système et outils : `get_system_info`, `rbw_status`, `tools_scan`, `tools_clean`, `tools_apps`, `tools_remove_apps`, `tools_drivers`, `tools_windows_update`, `tools_startup`, `tools_set_startup`, `tools_power_plans`, `tools_set_power_plan`, `tools_flush_dns`, `tools_open` ([[Page Outils]]), `live_stats`, `clean_ram`, `open_task_manager`, `restart_pc`, `open_folder`, `analysis_facts`.
 - Réglages : `run_tweaks`, `cancel_run`, `is_running`, `get_history`, `clear_history`, `get_applied`, `undo_all_plan`, `sign_out_plan`, `take_repair_notice`, `minecraft_status`, `minecraft_restore`, `save_preset_file`, `read_preset_file`.
+- Graphismes des jeux ([[gamecfg.rs]]) : `graphics_status`, `graphics_apply`, `graphics_restore`.
 - Réseau : `net_test`, `netopt_state`, `netopt_run`, `route_start`, `route_stop`, `route_status`, `route_token`, `route_links` (2e connexions possibles et diagnostic du partage de connexion du téléphone).
 - Jeux : `games_list`, `game_art`, `game_launch`, `game_add`, `game_remove`, `games_unhide`, `launchers_list`, `launcher_launch`, `launcher_icon`, `preset_icons`.
-- Barre en jeu et arrière-plan : `overlay_info`, `overlay_live`, `overlay_close`, `overlay_set_pin`, `overlay_open_app`, `background_get`, `background_set`, `session_state`, `session_set_prefs`.
+- Couleurs et résolution : `display_info`, `display_profiles`, `display_state`, `display_set_profile` (refus `premium:no_license` pour l'import d'un pro sans Premium), `display_preview`.
+- Barre en jeu et arrière-plan : `overlay_info`, `overlay_live`, `overlay_close`, `overlay_set_pin`, `overlay_open_app`, `background_get`, `background_set`, `session_state`, `session_set_prefs`, `tips_done`, `tips_mark` (réglages conseillés cochés, [[tips.rs]]).
 - Mise à jour : `update_ready`, `update_status`, `update_install`.
 - Licence et compte : `license_status`, `license_login`, `license_link_start`, `license_link_poll`, `license_activate`, `license_refresh`, `license_sign_out`, `account_me`, `account_login`, `account_sign_out`, `account_save_review`, `account_delete_review`, `account_set_name`, `account_set_photo`, `account_remove_photo`, `account_subscription`, `plans_info`.
 - Support : `support_report`, `show_report`.
 
 ### Événements émis vers l'interface
-`run:item`, `run:log`, `run:done` (lot de réglages, [[runner.rs]]), `reset:done`, `netopt:line`, `nettest:sample`, `nettest:measure`, `games:running`, `games:session`, `app:goto` (page à ouvrir, demandée par Rago OS ou la barre en jeu) ([[lib.rs]]), `update:ready` ([[update.rs]]), `overlay:mode` (vers la fenêtre de la barre en jeu, [[overlay.rs]]).
+`run:item`, `run:log`, `run:done` (lot de réglages, [[runner.rs]]), `reset:done`, `netopt:line`, `nettest:sample`, `nettest:measure`, `games:running`, `games:session`, `display:state` (couleurs et résolution posées, dernière erreur), `tips:done` (réglages conseillés cochés), `app:goto` (page à ouvrir, demandée par Rago OS ou la barre en jeu) ([[lib.rs]]), `update:ready` ([[update.rs]]), `overlay:mode` et `overlay:nudge` (rappel des conseils dans la pastille), vers la fenêtre de la barre en jeu ([[overlay.rs]]).
 
 ## 4. Interface React (`app/src/`)
 - `main.tsx` → `App.tsx` : barre de titre maison (`decorations: false`), `Sidebar`, page courante, `ApplyBar` (barre « Apply » des changements en attente), `RunOverlay` (suivi d'un lot), fenêtres `Upsell`, `ReviewPrompt`, `ReviewDialog`, `ConfirmDialog`, `SearchPalette`, `ResetToast`, `Splash`.
-- **Pas de routeur** : la page courante est un état du store (`page`). Pages : `dashboard`, `analysis`, modules du catalogue (`network`, `latency`, `gpu`, `windows`, `hitreg`, `minecraft`, `rbw`, `gamemode`, `expert`, `restore`) rendus par `ModulePage`, onglets réseau (`Network` : optimisations, `NetOpt`, `NetTest`, `RouteTab` dans tous les exe depuis la [[Version 1.3.0]], seul son bouton « Copier un jeton pour le Mac » reste réservé à l'exe de test), `tools`, `games`, `share`, `settings`.
-- Barre latérale (`components/Sidebar.tsx`) : groupe sans titre (Tableau de bord, Analyse), « Optimiser » (network, latency, gpu, windows, tools), « En jeu » (hitreg, minecraft, rbw, gamemode, games), « Avancé » (expert, restore), puis Paramètres.
+- **Pas de routeur** : la page courante est un état du store (`page`). Pages : `dashboard`, `analysis`, modules du catalogue (`network`, `latency`, `gpu`, `windows`, `hitreg`, `minecraft`, `rbw`, `gamemode`, `expert`, `restore`) rendus par `ModulePage`, onglets réseau (`Network` : optimisations, `NetOpt`, `NetTest`, `RouteTab` dans tous les exe depuis la [[Version 1.3.0]], seul son bouton « Copier un jeton pour le Mac » reste réservé à l'exe de test), `tools`, `games`, `display` (couleurs et résolution par jeu), `share`, `settings`.
+- Barre latérale (`components/Sidebar.tsx`) : groupe sans titre (Tableau de bord, Analyse), « Optimiser » (network, latency, gpu, windows, tools), « En jeu » (hitreg, minecraft, rbw, gamemode, games, display), « Avancé » (expert, restore), puis Paramètres.
 - **Store** (`lib/store.tsx`, contexte React) : réglages choisis, appliqués, licence, langue, upsell, page. Constantes du plan gratuit lues dans `data/free.json` (`FREE`, `FREE_SLOTS` = 30, `FREE_REVERTS`).
 - Catalogue : `lib/catalog.ts` lit `data/catalog.json` (modules → sections → tweaks → variantes, presets, retirés).
 - Textes : `lib/i18n.ts` (≈2 100 lignes, clés EN et FR ; anglais par défaut, tutoiement en français).
@@ -80,7 +86,7 @@ Fermeture de la fenêtre principale : cachée si une remise est en cours ou si l
 
 ## 6. Fichiers sur le PC du joueur
 - `%LOCALAPPDATA%\Rago\` : `license.bin` (jeton), `scripts.bin` (clé des scripts Premium), `account.bin` (jeton de compte), tous chiffrés DPAPI.
-- `%APPDATA%\gg.rago.optimizer\` (staging : `gg.rago.optimizer.staging`) : `applied.json` et `history.json` (chiffrés), `background.json`, `boost.json`, `session.json`, `reset-pending.json`, `games.json`, `overlay-games.json`, `last-match.json`, `netopt\` (dernière application du [[Packet Optimizer]]), `backup\*.reg`, `logs\` (`run-<ms>.log` des lots, `reset-<ms>.log`, `repairs.log` : à demander au joueur), `run\` (scripts temporaires, vidé), `art\` (images des jeux), `reports\`. Liste complète avec le module qui écrit chaque fichier : [[Code de l'app (Rust)]].
+- `%APPDATA%\gg.rago.optimizer\` (staging : `gg.rago.optimizer.staging`) : `applied.json` et `history.json` (chiffrés), `background.json`, `boost.json`, `session.json`, `tips-done.json`, `display.json`, `display-restore.json`, `reset-pending.json`, `games.json`, `overlay-games.json`, `last-match.json`, `netopt\` (dernière application du [[Packet Optimizer]]), `backup\*.reg`, `logs\` (`run-<ms>.log` des lots, `reset-<ms>.log`, `repairs.log` : à demander au joueur), `run\` (scripts temporaires, vidé), `art\` (images des jeux), `reports\`. Liste complète avec le module qui écrit chaque fichier : [[Code de l'app (Rust)]].
 - Installé : `Program Files\Rago Optimizer\` avec `resources\` (`nvidiaProfileInspector.exe`, `PresentMon.exe` ajouté par la CI).
 
 ## 7. Sécurité et garde-fous
@@ -97,4 +103,5 @@ Fermeture de la fenêtre principale : cachée si une remise est en cours ou si l
 - Démarrage et commandes : [[main.rs]], [[lib.rs]], [[instance.rs]] ; arrière-plan : [[background.rs]], [[icon.rs]] ; mise à jour : [[update.rs]].
 - Réglages : [[catalog.rs]], [[runner.rs]], [[backup.rs]], [[history.rs]], [[reset.rs]], [[repair.rs]], [[seal.rs]], [[assets.rs]], [[shell.rs]], [[reg.rs]] ; données : [[Scripts embarqués (JSON)]].
 - Licence et compte : [[license.rs]], [[account.rs]] ; PC : [[system.rs]], [[stats.rs]], [[memory.rs]], [[analysis.rs]], [[tools.rs]].
+- Couleurs et résolution par jeu : [[display.rs]], [[Display.tsx]], [[pros.json]].
 - Compilation et configuration : [[build.rs]], [[embed_scripts.rs]], [[Cargo.toml]], [[Configuration Tauri]], [[Installateur NSIS]].

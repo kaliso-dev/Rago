@@ -1,7 +1,7 @@
 ---
 type: carte
 tags: [technique, reprise, index]
-maj: 2026-11-10
+maj: 2026-11-11
 ---
 # Reprendre le développement
 
@@ -45,6 +45,7 @@ Vue d'ensemble et flux entre les briques : [[Architecture]]. Paiement : [[Paieme
 | Bot Discord | [[Bot communauté Discord]], [[Architecture du serveur]] | `licensing/src/discord.js` (rôle Pro, récompenses), `community.js` + `gateway.js` (bot communauté) | `npm test` (`community.test.js`) |
 | Rago Route | [[Infrastructure Rago Route]], [[Proxy]] | `proxy/rago-route.py`, `proxy/fabriquer-install.py`, `app/src-tauri/src/route.rs`, `app/src/pages/RouteTab.tsx` | `cargo test`, tests en labo décrits dans [[Proxy]] |
 | Pont avec Rago OS | [[Rago OS]], [[Architecture de l'app]] | `app/src-tauri/src/bridge.rs`, `bridge_handler` dans `lib.rs`, `boost.rs` | `cargo test` (`bridge_tests`) |
+| Couleurs et résolution par jeu, réglages des pros (11/11, dans `staging`) | [[Couleurs et résolution]], [[display.rs]], [[Display.tsx]] | `app/src-tauri/src/display.rs`, `app/src/pages/Display.tsx`, `app/src/data/pros.json` (relevé à revérifier avant chaque sortie, [[pros.json]]) | `cargo test` (11 tests `display::`), `npm run window` (`?amd`, `?intel`) ; les pilotes et l'écran ne se vérifient que sur un vrai Windows |
 | Support d'un joueur | [[Problèmes joueurs]], [[Serveur de licences]] | `npm run admin -- show <email>` (depuis `licensing/`, avec le `DATABASE_URL` de prod que seul Sofiene a) | — |
 
 ## 4. Les pièges qui ont déjà coûté cher

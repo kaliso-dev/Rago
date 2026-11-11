@@ -1,11 +1,11 @@
 ---
 type: historique
 tags: [historique]
-maj: 2026-11-10
+maj: 2026-11-11
 ---
 # Pull requests
 
-Liste de **toutes les pull requests** du dépôt `kaliso-dev/rago`, de la #1 (08/10) à la #87 (10/11). Source : l'API GitHub, lue le 10/11 vers 16:30 UTC puis vers 18:49 pour les #84 à #87, et les fils du projet Claude ([[Fils du projet]]). Statut : CONFIRMÉ (API GitHub et fils), sauf mention contraire. Voir aussi [[Chronologie du projet]], [[Branches et environnements]], [[Historique des versions]] et [[CI GitHub Actions]].
+Liste de **toutes les pull requests** du dépôt `kaliso-dev/rago`, de la #1 (08/10) à la #91 (11/11). Source : l'API GitHub, lue le 10/11 vers 16:30 UTC puis vers 18:49 pour les #84 à #87, et le 11/11 vers 00:50 pour les #88 à #91, et les fils du projet Claude ([[Fils du projet]]). Statut : CONFIRMÉ (API GitHub et fils), sauf mention contraire. Voir aussi [[Chronologie du projet]], [[Branches et environnements]], [[Historique des versions]] et [[CI GitHub Actions]].
 
 ## Comment lire ce tableau
 - **Heures en UTC**, comme GitHub. Paris avait 2 heures d'avance jusqu'au 24/10, puis 1 heure à partir du 25/10.
@@ -13,9 +13,9 @@ Liste de **toutes les pull requests** du dépôt `kaliso-dev/rago`, de la #1 (08
 - Une PR « fusionnée » l'a été sur un mot de Sofiene (« fusionne », « push », « vsy push »…), jamais d'office ([[Décisions]]).
 - **Fil d'origine** : le fil du projet Claude qui a ouvert la PR. Les PR #1 à #51 viennent d'un projet Claude plus ancien, d'avant le 15/10 : ses fils ne sont pas consultables depuis le projet actuel. Le passage d'un projet à l'autre est raconté dans [[Synthèse de reprise du 15-10]].
 
-## Chiffres au 10/11
-- **87 PR** : 74 fusionnées, 11 fermées sans fusion, 2 ouvertes (#71 et #86).
-- Cible : 47 vers la prod, 39 vers `staging`, 1 vers une autre branche (#60, vers la branche de la refonte 1.2.0).
+## Chiffres au 11/11 (00:50 UTC)
+- **91 PR** : 75 fusionnées, 11 fermées sans fusion, 5 ouvertes (#71, #86, #89, #90 et #91).
+- Cible : 47 vers la prod, 43 vers `staging`, 1 vers une autre branche (#60, vers la branche de la refonte 1.2.0).
 - Fermées sans fusion : #16, #21, #24, #26, #28, #46, #47, #50, #51, #60, #69. Les branches de ces PR sont gardées (décision du 01/11, [[Branches et environnements]]).
 - Jusqu'au 12/10, une PR vers `staging` était souvent suivie d'une PR « port en prod » qui reprenait le même travail (#25 → #27, #29 → #30, #31 + #32 → #33, #34 à #37 → #38, #39 + #41 + #42 → #43, #44 → #45). Depuis la 1.2, la prod n'a plus reçu que des PR ciblées (#59, #61, #63, #66 à #68, #72, #81, #87) : le 10/11, `staging` avait environ 160 commits de plus que la prod, et **le code de l'app sur la branche de prod était encore la 1.1.14** (les exe sont construits depuis `staging`).
 
@@ -107,8 +107,15 @@ Liste de **toutes les pull requests** du dépôt `kaliso-dev/rago`, de la #1 (08
 | 83 | Admin : plus de trous dans la mise en page, Stripe seulement dans Services | `claude/project-thread-49sqc3` → `staging` | 10/11 15:58 | 10/11 16:06 | fusionnée | Admin sans trous dans la mise en page ; contrôles Stripe seulement dans Services ; éditeur de la pop-up avec aperçu. | [[Fil - Créer le tableau de bord admin complet\|Créer le tableau de bord admin complet]] |
 | 84 | Admin : les ventes dans une seule devise (les $US convertis par Stripe comptent en €) | `claude/project-thread-49sqc3` → `staging` | 10/11 16:25 | 10/11 18:40 | fusionnée | Ventes de l'admin dans une seule devise : les paiements en $US convertis par Stripe comptent pour leur montant en €. | [[Fil - Créer le tableau de bord admin complet\|Créer le tableau de bord admin complet]] |
 | 85 | Cerveau du vault dans l'admin (/admin/cerveau) + vault détaillé fichier par fichier | `claude/project-thread-jyh9u0` → `staging` | 10/11 17:07 | 10/11 17:16 | fusionnée | Le vault en graphe animé dans l'admin, lecteur de chaque fichier du dépôt ; une fiche par fichier de code et l'histoire du projet dans le vault. | Créer le cerveau visuel du vault |
-| 86 | Profil hitreg : « Best hitreg » par défaut (débit Steam bridé à 15 Mbit/s) | `claude/project-thread-0ij01e` → `staging` | 10/11 17:51 |  | **ouverte** | Réglage hitreg : « Best hitreg » devient la variante par défaut (« Better hitreg » bridait le débit à 15 Mbit/s chez un joueur). | Régler les problèmes des clients |
+| 86 | Profil hitreg : « Best hitreg » par défaut (débit Steam bridé à 15 Mbit/s) | `claude/project-thread-0ij01e` → `staging` | 10/11 17:51 | 11/11 | fusionnée (par la #92) | Réglage hitreg : « Best hitreg » devient la variante par défaut (« Better hitreg » bridait le débit à 15 Mbit/s chez un joueur). | Régler les problèmes des clients |
 | 87 | (prod) Le nouveau tableau de bord /admin et le Cerveau du vault | `claude/project-thread-49sqc3-prod` → prod | 10/11 18:44 | 10/11 18:49 | fusionnée | Port en prod de l'admin (#77, #82, #83, #84) et du Cerveau (#85), sans la 1.3.0. | [[Fil - Créer le tableau de bord admin complet\|Créer le tableau de bord admin complet]] |
+| 88 | Vault : le tableau de bord admin et le Cerveau sont en prod (PR #87) | `claude/project-thread-49sqc3` → `staging` | 10/11 18:55 | 10/11 18:55 | fusionnée | Vault seulement : admin et Cerveau notés en prod après la #87. | [[Fil - Créer le tableau de bord admin complet\|Créer le tableau de bord admin complet]] |
+| 89 | Pendant la partie : le jeu passe en priorité haute le temps de jouer | `claude/project-thread-k6pmox` → `staging` | 11/11 00:24 | 11/11 | fusionnée (par la #92) | Point 5 de la demande de Sofiene du 11/11 : chaque jeu en cours passe en priorité haute (option de Pendant la partie, gratuite). | Mettre le jeu en priorité maximale |
+| 90 | Page Outils : tous les outils de l'app réunis, et de nouveaux outils du quotidien | `claude/project-thread-u6htp7` → `staging` | 11/11 00:36 | 11/11 | fusionnée (par la #92) | Point 6 de la demande de Sofiene du 11/11 : les actions « Lancer » des onglets réunies dans la page Outils, et de nouveaux outils (applis au démarrage, cache DNS, mode d'alimentation, cache des launchers, réglages Windows). | Centraliser et enrichir la page Tools |
+| 91 | App : conseils au lancement du jeu (réglages des pros, applis gourmandes, écran) | `claude/project-thread-g3od2h` → `staging` | 11/11 00:42 | 11/11 | fusionnée (par la #92) | Point 4 de la demande de Sofiene du 11/11 : conseils au lancement du jeu. | Ajouter les conseils au lancement du jeu |
+| 92 | Staging : les 6 features à tester ensemble (hitreg, presets par jeu, Outils, saturation, conseils, priorité) | `claude/project-thread-0z6ufn` → `staging` | 11/11 08:18 | 11/11 | fusionnée | Branche d'intégration de la version test : réunit #86, #89, #90, #91, #93 et #94, conflits résolus, sur « Push toutes les modification vers stagging pour que je puisse test la version test » de Sofiene |
+| 93 | Couleurs et résolution par jeu, réglages des pros | `claude/project-thread-7n0ikn` → `staging` | 11/11 08:20 | 11/11 | fusionnée (par la #92) | [[Couleurs et résolution]] (points 1 et 2 de la demande du 11/11) |
+| 94 | Graphismes des jeux (Performance, Équilibré, Qualité) | `claude/project-thread-5ln7f8` → `staging` | 11/11 08:21 | 11/11 | fusionnée (par la #92) | [[Graphismes des jeux]] (point 3 de la demande du 11/11) |
 
 ## Ce qui est arrivé sur `staging` sans PR
 Certains fils ont poussé leurs commits directement sur `staging`, après un accord de Sofiene dans le fil (CONFIRMÉ par `git branch -r --contains`) :

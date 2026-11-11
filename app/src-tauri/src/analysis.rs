@@ -83,10 +83,16 @@ pub fn facts() -> Facts {
     let mut f = read();
     f.processes = (!procs.is_empty()).then_some(procs.len() as u32);
     f.background = crate::session::checks(&procs, false);
-    let (cur, max) = win::refresh();
+    let (cur, max) = refresh();
     f.refresh = cur;
     f.refresh_max = max;
     f
+}
+
+/// Fréquence actuelle de l'écran principal et la plus haute qu'il accepte à cette définition (aussi lue pendant une
+/// partie, tips.rs).
+pub fn refresh() -> (Option<u32>, Option<u32>) {
+    win::refresh()
 }
 
 #[cfg(windows)]

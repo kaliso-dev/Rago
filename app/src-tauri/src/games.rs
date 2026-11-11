@@ -412,7 +412,7 @@ fn expand_vars(s: &str, var: impl Fn(&str) -> Option<String>) -> String {
 /// comptes du PC. Rago tourne en administrateur : élevé avec un autre compte que celui du joueur, son %LOCALAPPDATA%
 /// n'est pas celui où Lunar Client, Feather ou Prism se sont installés.
 #[cfg(windows)]
-fn local_dirs() -> Vec<PathBuf> {
+pub(crate) fn local_dirs() -> Vec<PathBuf> {
     let mut out: Vec<PathBuf> = env_path("LOCALAPPDATA").into_iter().collect();
     let list = "HKLM\\SOFTWARE\\Microsoft\\Windows NT\\CurrentVersion\\ProfileList";
     for sid in reg::subkeys(list).into_iter().filter(|s| user_sid(s)) {
@@ -1386,6 +1386,13 @@ impl Library {
             .collect()
     }
 
+    /// Jeux lancés (d'après le dernier `poll`) et leur dossier (minuscules, terminé par \\) : display.rs y reconnaît le
+    /// jeu au premier plan.
+    pub fn running_dirs(&self) -> Vec<(String, String)> {
+        let running = self.running.lock().unwrap().clone();
+        self.dirs(true).into_iter().filter(|(id, _)| running.contains(id)).collect()
+    }
+
     /// Un jeu de la bibliothèque est lancé (d'après le dernier `poll`).
     pub fn playing(&self) -> bool {
         !self.running.lock().unwrap().is_empty()
@@ -1421,6 +1428,18 @@ const PRESET_EXES: &[(&str, &[&str])] = &[
     ("lol", &["leagueclient.exe", "league of legends.exe"]),
     ("bedrock", &["minecraft.windows.exe"]),
 ];
+
+/// Clé du jeu des presets (variante de pri_game) d'après le nom de son exe en minuscules : « valorant.exe » →
+/// « valorant ». Sert aux conseils au lancement du jeu (tips.rs).
+pub fn preset_key(file: &str) -> Option<&'static str> {
+    PRESET_EXES.iter().find(|(_, names)| names.contains(&file)).map(|(k, _)| *k)
+}
+
+/// Toutes les clés de jeu connues par leur exe.
+#[cfg(test)]
+pub fn preset_keys() -> Vec<&'static str> {
+    PRESET_EXES.iter().map(|(k, _)| *k).collect()
+}
 
 /// Exe de chaque jeu de `keys` parmi les jeux de la bibliothèque : l'exe qui le lance, sinon dans son dossier.
 fn preset_exes(games: &[Game], keys: &[&str]) -> Vec<(&'static str, PathBuf)> {

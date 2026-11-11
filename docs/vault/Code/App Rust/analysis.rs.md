@@ -2,8 +2,8 @@
 type: code
 tags: [code, app, rust, windows]
 fichier: app/src-tauri/src/analysis.rs
-lignes: 163
-maj: 2026-11-10
+lignes: 169
+maj: 2026-11-11
 ---
 # analysis.rs
 
@@ -15,6 +15,7 @@ Tout est CONFIRMÉ (code de `staging`, 10/11). Créé le 04/11.
 - Appelé par la commande `analysis_facts` de [[lib.rs]] (dans `spawn_blocking`), qui ajoute au résultat le champ `lastMatch` (dernière partie suivie par la [[Barre en jeu]], [[overlay.rs]]).
 - L'interface (`app/src/pages/Analysis.tsx`) ajoute elle-même le test réseau ([[nettest.rs]]), la charge du processeur ([[stats.rs]]) et l'âge du pilote graphique ([[tools.rs]]), puis compare chaque valeur à sa norme et dit ce qui la règle : le plan gratuit, Premium, ou le joueur.
 - Emprunte à [[session.rs]] : `Check`, `checks(procs, false)` (logiciels en fond, mêmes listes que pendant une partie) et `parse_scheme` ; à [[games.rs]] : `process_paths()`.
+- **PR #91** (11/11) : `refresh()` devient publique (fréquence actuelle et la plus haute de l'écran), pour que [[tips.rs]] la relise pendant une partie ([[Conseils au lancement du jeu]]) ; et `checks` y ajoute Medal et Wallpaper Engine, qui apparaissent donc aussi dans « Applis en arrière-plan » de l'[[Analyse du PC]].
 
 ## Ce que le fichier expose
 `struct Facts` (JSON camelCase) et `facts() -> Facts`.

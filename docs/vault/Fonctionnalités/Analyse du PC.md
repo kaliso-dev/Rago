@@ -2,7 +2,7 @@
 type: fonctionnalité
 tags: [fonctionnalité, app, gratuit, 1.3]
 version_app: 1.3.0
-maj: 2026-11-10
+maj: 2026-11-11
 ---
 # Analyse du PC
 
@@ -16,7 +16,7 @@ Page « Analyze my PC » ajoutée en 1.3.0 (PR #70, pas sortie), demandée par S
   - **pics de ping** : 1, ou 2 à partir de 100 ms de ping ;
   - **avec au moins 2 analyses passées sur ce PC**, le seuil monte jusqu'à l'habitude du joueur : 1,5 fois sa gigue habituelle (médiane), sa perte habituelle + 0,5 %, ses pics habituels + 1. Jamais plus bas que les seuils d'un joueur proche des serveurs. Les 10 dernières mesures réseau sont gardées sur le PC (`rago.analysis`, champ `history`), même après « Start over ».
   - La norme affichée dit d'où vient le seuil : « (from your analyses: 4 ms usually) » ou « (at 130 ms ping) ».
-- Autres points et seuils (« au-dessus de la normale ») : Wi-Fi au lieu du câble (réseau ; le ping est affiché sans seuil) ; écran pas à sa fréquence la plus haute, 1 % low sous la moitié des FPS moyens, 2 saccades par minute ou plus (FPS ; les FPS moyens sont affichés sans seuil) ; processeur au repos au-dessus de 5 %, plus de 160 processus, mémoire sous la vitesse prévue par les barrettes (système) ; Game DVR actif, mode d'alimentation Équilibré, notifications actives, téléchargements ou synchronisation en arrière-plan, pilote graphique de plus de 180 jours (Windows).
+- Autres points et seuils (« au-dessus de la normale ») : Wi-Fi au lieu du câble (réseau ; le ping est affiché sans seuil) ; écran pas à sa fréquence la plus haute, 1 % low sous la moitié des FPS moyens, 2 saccades par minute ou plus (FPS ; les FPS moyens sont affichés sans seuil) ; processeur au repos au-dessus de 5 %, plus de 160 processus, mémoire sous la vitesse prévue par les barrettes (système) ; Game DVR actif, mode d'alimentation Équilibré, notifications actives, applis en arrière-plan (« Applis en arrière-plan » : téléchargement, synchronisation et enregistrement, les mêmes listes que [[Pendant la partie]] ; la PR #91, y ajoute Medal et Wallpaper Engine), pilote graphique de plus de 180 jours (Windows).
 - Bouton « Apply the N free tweaks » : les tweaks gratuits qui règlent un point trouvé et ne sont pas encore appliqués (au plus 4 : `win_background`, `win_services`, `win_gamedvr`, `win_notifications`). La page ne compte pas les places du plan gratuit : si le joueur a déjà presque 30 réglages allumés, c'est le moteur qui refuse le lot (erreur `free_slots`). En gratuit, « See what Premium adds » ouvre la fenêtre Premium avec la liste des points que Premium règle ; en Premium, le bouton est « Open Latency » (page Latence), même quand le point vient du [[Packet Optimizer]].
 - **Avant/après** : la première mesure sert de référence. Après une application de tweaks, la page le dit et refait la mesure à l'ouverture, puis montre un tableau avant → après des valeurs qui ont bougé. Les FPS se comparent après la partie suivante. Après une application, la fenêtre de fin propose « Measure the difference ». Le lien « Start over » efface la référence.
 - Les mesures restent sur le PC (`localStorage` `rago.analysis`, dernière partie dans `last-match.json` du dossier de l'app). **Seule exception** : l'étape réseau passe par le même test que le [[Test réseau]] (commande `net_test`), dont les résultats partent au serveur de Rago avec la ville et le fournisseur d'accès, jamais l'adresse IP (`netshare.rs`). La page le dit pendant la mesure : « The network test also sends its numbers to Rago's server, like the usual network test. »

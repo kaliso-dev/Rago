@@ -3,6 +3,7 @@
 import { invoke } from "@tauri-apps/api/core";
 import { listen, type UnlistenFn } from "@tauri-apps/api/event";
 import { tweaks } from "./catalog";
+import tipsData from "../data/tips.json";
 import type { NetAction, NetLine, NetOptions, NetOutcome, NetState } from "./netopt";
 
 export interface Gpu {
@@ -226,6 +227,8 @@ export interface BackgroundPrefs {
   gameGpu: boolean;
   gamePower: boolean;
   gameChecks: boolean;
+  /** processus du jeu en priorité haute le temps de jouer */
+  gamePriority: boolean;
 }
 export interface BackgroundState {
   prefs: BackgroundPrefs;
@@ -238,14 +241,66 @@ export interface BackgroundState {
 }
 /** Pendant une partie (session.rs). */
 export interface SessionCheck {
-  id: "battery" | "download" | "sync" | "record";
-  /** applis concernées */
+  /** processus lancés : battery, download, sync, record, wallpaper ; Windows : refresh, gamedvr ; applis gourmandes : cpu, ram */
+  id: "battery" | "download" | "sync" | "record" | "wallpaper" | "refresh" | "gamedvr" | "cpu" | "ram";
+  /** applis concernées ; pour "refresh" : la fréquence actuelle puis la plus haute (Hz) */
   apps: string[];
 }
+/** Couleurs d'un jeu (display.rs) : posées seulement quand le jeu est au premier plan. */
+export interface DisplayColors {
+  /** Digital Vibrance façon panneau NVIDIA : 50 (Windows) à 100 %. AMD : saturation 100 à 200. */
+  vibrance: number;
+  /** -30 à 30, 0 = Windows */
+  brightness: number;
+  /** -30 à 30, 0 = Windows */
+  contrast: number;
+  /** gamma × 100 : 70 à 150, 100 = Windows */
+  gamma: number;
+}
+/** Résolution d'un jeu : posée sur l'écran principal le temps de la partie. */
+export interface DisplayResolution {
+  width: number;
+  height: number;
+  /** étirée sur tout l'écran (sinon bandes noires) */
+  stretch: boolean;
+  /** aussi écrite dans le fichier de réglages du jeu (Valorant, Fortnite, CS2) */
+  gameFile: boolean;
+}
+export interface DisplayProfile {
+  colors: DisplayColors | null;
+  resolution: DisplayResolution | null;
+  /** preset de pro importé (id de data/pros.json) ; Premium */
+  pro: string | null;
+}
+export interface DisplayMonitor {
+  device: string;
+  name: string;
+  width: number;
+  height: number;
+  hz: number;
+  /** résolutions que l'écran accepte, de la plus grande à la plus petite */
+  modes: [number, number][];
+}
+export interface DisplayInfo {
+  /** qui fait la saturation sur l'écran principal ; null : pas de saturation (luminosité, contraste, gamma restent) */
+  vibrance: "nvidia" | "amd" | null;
+  monitor: DisplayMonitor | null;
+}
+export interface DisplayState {
+  /** jeu dont les couleurs sont posées en ce moment (« preview » pendant un aperçu) */
+  colors: string | null;
+  /** jeu dont la résolution est posée */
+  resolution: string | null;
+  /** "vibrance", "ramp", "mode", "file:read_only", "file:missing", "file:write" */
+  error: string | null;
+}
+
 export interface SessionState {
   playing: boolean;
   /** mode Performances élevées mis pour la partie */
   power: boolean;
+  /** processus du jeu passés en priorité haute pour la partie en cours */
+  priority: number;
   /** jeux qui ont reçu la carte graphique performante */
   gpuGames: number;
   checks: SessionCheck[];
@@ -253,6 +308,10 @@ export interface SessionState {
   multiGpu: boolean | null;
   /** Ryzen X3D à deux CCD : le mode d'alimentation n'est jamais changé */
   x3d: boolean;
+  /** jeu de la partie qui a des réglages conseillés (clé de tips.json), null sinon */
+  game: string | null;
+  /** ses réglages conseillés pas encore cochés « fait » */
+  tipsLeft: number;
 }
 export type OverlayMode = "hidden" | "panel" | "pill";
 export interface OverlayInfo {
@@ -264,6 +323,8 @@ export interface OverlayInfo {
   shortcutTaken: boolean;
   /** barre ouverte sans prendre le premier plan au jeu (Minecraft) : le clavier reste au jeu */
   passive: boolean;
+  /** la pastille montre le rappel des conseils au lancement du jeu */
+  nudge: boolean;
 }
 export interface OverlayLive {
   fps: number | null;
@@ -282,7 +343,7 @@ export interface RbwCheck {
 }
 
 /** Page Outils (tools.rs). */
-export type CleanAreaId = "temp" | "windows_temp" | "update" | "crash" | "browsers" | "discord" | "shaders" | "recycle";
+export type CleanAreaId = "temp" | "windows_temp" | "update" | "crash" | "browsers" | "discord" | "launchers" | "shaders" | "recycle";
 export interface CleanArea {
   id: CleanAreaId;
   bytes: number;
@@ -299,6 +360,26 @@ export interface BloatApp {
   id: string;
   name: { en: string; fr: string };
 }
+/** Programme lancé avec Windows (clés Run et dossiers Démarrage), tel que le Gestionnaire des tâches le montre. */
+export interface StartupApp {
+  /** « source|nom » */
+  id: string;
+  name: string;
+  publisher: string;
+  command: string;
+  scope: "user" | "machine";
+  enabled: boolean;
+  /** sécurité, audio, pavé tactile, anti-cheat, Rago : ne se coupe pas depuis Rago */
+  keep: boolean;
+}
+export interface PowerPlan {
+  guid: string;
+  /** nom donné par Windows, dans sa langue */
+  name: string;
+  active: boolean;
+}
+/** Réglages de Windows ouverts par la page Outils (liste fermée de tools.rs). */
+export type WindowsPanel = "graphics" | "display" | "gamemode" | "sound" | "mouse" | "network" | "power" | "devices" | "visual" | "taskmgr";
 export interface Driver {
   kind: "gpu" | "network" | "audio";
   name: string;
@@ -334,6 +415,25 @@ export interface DriversInfo {
   /** fabricant de la carte mère, ou du portable */
   maker: string | null;
   model: string | null;
+}
+
+/** Graphismes d'un jeu (gamecfg.rs) : Performance, Équilibré ou Qualité, écrits dans les réglages du jeu. */
+export type GraphicsLevel = "performance" | "balanced" | "quality";
+export interface GraphicsStatus {
+  /** fichiers de réglages trouvés (un par compte du jeu) ; 0 : le jeu n'a jamais été lancé */
+  files: number;
+  /** dont en lecture seule (laissés tels quels) */
+  locked: number;
+  /** niveau que les réglages ont en ce moment, s'il correspond à l'un des trois */
+  level: GraphicsLevel | null;
+  /** une copie d'avant Rago existe : « Remettre mes réglages » */
+  saved: boolean;
+  running: boolean;
+}
+export interface GraphicsOutcome {
+  files: number;
+  changed: number;
+  locked: number;
 }
 
 export interface MinecraftStatus {
@@ -451,16 +551,28 @@ export interface Api {
   /** Vide le cache mémoire de Windows ; `trim` : réduit aussi les applis en arrière-plan (option des paramètres). */
   cleanRam(trim: boolean): Promise<Cleaned>;
   minecraftStatus(dir?: string | null): Promise<MinecraftStatus>;
+  graphicsStatus(game: string): Promise<GraphicsStatus>;
+  /** erreurs : "running", "not_found", "locked", "unknown_format" */
+  graphicsApply(game: string, level: GraphicsLevel): Promise<GraphicsOutcome>;
+  /** erreurs : "running", "no_backup", "locked" ; renvoie les fichiers remis */
+  graphicsRestore(game: string): Promise<number>;
   rbwStatus(): Promise<RbwCheck[]>;
   toolsScan(): Promise<CleanArea[]>;
   toolsClean(areas: CleanAreaId[]): Promise<CleanResult>;
   toolsApps(): Promise<BloatApp[]>;
-  /** Premium ; renvoie les applis encore installées */
+  /** Gratuit, comme toute la page Outils ; renvoie les applis encore installées */
   toolsRemoveApps(ids: string[]): Promise<BloatApp[]>;
   toolsDrivers(): Promise<DriversInfo>;
   analysisFacts(): Promise<AnalysisFacts>;
   /** Paramètres Windows, mises à jour facultatives (pilotes) */
   toolsWindowsUpdate(): Promise<void>;
+  toolsStartup(): Promise<StartupApp[]>;
+  /** Active ou coupe un programme au démarrage, comme le Gestionnaire des tâches ; renvoie la liste à jour. */
+  toolsSetStartup(id: string, enabled: boolean): Promise<StartupApp[]>;
+  toolsPowerPlans(): Promise<PowerPlan[]>;
+  toolsSetPowerPlan(guid: string): Promise<PowerPlan[]>;
+  toolsFlushDns(): Promise<void>;
+  toolsOpen(panel: WindowsPanel): Promise<void>;
   minecraftRestore(dir?: string | null): Promise<string>;
   restartPc(): Promise<void>;
   openFolder(kind: "logs" | "resources" | "data"): Promise<void>;
@@ -523,8 +635,23 @@ export interface Api {
   backgroundSet(prefs: BackgroundPrefs): Promise<BackgroundState>;
   sessionState(): Promise<SessionState>;
   /** Options « pendant la partie » des paramètres ; renvoie les réglages enregistrés. */
-  sessionSetPrefs(gpu: boolean, power: boolean, checks: boolean): Promise<BackgroundPrefs>;
+  sessionSetPrefs(gpu: boolean, power: boolean, checks: boolean, priority: boolean): Promise<BackgroundPrefs>;
   onSession(cb: (s: SessionState) => void): Promise<UnlistenFn>;
+  /** Réglages en jeu conseillés cochés « fait » (tips.rs). */
+  tipsDone(): Promise<string[]>;
+  /** Coche ou décoche un réglage conseillé ; renvoie la liste cochée. */
+  tipsMark(id: string, done: boolean): Promise<string[]>;
+  onTipsDone(cb: (ids: string[]) => void): Promise<UnlistenFn>;
+  /** Couleurs et résolution par jeu (display.rs) */
+  displayInfo(): Promise<DisplayInfo>;
+  /** Profils par jeu (« mc:java » pour Minecraft Java). */
+  displayProfiles(): Promise<Record<string, DisplayProfile>>;
+  displayState(): Promise<DisplayState>;
+  /** Enregistre (null : retire) ; erreur « premium:no_license » pour un preset de pro sans Premium. */
+  displaySetProfile(id: string, profile: DisplayProfile | null): Promise<DisplayState>;
+  /** Aperçu des couleurs sur l'écran principal (rendu tout seul après 8 s) ; null : fin de l'aperçu. */
+  displayPreview(colors: DisplayColors | null): Promise<void>;
+  onDisplayState(cb: (s: DisplayState) => void): Promise<UnlistenFn>;
   /** Barre en jeu (fenêtre « overlay ») */
   overlayInfo(): Promise<OverlayInfo>;
   overlayLive(): Promise<OverlayLive>;
@@ -533,6 +660,8 @@ export interface Api {
   /** Ferme la barre et ouvre l'app (page : id de page, ou "premium" pour l'offre). */
   overlayOpenApp(page?: string): Promise<void>;
   onOverlayMode(cb: (mode: OverlayMode) => void): Promise<UnlistenFn>;
+  /** La pastille commence ou finit le rappel des conseils. */
+  onOverlayNudge(cb: (on: boolean) => void): Promise<UnlistenFn>;
   /** Fenêtre principale : page demandée depuis la barre en jeu. */
   onGoto(cb: (page: string) => void): Promise<UnlistenFn>;
   openUrl(url: string): Promise<void>;
@@ -567,6 +696,9 @@ const tauriApi: Api = {
   openTaskManager: () => invoke("open_task_manager"),
   cleanRam: (trim) => invoke("clean_ram", { trim }),
   minecraftStatus: (dir) => invoke("minecraft_status", { dir: dir ?? null }),
+  graphicsStatus: (game) => invoke("graphics_status", { game }),
+  graphicsApply: (game, level) => invoke("graphics_apply", { game, level }),
+  graphicsRestore: (game) => invoke("graphics_restore", { game }),
   rbwStatus: () => invoke("rbw_status"),
   toolsScan: () => invoke("tools_scan"),
   toolsClean: (areas) => invoke("tools_clean", { areas }),
@@ -575,6 +707,12 @@ const tauriApi: Api = {
   toolsDrivers: () => invoke("tools_drivers"),
   analysisFacts: () => invoke("analysis_facts"),
   toolsWindowsUpdate: () => invoke("tools_windows_update"),
+  toolsStartup: () => invoke("tools_startup"),
+  toolsSetStartup: (id, enabled) => invoke("tools_set_startup", { id, enabled }),
+  toolsPowerPlans: () => invoke("tools_power_plans"),
+  toolsSetPowerPlan: (guid) => invoke("tools_set_power_plan", { guid }),
+  toolsFlushDns: () => invoke("tools_flush_dns"),
+  toolsOpen: (panel) => invoke("tools_open", { id: panel }),
   minecraftRestore: (dir) => invoke("minecraft_restore", { dir: dir ?? null }),
   restartPc: () => invoke("restart_pc"),
   openFolder: (kind) => invoke("open_folder", { kind }),
@@ -635,14 +773,24 @@ const tauriApi: Api = {
   backgroundGet: () => invoke("background_get"),
   backgroundSet: (prefs) => invoke("background_set", { prefs }),
   sessionState: () => invoke("session_state"),
-  sessionSetPrefs: (gpu, power, checks) => invoke("session_set_prefs", { gpu, power, checks }),
+  sessionSetPrefs: (gpu, power, checks, priority) => invoke("session_set_prefs", { gpu, power, checks, priority }),
   onSession: (cb) => listen<SessionState>("games:session", (e) => cb(e.payload)),
+  tipsDone: () => invoke("tips_done"),
+  tipsMark: (id, done) => invoke("tips_mark", { id, done }),
+  onTipsDone: (cb) => listen<string[]>("tips:done", (e) => cb(e.payload)),
+  displayInfo: () => invoke("display_info"),
+  displayProfiles: () => invoke("display_profiles"),
+  displayState: () => invoke("display_state"),
+  displaySetProfile: (id, profile) => invoke("display_set_profile", { id, profile }),
+  displayPreview: (colors) => invoke("display_preview", { colors }),
+  onDisplayState: (cb) => listen<DisplayState>("display:state", (e) => cb(e.payload)),
   overlayInfo: () => invoke("overlay_info"),
   overlayLive: () => invoke("overlay_live"),
   overlayClose: () => invoke("overlay_close"),
   overlaySetPin: (pin) => invoke("overlay_set_pin", { pin }),
   overlayOpenApp: (page) => invoke("overlay_open_app", { page: page ?? null }),
   onOverlayMode: (cb) => listen<OverlayMode>("overlay:mode", (e) => cb(e.payload)),
+  onOverlayNudge: (cb) => listen<boolean>("overlay:nudge", (e) => cb(e.payload)),
   onGoto: (cb) => listen<string>("app:goto", (e) => cb(e.payload)),
   licenseStatus: () => invoke("license_status"),
   licenseLogin: (email, password) => invoke("license_login", { email, password }),
@@ -723,6 +871,7 @@ const mockAreas: CleanArea[] = [
   { id: "crash", bytes: 96 * MB, files: 23 },
   { id: "browsers", bytes: 1210 * MB, files: 9431 },
   { id: "discord", bytes: 388 * MB, files: 1290 },
+  { id: "launchers", bytes: 914 * MB, files: 3377 },
   { id: "shaders", bytes: 742 * MB, files: 2051 },
   { id: "recycle", bytes: 205 * MB, files: 31 },
 ];
@@ -739,6 +888,23 @@ let mockBloat: BloatApp[] = [
   { id: "king.com.CandyCrushSaga", name: { en: "Candy Crush Saga", fr: "Candy Crush Saga" } },
   { id: "SpotifyAB.SpotifyMusic", name: { en: "Spotify", fr: "Spotify" } },
   { id: "BytedancePte.Ltd.TikTok", name: { en: "TikTok", fr: "TikTok" } },
+];
+
+let mockStartup: StartupApp[] = [
+  { id: "hkcu|Discord", name: "Discord", publisher: "Discord Inc.", command: "C:\\Users\\demo\\AppData\\Local\\Discord\\Update.exe --processStart Discord.exe", scope: "user", enabled: true, keep: false },
+  { id: "hkcu|EpicGamesLauncher", name: "EpicGamesLauncher", publisher: "Epic Games, Inc.", command: "C:\\Program Files (x86)\\Epic Games\\Launcher\\Portal\\Binaries\\Win32\\EpicGamesLauncher.exe -silent", scope: "user", enabled: true, keep: false },
+  { id: "hkcu|MicrosoftEdgeAutoLaunch_0A1B", name: "Microsoft Edge", publisher: "Microsoft Corporation", command: "C:\\Program Files (x86)\\Microsoft\\Edge\\Application\\msedge.exe --no-startup-window", scope: "user", enabled: true, keep: false },
+  { id: "hkcu|OneDrive", name: "OneDrive", publisher: "Microsoft Corporation", command: "C:\\Users\\demo\\AppData\\Local\\Microsoft\\OneDrive\\OneDrive.exe /background", scope: "user", enabled: true, keep: false },
+  { id: "hkcu|Riot Vanguard", name: "Riot Vanguard", publisher: "Riot Games, Inc.", command: "C:\\Program Files\\Riot Vanguard\\vgtray.exe", scope: "user", enabled: true, keep: true },
+  { id: "hklm32|RtkAudUService", name: "RtkAudUService", publisher: "Realtek Semiconductor", command: "C:\\Windows\\System32\\DriverStore\\FileRepository\\RtkAudUService64.exe -background", scope: "machine", enabled: true, keep: true },
+  { id: "hklm|SecurityHealth", name: "SecurityHealth", publisher: "Microsoft Corporation", command: "C:\\Windows\\system32\\SecurityHealthSystray.exe", scope: "machine", enabled: true, keep: true },
+  { id: "startup|Spotify.lnk", name: "Spotify", publisher: "Spotify Ltd", command: "C:\\Users\\demo\\AppData\\Roaming\\Spotify\\Spotify.exe", scope: "user", enabled: false, keep: false },
+  { id: "hkcu|Steam", name: "Steam", publisher: "Valve Corporation", command: "C:\\Program Files (x86)\\Steam\\steam.exe -silent", scope: "user", enabled: true, keep: false },
+];
+let mockPlans: PowerPlan[] = [
+  { guid: "381b4222-f694-41f0-9685-ff5bb260df2e", name: "Balanced", active: true },
+  { guid: "8c5e7fda-e8bf-4a96-9a85-a6e23a8c635c", name: "High performance", active: false },
+  { guid: "e9a42b02-d5df-448d-aa00-03f14749eb61", name: "Ultimate Performance", active: false },
 ];
 
 const mockHistory: HistoryEntry[] = [];
@@ -763,6 +929,16 @@ let mockGames: Game[] = [
   { id: "epic:Fortnite", name: "Fortnite", launcher: "epic", client: null, kind: "shooter", installDir: null, lastPlayed: null, running: false },
   { id: "epic:Sugar", name: "Rocket League", launcher: "epic", client: null, kind: "other", installDir: null, lastPlayed: null, running: false },
 ];
+// démo des couleurs et de la résolution par jeu : les profils survivent au rechargement, comme display.json
+const mockDisplay: Record<string, DisplayProfile> = (() => {
+  try {
+    return JSON.parse(localStorage.getItem("rago.demoDisplay") ?? "{}") as Record<string, DisplayProfile>;
+  } catch {
+    return {};
+  }
+})();
+let mockDisplayState: DisplayState = { colors: null, resolution: null, error: null };
+const mockGraphics = new Map<string, { level: GraphicsLevel | null; saved: boolean }>();
 let mockStatsStart = 0;
 const mockLoad = { ram: 47, cpu: 14, gpu: 9 };
 // démo : les réglages appliqués survivent au rechargement de la page, comme applied.json dans l'app
@@ -840,17 +1016,35 @@ let mockBackground: BackgroundPrefs = {
   gameGpu: true,
   gamePower: true,
   gameChecks: true,
+  gamePriority: true,
 };
-/** Démo : une partie en cours avec ?playing dans l'adresse (barre en jeu : toujours). */
+/** Démo : réglages conseillés cochés « fait ». */
+let mockTipsDone: string[] = [];
+/** Démo : une partie en cours avec ?playing dans l'adresse (barre en jeu : toujours) ; ?game=fortnite change le jeu
+ * des réglages conseillés (VALORANT par défaut). */
 const mockSession = (): SessionState => {
-  const playing = new URLSearchParams(location.search).has("playing") || location.pathname.includes("overlay");
+  const q = new URLSearchParams(location.search);
+  const playing = q.has("playing") || location.pathname.includes("overlay");
+  const game = playing ? (q.get("game") ?? "valorant") : null;
+  const ids = game ? (tipsData.games[game as keyof typeof tipsData.games]?.tips.map((x) => x.id) ?? []) : [];
   return {
     playing,
     power: playing && mockBackground.gamePower,
+    priority: playing && mockBackground.gamePriority ? 1 : 0,
     gpuGames: mockBackground.gameGpu ? 2 : 0,
-    checks: playing && mockBackground.gameChecks ? [{ id: "sync", apps: ["OneDrive"] }, { id: "record", apps: ["OBS Studio"] }] : [],
+    checks:
+      playing && mockBackground.gameChecks
+        ? [
+            { id: "sync", apps: ["OneDrive"] },
+            { id: "record", apps: ["OBS Studio"] },
+            { id: "refresh", apps: ["60", "144"] },
+            { id: "cpu", apps: ["Google Chrome"] },
+          ]
+        : [],
     multiGpu: true,
     x3d: false,
+    game: ids.length ? game : null,
+    tipsLeft: ids.filter((id) => !mockTipsDone.includes(id)).length,
   };
 };
 
@@ -994,6 +1188,28 @@ const mockApi: Api = {
     return { standby: (1.2 + Math.random() * 1.6) * gb, trimmed: trim ? 0.4 * gb : 0, apps: trim ? 7 : 0 };
   },
   minecraftStatus: async () => ({ dirExists: true, optifineFile: true, backups: 1 }),
+  // démo : Valorant a deux comptes sur le PC, Apex n'a jamais été lancé (pas de fichier de réglages)
+  graphicsStatus: async (game) => {
+    await sleep(150);
+    if (game === "apex") return { files: 0, locked: 0, level: null, saved: false, running: false };
+    const s = mockGraphics.get(game) ?? { level: null, saved: false };
+    return { files: game === "valorant" ? 2 : 1, locked: 0, level: s.level, saved: s.saved, running: false };
+  },
+  graphicsApply: async (game, level) => {
+    await sleep(600);
+    if (game === "apex") throw "not_found";
+    const s = mockGraphics.get(game) ?? { level: null, saved: false };
+    const changed = s.level === level ? 0 : 12;
+    mockGraphics.set(game, { level, saved: true });
+    const files = changed ? (game === "valorant" ? 2 : 1) : 0;
+    return { files, changed: changed * files, locked: 0 };
+  },
+  graphicsRestore: async (game) => {
+    await sleep(400);
+    if (!mockGraphics.get(game)?.saved) throw "no_backup";
+    mockGraphics.delete(game);
+    return game === "valorant" ? 2 : 1;
+  },
   // démo : SysMain et PcaSvc arrêtés, Prefetch coupé (ce que le RBW Mod « Activé » corrige)
   rbwStatus: async () => {
     const svc = (name: string, state: RbwCheck["state"], start: RbwCheck["start"]): RbwCheck => ({ name, kind: "service", ok: state === "running", state, start });
@@ -1070,6 +1286,34 @@ const mockApi: Api = {
     };
   },
   toolsWindowsUpdate: async () => {},
+  toolsStartup: async () => {
+    await sleep(800);
+    return mockStartup.map((a) => ({ ...a }));
+  },
+  toolsSetStartup: async (id, enabled) => {
+    await sleep(350);
+    const app = mockStartup.find((a) => a.id === id);
+    if (!app) throw new Error("Unknown startup entry");
+    if (app.keep && !enabled) throw new Error("This program is needed by Windows or your hardware");
+    mockStartup = mockStartup.map((a) => (a.id === id ? { ...a, enabled } : a));
+    return mockStartup.map((a) => ({ ...a }));
+  },
+  toolsPowerPlans: async () => {
+    await sleep(500);
+    return mockPlans.map((p) => ({ ...p }));
+  },
+  toolsSetPowerPlan: async (guid) => {
+    await sleep(400);
+    if (!mockPlans.some((p) => p.guid === guid)) throw new Error("Unknown power plan");
+    mockPlans = mockPlans.map((p) => ({ ...p, active: p.guid === guid }));
+    return mockPlans.map((p) => ({ ...p }));
+  },
+  toolsFlushDns: async () => {
+    await sleep(600);
+  },
+  toolsOpen: async (panel) => {
+    console.info(`[démo] réglage Windows : ${panel}`);
+  },
   minecraftRestore: async () => "optionsof.txt restored (demo)",
   restartPc: async () => {},
   openFolder: async () => {},
@@ -1273,17 +1517,55 @@ const mockApi: Api = {
     await sleep(250);
     if (!/^((Ctrl|Alt|Shift|Super)\+)*(F\d{1,2}|[A-Z0-9]|[A-Za-z]+)$/.test(prefs.shortcut) || /\+$/.test(prefs.shortcut)) throw "shortcut";
     // comme background_set : les options « pendant la partie » se règlent à part
-    mockBackground = { ...prefs, gameGpu: mockBackground.gameGpu, gamePower: mockBackground.gamePower, gameChecks: mockBackground.gameChecks };
+    mockBackground = { ...prefs, gameGpu: mockBackground.gameGpu, gamePower: mockBackground.gamePower, gameChecks: mockBackground.gameChecks, gamePriority: mockBackground.gamePriority };
     return { prefs: mockBackground, autostart: prefs.autostart, shortcutTaken: false, fpsAvailable: true };
   },
   sessionState: async () => mockSession(),
-  sessionSetPrefs: async (gameGpu, gamePower, gameChecks) => {
-    mockBackground = { ...mockBackground, gameGpu, gamePower, gameChecks };
+  sessionSetPrefs: async (gameGpu, gamePower, gameChecks, gamePriority) => {
+    mockBackground = { ...mockBackground, gameGpu, gamePower, gameChecks, gamePriority };
     emit<SessionState>("games:session", mockSession());
     return mockBackground;
   },
   onSession: (cb) => on("games:session", cb),
-  // démo de la barre : overlay.html?pill pour la pastille
+  displayInfo: async () => {
+    await sleep(200);
+    // ?amd / ?intel : la démo montre une carte AMD, ou un écran sans saturation
+    const q = new URLSearchParams(location.search);
+    const modes: [number, number][] = [[1920, 1080], [1680, 1050], [1600, 900], [1440, 1080], [1366, 768], [1280, 1024], [1280, 960], [1280, 720], [1024, 768], [800, 600]];
+    return {
+      vibrance: q.has("intel") ? null : q.has("amd") ? "amd" : "nvidia",
+      monitor: { device: "\\\\.\\DISPLAY1", name: "ZOWIE XL LCD", width: 1920, height: 1080, hz: 240, modes },
+    };
+  },
+  displayProfiles: async () => ({ ...mockDisplay }),
+  displayState: async () => ({ ...mockDisplayState }),
+  displaySetProfile: async (id, profile) => {
+    await sleep(120);
+    const key = id.startsWith("mc:") && id !== "mc:bedrock" ? "mc:java" : id;
+    if (profile?.pro && profile.pro !== mockDisplay[key]?.pro && mockLicense().state !== "active") throw "premium:no_license";
+    if (profile && (profile.colors || profile.resolution || profile.pro)) mockDisplay[key] = profile;
+    else delete mockDisplay[key];
+    try {
+      localStorage.setItem("rago.demoDisplay", JSON.stringify(mockDisplay));
+    } catch {
+      /* démo sans stockage */
+    }
+    return { ...mockDisplayState };
+  },
+  displayPreview: async (colors) => {
+    mockDisplayState = { ...mockDisplayState, colors: colors ? "preview" : null };
+    emit("display:state", { ...mockDisplayState });
+  },
+  onDisplayState: (cb) => on("display:state", cb),
+  tipsDone: async () => mockTipsDone,
+  tipsMark: async (id, done) => {
+    mockTipsDone = done ? [...new Set([...mockTipsDone, id])] : mockTipsDone.filter((x) => x !== id);
+    emit<string[]>("tips:done", mockTipsDone);
+    emit<SessionState>("games:session", mockSession());
+    return mockTipsDone;
+  },
+  onTipsDone: (cb) => on("tips:done", cb),
+  // démo de la barre : overlay.html?pill pour la pastille, ?pill&nudge pour le rappel des conseils
   overlayInfo: async () => ({
     mode: new URLSearchParams(location.search).has("pill") ? "pill" : "panel",
     game: "Minecraft",
@@ -1292,6 +1574,7 @@ const mockApi: Api = {
     fpsAvailable: true,
     shortcutTaken: false,
     passive: new URLSearchParams(location.search).has("passive"),
+    nudge: new URLSearchParams(location.search).has("nudge"),
   }),
   overlayLive: async () => ({ fps: Math.round(238 + Math.random() * 14), ping: Math.round(21 + Math.random() * 4), pingEstimate: new URLSearchParams(location.search).has("estimate") }),
   overlayClose: async () => {},
@@ -1300,6 +1583,7 @@ const mockApi: Api = {
   },
   overlayOpenApp: async () => {},
   onOverlayMode: (cb) => on("overlay:mode", cb),
+  onOverlayNudge: (cb) => on("overlay:nudge", cb),
   onGoto: (cb) => on("app:goto", cb),
   licenseStatus: async () => {
     await sleep(300);

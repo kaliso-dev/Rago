@@ -2,14 +2,14 @@
 type: code
 tags: [code, app, rust, jeux, bibliothèque]
 fichier: app/src-tauri/src/games.rs
-lignes: 1929
-maj: 2026-11-10
+lignes: 1948
+maj: 2026-11-11
 ---
 # games.rs
 
 La **bibliothèque de jeux** côté Rust : détection des jeux installés par chaque launcher, des launchers eux-mêmes, image officielle de chaque jeu, lancement sans droits d'administrateur, et suivi des jeux en cours. Fiche parente : [[Code de l'app (Rust)]]. Fonctionnalité : [[Bibliothèque de jeux]] (Linear RAG-57).
 
-Tout ce qui suit est CONFIRMÉ (code de `staging`, 10/11).
+Tout ce qui suit est CONFIRMÉ (code de `staging`, 10/11). Ajouts du 11/11 pour [[Couleurs et résolution]] (`running_dirs`, `local_dirs` ouverte au reste du code) : PR #93 ; [[gamecfg.rs]] (PR #94) se sert aussi de `local_dirs` ; les deux sont dans `staging` depuis le 11/11 (PR #92).
 
 ## Rôle et place dans l'ensemble
 
@@ -41,6 +41,7 @@ Tout ce qui suit est CONFIRMÉ (code de `staging`, 10/11).
 | `install_dirs()` | — | dossiers des jeux, jamais touchés par « Nettoyer » la RAM |
 | `name_for(exe)` | — | nom du jeu dont le dossier contient cet exe (barre en jeu) |
 | `playing()`, `game_exes(procs)` | — | un jeu de la bibliothèque tourne ; ses exes (pas ceux des launchers Minecraft) |
+| `running_dirs()` | — | jeux lancés (d'après le dernier `poll`) et leur dossier en minuscules terminé par `\` : [[display.rs]] y reconnaît le jeu au premier plan |
 
 Fonctions publiques testables hors Windows : `normalize`, `parse_vdf`/`Vdf`, `steam_libraries`, `steam_app`, `EpicItem`, `epic_images`, `yaml_value`, `publisher_id`, `xml_attr`, `gaming_root`, `detect`, `detect_launchers`, `launchers_seen`, `launcher_running`, `process_paths`.
 
@@ -63,7 +64,7 @@ Ordre : Steam, Epic, Riot, Battle.net, Ubisoft, Xbox, Roblox, Minecraft. Ensuite
 
 ### Comptes Windows multiples
 
-Rago tourne en administrateur, parfois élevé avec un autre compte que celui du joueur. `local_dirs()` ajoute donc le `AppData\Local` de chaque compte de `HKLM\…\ProfileList` (SID `S-1-5-21-…`), et `uninstall_entries()` lit `Uninstall` dans `HKLM`, `HKLM\…\WOW6432Node`, `HKCU` et `HKU\<SID>` de chaque compte ouvert.
+Rago tourne en administrateur, parfois élevé avec un autre compte que celui du joueur. `local_dirs()` (`pub(crate)` : [[display.rs]] s'en sert pour les fichiers de réglages de Valorant et Fortnite, [[gamecfg.rs]] pour trouver les réglages graphiques des jeux dans chaque compte) ajoute donc le `AppData\Local` de chaque compte de `HKLM\…\ProfileList` (SID `S-1-5-21-…`), et `uninstall_entries()` lit `Uninstall` dans `HKLM`, `HKLM\…\WOW6432Node`, `HKCU` et `HKU\<SID>` de chaque compte ouvert.
 
 ### Launchers (`detect_launchers`)
 
@@ -85,7 +86,7 @@ Réseau : `ureq` avec TLS de Windows (`NativeTls` ; le TLS par défaut de ureq n
 
 ### Logos des presets (`preset_icons`)
 
-16 clés (`minecraft`, `fortnite`, `valorant`, `cs2`, `apex`, `gta`, `pubg`, `roblox`, `r6`, `overwatch`, `rivals`, `finals`, `tarkov`, `rl`, `lol`, `bedrock`) avec leurs exes connus. Les icônes déjà dans `art\preset-<clé>.png` sont rendues ; les manquantes sont cherchées **une fois par lancement de l'app** dans les dossiers des jeux (6 niveaux, 40 000 entrées au plus par recherche).
+16 clés (`minecraft`, `fortnite`, `valorant`, `cs2`, `apex`, `gta`, `pubg`, `roblox`, `r6`, `overwatch`, `rivals`, `finals`, `tarkov`, `rl`, `lol`, `bedrock`) avec leurs exes connus (`PRESET_EXES`). **PR #91** (11/11) : `preset_key(nom d'exe)` donne la clé d'un exe (« valorant.exe » → `valorant`) pour les [[Conseils au lancement du jeu]] ([[tips.rs]]) ; `preset_keys()` (tests) les liste toutes. Les icônes déjà dans `art\preset-<clé>.png` sont rendues ; les manquantes sont cherchées **une fois par lancement de l'app** dans les dossiers des jeux (6 niveaux, 40 000 entrées au plus par recherche).
 
 ### Jeux en cours (`poll`)
 
@@ -108,7 +109,7 @@ Un jeu tourne si un processus a son exe dans le dossier du jeu (comparaison en m
 ## Liens avec le reste
 
 - Commandes et boucle : [[lib.rs]] ; interface : [[Games.tsx]] ; icônes d'exe : `icon.rs` ; registre : `reg.rs` ; élévation : `shell.rs`.
-- Utilisée par [[overlay.rs]] (`name_for`), [[session.rs]] (`game_exes`, `playing`), [[boost.rs]] (arrêt automatique), [[bridge.rs]] (`games`, `game_launch`), `memory.rs` (`install_dirs`).
+- Utilisée par [[overlay.rs]] (`name_for`), [[session.rs]] (`game_exes`, `playing`), [[boost.rs]] (arrêt automatique), [[bridge.rs]] (`games`, `game_launch`), `memory.rs` (`install_dirs`), [[display.rs]] (`running_dirs`, `local_dirs`).
 - Fonctionnalités : [[Bibliothèque de jeux]], [[Pendant la partie]], [[Presets]].
 
 ## Tests

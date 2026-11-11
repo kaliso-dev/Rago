@@ -2,19 +2,19 @@
 type: code
 tags: [code, app, rust, jeux, alimentation, carte-graphique]
 fichier: app/src-tauri/src/session.rs
-lignes: 432
-maj: 2026-11-10
+lignes: 665
+maj: 2026-11-11
 ---
 # session.rs
 
-Ce que l'app fait **le temps d'une partie**, puis défait : carte graphique performante pour les jeux, mode Performances élevées, vérifications (conseils). Repris du `.bat` GAME V1 de Sofiene. Fiche parente : [[Code de l'app (Rust)]]. Fonctionnalité : [[Pendant la partie]].
+Ce que l'app fait **le temps d'une partie**, puis défait : carte graphique performante pour les jeux, mode Performances élevées, jeu en priorité haute, vérifications (conseils). Repris du `.bat` GAME V1 de Sofiene. Fiche parente : [[Code de l'app (Rust)]]. Fonctionnalité : [[Pendant la partie]].
 
 Tout ce qui suit est CONFIRMÉ (code de `staging`, 10/11).
 
 ## Rôle et place dans l'ensemble
 
 - Créé au démarrage par [[lib.rs]] (`Session::new`), puis appelé par la **boucle de fond toutes les 4 s** : [[games.rs]] donne les processus et les exes de jeu en cours, `minecraft_exe` ajoute le Java de Minecraft, `tick` reçoit `playing` et renvoie l'état quand il change (événement `games:session`).
-- Chaque option se coupe dans les paramètres (`Prefs` de [[background.rs]] : `game_gpu`, `game_power`, `game_checks`, **toutes activées par défaut**). Commandes : `session_state`, `session_set_prefs(gpu, power, checks)` (prise en compte au passage suivant, 4 s au plus).
+- Chaque option se coupe dans les paramètres (`Prefs` de [[background.rs]] : `game_gpu`, `game_power`, `game_checks`, `game_priority`, **toutes activées par défaut**). Commandes : `session_state`, `session_set_prefs(gpu, power, checks, priority?)` (`priority` absent = inchangé) (prise en compte au passage suivant, 4 s au plus).
 - Interface : `SessionCard.tsx` (carte des paramètres) et ses vérifications affichées dans [[Games.tsx]] et la barre en jeu ([[Overlay.tsx]]).
 - `dual_ccd_x3d` sert aussi au mode Compétitif du [[Packet Optimizer]] ([[netopt.rs]], [[apply.ps1]]).
 - `undo_all` est appelée par la désinstallation ([[reset.rs]]).
@@ -22,15 +22,17 @@ Tout ce qui suit est CONFIRMÉ (code de `staging`, 10/11).
 ## Ce que le fichier expose
 
 - GUIDs des plans : `BALANCED` (Utilisation normale), `POWER_SAVER` (Économie d'énergie), `HIGH` (Performances élevées).
-- `State { playing, power, gpuGames, checks, multiGpu, x3d }` (`multiGpu` = `None` tant que ce n'est pas vérifié) ; `Check { id, apps }` avec `id` = `battery`, `download`, `sync` ou `record`.
+- `State { playing, power, priority, gpuGames, checks, multiGpu, x3d, game, tipsLeft }` (`priority` = nombre de processus du jeu mis en priorité haute pour la partie en cours) (`multiGpu` = `None` tant que ce n'est pas vérifié) (`game`, `tipsLeft` : voir « Conseils au lancement du jeu » plus bas) ; `Check { id, apps }` avec `id` = `battery`, `download`, `sync` ou `record`.
 - `minecraft_exe(chemin)` : `Minecraft.Windows.exe` (Bedrock), ou `javaw.exe`/`java.exe` dont le chemin contient un dossier de launcher Minecraft : `\.minecraft\`, `\minecraft launcher\`, `microsoft.4297127d64ec6` (Store), `\.lunarclient\`, `badlion`, `feather`, `prismlauncher`, `modrinth`, `curseforge`, `multimc`, `tlauncher`, `atlauncher`, `gdlauncher`. Un autre programme Java n'est pas Minecraft.
 - `dual_ccd_x3d(nom du processeur)` : `7900X3D`, `7950X3D`, `9900X3D`, `9950X3D`, `7945HX3D` (un seul des deux CCD a le cache 3D). Un 7800X3D n'en fait pas partie.
 - `wants_gpu(chemin)` : un `.exe` dont le nom ne contient pas `unins`, `crash`, `report`, `setup`, `redist`, `vc_redist`, `dxsetup`.
+- `prio_fresh(vus, exes)` : exes de jeu (`wants_gpu`) pas encore passés par la priorité, et ceux à retenir (ceux qui tournent encore ; un exe fermé puis relancé est revu).
 - `parse_scheme(texte)` : premier GUID de la sortie de `powercfg /getactivescheme` (quelle que soit la langue de Windows).
 - `checks(processus, sur batterie)` : listes d'applis repérées par leur exe :
   - téléchargement : qBittorrent, µTorrent, BitTorrent, Transmission, Deluge, Tixati, Internet Download Manager ;
   - synchronisation : OneDrive, Dropbox, Google Drive, MEGA, iCloud ;
-  - enregistrement : OBS Studio (`obs64.exe`, `obs32.exe`), Streamlabs.
+  - enregistrement : OBS Studio (`obs64.exe`, `obs32.exe`), Streamlabs, Medal (`medal.exe`) ;
+  - fond d'écran animé (`wallpaper`) : Wallpaper Engine (`wallpaper32.exe`, `wallpaper64.exe`).
 - `Session::new`, `state`, `tick`, `undo_all(data_dir)`.
 
 ## Fonctionnement détaillé
@@ -47,8 +49,22 @@ Tout ce qui suit est CONFIRMÉ (code de `staging`, 10/11).
 - Les exes écrits sont notés dans `session.json` (`gpu`) ; ils restent après la partie (l'effet vaut au lancement suivant du jeu).
 - Option coupée : chaque choix écrit par Rago est supprimé **s'il vaut toujours `GpuPreference=2;`**.
 
+### Jeu en priorité haute (`game_priority`, 11/11, PR #89, **jamais testé sur Windows**)
+- Pendant une partie, chaque nouvel exe de jeu (`prio_fresh`) : ses processus (liste ToolHelp, chemin comparé en minuscules) sont ouverts avec `PROCESS_QUERY_LIMITED_INFORMATION | PROCESS_SET_INFORMATION` ; si leur priorité est `NORMAL_PRIORITY_CLASS` ou `ABOVE_NORMAL_PRIORITY_CLASS`, `SetPriorityClass(HIGH_PRIORITY_CLASS)` puis `SetProcessInformation(ProcessPowerThrottling)` avec `ControlMask = EXECUTION_SPEED`, `StateMask = 0` (EcoQoS coupé). Jamais Temps réel.
+- Mémoire seulement (`raised` : pid → chemin et priorité d'avant), rien dans `session.json` : la priorité meurt avec le processus.
+- Option coupée pendant la partie : chaque processus encore lancé, au même chemin et toujours en priorité haute, retrouve sa priorité d'avant, et EcoQoS est rendu à Windows (`ControlMask = 0`).
+- Processus qu'on ne peut pas ouvrir (anti-triche, autre compte) : laissé tel quel, sans erreur.
+
 ### Vérifications (`game_checks`)
 Pendant une partie seulement : `battery` si le PC est sur batterie (`GetSystemPowerStatus`), puis `download`, `sync`, `record` avec les applis trouvées. Des conseils : **rien n'est fermé**.
+
+### Conseils au lancement du jeu (`game_checks`, 11/11, PR #91, **jamais testé sur Windows**)
+- L'option `game_checks` commande aussi les [[Conseils au lancement du jeu]] ; le moteur est dans [[tips.rs]].
+- `checks` repère en plus `wallpaper` (Wallpaper Engine, une seule appli même si ses deux exes tournent) et Medal (dans `record`) ; le test `lists_background_apps_to_check` le vérifie (Medal, Wallpaper Engine sans doublon).
+- `State` gagne `game` (clé du jeu à conseils : `tips::game_of` sur les **exes des jeux en cours**, même option coupée ; un client ou un launcher resté ouvert passe après le jeu) et `tipsLeft` (ses réglages pas encore cochés « fait »). `Check.id` peut aussi valoir `wallpaper`, `refresh`, `gamedvr`, `cpu`, `ram` ; pour `refresh`, `apps` = fréquence actuelle puis la plus haute (Hz).
+- `tick(playing, exes, procs, prefs, hogs)` : `hogs` = applis gourmandes mesurées par le fil des jeux de [[lib.rs]] (`tips::Hogs`). Pendant une partie, option active, la liste = `checks` + écran et Game DVR (`tips::pc_checks`, relus tous les 15 tours, soit 1 min : `PC_EVERY`) + `hogs`. Sans partie ou option coupée : liste vide, écran et Game DVR oubliés.
+- `Session` garde les réglages cochés (`tips::Done`, fichier `tips-done.json`) : `tips_done()`, `tips_mark(id, fait)` (renvoie la liste cochée et l'état, `tipsLeft` recalculé), `has_advice(prefs)` (partie en cours, option active, et un réglage pas coché ou un point à vérifier) pour le rappel de [[overlay.rs]].
+- `file_of` est `pub(crate)` (utilisé par [[tips.rs]]).
 
 ### `undo_all` (désinstallation)
 Rend le mode d'alimentation (même règle) et retire les choix de carte graphique écrits par Rago.
@@ -67,7 +83,7 @@ Rend le mode d'alimentation (même règle) et retire les choix de carte graphiqu
 
 ## Liens avec le reste
 
-- Appelé par [[lib.rs]] (boucle de fond, commandes) et [[reset.rs]] (`undo_all`) ; utilise [[background.rs]] (`Prefs`), [[reg.rs]], [[shell.rs]], [[system.rs]] (`vendor_of`).
+- Appelé par [[lib.rs]] (boucle de fond, commandes) et [[reset.rs]] (`undo_all`) ; utilise [[background.rs]] (`Prefs`), [[reg.rs]], [[shell.rs]], [[system.rs]] (`vendor_of`), [[tips.rs]] (conseils).
 - Utilisé par [[netopt.rs]] (`dual_ccd_x3d`). Données des jeux : [[games.rs]].
 - Fonctionnalités : [[Pendant la partie]], [[Paramètres de l'app]], [[Arrière-plan et démarrage]] (marche tant que Rago est ouvert ou près de l'horloge).
 
@@ -77,7 +93,9 @@ Rend le mode d'alimentation (même règle) et retire les choix de carte graphiqu
 - `recognizes_minecraft_and_skips_helpers` : Java de Lunar et du launcher officiel, Bedrock du Store reconnus ; un JDK seul non ; `cs2.exe` mérite la carte, pas un désinstalleur ni `CrashReportClient.exe`.
 - `spots_dual_ccd_x3d_only` : 7950X3D et 9900X3D oui ; 7800X3D et un Intel non.
 - `lists_background_apps_to_check` : batterie, qBittorrent, OBS → `battery`, `download`, `record`.
+- `raises_each_game_exe_once_per_launch` : `cs2.exe` retenu, pas `CrashReportClient.exe` ; pas revu tant qu'il tourne ; revu après une fermeture.
 - `keeps_nothing_on_disk_once_undone` : une partie qui commence et finit ne laisse pas de `session.json`.
+- `follows_the_tips_of_the_game_being_played` : VALORANT reconnu, réglages à faire, `has_advice` vrai ; cocher `valorant.highlight` en enlève un ; option coupée → `has_advice` faux ; fin de partie → plus de jeu.
 
 ## À savoir avant de modifier
 

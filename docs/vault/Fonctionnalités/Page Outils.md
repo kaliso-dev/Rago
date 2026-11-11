@@ -1,28 +1,39 @@
 ---
 type: fonctionnalité
-tags: [fonctionnalité, app, 1.2]
+tags: [fonctionnalité, app, 1.2, outils]
 version_app: 1.3.0
-maj: 2026-11-10
+maj: 2026-11-11
 ---
 # Page Outils
 
-Page « Outils » du groupe « Optimiser » (« Entretien »). Code natif, hors catalogue (voir la section « Code »). **Toute la page est gratuite dans le code de `staging`** (1.3.0).
+Page « Outils » du groupe « Optimiser » (« Entretien »). Code natif, hors catalogue : [[tools.rs]], page [[Tools.tsx]]. **Toute la page est gratuite** (décision de Sofiene du 01/11 : les outils sont « indispensables » et font de Rago une app qu'on ouvre souvent).
 
-## Nettoyage (gratuit)
-- Analyse puis affiche la place de 8 zones : fichiers temporaires (Temp), temporaires de Windows, téléchargements de Windows Update, rapports de plantage, cache des navigateurs (Chrome, Edge, Brave, Opera, Firefox : **cache seulement**, jamais historique, mots de passe ni cookies), cache de Discord, cache des shaders (décoché d'office), corbeille de tous les disques (décochée d'office ; à éviter juste avant un screenshare).
-- Bouton « Nettoyer X Go » ; les fichiers ouverts restent ; liens jamais suivis ; **suppression définitive**. Jamais le Prefetch, les journaux Windows, les jeux, les documents ni Minecraft.
+**Refonte du 11/11 (PR #90, fusionnée dans `staging` le 11/11 par la PR #92)** : demande de Sofiene du 11/11 (point 6, « Tools new et centralisé ») : réunir dans cette page **tous les outils à bouton « Lancer »** de l'app, en les laissant aussi dans leur onglet, et ajouter de nouveaux outils sûrs et utiles au quotidien après une analyse de Hone et des autres optimiseurs. Tout ce qui suit décrit la branche de la PR #90 ; la CI Windows a construit l'exe et passé les tests du moteur, mais la page n'a **jamais été testée sur Windows** (règle 8 de [[Règles de travail]]). Ticket [[Linear]] : RAG-93. Avant la PR #90, la page n'avait que les cartes Nettoyage, Applis préinstallées et Pilotes.
 
-## Applis préinstallées (Premium en 1.2.1, gratuit dans la 1.3.0)
-Une quarantaine d'applis que Windows installe tout seul (Candy Crush, TikTok, Clipchamp, Météo, Teams…), désinstallées pour le compte Windows du joueur. Toutes sont cochées d'office, sauf celles qu'on peut vraiment utiliser (Teams, Outlook, Courrier et calendrier, Office, Mobile connecté, Spotify, To Do). Désinstallation en deux clics (confirmation). **Jamais le Store, Xbox ni la Game Bar.** Chacune se réinstalle depuis le Microsoft Store.
+## Ordre de la page
+1. **En un clic** (quatre tuiles)
+   - **Vider le cache de la RAM** : le même moteur que « Nettoyer » du [[Tableau de bord]] ([[memory.rs]], option « réduire aussi les applis en arrière-plan » des [[Paramètres de l'app]] comprise). Résultat affiché : cache vidé en Go, ou « Cache déjà vide ».
+   - **Vider le cache DNS** : `ipconfig /flushdns`. Windows redemande l'adresse des sites et des serveurs de jeu.
+   - **Mode d'alimentation** : la liste des modes de Windows (noms dans la langue de Windows), le mode actif coché ; un clic change de mode (`powercfg /setactive`, seulement un mode de la liste). Si Windows refuse (mode imposé par une entreprise ou une école), un message le dit. Pendant une partie, l'option « mode performances » de [[Pendant la partie]] peut passer d'Équilibré ou d'Économie d'énergie à Performances élevées ; elle remet le mode d'avant à la fin **seulement si Performances élevées est toujours actif** : un mode choisi ici pendant la partie est gardé.
+   - **Tester ma connexion** : ouvre le [[Test réseau]] (ping, stabilité, bufferbloat, MTU).
+2. **Nettoyage** (inchangé, plus une zone) : 9 zones : fichiers temporaires (Temp), temporaires de Windows, téléchargements de Windows Update, rapports de plantage, cache des navigateurs (Chrome, Edge, Brave, Vivaldi, Opera, Firefox : **cache seulement**, jamais historique, mots de passe ni cookies), cache de Discord, **cache des launchers** (nouveau : pages web de Steam et d'Epic Games, cochée d'office), cache des shaders (décoché d'office), corbeille de tous les disques (décochée d'office ; à éviter juste avant un screenshare). Bouton « Nettoyer X Go » ; les fichiers ouverts restent ; liens jamais suivis ; **suppression définitive**. Jamais le Prefetch, les journaux Windows, les jeux, les documents ni Minecraft.
+3. **Applis au démarrage** (nouveau) : les programmes qui démarrent avec Windows (clés Run du compte, du PC et du PC en 32 bits, dossiers Démarrage du compte et de tous les comptes), avec un interrupteur chacun et le compte « X sur N démarrent avec Windows ». Couper un programme écrit **la même valeur que le Gestionnaire des tâches** (`StartupApproved`) : rien n'est supprimé, on le rallume ici ou dans le Gestionnaire des tâches ; effet au prochain démarrage. **Ne se coupent pas** depuis Rago (interrupteur grisé, « Gardé : Windows ou ton matériel en a besoin ») : sécurité de Windows et antivirus, consoles audio (Realtek, Nahimic, Dolby…), pavé tactile (Synaptics, Elan), anti-cheat (Vanguard, FACEIT, EasyAntiCheat, BattlEye) et Rago. Les applis du Microsoft Store qui démarrent seules (tâches de démarrage des paquets) ne sont pas listées.
+4. **Applis préinstallées** (inchangé, gratuit) : une quarantaine d'applis que Windows installe tout seul (Candy Crush, TikTok, Clipchamp, Météo, Teams…), désinstallées pour le compte Windows du joueur. **Jamais le Store, Xbox ni la Game Bar.** Chacune se réinstalle depuis le Microsoft Store.
+5. **Réglages Windows utiles** (nouveau) : 10 raccourcis, liste fermée côté Rust : paramètres graphiques (carte graphique par jeu, planification GPU), affichage avancé (fréquence de l'écran en Hz), mode Jeu de Windows, son, souris, connexions réseau, options d'alimentation, Gestionnaire de périphériques, effets visuels (et mémoire virtuelle), Gestionnaire des tâches.
+6. **Pilotes** (inchangé, gratuit) : carte graphique, réseau, audio : version, date, âge (point orange si plus de 6 mois pour le GPU, 2 ans pour le reste). Boutons : site officiel, site du fabricant (carte mère / portable), mises à jour facultatives de Windows. **Rago n'installe jamais de pilote.**
+7. **Tous les outils de l'app** (nouveau) : les **17 actions à bouton « Lancer »** du [[Catalogue des tweaks]], rangées par onglet (Réseau, Latence, Carte graphique, Windows, Restaurer) avec un lien « Voir dans… ». Deux paires de jumelles (même script sous deux noms : « Optimiser le disque » / « TRIM du disque système », « Supprimer les applis préinstallées » / « Supprimer les applis inutiles ») ne comptent qu'une fois : **15 lignes**. Même ligne que dans l'onglet (`TweakRow`) : même verrou Premium (3 sont Premium : redémarrer la carte réseau, fréquence d'origine du processeur, priorité des contrôleurs SATA), même fenêtre de lancement, même historique. Elles restent dans leur onglet.
 
-## Pilotes (gratuit)
-Carte graphique, réseau, audio : version, date, âge (point orange si plus de 6 mois pour le GPU, 2 ans pour le reste). Boutons : site officiel, site du fabricant (carte mère / portable), mises à jour facultatives de Windows. **Rago n'installe jamais de pilote.**
+La barre latérale remet le badge « Nouveau » sur Outils jusqu'à la prochaine ouverture de la page (`tools.v2`, [[seen.ts]]).
 
-**Décision (Sofiene, 01/11)** : les outils restent gratuits, « c'est des outils indispensables » qui font de Rago une app qu'on ouvre souvent. Dans la 1.2.1, le nettoyage et les pilotes sont gratuits ; la désinstallation des applis préinstallées est encore Premium (`Tools.tsx`). Elle **passe en gratuit** (Sofiene, 01/11 : « Oui, tout gratuit » ; Linear RAG-88). Prévu d'abord pour une 1.2.2, mais la 1.2.2 ne sort pas seule : tout sort avec la 1.3.0 (Sofiene, 10/11, q47). Dans le code de `staging`, ni la page ni le moteur ne demandent de licence pour les outils (le commentaire de `lib.rs` dit encore « gratuite depuis la 1.2.2 » et celui de `api.ts` dit encore « Premium » : en retard).
+## Pourquoi ces outils (analyse du 11/11)
+- **Hone** range ses actions ponctuelles dans « Boost-Ups » (nettoyages, Discord, Steam, réparation de disque ; version 2.0 avec catégories, estimation de la place et planification) : [Hone 1.4](https://hone.gg/blog/hone-1-4-update-boost-ups-and-merged-optimizations/), [Hone 1.5.0](https://hone.gg/changelogs/update-1-5-0). D'où le cache des launchers et la page qui réunit tout.
+- **Microsoft PC Manager** : « PC Boost », nettoyage, **applis au démarrage**, gestion des processus ([Windows Central](https://www.windowscentral.com/software-apps/windows-11/what-is-pc-manager-and-how-to-get-started-using-it-on-windows-11)). D'où les applis au démarrage et le cache de la RAM en tuile.
+- **WinUtil** (Chris Titus) : « Reset Network », « System Corruption Scan » (déjà dans Rago : Réinitialiser le réseau, Réparer les fichiers système) et raccourcis vers les panneaux de Windows (son, réseau, alimentation…) ([WinUtil](https://winutil.christitus.com/dev/features/)). D'où les réglages Windows utiles.
+- Écartés : la détection des applis gourmandes en arrière-plan (OneDrive, OBS…) relève du fil « Ajouter les conseils au lancement du jeu » ; la résolution et la fréquence de l'écran, du fil « Ajouter saturation et résolution des pros » ; la priorité du jeu, du fil « Mettre le jeu en priorité maximale ». Réinitialiser Windows Update, désinstaller Adobe : pas assez sûrs ou hors sujet.
+- Chemins des caches vérifiés : Steam `htmlcache` = « only a cache for the store and advert display » ([forum CCleaner](https://community.ccleaner.com/t/clean-steam-htmlcache/63998)) ; Epic : dossier `webcache` de `%LOCALAPPDATA%\EpicGamesLauncher\Saved` (aide d'Epic, page « How do I clear the Launcher cache on PC? »). Les caches de l'EA app, de Battle.net et du Riot Client n'ont pas été ajoutés : chemins non confirmés.
 
-Liens : [[Offres et prix]], [[Tableau de bord]].
+## À faire
+- Tester sur Windows (applis au démarrage surtout : lecture, coupure, remise, entrées gardées) : exe de test de `staging` après la fusion sur « fusionne » de Sofiene, ou exe « Staging » construit à la main depuis la branche de la PR (l'exe du build de la PR, lui, vise le serveur de prod et remplace le Rago installé, voir [[CI GitHub Actions]]) ([[Prochaines étapes]]).
+- Sortie : **avec la [[Version 1.3.0]]** (Sofiene, 11/11 à 08:24 UTC, sur la carte du fil « Centraliser et enrichir la page Tools » : « Oui, fusionne dans staging »).
 
-## Code
-- Page : [[Tools.tsx]] (trois cartes, applis décochées d'office, seuils des pilotes, liens des fabricants).
-- Moteur : [[tools.rs]] (zones de nettoyage, liste des applis, lecture des pilotes) et les commandes `tools_*` de [[lib.rs]].
-- Carte d'ensemble : [[Code de l'app (interface)]]. Les réglages de nettoyage du catalogue (`cln_*`, module Windows) sont autre chose : voir [[Catalogue des tweaks]].
+Liens : [[Offres et prix]], [[Tableau de bord]], [[Étude de marché de novembre 2026]].

@@ -7,14 +7,22 @@
 //!   stratégie d'entreprise, et jamais sur un Ryzen X3D à deux CCD (AMD y veut Équilibré, qui garde le jeu sur le cache
 //!   3D). Le mode d'avant est noté sur le disque avant le changement, puis rendu à la fin de la partie, ou au lancement
 //!   suivant de l'app si elle a été fermée entre-temps ; pas si le joueur a lui-même changé de mode pendant la partie.
-//! - Vérifications : batterie, téléchargements, synchronisation et enregistrement en fond. Des conseils, rien n'est fermé.
+//! - Jeu en priorité haute : chaque processus du jeu passe en priorité « Haute » (jamais « Temps réel ») et Windows
+//!   ne le bride plus (EcoQoS) même quand la fenêtre n'est pas au premier plan. Seulement depuis la priorité normale
+//!   (ou supérieure à la normale) : un choix du joueur n'est pas touché. Ça ne vit que le temps du processus, rien
+//!   n'est écrit sur le disque ; couper l'option rend la priorité d'avant aux processus encore lancés.
+//! - Conseils au lancement d'un jeu (option « Vérifications ») : batterie, téléchargements, synchronisation,
+//!   enregistrement et fond d'écran animé en fond ; écran sous sa meilleure fréquence, Game DVR, applis qui prennent
+//!   du processeur ou de la mémoire (tips.rs) ; et les réglages en jeu conseillés pour le jeu lancé (tips.json).
+//!   Des conseils : rien n'est changé ni fermé.
 
 use serde::{Deserialize, Serialize};
-use std::collections::HashSet;
+use std::collections::{HashMap, HashSet};
 use std::path::{Path, PathBuf};
 use std::sync::Mutex;
 
 use crate::background::Prefs;
+use crate::tips;
 
 pub const BALANCED: &str = "381b4222-f694-41f0-9685-ff5bb260df2e";
 pub const POWER_SAVER: &str = "a1841308-3541-4fab-bc81-f71556f20b4a";
@@ -37,9 +45,10 @@ struct Saved {
 #[derive(Serialize, Clone, PartialEq, Debug)]
 #[serde(rename_all = "camelCase")]
 pub struct Check {
-    /// "battery", "download", "sync" ou "record"
+    /// "battery", "download", "sync", "record", "wallpaper" (processus lancés) ; "refresh", "gamedvr" (Windows) ;
+    /// "cpu", "ram" (applis gourmandes, tips.rs)
     pub id: &'static str,
-    /// applis concernées
+    /// applis concernées ; pour "refresh" : la fréquence actuelle puis la plus haute (Hz)
     pub apps: Vec<String>,
 }
 
@@ -49,6 +58,8 @@ pub struct State {
     pub playing: bool,
     /// mode Performances élevées mis pour la partie
     pub power: bool,
+    /// processus du jeu passés en priorité haute par Rago pour la partie en cours
+    pub priority: usize,
     /// jeux qui ont reçu la carte graphique performante (depuis toujours)
     pub gpu_games: usize,
     pub checks: Vec<Check>,
@@ -56,6 +67,10 @@ pub struct State {
     pub multi_gpu: Option<bool>,
     /// Ryzen X3D à deux CCD : le mode d'alimentation n'est jamais changé
     pub x3d: bool,
+    /// jeu de la partie qui a des réglages conseillés (clé de tips.json : "valorant", "fortnite"…)
+    pub game: Option<String>,
+    /// ses réglages conseillés que le joueur n'a pas encore cochés « fait »
+    pub tips_left: usize,
 }
 
 struct Inner {
@@ -65,12 +80,24 @@ struct Inner {
     tried: bool,
     /// exes déjà regardés pour la carte graphique
     seen: HashSet<String>,
+    /// exes du jeu déjà passés par la priorité, tant qu'ils tournent
+    prio_seen: HashSet<String>,
+    /// processus mis en priorité haute par Rago : pid -> (chemin, priorité d'avant)
+    raised: HashMap<u32, (String, u32)>,
+    /// écran et Game DVR, relus tous les PC_EVERY tours pendant la partie
+    pc: Vec<Check>,
+    pc_age: Option<u32>,
 }
 
 pub struct Session {
     path: PathBuf,
     inner: Mutex<Inner>,
+    /// réglages en jeu cochés « fait »
+    done: tips::Done,
 }
+
+/// Écran et Game DVR relus toutes les minutes (15 tours de 4 s).
+const PC_EVERY: u32 = 15;
 
 const DOWNLOAD: &[(&str, &str)] = &[
     ("qbittorrent.exe", "qBittorrent"),
@@ -88,7 +115,10 @@ const SYNC: &[(&str, &str)] = &[
     ("megasync.exe", "MEGA"),
     ("icloudservices.exe", "iCloud"),
 ];
-const RECORD: &[(&str, &str)] = &[("obs64.exe", "OBS Studio"), ("obs32.exe", "OBS Studio"), ("streamlabs obs.exe", "Streamlabs")];
+const RECORD: &[(&str, &str)] =
+    &[("obs64.exe", "OBS Studio"), ("obs32.exe", "OBS Studio"), ("streamlabs obs.exe", "Streamlabs"), ("medal.exe", "Medal")];
+/// Fond d'écran animé : Wallpaper Engine se met en pause en jeu, mais garde sa mémoire sauf réglage contraire.
+const WALLPAPER: &[(&str, &str)] = &[("wallpaper32.exe", "Wallpaper Engine"), ("wallpaper64.exe", "Wallpaper Engine")];
 
 /// Dossiers où tournent le Java de Minecraft et ses clients (launcher officiel, Store, Lunar, Badlion, Feather…).
 const MC_JAVA: &[&str] = &[
@@ -108,7 +138,7 @@ const MC_JAVA: &[&str] = &[
 ];
 
 /// Nom de l'exe en minuscules (chemin Windows, aussi lu tel quel dans les tests hors Windows).
-fn file_of(p: &Path) -> String {
+pub(crate) fn file_of(p: &Path) -> String {
     p.to_string_lossy().rsplit(['\\', '/']).next().unwrap_or_default().to_lowercase()
 }
 
@@ -134,6 +164,15 @@ pub fn wants_gpu(p: &Path) -> bool {
     file.ends_with(".exe") && !["unins", "crash", "report", "setup", "redist", "vc_redist", "dxsetup"].iter().any(|w| file.contains(w))
 }
 
+/// Priorité : les exes du jeu pas encore vus (à passer en priorité haute), et ceux à retenir, c'est-à-dire ceux qui
+/// tournent encore. Un exe fermé puis relancé est donc revu.
+pub fn prio_fresh(seen: &HashSet<String>, exes: &[PathBuf]) -> (Vec<String>, HashSet<String>) {
+    let now: HashSet<String> = exes.iter().filter(|p| wants_gpu(p)).map(|p| p.to_string_lossy().to_lowercase()).collect();
+    let mut fresh: Vec<String> = now.difference(seen).cloned().collect();
+    fresh.sort();
+    (fresh, now)
+}
+
 /// Premier GUID de la sortie de `powercfg /getactivescheme` (le texte autour change avec la langue de Windows).
 #[cfg_attr(not(windows), allow(dead_code))]
 pub fn parse_scheme(out: &str) -> Option<String> {
@@ -157,7 +196,7 @@ pub fn checks(procs: &[PathBuf], on_battery: bool) -> Vec<Check> {
     if on_battery {
         out.push(Check { id: "battery", apps: Vec::new() });
     }
-    for (id, list) in [("download", DOWNLOAD), ("sync", SYNC), ("record", RECORD)] {
+    for (id, list) in [("download", DOWNLOAD), ("sync", SYNC), ("record", RECORD), ("wallpaper", WALLPAPER)] {
         let apps = found(list);
         if !apps.is_empty() {
             out.push(Check { id, apps });
@@ -171,7 +210,11 @@ impl Session {
         let path = data_dir.join("session.json");
         let saved: Saved = std::fs::read(&path).ok().and_then(|b| serde_json::from_slice(&b).ok()).unwrap_or_default();
         let state = State { gpu_games: saved.gpu.len(), x3d: dual_ccd_x3d(&win::cpu_name()), ..State::default() };
-        Session { path, inner: Mutex::new(Inner { saved, state, tried: false, seen: HashSet::new() }) }
+        Session {
+            path,
+            inner: Mutex::new(Inner { saved, state, tried: false, seen: HashSet::new(), prio_seen: HashSet::new(), raised: HashMap::new(), pc: Vec::new(), pc_age: None }),
+            done: tips::Done::new(data_dir),
+        }
     }
 
     fn lock(&self) -> std::sync::MutexGuard<'_, Inner> {
@@ -195,9 +238,10 @@ impl Session {
         g.state.clone()
     }
 
-    /// Toutes les 4 secondes (lib.rs) : `playing` si un jeu tourne, `exes` ceux du jeu, `procs` tous les processus.
-    /// Renvoie l'état quand il change.
-    pub fn tick(&self, playing: bool, exes: &[PathBuf], procs: &[PathBuf], prefs: &Prefs) -> Option<State> {
+    /// Toutes les 4 secondes (lib.rs) : `playing` si un jeu tourne, `exes` ceux du jeu, `procs` tous les processus,
+    /// `hogs` les applis gourmandes mesurées par la boucle (tips::Hogs). Renvoie l'état quand il change.
+    pub fn tick(&self, playing: bool, exes: &[PathBuf], procs: &[PathBuf], prefs: &Prefs, hogs: Vec<Check>) -> Option<State> {
+        let watch = playing && prefs.game_checks;
         let mut g = self.lock();
         let before = g.state.clone();
         g.state.playing = playing;
@@ -237,8 +281,65 @@ impl Session {
         }
         g.state.gpu_games = g.saved.gpu.len();
 
-        g.state.checks = if playing && prefs.game_checks { checks(procs, win::on_battery()) } else { Vec::new() };
+        // priorité haute : chaque processus du jeu, une fois par lancement ; rien à défaire quand il se ferme
+        if prefs.game_priority && playing {
+            let (fresh, now) = prio_fresh(&g.prio_seen, exes);
+            if !fresh.is_empty() {
+                for (pid, path, before) in win::raise(&fresh) {
+                    g.raised.insert(pid, (path, before));
+                }
+            }
+            g.prio_seen = now;
+            let Inner { prio_seen, raised, .. } = &mut *g;
+            raised.retain(|_, (path, _)| prio_seen.contains(path));
+        } else {
+            if !prefs.game_priority && !g.raised.is_empty() {
+                win::restore(&g.raised);
+            }
+            g.raised.clear();
+            g.prio_seen.clear();
+        }
+        g.state.priority = g.raised.len();
+
+        // conseils : le jeu lancé et ses réglages pas encore faits, puis ce que le PC montre
+        let game = if playing { tips::game_of(exes) } else { None };
+        g.state.game = game.map(str::to_string);
+        g.state.tips_left = game.map_or(0, |k| self.done.left(k));
+        if watch {
+            if g.pc_age.map_or(true, |n| n >= PC_EVERY) {
+                g.pc = tips::pc_checks();
+                g.pc_age = Some(0);
+            }
+            g.pc_age = g.pc_age.map(|n| n + 1);
+            let mut list = checks(procs, win::on_battery());
+            list.extend(g.pc.iter().cloned());
+            list.extend(hogs);
+            g.state.checks = list;
+        } else {
+            g.state.checks = Vec::new();
+            g.pc.clear();
+            g.pc_age = None;
+        }
         (g.state != before).then(|| g.state.clone())
+    }
+
+    /// Réglages en jeu cochés « fait ».
+    pub fn tips_done(&self) -> Vec<String> {
+        self.done.list()
+    }
+
+    /// Coche ou décoche un réglage en jeu ; renvoie la liste cochée et l'état de la partie mis à jour.
+    pub fn tips_mark(&self, id: &str, done: bool) -> (Vec<String>, State) {
+        let list = self.done.set(id, done);
+        let mut g = self.lock();
+        g.state.tips_left = g.state.game.as_deref().map_or(0, |k| self.done.left(k));
+        (list, g.state.clone())
+    }
+
+    /// Quelque chose à signaler au joueur dans la partie en cours : un réglage en jeu pas fait ou une vérification.
+    pub fn has_advice(&self, prefs: &Prefs) -> bool {
+        let g = self.lock();
+        g.state.playing && prefs.game_checks && (g.state.tips_left > 0 || !g.state.checks.is_empty())
     }
 
     fn power_on(&self, g: &mut Inner) {
@@ -342,6 +443,95 @@ mod win {
     pub fn delete_gpu_pref(path: &str) -> bool {
         reg::delete_value(GPU_KEY, path)
     }
+
+    use windows_sys::Win32::Foundation::{CloseHandle, HANDLE, INVALID_HANDLE_VALUE};
+    use windows_sys::Win32::System::Threading::{
+        GetPriorityClass, OpenProcess, ProcessPowerThrottling, QueryFullProcessImageNameW, SetPriorityClass, SetProcessInformation,
+        ABOVE_NORMAL_PRIORITY_CLASS, HIGH_PRIORITY_CLASS, NORMAL_PRIORITY_CLASS, PROCESS_POWER_THROTTLING_CURRENT_VERSION,
+        PROCESS_POWER_THROTTLING_EXECUTION_SPEED, PROCESS_POWER_THROTTLING_STATE, PROCESS_QUERY_LIMITED_INFORMATION, PROCESS_SET_INFORMATION,
+    };
+
+    /// Ouvre un processus pour changer sa priorité ; renvoie aussi son chemin en minuscules.
+    unsafe fn open(pid: u32) -> Option<(HANDLE, String)> {
+        let h = OpenProcess(PROCESS_QUERY_LIMITED_INFORMATION | PROCESS_SET_INFORMATION, 0, pid);
+        if h.is_null() {
+            return None; // processus protégé (anti-triche) ou d'un autre compte : laissé tel quel
+        }
+        let mut buf = [0u16; 1024];
+        let mut len = buf.len() as u32;
+        if QueryFullProcessImageNameW(h, 0, buf.as_mut_ptr(), &mut len) == 0 {
+            CloseHandle(h);
+            return None;
+        }
+        Some((h, String::from_utf16_lossy(&buf[..len as usize]).to_lowercase()))
+    }
+
+    /// EcoQoS : `throttle` false = jamais bridé ; true = Windows décide (son réglage par défaut).
+    unsafe fn throttling(h: HANDLE, throttle: bool) {
+        let state = PROCESS_POWER_THROTTLING_STATE {
+            Version: PROCESS_POWER_THROTTLING_CURRENT_VERSION,
+            ControlMask: if throttle { 0 } else { PROCESS_POWER_THROTTLING_EXECUTION_SPEED },
+            StateMask: 0,
+        };
+        SetProcessInformation(h, ProcessPowerThrottling, &state as *const _ as *const _, std::mem::size_of::<PROCESS_POWER_THROTTLING_STATE>() as u32);
+    }
+
+    /// Pid de chaque processus lancé.
+    fn pids() -> Vec<u32> {
+        use windows_sys::Win32::System::Diagnostics::ToolHelp::{CreateToolhelp32Snapshot, Process32FirstW, Process32NextW, PROCESSENTRY32W, TH32CS_SNAPPROCESS};
+        let mut out = Vec::new();
+        unsafe {
+            let snap = CreateToolhelp32Snapshot(TH32CS_SNAPPROCESS, 0);
+            if snap == INVALID_HANDLE_VALUE {
+                return out;
+            }
+            let mut e: PROCESSENTRY32W = std::mem::zeroed();
+            e.dwSize = std::mem::size_of::<PROCESSENTRY32W>() as u32;
+            let mut more = Process32FirstW(snap, &mut e) != 0;
+            while more {
+                if e.th32ProcessID > 4 {
+                    out.push(e.th32ProcessID);
+                }
+                more = Process32NextW(snap, &mut e) != 0;
+            }
+            CloseHandle(snap);
+        }
+        out
+    }
+
+    /// Passe en priorité haute les processus de ces exes (chemins en minuscules), s'ils sont en priorité normale ou
+    /// supérieure à la normale. Renvoie ceux changés : (pid, chemin, priorité d'avant).
+    pub fn raise(paths: &[String]) -> Vec<(u32, String, u32)> {
+        let mut out = Vec::new();
+        for pid in pids() {
+            unsafe {
+                let Some((h, path)) = open(pid) else { continue };
+                if paths.contains(&path) {
+                    let before = GetPriorityClass(h);
+                    if (before == NORMAL_PRIORITY_CLASS || before == ABOVE_NORMAL_PRIORITY_CLASS) && SetPriorityClass(h, HIGH_PRIORITY_CLASS) != 0 {
+                        throttling(h, false);
+                        out.push((pid, path, before));
+                    }
+                }
+                CloseHandle(h);
+            }
+        }
+        out
+    }
+
+    /// Rend la priorité d'avant aux processus encore lancés, s'ils sont toujours en priorité haute.
+    pub fn restore(raised: &std::collections::HashMap<u32, (String, u32)>) {
+        for (&pid, (path, before)) in raised {
+            unsafe {
+                let Some((h, now)) = open(pid) else { continue };
+                if &now == path && GetPriorityClass(h) == HIGH_PRIORITY_CLASS {
+                    SetPriorityClass(h, *before);
+                    throttling(h, true);
+                }
+                CloseHandle(h);
+            }
+        }
+    }
 }
 
 #[cfg(not(windows))]
@@ -373,6 +563,10 @@ mod win {
     pub fn delete_gpu_pref(_path: &str) -> bool {
         true
     }
+    pub fn raise(_paths: &[String]) -> Vec<(u32, String, u32)> {
+        Vec::new()
+    }
+    pub fn restore(_raised: &std::collections::HashMap<u32, (String, u32)>) {}
 }
 
 #[cfg(test)]
@@ -401,6 +595,20 @@ mod tests {
     }
 
     #[test]
+    fn raises_each_game_exe_once_per_launch() {
+        let cs2 = PathBuf::from(r"D:\Steam\steamapps\common\Counter-Strike Global Offensive\game\bin\win64\cs2.exe");
+        let crash = PathBuf::from(r"D:\Games\Fortnite\CrashReportClient.exe");
+        let (fresh, seen) = prio_fresh(&HashSet::new(), &[cs2.clone(), crash]);
+        assert_eq!(fresh, [cs2.to_string_lossy().to_lowercase()]);
+        // toujours lancé : pas revu
+        let (fresh, seen) = prio_fresh(&seen, &[cs2.clone()]);
+        assert!(fresh.is_empty());
+        // fermé puis relancé : revu
+        let (_, seen) = prio_fresh(&seen, &[]);
+        assert_eq!(prio_fresh(&seen, &[cs2]).0.len(), 1);
+    }
+
+    #[test]
     fn spots_dual_ccd_x3d_only() {
         assert!(dual_ccd_x3d("AMD Ryzen 9 7950X3D 16-Core Processor"));
         assert!(dual_ccd_x3d("AMD Ryzen 9 9900X3D 12-Core Processor"));
@@ -415,6 +623,10 @@ mod tests {
         assert_eq!(c.iter().map(|c| c.id).collect::<Vec<_>>(), ["battery", "download", "record"]);
         assert_eq!(c[1].apps, ["qBittorrent"]);
         assert!(checks(&[], false).is_empty());
+        // les deux exes de Wallpaper Engine ne font qu'une appli
+        let procs = [PathBuf::from(r"C:\Steam\steamapps\common\wallpaper_engine\wallpaper32.exe"), PathBuf::from(r"C:\Steam\steamapps\common\wallpaper_engine\wallpaper64.exe"), PathBuf::from(r"C:\Medal\Medal.exe")];
+        let c = checks(&procs, false);
+        assert_eq!(c, vec![Check { id: "record", apps: vec!["Medal".into()] }, Check { id: "wallpaper", apps: vec!["Wallpaper Engine".into()] }]);
     }
 
     #[test]
@@ -424,9 +636,30 @@ mod tests {
         let s = Session::new(&dir);
         let prefs = Prefs::default();
         // hors Windows, rien n'est changé : la partie commence et finit sans rien laisser
-        assert!(s.tick(true, &[], &[], &prefs).is_some_and(|st| st.playing && !st.power));
-        assert!(s.tick(false, &[], &[], &prefs).is_some_and(|st| !st.playing));
+        assert!(s.tick(true, &[], &[], &prefs, Vec::new()).is_some_and(|st| st.playing && !st.power));
+        assert!(s.tick(false, &[], &[], &prefs, Vec::new()).is_some_and(|st| !st.playing));
         assert!(!dir.join("session.json").exists());
+        let _ = std::fs::remove_dir_all(&dir);
+    }
+
+    #[test]
+    fn follows_the_tips_of_the_game_being_played() {
+        let dir = std::env::temp_dir().join(format!("rago-session-tips-{}", std::process::id()));
+        let _ = std::fs::create_dir_all(&dir);
+        let s = Session::new(&dir);
+        let prefs = Prefs::default();
+        let game = PathBuf::from(r"C:\Riot Games\VALORANT\live\VALORANT.exe");
+        let st = s.tick(true, std::slice::from_ref(&game), std::slice::from_ref(&game), &prefs, Vec::new()).unwrap();
+        assert_eq!(st.game.as_deref(), Some("valorant"));
+        assert!(st.tips_left > 0 && s.has_advice(&prefs));
+        let (done, st2) = s.tips_mark("valorant.highlight", true);
+        assert_eq!(done, ["valorant.highlight"]);
+        assert_eq!(st2.tips_left, st.tips_left - 1);
+        // option coupée : rien à signaler, mais le jeu et ses réglages restent connus (barre en jeu, bibliothèque)
+        let off = Prefs { game_checks: false, ..Prefs::default() };
+        assert!(!s.has_advice(&off));
+        // fin de partie : plus de jeu
+        assert!(s.tick(false, &[], &[], &prefs, Vec::new()).is_some_and(|st| st.game.is_none() && st.tips_left == 0));
         let _ = std::fs::remove_dir_all(&dir);
     }
 }

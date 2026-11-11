@@ -8,7 +8,7 @@ maj: 2026-11-11
 
 Page « Couleurs et résolution » de l'app (groupe « En jeu », sous Jeux) : la saturation, la luminosité et la résolution **propres à chaque jeu**, posées seulement pendant la partie. Demandée par Sofiene le 11/11 : fonctionnalités 1 (« custom saturation ») et 2 (« custom resolution ») de son message, voir [[Décisions]]. Ticket [[Linear]] RAG-95. Retour à [[Projet]].
 
-**Statut (11/11)** : codée sur la branche `claude/project-thread-7n0ikn` (commit du 11/11), **pas encore envoyée sur GitHub** : l'accord de Sofiene est demandé dans le fil (carte « Envoyer la branche sur GitHub et ouvrir la PR vers staging ? »). Ni dans `staging`, ni dans une version, et pas dans la sortie de la semaine du 11/11 (consigne : ne pas la bloquer). **Jamais testé sur Windows** ([[Règles de travail]]). CONFIRMÉ (git local).
+**Statut (11/11)** : **dans `staging`** depuis le 11/11 : PR #93, fusionnée avec les 5 autres nouveautés du 11/11 par la PR #92, sur « Push toutes les modification vers stagging pour que je puisse test la version test » de Sofiene, pour la version test (exe « Rago Optimizer Staging »). Pas encore dans une version publiée. **Jamais testé sur Windows** ([[Règles de travail]]). CONFIRMÉ (GitHub, 11/11).
 
 ## Ce que voit le joueur
 - Choix du jeu parmi ceux de la [[Bibliothèque de jeux]] (Minecraft Java : une seule entrée pour tous ses launchers, comme dans Jeux). Depuis Jeux, une puce sur la fiche du jeu (« Saturation 55 % · 1440×1080 », ou « Couleurs et résolution » quand rien n'est réglé) ouvre la page sur ce jeu.
@@ -39,9 +39,8 @@ Page « Couleurs et résolution » de l'app (groupe « En jeu », sous Jeux) : l
 - **Valorant** (prosettings.net) : 13 pros sur 14 relevés jouent en 1920×1080 ; exception kaajak (1440×1080 étirée, saturation 55 %) ; la plupart laissent la saturation à 50 % (Demon1, Derke, Less, aspas) et règlent plutôt leur écran (ZOWIE : Color Vibrance 10 à 12) ; TenZ à 100 % (specs.gg).
 - **Fortnite** : environ 80 % des pros en 1920×1080, mais une saturation plus haute (Bugha 75 %, Peterbot 70 %, Veno 70 %, Malibuca 65 %) ; la communauté joue aussi en étiré 1440, 1650, 1720 ou 1750×1080.
 - Concurrent pour la résolution : TrueStretch (dépôt GitHub, seulement lu, rien téléchargé) fait la même chose que Rago.
-- Les réglages des pros sont dans `app/src/data/pros.json` (relevé du 11/11, sources prosettings.net et specs.gg) : à revérifier avant chaque sortie, les pros changent souvent. Quelques saturations de pros CS2 viennent de pages lues en résumé : À VÉRIFIER ([[Questions ouvertes]]).
+- Les réglages des pros sont dans [[pros.json]] (`app/src/data/pros.json`, relevé du 11/11, sources prosettings.net et specs.gg) : à revérifier avant chaque sortie, les pros changent souvent. Quelques saturations de pros CS2 viennent de pages lues en résumé : À VÉRIFIER ([[Questions ouvertes]]).
 
 ## Code
-- Moteur : nouveau module `display.rs` ; commandes `display_info`, `display_profiles`, `display_state`, `display_set_profile`, `display_preview` et événement `display:state` dans [[lib.rs]] ; la résolution est posée par `game_launch` ; jeux en cours lus dans [[games.rs]] ; remise à la désinstallation par [[reset.rs]]. Voir [[Architecture de l'app]].
-- Interface : nouvelle page `Display.tsx`, puce dans [[Games.tsx]], entrée de [[Sidebar.tsx]], démo dans [[api.ts]] (`?amd` et `?intel` pour voir une carte AMD ou un écran sans saturation).
-- Les fiches de code détaillées arrivent avec la branche, quand elle sera fusionnée dans `staging`.
+- Moteur : nouveau module [[display.rs]] ; commandes `display_info`, `display_profiles`, `display_state`, `display_set_profile`, `display_preview` et événement `display:state` dans [[lib.rs]] ; la résolution est posée par `game_launch` ; jeux en cours lus dans [[games.rs]] ; remise à la désinstallation par [[reset.rs]]. Voir [[Architecture de l'app]].
+- Interface : nouvelle page [[Display.tsx]], réglages des pros dans [[pros.json]], puce dans [[Games.tsx]], entrée de [[Sidebar.tsx]], démo dans [[api.ts]] (`?amd` et `?intel` pour voir une carte AMD ou un écran sans saturation).
