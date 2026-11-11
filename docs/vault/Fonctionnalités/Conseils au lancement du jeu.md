@@ -1,7 +1,7 @@
 ---
 type: fonctionnalité
 tags: [fonctionnalité, app, gratuit, jeux]
-version_app: aucune (dans `staging` depuis le 11/11, pas encore publiée)
+version_app: 1.3.0 (dans `staging`, pas encore publiée)
 maj: 2026-11-11
 ---
 # Conseils au lancement du jeu

@@ -18,7 +18,7 @@ Page « Jeux » (groupe « En jeu »). RAG-57. Code : [[games.rs]], [[icon.rs]],
 - « En cours » / « Dernière partie » : processus lancés depuis le dossier du jeu, regardés toutes les 4 s.
 - **Réglages conseillés** (PR #91 du 11/11) : sous le jeu en avant, les réglages à changer dans le jeu que conseillent les pros (VALORANT, Fortnite, Counter-Strike 2, Apex Legends, PUBG, League of Legends, Marvel Rivals, THE FINALS), à cocher « fait » ; ouvert quand le jeu tourne. Voir [[Conseils au lancement du jeu]].
 - « Retirer de la bibliothèque » (deux clics) ne désinstalle rien.
-- **Couleurs et résolution** (codée le 11/11, dans `staging` pour la version test, **pas encore dans une version publiée**) : une puce sur la fiche du jeu (« Saturation 55 % · 1440×1080 », ou « Couleurs et résolution » quand rien n'est réglé) ouvre la page [[Couleurs et résolution]] sur ce jeu ; lancé depuis Jeux, le jeu démarre déjà dans sa résolution.
+- **Couleurs et résolution** (codée le 11/11, dans `staging`, part avec la 1.3.0) : une puce sur la fiche du jeu (« Saturation 55 % · 1440×1080 », ou « Couleurs et résolution » quand rien n'est réglé) ouvre la page [[Couleurs et résolution]] sur ce jeu ; lancé depuis Jeux, le jeu démarre déjà dans sa résolution.
 
 Liens : [[Barre en jeu]], [[Pendant la partie]], [[Problèmes joueurs]] (curseur perdu après Optimiser et jouer).
 

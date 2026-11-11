@@ -1,14 +1,14 @@
 ---
 type: fonctionnalité
 tags: [fonctionnalité, app, jeux, couleurs, résolution, premium]
-version_app: pas encore dans une version
+version_app: 1.3.0 (dans `staging`, pas encore publiée)
 maj: 2026-11-11
 ---
 # Couleurs et résolution
 
 Page « Couleurs et résolution » de l'app (groupe « En jeu », sous Jeux) : la saturation, la luminosité et la résolution **propres à chaque jeu**, posées seulement pendant la partie. Demandée par Sofiene le 11/11 : fonctionnalités 1 (« custom saturation ») et 2 (« custom resolution ») de son message, voir [[Décisions]]. Ticket [[Linear]] RAG-95. Retour à [[Projet]].
 
-**Statut (11/11)** : **dans `staging`** depuis le 11/11 : PR #93, fusionnée avec les 5 autres nouveautés du 11/11 par la PR #92, sur « Push toutes les modification vers stagging pour que je puisse test la version test » de Sofiene, pour la version test (exe « Rago Optimizer Staging »). Pas encore dans une version publiée. **Jamais testé sur Windows** ([[Règles de travail]]). CONFIRMÉ (GitHub, 11/11).
+**Statut (11/11)** : **dans `staging`** depuis le 11/11 : PR #93, fusionnée avec les 5 autres nouveautés du 11/11 par la PR #92, sur « Push toutes les modification vers stagging pour que je puisse test la version test » de Sofiene, pour la version test (exe « Rago Optimizer Staging »). Part avec la [[Version 1.3.0]] (Sofiene, 11/11 à 09:20 UTC : « version fianle »). **Jamais testé sur Windows** ([[Règles de travail]]). CONFIRMÉ (GitHub, 11/11).
 
 ## Ce que voit le joueur
 - Choix du jeu parmi ceux de la [[Bibliothèque de jeux]] (Minecraft Java : une seule entrée pour tous ses launchers, comme dans Jeux). Depuis Jeux, une puce sur la fiche du jeu (« Saturation 55 % · 1440×1080 », ou « Couleurs et résolution » quand rien n'est réglé) ouvre la page sur ce jeu.

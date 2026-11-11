@@ -16,7 +16,6 @@ Mode d'emploi (outil ArtifactData, collection `questions`) :
 - Dire à Sofiene dans le fil, en une ligne, quand de nouvelles questions l'attendent.
 
 ## En attente de réponse sur la page
-- q95 (11/11) : les 6 nouveautés du 11/11, dans `staging` depuis la PR #92, partent-elles toutes avec la [[Version 1.3.0]] ? (la page Outils et les conseils au lancement : oui, Sofiene, 11/11)
 Au 10/11, après les réponses de Sofiene du jour (q36 à q68 traitées, q46 le 10/11 à 15 h, voir [[Décisions]]) :
 - q65 : réglages Railway de prod (Wait for CI, Watch Paths, Healthcheck, moniteur) ; Sofiene demande à Claude de vérifier et de le lui rappeler ([[Railway]]).
 
