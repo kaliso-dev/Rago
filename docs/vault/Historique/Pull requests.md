@@ -14,7 +14,7 @@ Liste de **toutes les pull requests** du dépôt `kaliso-dev/rago`, de la #1 (08
 - **Fil d'origine** : le fil du projet Claude qui a ouvert la PR. Les PR #1 à #51 viennent d'un projet Claude plus ancien, d'avant le 15/10 : ses fils ne sont pas consultables depuis le projet actuel. Le passage d'un projet à l'autre est raconté dans [[Synthèse de reprise du 15-10]].
 
 ## Chiffres au 11/11 (00:50 UTC)
-- **91 PR** : 75 fusionnées, 11 fermées sans fusion, 5 ouvertes (#71, #86, #89, #90 et #91).
+- **94 PR** (11/11, 08:50 UTC) : 82 fusionnées, 11 fermées sans fusion, 1 ouverte (#71).
 - Cible : 47 vers la prod, 43 vers `staging`, 1 vers une autre branche (#60, vers la branche de la refonte 1.2.0).
 - Fermées sans fusion : #16, #21, #24, #26, #28, #46, #47, #50, #51, #60, #69. Les branches de ces PR sont gardées (décision du 01/11, [[Branches et environnements]]).
 - Jusqu'au 12/10, une PR vers `staging` était souvent suivie d'une PR « port en prod » qui reprenait le même travail (#25 → #27, #29 → #30, #31 + #32 → #33, #34 à #37 → #38, #39 + #41 + #42 → #43, #44 → #45). Depuis la 1.2, la prod n'a plus reçu que des PR ciblées (#59, #61, #63, #66 à #68, #72, #81, #87) : le 10/11, `staging` avait environ 160 commits de plus que la prod, et **le code de l'app sur la branche de prod était encore la 1.1.14** (les exe sont construits depuis `staging`).

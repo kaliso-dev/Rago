@@ -33,7 +33,7 @@ La barre latérale remet le badge « Nouveau » sur Outils jusqu'à la prochaine
 - Chemins des caches vérifiés : Steam `htmlcache` = « only a cache for the store and advert display » ([forum CCleaner](https://community.ccleaner.com/t/clean-steam-htmlcache/63998)) ; Epic : dossier `webcache` de `%LOCALAPPDATA%\EpicGamesLauncher\Saved` (aide d'Epic, page « How do I clear the Launcher cache on PC? »). Les caches de l'EA app, de Battle.net et du Riot Client n'ont pas été ajoutés : chemins non confirmés.
 
 ## À faire
-- Tester sur Windows (applis au démarrage surtout : lecture, coupure, remise, entrées gardées) : exe de test de `staging` après la fusion sur « fusionne » de Sofiene, ou exe « Staging » construit à la main depuis la branche de la PR (l'exe du build de la PR, lui, vise le serveur de prod et remplace le Rago installé, voir [[CI GitHub Actions]]) ([[Prochaines étapes]]).
+- Tester sur Windows (applis au démarrage surtout : lecture, coupure, remise, entrées gardées) : exe « Rago Optimizer Staging » construit par la CI sur `staging` après la PR #92 (11/11), qui s'installe à côté du vrai Rago ([[CI GitHub Actions]]) ([[Prochaines étapes]]).
 - Sortie : **avec la [[Version 1.3.0]]** (Sofiene, 11/11 à 08:24 UTC, sur la carte du fil « Centraliser et enrichir la page Tools » : « Oui, fusionne dans staging »).
 
 Liens : [[Offres et prix]], [[Tableau de bord]], [[Étude de marché de novembre 2026]].
