@@ -25,6 +25,6 @@ Liens : [[Barre en jeu]], [[Pendant la partie]], [[Problèmes joueurs]] (curseur
 ## Code
 - [[gamecfg.rs]], [[GameGraphics.tsx]], [[graphics.ts]] : graphismes des jeux.
 - [[games.rs]] : détection par launcher (Steam, Epic, Riot, Battle.net, Ubisoft, Xbox, Roblox, Minecraft), comptes Windows multiples, 15 launchers, lancement sans droits administrateur (jeton de l'Explorateur), images dans `art\`, suivi des parties (`games.json`).
-- [[icon.rs]] (icône PNG d'un exe : logos des launchers et des jeux), [[session.rs]] (ce que l'app fait pendant la partie), [[lib.rs]] (boucle de fond toutes les 4 s, événements `games:running` et `games:session`), [[bridge.rs]] (commandes `games` et `game_launch` pour [[Rago OS]]).
+- [[icon.rs]] (icône PNG d'un exe : logos des launchers et des jeux), [[session.rs]] (ce que l'app fait pendant la partie), [[lib.rs]] (boucle de fond toutes les 4 s, événements `games:running` et `games:session`).
 - [[GameTips.tsx]] et [[tips.ts]] (PR #91) : réglages conseillés sous le jeu en avant.
 - Couleurs et résolution : [[display.rs]] (`game_launch` y pose la résolution avant le lancement), [[Display.tsx]] ; puce dans [[Games.tsx]].

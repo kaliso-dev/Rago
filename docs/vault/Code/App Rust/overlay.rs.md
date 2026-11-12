@@ -16,7 +16,7 @@ Tout ce qui suit est CONFIRMÉ (code de `staging`, 10/11).
 - Créée dans le `setup` de [[lib.rs]] (`Overlay::new(resource_dir, data_dir, library, background)`), surveillée par `overlay::watch` (fil `rago-overlay`). Le raccourci global appelle `overlay::on_shortcut`, et la perte de focus de la fenêtre `overlay` appelle `on_blur`.
 - La fenêtre de la barre (label `overlay`, page `overlay.html`, interface [[Overlay.tsx]]) est créée **cachée au premier jeu vu** puis gardée : l'ouvrir est instantané.
 - Les FPS viennent de [[fps.rs]] (PresentMon), le ping de [[gameping.rs]] ; le nom du jeu de [[games.rs]] (`Library::name_for`) ; les préférences (barre activée, raccourci, pastille gardée) de `background.rs`.
-- Historique : créée le 17/10 (`6d5bf29`), ping Minecraft réel le 21/10, souris libérée et Lunar trouvé le 22/10, Alt+X et pastille à gauche le 22/10 (`0948426`), Rago OS jamais pris pour un jeu le 09/11 (`2d18b13`).
+- Historique : créée le 17/10 (`6d5bf29`), ping Minecraft réel le 21/10, souris libérée et Lunar trouvé le 22/10, Alt+X et pastille à gauche le 22/10 (`0948426`).
 
 ## Ce que le fichier expose
 
@@ -34,7 +34,7 @@ Tout ce qui suit est CONFIRMÉ (code de `staging`, 10/11).
 
 ### Qu'est-ce qu'un jeu ? (`game_name`)
 
-1. Jamais un jeu (`NEVER`, 21 exes) : `explorer.exe`, `ragoos.exe`, `rago-os.exe` (Rago OS remplace le bureau), `searchhost.exe`, `startmenuexperiencehost.exe`, `shellexperiencehost.exe`, `lockapp.exe`, `textinputhost.exe`, `applicationframehost.exe`, les navigateurs (`chrome`, `msedge`, `firefox`, `brave`, `opera`, `vivaldi`, `arc`) et les lecteurs vidéo (`vlc`, `mpc-hc64`, `mpc-be64`, `potplayermini64`, `wmplayer`).
+1. Jamais un jeu (`NEVER`, 19 exes) : `explorer.exe`, `searchhost.exe`, `startmenuexperiencehost.exe`, `shellexperiencehost.exe`, `lockapp.exe`, `textinputhost.exe`, `applicationframehost.exe`, les navigateurs (`chrome`, `msedge`, `firefox`, `brave`, `opera`, `vivaldi`, `arc`) et les lecteurs vidéo (`vlc`, `mpc-hc64`, `mpc-be64`, `potplayermini64`, `wmplayer`).
 2. Un exe dans le dossier d'un jeu de la bibliothèque → son nom ([[games.rs]]).
 3. `KNOWN` : `javaw.exe` et `java.exe` → « Minecraft » (Java, tous les launchers), `minecraft.windows.exe` → « Minecraft » (Bedrock).
 4. Sinon, une fenêtre qui couvre tout son écran (plein écran fenêtré, `covers_monitor` : classes `Progman`, `WorkerW`, `Shell_TrayWnd`, `Shell_SecondaryTrayWnd` exclues) → le nom de son exe.
@@ -88,7 +88,7 @@ La fenêtre de l'app elle-même n'est jamais un jeu.
 
 ## Liens avec le reste
 
-- Appelle [[fps.rs]], [[gameping.rs]], [[games.rs]], `background.rs` ; appelée par [[lib.rs]] et [[bridge.rs]] (`live`).
+- Appelle [[fps.rs]], [[gameping.rs]], [[games.rs]], `background.rs` ; appelée par [[lib.rs]].
 - Interface : [[Overlay.tsx]] ; fonctionnalité : [[Barre en jeu]] ; ce que l'app fait pendant la partie : [[Pendant la partie]] et [[session.rs]].
 
 ## Tests
@@ -100,5 +100,5 @@ La fenêtre de l'app elle-même n'est jamais un jeu.
 
 - Ne jamais prendre le premier plan à Minecraft en plein écran ni à un jeu en plein écran exclusif : ils se réduisent.
 - Ne jamais afficher la pastille par-dessus un plein écran exclusif : invisible, elle pourrait le faire sortir de son plein écran.
-- Ajouter un exe à `NEVER` pour tout programme plein écran qui n'est pas un jeu (Rago OS y est depuis le 09/11).
+- Ajouter un exe à `NEVER` pour tout programme plein écran qui n'est pas un jeu.
 - L'ancien raccourci par défaut était `Ctrl+Shift+R` (`OLD_DEFAULT_SHORTCUT` dans `background.rs`).

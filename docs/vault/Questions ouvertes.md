@@ -21,8 +21,6 @@ Au 10/11, après les réponses de Sofiene du jour (q36 à q68 traitées, q46 le 
 
 Posées le 10/11 au soir (q70 à q93), après la relecture complète du code pour le vault détaillé (dossier `Code/`) :
 - q70 : l'exe de test et le vrai exe partagent la même licence sur un PC ([[license.rs]]).
-- q71 : le Mode jeu total coupe 4 services lus par le vérificateur de Ranked Bedwars ([[boost.rs]], [[RBW Mod]]).
-- q72 : services pas relancés si l'app se ferme pendant le Mode jeu total ([[boost.rs]]).
 - q73 : 4 réglages de carte graphique jamais grisés ([[meta.py]]).
 - q74 : provenance et licence de NVIDIA Profile Inspector ([[Configuration Tauri]]).
 - q75 : 73 ou 68 réglages gratuits affichés ; `FREE_TWEAKS` sur Railway ([[sync_tweaks.py]], [[config.js]]).
@@ -68,9 +66,6 @@ Posées le 11/11 (q78 traitée le même jour : Sofiene a demandé la page de ven
 - Les 1.2.0 installées reçoivent-elles bien la 1.2.1 ? (`/api/v1/update/status`) ([[Mise à jour automatique]])
 - Railway prod a-t-il chargé les bases DB-IP (`/admin/reseau`) ? ([[Proxy]])
 - La clé de mise à jour Tauri est-elle sauvegardée hors du PC ? ([[Clés et secrets]])
-- [[Rago OS]] : la tâche « Rago Optimizer » se lance-t-elle sans droits administrateur depuis Rago OS ? Sofiene a essayé l'exe de test le 07/11, sans le dire.
 - Remise du profil NVIDIA sur un vrai PC NVIDIA ([[Remise à zéro]]).
 - Identité du vendeur absente des conditions de vente ; TVA (RAG-20 annulée sans raison) : voir [[Conformité juridique]].
 - Barre en jeu pendant une partie par Rago Route : pas de ping affiché, le jeu étant connecté à `127.0.0.1` (déduit du code, [[gameping.rs]]) ; à voir sur Windows.
-- Pont [[Rago OS]] : la limite de 30 s annoncée n'est pas imposée par l'app ([[bridge.rs]]) ; voir avec le code de Rago OS.
-- Retours de Sofiene sur l'exe test5 de [[Rago OS]] (touche Windows après une relance, widgets cachés en jeu) : à revoir sur Windows.

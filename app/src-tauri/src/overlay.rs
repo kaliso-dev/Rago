@@ -57,12 +57,10 @@ const ESC: &str = "Escape";
 
 /// Exes de jeux reconnus sans la bibliothèque : Minecraft Java (tous les launchers) et Bedrock.
 const KNOWN: &[(&str, &str)] = &[("javaw.exe", "Minecraft"), ("java.exe", "Minecraft"), ("minecraft.windows.exe", "Minecraft")];
-/// Jamais un jeu, même en plein écran : le bureau de Windows (et Rago OS, qui le remplace), les navigateurs et les
+/// Jamais un jeu, même en plein écran : le bureau de Windows, les navigateurs et les
 /// lecteurs vidéo (une vidéo en plein écran n'a pas à afficher la pastille, et le raccourci y reste à la page).
 const NEVER: &[&str] = &[
     "explorer.exe",
-    "ragoos.exe",
-    "rago-os.exe",
     "searchhost.exe",
     "startmenuexperiencehost.exe",
     "shellexperiencehost.exe",

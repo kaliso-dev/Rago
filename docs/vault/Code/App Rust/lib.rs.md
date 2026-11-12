@@ -7,7 +7,7 @@ maj: 2026-11-11
 ---
 # lib.rs
 
-Point d'entrée de toute l'app côté Rust : il déclare les 42 modules, construit l'état partagé `AppState`, enregistre les **93 commandes Tauri** que l'interface React appelle, lance les fils permanents au démarrage (`run()`) et répond au pont de [[Rago OS]]. Fiche parente : [[Code de l'app (Rust)]]. Fonctionnement d'ensemble : [[Architecture de l'app]], [[App Windows]].
+Point d'entrée de toute l'app côté Rust : il déclare les 40 modules, construit l'état partagé `AppState`, enregistre les **93 commandes Tauri** que l'interface React appelle, lance les fils permanents au démarrage (`run()`). Fiche parente : [[Code de l'app (Rust)]]. Fonctionnement d'ensemble : [[Architecture de l'app]], [[App Windows]].
 
 Tout ce qui suit est CONFIRMÉ (code de `staging`, 10/11, commit `ee77d4f`). Fichier créé le 07/10 (1.1.5), 37 commits depuis : c'est le fichier le plus modifié du cœur.
 
@@ -40,19 +40,18 @@ Ajouts du 11/11 pour [[Couleurs et résolution]] (module `display`, 5 commandes 
 | `data_dir` | `PathBuf` | `%APPDATA%\gg.rago.optimizer` (staging : `gg.rago.optimizer.staging`) |
 | `repaired` | `AtomicBool` | vrai si [[repair.rs]] a supprimé une valeur à ce lancement |
 
-Sont aussi gérés à part (par `app.manage`) : `Arc<Background>` ([[background.rs]]), `Arc<overlay::Overlay>` ([[overlay.rs]]), `Arc<session::Session>` ([[session.rs]]), `Arc<display::Display>` ([[display.rs]]), `Arc<boost::Boost>` ([[boost.rs]]).
+Sont aussi gérés à part (par `app.manage`) : `Arc<Background>` ([[background.rs]]), `Arc<overlay::Overlay>` ([[overlay.rs]]), `Arc<session::Session>` ([[session.rs]]), `Arc<display::Display>` ([[display.rs]]).
 
 Méthodes : `AppState::system(refresh)` (sonde mise en cache par `probe_cached`) et `AppState::context(app, premium)`, qui fabrique le `runner::Context` d'un lot : `logs_dir = data_dir\logs`, `run_dir = data_dir\run`, `backup_dir = data_dir\backup`, `adapter` = carte réseau active de la sonde, `stop_when = None`. Quand `app` est `None` (remise à zéro), aucun événement n'est émis.
 
 ### Fonctions internes importantes
 - `keep_undo(ledger, bundle)` (`pub(crate)`, aussi utilisée par [[reset.rs]]) : remplit dans `applied.json` l'annulation des réglages qui n'en ont pas encore (appliqués avant 1.1.6), via `Ledger::fill_undo` et `catalog::undo_of`, puis enregistre. Ainsi l'annulation reste utilisable après une déconnexion.
-- `start_tweaks(app, state, items)` : lance un lot avec les règles de l'offre (détail plus bas). Appelée par `run_tweaks` et par le pont (`tweak`, `game_mode`).
+- `start_tweaks(app, state, items)` : lance un lot avec les règles de l'offre (détail plus bas). Appelée par `run_tweaks`.
 - `reset_after_license(app, bundle)` : remise de fin de licence en arrière-plan (détail plus bas).
 - `keep_route_token(lic)` : renouvelle le jeton de Rago Route (détail plus bas).
 - `quit(app)` : action « Quitter » du menu de l'icône près de l'horloge.
 - `server_name()` : `"staging"` si `RAGO_IDENTIFIER` (posé par [[build.rs]]) finit par `.staging`, sinon `"production"`. Sert au rapport de support.
 - `now_ms()`, `minecraft_dir(dir)` (par défaut `%APPDATA%\.minecraft`, erreur `"Minecraft folder not set"`), `preset_path(path)`.
-- `bridge_presets()`, `BRIDGE_TWEAKS`, `bridge_handler(app)` : le pont avec Rago OS.
 - `pub fn run()` : le démarrage.
 
 ### Les 93 commandes Tauri
@@ -196,7 +195,7 @@ Lancée dans un fil à chaque démarrage (`bundle = None`), après `license_refr
 - `license_sign_out` : `keep_undo`, puis dans `noting` : `Pending::new("signed_out").save` puis `lic.sign_out()` ; enfin `reset_after_license(bundle)`. L'interface repasse en gratuit tout de suite.
 
 ### `net_test`
-Garde seulement les id connus de `nettest::TARGETS`, 16 au plus. Un fil par serveur (`std::thread::scope`), chaque essai émis en `nettest:sample`, chaque serveur fini en `nettest:measure`. Le résultat va dans `LAST_NET_TEST` (lu par le pont), puis `netshare::send(machine_guid ou nom du PC, version, résultats)` l'envoie au serveur ([[netshare.rs]]).
+Garde seulement les id connus de `nettest::TARGETS`, 16 au plus. Un fil par serveur (`std::thread::scope`), chaque essai émis en `nettest:sample`, chaque serveur fini en `nettest:measure`. Le résultat part ensuite par `netshare::send(machine_guid ou nom du PC, version, résultats)` l'envoie au serveur ([[netshare.rs]]).
 
 ### `netopt_run`
 `Action::parse(action)` sinon `"unknown action"`. Une action qui change Windows (`changes()`) pendant un lot ou une remise → `"busy"`. `Apply` exige Premium (`premium_required:netopt`) et le paquet ouvert (`premium_scripts_unavailable`). Les options passent par `sanitized()`. `x3d = session::dual_ccd_x3d(cpu_name)` : jamais « Performances élevées » sur un Ryzen X3D à deux CCD. Chaque ligne du moteur est émise en `netopt:line`.
@@ -222,42 +221,35 @@ Si `reset.hold_exit()` (remise en cours) : cache la fenêtre et ne quitte pas. S
    - supprime `data_dir\run\` (scripts en clair laissés par un arrêt brutal) et le dossier de repli `%SystemRoot%\Temp\<identifiant>` ([[assets.rs]]) ;
    - `History::load(history.json)` ; `Ledger::load(applied.json)`. S'il n'existait pas : `import_history` puis `save` ; s'il est encore en clair (`needs_migration`) : `save` le réécrit chiffré ;
    - `repair::at_startup` (RAG-67) ; le résultat remplit `repaired` ;
-   - `games::Library::new` ; `started_hidden` = argument `--background` ; `Background::load` ; `Session::new` ; `Display::new` (remet ce qu'un plantage a laissé) et `display.spawn` (fil qui regarde le jeu au premier plan, émet `display:state`) ; `Boost::new` (relance ce qu'une partie interrompue a laissé arrêté) ;
-   - **fil des jeux** (toutes les 4 s) : `library.list(false)` une fois, puis en boucle `games::process_paths()`, `library.poll` → `games:running` si changement, exes des jeux + `javaw` de Minecraft (`session::minecraft_exe`), `session.tick(playing, exes, procs, prefs, hogs)` → `games:session` si changement (`hogs` : pendant une partie, option `game_checks` active, `tips::Hogs::tick(exes)` mesure les applis gourmandes, [[tips.rs]], gardé dans ce fil car les compteurs de Windows ne changent pas de fil ; sinon `reset` et liste vide), `display.tick(library.running_dirs(), minecraft)` → `display:state` si changement. Après 5 tours sans jeu (≈ 20 s) avec le Mode jeu total actif : `boost.off()` ;
+   - `games::Library::new` ; `started_hidden` = argument `--background` ; `Background::load` ; `Session::new` ; `Display::new` (remet ce qu'un plantage a laissé) et `display.spawn` (fil qui regarde le jeu au premier plan, émet `display:state`) ;
+   - **fil des jeux** (toutes les 4 s) : `library.list(false)` une fois, puis en boucle `games::process_paths()`, `library.poll` → `games:running` si changement, exes des jeux + `javaw` de Minecraft (`session::minecraft_exe`), `session.tick(playing, exes, procs, prefs, hogs)` → `games:session` si changement (`hogs` : pendant une partie, option `game_checks` active, `tips::Hogs::tick(exes)` mesure les applis gourmandes, [[tips.rs]], gardé dans ce fil car les compteurs de Windows ne changent pas de fil ; sinon `reset` et liste vide), `display.tick(library.running_dirs(), minecraft)` → `display:state` si changement ;
    - `sync_tray` ; si `prefs.autostart` et pas en debug, crée la tâche de démarrage dans un fil si elle manque ;
-   - `Overlay::new` (avec la `Session`, pour le rappel des conseils) + `overlay::watch` (fil `rago-overlay`) ; `manage` de `background`, `overlay`, `session`, `display`, `boost` ;
+   - `Overlay::new` (avec la `Session`, pour le rappel des conseils) + `overlay::watch` (fil `rago-overlay`) ; `manage` de `background`, `overlay`, `session`, `display` ;
    - `show_main` si pas lancé caché ;
    - `License::new()`, `Updates::default()`, `update::watch(app, updates, machine_guid ou nom du PC)` ;
    - `manage(AppState)` ;
    - `instance::on_show_request` : quand un 2e lancement demande la fenêtre, `reset.keep_open()` puis `show`, `unminimize`, `set_focus` ;
-   - `reset_after_license(None)` ; `bridge::serve(bridge_handler)` ([[bridge.rs]]).
+   - `reset_after_license(None)`.
 5. `on_window_event` :
    - fenêtre `overlay` : `CloseRequested` est empêché puis `overlay.close` (Alt+F4 ne la détruit jamais) ; `Focused(false)` → `on_blur` ;
    - fenêtre `main`, `CloseRequested` : remise en cours → cache ; sinon mode arrière-plan (`hides_on_close`) → cache ; sinon, mise à jour prête et aucun lot → `install(false)` ;
    - `main` `Destroyed` → `exit(0)`, même si la barre en jeu cachée existe.
 6. `RunEvent::Exit` : `flows::shutdown()` (session ETW du ping des jeux, [[flows.rs]]), `route::turn_off()` et `display.shutdown()` (couleurs et résolution d'un jeu en cours rendues, [[display.rs]]).
 
-### Le pont avec Rago OS (résumé)
-`bridge_handler` répond aux demandes JSON reçues par [[bridge.rs]] (`{"cmd": …}`), avec **les mêmes règles** que l'interface. Commandes : `hello` (`bridge: 1`), `status` (offre seulement, nombre de réglages appliqués, lot en cours, `gameMode`, boost, partie en cours, mise à jour, dernier test réseau), `live`, `stats`, `clean_ram` (sans réduction des applis), `net_test` (6 serveurs au plus, par défaut `hypixel`, `paris`, `internet`), `games`, `game_launch`, `presets` (noms en français), `tweaks` (tout `BRIDGE_TWEAKS` avec `applied`, `variant`, `locked`), `tweak` (allume ou éteint un réglage par `start_tweaks` ; erreurs `unknown_tweak`, `unknown_variant`, `not_a_switch`, `not_applied`), `open` (montre l'app et émet `app:goto`, éventuellement `page#tweak`), `game_mode` (réglage `game_mode` on/off), `boost` (Premium, `premium_required:boost`), `route`, `route_servers`, `route_start` (`second` ou `phone: true`), `route_stop`. Sinon `unknown_command` ; avant la fin du démarrage, `starting`.
-
-`BRIDGE_TWEAKS` (`LazyLock`) lit `app/src/data/catalog.json` inclus à la compilation : réglages de type `tweak` ou `action`, sans les natifs (`mc_optifine`, `nv_profile`, `rst_point`) ni ceux marqués `native`, avec nom français et anglais, risque, redémarrage, avertissement `confirm`, variantes.
-
 ## Données touchées
 - Disque : suppression de `run\` et du dossier de repli au démarrage ; fichiers `.rago` choisis par le joueur ; `reports\`.
 - Événements émis ici : `reset:done`, `nettest:sample`, `nettest:measure`, `netopt:line`, `games:running`, `games:session`, `display:state`, `app:goto`, `tips:done`. Les autres (`run:*`, `update:ready`, `overlay:mode`, `overlay:nudge`) viennent de [[runner.rs]], [[update.rs]] et [[overlay.rs]].
-- `static LAST_NET_TEST: Mutex<Option<(u64, Vec<Measure>)>>` : dernier test réseau (app ou Rago OS), pour que Rago OS l'affiche sans relancer 10 s de mesures.
 
 ## Erreurs et cas limites
 - Une panique dans un `spawn_blocking` devient le texte de l'erreur (commandes `String`) ou `server_error` (licence, compte).
-- Les verrous du pont utilisent `unwrap_or_else(PoisonError::into_inner)` : un fil qui a paniqué ne bloque pas Rago OS. Les commandes de l'interface utilisent `unwrap()`.
 - `quit` et la fermeture n'installent jamais une mise à jour pendant un lot.
 
 ## Tests
-Un test dans le fichier : `bridge_tests::reglages_proposes_a_rago_os` (plus de 150 réglages, aucun natif, `game_mode` présent, `mc_optifine` et `nv_profile` absents, `defaultVariant` toujours dans les variantes). Le reste est testé dans chaque module : `cargo test --manifest-path src-tauri/Cargo.toml` ([[Développer et tester]]).
+Aucun test dans le fichier : tout est testé dans chaque module : `cargo test --manifest-path src-tauri/Cargo.toml` ([[Développer et tester]]).
 
 ## À savoir avant de modifier
 - Ajouter une commande : l'écrire avec `#[tauri::command]`, l'ajouter à `generate_handler!`, puis à `app/src/lib/api.ts`. La commande n'a besoin d'aucune permission dans `capabilities/` (ce sont des commandes de l'app, pas de plugin).
 - Toute nouvelle façon de lancer des réglages doit passer par `start_tweaks` pour garder les règles de l'offre.
 - Une action qui change Windows doit refuser pendant un lot ou une remise (`"busy"`), comme `netopt_run` et `update_install`.
-- Ne jamais faire passer l'e-mail ou la clé par le pont ni dans le rapport : seulement l'offre.
+- Ne jamais faire passer l'e-mail ou la clé dans le rapport : seulement l'offre.
 - Le nombre de commandes (93) est cité dans [[Architecture de l'app]] : le mettre à jour si on en ajoute.

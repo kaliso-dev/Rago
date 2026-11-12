@@ -13,8 +13,7 @@ Tout ce qui suit est CONFIRMÉ (code de `staging`, 10/11).
 
 ## Rôle et place dans l'ensemble
 
-- Commande Tauri `net_test(ids)` dans [[lib.rs]] : garde seulement les identifiants connus (16 au plus), mesure **chaque serveur en parallèle** (un fil par serveur), envoie chaque essai à l'interface (`nettest:sample`) puis chaque résultat (`nettest:measure`), garde le dernier test (`LAST_NET_TEST`, lu par le pont), puis envoie les chiffres au serveur par [[netshare.rs]].
-- Commande de pont `net_test` ([[bridge.rs]]) : mêmes mesures (6 serveurs au plus, par défaut `hypixel`, `paris`, `internet`), **sans** envoi au serveur.
+- Commande Tauri `net_test(ids)` dans [[lib.rs]] : garde seulement les identifiants connus (16 au plus), mesure **chaque serveur en parallèle** (un fil par serveur), envoie chaque essai à l'interface (`nettest:sample`) puis chaque résultat (`nettest:measure`), puis envoie les chiffres au serveur par [[netshare.rs]].
 - Interface : [[NetTest.tsx]] (onglet Test de la page Réseau).
 - Le « Diagnostic avancé » de la page Réseau n'est pas ici : il passe par le moteur PowerShell de [[netopt.rs]] ([[common.ps1]], actions `quality`, `loaded`, `mtu`).
 
@@ -59,7 +58,7 @@ Les régions sont mesurées sur des serveurs Amazon (DynamoDB), qui ne réponden
 
 ## Liens avec le reste
 
-- Appelé par [[lib.rs]] (`net_test`) et [[bridge.rs]] ; appelle [[mcping.rs]] et [[icmp.rs]] ; résultats envoyés par [[netshare.rs]].
+- Appelé par [[lib.rs]] (`net_test`) ; appelle [[mcping.rs]] et [[icmp.rs]] ; résultats envoyés par [[netshare.rs]].
 - Fonctionnalités : [[Test réseau]], données des futurs serveurs : [[Proxy]].
 
 ## Tests
@@ -70,5 +69,5 @@ Les régions sont mesurées sur des serveurs Amazon (DynamoDB), qui ne réponden
 
 ## À savoir avant de modifier
 
-- Ajouter une cible ici change aussi ce que le pont accepte et ce qui part au serveur : l'interface ([[NetTest.tsx]]) doit en avoir le nom et la description.
+- Ajouter une cible ici change aussi ce qui part au serveur : l'interface ([[NetTest.tsx]]) doit en avoir le nom et la description.
 - Ne pas augmenter le nombre d'essais Minecraft : au-delà de 3 connexions en 4 s, les proxys Minecraft refusent.

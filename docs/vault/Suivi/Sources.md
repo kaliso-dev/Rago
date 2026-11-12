@@ -1,7 +1,7 @@
 ---
 type: référence
 tags: [sources]
-maj: 2026-11-11
+maj: 2026-11-12
 ---
 # Sources
 
@@ -26,7 +26,6 @@ Liste complète au **10/11/2026**, dossier par dossier, plus `rago-route-page/` 
 | `marketing/videos-milli/` | série de vidéos courtes « Milli » (183 Mo) : **abandonnée le 01/11** (voir [[Décisions]]). Les chiffres utiles sont dans [[Vidéos YouTube]] | aucune |
 | `marketing/videos-youtube/` | étude de style (18/10), épisode 001 « Rago tour » en 3 versions, film de lancement 4K (preuve en 720p), sources | [[Vidéos YouTube]] |
 | `proxy/` | **ancienne copie** (07/11) des scripts de Rago Route : `rago-route.py` et `install.sh` plus anciens que ceux du dépôt, `mcping.py` identique, `relay.py` (l'ancien proxy simple, retiré des serveurs le 09/11). Le dépôt (`proxy/`) fait foi | [[Infrastructure Rago Route]], [[Proxy]] |
-| `rago-os/` | à la racine : l'ancien Rago OS du 21/10 (zips de test, aperçu), **abandonné le 31/10** (voir [[Décisions]]). `logo/` (01/11) : logos « Rago OS ». `nouveau-rago-os/` : le Rago OS actuel (aperçus, exe test2 à test5 du 07 au 09/11, copies git `.bundle` de la branche `rago-design`) | [[Rago OS]] |
 | `rago-route-page/` | `version-gameplay/` : la version actuelle du 11/11 (haut de page sur ordinateur et sur téléphone, planche des animations du fonctionnement) ; à la racine : la version du matin avant ses corrections (vidéo de la page, 1 min 38, et 4 captures) ; `refonte/` : 4 captures de la refonte du 11/11 après-midi, remplacée (celle encore sur `staging`) ; `refonte/analyses/` : les 8 analyses (produit et code, preuves, problèmes des joueurs, ExitLag, autres outils, charte, critique de la page, offre) | [[Page de vente Rago Route]] |
 | `rago-route/` | `install.sh` du 08/11, **identique** à `proxy/install.sh` du dépôt au 10/11 | [[Infrastructure Rago Route]] |
 | `refonte-glass/` | les 6 documents de la 1.2.0, captures, `installateur-test/`, `optimisations-sources/` (fichiers de Sofiene du 21/10) | [[Documents de la 1.2.0]], [[Version 1.2.0]], [[Refonte glass]] |
@@ -35,7 +34,7 @@ Liste complète au **10/11/2026**, dossier par dossier, plus `rago-route-page/` 
 | `stripe/` | `ventes-stripe-2026-11-04.md` : copie de la note des ventes du 04/11 | [[Ventes Stripe]] |
 | `synthese/` | `SYNTHESE_REPRISE.md` : synthèse de reprise du 15/10 | [[Synthèse de reprise du 15-10]] |
 | `uploads/` | fichiers bruts envoyés dans le chat : **non lus**, ils peuvent contenir des données sensibles | aucune |
-| `vault/` | `Questions pour Sofiene.md` : vieille copie fixe du 31/10 (par exemple, elle dit encore Rago OS abandonné) ; elle renvoie à la page en ligne de [[Questions ouvertes]]. `maj-2026-11-10-point/` : patch du point du 10/11, déjà appliqué au vault | [[Questions ouvertes]] |
+| `vault/` | `Questions pour Sofiene.md` : vieille copie fixe du 31/10 ; elle renvoie à la page en ligne de [[Questions ouvertes]]. `maj-2026-11-10-point/` : patch du point du 10/11, déjà appliqué au vault | [[Questions ouvertes]] |
 | `vault-patchs/` | patch du 10/11 sur les minutes GitHub Actions, déjà appliqué au vault | [[CI GitHub Actions]] |
 | `Claude Preview(1) (1).mp4` | 28/10, 6 min 34 s, 1280×822, avec son (93 Mo) : enregistrement d'écran de l'app 1.2 sur le PC d'Abel (onglet Réseau, [[Packet Optimizer]] et ses réglages experts) | [[Version 1.2.0]] |
 

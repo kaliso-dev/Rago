@@ -3,8 +3,6 @@ mod analysis;
 mod assets;
 mod background;
 mod backup;
-mod boost;
-mod bridge;
 mod catalog;
 mod display;
 mod flows;
@@ -192,7 +190,7 @@ fn run_tweaks(app: AppHandle, state: State<'_, AppState>, items: Vec<RunItem>) -
     start_tweaks(&app, &state, items)
 }
 
-/// Lance un lot de réglages (interface de l'app, ou Rago OS par le pont) avec les règles de l'offre.
+/// Lance un lot de réglages avec les règles de l'offre.
 fn start_tweaks(app: &AppHandle, state: &AppState, items: Vec<RunItem>) -> Result<String, String> {
     if items.is_empty() {
         return Err("No tweak selected".into());
@@ -400,7 +398,6 @@ async fn net_test(app: AppHandle, state: State<'_, AppState>, ids: Vec<String>) 
                 .collect();
             jobs.into_iter().filter_map(|j| j.join().ok()).collect()
         });
-        *LAST_NET_TEST.lock().unwrap_or_else(std::sync::PoisonError::into_inner) = Some((now_ms(), results.clone()));
         let device = license.device();
         netshare::send(device.fingerprint.machine_guid.as_deref().unwrap_or(&device.name), &version, &results);
         results
@@ -1179,236 +1176,6 @@ fn overlay_open_app(app: AppHandle, overlay: State<'_, Arc<overlay::Overlay>>, p
     }
 }
 
-
-// ---------- pont avec Rago OS (bridge.rs)
-
-/// Dernier test réseau (app ou Rago OS) : Rago OS l'affiche sans relancer 10 s de mesures.
-static LAST_NET_TEST: Mutex<Option<(u64, Vec<nettest::Measure>)>> = Mutex::new(None);
-
-/// Presets du catalogue, pour Spotlight et les suggestions de Rago OS (noms en français).
-fn bridge_presets() -> Vec<serde_json::Value> {
-    let catalog: serde_json::Value = serde_json::from_str(include_str!("../../src/data/catalog.json")).unwrap_or_default();
-    catalog["presets"]
-        .as_array()
-        .map(|list| {
-            list.iter()
-                .map(|p| {
-                    serde_json::json!({
-                        "id": p["id"],
-                        "name": p["name"]["fr"],
-                        "desc": p["desc"]["fr"],
-                        "match": p["match"],
-                        "tweaks": p["tweaks"].as_array().map_or(0, Vec::len),
-                    })
-                })
-                .collect()
-        })
-        .unwrap_or_default()
-}
-
-/// Réglages que Rago OS propose dans Spotlight : ceux qui s'appliquent d'un clic dans l'app. Pas les réglages natifs
-/// à paramètres (OptiFine, profil NVIDIA) : ils se règlent dans l'app. `confirm` : l'avertissement que l'app montre
-/// avant de l'appliquer, que Rago OS montre aussi.
-static BRIDGE_TWEAKS: std::sync::LazyLock<Vec<serde_json::Value>> = std::sync::LazyLock::new(|| {
-    let catalog: serde_json::Value = serde_json::from_str(include_str!("../../src/data/catalog.json")).unwrap_or_default();
-    let mut out = Vec::new();
-    for m in catalog["modules"].as_array().into_iter().flatten() {
-        for s in m["sections"].as_array().into_iter().flatten() {
-            for t in s["tweaks"].as_array().into_iter().flatten() {
-                let (Some(id), Some(kind)) = (t["id"].as_str(), t["kind"].as_str()) else { continue };
-                if t.get("native").is_some() || runner::is_native(id) || !(kind == "tweak" || kind == "action") {
-                    continue;
-                }
-                let variants: Vec<serde_json::Value> = t["variants"]
-                    .as_array()
-                    .into_iter()
-                    .flatten()
-                    .map(|v| serde_json::json!({ "id": v["id"], "label": v["label"]["fr"], "revert": v["revert"].as_bool().unwrap_or(false) }))
-                    .collect();
-                out.push(serde_json::json!({
-                    "id": id,
-                    "name": t["name"]["fr"],
-                    "nameEn": t["name"]["en"],
-                    "desc": t["desc"]["fr"],
-                    "module": m["id"],
-                    "moduleName": m["name"]["fr"],
-                    "section": s["name"]["fr"],
-                    "kind": kind,
-                    "risk": t["risk"],
-                    "reboot": t["reboot"].as_bool().unwrap_or(false),
-                    "confirm": t["confirm"]["fr"],
-                    "variants": variants,
-                    "defaultVariant": t["defaultVariant"],
-                }));
-            }
-        }
-    }
-    out
-});
-
-/// Ce que Rago OS peut demander. Rien de plus que ce que l'interface de l'app sait déjà faire, avec les mêmes règles
-/// (Premium, lot déjà en cours, remise de fin de licence).
-fn bridge_handler(app: AppHandle) -> bridge::Handler {
-    use serde_json::{json, Value};
-    Arc::new(move |req: Value| -> Result<Value, String> {
-        let state = app.try_state::<AppState>().ok_or("starting")?;
-        let arg = |k: &str| req.get(k).cloned().unwrap_or(Value::Null);
-        match req["cmd"].as_str().unwrap_or("") {
-            "hello" => Ok(json!({ "app": "Rago Optimizer", "version": app.package_info().version.to_string(), "bridge": 1 })),
-            "status" => {
-                let lic = state.license.status();
-                let (applied, game_mode) = {
-                    let l = state.ledger.lock().unwrap_or_else(std::sync::PoisonError::into_inner);
-                    let gm = l.tweaks.get("game_mode").is_some_and(|a| a.ok && a.variant.as_deref() != Some("off"));
-                    (l.tweaks.values().filter(|a| a.ok).count(), gm)
-                };
-                let boost = app.try_state::<Arc<boost::Boost>>().map(|b| b.state()).unwrap_or_default();
-                let playing = app.try_state::<Arc<session::Session>>().is_some_and(|s| s.state().playing);
-                let net = LAST_NET_TEST.lock().unwrap_or_else(std::sync::PoisonError::into_inner).clone();
-                Ok(json!({
-                    "version": app.package_info().version.to_string(),
-                    // offre seulement : ni e-mail ni clé ne passent par le pont
-                    "license": { "state": lic.state, "plan": lic.plan, "expiresAt": lic.expires_at },
-                    "applied": applied,
-                    "running": state.runner.is_running(),
-                    "gameMode": game_mode,
-                    "boost": boost,
-                    "playing": playing,
-                    "update": state.updates.ready().map(|r| r.version),
-                    "lastNetTest": net.map(|(at, m)| json!({ "at": at, "results": m })),
-                }))
-            }
-            "live" => {
-                let ov = app.try_state::<Arc<overlay::Overlay>>().ok_or("starting")?;
-                let info = ov.info();
-                Ok(json!({ "game": info.game, "live": ov.live(), "fpsAvailable": info.fps_available }))
-            }
-            "stats" => Ok(serde_json::to_value(state.stats.latest()).unwrap_or_default()),
-            "clean_ram" => {
-                let keep = state.library.install_dirs();
-                memory::clean(false, &keep).map(|c| serde_json::to_value(c).unwrap_or_default())
-            }
-            "net_test" => {
-                let ids: Vec<String> = arg("ids")
-                    .as_array()
-                    .map(|a| a.iter().filter_map(|v| v.as_str().map(String::from)).collect())
-                    .filter(|v: &Vec<String>| !v.is_empty())
-                    .unwrap_or_else(|| vec!["hypixel".into(), "paris".into(), "internet".into()]);
-                let ids: Vec<String> = ids.into_iter().filter(|id| nettest::TARGETS.iter().any(|(t, _, _)| t == id)).take(6).collect();
-                let results: Vec<nettest::Measure> = std::thread::scope(|s| {
-                    let jobs: Vec<_> = ids.iter().map(|id| s.spawn(move || nettest::measure(id, &|_| {}))).collect();
-                    jobs.into_iter().filter_map(|j| j.join().ok()).collect()
-                });
-                *LAST_NET_TEST.lock().unwrap_or_else(std::sync::PoisonError::into_inner) = Some((now_ms(), results.clone()));
-                Ok(serde_json::to_value(results).unwrap_or_default())
-            }
-            "games" => Ok(serde_json::to_value(state.library.list(false)).unwrap_or_default()),
-            "game_launch" => state.library.launch(arg("id").as_str().ok_or("id")?).map(|_| Value::Null),
-            "presets" => Ok(Value::Array(bridge_presets())),
-            // tout le catalogue cherchable depuis Spotlight, avec l'état de chaque réglage et ce que l'offre ouvre
-            "tweaks" => {
-                let premium = state.license.status().state == "active";
-                let l = state.ledger.lock().unwrap_or_else(std::sync::PoisonError::into_inner);
-                let list: Vec<Value> = BRIDGE_TWEAKS
-                    .iter()
-                    .map(|t| {
-                        let id = t["id"].as_str().unwrap_or("");
-                        let applied = l.tweaks.get(id).filter(|a| a.ok);
-                        let mut t = t.clone();
-                        t["applied"] = json!(applied.is_some());
-                        t["variant"] = json!(applied.and_then(|a| a.variant.clone()));
-                        t["locked"] = json!(!catalog::allowed(id, t["defaultVariant"].as_str(), premium));
-                        t
-                    })
-                    .collect();
-                Ok(Value::Array(list))
-            }
-            // un réglage allumé ou éteint depuis Spotlight : même moteur et mêmes règles que le bouton de l'app
-            // (Premium, places du plan gratuit, lot déjà en cours)
-            "tweak" => {
-                let id = arg("id").as_str().ok_or("id")?.to_string();
-                let t = BRIDGE_TWEAKS.iter().find(|t| t["id"] == id.as_str()).ok_or("unknown_tweak")?;
-                let on = arg("on").as_bool().ok_or("on")?;
-                let item = if on {
-                    let variants: Vec<&str> = t["variants"].as_array().into_iter().flatten().filter_map(|v| v["id"].as_str()).collect();
-                    let variant = match arg("variant").as_str() {
-                        Some(v) if variants.contains(&v) => Some(v.to_string()),
-                        Some(_) => return Err("unknown_variant".into()),
-                        None => t["defaultVariant"].as_str().map(String::from).or_else(|| variants.first().map(|v| v.to_string())),
-                    };
-                    RunItem { id, variant, params: None, undo: false }
-                } else {
-                    if t["kind"] == "action" {
-                        return Err("not_a_switch".into());
-                    }
-                    let variant = {
-                        let l = state.ledger.lock().unwrap_or_else(std::sync::PoisonError::into_inner);
-                        l.tweaks.get(&id).filter(|a| a.ok).ok_or("not_applied")?.variant.clone()
-                    };
-                    RunItem { id, variant, params: None, undo: true }
-                };
-                start_tweaks(&app, &state, vec![item]).map(Value::String)
-            }
-            "open" => {
-                background::show_main(&app);
-                if let Some(page) = arg("page").as_str() {
-                    // « réseau#ping_main » : la page, puis le réglage mis en avant (comme la recherche de l'app)
-                    let target = match arg("tweak").as_str() {
-                        Some(t) => format!("{page}#{t}"),
-                        None => page.to_string(),
-                    };
-                    let _ = app.emit_to("main", "app:goto", target);
-                }
-                Ok(Value::Null)
-            }
-            // Mode jeu Rago (réglage game_mode) : même moteur et mêmes règles que le bouton de l'app
-            "game_mode" => {
-                let on = arg("on").as_bool().ok_or("on")?;
-                let item = RunItem { id: "game_mode".into(), variant: Some(if on { "on" } else { "off" }.into()), params: None, undo: !on };
-                start_tweaks(&app, &state, vec![item]).map(Value::String)
-            }
-            // Mode jeu total : services non essentiels arrêtés le temps de la partie (boost.rs), réservé à Premium
-            "boost" => {
-                let b = app.try_state::<Arc<boost::Boost>>().ok_or("starting")?;
-                let on = arg("on").as_bool().ok_or("on")?;
-                if on && state.license.status().state != "active" {
-                    return Err("premium_required:boost".into());
-                }
-                Ok(serde_json::to_value(if on { b.on() } else { b.off() }).unwrap_or_default())
-            }
-            // Rago Route (route.rs), comme l'onglet de l'app
-            "route" => {
-                let mut v = serde_json::to_value(route::current()).unwrap_or_default();
-                v["available"] = json!(true);
-                v["premium"] = json!(state.license.status().state == "active");
-                Ok(v)
-            }
-            "route_servers" => {
-                Ok(serde_json::to_value(route::probe_servers()).unwrap_or_default())
-            }
-            // mêmes règles que le bouton de l'app : jeton Premium, renouvelé tant que Rago Route tourne
-            "route_start" => {
-                let lic = Arc::clone(&state.license);
-                let token = lic.route_token().map_err(|e| format!("premium:{}", e.code))?;
-                // "second" : nom de la carte (comme l'onglet) ; "phone": true : le premier téléphone qui partage
-                let second = match arg("second").as_str() {
-                    Some(n) if !n.is_empty() => Some(n.to_string()),
-                    _ if arg("phone").as_bool().unwrap_or(false) => route::links().links.into_iter().find(|l| l.phone).map(|l| l.name),
-                    _ => None,
-                };
-                let st = route::turn_on(&token, second)?;
-                keep_route_token(lic);
-                Ok(serde_json::to_value(st).unwrap_or_default())
-            }
-            "route_stop" => {
-                route::turn_off();
-                Ok(Value::Null)
-            }
-            _ => Err("unknown_command".into()),
-        }
-    })
-}
-
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
     // une seule Rago Optimizer à la fois (instance.rs) : le verrou est gardé jusqu'à la fin du processus
@@ -1477,18 +1244,13 @@ pub fn run() {
                     let _ = handle.emit("display:state", state);
                 });
             }
-            // Mode jeu total demandé par Rago OS : relance ce qu'une partie interrompue a laissé arrêté (boost.rs)
-            let boost = Arc::new(boost::Boost::new(&data_dir));
             // jeux lancés : la dernière partie de chacun est notée, l'interface suit ceux en cours, et l'app fait ce
             // qu'elle doit pendant la partie (session.rs)
             {
                 let (library, background, session, handle) = (Arc::clone(&library), Arc::clone(&background), Arc::clone(&session), app.handle().clone());
-                let boost = Arc::clone(&boost);
                 let display = Arc::clone(&display);
                 std::thread::spawn(move || {
                     library.list(false);
-                    // parties de suite sans jeu : le Mode jeu total se rend (Rago OS fermé ou planté en pleine partie)
-                    let mut idle_ticks = 0u32;
                     // applis gourmandes pendant la partie (conseils au lancement, tips.rs)
                     let mut hogs = tips::Hogs::default();
                     loop {
@@ -1513,11 +1275,6 @@ pub fn run() {
                         let minecraft = procs.iter().any(|p| session::minecraft_exe(p));
                         if let Some(state) = display.tick(library.running_dirs(), minecraft) {
                             let _ = handle.emit("display:state", state);
-                        }
-                        idle_ticks = if playing { 0 } else { idle_ticks + 1 };
-                        // ~20 s sans jeu : laisse le temps à un lanceur de passer la main au vrai exe
-                        if idle_ticks >= 5 && boost.is_active() {
-                            boost.off();
                         }
                         std::thread::sleep(std::time::Duration::from_secs(4));
                     }
@@ -1546,7 +1303,6 @@ pub fn run() {
             app.manage(overlay);
             app.manage(session);
             app.manage(display);
-            app.manage(boost);
             if !started_hidden {
                 background::show_main(app.handle());
             }
@@ -1588,8 +1344,6 @@ pub fn run() {
             });
             // fin de licence depuis le dernier lancement, ou remise coupée en cours de route : elle reprend ici
             reset_after_license(app.handle(), None);
-            // pont avec Rago OS (bridge.rs)
-            bridge::serve(bridge_handler(app.handle().clone()));
             Ok(())
         })
         .on_window_event(|window, event| {
@@ -1742,26 +1496,4 @@ pub fn run() {
                 }
             }
         });
-}
-
-#[cfg(test)]
-mod bridge_tests {
-    use super::BRIDGE_TWEAKS;
-
-    /// Spotlight de Rago OS : tout le catalogue cliquable, sans les réglages natifs à paramètres.
-    #[test]
-    fn reglages_proposes_a_rago_os() {
-        assert!(BRIDGE_TWEAKS.len() > 150, "{}", BRIDGE_TWEAKS.len());
-        for t in BRIDGE_TWEAKS.iter() {
-            let id = t["id"].as_str().unwrap();
-            assert!(!super::runner::is_native(id), "{id}");
-            assert!(t["name"].as_str().is_some_and(|n| !n.is_empty()), "{id}");
-            assert!(t["module"].as_str().is_some(), "{id}");
-            if let Some(d) = t["defaultVariant"].as_str() {
-                assert!(t["variants"].as_array().unwrap().iter().any(|v| v["id"] == d), "{id}");
-            }
-        }
-        assert!(BRIDGE_TWEAKS.iter().any(|t| t["id"] == "game_mode"));
-        assert!(!BRIDGE_TWEAKS.iter().any(|t| t["id"] == "mc_optifine" || t["id"] == "nv_profile"));
-    }
 }

@@ -53,7 +53,7 @@ Aucun tag `app-v*` ni aucune release n'existe le 10/11 (OBSERVÉ par l'API GitHu
 13. `actions/upload-artifact@v4` : artefact `rago-optimizer-setup-STAGING` (exe de test) ou `rago-optimizer-setup` (prod), contenant `app/src-tauri/target/release/bundle/nsis/*.exe` et `*.exe.sig`. Pas de durée de conservation fixée dans le fichier : c'est le réglage du dépôt (90 jours par défaut chez GitHub, À VÉRIFIER dans les réglages).
 
 ## Durée et coût (OBSERVÉ, API GitHub, 10/11)
-- 238 exécutions depuis la création. Sur les 100 dernières (21/10 → 10/11) : 66 réussies, 26 échouées (21 en 3 à 6 secondes, machine jamais démarrée : quota de minutes vide le 21/10 et le 28/10 ; 5 vrais échecs le 21/10, dont 4 sur la branche Rago OS), 8 annulées.
+- 238 exécutions depuis la création. Sur les 100 dernières (21/10 → 10/11) : 66 réussies, 26 échouées (21 en 3 à 6 secondes, machine jamais démarrée : quota de minutes vide le 21/10 et le 28/10 ; 5 vrais échecs le 21/10), 8 annulées.
 - Durée d'une exécution réussie : 5,0 min au mieux, **7,7 min en médiane depuis le 04/11**, 13,4 min au plus depuis le 04/11 (jusqu'à 28 min sans cache).
 - Le dépôt étant public, ces minutes Windows sont gratuites ; s'il redevient privé, chaque minute Windows compte double (voir [[CI GitHub Actions]]).
 

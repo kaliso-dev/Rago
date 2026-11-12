@@ -52,7 +52,6 @@ Rappel de l'étude sur Rago : Premium 5,99 $/mois, 29,99 $/an, 59,99 $ à vie, *
 ## Ce que Rago en a fait (au 10/11)
 - Essai : retenu sous une autre forme (3 jours avec carte, sur le mensuel, [[Offres et prix]]).
 - Le rôle Discord Pro (Premium) existe déjà ([[Discord]]). Rago n'a pas de pub.
-- [[Rago OS]] résume la partie en fin de jeu (moyennes FPS et ping, temps de jeu) : proche de l'idée 6 côté OS.
 - Le reste n'est pas repris à notre connaissance.
 
 ## Sources les plus utiles (selon l'étude)

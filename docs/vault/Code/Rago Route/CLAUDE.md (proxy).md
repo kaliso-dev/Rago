@@ -20,4 +20,4 @@ Contenu CONFIRMÉ (fichier de `staging`, 10/11) :
 
 ## Écart avec le code
 
-- La phrase « ne marche que dans l'exe de test » est **en retard** : depuis la [[Version 1.3.0]], Rago Route est dans tous les exe (aucune condition `staging` dans [[route.rs]] ni dans les commandes de [[lib.rs]] ; le pont répond `available: true`). Il reste réservé au Premium (jeton signé). Seul le bouton « copier le jeton » pour le Mac est réservé à l'exe de test ([[RouteTab.tsx]]). Le fichier n'a pas été corrigé ici (consigne : pas de modification hors du vault) ; signalé dans le rapport.
+- La phrase « ne marche que dans l'exe de test » est **en retard** : depuis la [[Version 1.3.0]], Rago Route est dans tous les exe (aucune condition `staging` dans [[route.rs]] ni dans les commandes de [[lib.rs]]). Il reste réservé au Premium (jeton signé). Seul le bouton « copier le jeton » pour le Mac est réservé à l'exe de test ([[RouteTab.tsx]]). Le fichier n'a pas été corrigé ici (consigne : pas de modification hors du vault) ; signalé dans le rapport.

@@ -1,7 +1,7 @@
 ---
 type: pilotage
 tags: [journal, chronologie]
-maj: 2026-11-11
+maj: 2026-11-12
 ---
 # Journal
 
@@ -44,20 +44,13 @@ Une ligne par événement marquant, la plus récente en haut. Voir [[Historique 
 | 10/11 | Sofiene répond aux questions q36 à q67 ([[Décisions]]) : une seule grosse sortie avec Rago Route, pas de remboursement, Packet Optimizer en Premium, mensuel après l'essai, sa mère vendeuse ; Supabase de prod au-delà de son quota gratuit (restrictions possibles après le 05/12, voir la ligne sur l'e-mail relu) et aucune clé sauvegardée ; anciens dossiers du dossier partagé supprimés | [[État actuel]], [[Supabase]], [[Clés et secrets]] |
 | 10/11 | Point du projet : la page « Questions du vault Rago » montre en haut l'état du projet et la recommandation d'organisation (un seul projet Claude, un fil par tâche, une fiche technique par brique, CLAUDE.md par dossier du code), et range les questions par sujet ; 9 nouvelles questions (q56 à q64). LinkedIn automatisé arrêté à la demande de Sofiene (fil « Créer le profil LinkedIn de Sofiene ») | [[Questions ouvertes]], [[Mettre à jour le vault]] |
 | 10/11 | Rago Route : l'iPhone en USB n'est pas vu par le PC de Sofiene ; l'onglet propose maintenant n'importe quelle 2e connexion (dont le partage en Wi-Fi), prend le téléphone tout seul, montre un diagnostic étape par étape quand il ne partage pas encore, et reconnaît le partage par Bluetooth ; sur `staging` le 10/11 pour l'exe de test (« fait un exe de test pour tout ça ») | [[Proxy]] |
-| 09/11 | [[Rago OS]] test5 : appli Horloge (alarmes, minuteur, chronomètre, villes), widget Rago Route, Rago Notes, Météo et Horloge dans la Recherche, « Jeu sur tout l'écran », widgets cachés en jeu, touche Windows fiable après une relance, animations du Dock réglables, Météo et boutons de Rago Notes moins « Apple », widgets revus. Côté app, PR #74 fusionnée dans `staging` (commandes `tweaks`, `tweak` et Rago Route du pont, Rago OS jamais pris pour un jeu) | [[Rago OS]], [[Proxy]] |
 | 09/11 | Rago Route sur Windows testé par Sofiene avec pertes simulées (clumsy) : paquets sauvés et réparés comptés, pas de différence ressentie à 5 % de pertes, nette différence à 25 % | [[Proxy]] |
 | 09/11 | Serveurs Rago Route de Paris (sortie) et de Frankfurt (relais) réinstallés en protocole 2, fermés à tout sans jeton Premium ; Hypixel coupe les connexions venant de Frankfurt (sans gravité, c'est un relais) ; ancien proxy simple arrêté | [[Proxy]], [[Infrastructure Rago Route]] |
 | 09/11 | La vérification du site (site-check) échoue : GitHub est passé à Ubuntu 26.04, que Playwright 1.56.1 ne gère pas ; corrigé le 10/11 en fixant Ubuntu 24.04 (PR #75) | [[CI GitHub Actions]] |
-| 08/11 | Rago OS test4 : touche Windows → Applis, Dock rangé dès que la souris part, lancement instantané par défaut, session légère (47 services en pause), Windows remis comme avant en quittant, économiseur supprimé, noms moins « Apple » | [[Rago OS]] |
-| 08/11 | [[Rago OS]], retours de Sofiene traités : 3 thèmes gardés (Rago, Tournoi, Pétale) aux coins arrondis, contraste vérifié texte par texte en sombre et en clair, Dock qui ne s'ouvre que souris plaquée au bord et se range dès qu'elle part, île sans FPS ni ping en jeu (résumé de fin gardé). Nouvel exe de test | [[Rago OS]] |
 | 08/11 | Rago Route, protocole 2 : tunnel chiffré, paquets de secours, 4G du téléphone sur Windows, choix de la sortie la plus rapide ; testé en labo, poussé sur `staging` (Sofiene réinstalle les 2 serveurs) | [[Proxy]] |
 | 08/11 | Accès Premium de Rago Route poussé sur `staging` (commit `7ba0250`) à la demande de Sofiene | [[Proxy]] |
 | 08/11 | Rago Route réservé au Premium (choix de Sofiene) : jeton signé par le serveur de licences, vérifié par la sortie, relais limité à Paris, onglet de l'app avec l'offre Premium, ancien proxy simple retiré de `install.sh` ; testé en labo, pas encore poussé ni installé | [[Proxy]] |
 | 08/11 | Compte rendu des performances de Rago Route écrit pour le collègue de Sofiene | [[Proxy]] |
-| 07/11 | [[Rago OS]], suite : Spotlight cherche et active n'importe quel réglage de l'app, applis ouvertes en plein écran, Dock masqué par défaut, logo R, thèmes v2 (15 thèmes complets, éditeur, thèmes enregistrés), île et widgets enrichis. Commits sur `rago-design` (Mac de Sofiene) ; côté app, commandes `tweaks` et `tweak` du pont en local seulement | [[Rago OS]] |
-| 07/11 | Sofiene essaie l'exe de test de Rago OS sur son PC Windows : « plein de bug » (liste pas encore donnée) | [[Rago OS]] |
-| 07/11 | PR #73 fusionnée dans `staging` sur « fusionne » de Sofiene : pont Rago OS et Mode jeu total dans l'app, vault | [[Rago OS]], [[Mode jeu]] |
-| 07/11 | [[Rago OS]] (dossier `nimbus` du Mac de Sofiene) passe à la charte Rago, reçoit 7 thèmes Rago et devient l'extension de l'app : pont local, FPS et ping dans l'île, Mode jeu total, page, widget et Spotlight Rago | [[Rago OS]] |
 | 07/11 | Premier essai de Rago Route dans l'exe de test sur un PC Windows (soir) : marche ; direct 13 ms, Frankfurt 35 ms, 0 perte, retard du moteur 12 ms au pire | [[Proxy]] |
 | 07/11 | Rago Route dans l'app Windows : moteur Rust `route.rs` + onglet « Rago Route » dans Réseau (exe de test seulement), testé en labo ; poussé sur `staging` à la demande de Sofiene (exe de test refabriqué), jamais lancé sur un PC Windows | [[Proxy]] |
 | 07/11 | Test de coupure du Wi-Fi (30 à 38 s, 14 h 05) : la connexion tient, la 4G prend tout, mais monte à 1,2–1,5 s : mauvaise réception 4G à l'endroit du test (réponse de Sofiene) | [[Proxy]] |
@@ -87,7 +80,7 @@ Une ligne par événement marquant, la plus récente en haut. Voir [[Historique 
 | 02/11 | Vidéo TikTok « Création d'Adam » refaite avec le R de Rago en 4K | [[Logo création d'Adam]] |
 | 01/11 | PR #68 (mises à jour du vault du 31/10 et du 01/11) fusionnée sur « fusionne » | [[Mettre à jour le vault]] |
 | 01/11 | Dernières réponses de Sofiene : acerSHOCK = Abel ; RAG-16, RAG-21 abandonnés ; RAG-76, RAG-84 arrêtés faute de nouvelles des joueurs | [[Linear]], [[Problèmes joueurs]] |
-| 01/11 | Anciennes PR #16, #50, #51, #60 fermées ; [[Linear]] remis à jour (RAG-86 à RAG-91) ; fils « Sortir l'app 1.2.2 » et « Passer le bot Discord en prod » ouverts | [[Prochaines étapes]] |
+| 01/11 | Anciennes PR #16, #50, #51 fermées ; [[Linear]] remis à jour (RAG-86 à RAG-91) ; fils « Sortir l'app 1.2.2 » et « Passer le bot Discord en prod » ouverts | [[Prochaines étapes]] |
 | 01/11 | PR #69 (brouillon) : charte « Affiche » v2.2 sur la page d'accueil, pour décider de l'adopter ; abandonnée le 04/11 (voir [[Décisions]]) | [[Charte graphique]] |
 | 01/11 | Sofiene répond aux questions du vault sur la page « Questions du vault Rago » ; vault mis à jour | [[Décisions]], [[Questions ouvertes]] |
 
@@ -96,7 +89,7 @@ Une ligne par événement marquant, la plus récente en haut. Voir [[Historique 
 |---|---|---|
 | 31/10 | 1.2.1 en ligne (exe et `.sig` déposés par Sofiene) ; Lifetime 59,99 $ confirmé | [[Version 1.2.1]] |
 | 31/10 | Création de ce vault Obsidian dans `docs/vault/` | [[Mettre à jour le vault]] |
-| 31/10 | Premier Rago OS (PR #60) abandonné (voir [[Décisions]]) ; page « Questions du vault Rago » créée ; début d'une nouvelle charte graphique (abandonnée le 04/11) | [[Fils du projet]] |
+| 31/10 | Page « Questions du vault Rago » créée ; début d'une nouvelle charte graphique (abandonnée le 04/11) | [[Fils du projet]] |
 | 29/10 | Retour joueur : hitreg meilleur, mais curseur perdu en plein écran et ping instable | [[Problèmes joueurs]] |
 | 29/10 | Site mis à jour pour la 1.2.1, plans de prix réécrits (PR #66) ; section « New in 1.2 » (PR #59) | [[Site]] |
 | 29/10 | Serveur de prod : mises à jour auto + collecte des tests réseau (PR #63) ; exe 1.2.1 de prod signé ; 1.2.1 fusionnée dans `staging` (PR #64, #65) | [[Version 1.2.1]], [[Proxy]] |
@@ -110,7 +103,7 @@ Une ligne par événement marquant, la plus récente en haut. Voir [[Historique 
 | 22/10 | Retours sur la 1.2.0 : souris libre dans la barre, Lunar trouvé, logos, Network Optimizer, mode jeu renforcé, codes de partage | [[Version 1.2.0]] |
 | 22/10 | Sofiene passe le dépôt `rago` en public pour que la CI compile gratuitement ; Railway bloque les déploiements (cyberattaque) puis repart le soir ; code de partage `RAGO2_` et raccourci Alt+X | [[CI GitHub Actions]], [[Presets]] |
 | 21/10 | Nouvelles optimisations de Sofiene intégrées (Hone, OptiCore, GAME V1, network_optimizer) | [[Catalogue des tweaks]] |
-| 21/10 | Premier Rago OS codé (PR #60) et testé par Sofiene, abandonné le 31/10 (voir [[Décisions]]) ; minutes GitHub Actions épuisées, l'exe est compilé dans le conteneur de Claude | [[CI GitHub Actions]] |
+| 21/10 | Minutes GitHub Actions épuisées, l'exe est compilé dans le conteneur de Claude | [[CI GitHub Actions]] |
 | 19/10 | Site : section Nouveautés 1.2 et boutons Discord (PR #59, brouillon jusqu'au 29/10) | [[Site]] |
 | 19/10 | Vidéo de style CleanMyMac v1 à v3 ; un film publicitaire 4K procédural est abandonné le jour même (« c'est horrible ») | [[Vidéos YouTube]] |
 | 18/10 | Étude du style CleanMyMac pour YouTube | [[Vidéos YouTube]] |

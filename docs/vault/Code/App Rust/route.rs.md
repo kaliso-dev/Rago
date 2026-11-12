@@ -13,11 +13,11 @@ Tout ce qui suit est CONFIRMÉ (code de `staging`, 10/11). Le fichier est le **p
 
 ## Rôle et place dans l'ensemble
 
-- Le joueur Premium clique « Allumer » dans l'onglet Rago Route ([[RouteTab.tsx]]) ou Rago OS envoie `route_start` par le pont ([[bridge.rs]]). [[lib.rs]] demande un **jeton Rago Route** au serveur de licences (`License::route_token()` dans [[license.rs]], route `POST /api/v1/route/token`, voir [[API du serveur]]) puis appelle `route::turn_on(token, second)`.
+- Le joueur Premium clique « Allumer » dans l'onglet Rago Route ([[RouteTab.tsx]]) . [[lib.rs]] demande un **jeton Rago Route** au serveur de licences (`License::route_token()` dans [[license.rs]], route `POST /api/v1/route/token`, voir [[API du serveur]]) puis appelle `route::turn_on(token, second)`.
 - `turn_on` choisit la sortie (`pick_exit`), ouvre les ports locaux `25565` (Hypixel) et `25566` (Minemen) sur `127.0.0.1`, ouvre un socket UDP par trajet et lance le fil moteur.
 - Le joueur met `localhost` (ou `localhost:25566`) comme adresse de serveur dans Minecraft. Chaque connexion TCP du jeu devient une **session** du tunnel. La sortie ([[rago-route.py]] en mode `sortie`, sur le VPS de Paris) ouvre la vraie connexion TCP vers Hypixel ou Minemen et réécrit le nom du serveur dans le handshake.
 - Le jeu n'est jamais modifié : le fichier ne fait que transporter des octets. Rien n'est stocké ni envoyé ailleurs qu'aux serveurs Rago.
-- Historique (git) : moteur Rust et onglet de l'exe de test le 07/11 (`342d09e`), jeton Premium le 08/11 (`7ba0250`), protocole 2 chiffré + FEC le 08/11 (`83f4913`), 4G du téléphone le 08/11 (`85dd530`), liste des sorties le 08/11 (`05f34bd`), pont Rago OS le 09/11 (`2d18b13`), 2e connexion au choix et diagnostic du partage USB/Bluetooth le 10/11 (`3ce03b7`, `f3b9c9c`, `4d514c7`). Dans tous les exe depuis la [[Version 1.3.0]].
+- Historique (git) : moteur Rust et onglet de l'exe de test le 07/11 (`342d09e`), jeton Premium le 08/11 (`7ba0250`), protocole 2 chiffré + FEC le 08/11 (`83f4913`), 4G du téléphone le 08/11 (`85dd530`), liste des sorties le 08/11 (`05f34bd`), 2e connexion au choix et diagnostic du partage USB/Bluetooth le 10/11 (`3ce03b7`, `f3b9c9c`, `4d514c7`). Dans tous les exe depuis la [[Version 1.3.0]].
 
 ## Ce que le fichier expose
 
@@ -34,18 +34,16 @@ Fonctions publiques :
 - `current() -> Status` : état courant (défaut si rien ne tourne).
 - `set_token(t)` : remplace le jeton (les prochaines connexions du jeu l'utilisent) et oublie un refus (`REFUSED = false`).
 - `pick_exit(exits) -> SocketAddrV4` : choix de la sortie (voir plus bas).
-- `probe_servers() -> Vec<ServerView>` : sonde chaque sortie et chaque relais, pour l'état des serveurs dans [[Rago OS]] (commande de pont `route_servers`).
 - `links() -> LinksView` : 2e connexions possibles et diagnostic du téléphone, pour l'onglet (commande `route_links`).
 - `nics()`, `links_of(&[Nic])`, `is_phone_hotspot(Ipv4Addr)`, `is_cellular(desc, if_type)`, `phone_check_of(usb, adapters, links, apple_net_driver)` : détection des cartes réseau et des téléphones (publiques pour les tests).
 
 Types sérialisés vers le front (`camelCase`) :
 - `Status` : `running`, `error` (`"token"` quand la sortie a refusé le jeton), `playing` (une session est ouverte), `paths: PathView[]`, `saved`, `repaired`, `packets`, `resendsHere`, `resendsExit`, `exitPingMs`, `lagHereMs`, `lagExitMs`, `ports` (`[25565, 25566]`).
 - `PathView` : `kind` (`"direct"`, `"relay"`, `"phone"` ou `"second"`), `via` (ville), `rttMs` (arrondi au dixième, absent si le trajet est mort), `alive`, `lossPct`, `firstPct`, `mb`.
-- `ServerView` : `city`, `role` (`"exit"` ou `"relay"`), `rttMs`, `gamePingMs`.
 - `Link { name, phone }`, `LinksView { links, check: Option<PhoneCheck> }`, `PhoneCheck { phone: "iphone" | "android" | null, steps: Step[], why, details: string[] }`, `Step { code, ok }`.
 - `Config` (non sérialisé) : `exit`, `relays`, `no_direct`, `rate` (octets/s par connexion du jeu, défaut `30 × 125 000` = 30 Mbit/s), `port_offset` (tests), `test_loss` (pertes simulées par trajet), `test_cut` (coupure simulée), `second` (nom de la 2e carte).
 
-Commandes Tauri qui l'utilisent (dans [[lib.rs]]) : `route_start(second)`, `route_stop`, `route_status`, `route_links`, `route_token`. Commandes du pont : `route`, `route_servers`, `route_start`, `route_stop` (voir [[bridge.rs]]).
+Commandes Tauri qui l'utilisent (dans [[lib.rs]]) : `route_start(second)`, `route_stop`, `route_status`, `route_links`, `route_token`.
 
 ## Fonctionnement détaillé
 
@@ -126,7 +124,7 @@ Un fil moteur `rago-route` (toutes les décisions, à chaque paquet ou toutes le
 
 ### Choix de la sortie (`pick_exit`)
 
-Avec une seule sortie (cas actuel : Paris), elle est prise directement. Avec plusieurs : 3 tours d'`OPEN` (clé aléatoire, `sid` commun dont les octets 14 et 15 portent l'index et le tour), 200 ms par tour (600 ms au plus), sans ouvrir de session. Score = aller-retour + ping Minecraft lu dans le `HELLO` (octets 32 à 34 du corps), ou + 500 si le ping est inconnu. La plus petite gagne ; aucune réponse : la première de la liste. `probe_servers` fait la même chose pour chaque sortie et chaque relais (par un relais, l'`OPEN` part dans un `FWD` vers la première sortie). Rien n'est envoyé au serveur de jeu, aucun jeton.
+Avec une seule sortie (cas actuel : Paris), elle est prise directement. Avec plusieurs : 3 tours d'`OPEN` (clé aléatoire, `sid` commun dont les octets 14 et 15 portent l'index et le tour), 200 ms par tour (600 ms au plus), sans ouvrir de session. Score = aller-retour + ping Minecraft lu dans le `HELLO` (octets 32 à 34 du corps), ou + 500 si le ping est inconnu. La plus petite gagne ; aucune réponse : la première de la liste. Rien n'est envoyé au serveur de jeu, aucun jeton.
 
 ### Cartes réseau et téléphone (Windows)
 
@@ -157,11 +155,10 @@ Avec une seule sortie (cas actuel : Paris), elle est prise directement. Avec plu
 
 ## Liens avec le reste
 
-- Appelé par [[lib.rs]] (commandes `route_*`, pont, arrêt de l'app) ; le renouvellement du jeton (`keep_route_token` : vérifie toutes les 30 s, nouveau jeton après 2 h, nouvel essai 5 min plus tard en cas d'échec, un seul fil) est dans [[lib.rs]].
+- Appelé par [[lib.rs]] (commandes `route_*`, arrêt de l'app) ; le renouvellement du jeton (`keep_route_token` : vérifie toutes les 30 s, nouveau jeton après 2 h, nouvel essai 5 min plus tard en cas d'échec, un seul fil) est dans [[lib.rs]].
 - Jeton : [[license.rs]] → `POST /api/v1/route/token` du [[Serveur de licences]] (voir [[Code de Rago Route]]).
 - Interface : [[RouteTab.tsx]] (lit `route_status` toutes les secondes et `route_links` toutes les 3 s).
 - Serveurs : [[rago-route.py]] (même protocole, rôles `sortie` et `relais`), installés par [[install.sh]].
-- Rago OS : [[bridge.rs]] et [[Rago OS]].
 
 ## Tests
 

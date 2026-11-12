@@ -15,10 +15,9 @@ Carte du code de **Rago Route**, le tunnel anti-lag pour Minecraft Java, de bout
 | Note | Fichier | Rôle en une ligne |
 |---|---|---|
 | [[route.rs]] | `app/src-tauri/src/route.rs` | moteur du tunnel côté joueur : ports locaux, trajets, chiffrement, renvois, FEC, choix de la sortie, 2e connexion, diagnostic du téléphone |
-| [[lib.rs]] | `app/src-tauri/src/lib.rs` | commandes Tauri `route_start`, `route_stop`, `route_status`, `route_links`, `route_token`, renouvellement du jeton (`keep_route_token`), commandes du pont `route*`, arrêt à la fermeture |
+| [[lib.rs]] | `app/src-tauri/src/lib.rs` | commandes Tauri `route_start`, `route_stop`, `route_status`, `route_links`, `route_token`, renouvellement du jeton (`keep_route_token`), arrêt à la fermeture |
 | [[license.rs]] | `app/src-tauri/src/license.rs` | `route_token()` : demande le jeton au serveur avec le jeton de licence de ce PC |
 | [[RouteTab.tsx]] | `app/src/pages/RouteTab.tsx` | onglet Réseau > Rago Route : bouton, choix de la 2e connexion, diagnostic du téléphone, trajets et compteurs |
-| [[bridge.rs]] | `app/src-tauri/src/bridge.rs` | tube nommé par lequel [[Rago OS]] pilote Rago Route (`route`, `route_servers`, `route_start`, `route_stop`) |
 
 ### Serveurs (`proxy/`)
 | Note | Fichier | Rôle en une ligne |
@@ -35,9 +34,9 @@ Carte du code de **Rago Route**, le tunnel anti-lag pour Minecraft Java, de bout
 ## Comment les pièces s'enchaînent
 
 ```
-  Joueur Premium clique « Allumer » (RouteTab.tsx)      Rago OS envoie {"cmd":"route_start"} (bridge.rs)
-                     \                                    /
-                      v                                  v
+  Joueur Premium clique « Allumer » (RouteTab.tsx)
+                     |
+                     v
         lib.rs  route_start(second) ── license.rs route_token() ──HTTPS──> Serveur de licences
                      |                                            POST /api/v1/route/token
                      |  <── {route_token (6 h), expires_at} ───────────────┘

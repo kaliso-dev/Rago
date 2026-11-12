@@ -86,7 +86,7 @@ Mêmes identifiants que `TARGETS` dans [[nettest.rs]] :
 
 ## Données touchées
 - `localStorage` : `rago.netLast` (dernier test), `rago.netPick` (serveur choisi), `rago.netTarget` (serveur du diagnostic), `rago.netoptDraft` (via [[netopt.ts]], seulement pour la ligne instable). En cas d'échec d'écriture, rien n'est gardé, sans message.
-- Côté moteur : le dernier test est aussi gardé en mémoire (`LAST_NET_TEST` de [[lib.rs]], que [[Rago OS]] lit par le pont [[bridge.rs]] sans relancer de mesure) et envoyé au serveur ([[netshare.rs]]).
+- Côté moteur : le test est envoyé au serveur ([[netshare.rs]]).
 
 ## Erreurs et cas limites
 - Les écouteurs ignorent les événements reçus après la fermeture de l'onglet (`live`).

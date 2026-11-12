@@ -77,4 +77,4 @@ Heures UTC dans cette partie et la suivante (heure de Paris = UTC + 1).
 - Serveurs : Paris (sortie) et Frankfurt (relais) chez Vultr, environ 10 $ par mois. Les serveurs Mumbai, New York et Chicago du 05/11 ne servent plus (Sofiene a dit le 06/11 avoir supprimé les serveurs ; destruction de chacun À VÉRIFIER).
 - Reste : les tests de Sofiene sur l'exe du 10/11 ; q55 (`ROUTE_TESTERS` ajoutée par Sofiene le 10/11) ; ticket [[Linear]] RAG-50 jamais mis à jour (écriture refusée au fil).
 
-Liens : [[Proxy]] · [[Infrastructure Rago Route]] · [[Test réseau]] · [[Rago OS]] (widget Rago Route) · [[Chronologie du projet]]
+Liens : [[Proxy]] · [[Infrastructure Rago Route]] · [[Test réseau]] · [[Chronologie du projet]]
