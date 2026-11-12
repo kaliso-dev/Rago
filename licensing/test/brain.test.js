@@ -278,7 +278,7 @@ test('/admin/cerveau: behind the admin key, page without inline code, data reval
   assert.match(html, /<canvas id="cv-canvas"/);
   assert.match(html, /data-src="\/admin\/cerveau\/donnees.json\?c=rago"/);
   // The brain switcher: one link per brain, the open one marked.
-  assert.match(html, /<nav class="cv-brains"[\s\S]*href="\/admin\/cerveau\?c=rago" aria-current="page">Rago Optimizer<\/a>[\s\S]*href="\/admin\/cerveau\?c=rago-os">RAGO-OS<\/a>/);
+  assert.match(html, /<details class="cv-brains"[\s\S]*<summary[^>]*>[\s\S]*<b>Rago Optimizer<\/b>[\s\S]*href="\/admin\/cerveau\?c=rago" aria-current="page"><span>Rago Optimizer<\/span>[\s\S]*href="\/admin\/cerveau\?c=rago-os"><span>RAGO-OS<\/span><small>kaliso-dev\/RAGO-OS-<\/small>/);
   assert.doesNotMatch(html, /<script>|<script(?![^>]*\bsrc=)[^>]*>|\sstyle="|\son[a-z]+="/i);
   assert.match(page.headers.get('content-security-policy') || '', /script-src 'self'/);
   // The admin menu leads to it.
@@ -308,6 +308,7 @@ test('/admin/cerveau: behind the admin key, page without inline code, data reval
   const osHtml = await os.text();
   assert.match(osHtml, /data-src="\/admin\/cerveau\/donnees.json\?c=rago-os"/);
   assert.match(osHtml, /href="\/admin\/cerveau\?c=rago-os" aria-current="page"/);
+  assert.match(osHtml, /<summary[^>]*>[\s\S]*?<b>RAGO-OS<\/b>/);
   const remembered = os.headers.get('set-cookie').split(';')[0];
   assert.match(remembered, /^rago_cerveau=rago-os$/);
   const osData = await (await get('/admin/cerveau/donnees.json?c=rago-os')).json();

@@ -68,6 +68,12 @@
   // ---------- data ----------
   const SRC = root.dataset.src;
   const FILE_SRC = root.dataset.file;
+  // The brain menu (<details>): closes on a click outside it or on Échap.
+  const brainsMenu = document.getElementById('cv-brains');
+  if (brainsMenu) {
+    document.addEventListener('click', (e) => { if (brainsMenu.open && !brainsMenu.contains(e.target)) brainsMenu.open = false; });
+    brainsMenu.addEventListener('keydown', (e) => { if (e.key === 'Escape' && brainsMenu.open) { e.stopPropagation(); brainsMenu.open = false; brainsMenu.querySelector('summary').focus(); } });
+  }
   const join = (url, q) => `${url}${url.includes('?') ? '&' : '?'}${q}`; // SRC and FILE_SRC carry ?c=<brain>
   let D = null; // what /donnees.json returned
   let etag = '';

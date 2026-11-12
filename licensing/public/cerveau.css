@@ -42,12 +42,23 @@ kbd{font:500 10.5px/16px var(--mono);color:var(--t3);padding:0 5px;border:1px so
 .cv-ibtn[aria-pressed=true]{background:rgba(255,59,48,.14);border-color:rgba(255,59,48,.35);color:var(--t1)}
 .cv-ibtn span{font-size:12.5px;font-weight:500}
 .cv-side-close{display:none}
-/* brain switcher (Rago, RAGO-OS…): one link per brain, the open one lit */
-.cv-brains{display:flex;align-items:center;gap:2px;padding:3px;background:var(--card);border:1px solid var(--line);border-radius:11px;flex-wrap:wrap}
-.cv-brains-l{padding:0 6px 0 7px;font:500 10px/1 var(--mono);letter-spacing:.08em;text-transform:uppercase;color:var(--t3)}
-.cv-brains a{flex:1;display:flex;align-items:center;justify-content:center;min-width:0;height:28px;padding:0 8px;border-radius:8px;color:var(--t3);font-size:12.5px;font-weight:500;text-decoration:none;white-space:nowrap;transition:background .12s,color .12s}
-.cv-brains a:hover{background:var(--raise);color:var(--t1)}
-.cv-brains a[aria-current=page]{background:rgba(255,59,48,.14);color:var(--t1);box-shadow:inset 0 0 0 1px rgba(255,59,48,.35)}
+/* brain switcher (Rago, RAGO-OS…): a drop-down menu, the open brain ticked */
+.cv-brains{position:relative}
+.cv-brains summary{display:flex;align-items:center;gap:8px;height:36px;padding:0 10px;background:var(--card);border:1px solid var(--line-2);border-radius:11px;list-style:none;cursor:pointer;transition:border-color .12s}
+.cv-brains summary::-webkit-details-marker{display:none}
+.cv-brains summary:hover,.cv-brains[open] summary{border-color:var(--line-3)}
+.cv-brains summary:focus-visible{outline:2px solid rgba(255,59,48,.6);outline-offset:2px}
+.cv-brains-l{font:500 10px/1 var(--mono);letter-spacing:.08em;text-transform:uppercase;color:var(--t3)}
+.cv-brains summary b{flex:1;min-width:0;font-size:13px;font-weight:600;color:var(--t1);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.cv-brains summary .ic{color:var(--t3);transition:transform .15s var(--ease)}
+.cv-brains[open] summary .ic{transform:rotate(180deg)}
+.cv-brains-menu{position:absolute;z-index:40;top:calc(100% + 6px);left:0;right:0;margin:0;padding:4px;list-style:none;background:var(--card);border:1px solid var(--line-2);border-radius:12px;box-shadow:0 14px 40px rgba(0,0,0,.45)}
+.cv-brains-menu a{display:grid;grid-template-columns:1fr auto;align-items:center;column-gap:8px;padding:7px 9px;border-radius:8px;color:var(--t2);text-decoration:none;transition:background .12s,color .12s}
+.cv-brains-menu a:hover,.cv-brains-menu a:focus-visible{background:var(--raise);color:var(--t1);outline:none}
+.cv-brains-menu a span{font-size:13px;font-weight:500}
+.cv-brains-menu a small{grid-column:1;font:400 10.5px/1.4 var(--mono);color:var(--t3)}
+.cv-brains-menu a .ic{grid-column:2;grid-row:1/span 2;color:#FF3B30}
+.cv-brains-menu a[aria-current=page]{color:var(--t1)}
 .cv-searchbtn{display:flex;align-items:center;gap:9px;height:36px;padding:0 10px;background:var(--card);border:1px solid var(--line-2);border-radius:11px;color:var(--t3);text-align:left;font-size:13px;transition:border-color .12s,color .12s}
 .cv-searchbtn span{flex:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .cv-searchbtn:hover{border-color:var(--line-3);color:var(--t2)}

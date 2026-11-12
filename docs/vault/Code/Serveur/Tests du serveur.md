@@ -2,7 +2,7 @@
 type: code
 tags: [code, serveur, tests]
 fichier: licensing/test/
-lignes: 4178
+lignes: 4179
 maj: 2026-11-12
 ---
 # Tests du serveur
@@ -19,7 +19,7 @@ Les tests automatiques du serveur de comptes et licences : `npm test` dans `lice
 | `community.test.js` | 419 | 11 | [[community.js]] et [[gateway.js]] |
 | `network.test.js` | 193 | 5 | [[network.js]] et [[geo.js]] |
 | `sales.test.js` | 106 | 4 | [[sales.js]] |
-| `brain.test.js` | 324 | 8 | [[brain.js]], routes du [[Cerveau du vault]] |
+| `brain.test.js` | 325 | 8 | [[brain.js]], routes du [[Cerveau du vault]] |
 | `mmdb.js` | 86 | — | Outil : `writeMmdb(entries, type)` écrit un petit fichier MaxMind (arbre IPv6, enregistrements de 24 bits) pour simuler DB-IP |
 
 
