@@ -19,7 +19,28 @@ import { fileURLToPath } from 'node:url';
 import { gunzipSync, gzipSync } from 'node:zlib';
 
 export const BRAIN_VERSION = 1; // bumped when the data sent to the page changes shape (part of its ETag)
-const VAULT = 'docs/vault/';
+const VAULT = 'docs/vault/'; // the Rago vault; other brains have their own folder (brains below)
+// The brains the page can switch between (Sofiene, 12/11: « je veux pouvoir switch de cerveau […] je dois pouvoir
+// sélectionner le cerveau et il charge »): the Rago vault, and the vault of the new RAGO-OS project, kept in its own
+// repository (kaliso-dev/RAGO-OS-, created by Sofiene on 12/11). Without a repository, a brain is read from
+// CERVEAU_REPO / CERVEAU_BRANCH (and from the working copy when the server runs from one).
+// CERVEAUX replaces this list: "id|Nom|dossier|dépôt|branche;…" (dépôt and branche optional).
+export const DEFAULT_BRAINS = [
+  { id: 'rago', name: 'Rago Optimizer', dir: 'docs/vault/' },
+  { id: 'rago-os', name: 'RAGO-OS', dir: 'docs/vault/', repo: 'kaliso-dev/RAGO-OS-', branch: 'main' },
+];
+export function parseBrains(text) {
+  const out = [];
+  for (const part of String(text || '').split(/[;\n]/)) {
+    const [id, name, dir, repo, branch] = part.split('|').map((x) => (x || '').trim());
+    if (!/^[a-z0-9-]{1,40}$/.test(id || '') || !name || !dir || dir.includes('..')) continue;
+    if (repo && !/^[\w.-]+\/[\w.-]+$/.test(repo)) continue;
+    if (branch && !/^[\w./-]{1,100}$/.test(branch)) continue;
+    if (!out.some((b) => b.id === id)) out.push({ id, name, dir: `${dir.replace(/^\/+|\/+$/g, '')}/`, ...(repo ? { repo } : {}), ...(branch ? { branch } : {}) });
+  }
+  return out.length ? out : DEFAULT_BRAINS.map((b) => ({ ...b }));
+}
+const isNote = (p, dir) => p.startsWith(dir) && p.endsWith('.md') && !p.includes('/.obsidian/') && !p.includes('/.trash/');
 const CHECK_EVERY = 60 * 1000; // how often the branch head is looked at, while the page is used
 const MAX_TARBALL = 120 * 1024 * 1024;
 const MAX_TEXT = 600 * 1024; // bigger files are listed but not kept: the reader links to GitHub for them
@@ -372,6 +393,7 @@ const groupOf = (id) => (id.includes('/') ? id.slice(0, id.indexOf('/')) : '');
  * notes: [{ path (from the repo root), text }]; files: Map(path -> { size, kind }).
  */
 export function buildVault(notesIn, files, meta = {}) {
+  const VAULT = meta.vault || DEFAULT_BRAINS[0].dir;
   const notes = notesIn.filter((n) => n.path.startsWith(VAULT) && n.path.endsWith('.md'))
     .map((n) => ({ path: n.path, text: n.text, id: n.path.slice(VAULT.length, -3) }))
     .sort((a, b) => a.id.localeCompare(b.id, 'fr'));
@@ -446,8 +468,10 @@ export function buildVault(notesIn, files, meta = {}) {
         return `<a class="wl${embed ? ' embed' : ''}" href="#n=${encodeURIComponent(hit.id)}${h ? `&h=${encodeURIComponent(slug(h))}` : ''}" data-note="${esc(hit.id)}"${h ? ` data-h="${esc(slug(h))}"` : ''}>${esc(label)}</a>`;
       },
       code: (text) => {
-        const inVault = /^(?:\.\/)?docs\/vault\/(.+)\.md$/i.exec(text.trim());
-        const note = inVault ? resolveNote(inVault[1]) : null;
+        // `docs/vault/Projet.md` (the folder of this brain) or `Rago_OS_Pro_Build_Bible.md` (a note's file name)
+        const t = text.trim().replace(/^\.\//, '');
+        const note = !/\.md$/i.test(t) ? null : t.toLowerCase().startsWith(VAULT.toLowerCase()) ? resolveNote(t.slice(VAULT.length, -3))
+          : !t.includes('/') && !/\s/.test(t) ? resolveNote(t.slice(0, -3)) : null;
         if (note) {
           if (note !== n) { links.set(note.id, (links.get(note.id) || 0) + 1); if (!context[note.id]) context[note.id] = plain(current).slice(0, 260); }
           return `<a class="wl" href="#n=${encodeURIComponent(note.id)}" data-note="${esc(note.id)}"><code>${esc(text)}</code></a>`;
@@ -501,6 +525,9 @@ export function buildVault(notesIn, files, meta = {}) {
   for (const n of out) groups[n.g] = (groups[n.g] || 0) + 1;
   return {
     v: BRAIN_VERSION,
+    brain: meta.brain || '',
+    brains: meta.brains || [],
+    vault: VAULT,
     repo: meta.repo || '',
     branch: meta.branch || '',
     sha: meta.sha || '',
@@ -521,131 +548,171 @@ export function buildVault(notesIn, files, meta = {}) {
   };
 }
 
-// ---------- the brain: keeps the last build, refreshes it when the branch moves ----------
+// ---------- the brain: one snapshot per repository, each brain built from the snapshot of its repository ----------
 
 /**
- * createBrain(cfg, { fetchImpl, log }) -> { read({ fresh }) -> state, file(path) -> {...}, info() }
+ * createBrain(cfg, { fetchImpl, log }) -> { brains, pick(id), read({ fresh, id }) -> state, file(path, id) -> {...}, error(id) }
+ * cfg.brains: [{ id, name, dir, repo?, branch? }]. Each repository@branch is read once (GitHub, or the working copy
+ * for the main repository when the server runs from one) and shared by the brains it holds; a brain is built from
+ * it the first time it is asked, and again only when the snapshot changes.
  * state: { data (what buildVault returned), json, gzip, etag } or throws BrainError when nothing could be read.
  */
 export function createBrain(cfg, { fetchImpl = fetch, log = console } = {}) {
-  const repo = cfg.brainRepo || 'kaliso-dev/rago';
-  const branch = cfg.brainBranch || 'staging';
+  const mainRepo = cfg.brainRepo || 'kaliso-dev/rago';
+  const mainBranch = cfg.brainBranch || 'staging';
   const token = cfg.brainToken || '';
   const root = cfg.brainSource === 'github' ? null : localRepo(cfg.brainDir);
-  let state = null; // { data, json, gzip, etag, sha, files: Map, contents: Map|null, checkedAt, sig }
-  let pending = null;
-  let lastError = null;
+  const brains = (cfg.brains?.length ? cfg.brains : DEFAULT_BRAINS).map((b) => {
+    const repo = b.repo || mainRepo;
+    const branch = b.branch || (b.repo ? 'main' : mainBranch);
+    return { ...b, repo, branch, key: `${repo.toLowerCase()}@${branch}`, local: !b.repo || repo.toLowerCase() === mainRepo.toLowerCase() };
+  });
+  const list = brains.map(({ id, name, repo }) => ({ id, name, repo }));
+  const pick = (id) => brains.find((b) => b.id === id) || brains[0];
+  const sources = new Map();
+  for (const b of brains) {
+    if (!sources.has(b.key)) {
+      const dirs = brains.filter((x) => x.key === b.key).map((x) => x.dir);
+      sources.set(b.key, makeSource({ repo: b.repo, branch: b.branch, root: b.local && b.branch === mainBranch ? root : null, dirs }));
+    }
+  }
+  const builds = new Map(); // brain id -> { data, json, gzip, etag, sig }
 
-  const finish = (built, files, contents, sha, sig) => {
+  function makeSource({ repo, branch, root: disk, dirs }) {
+    const anyNote = (p) => dirs.some((d) => isNote(p, d));
+    const src = { repo, branch, disk, snap: null, pending: null, lastError: null };
+    const kindOf = (p, size, buf) => (size > MAX_TEXT ? 'big' : BINARY_EXT.has(extOf(p)) || (buf && isBinary(buf)) ? 'bin' : 'txt');
+
+    function loadDisk() {
+      const { files: listed, sha, branch: here } = readDisk(disk);
+      const md = [...listed.keys()].filter(anyNote);
+      const sig = createHash('sha1').update(md.map((p) => `${p}:${listed.get(p).mtime}:${listed.get(p).size}`).join('|') + sha).digest('hex');
+      if (src.snap && src.snap.sig === sig) { src.snap.checkedAt = Date.now(); return src.snap; }
+      const files = new Map();
+      for (const [p, f] of listed) files.set(p, { size: f.size, kind: kindOf(p, f.size) });
+      src.snap = { sha, branch: here || 'local', source: 'disk', files, contents: null, notes: null, checkedAt: Date.now(), sig, at: Date.now() };
+      return src.snap;
+    }
+
+    const authHeader = token ? { authorization: `Basic ${Buffer.from(`x-access-token:${token}`).toString('base64')}` } : {};
+    async function headSha() {
+      let res;
+      try {
+        res = await fetchImpl(`https://github.com/${repo}.git/info/refs?service=git-upload-pack`, {
+          headers: { 'user-agent': 'rago-licensing', ...authHeader }, signal: AbortSignal.timeout(15000) });
+      } catch (err) {
+        throw new BrainError(`GitHub ne répond pas (${err.message}).`);
+      }
+      if (res.status === 401 || res.status === 403 || res.status === 404) {
+        throw new BrainError(token
+          ? `GitHub refuse l’accès au dépôt ${repo} avec CERVEAU_GITHUB_TOKEN (${res.status}) : le jeton a expiré ou n’a pas le droit « Contents : lecture » sur ce dépôt.`
+          : `Le dépôt ${repo} n’est pas lisible sans jeton (${res.status}) : il est sans doute privé. Ajoute CERVEAU_GITHUB_TOKEN dans Railway (jeton GitHub en lecture seule, droit « Contents » sur ce dépôt).`);
+      }
+      if (!res.ok) throw new BrainError(`GitHub a répondu ${res.status} en lisant les branches de ${repo}.`);
+      const text = await res.text();
+      const ref = `refs/heads/${branch}`;
+      const m = new RegExp(`([0-9a-f]{40}) ${ref.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}(?:\\n|\\0)`).exec(text);
+      if (!m) throw new BrainError(`La branche ${branch} n’existe pas dans ${repo}.`);
+      return m[1];
+    }
+    async function download(sha) {
+      const url = token ? `https://api.github.com/repos/${repo}/tarball/${sha}` : `https://codeload.github.com/${repo}/tar.gz/${sha}`;
+      const headers = { 'user-agent': 'rago-licensing', ...(token ? { authorization: `Bearer ${token}`, accept: 'application/vnd.github+json' } : {}) };
+      let res;
+      try { res = await fetchImpl(url, { headers, redirect: 'follow', signal: AbortSignal.timeout(90000) }); } catch (err) {
+        throw new BrainError(`Téléchargement du dépôt ${repo} impossible (${err.message}).`);
+      }
+      if (!res.ok) throw new BrainError(`GitHub a répondu ${res.status} en envoyant le dépôt ${repo}.`);
+      const gz = Buffer.from(await res.arrayBuffer());
+      if (gz.length > MAX_TARBALL) throw new BrainError('Le dépôt est trop gros pour être lu ici.');
+      const tar = gunzipSync(gz, { maxOutputLength: 4 * MAX_TARBALL });
+      return untar(tar).files;
+    }
+    async function loadGithub(sha) {
+      const entries = await download(sha);
+      const files = new Map();
+      const contents = new Map();
+      const notes = new Map(); // every note of the brains of this repository, whatever its size
+      for (const e of entries) {
+        const p = e.path.slice(e.path.indexOf('/') + 1); // GitHub puts everything in <owner>-<repo>-<sha>/
+        if (!p) continue;
+        const kind = kindOf(p, e.data.length, e.data);
+        files.set(p, { size: e.data.length, kind });
+        if (kind === 'txt') contents.set(p, e.data.toString('utf8'));
+        if (anyNote(p)) notes.set(p, e.data.toString('utf8'));
+      }
+      src.snap = { sha, branch, source: 'github', files, contents, notes, checkedAt: Date.now(), sig: sha, at: Date.now() };
+      log.info?.(`[cerveau] ${repo} ${branch}@${sha.slice(0, 7)} : ${notes.size} notes, ${files.size} fichiers.`);
+      return src.snap;
+    }
+    async function refresh(force) {
+      if (disk) return loadDisk();
+      if (!force && src.snap && Date.now() - src.snap.checkedAt < CHECK_EVERY) return src.snap;
+      const sha = await headSha();
+      if (src.snap && src.snap.sha === sha) { src.snap.checkedAt = Date.now(); return src.snap; }
+      return loadGithub(sha);
+    }
+    src.run = (force) => {
+      if (!src.pending) {
+        src.pending = Promise.resolve().then(() => refresh(force))
+          .then((s) => { src.lastError = null; return s; })
+          .catch((err) => {
+            src.lastError = err instanceof BrainError ? err.message : `Lecture du vault impossible : ${err.message}`;
+            if (!(err instanceof BrainError)) log.error?.(`[cerveau] ${err.stack || err.message}`);
+            if (src.snap) { src.snap.checkedAt = Date.now(); return src.snap; }
+            throw new BrainError(src.lastError);
+          })
+          .finally(() => { src.pending = null; });
+      }
+      return src.pending;
+    };
+    /** Waits only when there is no snapshot yet (or when fresh is asked); otherwise refreshes behind. */
+    src.get = async (fresh) => {
+      if (!src.snap || fresh) return src.run(fresh);
+      if (disk || Date.now() - src.snap.checkedAt >= CHECK_EVERY) src.run(false).catch(() => {});
+      return src.snap;
+    };
+    return src;
+  }
+
+  /** The build of one brain from the snapshot of its repository (kept until the snapshot changes). */
+  function build(b, s) {
+    const have = builds.get(b.id);
+    if (have && have.sig === s.sig) return have;
+    const src = sources.get(b.key);
+    const paths = [...s.files.keys()].filter((p) => isNote(p, b.dir));
+    const notes = paths.map((p) => ({ path: p, text: s.notes ? s.notes.get(p) ?? '' : readFileSync(join(src.disk, p), 'utf8') }));
+    const built = buildVault(notes, s.files, { repo: b.repo, branch: s.branch, sha: s.sha, source: s.source, at: s.at, vault: b.dir, brain: b.id, brains: list });
     const json = JSON.stringify(built);
-    state = { data: built, json, gzip: gzipSync(json), etag: `"brain-${BRAIN_VERSION}-${createHash('sha256').update(json).digest('base64url').slice(0, 20)}"`,
-      sha, files, contents, checkedAt: Date.now(), sig };
-    lastError = null;
+    const state = { data: built, json, gzip: gzipSync(json), etag: `"brain-${BRAIN_VERSION}-${b.id}-${createHash('sha256').update(json).digest('base64url').slice(0, 20)}"`, sig: s.sig };
+    builds.set(b.id, state);
     return state;
-  };
-
-  // ---- from disk ----
-  function loadDisk() {
-    const { files: listed, sha, branch: here } = readDisk(root);
-    const vault = [...listed.keys()].filter((p) => p.startsWith(VAULT) && p.endsWith('.md') && !p.includes('/.obsidian/') && !p.includes('/.trash/'));
-    const sig = createHash('sha1').update(vault.map((p) => `${p}:${listed.get(p).mtime}:${listed.get(p).size}`).join('|') + sha).digest('hex');
-    if (state && state.sig === sig) { state.checkedAt = Date.now(); return state; }
-    const files = new Map();
-    for (const [p, f] of listed) files.set(p, { size: f.size, kind: f.size > MAX_TEXT ? 'big' : BINARY_EXT.has(extOf(p)) ? 'bin' : 'txt' });
-    const notes = vault.map((p) => ({ path: p, text: readFileSync(join(root, p), 'utf8') }));
-    const built = buildVault(notes, files, { repo, branch: here || 'local', sha, source: 'disk', at: Date.now() });
-    return finish(built, files, null, sha, sig);
   }
 
-  // ---- from GitHub ----
-  const authHeader = token ? { authorization: `Basic ${Buffer.from(`x-access-token:${token}`).toString('base64')}` } : {};
-  async function headSha() {
-    let res;
-    try {
-      res = await fetchImpl(`https://github.com/${repo}.git/info/refs?service=git-upload-pack`, {
-        headers: { 'user-agent': 'rago-licensing', ...authHeader }, signal: AbortSignal.timeout(15000) });
-    } catch (err) {
-      throw new BrainError(`GitHub ne répond pas (${err.message}).`);
-    }
-    if (res.status === 401 || res.status === 403 || res.status === 404) {
-      throw new BrainError(token
-        ? `GitHub refuse l’accès au dépôt ${repo} avec CERVEAU_GITHUB_TOKEN (${res.status}) : le jeton a expiré ou n’a pas le droit « Contents : lecture » sur ce dépôt.`
-        : `Le dépôt ${repo} n’est pas lisible sans jeton (${res.status}) : il est sans doute privé. Ajoute CERVEAU_GITHUB_TOKEN dans Railway (jeton GitHub en lecture seule, droit « Contents »).`);
-    }
-    if (!res.ok) throw new BrainError(`GitHub a répondu ${res.status} en lisant les branches.`);
-    const text = await res.text();
-    const ref = `refs/heads/${branch}`;
-    const m = new RegExp(`([0-9a-f]{40}) ${ref.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}(?:\\n|\\0)`).exec(text);
-    if (!m) throw new BrainError(`La branche ${branch} n’existe pas dans ${repo} (CERVEAU_BRANCH).`);
-    return m[1];
-  }
-  async function download(sha) {
-    const url = token ? `https://api.github.com/repos/${repo}/tarball/${sha}` : `https://codeload.github.com/${repo}/tar.gz/${sha}`;
-    const headers = { 'user-agent': 'rago-licensing', ...(token ? { authorization: `Bearer ${token}`, accept: 'application/vnd.github+json' } : {}) };
-    let res;
-    try { res = await fetchImpl(url, { headers, redirect: 'follow', signal: AbortSignal.timeout(90000) }); } catch (err) {
-      throw new BrainError(`Téléchargement du dépôt impossible (${err.message}).`);
-    }
-    if (!res.ok) throw new BrainError(`GitHub a répondu ${res.status} en envoyant le dépôt.`);
-    const gz = Buffer.from(await res.arrayBuffer());
-    if (gz.length > MAX_TARBALL) throw new BrainError('Le dépôt est trop gros pour être lu ici.');
-    const tar = gunzipSync(gz, { maxOutputLength: 4 * MAX_TARBALL });
-    return untar(tar).files;
-  }
-  async function loadGithub(sha) {
-    const entries = await download(sha);
-    const files = new Map();
-    const contents = new Map();
-    const notes = [];
-    for (const e of entries) {
-      const p = e.path.slice(e.path.indexOf('/') + 1); // GitHub puts everything in <owner>-<repo>-<sha>/
-      if (!p) continue;
-      const kind = e.data.length > MAX_TEXT ? 'big' : BINARY_EXT.has(extOf(p)) || isBinary(e.data) ? 'bin' : 'txt';
-      files.set(p, { size: e.data.length, kind });
-      if (kind === 'txt') contents.set(p, e.data.toString('utf8'));
-      if (p.startsWith(VAULT) && p.endsWith('.md') && !p.includes('/.obsidian/')) notes.push({ path: p, text: e.data.toString('utf8') });
-    }
-    const built = buildVault(notes, files, { repo, branch, sha, source: 'github', at: Date.now() });
-    log.info?.(`[cerveau] ${branch}@${sha.slice(0, 7)} : ${built.stats.notes} notes, ${built.stats.links} liens, ${files.size} fichiers.`);
-    return finish(built, files, contents, sha, sha);
-  }
-
-  async function refresh(force) {
-    if (root) return loadDisk();
-    if (!force && state && Date.now() - state.checkedAt < CHECK_EVERY) return state;
-    const sha = await headSha();
-    if (state && state.sha === sha) { state.checkedAt = Date.now(); return state; }
-    return loadGithub(sha);
-  }
-
-  function run(force) {
-    if (!pending) {
-      pending = Promise.resolve().then(() => refresh(force))
-        .catch((err) => {
-          lastError = err instanceof BrainError ? err.message : `Lecture du vault impossible : ${err.message}`;
-          if (!(err instanceof BrainError)) log.error?.(`[cerveau] ${err.stack || err.message}`);
-          if (state) { state.checkedAt = Date.now(); return state; }
-          throw new BrainError(lastError);
-        })
-        .finally(() => { pending = null; });
-    }
-    return pending;
-  }
-
+  const main = sources.get(brains[0].key);
   return {
-    source: root ? 'disk' : 'github',
-    repo,
-    branch,
-    /** The current build. Waits only when there is none yet (or when fresh is asked); otherwise refreshes behind. */
-    async read({ fresh = false } = {}) {
-      if (!state || fresh) return run(fresh);
-      if (root || Date.now() - state.checkedAt >= CHECK_EVERY) run(false).catch(() => {});
+    source: main.disk ? 'disk' : 'github',
+    repo: brains[0].repo,
+    branch: brains[0].branch,
+    brains: list,
+    pick: (id) => { const { key, local, ...b } = pick(id); return b; },
+    /** The current build of a brain (the first one when id is unknown). */
+    async read({ fresh = false, id } = {}) {
+      const b = pick(id);
+      const s = await sources.get(b.key).get(fresh);
+      const state = build(b, s);
+      if (!state.data.notes.length) {
+        throw new BrainError(`Le cerveau « ${b.name} » est vide : aucune note .md dans ${b.dir} de ${b.repo} (branche ${s.branch}).`);
+      }
       return state;
     },
-    error: () => lastError,
-    /** One file of the repository, for the reader. Only paths of the file list: nothing else on disk is reachable. */
-    async file(path) {
-      const s = state || await run(false);
+    /** Why the last reading of this brain's repository failed (the last build stays shown), or null. */
+    error: (id) => sources.get(pick(id).key).lastError,
+    /** One file of the brain's repository, for the reader. Only paths of the file list: nothing else on disk is reachable. */
+    async file(path, id) {
+      const b = pick(id);
+      const src = sources.get(b.key);
+      const s = await src.get(false);
       const f = s.files.get(path);
       if (!f) return null;
       const out = { p: path, s: f.size, k: f.kind, lang: extOf(path) };
@@ -653,13 +720,13 @@ export function createBrain(cfg, { fetchImpl = fetch, log = console } = {}) {
       let text = s.contents ? s.contents.get(path) : null;
       if (!s.contents) {
         let buf;
-        try { buf = readFileSync(join(root, path)); } catch { return null; }
+        try { buf = readFileSync(join(src.disk, path)); } catch { return null; }
         if (isBinary(buf)) return { ...out, k: 'bin' };
         text = buf.toString('utf8');
       }
       if (text == null) return { ...out, k: 'big' };
       out.text = text;
-      if (out.lang === 'md') out.html = renderFileMarkdown(text, path, s);
+      if (out.lang === 'md') out.html = renderFileMarkdown(text, path, { files: s.files, notes: build(b, s).data.notes, vault: b.dir });
       return out;
     },
   };
@@ -671,7 +738,7 @@ const BINARY_EXT = new Set(['png', 'jpg', 'jpeg', 'gif', 'webp', 'ico', 'bmp', '
 /** A markdown file outside the vault (README, guides): links to other files of the repo open in the reader. */
 function renderFileMarkdown(text, path, s) {
   const dir = posix.dirname(path);
-  const notes = s.data.notes;
+  const { notes, vault: VAULT } = s;
   const has = (p) => s.files.has(p);
   const ctx = {
     ids: new Set(),
