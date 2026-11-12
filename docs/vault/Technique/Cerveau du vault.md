@@ -17,7 +17,7 @@ Demandé par Sofiene le 12/11 : « ajoute moi au cerveau dans le dashboard admin
 - Chaque cerveau a son dépôt et sa branche : le serveur lit chaque dépôt à part (une archive par dépôt, mêmes règles de cache), et le lecteur ouvre les fichiers du dépôt du cerveau ouvert. Un cerveau sans aucune note affiche « Le cerveau « … » est vide ».
 - La liste se change avec la variable `CERVEAUX` (`id|Nom|dossier|dépôt|branche;…`, dépôt et branche facultatifs) ; vide = les deux cerveaux ci-dessus ([[Variables d'environnement]]).
 - Les deux vaults sont séparés : le vault RAGO-OS se tient dans son propre dépôt (son `CLAUDE.md` et sa note « Mettre à jour le vault »), pas dans celui-ci. RAGO-OS est un nouveau projet (OS Linux pour joueurs) ; c'est autre chose que l'ancien bureau Rago OS retiré de l'app par la PR #99.
-- **Statut (12/11)** : codé et testé en local (PR #100 vers `staging`), pas encore fusionné ni en prod.
+- **Statut (12/11)** : fusionné dans `staging` (PR #100) puis dans la branche de prod (PR #101, portage de `licensing/` seulement), le 12/11 vers 23 h 40 sur « push directement sur la prod » de Sofiene. **Pas encore servi** à 23 h 50 ni sur la prod ni sur staging : la CI GitHub ne démarre plus (limite de dépense Actions, « recent account payments have failed or your spending limit needs to be increased ») et Railway attend la CI (« Wait for CI », [[Railway]]) ; il faut cliquer **Redeploy** dans Railway (prod et staging) ou régler la facturation GitHub. À VÉRIFIER une fois fait.
 
 ## Accès
 - Menu de `/admin` → section **Projet** → **Cerveau**. Adresse : `https://account.rago-optimizer.com/admin/cerveau` (staging : `rago-staging.up.railway.app/admin/cerveau`).
