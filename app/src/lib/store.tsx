@@ -675,7 +675,6 @@ function useStoreValue() {
   }, []);
   // barre en jeu : « Ouvrir Rago Optimizer » ou l'offre Premium, depuis la partie
   useEffect(() => {
-    // « network#ping_main » (Rago OS) : la page, puis le réglage mis en avant
     const sub = api.onGoto((target) => {
       const [page, tweak] = target.split("#");
       if (page === "premium") setUpsell("plan");
