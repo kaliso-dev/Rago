@@ -68,6 +68,7 @@
   // ---------- data ----------
   const SRC = root.dataset.src;
   const FILE_SRC = root.dataset.file;
+  const join = (url, q) => `${url}${url.includes('?') ? '&' : '?'}${q}`; // SRC and FILE_SRC carry ?c=<brain>
   let D = null; // what /donnees.json returned
   let etag = '';
   let staleError = '';
@@ -77,7 +78,7 @@
   const citedBy = new Map(); // file path -> [note ids]
 
   async function fetchData(fresh) {
-    const res = await fetch(`${SRC}${fresh ? '?frais=1' : ''}`, { credentials: 'same-origin', cache: fresh ? 'no-cache' : 'default', headers: { accept: 'application/json' } });
+    const res = await fetch(fresh ? join(SRC, 'frais=1') : SRC, { credentials: 'same-origin', cache: fresh ? 'no-cache' : 'default', headers: { accept: 'application/json' } });
     if (res.redirected || !(res.headers.get('content-type') || '').includes('json')) throw Object.assign(new Error('Ta session admin a expiré : reconnecte-toi.'), { login: true });
     const body = await res.json();
     if (!res.ok) throw new Error(body.error || `Erreur ${res.status}`);
@@ -1141,7 +1142,7 @@
     let data = fileCache.get(`${etag}|${path}`);
     if (!data) {
       try {
-        const res = await fetch(`${FILE_SRC}?chemin=${encodeURIComponent(path)}`, { credentials: 'same-origin', headers: { accept: 'application/json' } });
+        const res = await fetch(join(FILE_SRC, `chemin=${encodeURIComponent(path)}`), { credentials: 'same-origin', headers: { accept: 'application/json' } });
         data = await res.json();
         if (!res.ok) throw new Error(data.error || `Erreur ${res.status}`);
         fileCache.set(`${etag}|${path}`, data);

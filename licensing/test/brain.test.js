@@ -192,6 +192,47 @@ test('brain from GitHub: branch head without the API, archive once per commit, c
   await assert.rejects(nobranch.read(), /La branche nope n’existe pas/);
 });
 
+test('brains: one archive per repository, each brain built apart, an empty one says so', async () => {
+  const sha = '3'.repeat(40);
+  const osSha = '4'.repeat(40);
+  const ragoFiles = { 'docs/vault/Projet.md': '# Projet\n\nVoir [[Journal]].', 'docs/vault/Journal.md': '# Journal' };
+  const osFiles = {
+    'docs/vault/Projet.md': '# Rago OS\n\n[[Architecture]] et `docs/vault/Journal.md`.',
+    'docs/vault/Architecture/Architecture.md': '# Architecture\n\nCode : `kernel/build.sh`.',
+    'docs/vault/Journal.md': '# Journal',
+    'kernel/build.sh': 'echo build\n',
+  };
+  const downloads = [];
+  const fetchImpl = async (url) => {
+    const os = url.includes('RAGO-OS-');
+    if (url.endsWith('/info/refs?service=git-upload-pack')) return new Response(os ? `003f${osSha} refs/heads/main\n0000` : `003f${sha} refs/heads/staging\n0000`);
+    downloads.push(url);
+    return new Response(os ? tarball(osFiles, osSha) : tarball(ragoFiles, sha));
+  };
+  const brain = createBrain(loadConfig({ CERVEAU_SOURCE: 'github' }), { fetchImpl, log: quiet });
+  assert.deepEqual(brain.brains, [{ id: 'rago', name: 'Rago Optimizer', repo: 'kaliso-dev/rago' }, { id: 'rago-os', name: 'RAGO-OS', repo: 'kaliso-dev/RAGO-OS-' }]);
+  const a = await brain.read();
+  assert.deepEqual(a.data.notes.map((n) => n.id), ['Journal', 'Projet']);
+  const b = await brain.read({ id: 'rago-os' });
+  assert.equal(b.data.brain, 'rago-os');
+  assert.equal(b.data.repo, 'kaliso-dev/RAGO-OS-');
+  assert.equal(b.data.branch, 'main');
+  assert.equal(b.data.sha, osSha);
+  assert.deepEqual(b.data.notes.map((n) => n.id), ['Architecture/Architecture', 'Journal', 'Projet']);
+  assert.deepEqual(b.data.notes.find((n) => n.id === 'Projet').out.sort(), ['Architecture/Architecture', 'Journal']);
+  assert.deepEqual(b.data.notes.find((n) => n.id === 'Architecture/Architecture').code, ['kernel/build.sh']);
+  assert.notEqual(a.etag, b.etag);
+  assert.deepEqual(downloads, [`https://codeload.github.com/kaliso-dev/rago/tar.gz/${sha}`, `https://codeload.github.com/kaliso-dev/RAGO-OS-/tar.gz/${osSha}`]);
+  // Files are read in the brain's own repository.
+  assert.equal((await brain.file('kernel/build.sh', 'rago-os')).text, 'echo build\n');
+  assert.equal(await brain.file('kernel/build.sh', 'rago'), null);
+  assert.equal(brain.pick('nope').id, 'rago');
+
+  // CERVEAUX: own list; a brain with no notes says so.
+  const custom = createBrain(loadConfig({ CERVEAU_SOURCE: 'github', CERVEAUX: 'rago|Rago|docs/vault;vide|Vide|docs/rien' }), { fetchImpl, log: quiet });
+  await assert.rejects(custom.read({ id: 'vide' }), (err) => err instanceof BrainError && /Le cerveau « Vide » est vide/.test(err.message));
+});
+
 test('brain from this working copy: the whole vault reads without a broken page', async () => {
   const brain = createBrain(loadConfig({}), { log: quiet });
   assert.equal(brain.source, 'disk');
@@ -210,7 +251,14 @@ test('/admin/cerveau: behind the admin key, page without inline code, data reval
   const cfg = loadConfig({ PUBLIC_URL: 'http://localhost', ADMIN_KEY: KEY });
   const db = await openMemoryDb();
   await ensureKeys(db, cfg);
-  const fetchImpl = async () => new Response('offline', { status: 503 });
+  // GitHub only answers for the RAGO-OS repository (the Rago brain is read from this working copy).
+  const osTar = tarball({ 'docs/vault/Projet.md': '# Rago OS\n\n[[Architecture]]', 'docs/vault/Architecture.md': '# Architecture' }, '5'.repeat(40));
+  const fetchImpl = async (url) => {
+    if (String(url).includes('RAGO-OS-')) {
+      return String(url).endsWith('git-upload-pack') ? new Response(`003f${'5'.repeat(40)} refs/heads/main\n0000`) : new Response(osTar);
+    }
+    return new Response('offline', { status: 503 });
+  };
   const mailer = { purchase: async () => {}, passwordReset: async () => {}, signupCode: async () => {}, subscriptionCanceled: async () => {} };
   const app = createApp({ cfg, db, keys: loadKeys(cfg.signingKeyPem), stripe: new Stripe('sk_test_fake'), mailer, log: quiet, fetchImpl });
 
@@ -228,7 +276,9 @@ test('/admin/cerveau: behind the admin key, page without inline code, data reval
   assert.equal(page.status, 200);
   const html = await page.text();
   assert.match(html, /<canvas id="cv-canvas"/);
-  assert.match(html, /data-src="\/admin\/cerveau\/donnees.json"/);
+  assert.match(html, /data-src="\/admin\/cerveau\/donnees.json\?c=rago"/);
+  // The brain switcher: one link per brain, the open one marked.
+  assert.match(html, /<nav class="cv-brains"[\s\S]*href="\/admin\/cerveau\?c=rago" aria-current="page">Rago Optimizer<\/a>[\s\S]*href="\/admin\/cerveau\?c=rago-os">RAGO-OS<\/a>/);
   assert.doesNotMatch(html, /<script>|<script(?![^>]*\bsrc=)[^>]*>|\sstyle="|\son[a-z]+="/i);
   assert.match(page.headers.get('content-security-policy') || '', /script-src 'self'/);
   // The admin menu leads to it.
@@ -252,5 +302,23 @@ test('/admin/cerveau: behind the admin key, page without inline code, data reval
   assert.match((await file.json()).text, /export function createBrain/);
   assert.equal((await get('/admin/cerveau/fichier?chemin=/etc/passwd')).status, 404);
   assert.equal((await get('/admin/cerveau/fichier')).status, 404);
+
+  // Switching brain: ?c=rago-os loads RAGO-OS (its own notes), and is remembered for the next visit.
+  const os = await get('/admin/cerveau?c=rago-os');
+  const osHtml = await os.text();
+  assert.match(osHtml, /data-src="\/admin\/cerveau\/donnees.json\?c=rago-os"/);
+  assert.match(osHtml, /href="\/admin\/cerveau\?c=rago-os" aria-current="page"/);
+  const remembered = os.headers.get('set-cookie').split(';')[0];
+  assert.match(remembered, /^rago_cerveau=rago-os$/);
+  const osData = await (await get('/admin/cerveau/donnees.json?c=rago-os')).json();
+  assert.equal(osData.brain, 'rago-os');
+  assert.deepEqual(osData.brains.map((b) => b.id), ['rago', 'rago-os']);
+  assert.equal(osData.repo, 'kaliso-dev/RAGO-OS-');
+  assert.deepEqual(osData.notes.map((n) => n.id), ['Architecture', 'Projet']);
+  assert.ok(!osData.notes.some((n) => n.id === 'État actuel'));
+  const again = await app.request('/admin/cerveau', { headers: { cookie: `${cookie}; ${remembered}` } });
+  assert.match(await again.text(), /data-src="\/admin\/cerveau\/donnees.json\?c=rago-os"/);
+  // An unknown brain falls back to the first one.
+  assert.match(await (await get('/admin/cerveau?c=nope')).text(), /donnees.json\?c=rago"/);
   await db.close?.();
 });

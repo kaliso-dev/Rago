@@ -2,8 +2,8 @@
 type: code
 tags: [code, serveur, tests]
 fichier: licensing/test/
-lignes: 4110
-maj: 2026-11-10
+lignes: 4178
+maj: 2026-11-12
 ---
 # Tests du serveur
 
@@ -19,7 +19,7 @@ Les tests automatiques du serveur de comptes et licences : `npm test` dans `lice
 | `community.test.js` | 419 | 11 | [[community.js]] et [[gateway.js]] |
 | `network.test.js` | 193 | 5 | [[network.js]] et [[geo.js]] |
 | `sales.test.js` | 106 | 4 | [[sales.js]] |
-| `brain.test.js` | 256 | 7 | [[brain.js]], routes du [[Cerveau du vault]] |
+| `brain.test.js` | 324 | 8 | [[brain.js]], routes du [[Cerveau du vault]] |
 | `mmdb.js` | 86 | — | Outil : `writeMmdb(entries, type)` écrit un petit fichier MaxMind (arbre IPv6, enregistrements de 24 bits) pour simuler DB-IP |
 
 
@@ -48,7 +48,7 @@ Les tests automatiques du serveur de comptes et licences : `npm test` dans `lice
 - **`community.test.js`** : faux REST Discord (`fakeRest`), horloge fixée au 12/10/2026, identifiants Discord fabriqués à la date voulue. Tests : config, ids et âge des comptes, comptage après 7 jours, départs/retours/comptes jeunes/auto-invitations, URL personnalisée et invitation épuisée, commandes et droits du staff, liens partenaires, VIP par le comptage Rago, texte de `/growth`, enregistrement des commandes et contrôles, gateway (identification, reprise, intent manquant).
 - **`network.test.js`** : faux DB-IP (fichiers gzip écrits avec `mmdb.js`) ; rapport gardé avec ville et fournisseur mais jamais l'IP, contrôle de ce que l'app envoie, limite par adresse, sans base de villes, page `/admin/reseau`, CSV, suppression après 12 mois.
 - **`sales.test.js`** : remboursements et échecs, revenu mensuel ; jours et mois qui commencent à minuit à Paris (été et hiver) ; lecture unique puis cache et relecture en arrière-plan ; paiements en $US convertis par Stripe comptés en € (PR #84).
-- **`brain.test.js`** (PR #85 du Cerveau) : petit écrivain d'archives tar comme celles de GitHub, faux GitHub (`fetchImpl`). Tests : markdown échappé (aucun `<script>`, `onerror` ni `javascript:`) ; tableaux, listes, cases, encadrés, en-têtes ; graphe (liens, liens cassés, fichiers cités, phrase de contexte) ; archive avec noms longs ; lecture GitHub (une archive par commit, cache d'une minute, panne, dépôt privé sans jeton, jeton envoyé, branche absente) ; vault réel lu sur le disque ; routes protégées, page sans code en ligne, `ETag` et 304, gzip, fichier hors liste en 404.
+- **`brain.test.js`** (PR #85 du Cerveau) : petit écrivain d'archives tar comme celles de GitHub, faux GitHub (`fetchImpl`). Tests : markdown échappé (aucun `<script>`, `onerror` ni `javascript:`) ; tableaux, listes, cases, encadrés, en-têtes ; graphe (liens, liens cassés, fichiers cités, phrase de contexte) ; archive avec noms longs ; lecture GitHub (une archive par commit, cache d'une minute, panne, dépôt privé sans jeton, jeton envoyé, branche absente) ; vault réel lu sur le disque ; plusieurs cerveaux (une archive par dépôt, cerveau RAGO-OS lu dans son dépôt, fichiers pris dans le bon dépôt, `CERVEAUX`, cerveau vide) ; routes protégées, page sans code en ligne, `ETag` et 304, gzip, fichier hors liste en 404, sélecteur et `?c=rago-os` gardé par cookie (12/11).
 
 ## Intégration continue
 

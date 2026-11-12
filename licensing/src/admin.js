@@ -687,19 +687,29 @@ export function mountAdmin(app, deps) {
 
   // ---------- the brain: the vault as a graph, and a reader for every file (brain.js, 2026-11-10) ----------
   const brain = createBrain(cfg, { fetchImpl, log });
-  app.get('/admin/cerveau', (c) => c.html(brainPage(cfg)));
+  // ?c=<id> picks the brain (Rago, RAGO-OS…); the choice is remembered in a cookie, so /admin/cerveau reopens it.
+  const BRAIN_COOKIE = 'rago_cerveau';
+  const chosenBrain = (c) => brain.pick(c.req.query('c') || getCookie(c, BRAIN_COOKIE) || '');
+  app.get('/admin/cerveau', (c) => {
+    const b = chosenBrain(c);
+    if (c.req.query('c')) {
+      setCookie(c, BRAIN_COOKIE, b.id, { ...cookieOpts, maxAge: 365 * 24 * 3600 });
+    }
+    return c.html(brainPage(cfg, { brains: brain.brains, current: b }));
+  });
   app.get('/admin/cerveau/donnees.json', async (c) => {
     // ?frais=1 (the page's refresh button) looks at GitHub now instead of within the minute.
     const fresh = c.req.query('frais') === '1' && allow(`cerveau:${ip(c)}`, 60, 60 * 60 * 1000);
     let s;
-    try { s = await brain.read({ fresh }); } catch (err) {
+    const id = chosenBrain(c).id;
+    try { s = await brain.read({ fresh, id }); } catch (err) {
       if (err instanceof BrainError) return c.json({ error: err.message }, 503);
       throw err;
     }
     // Revalidated with its ETag instead of downloaded again: the build only changes with the vault.
     c.header('Cache-Control', 'private, no-cache');
     c.header('ETag', s.etag);
-    const stale = brain.error();
+    const stale = brain.error(id);
     if (stale) c.header('X-Cerveau-Erreur', encodeURIComponent(stale));
     if (c.req.header('if-none-match') === s.etag) return c.body(null, 304);
     if (/\bgzip\b/.test(c.req.header('accept-encoding') || '')) {
@@ -711,7 +721,7 @@ export function mountAdmin(app, deps) {
   });
   app.get('/admin/cerveau/fichier', async (c) => {
     try {
-      const f = await brain.file(String(c.req.query('chemin') || ''));
+      const f = await brain.file(String(c.req.query('chemin') || ''), chosenBrain(c).id);
       return f ? c.json(f) : c.json({ error: 'Ce fichier n’est pas dans le dépôt.' }, 404);
     } catch (err) {
       if (err instanceof BrainError) return c.json({ error: err.message }, 503);

@@ -2,8 +2,8 @@
 type: code
 tags: [code, serveur, javascript, admin]
 fichier: licensing/src/admin.js
-lignes: 723
-maj: 2026-11-10
+lignes: 733
+maj: 2026-11-12
 ---
 # admin.js (serveur)
 
@@ -44,7 +44,7 @@ Ajouté le 10/11/2026 (PR #77), refait le même jour (PR #82), retouché par la 
 | POST `/admin/code-promo` | Code `^[A-Z0-9-]{2,40}$`, 1 à 99 %, `once` ou `forever` ; coupon `rago-promo-<pct>-<durée>`, code réservé aux premiers achats ; audit `admin.promo_code`. |
 | POST `/admin/test-licenses` | `endTestLicenses` ([[billing.js]]) puis `discord.syncAll()` ; audit `admin.test_licenses_ended` ; relit les services (pour que la liste des licences de test disparaisse) et renvoie vers `/admin/services?n=test-ended&count=<n>`. |
 | GET `/admin/reseau`, `/admin/reseau.csv` | [[network.js]] sur 30, 90 (défaut) ou 365 jours ; CSV `rago-tests-reseau-<date>.csv`. |
-| GET `/admin/cerveau` | La page du [[Cerveau du vault]] ([[brain-views.js]]). |
+| GET `/admin/cerveau` | La page du [[Cerveau du vault]] ([[brain-views.js]]). `?c=<id>` choisit le cerveau (`rago`, `rago-os`) et le garde dans le cookie `rago_cerveau` (un an, mêmes options que le cookie admin) ; sans `?c=`, le cookie, sinon le premier cerveau. Les deux routes suivantes suivent la même règle. |
 | GET `/admin/cerveau/donnees.json` | Tout le vault en graphe ([[brain.js]] `read()`) ; `?frais=1` relit GitHub tout de suite (60 fois par heure et par IP, clé `cerveau:<ip>`) ; `Cache-Control: private, no-cache`, `ETag` et réponse 304, gzip si le navigateur l'accepte, en-tête `X-Cerveau-Erreur` quand la dernière lecture a échoué ; 503 `{error}` si rien n'a pu être lu. |
 | GET `/admin/cerveau/fichier?chemin=` | Un fichier du dépôt ([[brain.js]] `file()`), 404 s'il n'est pas dans la liste. |
 

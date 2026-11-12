@@ -2,8 +2,8 @@
 type: code
 tags: [code, serveur, javascript, configuration]
 fichier: licensing/src/config.js
-lignes: 279
-maj: 2026-11-10
+lignes: 284
+maj: 2026-11-12
 ---
 # config.js
 
@@ -74,6 +74,7 @@ Un seul export utile : `loadConfig(env = process.env)` → objet `cfg`, passé �
 | `CERVEAU_REPO`, `CERVEAU_BRANCH` | `brainRepo`, `brainBranch` | `kaliso-dev/rago`, `staging` : le dépôt et la branche que lit le [[Cerveau du vault]] sur GitHub (même sur le serveur de prod). |
 | `CERVEAU_GITHUB_TOKEN` | `brainToken` | vide = le Cerveau ne lit le dépôt que tant qu'il est public ; jeton en lecture seule (« Contents ») à mettre avant le passage en privé. |
 | `CERVEAU_DIR`, `CERVEAU_SOURCE` | `brainDir`, `brainSource` | en local, le dossier lu sur le disque (par défaut le dépôt autour de `licensing/`) ; `github` force GitHub même à côté d'une copie locale. |
+| `CERVEAUX` | `brains` (par `parseBrains` de [[brain.js]], importé en tête du fichier) | les cerveaux du sélecteur, `id|Nom|dossier|dépôt|branche;…` ; vide = Rago Optimizer et RAGO-OS (`kaliso-dev/RAGO-OS-`, `main`). |
 | `AFFILIATE_HOLD_DAYS` | `affiliateHoldDays` | 0 (choix de Sofiene, 07/10/2026 : compte dès l'activation). |
 | `AFFILIATE_REWARD_MONTHS` | `affiliateRewardMonths` | 6. |
 | `AFFILIATE_REWARD_MAX` | `affiliateRewardMax` | 1 (`??` : `0` est accepté et veut dire « sans limite »). |
