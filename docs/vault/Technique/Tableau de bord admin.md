@@ -1,7 +1,7 @@
 ---
 type: technique
 tags: [technique, serveur, admin]
-maj: 2026-11-11
+maj: 2026-11-12
 ---
 # Tableau de bord admin (`/admin`)
 
@@ -25,7 +25,7 @@ Le même jour, Sofiene a trouvé l'interface « baclé remplis de bug pas optmis
 | Tests réseau | `/admin/reseau` | la page des [[Test réseau|tests réseau]] ([[Proxy]]) |
 | Site et promos | `/admin/site` | pop-up de réduction (formulaire à gauche, état et aperçu à droite), création de codes promo Stripe, avis du site ([[Promotions et affiliation]]) |
 | Journal | `/admin/journal` | tous les événements, filtrables (actions admin, licences, comptes, PC, abonnements, affiliation), 100 par page ; le filtre « affiliation » ne montre pas `referral.created`, et les types `discord.*`, `affiliate.*`, `trial.*`, `review.*`, `profile.photo`, `update_download`, `license.duplicate`, `license.subscription_stopped`, `user.email_verified` s'affichent sans libellé |
-| Cerveau | `/admin/cerveau` | le vault du projet en graphe animé, avec un lecteur pour chaque note et chaque fichier du dépôt ; section « Projet » du menu ; PR #85 du Cerveau (`staging`, 10/11), en prod par la PR #87 (10/11). Détail : [[Cerveau du vault]] |
+| Cerveau | `/admin/cerveau` | le vault du projet en graphe animé, avec un lecteur pour chaque note et chaque fichier du dépôt ; sélecteur Rago Optimizer / RAGO-OS (PR #100 du 12/11, pas encore fusionnée) ; section « Projet » du menu ; PR #85 du Cerveau (`staging`, 10/11), en prod par la PR #87 (10/11). Détail : [[Cerveau du vault]] |
 
 ## Interface (refonte, PR #82)
 - Menu fixe à gauche groupé en Pilotage, Joueurs, Produit, Système, avec le nombre de joueurs, une pastille rouge pour les achats non rattachés et un point vert, orange ou rouge pour l'état des services ; sur téléphone, un tiroir qui s'ouvre sans JavaScript. Mode Stripe (live, test, absent) et environnement visibles dans le menu.

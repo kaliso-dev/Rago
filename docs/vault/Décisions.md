@@ -1,7 +1,7 @@
 ---
 type: registre
 tags: [décision]
-maj: 2026-11-11
+maj: 2026-11-12
 ---
 # Décisions
 
@@ -19,6 +19,8 @@ Registre daté des décisions de Sofiene. **La plus récente prime.** Citations 
 | 11/11 | [[Page Outils]] refaite : part avec la [[Version 1.3.0]] (« Oui, fusionne dans staging », carte du fil « Centraliser et enrichir la page Tools », 08:24 UTC) | DÉCIDÉ |
 | 11/11 | Saturation et résolution par jeu (fonctionnalités 1 et 2 de son message du 11/11) : « que les joueurs puisse configurer directmeent dans rago leur saturation qui s'appliquera uniqument quand le jeu selectionner sera lancer, mais aussi il pourront importer les preset de leur joueurs pro », « s'inspirer aussi de l'app VibranceGui », et pour la résolution « importer ou clicker selectioner la resoution de leur youtuber ou jouer pro preferer en 1 clique » ; carte « Saturation, résolution et presets des pros : gratuits ou Premium ? » : **« Presets des pros en Premium »** (réglages à la main gratuits) | codé le 11/11 ; PR #93 dans `staging` par la PR #92 (11/11) pour la version test ; jamais testé sur Windows ; part avec la 1.3.0 (décision du 11/11 à 09:20) ([[Couleurs et résolution]], RAG-95) |
 | 11/11 | Graphismes par jeu comme OptiFine : « Tu vois l'optimization Optifine dans Minecraft elle permet de choisir la qualité de ces graphisme, QUALITE BALANCED VISUAL. Il faut la meme pour tout les jeux valorant fortnite csgo etc etc, avec un choix qualité max, un choix le plus utiliser et optimiser entre performance et agreabilité et enfin le settings avec tout au plus bas » ; sortie de la version en cours « demain voir apres demain MAX », les nouveautés viennent après | codé le 11/11 ; PR #94 dans `staging` par la PR #92 sur « Push toutes les modification vers stagging pour que je puisse test la version test » (11/11) ; part avec la 1.3.0 (décision du 11/11 à 09:20) ; gratuit ou Premium À DÉCIDER, q94 ([[Graphismes des jeux]]) |
+| 12/11 | Cerveau : « je veux pouvoir switch de cerveau et que tu lise maintenant le vault de RAGO-OS je dois pouvoir sélectionner le cerveau et il charge » ; le cerveau RAGO-OS est le vault du nouveau dépôt (« je viens de créer un repo pour lui et il y a un vault dedans c'est ce repo avec ce vault que je veux que tu intègre au cerveau ») | codé, PR #100 vers `staging` |
+| 12/11 | Cerveau : « pour changer de cerveau je veux un menu dépliant pas ça et ensuite push directement sur la prod » | menu déroulant fait ; passage en prod par la PR #100 puis une PR vers la branche de prod ([[Cerveau du vault]]) |
 | 10/11 | Version publique du Cerveau pour le cousin de Sofiene : « extraire le projet du cerveau le mettre dans un nouveau repo public », « retirer le design rago il faut un design classique », que son Claude puisse l'installer et créer le vault, « quelque soit le domaine », hébergeable sur GitHub Pages | fait : nom **Synapse** (choix de Sofiene sur la carte), dépôt public `kaliso-dev/Synapse` poussé le 10/11 ; reste à activer Pages ([[Cerveau du vault]]) |
 | 10/11 | Mettre l'admin et le Cerveau en prod tout de suite, sans attendre la 1.3.0 : « il faut le push sur la prod maintenant et qu'il soit fonctionnel normalement tu as du voir mais j'ai ajouté une page cerveau il faut push avec » | fait, PR #87 fusionnée dans la branche de prod le 10/11 ; la 1.3.0 reste dans `staging` ([[Tableau de bord admin]]) |
 | 10/11 | Admin : corriger l'affichage des ventes en plusieurs devises (« ok donc ça aussi », sur sa capture de la page Ventes) | fait, PR #84 fusionnée dans `staging` le 10/11, en prod par la #87 ([[Tableau de bord admin]]) |

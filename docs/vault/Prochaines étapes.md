@@ -1,7 +1,7 @@
 ---
 type: pilotage
 tags: [pilotage]
-maj: 2026-11-11
+maj: 2026-11-12
 ---
 # Prochaines étapes
 
@@ -11,7 +11,7 @@ Liste priorisée au 01/11, mise à jour le 11/11. Rien ne se lance sans la deman
 0. **Version test du 11/11** : Sofiene teste l'exe « Rago Optimizer Staging » (build de `staging` après la PR #92) avec les 6 nouveautés : « Best hitreg » par défaut, jeu en priorité haute, [[Page Outils]], [[Conseils au lancement du jeu]], [[Couleurs et résolution]], [[Graphismes des jeux]] ; puis il dit ce qui part en prod et quand.
 0. **[[Graphismes des jeux]]** (11/11) : dans `staging` depuis le 11/11 (PR #94 fusionnée par la PR #92, version test ; 6 jeux : Valorant, Fortnite, CS2, Apex, Marvel Rivals, The Finals). Reste : choix gratuit ou Premium (q94), puis test sur Windows (choisir un niveau, lancer le jeu, regarder le menu Vidéo, puis « Restore my settings »).
 0. **Urgent (10/11)** : sauvegarder les clés (`export-keys`, gestionnaire de mots de passe) et régler le dépassement de quota Supabase avant le 05/12 (restrictions possibles ensuite) ([[Supabase]], [[Clés et secrets]]).
-0. **[[Cerveau du vault]]** (`/admin/cerveau`, 10/11) : PR #85 **fusionnée dans `staging` le 10/11**, en prod par la PR #87 le même soir ; `CERVEAU_GITHUB_TOKEN` à mettre dans Railway (staging et prod) **avant que le dépôt passe en privé** (mode d'emploi donné à Sofiene le 11/11 ; fait ou non : À VÉRIFIER, q98), sinon la page affiche « Le dépôt kaliso-dev/rago n'est pas lisible sans jeton » ([[Variables d'environnement]], mode d'emploi dans `licensing/docs/MISE-EN-LIGNE.md`). Abel l'ouvre avec la clé admin.
+0. **[[Cerveau du vault]]** (`/admin/cerveau`, 10/11) : PR #85 **fusionnée dans `staging` le 10/11**, en prod par la PR #87 le même soir ; `CERVEAU_GITHUB_TOKEN` à mettre dans Railway (staging et prod) **avant que le dépôt passe en privé** (mode d'emploi donné à Sofiene le 11/11 ; fait ou non : À VÉRIFIER, q98), sinon la page affiche « Le dépôt kaliso-dev/rago n'est pas lisible sans jeton » ([[Variables d'environnement]], mode d'emploi dans `licensing/docs/MISE-EN-LIGNE.md`). Abel l'ouvre avec la clé admin. **12/11** : le dépôt `rago` était privé ce soir-là (OBSERVÉ), donc le jeton est nécessaire dès maintenant. Choix du cerveau (Rago Optimizer / RAGO-OS, dépôt `kaliso-dev/RAGO-OS-`) : PR #100 vers `staging` à fusionner, puis à mettre en prod si Sofiene le demande.
 0. **Synapse** (version publique du Cerveau, 10/11) : dépôt `kaliso-dev/Synapse` créé et kit poussé ; Sofiene active Pages (Settings → Pages → Source : GitHub Actions) pour mettre la démo en ligne ([[Cerveau du vault]]).
 0. **`site-check` rouge sur la branche de prod** depuis le 09/11 : le correctif `ubuntu-24.04` (`98181fb`) n'est que sur `staging` ; à porter dans la prochaine PR « (prod) », sinon toute PR de prod qui touche `site/` sera rouge ([[CI GitHub Actions]], [[site-check.yml]]).
 0. **[[Page Outils]] refaite** (PR #90, dans `staging` depuis le 11/11 par la PR #92, ticket RAG-93) : part avec la 1.3.0 (Sofiene, 11/11) ; Sofiene l'essaie sur Windows (applis au démarrage surtout : liste, couper, rallumer, programmes gardés ; mode d'alimentation ; « Lancer » depuis la liste réunie) : avec l'exe de test de `staging` une fois la PR fusionnée sur son « fusionne », ou avec un exe « Staging » construit à la main depuis la branche (Run workflow, serveur `staging`). L'exe du build de la PR vise le serveur de prod et remplace le Rago installé ([[CI GitHub Actions]]).

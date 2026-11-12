@@ -2,7 +2,7 @@
 // /admin/cerveau/donnees.json. Same strict CSP as the rest of /admin: no inline style or script in this HTML.
 import { html } from './views.js';
 
-const ASSETS = '20261110a'; // bumped when cerveau.css / cerveau.js change, so browsers don't keep the old ones
+const ASSETS = '20261112b'; // bumped when cerveau.css / cerveau.js change, so browsers don't keep the old ones
 const MARK = html`<svg viewBox="0 0 164 180" aria-hidden="true"><path d="M0 0H160V46L93.83 101.42L164 180H114L65.17 125.42L0 180V132L112.24 38H39V78.34L0 111Z" fill="#FF3B30"/></svg>`;
 const ic = (d) => html`<svg class="ic" viewBox="0 0 16 16" aria-hidden="true"><path d="${d}" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>`;
 const I = {
@@ -17,9 +17,22 @@ const I = {
   local: ic('M8 9.5a1.5 1.5 0 1 0 0-3 1.5 1.5 0 0 0 0 3zM3 4.5a1 1 0 1 0 0-2 1 1 0 0 0 0 2zM13 4.5a1 1 0 1 0 0-2 1 1 0 0 0 0 2zM3 13.5a1 1 0 1 0 0-2 1 1 0 0 0 0 2zM13 13.5a1 1 0 1 0 0-2 1 1 0 0 0 0 2zM6.8 7L3.7 4.2M9.2 7l3.1-2.8M6.8 9l-3.1 2.8M9.2 9l3.1 2.8'),
   files: ic('M2.5 4a1 1 0 0 1 1-1h3l1.5 1.5h4.5a1 1 0 0 1 1 1V12a1 1 0 0 1-1 1h-9a1 1 0 0 1-1-1z'),
   sliders: ic('M3 4.5h6M12 4.5h1M3 11.5h1M7 11.5h6M10.5 3v3M5.5 10v3'),
+  chevron: ic('M4.5 6.5L8 10l3.5-3.5'),
+  check: ic('M3.5 8.5l3 3 6-7'),
 };
 
-export function brainPage(cfg) {
+/** The brain switcher: a drop-down menu (<details>, works without script) with one link per brain; following one
+ * loads that brain (and is remembered, admin.js). Sofiene, 12/11: « pour changer de cerveau je veux un menu dépliant ». */
+function switcher(brains, current) {
+  if (!brains || brains.length < 2) return '';
+  return html`<details class="cv-brains" id="cv-brains">
+      <summary aria-label="Changer de cerveau"><span class="cv-brains-l">Cerveau</span><b>${current.name}</b>${I.chevron}</summary>
+      <ul class="cv-brains-menu" aria-label="Cerveaux">${brains.map((b) => html`<li><a href="/admin/cerveau?c=${encodeURIComponent(b.id)}"${b.id === current.id ? html` aria-current="page"` : ''}><span>${b.name}</span>${b.repo ? html`<small>${b.repo}</small>` : ''}${b.id === current.id ? I.check : ''}</a></li>`)}</ul>
+    </details>`;
+}
+
+export function brainPage(cfg, { brains = [], current = { id: 'rago', name: 'Rago Optimizer' } } = {}) {
+  const q = `?c=${encodeURIComponent(current.id)}`;
   return `<!doctype html>
 <html lang="fr">
 <head>
@@ -27,7 +40,7 @@ export function brainPage(cfg) {
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="theme-color" content="#070708">
 <meta name="robots" content="noindex, nofollow">
-<title>Cerveau · Rago Admin</title>
+<title>Cerveau ${html`${current.name}`} · Rago Admin</title>
 <link rel="icon" href="/assets/favicon.svg?v=3" type="image/svg+xml">
 <link rel="icon" href="/assets/favicon-32.png?v=3" type="image/png" sizes="32x32">
 <link rel="preload" href="/assets/fonts/Geist-Variable.woff2" as="font" type="font/woff2" crossorigin>
@@ -37,14 +50,15 @@ export function brainPage(cfg) {
 <script src="/assets/cerveau.js?v=${ASSETS}" defer></script>
 </head>
 <body class="cv">
-${html`<div class="cv-app" id="cv" data-src="/admin/cerveau/donnees.json" data-file="/admin/cerveau/fichier" data-env="${cfg.envName}">
+${html`<div class="cv-app" id="cv" data-src="/admin/cerveau/donnees.json${q}" data-file="/admin/cerveau/fichier${q}" data-brain="${current.id}" data-env="${cfg.envName}">
   <input type="checkbox" id="cv-nav" class="cv-nav-t" tabindex="-1" aria-hidden="true">
   <aside class="cv-side" aria-label="Explorateur">
     <div class="cv-brand">
-      <a class="cv-logo" href="/admin" title="Retour à l’admin">${MARK}<span><b>Cerveau</b><small>Vault Rago</small></span></a>
+      <a class="cv-logo" href="/admin" title="Retour à l’admin">${MARK}<span><b>Cerveau</b><small>${current.name}</small></span></a>
       <a class="cv-ibtn cv-back" href="/admin" aria-label="Retour à l’admin" title="Retour à l’admin">${I.left}</a>
       <label class="cv-ibtn cv-side-close" for="cv-nav" aria-label="Fermer le panneau">${I.x}</label>
     </div>
+    ${switcher(brains, current)}
     <button class="cv-searchbtn" type="button" data-palette>${I.search}<span>Rechercher une note ou un fichier</span><kbd>Ctrl K</kbd></button>
     <label class="cv-filter">${I.sliders}<input id="cv-filter" type="search" placeholder="Filtrer le graphe" autocomplete="off" spellcheck="false" aria-label="Filtrer le graphe"></label>
     <div class="cv-tabs" role="tablist">

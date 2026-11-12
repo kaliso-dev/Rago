@@ -1,3 +1,5 @@
+import { parseBrains } from './brain.js';
+
 const trimSlash = (s) => s.replace(/\/+$/, '');
 // Accepts "rago.up.railway.app" as well as "https://rago.up.railway.app/".
 const asUrl = (s) => (s ? trimSlash(/^https?:\/\//i.test(s.trim()) ? s.trim() : `https://${s.trim()}`) : '');
@@ -147,6 +149,9 @@ export function loadConfig(env = process.env) {
     brainToken: (env.CERVEAU_GITHUB_TOKEN || '').trim(),
     brainDir: (env.CERVEAU_DIR || '').trim(),
     brainSource: (env.CERVEAU_SOURCE || '').trim().toLowerCase(), // "github" forces GitHub even next to a working copy
+    // The brains the page switches between (2026-11-12): Rago (docs/vault of this repository) and RAGO-OS (docs/vault
+    // of kaliso-dev/RAGO-OS-, branch main) by default; CERVEAUX="id|Nom|dossier|dépôt|branche;…" replaces the list.
+    brains: parseBrains(env.CERVEAUX),
 
     // Pro role on the Rago Discord (2026-10-10): Premium players link their Discord from /account, a bot gives
     // them the role and takes it back when Premium stops. Without all five, the role stays manual (ticket).

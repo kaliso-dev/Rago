@@ -2,8 +2,8 @@
 type: code
 tags: [code, serveur, javascript, admin, vault, navigateur]
 fichier: licensing/public/cerveau.js
-lignes: 1534
-maj: 2026-11-10
+lignes: 1541
+maj: 2026-11-12
 ---
 # cerveau.js
 
@@ -17,7 +17,7 @@ Servi en fichier statique (`/assets/cerveau.js?v=<ASSETS>`), chargé par la page
 ## Fonctionnement détaillé
 
 ### Données et modèle
-- `fetchData(fresh)` : `fetch` de `donnees.json` (`?frais=1` pour le bouton ↻). Une redirection ou une réponse qui n'est pas du JSON = session admin expirée (« Ta session admin a expiré : reconnecte-toi », bouton « Se reconnecter »). L'en-tête `X-Cerveau-Erreur` (GitHub injoignable, version gardée) s'affiche en rouge dans le pied.
+- `fetchData(fresh)` : `fetch` de `donnees.json?c=<cerveau>` (`&frais=1` pour le bouton ↻ ; `join()` ajoute les paramètres aux adresses de la page, qui portent déjà `?c=`). Changer de cerveau recharge la page (lien du menu, [[brain-views.js]]) ; le menu `#cv-brains` se referme sur un clic à côté ou `Échap`. Une redirection ou une réponse qui n'est pas du JSON = session admin expirée (« Ta session admin a expiré : reconnecte-toi », bouton « Se reconnecter »). L'en-tête `X-Cerveau-Erreur` (GitHub injoignable, version gardée) s'affiche en rouge dans le pied.
 - `index()` : `notesById`, `filesByPath`, `backlinks` (qui cite chaque note), `citedBy` (quelles notes citent chaque fichier).
 - `buildGraph()` : un nœud par note (`n:<id>`), par fichier cité (`f:<chemin>`, sauf les `.md` du vault), par tag (`t:<tag>`), par lien cassé (`g:<nom>`) ; un lien par paire (sans doublon). À chaque rechargement, les nœuds gardent leur position (le graphe ne « saute » pas). Rayon d'une note : `min(19, 3,4 + √liens × 1,35)` ; fichier 2,8 ; tag 3,2 ; lien cassé 2,6. Les nouveaux nœuds partent à côté d'un voisin déjà placé, ou la première fois sur une spirale par groupe (la mise en place est plus rapide).
 - `computeVisible()` : groupes masqués, options (fichiers, tags, liens cassés, notes isolées), graphe local (voisins de la note ouverte jusqu'à 1, 2 ou 3 liens) ; un fichier, un tag ou un lien cassé ne s'affiche qu'à côté d'une note affichée.

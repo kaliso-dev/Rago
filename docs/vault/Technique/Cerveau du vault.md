@@ -1,15 +1,23 @@
 ---
 type: technique
 tags: [technique, serveur, admin, vault]
-maj: 2026-11-11
+maj: 2026-11-12
 ---
 # Cerveau du vault (`/admin/cerveau`)
 
-Le vault Obsidian du projet (`docs/vault/`) dessiné comme un cerveau : chaque note est un point, chaque lien entre deux notes un trait, et des impulsions parcourent les liens. On clique sur un point pour lire la note, et on peut ouvrir et lire **n'importe quel fichier du dépôt**. C'est une page de l'admin du [[Serveur de licences]], à côté du [[Tableau de bord admin]].
+Le vault Obsidian du projet (`docs/vault/`), ou celui de RAGO-OS (voir « Choisir le cerveau »), dessiné comme un cerveau : chaque note est un point, chaque lien entre deux notes un trait, et des impulsions parcourent les liens. On clique sur un point pour lire la note, et on peut ouvrir et lire **n'importe quel fichier du dépôt**. C'est une page de l'admin du [[Serveur de licences]], à côté du [[Tableau de bord admin]].
 
 Demandé par Sofiene le 10/11 : « une vision graphique du cerveau comme obsidian avec un schéma ou on voir les connexcion neuronale on pourra aussi ouvrir n'importe quel fichier et le lire tout l'animation de schéma des connexion doit etre parfaite et fluide […] il faudrait meme que ça soit juste accessible depuis l'interface admin ».
 
 **Statut (10/11)** : **dans `staging` depuis le 10/11** (PR #85, fusionnée sur « fusionne » de Sofiene) et **en prod depuis le 10/11 au soir** (PR #87 du [[Tableau de bord admin]], sur « il faut le push sur la prod maintenant […] j'ai ajouté une page cerveau il faut push avec »). Admin en ligne confirmé par Sofiene le 11/11 (« ok tout est bon le dashboard est bien en ligne »). Pour que la page lise le dépôt une fois privé, il faut `CERVEAU_GITHUB_TOKEN` dans Railway, staging et prod : mode d'emploi donné le 11/11 (jeton « fine-grained », `kaliso-dev/rago` seulement, Contents en lecture seule) ; mis ou non : **À VÉRIFIER** (q98).
+
+## Choisir le cerveau (12/11)
+Demandé par Sofiene le 12/11 : « ajoute moi au cerveau dans le dashboard admin je veux pouvoir switch de cerveau et que tu lise maintenant le vault de RAGO-OS je dois pouvoir sélectionner le cerveau et il charge », puis : « un nouveau RAGO-OS va être développer et je viens de créer un repo pour lui et il y a un vault dedans c'est ce repo avec ce vault que je veux que tu intègre au cerveau ».
+- En haut de la colonne de gauche, le **menu déroulant « Cerveau »** (Sofiene, 12/11 : « pour changer de cerveau je veux un menu dépliant ») : il affiche le cerveau ouvert ; on le déplie pour choisir entre **Rago Optimizer** (ce vault) et **RAGO-OS** (le vault `docs/vault/` du dépôt [kaliso-dev/RAGO-OS-](https://github.com/kaliso-dev/RAGO-OS-), branche `main`, créé par Sofiene le 12/11 : 36 notes à sa création). Chaque ligne du menu donne le nom et le dépôt, le cerveau ouvert est coché ; un clic charge le cerveau choisi, un clic à côté ou `Échap` referme le menu (adresse `/admin/cerveau?c=rago` ou `?c=rago-os`) ; le choix est gardé dans le cookie `rago_cerveau` (un an, chemin `/admin`), donc `/admin/cerveau` rouvre le dernier cerveau choisi. Le nom du cerveau ouvert est aussi écrit sous le logo et dans le titre de l'onglet.
+- Chaque cerveau a son dépôt et sa branche : le serveur lit chaque dépôt à part (une archive par dépôt, mêmes règles de cache), et le lecteur ouvre les fichiers du dépôt du cerveau ouvert. Un cerveau sans aucune note affiche « Le cerveau « … » est vide ».
+- La liste se change avec la variable `CERVEAUX` (`id|Nom|dossier|dépôt|branche;…`, dépôt et branche facultatifs) ; vide = les deux cerveaux ci-dessus ([[Variables d'environnement]]).
+- Les deux vaults sont séparés : le vault RAGO-OS se tient dans son propre dépôt (son `CLAUDE.md` et sa note « Mettre à jour le vault »), pas dans celui-ci. RAGO-OS est un nouveau projet (OS Linux pour joueurs) ; c'est autre chose que l'ancien bureau Rago OS retiré de l'app par la PR #99.
+- **Statut (12/11)** : codé et testé en local (PR #100 vers `staging`), pas encore fusionné ni en prod.
 
 ## Accès
 - Menu de `/admin` → section **Projet** → **Cerveau**. Adresse : `https://account.rago-optimizer.com/admin/cerveau` (staging : `rago-staging.up.railway.app/admin/cerveau`).
@@ -17,14 +25,14 @@ Demandé par Sofiene le 10/11 : « une vision graphique du cerveau comme obsidia
 - Sans cookie admin, les trois adresses du Cerveau renvoient vers `/admin` (le formulaire de la clé). Rien du vault n'est servi sans la clé.
 
 ## D'où vient le vault
-Le serveur de Railway ne contient que `licensing/` ([[Railway]], Root Directory = `licensing`) : le vault n'est pas sur le serveur. Le Cerveau le lit donc **sur GitHub** :
+Le serveur de Railway ne contient que `licensing/` ([[Railway]], Root Directory = `licensing`) : le vault n'est pas sur le serveur. Le Cerveau le lit donc **sur GitHub** (pour RAGO-OS : le dépôt `kaliso-dev/RAGO-OS-`, branche `main`, mêmes règles) :
 - la branche lue est `staging` (variable `CERVEAU_BRANCH`), là où le vault est tenu à jour en premier ([[Branches et environnements]]) ;
 - le serveur regarde le dernier commit de la branche par la liste des branches de git (`https://github.com/kaliso-dev/rago.git/info/refs?service=git-upload-pack`), qui ne compte pas dans le quota de l'API GitHub ;
 - il ne télécharge l'archive du dépôt (`codeload.github.com/…/tar.gz/<commit>`) que quand le commit change, **au plus une fois par minute** et seulement quand quelqu'un regarde la page ;
 - la page se recharge toute seule toutes les 2 minutes si le vault a changé (message « Vault mis à jour : N notes (+x) »), et le bouton ↻ en bas à gauche force la lecture (60 fois par heure au plus par adresse IP).
 - Si GitHub ne répond pas, la dernière version lue reste affichée avec la raison en rouge sous l'heure de lecture.
 
-**Dépôt privé** : `rago` passe parfois en privé en novembre et pour de bon le 1er décembre ([[CI GitHub Actions]]). Sans jeton, le Cerveau affiche alors « Le dépôt kaliso-dev/rago n'est pas lisible sans jeton ». Il faut mettre dans Railway la variable `CERVEAU_GITHUB_TOKEN` : un jeton GitHub « fine-grained », limité au dépôt `kaliso-dev/rago`, droit **Contents : Read-only** seulement (mode d'emploi dans `licensing/docs/MISE-EN-LIGNE.md`, partie « Le Cerveau »). Avec le jeton, l'archive passe par `api.github.com/repos/…/tarball/<commit>`. À faire par Sofiene ([[Prochaines étapes]]). Voir [[Variables d'environnement]].
+**Dépôt privé** : `rago` passe parfois en privé en novembre et pour de bon le 1er décembre ([[CI GitHub Actions]]). Le 12/11 au soir, GitHub le donnait **privé** (OBSERVÉ par la recherche de dépôts) : sans jeton, le cerveau Rago ne se charge donc pas en ce moment sur Railway. `kaliso-dev/RAGO-OS-` est public (12/11) ; s'il passe en privé, le même jeton doit aussi avoir le droit « Contents : Read-only » sur ce dépôt. Sans jeton, le Cerveau affiche alors « Le dépôt kaliso-dev/rago n'est pas lisible sans jeton ». Il faut mettre dans Railway la variable `CERVEAU_GITHUB_TOKEN` : un jeton GitHub « fine-grained », limité au dépôt `kaliso-dev/rago`, droit **Contents : Read-only** seulement (mode d'emploi dans `licensing/docs/MISE-EN-LIGNE.md`, partie « Le Cerveau »). Avec le jeton, l'archive passe par `api.github.com/repos/…/tarball/<commit>`. À faire par Sofiene ([[Prochaines étapes]]). Voir [[Variables d'environnement]].
 
 En local (`npm run local`) et dans les tests, le Cerveau lit le dossier sur le disque (fichiers suivis et nouveaux, sans ceux ignorés par git), y compris les notes pas encore poussées ([[Développer et tester]]).
 
@@ -48,8 +56,8 @@ En local (`npm run local`) et dans les tests, le Cerveau lit le dossier sur le d
 - [[brain-views.js]] : la page HTML (sans script ni style en ligne, comme tout `/admin`).
 - [[cerveau.js]] : le graphe, l'animation, le lecteur, la recherche, dans le navigateur.
 - [[cerveau.css]] : la mise en page et les styles.
-- Routes dans [[admin.js (serveur)]] : `GET /admin/cerveau` (la page), `GET /admin/cerveau/donnees.json` (tout le vault, compressé, avec `ETag`), `GET /admin/cerveau/fichier?chemin=` (un fichier du dépôt) ([[API du serveur]]).
-- Tests : `licensing/test/brain.test.js`, 7 tests ([[Tests du serveur]]).
+- Routes dans [[admin.js (serveur)]] : `GET /admin/cerveau` (la page, `?c=` pour choisir le cerveau), `GET /admin/cerveau/donnees.json` (tout le vault, compressé, avec `ETag`), `GET /admin/cerveau/fichier?chemin=` (un fichier du dépôt) ([[API du serveur]]).
+- Tests : `licensing/test/brain.test.js`, 8 tests ([[Tests du serveur]]).
 
 ## Version publique : Synapse
 Demandé par Sofiene le 10/11 : « mon cousin aimerai avoir cette vu il faudrait extraire le projet du cerveau le mettre dans un nouveau repo public il faut qu'il puisse donner le repo à son claude et que claude lui installe l'interface mais il faut retirer le design rago il faut un design classique […] ça serait bien que ça soit dans un format qu'il peut heberger sur github page ».
