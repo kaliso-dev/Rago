@@ -1,7 +1,7 @@
 ---
 type: pilotage
 tags: [journal, chronologie]
-maj: 2026-11-11
+maj: 2026-11-12
 ---
 # Journal
 

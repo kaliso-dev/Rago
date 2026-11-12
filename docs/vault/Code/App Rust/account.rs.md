@@ -52,5 +52,5 @@ Tout est CONFIRMÉ (code de `staging`, 10/11). Créé le 09/10. Contrat : `licen
 `origin_of_api_base`, `only_server_photos` (refuse nom trop court, autre extension, `..`, espace, autre dossier), `reads_the_server_reply`.
 
 ## À savoir avant de modifier
-- L'e-mail du compte est affiché dans l'app mais ne doit jamais partir ailleurs (rapport, pont Rago OS).
+- L'e-mail du compte est affiché dans l'app mais ne doit jamais partir ailleurs (rapport).
 - Le serveur garde la logique (validation de l'avis, recadrage de la photo, Stripe) : l'app ne fait que transmettre. Voir [[Architecture du serveur]].

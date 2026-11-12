@@ -12,7 +12,7 @@ maj: 2026-11-11
 Tout est CONFIRMÉ (code de `staging`, 10/11). Créé le 17/10 (RAG-82) ; le 21/10, lancement avec Windows activé d'office.
 
 ## Rôle et place dans l'ensemble
-- [[lib.rs]] : `Background::load` dans `setup`, `sync_tray`, création de la tâche au premier lancement, `hides_on_close` à la fermeture, commandes `background_get`, `background_set`, `session_set_prefs`, `overlay_set_pin`, `show_main` (icône, raccourci, 2e lancement, pont Rago OS).
+- [[lib.rs]] : `Background::load` dans `setup`, `sync_tray`, création de la tâche au premier lancement, `hides_on_close` à la fermeture, commandes `background_get`, `background_set`, `session_set_prefs`, `overlay_set_pin`, `show_main` (icône, raccourci, 2e lancement).
 - [[overlay.rs]] lit `overlay`, `shortcut`, `pin` ; [[session.rs]] lit `game_gpu`, `game_power`, `game_checks`, `game_priority` à chaque tour du fil des jeux.
 - L'[[Installateur NSIS]] supprime la tâche planifiée à la désinstallation.
 

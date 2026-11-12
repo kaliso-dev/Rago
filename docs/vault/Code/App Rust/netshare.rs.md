@@ -13,7 +13,7 @@ Tout ce qui suit est CONFIRMÉ (code de `staging`, 10/11).
 
 ## Rôle et place dans l'ensemble
 
-- Appelé à la fin de chaque test réseau de l'app par la commande `net_test` de [[lib.rs]] : `netshare::send(seed, version, results)`, où `seed` est le `MachineGuid` de l'empreinte de licence (ou, à défaut, le nom de l'appareil). Pas appelé par la commande `net_test` du pont ([[bridge.rs]]).
+- Appelé à la fin de chaque test réseau de l'app par la commande `net_test` de [[lib.rs]] : `netshare::send(seed, version, results)`, où `seed` est le `MachineGuid` de l'empreinte de licence (ou, à défaut, le nom de l'appareil).
 - Envoi **à chaque test, sans le demander au joueur** : choix de Sofiene du 29/10/2026, écrit dans la politique de confidentialité ([[Conformité juridique]]).
 - Côté serveur : `POST /api/v1/network/report` ; le serveur en déduit ville, région, pays et fournisseur d'accès, puis oublie l'adresse IP. Vue admin `/admin/reseau` (voir [[API du serveur]] et [[Tableau de bord admin]]). Données en prod depuis le 29/10.
 

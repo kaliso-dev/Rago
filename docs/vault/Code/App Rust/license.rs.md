@@ -96,5 +96,5 @@ L'interface (`store.tsx`) appelle `license_refresh` au démarrage puis toutes le
 
 ## À savoir avant de modifier
 - La règle `same_device` et le calcul `fp_hash` doivent rester **identiques** au serveur (`licensing/`), sinon tous les joueurs seraient « sur un autre PC ».
-- Ne jamais mettre l'e-mail ni le jeton dans un rapport, un journal ou le pont Rago OS ([[lib.rs]] n'expose que l'offre).
+- Ne jamais mettre l'e-mail ni le jeton dans un rapport ou un journal.
 - Ne jamais changer les clés de signature côté serveur (règle de Sofiene, [[Clés et secrets]]) : tous les jetons existants deviendraient invalides.

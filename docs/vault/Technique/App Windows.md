@@ -25,7 +25,7 @@ Contenu des modules : [[Catalogue des tweaks]]. Fonctionnement interne : [[Moteu
 - Cœur : `lib.rs` (commandes), `runner.rs` (exécute un lot : `.cmd` caché dans `run\`, journal `logs\run-<ms>.log`), `catalog.rs`, `seal.rs` (scripts chiffrés), `assets.rs` (plan d'alimentation et profil NVIDIA chiffrés dans l'exe, 1.1.14), `backup.rs` (`applied.json`, état d'avant, chiffré DPAPI), `history.rs`, `reset.rs` ([[Remise à zéro]]) / `repair.rs` ([[Réparations au lancement]]), `instance.rs`, `license.rs`, `account.rs`, `shell.rs`, `reg.rs`.
 - Système : `system.rs`, `stats.rs`, `memory.rs`, `minecraft.rs` (OptiFine), `tools.rs` ([[Page Outils]]), `rbw.rs` ([[RBW Mod]]), `background.rs` (icône près de l'horloge, démarrage avec Windows).
 - 1.2 : `overlay.rs`, `fps.rs`, `gameping.rs`, `mcping.rs`, `session.rs` ([[Barre en jeu]]) ; `games.rs`, `icon.rs` ([[Bibliothèque de jeux]]) ; `netopt.rs` ([[Packet Optimizer]]) ; `nettest.rs`, `icmp.rs`, `netshare.rs` ([[Test réseau]]) ; `flows.rs`, `report.rs` ; `update.rs` ([[Mise à jour automatique]]).
-- 1.3 et `staging` : `analysis.rs` ([[Analyse du PC]]), `boost.rs` (Mode jeu total), `bridge.rs` (pont local avec [[Rago OS]]), `route.rs` (Rago Route, [[Infrastructure Rago Route]]). `main.rs` ne fait qu'appeler `lib.rs`.
+- 1.3 et `staging` : `analysis.rs` ([[Analyse du PC]]), `route.rs` (Rago Route, [[Infrastructure Rago Route]]). `main.rs` ne fait qu'appeler `lib.rs`.
 - Pages React (`app/src/pages/`) : `Dashboard`, `Analysis`, `Games`, `ModulePage`, `Network`, `NetOpt`, `NetTest`, `RouteTab`, `Share`, `Tools`, `Settings`. FR/EN (`lib/i18n.ts`, anglais par défaut, tutoiement en français).
 
 ## Fichiers écrits sur le PC

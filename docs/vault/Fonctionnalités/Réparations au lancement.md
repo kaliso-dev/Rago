@@ -18,10 +18,9 @@ Ce que l'app répare seule à chaque démarrage (`repair.rs`, `instance.rs`, cha
 - **`run\` vidé** au démarrage, ainsi que le dossier de repli `%SystemRoot%\Temp\<identifiant>` (aucun script ni fichier natif laissé en clair après un arrêt brutal).
 - **Remise interrompue** reprise au lancement suivant ([[Remise à zéro]]).
 - **Mode Performances élevées** d'une partie rendu si l'app avait été fermée ([[Pendant la partie]]).
-- **Services du Mode jeu total** laissés arrêtés par une partie interrompue (app fermée, PC planté) : relancés au démarrage ([[Mode jeu]], [[Rago OS]]).
 
 ## Code
 - Réparations RAG-67, RAG-68 et `pow_timer`, journal `repairs.log` : [[repair.rs]] (appelé par `setup` de [[lib.rs]] et avant la remise de la désinstallation dans [[reset.rs]]).
 - Mise de côté et chiffrement des fichiers : [[backup.rs]] (`applied.json`), [[history.rs]] (`history.json`).
-- Instance unique : [[instance.rs]] ; dossiers temporaires : [[runner.rs]], [[assets.rs]] ; Mode jeu total : [[boost.rs]] ; partie en cours : [[session.rs]].
+- Instance unique : [[instance.rs]] ; dossiers temporaires : [[runner.rs]], [[assets.rs]] ; partie en cours : [[session.rs]].
 - Vérification côté scripts (plus aucun script n'écrit le 0) : test `kernel_timer_value_stays_out` de [[catalog.rs]].

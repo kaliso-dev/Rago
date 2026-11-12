@@ -1,7 +1,7 @@
 ---
 type: référence
 tags: [sources]
-maj: 2026-11-11
+maj: 2026-11-12
 ---
 # Sources
 

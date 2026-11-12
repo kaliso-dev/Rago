@@ -98,7 +98,7 @@ main.tsx
   - la recherche ([[SearchPalette.tsx]], vers le module du réglage, avec le réglage en avant) ;
   - la puce « Couleurs et résolution » de [[Games.tsx]] (`goTo("display", id du jeu)` : `focusTweak` porte alors l'id du jeu, lu par [[Display.tsx]]) ;
   - les liens entre pages (Paramètres → Partage et support, Test réseau → Packet Optimizer…) ;
-  - l'événement **`app:goto`** : la barre en jeu (« Ouvrir Rago Optimizer », `premium` ouvre l'offre) et [[Rago OS]] (forme `page#réglage`).
+  - l'événement **`app:goto`** : la barre en jeu (« Ouvrir Rago Optimizer », `premium` ouvre l'offre ; forme `page#réglage` acceptée).
 - Pages « nouvelles » : une puce dans la barre latérale tant que la page n'a pas été vue ([[seen.ts]], `rago.seenPages`).
 
 ## Cycle d'une action : appliquer des réglages
@@ -150,7 +150,7 @@ Les 15 événements Tauri que l'interface écoute, tous déclarés dans [[api.ts
 | `update:ready` | [[update.rs]] | [[UpdateCard.tsx]] | mise à jour téléchargée, prête |
 | `overlay:mode` | [[overlay.rs]] | [[Overlay.tsx]] | barre ouverte ou pastille |
 | `display:state` | [[lib.rs]] ([[display.rs]]) | [[Display.tsx]] | couleurs et résolution posées en ce moment, dernière erreur |
-| `app:goto` | [[lib.rs]] (barre en jeu, pont de [[Rago OS]]) | [[store.tsx]] | page à ouvrir (`page#réglage`, `premium`) |
+| `app:goto` | [[lib.rs]] (barre en jeu) | [[store.tsx]] | page à ouvrir (`page#réglage`, `premium`) |
 | `tips:done` | [[lib.rs]] ([[tips.rs]]) | [[tips.ts]] (`useTipsDone`, donc [[GameTips.tsx]]) | réglages en jeu cochés « fait » |
 | `overlay:nudge` | [[overlay.rs]] | [[Overlay.tsx]] | rappel des conseils dans la pastille, commencé ou fini |
 

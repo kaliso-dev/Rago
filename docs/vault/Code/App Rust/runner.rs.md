@@ -12,7 +12,7 @@ Le moteur qui applique et annule les réglages : un lot à la fois, dans un fil,
 Tout est CONFIRMÉ (code de `staging`, 10/11). Créé le 07/10 (1.1.5), 7 commits. Revue du moteur du 13/10 citée dans les tests (M1, m2, « Lancement des scripts »).
 
 ## Rôle et place dans l'ensemble
-- Appelé par [[lib.rs]] : `start` pour un lot de l'interface ou de [[Rago OS]] (après les règles de l'offre de `start_tweaks`), `run_now` pour la remise de fin de licence ; et par [[reset.rs]] pour la désinstallation.
+- Appelé par [[lib.rs]] : `start` pour un lot de l'interface (après les règles de l'offre de `start_tweaks`), `run_now` pour la remise de fin de licence ; et par [[reset.rs]] pour la désinstallation.
 - Lit les scripts dans [[catalog.rs]] (paquet gratuit ou Premium), relève et remet l'état d'avant avec [[backup.rs]] (`Ledger`, `Sys`), note chaque réglage dans [[history.rs]], sort les fichiers natifs avec [[assets.rs]], lance les processus cachés par [[shell.rs]], règle OptiFine par [[minecraft.rs]].
 
 ## Ce que le fichier expose

@@ -48,7 +48,7 @@ Tout ce qui suit est CONFIRMÉ (code de `staging`, 11/11 : PR #93 fusionnée par
 ### Résolution
 - Posée sur **l'écran principal**, une à la fois : la première partie lancée qui en a une la garde jusqu'à sa fin.
 - `prepare` (lancement depuis Rago) : fichier du jeu écrit (jeu fermé, `gameFile`), puis résolution posée tout de suite ; le jeu a **150 s** pour apparaître, sinon elle est rendue. `cancel_prepare` la rend si le lancement échoue.
-- `tick` (toutes les 4 s) : pose la résolution d'un jeu vu lancé (aussi lancé hors de Rago, ou par [[Rago OS]] dont la commande `game_launch` du pont ne passe pas par `prepare`), la rend à la fin de la partie, et réécrit la résolution dans le fichier du jeu qui vient de se fermer (le jeu réécrit le sien en quittant).
+- `tick` (toutes les 4 s) : pose la résolution d'un jeu vu lancé (aussi lancé hors de Rago), la rend à la fin de la partie, et réécrit la résolution dans le fichier du jeu qui vient de se fermer (le jeu réécrit le sien en quittant).
 - `mode_set` : fréquence la plus haute que l'écran propose pour cette résolution (celle d'aujourd'hui si possible) ; échelle demandée au pilote (`DMDFO_STRETCH` étirée, `DMDFO_CENTER` bandes noires) ; essai `CDS_TEST`, puis sans l'échelle si le pilote la refuse ; enfin `CDS_FULLSCREEN` : changement **temporaire**, jamais écrit dans le registre (Windows rend le mode tout seul si l'app se ferme). Une résolution que l'écran ne propose pas est refusée.
 - Refusée : erreur `mode`, et pas de nouvel essai pour ce jeu avant sa partie suivante (`res_refused`).
 - `mode_reset` : `ChangeDisplaySettingsExW` sans mode, Windows reprend celui du registre.

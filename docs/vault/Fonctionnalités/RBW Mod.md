@@ -12,7 +12,6 @@ Module du groupe « En jeu » pour jouer en **Ranked Bedwars** (RBW), partenaire
 - **Vérification Ranked Bedwars** (1.2.0, [[rbw.rs]], lecture seule) : 11 services, chaque `CDPUserSvc_*` et 6 réglages (5 valeurs de registre + « PCA Logging »), relus toutes les 5 s ; chaque service doit tourner, aucun réglage ne doit valoir 0, la stratégie AppCompat ne doit pas exister. « Prêt pour le screenshare » ou « N éléments en rouge » ; bouton « Tout remettre en marche » (= RBW Mod Activé).
 - Bug RAG-69 (services laissés arrêtés) présent en [[Version 1.1.10]], corrigé en [[Version 1.1.14]].
 - **Règle** : aucun preset, nettoyage ou outil ne touche à ce que lit le vérificateur ([[Presets]], [[Page Outils]]).
-- À VÉRIFIER (10/11, lu dans le code de `staging`) : le « Mode jeu total » demandé par [[Rago OS]] ([[boost.rs]]) arrête `SysMain`, `PcaSvc`, `DPS` et `WSearch` le temps d'une partie, quatre services lus par le vérificateur ; il n'est pas couvert par la règle ci-dessus (question pour Sofiene).
 
 ## Code
 - [[rbw.rs]] : liste des services et réglages lus par le vérificateur, commande `rbw_status` (lecture seule).

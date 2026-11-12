@@ -47,7 +47,6 @@ Lecture seule : gestionnaire de services Windows et registre (via [[reg.rs]]). R
 ## Erreurs et cas limites
 
 - Hors Windows, chaque service est `missing` et aucun réglage n'est lu.
-- [[boost.rs]] (Mode jeu total, demandé par [[Rago OS]]) arrête `SysMain`, `PcaSvc`, `DPS` et `WSearch` le temps d'une partie : la vérification les montre alors en rouge (À VÉRIFIER : conflit possible avec la règle du RBW Mod, question pour Sofiene).
 
 ## Liens avec le reste
 

@@ -12,7 +12,7 @@ Usage du PC **en direct** pour le tableau de bord : mémoire vive, processeur et
 Tout est CONFIRMÉ (code de `staging`, 10/11). Créé le 09/10 (1.1.8).
 
 ## Rôle et place dans l'ensemble
-- [[lib.rs]] garde un `stats::Sampler` dans `AppState` ; la commande `live_stats` (appelée **chaque seconde** par le tableau de bord) et la commande `stats` du pont [[Rago OS]] renvoient `Sampler::latest()`.
+- [[lib.rs]] garde un `stats::Sampler` dans `AppState` ; la commande `live_stats` (appelée **chaque seconde** par le tableau de bord) renvoie `Sampler::latest()`.
 - Le bouton « Nettoyer » sous la jauge de RAM est dans [[memory.rs]] ; le bouton vers le Gestionnaire des tâches est `open_task_manager` ([[lib.rs]]).
 
 ## Ce que le fichier expose

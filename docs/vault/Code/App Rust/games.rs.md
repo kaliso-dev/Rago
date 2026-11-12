@@ -13,9 +13,9 @@ Tout ce qui suit est CONFIRMÉ (code de `staging`, 10/11). Ajouts du 11/11 pour 
 
 ## Rôle et place dans l'ensemble
 
-- Créée au démarrage dans [[lib.rs]] (`Library::new(data_dir)`), partagée (`Arc`) entre les commandes Tauri, la boucle de fond, la barre en jeu ([[overlay.rs]]), la session de jeu ([[session.rs]]), le nettoyage de la RAM (`memory.rs`) et le pont ([[bridge.rs]]).
+- Créée au démarrage dans [[lib.rs]] (`Library::new(data_dir)`), partagée (`Arc`) entre les commandes Tauri, la boucle de fond, la barre en jeu ([[overlay.rs]]), la session de jeu ([[session.rs]]) et le nettoyage de la RAM (`memory.rs`).
 - Interface : [[Games.tsx]] (page Jeux) appelle les commandes ci-dessous.
-- **Boucle de fond** (dans le `setup` de [[lib.rs]]) : toutes les **4 s**, `process_paths()` puis `Library::poll` ; si la liste des jeux lancés change, événement `games:running` (liste des identifiants). La même boucle passe les exes des jeux à [[session.rs]] (événement `games:session`) et éteint le Mode jeu total de [[boost.rs]] après **5 tours sans jeu** (environ 20 s).
+- **Boucle de fond** (dans le `setup` de [[lib.rs]]) : toutes les **4 s**, `process_paths()` puis `Library::poll` ; si la liste des jeux lancés change, événement `games:running` (liste des identifiants). La même boucle passe les exes des jeux à [[session.rs]] (événement `games:session`).
 
 ## Ce que le fichier expose
 
@@ -109,7 +109,7 @@ Un jeu tourne si un processus a son exe dans le dossier du jeu (comparaison en m
 ## Liens avec le reste
 
 - Commandes et boucle : [[lib.rs]] ; interface : [[Games.tsx]] ; icônes d'exe : `icon.rs` ; registre : `reg.rs` ; élévation : `shell.rs`.
-- Utilisée par [[overlay.rs]] (`name_for`), [[session.rs]] (`game_exes`, `playing`), [[boost.rs]] (arrêt automatique), [[bridge.rs]] (`games`, `game_launch`), `memory.rs` (`install_dirs`), [[display.rs]] (`running_dirs`, `local_dirs`).
+- Utilisée par [[overlay.rs]] (`name_for`), [[session.rs]] (`game_exes`, `playing`), `memory.rs` (`install_dirs`), [[display.rs]] (`running_dirs`, `local_dirs`).
 - Fonctionnalités : [[Bibliothèque de jeux]], [[Pendant la partie]], [[Presets]].
 
 ## Tests

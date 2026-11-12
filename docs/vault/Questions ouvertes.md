@@ -21,8 +21,6 @@ Au 10/11, après les réponses de Sofiene du jour (q36 à q68 traitées, q46 le 
 
 Posées le 10/11 au soir (q70 à q93), après la relecture complète du code pour le vault détaillé (dossier `Code/`) :
 - q70 : l'exe de test et le vrai exe partagent la même licence sur un PC ([[license.rs]]).
-- q71 : le Mode jeu total coupe 4 services lus par le vérificateur de Ranked Bedwars ([[boost.rs]], [[RBW Mod]]).
-- q72 : services pas relancés si l'app se ferme pendant le Mode jeu total ([[boost.rs]]).
 - q73 : 4 réglages de carte graphique jamais grisés ([[meta.py]]).
 - q74 : provenance et licence de NVIDIA Profile Inspector ([[Configuration Tauri]]).
 - q75 : 73 ou 68 réglages gratuits affichés ; `FREE_TWEAKS` sur Railway ([[sync_tweaks.py]], [[config.js]]).

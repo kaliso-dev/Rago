@@ -12,7 +12,7 @@ Carte du **cœur Rust de Rago Optimizer** (`app/src-tauri/`) : chaque module en 
 Tout est CONFIRMÉ (code de `staging`, 11/11 : les 6 fonctionnalités de la PR #92 fusionnées, dont [[display.rs]], [[gamecfg.rs]], [[tips.rs]] et la page Outils ; pas encore testées sur Windows par Sofiene).
 
 ## Comment lire ce code
-- Point d'entrée : [[main.rs]] appelle `run()` de [[lib.rs]], qui déclare les **42 modules**, crée l'état partagé et enregistre les **92 commandes** que l'interface appelle par `invoke` ([[api.ts]]).
+- Point d'entrée : [[main.rs]] appelle `run()` de [[lib.rs]], qui déclare les **40 modules**, crée l'état partagé et enregistre les **92 commandes** que l'interface appelle par `invoke` ([[api.ts]]).
 - L'interface n'a **aucun accès réseau** (CSP, [[Configuration Tauri]]) : tout appel au serveur passe par une commande Rust.
 - L'app tourne **en administrateur** (`app.manifest`) : presque tous les réglages écrivent dans `HKLM`, les services ou le BCD.
 - Les scripts des réglages ne sont **jamais en clair** dans l'exe : chiffrés à la compilation ([[build.rs]], [[embed_scripts.rs]], [[seal.rs]]), le paquet Premium s'ouvre avec la clé donnée par le serveur à une licence active ([[license.rs]]).
@@ -23,7 +23,7 @@ Tout est CONFIRMÉ (code de `staging`, 11/11 : les 6 fonctionnalités de la PR #
 | Module | Lignes | Rôle |
 |---|---|---|
 | [[main.rs]] | 6 | lance `rago_hub_lib::run()`, sans console en release |
-| [[lib.rs]] | 1 767 | état partagé, 93 commandes, démarrage (`run()`), réponses au pont de Rago OS |
+| [[lib.rs]] | 1 499 | état partagé, 93 commandes, démarrage (`run()`) |
 | [[instance.rs]] | 283 | une seule instance : mutex Windows, réveil de la fenêtre déjà ouverte, attente de la désinstallation |
 | [[background.rs]] | 294 | préférences d'arrière-plan, icône près de l'horloge, tâche planifiée de lancement avec Windows |
 | [[icon.rs]] | 189 | extrait l'icône d'un exe en PNG (bibliothèque de jeux) |
@@ -70,7 +70,6 @@ Tout est CONFIRMÉ (code de `staging`, 11/11 : les 6 fonctionnalités de la PR #
 | [[session.rs]] | 665 | [[Pendant la partie]] : carte graphique performante, plan d'alimentation, jeu en priorité haute, défait après ; vérifications et conseils |
 | [[mouse.rs]] | 107 | [[Page Souris]] : logiciels de remappage, de macro, de clic automatique ou du fabricant lancés (lecture seule) |
 | [[tips.rs]] | 416 | [[Conseils au lancement du jeu]] : jeu à conseils, réglages cochés, applis gourmandes, écran, Game DVR |
-| [[boost.rs]] | 224 | Mode jeu total demandé par Rago OS : services non essentiels arrêtés puis relancés |
 | [[fps.rs]] | 286 | FPS du jeu par PresentMon, résumé de la dernière partie |
 | [[flows.rs]] | 382 | serveur du jeu en cours trouvé dans le journal réseau du noyau (ETW) |
 | [[gameping.rs]] | 408 | ping du jeu en cours (Minecraft, TCP ou ICMP) |
@@ -83,13 +82,12 @@ Tout est CONFIRMÉ (code de `staging`, 11/11 : les 6 fonctionnalités de la PR #
 | [[icmp.rs]] | 150 | ping ICMP de Windows, dernier routeur qui répond |
 | [[mcping.rs]] | 165 | ping d'un serveur Minecraft (Server List Ping) |
 | [[netshare.rs]] | 92 | envoie les chiffres d'un test réseau au serveur |
-| [[route.rs]] | 2 228 | Rago Route côté PC : tunnel UDP chiffré vers la sortie de Paris ([[Proxy]]) |
+| [[route.rs]] | 2 153 | Rago Route côté PC : tunnel UDP chiffré vers la sortie de Paris ([[Proxy]]) |
 
-### Support et Rago OS
+### Support
 | Module | Lignes | Rôle |
 |---|---|---|
 | [[report.rs]] | 435 | rapport pour le support, données personnelles masquées ([[Partage et support]]) |
-| [[bridge.rs]] | 206 | canal nommé local avec [[Rago OS]] |
 
 ### Compilation, données et configuration
 - [[build.rs]] (66 lignes) et [[embed_scripts.rs]] (98) : refus de la clé de test en release, chiffrement des scripts et des fichiers natifs, identifiant de l'app, manifeste Windows.
@@ -100,7 +98,7 @@ Tout est CONFIRMÉ (code de `staging`, 11/11 : les 6 fonctionnalités de la PR #
 Relevé des `crate::<module>::` dans `src/` (hors simples constantes et tests) :
 
 ```
-main.rs ─► lib.rs ─► tous les modules (commandes, run(), pont)
+main.rs ─► lib.rs ─► tous les modules (commandes, run())
 
 Réglages     runner ─► catalog, backup, history, assets, shell, minecraft, repair, reset
              catalog ─► seal, assets, backup (type Undo), shell
@@ -119,7 +117,7 @@ Jeux         games ─► icon, reg, shell
 Réseau       netopt ─► catalog, runner, seal, history, shell
              nettest ─► icmp, mcping     netshare ─► account, license, nettest, update
 Fond         update ─► license, history, report     background ─► shell
-             instance, bridge, assets ─► reset (identifiant de l'app)
+             instance, assets ─► reset (identifiant de l'app)
 Support      report ─► backup, history, system
 
 Sans dépendance interne : shell, reg, seal, icmp, mcping, icon, memory, stats, boost, route
@@ -133,13 +131,12 @@ Seuls [[overlay.rs]], [[background.rs]] et [[update.rs]] reçoivent un `AppHandl
 ## Les fils qui tournent
 | Fil | Lancé par | Rythme | Rôle |
 |---|---|---|---|
-| fil des jeux | `run()` de [[lib.rs]] | 4 s | jeux en cours, [[session.rs]], applis gourmandes pendant la partie ([[tips.rs]]), résolution des jeux ([[display.rs]]), fin du Mode jeu total après ≈ 20 s sans jeu |
+| fil des jeux | `run()` de [[lib.rs]] | 4 s | jeux en cours, [[session.rs]], applis gourmandes pendant la partie ([[tips.rs]]), résolution des jeux ([[display.rs]]) |
 | fil des couleurs | [[display.rs]] (`spawn`) | 250 ms tant qu'un jeu lancé a des couleurs (sinon endormi) | couleurs du jeu au premier plan, aperçu |
 | `rago-overlay` | [[overlay.rs]] | 700 ms | jeu au premier plan, barre en jeu |
 | `rago-stats` | [[stats.rs]] | 1 s | mesures en direct ; s'arrête 5 s après la dernière demande |
 | `update::watch` | [[update.rs]] | 4 h (30 min après un échec) | cherche une mise à jour ; s'arrête une fois la mise à jour téléchargée |
 | `on_show_request` | [[instance.rs]] | à la demande | montre la fenêtre quand on relance l'app |
-| `bridge::serve` + un fil par client | [[bridge.rs]] | à la demande | pont avec Rago OS |
 | `keep_route_token` | [[lib.rs]] | 30 s, renouvelle toutes les 2 h | jeton de Rago Route tant que le tunnel tourne |
 | `rago-route`, `rago-route-udp`, `rago-route-local`, `rago-route-jeu` | [[route.rs]] | tant que le tunnel tourne | moteur du tunnel |
 | `rago-flows`, `rago-flows-idle` | [[flows.rs]] | 5 s, arrêt après 30 s sans usage | journal réseau ETW |
@@ -156,7 +153,7 @@ Seuls [[overlay.rs]], [[background.rs]] et [[update.rs]] reçoivent un `AppHandl
 | `netopt:line` | [[lib.rs]] | lignes du moteur du [[Packet Optimizer]] |
 | `nettest:sample`, `nettest:measure` | [[lib.rs]] | essais et résultats du [[Test réseau]] |
 | `games:running`, `games:session` | [[lib.rs]] | jeux en cours, état de [[Pendant la partie]] |
-| `app:goto` | [[lib.rs]] | page à ouvrir (demande de Rago OS ou de la barre en jeu) |
+| `app:goto` | [[lib.rs]] | page à ouvrir (demande de la barre en jeu) |
 | `update:ready` | [[update.rs]] | mise à jour téléchargée |
 | `overlay:mode` | [[overlay.rs]] | mode de la barre en jeu (panneau, pastille) |
 | `overlay:nudge` | [[overlay.rs]] | rappel des conseils dans la pastille commencé ou fini |
@@ -180,7 +177,6 @@ Ils sont écoutés par [[store.tsx]] et les pages de l'interface.
 | `<data>\session.json` | [[session.rs]] | ce que l'app a changé le temps d'une partie |
 | `<data>\tips-done.json` | [[tips.rs]] | réglages en jeu cochés « fait » |
 | `<data>\display.json`, `<data>\display-restore.json` | [[display.rs]] | couleurs et résolution par jeu, valeurs d'avant Rago des fichiers des jeux ; ce qu'il faut remettre (couleurs, rampes, résolution) |
-| `<data>\boost.json` | [[boost.rs]] | services arrêtés par le Mode jeu total |
 | `<data>\netopt\` (`applied.json`, `snapshot.json`) | [[netopt.rs]] | dernière application du Packet Optimizer et valeurs d'avant |
 | `<data>\reports\rago-report-AAAA-MM-JJ-HHMM.txt` | [[report.rs]] | rapports pour le support (les 10 derniers) |
 | `<data>\logs\run-<ms>.log`, `reset-<ms>.log`, `repairs.log` | [[runner.rs]], [[reset.rs]], [[repair.rs]] | journaux |
@@ -200,7 +196,7 @@ En dehors des scripts des réglages ([[Scripts embarqués (JSON)]]) :
 - **Lu** : `HKLM\SOFTWARE\Microsoft\Cryptography` `MachineGuid` (empreinte, [[license.rs]]) ; `HKLM\SYSTEM\Select` `Current` et `…\Control\Power` `HibernateEnabled` ([[backup.rs]]) ; `GameConfigStore`, `GameDVR`, `PushNotifications` ([[analysis.rs]] ; les deux premiers aussi par [[tips.rs]] pendant une partie) ; clés des launchers et `Uninstall` ([[games.rs]]) ; clés lues par le vérificateur RBW ([[rbw.rs]]).
 - **Pilotes, écran et fichiers des jeux** ([[display.rs]]) : saturation NVIDIA (NVAPI) et AMD (ADL), rampe gamma, mode d'affichage temporaire (jamais écrit dans le registre), clés de résolution des fichiers de réglages de Valorant, Fortnite et CS2 ; lit `HKCU\Software\Valve\Steam` `SteamPath` et `HKLM\SOFTWARE\WOW6432Node\Valve\Steam` `InstallPath`.
 - **Tâche planifiée** « Rago Optimizer » (ou « Rago Optimizer Staging ») : lancement avec Windows ([[background.rs]]), supprimée à la désinstallation ([[Installateur NSIS]]).
-- **Objets nommés** : `Local\<identifiant>.instance` et `Local\<identifiant>.show` ([[instance.rs]]) ; canal `\\.\pipe\<identifiant>.bridge` ([[bridge.rs]]) ; session ETW « Rago-GamePing » ([[flows.rs]]) ; session PresentMon « RagoOptimizerFps » ([[fps.rs]]).
+- **Objets nommés** : `Local\<identifiant>.instance` et `Local\<identifiant>.show` ([[instance.rs]]) ; session ETW « Rago-GamePing » ([[flows.rs]]) ; session PresentMon « RagoOptimizerFps » ([[fps.rs]]).
 
 ## À savoir avant de modifier
 - Ajouter une commande : la fonction dans le module, `#[tauri::command]` dans [[lib.rs]], l'enregistrer dans `generate_handler!`, puis l'appel dans [[api.ts]]. Une commande de plugin demande aussi une permission dans `capabilities/` ([[Configuration Tauri]]).

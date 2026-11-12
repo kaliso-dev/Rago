@@ -1,7 +1,7 @@
 ---
 type: carte
 tags: [technique]
-maj: 2026-11-10
+maj: 2026-11-12
 ---
 # Architecture
 

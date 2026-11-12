@@ -16,7 +16,7 @@ Tout ce qui suit est CONFIRMÉ (code de `staging`, 10/11, commit `ee77d4f`).
 - `isNetworkTab(page)` : vrai pour ces quatre ids. Utilisé par [[App.tsx]] (quelle page rendre, clé d'animation commune) et [[Sidebar.tsx]] (l'entrée « Réseau » reste active sur les quatre onglets).
 - `Network({ tab })` : la page.
 
-Chaque onglet est **une page à part** du store (`goTo("netopt")`…) : la recherche Ctrl+K, la barre en jeu et le pont [[Rago OS]] peuvent y mener directement.
+Chaque onglet est **une page à part** du store (`goTo("netopt")`…) : la recherche Ctrl+K et la barre en jeu peuvent y mener directement.
 
 ## Fonctionnement détaillé
 - En-tête : surtitre « Connexion », titre « Réseau », texte « Les réglages réseau de Windows, le Packet Optimizer et le test de ta connexion, au même endroit. » (clés `hub.*`).

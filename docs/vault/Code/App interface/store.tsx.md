@@ -147,7 +147,7 @@ Ce qui **n'est pas** gardé : `page` (toujours `dashboard` au lancement), `sys`,
 
 ### Navigation et barre en jeu
 - `goTo(page, tweakId?)` : change `page`, fixe `focusTweak` ; avec un réglage, incrémente `focusSeq` (chaque recherche compte, même vers le même réglage, pour rouvrir une section repliée).
-- Événement `app:goto` (barre en jeu, pont [[Rago OS]]) : la cible est `"page"` ou `"page#tweak"` (ex. `network#ping_main`) ; `premium` ouvre l'offre `plan`.
+- Événement `app:goto` (barre en jeu) : la cible est `"page"` ou `"page#tweak"` (ex. `network#ping_main`) ; `premium` ouvre l'offre `plan`.
 
 ## Données touchées
 - `localStorage` : les 11 clés `rago.*` ci-dessus.

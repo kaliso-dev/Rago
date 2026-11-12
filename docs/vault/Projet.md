@@ -1,7 +1,7 @@
 ---
 type: index
 tags: [index]
-maj: 2026-11-11
+maj: 2026-11-12
 ---
 # Rago Optimizer : le projet
 
