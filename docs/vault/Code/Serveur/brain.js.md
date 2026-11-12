@@ -9,7 +9,7 @@ maj: 2026-11-12
 
 Le côté serveur du [[Cerveau du vault]] : lit le dépôt (sur GitHub, ou sur le disque en local), met en forme les notes du vault comme Obsidian, calcule le graphe (notes, liens, citations, fichiers cités, liens cassés) et sert n'importe quel fichier du dépôt au lecteur. Fiche parente : [[Code du serveur]]. Page : [[brain-views.js]] ; navigateur : [[cerveau.js]].
 
-(code de la PR #85 du Cerveau, dans `staging` depuis le 10/11 et en prod depuis la PR #87 du 10/11 ; plusieurs cerveaux depuis la PR du 12/11, pas encore fusionnée)
+(code de la PR #85 du Cerveau, dans `staging` depuis le 10/11 et en prod depuis la PR #87 du 10/11 ; plusieurs cerveaux depuis la PR #100 du 12/11, pas encore fusionnée)
 
 ## Rôle et place dans l'ensemble
 

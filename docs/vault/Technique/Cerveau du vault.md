@@ -17,7 +17,7 @@ Demandé par Sofiene le 12/11 : « ajoute moi au cerveau dans le dashboard admin
 - Chaque cerveau a son dépôt et sa branche : le serveur lit chaque dépôt à part (une archive par dépôt, mêmes règles de cache), et le lecteur ouvre les fichiers du dépôt du cerveau ouvert. Un cerveau sans aucune note affiche « Le cerveau « … » est vide ».
 - La liste se change avec la variable `CERVEAUX` (`id|Nom|dossier|dépôt|branche;…`, dépôt et branche facultatifs) ; vide = les deux cerveaux ci-dessus ([[Variables d'environnement]]).
 - Les deux vaults sont séparés : le vault RAGO-OS se tient dans son propre dépôt (son `CLAUDE.md` et sa note « Mettre à jour le vault »), pas dans celui-ci. RAGO-OS est un nouveau projet (OS Linux pour joueurs) ; c'est autre chose que l'ancien bureau Rago OS retiré de l'app par la PR #99.
-- **Statut (12/11)** : codé et testé en local (PR « Cerveau : choisir entre Rago et RAGO-OS » vers `staging`), pas encore fusionné ni en prod.
+- **Statut (12/11)** : codé et testé en local (PR #100 vers `staging`), pas encore fusionné ni en prod.
 
 ## Accès
 - Menu de `/admin` → section **Projet** → **Cerveau**. Adresse : `https://account.rago-optimizer.com/admin/cerveau` (staging : `rago-staging.up.railway.app/admin/cerveau`).
