@@ -472,6 +472,8 @@ Dans le menu de `/admin`, **Projet → Cerveau** : le vault `docs/vault/` en gra
 
 **Choisir le cerveau** (2026-11-12) : en haut à gauche, « Cerveau » propose **Rago Optimizer** (ce vault) et **RAGO-OS** (le vault `docs/vault/` du dépôt `kaliso-dev/RAGO-OS-`, branche `main`). Un clic charge le cerveau choisi ; il est gardé pour la visite suivante. La liste se change avec `CERVEAUX` (`id|Nom|dossier|dépôt|branche;…`). Si `RAGO-OS-` devient privé, donne aussi au jeton `CERVEAU_GITHUB_TOKEN` le droit « Contents : Read-only » sur ce dépôt.
 
+Si Railway ne déploie pas après une fusion (réglage « Wait for CI ») parce que la CI GitHub n'a pas pu démarrer (limite de dépense Actions), relancer la CI ne suffit pas toujours : cliquer **Redeploy** dans Railway, ou pousser un nouveau commit qui touche `licensing/`.
+
 Le serveur de Railway n'a pas le vault (il ne contient que `licensing/`) : il le lit sur GitHub, branche `staging` par défaut (`CERVEAU_BRANCH`). Il regarde la branche au plus une fois par minute et ne retélécharge le dépôt que quand un nouveau commit arrive ; le bouton ↻ du Cerveau force la lecture.
 
 **Dès maintenant, car le dépôt passe parfois en privé en novembre et pour de bon le 1er décembre** : crée un jeton sur GitHub → Settings → Developer settings → Personal access tokens → **Fine-grained tokens** → Generate new token : Repository access = *Only select repositories* → `kaliso-dev/rago` ; Permissions → Repository → **Contents : Read-only** ; rien d'autre. Mets-le dans Railway → Variables → `CERVEAU_GITHUB_TOKEN`. Sans lui, le Cerveau affiche « Le dépôt n'est pas lisible sans jeton » ; le reste de `/admin` ne change pas. Quand le jeton expire, même message : en refaire un.
