@@ -1049,9 +1049,65 @@ pub fn links() -> LinksView {
     };
     #[cfg(not(windows))]
     let (nics, adapters, usb, apple_net): (Vec<Nic>, Vec<Adapter>, Vec<UsbDev>, bool) = (Vec::new(), Vec::new(), Vec::new(), false);
+    keep_wifi(&nics);
     let links = links_of(&nics);
     let check = phone_check_of(&usb, &adapters, &links, apple_net);
     LinksView { links, check }
+}
+
+// --- Garder le Wi-Fi quand le téléphone partage sa 4G (Sofiene, 13/11 : la 4G en même temps que le Wi-Fi) ----------
+//
+// Un iPhone ou un Android branché en USB est une carte Ethernet pour Windows : Windows la préfère au Wi-Fi et, par
+// défaut (« réduire le nombre de connexions simultanées »), coupe le Wi-Fi. Tout le PC passe alors par la 4G et Rago
+// Route n'a plus qu'un trajet. Ici : la règle de Windows passe à « garder toutes les connexions » (fMinimizeConnections
+// = 0) et la carte du téléphone reçoit une métrique haute, pour que Windows reste sur le Wi-Fi ou la box et que la 4G
+// ne serve qu'au trajet de Rago Route qui lui est collé.
+
+/// Métrique des cartes de téléphone : plus haute que celles du Wi-Fi et du câble (de 5 à 75 d'habitude).
+pub const PHONE_METRIC: u32 = 4000;
+
+/// Les cartes de téléphone (avec Internet) que Windows préfère encore : numéros d'interface à corriger.
+pub fn phones_to_demote(all: &[Nic]) -> Vec<u32> {
+    all.iter().filter(|n| n.cellular && n.gateway && n.metric < PHONE_METRIC).map(|n| n.index).collect()
+}
+
+/// Le script PowerShell qui garde le Wi-Fi : la règle de Windows (une fois par lancement de l'app, le service des
+/// connexions est relancé seulement si elle change) puis la métrique de chaque carte de téléphone.
+pub fn keep_wifi_script(policy: bool, phones: &[u32]) -> String {
+    let mut s = String::new();
+    if policy {
+        s.push_str(
+            "$k='HKLM:\\SOFTWARE\\Policies\\Microsoft\\Windows\\WcmSvc\\GroupPolicy'; \
+             if (-not (Test-Path $k)) { New-Item $k -Force | Out-Null }; \
+             if ((Get-ItemProperty $k -ErrorAction SilentlyContinue).fMinimizeConnections -ne 0) { \
+             New-ItemProperty $k -Name fMinimizeConnections -Value 0 -PropertyType DWord -Force | Out-Null; \
+             Restart-Service WcmSvc -Force -ErrorAction SilentlyContinue }; ",
+        );
+    }
+    for i in phones {
+        s.push_str(&format!("Set-NetIPInterface -InterfaceIndex {i} -AddressFamily IPv4 -InterfaceMetric {PHONE_METRIC} -ErrorAction SilentlyContinue; "));
+    }
+    s
+}
+
+/// Garde le Wi-Fi allumé dès qu'un téléphone partage sa 4G (appelé par l'onglet, toutes les 3 s : ne fait rien quand
+/// tout est déjà en place).
+fn keep_wifi(all: &[Nic]) {
+    static POLICY_DONE: AtomicBool = AtomicBool::new(false);
+    let phones = phones_to_demote(all);
+    if !all.iter().any(|n| n.cellular && n.gateway) {
+        return;
+    }
+    let policy = !POLICY_DONE.swap(true, Ordering::Relaxed);
+    if !policy && phones.is_empty() {
+        return;
+    }
+    #[cfg(windows)]
+    {
+        crate::shell::powershell(&keep_wifi_script(policy, &phones));
+    }
+    #[cfg(not(windows))]
+    let _ = keep_wifi_script(policy, &phones);
 }
 
 impl Engine {
@@ -2087,6 +2143,21 @@ mod tests {
         assert!(is_cellular("Bluetooth Device (Personal Area Network)", 6));
         assert!(is_phone_hotspot(Ipv4Addr::new(172, 20, 10, 1)));
         assert!(!is_phone_hotspot(Ipv4Addr::new(192, 168, 1, 254)));
+    }
+
+    #[test]
+    fn keep_wifi_with_phone() {
+        let nic = |name: &str, index, cellular, gateway, metric| Nic { name: name.into(), ip: Ipv4Addr::new(10, 0, 0, 1), index, cellular, gateway, metric };
+        // iPhone en USB préféré par Windows (métrique 25) : à corriger ; le Wi-Fi n'est jamais touché
+        let all = [nic("Wi-Fi", 7, false, true, 45), nic("Ethernet 2", 12, true, true, 25)];
+        assert_eq!(phones_to_demote(&all), vec![12]);
+        // déjà corrigé, ou téléphone sans Internet : rien à faire
+        assert!(phones_to_demote(&[nic("Ethernet 2", 12, true, true, PHONE_METRIC)]).is_empty());
+        assert!(phones_to_demote(&[nic("Ethernet 2", 12, true, false, 25)]).is_empty());
+        let s = keep_wifi_script(true, &[12]);
+        assert!(s.contains("fMinimizeConnections -Value 0"));
+        assert!(s.contains("Set-NetIPInterface -InterfaceIndex 12 -AddressFamily IPv4 -InterfaceMetric 4000"));
+        assert!(!keep_wifi_script(false, &[12]).contains("WcmSvc"));
     }
 
     #[test]

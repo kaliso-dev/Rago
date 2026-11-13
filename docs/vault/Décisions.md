@@ -1,7 +1,7 @@
 ---
 type: registre
 tags: [décision]
-maj: 2026-11-12
+maj: 2026-11-13
 ---
 # Décisions
 
@@ -10,6 +10,7 @@ Registre daté des décisions de Sofiene. **La plus récente prime.** Citations 
 ## App et versions
 | Date | Décision | Statut |
 |---|---|---|
+| 13/11 | **Rago Route et la 4G du téléphone** : « Toujours en même temps » (carte de choix) : la 4G reste un trajet de plus à côté du Wi-Fi, et Windows ne doit plus couper le Wi-Fi quand le téléphone est branché ([[Proxy]]) | DÉCIDÉ |
 | 11/11 | **Page Souris** dans la version finale : « + mouse » ajouté au message « Oui tu peux push ca sur la derniere version stagging » ; codée gratuite (proposition de Claude, à confirmer : q96) ([[Page Souris]]) | DÉCIDÉ |
 | 11/11 | **Version finale 1.3.0** : « Oui tu peux push ca sur la derniere version stagging. Comme ca ca nous fait un version fianle avec » Rago Route (« Prox »), l'analyse du PC, l'avant/après, la connexion Google, les correctifs réseau, le profil hitreg, les graphismes par jeu, la page Outils, la saturation et la résolution des pros, les conseils au lancement du jeu et le jeu en priorité haute (09:20 UTC, réponse à q95) | DÉCIDÉ |
 | 11/11 | Sortie : « je compte release la nouvelle version avec les Free Slot, les correctif des retour client, la conexion google et discord fixe, analyse my pc et avant apres et les nouveaux proxy demain voir apres demain MAX » (message de 01:17, heure de Paris) ; « Actuellement tout est finit mais j'aimerais rajouter de nouvelle features » | prévu ; les six nouvelles fonctions sont dans `staging` depuis le 11/11 (PR #92, version test) ; toutes partent avec la 1.3.0 (décision du 11/11 à 09:20, plus haut) ([[Version 1.3.0]]) |
