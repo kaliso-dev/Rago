@@ -69,7 +69,7 @@ Les joueurs ont la [[Version 1.2.1]] (en ligne depuis le 31/10). La [[Version 1.
 4. Côté serveur c'est bon (11/11 : `/api/v1/update/status` propose la 1.2.1 à 100 %) ; reste à voir sur un PC encore en 1.2.0 que la mise à jour arrive ([[Mise à jour automatique]]).
 5. Valider l'e-mail sur la collecte des tests réseau avant son envoi, une fois rédigé ([[Prochaines étapes]]).
 6. Avant la prod de l'essai : inscrire sa mère comme vendeuse et régler l'adresse ([[Conformité juridique]]).
-7. Rago Route : faire voir la 4G du téléphone à Windows (en cours, 10/11).
+7. Rago Route : la 4G de l'iPhone est vue par le PC (Sofiene, 13/11), mais Windows coupe alors le Wi-Fi et tout passe par le téléphone ; dire si la 4G doit servir en secours seulement (carte de choix du 13/11, À DÉCIDER) ([[Proxy]]).
 8. GitHub : passer `network-server-rago` en public (libère les minutes) ; en novembre, `rago` doit être public pendant les builds ; `rago` en privé pour de bon le 1er décembre ([[CI GitHub Actions]]).
 9. [[Cerveau du vault]] (en prod depuis le 10/11) : `CERVEAU_GITHUB_TOKEN` dans Railway, staging **et** prod, avant le passage du dépôt en privé ; mode d'emploi donné le 11/11, puis « tout est bon » : jeton mis ou non, et où, **À VÉRIFIER** (q98).
 10. Répondre aux questions ouvertes de q70 à q104 sur la page « Questions du vault Rago » ([[Questions ouvertes]]).

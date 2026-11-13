@@ -10,6 +10,7 @@ Une ligne par événement marquant, la plus récente en haut. Voir [[Historique 
 ## Novembre 2026
 | Date | Événement | Liens |
 |---|---|---|
+| 13/11 | Rago Route : l'iPhone est enfin vu par Windows, mais Windows coupe le Wi-Fi et tout passe par la 4G ; la 4G n'a jamais été codée « en secours seulement » : choix demandé à Sofiene | [[Proxy]] |
 | 12/11 | Sofiene repasse `rago` en public (« j'ai passer le github en public ») ; CI relancée et verte, staging déployé, prod redéployée par la PR #103 : menu des cerveaux servi en prod | [[Cerveau du vault]], [[Railway]] |
 | 12/11 | Cerveau : menu déroulant (« je veux un menu dépliant ») ; PR #100 fusionnée dans `staging` et PR #101 dans la prod (« push directement sur la prod »). La CI GitHub ne démarre plus (facturation Actions) et Railway attend la CI : pas déployé, Redeploy à faire dans Railway | [[Cerveau du vault]], [[CI GitHub Actions]], [[Railway]] |
 | 12/11 | **[[Cerveau du vault]] : choix du cerveau** (demande de Sofiene : « je veux pouvoir switch de cerveau […] je dois pouvoir sélectionner le cerveau et il charge ») : sélecteur Rago Optimizer / RAGO-OS dans `/admin/cerveau`, le cerveau RAGO-OS lit le vault du nouveau dépôt `kaliso-dev/RAGO-OS-` (créé par Sofiene le 12/11, 36 notes), choix gardé par cookie ; testé en local (tests du Cerveau et captures), PR #100 vers `staging`, pas en prod. Le dépôt `rago` était privé ce soir-là : sans `CERVEAU_GITHUB_TOKEN`, le cerveau Rago ne se charge pas sur Railway | [[Cerveau du vault]], [[brain.js]] |
