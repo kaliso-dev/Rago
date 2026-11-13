@@ -52,6 +52,12 @@ if os.path.isfile(ra):
     m = re.search(r"ROUTE_PRICE = \{ amount: (\d+), currency: '(\w+)'", open(ra).read())
     assert m and (int(m.group(1)), m.group(2)) == (round(PR * 100), ISO.lower()), \
         f'priceRoute ({CUR}{PR:.2f} in src/page.html) and ROUTE_PRICE (licensing/src/route-addon.js) differ: change both'
+# and its yearly price (2026-11-13), the server's ROUTE_PRICE_YEARLY
+PRY = float(cfg('priceRouteYear'))
+if os.path.isfile(ra):
+    m = re.search(r"ROUTE_PRICE_YEARLY = \{ amount: (\d+), currency: '(\w+)'", open(ra).read())
+    assert m and (int(m.group(1)), m.group(2)) == (round(PRY * 100), ISO.lower()), \
+        f'priceRouteYear ({CUR}{PRY:.2f} in src/page.html) and ROUTE_PRICE_YEARLY (licensing/src/route-addon.js) differ: change both'
 # FAQ without JavaScript: the same questions, rendered once here into a <noscript> block
 a = s.index('  const F = ['); b = s.index('\n  ];', a) + len('\n  ];')
 try:
@@ -172,16 +178,18 @@ assert GOOGLE in ro, 'Google Fonts block changed in route.html: update build.py'
 ro = ro.replace(GOOGLE, LOCAL)
 TD = int(cfg('trialDays'))
 for key, val in (('accountBase', f'"{BASE}"'), ('trialDays', str(TD)), ('currency', f'"{CUR}"'),
-                 ('priceMonth', cfg('priceMonth')), ('priceYear', cfg('priceYear')), ('priceRoute', cfg('priceRoute'))):
+                 ('priceMonth', cfg('priceMonth')), ('priceYear', cfg('priceYear')), ('priceRoute', cfg('priceRoute')),
+                 ('priceRouteYear', cfg('priceRouteYear'))):
     ro, n = re.subn(key + r': (?:"[^"]*"|[\d.]+)', lambda m: f'{key}: {val}', ro, count=1)
     assert n == 1, f'{key} not found in the CONFIG of route.html'
 money = lambda n: f'{CUR}{jsround(n):.2f}'
 money0 = lambda n: f'{CUR}{int(n)}' if n == int(n) else money(n)  # $3, as the page's JS writes it
-for cls, val in (('js-td', str(TD)), ('js-pm', money(PM)), ('js-py', money(PY)), ('js-pr', money0(PR)), ('js-pmr', money(PM + PR)),
+for cls, val in (('js-td', str(TD)), ('js-pm', money(PM)), ('js-py', money(PY)), ('js-pr', money0(PR)), ('js-pmr', money(PM + PR)), ('js-pry', money(PRY)), ('js-pyr', money(PY + PRY)),
                  ('js-free', free_txt if FREE >= 1 else f'{money(PY / 12)} a month')):  # same texts as the page's JS
     ro, n = re.subn(rf'(<span class="{cls}">)[^<]*(</span>)', lambda m: m.group(1) + val + m.group(2), ro)
     assert n >= 1, f'no {cls} in route.html'
-for path in ('/buy?interval=month&amp;trial=1&amp;route=1', '/buy?interval=year&amp;route=1', '/buy/route'):
+for path in ('/buy?interval=month&amp;trial=1&amp;route=1', '/buy?interval=year&amp;route=1', '/buy/route',
+             '/buy/route?interval=month', '/buy/route?interval=year'):
     ro, n = re.subn(re.escape(f'href="{path}"'), f'href="{BASE}{path}"', ro)
     assert n >= 1, f'no link to {path} in route.html'
 open(os.path.join(ROOT, 'route.html'), 'w').write(ro)

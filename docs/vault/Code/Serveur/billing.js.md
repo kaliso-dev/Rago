@@ -2,8 +2,8 @@
 type: code
 tags: [code, serveur, javascript, stripe]
 fichier: licensing/src/billing.js
-lignes: 585
-maj: 2026-11-13
+lignes: 586
+maj: 2026-11-14
 ---
 # billing.js
 
@@ -46,7 +46,7 @@ Tout ce qui parle à Stripe : création du paiement Checkout (abonnement, essai 
 ## Fonctionnement détaillé
 
 ### Création du paiement (`createCheckout` → `buildCheckout`)
-Paramètres : `interval` (`month`, `year`, `lifetime`), `customerId` (client Stripe d'une licence précédente), `ref` (code d'affilié), `promotionCode`, `trialEnd` (récompense encore en cours), `replaces` (abonné qui passe à Lifetime), `trial`, `withRoute` (case Rago Route, 13/11, sur `staging` depuis le 13/11 au soir : abonnements seulement et avec `STRIPE_PRICE_ROUTE`, métadonnée `route: '1'` et une phrase sur l'option dans le texte au-dessus du bouton, `routeText`).
+Paramètres : `interval` (`month`, `year`, `lifetime`), `customerId` (client Stripe d'une licence précédente), `ref` (code d'affilié), `promotionCode`, `trialEnd` (récompense encore en cours), `replaces` (abonné qui passe à Lifetime), `trial`, `withRoute` (case Rago Route, 13/11, sur `staging` depuis le 13/11 au soir : abonnements seulement et avec `STRIPE_PRICE_ROUTE`, métadonnée `route: '1'` et une phrase sur l'option dans le texte au-dessus du bouton, `routeText(fin d'essai, rythme)` : « … then $3 a month… » pendant l'essai, sinon « $3 a month… every month » ou « $17.99 a year… every year »).
 
 - **Commun** : `line_items` = 1 prix ; `success_url` = `<PUBLIC_URL>/checkout/success?session_id={CHECKOUT_SESSION_ID}` ; `cancel_url` = `CHECKOUT_CANCEL_URL` ; `customer` (client connu) sinon `customer_email` ; `client_reference_id` = id du compte connecté ; `discounts: [{promotion_code}]` si un code est appliqué, sinon `allow_promotion_codes: true` (le joueur peut taper un code) ; `metadata` = `{product: 'rago-hub-premium', interval?, plan?, ref?, trial?}` ; case des CGV obligatoire (`consent_collection.terms_of_service: 'required'`) avec le texte `termsText` : accès immédiat, perte du droit de rétractation de 14 jours, « payments aren't refunded » (droit européen).
 - **Lifetime** (`mode: 'payment'`) : `customer_creation: 'always'`, `payment_intent_data.metadata`, texte « One payment: Rago Optimizer Premium for life on one Windows PC. No subscription, nothing renews. » (+ « Your current subscription stops right after this payment. » pour un abonné).

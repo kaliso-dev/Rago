@@ -2,8 +2,8 @@
 type: code
 tags: [code, serveur, javascript, configuration]
 fichier: licensing/src/config.js
-lignes: 284
-maj: 2026-11-12
+lignes: 290
+maj: 2026-11-14
 ---
 # config.js
 
@@ -46,6 +46,8 @@ Un seul export utile : `loadConfig(env = process.env)` → objet `cfg`, passé �
 | `STRIPE_PRICE_MONTHLY`, `STRIPE_PRICE_YEARLY` | `stripePriceMonthly`, `stripePriceYearly` | vides. |
 | `STRIPE_PRICE_ID` | `stripePriceId` | ancien prix unique, plus vendu ; seulement comparé et signalé. |
 | `STRIPE_PRICE_LIFETIME` | `stripePriceLifetime` | vide = Lifetime pas en vente. |
+| `STRIPE_PRICE_ROUTE` | `stripePriceRoute` | option Rago Route, 3 $ par mois (13/11) ; vide = pas vendue, et Rago Route fermé en prod. |
+| `STRIPE_PRICE_ROUTE_YEARLY` | `stripePriceRouteYearly` | la même à 17,99 $ par an (14/11) ; vide = vendue au mois seulement. |
 | `TRIAL_DAYS` | `trialDays` | 3 ; entier de 0 à 30, sinon 3 ; 0 = aucun essai. |
 | `LICENSE_SIGNING_KEY` | `signingKeyPem` | vide = clé générée en base ([[db.js]]). |
 | `SESSION_SECRET` | `sessionSecret` | vide = généré en base. |

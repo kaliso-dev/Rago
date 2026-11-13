@@ -420,7 +420,10 @@ test('Rago Route option: $3 a month on top of Premium, bought from the account, 
   const params = t.created.at(-1);
   assert.equal(params.mode, 'subscription');
   assert.deepEqual(params.line_items, [{ price: 'price_route', quantity: 1 }]);
-  assert.deepEqual(params.subscription_data.metadata, { product: 'rago-route', user_id: uid });
+  assert.deepEqual(params.subscription_data.metadata, { product: 'rago-route', user_id: uid, interval: 'month' });
+  // No yearly price set: ?interval=year still sells the monthly one.
+  assert.equal((await t.browse('/buy/route?interval=year')).status, 303);
+  assert.deepEqual(t.created.at(-1).line_items, [{ price: 'price_route', quantity: 1 }]);
   // Paid: the success page saves it even before the webhook, and the account page shows it.
   const sub = t.subscription('sub_route', 'month', { metadata: { product: 'rago-route', user_id: uid }, customer: 'cus_o' });
   t.sessions.cs_opt = { id: 'cs_opt', object: 'checkout.session', mode: 'subscription', metadata: { product: 'rago-route', user_id: uid }, subscription: sub };
@@ -448,14 +451,14 @@ test('Rago Route option: $3 a month on top of Premium, bought from the account, 
 });
 
 test('Rago Route ticked at checkout: Premium and the option together, the trial includes it, an account with Premium only adds it', async () => {
-  const t = await setup({ STRIPE_PRICE_MONTHLY: 'price_m', STRIPE_PRICE_YEARLY: 'price_y', STRIPE_PRICE_ROUTE: 'price_route' });
+  const t = await setup({ STRIPE_PRICE_MONTHLY: 'price_m', STRIPE_PRICE_YEARLY: 'price_y', STRIPE_PRICE_ROUTE: 'price_route', STRIPE_PRICE_ROUTE_YEARLY: 'price_route_y' });
   const createdSubs = [];
   t.stripe.subscriptions.create = async (p, o) => {
     createdSubs.push([p, o]);
     const id = `sub_r${createdSubs.length}`;
     return (t.subs[id] = { id, object: 'subscription', customer: p.customer, metadata: p.metadata, cancel_at_period_end: false,
       status: p.trial_end ? 'trialing' : 'active', default_payment_method: p.default_payment_method,
-      items: { data: [{ price: { id: p.items[0].price, recurring: { interval: 'month' } }, current_period_end: p.trial_end || Math.floor(Date.now() / 1000) + 30 * 86400 }] } });
+      items: { data: [{ price: { id: p.items[0].price, recurring: { interval: p.items[0].price === 'price_route_y' ? 'year' : 'month' } }, current_period_end: p.trial_end || Math.floor(Date.now() / 1000) + 30 * 86400 }] } });
   };
   t.stripe.paymentMethods = { retrieve: async (id) => ({ id, card: { fingerprint: 'fp_route' } }), list: async () => ({ data: [{ id: 'pm_listed' }] }) };
 
@@ -465,9 +468,11 @@ test('Rago Route ticked at checkout: Premium and the option together, the trial 
   assert.equal(params.metadata.route, '1');
   assert.deepEqual(params.line_items, [{ price: 'price_m', quantity: 1 }]);
   assert.match(params.custom_text.submit.message, /Rago Route is included in the free trial, then \$3 a month on top of Premium/);
-  // Paid from the start (yearly): charged today, its own monthly subscription.
+  // Paid from the start (yearly): charged today, its own yearly subscription ($17.99, 6 months free like Premium).
   await t.browse('/buy?interval=year&route=1');
-  assert.match(t.created.at(-1).custom_text.submit.message, /\$3 a month on top of Premium, as its own subscription on this card, charged today/);
+  assert.match(t.created.at(-1).custom_text.submit.message, /\$17\.99 a year on top of Premium, as its own subscription on this card, charged today and every year/);
+  await t.browse('/buy?interval=month&route=1');
+  assert.match(t.created.at(-1).custom_text.submit.message, /\$3 a month on top of Premium, as its own subscription on this card, charged today and every month/);
   // No box ticked: nothing about it. Lifetime: never (added from the account).
   await t.browse('/buy?interval=month');
   assert.equal(t.created.at(-1).metadata.route, undefined);
@@ -483,6 +488,7 @@ test('Rago Route ticked at checkout: Premium and the option together, the trial 
   const [p1, o1] = createdSubs[0];
   assert.equal(p1.customer, 'cus_rt');
   assert.deepEqual(p1.items, [{ price: 'price_route' }]);
+  assert.equal(p1.metadata.interval, 'month');
   assert.equal(p1.default_payment_method, 'pm_t');
   assert.equal(p1.trial_end, end);
   assert.equal(o1.idempotencyKey, 'rago-route-cs_rt');
@@ -517,6 +523,10 @@ test('Rago Route ticked at checkout: Premium and the option together, the trial 
   assert.equal(createdSubs.length, 2);
   assert.equal(createdSubs[1][0].trial_end, undefined);
   assert.equal(createdSubs[1][0].default_payment_method, 'pm_listed');
+  // A yearly Premium: the option is yearly too.
+  assert.deepEqual(createdSubs[1][0].items, [{ price: 'price_route_y' }]);
+  assert.equal(createdSubs[1][0].metadata.interval, 'year');
+  assert.equal((await t.db.get("SELECT billing_interval FROM route_subscriptions WHERE stripe_subscription_id = 'sub_r2'")).billing_interval, 'year');
   await t.webhook('checkout.session.completed', t.sessions.cs_py);
   assert.equal(createdSubs.length, 2);
   const licY = await t.db.get("SELECT * FROM licenses WHERE stripe_session_id = 'cs_py'");
@@ -530,6 +540,16 @@ test('Rago Route ticked at checkout: Premium and the option together, the trial 
   await t.browse('/signup', { form: { email: 'has@rago.gg', password: 'password123' } });
   await L.grantLicense(t.db, 'has@rago.gg', 'test');
   assert.equal((await t.browse('/buy?interval=month&trial=1&route=1')).headers.get('location'), '/buy/route');
+  // The account page offers both, and each button buys its own price.
+  assert.match(await (await t.browse('/account')).text(), /\/buy\/route\?interval=year[\s\S]*\$17\.99\/year[\s\S]*\/buy\/route\?interval=month/);
+  await t.browse('/buy/route?interval=year');
+  assert.deepEqual(t.created.at(-1).line_items, [{ price: 'price_route_y', quantity: 1 }]);
+  assert.match(t.created.at(-1).custom_text.submit.message, /\$17\.99 a year on top of your Premium/);
+  await t.browse('/buy/route?interval=month');
+  assert.deepEqual(t.created.at(-1).line_items, [{ price: 'price_route', quantity: 1 }]);
+  // No interval: like the Premium (this one isn't yearly): monthly.
+  await t.browse('/buy/route');
+  assert.deepEqual(t.created.at(-1).line_items, [{ price: 'price_route', quantity: 1 }]);
 });
 
 test('account without a license sees the offer', async () => {

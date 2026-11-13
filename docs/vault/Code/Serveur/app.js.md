@@ -2,8 +2,8 @@
 type: code
 tags: [code, serveur, javascript, api, hono]
 fichier: licensing/src/app.js
-lignes: 1739
-maj: 2026-11-13
+lignes: 1742
+maj: 2026-11-14
 ---
 # app.js
 
@@ -71,7 +71,7 @@ Toutes les routes du serveur de comptes et licences : pages du site de compte (i
 | GET `/healthz` | public | `SELECT 1` → `{ok:true}` ou 503 `database unreachable`. |
 | GET `/acces/:key` | public | Bonne clé `PREVIEW_KEY` → cookie `rago_preview` et `/signup` ; `sortir` l'efface ; sinon 404. |
 | GET `/buy`, `/buy/lifetime` | public | Crée la session Stripe Checkout (voir plus bas) et redirige. `route=1` : Premium avec l'option Rago Route ; un compte connecté qui a déjà Premium est envoyé sur `/buy/route` (13/11, sur `staging` depuis le 13/11 au soir). |
-| GET `/buy/route`, `/checkout/route` | session | Option Rago Route seule pour un compte avec Premium actif (`?n=routenopremium`, `routeowned`, `routesoon` sinon), puis page de retour qui l'enregistre ([[route-addon.js]]). |
+| GET `/buy/route`, `/checkout/route` | session | Option Rago Route seule pour un compte avec Premium actif (`?n=routenopremium`, `routeowned`, `routesoon` sinon), au mois ou à l'année (`?interval=month|year` ; sans, comme le Premium du compte, `licenses.plan`, 14/11), puis page de retour qui l'enregistre ([[route-addon.js]]). |
 | GET `/checkout/success` | public | `session_id` `cs_…` : `fulfillCheckoutSession`, `settleTrial`, `addRouteWithPremium` (case Rago Route), e-mail, puis compte ou page de connexion/inscription. |
 | GET `/claim/:token` | public | Lien de l'e-mail d'achat ; expiré → 410 « This link doesn't work anymore. ». |
 | GET/POST `/signup` | public | E-mail ≤ 254, mot de passe 8 à 200. Avec `EMAIL_VERIFICATION` et un e-mail qui n'est pas celui de l'achat : code par e-mail (`startSignup`) et `/signup/verify` ; sinon compte créé, bienvenue, `/account/profile?welcome=1`. |

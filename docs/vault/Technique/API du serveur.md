@@ -1,7 +1,7 @@
 ---
 type: technique
 tags: [technique, serveur, api]
-maj: 2026-11-13
+maj: 2026-11-14
 ---
 # API du serveur
 
@@ -43,7 +43,7 @@ Les routes marquées **(staging)** n'existent que sur `staging`, pas encore sur 
 | `GET /admin/cerveau`, `GET /admin/cerveau/donnees.json` (`?frais=1`), `GET /admin/cerveau/fichier?chemin=` (toutes avec `?c=<cerveau>`, 12/11) | [[Cerveau du vault]] : la page, le vault en graphe (gzip, `ETag`), un fichier du dépôt ; PR #85 du Cerveau (`staging`, 10/11), en prod par la PR #87 (10/11) |
 | `POST /webhooks/stripe` | Webhook Stripe (signature vérifiée, idempotent par `stripe_events`) |
 | `GET /` | Redirige vers `SITE_URL` (le site est sur Netlify) |
-| `GET /buy/route`, `GET /checkout/route` | session du site | Option Rago Route (13/11) : Checkout Stripe de l'abonnement à 3 $/mois pour un compte Premium connecté, puis page de retour qui l'enregistre ([[route-addon.js]]) |
+| `GET /buy/route`, `GET /checkout/route` | session du site | Option Rago Route (13/11) : Checkout Stripe de l'abonnement à 3 $/mois ou 17,99 $/an (`?interval=month|year` ; sans, comme le Premium du compte) pour un compte Premium connecté, puis page de retour qui l'enregistre ([[route-addon.js]]) |
 
 ## API de l'app : `/api/v1`
 JSON en entrée et en sortie. Chaque appel de licence envoie l'objet `device` (nom, OS, `app_version`, empreinte hachée `machine_guid`, `smbios_uuid`, `board_serial`). Les mises à jour et tests réseau envoient `X-Rago-Device` (hash du PC, jamais l'empreinte de licence).

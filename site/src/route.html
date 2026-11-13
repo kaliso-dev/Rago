@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="theme-color" content="#0A0A0B">
-<!-- Rago Route: the anti-lag tunnel for Minecraft Java, a $3/month option of Rago Optimizer Premium (beta since the app 1.3.0;
+<!-- Rago Route: the anti-lag tunnel for Minecraft Java, a $3/month or $17.99/year option of Rago Optimizer Premium (beta since the app 1.3.0;
      option decided by Sofiene on 2026-11-13, page rewritten the same day: « la simplifier, des illustrations animées simples
      et épurées, aller droit au but, expliquer uniquement le proxy »).
      Source of site/route.html (built by tools/build.py, which also copies prices, trial and account server from page.html).
@@ -573,7 +573,7 @@ footer.foot p{max-width:80ch}
       <div class="head rv">
         <span class="eyebrow">Pricing</span>
         <h2>Premium with Rago Route, or just the option.</h2>
-        <p>Try both free for <span class="js-td">3</span> days. Already Premium? Add Rago Route for <span class="js-pr">$3</span> a month. Cancel either anytime.</p>
+        <p>Try both free for <span class="js-td">3</span> days. Already Premium? Add Rago Route for <span class="js-pr">$3</span> a month or <span class="js-pry">$17.99</span> a year. Cancel either anytime.</p>
       </div>
       <div class="prices">
         <div class="pc main rv">
@@ -595,8 +595,8 @@ footer.foot p{max-width:80ch}
             <li><svg><use href="#i-check"/></svg><span><b>Packet Optimizer</b>, tuned to your line</span></li>
             <li><svg><use href="#i-check"/></svg><span><b>20 presets</b>, and tweaks to switch from the in-game bar</span></li>
           </ul>
-          <a class="btn btn-ghost js-year" href="/buy?interval=year&amp;route=1"><span>Skip the trial: <span class="js-py">$29.99</span> a year + <span class="js-pr">$3</span> a month</span></a>
-          <p class="micro">Yearly Premium is <span class="js-free">6 months free</span>, paid today; Rago Route stays monthly. Card required for the trial, one per person: if you've had Premium or a trial before, you pay from the start.<span class="js-nw" hidden> The <span class="js-td">3</span> days start when you pay, so start your trial at your PC.</span></p>
+          <a class="btn btn-ghost js-year" href="/buy?interval=year&amp;route=1"><span>Skip the trial: <span class="js-pyr">$47.98</span> a year for both</span></a>
+          <p class="micro">Yearly: <span class="js-py">$29.99</span> Premium + <span class="js-pry">$17.99</span> Rago Route, paid today, <span class="js-free">6 months free</span> on both. Card required for the trial, one per person: if you've had Premium or a trial before, you pay from the start.<span class="js-nw" hidden> The <span class="js-td">3</span> days start when you pay, so start your trial at your PC.</span></p>
         </div>
 
         <div class="pc rv" id="option">
@@ -604,7 +604,9 @@ footer.foot p{max-width:80ch}
           <h3>Rago Route option</h3>
           <p class="sub">For an account with Premium: monthly, yearly<span data-gate="lifetime" data-gate-note="q101 · Lifetime and Rago Route">, Lifetime</span> or Premium time from Rago.</p>
           <div class="price"><b><span class="js-pr">$3</span></b><small>/ month, on top of your Premium</small></div>
-          <a class="btn btn-ghost btn-lg js-route" href="/buy/route">Add Rago Route<svg><use href="#i-arrow"/></svg></a>
+          <p class="pnote">Or <span class="js-pry">$17.99</span> a year: <span class="js-free">6 months free</span>, like yearly Premium.</p>
+          <a class="btn btn-ghost btn-lg js-route-m" href="/buy/route?interval=month"><span>Add it monthly: <span class="js-pr">$3</span> a month</span><svg><use href="#i-arrow"/></svg></a>
+          <a class="btn btn-ghost js-route-y" href="/buy/route?interval=year"><span>Add it yearly: <span class="js-pry">$17.99</span> a year</span></a>
           <p class="micro">Sign in, pay on Stripe with your Premium's card, then turn it on in the app.</p>
           <p class="pl-h">Every feature</p>
           <ul class="pl">
@@ -618,7 +620,7 @@ footer.foot p{max-width:80ch}
             <li><svg><use href="#i-check"/></svg><span><b>Hypixel</b><span data-gate="minemen" data-gate-note="P0-6"> and Minemen Club</span>, Minecraft Java, Windows 10 and 11, on your Premium's PC</span></li>
           </ul>
           <ul class="pl terms">
-            <li><svg><use href="#i-dot"/></svg><span>Its own monthly subscription. Cancel anytime from your account: you keep it until the end of the month you paid.</span></li>
+            <li><svg><use href="#i-dot"/></svg><span>Its own subscription, monthly or yearly. Cancel anytime from your account: you keep it until the end of the period you paid.</span></li>
             <li><svg><use href="#i-dot"/></svg><span>It stops with your Premium: if Premium ends, the option is canceled automatically.</span></li>
             <li><svg><use href="#i-dot"/></svg><span>In beta: it can change, and we don't promise a ping or hit registration result. <a href="terms.html#route">Terms, section 4a</a></span></li>
           </ul>
@@ -640,7 +642,7 @@ footer.foot p{max-width:80ch}
         <details><summary>Is it a VPN?</summary><p>Not a full VPN. Only your Minecraft connection goes through it, and only when you join <code>localhost</code>: the rest of your PC's traffic doesn't change. But as with a VPN, Hypixel sees the address of Rago's server in Paris instead of yours.</p></details>
         <details><summary>Is it fair play?</summary><p>Rago Route doesn't touch Minecraft: no mod, nothing injected, no fake ping, no lag switch. It carries your game's own packets, encrypted, by more than one road, and delivers them in order. Your match stays encrypted by Minecraft, end to end with the server, so Rago Route can't read it or change it.</p></details>
         <details data-gate="ban" data-gate-note="P0-9 · Hypixel and the shared address"><summary>Can Hypixel block my account if I use it?</summary><p>Hypixel sees the address of Rago's server in Paris, which other Rago Route players share. We're testing it with several accounts before saying more here.</p></details>
-        <details><summary>I already have Premium. How do I add it?</summary><p>Choose Add Rago Route above, sign in and pay <span class="js-pr">$3</span> a month on Stripe, with the card of your Premium. You can also add it from your account page, or from the Rago Route tab of the app. It's its own subscription: your Premium doesn't change.</p></details>
+        <details><summary>I already have Premium. How do I add it?</summary><p>Choose Add Rago Route above, sign in and pay <span class="js-pr">$3</span> a month or <span class="js-pry">$17.99</span> a year on Stripe, with the card of your Premium. You can also add it from your account page, or from the Rago Route tab of the app. It's its own subscription: your Premium doesn't change.</p></details>
         <details><summary>What does the free trial include?</summary><p>All of Premium, Rago Route included, for <span class="js-td">3</span> days. Taken with Rago Route, both are charged when it ends: <span class="js-pm">$5.99</span> + <span class="js-pr">$3</span> a month, and the email we send you gives the date. Taken without it, Rago Route stops when the trial ends, and you can add it later from your account. Cancel before the end and you pay nothing.</p></details>
         <details><summary>What happens if I cancel Premium?</summary><p>Rago Route stops with it: you keep both until the end of what you paid, and nothing more is charged for either. A trial canceled before its end costs nothing for Rago Route either.</p></details>
         <details data-gate="phone" data-gate-note="P0-5 · phone on Windows"><summary>How much mobile data does the phone use?</summary><p>About 70 to 90 MB per hour of play, as an estimate: in our test on the prototype, the phone received 11.2 MB in 10 minutes on Hypixel, and backup packets add up to a quarter more. The app shows the data received, live.</p></details>
@@ -690,7 +692,8 @@ const CONFIG = {
   currency: "$",
   priceMonth: 5.99,
   priceYear: 29.99,
-  priceRoute: 3
+  priceRoute: 3,
+  priceRouteYear: 17.99
 };
 const $ = (s, r = document) => r.querySelector(s);
 const $$ = (s, r = document) => [...r.querySelectorAll(s)];
@@ -744,11 +747,14 @@ const REF = (() => {
   const set = (sel, v) => $$(sel).forEach(e => { e.textContent = v; });
   set(".js-td", d); set(".js-pm", fmt(CONFIG.priceMonth)); set(".js-py", fmt(CONFIG.priceYear));
   set(".js-pr", fmt0(CONFIG.priceRoute)); set(".js-pmr", fmt(CONFIG.priceMonth + CONFIG.priceRoute));
+  set(".js-pry", fmt(CONFIG.priceRouteYear)); set(".js-pyr", fmt(CONFIG.priceYear + CONFIG.priceRouteYear));
   set(".js-free", free >= 1 ? `${free} month${free === 1 ? "" : "s"} free` : `${fmt(CONFIG.priceYear / 12)} a month`);
   const tail = REF ? "&ref=" + encodeURIComponent(REF) : "";
   $$(".js-trial").forEach(a => a.href = acct(`${CONFIG.checkoutPath}?interval=month&trial=1&route=1${tail}`));
   $$(".js-year").forEach(a => a.href = acct(`${CONFIG.checkoutPath}?interval=year&route=1${tail}`));
   $$(".js-route").forEach(a => a.href = acct(CONFIG.routePath));
+  $$(".js-route-m").forEach(a => a.href = acct(CONFIG.routePath + "?interval=month"));
+  $$(".js-route-y").forEach(a => a.href = acct(CONFIG.routePath + "?interval=year"));
 })();
 const onWindows = /Windows/i.test(navigator.userAgent) || /Win/i.test(navigator.userAgentData?.platform || "");
 if (!onWindows) $$(".js-nw").forEach(e => e.hidden = false);  // the trial starts when you pay: say so on phones and Macs

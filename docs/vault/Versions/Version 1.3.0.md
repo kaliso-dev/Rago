@@ -1,7 +1,7 @@
 ---
 type: version
 tags: [version, app]
-maj: 2026-11-11
+maj: 2026-11-14
 version_app: 1.3.0
 ---
 # Version 1.3.0
@@ -18,4 +18,4 @@ version_app: 1.3.0
 - **Nouveautés du 11/11 dans `staging`** (PR #92, version test demandée par Sofiene) : « Best hitreg » par défaut (#86), jeu en priorité haute (#89), [[Page Outils]] refaite (#90), [[Conseils au lancement du jeu]] (#91), [[Couleurs et résolution]] (#93), [[Graphismes des jeux]] (#94), puis la [[Page Souris]] (PR #96, « + mouse »). **Toutes partent avec la 1.3.0**, la « version finale » (Sofiene, 11/11 à 09:20 UTC : « Oui tu peux push ca sur la derniere version stagging. Comme ca ca nous fait un version fianle avec » Rago Route, l'analyse du PC, l'avant/après, la connexion Google, les correctifs réseau, puis les 6 nouveautés ; avant, à 08:24 UTC, il avait déjà dit oui pour la page Outils et pour les conseils). Sortie prévue par Sofiene « demain voir apres demain MAX » (message du 11/11 à 01:17, heure de Paris).
 - Histoire : ouverte le 01/11 comme 1.2.2 dans le fil « Sortir l'app 1.2.2 » (renommé « Lancer l'essai 3 jours et le gratuit élargi ») ; le 04/11 à 19:59 UTC, Sofiene : « on va ajouter directement la suite » ; fusionnée dans `staging` le 04/11 à 22:55 ; exe « Rago Optimizer Staging » à 23:06. Détails : [[Fil - Lancer l'essai 3 jours et le gratuit élargi]] et, pour Rago Route, [[Fil - Développer les proxys Minecraft]].
 - Tests : 04/11 `npm run build` OK, 148 tests Rust OK (1 ignoré). 10/11 (PR #76) : `npm run build` OK, 96 tests serveur OK (3 ignorés), site régénéré ; tests Rust pas lancés (le conteneur de Claude n'a pas les bibliothèques GTK), la CI `app-windows` les fera. Rien testé sur Windows, sauf Rago Route : Sofiene l'a essayé avec l'exe de test de `staging` le 07/11 et le 09/11 (pertes simulées), et le diagnostic du partage USB du téléphone attend son test (exe du 10/11).
-- **Option Rago Route (13/11)** : Rago Route se paie 3 $ par mois en plus du Premium (décision de Sofiene du 13/11) ; comprise dans l'essai gratuit, CGV section 4a, sur `staging` depuis le 13/11 ([[Offres et prix]]).
+- **Option Rago Route (13/11)** : Rago Route se paie 3 $ par mois ou 17,99 $ par an en plus du Premium (décisions de Sofiene des 13 et 14/11) ; comprise dans l'essai gratuit, CGV section 4a, sur `staging` depuis le 13/11 ([[Offres et prix]]).

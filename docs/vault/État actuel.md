@@ -1,7 +1,7 @@
 ---
 type: pilotage
 tags: [état, pilotage]
-maj: 2026-11-13
+maj: 2026-11-14
 ---
 # État actuel (11/11/2026)
 
@@ -63,7 +63,7 @@ Les joueurs ont la [[Version 1.2.1]] (en ligne depuis le 31/10). La [[Version 1.
 - Fermées le 01/11 avec l'accord de Sofiene (branches gardées) : #16 (1.1.10), #50 et #51 (1.1.13), dont les fonctions sont dans la 1.2.1.
 
 ## Ce qui attend Sofiene
-0. **Option Rago Route à 3 $/mois** (13/11) : créer dans Stripe le produit « Rago Route » avec un prix récurrent de 3 USD par mois (test et live), mettre son `price_...` dans `STRIPE_PRICE_ROUTE` sur Railway (staging, puis prod), (code sur `staging` depuis le 13/11) ; sans ce prix, Rago Route ne s'allume plus en prod, sauf pendant l'essai gratuit ([[Paiements Stripe]]).
+0. **Option Rago Route à 3 $/mois ou 17,99 $/an** (13-14/11) : en **live**, le produit et ses deux prix sont créés (14/11, identifiants dans [[Paiements Stripe]]) ; à faire par Sofiene : les deux mêmes prix en **mode test**, leurs `price_...` dans Railway `staging` (`STRIPE_PRICE_ROUTE`, `STRIPE_PRICE_ROUTE_YEARLY`) ; les identifiants live dans Railway `production` seulement à la mise en prod. Sans ces prix, Rago Route ne s'allume plus en prod, sauf pendant l'essai gratuit.
 1. **URGENT, avant le 05/12** : l'organisation Supabase (offre gratuite) a dépassé son quota de bande passante (e-mail du 04/11) ; restrictions possibles à partir du 05/12, pas de suppression annoncée. La base contient la clé de signature des licences, sauvegardée nulle part ([[Supabase]], [[Clés et secrets]]). D'abord un gestionnaire de mots de passe et la sauvegarde des clés (guide envoyé le 10/11 dans le fil « Sauvegarder les clés »), puis Sofiene passe en Pro (25 $/mois) ou migre vers un autre service, et le dit avant le 05/12 (10/11).
 2. **Clés** : aucune n'est sauvegardée (Railway, Stripe, GitHub, clé de mise à jour Tauri) ; Stripe va bientôt masquer ses clés secrètes.
 3. Prendre une domiciliation pour l'adresse des mentions légales, quand le budget le permet (q46). Tester la 1.3.0 (exe de test de `staging`) sur Windows avant la sortie.

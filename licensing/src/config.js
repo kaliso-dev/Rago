@@ -73,6 +73,9 @@ export function loadConfig(env = process.env) {
     // Rago Route option (2026-11-13): its own recurring price, $3 a month, bought on top of Premium. Empty: not sold
     // (the app's Rago Route then can't be turned on in production).
     stripePriceRoute: (env.STRIPE_PRICE_ROUTE || '').trim(),
+    // Its yearly price, $17.99 a year (6 months free, like Premium): with a yearly Premium, or picked from the account.
+    // Empty: the option is sold monthly only, yearly Premium included.
+    stripePriceRouteYearly: (env.STRIPE_PRICE_ROUTE_YEARLY || '').trim(),
 
     signingKeyPem: readPem(env.LICENSE_SIGNING_KEY),
     sessionSecret: env.SESSION_SECRET || '',

@@ -2,12 +2,12 @@
 type: code
 tags: [code, serveur, base-de-données, rago-route]
 fichier: licensing/supabase/schema.sql
-lignes: 344-365
-maj: 2026-11-13
+lignes: 344-367
+maj: 2026-11-14
 ---
 # Table route_subscriptions
 
-L'**option Rago Route** (3 $ par mois en plus du Premium, décision de Sofiene du 13/11) : une ligne par abonnement Stripe de l'option. Définie dans [[schema.sql]] (lignes 344-365). Écrite et lue par [[route-addon.js]]. Fiche parente : [[Code du serveur]].
+L'**option Rago Route** (3 $ par mois en plus du Premium, décision de Sofiene du 13/11) : une ligne par abonnement Stripe de l'option. Définie dans [[schema.sql]] (lignes 344-367). Écrite et lue par [[route-addon.js]]. Fiche parente : [[Code du serveur]].
 
 (code de `staging`, 13/11 ; les colonnes `license_id`, `checkout_session` et `stopped_with_premium` y sont depuis le 13/11 au soir ; pas en prod)
 
@@ -23,6 +23,7 @@ L'**option Rago Route** (3 $ par mois en plus du Premium, décision de Sofiene d
 | `status` | TEXT | NOT NULL | Statut Stripe (`active`, `trialing`, `past_due`, `canceled`, `incomplete`…) ; `active`, `trialing` et `past_due` donnent Rago Route | [[route-addon.js]] |
 | `current_period_end` | BIGINT | — | Fin du mois payé (ou de l'essai) | [[route-addon.js]] |
 | `cancel_at_period_end` | BOOLEAN | NOT NULL, défaut FALSE | L'option s'arrête à `current_period_end` | [[route-addon.js]] |
+| `billing_interval` | TEXT | — | `month` (3 $) ou `year` (17,99 $), lu sur le prix de l'abonnement (14/11) ; montré sur la page compte | [[route-addon.js]] (`syncRouteSubscription`) |
 | `stopped_with_premium` | BOOLEAN | NOT NULL, défaut FALSE | Arrêt demandé par le serveur parce que le Premium s'arrête ; repris si le Premium reprend | [[route-addon.js]] (`followPremium`) |
 | `created_at`, `updated_at` | BIGINT | NOT NULL | Dates | [[route-addon.js]] |
 

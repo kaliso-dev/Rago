@@ -2,7 +2,7 @@
 type: marketing
 tags: [marketing, rago-route, concurrence, site, conversion]
 source: https://claude.ai/artifact/NyWmDzuXV8iHKP7dmRbhYG
-maj: 2026-11-13
+maj: 2026-11-14
 ---
 # Page de vente Rago Route
 
@@ -45,7 +45,7 @@ Haste n'existe plus (racheté par ExitLag en 07/2021). Le comparatif tech-inside
 3. La connexion gardée quand tous les trajets coupent quelques secondes (labo seulement : P0-4 avant de la mettre en avant).
 4. Chaque résultat avec ses conditions et sa date ; les animations sont présentées comme des illustrations (légende « Illustration » en haut, une phrase avant les six fonctions).
 5. Ce qu'il ne fait pas, dit avant le prix.
-6. Une option de Premium à 3 $ par mois en plus des 5,99 $ (8,99 $ par mois avec les 218 tweaks et le [[Packet Optimizer]]), comprise dans l'essai gratuit, là où les outils séparés coûtent de 4 à 15 $ par mois ([[Offres et prix]]).
+6. Une option de Premium à 3 $ par mois ou 17,99 $ par an (8,99 $ par mois ou 47,98 $ par an avec les 218 tweaks et le [[Packet Optimizer]]), comprise dans l'essai gratuit, là où les outils séparés coûtent de 4 à 15 $ par mois ([[Offres et prix]]).
 
 Pas revendiqué : le nombre de routes (d'autres en ont 3 à 5), « instant » (le renvoi part vers 1,25 aller-retour du tunnel), le chiffrement comme exclusivité, le téléphone et Minemen avant leurs tests.
 
@@ -55,7 +55,7 @@ Depuis le 13/11, la page va droit au but : ce que fait Rago Route, chaque foncti
 2. **« One lost packet freezes everything behind it. »** : le problème en deux phrases, puis les **six fonctions** (deux routes, paquets de secours, renvoi rapide, session gardée, téléphone derrière une porte, compteurs de l'app), chacune avec son animation et sa preuve datée.
 3. **Trois faits** (rien dans le jeu, chiffré et signé, fair play) et **« What it won't do »**.
 4. **« Three steps, then play. »**
-5. **« Premium with Rago Route, or just the option. »** : la carte « Premium + Rago Route » (8,99 $ par mois après l'essai, frise de l'essai, ce qui est compris, annuel) et la carte « Rago Route option » (étiquette « Already Premium? », 3 $ par mois, **toutes les fonctions** et les conditions de l'option).
+5. **« Premium with Rago Route, or just the option. »** : la carte « Premium + Rago Route » (8,99 $ par mois après l'essai, frise de l'essai, ce qui est compris, annuel) et la carte « Rago Route option » (étiquette « Already Premium? », 3 $ par mois ou 17,99 $ par an, **toutes les fonctions** et les conditions de l'option).
 6. **FAQ** (11 questions, 2 derrière une porte) et **« Give every packet a second road. »**
 
 Retiré le 13/11 : la scène dessinée du jeu et les emplacements de clips de gameplay, les quatre cartes de problèmes, le schéma des deux parties, la grande section des résultats, « Why Rago Route », « Is it for you? », le test réseau gratuit, les avis et la maquette complète de l'onglet.
@@ -63,7 +63,7 @@ Retiré le 13/11 : la scène dessinée du jeu et les emplacements de clips de ga
 ## Choix faits pour vendre honnêtement
 - Les boutons d'essai (en-tête, héros, carte « Premium + Rago Route », fin, barre du téléphone) mènent au vrai paiement **avec Rago Route coché** (`/buy?interval=month&trial=1&route=1`), l'annuel à `/buy?interval=year&route=1` ; « Already Premium? Add it » et la carte de l'option mènent à `/buy/route`. Un compte qui a déjà Premium et clique sur l'essai est envoyé par le serveur sur `/buy/route`, pour qu'il n'achète pas un 2e Premium ([[Paiements Stripe]]).
 - Près de chaque bouton d'essai : « Card required: free for 3 days, then $5.99 + $3 a month, charged automatically unless you cancel before. », et en bas « Cancel in two clicks in the app, or anytime from your account » ; hors Windows : « The 3 days start when you pay, so start your trial at your PC. » La frise dit « After 3 days », jamais « day 3 ».
-- La carte « Premium + Rago Route » montre la frise (Today, After 3 days, Anytime), ce qui est compris, l'annuel (« Skip the trial: $29.99 a year + $3 a month », Rago Route reste mensuel), « one per person » ; la carte de l'option donne toutes les fonctions, l'abonnement à part résiliable, l'arrêt avec le Premium, la bêta sans promesse de ping ni de hitreg, et le lien vers les CGV (section 4a, [[Conformité juridique]]). Dessous : « Secure checkout with Stripe · Prices in US dollars · Cancel anytime · No refunds: try it free first · Premium without Rago Route ».
+- La carte « Premium + Rago Route » montre la frise (Today, After 3 days, Anytime), ce qui est compris, l'annuel (« Skip the trial: $47.98 a year for both », 6 mois offerts sur les deux), « one per person » ; la carte de l'option donne toutes les fonctions, l'abonnement à part résiliable, l'arrêt avec le Premium, la bêta sans promesse de ping ni de hitreg, et le lien vers les CGV (section 4a, [[Conformité juridique]]). Dessous : « Secure checkout with Stripe · Prices in US dollars · Cancel anytime · No refunds: try it free first · Premium without Rago Route ».
 - Logos : les aperçus de ChatGPT montrent le bloc d'herbe, le H de Hypixel et un personnage proche de Steve ; la page garde des icônes neutres avec les noms écrits (Minecraft, Hypixel), pour ne pas utiliser leurs marques.
 - Jamais : « the only », « the first », « zero risk », « guaranteed », « no ban », « instant », « FEC » seul, « up to X % » sans source, un meilleur hitreg, « we'll remind you » ([[Voix et ton]]).
 

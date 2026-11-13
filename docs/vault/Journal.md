@@ -1,7 +1,7 @@
 ---
 type: pilotage
 tags: [journal, chronologie]
-maj: 2026-11-13
+maj: 2026-11-14
 ---
 # Journal
 
@@ -10,7 +10,8 @@ Une ligne par événement marquant, la plus récente en haut. Voir [[Historique 
 ## Novembre 2026
 | Date | Événement | Liens |
 |---|---|---|
-| 13/11 | Soir (22 h) : sur l'accueil, le prix du Premium **change quand on coche Rago Route** (8,99 $ par mois en mensuel, 5,50 $ par mois en annuel, l'option restant à 3 $ par mois) ; étiquettes des cartes de prix centrées sur la page Rago Route ; pas à pas Stripe de l'option écrit dans `MISE-EN-LIGNE.md` ; sur `staging` (« Oui, envoie sur staging ») | [[page.html]], [[route.html]], [[Paiements Stripe]], [[Offres et prix]] |
+| 14/11 | **Rago Route à l'année : 17,99 $** (6 mois offerts) : avec l'option à 3 $ par mois seulement, le Premium annuel + Rago Route (65,99 $) coûtait plus que le Lifetime (59,99 $) ; Sofiene a choisi 17,99 $ (Premium + Rago Route : 8,99 $ par mois ou 47,98 $ par an). Serveur (prix annuel, option qui suit le Premium, choix au mois ou à l'année sur `/buy/route`, colonne `billing_interval`), accueil, page Rago Route, CGV 4a, textes de l'app ; 111 tests serveur OK ; sur `staging` le 14/11. **Stripe live** : produit « Rago Route » et ses deux prix créés par Claude ; mode test à créer par Sofiene | [[Offres et prix]], [[Paiements Stripe]], [[route-addon.js]], [[page.html]], [[route.html]] |
+| 13/11 | Soir (22 h) : sur l'accueil, le prix du Premium **change quand on coche Rago Route** (8,99 $ par mois en mensuel ; en annuel, voir la ligne du 14/11) ; étiquettes des cartes de prix centrées sur la page Rago Route ; pas à pas Stripe de l'option écrit dans `MISE-EN-LIGNE.md` ; sur `staging` (« Oui, envoie sur staging ») | [[page.html]], [[route.html]], [[Paiements Stripe]], [[Offres et prix]] |
 | 13/11 | **Page Rago Route refaite** (plus courte, animations simples, toutes les fonctions, deux cartes de prix) et **option Rago Route au paiement** : case « Add Rago Route » sur l'accueil, « Already Premium? » pour l'option seule, Premium + Rago Route sur la page ; le serveur crée l'option après le Premium (essai compris) et l'arrête avec lui ; CGV 4a complétées ; 111 tests serveur OK ; sur `staging` le soir même (« Oui, envoie sur staging ») | [[route.html]], [[Paiements Stripe]], [[route-addon.js]] |
 | 13/11 | **Rago Route devient une option à 3 $ par mois en plus du Premium** (décision de Sofiene) : serveur, onglet de l'app, page compte et site codés, 110 tests serveur OK ; essai gratuit avec Rago Route compris et CGV section 4a ; sur `staging` le 13/11, prix Stripe à créer | [[Offres et prix]], [[route-addon.js]] |
 | 13/11 | Rago Route : l'iPhone est enfin vu par Windows, mais Windows coupe le Wi-Fi et tout passe par la 4G ; la 4G n'a jamais été codée « en secours seulement » : choix demandé à Sofiene | [[Proxy]] |

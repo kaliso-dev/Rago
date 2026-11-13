@@ -363,3 +363,5 @@ ALTER TABLE route_subscriptions ALTER COLUMN user_id DROP NOT NULL;
 CREATE INDEX IF NOT EXISTS route_subscriptions_license ON route_subscriptions (license_id);
 CREATE UNIQUE INDEX IF NOT EXISTS route_subscriptions_checkout ON route_subscriptions (checkout_session);
 ALTER TABLE route_subscriptions ENABLE ROW LEVEL SECURITY;
+-- Monthly or yearly (2026-11-13: « le prix à l'année doit être avantageux »)
+ALTER TABLE route_subscriptions ADD COLUMN IF NOT EXISTS billing_interval TEXT;

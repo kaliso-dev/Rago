@@ -3,7 +3,7 @@ import Stripe from 'stripe';
 import { audit } from './db.js';
 import { fulfillCheckoutSession, revokeForCharge, setLicenseStatus, syncSubscription } from './licensing.js';
 import { codeFull, getAffiliate, voidReferrals } from './affiliates.js';
-import { addRouteWithPremium, followPremium, isRouteCheckout, isRouteSubscription, syncRouteSubscription } from './route-addon.js';
+import { addRouteWithPremium, followPremium, isRouteCheckout, isRouteSubscription, routePriceText, syncRouteSubscription } from './route-addon.js';
 
 export function createStripe(cfg) {
   return cfg.stripeSecretKey ? new Stripe(cfg.stripeSecretKey) : null;
@@ -80,12 +80,13 @@ const lifetimeText = (user, replaces) => ['One payment: Rago Optimizer Premium f
   ...(user ? [] : ['You create your account right after paying.'])].join(' ');
 
 /**
- * « + Rago Route » ticked (2026-11-13): what the buyer reads above the Pay button. The option is its own monthly
- * subscription, started on the same card once Premium is paid (addRouteWithPremium); a free trial includes it.
+ * « + Rago Route » ticked (2026-11-13): what the buyer reads above the Pay button. The option is its own subscription,
+ * monthly or yearly like Premium, started on the same card once Premium is paid (addRouteWithPremium); a free trial
+ * includes it (then monthly, like the Premium after a trial).
  */
-const routeText = (trialEnds) => trialEnds
-  ? `Rago Route is included in the free trial, then $3 a month on top of Premium, from ${trialEnds}, as its own subscription on this card.`
-  : 'With Rago Route: $3 a month on top of Premium, as its own subscription on this card, charged today and every month.';
+const routeText = (trialEnds, interval) => trialEnds
+  ? `Rago Route is included in the free trial, then ${routePriceText('month')} on top of Premium, from ${trialEnds}, as its own subscription on this card.`
+  : `With Rago Route: ${routePriceText(interval)} on top of Premium, as its own subscription on this card, charged today and every ${interval === 'year' ? 'year' : 'month'}.`;
 
 async function buildCheckout(stripe, cfg, user, { interval, customerId, terms, ref, promotionCode, trialEnd, replaces, trial = false, withRoute = false } = {}) {
   // Free trial (2026-11-04): only on a subscription, never with a reward still running (trialEnd). After the trial, the
@@ -135,7 +136,7 @@ async function buildCheckout(stripe, cfg, user, { interval, customerId, terms, r
     mode: 'subscription',
     // An affiliate reward still running: the subscription starts paying when it ends (Stripe needs 2+ days).
     subscription_data: { metadata, ...(trialEnd && trialEnd > Date.now() / 1000 + 2 * 86400 ? { trial_end: trialEnd } : {}) },
-    custom_text: custom(`${route ? `${routeText(null)} ` : ''}Rago Optimizer Premium works on one Windows PC. Cancel anytime from your account. You create your account right after paying.`),
+    custom_text: custom(`${route ? `${routeText(null, choice.interval)} ` : ''}Rago Optimizer Premium works on one Windows PC. Cancel anytime from your account. You create your account right after paying.`),
   });
 }
 

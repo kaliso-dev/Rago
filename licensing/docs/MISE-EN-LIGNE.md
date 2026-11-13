@@ -89,11 +89,11 @@ Lifetime a **son propre prix** (`STRIPE_PRICE_LIFETIME`), jamais celui d'un abon
 
 **Option Rago Route (13/11/2026)**, à faire dans le même mode que le reste (test pour staging, live pour la prod) :
    1. Catalogue de produits → **Ajouter un produit** : nom « Rago Route », description « Option de Rago Optimizer Premium : le tunnel anti-lag pour Minecraft (bêta). », même code fiscal que « Rago Optimizer Premium ».
-   2. Prix : **Récurrent**, **3,00 USD**, période **Mensuelle**, taxe comme les prix du Premium (non incluse). Enregistre, ouvre le prix et copie son `price_...` (pas le `prod_...`) : **c'est `STRIPE_PRICE_ROUTE`**. Il reste mensuel même avec un Premium annuel ou Lifetime.
+   2. Deux prix sur ce produit, taxe comme les prix du Premium (non incluse) : **Récurrent, 3,00 USD, Mensuel** et **Récurrent, 17,99 USD, Annuel** (6 mois offerts, comme le Premium annuel). Ouvre chaque prix et copie son `price_...` (pas le `prod_...`) : le mensuel **c'est `STRIPE_PRICE_ROUTE`**, l'annuel **c'est `STRIPE_PRICE_ROUTE_YEARLY`**.
    3. Portail client (point 5) : « Annuler les abonnements » vaut aussi pour l'option. Dans « Changer de formule », **n'ajoute pas Rago Route** : seulement les prix du Premium, sinon un joueur pourrait remplacer son Premium par l'option à 3 $.
    4. Webhook : rien à ajouter, l'option passe par les mêmes événements.
 
-   C'est un abonnement à part, sur le même client Stripe que le Premium (le portail montre les deux) : **coché au paiement du Premium** (`/buy?…&route=1` : le serveur le crée juste après le paiement, sur la même carte, avec la même fin d'essai) ou **pris seul** depuis `/buy/route` par un compte qui a déjà Premium (mensuel, annuel, Lifetime ou récompense). Il s'arrête avec le Premium ; sans Premium actif, le serveur l'annule tout seul dans l'heure. En production, `/api/v1/route/token` ne donne un jeton Rago Route qu'avec l'option ou pendant l'essai ; sur le serveur de test, les comptes de `ROUTE_TESTERS` n'ont pas à la payer. Tant que `STRIPE_PRICE_ROUTE` est vide, la case est ignorée et `/buy/route` répond « bientôt ».
+   C'est un abonnement à part, sur le même client Stripe que le Premium (le portail montre les deux) : **coché au paiement du Premium** (`/buy?…&route=1` : le serveur le crée juste après le paiement, sur la même carte, avec la même fin d'essai, annuel avec un Premium annuel, mensuel sinon et après l'essai) ou **pris seul** depuis `/buy/route?interval=month|year` par un compte qui a déjà Premium (mensuel, annuel, Lifetime ou récompense ; sans `interval`, comme son Premium). Il s'arrête avec le Premium ; sans Premium actif, le serveur l'annule tout seul dans l'heure. En production, `/api/v1/route/token` ne donne un jeton Rago Route qu'avec l'option ou pendant l'essai ; sur le serveur de test, les comptes de `ROUTE_TESTERS` n'ont pas à la payer. Tant que `STRIPE_PRICE_ROUTE` est vide, la case est ignorée et `/buy/route` répond « bientôt » ; sans `STRIPE_PRICE_ROUTE_YEARLY`, l'option ne se vend qu'au mois, même avec un Premium annuel.
 
 Le webhook se fait à l'étape 6, une fois le serveur en ligne.
 
@@ -247,7 +247,7 @@ Ce qui dépend du mode Stripe : la clé, les deux prix, le webhook et son secret
 4. **Webhook** : Développeurs → Webhooks → **Ajouter une destination**, URL `https://account.rago-optimizer.com/webhooks/stripe`, les 10 événements de l'étape 6. Copie son secret `whsec_...`.
 5. **Portail client** : Paramètres → Facturation → Portail client, comme à l'étape 3.5 (résiliation, changement de formule avec les deux prix **live**, moyen de paiement, liens Conditions et Confidentialité), puis **Enregistrer**. Copie le lien de connexion au portail (il ne contient pas `test_`).
    Vérifie aussi en live : Moyens de paiement (PayPal), Abonnements et e-mails (relances, rappel avant renouvellement annuel), E-mails clients (reçus). Les Informations publiques (URL des conditions, libellé `RAGO OPTIMIZER`) sont communes aux deux modes.
-6. **Railway → Variables** : remplace `STRIPE_SECRET_KEY`, `STRIPE_PRICE_MONTHLY`, `STRIPE_PRICE_YEARLY`, `STRIPE_PRICE_LIFETIME`, `STRIPE_PRICE_ROUTE`, `STRIPE_WEBHOOK_SECRET` et `STRIPE_PORTAL_LOGIN_URL` par les valeurs live, retire `STRIPE_PRICE_ID` s'il est encore là, puis **Deploy** une seule fois. Garde les valeurs test dans ton gestionnaire de mots de passe (« Revenir en mode test »).
+6. **Railway → Variables** : remplace `STRIPE_SECRET_KEY`, `STRIPE_PRICE_MONTHLY`, `STRIPE_PRICE_YEARLY`, `STRIPE_PRICE_LIFETIME`, `STRIPE_PRICE_ROUTE`, `STRIPE_PRICE_ROUTE_YEARLY`, `STRIPE_WEBHOOK_SECRET` et `STRIPE_PORTAL_LOGIN_URL` par les valeurs live, retire `STRIPE_PRICE_ID` s'il est encore là, puis **Deploy** une seule fois. Garde les valeurs test dans ton gestionnaire de mots de passe (« Revenir en mode test »).
 7. **Stripe, mode test** : Développeurs → Webhooks → la destination test vers `account.rago-optimizer.com` → **Désactiver**. Sinon ses événements arrivent avec le mauvais secret, sont refusés, et `/admin` le signale.
 8. **Vérifie sur `/admin/services`**, section **Paiements Stripe** : clé, compte, prix (dont « Prix Lifetime »), webhook, portail et lien doivent être « OK ». Chaque ligne « À corriger » dit quoi changer (un prix du mode test, un événement manquant, le portail pas enregistré…). « Secret du webhook » reste « À vérifier » jusqu'au premier achat : le secret ne se lit pas dans Stripe, seul un événement reçu le confirme.
 9. **Achats de test** : les licences achetées en mode test sont dans la même base. Elles donnent encore Premium, comptent pour les affiliés et empêchent ces comptes d'acheter. Sur `/admin/services`, **Arrêter les licences de test** les passe en « Test purchase » (rien d'autre n'est touché : licences offertes, achats live, comptes, avis). Une licence offerte se redonne avec `npm run admin -- grant`.
@@ -267,7 +267,7 @@ Pour refaire des essais sans vrai paiement, remets les valeurs **test** dans Rai
 |---|---|
 | `STRIPE_SECRET_KEY` | Développeurs → Clés API → **Clé secrète** `sk_test_...` |
 | `STRIPE_PRICE_MONTHLY`, `STRIPE_PRICE_YEARLY`, `STRIPE_PRICE_LIFETIME` | Catalogue de produits → Rago Optimizer Premium → les trois prix **test** `price_...` (créés à l'étape 3.2 ; s'ils n'existent pas en test, recrée-les) |
-| `STRIPE_PRICE_ROUTE` | Catalogue de produits → Rago Route → le prix **test** de 3 USD par mois (étape 3, « Option Rago Route ») |
+| `STRIPE_PRICE_ROUTE`, `STRIPE_PRICE_ROUTE_YEARLY` | Catalogue de produits → Rago Route → les prix **test** de 3 USD par mois et de 17,99 USD par an (étape 3, « Option Rago Route ») |
 | `STRIPE_WEBHOOK_SECRET` | Développeurs → Webhooks → la destination **test** vers `/webhooks/stripe` → **Secret de signature** `whsec_...` (sinon crée-la comme à l'étape 6) |
 | `STRIPE_PORTAL_LOGIN_URL` | Paramètres → Facturation → Portail client (mode test) → lien de connexion |
 
@@ -419,6 +419,7 @@ Le bot compte à partir du moment où il est connecté : rien avant. Un test (st
 | `STRIPE_PRICE_MONTHLY`, `STRIPE_PRICE_YEARLY`, `STRIPE_SECRET_KEY` | Stripe (étapes 3.2 et 3.3) |
 | `STRIPE_PRICE_LIFETIME` | Stripe, le prix en paiement unique de 59,99 $ (étape 3.2). Facultative : vide, Lifetime reste « Coming soon » sur le site et rien n'est vendu |
 | `STRIPE_PRICE_ROUTE` | Stripe, l'option Rago Route : un produit « Rago Route » avec un prix **récurrent mensuel de 3 USD** (13/11/2026). Facultative : vide, l'option n'est pas vendue et, en production, personne ne peut allumer Rago Route (le serveur répond `route_option`) |
+| `STRIPE_PRICE_ROUTE_YEARLY` | Stripe, le prix **récurrent annuel de 17,99 USD** du même produit « Rago Route » (13/11/2026). Facultative : vide, l'option ne se vend qu'au mois |
 | `STRIPE_WEBHOOK_SECRET` | Stripe → Webhooks (étape 6) |
 | `RESEND_API_KEY`, `MAIL_FROM` | Resend (étape 4) |
 | `PUBLIC_URL`, `SITE_URL` | Ton domaine (étape 1) |

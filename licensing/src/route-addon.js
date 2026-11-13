@@ -1,5 +1,7 @@
-// Rago Route option (2026-11-13): $3 a month on top of Premium, as its own Stripe subscription (STRIPE_PRICE_ROUTE).
-// Sofiene : « pour y avoir accès il faut payer 3$ en plus de l'abonnement premium il faut que ça soit une option ».
+// Rago Route option (2026-11-13): $3 a month or $17.99 a year on top of Premium, as its own Stripe subscription
+// (STRIPE_PRICE_ROUTE, STRIPE_PRICE_ROUTE_YEARLY). Sofiene : « pour y avoir accès il faut payer 3$ en plus de
+// l'abonnement premium il faut que ça soit une option », then « le prix à l'année doit être avantageux » (yearly price,
+// 6 months free like Premium, so yearly Premium with the option stays well under Lifetime).
 // Its own subscription, not an item of the Premium one: Stripe puts only one billing interval in a subscription, and
 // yearly and Lifetime players buy it too. /route/token asks for an active Premium AND an active option.
 import { audit } from './db.js';
@@ -8,8 +10,15 @@ import { subscriptionFacts } from './licensing.js';
 export const ROUTE_PRODUCT = 'rago-route';
 export const isRouteCheckout = (session) => session?.metadata?.product === ROUTE_PRODUCT;
 export const isRouteSubscription = (sub) => sub?.metadata?.product === ROUTE_PRODUCT;
-/** What the option costs. The site and the app show the same amount: change them together. */
+/** What the option costs. The site and the app show the same amounts: change them together (site/tools/build.py checks). */
 export const ROUTE_PRICE = { amount: 300, currency: 'usd', interval: 'month' };
+export const ROUTE_PRICE_YEARLY = { amount: 1799, currency: 'usd', interval: 'year' };
+/** The option's Stripe price for this billing interval: yearly when asked and sold, monthly otherwise. */
+export const routePriceFor = (cfg, interval) => (interval === 'year' && cfg.stripePriceRouteYearly
+  ? { price: cfg.stripePriceRouteYearly, interval: 'year' } : { price: cfg.stripePriceRoute, interval: 'month' });
+const usd = (cents) => `$${cents % 100 ? (cents / 100).toFixed(2) : cents / 100}`;
+/** « $3 a month » or « $17.99 a year », as the buyer reads it. */
+export const routePriceText = (interval) => (interval === 'year' ? `${usd(ROUTE_PRICE_YEARLY.amount)} a year` : `${usd(ROUTE_PRICE.amount)} a month`);
 
 const idOf = (v) => (typeof v === 'string' ? v : v?.id ?? null);
 const LIVE = "status IN ('active', 'trialing', 'past_due')";
@@ -45,14 +54,16 @@ export async function syncRouteSubscription(db, sub, userId = null) {
   if (!sub?.id || (!user && !license)) return 'unknown';
   const f = subscriptionFacts(sub);
   const now = Date.now();
+  const every = sub.items?.data?.[0]?.price?.recurring?.interval || sub.metadata?.interval || null;
   const before = await db.get('SELECT status FROM route_subscriptions WHERE stripe_subscription_id = ?', [sub.id]);
-  await db.run(`INSERT INTO route_subscriptions (stripe_subscription_id, user_id, license_id, checkout_session, stripe_customer_id, status, current_period_end, cancel_at_period_end, created_at, updated_at)
-    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?) ON CONFLICT (stripe_subscription_id) DO UPDATE SET status = EXCLUDED.status,
+  await db.run(`INSERT INTO route_subscriptions (stripe_subscription_id, user_id, license_id, checkout_session, stripe_customer_id, status, current_period_end, cancel_at_period_end, created_at, updated_at, billing_interval)
+    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?) ON CONFLICT (stripe_subscription_id) DO UPDATE SET status = EXCLUDED.status,
+    billing_interval = COALESCE(EXCLUDED.billing_interval, route_subscriptions.billing_interval),
     user_id = COALESCE(route_subscriptions.user_id, EXCLUDED.user_id), license_id = COALESCE(route_subscriptions.license_id, EXCLUDED.license_id),
     current_period_end = COALESCE(EXCLUDED.current_period_end, route_subscriptions.current_period_end),
     cancel_at_period_end = EXCLUDED.cancel_at_period_end, stripe_customer_id = COALESCE(EXCLUDED.stripe_customer_id, route_subscriptions.stripe_customer_id),
     updated_at = EXCLUDED.updated_at`,
-  [sub.id, user, license, sub.metadata?.checkout_session || null, idOf(sub.customer), sub.status || 'incomplete', f.periodEnd, f.cancelAtPeriodEnd, now, now]);
+  [sub.id, user, license, sub.metadata?.checkout_session || null, idOf(sub.customer), sub.status || 'incomplete', f.periodEnd, f.cancelAtPeriodEnd, now, now, every]);
   if (before?.status !== sub.status) await audit(db, 'route.subscription', { userId: user, licenseId: license, detail: { subscription: sub.id, status: sub.status } });
   return sub.status || 'unknown';
 }
@@ -64,7 +75,8 @@ export const wantsRoute = (session) => session?.metadata?.route === '1';
  * Premium bought with « + Rago Route » ticked (2026-11-13): once the Premium checkout is done (webhook or success page,
  * both call this), the option starts as its own subscription, on the same Stripe customer and card. A free trial of
  * Premium includes it: it then starts paying when the trial ends, like Premium (« pendant l'essai gratuit ils ont accès
- * à tout »). `trial` is what settleTrial said ('trial', 'charged_now' or null). Never twice for one checkout (Stripe
+ * à tout »). It follows Premium's billing: yearly with a yearly Premium (STRIPE_PRICE_ROUTE_YEARLY), monthly otherwise,
+ * the trial included. `trial` is what settleTrial said ('trial', 'charged_now' or null). Never twice for one checkout (Stripe
  * idempotency key and the checkout_session column). Never throws for a Stripe error: logged, the account page still
  * offers the option. Returns the option's status, 'owned', 'failed' or null (not asked).
  */
@@ -78,11 +90,12 @@ export async function addRouteWithPremium(db, stripe, cfg, { session, sub, licen
   try {
     let pm = idOf(sub.default_payment_method);
     if (!pm) pm = (await stripe.paymentMethods.list({ customer, type: 'card', limit: 1 }))?.data?.[0]?.id || null;
-    const metadata = { product: ROUTE_PRODUCT, license_id: license.id, ...(license.user_id ? { user_id: license.user_id } : {}), checkout_session: session.id };
     const trialEnd = trial === 'trial' && Number(sub.trial_end) > Date.now() / 1000 + 60 ? Number(sub.trial_end) : null;
+    const choice = routePriceFor(cfg, trialEnd ? 'month' : session.metadata?.interval);
+    const metadata = { product: ROUTE_PRODUCT, license_id: license.id, ...(license.user_id ? { user_id: license.user_id } : {}), checkout_session: session.id, interval: choice.interval };
     const route = await stripe.subscriptions.create({
       customer,
-      items: [{ price: cfg.stripePriceRoute }],
+      items: [{ price: choice.price }],
       metadata,
       ...(pm ? { default_payment_method: pm } : {}),
       ...(trialEnd ? { trial_end: trialEnd, trial_settings: { end_behavior: { missing_payment_method: 'cancel' } } } : {}),
@@ -127,19 +140,20 @@ export async function followPremium(db, stripe, sub, log = console) {
   return n;
 }
 
-/** Checkout for the option: monthly, for a signed-in account with Premium. */
-export function createRouteCheckout(stripe, cfg, user, customerId) {
-  const metadata = { product: ROUTE_PRODUCT, user_id: user.id };
+/** Checkout for the option alone, monthly or yearly (routePriceFor), for a signed-in account with Premium. */
+export function createRouteCheckout(stripe, cfg, user, customerId, interval = 'month') {
+  const choice = routePriceFor(cfg, interval);
+  const metadata = { product: ROUTE_PRODUCT, user_id: user.id, interval: choice.interval };
   return stripe.checkout.sessions.create({
     mode: 'subscription',
-    line_items: [{ price: cfg.stripePriceRoute, quantity: 1 }],
+    line_items: [{ price: choice.price, quantity: 1 }],
     success_url: `${cfg.publicUrl}/checkout/route?session_id={CHECKOUT_SESSION_ID}`,
     cancel_url: `${cfg.publicUrl}/account`,
     ...(customerId ? { customer: customerId } : { customer_email: user.email }),
     client_reference_id: user.id,
     metadata,
     subscription_data: { metadata },
-    custom_text: { submit: { message: 'Rago Route, the anti-lag tunnel for Minecraft: $3 a month on top of your Premium. Cancel anytime from your account. It stops with your Premium.' } },
+    custom_text: { submit: { message: `Rago Route, the anti-lag tunnel for Minecraft: ${routePriceText(choice.interval)} on top of your Premium. Cancel anytime from your account. It stops with your Premium.` } },
   });
 }
 

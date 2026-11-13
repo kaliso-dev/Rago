@@ -1,7 +1,7 @@
 ---
 type: fonctionnalité
 tags: [fonctionnalité, produit, en-cours]
-maj: 2026-11-13
+maj: 2026-11-14
 ---
 # Proxy
 
@@ -83,5 +83,5 @@ Document : « Proxys Minecraft Rago sur Vultr » (https://claude.ai/artifact/Et2
 
 ## Code
 Fiches de code (état de `staging` au 10/11) : carte de bout en bout [[Code de Rago Route]] ; app : [[route.rs]], [[RouteTab.tsx]], [[license.rs]] (`route_token`) ; serveurs : [[rago-route.py]], [[mcping.py]], [[fabriquer-install.py]], [[install.sh]], [[CLAUDE.md (proxy)]] ; données du test réseau : [[nettest.rs]], [[netshare.rs]]. Partie technique : [[Infrastructure Rago Route]].
-- **Option payante (13/11, Sofiene)** : Rago Route n'est plus compris dans le Premium : c'est une **option à 3 $ par mois en plus** (« il faut que ça soit une option », « 3$ par mois en plus de l'abonnement c'est le mieux »). Codée le 13/11 (serveur [[route-addon.js]], onglet de l'app, page compte, textes de [[route.html]] et de l'accueil), **sur `staging` depuis le 13/11** (« passe en staging ») ; compris dans l'essai gratuit ; CGV section 4a ; le prix Stripe `STRIPE_PRICE_ROUTE` est à créer. Voir [[Offres et prix]].
+- **Option payante (13/11, Sofiene)** : Rago Route n'est plus compris dans le Premium : c'est une **option à 3 $ par mois en plus** (« il faut que ça soit une option », « 3$ par mois en plus de l'abonnement c'est le mieux »), ou **17,99 $ par an** depuis le 14/11 (« le prix à l'année doit être avantageux »). Codée le 13/11 (serveur [[route-addon.js]], onglet de l'app, page compte, textes de [[route.html]] et de l'accueil), **sur `staging` depuis le 13/11** (« passe en staging ») ; compris dans l'essai gratuit ; CGV section 4a ; le prix Stripe `STRIPE_PRICE_ROUTE` est à créer. Voir [[Offres et prix]].
 - **Au paiement (13/11, Sofiene)** : l'option se coche au paiement du Premium (case « Add Rago Route » de l'accueil, carte « Premium + Rago Route » de la page Rago Route) et s'ajoute seule pour qui a déjà Premium (bandeau « Already Premium? » de l'accueil, carte « Rago Route option ») ; elle s'arrête avec le Premium, essai compris ([[Paiements Stripe]]) ; sur `staging` depuis le 13/11 au soir, pas en prod.

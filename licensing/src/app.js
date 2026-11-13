@@ -44,7 +44,7 @@ const API_ERRORS = {
   // Rago Route (2026-11-08)
   route_closed: [403, "Rago Route isn't open to this account yet."],
   // Rago Route option (2026-11-13): $3 a month on top of Premium
-  route_option: [402, 'Rago Route is an option: $3 a month on top of Premium. Add it from your account, then turn Rago Route on again.'],
+  route_option: [402, 'Rago Route is an option: $3 a month or $17.99 a year on top of Premium. Add it from your account, then turn Rago Route on again.'],
   rate_limited: [429, 'Too many attempts. Wait a few minutes and try again.'],
   // Sign-in to the app through the browser, with Google or Discord (2026-11-04)
   no_subscription: [404, 'There is no subscription to change on this account.'],
@@ -481,7 +481,7 @@ export function createApp({ cfg, db, keys, stripe, mailer, log = console, fetchI
     return c.redirect(session.url, 303);
   }
 
-  // ---------- Rago Route option (2026-11-13): $3 a month, for an account with an active Premium ----------
+  // ---------- Rago Route option (2026-11-13): $3 a month or $17.99 a year, for an account with an active Premium ----------
   // The app's Rago Route tab sends here (signed in on the site first). Its own subscription, paid with the same Stripe
   // customer as Premium when there is one, so the account's portal shows both. It stops with Premium (hourly sweep).
   app.get('/buy/route', requireUser, async (c) => {
@@ -492,7 +492,10 @@ export function createApp({ cfg, db, keys, stripe, mailer, log = console, fetchI
     if (!stripe || !cfg.stripePriceRoute) return c.redirect('/account?n=routesoon', 303);
     const previous = license.stripe_customer_id ? license
       : await db.get('SELECT stripe_customer_id FROM licenses WHERE user_id = ? AND stripe_customer_id IS NOT NULL ORDER BY created_at DESC LIMIT 1', [user.id]);
-    const session = await RO.createRouteCheckout(stripe, cfg, user, previous?.stripe_customer_id || null);
+    // ?interval=month|year picks; without it, like the Premium (yearly with a yearly Premium, monthly otherwise).
+    const asked = c.req.query('interval');
+    const interval = asked === 'year' || asked === 'month' ? asked : license.plan === 'year' ? 'year' : 'month';
+    const session = await RO.createRouteCheckout(stripe, cfg, user, previous?.stripe_customer_id || null, interval);
     return c.redirect(session.url, 303);
   });
 
@@ -913,7 +916,7 @@ export function createApp({ cfg, db, keys, stripe, mailer, log = console, fetchI
       // Lifetime is offered (free plan text, "Switch to Lifetime") only while its Stripe price can really be paid, and
       // only where it shows: Stripe isn't asked for accounts that hold Premium for life or a reward.
       lifetime: (license?.status !== 'active' || license.plan === 'month' || license.plan === 'year') && !!(await lifetimeOffer()),
-      routeOption: await RO.routeOption(db, user.id), routeOnSale: !!(stripe && cfg.stripePriceRoute),
+      routeOption: await RO.routeOption(db, user.id), routeOnSale: !!(stripe && cfg.stripePriceRoute), routeYearly: !!(stripe && cfg.stripePriceRoute && cfg.stripePriceRouteYearly),
     }));
   });
 

@@ -2,8 +2,8 @@
 type: code
 tags: [code, serveur, javascript, html]
 fichier: licensing/src/views.js
-lignes: 888
-maj: 2026-11-10
+lignes: 904
+maj: 2026-11-14
 ---
 # views.js
 
@@ -29,7 +29,7 @@ Seul [[app.js]] l'appelle (`V.<page>(cfg, {...})`). Les pages chargent `/assets/
 | `signupPage`, `verifyPage`, `loginPage`, `forgotPage`, `resetPage`, `passwordPage` | Pages d'accès, avec boutons « Continue with Google/Discord » et le champ code de parrainage. |
 | `appLinkPage` | « Sign in to the app? » avec le code à 4 caractères à comparer avec l'app, et « Use another account ». |
 | `messagePage` | Page de message (erreurs, liens expirés, 404), avec Back / Ask on Discord. |
-| `dashboardPage` | Page `/account`. |
+| `dashboardPage` | Page `/account` (avec le bloc « Rago Route » : option en cours, son prix au mois ou à l'année et « Manage or cancel » ; sinon « Add Rago Route · $17.99/year » et « $3/month », ou le mensuel seul sans prix annuel, 14/11). |
 | `profilePage`, `reviewPage` | Profil public et avis. |
 | `affiliatePage` | Programme d'affiliation. |
 

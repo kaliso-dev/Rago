@@ -2,8 +2,8 @@
 type: code
 tags: [code, serveur, sql, base-de-données]
 fichier: licensing/supabase/schema.sql
-lignes: 365
-maj: 2026-11-13
+lignes: 367
+maj: 2026-11-14
 ---
 # schema.sql
 
@@ -51,7 +51,7 @@ Le schéma de la base Postgres (Supabase) du serveur de comptes et licences : 26
 | [[Table network_reports]] | 273-284 | RAG-50 | Tests réseau |
 | [[Table network_results]] | 285-300 | RAG-50 | Résultats par cible |
 | [[Table trials]] | 303-312 | 04/11/2026 | Essais gratuits |
-| [[Table route_subscriptions]] | 344-365 | 13/11/2026 | Option Rago Route (3 $/mois) |
+| [[Table route_subscriptions]] | 344-367 | 13/11/2026 ; `billing_interval` 14/11 | Option Rago Route (3 $/mois ou 17,99 $/an) |
 
 ## Relations
 

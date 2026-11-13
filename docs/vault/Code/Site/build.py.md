@@ -2,8 +2,8 @@
 type: code
 tags: [code, site, python]
 fichier: site/tools/build.py
-lignes: 188
-maj: 2026-11-13
+lignes: 196
+maj: 2026-11-14
 ---
 # build.py
 
@@ -74,9 +74,9 @@ Exactement le même traitement que la page des avis (messages `… in tweaks.htm
 ### 6. Rago Route (`src/route.html` → `route.html`, depuis le 11/11)
 Page de vente de Rago Route ([[route.html]]), traitée comme une page de l'accueil (depuis le 11/11, sur `staging` ; avant, seulement les polices locales) :
 1. Polices locales (`assert`, message `Google Fonts block changed in route.html: update build.py`).
-2. Recopie dans son `CONFIG` les valeurs du `CONFIG` de [[page.html]] : `accountBase` (`BASE`), `trialDays`, `currency`, `priceMonth`, `priceYear`, `priceRoute` (une seule occurrence chacune, `assert n == 1`, message `<clé> not found in the CONFIG of route.html`).
-3. Écrit les mêmes textes que le JavaScript de la page dans les `<span>` `js-td` (jours d'essai), `js-pm` (prix mensuel, ex. `$5.99`), `js-py` (prix annuel), `js-pr` (prix de l'option, « $3 » sans décimales quand il est rond), `js-pmr` (mensuel + option, « $8.99 ») et `js-free` (« 6 months free », ou le prix par mois si l'annuel n'offre aucun mois) ; au moins une occurrence de chaque (`assert n >= 1`, message `no <classe> in route.html`).
-4. Met l'adresse du serveur de comptes devant les liens `/buy?interval=month&trial=1&route=1`, `/buy?interval=year&route=1` et `/buy/route` (au moins un de chaque, depuis la refonte du 13/11 ; message `no link to <chemin> in route.html`), pour les visiteurs sans JavaScript.
+2. Recopie dans son `CONFIG` les valeurs du `CONFIG` de [[page.html]] : `accountBase` (`BASE`), `trialDays`, `currency`, `priceMonth`, `priceYear`, `priceRoute`, `priceRouteYear` (une seule occurrence chacune, `assert n == 1`, message `<clé> not found in the CONFIG of route.html`).
+3. Écrit les mêmes textes que le JavaScript de la page dans les `<span>` `js-td` (jours d'essai), `js-pm` (prix mensuel, ex. `$5.99`), `js-py` (prix annuel), `js-pr` (prix de l'option, « $3 » sans décimales quand il est rond), `js-pmr` (mensuel + option, « $8.99 »), `js-pry` (l'option à l'année, « $17.99 »), `js-pyr` (Premium annuel + option annuelle, « $47.98 ») et `js-free` (« 6 months free », ou le prix par mois si l'annuel n'offre aucun mois) ; au moins une occurrence de chaque (`assert n >= 1`, message `no <classe> in route.html`).
+4. Met l'adresse du serveur de comptes devant les liens `/buy?interval=month&trial=1&route=1`, `/buy?interval=year&route=1`, `/buy/route`, `/buy/route?interval=month` et `/buy/route?interval=year` (au moins un de chaque, depuis la refonte du 13/11 ; message `no link to <chemin> in route.html`), pour les visiteurs sans JavaScript.
 5. Message `route.html built`.
 
 ## Données touchées
@@ -104,7 +104,7 @@ Pas de test unitaire. Le contrôle est la CI [[site-check.yml]] : relance compl�
 
 ## À savoir avant de modifier
 - Le bloc `GOOGLE` doit rester identique, caractère pour caractère, dans les cinq sources : si on change les polices d'une source, il faut changer `GOOGLE` ici aussi (sinon `assert`).
-- Le prix de l'option Rago Route aussi : `CONFIG.priceRoute` dans [[page.html]] et `ROUTE_PRICE` dans `licensing/src/route-addon.js`.
+- Les prix de l'option Rago Route aussi : `CONFIG.priceRoute` et `CONFIG.priceRouteYear` dans [[page.html]], `ROUTE_PRICE` et `ROUTE_PRICE_YEARLY` dans `licensing/src/route-addon.js` (arrêt avec `priceRouteYear (…) and ROUTE_PRICE_YEARLY (…) differ: change both`).
 - Le prix Lifetime se change **à deux endroits** : `CONFIG.priceLifetime` dans [[page.html]] et `LIFETIME_PRICE` dans `licensing/src/billing.js`. Le script refuse de construire s'ils diffèrent.
 - Les 302 de `netlify.toml` (`/buy`, `/login`…) ne servent qu'aux adresses tapées à la main ; les liens de la page sont déjà absolus après ce script.
 - Le commentaire sur `aggregateRating` (ligne 78) est trompeur tant que le code n'est pas remis dans la page (voir plus haut).
