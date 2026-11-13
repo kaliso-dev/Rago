@@ -17,7 +17,6 @@ Mode d'emploi (outil ArtifactData, collection `questions`) :
 
 ## En attente de réponse sur la page
 Posées le 13/11 (option Rago Route à 3 $/mois, [[Offres et prix]]) :
-- q107 : l'option se paie-t-elle pendant l'essai gratuit du Premium ?
 - q108 : le Lifetime paie-t-il aussi l'option ?
 
 Au 10/11, après les réponses de Sofiene du jour (q36 à q68 traitées, q46 le 10/11 à 15 h, voir [[Décisions]]) :

@@ -1425,12 +1425,16 @@ export function createApp({ cfg, db, keys, stripe, mailer, log = console, fetchI
     // Device freed or re-bound since this license token was issued.
     if (license.token_version !== claims.tv) return fail(c, 'invalid_token');
     if (cfg.staging && !cfg.routeTesters.includes(user.email)) return fail(c, 'route_closed');
-    // The option ($3 a month, 2026-11-13). The testers of the test server (ROUTE_TESTERS) don't pay for it there.
+    // The option ($3 a month, 2026-11-13). The testers of the test server (ROUTE_TESTERS) don't pay for it there, and
+    // the free trial of Premium has everything, Rago Route included, until it ends.
     const option = cfg.staging ? null : await RO.routeOption(db, user.id);
-    if (!cfg.staging && !option) return fail(c, 'route_option');
+    const trial = cfg.staging || option ? null : await RO.trialEnd(db, license, cfg.trialDays);
+    if (!cfg.staging && !option && !trial) return fail(c, 'route_option');
     const iat = now();
-    // Never past the end of the paid month of the option (Stripe renews it before, and the app asks again).
-    const optionEnd = option?.current_period_end ? Math.floor(Number(option.current_period_end) / 1000) + 3 * 86400 : Infinity;
+    // Never past the end of the paid month of the option (Stripe renews it before, and the app asks again), nor past
+    // the end of the trial: then the option is needed.
+    const optionEnd = option?.current_period_end ? Math.floor(Number(option.current_period_end) / 1000) + 3 * 86400
+      : trial ? Math.floor(trial / 1000) : Infinity;
     const exp = Math.min(iat + ROUTE_TOKEN_SECONDS, tokenExp(license, iat), optionEnd);
     return c.json({ route_token: signToken({ typ: 'route', lic: license.id, iat, exp }, keys), expires_at: new Date(exp * 1000).toISOString() });
   });

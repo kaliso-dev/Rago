@@ -19,6 +19,18 @@ export function routeOption(db, userId) {
   return db.get(`SELECT * FROM route_subscriptions WHERE user_id = ? AND ${LIVE} ORDER BY created_at DESC LIMIT 1`, [userId]);
 }
 
+/**
+ * The free trial of Premium still running for this license (Sofiene, 2026-11-13: « pendant l'essai gratuit ils ont
+ * accès à tout »): Rago Route works without the option until the trial ends. Returns the trial end (ms) or null.
+ */
+export async function trialEnd(db, license, trialDays, now = Date.now()) {
+  const end = Number(license?.current_period_end);
+  if (!license?.stripe_subscription_id || !(end > now)) return null;
+  const row = await db.get('SELECT 1 FROM trials WHERE subscription_id = ? AND NOT charged_now AND started_at > ?',
+    [license.stripe_subscription_id, now - Math.max(trialDays, 1) * 86400 * 1000 - 3600 * 1000]);
+  return row ? end : null;
+}
+
 /** Saves what Stripe says about an option subscription (webhook, success page). Returns its status, or 'unknown'. */
 export async function syncRouteSubscription(db, sub, userId = null) {
   const user = userId || sub?.metadata?.user_id;

@@ -438,6 +438,13 @@ test('Rago Route option: $3 a month on top of Premium, bought from the account, 
   assert.ok(t.stripeCalls.some(([k, id]) => k === 'cancel' && id === 'sub_route'));
   assert.equal(await RO.routeOption(t.db, uid), null);
   assert.equal(await RO.stopOrphanRoutes(t.db, t.stripe, { error() {} }), 0);
+
+  // Free trial of Premium: everything, Rago Route included, without the option, until the trial ends.
+  const lic2 = { stripe_subscription_id: 'sub_trial', current_period_end: Date.now() + 2 * 86400 * 1000 };
+  assert.equal(await RO.trialEnd(t.db, lic2, 3), null);
+  await t.db.run('INSERT INTO trials (subscription_id, email, started_at) VALUES (?, ?, ?)', ['sub_trial', 'opt@rago.gg', Date.now() - 86400 * 1000]);
+  assert.equal(await RO.trialEnd(t.db, lic2, 3), lic2.current_period_end);
+  assert.equal(await RO.trialEnd(t.db, { ...lic2, current_period_end: Date.now() - 1000 }, 3), null);
 });
 
 test('account without a license sees the offer', async () => {

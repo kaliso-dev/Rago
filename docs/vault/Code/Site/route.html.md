@@ -85,3 +85,4 @@ Source de la page de vente de Rago Route (`rago-optimizer.com/route.html`) : le 
 - Une porte ne s'ouvre (on retire `data-gate`) qu'avec la mesure du test qu'elle attend.
 - Les classes courtes ont déjà un style : `.r` (bande de la course), `.st` (étapes de `#start`), `.av` (avatars des avis) ; `.tl` et `.ttl` sont différentes. Ne pas les réutiliser ailleurs.
 - `sitemap.xml` garde `lastmod` 2026-11-07.
+- 13/11 : l'option Rago Route (3 $/mois) est écrite partout, et l'essai gratuit la comprend (« Included in the free trial of Premium, then an option at $3 a month on top »).

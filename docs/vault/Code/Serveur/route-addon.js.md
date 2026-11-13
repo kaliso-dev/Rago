@@ -5,11 +5,12 @@ maj: 2026-11-13
 ---
 # route-addon.js
 
-`licensing/src/route-addon.js` : l'**option Rago Route**, 3 $ par mois en plus du Premium (décision de Sofiene du 13/11). Créé le 13/11, sur la branche du fil, **pas encore sur `staging`**. Voir [[Paiements Stripe]], [[Proxy]], [[Offres et prix]], [[Code du serveur]].
+`licensing/src/route-addon.js` : l'**option Rago Route**, 3 $ par mois en plus du Premium (décision de Sofiene du 13/11). Créé le 13/11, **sur `staging` depuis le 13/11** (« passe en staging »). Voir [[Paiements Stripe]], [[Proxy]], [[Offres et prix]], [[Code du serveur]].
 
 ## Ce que le fichier expose
 - `ROUTE_PRODUCT` (`rago-route`), `isRouteCheckout`, `isRouteSubscription` : reconnaître un Checkout ou un abonnement de l'option (métadonnée `product`).
 - `ROUTE_PRICE` : 3 USD par mois (le site et l'app écrivent le même montant).
+- `trialEnd(db, license, trialDays)` : la fin de l'essai gratuit du Premium en cours, ou rien ; pendant l'essai, Rago Route marche sans l'option (Sofiene, 13/11 : « pendant l'essai gratuit ils ont accès à tout »).
 - `routeOption(db, userId)` : l'option en cours du compte (statut `active`, `trialing` ou `past_due`), ou rien.
 - `syncRouteSubscription(db, sub, userId?)` : enregistre ce que Stripe dit de l'abonnement (table `route_subscriptions`, une ligne par abonnement Stripe ; journal `route.subscription` à chaque changement de statut).
 - `createRouteCheckout(stripe, cfg, user, customerId)` : le Checkout Stripe (abonnement, prix `STRIPE_PRICE_ROUTE`, retour sur `/checkout/route`).
