@@ -340,3 +340,17 @@ ALTER TABLE oauth_identities ENABLE ROW LEVEL SECURITY;
 ALTER TABLE network_reports ENABLE ROW LEVEL SECURITY;
 ALTER TABLE network_results ENABLE ROW LEVEL SECURITY;
 ALTER TABLE trials ENABLE ROW LEVEL SECURITY;
+
+-- Rago Route option (2026-11-13, Sofiene : « il faut payer 3$ en plus de l'abonnement premium, il faut que ça soit une
+-- option ») : its own monthly Stripe subscription, on top of an active Premium. One row per Stripe subscription.
+CREATE TABLE IF NOT EXISTS route_subscriptions (
+  stripe_subscription_id TEXT PRIMARY KEY,
+  user_id TEXT NOT NULL,
+  stripe_customer_id TEXT,
+  status TEXT NOT NULL,                           -- Stripe's status (active, trialing, past_due, canceled…)
+  current_period_end BIGINT,
+  cancel_at_period_end BOOLEAN NOT NULL DEFAULT FALSE,
+  created_at BIGINT NOT NULL,
+  updated_at BIGINT NOT NULL
+);
+CREATE INDEX IF NOT EXISTS route_subscriptions_user ON route_subscriptions (user_id);

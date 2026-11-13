@@ -50,6 +50,10 @@
   to = "https://account.rago-optimizer.com/buy"
   status = 302
 [[redirects]]
+  from = "/buy/*"
+  to = "https://account.rago-optimizer.com/buy/:splat"
+  status = 302
+[[redirects]]
   from = "/login"
   to = "https://account.rago-optimizer.com/login"
   status = 302

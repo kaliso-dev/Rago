@@ -3,6 +3,7 @@ import Stripe from 'stripe';
 import { audit } from './db.js';
 import { fulfillCheckoutSession, revokeForCharge, setLicenseStatus, syncSubscription } from './licensing.js';
 import { codeFull, getAffiliate, voidReferrals } from './affiliates.js';
+import { isRouteCheckout, isRouteSubscription, syncRouteSubscription } from './route-addon.js';
 
 export function createStripe(cfg) {
   return cfg.stripeSecretKey ? new Stripe(cfg.stripeSecretKey) : null;
@@ -357,6 +358,12 @@ export async function handleStripeEvent(db, event, { stripe, onLicense, log } = 
   switch (event.type) {
     case 'checkout.session.completed':
     case 'checkout.session.async_payment_succeeded': {
+      // The Rago Route option (2026-11-13): its own subscription, saved apart from the licenses.
+      if (isRouteCheckout(obj)) {
+        const sub = obj.subscription && stripe ? await stripe.subscriptions.retrieve(idOf(obj.subscription)) : null;
+        label = sub ? `route:${await syncRouteSubscription(db, sub, obj.metadata?.user_id)}` : 'route:unpaid';
+        break;
+      }
       // Only our own checkouts (/buy sets this). Other products or Payment Links on the account are ignored.
       if (!isRagoCheckout(obj)) { label = 'not_rago'; break; }
       const sub = obj.mode === 'subscription' && obj.subscription && stripe
@@ -380,7 +387,7 @@ export async function handleStripeEvent(db, event, { stripe, onLicense, log } = 
         ? idOf(obj.subscription ?? obj.parent?.subscription_details?.subscription) : obj.id;
       if (!subId) break;
       const sub = stripe ? await stripe.subscriptions.retrieve(subId) : obj;
-      label = `subscription:${await syncSubscription(db, sub)}`;
+      label = isRouteSubscription(sub) ? `route:${await syncRouteSubscription(db, sub)}` : `subscription:${await syncSubscription(db, sub)}`;
       break;
     }
     case 'charge.refunded':

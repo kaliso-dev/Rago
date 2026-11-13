@@ -52,6 +52,7 @@ if (stripe) {
 const { affiliatesToEvaluate, settleAffiliate } = await import('./affiliates.js');
 const { expireRewards } = await import('./licensing.js');
 const { stopAllReplacedSubscriptions, syncAffiliatePromos } = await import('./billing.js');
+const { stopOrphanRoutes } = await import('./route-addon.js');
 const sweep = async () => {
   try {
     for (const id of await affiliatesToEvaluate(db, cfg)) await settleAffiliate(db, cfg, stripe, console, id);
@@ -60,6 +61,8 @@ const sweep = async () => {
   } catch (err) { console.error('[affiliate] sweep failed', err); }
   // A subscription replaced by Lifetime that Stripe didn't let us cancel at the purchase: tried again.
   try { await stopAllReplacedSubscriptions(db, stripe, console); } catch (err) { console.error('[stripe] Lifetime sweep failed', err); }
+  // A Rago Route option left without Premium: canceled, so it isn't charged for nothing.
+  try { await stopOrphanRoutes(db, stripe, console); } catch (err) { console.error('[stripe] Rago Route sweep failed', err); }
   // Network tests older than 12 months (privacy policy).
   try { await purgeNetworkReports(db); } catch (err) { console.error('[network] purge failed', err); }
   // Security log after 12 months, free trials after 2 years (privacy policy).

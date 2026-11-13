@@ -58,8 +58,8 @@ Le parcours de la version du matin : le problème, pourquoi il arrive, une fonct
 4. **« Rago Optimizer tunes your PC. Rago Route takes care of the road. »** : trois façons de récupérer un paquet, puis les fonctions 01 à 06 (deux routes, paquets de secours, renvoi rapide, session gardée, téléphone derrière une porte, onglet de l'app avec un emplacement de clip), chacune avec Problem, Fix, sa preuve et ses conditions.
 5. **« Faster delivery. The same game. »** : fair play.
 6. **« Measured, not promised. »** : six résultats (dont un caché), puis « What it won't do. ».
-7. **« Built for one game. Included in Premium. »**, **« Made for lag that comes from the road. »** (pour qui, pas pour qui, test gratuit), **« Three steps, then play. »**.
-8. **« Rago Route comes with Premium. »** : carte Premium avec la frise de l'essai, puis la FAQ (18 questions, 4 derrière des portes) et « Give every packet a second road. ».
+7. **« Built for one game. An option of Premium. »** (« Included in Premium » jusqu'au 13/11), **« Made for lag that comes from the road. »** (pour qui, pas pour qui, test gratuit), **« Three steps, then play. »**.
+8. **« Premium, plus Rago Route for $3 a month. »** (« Rago Route comes with Premium » jusqu'au 13/11, option payante décidée ce jour-là) : carte Premium avec la frise de l'essai, puis la FAQ (18 questions, 4 derrière des portes) et « Give every packet a second road. ».
 
 ## Clips de gameplay (protocole du 11/11)
 Protocole complet dans le dossier (Claude Doc, « Protocole d'enregistrement des clips »). Les clips sont de **vrais enregistrements**, jamais une vidéo faite par IA, sans accélération, coupe à l'intérieur ni retouche.

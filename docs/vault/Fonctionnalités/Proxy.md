@@ -83,3 +83,4 @@ Document : « Proxys Minecraft Rago sur Vultr » (https://claude.ai/artifact/Et2
 
 ## Code
 Fiches de code (état de `staging` au 10/11) : carte de bout en bout [[Code de Rago Route]] ; app : [[route.rs]], [[RouteTab.tsx]], [[license.rs]] (`route_token`) ; serveurs : [[rago-route.py]], [[mcping.py]], [[fabriquer-install.py]], [[install.sh]], [[CLAUDE.md (proxy)]] ; données du test réseau : [[nettest.rs]], [[netshare.rs]]. Partie technique : [[Infrastructure Rago Route]].
+- **Option payante (13/11, Sofiene)** : Rago Route n'est plus compris dans le Premium : c'est une **option à 3 $ par mois en plus** (« il faut que ça soit une option », « 3$ par mois en plus de l'abonnement c'est le mieux »). Codée le 13/11 sur la branche du fil (serveur [[route-addon.js]], onglet de l'app, page compte, textes de [[route.html]] et de l'accueil), pas encore sur `staging` ; le prix Stripe `STRIPE_PRICE_ROUTE` est à créer. Voir [[Offres et prix]].

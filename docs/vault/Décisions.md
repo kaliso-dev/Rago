@@ -10,6 +10,7 @@ Registre daté des décisions de Sofiene. **La plus récente prime.** Citations 
 ## App et versions
 | Date | Décision | Statut |
 |---|---|---|
+| 13/11 | **Rago Route devient une option payante : 3 $ par mois en plus du Premium** (« pour y avoir accès il faut payé 3$ en plus de l'abonnement premium il faut que ça soit une option », puis « à mon avis 3$ par mois en plus de l'abonnement c'est le mieux », après un « 3 $ une seule fois » retiré par « non stop ») ([[Offres et prix]], [[Proxy]]) | DÉCIDÉ ; codé, pas encore sur `staging` |
 | 13/11 | **Rago Route et la 4G du téléphone** : « Toujours en même temps » (carte de choix) : la 4G reste un trajet de plus à côté du Wi-Fi, et Windows ne doit plus couper le Wi-Fi quand le téléphone est branché ([[Proxy]]) | DÉCIDÉ |
 | 11/11 | **Page Souris** dans la version finale : « + mouse » ajouté au message « Oui tu peux push ca sur la derniere version stagging » ; codée gratuite (proposition de Claude, à confirmer : q96) ([[Page Souris]]) | DÉCIDÉ |
 | 11/11 | **Version finale 1.3.0** : « Oui tu peux push ca sur la derniere version stagging. Comme ca ca nous fait un version fianle avec » Rago Route (« Prox »), l'analyse du PC, l'avant/après, la connexion Google, les correctifs réseau, le profil hitreg, les graphismes par jeu, la page Outils, la saturation et la résolution des pros, les conseils au lancement du jeu et le jeu en priorité haute (09:20 UTC, réponse à q95) | DÉCIDÉ |

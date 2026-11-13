@@ -37,6 +37,7 @@ La carte du code du **serveur de comptes et licences** (`licensing/`, Node ≥ 2
 | Fichier | Lignes | Rôle |
 |---|---|---|
 | [[licensing.js]] | 584 | Comptes, sessions, inscription par code, Google/Discord, licences, PC, bannissement, temps offert. |
+| [[route-addon.js]] | 95 | Option Rago Route (13/11) : Checkout de l'abonnement à 3 $/mois, table `route_subscriptions`, annulation sans Premium. |
 | [[billing.js]] | 560 | Stripe : Checkout, webhooks, abonnements, essai, Lifetime, codes promo, contrôles de mise en ligne. |
 | [[affiliates.js]] | 237 | Programme d'affiliation : filleuls, comptage, récompenses. |
 | [[promo.js]] | 174 | Pop-up de réduction du site. |
@@ -98,7 +99,7 @@ Détail complet dans [[app.js]] :
 
 | Fréquence | Tâche | Où |
 |---|---|---|
-| 30 s après le démarrage, puis **toutes les heures** | Passe horaire : filleuls à compter et récompenses d'affiliation, fin des récompenses dépassées (`expireRewards`), codes promo des affiliés dans Stripe, abonnements remplacés par Lifetime à arrêter, purge des tests réseau (12 mois), purge du journal (12 mois), des départs Discord (12 mois), des codes d'inscription et des essais (2 ans) | [[server.js]], [[affiliates.js]], [[licensing.js]], [[billing.js]], [[network.js]], [[retention.js]] |
+| 30 s après le démarrage, puis **toutes les heures** | Passe horaire : filleuls à compter et récompenses d'affiliation, fin des récompenses dépassées (`expireRewards`), codes promo des affiliés dans Stripe, abonnements remplacés par Lifetime à arrêter, options Rago Route sans Premium à annuler, purge des tests réseau (12 mois), purge du journal (12 mois), des départs Discord (12 mois), des codes d'inscription et des essais (2 ans) | [[server.js]], [[affiliates.js]], [[licensing.js]], [[billing.js]], [[network.js]], [[retention.js]] |
 | **Toutes les 5 min** | Rôle Pro : comptes dont le rôle ne correspond pas, puis récompenses Discord (50 comptes au plus) | [[discord.js]] |
 | 60 s après le démarrage, puis **toutes les 24 h** | Rôle Pro redonné à tous les Premium | [[discord.js]] |
 | Après chaque webhook Stripe | `discord.syncAll()` | [[app.js]] |

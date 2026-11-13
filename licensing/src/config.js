@@ -70,6 +70,9 @@ export function loadConfig(env = process.env) {
     stripePriceId: (env.STRIPE_PRICE_ID || '').trim(),
     // Lifetime (2026-10-16): its own one-time price, Premium for life in one payment. Never one of the prices above.
     stripePriceLifetime: (env.STRIPE_PRICE_LIFETIME || '').trim(),
+    // Rago Route option (2026-11-13): its own recurring price, $3 a month, bought on top of Premium. Empty: not sold
+    // (the app's Rago Route then can't be turned on in production).
+    stripePriceRoute: (env.STRIPE_PRICE_ROUTE || '').trim(),
 
     signingKeyPem: readPem(env.LICENSE_SIGNING_KEY),
     sessionSecret: env.SESSION_SECRET || '',

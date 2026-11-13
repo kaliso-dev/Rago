@@ -14,6 +14,7 @@ import { createApp } from '../src/app.js';
 import { purgeOldRecords } from '../src/retention.js';
 import { createMailer } from '../src/mailer.js';
 import * as L from '../src/licensing.js';
+import * as RO from '../src/route-addon.js';
 import * as P from '../src/profile.js';
 import * as R from '../src/reviews.js';
 import { createDiscord } from '../src/discord.js';
@@ -366,6 +367,12 @@ test('Rago Route token: active Premium only, 6 hours, no personal data, checked 
 
   let r = await t.api('/route/token', {});
   assert.equal(r.status, 401);
+  // Premium alone isn't enough: Rago Route is an option, $3 a month (2026-11-13).
+  r = await t.api('/route/token', {}, { authorization: `Bearer ${lic}` });
+  assert.equal(r.status, 402);
+  assert.equal((await r.json()).error.code, 'route_option');
+  const uid = (await t.db.get("SELECT id FROM users WHERE email = 'route@rago.gg'")).id;
+  await t.webhook('customer.subscription.created', t.subscription('sub_opt', 'month', { metadata: { product: 'rago-route', user_id: uid }, customer: 'cus_opt' }));
   r = await t.api('/route/token', {}, { authorization: `Bearer ${lic}` });
   const j = await r.json();
   assert.equal(r.status, 200, JSON.stringify(j));
@@ -397,6 +404,40 @@ test('Rago Route token: active Premium only, 6 hours, no personal data, checked 
   const tester = await premiumToken(s2, 'tester@rago.gg', 'cs_route3');
   r = await s2.api('/route/token', {}, { authorization: `Bearer ${tester}` });
   assert.equal(r.status, 200);
+});
+
+test('Rago Route option: $3 a month on top of Premium, bought from the account, stops with Premium', async () => {
+  const t = await setup({ STRIPE_PRICE_MONTHLY: 'price_m', STRIPE_PRICE_YEARLY: 'price_y', STRIPE_PRICE_ROUTE: 'price_route' });
+  await t.browse('/signup', { form: { email: 'opt@rago.gg', password: 'password123' } });
+  // No Premium yet: no option.
+  let r = await t.browse('/buy/route');
+  assert.equal(r.headers.get('location'), '/account?n=routenopremium');
+  const { license } = await L.grantLicense(t.db, 'opt@rago.gg', 'test');
+  const uid = license.user_id;
+  r = await t.browse('/buy/route');
+  assert.equal(r.status, 303);
+  assert.match(r.headers.get('location'), /checkout\.stripe\.com/);
+  const params = t.created.at(-1);
+  assert.equal(params.mode, 'subscription');
+  assert.deepEqual(params.line_items, [{ price: 'price_route', quantity: 1 }]);
+  assert.deepEqual(params.subscription_data.metadata, { product: 'rago-route', user_id: uid });
+  // Paid: the success page saves it even before the webhook, and the account page shows it.
+  const sub = t.subscription('sub_route', 'month', { metadata: { product: 'rago-route', user_id: uid }, customer: 'cus_o' });
+  t.sessions.cs_opt = { id: 'cs_opt', object: 'checkout.session', mode: 'subscription', metadata: { product: 'rago-route', user_id: uid }, subscription: sub };
+  r = await t.browse('/checkout/route?session_id=cs_opt');
+  assert.equal(r.headers.get('location'), '/account?n=route');
+  assert.match(await (await t.browse('/account?n=route')).text(), /Rago Route[\s\S]*\$3/);
+  // Never twice.
+  assert.equal((await t.browse('/buy/route')).headers.get('location'), '/account?n=routeowned');
+  // The webhook of the option never touches the license.
+  await t.webhook('customer.subscription.updated', { ...sub });
+  assert.equal((await L.getLicense(t.db, license.id)).status, 'active');
+  // Premium ends: the hourly sweep cancels the option in Stripe.
+  await L.setLicenseStatus(t.db, license.id, 'revoked', 'support');
+  assert.equal(await RO.stopOrphanRoutes(t.db, t.stripe, { error() {} }), 1);
+  assert.ok(t.stripeCalls.some(([k, id]) => k === 'cancel' && id === 'sub_route'));
+  assert.equal(await RO.routeOption(t.db, uid), null);
+  assert.equal(await RO.stopOrphanRoutes(t.db, t.stripe, { error() {} }), 0);
 });
 
 test('account without a license sees the offer', async () => {

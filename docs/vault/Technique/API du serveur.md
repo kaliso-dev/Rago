@@ -43,6 +43,7 @@ Les routes marquées **(staging)** n'existent que sur `staging`, pas encore sur 
 | `GET /admin/cerveau`, `GET /admin/cerveau/donnees.json` (`?frais=1`), `GET /admin/cerveau/fichier?chemin=` (toutes avec `?c=<cerveau>`, 12/11) | [[Cerveau du vault]] : la page, le vault en graphe (gzip, `ETag`), un fichier du dépôt ; PR #85 du Cerveau (`staging`, 10/11), en prod par la PR #87 (10/11) |
 | `POST /webhooks/stripe` | Webhook Stripe (signature vérifiée, idempotent par `stripe_events`) |
 | `GET /` | Redirige vers `SITE_URL` (le site est sur Netlify) |
+| `GET /buy/route`, `GET /checkout/route` | session du site | Option Rago Route (13/11) : Checkout Stripe de l'abonnement à 3 $/mois pour un compte Premium connecté, puis page de retour qui l'enregistre ([[route-addon.js]]) |
 
 ## API de l'app : `/api/v1`
 JSON en entrée et en sortie. Chaque appel de licence envoie l'objet `device` (nom, OS, `app_version`, empreinte hachée `machine_guid`, `smbios_uuid`, `board_serial`). Les mises à jour et tests réseau envoient `X-Rago-Device` (hash du PC, jamais l'empreinte de licence).
@@ -54,7 +55,7 @@ JSON en entrée et en sortie. Chaque appel de licence envoie l'objet `device` (n
 | `POST /auth/app-link/start`, `POST /auth/app-link/poll` **(staging)** | jeton de sondage | Connexion de l'app par le navigateur (Google, Discord ou e-mail) : l'app ouvre `/app/link/<id>?p=google|discord`, puis sonde ; liens de 10 min gardés en mémoire |
 | `POST /licenses/activate` | Bearer `access` | Lie la licence à ce PC, renvoie le jeton de licence et `scripts_key` |
 | `POST /licenses/refresh` | jeton de licence (même expiré) | Nouveau jeton ; `revoked` (avec `reason: subscription_ended` et `buy_url`), `bound_to_other_device` ou `invalid_token` sinon |
-| `POST /route/token` **(staging)** | Bearer licence | Jeton Rago Route de 6 h, licence Premium active seulement ; sur staging, comptes de `ROUTE_TESTERS` seulement |
+| `POST /route/token` **(staging)** | Bearer licence | Jeton Rago Route de 6 h, licence Premium active **et option Rago Route active** (13/11, sinon `route_option`, 402) ; sur staging, comptes de `ROUTE_TESTERS` seulement, sans payer l'option |
 | `POST /account/login` | email + mot de passe | Jeton de compte (180 jours) pour les comptes gratuits |
 | `GET /account/me` | Bearer licence ou compte | Profil et avis |
 | `GET /account/subscription` **(staging)** | idem | État de l'abonnement pour la fenêtre de l'app ([[Abonnement dans l'app]]) |

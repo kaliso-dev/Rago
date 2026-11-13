@@ -5,6 +5,7 @@ import { api, type RouteCheck, type RouteLinks, type RoutePath, type RouteStatus
 import type { Key } from "../lib/i18n";
 import { useStore } from "../lib/store";
 import { Button, Switch } from "../components/ui";
+import { ACCOUNT_URL } from "../components/LicenseGate";
 
 const stagger = { animate: { transition: { staggerChildren: 0.05 } } };
 const rise = { initial: { opacity: 0, y: 10 }, animate: { opacity: 1, y: 0, transition: { duration: 0.42, ease: [0.16, 1, 0.3, 1] as const } } };
@@ -18,6 +19,8 @@ function errorKey(e: string): Key {
   if (e.startsWith("udp:")) return "route.err.udp";
   if (e === "premium:no_license") return "route.err.premium";
   if (e === "premium:route_closed") return "route.err.closed";
+  // Premium sans l'option Rago Route (3 $ par mois en plus, 13/11)
+  if (e === "premium:route_option") return "route.err.option";
   if (e === "premium:network") return "route.err.network";
   if (e === "premium:rate_limited") return "route.err.busy";
   if (e.startsWith("premium:")) return "route.err.account";
@@ -28,7 +31,8 @@ function errorKey(e: string): Key {
 const STAGING = import.meta.env.VITE_RAGO_SERVER === "staging";
 
 /** Rago Route dans Réseau : le tunnel anti-lag vers la sortie de Paris (route.rs). Dans tous les exe depuis la 1.3.0.
- *  Réservé au Premium : la sortie de Paris refuse toute partie sans jeton signé par le serveur de licences. */
+ *  Réservé au Premium avec l'option Rago Route (3 $ par mois en plus, 13/11) : la sortie de Paris refuse toute partie
+ *  sans jeton signé par le serveur de licences, qui n'en donne qu'avec l'option. */
 export function RouteTab() {
   const { t, license, premium, setUpsell } = useStore();
   const [st, setSt] = useState<RouteStatus | null>(null);
@@ -172,6 +176,11 @@ export function RouteTab() {
         {!locked && !running && found?.check && <PhoneCheckBox c={found.check} t={t} />}
         {shown && (
           <p className="rt-error small">{shown === "token" ? t("route.err.token") : t(errorKey(shown), { e: shown.replace(/^\w+:/, "") })}</p>
+        )}
+        {shown === "premium:route_option" && (
+          <Button variant="primary" onClick={() => api.openUrl(`${ACCOUNT_URL}/buy/route`).catch(() => {})}>
+            {t("route.option.buy")}
+          </Button>
         )}
 
         <div className="nt-actions">

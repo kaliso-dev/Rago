@@ -349,7 +349,7 @@ function affiliateLine(a) {
   return next;
 }
 
-export function dashboardPage(cfg, { user, license, device, notice, error, canReset, nextResetAt, affiliate, discordLink, discordRewards = [], inviteRewards = [], review = null, lifetime = false, noPassword = false, trial = false }) {
+export function dashboardPage(cfg, { user, license, device, notice, error, canReset, nextResetAt, affiliate, discordLink, discordRewards = [], inviteRewards = [], review = null, lifetime = false, noPassword = false, trial = false, routeOption = null, routeOnSale = false }) {
   const active = license?.status === 'active';
   const reason = license?.status_reason;
   const ended = !active && reason === 'subscription_ended';
@@ -595,6 +595,20 @@ export function dashboardPage(cfg, { user, license, device, notice, error, canRe
       row(actions));
   };
 
+  // Rago Route option (2026-11-13): $3 a month on top of Premium, its own subscription, managed in the same portal.
+  const routeSect = () => {
+    if (!active || (!routeOption && !routeOnSale)) return '';
+    const end = routeOption && Number(routeOption.current_period_end);
+    if (routeOption) {
+      const stops = routeOption.cancel_at_period_end;
+      return sect('sect-route', html`<p class="overline">Rago Route</p><span class="badge ${stops ? 'badge-off' : 'badge-ok'}"><i></i>${stops ? `Stops ${end ? fmtDate(end) : 'soon'}` : 'Active'}</span>`,
+        html`<p class="muted small">The anti-lag tunnel for Minecraft, $3 a month on top of your Premium.${end ? ` ${stops ? 'It stops on' : 'Next payment on'} ${fmtDate(end)}.` : ''} It stops with your Premium.</p>`,
+        html`<form method="post" action="/account/billing" class="inline" data-busy="Opening…"><button class="btn btn-ghost btn-sm" type="submit">${ICON.card}<span>Manage or cancel</span></button></form>`);
+    }
+    return sect('sect-route', html`<p class="overline">Rago Route</p><span class="badge badge-off"><i></i>Option</span>`,
+      html`<p class="muted small">The anti-lag tunnel for Minecraft (beta): your game goes through the Rago servers by several paths at once, and lost packets are sent again right away. $3 a month on top of your Premium, cancel anytime.</p>`,
+      html`<a class="btn btn-primary btn-sm" href="/buy/route">Add Rago Route · $3/month</a>`);
+  };
   const affiliateSect = () => sect('sect-aff', html`<p class="overline">Affiliate program</p>${affiliate ? html`<span class="mono small muted">${affiliate.full ? affiliate.goal : affiliate.progress} / ${affiliate.goal}${affiliate.pending ? ` · ${affiliate.pending} waiting` : ''}</span>` : ''}`,
     affiliate
       ? html`<div class="aff-mini">${affiliateRing(affiliate, 'sm')}<div class="aff-text">
@@ -629,7 +643,7 @@ export function dashboardPage(cfg, { user, license, device, notice, error, canRe
   // program and the review.
   const cards = !license
     ? [freeCard(), panel([affiliateSect(), discordSect()], 'd2')]
-    : [active ? download() : comeBack(), panel([licenseSect(), deviceSect(), planSect()], 'd2'),
+    : [active ? download() : comeBack(), panel([licenseSect(), deviceSect(), planSect(), routeSect()], 'd2'),
       panel([discordSect(), sideSect(), active ? reviewSect() : ''], 'd3')];
 
   const title = !license ? 'Welcome to Rago Optimizer'

@@ -24,6 +24,7 @@ import * as V from './views.js';
 import * as P from './profile.js';
 import * as R from './reviews.js';
 import * as Promo from './promo.js';
+import * as RO from './route-addon.js';
 import { audit } from './db.js';
 import { mountAdmin } from './admin.js';
 
@@ -42,6 +43,8 @@ const API_ERRORS = {
   subscription_ended: [403, 'Your Rago Optimizer Premium subscription ended. Renew it on the website, then sign in again.'],
   // Rago Route (2026-11-08)
   route_closed: [403, "Rago Route isn't open to this account yet."],
+  // Rago Route option (2026-11-13): $3 a month on top of Premium
+  route_option: [402, 'Rago Route is an option: $3 a month on top of Premium. Add it from your account, then turn Rago Route on again.'],
   rate_limited: [429, 'Too many attempts. Wait a few minutes and try again.'],
   // Sign-in to the app through the browser, with Google or Discord (2026-11-04)
   no_subscription: [404, 'There is no subscription to change on this account.'],
@@ -373,7 +376,7 @@ export function createApp({ cfg, db, keys, stripe, mailer, log = console, fetchI
     allow(`login-fail:${ip(c)}:${email}`, Infinity, LOGIN_WINDOW);
   }
   // Where to go after signing in. Only our own pages.
-  const NEXT = new Set(['/affiliate', '/account/review']);
+  const NEXT = new Set(['/affiliate', '/account/review', '/buy/route']);
   // and the page that signs the Windows app in (/app/link/<id>, 2026-11-04)
   const APP_LINK_PATH = /^\/app\/link\/[A-Za-z0-9_-]{16,64}$/;
   const nextPath = (v) => (NEXT.has(String(v || '')) || APP_LINK_PATH.test(String(v || '')) ? String(v) : null);
@@ -473,6 +476,33 @@ export function createApp({ cfg, db, keys, stripe, mailer, log = console, fetchI
     const session = await createCheckout(stripe, cfg, user, { interval, customerId: previous?.stripe_customer_id, ref, promotionCode, trialEnd, trial }, log);
     return c.redirect(session.url, 303);
   }
+
+  // ---------- Rago Route option (2026-11-13): $3 a month, for an account with an active Premium ----------
+  // The app's Rago Route tab sends here (signed in on the site first). Its own subscription, paid with the same Stripe
+  // customer as Premium when there is one, so the account's portal shows both. It stops with Premium (hourly sweep).
+  app.get('/buy/route', requireUser, async (c) => {
+    const user = c.get('user');
+    const license = await L.current(db, await L.licenseForUser(db, user.id));
+    if (license?.status !== 'active') return c.redirect('/account?n=routenopremium', 303);
+    if (await RO.routeOption(db, user.id)) return c.redirect('/account?n=routeowned', 303);
+    if (!stripe || !cfg.stripePriceRoute) return c.redirect('/account?n=routesoon', 303);
+    const previous = license.stripe_customer_id ? license
+      : await db.get('SELECT stripe_customer_id FROM licenses WHERE user_id = ? AND stripe_customer_id IS NOT NULL ORDER BY created_at DESC LIMIT 1', [user.id]);
+    const session = await RO.createRouteCheckout(stripe, cfg, user, previous?.stripe_customer_id || null);
+    return c.redirect(session.url, 303);
+  });
+
+  app.get('/checkout/route', requireUser, async (c) => {
+    const id = c.req.query('session_id');
+    if (!stripe || !id || !/^cs_[A-Za-z0-9_]+$/.test(id)) return c.redirect('/account', 303);
+    let session;
+    try { session = await stripe.checkout.sessions.retrieve(id, { expand: ['subscription'] }); } catch { return c.redirect('/account', 303); }
+    // Another account's checkout link does nothing here.
+    if (!RO.isRouteCheckout(session) || session.metadata?.user_id !== c.get('user').id) return c.redirect('/account', 303);
+    // The webhook may not have arrived yet: saving here too is safe.
+    if (session.subscription && typeof session.subscription === 'object') await RO.syncRouteSubscription(db, session.subscription, c.get('user').id);
+    return c.redirect('/account?n=route', 303);
+  });
 
   app.get('/checkout/success', async (c) => {
     const id = c.req.query('session_id');
@@ -828,6 +858,10 @@ export function createApp({ cfg, db, keys, stripe, mailer, log = console, fetchI
     claimed: ['notice', 'License added to your account. Download Rago Optimizer below.'],
     claimedref: ['notice', 'License added to your account, and your referral code was applied. Download Rago Optimizer below.'],
     owned: ['notice', 'You already have Rago Optimizer Premium. No need to buy it twice.'],
+    route: ['notice', 'Rago Route is added to your Premium. Turn it on from the Rago Route tab of the app.'],
+    routeowned: ['notice', 'Rago Route is already part of your Premium.'],
+    routenopremium: ['error', 'Rago Route is an option of Premium: get Premium first, then add Rago Route.'],
+    routesoon: ['error', 'The Rago Route option opens soon. Try again later.'],
     reset: ['notice', 'Device freed. Sign in to Rago Optimizer on your new PC to activate it.'],
     duplicate: ['error', V.html`This account already has Premium, so the new purchase was not added and its subscription was stopped. ${V.supportLink(cfg, 'Contact support on Discord')} to get the extra payment back.`],
     duplicatelife: ['error', V.html`This account already has Premium for life, so the new purchase was not added. ${V.supportLink(cfg, 'Contact support on Discord')} to get the extra payment back.`],
@@ -873,6 +907,7 @@ export function createApp({ cfg, db, keys, stripe, mailer, log = console, fetchI
       // Lifetime is offered (free plan text, "Switch to Lifetime") only while its Stripe price can really be paid, and
       // only where it shows: Stripe isn't asked for accounts that hold Premium for life or a reward.
       lifetime: (license?.status !== 'active' || license.plan === 'month' || license.plan === 'year') && !!(await lifetimeOffer()),
+      routeOption: await RO.routeOption(db, user.id), routeOnSale: !!(stripe && cfg.stripePriceRoute),
     }));
   });
 
@@ -1030,9 +1065,11 @@ export function createApp({ cfg, db, keys, stripe, mailer, log = console, fetchI
   // Stripe's customer portal: change plan, update the card, invoices, cancel.
   app.post('/account/billing', requireUser, async (c) => {
     const license = await L.licenseForUser(db, c.get('user').id);
-    if (!stripe || !license?.stripe_customer_id) return c.redirect('/account', 303);
+    // A Premium without a Stripe customer (reward) can still have the Rago Route option to manage.
+    const customer = license?.stripe_customer_id || (await RO.routeOption(db, c.get('user').id))?.stripe_customer_id;
+    if (!stripe || !customer) return c.redirect('/account', 303);
     try {
-      const portal = await billingPortal(stripe, cfg, license.stripe_customer_id);
+      const portal = await billingPortal(stripe, cfg, customer);
       return c.redirect(portal.url, 303);
     } catch (err) {
       log.error('[stripe] billing portal', err.message);
@@ -1388,8 +1425,13 @@ export function createApp({ cfg, db, keys, stripe, mailer, log = console, fetchI
     // Device freed or re-bound since this license token was issued.
     if (license.token_version !== claims.tv) return fail(c, 'invalid_token');
     if (cfg.staging && !cfg.routeTesters.includes(user.email)) return fail(c, 'route_closed');
+    // The option ($3 a month, 2026-11-13). The testers of the test server (ROUTE_TESTERS) don't pay for it there.
+    const option = cfg.staging ? null : await RO.routeOption(db, user.id);
+    if (!cfg.staging && !option) return fail(c, 'route_option');
     const iat = now();
-    const exp = Math.min(iat + ROUTE_TOKEN_SECONDS, tokenExp(license, iat));
+    // Never past the end of the paid month of the option (Stripe renews it before, and the app asks again).
+    const optionEnd = option?.current_period_end ? Math.floor(Number(option.current_period_end) / 1000) + 3 * 86400 : Infinity;
+    const exp = Math.min(iat + ROUTE_TOKEN_SECONDS, tokenExp(license, iat), optionEnd);
     return c.json({ route_token: signToken({ typ: 'route', lic: license.id, iat, exp }, keys), expires_at: new Date(exp * 1000).toISOString() });
   });
 

@@ -87,6 +87,8 @@ Tu avais déjà créé un prix « Paiement unique » (`STRIPE_PRICE_ID`) ? Il ne
 
 Lifetime a **son propre prix** (`STRIPE_PRICE_LIFETIME`), jamais celui d'un abonnement ni l'ancien `STRIPE_PRICE_ID` : le serveur refuse de le vendre avec l'identifiant d'un autre prix. Tant que `STRIPE_PRICE_LIFETIME` est vide, ou que son prix Stripe n'est pas un paiement unique actif, la carte Lifetime du site affiche « Coming soon », la page compte ne le propose pas et rien n'est vendu. Le serveur et le site ne le vendent que si le prix Stripe est exactement celui du site, 59,99 USD : si tu changes le prix un jour, change aussi `priceLifetime` dans `site/src/page.html` et `LIFETIME_PRICE` dans `licensing/src/billing.js`. Les codes promo marchent sur Lifetime comme sur l'abonnement (décision du 16 octobre 2026). Un abonné qui achète Lifetime garde son PC, et son abonnement est annulé dans Stripe dès que Lifetime est sur son compte : juste après le paiement s'il était connecté, sinon quand il rattache l'achat à son compte (lien de l'email d'achat), sans remboursement du temps restant. Si Stripe refuse l'annulation, le serveur réessaie toutes les heures, même si Lifetime a été remboursé entre-temps.
 
+**Option Rago Route (13/11/2026)** : crée un produit « Rago Route » avec un prix récurrent de **3 USD par mois**, et mets son `price_...` dans `STRIPE_PRICE_ROUTE`. C'est un abonnement à part, pris depuis la page compte (`/buy/route`) par un compte qui a déjà Premium (mensuel, annuel, Lifetime ou récompense), payé avec le même client Stripe que Premium : le portail montre les deux. Il passe par le même webhook (rien à ajouter). Sans Premium actif, le serveur l'annule tout seul dans l'heure. En production, `/api/v1/route/token` ne donne un jeton Rago Route qu'avec l'option ; sur le serveur de test, les comptes de `ROUTE_TESTERS` n'ont pas à la payer.
+
 Le webhook se fait à l'étape 6, une fois le serveur en ligne.
 
 ## Étape 4 : Resend (emails)
@@ -409,6 +411,7 @@ Le bot compte à partir du moment où il est connecté : rien avant. Un test (st
 | `SUPABASE_URL`, `SUPABASE_SERVICE_ROLE_KEY` | Supabase → Project Settings → API Keys (étape 2.5). Servent aussi aux photos de profil (bucket `avatars`, créé tout seul ; `AVATAR_BUCKET` change son nom, facultatif) |
 | `STRIPE_PRICE_MONTHLY`, `STRIPE_PRICE_YEARLY`, `STRIPE_SECRET_KEY` | Stripe (étapes 3.2 et 3.3) |
 | `STRIPE_PRICE_LIFETIME` | Stripe, le prix en paiement unique de 59,99 $ (étape 3.2). Facultative : vide, Lifetime reste « Coming soon » sur le site et rien n'est vendu |
+| `STRIPE_PRICE_ROUTE` | Stripe, l'option Rago Route : un produit « Rago Route » avec un prix **récurrent mensuel de 3 USD** (13/11/2026). Facultative : vide, l'option n'est pas vendue et, en production, personne ne peut allumer Rago Route (le serveur répond `route_option`) |
 | `STRIPE_WEBHOOK_SECRET` | Stripe → Webhooks (étape 6) |
 | `RESEND_API_KEY`, `MAIL_FROM` | Resend (étape 4) |
 | `PUBLIC_URL`, `SITE_URL` | Ton domaine (étape 1) |
