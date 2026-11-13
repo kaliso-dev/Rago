@@ -1,7 +1,7 @@
 ---
 type: technique
 tags: [technique, supabase, base-de-données]
-maj: 2026-11-10
+maj: 2026-11-13
 ---
 # Supabase
 
@@ -63,4 +63,4 @@ Préférer `npm run admin -- show <email>` (depuis `licensing/`, avec le `DATABA
 
 ## Code
 
-[[schema.sql]] (les 25 tables, chacune avec sa note `Table …`), [[db.js]] (connexion, schéma rejoué, garde-fou d'environnement, secrets), [[installer.js]] (bucket `downloads`), [[profile.js]] (bucket `avatars`), [[retention.js]] (purges). Carte : [[Code du serveur]].
+[[schema.sql]] (les 26 tables, chacune avec sa note `Table …`), [[db.js]] (connexion, schéma rejoué, garde-fou d'environnement, secrets), [[installer.js]] (bucket `downloads`), [[profile.js]] (bucket `avatars`), [[retention.js]] (purges). Carte : [[Code du serveur]].

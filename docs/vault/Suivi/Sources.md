@@ -48,4 +48,4 @@ Supprimés le 10/11 à la demande de Sofiene (q58) :
 - Docs Claude : script YouTube « What's new » ([[Vidéos YouTube]]).
 - Artefacts Claude cités par l'étude de marché : rapport « Rago : le marché et la nouvelle app » et fonctions de la dernière maquette ([[Étude de marché de novembre 2026]]).
 - Artefact « Charte Rago » : https://claude.ai/artifact/VQJxXTdYLdRmEPawYzBSwt (non relu le 10/11).
-- Dossier CapCut « Claude Animation Proxy » du PC Windows « Abel » (connecté au fil Rago Route le 11/11) : les aperçus vidéo faits par ChatGPT des animations de la page Rago Route ; c'est là que Sofiene dépose les clips de gameplay bruts ([[Page de vente Rago Route]]).
+- Dossier CapCut « Claude Animation Proxy » du PC Windows « Abel » (connecté au fil Rago Route le 11/11) : les aperçus vidéo faits par ChatGPT des animations de la page Rago Route du 11/11 ([[Page de vente Rago Route]]).

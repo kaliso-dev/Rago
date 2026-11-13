@@ -3,7 +3,7 @@ type: code
 tags: [code, serveur, carte]
 fichier: licensing/
 lignes: 8534 (src) + 755 (scripts et JS du navigateur) + 1085 (CSS) + 342 (schema)
-maj: 2026-11-10
+maj: 2026-11-13
 ---
 # Code du serveur
 
@@ -37,7 +37,7 @@ La carte du code du **serveur de comptes et licences** (`licensing/`, Node ≥ 2
 | Fichier | Lignes | Rôle |
 |---|---|---|
 | [[licensing.js]] | 584 | Comptes, sessions, inscription par code, Google/Discord, licences, PC, bannissement, temps offert. |
-| [[route-addon.js]] | 95 | Option Rago Route (13/11) : Checkout de l'abonnement à 3 $/mois, table `route_subscriptions`, annulation sans Premium. |
+| [[route-addon.js]] | 169 | Option Rago Route (13/11) : Checkout de l'abonnement à 3 $/mois, option prise au paiement du Premium, arrêt avec le Premium, [[Table route_subscriptions]]. |
 | [[billing.js]] | 560 | Stripe : Checkout, webhooks, abonnements, essai, Lifetime, codes promo, contrôles de mise en ligne. |
 | [[affiliates.js]] | 237 | Programme d'affiliation : filleuls, comptage, récompenses. |
 | [[promo.js]] | 174 | Pop-up de réduction du site. |
@@ -122,9 +122,9 @@ Caches en mémoire : ventes 5 min, services 1 min, avis 30 s, pop-up 30 s, prix 
 
 ## Les tables
 
-25 tables, définies dans [[schema.sql]] (une note par table) :
+26 tables, définies dans [[schema.sql]] (une note par table) :
 - **Comptes** : [[Table users]], [[Table web_sessions]], [[Table api_sessions]], [[Table password_resets]], [[Table signup_codes]], [[Table oauth_identities]].
-- **Licences et paiements** : [[Table licenses]], [[Table devices]], [[Table stripe_events]], [[Table trials]].
+- **Licences et paiements** : [[Table licenses]], [[Table devices]], [[Table stripe_events]], [[Table trials]], [[Table route_subscriptions]].
 - **Affiliation** : [[Table affiliates]], [[Table referrals]], [[Table account_devices]].
 - **Profil et site** : [[Table reviews]], [[Table site_settings]].
 - **Discord** : [[Table discord_links]], [[Table discord_rewards]], [[Table discord_joins]], [[Table discord_invite_links]], [[Table discord_invite_bonus]], [[Table discord_invite_roles]].

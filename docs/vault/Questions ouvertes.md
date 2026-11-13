@@ -57,7 +57,6 @@ Posées le 11/11 (q78 traitée le même jour : Sofiene a demandé la page de ven
 - q103 : un abonné Premium non connecté au site peut payer un 2e abonnement, essai compris : le bloquer côté serveur (même e-mail ou même carte), ou la ligne « Already Premium? » de la page suffit ? (lu dans le code, pas vérifié sur staging ; [[Paiements Stripe]])
 - q104 : « Card required » ou « Card or PayPal required » sous les boutons d'essai ? PayPal sur le paiement de l'essai pas encore vu ; avec PayPal, « un essai par personne » ne compare que l'e-mail ([[Paiements Stripe]], [[route.html]]).
 - q105 : garder le titre « Lose packets, not fights. » de la page Rago Route (il frôle la règle « jamais de hitreg promis »), ou prendre « Lost packets shouldn't freeze your game. » ? ([[route.html]], [[Page de vente Rago Route]])
-- q106 : clips de gameplay du haut de la page : 40 % de pertes sur toute la connexion dans les deux clips (conseillé), ou sur la route directe seulement avec une légende qui le dit ? Et avec quel compte enregistrer ? ([[Page de vente Rago Route]])
 
 ## À vérifier (sans Sofiene)
 - Rago Route : tous les joueurs sortent par la même adresse à Paris ; Hypixel coupe déjà les connexions venant de Frankfurt (09/11, sans effet tant que Frankfurt n'est qu'un relais). À surveiller dès les premiers joueurs ([[Proxy]], [[Page de vente Rago Route]]).

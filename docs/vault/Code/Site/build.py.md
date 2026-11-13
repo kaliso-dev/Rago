@@ -2,8 +2,8 @@
 type: code
 tags: [code, site, python]
 fichier: site/tools/build.py
-lignes: 180
-maj: 2026-11-11
+lignes: 188
+maj: 2026-11-13
 ---
 # build.py
 
@@ -42,13 +42,13 @@ Ligne 11 : `subprocess.run([sys.executable, 'tools/sync_partners.py'], check=Tru
 
 ### 2. Accueil (`src/page.html` → `index.html`)
 1. **Polices** : `assert GOOGLE in s` (message `Google Fonts block changed in page.html: update build.py`), puis remplacement par `LOCAL`. But écrit en tête du script : ne pas envoyer l'adresse IP des visiteurs à Google.
-2. **Liens sans JavaScript** : les `href="/login"`, `/signup`, `/affiliate`, `/download` et `/buy?interval=year` deviennent `href="https://account.rago-optimizer.com/..."` (valeur de `accountBase`). Le JavaScript de la page réécrit de toute façon ces liens au chargement ; ce remplacement sert aux visiteurs sans JavaScript.
+2. **Liens sans JavaScript** : les `href="/login"`, `/signup`, `/affiliate`, `/download`, `/buy?interval=year` et `/buy/route` (13/11) deviennent `href="https://account.rago-optimizer.com/..."` (valeur de `accountBase`). Le JavaScript de la page réécrit de toute façon ces liens au chargement ; ce remplacement sert aux visiteurs sans JavaScript.
 3. **Prix par défaut (offre annuelle)** :
    - `<b id="p-amt">` ← `$2.50` (29,99 / 12 arrondi) ;
    - `<div class="price-note" id="p-note">` ← `Billed $29.99 yearly. 6 months free.` (la phrase des mois offerts disparaît si `FREE` < 1) ;
    - `<span class="save" id="save">` ← `6 months free yearly` (avec `hidden` si `FREE` < 1) ;
    - `<b id="l-amt">` ← `$59.99` (Lifetime). `assert n == 1` (message `Lifetime price (l-amt) not found in page.html`). Sans JavaScript, le bouton Lifetime reste sur « Coming soon ».
-4. **Contrôle du prix Lifetime** : si `licensing/src/billing.js` existe (il existe dans le monodépôt), le script y cherche `LIFETIME_PRICE = { amount: (\d+), currency: '(\w+)' }` et vérifie que `amount == round(PL × 100)` et `currency == ISO.lower()`. Aujourd'hui : `5999` et `usd` des deux côtés. En cas d'écart, arrêt avec `priceLifetime ($59.99 in src/page.html) and LIFETIME_PRICE (licensing/src/billing.js) differ: change both`. C'est la règle de `site/CLAUDE.md` : le prix du site doit rester égal à celui que vend le serveur ([[Offres et prix]], [[Paiements Stripe]]). Le prix mensuel et annuel ne sont **pas** contrôlés ici (ils viennent de Stripe, lus par la page via `/api/v1/plans`).
+4. **Contrôle du prix Lifetime** : si `licensing/src/billing.js` existe (il existe dans le monodépôt), le script y cherche `LIFETIME_PRICE = { amount: (\d+), currency: '(\w+)' }` et vérifie que `amount == round(PL × 100)` et `currency == ISO.lower()`. Aujourd'hui : `5999` et `usd` des deux côtés. En cas d'écart, arrêt avec `priceLifetime ($59.99 in src/page.html) and LIFETIME_PRICE (licensing/src/billing.js) differ: change both`. C'est la règle de `site/CLAUDE.md` : le prix du site doit rester égal à celui que vend le serveur ([[Offres et prix]], [[Paiements Stripe]]). **Même contrôle pour l'option Rago Route** (13/11) : `priceRoute` de [[page.html]] contre `ROUTE_PRICE = { amount: 300, currency: 'usd'` de `licensing/src/route-addon.js` ; message `priceRoute ($3.00 in src/page.html) and ROUTE_PRICE (licensing/src/route-addon.js) differ: change both`. Le prix mensuel et annuel ne sont **pas** contrôlés ici (ils viennent de Stripe, lus par la page via `/api/v1/plans`).
 5. **FAQ sans JavaScript** : le script découpe dans la page le tableau JavaScript `  const F = [` … `\n  ];`, le fait exécuter par `node -e` avec `MONTHS_FREE` et un `CONFIG` réduit (`currency`, `priceLifetime`, `priceMonth`, `trialDays`), récupère le JSON des questions, échappe `&`, `<`, `>`, remplace le mot `Discord` par un lien vers `CONFIG.discord`, **écarte les questions marquées `"life"`** (Lifetime ne s'achète pas sans JavaScript) et insère juste après `<div class="faq rv" id="faqs"></div>` un `<noscript><div class="faq">` de `<details class="fq-s">`. Aujourd'hui : 18 questions dans `F`, **16** dans la version sans JavaScript. Si `node` manque : avertissement `warning: static FAQ skipped (node not available)` et la page est quand même écrite. Correctif du 10/11 (`a190565`) : `priceMonth` et `trialDays` ajoutés au `CONFIG` réduit, sinon la FAQ statique affichait « undefined-day ».
 6. **Discord** : si `CONFIG.discord` est rempli (c'est le cas), chaque `href="#discord"` devient le lien d'invitation avec `target="_blank" rel="noopener"`, et l'attribut ` hidden` est retiré des éléments qui ont la classe `js-discord` (`assert n >= 1`, message `no js-discord element found in page.html`).
 7. **Image de partage** : l'adresse porte une empreinte du fichier `site/og-image.png` (`?v=` + 10 caractères du SHA-256), pour que Discord, WhatsApp et les réseaux rechargent l'image quand elle change. Attention : l'image actuelle affiche encore « 199 tweaks » (voir [[Fichiers publiés du site]] et [[export-logo.js]]).
@@ -74,13 +74,13 @@ Exactement le même traitement que la page des avis (messages `… in tweaks.htm
 ### 6. Rago Route (`src/route.html` → `route.html`, depuis le 11/11)
 Page de vente de Rago Route ([[route.html]]), traitée comme une page de l'accueil (depuis le 11/11, sur `staging` ; avant, seulement les polices locales) :
 1. Polices locales (`assert`, message `Google Fonts block changed in route.html: update build.py`).
-2. Recopie dans son `CONFIG` les valeurs du `CONFIG` de [[page.html]] : `accountBase` (`BASE`), `trialDays`, `currency`, `priceMonth`, `priceYear` (une seule occurrence chacune, `assert n == 1`, message `<clé> not found in the CONFIG of route.html`).
-3. Écrit les mêmes textes que le JavaScript de la page dans les `<span>` `js-td` (jours d'essai), `js-pm` (prix mensuel, ex. `$5.99`), `js-py` (prix annuel) et `js-free` (« 6 months free », ou le prix par mois si l'annuel n'offre aucun mois) ; au moins une occurrence de chaque (`assert n >= 1`, message `no <classe> in route.html`).
-4. Met l'adresse du serveur de comptes devant les liens `/buy?interval=month&trial=1`, `/buy?interval=year` et `/download` (au moins un de chaque, message `no link to <chemin> in route.html`), pour les visiteurs sans JavaScript.
+2. Recopie dans son `CONFIG` les valeurs du `CONFIG` de [[page.html]] : `accountBase` (`BASE`), `trialDays`, `currency`, `priceMonth`, `priceYear`, `priceRoute` (une seule occurrence chacune, `assert n == 1`, message `<clé> not found in the CONFIG of route.html`).
+3. Écrit les mêmes textes que le JavaScript de la page dans les `<span>` `js-td` (jours d'essai), `js-pm` (prix mensuel, ex. `$5.99`), `js-py` (prix annuel), `js-pr` (prix de l'option, « $3 » sans décimales quand il est rond), `js-pmr` (mensuel + option, « $8.99 ») et `js-free` (« 6 months free », ou le prix par mois si l'annuel n'offre aucun mois) ; au moins une occurrence de chaque (`assert n >= 1`, message `no <classe> in route.html`).
+4. Met l'adresse du serveur de comptes devant les liens `/buy?interval=month&trial=1&route=1`, `/buy?interval=year&route=1` et `/buy/route` (au moins un de chaque, depuis la refonte du 13/11 ; message `no link to <chemin> in route.html`), pour les visiteurs sans JavaScript.
 5. Message `route.html built`.
 
 ## Données touchées
-- **Lit** : `site/src/page.html`, `reviews.html`, `tweaks.html`, `partners.html`, `route.html`, `site/og-image.png`, `licensing/src/billing.js`.
+- **Lit** : `site/src/page.html`, `reviews.html`, `tweaks.html`, `partners.html`, `route.html`, `site/og-image.png`, `licensing/src/billing.js`, `licensing/src/route-addon.js`.
 - **Écrit** : `site/index.html`, `site/reviews.html`, `site/tweaks.html`, `site/partners.html`, `site/route.html` ; et, par [[sync_partners.py]], `site/src/page.html` et `site/src/partners.html` (seulement si les cartes ont changé).
 - **Lance** : `python3 tools/sync_partners.py`, `node -e …` (FAQ), `node tools/prerender.js` (Chromium par Playwright).
 - Aucun accès réseau : le pré-rendu bloque toutes les requêtes `http(s)`.
@@ -104,6 +104,7 @@ Pas de test unitaire. Le contrôle est la CI [[site-check.yml]] : relance compl�
 
 ## À savoir avant de modifier
 - Le bloc `GOOGLE` doit rester identique, caractère pour caractère, dans les cinq sources : si on change les polices d'une source, il faut changer `GOOGLE` ici aussi (sinon `assert`).
+- Le prix de l'option Rago Route aussi : `CONFIG.priceRoute` dans [[page.html]] et `ROUTE_PRICE` dans `licensing/src/route-addon.js`.
 - Le prix Lifetime se change **à deux endroits** : `CONFIG.priceLifetime` dans [[page.html]] et `LIFETIME_PRICE` dans `licensing/src/billing.js`. Le script refuse de construire s'ils diffèrent.
 - Les 302 de `netlify.toml` (`/buy`, `/login`…) ne servent qu'aux adresses tapées à la main ; les liens de la page sont déjà absolus après ce script.
 - Le commentaire sur `aggregateRating` (ligne 78) est trompeur tant que le code n'est pas remis dans la page (voir plus haut).

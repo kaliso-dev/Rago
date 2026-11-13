@@ -2,8 +2,8 @@
 type: code
 tags: [code, serveur, javascript, api, hono]
 fichier: licensing/src/app.js
-lignes: 1686
-maj: 2026-11-10
+lignes: 1739
+maj: 2026-11-13
 ---
 # app.js
 
@@ -18,7 +18,7 @@ Toutes les routes du serveur de comptes et licences : pages du site de compte (i
 ## Ce que le fichier expose
 
 - `createApp(deps)` → l'application Hono, plus `app.idle()` (attend la fin de la passe du bot Discord ; sert aux tests).
-- `API_ERRORS` (non exporté) : code → [statut HTTP, message en anglais affichable tel quel par l'app] : `invalid_request` 400, `invalid_credentials` 401, `invalid_token` 401, `no_license` 403, `bound_to_other_device` 403, `revoked` 403, `account_banned` 403, `subscription_ended` 403 (message seulement, renvoyé sous le code `revoked`), `route_closed` 403, `rate_limited` 429, `no_subscription` 404, `billing_unavailable` 503, `link_expired` 410, `name_required`, `invalid_name`, `invalid_rating`, `empty_comment`, `comment_too_long`, `invalid_image` (400), `image_too_large` 413, `storage_unavailable` 503. En plus : `server_error` 500 (toute exception sous `/api/`), `not_found` 404 et `unavailable` 503 (fichier de mise à jour).
+- `API_ERRORS` (non exporté) : code → [statut HTTP, message en anglais affichable tel quel par l'app] : `invalid_request` 400, `invalid_credentials` 401, `invalid_token` 401, `no_license` 403, `bound_to_other_device` 403, `revoked` 403, `account_banned` 403, `subscription_ended` 403 (message seulement, renvoyé sous le code `revoked`), `route_closed` 403, `route_option` 402 (Rago Route demande l'option, 13/11), `rate_limited` 429, `no_subscription` 404, `billing_unavailable` 503, `link_expired` 410, `name_required`, `invalid_name`, `invalid_rating`, `empty_comment`, `comment_too_long`, `invalid_image` (400), `image_too_large` 413, `storage_unavailable` 503. En plus : `server_error` 500 (toute exception sous `/api/`), `not_found` 404 et `unavailable` 503 (fichier de mise à jour).
 
 ## Cycle d'une requête (middlewares, dans l'ordre)
 
@@ -70,8 +70,9 @@ Toutes les routes du serveur de comptes et licences : pages du site de compte (i
 |---|---|---|
 | GET `/healthz` | public | `SELECT 1` → `{ok:true}` ou 503 `database unreachable`. |
 | GET `/acces/:key` | public | Bonne clé `PREVIEW_KEY` → cookie `rago_preview` et `/signup` ; `sortir` l'efface ; sinon 404. |
-| GET `/buy`, `/buy/lifetime` | public | Crée la session Stripe Checkout (voir plus bas) et redirige. |
-| GET `/checkout/success` | public | `session_id` `cs_…` : `fulfillCheckoutSession`, `settleTrial`, e-mail, puis compte ou page de connexion/inscription. |
+| GET `/buy`, `/buy/lifetime` | public | Crée la session Stripe Checkout (voir plus bas) et redirige. `route=1` : Premium avec l'option Rago Route ; un compte connecté qui a déjà Premium est envoyé sur `/buy/route` (13/11, sur `staging` depuis le 13/11 au soir). |
+| GET `/buy/route`, `/checkout/route` | session | Option Rago Route seule pour un compte avec Premium actif (`?n=routenopremium`, `routeowned`, `routesoon` sinon), puis page de retour qui l'enregistre ([[route-addon.js]]). |
+| GET `/checkout/success` | public | `session_id` `cs_…` : `fulfillCheckoutSession`, `settleTrial`, `addRouteWithPremium` (case Rago Route), e-mail, puis compte ou page de connexion/inscription. |
 | GET `/claim/:token` | public | Lien de l'e-mail d'achat ; expiré → 410 « This link doesn't work anymore. ». |
 | GET/POST `/signup` | public | E-mail ≤ 254, mot de passe 8 à 200. Avec `EMAIL_VERIFICATION` et un e-mail qui n'est pas celui de l'achat : code par e-mail (`startSignup`) et `/signup/verify` ; sinon compte créé, bienvenue, `/account/profile?welcome=1`. |
 | GET/POST `/signup/verify`, POST `/signup/resend` | cookie `rg_signup` | Code : `wrong` (essais restants), `expired`, `locked` (429) ; audit `user.email_verified`. |

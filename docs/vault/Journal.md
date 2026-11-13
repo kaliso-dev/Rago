@@ -1,7 +1,7 @@
 ---
 type: pilotage
 tags: [journal, chronologie]
-maj: 2026-11-12
+maj: 2026-11-13
 ---
 # Journal
 
@@ -10,6 +10,7 @@ Une ligne par événement marquant, la plus récente en haut. Voir [[Historique 
 ## Novembre 2026
 | Date | Événement | Liens |
 |---|---|---|
+| 13/11 | **Page Rago Route refaite** (plus courte, animations simples, toutes les fonctions, deux cartes de prix) et **option Rago Route au paiement** : case « Add Rago Route » sur l'accueil, « Already Premium? » pour l'option seule, Premium + Rago Route sur la page ; le serveur crée l'option après le Premium (essai compris) et l'arrête avec lui ; CGV 4a complétées ; 111 tests serveur OK ; sur `staging` le soir même (« Oui, envoie sur staging ») | [[route.html]], [[Paiements Stripe]], [[route-addon.js]] |
 | 13/11 | **Rago Route devient une option à 3 $ par mois en plus du Premium** (décision de Sofiene) : serveur, onglet de l'app, page compte et site codés, 110 tests serveur OK ; essai gratuit avec Rago Route compris et CGV section 4a ; sur `staging` le 13/11, prix Stripe à créer | [[Offres et prix]], [[route-addon.js]] |
 | 13/11 | Rago Route : l'iPhone est enfin vu par Windows, mais Windows coupe le Wi-Fi et tout passe par la 4G ; la 4G n'a jamais été codée « en secours seulement » : choix demandé à Sofiene | [[Proxy]] |
 | 12/11 | Sofiene repasse `rago` en public (« j'ai passer le github en public ») ; CI relancée et verte, staging déployé, prod redéployée par la PR #103 : menu des cerveaux servi en prod | [[Cerveau du vault]], [[Railway]] |

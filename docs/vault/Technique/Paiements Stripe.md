@@ -1,7 +1,7 @@
 ---
 type: technique
 tags: [technique, serveur, stripe, paiement]
-maj: 2026-11-10
+maj: 2026-11-13
 ---
 # Paiements Stripe
 
@@ -36,7 +36,9 @@ Décidé par Sofiene le 04/11. `GET /buy?trial=1` : carte demandée (`payment_me
 ## Option Rago Route (13/11, sur `staging`)
 - Décision de Sofiene du 13/11 : Rago Route se paie **3 $ par mois en plus** du Premium (« il faut que ça soit une option »). Abonnement Stripe **à part** (Stripe ne met qu'une période de facturation par abonnement, et les annuels et Lifetime doivent pouvoir le prendre), prix `STRIPE_PRICE_ROUTE` (récurrent mensuel 3 USD, **à créer dans Stripe** par Sofiene), métadonnées `product: rago-route` et `user_id`.
 - Achat : `/buy/route` (compte connecté avec Premium actif ; sinon `/account?n=routenopremium`, déjà pris : `routeowned`, pas de prix : `routesoon`), payé avec le client Stripe du Premium (le portail montre les deux) ; retour sur `/checkout/route`, qui l'enregistre même avant le webhook. **L'essai gratuit du Premium comprend Rago Route** (Sofiene, 13/11 : « pendant l'essai gratuit ils ont accès à tout ») : pendant l'essai, `/route/token` donne un jeton sans l'option, jusqu'à la fin de l'essai (`trialEnd`, table `trials`) ; ensuite il faut l'option. L'option elle-même n'a pas d'essai : prise pendant l'essai, elle est débitée dès qu'on l'ajoute. CGV section 4a.
-- Webhook : `checkout.session.completed` et les événements d'abonnement d'une option vont dans la table `route_subscriptions` ([[route-addon.js]]), jamais dans `licenses`.
+- **Avec Premium, au paiement** (13/11, sur `staging` depuis le 13/11 au soir) : Sofiene (« je veeux vraiment que au paiement au puisse l'ajouter comme une option que quelqu'un déjà en premium puisse l'ajouter facilement dans la page principale des prices on doit pouvoir sélectionner avec proxy et prendre l'aboonnement avec mais il faut aussi pouvoir depuis la page principale seulement payer le proxy l'ajouter »). La case « Add Rago Route » des prix de l'accueil et les boutons de la page Rago Route ajoutent `&route=1` à `/buy`. Le Checkout du Premium porte alors la métadonnée `route: '1'` et le texte « Rago Route is included in the free trial, then $3 a month on top of Premium, from <date>, as its own subscription on this card. » (sans essai : « …charged today and every month. ») ; il ne montre que le prix du Premium. Une fois le Premium payé (webhook ou page de succès, jamais deux fois : clé d'idempotence `rago-route-<session>` et colonne `checkout_session`), le serveur crée l'abonnement de l'option sur le même client et la même carte (`addRouteWithPremium`), lié à la licence (`license_id`) tant que le compte n'existe pas ; avec l'essai, il démarre avec la même fin d'essai que le Premium (rien à payer avant), sinon il est débité tout de suite. Pas pour Lifetime (l'option s'ajoute depuis le compte). Un compte qui a déjà Premium et arrive sur `/buy?…&route=1` est envoyé sur `/buy/route`. Sans `STRIPE_PRICE_ROUTE`, la case est ignorée.
+- **Premium annulé** (depuis le compte, l'app ou le portail, `cancel_at_period_end`) : une option qui se renouvellerait après la fin du Premium est mise à l'arrêt en même temps (`followPremium`, colonne `stopped_with_premium`) ; un essai annulé à temps ne coûte donc rien pour Rago Route non plus. Premium repris : l'option reprend. Pas si le compte garde un autre Premium (Lifetime).
+- Webhook : `checkout.session.completed` et les événements d'abonnement d'une option vont dans la table `route_subscriptions` ([[Table route_subscriptions]], [[route-addon.js]]), jamais dans `licenses`.
 - Passe horaire : une option encore active sans Premium actif est annulée dans Stripe (`stopOrphanRoutes`).
 
 ## Webhook (`POST /webhooks/stripe`)
@@ -74,4 +76,4 @@ Uniquement sur staging (clés `sk_test_`) : carte `4242 4242 4242 4242`, date fu
 
 ## Code
 
-[[billing.js]] (Checkout, webhooks, essai, Lifetime, codes promo, contrôles), [[licensing.js]] (licences, `syncSubscription`, temps offert), [[app.js]] (`/buy`, `/checkout/success`, webhook, résiliation depuis l'app), [[promo.js]] (pop-up), [[sales.js]] (ventes lues dans Stripe pour `/admin`, jamais stockées). Tables : [[Table licenses]], [[Table stripe_events]], [[Table trials]], [[Table affiliates]]. Carte : [[Code du serveur]].
+[[billing.js]] (Checkout, webhooks, essai, Lifetime, codes promo, contrôles), [[licensing.js]] (licences, `syncSubscription`, temps offert), [[app.js]] (`/buy`, `/checkout/success`, webhook, résiliation depuis l'app), [[promo.js]] (pop-up), [[sales.js]] (ventes lues dans Stripe pour `/admin`, jamais stockées). Tables : [[Table licenses]], [[Table stripe_events]], [[Table trials]], [[Table affiliates]], [[Table route_subscriptions]]. Carte : [[Code du serveur]].

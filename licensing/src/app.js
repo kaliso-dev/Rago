@@ -440,6 +440,9 @@ export function createApp({ cfg, db, keys, stripe, mailer, log = console, fetchI
     const active = owned?.status === 'active' ? owned : null;
     // An affiliate reward (6 months) can turn into a subscription: no payment until the reward ends.
     const reward = active?.plan === 'reward' ? active : null;
+    // « + Rago Route » ticked on the site (2026-11-13). An account that already has Premium only adds the option.
+    const routeAsked = !lifetime && c.req.query('route') === '1';
+    if (routeAsked && active && !reward) return c.redirect('/buy/route', 303);
     if (L.blocksPurchase(active, lifetime ? { plan: 'lifetime', source: 'stripe' } : null)) return c.redirect('/account?n=owned', 303);
     if (lifetime && !(await lifetimeOffer())) {
       return c.html(V.messagePage(cfg, { user, overline: 'Checkout', title: 'Lifetime opens soon.',
@@ -473,7 +476,8 @@ export function createApp({ cfg, db, keys, stripe, mailer, log = console, fetchI
     const hadPremium = user && (await db.get('SELECT 1 FROM licenses WHERE user_id = ? LIMIT 1', [user.id])
       || await db.get('SELECT 1 FROM trials WHERE email = ? LIMIT 1', [user.email]));
     const trial = c.req.query('trial') === '1' && !reward && !hadPremium;
-    const session = await createCheckout(stripe, cfg, user, { interval, customerId: previous?.stripe_customer_id, ref, promotionCode, trialEnd, trial }, log);
+    const withRoute = routeAsked && !!cfg.stripePriceRoute && !(user && await RO.routeOption(db, user.id));
+    const session = await createCheckout(stripe, cfg, user, { interval, customerId: previous?.stripe_customer_id, ref, promotionCode, trialEnd, trial, withRoute }, log);
     return c.redirect(session.url, 303);
   }
 
@@ -525,6 +529,8 @@ export function createApp({ cfg, db, keys, stripe, mailer, log = console, fetchI
     }
     // Free trial: one per person, settled here too when the webhook hasn't come yet (the email says when the first payment comes)
     const trial = await settleTrial(db, stripe, session, session.subscription, out.license, log);
+    // « + Rago Route » ticked: started here too when the webhook hasn't come yet (never twice).
+    await RO.addRouteWithPremium(db, stripe, cfg, { session, sub: session.subscription, license: out.license, trial }, log);
     if (out.created) await sendClaimEmail(withTrial(out.license, session, session.subscription, trial), out.claimToken);
 
     const user = await currentUser(c);
@@ -1219,7 +1225,7 @@ export function createApp({ cfg, db, keys, stripe, mailer, log = console, fetchI
       log.error(`[stripe] ${event.type} ${event.id} ignored: it comes from Stripe ${event.livemode ? 'live' : 'test'} mode and STRIPE_SECRET_KEY is the ${mode} key. Put the whsec_ of the ${mode} destination in STRIPE_WEBHOOK_SECRET.`);
       return c.json({ received: true, ignored: 'other_mode' });
     }
-    const label = await handleStripeEvent(db, event, { stripe, onLicense: sendClaimEmail, log });
+    const label = await handleStripeEvent(db, event, { stripe, cfg, onLicense: sendClaimEmail, log });
     log.info?.(`[stripe] ${event.type} ${event.id} -> ${label}`);
     // Premium may have started, stopped or come back: the Discord role follows, after this reply to Stripe.
     discord?.syncAll();
@@ -1522,6 +1528,7 @@ export function createApp({ cfg, db, keys, stripe, mailer, log = console, fetchI
       return fail(c, 'billing_unavailable');
     }
     await L.syncSubscription(db, sub);
+    await RO.followPremium(db, stripe, sub, log); // the Rago Route option stops (or goes on) with Premium
     await db.run('INSERT INTO audit (at, license_id, user_id, type, detail) VALUES (?, ?, ?, ?, ?)',
       [Date.now(), lic.id, user.id, cancel ? 'subscription.canceled_in_app' : 'subscription.resumed_in_app', null]);
     const fresh = await L.getLicense(db, lic.id);

@@ -391,6 +391,30 @@ img.av{object-fit:cover;padding:0}
 .rec{position:absolute;top:-14px;left:50%;transform:translateX(-50%);padding:7px 14px;border-radius:var(--r-full);background:var(--red);color:var(--ink);font-size:12px;font-weight:600;white-space:nowrap;z-index:2}
 .lic{display:flex;gap:10px;align-items:center;padding:12px 14px;border-radius:var(--r-md);background:var(--ink);border:1px solid var(--l1);font-size:12.5px;color:var(--t2)}
 .lic svg{width:16px;height:16px;flex:none;fill:none;stroke:currentColor;stroke-width:1.6}
+/* « + Rago Route » in the Premium card (2026-11-13): ticked, both checkout buttons take the option with Premium (/buy?…&route=1) */
+.addon{position:relative;display:flex;gap:12px;align-items:flex-start;padding:14px 16px;border-radius:var(--r-md);background:var(--ink);border:1px solid var(--l1);cursor:pointer;transition:border-color .2s,background .2s}
+.addon:hover{border-color:var(--l3)}
+.addon input{position:absolute;opacity:0;width:1px;height:1px;pointer-events:none}
+.addon .box{width:20px;height:20px;flex:none;border-radius:6px;border:1.5px solid var(--t3);display:grid;place-items:center;margin-top:1px;transition:background .2s,border-color .2s}
+.addon .box svg{width:12px;height:12px;color:var(--ink);opacity:0;transform:scale(.5);transition:opacity .2s,transform .25s cubic-bezier(.16,1,.3,1)}
+.addon input:checked+.box{background:var(--red);border-color:var(--red)}
+.addon input:checked+.box svg{opacity:1;transform:none}
+.addon input:focus-visible+.box{outline:2px solid var(--red);outline-offset:2px}
+.addon:has(input:checked){border-color:rgba(255,59,48,.55);background:rgba(255,59,48,.07)}
+.addon .t{font-size:13.5px;color:var(--t2);line-height:1.45;min-width:0}
+.addon .t b{color:var(--t1);font-weight:600}
+.addon .t em{font-style:normal;color:var(--red);font-weight:600;white-space:nowrap}
+.addon .t small{display:block;font-size:12px;color:var(--t3);margin-top:3px}
+.addon .t a{color:var(--t2);text-decoration:underline;text-underline-offset:2px}
+/* Already Premium: only the option (/buy/route), under the plans */
+.addon-only{max-width:1240px;margin:28px auto 0;display:flex;gap:18px;align-items:center;padding:18px 22px;border-radius:var(--r-xl);border:1px solid var(--l1);background:var(--ink-2)}
+.addon-only p{flex:1;font-size:14px;color:var(--t2);line-height:1.5;margin:0}
+.addon-only p b{color:var(--t1);font-weight:600}
+.addon-only p a{color:var(--t1);text-decoration:underline;text-underline-offset:2px}
+.addon-only .btn{flex:none}
+.ao-ic{width:42px;height:42px;flex:none;border-radius:12px;display:grid;place-items:center;background:rgba(255,59,48,.12);color:var(--red)}
+.ao-ic svg{width:22px;height:22px;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
+@media (max-width:720px){.addon-only{flex-direction:column;align-items:flex-start}.addon-only .btn{width:100%}}
 /* Lifetime: "Coming soon" (no link) until the account server says its Stripe price is the one shown here */
 .btn.js-lifetime:not([href]){cursor:default;color:var(--t3);background:none;box-shadow:inset 0 0 0 1px var(--l1);transform:none}
 /* What only applies once Lifetime can be bought (.life-on: FAQ, table, checkout line) or until then (.life-off) */
@@ -1446,6 +1470,7 @@ footer.foot p{max-width:80ch}
             <li><svg><use href="#i-check"/></svg><span><b>The Premium role</b> on Discord</span></li>
           </ul>
           <div class="lic"><svg viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="12" rx="3"/><path d="M8 20h8M12 16v4"/></svg>One license, one PC.</div>
+          <label class="addon" for="with-route"><input type="checkbox" id="with-route"><span class="box"><svg viewBox="0 0 16 16"><use href="#i-check"/></svg></span><span class="t"><b>Add Rago Route</b> <em>+$3/month</em><small>The anti-lag tunnel for Minecraft, in beta: two roads for every packet. Included in the free trial. <a href="route.html">What it does</a></small></span></label>
           <a class="btn btn-red js-trial" href="/buy?interval=month&amp;trial=1">Start 3-day free trial<svg><use href="#i-arrow"/></svg></a>
           <p class="trial-note" id="trial-note">Card required. Free for 3 days, then the monthly plan at $5.99 a month, charged automatically on day 3 unless you cancel before. Cancel in two clicks from your account. One trial per person.</p>
           <a class="btn btn-ghost js-checkout" href="/buy?interval=year">Skip the trial and buy now</a>
@@ -1467,6 +1492,11 @@ footer.foot p{max-width:80ch}
         <a class="btn btn-ghost js-lifetime" role="link" aria-disabled="true">Coming soon</a>
         <p class="micro"><span class="life-on">Secure checkout with Stripe · </span>One-time payment · <a href="terms.html#cancel">No refunds</a></p>
       </div>
+    </div>
+    <div class="addon-only rv" id="route-only">
+      <span class="ao-ic"><svg viewBox="0 0 24 24"><path d="M3 12h4l3-7 4 14 3-7h4"/></svg></span>
+      <p><b>Already Premium?</b> Add only Rago Route, the anti-lag tunnel for Minecraft (beta): $3 a month on top of your Premium, its own subscription, cancel anytime. <a href="route.html">See what it does</a></p>
+      <a class="btn btn-ghost js-route-only" href="/buy/route">Add Rago Route<svg><use href="#i-arrow"/></svg></a>
     </div>
     <div class="cmp-wrap rv">
       <table class="cmp">
@@ -1618,6 +1648,7 @@ const CONFIG = {
   previewAccountBase: "",                           // staging account server for Netlify previews: filled at build by netlify/preview.sh (STAGING_ACCOUNT_URL)
   trialDays: 3,                                     // free trial of the subscription: same number as TRIAL_DAYS on the account server
   checkoutPath: "/buy",                             // + ?interval=month|year (+ &ref=CODE from an affiliate link). Creates the Stripe Checkout session, 303 redirect
+  routePath: "/buy/route",                          // Rago Route option alone, for an account that already has Premium (signed in on the account server)
   lifetimePath: "/buy/lifetime",                    // Lifetime checkout (one payment, + ?ref=CODE or ?promo=CODE). Opened only once /api/v1/plans says it's sold at priceLifetime
   loginPath: "/login",
   signupPath: "/signup",
@@ -1629,6 +1660,7 @@ const CONFIG = {
   currency: "$",
   priceMonth: 5.99,                                 // monthly Stripe price (USD)
   priceYear: 29.99,                                 // yearly Stripe price (USD); "months free" is computed from both
+  priceRoute: 3,                                    // Rago Route option, a month on top of Premium (USD): the same as ROUTE_PRICE (licensing/src/route-addon.js), checked by build.py
   priceLifetime: 59.99                              // Lifetime, paid once (USD): the account server sells it only at LIFETIME_PRICE (licensing/src/billing.js), the same
 };
 /* ----------------------- */
@@ -2309,17 +2341,24 @@ const REF = (() => {
     const y = v === "year";
     $("#p-amt").textContent = fmt(y ? CONFIG.priceYear / 12 : CONFIG.priceMonth);
     $("#p-per").textContent = "/ month";
-    $("#p-note").textContent = y ? `Billed ${fmt(CONFIG.priceYear)} yearly.${free >= 1 ? " " + freeTxt + "." : ""}` : "Billed monthly.";
+    // « + Rago Route » ticked (2026-11-13): the option comes with Premium, $3 a month on top, in the free trial too
+    const rt = !!($("#with-route") || {}).checked, rq = rt ? "&route=1" : "", ro = Number.isInteger(CONFIG.priceRoute) ? c + CONFIG.priceRoute : fmt(CONFIG.priceRoute);
+    $("#p-note").textContent = (y ? `Billed ${fmt(CONFIG.priceYear)} yearly.${free >= 1 ? " " + freeTxt + "." : ""}` : "Billed monthly.") + (rt ? ` Rago Route: +${ro} a month.` : "");
     const tail = REF ? "&ref=" + encodeURIComponent(REF) : promo() ? "&promo=" + encodeURIComponent(promo()) : "";
-    $$(".js-checkout").forEach(a => a.href = acct(`${CONFIG.checkoutPath}?interval=${y ? "year" : "month"}${tail}`));
+    $$(".js-checkout").forEach(a => a.href = acct(`${CONFIG.checkoutPath}?interval=${y ? "year" : "month"}${rq}${tail}`));
     // after the trial, monthly only (2026-11-10): the trial always starts on the monthly plan, the toggle sets "buy now"
-    $$(".js-trial").forEach(a => a.href = acct(`${CONFIG.checkoutPath}?interval=month&trial=1${tail}`));
+    $$(".js-trial").forEach(a => a.href = acct(`${CONFIG.checkoutPath}?interval=month&trial=1${rq}${tail}`));
+    $$(".js-route-only").forEach(a => a.href = acct(CONFIG.routePath));
     const tn = $("#trial-note"), d = CONFIG.trialDays;
-    if (tn) tn.textContent = `Card required. Free for ${d} days, then the monthly plan at ${fmt(CONFIG.priceMonth)} a month, charged automatically on day ${d} unless you cancel before. Cancel in two clicks from your account. One trial per person.`;
+    if (tn) tn.textContent = `Card required. Free for ${d} days${rt ? ", Rago Route included" : ""}, then the monthly plan at ${fmt(CONFIG.priceMonth)} a month${rt ? ` and Rago Route at ${ro} a month` : ""}, charged automatically on day ${d} unless you cancel before. Cancel in two clicks from your account. One trial per person.`;
     setLife();
     const amt = $("#p-amt"); amt.animate && !reduce && amt.animate([{ transform: "translateY(8px)", opacity: 0 }, { transform: "none", opacity: 1 }], { duration: 400, easing: "cubic-bezier(.16,1,.3,1)" });
   };
-  window.__seg($("#billing"), v => { bill = v; setBill(v); }); setBill("year"); window.__bill = () => setBill(bill);
+  window.__seg($("#billing"), v => { bill = v; setBill(v); });
+  // ticked from a link (?route=1, from route.html), and kept while the toggle moves
+  const wr = $("#with-route");
+  if (wr) { if (/[?&]route=1(&|$)/.test(location.search)) wr.checked = true; wr.addEventListener("change", () => setBill(bill)); }
+  setBill("year"); window.__bill = () => setBill(bill);
   const Y = '<span class="yes"><svg viewBox="0 0 16 16"><use href="#i-check"/></svg></span>', N = '<span class="no"><svg viewBox="0 0 16 16"><path d="M4.5 8h7"/></svg></span>', L = '<span class="lk" title="Locked in Free"><svg viewBox="0 0 16 16"><use href="#i-lock"/></svg></span>';
   const rows = [
     ['Tweaks unlocked', '<span class="txt">73 of 218</span>', '<span class="txt">All 218</span>'],
@@ -2332,6 +2371,7 @@ const REF = (() => {
     ["Clean RAM, cleanup and driver check", Y, Y],
     ["Tweaks on at the same time", '<span class="txt">Up to 30</span>', '<span class="txt">No limit</span>'],
     ["Remove preinstalled apps", Y, Y],
+    ["Rago Route, the anti-lag tunnel for Minecraft (beta)", L, '<span class="txt">+$3/month option</span>'],
     ["Network, hitreg and most latency and graphics card tweaks", L, Y],
     ["Minecraft, Expert mode, RBW Mod Off and Game mode On", L, Y],
     ["Share and import presets", Y, Y],

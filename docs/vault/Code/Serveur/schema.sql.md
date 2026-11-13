@@ -2,12 +2,12 @@
 type: code
 tags: [code, serveur, sql, base-de-données]
 fichier: licensing/supabase/schema.sql
-lignes: 342
-maj: 2026-11-10
+lignes: 365
+maj: 2026-11-13
 ---
 # schema.sql
 
-Le schéma de la base Postgres (Supabase) du serveur de comptes et licences : 25 tables. **Idempotent** : le serveur le rejoue à chaque démarrage. Fiche parente : [[Code du serveur]]. Hébergement : [[Supabase]].
+Le schéma de la base Postgres (Supabase) du serveur de comptes et licences : 26 tables. **Idempotent** : le serveur le rejoue à chaque démarrage. Fiche parente : [[Code du serveur]]. Hébergement : [[Supabase]].
 
 (code de `staging`, 10/11)
 
@@ -19,7 +19,7 @@ Le schéma de la base Postgres (Supabase) du serveur de comptes et licences : 25
 
 - Seulement des changements **idempotents** : `CREATE TABLE IF NOT EXISTS`, `ALTER TABLE … ADD COLUMN IF NOT EXISTS`, `CREATE INDEX IF NOT EXISTS`, et un `UPDATE` sans effet la deuxième fois. Jamais de `DROP` ni de renommage (`licensing/CLAUDE.md`).
 - Dates en `BIGINT` (millisecondes depuis 1970), pas de `timestamp`.
-- **RLS activée sur les 25 tables, sans aucune politique** (lignes 318-342) : l'API publique de Supabase (clés `anon` / `authenticated`) ne peut ni lire ni écrire ; seule la connexion directe du serveur (`DATABASE_URL`) le peut.
+- **RLS activée sur les 26 tables, sans aucune politique** (lignes 318-342, et 365 pour `route_subscriptions`) : l'API publique de Supabase (clés `anon` / `authenticated`) ne peut ni lire ni écrire ; seule la connexion directe du serveur (`DATABASE_URL`) le peut.
 - Identifiants en texte, avec un préfixe (`usr_`, `lic_`, `dev_`, `sgn_`, `ref_`, `drw_`), créés par [[crypto.js]].
 
 ## Les tables (ordre du fichier)
@@ -51,6 +51,7 @@ Le schéma de la base Postgres (Supabase) du serveur de comptes et licences : 25
 | [[Table network_reports]] | 273-284 | RAG-50 | Tests réseau |
 | [[Table network_results]] | 285-300 | RAG-50 | Résultats par cible |
 | [[Table trials]] | 303-312 | 04/11/2026 | Essais gratuits |
+| [[Table route_subscriptions]] | 344-365 | 13/11/2026 | Option Rago Route (3 $/mois) |
 
 ## Relations
 

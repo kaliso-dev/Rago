@@ -10,6 +10,8 @@ Registre daté des décisions de Sofiene. **La plus récente prime.** Citations 
 ## App et versions
 | Date | Décision | Statut |
 |---|---|---|
+| 13/11 | **Page Rago Route refaite** : « faut refaire toute la page des proxy il faut la simplifier enlever les illustration complète priviligie des illutration animé simple et épurer réduit la longueur de la page toute les feature doivent être expliqué mais la page doit aller droit au but et expliqué uniquement les procu enlève lme superflux » ; prix : « dans la page des proxy il faut un plan premium avec ou une card proxy option qui précise que si t'as déjà le premium et dans le détail de la card il faut bien préciser toute les feature » ([[route.html]], [[Page de vente Rago Route]]) | DÉCIDÉ ; codé, sur `staging` depuis le 13/11 au soir, pas en prod |
+| 13/11 | **L'option Rago Route se prend au paiement du Premium, et seule pour qui a déjà Premium** (« je veeux vraiment que au paiement au puisse l'ajouter comme une option que quelqu'un déjà en premium puisse l'ajouter facilement dans la page principale des prices on doit pouvoir sélectionner avec proxy et prendre l'aboonnement avec mais il faut aussi pouvoir depuis la page principale seulement payer le proxy l'ajouter ») ([[Paiements Stripe]], [[page.html]]) | DÉCIDÉ ; codé, sur `staging` depuis le 13/11 au soir, pas en prod |
 | 13/11 | **Essai gratuit : accès à tout, Rago Route compris** (« pendant l'essai gratuit ils ont accès à tout »), et CGV complétées pour l'option ; « passe en staging » (q107 répondue) | sur `staging` |
 | 13/11 | **Rago Route devient une option payante : 3 $ par mois en plus du Premium** (« pour y avoir accès il faut payé 3$ en plus de l'abonnement premium il faut que ça soit une option », puis « à mon avis 3$ par mois en plus de l'abonnement c'est le mieux », après un « 3 $ une seule fois » retiré par « non stop ») ([[Offres et prix]], [[Proxy]]) | DÉCIDÉ ; sur `staging` le 13/11 |
 | 13/11 | **Rago Route et la 4G du téléphone** : « Toujours en même temps » (carte de choix) : la 4G reste un trajet de plus à côté du Wi-Fi, et Windows ne doit plus couper le Wi-Fi quand le téléphone est branché ([[Proxy]]) | DÉCIDÉ |
@@ -107,6 +109,7 @@ Registre daté des décisions de Sofiene. **La plus récente prime.** Citations 
 Une ligne par projet ou fonctionnalité arrêtés, pour qu'aucun Claude ne les relance. Le reste du vault n'en parle plus.
 | Date | Quoi | Raison |
 |---|---|---|
+| 13/11 | Clips de gameplay Minecraft sur la page Rago Route (haut de page, cartes, onglet ; protocole du 11/11, question q106) | page refaite le 13/11 avec des « illustrations animées simples et épurées » (Sofiene) |
 | 11/11 | Refonte de la page Rago Route en 12 sections (sélecteur de symptômes, carte « Two paths to Paris », simulateur « Three ways back », frise des coupures), sauf sa scène du haut | « L'ancienne version était beaucoup mieux et claire » : la page repart de la version du matin ([[Page de vente Rago Route]]) |
 | 10/11 | Posts LinkedIn automatiques (un par jour, demandés le 04/11) | « je veux supprimer le linkedin automatisé » ; tâche planifiée supprimée, plus aucun post |
 | 10/11 | Trailer de la 1.2 (versions v1 à v4, plans Kling) | « finalement on a pas sorti de trailer pour la 1.2 » ; jamais publié |

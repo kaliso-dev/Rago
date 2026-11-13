@@ -3,7 +3,7 @@ import Stripe from 'stripe';
 import { audit } from './db.js';
 import { fulfillCheckoutSession, revokeForCharge, setLicenseStatus, syncSubscription } from './licensing.js';
 import { codeFull, getAffiliate, voidReferrals } from './affiliates.js';
-import { isRouteCheckout, isRouteSubscription, syncRouteSubscription } from './route-addon.js';
+import { addRouteWithPremium, followPremium, isRouteCheckout, isRouteSubscription, syncRouteSubscription } from './route-addon.js';
 
 export function createStripe(cfg) {
   return cfg.stripeSecretKey ? new Stripe(cfg.stripeSecretKey) : null;
@@ -79,13 +79,23 @@ const lifetimeText = (user, replaces) => ['One payment: Rago Optimizer Premium f
   ...(replaces ? ['Your current subscription stops right after this payment.'] : []),
   ...(user ? [] : ['You create your account right after paying.'])].join(' ');
 
-async function buildCheckout(stripe, cfg, user, { interval, customerId, terms, ref, promotionCode, trialEnd, replaces, trial = false } = {}) {
+/**
+ * « + Rago Route » ticked (2026-11-13): what the buyer reads above the Pay button. The option is its own monthly
+ * subscription, started on the same card once Premium is paid (addRouteWithPremium); a free trial includes it.
+ */
+const routeText = (trialEnds) => trialEnds
+  ? `Rago Route is included in the free trial, then $3 a month on top of Premium, from ${trialEnds}, as its own subscription on this card.`
+  : 'With Rago Route: $3 a month on top of Premium, as its own subscription on this card, charged today and every month.';
+
+async function buildCheckout(stripe, cfg, user, { interval, customerId, terms, ref, promotionCode, trialEnd, replaces, trial = false, withRoute = false } = {}) {
   // Free trial (2026-11-04): only on a subscription, never with a reward still running (trialEnd). After the trial, the
   // player pays monthly (decision of 2026-11-10): a trial checkout always takes the monthly price, whatever was picked.
   const trialOk = trial && interval !== 'lifetime' && !trialEnd && cfg.trialDays > 0 && !!cfg.stripePriceMonthly;
   const choice = priceFor(cfg, trialOk ? 'month' : interval);
   const trialDays = trialOk && choice?.interval === 'month' ? cfg.trialDays : 0;
-  const metadata = { product: RAGO_PRODUCT, ...(choice.interval ? { interval: choice.interval } : {}), ...(choice.plan ? { plan: choice.plan } : {}), ...(ref ? { ref } : {}), ...(trialDays ? { trial: String(trialDays) } : {}) };
+  // Rago Route with Premium: subscriptions only (Lifetime adds it from the account).
+  const route = withRoute && !!choice.interval && !!cfg.stripePriceRoute;
+  const metadata = { product: RAGO_PRODUCT, ...(choice.interval ? { interval: choice.interval } : {}), ...(choice.plan ? { plan: choice.plan } : {}), ...(ref ? { ref } : {}), ...(trialDays ? { trial: String(trialDays) } : {}), ...(route ? { route: '1' } : {}) };
   const common = {
     line_items: [{ price: choice.price, quantity: 1 }],
     success_url: `${cfg.publicUrl}/checkout/success?session_id={CHECKOUT_SESSION_ID}`,
@@ -117,7 +127,7 @@ async function buildCheckout(stripe, cfg, user, { interval, customerId, terms, r
       mode: 'subscription',
       payment_method_collection: 'always',
       subscription_data: { metadata, trial_period_days: trialDays, trial_settings: { end_behavior: { missing_payment_method: 'cancel' } } },
-      custom_text: custom(`${trialDays} days free, then your card is charged on ${ends} and at each renewal. Cancel anytime before ${ends} from your account and you pay nothing. One free trial per person. Rago Optimizer Premium works on one Windows PC. You create your account right after.`),
+      custom_text: custom(`${trialDays} days free, then your card is charged on ${ends} and at each renewal. ${route ? `${routeText(ends)} ` : ''}Cancel anytime before ${ends} from your account and you pay nothing. One free trial per person. Rago Optimizer Premium works on one Windows PC. You create your account right after.`),
     });
   }
   return stripe.checkout.sessions.create({
@@ -125,7 +135,7 @@ async function buildCheckout(stripe, cfg, user, { interval, customerId, terms, r
     mode: 'subscription',
     // An affiliate reward still running: the subscription starts paying when it ends (Stripe needs 2+ days).
     subscription_data: { metadata, ...(trialEnd && trialEnd > Date.now() / 1000 + 2 * 86400 ? { trial_end: trialEnd } : {}) },
-    custom_text: custom('Rago Optimizer Premium works on one Windows PC. Cancel anytime from your account. You create your account right after paying.'),
+    custom_text: custom(`${route ? `${routeText(null)} ` : ''}Rago Optimizer Premium works on one Windows PC. Cancel anytime from your account. You create your account right after paying.`),
   });
 }
 
@@ -350,7 +360,7 @@ async function cancelSubscriptions(stripe, licenses, log) {
  * Subscription events re-read the subscription from Stripe, so events arriving out of order can't
  * bring back an old state.
  */
-export async function handleStripeEvent(db, event, { stripe, onLicense, log } = {}) {
+export async function handleStripeEvent(db, event, { stripe, cfg = {}, onLicense, log } = {}) {
   const seen = await db.get('SELECT 1 FROM stripe_events WHERE id = ?', [event.id]);
   if (seen) return 'duplicate';
   let label = 'ignored';
@@ -371,6 +381,8 @@ export async function handleStripeEvent(db, event, { stripe, onLicense, log } = 
       const out = await fulfillCheckoutSession(db, obj, sub);
       // Free trial: one per person; the email says when the first payment comes (or that it was charged now).
       const trial = out.license && stripe ? await settleTrial(db, stripe, obj, sub, out.license, log) : null;
+      // « + Rago Route » ticked at checkout: the option starts now, on the same card (with the trial if there is one).
+      if (out.license && stripe) await addRouteWithPremium(db, stripe, cfg, { session: obj, sub, license: out.license, trial }, log);
       if (out.created && onLicense) await onLicense(withTrial(out.license, obj, sub, trial), out.claimToken);
       // Lifetime bought while subscribed: the subscription it replaced stops now.
       if (out.license?.plan === 'lifetime' && out.license.status === 'active' && out.license.user_id && stripe) await stopReplacedSubscriptions(db, stripe, out.license.user_id, log, out.license.id);
@@ -387,7 +399,13 @@ export async function handleStripeEvent(db, event, { stripe, onLicense, log } = 
         ? idOf(obj.subscription ?? obj.parent?.subscription_details?.subscription) : obj.id;
       if (!subId) break;
       const sub = stripe ? await stripe.subscriptions.retrieve(subId) : obj;
-      label = isRouteSubscription(sub) ? `route:${await syncRouteSubscription(db, sub)}` : `subscription:${await syncSubscription(db, sub)}`;
+      if (isRouteSubscription(sub)) {
+        label = `route:${await syncRouteSubscription(db, sub)}`;
+      } else {
+        label = `subscription:${await syncSubscription(db, sub)}`;
+        // Premium canceled (or resumed): the Rago Route option follows it.
+        await followPremium(db, stripe, sub, log);
+      }
       break;
     }
     case 'charge.refunded':

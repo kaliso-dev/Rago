@@ -2,8 +2,8 @@
 type: code
 tags: [code, site, html, javascript]
 fichier: site/src/page.html
-lignes: 2415
-maj: 2026-11-11
+lignes: 2455
+maj: 2026-11-13
 ---
 # page.html
 
@@ -85,7 +85,7 @@ Pastilles qui défilent : « Built for Minecraft PvP », BedWars, Ranked BedWars
 Bas de section : « Illustrations of Rago Optimizer 1.2. The numbers are examples, not measurements. » ; boutons **Download free** et « Talk about 1.2 on Discord ».
 
 ### Rago Route (`#route`)
-- Ajoutée le 07/11 (commit `9658716`), texte passé de « in testing » à « **Rago Route · new in Premium, in beta** » le 10/11 (commit `a190565`, PR #76). Mots alignés le 11/11 sur la page de vente : « roads » au lieu de « paths » (sur `staging` depuis le 11/11 à 15 h 30). Pas en prod.
+- Ajoutée le 07/11 (commit `9658716`), texte passé de « in testing » à « Rago Route · new in Premium, in beta » le 10/11 (commit `a190565`, PR #76), puis à « **Rago Route · new Premium option, +$3/month, in beta** » le 13/11 (option payante, sur `staging`). Mots alignés le 11/11 sur la page de vente : « roads » au lieu de « paths » (sur `staging` depuis le 11/11 à 15 h 30). Pas en prod.
 - « Your PC is tuned. Now Rago takes the road. » ; texte : « … Rago Route sends every packet on two roads and quickly rebuilds or resends what's lost, so your game waits less. » ; schéma « Road 1 · straight to Paris », « Road 2 · through Frankfurt », légende « Lost on road 1, delivered by road 2 » ; trois points (Two roads for every packet, Lost packets rebuilt or sent again, fast, Your connection held open through a short cut).
 - Boutons : **Discover Rago Route** → `route.html` ; « Get notified on Discord » (`js-discord`), à garder ou remplacer selon la question q100 ([[Questions ouvertes]]).
 - Schéma SVG `#rt-svg` (Your PC → « Path 1 · straight to Paris » et « Path 2 · through Frankfurt » → Paris → Hypixel) animé en SMIL (`animateMotion`, cycle 3,6 s ; un paquet perdu sur le chemin 1 éclate, sa copie du chemin 2 arrive, anneau autour de Paris). Légende « Lost on path 1, delivered by path 2 ». Voir [[route.html]], [[Proxy]].
@@ -99,9 +99,10 @@ Bas de section : « Illustrations of Rago Optimizer 1.2. The numbers are example
 ### Plans (`#plans`, ancre de prix `#pricing` sur le sélecteur)
 - « Start free. Unlock everything with Premium. » Sélecteur **Monthly / Yearly** (`#billing`, Yearly par défaut) et pastille `#save` « 6 months free yearly ».
 - **Free** : « $0 forever », liste (In-game bar, Network test, Clean RAM, Game library et partage de presets, « 73 tweaks open, up to 30 on at once », Remove preinstalled apps ; verrouillés : « Network and hitreg tweaks, presets and Packet Optimizer »), bouton **Download free** (`/download`).
-- **Premium** (« Recommended ») : prix `#p-amt` (2,50 $/mois en annuel, 5,99 $ en mensuel), `#p-note` (« Billed $29.99 yearly. 6 months free. » ou « Billed monthly. »), liste (All 218 tweaks, Packet Optimizer, 20 presets, Optimize and play, 21 tweaks to switch mid-match, No limit, futures versions, rôle Premium sur Discord), « One license, one PC. », bouton **Start 3-day free trial** (`js-trial`) → `/buy?interval=month&trial=1` (**toujours le mensuel** depuis le 10/11), texte `#trial-note`, bouton **Skip the trial and buy now** (`js-checkout`) → `/buy?interval=year` ou `month` selon le sélecteur, ligne « Secure checkout with Stripe · Cancel anytime · No refunds: try it free first » → `terms.html#cancel`.
+- **Premium** (« Recommended ») : prix `#p-amt` (2,50 $/mois en annuel, 5,99 $ en mensuel), `#p-note` (« Billed $29.99 yearly. 6 months free. » ou « Billed monthly. »), liste (All 218 tweaks, Packet Optimizer, 20 presets, Optimize and play, 21 tweaks to switch mid-match, No limit, futures versions, rôle Premium sur Discord), « One license, one PC. », bouton **Start 3-day free trial** (`js-trial`) → `/buy?interval=month&trial=1` (**toujours le mensuel** depuis le 10/11), texte `#trial-note`, bouton **Skip the trial and buy now** (`js-checkout`) → `/buy?interval=year` ou `month` selon le sélecteur, ligne « Secure checkout with Stripe · Cancel anytime · No refunds: try it free first » → `terms.html#cancel`. Entre « One license, one PC. » et le bouton d'essai : la case **« Add Rago Route +$3/month »** (`label.addon`, `#with-route`, texte « The anti-lag tunnel for Minecraft, in beta: two roads for every packet. Included in the free trial. What it does » → `route.html`) ; cochée, les deux boutons prennent `&route=1`, `#p-note` ajoute « Rago Route: +$3 a month. » et `#trial-note` dit « Free for 3 days, Rago Route included, then the monthly plan at $5.99 a month and Rago Route at $3 a month… » (13/11, sur `staging` depuis le 13/11 au soir ; cochée d'office si l'adresse contient `?route=1`).
+- **Bandeau « Already Premium? »** (`#route-only`, sous les trois cartes, 13/11) : « Add only Rago Route, the anti-lag tunnel for Minecraft (beta): $3 a month on top of your Premium, its own subscription, cancel anytime. See what it does » et le bouton **Add Rago Route** (`js-route-only`) → `/buy/route`.
 - **Lifetime** (`#lifetime`) : `#l-amt` 59,99 $ « once », liste (dont « Already subscribed? Switch from your account page », visible seulement quand Lifetime est vendu), bouton `js-lifetime` « **Coming soon** » (sans lien, `aria-disabled`) qui devient « Get Lifetime » → `/buy/lifetime` quand le serveur le vend.
-- Tableau comparatif `#cmp` (Free contre Premium, 19 lignes), rempli par le script.
+- Tableau comparatif `#cmp` (Free contre Premium, 20 lignes, dont « Rago Route, the anti-lag tunnel for Minecraft (beta) » : verrou en Free, « +$3/month option » en Premium depuis le 13/11), rempli par le script.
 
 ### FAQ (`#faq`)
 « Before you buy. » Accordéon `#faqs` (une seule question ouverte à la fois). 18 questions, dont 2 réservées à Lifetime (marquées `"life"`, cachées tant que Lifetime n'est pas vendu) : bannissement, ping, Free contre Premium (« Free opens 73 tweaks… up to 30 of them on at once »), jeux (15 presets de jeux listés), portables, Mac et Linux, essai gratuit, **remboursement (« No, payments aren't refunded »)**, mensuel ou annuel, rôle Premium sur Discord, Lifetime, passage à Lifetime, un PC par licence, annuler un réglage, SmartScreen, désinstaller, antivirus, affiliation. Les mots « Discord » deviennent des liens (`dlink`).
@@ -133,11 +134,13 @@ Bas de section : « Illustrations of Rago Optimizer 1.2. The numbers are example
 | `previewAccountBase` | `""` | rempli au déploiement des aperçus par [[preview.sh]] (`STAGING_ACCOUNT_URL`) |
 | `trialDays` | `3` | même nombre que `TRIAL_DAYS` du serveur |
 | `checkoutPath` | `/buy` | + `?interval=month|year` (+ `&trial=1`, `&ref=`, `&promo=`) |
+| `routePath` | `/buy/route` | l'option Rago Route seule, pour un compte qui a déjà Premium (13/11) |
 | `lifetimePath` | `/buy/lifetime` | achat Lifetime (+ `?ref=` ou `?promo=`) |
 | `loginPath`, `signupPath`, `affiliatePath` | `/login`, `/signup`, `/affiliate` | pages de compte |
 | `freeAppPath` | `/download` | installateur public |
 | `discord` | invitation permanente du Discord Rago | vide = tous les éléments `js-discord` retirés |
 | `currency` | `$` | devise affichée |
+| `priceRoute` | `3` | l'option Rago Route par mois ; égal à `ROUTE_PRICE` de `licensing/src/route-addon.js` (vérifié par [[build.py]]) ; recopié dans [[route.html]] |
 | `priceMonth`, `priceYear`, `priceLifetime` | `5.99`, `29.99`, `59.99` | doivent être égaux aux prix Stripe ; `priceLifetime` = `LIFETIME_PRICE` de `licensing/src/billing.js` (vérifié par [[build.py]]) |
 Le pop-up n'est **pas** dans `CONFIG` : il se règle sur le serveur (`/admin` ou `npm run admin -- popup`), voir [[Tableau de bord admin]].
 
@@ -172,7 +175,7 @@ Avec `null`, chaque lien de compte vaut `#account-off` et un clic affiche « Acc
 `?ref=CODE` (motif `^[A-Za-z0-9_-]{2,40}$`) est gardé 30 jours dans `localStorage.rago_ref` (`{c, t}`) et pour l'onglet dans `sessionStorage.rago_ref`. Il est ajouté aux liens d'achat (`&ref=`), au lien envoyé vers le PC et à l'achat Lifetime. **Un code d'affilié passe avant le code du pop-up** (jamais les deux).
 
 ### Prix et liens d'achat (lignes 2283-2338)
-- `setBill("year"|"month")` : prix affiché `fmt(priceYear / 12)` ou `fmt(priceMonth)` (arrondi `Math.round(n*100)/100`), `#p-note`, liens `js-checkout` → `/buy?interval=<choix>` + `&ref=` ou `&promo=`, liens `js-trial` → `/buy?interval=month&trial=1` + code (commentaire : « after the trial, monthly only (2026-11-10) »), texte de `#trial-note` recalculé avec `trialDays` et `priceMonth`.
+- `setBill("year"|"month")` : prix affiché `fmt(priceYear / 12)` ou `fmt(priceMonth)` (arrondi `Math.round(n*100)/100`), `#p-note`, liens `js-checkout` → `/buy?interval=<choix>` + `&ref=` ou `&promo=`, liens `js-trial` → `/buy?interval=month&trial=1` + code (commentaire : « after the trial, monthly only (2026-11-10) »), texte de `#trial-note` recalculé avec `trialDays` et `priceMonth` ; avec la case Rago Route cochée, `&route=1` sur les deux liens et les phrases de l'option (`priceRoute`) ; lien `js-route-only` → `routePath`. La case relance `setBill` quand elle change.
 - Lifetime : `GET /api/v1/plans`. Vendu seulement si `lifetime.amount === round(priceLifetime × 100)` et `lifetime.currency` = `usd` (ou `eur`/`gbp` selon `currency`). Alors `html.life`, bouton « Get Lifetime » → `/buy/lifetime` + `?ref=` ou `?promo=`. Sinon « Coming soon » et les lignes `.life-on` restent cachées.
 - Tableau comparatif (19 lignes, dans l'ordre) : Tweaks unlocked (73 of 218 / All 218) · in-game bar live stats (oui/oui) · switch tweaks mid-match (cadenas/oui) · Network test · **Packet Optimizer (cadenas/oui)** · Presets (cadenas/oui) · Game library (Launch games / Optimize and play) · Clean RAM, cleanup and driver check · Tweaks on at the same time (Up to 30 / No limit) · Remove preinstalled apps · Network, hitreg and most latency and graphics card tweaks (cadenas) · Minecraft, Expert mode, RBW Mod Off and Game mode On (cadenas) · Share and import presets · Restore point and undo · New tweaks from future versions (cadenas) · Premium role on Discord (non/oui) · Free trial (non / 3 days, card required) · How you pay (Free / Monthly or yearly, ou « Monthly, yearly or once » avec Lifetime) · License (Not needed / 1 PC per license).
 

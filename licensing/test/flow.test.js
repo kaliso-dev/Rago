@@ -447,6 +447,91 @@ test('Rago Route option: $3 a month on top of Premium, bought from the account, 
   assert.equal(await RO.trialEnd(t.db, { ...lic2, current_period_end: Date.now() - 1000 }, 3), null);
 });
 
+test('Rago Route ticked at checkout: Premium and the option together, the trial includes it, an account with Premium only adds it', async () => {
+  const t = await setup({ STRIPE_PRICE_MONTHLY: 'price_m', STRIPE_PRICE_YEARLY: 'price_y', STRIPE_PRICE_ROUTE: 'price_route' });
+  const createdSubs = [];
+  t.stripe.subscriptions.create = async (p, o) => {
+    createdSubs.push([p, o]);
+    const id = `sub_r${createdSubs.length}`;
+    return (t.subs[id] = { id, object: 'subscription', customer: p.customer, metadata: p.metadata, cancel_at_period_end: false,
+      status: p.trial_end ? 'trialing' : 'active', default_payment_method: p.default_payment_method,
+      items: { data: [{ price: { id: p.items[0].price, recurring: { interval: 'month' } }, current_period_end: p.trial_end || Math.floor(Date.now() / 1000) + 30 * 86400 }] } });
+  };
+  t.stripe.paymentMethods = { retrieve: async (id) => ({ id, card: { fingerprint: 'fp_route' } }), list: async () => ({ data: [{ id: 'pm_listed' }] }) };
+
+  // The site's « + Rago Route » box: the trial checkout says the option is included, then $3 a month.
+  await t.browse('/buy?interval=month&trial=1&route=1');
+  let params = t.created.at(-1);
+  assert.equal(params.metadata.route, '1');
+  assert.deepEqual(params.line_items, [{ price: 'price_m', quantity: 1 }]);
+  assert.match(params.custom_text.submit.message, /Rago Route is included in the free trial, then \$3 a month on top of Premium/);
+  // Paid from the start (yearly): charged today, its own monthly subscription.
+  await t.browse('/buy?interval=year&route=1');
+  assert.match(t.created.at(-1).custom_text.submit.message, /\$3 a month on top of Premium, as its own subscription on this card, charged today/);
+  // No box ticked: nothing about it. Lifetime: never (added from the account).
+  await t.browse('/buy?interval=month');
+  assert.equal(t.created.at(-1).metadata.route, undefined);
+
+  // Trial checkout done (not signed in): Premium trialing, the option starts with the same trial end, on the same card.
+  const end = Math.floor(Date.now() / 1000) + 3 * 86400;
+  const trialSub = t.subscription('sub_pt', 'month', { status: 'trialing', trial_end: end, customer: 'cus_rt', default_payment_method: 'pm_t',
+    items: { data: [{ price: { id: 'price_m', unit_amount: 599, currency: 'usd', recurring: { interval: 'month' } }, current_period_end: end }] } });
+  const s1 = t.paidSession('cs_rt', 'combo@rago.gg', { mode: 'subscription', payment_status: 'no_payment_required', amount_total: 0, payment_intent: null,
+    customer: 'cus_rt', subscription: trialSub, metadata: { interval: 'month', trial: '3', route: '1' } });
+  await t.webhook('checkout.session.completed', s1);
+  assert.equal(createdSubs.length, 1);
+  const [p1, o1] = createdSubs[0];
+  assert.equal(p1.customer, 'cus_rt');
+  assert.deepEqual(p1.items, [{ price: 'price_route' }]);
+  assert.equal(p1.default_payment_method, 'pm_t');
+  assert.equal(p1.trial_end, end);
+  assert.equal(o1.idempotencyKey, 'rago-route-cs_rt');
+  const lic = await t.db.get("SELECT * FROM licenses WHERE stripe_session_id = 'cs_rt'");
+  assert.equal(p1.metadata.license_id, lic.id);
+  assert.equal(p1.metadata.product, 'rago-route');
+  // The success page after the webhook: nothing more created.
+  await t.browse('/checkout/success?session_id=cs_rt');
+  assert.equal(createdSubs.length, 1);
+  // The account created and the license claimed: the option is the account's.
+  await t.browse('/signup', { form: { email: 'combo@rago.gg', password: 'password123' } });
+  const owner = (await L.findUserByEmail(t.db, 'combo@rago.gg')).id;
+  if (!(await L.getLicense(t.db, lic.id)).user_id) await L.claimLicense(t.db, lic.id, owner);
+  assert.equal((await L.getLicense(t.db, lic.id)).user_id, owner);
+  assert.equal((await RO.routeOption(t.db, owner))?.stripe_subscription_id, 'sub_r1');
+
+  // Trial canceled before its end: the option stops with it (nothing charged for Rago Route either), and comes back on resume.
+  t.subs.sub_pt = { ...t.subs.sub_pt, cancel_at_period_end: true };
+  await t.webhook('customer.subscription.updated', t.subs.sub_pt);
+  assert.deepEqual(t.stripeCalls.find(([k, id]) => k === 'update' && id === 'sub_r1')?.[2], { cancel_at_period_end: true });
+  assert.equal((await RO.routeOption(t.db, owner)).cancel_at_period_end, true);
+  t.subs.sub_pt = { ...t.subs.sub_pt, cancel_at_period_end: false };
+  await t.webhook('customer.subscription.updated', t.subs.sub_pt);
+  assert.deepEqual(t.stripeCalls.filter(([k, id]) => k === 'update' && id === 'sub_r1').at(-1)[2], { cancel_at_period_end: false });
+  assert.equal((await RO.routeOption(t.db, owner)).cancel_at_period_end, false);
+
+  // Paid from the start, success page before the webhook: charged now (no trial), the card found on the customer.
+  await t.browse('/logout', { form: {} });
+  const paid = t.subscription('sub_py', 'year', { customer: 'cus_py' });
+  t.paidSubscription('cs_py', 'year@rago.gg', 'year', { customer: 'cus_py', subscription: paid, metadata: { interval: 'year', route: '1' } });
+  await t.browse('/checkout/success?session_id=cs_py');
+  assert.equal(createdSubs.length, 2);
+  assert.equal(createdSubs[1][0].trial_end, undefined);
+  assert.equal(createdSubs[1][0].default_payment_method, 'pm_listed');
+  await t.webhook('checkout.session.completed', t.sessions.cs_py);
+  assert.equal(createdSubs.length, 2);
+  const licY = await t.db.get("SELECT * FROM licenses WHERE stripe_session_id = 'cs_py'");
+  assert.equal((await t.db.get("SELECT license_id FROM route_subscriptions WHERE stripe_subscription_id = 'sub_r2'")).license_id, licY.id);
+  // Its Premium ends before the account is even created: the sweep stops it (tied to the license).
+  await L.setLicenseStatus(t.db, licY.id, 'revoked', 'support');
+  assert.equal(await RO.stopOrphanRoutes(t.db, t.stripe, { error() {} }), 1);
+  assert.ok(t.stripeCalls.some(([k, id]) => k === 'cancel' && id === 'sub_r2'));
+
+  // An account that already has Premium, on the site's « Premium + Rago Route »: only the option.
+  await t.browse('/signup', { form: { email: 'has@rago.gg', password: 'password123' } });
+  await L.grantLicense(t.db, 'has@rago.gg', 'test');
+  assert.equal((await t.browse('/buy?interval=month&trial=1&route=1')).headers.get('location'), '/buy/route');
+});
+
 test('account without a license sees the offer', async () => {
   const t = await setup();
   await t.browse('/signup', { form: { email: 'free@x.io', password: 'password123' } });

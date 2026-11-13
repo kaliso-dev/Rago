@@ -354,3 +354,12 @@ CREATE TABLE IF NOT EXISTS route_subscriptions (
   updated_at BIGINT NOT NULL
 );
 CREATE INDEX IF NOT EXISTS route_subscriptions_user ON route_subscriptions (user_id);
+-- Rago Route taken with Premium at checkout (2026-11-13, Sofiene : « au paiement on puisse l'ajouter comme une option ») :
+-- the buyer may not have an account yet, so the option is tied to the license until it is claimed.
+ALTER TABLE route_subscriptions ADD COLUMN IF NOT EXISTS license_id TEXT;
+ALTER TABLE route_subscriptions ADD COLUMN IF NOT EXISTS checkout_session TEXT;      -- the Premium checkout it came with
+ALTER TABLE route_subscriptions ADD COLUMN IF NOT EXISTS stopped_with_premium BOOLEAN NOT NULL DEFAULT FALSE;
+ALTER TABLE route_subscriptions ALTER COLUMN user_id DROP NOT NULL;
+CREATE INDEX IF NOT EXISTS route_subscriptions_license ON route_subscriptions (license_id);
+CREATE UNIQUE INDEX IF NOT EXISTS route_subscriptions_checkout ON route_subscriptions (checkout_session);
+ALTER TABLE route_subscriptions ENABLE ROW LEVEL SECURITY;

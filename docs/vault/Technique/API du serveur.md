@@ -1,7 +1,7 @@
 ---
 type: technique
 tags: [technique, serveur, api]
-maj: 2026-11-12
+maj: 2026-11-13
 ---
 # API du serveur
 
@@ -14,7 +14,7 @@ Les routes marquées **(staging)** n'existent que sur `staging`, pas encore sur 
 |---|---|
 | `GET /healthz` | Santé, interroge aussi la base (healthcheck Railway) |
 | `GET /acces/:key`, `/acces/sortir` | Cookie d'accès de l'équipe avant le lancement (inutile depuis le 10/10) |
-| `GET /buy`, `GET /buy/lifetime` | Crée la session Stripe Checkout et redirige. Paramètres : `interval=month|year`, `trial=1` (essai, staging), `ref=CODE` (affilié), `promo=CODE` (pop-up). Voir [[Paiements Stripe]] |
+| `GET /buy`, `GET /buy/lifetime` | Crée la session Stripe Checkout et redirige. Paramètres : `interval=month|year`, `trial=1` (essai, staging), `route=1` (avec l'option Rago Route, abonnements seulement ; un compte qui a déjà Premium est envoyé sur `/buy/route` ; 13/11, sur `staging` depuis le 13/11 au soir), `ref=CODE` (affilié), `promo=CODE` (pop-up). Voir [[Paiements Stripe]] |
 | `GET /checkout/success` | Retour de Stripe : « Payment confirmed », création du compte ou rattachement |
 | `GET /claim/:token` | Rattacher un achat à un compte (lien de l'e-mail d'achat) |
 | `GET/POST /signup`, `GET/POST /signup/verify`, `POST /signup/resend` | Inscription par e-mail avec code à 6 chiffres (15 min, 5 essais) |
