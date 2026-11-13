@@ -2370,11 +2370,14 @@ const REF = (() => {
   let bill = "year";
   const setBill = v => {
     const y = v === "year";
-    $("#p-amt").textContent = fmt(y ? CONFIG.priceYear / 12 : CONFIG.priceMonth);
-    $("#p-per").textContent = "/ month";
-    // « + Rago Route » ticked (2026-11-13): the option comes with Premium, $3 a month on top, in the free trial too
+    // « + Rago Route » ticked (2026-11-13): the option comes with Premium, $3 a month on top (monthly even with yearly Premium), in the free trial too
     const rt = !!($("#with-route") || {}).checked, rq = rt ? "&route=1" : "", ro = Number.isInteger(CONFIG.priceRoute) ? c + CONFIG.priceRoute : fmt(CONFIG.priceRoute);
-    $("#p-note").textContent = (y ? `Billed ${fmt(CONFIG.priceYear)} yearly.${free >= 1 ? " " + freeTxt + "." : ""}` : "Billed monthly.") + (rt ? ` Rago Route: +${ro} a month.` : "");
+    // the big price is what a month costs: yearly Premium spread over 12 months, plus the option when it's ticked
+    $("#p-amt").textContent = fmt((y ? CONFIG.priceYear / 12 : CONFIG.priceMonth) + (rt ? CONFIG.priceRoute : 0));
+    $("#p-per").textContent = "/ month";
+    $("#p-note").textContent = rt
+      ? (y ? `Premium billed ${fmt(CONFIG.priceYear)} yearly${free >= 1 ? ", " + freeTxt : ""}. Rago Route: ${ro} a month, billed monthly.` : `Premium ${fmt(CONFIG.priceMonth)} + Rago Route ${ro}, billed monthly.`)
+      : (y ? `Billed ${fmt(CONFIG.priceYear)} yearly.${free >= 1 ? " " + freeTxt + "." : ""}` : "Billed monthly.");
     const tail = REF ? "&ref=" + encodeURIComponent(REF) : promo() ? "&promo=" + encodeURIComponent(promo()) : "";
     $$(".js-checkout").forEach(a => a.href = acct(`${CONFIG.checkoutPath}?interval=${y ? "year" : "month"}${rq}${tail}`));
     // after the trial, monthly only (2026-11-10): the trial always starts on the monthly plan, the toggle sets "buy now"
