@@ -1,7 +1,7 @@
 ---
 type: design
 tags: [design, marque]
-maj: 2026-11-10
+maj: 2026-11-14
 ---
 # Charte graphique
 
@@ -12,7 +12,7 @@ Source de vérité : `brand/tokens/tokens.json` et sa traduction `brand/tokens/t
 - **Rouge unique** `#FF3B30` (`--rg-red-500`) ; hover `#FF5E55`, pressed `#F2352B`, profond `#C9221A`. Dégradé rouge réservé aux héros, barres de progression et CTA d'achat. **Aucun orange.**
 - Texte posé sur le rouge : **toujours `#0A0A0B`** (jamais blanc ; blanc accepté sur `#C9221A`).
 - Autres : succès `#3DDC97` (gains mesurés), alerte `#FFD60A`, info `#5AB8FF`.
-- **Typo** : Geist (interface) et Geist Mono (mesures, labels), auto-hébergées ; chiffres en `tabular-nums`.
+- **Typo** : Geist partout, auto-hébergée ; chiffres en `tabular-nums`. **Plus de Geist Mono sur le site ni sur les pages compte et admin depuis le 14/11** (Sofiene : « j'aimerai que tu enlève cette police robotique un peu en mode terminal que tu utilisent elle est horrible ») : `--mono` du site et `--rg-font-mono` de `licensing/public/tokens.css` pointent sur Geist. L'app et le kit de marque (`brand/`) gardent encore Geist Mono.
 - **Formes** : arrondis partout (8/12/16/24/32/40/999), actions principales en pilule. Relief par les paliers d'encre, pas les ombres.
 - **Logo** : R rouge de Sofiene vectorisé, icône d'app sans tuile ; interdits : pivoté, déformé, contour, dégradé, néon.
 - Historique : v1 (04/10) rouge `#FF3347` → v1.1 (05/10) `#FF3B30`, plus d'orange → v1.2 (06-07/10) logo et nom « Rago Optimizer ».

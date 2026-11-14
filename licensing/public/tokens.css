@@ -40,7 +40,7 @@
 
   /* Typo */
   --rg-font-sans: "Geist", "Inter", "Segoe UI Variable", "Segoe UI", system-ui, sans-serif;
-  --rg-font-mono: "Geist Mono", "JetBrains Mono", "Cascadia Mono", ui-monospace, monospace;
+  --rg-font-mono: var(--rg-font-sans); /* no monospace font on the account pages (Sofiene, 14/11) */
   --rg-fs-display: 56px; --rg-lh-display: 1.02; --rg-ls-display: -0.035em;
   --rg-fs-h1: 36px;      --rg-lh-h1: 1.1;       --rg-ls-h1: -0.025em;
   --rg-fs-h2: 24px;      --rg-lh-h2: 1.2;       --rg-ls-h2: -0.02em;

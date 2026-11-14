@@ -3,11 +3,11 @@ type: code
 tags: [code, serveur, css]
 fichier: licensing/public/tokens.css, licensing/public/account.css, licensing/public/admin.css
 lignes: 105 + 465 + 545
-maj: 2026-11-10
+maj: 2026-11-14
 ---
 # Styles du serveur (CSS)
 
-Les trois feuilles de style servies par le serveur de comptes sous `/assets/` : les jetons de la charte (`tokens.css`), le site de compte (`account.css`) et le tableau de bord (`admin.css`). Fiche parente : [[Code du serveur]].
+Les trois feuilles de style servies par le serveur de comptes sous `/assets/` : les jetons de la charte (`tokens.css` ; `--rg-font-mono` = Geist comme `--rg-font-sans` depuis le 14/11, plus de police à chasse fixe, demande de Sofiene), le site de compte (`account.css`) et le tableau de bord (`admin.css`). Fiche parente : [[Code du serveur]].
 
 (code de `staging`, 10/11)
 
