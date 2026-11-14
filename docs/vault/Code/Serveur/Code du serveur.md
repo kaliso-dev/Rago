@@ -37,7 +37,7 @@ La carte du code du **serveur de comptes et licences** (`licensing/`, Node ≥ 2
 | Fichier | Lignes | Rôle |
 |---|---|---|
 | [[licensing.js]] | 584 | Comptes, sessions, inscription par code, Google/Discord, licences, PC, bannissement, temps offert. |
-| [[route-addon.js]] | 183 | Option Rago Route (13/11) : Checkout de l'abonnement à 3 $/mois ou 17,99 $/an, option prise au paiement du Premium, arrêt avec le Premium, [[Table route_subscriptions]]. |
+| [[route-addon.js]] | 199 | Option Rago Route (13/11) : Checkout de l'abonnement à 3 $/mois ou 17,99 $/an, option prise au paiement du Premium, arrêt avec le Premium, [[Table route_subscriptions]]. |
 | [[billing.js]] | 560 | Stripe : Checkout, webhooks, abonnements, essai, Lifetime, codes promo, contrôles de mise en ligne. |
 | [[affiliates.js]] | 237 | Programme d'affiliation : filleuls, comptage, récompenses. |
 | [[promo.js]] | 174 | Pop-up de réduction du site. |

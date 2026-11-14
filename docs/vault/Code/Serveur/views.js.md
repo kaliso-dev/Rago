@@ -2,7 +2,7 @@
 type: code
 tags: [code, serveur, javascript, html]
 fichier: licensing/src/views.js
-lignes: 904
+lignes: 908
 maj: 2026-11-14
 ---
 # views.js
@@ -26,7 +26,7 @@ Seul [[app.js]] l'appelle (`V.<page>(cfg, {...})`). Les pages chargent `/assets/
 | `page({title, body, user, cfg, bodyClass, nav, cta, buy, lang})` | Gabarit commun : `noindex`, favicons, police Geist préchargée, bandeau « Test server » sur staging (carte de test 4242), en-tête (Pricing / Get Premium pour les visiteurs et comptes gratuits, onglets Account / Profile / Affiliate et bouton Sign out pour un connecté), pied « © Rago Optimizer, by KALISO and RAGO » avec Terms et Privacy du [[Site]]. |
 | `field`, `alertBox` | Champ de formulaire, encadré d'erreur ou d'information. |
 | `signInProviders(cfg)` | Google si ses 2 clés sont réglées ; Discord si `DISCORD_LOGIN` et ses clés ([[Connexion Google et Discord]]). |
-| `signupPage`, `verifyPage`, `loginPage`, `forgotPage`, `resetPage`, `passwordPage` | Pages d'accès, avec boutons « Continue with Google/Discord » et le champ code de parrainage. |
+| `signupPage`, `verifyPage`, `loginPage`, `forgotPage`, `resetPage`, `passwordPage` | Pages d'accès, avec boutons « Continue with Google/Discord » et le champ code de parrainage. `loginPage` vers `/buy/route` : « Sign in with your Premium account to add Rago Route… » (14/11). |
 | `appLinkPage` | « Sign in to the app? » avec le code à 4 caractères à comparer avec l'app, et « Use another account ». |
 | `messagePage` | Page de message (erreurs, liens expirés, 404), avec Back / Ask on Discord. |
 | `dashboardPage` | Page `/account` (avec le bloc « Rago Route » : option en cours, son prix au mois ou à l'année et « Manage or cancel » ; sinon « Add Rago Route · $17.99/year » et « $3/month », ou le mensuel seul sans prix annuel, 14/11). |

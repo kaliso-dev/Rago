@@ -350,10 +350,14 @@ export function createApp({ cfg, db, keys, stripe, mailer, log = console, fetchI
     }
   }
 
+  const withInterval = (c, path) => {
+    const iv = path === '/buy/route' ? c.req.query('interval') : null;
+    return iv === 'month' || iv === 'year' ? `${path}?interval=${iv}` : path;
+  };
   const requireUser = async (c, next) => {
     const user = await currentUser(c);
     // Pages a link can point at directly (the site's "Leave a review"): back there after signing in.
-    if (!user) return c.redirect(NEXT.has(c.req.path) ? `/login?next=${encodeURIComponent(c.req.path)}` : '/login', 303);
+    if (!user) return c.redirect(NEXT.has(c.req.path) ? `/login?next=${encodeURIComponent(withInterval(c, c.req.path))}` : '/login', 303);
     c.set('user', user);
     await next();
   };
@@ -379,7 +383,9 @@ export function createApp({ cfg, db, keys, stripe, mailer, log = console, fetchI
   const NEXT = new Set(['/affiliate', '/account/review', '/buy/route']);
   // and the page that signs the Windows app in (/app/link/<id>, 2026-11-04)
   const APP_LINK_PATH = /^\/app\/link\/[A-Za-z0-9_-]{16,64}$/;
-  const nextPath = (v) => (NEXT.has(String(v || '')) || APP_LINK_PATH.test(String(v || '')) ? String(v) : null);
+  // and the option's monthly or yearly choice (/buy/route?interval=year, 2026-11-14): kept through sign-in
+  const ROUTE_NEXT = /^\/buy\/route\?interval=(month|year)$/;
+  const nextPath = (v) => (NEXT.has(String(v || '')) || APP_LINK_PATH.test(String(v || '')) || ROUTE_NEXT.test(String(v || '')) ? String(v) : null);
 
   const settleAffiliate = async (userId) => {
     const out = await A.settleAffiliate(db, cfg, stripe, log, userId);
@@ -495,7 +501,7 @@ export function createApp({ cfg, db, keys, stripe, mailer, log = console, fetchI
     // ?interval=month|year picks; without it, like the Premium (yearly with a yearly Premium, monthly otherwise).
     const asked = c.req.query('interval');
     const interval = asked === 'year' || asked === 'month' ? asked : license.plan === 'year' ? 'year' : 'month';
-    const session = await RO.createRouteCheckout(stripe, cfg, user, previous?.stripe_customer_id || null, interval);
+    const session = await RO.createRouteCheckout(stripe, cfg, user, previous?.stripe_customer_id || null, interval, log);
     return c.redirect(session.url, 303);
   });
 

@@ -1,7 +1,7 @@
 ---
 type: pilotage
 tags: [pilotage, à-décider, à-vérifier]
-maj: 2026-11-13
+maj: 2026-11-14
 ---
 # Questions ouvertes
 
@@ -18,6 +18,10 @@ Mode d'emploi (outil ArtifactData, collection `questions`) :
 ## En attente de réponse sur la page
 Posées le 13/11 (option Rago Route à 3 $/mois, [[Offres et prix]]) :
 - q108 : le Lifetime paie-t-il aussi l'option ?
+
+Posées le 14/11 ([[Paiements Stripe]]) :
+- q110 : ce que Stripe fait d'un abonnement après le dernier essai de paiement raté.
+- q111 : couper le changement de quantité dans le portail client live.
 
 Au 10/11, après les réponses de Sofiene du jour (q36 à q68 traitées, q46 le 10/11 à 15 h, voir [[Décisions]]) :
 - q65 : réglages Railway de prod (Wait for CI, Watch Paths, Healthcheck, moniteur) ; Sofiene demande à Claude de vérifier et de le lui rappeler ([[Railway]]).

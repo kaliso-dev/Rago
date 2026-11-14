@@ -141,10 +141,18 @@ export async function followPremium(db, stripe, sub, log = console) {
 }
 
 /** Checkout for the option alone, monthly or yearly (routePriceFor), for a signed-in account with Premium. */
-export function createRouteCheckout(stripe, cfg, user, customerId, interval = 'month') {
+// EU law, like Premium (billing.js termsText): immediate access only waives the 14-day withdrawal right if the buyer asks.
+const routeTermsText = (cfg) => `I agree to the [Terms of Sale](${cfg.siteUrl}/terms.html#route) and ask for immediate access to Rago Route. I understand I lose my 14-day right of withdrawal once it starts, and that payments aren't refunded.`;
+
+/**
+ * The Checkout of the option alone, with the required terms checkbox like Premium. Stripe refuses that checkbox until
+ * the Terms URL is set in its dashboard: then it is logged and the checkout still opens.
+ */
+export async function createRouteCheckout(stripe, cfg, user, customerId, interval = 'month', log = console) {
   const choice = routePriceFor(cfg, interval);
   const metadata = { product: ROUTE_PRODUCT, user_id: user.id, interval: choice.interval };
-  return stripe.checkout.sessions.create({
+  const submit = { message: `Rago Route, the anti-lag tunnel for Minecraft: ${routePriceText(choice.interval)} on top of your Premium. Cancel anytime from your account. It stops with your Premium.` };
+  const build = (terms) => stripe.checkout.sessions.create({
     mode: 'subscription',
     line_items: [{ price: choice.price, quantity: 1 }],
     success_url: `${cfg.publicUrl}/checkout/route?session_id={CHECKOUT_SESSION_ID}`,
@@ -153,8 +161,16 @@ export function createRouteCheckout(stripe, cfg, user, customerId, interval = 'm
     client_reference_id: user.id,
     metadata,
     subscription_data: { metadata },
-    custom_text: { submit: { message: `Rago Route, the anti-lag tunnel for Minecraft: ${routePriceText(choice.interval)} on top of your Premium. Cancel anytime from your account. It stops with your Premium.` } },
+    ...(terms ? { consent_collection: { terms_of_service: 'required' } } : {}),
+    custom_text: { submit, ...(terms ? { terms_of_service_acceptance: { message: routeTermsText(cfg) } } : {}) },
   });
+  try {
+    return await build(true);
+  } catch (err) {
+    if (!/terms of service|terms_of_service/i.test(err.message || '')) throw err;
+    log.error?.('[stripe] Terms checkbox refused on the Rago Route checkout: set the Terms of Service URL in Stripe (Settings > Public details).', err.message);
+    return build(false);
+  }
 }
 
 /**

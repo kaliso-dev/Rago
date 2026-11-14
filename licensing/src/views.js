@@ -199,6 +199,10 @@ export function loginPage(cfg, { email = '', error, notice, purchased = false, n
       ? html`<p class="overline rise">Reviews</p>
         <h1 class="display rise d1">Welcome back.</h1>
         <p class="lede rise d2">Sign in to leave your review of Rago Optimizer. It shows on the site with your public name.</p>`
+    : String(next || '').startsWith('/buy/route') && !purchased
+      ? html`<p class="overline rise">Rago Route</p>
+        <h1 class="display rise d1">Welcome back.</h1>
+        <p class="lede rise d2">Sign in with your Premium account to add Rago Route. You pay on Stripe next, then turn it on from the Rago Route tab of the app.</p>`
     : html`<p class="overline rise">${purchased ? 'Rago Optimizer Premium' : 'Rago Optimizer account'}</p>
       <h1 class="display rise d1">${purchased ? 'Payment confirmed.' : 'Welcome back.'}</h1>
       <p class="lede rise d2">${purchased ? 'Sign in and we add the license to your account.' : 'Sign in to get your license key and download Rago Optimizer.'}</p>`;

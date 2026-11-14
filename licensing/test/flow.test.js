@@ -545,11 +545,24 @@ test('Rago Route ticked at checkout: Premium and the option together, the trial 
   await t.browse('/buy/route?interval=year');
   assert.deepEqual(t.created.at(-1).line_items, [{ price: 'price_route_y', quantity: 1 }]);
   assert.match(t.created.at(-1).custom_text.submit.message, /\$17\.99 a year on top of your Premium/);
+  // Like Premium: the buyer asks for immediate access and waives the withdrawal right (EU), on a required checkbox.
+  assert.deepEqual(t.created.at(-1).consent_collection, { terms_of_service: 'required' });
+  assert.match(t.created.at(-1).custom_text.terms_of_service_acceptance.message, /terms\.html#route.*immediate access to Rago Route.*14-day right of withdrawal/);
   await t.browse('/buy/route?interval=month');
   assert.deepEqual(t.created.at(-1).line_items, [{ price: 'price_route', quantity: 1 }]);
   // No interval: like the Premium (this one isn't yearly): monthly.
   await t.browse('/buy/route');
   assert.deepEqual(t.created.at(-1).line_items, [{ price: 'price_route', quantity: 1 }]);
+  // Signed out on the site's « Add it yearly »: the yearly choice survives the sign-in.
+  t.jar.clear();
+  let r = await t.browse('/buy/route?interval=year');
+  assert.equal(r.headers.get('location'), '/login?next=%2Fbuy%2Froute%3Finterval%3Dyear');
+  assert.match(await (await t.browse(r.headers.get('location'))).text(), /Sign in with your Premium account to add Rago Route[\s\S]*name="next" value="\/buy\/route\?interval=year"/);
+  r = await t.browse('/login', { form: { email: 'has@rago.gg', password: 'password123', next: '/buy/route?interval=year' } });
+  assert.equal(r.headers.get('location'), '/buy/route?interval=year');
+  // Anything else after /buy/route is dropped.
+  t.jar.clear();
+  assert.equal((await t.browse('/buy/route?interval=week')).headers.get('location'), '/login?next=%2Fbuy%2Froute');
 });
 
 test('account without a license sees the offer', async () => {

@@ -1,7 +1,7 @@
 ---
 type: procédure
 tags: [technique, développement, tests]
-maj: 2026-11-11
+maj: 2026-11-14
 ---
 # Développer et tester
 
@@ -24,7 +24,7 @@ Node 22 (LTS) ; Python 3 (catalogue, site) ; Rust stable + outils de build Visua
 ```bash
 cd licensing && npm install && npm run local     # http://localhost:8787
 ```
-- `scripts/local.js` **retire** du terminal les variables de prod (`DATABASE_URL`, Resend, Supabase, Discord, clés) et toute clé Stripe live : impossible de toucher la prod par erreur.
+- `scripts/local.js` **retire** du terminal les variables de prod (`DATABASE_URL`, Resend, Supabase, Discord, clés) et toute clé Stripe live, avec ses prix (Premium, Lifetime, Rago Route) : impossible de toucher la prod par erreur.
 - Base en mémoire (PGlite), vide à chaque redémarrage ; compte Premium `test@rago.dev` / `password123` (`DEV_SEED`) ; codes d'inscription et e-mails affichés dans le terminal ; le site est servi par le même serveur (`SITE_DIR`), source visible sur `/src/page.html`.
 - Paiement : pas branché en local sauf avec des clés `sk_test_` (et la Stripe CLI pour les webhooks) ; sinon le tester sur staging.
 

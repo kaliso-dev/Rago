@@ -2,7 +2,7 @@
 type: code
 tags: [code, serveur, stripe, rago-route]
 fichier: licensing/src/route-addon.js
-lignes: 183
+lignes: 199
 maj: 2026-11-14
 ---
 # route-addon.js
@@ -19,7 +19,7 @@ maj: 2026-11-14
 - `wantsRoute(session)` : un Checkout du Premium ouvert avec la case Rago Route (métadonnée `route: '1'`).
 - `addRouteWithPremium(db, stripe, cfg, {session, sub, license, trial})` (13/11, sur `staging` depuis le 13/11 au soir) : Premium payé avec la case : crée l'abonnement de l'option (`subscriptions.create`, prix de `routePriceFor` : annuel avec un Premium annuel, mensuel sinon et après un essai, même client, carte de l'abonnement Premium ou la première carte du client, `payment_behavior: 'allow_incomplete'`, `off_session`, métadonnées `product`, `license_id`, `user_id`, `checkout_session`) ; avec l'essai (`trial === 'trial'`, réponse de `settleTrial`), `trial_end` = fin de l'essai du Premium ; clé d'idempotence `rago-route-<session>` ; rien si déjà fait pour ce paiement, si le compte a déjà l'option (`owned`) ou sans prix. Journal `route.added_at_checkout`. Une erreur Stripe est journalisée (`failed`), jamais relancée.
 - `followPremium(db, stripe, sub)` : Premium mis à l'arrêt en fin de période : chaque option du compte ou de la licence qui se renouvellerait après (fin de période ≥ fin du Premium moins un jour) passe en `cancel_at_period_end`, notée `stopped_with_premium` ; Premium repris : ces options reprennent. Rien si le compte garde un autre Premium actif.
-- `createRouteCheckout(stripe, cfg, user, customerId, interval)` : le Checkout Stripe de l'option seule (abonnement au prix de `routePriceFor`, métadonnée `interval`, texte « … $3 a month » ou « … $17.99 a year on top of your Premium », retour sur `/checkout/route`).
+- `createRouteCheckout(stripe, cfg, user, customerId, interval, log)` : le Checkout Stripe de l'option seule, avec la **case des CGV obligatoire** comme le Premium (14/11 : « I agree to the Terms of Sale and ask for immediate access to Rago Route… 14-day right of withdrawal… », lien `terms.html#route` ; si Stripe refuse la case, journalisé et Checkout sans elle) (abonnement au prix de `routePriceFor`, métadonnée `interval`, texte « … $3 a month » ou « … $17.99 a year on top of your Premium », retour sur `/checkout/route`).
 - `stopOrphanRoutes(db, stripe)` : passe horaire ([[server.js]]) ; annule dans Stripe une option encore active sans Premium actif, ni pour son compte, ni pour sa licence, ni pour le compte qui a rattaché cette licence (journal `route.subscription_stopped`).
 
 ## Liens avec le reste
