@@ -2,7 +2,7 @@
 type: code
 tags: [code, site, html, javascript, rago-route]
 fichier: site/src/route.html
-lignes: 793
+lignes: 781
 maj: 2026-11-14
 ---
 # route.html
@@ -22,8 +22,9 @@ Source de la page de **Rago Route** (`rago-optimizer.com/route.html`) : ce que c
 1. **En-tête** : logo, menu (How it works, Get started, Pricing, FAQ ; caché sous 860 px), bouton « Start free trial » (`js-trial`).
 2. **Héros** : surtitre « Rago Route · Premium option · beta » ; titre « Lose packets, not fights. » (q105) ; texte : « Rago Route is the anti-lag tunnel for Minecraft Java. Every packet takes two roads to the server, a lost one is rebuilt or sent again fast, and your connection holds through a Wi-Fi blink. Built to stop the freezes and rubberbands that lost packets cause. » ; boutons **Start 3-day free trial** (`#hero-cta`, `js-trial`) et **Already Premium? Add it** (`js-route` → `/buy/route`) ; ligne de prix (« Included in the free trial of Premium, then $3 a month on top. Card required: free for 3 days, then $5.99 + $3 a month, charged automatically unless you cancel before. ») ; trois coches (Built for Minecraft Java, Tested on Hypixel, Nothing injected in your game). À droite, **l'animation** : ton PC, deux routes (« Road 1 · straight to Paris », « Road 2 · through Frankfurt », point du relais), la sortie de Rago puis Hypixel ; un paquet se perd au milieu de la route 1 (« lost »), sa copie arrive par la route 2 et la sortie s'allume en vert. Légende « Illustration · A packet lost on road 1: its copy on road 2 gets there, and the first copy in is used. »
 3. **How it works** (`#how`) : « One lost packet freezes everything behind it. » et le problème en deux phrases (Minecraft Java joue les paquets dans l'ordre ; un forfait plus rapide n'y change rien), puis « The drawings below are illustrations; the line under each one is what we measured. » Puis **six cartes**, chacune avec une petite animation, un numéro, un texte et sa preuve datée :
+   - Aucune illustration n'a d'anneau autour du serveur Rago (Sofiene, 14/11 : « enlève l'oreole verte autour ») : les anneaux verts du héros, de 01 et de 04 sont retirés.
    - **01 Two roads** : Paris en direct et Frankfurt en relais, la première copie gagne. Preuve : 2 246 paquets sauvés en 2 min environ avec 30 % de pertes ajoutées sur la 1re route (Hypixel, prototype sur Mac, 06/11).
-   - **02 Backup packets** : un paquet de secours pour 4 au plus, un paquet perdu refait à l'arrivée (animation : le paquet 2 devient « lost », puis « rebuilt » en vert). Preuve : 1 413 paquets refaits (labo, 20 Mo à travers 20 % de pertes sur chaque route, 08/11).
+   - **02 Backup packets** : un paquet de secours pour 4 au plus, un paquet perdu refait à l'arrivée (animation : le paquet 2 devient « lost », puis « rebuilt » en vert ; le chiffre « 2 » se cache pendant ce temps, il restait affiché par-dessus jusqu'au 14/11, bug signalé par Sofiene). Preuve : 1 413 paquets refaits (labo, 20 Mo à travers 20 % de pertes sur chaque route, 08/11).
    - **03 Quick resend** : les paquets sont numérotés, le trou est vu dès que le suivant arrive, renvoi en un aller-retour environ (animation : 4 manque, 5 et 6 attendent, « gap », 4 renvoyé, « in order »). Preuve : « Counted live in the app » (compteur Resends de l'onglet).
    - **04 Session hold** : la sortie garde la connexion au serveur jusqu'à une minute pendant une coupure (animation : « Wi-Fi cut » sur le lien du PC, « held open at the exit »). Preuve : 20 ms pour repartir après une coupure totale de 8 s (labo, 07/11).
    - **05 Phone backup** (porte `phone`, badge BETA) : les données mobiles du téléphone en route de plus, en même temps que la connexion de la maison (animation : « Wi-Fi stalls », les copies du téléphone continuent). Preuve : environ 30 s de Wi-Fi coupé tenues par la 4G, injouable avec un signal faible (prototype sur Mac, 07/11).
