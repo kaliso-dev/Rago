@@ -2,7 +2,7 @@
 type: code
 tags: [code, serveur, javascript, html]
 fichier: licensing/src/views.js
-lignes: 910
+lignes: 936
 maj: 2026-11-22
 ---
 # views.js
@@ -20,7 +20,7 @@ Seul [[app.js]] l'appelle (`V.<page>(cfg, {...})`). Les pages chargent `/assets/
 | Nom | Rôle |
 |---|---|
 | `html` (gabarit) / `raw(s)` | Gabarit qui **échappe tout** (`& < > " '`) ; `raw` marque un HTML de confiance. Les tableaux sont joints. |
-| `ICON` | Icônes SVG (check, carte, flèche, utilisateurs…). |
+| `ICON` | Icônes « imprimées » de la charte v5 (demande de Sofiene du 22/11 au soir) : forme pleine dans la couleur du texte, copie rouge décalée derrière, bords rugueux (filtres `rgh-face` / `rgh-back` posés une fois en haut de `<body>` par `page()`), penchées de -12° ; check, download, copy, pc, alert, arrow, card, users, clock, infinity, star. Aucune balise `style` (CSP) : les couleurs viennent de `account.css` (`.pi .pb` = copie rouge). |
 | `avatar(user, size)` | Photo de profil ou initiale. |
 | `supportLink(cfg, label)` | Lien « Contact support on Discord » (`SUPPORT_URL`, sinon la FAQ du site). |
 | `page({title, body, user, cfg, bodyClass, nav, cta, buy, lang})` | Gabarit commun : `noindex`, favicons `?v=5` (R rouge sur tuile blanche), polices Barlow Condensed 900 italique et Barlow 400 préchargées, logo v5 `lockup.svg?v=5` (tuile + RAGO) suivi de « Account » (`WORDMARK`, depuis le 22/11, [[Charte graphique]]), bandeau « Test server » sur staging (carte de test 4242), en-tête (Pricing / Get Premium pour les visiteurs et comptes gratuits, onglets Account / Profile / Affiliate et bouton Sign out pour un connecté), pied « © Rago Optimizer, by KALISO and RAGO » avec Terms et Privacy du [[Site]]. |
