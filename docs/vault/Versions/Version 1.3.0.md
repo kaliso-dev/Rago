@@ -6,7 +6,7 @@ version_app: 1.3.0
 ---
 # Version 1.3.0
 
-**En cours de sortie (22/11)** : fusionnée dans la branche de prod (PR #105, sur « oui c'est bon on peut publier normalement » de Sofiene), exe de prod signé construit (run 270) ; reste à Sofiene le dépôt dans Supabase et `INSTALLER_VERSION=1.3.0` ([[Publier une version]]). Avant : PR #70 fusionnée le 04/11, puis PR #76 (fusionnée le 10/11) pour en faire la grosse sortie avec Rago Route. Demandée par Sofiene le 04/11 ([[Décisions]]). Presque rien n'a été testé sur Windows (voir « Tests »). Voir [[État actuel]], [[Offres et prix]].
+**En prod depuis le 22/11** (vers 02:20, heure de Paris) : PR #105 vers la branche de prod sur « oui c'est bon on peut publier normalement » de Sofiene, tables Supabase prod créées par Claude, exe de prod signé du run 270 déposé par Sofiene, `INSTALLER_VERSION=1.3.0`, mise à jour automatique à 100 % ([[Publier une version]]). Avant : PR #70 fusionnée le 04/11, puis PR #76 (fusionnée le 10/11) pour en faire la grosse sortie avec Rago Route. Demandée par Sofiene le 04/11 ([[Décisions]]). Presque rien n'a été testé sur Windows (voir « Tests »). Voir [[État actuel]], [[Offres et prix]].
 
 - Contient la 1.2.2 (commit `29123d4`) : preset Minecraft PvP sans `win_fullscreen` ni `ping_packets:hitreg` ([[Presets]], [[Problèmes joueurs]]), désinstallation des applis préinstallées gratuite ([[Page Outils]]). Pas de 1.2.2 seule : tout sort ensemble (Sofiene, 10/11, q47).
 - **Plan gratuit** (confirmé par Sofiene le 10/11, q68) : 73 réglages ouverts (`app/src/data/free.json`), 30 actifs à la fois au plus (`slots`). L'app montre « N of 30 slots used » dans la barre latérale et une fenêtre Premium quand c'est plein ; le moteur Rust refuse aussi (`free_slots`).
