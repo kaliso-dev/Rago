@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { motion } from "motion/react";
-import { AppWindow, BrushCleaning, Lightbulb, Lock, LoaderCircle, Pin, PinOff, X } from "lucide-react";
+import { AppWindow, BrushCleaning, Lightbulb, Lock, LoaderCircle, Pin, PinOff, X } from "../components/ri";
 import { api, type AppliedView, type LiveStats, type OverlayInfo, type OverlayLive, type OverlayMode, type SystemInfo } from "../lib/api";
 import { availability, tweaks, type Lang } from "../lib/catalog";
 import { translate, type Key } from "../lib/i18n";

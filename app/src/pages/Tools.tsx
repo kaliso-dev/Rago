@@ -4,7 +4,7 @@ import {
   AppWindow, ArrowRight, ArrowUpRight, AudioLines, BatteryCharging, Check, CircuitBoard, Clock, Download, FileWarning, Gamepad2, Gauge, Globe,
   Gpu, Layers, ListTree, LoaderCircle, Lock, MemoryStick, Monitor, MonitorCog, Mouse, Network, PackageX, Power, RefreshCw, Sparkles, Trash2,
   Volume2, Wifi, Wrench,
-} from "lucide-react";
+} from "../components/ri";
 import {
   api, type BloatApp, type CleanArea, type CleanAreaId, type CleanResult, type Driver, type DriversInfo, type PowerPlan, type StartupApp,
   type WindowsPanel,

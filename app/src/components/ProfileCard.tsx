@@ -1,4 +1,4 @@
-import { Camera, LogOut, Pencil, Star, Trash2 } from "lucide-react";
+import { Camera, LogOut, Pencil, Star, Trash2 } from "./ri";
 import { useRef, useState } from "react";
 import { shrinkPhoto, useAccount } from "../lib/account";
 import { asAccountError, NAME_MAX, type AccountError } from "../lib/accountApi";

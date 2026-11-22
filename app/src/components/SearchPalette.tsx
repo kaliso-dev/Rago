@@ -1,4 +1,4 @@
-import { CornerDownLeft, Lock, Search } from "lucide-react";
+import { CornerDownLeft, Lock, Search } from "./ri";
 import { useEffect, useMemo, useState } from "react";
 import { catalog, searchTweaks, totalTweaks, tweakModule } from "../lib/catalog";
 import { useStore } from "../lib/store";

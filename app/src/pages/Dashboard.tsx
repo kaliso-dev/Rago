@@ -1,5 +1,5 @@
 import { motion } from "motion/react";
-import { Check, Copy, Cpu, Gpu, HardDrive, MemoryStick, Network, Pencil, Plus, RefreshCw, Lock, RotateCcw, Trash2, TriangleAlert, Zap, ScanSearch } from "lucide-react";
+import { Check, Copy, Cpu, Gpu, HardDrive, MemoryStick, Network, Pencil, Plus, RefreshCw, Lock, RotateCcw, Trash2, TriangleAlert, Zap, ScanSearch } from "../components/ri";
 import { availability, catalog, distinctKey, retired, totalTweaks, tweakModule, tweaks } from "../lib/catalog";
 import { api } from "../lib/api";
 import { formatDate } from "../lib/i18n";
@@ -10,7 +10,7 @@ import { FREE, FREE_SLOTS, useStore, type MyPreset } from "../lib/store";
 import { GameLogo, usePresetIcons } from "../components/GameLogo";
 import { LiveStatsCard } from "../components/LiveStatsCard";
 import { PresetEditor } from "../components/PresetEditor";
-import { Button, Card } from "../components/ui";
+import { Button, Card, HeadNumber, Segments } from "../components/ui";
 import { useState, type ReactNode } from "react";
 
 /** Interrupteurs du catalogue (les actions ponctuelles ne restent jamais « appliquées »), jumeaux comptés une fois. */
@@ -105,45 +105,71 @@ export function Dashboard() {
       ]
     : [];
 
+  // réglages gratuits déjà actifs sur ce PC (pour la jauge de la carte « Free tweaks »)
+  const freeOn = FREE_ENTRIES.filter((e) => isOn(e.split(":")[0])).length;
+  const freeTotal = premium ? FREE_ENTRIES.length : Math.min(FREE_ENTRIES.length, FREE_SLOTS || FREE_ENTRIES.length);
+
   return (
     <motion.div className="page dashboard" variants={stagger} initial="initial" animate="animate">
-      <motion.header className="page-head" variants={rise}>
-        <div className="rg-overline">{t("dash.overline")}</div>
-        <h1 className="display">{t("dash.title")}</h1>
-        <p className="lead">{t("dash.lead", { n: totalTweaks })}</p>
+      <motion.header className="page-head with-side" variants={rise}>
+        <div>
+          <div className="rg-overline">
+            {t("dash.overline")} <b>//</b> {t("dash.kick", { n: totalTweaks })}
+          </div>
+          <h1>{t("dash.title")}</h1>
+        </div>
+        <HeadNumber value={applied} label={t("dash.on")} sub={t("dash.of", { n: totalSwitches })} n={applied} total={totalSwitches} />
       </motion.header>
 
-      <motion.section variants={rise} className={`card free-boost${sys && freeLeft === 0 ? " done" : ""}`}>
-        <span className="free-boost-icon" aria-hidden="true">
-          {sys && freeLeft === 0 ? <Check size={18} strokeWidth={2.25} /> : <Zap size={18} strokeWidth={2} />}
-        </span>
-        <div className="free-boost-text">
-          <h2 className="free-boost-title">{t("dash.free.title")}</h2>
-          <p className="muted small">{t("dash.free.lead", { n: premium ? FREE_ENTRIES.length : Math.min(FREE_ENTRIES.length, FREE_SLOTS || FREE_ENTRIES.length) })}</p>
-        </div>
-        <Button
-          variant={sys && freeLeft === 0 ? "secondary" : "primary"}
-          icon={sys && freeLeft === 0 ? <Check size={14} /> : <Zap size={14} />}
-          disabled={!sys || freeLeft === 0 || !!run}
-          onClick={() => requestApplyEntries(boost, { title: t("dash.free.confirmTitle"), lead: t("dash.free.confirmLead") })}
-        >
-          {sys && freeLeft === 0 ? t("dash.free.done") : t("dash.free.go")}
-        </Button>
-      </motion.section>
+      <div className="dash-top">
+        <motion.section variants={rise} className={`card dash-free${sys && freeLeft === 0 ? " done" : ""}`}>
+          <div className="dash-free-head">
+            <div>
+              {!premium && <span className="chip">{t("free.plan")}</span>}
+              <h2 className="dash-card-title">{t("dash.free.title")}</h2>
+            </div>
+            <div className="dash-free-left">
+              <b>{sys ? freeLeft : "–"}</b>
+              <span>{t("dash.free.left")}</span>
+            </div>
+          </div>
+          <Segments n={freeOn} total={Math.max(freeTotal, 1)} count={30} className="lg" />
+          <p className="muted small dash-free-lead">{t("dash.free.lead", { n: freeTotal })}</p>
+          <div className="dash-free-go">
+            <Button
+              size="lg"
+              variant={sys && freeLeft === 0 ? "secondary" : "primary"}
+              icon={sys && freeLeft === 0 ? <Check size={17} /> : <Zap size={17} />}
+              disabled={!sys || freeLeft === 0 || !!run}
+              onClick={() => requestApplyEntries(boost, { title: t("dash.free.confirmTitle"), lead: t("dash.free.confirmLead") })}
+            >
+              {sys && freeLeft === 0 ? t("dash.free.done") : t("dash.free.go")}
+            </Button>
+            <span className="small muted">{t("dash.free.already", { n: freeOn, total: freeTotal })}</span>
+          </div>
+        </motion.section>
 
-      <motion.section variants={rise} className="card free-boost an-cta">
-        <span className="free-boost-icon" aria-hidden="true">
-          <ScanSearch size={18} strokeWidth={2} />
-        </span>
-        <div className="free-boost-text">
-          <h2 className="free-boost-title">{t("pa.title")}</h2>
+        <motion.section variants={rise} className="card dash-an">
+          <div className="dash-an-head">
+            <span className="dash-an-icon">
+              <ScanSearch size={24} />
+            </span>
+            <h2 className="dash-card-title">{t("pa.title")}</h2>
+          </div>
           <p className="muted small">{t("pa.dashLead")}</p>
-        </div>
-        <Button icon={<ScanSearch size={14} />} onClick={() => goTo("analysis")}>
-          {t("pa.start")}
-        </Button>
-      </motion.section>
+          <Button icon={<ScanSearch size={15} />} onClick={() => goTo("analysis")}>
+            {t("pa.start")}
+          </Button>
+        </motion.section>
+      </div>
 
+      <motion.div variants={rise} className="section-title dash-pc-title">
+        <span>{t("dash.system")}</span>
+        <span className="dash-live-tag">
+          <i className="dot dot-ok" />
+          {t("dash.live")}
+        </span>
+      </motion.div>
       <div className="dash-grid">
         <motion.div variants={rise} className="dash-system">
           <Card
@@ -213,7 +239,7 @@ export function Dashboard() {
       )}
 
       <motion.section variants={rise}>
-        <h2 className="section-title rg-overline">{t("dash.presets")}</h2>
+        <h2 className="section-title"><span>{t("dash.presets")}</span></h2>
         <div className="presets">
           {catalog.presets.filter((p) => !p.game).map((p, i) => {
             const { n, on: all } = presetState(p.tweaks);
@@ -245,7 +271,7 @@ export function Dashboard() {
       {/* un preset par jeu : la priorité du jeu (pri_game) et son socle ; Minecraft reprend le preset PvP */}
       <motion.section variants={rise} className="game-presets">
         <div className="section-head">
-          <h2 className="section-title rg-overline">{t("dash.gamePresets")}</h2>
+          <h2 className="section-title"><span>{t("dash.gamePresets")}</span></h2>
           <span className="muted small">{t("dash.gamePresets.lead")}</span>
         </div>
         <div className="game-presets-grid">
@@ -281,7 +307,7 @@ export function Dashboard() {
 
       {/* presets enregistrés par le joueur, ouverts en gratuit (seuls les réglages de son plan sont ajoutés) */}
       <motion.section variants={rise} className="mine">
-        <h2 className="section-title rg-overline">{t("dash.mine")}</h2>
+        <h2 className="section-title"><span>{t("dash.mine")}</span></h2>
         <div className="presets">
           {myPresets.map((p) => (
             <MyPresetCard key={p.id} preset={p} state={presetState(p.t)} onEdit={() => setEditing(p.id)} />

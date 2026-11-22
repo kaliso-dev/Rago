@@ -3,7 +3,7 @@ import { AnimatePresence, motion } from "motion/react";
 import {
   Activity, ArrowRight, AudioWaveform, Cable, Check, ChevronDown, CircleX, Cpu, Crosshair, Info, LoaderCircle, Lock, Minus, Plus, Power,
   RotateCcw, Scale, ScanSearch, ScrollText, SlidersHorizontal, Swords, TriangleAlert, Trophy, Wifi, X, type LucideIcon,
-} from "lucide-react";
+} from "../components/ri";
 import { api, type NetMeasure } from "../lib/api";
 import type { Key } from "../lib/i18n";
 import {

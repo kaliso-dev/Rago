@@ -1,4 +1,4 @@
-import { Lock } from "lucide-react";
+import { Lock } from "./ri";
 import { motion } from "motion/react";
 import type { ButtonHTMLAttributes, ReactNode } from "react";
 
@@ -108,4 +108,32 @@ export function Card({ children, className, title, action }: { children: ReactNo
 
 export function Kbd({ children }: { children: ReactNode }) {
   return <kbd className="kbd">{children}</kbd>;
+}
+
+/** Jauge à segments penchés (charte v5) : `n` sur `total`, en `count` segments. */
+export function Segments({ n, total, count = 24, className }: { n: number; total: number; count?: number; className?: string }) {
+  const full = total > 0 ? Math.round((Math.min(n, total) / total) * count) : 0;
+  return (
+    <div className={`segs${className ? ` ${className}` : ""}`} aria-hidden="true">
+      {Array.from({ length: count }, (_, i) => (
+        <i key={i} className={i < full ? "f" : undefined} />
+      ))}
+    </div>
+  );
+}
+
+/** Bloc rouge au bord déchiré, en haut à droite d'une page : le chiffre en direct (« 21 ON / OF 212 »). */
+export function HeadNumber({ value, label, sub, n, total }: { value: ReactNode; label: ReactNode; sub?: ReactNode; n?: number; total?: number }) {
+  return (
+    <div className="head-side head-num">
+      <div className="head-num-v">
+        <b>{value}</b>
+        <span>
+          {label}
+          {sub && <small>{sub}</small>}
+        </span>
+      </div>
+      {total != null && <Segments n={n ?? 0} total={total} count={28} className="on-red" />}
+    </div>
+  );
 }

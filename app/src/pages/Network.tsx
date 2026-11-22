@@ -1,6 +1,6 @@
 import { useEffect } from "react";
 import { AnimatePresence, motion } from "motion/react";
-import { Activity, Gauge, Route, SlidersHorizontal, type LucideIcon } from "lucide-react";
+import { Activity, Gauge, Route, SlidersHorizontal, type LucideIcon } from "../components/ri";
 import { catalog } from "../lib/catalog";
 import type { Key } from "../lib/i18n";
 import { useStore } from "../lib/store";

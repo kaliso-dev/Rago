@@ -1,5 +1,5 @@
 import { Component, type ReactNode } from "react";
-import { RefreshCw } from "lucide-react";
+import { RefreshCw } from "./ri";
 import type { Lang } from "../lib/catalog";
 import { translate, type Key } from "../lib/i18n";
 import { Button } from "./ui";

@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import { motion } from "motion/react";
-import { ArrowRight, CircleX, Globe, LoaderCircle, Play, RefreshCw, ShieldCheck } from "lucide-react";
+import { ArrowRight, CircleX, Globe, LoaderCircle, Play, RefreshCw, ShieldCheck } from "../components/ri";
 import { api, type NetMeasure } from "../lib/api";
 import type { Key } from "../lib/i18n";
 import { loadDraft, NET_DEFAULTS, saveDraft } from "../lib/netopt";

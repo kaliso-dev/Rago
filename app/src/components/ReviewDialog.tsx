@@ -1,5 +1,5 @@
 import { AnimatePresence, motion } from "motion/react";
-import { ArrowRight, Check, Star, TriangleAlert } from "lucide-react";
+import { ArrowRight, Check, Star, TriangleAlert } from "./ri";
 import { useEffect, useState, type KeyboardEvent } from "react";
 import { api } from "../lib/api";
 import { useAccount } from "../lib/account";

@@ -1,5 +1,5 @@
 import { AnimatePresence, motion } from "motion/react";
-import { ArrowRight, Check, FolderOpen, LoaderCircle, Minus, Power, Sparkles, Square, X } from "lucide-react";
+import { ArrowRight, Check, FolderOpen, LoaderCircle, Minus, Power, Sparkles, Square, X } from "./ri";
 import { useEffect, useRef } from "react";
 import { api } from "../lib/api";
 import { formatNumber } from "../lib/i18n";

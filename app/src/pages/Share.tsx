@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { motion } from "motion/react";
-import { Check, ChevronLeft, Copy, Download, FileText, FolderOpen, LoaderCircle, MessagesSquare, Pencil, Plus, Upload } from "lucide-react";
+import { Check, ChevronLeft, Copy, Download, FileText, FolderOpen, LoaderCircle, MessagesSquare, Pencil, Plus, Upload } from "../components/ri";
 import { api, isTauri, type ReportParts, type SupportReport } from "../lib/api";
 import { autoVariant, availability, needsReboot, tweaks } from "../lib/catalog";
 import { decodePreset, encodePreset, MAX_NAME, presetFileName, ShareError, type SharedPreset } from "../lib/share";

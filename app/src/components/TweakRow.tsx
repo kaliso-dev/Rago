@@ -1,5 +1,5 @@
 import { AnimatePresence, motion } from "motion/react";
-import { ChevronDown, Lock, Play, Power, PowerOff, RotateCcw, TriangleAlert } from "lucide-react";
+import { ChevronDown, Lock, Play, Power, PowerOff, RotateCcw, TriangleAlert } from "./ri";
 import { useEffect, useRef, useState } from "react";
 import { autoVariant, availability, catalog, tweakModule, tweaks, type Lang, type Tweak } from "../lib/catalog";
 import { formatDate, formatTime, type Key } from "../lib/i18n";
@@ -57,65 +57,55 @@ export function TweakRow({ tweak }: { tweak: Tweak }) {
     else toggle(tweak.id);
   };
 
+  // ligne d'état sous le nom (charte v5 : la tuile ne montre que le nom et ce qui demande l'attention)
+  const state: { text: string; tone?: "red" | "ok" } | null = locked
+    ? null
+    : !av.ok && av.block
+      ? { text: t(`block.${av.block}` as Key) }
+      : sessionState
+        ? { text: t(sessionState === "on" ? "session.onSince" : "session.offSince", { time: formatTime(lang, last!.ts) }), tone: sessionState === "on" ? "ok" : undefined }
+        : isAction
+          ? last
+            ? { text: t(last.ok ? "badge.applied" : "badge.failed", { date: formatDate(lang, last.ts) }), tone: last.ok ? undefined : "red" }
+            : null
+          : undoing
+            ? { text: t("badge.pendingUndo"), tone: "red" }
+            : done && selected.has(tweak.id)
+              ? { text: t("badge.pendingUpdate"), tone: "red" }
+              : done?.drift
+                ? { text: t("badge.drift"), tone: "red" }
+                : done && !done.ok
+                  ? { text: t("badge.failed", { date: formatDate(lang, done.ts) }), tone: "red" }
+                  : null;
+  const wide = (tweak.variants && tweak.variants.length > 1 && av.ok && !session) || session;
+
   return (
     <div
       ref={ref}
-      className={`tweak${isOn ? " on" : ""}${!av.ok ? " blocked" : ""}${locked ? " locked" : ""}${focused ? " focused" : ""}`}
+      className={`tweak tile${wide ? " wide" : ""}${isOn ? " on" : ""}${undoing || (done && selected.has(tweak.id)) ? " pend" : ""}${!av.ok ? " blocked" : ""}${locked ? " locked" : ""}${focused ? " focused" : ""}${open ? " open" : ""}`}
       onClick={onRowClick}
     >
       <div className="tweak-main">
         <div className="tweak-title">
           <span className="tweak-name">{tweak.name[lang]}</span>
-          {!premium && !isLocked(tweak.id) && <Badge tone="ok">{t(undoOnly(tweak.id) ? "free.undoBadge" : "free.badge")}</Badge>}
-          {tweak.risk === "advanced" && <Badge tone="warn">{t("badge.advanced")}</Badge>}
-          {tweak.reboot && (
-            <Badge>
-              <RotateCcw size={11} />
-              {t("badge.reboot")}
-            </Badge>
-          )}
-          {sessionState ? (
-            <Badge tone={sessionState === "on" ? "ok" : undefined}>
-              {t(sessionState === "on" ? "session.onSince" : "session.offSince", { time: formatTime(lang, last!.ts) })}
-            </Badge>
-          ) : isAction ? (
-            last && <Badge tone={last.ok ? "ok" : "red"}>{t(last.ok ? "badge.applied" : "badge.failed", { date: formatDate(lang, last.ts) })}</Badge>
-          ) : undoing ? (
-            <Badge tone="warn">{t("badge.pendingUndo")}</Badge>
-          ) : done && selected.has(tweak.id) ? (
-            <Badge tone="warn">{t("badge.pendingUpdate")}</Badge>
-          ) : (
-            done && <Badge tone={done.ok ? "ok" : "red"}>{t(done.ok ? "badge.applied" : "badge.failed", { date: formatDate(lang, done.ts) })}</Badge>
-          )}
-          {done?.drift && !undoing && !selected.has(tweak.id) && <Badge tone="warn">{t("badge.drift")}</Badge>}
-          {!locked && (
-            <button
-              type="button"
-              className={`tweak-more${open ? " open" : ""}`}
-              onClick={(e) => {
-                e.stopPropagation();
-                setOpen((o) => !o);
-              }}
-            >
-              {t("tweak.more")}
-              <ChevronDown size={12} />
-            </button>
-          )}
+          {tweak.reboot && <RotateCcw size={12} className="tweak-reboot" aria-label={t("badge.reboot")} />}
         </div>
-        <p className="tweak-desc">{tweak.desc[lang]}</p>
-        {(tweak.gain || tweak.cons) && (
-          <ul className="tweak-facts">
-            {tweak.gain && (
-              <li>
-                <b>{t("tweak.gain")}</b> {tweak.gain[lang]}
-              </li>
+        {state && (
+          <span className={`tweak-state${state.tone ? ` ${state.tone}` : ""}`}>
+            {state.text}
+            {done?.drift && !undoing && !selected.has(tweak.id) && !session && (
+              <button
+                type="button"
+                className="link"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  reapply(tweak.id);
+                }}
+              >
+                {t("tweak.reapply")}
+              </button>
             )}
-            {tweak.cons && (
-              <li>
-                <b>{t("tweak.cons")}</b> {tweak.cons[lang]}
-              </li>
-            )}
-          </ul>
+          </span>
         )}
 
         {tweak.variants && tweak.variants.length > 1 && av.ok && !session && (
@@ -133,15 +123,51 @@ export function TweakRow({ tweak }: { tweak: Tweak }) {
             />
           </div>
         )}
+      </div>
 
-        {!av.ok && av.block && <p className="tweak-note block">{t(`block.${av.block}` as Key)}</p>}
+      {/* détail au survol (ou épinglé par « Détails ») : la phrase, le gain, l'inconvénient, ce que fait le script */}
+      <div className="tweak-pop" onClick={(e) => e.stopPropagation()}>
+        <p className="tweak-desc">{tweak.desc[lang]}</p>
+        {(tweak.gain || tweak.cons) && (
+          <ul className="tweak-facts">
+            {tweak.gain && (
+              <li>
+                <b className="g">+</b>
+                <span>{tweak.gain[lang]}</span>
+              </li>
+            )}
+            {tweak.cons && (
+              <li>
+                <b>–</b>
+                <span>{tweak.cons[lang]}</span>
+              </li>
+            )}
+          </ul>
+        )}
         {av.warn && (
           <p className="tweak-note warn">
             <TriangleAlert size={12} />
             {t(`warn.${av.warn}` as Key)}
           </p>
         )}
-
+        {tweak.confirm && (
+          <p className="tweak-note warn">
+            <TriangleAlert size={12} />
+            {tweak.confirm[lang]}
+          </p>
+        )}
+        {done?.drift && !session && <p className="tweak-note warn">{t("tweak.drift")}</p>}
+        <div className="tweak-pop-ft">
+          {!premium && !isLocked(tweak.id) && <Badge tone="ok">{t(undoOnly(tweak.id) ? "free.undoBadge" : "free.badge")}</Badge>}
+          {tweak.risk === "advanced" && <Badge tone="warn">{t("badge.advanced")}</Badge>}
+          {tweak.reboot && (
+            <Badge>
+              <RotateCcw size={11} />
+              {t("badge.reboot")}
+            </Badge>
+          )}
+          {done && done.ok && !isAction && <Badge tone="ok">{t("badge.applied", { date: formatDate(lang, done.ts) })}</Badge>}
+        </div>
         <AnimatePresence initial={false}>
           {open && (
             <motion.div
@@ -151,36 +177,27 @@ export function TweakRow({ tweak }: { tweak: Tweak }) {
               exit={{ height: 0, opacity: 0 }}
               transition={{ duration: 0.2, ease: [0.16, 1, 0.3, 1] }}
             >
-              <p className="muted small">
+              <p className="small">
                 {tweak.native ? t(`tweak.native.${tweak.native}` as Key) : t("tweak.details", { n: tweak.variants?.find((v) => v.id === variant)?.lines ?? tweak.lines })}
                 {!isAction && <> {t(session ? "tweak.undoSession" : done && !done.backup ? "tweak.undoDefaults" : "tweak.undoSwitch")}</>}
                 {twin && <> {t(isAction ? "tweak.twinAction" : "tweak.twin", { names: twin })}</>}
               </p>
-              {done?.drift && !session && (
-                <p className="tweak-note warn">
-                  <TriangleAlert size={12} />
-                  {t("tweak.drift")}
-                  <button
-                    type="button"
-                    className="link"
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      reapply(tweak.id);
-                    }}
-                  >
-                    {t("tweak.reapply")}
-                  </button>
-                </p>
-              )}
-              {tweak.confirm && (
-                <p className="tweak-note warn">
-                  <TriangleAlert size={12} />
-                  {tweak.confirm[lang]}
-                </p>
-              )}
             </motion.div>
           )}
         </AnimatePresence>
+        {!locked && (
+          <button
+            type="button"
+            className={`tweak-more${open ? " open" : ""}`}
+            onClick={(e) => {
+              e.stopPropagation();
+              setOpen((o) => !o);
+            }}
+          >
+            {t("tweak.more")}
+            <ChevronDown size={12} />
+          </button>
+        )}
       </div>
 
       <div className="tweak-side">

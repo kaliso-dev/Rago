@@ -5,7 +5,7 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import type { PointerEvent as ReactPointerEvent } from "react";
 import { motion } from "motion/react";
-import { Activity, ArrowRight, Calculator, Check, MousePointer2, MousePointerClick, RotateCcw, ShieldAlert, TriangleAlert } from "lucide-react";
+import { Activity, ArrowRight, Calculator, Check, MousePointer2, MousePointerClick, RotateCcw, ShieldAlert, TriangleAlert } from "../components/ri";
 import { api, type MouseApp } from "../lib/api";
 import { useStore } from "../lib/store";
 import { Badge, Button } from "../components/ui";

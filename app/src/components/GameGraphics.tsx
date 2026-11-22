@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { motion } from "motion/react";
-import { Check, Gauge, LoaderCircle, RotateCcw, Sparkles, Zap } from "lucide-react";
+import { Check, Gauge, LoaderCircle, RotateCcw, Sparkles, Zap } from "./ri";
 import { api, type GraphicsLevel, type GraphicsStatus } from "../lib/api";
 import { GFX_DETAILS, GFX_LEVELS } from "../lib/graphics";
 import { useStore } from "../lib/store";

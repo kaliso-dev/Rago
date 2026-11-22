@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { motion } from "motion/react";
-import { ArrowDown, LoaderCircle } from "lucide-react";
+import { ArrowDown, LoaderCircle } from "./ri";
 import { api, type UpdateReady } from "../lib/api";
 import { useStore } from "../lib/store";
 

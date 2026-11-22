@@ -1,5 +1,5 @@
 import { AnimatePresence, motion } from "motion/react";
-import { ArrowRight } from "lucide-react";
+import { ArrowRight } from "./ri";
 import { needsReboot, retired, tweaks } from "../lib/catalog";
 import { undoVariant, useStore } from "../lib/store";
 import { Button } from "./ui";

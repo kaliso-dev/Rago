@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
-import { ArrowRight, Check, Lock } from "lucide-react";
+import { ArrowRight, Check, Lock } from "./ri";
 import { api } from "../lib/api";
 import { accountApi, formatPrice, type Plans } from "../lib/accountApi";
 import { findings, saved } from "../lib/analysis";

@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { ChevronRight, ExternalLink, FolderOpen, LifeBuoy, LogOut, Share2, UserRound } from "lucide-react";
+import { ChevronRight, ExternalLink, FolderOpen, LifeBuoy, LogOut, Share2, UserRound } from "../components/ri";
 import { formatDate } from "../lib/i18n";
 import { api, isTauri } from "../lib/api";
 import { totalTweaks } from "../lib/catalog";
@@ -19,7 +19,7 @@ const STAGING = import.meta.env.VITE_RAGO_SERVER === "staging";
 const LICENCES = [
   { name: "NVIDIA Profile Inspector", licence: "MIT", url: "https://github.com/Orbmu2k/nvidiaProfileInspector" },
   { name: "PresentMon (Intel)", licence: "MIT", url: "https://github.com/GameTechDev/PresentMon" },
-  { name: "Geist, Geist Mono", licence: "SIL OFL 1.1", url: "https://vercel.com/font" },
+  { name: "Barlow, Barlow Condensed", licence: "SIL OFL 1.1", url: "https://github.com/jpt/barlow" },
   { name: "Tauri", licence: "MIT / Apache 2.0", url: "https://tauri.app" },
   { name: "React", licence: "MIT", url: "https://react.dev" },
   { name: "Motion", licence: "MIT", url: "https://motion.dev" },
