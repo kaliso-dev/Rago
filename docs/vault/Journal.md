@@ -1,7 +1,7 @@
 ---
 type: pilotage
 tags: [journal, chronologie]
-maj: 2026-11-14
+maj: 2026-11-22
 ---
 # Journal
 
@@ -10,6 +10,7 @@ Une ligne par événement marquant, la plus récente en haut. Voir [[Historique 
 ## Novembre 2026
 | Date | Événement | Liens |
 |---|---|---|
+| 22/11 | App passée à la charte v5 « Match day » (polices Barlow, icônes imprimées, cadre, tuiles, fenêtres, démarrage, barre en jeu, icône R rouge sur tuile blanche, images de l'installeur) et version 1.4.0 : PR #108 vers `staging`, jamais testée sur Windows | [[Charte graphique]], [[App Windows]] |
 | 14/11 | Nuit (2 h 20) : plus de Geist Mono sur le site (5 pages, `--mono` = Geist) ni sur les pages compte et admin (`--rg-font-mono`), demande de Sofiene ; vérifié : aucun élément en police à chasse fixe sur l'accueil, Rago Route, tweaks et la page compte | [[Charte graphique]], [[page.html]], [[Styles du serveur (CSS)]] |
 | 14/11 | Nuit (2 h) : page Rago Route, illustration 02 corrigée (le « 2 » restait affiché sous « lost » et « rebuilt » : `keyTimes` qui ne finissait pas à 1) ; plus d'anneau vert autour du serveur Rago (héros, 01, 04), ni d'anneau et de lueur rouges sur l'accueil (demande de Sofiene) | [[route.html]], [[page.html]] |
 | 14/11 | Nuit : vérifié pour Sofiene la fin de l'essai (5,99 $, ou 8,99 $ avec Rago Route, au jour 3 ; Premium coupé à la fin de l'essai s'il est annulé) et l'ajout de Rago Route à un compte. Corrigé (sur `staging` le 14/11, « Oui, envoie sur staging ») : le choix mensuel ou annuel se perdait à la connexion, la case des CGV manquait au paiement de l'option seule, texte de connexion propre à Rago Route ; description du produit Stripe live en anglais. Captures dans `rago-route-page/ajout-option/`. Questions q110, q111 | [[Paiements Stripe]], [[route-addon.js]], [[Conformité juridique]] |

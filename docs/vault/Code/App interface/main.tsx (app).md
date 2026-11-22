@@ -2,8 +2,8 @@
 type: code
 tags: [code, app, typescript, react]
 fichier: app/src/main.tsx
-lignes: 19
-maj: 2026-11-10
+lignes: 22
+maj: 2026-11-22
 ---
 # main.tsx (app)
 
@@ -20,6 +20,9 @@ Tout ce qui suit est CONFIRMÉ (code de `staging`, 10/11, commit `ee77d4f`).
     <AccountProvider>    ← compte et avis (account.tsx), lit le store
       <App />            ← cadre et pages (App.tsx)
 ```
+
+## Charte v5 (PR #108 du 22/11, vers `staging`, jamais testée sur Windows)
+Imports de style : `fonts.css` avant `tokens.css`, et `v5.css` en dernier, après `features.css` et `mouse.css` ([[Styles de l'app (CSS)]]).
 
 ## Liens avec le reste
 - Page HTML : `app/index.html` (voir [[Configuration du front (Vite, npm)]]).

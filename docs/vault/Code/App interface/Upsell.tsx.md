@@ -2,8 +2,8 @@
 type: code
 tags: [code, app, typescript, react, abonnement]
 fichier: app/src/components/Upsell.tsx
-lignes: 185
-maj: 2026-11-10
+lignes: 195
+maj: 2026-11-22
 ---
 # Upsell.tsx
 
@@ -47,8 +47,12 @@ Puis la fenêtre passe à « Termine dans ton navigateur. Une fois payé, crée 
 
 Lien permanent en bas : « J'ai déjà Premium, me connecter » (→ `signin`).
 
+## Charte v5 (PR #108 du 22/11, vers `staging`, jamais testée sur Windows)
+- La fenêtre a deux colonnes : à gauche un panneau rouge `<aside className="upsell-side">` (`AppIcon` de 56 px, `totalTweaks` « tweaks », « N open on the free plan », textes `upsell.sideTweaks` et `upsell.sideFree`), à droite `.upsell-body` avec le reste du contenu.
+- Le titre passe sur un ruban (`modal-title`) ; le logo animé `Pulse` est remplacé par `AppIcon`.
+
 ## Liens avec le reste
-- [[accountApi.ts]] (`plans`, `formatPrice`), [[analysis.ts]] (`saved`, `findings`), [[LicenseGate.tsx]] (`ACCOUNT_URL`, `SITE_URL`, formulaire), `Modal`, `Pulse`, `Button` ([[Petits composants de l'interface]]).
+- [[accountApi.ts]] (`plans`, `formatPrice`), [[analysis.ts]] (`saved`, `findings`), [[LicenseGate.tsx]] (`ACCOUNT_URL`, `SITE_URL`, formulaire), `Modal`, `AppIcon`, `Button` ([[Petits composants de l'interface]]).
 - Paiement côté serveur : [[Paiements Stripe]], pages `/buy` du [[Serveur de licences]].
 
 ## À savoir avant de modifier

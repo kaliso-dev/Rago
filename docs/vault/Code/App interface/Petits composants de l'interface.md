@@ -1,23 +1,25 @@
 ---
 type: code
 tags: [code, app, react, composant]
-fichier: app/src/components/ (ui.tsx, Modal.tsx, Logo.tsx, logoPaths.ts, icons.ts, Avatar.tsx, GameLogo.tsx, PageBoundary.tsx) et app/src/vite-env.d.ts
-lignes: 343
-maj: 2026-11-11
+fichier: app/src/components/ (ui.tsx, Modal.tsx, Logo.tsx, logoPaths.ts, icons.ts, ri.tsx, printed.ts, Avatar.tsx, GameLogo.tsx, PageBoundary.tsx) et app/src/vite-env.d.ts
+lignes: 492
+maj: 2026-11-22
 ---
 # Petits composants de l'interface
 
-Les briques réutilisées partout dans l'app : boutons, interrupteurs, cartes, fenêtres, logo, icônes, avatar, logo des jeux, garde-fou d'erreur de page. Ce sont de petits fichiers sans logique métier, regroupés ici. Fiche parente : [[Code de l'app (interface)]]. Design : [[Refonte glass]], [[Charte graphique]].
+Les briques réutilisées partout dans l'app : boutons, interrupteurs, cartes, fenêtres, logo, icônes, avatar, logo des jeux, garde-fou d'erreur de page. Ce sont de petits fichiers sans logique métier, regroupés ici. Fiche parente : [[Code de l'app (interface)]]. Design : [[Charte graphique]] (v5 depuis la PR #108 du 22/11, vers `staging`, jamais testée sur Windows).
 
 Tout ce qui suit est CONFIRMÉ (code de `staging`, 10/11, commit `ee77d4f`).
 
 | Fichier | Lignes | Contenu |
 |---|---|---|
-| `components/ui.tsx` | 111 | `Switch`, `Segmented`, `Badge`, `Button`, `Card`, `Kbd` |
+| `components/ui.tsx` | 139 | `Switch`, `Segmented`, `Badge`, `Button`, `Card`, `Kbd`, `Segments`, `HeadNumber` |
 | `components/Modal.tsx` | 53 | `Modal` (fenêtre par-dessus la page, avec pile d'Échap) |
-| `components/Logo.tsx` | 45 | `Mark`, `Wordmark`, `Pulse` |
-| `components/logoPaths.ts` | 8 | tracés SVG du logo |
-| `components/icons.ts` | 37 | `MODULE_ICONS`, `DiscordIcon` |
+| `components/Logo.tsx` | 53 | `Mark`, `AppIcon`, `Wordmark`, `Pulse` |
+| `components/logoPaths.ts` | 3 | tracé SVG du R |
+| `components/icons.ts` | 23 | `MODULE_ICONS`, `DiscordIcon` |
+| `components/ri.tsx` | 125 | icônes de l'app (imprimées ou lucide), `PrintIcon`, `PrintDefs` |
+| `components/printed.ts` | 7 | formes des icônes imprimées et leurs filtres (généré) |
 | `components/Avatar.tsx` | 9 | `Avatar` |
 | `components/GameLogo.tsx` | 37 | `usePresetIcons`, `GameLogo` |
 | `components/PageBoundary.tsx` | 34 | `PageBoundary` |
@@ -33,8 +35,10 @@ Utilisé par 31 fichiers.
 - **`Switch({ checked, onChange, disabled, label })`** : interrupteur accessible (`role="switch"`, `aria-label`). Le rond glisse avec une animation à ressort (`motion`). Le clic ne remonte pas au parent (`stopPropagation`), ce qui permet de rendre toute une ligne cliquable sans double bascule (voir [[TweakRow.tsx]], [[NetOpt.tsx]]).
 - **`Segmented({ value, options, onChange, layoutId, disabled })`** : choix entre plusieurs boutons (`role="radiogroup"`). La pastille du choix actif glisse d'un bouton à l'autre (`layoutId`, qui doit être unique dans la page). Une option peut porter un cadenas (`locked`, variante Premium) et une petite indication (`hint`).
 - **`Badge({ tone, children })`** : étiquette, `tone` parmi `neutral`, `warn`, `red`, `ok`, `info`.
-- **`Card({ title, action, className, children })`** : la carte en verre (classe `card`), avec un en-tête en petites capitales (`rg-overline`) si un titre ou une action est donné.
+- **`Card({ title, action, className, children })`** : la carte (classe `card`), avec un en-tête en petites capitales (`rg-overline`) si un titre ou une action est donné.
 - **`Kbd`** : une touche de clavier (raccourci Ctrl+K de la recherche, voir [[SearchPalette.tsx]], [[TitleBar.tsx]]).
+- **`Segments({ n, total, count, className })`** (v5) : jauge à segments (`.segs`) ; `count` segments, les `n/total` premiers allumés en rouge.
+- **`HeadNumber({ value, label, sub, n, total })`** (v5) : le bloc rouge au bord déchiré à droite du titre de page (`.head-num`), avec un libellé et une jauge `Segments` ([[Dashboard.tsx]], [[ModulePage.tsx]]).
 
 ## `Modal.tsx` : les fenêtres
 - `Modal({ open, onClose, className, children })` : un fond sombre (`scrim`) et la fenêtre (`role="dialog"`, `aria-modal`), avec une animation d'entrée et de sortie.
@@ -44,14 +48,22 @@ Utilisé par 31 fichiers.
 - Utilisée par [[ConfirmDialog.tsx]], [[SearchPalette.tsx]], [[Upsell.tsx]], [[SubscriptionCard.tsx]], [[PresetEditor.tsx]], [[ReviewDialog.tsx]].
 
 ## `Logo.tsx` et `logoPaths.ts` : le logo
-- `logoPaths.ts` : le tracé de la **marque** (`MARK`, boîte 164 × 180) et du **texte** « Rago Optimizer » (`WORDMARK_TEXT`, boîte `0 0 1124 180`). Le commentaire dit qu'ils sont repris du dossier de la marque (fil « charte »), voir [[Charte graphique]].
-- **`Mark({ size })`** : la marque seule, en rouge (`--rg-red-500`), centrée dans un carré pour s'aligner comme une icône ([[TitleBar.tsx]], [[Splash.tsx]]).
-- **`Wordmark({ height, mark })`** : la marque et le texte (`--rg-text-1`). Avec `mark={false}`, on a le texte seul ([[Splash.tsx]], [[LicenseGate.tsx]]).
-- **`Pulse({ size, active })`** : la signature « Pulse », 4 ondes qui partent du coin haut droit de la marque, décalées de 400 ms ([[RunOverlay.tsx]], [[Upsell.tsx]], [[LicenseGate.tsx]]). Animation dans `app.css` (section Pulse, voir [[Styles de l'app (CSS)]]).
+Charte v5 (PR #108 du 22/11, vers `staging`, jamais testée sur Windows) : **R rouge plein partout** (décision de Sofiene du 22/11) ; le R est noir seulement sur la transition rouge plein écran du démarrage.
+- `logoPaths.ts` : le tracé du R (`MARK`, boîte 164 × 180). L'ancien tracé du texte « Rago Optimizer » (`WORDMARK_TEXT`) est retiré.
+- **`Mark({ size, ink })`** : le R seul, centré dans un carré ; rouge (`--rg-red-500`), ou noir avec `ink` ([[Sidebar.tsx]], [[Splash.tsx]]).
+- **`AppIcon({ size })`** : l'icône de l'app, R rouge sur une tuile blanche arrondie (`rx` 56 sur 256), comme `marque/logo/rago-app-icon.svg` ([[Upsell.tsx]], [[Overlay.tsx]]).
+- **`Wordmark({ height, mark, sub })`** : texte HTML « R » rouge + « AGO » en condensé 900 italique, et « optimizer » en petit avec `sub` ([[LicenseGate.tsx]], [[Settings.tsx]]).
+- **`Pulse({ size, active })`** : `AppIcon` avec des ondes centrées autour, actives pendant un travail ([[RunOverlay.tsx]], [[LicenseGate.tsx]]).
 
 ## `icons.ts`
-- **`MODULE_ICONS`** : l'icône lucide de chaque module ou page, par nom d'icône du catalogue ou id de page. Par exemple : `network` (réseau), `gauge` (latence), `gpu`, `windows`, `crosshair` (hitreg), `cube` (Minecraft), `shield`, `bolt`, `flask` (expert), `undo` (restaurer), `settings`, `games`, `display` (palette, page [[Display.tsx]], ajoutée le 11/11, PR #93), `nettest`, `netopt`, `tools`, `analysis`. Utilisé par [[Sidebar.tsx]].
+- **`MODULE_ICONS`** : l'icône **imprimée** de chaque module ou page, construite depuis la table `NAMES` (nom du catalogue ou id de page → nom de l'icône de la charte, rendue par `PrintIcon`). Exemples : `games` → `library`, `bolt` → `games`, `gauge` → `latency`, `display`, `nettest`, `tools`, `analysis`. Utilisé par [[Sidebar.tsx]].
 - **`DiscordIcon({ size })`** : le logo de Discord (Simple Icons, licence CC0), pour les liens vers le Discord de Rago ([[Sidebar.tsx]], [[Settings.tsx]], [[Tools.tsx]] pour le cache de Discord).
+
+## `ri.tsx` et `printed.ts` : les icônes imprimées
+- Toute l'app importe ses icônes depuis `components/ri` au lieu de `lucide-react` (chemins relatifs). `ri.tsx` réexporte tout lucide (`export * from "lucide-react"`), puis **remplace** les noms qui ont un équivalent dans la charte par une icône imprimée : `Zap` → `apply`, `Check`, `Lock`, `Cpu`, `Gpu` → `graphics`, `Search`, `Play`, `Plus`, `Power`, `RefreshCw`, `RotateCcw` → `rotate`, `Trash2`, `Pencil`, `ScanSearch` → `analysis`, `TriangleAlert` → `alert`, etc. (65 noms). Flèches, chevrons, croix, `Minus`, `Square` et `LoaderCircle` restent au trait.
+- **`PrintIcon({ name, size, color, ... })`** : SVG 24 × 24 ; la forme pleine (masquée par ses découpes) est dessinée deux fois, un dos rouge décalé de (1,3 ; 1,5) puis la face, le tout penché (`skewX(-12)`). Couleurs par CSS : `--pf` (face) et `--pb` (dos), changées selon le fond dans `v5.css` ([[Styles de l'app (CSS)]]).
+- **`PrintDefs()`** : pose une fois les filtres de grain (`rgh-face-s`, `rgh-back-s`) ; monté en haut de [[App.tsx]] et de [[Overlay.tsx]].
+- `printed.ts` est **généré** depuis les maquettes : `PRINTED` (nom → [formes, découpes], environ 85 icônes) et `PRINT_FILTERS`. Ne pas l'éditer à la main.
 
 ## `Avatar.tsx`
 `Avatar({ photo, name, size })` : la photo du compte, ou la première lettre du nom (ou de l'e-mail) sur un rond sombre. La taille du texte suit celle du rond (42 %). Utilisé par [[ProfileCard.tsx]] et [[ReviewDialog.tsx]].
@@ -84,5 +96,6 @@ Utilisé par 31 fichiers.
 
 ## À savoir avant de modifier
 - `Button` et `Card` sont partout : changer leurs classes touche toute l'app et ses styles ([[Styles de l'app (CSS)]]).
-- Une nouvelle page dans la barre latérale a besoin de son icône dans `MODULE_ICONS`.
+- Une nouvelle page dans la barre latérale a besoin de son icône dans `NAMES` d'`icons.ts`.
+- Importer les icônes depuis `components/ri`, jamais directement depuis `lucide-react`.
 - Une fenêtre doit passer par `Modal`, sinon Échap ferme aussi celle du dessous.

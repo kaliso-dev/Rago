@@ -2,8 +2,8 @@
 type: code
 tags: [code, app, typescript, react, catalogue]
 fichier: app/src/pages/ModulePage.tsx
-lignes: 263
-maj: 2026-11-10
+lignes: 269
+maj: 2026-11-22
 ---
 # ModulePage.tsx
 
@@ -48,6 +48,12 @@ C'est la page « par défaut » de [[App.tsx]] : toute valeur de `page` qui n'es
 ## Données touchées
 - Store : sélection, `rago.mcDir`.
 - Commandes : `minecraft_status`, `minecraft_restore`, `clear_history`, dialogue de choix de dossier ([[api.ts]]).
+
+## Charte v5 (PR #108 du 22/11, vers `staging`, jamais testée sur Windows)
+- En-tête : surtitre « Nom // tagline », titre, et `HeadNumber` (allumés / total, « tweaks on »).
+- Barre `.module-bar-v5` : puces des sections avec « allumés/total », puis les outils du module (le texte `module.selected` n'apparaît qu'en mode intégré).
+- Titres de section sur ruban, compteur `.sec-count`, et bouton `.sec-fold` « Hide » / « Show » pour replier les sections des modules longs (`module.hide`, `module.show`).
+- Les réglages sont des tuiles sur 3 colonnes ([[TweakRow.tsx]]).
 
 ## Liens avec le reste
 - [[TweakRow.tsx]] (une ligne), [[RbwStatus.tsx]], `Card`/`Button` ([[Petits composants de l'interface]]).

@@ -2,8 +2,8 @@
 type: code
 tags: [code, app, typescript, react]
 fichier: app/src/pages/Dashboard.tsx
-lignes: 395
-maj: 2026-11-10
+lignes: 421
+maj: 2026-11-22
 ---
 # Dashboard.tsx
 
@@ -45,6 +45,12 @@ Réglages du preset utilisables sur ce PC = `tweak` disponibles (`availability`)
 
 ## Données touchées
 Aucune directement : tout passe par [[store.tsx]] (sélection, presets du joueur dans `rago.myPresets`) et [[api.ts]] (`copyText`, `presetIcons` par `usePresetIcons`).
+
+## Charte v5 (PR #108 du 22/11, vers `staging`, jamais testée sur Windows)
+- En-tête `with-side` : surtitre « Dashboard // N tweaks », titre `dash.title` (« Tableau de bord » / « Dashboard »), et à droite `HeadNumber` (réglages appliqués sur `totalSwitches`).
+- `.dash-top` : carte des réglages gratuits (puce du plan, reste à appliquer, jauge `Segments` `freeOn`/`freeTotal`, gros bouton, « N sur total déjà actifs ») et carte d'analyse.
+- Section « Your PC » avec l'étiquette « Live » ; la carte des caractéristiques n'a plus de titre (`dash-specs`). Titres de section sur ruban, presets en liste dans un panneau.
+- Textes ajoutés : `dash.title`, `dash.kick`, `dash.on`, `dash.of`, `dash.free.left`, `dash.free.already`, `dash.readyMade`, `dash.live` ([[i18n.ts]]).
 
 ## Liens avec le reste
 - Store : `sys`, `refreshSys`, `isOn`, `selectMany`, `toApply`, `requestApply`, `requestApplyEntries`, `requestUndo`, `requestUndoAll`, `myPresets`, `savePreset`, `currentSetup`, `slotsUsed`, `premium`, `setUpsell`, `goTo`.
