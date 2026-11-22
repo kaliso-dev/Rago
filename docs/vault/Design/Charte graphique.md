@@ -17,7 +17,7 @@ Source : dossier partagé `rago-redesign/rendus-v5/` (maquettes, sources HTML `s
 - Illustrations en cours de refonte : les maquettes gardent les illustrations actuelles, à remplacer ensuite.
 
 ## Où la v5 est appliquée (22/11)
-- **Serveur de comptes** (`licensing/`) : pages compte, e-mails, admin, Cerveau (cadre seulement) et messages du [[Bot communauté Discord]], sur `staging` par la PR « compte, e-mails et admin en v5 » du 22/11 ([[Styles du serveur (CSS)]], [[mailer.js]], [[community.js]]). Jetons : `licensing/public/tokens.css` = `tokens.css` v2.0 du kit, avec les `@font-face` Barlow en tête.
+- **Serveur de comptes** (`licensing/`) : pages compte, e-mails, admin, Cerveau (cadre seulement) et messages du [[Bot communauté Discord]], sur `staging` par la PR #107 du 22/11 ([[Styles du serveur (CSS)]], [[mailer.js]], [[community.js]]). Jetons : `licensing/public/tokens.css` = `tokens.css` v2.0 du kit, avec les `@font-face` Barlow en tête.
 - **App Windows** (`app/`) et **site** (`site/`, `netlify/`), et copie du kit dans `brand/` : chacun dans son propre fil et sa propre PR vers `staging` (22/11) ; tant qu'ils ne sont pas fusionnés, ces parties gardent la v1.2 et le verre.
 - Rien en prod.
 

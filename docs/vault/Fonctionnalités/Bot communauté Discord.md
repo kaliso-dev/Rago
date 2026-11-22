@@ -20,7 +20,7 @@ PR #40, **fusionnée dans `staging` le 15/10, absente de la prod** (vérifié da
 - Accueil seulement dans `DISCORD_WELCOME_CHANNEL_ID` (jamais en message privé).
 - Données : arrivées gardées 12 mois après le départ.
 
-## Messages en charte v5 (22/11, PR vers `staging`)
+## Messages en charte v5 (22/11, PR #107 vers `staging`)
 - Tous les messages du bot sont des **embeds** rouges (`#FF3B30`) : accueil (mention dans le texte, « Invited by », bannière `discord-welcome.png`, boutons « Download free » et « Link my Discord »), annonces VIP/MVP (bannières `discord-vip.png` / `discord-mvp.png`, bouton de liaison si le compte n'est pas lié), `/invites` (barre ▰▱ vers le prochain palier), `/top-invites`. Les bannières (1200×480) sont servies par le serveur dans `/assets/`.
 - **Avatar du bot** : R rouge sur tuile blanche (`png/rago-tile-512.png` du kit). À poser **à la main** dans le portail développeur Discord (Abel gère les bots) : À VÉRIFIER (pas encore fait au 22/11).
 
