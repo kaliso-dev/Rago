@@ -2,8 +2,8 @@
 type: code
 tags: [code, serveur, javascript, html]
 fichier: licensing/src/views.js
-lignes: 908
-maj: 2026-11-14
+lignes: 910
+maj: 2026-11-22
 ---
 # views.js
 
@@ -13,7 +13,7 @@ Les pages HTML du site de compte (`/signup`, `/login`, `/account`, `/account/pro
 
 ## Rôle et place dans l'ensemble
 
-Seul [[app.js]] l'appelle (`V.<page>(cfg, {...})`). Les pages chargent `/assets/tokens.css`, `/assets/account.css` et `/assets/account.js` ([[account.js]]) : aucun style ni script en ligne, à cause de la CSP stricte de [[app.js]]. L'admin a ses propres vues ([[admin-views.js]]).
+Seul [[app.js]] l'appelle (`V.<page>(cfg, {...})`). Les pages chargent `/assets/tokens.css?v=5`, `/assets/account.css?v=5` et `/assets/account.js?v=5` ([[account.js]] ; monter le `?v=` quand un de ces fichiers change) : aucun style ni script en ligne, à cause de la CSP stricte de [[app.js]]. L'admin a ses propres vues ([[admin-views.js]]).
 
 ## Ce que le fichier expose
 
@@ -23,7 +23,7 @@ Seul [[app.js]] l'appelle (`V.<page>(cfg, {...})`). Les pages chargent `/assets/
 | `ICON` | Icônes SVG (check, carte, flèche, utilisateurs…). |
 | `avatar(user, size)` | Photo de profil ou initiale. |
 | `supportLink(cfg, label)` | Lien « Contact support on Discord » (`SUPPORT_URL`, sinon la FAQ du site). |
-| `page({title, body, user, cfg, bodyClass, nav, cta, buy, lang})` | Gabarit commun : `noindex`, favicons, police Geist préchargée, bandeau « Test server » sur staging (carte de test 4242), en-tête (Pricing / Get Premium pour les visiteurs et comptes gratuits, onglets Account / Profile / Affiliate et bouton Sign out pour un connecté), pied « © Rago Optimizer, by KALISO and RAGO » avec Terms et Privacy du [[Site]]. |
+| `page({title, body, user, cfg, bodyClass, nav, cta, buy, lang})` | Gabarit commun : `noindex`, favicons `?v=5` (R rouge sur tuile blanche), polices Barlow Condensed 900 italique et Barlow 400 préchargées, logo v5 `lockup.svg?v=5` (tuile + RAGO) suivi de « Account » (`WORDMARK`, depuis le 22/11, [[Charte graphique]]), bandeau « Test server » sur staging (carte de test 4242), en-tête (Pricing / Get Premium pour les visiteurs et comptes gratuits, onglets Account / Profile / Affiliate et bouton Sign out pour un connecté), pied « © Rago Optimizer, by KALISO and RAGO » avec Terms et Privacy du [[Site]]. |
 | `field`, `alertBox` | Champ de formulaire, encadré d'erreur ou d'information. |
 | `signInProviders(cfg)` | Google si ses 2 clés sont réglées ; Discord si `DISCORD_LOGIN` et ses clés ([[Connexion Google et Discord]]). |
 | `signupPage`, `verifyPage`, `loginPage`, `forgotPage`, `resetPage`, `passwordPage` | Pages d'accès, avec boutons « Continue with Google/Discord » et le champ code de parrainage. `loginPage` vers `/buy/route` : « Sign in with your Premium account to add Rago Route… » (14/11). |

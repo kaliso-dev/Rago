@@ -1,7 +1,7 @@
 ---
 type: pilotage
 tags: [état, pilotage]
-maj: 2026-11-14
+maj: 2026-11-22
 ---
 # État actuel (11/11/2026)
 
@@ -18,6 +18,7 @@ Les joueurs ont la [[Version 1.2.1]] (en ligne depuis le 31/10). La [[Version 1.
 | Code app sur la branche de prod | encore **1.1.14** (`app/package.json`) : la prod ne reçoit que site + serveur, l'app part de `staging` | CONFIRMÉ |
 | Serveur de prod | mises à jour auto (RAG-24) + collecte des tests réseau (RAG-50), PR #63 fusionnée le 29/10 ; nouveau [[Tableau de bord admin]] et [[Cerveau du vault]], PR #87 fusionnée le 10/11 à 18:49 UTC | CONFIRMÉ (git) ; redéployé par Railway, nouvelle page `/admin` servie à 18:54 UTC (OBSERVÉ le 10/11) |
 | Site de prod | à jour pour la 1.2.1 : section « New in 1.2 », Discord, prix réécrits, 218 tweaks (PR #59 et #66, 29/10) | CONFIRMÉ (git) |
+| Design v5 « Match day » | validé par Sofiene le 22/11 ([[Charte graphique]]) ; serveur de comptes (pages compte, e-mails, admin, cadre du Cerveau, bot Discord) : PR #107 vers `staging` (22/11) ; app et site : leurs propres PR vers `staging` ; rien en prod | DÉCIDÉ (Sofiene, 22/11) |
 | Connexion Google / Discord + code email | en ligne (PR #61, 28/10) | OBSERVÉ (fil) |
 | Offre Lifetime | **59,99 $** (Sofiene, 31/10 : « c'est normal »), vendue seulement si le prix Stripe correspond | DÉCIDÉ / CONFIRMÉ (`site/src/page.html`) |
 | Ventes (Stripe, 04/11) | 611,02 $ payés depuis le 10/10 (505,08 € reçus après frais) ; 33 abonnés actifs (23 mensuels, 10 annuels) dont 8 mensuels résiliés en fin de période ; 5 Lifetime ; aucun essai ; premiers renouvellements le 10/11 ([[Ventes Stripe]]) | CONFIRMÉ (Stripe) |

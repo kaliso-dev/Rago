@@ -209,3 +209,15 @@ for (const form of document.querySelectorAll('[data-review-form]')) {
   form.addEventListener('change', () => word.classList.remove('missing'));
   stars(); count();
 }
+
+// v5 (22/11/2026): the last word of a page title sits on a red brush stroke. Only titles made of plain text.
+for (const h of document.querySelectorAll('.display')) {
+  if (h.children.length || h.closest('.dash-head')) continue;
+  const text = h.textContent.trim();
+  const cut = text.lastIndexOf(' ');
+  const br = document.createElement('span');
+  br.className = 'br';
+  br.textContent = cut < 0 ? text : text.slice(cut + 1);
+  h.textContent = cut < 0 ? '' : `${text.slice(0, cut)} `;
+  h.append(br);
+}
