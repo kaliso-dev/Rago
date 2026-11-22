@@ -1,23 +1,23 @@
 ---
 type: pilotage
 tags: [état, pilotage]
-maj: 2026-11-14
+maj: 2026-11-22
 ---
-# État actuel (11/11/2026)
+# État actuel (22/11/2026)
 
 Voir aussi [[Prochaines étapes]], [[Questions ouvertes]], [[Journal]]. Retour à [[Projet]].
 
 ## En une phrase
-Les joueurs ont la [[Version 1.2.1]] (en ligne depuis le 31/10). La [[Version 1.3.0]] (plan gratuit à 73 réglages dont 30 actifs, essai de 3 jours, connexion Google ou Discord, Rago Route dans tous les exe) est **dans `staging`** et sortira **en une seule fois** avec le serveur et le site, après les tests de Sofiene sur Windows. `staging` a 186 commits de plus que la branche de prod (10/11 au soir) ; seuls le [[Tableau de bord admin]] et le [[Cerveau du vault]] ont été portés en prod (PR #87).
+**Sortie de la [[Version 1.3.0]] en cours (22/11)** : sur « oui c'est bon on peut publier normalement » de Sofiene (22/11, 01:32 heure de Paris), `staging` a été fusionnée dans la branche de prod (PR #105, 22/11 vers 02:07) ; le nouveau serveur et le nouveau site sont en ligne. L'exe 1.3.0 de prod est construit et signé (run 270). Reste à Sofiene : déposer l'exe et le `.sig` dans Supabase prod, mettre `INSTALLER_VERSION=1.3.0` et les prix live de Rago Route sur Railway `production`. Tant que ce n'est pas fait, les joueurs reçoivent encore la [[Version 1.2.1]].
 
 ## Tableau
 | Sujet | État | Statut |
 |---|---|---|
-| Dernière version de l'app | [[Version 1.3.0]] dans `staging` (PR #70 du 04/11 et #76 du 10/11, `app/package.json` = 1.3.0) ; dernière publiée : [[Version 1.2.1]] | CONFIRMÉ (git) |
+| Dernière version de l'app | [[Version 1.3.0]] : code dans `staging` **et** dans la branche de prod depuis la PR #105 (22/11) ; exe de prod `Rago Optimizer_1.3.0_x64-setup.exe` + `.sig` construit le 22/11 (run 270 de [[app-windows.yml]], `server = production`, commit `eded070`) | CONFIRMÉ (git, CI) |
 | Version servie aux joueurs | **1.2.1** (exe + `.sig` dans Supabase) : téléchargement `Rago Optimizer_1.2.1_x64-setup.exe`, mise à jour automatique proposée à 100 % des joueurs, sans pause | CONFIRMÉ (HTTP, 11/11 : `/download/status`, `/api/v1/installer`, `/api/v1/update/status` → `ok: true`, `version: 1.2.1`, `rollout: 100`) |
-| Code app sur la branche de prod | encore **1.1.14** (`app/package.json`) : la prod ne reçoit que site + serveur, l'app part de `staging` | CONFIRMÉ |
-| Serveur de prod | mises à jour auto (RAG-24) + collecte des tests réseau (RAG-50), PR #63 fusionnée le 29/10 ; nouveau [[Tableau de bord admin]] et [[Cerveau du vault]], PR #87 fusionnée le 10/11 à 18:49 UTC | CONFIRMÉ (git) ; redéployé par Railway, nouvelle page `/admin` servie à 18:54 UTC (OBSERVÉ le 10/11) |
-| Site de prod | à jour pour la 1.2.1 : section « New in 1.2 », Discord, prix réécrits, 218 tweaks (PR #59 et #66, 29/10) | CONFIRMÉ (git) |
+| Code app sur la branche de prod | **1.3.0** depuis la PR #105 (22/11, commit de fusion `10d5398`) | CONFIRMÉ (git) |
+| Serveur de prod | code de la 1.3.0 depuis la PR #105 (22/11) : essai 3 jours, connexion de l'app par Google ou Discord (`/api/v1/auth/app-link/*`), option Rago Route (`/api/v1/route/token`), bot communauté ; tables `route_subscriptions` et `discord_*` créées dans Supabase prod par Claude le 22/11 (accord de Sofiene : « tu as ma permission pour les nouvelles tables et tu peux fusionner ») | CONFIRMÉ (HTTP, 22/11 : les nouvelles routes répondent) |
+| Site de prod | celui de `staging` depuis la PR #105 (22/11) : page Rago Route (`route.html`), prix avec l'option, pages légales de l'essai | CONFIRMÉ (HTTP, 22/11 : `route.html` servie) |
 | Connexion Google / Discord + code email | en ligne (PR #61, 28/10) | OBSERVÉ (fil) |
 | Offre Lifetime | **59,99 $** (Sofiene, 31/10 : « c'est normal »), vendue seulement si le prix Stripe correspond | DÉCIDÉ / CONFIRMÉ (`site/src/page.html`) |
 | Ventes (Stripe, 04/11) | 611,02 $ payés depuis le 10/10 (505,08 € reçus après frais) ; 33 abonnés actifs (23 mensuels, 10 annuels) dont 8 mensuels résiliés en fin de période ; 5 Lifetime ; aucun essai ; premiers renouvellements le 10/11 ([[Ventes Stripe]]) | CONFIRMÉ (Stripe) |
@@ -63,6 +63,7 @@ Les joueurs ont la [[Version 1.2.1]] (en ligne depuis le 31/10). La [[Version 1.
 - Fermées le 01/11 avec l'accord de Sofiene (branches gardées) : #16 (1.1.10), #50 et #51 (1.1.13), dont les fonctions sont dans la 1.2.1.
 
 ## Ce qui attend Sofiene
+0. **Finir la sortie de la 1.3.0 (22/11)** : Railway `production` : `STRIPE_PRICE_ROUTE` et `STRIPE_PRICE_ROUTE_YEARLY` (prix live, [[Paiements Stripe]]) ; déposer `Rago Optimizer_1.3.0_x64-setup.exe` et son `.sig` dans le bucket `downloads` de Supabase prod ; `INSTALLER_VERSION=1.3.0` (`UPDATE_ROLLOUT` absente = 100 %, la créer à 20 pour commencer petit). Rien n'a été testé sur Windows avant (question posée le 22/11, pas de réponse).
 0. **Option Rago Route à 3 $/mois ou 17,99 $/an** (13-14/11) : en **live**, le produit et ses deux prix sont créés (14/11, identifiants dans [[Paiements Stripe]])  ; en **mode test**, créés par Sofiene et mis dans Railway `staging` le 14/11 vers 2 h (`STRIPE_PRICE_ROUTE`, `STRIPE_PRICE_ROUTE_YEARLY`), le bloc Rago Route apparaît sur la page compte staging (« ça fonctionne ») ; reste à faire : les identifiants live dans Railway `production` seulement à la mise en prod. Sans ces prix, Rago Route ne s'allume plus en prod, sauf pendant l'essai gratuit.
 1. **URGENT, avant le 05/12** : l'organisation Supabase (offre gratuite) a dépassé son quota de bande passante (e-mail du 04/11) ; restrictions possibles à partir du 05/12, pas de suppression annoncée. La base contient la clé de signature des licences, sauvegardée nulle part ([[Supabase]], [[Clés et secrets]]). D'abord un gestionnaire de mots de passe et la sauvegarde des clés (guide envoyé le 10/11 dans le fil « Sauvegarder les clés »), puis Sofiene passe en Pro (25 $/mois) ou migre vers un autre service, et le dit avant le 05/12 (10/11).
 2. **Clés** : aucune n'est sauvegardée (Railway, Stripe, GitHub, clé de mise à jour Tauri) ; Stripe va bientôt masquer ses clés secrètes.
