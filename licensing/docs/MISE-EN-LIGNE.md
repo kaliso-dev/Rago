@@ -87,6 +87,14 @@ Tu avais déjà créé un prix « Paiement unique » (`STRIPE_PRICE_ID`) ? Il ne
 
 Lifetime a **son propre prix** (`STRIPE_PRICE_LIFETIME`), jamais celui d'un abonnement ni l'ancien `STRIPE_PRICE_ID` : le serveur refuse de le vendre avec l'identifiant d'un autre prix. Tant que `STRIPE_PRICE_LIFETIME` est vide, ou que son prix Stripe n'est pas un paiement unique actif, la carte Lifetime du site affiche « Coming soon », la page compte ne le propose pas et rien n'est vendu. Le serveur et le site ne le vendent que si le prix Stripe est exactement celui du site, 59,99 USD : si tu changes le prix un jour, change aussi `priceLifetime` dans `site/src/page.html` et `LIFETIME_PRICE` dans `licensing/src/billing.js`. Les codes promo marchent sur Lifetime comme sur l'abonnement (décision du 16 octobre 2026). Un abonné qui achète Lifetime garde son PC, et son abonnement est annulé dans Stripe dès que Lifetime est sur son compte : juste après le paiement s'il était connecté, sinon quand il rattache l'achat à son compte (lien de l'email d'achat), sans remboursement du temps restant. Si Stripe refuse l'annulation, le serveur réessaie toutes les heures, même si Lifetime a été remboursé entre-temps.
 
+**Option Rago Route (13/11/2026)**, à faire dans le même mode que le reste (test pour staging, live pour la prod) :
+   1. Catalogue de produits → **Ajouter un produit** : nom « Rago Route », description « Option de Rago Optimizer Premium : le tunnel anti-lag pour Minecraft (bêta). », même code fiscal que « Rago Optimizer Premium ».
+   2. Deux prix sur ce produit, taxe comme les prix du Premium (non incluse) : **Récurrent, 3,00 USD, Mensuel** et **Récurrent, 17,99 USD, Annuel** (6 mois offerts, comme le Premium annuel). Ouvre chaque prix et copie son `price_...` (pas le `prod_...`) : le mensuel **c'est `STRIPE_PRICE_ROUTE`**, l'annuel **c'est `STRIPE_PRICE_ROUTE_YEARLY`**.
+   3. Portail client (point 5) : « Annuler les abonnements » vaut aussi pour l'option. Dans « Changer de formule », **n'ajoute pas Rago Route** : seulement les prix du Premium, sinon un joueur pourrait remplacer son Premium par l'option à 3 $.
+   4. Webhook : rien à ajouter, l'option passe par les mêmes événements.
+
+   C'est un abonnement à part, sur le même client Stripe que le Premium (le portail montre les deux) : **coché au paiement du Premium** (`/buy?…&route=1` : le serveur le crée juste après le paiement, sur la même carte, avec la même fin d'essai, annuel avec un Premium annuel, mensuel sinon et après l'essai) ou **pris seul** depuis `/buy/route?interval=month|year` par un compte qui a déjà Premium (mensuel, annuel, Lifetime ou récompense ; sans `interval`, comme son Premium). Il s'arrête avec le Premium ; sans Premium actif, le serveur l'annule tout seul dans l'heure. En production, `/api/v1/route/token` ne donne un jeton Rago Route qu'avec l'option ou pendant l'essai ; sur le serveur de test, les comptes de `ROUTE_TESTERS` n'ont pas à la payer. Tant que `STRIPE_PRICE_ROUTE` est vide, la case est ignorée et `/buy/route` répond « bientôt » ; sans `STRIPE_PRICE_ROUTE_YEARLY`, l'option ne se vend qu'au mois, même avec un Premium annuel.
+
 Le webhook se fait à l'étape 6, une fois le serveur en ligne.
 
 ## Étape 4 : Resend (emails)
@@ -234,12 +242,12 @@ Si une étape coince, envoie-moi une capture et l'heure : je trouve la cause.
 Ce qui dépend du mode Stripe : la clé, les deux prix, le webhook et son secret, le portail client et son lien, les codes promo. Un objet Stripe n'existe que dans le mode où il a été créé : tout ce qui suit est à refaire **mode test éteint**. Rien ne change sur Netlify ni dans l'app (aucune clé Stripe n'y est).
 
 1. **Compte** : Stripe → **Activer les paiements** (identité, IBAN). Tant que Stripe ne l'a pas validé, `/admin` affiche « Compte : à corriger ».
-2. **Produit et prix** : Catalogue de produits → **Rago Optimizer Premium** avec deux prix **récurrents en USD** : 5,99 mensuel et 29,99 annuel, et un prix en **paiement unique** de 59,99 USD pour Lifetime (les montants du site). Copie les trois `price_...`.
+2. **Produit et prix** : Catalogue de produits → **Rago Optimizer Premium** avec deux prix **récurrents en USD** : 5,99 mensuel et 29,99 annuel, et un prix en **paiement unique** de 59,99 USD pour Lifetime (les montants du site). Copie les trois `price_...`. Puis le produit **Rago Route** avec son prix récurrent de 3 USD par mois (étape 3, « Option Rago Route ») : son `price_...` live.
 3. **Clé secrète** : Développeurs → Clés API → clé secrète `sk_live_...`. Stripe ne montre une clé live qu'une fois : colle-la directement dans Railway (étape 6 ci-dessous) et garde-la dans ton gestionnaire de mots de passe.
 4. **Webhook** : Développeurs → Webhooks → **Ajouter une destination**, URL `https://account.rago-optimizer.com/webhooks/stripe`, les 10 événements de l'étape 6. Copie son secret `whsec_...`.
 5. **Portail client** : Paramètres → Facturation → Portail client, comme à l'étape 3.5 (résiliation, changement de formule avec les deux prix **live**, moyen de paiement, liens Conditions et Confidentialité), puis **Enregistrer**. Copie le lien de connexion au portail (il ne contient pas `test_`).
    Vérifie aussi en live : Moyens de paiement (PayPal), Abonnements et e-mails (relances, rappel avant renouvellement annuel), E-mails clients (reçus). Les Informations publiques (URL des conditions, libellé `RAGO OPTIMIZER`) sont communes aux deux modes.
-6. **Railway → Variables** : remplace `STRIPE_SECRET_KEY`, `STRIPE_PRICE_MONTHLY`, `STRIPE_PRICE_YEARLY`, `STRIPE_PRICE_LIFETIME`, `STRIPE_WEBHOOK_SECRET` et `STRIPE_PORTAL_LOGIN_URL` par les valeurs live, retire `STRIPE_PRICE_ID` s'il est encore là, puis **Deploy** une seule fois. Garde les valeurs test dans ton gestionnaire de mots de passe (« Revenir en mode test »).
+6. **Railway → Variables** : remplace `STRIPE_SECRET_KEY`, `STRIPE_PRICE_MONTHLY`, `STRIPE_PRICE_YEARLY`, `STRIPE_PRICE_LIFETIME`, `STRIPE_PRICE_ROUTE`, `STRIPE_PRICE_ROUTE_YEARLY`, `STRIPE_WEBHOOK_SECRET` et `STRIPE_PORTAL_LOGIN_URL` par les valeurs live, retire `STRIPE_PRICE_ID` s'il est encore là, puis **Deploy** une seule fois. Garde les valeurs test dans ton gestionnaire de mots de passe (« Revenir en mode test »).
 7. **Stripe, mode test** : Développeurs → Webhooks → la destination test vers `account.rago-optimizer.com` → **Désactiver**. Sinon ses événements arrivent avec le mauvais secret, sont refusés, et `/admin` le signale.
 8. **Vérifie sur `/admin/services`**, section **Paiements Stripe** : clé, compte, prix (dont « Prix Lifetime »), webhook, portail et lien doivent être « OK ». Chaque ligne « À corriger » dit quoi changer (un prix du mode test, un événement manquant, le portail pas enregistré…). « Secret du webhook » reste « À vérifier » jusqu'au premier achat : le secret ne se lit pas dans Stripe, seul un événement reçu le confirme.
 9. **Achats de test** : les licences achetées en mode test sont dans la même base. Elles donnent encore Premium, comptent pour les affiliés et empêchent ces comptes d'acheter. Sur `/admin/services`, **Arrêter les licences de test** les passe en « Test purchase » (rien d'autre n'est touché : licences offertes, achats live, comptes, avis). Une licence offerte se redonne avec `npm run admin -- grant`.
@@ -259,6 +267,7 @@ Pour refaire des essais sans vrai paiement, remets les valeurs **test** dans Rai
 |---|---|
 | `STRIPE_SECRET_KEY` | Développeurs → Clés API → **Clé secrète** `sk_test_...` |
 | `STRIPE_PRICE_MONTHLY`, `STRIPE_PRICE_YEARLY`, `STRIPE_PRICE_LIFETIME` | Catalogue de produits → Rago Optimizer Premium → les trois prix **test** `price_...` (créés à l'étape 3.2 ; s'ils n'existent pas en test, recrée-les) |
+| `STRIPE_PRICE_ROUTE`, `STRIPE_PRICE_ROUTE_YEARLY` | Catalogue de produits → Rago Route → les prix **test** de 3 USD par mois et de 17,99 USD par an (étape 3, « Option Rago Route ») |
 | `STRIPE_WEBHOOK_SECRET` | Développeurs → Webhooks → la destination **test** vers `/webhooks/stripe` → **Secret de signature** `whsec_...` (sinon crée-la comme à l'étape 6) |
 | `STRIPE_PORTAL_LOGIN_URL` | Paramètres → Facturation → Portail client (mode test) → lien de connexion |
 
@@ -366,6 +375,27 @@ Le joueur (gratuit ou Premium) lie son Discord depuis sa page compte : la carte 
 
 **À faire une fois** : dans InviteLogger, crée les deux rangs (VIP à 10, MVP à 15) et active le filtre des fausses invitations. Puis clic droit sur le rôle **VIP** → **Copier l'identifiant du rôle** → variable Railway `DISCORD_VIP_ROLE_ID`, pareil pour **MVP** → `DISCORD_MVP_ROLE_ID` et pour ton rôle 2 boosts → `DISCORD_BOOST2_ROLE_ID`. La récompense d'un boost marche sans variable. Sur `/admin`, les lignes « Récompense … » doivent être « OK » ; elles comptent aussi les récompenses données. `npm run admin -- discord joueur@mail.com` montre les récompenses d'un joueur (et les donne tout de suite s'il y a droit).
 
+### Le bot communauté (invitations, accueil, partenaires)
+
+Le même bot écoute le serveur en direct (`DISCORD_COMMUNITY=1`). Il note par quel lien chaque membre arrive et s'il reste, ce qu'aucun bot d'invitations ne relie à tes ventes :
+
+- **`/invites`** pour tout le monde (et `/invites @membre`) : un ami compte seulement après **7 jours** sur le serveur. Revenir après être parti, un compte Discord de moins d'une semaine ou son propre lien ne comptent jamais. **`/top-invites`** : les 10 meilleurs.
+- **Accueil** dans un salon (jamais en message privé, interdit par Discord) : « Welcome @membre, you're member #… », qui l'a invité, puis le lien de la version gratuite et de la page compte. Seul le nouveau membre est notifié.
+- **`/partner-link Axora`** (staff) : crée un lien d'invitation suivi pour un partenaire (ou suit un lien existant avec `code`). Les arrivées par ce lien ne comptent pour aucun membre.
+- **`/growth`** (staff, visible par toi seul) : sur 30 jours, par source (chaque partenaire, invitations des membres, lien personnalisé) : arrivés, partis en moins de 24 h, restés 7 jours, encore là, compte Rago lié, acheteurs. Plus le nombre de membres qui portent le tag du serveur. `npm run admin -- growth` donne le même tableau.
+- **`/invites-adjust @membre 12`** (staff) : reprend le compte d'Invite Tracker pour un membre, ajouté au compte du bot Rago (0 l'enlève).
+- **VIP et MVP par le bot Rago** (`DISCORD_INVITE_ROLES=1`) : le bot donne VIP à 10 invitations et MVP à 15 (réglables avec `DISCORD_VIP_INVITES` et `DISCORD_MVP_INVITES`), l'annonce dans le salon d'accueil, et la récompense Premium suit si le compte est lié. Coupe d'abord les rangs de l'autre bot, sinon les deux donnent le rôle.
+
+**À faire une fois** (sur le serveur de test d'abord) :
+
+1. Developer Portal → ton application → **Bot** → **Privileged Gateway Intents** : active **Server Members Intent**, puis Save Changes. Sans lui, Discord coupe la connexion (code 4014) et `/admin` le dit.
+2. Sur Discord, **Paramètres du serveur → Rôles** → le rôle du bot : coche **Gérer le serveur** (sans elle, Discord cache les invitations au bot et aucune n'est comptée) et vérifie qu'il peut écrire dans le salon d'accueil. Ou ouvre le lien « Redonner ses permissions au bot » sur `/admin`.
+3. Clic droit sur le salon d'accueil → **Copier l'identifiant du salon** → `DISCORD_WELCOME_CHANNEL_ID`. Puis `DISCORD_COMMUNITY=1` et redémarre.
+4. Sur `/admin`, la section **Bot communauté Discord** doit afficher « Connexion live » et « Invitations » en OK. Les commandes `/invites`… apparaissent sur le serveur dans la minute.
+5. Reprends les meilleurs comptes d'Invite Tracker avec `/invites-adjust`, puis passe `DISCORD_INVITE_ROLES=1` si tu veux que le bot Rago donne VIP et MVP.
+
+Le bot compte à partir du moment où il est connecté : rien avant. Un test (staging) avec les mêmes variables Discord que la production écouterait le vrai serveur : utilise un serveur Discord de test pour staging.
+
 ---
 
 ## Ce que tu me donnes
@@ -388,6 +418,8 @@ Le joueur (gratuit ou Premium) lie son Discord depuis sa page compte : la carte 
 | `SUPABASE_URL`, `SUPABASE_SERVICE_ROLE_KEY` | Supabase → Project Settings → API Keys (étape 2.5). Servent aussi aux photos de profil (bucket `avatars`, créé tout seul ; `AVATAR_BUCKET` change son nom, facultatif) |
 | `STRIPE_PRICE_MONTHLY`, `STRIPE_PRICE_YEARLY`, `STRIPE_SECRET_KEY` | Stripe (étapes 3.2 et 3.3) |
 | `STRIPE_PRICE_LIFETIME` | Stripe, le prix en paiement unique de 59,99 $ (étape 3.2). Facultative : vide, Lifetime reste « Coming soon » sur le site et rien n'est vendu |
+| `STRIPE_PRICE_ROUTE` | Stripe, l'option Rago Route : un produit « Rago Route » avec un prix **récurrent mensuel de 3 USD** (13/11/2026). Facultative : vide, l'option n'est pas vendue et, en production, personne ne peut allumer Rago Route (le serveur répond `route_option`) |
+| `STRIPE_PRICE_ROUTE_YEARLY` | Stripe, le prix **récurrent annuel de 17,99 USD** du même produit « Rago Route » (13/11/2026). Facultative : vide, l'option ne se vend qu'au mois |
 | `STRIPE_WEBHOOK_SECRET` | Stripe → Webhooks (étape 6) |
 | `RESEND_API_KEY`, `MAIL_FROM` | Resend (étape 4) |
 | `PUBLIC_URL`, `SITE_URL` | Ton domaine (étape 1) |
@@ -401,6 +433,7 @@ Le joueur (gratuit ou Premium) lie son Discord depuis sa page compte : la carte 
 | `DISCORD_LOGIN` | `1` une fois l'adresse `/auth/discord/callback` ajoutée dans le Developer Portal : affiche « Continue with Discord ». Vide : bouton caché |
 | `EMAIL_VERIFICATION` | Facultative. Vide : le code à 6 chiffres est demandé à l'inscription dès que Resend est branché. `0` : coupé |
 | `DISCORD_VIP_ROLE_ID`, `DISCORD_MVP_ROLE_ID`, `DISCORD_BOOST2_ROLE_ID` | Clic droit sur les rôles VIP, MVP et 2 boosts → Copier l'identifiant (« Les récompenses Discord »). Facultatives : sans elles, pas de récompense pour ce palier |
+| `DISCORD_COMMUNITY`, `DISCORD_WELCOME_CHANNEL_ID`, `DISCORD_WELCOME_TEXT`, `DISCORD_INVITE_ROLES`, `DISCORD_VIP_INVITES`, `DISCORD_MVP_INVITES` | Le bot communauté (« Le bot communauté »). Facultatives : sans `DISCORD_COMMUNITY=1`, rien ne change |
 | `ADMIN_KEY` | Une clé d'au moins 16 lettres et chiffres que tu choisis : elle ouvre `/admin`, où se règle le pop-up du site (« Le pop-up du site »). Sans elle, `/admin` n'existe pas |
 | `CERVEAU_GITHUB_TOKEN` | Pour le Cerveau de `/admin` (« Le Cerveau ») quand le dépôt sera privé : jeton GitHub « fine-grained », ce dépôt seulement, droit « Contents : Read-only ». Sans lui, le Cerveau ne marche que pendant que le dépôt est public. `CERVEAU_BRANCH` (défaut `staging`) et `CERVEAU_REPO` (défaut `kaliso-dev/rago`) sont facultatives |
 | `INSTALLER_VERSION` | Le numéro de l'exe déposé dans le bucket, lu dans son nom `Rago Optimizer_<numéro>_x64-setup.exe` (ex. `1.1.5`). Affiché à côté du bouton de téléchargement, et sous celui de la page Tweaks du site, qui le lit sur `/api/v1/installer`. `INSTALLER_OBJECT` est facultatif (il donne le bucket et le dossier) : le `.exe` le plus récent du dossier est toujours servi |
@@ -438,6 +471,7 @@ npm run admin -- delete-user joueur@mail.com    # demande de suppression (RGPD) 
 npm run admin -- export-keys                    # la clé qui signe les licences, à garder dans ton gestionnaire de mots de passe
 npm run admin -- discord joueur@mail.com        # son Discord lié et son rôle Pro, remis d'aplomb tout de suite (demande les cinq DISCORD_ de Railway)
 npm run admin -- discord-unlink joueur@mail.com # retire le rôle et délie son Discord
+npm run admin -- growth                         # arrivées sur Discord des 30 derniers jours par source (growth 7 : sur 7 jours)
 ```
 
 - **« J'ai payé mais mon compte n'a pas de licence »** (onglet fermé après le paiement, compte créé sur un autre appareil ou plus de 48 h après) : `show son@email.com` affiche l'achat sous « Not on any account yet ». S'il a déjà un compte avec cet email : `attach son@email.com`. S'il n'a pas de compte : `claim-link son@email.com` et envoie-lui le lien. S'il a payé avec un autre email : `show email-de-paiement`, puis `attach email-du-compte <id de la licence>`.

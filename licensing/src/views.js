@@ -11,7 +11,7 @@ export const html = (strings, ...vals) => new Raw(strings.reduce((out, s, i) => 
 const WORDMARK = html`<img class="wordmark" src="/assets/wordmark.svg?v=2" alt="Rago Optimizer" width="150" height="24">`;
 
 const svg = (d, w = 1.6) => html`<svg viewBox="0 0 16 16" aria-hidden="true"><path d="${d}" fill="none" stroke="currentColor" stroke-width="${w}" stroke-linecap="round" stroke-linejoin="round"/></svg>`;
-const ICON = {
+export const ICON = {
   check: svg('M3.5 8.5l3 3 6-7'),
   download: svg('M8 2.5v7.5m0 0L4.8 6.8M8 10l3.2-3.2M3 13.2h10'),
   copy: svg('M6 5.5h6a1.5 1.5 0 0 1 1.5 1.5v5A1.5 1.5 0 0 1 12 13.5H7A1.5 1.5 0 0 1 5.5 12V6M3.5 10V4A1.5 1.5 0 0 1 5 2.5h5', 1.4),
@@ -51,7 +51,7 @@ export const supportLink = (cfg, label = 'Contact support on Discord') =>
 /**
  * @param buy show Pricing and "Get Premium" in the header (visitors and free accounts)
  */
-function page({ title, body, user, cfg, bodyClass = '', nav = '', cta = { href: '/login', label: 'Sign in' }, buy = !user, lang = 'en' }) {
+export function page({ title, body, user, cfg, bodyClass = '', nav = '', cta = { href: '/login', label: 'Sign in' }, buy = !user, lang = 'en' }) {
   const pricing = `${cfg.siteUrl}/#pricing`;
   return `<!doctype html>
 <html lang="${lang}">
@@ -87,13 +87,13 @@ ${cfg.staging ? render(html`<div class="staging-bar" role="note"><b>Test server 
 </header>
 ${render(body)}
 <footer class="foot">
-  <span class="foot-links"><a href="/affiliate">Affiliate program</a><a href="${escape(cfg.siteUrl)}/terms.html">Terms</a><a href="${escape(cfg.siteUrl)}/privacy.html">Privacy</a><a href="${escape(cfg.siteUrl)}/refunds.html">Refunds</a>${cfg.portalLoginUrl ? render(html`<a href="${cfg.portalLoginUrl}" rel="noopener">Cancel subscription</a>`) : ''}${cfg.supportUrl ? render(html`<a href="${cfg.supportUrl}" rel="noopener">Support on Discord</a>`) : ''}</span>
-  <p class="foot-legal">© ${new Date().getUTCFullYear()} Rago Optimizer. Every millisecond counts. Rago Optimizer changes Windows settings on your PC. It isn't affiliated with Mojang or Microsoft.</p></footer>
+  <span class="foot-links"><a href="/affiliate">Affiliate program</a><a href="${escape(cfg.siteUrl)}/terms.html">Terms</a><a href="${escape(cfg.siteUrl)}/privacy.html">Privacy</a><a href="${escape(cfg.siteUrl)}/terms.html#cancel">Cancellation</a>${cfg.portalLoginUrl ? render(html`<a href="${cfg.portalLoginUrl}" rel="noopener">Cancel subscription</a>`) : ''}${cfg.supportUrl ? render(html`<a href="${cfg.supportUrl}" rel="noopener">Support on Discord</a>`) : ''}</span>
+  <p class="foot-legal">© ${new Date().getUTCFullYear()} Rago Optimizer, by KALISO and RAGO. Every millisecond counts. Rago Optimizer changes Windows settings on your PC. It isn't affiliated with Mojang or Microsoft.</p></footer>
 </body>
 </html>`;
 }
 
-const field = ({ label, name, type = 'text', value = '', autocomplete, hint, attrs = '', required = true }) => html`
+export const field = ({ label, name, type = 'text', value = '', autocomplete, hint, attrs = '', required = true }) => html`
   <div class="field">
     <label class="field-label" for="f-${name}">${label}</label>
     <span class="field-box">
@@ -107,7 +107,7 @@ const referralField = (code) => field({ label: 'Referral code (optional)', name:
 
 const hidden = (name, value) => (value ? html`<input type="hidden" name="${name}" value="${value}">` : '');
 
-const alertBox = (msg, kind = 'error') => msg ? html`<div class="alert alert-${kind}" role="${kind === 'error' ? 'alert' : 'status'}">${kind === 'error' ? ICON.alert : ICON.check}<span>${msg}</span></div>` : '';
+export const alertBox = (msg, kind = 'error') => msg ? html`<div class="alert alert-${kind}" role="${kind === 'error' ? 'alert' : 'status'}">${kind === 'error' ? ICON.alert : ICON.check}<span>${msg}</span></div>` : '';
 
 // Two-column layout for the sign-up / sign-in flow: story on the left, form on the right.
 function split({ step, aside, form }) {
@@ -199,6 +199,10 @@ export function loginPage(cfg, { email = '', error, notice, purchased = false, n
       ? html`<p class="overline rise">Reviews</p>
         <h1 class="display rise d1">Welcome back.</h1>
         <p class="lede rise d2">Sign in to leave your review of Rago Optimizer. It shows on the site with your public name.</p>`
+    : String(next || '').startsWith('/buy/route') && !purchased
+      ? html`<p class="overline rise">Rago Route</p>
+        <h1 class="display rise d1">Welcome back.</h1>
+        <p class="lede rise d2">Sign in with your Premium account to add Rago Route. You pay on Stripe next, then turn it on from the Rago Route tab of the app.</p>`
     : html`<p class="overline rise">${purchased ? 'Rago Optimizer Premium' : 'Rago Optimizer account'}</p>
       <h1 class="display rise d1">${purchased ? 'Payment confirmed.' : 'Welcome back.'}</h1>
       <p class="lede rise d2">${purchased ? 'Sign in and we add the license to your account.' : 'Sign in to get your license key and download Rago Optimizer.'}</p>`;
@@ -272,6 +276,20 @@ export function passwordPage(cfg, { user, error, hasPassword = true } = {}) {
 }
 
 /** Information page. Always offers a way out: the main action if any, back to the site, Discord. */
+/** The app asked to sign in through the browser (2026-11-04): the player checks the code the app shows, then confirms. */
+export function appLinkPage(cfg, { user, code, action }) {
+  const aside = html`<p class="overline rise">Rago Optimizer for Windows</p>
+    <h1 class="display rise d1">Sign in to the app?</h1>
+    <p class="lede rise d2">Rago Optimizer on your PC will be signed in as <strong>${user.email}</strong>. Check that the app shows this code:</p>
+    <p class="display rise d2 app-code" aria-label="Code">${code}</p>
+    <div class="row rise d3">
+      <form method="post" action="${action}" data-busy="Signing in…"><button class="btn btn-primary" type="submit">Yes, sign in the app</button></form>
+      <form method="post" action="/logout">${hidden('next', action)}<button class="btn btn-ghost" type="submit">Use another account</button></form>
+    </div>
+    <p class="muted small rise d4">Different code, or you didn't click “Continue with Google” or “Continue with Discord” in the app? Close this page.</p>`;
+  return page({ title: 'Sign in to the app', cfg, user, body: html`<main class="split split-solo"><section class="split-aside">${pulse}${aside}</section></main>` });
+}
+
 export function messagePage(cfg, { title, text, action, user, step, overline = 'Rago Optimizer' }) {
   const aside = html`<p class="overline rise">${overline}</p><h1 class="display rise d1">${title}</h1><p class="lede rise d2">${text}</p>
     <div class="row rise d3">
@@ -335,7 +353,7 @@ function affiliateLine(a) {
   return next;
 }
 
-export function dashboardPage(cfg, { user, license, device, notice, error, canReset, nextResetAt, affiliate, discordLink, discordRewards = [], inviteRewards = [], review = null, lifetime = false, noPassword = false }) {
+export function dashboardPage(cfg, { user, license, device, notice, error, canReset, nextResetAt, affiliate, discordLink, discordRewards = [], inviteRewards = [], review = null, lifetime = false, noPassword = false, trial = false, routeOption = null, routeOnSale = false, routeYearly = false }) {
   const active = license?.status === 'active';
   const reason = license?.status_reason;
   const ended = !active && reason === 'subscription_ended';
@@ -565,6 +583,11 @@ export function dashboardPage(cfg, { user, license, device, notice, error, canRe
       line = `Canceled. Premium keeps working until ${end ? fmtDate(end) : 'the end of the period'}, then Rago Optimizer goes back to the free version and puts back its tweaks.`;
       badge = html`<span class="badge badge-wait"><i></i>Ends ${end ? fmtDate(end) : 'soon'}</span>`;
       actions = html`${portalButton('Keep Premium', 'btn-primary')}`;
+    } else if (trial) {
+      // Free trial (2026-11-04): the first payment and how to avoid it, in plain words
+      line = `Free trial. Your card is charged on ${end ? fmtDate(end) : 'the last day'}, unless you cancel before. Cancel anytime: you pay nothing.`;
+      badge = html`<span class="badge badge-wait"><i></i>Trial until ${end ? fmtDate(end) : 'soon'}</span>`;
+      actions = portalButton('Cancel trial or manage');
     } else {
       line = end ? `Renews on ${fmtDate(end)}. Cancel anytime.` : 'Renews automatically. Cancel anytime.';
     }
@@ -576,6 +599,22 @@ export function dashboardPage(cfg, { user, license, device, notice, error, canRe
       row(actions));
   };
 
+  // Rago Route option (2026-11-13): $3 a month or $17.99 a year on top of Premium, its own subscription, managed in the same portal.
+  const routeSect = () => {
+    if (!active || (!routeOption && !routeOnSale)) return '';
+    const end = routeOption && Number(routeOption.current_period_end);
+    if (routeOption) {
+      const stops = routeOption.cancel_at_period_end;
+      return sect('sect-route', html`<p class="overline">Rago Route</p><span class="badge ${stops ? 'badge-off' : 'badge-ok'}"><i></i>${stops ? `Stops ${end ? fmtDate(end) : 'soon'}` : 'Active'}</span>`,
+        html`<p class="muted small">The anti-lag tunnel for Minecraft, ${routeOption.billing_interval === 'year' ? '$17.99 a year' : '$3 a month'} on top of your Premium.${end ? ` ${stops ? 'It stops on' : 'Next payment on'} ${fmtDate(end)}.` : ''} It stops with your Premium.</p>`,
+        html`<form method="post" action="/account/billing" class="inline" data-busy="Opening…"><button class="btn btn-ghost btn-sm" type="submit">${ICON.card}<span>Manage or cancel</span></button></form>`);
+    }
+    return sect('sect-route', html`<p class="overline">Rago Route</p><span class="badge badge-off"><i></i>Option</span>`,
+      html`<p class="muted small">The anti-lag tunnel for Minecraft (beta): your game goes through the Rago servers by several paths at once, and lost packets are sent again right away. ${routeYearly ? '$3 a month or $17.99 a year (6 months free)' : '$3 a month'} on top of your Premium, cancel anytime.</p>`,
+      routeYearly
+        ? html`<a class="btn btn-primary btn-sm" href="/buy/route?interval=year">Add Rago Route · $17.99/year</a> <a class="btn btn-ghost btn-sm" href="/buy/route?interval=month">$3/month</a>`
+        : html`<a class="btn btn-primary btn-sm" href="/buy/route?interval=month">Add Rago Route · $3/month</a>`);
+  };
   const affiliateSect = () => sect('sect-aff', html`<p class="overline">Affiliate program</p>${affiliate ? html`<span class="mono small muted">${affiliate.full ? affiliate.goal : affiliate.progress} / ${affiliate.goal}${affiliate.pending ? ` · ${affiliate.pending} waiting` : ''}</span>` : ''}`,
     affiliate
       ? html`<div class="aff-mini">${affiliateRing(affiliate, 'sm')}<div class="aff-text">
@@ -610,7 +649,7 @@ export function dashboardPage(cfg, { user, license, device, notice, error, canRe
   // program and the review.
   const cards = !license
     ? [freeCard(), panel([affiliateSect(), discordSect()], 'd2')]
-    : [active ? download() : comeBack(), panel([licenseSect(), deviceSect(), planSect()], 'd2'),
+    : [active ? download() : comeBack(), panel([licenseSect(), deviceSect(), planSect(), routeSect()], 'd2'),
       panel([discordSect(), sideSect(), active ? reviewSect() : ''], 'd3')];
 
   const title = !license ? 'Welcome to Rago Optimizer'

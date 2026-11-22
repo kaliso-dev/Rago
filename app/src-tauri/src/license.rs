@@ -348,6 +348,16 @@ pub enum LoginResult {
     Active { status: Status },
 }
 
+/// Connexion par le navigateur (Google, Discord) : le lien à ouvrir et le code à comparer avec la page (1.3.0).
+#[derive(Debug, Serialize)]
+#[serde(rename_all = "camelCase")]
+pub struct Link {
+    pub link_id: String,
+    pub poll_token: String,
+    pub code: String,
+    pub url: String,
+}
+
 pub struct License {
     path: PathBuf,
     device: OnceLock<Device>,
@@ -474,6 +484,12 @@ impl License {
 
     pub fn login(&self, email: &str, password: &str) -> Result<LoginResult, ApiError> {
         let res = post("/auth/login", None, json!({ "email": email, "password": password, "device": self.device().to_json() }))?;
+        self.login_reply(&res, email)
+    }
+
+    /// Réponse de connexion du serveur (mot de passe ou navigateur) : activation à confirmer, ou licence active.
+    fn login_reply(&self, res: &Value, email: &str) -> Result<LoginResult, ApiError> {
+        let res = res.clone();
         if field(&res, &["status"]).as_deref() == Some("activation_required") {
             *self.access.lock().unwrap() = field(&res, &["access_token"]);
             let key_hint = field(&res, &["license", "key_hint"]);
@@ -482,6 +498,22 @@ impl License {
             return Ok(LoginResult::ActivationRequired { email, key_hint });
         }
         Ok(LoginResult::Active { status: self.accept(&res)? })
+    }
+
+    /// Demande un lien de connexion par le navigateur (Google ou Discord sur le site du compte).
+    pub fn link_start(&self) -> Result<Link, ApiError> {
+        let res = post("/auth/app-link/start", None, json!({}))?;
+        let get = |k: &str| field(&res, &[k]).ok_or_else(|| ApiError::from("server_error"));
+        Ok(Link { link_id: get("link_id")?, poll_token: get("poll_token")?, code: get("code")?, url: get("url")? })
+    }
+
+    /// Le joueur a-t-il confirmé dans le navigateur ? None : pas encore. Ensuite, comme une connexion par mot de passe.
+    pub fn link_poll(&self, link_id: &str, poll_token: &str) -> Result<Option<LoginResult>, ApiError> {
+        let res = post("/auth/app-link/poll", None, json!({ "link_id": link_id, "poll_token": poll_token, "device": self.device().to_json() }))?;
+        if field(&res, &["status"]).as_deref() == Some("pending") {
+            return Ok(None);
+        }
+        self.login_reply(&res, "").map(Some)
     }
 
     pub fn activate(&self) -> Result<Status, ApiError> {
@@ -517,6 +549,14 @@ impl License {
         let _w = self.write.lock().unwrap_or_else(std::sync::PoisonError::into_inner);
         self.clear();
         *self.access.lock().unwrap() = None;
+    }
+
+    /// Jeton Rago Route (6 h) pour les serveurs Rago, seulement avec une licence Premium active sur ce PC.
+    /// Erreurs : "no_license" (pas de Premium ici), puis celles du serveur ("revoked", "route_closed", "network"…).
+    pub fn route_token(&self) -> Result<String, ApiError> {
+        let bearer = self.bearer().ok_or("no_license")?;
+        let res = post("/route/token", Some(&bearer), json!({}))?;
+        field(&res, &["route_token"]).ok_or_else(|| "server_error".into())
     }
 
     /// Jeton de licence de ce PC tant qu'il est valable : il ouvre aussi l'API du compte (avis, photo).

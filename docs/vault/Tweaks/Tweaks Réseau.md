@@ -2,13 +2,13 @@
 type: catalogue
 tags: [tweaks, catalogue, généré]
 généré: docs/tools/catalogue_vault.py
-version_app: 1.2.1
-maj: 2026-10-31
+version_app: 1.3.0
+maj: 2026-11-10
 ---
 
 # Tweaks Réseau
 
-Module **Réseau** (`network`) de l'app 1.2.1 : Ping, stabilité et enregistrement des coups.
+Module **Réseau** (`network`) de l'app 1.3.0 : Ping, stabilité et enregistrement des coups.
 Note **générée** depuis `app/src/data/catalog.json` : ne pas l'éditer à la main, voir [[Catalogue des tweaks]].
 
 Légende : 🆓 gratuit · 🔒 Premium (voir [[Offres et prix]]) · ↩️ seul le retour arrière est gratuit · ⚠️ avancé · 🔁 redémarrage nécessaire · ⚙️ action ponctuelle. Comment un tweak est appliqué : [[Moteur des tweaks]].
@@ -17,7 +17,7 @@ Légende : 🆓 gratuit · 🔒 Premium (voir [[Offres et prix]]) · ↩️ seul
 
 ### Profil hitreg `ping_hitreg` 🔒
 Six profils pour l'ajustement auto du débit TCP et le regroupement des paquets reçus ; « Par défaut » remet Windows comme avant.
-- Variantes : Meilleur hitreg (`better`), Hitreg maximal (`besthitreg`), Équilibré (`balanced`), Hypixel (`hypixel`), Le plus lent (`slowlest`), Par défaut (`default`, retour) ; par défaut `better`.
+- Variantes : Meilleur hitreg (`better`), Hitreg maximal (`besthitreg`), Équilibré (`balanced`), Hypixel (`hypixel`), Le plus lent (`slowlest`), Par défaut (`default`, retour) ; par défaut `besthitreg`.
 - Gain : Effet rarement mesurable : le hitreg est calculé par le serveur et dépend surtout de ton ping.
 - Inconvénient : Les profils autres que « Hitreg maximal » et « Par défaut » peuvent ralentir les gros téléchargements.
 - Dans les presets : Minecraft PvP (voir [[Tweaks Presets]]).
@@ -27,7 +27,6 @@ Trois profils : Hitreg (paquets plus petits, accélérations de la carte coupée
 - Variantes : Hitreg (`hitreg`), QoS (`qos`), Knockback (`knockback`) ; par défaut `hitreg`.
 - Gain : Effet rarement mesurable sur le ping ; le marquage QoS n'aide que si ta box le respecte.
 - Inconvénient : Le profil Hitreg peut un peu baisser le débit et charger un peu plus le processeur.
-- Dans les presets : Minecraft PvP (voir [[Tweaks Presets]]).
 
 ## Ping
 

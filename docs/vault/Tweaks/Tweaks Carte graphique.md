@@ -2,13 +2,13 @@
 type: catalogue
 tags: [tweaks, catalogue, généré]
 généré: docs/tools/catalogue_vault.py
-version_app: 1.2.1
-maj: 2026-10-31
+version_app: 1.3.0
+maj: 2026-11-10
 ---
 
 # Tweaks Carte graphique
 
-Module **Carte graphique** (`gpu`) de l'app 1.2.1 : NVIDIA, AMD et Intel, chacun ses réglages.
+Module **Carte graphique** (`gpu`) de l'app 1.3.0 : NVIDIA, AMD et Intel, chacun ses réglages.
 Note **générée** depuis `app/src/data/catalog.json` : ne pas l'éditer à la main, voir [[Catalogue des tweaks]].
 
 Légende : 🆓 gratuit · 🔒 Premium (voir [[Offres et prix]]) · ↩️ seul le retour arrière est gratuit · ⚠️ avancé · 🔁 redémarrage nécessaire · ⚙️ action ponctuelle. Comment un tweak est appliqué : [[Moteur des tweaks]].
@@ -65,7 +65,7 @@ Importe le profil « faible latence » de Rago dans le pilote NVIDIA, appliqué 
 - Nécessite : `gpu:nvidia`, `res:nvidiaProfileInspector.exe`
 - Exécuté par du code Rust natif (`nvidia_profile`), pas par un script.
 
-### Supprimer la télémétrie NVIDIA `nv_telemetry` 🔒 🔁
+### Supprimer la télémétrie NVIDIA `nv_telemetry` 🆓 🔁
 Coupe la télémétrie NVIDIA : rapports de plantage, collecte de données et vérifications automatiques de mises à jour.
 - Gain : Plus de vie privée ; effet sur les FPS quasi nul.
 - Inconvénient : Tu peux ne plus être prévenu des nouveaux pilotes NVIDIA, et GeForce Experience ne se met plus à jour seul.
@@ -124,7 +124,7 @@ Demande au pilote de réserver la mémoire du GPU en un seul bloc dans la mémoi
 - Inconvénient : Aucun inconvénient connu.
 - Nécessite : `gpu:nvidia`
 
-### Nettoyer les restes d'installation NVIDIA `nv_debloat` 🔒 ⚙️
+### Nettoyer les restes d'installation NVIDIA `nv_debloat` 🆓 ⚙️
 Supprime les fichiers d'installation NVIDIA restés dans le dossier C:\NVIDIA. Le pilote installé n'est pas touché.
 - Gain : Libère de l'espace disque ; aucun effet sur les FPS.
 - Inconvénient : Pour réparer ou réinstaller le pilote, il faudra retélécharger son installateur.
@@ -184,7 +184,7 @@ Active Anti-Lag dans le pilote AMD, qui empêche le processeur de prendre trop d
 - Inconvénient : Peut coûter un peu de FPS dans certains jeux.
 - Nécessite : `gpu:amd`
 
-### Désactiver les journaux AMD `amd_logging` 🔒 🔁
+### Désactiver les journaux AMD `amd_logging` 🆓 🔁
 Désactive le service de journaux du pilote AMD.
 - Gain : Effet rarement mesurable : un petit service de fond en moins.
 - Inconvénient : Aucun inconvénient connu.

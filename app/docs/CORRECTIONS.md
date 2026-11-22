@@ -462,10 +462,102 @@ quand il n'y a pas de sauvegarde, `rest` ce que la sauvegarde ne relève pas, `r
 pow_delete_plans) le lance avant la sauvegarde. Chiffrée dans l'exe avec les scripts Premium ; l'app en garde une copie
 par réglage appliqué, pour annuler après une déconnexion ou une fin de licence.
 
+Priorité par jeu (pri_game), 1.2.0 (`add_games`, après l'audit) :
+- Valorant visait `ValorantClient-Win64-Shipping.exe`, qui n'existe pas : rien ne s'appliquait. La variante écrit
+  maintenant la stratégie QoS et la priorité haute de `VALORANT-Win64-Shipping.exe` ;
+- Fortnite, CS2, Apex et GTA V : nom d'appli de la stratégie QoS faux (`cs2.exe.exe`, `FortniteClient-Win64.exe`),
+  donc marquage réseau sans effet ; Apex DirectX 12 (`r5apex_dx12.exe`), GTA V Enhanced (`GTA5_Enhanced.exe`) et
+  CS:GO (`csgo.exe`) ajoutés ;
+- Minecraft, Fortnite, CS2, Apex et GTA V réécrits (`LEGACY_GAMES`, GAME V1 du 2026-10-21) : leurs .bat écrivaient
+  111 valeurs PerfOptions par exe que Windows ignore (et un `CpuPriorityClass` 8, qui n'existe pas) ;
+- dix jeux ajoutés (`GAMES`) : PUBG, Roblox, Rainbow Six Siege, Overwatch 2, Marvel Rivals, The Finals, Escape from
+  Tarkov, Rocket League, League of Legends, Minecraft Bedrock (`Minecraft.Windows.exe`). Seulement ce que Windows lit :
+  stratégie QoS DSCP 46, `CpuPriorityClass` et `IoPriority` à 3 (haute) dans les PerfOptions de l'exe ;
+- chaque variante écrit aussi `Do not use NLA` (chaîne « 1 ») sous `Tcpip\QoS` : hors d'un domaine d'entreprise,
+  Windows n'appliquait pas la stratégie QoS sans elle (GAME V1).
+
+Presets, 1.2.0 : enrichis de réglages sûrs sans gros inconvénient (`PRESETS`, `PRESET_EXTRA`) et un preset par jeu
+(`GAME_PRESETS`) : la priorité du jeu plus un socle compétitif ou fluide. Le preset Minecraft ne touche à rien de ce
+que lit le vérificateur de screenshare RBW (`RBW_TOUCHED`, vérifié au build).
+
+
+# Optimisations envoyées le 2026-10-21 (1.2.0)
+
+`tools/optis_120.py`. Sources : dump Hone.gg (Basic, General & Advanced), OptiCore-Tweaks.ps1,
+Hone-Optimizations.ps1, network_optimizer.bat, [RAGO APP] GAME V1.bat. Chaque optimisation a été comparée au catalogue
+(valeurs écrites, pas les noms) : déjà là, meilleure qu'un réglage existant (remplacé), nouvelle (ajoutée) ou écartée.
+Les clés des journaux Hone sont reprises des fichiers « Off » quand le journal « On » les range sous une mauvaise clé.
+
+Ajoutés (Hone, Basic) : win_taskbar, win_recent, win_highlights, win_lockscreen, win_classicmenu, win_alttab,
+win_shortcut (section « Interface et confort »), dbl_onedrive_off (stratégie Microsoft, rien n'est supprimé,
+contrairement à dbl_onedrive retiré en 1.1.8), win_browserbg (Edge, Chrome et Brave fermés pour de vrai).
+
+Ajouté le 2026-10-22 (« Pack latence », réglages optionnels) : win_bgdownloads, les stratégies Maps
+(AutoDownloadAndUpdateMapData, AllowUntriggeredNetworkTrafficOnSettingsPage) et Speech (AllowSpeechModelUpdate) à 0 ;
+l'annulation les retire, comme le fichier « 2 - Annuler » envoyé avec. Complète dbl_print, qui coupe le service
+MapsBroker.
+
+Remplacés :
+- win_visual : les 18 lignes `VisualEffects\<effet>\DefaultApplied` (valeurs que Windows note, sans les relire) →
+  UserPreferencesMask (masque « meilleures performances », comme game_mode), DragFullWindows, TaskbarAnimations,
+  ListviewAlphaSelect, EnableAeroPeek ; `DWMWA_TRANSITIONS_FORCEDISABLED` et `MaxAnimate`, que Windows ne lit pas, retirés ;
+- in_advanced : la valeur `link` de Windows XP → `NamingTemplates\ShortcutNameTemplate`.
+
+Écartés (Hone, Basic) : accélération matérielle des navigateurs (charge le processeur au lieu de la carte graphique),
+mises à jour des navigateurs (déjà retirées en 1.1.8), option Verrouiller, Assistant de concentration (blobs datés qui
+coupent aussi la règle « pendant un jeu »), Centre de mobilité, ancien volume, transparence de la barre des tâches,
+menu « Prendre possession » et « priorité temps réel », icônes de la zone de notification : cosmétiques, sans effet sur
+Windows 11, ou risqués. NoRecentDocsHistory laissé hors de win_recent : il vide les listes de raccourcis comme
+Start_TrackDocs, que lit le vérificateur RBW.
+
+Ajoutés (Hone, General & Advanced) : win_suggestions (recommandations de Démarrer, rappels « terminer la configuration »,
+astuces en ligne des Paramètres, recherche dans le cloud), win_extensions, win_compact, win_wallpaper, dbl_browsers
+(stratégies de télémétrie Edge, Chrome et Firefox ; aucun navigateur n'est supprimé), dbl_vs, net_dscp (même stratégie
+QoS que pri_game pour douze jeux en ligne qu'il ne connaît pas).
+
+Remplacés ou complétés (Hone, General & Advanced) :
+- ping_packets:qos et net_profile:qos : « DSCP Value » écrit en REG_DWORD, « Throttle Rate » à `Disabled` et port
+  distant 25565 seulement → tout en REG_SZ, `-1` et `*` (format des stratégies QoS de Windows) ;
+- « Do not use NLA » : ajouté à pri_game (sans lui, le marquage DSCP ne s'applique pas hors domaine, donc sur un PC de
+  joueur) et passé de REG_DWORD à REG_SZ dans ping_main et net_server ;
+- dbl_office : stratégies Office documentées (`HKCU\Software\Policies\Microsoft\Office`) ajoutées, anciennes lignes gardées ;
+- in_advanced : JPEGImportQuality 256 → 100 (Windows accepte 60 à 100) ;
+- exp_startup : StartupDelayInMSec écrit aussi sous HKCU, l'endroit le plus cité.
+
+Ajoutés (OptiCore, Hone-Optimizations.ps1, network_optimizer) : win_thispc, net_dns (DNS 1.1.1.1 et 8.8.8.8 sur les
+cartes connectées ; ne baisse pas le ping en jeu, échoue sur les réseaux qui imposent leur DNS), net_intmod (modération
+des interruptions coupée, comme Microsoft le conseille pour la latence ; contraire de hitreg_suite, qui l'active).
+
+Remplacés (mêmes sources) :
+- lat_directx : `HwSchedMode`, que Windows ne lit pas → `HwSchMode` ;
+- win_fullscreen : DirectXUserGlobalSettings était écrasé, ce qui effaçait l'Auto HDR et les autres choix DirectX du
+  joueur ; la valeur est maintenant fusionnée ;
+- win_search et exp_search : DisableSearchBoxSuggestions ajouté, la stratégie documentée qui coupe vraiment le web dans la
+  recherche sur Windows 10 2004+ et 11 (l'Explorateur ne liste plus les recherches récentes) ;
+- amd_power : trouve chaque carte AMD au lieu d'écrire dans `\0000`, faux quand une autre carte est listée en premier ;
+- net_advanced : initialRto 2000 → 1000 ms (valeur Windows et RFC 6298 ; le commentaire disait 2 ms).
+
+Jeux ([RAGO APP] GAME V1) : pri_game:minecraft, fortnite, valorant, cs2, apex et gta écrivaient 111 valeurs PerfOptions
+par jeu, dont Windows ne lit que CpuPriorityClass et IoPriority (et un CpuPriorityClass=8, classe qui n'existe pas) :
+reconstruits avec game_priority() comme les autres jeux. Nouvelle variante bedrock (Minecraft.Windows.exe) et préréglage
+Minecraft Bedrock ; csgo.exe ajouté à cs2. Roblox est maintenant détecté (Roblox Player ou version Microsoft Store).
+
+Écartés (mêmes sources) : tout ce qui baisse la sécurité ou casse un usage (Defender, SmartScreen, contrôle de compte,
+virtualisation et intégrité mémoire, atténuations Spectre, contournement TPM, Windows Update, Xbox, VPN, SMB2, Wi-Fi,
+mot de passe sans expiration, UCPD), les placebos et services déjà au repos (HomeGroup, Insider, démo en magasin,
+quotas de disque, TdrDelay), ce qui demande un programme téléchargé ou détourne taskmgr ou regedit par IFEO, les
+réglages propres au PC de test (affinités PCI, instance d'écran fixe), ce que le journal ne permet pas de vérifier
+(netsh, bcdedit, powercfg sans trace), le plafond de débit fixe, la région forcée (94 = Allemagne), SysMain coupé
+(contredit la décision PLACEBO ci-dessus : la compression mémoire en dépend), l'optimisation plein écran coupée par jeu
+(clés AppCompat lues par le vérificateur RBW), et le cosmétique sans effet sur Windows 11.
+
+Pas encore fait (code de l'appli, à tester sous Windows) : carte graphique performante et mode d'alimentation pendant
+le jeu, vérifications avant de jouer, préréglages graphiques dans les fichiers des jeux.
+
 
 # Réglages risqués retirés (1.1.8)
 
-Demande de Sofiene (2026-10-08) : `tools/safety.py`. 17 réglages quittent le catalogue, les profils et le plan gratuit. Il reste 211 entrées au catalogue, soit 198 réglages distincts : les 13 autres lancent les mêmes commandes qu'un autre réglage, sous un autre nom ou dans un autre module (champ `twin`), et c'est ce nombre distinct que l'app et le site annoncent. Leur annulation reste dans undo.json : sur un PC où une version précédente les a appliqués, le tableau de bord propose de les remettre comme avant.
+Demande de Sofiene (2026-10-08) : `tools/safety.py`. 17 réglages quittent le catalogue, les profils et le plan gratuit. Il reste 231 entrées au catalogue, soit 218 réglages distincts : les 13 autres lancent les mêmes commandes qu'un autre réglage, sous un autre nom ou dans un autre module (champ `twin`), et c'est ce nombre distinct que l'app et le site annoncent. Leur annulation reste dans undo.json : sur un PC où une version précédente les a appliqués, le tableau de bord propose de les remettre comme avant.
 
 - `win_mitigations` : Il coupait les protections Spectre et Meltdown.
 - `win_coreiso` : Couper l'intégrité de la mémoire baisse la protection de ton PC contre les pilotes malveillants.
@@ -659,3 +751,12 @@ fait supprimer le fichier à la remise ; un optionsof.txt illisible n'est plus r
 (avant, seulement sur un onglet sans aucun réglage gratuit). Mode jeu : « Désactivé depuis… » après Désactiver ou Tout
 annuler. Bouton « Tout annuler » dans la carte État (RAG-43), une seule Rago Optimizer à la fois, et les petites
 corrections reprises de la 1.1.13 (dates, historique, fenêtres superposées, messages de fin d'exécution).
+
+# Version 1.2.0 (construite sur la 1.1.14, 2026-10-17)
+
+Demande de Sofiene : refonte en verre et nouvelles fonctions, sans rien changer aux optimisations. Vérifié avec
+`git diff origin/staging -- app/src-tauri/scripts app/src/data app/src-tauri/src/runner.rs` : aucun changement dans
+`scripts.json`, `probes.json`, `undo.json`, `catalog.json` ni dans le moteur qui les lance. Nouveau dans cette version :
+refonte visuelle (CSS), Nettoyer la RAM (RAG-48), partage de presets et rapport support, bibliothèque de jeux avec
+images officielles (RAG-57), test réseau (RAG-50), mises à jour automatiques signées (RAG-24), barre en jeu et mode
+arrière-plan (RAG-82). La barre en jeu ne lance que des réglages déjà au catalogue, par le même moteur que l'app.

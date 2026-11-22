@@ -1,0 +1,75 @@
+---
+type: technique
+tags: [technique, serveur, admin, vault]
+maj: 2026-11-12
+---
+# Cerveau du vault (`/admin/cerveau`)
+
+Le vault Obsidian du projet (`docs/vault/`), ou celui de RAGO-OS (voir « Choisir le cerveau »), dessiné comme un cerveau : chaque note est un point, chaque lien entre deux notes un trait, et des impulsions parcourent les liens. On clique sur un point pour lire la note, et on peut ouvrir et lire **n'importe quel fichier du dépôt**. C'est une page de l'admin du [[Serveur de licences]], à côté du [[Tableau de bord admin]].
+
+Demandé par Sofiene le 10/11 : « une vision graphique du cerveau comme obsidian avec un schéma ou on voir les connexcion neuronale on pourra aussi ouvrir n'importe quel fichier et le lire tout l'animation de schéma des connexion doit etre parfaite et fluide […] il faudrait meme que ça soit juste accessible depuis l'interface admin ».
+
+**Statut (10/11)** : **dans `staging` depuis le 10/11** (PR #85, fusionnée sur « fusionne » de Sofiene) et **en prod depuis le 10/11 au soir** (PR #87 du [[Tableau de bord admin]], sur « il faut le push sur la prod maintenant […] j'ai ajouté une page cerveau il faut push avec »). Admin en ligne confirmé par Sofiene le 11/11 (« ok tout est bon le dashboard est bien en ligne »). Pour que la page lise le dépôt une fois privé, il faut `CERVEAU_GITHUB_TOKEN` dans Railway, staging et prod : mode d'emploi donné le 11/11 (jeton « fine-grained », `kaliso-dev/rago` seulement, Contents en lecture seule) ; mis ou non : **À VÉRIFIER** (q98).
+
+## Choisir le cerveau (12/11)
+Demandé par Sofiene le 12/11 : « ajoute moi au cerveau dans le dashboard admin je veux pouvoir switch de cerveau et que tu lise maintenant le vault de RAGO-OS je dois pouvoir sélectionner le cerveau et il charge », puis : « un nouveau RAGO-OS va être développer et je viens de créer un repo pour lui et il y a un vault dedans c'est ce repo avec ce vault que je veux que tu intègre au cerveau ».
+- En haut de la colonne de gauche, le **menu déroulant « Cerveau »** (Sofiene, 12/11 : « pour changer de cerveau je veux un menu dépliant ») : il affiche le cerveau ouvert ; on le déplie pour choisir entre **Rago Optimizer** (ce vault) et **RAGO-OS** (le vault `docs/vault/` du dépôt [kaliso-dev/RAGO-OS-](https://github.com/kaliso-dev/RAGO-OS-), branche `main`, créé par Sofiene le 12/11 : 36 notes à sa création). Chaque ligne du menu donne le nom et le dépôt, le cerveau ouvert est coché ; un clic charge le cerveau choisi, un clic à côté ou `Échap` referme le menu (adresse `/admin/cerveau?c=rago` ou `?c=rago-os`) ; le choix est gardé dans le cookie `rago_cerveau` (un an, chemin `/admin`), donc `/admin/cerveau` rouvre le dernier cerveau choisi. Le nom du cerveau ouvert est aussi écrit sous le logo et dans le titre de l'onglet.
+- Chaque cerveau a son dépôt et sa branche : le serveur lit chaque dépôt à part (une archive par dépôt, mêmes règles de cache), et le lecteur ouvre les fichiers du dépôt du cerveau ouvert. Un cerveau sans aucune note affiche « Le cerveau « … » est vide ».
+- La liste se change avec la variable `CERVEAUX` (`id|Nom|dossier|dépôt|branche;…`, dépôt et branche facultatifs) ; vide = les deux cerveaux ci-dessus ([[Variables d'environnement]]).
+- Les deux vaults sont séparés : le vault RAGO-OS se tient dans son propre dépôt (son `CLAUDE.md` et sa note « Mettre à jour le vault »), pas dans celui-ci. RAGO-OS est un nouveau projet (OS Linux pour joueurs) ; c'est autre chose que l'ancien bureau Rago OS retiré de l'app par la PR #99.
+- **Statut (12/11)** : fusionné dans `staging` (PR #100) puis dans la branche de prod (PR #101, portage de `licensing/` seulement), le 12/11 vers 23 h 40 sur « push directement sur la prod » de Sofiene. La CI GitHub ne démarrait plus (limite de dépense Actions) et Railway attend la CI (« Wait for CI », [[Railway]]) : rien n'est parti tout de suite. Sofiene a repassé `rago` en **public** le 12/11 à 23 h 41 ; CI relancée (verte), staging servi, puis la prod redéployée par la PR #103 (une ligne de `MISE-EN-LIGNE.md`, qui touche `licensing/`). **Menu servi en prod et sur staging le 13/11 vers 0 h 05** (CONFIRMÉ : `cerveau.css` avec `.cv-brains-menu` sur les deux serveurs).
+
+## Accès
+- Menu de `/admin` → section **Projet** → **Cerveau**. Adresse : `https://account.rago-optimizer.com/admin/cerveau` (staging : `rago-staging.up.railway.app/admin/cerveau`).
+- Même clé que le reste de l'admin, `ADMIN_KEY`. **Abel s'en sert avec cette même clé** : choix de Sofiene du 10/11 (« La clé admin complète »), plutôt qu'une clé à part ou un sous-domaine. Abel voit donc aussi les joueurs, les ventes et les actions de l'admin ([[Décisions]]).
+- Sans cookie admin, les trois adresses du Cerveau renvoient vers `/admin` (le formulaire de la clé). Rien du vault n'est servi sans la clé.
+
+## D'où vient le vault
+Le serveur de Railway ne contient que `licensing/` ([[Railway]], Root Directory = `licensing`) : le vault n'est pas sur le serveur. Le Cerveau le lit donc **sur GitHub** (pour RAGO-OS : le dépôt `kaliso-dev/RAGO-OS-`, branche `main`, mêmes règles) :
+- la branche lue est `staging` (variable `CERVEAU_BRANCH`), là où le vault est tenu à jour en premier ([[Branches et environnements]]) ;
+- le serveur regarde le dernier commit de la branche par la liste des branches de git (`https://github.com/kaliso-dev/rago.git/info/refs?service=git-upload-pack`), qui ne compte pas dans le quota de l'API GitHub ;
+- il ne télécharge l'archive du dépôt (`codeload.github.com/…/tar.gz/<commit>`) que quand le commit change, **au plus une fois par minute** et seulement quand quelqu'un regarde la page ;
+- la page se recharge toute seule toutes les 2 minutes si le vault a changé (message « Vault mis à jour : N notes (+x) »), et le bouton ↻ en bas à gauche force la lecture (60 fois par heure au plus par adresse IP).
+- Si GitHub ne répond pas, la dernière version lue reste affichée avec la raison en rouge sous l'heure de lecture.
+
+**Dépôt privé** : `rago` passe parfois en privé en novembre et pour de bon le 1er décembre ([[CI GitHub Actions]]). Le 12/11 au soir, GitHub le donnait **privé** (OBSERVÉ par la recherche de dépôts) : sans jeton, le cerveau Rago ne se charge donc pas en ce moment sur Railway. `kaliso-dev/RAGO-OS-` est public (12/11) ; s'il passe en privé, le même jeton doit aussi avoir le droit « Contents : Read-only » sur ce dépôt. Sans jeton, le Cerveau affiche alors « Le dépôt kaliso-dev/rago n'est pas lisible sans jeton ». Il faut mettre dans Railway la variable `CERVEAU_GITHUB_TOKEN` : un jeton GitHub « fine-grained », limité au dépôt `kaliso-dev/rago`, droit **Contents : Read-only** seulement (mode d'emploi dans `licensing/docs/MISE-EN-LIGNE.md`, partie « Le Cerveau »). Avec le jeton, l'archive passe par `api.github.com/repos/…/tarball/<commit>`. À faire par Sofiene ([[Prochaines étapes]]). Voir [[Variables d'environnement]].
+
+En local (`npm run local`) et dans les tests, le Cerveau lit le dossier sur le disque (fichiers suivis et nouveaux, sans ceux ignorés par git), y compris les notes pas encore poussées ([[Développer et tester]]).
+
+## Ce que montre la page
+- **Graphe** : un point par note, coloré par dossier du vault (Pilotage = notes de la racine, Technique, Fonctionnalités, Code, Tweaks, Versions, Marketing, Design, Suivi, Projets, Historique), d'autant plus gros qu'il a de liens. Les traits sont les liens entre notes. En option : les fichiers du dépôt cités dans les notes (petits carrés), les tags (losanges), les liens cassés (cercles vides), les notes isolées.
+- **Animation** : simulation de forces (comme la vue graphe d'Obsidian) qui se pose en 5 secondes environ puis s'arrête ; caméra qui glisse, zoom à la molette, au pincement ou avec + et −, inertie quand on lâche le graphe, points qu'on peut tirer. Au survol, la note et ses voisins s'allument, le reste s'efface, et des impulsions (« l'influx ») partent de la note vers ses voisins ; d'autres impulsions parcourent le graphe au hasard. Les noms des notes apparaissent selon le zoom, sans jamais se chevaucher. 60 images par seconde mesurées dans Chromium avec 250 notes et 2 600 liens.
+- **Graphe local** : bouton « Local » (touche L) : seulement la note ouverte et ses voisins, à 1, 2 ou 3 liens de distance.
+- **Lecteur** (panneau de droite, largeur réglable en tirant son bord, mode « grand ») : la note mise en forme (tableaux, listes, cases à cocher, encadrés, blocs de code colorés), l'en-tête (dossier, type, date `maj`, tags), un sommaire (à partir de 4 parties), puis « Mentionnée dans » avec la phrase de chaque citation, « Liens sortants », « Fichiers cités » et « Liens cassés ». Les liens de notes ouvrent la note, le code entre backticks qui nomme un fichier du dépôt ouvre le fichier. Pointer un lien du lecteur allume sa note dans le graphe.
+- **Fichiers** : n'importe quel fichier du dépôt s'ouvre dans le lecteur avec numéros de ligne et couleurs (JS/TS, Rust, Python, PowerShell, batch, shell, CSS, HTML, JSON, TOML, YAML, SQL) ; un `.md` hors du vault s'affiche mis en forme avec un bouton « Source ». Les images et binaires ne sont pas affichés (lien GitHub). Les fichiers de plus de 600 Ko sont listés mais pas lus.
+- **Explorateur** (colonne de gauche) : l'arbre du vault et l'arbre complet du dépôt ; onglet **Affichage** : groupes à afficher, options, forces (attraction, répulsion, force et longueur des liens), chiffres du vault et liste des liens cassés.
+- **Recherche** (`Ctrl K` ou `/`) : notes par nom, puis texte des notes (avec l'extrait), puis fichiers du dépôt. Le champ « Filtrer le graphe » allume les notes qui correspondent.
+- **Adresse** : la note ou le fichier ouvert est dans l'adresse (`#n=<note>` ou `#f=<chemin>`), donc un lien copié (bouton 🔗) rouvre la même note, et le bouton Précédent du navigateur marche.
+- **Téléphone** : explorateur en tiroir (bouton ☰), lecteur plein écran, pincement pour zoomer.
+- Les réglages (groupes masqués, options, forces, largeur du lecteur) sont gardés dans le navigateur (`localStorage`, clé `rago.cerveau.v1`).
+
+## Raccourcis
+`Ctrl K` ou `/` rechercher · `F` tout voir · `L` graphe local · `+` `−` zoom · `Échap` fermer · `Alt ←` note précédente · double-clic sur un point pour zoomer dessus.
+
+## Code
+- [[brain.js]] : lecture du dépôt (GitHub ou disque), lecteur d'archive tar, rendu du markdown façon Obsidian, construction du graphe, cache.
+- [[brain-views.js]] : la page HTML (sans script ni style en ligne, comme tout `/admin`).
+- [[cerveau.js]] : le graphe, l'animation, le lecteur, la recherche, dans le navigateur.
+- [[cerveau.css]] : la mise en page et les styles.
+- Routes dans [[admin.js (serveur)]] : `GET /admin/cerveau` (la page, `?c=` pour choisir le cerveau), `GET /admin/cerveau/donnees.json` (tout le vault, compressé, avec `ETag`), `GET /admin/cerveau/fichier?chemin=` (un fichier du dépôt) ([[API du serveur]]).
+- Tests : `licensing/test/brain.test.js`, 8 tests ([[Tests du serveur]]).
+
+## Version publique : Synapse
+Demandé par Sofiene le 10/11 : « mon cousin aimerai avoir cette vu il faudrait extraire le projet du cerveau le mettre dans un nouveau repo public il faut qu'il puisse donner le repo à son claude et que claude lui installe l'interface mais il faut retirer le design rago il faut un design classique […] ça serait bien que ça soit dans un format qu'il peut heberger sur github page ».
+
+- **Un kit à part**, sans rien de Rago, nommé **Synapse** (nom choisi par Sofiene sur la carte du 10/11, parmi Synapse, Mycélium, Constellation et Cerveau) : dépôt public [kaliso-dev/Synapse](https://github.com/kaliso-dev/Synapse), licence MIT choisie par Claude par défaut. Il ne dépend pas du serveur de licences : `synapse/build.mjs` (Node 18+, aucune dépendance) construit un **site statique** (`_site/` : la page, `data.json`, une copie des pièces jointes) et une action GitHub le publie sur **GitHub Pages** à chaque push sur `main`. `synapse/serve.mjs` donne un aperçu local ; `node synapse/build.mjs --check` liste liens cassés, notes isolées, dossiers sans note d'index, notes hors d'atteinte depuis l'accueil.
+- **Design classique** : thème clair et sombre (celui de l'appareil, ou choisi dans Affichage), polices du système, accent bleu, plus de rouge ni de Geist ni de logo R. Couleurs des dossiers données par taille (ou par `cerveau.config.json`).
+- **Pour tout domaine** : le dossier du vault, le titre, ce qui est publié (`"fichiers"` : pièces jointes du vault, tout le dépôt ou rien) et les dossiers exclus se règlent dans `synapse.config.json`. Ajouts par rapport à la page Rago : images et pièces jointes affichées (`![[image.png]]`), propriétés de l'en-tête (avec leurs liens), alias, `#tags` dans le texte, commentaires `%%…%%` masqués.
+- **`INSTALLER.md`** : la marche à suivre pour le Claude de la personne (questions à poser, créer le dépôt, copier l'outil, créer le vault avec une note d'index par dossier, relier les notes, vérifier, publier, régler Pages). Un vault d'exemple (`exemple/`, 20 notes) sert de démo et de guide, avec des structures par domaine et des modèles de notes.
+- **Statut (10/11)** : construit et testé (Chromium : clair, sombre, téléphone, et le vault Rago de 341 notes en mode dépôt, 0 erreur). Dépôt créé par Sofiene le 10/11, kit poussé sur `main` le même soir (commit `7f029c8`). **Reste** : activer Pages (Settings → Pages → Source : GitHub Actions) pour que la démo soit en ligne sur `https://kaliso-dev.github.io/Synapse/`. Une copie du kit est dans les fichiers du projet (`synapse/synapse.bundle`).
+- Les deux versions sont séparées : une amélioration de la page Rago n'arrive pas toute seule dans le kit, et inversement.
+
+## À savoir
+- Les notes du vault sont lues telles quelles : un lien vers une note qui n'existe pas apparaît comme lien cassé (pastille jaune en haut du graphe et liste dans Affichage). C'est un bon moyen de vérifier la règle « aucun lien cassé » de [[Mettre à jour le vault]].
+- Le dépôt étant public tant qu'il n'est pas privé, le Cerveau ne montre rien de plus que GitHub ; il ne montre jamais de `.env`.
+- Le Cerveau affiche la branche `staging` même sur le serveur de prod : le vault de la branche de prod est en retard sur celui de `staging`.

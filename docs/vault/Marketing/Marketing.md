@@ -1,11 +1,11 @@
 ---
 type: carte
 tags: [marketing]
-maj: 2026-11-01
+maj: 2026-11-11
 ---
 # Marketing
 
-Carte des sujets marketing. Retour à [[Projet]]. Référence détaillée au 15/10 : `PROJECT_HANDOFF/11_MARKETING.md` ([[Sources]]).
+Carte des sujets marketing. Retour à [[Projet]].
 
 - **Positionnement** : réduire le délai **ajouté par le PC** (input lag, temps de trame, gigue), pas la distance au serveur. Créneau face à Hone (FPS) et ExitLag/NoPing (routage) : « mon coup n'est pas passé ». Promesse : « l'optimiseur honnête pour le PvP Minecraft ». Voir [[Voix et ton]].
 - **Cible** : joueurs Minecraft PvP sous Windows (Bedwars, Ranked Bedwars, Boxing, Sumo, Bridge) puis jeux compétitifs depuis la 1.2. Public jeune, souvent sans carte bancaire.
@@ -15,6 +15,7 @@ Carte des sujets marketing. Retour à [[Projet]]. Référence détaillée au 15/
 ## Sujets
 - [[Offres et prix]] · [[Promotions et affiliation]]
 - [[Discord]] · [[Partenaires et créateurs]]
-- Contenus : [[Vidéos YouTube]] · [[Trailer 1.2]]
+- Contenus : [[Vidéos YouTube]] · [[Logo création d'Adam]]
+- Concurrence et conversion : [[Étude de marché de novembre 2026]] (7 études du 03/11) · [[Page de vente Rago Route]] (ExitLag et les vendeurs de routes, 11/11)
 - Projet lié : [[Client Minecraft Rago]]
 - [[Site]] (tunnel d'achat)
