@@ -11,20 +11,45 @@ export const html = (strings, ...vals) => new Raw(strings.reduce((out, s, i) => 
 // v5 logo: the red R on a white tile, then RAGO (public/lockup.svg), and "Account" next to it.
 const WORDMARK = html`<img class="lockup" src="/assets/lockup.svg?v=5" alt="Rago Optimizer" width="102" height="34"><span class="brand-sub" aria-hidden="true">Account</span>`;
 
-const svg = (d, w = 1.6) => html`<svg viewBox="0 0 16 16" aria-hidden="true"><path d="${d}" fill="none" stroke="currentColor" stroke-width="${w}" stroke-linecap="round" stroke-linejoin="round"/></svg>`;
-export const ICON = {
-  check: svg('M3.5 8.5l3 3 6-7'),
-  download: svg('M8 2.5v7.5m0 0L4.8 6.8M8 10l3.2-3.2M3 13.2h10'),
-  copy: svg('M6 5.5h6a1.5 1.5 0 0 1 1.5 1.5v5A1.5 1.5 0 0 1 12 13.5H7A1.5 1.5 0 0 1 5.5 12V6M3.5 10V4A1.5 1.5 0 0 1 5 2.5h5', 1.4),
-  pc: svg('M3 2.8h10a1.5 1.5 0 0 1 1.5 1.5v5.4a1.5 1.5 0 0 1-1.5 1.5H3a1.5 1.5 0 0 1-1.5-1.5V4.3A1.5 1.5 0 0 1 3 2.8zM5.5 14h5M8 11.2V14', 1.4),
-  alert: svg('M8 2.2l6 10.6a.8.8 0 0 1-.7 1.2H2.7a.8.8 0 0 1-.7-1.2zM8 6.5v3M8 11.6v.1', 1.4),
-  arrow: svg('M3 8h10m0 0L9 4m4 4l-4 4'),
-  card: svg('M2.5 4h11a1 1 0 0 1 1 1v6a1 1 0 0 1-1 1h-11a1 1 0 0 1-1-1V5a1 1 0 0 1 1-1zM1.5 6.8h13', 1.4),
-  users: svg('M6 7.5a2.3 2.3 0 1 0 0-4.6 2.3 2.3 0 0 0 0 4.6zM1.8 13.5c.4-2.3 2.1-3.6 4.2-3.6s3.8 1.3 4.2 3.6M10.6 3a2.2 2.2 0 0 1 0 4.4M12.2 9.9c1.2.4 1.9 1.6 2.1 3.6', 1.4),
-  clock: svg('M8 14.5a6.5 6.5 0 1 0 0-13 6.5 6.5 0 0 0 0 13zM8 4.5V8l2.5 1.5', 1.4),
-  infinity: svg('M8 8c-1.4-2-2.6-3-4-3a3 3 0 0 0 0 6c1.4 0 2.6-1 4-3zm0 0c1.4 2 2.6 3 4 3a3 3 0 0 0 0-6c-1.4 0-2.6 1-4 3z', 1.4),
-  star: svg('M8 1.9l1.9 4 4.4.5-3.3 3.1.9 4.4L8 11.7l-3.9 2.2.9-4.4-3.3-3.1 4.4-.5z', 1.4),
+// Rago "printed" icons (v5 kit, outils/ricons/solid.py): solid shapes in the text colour, rough edges, a red copy
+// shifted behind like a misaligned print, leaning -12°. Drawn on a 24 grid; cuts are knocked out with a mask.
+// No style attribute anywhere (strict CSP): colours come from account.css (.pi .pb / .pi .pf).
+const cr = (x, y, w, h, c = 2.5) => `M${x} ${y}H${x + w - c}L${x + w} ${y + c}V${y + h}H${x}Z`;
+const fill = (d) => `<path fill="currentColor" d="${d}"/>`;
+const line = (d, w = 2.8) => `<path fill="none" stroke="currentColor" stroke-width="${w}" stroke-linejoin="miter" stroke-miterlimit="10" d="${d}"/>`;
+const cut = (d, w = 1.4) => `<path fill="none" stroke="#000" stroke-width="${w}" stroke-linejoin="miter" d="${d}"/>`;
+const cutf = (d) => `<path fill="#000" d="${d}"/>`;
+const circ = (cx, cy, r) => `<circle fill="currentColor" cx="${cx}" cy="${cy}" r="${r}"/>`;
+const SOLID = {
+  check: [fill('M1.8 12.6L5.6 8.8L9.8 13L18.4 4.4L22.2 8.2L9.8 20.6Z'), ''],
+  download: [fill('M9.4 2.2H14.6V9.2H19.4L12 16.6L4.6 9.2H9.4Z') + fill('M2.8 18.4H21.2V21.6H2.8Z'), ''],
+  copy: [fill(cr(8.4, 2.4, 12.2, 14.2, 2.6)) + fill(cr(3.4, 7.4, 12.2, 14.2, 2.6)), cut(cr(3.4, 7.4, 12.2, 14.2, 2.6), 1.4)],
+  pc: [fill('M2.8 3.5H18L21.2 6.7V16.2H2.8Z') + fill('M10.7 16H13.3V19.6H10.7Z') + fill('M7.2 19.4H16.8V21.4H7.2Z'),
+    cut(cr(5.4, 6, 12.8, 7.6, 1.8), 1.3) + cutf('M7.4 8.2H11.4V11.4H7.4Z')],
+  alert: [fill('M12 2.4L22.2 20.6H1.8Z'), cutf('M10.8 8.6H13.2V14.8H10.8Z') + cutf('M10.8 16.4H13.2V18.8H10.8Z')],
+  arrow: [fill('M2.2 9.6H12.6V4.6L21.8 12L12.6 19.4V14.4H2.2Z'), ''],
+  card: [fill(cr(1.8, 4.4, 20.4, 15.2, 2.6)), cutf('M1.8 8.2H22.2V10.8H1.8Z') + cutf('M4.8 14.4H10.4V16.4H4.8Z')],
+  users: [circ(9, 7.4, 3.8) + fill('M2.2 20.8C2.2 15.6 5.2 12.8 9 12.8S15.8 15.6 15.8 20.8Z') + circ(16.8, 6.2, 2.9)
+    + fill('M15.4 11.8C19.4 11.4 21.8 14.2 21.8 18.8H17.4C17.3 15.8 16.7 13.4 15.4 11.8Z'), cut('M9 12.8V14.6', 1.2)],
+  clock: [circ(12, 12, 9.4), cut('M12 6.2V12.6L16 14.8', 1.9)],
+  infinity: [line('M12 12C10 9 8.6 7.4 6.4 7.4A4.6 4.6 0 0 0 6.4 16.6C8.6 16.6 10 15 12 12C14 9 15.4 7.4 17.6 7.4A4.6 4.6 0 0 1 17.6 16.6C15.4 16.6 14 15 12 12Z', 3.2), ''],
+  star: [fill('M12 1.6L15.1 8.5L22.4 9.2L16.9 14.2L18.5 21.6L12 17.8L5.5 21.6L7.1 14.2L1.6 9.2L8.9 8.5Z'), cutf('M11 8.4H13V13.4H11Z')],
 };
+let uid = 0;
+/** One printed icon: the red copy behind (.pb), the face in the text colour on top (.pf). */
+const printed = (name) => {
+  const [shapes, cuts] = SOLID[name];
+  const u = `pi${(uid = (uid + 1) % 1e6)}`;
+  const mask = cuts ? `<mask id="m${u}" maskUnits="userSpaceOnUse" x="-4" y="-4" width="32" height="32"><rect x="-4" y="-4" width="32" height="32" fill="#fff"/>${cuts}</mask>` : '';
+  return raw(`<svg class="pi pi-${name}" viewBox="0 0 24 24" overflow="visible" aria-hidden="true" focusable="false"><defs>${mask}`
+    + `<g id="g${u}"${cuts ? ` mask="url(#m${u})"` : ''}>${shapes}</g></defs><g transform="translate(2.55 0) skewX(-12)">`
+    + `<use class="pb" href="#g${u}" transform="translate(1.3 1.5)" filter="url(#rgh-back)"/><use class="pf" href="#g${u}" filter="url(#rgh-face)"/></g></svg>`);
+};
+const flt = (id, freq, scale, seed, xs = 'R', ys = 'G') => `<filter id="${id}" x="-20%" y="-20%" width="140%" height="140%" primitiveUnits="userSpaceOnUse" color-interpolation-filters="sRGB">`
+  + `<feTurbulence type="fractalNoise" baseFrequency="${freq}" numOctaves="2" seed="${seed}" result="n"/><feDisplacementMap in="SourceGraphic" in2="n" scale="${scale}" xChannelSelector="${xs}" yChannelSelector="${ys}"/></filter>`;
+/** Rough-edge filters shared by every printed icon on the page (put once at the top of <body>). */
+const PI_DEFS = `<svg class="pi-defs" width="0" height="0" aria-hidden="true" focusable="false"><defs>${flt('rgh-face', 1.2, 0.45, 3)}${flt('rgh-back', 1.0, 0.6, 14, 'G', 'R')}</defs></svg>`;
+export const ICON = new Proxy({}, { get: (_, name) => (SOLID[name] ? printed(name) : undefined) });
 
 /** Profile photo, or the first letter of the public name (or email) on a dark circle when there's none. */
 export function avatar(user, size = 'sm') {
@@ -69,10 +94,11 @@ export function page({ title, body, user, cfg, bodyClass = '', nav = '', cta = {
 <link rel="preload" href="/assets/fonts/BarlowCondensed-900-italic.woff2" as="font" type="font/woff2" crossorigin>
 <link rel="preload" href="/assets/fonts/Barlow-400.woff2" as="font" type="font/woff2" crossorigin>
 <link rel="stylesheet" href="/assets/tokens.css?v=5">
-<link rel="stylesheet" href="/assets/account.css?v=5">
+<link rel="stylesheet" href="/assets/account.css?v=7">
 <script src="/assets/account.js?v=5" defer></script>
 </head>
 <body class="${escape(bodyClass)}">
+${PI_DEFS}
 ${cfg.staging ? render(html`<div class="staging-bar" role="note"><b>Test server (${cfg.envName})</b> Not the real Rago: payments use Stripe test cards (4242 4242 4242 4242), accounts here are test accounts.</div>`) : ''}
 <div class="bg" aria-hidden="true"><span></span><span></span></div>
 <header class="top">
