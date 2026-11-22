@@ -17,7 +17,8 @@
 <link rel="icon" href="favicon.ico" sizes="any">
 <link rel="apple-touch-icon" href="apple-touch-icon.png">
 <link rel="preload" href="fonts/BarlowCondensed-900-italic.woff2" as="font" type="font/woff2" crossorigin>
-<link rel="stylesheet" href="v5.css?v=2833c51b59">
+<link rel="stylesheet" href="v5.css?v=84f9d1d923">
+<script src="v5.js?v=25a4c2a9fa" defer></script>
 <style>
 .sm-nav .r > a{display:inline-flex;align-items:center;gap:8px}
 .sm-nav .r > a svg{width:16px;height:16px;transform:rotate(180deg)}
@@ -45,13 +46,15 @@
 .s-nav .brand em{font-family:var(--cond);font-weight:900;font-style:italic;font-size:26px;text-transform:uppercase;color:var(--red)}
 @media (max-width:760px){.s-nav .brand em{font-size:22px}.s-nav .brand i{height:22px}}
 
-.sm-hero{width:min(1200px,calc(100% - 2 * var(--g)));margin:0 auto;grid-template-columns:1fr}
+.sm-hero{width:min(var(--cw),calc(100% - 2 * var(--g)));margin:0 auto;grid-template-columns:1fr}
 .sm-nav .r > a:not(.btn) svg{width:16px;height:16px;transform:none}
-.sw5.sm-w{width:min(1200px,calc(100% - 2 * var(--g)));margin:0 auto}
+.sw5.sm-w{width:min(var(--cw),calc(100% - 2 * var(--g)));margin:0 auto}
 .s-eb b{color:var(--red);font-weight:inherit;margin:0 4px}
 .pt-c{transition:border-color .3s,transform .4s var(--out)}
 .pt-c:hover{border-color:rgba(255,59,48,.55);transform:translateY(-3px)}
-.pt-c:hover .btn{background:var(--red);color:var(--red-ink)}
+.pt-c:hover .btn{color:var(--red-ink)}
+.pt-c:hover .btn::before{background:var(--red);border-color:var(--red);box-shadow:0 0 0 5px rgba(255,59,48,.16),0 0 34px rgba(255,59,48,.35)}
+.pt-c:hover .btn svg.i{--pf:#ECE9E2;--pb:#0A0A0B}
 .pt-c img{border-radius:20px;object-fit:cover}
 .pt-c .lg > div{min-width:0}
 .pt-c picture{flex:none;display:block}

@@ -29,7 +29,8 @@
 <meta name="description" content="Rago Optimizer tunes Windows, your network and Minecraft for steadier ping, smoother frames and less input lag. Nearly 220 tweaks, free to start.">
 <link rel="preload" href="fonts/BarlowCondensed-900-italic.woff2" as="font" type="font/woff2" crossorigin>
 <link rel="preload" href="fonts/Barlow-400.woff2" as="font" type="font/woff2" crossorigin>
-<link rel="stylesheet" href="v5.css?v=2833c51b59">
+<link rel="stylesheet" href="v5.css?v=84f9d1d923">
+<script src="v5.js?v=25a4c2a9fa" defer></script>
 <noscript><style>.js-only{display:none!important}</style></noscript>
 <style>
 /* Layout of the home page (design v5 "Match day", 22/11/2026): the shared parts are in v5.css, here only what this page
@@ -95,9 +96,9 @@ details.s-q p{padding:0 0 24px;font-size:15.5px;line-height:1.6;color:var(--ink-
 #with-route:focus-visible + .cb{outline:2px solid var(--red);outline-offset:3px}
 #partners{margin-top:clamp(70px,8vw,110px)}
 .s-pt > div{min-width:0}
-.s-hero .s-hl{left:max(var(--g),calc((100% - 1200px) / 2))}
-.s-hero .s-shot{left:calc(max(var(--g),calc((100% - 1200px) / 2)) + 670px)}
-.s-final .in{width:min(1200px,calc(100% - 2 * var(--g)))}
+.s-hero .s-hl{left:max(var(--g),calc((100% - var(--cw)) / 2))}
+.s-hero .s-shot{left:calc(max(var(--g),calc((100% - var(--cw)) / 2)) + 670px)}
+.s-final .in{width:min(var(--cw),calc(100% - 2 * var(--g)))}
 .s-b .vis{overflow:hidden}
 
 /* smaller screens: the compositions of the 1440 mockups fold into one column */

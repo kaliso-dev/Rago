@@ -19,7 +19,7 @@
   --ink:#F5F5F6; --ink-2:#A1A1AA; --ink-3:#7C7C86; --line:rgba(255,255,255,.07); --line-2:rgba(255,255,255,.13);
   --red:#FF3B30; --red-ink:#0A0A0B; --red-deep:#C9221A; --ok:#3DDC97; --warn:#FFD60A;
   --cond:"Barlow Condensed","Arial Narrow",sans-serif; --body:"Barlow","Helvetica Neue",Arial,sans-serif;
-  --skew:-12deg; --g:clamp(16px,4vw,48px); --out:cubic-bezier(.16,1,.3,1);
+  --skew:-12deg; --g:clamp(16px,3.6vw,64px); --cw:1440px; --out:cubic-bezier(.16,1,.3,1);
   --pf:#ECE9E2; --pb:#FF3B30;
   color-scheme:dark;
 }
@@ -163,7 +163,7 @@ svg.i{width:16px;height:16px;fill:none;stroke:currentColor;stroke-width:2;stroke
 .s-trust .s-ck{font-size:14px;color:var(--ink-2)}
 .s-shot{position:absolute;z-index:1;left:790px;top:118px;width:900px}
 .s-shot::before{content:"";position:absolute;left:18px;top:18px;right:-18px;bottom:-18px;background:var(--red)}
-.s-shot img.sc{position:relative;display:block;width:900px;border:1px solid var(--line-2);box-shadow:0 40px 90px -30px rgba(0,0,0,.9)}
+.s-shot img.sc{position:relative;display:block;width:900px;height:auto;border:1px solid var(--line-2);box-shadow:0 40px 90px -30px rgba(0,0,0,.9)}
 .s-shot .pill{position:absolute;left:-44px;bottom:-28px;z-index:2;height:52px;display:flex;align-items:center;gap:9px;padding:0 20px 0 6px;background:rgba(10,10,11,.92);border:1px solid rgba(255,255,255,.14);box-shadow:0 20px 40px -10px rgba(0,0,0,.8)}
 .s-shot .pill img{width:38px;height:38px;margin-right:3px}
 .s-shot .pill b{font-family:var(--cond);font-weight:900;font-style:italic;font-size:26px}
@@ -608,7 +608,7 @@ svg.i{width:16px;height:16px;fill:none;stroke:currentColor;stroke-width:2;stroke
 /* =====================================================================================================================
    Le site en vrai (22/11/2026) : ce que les maquettes fixes à 1440 px ne disent pas
    ===================================================================================================================== */
-.sw5{width:min(1200px,calc(100% - 2 * var(--g)))}
+.sw5{width:min(var(--cw),calc(100% - 2 * var(--g)))}
 .btn{cursor:pointer;transition:transform .16s var(--out),color .16s}
 .btn::before{transition:background .16s,box-shadow .2s,border-color .16s}
 .btn:hover::before{background:var(--bg-4);border-color:rgba(255,255,255,.22)}
@@ -623,8 +623,14 @@ svg.i{width:16px;height:16px;fill:none;stroke:currentColor;stroke-width:2;stroke
 .s-link:hover{color:var(--red)}
 .s-link svg{transition:transform .24s var(--out)}
 .s-link:hover svg{transform:translateX(3px)}
-.s-h2{font-size:clamp(46px,7vw,86px)}
-.s-sec{padding-top:clamp(84px,10vw,120px)}
+.s-h2{font-size:clamp(46px,6.6vw,100px)}
+.s-sec{padding-top:clamp(90px,11vw,160px)}
+/* grands écrans (Sofiene, 22/11 : « ça doit bien occuper la largeur de l'écran ») : toute la page grossit d'un cran,
+   la mise en page reste celle des maquettes à 1 440 px */
+@media (min-width:1600px){body{zoom:1.1}}
+@media (min-width:1800px){body{zoom:1.22}}
+@media (min-width:2100px){body{zoom:1.38}}
+@media (min-width:2500px){body{zoom:1.6}}
 a.s-card{transition:border-color .2s,transform .3s var(--out)}
 a.s-card:hover{border-color:rgba(255,59,48,.55);transform:translateY(-2px)}
 
@@ -757,6 +763,38 @@ a.s-card:hover{border-color:rgba(255,59,48,.55);transform:translateY(-2px)}
   .s-foot .cols{display:grid;grid-template-columns:1fr 1fr;gap:30px}
   .toast{bottom:calc(84px + env(safe-area-inset-bottom,0px))}
 }
+/* =====================================================================================================================
+   Mouvement (v5.js, 22/11/2026) : seulement quand v5.js a mis la classe .mo sur <html> (jamais avec « réduire les
+   animations »). Propriétés translate, scale, opacity et clip-path : les transform des pages restent libres.
+   ===================================================================================================================== */
+.mo .rv.pre{opacity:1;transform:none;filter:none}
+.mo .mo-ln{display:block;padding-bottom:.04em;margin-bottom:-.04em;clip-path:inset(-60% -40% 0 -40%)}
+.mo .mo-li{display:block;translate:0 110%;rotate:4deg;transform-origin:0 100%;transition:translate 1s var(--out),rotate 1s var(--out);transition-delay:calc(var(--d,0ms) + var(--i,0) * 90ms)}
+.mo .mo-h.in .mo-li{translate:0 0;rotate:0deg}
+.mo .mo-h.in .mo-ln{animation:mo-unclip 0s linear calc(1.1s + var(--i,0) * 90ms + var(--d,0ms)) forwards}
+@keyframes mo-unclip{to{clip-path:none}}
+.mo .mo-h .br::after,.mo .mo-h .brush::after{clip-path:inset(0 100% 0 0);transition:clip-path .9s cubic-bezier(.7,0,.2,1) calc(var(--d,0ms) + .45s)}
+.mo .mo-h.in .br::after,.mo .mo-h.in .brush::after{clip-path:inset(0 0 0 0)}
+.mo .mo-b{opacity:0;translate:0 48px;transition:opacity .9s var(--out),translate 1.1s var(--out);transition-delay:var(--d,0ms)}
+.mo .mo-b.s-card,.mo .mo-b.pt-c,.mo .mo-b.r5-f,.mo .mo-b.pc{scale:.96}
+.mo .mo-b.in{opacity:1;translate:0 0;scale:1;transition:opacity .9s var(--out),translate 1.1s var(--out),scale 1.1s var(--out);transition-delay:var(--d,0ms)}
+.mo .mo-v > .vis,.mo .mo-v > .s-dcv{clip-path:inset(100% 0 0 0 round 14px);transition:clip-path 1.2s cubic-bezier(.7,0,.2,1) calc(var(--d,0ms) + .15s)}
+.mo .mo-v.in > .vis,.mo .mo-v.in > .s-dcv{clip-path:inset(0 0 0 0 round 0)}
+/* héros : l'app arrive en glissant, le bandeau rouge défile */
+.mo .s-hero .s-shot{animation:mo-shot 1.4s var(--out) .25s both}
+.mo .s-hero .s-shot::before{animation:mo-shadow 1.2s var(--out) .7s both}
+@keyframes mo-shot{from{opacity:0;translate:160px 40px;rotate:3deg}}
+@keyframes mo-shadow{from{translate:-18px -18px}}
+.mo .s-hero .s-shot img.sc{will-change:translate}
+.mo .s-tick > div.mo-run{width:max-content;padding-left:0;will-change:translate}
+.mo .s-tick > div.mo-run > *:first-child{margin-left:40px}
+/* barre de progression de la lecture, en haut de l'écran */
+.mo-bar{position:fixed;left:0;right:0;top:0;z-index:60;height:3px;background:var(--red);transform-origin:0 50%;scale:0 1;pointer-events:none;box-shadow:0 0 12px rgba(255,59,48,.6)}
+/* mot « RAGO » de la bande finale : glisse au défilement */
+.mo .s-final .big,.mo .final .big{will-change:translate}
+/* cartes : une lueur rouge suit la souris */
+.mo .mo-hot{background-image:radial-gradient(420px circle at var(--mx,50%) var(--my,50%),rgba(255,59,48,.10),transparent 60%)}
+.mo .btn.lg,.mo .btn.xl{transition:translate .35s var(--out),transform .16s var(--out),color .16s}
 @media (prefers-reduced-motion:reduce){
   html{scroll-behavior:auto}
   *,*::before,*::after{animation-duration:.01ms!important;animation-iteration-count:1!important;transition-duration:.01ms!important}

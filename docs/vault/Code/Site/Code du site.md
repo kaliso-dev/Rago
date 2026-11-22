@@ -15,6 +15,7 @@ Tout est CONFIRMÉ d'après le code de `staging` (10/11, commit `ee77d4f`), mis 
 |---|---|
 | [[page.html]] | source de l'accueil : HTML, CSS propre à l'accueil et JavaScript en un fragment (prix, pop-up promo, avis, aperçu de l'app, FAQ) |
 | [[v5.css]] | feuille partagée par toutes les pages : polices Barlow, couleurs, boutons penchés, en-tête, pied de page |
+| [[v5.js]] | animations partagées : titres, apparitions au défilement, bandeau qui défile, parallaxe, lueur des cartes |
 | [[tweaks.html]] | source de la page Tweaks : téléchargement gratuit et les 218 tweaks avec recherche, filtres, fiche détaillée |
 | [[reviews.html]] | source de la page de tous les avis (lus en direct sur le serveur) |
 | [[partners.html]] | source de la page des serveurs partenaires |
@@ -68,7 +69,7 @@ Sources de vérité côté app : [[catalog.json]], [[free.json]], [[i18n.ts]] ; 
 python3 site/tools/build.py
   1. sync_partners.py : partners.json ──> src/page.html (4 cartes) + src/partners.html (6 cartes)
      sync_icons.py    : icons_v5.json ──> sprite d'icônes de chaque src/*.html
-  2. src/page.html ──> index.html  (v5.css?v=<empreinte>, CONFIG lu, prix et liens sans JS,
+  2. src/page.html ──> index.html  (v5.css?v= et v5.js?v=<empreinte>, CONFIG lu, prix et liens sans JS,
                                      contrôle prix Lifetime = licensing/src/billing.js,
                                      FAQ <noscript> via node, Discord, og:image?v=, JSON-LD, <head>)
      └─ node prerender.js index.html ──> tableau cmp gravé

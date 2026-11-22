@@ -25,7 +25,8 @@
 <link rel="icon" href="favicon.ico" sizes="any">
 <link rel="apple-touch-icon" href="apple-touch-icon.png">
 <link rel="preload" href="fonts/BarlowCondensed-900-italic.woff2" as="font" type="font/woff2" crossorigin>
-<link rel="stylesheet" href="v5.css?v=2833c51b59">
+<link rel="stylesheet" href="v5.css?v=84f9d1d923">
+<script src="v5.js?v=25a4c2a9fa" defer></script>
 <style>
 .r5-nav .brand{display:flex;align-items:center;gap:12px}
 .r5-nav .brand i{width:2px;height:26px;background:var(--line-2);transform:skewX(var(--skew))}
@@ -195,8 +196,8 @@ details.s-q .a code{font-family:Consolas,"Courier New",monospace;font-size:14px;
 .r5-p .skip a:hover b{color:var(--red)}
 .r5-p .skip a svg{width:16px;height:16px;vertical-align:-2px;margin-left:8px}
 .s-tag{white-space:nowrap}
-.r5-hero{width:min(1200px,calc(100% - 2 * var(--g)));margin:0 auto}
-.s-final .in{width:min(1200px,calc(100% - 2 * var(--g)))}
+.r5-hero{width:min(var(--cw),calc(100% - 2 * var(--g)));margin:0 auto}
+.s-final .in{width:min(var(--cw),calc(100% - 2 * var(--g)))}
 .s-final .fine{margin-top:16px;font-size:13px;color:rgba(10,10,11,.7);max-width:640px}
 .rv{transition:opacity .8s var(--out),transform .8s var(--out)}
 @media (max-width:1240px){

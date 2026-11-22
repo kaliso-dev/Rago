@@ -21,7 +21,7 @@
 <style>
 .sm-nav .r > a{display:inline-flex;align-items:center;gap:8px}
 .sm-nav .r > a svg{width:16px;height:16px;transform:rotate(180deg)}
-.sm-hero{position:relative;width:min(1200px,calc(100% - 2 * var(--g)));margin:0 auto;display:grid;grid-template-columns:minmax(0,1fr) 430px;gap:60px;align-items:end;padding:80px 0 0}
+.sm-hero{position:relative;width:min(var(--cw),calc(100% - 2 * var(--g)));margin:0 auto;display:grid;grid-template-columns:minmax(0,1fr) 430px;gap:60px;align-items:end;padding:80px 0 0}
 .sm-hero .s-dots{right:-120px;top:-40px;width:760px;height:520px;-webkit-mask:linear-gradient(230deg,#000 0,transparent 65%)}
 .sm-hero h1{position:relative;margin-top:22px;font-family:var(--cond);font-weight:900;font-style:italic;font-size:100px;line-height:.84;text-transform:uppercase;letter-spacing:-.01em}
 .sm-hero .s-lead{margin-top:26px}
@@ -73,7 +73,7 @@
 .s-nav .brand em{font-family:var(--cond);font-weight:900;font-style:italic;font-size:26px;text-transform:uppercase;color:var(--red)}
 @media (max-width:760px){.s-nav .brand em{font-size:22px}.s-nav .brand i{height:22px}}
 
-.sw5.sm-w{width:min(1200px,calc(100% - 2 * var(--g)));margin:0 auto}
+.sw5.sm-w{width:min(var(--cw),calc(100% - 2 * var(--g)));margin:0 auto}
 .sm-nav .r > a:not(.btn) svg{width:16px;height:16px;transform:none}
 .sm-sum ul{list-style:none;margin:0;padding:0}
 .sm-sum li button{all:unset;box-sizing:border-box;display:grid;grid-template-columns:32px 1fr 26px;gap:12px;align-items:center;width:100%;cursor:pointer;font:inherit;color:inherit;padding:2px 0}

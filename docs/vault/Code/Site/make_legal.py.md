@@ -22,7 +22,7 @@ Tout ce qui suit est CONFIRMÉ (branche du site v5, PR #109, 22/11). Commande : 
 |---|---|
 | `UPD` | date « Last updated » de chaque page : terms « November 13, 2026 », privacy « November 10, 2026 » |
 | `SITE`, `ACC`, `DISCORD`, `MAIL` | adresses du site, du serveur de comptes, de l'invitation Discord et lien `mailto:` du support |
-| `CSSV`, `OGV` | empreintes de `v5.css` et `og-image.png`, calculées comme [[build.py]] (adresses `?v=`) |
+| `CSSV`, `JSV`, `OGV` | empreintes de `v5.css`, [[v5.js]] et `og-image.png`, calculées comme [[build.py]] (adresses `?v=`) |
 | `CSS` | le style des pages légales et de la 404 (maquettes « site-terms », « site-privacy », « site-404 »), en plus de `v5.css` |
 | `head()`, `logo()`, `footer()` | haut de page (icônes, préchargement de Barlow Condensed 900 italique, `v5.css?v=`), logo (tuile blanche, R rouge), pied de page v5 commun ; `root="/"` pour la 404 |
 | `sections(src, numbered, ids)` | coupe le texte à chaque `<h2>` : une `<section class="lg-sec" id>` par titre, le numéro (« 4a ») à part en contour rouge, et le sommaire ; le tableau `<div class="tbl"><table>` de la confidentialité devient une liste à deux colonnes `.lg-tbl` (rôles ARIA `table`, `row`, `cell`) |
@@ -60,7 +60,7 @@ Encadrés : cookies 0 ads, your card Stripe only, network test no IP kept, delet
 `<meta name="robots" content="noindex">`. Netlify la sert pour **n'importe quelle** adresse inconnue : tous les liens, images, polices et la feuille sont absolus (`/…`). En-tête complet du site (Why Rago, Features, Rago Route, Tweaks, Reviews, Pricing, FAQ, Sign in, Get Premium), « Error // 404 », « This page doesn't exist. », « The link may be old or mistyped. », boutons « Back to Rago Optimizer » et « See pricing », rangée de paquets « 1 2 3 404 5 » (« packet lost // this page never arrived »), raccourcis Tweaks, Rago Route, Reviews, FAQ, grand « 404 » en contour, pied de page.
 
 ## Données touchées
-Lit `site/src/legal/terms.html`, `site/src/legal/privacy.html`, `site/v5.css`, `site/og-image.png`. Écrit `site/terms.html`, `site/privacy.html`, `site/404.html`.
+Lit `site/src/legal/terms.html`, `site/src/legal/privacy.html`, `site/v5.css`, `site/v5.js`, `site/og-image.png`. Écrit `site/terms.html`, `site/privacy.html`, `site/404.html`.
 
 ## Erreurs et cas limites
 - Une section numérotée des conditions doit commencer par « N. » ou « Na. » (`re.match` sinon `AttributeError`).
