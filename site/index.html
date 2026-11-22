@@ -329,6 +329,10 @@ details.s-q p{padding:0 0 24px;font-size:15.5px;line-height:1.6;color:var(--ink-
   .hs-on .s-bento > .s-b.c3{width:calc(520px * var(--k,1))}
   .hs-on .s-bento > .s-b.ig{width:auto;grid-template-columns:auto calc(340px * var(--k,1))}
   .hs-on .s-bento > .s-b.ig .vis{height:calc(560px * var(--k,1));width:auto;aspect-ratio:1100/636;min-height:0}
+  /* les autres cartes prennent la hauteur de la carte de la barre en jeu : leur illustration s'agrandit (contenu centré),
+     le texte et les étiquettes restent collés dessous, sans trou */
+  .hs-on .s-b:not(.ig) > .vis{flex:1 1 auto;height:auto;min-height:calc(300px * var(--k,1));justify-content:center}
+  .hs-on .s-b:not(.ig) > .tags{margin-top:0}
   .hs-on .s-fin{margin-top:calc(26px * var(--k,1))}
   .hs-on .hs-bar{display:block}
   .hs-bar{display:none;position:relative;height:3px;margin-top:22px;background:var(--line-2);border-radius:3px;overflow:hidden}
