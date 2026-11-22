@@ -715,3 +715,6 @@ svg.pi{overflow:visible;fill:currentColor;stroke:none}
 .device-icon svg,.plan-icon svg{width:27px;height:27px}
 .device-empty .device-icon{color:var(--rg-text-2)}
 .steps li.now::before,.steps li.done + li.now::before{background:var(--rg-red-500);border-color:var(--rg-red-500)}
+/* Sofiene, 22/11 22:45: the tick itself is red (dark square, red tick, dark-red print behind). */
+.steps .done .steps-dot{background:var(--rg-ink-4);color:var(--rg-red-500);box-shadow:inset 0 0 0 1px rgba(255,59,48,.45)}
+.steps .done .pi .pb{color:var(--rg-red-700)}

@@ -2,7 +2,7 @@
 type: code
 tags: [code, serveur, css]
 fichier: licensing/public/tokens.css, licensing/public/account.css, licensing/public/admin.css
-lignes: 227 + 717 + 737
+lignes: 227 + 721 + 737
 maj: 2026-11-22
 ---
 # Styles du serveur (CSS)
@@ -21,7 +21,7 @@ Servies par `serveStatic` d'[[app.js]] depuis `licensing/public/`. Les pages de 
 - Puis la copie exacte de `rendus-v5/marque/tokens/tokens.css` (tokens **v2.0 « Match day »** du 22/11) : fonds `--rg-ink-0` à `-5`, texte (`--rg-text-3` `#6E6E78`), lignes, rouge (plus de dégradé : `--rg-red-gradient` = `#FF3B30`), papier `--rg-paper`, états (`--rg-warning` `#FFC53D` et ses fonds `-a06/-a10/-a18`, `--rg-info` gris), effets d'affiche (`--rg-fx-*` : trame, carbone, hachures, voile rouge), polices (`--rg-font-display` Barlow Condensed, `--rg-font-sans` Barlow, `--rg-font-mono` = Barlow Condensed), angles (`--rg-skew` -12°, `--rg-angle-brush` -2,5°…), rayons v5 (`--rg-radius-btn` 12 px, `--rg-radius-panel` 22 px…), hauteurs, ombres (`--rg-shadow-glow`…), mouvement, styles de texte `--rg-t-*` (titre, chiffres, boutons, libellés) ; un bloc de jetons v1.2 (tailles Geist, verre) gardé le temps de la migration.
 - Plus de thème clair. Classes utilitaires `.rg-title`, `.rg-kick`, `.rg-label`, `.rg-metric`, `.rg-overline`, `.rg-skew`, `.rg-halftone`, `.rg-carbon`, `.rg-hatch`.
 
-## account.css (717 lignes)
+## account.css (721 lignes)
 
 Les règles de base (v1.1, lignes 1 à 467) décrivent la structure ; la **couche v5** ajoutée à la fin (22/11, maquettes 99 à 123 de la revue) change le dessin sans toucher au HTML :
 - fond : trame de points qui s'efface depuis le haut à gauche (plus de halos rouges ni d'onde « pulse ») ; bandeau jaune « Test server » sur staging ;
@@ -32,7 +32,7 @@ Les règles de base (v1.1, lignes 1 à 467) décrivent la structure ; la **couch
 - tableau de bord `/account` : carte de téléchargement sur toute la largeur (étapes à droite sur fond `#17171A`), puis **deux colonnes** de cartes (licence, PC, abonnement, Rago Route | Discord, affiliation, avis), une seule colonne sous 1000 px ; chaque section empilée (libellé et badge, contenu, actions) ; titres de section en 900 italique, icônes « imprimées » sur carré rouge teinté, clé de licence en Barlow Condensed, badges en capitales, récompenses Discord en lignes grises, anneau d'affiliation avec chiffres italiques ;
 - affiliation, profil (avatar rouge, aperçu dans un cadre), avis : mêmes règles ;
 - adaptations ajoutées : bouton large qui tient sur un téléphone (560 et 360 px) ; vérifié à 1440 et 390 px (pas de défilement horizontal).
-- **retour de Sofiene du 22/11 au soir** (« les icones ne sont pas personnalisé comme je le voulais et les signes validé devrait être rouge ») : icônes « imprimées » de [[views.js]] (`svg.pi`, copie rouge `.pb`, plus foncée sur les boutons rouges) ; tout ce qui est validé est **rouge**, plus vert ni blanc : étapes faites (carré rouge, coche noire), messages de succès, places d'affiliation remplies, badges « Active », anneau complet ; correction : l'étape en cours après une étape faite reste bien rouge.
+- **retour de Sofiene du 22/11 au soir** (« les icones ne sont pas personnalisé comme je le voulais et les signes validé devrait être rouge ») : icônes « imprimées » de [[views.js]] (`svg.pi`, copie rouge `.pb`, plus foncée sur les boutons rouges) ; tout ce qui est validé est **rouge**, plus vert ni blanc : étapes faites (coche rouge sur carré sombre), messages de succès, places d'affiliation remplies, badges « Active », anneau complet ; correction : l'étape en cours après une étape faite reste bien rouge.
 
 ## admin.css (737 lignes)
 
