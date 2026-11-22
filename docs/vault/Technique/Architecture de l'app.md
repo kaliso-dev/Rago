@@ -2,7 +2,7 @@
 type: technique
 tags: [technique, app, architecture]
 version_app: 1.3.0
-maj: 2026-11-11
+maj: 2026-11-22
 ---
 # Architecture de l'app
 
@@ -68,7 +68,7 @@ Fermeture de la fenêtre principale : cachée si une remise est en cours ou si l
 - Catalogue : `lib/catalog.ts` lit `data/catalog.json` (modules → sections → tweaks → variantes, presets, retirés).
 - Textes : `lib/i18n.ts` (≈2 100 lignes, clés EN et FR ; anglais par défaut, tutoiement en français).
 - Barre en jeu : deuxième page Vite `overlay.html` → `src/overlay/Overlay.tsx`, fenêtre `overlay` avec sa propre capability (`capabilities/overlay.json`, `core:default` seulement).
-- Styles dans `src/styles/`, polices Geist embarquées (`src/assets/fonts`), animations `motion`, icônes `lucide-react`.
+- Styles dans `src/styles/` (charte v5 dans `v5.css` depuis la PR #108 du 22/11), polices Barlow et Barlow Condensed embarquées (`src/assets/fonts`), animations `motion`, icônes imprimées de `components/ri.tsx` par-dessus `lucide-react`.
 
 ## 5. Ce qui est figé à la compilation
 | Variable (CI) | Lue par | Effet |

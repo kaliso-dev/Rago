@@ -5,7 +5,7 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import type { PointerEvent as ReactPointerEvent } from "react";
 import { motion } from "motion/react";
-import { Activity, ArrowRight, Calculator, Check, MousePointer2, MousePointerClick, RotateCcw, ShieldAlert, TriangleAlert } from "lucide-react";
+import { Activity, ArrowRight, Calculator, Check, MousePointer2, MousePointerClick, RotateCcw, ShieldAlert, TriangleAlert } from "../components/ri";
 import { api, type MouseApp } from "../lib/api";
 import { useStore } from "../lib/store";
 import { Badge, Button } from "../components/ui";
@@ -39,8 +39,8 @@ export function Mouse() {
   return (
     <motion.div className="page tools mouse" variants={stagger} initial="initial" animate="animate">
       <motion.header className="page-head" variants={rise}>
-        <div className="rg-overline">{L("Mouse", "Souris")}</div>
-        <h1>{L("Check your mouse", "Vérifie ta souris")}</h1>
+        <div className="rg-overline">{L("Check your mouse", "Vérifie ta souris")}</div>
+        <h1>{L("Mouse", "Souris")}</h1>
         <p className="lead">
           {L(
             "Real polling rate, worn clicks and software that gets between your mouse and the game. Measured in this window only: nothing touches your game.",

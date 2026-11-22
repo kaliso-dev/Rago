@@ -3,7 +3,7 @@ type: code
 tags: [code, app, typescript, react]
 fichier: app/src/pages/Settings.tsx
 lignes: 225
-maj: 2026-11-10
+maj: 2026-11-22
 ---
 # Settings.tsx
 
@@ -51,7 +51,7 @@ Interrupteur « « Nettoyer » réduit aussi les applis en arrière-plan » (`cl
 - « Par KALISO et RAGO » (signature ajoutée en 1.3.0).
 - En démo : « Mode démo : aucune modification n'est faite sur ce PC. »
 - **Exe de test seulement** (`STAGING`) : « Mise à jour : {date de la dernière recherche} » (ou « recherche en cours »), relu toutes les 3 s (`api.updateStatus()`).
-- **Licences** des logiciels tiers, chacun avec un lien : NVIDIA Profile Inspector (MIT), PresentMon d'Intel (MIT), Geist et Geist Mono (SIL OFL 1.1), Tauri (MIT / Apache 2.0), React (MIT), Motion (MIT), Lucide (ISC).
+- **Licences** des logiciels tiers, chacun avec un lien : NVIDIA Profile Inspector (MIT), PresentMon d'Intel (MIT), Barlow et Barlow Condensed (SIL OFL 1.1, lien https://github.com/jpt/barlow, depuis la PR #108 du 22/11), Tauri (MIT / Apache 2.0), React (MIT), Motion (MIT), Lucide (ISC).
 
 ### Déconnexion
 « Se déconnecter » ouvre une confirmation :

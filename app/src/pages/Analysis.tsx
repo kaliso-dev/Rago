@@ -2,7 +2,7 @@
 // l'avant/après quand des tweaks ont été appliqués depuis. Logique : lib/analysis.ts.
 import { useEffect, useMemo, useState } from "react";
 import { motion } from "motion/react";
-import { ArrowRight, Check, LoaderCircle, RefreshCw, ScanSearch, Sparkles, Wrench } from "lucide-react";
+import { ArrowRight, Check, LoaderCircle, RefreshCw, ScanSearch, Sparkles, Wrench } from "../components/ri";
 import { useStore, FREE } from "../lib/store";
 import { analyze, deltas, findings, record, resetBaseline, saved, STEPS, type Finding, type Group, type Step, type Values } from "../lib/analysis";
 import { Badge, Button, Card } from "../components/ui";

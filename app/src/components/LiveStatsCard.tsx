@@ -1,4 +1,4 @@
-import { BrushCleaning, Cpu, Gpu, ListTree, LoaderCircle, MemoryStick } from "lucide-react";
+import { BrushCleaning, Cpu, Gpu, ListTree, LoaderCircle, MemoryStick } from "./ri";
 import { useEffect, useState, type ReactNode } from "react";
 import { api, type Cleaned, type LiveStats } from "../lib/api";
 import { formatNumber } from "../lib/i18n";

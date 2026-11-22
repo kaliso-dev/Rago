@@ -3,7 +3,7 @@ type: code
 tags: [code, app, react, carte]
 fichier: app/src/
 lignes: 33402
-maj: 2026-11-11
+maj: 2026-11-22
 ---
 # Code de l'app (interface)
 
@@ -17,12 +17,12 @@ La **carte du code de l'interface React** de l'app Windows (`app/src/`). Elle pr
 
 Côté moteur : [[Code de l'app (Rust)]]. Vue produit : [[App Windows]]. Architecture d'ensemble : [[Architecture de l'app]]. Reprendre le travail : [[Reprendre le développement]].
 
-Tout ce qui suit est CONFIRMÉ (code de `staging`, 10/11, commit `ee77d4f`), sauf mention contraire. Ajouts du 11/11 pour [[Couleurs et résolution]] ([[Display.tsx]], [[pros.json]], puce de [[Games.tsx]]) : PR #93 ; aussi [[GameGraphics.tsx]] (PR #94), [[GameTips.tsx]] (PR #91) et la page Outils refaite (PR #90), tous dans `staging` depuis le 11/11 (PR #92), jamais testés sur Windows.
+Tout ce qui suit est CONFIRMÉ (code de `staging`, 10/11, commit `ee77d4f`), sauf mention contraire. Charte v5 « Match day » (polices Barlow, icônes imprimées, cadre, tuiles, fenêtres, démarrage, barre en jeu) : PR #108 du 22/11, vers `staging`, jamais testée sur Windows, voir [[Charte graphique]] et [[Styles de l'app (CSS)]]. Ajouts du 11/11 pour [[Couleurs et résolution]] ([[Display.tsx]], [[pros.json]], puce de [[Games.tsx]]) : PR #93 ; aussi [[GameGraphics.tsx]] (PR #94), [[GameTips.tsx]] (PR #91) et la page Outils refaite (PR #90), tous dans `staging` depuis le 11/11 (PR #92), jamais testés sur Windows.
 
 ## En bref
 - **Pile** :
   - React 19 et TypeScript, construits par Vite ([[Configuration du front (Vite, npm)]]) ;
-  - animations `motion/react`, icônes `lucide-react` ;
+  - animations `motion/react` ; icônes imprimées de la charte v5 par `components/ri.tsx`, qui complète `lucide-react` ([[Petits composants de l'interface]]) ;
   - affichage par Tauri 2 dans WebView2.
 - **Deux fenêtres, deux pages HTML** :
   - l'app (`index.html`, [[main.tsx (app)]]) ;
@@ -52,9 +52,10 @@ main.tsx
          └─ App                     (App.tsx)
             └─ MotionConfig         (mouvement réduit ou non)
                └─ div.app
-                  ├─ TitleBar               barre de titre, recherche Ctrl+K, boutons de fenêtre
+                  ├─ PrintDefs              filtres des icônes imprimées
+                  ├─ Sidebar                logo, navigation, plan gratuit ou « This PC », Discord
                   ├─ div.body
-                  │  ├─ Sidebar             navigation, compte, offre Premium
+                  │  ├─ TitleBar            recherche Ctrl+K, bandeau, Premium, boutons de fenêtre
                   │  ├─ main
                   │  │  ├─ LicenseNotice    message de licence (fin, appareil, réparation)
                   │  │  └─ PageBoundary     garde-fou d'erreur
@@ -204,7 +205,7 @@ Les 15 événements Tauri que l'interface écoute, tous déclarés dans [[api.ts
 - Cartes : [[UpdateCard.tsx]], [[BackgroundCard.tsx]], [[SessionCard.tsx]], [[LiveStatsCard.tsx]], [[RbwStatus.tsx]].
 - Réseau et presets : [[NetTools.tsx]], [[PresetEditor.tsx]].
 - Jeux : [[GameGraphics.tsx]] (graphismes des jeux), [[GameTips.tsx]] (réglages conseillés, [[Conseils au lancement du jeu]]).
-- Petites briques (`ui.tsx`, `Modal`, `Logo`, `icons.ts`, `Avatar`, `GameLogo`, `PageBoundary`, `vite-env.d.ts`) : [[Petits composants de l'interface]].
+- Petites briques (`ui.tsx`, `Modal`, `Logo`, `icons.ts`, `ri.tsx`, `printed.ts`, `Avatar`, `GameLogo`, `PageBoundary`, `vite-env.d.ts`) : [[Petits composants de l'interface]].
 
 ### Logique (`app/src/lib/`)
 [[api.ts]], [[store.tsx]], [[catalog.ts]], [[i18n.ts]], [[account.tsx]], [[accountApi.ts]], [[accountText.ts]], [[analysis.ts]], [[netopt.ts]], [[share.ts]], [[art.ts]], [[gameLogos.ts]], [[graphics.ts]], [[seen.ts]], [[tips.ts]].

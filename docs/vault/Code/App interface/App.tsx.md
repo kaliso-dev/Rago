@@ -2,8 +2,8 @@
 type: code
 tags: [code, app, typescript, react]
 fichier: app/src/App.tsx
-lignes: 85
-maj: 2026-11-11
+lignes: 113
+maj: 2026-11-22
 ---
 # App.tsx
 
@@ -64,6 +64,10 @@ MotionConfig (reducedMotion)
 - Remonte la zone `main` en haut à chaque changement de page.
 - **Clic droit bloqué** partout (`contextmenu` annulé), sauf dans un champ de saisie (`input`, `textarea`) et dans la console du lot (`.run-console`), où le menu natif sert à copier.
 - `Splash` est affiché au lancement puis retiré par son `onDone` (voir [[Splash.tsx]]).
+
+## Charte v5 (PR #108 du 22/11, vers `staging`, jamais testée sur Windows)
+- Ordre du cadre : `PrintDefs` (filtres des icônes imprimées), `Sidebar`, puis `div.body` qui contient `TitleBar`, `main`, `ApplyBar` et `RunOverlay`.
+- Un effet `MutationObserver` surveille la page : il pose `data-t` (le texte du titre) sur `.page-head h1`, pour l'écho en contour, et règle `--title-size` entre 56 et 112 px selon la largeur de `.page-head` moins `.head-side`, pour que le grand titre tienne sur une ligne ([[Styles de l'app (CSS)]]).
 
 ## Liens avec le reste
 - Composants du cadre : [[TitleBar.tsx]], [[Sidebar.tsx]], [[LicenseNotice.tsx]], [[ApplyBar.tsx]], [[RunOverlay.tsx]], [[ConfirmDialog.tsx]], [[SearchPalette.tsx]], [[Upsell.tsx]], [[ReviewPrompt.tsx]], [[ReviewDialog.tsx]], [[ResetToast.tsx]], [[Splash.tsx]] ; filet d'erreur `PageBoundary` (voir [[Petits composants de l'interface]]).

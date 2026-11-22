@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import { AnimatePresence, motion } from "motion/react";
-import { ArrowUpRight, Check, ChevronDown, LoaderCircle, Lock, Palette, Play, Plus, RefreshCw, RotateCcw, Trash2, Zap } from "lucide-react";
+import { ArrowUpRight, Check, ChevronDown, LoaderCircle, Lock, Palette, Play, Plus, RefreshCw, RotateCcw, Trash2, Zap } from "../components/ri";
 import { api, type DisplayProfile, type Game, type Launcher } from "../lib/api";
 import { hue, initials } from "../lib/art";
 import { catalog, presetForGame, tweaks } from "../lib/catalog";

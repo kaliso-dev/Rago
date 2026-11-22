@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Check, ChevronDown, Lightbulb } from "lucide-react";
+import { Check, ChevronDown, Lightbulb } from "./ri";
 import { api } from "../lib/api";
 import type { Lang } from "../lib/catalog";
 import type { Key } from "../lib/i18n";

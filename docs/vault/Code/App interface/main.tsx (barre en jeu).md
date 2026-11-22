@@ -2,8 +2,8 @@
 type: code
 tags: [code, app, typescript, react, overlay]
 fichier: app/src/overlay/main.tsx
-lignes: 11
-maj: 2026-11-10
+lignes: 12
+maj: 2026-11-22
 ---
 # main.tsx (barre en jeu)
 
@@ -15,6 +15,9 @@ Tout ce qui suit est CONFIRMÉ (code de `staging`, 10/11, commit `ee77d4f`).
 - Importe seulement `tokens.css` et `overlay.css` (pas les styles de l'app : la fenêtre est transparente et ne peint que la barre ou la pastille, voir [[Styles de l'app (CSS)]]).
 - Rend `<StrictMode><Overlay /></StrictMode>` dans `#root`.
 - **Aucun fournisseur** : ni `StoreProvider` ni `AccountProvider`. La barre est une fenêtre séparée, avec son propre JavaScript ; elle lit la langue et l'option de nettoyage directement dans `localStorage` et parle au moteur par [[api.ts]].
+
+## Charte v5 (PR #108 du 22/11, vers `staging`, jamais testée sur Windows)
+Importe `fonts.css` (Barlow), puis `tokens.css` et `overlay.css` ([[Styles de l'app (CSS)]]).
 
 ## Liens avec le reste
 - Composant : [[Overlay.tsx]].

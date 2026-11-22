@@ -13,6 +13,7 @@ import { Splash } from "./components/Splash";
 import { Upsell } from "./components/Upsell";
 import { Sidebar } from "./components/Sidebar";
 import { TitleBar } from "./components/TitleBar";
+import { PrintDefs } from "./components/ri";
 import { useStore } from "./lib/store";
 import { Dashboard } from "./pages/Dashboard";
 import { ModulePage } from "./pages/ModulePage";
@@ -38,6 +39,31 @@ export function App() {
     scroller.current?.scrollTo({ top: 0 });
   }, [page]);
 
+  // titres d'affiche (charte v5) : l'écho en contour reprend le texte, la taille suit la largeur disponible
+  useEffect(() => {
+    const main = scroller.current;
+    if (!main) return;
+    const fit = () => {
+      main.querySelectorAll<HTMLElement>(".page-head h1").forEach((h) => {
+        const txt = h.textContent ?? "";
+        if (h.dataset.t !== txt) h.dataset.t = txt;
+        const head = h.closest(".page-head") ?? h.parentElement;
+        const room = (head?.clientWidth ?? 900) - (head?.querySelector(".head-side")?.clientWidth ?? 0) - 60;
+        // Barlow Condensed 900 italique : environ 0,5 em par lettre en capitales
+        const size = Math.max(56, Math.min(112, Math.floor(room / (Math.max(txt.length, 4) * 0.52))));
+        h.style.setProperty("--title-size", `${size}px`);
+      });
+    };
+    fit();
+    const mo = new MutationObserver(fit);
+    mo.observe(main, { childList: true, subtree: true, characterData: true });
+    window.addEventListener("resize", fit);
+    return () => {
+      mo.disconnect();
+      window.removeEventListener("resize", fit);
+    };
+  }, []);
+
   // le clic droit natif n'a rien à faire dans une app de bureau
   useEffect(() => {
     const h = (e: MouseEvent) => {
@@ -50,9 +76,10 @@ export function App() {
   return (
     <MotionConfig reducedMotion={motionPref === "reduced" ? "always" : "user"}>
       <div className={`app${motionPref === "reduced" ? " reduced" : ""}`}>
-        <TitleBar />
+        <PrintDefs />
+        <Sidebar />
         <div className="body">
-          <Sidebar />
+          <TitleBar />
           <main className="main" ref={scroller}>
             <LicenseNotice />
             <AnimatePresence mode="wait" initial={false}>

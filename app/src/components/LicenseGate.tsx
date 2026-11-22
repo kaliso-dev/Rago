@@ -1,5 +1,5 @@
 import { AnimatePresence, motion } from "motion/react";
-import { ArrowRight, Check, Lock, Monitor, TriangleAlert } from "lucide-react";
+import { ArrowRight, Check, Lock, Monitor, TriangleAlert } from "./ri";
 import { useEffect, useState } from "react";
 import { api, asLicenseError, type LicenseError } from "../lib/api";
 import { totalTweaks } from "../lib/catalog";

@@ -2,8 +2,8 @@
 type: code
 tags: [code, app, typescript, react, catalogue]
 fichier: app/src/components/TweakRow.tsx
-lignes: 234
-maj: 2026-11-11
+lignes: 251
+maj: 2026-11-22
 ---
 # TweakRow.tsx
 
@@ -50,11 +50,17 @@ Bouton « Détails » (chevron) sauf sur une ligne verrouillée.
 ## Mise en valeur après une recherche
 Quand `focusTweak` vise cette ligne : défilement doux jusqu'à elle (centrée), classe `focused` pendant **1,8 s**, puis `setFocusTweak(null)`. La recherche vient de [[SearchPalette.tsx]] ou d'un lien (`goTo(page, tweakId)`).
 
+## Charte v5 : la ligne devient une tuile (PR #108 du 22/11, vers `staging`, jamais testée sur Windows)
+Toute la logique ci-dessus est gardée ; seul le rendu change.
+- Classes : `tweak tile`, plus `wide` (variantes ou mode de session, la tuile prend toute la ligne), `on`, `pend`, `blocked`, `locked`, `focused`, `open`.
+- Dans la tuile : le nom, l'icône de redémarrage, une ligne d'état (`.tweak-state`, rouge ou verte, avec le lien « Réappliquer » si Windows a changé le réglage), les variantes en ligne ; à droite le cadenas, les boutons de session, « Lancer » ou l'interrupteur.
+- La **bulle** `.tweak-pop` (claire, au survol après 0,35 s, ou ouverte) porte la description, le bénéfice et les inconvénients, les avertissements, la confirmation, les badges, les détails repliables et le bouton « Détails ».
+
 ## Liens avec le reste
 - Store ([[store.tsx]]) : `toggle`, `setVariant`, `variantOf`, `requestApply`, `reapply`, `isLocked`, `variantLocked`, `undoOnly`, `isOn`, `applied`, `pendingUndo`, `lastRun`, `focusTweak`, `SESSION_TOGGLES`.
 - Primitives `Badge`, `Button`, `Segmented`, `Switch` ([[Petits composants de l'interface]]).
 - Textes `tweak.*`, `badge.*`, `session.*`, `free.*`, `block.*`, `warn.*` ([[i18n.ts]]).
-- Styles : section « réglages » de `app.css` ([[Styles de l'app (CSS)]]).
+- Styles : tuiles et bulle de `v5.css`, par-dessus la section « réglages » d'`app.css` ([[Styles de l'app (CSS)]]).
 
 ## À savoir avant de modifier
 - Le clic sur toute la ligne bascule l'interrupteur : chaque bouton intérieur fait `e.stopPropagation()` pour ne pas basculer en même temps.

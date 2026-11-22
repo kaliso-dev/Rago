@@ -2,9 +2,11 @@
 type: design
 tags: [design, app, 1.2]
 version_app: 1.3.0
-maj: 2026-11-10
+maj: 2026-11-22
 ---
 # Refonte glass
+
+> **Remplacée par la charte v5 « Match day »** ([[Charte graphique]], 22/11) : dans `staging` pour l'app depuis la PR #108. Le verre reste ce que voient les joueurs (1.2.1, 1.3.0) jusqu'à la sortie de la v5 ; à ce moment, supprimer cette note et garder une ligne dans [[Décisions]] > « Abandonné ».
 
 Demandée le 16/10 : rester dans la [[Charte graphique]], s'inspirer d'Apple, beaucoup d'effet verre, interface plus épurée, **gagner de la place pour les nouvelles fonctionnalités**, et **ne rien changer aux optimisations ni au fonctionnement**. Livrée dans la [[Version 1.2.0]] (PR #58).
 

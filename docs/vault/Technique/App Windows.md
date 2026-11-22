@@ -1,18 +1,19 @@
 ---
 type: technique
 tags: [technique, app]
-maj: 2026-11-11
+maj: 2026-11-22
 ---
 # App Windows (`app/`)
 
 Vue produit de l'app (écrans, stack, fichiers). Fonctionnement interne précis (démarrage, 93 commandes, événements, scellement) : [[Architecture de l'app]]. Code fichier par fichier : [[Code de l'app (Rust)]]. Voir aussi [[Architecture]], [[Historique des versions]], [[Développer et tester]].
 
 ## Navigation (barre latérale)
-- **Tableau de bord** ([[Tableau de bord]]) · **Analyse du PC** ([[Analyse du PC]], 1.3.0 sur `staging`)
-- **Optimiser** : Réseau (onglets Optimisations, [[Packet Optimizer]], [[Test réseau]], et « Rago Route » (badge « Beta »), dans tous les exe sur `staging` depuis la PR #76, réservé au Premium (sur `staging` le 08/11 ; protocole 2 avec chiffrement, paquets de secours et 4G du téléphone sur `staging` le 08/11) : voir [[Proxy]]) · Latence · Carte graphique · Windows · [[Page Outils]]
-- **En jeu** : Hitreg · Minecraft · [[RBW Mod]] · [[Mode jeu]] · Jeux ([[Bibliothèque de jeux]])
-- **Avancé** : Mode expert · Restaurer (historique, retour arrière)
-- En bas : carte « Plan gratuit » ([[Licence dans l'app]]), « Rejoindre le Discord », Paramètres ([[Paramètres de l'app]]), état administrateur.
+Ordre de la charte v5 (PR #108 du 22/11, sur `staging`, jamais testée sur Windows ; la prod garde l'ancien ordre : Optimiser, En jeu, Avancé).
+- **Optimize** : **Tableau de bord** ([[Tableau de bord]]) · **Analyse du PC** ([[Analyse du PC]], 1.3.0 sur `staging`) · Réseau (onglets Optimisations, [[Packet Optimizer]], [[Test réseau]], et « Rago Route » (badge « Beta »), dans tous les exe sur `staging` depuis la PR #76, réservé au Premium) · Latence · Carte graphique · Windows · Outils ([[Page Outils]])
+- **Play** : Jeux ([[Bibliothèque de jeux]]) · Affichage ([[Couleurs et résolution]]) · Hitreg · Souris ([[Page Souris]]) · [[Mode jeu]] · Minecraft · [[RBW Mod]]
+- **Pro** : Mode expert · Restaurer (historique, retour arrière)
+- En bas : carte « Plan gratuit » ([[Licence dans l'app]]) ou, en Premium, carte « This PC » (réglages allumés, état administrateur), Paramètres ([[Paramètres de l'app]]), devise « Every millisecond counts. » et bouton Discord.
+- **Look** : charte v5 « Match day » ([[Charte graphique]]) : grands titres penchés sur pinceau rouge, réglages en tuiles sur 3 colonnes avec la description dans une bulle au survol, écran de démarrage RAGO, icône R rouge sur tuile blanche.
 - Recherche de tweak (palette), [[Barre en jeu]] (fenêtre séparée `overlay.html`), icône près de l'horloge ([[Arrière-plan et démarrage]]).
 Contenu des modules : [[Catalogue des tweaks]]. Fonctionnement interne : [[Moteur des tweaks]], [[Réparations au lancement]], [[Pendant la partie]], [[Partage et support]].
 

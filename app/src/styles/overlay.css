@@ -1,17 +1,4 @@
 /* Barre en jeu (RAG-82) : fenêtre transparente posée sur le jeu. Seule la barre (ou la pastille) est peinte. */
-@font-face {
-  font-family: "Geist";
-  src: url("../assets/fonts/Geist-Variable.woff2") format("woff2");
-  font-weight: 100 900;
-  font-display: swap;
-}
-@font-face {
-  font-family: "Geist Mono";
-  src: url("../assets/fonts/GeistMono-Variable.woff2") format("woff2");
-  font-weight: 100 900;
-  font-display: swap;
-}
-
 *,
 *::before,
 *::after {
@@ -389,4 +376,372 @@ button:disabled {
 .session-head {
   font-size: 10px;
   margin-top: 2px;
+}
+
+/* ========== Charte v5 « Match day » (22/11/2026) : maquettes cadre/app-barre-en-jeu*.jpg ========== */
+body.overlay-body {
+  font-family: var(--rg-font-sans);
+}
+.pi {
+  --pf: var(--rg-text-1);
+  --pb: var(--rg-red-500);
+}
+.pi .pf {
+  fill: var(--pf);
+}
+.pi .pb {
+  fill: var(--pb);
+}
+.ov-panel,
+.ov-pill {
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.055), rgba(255, 255, 255, 0) 38%),
+    rgba(10, 10, 11, 0.94);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+}
+.ov-panel {
+  position: relative;
+  overflow: visible;
+  padding: 16px 18px 12px;
+}
+.ov-panel::before {
+  content: "";
+  position: absolute;
+  left: -1px;
+  top: 30px;
+  width: 4px;
+  height: 26px;
+  background: var(--rg-red-500);
+  transform: skewY(-20deg);
+}
+.ov-head {
+  gap: 12px;
+  padding: 0 2px 14px;
+}
+.ov-head .app-icon {
+  flex: none;
+  width: 36px;
+  height: 36px;
+}
+.ov-title {
+  gap: 4px;
+}
+.ov-overline {
+  font-family: var(--rg-font-display);
+  font-weight: 700;
+  font-size: 11.5px;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--rg-text-3);
+}
+.ov-game {
+  font-family: var(--rg-font-display);
+  font-weight: 900;
+  font-style: italic;
+  font-size: 31px;
+  line-height: 0.86;
+  text-transform: uppercase;
+  letter-spacing: 0;
+}
+.ov-actions {
+  gap: 6px;
+}
+.ov-icon {
+  width: 34px;
+  height: 34px;
+  border-radius: 10px;
+  background: #17171a;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+}
+.ov-icon.on {
+  color: var(--rg-red-500);
+  border-color: rgba(255, 59, 48, 0.45);
+  background: rgba(255, 59, 48, 0.1);
+}
+.ov-tiles {
+  grid-template-columns: repeat(5, minmax(0, 1fr)) 92px;
+  gap: 6px;
+}
+.ov-tile {
+  gap: 6px;
+  padding: 10px 12px 9px;
+  background: rgba(255, 255, 255, 0.035);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+}
+.ov-tile-v.rg-metric,
+.ov-pill-v.rg-metric {
+  font-family: var(--rg-font-display);
+  font-weight: 900;
+  font-style: italic;
+  letter-spacing: 0;
+}
+.ov-tile-v {
+  font-size: 31px;
+  line-height: 0.86;
+  white-space: nowrap;
+}
+.ov-tile-v small {
+  margin-left: 2px;
+  font-size: 14px;
+  font-weight: 800;
+  color: var(--rg-text-2);
+}
+.ov-tile.hi .ov-tile-v {
+  color: var(--rg-red-500);
+}
+.ov-tile.na .ov-tile-v {
+  color: var(--rg-text-3);
+}
+.ov-clean {
+  min-width: 0;
+  gap: 7px;
+  font-family: var(--rg-font-display);
+  font-weight: 800;
+  font-size: 13px;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  background: #17171a;
+  border: 1px solid rgba(255, 255, 255, 0.14);
+}
+.ov-clean:disabled {
+  color: var(--rg-text-2);
+}
+.ov-note {
+  font-size: 12.5px;
+}
+.ov-error {
+  color: #ff6b61;
+}
+
+/* corps : conseils de la partie à gauche, réglages en direct à droite */
+.ov-main {
+  flex: 1;
+  min-height: 0;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 14px;
+  margin-top: 14px;
+}
+.ov-main.two {
+  grid-template-columns: 296px minmax(0, 1fr);
+}
+.ov-side,
+.ov-live {
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+}
+.ov-col-head,
+.ov-section-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  height: 24px;
+  margin: 0 2px 8px;
+}
+.ov-main .ov-advice {
+  flex: 1;
+  max-height: none;
+  min-height: 0;
+  padding: 0 2px 10px 0;
+  mask-image: linear-gradient(180deg, #000 calc(100% - 26px), transparent);
+}
+.ov-premium {
+  height: 24px;
+  border-radius: 7px;
+  font-family: var(--rg-font-display);
+  font-weight: 800;
+  font-size: 12.5px;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: #0a0a0b;
+}
+.ov-list {
+  mask-image: linear-gradient(180deg, #000 calc(100% - 26px), transparent);
+}
+.ov-main.two .ov-cols {
+  columns: 1;
+}
+.ov-group {
+  margin-bottom: 10px;
+  padding: 0;
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  overflow: hidden;
+}
+.ov-group-label {
+  padding: 9px 12px 5px;
+  font-family: var(--rg-font-display);
+  font-weight: 700;
+  font-size: 11.5px;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--rg-text-3);
+}
+.ov-row {
+  min-height: 34px;
+  height: 34px;
+  padding: 0 10px 0 12px;
+  border-radius: 0;
+  border-top: 1px solid rgba(255, 255, 255, 0.08);
+}
+.ov-row-name {
+  font-family: var(--rg-font-display);
+  font-weight: 800;
+  font-size: 15px;
+  letter-spacing: 0.03em;
+  text-transform: uppercase;
+  color: var(--rg-text-2);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.ov-row:has(.switch.on) .ov-row-name {
+  color: var(--rg-text-1);
+}
+.ov-list.locked .ov-row-name {
+  color: var(--rg-text-3);
+}
+.ov-row-busy {
+  color: var(--rg-red-500);
+}
+.switch {
+  width: 38px;
+  height: 20px;
+  border-radius: 6px;
+  transform: skewX(-12deg);
+}
+.switch-thumb {
+  width: 14px;
+  height: 14px;
+  border-radius: 4px;
+}
+.switch.on .switch-thumb {
+  background: #0a0a0b;
+}
+.ov-foot {
+  margin-top: 10px;
+  padding: 10px 2px 0;
+  border-top-color: rgba(255, 255, 255, 0.08);
+}
+.ov-foot-sep {
+  border-radius: 0;
+}
+
+/* partie en cours et réglages conseillés (composants partagés avec l'app) */
+.ov-advice .session-checks {
+  margin: 0;
+  padding: 11px 12px;
+  border-radius: 14px;
+  background: rgba(255, 255, 255, 0.035);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  box-shadow: none;
+}
+.ov-advice .session-line {
+  font-size: 12.5px;
+  line-height: 1.4;
+}
+.ov-advice .session-line.warn {
+  color: var(--rg-text-1);
+}
+.ov-advice .session-line.warn svg {
+  color: var(--rg-red-500);
+}
+.ov-advice .game-tips {
+  margin-top: 10px;
+  padding: 10px 12px;
+  border-radius: 14px;
+  background: rgba(255, 255, 255, 0.035);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  box-shadow: none;
+}
+.ov-advice .game-tips .rg-overline,
+.ov-advice .session-head {
+  font-family: var(--rg-font-display);
+  font-weight: 700;
+  font-size: 10.5px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--rg-text-2);
+}
+.ov-advice .game-tips-count {
+  font-family: var(--rg-font-display);
+  font-weight: 800;
+  font-size: 12px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--rg-red-500);
+}
+.ov-advice .game-tips-count.ok {
+  color: var(--rg-success);
+}
+
+/* pastille : logo rond calé dans le bout arrondi, chiffres en condensé penché */
+.ov-pill {
+  justify-content: flex-start;
+  gap: 0;
+  padding: 0 12px 0 5px;
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.07), rgba(255, 255, 255, 0.02)),
+    rgba(10, 10, 11, 0.72);
+}
+.ov-pill .app-icon {
+  flex: none;
+  width: 32px;
+  height: 32px;
+  margin-right: 6px;
+  clip-path: circle(50%);
+}
+.ov-pill-m {
+  flex: 1;
+  display: flex;
+  align-items: baseline;
+  justify-content: center;
+  gap: 5px;
+}
+.ov-pill-v {
+  font-size: 22px;
+  line-height: 1;
+}
+.ov-pill-u {
+  font-family: var(--rg-font-display);
+  font-weight: 800;
+  font-size: 11.5px;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--rg-text-2);
+}
+.ov-pill-sep {
+  height: 16px;
+  margin: 0;
+  background: rgba(255, 255, 255, 0.18);
+}
+.ov-pill.ov-nudge {
+  gap: 9px;
+  padding: 0 20px 0 5px;
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.07), rgba(255, 255, 255, 0.02)),
+    rgba(10, 10, 11, 0.88);
+  border-color: rgba(255, 59, 48, 0.45);
+}
+.ov-nudge .app-icon {
+  margin-right: 2px;
+}
+.ov-nudge-icon {
+  color: var(--rg-red-500);
+}
+.ov-nudge-text {
+  font-size: 13px;
+  font-weight: 500;
+}
+.ov-nudge-key {
+  font-family: var(--rg-font-display);
+  font-weight: 800;
+  font-size: 12px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--rg-text-2);
+}
+.ov-nudge .ov-pill-sep {
+  margin: 0 4px;
 }

@@ -1,12 +1,12 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { motion } from "motion/react";
-import { AppWindow, BrushCleaning, Lightbulb, Lock, LoaderCircle, Pin, PinOff, X } from "lucide-react";
+import { AppWindow, BrushCleaning, Lightbulb, Lock, LoaderCircle, Pin, PinOff, PrintDefs, X } from "../components/ri";
 import { api, type AppliedView, type LiveStats, type OverlayInfo, type OverlayLive, type OverlayMode, type SystemInfo } from "../lib/api";
 import { availability, tweaks, type Lang } from "../lib/catalog";
 import { translate, type Key } from "../lib/i18n";
 import { tipsFor } from "../lib/tips";
 import { GameTips } from "../components/GameTips";
-import { Mark } from "../components/Logo";
+import { AppIcon } from "../components/Logo";
 import { SessionChecks, useSession } from "../components/SessionCard";
 import { Switch } from "../components/ui";
 
@@ -158,7 +158,8 @@ export function Overlay() {
         : t("tips.nudgeChecks", { n: session.checks.length });
     return (
       <div className="ov-pill ov-nudge" aria-live="polite">
-        <Mark size={14} />
+        <PrintDefs />
+        <AppIcon size={26} />
         <Lightbulb size={13} className="ov-nudge-icon" />
         <span className="ov-nudge-text">{label}</span>
         <span className="ov-pill-sep" />
@@ -169,15 +170,19 @@ export function Overlay() {
   if (mode === "pill") {
     return (
       <div className="ov-pill" aria-live="off">
-        <Mark size={14} />
-        <span className="ov-pill-v rg-metric">{info?.fpsAvailable === false ? "—" : value(live.fps)}</span>
-        <span className="ov-pill-u">FPS</span>
-        <span className="ov-pill-sep" />
-        <span className="ov-pill-v rg-metric">
-          {live.ping != null && live.pingEstimate ? "≈" : ""}
-          {value(live.ping)}
+        <AppIcon size={26} />
+        <span className="ov-pill-m">
+          <span className="ov-pill-v rg-metric">{info?.fpsAvailable === false ? "—" : value(live.fps)}</span>
+          <span className="ov-pill-u">FPS</span>
         </span>
-        <span className="ov-pill-u">ms</span>
+        <span className="ov-pill-sep" />
+        <span className="ov-pill-m">
+          <span className="ov-pill-v rg-metric">
+            {live.ping != null && live.pingEstimate ? "≈" : ""}
+            {value(live.ping)}
+          </span>
+          <span className="ov-pill-u">ms</span>
+        </span>
       </div>
     );
   }
@@ -198,12 +203,15 @@ export function Overlay() {
     { key: "ram", label: "RAM", v: value(stats?.ram), unit: "%" },
   ];
 
+  const advice = !!session && (session.playing || !!session.game);
+
   return (
     // clic hors de la barre : retour au jeu
     <div className="ov-stage" onMouseDown={(e) => e.target === e.currentTarget && void api.overlayClose()}>
       <motion.section className="ov-panel" initial={{ opacity: 0, y: -10, scale: 0.98 }} animate={{ opacity: 1, y: 0, scale: 1 }} transition={{ duration: 0.22, ease: [0.16, 1, 0.3, 1] }}>
+        <PrintDefs />
         <header className="ov-head">
-          <Mark size={18} />
+          <AppIcon size={40} />
           <div className="ov-title">
             <span className="ov-overline">{t("overlay.title")}</span>
             <span className="ov-game">{info?.game ?? t("overlay.noGame")}</span>
@@ -232,7 +240,7 @@ export function Overlay() {
 
         <div className="ov-tiles">
           {tiles.map((x) => (
-            <div key={x.key} className="ov-tile" title={x.hint}>
+            <div key={x.key} className={`ov-tile${x.key === "fps" ? " hi" : ""}${x.v === "—" ? " na" : ""}`} title={x.hint}>
               <span className="ov-overline">{x.label}</span>
               <span className="ov-tile-v rg-metric">
                 {x.v}
@@ -246,14 +254,18 @@ export function Overlay() {
           </button>
         </div>
         {cleaned && <p className="ov-note ov-cleaned">{cleaned}</p>}
-        {/* conseils de la partie : défilent à part, la place reste aux réglages en direct */}
-        {session && (session.playing || session.game) && (
+        {/* conseils de la partie à gauche (défilent à part), réglages en direct à droite */}
+        <div className={`ov-main${advice ? " two" : ""}`}>
+        {advice && (
+          <div className="ov-side">
+          <span className="ov-overline ov-col-head">{t("overlay.thisGame")}</span>
           <div className="ov-advice">
-            <SessionChecks session={session} t={t} />
-            {session.game && <GameTips game={session.game} t={t} lang={lang} open={session.tipsLeft > 0} compact className="ov-tips" />}
+            <SessionChecks session={session!} t={t} />
+            {session!.game && <GameTips game={session!.game} t={t} lang={lang} open={session!.tipsLeft > 0} compact className="ov-tips" />}
+          </div>
           </div>
         )}
-
+        <div className="ov-live">
         <div className="ov-section-head">
           <span className="ov-overline">{t("overlay.live")}</span>
           {!premium && (
@@ -284,6 +296,8 @@ export function Overlay() {
               </div>
             ))}
           </div>
+        </div>
+        </div>
         </div>
         {error && <p className="ov-note ov-error">{error}</p>}
         <footer className="ov-foot">

@@ -2,8 +2,8 @@
 type: code
 tags: [code, app, typescript, react, overlay]
 fichier: app/src/overlay/Overlay.tsx
-lignes: 297
-maj: 2026-11-11
+lignes: 311
+maj: 2026-11-22
 ---
 # Overlay.tsx
 
@@ -70,6 +70,15 @@ Logo + FPS + ping, rien d'autre (`aria-live="off"`). La pastille ne prend ni le 
 ## Erreurs et cas limites
 - Démo navigateur : ouvrir `overlay.html` (avec `?pill`, `?passive`, `?estimate`) ; la session y est toujours « en cours » (voir [[api.ts]]).
 - Un réglage appliqué depuis la barre reste appliqué après la partie : on le retire dans l'app ou dans la barre.
+
+## Charte v5 (PR #108 du 22/11, vers `staging`, jamais testée sur Windows)
+Maquettes `cadre/app-barre-en-jeu.jpg` et `app-barre-en-jeu-etats.jpg`.
+- `PrintDefs` est monté dans la barre et dans la pastille de rappel (icônes imprimées).
+- En-tête : `AppIcon` (36 px), surtitre « In-game bar », nom du jeu en condensé 900 italique ; boutons carrés arrondis.
+- Mesures : chiffres en condensé penché de 31 px, FPS en rouge (`hi`), valeur absente grisée (`na`) ; bouton « Clean ».
+- Corps `.ov-main` : quand la partie a des vérifications ou des conseils (`advice`), deux colonnes, « This game » à gauche (296 px, `.ov-side`, texte `overlay.thisGame`) et les réglages en direct à droite (`.ov-live`, une colonne) ; sinon une seule colonne, les groupes de réglages sur deux colonnes.
+- Pastille : logo rond (`AppIcon` coupé en cercle) calé dans le bout arrondi, FPS et ping qui se partagent le reste (`.ov-pill-m`). Pastille de rappel : liseré rouge, « Alt+X to see ».
+- Styles : section « Charte v5 » à la fin d'`overlay.css` ([[Styles de l'app (CSS)]]).
 
 ## Liens avec le reste
 - Composants réutilisés : `Mark` (logo) et `Switch` (voir [[Petits composants de l'interface]]), `SessionChecks` et `useSession` ([[SessionCard.tsx]]).

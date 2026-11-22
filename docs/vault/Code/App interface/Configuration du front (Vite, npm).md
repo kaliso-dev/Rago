@@ -3,7 +3,7 @@ type: code
 tags: [code, app, config, vite, npm]
 fichier: app/package.json, app/vite.config.ts, app/tsconfig.json, app/index.html, app/overlay.html, app/public/, app/ci/
 lignes: 181
-maj: 2026-11-10
+maj: 2026-11-22
 ---
 # Configuration du front (Vite, npm)
 
@@ -39,13 +39,12 @@ Tout ce qui suit est CONFIRMÉ (code de `staging`, 10/11, commit `ee77d4f`).
   - `@tauri-apps/api` 2.12 : `invoke`, `listen`, fenêtre ;
   - `@tauri-apps/plugin-dialog` 2.8 : boîtes Ouvrir et Enregistrer ;
   - `@tauri-apps/plugin-opener` 2.7 : ouvrir une URL ;
-  - `geist` 1.7 ;
   - `lucide-react` 1.52 : icônes ;
   - `motion` 14 : animations, importé depuis `motion/react` ;
   - `react` et `react-dom` 19.3.
 - **Outils de développement** : `@tauri-apps/cli` 2.12, `@vitejs/plugin-react` 6.1, `typescript` 7.0, `vite` 8.3, types React 19.
 - Les deux plugins Tauri ne sont chargés qu'à la demande (`await import(...)` dans [[api.ts]]). Le mode démo du navigateur ne les charge donc jamais.
-- La dépendance `geist` n'est importée nulle part dans `app/src` ni dans `app/tools` (OBSERVÉ par recherche). Les polices utilisées sont des copies dans `src/assets/fonts/` (voir [[Styles de l'app (CSS)]]).
+- Plus de dépendance de police : la dépendance `geist` est retirée par la PR #108 du 22/11, vers `staging`, jamais testée sur Windows. Les polices (Barlow, Barlow Condensed) sont des fichiers dans `src/assets/fonts/` (voir [[Styles de l'app (CSS)]]). Les icônes de `lucide-react` passent par `components/ri.tsx` ([[Petits composants de l'interface]]).
 
 ## `vite.config.ts` (21 lignes)
 - `base: "./"` : chemins relatifs, nécessaires quand Tauri sert les fichiers depuis le disque.

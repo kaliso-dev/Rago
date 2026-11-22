@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { ArrowRight, LoaderCircle, TriangleAlert } from "lucide-react";
+import { ArrowRight, LoaderCircle, TriangleAlert } from "./ri";
 import type { Key } from "../lib/i18n";
 import { engineText } from "../lib/netopt";
 import { useStore } from "../lib/store";

@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { motion } from "motion/react";
-import { ArrowUpRight, Check, ChevronDown, Eye, Gamepad2, Info, Lock, MonitorCog, Palette, RotateCcw, Sparkles, TriangleAlert } from "lucide-react";
+import { ArrowUpRight, Check, ChevronDown, Eye, Gamepad2, Info, Lock, MonitorCog, Palette, RotateCcw, Sparkles, TriangleAlert } from "../components/ri";
 import { api, type DisplayColors, type DisplayInfo, type DisplayProfile, type DisplayResolution, type DisplayState, type Game } from "../lib/api";
 import { hue, initials } from "../lib/art";
 import type { Key } from "../lib/i18n";

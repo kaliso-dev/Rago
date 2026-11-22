@@ -1,4 +1,4 @@
-import { RotateCcw, ShieldCheck, TriangleAlert } from "lucide-react";
+import { RotateCcw, ShieldCheck, TriangleAlert } from "./ri";
 import { useEffect, useRef, useState } from "react";
 import { availability, needsReboot, retired, tweaks } from "../lib/catalog";
 import { formatTime } from "../lib/i18n";

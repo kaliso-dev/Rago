@@ -1,4 +1,4 @@
-import { ArrowRight, LifeBuoy, RefreshCw, TriangleAlert, X } from "lucide-react";
+import { ArrowRight, LifeBuoy, RefreshCw, TriangleAlert, X } from "./ri";
 import { useState } from "react";
 import { api } from "../lib/api";
 import { type Key } from "../lib/i18n";

@@ -1,30 +1,15 @@
 import { createElement } from "react";
-import {
-  Box, Crosshair, FlaskConical, Mouse, Gamepad2, Gauge, Globe, Gpu, LayoutDashboard, Network, Palette, Router, ScanSearch, Settings, Shield, Undo2, AppWindow, Wrench, Zap,
-  type LucideIcon,
-} from "lucide-react";
+import { PrintIcon, type LucideIcon } from "./ri";
 
-export const MODULE_ICONS: Record<string, LucideIcon> = {
-  dashboard: LayoutDashboard,
-  network: Network,
-  gauge: Gauge,
-  gpu: Gpu,
-  windows: AppWindow,
-  crosshair: Crosshair,
-  cube: Box,
-  shield: Shield,
-  bolt: Zap,
-  flask: FlaskConical,
-  undo: Undo2,
-  settings: Settings,
-  games: Gamepad2,
-  display: Palette,
-  mouse: Mouse,
-  nettest: Globe,
-  netopt: Router,
-  tools: Wrench,
-  analysis: ScanSearch,
+// icônes imprimées de la barre latérale (charte v5) : clé du catalogue ou de la page → nom dans la charte
+const NAMES: Record<string, string> = {
+  dashboard: "dashboard", analysis: "analysis", network: "network", gauge: "latency", gpu: "graphics", windows: "windows", tools: "tools",
+  games: "library", display: "display", crosshair: "hitreg", mouse: "mouse", bolt: "games", cube: "minecraft", shield: "rbw",
+  flask: "expert", undo: "restore", settings: "settings", nettest: "globe", netopt: "network",
 };
+const named = (name: string) => ((props: object) => createElement(PrintIcon, { name, ...props })) as unknown as LucideIcon;
+
+export const MODULE_ICONS: Record<string, LucideIcon> = Object.fromEntries(Object.entries(NAMES).map(([k, n]) => [k, named(n)]));
 
 /** Logo de Discord (Simple Icons, CC0), pour le lien vers le serveur de Rago. */
 export function DiscordIcon({ size = 16 }: { size?: number }) {

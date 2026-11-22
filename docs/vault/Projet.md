@@ -37,7 +37,7 @@ Vue d'ensemble technique : [[Architecture]]. **Pour coder ou dépanner : commenc
   - Site : [[Site]] · Rago Route : [[Infrastructure Rago Route]]
   - Outil : [[Cerveau du vault]] (ce vault en graphe dans l'admin, avec un lecteur pour chaque fichier)
 - **Code, une note par fichier** (dossier `Code/`) : [[Code de l'app (Rust)]] · [[Code de l'app (interface)]] · [[Code du générateur de catalogue]] · [[Code du serveur]] (et ses tables) · [[Code du site]] · [[Code de Rago Route]] · [[Code de la CI et du dépôt]] (avec [[Branches du dépôt]])
-- **Design** : [[Charte graphique]] · [[Voix et ton]] · [[Refonte glass]]
+- **Design** : [[Charte graphique]] (v5 « Match day ») · [[Voix et ton]] · [[Refonte glass]] (look encore en prod)
 - **Marketing** : [[Marketing]] · [[Discord]] · [[Partenaires et créateurs]] · [[Promotions et affiliation]] · [[Vidéos YouTube]] · [[Étude de marché de novembre 2026]] · [[Logo création d'Adam]]
 - **Suivi** : [[Ventes Stripe]] · [[Conformité juridique]] · [[Bugs et incidents]] · [[Problèmes joueurs]] · [[Historique des problèmes]] · [[Linear]] · [[Personnes et services]] · [[Sources]]
 - **Historique** (pour comprendre d'où vient une chose, pas pour décider) : [[Chronologie du projet]] · [[Pull requests]] · [[Fils du projet]] · [[Synthèse de reprise du 15-10]] · [[Documents de la 1.2.0]]

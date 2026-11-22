@@ -1,5 +1,5 @@
 import { AnimatePresence, motion } from "motion/react";
-import { Star, X } from "lucide-react";
+import { Star, X } from "./ri";
 import { useAccount } from "../lib/account";
 import { useAccountText } from "../lib/accountText";
 import { useStore } from "../lib/store";

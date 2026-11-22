@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
-import { ChevronDown, ListPlus, Plus, Search, X } from "lucide-react";
+import { ChevronDown, ListPlus, Plus, Search, X } from "./ri";
 import { catalog, searchTweaks, tweakModule, tweaks } from "../lib/catalog";
 import { MAX_NAME } from "../lib/share";
 import { itemName, useStore } from "../lib/store";

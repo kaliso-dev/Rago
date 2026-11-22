@@ -1,5 +1,5 @@
 import { AnimatePresence, motion } from "motion/react";
-import { Check, RotateCcw, TriangleAlert } from "lucide-react";
+import { Check, RotateCcw, TriangleAlert } from "./ri";
 import { useEffect } from "react";
 import { useStore } from "../lib/store";
 

@@ -1,5 +1,5 @@
 import { motion } from "motion/react";
-import { RefreshCw, ShieldCheck, ShieldAlert } from "lucide-react";
+import { RefreshCw, ShieldCheck, ShieldAlert } from "./ri";
 import { useCallback, useEffect, useState } from "react";
 import { api, type RbwCheck } from "../lib/api";
 import type { Key } from "../lib/i18n";

@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { motion } from "motion/react";
-import { Check, Copy, LoaderCircle, Lock, Power, Route, X } from "lucide-react";
+import { Check, Copy, LoaderCircle, Lock, Power, Route, X } from "../components/ri";
 import { api, type RouteCheck, type RouteLinks, type RoutePath, type RouteStatus } from "../lib/api";
 import type { Key } from "../lib/i18n";
 import { useStore } from "../lib/store";

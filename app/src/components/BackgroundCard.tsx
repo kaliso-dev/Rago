@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { Keyboard, RotateCcw } from "lucide-react";
+import { Keyboard, RotateCcw } from "./ri";
 import { api, type BackgroundPrefs, type BackgroundState } from "../lib/api";
 import { useStore } from "../lib/store";
 import { Button, Card, Switch } from "./ui";

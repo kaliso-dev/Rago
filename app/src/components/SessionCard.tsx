@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { AlertTriangle, Gauge, Zap } from "lucide-react";
+import { AlertTriangle, Gauge, Zap } from "./ri";
 import { api, type BackgroundPrefs, type SessionCheck, type SessionState } from "../lib/api";
 import type { Key } from "../lib/i18n";
 import { useStore } from "../lib/store";
