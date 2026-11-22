@@ -2,7 +2,7 @@
 type: code
 tags: [code, site, python, juridique]
 fichier: site/tools/make_legal.py
-lignes: 276
+lignes: 280
 maj: 2026-11-22
 ---
 # make_legal.py
@@ -22,7 +22,7 @@ Tout ce qui suit est CONFIRMÉ (branche du site v5, PR #109, 22/11). Commande : 
 |---|---|
 | `UPD` | date « Last updated » de chaque page : terms « November 13, 2026 », privacy « November 10, 2026 » |
 | `SITE`, `ACC`, `DISCORD`, `MAIL` | adresses du site, du serveur de comptes, de l'invitation Discord et lien `mailto:` du support |
-| `CSSV`, `JSV`, `OGV` | empreintes de `v5.css`, [[v5.js]] et `og-image.png`, calculées comme [[build.py]] (adresses `?v=`) |
+| `CSSV`, `JSV`, `OGV`, `KJS` | empreintes de `v5.css`, [[v5.js]] et `og-image.png`, calculées comme [[build.py]] (adresses `?v=`) ; `KJS` : le petit script qui pose `--k` avant le premier affichage, comme [[build.py]] |
 | `CSS` | le style des pages légales et de la 404 (maquettes « site-terms », « site-privacy », « site-404 »), en plus de `v5.css` |
 | `head()`, `logo()`, `footer()` | haut de page (icônes, préchargement de Barlow Condensed 900 italique, `v5.css?v=`), logo (tuile blanche, R rouge), pied de page v5 commun ; `root="/"` pour la 404 |
 | `sections(src, numbered, ids)` | coupe le texte à chaque `<h2>` : une `<section class="lg-sec" id>` par titre, le numéro (« 4a ») à part en contour rouge, et le sommaire ; le tableau `<div class="tbl"><table>` de la confidentialité devient une liste à deux colonnes `.lg-tbl` (rôles ARIA `table`, `row`, `cell`) |

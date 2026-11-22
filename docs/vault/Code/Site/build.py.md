@@ -2,7 +2,7 @@
 type: code
 tags: [code, site, python]
 fichier: site/tools/build.py
-lignes: 184
+lignes: 188
 maj: 2026-11-22
 ---
 # build.py
@@ -23,7 +23,7 @@ Un script sans fonction publique. Repères :
 | Nom | Valeur ou rôle |
 |---|---|
 | `SITE` | `https://rago-optimizer.com` |
-| `CSSV`, `css(html, name)` | 10 premiers caractères du SHA-256 de `site/v5.css` ; `css()` vérifie que la page a exactement une fois `<link rel="stylesheet" href="v5.css">` (sinon `link to v5.css not found in <page>: update build.py`) et le remplace par `v5.css?v=<CSSV>`, pour que les navigateurs ne gardent jamais une ancienne copie de la feuille ; depuis le 22/11 au soir, elle ajoute aussi `<script src="v5.js?v=<JSV>" defer>` ([[v5.js]]) et refuse une source qui charge déjà `v5.js` |
+| `CSSV`, `css(html, name)` | 10 premiers caractères du SHA-256 de `site/v5.css` ; `css()` vérifie que la page a exactement une fois `<link rel="stylesheet" href="v5.css">` (sinon `link to v5.css not found in <page>: update build.py`) et le remplace par `v5.css?v=<CSSV>`, pour que les navigateurs ne gardent jamais une ancienne copie de la feuille ; depuis le 22/11 au soir, elle ajoute aussi `<script src="v5.js?v=<JSV>" defer>` ([[v5.js]]) et refuse une source qui charge déjà `v5.js` (même dans un commentaire) ; depuis le 2e retour, elle met devant un petit script `KJS` qui pose `--k` avant le premier affichage ([[v5.css]], « écran par écran ») |
 | `cfg(k)` | lit une valeur de l'objet `CONFIG` de [[page.html]] |
 | `BASE`, `CUR`, `PM`, `PY`, `PL`, `PR`, `PRY` | serveur de comptes, devise, prix mensuel, annuel, Lifetime, option Rago Route mensuelle et annuelle |
 | `FREE`, `free_txt` | mois offerts par l'annuel (`floor(12 - PY / PM)`, 6 aujourd'hui) et « 6 months free » |

@@ -17,11 +17,12 @@ s = open(os.path.join(ROOT, 'src/page.html')).read()
 import hashlib
 CSSV = hashlib.sha256(open(os.path.join(ROOT, 'v5.css'), 'rb').read()).hexdigest()[:10]
 # v5.js (the motion shared by every page, 22/11/2026) is added right after the stylesheet, with its own cache key
+KJS = 'document.documentElement.style.setProperty("--k",Math.max(.78,Math.min(1.45,innerWidth/1440,innerHeight/1000)).toFixed(3))'  # --k before the first paint (v5.css, v5.js)
 JSV = hashlib.sha256(open(os.path.join(ROOT, 'v5.js'), 'rb').read()).hexdigest()[:10]
 def css(html, name):
     assert html.count('<link rel="stylesheet" href="v5.css">') == 1, f'link to v5.css not found in {name}: update build.py'
     assert 'v5.js' not in html, f'{name} already loads v5.js: build.py adds it'
-    return html.replace('<link rel="stylesheet" href="v5.css">', f'<link rel="stylesheet" href="v5.css?v={CSSV}">\n<script src="v5.js?v={JSV}" defer></script>')
+    return html.replace('<link rel="stylesheet" href="v5.css">', f'<script>{KJS}</script>\n<link rel="stylesheet" href="v5.css?v={CSSV}">\n<script src="v5.js?v={JSV}" defer></script>')
 s = css(s, 'page.html')
 
 # Without JavaScript the page still works: account links point at the real server and the price shows the default (yearly) plan

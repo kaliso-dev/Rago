@@ -6,6 +6,10 @@
 (() => {
   "use strict";
   const doc = document.documentElement;
+  /* --k: how big this screen is next to the 1440-wide mockups, the height counted against 1000 so that a section fits one
+     screen with the header (titles, hero and illustrations follow it; v5.css) */
+  const fitK = () => doc.style.setProperty("--k", Math.max(.78, Math.min(1.45, innerWidth / 1440, innerHeight / 1000)).toFixed(3));
+  fitK(); addEventListener("resize", fitK, { passive: true });
   if (matchMedia("(prefers-reduced-motion: reduce)").matches || !("IntersectionObserver" in window)) return;
   doc.classList.add("mo");
   const $$ = (q, r = document) => Array.from(r.querySelectorAll(q));
@@ -40,7 +44,7 @@
   let batch = [], flushT = 0;
   const flush = () => {
     batch.sort((a, b) => { const r = a.getBoundingClientRect(), s = b.getBoundingClientRect(); return r.top - s.top || r.left - s.left; });
-    batch.forEach((el, i) => { el.style.setProperty("--d", Math.min(i, 8) * 70 + "ms"); el.classList.add("in"); });
+    batch.forEach((el, i) => { el.style.setProperty("--d", Math.min(i, 8) * 70 + "ms"); el.classList.add("mo-in"); }); // not "in": .s-final .in is a layout class
     batch = [];
   };
   const io = new IntersectionObserver(es => es.forEach(e => {
@@ -90,6 +94,21 @@
   const bar = document.createElement("i"); bar.className = "mo-bar"; bar.setAttribute("aria-hidden", "true"); document.body.appendChild(bar);
   const shot = document.querySelector(".s-shot img.sc, .r5-hero .vis, .hero .shot");
   const bigs = $$(".s-final .big, .final .big");
+  /* "Now Rago plays with you" (home): on a computer screen the section stays put and its cards slide sideways */
+  const hs = document.querySelector("#new"), hsWrap = hs && hs.querySelector(":scope > .sw5"), hsTrack = hs && hs.querySelector(".s-bento");
+  let hsDist = 0, hsBar = null;
+  if (hsTrack) {
+    const bw = document.createElement("div"); bw.className = "hs-bar"; bw.setAttribute("aria-hidden", "true"); bw.innerHTML = "<i></i>";
+    hsTrack.after(bw); hsBar = bw.firstChild;
+    const setup = () => {
+      const on = innerWidth >= 1081 && innerHeight >= 640;
+      hs.classList.toggle("hs-on", on);
+      if (!on) { hs.style.height = ""; hsTrack.style.translate = ""; hsDist = 0; return; }
+      hsDist = Math.max(0, hsTrack.scrollWidth - hsWrap.clientWidth);
+      hs.style.height = (innerHeight + hsDist) + "px";
+    };
+    setup(); addEventListener("resize", setup, { passive: true }); addEventListener("load", setup);
+  }
   let lastY = scrollY, vel = 0, last = performance.now();
   const frame = now => {
     const dt = Math.min(64, now - last); last = now;
@@ -99,6 +118,7 @@
     bar.style.scale = (y / max).toFixed(4) + " 1";
     if (shot && y < innerHeight * 1.5) shot.style.translate = `0 ${(y * .12).toFixed(1)}px`;
     bigs.forEach(b => { const r = b.parentElement.getBoundingClientRect(); const p = 1 - (r.top + r.height) / (innerHeight + r.height); b.style.translate = `${((p - .5) * -260).toFixed(1)}px 0`; });
+    if (hsDist) { const p = Math.max(0, Math.min(1, -hs.getBoundingClientRect().top / hsDist)); hsTrack.style.translate = `${(-p * hsDist).toFixed(1)}px 0`; hsBar.style.scale = `${p.toFixed(4)} 1`; }
     tracks.forEach(t => { t.x -= (0.045 + Math.min(vel, 6) * .35) * dt; if (-t.x >= t.w) t.x += t.w; t.row.style.translate = `${t.x.toFixed(1)}px 0`; });
     requestAnimationFrame(frame);
   };
