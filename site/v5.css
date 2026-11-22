@@ -625,17 +625,17 @@ svg.i{width:16px;height:16px;fill:none;stroke:currentColor;stroke-width:2;stroke
 .s-link:hover svg{transform:translateX(3px)}
 .s-h2{font-size:clamp(46px,6.6vw,100px)}
 .s-sec{padding-top:clamp(80px,10vw,130px)}
-/* Écran par écran (Sofiene, 22/11 au soir, 2e retour : « que chaque section prenne juste la hauteur de l'écran, pas
-   plus », sans effet zoomé, mais sur toute la largeur). Sur ordinateur, chaque section fait la hauteur de la fenêtre et
-   son contenu est centré dedans. --k (posé par v5.js) = min(largeur / 1 440, hauteur / 1 000), entre 0,78 et 1,45 :
+/* Écran par écran (Sofiene, 22/11 au soir : « que chaque section prenne juste la hauteur de l'écran, pas plus », sans
+   effet zoomé, mais sur toute la largeur ; puis 3e retour : « colle toutes les sections, supprime les énormes marges »).
+   Sur ordinateur, chaque section tient dans la hauteur de la fenêtre, et les sections se suivent sans grand vide. --k (posé par v5.js) = min(largeur / 1 440, hauteur / 1 000), entre 0,78 et 1,45 :
    les titres et le héros suivent la taille de l'écran ; sans JavaScript, --k vaut 1. Plus de zoom de la page. */
 @media (min-width:1081px){
   .s-h2{font-size:calc(86px * var(--k,1))}
   .s-head .s-lead{font-size:calc(17px * min(var(--k,1),1.15))}
 }
 @media (min-width:1081px) and (min-height:640px){
-  .s-sec{min-height:100svh;display:flex;flex-direction:column;justify-content:center;padding:calc(76px + 1svh) 0 2.5svh}
-  .s-final{min-height:100svh;display:flex;flex-direction:column;justify-content:center;padding:76px 0 0}
+  .s-sec{padding:calc(92px * var(--k,1)) 0 0}
+  .s-final{margin-top:calc(92px * var(--k,1));padding:calc(96px * var(--k,1)) 0}
   .s-final .in{padding:0}
 }
 a.s-card{transition:border-color .2s,transform .3s var(--out)}
