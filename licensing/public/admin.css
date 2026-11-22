@@ -735,3 +735,15 @@ a.kpi:hover{background:var(--rg-ink-3)}
   .t th:first-child,.t td:first-child{padding-left:16px}.t th:last-child,.t td:last-child{padding-right:16px}.facts dd{font-size:36px}.facts > div{padding:16px}
   .feed li,.todo li,.svc li,.checks li{padding-left:16px;padding-right:16px}}
 .toolbar .search .ic{top:14px;left:13px}
+
+/* ---- Printed icons (Sofiene, 22/11 23:51: « mes icônes ») ---- */
+/* Face paper, red copy behind (admin-views.js printed()); arrows, chevrons, menu and close stay stroked. */
+.pi-defs{position:absolute;width:0;height:0;overflow:hidden;pointer-events:none}
+svg.pi{overflow:visible;fill:currentColor;stroke:none}
+.pi .pf{color:var(--pf,#ECE9E2)}
+.pi .pb{color:var(--pb,var(--rg-red-500))}
+.btn-primary .pi{--pf:var(--rg-text-inverse);--pb:var(--rg-red-700)}
+.alert .pi,.toast .pi,.env-note .pi,.delta .pi{--pf:currentColor;--pb:rgba(255,59,48,.55)}
+.empty .pi{width:26px;height:26px;--pf:var(--rg-text-2)}
+.side-nav a .ic.pi{width:20px;height:20px}
+.card-h h2 .ic.pi{width:22px;height:22px}
