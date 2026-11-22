@@ -43,6 +43,7 @@ export function Settings() {
   return (
     <div className="page settings">
       <header className="page-head">
+        <div className="rg-overline">{t("settings.title")}</div>
         <h1>{t("settings.title")}</h1>
       </header>
       <div className="settings-grid">
