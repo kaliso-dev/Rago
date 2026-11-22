@@ -1,6 +1,6 @@
 import { AnimatePresence, motion } from "motion/react";
 import { ArrowRight, Check, Lock, Monitor, TriangleAlert } from "lucide-react";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { api, asLicenseError, type LicenseError } from "../lib/api";
 import { totalTweaks } from "../lib/catalog";
 import { formatDate, translate, type Key } from "../lib/i18n";
@@ -21,10 +21,28 @@ const origin = (u: string) => {
 export const ACCOUNT_URL: string = origin(trim(import.meta.env.VITE_ACCOUNT_URL)) || "http://localhost:8787";
 /** Site de vente (VITE_SITE_URL). Vide : le serveur de comptes, dont la racine redirige vers le site en gardant #pricing. */
 export const SITE_URL: string = trim(import.meta.env.VITE_SITE_URL) || ACCOUNT_URL;
-/** Support (invitation Discord, VITE_SUPPORT_URL). Vide : aucun bouton d'aide n'est affiché. */
-export const SUPPORT_URL: string = trim(import.meta.env.VITE_SUPPORT_URL);
+/** Invitation permanente du Discord de Rago (la même que sur le site). */
+export const DISCORD_URL = "https://discord.gg/cbCxCBx8vJ";
+/** Support (VITE_SUPPORT_URL, sinon le Discord de Rago, où se trouvent les tickets). */
+export const SUPPORT_URL: string = trim(import.meta.env.VITE_SUPPORT_URL) || DISCORD_URL;
 
-type Step = { kind: "signin" } | { kind: "confirm"; email: string; keyHint: string | null } | { kind: "success" };
+type Step =
+  | { kind: "signin" }
+  | { kind: "confirm"; email: string; keyHint: string | null }
+  | { kind: "success" }
+  /** connexion avec Google ou Discord dans le navigateur (1.3.0) : on attend la confirmation sur la page du compte */
+  | { kind: "browser"; linkId: string; pollToken: string; code: string };
+
+const GOOGLE = (
+  <svg viewBox="0 0 24 24" width="16" height="16" aria-hidden="true">
+    <path fill="#EA4335" d="M12 10.2v3.9h5.4c-.2 1.3-1.6 3.8-5.4 3.8-3.2 0-5.9-2.7-5.9-6s2.7-6 5.9-6c1.9 0 3.1.8 3.8 1.5l2.6-2.5C16.8 3.4 14.6 2.4 12 2.4 6.7 2.4 2.4 6.7 2.4 12s4.3 9.6 9.6 9.6c5.5 0 9.2-3.9 9.2-9.4 0-.6-.1-1.1-.2-1.6H12z" />
+  </svg>
+);
+const DISCORD = (
+  <svg viewBox="0 0 24 24" width="16" height="16" aria-hidden="true">
+    <path fill="#5865F2" d="M20.3 4.4A19.6 19.6 0 0 0 15.4 3l-.6 1.3a18.2 18.2 0 0 0-5.6 0L8.6 3a19.6 19.6 0 0 0-4.9 1.5C.6 9.1-.3 13.6.2 18a19.8 19.8 0 0 0 6 3l1.3-2.1a12.8 12.8 0 0 1-2-1l.5-.4a14 14 0 0 0 12 0l.5.4c-.6.4-1.3.7-2 1l1.3 2.1a19.7 19.7 0 0 0 6-3c.5-5.1-.8-9.6-3.5-13.6zM8 15.3c-1.2 0-2.1-1.1-2.1-2.4s.9-2.4 2.1-2.4 2.2 1.1 2.1 2.4c0 1.3-.9 2.4-2.1 2.4zm8 0c-1.2 0-2.1-1.1-2.1-2.4s.9-2.4 2.1-2.4 2.2 1.1 2.1 2.4c0 1.3-.9 2.4-2.1 2.4z" />
+  </svg>
+);
 
 const ease = [0.16, 1, 0.3, 1] as const;
 
@@ -76,6 +94,43 @@ export function LicenseGate({ embedded = false, onDone }: { embedded?: boolean; 
     });
 
   const activate = () => run(async () => done(await api.licenseActivate(), true));
+
+  /** Google ou Discord : le navigateur s'ouvre sur la page du compte, l'app attend la confirmation. */
+  const browserSignIn = (provider: "google" | "discord") =>
+    run(async () => {
+      const link = await api.licenseLinkStart(provider);
+      setStep({ kind: "browser", ...link });
+    });
+
+  // toutes les 2 s, tant que la page du compte n'est pas confirmée (10 minutes au plus, le serveur dit link_expired)
+  const linkId = step.kind === "browser" ? step.linkId : null;
+  const pollToken = step.kind === "browser" ? step.pollToken : null;
+  useEffect(() => {
+    if (!linkId || !pollToken) return;
+    let live = true;
+    const tick = async () => {
+      try {
+        const r = await api.licenseLinkPoll(linkId, pollToken);
+        if (!live) return;
+        if (!r) return void (timer = window.setTimeout(tick, 2000));
+        if (r.kind === "active") done(r.status, false);
+        else setStep({ kind: "confirm", email: r.email, keyHint: r.keyHint });
+      } catch (e) {
+        if (!live) return;
+        const err = asLicenseError(e);
+        // coupure passagère : on réessaie ; le reste revient à l'écran de connexion avec le message
+        if (err.code === "network" || err.code === "rate_limited") return void (timer = window.setTimeout(tick, 4000));
+        setError(err);
+        setStep({ kind: "signin" });
+      }
+    };
+    let timer = window.setTimeout(tick, 2000);
+    return () => {
+      live = false;
+      window.clearTimeout(timer);
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [linkId, pollToken]);
 
   const errorBox = (
     <AnimatePresence>
@@ -175,6 +230,22 @@ export function LicenseGate({ embedded = false, onDone }: { embedded?: boolean; 
             </motion.div>
           )}
 
+          {step.kind === "browser" && (
+            <motion.div key="browser" initial={{ opacity: 0, x: 12 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -12 }} transition={{ duration: 0.24, ease }}>
+              <h1>{t("license.browserTitle")}</h1>
+              <p className="gate-lead">{t("license.browserLead")}</p>
+              <p className="gate-code rg-metric" aria-label={t("license.browserCode")}>
+                {step.code}
+              </p>
+              <p className="muted small">{t("license.browserWait")}</p>
+              <div className="gate-links">
+                <button type="button" className="link" onClick={() => setStep({ kind: "signin" })}>
+                  {t("license.back")}
+                </button>
+              </div>
+            </motion.div>
+          )}
+
           {step.kind === "signin" && (
             <motion.form
               key="form"
@@ -189,6 +260,15 @@ export function LicenseGate({ embedded = false, onDone }: { embedded?: boolean; 
             >
               <h1>{t("license.title")}</h1>
               <p className="gate-lead">{t("license.lead")}</p>
+              <div className="gate-oauth">
+                <Button type="button" variant="secondary" size="lg" disabled={busy} onClick={() => void browserSignIn("google")}>
+                  {GOOGLE} {t("license.google")}
+                </Button>
+                <Button type="button" variant="secondary" size="lg" disabled={busy} onClick={() => void browserSignIn("discord")}>
+                  {DISCORD} {t("license.discord")}
+                </Button>
+              </div>
+              <p className="gate-or muted small">{t("license.orEmail")}</p>
               <label className="field">
                 <span>{t("license.email")}</span>
                 <input id="gate-email" className="input" type="email" autoComplete="email" autoFocus value={email} onChange={(e) => setEmail(e.target.value)} required />

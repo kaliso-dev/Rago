@@ -73,6 +73,20 @@
   --rg-glow:     0 0 0 1px rgba(255,59,48,.4), 0 8px 32px -6px rgba(255,59,48,.45);
   --rg-focus:    0 0 0 2px var(--rg-ink-1), 0 0 0 4px var(--rg-red-500);
 
+  /* Verre (refonte du 16/10/2026, inspirée d'Apple) : surfaces translucides posées sur l'encre. Le flou ne va que
+     sur ce qui flotte au-dessus du contenu (barre Apply, modales, palette, messages) ; les cartes n'en ont pas,
+     pour garder le défilement fluide. */
+  --rg-glass-1: rgba(255,255,255,.025);  /* carte, liste de réglages */
+  --rg-glass-2: rgba(255,255,255,.045);   /* survol, contrôles (segmented, bouton secondaire, champ) */
+  --rg-glass-3: rgba(255,255,255,.08);   /* élément actif (nav, pastille du segmented) */
+  --rg-glass-float: rgba(17,17,19,.82);  /* panneau flottant, toujours avec --rg-glass-blur */
+  --rg-glass-blur: blur(36px) saturate(1.8);
+  --rg-glass-edge: inset 0 1px 0 rgba(255,255,255,.05); /* reflet discret du bord haut */
+  /* remplissage d'une carte : voile clair très léger, l'encre reste sombre */
+  --rg-glass-fill: linear-gradient(180deg, rgba(255,255,255,.035), rgba(255,255,255,.015));
+  /* liseré des cartes (posé en ::after) : léger en haut à gauche, presque éteint ailleurs */
+  --rg-glass-rim: linear-gradient(150deg, rgba(255,255,255,.12), rgba(255,255,255,.04) 30%, rgba(255,255,255,.015) 60%, rgba(255,255,255,.06));
+
   /* Mouvement */
   --rg-ease-out: cubic-bezier(.16, 1, .3, 1);     /* entrées, la plupart des transitions */
   --rg-ease-in-out: cubic-bezier(.65, 0, .35, 1); /* déplacements de layout */

@@ -69,7 +69,7 @@ struct DoneEvent<'a> {
 /// Un seul lot à la fois sur Windows : un lot lancé depuis l'interface attend la fin d'une remise à zéro en cours.
 static EXCLUSIVE: Mutex<()> = Mutex::new(());
 
-fn exclusive() -> MutexGuard<'static, ()> {
+pub(crate) fn exclusive() -> MutexGuard<'static, ()> {
     EXCLUSIVE.lock().unwrap_or_else(PoisonError::into_inner)
 }
 

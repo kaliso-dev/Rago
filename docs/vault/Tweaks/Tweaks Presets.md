@@ -2,19 +2,18 @@
 type: catalogue
 tags: [tweaks, presets, généré]
 généré: docs/tools/catalogue_vault.py
-version_app: 1.2.1
-maj: 2026-10-31
+version_app: 1.3.0
+maj: 2026-11-10
 ---
 
 # Tweaks Presets
 
-Les 20 presets de l'app 1.2.1 et leur contenu exact (`ids:variante`). Note générée, voir [[Presets]] pour le fonctionnement.
+Les 20 presets de l'app 1.3.0 et leur contenu exact (`ids:variante`). Note générée, voir [[Presets]] pour le fonctionnement.
 
-## Minecraft PvP (`mc_pvp`, 22 tweaks · étiquette MC · reconnu pour : minecraft)
+## Minecraft PvP (`mc_pvp`, 20 tweaks · étiquette MC · reconnu pour : minecraft)
 Hitreg, ping et entrées brutes pour le PvP Minecraft.
 
 - Profil hitreg `ping_hitreg` → hypixel · [[Tweaks Réseau]]
-- Optimisation des paquets `ping_packets` → hitreg · [[Tweaks Réseau]]
 - Optimisation du ping `ping_main` → config1 · [[Tweaks Réseau]]
 - Latence des pilotes `in_driver` · [[Tweaks Hitreg]]
 - Latence de la carte `in_adapter` · [[Tweaks Hitreg]]
@@ -24,7 +23,6 @@ Hitreg, ping et entrées brutes pour le PvP Minecraft.
 - File souris et clavier `in_queue` → low · [[Tweaks Hitreg]]
 - Mode jeu Windows `win_gamemode` → on · [[Tweaks Windows]]
 - Couper Game DVR `win_gamedvr` · [[Tweaks Windows]]
-- Plein écran `win_fullscreen` · [[Tweaks Windows]]
 - Priorité avancée par jeu `pri_game` → minecraft · [[Tweaks Latence]]
 - Planificateur multimédia (MMCSS) `pri_mmcss` · [[Tweaks Latence]]
 - Séparation des priorités Win32 `pri_w32` · [[Tweaks Latence]]

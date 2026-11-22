@@ -1,0 +1,972 @@
+{
+ "version": 1,
+ "updated": "2026-11-11",
+ "games": {
+  "valorant": {
+   "name": "VALORANT",
+   "sources": [
+    {
+     "name": "ProSettings",
+     "url": "https://prosettings.net/guides/valorant-options",
+     "date": "2026-05-18"
+    },
+    {
+     "name": "Hone",
+     "url": "https://hone.gg/blog/best-valorant-settings/",
+     "date": "2026-08-14"
+    },
+    {
+     "name": "Evetech",
+     "url": "https://evezone.evetech.co.za/performance-pulse/valorant-esports-settings-see-enemies",
+     "date": "2026-01-22"
+    }
+   ],
+   "tips": [
+    {
+     "id": "valorant.highlight",
+     "tag": "see",
+     "setting": "Enemy Highlight Color",
+     "value": {
+      "en": "Yellow (Deuteranopia)",
+      "fr": "Yellow (Deuteranopia)"
+     },
+     "why": {
+      "en": "The yellow outline stands out most against the maps. It's the pros' pick.",
+      "fr": "Le contour jaune ressort le mieux sur les décors. C'est le choix des pros."
+     }
+    },
+    {
+     "id": "valorant.reflex",
+     "tag": "lag",
+     "setting": "NVIDIA Reflex Low Latency",
+     "value": {
+      "en": "On + Boost",
+      "fr": "On + Boost"
+     },
+     "why": {
+      "en": "Cuts the delay between your mouse and the screen (NVIDIA cards).",
+      "fr": "Réduit le délai entre ta souris et l'écran (cartes NVIDIA)."
+     }
+    },
+    {
+     "id": "valorant.rawinput",
+     "tag": "aim",
+     "setting": "Raw Input Buffer",
+     "value": {
+      "en": "On",
+      "fr": "On"
+     },
+     "why": {
+      "en": "Reads your mouse more directly, best with a high polling rate mouse. 8 pros out of 10 use it.",
+      "fr": "Lit ta souris plus directement, surtout utile à haute fréquence. 8 pros sur 10 l'activent."
+     }
+    },
+    {
+     "id": "valorant.vsync",
+     "tag": "lag",
+     "setting": "VSync",
+     "value": {
+      "en": "Off",
+      "fr": "Off"
+     },
+     "why": {
+      "en": "Vertical sync adds input lag.",
+      "fr": "La synchro verticale ajoute du délai."
+     }
+    },
+    {
+     "id": "valorant.quality",
+     "tag": "see",
+     "setting": "Material Quality · Detail Quality",
+     "value": {
+      "en": "Low",
+      "fr": "Low"
+     },
+     "why": {
+      "en": "Less clutter on the maps (vines, props): enemies are easier to spot and FPS go up.",
+      "fr": "Moins de détails dans le décor (lianes, objets) : les ennemis se voient mieux et les FPS montent."
+     }
+    },
+    {
+     "id": "valorant.effects",
+     "tag": "see",
+     "setting": "Vignette · Bloom · Distortion",
+     "value": {
+      "en": "Off",
+      "fr": "Off"
+     },
+     "why": {
+      "en": "These effects darken the edges and blur the picture.",
+      "fr": "Ces effets assombrissent les bords et brouillent l'image."
+     }
+    },
+    {
+     "id": "valorant.shadows",
+     "tag": "fps",
+     "setting": "Cast Shadows",
+     "value": {
+      "en": "Off",
+      "fr": "Off"
+     },
+     "why": {
+      "en": "Only changes your own shadow: free FPS.",
+      "fr": "Ne touche que ton ombre : des FPS gratuits."
+     }
+    },
+    {
+     "id": "valorant.buffering",
+     "tag": "lag",
+     "setting": "Network Buffering",
+     "value": {
+      "en": "Minimum (Moderate if your connection is unstable)",
+      "fr": "Minimum (Moderate si ta connexion est instable)"
+     },
+     "why": {
+      "en": "Less waiting on the server's updates.",
+      "fr": "Moins d'attente sur les informations du serveur."
+     }
+    },
+    {
+     "id": "valorant.fullscreen",
+     "tag": "lag",
+     "setting": "Display Mode",
+     "value": {
+      "en": "Fullscreen",
+      "fr": "Fullscreen"
+     },
+     "why": {
+      "en": "Fullscreen gives the lowest input lag.",
+      "fr": "Le plein écran donne le moins de délai."
+     }
+    }
+   ]
+  },
+  "fortnite": {
+   "name": "Fortnite",
+   "sources": [
+    {
+     "name": "Evetech",
+     "url": "https://www.evetech.co.za/best-settings-fortnite-pc/e/3807",
+     "date": "2026-05"
+    },
+    {
+     "name": "NoPing",
+     "url": "https://noping.com/blog/best-fortnite-settings",
+     "date": "2026-10-02"
+    },
+    {
+     "name": "Esports.net",
+     "url": "https://www.esports.net/wiki/guides/best-fortnite-settings/",
+     "date": "2025-04"
+    }
+   ],
+   "tips": [
+    {
+     "id": "fortnite.rendering",
+     "tag": "fps",
+     "setting": "Rendering Mode (Video)",
+     "value": {
+      "en": "Performance",
+      "fr": "Performance"
+     },
+     "why": {
+      "en": "The lightest mode, used by pros in Battle Royale. Restart the game after. Keep DirectX 12 for LEGO, Festival and Rocket Racing.",
+      "fr": "Le mode le plus léger, celui des pros en Battle Royale. Redémarre le jeu ensuite. Garde DirectX 12 pour LEGO, Festival et Rocket Racing."
+     }
+    },
+    {
+     "id": "fortnite.turbobuild",
+     "tag": "build",
+     "setting": "Turbo Building",
+     "value": {
+      "en": "On",
+      "fr": "On"
+     },
+     "why": {
+      "en": "Hold the button to place builds in a row, no extra clicks.",
+      "fr": "Garde le bouton enfoncé pour construire à la suite, sans recliquer."
+     }
+    },
+    {
+     "id": "fortnite.edithold",
+     "tag": "build",
+     "setting": "Edit Hold Time",
+     "value": {
+      "en": "0 to 0.1",
+      "fr": "0 à 0,1"
+     },
+     "why": {
+      "en": "The default (0.150) makes you wait before each edit. Lower, the edit starts right away.",
+      "fr": "La valeur par défaut (0,150) fait attendre avant chaque edit. Plus bas, l'edit part tout de suite."
+     }
+    },
+    {
+     "id": "fortnite.confirmedit",
+     "tag": "build",
+     "setting": "Confirm Edit on Release",
+     "value": {
+      "en": "On",
+      "fr": "On"
+     },
+     "why": {
+      "en": "The edit goes through when you let go of the key: one press less.",
+      "fr": "L'edit se valide quand tu relâches la touche : une touche de moins."
+     }
+    },
+    {
+     "id": "fortnite.reflex",
+     "tag": "lag",
+     "setting": "NVIDIA Reflex Low Latency",
+     "value": {
+      "en": "On + Boost (On for an RTX 20)",
+      "fr": "On + Boost (On sur une RTX 20)"
+     },
+     "why": {
+      "en": "Cuts the delay between your mouse and the screen.",
+      "fr": "Réduit le délai entre ta souris et l'écran."
+     }
+    },
+    {
+     "id": "fortnite.vsync",
+     "tag": "lag",
+     "setting": "V-Sync · Motion Blur",
+     "value": {
+      "en": "Off",
+      "fr": "Off"
+     },
+     "why": {
+      "en": "V-Sync adds input lag, motion blur hides movement.",
+      "fr": "La synchro ajoute du délai, le flou cache les mouvements."
+     }
+    },
+    {
+     "id": "fortnite.sound",
+     "tag": "see",
+     "setting": "Visualize Sound Effects",
+     "value": {
+      "en": "On",
+      "fr": "On"
+     },
+     "why": {
+      "en": "Footsteps, chests and shots show up around your crosshair.",
+      "fr": "Les pas, coffres et tirs s'affichent autour de ton viseur."
+     }
+    },
+    {
+     "id": "fortnite.3dres",
+     "tag": "see",
+     "setting": "3D Resolution",
+     "value": {
+      "en": "100%",
+      "fr": "100 %"
+     },
+     "why": {
+      "en": "Below 100%, the picture gets blurry.",
+      "fr": "En dessous de 100 %, l'image devient floue."
+     }
+    }
+   ]
+  },
+  "cs2": {
+   "name": "Counter-Strike 2",
+   "sources": [
+    {
+     "name": "CSDB",
+     "url": "https://csdb.gg/guides/best-cs2-video-settings/",
+     "date": "2026-07-13"
+    }
+   ],
+   "tips": [
+    {
+     "id": "cs2.contrast",
+     "tag": "see",
+     "setting": "Boost Player Contrast",
+     "value": {
+      "en": "Enabled",
+      "fr": "Enabled"
+     },
+     "why": {
+      "en": "Players stand out from the background, at almost no FPS cost.",
+      "fr": "Les joueurs ressortent mieux sur le décor, presque sans coût en FPS."
+     }
+    },
+    {
+     "id": "cs2.reflex",
+     "tag": "lag",
+     "setting": "NVIDIA Reflex Low Latency",
+     "value": {
+      "en": "Enabled + Boost (AMD: Anti-Lag 2)",
+      "fr": "Enabled + Boost (AMD : Anti-Lag 2)"
+     },
+     "why": {
+      "en": "Cuts the delay between your mouse and the screen.",
+      "fr": "Réduit le délai entre ta souris et l'écran."
+     }
+    },
+    {
+     "id": "cs2.vsync",
+     "tag": "lag",
+     "setting": "Wait for Vertical Sync",
+     "value": {
+      "en": "Disabled",
+      "fr": "Disabled"
+     },
+     "why": {
+      "en": "Vertical sync adds input lag.",
+      "fr": "La synchro verticale ajoute du délai."
+     }
+    },
+    {
+     "id": "cs2.shadows",
+     "tag": "see",
+     "setting": "Global Shadow Quality",
+     "value": {
+      "en": "Medium or High",
+      "fr": "Medium ou High"
+     },
+     "why": {
+      "en": "The one setting to keep up: it shows enemy shadows from far away.",
+      "fr": "Le seul réglage à garder haut : il montre l'ombre des ennemis de loin."
+     }
+    },
+    {
+     "id": "cs2.msaa",
+     "tag": "fps",
+     "setting": "Multisampling Anti-Aliasing Mode",
+     "value": {
+      "en": "CMAA2 or None",
+      "fr": "CMAA2 ou None"
+     },
+     "why": {
+      "en": "MSAA 4x and 8x cost a lot of FPS.",
+      "fr": "Le MSAA 4x et 8x coûte beaucoup de FPS."
+     }
+    },
+    {
+     "id": "cs2.detail",
+     "tag": "fps",
+     "setting": "Shader Detail · Particle Detail",
+     "value": {
+      "en": "Low",
+      "fr": "Low"
+     },
+     "why": {
+      "en": "More FPS, and less smoke and effects on screen.",
+      "fr": "Plus de FPS, et moins de fumée et d'effets à l'écran."
+     }
+    },
+    {
+     "id": "cs2.ao",
+     "tag": "fps",
+     "setting": "Ambient Occlusion",
+     "value": {
+      "en": "Disabled",
+      "fr": "Disabled"
+     },
+     "why": {
+      "en": "Looks only, costs FPS.",
+      "fr": "Purement esthétique, coûte des FPS."
+     }
+    },
+    {
+     "id": "cs2.fsr",
+     "tag": "see",
+     "setting": "FidelityFX Super Resolution",
+     "value": {
+      "en": "Disabled (Highest Quality)",
+      "fr": "Disabled (Highest Quality)"
+     },
+     "why": {
+      "en": "Upscaling blurs the picture.",
+      "fr": "L'upscaling rend l'image floue."
+     }
+    },
+    {
+     "id": "cs2.fullscreen",
+     "tag": "lag",
+     "setting": "Display Mode",
+     "value": {
+      "en": "Fullscreen",
+      "fr": "Fullscreen"
+     },
+     "why": {
+      "en": "Windowed and borderless add input lag.",
+      "fr": "Le mode fenêtré et sans bordure ajoutent du délai."
+     }
+    }
+   ]
+  },
+  "apex": {
+   "name": "Apex Legends",
+   "sources": [
+    {
+     "name": "EA",
+     "url": "https://help.ea.com/en/articles/apex-legends/best-settings-pc",
+     "date": "2026-08"
+    },
+    {
+     "name": "ProSettings",
+     "url": "https://prosettings.net/guides/apex-legends-options",
+     "date": "2025-06-25"
+    }
+   ],
+   "tips": [
+    {
+     "id": "apex.vsync",
+     "tag": "lag",
+     "setting": "V-Sync",
+     "value": {
+      "en": "Disabled",
+      "fr": "Disabled"
+     },
+     "why": {
+      "en": "Vertical sync adds input lag.",
+      "fr": "La synchro verticale ajoute du délai."
+     }
+    },
+    {
+     "id": "apex.reflex",
+     "tag": "lag",
+     "setting": "NVIDIA Reflex",
+     "value": {
+      "en": "Enabled + Boost (Enabled if your FPS drop)",
+      "fr": "Enabled + Boost (Enabled si tes FPS chutent)"
+     },
+     "why": {
+      "en": "Cuts the delay between your mouse and the screen.",
+      "fr": "Réduit le délai entre ta souris et l'écran."
+     }
+    },
+    {
+     "id": "apex.adaptive",
+     "tag": "see",
+     "setting": "Adaptive Resolution FPS Target",
+     "value": {
+      "en": "0",
+      "fr": "0"
+     },
+     "why": {
+      "en": "Otherwise the game lowers its resolution mid-fight and the picture gets blurry.",
+      "fr": "Sinon le jeu baisse sa définition en plein combat et l'image devient floue."
+     }
+    },
+    {
+     "id": "apex.fov",
+     "tag": "see",
+     "setting": "Field of View",
+     "value": {
+      "en": "110 (most pros)",
+      "fr": "110 (la majorité des pros)"
+     },
+     "why": {
+      "en": "You see more around you.",
+      "fr": "Tu vois plus large autour de toi."
+     }
+    },
+    {
+     "id": "apex.fovscaling",
+     "tag": "aim",
+     "setting": "FOV Ability Scaling",
+     "value": {
+      "en": "Disabled",
+      "fr": "Disabled"
+     },
+     "why": {
+      "en": "Your sensitivity stays the same when an ability changes the field of view.",
+      "fr": "Ta sensibilité ne change pas quand une compétence modifie le champ de vision."
+     }
+    },
+    {
+     "id": "apex.heavy",
+     "tag": "fps",
+     "setting": "Ambient Occlusion Quality · Volumetric Lighting",
+     "value": {
+      "en": "Disabled",
+      "fr": "Disabled"
+     },
+     "why": {
+      "en": "Big FPS gain, no edge in a fight.",
+      "fr": "Gros gain de FPS, aucun avantage en combat."
+     }
+    },
+    {
+     "id": "apex.sun",
+     "tag": "fps",
+     "setting": "Sun Shadow Coverage · Sun Shadow Detail",
+     "value": {
+      "en": "Low",
+      "fr": "Low"
+     },
+     "why": {
+      "en": "More FPS in open areas.",
+      "fr": "Plus de FPS dans les zones ouvertes."
+     }
+    },
+    {
+     "id": "apex.fullscreen",
+     "tag": "lag",
+     "setting": "Display Mode",
+     "value": {
+      "en": "Full Screen",
+      "fr": "Full Screen"
+     },
+     "why": {
+      "en": "Fullscreen gives the lowest input lag.",
+      "fr": "Le plein écran donne le moins de délai."
+     }
+    }
+   ]
+  },
+  "pubg": {
+   "name": "PUBG",
+   "sources": [
+    {
+     "name": "ProSettings",
+     "url": "https://prosettings.net/guides/pubg-options",
+     "date": "2026-06-23"
+    }
+   ],
+   "tips": [
+    {
+     "id": "pubg.aa",
+     "tag": "see",
+     "setting": "Anti-Aliasing",
+     "value": {
+      "en": "Medium",
+      "fr": "Medium"
+     },
+     "why": {
+      "en": "The sweet spot: clean edges without hurting visibility.",
+      "fr": "Le bon compromis : des contours propres sans gêner la visibilité."
+     }
+    },
+    {
+     "id": "pubg.post",
+     "tag": "see",
+     "setting": "Post-Processing",
+     "value": {
+      "en": "Low",
+      "fr": "Low"
+     },
+     "why": {
+      "en": "Higher makes enemies harder to see.",
+      "fr": "Plus haut, il rend les ennemis plus difficiles à voir."
+     }
+    },
+    {
+     "id": "pubg.textures",
+     "tag": "see",
+     "setting": "Textures",
+     "value": {
+      "en": "Medium",
+      "fr": "Medium"
+     },
+     "why": {
+      "en": "One of the most useful settings to read the world.",
+      "fr": "L'un des réglages les plus utiles pour bien lire le décor."
+     }
+    },
+    {
+     "id": "pubg.low",
+     "tag": "fps",
+     "setting": "Shadows · Effects · Foliage",
+     "value": {
+      "en": "Very Low",
+      "fr": "Very Low"
+     },
+     "why": {
+      "en": "Higher only looks prettier and costs FPS.",
+      "fr": "Plus haut, c'est seulement plus joli, et ça coûte des FPS."
+     }
+    },
+    {
+     "id": "pubg.scale",
+     "tag": "see",
+     "setting": "Render Scale",
+     "value": {
+      "en": "100",
+      "fr": "100"
+     },
+     "why": {
+      "en": "Below 100, the picture gets blurry.",
+      "fr": "En dessous de 100, l'image devient floue."
+     }
+    },
+    {
+     "id": "pubg.vsync",
+     "tag": "lag",
+     "setting": "V-Sync · Motion Blur",
+     "value": {
+      "en": "Off",
+      "fr": "Off"
+     },
+     "why": {
+      "en": "V-Sync adds input lag, motion blur hurts visibility.",
+      "fr": "La synchro ajoute du délai, le flou gêne la visibilité."
+     }
+    },
+    {
+     "id": "pubg.fov",
+     "tag": "see",
+     "setting": "FPP Camera FOV",
+     "value": {
+      "en": "103",
+      "fr": "103"
+     },
+     "why": {
+      "en": "Wider than the default 90: you see more around you.",
+      "fr": "Plus large que les 90 par défaut : tu vois plus autour de toi."
+     }
+    },
+    {
+     "id": "pubg.fullscreen",
+     "tag": "lag",
+     "setting": "Display Mode",
+     "value": {
+      "en": "Full Screen",
+      "fr": "Full Screen"
+     },
+     "why": {
+      "en": "Fullscreen gives the lowest input lag.",
+      "fr": "Le plein écran donne le moins de délai."
+     }
+    }
+   ]
+  },
+  "lol": {
+   "name": "League of Legends",
+   "sources": [
+    {
+     "name": "ProSettings",
+     "url": "https://prosettings.net/guides/league-of-legends-options",
+     "date": "2025-01-13"
+    }
+   ],
+   "tips": [
+    {
+     "id": "lol.vsync",
+     "tag": "lag",
+     "setting": "Wait for Vertical Sync",
+     "value": {
+      "en": "Off",
+      "fr": "Off"
+     },
+     "why": {
+      "en": "Vertical sync adds input lag.",
+      "fr": "La synchro verticale ajoute du délai."
+     }
+    },
+    {
+     "id": "lol.cap",
+     "tag": "lag",
+     "setting": "Frame Rate Cap",
+     "value": {
+      "en": "Uncapped (your screen's Hz if the game stutters)",
+      "fr": "Uncapped (la fréquence de ton écran si le jeu saccade)"
+     },
+     "why": {
+      "en": "More frames, less delay.",
+      "fr": "Plus d'images, moins de délai."
+     }
+    },
+    {
+     "id": "lol.inking",
+     "tag": "fps",
+     "setting": "Character Inking",
+     "value": {
+      "en": "Off",
+      "fr": "Off"
+     },
+     "why": {
+      "en": "It weighs a lot on FPS.",
+      "fr": "Il pèse beaucoup sur les FPS."
+     }
+    },
+    {
+     "id": "lol.aa",
+     "tag": "fps",
+     "setting": "Anti-Aliasing",
+     "value": {
+      "en": "Off",
+      "fr": "Off"
+     },
+     "why": {
+      "en": "No competitive benefit.",
+      "fr": "Aucun avantage en partie."
+     }
+    },
+    {
+     "id": "lol.low",
+     "tag": "fps",
+     "setting": "Shadow Quality · Effects Quality",
+     "value": {
+      "en": "Low",
+      "fr": "Low"
+     },
+     "why": {
+      "en": "More FPS in team fights.",
+      "fr": "Plus de FPS dans les combats d'équipe."
+     }
+    },
+    {
+     "id": "lol.window",
+     "tag": "lag",
+     "setting": "Window Mode",
+     "value": {
+      "en": "Full Screen (Borderless works too)",
+      "fr": "Full Screen (Borderless marche aussi)"
+     },
+     "why": {
+      "en": "Fullscreen gives the lowest input lag.",
+      "fr": "Le plein écran donne le moins de délai."
+     }
+    }
+   ]
+  },
+  "rivals": {
+   "name": "Marvel Rivals",
+   "sources": [
+    {
+     "name": "ProSettings",
+     "url": "https://prosettings.net/guides/marvel-rivals-options",
+     "date": "2025-04-11"
+    }
+   ],
+   "tips": [
+    {
+     "id": "rivals.latency",
+     "tag": "lag",
+     "setting": "Low Latency Mode",
+     "value": {
+      "en": "On + Boost (AMD: AMD Anti-Lag 2 On)",
+      "fr": "On + Boost (AMD : AMD Anti-Lag 2 sur On)"
+     },
+     "why": {
+      "en": "Cuts the delay between your mouse and the screen.",
+      "fr": "Réduit le délai entre ta souris et l'écran."
+     }
+    },
+    {
+     "id": "rivals.vsync",
+     "tag": "lag",
+     "setting": "V-Sync",
+     "value": {
+      "en": "Off",
+      "fr": "Off"
+     },
+     "why": {
+      "en": "Vertical sync adds input lag.",
+      "fr": "La synchro verticale ajoute du délai."
+     }
+    },
+    {
+     "id": "rivals.framegen",
+     "tag": "lag",
+     "setting": "Frame Generation",
+     "value": {
+      "en": "Off",
+      "fr": "Off"
+     },
+     "why": {
+      "en": "It can be buggy.",
+      "fr": "Il peut être instable."
+     }
+    },
+    {
+     "id": "rivals.upscale",
+     "tag": "see",
+     "setting": "Anti-Aliasing and Super Resolution Type",
+     "value": {
+      "en": "TAAU, 100%",
+      "fr": "TAAU, 100 %"
+     },
+     "why": {
+      "en": "The safest option for a clean picture.",
+      "fr": "L'option la plus sûre pour une image propre."
+     }
+    },
+    {
+     "id": "rivals.shadow",
+     "tag": "see",
+     "setting": "Shadow Detail",
+     "value": {
+      "en": "Medium",
+      "fr": "Medium"
+     },
+     "why": {
+      "en": "Shadows help you spot enemies.",
+      "fr": "Les ombres aident à repérer les ennemis."
+     }
+    },
+    {
+     "id": "rivals.low",
+     "tag": "fps",
+     "setting": "Effects Detail · Foliage Quality · Post-Processing",
+     "value": {
+      "en": "Low",
+      "fr": "Low"
+     },
+     "why": {
+      "en": "More FPS and less clutter in fights.",
+      "fr": "Plus de FPS et moins d'effets dans les combats."
+     }
+    },
+    {
+     "id": "rivals.cap",
+     "tag": "fps",
+     "setting": "Limit FPS",
+     "value": {
+      "en": "On, at your screen's refresh rate",
+      "fr": "On, à la fréquence de ton écran"
+     },
+     "why": {
+      "en": "Steadier frame times.",
+      "fr": "Des images plus régulières."
+     }
+    },
+    {
+     "id": "rivals.reflection",
+     "tag": "fps",
+     "setting": "Reflection Quality",
+     "value": {
+      "en": "Disable",
+      "fr": "Disable"
+     },
+     "why": {
+      "en": "Free FPS.",
+      "fr": "Des FPS gratuits."
+     }
+    }
+   ]
+  },
+  "finals": {
+   "name": "THE FINALS",
+   "sources": [
+    {
+     "name": "ProSettings",
+     "url": "https://prosettings.net/guides/the-finals-options",
+     "date": "2025-01-13"
+    }
+   ],
+   "tips": [
+    {
+     "id": "finals.reflex",
+     "tag": "lag",
+     "setting": "NVIDIA Reflex",
+     "value": {
+      "en": "On + Boost",
+      "fr": "On + Boost"
+     },
+     "why": {
+      "en": "Cuts input lag. If your FPS drop, try On without Boost.",
+      "fr": "Réduit le délai. Si tes FPS chutent, essaie On sans Boost."
+     }
+    },
+    {
+     "id": "finals.vsync",
+     "tag": "lag",
+     "setting": "V-Sync",
+     "value": {
+      "en": "Off",
+      "fr": "Off"
+     },
+     "why": {
+      "en": "Vertical sync adds input lag.",
+      "fr": "La synchro verticale ajoute du délai."
+     }
+    },
+    {
+     "id": "finals.dlss",
+     "tag": "lag",
+     "setting": "NVIDIA DLSS",
+     "value": {
+      "en": "Disabled (Resolution Scaling Method: TAAU at 100%)",
+      "fr": "Disabled (Resolution Scaling Method : TAAU à 100 %)"
+     },
+     "why": {
+      "en": "DLSS adds input latency.",
+      "fr": "Le DLSS ajoute du délai."
+     }
+    },
+    {
+     "id": "finals.blur",
+     "tag": "see",
+     "setting": "Motion Blur · Lens Distortion",
+     "value": {
+      "en": "Disabled",
+      "fr": "Disabled"
+     },
+     "why": {
+      "en": "A sharper, straighter picture.",
+      "fr": "Une image plus nette et sans déformation."
+     }
+    },
+    {
+     "id": "finals.clutter",
+     "tag": "see",
+     "setting": "Effects · Foliage",
+     "value": {
+      "en": "Low",
+      "fr": "Low"
+     },
+     "why": {
+      "en": "Pretty effects and foliage hide enemies.",
+      "fr": "Les effets et la végétation cachent les ennemis."
+     }
+    },
+    {
+     "id": "finals.shadows",
+     "tag": "see",
+     "setting": "Shadows",
+     "value": {
+      "en": "Medium",
+      "fr": "Medium"
+     },
+     "why": {
+      "en": "A balance between visibility and FPS.",
+      "fr": "Un équilibre entre visibilité et FPS."
+     }
+    },
+    {
+     "id": "finals.gi",
+     "tag": "fps",
+     "setting": "NVIDIA RTX Global Illumination",
+     "value": {
+      "en": "Static",
+      "fr": "Static"
+     },
+     "why": {
+      "en": "The lightest lighting mode.",
+      "fr": "Le mode d'éclairage le plus léger."
+     }
+    },
+    {
+     "id": "finals.fov",
+     "tag": "see",
+     "setting": "FOV",
+     "value": {
+      "en": "100",
+      "fr": "100"
+     },
+     "why": {
+      "en": "You see more of the arena.",
+      "fr": "Tu vois plus de l'arène."
+     }
+    },
+    {
+     "id": "finals.window",
+     "tag": "lag",
+     "setting": "Window Mode",
+     "value": {
+      "en": "Fullscreen",
+      "fr": "Fullscreen"
+     },
+     "why": {
+      "en": "Fullscreen gives the lowest input lag.",
+      "fr": "Le plein écran donne le moins de délai."
+     }
+    }
+   ]
+  }
+ }
+}

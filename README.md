@@ -173,7 +173,7 @@ Le bouton « Download free » du site et le bouton « Download Rago Optimizer »
 1. Décompresse l'artefact et dépose le **`.exe`** (pas le zip) dans Supabase → **Storage → downloads**. Le serveur prend le `.exe` le plus récent du bucket.
 2. Vérifie sur `https://account.<ton-domaine>/download/status` : tu dois voir `"ok":true` et le nom de ton fichier.
 
-Pour chaque nouvelle version : dans `app/`, lance `npm run bump 1.2.0` (avec le nouveau numéro ; il met à jour `package.json` et `Cargo.toml`, ne modifie pas `tauri.conf.json` à la main), pousse, laisse la fabrication tourner, dépose le nouvel exe et mets à jour `INSTALLER_VERSION` dans Railway. Le détail est à l'étape 8 de [`licensing/docs/MISE-EN-LIGNE.md`](licensing/docs/MISE-EN-LIGNE.md).
+Pour chaque nouvelle version : dans `app/`, lance `npm run bump 1.2.0` (avec le nouveau numéro ; il met à jour `package.json` et `Cargo.toml`, ne modifie pas `tauri.conf.json` à la main), pousse, laisse la fabrication tourner, dépose le nouvel exe **et son `.exe.sig`** (mise à jour automatique des apps installées) et mets à jour `INSTALLER_VERSION` dans Railway. Le détail est à l'étape 8 de [`licensing/docs/MISE-EN-LIGNE.md`](licensing/docs/MISE-EN-LIGNE.md).
 
 ### 4.2 L'alerte SmartScreen
 
@@ -200,6 +200,14 @@ Le test complet est l'étape 9 de `licensing/docs/MISE-EN-LIGNE.md`. En résumé
 10. Pop-up du site : **Claim my discount** puis **Get Premium** : la page Stripe affiche la réduction du pop-up (réglé sur `/admin` du serveur de comptes, section 8).
 
 Quand tout est bon : refais en **live** les prix, la clé `sk_live_`, le portail et le webhook `whsec_`, puis remplace-les dans Railway (étape 10 de `MISE-EN-LIGNE.md`).
+
+### 5.1 La barre en jeu et le mode arrière-plan (depuis la 1.2.0)
+
+**Ctrl+Maj+R** (modifiable dans Paramètres) ouvre une barre par-dessus le jeu : FPS, ping, CPU, GPU, RAM, nettoyage de la RAM et une vingtaine de réglages à activer ou couper en pleine partie (Premium ; les mesures sont gratuites). Le raccourci n'est pris que quand un jeu est au premier plan. Le jeu doit être en plein écran fenêtré ou en fenêtre : en plein écran exclusif, Windows ne laisse rien s'afficher par-dessus. Les FPS viennent de PresentMon (Intel, MIT), téléchargé à chaque fabrication (étape « PresentMon » du build) ; s'il manque, l'exe marche et les FPS affichent « — ». Le ping est lu sur la connexion TCP du jeu : les jeux en UDP (Valorant, CS2, Fortnite) affichent « — ».
+
+Dans Paramètres, carte « Barre en jeu et arrière-plan » : rester près de l'horloge à la fermeture, et lancer avec Windows (tâche planifiée au nom de l'app, retirée à la désinstallation). La vérification de la licence continue pendant ce temps. Les réglages appliqués restent en place à la fermeture du jeu : on les coupe dans l'app ou dans la barre.
+
+À tester sur un vrai PC Windows avant de diffuser une version : la barre sur Minecraft et un jeu Steam ou Epic, les FPS, le ping, la pastille gardée à l'écran, l'icône près de l'horloge, le lancement avec Windows après un redémarrage, et la mise à jour automatique depuis la version d'avant.
 
 ---
 
@@ -261,7 +269,7 @@ cd app && npm ci && npm run tauri dev
 - **La variable GitHub `SITE_URL`** : la passer sur `https://rago-optimizer.com` (section 4) à la prochaine fabrication.
 - **Protéger la branche de production** : Settings → Branches → règle sur la branche par défaut qui interdit le force-push et la suppression.
 - **Railway, attendre les tests** : dans le service → **Settings**, active **Wait for CI** (Railway attend que les vérifications GitHub du commit, dont `licensing-tests`, soient vertes avant de redéployer), mets **Watch Paths** = `licensing/**` (un changement du site ou de l'app ne redéploie plus le serveur) et, dans **Deploy**, **Healthcheck Path** = `/healthz` (un nouveau déploiement qui ne répond pas, par exemple parce que la base est injoignable, ne remplace pas celui qui marche). Revers de Wait for CI : si une autre vérification du même commit échoue (par exemple la fabrication de l'app ou `site-check`), Railway peut sauter le déploiement du serveur, et le commit qui répare la vérification ne le relance pas s'il ne touche pas `licensing/`. Après chaque envoi qui modifie `licensing/`, regarde donc l'onglet **Deployments** de Railway : si le déploiement est marqué sauté (*skipped*), relance-le avec **Redeploy** une fois toutes les vérifications vertes.
-- **Les pages légales** (`terms.html`, `privacy.html`, `refunds.html`) sont des brouillons avec un bandeau « Draft » et des champs en jaune. Il faut ton identité de vendeur (nom ou société, adresse, pays, email de contact, numéro d'immatriculation et TVA s'il y en a) : donne-les sur le projet et elles sont remplies dans `site/tools/make_legal.py`, puis régénérées sans le bandeau. Vérifie ensuite que « Draft » a disparu des trois pages. **À faire avant d'ouvrir les paiements** : Stripe fait accepter ces conditions au client.
+- **Les pages légales** (`terms.html`, `privacy.html`) sont des brouillons avec un bandeau « Draft » et des champs en jaune. Il faut ton identité de vendeur (nom ou société, adresse, pays, email de contact, numéro d'immatriculation et TVA s'il y en a) : donne-les sur le projet et elles sont remplies dans `site/tools/make_legal.py`, puis régénérées sans le bandeau. Vérifie ensuite que « Draft » a disparu des trois pages. **À faire avant d'ouvrir les paiements** : Stripe fait accepter ces conditions au client.
 - **Certificat de signature de code** (section 4.2).
 
 ### Plus tard, au calme : renommer la branche en `main`

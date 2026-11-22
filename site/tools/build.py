@@ -28,7 +28,7 @@ cfg = lambda k: (lambda m: m.group(1) if m.group(1) is not None else m.group(2))
 BASE, CUR = cfg('accountBase').rstrip('/'), cfg('currency')
 PM, PY, PL = float(cfg('priceMonth')), float(cfg('priceYear')), float(cfg('priceLifetime'))
 ISO = {'$': 'USD', '€': 'EUR', '£': 'GBP'}.get(CUR, 'USD')
-for path in ('/login', '/signup', '/affiliate', '/download', '/buy?interval=year'):
+for path in ('/login', '/signup', '/affiliate', '/download', '/buy?interval=year', '/buy/route'):
     s = s.replace(f'href="{path}"', f'href="{BASE}{path}"')
 import math, subprocess
 jsround = lambda n: math.floor(n * 100 + 0.5) / 100  # same rounding as the page's JS (Math.round)
@@ -45,10 +45,23 @@ if os.path.isfile(srv):
     m = re.search(r"LIFETIME_PRICE = \{ amount: (\d+), currency: '(\w+)' \}", open(srv).read())
     assert m and (int(m.group(1)), m.group(2)) == (round(PL * 100), ISO.lower()), \
         f'priceLifetime ({CUR}{PL:.2f} in src/page.html) and LIFETIME_PRICE (licensing/src/billing.js) differ: change both'
+# Rago Route option (2026-11-13): the site's price is the server's ROUTE_PRICE
+PR = float(cfg('priceRoute'))
+ra = os.path.join(ROOT, '..', 'licensing', 'src', 'route-addon.js')
+if os.path.isfile(ra):
+    m = re.search(r"ROUTE_PRICE = \{ amount: (\d+), currency: '(\w+)'", open(ra).read())
+    assert m and (int(m.group(1)), m.group(2)) == (round(PR * 100), ISO.lower()), \
+        f'priceRoute ({CUR}{PR:.2f} in src/page.html) and ROUTE_PRICE (licensing/src/route-addon.js) differ: change both'
+# and its yearly price (2026-11-13), the server's ROUTE_PRICE_YEARLY
+PRY = float(cfg('priceRouteYear'))
+if os.path.isfile(ra):
+    m = re.search(r"ROUTE_PRICE_YEARLY = \{ amount: (\d+), currency: '(\w+)'", open(ra).read())
+    assert m and (int(m.group(1)), m.group(2)) == (round(PRY * 100), ISO.lower()), \
+        f'priceRouteYear ({CUR}{PRY:.2f} in src/page.html) and ROUTE_PRICE_YEARLY (licensing/src/route-addon.js) differ: change both'
 # FAQ without JavaScript: the same questions, rendered once here into a <noscript> block
 a = s.index('  const F = ['); b = s.index('\n  ];', a) + len('\n  ];')
 try:
-    faq = json.loads(subprocess.run(['node', '-e', f'const MONTHS_FREE = {FREE}; const CONFIG = {json.dumps({"currency": CUR, "priceLifetime": PL})};' + s[a:b] + ';process.stdout.write(JSON.stringify(F))'],
+    faq = json.loads(subprocess.run(['node', '-e', f'const MONTHS_FREE = {FREE}; const CONFIG = {json.dumps({"currency": CUR, "priceLifetime": PL, "priceMonth": PM, "trialDays": int(cfg("trialDays"))})};' + s[a:b] + ';process.stdout.write(JSON.stringify(F))'],
                                     capture_output=True, text=True, check=True).stdout)
     esc = lambda t: t.replace('&', '&amp;').replace('<', '&lt;').replace('>', '&gt;')
     DISCORD = cfg('discord')
@@ -75,7 +88,8 @@ LD = json.dumps({"@context": "https://schema.org", "@graph": [
    "inLanguage": "en", "publisher": {"@id": ORG}},
   {"@type": "Organization", "@id": ORG, "name": "Rago Optimizer", "url": SITE + "/", "logo": SITE + "/apple-touch-icon.png",
    "email": "support@rago-optimizer.com"},
-  {"@type": "SoftwareApplication", "name": "Rago Optimizer", "operatingSystem": "Windows 10, Windows 11",
+  # aggregateRating (Google's stars) is added by the page itself from the published reviews: see "Reviews" in page.html
+  {"@type": "SoftwareApplication", "@id": SITE + "/#app", "name": "Rago Optimizer", "operatingSystem": "Windows 10, Windows 11",
    "applicationCategory": "UtilitiesApplication", "url": SITE + "/", "image": OG, "publisher": {"@id": ORG},
    "description": "The Minecraft PvP optimizer for Windows: steadier ping, smoother frames, less input lag.",
    "offers": [{"@type": "Offer", "name": "Free", "price": "0", "priceCurrency": ISO},
@@ -155,3 +169,28 @@ pa = open(os.path.join(ROOT, 'src/partners.html')).read()
 assert GOOGLE in pa, 'Google Fonts block changed in partners.html: update build.py'
 open(os.path.join(ROOT, 'partners.html'), 'w').write(pa.replace(GOOGLE, LOCAL))
 print('partners.html built')
+
+# Rago Route page (site/route.html, from src/route.html): its sales page, so local fonts, the same account server as
+# the home page, and the home page's prices, trial and currency (CONFIG of page.html), also baked into the text and
+# the links for visitors without JavaScript.
+ro = open(os.path.join(ROOT, 'src/route.html')).read()
+assert GOOGLE in ro, 'Google Fonts block changed in route.html: update build.py'
+ro = ro.replace(GOOGLE, LOCAL)
+TD = int(cfg('trialDays'))
+for key, val in (('accountBase', f'"{BASE}"'), ('trialDays', str(TD)), ('currency', f'"{CUR}"'),
+                 ('priceMonth', cfg('priceMonth')), ('priceYear', cfg('priceYear')), ('priceRoute', cfg('priceRoute')),
+                 ('priceRouteYear', cfg('priceRouteYear'))):
+    ro, n = re.subn(key + r': (?:"[^"]*"|[\d.]+)', lambda m: f'{key}: {val}', ro, count=1)
+    assert n == 1, f'{key} not found in the CONFIG of route.html'
+money = lambda n: f'{CUR}{jsround(n):.2f}'
+money0 = lambda n: f'{CUR}{int(n)}' if n == int(n) else money(n)  # $3, as the page's JS writes it
+for cls, val in (('js-td', str(TD)), ('js-pm', money(PM)), ('js-py', money(PY)), ('js-pr', money0(PR)), ('js-pmr', money(PM + PR)), ('js-pry', money(PRY)), ('js-pyr', money(PY + PRY)),
+                 ('js-free', free_txt if FREE >= 1 else f'{money(PY / 12)} a month')):  # same texts as the page's JS
+    ro, n = re.subn(rf'(<span class="{cls}">)[^<]*(</span>)', lambda m: m.group(1) + val + m.group(2), ro)
+    assert n >= 1, f'no {cls} in route.html'
+for path in ('/buy?interval=month&amp;trial=1&amp;route=1', '/buy?interval=year&amp;route=1', '/buy/route',
+             '/buy/route?interval=month', '/buy/route?interval=year'):
+    ro, n = re.subn(re.escape(f'href="{path}"'), f'href="{BASE}{path}"', ro)
+    assert n >= 1, f'no link to {path} in route.html'
+open(os.path.join(ROOT, 'route.html'), 'w').write(ro)
+print('route.html built')

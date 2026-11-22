@@ -1,7 +1,7 @@
 ---
 type: marketing
 tags: [marketing, partenaires]
-maj: 2026-11-01
+maj: 2026-11-10
 ---
 # Partenaires et créateurs
 
@@ -17,7 +17,7 @@ Voir [[Marketing]], [[Promotions et affiliation]], [[Discord]]. Page Partners su
 |---|---|---|
 | **RBW (Ranked Bedwars)** | 230 $ : @everyone, 30 % de commission, code RBWS820, Premium pour 5 staff max, 30 jours d'exclusivité (14/10). Responsable pub à recontacter quand des commandes arrivent (15/10) | actif (Sofiene, 01/11) |
 | Axora Ranked Bedwars (ARBW) | pub payée (« I pay », 11/10), code ARBW20 | actif (Sofiene, 01/11) |
-| Un créateur YouTube | accès à vie tant que partenaire, code, 50 % (14/10) | sans doute arrêté (Sofiene, 01/11 : « il me semble ») ; à confirmer avec Abel, qui gère ce partenariat |
+| Un créateur YouTube | accès à vie tant que partenaire, code, 50 % (14/10) | en attente : Abel lui a dit d'attendre la version avec Rago Route dans l'app pour faire les partenariats (Sofiene, 10/11) |
 | Serveur annoncé « 40k » (2k réels) | partenariat mutuel au lieu de payer | DÉCIDÉ 13/10 |
 
 - 17/10 : « on a payé des partners discords mais le problème reste le même ». Approche actuelle : [[Marketing]].
