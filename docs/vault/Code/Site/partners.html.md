@@ -20,7 +20,7 @@ Tout ce qui suit est CONFIRMÉ (branche du site v5, PR #109 vers `staging`, 22/1
 - `<head>` complet : titre « Partners · Rago Optimizer », description, canonical, `og:*`, icônes, `v5.css`, un petit `<style>` propre à la page.
 - En-tête `header.s-nav.sm-nav#top` : logo (tuile blanche, R rouge), « Back to the site » (caché sur téléphone), « Get Premium » (`./#pricing`).
 - Héros : « Partners // 6 servers » (le nombre, dans `<span id="pt-n">`, est écrit par [[sync_partners.py]]), « Our partner servers. » (coup de pinceau sous « servers. »), « Minecraft PvP communities that work with Rago Optimizer. Each card opens the server's Discord invite in a new tab. ».
-- Grille `.pt-grid` (3 colonnes, 2 sous 1 080 px, 1 sur téléphone) de cartes `a.s-card.pt-c` : logo 96 × 96 (72 sur téléphone), nom, « Minecraft PvP server », bouton « Join on Discord » avec l'icône de lien externe, texte pour lecteur d'écran « (opens in a new tab) ».
+- Grille `.pt-grid` (3 colonnes, 2 sous 1 080 px, 1 sur téléphone) de cartes `a.s-card.pt-c` : logo 96 × 96 (72 sur téléphone), nom, « Minecraft PvP server », bouton « Join on Discord » avec l'icône de lien externe (au survol de la carte, le fond penché du bouton passe au rouge ; corrigé le 22/11 au soir, avant c'était un rectangle rouge droit derrière le bouton), texte pour lecteur d'écran « (opens in a new tab) ».
 - Note « Each partner server is run by its own team. » et le pied de page v5 commun, avec le même texte légal qu'avant.
 - Script : seulement le fond de l'en-tête au défilement.
 

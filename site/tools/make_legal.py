@@ -17,6 +17,7 @@ DISCORD = 'https://discord.gg/cbCxCBx8vJ'
 MAIL = '<a href="mailto:support@rago-optimizer.com">support@rago-optimizer.com</a>'
 OGV = hashlib.sha256(open(os.path.join(OUT, 'og-image.png'), 'rb').read()).hexdigest()[:10]  # same as build.py
 CSSV = hashlib.sha256(open(os.path.join(OUT, 'v5.css'), 'rb').read()).hexdigest()[:10]  # same cache key as build.py
+JSV = hashlib.sha256(open(os.path.join(OUT, 'v5.js'), 'rb').read()).hexdigest()[:10]  # motion shared by every page
 LEGAL = ("Rago Optimizer changes Windows settings. Results depend on your hardware and connection. A restore point is offered "
          "before advanced tweaks. Minecraft is a trademark of Mojang Studios; Rago Optimizer isn't affiliated with Mojang or "
          "Microsoft. © 2026 Rago Optimizer, by KALISO and RAGO.")
@@ -28,7 +29,7 @@ def icon(n):
 
 CSS = '''.lg-nav .r > a{display:inline-flex;align-items:center;gap:8px}
 .lg-nav .r > a svg{width:16px;height:16px}
-.lg-hero,.lg-wrap,.nf .in{width:min(1200px,calc(100% - 2 * var(--g)));margin-inline:auto}
+.lg-hero,.lg-wrap,.nf .in{width:min(var(--cw),calc(100% - 2 * var(--g)));margin-inline:auto}
 .lg-hero{position:relative;padding:76px 0 0}
 .lg-hero .s-dots{right:0;top:-40px;width:min(760px,100%);height:480px;-webkit-mask:linear-gradient(230deg,#000 0,transparent 65%)}
 .s-eb b{color:var(--red);font-weight:inherit;margin:0 4px}
@@ -154,6 +155,7 @@ def head(title, desc, meta, root=''):
             f'<link rel="apple-touch-icon" href="{root}apple-touch-icon.png">\n'
             f'<link rel="preload" href="{root}fonts/BarlowCondensed-900-italic.woff2" as="font" type="font/woff2" crossorigin>\n'
             f'<link rel="stylesheet" href="{root}v5.css?v={CSSV}">\n'
+            f'<script src="{root}v5.js?v={JSV}" defer></script>\n'
             f'<style>\n{CSS.strip()}\n</style>\n</head>\n<body>\n<!-- icons -->\n<!-- /icons -->\n')
 
 

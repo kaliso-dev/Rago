@@ -23,7 +23,7 @@ Un script sans fonction publique. Repères :
 | Nom | Valeur ou rôle |
 |---|---|
 | `SITE` | `https://rago-optimizer.com` |
-| `CSSV`, `css(html, name)` | 10 premiers caractères du SHA-256 de `site/v5.css` ; `css()` vérifie que la page a exactement une fois `<link rel="stylesheet" href="v5.css">` (sinon `link to v5.css not found in <page>: update build.py`) et le remplace par `v5.css?v=<CSSV>`, pour que les navigateurs ne gardent jamais une ancienne copie de la feuille |
+| `CSSV`, `css(html, name)` | 10 premiers caractères du SHA-256 de `site/v5.css` ; `css()` vérifie que la page a exactement une fois `<link rel="stylesheet" href="v5.css">` (sinon `link to v5.css not found in <page>: update build.py`) et le remplace par `v5.css?v=<CSSV>`, pour que les navigateurs ne gardent jamais une ancienne copie de la feuille ; depuis le 22/11 au soir, elle ajoute aussi `<script src="v5.js?v=<JSV>" defer>` ([[v5.js]]) et refuse une source qui charge déjà `v5.js` |
 | `cfg(k)` | lit une valeur de l'objet `CONFIG` de [[page.html]] |
 | `BASE`, `CUR`, `PM`, `PY`, `PL`, `PR`, `PRY` | serveur de comptes, devise, prix mensuel, annuel, Lifetime, option Rago Route mensuelle et annuelle |
 | `FREE`, `free_txt` | mois offerts par l'annuel (`floor(12 - PY / PM)`, 6 aujourd'hui) et « 6 months free » |
@@ -53,7 +53,7 @@ Un script sans fonction publique. Repères :
 `src/route.html` → `route.html` : `css()`, `share()`, le `CONFIG` de l'accueil (`accountBase`, `trialDays`, `currency`, prix) recopié dans celui de la page, prix et liens écrits dans le HTML pour les visiteurs sans JavaScript, liens du serveur de comptes rendus absolus.
 
 ## Données touchées
-- **Lit** : `site/src/page.html`, `reviews.html`, `tweaks.html`, `partners.html`, `route.html`, `site/v5.css`, `site/og-image.png`, `site/media/og-route.png`, `licensing/src/billing.js`, `licensing/src/route-addon.js`.
+- **Lit** : `site/src/page.html`, `reviews.html`, `tweaks.html`, `partners.html`, `route.html`, `site/v5.css`, `site/v5.js`, `site/og-image.png`, `site/media/og-route.png`, `licensing/src/billing.js`, `licensing/src/route-addon.js`.
 - **Écrit** : `site/index.html`, `site/reviews.html`, `site/tweaks.html`, `site/partners.html`, `site/route.html` ; par [[sync_partners.py]] et [[sync_icons.py]], les sources de `site/src/` (seulement si quelque chose change).
 - Aucun accès réseau : le pré-rendu bloque toutes les requêtes `http(s)`.
 
@@ -75,7 +75,7 @@ Un script sans fonction publique. Repères :
 Pas de test unitaire. Le contrôle est la CI [[site-check.yml]] : relance complète puis `git diff --exit-code` sur les 5 pages générées.
 
 ## À savoir avant de modifier
-- Chaque source doit garder une seule ligne `<link rel="stylesheet" href="v5.css">` (sinon `assert`).
+- Chaque source doit garder une seule ligne `<link rel="stylesheet" href="v5.css">` et ne jamais charger `v5.js` elle-même (sinon `assert`).
 - Les prix de l'option Rago Route aussi : `CONFIG.priceRoute` et `CONFIG.priceRouteYear` dans [[page.html]], `ROUTE_PRICE` et `ROUTE_PRICE_YEARLY` dans `licensing/src/route-addon.js` (arrêt avec `priceRouteYear (…) and ROUTE_PRICE_YEARLY (…) differ: change both`).
 - Le prix Lifetime se change **à deux endroits** : `CONFIG.priceLifetime` dans [[page.html]] et `LIFETIME_PRICE` dans `licensing/src/billing.js`. Le script refuse de construire s'ils diffèrent.
 - Les 302 de `netlify.toml` (`/buy`, `/login`…) ne servent qu'aux adresses tapées à la main ; les liens de la page sont déjà absolus après ce script.
