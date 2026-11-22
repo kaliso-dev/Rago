@@ -2685,6 +2685,7 @@ svg.pi use.pf {
 /* onglets en biais (Réseau, Paramètres…) : l'onglet ouvert en rouge plein */
 .hub-bar {
   margin: 0 0 30px;
+  padding: 0 0 0 4px;
   background: none;
   border: 0;
   position: static;
@@ -2800,9 +2801,12 @@ svg.pi use.pf {
   letter-spacing: 0.005em;
   line-height: 0.95;
 }
-.no-hero-title,
 .games-hero-title {
   font-size: 44px;
+}
+.no-hero-title {
+  font-size: 26px;
+  line-height: 1;
 }
 /* titres de section restés en « overline » : ruban rouge aussi */
 h2.section-title.rg-overline,
@@ -2997,3 +3001,4 @@ select,
   font-size: 136px;
   color: var(--rg-ink-1);
 }
+
