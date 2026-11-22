@@ -2,7 +2,7 @@
 type: code
 tags: [code, serveur, css]
 fichier: licensing/public/tokens.css, licensing/public/account.css, licensing/public/admin.css
-lignes: 227 + 721 + 737
+lignes: 227 + 720 + 737
 maj: 2026-11-22
 ---
 # Styles du serveur (CSS)
@@ -21,7 +21,7 @@ Servies par `serveStatic` d'[[app.js]] depuis `licensing/public/`. Les pages de 
 - Puis la copie exacte de `rendus-v5/marque/tokens/tokens.css` (tokens **v2.0 « Match day »** du 22/11) : fonds `--rg-ink-0` à `-5`, texte (`--rg-text-3` `#6E6E78`), lignes, rouge (plus de dégradé : `--rg-red-gradient` = `#FF3B30`), papier `--rg-paper`, états (`--rg-warning` `#FFC53D` et ses fonds `-a06/-a10/-a18`, `--rg-info` gris), effets d'affiche (`--rg-fx-*` : trame, carbone, hachures, voile rouge), polices (`--rg-font-display` Barlow Condensed, `--rg-font-sans` Barlow, `--rg-font-mono` = Barlow Condensed), angles (`--rg-skew` -12°, `--rg-angle-brush` -2,5°…), rayons v5 (`--rg-radius-btn` 12 px, `--rg-radius-panel` 22 px…), hauteurs, ombres (`--rg-shadow-glow`…), mouvement, styles de texte `--rg-t-*` (titre, chiffres, boutons, libellés) ; un bloc de jetons v1.2 (tailles Geist, verre) gardé le temps de la migration.
 - Plus de thème clair. Classes utilitaires `.rg-title`, `.rg-kick`, `.rg-label`, `.rg-metric`, `.rg-overline`, `.rg-skew`, `.rg-halftone`, `.rg-carbon`, `.rg-hatch`.
 
-## account.css (721 lignes)
+## account.css (720 lignes)
 
 Les règles de base (v1.1, lignes 1 à 467) décrivent la structure ; la **couche v5** ajoutée à la fin (22/11, maquettes 99 à 123 de la revue) change le dessin sans toucher au HTML :
 - fond : trame de points qui s'efface depuis le haut à gauche (plus de halos rouges ni d'onde « pulse ») ; bandeau jaune « Test server » sur staging ;
