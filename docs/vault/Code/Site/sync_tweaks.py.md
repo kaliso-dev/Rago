@@ -2,14 +2,14 @@
 type: code
 tags: [code, site, python, catalogue]
 fichier: site/tools/sync_tweaks.py
-lignes: 170
-maj: 2026-11-10
+lignes: 168
+maj: 2026-11-22
 ---
 # sync_tweaks.py
 
 Écrit toute la liste des tweaks de la page Tweaks (`site/src/tweaks.html`) à partir du catalogue de l'app et des textes du site ([[tweaks-copy.json]]) : une fiche dépliable par tweak, la navigation par section, les boutons « Helps with » et tous les compteurs. Fiche parente : [[Code du site]]. Fonctionnalité : [[Site]], [[Catalogue des tweaks]].
 
-Tout ce qui suit est CONFIRMÉ (code de `staging`, 10/11). Créé le 12/10 avec la page Tweaks (PR #39, prod #43). Commande : `python3 site/tools/sync_tweaks.py` (ou via [[sync_app.py]], qui le lance à la fin), puis [[build.py]].
+Tout ce qui suit est CONFIRMÉ (code de `staging` du 10/11, mis à jour d'après la branche du site v5, PR #109, 22/11). Créé le 12/10 avec la page Tweaks (PR #39, prod #43). Commande : `python3 site/tools/sync_tweaks.py` (ou via [[sync_app.py]], qui le lance à la fin), puis [[build.py]].
 
 ## Rôle et place dans l'ensemble
 - Sources de vérité : [[catalog.json]] (noms, sections, risques, redémarrage, variantes, gains, inconvénients, descriptions de l'app, presets) et [[free.json]] (plan gratuit). Les mots propres au site (résumé, explication, objectifs, ce qui ne revient pas, redémarrage réel) viennent de [[tweaks-copy.json]].
@@ -26,7 +26,7 @@ Tout ce qui suit est CONFIRMÉ (code de `staging`, 10/11). Créé le 12/10 avec 
 | `GROUPS` | `Optimize` : network, latency, gpu, windows ; `In game` : hitreg, minecraft, rbw, gamemode ; `Advanced` : expert, restore (mêmes groupes que la barre latérale de l'app) |
 | `GOALS` | les 9 objectifs proposés en boutons : FPS, Smoothness, Input lag, Connection, Hitreg, Background, Privacy, Cleanup, Recovery |
 | `NEEDS` | `gpu:nvidia` → « An NVIDIA graphics card », `gpu:amd` → « An AMD graphics card », `gpu:intel` → « Intel graphics », `cpu:intel` → « An Intel CPU », `cpu:amd` → « An AMD CPU » |
-| `ICON` | les icônes Lucide des modules, lues dans l'objet `const ICON = {` de [[page.html]] |
+| `ICON` / `mi(mid)` | l'icône v5 de chaque module (gpu → `graphics`, gamemode → `games`, les autres gardent leur nom), écrite `<use href="#i-…">` ; le sprite est ajouté ensuite par `sync_icons.py` |
 | `presets` | pour chaque id de tweak, les noms anglais des presets qui le contiennent (le préfixe avant `:` des entrées de preset) |
 | `restart(t)` | `('v', 'Depends on the option')` si une variante a un `reboot` différent du tweak, sinon `('1', 'Needed')` ou `('0', 'Not needed')` |
 | `card(m, sec, t, k)` | le HTML d'une fiche |
@@ -59,7 +59,6 @@ Le 10/11 : aucun avertissement, aucune note (218 clés de chaque côté).
 - **Balise** : `<details class="tc" id="<clé>" data-m="<module>" data-mn="<nom du module>" data-h="<objectifs séparés par |>" data-p="free|pro" data-r="<risk>" data-b="0|1|v"` + `data-a` (alias) + `data-ids` (si jumeaux). Le résumé contient la section, la pastille Free ou Premium (cadenas), le nom, le résumé du site et les badges ; le corps contient l'explication (`about`), la fiche technique et les encadrés. Ces attributs `data-*` sont lus par le JavaScript de [[tweaks.html]] pour les filtres et la recherche.
 
 ### 4. Navigation, objectifs, puces et liste
-- `icons` : un `<symbol id="m-<module>">` par module, plus `m-dashboard`.
 - `nav` (barre latérale) : bouton « All tweaks » (218) puis les modules par groupe avec leur nombre de fiches.
 - `chips` (puces au-dessus de la liste, pour mobile) : « All » puis les mêmes modules.
 - `goals` : un bouton par objectif de `GOALS` qui a au moins un tweak, avec son nombre. Le 10/11 : Smoothness 66, Background 49, Input lag 38, Privacy 33, Connection 32, Cleanup 14, FPS 11, Recovery 8, Hitreg 3. L'objectif « Screenshare », utilisé par un seul texte (`rbw_mode`), n'est pas dans `GOALS` : il apparaît comme badge sur la fiche mais n'a pas de bouton.
@@ -67,10 +66,10 @@ Le 10/11 : aucun avertissement, aucune note (218 clés de chaque côté).
 - Nombre de fiches par section le 10/11 : Latency 81, Windows 56, Graphics card 29, Network 24, Expert mode 12, Hitreg 9, Restore 4, Minecraft 1, RBW Mod 1, Game mode 1 (ces nombres comptent aussi les actions, d'où l'écart avec les compteurs de l'accueil, voir [[sync_app.py]]).
 
 ### 5. Écriture
-`put()` pour `icons`, `nav`, `goals`, `chips`, `list` ; puis les nombres écrits dans le texte : classes `n-all` (218), `n-free` (68), `n-mods` (10), `n-presets` (nombre de presets du catalogue : 20) ; `<title>All 218 tweaks` ; « explore all / all / Search 218 tweaks ». Message final : `tweaks.html: 218 tweaks, 68 free, 10 sections`.
+`put()` pour `nav`, `goals`, `chips`, `list` (plus de bloc `icons` depuis le 22/11 : le sprite est écrit par `sync_icons.py`) ; puis les nombres écrits dans le texte : classes `n-all` (218), `n-free` (68), `n-mods` (10), `n-presets` (nombre de presets du catalogue : 20) ; `<title>All 218 tweaks` ; « explore all / all / Search 218 tweaks ». Message final : `tweaks.html: 218 tweaks, 68 free, 10 sections`.
 
 ## Données touchées
-- Lit : `app/src/data/catalog.json`, `app/src/data/free.json`, `site/src/tweaks-copy.json`, `site/src/page.html` (icônes).
+- Lit : `app/src/data/catalog.json`, `app/src/data/free.json`, `site/src/tweaks-copy.json`.
 - Écrit : `site/src/tweaks.html` (toujours réécrit).
 
 ## Erreurs et cas limites

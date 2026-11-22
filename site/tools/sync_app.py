@@ -37,7 +37,7 @@ s = re.sub(r'(?:Nearly )?\d+ tweaks, free to start', f'{heading}, free to start'
 s = re.sub(r'(<span class="n-all">)\d+', lambda m: m.group(1) + str(total), s)
 s = re.sub(r'(<b class="n-all">)\d+', lambda m: m.group(1) + str(total), s)
 s = re.sub(r'(<span>)\d+( tweaks</span>)', lambda m: m.group(1) + str(total) + m.group(2), s)  # hero ticker
-s = re.sub(r'(All )\d+(<)', lambda m: m.group(1) + str(total) + m.group(2), s)  # comparison table
+s = re.sub(r'(All |unlocks all )\d+( tweaks|<)', lambda m: m.group(1) + str(total) + m.group(2), s)  # comparison table, links, FAQ
 # tweaks open in the free plan, like the app (store.tsx FREE.size: the list of free.json, Restore tools included)
 n_free = len(json.load(open(os.path.join(APP, 'data', 'free.json')))['tweaks'])
 s = re.sub(r'(<span class="txt">)\d+ of \d+(</span>)', lambda m: f'{m.group(1)}{n_free} of {total}{m.group(2)}', s)

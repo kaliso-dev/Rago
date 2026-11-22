@@ -18,10 +18,11 @@ Source : dossier partagé `rago-redesign/rendus-v5/` (maquettes, sources HTML `s
 
 ## Où la v5 est appliquée (22/11)
 - **Serveur de comptes** (`licensing/`) : pages compte, e-mails, admin, Cerveau (cadre seulement) et messages du [[Bot communauté Discord]], sur `staging` par la PR #107 du 22/11 ([[Styles du serveur (CSS)]], [[mailer.js]], [[community.js]]). Jetons : `licensing/public/tokens.css` = `tokens.css` v2.0 du kit, avec les `@font-face` Barlow en tête.
-- **App Windows** (`app/`) et **site** (`site/`, `netlify/`), et copie du kit dans `brand/` : chacun dans son propre fil et sa propre PR vers `staging` (22/11) ; tant qu'ils ne sont pas fusionnés, ces parties gardent la v1.2 et le verre.
+- **Site** (`site/`, `netlify/`) et kit dans `brand/` : PR #109 vers `staging` (22/11) : les 8 pages et le compte à rebours d'après les maquettes 78 à 98, feuille [[v5.css]], polices Barlow servies par le site (Geist retirée), icônes imprimées ([[sync_icons.py]]), favicons et images de partage du kit v5 ; `brand/` reçoit le kit v5 (logo, jetons v2.0, charte en images) et perd la charte HTML v1.2 et `export-logo.js`. Illustrations de Rago Route fixes en attendant leur refonte.
+- **App Windows** (`app/`) : son propre fil et sa propre PR vers `staging` (22/11) ; tant qu'elle n'est pas fusionnée, l'app garde la v1.2 et le verre.
 - Rien en prod.
 
 ## Code
-Notes de code : [[Kit de marque (brand)]] (README, charte HTML, voix, fichiers du logo), [[tokens.css (marque)]] (jetons et `tokens.json`), [[export-logo.js]] (rendu des icônes, images de l'installateur et images de partage), [[Styles du serveur (CSS)]] (copie du serveur). Où le site applique la charte : [[Code du site]].
+Notes de code : [[Kit de marque (brand)]] (README, charte en images, voix, fichiers du logo ; le kit est produit par les scripts de la maquette, hors du dépôt), [[tokens.css (marque)]] (jetons et `tokens.json`), [[v5.css]] (styles du site), [[Styles du serveur (CSS)]] (copie du serveur). Où le site applique la charte : [[Code du site]].
 
 Liens : [[Site]], [[App Windows]], [[Marketing]].

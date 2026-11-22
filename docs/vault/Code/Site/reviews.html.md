@@ -2,14 +2,14 @@
 type: code
 tags: [code, site, html, javascript, avis]
 fichier: site/src/reviews.html
-lignes: 345
-maj: 2026-11-10
+lignes: 282
+maj: 2026-11-22
 ---
 # reviews.html
 
 Source de la page « tous les avis » (`rago-optimizer.com/reviews.html`) : les avis publiés des joueurs, en entier, lus en direct sur le serveur de comptes, avec la note moyenne, la répartition par étoiles, un filtre et un tri. Fiche parente : [[Code du site]]. Fonctionnalité : [[Site]], [[Partage et support]].
 
-Tout ce qui suit est CONFIRMÉ (code de `staging`, 10/11). Page créée le 11/10 (PR #34, prod #38). La page publiée `site/reviews.html` est produite par [[build.py]] (polices locales, `accountBase`) ; ne jamais la modifier à la main.
+Tout ce qui suit est CONFIRMÉ (branche du site v5, PR #109 vers `staging`, 22/11). Page créée le 11/10 (PR #34, prod #38), passée au design v5 le 22/11 d'après les maquettes « site-reviews » et « site-reviews-empty » ([[Charte graphique]]). La page publiée `site/reviews.html` est produite par [[build.py]] (`v5.css?v=`, `accountBase`, image de partage versionnée) ; ne jamais la modifier à la main.
 
 ## Rôle et place dans l'ensemble
 - L'accueil ([[page.html]]) montre quelques avis, coupés quand ils sont longs, avec « See more » qui pointe ici sur `reviews.html#r-<id>`. Cette page montre **tous** les avis publiés, en entier.
@@ -17,13 +17,13 @@ Tout ce qui suit est CONFIRMÉ (code de `staging`, 10/11). Page créée le 11/10
 - Contrairement à [[page.html]], c'est une page HTML complète (avec `<!doctype>`, `<head>`, balises `og:*`, canonical `https://rago-optimizer.com/reviews.html`).
 
 ## Sections et boutons
-- **En-tête** : logo, « Back to the site » (`./`), « Get Premium » (`./#pricing`).
-- **Héros** : « Reviews », titre « Players feel the difference. », texte « Every review of Rago Optimizer, in full and as written, from players signed in to their Rago account. Results depend on your PC and connection. ».
-- **Résumé `#sum`** (caché tant que rien n'est chargé) : moyenne `#avg` (une décimale), jauge d'étoiles `#meter` (fond + avant-plan dont la largeur = moyenne / 5), total `#total`, répartition `#dist` : 5 boutons (5 à 1 étoiles) avec barre proportionnelle ; un bouton sans avis est désactivé ; cliquer filtre la liste (cliquer à nouveau enlève le filtre).
-- **Outils `#tools`** : compteur `#count` (« 12 reviews », ou « 3 5-star reviews » + bouton « Show all ») ; tri `#sort` : Newest (`new`, par défaut), Highest rated (`high`), Lowest rated (`low`).
-- **Liste `#list`** (`aria-busy` pendant le chargement, squelettes) et zone d'état `#state`.
-- **Appel `#leave`** : « Played with Rago Optimizer? Leave your review. », « Premium members write theirs from their account page. On the free version, open Rago Optimizer, then Settings, then Leave a review. It shows here with your public name, never your email. », bouton « Leave a review » (classe `js-review`, vers `/account/review` du serveur de comptes).
-- **Pied** : Rago Optimizer, Pricing, FAQ, Partners, Terms, Privacy, Cancellation, et le texte « Reviews are posted by players signed in to their Rago account, from the app or the website, and shown as written, from the most recently updated. We don't pay for reviews or hide negative ones. »
+- **En-tête** `header.s-nav.sm-nav#top` : logo (tuile blanche, R rouge), « Back to the site » (`./`, caché sur téléphone), « Get Premium » (`./#pricing`).
+- **Héros** `section.sm-hero` (trame de points, coup de pinceau sous « the difference. ») : « Reviews », titre « Players feel the difference. », texte « Every review of Rago Optimizer, in full and as written, from players signed in to their Rago account. Results depend on your PC and connection. ».
+- **Résumé `#sum`** (carte `.sm-sum`, cachée tant que rien n'est chargé) : moyenne `#avg` (une décimale), jauge `#meter` de 5 étoiles dessinées en CSS (`.st5`, avant-plan `#meter-fg` dont la largeur = moyenne / 5), total `#total`, répartition `#dist` : 5 boutons (5 à 1 étoiles) avec barre proportionnelle ; un bouton sans avis est désactivé ; cliquer filtre la liste (cliquer à nouveau enlève le filtre).
+- **Outils `#tools`** (barre `.sm-bar`, bouton actif sur fond rouge penché) : compteur `#count` (« 12 reviews », ou « 3 5-star reviews » + bouton « Show all ») ; tri `#sort` : Newest (`new`, par défaut), Highest rated (`high`), Lowest rated (`low`).
+- **Liste `#list`** (`.sm-list`, `aria-busy` pendant le chargement, six cartes squelettes) et zone d'état `#state` (cadre pointillé `.sm-empty` avec l'icône de bulle, comme la maquette « sans avis »). Chaque avis est une carte `figure.s-card.sm-rv` : étoiles, texte entre guillemets, initiale ou photo, nom, date.
+- **Appel `#leave`** (carte `.sm-leave`) : « Played with Rago Optimizer? Leave your review. », « Premium members write theirs from their account page. On the free version, open Rago Optimizer, then Settings, then Leave a review. It shows here with your public name, never your email. », bouton « Leave a review » (classe `js-review`, vers `/account/review` du serveur de comptes).
+- **Pied** : le pied de page v5 commun (product, community, account, legal) et le texte « Reviews are posted by players signed in to their Rago account, from the app or the website, and shown as written, from the most recently updated. We don't pay for reviews or hide negative ones. »
 
 ## Ce que le script expose
 - `CONFIG` : `accountBase` (prod, réécrit par [[build.py]]), `previewAccountBase` (rempli par [[preview.sh]]). Même choix de serveur que [[page.html]] et [[tweaks.html]] : local → `http://<hôte>:8787`, `*.netlify.app` → `previewAccountBase` ou `null`.
@@ -57,4 +57,5 @@ Tout ce qui suit est CONFIRMÉ (code de `staging`, 10/11). Page créée le 11/10
 ## À savoir avant de modifier
 - La page ne doit jamais contenir d'avis écrits en dur (règle : « Toujours les vrais chiffres »).
 - Le motif `PHOTO` doit rester aligné sur les adresses produites par le serveur pour les photos de profil.
-- Dernière modification le 10/11 (`a190565`, lien « Refunds » du pied remplacé par « Cancellation »).
+- Les étoiles ne sont plus des SVG : des `<i>` découpés en étoile par `clip-path` (`.st5`, `<i class="off">` pour une étoile vide).
+- Dernière modification le 22/11 (design v5, PR #109).

@@ -31,7 +31,7 @@ Posées le 10/11 au soir (q70 à q93), après la relecture complète du code pou
 - q73 : 4 réglages de carte graphique jamais grisés ([[meta.py]]).
 - q74 : provenance et licence de NVIDIA Profile Inspector ([[Configuration Tauri]]).
 - q75 : 73 ou 68 réglages gratuits affichés ; `FREE_TWEAKS` sur Railway ([[sync_tweaks.py]], [[config.js]]).
-- q76 : image de partage du site à « 199 tweaks » ([[export-logo.js]]).
+- q76 : réglée le 22/11 sans réponse nécessaire : la nouvelle image de partage v5 dit « 218 tweaks » (PR #109, [[Kit de marque (brand)]]).
 - q77 : étoiles Google des avis perdues (RAG-33, [[page.html]]).
 - q79 : retirer la protection d'avant lancement ([[launch-gate.js]]).
 - q80 : GitHub Pages publie le vault ([[Fichiers de la racine du dépôt]]).

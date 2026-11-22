@@ -14,6 +14,6 @@ Voir [[Branches et environnements]], [[Mise à jour automatique]], [[Historique 
 5. **Sofiene** dépose le **`.exe`** (pas le zip) et le **`.exe.sig`** dans le bucket `downloads` du Supabase **de prod** (jamais l'exe staging en prod).
 6. **Sofiene** règle sur Railway `INSTALLER_VERSION=X.Y.Z`, `UPDATE_ROLLOUT=20` puis 100 ; `UPDATE_PAUSED=1` arrête tout.
 7. Vérifier : `https://account.rago-optimizer.com/download/status`, `/api/v1/installer`, `/api/v1/update/status`.
-8. Mettre à jour le [[Site]] si les chiffres ou fonctions changent (catalogue : [[sync_app.py]] puis [[build.py]] ; nombre de tweaks sur l'image de partage : [[export-logo.js]]), [[Linear]], et ce vault ([[Mettre à jour le vault]]).
+8. Mettre à jour le [[Site]] si les chiffres ou fonctions changent (catalogue : [[sync_app.py]] puis [[build.py]] ; l'image de partage vient du [[Kit de marque (brand)]]), [[Linear]], et ce vault ([[Mettre à jour le vault]]).
 
 Référence complète : `licensing/docs/MISE-EN-LIGNE.md`. Code de la CI : [[Code de la CI et du dépôt]] ; branches : [[Branches du dépôt]].
