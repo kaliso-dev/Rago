@@ -816,7 +816,7 @@ test('webhook rejects bad signatures; cross-site form posts are refused', async 
   const x = await t.app.request('/login', { method: 'POST', headers: { origin: 'https://evil.example', 'content-type': 'application/x-www-form-urlencoded' }, body: 'email=a&password=b' });
   assert.equal(x.status, 403);
   // The email logo must load inside mail clients; page assets stay same-origin.
-  assert.equal((await t.app.request('/assets/email-wordmark.png')).headers.get('cross-origin-resource-policy'), 'cross-origin');
+  assert.equal((await t.app.request('/assets/email-header.png')).headers.get('cross-origin-resource-policy'), 'cross-origin');
   assert.equal((await t.app.request('/assets/account.css')).headers.get('cross-origin-resource-policy'), 'same-origin');
 });
 

@@ -6,7 +6,7 @@ import { parisDay } from './sales.js';
 
 const TZ = 'Europe/Paris';
 export const DAY = 86400000;
-const ASSETS = '20261110d'; // bumped when admin.css / admin.js change, so browsers don't keep the old ones
+const ASSETS = '20261122a'; // bumped when admin.css / admin.js change, so browsers don't keep the old ones
 
 // ---------- formatting ----------
 const fmt = (o) => new Intl.DateTimeFormat('fr-FR', { timeZone: TZ, ...o });
@@ -101,8 +101,8 @@ const I = {
   stack: ic('M8 2l6 3-6 3-6-3zM2 8l6 3 6-3M2 11l6 3 6-3'),
   brain: ic('M8 9.2a1.2 1.2 0 1 0 0-2.4 1.2 1.2 0 0 0 0 2.4zM3.2 4.6a1.1 1.1 0 1 0 0-2.2 1.1 1.1 0 0 0 0 2.2zM12.8 5.4a1.1 1.1 0 1 0 0-2.2 1.1 1.1 0 0 0 0 2.2zM4 13.6a1.1 1.1 0 1 0 0-2.2 1.1 1.1 0 0 0 0 2.2zM12.4 13a1.1 1.1 0 1 0 0-2.2 1.1 1.1 0 0 0 0 2.2zM7 7.3L4.1 4.3M9.1 7.3l2.8-2.6M7.1 8.9l-2.3 2.8M9 8.8l2.5 2.4M4.3 3.6l7.4.9'),
 };
-// The Rago mark (public/mark.svg), inline so it needs no extra request.
-const MARK = html`<svg viewBox="0 0 164 180" aria-hidden="true"><path d="M0 0H160V46L93.83 101.42L164 180H114L65.17 125.42L0 180V132L112.24 38H39V78.34L0 111Z" fill="#FF3B30"/></svg>`;
+// The v5 app icon (red R on a white tile, public/favicon.svg), inline so it needs no extra request.
+const MARK = html`<svg viewBox="0 0 256 256" aria-hidden="true"><rect width="256" height="256" rx="56" fill="#FFFFFF"/><path d="M0 0H160V46L93.83 101.42L164 180H114L65.17 125.42L0 180V132L112.24 38H39V78.34L0 111Z" fill="#FF3B30" transform="translate(62.4 56) scale(.8)"/></svg>`;
 
 // ---------- small components ----------
 const pill = (kind, text) => html`<span class="pill ${kind}"><i></i>${text}</span>`;
@@ -276,11 +276,11 @@ function doc({ title, body, bodyClass = '' }) {
 <meta name="theme-color" content="#070708">
 <meta name="robots" content="noindex, nofollow">
 <title>${html`${String(title)}`} · Rago Admin</title>
-<link rel="icon" href="/assets/favicon.svg?v=3" type="image/svg+xml">
-<link rel="icon" href="/assets/favicon-32.png?v=3" type="image/png" sizes="32x32">
-<link rel="preload" href="/assets/fonts/Geist-Variable.woff2" as="font" type="font/woff2" crossorigin>
-<link rel="preload" href="/assets/fonts/GeistMono-Variable.woff2" as="font" type="font/woff2" crossorigin>
-<link rel="stylesheet" href="/assets/tokens.css">
+<link rel="icon" href="/assets/favicon.svg?v=5" type="image/svg+xml">
+<link rel="icon" href="/assets/favicon-32.png?v=5" type="image/png" sizes="32x32">
+<link rel="preload" href="/assets/fonts/BarlowCondensed-900-italic.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="preload" href="/assets/fonts/Barlow-400.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="stylesheet" href="/assets/tokens-v5.css?v=${ASSETS}">
 <link rel="stylesheet" href="/assets/admin.css?v=${ASSETS}">
 <script src="/assets/admin.js?v=${ASSETS}" defer></script>
 </head>
