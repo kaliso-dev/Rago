@@ -146,7 +146,10 @@ test('an invite counts once the friend has stayed 7 days', async () => {
   const post = t.rest.s.posts.at(-1);
   assert.equal(post.channel, WELCOME);
   assert.match(post.content, new RegExp(`Welcome <@${friend}>, you're member #101\\.`));
-  assert.match(post.content, new RegExp(`Invited by <@${inviter}>`));
+  assert.match(post.embeds[0].description, new RegExp(`Invited by <@${inviter}>`));
+  assert.equal(post.embeds[0].color, 0xFF3B30);
+  assert.equal(post.embeds[0].image.url, 'https://account.test/assets/discord-welcome.png');
+  assert.deepEqual(post.components[0].components.map((b) => [b.style, b.url]), [[5, 'https://site.test/download'], [5, 'https://account.test/account']]);
   assert.deepEqual(post.allowed_mentions, { users: [friend] });
 
   t.clock.t += HOLD_MS + 1000;
@@ -236,15 +239,17 @@ test('/invites, /top-invites, and staff-only commands', async () => {
 
   let [r] = await t.command('invites', { user: inviter });
   assert.equal(r.type, 4);
-  assert.match(r.data.content, /^You invited \*\*2 friends\*\* who stayed 7 days\. 1 more will count once they've been here 7 days\./);
+  assert.equal(r.data.embeds[0].title, 'Your invites');
+  assert.match(r.data.embeds[0].description, /^You invited \*\*2 friends\*\* who stayed 7 days\. 1 more will count once they've been here 7 days\./);
   assert.equal(r.data.flags, undefined, 'visible to the channel');
   assert.deepEqual(r.data.allowed_mentions, { parse: [] });
 
   [r] = await t.command('invites', { options: [{ name: 'member', value: inviter }] });
-  assert.match(r.data.content, new RegExp(`^<@${inviter}> invited \\*\\*2 friends\\*\\*`));
+  assert.match(r.data.embeds[0].description, new RegExp(`^<@${inviter}> invited \\*\\*2 friends\\*\\*`));
 
   [r] = await t.command('top-invites');
-  assert.match(r.data.content, new RegExp(`1\\. <@${inviter}> 2`));
+  assert.equal(r.data.embeds[0].title, 'Top inviters');
+  assert.match(r.data.embeds[0].description, new RegExp(`\` 1\`  <@${inviter}>  \\*\\*2\\*\\*`));
 
   for (const name of ['growth', 'partner-link', 'invites-adjust']) {
     [r] = await t.command(name);
@@ -307,7 +312,9 @@ test('VIP from the Rago count: the role, the Premium reward, announced once', as
   assert.deepEqual(t.rest.s.puts, [{ member: inviter, role: VIP_ROLE }]);
   assert.deepEqual(t.rewardCalls, [user.id]);
   const post = t.rest.s.posts.at(-1);
-  assert.equal(post.content, `<@${inviter}> reached 2 invites and gets VIP. 1 month of Premium and a one-time 10% code are on your Rago account.`);
+  assert.equal(post.content, `<@${inviter}> reached 2 invites and gets VIP.`);
+  assert.equal(post.embeds[0].description, '1 month of Premium and a one-time 10% code are on your Rago account.');
+  assert.equal(post.embeds[0].image.url, 'https://account.test/assets/discord-vip.png');
   assert.equal(await t.bot.inviteRolesPass(), 0, 'given once');
 
   // Not linked: told how to get the reward. Already VIP (given by hand): nothing said.
@@ -319,7 +326,9 @@ test('VIP from the Rago count: the role, the Premium reward, announced once', as
     await t.command('invites-adjust', { staff: true, options: [{ name: 'member', value: id }, { name: 'count', value: 5 }] });
   }
   await t.bot.inviteRolesPass();
-  assert.match(t.rest.s.posts.at(-1).content, new RegExp(`^<@${other}> reached 5 invites and gets VIP\\. Link your Discord on your Rago account to get 1 month of Premium`));
+  assert.equal(t.rest.s.posts.at(-1).content, `<@${other}> reached 5 invites and gets VIP.`);
+  assert.match(t.rest.s.posts.at(-1).embeds[0].description, /^Link your Discord on your Rago account to get 1 month of Premium/);
+  assert.equal(t.rest.s.posts.at(-1).components[0].components[0].url, 'https://account.test/account');
   assert.equal(t.rest.s.posts.filter((p) => p.content.includes(veteran)).length, 0);
 
   // Not on the server: tried again at the next pass.

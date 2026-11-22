@@ -3,7 +3,7 @@ type: code
 tags: [code, serveur, javascript, admin, vault]
 fichier: licensing/src/brain-views.js
 lignes: 115
-maj: 2026-11-12
+maj: 2026-11-22
 ---
 # brain-views.js
 
@@ -17,8 +17,8 @@ La page HTML du [[Cerveau du vault]] (`GET /admin/cerveau`) : une application pl
 
 ## Fonctionnement détaillé
 - **Mêmes règles que tout `/admin`** : CSP stricte, donc **aucun script ni style en ligne** ; tout le comportement est dans `/assets/cerveau.js` (chargé en `defer`) et tout le style dans `/assets/tokens.css` et `/assets/cerveau.css`. Les icônes sont des SVG en ligne (tracés seulement). Le HTML est construit avec le gabarit `html` de [[views.js]], qui échappe les valeurs.
-- `ASSETS = '20261112b'` : ajouté aux adresses de `cerveau.css` et `cerveau.js` (`?v=`). **À changer à chaque modification de ces deux fichiers**, sinon les navigateurs gardent l'ancienne version.
-- Polices Geist et Geist Mono préchargées (comme l'admin), icône du site, couleur de thème `#070708`.
+- `ASSETS = '20261122a'` : ajouté aux adresses de `cerveau.css` et `cerveau.js` (`?v=`). **À changer à chaque modification de ces deux fichiers**, sinon les navigateurs gardent l'ancienne version.
+- Polices Geist et Geist Mono préchargées (la toile garde Geist pour ses étiquettes, Sofiene, 22/11 : la toile reste celle du vrai Cerveau), `tokens.css?v=5` (le cadre passe en Barlow v5), icône du site `?v=5`, couleur de thème `#070708`. `MARK` = l'icône v5 (R rouge sur tuile blanche) depuis le 22/11.
 - Structure (identifiants utilisés par [[cerveau.js]]) :
   - `#cv` (racine, `data-src`, `data-file`, `data-brain`, `data-env`) ; case cachée `#cv-nav` qui ouvre le tiroir sur téléphone (sans JavaScript, par `<label for>`).
   - Colonne `cv-side` : logo et retour à `/admin`, sélecteur de cerveau `.cv-brains`, bouton de recherche (`data-palette`, `Ctrl K`), filtre `#cv-filter`, onglets `#tab-files` / `#tab-view` et leurs panneaux `#panel-files` / `#panel-view`, pied `#cv-sync` (branche, commit, heure de lecture) et bouton ↻ `#cv-refresh`.

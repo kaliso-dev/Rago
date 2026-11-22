@@ -2,8 +2,8 @@
 // /admin/cerveau/donnees.json. Same strict CSP as the rest of /admin: no inline style or script in this HTML.
 import { html } from './views.js';
 
-const ASSETS = '20261112b'; // bumped when cerveau.css / cerveau.js change, so browsers don't keep the old ones
-const MARK = html`<svg viewBox="0 0 164 180" aria-hidden="true"><path d="M0 0H160V46L93.83 101.42L164 180H114L65.17 125.42L0 180V132L112.24 38H39V78.34L0 111Z" fill="#FF3B30"/></svg>`;
+const ASSETS = '20261122a'; // bumped when cerveau.css / cerveau.js change, so browsers don't keep the old ones
+const MARK = html`<svg viewBox="0 0 256 256" aria-hidden="true"><rect width="256" height="256" rx="56" fill="#FFFFFF"/><path d="M0 0H160V46L93.83 101.42L164 180H114L65.17 125.42L0 180V132L112.24 38H39V78.34L0 111Z" fill="#FF3B30" transform="translate(62.4 56) scale(.8)"/></svg>`;
 const ic = (d) => html`<svg class="ic" viewBox="0 0 16 16" aria-hidden="true"><path d="${d}" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>`;
 const I = {
   left: ic('M10 3.5L5.5 8 10 12.5'),
@@ -41,11 +41,11 @@ export function brainPage(cfg, { brains = [], current = { id: 'rago', name: 'Rag
 <meta name="theme-color" content="#070708">
 <meta name="robots" content="noindex, nofollow">
 <title>Cerveau ${html`${current.name}`} · Rago Admin</title>
-<link rel="icon" href="/assets/favicon.svg?v=3" type="image/svg+xml">
-<link rel="icon" href="/assets/favicon-32.png?v=3" type="image/png" sizes="32x32">
+<link rel="icon" href="/assets/favicon.svg?v=5" type="image/svg+xml">
+<link rel="icon" href="/assets/favicon-32.png?v=5" type="image/png" sizes="32x32">
 <link rel="preload" href="/assets/fonts/Geist-Variable.woff2" as="font" type="font/woff2" crossorigin>
 <link rel="preload" href="/assets/fonts/GeistMono-Variable.woff2" as="font" type="font/woff2" crossorigin>
-<link rel="stylesheet" href="/assets/tokens.css">
+<link rel="stylesheet" href="/assets/tokens.css?v=5">
 <link rel="stylesheet" href="/assets/cerveau.css?v=${ASSETS}">
 <script src="/assets/cerveau.js?v=${ASSETS}" defer></script>
 </head>

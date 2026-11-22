@@ -1,7 +1,7 @@
 ---
 type: fonctionnalité
 tags: [fonctionnalité, serveur, discord, en-cours]
-maj: 2026-11-10
+maj: 2026-11-22
 ---
 # Bot communauté Discord
 
@@ -19,6 +19,10 @@ PR #40, **fusionnée dans `staging` le 15/10, absente de la prod** (vérifié da
 - `/invites-adjust` (staff) ajoute de 0 à 1000 invitations comptées avant le bot ; `/partner-link` (staff) crée un lien partenaire suivi dans `/growth` et qui ne compte pour personne ; `/growth` (staff) donne arrivées, départs en moins de 24 h, restés 7 jours, comptes Rago liés et acheteurs par source, plus le nombre de membres portant le tag du serveur. Le même rapport : `npm run admin -- growth`.
 - Accueil seulement dans `DISCORD_WELCOME_CHANNEL_ID` (jamais en message privé).
 - Données : arrivées gardées 12 mois après le départ.
+
+## Messages en charte v5 (22/11, PR vers `staging`)
+- Tous les messages du bot sont des **embeds** rouges (`#FF3B30`) : accueil (mention dans le texte, « Invited by », bannière `discord-welcome.png`, boutons « Download free » et « Link my Discord »), annonces VIP/MVP (bannières `discord-vip.png` / `discord-mvp.png`, bouton de liaison si le compte n'est pas lié), `/invites` (barre ▰▱ vers le prochain palier), `/top-invites`. Les bannières (1200×480) sont servies par le serveur dans `/assets/`.
+- **Avatar du bot** : R rouge sur tuile blanche (`png/rago-tile-512.png` du kit). À poser **à la main** dans le portail développeur Discord (Abel gère les bots) : À VÉRIFIER (pas encore fait au 22/11).
 
 ## Code
 [[community.js]] (comptage, accueil, commandes, rôles), [[gateway.js]] (WebSocket), [[discord.js]] (client REST, récompenses), [[config.js]] (variables). Tables : [[Table discord_joins]], [[Table discord_invite_links]], [[Table discord_invite_bonus]], [[Table discord_invite_roles]]. Tests : `community.test.js` ([[Tests du serveur]]).

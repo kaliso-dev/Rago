@@ -2,14 +2,14 @@
 type: code
 tags: [code, serveur, javascript, navigateur]
 fichier: licensing/public/account.js
-lignes: 211
-maj: 2026-11-10
+lignes: 223
+maj: 2026-11-22
 ---
 # account.js
 
 Le script du navigateur des pages du site de compte (`/signup`, `/login`, `/account`, `/account/profile`, `/account/review`, `/affiliate`), servi sous `/assets/account.js`. Améliorations seulement : chaque page marche sans lui. Fiche parente : [[Code du serveur]].
 
-(code de `staging`, 10/11)
+(code de `staging`, 22/11)
 
 ## Rôle et place dans l'ensemble
 
@@ -26,6 +26,7 @@ Chargé en `defer` par le gabarit `page()` de [[views.js]]. Fichier séparé à 
 | Formulaires | Bouton occupé à l'envoi (`data-busy`) ; confirmation pour les formulaires `data-confirm` (délier Discord, supprimer l'avis…). |
 | Compteurs | Les chiffres de l'affiliation montent à l'ouverture (rien ne bouge avec « réduire les animations »). |
 | Code de parrainage | Mis en majuscules pendant la saisie. |
+| Titres (v5, 22/11) | Dans chaque titre `.display` fait de texte seul (hors en-tête du tableau de bord), le dernier mot est entouré d'un `span.br` : [[Styles du serveur (CSS)]] pose dessous le coup de pinceau rouge (`/assets/brush.svg`). Sans JavaScript, le titre s'affiche sans pinceau. |
 | Messages | `?n=…` retiré de l'adresse : recharger ne réaffiche pas le message. |
 | Photo de profil | Nom du fichier choisi, aperçu recadré avant l'envoi (le serveur recadre de la même façon, [[profile.js]]), dépôt par glisser-déposer. |
 | Avis | Sens de la note (Not for me → Excellent), caractères restants, aperçu en direct de la carte vue sur le [[Site]], initiale du nom quand il n'y a pas de photo, message à côté des étoiles si aucune n'est choisie. Le serveur revérifie tout ([[reviews.js]]). |

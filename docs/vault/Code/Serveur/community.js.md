@@ -2,8 +2,8 @@
 type: code
 tags: [code, serveur, javascript, discord]
 fichier: licensing/src/community.js
-lignes: 459
-maj: 2026-11-10
+lignes: 486
+maj: 2026-11-22
 ---
 # community.js
 
@@ -38,18 +38,18 @@ Le bot garde en mémoire les compteurs d'utilisation de chaque invitation (`GET 
 Une arrivée compte pour celui qui a invité si : première arrivée de ce compte, invitation d'un **autre** membre (pas soi-même, pas un bot, pas l'URL personnalisée), compte Discord d'au moins 7 jours à l'arrivée, **pas** par un lien partenaire ; et le membre est resté 7 jours (encore là après 7 jours, ou parti après 7 jours). `inviteStats` donne `counted`, `pending` (encore dans les 7 jours), `left` (parti avant), `ignored`, `bonus` (ajouté à la main) et `total`.
 
 ### Accueil
-Dans `DISCORD_WELCOME_CHANNEL_ID` (jamais en message privé : règle des développeurs Discord). Texte : « Welcome @membre, you're member #N. », « Invited by @parrain. » s'il est connu, puis `DISCORD_WELCOME_TEXT` ou un texte par défaut (version gratuite sur `<SITE_URL>/download`, liaison du Discord sur le compte Rago pour les récompenses). Seul le nouveau membre est mentionné.
+Dans `DISCORD_WELCOME_CHANNEL_ID` (jamais en message privé : règle des développeurs Discord). Message v5 (22/11, maquette 135) : texte « Welcome @membre, you're member #N. » (la mention reste dans le texte pour notifier : une mention dans un encadré ne notifie pas), puis un **encadré rouge** (`color` `0xFF3B30`) avec « Invited by @parrain. » s'il est connu et `DISCORD_WELCOME_TEXT` ou le texte par défaut (« New here? The free version of Rago Optimizer is one click away. Link your Discord on your Rago account to get invite and boost rewards. »), la bannière `<PUBLIC_URL>/assets/discord-welcome.png`, et deux **boutons de lien** (type 2, style 5) : « Download free » (`<SITE_URL>/download`) et « Link my Discord » (`<PUBLIC_URL>/account`). Seul le nouveau membre est mentionné.
 
 ### VIP et MVP par le bot (`DISCORD_INVITE_ROLES=1`)
-Passe des rôles **toutes les heures** et **2 min** après le démarrage, et après `/invites-adjust`, dans la même file que les arrivées. Pour chaque membre au-dessus du seuil (`DISCORD_VIP_INVITES` = 10, `DISCORD_MVP_INVITES` = 15) : réservation dans [[Table discord_invite_roles]] (une fois par membre et par palier) ; si le membre n'a pas déjà le rôle, `PUT` du rôle (raison « N invites (Rago) »), audit `discord.invite_role`, puis si son compte Rago est lié : `discord.checkRewards` (Premium + code, voir [[discord.js]]) et `syncUser` ; annonce « @membre reached N invites and gets VIP. » avec la récompense ou l'invitation à lier son Discord. Échec (pas sur le serveur…) : réservation supprimée, nouvel essai à la passe suivante.
+Passe des rôles **toutes les heures** et **2 min** après le démarrage, et après `/invites-adjust`, dans la même file que les arrivées. Pour chaque membre au-dessus du seuil (`DISCORD_VIP_INVITES` = 10, `DISCORD_MVP_INVITES` = 15) : réservation dans [[Table discord_invite_roles]] (une fois par membre et par palier) ; si le membre n'a pas déjà le rôle, `PUT` du rôle (raison « N invites (Rago) »), audit `discord.invite_role`, puis si son compte Rago est lié : `discord.checkRewards` (Premium + code, voir [[discord.js]]) et `syncUser` ; annonce « @membre reached N invites and gets VIP. » dans le texte, puis un encadré rouge avec la bannière `<PUBLIC_URL>/assets/discord-vip.png` ou `discord-mvp.png` et la récompense (« 1 month of Premium and a one-time 10% code are on your Rago account. ») ou l'invitation à lier son Discord (avec un bouton « Link my Discord »). Échec (pas sur le serveur…) : réservation supprimée, nouvel essai à la passe suivante.
 
 ### Commandes slash
 Enregistrées au démarrage sur le serveur (`PUT /applications/<app>/guilds/<g>/commands`).
 
 | Commande | Qui | Ce qu'elle fait |
 |---|---|---|
-| `/invites [member]` | tout le monde | Nombre d'amis restés 7 jours (+ bonus), en attente, partis, prochain palier. |
-| `/top-invites` | tout le monde | Les 10 membres qui ont le plus invité (bonus compris). |
+| `/invites [member]` | tout le monde | Encadré rouge « Your invites » (ou « Invites » pour un autre membre) : amis restés 7 jours (+ bonus), en attente, partis ; champs « Next: VIP » avec une barre de 10 cases (`bar()`, ▰ et ▱) et « Then: MVP » ; la règle des 7 jours en pied. |
+| `/top-invites` | tout le monde | Encadré rouge « Top inviters » : les 10 membres qui ont le plus invité (bonus compris), « Friends who stayed 7 days » en petit. |
 | `/partner-link name [code]` | staff (Gérer le serveur ou Administrateur) | Crée une invitation permanente unique dans le salon (ou suit un lien existant de ce serveur) ; enregistrée dans [[Table discord_invite_links]] ; audit `discord.partner_link`. Ses arrivées ne comptent pour personne et apparaissent dans `/growth`. Réponse visible seulement par l'auteur. |
 | `/growth` | staff | Répond d'abord « en réflexion », puis modifie le message avec `growthText` et le nombre de membres qui portent le tag du serveur (lecture de tous les membres, 50 pages de 1000 au plus). |
 | `/invites-adjust member count` | staff | Bonus de 0 à 1000 invitations comptées avant le bot Rago (Invite Tracker) dans [[Table discord_invite_bonus]] ; 0 le supprime ; audit `discord.invite_bonus` ; relance la passe des rôles. |
