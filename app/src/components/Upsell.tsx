@@ -7,7 +7,7 @@ import { totalTweaks, tweaks } from "../lib/catalog";
 import { FREE, FREE_REVERTS, FREE_SLOTS, useStore } from "../lib/store";
 import type { Key } from "../lib/i18n";
 import { ACCOUNT_URL, LicenseGate, SITE_URL } from "./LicenseGate";
-import { Pulse } from "./Logo";
+import { AppIcon } from "./Logo";
 import { Modal } from "./Modal";
 import { Button } from "./ui";
 
@@ -80,13 +80,22 @@ export function Upsell() {
   return (
     <>
       <Modal open={open} onClose={close} className="upsell">
+        {/* panneau rouge : l'icône de l'app et le nombre de réglages (charte v5) */}
+        <aside className="upsell-side">
+          <AppIcon size={56} />
+          <div className="upsell-sig">
+            <b>{totalTweaks}</b>
+            <span>{t("upsell.sideTweaks")}</span>
+            <small>{t("upsell.sideFree", { n: FREE.size })}</small>
+          </div>
+        </aside>
+        <div className="upsell-body">
         <div className="upsell-head">
-          <Pulse size={40} active />
           <span className="upsell-kicker rg-overline">
             <Lock size={11} /> {kicker}
           </span>
         </div>
-        <h2>{title}</h2>
+        <h2 className="modal-title">{title}</h2>
         {sent ? (
           <>
             <p className="muted">{t("upsell.sentLead")}</p>
@@ -176,6 +185,7 @@ export function Upsell() {
             </button>
           </>
         )}
+        </div>
       </Modal>
       <Modal open={upsell === "signin"} onClose={close} className="modal-gate">
         <LicenseGate embedded onDone={close} />
