@@ -1,205 +1,276 @@
-import os
-OUT=os.path.join(os.path.dirname(os.path.abspath(__file__)),'..')
-# Builds site/terms.html, privacy.html (and 404.html, which shares their header).
-# No refunds page since 2026-11-10 (Sofiene: no refunds, the free trial replaces them): cancellation is in the Terms.
-MAIL='<a href="mailto:support@rago-optimizer.com">support@rago-optimizer.com</a>'; UPD="October 9, 2026"
-SITE='https://rago-optimizer.com'  # same as build.py
-HEAD='''<!doctype html>
-<html lang="en">
-<head>
-<meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
-<meta name="theme-color" content="#0A0A0B">
-{meta}
-<title>{title} · Rago Optimizer</title>
-<link rel="icon" href="favicon.svg" type="image/svg+xml">
-<link rel="icon" href="favicon.ico" sizes="any">
-<style>
-@font-face{{font-family:"Geist";src:url("fonts/Geist-Variable.woff2") format("woff2");font-weight:100 900;font-display:swap}}
-@font-face{{font-family:"Geist Mono";src:url("fonts/GeistMono-Variable.woff2") format("woff2");font-weight:100 900;font-display:swap}}
-:root{{--ink:#0A0A0B;--ink-2:#111113;--l1:rgba(255,255,255,.07);--l2:rgba(255,255,255,.12);--t1:#F5F5F7;--t2:#A1A1AA;--t3:#7C7C86;--red:#FF3B30;--warn:#FFD60A}}
-*{{box-sizing:border-box;margin:0}}
-html{{background:var(--ink);color-scheme:dark}}
-body{{background:var(--ink);color:var(--t1);font:400 15px/1.7 Geist,system-ui,sans-serif;-webkit-font-smoothing:antialiased;padding:0 16px}}
-.wrap{{max-width:760px;margin:0 auto;padding:40px 0 100px}}
-.top{{display:flex;align-items:center;justify-content:space-between;gap:16px;margin-bottom:56px}}
-.top a.logo{{display:flex;align-items:center;gap:10px;color:var(--t1);text-decoration:none;font-weight:600;letter-spacing:-.02em}}
-.top a.logo img{{height:22px}}
-a.back{{color:var(--t2);text-decoration:none;font-size:13.5px;padding:8px 14px;border-radius:999px;box-shadow:inset 0 0 0 1px var(--l2)}}
-a.back:hover{{color:var(--t1)}}
-h1{{font-size:clamp(30px,5vw,44px);letter-spacing:-.04em;line-height:1.1}}
-.upd{{color:var(--t3);font:400 12.5px/1 "Geist Mono",monospace;margin:14px 0 40px}}
-h2{{font-size:19px;letter-spacing:-.02em;margin:44px 0 12px}}
-p,li{{color:var(--t2)}}
-p+p{{margin-top:12px}}
-ul{{padding-left:20px;margin-top:10px}} ul+p{{margin-top:14px}} li+li{{margin-top:6px}}
-strong{{color:var(--t1);font-weight:560}}
-a{{color:var(--t1)}}
-table{{width:100%;border-collapse:collapse;margin-top:12px;font-size:13.5px}}
-th,td{{text-align:left;padding:10px 12px;border-bottom:1px solid var(--l1);color:var(--t2);vertical-align:top}}
-th{{color:var(--t1);font-weight:560}}
-.tbl{{overflow-x:auto;border:1px solid var(--l1);border-radius:24px;padding:4px 8px;background:var(--ink-2);margin-top:12px}}
-.tbl table{{margin:0}} .tbl tr:last-child td{{border-bottom:0}}
-.foot{{margin-top:64px;padding-top:24px;border-top:1px solid var(--l1);display:flex;flex-wrap:wrap;gap:6px 18px;font-size:13px}}
-.foot a{{color:var(--t2);text-decoration:none}} .foot a:hover{{color:var(--t1)}}
-</style>
-</head>
-<body>
-<div class="wrap">
-<div class="top"><a class="logo" href="./"><img src="rago-wordmark.svg" alt="Rago Optimizer"></a><a class="back" href="./">Back to the site</a></div>
-<h1>{title}</h1>
-<p class="upd">Last updated: {upd}</p>
+"""Builds site/terms.html, site/privacy.html and site/404.html (design v5, 22/11/2026).
+
+The legal text itself is in src/legal/terms.html and src/legal/privacy.html (only the sections: <h2> then paragraphs and
+lists, as written by hand). Edit the text there, change the date below, then run: python3 site/tools/make_legal.py
+No refunds page since 2026-11-10 (Sofiene: no refunds, the free trial replaces them): cancellation is in the Terms.
+"""
+import hashlib, html, os, re, sys
+HERE = os.path.dirname(os.path.abspath(__file__))
+OUT = os.path.join(HERE, '..')
+sys.path.insert(0, HERE)
+import sync_icons
+
+UPD = {'terms': 'November 13, 2026', 'privacy': 'November 10, 2026'}
+SITE = 'https://rago-optimizer.com'  # same as build.py
+ACC = 'https://account.rago-optimizer.com'
+DISCORD = 'https://discord.gg/cbCxCBx8vJ'
+MAIL = '<a href="mailto:support@rago-optimizer.com">support@rago-optimizer.com</a>'
+OGV = hashlib.sha256(open(os.path.join(OUT, 'og-image.png'), 'rb').read()).hexdigest()[:10]  # same as build.py
+CSSV = hashlib.sha256(open(os.path.join(OUT, 'v5.css'), 'rb').read()).hexdigest()[:10]  # same cache key as build.py
+LEGAL = ("Rago Optimizer changes Windows settings. Results depend on your hardware and connection. A restore point is offered "
+         "before advanced tweaks. Minecraft is a trademark of Mojang Studios; Rago Optimizer isn't affiliated with Mojang or "
+         "Microsoft. © 2026 Rago Optimizer, by KALISO and RAGO.")
+
+
+def icon(n):
+    return f'<svg class="i" aria-hidden="true"><use href="#i-{n}"/></svg>'
+
+
+CSS = '''.lg-nav .r > a{display:inline-flex;align-items:center;gap:8px}
+.lg-nav .r > a svg{width:16px;height:16px}
+.lg-hero,.lg-wrap,.nf .in{width:min(1200px,calc(100% - 2 * var(--g)));margin-inline:auto}
+.lg-hero{position:relative;padding:76px 0 0}
+.lg-hero .s-dots{right:0;top:-40px;width:min(760px,100%);height:480px;-webkit-mask:linear-gradient(230deg,#000 0,transparent 65%)}
+.s-eb b{color:var(--red);font-weight:inherit;margin:0 4px}
+.lg-hero h1{position:relative;margin-top:22px;font-family:var(--cond);font-weight:900;font-style:italic;font-size:110px;line-height:.84;text-transform:uppercase;letter-spacing:-.01em}
+.lg-hero h1 .br,.nf h1 .br{position:relative;display:inline-block;isolation:isolate}
+.lg-hero h1 .br::after{content:"";position:absolute;z-index:-1;left:-22px;right:-46px;top:32%;height:72%;background:url(img/v5/brush.svg) center/100% 100% no-repeat;transform:rotate(-2deg)}
+.lg-meta{display:flex;flex-wrap:wrap;align-items:center;gap:18px;margin-top:30px}
+.lg-seg{display:flex;gap:4px;padding:4px;background:var(--bg-2);border:1px solid var(--line-2);border-radius:12px}
+.lg-seg a{position:relative;height:36px;padding:0 18px;display:inline-grid;place-items:center;font-family:var(--cond);font-weight:800;font-size:15px;letter-spacing:.08em;text-transform:uppercase;color:var(--ink-2);isolation:isolate;white-space:nowrap}
+.lg-seg a:hover{color:var(--ink)}
+.lg-seg a[aria-current]{color:var(--red-ink)}
+.lg-seg a[aria-current]::before{content:"";position:absolute;inset:0;z-index:-1;background:var(--red);border-radius:7px}
+.lg-upd{font-size:14px;color:var(--ink-3)}
+.lg-upd b{color:var(--ink-2);font-weight:600}
+.lg-gl{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-top:52px}
+.lg-gl .s-card{display:flex;flex-direction:column;padding:24px 24px 20px}
+.lg-gl .k{font-family:var(--cond);font-weight:800;font-size:13px;letter-spacing:.14em;text-transform:uppercase;color:var(--ink-3)}
+.lg-gl b{display:block;margin-top:8px;font-family:var(--cond);font-weight:900;font-style:italic;font-size:50px;line-height:.86;text-transform:uppercase}
+.lg-gl p{margin-top:12px;font-size:14.5px;line-height:1.5;color:var(--ink-2)}
+.lg-gl a{margin-top:auto;padding-top:16px;font-family:var(--cond);font-weight:800;font-size:13px;letter-spacing:.12em;text-transform:uppercase;color:var(--red)}
+.lg-gl a:hover{text-decoration:underline;text-underline-offset:3px}
+.lg-gl-note{margin-top:14px;font-size:13px;color:var(--ink-3)}
+.lg-wrap{display:grid;grid-template-columns:290px minmax(0,1fr);gap:90px;margin-top:64px;padding-top:12px;border-top:1px solid var(--line)}
+.lg-toc{position:sticky;top:96px;align-self:start;padding-top:34px}
+.lg-toc .s-eb{font-size:13px;padding:0 12px 12px}
+.lg-toc nav{display:grid;gap:2px}
+.lg-toc nav a{position:relative;display:grid;grid-template-columns:34px 1fr;gap:4px;align-items:baseline;padding:8px 12px;border-radius:10px;font-family:var(--cond);font-weight:800;font-size:16.5px;line-height:1.1;letter-spacing:.02em;text-transform:uppercase;color:var(--ink-2)}
+.lg-toc nav.plain a{grid-template-columns:1fr}
+.lg-toc nav a em{font-style:normal;font-weight:900;color:var(--ink-3)}
+.lg-toc nav a:hover{color:var(--ink)}
+.lg-toc nav a.on{color:var(--ink);background:var(--bg-3)}
+.lg-toc nav a.on em{color:var(--red)}
+.lg-toc nav a.on::before{content:"";position:absolute;left:5px;top:9px;bottom:9px;width:3px;border-radius:3px;background:var(--red)}
+.lg-help{margin-top:28px;padding:22px}
+.lg-help b{display:block;font-family:var(--cond);font-weight:900;font-style:italic;font-size:26px;line-height:.9;text-transform:uppercase}
+.lg-help p{margin-top:10px;font-size:14px;line-height:1.5;color:var(--ink-2)}
+.lg-help p a{color:var(--ink);text-decoration:underline;text-decoration-color:var(--red);text-underline-offset:3px;overflow-wrap:anywhere}
+.lg-help .btn{margin-top:16px;width:100%;height:42px}
+.lg-help .btn svg{width:15px;height:15px}
+.lg-doc{min-width:0}
+.lg-sec{position:relative;padding:40px 0 42px;border-bottom:1px solid var(--line);scroll-margin-top:90px}
+.lg-sec:last-child{border-bottom:0}
+.lg-sec h2{display:flex;align-items:baseline;gap:12px;margin-bottom:20px;font-family:var(--cond);font-weight:900;font-style:italic;font-size:42px;line-height:.92;text-transform:uppercase;letter-spacing:-.005em}
+.lg-sec h2 .n{flex:none;min-width:62px;font-size:58px;line-height:.8;color:transparent;-webkit-text-stroke:1.5px var(--red)}
+.lg-sec > p,.lg-sec > ul{max-width:680px}
+.lg-sec p,.lg-sec li{font-size:16.5px;line-height:1.72;color:var(--ink-2)}
+.lg-sec p + p,.lg-sec ul + p,.lg-sec .lg-tbl + p{margin-top:14px}
+.lg-sec p + ul{margin-top:14px}
+.lg-sec strong{color:var(--ink);font-weight:600}
+.lg-sec a{color:var(--ink);text-decoration:underline;text-decoration-color:var(--red);text-decoration-thickness:1.5px;text-underline-offset:4px;overflow-wrap:anywhere}
+.lg-sec ul{display:grid;gap:10px;list-style:none;padding:0}
+.lg-sec li{position:relative;padding-left:28px}
+.lg-sec li::before{content:"";position:absolute;left:2px;top:.78em;width:13px;height:4px;border-radius:2px;background:var(--red);transform:skewX(var(--skew))}
+.lg-sec:target{margin:14px 0 14px -40px;padding:40px 40px 42px;background:var(--bg-2);border:1px solid var(--line-2);border-radius:22px}
+.lg-sec:target::before{content:"";position:absolute;left:7px;top:34px;bottom:34px;width:3px;border-radius:3px;background:var(--red)}
+.lg-tbl{margin-top:4px;border:1px solid var(--line-2);background:var(--bg-2);border-radius:20px;overflow:hidden}
+.lg-tbl > div{display:grid;grid-template-columns:minmax(0,1.25fr) minmax(0,1fr);gap:28px;padding:16px 22px;border-top:1px solid var(--line)}
+.lg-tbl > div:first-child{border-top:0;padding:14px 22px;background:var(--bg-3)}
+.lg-tbl > div:first-child span{font-family:var(--cond);font-weight:800;font-size:14px;letter-spacing:.14em;text-transform:uppercase;color:var(--ink-3)!important}
+.lg-tbl > div span{font-size:14.5px;line-height:1.55;color:var(--ink-2)}
+.lg-tbl > div span:first-child{color:var(--ink)}
+.lg-foot{margin-top:100px}
+.nf{position:relative;overflow:hidden;padding:96px 0 120px}
+.nf .s-dots{right:0;top:0;width:min(900px,100%);height:640px;-webkit-mask:linear-gradient(230deg,#000 0,transparent 70%)}
+.nf .big{position:absolute;right:-30px;top:40px;font-family:var(--cond);font-weight:900;font-style:italic;font-size:520px;line-height:.8;color:transparent;-webkit-text-stroke:2px rgba(255,255,255,.07);letter-spacing:-.02em;pointer-events:none}
+.nf .in{position:relative}
+.nf h1{margin-top:22px;max-width:820px;font-family:var(--cond);font-weight:900;font-style:italic;font-size:128px;line-height:.82;text-transform:uppercase;letter-spacing:-.012em}
+.nf h1 .br::after{content:"";position:absolute;z-index:-1;left:-24px;right:-52px;top:30%;height:74%;background:url(/img/v5/brush.svg) center/100% 100% no-repeat;transform:rotate(-2deg)}
+.nf .s-lead{margin-top:28px;font-size:19px}
+.nf .s-acts{margin-top:40px;flex-wrap:wrap}
+.nf-pk{display:flex;align-items:center;gap:10px;margin-top:70px}
+.nf-pk i{width:78px;height:52px;display:grid;place-items:center;border-radius:10px;background:var(--ink);color:var(--bg);font-family:var(--cond);font-weight:900;font-size:22px;font-style:normal;transform:skewX(var(--skew))}
+.nf-pk i.lost{width:110px;background:transparent;color:var(--red);box-shadow:inset 0 0 0 2px var(--red)}
+.nf-pk i.wait{background:var(--bg-3);color:var(--ink-3);box-shadow:inset 0 0 0 1px var(--line-2)}
+.nf-pk span{margin-left:18px;font-family:var(--cond);font-weight:800;font-size:15px;letter-spacing:.14em;text-transform:uppercase;color:var(--ink-3)}
+.nf-pk span b{color:var(--red)}
+.nf-go{display:flex;flex-wrap:wrap;align-items:center;gap:10px;margin-top:34px;font-size:14.5px;color:var(--ink-3)}
+.nf-go a{height:34px;padding:0 14px;display:inline-grid;place-items:center;border-radius:999px;background:var(--bg-2);border:1px solid var(--line-2);font-family:var(--cond);font-weight:800;font-size:14px;letter-spacing:.08em;text-transform:uppercase;color:var(--ink)}
+.nf-go a:hover{border-color:var(--red)}
+@media (max-width:1080px){
+  .lg-gl{grid-template-columns:1fr 1fr}
+  .lg-wrap{grid-template-columns:1fr;gap:0}
+  .lg-toc{position:static}
+  .lg-toc nav{grid-template-columns:1fr 1fr}
+  .lg-hero h1{font-size:88px}
+  .nf h1{font-size:96px}
+  .nf .big{font-size:360px}
+}
+@media (max-width:760px){
+  .lg-nav .r > a:not(.btn) span{display:none}
+  .lg-hero{padding-top:50px}
+  .lg-hero h1{font-size:clamp(52px,15vw,80px)}
+  .lg-hero h1 .br::after{left:-12px;right:-24px}
+  .lg-gl{grid-template-columns:1fr;margin-top:36px}
+  .lg-gl b{font-size:42px}
+  .lg-toc nav{grid-template-columns:1fr}
+  .lg-sec h2{font-size:32px}
+  .lg-sec h2 .n{min-width:48px;font-size:44px}
+  .lg-sec p,.lg-sec li{font-size:16px}
+  .lg-sec:target{margin-left:-14px;margin-right:-14px;padding:30px 18px}
+  .lg-tbl > div{grid-template-columns:1fr;gap:6px;padding:14px 16px}
+  .lg-tbl > div:first-child{display:none}
+  .lg-foot{margin-top:70px}
+  .nf{padding:56px 0 80px}
+  .nf h1{font-size:clamp(52px,15vw,80px)}
+  .nf h1 .br::after{left:-12px;right:-24px}
+  .nf .big{font-size:220px;top:auto;bottom:20px;right:-20px}
+  .nf .s-acts .btn{flex:1 1 100%}
+  .nf-pk{gap:6px;margin-top:50px;flex-wrap:wrap}
+  .nf-pk i{width:46px;height:40px;font-size:17px}
+  .nf-pk i.lost{width:70px}
+  .nf-pk span{margin:10px 0 0;width:100%;font-size:13px}
+}
 '''
-FOOT='''<div class="foot"><a href="terms.html">Terms of Sale</a><a href="privacy.html">Privacy Policy</a><a href="terms.html#cancel">Cancellation</a><a href="./">Rago Optimizer</a></div>
-</div>
-</body>
-</html>
+
+
+def head(title, desc, meta, root=''):
+    return (f'<!doctype html>\n<html lang="en">\n<head>\n<meta charset="utf-8">\n'
+            f'<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">\n'
+            f'<meta name="theme-color" content="#0A0A0B">\n<title>{title}</title>\n'
+            + (f'<meta name="description" content="{desc}">\n' if desc else '') + meta +
+            f'<link rel="icon" href="{root}favicon.svg" type="image/svg+xml">\n<link rel="icon" href="{root}favicon.ico" sizes="any">\n'
+            f'<link rel="apple-touch-icon" href="{root}apple-touch-icon.png">\n'
+            f'<link rel="preload" href="{root}fonts/BarlowCondensed-900-italic.woff2" as="font" type="font/woff2" crossorigin>\n'
+            f'<link rel="stylesheet" href="{root}v5.css?v={CSSV}">\n'
+            f'<style>\n{CSS.strip()}\n</style>\n</head>\n<body>\n<!-- icons -->\n<!-- /icons -->\n')
+
+
+def logo(root):
+    return (f'<a class="s-logo" href="{root or "./"}" aria-label="Rago Optimizer home"><img src="{root}img/v5/rago-icon.svg" alt="" width="34" height="34"><b>rago</b></a>')
+
+
+def footer(root=''):
+    r = root or './'
+    return (f'<footer class="s-foot"><div class="sw5"><div class="row"><div>{logo(root)}<p class="motto">every millisecond counts.</p></div>\n'
+            f'  <nav class="cols" aria-label="Footer"><div><b>product</b><a href="{r}#features">Features</a><a href="{root}tweaks.html">Tweaks</a>'
+            f'<a href="{root}route.html">Rago Route</a><a href="{r}#pricing">Pricing</a><a href="{r}#faq">FAQ</a></div>'
+            f'<div><b>community</b><a href="{DISCORD}" target="_blank" rel="noopener">Discord</a><a href="{root}partners.html">Partners</a>'
+            f'<a href="{ACC}/affiliate">Affiliate program</a><a href="{root}reviews.html">Reviews</a></div>'
+            f'<div><b>account</b><a href="{ACC}/login">Sign in</a><a href="{ACC}/signup">Create account</a></div>'
+            f'<div><b>legal</b><a href="{root}terms.html">Terms</a><a href="{root}privacy.html">Privacy</a><a href="{root}terms.html#cancel">Cancellation</a></div></nav></div>\n'
+            f'  <p class="legal">{LEGAL}</p></div></footer>\n')
+
+
+NAV_JS = ('const top5 = document.getElementById("top"); const onTop = () => top5.classList.toggle("scrolled", scrollY > 10); '
+          'addEventListener("scroll", onTop, { passive: true }); onTop();\n')
+# the table of contents shows the section being read
+TOC_JS = '''const links = [...document.querySelectorAll(".lg-toc nav a")], secs = links.map(a => document.getElementById(a.hash.slice(1)));
+const mark = () => { let k = 0; secs.forEach((s, i) => { if (s.getBoundingClientRect().top < innerHeight * .35) k = i; }); links.forEach((a, i) => a.classList.toggle("on", i === k)); };
+addEventListener("scroll", mark, { passive: true }); mark();
 '''
-# The legal pages are public and indexable (linked from every footer); the 404 page isn't.
-def page(name,title,desc,body,upd=UPD):
-    meta=f'<meta name="description" content="{desc}">\n<link rel="canonical" href="{SITE}/{name}">'
-    open(os.path.join(OUT,name),'w').write(HEAD.format(title=title,upd=upd,meta=meta)+body+FOOT)
 
-page('terms.html','Terms of Sale','Terms of sale for Rago Optimizer: the Free, Premium and Lifetime plans, the free trial, prices, your one-PC license, renewal, cancellation and the no-refund policy.',f'''
-<h2>1. Who we are</h2>
-<p>Rago Optimizer is an independent project, run and sold from France by the Rago Optimizer team. Contact: {MAIL}, or our Discord server.</p>
-<p>This site is hosted by Netlify, Inc., 101 2nd Street, San Francisco, CA 94105, USA. Account pages and the license server are hosted by Railway Corporation, San Francisco, CA, USA.</p>
 
-<h2>2. What you buy</h2>
-<p>Rago Optimizer is a Windows 10 and 11 app that changes Windows, network and game settings. It comes in three plans:</p>
-<ul>
-<li><strong>Free:</strong> the app with a limited set of tweaks, up to 30 of them on at the same time, with no payment. You don't need an account to use it, only to leave a review.</li>
-<li><strong>Premium:</strong> a monthly or yearly subscription that unlocks every tweak, with no limit on how many are on, presets and updates while the subscription is active. It can start with a free trial (section 4).</li>
-<li><strong>Lifetime:</strong> Premium in one payment, with no subscription and nothing to renew. It unlocks the same tweaks, presets and updates as Premium for as long as Rago Optimizer Premium is offered.</li>
-</ul>
-<p>Results depend on your hardware, your connection and the game server. We don't promise a specific ping, frame rate or hit registration result. Distance to the server can't be changed by any software.</p>
+def sections(src, numbered, ids):
+    """<h2>N. Title</h2> + content -> <section class="lg-sec" id> with the number apart; returns (html, toc)."""
+    parts = re.split(r'(<h2[^>]*>.*?</h2>)', src.strip())
+    out, toc = [], []
+    for i in range(1, len(parts), 2):
+        m = re.match(r'<h2(?: id="([^"]+)")?>(.*?)</h2>', parts[i])
+        own_id, t = m.groups()
+        n = None
+        if numbered:
+            n, t = re.match(r'(\d+a?)\. (.*)', t).groups()
+        sid = own_id or ids.get(n or t) or ('s' + n if n else re.sub(r'[^a-z0-9]+', '-', t.lower()).strip('-'))
+        body = parts[i + 1].strip()
+        # the data table of the privacy policy: a two-column list
+        body = re.sub(r'<div class="tbl"><table>(.*?)</table></div>', lambda mm: '<div class="lg-tbl" role="table">' + ''.join(
+            '<div role="row">' + ''.join(f'<span role="{"columnheader" if c == "th" else "cell"}">{x}</span>' for c, x in re.findall(r'<(t[hd])>(.*?)</t[hd]>', row)) + '</div>'
+            for row in re.findall(r'<tr>(.*?)</tr>', mm.group(1), re.S)) + '</div>', body, flags=re.S)
+        num = f'<span class="n" aria-hidden="true">{n}</span>' if n else ''
+        lbl = f'<span class="sr-only">{n}. </span>' if n else ''
+        out.append(f'<section class="lg-sec" id="{sid}"><h2>{num}{lbl}<span>{t}</span></h2>\n{body}\n</section>')
+        toc.append(f'<a href="#{sid}">' + (f'<em>{n}</em>' if n else '') + f'<span>{t}</span></a>')
+    return '\n'.join(out), toc
 
-<h2>3. Prices and payment</h2>
-<p>Prices are shown on the site before checkout, in US dollars. No VAT is charged: VAT exemption under article 293 B of the French General Tax Code (TVA non applicable, art. 293 B du CGI). Payment is handled by Stripe. We never see or store your card number.</p>
-<p>A subscription renews automatically at the end of each month or year, at the price you accepted, until you cancel. If we change the price, we'll tell you by email before your next renewal and you can cancel before it applies. Lifetime is paid once and never renews.</p>
-<p>Discount codes, affiliate codes included, apply to Lifetime as they do to a subscription, within their own conditions (for example, a first payment only).</p>
-<p>If you have a Premium subscription, you can switch to Lifetime. As soon as Lifetime is on your account (right after the payment if you pay while signed in), your subscription is canceled so it doesn't renew, and your license stays on the same PC. The time left on your subscription isn't refunded.</p>
 
-<h2>4. Free trial</h2>
-<p>New customers can start Premium with a <strong>3-day free trial</strong> of the monthly plan. You enter your card on Stripe when you start it. Nothing is charged during the trial, and you get all of Premium right away.</p>
-<ul>
-<li><strong>If you don't cancel</strong>, the monthly plan is charged automatically at the end of the trial, then renews each month like any other subscription. The checkout page, the confirmation email and your account page show the exact date of the first payment.</li>
-<li><strong>To stop</strong>, cancel from your account page (Cancel trial or manage) before that date. You pay nothing, and Premium ends with the trial.</li>
-<li><strong>One trial per person.</strong> We keep the email and Stripe's fingerprint of the card used for a trial (not the card number). An account that already had Premium or a trial, or a card already used for one, gets no new trial: the subscription is then charged when it starts.</li>
-<li>The yearly plan and Lifetime have no trial: they are paid when you buy them.</li>
-<li>The trial is there so you can try all of Premium before paying. That's why payments aren't refunded (section 6).</li>
-</ul>
-<h2>5. Your license</h2>
-<ul>
-<li>One Premium subscription, or one Lifetime purchase, works on <strong>one PC</strong>. The license is linked to that PC the first time you sign in to the app and activate it.</li>
-<li>If you change PCs, contact support to move your license.</li>
-<li>You may not share, resell or sublicense your account or license, or try to bypass the license check.</li>
-<li>If a renewal payment fails, Stripe tries it again over the following days and Premium stays on meanwhile. If it still fails, Premium stops. The app keeps working in free mode.</li>
-</ul>
+def glance(cards):
+    return ('<div class="lg-gl">' + ''.join(f'<div class="s-card"><span class="k">{k}</span><b>{b}</b><p>{p}</p><a href="#{h}">{a}</a></div>' for k, b, p, h, a in cards)
+            + '</div>')
 
-<h2 id="cancel">6. Cancellation, no refunds</h2>
-<p><strong>Cancel anytime</strong> from your account page (Cancel or manage subscription). You keep Premium until the end of the period you already paid for, then the app goes back to free mode. Nothing else is charged. Lifetime is a single payment: there is nothing to cancel and nothing renews.</p>
-<p><strong>During a free trial</strong>, choose Cancel trial or manage on your account page before the date of the first payment (shown there and in your confirmation email). Nothing is charged, and Premium ends with the trial.</p>
-<p><strong>Payments aren't refunded</strong>, for a subscription, a renewal or Lifetime, and canceling doesn't refund the period already paid. The free trial lets you try all of Premium before paying. If you're charged twice or by mistake (for example a renewal after you switched to Lifetime), we give back the extra payment: contact {MAIL} or our Discord server with the email of your Rago account.</p>
-<p><strong>Payment disputes:</strong> please contact us before opening a dispute with your bank: it's faster. A dispute turns Premium off automatically, and it stays off.</p>
-<p><strong>Right of withdrawal (EU and UK customers):</strong> Premium, by subscription or Lifetime, is digital content supplied right after payment. By completing checkout, you ask for immediate access and acknowledge that you lose your 14-day right of withdrawal once the license is delivered. With a free trial, the license is delivered when the trial starts: cancel before the trial ends and nothing is charged.</p>
 
-<h2>7. Using the app safely</h2>
-<p>Before applying changes, Rago offers to create a Windows restore point (ticked by default before Advanced tweaks), and its Restore section opens System Restore so you can go back to it. Turning a tweak off puts back the Windows settings it changed. One-time actions, like removing apps, can't be turned off. When Premium ends or you sign out, Rago puts back the settings of every tweak it can undo by itself, free tweaks included. Uninstalling the app does the same. Some tweaks are marked <strong>Advanced</strong>: they change deeper Windows settings or turn off services, and ask for confirmation. You choose which tweaks to apply, and you are responsible for that choice.</p>
-<p>Rago doesn't modify Minecraft or inject anything into games. Server rules are set by each server: check them before you play. We aren't responsible for decisions a server's staff makes about your account.</p>
+def legal_page(name, title, h1, eb, desc, og, cards, note, numbered, ids):
+    src = open(os.path.join(OUT, 'src', 'legal', name)).read()
+    secs, toc = sections(src, numbered, ids)
+    key = name[:-5]
+    seg = ''.join(f'<a href="{p}"' + (' aria-current="page"' if p == name else '') + f'>{t}</a>' for p, t in (('terms.html', 'Terms of sale'), ('privacy.html', 'Privacy policy')))
+    meta = (f'<link rel="canonical" href="{SITE}/{name}">\n<meta property="og:site_name" content="Rago Optimizer">\n<meta property="og:type" content="website">\n'
+            f'<meta property="og:url" content="{SITE}/{name}">\n<meta property="og:title" content="{og}">\n<meta property="og:description" content="{desc}">\n'
+            f'<meta property="og:image" content="{SITE}/og-image.png?v={OGV}">\n')
+    a, b = h1
+    page = (head(f'{title} · Rago Optimizer', desc, meta)
+            + f'<header class="s-nav lg-nav" id="top"><span class="brand">{logo("")}</span><div class="r"><a href="./">{icon("left")}<span>Back to the site</span></a>'
+              f'<a class="btn red" href="./#pricing">Get Premium</a></div></header>\n<main>\n'
+            + f'<section class="lg-hero"><span class="s-dots" aria-hidden="true"></span>\n'
+              f'  <p class="s-eb">Legal <b>//</b> {eb}</p><h1>{a} <span class="br">{b}</span></h1>\n'
+              f'  <div class="lg-meta"><nav class="lg-seg" aria-label="Legal pages">{seg}</nav><span class="lg-upd">Last updated <b>{UPD[key]}</b></span></div>\n'
+              f'  {glance(cards)}<p class="lg-gl-note">{note}</p>\n</section>\n'
+            + f'<div class="lg-wrap"><aside class="lg-toc"><p class="s-eb" id="toc-t">On this page</p><nav aria-labelledby="toc-t"{"" if numbered else " class=\"plain\""}>{"".join(toc)}</nav>'
+              f'<div class="s-card lg-help"><b>Questions?</b><p>Write to {MAIL} from the email of your Rago account, or ask on our Discord server.</p>'
+              f'<a class="btn" href="{DISCORD}" target="_blank" rel="noopener">{icon("chat")}Open Discord</a></div></aside>\n'
+              f'<div class="lg-doc">\n{secs}\n</div></div>\n</main>\n'
+            + f'<div class="lg-foot">{footer()}</div>\n<script>\n{NAV_JS}{TOC_JS}</script>\n</body>\n</html>\n')
+    path = os.path.join(OUT, name)
+    open(path, 'w').write(page)
+    sync_icons.sync(path)
 
-<h2>8. Affiliate program</h2>
-<p>Affiliates get a personal code. New customers who use an affiliate code get 5% off their first Premium payment. A referral counts as soon as the buyer has activated the app on their PC, and stops counting if the purchase is disputed or paid back. Your own purchases and activations on your own PC don't count. Each affiliate can refer up to 3 buyers. Once those 3 referrals count, the affiliate gets 6 months of Premium for one PC. We can cancel a reward obtained by fraud.</p>
 
-<h2>9. Reviews</h2>
-<p>Once signed in to the app with a Rago account, free or Premium, you can rate Rago Optimizer from 1 to 5 stars and write a comment. With Premium, you can also write it from your account page on our site. Your review is shown on our site with your public name and your profile photo, if you added one. Long reviews are shortened on the home page, with a link to read them in full on our reviews page. You can change your review anytime from the app, or from your account page with Premium, and delete it from either.</p>
-<p>Each account can leave one review. We don't check whether its author bought Premium, and we don't pay for reviews or reward them. The site shows them from the most recently updated, whatever their rating. We may hide a review that is spam, abusive, off topic or that reveals someone's personal data. We don't hide a review because it is negative.</p>
+legal_page('terms.html', 'Terms of Sale', ('Terms', 'of sale.'), 'terms of sale',
+           'Terms of sale for Rago Optimizer: the Free, Premium and Lifetime plans, the free trial, the Rago Route option, prices, your one-PC license, renewal, cancellation and the no-refund policy.',
+           'Rago Optimizer terms of sale',
+           [('free trial', '3 days', 'Nothing is charged if you cancel before the trial ends.', 's4', 'section 4'),
+            ('per license', '1 PC', 'Your license is linked to one PC. Support can move it to a new one.', 's5', 'section 5'),
+            ('cancel', 'anytime', 'From your account page. Premium stays until the end of the period you paid.', 'cancel', 'section 6'),
+            ('payments', 'no refunds', 'Except a double or mistaken charge: we give the extra payment back.', 'cancel', 'section 6')],
+           'At a glance. The full terms below are what apply.', True, {})
 
-<h2>10. Liability</h2>
-<p>The app is provided as is. To the extent the law allows, we aren't liable for indirect damage such as lost data, lost games or lost time, and our total liability is limited to the amount you paid us in the last 12 months. Nothing in these terms limits your statutory rights as a consumer.</p>
+legal_page('privacy.html', 'Privacy Policy', ('Privacy', 'policy.'), 'privacy policy',
+           'What Rago Optimizer and its account server collect, why, who processes it, how long it is kept and how to delete it.',
+           'Rago Optimizer privacy policy',
+           [('cookies', '0 ads', 'No advertising or analytics cookies, and no third-party fonts or trackers.', 'cookies', 'cookies'),
+            ('your card', 'Stripe only', 'Your card number goes to Stripe, never to us.', 'collect', 'what we collect'),
+            ('network test', 'no IP kept', "City and provider are worked out on our own server. The IP address itself isn't kept.", 'collect', 'what we collect'),
+            ('delete', '30 days', 'Account and license data is deleted within 30 days of your request.', 'keep', 'how long we keep it')],
+           'At a glance. The full policy below is what applies.', False,
+           {'What we collect, and why': 'collect', 'Cookies and local storage': 'cookies', 'How long we keep it': 'keep',
+            'Who is responsible': 'who', 'Who processes it for us': 'processors', 'Your rights': 'rights'})
 
-<h2>11. Suspension</h2>
-<p>We may suspend a license in case of fraud, a chargeback, or sharing of the license. A payment dispute, or a payment given back in full, turns Premium off automatically.</p>
-
-<h2>12. Changes and law</h2>
-<p>We may update these terms. The version accepted at checkout applies to that purchase. These terms are governed by French law, which doesn't take away the protection the mandatory consumer law of your country gives you. If a dispute isn't solved with our support, you can also use the mediation services and the courts of your own country.</p>
-''',upd="November 10, 2026")
-
-page('privacy.html','Privacy Policy','What Rago Optimizer and its account server collect, why, who processes it, how long it is kept and how to delete it.',f'''
-<h2>Who is responsible</h2>
-<p>The Rago Optimizer team, in France, is responsible for your data. Contact: {MAIL}.</p>
-
-<h2>What we collect, and why</h2>
-<div class="tbl"><table>
-<tr><th>Data</th><th>Why</th></tr>
-<tr><td>Email, password and sign-in sessions (stored hashed, never readable)</td><td>Your account and sign-in, on the site and in the app</td></tr>
-<tr><td>When you create an account with an email: the 6-digit code we email you (stored hashed) and your number of tries, deleted within a day</td><td>Checking that the email is yours</td></tr>
-<tr><td>If you sign in with Google or Discord: the ID of that account and the email it gives us. We don't keep your Google or Discord sign-in.</td><td>Signing you in to the same Rago account each time, on the site and in the app</td></tr>
-<tr><td>Payment references from Stripe: customer and payment IDs, amount, currency, subscription status</td><td>Selling and renewing Premium, accounting</td></tr>
-<tr><td>Hashed identifiers of your PC (from the Windows machine ID, the PC's hardware UUID and motherboard serial number), PC name, Windows version, app version, activation dates and last IP address</td><td>Linking your license to one PC and preventing license sharing</td></tr>
-<tr><td>Affiliate code, which accounts used it, and hashed identifiers of the buyer's first PC</td><td>Running the affiliate program and blocking self-referrals</td></tr>
-<tr><td>Your public name, profile photo (resized to 256 × 256 pixels, with its metadata removed) and your review: rating, comment, app version and dates</td><td>Showing your review on our site and your profile in the app. Your public name, photo, rating and comment are public.</td></tr>
-<tr><td>If you link your Discord account: its Discord user ID and username</td><td>Adding you to our Discord server and giving you the Premium role while your Premium is active, then removing it when Premium ends. We don't keep your Discord sign-in: it's revoked right after linking. You can unlink anytime from your account page.</td></tr>
-<tr><td>If you start a free trial: your email, the subscription ID and Stripe's fingerprint of your card (a code that recognizes the same card, not its number)</td><td>Giving each person and each card one free trial</td></tr>
-<tr><td>If you join our Discord server: your Discord ID, when your Discord account was created, when you joined and left, and which invite you used (and so who invited you)</td><td>Counting the friends each member invites, to give the VIP and MVP roles and their rewards, and not counting accounts created to cheat</td></tr>
-<tr><td>A log of license events (purchase, activation, dispute, blocked activation with IP address)</td><td>Security and support</td></tr>
-<tr><td>IP address, kept briefly in memory</td><td>Limiting sign-in and download attempts</td></tr>
-<tr><td>When you run the app's network test: its results (ping, jitter and lost packets to each test server), the app version, an anonymous ID of your PC (a hash, not linked to your account or license), and the city, region, country and internet provider worked out from your IP address. The IP address itself isn't kept.</td><td>Finding where players are and how their connection reaches game servers, to choose where future Rago servers would lower their ping</td></tr>
-</table></div>
-<p>The app contacts our server to check for updates (with its version and an anonymous ID of your PC), to send the results of the network test each time you run it, and when you sign in, activate Premium, refresh your license, or save your review, public name or photo. When you sign in to the app with Google or Discord, the app opens your browser on our site with a short code, and the sign-in finishes there: the app never sees your Google or Discord password. Your card number goes to Stripe, never to us.</p>
-<p>The city and provider come from DB-IP's free database, which runs on our own server: your IP address is never sent to DB-IP. <a href="https://db-ip.com">IP Geolocation by DB-IP</a>.</p>
-
-<h2>Legal basis</h2>
-<p>We use your data to perform our contract with you (account, license, payment, free trial), for our legitimate interest in preventing fraud, license sharing and repeated free trials, in running our Discord community and in improving our service (the network test results), and to meet legal obligations such as keeping accounting records. Your review, public name and photo are published because you choose to post them: you can delete them anytime.</p>
-
-<h2>Cookies and local storage</h2>
-<ul>
-<li><strong>rg_session</strong>: keeps you signed in to your account. Necessary.</li>
-<li><strong>rg_claim</strong>: links a purchase to the account you create right after it, for 2 days. Necessary.</li>
-<li><strong>rg_signup</strong>: remembers the account you're creating while you type the code we emailed you, for 24 hours. Necessary.</li>
-<li><strong>rg_oauth</strong>: checks that the Google or Discord account coming back to our site is the sign-in you started, for 10 minutes. Only set when you sign in with Google or Discord. Necessary.</li>
-<li><strong>rg_discord</strong>: checks that the Discord account coming back from Discord's authorization page is linked to your account, for 10 minutes. Only set when you link Discord. Necessary.</li>
-<li><strong>rago_preview</strong> and <strong>rago_admin</strong>: let our team open the site before a launch and the admin pages. Only set for team members. Necessary.</li>
-<li><strong>rg_ref</strong> (cookie on the account server) and <strong>rago_ref</strong> (browser storage on this site): remember an affiliate code from a share link for 30 days.</li>
-<li><strong>rago_promo_seen</strong>, <strong>rago_promo_seen_code</strong> and <strong>rago_promo_claimed</strong> (browser storage on this site): remember that the welcome offer was shown, so it isn't shown again for 30 days, and the discount code you claimed, so it is applied at checkout. Clearing your browser data removes them.</li>
-</ul>
-<p>We don't use advertising or analytics cookies, and the site loads no third-party fonts or trackers.</p>
-
-<h2>Who processes it for us</h2>
-<ul>
-<li><strong>Stripe</strong>: payments and subscriptions</li>
-<li><strong>Supabase</strong>: database, download storage and profile photos</li>
-<li><strong>Railway</strong>: account and license server</li>
-<li><strong>Netlify</strong>: website hosting</li>
-<li><strong>Resend</strong>: account emails (sign-up code, purchase and trial confirmation, password reset)</li>
-<li><strong>OVHcloud</strong>: our domain name and the support mailbox</li>
-<li><strong>Discord</strong>: our community server, sign-in with Discord, and the Premium role if you link your Discord account</li>
-<li><strong>Google</strong>: sign-in with Google, only if you choose it</li>
-</ul>
-<p>Some of these providers are in the United States. Transfers rely on the European Commission's standard contractual clauses or an equivalent safeguard.</p>
-
-<h2>How long we keep it</h2>
-<ul>
-<li>Account and license data: while your account exists, then deleted within 30 days of your deletion request.</li>
-<li>Payment and invoicing records: as long as accounting law requires, 10 years.</li>
-<li>Your review and profile photo: until you delete them or your account. A replaced photo is deleted right away.</li>
-<li>Security log: 12 months.</li>
-<li>Free trial records (email, card fingerprint): 2 years after the trial started.</li>
-<li>Discord server records: while you're a member, then 12 months after you leave.</li>
-<li>Sign-up codes: deleted within a day.</li>
-<li>Network test results: 12 months.</li>
-</ul>
-
-<h2>Your rights</h2>
-<p>You can delete your review and profile photo yourself, from your account page. You can ask to access, correct, export or delete your data, or object to its use, by writing to {MAIL} from the email of your account. You can also complain to your data protection authority: in France, the CNIL (cnil.fr).</p>
-
-<h2>Changes</h2>
-<p>If we change this policy in a way that matters, we'll update the date above and tell account holders by email.</p>
-''',upd="November 10, 2026")
-print('ok')
-
-# 404: Netlify serves it for any unknown path, so every link is absolute
-nf=HEAD.format(title='Page not found',upd='',meta='<meta name="robots" content="noindex">').replace('href="','href="/').replace('src="','src="/').replace('url("fonts/','url("/fonts/').replace('href="/https:','href="https:')
-nf=nf.split('<h1>')[0]+'<h1>This page doesn\'t exist.</h1>\n<p class="upd">Error 404</p>\n<p>The link may be old or mistyped.</p>\n<p style="margin-top:28px;display:flex;gap:10px;flex-wrap:wrap"><a class="back" href="/" style="color:#0A0A0B;background:#FF3B30;box-shadow:none;font-weight:600;text-decoration:none;padding:10px 18px;border-radius:999px">Back to Rago Optimizer</a><a class="back" href="/#pricing" style="text-decoration:none;padding:10px 18px;border-radius:999px">See pricing</a></p>\n'+FOOT.replace('href="','href="/').replace('href="/./"','href="/"')
-nf=nf.replace('href="/./"','href="/"')
-open(os.path.join(OUT,'404.html'),'w').write(nf)
+# 404: Netlify serves it for any unknown path, so every link and file is absolute. Not indexed.
+nf = (head('Page not found · Rago Optimizer', '', '<meta name="robots" content="noindex">\n', '/')
+      + f'<header class="s-nav" id="top"><span class="brand">{logo("/")}</span><nav aria-label="Site"><a href="/#why">Why Rago</a><a href="/#features">Features</a>'
+        f'<a href="/route.html">Rago Route</a><a href="/tweaks.html">Tweaks</a><a href="/reviews.html">Reviews</a><a href="/#pricing">Pricing</a><a href="/#faq">FAQ</a></nav>'
+        f'<div class="r"><a class="hide-m" href="{ACC}/login">Sign in</a><a class="btn red" href="/#pricing">Get Premium</a></div></header>\n<main>\n'
+      + '<section class="nf"><span class="s-dots" aria-hidden="true"></span><span class="big" aria-hidden="true">404</span><div class="in">\n'
+        "  <p class=\"s-eb\">Error <b>//</b> 404</p><h1>This page <span class=\"br\">doesn't exist.</span></h1>\n"
+        '  <p class="s-lead">The link may be old or mistyped.</p>\n'
+        f'  <div class="s-acts"><a class="btn red xl" href="/">{icon("left")}Back to Rago Optimizer</a><a class="btn xl" href="/#pricing">See pricing</a></div>\n'
+        '  <div class="nf-pk" aria-hidden="true"><i>1</i><i>2</i><i>3</i><i class="lost">404</i><i class="wait">5</i><span>packet lost <b>//</b> this page never arrived</span></div>\n'
+        '  <nav class="nf-go" aria-label="Popular pages">Or go to<a href="/tweaks.html">Tweaks</a><a href="/route.html">Rago Route</a><a href="/reviews.html">Reviews</a><a href="/#faq">FAQ</a></nav>\n'
+        '</div></section>\n</main>\n'
+      + footer('/') + f'<script>\n{NAV_JS}</script>\n</body>\n</html>\n')
+nf = nf.replace('href="/./"', 'href="/"')
+p = os.path.join(OUT, '404.html')
+open(p, 'w').write(nf)
+sync_icons.sync(p)
+print('legal ok')

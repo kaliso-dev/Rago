@@ -24,9 +24,10 @@ NEEDS = {"gpu:nvidia": "An NVIDIA graphics card", "gpu:amd": "An AMD graphics ca
          "cpu:intel": "An Intel CPU", "cpu:amd": "An AMD CPU"}
 e = lambda t: html.escape(str(t), quote=True)
 
-# Module icons: the Lucide set of the home page preview (page.html, const ICON)
-page = open(os.path.join(SRC, 'page.html')).read()
-ICON = dict(re.findall(r"^\s+(\w+):'([^']+)'", page[page.index('const ICON = {'):page.index('};', page.index('const ICON = {'))], re.M))
+# Module icons: the v5 icon set (tools/icons_v5.json, sprite written by sync_icons.py), the same as the home page's sections
+ICON = {'dashboard': 'dashboard', 'network': 'network', 'latency': 'latency', 'gpu': 'graphics', 'windows': 'windows', 'hitreg': 'hitreg',
+        'minecraft': 'minecraft', 'rbw': 'rbw', 'gamemode': 'games', 'expert': 'expert', 'restore': 'restore'}
+mi = lambda mid: 'i-' + ICON.get(mid, 'settings')
 
 presets = {}
 for p in cat['presets']:
@@ -75,7 +76,7 @@ def card(m, sec, t, k):
     if t['risk'] == 'advanced':
         badges += '<span class="bdg warn">Advanced</span>'
     if rb == '1':
-        badges += '<span class="bdg"><svg aria-hidden="true"><use href="#i-restart"/></svg>Restart</span>'
+        badges += '<span class="bdg"><svg aria-hidden="true"><use href="#i-refresh"/></svg>Restart</span>'
     if kind == 'action':
         badges += '<span class="bdg">Runs once</span>'
     elif kind == 'session':
@@ -112,7 +113,7 @@ def card(m, sec, t, k):
         notes += f'<div class="note warn"><span class="ni"><svg aria-hidden="true"><use href="#i-alert"/></svg></span><b>Good to know</b><p>{e(t["cons"]["en"])}</p></div>'
     else:
         notes += '<div class="note ok"><span class="ni"><svg aria-hidden="true"><use href="#i-check"/></svg></span><b>Good to know</b><p>No known drawback.</p></div>'
-    notes += f'<div class="note app"><span class="ni"><svg aria-hidden="true"><use href="#i-app"/></svg></span><b>How the app describes it</b><p>{e(t["desc"]["en"])}</p></div>'
+    notes += f'<div class="note app"><span class="ni"><svg aria-hidden="true"><use href="#i-monitor"/></svg></span><b>How the app describes it</b><p>{e(t["desc"]["en"])}</p></div>'
     ids = ' '.join([t['id']] + twin_ids.get(k, []))
     data = (f' data-m="{m["id"]}" data-mn="{e(m["name"]["en"])}" data-h="{e("|".join(c["helps"]))}" data-p="{"free" if free else "pro"}"'
             f' data-r="{t["risk"]}" data-b="{rb}"' + (f' data-a="{e(" ".join(alias[k]))}"' if alias.get(k) else '') + (f' data-ids="{ids}"' if ' ' in ids else ''))
@@ -131,20 +132,18 @@ total = len(items)
 n_free = sum(1 for _, _, t, _ in items if t['id'] in FREE)
 mod_ids = [mid for _, g in GROUPS for mid in g if mid in by_mod] + [m['id'] for m in mods if m['id'] in by_mod and all(m['id'] not in g for _, g in GROUPS)]
 
-icons = '\n'.join(f'  <symbol id="m-{mid}" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round">{ICON[mid]}</g></symbol>' for mid in mod_ids)
 mb = lambda mid, label, n, icon: f'<button class="mb" type="button" data-m="{mid}" aria-pressed="false"><svg aria-hidden="true"><use href="#{icon}"/></svg><span>{e(label)}</span><span class="c">{n}</span></button>'
-nav = '<div class="mods" role="group" aria-label="Sections">' + mb('', 'All tweaks', total, 'm-dashboard')
+nav = '<div class="mods" role="group" aria-label="Sections">' + mb('', 'All tweaks', total, 'i-dashboard')
 for g, ids in GROUPS:
-    nav += f'<div class="ngl">{g}</div>' + ''.join(mb(mid, MOD[mid]['name']['en'], len(by_mod[mid]), f'm-{mid}') for mid in ids if mid in by_mod)
+    nav += f'<div class="ngl">{g}</div>' + ''.join(mb(mid, MOD[mid]['name']['en'], len(by_mod[mid]), mi(mid)) for mid in ids if mid in by_mod)
 nav += '</div>'
-icons = f'  <symbol id="m-dashboard" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round">{ICON["dashboard"]}</g></symbol>\n' + icons
-chips = '<div class="chips" role="group" aria-label="Sections">' + mb('', 'All', total, 'm-dashboard') + ''.join(mb(mid, MOD[mid]['name']['en'], len(by_mod[mid]), f'm-{mid}') for mid in mod_ids) + '</div>'
+chips = '<div class="chips" role="group" aria-label="Sections">' + mb('', 'All', total, 'i-dashboard') + ''.join(mb(mid, MOD[mid]['name']['en'], len(by_mod[mid]), mi(mid)) for mid in mod_ids) + '</div>'
 gcount = {g: sum(1 for k in COPY if k in seen and g in COPY[k]['helps']) for g in GOALS}
 goals = '<div class="goals" role="group" aria-labelledby="goals-l">' + ''.join(f'<button class="goal" type="button" data-h="{e(g)}" aria-pressed="false">{e(g)}<span class="c">{gcount[g]}</span></button>' for g in GOALS if gcount[g]) + '</div>'
 lst = ''
 for mid in mod_ids:
     m = MOD[mid]
-    lst += (f'<section class="grp" id="s-{mid}" data-m="{mid}" aria-labelledby="h-{mid}"><div class="grp-h"><span class="ic"><svg aria-hidden="true"><use href="#m-{mid}"/></svg></span>'
+    lst += (f'<section class="grp" id="s-{mid}" data-m="{mid}" aria-labelledby="h-{mid}"><div class="grp-h"><span class="ic"><svg aria-hidden="true"><use href="#{mi(mid)}"/></svg></span>'
             f'<h3 id="h-{mid}">{e(m["name"]["en"])}</h3><p>{e(m["tagline"]["en"])}</p><span class="c">{len(by_mod[mid])}</span></div>'
             f'<div class="cards">' + ''.join(card(*it) for it in by_mod[mid]) + '</div></section>\n')
 
@@ -156,7 +155,6 @@ def put(name, body):
     s = s[:i] + '\n' + body + '\n' + s[j:]
 
 
-put('icons', icons)
 put('nav', nav)
 put('goals', goals)
 put('chips', chips)
