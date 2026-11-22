@@ -816,7 +816,7 @@ test('webhook rejects bad signatures; cross-site form posts are refused', async 
   const x = await t.app.request('/login', { method: 'POST', headers: { origin: 'https://evil.example', 'content-type': 'application/x-www-form-urlencoded' }, body: 'email=a&password=b' });
   assert.equal(x.status, 403);
   // The email logo must load inside mail clients; page assets stay same-origin.
-  assert.equal((await t.app.request('/assets/email-wordmark.png')).headers.get('cross-origin-resource-policy'), 'cross-origin');
+  assert.equal((await t.app.request('/assets/email-header.png')).headers.get('cross-origin-resource-policy'), 'cross-origin');
   assert.equal((await t.app.request('/assets/account.css')).headers.get('cross-origin-resource-policy'), 'same-origin');
 });
 
@@ -3240,7 +3240,10 @@ test('app sign-in through the browser: Google, code shown on both sides, then th
   const back = await oauthSignIn(t, 'google', 'g1', { next: path });
   assert.equal(back.headers.get('location'), path);
   const page = await (await t.browse(path)).text();
-  assert.match(page, new RegExp(`>${start.code}<`));
+  // the code is drawn one character per box (v5), and read out whole
+  assert.match(page, new RegExp(`aria-label="Code ${start.code}"`));
+  const shown = [...page.matchAll(/<span class="ch" aria-hidden="true">([^<])<\/span>/g)].map((m) => m[1]).join('');
+  assert.equal(shown, start.code);
   assert.match(page, /pro@gmail\.com/);
   assert.equal((await (await poll()).json()).status, 'pending'); // nothing before the click
   const ok = await t.browse(path, { form: {} });

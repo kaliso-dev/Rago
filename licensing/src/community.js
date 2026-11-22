@@ -25,6 +25,12 @@ const MANAGE_GUILD = 1n << 5n;
 const ADMINISTRATOR = 1n << 3n;
 const EPHEMERAL = 64;
 const NO_PINGS = { parse: [] };
+// v5 « Match day » (22/11/2026): the bot's messages sit in a red Rago embed, with a fixed banner (public/discord-*.png,
+// 1200 × 480) and link buttons. A mention inside an embed doesn't notify, so the one that must stays in `content`.
+const RED = 0xFF3B30;
+const linkButtons = (list) => [{ type: 1, components: list.map(([label, url]) => ({ type: 2, style: 5, label, url })) }];
+/** A text progress bar for /invites: ▰ reached, ▱ still to go, 10 boxes. */
+export const bar = (n, of) => { const k = of ? Math.max(0, Math.min(10, Math.floor((10 * n) / of))) : 0; return `${'▰'.repeat(k)}${'▱'.repeat(10 - k)}`; };
 const INVITE_ROLES_EVERY_MS = 60 * 60 * 1000;
 
 /** VIP and MVP by invites: the role, how many invites (env), and the Premium reward the role brings. */
@@ -203,11 +209,17 @@ export function createCommunity(cfg, { db, discord, log = console, now = Date.no
 
   async function welcome(memberId, how) {
     if (!cfg.discordWelcomeChannelId) return;
-    const lines = [`Welcome <@${memberId}>${memberCount ? `, you're member #${memberCount.toLocaleString('en-US')}` : ''}.`];
-    if (how.inviterId) lines.push(`Invited by <@${how.inviterId}>.`);
-    lines.push(cfg.discordWelcomeText || `New here? The free version of Rago Optimizer is at <${cfg.siteUrl}/download>. Link your Discord on your Rago account to get invite and boost rewards: <${cfg.publicUrl}/account>`);
-    // Only the new member is pinged: the inviter sees it without a notification each time.
-    await call('POST', `/channels/${cfg.discordWelcomeChannelId}/messages`, { json: { content: lines.join('\n'), allowed_mentions: { users: [memberId] } } })
+    const content = `Welcome <@${memberId}>${memberCount ? `, you're member #${memberCount.toLocaleString('en-US')}` : ''}.`;
+    const text = [how.inviterId ? `Invited by <@${how.inviterId}>.` : null,
+      cfg.discordWelcomeText || 'New here? The free version of Rago Optimizer is one click away. Link your Discord on your Rago account to get invite and boost rewards.'].filter(Boolean).join('\n');
+    const json = {
+      content,
+      embeds: [{ color: RED, description: text, image: { url: `${cfg.publicUrl}/assets/discord-welcome.png` } }],
+      components: linkButtons([['Download free', `${cfg.siteUrl}/download`], ['Link my Discord', `${cfg.publicUrl}/account`]]),
+      // Only the new member is pinged: the inviter sees it without a notification each time.
+      allowed_mentions: { users: [memberId] },
+    };
+    await call('POST', `/channels/${cfg.discordWelcomeChannelId}/messages`, { json })
       .catch((err) => log.error(`[community] message de bienvenue non posté : ${err.message}`));
   }
 
@@ -290,10 +302,16 @@ export function createCommunity(cfg, { db, discord, log = console, now = Date.no
     const r = cfg.discord ? REWARDS.find((x) => x.kind === t.kind) : null;
     const prize = r ? `${r.label} of Premium and a one-time ${r.percent}% code` : null;
     const how = !prize || reward === 'linked' ? ''
-      : reward === 'given' ? ` ${prize[0].toUpperCase()}${prize.slice(1)} are on your Rago account.`
-        : ` Link your Discord on your Rago account to get ${prize}: <${cfg.publicUrl}/account>`;
+      : reward === 'given' ? `${prize[0].toUpperCase()}${prize.slice(1)} are on your Rago account.`
+        : `Link your Discord on your Rago account to get ${prize}.`;
+    const embed = { color: RED, image: { url: `${cfg.publicUrl}/assets/discord-${t.kind}.png` }, ...(how ? { description: how } : {}) };
     await call('POST', `/channels/${cfg.discordWelcomeChannelId}/messages`, {
-      json: { content: `<@${memberId}> reached ${plural(n, 'invite')} and gets ${t.name}.${how}`, allowed_mentions: { users: [memberId] } },
+      json: {
+        content: `<@${memberId}> reached ${plural(n, 'invite')} and gets ${t.name}.`,
+        embeds: [embed],
+        ...(reward === 'unlinked' && prize ? { components: linkButtons([['Link my Discord', `${cfg.publicUrl}/account`]]) } : {}),
+        allowed_mentions: { users: [memberId] },
+      },
     }).catch((err) => log.error(`[community] annonce ${t.name} non postée : ${err.message}`));
   }
 
@@ -323,8 +341,8 @@ export function createCommunity(cfg, { db, discord, log = console, now = Date.no
     const p = BigInt(member?.permissions || 0);
     return (p & ADMINISTRATOR) !== 0n || (p & MANAGE_GUILD) !== 0n;
   };
-  const reply = (i, content, { ephemeral = false, mentions = NO_PINGS } = {}) => call('POST', `/interactions/${i.id}/${i.token}/callback`, {
-    json: { type: 4, data: { content, allowed_mentions: mentions, ...(ephemeral ? { flags: EPHEMERAL } : {}) } },
+  const reply = (i, content, { ephemeral = false, mentions = NO_PINGS, embeds } = {}) => call('POST', `/interactions/${i.id}/${i.token}/callback`, {
+    json: { type: 4, data: { ...(content ? { content } : {}), ...(embeds ? { embeds } : {}), allowed_mentions: mentions, ...(ephemeral ? { flags: EPHEMERAL } : {}) } },
   });
   const option = (i, name) => i.data?.options?.find((o) => o.name === name)?.value;
 
@@ -334,9 +352,17 @@ export function createCommunity(cfg, { db, discord, log = console, now = Date.no
     const parts = [`${who} invited **${plural(s.total, 'friend')}** who stayed 7 days${s.bonus ? ` (${s.bonus} from before the Rago bot)` : ''}.`];
     if (s.pending) parts.push(`${s.pending} more will count once they've been here 7 days.`);
     if (s.left) parts.push(`${s.left} left before that.`);
-    const next = tiers().map((t) => ({ ...t, need: cfg[t.needKey] })).find((t) => s.total < t.need);
-    if (next) parts.push(`Next: ${next.name} at ${next.need} invites.`);
-    return `${parts.join(' ')}\n-# A friend counts after 7 days on the server. Rejoins and accounts under a week old don't count.`;
+    const ahead = tiers().map((t) => ({ ...t, need: cfg[t.needKey] })).filter((t) => s.total < t.need);
+    const fields = ahead.slice(0, 2).map((t, k) => (k === 0
+      ? { name: `Next: ${t.name}`, value: `${bar(s.total, t.need)} ${s.total} / ${t.need}`, inline: true }
+      : { name: `Then: ${t.name}`, value: `${t.need} invites`, inline: true }));
+    return {
+      color: RED,
+      title: self ? 'Your invites' : 'Invites',
+      description: parts.join(' '),
+      ...(fields.length ? { fields } : {}),
+      footer: { text: "A friend counts after 7 days on the server. Rejoins and accounts under a week old don't count." },
+    };
   }
 
   async function onCommand(i) {
@@ -348,12 +374,13 @@ export function createCommunity(cfg, { db, discord, log = console, now = Date.no
     switch (name) {
       case 'invites': {
         const target = option(i, 'member') || userId;
-        return reply(i, await invitesText(target, target === userId));
+        return reply(i, null, { embeds: [await invitesText(target, target === userId)] });
       }
       case 'top-invites': {
         const top = await leaderboard({ limit: 10 });
         if (!top.length) return reply(i, 'No invites counted yet. A friend counts after 7 days on the server.');
-        return reply(i, `**Top inviters** (friends who stayed 7 days)\n${top.map((r, k) => `${k + 1}. <@${r.discord_id}> ${r.n}`).join('\n')}`);
+        return reply(i, null, { embeds: [{ color: RED, title: 'Top inviters',
+          description: `-# Friends who stayed 7 days\n${top.map((r, k) => `\`${String(k + 1).padStart(2)}\`  <@${r.discord_id}>  **${r.n}**`).join('\n')}` }] });
       }
       case 'partner-link': {
         const label = String(option(i, 'name') || '').trim().slice(0, 40);

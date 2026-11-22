@@ -6,6 +6,9 @@ const esc = (s) => String(s).replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&l
 const P = 'margin:0 0 16px;color:#C7C7CE;font-size:15px;line-height:1.6';
 const SMALL = 'margin:0 0 12px;color:#8E8E98;font-size:13px;line-height:1.6';
 const LINK = 'color:#FF5E55;text-decoration:underline';
+// v5 « Match day » (22/11/2026): titles and buttons in Barlow Condensed when the mail app has it, else Arial Narrow.
+const COND = "font-family:'Barlow Condensed','Arial Narrow',Arial,sans-serif";
+const DIGIT = `width:64px;height:76px;background:#17171A;border:1px solid #2A2A30;border-radius:10px;color:#F5F5F6;${COND};font-weight:900;font-style:italic;font-size:44px`;
 
 function layout(cfg, title, bodyHtml) {
   const footLinks = [
@@ -18,16 +21,18 @@ function layout(cfg, title, bodyHtml) {
 <body style="margin:0;padding:0;background:#0A0A0B">
 <table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0" bgcolor="#0A0A0B" style="background:#0A0A0B">
 <tr><td align="center" bgcolor="#0A0A0B" style="background:#0A0A0B;padding:40px 16px">
-<table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0" style="max-width:520px;font-family:-apple-system,'Segoe UI',Roboto,Helvetica,Arial,sans-serif">
-<tr><td style="padding:0 0 32px"><img src="${esc(cfg.publicUrl)}/assets/email-wordmark.png" width="180" height="29" alt="Rago Optimizer" style="display:block;border:0;outline:none;color:#F5F5F6;font-size:18px;font-weight:600"></td></tr>
-<tr><td style="color:#F5F5F6"><h1 style="margin:0 0 16px;color:#F5F5F6;font-size:22px;line-height:1.3;letter-spacing:-.02em">${esc(title)}</h1>
+<table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0" style="max-width:600px;font-family:-apple-system,'Segoe UI',Roboto,Helvetica,Arial,sans-serif">
+<tr><td style="padding:0"><img src="${esc(cfg.publicUrl)}/assets/email-header.png" width="600" height="120" alt="Rago Optimizer" style="display:block;border:0;outline:none;width:100%;max-width:600px;height:auto;color:#F5F5F6;font-size:18px;font-weight:600"></td></tr>
+<tr><td style="padding:34px 40px 0;color:#F5F5F6"><h1 style="margin:0 0 18px;color:#F5F5F6;${COND};font-weight:900;font-style:italic;font-size:38px;line-height:1;text-transform:uppercase;letter-spacing:-.005em">${esc(title)}</h1>
 ${bodyHtml}</td></tr>
-<tr><td style="padding:32px 0 0;border-top:1px solid #26262B"><p style="${SMALL}">Rago Optimizer. Every millisecond counts.</p><p style="${SMALL}">${footLinks}</p></td></tr>
+<tr><td style="padding:0 40px"><table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0"><tr><td style="padding:28px 0 0;border-top:1px solid #26262B">
+<p style="margin:0 0 10px;color:#F5F5F6;${COND};font-weight:900;font-style:italic;font-size:16px;text-transform:uppercase;letter-spacing:.02em">Rago Optimizer. Every millisecond counts.</p>
+<p style="${SMALL}">${footLinks}</p></td></tr></table></td></tr>
 </table></td></tr></table></body></html>`;
 }
 
-const button = (href, label) => `<table role="presentation" cellspacing="0" cellpadding="0" border="0" style="margin:24px 0 12px"><tr>
-<td bgcolor="#FF3B30" style="background:#FF3B30;border-radius:999px"><a href="${esc(href)}" style="display:inline-block;padding:13px 24px;color:#0A0A0B;font-weight:600;font-size:15px;text-decoration:none;border-radius:999px">${esc(label)}</a></td>
+const button = (href, label) => `<table role="presentation" cellspacing="0" cellpadding="0" border="0" style="margin:26px 0 14px"><tr>
+<td bgcolor="#FF3B30" style="background:#FF3B30;border-radius:10px"><a href="${esc(href)}" style="display:inline-block;padding:16px 30px;color:#0A0A0B;${COND};font-weight:800;font-size:18px;letter-spacing:.06em;text-transform:uppercase;text-decoration:none;border-radius:10px">${esc(label)}</a></td>
 </tr></table><p style="${SMALL}">Or paste this link in your browser:<br><a href="${esc(href)}" style="${LINK};word-break:break-all">${esc(href)}</a></p>`;
 
 const PLAN = { month: 'Monthly', year: 'Yearly', lifetime: 'Lifetime', reward: 'Affiliate reward' };
@@ -73,8 +78,8 @@ export function createMailer(cfg, { log = console.log, fetchImpl = fetch } = {})
      */
     purchase(to, claimUrl, license = {}) {
       const lines = orderLines(license);
-      const table = `<table role="presentation" cellspacing="0" cellpadding="0" border="0" width="100%" style="margin:8px 0 20px;border:1px solid #26262B;border-radius:16px">
-${lines.map(([k, v]) => `<tr><td style="padding:10px 16px;color:#8E8E98;font-size:13px;width:90px">${esc(k)}</td><td style="padding:10px 16px;color:#F5F5F6;font-size:14px">${esc(v)}</td></tr>`).join('\n')}</table>`;
+      const table = `<table role="presentation" cellspacing="0" cellpadding="0" border="0" width="100%" bgcolor="#111113" style="margin:6px 0 4px;background:#111113;border:1px solid #26262B;border-radius:14px">
+${lines.map(([k, v], i) => `<tr><td style="padding:12px 18px;color:#8E8E98;font-size:13px;width:110px;vertical-align:top;border-top:${i ? '1px solid #1F1F23' : '0'}">${esc(k)}</td><td style="padding:12px 18px;color:#F5F5F6;font-size:14px;border-top:${i ? '1px solid #1F1F23' : '0'}">${esc(v)}</td></tr>`).join('\n')}</table>`;
       const waiver = 'You asked for immediate access to Premium and agreed that your 14-day right of withdrawal ends once the license is delivered. Payments aren\'t refunded.';
       const sub = license.plan === 'month' || license.plan === 'year';
       // Text version: the portal link alone at the end of its line, no punctuation glued to it.
@@ -111,7 +116,8 @@ ${discord ? `<p style="${SMALL}">${esc(discord)} <a href="${esc(cfg.supportUrl)}
     },
     /** The 6-digit code that confirms the email at sign-up (2026-10-25). */
     signupCode(to, code) {
-      const big = `<p style="margin:8px 0 24px;color:#F5F5F6;font-family:ui-monospace,'SF Mono',Menlo,Consolas,monospace;font-size:34px;font-weight:600;letter-spacing:.3em">${esc(code)}</p>`;
+      // One box per digit (v5), in Barlow Condensed 900 italic.
+      const big = `<table role="presentation" cellspacing="0" cellpadding="0" border="0" style="margin:8px 0 26px"><tr>${[...String(code)].map((d) => `<td width="64" height="76" align="center" bgcolor="#17171A" style="${DIGIT}">${esc(d)}</td><td width="8" style="width:8px"></td>`).join('')}</tr></table>`;
       return send(to, `${code} is your Rago Optimizer code`,
         layout(cfg, 'Confirm your email', `<p style="${P}">Type this code on the sign-up page to create your Rago Optimizer account. It works for 15 minutes.</p>${big}<p style="${SMALL}">If you didn't sign up, ignore this email: no account is created without the code.</p>`),
         `Your Rago Optimizer code: ${code}\nType it on the sign-up page to create your account. It works for 15 minutes. If you didn't sign up, ignore this email.`);

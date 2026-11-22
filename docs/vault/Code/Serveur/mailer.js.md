@@ -2,8 +2,8 @@
 type: code
 tags: [code, serveur, javascript]
 fichier: licensing/src/mailer.js
-lignes: 134
-maj: 2026-11-10
+lignes: 140
+maj: 2026-11-22
 ---
 # mailer.js
 
@@ -27,14 +27,14 @@ Envoie les 4 e-mails du serveur par l'API Resend (achat, code d'inscription, ré
 - sans `RESEND_API_KEY` : log `[mail] to=… subject="…"` suivi du texte (le parcours marche quand même en local ; les codes d'inscription s'y lisent) ;
 - sinon `POST https://api.resend.com/emails` avec `from` = `MAIL_FROM`, `to`, `subject`, `html`, `text`, et `reply_to` = `MAIL_REPLY_TO` s'il est réglé ; réponse non OK → erreur `Resend <statut>: …`.
 
-**Gabarit (`layout`)** : fond `#0A0A0B`, largeur max 520 px, logo `<PUBLIC_URL>/assets/email-wordmark.png` (180 × 29), titre, contenu, pied « Rago Optimizer. Every millisecond counts. » avec liens Terms, Privacy, Cancellation (`<SITE_URL>/terms.html`, `/privacy.html`, `/terms.html#cancel`) et « Support on Discord » si `SUPPORT_URL`. Bouton pilule rouge `#FF3B30`, texte `#0A0A0B`, suivi du lien en clair.
+**Gabarit (`layout`, v5 depuis le 22/11, maquettes « Five emails, one template »)** : fond `#0A0A0B`, largeur max 600 px ; en-tête image `<PUBLIC_URL>/assets/email-header.png` (1200 × 240 affichée en 600 × 120 : tuile blanche au R rouge, « RAGO OPTIMIZER », trame de points, trait rouge ; PNG en palette de 54 Ko) ; titre en Barlow Condensed 900 italique capitales 38 px (repli Arial Narrow puis Arial si la messagerie n'a pas la police, le cas le plus courant) ; texte à 40 px des bords ; pied avec « Rago Optimizer. Every millisecond counts. » en capitales italiques, puis les liens Terms, Privacy, Cancellation (`<SITE_URL>/terms.html`, `/privacy.html`, `/terms.html#cancel`) et « Support on Discord » si `SUPPORT_URL`. Bouton rouge `#FF3B30` aux coins de 10 px, texte `#0A0A0B` en capitales Barlow Condensed 800, suivi du lien en clair. Récapitulatif dans un cadre `#111113` aux coins de 14 px, lignes séparées. L'ancienne image `email-wordmark.png` reste servie pour les e-mails déjà envoyés.
 
 **Récapitulatif (`orderLines`)** : `Plan` = « Rago Optimizer Premium · Monthly / Yearly / Lifetime / Affiliate reward » ; `Paid` (montant formaté en `en-US`) ; pour un essai d'un abonnement : `Free trial` = « N days » et `First payment` = date (ou « When the trial ends »), prix, « unless you cancel before » ; pour un abonnement sans essai : `Renews` = date, « unless you cancel ». Dates en anglais, fuseau UTC.
 
 | E-mail | Fonction | Sujet | Contenu |
 |---|---|---|---|
 | Achat | `purchase(to, claimUrl, license)` | « Your Rago Optimizer Premium license », ou « Your N-day free trial of Rago Optimizer Premium » | Titre « Payment confirmed » / « Free trial started ». Récapitulatif. Bouton « Create your account » (lien de rattachement `claimUrl`, « Keep it private ») ou « Open your account » (`/account`) si l'achat a été fait connecté. Renonciation au droit de rétractation de 14 jours + « Payments aren't refunded. ». Pour un abonnement : comment résilier (portail, et `STRIPE_PORTAL_LOGIN_URL` s'il est réglé). Paragraphe Discord si `SUPPORT_URL`. |
-| Code d'inscription | `signupCode(to, code)` | « `<code>` is your Rago Optimizer code » | Titre « Confirm your email », code à 6 chiffres en grand, valable 15 minutes. |
+| Code d'inscription | `signupCode(to, code)` | « `<code>` is your Rago Optimizer code » | Titre « Confirm your email », code à 6 chiffres, un chiffre par case (64 × 76, fond `#17171A`, Barlow Condensed 900 italique), valable 15 minutes. |
 | Résiliation | `subscriptionCanceled(to, sub)` | « Your subscription is canceled: Rago Optimizer Premium » ou « Your free trial is canceled: … » | Premium reste actif jusqu'à la date de fin, plus aucun prélèvement ; à la fin, l'app remet les réglages modifiés et repasse en gratuit ; « Resume » possible depuis l'app ou le compte. Envoyé seulement quand la résiliation est faite **depuis l'app** (1.3.0). |
 | Mot de passe | `passwordReset(to, url)` | « Reset your Rago Optimizer password » | Lien valable 1 heure, bouton « Choose a new password ». |
 

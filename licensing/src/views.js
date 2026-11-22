@@ -1,4 +1,4 @@
-// Server-rendered account pages. Copy follows /brand/voice-en.md, look follows brand kit v1.1.
+// Server-rendered account pages. Copy follows /brand/voice-en.md, look follows the v5 « Match day » kit (22/11/2026).
 import { maskLicenseKey } from './crypto.js';
 import { COMMENT_MAX } from './reviews.js';
 
@@ -8,7 +8,8 @@ const escape = (v) => String(v).replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<':
 const render = (v) => (v == null || v === false ? '' : v instanceof Raw ? v.s : Array.isArray(v) ? v.map(render).join('') : escape(v));
 export const html = (strings, ...vals) => new Raw(strings.reduce((out, s, i) => out + s + (i < vals.length ? render(vals[i]) : ''), ''));
 
-const WORDMARK = html`<img class="wordmark" src="/assets/wordmark.svg?v=2" alt="Rago Optimizer" width="150" height="24">`;
+// v5 logo: the red R on a white tile, then RAGO (public/lockup.svg), and "Account" next to it.
+const WORDMARK = html`<img class="lockup" src="/assets/lockup.svg?v=5" alt="Rago Optimizer" width="102" height="34"><span class="brand-sub" aria-hidden="true">Account</span>`;
 
 const svg = (d, w = 1.6) => html`<svg viewBox="0 0 16 16" aria-hidden="true"><path d="${d}" fill="none" stroke="currentColor" stroke-width="${w}" stroke-linecap="round" stroke-linejoin="round"/></svg>`;
 export const ICON = {
@@ -61,14 +62,15 @@ export function page({ title, body, user, cfg, bodyClass = '', nav = '', cta = {
 <meta name="theme-color" content="#0A0A0B">
 <meta name="robots" content="noindex">
 <title>${escape(String(title).replace(/\.$/, ''))} · Rago Optimizer</title>
-<link rel="icon" href="/assets/favicon.ico?v=3" sizes="any">
-<link rel="icon" href="/assets/favicon.svg?v=3" type="image/svg+xml">
-<link rel="icon" href="/assets/favicon-32.png?v=3" type="image/png" sizes="32x32">
-<link rel="apple-touch-icon" href="/assets/apple-touch-icon.png?v=3">
-<link rel="preload" href="/assets/fonts/Geist-Variable.woff2" as="font" type="font/woff2" crossorigin>
-<link rel="stylesheet" href="/assets/tokens.css">
-<link rel="stylesheet" href="/assets/account.css">
-<script src="/assets/account.js" defer></script>
+<link rel="icon" href="/assets/favicon.ico?v=5" sizes="any">
+<link rel="icon" href="/assets/favicon.svg?v=5" type="image/svg+xml">
+<link rel="icon" href="/assets/favicon-32.png?v=5" type="image/png" sizes="32x32">
+<link rel="apple-touch-icon" href="/assets/apple-touch-icon.png?v=5">
+<link rel="preload" href="/assets/fonts/BarlowCondensed-900-italic.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="preload" href="/assets/fonts/Barlow-400.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="stylesheet" href="/assets/tokens.css?v=5">
+<link rel="stylesheet" href="/assets/account.css?v=5">
+<script src="/assets/account.js?v=5" defer></script>
 </head>
 <body class="${escape(bodyClass)}">
 ${cfg.staging ? render(html`<div class="staging-bar" role="note"><b>Test server (${cfg.envName})</b> Not the real Rago: payments use Stripe test cards (4242 4242 4242 4242), accounts here are test accounts.</div>`) : ''}
@@ -281,7 +283,7 @@ export function appLinkPage(cfg, { user, code, action }) {
   const aside = html`<p class="overline rise">Rago Optimizer for Windows</p>
     <h1 class="display rise d1">Sign in to the app?</h1>
     <p class="lede rise d2">Rago Optimizer on your PC will be signed in as <strong>${user.email}</strong>. Check that the app shows this code:</p>
-    <p class="display rise d2 app-code" aria-label="Code">${code}</p>
+    <p class="app-code rise d2" aria-label="Code ${code}">${[...String(code)].map((ch) => html`<span class="ch" aria-hidden="true">${ch}</span>`)}</p>
     <div class="row rise d3">
       <form method="post" action="${action}" data-busy="Signing in…"><button class="btn btn-primary" type="submit">Yes, sign in the app</button></form>
       <form method="post" action="/logout">${hidden('next', action)}<button class="btn btn-ghost" type="submit">Use another account</button></form>

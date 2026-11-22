@@ -3,7 +3,7 @@ type: code
 tags: [code, serveur, javascript, admin, html]
 fichier: licensing/src/admin-views.js
 lignes: 943
-maj: 2026-11-10
+maj: 2026-11-22
 ---
 # admin-views.js
 
@@ -13,7 +13,7 @@ Les pages HTML du tableau de bord `/admin`, en français : menu latéral, cartes
 
 ## Rôle et place dans l'ensemble
 
-Refait le 10/11/2026 (PR #82) « comme un produit ». Réutilise le gabarit `html`/`raw` de [[views.js]] (échappement automatique) et `parisDay` de [[sales.js]]. Charge `tokens.css`, `admin.css?v=<ASSETS>` et `admin.js?v=<ASSETS>` ([[Styles du serveur (CSS)]], [[admin.js (page admin)]]). Aucun style ni script en ligne (CSP stricte d'[[app.js]]) : la hauteur des barres passe par des classes `h-0` à `h-100`.
+Refait le 10/11/2026 (PR #82) « comme un produit ». Réutilise le gabarit `html`/`raw` de [[views.js]] (échappement automatique) et `parisDay` de [[sales.js]]. Charge `tokens.css?v=<ASSETS>`, `admin.css?v=<ASSETS>` et `admin.js?v=<ASSETS>` ([[Styles du serveur (CSS)]], [[admin.js (page admin)]]). Aucun style ni script en ligne (CSP stricte d'[[app.js]]) : la hauteur des barres passe par des classes `h-0` à `h-100`.
 
 ## Ce que le fichier expose
 
@@ -29,11 +29,11 @@ Refait le 10/11/2026 (PR #82) « comme un produit ». Réutilise le gabarit `htm
 | `popupLeftLine(total, left)` | « Limited to the first N players · M left » (aperçu du pop-up). |
 | `raw` | Réexporté de [[views.js]]. |
 
-`ASSETS = '20261110d'` (depuis la PR #84) : à changer quand `admin.css` ou `public/admin.js` changent (les navigateurs gardent sinon l'ancienne version).
+`ASSETS = '20261122a'` (passage en v5 du 22/11) : à changer quand `tokens.css`, `admin.css` ou `public/admin.js` changent (les navigateurs gardent sinon l'ancienne version).
 
 ## Fonctionnement détaillé
 
-**Cadre** (`doc`, `shell`) : `noindex, nofollow`, titre « … · Rago Admin », polices Geist et Geist Mono préchargées. Menu `NAV` en 4 groupes : **Pilotage** (Vue d'ensemble, Ventes), **Joueurs** (Joueurs, Offrir et achats), **Produit** (Site et promos, Tests réseau), **Système** (Services, Journal), et avec la PR #85 du Cerveau **Projet** (Cerveau, icône `I.brain`, vers `/admin/cerveau`, page à part dessinée par [[brain-views.js]]). Sur téléphone, le menu est un tiroir ouvert par une case à cocher (sans JavaScript). Hors prod, bandeau « Serveur de test … : Stripe en mode test ». Message de succès en bas (`toast`).
+**Cadre** (`doc`, `shell`) : `noindex, nofollow`, titre « … · Rago Admin », polices Barlow Condensed 900 italique et Barlow 400 préchargées, favicons `?v=5`. Logo `MARK` (22/11, v5) : l'icône de l'app en SVG en ligne, R rouge `#FF3B30` sur tuile blanche aux coins de 56/256, suivie de « Rago » et de l'étiquette « Admin » ([[Charte graphique]]). Menu `NAV` en 4 groupes : **Pilotage** (Vue d'ensemble, Ventes), **Joueurs** (Joueurs, Offrir et achats), **Produit** (Site et promos, Tests réseau), **Système** (Services, Journal), et avec la PR #85 du Cerveau **Projet** (Cerveau, icône `I.brain`, vers `/admin/cerveau`, page à part dessinée par [[brain-views.js]]). Sur téléphone, le menu est un tiroir ouvert par une case à cocher (sans JavaScript). Hors prod, bandeau « Serveur de test … : Stripe en mode test ». Message de succès en bas (`toast`).
 
 **Pages** :
 - **Vue d'ensemble** (« Activité récente » : 30 événements dans une liste qui défile) : chiffres « Encaissé aujourd'hui » (comparé à hier à la même heure), « Ce mois-ci » (comparé au mois dernier à la même date), « Revenu mensuel récurrent », « Joueurs Premium » ; « Ventes des 30 derniers jours » ; « À traiter » (services en panne, achats non rattachés, paiements échoués, abonnements Stripe illisibles, licences de test, variables à vérifier) ; Joueurs et communauté ; Derniers paiements ; répartition Premium (abonnés, en essai, résiliés, offerts) ; Activité récente ; Services ; Derniers inscrits.
