@@ -19,11 +19,11 @@ Source : dossier partagé `rago-redesign/rendus-v5/` (maquettes, sources HTML `s
 
 ## Où la v5 est appliquée (22/11)
 - **Serveur de comptes** (`licensing/`) : pages compte, e-mails, admin, Cerveau (cadre seulement) et messages du [[Bot communauté Discord]], sur `staging` par la PR #107 du 22/11 ([[Styles du serveur (CSS)]], [[mailer.js]], [[community.js]]). Jetons : `licensing/public/tokens.css` = `tokens.css` v2.0 du kit, avec les `@font-face` Barlow en tête.
+- **Site** (`site/`, `netlify/`) et kit dans `brand/` : PR #109 vers `staging` (22/11) : les 8 pages et le compte à rebours d'après les maquettes 78 à 98, feuille [[v5.css]], polices Barlow servies par le site (Geist retirée), icônes imprimées ([[sync_icons.py]]), favicons et images de partage du kit v5 ; `brand/` reçoit le kit v5 (logo, jetons v2.0, charte en images) et perd la charte HTML v1.2 et `export-logo.js`. Illustrations de Rago Route fixes en attendant leur refonte.
 - **App Windows** (`app/`) : sur `staging` par la PR #108 du 22/11, version 1.4.0, jamais testée sur Windows. Polices Barlow embarquées, jetons du kit (`app/src/styles/tokens.css`), charte posée par `v5.css` ; icônes imprimées ; cadre (barre latérale Optimize / Play / Pro, barre du haut) ; réglages en tuiles sur 3 colonnes avec bulle au survol ; fenêtres ; écran de démarrage (transition rouge avec le R noir) ; barre en jeu ; icône R rouge sur tuile blanche dans l'exe, la zone de notification et l'installeur ([[App Windows]], [[Styles de l'app (CSS)]], [[Petits composants de l'interface]], [[Splash.tsx]], [[Overlay.tsx]]).
-- **Site** (`site/`, `netlify/`), et copie du kit dans `brand/` : dans leur propre fil et leur propre PR vers `staging` (22/11) ; tant qu'ils ne sont pas fusionnés, ils gardent la v1.2 et le verre.
 - Rien en prod.
 
 ## Code
-Notes de code : [[Kit de marque (brand)]] (README, charte HTML, voix, fichiers du logo), [[tokens.css (marque)]] (jetons et `tokens.json`), [[export-logo.js]] (rendu des icônes, images de l'installateur et images de partage), [[Styles du serveur (CSS)]] (copie du serveur). Où le site applique la charte : [[Code du site]].
+Notes de code : [[Kit de marque (brand)]] (README, charte en images, voix, fichiers du logo ; le kit est produit par les scripts de la maquette, hors du dépôt), [[tokens.css (marque)]] (jetons et `tokens.json`), [[v5.css]] (styles du site), [[Styles du serveur (CSS)]] (copie du serveur). Où le site applique la charte : [[Code du site]].
 
 Liens : [[Site]], [[App Windows]], [[Marketing]].

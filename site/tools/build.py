@@ -1,26 +1,25 @@
 """Builds site/index.html (what Netlify serves) from site/src/page.html (also the Claude preview), site/reviews.html
 from site/src/reviews.html, site/tweaks.html from site/src/tweaks.html (its tweak list: tools/sync_tweaks.py) and
 site/partners.html from site/src/partners.html (partner cards: src/partners.json, written first by tools/sync_partners.py).
-The source loads Geist from Google Fonts so the preview works; the built page uses the copies in site/fonts/ instead,
-so visitors' IP addresses aren't sent to Google."""
+site/route.html from site/src/route.html. The legal pages and the 404 page are built apart, by tools/make_legal.py."""
 import os
 SITE = 'https://rago-optimizer.com'  # public site URL
 ROOT = os.path.join(os.path.dirname(os.path.abspath(__file__)), '..')
 # Partner cards of the home page and of partners.html, from src/partners.json (stops here if an entry is incomplete)
 import subprocess, sys
 subprocess.run([sys.executable, os.path.join(ROOT, 'tools', 'sync_partners.py')], check=True)
+# The icon sprite of each source page (design v5): every icon a page uses, from tools/icons_v5.json
+subprocess.run([sys.executable, os.path.join(ROOT, 'tools', 'sync_icons.py')], check=True)
 s = open(os.path.join(ROOT, 'src/page.html')).read()
 
-GOOGLE = '''<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600;700&family=Geist+Mono:wght@400;500&display=swap">'''
-LOCAL = '''<link rel="preload" href="fonts/Geist-Variable.woff2" as="font" type="font/woff2" crossorigin>
-<style>
-@font-face{font-family:"Geist";src:url("fonts/Geist-Variable.woff2") format("woff2");font-weight:100 900;font-display:swap}
-@font-face{font-family:"Geist Mono";src:url("fonts/GeistMono-Variable.woff2") format("woff2");font-weight:100 900;font-display:swap}
-</style>'''
-assert GOOGLE in s, 'Google Fonts block changed in page.html: update build.py'
-s = s.replace(GOOGLE, LOCAL)
+# Design v5 (22/11/2026): every page links the shared stylesheet v5.css (Barlow, from site/fonts/: visitors' IP addresses
+# aren't sent to Google). Its address changes with its content, so browsers never keep an old copy.
+import hashlib
+CSSV = hashlib.sha256(open(os.path.join(ROOT, 'v5.css'), 'rb').read()).hexdigest()[:10]
+def css(html, name):
+    assert html.count('<link rel="stylesheet" href="v5.css">') == 1, f'link to v5.css not found in {name}: update build.py'
+    return html.replace('<link rel="stylesheet" href="v5.css">', f'<link rel="stylesheet" href="v5.css?v={CSSV}">')
+s = css(s, 'page.html')
 
 # Without JavaScript the page still works: account links point at the real server and the price shows the default (yearly) plan
 import re, json
@@ -35,8 +34,11 @@ jsround = lambda n: math.floor(n * 100 + 0.5) / 100  # same rounding as the page
 FREE = math.floor(1e-9 + 12 - PY / PM)                  # same as MONTHS_FREE in the page
 free_txt = f"{FREE} month{'' if FREE == 1 else 's'} free"
 s = re.sub(r'<b id="p-amt">[^<]*</b>', f'<b id="p-amt">{CUR}{jsround(PY / 12):.2f}</b>', s)
-s = re.sub(r'<div class="price-note" id="p-note">[^<]*</div>', f'<div class="price-note" id="p-note">Billed {CUR}{jsround(PY):.2f} yearly.{" " + free_txt + "." if FREE >= 1 else ""}</div>', s)
-s = re.sub(r'<span class="save" id="save"( hidden)?>[^<]*</span>', f'<span class="save" id="save"{"" if FREE >= 1 else " hidden"}>{free_txt} yearly</span>', s)
+s, n = re.subn(r'<p class="bil" id="p-note">[^<]*</p>', f'<p class="bil" id="p-note">Billed {CUR}{jsround(PY):.2f} yearly.{" " + free_txt + "." if FREE >= 1 else ""}</p>', s)
+assert n == 1, 'price note (p-note) not found in page.html'
+s, n = re.subn(r'<em id="save"( hidden)?>[^<]*</em>', f'<em id="save"{"" if FREE >= 1 else " hidden"}>{free_txt}</em>', s)
+assert n == 1, 'yearly saving (save) not found in page.html'
+
 s, n = re.subn(r'<b id="l-amt">[^<]*</b>', f'<b id="l-amt">{CUR}{PL:.2f}</b>', s)  # Lifetime: its button stays "Coming soon" without JavaScript
 assert n == 1, 'Lifetime price (l-amt) not found in page.html'
 # The account server sells Lifetime only at its own LIFETIME_PRICE: both must say the same amount
@@ -67,8 +69,9 @@ try:
     DISCORD = cfg('discord')
     dlink = lambda h: re.sub(r'\bDiscord\b', f'<a href="{DISCORD}" rel="noopener">Discord</a>', h) if DISCORD else h
     # without JavaScript, Lifetime can't be bought from this page: its questions (marked "life") stay out
-    static = ''.join(f'<details class="fq-s"><summary>{esc(q)}</summary><p>{dlink(esc(x))}</p></details>' for q, x, *only in faq if not only)
+    static = ''.join(f'<details class="s-q"><summary class="qh"><span>{esc(q)}</span><span class="pm" aria-hidden="true"></span></summary><p>{dlink(esc(x))}</p></details>' for q, x, *only in faq if not only)
     s = s.replace('<div class="faq rv" id="faqs"></div>', '<div class="faq rv" id="faqs"></div>\n    <noscript><div class="faq">' + static + '</div></noscript>', 1)
+    s = re.sub(r'(<span id="faq-n">)\d+', lambda m: m.group(1) + str(sum(1 for f in faq if len(f) < 3)), s)
 except (OSError, subprocess.CalledProcessError) as e:
     print('warning: static FAQ skipped (node not available):', e)
 # Discord buttons and the Community section (class js-discord): with CONFIG.discord set they are baked in for visitors
@@ -126,56 +129,40 @@ head = ('''<!doctype html>
 <script type="application/ld+json">{LD}</script>
 '''.replace('{OGDESC}', 'Every millisecond counts. The Minecraft PvP optimizer for Windows: {TOTAL}, free to start, with a restore point offered before advanced tweaks.')
         .replace('{TITLE}', re.search(r'<title>([^<]+)</title>', s).group(1)).replace('{ALT}', 'Rago Optimizer, the Windows optimizer for Minecraft PvP. Every millisecond counts.')
-        .replace('{SITE}', SITE).replace('{OG}', OG).replace('{LD}', LD).replace('{TOTAL}', re.search(r'<h2>((?:Nearly )?\d+ tweaks)\. One clear app\.</h2>', s).group(1).lower()))
+        .replace('{SITE}', SITE).replace('{OG}', OG).replace('{LD}', LD).replace('{TOTAL}', re.search(r'<h2 class="s-h2" id="feat-h">((?:Nearly )?\d+ tweaks)\.', s).group(1).lower()))
 OUT = os.path.join(ROOT, 'index.html')
 page = head + s[:i] + '\n</head>\n<body>\n' + s[i:].lstrip('\n') + '\n</body>\n</html>\n'
 open(OUT, 'w').write(page)
 
-# Without JavaScript: bake the comparison table, game strip and app previews into the HTML (the JS rewrites them on load).
+# Without JavaScript: bake the comparison table into the HTML (the JS rewrites them on load).
 # The reviews come from the account server and stay hidden without JavaScript.
 try:
     baked = json.loads(subprocess.run(['node', os.path.join(ROOT, 'tools', 'prerender.js'), OUT], capture_output=True, text=True, check=True).stdout)
     for k, v in baked.items():
         page, n = re.subn(r'(<[a-z]+ [^>]*id="' + k + r'"[^>]*>)(</[a-z]+>)', lambda m: m.group(1) + v + m.group(2), page, count=1)
         assert n == 1, k
-    page = page.replace('id="xpanel" role="tabpanel"', 'id="xpanel" role="tabpanel" aria-labelledby="xt1"', 1)  # the baked tab (Latency)
     open(OUT, 'w').write(page)
 except (OSError, subprocess.CalledProcessError) as e:
     print('warning: no-JS sections not baked (node + playwright needed):', getattr(e, 'stderr', e))
 print('index.html built')
 
-# Reviews page (site/reviews.html, from src/reviews.html): local fonts too, and the same account server as the home page.
-r = open(os.path.join(ROOT, 'src/reviews.html')).read()
-assert GOOGLE in r, 'Google Fonts block changed in reviews.html: update build.py'
-r = r.replace(GOOGLE, LOCAL)
-r, n = re.subn(r'accountBase: "[^"]*"', f'accountBase: "{BASE}"', r, count=1)
-assert n == 1, 'accountBase not found in reviews.html'
-r = r.replace('href="https://account.rago-optimizer.com/', f'href="{BASE}/')  # the link baked for visitors without JavaScript
-open(os.path.join(ROOT, 'reviews.html'), 'w').write(r)
-print('reviews.html built')
+# Reviews, Tweaks and Partners pages (site/X.html, from src/X.html): the shared stylesheet, and the same account server as
+# the home page (in their script and in the links baked for visitors without JavaScript).
+# share images of the other pages, with the same changing address as the home page's
+OGR = f"{SITE}/media/og-route.png?v={hashlib.sha256(open(os.path.join(ROOT, 'media/og-route.png'), 'rb').read()).hexdigest()[:10]}"
+share = lambda t: t.replace(f'content="{SITE}/og-image.png"', f'content="{OG}"').replace(f'content="{SITE}/media/og-route.png"', f'content="{OGR}"')
+for name in ('reviews.html', 'tweaks.html', 'partners.html'):
+    t = share(css(open(os.path.join(ROOT, 'src', name)).read(), name))
+    t, n = re.subn(r'accountBase: "[^"]*"', f'accountBase: "{BASE}"', t, count=1)
+    assert n == 1 or name == 'partners.html', f'accountBase not found in {name}'
+    t = t.replace('href="https://account.rago-optimizer.com/', f'href="{BASE}/')
+    open(os.path.join(ROOT, name), 'w').write(t)
+    print(name, 'built')
 
-# Tweaks page (site/tweaks.html, from src/tweaks.html): same as the reviews page.
-t = open(os.path.join(ROOT, 'src/tweaks.html')).read()
-assert GOOGLE in t, 'Google Fonts block changed in tweaks.html: update build.py'
-t = t.replace(GOOGLE, LOCAL)
-t, n = re.subn(r'accountBase: "[^"]*"', f'accountBase: "{BASE}"', t, count=1)
-assert n == 1, 'accountBase not found in tweaks.html'
-t = t.replace('href="https://account.rago-optimizer.com/', f'href="{BASE}/')  # the links baked for visitors without JavaScript
-open(os.path.join(ROOT, 'tweaks.html'), 'w').write(t)
-print('tweaks.html built')
-
-# Partners page (site/partners.html, from src/partners.html): local fonts too. Static: no account server.
-pa = open(os.path.join(ROOT, 'src/partners.html')).read()
-assert GOOGLE in pa, 'Google Fonts block changed in partners.html: update build.py'
-open(os.path.join(ROOT, 'partners.html'), 'w').write(pa.replace(GOOGLE, LOCAL))
-print('partners.html built')
-
-# Rago Route page (site/route.html, from src/route.html): its sales page, so local fonts, the same account server as
+# Rago Route page (site/route.html, from src/route.html): its sales page, so the shared stylesheet, the same account server as
 # the home page, and the home page's prices, trial and currency (CONFIG of page.html), also baked into the text and
 # the links for visitors without JavaScript.
-ro = open(os.path.join(ROOT, 'src/route.html')).read()
-assert GOOGLE in ro, 'Google Fonts block changed in route.html: update build.py'
-ro = ro.replace(GOOGLE, LOCAL)
+ro = share(css(open(os.path.join(ROOT, 'src/route.html')).read(), 'route.html'))
 TD = int(cfg('trialDays'))
 for key, val in (('accountBase', f'"{BASE}"'), ('trialDays', str(TD)), ('currency', f'"{CUR}"'),
                  ('priceMonth', cfg('priceMonth')), ('priceYear', cfg('priceYear')), ('priceRoute', cfg('priceRoute')),
@@ -192,5 +179,6 @@ for path in ('/buy?interval=month&amp;trial=1&amp;route=1', '/buy?interval=year&
              '/buy/route?interval=month', '/buy/route?interval=year'):
     ro, n = re.subn(re.escape(f'href="{path}"'), f'href="{BASE}{path}"', ro)
     assert n >= 1, f'no link to {path} in route.html'
+ro = ro.replace('href="https://account.rago-optimizer.com/', f'href="{BASE}/')  # bar on top and footer
 open(os.path.join(ROOT, 'route.html'), 'w').write(ro)
 print('route.html built')

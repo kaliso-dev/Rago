@@ -1,7 +1,7 @@
 ---
 type: technique
 tags: [technique, netlify, site, déploiement]
-maj: 2026-11-11
+maj: 2026-11-22
 ---
 # Netlify
 
@@ -33,7 +33,7 @@ On modifie **les sources** `site/src/*.html` (et `partners.json`, `tweaks-copy.j
 | `src/partners.html` + `src/partners.json` | `partners.html` (et la section Partners de l'accueil) |
 | `src/route.html` | `route.html` (sur `staging` ; depuis le 11/11 avec le `CONFIG`, les prix et les liens de l'accueil ; refaite le 11/11 après-midi) |
 
-Ce que fait `build.py` ([[build.py]]) : remplace Google Fonts par les polices locales `site/fonts/` (aucune IP envoyée à Google), lit le `CONFIG` de `page.html` (`accountBase`, prix, devise, Discord), écrit les liens et prix pour les visiteurs sans JavaScript, **vérifie que le prix Lifetime du site = `LIFETIME_PRICE` du serveur**, rend la FAQ en `<noscript>`, ajoute les données structurées, versionne l'image de partage, puis lance `prerender.js` (Chromium par Playwright, hors ligne) pour figer le tableau comparatif, la bande de jeux et les aperçus de l'app. `sync_partners.py` est lancé en premier et s'arrête sur une entrée incomplète.
+Ce que fait `build.py` ([[build.py]]) depuis le site v5 (22/11, PR #109) : lance `sync_partners.py` puis `sync_icons.py` (sprite d'icônes), ajoute l'empreinte `?v=` à `v5.css` (polices Barlow servies par le site, aucune IP envoyée à Google), lit le `CONFIG` de `page.html` (`accountBase`, prix, devise, Discord), écrit les liens et prix pour les visiteurs sans JavaScript, **vérifie que le prix Lifetime du site = `LIFETIME_PRICE` du serveur**, rend la FAQ en `<noscript>`, ajoute les données structurées, versionne l'image de partage, puis lance `prerender.js` (Chromium par Playwright, hors ligne) pour figer le tableau comparatif. `sync_partners.py` s'arrête sur une entrée incomplète.
 
 Autres outils :
 - `sync_app.py` ([[sync_app.py]], [[sync_tweaks.py]]) : recopie dans `page.html` l'aperçu de l'app depuis `app/src/data/catalog.json` et `app/src/lib/i18n.ts`, puis lance `sync_tweaks.py` (liste des tweaks de `tweaks.html`, depuis `catalog.json`, `free.json` et `tweaks-copy.json`). **À lancer quand le catalogue de l'app change**, avant `build.py`.
@@ -45,7 +45,7 @@ La CI `site-check` relance `build.py` et échoue si les pages commitées diffèr
 `STAGING_ACCOUNT_URL` (aperçus et staging), `PREVIEW_KEY` et `LAUNCH_AT` (fonction edge, inutiles depuis le lancement). Aucune clé secrète côté site : le site est public et n'appelle que les routes publiques du serveur (`/api/v1/reviews`, `/promo`, `/plans`, `/installer`).
 
 ## Code
-Carte : [[Code du site]]. Configuration : [[netlify.toml]] ; aperçus : [[preview.sh]] ; fonction edge : [[launch-gate.js]] ; fabrication : [[build.py]], [[prerender.js]], [[sync_partners.py]], [[sync_app.py]], [[sync_tweaks.py]], [[make_legal.py]] ; ce qui est publié : [[Fichiers publiés du site]] ; contrôle : [[site-check.yml]].
+Carte : [[Code du site]]. Configuration : [[netlify.toml]] ; aperçus : [[preview.sh]] ; fonction edge : [[launch-gate.js]] ; fabrication : [[build.py]], [[prerender.js]], [[sync_partners.py]], [[sync_app.py]], [[sync_tweaks.py]], [[sync_icons.py]], [[make_legal.py]] ; ce qui est publié : [[Fichiers publiés du site]] ; contrôle : [[site-check.yml]].
 
 ## Voir une modification
 Aperçu Netlify de la PR (lien « Deploy Preview » sur GitHub), ou en local `cd licensing && npm run local` puis `http://localhost:8787/src/page.html` (source) ([[Développer et tester]]).

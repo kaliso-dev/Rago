@@ -3,7 +3,7 @@
 // Usage: node prerender.js path/to/index.html   (needs the playwright package; build.py skips this step without it)
 const { chromium } = require("playwright");
 const path = require("path");
-const IDS = ["side", "tl1", "tl2", "mq", "cmp", "xtabs", "xpanel"];
+const IDS = ["cmp"];
 (async () => {
   const b = await chromium.launch();
   const p = await b.newPage({ viewport: { width: 1440, height: 900 }, reducedMotion: "reduce" });
@@ -12,8 +12,6 @@ const IDS = ["side", "tl1", "tl2", "mq", "cmp", "xtabs", "xpanel"];
   await p.waitForTimeout(300);
   const out = await p.evaluate(ids => Object.fromEntries(ids.map(i => {
     const el = document.getElementById(i).cloneNode(true);
-    // without JS the preview rows can't be toggled: don't announce or focus them as switches
-    el.querySelectorAll(".tw").forEach(r => { r.removeAttribute("role"); r.removeAttribute("aria-checked"); r.removeAttribute("tabindex"); });
     return [i, el.innerHTML];
   })), IDS);
   await b.close();

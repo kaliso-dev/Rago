@@ -112,6 +112,7 @@ Registre daté des décisions de Sofiene. **La plus récente prime.** Citations 
 Une ligne par projet ou fonctionnalité arrêtés, pour qu'aucun Claude ne les relance. Le reste du vault n'en parle plus.
 | Date | Quoi | Raison |
 |---|---|---|
+| 22/11 | Polices Geist sur le site, charte HTML v1.2 (`brand/charte.html`) et générateur d'images `brand/tools/export-logo.js` | remplacés par la charte v5 « Match day » : Barlow servie par le site, charte en images, kit produit par les scripts de la maquette (PR #109) |
 | 13/11 | Clips de gameplay Minecraft sur la page Rago Route (haut de page, cartes, onglet ; protocole du 11/11, question q106) | page refaite le 13/11 avec des « illustrations animées simples et épurées » (Sofiene) |
 | 11/11 | Refonte de la page Rago Route en 12 sections (sélecteur de symptômes, carte « Two paths to Paris », simulateur « Three ways back », frise des coupures), sauf sa scène du haut | « L'ancienne version était beaucoup mieux et claire » : la page repart de la version du matin ([[Page de vente Rago Route]]) |
 | 10/11 | Posts LinkedIn automatiques (un par jour, demandés le 04/11) | « je veux supprimer le linkedin automatisé » ; tâche planifiée supprimée, plus aucun post |

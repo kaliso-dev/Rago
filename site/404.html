@@ -2,50 +2,155 @@
 <html lang="en">
 <head>
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="theme-color" content="#0A0A0B">
-<meta name="robots" content="noindex">
 <title>Page not found · Rago Optimizer</title>
+<meta name="robots" content="noindex">
 <link rel="icon" href="/favicon.svg" type="image/svg+xml">
 <link rel="icon" href="/favicon.ico" sizes="any">
+<link rel="apple-touch-icon" href="/apple-touch-icon.png">
+<link rel="preload" href="/fonts/BarlowCondensed-900-italic.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="stylesheet" href="/v5.css?v=2833c51b59">
 <style>
-@font-face{font-family:"Geist";src:url("/fonts/Geist-Variable.woff2") format("woff2");font-weight:100 900;font-display:swap}
-@font-face{font-family:"Geist Mono";src:url("/fonts/GeistMono-Variable.woff2") format("woff2");font-weight:100 900;font-display:swap}
-:root{--ink:#0A0A0B;--ink-2:#111113;--l1:rgba(255,255,255,.07);--l2:rgba(255,255,255,.12);--t1:#F5F5F7;--t2:#A1A1AA;--t3:#7C7C86;--red:#FF3B30;--warn:#FFD60A}
-*{box-sizing:border-box;margin:0}
-html{background:var(--ink);color-scheme:dark}
-body{background:var(--ink);color:var(--t1);font:400 15px/1.7 Geist,system-ui,sans-serif;-webkit-font-smoothing:antialiased;padding:0 16px}
-.wrap{max-width:760px;margin:0 auto;padding:40px 0 100px}
-.top{display:flex;align-items:center;justify-content:space-between;gap:16px;margin-bottom:56px}
-.top a.logo{display:flex;align-items:center;gap:10px;color:var(--t1);text-decoration:none;font-weight:600;letter-spacing:-.02em}
-.top a.logo img{height:22px}
-a.back{color:var(--t2);text-decoration:none;font-size:13.5px;padding:8px 14px;border-radius:999px;box-shadow:inset 0 0 0 1px var(--l2)}
-a.back:hover{color:var(--t1)}
-h1{font-size:clamp(30px,5vw,44px);letter-spacing:-.04em;line-height:1.1}
-.upd{color:var(--t3);font:400 12.5px/1 "Geist Mono",monospace;margin:14px 0 40px}
-h2{font-size:19px;letter-spacing:-.02em;margin:44px 0 12px}
-p,li{color:var(--t2)}
-p+p{margin-top:12px}
-ul{padding-left:20px;margin-top:10px} ul+p{margin-top:14px} li+li{margin-top:6px}
-strong{color:var(--t1);font-weight:560}
-a{color:var(--t1)}
-table{width:100%;border-collapse:collapse;margin-top:12px;font-size:13.5px}
-th,td{text-align:left;padding:10px 12px;border-bottom:1px solid var(--l1);color:var(--t2);vertical-align:top}
-th{color:var(--t1);font-weight:560}
-.tbl{overflow-x:auto;border:1px solid var(--l1);border-radius:24px;padding:4px 8px;background:var(--ink-2);margin-top:12px}
-.tbl table{margin:0} .tbl tr:last-child td{border-bottom:0}
-.foot{margin-top:64px;padding-top:24px;border-top:1px solid var(--l1);display:flex;flex-wrap:wrap;gap:6px 18px;font-size:13px}
-.foot a{color:var(--t2);text-decoration:none} .foot a:hover{color:var(--t1)}
+.lg-nav .r > a{display:inline-flex;align-items:center;gap:8px}
+.lg-nav .r > a svg{width:16px;height:16px}
+.lg-hero,.lg-wrap,.nf .in{width:min(1200px,calc(100% - 2 * var(--g)));margin-inline:auto}
+.lg-hero{position:relative;padding:76px 0 0}
+.lg-hero .s-dots{right:0;top:-40px;width:min(760px,100%);height:480px;-webkit-mask:linear-gradient(230deg,#000 0,transparent 65%)}
+.s-eb b{color:var(--red);font-weight:inherit;margin:0 4px}
+.lg-hero h1{position:relative;margin-top:22px;font-family:var(--cond);font-weight:900;font-style:italic;font-size:110px;line-height:.84;text-transform:uppercase;letter-spacing:-.01em}
+.lg-hero h1 .br,.nf h1 .br{position:relative;display:inline-block;isolation:isolate}
+.lg-hero h1 .br::after{content:"";position:absolute;z-index:-1;left:-22px;right:-46px;top:32%;height:72%;background:url(img/v5/brush.svg) center/100% 100% no-repeat;transform:rotate(-2deg)}
+.lg-meta{display:flex;flex-wrap:wrap;align-items:center;gap:18px;margin-top:30px}
+.lg-seg{display:flex;gap:4px;padding:4px;background:var(--bg-2);border:1px solid var(--line-2);border-radius:12px}
+.lg-seg a{position:relative;height:36px;padding:0 18px;display:inline-grid;place-items:center;font-family:var(--cond);font-weight:800;font-size:15px;letter-spacing:.08em;text-transform:uppercase;color:var(--ink-2);isolation:isolate;white-space:nowrap}
+.lg-seg a:hover{color:var(--ink)}
+.lg-seg a[aria-current]{color:var(--red-ink)}
+.lg-seg a[aria-current]::before{content:"";position:absolute;inset:0;z-index:-1;background:var(--red);border-radius:7px}
+.lg-upd{font-size:14px;color:var(--ink-3)}
+.lg-upd b{color:var(--ink-2);font-weight:600}
+.lg-gl{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-top:52px}
+.lg-gl .s-card{display:flex;flex-direction:column;padding:24px 24px 20px}
+.lg-gl .k{font-family:var(--cond);font-weight:800;font-size:13px;letter-spacing:.14em;text-transform:uppercase;color:var(--ink-3)}
+.lg-gl b{display:block;margin-top:8px;font-family:var(--cond);font-weight:900;font-style:italic;font-size:50px;line-height:.86;text-transform:uppercase}
+.lg-gl p{margin-top:12px;font-size:14.5px;line-height:1.5;color:var(--ink-2)}
+.lg-gl a{margin-top:auto;padding-top:16px;font-family:var(--cond);font-weight:800;font-size:13px;letter-spacing:.12em;text-transform:uppercase;color:var(--red)}
+.lg-gl a:hover{text-decoration:underline;text-underline-offset:3px}
+.lg-gl-note{margin-top:14px;font-size:13px;color:var(--ink-3)}
+.lg-wrap{display:grid;grid-template-columns:290px minmax(0,1fr);gap:90px;margin-top:64px;padding-top:12px;border-top:1px solid var(--line)}
+.lg-toc{position:sticky;top:96px;align-self:start;padding-top:34px}
+.lg-toc .s-eb{font-size:13px;padding:0 12px 12px}
+.lg-toc nav{display:grid;gap:2px}
+.lg-toc nav a{position:relative;display:grid;grid-template-columns:34px 1fr;gap:4px;align-items:baseline;padding:8px 12px;border-radius:10px;font-family:var(--cond);font-weight:800;font-size:16.5px;line-height:1.1;letter-spacing:.02em;text-transform:uppercase;color:var(--ink-2)}
+.lg-toc nav.plain a{grid-template-columns:1fr}
+.lg-toc nav a em{font-style:normal;font-weight:900;color:var(--ink-3)}
+.lg-toc nav a:hover{color:var(--ink)}
+.lg-toc nav a.on{color:var(--ink);background:var(--bg-3)}
+.lg-toc nav a.on em{color:var(--red)}
+.lg-toc nav a.on::before{content:"";position:absolute;left:5px;top:9px;bottom:9px;width:3px;border-radius:3px;background:var(--red)}
+.lg-help{margin-top:28px;padding:22px}
+.lg-help b{display:block;font-family:var(--cond);font-weight:900;font-style:italic;font-size:26px;line-height:.9;text-transform:uppercase}
+.lg-help p{margin-top:10px;font-size:14px;line-height:1.5;color:var(--ink-2)}
+.lg-help p a{color:var(--ink);text-decoration:underline;text-decoration-color:var(--red);text-underline-offset:3px;overflow-wrap:anywhere}
+.lg-help .btn{margin-top:16px;width:100%;height:42px}
+.lg-help .btn svg{width:15px;height:15px}
+.lg-doc{min-width:0}
+.lg-sec{position:relative;padding:40px 0 42px;border-bottom:1px solid var(--line);scroll-margin-top:90px}
+.lg-sec:last-child{border-bottom:0}
+.lg-sec h2{display:flex;align-items:baseline;gap:12px;margin-bottom:20px;font-family:var(--cond);font-weight:900;font-style:italic;font-size:42px;line-height:.92;text-transform:uppercase;letter-spacing:-.005em}
+.lg-sec h2 .n{flex:none;min-width:62px;font-size:58px;line-height:.8;color:transparent;-webkit-text-stroke:1.5px var(--red)}
+.lg-sec > p,.lg-sec > ul{max-width:680px}
+.lg-sec p,.lg-sec li{font-size:16.5px;line-height:1.72;color:var(--ink-2)}
+.lg-sec p + p,.lg-sec ul + p,.lg-sec .lg-tbl + p{margin-top:14px}
+.lg-sec p + ul{margin-top:14px}
+.lg-sec strong{color:var(--ink);font-weight:600}
+.lg-sec a{color:var(--ink);text-decoration:underline;text-decoration-color:var(--red);text-decoration-thickness:1.5px;text-underline-offset:4px;overflow-wrap:anywhere}
+.lg-sec ul{display:grid;gap:10px;list-style:none;padding:0}
+.lg-sec li{position:relative;padding-left:28px}
+.lg-sec li::before{content:"";position:absolute;left:2px;top:.78em;width:13px;height:4px;border-radius:2px;background:var(--red);transform:skewX(var(--skew))}
+.lg-sec:target{margin:14px 0 14px -40px;padding:40px 40px 42px;background:var(--bg-2);border:1px solid var(--line-2);border-radius:22px}
+.lg-sec:target::before{content:"";position:absolute;left:7px;top:34px;bottom:34px;width:3px;border-radius:3px;background:var(--red)}
+.lg-tbl{margin-top:4px;border:1px solid var(--line-2);background:var(--bg-2);border-radius:20px;overflow:hidden}
+.lg-tbl > div{display:grid;grid-template-columns:minmax(0,1.25fr) minmax(0,1fr);gap:28px;padding:16px 22px;border-top:1px solid var(--line)}
+.lg-tbl > div:first-child{border-top:0;padding:14px 22px;background:var(--bg-3)}
+.lg-tbl > div:first-child span{font-family:var(--cond);font-weight:800;font-size:14px;letter-spacing:.14em;text-transform:uppercase;color:var(--ink-3)!important}
+.lg-tbl > div span{font-size:14.5px;line-height:1.55;color:var(--ink-2)}
+.lg-tbl > div span:first-child{color:var(--ink)}
+.lg-foot{margin-top:100px}
+.nf{position:relative;overflow:hidden;padding:96px 0 120px}
+.nf .s-dots{right:0;top:0;width:min(900px,100%);height:640px;-webkit-mask:linear-gradient(230deg,#000 0,transparent 70%)}
+.nf .big{position:absolute;right:-30px;top:40px;font-family:var(--cond);font-weight:900;font-style:italic;font-size:520px;line-height:.8;color:transparent;-webkit-text-stroke:2px rgba(255,255,255,.07);letter-spacing:-.02em;pointer-events:none}
+.nf .in{position:relative}
+.nf h1{margin-top:22px;max-width:820px;font-family:var(--cond);font-weight:900;font-style:italic;font-size:128px;line-height:.82;text-transform:uppercase;letter-spacing:-.012em}
+.nf h1 .br::after{content:"";position:absolute;z-index:-1;left:-24px;right:-52px;top:30%;height:74%;background:url(/img/v5/brush.svg) center/100% 100% no-repeat;transform:rotate(-2deg)}
+.nf .s-lead{margin-top:28px;font-size:19px}
+.nf .s-acts{margin-top:40px;flex-wrap:wrap}
+.nf-pk{display:flex;align-items:center;gap:10px;margin-top:70px}
+.nf-pk i{width:78px;height:52px;display:grid;place-items:center;border-radius:10px;background:var(--ink);color:var(--bg);font-family:var(--cond);font-weight:900;font-size:22px;font-style:normal;transform:skewX(var(--skew))}
+.nf-pk i.lost{width:110px;background:transparent;color:var(--red);box-shadow:inset 0 0 0 2px var(--red)}
+.nf-pk i.wait{background:var(--bg-3);color:var(--ink-3);box-shadow:inset 0 0 0 1px var(--line-2)}
+.nf-pk span{margin-left:18px;font-family:var(--cond);font-weight:800;font-size:15px;letter-spacing:.14em;text-transform:uppercase;color:var(--ink-3)}
+.nf-pk span b{color:var(--red)}
+.nf-go{display:flex;flex-wrap:wrap;align-items:center;gap:10px;margin-top:34px;font-size:14.5px;color:var(--ink-3)}
+.nf-go a{height:34px;padding:0 14px;display:inline-grid;place-items:center;border-radius:999px;background:var(--bg-2);border:1px solid var(--line-2);font-family:var(--cond);font-weight:800;font-size:14px;letter-spacing:.08em;text-transform:uppercase;color:var(--ink)}
+.nf-go a:hover{border-color:var(--red)}
+@media (max-width:1080px){
+  .lg-gl{grid-template-columns:1fr 1fr}
+  .lg-wrap{grid-template-columns:1fr;gap:0}
+  .lg-toc{position:static}
+  .lg-toc nav{grid-template-columns:1fr 1fr}
+  .lg-hero h1{font-size:88px}
+  .nf h1{font-size:96px}
+  .nf .big{font-size:360px}
+}
+@media (max-width:760px){
+  .lg-nav .r > a:not(.btn) span{display:none}
+  .lg-hero{padding-top:50px}
+  .lg-hero h1{font-size:clamp(52px,15vw,80px)}
+  .lg-hero h1 .br::after{left:-12px;right:-24px}
+  .lg-gl{grid-template-columns:1fr;margin-top:36px}
+  .lg-gl b{font-size:42px}
+  .lg-toc nav{grid-template-columns:1fr}
+  .lg-sec h2{font-size:32px}
+  .lg-sec h2 .n{min-width:48px;font-size:44px}
+  .lg-sec p,.lg-sec li{font-size:16px}
+  .lg-sec:target{margin-left:-14px;margin-right:-14px;padding:30px 18px}
+  .lg-tbl > div{grid-template-columns:1fr;gap:6px;padding:14px 16px}
+  .lg-tbl > div:first-child{display:none}
+  .lg-foot{margin-top:70px}
+  .nf{padding:56px 0 80px}
+  .nf h1{font-size:clamp(52px,15vw,80px)}
+  .nf h1 .br::after{left:-12px;right:-24px}
+  .nf .big{font-size:220px;top:auto;bottom:20px;right:-20px}
+  .nf .s-acts .btn{flex:1 1 100%}
+  .nf-pk{gap:6px;margin-top:50px;flex-wrap:wrap}
+  .nf-pk i{width:46px;height:40px;font-size:17px}
+  .nf-pk i.lost{width:70px}
+  .nf-pk span{margin:10px 0 0;width:100%;font-size:13px}
+}
 </style>
 </head>
 <body>
-<div class="wrap">
-<div class="top"><a class="logo" href="/"><img src="/rago-wordmark.svg" alt="Rago Optimizer"></a><a class="back" href="/">Back to the site</a></div>
-<h1>This page doesn't exist.</h1>
-<p class="upd">Error 404</p>
-<p>The link may be old or mistyped.</p>
-<p style="margin-top:28px;display:flex;gap:10px;flex-wrap:wrap"><a class="back" href="/" style="color:#0A0A0B;background:#FF3B30;box-shadow:none;font-weight:600;text-decoration:none;padding:10px 18px;border-radius:999px">Back to Rago Optimizer</a><a class="back" href="/#pricing" style="text-decoration:none;padding:10px 18px;border-radius:999px">See pricing</a></p>
-<div class="foot"><a href="/terms.html">Terms of Sale</a><a href="/privacy.html">Privacy Policy</a><a href="/terms.html#cancel">Cancellation</a><a href="/">Rago Optimizer</a></div>
-</div>
+<!-- icons -->
+<svg class="sprite" width="0" height="0" aria-hidden="true" focusable="false"><defs><filter id="rgh-face" x="-20%" y="-20%" width="140%" height="140%" primitiveUnits="userSpaceOnUse" color-interpolation-filters="sRGB"><feTurbulence type="fractalNoise" baseFrequency="1.7" numOctaves="2" seed="3" result="n"/><feDisplacementMap in="SourceGraphic" in2="n" scale="0.75" xChannelSelector="R" yChannelSelector="G" result="d"/><feTurbulence type="fractalNoise" baseFrequency="1.3" numOctaves="2" seed="9" result="s"/><feColorMatrix in="s" type="matrix" values="0 0 0 0 0  0 0 0 0 0  0 0 0 0 0  -16 0 0 0 12.4" result="sm"/><feComposite in="d" in2="sm" operator="in"/></filter><filter id="rgh-back" x="-20%" y="-20%" width="140%" height="140%" primitiveUnits="userSpaceOnUse" color-interpolation-filters="sRGB"><feTurbulence type="fractalNoise" baseFrequency="1.3" numOctaves="2" seed="14" result="n"/><feDisplacementMap in="SourceGraphic" in2="n" scale="1.0" xChannelSelector="G" yChannelSelector="R" result="d"/><feTurbulence type="fractalNoise" baseFrequency="1.1" numOctaves="2" seed="20" result="s"/><feColorMatrix in="s" type="matrix" values="0 0 0 0 0  0 0 0 0 0  0 0 0 0 0  -14 0 0 0 10.9" result="sm"/><feComposite in="d" in2="sm" operator="in"/></filter><filter id="rgh-face-s" x="-20%" y="-20%" width="140%" height="140%" primitiveUnits="userSpaceOnUse" color-interpolation-filters="sRGB"><feTurbulence type="fractalNoise" baseFrequency="1.2" numOctaves="2" seed="3" result="n"/><feDisplacementMap in="SourceGraphic" in2="n" scale="0.45" xChannelSelector="R" yChannelSelector="G" result="d"/></filter><filter id="rgh-back-s" x="-20%" y="-20%" width="140%" height="140%" primitiveUnits="userSpaceOnUse" color-interpolation-filters="sRGB"><feTurbulence type="fractalNoise" baseFrequency="1.0" numOctaves="2" seed="14" result="n"/><feDisplacementMap in="SourceGraphic" in2="n" scale="0.6" xChannelSelector="G" yChannelSelector="R" result="d"/></filter><filter id="rgh-face-l" x="-20%" y="-20%" width="140%" height="140%" primitiveUnits="userSpaceOnUse" color-interpolation-filters="sRGB"><feTurbulence type="fractalNoise" baseFrequency="2.4" numOctaves="2" seed="3" result="n"/><feDisplacementMap in="SourceGraphic" in2="n" scale="0.42" xChannelSelector="R" yChannelSelector="G" result="d"/><feTurbulence type="fractalNoise" baseFrequency="3.2" numOctaves="2" seed="9" result="s"/><feColorMatrix in="s" type="matrix" values="0 0 0 0 0  0 0 0 0 0  0 0 0 0 0  -16 0 0 0 13.9" result="sm"/><feComposite in="d" in2="sm" operator="in"/></filter><filter id="rgh-back-l" x="-20%" y="-20%" width="140%" height="140%" primitiveUnits="userSpaceOnUse" color-interpolation-filters="sRGB"><feTurbulence type="fractalNoise" baseFrequency="2.0" numOctaves="2" seed="14" result="n"/><feDisplacementMap in="SourceGraphic" in2="n" scale="0.55" xChannelSelector="G" yChannelSelector="R" result="d"/><feTurbulence type="fractalNoise" baseFrequency="2.8" numOctaves="2" seed="20" result="s"/><feColorMatrix in="s" type="matrix" values="0 0 0 0 0  0 0 0 0 0  0 0 0 0 0  -14 0 0 0 12.6" result="sm"/><feComposite in="d" in2="sm" operator="in"/></filter></defs>
+<symbol id="i-left" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m15 18-6-6 6-6"/></g></symbol>
+</svg>
+<!-- /icons -->
+<header class="s-nav" id="top"><span class="brand"><a class="s-logo" href="/" aria-label="Rago Optimizer home"><img src="/img/v5/rago-icon.svg" alt="" width="34" height="34"><b>rago</b></a></span><nav aria-label="Site"><a href="/#why">Why Rago</a><a href="/#features">Features</a><a href="/route.html">Rago Route</a><a href="/tweaks.html">Tweaks</a><a href="/reviews.html">Reviews</a><a href="/#pricing">Pricing</a><a href="/#faq">FAQ</a></nav><div class="r"><a class="hide-m" href="https://account.rago-optimizer.com/login">Sign in</a><a class="btn red" href="/#pricing">Get Premium</a></div></header>
+<main>
+<section class="nf"><span class="s-dots" aria-hidden="true"></span><span class="big" aria-hidden="true">404</span><div class="in">
+  <p class="s-eb">Error <b>//</b> 404</p><h1>This page <span class="br">doesn't exist.</span></h1>
+  <p class="s-lead">The link may be old or mistyped.</p>
+  <div class="s-acts"><a class="btn red xl" href="/"><svg class="i" aria-hidden="true"><use href="#i-left"/></svg>Back to Rago Optimizer</a><a class="btn xl" href="/#pricing">See pricing</a></div>
+  <div class="nf-pk" aria-hidden="true"><i>1</i><i>2</i><i>3</i><i class="lost">404</i><i class="wait">5</i><span>packet lost <b>//</b> this page never arrived</span></div>
+  <nav class="nf-go" aria-label="Popular pages">Or go to<a href="/tweaks.html">Tweaks</a><a href="/route.html">Rago Route</a><a href="/reviews.html">Reviews</a><a href="/#faq">FAQ</a></nav>
+</div></section>
+</main>
+<footer class="s-foot"><div class="sw5"><div class="row"><div><a class="s-logo" href="/" aria-label="Rago Optimizer home"><img src="/img/v5/rago-icon.svg" alt="" width="34" height="34"><b>rago</b></a><p class="motto">every millisecond counts.</p></div>
+  <nav class="cols" aria-label="Footer"><div><b>product</b><a href="/#features">Features</a><a href="/tweaks.html">Tweaks</a><a href="/route.html">Rago Route</a><a href="/#pricing">Pricing</a><a href="/#faq">FAQ</a></div><div><b>community</b><a href="https://discord.gg/cbCxCBx8vJ" target="_blank" rel="noopener">Discord</a><a href="/partners.html">Partners</a><a href="https://account.rago-optimizer.com/affiliate">Affiliate program</a><a href="/reviews.html">Reviews</a></div><div><b>account</b><a href="https://account.rago-optimizer.com/login">Sign in</a><a href="https://account.rago-optimizer.com/signup">Create account</a></div><div><b>legal</b><a href="/terms.html">Terms</a><a href="/privacy.html">Privacy</a><a href="/terms.html#cancel">Cancellation</a></div></nav></div>
+  <p class="legal">Rago Optimizer changes Windows settings. Results depend on your hardware and connection. A restore point is offered before advanced tweaks. Minecraft is a trademark of Mojang Studios; Rago Optimizer isn't affiliated with Mojang or Microsoft. © 2026 Rago Optimizer, by KALISO and RAGO.</p></div></footer>
+<script>
+const top5 = document.getElementById("top"); const onTop = () => top5.classList.toggle("scrolled", scrollY > 10); addEventListener("scroll", onTop, { passive: true }); onTop();
+</script>
 </body>
 </html>
