@@ -689,3 +689,29 @@ strong{font-weight:600}
 .dash-head .display .br::after{content:none}
 @media (max-width:560px){.btn-lg{--h:52px;padding:0 20px;font-size:16px;max-width:100%}.hero-main .row .btn-lg{width:100%}}
 @media (max-width:360px){.btn-lg{white-space:normal;text-align:center;line-height:1.15}}
+
+/* ---- Printed icons and red checks (Sofiene, 22/11 evening) ---- */
+/* Every icon is a Rago "printed" icon (views.js ICON): face in the text colour, red copy shifted behind. */
+.pi-defs{position:absolute;width:0;height:0;overflow:hidden;pointer-events:none}
+svg.pi{overflow:visible;fill:currentColor;stroke:none}
+.pi .pb{color:var(--rg-red-500)}
+.btn-primary .pi .pb,.btn-buy .pi .pb,.slots li.on .pi .pb,.steps .now .pi .pb{color:var(--rg-red-700)}
+.device-icon svg,.plan-icon svg{width:22px;height:22px}
+.device-icon,.plan-icon{color:var(--rg-text-1)}
+.empty svg{width:28px;height:28px;color:var(--rg-text-2)}
+.alert svg{width:18px;height:18px}
+.link-arrow svg{width:15px;height:15px}
+/* Validated = red, never green or white (steps, success messages, affiliate slots, badges). */
+.steps .done .steps-dot{background:var(--rg-red-500);color:var(--rg-text-inverse)}
+.steps .done .pi .pb{color:var(--rg-red-700)}
+.steps li.done{color:var(--rg-text-1)}
+.alert-ok{background:var(--rg-red-a12);border-color:rgba(255,59,48,.35);color:var(--rg-text-1)}
+.alert-ok svg{color:var(--rg-red-500)}
+.alert-ok .pi .pb{color:var(--rg-red-700)}
+.slots-full li.on{background:var(--rg-red-500);box-shadow:0 6px 18px -6px rgba(255,59,48,.7)}
+.badge-ok{color:var(--rg-red-400);background:var(--rg-red-a12)}
+.ring-full .ring-bar{stroke:var(--rg-red-500);filter:drop-shadow(0 0 6px rgba(255,59,48,.45))}
+@keyframes beat{0%{box-shadow:0 0 0 0 rgba(255,59,48,.5)}70%,100%{box-shadow:0 0 0 6px rgba(255,59,48,0)}}
+.device-icon svg,.plan-icon svg{width:27px;height:27px}
+.device-empty .device-icon{color:var(--rg-text-2)}
+.steps li.now::before,.steps li.done + li.now::before{background:var(--rg-red-500);border-color:var(--rg-red-500)}
