@@ -29,8 +29,9 @@
 <meta name="description" content="Rago Optimizer tunes Windows, your network and Minecraft for steadier ping, smoother frames and less input lag. Nearly 220 tweaks, free to start.">
 <link rel="preload" href="fonts/BarlowCondensed-900-italic.woff2" as="font" type="font/woff2" crossorigin>
 <link rel="preload" href="fonts/Barlow-400.woff2" as="font" type="font/woff2" crossorigin>
-<link rel="stylesheet" href="v5.css?v=84f9d1d923">
-<script src="v5.js?v=25a4c2a9fa" defer></script>
+<script>document.documentElement.style.setProperty("--k",Math.max(.78,Math.min(1.45,innerWidth/1440,innerHeight/1000)).toFixed(3))</script>
+<link rel="stylesheet" href="v5.css?v=6866729f6e">
+<script src="v5.js?v=f17650dd49" defer></script>
 <noscript><style>.js-only{display:none!important}</style></noscript>
 <style>
 /* Layout of the home page (design v5 "Match day", 22/11/2026): the shared parts are in v5.css, here only what this page
@@ -197,6 +198,142 @@ details.s-q p{padding:0 0 24px;font-size:15.5px;line-height:1.6;color:var(--ink-
   .rev-row{flex-wrap:wrap;width:auto;justify-content:center;padding-inline:16px}
   .rev-row > [aria-hidden="true"],.rev-pause{display:none}
 }
+
+/* =====================================================================================================================
+   2e retour de Sofiene (22/11, 22 h 45) : un écran par section sur ordinateur, héros à la hauteur de la fenêtre,
+   « What delays your hit » animé (gains en vert), barre en jeu entière, « Now Rago plays with you » qui défile de
+   côté, étapes avec leurs séparateurs, FAQ sur deux colonnes et animée.
+   ===================================================================================================================== */
+/* What delays your hit : un paquet part en même temps sur les deux lignes ; avec Rago il arrive avant le contrôle du
+   serveur (vert), sans Rago après (il attend le suivant). Le temps gagné est en vert. */
+.hit-rows{position:relative}
+.s-hit .row{position:relative}
+.s-track{overflow:visible}
+.s-track .pk{position:absolute;left:0;top:50%;width:16px;height:16px;margin:-8px 0 0 -8px;border-radius:50%;background:#F5F5F6;box-shadow:0 0 0 4px rgba(245,245,246,.14),0 0 18px rgba(245,245,246,.5);opacity:0;z-index:2}
+.s-track .res{position:absolute;top:50%;translate:0 -50%;padding:5px 10px;border-radius:7px;font-style:normal;font-family:var(--cond);font-weight:800;font-size:13px;letter-spacing:.1em;text-transform:uppercase;white-space:nowrap;opacity:0;z-index:3}
+.s-track .res.late{left:auto;right:30px;color:var(--red);background:rgba(255,59,48,.12);box-shadow:inset 0 0 0 1px rgba(255,59,48,.5)}
+.s-track .res.ok{left:calc(73% + 12px);color:var(--red-ink);background:var(--ok)}
+.s-track .saved{position:absolute;left:73%;width:27%;top:-6px;bottom:-6px;border-radius:9px;border:1.5px dashed rgba(61,220,151,.7);background:repeating-linear-gradient(-60deg,rgba(61,220,151,.18) 0 6px,transparent 6px 12px);transform:skewX(var(--skew));opacity:0;display:grid;place-items:center}
+.s-track .saved b{transform:skewX(calc(var(--skew) * -1));font-family:var(--cond);font-weight:800;font-size:13px;letter-spacing:.12em;text-transform:uppercase;color:var(--ok)}
+.hit-rows .chk{position:absolute;top:-34px;bottom:-12px;left:calc(150px + (100% - 150px) * .8);width:2px;background:linear-gradient(var(--ok),rgba(61,220,151,.3));border-radius:2px;opacity:0;z-index:1}
+.hit-rows .chk b{position:absolute;left:50%;top:-22px;translate:-50% 0;white-space:nowrap;font-family:var(--cond);font-weight:800;font-size:12px;letter-spacing:.14em;text-transform:uppercase;color:var(--ok)}
+.s-leg em{color:var(--ok)}
+.s-hit.go .chk{opacity:1;transition:opacity .6s 1.2s}
+.s-hit.run .s-track .pk{animation:hitB 4.6s cubic-bezier(.45,0,.4,1) infinite}
+.s-hit.run .row.w .pk{animation-name:hitW}
+.s-hit.run .row:not(.w) .res{animation:resB 4.6s linear infinite}
+.s-hit.run .row.w .res{animation:resW 4.6s linear infinite}
+.s-hit.run .saved{animation:savedW 4.6s linear infinite}
+.s-hit.run .chk{animation:chkP 4.6s linear infinite}
+@keyframes hitB{0%{left:0;opacity:0}4%{opacity:1}62%{left:100%;opacity:1}86%{left:100%;opacity:1}92%,100%{left:100%;opacity:0}}
+@keyframes hitW{0%{left:0;opacity:0}4%{opacity:1}45%{left:73%;opacity:1}86%{left:73%;opacity:1}92%,100%{left:73%;opacity:0}}
+@keyframes resB{0%,62%{opacity:0;scale:.8}66%,86%{opacity:1;scale:1}92%,100%{opacity:0}}
+@keyframes resW{0%,45%{opacity:0;scale:.8}49%,86%{opacity:1;scale:1}92%,100%{opacity:0}}
+@keyframes savedW{0%,47%{opacity:0}53%,86%{opacity:1}92%,100%{opacity:0}}
+@keyframes chkP{0%,44%{box-shadow:none}48%{box-shadow:0 0 0 4px rgba(61,220,151,.25),0 0 24px rgba(61,220,151,.6)}56%,100%{box-shadow:none}}
+@media (max-width:1080px){.hit-rows .chk{left:80%;top:-10px}.s-track .saved b{display:none}.s-track .res.ok{left:auto;right:calc(27% + 8px);font-size:11px;padding:4px 8px}.s-track .res.late{font-size:11px;padding:4px 8px}}
+@media (prefers-reduced-motion:reduce){.s-track .pk{display:none}.s-track .res,.s-track .saved{opacity:1}.s-track .pk{animation:none}}
+/* étapes : un trait en haut de chaque colonne et un séparateur entre les colonnes */
+.s-how{border-top:0;gap:0}
+.s-how li{position:relative;padding:30px 28px 0;border-top:1px solid var(--line-2);border-left:1px solid var(--line)}
+.s-how li:first-child{border-left:0;padding-left:0}
+.s-how li::before{content:"";position:absolute;left:0;top:-1px;width:56px;height:3px;background:var(--red)}
+.s-how li:not(:first-child)::before{left:28px}
+/* illustrations des cartes : des images, pas des boutons */
+.s-bento .vis,.s-feat .s-srch,.s-feat .s-chips,.s-feat .s-toast,.s-map,.s-dcv,#affvis{pointer-events:none;user-select:none}
+/* barre en jeu : la scène entière, à sa proportion (1 100 × 636) */
+.s-b.ig .vis{height:auto;aspect-ratio:1100/636}
+/* FAQ : deux colonnes, les réponses glissent et apparaissent */
+.s-q .a > div > *{opacity:0;translate:0 -8px;transition:opacity .3s,translate .4s var(--out)}
+.s-q.open .a > div > *{opacity:1;translate:0 0;transition:opacity .45s .08s,translate .5s .08s var(--out)}
+.s-q .pm{transition:rotate .35s var(--out)}
+.s-q.open .pm{rotate:180deg}
+.s-q .qh{transition:color .2s,padding-left .3s var(--out)}
+.s-q .qh:hover{padding-left:6px}
+.s-q{position:relative}
+.s-q::after{content:"";position:absolute;left:0;top:-1px;height:1.5px;width:0;background:var(--red);transition:width .5s var(--out)}
+.s-q.open::after,.s-q:hover::after{width:100%}
+
+@media (min-width:1081px){
+  /* héros : la hauteur de la fenêtre, le bandeau rouge en bas de l'écran, la pastille juste au-dessus du titre */
+  .s-hero{height:max(600px,calc(100svh - 76px))}
+  .s-hero .s-hl{top:calc(50% - 29px);transform:translateY(-50%);width:calc(640px * var(--k,1))}
+  .s-hero .s-h1{font-size:calc(128px * var(--k,1));margin-top:calc(16px * var(--k,1))}
+  .s-hero h1{margin-top:22px}
+  .s-hero .s-hl .s-lead{font-size:calc(18px * min(var(--k,1),1.15));max-width:calc(520px * var(--k,1))}
+  .s-hero .s-shot{top:calc(50% - 29px);transform:translateY(-50%);left:calc(max(var(--g),calc((100% - var(--cw)) / 2)) + 670px * var(--k,1));width:calc(900px * var(--k,1))}
+  .s-hero .s-shot img.sc{width:100%}
+  /* sections : têtes plus serrées pour tenir dans l'écran */
+  .s-steps,.s-bento,.s-how,.s-feat{margin-top:calc(40px * var(--k,1))}
+  .s-steps{gap:14px}
+  .s-hit{margin-top:calc(36px * var(--k,1))}
+  .s-hit .row{margin-top:calc(26px * var(--k,1))}
+  .s-track{height:calc(44px * var(--k,1))}
+  .s-route .s-h2{font-size:calc(72px * var(--k,1))}
+  .s-faq .s-h2{font-size:calc(80px * var(--k,1))}
+  .s-dc .s-h2,.s-af .s-h2{font-size:calc(58px * var(--k,1))}
+  .s-final h2{font-size:calc(110px * var(--k,1))}
+  .s-final .big{font-size:calc(290px * var(--k,1))}
+  .s-faq .faq{columns:2;column-gap:40px}
+  .s-faq .s-q{break-inside:avoid}
+  .s-faq .s-q:last-child{border-bottom:0}
+  .s-faq .faq{border-bottom:1px solid var(--line-2)}
+}
+@media (min-width:1081px) and (min-height:640px){
+  /* chaque section tient dans l'écran : fonctionnalités, tarifs, tableau, communauté plus serrés */
+  .s-hr{max-width:440px}
+  .s-hr .s-more{margin-top:14px}
+  #features .s-m{min-height:0;padding:calc(8px * var(--k,1)) 14px}
+  #features .s-mg{margin-top:14px}
+  #features .s-fcol{gap:12px}
+  #features .s-fc{padding:calc(18px * var(--k,1)) 24px}
+  #features .s-srch{margin-top:12px}
+  #features .s-srch .in{height:calc(40px * var(--k,1))}
+  #features .s-srch .r{height:calc(34px * var(--k,1))}
+  #features .s-chips{margin-top:12px}
+  #features .s-chips span{height:30px}
+  #features .s-toast{margin-top:12px;padding:9px 14px}
+  #features .s-split{margin-top:14px;padding-top:14px}
+  #plans .s-h2{font-size:calc(54px * var(--k,1))}
+  #plans .s-head{gap:32px}
+  #plans .s-h2 br{display:none}
+  #plans .s-h2 .mo-ln{display:inline-block;margin-right:.22em}
+  #features .s-mods h3,#features .s-fc h3{font-size:calc(27px * var(--k,1))}
+  #features .s-fc p{margin-top:6px}
+  .s-pl .sub{margin-top:4px}
+  .s-plans{margin-top:calc(16px * var(--k,1))}
+  .s-pl{padding:calc(22px * var(--k,1)) 26px}
+  .s-pl h3{font-size:calc(34px * var(--k,1))}
+  .s-pl .pr{margin-top:calc(14px * var(--k,1))}
+  .s-pl .pr b{font-size:calc(56px * var(--k,1))}
+  .s-pl .bil{margin-top:6px}
+  .s-pl ul{gap:calc(6px * var(--k,1));margin:calc(14px * var(--k,1)) 0 calc(16px * var(--k,1));padding-top:calc(14px * var(--k,1))}
+  .s-pl ul .s-ck{font-size:13.5px;line-height:1.38}
+  .s-pl .s-addon{margin:-4px 0 14px;padding:11px 14px}
+  .s-pl .fine{margin-top:8px;font-size:11.5px}
+  #compare .s-ronly{margin-top:0}
+  #compare .s-cmp{margin-top:12px;padding-top:0}
+  #compare .s-cmp th{height:calc(48px * var(--k,1))}
+  #compare .s-cmp td{height:calc(31px * var(--k,1));font-size:14px}
+  #community .s-two + .s-head{margin-top:calc(30px * var(--k,1))}
+  #features .s-feat{margin-top:calc(26px * var(--k,1))}
+  #community .s-h2.sm{font-size:calc(56px * var(--k,1))}
+  #community .s-pts{margin-top:calc(22px * var(--k,1))}
+  .s-dc,.s-af{padding:calc(26px * var(--k,1)) 36px calc(24px * var(--k,1))}
+  .s-chan{padding-top:calc(20px * var(--k,1))}
+  /* Now Rago plays with you : la section se fige à l'écran et les cartes défilent de côté (script partagé du site, classe .hs-on) */
+  .hs-on{position:relative;display:block!important;min-height:0!important;padding:0!important}
+  .hs-on > .sw5{position:sticky;top:0;height:100svh;display:flex;flex-direction:column;justify-content:center;padding-top:76px;overflow:visible}
+  .hs-on .s-bento{display:flex;gap:16px;width:max-content;align-items:stretch;will-change:translate}
+  .hs-on .s-bento > .s-b{flex:none;width:calc(420px * var(--k,1))}
+  .hs-on .s-bento > .s-b.c3{width:calc(520px * var(--k,1))}
+  .hs-on .s-bento > .s-b.ig{width:calc(1180px * var(--k,1));grid-template-columns:minmax(0,1fr) calc(340px * var(--k,1))}
+  .hs-on .s-bento > .s-b.ig .vis{aspect-ratio:auto;height:100%;min-height:calc(440px * var(--k,1))}
+  .hs-on .s-fin{margin-top:calc(26px * var(--k,1))}
+  .hs-on .hs-bar{display:block}
+  .hs-bar{display:none;position:relative;height:3px;margin-top:22px;background:var(--line-2);border-radius:3px;overflow:hidden}
+  .hs-bar i{position:absolute;inset:0;background:var(--red);transform-origin:0 50%;scale:0 1}
+}
 </style>
 </head>
 <body>
@@ -283,11 +420,19 @@ details.s-q p{padding:0 0 24px;font-size:15.5px;line-height:1.6;color:var(--ink-
   <div class="s-head rv"><div><p class="s-eb">why rago <b>//</b> the server decides</p><h2 class="s-h2">Why your hits<br>don't register</h2></div>
   <p class="s-lead">The server decides. <b>Your timing decides what it sees.</b> Here is what happens between your click and the server.</p></div>
   <div class="s-steps rv"><div class="s-card s-step"><b class="n" aria-hidden="true">01</b><p class="k">the journey</p><h3>Every hit takes a trip.</h3><p>Your click goes through your mouse, your PC, your network, then the server. The server checks hits on a fixed beat, 20 times a second.</p></div><div class="s-card s-step"><b class="n" aria-hidden="true">02</b><p class="k">input lag</p><h3>Your click leaves faster.</h3><p>Mouse acceleration makes your aim inconsistent. USB power saving and input queues add delay before your PC even sees the click. Rago turns them off.</p></div><div class="s-card s-step"><b class="n" aria-hidden="true">03</b><p class="k">frame time</p><h3>Your frames stop stuttering.</h3><p>CPU power states and core parking cause uneven frames. Rago keeps the CPU awake so each frame takes the same time.</p></div><div class="s-card s-step"><b class="n" aria-hidden="true">04</b><p class="k">ping jitter</p><h3>Your timing gets consistent.</h3><p>The distance to the server doesn't change. What changes is how much your timing jumps around, so more hits land in the beat they were meant for.</p></div></div>
+</div></section>
+
+<section class="s-sec" id="delay"><div class="sw5">
+  <div class="s-head rv"><div><p class="s-eb">your hit <b>//</b> from click to server</p><h2 class="s-h2">What delays<br>your hit.</h2></div>
+  <p class="s-lead">The server checks hits 20 times a second. <b>Arrive before the check and your hit counts in this beat.</b> Rago cuts what your PC and your connection add on the way.</p></div>
   <div class="s-card s-hit rv" id="hit">
-    <div class="top"><h3>What delays your hit</h3><span class="s-tag">illustration</span></div>
+    <div class="top"><h3>One click, two PCs</h3><span class="s-tag">illustration</span></div>
     <div class="s-ticks" aria-hidden="true"><span>server checks hits 20 times a second</span></div>
-    <div class="row"><b>before</b><div class="s-track" role="img" aria-label="Before Rago: input lag, frame time and ping jitter add up before the distance to the server"><i class="a" style="--w:19%"></i><i class="b" style="--w:17%"></i><i class="c" style="--w:21%"></i><i class="d" style="--w:43%"></i></div></div>
-    <div class="row w"><b>with rago</b><div class="s-track" role="img" aria-label="With Rago: the first three are shorter or steadier, the distance stays the same"><i class="a" style="--w:10%"></i><i class="b" style="--w:12%"></i><i class="c" style="--w:8%"></i><i class="d" style="--w:43%"></i></div></div>
+    <div class="hit-rows">
+    <div class="row"><b>before</b><div class="s-track" role="img" aria-label="Before Rago: input lag, frame time and ping jitter add up before the distance to the server, and the hit arrives after the server's check"><i class="a" style="--w:19%"></i><i class="b" style="--w:17%"></i><i class="c" style="--w:21%"></i><i class="d" style="--w:43%"></i><span class="pk" aria-hidden="true"></span><em class="res late" aria-hidden="true">next check</em></div></div>
+    <div class="row w"><b>with rago</b><div class="s-track" role="img" aria-label="With Rago: the first three are shorter or steadier, the distance stays the same, and the hit arrives before the server's check"><i class="a" style="--w:10%"></i><i class="b" style="--w:12%"></i><i class="c" style="--w:8%"></i><i class="d" style="--w:43%"></i><span class="saved" aria-hidden="true"><b>time saved</b></span><span class="pk" aria-hidden="true"></span><em class="res ok" aria-hidden="true">this check</em></div></div>
+    <span class="chk" aria-hidden="true"><b>server check</b></span>
+    </div>
     <div class="s-leg">
       <div><i style="background:var(--red)"></i><div><b>input lag</b><span>Your mouse and PC</span><em>shorter</em></div></div>
       <div><i style="background:repeating-linear-gradient(-60deg,var(--red) 0 4px,rgba(255,59,48,.35) 4px 8px)"></i><div><b>frame time</b><span>Your CPU and GPU</span><em>steadier</em></div></div>
@@ -300,7 +445,8 @@ details.s-q p{padding:0 0 24px;font-size:15.5px;line-height:1.6;color:var(--ink-
 
 <section class="s-sec" id="features"><div class="sw5">
   <div class="s-head rv"><div><p class="s-eb">inside the app <b>//</b> <span class="n-all">218</span> tweaks</p><h2 class="s-h2" id="feat-h">Nearly 220 tweaks.<br>One clear app.</h2></div>
-  <p class="s-lead">Ten sections, each with what it changes. <b>Every tweak says what it does</b>, and what it costs, before it runs.</p></div>
+  <div class="s-hr"><p class="s-lead">Ten sections, each with what it changes. <b>Every tweak says what it does</b>, and what it costs, before it runs.</p>
+  <p class="s-more"><a class="s-link" href="tweaks.html">All <span class="n-all">218</span> tweaks, explained one by one <svg class="i" aria-hidden="true"><use href="#i-arrow"/></svg></a></p></div></div>
   <div class="s-feat rv">
     <div class="s-card s-mods"><div class="t"><h3>ten sections</h3><span class="s-tag">free and premium</span></div><div class="s-mg" id="mods">
 <!-- mods -->
@@ -325,7 +471,6 @@ details.s-q p{padding:0 0 24px;font-size:15.5px;line-height:1.6;color:var(--ink-
         <div class="s-toast" aria-hidden="true"><svg class="i" aria-hidden="true"><use href="#i-check"/></svg><div><b>Restore point created</b><span>Restore Windows with System Restore.</span></div></div></div>
     </div>
   </div>
-  <p class="s-more rv"><a class="s-link" href="tweaks.html">All <span class="n-all">218</span> tweaks, explained one by one <svg class="i" aria-hidden="true"><use href="#i-arrow"/></svg></a></p>
 </div></section>
 
 <section class="s-sec" id="new"><div class="sw5">
@@ -386,13 +531,7 @@ details.s-q p{padding:0 0 24px;font-size:15.5px;line-height:1.6;color:var(--ink-
   <p class="s-lead">A ping spike mid-fight, a freeze right before a clutch, a Wi-Fi drop that kicks you from the match: often it isn't your PC, it's the road to the server. Rago Route sends every packet on two roads and quickly rebuilds or resends what's lost, so your game waits less.</p>
   <ul><li class="s-ck"><svg class="i" aria-hidden="true"><use href="#i-check"/></svg><span>Two roads for every packet</span></li><li class="s-ck"><svg class="i" aria-hidden="true"><use href="#i-check"/></svg><span>Lost packets rebuilt or sent again, fast</span></li><li class="s-ck"><svg class="i" aria-hidden="true"><use href="#i-check"/></svg><span>Your connection held open through a short cut</span></li></ul>
   <div class="s-acts"><a class="btn red lg" href="route.html">Discover Rago Route<svg class="i" aria-hidden="true"><use href="#i-arrow"/></svg></a><a class="s-link js-discord" href="https://discord.gg/cbCxCBx8vJ" target="_blank" rel="noopener"><svg class="i" aria-hidden="true"><use href="#i-chat"/></svg>Get notified on Discord</a></div></div>
-  <div class="s-map"><svg viewBox="0 0 560 360"><path d="M100 190 C 190 70, 370 70, 460 190" fill="none" stroke="#ECE9E2" stroke-width="3" stroke-dasharray="10 8"/>
-      <path d="M100 190 C 190 310, 370 310, 460 190" fill="none" stroke="#FF3B30" stroke-width="5"/><rect x="156" y="125" width="14" height="14" fill="#ECE9E2" transform="rotate(-12 163 132)"/><rect x="213" y="101" width="14" height="14" fill="#ECE9E2" transform="rotate(-12 220 108)"/><rect x="193" y="259" width="14" height="14" fill="#FF3B30" transform="rotate(-12 200 266)"/><rect x="273" y="273" width="14" height="14" fill="#FF3B30" transform="rotate(-12 280 280)"/><rect x="371" y="251" width="14" height="14" fill="#FF3B30" transform="rotate(-12 378 258)"/>
-      <g transform="translate(280 100)"><circle r="17" fill="#0A0A0B" stroke="#FF3B30" stroke-width="2.5"/><path d="M-6 -6 6 6M6 -6-6 6" stroke="#FF3B30" stroke-width="3"/></g>
-      <rect x="91" y="181" width="18" height="18" fill="#ECE9E2"/><rect x="451" y="181" width="18" height="18" fill="#FF3B30"/>
-      <text x="84" y="199" text-anchor="end" fill="#ECE9E2" font-family="Barlow Condensed" font-weight="900" font-style="italic" font-size="26">PARIS</text><text x="476" y="199" fill="#ECE9E2" font-family="Barlow Condensed" font-weight="900" font-style="italic" font-size="26">HYPIXEL</text>
-      <text x="280" y="64" fill="#A1A1AA" font-family="Barlow Condensed" font-weight="800" font-size="14" letter-spacing="1.6" text-anchor="middle">ROAD 1</text>
-      <text x="280" y="318" fill="#FF3B30" font-family="Barlow Condensed" font-weight="800" font-size="14" letter-spacing="1.6" text-anchor="middle">ROAD 2</text></svg>
+  <div class="s-map"><svg class="rr" viewBox="0 0 560 360" aria-hidden="true"><defs><filter id="rrg" x="-20%" y="-50%" width="140%" height="200%"><feGaussianBlur stdDeviation="2.4" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge></filter></defs><g class="r1"><path class="b" d="M86 180 C 196 62, 364 62, 474 180"/><path class="b" d="M86 180 C 196 84, 364 84, 474 180"/><path class="b" d="M86 180 C 196 106, 364 106, 474 180"/><g filter="url(#rrg)"><path class="fl" pathLength="100" d="M86 180 C 196 62, 364 62, 474 180" style="--t:2.6s;--w:-0.4s"/><path class="fl lost" pathLength="100" d="M86 180 C 196 84, 364 84, 474 180" style="--t:2.2s;--w:-1.5s"/><path class="fl" pathLength="100" d="M86 180 C 196 106, 364 106, 474 180" style="--t:2.9s;--w:-2.1s"/></g></g><g class="r2"><path class="b" d="M86 180 C 196 298, 364 298, 474 180"/><path class="b" d="M86 180 C 196 276, 364 276, 474 180"/><path class="b" d="M86 180 C 196 254, 364 254, 474 180"/><g filter="url(#rrg)"><path class="fl" pathLength="100" d="M86 180 C 196 298, 364 298, 474 180" style="--t:2.4s;--w:-0.9s"/><path class="fl" pathLength="100" d="M86 180 C 196 276, 364 276, 474 180" style="--t:2.0s;--w:-0.2s"/><path class="fl" pathLength="100" d="M86 180 C 196 254, 364 254, 474 180" style="--t:2.7s;--w:-1.7s"/></g></g><g class="x" style="--t:2.2s;--w:-1.5s" transform="translate(280 108)"><circle r="13" fill="#0A0A0B" stroke="#FF3B30" stroke-width="2"/><path d="M-4.5 -4.5 4.5 4.5M4.5 -4.5-4.5 4.5" stroke="#FF3B30" stroke-width="2.4" stroke-linecap="round"/></g><rect x="77" y="171" width="18" height="18" fill="#ECE9E2"/><rect x="465" y="171" width="18" height="18" fill="#FF3B30"/><text x="70" y="188" text-anchor="end" fill="#ECE9E2" font-family="Barlow Condensed" font-weight="900" font-style="italic" font-size="24">YOUR PC</text><text x="490" y="188" text-anchor="start" fill="#ECE9E2" font-family="Barlow Condensed" font-weight="900" font-style="italic" font-size="24">HYPIXEL</text><text x="280" y="52" text-anchor="middle" fill="#A1A1AA" font-family="Barlow Condensed" font-weight="800" font-size="13" letter-spacing="1.6">ROAD 1</text><text x="280" y="330" text-anchor="middle" fill="#FF3B30" font-family="Barlow Condensed" font-weight="800" font-size="13" letter-spacing="1.6">ROAD 2</text></svg>
     <span class="s-tag ill">illustration</span><p class="cap">lost on road 1 <b>//</b> delivered by road 2</p></div>
 </div></div></section>
 
@@ -413,7 +552,7 @@ details.s-q p{padding:0 0 24px;font-size:15.5px;line-height:1.6;color:var(--ink-
 </section>
 
 <section class="s-sec" id="plans"><div class="sw5">
-  <div class="s-head rv" id="pricing"><div><p class="s-eb">pricing <b>//</b> start free</p><h2 class="s-h2">Start free. Unlock<br>everything with Premium.</h2></div>
+  <div class="s-head rv" id="pricing"><div><p class="s-eb">pricing <b>//</b> start free</p><h2 class="s-h2">Start free. Unlock <br>everything with Premium.</h2></div>
   <div class="s-bill" id="billing" role="group" aria-label="Billing"><button type="button" data-v="month">Monthly</button><button type="button" data-v="year" class="on">Yearly <em id="save">6 months free</em></button></div></div>
   <div class="s-plans">
     <div class="s-card s-pl rv"><div class="hd"><h3>Free</h3></div><p class="sub">Watch, test and clean your PC.</p>
@@ -432,6 +571,9 @@ details.s-q p{padding:0 0 24px;font-size:15.5px;line-height:1.6;color:var(--ink-
       <ul><li class="s-ck"><svg class="i" aria-hidden="true"><use href="#i-check"/></svg><span><b>Everything in Premium</b>, with nothing to renew</span></li><li class="s-ck"><svg class="i" aria-hidden="true"><use href="#i-check"/></svg><span>Every future version: new tweaks, presets and features</span></li><li class="s-ck life-on"><svg class="i" aria-hidden="true"><use href="#i-check"/></svg><span>Already subscribed? Switch from your account page</span></li><li class="s-ck"><svg class="i" aria-hidden="true"><use href="#i-check"/></svg><span>The Premium role on Discord</span></li><li class="s-ck dim"><svg class="i" aria-hidden="true"><use href="#i-monitor"/></svg><span>One license, one PC.</span></li></ul>
       <div class="cta"><a class="btn lg full js-lifetime" role="link" aria-disabled="true">Coming soon</a><p class="fine"><span class="life-on">Secure checkout with Stripe. </span>One-time payment. <a href="terms.html#cancel">No refunds.</a></p></div></div>
   </div>
+</div></section>
+
+<section class="s-sec" id="compare"><div class="sw5">
   <div class="s-ronly rv" id="route-only"><span class="ic"><svg class="i big" aria-hidden="true"><use href="#i-route"/></svg></span><p><b>Already Premium?</b> Add only Rago Route, the anti-lag tunnel for Minecraft (beta): $3 a month or $17.99 a year on top of your Premium, its own subscription, cancel anytime.</p><a class="s-link" href="route.html">See what it does</a><a class="btn js-route-only" href="https://account.rago-optimizer.com/buy/route">Add Rago Route</a></div>
   <div class="s-card s-cmp rv"><table><thead><tr><th scope="col">What you get</th><th scope="col" class="c">Free</th><th scope="col" class="c p">Premium</th></tr></thead><tbody id="cmp"><tr><td>Tweaks unlocked</td><td class="c"><span class="txt">73 of 218</span></td><td class="c p"><span class="txt">All 218</span></td></tr><tr><td>In-game bar: live FPS, ping, CPU, GPU and RAM</td><td class="c"><span class="y" role="img" aria-label="Yes"><svg class="i" aria-hidden="true"><use href="#i-check"></use></svg></span></td><td class="c p"><span class="y" role="img" aria-label="Yes"><svg class="i" aria-hidden="true"><use href="#i-check"></use></svg></span></td></tr><tr><td>In-game bar: switch tweaks mid-match</td><td class="c"><span class="lk" role="img" aria-label="Locked in Free" title="Locked in Free"><svg class="i" aria-hidden="true"><use href="#i-lock"></use></svg></span></td><td class="c p"><span class="y" role="img" aria-label="Yes"><svg class="i" aria-hidden="true"><use href="#i-check"></use></svg></span></td></tr><tr><td>Network test</td><td class="c"><span class="y" role="img" aria-label="Yes"><svg class="i" aria-hidden="true"><use href="#i-check"></use></svg></span></td><td class="c p"><span class="y" role="img" aria-label="Yes"><svg class="i" aria-hidden="true"><use href="#i-check"></use></svg></span></td></tr><tr><td>Packet Optimizer</td><td class="c"><span class="lk" role="img" aria-label="Locked in Free" title="Locked in Free"><svg class="i" aria-hidden="true"><use href="#i-lock"></use></svg></span></td><td class="c p"><span class="y" role="img" aria-label="Yes"><svg class="i" aria-hidden="true"><use href="#i-check"></use></svg></span></td></tr><tr><td>Presets: Minecraft PvP, Max FPS, Low latency, Laptop, Privacy and 15 games</td><td class="c"><span class="lk" role="img" aria-label="Locked in Free" title="Locked in Free"><svg class="i" aria-hidden="true"><use href="#i-lock"></use></svg></span></td><td class="c p"><span class="y" role="img" aria-label="Yes"><svg class="i" aria-hidden="true"><use href="#i-check"></use></svg></span></td></tr><tr><td>Game library</td><td class="c"><span class="txt">Launch games</span></td><td class="c p"><span class="txt">Optimize and play</span></td></tr><tr><td>Clean RAM, cleanup and driver check</td><td class="c"><span class="y" role="img" aria-label="Yes"><svg class="i" aria-hidden="true"><use href="#i-check"></use></svg></span></td><td class="c p"><span class="y" role="img" aria-label="Yes"><svg class="i" aria-hidden="true"><use href="#i-check"></use></svg></span></td></tr><tr><td>Tweaks on at the same time</td><td class="c"><span class="txt">Up to 30</span></td><td class="c p"><span class="txt">No limit</span></td></tr><tr><td>Remove preinstalled apps</td><td class="c"><span class="y" role="img" aria-label="Yes"><svg class="i" aria-hidden="true"><use href="#i-check"></use></svg></span></td><td class="c p"><span class="y" role="img" aria-label="Yes"><svg class="i" aria-hidden="true"><use href="#i-check"></use></svg></span></td></tr><tr><td>Rago Route, the anti-lag tunnel for Minecraft (beta)</td><td class="c"><span class="lk" role="img" aria-label="Locked in Free" title="Locked in Free"><svg class="i" aria-hidden="true"><use href="#i-lock"></use></svg></span></td><td class="c p"><span class="txt">Option: +$3/month or +$17.99/year</span></td></tr><tr><td>Network, hitreg and most latency and graphics card tweaks</td><td class="c"><span class="lk" role="img" aria-label="Locked in Free" title="Locked in Free"><svg class="i" aria-hidden="true"><use href="#i-lock"></use></svg></span></td><td class="c p"><span class="y" role="img" aria-label="Yes"><svg class="i" aria-hidden="true"><use href="#i-check"></use></svg></span></td></tr><tr><td>Minecraft, Expert mode, RBW Mod Off and Game mode On</td><td class="c"><span class="lk" role="img" aria-label="Locked in Free" title="Locked in Free"><svg class="i" aria-hidden="true"><use href="#i-lock"></use></svg></span></td><td class="c p"><span class="y" role="img" aria-label="Yes"><svg class="i" aria-hidden="true"><use href="#i-check"></use></svg></span></td></tr><tr><td>Share and import presets</td><td class="c"><span class="y" role="img" aria-label="Yes"><svg class="i" aria-hidden="true"><use href="#i-check"></use></svg></span></td><td class="c p"><span class="y" role="img" aria-label="Yes"><svg class="i" aria-hidden="true"><use href="#i-check"></use></svg></span></td></tr><tr><td>Restore point and undo for your tweaks</td><td class="c"><span class="y" role="img" aria-label="Yes"><svg class="i" aria-hidden="true"><use href="#i-check"></use></svg></span></td><td class="c p"><span class="y" role="img" aria-label="Yes"><svg class="i" aria-hidden="true"><use href="#i-check"></use></svg></span></td></tr><tr><td>New tweaks from future versions</td><td class="c"><span class="lk" role="img" aria-label="Locked in Free" title="Locked in Free"><svg class="i" aria-hidden="true"><use href="#i-lock"></use></svg></span></td><td class="c p"><span class="y" role="img" aria-label="Yes"><svg class="i" aria-hidden="true"><use href="#i-check"></use></svg></span></td></tr><tr><td>Premium role on Discord</td><td class="c"><span class="no" role="img" aria-label="No"></span></td><td class="c p"><span class="y" role="img" aria-label="Yes"><svg class="i" aria-hidden="true"><use href="#i-check"></use></svg></span></td></tr><tr><td>Free trial</td><td class="c"><span class="no" role="img" aria-label="No"></span></td><td class="c p"><span class="txt">3 days, card required</span></td></tr><tr><td>How you pay</td><td class="c"><span class="txt">Free</span></td><td class="c p"><span class="txt life-off">Monthly or yearly</span><span class="txt life-on">Monthly, yearly or once</span></td></tr><tr><td>License</td><td class="c"><span class="txt">Not needed</span></td><td class="c p"><span class="txt">1 PC per license</span></td></tr></tbody></table></div>
 </div></section>
@@ -470,7 +612,7 @@ details.s-q p{padding:0 0 24px;font-size:15.5px;line-height:1.6;color:var(--ink-
 </div></section>
 
 <section class="s-final"><span class="s-dots" aria-hidden="true"></span><span class="big" aria-hidden="true">RAGO</span><div class="in rv">
-  <p class="s-eb">your next match</p><h2>Tune your PC once. Feel it on the first combo.</h2><p>Start free, or try Premium free for 3 days.</p>
+  <p class="s-eb">your next match</p><h2>Tune your PC once. Feel it on the first combo.</h2>
   <div class="s-acts"><a class="btn xl" href="#pricing"><svg class="i" aria-hidden="true"><use href="#i-zap"/></svg>Try Premium free</a><a class="btn xl gh js-free-app" href="#pricing"><svg class="i" aria-hidden="true"><use href="#i-download"/></svg>Download free</a></div></div></section>
 </main>
 
@@ -715,7 +857,7 @@ const seg = (wrap, cb) => {
 };
 
 /* What delays your hit: the bars grow in once, on screen */
-onView($("#hit"), () => $("#hit").classList.add("go"), .35);
+onView($("#hit"), () => { $("#hit").classList.add("go"); if (!reduce) setTimeout(() => $("#hit").classList.add("run"), 1300); }, .35);
 
 /* Feature demos: typing search, cycling presets */
 (() => {
@@ -745,7 +887,7 @@ onView($("#hit"), () => $("#hit").classList.add("go"), .35);
   const tile = qq(".igtile b"), pm = qq(".igpill .m b");
   const rows = ["Configure C-states", "Enable Turbo Boost", "Rago Low Latency power plan"].map(n => qq(".igr").find(r => r.querySelector("b").textContent === n));
   const vis = st.parentElement;
-  const fit = () => st.style.setProperty("--k", Math.max(vis.clientWidth / 1100, vis.clientHeight / 636));
+  const fit = () => st.style.setProperty("--k", Math.min(vis.clientWidth / 1100, vis.clientHeight / 636)); // the whole scene, never cropped
   fit(); addEventListener("resize", fit);
   const D = 10000;
   const cl01 = x => Math.max(0, Math.min(1, x)), pr = (t, a, d) => cl01((t - a) / d);

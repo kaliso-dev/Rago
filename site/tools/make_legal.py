@@ -17,6 +17,7 @@ DISCORD = 'https://discord.gg/cbCxCBx8vJ'
 MAIL = '<a href="mailto:support@rago-optimizer.com">support@rago-optimizer.com</a>'
 OGV = hashlib.sha256(open(os.path.join(OUT, 'og-image.png'), 'rb').read()).hexdigest()[:10]  # same as build.py
 CSSV = hashlib.sha256(open(os.path.join(OUT, 'v5.css'), 'rb').read()).hexdigest()[:10]  # same cache key as build.py
+KJS = 'document.documentElement.style.setProperty("--k",Math.max(.78,Math.min(1.45,innerWidth/1440,innerHeight/1000)).toFixed(3))'  # --k before the first paint (v5.css, v5.js)
 JSV = hashlib.sha256(open(os.path.join(OUT, 'v5.js'), 'rb').read()).hexdigest()[:10]  # motion shared by every page
 LEGAL = ("Rago Optimizer changes Windows settings. Results depend on your hardware and connection. A restore point is offered "
          "before advanced tweaks. Minecraft is a trademark of Mojang Studios; Rago Optimizer isn't affiliated with Mojang or "
@@ -154,6 +155,7 @@ def head(title, desc, meta, root=''):
             f'<link rel="icon" href="{root}favicon.svg" type="image/svg+xml">\n<link rel="icon" href="{root}favicon.ico" sizes="any">\n'
             f'<link rel="apple-touch-icon" href="{root}apple-touch-icon.png">\n'
             f'<link rel="preload" href="{root}fonts/BarlowCondensed-900-italic.woff2" as="font" type="font/woff2" crossorigin>\n'
+            f'<script>{KJS}</script>\n'
             f'<link rel="stylesheet" href="{root}v5.css?v={CSSV}">\n'
             f'<script src="{root}v5.js?v={JSV}" defer></script>\n'
             f'<style>\n{CSS.strip()}\n</style>\n</head>\n<body>\n<!-- icons -->\n<!-- /icons -->\n')

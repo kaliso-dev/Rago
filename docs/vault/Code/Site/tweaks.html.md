@@ -2,7 +2,7 @@
 type: code
 tags: [code, site, html, javascript]
 fichier: site/src/tweaks.html
-lignes: 879
+lignes: 876
 maj: 2026-11-22
 ---
 # tweaks.html
@@ -29,7 +29,7 @@ Tout ce qui suit est CONFIRMÉ (branche du site v5, PR #109 vers `staging`, 22/1
   - barre latérale `#side` : navigation par section (`<!-- tw:nav -->`), interrupteurs « Show only » : Free tweaks (`data-f="free"`), Safe tweaks (`safe`), No restart needed (`nb`) ; objectifs « Helps with » (`<!-- tw:goals -->`) ; sur tablette et téléphone elle s'ouvre par-dessus la page avec le bouton « Filters » `#fbtn` ;
   - barre `#bar` (collante) : champ `#q` (« Search 218 tweaks: mouse, ping, NVIDIA… », raccourcis `/` et `Ctrl+K`), bouton effacer `#q-x`, puces des sections (`<!-- tw:chips -->`), compteur « Showing all 218 tweaks », suggestions `#sugg` (mouse, ping, fps, nvidia, laptop, privacy), « Reset filters » ;
   - liste `#list` (`<!-- tw:list -->`) : une `<section class="grp">` par module, des `<details class="tc">` par tweak (format décrit dans [[sync_tweaks.py]]) ; état vide avec `#empty-reset`.
-- **Section finale** : depuis le 22/11 au soir, la même bande rouge que l'accueil (`section.s-final`, mot « RAGO » en contour) : « Your next match », « Start with the free tweaks. Unlock the rest when you want. », boutons « Download free » et « Get Premium » (l'ancienne section sombre était jugée « moche » et illisible par Sofiene).
+- **Section finale** : depuis le 22/11 au soir, la même bande rouge que l'accueil (`section.s-final`, mot « RAGO » en contour) : « Your next match », « Start with the free tweaks. Unlock the rest when you want. », boutons « Download free » et « Get Premium » (l'ancienne section sombre était jugée « moche » et illisible par Sofiene). La phrase « Same app, free or Premium. Download it now […] » a été retirée le 22/11 au soir (demande de Sofiene) ; le titre était décalé à cause d'une classe `.in` partagée avec les animations, corrigé (voir [[v5.js]]).
 - **Pied** : le pied de page v5 commun (product, dont Rago Route ; community ; account ; legal) et l'avertissement (résultats variables, point de restauration, Minecraft marque de Mojang).
 - **Fiche `#sheet`** (panneau latéral, feuille du bas sur téléphone) : chemin (module · section), nom, résumé, badges, « What it's for » + le détail de la fiche ; boutons précédent / suivant, position « k / n », « Copy link » ; bouton d'action « Download free » (tweak gratuit, vers `/download`) ou « Unlock with Premium » (vers `./#pricing`).
 - **Dialogue `#send`** (visiteur qui n'est pas sous Windows) : « Rago runs on your PC. Send it there. », adresse à recopier, « Copy link », « Share » (API `navigator.share`), « On this device anyway? Download the installer » (`#send-dl`).
