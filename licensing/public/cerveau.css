@@ -1,5 +1,5 @@
 /* Rago — le Cerveau (/admin/cerveau), 2026-11-10. The vault as a graph (canvas) with an explorer on the left and a
-   reader sliding over the graph on the right. Colours and fonts from tokens.css (brand kit v1.1). Strict CSP: no
+   reader sliding over the graph on the right. Colours and fonts from tokens.css (v5 « Match day », 22/11/2026); Geist stays for the graph labels drawn on the canvas, unchanged. Strict CSP: no
    inline style in the HTML; widths and colours set from cerveau.js go through CSS variables (CSSOM). */
 @font-face{font-family:"Geist";src:url(/assets/fonts/Geist-Variable.woff2) format("woff2");font-weight:100 900;font-style:normal;font-display:swap}
 @font-face{font-family:"Geist Mono";src:url(/assets/fonts/GeistMono-Variable.woff2) format("woff2");font-weight:100 900;font-style:normal;font-display:swap}
@@ -33,7 +33,7 @@ kbd{font:500 10.5px/16px var(--mono);color:var(--t3);padding:0 5px;border:1px so
 .cv-side{position:relative;z-index:30;flex:none;width:var(--sw);display:flex;flex-direction:column;gap:10px;padding:14px 10px 10px;background:var(--side);border-right:1px solid var(--line)}
 .cv-brand{display:flex;align-items:center;gap:6px;padding:0 4px 2px}
 .cv-logo{display:flex;align-items:center;gap:10px;min-width:0;flex:1;text-decoration:none}
-.cv-logo svg{width:20px;height:22px}
+.cv-logo svg{width:30px;height:30px}
 .cv-logo span{display:flex;flex-direction:column;line-height:1.15}
 .cv-logo b{font-weight:600;font-size:15px;letter-spacing:-.01em}
 .cv-logo small{font:500 10px/1.3 var(--mono);letter-spacing:.08em;text-transform:uppercase;color:var(--t3)}
@@ -161,7 +161,7 @@ kbd{font:500 10.5px/16px var(--mono);color:var(--t3);padding:0 5px;border:1px so
 .cv-loading .err{color:var(--warn)}
 .cv-loading button{margin-top:4px}
 .cv-pulse{position:relative;width:46px;height:50px}
-.cv-pulse svg{width:46px;height:50px;animation:cv-beat 1.6s var(--ease) infinite}
+.cv-pulse svg{width:50px;height:50px;animation:cv-beat 1.6s var(--ease) infinite}
 .cv-pulse::after{content:"";position:absolute;inset:-18px;border-radius:50%;border:1px solid rgba(255,59,48,.35);animation:cv-ring 1.6s var(--ease) infinite}
 @keyframes cv-beat{0%,100%{transform:scale(1);opacity:.85}40%{transform:scale(1.07);opacity:1}}
 @keyframes cv-ring{0%{transform:scale(.6);opacity:.9}100%{transform:scale(1.5);opacity:0}}

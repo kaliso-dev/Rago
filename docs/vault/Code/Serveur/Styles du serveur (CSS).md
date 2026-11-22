@@ -2,45 +2,45 @@
 type: code
 tags: [code, serveur, css]
 fichier: licensing/public/tokens.css, licensing/public/account.css, licensing/public/admin.css
-lignes: 105 + 465 + 545
-maj: 2026-11-14
+lignes: 227 + 691 + 737
+maj: 2026-11-22
 ---
 # Styles du serveur (CSS)
 
-Les trois feuilles de style servies par le serveur de comptes sous `/assets/` : les jetons de la charte (`tokens.css` ; `--rg-font-mono` = Geist comme `--rg-font-sans` depuis le 14/11, plus de police à chasse fixe, demande de Sofiene), le site de compte (`account.css`) et le tableau de bord (`admin.css`). Fiche parente : [[Code du serveur]].
+Les trois feuilles de style servies par le serveur de comptes sous `/assets/` : les jetons de la charte v5 « Match day » et les polices (`tokens.css`), le site de compte (`account.css`) et le tableau de bord (`admin.css`). Passées en v5 le 22/11/2026 ([[Charte graphique]]). Fiche parente : [[Code du serveur]].
 
-(code de `staging`, 10/11)
+(code de `staging`, 22/11)
 
 ## Rôle et place dans l'ensemble
 
-Servies par `serveStatic` d'[[app.js]] depuis `licensing/public/`. Les pages de [[views.js]] chargent `tokens.css` + `account.css` ; celles d'[[admin-views.js]] chargent `tokens.css` + `admin.css?v=<ASSETS>`. Polices Geist et Geist Mono servies par le serveur lui-même (`public/fonts/`, licence OFL dans `fonts/OFL.txt`), sans appel à Google. La **CSP stricte** interdit tout style en ligne : tout passe par des classes.
+Servies par `serveStatic` d'[[app.js]] depuis `licensing/public/`. Les pages de [[views.js]] chargent `tokens.css` + `account.css` ; celles d'[[admin-views.js]] chargent `tokens.css` + `admin.css?v=<ASSETS>`. Polices servies par le serveur lui-même (`public/fonts/`), sans appel à Google : Barlow 400, 500, 600, 700 (`Barlow-<poids>.woff2`) et Barlow Condensed 700, 800, 900 droit et 800, 900 italique (`BarlowCondensed-<poids>-<style>.woff2`), tirées du paquet npm `@fontsource` 5.3.0, licence OFL dans `fonts/OFL-Barlow.txt`. Geist et Geist Mono (`fonts/OFL.txt`) ne restent que pour la toile du [[Cerveau du vault]] ([[cerveau.css]]). Les pages chargent `tokens.css?v=5`, `account.css?v=5` et `account.js?v=5` ([[views.js]]) ; l'admin passe par `ASSETS` ([[admin-views.js]]). La **CSP stricte** interdit tout style en ligne : tout passe par des classes.
 
-## tokens.css (105 lignes)
+## tokens.css (227 lignes)
 
-- En-tête : « design tokens **v1.1** (05/10/2026 : rouge `#FF3B30`, plus d'orange, arrondis partout) », source déclarée `brand/tokens/tokens.json` (chemin écrit avec l'ancien préfixe `/mnt/project-files/`).
-- Variables `--rg-…` : encre (`--rg-ink-0` `#070708` à `--rg-ink-5`), texte, rouge de marque et ses transparences, états (succès, avertissement, erreur), typographie Geist (tailles, interlignes), espacements de base 4, rayons de 8 à 40 px, ombres, durées et courbes d'animation.
-- Thème sombre par défaut, thème clair `[data-theme=light]` ; `prefers-reduced-motion` coupe les animations.
-- Classes utilitaires `.rg-metric`, `.rg-overline` ; animations `rg-pulse`, `rg-pixel-blink`.
-- **Copies** : `brand/tokens/tokens.css` (v1.2 du 07/10, avec en plus les fonds d'avertissement `--rg-warning-a06/a10/a18` et les jetons « verre » `--rg-glass-*` du 16/10) et `app/src/styles/tokens.css` (avec les jetons « verre »). La copie du serveur n'a pas ces ajouts (elle ne s'en sert pas). Voir [[Charte graphique]].
+- En tête, les 9 `@font-face` Barlow et Barlow Condensed (`font-display: swap`).
+- Puis la copie exacte de `rendus-v5/marque/tokens/tokens.css` (tokens **v2.0 « Match day »** du 22/11) : fonds `--rg-ink-0` à `-5`, texte (`--rg-text-3` `#6E6E78`), lignes, rouge (plus de dégradé : `--rg-red-gradient` = `#FF3B30`), papier `--rg-paper`, états (`--rg-warning` `#FFC53D` et ses fonds `-a06/-a10/-a18`, `--rg-info` gris), effets d'affiche (`--rg-fx-*` : trame, carbone, hachures, voile rouge), polices (`--rg-font-display` Barlow Condensed, `--rg-font-sans` Barlow, `--rg-font-mono` = Barlow Condensed), angles (`--rg-skew` -12°, `--rg-angle-brush` -2,5°…), rayons v5 (`--rg-radius-btn` 12 px, `--rg-radius-panel` 22 px…), hauteurs, ombres (`--rg-shadow-glow`…), mouvement, styles de texte `--rg-t-*` (titre, chiffres, boutons, libellés) ; un bloc de jetons v1.2 (tailles Geist, verre) gardé le temps de la migration.
+- Plus de thème clair. Classes utilitaires `.rg-title`, `.rg-kick`, `.rg-label`, `.rg-metric`, `.rg-overline`, `.rg-skew`, `.rg-halftone`, `.rg-carbon`, `.rg-hatch`.
 
-## account.css (465 lignes)
+## account.css (691 lignes)
 
-Pages du site de compte, charte v1.1 :
-- fond : deux halos rouges sur un champ de points ; bandeau jaune « Test server » sur staging ;
-- en-tête (marque, Pricing, onglets Account / Profile / Affiliate, avatar), boutons en pilule (`btn-primary`, `btn-ghost`, `btn-sm`, `btn-block`, boutons Google/Discord) ;
-- pages d'accès en deux colonnes (`split`, texte + formulaire), onde « pulse », étapes d'achat (`steps`), champs, encadrés d'alerte ;
-- tableau de bord `/account` (grille avec `subgrid`, refait le 11/10/2026), cartes licence, PC, téléchargement, Discord, affiliation (anneau SVG et places), badges d'état ;
-- profil et photo (09/10), avis avec étoiles en boutons radio (11/10) et champ de texte de l'avis (`.field textarea`, remis le 10/11 : il avait perdu son style quand la PR #82 a retiré les styles de l'ancien admin), code d'inscription à 6 chiffres et boutons Google/Discord (25/10), page de connexion de l'app (code à 4 caractères) ;
-- animations d'entrée (`rise`, `d1`…`d4`) coupées par `prefers-reduced-motion` ;
-- adaptations : 1000, 900, 760, 720, 560, 420, 360 px ; champs en 16 px sur téléphone (pas de zoom iOS), iPhone SE (320 px).
+Les règles de base (v1.1, lignes 1 à 467) décrivent la structure ; la **couche v5** ajoutée à la fin (22/11, maquettes 99 à 123 de la revue) change le dessin sans toucher au HTML :
+- fond : trame de points qui s'efface depuis le haut à gauche (plus de halos rouges ni d'onde « pulse ») ; bandeau jaune « Test server » sur staging ;
+- en-tête : logo `lockup.svg` (R rouge sur tuile blanche + RAGO) et « Account » séparé par un trait, onglets Account / Profile / Affiliate en capitales soulignées de rouge, avatar rouge avec l'initiale, boutons ; pied en ligne (liens à gauche, mentions à droite) ;
+- titres `.display` en Barlow Condensed 900 italique capitales (46 à 100 px), le dernier mot posé sur un coup de pinceau rouge (`brush.svg`, mot entouré par [[account.js]] ; pas sur le titre du tableau de bord) ; `.overline` en petites capitales espacées ;
+- boutons : capitales Barlow Condensed 800 sur un fond penché (`::before` en `skewX(-12deg)`), rouge avec lueur pour `btn-primary` / `btn-buy`, gris pour `btn-ghost` ; Google / Discord restent droits et en Barlow ; liens soulignés de rouge, `link-arrow` en capitales rouges ;
+- pages d'accès : panneau `#111113` aux coins de 22 px, champs de 52 px (bord rouge au focus), code d'inscription en grand, code de connexion de l'app en cases penchées (`.app-code .ch`), étapes Pay / Your account / Download / Activate en onglets penchés (étape en cours rouge, faites cochées en blanc) ;
+- tableau de bord `/account` : carte de téléchargement sur toute la largeur (étapes à droite sur fond `#17171A`), puis **deux colonnes** de cartes (licence, PC, abonnement, Rago Route | Discord, affiliation, avis), une seule colonne sous 1000 px ; chaque section empilée (libellé et badge, contenu, actions) ; titres de section en 900 italique, icônes sur carré rouge teinté, clé de licence en Barlow Condensed, badges en capitales, récompenses Discord en lignes grises, anneau d'affiliation avec chiffres italiques ;
+- affiliation, profil (avatar rouge, aperçu dans un cadre), avis : mêmes règles ;
+- adaptations ajoutées : bouton large qui tient sur un téléphone (560 et 360 px) ; vérifié à 1440 et 390 px (pas de défilement horizontal).
 
-## admin.css (545 lignes)
+## admin.css (737 lignes)
 
 Feuille propre à `/admin` (10/11/2026), sans fond animé ni flou pour que les longues tables défilent bien ; couleurs et polices de `tokens.css` :
-- variables locales (`--bg`, `--side`, `--card`, `--side-w: 244px`…) ;
+- variables locales (`--bg`, `--side`, `--card`, `--cond`, `--side-w`…) ;
 - sections : mise en page (menu latéral, tiroir sur téléphone), en-tête de page, grilles (`g21`, `g12`, `g3`, `g4`), cartes, chiffres clés (`kpis`), mini-statistiques, clé/valeur, pastilles et avatars, boutons et champs, alertes et messages (`toast`), tables (en-tête fixe, lignes cliquables), filtres et pagination, graphiques, listes, fiche joueur, page du site, réseau (`p-1` à `p-4`, `net-loss`), connexion, fenêtre de confirmation (`.dlg`) ;
 - classes `.h-0` à `.h-100` et `.w-0` à `.w-100` (hauteur des barres, largeur des jauges) à la place du style en ligne ;
-- **sans trou** (PR #83, 10/11, « fait en sorte que y a pas de trou dans l'interface ») : les grilles `.g` étirent leurs cartes (`align-items: stretch`), la dernière carte d'une colonne `.side-col` et le dernier bloc d'une carte prennent la place restante, les listes longues défilent dans `.scroll-fill` pour finir à la hauteur de la colonne voisine, les graphiques (`.chart`) remplissent leur carte ; rangées en flex qui se répartissent (`.facts`, `.svc`, `.checks.two`) ; `.editor` (formulaire à gauche, état et aperçu à droite, 400 px) pour la pop-up ; `.zone` et `.form-line` pour les formulaires sur une ligne ;
+- **sans trou** (PR #83, 10/11) : les grilles `.g` étirent leurs cartes, les listes longues défilent dans `.scroll-fill`, les graphiques remplissent leur carte ; `.editor` pour la pop-up ; `.zone` et `.form-line` pour les formulaires sur une ligne ;
+- **couche v5** à la fin (22/11, maquettes 124 à 129) : logo tuile + « RAGO » + étiquette rouge penchée « ADMIN » ; menu en Barlow Condensed 900 italique capitales, icônes rouges, page en cours sur voile rouge avec barre rouge à gauche, compteur d'alertes en carré rouge ; fil d'Ariane en petites capitales ; titre de page en 900 italique (48 à 96 px) suivi d'un point ajouté par CSS (« VUE D'ENSEMBLE. ») ; titres de carte en 900 italique ; chiffres clés et mini-statistiques en grands chiffres italiques ; libellés, pastilles, en-têtes de table, filtres (puces penchées, la choisie en rouge) et boutons (fond penché, `::after`) en capitales 800 ; avatars sans photo sur pastilles blanche, jaune, rouge, bleue, grise ou verte ; barres du graphique rouges, la barre du jour hachurée ; connexion sur trame de points ;
 - adaptations : 1280, 1100, 960, 640, 420 px ; `prefers-reduced-motion`.
 
 ## Données touchées
@@ -53,10 +53,10 @@ Aucune.
 
 ## Tests
 
-Aucun test automatique ([[Tests du serveur]]) ; l'admin a été vérifiée à la main en 1440 et 390 px ([[Tableau de bord admin]]).
+Aucun test automatique ([[Tests du serveur]]) ; la v5 a été vérifiée à la main le 22/11 en local (`npm run local`) : captures à 1440 px des pages compte et admin, et à 390 px du tableau de bord du compte.
 
 ## À savoir avant de modifier
 
-- Après un changement d'`admin.css`, changer `ASSETS` dans [[admin-views.js]]. `account.css` et `tokens.css` sont chargés sans numéro de version.
+- Après un changement d'`admin.css` ou de `tokens.css`, changer `ASSETS` dans [[admin-views.js]] (et dans [[brain-views.js]] pour `cerveau.css`). Après un changement d'`account.css`, `account.js` ou `tokens.css`, monter le `?v=` dans `page()` de [[views.js]].
 - Garder `tokens.css` du serveur en accord avec `brand/tokens/` si la charte change.
 - La page du [[Cerveau du vault]] a sa propre feuille, décrite dans [[cerveau.css]].
