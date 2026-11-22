@@ -46,7 +46,7 @@ Presets de jeu, avec leur sigle et les mots reconnus dans le nom du jeu (`match`
 ## Qui le lit
 - [[catalog.ts]] l'importe et construit les tables (`tweaks`, `tweakModule`, `retired`, `totalTweaks`…), utilisées dans toute l'interface.
 - [[catalog.rs]] l'inclut dans l'exe (`include_str!`) : liste des réglages connus, jumeaux, retours, redémarrages, tests de cohérence.
-- `docs/tools/catalogue_vault.py` (notes `Tweaks/` du vault), `site/tools/sync_app.py` et `site/tools/sync_tweaks.py` (site), `brand/tools/export-logo.js` (icônes des modules).
+- `docs/tools/catalogue_vault.py` (notes `Tweaks/` du vault), `site/tools/sync_app.py` et `site/tools/sync_tweaks.py` (site).
 
 ## À savoir avant de modifier
 - Ne pas éditer à la main : changer le générateur (voir [[Code du générateur de catalogue]]) puis `npm run catalog` dans `app/`.

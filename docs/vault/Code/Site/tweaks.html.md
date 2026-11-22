@@ -2,36 +2,27 @@
 type: code
 tags: [code, site, html, javascript]
 fichier: site/src/tweaks.html
-lignes: 1035
-maj: 2026-11-10
+lignes: 879
+maj: 2026-11-22
 ---
 # tweaks.html
 
 Source de la page Tweaks (`rago-optimizer.com/tweaks.html`) : téléchargement gratuit de l'app en haut, puis les 218 tweaks expliqués un par un, avec recherche, filtres et fiche détaillée. Fiche parente : [[Code du site]]. Fonctionnalité : [[Site]], [[Catalogue des tweaks]].
 
-Tout ce qui suit est CONFIRMÉ (code de `staging`, 10/11). Fichier de 1 035 lignes et environ 580 Ko, dont l'essentiel est la liste des fiches générée. La page publiée `site/tweaks.html` est produite par [[build.py]] (polices locales et `accountBase`) : ne jamais la modifier à la main. Créée le 12/10 (PR #39, alors « 199 tweaks »).
+Tout ce qui suit est CONFIRMÉ (branche du site v5, PR #109 vers `staging`, 22/11). Fichier de 879 lignes et environ 585 Ko, dont l'essentiel est la liste des fiches générée. Passée au design v5 le 22/11 ([[Charte graphique]]) : même mise en page et même script qu'avant, avec les couleurs, polices, boutons, en-tête et pied v5 et les icônes imprimées. La page publiée `site/tweaks.html` est produite par [[build.py]] (`v5.css?v=`, `accountBase`, image de partage versionnée) : ne jamais la modifier à la main. Créée le 12/10 (PR #39, alors « 199 tweaks »).
 
 ## Rôle et place dans l'ensemble
 - Page de destination du bouton « Download free » de l'accueil et de tous les liens « See every tweak ». Elle sert à la fois de page de téléchargement du plan gratuit et de catalogue public.
 - Deux outils l'écrivent :
-  - [[sync_tweaks.py]] remplace tout ce qui est entre `<!-- tw:icons|nav|goals|chips|list -->` et les marqueurs de fin, ainsi que les nombres (`n-all`, `n-free`, `n-mods`, `n-presets`, le titre, « Search 218 tweaks ») ;
+  - [[sync_tweaks.py]] remplace tout ce qui est entre `<!-- tw:nav|goals|chips|list -->` et les marqueurs de fin, ainsi que les nombres (`n-all`, `n-free`, `n-mods`, `n-presets`, le titre, « Search 218 tweaks ») ;
   - [[build.py]] fabrique la page publiée.
 - Tout le reste (structure, CSS, JavaScript, textes du haut et du bas) s'écrit à la main dans ce fichier.
 
 ## Plan du fichier
-| Lignes | Contenu |
-|---|---|
-| 1-478 | `<title>All 218 tweaks · Download Rago Optimizer</title>`, description, canonical `https://rago-optimizer.com/tweaks.html`, balises `og:*` et Twitter (image `og-image.png` **sans** empreinte `?v=`, contrairement à l'accueil), bloc Google Fonts (remplacé par [[build.py]]), CSS |
-| 479-491 | sprite SVG des icônes de modules (`<!-- tw:icons -->`) |
-| 494-519 | en-tête et menu mobile |
-| 520-569 | section `#download` |
-| 570-640 | section `#tweaks` : principes, explorateur, liste |
-| 641-664 | section finale et pied de page |
-| 665-704 | fiche `#sheet`, dialogues `#send` et `#dlg`, toast |
-| 705-1033 | script |
+`<head>` (titre `All 218 tweaks · Download Rago Optimizer`, description, canonical, `og:*` et Twitter, `v5.css`, `<style>` propre à la page : l'ancienne mise en page passée sur les jetons v5), sprite d'icônes (entre `<!-- icons -->` et `<!-- /icons -->`, écrit par `sync_icons.py`), en-tête, section `#download`, section `#tweaks` (principes, explorateur, liste), section finale, pied de page, fiche `#sheet`, dialogues `#send` et `#dlg`, toast, script.
 
 ## Sections et boutons
-- **En-tête** : logo vers `./`, liens Why Rago (`./#why`), Features, **Tweaks** (page courante), Pricing (`./#pricing`), FAQ ; « Sign in » (lien absolu vers le serveur de comptes) ; « Get Premium » → `./#pricing`. Menu mobile : les mêmes plus Affiliate et « Create account ». Pas de lien vers [[route.html]] (à la différence de l'accueil).
+- **En-tête** `header.s-nav#top` (v5) : logo vers `./`, liens Why Rago (`./#why`), Features, Rago Route (`route.html`), **Tweaks** (page courante), Pricing (`./#pricing`), FAQ ; « Sign in » (`js-account`, caché sur téléphone) ; « Get Premium » → `./#pricing`. Plus de menu mobile ni de flèche « Scroll » depuis le 22/11.
 - **`#download`** (« Free download for Windows ») : titre « Download Rago Optimizer. Start free. », texte « No account needed: 68 tweaks are open from the first launch, and Premium unlocks all 218 in the same app. » ; boutons « Download latest version » (classe `js-free-app`, vers `/download` du serveur de comptes) et « Explore the 218 tweaks » ; ligne d'infos : `#ver` (« Always the latest version », remplacé par « Version X » lu sur `/api/v1/installer`), « Windows 10 and 11, 64-bit », `RagoOptimizer-Setup.exe` ; garanties « No account needed », « Restore point offered », « Most tweaks undo with one switch » ; carte animée de l'installateur (barre 0 → 100 %) et trois étapes (télécharger, autoriser malgré l'écran SmartScreen « Windows protected your PC » faute de certificat de signature payant, choisir ses tweaks) ; « Only download Rago from this site. ».
 - **Bande de chiffres** : 218 tweaks, 10 sections, 68 open in the free plan, 20 one-click presets, 1 switch to undo most tweaks.
 - **`#tweaks`** (« Every tweak, in plain words. ») : trois principes, puis l'explorateur `#ex` :
@@ -39,7 +30,7 @@ Tout ce qui suit est CONFIRMÉ (code de `staging`, 10/11). Fichier de 1 035 lign
   - barre `#bar` (collante) : champ `#q` (« Search 218 tweaks: mouse, ping, NVIDIA… », raccourcis `/` et `Ctrl+K`), bouton effacer `#q-x`, puces des sections (`<!-- tw:chips -->`), compteur « Showing all 218 tweaks », suggestions `#sugg` (mouse, ping, fps, nvidia, laptop, privacy), « Reset filters » ;
   - liste `#list` (`<!-- tw:list -->`) : une `<section class="grp">` par module, des `<details class="tc">` par tweak (format décrit dans [[sync_tweaks.py]]) ; état vide avec `#empty-reset`.
 - **Section finale** « Your next match » : « Start with the free tweaks. Unlock the rest when you want. », boutons « Download free » et « Get Premium ».
-- **Pied** : Features, Tweaks, Pricing, FAQ, Reviews, Affiliate program, Partners, Sign in, Terms, Privacy, Cancellation ; avertissement (résultats variables, point de restauration, Minecraft marque de Mojang). Pas de lien vers Rago Route.
+- **Pied** : le pied de page v5 commun (product, dont Rago Route ; community ; account ; legal) et l'avertissement (résultats variables, point de restauration, Minecraft marque de Mojang).
 - **Fiche `#sheet`** (panneau latéral, feuille du bas sur téléphone) : chemin (module · section), nom, résumé, badges, « What it's for » + le détail de la fiche ; boutons précédent / suivant, position « k / n », « Copy link » ; bouton d'action « Download free » (tweak gratuit, vers `/download`) ou « Unlock with Premium » (vers `./#pricing`).
 - **Dialogue `#send`** (visiteur qui n'est pas sous Windows) : « Rago runs on your PC. Send it there. », adresse à recopier, « Copy link », « Share » (API `navigator.share`), « On this device anyway? Download the installer » (`#send-dl`).
 - **Dialogue `#dlg`** (après un clic de téléchargement sous Windows) : « Download started », « Three steps to your first tweaks. », « Got it », « See Premium », « Nothing downloaded? Try again ».
@@ -92,10 +83,10 @@ Apparition des blocs au défilement (`IntersectionObserver`, classe `pre`), anim
 ## Liens avec le reste
 - Écrite par [[sync_tweaks.py]] (liste) à partir de [[catalog.json]], [[free.json]] et [[tweaks-copy.json]] ; publiée par [[build.py]] ; vérifiée par [[site-check.yml]] ; retouchée par [[preview.sh]] sur les aperçus.
 - Le téléchargement passe par le serveur de comptes ([[Serveur de licences]], route `/download`).
-- Pages sœurs : [[page.html]] (accueil, même CSS de base et mêmes jetons), [[reviews.html]], [[partners.html]].
+- Pages sœurs : [[page.html]] (accueil, même feuille `v5.css`), [[reviews.html]], [[partners.html]].
 
 ## À savoir avant de modifier
 - Le chiffre « 68 » (tweaks gratuits distincts) diffère du « 73 » de l'accueil (voir [[sync_app.py]]). À VÉRIFIER avec Sofiene.
 - Ne pas retirer les marqueurs `<!-- tw:… -->` ni changer les classes `n-all`, `n-free`, `n-mods`, `n-presets` sans adapter [[sync_tweaks.py]].
-- Le bloc Google Fonts doit rester identique à celui attendu par [[build.py]].
-- L'en-tête et le pied n'ont pas de lien vers [[route.html]] alors que l'accueil en a un : à ajouter si Rago Route doit être visible partout (À VÉRIFIER).
+- La page doit garder une seule ligne `<link rel="stylesheet" href="v5.css">` (attendue par [[build.py]]).
+- Les icônes des modules et des fiches viennent du jeu v5 (`#i-network`, `#i-graphics`…), plus des icônes Lucide.

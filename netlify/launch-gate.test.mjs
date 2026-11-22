@@ -24,7 +24,7 @@ test("before the launch: countdown everywhere, nothing from the site", async () 
     assert.equal(res.headers.get("set-cookie"), null, path);
   }
   // the countdown's own files go through, the share images included
-  for (const path of ["/fonts/Geist-Variable.woff2", "/favicon.svg", "/rago-wordmark.svg", "/og-image.png", "/og-launch.png", "/robots.txt"]) assert.equal(await (await get(path)).text(), SITE);
+  for (const path of ["/fonts/BarlowCondensed-900-italic.woff2", "/favicon.svg", "/img/v5/rago-icon.svg", "/og-image.png", "/og-launch.png", "/robots.txt"]) assert.equal(await (await get(path)).text(), SITE);
 });
 
 test("before the launch: link previews get the site's share tags, and nothing else from the site", async () => {

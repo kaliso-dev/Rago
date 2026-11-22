@@ -1,4 +1,4 @@
-// The page every visitor sees before the launch. Self-contained: inline styles and script, plus the logo,
+// The page every visitor sees before the launch (design v5, 22/11/2026). Self-contained: inline styles and script, plus the logo,
 // icons, fonts and share images that launch-gate.js lets through. It says nothing about the product beyond its name.
 // Link previews (Discord, WhatsApp, X...) get the site's own share tags (share, read by launch-gate.js), so a link
 // shared now already shows the site's image and keeps the right preview after the launch. og-launch.png is the fallback.
@@ -44,46 +44,57 @@ ${share ? `${share}\n` : `<meta property="og:site_name" content="Rago Optimizer"
 `}<link rel="icon" href="/favicon.svg" type="image/svg+xml">
 <link rel="icon" href="/favicon.ico" sizes="any">
 <link rel="apple-touch-icon" href="/apple-touch-icon.png">
-<link rel="preload" href="/fonts/GeistMono-Variable.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="preload" href="/fonts/BarlowCondensed-900-italic.woff2" as="font" type="font/woff2" crossorigin>
 <style>
-@font-face{font-family:"Geist";src:url("/fonts/Geist-Variable.woff2") format("woff2");font-weight:100 900;font-display:swap}
-@font-face{font-family:"Geist Mono";src:url("/fonts/GeistMono-Variable.woff2") format("woff2");font-weight:100 900;font-display:swap}
-:root{--ink-1:#0A0A0B;--ink-2:#111113;--t1:#F5F5F6;--t2:#A1A1AA;--t3:#7C7C86;--l1:rgba(255,255,255,.06);--red:#FF3B30;--ease:cubic-bezier(.16,1,.3,1);--sans:"Geist","Segoe UI Variable","Segoe UI",system-ui,sans-serif;--mono:"Geist Mono","Cascadia Mono",ui-monospace,Consolas,monospace}
+@font-face{font-family:"Barlow";src:url("/fonts/Barlow-400.woff2") format("woff2");font-weight:400;font-display:swap}
+@font-face{font-family:"Barlow";src:url("/fonts/Barlow-600.woff2") format("woff2");font-weight:600;font-display:swap}
+@font-face{font-family:"Barlow Condensed";src:url("/fonts/BarlowCondensed-800.woff2") format("woff2");font-weight:800;font-display:swap}
+@font-face{font-family:"Barlow Condensed";src:url("/fonts/BarlowCondensed-900-italic.woff2") format("woff2");font-weight:900;font-style:italic;font-display:swap}
+:root{--bg:#0A0A0B;--bg-2:#141416;--ink:#F5F5F6;--ink-2:#A1A1AA;--ink-3:#7C7C86;--line-2:rgba(255,255,255,.10);--red:#FF3B30;--red-ink:#0A0A0B;--skew:-12deg;--cond:"Barlow Condensed","Arial Narrow",sans-serif;--body:"Barlow","Segoe UI",system-ui,sans-serif}
 *{box-sizing:border-box;margin:0}
-html{background:var(--ink-1);color-scheme:dark}
-body{min-height:100vh;min-height:100dvh;display:flex;flex-direction:column;padding:0 16px;color:var(--t1);font:400 15px/1.6 var(--sans);-webkit-font-smoothing:antialiased;background:radial-gradient(900px 520px at 50% -12%,rgba(255,59,48,.16),transparent 62%),var(--ink-1)}
-header{display:flex;justify-content:center;padding:32px 0 0}
-header img{display:block;height:22px;width:auto}
-main{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;width:100%;max-width:720px;margin:0 auto;padding:48px 0 56px;text-align:center}
-.mark{position:relative;width:64px;height:64px;margin-bottom:44px}
+html{background:var(--bg);color-scheme:dark}
+body{position:relative;min-height:100vh;min-height:100dvh;display:flex;flex-direction:column;align-items:center;padding:0 16px;color:var(--ink);font:400 16px/1.55 var(--body);-webkit-font-smoothing:antialiased;background:var(--bg);text-align:center;overflow-x:hidden}
+.dots{position:fixed;inset:0;pointer-events:none;background:radial-gradient(circle,rgba(255,255,255,.07) 1.1px,transparent 1.5px) 0 0/9px 9px;-webkit-mask:radial-gradient(60% 70% at 50% 40%,transparent 30%,#000 100%);mask:radial-gradient(60% 70% at 50% 40%,transparent 30%,#000 100%)}
+header{position:relative;padding-top:34px}
+.logo{display:flex;align-items:center;gap:10px}
+.logo img{display:block;width:34px;height:34px}
+.logo b{font-family:var(--cond);font-weight:900;font-style:italic;font-size:30px;line-height:1;text-transform:uppercase}
+main{position:relative;flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;width:100%;max-width:880px;padding:56px 0 40px}
+.mark{position:relative;width:84px;height:84px;margin-bottom:58px}
 .mark img{position:relative;display:block;width:100%;height:100%}
-.mark i{position:absolute;inset:0;border-radius:50%;border:1.5px solid var(--red);opacity:0;animation:pulse 1600ms var(--ease) infinite}
-.mark i:nth-child(2){animation-delay:533ms}.mark i:nth-child(3){animation-delay:1066ms}
-@keyframes pulse{0%{transform:scale(.6);opacity:.9}100%{transform:scale(2);opacity:0}}
-.over{margin-bottom:18px;color:var(--t3);font:500 11px/1 var(--mono);letter-spacing:.12em;text-transform:uppercase}
-h1{font-weight:600;font-size:clamp(36px,8.5vw,64px);line-height:1.02;letter-spacing:-.035em}
-h1 em{font-style:normal;color:var(--red)}
-.sub{max-width:560px;margin-top:20px;color:var(--t2);font-size:clamp(15px,2.4vw,17px)}
-.sub strong{color:var(--t1);font-weight:500}
-.clock{display:grid;grid-template-columns:repeat(4,1fr);gap:clamp(8px,2vw,16px);width:100%;max-width:620px;margin-top:44px}
-.unit{padding:clamp(16px,3.6vw,28px) 4px clamp(14px,3vw,22px);background:var(--ink-2);border:1px solid var(--l1);border-radius:24px;box-shadow:0 1px 0 rgba(255,255,255,.04) inset,0 8px 24px -8px rgba(0,0,0,.6)}
-.num{display:block;font:500 clamp(30px,8.5vw,60px)/1 var(--mono);font-variant-numeric:tabular-nums;letter-spacing:-.02em}
-.lbl{display:block;margin-top:12px;color:var(--t3);font:500 10.5px/1 var(--mono);letter-spacing:.12em;text-transform:uppercase}
-.local{min-height:20px;margin-top:28px;color:var(--t3);font:400 13px/1.5 var(--mono)}
-footer{padding:0 0 28px;color:var(--t3);font-size:12.5px;text-align:center}
-@media (max-width:420px){.unit{border-radius:16px}.lbl{font-size:9.5px;letter-spacing:.08em}}
-@media (prefers-reduced-motion:reduce){.mark i{animation:none}}
+.mark i{position:absolute;inset:0;border:1.5px solid var(--red);border-radius:24px;opacity:0;animation:pulse 2400ms cubic-bezier(.16,1,.3,1) infinite}
+.mark i:nth-child(2){animation-delay:1200ms}
+@keyframes pulse{0%{transform:scale(1);opacity:.6}100%{transform:scale(1.9);opacity:0}}
+.over{font-family:var(--cond);font-weight:800;font-size:15px;letter-spacing:.2em;text-transform:uppercase;color:var(--ink-3)}
+h1{margin-top:18px;font-family:var(--cond);font-weight:900;font-style:italic;font-size:clamp(54px,11vw,112px);line-height:.82;text-transform:uppercase;letter-spacing:-.012em}
+h1 em{position:relative;display:inline-block;font-style:inherit;isolation:isolate}
+h1 em::after{content:"";position:absolute;z-index:-1;left:-6%;right:-12%;top:30%;height:74%;background:url(/img/v5/brush.svg) center/100% 100% no-repeat;transform:rotate(-2deg)}
+.sub{max-width:600px;margin-top:28px;font-size:clamp(16px,2.4vw,18px);color:var(--ink-2)}
+.sub strong{color:var(--ink);font-weight:600}
+.clock{display:grid;grid-template-columns:repeat(4,1fr);gap:clamp(8px,1.6vw,14px);width:100%;max-width:760px;margin-top:46px}
+.unit{position:relative;padding:clamp(16px,3vw,24px) 0 clamp(12px,2.4vw,18px);isolation:isolate}
+.unit::before{content:"";position:absolute;inset:0;z-index:-1;background:var(--bg-2);border:1px solid var(--line-2);border-radius:18px;transform:skewX(var(--skew))}
+.num{display:block;font-family:var(--cond);font-weight:900;font-style:italic;font-size:clamp(46px,10vw,104px);line-height:.8;font-variant-numeric:tabular-nums}
+.lbl{display:block;margin-top:12px;font-family:var(--cond);font-weight:800;font-size:clamp(11px,1.6vw,13.5px);letter-spacing:.18em;text-transform:uppercase;color:var(--ink-3)}
+.unit.s{color:var(--red-ink)}
+.unit.s::before{background:var(--red);border-color:var(--red)}
+.unit.s .lbl{color:rgba(10,10,11,.65)}
+.local{min-height:21px;margin-top:30px;font-size:14px;color:var(--ink-3)}
+footer{position:relative;padding:0 0 28px;color:var(--ink-3);font-size:13px}
+@media (max-width:420px){.unit::before{border-radius:12px}.lbl{letter-spacing:.1em}.mark{margin-bottom:44px}}
+@media (prefers-reduced-motion:reduce){.mark i{animation:none;opacity:.3;transform:scale(1.35)}}
 </style>
 </head>
 <body>
-<header><img src="/rago-wordmark.svg" alt="Rago Optimizer" width="137" height="22"></header>
+<span class="dots" aria-hidden="true"></span>
+<header><span class="logo" role="img" aria-label="Rago Optimizer"><img src="/img/v5/rago-icon.svg" alt="" width="34" height="34"><b aria-hidden="true">rago</b></span></header>
 <main>
-  <div class="mark" aria-hidden="true"><i></i><i></i><i></i><img src="/favicon.svg" alt=""></div>
+  <div class="mark" aria-hidden="true"><i></i><i></i><img src="/img/v5/rago-icon.svg" alt=""></div>
   <p class="over">Launching ${esc(day)}</p>
   <h1>Every millisecond <em>counts.</em></h1>
   <p class="sub">Rago Optimizer opens on <strong>${esc(when)}</strong>, Paris time.</p>
   <div class="clock" role="timer" aria-label="Time left before the launch">
-${units.map(([id, label, n]) => `    <div class="unit"><span class="num" id="${id}">${pad(n)}</span><span class="lbl">${label}</span></div>`).join("\n")}
+${units.map(([id, label, n]) => `    <div class="unit${id === "s" ? " s" : ""}"><span class="num" id="${id}">${pad(n)}</span><span class="lbl">${label}</span></div>`).join("\n")}
   </div>
   <p class="local" id="local"></p>
 </main>

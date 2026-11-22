@@ -2,46 +2,29 @@
 type: code
 tags: [code, marque, design]
 fichier: brand/
-lignes: 636
-maj: 2026-11-10
+lignes: 96
+maj: 2026-11-22
 ---
 # Kit de marque (brand)
 
-Le dossier `brand/` du dépôt : le résumé de la charte (`README.md`), la charte complète à ouvrir dans un navigateur (`charte.html`), la voix en anglais (`voice-en.md`), les jetons de design (`tokens/`), les fichiers du logo (`logo/`) et l'outil qui les fabrique (`tools/`). Fiche parente : [[Code du site]]. Fonctionnalité : [[Charte graphique]], [[Voix et ton]].
+Le dossier `brand/` du dépôt : kit de marque **v5 « Match day »** du 22/11/2026 ([[Charte graphique]]). Résumé (`README.md`), charte en images (`charte/`), voix en anglais (`voice-en.md`), jetons (`tokens/`) et fichiers du logo (`logo/`). Fiche parente : [[Code du site]].
 
-Tout ce qui suit est CONFIRMÉ (fichiers de `staging`, 10/11). Les « lignes » de l'en-tête sont la somme des quatre fichiers texte principaux (`README.md` 60, `charte.html` 420, `voice-en.md` 73, `tools/export-logo.js` 83, hors jetons qui ont leur propre note). Le dossier n'est ni publié ni utilisé à l'exécution : c'est une référence, et chaque copie (app, site, serveur, installateur) est faite à la main.
+CONFIRMÉ (branche du site v5, PR #109 vers `staging`, 22/11). Le kit a été copié depuis le dossier partagé `rago-redesign/rendus-v5/marque/` (`logo/` sans le sous-dossier `abandonnes/`, `tokens/`, `charte-1…5.jpg`). Retirés le même jour : la charte v1.2 `charte.html`, l'outil de rendu `tools/export-logo.js` et ses polices Geist, et les fichiers abandonnés du logo (`rago-mark-white.svg`, `rago-mark-mono.svg`, `rago-wordmark-mono.svg`, `png/rago-mark-white-512.png`, `installer/header.png`, `installer/sidebar.png`). « lignes » = `README.md` (23) + `voice-en.md` (73).
 
 ## Plan du dossier
 | Chemin | Rôle | Note |
 |---|---|---|
-| `README.md` | « kit de marque v1.2 (7 octobre 2026) » : résumé à appliquer pour l'app et le site, et commandes de régénération du logo | ci-dessous |
-| `charte.html` | charte complète en français (page sombre, colonne de 1 080 px, sections numérotées) | ci-dessous |
-| `voice-en.md` | « Rago voice: English (v1.1) » : la voix de toutes les surfaces anglaises | ci-dessous et [[Voix et ton]] |
-| `tokens/tokens.css`, `tokens/tokens.json` | jetons `--rg-*` | [[tokens.css (marque)]] |
-| `tools/export-logo.js` | rendu de toutes les images | [[export-logo.js]] |
-| `tools/fonts/Geist-Variable.woff2`, `GeistMono-Variable.woff2` | polices intégrées dans les rendus (licence OFL ; 56 800 et 58 048 octets, d'une autre version que les copies de `site/fonts/`, 69 652 et 71 368 octets) | [[export-logo.js]] |
-| `logo/` | SVG sources et fichiers produits | ci-dessous |
+| `README.md` | résumé du kit v5 : logo, couleurs, typo, formes, voix, où sont les scripts qui régénèrent le kit | ci-dessous |
+| `charte/charte-1.jpg` à `charte-5.jpg` | la charte v5 en images, 10 chapitres (principes, logo, couleurs, typo, formes, effets d'affiche, icônes imprimées, voix, appliqué, fichiers) | [[Charte graphique]] |
+| `voice-en.md` | « Rago voice: English (v1.1) » | ci-dessous et [[Voix et ton]] |
+| `tokens/tokens.css`, `tokens/tokens.json` | jetons `--rg-*` v2.0 | [[tokens.css (marque)]] |
+| `logo/` | SVG, PNG, `.ico`, fichiers du site et de l'installeur | ci-dessous |
 
-## `README.md` (60 lignes)
-- **Historique** : v1.1 (05/10) : rouge `#FF3B30` au lieu de `#FF3347`, plus d'orange (dégradé rouge→orange supprimé, alerte en jaune), plus de formes carrées ni de coins coupés. v1.2 (06-07/10) : logo de Sofiene vectorisé, nom « Rago Optimizer ».
-- **Logo** : source vectorielle unique `logo/rago-mark.svg` (R rouge `#FF3B30`, viewBox 164 × 180) ; icône d'app **R rouge sur fond transparent, sans tuile** (demande de Sofiene du 06/10) ; tuile sombre gardée seulement où un fond opaque est exigé (apple-touch, avatar Discord) ; favicon et moins de 32 px : `rago-favicon.svg` (R presque plein cadre) ; le R est toujours rouge (blanc ou monochrome seulement sur rouge ou photo) ; interdits : pivoter, déformer, contour, dégradé, néon.
-- **Couleurs, typo, formes, mouvement** : mêmes valeurs que [[tokens.css (marque)]] ; texte sur rouge toujours `#0A0A0B` ; rayons 8 / 12 / 16 / 24 / 32 / 40 / 999 ; durées 90 / 160 / 240 / 420 ms, signature « Pulse » (ondes rouges qui partent du R, 1 600 ms, en boucle).
-- **Interface (direction)** : « Sidebar (12 modules, 199 tweaks) » : **chiffre périmé** (218 tweaks distincts aujourd'hui, 10 sections de tweaks côté site).
-- **Voix** : renvoie à `voice-en.md`.
-- **Régénérer le logo** : `node tools/export-logo.js`, puis ImageMagick : `convert png/rago-icon-{16…256}.png rago.ico`, `convert png/rago-icon-{16,32,48}.png web/favicon.ico`, `cp rago-favicon.svg web/favicon.svg`, conversion des PNG de l'installateur en BMP 24 bits (`BMP3:`), réduction des images de partage en PNG 8 bits (environ 85 et 45 Ko au lieu de 125). Ensuite copier `logo/web/og-image.png` et `og-launch.png` dans `site/` et relancer [[build.py]] ; copier `logo/installer/*.bmp` dans `app/src-tauri/installer/`.
-
-## `charte.html` (420 lignes)
-Charte « Charte Rago » en français, thème sombre, Geist chargé depuis Google Fonts (c'est un document interne, non publié). Sections (`id`) et titres :
-1. `marque` : « Un outil de précision, pas un gadget « boost FPS ». » (principes Précis, Rapide, Sobre) ;
-2. `logo` : « Le R de Rago Optimizer. » (bons usages et interdits, `#bad`) ;
-3. `couleurs` : « Six encres, un rouge. » ;
-4. `typo` : « Geist pour parler, Geist Mono pour mesurer. » ;
-5. `formes` : « Arrondi partout. » ;
-6. `mouvement` : « Court, ferme, et une onde quand ça travaille. » (démonstrations : interrupteur `#demo-tog` et compteur `#demo-count` qui descend de 41 à 18 ms en 1,4 s, figé à 18 avec « réduire les animations ») ;
-7. `app` : « Rago Optimizer, appliqué. » (maquette de l'app, texte « 12 modules (199 réglages) » et « 199 tweaks · 12 modules » : **périmé**) ;
-8. `voix` : « Talk to one player. Measure. Never overpromise. » ;
-9. `fichiers` : « Tout est dans le dossier brand. ».
-Version indiquée : v1.2 du 07/10. Elle ne contient pas les jetons de verre (refonte du 16/10, voir [[Refonte glass]]).
+## `README.md`
+- **Logo** : le R est rouge plein (#FF3B30) partout ; icône de l'app = R rouge sur tuile blanche ; plus de R blanc, noir ou imprimé, ni de tuile rouge (sauf R noir sur la transition rouge plein écran de l'app).
+- **Couleurs, typo, formes** : fonds `#0A0A0B` à `#1F1F23`, texte `#F5F5F6` / `#A1A1AA` / `#6E6E78`, un seul accent rouge (texte encre dessus), papier `#ECE9E2` ; Barlow Condensed 900 italique en capitales pour les titres, Barlow pour le texte ; boutons penchés (-12°), coins arrondis, icônes imprimées.
+- **Régénérer** : scripts de la maquette (`rendus-v5/outils/marque/` : `gen_brand.py`, `gen_tokens.py`, `gen_charte.py`), qui écrivent dans le dossier partagé ; on recopie ensuite ici. Pas d'outil de rendu dans le dépôt.
+- Le site prend `logo/web/*` (copiés dans `site/` et `site/media/og-route.png`, puis [[build.py]]) ; l'app prend `brand/logo` avec `sh app/tools/sync_icons.sh`.
 
 ## `voice-en.md` (73 lignes)
 « This replaces the French "Voix" section of the charter for every English surface » : site, pages compte et licence, app, e-mails, annonces Discord.
@@ -54,24 +37,24 @@ Version indiquée : v1.2 du 07/10. Elle ne contient pas les jetons de verre (ref
 ## `logo/`
 | Fichier | Usage |
 |---|---|
-| `rago-mark.svg` | **source unique** : le R rouge (164 × 180) |
-| `rago-mark-white.svg`, `rago-mark-mono.svg` | R blanc (sur rouge ou photo), monochrome |
-| `rago-wordmark-white.svg`, `-ink.svg`, `-mono.svg` | logotype « Rago Optimizer » vectorisé en Geist (fond sombre, fond clair, mono) ; `site/rago-wordmark.svg` en est une copie |
-| `rago-app-icon.svg` | icône d'app sans tuile (≥ 40 px) |
-| `rago-favicon.svg` | R plein cadre pour les petites tailles et le favicon |
-| `rago-app-tile.svg` | tuile sombre (apple-touch, avatar Discord) |
-| `rago.ico` | icône Windows multi-tailles (16 à 256) ; identique à `app/src-tauri/icons/icon.ico` |
-| `png/` | `rago-icon-16` à `-1024`, `rago-mark-512`, `rago-mark-white-512`, `rago-tile-512`, `rago-wordmark-ink-1200`, `rago-wordmark-white-1200` |
-| `web/` | `favicon.svg`, `favicon.ico`, `favicon-32.png`, `apple-touch-icon.png`, `og-image.png`, `og-launch.png` (copiés dans `site/`) |
-| `installer/` | `sidebar.png/.bmp` (164 × 314), `header.png/.bmp` (150 × 57) ; les BMP sont identiques à ceux de `app/src-tauri/installer/` |
+| `rago-mark.svg` | le R seul, rouge |
+| `rago-app-icon.svg`, `rago-app-icon-32.svg` | icône de l'app : tuile blanche, R rouge (256, et version dessinée pour 32 px) |
+| `rago-favicon.svg` | favicon (16 px) |
+| `rago-app-tile.svg` | tuile plein cadre (avatars, Apple) |
+| `rago-lockup-app.svg`, `rago-lockup-app-ink.svg` | R rouge + « AGO » blanc (ou encre sur fond clair), comme dans l'app |
+| `rago-lockup.svg` | tuile + « RAGO » (barres du site) |
+| `rago-wordmark-white.svg`, `rago-wordmark-ink.svg` | nom complet ; texte vectorisé en Barlow Condensed Black Italic |
+| `rago.ico` | icône Windows (16 à 256) |
+| `png/` | `rago-icon-16` à `-1024`, `rago-mark-512`, `rago-tile-512` (avatar), `rago-lockup-1200`, `rago-lockup-app-1200`, `rago-wordmark-ink-1200`, `rago-wordmark-white-1200` |
+| `web/` | `favicon.svg`, `favicon.ico` (16/32/48), `favicon-32.png`, `apple-touch-icon.png` (180), `og-image.png`, `og-launch.png`, `og-route.png` (1200 × 630) |
+| `installer/` | fichiers de Tauri et NSIS : `icon.ico`, `icon.png`, `32x32.png`, `128x128.png`, `128x128@2x.png`, `sidebar.bmp` et `@2x`, `header.bmp` et `@2x` |
 
-Les SVG contiennent un manifeste C2PA dans `<metadata>` (provenance du fichier) ; [[export-logo.js]] le retire avant le rendu. Le logo d'Adam (création proposée) est un autre sujet : [[Logo création d'Adam]].
+Les SVG contiennent un manifeste C2PA dans `<metadata>` (provenance du fichier). Le logo d'Adam (création proposée) est un autre sujet : [[Logo création d'Adam]].
 
-## Écarts trouvés le 10/11
-- « 199 tweaks » et « 12 modules » dans `README.md`, `charte.html` et `voice-en.md` ; `site/og-image.png` affiche aussi « 199 tweaks » (voir [[export-logo.js]]).
-- Copies des jetons en retard dans l'app et le serveur (voir [[tokens.css (marque)]]).
-- Le kit ne décrit pas encore la [[Refonte glass]] ailleurs que dans les jetons.
+## Écarts connus (22/11)
+- `voice-en.md` dit encore « App sections (12) … 199 tweaks in total » (218 tweaks distincts aujourd'hui, 10 sections de tweaks).
+- L'app (`app/`) n'a pas encore repris ces fichiers tant que sa PR v5 n'est pas fusionnée ([[Charte graphique]]).
 
 ## Liens avec le reste
-- Règles lisibles dans le vault : [[Charte graphique]], [[Voix et ton]], [[Refonte glass]].
+- Règles lisibles dans le vault : [[Charte graphique]], [[Voix et ton]].
 - Utilisateurs : le site ([[Code du site]], [[Fichiers publiés du site]]), l'app ([[App Windows]]), le serveur de comptes ([[Serveur de licences]]), la communication ([[Marketing]]).

@@ -27,17 +27,25 @@ if not any(p.get('home') for p in data):
 if errors:
     sys.exit('partners.json:\n  ' + '\n  '.join(errors))
 
-def logo(p):
-    img = f'<img src="{e(p["logo"])}" alt="" width="56" height="56" loading="lazy" decoding="async">'
+def logo(p, size=64):
+    img = f'<img src="{e(p["logo"])}" alt="" width="{size}" height="{size}" loading="lazy" decoding="async">'
     # an animated logo stays still for visitors who turn animations off
     return f'<picture><source srcset="{e(p["still"])}" media="(prefers-reduced-motion: reduce)">{img}</picture>' if p.get('still') else img
 
 def card(p, ind):
-    return (f'{ind}<a class="pt" href="{e(p["url"])}" target="_blank" rel="noopener">{logo(p)}'
-            f'<span class="pt-t"><b>{e(p["name"])}</b> <small>Join on Discord<svg aria-hidden="true"><use href="#i-arrow"/></svg></small>'
-            f'<span class="sr-only"> (opens in a new tab)</span></span></a>')
+    # design v5: a card with the logo, the name and "Join on Discord"
+    return (f'{ind}<a class="s-card s-pt" href="{e(p["url"])}" target="_blank" rel="noopener">{logo(p)}'
+            f'<div><b>{e(p["name"])}</b><span><svg class="i" aria-hidden="true"><use href="#i-external"/></svg>Join on Discord</span>'
+            f'<span class="sr-only"> (opens in a new tab)</span></div></a>')
 
-def write(path, name, items):
+def card_all(p, ind):
+    # partners page: a bigger logo, the name, and "Join on Discord" as a button
+    return (f'{ind}<a class="s-card pt-c" href="{e(p["url"])}" target="_blank" rel="noopener"><div class="lg">{logo(p, 96)}'
+            f'<div><b>{e(p["name"])}</b><small>Minecraft PvP server</small></div></div>'
+            f'<span class="btn"><svg class="i" aria-hidden="true"><use href="#i-external"/></svg>Join on Discord</span>'
+            f'<span class="sr-only"> (opens in a new tab)</span></a>')
+
+def write(path, name, items, card=card):
     s = open(path).read()
     a, b = f'<!-- partners:{name} -->', f'<!-- /partners:{name} -->'
     assert s.count(a) == 1 and s.count(b) == 1, f'{a} and {b} must each appear once in {path}'
@@ -49,5 +57,11 @@ def write(path, name, items):
     return len(items)
 
 n_home = write(os.path.join(SRC, 'page.html'), 'home', [p for p in data if p.get('home')])
-n_all = write(os.path.join(SRC, 'partners.html'), 'all', data)
+n_all = write(os.path.join(SRC, 'partners.html'), 'all', data, card_all)
+# the number of servers in the eyebrow of the partners page
+t = open(os.path.join(SRC, 'partners.html')).read()
+t2, k = re.subn(r'(<span id="pt-n">)[^<]*(</span>)', rf'\g<1>{n_all} server{"s" if n_all != 1 else ""}\2', t)
+assert k == 1, '<span id="pt-n"> not found in partners.html'
+if t2 != t:
+    open(os.path.join(SRC, 'partners.html'), 'w').write(t2)
 print(f'partners: {n_home} on the home page, {n_all} on partners.html')

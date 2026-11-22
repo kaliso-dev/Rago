@@ -4,8 +4,6 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="theme-color" content="#0A0A0B">
-<!-- Every review, in full. Source of site/reviews.html (built by tools/build.py, like the home page from page.html).
-     Reviews are read from the account server in the browser (/api/v1/reviews?all=1), as on the home page. -->
 <title>Reviews · Rago Optimizer</title>
 <meta name="description" content="What players say about Rago Optimizer, the Minecraft PvP optimizer for Windows. Every review, in full and as written, from players signed in to their Rago account.">
 <link rel="canonical" href="https://rago-optimizer.com/reviews.html">
@@ -18,226 +16,166 @@
 <link rel="icon" href="favicon.svg" type="image/svg+xml">
 <link rel="icon" href="favicon.ico" sizes="any">
 <link rel="apple-touch-icon" href="apple-touch-icon.png">
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600;700&family=Geist+Mono:wght@400;500&display=swap">
+<link rel="preload" href="fonts/BarlowCondensed-900-italic.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="stylesheet" href="v5.css">
 <style>
-/* Same tokens and pieces as the home page (page.html): rounded everywhere, one red, no orange. */
-:root{
-  --ink-0:#070708; --ink:#0A0A0B; --ink-2:#111113; --ink-3:#17171A; --ink-4:#1F1F23; --ink-5:#2A2A30;
-  --t1:#F5F5F6; --t2:#A1A1AA; --t3:#7C7C86;
-  --l1:rgba(255,255,255,.06); --l2:rgba(255,255,255,.10); --l3:rgba(255,255,255,.16);
-  --red:#FF3B30; --red-hover:#FF5E55; --red-press:#F2352B;
-  --red-a08:rgba(255,59,48,.08); --red-a14:rgba(255,59,48,.14); --red-a30:rgba(255,59,48,.30);
-  --ok:#3DDC97;
-  --sans:"Geist","Segoe UI Variable","Segoe UI",system-ui,-apple-system,sans-serif;
-  --mono:var(--sans); /* no monospace font on the site (Sofiene, 14/11: « cette police robotique […] elle est horrible ») */
-  --out:cubic-bezier(.16,1,.3,1); --spring:cubic-bezier(.34,1.56,.64,1);
-  --r-xs:8px; --r-sm:12px; --r-md:16px; --r-lg:24px; --r-xl:32px; --r-full:999px;
-  --g:clamp(16px,6vw,120px);
-  color-scheme:dark;
+.sm-nav .r > a{display:inline-flex;align-items:center;gap:8px}
+.sm-nav .r > a svg{width:16px;height:16px;transform:rotate(180deg)}
+.sm-hero{position:relative;width:min(1200px,calc(100% - 2 * var(--g)));margin:0 auto;display:grid;grid-template-columns:minmax(0,1fr) 430px;gap:60px;align-items:end;padding:80px 0 0}
+.sm-hero .s-dots{right:-120px;top:-40px;width:760px;height:520px;-webkit-mask:linear-gradient(230deg,#000 0,transparent 65%)}
+.sm-hero h1{position:relative;margin-top:22px;font-family:var(--cond);font-weight:900;font-style:italic;font-size:100px;line-height:.84;text-transform:uppercase;letter-spacing:-.01em}
+.sm-hero .s-lead{margin-top:26px}
+.sm-hero h1 span{display:block}
+.sm-hero h1 .br{position:relative;display:inline-block;isolation:isolate}
+.sm-hero h1 .br::after{content:"";position:absolute;z-index:-1;left:-24px;right:-50px;top:30%;height:76%;background:url(img/v5/brush.svg) center/100% 100% no-repeat;transform:rotate(-2deg)}
+.sm-sum{display:grid;grid-template-columns:150px 1fr;gap:26px;padding:26px 28px}
+.sm-sum .avg b{display:block;font-family:var(--cond);font-weight:900;font-style:italic;font-size:96px;line-height:.8}
+.sm-sum .avg small{display:block;margin-top:10px;font-size:13px;color:var(--ink-3)}
+.st5{display:flex;gap:3px;margin-top:10px}
+.st5 i{width:16px;height:16px;background:var(--red);clip-path:polygon(50% 0,61% 35%,98% 35%,68% 57%,79% 91%,50% 70%,21% 91%,32% 57%,2% 35%,39% 35%)}
+.st5 i.off{background:var(--bg-4)}
+.st5.sm i{width:15px;height:15px}
+.sm-sum ul{display:grid;gap:7px;align-content:center}
+.sm-sum li{display:grid;grid-template-columns:32px 1fr 26px;gap:12px;align-items:center;font-family:var(--cond);font-weight:800;font-size:14px;color:var(--ink-2)}
+.sm-sum li .b{height:10px;background:var(--bg-4);transform:skewX(var(--skew))}
+.sm-sum li .b i{display:block;height:100%;background:var(--red)}
+.sm-sum li em{font-style:normal;text-align:right;color:var(--ink-3)}
+.sm-sum li.on{color:var(--ink)}
+.sm-bar{display:flex;align-items:center;gap:6px;margin-top:64px;padding-bottom:16px;border-bottom:1px solid var(--line)}
+.sm-bar span{height:38px;padding:0 16px;display:inline-grid;place-items:center;font-family:var(--cond);font-weight:800;font-size:15px;letter-spacing:.08em;text-transform:uppercase;color:var(--ink-2)}
+.sm-bar span.on{position:relative;color:var(--red-ink);isolation:isolate}
+.sm-bar span.on::before{content:"";position:absolute;inset:0;z-index:-1;background:var(--red);transform:skewX(var(--skew))}
+.sm-bar b{margin-left:auto;font-family:var(--cond);font-weight:800;font-size:14px;letter-spacing:.1em;text-transform:uppercase;color:var(--ink-3)}
+.sm-list{columns:3;column-gap:14px;margin-top:24px}
+.sm-rv{break-inside:avoid;margin-bottom:14px;padding:24px 24px 22px}
+.sm-rv q{display:block;margin-top:14px;font-size:15.5px;line-height:1.55}
+.sm-rv q::before{content:"“"}.sm-rv q::after{content:"”"}
+.sm-rv footer{display:flex;align-items:center;gap:12px;margin-top:18px}
+.sm-rv footer i{width:36px;height:36px;display:grid;place-items:center;background:var(--bg-4);font-family:var(--cond);font-weight:900;font-size:17px;font-style:normal}
+.sm-rv footer i{border-radius:50%}
+.sm-rv footer b{font-family:var(--cond);font-weight:800;font-size:15px;letter-spacing:.04em;text-transform:uppercase}
+.sm-rv footer small{margin-left:auto;font-size:12.5px;color:var(--ink-3)}
+.sm-leave{display:grid;grid-template-columns:1fr auto;gap:40px;align-items:center;margin-top:40px;padding:34px 36px}
+.sm-leave h3{font-family:var(--cond);font-weight:900;font-style:italic;font-size:44px;line-height:.88;text-transform:uppercase}
+.sm-leave p{margin-top:12px;max-width:640px;font-size:15px;line-height:1.55;color:var(--ink-2)}
+.sm-empty{display:grid;place-items:center;text-align:center;padding:80px 20px;margin-top:64px;border:1.5px dashed var(--line-2)}
+.sm-empty{border-radius:22px}
+.sm-empty .ic{width:64px;height:64px;display:grid;place-items:center;background:rgba(255,59,48,.12);color:var(--red)}
+.sm-empty .ic svg{width:28px;height:28px}
+.sm-empty .ic{border-radius:18px}
+.sm-empty b{display:block;margin-top:18px;font-family:var(--cond);font-weight:900;font-style:italic;font-size:40px;text-transform:uppercase}
+.sm-empty span{display:block;margin-top:6px;font-size:15px;color:var(--ink-2)}
+.sm-sum.none .avg b{color:var(--ink-3)}
+.sm-sum.none li .b i{width:0 !important}
+.sm-foot{margin-top:110px}
+.s-nav .brand{display:flex;align-items:center;gap:12px}
+.s-nav .brand i{width:2px;height:26px;background:var(--line-2);transform:skewX(var(--skew))}
+.s-nav .brand em{font-family:var(--cond);font-weight:900;font-style:italic;font-size:26px;text-transform:uppercase;color:var(--red)}
+@media (max-width:760px){.s-nav .brand em{font-size:22px}.s-nav .brand i{height:22px}}
+
+.sw5.sm-w{width:min(1200px,calc(100% - 2 * var(--g)));margin:0 auto}
+.sm-nav .r > a:not(.btn) svg{width:16px;height:16px;transform:none}
+.sm-sum ul{list-style:none;margin:0;padding:0}
+.sm-sum li button{all:unset;box-sizing:border-box;display:grid;grid-template-columns:32px 1fr 26px;gap:12px;align-items:center;width:100%;cursor:pointer;font:inherit;color:inherit;padding:2px 0}
+.sm-sum li{display:block}
+.sm-sum li button:disabled{cursor:default;opacity:.5}
+.sm-sum li button:not(:disabled):hover,.sm-sum li button[aria-pressed="true"]{color:var(--ink)}
+.sm-sum li button[aria-pressed="true"] em{color:var(--red)}
+.sm-sum li button:focus-visible{outline:2px solid var(--red);outline-offset:3px;border-radius:4px}
+.sm-sum li .b i{width:0;transition:width .9s var(--out)}
+.st5.mt{position:relative;width:fit-content}
+.st5.mt .fg{position:absolute;inset:0 auto 0 0;display:flex;gap:3px;overflow:hidden;white-space:nowrap}
+.st5.mt .bg{display:flex;gap:3px}
+.st5.mt .bg i{background:var(--bg-4)}
+.st5 i{flex:none}
+.sm-bar{flex-wrap:wrap}
+.sm-bar .sort{display:flex;gap:6px}
+.sm-bar button{all:unset;box-sizing:border-box;position:relative;height:38px;padding:0 16px;display:inline-grid;place-items:center;cursor:pointer;font-family:var(--cond);font-weight:800;font-size:15px;letter-spacing:.08em;text-transform:uppercase;color:var(--ink-2);isolation:isolate}
+.sm-bar button:hover{color:var(--ink)}
+.sm-bar button[aria-pressed="true"]{color:var(--red-ink)}
+.sm-bar button[aria-pressed="true"]::before{content:"";position:absolute;inset:0;z-index:-1;background:var(--red);transform:skewX(var(--skew));border-radius:6px}
+.sm-bar button:focus-visible{outline:2px solid var(--red);outline-offset:2px}
+.sm-bar .count{margin-left:auto;display:flex;align-items:center;gap:14px;font-family:var(--cond);font-weight:800;font-size:14px;letter-spacing:.1em;text-transform:uppercase;color:var(--ink-3)}
+.sm-bar .count button{height:auto;padding:0;color:var(--red)}
+.sm-bar .count button:hover{text-decoration:underline;text-underline-offset:3px}
+.sm-list{columns:auto;display:grid;grid-template-columns:repeat(var(--n,3),minmax(0,1fr));gap:14px;align-items:start}
+.sm-list .col{display:flex;flex-direction:column;gap:14px;min-width:0}
+.sm-rv{margin:0;animation:rvIn .5s var(--out) both}
+.sm-rv p{margin-top:14px;font-size:15.5px;line-height:1.55;white-space:pre-line;overflow-wrap:anywhere}
+.sm-rv footer .av{width:36px;height:36px;flex:none;display:grid;place-items:center;border-radius:50%;object-fit:cover;background:var(--bg-4);font-family:var(--cond);font-weight:900;font-style:italic;font-size:17px}
+.sm-rv footer b{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.sm-rv footer small{white-space:nowrap}
+.sm-rv.hl{border-color:var(--red);box-shadow:0 0 0 1px var(--red)}
+.sm-rv.sk{height:190px;animation:skel 1.4s ease-in-out infinite alternate}
+.sm-rv.sk.t{height:250px}.sm-rv.sk.s{height:150px}
+@keyframes skel{from{opacity:.45}to{opacity:.9}}
+@keyframes rvIn{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:none}}
+@media (prefers-reduced-motion:reduce){.sm-rv,.sm-rv.sk{animation:none}.sm-sum li .b i{transition:none}}
+.sm-empty{border-radius:22px}
+.sm-empty .ic{border-radius:18px}
+.sm-leave .btn svg{width:18px;height:18px}
+@media (max-width:1080px){
+  .sm-hero{grid-template-columns:1fr;gap:40px;padding-top:50px}
+  .sm-hero .s-dots{right:0;width:100%}
+  .sm-sum{max-width:520px}
+  .sm-leave{grid-template-columns:1fr;gap:24px}
 }
-*{box-sizing:border-box}
-html{overflow-x:clip;background:var(--ink)}
-body{margin:0;background:var(--ink);color:var(--t1);font:400 15px/1.65 var(--sans);-webkit-font-smoothing:antialiased;overflow-x:clip}
-a{color:inherit}
-h1,h2,p{margin:0}
-h1,h2{font-weight:600;letter-spacing:-.035em;line-height:1.05;text-wrap:balance}
-[hidden]{display:none!important}
-:focus-visible{outline:2px solid var(--red);outline-offset:3px;border-radius:var(--r-sm)}
-.band{padding-inline:var(--g)}
-.wrap{max-width:1240px;margin-inline:auto}
-.sr-only{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0}
-.eyebrow{display:inline-flex;align-items:center;gap:8px;padding:6px 12px 6px 10px;border-radius:var(--r-full);background:var(--ink-2);border:1px solid var(--l1);font:500 12px/1 var(--sans);color:var(--t2)}
-.eyebrow::before{content:"";width:6px;height:6px;border-radius:50%;background:var(--red);box-shadow:0 0 10px var(--red)}
-
-.btn{--h:44px;display:inline-flex;align-items:center;justify-content:center;gap:9px;height:var(--h);padding-inline:22px;border-radius:var(--r-full);font:600 14px/1 var(--sans);text-decoration:none;border:0;cursor:pointer;white-space:nowrap;transition:transform .16s var(--out),background .16s,box-shadow .24s var(--out),color .16s}
-.btn svg{width:16px;height:16px;flex:none}
-.btn-red{background:var(--red);color:var(--ink);box-shadow:0 8px 30px -10px rgba(255,59,48,.6)}
-.btn-red:hover{background:var(--red-hover);transform:translateY(-1px);box-shadow:0 0 0 6px var(--red-a14),0 14px 40px -10px rgba(255,59,48,.7)}
-.btn-red:active{background:var(--red-press);transform:none}
-.btn-ghost{background:rgba(255,255,255,.04);color:var(--t1);box-shadow:inset 0 0 0 1px var(--l2)}
-.btn-ghost:hover{background:rgba(255,255,255,.08);box-shadow:inset 0 0 0 1px var(--l3)}
-.btn-sm{--h:38px;padding-inline:16px;font-size:13.5px}
-
-/* Header */
-.top{display:flex;align-items:center;justify-content:space-between;gap:16px;padding-top:max(18px,env(safe-area-inset-top,0px));padding-bottom:18px}
-.logo{display:flex;align-items:center;color:var(--t1);border-radius:var(--r-sm)}
-.logo img{display:block;height:24px;width:auto}
-.top-cta{display:flex;gap:8px;align-items:center}
-
-/* Summary: average, stars, and how many reviews give each rating (click a row to filter) */
-.hero{position:relative;padding-block:clamp(28px,6vw,72px) clamp(28px,4vw,48px);isolation:isolate;overflow:hidden;overflow:clip}
-.hero::before{content:"";position:absolute;z-index:-1;width:min(720px,80vw);height:min(720px,80vw);right:-14vw;top:-30vw;border-radius:50%;background:radial-gradient(circle,rgba(255,59,48,.22),transparent 62%);filter:blur(40px);pointer-events:none}
-.hero-in{display:grid;grid-template-columns:minmax(0,1.15fr) minmax(0,.85fr);gap:clamp(28px,5vw,80px);align-items:end}
-.hero h1{font-size:clamp(38px,5vw,68px);letter-spacing:-.05em;margin:20px 0 16px}
-.lede{font-size:clamp(15px,1.1vw,17px);color:var(--t2);max-width:34em}
-.sum{display:grid;grid-template-columns:auto minmax(0,1fr);gap:20px 28px;align-items:center;padding:24px;border-radius:var(--r-xl);background:var(--ink-2);border:1px solid var(--l1)}
-.avg{display:flex;flex-direction:column;gap:8px;align-items:flex-start}
-.avg b{font:650 56px/1 var(--sans);letter-spacing:-.05em;font-variant-numeric:tabular-nums}
-.avg small{font-size:12.5px;color:var(--t3)}
-.meter{position:relative;display:inline-flex;color:var(--ink-5)}
-.meter span{display:flex;gap:3px}
-.meter .fg{position:absolute;inset:0 auto 0 0;overflow:hidden;color:var(--red);white-space:nowrap}
-.meter svg{width:17px;height:17px;flex:none;fill:currentColor}
-.dist{display:grid;gap:4px;margin:0;padding:0;list-style:none}
-.dist button{all:unset;box-sizing:border-box;display:grid;grid-template-columns:30px minmax(0,1fr) 28px;gap:10px;align-items:center;width:100%;padding:5px 8px;border-radius:var(--r-sm);cursor:pointer;font:500 12.5px/1 var(--mono);color:var(--t2);transition:background .16s,color .16s}
-.dist button:hover{background:var(--l1);color:var(--t1)}
-.dist button:focus-visible{outline:2px solid var(--red);outline-offset:1px}
-.dist button[aria-pressed="true"]{background:var(--red-a14);color:var(--t1)}
-.dist button:disabled{cursor:default;opacity:.45;background:none}
-.dist .n{display:inline-flex;align-items:center;gap:4px}
-.dist .n svg{width:11px;height:11px;fill:var(--red)}
-.dist .bar{height:6px;border-radius:6px;background:var(--ink-4);overflow:hidden}
-.dist .bar i{display:block;height:100%;width:0;border-radius:6px;background:var(--red);transition:width .9s var(--out)}
-.dist .c{text-align:right;color:var(--t3)}
-
-/* Toolbar: filter state and sort */
-.tools{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:12px;margin-bottom:20px;padding-top:20px;border-top:1px solid var(--l1)}
-.count{font-size:13.5px;color:var(--t2)}
-.count button{all:unset;cursor:pointer;margin-left:8px;color:var(--red);font-weight:500;border-radius:var(--r-xs)}
-.count button:hover{text-decoration:underline;text-underline-offset:3px}
-.count button:focus-visible{outline:2px solid var(--red);outline-offset:2px}
-.seg{display:inline-flex;padding:4px;border-radius:var(--r-full);background:var(--ink-2);border:1px solid var(--l1)}
-.seg button{all:unset;cursor:pointer;padding:7px 14px;border-radius:var(--r-full);font-size:13px;color:var(--t2);transition:color .16s,background .16s}
-.seg button:hover{color:var(--t1)}
-.seg button[aria-pressed="true"]{background:var(--ink-4);color:var(--t1);box-shadow:inset 0 0 0 1px var(--l2)}
-.seg button:focus-visible{outline:2px solid var(--red);outline-offset:1px}
-
-/* Reviews: columns filled left to right, each card on the shortest one, so the newest stay on top */
-.cols{display:grid;grid-template-columns:repeat(var(--n,3),minmax(0,1fr));gap:16px;align-items:start}
-.col{display:grid;gap:16px;min-width:0}
-.rq{border-radius:var(--r-lg);background:var(--ink-2);border:1px solid var(--l1);padding:22px;display:flex;flex-direction:column;gap:16px;margin:0;scroll-margin-top:24px;transition:border-color .3s,transform .4s var(--out),box-shadow .4s var(--out);animation:in .6s var(--out) both}
-.rq:hover{border-color:var(--l3);transform:translateY(-2px)}
-.rq .stars{display:flex;gap:3px;color:var(--red)}
-.rq .stars svg{width:14px;height:14px;fill:currentColor}
-.rq .stars .off{display:flex;color:var(--ink-4)}
-.rq p{font-size:14.5px;color:var(--t1);line-height:1.65;white-space:pre-line;overflow-wrap:anywhere}
-.rq footer{display:flex;align-items:center;gap:10px;font-size:13px;color:var(--t2)}
-.rq footer small{margin-left:auto;font-size:11px;color:var(--t3);white-space:nowrap}
-.rq footer .rn{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-.av{width:30px;height:30px;border-radius:50%;display:grid;place-items:center;font:600 12px/1 var(--sans);color:var(--t1);background:var(--ink-4);border:1px solid var(--l2);flex:none}
-img.av{object-fit:cover;padding:0}
-/* The review opened from "See more" on the home page */
-.rq.hl{border-color:var(--red);box-shadow:0 0 0 6px var(--red-a14),0 20px 50px -20px rgba(255,59,48,.45)}
-@keyframes in{from{opacity:0;transform:translateY(14px)}}
-.state{padding:56px 24px;border-radius:var(--r-xl);border:1px dashed var(--l2);text-align:center;color:var(--t2);display:grid;gap:8px;justify-items:center}
-.state b{color:var(--t1);font-weight:600;font-size:17px;letter-spacing:-.02em}
-.skel{height:180px;border-radius:var(--r-lg);background:linear-gradient(100deg,var(--ink-2) 30%,var(--ink-3) 50%,var(--ink-2) 70%);background-size:300% 100%;animation:shine 1.4s linear infinite;border:1px solid var(--l1)}
-.skel.t{height:240px}.skel.s{height:140px}
-@keyframes shine{from{background-position:100% 0}to{background-position:0 0}}
-
-/* Leave a review */
-.cta{margin-block:clamp(40px,6vw,72px)}
-.cta-in{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:20px 32px;padding:clamp(24px,3vw,36px);border-radius:var(--r-xl);background:radial-gradient(110% 120% at 100% 0%,rgba(255,59,48,.14),transparent 55%),var(--ink-2);border:1px solid var(--l1)}
-.cta h2{font-size:clamp(22px,2.2vw,28px);letter-spacing:-.03em}
-.cta p{color:var(--t2);font-size:14px;margin-top:8px;max-width:46em}
-.cta-acts{display:flex;flex-wrap:wrap;gap:10px}
-
-footer.foot{border-top:1px solid var(--l1);padding-block:36px;font-size:12.5px;color:var(--t3)}
-footer.foot .wrap{display:grid;gap:16px}
-footer.foot nav{display:flex;flex-wrap:wrap;gap:6px;margin-left:-12px}
-footer.foot nav a{text-decoration:none;color:var(--t2);padding:6px 12px;border-radius:var(--r-full)}
-footer.foot nav a:hover{color:var(--t1);background:var(--l1)}
-footer.foot p{max-width:80ch}
-
-@media (max-width:900px){
-  .hero-in{grid-template-columns:1fr;align-items:start}
-}
-@media (max-width:560px){
-  .top-cta .btn-ghost{display:none}
-  .logo img{height:20px}
-  .sum{grid-template-columns:1fr;padding:20px}
-  .avg{flex-direction:row;align-items:center;flex-wrap:wrap;gap:6px 12px}
-  .avg b{font-size:44px}
-  .tools{flex-direction:column;align-items:flex-start}
-  .seg{width:100%}.seg button{flex:1;text-align:center}
-  .cta-acts,.cta-acts .btn{width:100%}
-  footer.foot nav a{padding:10px 12px}
-}
-@media (prefers-reduced-motion:reduce){
-  .rq,.rq:hover{animation:none;transform:none}
-  .skel{animation:none}
-  .dist .bar i{transition:none}
+@media (max-width:760px){
+  .sm-nav .r > a:not(.btn){display:none}
+  .sm-hero h1{font-size:clamp(54px,15vw,80px)}
+  .sm-hero h1 .br::after{left:-12px;right:-24px}
+  .sm-sum{grid-template-columns:1fr;gap:18px;padding:22px}
+  .sm-sum .avg b{font-size:76px}
+  .sm-bar{margin-top:44px;gap:10px}
+  .sm-bar .sort{width:100%;overflow-x:auto}
+  .sm-bar button{padding:0 12px;font-size:14px;white-space:nowrap}
+  .sm-bar .count{margin-left:0}
+  .sm-leave{padding:26px 22px}
+  .sm-leave h3{font-size:36px}
+  .sm-leave .btn{width:100%}
+  .sm-empty{padding:56px 18px}
+  .sm-empty b{font-size:32px}
+  .sm-foot{margin-top:80px}
 }
 </style>
 </head>
 <body>
-<svg width="0" height="0" style="position:absolute" aria-hidden="true">
-  <symbol id="i-arrow" viewBox="0 0 20 20"><path fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" d="M4 10h12M11 5l5 5-5 5"/></symbol>
-  <symbol id="i-back" viewBox="0 0 20 20"><path fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" d="M16 10H4M9 5l-5 5 5 5"/></symbol>
+<script>document.documentElement.classList.add("js")</script>
+<!-- icons -->
+<svg class="sprite" width="0" height="0" aria-hidden="true" focusable="false"><defs><filter id="rgh-face" x="-20%" y="-20%" width="140%" height="140%" primitiveUnits="userSpaceOnUse" color-interpolation-filters="sRGB"><feTurbulence type="fractalNoise" baseFrequency="1.7" numOctaves="2" seed="3" result="n"/><feDisplacementMap in="SourceGraphic" in2="n" scale="0.75" xChannelSelector="R" yChannelSelector="G" result="d"/><feTurbulence type="fractalNoise" baseFrequency="1.3" numOctaves="2" seed="9" result="s"/><feColorMatrix in="s" type="matrix" values="0 0 0 0 0  0 0 0 0 0  0 0 0 0 0  -16 0 0 0 12.4" result="sm"/><feComposite in="d" in2="sm" operator="in"/></filter><filter id="rgh-back" x="-20%" y="-20%" width="140%" height="140%" primitiveUnits="userSpaceOnUse" color-interpolation-filters="sRGB"><feTurbulence type="fractalNoise" baseFrequency="1.3" numOctaves="2" seed="14" result="n"/><feDisplacementMap in="SourceGraphic" in2="n" scale="1.0" xChannelSelector="G" yChannelSelector="R" result="d"/><feTurbulence type="fractalNoise" baseFrequency="1.1" numOctaves="2" seed="20" result="s"/><feColorMatrix in="s" type="matrix" values="0 0 0 0 0  0 0 0 0 0  0 0 0 0 0  -14 0 0 0 10.9" result="sm"/><feComposite in="d" in2="sm" operator="in"/></filter><filter id="rgh-face-s" x="-20%" y="-20%" width="140%" height="140%" primitiveUnits="userSpaceOnUse" color-interpolation-filters="sRGB"><feTurbulence type="fractalNoise" baseFrequency="1.2" numOctaves="2" seed="3" result="n"/><feDisplacementMap in="SourceGraphic" in2="n" scale="0.45" xChannelSelector="R" yChannelSelector="G" result="d"/></filter><filter id="rgh-back-s" x="-20%" y="-20%" width="140%" height="140%" primitiveUnits="userSpaceOnUse" color-interpolation-filters="sRGB"><feTurbulence type="fractalNoise" baseFrequency="1.0" numOctaves="2" seed="14" result="n"/><feDisplacementMap in="SourceGraphic" in2="n" scale="0.6" xChannelSelector="G" yChannelSelector="R" result="d"/></filter><filter id="rgh-face-l" x="-20%" y="-20%" width="140%" height="140%" primitiveUnits="userSpaceOnUse" color-interpolation-filters="sRGB"><feTurbulence type="fractalNoise" baseFrequency="2.4" numOctaves="2" seed="3" result="n"/><feDisplacementMap in="SourceGraphic" in2="n" scale="0.42" xChannelSelector="R" yChannelSelector="G" result="d"/><feTurbulence type="fractalNoise" baseFrequency="3.2" numOctaves="2" seed="9" result="s"/><feColorMatrix in="s" type="matrix" values="0 0 0 0 0  0 0 0 0 0  0 0 0 0 0  -16 0 0 0 13.9" result="sm"/><feComposite in="d" in2="sm" operator="in"/></filter><filter id="rgh-back-l" x="-20%" y="-20%" width="140%" height="140%" primitiveUnits="userSpaceOnUse" color-interpolation-filters="sRGB"><feTurbulence type="fractalNoise" baseFrequency="2.0" numOctaves="2" seed="14" result="n"/><feDisplacementMap in="SourceGraphic" in2="n" scale="0.55" xChannelSelector="G" yChannelSelector="R" result="d"/><feTurbulence type="fractalNoise" baseFrequency="2.8" numOctaves="2" seed="20" result="s"/><feColorMatrix in="s" type="matrix" values="0 0 0 0 0  0 0 0 0 0  0 0 0 0 0  -14 0 0 0 12.6" result="sm"/><feComposite in="d" in2="sm" operator="in"/></filter></defs>
+<symbol id="i-chat" viewBox="0 0 24 24" overflow="visible"><defs><mask id="im-chat" maskUnits="userSpaceOnUse" x="-4" y="-4" width="32" height="32"><rect x="-4" y="-4" width="32" height="32" fill="#fff"/><path fill="#000" d="M7.2 9H9.2V11H7.2ZM11 9H13V11H11ZM14.8 9H16.8V11H14.8Z"/></mask><g id="ig-chat" mask="url(#im-chat)"><path fill="currentColor" d="M3 4.2H18.4L21 6.8V15.6H10.4L5.4 19.8V15.6H3Z"/></g></defs><g transform="translate(2.55 0) skewX(-12)"><use href="#ig-chat" style="color:var(--pb);filter:url(#rgh-back-s)" transform="translate(1.3 1.5)"/><use href="#ig-chat" style="color:var(--pf);filter:url(#rgh-face-s)"/></g></symbol>
+<symbol id="i-left" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m15 18-6-6 6-6"/></g></symbol>
+<symbol id="i-pencil" viewBox="0 0 24 24" overflow="visible"><defs><mask id="im-pencil" maskUnits="userSpaceOnUse" x="-4" y="-4" width="32" height="32"><rect x="-4" y="-4" width="32" height="32" fill="#fff"/><path fill="none" stroke="#000" stroke-width="1.5" stroke-linejoin="miter" d="M13 5.4L18.6 11"/></mask><g id="ig-pencil" mask="url(#im-pencil)"><path fill="currentColor" d="M15.4 3L21 8.6L8.6 21H3V15.4Z"/></g></defs><g transform="translate(2.55 0) skewX(-12)"><use href="#ig-pencil" style="color:var(--pb);filter:url(#rgh-back-s)" transform="translate(1.3 1.5)"/><use href="#ig-pencil" style="color:var(--pf);filter:url(#rgh-face-s)"/></g></symbol>
 </svg>
-
-<header class="band">
-  <div class="wrap top">
-    <a class="logo" href="./" aria-label="Rago Optimizer home"><img src="rago-wordmark.svg" alt="" height="24"></a>
-    <div class="top-cta">
-      <a class="btn btn-ghost btn-sm" href="./"><svg><use href="#i-back"/></svg>Back to the site</a>
-      <a class="btn btn-red btn-sm" href="./#pricing">Get Premium</a>
-    </div>
-  </div>
-</header>
-
+<!-- /icons -->
+<header class="s-nav sm-nav" id="top"><span class="brand"><a class="s-logo" href="./" aria-label="Rago Optimizer home"><img src="img/v5/rago-icon.svg" alt="" width="34" height="34"><b>rago</b></a></span><div class="r"><a href="./"><svg class="i" aria-hidden="true"><use href="#i-left"/></svg>Back to the site</a><a class="btn red" href="./#pricing">Get Premium</a></div></header>
 <main>
-  <section class="hero band">
-    <div class="wrap hero-in">
-      <div>
-        <span class="eyebrow">Reviews</span>
-        <h1>Players feel the difference.</h1>
-        <p class="lede">Every review of Rago Optimizer, in full and as written, from players signed in to their Rago account. Results depend on your PC and connection.</p>
-      </div>
-      <div class="sum" id="sum" hidden>
-        <div class="avg">
-          <b id="avg">–</b>
-          <span class="meter" id="meter" role="img"><span id="meter-bg"></span><span class="fg" id="meter-fg"></span></span>
-          <small id="total"></small>
-        </div>
-        <ul class="dist" id="dist" aria-label="Filter by rating"></ul>
-      </div>
-    </div>
-  </section>
-
-  <section class="band" aria-labelledby="list-t">
-    <div class="wrap">
-      <h2 class="sr-only" id="list-t">All reviews</h2>
-      <div class="tools" id="tools" hidden>
-        <p class="count" id="count" aria-live="polite"></p>
-        <div class="seg" id="sort" role="group" aria-label="Sort reviews">
-          <button type="button" data-sort="new" aria-pressed="true">Newest</button>
-          <button type="button" data-sort="high" aria-pressed="false">Highest rated</button>
-          <button type="button" data-sort="low" aria-pressed="false">Lowest rated</button>
-        </div>
-      </div>
-      <div class="cols" id="list" aria-busy="true">
-        <div class="col"><div class="skel t"></div><div class="skel s"></div></div>
-        <div class="col"><div class="skel"></div><div class="skel t"></div></div>
-        <div class="col"><div class="skel s"></div><div class="skel"></div></div>
-      </div>
-      <div class="state" id="state" hidden></div>
-      <noscript><div class="state"><b>Reviews load with JavaScript.</b><span>Turn it on to read them.</span></div></noscript>
-    </div>
-  </section>
-
-  <section class="band cta" id="leave">
-    <div class="wrap cta-in">
-      <div>
-        <h2>Played with Rago Optimizer? Leave your review.</h2>
-        <p>Premium members write theirs from their account page. On the free version, open Rago Optimizer, then Settings, then Leave a review. It shows here with your public name, never your email.</p>
-      </div>
-      <div class="cta-acts">
-        <a class="btn btn-red js-review" href="https://account.rago-optimizer.com/account/review">Leave a review<svg><use href="#i-arrow"/></svg></a>
-      </div>
-    </div>
-  </section>
-</main>
-
-<footer class="foot band">
-  <div class="wrap">
-    <nav aria-label="Footer"><a href="./">Rago Optimizer</a><a href="./#pricing">Pricing</a><a href="./#faq">FAQ</a><a href="partners.html">Partners</a><a href="terms.html">Terms</a><a href="privacy.html">Privacy</a><a href="terms.html#cancel">Cancellation</a></nav>
-    <p>Reviews are posted by players signed in to their Rago account, from the app or the website, and shown as written, from the most recently updated. We don't pay for reviews or hide negative ones. Minecraft is a trademark of Mojang Studios; Rago Optimizer isn't affiliated with Mojang or Microsoft. © 2026 Rago Optimizer, by KALISO and RAGO.</p>
+<section class="sm-hero" aria-labelledby="h"><span class="s-dots" aria-hidden="true"></span>
+  <div><p class="s-eb">Reviews</p><h1 id="h"><span>Players feel</span><span class="br">the difference.</span></h1>
+    <p class="s-lead">Every review of Rago Optimizer, in full and as written, from players signed in to their Rago account. Results depend on your PC and connection.</p></div>
+  <div class="s-card sm-sum" id="sum" hidden><div class="avg"><b id="avg">–</b><span class="st5 mt" id="meter" role="img"><span class="bg"><i></i><i></i><i></i><i></i><i></i></span><span class="fg" id="meter-fg"><i></i><i></i><i></i><i></i><i></i></span></span><small id="total"></small></div>
+    <ul id="dist" aria-label="Filter by rating"></ul></div>
+</section>
+<section class="sw5 sm-w" aria-labelledby="list-t">
+  <h2 class="sr-only" id="list-t">All reviews</h2>
+  <div class="sm-bar" id="tools" hidden><div class="sort" id="sort" role="group" aria-label="Sort reviews">
+    <button type="button" data-sort="new" aria-pressed="true">Newest</button><button type="button" data-sort="high" aria-pressed="false">Highest rated</button><button type="button" data-sort="low" aria-pressed="false">Lowest rated</button></div>
+    <p class="count" id="count" aria-live="polite"></p></div>
+  <div class="sm-list" id="list" aria-busy="true" style="margin-top:64px">
+    <div class="col"><div class="s-card sm-rv sk t"></div><div class="s-card sm-rv sk s"></div></div>
+    <div class="col"><div class="s-card sm-rv sk"></div><div class="s-card sm-rv sk t"></div></div>
+    <div class="col"><div class="s-card sm-rv sk s"></div><div class="s-card sm-rv sk"></div></div>
   </div>
-</footer>
-
+  <div class="sm-empty" id="state" hidden></div>
+  <noscript><div class="sm-empty"><div><span class="ic"><svg class="i" aria-hidden="true"><use href="#i-chat"/></svg></span><b>Reviews load with JavaScript.</b><span>Turn it on to read them.</span></div></div></noscript>
+  <div class="s-card sm-leave" id="leave"><div><h3>Played with Rago Optimizer?<br>Leave your review.</h3>
+    <p>Premium members write theirs from their account page. On the free version, open Rago Optimizer, then Settings, then Leave a review. It shows here with your public name, never your email.</p></div>
+    <a class="btn red lg js-review" href="https://account.rago-optimizer.com/account/review"><svg class="i" aria-hidden="true"><use href="#i-pencil"/></svg>Leave a review</a></div>
+</section>
+</main>
+<div class="sm-foot"><footer class="s-foot"><div class="sw5"><div class="row"><div><a class="s-logo" href="./" aria-label="Rago Optimizer home"><img src="img/v5/rago-icon.svg" alt="" width="34" height="34"><b>rago</b></a><p class="motto">every millisecond counts.</p></div>
+  <nav class="cols" aria-label="Footer"><div><b>product</b><a href="./#features">Features</a><a href="tweaks.html">Tweaks</a><a href="route.html">Rago Route</a><a href="./#pricing">Pricing</a><a href="./#faq">FAQ</a></div><div><b>community</b><a href="https://discord.gg/cbCxCBx8vJ" target="_blank" rel="noopener">Discord</a><a href="partners.html">Partners</a><a href="https://account.rago-optimizer.com/affiliate">Affiliate program</a><a href="reviews.html">Reviews</a></div><div><b>account</b><a href="https://account.rago-optimizer.com/login">Sign in</a><a href="https://account.rago-optimizer.com/signup">Create account</a></div><div><b>legal</b><a href="terms.html">Terms</a><a href="privacy.html">Privacy</a><a href="terms.html#cancel">Cancellation</a></div></nav></div>
+  <p class="legal">Reviews are posted by players signed in to their Rago account, from the app or the website, and shown as written, from the most recently updated. We don't pay for reviews or hide negative ones. Minecraft is a trademark of Mojang Studios; Rago Optimizer isn't affiliated with Mojang or Microsoft. © 2026 Rago Optimizer, by KALISO and RAGO.</p></div></footer></div>
 <script>
 /* Same account server as the home page: build.py copies accountBase from page.html; netlify/preview.sh fills
    previewAccountBase on Netlify previews. A copy on this computer uses the local server (licensing: npm run local). */
@@ -245,6 +183,7 @@ const CONFIG = {
   accountBase: "https://account.rago-optimizer.com",
   previewAccountBase: ""
 };
+const top5 = document.getElementById("top"); const onTop = () => top5.classList.toggle("scrolled", scrollY > 10); addEventListener("scroll", onTop, { passive: true }); onTop();
 const HOST = location.hostname;
 if (!HOST || /^(localhost|127\.0\.0\.1|\[::1\]|10(\.\d+){3}|192\.168(\.\d+){2}|172\.(1[6-9]|2\d|3[01])(\.\d+){2})$|\.local$/.test(HOST))
   CONFIG.accountBase = `http://${HOST && HOST !== "[::1]" ? HOST : "localhost"}:8787`;
@@ -254,19 +193,18 @@ const acct = p => CONFIG.accountBase.replace(/\/+$/, "") + p;
 (() => {
   const $ = s => document.querySelector(s);
   const esc = s => String(s).replace(/[&<>"]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
-  const STAR = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2.5l2.9 6.1 6.6.8-4.9 4.6 1.3 6.6L12 17.3l-5.9 3.3 1.3-6.6-4.9-4.6 6.6-.8z"/></svg>';
   const PHOTO = /^https?:\/\/[a-z0-9.-]+(:\d+)?\/avatars\/[A-Za-z0-9_-]{20,40}\.webp$/i;
   const ok = r => r && Number.isInteger(r.rating) && r.rating >= 1 && r.rating <= 5 && typeof r.comment === "string" && r.comment.trim() && typeof r.name === "string" && r.name.trim();
   const first = n => ([...n.trim()][0] || "?").toUpperCase();
   const when = d => { const t = Date.parse(d); return isNaN(t) ? "" : new Date(t).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric", timeZone: "UTC" }); };
   const idOf = r => (typeof r.id === "string" && /^[a-z0-9]{1,12}$/.test(r.id) ? "r-" + r.id : null);
   const face = r => typeof r.avatar_url === "string" && PHOTO.test(r.avatar_url)
-    ? `<img class="av" src="${esc(r.avatar_url)}" alt="" width="30" height="30" loading="lazy" decoding="async" referrerpolicy="no-referrer" data-i="${esc(first(r.name))}">`
+    ? `<img class="av" src="${esc(r.avatar_url)}" alt="" width="36" height="36" loading="lazy" decoding="async" referrerpolicy="no-referrer" data-i="${esc(first(r.name))}">`
     : `<span class="av" aria-hidden="true">${esc(first(r.name))}</span>`;
-  const card = (r, i) => `<figure class="rq"${idOf(r) ? ` id="${idOf(r)}"` : ""} style="animation-delay:${Math.min(i, 12) * 40}ms"><span class="stars" role="img" aria-label="${r.rating} out of 5 stars">${STAR.repeat(r.rating)}${`<span class="off">${STAR}</span>`.repeat(5 - r.rating)}</span><p>“${esc(r.comment.trim())}”</p><footer>${face(r)}<span class="rn">${esc(r.name.trim())}</span><small>${when(r.date)}</small></footer></figure>`;
+  const card = (r, i) => `<figure class="s-card sm-rv"${idOf(r) ? ` id="${idOf(r)}"` : ""} style="animation-delay:${Math.min(i, 12) * 40}ms"><span class="st5 sm" role="img" aria-label="${r.rating} out of 5 stars">${"<i></i>".repeat(r.rating)}${'<i class="off"></i>'.repeat(5 - r.rating)}</span><p>“${esc(r.comment.trim())}”</p><footer>${face(r)}<b>${esc(r.name.trim())}</b><small>${when(r.date)}</small></footer></figure>`;
 
   const list = $("#list"), state = $("#state");
-  const say = (title, text) => { list.hidden = true; list.removeAttribute("aria-busy"); state.innerHTML = `<b>${title}</b>${text ? `<span>${text}</span>` : ""}`; state.hidden = false; };
+  const say = (title, text) => { list.hidden = true; list.removeAttribute("aria-busy"); state.innerHTML = `<div><span class="ic"><svg class="i" aria-hidden="true"><use href="#i-chat"/></svg></span><b>${title}</b>${text ? `<span>${text}</span>` : ""}</div>`; state.hidden = false; };
 
   // The button to leave a review goes to the account page (sign-in first if needed); off on a preview without a server.
   const $$ = s => [...document.querySelectorAll(s)];
@@ -279,7 +217,7 @@ const acct = p => CONFIG.accountBase.replace(/\/+$/, "") + p;
     const shown = all.filter(r => !filter || r.rating === filter);
     if (sort !== "new") shown.sort((a, b) => (sort === "high" ? b.rating - a.rating : a.rating - b.rating) || b._i - a._i);
     n = columns();
-    list.style.setProperty("--n", n);
+    list.style.setProperty("--n", n); list.style.marginTop = "24px";
     list.innerHTML = Array.from({ length: n }, () => '<div class="col"></div>').join("");
     const cols = [...list.children];
     // each card on the shortest column, so reading left to right keeps the order
@@ -302,17 +240,16 @@ const acct = p => CONFIG.accountBase.replace(/\/+$/, "") + p;
     const total = Number(data.count) || all.length;
     const avg = Number(data.average) >= 1 ? Number(data.average) : all.reduce((s, r) => s + r.rating, 0) / all.length;
     $("#avg").textContent = avg.toFixed(1);
-    $("#meter-bg").innerHTML = $("#meter-fg").innerHTML = STAR.repeat(5);
-    $("#meter-fg").style.width = `${(avg / 5) * 100}%`;
+        $("#meter-fg").style.width = `${(avg / 5) * 100}%`;
     $("#meter").setAttribute("aria-label", `${avg.toFixed(1)} out of 5 stars`);
     $("#total").textContent = `${total} review${total === 1 ? "" : "s"}`;
     const by = [0, 0, 0, 0, 0, 0];
     all.forEach(r => by[r.rating]++);
     const top = Math.max(...by);
-    $("#dist").innerHTML = [5, 4, 3, 2, 1].map(k => `<li><button type="button" data-n="${k}" aria-pressed="false" aria-label="${k} star${k === 1 ? "" : "s"}: ${by[k]} review${by[k] === 1 ? "" : "s"}"${by[k] ? "" : " disabled"}><span class="n">${k}${STAR}</span><span class="bar"><i data-w="${top ? (by[k] / top) * 100 : 0}"></i></span><span class="c">${by[k]}</span></button></li>`).join("");
+    $("#dist").innerHTML = [5, 4, 3, 2, 1].map(k => `<li><button type="button" data-n="${k}" aria-pressed="false" aria-label="${k} star${k === 1 ? "" : "s"}: ${by[k]} review${by[k] === 1 ? "" : "s"}"${by[k] ? "" : " disabled"}><span>${k} ★</span><span class="b"><i data-w="${top ? (by[k] / top) * 100 : 0}"></i></span><em>${by[k]}</em></button></li>`).join("");
     $$("#dist button").forEach(b => b.addEventListener("click", () => setFilter(Number(b.dataset.n))));
     $("#sum").hidden = false; $("#tools").hidden = false;
-    requestAnimationFrame(() => requestAnimationFrame(() => $$("#dist .bar i").forEach(i => { i.style.width = i.dataset.w + "%"; })));
+    requestAnimationFrame(() => requestAnimationFrame(() => $$("#dist .b i").forEach(i => { i.style.width = i.dataset.w + "%"; })));
     render(false);
     // From "See more" on the home page: open on that review
     const open = () => {
