@@ -450,7 +450,6 @@ const fr = {
   "settings.cleanTrim": "« Nettoyer » réduit aussi les applis en arrière-plan",
   "settings.cleanTrimHint": "Jamais la fenêtre au premier plan, tes jeux ni les anti-cheat. Une appli réduite peut mettre un instant à se réveiller.",
   "share.title": "Partage et support",
-  "share.lead": "Envoie tes réglages à un ami, ou donne au support tout ce qu'il lui faut en un seul fichier.",
   "share.preset": "Partager un preset",
   "share.on": "1 réglage allumé|{n} réglages allumés",
   "share.presetLead": "Tes réglages allumés et leurs variantes deviennent un code. Rien sur ton PC n'y figure.",
@@ -495,7 +494,7 @@ const fr = {
   "share.make": "Créer le rapport",
   "share.again": "Recréer",
   "share.discord": "Ouvrir le support Discord",
-  "share.showFile": "Afficher dans le dossier",
+  "share.showFile": "Ouvrir le dossier",
   "share.look": "Voir le contenu",
   "share.hide": "Masquer",
   "share.reportError": "Le rapport n'a pas pu être créé. Réessaie.",
@@ -1433,6 +1432,12 @@ const fr = {
   "s5.st.activated": "Cette licence est active sur 1 appareil. Activée le {date}.",
   "s5.st.app": "app",
   "s5.st.tweaks": "{n} réglages",
+  "s5.sh.kick": "envoie tes réglages à un ami, ou donne tout au support en un seul fichier",
+  "s5.sh.unit": "réglage|réglages",
+  "s5.sh.ready": "prêts à partager",
+  "s5.sh.empty": "allume-en pour partager",
+  "s5.sh.preset": "preset",
+  "s5.sh.untitled": "sans nom",
 };
 
 export type Key = keyof typeof fr;
@@ -1873,7 +1878,6 @@ const en: Record<Key, string> = {
   "settings.cleanTrim": "Clean also trims background apps",
   "settings.cleanTrimHint": "Never the window in front, your games or anti-cheats. A trimmed app can take a moment to wake up.",
   "share.title": "Share and support",
-  "share.lead": "Send your setup to a friend, or give support everything they need in one file.",
   "share.preset": "Share a preset",
   "share.on": "1 tweak on|{n} tweaks on",
   "share.presetLead": "Your current tweaks and variants become a code. Nothing about your PC is in it.",
@@ -2856,6 +2860,12 @@ const en: Record<Key, string> = {
   "s5.st.activated": "This license is active on 1 device. Activated on {date}.",
   "s5.st.app": "app",
   "s5.st.tweaks": "{n} tweaks",
+  "s5.sh.kick": "send your setup to a friend, or give support everything in one file",
+  "s5.sh.unit": "tweak|tweaks",
+  "s5.sh.ready": "in your code, ready to send",
+  "s5.sh.empty": "turn some on to share",
+  "s5.sh.preset": "preset",
+  "s5.sh.untitled": "untitled",
 };
 
 const dicts: Record<Lang, Record<Key, string>> = { fr, en };

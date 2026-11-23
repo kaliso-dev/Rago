@@ -1,29 +1,78 @@
-import { useEffect, useState } from "react";
-import { motion } from "motion/react";
-import { Check, ChevronLeft, Copy, Download, FileText, FolderOpen, LoaderCircle, MessagesSquare, Pencil, Plus, Upload } from "../components/ri";
-import { api, isTauri, type ReportParts, type SupportReport } from "../lib/api";
+// Partage et support, à l'identique des maquettes v5 app-share.html et app-share-states.html : le nombre de réglages
+// du code dans l'étiquette rouge de l'en-tête ; à gauche le code en ticket et l'import d'un ami (barre à segments :
+// nouveaux, déjà allumés, Premium, indisponibles) ; à droite le rapport pour le support.
+// Styles : s5/pages/module.css (socle) et s5/pages/pages.css, retouches dans s5/app.css.
+import { useEffect, useRef, useState, type CSSProperties, type KeyboardEvent } from "react";
+import { api, type ReportParts, type SupportReport } from "../lib/api";
 import { autoVariant, availability, needsReboot, tweaks } from "../lib/catalog";
 import { decodePreset, encodePreset, MAX_NAME, presetFileName, ShareError, type SharedPreset } from "../lib/share";
 import { useStore } from "../lib/store";
 import { SUPPORT_URL } from "../components/LicenseGate";
 import { PresetEditor } from "../components/PresetEditor";
-import { Button } from "../components/ui";
-
-const stagger = { animate: { transition: { staggerChildren: 0.05 } } };
-const rise = { initial: { opacity: 0, y: 10 }, animate: { opacity: 1, y: 0, transition: { duration: 0.42, ease: [0.16, 1, 0.3, 1] as const } } };
+import { I } from "../s5/I";
 
 const PARTS: (keyof ReportParts)[] = ["pc", "tweaks", "history", "logs", "network"];
+/** Ordre des segments de l'aperçu, comme la maquette : nouveaux, déjà allumés, réservés à Premium, indisponibles. */
+const ORDER = { n: 0, a: 1, l: 2, u: 3 } as const;
+type Mark = { k: keyof typeof ORDER; r: boolean };
 
 /** Ce que l'import changerait sur ce PC, réglage par réglage (mêmes règles que selectMany). */
 interface Preview {
   preset: SharedPreset;
   /** entrées à ajouter, variantes inconnues de cette version retirées */
   entries: string[];
+  /** un segment par réglage du code, dans l'ordre de la barre */
+  marks: Mark[];
   fresh: number;
   reboot: number;
   already: number;
   unavailable: number;
   locked: number;
+}
+
+const titleSize = (s: string) => Math.min(96, Math.floor((96 * 17) / s.length));
+
+/** Champ de la maquette (.in3) : la case dessinée, l'<input> transparent dedans. */
+function Field({ id, value, onChange, placeholder, code, bad, label, onEnter }: { id: string; value: string; onChange: (v: string) => void; placeholder?: string; code?: boolean; bad?: boolean; label?: string; onEnter?: () => void }) {
+  return (
+    <div className={`in3${code ? " code" : ""}${bad ? " bad" : ""}`}>
+      <input
+        id={id}
+        value={value}
+        maxLength={code ? undefined : MAX_NAME}
+        spellCheck={false}
+        autoComplete="off"
+        placeholder={placeholder}
+        aria-label={label}
+        onChange={(e) => onChange(e.target.value)}
+        onKeyDown={(e) => e.key === "Enter" && onEnter?.()}
+      />
+    </div>
+  );
+}
+
+/** Texte du rapport : les titres « == … == » et la ligne de ce qui est masqué ressortent, comme la maquette. */
+function ReportText({ text }: { text: string }) {
+  const box = useRef<HTMLSpanElement>(null);
+  const [end, setEnd] = useState(false);
+  const check = () => {
+    const el = box.current;
+    if (el) setEnd(el.scrollTop + el.clientHeight >= el.scrollHeight - 2);
+  };
+  useEffect(check, [text]);
+  const lines = text.replace(/\n+$/, "").split("\n");
+  return (
+    <pre className={`txt2${end ? " end" : ""}`}>
+      <span className="tx" ref={box} onScroll={check} tabIndex={0}>
+        {lines.map((l, i) => (
+          <span key={i}>
+            {l.startsWith("Hidden in this file") ? <span className="hl2">{l}</span> : /^== .* ==$/.test(l) ? <span className="sec">{l}</span> : l || " "}
+            {i < lines.length - 1 && "\n"}
+          </span>
+        ))}
+      </span>
+    </pre>
+  );
 }
 
 export function Share() {
@@ -77,18 +126,20 @@ export function Share() {
   const [editing, setEditing] = useState<string | null>(null);
 
   const analyse = (preset: SharedPreset): Preview => {
-    const p: Preview = { preset, entries: [], fresh: 0, reboot: 0, already: 0, unavailable: 0, locked: 0 };
+    const p: Preview = { preset, entries: [], marks: [], fresh: 0, reboot: 0, already: 0, unavailable: 0, locked: 0 };
     for (const e of preset.t) {
       const [id, raw] = e.split(":");
       const tw = tweaks.get(id);
       if (!tw || tw.kind !== "tweak" || !availability(tw, sys).ok) {
         p.unavailable++;
+        p.marks.push({ k: "u", r: false });
         continue;
       }
       // variante d'une autre version : celle choisie pour ce PC à la place
       const v = raw && tw.variants?.some((x) => x.id === raw) ? raw : undefined;
       if (isLocked(id) || (v && variantLocked(id, v))) {
         p.locked++;
+        p.marks.push({ k: "l", r: false });
         continue;
       }
       p.entries.push(v ? `${id}:${v}` : id);
@@ -97,11 +148,16 @@ export function Share() {
       const current = selected.has(id) ? variantOf(tw) : (applied.get(id)?.variant ?? null);
       if (isOn(id) && current === vNow) {
         p.already++;
+        p.marks.push({ k: "a", r: false });
         continue;
       }
       p.fresh++;
-      if (needsReboot(tw, vNow)) p.reboot++;
+      const r = needsReboot(tw, vNow);
+      if (r) p.reboot++;
+      p.marks.push({ k: "n", r });
     }
+    // tri stable : chaque groupe garde l'ordre du code
+    p.marks = p.marks.map((m, i) => [m, i] as const).sort((a, b) => ORDER[a[0].k] - ORDER[b[0].k] || a[1] - b[1]).map(([m]) => m);
     return p;
   };
 
@@ -159,217 +215,327 @@ export function Share() {
     }
   };
   const kb = (n: number) => `${Math.max(1, Math.round(n / 1024))} ${lang === "fr" ? "Ko" : "KB"}`;
-  const counts = preview
-    ? [
-        preview.fresh > 0 && t("share.import.fresh", { n: preview.fresh }),
-        preview.already > 0 && t("share.import.already", { n: preview.already }),
-        preview.reboot > 0 && t("share.import.reboot", { n: preview.reboot }),
-        preview.unavailable > 0 && t("share.import.unavailable", { n: preview.unavailable }),
-        preview.locked > 0 && t("share.import.locked", { n: preview.locked }),
-      ].filter(Boolean)
-    : [];
+  const toggle = (k: keyof ReportParts) => setParts((p) => ({ ...p, [k]: !p[k] }));
+  const picked = PARTS.some((k) => parts[k]);
+
+  const title = t("share.title").toLowerCase();
+  const n = currentSetup.length;
+  const ticks = Math.min(Math.max(n, 1), 60);
+  const cut = code.indexOf("_") + 1;
 
   return (
-    <motion.div className="page share" variants={stagger} initial="initial" animate="animate">
-      <motion.header className="page-head" variants={rise}>
-        <button type="button" className="rg-overline back-link" onClick={() => goTo("settings")}>
-          <ChevronLeft size={12} />
-          {t("nav.settings")}
-        </button>
-        <h1>{t("share.title")}</h1>
-        <p className="lead">{t("share.lead")}</p>
-      </motion.header>
-
-      <div className="share-grid">
-        {/* RAG-44 : partager un preset */}
-        <motion.section variants={rise} className="card share-card">
-          <header className="card-head">
-            <h3 className="rg-overline">{t("share.preset")}</h3>
-            <span className="rg-metric muted small">{t("share.on", { n: currentSetup.length })}</span>
-          </header>
-          <p className="muted small share-p">{t("share.presetLead")}</p>
-          {currentSetup.length > 0 ? (
-            <>
-              <label htmlFor="share-name" className="share-label">
-                {t("share.name")}
-              </label>
-              <input
-                id="share-name"
-                className="input text share-name"
-                maxLength={MAX_NAME}
-                value={shareName}
-                autoComplete="off"
-                placeholder={t("share.namePh")}
-                onChange={(e) => setShareName(e.target.value)}
-              />
-              <p className="muted small share-hint">{t("share.nameHint")}</p>
-              <div className="share-well share-code">
-                <span className="rg-metric" title={code}>
-                  {code || "…"}
-                </span>
-                <Button size="sm" icon={copied ? <Check size={13} /> : <Copy size={13} />} disabled={!code} onClick={() => void copy()}>
-                  {copied ? t("share.copied") : t("share.copy")}
-                </Button>
-              </div>
-              <div className="share-row">
-                <Button size="sm" icon={<Download size={13} />} disabled={!code} onClick={() => void saveFile()}>
-                  {t("share.saveFile")}
-                </Button>
-              </div>
-            </>
-          ) : (
-            <div className="share-well share-empty muted small">{t("share.none")}</div>
-          )}
-          {shareError && <p className="share-error small">{t("share.error")}</p>}
-
-          <div className="share-sep" />
-
-          <label htmlFor="share-code" className="share-label">
-            {t("share.import")}
-          </label>
-          <div className="share-input">
-            <input
-              id="share-code"
-              className="input rg-metric"
-              value={input}
-              spellCheck={false}
-              autoComplete="off"
-              placeholder="RAGO2_…"
-              onChange={(e) => {
-                setInput(e.target.value);
-                setImportError(null);
-              }}
-              onKeyDown={(e) => e.key === "Enter" && void runPreview()}
-            />
-            <Button disabled={!input.trim()} onClick={() => void runPreview()}>
-              {t("share.preview")}
-            </Button>
+    <div className="pg-mod pg-pages pg-share is-page">
+      <section className="head">
+        <div>
+          <p className="kick">
+            <button type="button" className="bk" onClick={() => goTo("settings")}>
+              <I n="left" />
+              {t("nav.settings")}
+            </button>{" "}
+            <b>//</b> {t("s5.sh.kick")}
+          </p>
+          <h1 className="title" data-t={title} style={{ fontSize: titleSize(title) }}>
+            {title}
+          </h1>
+        </div>
+        <div className="ping sig">
+          <div className="pv">
+            <b>{n}</b>
+            <span>
+              {t("s5.sh.unit", { n })}
+              <small>{n ? t("s5.sh.ready") : t("s5.sh.empty")}</small>
+            </span>
           </div>
-          <button type="button" className="link small share-open" onClick={() => void openFile()}>
-            <Upload size={12} />
-            {t("share.openFile")}
-          </button>
-          {importError && <p className="share-error small">{importError}</p>}
-          {preview && (
-            <motion.div className="share-well share-preview" initial={{ opacity: 0, y: 6 }} animate={{ opacity: 1, y: 0 }}>
-              <div className="share-preview-top">
-                <span>{preview.preset.n ? <b>{preview.preset.n}</b> : t("share.import.unnamed")}</span>
-                <span className="rg-metric muted">{t("share.import.count", { n: preview.preset.t.length })}</span>
-              </div>
-              <div className="muted">{counts.join(" · ")}</div>
-            </motion.div>
-          )}
-          {preview && (
-            <div className="share-actions">
-              {added != null && (
-                <span className="share-added small">{added > 0 ? t("share.import.added", { n: added }) : t("share.import.nothing")}</span>
-              )}
-              {preview.locked > 0 && !premium && (
-                <Button size="sm" variant="ghost" onClick={() => setUpsell("plan")}>
-                  {t("free.upgrade")}
-                </Button>
-              )}
-              {added == null && (
-                <Button size="sm" variant="primary" disabled={preview.fresh === 0} onClick={addAll}>
-                  {t("share.import.add")}
-                </Button>
-              )}
+          <div className="ticks" aria-hidden="true">
+            <span className="g" style={{ "--n": ticks } as CSSProperties}>
+              {Array.from({ length: n ? ticks : 21 }, (_, i) => (
+                <i key={i} className={n ? "on" : undefined} />
+              ))}
+            </span>
+          </div>
+        </div>
+      </section>
+      <div className="nobar" />
+
+      <div className="setgrid shgrid">
+        <div className="col">
+          {/* RAG-44 : partager un preset */}
+          <section>
+            <div className="sh">
+              <h2 className="h2 tape">{t("share.preset")}</h2>
+              <span className="vt2 ok">{t("share.on", { n })}</span>
             </div>
-          )}
-          {/* le preset de l'ami se garde sous son nom, modifiable ici puis dans Mes presets */}
-          {preview && !savedMine && (
-            <label htmlFor="share-keep-name" className="share-label share-keep-label">
-              {t("share.import.keepAs")}
-            </label>
-          )}
-          {preview && (
-            <div className={`share-keep${savedMine ? " saved" : ""}`}>
-              {savedMine ? (
+            <p className="lead3">{t("share.presetLead")}</p>
+            <div className="panel shp">
+              {n > 0 ? (
                 <>
-                  <span className="share-added small">
-                    <Check size={13} />
-                    {t("share.import.saved")}
-                  </span>
-                  <Button size="sm" variant="ghost" icon={<Pencil size={12} />} onClick={() => setEditing(savedMine)}>
-                    {t("share.import.edit")}
-                  </Button>
+                  <div className="fld">
+                    <label className="lbl" htmlFor="share-name">
+                      {t("share.name")}
+                    </label>
+                    <Field id="share-name" value={shareName} onChange={setShareName} placeholder={t("share.namePh")} />
+                    <p className="hint2">{t("share.nameHint")}</p>
+                  </div>
+                  <div className="tkt">
+                    <div className="tkl">
+                      <div className="tkh">
+                        <span className="lbl">{t("s5.sh.preset")}</span>
+                        <b className={shareName.trim() ? undefined : "dim"}>{shareName.trim() || t("s5.sh.untitled")}</b>
+                      </div>
+                      <p className="cdv" title={code}>
+                        {code ? (
+                          <>
+                            <em>{code.slice(0, cut)}</em>
+                            {code.slice(cut)}
+                          </>
+                        ) : (
+                          "…"
+                        )}
+                      </p>
+                    </div>
+                    <div className="tkr">
+                      <b>{n}</b>
+                      <span>{t("s5.sh.unit", { n })}</span>
+                      <button type="button" className={`btn sm${copied ? "" : " red"}`} disabled={!code} onClick={() => void copy()}>
+                        <I n={copied ? "check" : "copy"} />
+                        {copied ? t("share.copied") : t("share.copy")}
+                      </button>
+                    </div>
+                  </div>
+                  {shareError && (
+                    <p className="err2" role="alert">
+                      <I n="alert" />
+                      {t("share.error")}
+                    </p>
+                  )}
+                  <div className="shrow">
+                    <button type="button" className="btn sm" disabled={!code} onClick={() => void saveFile()}>
+                      <I n="download" />
+                      {t("share.saveFile")}
+                    </button>
+                  </div>
                 </>
               ) : (
-                <>
-                  <input
-                    id="share-keep-name"
-                    className="input text"
-                    maxLength={MAX_NAME}
-                    value={keepName}
-                    placeholder={t("share.import.unnamed")}
-                    onChange={(e) => setKeepName(e.target.value)}
-                  />
-                  <Button
-                    size="sm"
-                    icon={<Plus size={13} />}
-                    onClick={() => setSavedMine(savePreset(keepName.trim() || t("share.import.unnamed"), preview.preset.t))}
-                  >
-                    {t("share.import.keep")}
-                  </Button>
-                </>
+                <div className="emp2">
+                  <I n="sliders" />
+                  <p>{t("share.none")}</p>
+                </div>
               )}
             </div>
-          )}
-          <PresetEditor id={editing} onClose={() => setEditing(null)} />
-        </motion.section>
+          </section>
 
-        {/* RAG-70 : rapport pour le support */}
-        <motion.section variants={rise} className="card share-card">
-          <header className="card-head">
-            <h3 className="rg-overline">{t("share.report")}</h3>
-            <span className="muted small">{t("share.reportFor")}</span>
-          </header>
-          <p className="muted small share-p">{t("share.reportLead")}</p>
-          <div className="share-well share-parts">
-            {PARTS.map((k) => (
-              <label key={k} className="check">
-                <input type="checkbox" checked={parts[k]} onChange={(e) => setParts((p) => ({ ...p, [k]: e.target.checked }))} />
-                <span>{t(`share.part.${k}`)}</span>
-              </label>
-            ))}
-          </div>
-          {report && (
-            <motion.div className="share-file" initial={{ opacity: 0, y: 6 }} animate={{ opacity: 1, y: 0 }}>
-              <FileText size={15} />
-              <span className="share-file-name">
-                <span className="rg-metric">{report.name}</span>
-                <span className="rg-metric muted"> · {kb(report.size)}</span>
-              </span>
-              <button type="button" className="link small" onClick={() => setShowText((v) => !v)}>
-                {showText ? t("share.hide") : t("share.look")}
+          <section>
+            <div className="sh">
+              <h2 className="h2 tape">{t("share.import")}</h2>
+            </div>
+            <div className="panel shp">
+              <div className="pst">
+                <Field
+                  id="share-code"
+                  code
+                  bad={!!importError}
+                  value={input}
+                  placeholder="RAGO2_…"
+                  label={t("share.import")}
+                  onChange={(v) => {
+                    setInput(v);
+                    setImportError(null);
+                  }}
+                  onEnter={() => void runPreview()}
+                />
+                <button type="button" className="btn sm" disabled={!input.trim()} onClick={() => void runPreview()}>
+                  {t("share.preview")}
+                </button>
+              </div>
+              <button type="button" className="lnk opn" onClick={() => void openFile()}>
+                <I n="upload" />
+                {t("share.openFile")}
               </button>
-              {isTauri && (
-                <Button size="sm" icon={<FolderOpen size={13} />} onClick={() => void api.showReport(report.name)}>
-                  {t("share.showFile")}
-                </Button>
+              {importError && (
+                <p className="err2" role="alert">
+                  <I n="alert" />
+                  {importError}
+                </p>
               )}
-            </motion.div>
-          )}
-          {report && showText && <pre className="share-text rg-metric">{report.text}</pre>}
-          {reportError && <p className="share-error small">{t("share.reportError")}</p>}
-          <div className="share-actions share-foot">
-            <Button
-              size="sm"
-              variant={report ? "secondary" : "primary"}
-              icon={making ? <LoaderCircle size={13} className="spin" /> : undefined}
-              disabled={making || !PARTS.some((k) => parts[k])}
-              onClick={() => void makeReport()}
-            >
-              {report ? t("share.again") : t("share.make")}
-            </Button>
-            {report && SUPPORT_URL && (
-              <Button size="sm" variant="primary" icon={<MessagesSquare size={13} />} onClick={() => void api.openUrl(SUPPORT_URL)}>
-                {t("share.discord")}
-              </Button>
-            )}
-          </div>
-        </motion.section>
+              {preview && (
+                <div className="pv2">
+                  <div className="pvh">
+                    <b>{preview.preset.n || t("share.import.unnamed")}</b>
+                    <span>{t("share.import.count", { n: preview.preset.t.length })}</span>
+                  </div>
+                  <div className="segb" aria-hidden="true">
+                    {preview.marks.map((m, i) => (
+                      <i key={i} className={m.r ? `${m.k} r` : m.k} />
+                    ))}
+                  </div>
+                  <div className="lg2">
+                    {preview.fresh > 0 && (
+                      <span className="n">
+                        <i />
+                        {t("share.import.fresh", { n: preview.fresh })}
+                      </span>
+                    )}
+                    {preview.already > 0 && (
+                      <span className="a">
+                        <i />
+                        {t("share.import.already", { n: preview.already })}
+                      </span>
+                    )}
+                    {preview.reboot > 0 && (
+                      <span className="r">
+                        <I n="power" />
+                        {t("share.import.reboot", { n: preview.reboot })}
+                      </span>
+                    )}
+                    {preview.locked > 0 && (
+                      <span className="l">
+                        <i />
+                        {t("share.import.locked", { n: preview.locked })}
+                      </span>
+                    )}
+                    {preview.unavailable > 0 && (
+                      <span className="u">
+                        <i />
+                        {t("share.import.unavailable", { n: preview.unavailable })}
+                      </span>
+                    )}
+                  </div>
+                  <div className="pva">
+                    {added != null ? (
+                      <span className="ok3" role="status">
+                        <I n="check" />
+                        {t("share.import.added", { n: added })}
+                      </span>
+                    ) : (
+                      // « tout est déjà allumé » seulement si c'est vrai : pas quand le reste est réservé à Premium
+                      preview.fresh === 0 && preview.locked === 0 && preview.already > 0 && <span className="ok3 dim">{t("share.import.nothing")}</span>
+                    )}
+                    {preview.locked > 0 && !premium && (
+                      <button type="button" className="btn sm gh2" onClick={() => setUpsell("plan")}>
+                        {t("free.upgrade")}
+                      </button>
+                    )}
+                    {added == null && preview.fresh > 0 && (
+                      <button type="button" className="btn sm red" onClick={addAll}>
+                        <I n="plus" />
+                        {t("share.import.add")}
+                      </button>
+                    )}
+                  </div>
+                </div>
+              )}
+              {/* le preset de l'ami se garde sous son nom, modifiable ici puis dans Mes presets */}
+              {preview &&
+                (savedMine ? (
+                  <div className="keep2 done">
+                    <span className="ok3" role="status">
+                      <I n="check" />
+                      {t("share.import.saved")}
+                    </span>
+                    <button type="button" className="btn sm" onClick={() => setEditing(savedMine)}>
+                      <I n="pencil" />
+                      {t("share.import.edit")}
+                    </button>
+                  </div>
+                ) : (
+                  <div className="keep2">
+                    <label className="lbl" htmlFor="share-keep-name">
+                      {t("share.import.keepAs")}
+                    </label>
+                    <div className="kr">
+                      <Field id="share-keep-name" value={keepName} onChange={setKeepName} placeholder={t("share.import.unnamed")} />
+                      <button type="button" className="btn sm" onClick={() => setSavedMine(savePreset(keepName.trim() || t("share.import.unnamed"), preview.preset.t))}>
+                        <I n="plus" />
+                        {t("share.import.keep")}
+                      </button>
+                    </div>
+                  </div>
+                ))}
+            </div>
+            <PresetEditor id={editing} onClose={() => setEditing(null)} />
+          </section>
+        </div>
+
+        <div className="col">
+          {/* RAG-70 : rapport pour le support */}
+          <section>
+            <div className="sh">
+              <h2 className="h2 tape">{t("share.report")}</h2>
+              <span className="fold">{t("share.reportFor")}</span>
+            </div>
+            <p className="lead3">{t("share.reportLead")}</p>
+            <div className="panel shp">
+              <div className="chl">
+                {PARTS.map((k) => (
+                  <div
+                    key={k}
+                    className={`cr${parts[k] ? "" : " off"}`}
+                    role="checkbox"
+                    aria-checked={parts[k]}
+                    tabIndex={0}
+                    onClick={() => toggle(k)}
+                    onKeyDown={(e: KeyboardEvent) => {
+                      if (e.key === " " || e.key === "Enter") {
+                        e.preventDefault();
+                        toggle(k);
+                      }
+                    }}
+                  >
+                    <i className={`cbx${parts[k] ? " on" : ""}`} />
+                    <span>{t(`share.part.${k}`)}</span>
+                  </div>
+                ))}
+              </div>
+              {report && (
+                <div className="rfile">
+                  <span className="ic2">
+                    <I n="filetext" />
+                  </span>
+                  <div className="l">
+                    <b title={report.name}>{report.name}</b>
+                    <span>{kb(report.size)}</span>
+                  </div>
+                  <button type="button" className="lnk" aria-expanded={showText} onClick={() => setShowText((v) => !v)}>
+                    {showText ? t("share.hide") : t("share.look")}
+                  </button>
+                  <button type="button" className="btn sm" onClick={() => void api.showReport(report.name)}>
+                    <I n="folder" />
+                    {t("share.showFile")}
+                  </button>
+                </div>
+              )}
+              {report && showText && <ReportText text={report.text} />}
+              {reportError && (
+                <p className="err2" role="alert">
+                  <I n="alert" />
+                  {t("share.reportError")}
+                </p>
+              )}
+              <div className="shrow end">
+                {report ? (
+                  <>
+                    <button type="button" className="btn sm" disabled={making || !picked} onClick={() => void makeReport()}>
+                      <I n={making ? "loader" : "refresh"} className={making ? "spin" : undefined} />
+                      {t("share.again")}
+                    </button>
+                    {SUPPORT_URL && (
+                      <button type="button" className="btn sm red" onClick={() => void api.openUrl(SUPPORT_URL)}>
+                        <I n="chat" />
+                        {t("share.discord")}
+                      </button>
+                    )}
+                  </>
+                ) : (
+                  <button type="button" className={`btn sm red${picked ? "" : " dis2"}`} disabled={making || !picked} onClick={() => void makeReport()}>
+                    {making && <I n="loader" className="spin" />}
+                    {t("share.make")}
+                  </button>
+                )}
+              </div>
+            </div>
+          </section>
+        </div>
       </div>
-    </motion.div>
+    </div>
   );
 }
