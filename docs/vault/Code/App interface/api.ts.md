@@ -2,7 +2,7 @@
 type: code
 tags: [code, app, typescript, interface]
 fichier: app/src/lib/api.ts
-lignes: 1761
+lignes: 1762
 maj: 2026-11-23
 ---
 # api.ts
@@ -94,7 +94,7 @@ Chaque ligne : nom dans `api` → commande Rust (paramètres) → ce que fait le
 | `toolsSetPowerPlan(guid)` | `tools_set_power_plan { guid }` → liste à jour | 400 ms ; refuse un GUID inconnu (PR #90) |
 | `toolsFlushDns()` | `tools_flush_dns` | 600 ms (PR #90) |
 | `toolsOpen(panel)` | `tools_open { id: panel }` | écrit « [démo] réglage Windows : <id> » dans la console (PR #90) |
-| `analysisFacts()` | `analysis_facts` | 1,5 s ; écran à 60 Hz sur 144 possibles, 212 processus, mémoire à 4 800 sur 6 000 MT/s, Wi-Fi, Game DVR et notifications actifs, plan Équilibré, OneDrive en fond, dernière partie de 24 min à 312 FPS (1 % bas 128, 3,4 saccades/min) |
+| `analysisFacts()` | `analysis_facts` | 1,5 s ; valeurs de la maquette `app-analysis-results` (PR #128) : écran à 165 Hz sur 165 possibles, 214 processus, mémoire à 4 800 sur 6 000 MT/s, câble, Game DVR actif, notifications coupées, plan Équilibré, Steam et OneDrive en fond, dernière partie de 24 min à 312 FPS (1 % bas 141, 1,4 saccade/min) |
 
 **Partage et support**
 | Fonction | Commande | Simulateur |

@@ -19,6 +19,7 @@ import "./s5/pages/module.css";
 import "./s5/pages/net.css";
 import "./s5/pages/tools.css";
 import "./s5/pages/pages.css";
+import "./s5/pages/analysis.css";
 
 document.documentElement.classList.add("round", "poster");
 import { App } from "./App";

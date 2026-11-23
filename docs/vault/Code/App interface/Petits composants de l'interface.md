@@ -25,7 +25,7 @@ Tout ce qui suit est CONFIRMÉ (code de `staging`, 10/11, commit `ee77d4f`).
 | `vite-env.d.ts` | 9 | types des variables `VITE_*` et de `__APP_VERSION__` |
 
 ## `ui.tsx` : les briques de base
-Utilisé par 24 fichiers (23/11 ; les pages refaites sur les maquettes se servent de `s5/ui.tsx`).
+Utilisé par 13 fichiers (23/11, après la PR #128 : surtout les fenêtres, la barre en jeu et Paramètres ; les pages refaites sur les maquettes se servent de `s5/ui.tsx`).
 - **`Button({ variant, size, icon, ...})`** :
   - `variant` : `primary` (rouge), `secondary` (par défaut) ou `ghost` ;
   - `size` : `sm`, `md` (par défaut) ou `lg` ;
