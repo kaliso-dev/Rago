@@ -1,9 +1,11 @@
-import { useCallback, useEffect, useMemo, useRef, useState, type ReactNode } from "react";
-import { AnimatePresence, motion } from "motion/react";
-import {
-  Activity, ArrowRight, AudioWaveform, Cable, Check, ChevronDown, CircleX, Cpu, Crosshair, Info, LoaderCircle, Lock, Minus, Plus, Power,
-  RotateCcw, Scale, ScanSearch, ScrollText, SlidersHorizontal, Swords, TriangleAlert, Trophy, Wifi, X, type LucideIcon,
-} from "../components/ri";
+// Onglet « packet optimizer » de Réseau, à l'identique de la maquette v5 app-network-packet-pi.html : presets en cartes,
+// console « tune » (trois curseurs à segments et le tableau Windows → Rago), options en carreaux (connexion, avancé,
+// expert), outils, et sa barre d'application en bas de la fenêtre. Les choix vont au moteur (netopt.rs) ; les valeurs
+// affichées viennent des mêmes formules (lib/netopt.ts).
+// 1.3.0 (Sofiene, 10/11) : appliquer est Premium. En gratuit, la page se montre telle quelle mais verrouillée (un clic
+// ouvre l'offre), les outils et « restore » restent libres.
+import { useCallback, useEffect, useMemo, useRef, useState, type KeyboardEvent, type PointerEvent, type ReactNode } from "react";
+import { createPortal } from "react-dom";
 import { api, type NetMeasure } from "../lib/api";
 import type { Key } from "../lib/i18n";
 import {
@@ -11,19 +13,18 @@ import {
   type NetLine, type NetOptions, type NetOutcome, type NetState, type NetValues, type PresetId, type Why,
 } from "../lib/netopt";
 import { useStore } from "../lib/store";
-import { Button, Segmented, Switch } from "../components/ui";
-import { Tool, validTarget } from "../components/NetTools";
-
-const stagger = { animate: { transition: { staggerChildren: 0.05 } } };
-const rise = { initial: { opacity: 0, y: 10 }, animate: { opacity: 1, y: 0, transition: { duration: 0.42, ease: [0.16, 1, 0.3, 1] as const } } };
+import { I, Seg } from "../s5/I";
+import { TOOLS, ToolResult, toolName, validTarget, type ToolId } from "../components/NetTools";
 
 const same = (a: NetOptions, b: NetOptions) => JSON.stringify({ ...a, preset: "" }) === JSON.stringify({ ...b, preset: "" });
 
 type Detect = { connected: boolean; wifi: boolean; alias: string | null; desc: string | null; speed: string | null };
+type T = (key: Key, vars?: Record<string, string | number>) => string;
 
-const PRESET_ICONS: Record<PresetId, LucideIcon> = { hitreg: Crosshair, knockback: Swords, balanced: Scale, wifi: Wifi, unstable: AudioWaveform, classic: Trophy };
+/** Icônes des presets, celles de la maquette. */
+const PRESET_ICONS: Record<PresetId, string> = { hitreg: "crosshair", knockback: "download", balanced: "sliders", wifi: "wifi", unstable: "alert", classic: "drive" };
 
-/** Blocs repliés (Avancé, Réglages experts), gardés d'une visite à l'autre. */
+/** Blocs dépliés (avancé, expert), gardés d'une visite à l'autre. */
 const FOLDS = "rago.netoptFolds";
 type FoldId = "advanced" | "expert";
 function loadFolds(): Record<FoldId, boolean> {
@@ -34,7 +35,7 @@ function loadFolds(): Record<FoldId, boolean> {
   }
 }
 
-/** « Analyser mon PC » : carte réseau, processeur et Windows, puis 40 pings vers Internet. */
+/** « find my preset » : carte réseau, processeur et Windows, puis 40 pings vers Internet. */
 interface Scan {
   step: "card" | "pc" | "line" | "done";
   before: NetOptions;
@@ -46,6 +47,16 @@ interface Scan {
 }
 const LINE_SAMPLES = 40;
 
+/** Marques de priorité proposées (curseur de priorité du .bat : ces valeurs donnent chaque classe DSCP). */
+const PRIOS: { priority: number; dscp: number }[] = [
+  { priority: 0, dscp: 0 },
+  { priority: 10, dscp: 32 },
+  { priority: 30, dscp: 34 },
+  { priority: 50, dscp: 40 },
+  { priority: 75, dscp: 46 },
+  { priority: 95, dscp: 48 },
+];
+
 export function NetOpt() {
   const { t, lang, premium, setUpsell, sys } = useStore();
   const [state, setState] = useState<NetState | null>(null);
@@ -56,13 +67,13 @@ export function NetOpt() {
   const [progress, setProgress] = useState<{ step: number; total: number } | null>(null);
   const [done, setDone] = useState<{ action: NetAction; outcome: NetOutcome } | null>(null);
   const [error, setError] = useState<string | null>(null);
-  const [status, setStatus] = useState<Record<string, unknown> | undefined>(undefined);
-  const [showLog, setShowLog] = useState(false);
-  const [restoreMenu, setRestoreMenu] = useState(false);
+  const [tool, setTool] = useState<{ id: ToolId; result?: Record<string, unknown>; confirm?: boolean; error?: string } | null>(null);
+  const [toolStep, setToolStep] = useState<string | null>(null);
   const [folds, setFolds] = useState(loadFolds);
   const [scan, setScan] = useState<Scan | null>(null);
   const live = useRef(true);
   const touched = useRef(loadDraft() !== null);
+  const locked = !premium;
 
   const refresh = useCallback(async () => {
     const s = await api.netOptState();
@@ -77,7 +88,9 @@ export function NetOpt() {
       api.onNetOptLine((l) => {
         if (!live.current) return;
         if (l.tag === "progress") setProgress({ step: l.step ?? 0, total: l.total ?? 0 });
-        else setLines((ls) => [...ls, l]);
+        // le journal ne garde que les applications et les remises ; d'un outil, seule l'étape en cours s'affiche
+        else if (l.action === "apply" || l.action === "restore" || l.action === "defaults") setLines((ls) => [...ls, l]);
+        else if (l.tag === "title") setToolStep(l.text);
       }),
       api.onNetSample((s) => {
         if (live.current && s.id === "internet") setScan((sc) => (sc?.step === "line" ? { ...sc, samples: Math.max(sc.samples, s.i + 1) } : sc));
@@ -105,7 +118,10 @@ export function NetOpt() {
   const dirty = applied ? !same(opts, { ...NET_DEFAULTS, ...applied.options }) : true;
 
   const change = (patch: Partial<NetOptions>) => {
+    if (locked) return setUpsell("plan");
     touched.current = true;
+    setDone(null);
+    setError(null);
     setOpts((o) => {
       const next = { ...o, ...patch, preset: "preset" in patch ? patch.preset! : "custom" };
       saveDraft(next);
@@ -114,7 +130,8 @@ export function NetOpt() {
   };
   const setExpert = (patch: Partial<NetExpert>) => change({ expert: { ...opts.expert, ...patch } });
   const pickPreset = (id: PresetId) => change(applyPreset(opts, id));
-  const fold = (id: FoldId) =>
+  const fold = (id: FoldId) => {
+    if (locked) return setUpsell("plan");
     setFolds((f) => {
       const next = { ...f, [id]: !f[id] };
       try {
@@ -124,6 +141,7 @@ export function NetOpt() {
       }
       return next;
     });
+  };
 
   const errorText = (e: unknown) => {
     const m = String(e);
@@ -132,31 +150,46 @@ export function NetOpt() {
     return m;
   };
 
-  const run = async (action: NetAction) => {
+  /** Appliquer, restaurer (sauvegarde ou valeurs de Windows). */
+  const run = async (action: "apply" | "restore" | "defaults") => {
     if (busy) return;
-    if (action === "apply" && !premium) return setUpsell("tweak");
+    if (action === "apply" && locked) return setUpsell("plan");
     setBusy(action);
     setError(null);
     setDone(null);
-    setRestoreMenu(false);
-    if (action === "apply" || action === "restore" || action === "defaults") {
-      setLines([]);
-      setProgress(null);
-    }
+    setLines([]);
+    setProgress(null);
     try {
       const outcome = await api.netOptRun(action, opts);
       if (!live.current) return;
-      if (action === "apply" || action === "restore" || action === "defaults") {
-        setDone({ action, outcome });
-        if (outcome.code === 0) saveDraft(null);
-        await refresh();
-      } else if (action === "status" && outcome.result) {
-        setStatus(outcome.result);
-      }
+      setDone({ action, outcome });
+      if (outcome.code === 0) saveDraft(null);
+      await refresh();
     } catch (e) {
       if (!live.current) return;
-      if (String(e).startsWith("premium_required")) setUpsell("tweak");
+      if (String(e).startsWith("premium_required")) setUpsell("plan");
       else setError(errorText(e));
+    } finally {
+      if (live.current) {
+        setBusy(null);
+        setProgress(null);
+      }
+    }
+  };
+
+  /** Un outil : son résultat s'affiche sous la rangée « tools ». Le bufferbloat télécharge : il demande d'abord. */
+  const runTool = async (id: ToolId, confirmed = false) => {
+    if (busy) return;
+    if (id === "loaded" && !confirmed) return setTool({ id, confirm: true });
+    setTool({ id });
+    setBusy(id);
+    setProgress(null);
+    setToolStep(null);
+    try {
+      const outcome = await api.netOptRun(id, opts);
+      if (live.current) setTool({ id, result: outcome.result ?? undefined });
+    } catch (e) {
+      if (live.current) setTool({ id, error: errorText(e) });
     } finally {
       if (live.current) {
         setBusy(null);
@@ -167,6 +200,7 @@ export function NetOpt() {
 
   const scanning = !!scan && scan.step !== "done";
   const analyse = async () => {
+    if (locked) return setUpsell("plan");
     if (busy || scanning) return;
     const before = opts;
     setScan({ step: "card", before, samples: 0 });
@@ -193,751 +227,480 @@ export function NetOpt() {
     setScan(null);
   };
 
-  const presetName = (p: string) => (PRESETS.includes(p as PresetId) ? t(`no.preset.${p}` as Key) : t("no.preset.custom"));
-  const when = (ts: number) => {
-    const d = new Date(ts);
-    const loc = lang === "fr" ? "fr-FR" : "en-US";
-    return `${d.toLocaleDateString(loc, { day: "numeric", month: "short" })} ${d.toLocaleTimeString(loc, { hour: "2-digit", minute: "2-digit" })}`;
-  };
-  const changing = busy === "apply" || busy === "restore" || busy === "defaults";
-  const pct = progress && progress.total ? Math.min(100, (progress.step / progress.total) * 100) : changing ? 4 : 0;
-  const buffersOff = [v.throttlingOff, v.rscOff, v.coalescingOff, v.flowControlOff, v.lsoOff, v.interruptModeration === 2].filter(Boolean).length;
-  const respName = opts.responsiveness < 34 ? t("no.resp.delayed") : opts.responsiveness < 67 ? t("no.resp.balanced") : t("no.resp.responsive");
-  const win11 = !!sys?.isWin11;
+  const presetName = (p: string) => (PRESETS.includes(p as PresetId) ? t(`s5.no.p.${p}` as Key) : t("s5.no.p.custom"));
   const cardName = (d: Detect | null | undefined) => [d?.alias, d?.desc, d?.speed].filter(Boolean).join(" · ");
-  const advancedSummary = [
-    opts.mtuMode === 1 ? t("no.sum.mtuAuto") : opts.mtuMode === 2 ? `MTU ${opts.mtu}` : t("no.sum.mtuKeep"),
-    opts.delay === 0 ? t("no.delay.none") : t("no.sum.delay", { n: opts.delay }),
-    !opts.smart || v.dscp === 0 ? t("no.prio.none") : `DSCP ${v.dscp}${v.dscpName ? ` ${v.dscpName}` : ""}`,
-    t("no.sum.options", { n: [opts.priorityMode, opts.powerSaving, opts.wifi, opts.bgGuard].filter(Boolean).length }),
-  ].join(" · ");
+  const buffersOff = [v.throttlingOff, v.rscOff, v.coalescingOff, v.flowControlOff, v.lsoOff, v.interruptModeration === 2].filter(Boolean).length;
   const expertCount = Object.values(opts.expert).filter((x) => x != null).length;
 
-  // 1.3.0 (Sofiene, 10/11) : le Packet Optimizer est entièrement Premium. En gratuit, la page le présente et ne garde que
-  // Restaurer, pour remettre la connexion comme avant après une application faite en Premium.
-  if (!premium) {
-    return (
-      <motion.div className="netopt" variants={stagger} initial="initial" animate="animate">
-        <motion.section variants={rise} className="card no-hero">
-          <div className="no-hero-main">
-            <div className="no-hero-orb">
-              <Lock size={20} />
-            </div>
-            <div className="no-hero-text">
-              <div className="no-hero-title">{t("no.locked.title")}</div>
-              <div className="no-hero-sub muted small">{t("no.lead")}</div>
-            </div>
-            <div className="no-hero-actions">
-              {(applied || state?.backup) && (
-                <Button variant="secondary" size="lg" icon={busy ? <LoaderCircle size={14} className="spin" /> : <RotateCcw size={14} />} disabled={!!busy} onClick={() => void run(state?.backup ? "restore" : "defaults")}>
-                  {t("no.restore")}
-                </Button>
-              )}
-              <Button variant="primary" size="lg" icon={<Lock size={14} />} onClick={() => setUpsell("plan")}>
-                {t("free.upgrade")}
-              </Button>
-            </div>
-          </div>
-          <ul className="no-locked-list muted small">
-            {(["no.locked.b1", "no.locked.b2", "no.locked.b3"] as const).map((k) => (
-              <li key={k}>
-                <Check size={13} /> {t(k)}
-              </li>
-            ))}
-          </ul>
-          {(done || error) && (
-            <div className="no-run">
-              {done && <Summary done={done} t={t} />}
-              {error && (
-                <div className="no-error">
-                  <CircleX size={14} />
-                  {error}
-                </div>
-              )}
-            </div>
-          )}
-        </motion.section>
-      </motion.div>
-    );
-  }
+  const resendName = opts.responsiveness === 0 ? t("s5.no.f.windows") : opts.responsiveness < 34 ? t("s5.no.f.cautious") : opts.responsiveness < 67 ? t("s5.no.f.balanced") : t("s5.no.f.fast");
+  const batchName = opts.delay === 0 ? t("s5.no.f.none") : opts.delay >= 100 ? t("s5.no.f.windows") : opts.delay < 50 ? t("s5.no.f.light") : t("s5.no.f.heavy");
 
-  return (
-    <motion.div className="netopt" variants={stagger} initial="initial" animate="animate">
-      <motion.section variants={rise} className="card no-hero">
-        <div className="no-hero-main">
-          <div className={`no-hero-orb${applied ? " on" : ""}${changing ? " busy" : ""}`}>
-            {changing ? <LoaderCircle size={22} className="spin" /> : <Activity size={22} />}
-          </div>
-          <div className="no-hero-text">
-            <div className="no-hero-title">
-              {changing
-                ? t(busy === "apply" ? "no.applying" : "no.restoring")
-                : applied
-                  ? t("no.status.applied", { when: when(applied.at), preset: presetName(applied.options.preset) })
-                  : t("no.status.never")}
-            </div>
-            <div className="no-hero-sub muted small">
-              {detect?.connected && (
-                <span className="no-detected">
-                  {detect.wifi ? <Wifi size={12} /> : <Cable size={12} />}
-                  <span className="no-detected-text" title={cardName(detect)}>
-                    {t("no.detected", { name: cardName(detect) })}
-                  </span>
-                </span>
-              )}
-              {applied && dirty && !changing && <span className="no-dirty">{t("no.status.changed")}</span>}
-            </div>
-          </div>
-          <div className="no-hero-actions">
-            <Button variant="secondary" size="lg" icon={scanning ? <LoaderCircle size={14} className="spin" /> : <ScanSearch size={15} />} disabled={!!busy || scanning} onClick={() => void analyse()}>
-              {t("an.run")}
-            </Button>
-            <div className="no-restore">
-              <Button
-                variant="secondary"
-                size="lg"
-                icon={<RotateCcw size={14} />}
-                disabled={!!busy || (!applied && !state?.backup)}
-                onClick={() => setRestoreMenu((m) => !m)}
-              >
-                {t("no.restore")}
-              </Button>
-              <AnimatePresence>
-                {restoreMenu && (
-                  <motion.div
-                    className="no-menu"
-                    initial={{ opacity: 0, y: -4, scale: 0.98 }}
-                    animate={{ opacity: 1, y: 0, scale: 1 }}
-                    exit={{ opacity: 0, y: -4, scale: 0.98 }}
-                    transition={{ duration: 0.14 }}
-                  >
-                    <button type="button" disabled={!state?.backup} onClick={() => void run("restore")}>
-                      <span>{t("no.restore.backup")}</span>
-                      <span className="muted small">{t("no.restore.backup.desc")}</span>
-                    </button>
-                    <button type="button" onClick={() => void run("defaults")}>
-                      <span>{t("no.restore.defaults")}</span>
-                      <span className="muted small">{t("no.restore.defaults.desc")}</span>
-                    </button>
-                  </motion.div>
-                )}
-              </AnimatePresence>
-            </div>
-            <Button
-              variant="primary"
-              size="lg"
-              disabled={!!busy || scanning}
-              icon={busy === "apply" ? <LoaderCircle size={15} className="spin" /> : !premium ? <Lock size={14} /> : undefined}
-              onClick={() => void run("apply")}
-            >
-              {t("no.apply")}
-              {!busy && premium && <ArrowRight size={15} />}
-            </Button>
-          </div>
-        </div>
-        <div className="no-hero-foot muted small">
-          <Info size={12} />
-          <span>{t("no.drop")}</span>
-        </div>
-
-        <AnimatePresence initial={false}>
-          {(changing || done || error) && (
-            <motion.div className="no-run" initial={{ height: 0, opacity: 0 }} animate={{ height: "auto", opacity: 1 }} exit={{ height: 0, opacity: 0 }}>
-              {changing && (
-                <div className="no-progress">
-                  <motion.div className="no-progress-fill" animate={{ width: `${pct}%` }} transition={{ ease: [0.16, 1, 0.3, 1], duration: 0.42 }} />
-                </div>
-              )}
-              {changing && <div className="no-current muted small">{engineText([...lines].reverse().find((l) => l.tag === "title")?.text ?? "…", lang)}</div>}
-              {done && <Summary done={done} t={t} />}
-              {error && (
-                <div className="no-error">
-                  <CircleX size={14} />
-                  {error}
-                </div>
-              )}
-              {lines.length > 0 && (
-                <button type="button" className="link no-log-toggle" onClick={() => setShowLog((s) => !s)}>
-                  <ScrollText size={13} />
-                  {t("no.log")}
-                  <ChevronDown size={13} className={showLog ? "flip" : undefined} />
-                </button>
-              )}
-              {showLog && <Log lines={lines} />}
-            </motion.div>
-          )}
-        </AnimatePresence>
-      </motion.section>
-
-      <AnimatePresence initial={false}>
-        {scan && (
-          <motion.section
-            key="scan"
-            className="card no-scan"
-            initial={{ opacity: 0, y: -6, height: 0 }}
-            animate={{ opacity: 1, y: 0, height: "auto" }}
-            exit={{ opacity: 0, y: -6, height: 0 }}
-            transition={{ duration: 0.28, ease: [0.16, 1, 0.3, 1] }}
-          >
-            <ScanPanel
-              scan={scan}
-              cardName={cardName}
-              presetName={presetName}
-              premium={premium}
-              onApply={() => {
-                setScan(null);
-                void run("apply");
-              }}
-              onKeep={keepMine}
-              onClose={() => setScan(null)}
-            />
-          </motion.section>
-        )}
-      </AnimatePresence>
-
-      <motion.section variants={rise} className="no-presets" role="radiogroup" aria-label={t("no.presets")}>
-        {PRESETS.map((p) => {
-          const Icon = PRESET_ICONS[p];
-          const on = opts.preset === p;
-          return (
-            <button key={p} type="button" role="radio" aria-checked={on} className={`no-preset${on ? " on" : ""}`} onClick={() => pickPreset(p)}>
-              <span className="no-preset-icon">
-                <Icon size={17} strokeWidth={1.75} />
-              </span>
-              <span className="no-preset-text">
-                <span className="no-preset-name">
-                  {t(`no.preset.${p}` as Key)}
-                  {scan?.advice?.preset === p && <span className="no-preset-tag">{t("an.tag")}</span>}
-                </span>
-                <span className="no-preset-desc">{t(`no.preset.${p}.desc` as Key)}</span>
-              </span>
-              {on && <Check size={14} className="no-preset-check" />}
-            </button>
-          );
-        })}
-      </motion.section>
-
-      <div className="no-layout">
-        <div className="no-main">
-          <motion.section variants={rise} className="card no-section">
-            <header className="card-head">
-              <h3 className="rg-overline">{t("no.settings")}</h3>
-              {opts.preset === "custom" && <span className="no-custom rg-metric">{t("no.preset.custom")}</span>}
-            </header>
-            <Slider
-              label={t("no.latency")}
-              value={opts.latency}
-              display={String(opts.latency)}
-              onChange={(latency) => change({ latency })}
-              min={t("no.latency.min")}
-              max={t("no.latency.max")}
-              mid={t("no.latency.mid", { n: buffersOff })}
-            />
-            <Slider
-              label={t("no.resp")}
-              value={opts.responsiveness}
-              display={`${respName} · ${opts.responsiveness}`}
-              onChange={(responsiveness) => change({ responsiveness })}
-              min={t("no.resp.min")}
-              max={t("no.resp.max")}
-            >
-              <div className="no-slider-extra">
-                <div className="no-chips">
-                  {([
-                    [0, "no.resp.delayed"],
-                    [50, "no.resp.balanced"],
-                    [100, "no.resp.responsive"],
-                  ] as const).map(([n, k]) => (
-                    <button key={n} type="button" className={`no-chip${opts.responsiveness === n ? " on" : ""}`} onClick={() => change({ responsiveness: n })}>
-                      {t(k)}
-                    </button>
-                  ))}
-                </div>
-                <span className="muted small no-resp-mid">{t("no.resp.mid", { irto: v.initialRto, sr: v.systemResponsiveness })}</span>
-              </div>
-            </Slider>
-            <div className="no-selects">
-              <Select
-                label={t("no.tuning")}
-                value={opts.tuning}
-                onChange={(tuning) => change({ tuning })}
-                options={[0, 1, 2, 3, 4, 5, 6].map((n) => ({ value: n, label: n === 0 ? `${t("no.tuning.0")} · ${v.autoTuning}` : t(`no.tuning.${n}` as Key) }))}
-              />
-              <Select
-                label={t("no.line")}
-                value={opts.line}
-                onChange={(line) => change({ line, wifi: line === 5 ? true : opts.line === 5 ? false : opts.wifi })}
-                options={[1, 2, 3, 4, 5, 6, 7].map((n) => ({ value: n, label: t(`no.line.${n}` as Key) }))}
-              />
-            </div>
-            <div className="no-toggles">
-              <Toggle title={t("no.smart")} desc={t("no.smart.desc")} checked={opts.smart} onChange={(smart) => change({ smart })} />
-              <Toggle title={t("no.stable")} desc={t("no.stable.desc")} checked={!opts.stable} onChange={(on) => change({ stable: !on })} />
-              <Toggle title={t("no.competitive")} desc={t("no.competitive.desc")} checked={opts.competitive} onChange={(competitive) => change({ competitive })} />
-            </div>
-          </motion.section>
-
-          <motion.div variants={rise}>
-            <Fold title={t("no.advanced")} summary={advancedSummary} open={folds.advanced} onToggle={() => fold("advanced")}>
-              <div className="no-toggles">
-                <div className="no-toggle no-mtu">
-                  <div className="no-toggle-text">
-                    <div className="no-toggle-title">{t("no.mtu")}</div>
-                    <div className="no-toggle-desc">{t("no.mtu.desc")}</div>
-                  </div>
-                  {opts.mtuMode !== 1 && (
-                    <input
-                      className="input no-mtu-input"
-                      inputMode="numeric"
-                      placeholder={t("no.mtu.keep")}
-                      aria-label={t("no.mtu.manual")}
-                      value={opts.mtuMode === 2 ? String(opts.mtu) : ""}
-                      onChange={(e) => {
-                        const n = parseInt(e.target.value.replace(/\D/g, ""), 10);
-                        change(Number.isNaN(n) ? { mtuMode: 0 } : { mtuMode: 2, mtu: Math.min(n, 1500) });
-                      }}
-                      onBlur={() => opts.mtuMode === 2 && opts.mtu < 576 && change({ mtu: 576 })}
-                    />
-                  )}
-                  <span className="no-mtu-auto muted small">{t("no.mtu.auto")}</span>
-                  <Switch checked={opts.mtuMode === 1} onChange={(on) => change({ mtuMode: on ? 1 : 0 })} label={t("no.mtu.auto")} />
-                </div>
-                {opts.mtuMode === 1 && (
-                  <label className="no-toggle no-target-row">
-                    <div className="no-toggle-text">
-                      <div className="no-toggle-title">{t("no.target")}</div>
-                      <div className="no-toggle-desc">{t("no.target.desc")}</div>
-                      {!validTarget(opts.target) && <div className="no-bad small">{t("no.target.bad")}</div>}
-                    </div>
-                    <input
-                      className={`input no-target-input${validTarget(opts.target) ? "" : " bad"}`}
-                      value={opts.target}
-                      spellCheck={false}
-                      maxLength={253}
-                      onChange={(e) => change({ target: e.target.value.trim(), preset: opts.preset })}
-                    />
-                  </label>
-                )}
-              </div>
-              <Slider
-                label={t("no.delay")}
-                value={opts.delay}
-                display={opts.delay === 0 ? t("no.delay.none") : String(opts.delay)}
-                onChange={(delay) => change({ delay })}
-                min={t("no.delay.min")}
-                max={t("no.delay.max")}
-                mid={t("no.delay.mid", { f: v.ackFrequency, t: v.ackTimeout, nagle: v.noDelay ? t("no.delay.nagleOff") : t("no.delay.nagleOn") })}
-              />
-              <Slider
-                label={t("no.prio")}
-                value={opts.priority}
-                display={v.dscp === 0 ? t("no.prio.none") : `DSCP ${v.dscp}${v.dscpName ? ` ${v.dscpName}` : ""}`}
-                onChange={(priority) => change({ priority })}
-                min={t("no.prio.min")}
-                max={t("no.prio.max")}
-                mid={opts.smart ? t("no.prio.mid") : t("no.prio.off")}
-                warn={!opts.smart}
-              />
-              <div className="no-selects">
-                <Select
-                  label={t("no.ccp")}
-                  value={opts.congestion}
-                  onChange={(congestion) => change({ congestion })}
-                  options={[0, 1, 2, 3, 4, 5].filter((n) => n !== 5 || win11 || opts.congestion === 5).map((n) => ({ value: n, label: t(`no.ccp.${n}` as Key) }))}
-                />
-              </div>
-              <div className="no-toggles">
-                <Toggle title={t("no.pmode")} desc={t("no.pmode.desc")} checked={opts.priorityMode} onChange={(priorityMode) => change({ priorityMode })} />
-                <Toggle title={t("no.nps")} desc={t("no.nps.desc")} checked={opts.powerSaving} onChange={(powerSaving) => change({ powerSaving })} />
-                <Toggle title={t("no.wifi")} desc={t("no.wifi.desc")} checked={opts.wifi} onChange={(wifi) => change({ wifi })} />
-                <Toggle title={t("no.bguard")} desc={t("no.bguard.desc")} checked={opts.bgGuard} onChange={(bgGuard) => change({ bgGuard })} />
-              </div>
-            </Fold>
-          </motion.div>
-
-          <motion.div variants={rise}>
-            <Fold
-              title={t("no.expert")}
-              icon={<SlidersHorizontal size={12} />}
-              summary={expertCount ? t("no.x.count", { n: expertCount }) : t("no.x.none")}
-              open={folds.expert}
-              onToggle={() => fold("expert")}
-            >
-              <Expert o={opts} v={v} count={expertCount} set={setExpert} clear={() => change({ expert: {} })} t={t} />
-            </Fold>
-          </motion.div>
-        </div>
-
-        <aside className="no-aside">
-          <motion.section variants={rise} className="card no-changes">
-            <header className="card-head">
-              <h3 className="rg-overline">{t("no.changes")}</h3>
-              <span className="muted small">{t("no.changes.head")}</span>
-            </header>
-            <Changes o={opts} v={v} buffersOff={buffersOff} t={t} />
-          </motion.section>
-          <motion.section variants={rise} className="card no-section no-state">
-            <Tool id="status" running={busy === "status"} disabled={!!busy} result={status} progress={busy === "status" ? progress : null} onRun={() => void run("status")} />
-          </motion.section>
-          <motion.section variants={rise} className="card no-section no-honest">
-            <header className="card-head">
-              <h3 className="rg-overline">{t("no.honest.title")}</h3>
-            </header>
-            <p className="small">{t("no.honest.text")}</p>
-          </motion.section>
-        </aside>
-      </div>
-    </motion.div>
-  );
-}
-
-function Fold({ title, icon, summary, open, onToggle, children }: { title: string; icon?: ReactNode; summary: string; open: boolean; onToggle: () => void; children: ReactNode }) {
-  return (
-    <section className={`card no-section no-fold${open ? " open" : ""}`}>
-      <button type="button" className="no-fold-head" aria-expanded={open} onClick={onToggle}>
-        <h3 className="rg-overline">
-          {icon}
-          {title}
-        </h3>
-        {!open && <span className="no-fold-sum muted small">{summary}</span>}
-        <ChevronDown size={15} className={open ? "flip" : undefined} />
-      </button>
-      <AnimatePresence initial={false}>
-        {open && (
-          <motion.div initial={{ height: 0, opacity: 0 }} animate={{ height: "auto", opacity: 1 }} exit={{ height: 0, opacity: 0 }} className="no-fold-body">
-            {children}
-          </motion.div>
-        )}
-      </AnimatePresence>
-    </section>
-  );
-}
-
-/** Ce que ces réglages changent dans Windows : sa valeur à gauche, la nouvelle à droite (netopt.rs, `compute`). */
-function Changes({ o, v, buffersOff, t }: { o: NetOptions; v: NetValues; buffersOff: number; t: T }) {
-  const w = WINDOWS_VALUES;
-  const im = (n: number) => t(`no.v.im.${n}` as Key);
-  const dscp = (x: NetValues, on: boolean) => (!on || x.dscp === 0 ? t("no.v.none") : `${x.dscp}${x.dscpName ? ` ${x.dscpName}` : ""}`);
-  const yes = (b: boolean) => (b ? t("no.x.on") : t("no.x.off"));
-  const tuning = (s: string) => (s === "keep" ? t("no.v.keep") : s);
-  const rows: [Key, string, string][] = [
-    ["no.v.buffers", "0/6", `${buffersOff}/6`],
-    ["no.v.im", im(0), im(v.interruptModeration)],
-    ["no.v.minRto", `${w.minRto} ms`, `${v.minRto} ms`],
-    ["no.v.initialRto", `${w.initialRto} ms`, `${v.initialRto} ms`],
-    ["no.v.ack", t("no.v.ackValue", { f: w.ackFrequency, t: w.ackTimeout }), t("no.v.ackValue", { f: v.ackFrequency, t: v.ackTimeout })],
-    ["no.v.nagle", t("no.delay.nagleOn"), v.noDelay ? t("no.delay.nagleOff") : t("no.delay.nagleOn")],
-    ["no.v.dscp", t("no.v.none"), dscp(v, o.smart)],
-    ["no.v.tuning", w.tuning, tuning(v.tuning)],
-    ["no.v.sysResp", String(w.systemResponsiveness), String(v.systemResponsiveness)],
-    ["no.v.timestamps", yes(w.timestamps), yes(v.timestamps)],
-    ["no.v.mtu", t("no.v.keep"), o.mtuMode === 1 ? t("no.v.auto") : o.mtuMode === 2 ? String(o.mtu) : t("no.v.keep")],
-  ];
-  return (
-    <dl className="no-values">
-      {rows.map(([k, from, to]) => (
-        <div key={k} className={`no-value${from !== to ? " changed" : ""}`}>
-          <dt>{t(k)}</dt>
-          <dd className="rg-metric">
-            {from !== to && <span className="no-value-from">{from}</span>}
-            <span className="no-value-to">{to}</span>
-          </dd>
-        </div>
-      ))}
-    </dl>
-  );
-}
-
-function ScanPanel({
-  scan,
-  cardName,
-  presetName,
-  premium,
-  onApply,
-  onKeep,
-  onClose,
-}: {
-  scan: Scan;
-  cardName: (d: Detect | null | undefined) => string;
-  presetName: (p: string) => string;
-  premium: boolean;
-  onApply: () => void;
-  onKeep: () => void;
-  onClose: () => void;
-}) {
-  const { t, lang } = useStore();
-  const order = ["card", "pc", "line", "done"] as const;
-  const at = order.indexOf(scan.step);
-  const state = (s: (typeof order)[number]) => (order.indexOf(s) < at ? "done" : order.indexOf(s) === at ? "now" : "next");
-  const dec = (x: number | null | undefined) => (x == null ? "—" : (Math.round(x * 10) / 10).toLocaleString(lang === "fr" ? "fr-FR" : "en-US"));
-  const m = scan.measure;
-  const lost = m ? (m.lost ?? Math.round(m.loss * m.samples)) : 0;
-  const advice = scan.advice;
-  const Icon = advice ? PRESET_ICONS[advice.preset] : ScanSearch;
-  const steps: { id: "card" | "pc" | "line"; icon: LucideIcon; title: Key; text: string | null }[] = [
-    {
-      id: "card",
-      icon: scan.card?.wifi ? Wifi : Cable,
-      title: "an.step.card",
-      text: scan.card === undefined ? null : scan.card?.connected ? `${scan.card.wifi ? "Wi-Fi" : t("an.wired")} · ${cardName(scan.card)}` : t("an.card.none"),
-    },
-    {
-      id: "pc",
-      icon: Cpu,
-      title: "an.step.pc",
-      text: scan.pc ? [scan.pc.cpu, scan.pc.threads ? t("an.threads", { n: scan.pc.threads }) : "", scan.pc.win].filter(Boolean).join(" · ") || "—" : null,
-    },
-    {
-      id: "line",
-      icon: Activity,
-      title: "an.step.line",
-      text:
-        m === undefined
-          ? scan.step === "line"
-            ? t("an.line.running", { i: scan.samples, n: LINE_SAMPLES })
-            : null
-          : m?.ping != null
-            ? t("an.line.result", { avg: dec(m.ping), jitter: dec(m.jitter), lost, n: m.samples })
-            : t("an.line.none"),
-    },
-  ];
   return (
     <>
-      <header className="card-head">
-        <h3 className="rg-overline">
-          <ScanSearch size={12} />
-          {t("an.title")}
-        </h3>
-        <button type="button" className="icon-btn" aria-label={t("an.close")} onClick={scan.step === "done" ? onKeep : onClose} disabled={scan.step !== "done"}>
-          <X size={14} />
-        </button>
-      </header>
-      <div className="no-scan-body">
-        <ol className="no-scan-steps">
-          {steps.map(({ id, icon: StepIcon, title, text }) => {
-            const s = state(id);
+      {scan && (
+        <ScanPanel
+          scan={scan}
+          cardName={cardName}
+          presetName={presetName}
+          onApply={() => {
+            setScan(null);
+            void run("apply");
+          }}
+          onKeep={keepMine}
+        />
+      )}
+
+      <section className={`pre${locked ? " lkd" : ""}`}>
+        <div className="sh">
+          <h2 className="h2 tape">{t("s5.no.presets")}</h2>
+          {detect?.connected && (
+            <span className="chip ghost" title={cardName(detect)}>
+              <I n={detect.wifi ? "wifi" : "net"} />
+              {t("s5.no.detected", { name: detect.wifi ? t("s5.no.wifi") : t("s5.no.ethernet") })}
+            </span>
+          )}
+          <button type="button" className="btn sm" disabled={!!busy || scanning} onClick={() => void analyse()}>
+            <I n={locked ? "lock" : scanning ? "loader" : "analysis"} className={scanning ? "spin" : undefined} />
+            {t("s5.no.analyse")}
+          </button>
+        </div>
+        <div className="pcards" role="radiogroup" aria-label={t("s5.no.presets")}>
+          {PRESETS.map((p) => {
+            const on = opts.preset === p;
             return (
-              <li key={id} className={`no-scan-step ${s}`}>
-                <span className="no-scan-mark">{s === "done" ? <Check size={13} /> : s === "now" ? <LoaderCircle size={13} className="spin" /> : <StepIcon size={13} />}</span>
-                <div className="no-scan-text">
-                  <div className="no-scan-title">{t(title)}</div>
-                  {text && <div className="no-scan-desc muted small">{text}</div>}
-                  {id === "line" && s === "now" && (
-                    <div className="no-progress no-scan-progress">
-                      <motion.div className="no-progress-fill" animate={{ width: `${Math.max(4, (scan.samples / LINE_SAMPLES) * 100)}%` }} transition={{ duration: 0.25 }} />
-                    </div>
-                  )}
-                </div>
-              </li>
+              <button key={p} type="button" role="radio" aria-checked={on} className={`pset${on ? " on" : ""}`} title={t(`no.preset.${p}.desc` as Key)} onClick={() => pickPreset(p)}>
+                <I n={PRESET_ICONS[p]} />
+                {on && (
+                  <em className="ck">
+                    <I n="check" />
+                  </em>
+                )}
+                <b>{t(`s5.no.p.${p}` as Key)}</b>
+                <span>{t(`s5.no.pd.${p}` as Key)}</span>
+              </button>
             );
           })}
-        </ol>
-        <div className={`no-scan-result${advice ? " ready" : ""}`}>
-          <div className="no-scan-pick">
-            <span className="no-scan-icon">
-              <Icon size={20} strokeWidth={1.75} />
-            </span>
-            <div>
-              <div className="rg-overline">{t("an.pick")}</div>
-              <div className="no-scan-name">{advice ? presetName(advice.preset) : t("an.wait")}</div>
-            </div>
-          </div>
-          {advice && (
-            <>
-              <ul className="no-scan-why">
-                {advice.why.map((w, i) => (
-                  <li key={i}>{t(w.key, w.vars && Object.fromEntries(Object.entries(w.vars).map(([k, x]) => [k, typeof x === "number" ? dec(x) : x])))}</li>
-                ))}
-              </ul>
-              <p className="muted small">{t("an.note")}</p>
-              <div className="no-scan-actions">
-                <Button variant="primary" icon={!premium ? <Lock size={13} /> : undefined} onClick={onApply}>
-                  {t("an.apply")}
-                  {premium && <ArrowRight size={14} />}
-                </Button>
-                <Button variant="ghost" onClick={onKeep}>
-                  {t("an.keep")}
-                </Button>
-              </div>
-            </>
-          )}
         </div>
-      </div>
+      </section>
+
+      <section className={`tune${locked ? " lkd" : ""}`}>
+        <div className="sh">
+          <h2 className="h2 tape">{t("s5.no.tune")}</h2>
+          {opts.preset === "custom" && <span className="chip ghost">{t("s5.no.custom")}</span>}
+        </div>
+        <div className="cons panel">
+          <div className="faders">
+            <Fader
+              name={t("s5.no.f.buffering")}
+              value={opts.latency}
+              label={buffersOff === 0 ? t("s5.no.f.windows") : t("s5.no.f.offOf", { n: buffersOff })}
+              lo={t("s5.no.f.none")}
+              hi={t("s5.no.f.windows")}
+              hint={t("no.latency")}
+              locked={locked ? () => setUpsell("plan") : undefined}
+              onChange={(latency) => change({ latency })}
+            />
+            <Fader
+              name={t("s5.no.f.resend")}
+              value={opts.responsiveness}
+              label={resendName}
+              lo={t("s5.no.f.cautious")}
+              hi={t("s5.no.f.fast")}
+              hint={t("no.resp")}
+              locked={locked ? () => setUpsell("plan") : undefined}
+              onChange={(responsiveness) => change({ responsiveness })}
+            />
+            <Fader
+              name={t("s5.no.f.batching")}
+              value={opts.delay}
+              label={batchName}
+              lo={t("s5.no.f.sendNow")}
+              hi={t("s5.no.f.windows")}
+              hint={t("no.delay")}
+              locked={locked ? () => setUpsell("plan") : undefined}
+              onChange={(delay) => change({ delay })}
+            />
+          </div>
+          <Diff o={opts} v={v} buffersOff={buffersOff} t={t} />
+        </div>
+
+        <div className="tgrid opts2">
+          <Toggle name={t("s5.no.o.smart")} desc={t("no.smart.desc")} on={opts.smart} onChange={(smart) => change({ smart })} />
+          <Toggle name={t("s5.no.o.loss")} desc={t("no.stable.desc")} on={!opts.stable} onChange={(on) => change({ stable: !on })} />
+          <Toggle name={t("s5.no.o.boost")} desc={t("no.competitive.desc")} on={opts.competitive} onChange={(competitive) => change({ competitive })} />
+          <LineTile
+            value={opts.line}
+            locked={locked}
+            onLocked={() => setUpsell("plan")}
+            onChange={(line) => change({ line, wifi: line === 5 ? true : opts.line === 5 ? false : opts.wifi })}
+          />
+          <button type="button" className="tw adv" aria-expanded={folds.advanced} onClick={() => fold("advanced")}>
+            <span className="nm">{t("s5.no.o.advanced")}</span>
+            <em>9</em>
+            <I n="chev" className="chev" />
+          </button>
+          <button type="button" className="tw adv" aria-expanded={folds.expert} onClick={() => fold("expert")}>
+            <span className="nm">{t("s5.no.o.expert")}</span>
+            <em>9</em>
+            {expertCount > 0 && <small className="mn">{t("s5.no.o.manual", { n: expertCount })}</small>}
+            <I n="chev" className="chev" />
+          </button>
+        </div>
+
+        {folds.advanced && !locked && <Advanced o={opts} v={v} change={change} win11={!!sys?.isWin11} onHide={() => fold("advanced")} />}
+        {folds.expert && !locked && <Expert o={opts} v={v} count={expertCount} set={setExpert} clear={() => change({ expert: {} })} onHide={() => fold("expert")} />}
+
+        <div className="tools">
+          <span className="lbl">{t("s5.no.t.tools")}</span>
+          {TOOLS.map(({ id, icon }) => (
+            <button key={id} type="button" className={`btn sm${tool?.id === id ? " on" : ""}`} disabled={!!busy && busy !== id} onClick={() => busy !== id && void runTool(id)}>
+              <I n={busy === id ? "loader" : icon} className={busy === id ? "spin" : undefined} />
+              {t(toolName(id))}
+              {busy === id && progress?.total ? <small>{Math.round((progress.step / progress.total) * 100)} %</small> : null}
+            </button>
+          ))}
+        </div>
+        {tool && (
+          <div className={`tres panel${busy === tool.id ? " busy" : ""}`}>
+            <div className="th">
+              <h3>{t(toolName(tool.id))}</h3>
+              <span className="sub">{t(`no.tool.${tool.id}.desc` as Key)}</span>
+              <button type="button" className="ic" aria-label={t("an.close")} disabled={busy === tool.id} onClick={() => setTool(null)}>
+                <I n="x" />
+              </button>
+            </div>
+            {tool.confirm ? (
+              <div className="cf">
+                <p className="tx">{t("no.tool.loaded.confirm")}</p>
+                <button type="button" className="btn sm red" disabled={!!busy} onClick={() => void runTool("loaded", true)}>
+                  <I n="play" />
+                  {t("no.tool.run")}
+                </button>
+              </div>
+            ) : busy === tool.id ? (
+              <div className="rn">
+                <Seg value={progress?.step ?? 0} total={progress?.total || 1} count={30} />
+                {toolStep && <p className="tx">{engineText(toolStep, lang)}</p>}
+              </div>
+            ) : tool.error ? (
+              <p className="tx bad">{tool.error}</p>
+            ) : tool.result ? (
+              <ToolResult id={tool.id} result={tool.result} onUnstable={locked ? undefined : () => change({ stable: false })} />
+            ) : null}
+          </div>
+        )}
+
+        <p className="note">
+          <b>{t("no.honest.title")}</b> {t("no.honest.text")}
+        </p>
+      </section>
+
+      <Bar
+        name={presetName(opts.preset)}
+        locked={locked}
+        busy={busy}
+        progress={progress}
+        lines={lines}
+        done={done}
+        error={error}
+        applied={applied}
+        dirty={dirty}
+        canRestore={!!applied || !!state?.backup}
+        backup={!!state?.backup}
+        scanning={scanning}
+        onApply={() => void run("apply")}
+        onRestore={(a) => void run(a)}
+      />
     </>
   );
 }
 
-type T = (key: Key, vars?: Record<string, string | number>) => string;
-
-function Summary({ done, t }: { done: { action: NetAction; outcome: NetOutcome }; t: T }) {
-  const { action, outcome } = done;
-  const ok = outcome.code === 0;
-  const head = action === "apply" ? t("no.done.apply", { ok: outcome.ok }) : action === "restore" ? t("no.done.restore") : t("no.done.defaults");
+/** Un curseur de la console : 24 segments, la poignée, ses deux bouts. Glisser, cliquer ou les flèches du clavier. */
+function Fader({
+  name,
+  value,
+  label,
+  lo,
+  hi,
+  hint,
+  locked,
+  onChange,
+}: {
+  name: string;
+  value: number;
+  label: string;
+  lo: string;
+  hi: string;
+  hint: string;
+  /** gratuit : un clic ouvre l'offre */
+  locked?: () => void;
+  onChange: (v: number) => void;
+}) {
+  const at = (e: PointerEvent<HTMLDivElement>) => {
+    const r = e.currentTarget.getBoundingClientRect();
+    return Math.round(Math.max(0, Math.min(1, (e.clientX - r.left) / r.width)) * 100);
+  };
+  const set = (n: number) => {
+    const x = Math.max(0, Math.min(100, n));
+    if (x !== value) onChange(x);
+  };
+  const key = (e: KeyboardEvent<HTMLDivElement>) => {
+    const step: Record<string, number> = { ArrowLeft: -5, ArrowDown: -5, ArrowRight: 5, ArrowUp: 5, PageDown: -20, PageUp: 20, Home: -100, End: 100 };
+    if (!(e.key in step)) return;
+    e.preventDefault();
+    if (locked) return locked();
+    set(value + step[e.key]);
+  };
   return (
-    <div className={`no-summary${ok ? "" : " bad"}`}>
-      <div className="no-summary-head">
-        {ok ? <Check size={15} /> : <CircleX size={15} />}
-        <span>{head}</span>
-        {outcome.warn > 0 && <span className="no-tag warn">{t("no.done.warn", { n: outcome.warn })}</span>}
-        {outcome.fail > 0 && <span className="no-tag fail">{t("no.done.fail", { n: outcome.fail })}</span>}
+    <div className="fd">
+      <div className="fh">
+        <b>{name}</b>
+        <em>{label}</em>
       </div>
-      {ok && (
-        <div className="no-reboot">
-          <span className="muted small">{t("no.reboot")}</span>
-          <Button size="sm" icon={<Power size={13} />} onClick={() => void api.restartPc()}>
-            {t("no.rebootNow")}
-          </Button>
+      <div
+        className="trk"
+        role="slider"
+        tabIndex={0}
+        title={hint}
+        aria-label={hint}
+        aria-valuemin={0}
+        aria-valuemax={100}
+        aria-valuenow={value}
+        aria-valuetext={label}
+        onPointerDown={(e) => {
+          if (locked) return locked();
+          e.currentTarget.setPointerCapture(e.pointerId);
+          set(at(e));
+        }}
+        onPointerMove={(e) => e.currentTarget.hasPointerCapture(e.pointerId) && set(at(e))}
+        onKeyDown={key}
+      >
+        <Seg value={value} total={100} count={24} />
+        <span className="kn" style={{ left: `${Math.max(1, Math.min(99, value))}%` }} />
+      </div>
+      <div className="ends">
+        <span className="lbl">{lo}</span>
+        <span className="lbl">{hi}</span>
+      </div>
+    </div>
+  );
+}
+
+/** Ce que ces réglages changent dans Windows : sa valeur, puis celle de Rago (netopt.rs, `compute`). */
+function Diff({ o, v, buffersOff, t }: { o: NetOptions; v: NetValues; buffersOff: number; t: T }) {
+  const w = WINDOWS_VALUES;
+  const none = t("s5.no.d.none");
+  const rows: [Key, string, string][] = [
+    ["s5.no.d.nagle", t("s5.no.d.on"), v.noDelay ? t("s5.no.d.off") : t("s5.no.d.on")],
+    ["s5.no.d.ack", `${w.ackFrequency} · ${w.ackTimeout} ms`, `${v.ackFrequency} · ${v.ackTimeout} ms`],
+    ["s5.no.d.resend", `${w.minRto} ms`, `${v.minRto} ms`],
+    ["s5.no.d.buffers", t("s5.no.d.nOn", { n: 6 }), t("s5.no.d.nOn", { n: 6 - buffersOff })],
+    ["s5.no.d.prio", none, !o.smart || v.dscp === 0 ? none : `${v.dscp}${v.dscpName ? ` ${v.dscpName}` : ""}`],
+  ];
+  return (
+    <div className="diff">
+      <div className="dh">
+        <span />
+        <span className="lbl">{t("s5.no.d.windows")}</span>
+        <span />
+        <span className="lbl">{t("s5.no.d.rago")}</span>
+      </div>
+      {rows.map(([k, a, b]) => (
+        <div key={k} className={`dr${a === b ? " same" : ""}`}>
+          <span className="k">{t(k)}</span>
+          <span className="a">{a}</span>
+          <I n="right" />
+          <b>{b}</b>
+        </div>
+      ))}
+    </div>
+  );
+}
+
+function Toggle({ name, desc, on, onChange }: { name: string; desc: string; on: boolean; onChange: (v: boolean) => void }) {
+  return (
+    <button type="button" role="switch" aria-checked={on} className={`tw${on ? " on" : ""}`} title={desc} onClick={() => onChange(!on)}>
+      <span className="nm">{name}</span>
+      <i className={`sw${on ? " on" : ""}`} />
+    </button>
+  );
+}
+
+/** Carreau « connection » : le type de ligne, choisi dans une liste qui s'ouvre dessous. */
+function LineTile({ value, locked, onLocked, onChange }: { value: number; locked: boolean; onLocked: () => void; onChange: (line: number) => void }) {
+  const { t } = useStore();
+  const [open, setOpen] = useState(false);
+  const ref = useRef<HTMLDivElement>(null);
+  useEffect(() => {
+    if (!open) return;
+    const away = (e: MouseEvent) => !ref.current?.contains(e.target as Node) && setOpen(false);
+    const esc = (e: globalThis.KeyboardEvent) => e.key === "Escape" && setOpen(false);
+    document.addEventListener("mousedown", away);
+    document.addEventListener("keydown", esc);
+    return () => {
+      document.removeEventListener("mousedown", away);
+      document.removeEventListener("keydown", esc);
+    };
+  }, [open]);
+  return (
+    <div className="lsel" ref={ref}>
+      <button type="button" className="tw val" aria-haspopup="listbox" aria-expanded={open} title={t("no.line")} onClick={() => (locked ? onLocked() : setOpen((x) => !x))}>
+        <span className="nm">{t("s5.no.o.line")}</span>
+        <span className="v">{t(`s5.no.line.${value}` as Key)}</span>
+        <I n="chev" className="chev" />
+      </button>
+      {open && (
+        <div className="lmenu panel" role="listbox" aria-label={t("no.line")}>
+          {[1, 2, 3, 4, 5, 6, 7].map((n) => (
+            <button
+              key={n}
+              type="button"
+              role="option"
+              aria-selected={n === value}
+              className={n === value ? "on" : undefined}
+              onClick={() => {
+                setOpen(false);
+                if (n !== value) onChange(n);
+              }}
+            >
+              {t(`s5.no.line.${n}` as Key)}
+              {n === value && <I n="check" />}
+            </button>
+          ))}
         </div>
       )}
     </div>
   );
 }
 
-function Log({ lines }: { lines: NetLine[] }) {
-  const { lang } = useStore();
-  const ref = useRef<HTMLDivElement>(null);
-  useEffect(() => {
-    const el = ref.current;
-    if (el) el.scrollTop = el.scrollHeight;
-  }, [lines.length]);
+/** En-tête d'un bloc déplié (avancé, expert), comme les avancés des pages de module. */
+function FoldHead({ name, n, lead, extra, onHide }: { name: string; n: number; lead: string; extra?: ReactNode; onHide: () => void }) {
+  const { t } = useStore();
   return (
-    <div className="no-log rg-metric" ref={ref}>
-      {lines.map((l, i) =>
-        l.tag === "title" ? (
-          <div key={i} className="no-log-title">
-            {engineText(l.text, lang)}
-          </div>
-        ) : (
-          <div key={i} className={`no-log-line ${l.tag}`}>
-            <span className="no-log-mark">{l.tag === "ok" ? "✓" : l.tag === "warn" ? "!" : l.tag === "fail" ? "✕" : "·"}</span>
-            {l.text}
-          </div>
-        ),
-      )}
+    <div className="advh">
+      {name}
+      <em>{n}</em>
+      <small>{lead}</small>
+      <i className="ln" />
+      {extra}
+      <button type="button" className="hd" onClick={onHide}>
+        {t("module.hide")}
+        <I n="chev" />
+      </button>
     </div>
   );
 }
 
-function Slider({
-  label,
-  value,
-  display,
-  onChange,
-  min,
-  max,
-  mid,
-  warn,
-  children,
-}: {
-  label: string;
-  value: number;
-  display: string;
-  onChange: (v: number) => void;
-  min: string;
-  max: string;
-  mid?: string;
-  warn?: boolean;
-  children?: ReactNode;
-}) {
+/** Rangée à options (.tw.var des pages de module). */
+function VarRow({ name, note, warn, children }: { name: string; note: string; warn?: boolean; children: ReactNode }) {
   return (
-    <div className="no-slider">
-      <div className="no-slider-head">
-        <span className="no-slider-label">{label}</span>
-        <span className="no-slider-value">{display}</span>
-      </div>
-      <input
-        type="range"
-        min={0}
-        max={100}
-        step={1}
-        value={value}
-        aria-label={label}
-        style={{ "--pct": `${value}%` } as React.CSSProperties}
-        onChange={(e) => onChange(Number(e.target.value))}
-      />
-      <div className="no-slider-ends muted">
-        <span>{min}</span>
-        {mid && <span className={`no-slider-mid${warn ? " warn" : ""}`}>{mid}</span>}
-        <span>{max}</span>
-      </div>
-      {children}
-    </div>
-  );
-}
-
-function Select({ label, value, options, onChange }: { label: string; value: number; options: { value: number; label: string }[]; onChange: (v: number) => void }) {
-  return (
-    <label className="no-select">
-      <span className="no-select-label">{label}</span>
-      <span className="no-select-box">
-        <select value={value} onChange={(e) => onChange(Number(e.target.value))}>
-          {options.map((o) => (
-            <option key={o.value} value={o.value}>
-              {o.label}
-            </option>
-          ))}
-        </select>
-        <ChevronDown size={15} />
+    <div className={`tw var${warn ? " warn" : ""}`}>
+      <span className="tx">
+        <span className="nm">{name}</span>
+        <span className="note">{note}</span>
       </span>
-    </label>
-  );
-}
-
-function Toggle({ title, desc, checked, onChange }: { title: string; desc: string; checked: boolean; onChange: (v: boolean) => void }) {
-  return (
-    <div className="no-toggle" onClick={() => onChange(!checked)}>
-      <div className="no-toggle-text">
-        <div className="no-toggle-title">{title}</div>
-        <div className="no-toggle-desc">{desc}</div>
-      </div>
-      <Switch checked={checked} onChange={onChange} label={title} />
+      <div className="opts">{children}</div>
     </div>
   );
 }
 
-/** Réglages experts : chaque valeur calculée par les curseurs, laissée en Auto ou remplacée à la main (NetExpert, null = Auto). */
+function Opt({ on, label, onClick, disabled }: { on: boolean; label: string; onClick: () => void; disabled?: boolean }) {
+  return (
+    <button type="button" className={`o${on ? " on" : ""}`} aria-pressed={on} disabled={disabled} onClick={onClick}>
+      {label}
+    </button>
+  );
+}
+
+/** Avancé : les 9 réglages que les presets posent et que la console ne montre pas. */
+function Advanced({ o, v, change, win11, onHide }: { o: NetOptions; v: NetValues; change: (p: Partial<NetOptions>) => void; win11: boolean; onHide: () => void }) {
+  const { t } = useStore();
+  const [mtu, setMtu] = useState(String(o.mtu));
+  useEffect(() => setMtu(String(o.mtu)), [o.mtu]);
+  const okTarget = validTarget(o.target);
+  const dscp = v.dscp;
+  return (
+    <div className="tgrid nadv">
+      <FoldHead name={t("s5.no.o.advanced")} n={9} lead={t("s5.no.a.lead")} onHide={onHide} />
+      <Toggle name={t("s5.no.a.pmode")} desc={t("no.pmode.desc")} on={o.priorityMode} onChange={(priorityMode) => change({ priorityMode })} />
+      <Toggle name={t("s5.no.a.nps")} desc={t("no.nps.desc")} on={o.powerSaving} onChange={(powerSaving) => change({ powerSaving })} />
+      <Toggle name={t("s5.no.a.wifi")} desc={t("no.wifi.desc")} on={o.wifi} onChange={(wifi) => change({ wifi })} />
+      <Toggle name={t("s5.no.a.bguard")} desc={t("no.bguard.desc")} on={o.bgGuard} onChange={(bgGuard) => change({ bgGuard })} />
+      <label className={`tw fld${okTarget ? "" : " bad"}`} title={t("no.target.desc")}>
+        <span className="tx">
+          <span className="nm">{t("s5.no.a.target")}</span>
+          <span className="note">{okTarget ? t("s5.no.a.targetD") : t("no.target.bad")}</span>
+        </span>
+        <input value={o.target} spellCheck={false} maxLength={253} onChange={(e) => change({ target: e.target.value.trim(), preset: o.preset })} />
+      </label>
+      <VarRow name={t("s5.no.a.prio")} note={o.smart ? t("s5.no.a.prioD") : t("no.prio.off")} warn={!o.smart && dscp !== 0}>
+        {PRIOS.map((p) => (
+          <Opt key={p.dscp} on={o.expert.dscp == null && dscp === p.dscp} label={p.dscp === 0 ? t("s5.no.d.none") : `${p.dscp} ${DSCP_NAMES[p.dscp]}`} onClick={() => change({ priority: p.priority })} />
+        ))}
+      </VarRow>
+      <VarRow name={t("s5.no.a.mtu")} note={t("no.mtu.desc")}>
+        <Opt on={o.mtuMode === 0} label={t("s5.no.a.keep")} onClick={() => change({ mtuMode: 0 })} />
+        <Opt on={o.mtuMode === 1} label={t("s5.no.a.auto")} onClick={() => change({ mtuMode: 1 })} />
+        <Opt on={o.mtuMode === 2} label={t("s5.no.a.set")} onClick={() => change({ mtuMode: 2 })} />
+        {o.mtuMode === 2 && (
+          <input
+            className="num"
+            inputMode="numeric"
+            aria-label={t("no.mtu.manual")}
+            value={mtu}
+            onChange={(e) => setMtu(e.target.value.replace(/\D/g, "").slice(0, 4))}
+            onBlur={() => {
+              const n = parseInt(mtu, 10);
+              change({ mtu: Number.isNaN(n) ? o.mtu : Math.max(576, Math.min(n, 1500)) });
+            }}
+            onKeyDown={(e) => e.key === "Enter" && (e.target as HTMLInputElement).blur()}
+          />
+        )}
+      </VarRow>
+      <VarRow name={t("s5.no.a.tuning")} note={t("s5.no.a.tuningD", { v: v.autoTuning })}>
+        {[0, 1, 2, 3, 4, 5, 6].map((n) => (
+          <Opt key={n} on={o.tuning === n} label={t(`s5.no.tu.${n}` as Key)} onClick={() => change({ tuning: n })} />
+        ))}
+      </VarRow>
+      <VarRow name={t("s5.no.a.ccp")} note={t("s5.no.a.ccpD")}>
+        {[0, 1, 2, 3, 4, 5]
+          .filter((n) => n !== 5 || win11 || o.congestion === 5)
+          .map((n) => (
+            <Opt key={n} on={o.congestion === n} label={t(`s5.no.cc.${n}` as Key)} onClick={() => change({ congestion: n })} />
+          ))}
+      </VarRow>
+    </div>
+  );
+}
+
+/** Expert : chaque valeur calculée, laissée en auto ou remplacée à la main (NetExpert, null = auto). */
 type NumId = "minRto" | "initialRto" | "icw" | "ackFrequency" | "ackTimeout" | "dscp";
 type BoolId = "timestamps" | "ecn" | "interruptModeration";
-const NUM_ROWS: Record<NumId, { min: number; max: number; step: number; unit: "ms" | "packets" | "" }> = {
-  minRto: { min: 20, max: 300, step: 10, unit: "ms" },
-  initialRto: { min: 300, max: 3000, step: 100, unit: "ms" },
-  icw: { min: 2, max: 64, step: 1, unit: "packets" },
-  ackFrequency: { min: 1, max: 255, step: 1, unit: "packets" },
-  ackTimeout: { min: 10, max: 600, step: 10, unit: "ms" },
-  dscp: { min: 0, max: 63, step: 1, unit: "" },
+const NUM_ROWS: Record<NumId, { min: number; max: number; step: number; ms: boolean }> = {
+  minRto: { min: 20, max: 300, step: 10, ms: true },
+  initialRto: { min: 300, max: 3000, step: 100, ms: true },
+  icw: { min: 2, max: 64, step: 1, ms: false },
+  ackFrequency: { min: 1, max: 255, step: 1, ms: false },
+  ackTimeout: { min: 10, max: 600, step: 10, ms: true },
+  dscp: { min: 0, max: 63, step: 1, ms: false },
 };
-const GROUPS: { id: Key; rows: (NumId | BoolId)[] }[] = [
-  { id: "no.x.group.resend", rows: ["minRto", "initialRto"] },
-  { id: "no.x.group.ack", rows: ["ackFrequency", "ackTimeout"] },
-  { id: "no.x.group.send", rows: ["icw", "dscp"] },
-  { id: "no.x.group.card", rows: ["timestamps", "ecn", "interruptModeration"] },
-];
+const EXPERT_ROWS: (NumId | BoolId)[] = ["minRto", "initialRto", "ackFrequency", "ackTimeout", "icw", "dscp", "timestamps", "ecn", "interruptModeration"];
 
-function Expert({ o, v, count, set, clear, t }: { o: NetOptions; v: NetValues; count: number; set: (p: Partial<NetExpert>) => void; clear: () => void; t: T }) {
+function Expert({ o, v, count, set, clear, onHide }: { o: NetOptions; v: NetValues; count: number; set: (p: Partial<NetExpert>) => void; clear: () => void; onHide: () => void }) {
+  const { t } = useStore();
   const w = WINDOWS_VALUES;
   const x = o.expert;
-  const unit = (id: NumId, n: number) => (id === "dscp" ? (DSCP_NAMES[n] ?? "") : NUM_ROWS[id].unit === "packets" ? t("no.x.packets", { n }) : NUM_ROWS[id].unit);
-  const show = (id: NumId, n: number) => `${n} ${unit(id, n)}`.trim();
-  const onOff = (b: boolean) => (b ? t("no.x.on") : t("no.x.off"));
-  const im = (n: number) => (n === 1 ? t("no.v.im.1").replace(/^./, (c) => c.toUpperCase()) : onOff(n !== 2));
-  const autoNum: Record<NumId, string> = {
-    minRto: show("minRto", v.minRto),
-    initialRto: show("initialRto", v.initialRto),
-    icw: show("icw", 10),
-    ackFrequency: show("ackFrequency", v.ackFrequency),
-    ackTimeout: show("ackTimeout", v.ackTimeout),
-    dscp: !o.smart || v.dscp === 0 ? t("no.v.none") : show("dscp", v.dscp),
-  };
+  const onOff = (b: boolean) => (b ? t("s5.no.x.on") : t("s5.no.x.off"));
+  const autoNum: Record<NumId, number> = { minRto: v.minRto, initialRto: v.initialRto, icw: 10, ackFrequency: v.ackFrequency, ackTimeout: v.ackTimeout, dscp: v.dscp };
   const winNum: Record<NumId, string> = {
-    minRto: show("minRto", w.minRto),
-    initialRto: show("initialRto", w.initialRto),
-    icw: show("icw", 10),
-    ackFrequency: show("ackFrequency", w.ackFrequency),
-    ackTimeout: show("ackTimeout", w.ackTimeout),
-    dscp: t("no.v.none"),
+    minRto: `${w.minRto} ms`,
+    initialRto: `${w.initialRto} ms`,
+    icw: "10",
+    ackFrequency: String(w.ackFrequency),
+    ackTimeout: `${w.ackTimeout} ms`,
+    dscp: t("s5.no.d.none"),
   };
-  const autoNumValue: Record<NumId, number> = { minRto: v.minRto, initialRto: v.initialRto, icw: 10, ackFrequency: v.ackFrequency, ackTimeout: v.ackTimeout, dscp: v.dscp };
-  const autoBool: Record<BoolId, string> = { timestamps: onOff(v.timestamps), ecn: onOff(v.ecn), interruptModeration: im(v.interruptModeration) };
+  const autoBool: Record<BoolId, boolean> = { timestamps: v.timestamps, ecn: v.ecn, interruptModeration: v.interruptModeration !== 2 };
   const winBool: Record<BoolId, string> = { timestamps: onOff(w.timestamps), ecn: onOff(false), interruptModeration: onOff(true) };
   const warn = (id: NumId | BoolId): Key | null => {
     const n = x[id];
@@ -951,114 +714,77 @@ function Expert({ o, v, count, set, clear, t }: { o: NetOptions; v: NetValues; c
     return null;
   };
   return (
-    <div className="no-x">
-      <div className="no-x-intro">
-        <Info size={15} />
-        <div>
-          <div className="no-x-intro-title">{t("no.x.introTitle")}</div>
-          <p className="small">{t("no.x.intro")}</p>
-          <p className="muted small">{t("no.x.note")}</p>
-        </div>
-      </div>
-      {GROUPS.map((g) => (
-        <div key={g.id} className="no-x-group">
-          <h4 className="rg-overline">{t(g.id)}</h4>
-          <div className="no-x-list">
-          {g.rows.map((id) => {
-            const manual = x[id] != null;
-            const tip = warn(id);
-            const isNum = id in NUM_ROWS;
-            const r = isNum ? NUM_ROWS[id as NumId] : null;
-            return (
-              <div key={id} className={`no-x-row${manual ? " manual" : ""}`}>
-                <div className="no-x-text">
-                  <div className="no-x-title">
-                    {t(`no.x.${id}` as Key)}
-                    {manual && <span className="no-x-badge">{t("no.x.manual")}</span>}
-                  </div>
-                  <div className="no-x-desc">{t(`no.x.${id}.desc` as Key)}</div>
-                  <div className="no-x-meta rg-metric">
-                    {r && `${t("no.x.range", { min: r.min, max: r.max, unit: id === "dscp" ? "" : unit(id as NumId, r.max) }).trim()} · `}
-                    {t("no.x.windows", { v: isNum ? winNum[id as NumId] : winBool[id as BoolId] })}
-                  </div>
-                </div>
-                <div className="no-x-ctl">
-                  {isNum ? (
-                    <>
-                      <Segmented
-                        value={manual ? "manual" : "auto"}
-                        options={[
-                          { id: "auto", label: t("no.x.auto") },
-                          { id: "manual", label: t("no.x.manual") },
-                        ]}
-                        onChange={(m) => set({ [id]: m === "auto" ? null : autoNumValue[id as NumId] })}
-                        layoutId={`no-x-${id}`}
-                      />
-                      {manual ? (
-                        <Stepper
-                          value={x[id] as number}
-                          {...r!}
-                          unit={(n) => unit(id as NumId, n)}
-                          onChange={(n) => set({ [id]: n })}
-                          t={t}
-                        />
-                      ) : (
-                        <span className="no-x-auto rg-metric">{t("no.x.autoValue", { v: autoNum[id as NumId] })}</span>
-                      )}
-                    </>
-                  ) : (
-                    <>
-                      <Segmented
-                        value={x[id] == null ? "auto" : x[id] ? "on" : "off"}
-                        options={[
-                          { id: "auto", label: t("no.x.auto") },
-                          { id: "on", label: t("no.x.on") },
-                          { id: "off", label: t("no.x.off") },
-                        ]}
-                        onChange={(m) => set({ [id]: m === "auto" ? null : m === "on" })}
-                        layoutId={`no-x-${id}`}
-                      />
-                      {!manual && <span className="no-x-auto rg-metric">{t("no.x.autoValue", { v: autoBool[id as BoolId] })}</span>}
-                    </>
-                  )}
-                </div>
-                {tip && (
-                  <div className="no-x-warn small">
-                    <TriangleAlert size={13} />
-                    <span>{t(tip)}</span>
-                  </div>
-                )}
+    <div className="tgrid nadv nx">
+      <FoldHead
+        name={t("s5.no.o.expert")}
+        n={9}
+        lead={t("s5.no.x.lead")}
+        onHide={onHide}
+        extra={
+          <button type="button" className="hd" disabled={!count} onClick={clear}>
+            <I n="undo" />
+            {t("s5.no.x.reset")}
+          </button>
+        }
+      />
+      {EXPERT_ROWS.map((id) => {
+        const manual = x[id] != null;
+        const tip = warn(id);
+        const isNum = id in NUM_ROWS;
+        const win = isNum ? winNum[id as NumId] : winBool[id as BoolId];
+        const note = tip ? t(tip) : t(manual ? "s5.no.x.manualNote" : "s5.no.x.autoNote", { w: win });
+        return (
+          <div key={id} className={`tw xp${manual ? " on" : ""}${tip ? " warn" : ""}`} title={t(`no.x.${id}.desc` as Key)}>
+            <span className="tx">
+              <span className="nm">{t(`s5.no.x.n.${id}` as Key)}</span>
+              <span className="note">{note}</span>
+            </span>
+            {isNum ? (
+              <Stepper
+                value={(x[id] as number | null | undefined) ?? autoNum[id as NumId]}
+                auto={!manual}
+                {...NUM_ROWS[id as NumId]}
+                suffix={(n) => (id === "dscp" ? (DSCP_NAMES[n] ?? "") : NUM_ROWS[id as NumId].ms ? "ms" : "")}
+                onChange={(n) => set({ [id]: n })}
+                onAuto={() => set({ [id]: null })}
+                t={t}
+              />
+            ) : (
+              <div className="opts">
+                <Opt on={!manual} label={`${t("s5.no.x.auto")} · ${onOff(autoBool[id as BoolId])}`} onClick={() => set({ [id]: null })} />
+                <Opt on={x[id] === true} label={t("s5.no.x.on")} onClick={() => set({ [id]: true })} />
+                <Opt on={x[id] === false} label={t("s5.no.x.off")} onClick={() => set({ [id]: false })} />
               </div>
-            );
-          })}
+            )}
           </div>
-        </div>
-      ))}
-      <div className="no-x-foot">
-        <span className={count ? "no-x-count" : "muted small"}>{count ? t("no.x.count", { n: count }) : t("no.x.none")}</span>
-        <Button size="sm" variant="ghost" icon={<RotateCcw size={13} />} disabled={!count} onClick={clear}>
-          {t("no.x.clear")}
-        </Button>
-      </div>
+        );
+      })}
+      <p className="note xn">
+        <b>{t("no.x.introTitle")}</b> {t("no.x.note")}
+      </p>
     </div>
   );
 }
 
 function Stepper({
   value,
+  auto,
   min,
   max,
   step,
-  unit,
+  suffix,
   onChange,
+  onAuto,
   t,
 }: {
   value: number;
+  auto: boolean;
   min: number;
   max: number;
   step: number;
-  unit: (n: number) => string;
+  suffix: (n: number) => string;
   onChange: (n: number) => void;
+  onAuto: () => void;
   t: T;
 }) {
   const [text, setText] = useState(String(value));
@@ -1066,25 +792,316 @@ function Stepper({
   const clamp = (n: number) => Math.min(max, Math.max(min, n));
   const commit = () => {
     const n = parseInt(text, 10);
-    if (Number.isNaN(n)) setText(String(value));
+    if (Number.isNaN(n) || (auto && n === value)) setText(String(value));
     else onChange(clamp(n));
   };
   return (
-    <div className="no-x-stepper">
+    <div className={`stp${auto ? " auto" : ""}`}>
+      {!auto && (
+        <button type="button" className="rs" title={t("s5.no.x.toAuto")} aria-label={t("s5.no.x.toAuto")} onClick={onAuto}>
+          <I n="undo" />
+        </button>
+      )}
       <button type="button" aria-label={t("no.x.less")} disabled={value <= min} onClick={() => onChange(clamp(value - step))}>
-        <Minus size={13} />
+        <I n="minus" line />
       </button>
-      <input
-        inputMode="numeric"
-        value={text}
-        onChange={(e) => setText(e.target.value.replace(/\D/g, "").slice(0, 4))}
-        onBlur={commit}
-        onKeyDown={(e) => e.key === "Enter" && commit()}
-      />
-      {unit(value) && <span className="no-x-unit">{unit(value)}</span>}
+      <input inputMode="numeric" value={text} onChange={(e) => setText(e.target.value.replace(/\D/g, "").slice(0, 4))} onBlur={commit} onKeyDown={(e) => e.key === "Enter" && commit()} />
+      {suffix(value) && <small>{suffix(value)}</small>}
       <button type="button" aria-label={t("no.x.more")} disabled={value >= max} onClick={() => onChange(clamp(value + step))}>
-        <Plus size={13} />
+        <I n="plus" line />
       </button>
+    </div>
+  );
+}
+
+/** « find my preset » : les trois étapes à gauche, le preset conseillé et ses raisons à droite. */
+function ScanPanel({
+  scan,
+  cardName,
+  presetName,
+  onApply,
+  onKeep,
+}: {
+  scan: Scan;
+  cardName: (d: Detect | null | undefined) => string;
+  presetName: (p: string) => string;
+  onApply: () => void;
+  onKeep: () => void;
+}) {
+  const { t, lang } = useStore();
+  const order = ["card", "pc", "line", "done"] as const;
+  const at = order.indexOf(scan.step);
+  const stateOf = (s: (typeof order)[number]) => (order.indexOf(s) < at ? "ok" : order.indexOf(s) === at ? "now" : "next");
+  const dec = (x: number | null | undefined) => (x == null ? "–" : (Math.round(x * 10) / 10).toLocaleString(lang === "fr" ? "fr-FR" : "en-US"));
+  const m = scan.measure;
+  const lost = m ? (m.lost ?? Math.round(m.loss * m.samples)) : 0;
+  const advice = scan.advice;
+  const steps: { id: "card" | "pc" | "line"; icon: string; title: Key; text: string | null }[] = [
+    {
+      id: "card",
+      icon: scan.card?.wifi ? "wifi" : "net",
+      title: "an.step.card",
+      text: scan.card === undefined ? null : scan.card?.connected ? `${scan.card.wifi ? "Wi-Fi" : t("an.wired")} · ${cardName(scan.card)}` : t("an.card.none"),
+    },
+    {
+      id: "pc",
+      icon: "cpu",
+      title: "an.step.pc",
+      text: scan.pc ? [scan.pc.cpu, scan.pc.threads ? t("an.threads", { n: scan.pc.threads }) : "", scan.pc.win].filter(Boolean).join(" · ") || "–" : null,
+    },
+    {
+      id: "line",
+      icon: "activity",
+      title: "an.step.line",
+      text:
+        m === undefined
+          ? scan.step === "line"
+            ? t("an.line.running", { i: scan.samples, n: LINE_SAMPLES })
+            : null
+          : m?.ping != null
+            ? t("an.line.result", { avg: dec(m.ping), jitter: dec(m.jitter), lost, n: m.samples })
+            : t("an.line.none"),
+    },
+  ];
+  return (
+    <section className="scan panel" aria-live="polite">
+      <div className="sl">
+        <h3>{t("an.title")}</h3>
+        <ol>
+          {steps.map(({ id, icon, title, text }) => {
+            const s = stateOf(id);
+            return (
+              <li key={id} className={s}>
+                <span className="mk">{s === "ok" ? <I n="check" line /> : s === "now" ? <I n="loader" className="spin" /> : <I n={icon} line />}</span>
+                <div>
+                  <b>{t(title)}</b>
+                  {text && <span>{text}</span>}
+                  {id === "line" && s === "now" && <Seg value={scan.samples} total={LINE_SAMPLES} count={40} />}
+                </div>
+              </li>
+            );
+          })}
+        </ol>
+      </div>
+      <div className="sr">
+        <span className="lbl">{t("an.pick")}</span>
+        <b className="pn">{advice ? presetName(advice.preset) : t("an.wait")}</b>
+        {advice && (
+          <>
+            <ul>
+              {advice.why.map((w, i) => (
+                <li key={i}>{t(w.key, w.vars && Object.fromEntries(Object.entries(w.vars).map(([k, x]) => [k, typeof x === "number" ? dec(x) : x])))}</li>
+              ))}
+            </ul>
+            <p className="tx">{t("an.note")}</p>
+            <div className="acts">
+              <button type="button" className="btn sm red" onClick={onApply}>
+                <I n="zap" />
+                {t("an.apply")}
+              </button>
+              <button type="button" className="clr" onClick={onKeep}>
+                {t("an.keep")}
+              </button>
+            </div>
+          </>
+        )}
+      </div>
+      <button type="button" className="ic x" aria-label={t("an.close")} disabled={scan.step !== "done"} onClick={onKeep}>
+        <I n="x" />
+      </button>
+    </section>
+  );
+}
+
+/** La barre du Packet Optimizer (.apply > .ap.net de la maquette), posée dans la fenêtre comme celle des réglages :
+ * le preset, l'état, « restore » (sauvegarde ou valeurs de Windows), le journal et « apply ». */
+function Bar({
+  name,
+  locked,
+  busy,
+  progress,
+  lines,
+  done,
+  error,
+  applied,
+  dirty,
+  canRestore,
+  backup,
+  scanning,
+  onApply,
+  onRestore,
+}: {
+  name: string;
+  locked: boolean;
+  busy: NetAction | null;
+  progress: { step: number; total: number } | null;
+  lines: NetLine[];
+  done: { action: NetAction; outcome: NetOutcome } | null;
+  error: string | null;
+  applied: NetState["applied"];
+  dirty: boolean;
+  canRestore: boolean;
+  backup: boolean;
+  scanning: boolean;
+  onApply: () => void;
+  onRestore: (a: "restore" | "defaults") => void;
+}) {
+  const { t, lang, setUpsell } = useStore();
+  const [pop, setPop] = useState<"restore" | "log" | null>(null);
+  const ref = useRef<HTMLDivElement>(null);
+  const [host, setHost] = useState<Element | null>(null);
+  useEffect(() => setHost(document.querySelector(".win")), []);
+  useEffect(() => {
+    if (!pop) return;
+    const away = (e: MouseEvent) => !ref.current?.contains(e.target as Node) && setPop(null);
+    document.addEventListener("mousedown", away);
+    return () => document.removeEventListener("mousedown", away);
+  }, [pop]);
+
+  const changing = busy === "apply" || busy === "restore" || busy === "defaults";
+  const pct = progress && progress.total ? Math.min(100, (progress.step / progress.total) * 100) : changing ? 4 : 0;
+  const when = (ts: number) => {
+    const d = new Date(ts);
+    const loc = lang === "fr" ? "fr-FR" : "en-US";
+    return `${d.toLocaleDateString(loc, { day: "numeric", month: "short" })} ${d.toLocaleTimeString(loc, { hour: "2-digit", minute: "2-digit" })}`;
+  };
+  const ok = done?.outcome.code === 0;
+  const counts = done ? [done.outcome.warn ? t("no.done.warn", { n: done.outcome.warn }) : "", done.outcome.fail ? t("no.done.fail", { n: done.outcome.fail }) : ""].filter(Boolean).join(" · ") : "";
+
+  let lb: string;
+  let small: ReactNode;
+  let tip: string | undefined;
+  if (changing) {
+    lb = t(busy === "apply" ? "s5.no.b.applying" : "s5.no.b.restoring");
+    small = (
+      <>
+        <I n="loader" className="spin" />
+        {engineText([...lines].reverse().find((l) => l.tag === "title")?.text ?? "…", lang)}
+      </>
+    );
+  } else if (error) {
+    lb = t("s5.no.b.failed");
+    tip = error;
+    small = (
+      <>
+        <I n="alert" />
+        {error}
+      </>
+    );
+  } else if (done) {
+    lb = !ok ? t("s5.no.b.failed") : done.action === "apply" ? t("s5.no.b.applied") : t("s5.no.b.restored");
+    const what = done.action === "apply" ? t("s5.no.b.done", { n: done.outcome.ok }) : done.action === "restore" ? t("no.done.restore") : t("no.done.defaults");
+    tip = [what, counts, ok && done.action === "apply" ? t("s5.no.b.reboot") : ""].filter(Boolean).join(" · ");
+    small = (
+      <>
+        <I n={ok ? "rotate" : "alert"} />
+        {[what, counts].filter(Boolean).join(" · ")}
+      </>
+    );
+  } else if (locked) {
+    lb = t("s5.no.b.locked");
+    small = (
+      <>
+        <I n="lock" />
+        {t("s5.no.b.restoreFree")}
+      </>
+    );
+  } else if (applied && !dirty) {
+    lb = t("s5.no.b.applied");
+    small = (
+      <>
+        <I n="check" />
+        {when(applied.at)}
+      </>
+    );
+  } else {
+    lb = applied ? t("s5.no.b.changed") : t("s5.no.b.never");
+    small = (
+      <>
+        <I n="wifi" />
+        {t("s5.no.b.drop")}
+      </>
+    );
+  }
+
+  const restoreClick = () => {
+    if (!canRestore || busy) return;
+    // gratuit : une seule action, la sauvegarde si elle existe, sinon les valeurs de Windows
+    if (locked) return onRestore(backup ? "restore" : "defaults");
+    setPop((p) => (p === "restore" ? null : "restore"));
+  };
+
+  const bar = (
+    <div className="apply">
+      <div className={`ap net${changing ? " run" : ""}${error || (done && !ok) ? " bad" : ""}`} ref={ref} role="region" aria-label={t("hub.tab.packet")}>
+        <b>{name}</b>
+        <span className="lb" title={tip}>
+          {lb}
+          <small>{small}</small>
+        </span>
+        {lines.length > 0 && !changing && (
+          <button type="button" className="clr" aria-expanded={pop === "log"} onClick={() => setPop((p) => (p === "log" ? null : "log"))}>
+            {t("s5.no.b.log")}
+          </button>
+        )}
+        <button type="button" className="clr" disabled={!canRestore || !!busy} aria-expanded={pop === "restore"} onClick={restoreClick}>
+          {t("s5.no.b.restore")}
+        </button>
+        {locked ? (
+          <button type="button" className="btn" onClick={() => setUpsell("plan")}>
+            <I n="lock" />
+            {t("free.upgrade")}
+          </button>
+        ) : done?.action === "apply" && ok && !dirty ? (
+          <button type="button" className="btn" onClick={() => void api.restartPc()}>
+            <I n="power" />
+            {t("s5.no.b.restart")}
+          </button>
+        ) : (
+          <button type="button" className="btn" disabled={!!busy || scanning} onClick={onApply}>
+            <I n={busy === "apply" ? "loader" : "zap"} className={busy === "apply" ? "spin" : undefined} />
+            {t("s5.no.b.apply")}
+          </button>
+        )}
+        {changing && <i className="pg" style={{ width: `calc((100% - 28px) * ${pct / 100})` }} />}
+        {pop === "restore" && (
+          <div className="pop panel" role="menu">
+            <button type="button" role="menuitem" disabled={!backup} onClick={() => (setPop(null), onRestore("restore"))}>
+              <b>{t("no.restore.backup")}</b>
+              <span>{t("no.restore.backup.desc")}</span>
+            </button>
+            <button type="button" role="menuitem" onClick={() => (setPop(null), onRestore("defaults"))}>
+              <b>{t("no.restore.defaults")}</b>
+              <span>{t("no.restore.defaults.desc")}</span>
+            </button>
+          </div>
+        )}
+        {pop === "log" && <Log lines={lines} />}
+      </div>
+    </div>
+  );
+  return host ? createPortal(bar, host) : null;
+}
+
+function Log({ lines }: { lines: NetLine[] }) {
+  const { lang } = useStore();
+  const ref = useRef<HTMLDivElement>(null);
+  useEffect(() => {
+    const el = ref.current;
+    if (el) el.scrollTop = el.scrollHeight;
+  }, [lines.length]);
+  return (
+    <div className="pop panel log" ref={ref}>
+      {lines.map((l, i) =>
+        l.tag === "title" ? (
+          <b key={i}>{engineText(l.text, lang)}</b>
+        ) : (
+          <span key={i} className={l.tag}>
+            <i>{l.tag === "ok" ? "✓" : l.tag === "warn" ? "!" : l.tag === "fail" ? "✕" : "·"}</i>
+            {l.text}
+          </span>
+        ),
+      )}
     </div>
   );
 }

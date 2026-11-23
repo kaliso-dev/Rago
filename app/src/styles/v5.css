@@ -2059,77 +2059,6 @@ svg.pi use.pf {
 }
 
 /* onglets en biais (Réseau, Paramètres…) : l'onglet ouvert en rouge plein */
-.hub-bar {
-  margin: 0 0 30px;
-  padding: 0 0 0 4px;
-  background: none;
-  border: 0;
-  position: static;
-  backdrop-filter: none;
-}
-.hub-tabs {
-  gap: 4px;
-  padding: 0;
-  background: none;
-  border: 0;
-  border-radius: 0;
-}
-.hub-tab {
-  position: relative;
-  height: 36px;
-  padding: 0 16px;
-  border-radius: 0;
-  font-family: var(--rg-font-display);
-  font-weight: 800;
-  font-size: 14.5px;
-  letter-spacing: 0.06em;
-  text-transform: uppercase;
-  color: var(--rg-text-2);
-  isolation: isolate;
-  background: none !important;
-}
-.hub-tab::before {
-  content: "";
-  position: absolute;
-  inset: 0;
-  z-index: -2;
-  border-radius: var(--rg-radius-tab);
-  background: var(--rg-ink-2);
-  box-shadow: inset 0 0 0 1px var(--rg-line-1);
-  transform: skewX(var(--rg-skew));
-}
-.hub-tab:hover {
-  color: var(--rg-text-1);
-}
-.hub-tab.on {
-  color: var(--rg-ink-1);
-  --pf: var(--rg-ink-1);
-  --pb: var(--rg-red-700);
-}
-.hub-pill {
-  z-index: -1;
-  border-radius: var(--rg-radius-tab);
-  background: var(--rg-red-500);
-  box-shadow: none;
-  transform: skewX(var(--rg-skew));
-}
-.hub-new {
-  font-family: var(--rg-font-display);
-  font-weight: 800;
-  font-size: 10.5px;
-  letter-spacing: 0.1em;
-  padding: 1px 5px;
-  border-radius: 5px;
-  background: var(--rg-red-500);
-  color: var(--rg-ink-1);
-}
-.hub-tab.on .hub-new,
-.hub-tab.on .nav-count {
-  background: var(--rg-ink-1);
-  color: var(--rg-red-500);
-  padding: 1px 5px;
-  border-radius: 5px;
-}
 
 /* titres de carte, de ligne et de tuile : condensé capitales, comme les tuiles de réglage */
 .tools-tile-head h3,
@@ -2140,13 +2069,6 @@ svg.pi use.pf {
 .driver-name,
 .launcher-name,
 .games-gfx-name,
-.net-name,
-.no-toggle-title,
-.no-x-title,
-.no-scan-name,
-.no-preset-name,
-.rt-path-name,
-.rt-check-title,
 .pe-item-name,
 .share-file-name,
 .page .card h3:not(.rg-overline),
@@ -2162,10 +2084,7 @@ svg.pi use.pf {
   line-height: 1.1;
 }
 /* grands titres de bloc : condensé 900 italique */
-.no-hero-title,
 .games-hero-title,
-.no-scan-title,
-.no-x-intro-title,
 .profile-name-edit,
 .review-name {
   font-family: var(--rg-font-display);
@@ -2177,10 +2096,6 @@ svg.pi use.pf {
 }
 .games-hero-title {
   font-size: 44px;
-}
-.no-hero-title {
-  font-size: 26px;
-  line-height: 1;
 }
 /* titres de section restés en « overline » : ruban rouge aussi */
 h2.section-title.rg-overline,
@@ -2215,8 +2130,6 @@ h2.section-title.rg-overline::before,
 }
 /* gros chiffres de mesure : condensé 900 italique */
 .metric-big,
-.nt-big,
-.no-big,
 .mouse-big,
 .meter-value,
 .live-value {

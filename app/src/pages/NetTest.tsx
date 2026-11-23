@@ -1,42 +1,33 @@
-import { useEffect, useRef, useState } from "react";
-import { motion } from "motion/react";
-import { ArrowRight, CircleX, Globe, LoaderCircle, Play, RefreshCw, ShieldCheck } from "../components/ri";
+// Onglet « network test » de Réseau, à l'identique de la maquette v5 app-network-test-pi.html : note de la connexion
+// (ping, gigue, perte du serveur choisi), graphe « imprimé » des essais (pingchart.js de la maquette), liste des serveurs
+// avec un serveur au choix (« host:… », nettest.rs), et l'écran hors ligne (app-network-offline.html).
+import { useEffect, useId, useLayoutEffect, useRef, useState, type CSSProperties } from "react";
 import { api, type NetMeasure } from "../lib/api";
 import type { Key } from "../lib/i18n";
-import { loadDraft, NET_DEFAULTS, saveDraft } from "../lib/netopt";
 import { useStore } from "../lib/store";
-import { Button } from "../components/ui";
-import { Tool, validTarget, type ToolId } from "../components/NetTools";
+import { BigIcon, I, Rich } from "../s5/I";
+import { validTarget } from "../components/NetTools";
 
-const stagger = { animate: { transition: { staggerChildren: 0.05 } } };
-const rise = { initial: { opacity: 0, y: 10 }, animate: { opacity: 1, y: 0, transition: { duration: 0.42, ease: [0.16, 1, 0.3, 1] as const } } };
-
-/** Serveurs mesurés (mêmes identifiants que nettest.rs), par groupe, avec le code affiché dans la pastille. */
-const GROUPS: { label: Key; items: { id: string; code: string }[] }[] = [
-  { label: "net.group.mc", items: [{ id: "hypixel", code: "MC" }, { id: "minemen", code: "MC" }] },
-  {
-    label: "net.group.regions",
-    items: [
-      { id: "paris", code: "FR" },
-      { id: "frankfurt", code: "DE" },
-      { id: "london", code: "UK" },
-      { id: "madrid", code: "ES" },
-      { id: "stockholm", code: "SE" },
-      { id: "virginia", code: "US" },
-    ],
-  },
-  { label: "net.group.internet", items: [{ id: "internet", code: "CF" }] },
+/** Serveurs mesurés (mêmes identifiants que nettest.rs), dans l'ordre de la maquette. */
+const GROUPS: { label: Key; ids: string[] }[] = [
+  { label: "s5.nt.g.mc", ids: ["minemen", "hypixel"] },
+  { label: "s5.nt.g.game", ids: ["paris", "london", "frankfurt", "madrid", "stockholm", "virginia"] },
+  { label: "s5.nt.g.net", ids: ["internet"] },
 ];
-const ALL = GROUPS.flatMap((g) => g.items.map((i) => i.id));
-// essais par mesure (nettest.rs) : la courbe garde sa place pendant le test
-const slots = (id: string) => (id === "hypixel" || id === "minemen" ? 8 : 40);
-const DIAG: ToolId[] = ["quality", "loaded", "mtu"];
+const ALL = GROUPS.flatMap((g) => g.ids);
+const CUSTOM = "host:";
+const isMc = (id: string) => id === "hypixel" || id === "minemen";
+/** Essais par mesure et écart entre deux essais (nettest.rs) : 40 en 10 s, 8 toutes les 1,4 s pour Minecraft. */
+const slotsOf = (id: string) => (isMc(id) ? 8 : 40);
+const gapOf = (n: number) => (n <= 8 ? 1.4 : 0.25);
 
 type Grade = "great" | "good" | "fair" | "bad";
 function grade(m: NetMeasure | undefined): Grade | null {
-  if (!m || m.ping == null) return m ? "bad" : null;
-  if (m.loss >= 0.02 || (m.jitter ?? 0) > 15) return "bad";
-  if (m.ping <= 40 && (m.jitter ?? 0) <= 5 && m.loss === 0) return "great";
+  if (!m || m.error === "dns") return null;
+  if (m.ping == null) return "bad";
+  // un essai perdu sur 40 (2,5 %) arrive sur une bonne ligne : la note ne tombe qu'à partir de 5 %
+  if (m.loss >= 0.05 || (m.jitter ?? 0) > 15) return "bad";
+  if (m.ping <= 40 && (m.jitter ?? 0) <= 5 && m.loss <= 0.025) return "great";
   if (m.ping <= 80 && (m.jitter ?? 0) <= 10) return "good";
   return "fair";
 }
@@ -50,7 +41,7 @@ function partial(id: string, series: (number | null | undefined)[]): NetMeasure 
   const lost = done.length - ok.length;
   return { id, ping: avg, best: ok.length ? Math.min(...ok) : null, worst: ok.length ? Math.max(...ok) : null, jitter, loss: lost / done.length, lost, samples: done.length, error: null };
 }
-const bars = (ping: number | null) => (ping == null ? 0 : ping < 30 ? 4 : ping < 60 ? 3 : ping < 100 ? 2 : 1);
+const mmss = (s: number) => `${String(Math.floor(Math.round(s) / 60)).padStart(2, "0")}:${String(Math.round(s) % 60).padStart(2, "0")}`;
 
 interface Saved {
   at: number;
@@ -72,15 +63,19 @@ function save(key: string, v: unknown) {
   }
 }
 
-export function NetTest() {
+export function NetTest({ offline }: { offline: boolean }) {
   const { t, lang, goTo } = useStore();
   const [last, setLast] = useState<Saved | null>(() => load<Saved | null>("netLast", null));
   const [results, setResults] = useState<Record<string, NetMeasure>>(() => last?.results ?? {});
   const [running, setRunning] = useState<Set<string>>(new Set());
-  // essais reçus pendant la mesure, avant le résultat
-  const [samples, setSamples] = useState<Record<string, (number | null)[]>>({});
-  const [pick, setPick] = useState<string>(() => load("netPick", "hypixel"));
+  // essais reçus pendant la mesure, avant le résultat, et leur nombre prévu
+  const [samples, setSamples] = useState<Record<string, { n: number; v: (number | null)[] }>>({});
+  const [pick, setPick] = useState<string>(() => load("netPick", "paris"));
+  // serveur au choix : ce qui est tapé, et le dernier testé (gardé sur ce PC)
+  const [mine, setMine] = useState<string | null>(() => load<string | null>("netCustom", null));
+  const [typed, setTyped] = useState("");
   const live = useRef(true);
+  const [, tick] = useState(0);
 
   useEffect(() => {
     live.current = true;
@@ -88,9 +83,9 @@ export function NetTest() {
       api.onNetSample((s) => {
         if (!live.current) return;
         setSamples((all) => {
-          const next = [...(all[s.id] ?? [])];
-          next[s.i] = s.ms;
-          return { ...all, [s.id]: next };
+          const v = [...(all[s.id]?.v ?? [])];
+          v[s.i] = s.ms;
+          return { ...all, [s.id]: { n: s.n, v } };
         });
       }),
       api.onNetMeasure((m) => {
@@ -103,8 +98,11 @@ export function NetTest() {
         });
       }),
     ];
+    // « testé il y a 2 min » reste juste
+    const h = window.setInterval(() => tick((x) => x + 1), 30_000);
     return () => {
       live.current = false;
+      window.clearInterval(h);
       for (const sub of subs) void sub.then((un) => un());
     };
   }, []);
@@ -114,7 +112,7 @@ export function NetTest() {
     setRunning(new Set(ids));
     setSamples((all) => {
       const next = { ...all };
-      for (const id of ids) next[id] = [];
+      for (const id of ids) next[id] = { n: id.startsWith(CUSTOM) ? 40 : slotsOf(id), v: [] };
       return next;
     });
     try {
@@ -128,292 +126,406 @@ export function NetTest() {
         setLast(saved);
         return next;
       });
+    } catch {
+      /* le moteur n'a pas répondu : les serveurs gardent leur dernier résultat */
     } finally {
       if (live.current) setRunning(new Set());
     }
   };
   // première visite : le test se lance tout seul
   useEffect(() => {
-    if (!last) void test(ALL);
+    if (!last && !offline) void test(ALL);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const busy = running.size > 0;
-  // serveur introuvable (pas de réseau, serveur renommé) : la ligne disparaît plutôt que d'afficher une erreur
-  const visible = (id: string) => results[id]?.error !== "dns";
+  const testMine = () => {
+    const host = typed.trim().toLowerCase();
+    if (!validTarget(host) || busy) return;
+    const id = CUSTOM + host;
+    setMine(id);
+    save("netCustom", id);
+    setPick(id);
+    setTyped("");
+    void test([id]);
+  };
+
+  // tout le test sans réseau (aucun serveur trouvé) : l'écran hors ligne, comme quand le ping en direct ne revient plus
+  const allLost = !busy && ALL.every((id) => results[id]?.error === "dns");
+  if (offline || allLost)
+    return (
+      <section className="empty panel">
+        <span className="bgdots" />
+        <BigIcon n="offline" />
+        <div className="tx">
+          <h2>
+            {t("s5.nt.off1")}
+            <br />
+            {t("s5.nt.off2")}
+          </h2>
+          <p>
+            <Rich text={t("s5.nt.offLead")} />
+          </p>
+          <div className="acts">
+            <button type="button" className="btn red lg" disabled={busy} onClick={() => void test(ALL)}>
+              <I n={busy ? "loader" : "refresh"} className={busy ? "spin" : undefined} />
+              {t("s5.nt.again")}
+            </button>
+            <button type="button" className="btn lg" onClick={() => void api.toolsOpen("network").catch(() => {})}>
+              <I n="external" />
+              {t("s5.nt.openSettings")}
+            </button>
+          </div>
+          <p className="hint">{t("s5.nt.offHint")}</p>
+        </div>
+      </section>
+    );
+
+  const custom = pick.startsWith(CUSTOM);
   const testing = running.has(pick);
   const sel = testing ? undefined : results[pick];
   const g = grade(sel);
+  const now = samples[pick];
   // pendant la mesure : les chiffres des essais déjà reçus
-  const shown = testing ? partial(pick, samples[pick] ?? []) : sel;
-  const name = (id: string) => t(`net.${id}` as Key);
-  const ms = (v: number | null | undefined) => (v == null ? "—" : String(Math.round(v)));
-  const dec = (v: number | null | undefined) => (v == null ? "—" : (Math.round(v * 10) / 10).toLocaleString(lang === "fr" ? "fr-FR" : "en-US"));
-  const pct = (v: number | undefined) => (v == null ? "—" : `${dec(v * 100)} %`);
+  const shown = testing ? partial(pick, now?.v ?? []) : sel;
+  const name = (id: string) => (id.startsWith(CUSTOM) ? id.slice(CUSTOM.length) : t(`net.${id}` as Key));
+  const desc = (id: string) => {
+    if (!id.startsWith(CUSTOM)) return t(`net.${id}.desc` as Key);
+    const m = results[id]?.method;
+    return m ? t(`s5.nt.m.${m}` as Key) : "";
+  };
+  const num = (v: number | null | undefined) => (v == null ? "–" : String(Math.round(v)));
+  const pct = (v: number | undefined) => (v == null ? "–" : (Math.round(v * 1000) / 10).toLocaleString(lang === "fr" ? "fr-FR" : "en-US"));
   const ago = (ts: number) => {
-    const min = Math.round((Date.now() - ts) / 60_000);
-    const rtf = new Intl.RelativeTimeFormat(lang === "fr" ? "fr-FR" : "en-US", { numeric: "auto" });
-    return min < 60 ? rtf.format(-min, "minute") : min < 1440 ? rtf.format(-Math.round(min / 60), "hour") : rtf.format(-Math.round(min / 1440), "day");
+    const min = Math.floor((Date.now() - ts) / 60_000);
+    return min < 1 ? t("s5.nt.testedNow") : min < 60 ? t("s5.nt.testedMin", { n: min }) : min < 1440 ? t("s5.nt.testedH", { n: Math.floor(min / 60) }) : t("s5.nt.testedD", { n: Math.floor(min / 1440) });
   };
-  const tip = sel && sel.ping != null && (sel.loss > 0 || (sel.jitter ?? 0) > 10);
   // la courbe : les essais en direct pendant la mesure, sinon ceux du dernier résultat
-  const series = testing ? (samples[pick] ?? []) : (sel?.series ?? []);
-  const lost = shown?.lost ?? (shown ? Math.round(shown.loss * shown.samples) : undefined);
-  const done = testing ? series.filter((v) => v !== undefined).length : 0;
+  const series: (number | null | undefined)[] = testing ? (now?.v ?? []) : (sel?.series ?? []);
+  const n = testing ? (now?.n ?? slotsOf(pick)) : series.length || (custom ? 40 : slotsOf(pick));
+  const got = series.filter((v) => v !== undefined).length;
+  const lost = sel ? (sel.lost ?? Math.round(sel.loss * sel.samples)) : 0;
+  const tip = !!sel && sel.ping != null && (sel.loss >= 0.05 || (sel.jitter ?? 0) > 10);
+  const gap = gapOf(n);
 
-  return (
-    <motion.div className="nettest" variants={stagger} initial="initial" animate="animate">
-      <div className="net-grid">
-        <motion.section variants={rise} className="card nt-hero">
-          <header className="card-head">
-            <h3 className="rg-overline">{t("net.connection")}</h3>
-            {sel?.method && <span className="badge">{t(`net.method.${sel.method}` as Key)}</span>}
-          </header>
-          <div className="nt-head">
-            <div className={`net-orb nt-orb${g ? ` ${g}` : ""}${testing ? " busy" : ""}`}>
-              <Globe size={26} strokeWidth={1.5} />
-            </div>
-            <div className="nt-head-text">
-              <div className="net-verdict">{testing ? t("net.testing") : g ? t(`net.grade.${g}`) : t("net.start")}</div>
-              <div className="net-sub muted small">
-                {name(pick)}
-                {testing ? ` · ${done}/${slots(pick)}` : last && results[pick] ? ` · ${t("net.tested", { when: ago(last.at) })}` : ""}
-              </div>
-            </div>
-            <div className="nt-avg">
-              <div className={`nt-avg-value rg-metric${g ? ` ${g}` : ""}`}>
-                {ms(shown?.ping)}
-                <span>ms</span>
-              </div>
-              <div className="nt-avg-label">{t("net.average")}</div>
-            </div>
-          </div>
-
-          <Chart series={series} n={testing ? slots(pick) : Math.max(series.length, slots(pick))} avg={sel?.ping ?? null} t={t} />
-
-          <div className="nt-stats">
-            <Stat label={t("net.best")} value={ms(shown?.best)} unit="ms" />
-            <Stat
-              label={t("net.worst")}
-              value={ms(shown?.worst)}
-              unit="ms"
-              warn={shown?.worst != null && shown.ping != null && shown.worst > shown.ping * 2 && shown.worst - shown.ping > 20}
-            />
-            <Stat label={t("net.jitter")} value={dec(shown?.jitter)} unit="ms" warn={(shown?.jitter ?? 0) > 10} />
-            <Stat
-              label={t("net.lost")}
-              value={shown ? `${lost ?? 0}/${shown.samples}` : "—"}
-              unit={shown && lost ? pct(shown.loss) : undefined}
-              warn={(lost ?? 0) > 0}
-            />
-            <Stat label={t("net.spikes")} value={sel?.spikes == null ? "—" : String(sel.spikes)} warn={(sel?.spikes ?? 0) >= 3} />
-          </div>
-
-          <div className="nt-actions">
-            <Button variant="primary" disabled={busy} icon={testing ? <LoaderCircle size={14} className="spin" /> : <Play size={13} />} onClick={() => void test([pick])}>
-              {testing ? t("net.testing") : t("net.testThis", { server: name(pick) })}
-            </Button>
-            <Button disabled={busy} icon={busy && !testing ? <LoaderCircle size={14} className="spin" /> : <RefreshCw size={13} />} onClick={() => void test(ALL)}>
-              {t("net.testAll")}
-            </Button>
-          </div>
-          {tip && (
-            <button type="button" className="net-tip" onClick={() => goTo("netopt")}>
-              <span>{t("net.tip")}</span>
-              <ArrowRight size={13} />
-            </button>
+  const row = (id: string) => {
+    const m = results[id];
+    const run = running.has(id);
+    const cur = run ? partial(id, samples[id]?.v ?? []) : m;
+    // ping de 0 à 100 ms sur la barre ; au-delà de 80 ms, ou sans réponse, la ligne passe en rouge
+    const far = !run && !!m && (m.ping == null || m.ping > 80);
+    const w = cur?.ping ?? (m && !run ? 100 : 0);
+    return (
+      <button key={id} type="button" role="radio" aria-checked={pick === id} className={`sv${pick === id ? " on" : ""}${far ? " far" : ""}`} onClick={() => setPick(id)}>
+        <div>
+          <b>{name(id)}</b>
+          <small>{desc(id)}</small>
+        </div>
+        <span className="pb">
+          <i style={{ "--w": `${Math.min(100, Math.max(0, w))}%` } as CSSProperties} />
+        </span>
+        <em>
+          {run && cur?.ping == null ? (
+            <I n="loader" className="spin" />
+          ) : cur?.ping != null ? (
+            <>
+              {num(cur.ping)}
+              <small>ms</small>
+            </>
+          ) : m ? (
+            <small>{m.error === "dns" ? t("s5.nt.notFound") : t("s5.nt.noAnswer")}</small>
+          ) : (
+            "–"
           )}
-        </motion.section>
+        </em>
+      </button>
+    );
+  };
+  const typedOk = validTarget(typed.trim());
 
-        <motion.section variants={rise} className="card net-servers">
-          <header className="card-head">
-            <h3 className="rg-overline">{t("net.servers")}</h3>
-            <span className="muted small">{t("net.servers.hint")}</span>
-          </header>
-          {GROUPS.map((grp) => {
-            const items = grp.items.filter((i) => visible(i.id));
-            if (!items.length) return null;
-            return (
-              <div key={grp.label} className="net-group">
-                <div className="rg-overline net-group-label">{t(grp.label)}</div>
-                {items.map(({ id, code }) => {
-                  const m = results[id];
-                  const q = grade(m);
-                  const b = bars(m?.ping ?? null);
-                  const lostN = m?.lost ?? (m ? Math.round(m.loss * m.samples) : 0);
-                  return (
-                    <button key={id} type="button" role="radio" aria-checked={pick === id} className={`net-row${pick === id ? " on" : ""}`} onClick={() => setPick(id)}>
-                      <span className="net-radio" />
-                      <span className="net-code rg-metric">{code}</span>
-                      <span className="net-name">
-                        <span>{name(id)}</span>
-                        <span className="muted small">{t(`net.${id}.desc` as Key)}</span>
-                      </span>
-                      {m && !running.has(id) && lostN > 0 && <span className="nt-lost rg-metric">{t("net.lostShort", { n: lostN })}</span>}
-                      <span className={`net-bars${q ? ` ${q}` : ""}`} aria-hidden>
-                        {[1, 2, 3, 4].map((i) => (
-                          <i key={i} className={i <= b ? "lit" : undefined} />
-                        ))}
-                      </span>
-                      <span className={`net-ms rg-metric${q ? ` ${q}` : ""}`}>
-                        {running.has(id) ? <LoaderCircle size={13} className="spin" /> : m?.ping != null ? `${ms(m.ping)} ms` : m ? t("net.noAnswer") : "—"}
-                      </span>
-                    </button>
-                  );
-                })}
-              </div>
-            );
-          })}
-          <p className="net-note muted small">
-            <ShieldCheck size={13} />
-            {t("net.note")}
-          </p>
-          <p className="net-note muted small">
-            <Globe size={13} />
-            {t("net.shared")}
-          </p>
-        </motion.section>
-      </div>
-
-      <motion.div variants={rise}>
-        <Diagnostic />
-      </motion.div>
-    </motion.div>
-  );
-}
-
-type T = (key: Key, vars?: Record<string, string | number>) => string;
-
-function Stat({ label, value, unit, warn }: { label: string; value: string; unit?: string; warn?: boolean }) {
   return (
-    <div className="net-stat">
-      <div className={`net-stat-value rg-metric${warn ? " warn" : ""}`}>
-        {value}
-        {unit && <span>{unit}</span>}
-      </div>
-      <div className="net-stat-label">{label}</div>
-    </div>
-  );
-}
+    <>
+      <section className="score panel">
+        <div className="gr">
+          <b>{testing ? t("s5.nt.testing") : g ? t(`s5.nt.grade.${g}` as Key) : "–"}</b>
+          <span>{t("s5.nt.connection")}</span>
+        </div>
+        <div className="mets">
+          <div className="met">
+            <b>
+              {num(shown?.ping)}
+              <small>ms</small>
+            </b>
+            <span className="lbl">{t("s5.nt.ping")}</span>
+          </div>
+          <div className="met">
+            <b>
+              {num(shown?.jitter)}
+              <small>ms</small>
+            </b>
+            <span className="lbl">{t("s5.nt.jitter")}</span>
+          </div>
+          <div className="met">
+            <b>
+              {pct(shown?.loss)}
+              <small>%</small>
+            </b>
+            <span className="lbl">{t("s5.nt.loss")}</span>
+          </div>
+        </div>
+        <div className="again">
+          <button type="button" className="btn red" disabled={busy} onClick={() => void test([pick])}>
+            <I n={testing ? "loader" : "refresh"} className={testing ? "spin" : undefined} />
+            {results[pick] ? t("s5.nt.again") : t("s5.nt.test")}
+          </button>
+          <span className="sub">{testing ? t("s5.nt.progress", { done: got, n }) : last && results[pick] ? ago(last.at) : t("s5.nt.never")}</span>
+        </div>
+      </section>
 
-/** Chaque essai en barre : jaune quand il monte nettement au-dessus des autres, rouge quand il est perdu. */
-function Chart({ series, n, avg, t }: { series: (number | null | undefined)[]; n: number; avg: number | null; t: T }) {
-  const got = series.filter((v): v is number => typeof v === "number");
-  const sorted = [...got].sort((a, b) => a - b);
-  const med = sorted.length ? sorted[Math.floor(sorted.length / 2)] : 0;
-  // même règle que nettest.rs pour les pics
-  const spike = (v: number) => sorted.length >= 4 && v > med + Math.max(15, med / 2);
-  const top = Math.max(10, ...got, (avg ?? med) * 1.6);
-  return (
-    <div className="nt-chart" role="img" aria-label={t("net.chart")}>
-      <div className="nt-plot">
-        <span className="nt-chart-top rg-metric">{Math.round(top)} ms</span>
-        <div className="nt-bars">
-          {avg != null && (
-            <span className="nt-chart-avg" style={{ bottom: `${(avg / top) * 100}%` }}>
-              <span className="rg-metric">
-                {t("net.chart.avg")} {Math.round(avg)}
+      <div className="tg">
+        <section className="chart panel">
+          <div className="ch">
+            <h3>{name(pick)}</h3>
+            <span className="sub">{desc(pick)}</span>
+            {(testing || series.length > 0) && (
+              <span className="clk">
+                <small>{testing ? t("s5.nt.clkLive") : t("s5.nt.clkDone")}</small>
+                {mmss(Math.max(0, (testing ? got - 1 : n - 1) * gap))}
               </span>
-            </span>
+            )}
+          </div>
+          <PingChart series={series} n={n} gap={gap} done={!testing && !!sel} avg={sel?.ping ?? null} />
+          <div className="cs">
+            {(
+              [
+                ["s5.nt.best", sel?.best, true],
+                ["s5.nt.worst", sel?.worst, true],
+                ["s5.nt.spikes", sel?.spikes, false],
+                ["s5.nt.lost", sel ? lost : undefined, false],
+              ] as [Key, number | null | undefined, boolean][]
+            ).map(([k, v, unit], i) => (
+              <div key={k} className={i === 3 && lost > 0 && !testing ? "bad" : undefined} style={testing ? { opacity: 0.45 } : undefined}>
+                <span className="lbl">{t(k)}</span>
+                <b>
+                  {testing || v == null ? "–" : num(v)}
+                  {unit && !testing && v != null && <small>ms</small>}
+                </b>
+              </div>
+            ))}
+          </div>
+        </section>
+
+        <section className="srv panel">
+          <div className="sh2">
+            <h3>{t("s5.nt.servers")}</h3>
+            <button type="button" className="btn sm" disabled={busy} onClick={() => void test(ALL)}>
+              <I n={busy && !testing ? "loader" : "play"} className={busy && !testing ? "spin" : undefined} />
+              {t("s5.nt.testAll")}
+            </button>
+          </div>
+          {GROUPS.map((grp) => (
+            <div key={grp.label} role="radiogroup" aria-label={t(grp.label)}>
+              <div className="g lbl">{t(grp.label)}</div>
+              {grp.ids.map(row)}
+            </div>
+          ))}
+          {mine && (
+            <div role="radiogroup" aria-label={t("s5.nt.g.mine")}>
+              <div className="g lbl">{t("s5.nt.g.mine")}</div>
+              {row(mine)}
+            </div>
           )}
-          {Array.from({ length: n }, (_, i) => {
-            const v = series[i];
-            if (v === undefined) return <i key={i} className="pending" />;
-            if (v === null) return <i key={i} className="lost" title={`#${i + 1} · ${t("net.chart.lost")}`} />;
-            return <i key={i} className={spike(v) ? "spike" : undefined} style={{ height: `${Math.max(3, (v / top) * 100)}%` }} title={`#${i + 1} · ${Math.round(v * 10) / 10} ms`} />;
-          })}
-        </div>
+          <form
+            className="cust"
+            onSubmit={(e) => {
+              e.preventDefault();
+              testMine();
+            }}
+          >
+            <label className={`inp${typed && !typedOk ? " bad" : ""}`} title={typed && !typedOk ? t("s5.nt.customBad") : undefined}>
+              <I n="search" />
+              <input value={typed} spellCheck={false} maxLength={253} placeholder={t("s5.nt.custom")} aria-label={t("s5.nt.custom")} onChange={(e) => setTyped(e.target.value)} />
+            </label>
+            <button type="submit" className="btn sm" disabled={busy || !typed.trim() || !typedOk}>
+              {t("s5.nt.test")}
+            </button>
+          </form>
+        </section>
       </div>
-    </div>
+
+      {tip && (
+        <p className="note">
+          <I n="alert" />
+          {t("net.tip")}
+          <button type="button" className="lnk" onClick={() => goTo("netopt")}>
+            {t("s5.nt.tipGo")}
+          </button>
+        </p>
+      )}
+      <p className="note">
+        <I n="globe" />
+        {t("net.shared")}
+      </p>
+    </>
   );
 }
 
-/** Tests plus longs du moteur réseau vers un serveur choisi : stabilité sur 100 pings, ping sous charge, MTU. */
-function Diagnostic() {
-  const { t, goTo } = useStore();
-  const [target, setTarget] = useState<string>(() => load("netTarget", "1.1.1.1"));
-  const [busy, setBusy] = useState<ToolId | null>(null);
-  const [progress, setProgress] = useState<{ step: number; total: number } | null>(null);
-  const [results, setResults] = useState<Partial<Record<ToolId, Record<string, unknown>>>>({});
-  const [error, setError] = useState<string | null>(null);
-  const live = useRef(true);
+/** Échelle du graphe : la première au-dessus du pire essai (avec un peu de marge), en 4 lignes. */
+const NICE = [20, 40, 60, 80, 100, 120, 160, 200, 240, 300, 400, 500, 600, 800, 1000, 1500, 2000];
 
-  useEffect(() => {
-    live.current = true;
-    const sub = api.onNetOptLine((l) => {
-      if (live.current && l.tag === "progress") setProgress({ step: l.step ?? 0, total: l.total ?? 0 });
-    });
-    return () => {
-      live.current = false;
-      void sub.then((un) => un());
-    };
+/** Graphe « imprimé » de la maquette (pingchart.js) : courbe papier avec la couche rouge décalée dessous, trame rouge
+ * sous la courbe, repères de temps, moyenne et pic sur des bandes de papier, essai perdu hachuré. */
+function PingChart({ series, n, gap, done, avg }: { series: (number | null | undefined)[]; n: number; gap: number; done: boolean; avg: number | null }) {
+  const { t } = useStore();
+  const ref = useRef<HTMLDivElement>(null);
+  const [size, setSize] = useState({ w: 0, h: 0 });
+  const uid = useId().replace(/[^a-zA-Z0-9]/g, "");
+  useLayoutEffect(() => {
+    const el = ref.current;
+    if (!el) return;
+    const read = () => setSize({ w: el.clientWidth, h: el.clientHeight });
+    read();
+    const ro = new ResizeObserver(read);
+    ro.observe(el);
+    return () => ro.disconnect();
   }, []);
-  useEffect(() => save("netTarget", target), [target]);
 
-  const run = async (id: ToolId) => {
-    if (busy) return;
-    setBusy(id);
-    setError(null);
-    setProgress(null);
-    try {
-      const out = await api.netOptRun(id, { ...NET_DEFAULTS, target });
-      if (live.current && out.result) setResults((r) => ({ ...r, [id]: out.result! }));
-    } catch (e) {
-      const m = String(e);
-      if (live.current) setError(m.startsWith("busy") ? t("no.busy") : m);
-    } finally {
-      if (live.current) {
-        setBusy(null);
-        setProgress(null);
-      }
+  const { w: W, h: H } = size;
+  const X0 = 34;
+  const X1 = W - 78;
+  const Y0 = 34;
+  const Y1 = H - 28;
+  const V = series;
+  const vals = V.filter((v): v is number => typeof v === "number");
+  const top = Math.max(0, ...vals, avg ?? 0);
+  const MAX = NICE.find((m) => m >= top * 1.1) ?? Math.ceil((top * 1.1) / 1000) * 1000;
+  const slots = Math.max(2, n);
+  const px = (i: number) => X0 + (i * (X1 - X0)) / (slots - 1);
+  const py = (v: number) => Y1 - (Math.min(v, MAX) / MAX) * (Y1 - Y0);
+  const f = (v: number) => v.toFixed(1);
+
+  // tronçons de courbe, coupés par les essais perdus
+  const segs: [number, number][][] = [];
+  let cur: [number, number][] = [];
+  let lastI = -1;
+  V.forEach((v, i) => {
+    if (v === undefined) return;
+    lastI = i;
+    if (v === null) {
+      if (cur.length) segs.push(cur);
+      cur = [];
+      return;
     }
-  };
-  // ligne instable : le Packet Optimizer s'ouvre avec « tolérance aux pertes » activée, à appliquer
-  const markUnstable = async () => {
-    const s = await api.netOptState().catch(() => null);
-    const base = loadDraft() ?? (s?.applied ? { ...NET_DEFAULTS, ...s.applied.options } : NET_DEFAULTS);
-    saveDraft({ ...base, stable: false, preset: "custom" });
-    goTo("netopt");
-  };
+    cur.push([px(i), py(v)]);
+  });
+  if (cur.length) segs.push(cur);
+  const lostI = V.flatMap((v, i) => (v === null ? [i] : []));
+  const hiI = vals.length > 1 ? V.indexOf(Math.max(...vals)) : -1;
+  const hi = hiI >= 0 ? (V[hiI] as number) : 0;
+  const tail = segs.length ? segs[segs.length - 1] : null;
+  const head = tail && lastI >= 0 && V[lastI] !== null ? tail[tail.length - 1] : null;
+
+  // repères de temps : un trait toutes les 2 s (5 s, 10 s si le test est plus long), un petit tous les quarts
+  const D = (slots - 1) * gap;
+  const step = D <= 12 ? 2 : D <= 30 ? 5 : 10;
+  const tx = (s: number) => X0 + (s / D) * (X1 - X0);
+  const majors: number[] = [];
+  for (let s = 0; s <= D + 1e-6; s += step) majors.push(s);
+  const minors: number[] = [];
+  for (let k = 1; (k * step) / 4 <= D + 1e-6; k++) if (k % 4) minors.push((k * step) / 4);
+
+  const flt = (fid: string, freq: number, scale: number, seed: number, sa: number, sb: number, xs: "R" | "G", ys: "R" | "G") => (
+    <filter id={fid} x="-5%" y="-20%" width="110%" height="140%" primitiveUnits="userSpaceOnUse" colorInterpolationFilters="sRGB">
+      <feTurbulence type="fractalNoise" baseFrequency={freq} numOctaves={2} seed={seed} result="n" />
+      <feDisplacementMap in="SourceGraphic" in2="n" scale={scale} xChannelSelector={xs} yChannelSelector={ys} result="d" />
+      <feTurbulence type="fractalNoise" baseFrequency={freq} numOctaves={2} seed={seed + 6} result="s" />
+      <feColorMatrix in="s" type="matrix" values={`0 0 0 0 0  0 0 0 0 0  0 0 0 0 0  ${sa} 0 0 0 ${sb}`} result="sm" />
+      <feComposite in="d" in2="sm" operator="in" />
+    </filter>
+  );
+  const lines = (col: string) => segs.map((s, i) => <polyline key={i} points={s.map((q) => `${f(q[0])},${f(q[1])}`).join(" ")} fill="none" stroke={col} strokeWidth={3} strokeLinejoin="miter" strokeMiterlimit={4} />);
+  const area = segs
+    .filter((s) => s.length > 1)
+    .map((s) => `M${f(s[0][0])},${Y1}L` + s.map((q) => `${f(q[0])},${f(q[1])}`).join("L") + `L${f(s[s.length - 1][0])},${Y1}Z`)
+    .join("");
+  const id = (k: string) => `pc-${k}-${uid}`;
 
   return (
-    <section className="card nt-diag">
-      <header className="card-head">
-        <h3 className="rg-overline">{t("net.diag")}</h3>
-      </header>
-      <div className="nt-diag-grid">
-        <label className="no-target">
-          <span className="no-toggle-title">{t("no.target")}</span>
-          <span className="no-toggle-desc">{t("net.diag.desc")}</span>
-          <input
-            className={`input${validTarget(target) ? "" : " bad"}`}
-            value={target}
-            spellCheck={false}
-            maxLength={253}
-            onChange={(e) => setTarget(e.target.value.trim())}
-          />
-          {!validTarget(target) && <span className="no-bad small">{t("no.target.bad")}</span>}
-          {error && (
-            <span className="no-error small">
-              <CircleX size={13} />
-              {error}
+    <div className="plot" ref={ref} role="img" aria-label={t("s5.nt.chart")}>
+      {W > 120 && H > 100 && (
+        <>
+          <svg className="pc" width={W} height={H}>
+            <defs>
+              {flt(id("f"), 0.5, 1.6, 5, -16, 13.2, "R", "G")}
+              {flt(id("b"), 0.4, 2.2, 17, -14, 12, "G", "R")}
+              <pattern id={id("hatch")} width="7" height="7" patternUnits="userSpaceOnUse" patternTransform="rotate(-30)">
+                <rect width="2.4" height="7" fill="#FF3B30" fillOpacity=".55" />
+              </pattern>
+              <linearGradient id={id("fade")} x1="0" y1={Y0} x2="0" y2={Y1} gradientUnits="userSpaceOnUse">
+                <stop offset="0" stopColor="#fff" stopOpacity=".85" />
+                <stop offset="1" stopColor="#fff" stopOpacity=".08" />
+              </linearGradient>
+              <mask id={id("m")} maskUnits="userSpaceOnUse" x="0" y="0" width={W} height={H}>
+                <rect x="0" y="0" width={W} height={H} fill={`url(#${id("fade")})`} />
+              </mask>
+            </defs>
+            {[1, 2, 3, 4].map((k) => {
+              const v = (MAX / 4) * k;
+              return (
+                <g key={k}>
+                  <line x1={X0} x2={X1} y1={py(v)} y2={py(v)} stroke="#fff" strokeOpacity=".06" />
+                  <text x={X0 - 10} y={py(v) + 4} textAnchor="end" fontFamily="Barlow Condensed" fontWeight="700" fontSize="12" fill="#6E6E78">
+                    {Math.round(v)}
+                  </text>
+                </g>
+              );
+            })}
+            <line x1={X0} x2={X1} y1={Y1} y2={Y1} stroke="#fff" strokeOpacity=".14" />
+            {majors.map((s) => (
+              <g key={s}>
+                <line x1={tx(s)} x2={tx(s)} y1={Y1} y2={Y1 + 6} stroke="#fff" strokeOpacity=".3" strokeWidth="2" />
+                <text x={tx(s)} y={Y1 + 21} textAnchor={s ? "middle" : "start"} fontFamily="Barlow Condensed" fontWeight="800" fontStyle="italic" fontSize="13" fill="#A1A1AA" letterSpacing=".5">
+                  {mmss(s)}
+                </text>
+              </g>
+            ))}
+            {minors.map((s) => (
+              <line key={s} x1={tx(s)} x2={tx(s)} y1={Y1} y2={Y1 + 3} stroke="#fff" strokeOpacity=".18" />
+            ))}
+            {lostI.map((i) => (
+              <g key={i}>
+                <rect x={px(i) - 7} y={Y0 - 6} width="14" height={Y1 - Y0 + 6} fill={`url(#${id("hatch")})`} />
+                <rect x={px(i) - 7} y={Y0 - 6} width="14" height="3" fill="#FF3B30" />
+              </g>
+            ))}
+            <g mask={`url(#${id("m")})`}>
+              <path d={area} fill="#FF3B30" opacity=".13" />
+            </g>
+            {done && avg != null && <line x1={X0} x2={X1} y1={py(avg)} y2={py(avg)} stroke="#FF3B30" strokeWidth="2" strokeDasharray="7 6" />}
+            <g transform="translate(2 2.6)" filter={`url(#${id("b")})`}>
+              {lines("#FF3B30")}
+            </g>
+            <g filter={`url(#${id("f")})`}>{lines("#ECE9E2")}</g>
+            {hiI >= 0 && <line x1={px(hiI)} x2={px(hiI)} y1={py(hi) - 26} y2={py(hi) - 6} stroke="#ECE9E2" strokeWidth="2" />}
+            {head && <rect x={head[0] - 5} y={head[1] - 5} width="10" height="10" fill="#FF3B30" transform={`rotate(-12 ${head[0]} ${head[1]})`} />}
+          </svg>
+          {done && avg != null && (
+            <span className="ptag" style={{ left: X1 + 10, top: py(avg) - 11 }}>
+              {t("s5.nt.avg", { n: Math.round(avg) })}
             </span>
           )}
-        </label>
-        <div className="nt-diag-tools">
-          {DIAG.map((id) => (
-            <Tool
-              key={id}
-              id={id}
-              running={busy === id}
-              disabled={!!busy || !validTarget(target)}
-              result={results[id]}
-              progress={busy === id ? progress : null}
-              onRun={() => void run(id)}
-              onUnstable={() => void markUnstable()}
-            />
-          ))}
-        </div>
-      </div>
-    </section>
+          {hiI >= 0 && (
+            <span className="ptag" style={{ left: px(hiI) - 26, top: py(hi) - 52 }}>
+              {Math.round(hi)} ms
+            </span>
+          )}
+          {lostI.length > 0 && (
+            <span className="ptag r" style={{ left: px(lostI[0]) - 22, top: Y0 - 34 }}>
+              {t("s5.nt.lostTag")}
+            </span>
+          )}
+        </>
+      )}
+    </div>
   );
 }

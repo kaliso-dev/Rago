@@ -8,6 +8,8 @@
 //! - Internet (Cloudflare) : écho ICMP, comme la commande ping ;
 //! - régions : temps d'ouverture d'une connexion TCP (aller-retour SYN / SYN-ACK). Ces serveurs ne répondent pas au ping
 //!   ICMP, ils répondent tous sur leur port.
+//!
+//! Le joueur peut aussi tester un serveur à lui (« host:play.monserveur.fr », 23/11/2026) : voir [`custom`].
 
 use serde::Serialize;
 use std::net::{SocketAddr, TcpStream, ToSocketAddrs};
@@ -28,6 +30,25 @@ pub const TARGETS: &[(&str, &str, u16)] = &[
     ("virginia", "dynamodb.us-east-1.amazonaws.com", 443),
     ("internet", "one.one.one.one", 443),
 ];
+
+/// Préfixe d'un serveur choisi par le joueur : « host:play.monserveur.fr », « host:1.1.1.1 », « host:mc.serveur.fr:25566 ».
+pub const CUSTOM: &str = "host:";
+
+/// Hôte (en minuscules) et port d'un serveur choisi par le joueur. None si l'adresse n'est pas une simple adresse :
+/// lettres, chiffres, point et tiret (la même règle que la cible du Packet Optimizer), au moins un point, un port de 1 à
+/// 65535 s'il y en a un.
+pub fn custom(id: &str) -> Option<(String, Option<u16>)> {
+    let rest = id.strip_prefix(CUSTOM)?;
+    if !crate::netopt::valid_target(rest) {
+        return None;
+    }
+    let (host, port) = match rest.split_once(':') {
+        Some((h, p)) => (h, Some(p.parse::<u16>().ok().filter(|p| *p > 0)?)),
+        None => (rest, None),
+    };
+    let ok = host.contains('.') && !host.starts_with('.') && !host.ends_with('.') && !host.starts_with('-');
+    ok.then(|| (host.to_ascii_lowercase(), port))
+}
 
 /// Assez d'essais pour une vraie moyenne et un taux de pertes qui veut dire quelque chose : 40 en 10 s.
 const SAMPLES: u32 = 40;
@@ -168,24 +189,53 @@ fn tcp(addr: SocketAddr) -> Option<f64> {
 
 /// Mesure un serveur ; `on_sample` reçoit chaque essai dès qu'il est fait.
 pub fn measure(id: &str, on_sample: &dyn Fn(Sample)) -> Measure {
-    let Some((_, host, port)) = TARGETS.iter().find(|(t, _, _)| *t == id) else {
-        return failed(id, "unknown");
+    let mine = custom(id);
+    let (host, port) = match (&mine, TARGETS.iter().find(|(t, _, _)| *t == id)) {
+        (Some((h, p)), _) => (h.clone(), *p),
+        (None, Some((_, h, p))) => ((*h).to_string(), Some(*p)),
+        (None, None) => return failed(id, "unknown"),
     };
-    let Some(addr) = resolve(host, *port) else {
+    let Some(addr) = resolve(&host, port.unwrap_or(443)) else {
         return failed(id, "dns");
     };
-    // Internet (Cloudflare) répond à l'écho : un vrai ping, chaque paquet perdu se voit. Sinon, la connexion.
-    let pinger = match addr.ip() {
-        std::net::IpAddr::V4(ip) if id == "internet" => crate::icmp::Pinger::new().filter(|p| matches!(p.send(ip, None, TIMEOUT), Reply::Echo(_))).map(|p| (p, ip)),
+    // un écho ICMP qui revient : un vrai ping, chaque paquet perdu se voit
+    let echo = || match addr.ip() {
+        std::net::IpAddr::V4(ip) => crate::icmp::Pinger::new().filter(|p| matches!(p.send(ip, None, TIMEOUT), Reply::Echo(_))).map(|p| (p, ip)),
         _ => None,
     };
-    let method = if *port == MINECRAFT {
-        Method::Mc
-    } else if pinger.is_some() {
-        Method::Icmp
+    let at = |port: u16| SocketAddr::new(addr.ip(), port);
+    let answers_mc = |a: SocketAddr| crate::mcping::ping(a, &host, TIMEOUT * 2).is_some();
+    let (method, addr, pinger) = if mine.is_some() {
+        // serveur du joueur : d'abord le ping de Minecraft (c'est souvent un serveur de jeu, et derrière Cloudflare
+        // l'écho ne dirait que le trajet jusqu'à Cloudflare), puis l'écho, puis l'ouverture d'une connexion. Une adresse
+        // IP sans port est plutôt une machine qu'on « ping » : l'écho passe en premier.
+        let ip_only = host.parse::<std::net::IpAddr>().is_ok();
+        match port {
+            Some(p) if answers_mc(at(p)) => (Method::Mc, at(p), None),
+            Some(p) => (Method::Tcp, at(p), None),
+            None if !ip_only && answers_mc(at(MINECRAFT)) => (Method::Mc, at(MINECRAFT), None),
+            None => match echo() {
+                Some(p) => (Method::Icmp, addr, Some(p)),
+                None if ip_only && answers_mc(at(MINECRAFT)) => (Method::Mc, at(MINECRAFT), None),
+                None => (Method::Tcp, addr, None),
+            },
+        }
     } else {
-        Method::Tcp
+        // Internet (Cloudflare) répond à l'écho : un vrai ping. Sinon, la connexion (ou le ping du jeu sur 25565).
+        let pinger = if id == "internet" { echo() } else { None };
+        let method = if port == Some(MINECRAFT) {
+            Method::Mc
+        } else if pinger.is_some() {
+            Method::Icmp
+        } else {
+            Method::Tcp
+        };
+        (method, addr, pinger)
     };
+    // le ping de Minecraft qui a servi à choisir compte comme une connexion : on laisse passer le délai des proxys
+    if mine.is_some() && method == Method::Mc {
+        std::thread::sleep(MC_GAP);
+    }
     let (samples, gap) = if method == Method::Mc { (MC_SAMPLES, MC_GAP) } else { (SAMPLES, GAP) };
     let mut rtts = Vec::with_capacity(samples as usize);
     for i in 0..samples {
@@ -193,7 +243,7 @@ pub fn measure(id: &str, on_sample: &dyn Fn(Sample)) -> Measure {
             std::thread::sleep(gap);
         }
         let ms = match (&pinger, method) {
-            (_, Method::Mc) => crate::mcping::ping(addr, host, TIMEOUT * 2),
+            (_, Method::Mc) => crate::mcping::ping(addr, &host, TIMEOUT * 2),
             (Some((p, ip)), _) => match p.send(*ip, None, TIMEOUT) {
                 Reply::Echo(ms) => Some(ms),
                 _ => None,
@@ -238,6 +288,16 @@ mod tests {
         assert_eq!(m.ping, Some(24.3));
         // en ICMP, un écho lent reste une mesure
         assert_eq!(summarize("x", &rtts, Method::Icmp).lost, 0);
+    }
+
+    #[test]
+    fn a_server_of_the_player() {
+        assert_eq!(custom("host:Play.MonServeur.fr"), Some(("play.monserveur.fr".into(), None)));
+        assert_eq!(custom("host:1.1.1.1"), Some(("1.1.1.1".into(), None)));
+        assert_eq!(custom("host:mc.serveur.fr:25566"), Some(("mc.serveur.fr".into(), Some(25566))));
+        for bad in ["play.monserveur.fr", "host:", "host:localhost", "host:a b.fr", "host:x.fr;calc", "host:-x.fr", "host:.fr", "host:x.fr:0", "host:x.fr:70000", "host:x.fr:", "host:x.fr:1:2", "host:é.fr"] {
+            assert_eq!(custom(bad), None, "{bad}");
+        }
     }
 
     #[test]

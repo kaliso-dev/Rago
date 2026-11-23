@@ -375,10 +375,23 @@ async fn clean_ram(state: State<'_, AppState>, trim: bool) -> Result<memory::Cle
 
 /// Test réseau (nettest.rs) : les serveurs demandés mesurés en même temps ; chaque essai est envoyé à l'interface
 /// (`nettest:sample`), puis chaque serveur (`nettest:measure`) dès qu'il a fini. Les chiffres partent ensuite au
-/// serveur, pour choisir où placer de futurs proxys (netshare.rs).
+/// serveur, pour choisir où placer de futurs proxys (netshare.rs), sauf le serveur du joueur.
 #[tauri::command]
 async fn net_test(app: AppHandle, state: State<'_, AppState>, ids: Vec<String>) -> Result<Vec<nettest::Measure>, String> {
-    let ids: Vec<String> = ids.into_iter().filter(|id| nettest::TARGETS.iter().any(|(t, _, _)| t == id)).take(16).collect();
+    // serveurs connus, et au plus un serveur du joueur (« host:… »)
+    let mut mine = false;
+    let ids: Vec<String> = ids
+        .into_iter()
+        .filter(|id| {
+            if nettest::TARGETS.iter().any(|(t, _, _)| t == id) {
+                return true;
+            }
+            let ok = !mine && nettest::custom(id).is_some();
+            mine |= ok;
+            ok
+        })
+        .take(16)
+        .collect();
     let version = app.package_info().version.to_string();
     let license = Arc::clone(&state.license);
     tauri::async_runtime::spawn_blocking(move || {
@@ -399,7 +412,9 @@ async fn net_test(app: AppHandle, state: State<'_, AppState>, ids: Vec<String>) 
             jobs.into_iter().filter_map(|j| j.join().ok()).collect()
         });
         let device = license.device();
-        netshare::send(device.fingerprint.machine_guid.as_deref().unwrap_or(&device.name), &version, &results);
+        // le serveur du joueur reste sur ce PC : seuls les serveurs connus partent
+        let known: Vec<nettest::Measure> = results.iter().filter(|m| !m.id.starts_with(nettest::CUSTOM)).cloned().collect();
+        netshare::send(device.fingerprint.machine_guid.as_deref().unwrap_or(&device.name), &version, &known);
         results
     })
     .await

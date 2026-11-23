@@ -977,6 +977,14 @@ const mockDisplay: Record<string, DisplayProfile> = (() => {
 })();
 let mockDisplayState: DisplayState = { colors: null, resolution: null, error: null };
 const mockGraphics = new Map<string, { level: GraphicsLevel | null; saved: boolean }>([["valorant", { level: "balanced", saved: true }]]);
+/** Démo : « rago.demoOffline » = 1 simule un PC sans réseau (ping en direct et test réseau). */
+const demoOffline = () => {
+  try {
+    return localStorage.getItem("rago.demoOffline") === "1";
+  } catch {
+    return false;
+  }
+};
 let mockStatsStart = 0;
 const mockLoad = { ram: 47, cpu: 14, gpu: 9 };
 // démo : les réglages appliqués survivent au rechargement de la page, comme applied.json dans l'app
@@ -1217,7 +1225,7 @@ const mockApi: Api = {
       /* rien */
     }
     const ramTotal = 32 * 1024 ** 3;
-    return { ready: true, ram: mockLoad.ram, cpu: mockLoad.cpu, gpu: noGpu ? null : mockLoad.gpu, ramUsed: (mockLoad.ram / 100) * ramTotal, ramTotal, ping: Math.round(17 + Math.random() * 3) };
+    return { ready: true, ram: mockLoad.ram, cpu: mockLoad.cpu, gpu: noGpu ? null : mockLoad.gpu, ramUsed: (mockLoad.ram / 100) * ramTotal, ramTotal, ping: demoOffline() ? null : Math.round(17 + Math.random() * 3) };
   },
   openTaskManager: async () => {
     console.info("[démo] Gestionnaire des tâches");
@@ -1402,19 +1410,27 @@ const mockApi: Api = {
     }),
   copyText,
   netTest: async (ids) => {
-    // démo : valeurs plausibles depuis Paris, essai par essai comme nettest.rs (40 en 10 s, 8 pour Minecraft)
-    const base: Record<string, number> = { hypixel: 92, minemen: 21, paris: 9, frankfurt: 17, london: 14, stockholm: 33, madrid: 28, virginia: 86, internet: 7 };
+    // démo hors ligne (localStorage « rago.demoOffline » = 1) : aucun serveur trouvé, comme nettest.rs sans réseau
+    if (demoOffline()) {
+      await sleep(600);
+      return ids.map((id) => ({ id, ping: null, best: null, jitter: null, loss: 1, lost: 0, samples: 0, method: "tcp" as const, error: "dns" }));
+    }
+    // démo : les valeurs de la maquette (depuis Paris), essai par essai comme nettest.rs (40 en 10 s, 8 pour
+    // Minecraft) ; un serveur au choix (« host:… ») répond au ping de Minecraft si son nom parle de Minecraft
+    const base: Record<string, number> = { hypixel: 96, minemen: 22, paris: 16.5, frankfurt: 24, london: 20, stockholm: 39, madrid: 32, virginia: 90, internet: 7.5 };
     const fast = new URLSearchParams(location.search).has("fastnet");
     return Promise.all(
       ids.map(async (id) => {
-        const mc = id === "hypixel" || id === "minemen";
+        const host = id.startsWith("host:") ? id.slice(5) : null;
+        const mc = id === "hypixel" || id === "minemen" || (!!host && /hypixel|minemen|mc|play/.test(host));
+        if (host) base[id] = mc ? 31 : 12;
         const n = mc ? 8 : 40;
         const series: (number | null)[] = [];
         for (let i = 0; i < n; i++) {
           await sleep(fast ? 8 : mc ? 1400 : 250);
           const b = base[id] ?? 40;
-          const lost = id === "virginia" && i === 17;
-          const ms = lost ? null : Math.round((b + Math.random() * 3 + (i % 13 === 7 ? b * 0.6 : 0)) * 10) / 10;
+          const lost = id === "paris" && i === 31;
+          const ms = lost ? null : Math.round((b + Math.random() * 3 + (i === 23 ? b * 0.75 : 0)) * 10) / 10;
           series.push(ms);
           emit<NetSample>("nettest:sample", { id, i, n, ms });
         }
@@ -1436,7 +1452,7 @@ const mockApi: Api = {
           samples: n,
           spikes: ok.filter((v) => v > med + Math.max(15, med / 2)).length,
           series,
-          method: mc ? "mc" : id === "internet" ? "icmp" : "tcp",
+          method: mc ? "mc" : id === "internet" || host ? "icmp" : "tcp",
           error: null,
         };
         emit("nettest:measure", m);
