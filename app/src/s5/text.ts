@@ -24,9 +24,13 @@ export function shortDate(lang: Lang, ts: number): string {
 /** Nom court d'un jeu à l'écran : sans « Tom Clancy's » ni ™ ®. */
 export const displayName = (name: string) => name.replace(/^Tom Clancy's\s+/i, "").replace(/[™®]/g, "").trim();
 
-/** Jour et mois des maquettes : « 12 Nov », « 12 nov. ». */
-export function dayMonth(lang: Lang, ts: number): string {
-  return new Date(ts).toLocaleDateString(lang === "fr" ? "fr-FR" : "en-GB", { day: "numeric", month: "short" });
+/** Jour, mois (et année) des maquettes : « 12 Nov », « 10 Sep 2021 », « 12 nov. ». En anglais, le mois court américain
+ * (« Sep » : en-GB écrit « Sept ») après le jour, comme les maquettes. */
+export function dayMonth(lang: Lang, ts: number, year = false): string {
+  const d = new Date(ts);
+  if (lang === "fr") return d.toLocaleDateString("fr-FR", { day: "numeric", month: "short", ...(year ? { year: "numeric" } : {}) });
+  const month = d.toLocaleDateString("en-US", { month: "short" });
+  return `${d.getDate()} ${month}${year ? ` ${d.getFullYear()}` : ""}`;
 }
 
 /** Heure sur 24 h : « 21:04 ». */

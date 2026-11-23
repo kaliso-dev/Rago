@@ -132,7 +132,7 @@ button.tile{border:0;padding:0;cursor:pointer;line-height:inherit;font-style:nor
 /* pages module (s5/pages/module.css) : ce que la fenêtre change. La .main de la maquette a 150 px en bas (place de la
    barre pour appliquer), celle de l'app 44 px ; la page ajoute le reste. */
 .pg-mod.is-page{padding-bottom:106px}
-button.tw,button.o,button.run,button.sb,button.pick,button.fold,button.hd,button.ic,button.clr,button.lnk{border:0;background:none;font:inherit;color:inherit;cursor:pointer;text-align:inherit;line-height:inherit;letter-spacing:inherit;text-transform:inherit;padding:0}
+button.tw,button.o,button.run,button.sb,button.pick,button.fold,button.hd,button.ic,button.clr,button.lnk,button.pn,button.site,button.go2{border:0;background:none;font:inherit;color:inherit;cursor:pointer;text-align:inherit;line-height:inherit;letter-spacing:inherit;text-transform:inherit;padding:0}
 button.run:disabled{cursor:default;opacity:.45}
 .pg-mod .tw:has(> button.sw:not(:disabled)),.pg-mod .tw.lock,.pg-mod button.tw{cursor:pointer}
 .pg-mod .tw.blk button.sw:disabled{opacity:1}
@@ -390,3 +390,30 @@ html.round .win .ap.net .pg{border-radius:2px}
 .pg-net .tw .note{display:block;margin-top:0}
 /* chargement dans un bouton : base.css cache .btn .spin (le rond de la maquette) ; l'icône « loader » tourne à sa place */
 .btn svg.spin{display:block;flex:none;border:0;border-radius:0}
+/* Outils (s5/pages/tools.css, sur le socle des pages module) : la .main de la maquette a 60 px en bas, celle de l'app 44. */
+.pg-mod.pg-tools.is-page{padding-bottom:16px}
+.pg-tools .qt .run{flex:none}
+.pg-tools .qt .ok.muted{color:var(--ink-3);font-weight:500}
+.pg-tools .qt .ok.bad{color:var(--red);font-weight:500}
+.pg-tools .plans span{cursor:pointer}
+.pg-tools .plans span[aria-disabled="true"]{cursor:default}
+.pg-tools .plans span:not(.on):hover{color:var(--ink)}
+.pg-tools .plans span svg{width:12px;height:12px;flex:none}
+.pg-tools .lst .li[role="checkbox"],.pg-tools .bl[role="checkbox"]{cursor:pointer}
+.pg-tools .lst .li[aria-disabled="true"],.pg-tools .bl[aria-disabled="true"]{cursor:default}
+.pg-tools .lst .li[role="checkbox"]:not([aria-disabled="true"]):hover .cb:not(.on),.pg-tools .bl:not([aria-disabled="true"]):hover .cb:not(.on){box-shadow:inset 0 0 0 1.5px var(--ink-2)}
+.pg-tools .li.wait{color:var(--ink-3)}
+.pg-tools .li.wait > svg{width:15px;height:15px;flex:none}
+.pg-tools .li.wait .l span{font-size:13px;color:var(--ink-2)}
+.pg-tools .pf .sub.ok{display:inline-flex;align-items:center;gap:6px;color:var(--ink)}
+.pg-tools .pf .sub.ok svg{width:13px;height:13px;flex:none;color:var(--red);stroke-width:3}
+.pg-tools .pf .sub.bad{color:var(--red)}
+.pg-tools .pf .ask{margin-left:auto;display:flex;gap:8px}
+.pg-tools button.pn{width:100%;text-align:left}
+.pg-tools button.pn:hover{background:var(--bg-4)}
+.pg-tools button.pn:hover > svg{color:var(--ink)}
+.pg-tools button.site{line-height:inherit}
+.pg-tools button.site:hover{color:var(--red)}
+.pg-tools button.go2:hover{color:var(--ink)}
+.pg-tools .btn:disabled,.pg-tools .lnk2:disabled{opacity:.5;cursor:default}
+.pg-tools .li:has(.keep) button.sw:disabled{opacity:1}
