@@ -2,8 +2,8 @@
 type: code
 tags: [code, app, css, design]
 fichier: app/src/styles/ (tokens.css, fonts.css, app.css, features.css, account.css, mouse.css, v5.css, overlay.css, tips.css)
-lignes: 11690
-maj: 2026-11-22
+lignes: 10195
+maj: 2026-11-23
 ---
 # Styles de l'app (CSS)
 
@@ -17,11 +17,11 @@ Tout ce qui suit est CONFIRMÉ (code de `staging`, 10/11, commit `ee77d4f`), ave
 |---|---|---|---|
 | `tokens.css` | 219 | les deux fenêtres | jetons `--rg-*` du kit v5 (`marque/tokens/tokens.css` des maquettes), classes `.rg-metric` et `.rg-overline`, animations `rg-pulse` et `rg-pixel-blink` |
 | `fonts.css` | 79 | les deux fenêtres | `@font-face` de Barlow (400, 500, 600, 700) et Barlow Condensed (600 à 900 droit, 700 à 900 italique), `font-display: block` |
-| `app.css` | 2922 | fenêtre principale | polices, cadre, barre de titre, navigation, pages, cartes, boutons, réglages, barre « Appliquer », fenêtres, exécution, tableau de bord, Minecraft, paramètres, licence, plan gratuit, verre, finitions, 1.3.0 |
+| `app.css` | 2537 | fenêtre principale | polices, cadre, barre de titre, navigation, pages, cartes, boutons, interrupteur, fenêtres, exécution, tableau de bord, paramètres, licence, plan gratuit, verre, finitions, 1.3.0 |
 | `account.css` | 257 | fenêtre principale | avatar, invitation à laisser un avis, formulaire d'avis, carte Profil |
-| `features.css` | 3850 | fenêtre principale | fonctionnalités de la 1.2.0 et après (liste plus bas) |
+| `features.css` | 3724 | fenêtre principale | fonctionnalités de la 1.2.0 et après (liste plus bas) |
 | `overlay.css` | 747 | barre en jeu | toute la barre en jeu (RAG-82) ; la fin du fichier (section « Charte v5 ») la réhabille |
-| `v5.css` | 3004 | fenêtre principale, **chargée en dernier** | la charte v5 « Match day » posée sur les classes existantes (voir plus bas) |
+| `v5.css` | 2378 | fenêtre principale, **chargée en dernier** | la charte v5 « Match day » posée sur les classes existantes (voir plus bas) |
 | `tips.css` | 214 | fenêtre principale et barre en jeu (importé par [[GameTips.tsx]]) | bloc des réglages conseillés (`.game-tips*`, `.game-tip*`), place sous le jeu en avant de la bibliothèque (`.games-hero-tips`), bloc des conseils de la barre en jeu qui défile à part (`.ov-advice`, 258 px au plus, fondu en bas ; `.ov-tips`), pastille élargie du rappel (`.ov-nudge*`). Voir [[Conseils au lancement du jeu]] |
 | `mouse.css` | 40 | fenêtre principale (importé par [[main.tsx (app)]]) | [[Page Souris]] : zone de mesure, pastilles du test de clics, liste des logiciels, formulaire de sensibilité (`.mouse-*`) ; PR #96 |
 
@@ -61,9 +61,9 @@ Tout ce qui suit est CONFIRMÉ (code de `staging`, 10/11, commit `ee77d4f`), ave
 ## L'effet verre, en pratique (avant la v5)
 Ce qui suit décrit `app.css` et `features.css`, toujours chargés. Sur `staging`, `v5.css` recouvre la plupart de ces règles (cartes pleines, plus de liseré ni de flou) ; la prod (1.3.0) les montre encore.
 - **Cartes** (`.card`) : fond `--rg-glass-fill`, bordure `--rg-line-1`, rayon `--rg-radius-lg`, reflet `--rg-glass-edge` et une ombre douce. **Pas de flou** sur les cartes, pour garder un défilement fluide.
-- **Liseré lumineux** (section « verre : bord lumineux » de `app.css`) : un `::after` avec un masque trace le dégradé `--rg-glass-rim`, vif en haut à gauche et éteint ailleurs. Il est posé sur `.card`, `.tweak-list`, `.preset`, `.applybar`, `.gate-card`, `.nav-upgrade` et `.review-prompt`. Il n'est pas posé sur ce qui défile à l'intérieur (barre latérale, fenêtres) : là, le reflet reste en `box-shadow`. Un preset choisi (`.preset.on`) a un liseré rouge.
+- **Liseré lumineux** (section « verre : bord lumineux » de `app.css`) : un `::after` avec un masque trace le dégradé `--rg-glass-rim`, vif en haut à gauche et éteint ailleurs. Il est posé sur `.card`, `.preset`, `.gate-card`, `.nav-upgrade` et `.review-prompt`. Il n'est pas posé sur ce qui défile à l'intérieur (barre latérale, fenêtres) : là, le reflet reste en `box-shadow`. Un preset choisi (`.preset.on`) a un liseré rouge.
 - **Flou** (`backdrop-filter: var(--rg-glass-blur)`) : seulement sur ce qui flotte au-dessus du contenu. Cela comprend :
-  - la barre latérale, la barre « Appliquer » et les fenêtres ;
+  - la barre latérale et les fenêtres ;
   - les panneaux de licence, les messages et les toasts ;
   - l'invitation à laisser un avis ;
   - quelques éléments de `features.css` (onglets de Réseau, menus).
@@ -77,40 +77,41 @@ Ce qui suit décrit `app.css` et `features.css`, toujours chargés. Sur `staging
 - `tokens.css` met les durées à 0 sous `prefers-reduced-motion`, mais `app.css`, chargé après, les remet à 90, 120, 160 et 200 ms.
 
 ## Plan de `app.css`
-- Lignes 1 à 140 : polices, base, `.spin`, `.pixel-blink`, mouvement réduit.
-- 141 cadre (`.app`) ; 163 barre de titre ; 269 navigation (barre latérale) ; 400 pages et cartes (`.card` vers la ligne 502) ; 537 boutons (`.btn-*`) ; 635 interrupteur et `segmented` ; 758 réglages (`.tweak-*`).
-- 940 barre « Appliquer » ; 991 fenêtres (`.scrim`, `.modal`) et palette ; 1242 exécution (`RunOverlay`) ; 1412 tableau de bord ; 1684 Minecraft ; 1750 paramètres ; 1840 licence (dont Google et Discord, vers 1915).
-- Vers 1988 : **démo à largeur de téléphone** (`max-width: 760px`). L'app de bureau a une largeur minimale de 1080 px ; ce bloc sert à la démo web.
-- 2162 plan gratuit ; 2360 vérification du 07/10/2026 (toasts, message de licence) ; 2586 verre (bord lumineux) ; 2637 focus et finitions (audit du 17/10) ; 2687 et suivantes : lien Discord, `Splash`, `Pulse`.
-- 2763 : **1.3.0**, analyse du PC, fenêtre Premium avec les prix, résiliation.
+- Lignes 1 à 147 : polices, base, `.spin`, `.pixel-blink`, mouvement réduit (91), verre de la fenêtre et cadre `.app` (128).
+- 148 barre de titre ; 254 navigation (barre latérale) ; 385 pages et cartes (`.card` vers la ligne 457) ; 492 boutons (`.btn-*`) ; 590 interrupteur et `segmented`.
+- 717 fenêtres (`.scrim`, `.modal`) et palette ; 968 exécution (`RunOverlay`) ; 1138 tableau de bord ; 1410 paramètres ; 1500 licence (dont Google et Discord, 1575).
+- 1647 : **démo à largeur de téléphone** (`max-width: 760px`). L'app de bureau a une largeur minimale de 1080 px ; ce bloc sert à la démo web.
+- 1802 plan gratuit ; 1967 fenêtre de connexion centrée, toasts (1981), bandeau de licence (2031), fenêtre basse 1080×680 (2108) ; 2200 verre (bord lumineux) ; 2240 focus et finitions (audit du 17/10) ; 2270 et suivantes : lien Discord, `Splash`, `Pulse`.
+- 2365 : **1.3.0**, analyse du PC, fenêtre Premium avec les prix, résiliation.
+- Les anciennes sections des réglages (`.tweak-*`), de la barre « Appliquer » (`.applybar*`), des modules, de l'historique et du dossier Minecraft sont retirées le 23/11 : les pages des modules suivent le CSS des maquettes ([[Maquettes v5 dans l'app (s5)]]).
 
 ## Plan de `features.css`
 - En-tête : « Nouvelles fonctionnalités de la 1.2.0 (17/10/2026)… Les règles de app.css ne sont pas modifiées ici. ».
 - Sections, dans l'ordre :
-  - 5 : Nettoyer la RAM (RAG-48) ;
-  - 16 : Partage et support (RAG-44, RAG-70) ;
-  - 245 : Mes presets ;
-  - 319 : pages nouvelles dans la barre latérale ;
-  - 342 : puces ;
-  - 368 : bibliothèque de jeux (RAG-57) ;
-  - 454 : launcher de Minecraft Java ;
-  - 588 : graphismes du jeu (`.games-gfx*`, plus utilisé depuis le 23/11 : la page Jeux suit le CSS des maquettes, [[Maquettes v5 dans l'app (s5)]]) ;
-  - 826 : onglets de Réseau ;
-  - 904 : test réseau ;
-  - 1301 : mise à jour prête (RAG-24) ;
-  - 1380 : paramètres de la barre en jeu et de l'arrière-plan (RAG-82) ;
-  - 1422 : optimisations gratuites du tableau de bord ;
-  - 1478 : RBW Mod ;
-  - 1587 : launchers ;
-  - 1714 : presets par jeu ;
-  - 1880 : outils (nettoyage, applis, pilotes ; « en un clic » 2141, applis au démarrage 2262, réglages Windows utiles 2323, tous les outils de l'app 2355 : [[Page Outils]]) ;
-  - 2396 : Pendant la partie ;
-  - 2431 : Packet Optimizer ;
-  - 2545 : vue gratuite du Packet Optimizer (1.3.0) ;
-  - 2976 et 3023 : Avancé et Réglages experts ;
-  - 3289 : Analyser mon PC ;
-  - 3556 : modifier un preset ;
-  - 3718 : Rago Route (fin du fichier).
+  - 1 : Nettoyer la RAM (RAG-48) ;
+  - 12 : Partage et support (RAG-44, RAG-70) ;
+  - 241 : Mes presets ;
+  - 315 : pages nouvelles dans la barre latérale ;
+  - 338 : puces ;
+  - 364 : bibliothèque de jeux (RAG-57) ;
+  - 450 : launcher de Minecraft Java ;
+  - 584 : graphismes du jeu (`.games-gfx*`, plus utilisé depuis le 23/11 : la page Jeux suit le CSS des maquettes, [[Maquettes v5 dans l'app (s5)]]) ;
+  - 822 : onglets de Réseau ;
+  - 888 : test réseau ;
+  - 1285 : mise à jour prête (RAG-24) ;
+  - 1364 : paramètres de la barre en jeu et de l'arrière-plan (RAG-82) ;
+  - 1406 : optimisations gratuites du tableau de bord ;
+  - 1462 : launchers ;
+  - 1589 : presets par jeu ;
+  - 1755 : outils (nettoyage, applis, pilotes ; « en un clic » 2016, réglages Windows utiles 2197, tous les outils de l'app 2229 : [[Page Outils]]) ;
+  - 2270 : Pendant la partie ;
+  - 2305 : Packet Optimizer ;
+  - 2419 : vue gratuite du Packet Optimizer (1.3.0) ;
+  - 2850 et 2897 : Avancé et Réglages experts ;
+  - 3163 : Analyser mon PC ;
+  - 3430 : modifier un preset ;
+  - 3592 : Rago Route (fin du fichier).
+  - La section du vérificateur RBW Mod (`.rbw-*`) est retirée depuis le 23/11 : le panneau est dans [[ModulePage.tsx]] avec le CSS de la maquette.
   - La section « couleurs et résolution par jeu » (`.display-*`) est retirée depuis le 23/11 : [[Display.tsx]] est refaite sur la maquette v5 ([[Maquettes v5 dans l'app (s5)]]).
 - Le titre de la section Rago Route dit encore « exe de test » : en retard, l'onglet est dans tous les exe depuis le 10/11 (voir [[RouteTab.tsx]]).
 
@@ -149,13 +150,12 @@ Ajoutée par la PR #108 du 22/11, vers `staging`, jamais testée sur Windows. El
 - **titres de page** : taille `--title-size` (56 à 112 px, réglée par [[App.tsx]]), écho en contour (`::before` avec `attr(data-t)`), pinceau rouge (`::after`, `assets/fx/brush.svg`) ;
 - **rubans** : `.section-title > span:first-child`, `.tape`, `.modal-title`, `h2.section-title.rg-overline`, `.gate-card h1` sur `tape-red.svg` avec le masque `tape-mask.svg` ;
 - composants : `.section-chip`, cartes, boutons penchés par `::before` (primaire rouge), champs, interrupteur penché, `segmented`, badges, puces, `.carbon` ;
-- `.head-num` (bloc rouge au bord déchiré, masque `num-mask.svg`) et la jauge à segments `.segs` ;
-- tableau de bord (`.dash-top`, `.dash-free`, `.dash-an`, presets en liste) ; pages module (`.module-bar-v5`, `.sec-count`, `.sec-fold`, grille de tuiles sur 3 colonnes, `.tweak.tile`, `.wide`, `.tweak-state`, bulle claire `.tweak-pop` au survol après 0,35 s) ;
-- barre « Appliquer » (660 px, 72 px de haut, chiffre rouge de 54 px), bandeau de licence, erreur de page, fenêtres, confirmation, exécution (compteur de 170 px sur pinceau), palette de recherche, toasts ;
+- tableau de bord (`.dash-top`, `.dash-free`, `.dash-an`, presets en liste) ;
+- bandeau de licence, erreur de page, fenêtres, confirmation, exécution (compteur de 170 px sur pinceau), palette de recherche, toasts ;
 - connexion (`.gate-*`), Premium (grille 260 px + 1fr, panneau rouge `.upsell-side`), onglets `.hub-tab` penchés (onglet ouvert en rouge), titres de carte et de ligne en condensé capitales ;
 - écran de démarrage (`.splash-*`, voir [[Splash.tsx]]) ;
 - état du Packet Optimizer (`.no-hero-title`, 26 px).
-- Textures dans `app/src/assets/fx/` : `brush.svg`, `tape-red.svg`, `torn-a.svg`, `torn-b.svg`, `grain.svg`, `num-left.svg` (copiés des maquettes), `tape-mask.svg` et `num-mask.svg` (tirés des maquettes `module.css` et `poster.css`).
+- Textures dans `app/src/assets/fx/` : `brush.svg`, `tape-red.svg`, `torn-a.svg`, `torn-b.svg`, `grain.svg` (copiés des maquettes) et `tape-mask.svg` (tiré de la maquette `module.css`). `num-left.svg` et `num-mask.svg` (ancien bloc chiffré `.head-num`) sont retirés le 23/11.
 
 ## À savoir avant de modifier
 - Un changement de look va dans `v5.css` (ou la section « Charte v5 » d'`overlay.css`), pas dans les anciennes feuilles.

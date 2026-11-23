@@ -2,8 +2,8 @@
 type: code
 tags: [code, app, react, composant]
 fichier: app/src/components/ (ui.tsx, Modal.tsx, Logo.tsx, logoPaths.ts, icons.ts, ri.tsx, printed.ts, Avatar.tsx, PageBoundary.tsx) et app/src/vite-env.d.ts
-lignes: 492
-maj: 2026-11-22
+lignes: 465
+maj: 2026-11-23
 ---
 # Petits composants de l'interface
 
@@ -13,7 +13,7 @@ Tout ce qui suit est CONFIRMÉ (code de `staging`, 10/11, commit `ee77d4f`).
 
 | Fichier | Lignes | Contenu |
 |---|---|---|
-| `components/ui.tsx` | 139 | `Switch`, `Segmented`, `Badge`, `Button`, `Card`, `Kbd`, `Segments`, `HeadNumber` |
+| `components/ui.tsx` | 112 | `Switch`, `Segmented`, `Badge`, `Button`, `Card`, `Kbd` |
 | `components/Modal.tsx` | 53 | `Modal` (fenêtre par-dessus la page, avec pile d'Échap) |
 | `components/Logo.tsx` | 53 | `Mark`, `AppIcon`, `Wordmark`, `Pulse` |
 | `components/logoPaths.ts` | 3 | tracé SVG du R |
@@ -25,19 +25,18 @@ Tout ce qui suit est CONFIRMÉ (code de `staging`, 10/11, commit `ee77d4f`).
 | `vite-env.d.ts` | 9 | types des variables `VITE_*` et de `__APP_VERSION__` |
 
 ## `ui.tsx` : les briques de base
-Utilisé par 31 fichiers.
+Utilisé par 24 fichiers (23/11 ; les pages refaites sur les maquettes se servent de `s5/ui.tsx`).
 - **`Button({ variant, size, icon, ...})`** :
   - `variant` : `primary` (rouge), `secondary` (par défaut) ou `ghost` ;
   - `size` : `sm`, `md` (par défaut) ou `lg` ;
   - l'icône est placée avant le texte ; classes `btn btn-<variant> btn-<size>` ;
   - `type="button"` par défaut, sauf si l'appelant passe `type="submit"`.
-- **`Switch({ checked, onChange, disabled, label })`** : interrupteur accessible (`role="switch"`, `aria-label`). Le rond glisse avec une animation à ressort (`motion`). Le clic ne remonte pas au parent (`stopPropagation`), ce qui permet de rendre toute une ligne cliquable sans double bascule (voir [[TweakRow.tsx]], [[NetOpt.tsx]]).
+- **`Switch({ checked, onChange, disabled, label })`** : interrupteur accessible (`role="switch"`, `aria-label`). Le rond glisse avec une animation à ressort (`motion`). Le clic ne remonte pas au parent (`stopPropagation`), ce qui permet de rendre toute une ligne cliquable sans double bascule (voir [[NetOpt.tsx]] ; les carreaux de réglage de [[TweakRow.tsx]] ont leur propre interrupteur `.sw` depuis le 23/11).
 - **`Segmented({ value, options, onChange, layoutId, disabled })`** : choix entre plusieurs boutons (`role="radiogroup"`). La pastille du choix actif glisse d'un bouton à l'autre (`layoutId`, qui doit être unique dans la page). Une option peut porter un cadenas (`locked`, variante Premium) et une petite indication (`hint`).
 - **`Badge({ tone, children })`** : étiquette, `tone` parmi `neutral`, `warn`, `red`, `ok`, `info`.
 - **`Card({ title, action, className, children })`** : la carte (classe `card`), avec un en-tête en petites capitales (`rg-overline`) si un titre ou une action est donné.
 - **`Kbd`** : une touche de clavier (raccourci Ctrl+K de la recherche, voir [[SearchPalette.tsx]], [[TitleBar.tsx]]).
-- **`Segments({ n, total, count, className })`** (v5) : jauge à segments (`.segs`) ; `count` segments, les `n/total` premiers allumés en rouge.
-- **`HeadNumber({ value, label, sub, n, total })`** (v5) : le bloc rouge au bord déchiré à droite du titre de page (`.head-num`), avec un libellé et une jauge `Segments` ([[Dashboard.tsx]], [[ModulePage.tsx]]).
+- `Segments` et `HeadNumber` (jauge et bloc chiffré rouge de la PR #108) sont retirés le 23/11 : plus aucune page ne s'en servait (le bloc en tête des pages suit maintenant les maquettes, [[Maquettes v5 dans l'app (s5)]]).
 
 ## `Modal.tsx` : les fenêtres
 - `Modal({ open, onClose, className, children })` : un fond sombre (`scrim`) et la fenêtre (`role="dialog"`, `aria-modal`), avec une animation d'entrée et de sortie.

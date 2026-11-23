@@ -125,8 +125,6 @@ kbd {
   }
 }
 
-/* ------------------------------------------------------------------ cadre */
-
 /* Verre : la fenêtre reste une encre profonde et unie ; les panneaux posés dessus sont des voiles clairs très légers. */
 .app {
   position: relative;
@@ -455,36 +453,6 @@ kbd {
 .section-fold:hover svg {
   color: var(--rg-text-1);
 }
-.section-index {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 6px;
-  margin: 0 0 22px;
-}
-.section-chip {
-  display: inline-flex;
-  align-items: center;
-  gap: 8px;
-  height: 28px;
-  padding: 0 12px;
-  border-radius: var(--rg-radius-full);
-  border: 0;
-  background: var(--rg-glass-2);
-  font-size: 12.5px;
-  color: var(--rg-text-2);
-  transition: color var(--rg-dur-instant), border-color var(--rg-dur-instant), background var(--rg-dur-instant);
-}
-.section-chip:hover {
-  color: var(--rg-text-1);
-  background: var(--rg-glass-3);
-}
-.section-chip .rg-metric {
-  font-size: 11px;
-  color: var(--rg-text-3);
-}
-.tweak-section {
-  scroll-margin-top: 16px;
-}
 
 /* carte de verre : voile clair sur l'encre, reflet en haut, pas de flou (rien ne défile derrière) */
 .card {
@@ -651,19 +619,8 @@ kbd {
 .switch:disabled {
   opacity: 0.35;
 }
-.tweak:hover .switch:not(:disabled) {
-  background: rgba(255, 255, 255, 0.18);
-}
-.tweak:hover .switch.on:not(:disabled) {
-  background: var(--rg-red-400);
-}
+
 /* sur le choix de variante ou « Détails », le clic ne bascule pas : l'interrupteur ne s'allume pas */
-.tweak:has(.tweak-more:hover, .segmented:hover, .link:hover) .switch:not(:disabled) {
-  background: rgba(255, 255, 255, 0.12);
-}
-.tweak:has(.tweak-more:hover, .segmented:hover, .link:hover) .switch.on:not(:disabled) {
-  background: var(--rg-red-500);
-}
 
 .segmented {
   display: inline-flex;
@@ -712,9 +669,6 @@ kbd {
   text-transform: uppercase;
   color: var(--rg-red-500);
 }
-.tweak.locked .segmented-label > svg {
-  display: none;
-}
 
 .badge {
   display: inline-flex;
@@ -742,75 +696,8 @@ kbd {
   background: rgba(61, 220, 151, 0.1);
 }
 
-/* --------------------------------------------------------------- réglages */
-
-.module-head {
-  display: flex;
-  align-items: last baseline;
-  justify-content: space-between;
-  gap: 24px;
-}
-.module-tools {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  flex: none;
-  font-size: 12px;
-}
-.tweak-section {
-  margin-bottom: 26px;
-}
-.tweak-list {
-  background: var(--rg-glass-fill);
-  border: 1px solid var(--rg-line-1);
-  border-radius: var(--rg-radius-lg);
-  box-shadow: var(--rg-glass-edge), 0 12px 32px -20px rgba(0, 0, 0, 0.7);
-  overflow: hidden;
-}
-.tweak {
-  position: relative;
-  display: flex;
-  gap: 20px;
-  padding: 12px 18px;
-  cursor: pointer;
-  transition: background-color var(--rg-dur-instant);
-}
 /* séparateur en retrait des deux côtés, à la manière des listes d'Apple */
-.tweak + .tweak {
-  background-image: linear-gradient(var(--rg-line-1), var(--rg-line-1));
-  background-repeat: no-repeat;
-  background-position: 18px 0;
-  background-size: calc(100% - 36px) 1px;
-}
-.tweak::before {
-  content: "";
-  position: absolute;
-  left: 6px;
-  top: 14px;
-  bottom: 14px;
-  width: 3px;
-  border-radius: var(--rg-radius-full);
-  background: var(--rg-red-500);
-  transform: scaleY(0);
-  transition: transform var(--rg-dur-fast) var(--rg-ease-out);
-}
-.tweak.on::before {
-  transform: scaleY(1);
-}
-.tweak:hover {
-  background-color: rgba(255, 255, 255, 0.03);
-}
-.tweak.blocked {
-  cursor: default;
-}
-.tweak.blocked .tweak-name,
-.tweak.blocked .tweak-desc,
-.tweak.blocked .tweak-facts {
-  opacity: 0.5;
-}
-.tweak.focused {
-  animation: focus-flash 1.6s var(--rg-ease-out);
-}
+
 @keyframes focus-flash {
   0%,
   30% {
@@ -820,159 +707,11 @@ kbd {
     background-color: transparent;
   }
 }
-.tweak-main {
-  flex: 1;
-  min-width: 0;
-}
-.tweak-title {
-  display: flex;
-  align-items: center;
-  flex-wrap: wrap;
-  gap: 8px;
-}
-.tweak-name {
-  font-size: 14px;
-  font-weight: 560;
-  letter-spacing: -0.005em;
-}
-.tweak-desc {
-  margin-top: 3px;
-  color: var(--rg-text-2);
-  font-size: 12.5px;
-  line-height: 1.5;
-  max-width: 64em;
-}
-.tweak-facts {
-  display: flex;
-  flex-direction: column;
-  gap: 2px;
-  margin: 5px 0 0;
-  padding: 0;
-  list-style: none;
-  color: var(--rg-text-3);
-  font-size: 11.5px;
-  line-height: 1.45;
-  max-width: 62em;
-}
-.tweak-facts b {
-  color: var(--rg-text-2);
-  font-weight: 560;
-}
-.tweak-variants {
-  margin-top: 10px;
-}
-.tweak-note {
-  display: flex;
-  align-items: flex-start;
-  gap: 6px;
-  margin-top: 10px;
-  font-size: 12.5px;
-}
-.tweak-note svg {
-  flex: none;
-  margin-top: 3px;
-}
-.tweak-note.warn {
-  color: var(--rg-warning);
-}
-.tweak-note.block {
-  color: var(--rg-text-3);
-}
-.tweak-more {
-  display: inline-flex;
-  align-items: center;
-  gap: 4px;
-  margin-left: auto;
-  margin-right: -6px;
-  padding: 2px 6px;
-  border-radius: var(--rg-radius-xs);
-  font-size: 11.5px;
-  color: var(--rg-text-3);
-  opacity: 0;
-  transition: opacity var(--rg-dur-instant), color var(--rg-dur-instant), background var(--rg-dur-instant);
-}
-.tweak:hover .tweak-more,
-.tweak-more.open,
-.tweak-more:focus-visible {
-  opacity: 1;
-}
-.tweak-more:hover {
-  color: var(--rg-text-1);
-  background: var(--rg-glass-2);
-}
-.tweak-more svg {
-  transition: transform var(--rg-dur-fast);
-}
-.tweak-more.open svg {
-  transform: rotate(180deg);
-}
-.tweak-details {
-  overflow: hidden;
-}
-.tweak-details > p:first-child {
-  padding-top: 10px;
-}
+
 .tweak-legacy {
   margin-top: 8px;
   font-size: 11.5px;
   color: var(--rg-text-3);
-}
-.tweak-side {
-  display: flex;
-  align-self: flex-start;
-  align-items: center;
-  height: 22px;
-}
-
-/* ------------------------------------------------------- barre d'application */
-
-.applybar-wrap {
-  position: absolute;
-  left: 216px;
-  right: 0;
-  bottom: 22px;
-  z-index: 20;
-  display: flex;
-  justify-content: center;
-  pointer-events: none;
-}
-.applybar {
-  pointer-events: auto;
-  display: flex;
-  align-items: center;
-  gap: 32px;
-  padding: 8px 8px 8px 20px;
-  border-radius: var(--rg-radius-full);
-  background: var(--rg-glass-float);
-  backdrop-filter: var(--rg-glass-blur);
-  border: 1px solid var(--rg-line-2);
-  box-shadow: var(--rg-glass-edge), var(--rg-shadow-3);
-}
-.applybar-info {
-  display: flex;
-  align-items: center;
-  gap: 14px;
-}
-.applybar-count {
-  font-size: 28px;
-  font-weight: 500;
-  line-height: 1;
-}
-.applybar-label {
-  font-size: 13.5px;
-  font-weight: 540;
-}
-.applybar-sub {
-  font-size: 12px;
-  color: var(--rg-text-3);
-}
-.applybar-actions {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-}
-.applybar-actions .obtn {
-  border-radius: var(--rg-radius-full);
 }
 
 /* -------------------------------------------------------------- modales */
@@ -1668,72 +1407,6 @@ kbd {
   color: var(--rg-red-500);
 }
 
-/* ------------------------------------------------------------ minecraft */
-
-.mc-folder {
-  margin-bottom: 24px;
-}
-.mc-row {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-}
-.mc-row .btn-sm {
-  height: 34px;
-  padding: 0 14px;
-  font-size: 13.5px;
-  border-radius: var(--rg-radius-md);
-}
-.mc-path {
-  flex: 1;
-  min-width: 0;
-  height: 34px;
-  padding: 0 12px;
-  line-height: 32px;
-  border-radius: var(--rg-radius-md);
-  background: rgba(0, 0, 0, 0.25);
-  border: 1px solid var(--rg-line-2);
-  font-size: 12.5px;
-  color: var(--rg-text-2);
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  user-select: text;
-}
-.mc-status {
-  display: flex;
-  align-items: center;
-  flex-wrap: wrap;
-  gap: 8px;
-  margin-top: 12px;
-  font-size: 13px;
-}
-
-.history {
-  list-style: none;
-  margin: 0;
-  padding: 0;
-  max-height: 360px;
-  overflow-y: auto;
-}
-.history li {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  padding: 7px 0;
-  font-size: 13px;
-  border-bottom: 1px solid var(--rg-line-1);
-}
-.history li:last-child {
-  border-bottom: 0;
-}
-.history-name {
-  flex: 1;
-}
-.history .rg-metric {
-  font-size: 11.5px;
-}
-
 /* ------------------------------------------------------------ paramètres */
 
 .settings-grid {
@@ -2017,10 +1690,7 @@ svg {
   .page h1.display {
     font-size: 32px;
   }
-  .module-head {
-    flex-direction: column;
-    align-items: flex-start;
-  }
+
   .dash-grid {
     grid-template-columns: 1fr;
     grid-template-areas: "live" "system" "health";
@@ -2031,17 +1701,10 @@ svg {
   .presets {
     grid-template-columns: 1fr;
   }
-  .tweak {
-    padding: 14px 16px;
-    gap: 12px;
-  }
+
   /* pas de survol au doigt : « Détails » reste visible */
-  .tweak-more {
-    opacity: 1;
-  }
-  .tweak-title {
-    row-gap: 4px;
-  }
+
+  
   .modal.signout .modal-actions {
     flex-direction: row-reverse;
     flex-wrap: wrap;
@@ -2069,19 +1732,9 @@ svg {
     height: 26px;
     padding: 0 12px;
   }
-  .applybar-wrap {
-    left: 0;
-    padding: 0 12px;
-  }
-  .applybar {
-    gap: 12px;
-    padding-left: 14px;
-  }
-  .applybar-label,
-  .applybar-sub,
-  .applybar-clear {
-    display: none;
-  }
+
+  
+
   .run {
     grid-template-columns: 1fr;
     grid-template-rows: auto 1fr;
@@ -2148,25 +1801,6 @@ svg {
 
 /* ------------------------------------------------------- plan gratuit */
 
-.tweak.locked .tweak-desc {
-  color: var(--rg-text-3);
-}
-.tweak.locked .tweak-name {
-  color: var(--rg-text-2);
-}
-.tweak.locked .tweak-facts b {
-  color: inherit;
-}
-.tweak.locked:hover {
-  border-color: var(--rg-red-a24);
-}
-.tweak-lock {
-  color: var(--rg-text-2);
-}
-.tweak.locked:hover .tweak-lock {
-  color: var(--rg-red-400);
-  border-color: var(--rg-red-a24);
-}
 .nav-lock {
   margin-left: auto;
   color: var(--rg-text-3);
@@ -2344,8 +1978,6 @@ svg {
   width: 100%;
 }
 
-/* ---------------------------------------------------- vérification du 2026-10-07 */
-
 /* petits messages en bas à droite (ResetToast) : les uns au-dessus des autres, jamais cliquables */
 .toasts {
   position: fixed;
@@ -2360,9 +1992,7 @@ svg {
   pointer-events: none;
   transition: bottom var(--rg-dur-base) var(--rg-ease-out);
 }
-.app:has(.applybar) .toasts {
-  bottom: 100px;
-}
+
 .app:has(.review-prompt) .toasts {
   bottom: 200px;
 }
@@ -2431,10 +2061,7 @@ svg {
   flex: 1;
   color: var(--rg-text-1);
 }
-.tweak-session {
-  display: flex;
-  gap: 6px;
-}
+
 .run-upsell {
   display: inline-flex;
   align-items: center;
@@ -2570,23 +2197,17 @@ svg {
   line-height: 1.45;
 }
 
-/* ---------------------------------------------------- verre : bord lumineux */
-
 /* Liseré dégradé (vif en haut à gauche, éteint au milieu) tracé par un ::after masqué, comme le verre d'Apple.
    Seulement sur ce qui ne défile pas à l'intérieur : la barre latérale et les modales gardent leur reflet en
    box-shadow, sinon le liseré défilerait avec leur contenu. */
 .card,
-.tweak-list,
 .preset,
-.applybar,
 .gate-card,
 .nav-upgrade {
   position: relative;
 }
 .card::after,
-.tweak-list::after,
 .preset::after,
-.applybar::after,
 .gate-card::after,
 .nav-upgrade::after,
 .review-prompt::after {
@@ -2604,12 +2225,7 @@ svg {
   pointer-events: none;
 }
 /* la liste coupe ce qui dépasse : son liseré se pose sur le bord intérieur, à la place de la bordure */
-.tweak-list {
-  border-color: transparent;
-}
-.tweak-list::after {
-  inset: 0;
-}
+
 .preset.on::after {
   background: linear-gradient(150deg, rgba(255, 94, 85, 0.6), rgba(255, 59, 48, 0.12) 40%, rgba(255, 59, 48, 0.05) 65%, rgba(255, 59, 48, 0.3));
 }
@@ -2645,7 +2261,6 @@ svg {
 .modal-lead,
 .gate-lead,
 .upsell-list li,
-.tweak-desc,
 .preset-desc,
 .live-note,
 .confirm-warn p {

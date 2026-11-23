@@ -3,7 +3,7 @@ type: code
 tags: [code, app, typescript, react]
 fichier: app/src/components/SearchPalette.tsx
 lignes: 111
-maj: 2026-11-10
+maj: 2026-11-23
 ---
 # SearchPalette.tsx
 
@@ -16,7 +16,7 @@ Tout ce qui suit est CONFIRMÉ (code de `staging`, 10/11, commit `ee77d4f`).
 - **Champ** : texte d'aide « Rechercher parmi {n} réglages » (`n` = 218, `totalTweaks`). Aucun résultat tant que le champ est vide.
 - **Résultats** : `searchTweaks(q, lang)` de [[catalog.ts]] (tous les mots, sans accents, nom + description + nom anglais + id ; 40 au plus) ; chaque ligne montre le nom et le module.
 - **Clavier** : flèches haut/bas pour changer de ligne, Entrée pour ouvrir ; la souris survolant une ligne la rend active (icône ↵).
-- **Ouvrir un réglage** : ferme la palette et `goTo(module du réglage, id)` : la page du module s'ouvre, la section se déplie et la ligne est mise en valeur ([[ModulePage.tsx]], [[TweakRow.tsx]]).
+- **Ouvrir un réglage** : ferme la palette et `goTo(module du réglage, id)` : la page du module s'ouvre, la section se déplie (et ses réglages avancés si besoin) et le carreau est mis en valeur ([[ModulePage.tsx]], [[TweakRow.tsx]]).
 - **Bouton à droite** (seulement pour les interrupteurs) :
   - réglage verrouillé : cadenas → ferme et ouvre l'offre `tweak` ([[Upsell.tsx]]) ;
   - sinon « + » → `toggle(id, true)` (coche ; respecte les places du plan gratuit) ; « ✓ » → `unselectMany([id])` (retire de la sélection). Ce bouton **n'annule jamais** un réglage déjà appliqué.

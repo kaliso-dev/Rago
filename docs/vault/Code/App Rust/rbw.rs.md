@@ -3,7 +3,7 @@ type: code
 tags: [code, app, rust, minecraft, rbw]
 fichier: app/src-tauri/src/rbw.rs
 lignes: 178
-maj: 2026-11-10
+maj: 2026-11-23
 ---
 # rbw.rs
 
@@ -13,7 +13,7 @@ Tout ce qui suit est CONFIRMÉ (code de `staging`, 10/11).
 
 ## Rôle et place dans l'ensemble
 
-- Commande `rbw_status` de [[lib.rs]] (dans un fil à part) ; l'interface (`RbwStatus.tsx`) la relit **toutes les 5 s**.
+- Commande `rbw_status` de [[lib.rs]] (dans un fil à part) ; l'interface (panneau RBW Mod de [[ModulePage.tsx]]) la relit **toutes les 5 s** et après chaque lot.
 - Ce qui corrige, c'est le réglage RBW Mod « Activé » (`rbw_mode`, catalogue, script `Rago-RBW-Fix.ps1`) ; ce fichier ne change rien.
 
 ## Ce que le fichier expose

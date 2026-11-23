@@ -23,3 +23,22 @@ export function shortDate(lang: Lang, ts: number): string {
 
 /** Nom court d'un jeu à l'écran : sans « Tom Clancy's » ni ™ ®. */
 export const displayName = (name: string) => name.replace(/^Tom Clancy's\s+/i, "").replace(/[™®]/g, "").trim();
+
+/** Jour et mois des maquettes : « 12 Nov », « 12 nov. ». */
+export function dayMonth(lang: Lang, ts: number): string {
+  return new Date(ts).toLocaleDateString(lang === "fr" ? "fr-FR" : "en-GB", { day: "numeric", month: "short" });
+}
+
+/** Heure sur 24 h : « 21:04 ». */
+export function clock(lang: Lang, ts: number): string {
+  return new Date(ts).toLocaleTimeString(lang === "fr" ? "fr-FR" : "en-GB", { hour: "2-digit", minute: "2-digit" });
+}
+
+/** Date et heure de l'historique : « Today 21:14 », « Yesterday 18:02 », « 20 Nov 22:41 ». */
+export function dayTime(lang: Lang, ts: number, today: string, yesterday: string): string {
+  const d = new Date(ts);
+  const now = new Date();
+  const y = new Date(now.getFullYear(), now.getMonth(), now.getDate() - 1);
+  const day = d.toDateString() === now.toDateString() ? today : d.toDateString() === y.toDateString() ? yesterday : dayMonth(lang, ts);
+  return `${day} ${clock(lang, ts)}`;
+}

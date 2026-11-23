@@ -16,6 +16,8 @@ const NONE: &str = ".none";
 #[derive(Debug, Serialize)]
 #[serde(rename_all = "camelCase")]
 pub struct Status {
+    /// dossier lu (celui choisi, sinon %APPDATA%\.minecraft), affiché dans la page Minecraft
+    pub dir: String,
     pub dir_exists: bool,
     pub optifine_file: bool,
     pub backups: usize,
@@ -41,6 +43,7 @@ fn backups(dir: &Path) -> Vec<PathBuf> {
 
 pub fn status(dir: &Path) -> Status {
     Status {
+        dir: dir.display().to_string(),
         dir_exists: dir.is_dir(),
         optifine_file: dir.join(FILE).is_file(),
         backups: backups(dir).len(),

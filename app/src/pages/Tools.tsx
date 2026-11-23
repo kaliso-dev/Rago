@@ -418,10 +418,12 @@ function AllTools() {
               <ArrowRight size={12} />
             </button>
           </h3>
-          <div className="tweak-list">
-            {list.map((tw) => (
-              <TweakRow key={tw.id} tweak={tw} />
-            ))}
+          <div className="pg-mod embed">
+            <div className="tgrid">
+              {list.map((tw) => (
+                <TweakRow key={tw.id} tweak={tw} />
+              ))}
+            </div>
           </div>
         </section>
       ))}

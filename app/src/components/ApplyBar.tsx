@@ -1,8 +1,9 @@
+// Barre pour appliquer (.apply > .ap des maquettes v5 app-module-*.html) : le nombre de changements, ceux qui
+// demandent un redémarrage, « clear » et « apply ». Droite et arrondie, sans déchirure (demande de Sofiene du 22/11).
 import { AnimatePresence, motion } from "motion/react";
-import { ArrowRight } from "./ri";
 import { needsReboot, retired, tweaks } from "../lib/catalog";
 import { undoVariant, useStore } from "../lib/store";
-import { Button } from "./ui";
+import { I } from "../s5/I";
 
 export function ApplyBar() {
   const { t, selection, pendingUndo, unselectMany, requestApply, run, variantOf, applied } = useStore();
@@ -18,51 +19,36 @@ export function ApplyBar() {
       return tw ? needsReboot(tw, undoVariant(id, applied.get(id))) : !!retired.get(id)?.reboot;
     }).length;
   return (
-    <div className="applybar-wrap">
+    <div className="apply">
       <AnimatePresence>
         {n > 0 && !run && (
           <motion.div
-            className="applybar"
-            initial={{ y: 80, opacity: 0 }}
+            className="ap"
+            role="region"
+            aria-label={t("apply.changes", { n })}
+            title={undo.length ? t("apply.split", { a: selection.length, u: undo.length }) : undefined}
+            initial={{ y: 110, opacity: 0 }}
             animate={{ y: 0, opacity: 1 }}
-            exit={{ y: 80, opacity: 0 }}
+            exit={{ y: 110, opacity: 0 }}
             transition={{ type: "spring", stiffness: 420, damping: 36 }}
           >
-            <div className="applybar-info">
-              <motion.span
-                key={n}
-                className="applybar-count rg-metric"
-                initial={{ y: -8, opacity: 0 }}
-                animate={{ y: 0, opacity: 1 }}
-              >
-                {n}
-              </motion.span>
-              <div>
-                <div className="applybar-label">
-                  {(undo.length ? t("apply.changes", { n }) : t("apply.count", { n })).replace(/^\d+\s/, "")}
-                </div>
-                {(undo.length > 0 || reboot > 0) && (
-                  <div className="applybar-sub">
-                    {undo.length > 0 && t("apply.split", { a: selection.length, u: undo.length })}
-                    {undo.length > 0 && reboot > 0 && " · "}
-                    {reboot > 0 && t("apply.reboot", { n: reboot })}
-                  </div>
-                )}
-              </div>
-            </div>
-            <div className="applybar-actions">
-              <Button variant="secondary" size="lg" className="applybar-clear" onClick={() => unselectMany([...selection, ...undo])}>
-                {t("apply.clear")}
-              </Button>
-              <Button
-                variant="primary"
-                size="lg"
-                onClick={() => requestApply()}
-              >
-                {undo.length ? t("apply.goChanges", { n }) : t("apply.goN", { n })}
-                <ArrowRight size={16} />
-              </Button>
-            </div>
+            <motion.b key={n} initial={{ y: -8, opacity: 0 }} animate={{ y: 0, opacity: 1 }}>
+              {n}
+            </motion.b>
+            <span className="lb">
+              {t("apply.changes", { n }).replace(/^\d+\s/, "")}
+              <small>
+                <I n="rotate" />
+                {reboot ? t("apply.reboot", { n: reboot }) : t("s5.mod.noRestartNeeded")}
+              </small>
+            </span>
+            <button type="button" className="clr" onClick={() => unselectMany([...selection, ...undo])}>
+              {t("apply.clear")}
+            </button>
+            <button type="button" className="btn" onClick={() => requestApply()}>
+              <I n="zap" />
+              {t("apply.go")}
+            </button>
           </motion.div>
         )}
       </AnimatePresence>

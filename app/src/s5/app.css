@@ -34,8 +34,7 @@ button.btn.red:not(:disabled):hover::before{background:#FF5248}
 button.btn:not(:disabled):active{transform:translateY(1px)}
 :focus-visible{outline:2px solid var(--red);outline-offset:3px}
 
-/* barre « Apply » et exécution : à droite de la barre latérale (à refaire avec leurs maquettes) */
-.applybar-wrap{left:236px}
+/* exécution : à droite de la barre latérale (à refaire avec sa maquette) */
 .stage{position:absolute;z-index:30;left:236px;right:0;top:0;bottom:0;pointer-events:none}
 .stage > *{pointer-events:auto}
 
@@ -129,3 +128,52 @@ button.tile{border:0;padding:0;cursor:pointer;line-height:inherit;font-style:nor
 .pg-display button.nm:hover{color:var(--red)}
 .pg-display .pcard .ph.none{display:grid;place-items:center;background:repeating-linear-gradient(-45deg,var(--bg-3) 0 10px,var(--bg-2) 10px 20px)}
 .pg-display .pcard .ph .ini{font-family:var(--cond);font-weight:900;font-style:italic;font-size:54px;color:var(--ink-3)}
+
+/* pages module (s5/pages/module.css) : ce que la fenêtre change. La .main de la maquette a 150 px en bas (place de la
+   barre pour appliquer), celle de l'app 44 px ; la page ajoute le reste. */
+.pg-mod.is-page{padding-bottom:106px}
+button.tw,button.o,button.run,button.sb,button.pick,button.fold,button.hd,button.ic,button.clr,button.lnk{border:0;background:none;font:inherit;color:inherit;cursor:pointer;text-align:inherit;line-height:inherit;letter-spacing:inherit;text-transform:inherit;padding:0}
+button.run:disabled{cursor:default;opacity:.45}
+.pg-mod .tw:has(> button.sw:not(:disabled)),.pg-mod .tw.lock,.pg-mod button.tw{cursor:pointer}
+.pg-mod .tw.blk button.sw:disabled{opacity:1}
+.pg-mod .tw .note u{cursor:pointer}
+.pg-mod .tw .note b{font-weight:700}
+.pg-mod .tw.drift .note b{color:var(--red)}
+.pg-mod .o.lkd{opacity:.5}
+.pg-mod button.lk{text-decoration:none}
+/* survol : le carreau passe devant, le détail s'ouvre après un court temps (maquette : .tw.hov) */
+.pg-mod .tw:hover,.pg-mod .tw:focus-within{z-index:5}
+.pg-mod .tw:not(.pend):not(.undo):not(.drift):not(.blk):not(.adv):hover{border-color:var(--line-2);background:var(--bg-4)}
+.pg-mod button.tw.adv:hover{border-color:var(--ink-3)}
+.pg-mod .tw .pop{visibility:hidden;opacity:0;pointer-events:none;transition:opacity .12s,visibility 0s .12s}
+.pg-mod .tw:hover .pop,.pg-mod .tw:has(:focus-visible) .pop{visibility:visible;opacity:1;transition:opacity .15s .35s,visibility 0s .35s}
+.pg-mod .tw:has(.pick-menu) .pop{display:none}
+.pg-mod .tw.focused{animation:mod-focus 1.8s ease-out}
+@keyframes mod-focus{0%,35%{box-shadow:0 0 0 2px var(--red),0 0 30px rgba(255,59,48,.35)}100%{box-shadow:0 0 0 2px transparent}}
+/* sélecteur des 16 jeux (Priorité avancée par jeu) : la liste, que la maquette ne montre pas ouverte */
+.pg-mod .pick-wrap{position:relative;margin-left:auto;display:flex}
+.pg-mod .tw:has(.pick-menu){z-index:7}
+.pg-mod .pick-menu{position:absolute;z-index:20;right:0;top:46px;width:270px;max-height:344px;overflow-y:auto;padding:6px;display:flex;flex-direction:column;gap:2px;background:var(--bg-3);border:1px solid var(--line-2);box-shadow:0 24px 50px -12px rgba(0,0,0,.9);scrollbar-width:thin}
+.pg-mod .pick-menu button{display:flex;align-items:center;gap:12px;height:40px;flex:none;padding:0 12px 0 6px;border:0;background:none;color:var(--ink-2);cursor:pointer;text-align:left}
+.pg-mod .pick-menu button b{font-family:var(--cond);font-weight:900;font-style:italic;font-size:19px;text-transform:uppercase;line-height:1}
+.pg-mod .pick-menu button:hover{background:var(--bg-4);color:var(--ink)}
+.pg-mod .pick-menu button.on{color:var(--ink);box-shadow:inset 0 0 0 1.5px var(--red)}
+.pg-mod .pick-menu button svg{width:13px;height:13px;margin-left:auto;color:var(--ink-3)}
+.pg-mod .pick-menu .pg{width:28px;height:28px;flex:none;display:grid;place-items:center;font-family:var(--cond);font-weight:900;font-style:italic;font-size:15px}
+.pg-mod .pick-menu .pg.mc{background:none;overflow:hidden}
+.pg-mod .pick-menu .pg.mc img{display:block;width:100%;height:100%;image-rendering:pixelated}
+html.round .pg-mod .pick-menu{border-radius:14px}
+html.round .pg-mod .pick-menu button{border-radius:9px}
+html.round .pg-mod .pick-menu .pg{border-radius:7px}
+/* sections, sommaire, avancés */
+.pg-mod .sh .fold:hover,.pg-mod .advh .hd:hover{color:var(--ink)}
+.pg-mod .tabs.idx span.off:not(.on){color:var(--ink-3)}
+/* Minecraft, RBW Mod */
+.pg-mod .folder .st .d.no{background:var(--red);box-shadow:0 0 10px rgba(255,59,48,.6)}
+.pg-mod .folder .msg{color:var(--ink-2)}
+.pg-mod .folder .lnk:hover,.pg-mod .verdict .ic:hover{color:var(--ink)}
+.pg-mod .verdict .ic svg.spin{animation:spin 1s linear infinite}
+/* barre pour appliquer */
+.win .apply{pointer-events:none}
+.win .apply .ap{pointer-events:auto}
+.win .ap .clr:hover{color:var(--ink)}

@@ -1,7 +1,7 @@
 ---
 type: technique
 tags: [technique, app]
-maj: 2026-11-22
+maj: 2026-11-23
 ---
 # App Windows (`app/`)
 
@@ -13,7 +13,7 @@ Ordre de la charte v5 (PR #108 du 22/11, sur `staging`, jamais testée sur Windo
 - **Play** : Jeux ([[Bibliothèque de jeux]]) · Affichage ([[Couleurs et résolution]]) · Hitreg · Souris ([[Page Souris]]) · [[Mode jeu]] · Minecraft · [[RBW Mod]]
 - **Pro** : Mode expert · Restaurer (historique, retour arrière)
 - En bas : carte « Plan gratuit » ([[Licence dans l'app]]) ou, en Premium, carte « This PC » (réglages allumés, état administrateur), Paramètres ([[Paramètres de l'app]]), devise « Every millisecond counts. » et bouton Discord.
-- **Look** : charte v5 « Match day » ([[Charte graphique]]) : grands titres penchés sur pinceau rouge, réglages en tuiles sur 3 colonnes avec la description dans une bulle au survol, écran de démarrage RAGO, icône R rouge sur tuile blanche.
+- **Look** : charte v5 « Match day » ([[Charte graphique]]) : grands titres penchés sur pinceau rouge, écran de démarrage RAGO, icône R rouge sur tuile blanche. Depuis le 23/11, les pages sont refaites une à une avec le HTML et le CSS exacts des maquettes v5 ([[Maquettes v5 dans l'app (s5)]]) : tableau de bord, Jeux, choix du preset, Display et, en PR vers `staging`, les pages des modules (réglages en carreaux sur 3 colonnes, détail au survol, barre « apply » en bas).
 - Recherche de tweak (palette), [[Barre en jeu]] (fenêtre séparée `overlay.html`), icône près de l'horloge ([[Arrière-plan et démarrage]]).
 Contenu des modules : [[Catalogue des tweaks]]. Fonctionnement interne : [[Moteur des tweaks]], [[Réparations au lancement]], [[Pendant la partie]], [[Partage et support]].
 

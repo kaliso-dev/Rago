@@ -1,47 +1,60 @@
-import { AnimatePresence, motion } from "motion/react";
-import { ChevronDown, Lock, Play, Power, PowerOff, RotateCcw, TriangleAlert } from "./ri";
-import { useEffect, useRef, useState } from "react";
-import { autoVariant, availability, catalog, tweakModule, tweaks, type Lang, type Tweak } from "../lib/catalog";
-import { formatDate, formatTime, type Key } from "../lib/i18n";
+// Carreau d'un réglage (.tw des maquettes v5 app-module-*.html, styles s5/pages/module.css) : tout le carreau est
+// l'interrupteur ; réglage à options sur toute la largeur ; action : bouton « run » ; réglage de session : deux
+// boutons ; détail au survol (.pop). Le carreau vit dans une page .pg-mod (modules, Outils, onglet Tweaks de Réseau).
+import { useEffect, useRef, useState, type ReactNode } from "react";
+import { autoVariant, availability, catalog, tweakModule, type Tweak } from "../lib/catalog";
+import type { Key } from "../lib/i18n";
 import { SESSION_TOGGLES, useStore } from "../lib/store";
-import { Badge, Button, Segmented, Switch } from "./ui";
+import { I } from "../s5/I";
+import { clock, dayMonth } from "../s5/text";
+import grass from "../assets/s5/img/game/grass-block.svg";
 
-/** Réglages au même script (champ `twin`), avec leur module : « Nom » (Module). */
-function twinNames(tweak: Tweak, lang: Lang): string | null {
-  if (!tweak.twin) return null;
-  const names = [...tweaks.values()]
-    .filter((o) => o.twin === tweak.twin && o.id !== tweak.id)
-    .map((o) => {
-      const mod = catalog.modules.find((m) => m.id === tweakModule.get(o.id));
-      return lang === "fr" ? `« ${o.name.fr} » (${mod?.name.fr})` : `“${o.name.en}” (${mod?.name.en})`;
-    });
-  return names.length ? names.join(", ") : null;
+/** Pastille du jeu dans le sélecteur des 16 jeux (comme la maquette : V rouge pour Valorant, bloc d'herbe pour Minecraft). */
+const GLYPH: Record<string, [string, string, string]> = { valorant: ["V", "#FF4655", "#0A0A0B"] };
+function Glyph({ id, label }: { id: string; label: string }) {
+  if (id === "minecraft" || id === "mc_bedrock" || id === "bedrock")
+    return (
+      <span className="pg mc">
+        <img src={grass} alt="" />
+      </span>
+    );
+  const [g, bg, fg] = GLYPH[id] ?? [label.slice(0, 1), "#3A3A42", "#F5F5F6"];
+  return (
+    <span className="pg" style={{ background: bg, color: fg }}>
+      {g}
+    </span>
+  );
 }
 
-export function TweakRow({ tweak }: { tweak: Tweak }) {
-  const { t, lang, sys, selected, toggle, variantOf, setVariant, lastRun, requestApply, focusTweak, setFocusTweak, focusSeq, isLocked, variantLocked, undoOnly, premium, setUpsell, isOn: isOnFn, applied, pendingUndo, reapply } = useStore();
-  const [open, setOpen] = useState(false);
+/** Notes sous le nom des réglages à options (maquettes) : une phrase sur ce que veut dire le choix. */
+const VNOTE = new Set(["pri_game", "in_frames", "in_queue", "hitreg_suite", "mc_optifine"]);
+
+export function TweakRow({ tweak, mod, adv = false }: { tweak: Tweak; /** module de la page : « Also in … » pour un réglage d'un autre module */ mod?: string; /** dans les avancés dépliés */ adv?: boolean }) {
+  const { t, lang, sys, selected, toggle, variantOf, setVariant, lastRun, requestApply, focusTweak, setFocusTweak, focusSeq, isLocked, variantLocked, setUpsell, isOn: isOnFn, applied, pendingUndo, reapply } = useStore();
   const ref = useRef<HTMLDivElement>(null);
+  const [up, setUp] = useState(false);
+  const [menu, setMenu] = useState(false);
   const av = availability(tweak, sys);
-  const isOn = isOnFn(tweak.id);
-  const last = lastRun.get(tweak.id);
-  const done = applied.get(tweak.id);
-  const undoing = !!done && pendingUndo.includes(tweak.id);
-  const variant = variantOf(tweak);
-  const auto = autoVariant(tweak, sys);
+  const id = tweak.id;
+  const isOn = isOnFn(id);
+  const last = lastRun.get(id);
+  const done = applied.get(id);
+  const sel = selected.has(id);
+  const undoing = !!done && pendingUndo.includes(id);
   const isAction = tweak.kind === "action";
-  const focused = focusTweak === tweak.id;
-  const twin = twinNames(tweak, lang);
+  const focused = focusTweak === id;
   // appliqué pendant Premium : on peut toujours l'éteindre (l'annulation reste ouverte sans licence)
-  const locked = isLocked(tweak.id) && !done;
+  const locked = isLocked(id) && !done;
   // mode jeu, RBW Mod, mode jeu Windows : on les allume et on les éteint, l'état connu vient de l'historique
-  const session = SESSION_TOGGLES.has(tweak.id) && !!tweak.variants?.length && av.ok;
+  const session = SESSION_TOGGLES.has(id) && !!tweak.variants?.length && av.ok;
   const sessionState = session && last?.ok && last.variant ? last.variant : null;
-  const runVariant = (v: string) => {
-    if (variantLocked(tweak.id, v)) return setUpsell("tweak", tweak.id);
-    setVariant(tweak.id, v);
-    requestApply([tweak.id]);
-  };
+  const vs = tweak.variants ?? [];
+  const many = vs.length > 1 && av.ok && !session;
+  const cur = sel || !done ? variantOf(tweak) : (done.variant ?? variantOf(tweak));
+  const auto = autoVariant(tweak, sys);
+  const num = many && vs.every((v) => /^\d/.test(v.label.en));
+  const pick = many && vs.length > 6 && !num;
+  const unit = num ? (vs[0].label.en.split(" ")[1] ?? "") : "";
 
   useEffect(() => {
     if (!focused || !ref.current) return;
@@ -50,201 +63,268 @@ export function TweakRow({ tweak }: { tweak: Tweak }) {
     return () => clearTimeout(h);
   }, [focused, focusSeq, setFocusTweak]);
 
-  const onRowClick = () => {
-    if (locked) return setUpsell("tweak", tweak.id);
-    if (!av.ok) return;
-    if (isAction || session) setOpen((o) => !o);
-    else toggle(tweak.id);
+  useEffect(() => {
+    if (!menu) return;
+    const close = (e: MouseEvent) => !ref.current?.querySelector(".pick-wrap")?.contains(e.target as Node) && setMenu(false);
+    const key = (e: KeyboardEvent) => e.key === "Escape" && setMenu(false);
+    window.addEventListener("mousedown", close);
+    window.addEventListener("keydown", key);
+    return () => {
+      window.removeEventListener("mousedown", close);
+      window.removeEventListener("keydown", key);
+    };
+  }, [menu]);
+
+  const onTile = () => {
+    if (locked) return setUpsell("tweak", id);
+    if (!av.ok || isAction || session) return;
+    toggle(id);
+  };
+  const choose = (v: string) => {
+    if (variantLocked(id, v)) return setUpsell("tweak", id);
+    setVariant(id, v);
+    // une option choisie sur un réglage éteint le prépare à être appliqué
+    if (!done && !sel) toggle(id, true);
+  };
+  const runVariant = (v: string) => {
+    if (variantLocked(id, v)) return setUpsell("tweak", id);
+    setVariant(id, v);
+    requestApply([id]);
   };
 
-  // ligne d'état sous le nom (charte v5 : la tuile ne montre que le nom et ce qui demande l'attention)
-  const state: { text: string; tone?: "red" | "ok" } | null = locked
-    ? null
-    : !av.ok && av.block
-      ? { text: t(`block.${av.block}` as Key) }
-      : sessionState
-        ? { text: t(sessionState === "on" ? "session.onSince" : "session.offSince", { time: formatTime(lang, last!.ts) }), tone: sessionState === "on" ? "ok" : undefined }
-        : isAction
-          ? last
-            ? { text: t(last.ok ? "badge.applied" : "badge.failed", { date: formatDate(lang, last.ts) }), tone: last.ok ? undefined : "red" }
-            : null
-          : undoing
-            ? { text: t("badge.pendingUndo"), tone: "red" }
-            : done && selected.has(tweak.id)
-              ? { text: t("badge.pendingUpdate"), tone: "red" }
-              : done?.drift
-                ? { text: t("badge.drift"), tone: "red" }
-                : done && !done.ok
-                  ? { text: t("badge.failed", { date: formatDate(lang, done.ts) }), tone: "red" }
-                  : null;
-  const wide = (tweak.variants && tweak.variants.length > 1 && av.ok && !session) || session;
+  // la ligne sous le nom : ce qui demande l'attention (maquette : une seule)
+  let note: ReactNode = null;
+  let failed = false;
+  if (!av.ok && av.block) note = t(`block.${av.block}` as Key);
+  else if (sessionState) note = t(sessionState === "on" ? "session.onSince" : "session.offSince", { time: clock(lang, last!.ts) });
+  else if (isAction && last) {
+    failed = !last.ok;
+    // point de restauration : l'heure aussi (on revient à ce moment-là)
+    const when = id === "rst_point" ? `${dayMonth(lang, last.ts)} ${clock(lang, last.ts)}` : dayMonth(lang, last.ts);
+    note = last.ok ? t("s5.mod.lastRun", { date: when }) : <b>{t("badge.failed", { date: dayMonth(lang, last.ts) })}</b>;
+  } else if (undoing) note = t("badge.pendingUndo");
+  else if (done && sel) note = t("badge.pendingUpdate");
+  else if (done && (done.drift || !done.ok) && !session) {
+    failed = true;
+    note = (
+      <>
+        <b>{done.drift ? t("badge.drift") : t("badge.failed", { date: dayMonth(lang, done.ts) })}</b>
+        <u
+          role="button"
+          tabIndex={0}
+          onClick={(e) => {
+            e.stopPropagation();
+            reapply(id);
+          }}
+          onKeyDown={(e) => (e.key === "Enter" || e.key === " ") && (e.preventDefault(), e.stopPropagation(), reapply(id))}
+        >
+          {t("s5.mod.applyAgain")}
+        </u>
+      </>
+    );
+  }
+  const home = tweakModule.get(id);
+  if (!note && mod && home && home !== mod) note = t("s5.mod.alsoIn", { name: catalog.modules.find((m) => m.id === home)?.name[lang] ?? home });
+  if (!note && many) {
+    if (VNOTE.has(id)) note = t(`s5.mod.note.${id}` as Key);
+    else if (unit === "GB") note = t("s5.mod.note.gb");
+    else if (unit === "Hz") note = t("s5.mod.note.hz");
+    else if (vs.some((v) => v.auto)) note = t("s5.mod.note.auto");
+  }
+
+  const applied_ = !!done && !undoing;
+  const pend = sel;
+  const cls = ["tw"];
+  if (applied_) cls.push("on");
+  if (pend) cls.push("pend");
+  if (undoing) cls.push("undo");
+  if (failed) cls.push("drift");
+  if (!av.ok) cls.push("blk");
+  if (adv) cls.push("advx");
+  if (many || session) cls.push("var");
+  if (session) cls.push("sess");
+  if (locked) cls.push("lock");
+  if (focused) cls.push("focused");
+  const swCls = `sw${applied_ ? " on" : ""}${pend ? " pend" : ""}${undoing ? " undo" : ""}`;
+  const zap = !tweak.reboot && !isAction && !session;
+  const n = vs.find((v) => v.id === cur)?.lines ?? tweak.lines;
+
+  let right: ReactNode;
+  if (locked)
+    right = (
+      <button
+        type="button"
+        className="lk"
+        onClick={(e) => {
+          e.stopPropagation();
+          setUpsell("tweak", id);
+        }}
+      >
+        <I n="lock" />
+        {t("free.lock")}
+      </button>
+    );
+  else if (session) {
+    const nxt = sessionState === "on" ? "off" : "on";
+    right = (
+      <>
+        <span className={`sst${sessionState === "on" ? " is-on" : ""}`}>
+          <i />
+          {t(sessionState === "on" ? "s5.mod.on" : "s5.mod.off")}
+        </span>
+        <button
+          type="button"
+          className={`sb${nxt === "on" ? " go" : ""}`}
+          onClick={(e) => {
+            e.stopPropagation();
+            runVariant(nxt);
+          }}
+        >
+          <I n={variantLocked(id, nxt) ? "lock" : "power"} />
+          {t(nxt === "on" ? "session.turnOn" : "session.turnOff")}
+        </button>
+      </>
+    );
+  } else if (isAction)
+    right = (
+      <button
+        type="button"
+        className="run"
+        disabled={!av.ok}
+        onClick={(e) => {
+          e.stopPropagation();
+          requestApply([id]);
+        }}
+      >
+        <I n="play" />
+        {t("tweak.run")}
+      </button>
+    );
+  else
+    right = (
+      <button
+        type="button"
+        role="switch"
+        aria-checked={isOn}
+        aria-label={tweak.name[lang]}
+        disabled={!av.ok}
+        className={swCls}
+        onClick={(e) => {
+          e.stopPropagation();
+          onTile();
+        }}
+      />
+    );
+
+  let mid: ReactNode = null;
+  if (many && pick) {
+    const v = vs.find((x) => x.id === cur) ?? vs[0];
+    mid = (
+      <span className="pick-wrap" onClick={(e) => e.stopPropagation()}>
+        <button type="button" className="pick" aria-haspopup="listbox" aria-expanded={menu} onClick={() => !locked && setMenu((m) => !m)}>
+          <Glyph id={v.id} label={v.label[lang]} />
+          <b>{v.label[lang]}</b>
+          <small>{t("s5.mod.games", { n: vs.length })}</small>
+          <I n="chev" />
+        </button>
+        {menu && (
+          <span className="pick-menu" role="listbox" aria-label={tweak.name[lang]}>
+            {vs.map((x) => (
+              <button
+                key={x.id}
+                type="button"
+                role="option"
+                aria-selected={x.id === cur}
+                className={x.id === cur ? "on" : undefined}
+                onClick={() => {
+                  setMenu(false);
+                  choose(x.id);
+                }}
+              >
+                <Glyph id={x.id} label={x.label[lang]} />
+                <b>{x.label[lang]}</b>
+                {variantLocked(id, x.id) && <I n="lock" />}
+              </button>
+            ))}
+          </span>
+        )}
+      </span>
+    );
+  } else if (many)
+    mid = (
+      <span className="opts" onClick={(e) => e.stopPropagation()}>
+        {vs.map((v) => {
+          const on = v.id === cur;
+          const c = `o${num ? " n" : ""}${on ? (pend ? " pend" : applied_ ? " on" : " now") : ""}${variantLocked(id, v.id) ? " lkd" : ""}`;
+          return (
+            <button key={v.id} type="button" className={c} aria-pressed={on} title={variantLocked(id, v.id) ? t("free.lock") : undefined} onClick={() => !locked && choose(v.id)}>
+              {num ? v.label[lang].split(" ")[0] : v.label[lang]}
+              {v.auto && v.id === auto && <sup>{t("s5.mod.auto")}</sup>}
+            </button>
+          );
+        })}
+      </span>
+    );
 
   return (
     <div
       ref={ref}
-      className={`tweak tile${wide ? " wide" : ""}${isOn ? " on" : ""}${undoing || (done && selected.has(tweak.id)) ? " pend" : ""}${!av.ok ? " blocked" : ""}${locked ? " locked" : ""}${focused ? " focused" : ""}${open ? " open" : ""}`}
-      onClick={onRowClick}
+      className={cls.join(" ")}
+      onClick={onTile}
+      onMouseEnter={() => {
+        const r = ref.current?.getBoundingClientRect();
+        const box = ref.current?.closest(".main")?.getBoundingClientRect();
+        setUp(!!r && !!box && r.bottom + 230 > box.bottom && r.top - 230 > box.top);
+      }}
     >
-      <div className="tweak-main">
-        <div className="tweak-title">
-          <span className="tweak-name">{tweak.name[lang]}</span>
-          {tweak.reboot && <RotateCcw size={12} className="tweak-reboot" aria-label={t("badge.reboot")} />}
-        </div>
-        {state && (
-          <span className={`tweak-state${state.tone ? ` ${state.tone}` : ""}`}>
-            {state.text}
-            {done?.drift && !undoing && !selected.has(tweak.id) && !session && (
-              <button
-                type="button"
-                className="link"
-                onClick={(e) => {
-                  e.stopPropagation();
-                  reapply(tweak.id);
-                }}
-              >
-                {t("tweak.reapply")}
-              </button>
-            )}
-          </span>
-        )}
-
-        {tweak.variants && tweak.variants.length > 1 && av.ok && !session && (
-          <div className="tweak-variants">
-            <Segmented
-              layoutId={`seg-${tweak.id}`}
-              value={variant ?? tweak.variants[0].id}
-              onChange={(v) => setVariant(tweak.id, v)}
-              options={tweak.variants.map((v) => ({
-                id: v.id,
-                label: v.label[lang],
-                hint: v.auto && v.id === auto ? t("badge.auto") : undefined,
-                locked: variantLocked(tweak.id, v.id),
-              }))}
-            />
+      <span className="tx">
+        <span className="nr">
+          <span className="nm">{tweak.name[lang]}</span>
+          {zap && <I n="zap" />}
+        </span>
+        {note && <span className="note">{note}</span>}
+      </span>
+      {mid}
+      {right}
+      <div className={`pop${up ? " up" : ""}`} aria-hidden="true">
+        <p>{tweak.desc[lang]}</p>
+        {tweak.gain && (
+          <div className="ft">
+            <b className="g">+</b>
+            {tweak.gain[lang]}
           </div>
         )}
-      </div>
-
-      {/* détail au survol (ou épinglé par « Détails ») : la phrase, le gain, l'inconvénient, ce que fait le script */}
-      <div className="tweak-pop" onClick={(e) => e.stopPropagation()}>
-        <p className="tweak-desc">{tweak.desc[lang]}</p>
-        {(tweak.gain || tweak.cons) && (
-          <ul className="tweak-facts">
-            {tweak.gain && (
-              <li>
-                <b className="g">+</b>
-                <span>{tweak.gain[lang]}</span>
-              </li>
-            )}
-            {tweak.cons && (
-              <li>
-                <b>–</b>
-                <span>{tweak.cons[lang]}</span>
-              </li>
-            )}
-          </ul>
+        {tweak.cons && (
+          <div className="ft">
+            <b>&minus;</b>
+            {tweak.cons[lang]}
+          </div>
         )}
         {av.warn && (
-          <p className="tweak-note warn">
-            <TriangleAlert size={12} />
+          <div className="ft cf">
+            <b>!</b>
             {t(`warn.${av.warn}` as Key)}
-          </p>
-        )}
-        {tweak.confirm && (
-          <p className="tweak-note warn">
-            <TriangleAlert size={12} />
-            {tweak.confirm[lang]}
-          </p>
-        )}
-        {done?.drift && !session && <p className="tweak-note warn">{t("tweak.drift")}</p>}
-        <div className="tweak-pop-ft">
-          {!premium && !isLocked(tweak.id) && <Badge tone="ok">{t(undoOnly(tweak.id) ? "free.undoBadge" : "free.badge")}</Badge>}
-          {tweak.risk === "advanced" && <Badge tone="warn">{t("badge.advanced")}</Badge>}
-          {tweak.reboot && (
-            <Badge>
-              <RotateCcw size={11} />
-              {t("badge.reboot")}
-            </Badge>
-          )}
-          {done && done.ok && !isAction && <Badge tone="ok">{t("badge.applied", { date: formatDate(lang, done.ts) })}</Badge>}
-        </div>
-        <AnimatePresence initial={false}>
-          {open && (
-            <motion.div
-              className="tweak-details"
-              initial={{ height: 0, opacity: 0 }}
-              animate={{ height: "auto", opacity: 1 }}
-              exit={{ height: 0, opacity: 0 }}
-              transition={{ duration: 0.2, ease: [0.16, 1, 0.3, 1] }}
-            >
-              <p className="small">
-                {tweak.native ? t(`tweak.native.${tweak.native}` as Key) : t("tweak.details", { n: tweak.variants?.find((v) => v.id === variant)?.lines ?? tweak.lines })}
-                {!isAction && <> {t(session ? "tweak.undoSession" : done && !done.backup ? "tweak.undoDefaults" : "tweak.undoSwitch")}</>}
-                {twin && <> {t(isAction ? "tweak.twinAction" : "tweak.twin", { names: twin })}</>}
-              </p>
-            </motion.div>
-          )}
-        </AnimatePresence>
-        {!locked && (
-          <button
-            type="button"
-            className={`tweak-more${open ? " open" : ""}`}
-            onClick={(e) => {
-              e.stopPropagation();
-              setOpen((o) => !o);
-            }}
-          >
-            {t("tweak.more")}
-            <ChevronDown size={12} />
-          </button>
-        )}
-      </div>
-
-      <div className="tweak-side">
-        {locked ? (
-          <Button
-            size="sm"
-            className="tweak-lock"
-            icon={<Lock size={12} />}
-            onClick={(e) => {
-              e.stopPropagation();
-              setUpsell("tweak", tweak.id);
-            }}
-          >
-            {t("free.lock")}
-          </Button>
-        ) : session ? (
-          <div className="tweak-session">
-            {tweak.variants!.map((v) => (
-              <Button
-                key={v.id}
-                size="sm"
-                variant={sessionState === v.id ? "primary" : "secondary"}
-                icon={variantLocked(tweak.id, v.id) ? <Lock size={12} /> : v.id === "off" ? <PowerOff size={12} /> : <Power size={12} />}
-                onClick={(e) => {
-                  e.stopPropagation();
-                  runVariant(v.id);
-                }}
-              >
-                {t(v.id === "off" ? "session.turnOff" : "session.turnOn")}
-              </Button>
-            ))}
           </div>
-        ) : isAction ? (
-          <Button
-            size="sm"
-            icon={<Play size={12} />}
-            disabled={!av.ok}
-            onClick={(e) => {
-              e.stopPropagation();
-              requestApply([tweak.id]);
-            }}
-          >
-            {t("tweak.run")}
-          </Button>
-        ) : (
-          <Switch checked={isOn} disabled={!av.ok} onChange={(v) => toggle(tweak.id, v)} label={tweak.name[lang]} />
         )}
+        {done?.drift && !session && (
+          <div className="ft cf">
+            <b>!</b>
+            {t("tweak.drift")}
+          </div>
+        )}
+        <div className="meta">
+          <span>
+            <I n={tweak.reboot ? "rotate" : "zap"} />
+            {t(tweak.reboot ? "s5.mod.restart" : "s5.mod.noRestart")}
+          </span>
+          {!tweak.native && <span>{t("s5.mod.commands", { n })}</span>}
+          {tweak.confirm && (
+            <span>
+              <I n="alert" />
+              {t("s5.mod.asksFirst")}
+            </span>
+          )}
+        </div>
       </div>
     </div>
   );

@@ -16,10 +16,10 @@ La **barre latérale**, reprise de la maquette v5 (`shell5.js`, `printicons.js`)
 | Pro | expert (« Expert mode »), restore |
 
 ## Compteurs (à droite de l'entrée, comme la maquette)
-- Latence, Carte graphique, Windows, Hitreg, Mode expert : réglages allumés sur le total du module (« 6/82 »).
+- Latence, Carte graphique, Windows, Hitreg, Mode expert : interrupteurs **allumés sur le PC** (appliqués et pas en cours d'annulation ; un réglage seulement coché ne compte pas) sur le total du module (« 6/82 »), la même règle que le bloc en tête de la page du module ([[ModulePage.tsx]], 23/11).
 - Jeux : nombre de jeux trouvés sur le PC.
 - Display : jeux qui ont des couleurs ou une résolution réglées sur le nombre de jeux (« 2/9 », `api.displayProfiles()`, relu en ouvrant Jeux ou Display) ; rien sans jeu.
-- Mode jeu (`game_mode`) et RBW Mod (`rbw_mode`) : « on » ou « off ».
+- Mode jeu (`game_mode`) et RBW Mod (`rbw_mode`) : « on » si leur dernier passage a réussi en variante « Activé », sinon « off » (comme leur page, 23/11).
 - Réseau, Minecraft, Souris, Outils, Analyse, Restaurer : rien.
 Plus de cadenas, de badge « Nouveau » ni de bouton Discord dans la barre (absents de la maquette).
 

@@ -446,6 +446,8 @@ export interface GraphicsOutcome {
 }
 
 export interface MinecraftStatus {
+  /** dossier lu : celui choisi, sinon %APPDATA%\\.minecraft */
+  dir: string;
   dirExists: boolean;
   optifineFile: boolean;
   backups: number;
@@ -919,7 +921,21 @@ let mockPlans: PowerPlan[] = [
   { guid: "e9a42b02-d5df-448d-aa00-03f14749eb61", name: "Ultimate Performance", active: false },
 ];
 
-const mockHistory: HistoryEntry[] = [];
+// démo : l'historique survit au rechargement de la page, comme history.json dans l'app
+const mockHistory: HistoryEntry[] = (() => {
+  try {
+    return JSON.parse(localStorage.getItem("rago.demoHistory") ?? "[]") as HistoryEntry[];
+  } catch {
+    return [];
+  }
+})();
+const saveMockHistory = () => {
+  try {
+    localStorage.setItem("rago.demoHistory", JSON.stringify(mockHistory.slice(-200)));
+  } catch {
+    /* démo sans stockage */
+  }
+};
 const hour = 3_600_000;
 // démo : bibliothèque type d'un joueur de PvP Minecraft ; les images restent des tuiles au nom du jeu
 let mockLaunchers: Launcher[] = [
@@ -1101,8 +1117,8 @@ const mockApi: Api = {
       linkSpeed: "1 Gbps",
       isAdmin: true,
       hasWmic: false,
-      minecraftDir: "C:\\Users\\demo\\AppData\\Roaming\\.minecraft",
-      resources: ["nvidiaProfileInspector.exe", "extremelatencylow.nip"],
+      minecraftDir: "C:\\Users\\Player\\AppData\\Roaming\\.minecraft",
+      resources: ["nvidiaProfileInspector.exe", "extremelatencylow.nip", "LowLatency.pow"],
     };
   },
   runTweaks: async (items) => {
@@ -1153,6 +1169,7 @@ const mockApi: Api = {
         // annulation, sauf celle du RBW Mod, qui lance « Activé » en entier
         const undo = !!it.undo || (revert && mockApplied.has(it.id) && it.id !== "rbw_mode");
         mockHistory.push({ id: it.id, variant: it.variant ?? null, ts: Date.now(), ok: true, code: 0, durationMs, undo });
+        saveMockHistory();
         if (it.undo || (revert && mockApplied.has(it.id))) mockApplied.delete(it.id);
         else if (tw?.kind === "tweak" && !revert)
           // RBW Mod « Désactivé » : valeurs de Windows, sans sauvegarde (moteur : runner.rs)
@@ -1172,6 +1189,7 @@ const mockApi: Api = {
   history: async () => [...mockHistory],
   clearHistory: async () => {
     mockHistory.length = 0;
+    saveMockHistory();
   },
   applied: async () => [...mockApplied.values()],
   undoAllPlan: async () => [...mockApplied.values()].sort((a, b) => b.ts - a.ts || a.id.localeCompare(b.id)).map((a) => a.id),
@@ -1209,7 +1227,7 @@ const mockApi: Api = {
     const gb = 1024 ** 3;
     return { standby: (1.2 + Math.random() * 1.6) * gb, trimmed: trim ? 0.4 * gb : 0, apps: trim ? 7 : 0 };
   },
-  minecraftStatus: async () => ({ dirExists: true, optifineFile: true, backups: 1 }),
+  minecraftStatus: async (dir) => ({ dir: dir ?? "C:\\Users\\Player\\AppData\\Roaming\\.minecraft", dirExists: true, optifineFile: true, backups: 2 }),
   // démo : Valorant a deux comptes sur le PC, Apex n'a jamais été lancé (pas de fichier de réglages)
   graphicsStatus: async (game) => {
     await sleep(150);
@@ -1232,14 +1250,14 @@ const mockApi: Api = {
     mockGraphics.delete(game);
     return game === "valorant" ? 2 : 1;
   },
-  // démo : SysMain et PcaSvc arrêtés, Prefetch coupé (ce que le RBW Mod « Activé » corrige)
+  // démo : SysMain arrêté et Prefetch coupé, comme la maquette app-module-rbw.html (ce que le RBW Mod « Activé » corrige)
   rbwStatus: async () => {
     const svc = (name: string, state: RbwCheck["state"], start: RbwCheck["start"]): RbwCheck => ({ name, kind: "service", ok: state === "running", state, start });
     const set = (name: string, ok: boolean): RbwCheck => ({ name, kind: "setting", ok, state: ok ? "on" : "off", start: null });
     const fixed = mockApplied.get("rbw_mode")?.variant === "on";
     return [
       svc("SysMain", fixed ? "running" : "stopped", fixed ? "auto" : "disabled"),
-      svc("PcaSvc", fixed ? "running" : "stopped", fixed ? "auto" : "manual"),
+      svc("PcaSvc", "running", "auto"),
       ...["DPS", "BAM", "EventLog", "WSearch", "DusmSvc", "BFE", "AppInfo", "DCOMLaunch", "PlugPlay", "CDPUserSvc_4f1a2"].map((n) =>
         svc(n, "running", n === "BAM" ? "system" : n === "AppInfo" || n === "PlugPlay" ? "manual" : "auto"),
       ),
