@@ -3,11 +3,13 @@ type: code
 tags: [code, app, typescript, interface]
 fichier: app/src/lib/seen.ts
 lignes: 38
-maj: 2026-11-11
+maj: 2026-11-23
 ---
 # seen.ts
 
 Mémoire des **pages et onglets déjà ouverts**, pour effacer leur badge « Nouveau » à la première visite. Fiche parente : [[Code de l'app (interface)]]. Utilisé par [[Sidebar.tsx]], [[Network.tsx]] et, depuis la PR #90 (11/11), [[Tools.tsx]].
+
+**Depuis le cadre v5 (PR #119 du 23/11), plus aucun badge « Nouveau » n'est affiché** (absent des maquettes) : [[Sidebar.tsx]], [[Network.tsx]] et [[Tools.tsx]] écrivent encore la liste avec `markSeen`, mais plus rien ne la lit (`useSeen` n'est plus appelé). Ce qui suit décrit le fichier, toujours présent.
 
 Tout ce qui suit est CONFIRMÉ (code de `staging`, 10/11, commit `ee77d4f`).
 
