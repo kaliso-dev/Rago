@@ -9,7 +9,7 @@ maj: 2026-11-23
 
 La [[Page Souris]] (page `mouse` de [[App.tsx]], entrée « Souris » de [[Sidebar.tsx]]). Fiche parente : [[Code de l'app (interface)]].
 
-**Écran v5 (23/11, dans `staging` par la PR #125, jamais testé sur Windows)** : la page est refaite à l'identique de la maquette `app-mouse.html` (demande de Sofiene du 23/11 : l'app doit être « strictement conforme au design »). Styles : `s5/pages/module.css` (socle des pages, en-tête et `.panel`) et `s5/pages/pages.css` (porté de `rendus-v5/src/pages.css`, commun aux maquettes Souris, Paramètres et Partage), retouches dans `s5/app.css` ([[Maquettes v5 dans l'app (s5)]]). L'ancienne feuille `styles/mouse.css` et les cartes `.tools-tile` de `features.css` sont retirées. Fichier ajouté le 11/11 (PR #96). Textes en anglais et en français dans le fichier (fonction `L(en, fr)`), sauf le libellé `nav.mouse` de [[i18n.ts]].
+**Écran v5 (23/11, dans `staging` par la PR #125, fusionnée le 23/11, jamais testé sur Windows)** : la page est refaite à l'identique de la maquette `app-mouse.html` (demande de Sofiene du 23/11 : l'app doit être « strictement conforme au design »). Styles : `s5/pages/module.css` (socle des pages, en-tête et `.panel`) et `s5/pages/pages.css` (porté de `rendus-v5/src/pages.css`, commun aux maquettes Souris, Paramètres et Partage), retouches dans `s5/app.css` ([[Maquettes v5 dans l'app (s5)]]). L'ancienne feuille `styles/mouse.css` et les cartes `.tools-tile` de `features.css` sont retirées. Fichier ajouté le 11/11 (PR #96). Textes en anglais et en français dans le fichier (fonction `L(en, fr)`), sauf le libellé `nav.mouse` de [[i18n.ts]].
 
 ## Composants
 - `Mouse` : racine `div.pg-mod.pg-pages.pg-mouse.is-page`.

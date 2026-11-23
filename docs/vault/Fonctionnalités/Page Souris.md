@@ -8,7 +8,7 @@ maj: 2026-11-23
 
 Page « Mouse » / « Souris » de l'app, dans le groupe « Play » de la barre latérale, sous Hitreg (la barre latérale v5 n'a plus de badge « Nouveau »). **Gratuite, sans cadenas. Ne change rien sur le PC et ne touche pas au jeu.** Demandée par Sofiene le 11/11 après l'analyse de X-Mouse Button Control (« Oui tu peux push ca sur la derniere version stagging […] + mouse ») : elle part avec la [[Version 1.3.0]]. **Dans `staging` par la PR #96, jamais testée sur Windows.** Gratuit ou Premium à confirmer (q96). Ticket [[Linear]] RAG-96. Voir [[Analyse du PC]], [[Tweaks Latence]].
 
-**Écran v5 (23/11, dans `staging` par la PR #125, jamais testé sur Windows)** : la page est refaite à l'identique de la maquette `app-mouse.html` (demande de Sofiene du 23/11 : l'app doit être « strictement conforme au design ») ; détail dans [[Mouse.tsx]]. Le fond ne change pas. Ce qui se voit :
+**Écran v5 (23/11, dans `staging` par la PR #125, fusionnée le 23/11, jamais testé sur Windows)** : la page est refaite à l'identique de la maquette `app-mouse.html` (demande de Sofiene du 23/11 : l'app doit être « strictement conforme au design ») ; détail dans [[Mouse.tsx]]. Le fond ne change pas. Ce qui se voit :
 - la fréquence mesurée dans l'étiquette rouge de l'en-tête ;
 - les quatre sections en deux colonnes : « polling rate » (64 barres, les écarts hors rythme en rouge), « double-click check » (compteur 20 / 20 et pastilles, rouge pour un clic qui a rebondi), « mouse software » et « sensitivity » ;
 - la ligne « 1:1 mouse » montre son état et garde toujours le lien vers Latence.
