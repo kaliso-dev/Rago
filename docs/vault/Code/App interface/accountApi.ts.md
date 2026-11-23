@@ -58,7 +58,7 @@ Les réponses d'abonnement et d'offres arrivent du serveur en `snake_case` (`ren
   - photo de plus de 5 Mo (en base64, ≈ 6,7 millions de caractères) → `image_too_large` ;
   - toute action sans être connecté → `invalid_token`.
 - Connexion : sans `@` ou mot de passe de moins de 4 caractères → `invalid_credentials`.
-- Abonnement de démo : annuel, en essai, fin dans 3 jours, 29,99 USD ; `cancel` et `resume` basculent un drapeau en mémoire.
+- Abonnement de démo : mensuel, sans essai, 5,99 USD, prochain paiement dans 21 jours (comme la maquette `app-settings.html` depuis le 23/11 ; avant : annuel en essai, fin dans 3 jours) ; `cancel` et `resume` basculent un drapeau en mémoire.
 - Prix de démo : mensuel 5,99 USD, annuel 29,99 USD, Lifetime 59,99 USD, essai de 3 jours. Ce sont des valeurs de démonstration : les vrais prix viennent de Stripe par `plans_info` (voir [[Offres et prix]], [[Paiements Stripe]]).
 
 ## Erreurs et cas limites

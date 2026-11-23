@@ -2,11 +2,13 @@
 type: fonctionnalité
 tags: [fonctionnalité, app]
 version_app: 1.3.0
-maj: 2026-11-11
+maj: 2026-11-23
 ---
 # Paramètres de l'app
 
-Page Paramètres, en bas de la barre latérale. Voir [[App Windows]]. En 1.3.0 (PR #70), la section du compte montre aussi l'abonnement et permet de le résilier : [[Abonnement dans l'app]]. Ordre des cartes dans le code de `staging` : Compte, Profil, Langue et animations, Partage et support, Barre en jeu et arrière-plan, Pendant la partie, Mémoire, Dossiers, À propos.
+Page Paramètres, en bas de la barre latérale. Voir [[App Windows]]. En 1.3.0 (PR #70), la section du compte montre aussi l'abonnement et permet de le résilier : [[Abonnement dans l'app]]. Ordre des blocs dans le code de `staging` : à gauche Compte, Profil, App (langue, animations, partage et support), À propos ; à droite Barre en jeu et arrière-plan, Pendant la partie, Mémoire, Dossiers.
+
+**Écran v5 (23/11, PR #126 vers `staging`, jamais testé sur Windows)** : la page est refaite à l'identique des maquettes `app-settings.html` et `app-settings-states.html` (demande de Sofiene du 23/11 : l'app doit être « strictement conforme au design »), détail dans [[Settings.tsx]]. Le fond ne change pas ; ce qui se voit : un en-tête avec le titre géant et, à droite, l'offre (« monthly » et « next payment $5.99 on 14 december » ; « canceled » et « active until … » une fois résilié ; « free », « 15 / 98 tweaks » et « premium unlocks the rest » en gratuit) ; deux colonnes de blocs en lignes ; « Sign out » dans le titre du bloc Compte ; la date d'activation sous l'e-mail ; en gratuit, une barre des réglages gratuits et le bouton rouge « Upgrade » ; résilié, la ligne d'abonnement passe en rouge avec « Resume subscription ». Dans le Profil, supprimer l'avis se fait avec une petite corbeille (hors maquette). La fenêtre « Before you cancel » et la confirmation de déconnexion gardent l'ancien style en attendant la reprise des fenêtres.
 
 - **Langue** : anglais (défaut) ou français (tutoiement).
 - **Animations** : complètes ou réduites.
@@ -15,7 +17,7 @@ Page Paramètres, en bas de la barre latérale. Voir [[App Windows]]. En 1.3.0 (
 - **Mémoire** : « Nettoyer » réduit aussi les applis en arrière-plan (coupé par défaut, voir [[Tableau de bord]]).
 - **Partage et support** : ouvre [[Partage et support]].
 - **Dossiers** : ouvrir Journaux, Ressources, Données.
-- **À propos** : logo, version et nombre de réglages, signature « Par KALISO et RAGO » (1.3.0), licences des logiciels tiers avec un lien chacun (NVIDIA Profile Inspector, PresentMon, Geist, Tauri, React, Motion, Lucide). La ligne de recherche de [[Mise à jour automatique]] (« Mise à jour : … ») n'existe **que dans l'exe de test** (`VITE_RAGO_SERVER=staging`).
+- **À propos** : logo, version et nombre de réglages, signature « Par KALISO et RAGO » (1.3.0), licences des logiciels tiers avec un lien chacun (NVIDIA Profile Inspector, PresentMon, Barlow, Tauri, React, Motion, Lucide). La ligne de recherche de [[Mise à jour automatique]] (« Mise à jour : … ») n'existe **que dans l'exe de test** (`VITE_RAGO_SERVER=staging`).
 - **Compte** (licence) : e-mail, appareil, clé masquée, offre et date de vérification, **lignes d'abonnement** (prochain paiement, « Résilier l'abonnement », « Reprendre l'abonnement », voir [[Abonnement dans l'app]]), « Gérer mon compte », « Aide sur Discord », « Se déconnecter » avec une confirmation qui dit combien de réglages seront remis comme avant ([[Licence dans l'app]], [[Remise à zéro]]). En plan gratuit : « {73} réglages sur {218} sont ouverts », « Passer Premium », « Se connecter ».
 - **Profil** (compte Rago) : nom public, photo de profil, avis (après environ 5 min d'utilisation réelle, l'app invite à laisser un avis), déconnexion du compte.
 - Depuis le 11/11 (PR #91, dans `staging`) : dans « Pendant la partie », l'option « Vérifications au lancement d'un jeu » s'appelle « **Conseils au lancement d'un jeu** » ([[Conseils au lancement du jeu]]).

@@ -2,12 +2,14 @@
 type: code
 tags: [code, app, react, composant, compte, avis]
 fichier: app/src/components/ProfileCard.tsx
-lignes: 166
-maj: 2026-11-10
+lignes: 193
+maj: 2026-11-23
 ---
 # ProfileCard.tsx
 
 La carte **« Profil »** des Paramètres : photo et nom public du compte Rago (affichés avec l'avis sur le site), l'avis lui-même (laisser, modifier, supprimer) et la déconnexion du compte. Fiche parente : [[Code de l'app (interface)]]. Fonctionnalité : [[Paramètres de l'app]] (et les avis du site, voir [[Site]]).
+
+**Écran v5 (23/11, dans `staging` par la PR #126, jamais testé sur Windows)** : le composant s'appelle `ProfileSection` et suit le bloc « profile » des maquettes `app-settings*.html` : avatar carré de 64 px (initiale ou photo), nom en gros, conseil sur la photo, bouton « Changer la photo » (poubelle à côté s'il y a une photo) ; ligne « Nom public » avec son champ et « Save » dedans (rouge quand le nom a changé) ; ligne « Ton avis » (étoiles rouges, commentaire entre guillemets, lien « Modifier l'avis »). Supprimer l'avis, absent de la maquette, est une petite poubelle dans le coin bas droit de la ligne, qui ne prend pas de place. Déconnecté : avatar éteint (`.av.off`), la phrase et « Se connecter ». La déconnexion du compte (`via === "account"`) est en haut à droite du bloc. L'e-mail n'est plus répété ici (il est dans le bloc compte).
 
 Tout ce qui suit est CONFIRMÉ (code de `staging`, 10/11, commit `ee77d4f`).
 
@@ -17,7 +19,7 @@ Tout ce qui suit est CONFIRMÉ (code de `staging`, 10/11, commit `ee77d4f`).
 - Textes : `useAccountText()` de [[accountText.ts]] (clés `profile.*`), pas [[i18n.ts]].
 
 ## Ce que le fichier expose
-- `ProfileCard()`, sans paramètre.
+- `ProfileSection()`, sans paramètre.
 
 ## Fonctionnement détaillé
 
@@ -55,7 +57,7 @@ Si `via` ou `profile` manque, la carte montre :
 ## Liens avec le reste
 - Logique : [[account.tsx]], [[accountApi.ts]], [[accountText.ts]]. Fenêtres : [[ReviewDialog.tsx]]. Invitation : [[ReviewPrompt.tsx]].
 - Moteur : [[account.rs]]. Serveur : [[API du serveur]].
-- Styles : section « carte Profil » de `account.css` ([[Styles de l'app (CSS)]]).
+- Styles : `s5/pages/pages.css` et `s5/app.css` ([[Maquettes v5 dans l'app (s5)]]) ; l'ancienne section « carte Profil » d'`account.css` est retirée le 23/11.
 
 ## À savoir avant de modifier
 - La limite de 32 caractères et la règle du nom doivent rester les mêmes que celles du serveur ([[API du serveur]]), sinon le serveur refuse ce que l'app laisse passer.

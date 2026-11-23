@@ -2,12 +2,14 @@
 type: code
 tags: [code, app, typescript, react, overlay]
 fichier: app/src/components/BackgroundCard.tsx
-lignes: 139
-maj: 2026-11-10
+lignes: 136
+maj: 2026-11-23
 ---
 # BackgroundCard.tsx
 
 La carte **« Barre en jeu et arrière-plan »** des paramètres : activer la barre en jeu, choisir son raccourci, garder FPS et ping à l'écran, rester près de l'horloge, lancer avec Windows. Fiche parente : [[Code de l'app (interface)]]. Fonctionnalités : [[Barre en jeu]], [[Arrière-plan et démarrage]]. Ticket : RAG-82.
+
+**Écran v5 (23/11, dans `staging` par la PR #126, jamais testé sur Windows)** : le composant s'appelle `BackgroundSection` et suit le bloc « in-game bar » des maquettes `app-settings*.html` : lignes `.sr` avec l'interrupteur `Sw` ; le raccourci en touches `.kb` avec le lien « Changer » (« Annuler » pendant l'enregistrement, « Par défaut » en lien gris si le raccourci n'est pas `Alt+X`) ; les avertissements (raccourci pris, FPS non mesurés, erreur) en petites lignes `.sr.nt`.
 
 Tout ce qui suit est CONFIRMÉ (code de `staging`, 10/11, commit `ee77d4f`).
 
@@ -17,10 +19,10 @@ Tout ce qui suit est CONFIRMÉ (code de `staging`, 10/11, commit `ee77d4f`).
   - touche principale lue sur `e.code` (indépendante de la disposition du clavier) : lettre `KeyA` → `A`, chiffre `Digit1` → `1`, `F1`–`F24`, ou un nom parmi `Numpad0-9`, `Space`, `Backquote`, `Minus`, `Equal`, `BracketLeft/Right`, `Semicolon`, `Quote`, `Comma`, `Period`, `Slash`, `Backslash`, `Insert`, `Home`, `End`, `PageUp`, `PageDown` ; autre touche → `null` ;
   - modificateurs dans l'ordre `Ctrl`, `Alt`, `Shift`, `Super` ;
   - **une touche F peut servir seule** ; une lettre ou un chiffre seul est refusé (gênerait la frappe en jeu).
-- `BackgroundCard()` : la carte (montée par [[Settings.tsx]]).
+- `BackgroundSection()` : le bloc (monté par [[Settings.tsx]] en tête de la colonne de droite).
 
 ## Fonctionnement détaillé
-- Au montage : `api.backgroundGet()` → `{ prefs, autostart, shortcutTaken, fpsAvailable }` ([[background.rs]]). Rien n'est affiché avant la réponse.
+- Au montage : `api.backgroundGet()` → `{ prefs, autostart, shortcutTaken, fpsAvailable }` ([[background.rs]]). Seul le titre est affiché avant la réponse.
 - `save(patch)` : fusionne, **ajoute toujours la langue de l'app** (`lang`), applique deux liens : allumer « Lancer avec Windows » allume aussi « Rester près de l'horloge » (le lancement démarre caché) ; éteindre « Rester près de l'horloge » éteint aussi « Lancer avec Windows ». Mise à jour optimiste, puis `api.backgroundSet(prefs)`. Erreurs : `shortcut` → « Ce raccourci ne marche pas : garde Ctrl, Alt ou Maj avec une lettre, un chiffre ou une touche F. » ; `autostart:…` → « Windows a refusé le lancement automatique. Réessaie, ou lance Rago en administrateur. » ; après une erreur, l'état est relu.
 - Lignes :
   1. « Barre en jeu » (interrupteur `overlay`) : « Par-dessus le jeu : FPS, ping, CPU, GPU, RAM et réglages en direct. Le jeu doit être en plein écran fenêtré ou en fenêtre. »
@@ -32,7 +34,7 @@ Tout ce qui suit est CONFIRMÉ (code de `staging`, 10/11, commit `ee77d4f`).
 ## Liens avec le reste
 - [[api.ts]] (`backgroundGet`, `backgroundSet`) ; moteur [[background.rs]] (préférences, tâche de lancement, icône) et [[overlay.rs]] (raccourci global).
 - La barre elle-même : [[Overlay.tsx]].
-- Primitives `Card`, `Switch`, `Button` ([[Petits composants de l'interface]]).
+- Interrupteur `Sw` (`s5/ui.tsx`, [[Maquettes v5 dans l'app (s5)]]).
 
 ## À savoir avant de modifier
 - Le moteur valide aussi le raccourci (le simulateur imite sa règle) : changer `shortcutOf` sans changer [[background.rs]] crée des raccourcis refusés.
