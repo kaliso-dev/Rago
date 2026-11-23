@@ -33,10 +33,13 @@ def logo(p, size=64):
     return f'<picture><source srcset="{e(p["still"])}" media="(prefers-reduced-motion: reduce)">{img}</picture>' if p.get('still') else img
 
 def card(p, ind):
-    # design v5: a card with the logo, the name and "Join on Discord"
-    return (f'{ind}<a class="s-card s-pt" href="{e(p["url"])}" target="_blank" rel="noopener">{logo(p)}'
-            f'<div><b>{e(p["name"])}</b><span><svg class="i" aria-hidden="true"><use href="#i-external"/></svg>Join on Discord</span>'
-            f'<span class="sr-only"> (opens in a new tab)</span></div></a>')
+    # site v6 (23/11/2026): an item of the banner of partner servers under the hero (logo and name, opens their Discord)
+    return (f'{ind}<li><a class="x-pt-i" href="{e(p["url"])}" target="_blank" rel="noopener">{logo(p, 48)}<b>{e(p["name"])}</b>'
+            f'<span class="sr-only"> on Discord (opens in a new tab)</span></a></li>')
+
+def card_logo(p, ind):
+    # site v6: the logos in the Partners card of the Community section
+    return f'{ind}{logo(p)}'
 
 def card_all(p, ind):
     # partners page: a bigger logo, the name, and "Join on Discord" as a button
@@ -57,6 +60,7 @@ def write(path, name, items, card=card):
     return len(items)
 
 n_home = write(os.path.join(SRC, 'page.html'), 'home', [p for p in data if p.get('home')])
+write(os.path.join(SRC, 'page.html'), 'homecard', [p for p in data if p.get('home')][:3], card_logo)
 n_all = write(os.path.join(SRC, 'partners.html'), 'all', data, card_all)
 # the number of servers in the eyebrow of the partners page
 t = open(os.path.join(SRC, 'partners.html')).read()

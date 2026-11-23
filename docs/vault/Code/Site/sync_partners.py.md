@@ -2,8 +2,8 @@
 type: code
 tags: [code, site, python, partenaires]
 fichier: site/tools/sync_partners.py
-lignes: 67
-maj: 2026-11-22
+lignes: 71
+maj: 2026-11-23
 ---
 # sync_partners.py
 
@@ -18,7 +18,8 @@ Tout ce qui suit est CONFIRMÉ (branche du site v5, PR #109, 22/11). Ajouté le 
 ## Ce que le fichier expose
 - `e(t)` : `html.escape(str(t), quote=True)`.
 - `logo(p, size=64)` : `<img src="…" alt="" width="size" height="size" loading="lazy" decoding="async">` (64 sur l'accueil, 96 sur la page des partenaires). Si l'entrée a `still`, l'image est entourée d'un `<picture>` avec `<source srcset="still" media="(prefers-reduced-motion: reduce)">` : un logo animé reste immobile pour qui coupe les animations.
-- `card(p, ind)` (accueil, design v5) : `<a class="s-card s-pt" href="url" target="_blank" rel="noopener">` + logo 64 + `<div><b>nom</b><span>` icône `#i-external` + « Join on Discord »`</span>` + `<span class="sr-only"> (opens in a new tab)</span>`.
+- `card(p, ind)` (accueil, Site v6 du 23/11) : un élément du bandeau des partenaires sous le héros, `<li><a class="x-pt-i" href="url" target="_blank" rel="noopener">` + logo 48 + `<b>nom</b>` + `<span class="sr-only"> on Discord (opens in a new tab)</span></a></li>`.
+- `card_logo(p, ind)` (accueil) : le logo seul (64), pour la carte « Our partner servers » de la section Community.
 - `card_all(p, ind)` (page des partenaires) : `<a class="s-card pt-c" …>` + `<div class="lg">` logo 96, nom, « Minecraft PvP server » + bouton `<span class="btn">` « Join on Discord » + texte pour lecteur d'écran.
 - `write(path, name, items, card=card)` : remplace tout ce qui est entre `<!-- partners:<name> -->` et `<!-- /partners:<name> -->`, avec l'indentation des marqueurs ; renvoie le nombre de cartes.
 
@@ -29,7 +30,7 @@ Tout ce qui suit est CONFIRMÉ (branche du site v5, PR #109, 22/11). Ajouté le 
    - `url` doit correspondre à `https://[^\s"<>]+` (« must be the full https invite link ») ;
    - `logo` (obligatoire) et `still` (si présent) doivent correspondre à `img/partners/[a-z0-9-]+\.webp` **et** le fichier doit exister dans `site/img/partners/` (« must be a WebP in site/img/partners/ ») ;
    - au moins une entrée doit avoir `"home": true` (« the home page section would be empty »).
-3. Écrit les entrées `home: true` entre `<!-- partners:home -->` et `<!-- /partners:home -->` de `src/page.html`, puis **toutes** les entrées entre `<!-- partners:all -->` et `<!-- /partners:all -->` de `src/partners.html`. Chaque paire de marqueurs doit apparaître exactement une fois (`assert`). Le fichier n'est réécrit que si le contenu change. Écrit aussi le nombre de serveurs dans `<span id="pt-n">` de `src/partners.html` (« 6 servers », `assert` s'il manque).
+3. Écrit les entrées `home: true` entre `<!-- partners:home -->` et `<!-- /partners:home -->` de `src/page.html`, les logos des trois premières entre `<!-- partners:homecard -->` et `<!-- /partners:homecard -->`, puis **toutes** les entrées entre `<!-- partners:all -->` et `<!-- /partners:all -->` de `src/partners.html`. Chaque paire de marqueurs doit apparaître exactement une fois (`assert`). Le fichier n'est réécrit que si le contenu change. Écrit aussi le nombre de serveurs dans `<span id="pt-n">` de `src/partners.html` (« 6 servers », `assert` s'il manque).
 4. Affiche `partners: N on the home page, M on partners.html`. Aujourd'hui : **4** sur l'accueil, **6** sur la page des partenaires.
 
 ## Données touchées
@@ -49,5 +50,5 @@ Tout ce qui suit est CONFIRMÉ (branche du site v5, PR #109, 22/11). Ajouté le 
 
 ## À savoir avant de modifier
 - Garder les marqueurs `<!-- partners:… -->` dans les sources ; les supprimer casse la construction.
-- Le style des cartes est défini dans chaque page : `.s-pt` dans [[page.html]], `.pt-c` dans [[partners.html]].
+- Le style des cartes est défini dans chaque page : `.x-pt-i` et `.x-tc .shape` dans [[page.html]], `.pt-c` dans [[partners.html]].
 - La règle « 4 partenaires sur l'accueil » est écrite dans `_about` de [[partners.json]], pas imposée par le script.

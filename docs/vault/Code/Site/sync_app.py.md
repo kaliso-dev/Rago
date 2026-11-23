@@ -2,8 +2,8 @@
 type: code
 tags: [code, site, python, catalogue]
 fichier: site/tools/sync_app.py
-lignes: 51
-maj: 2026-11-22
+lignes: 60
+maj: 2026-11-23
 ---
 # sync_app.py
 
@@ -20,10 +20,11 @@ Tout ce qui suit est CONFIRMÉ (branche du site v5, PR #109, 22/11 ; script ré�
 - `APP` : le premier dossier qui contient `data/catalog.json` parmi `app/src` (dépôt) et `app/rago-hub/src` (ancien dossier de projet).
 - `T` : tous les tweaks du catalogue sauf les renvois (`ref`), par id ; `MOD` : les modules ; `SEC` : les sections.
 - `count(mid)` : nombre de tweaks d'un module avec `kind == "tweak"` (comme le compteur de l'app).
+- `sec_name(sec)` : nom anglais d'une partie d'un module ; `tally(mid)` : le compte affiché sur la carte.
 - `ICON` : l'icône v5 de chaque module (gpu → `graphics`, gamemode → `games`, les autres gardent leur nom ; `settings` par défaut).
 
 ## Fonctionnement détaillé (dans l'ordre du fichier)
-1. **Les dix sections** de la carte « ten sections » de l'accueil : tout ce qui est entre `<!-- mods -->` et `<!-- /mods -->` est remplacé par une ligne `<div class="s-m">` par module, dans l'ordre de l'app : icône, nom anglais (`name.en`) et tagline anglaise (`tagline.en`). La ligne Latency a la classe `on` (allumée).
+1. **Les dix sections** de l'app sur l'accueil (Site v6, 23/11) : tout ce qui est entre `<!-- mods -->` et `<!-- /mods -->` est remplacé par une carte `<article class="x-cap">` par module, dans l'ordre de l'app : numéro (01 à 10), nom anglais (`name.en`), tagline anglaise (`tagline.en`), le nom de chacune de ses parties (`sections[].name.en`, en étiquettes), l'icône (`ICON`) et le nombre de tweaks (`count`, « 1 tweak » au singulier ; Restore, qui n'en a aucun, affiche « Undo every tweak »). Les cartes s'empilent au défilement ([[page.html]]).
 2. **Total** : `total = nombre de valeurs distinctes de (twin ou id)` sur `T` (jumeaux comptés une fois, actions uniques comptées), comme `totalTweaks` de [[catalog.ts]]. Aujourd'hui **218**.
 3. **Titre arrondi** : si le total est 1 à 3 sous une dizaine, « Nearly 220 tweaks », sinon le nombre exact (règle décidée avec Sofiene le 09/10). Écrit dans `<h2 class="s-h2" id="feat-h">` et dans la description « … tweaks, free to start ».
 4. **Compteurs exacts** : classes `n-all` (`<span>` et `<b>`), chiffre « 218 tweaks » du bandeau du héros (`<span>N tweaks</span>`), « All N » et « unlocks all N » (tableau, lien vers la page Tweaks, étape « Sign in and unlock », FAQ).
