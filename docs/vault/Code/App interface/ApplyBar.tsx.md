@@ -9,7 +9,7 @@ maj: 2026-11-23
 
 La **barre « apply »** (`.apply > .ap` des maquettes v5 `app-module-*.html`) qui monte en bas de la fenêtre dès qu'il y a des changements en attente (réglages cochés ou réglages appliqués décochés). Refaite le 23/11 à l'identique de la maquette : droite et arrondie, sans déchirure ([[Maquettes v5 dans l'app (s5)]]). Fiche parente : [[Code de l'app (interface)]]. Fonctionnalité : [[Moteur des tweaks]].
 
-Statut : branche `claude/app-v5-modules`, PR vers `staging` (23/11). Jamais testée sur Windows.
+Statut : dans `staging` (PR #122, fusionnée le 23/11). Jamais testée sur Windows.
 
 ## Fonctionnement détaillé
 - Rendue par [[App.tsx]] (`div.apply`, posée en bas de `.win`, `pointer-events: none` sauf sur la barre).

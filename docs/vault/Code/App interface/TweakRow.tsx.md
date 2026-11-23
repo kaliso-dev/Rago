@@ -9,7 +9,7 @@ maj: 2026-11-23
 
 **Le carreau d'un réglage** (`.tw` des maquettes v5 `app-module-*.html`), refait le 23/11 à l'identique de la maquette (demande de Sofiene du 23/11, voir [[Maquettes v5 dans l'app (s5)]]) : tout le carreau est l'interrupteur ; un réglage à options prend toute la largeur ; une action a un bouton « run » ; un mode de session a deux boutons ; le détail s'ouvre au survol. Fiche parente : [[Code de l'app (interface)]]. Fonctionnalités : [[Catalogue des tweaks]], [[Moteur des tweaks]], [[Mode jeu]].
 
-Statut : branche `claude/app-v5-modules`, PR vers `staging` (23/11). Jamais testé sur Windows ([[Règles de travail]]).
+Statut : dans `staging` (PR #122, fusionnée le 23/11). Jamais testé sur Windows ([[Règles de travail]]).
 
 ## Ce que le fichier expose
 - `TweakRow({ tweak, mod?, adv? })` :

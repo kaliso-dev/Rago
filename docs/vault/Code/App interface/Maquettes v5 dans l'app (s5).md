@@ -50,7 +50,7 @@ Pour que le CSS des maquettes ne touche pas les pages pas encore refaites : `.bt
 | Jeux (lanceur, aucun jeu) | `app-games-pi.html`, `app-games-empty.html` | refait, dans `staging` (PR #120) |
 | Choix du preset (covers verticales) | `app-preset-picker.html` (nouvelle, 23/11) | refait, dans `staging` (PR #120), maquette à valider par Sofiene |
 | Display (aperçu avant / après, ligne « vs » à glisser, photos des pros) | `app-display-pi.html` | refait, dans `staging` (PR #121) |
-| Pages des modules (Latence, Carte graphique, Windows, Hitreg, Minecraft, RBW Mod, Mode jeu, Mode expert, Restauration), barre « apply » | `app-module-*.html` (10 maquettes, dont Restauration vide) | refait, PR vers `staging` (23/11) |
+| Pages des modules (Latence, Carte graphique, Windows, Hitreg, Minecraft, RBW Mod, Mode jeu, Mode expert, Restauration), barre « apply » | `app-module-*.html` (10 maquettes, dont Restauration vide) | refait, dans `staging` (PR #122) |
 | Le reste (onglets de Réseau, outils, souris, paramètres, partage, analyse, fenêtres, barre en jeu, démarrage) | voir l'inventaire des maquettes | à faire, ancienne interface en attendant ; l'onglet des réglages de Réseau et la liste « Tous les outils » montrent déjà les nouveaux carreaux |
 
 Captures app contre maquette de chaque étape : `rago-redesign/app-strict/` (dossier du projet), de `1-…` à `18-…` (8 à 18 : les modules, le survol et la vue gratuite).

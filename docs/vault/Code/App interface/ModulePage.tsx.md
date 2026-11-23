@@ -9,7 +9,7 @@ maj: 2026-11-23
 
 La page **d'un module du catalogue** (Latence, Carte graphique, Windows, Hitreg, Minecraft, RBW Mod, Mode jeu, Mode expert, Restauration, et l'onglet des réglages de Réseau), **refaite le 23/11 à l'identique des maquettes v5 `app-module-*.html`** (demande de Sofiene du 23/11 : « strictement conforme au design », voir [[Maquettes v5 dans l'app (s5)]]). Fiche parente : [[Code de l'app (interface)]]. Fonctionnalités : [[Catalogue des tweaks]], [[Moteur des tweaks]].
 
-Statut : branche `claude/app-v5-modules`, PR vers `staging` (23/11). Jamais testée sur Windows ([[Règles de travail]]). Captures app contre maquette : `/mnt/project-files/rago-redesign/app-strict/8-…` à `18-…` (dossier du projet, hors dépôt).
+Statut : dans `staging` (PR #122, fusionnée le 23/11). Jamais testée sur Windows ([[Règles de travail]]). Captures app contre maquette : `/mnt/project-files/rago-redesign/app-strict/8-…` à `18-…` (dossier du projet, hors dépôt).
 
 ## Ce que le fichier expose
 - `ModulePage({ id, embedded = false })` : `id` = id du module dans [[catalog.json]] ; `embedded` = affichée dans un onglet ([[Network.tsx]]) : sans en-tête, classe `embed` au lieu de `is-page`.
