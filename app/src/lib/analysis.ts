@@ -60,23 +60,50 @@ const BALANCED = "381b4222-f694-41f0-9685-ff5bb260df2e";
 const SAVER = "a1841308-3541-4fab-bc81-f71556f20b4a";
 const round = (v: number | null | undefined, d = 1) => (v == null ? null : Math.round(v * 10 ** d) / 10 ** d);
 
-/** Lance toute l'analyse (une vingtaine de secondes) ; `onStep` suit l'avancement. */
-export async function analyze(onStep: (s: Step) => void): Promise<Values> {
+/** Analyse arrêtée par le joueur (bouton « Stop ») : rien n'est gardé. */
+export class Stopped extends Error {}
+
+/** Lance toute l'analyse (une vingtaine de secondes) ; `onStep` suit l'avancement, `onProgress` les pings de la
+ *  connexion (40) et les secondes du processeur (10), `signal` l'arrête entre deux mesures. */
+export async function analyze(onStep: (s: Step) => void, opts: { signal?: AbortSignal; onProgress?: (done: number, n: number) => void } = {}): Promise<Values> {
+  const { signal, onProgress } = opts;
+  const check = () => {
+    if (signal?.aborted) throw new Stopped();
+  };
+  // le test réseau du moteur ne s'arrête pas : à l'arrêt, son résultat est laissé de côté
+  const stoppable = <T>(p: Promise<T>) =>
+    signal
+      ? Promise.race([p, new Promise<never>((_, reject) => signal.addEventListener("abort", () => reject(new Stopped()), { once: true }))])
+      : p;
   onStep("hardware");
-  const facts: AnalysisFacts | null = await api.analysisFacts().catch(() => null);
+  const facts: AnalysisFacts | null = await stoppable(api.analysisFacts().catch(() => null));
+  check();
   onStep("windows");
-  await new Promise((r) => setTimeout(r, 300));
+  await stoppable(new Promise((r) => setTimeout(r, 300)));
   onStep("drivers");
-  const drivers: DriversInfo | null = await api.toolsDrivers().catch(() => null);
+  const drivers: DriversInfo | null = await stoppable(api.toolsDrivers().catch(() => null));
+  check();
   onStep("network");
-  const net: NetMeasure[] = await api.netTest(["hypixel", "internet"]).catch(() => []);
+  onProgress?.(0, 40);
+  const unlisten = api.onNetSample((x) => {
+    if (x.id === "internet") onProgress?.(x.i + 1, x.n);
+  });
+  let net: NetMeasure[];
+  try {
+    net = await stoppable(api.netTest(["hypixel", "internet"]).catch(() => []));
+  } finally {
+    void unlisten.then((un) => un());
+  }
+  check();
   onStep("system");
   // processeur sans jeu ouvert : la moyenne de 10 secondes
   const cpu: number[] = [];
+  onProgress?.(0, 10);
   for (let i = 0; i < 10; i++) {
-    const s = await api.liveStats().catch(() => null);
+    const s = await stoppable(api.liveStats().catch(() => null));
     if (s?.ready && s.cpu != null) cpu.push(s.cpu);
-    await new Promise((r) => setTimeout(r, 1000));
+    await stoppable(new Promise((r) => setTimeout(r, 1000)));
+    onProgress?.(i + 1, 10);
   }
   onStep("match");
   const game = net.find((m) => m.id === "hypixel" && m.ping != null) ?? null;
@@ -146,13 +173,15 @@ export function findings(v: Values): Finding[] {
   const packets: Fix = { kind: "premium", module: "netopt" };
   const latency: Fix = { kind: "premium", module: "latency" };
   // la norme dit d'où vient le seuil : l'habitude de ce PC, sinon le ping, sinon la norme d'un joueur proche des serveurs
-  const why = (u: number | null, unit: string): Record<string, string | number> => (u != null ? { why: "pa.norm.usual", usual: `${u}${unit}` } : (v.ping ?? 0) >= 50 ? { why: "pa.norm.atPing", ping: v.ping! } : { why: "" });
+  // « (à 96 ms de ping) » seulement quand le ping a vraiment relevé le seuil : gigue au-dessus de 5 ms, perte et pics dès 100 ms
+  const far = (v.ping ?? 0) >= 100;
+  const why = (u: number | null, unit: string, raised: boolean): Record<string, string | number> => (u != null ? { why: "pa.norm.usual", usual: `${u}${unit}` } : raised ? { why: "pa.norm.atPing", ping: v.ping! } : { why: "" });
   if (v.jitter != null)
-    add({ id: "jitter", group: "network", value: `${v.jitter} ms`, norm: "pa.norm.jitter", vars: { n: n.jitter, ...why(n.usual.jitter, " ms") }, issue: v.jitter > n.jitter, fix: packets });
+    add({ id: "jitter", group: "network", value: `${v.jitter} ms`, norm: "pa.norm.jitter", vars: { n: n.jitter, ...why(n.usual.jitter, " ms", Math.round((v.ping ?? 0) * 0.1) > 5) }, issue: v.jitter > n.jitter, fix: packets });
   if (v.loss != null)
-    add({ id: "loss", group: "network", value: `${round(v.loss * 100)} %`, norm: n.lossPct > 0 ? "pa.norm.lossUpTo" : "pa.norm.loss", vars: { n: n.lossPct, ...why(n.usual.lossPct, " %") }, issue: (round(v.loss * 100) ?? 0) > n.lossPct, fix: packets });
+    add({ id: "loss", group: "network", value: `${round(v.loss * 100)} %`, norm: n.lossPct > 0 ? "pa.norm.lossUpTo" : "pa.norm.loss", vars: { n: n.lossPct, ...why(n.usual.lossPct, " %", far) }, issue: (round(v.loss * 100) ?? 0) > n.lossPct, fix: packets });
   if (v.spikes != null)
-    add({ id: "spikes", group: "network", value: `${v.spikes}`, norm: "pa.norm.spikes", vars: { n: n.spikes, ...why(n.usual.spikes, "") }, issue: v.spikes > n.spikes, fix: packets });
+    add({ id: "spikes", group: "network", value: `${v.spikes}`, norm: "pa.norm.spikes", vars: { n: n.spikes, ...why(n.usual.spikes, "", far) }, issue: v.spikes > n.spikes, fix: packets });
   if (v.wired != null) add({ id: "wired", group: "network", value: v.wired ? "pa.v.cable" : "pa.v.wifi", norm: "pa.norm.wired", issue: !v.wired, fix: { kind: "diy", how: "pa.diy.cable" } });
   if (v.ping != null) add({ id: "ping", group: "network", value: `${v.ping} ms`, norm: "pa.norm.ping", issue: false, fix: { kind: "none" } });
   if (v.refresh != null && v.refreshMax != null)
@@ -169,7 +198,7 @@ export function findings(v: Values): Finding[] {
   if (v.notifications != null)
     add({ id: "notifications", group: "windows", value: v.notifications ? "pa.v.on" : "pa.v.off", norm: "pa.norm.offPlaying", issue: v.notifications, fix: { kind: "free", tweaks: ["win_notifications"] } });
   add({ id: "background", group: "windows", value: v.background.length ? v.background.join(", ") : "pa.v.none", norm: "pa.norm.background", issue: v.background.length > 0, fix: { kind: "diy", how: "pa.diy.background" } });
-  if (v.driverDays != null) add({ id: "driverDays", group: "windows", value: `${v.driverDays} d`, norm: "pa.norm.driver", issue: v.driverDays > 180, fix: { kind: "diy", how: "pa.diy.driver" } });
+  if (v.driverDays != null) add({ id: "driverDays", group: "system", value: `${v.driverDays} d`, norm: "pa.norm.driver", issue: v.driverDays > 180, fix: { kind: "diy", how: "pa.diy.driver" } });
   return out;
 }
 
@@ -235,11 +264,12 @@ export interface Delta {
 }
 
 const COMPARED: { id: keyof Values; unit: string; lowerIsBetter: boolean }[] = [
+  // ordre de la maquette app-analysis-after : gigue, processus, processeur, pics
   { id: "jitter", unit: "ms", lowerIsBetter: true },
-  { id: "spikes", unit: "", lowerIsBetter: true },
-  { id: "loss", unit: "%", lowerIsBetter: true },
   { id: "processes", unit: "", lowerIsBetter: true },
   { id: "cpuIdle", unit: "%", lowerIsBetter: true },
+  { id: "spikes", unit: "", lowerIsBetter: true },
+  { id: "loss", unit: "%", lowerIsBetter: true },
   { id: "fps", unit: "FPS", lowerIsBetter: false },
   { id: "low1", unit: "FPS", lowerIsBetter: false },
   { id: "stutters", unit: "/min", lowerIsBetter: true },

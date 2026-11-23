@@ -2,14 +2,14 @@
 type: code
 tags: [code, app, css, design]
 fichier: app/src/styles/ (tokens.css, fonts.css, app.css, features.css, account.css, v5.css, overlay.css, tips.css)
-lignes: 7421
+lignes: 6702
 maj: 2026-11-23
 ---
 # Styles de l'app (CSS)
 
 Les **feuilles de style** de l'app Windows : les jetons de design (couleurs, tailles, mouvement), les polices, le cadre et les composants, les fonctionnalités ajoutées depuis la 1.2.0, le compte et les avis, la charte v5 posée par-dessus, et la barre en jeu. Il n'y a ni Tailwind, ni CSS Modules, ni CSS dans le JavaScript : des classes simples, écrites à la main. Fiche parente : [[Code de l'app (interface)]]. Design : [[Charte graphique]] (v5 « Match day » depuis la PR #108 du 22/11, vers `staging`, jamais testée sur Windows) ; l'ancien verre : [[Refonte glass]].
 
-Tout ce qui suit est CONFIRMÉ (code de `staging`, 10/11, commit `ee77d4f`), avec les 238 lignes de la page Outils refaite par la **PR #90** (11/11, fusionnée dans `staging` par la PR #92), et les nettoyages des PR #119 à #123 et de la page Outils (23/11) : les sections des pages refaites sur les maquettes v5 sont retirées. Les chiffres de lignes sont ceux du 23/11 (PR #124).
+Tout ce qui suit est CONFIRMÉ (code de `staging`, 10/11, commit `ee77d4f`), avec les 238 lignes de la page Outils refaite par la **PR #90** (11/11, fusionnée dans `staging` par la PR #92), et les nettoyages des PR #119 à #130 (23/11) : les sections des pages et des fenêtres refaites sur les maquettes v5 sont retirées. Les chiffres de lignes sont ceux du 23/11 (PR #130).
 
 ## Les fichiers et qui les charge
 
@@ -17,14 +17,14 @@ Tout ce qui suit est CONFIRMÉ (code de `staging`, 10/11, commit `ee77d4f`), ave
 |---|---|---|---|
 | `tokens.css` | 219 | les deux fenêtres | jetons `--rg-*` du kit v5 (`marque/tokens/tokens.css` des maquettes), classes `.rg-metric` et `.rg-overline`, animations `rg-pulse` et `rg-pixel-blink` |
 | `fonts.css` | 79 | les deux fenêtres | `@font-face` de Barlow (400, 500, 600, 700) et Barlow Condensed (600 à 900 droit, 700 à 900 italique), `font-display: block` |
-| `app.css` | 2504 | fenêtre principale | polices, cadre, barre de titre, navigation, pages, cartes, boutons, interrupteur, fenêtres, exécution, tableau de bord, paramètres, licence, plan gratuit, verre, finitions, 1.3.0 |
+| `app.css` | 2036 | fenêtre principale | polices, cadre, barre de titre, navigation, pages, cartes, boutons, interrupteur, anciennes fenêtres, logo animé, tableau de bord, paramètres, licence, plan gratuit, verre, finitions, 1.3.0 |
 | `account.css` | 157 | fenêtre principale | avatar, invitation à laisser un avis, formulaire d'avis |
 | `features.css` | 1224 | fenêtre principale | fonctionnalités de la 1.2.0 et après (liste plus bas) |
 | `overlay.css` | 747 | barre en jeu | toute la barre en jeu (RAG-82) ; la fin du fichier (section « Charte v5 ») la réhabille |
-| `v5.css` | 2277 | fenêtre principale, chargée après les anciennes feuilles | la charte v5 « Match day » posée sur les classes existantes (voir plus bas) |
+| `v5.css` | 2026 | fenêtre principale, chargée après les anciennes feuilles | la charte v5 « Match day » posée sur les classes existantes (voir plus bas) |
 | `tips.css` | 214 | fenêtre principale et barre en jeu (importé par [[GameTips.tsx]]) | bloc des réglages conseillés (`.game-tips*`, `.game-tip*`), place sous le jeu en avant de la bibliothèque (`.games-hero-tips`), bloc des conseils de la barre en jeu qui défile à part (`.ov-advice`, 258 px au plus, fondu en bas ; `.ov-tips`), pastille élargie du rappel (`.ov-nudge*`). Voir [[Conseils au lancement du jeu]] |
 
-- Ordre d'import dans [[main.tsx (app)]] : `fonts.css`, `tokens.css`, `app.css`, `account.css`, `features.css`, `v5.css`, puis les feuilles des maquettes v5 de `app/src/s5/` (`base.css`, `app.css`, puis une par page refaite, dont `module.css`, `net.css`, `tools.css` et `pages.css`), décrites dans [[Maquettes v5 dans l'app (s5)]]. L'ordre compte : une règle plus bas l'emporte à égalité, c'est ce qui permet à `v5.css` de réhabiller les pages pas encore refaites sans réécrire les autres feuilles.
+- Ordre d'import dans [[main.tsx (app)]] : `fonts.css`, `tokens.css`, `app.css`, `account.css`, `features.css`, `v5.css`, puis les feuilles des maquettes v5 de `app/src/s5/` (`base.css`, `app.css`, puis une par page refaite, dont `module.css`, `net.css`, `tools.css`, `pages.css`, `analysis.css` et `win.css`), décrites dans [[Maquettes v5 dans l'app (s5)]]. L'ordre compte : une règle plus bas l'emporte à égalité, c'est ce qui permet à `v5.css` de réhabiller les pages pas encore refaites sans réécrire les autres feuilles.
 - La barre en jeu ([[main.tsx (barre en jeu)]]) charge seulement `fonts.css`, `tokens.css` et `overlay.css`.
 - Exception : `tips.css` est importée par le composant [[GameTips.tsx]], pas par les `main.tsx`, parce que ce bloc sert dans les deux fenêtres (la barre en jeu ne charge pas `features.css`).
 - **Polices** (depuis la PR #108 du 22/11, vers `staging`, jamais testée sur Windows) : Barlow et Barlow Condensed, fichiers `woff2` dans `app/src/assets/fonts/` avec leur licence `Barlow-OFL.txt`, déclarées une seule fois dans `fonts.css`. Geist est retiré de l'app. Rien n'est chargé depuis Internet : la CSP de la fenêtre l'interdirait (voir [[Configuration Tauri]]).
@@ -78,10 +78,12 @@ Ce qui suit décrit `app.css` et `features.css`, toujours chargés. Sur `staging
 ## Plan de `app.css`
 - Lignes 1 à 147 : polices, base, `.spin`, `.pixel-blink`, mouvement réduit (91), verre de la fenêtre et cadre `.app` (128).
 - 148 barre de titre ; 254 navigation (barre latérale) ; 385 pages et cartes (`.card` vers la ligne 457) ; 492 boutons (`.btn-*`) ; 590 interrupteur et `segmented`.
-- 717 fenêtres (`.scrim`, `.modal`) et palette ; 968 exécution (`RunOverlay`) ; 1138 tableau de bord ; 1410 lignes `.setting` (encore utilisées par [[Analysis.tsx]]) ; 1467 licence (dont Google et Discord, 1542).
-- 1614 : **démo à largeur de téléphone** (`max-width: 760px`). L'app de bureau a une largeur minimale de 1080 px ; ce bloc sert à la démo web.
-- 1769 plan gratuit ; 1934 fenêtre de connexion centrée, toasts (1948), bandeau de licence (1998), fenêtre basse 1080×680 (2075) ; 2167 verre (bord lumineux) ; 2207 focus et finitions (audit du 17/10) ; 2237 et suivantes : lien Discord, `Splash`, `Pulse`.
-- 2332 : **1.3.0**, analyse du PC, fenêtre Premium avec les prix, résiliation.
+- 717 anciennes fenêtres (`.scrim`, `.modal`, encore utilisées par Premium, connexion, avis, recherche et modifier un preset) et palette ; 846 logo animé `Pulse` (fenêtre de connexion) ; 867 tableau de bord ; 1177 licence (dont Google et Discord, 1252).
+- 1325 : **démo à largeur de téléphone** (`max-width: 760px`). L'app de bureau a une largeur minimale de 1080 px ; ce bloc sert à la démo web.
+- 1456 plan gratuit ; 1616 fenêtre de connexion centrée, toasts (1631), bandeau de licence (1680), fenêtre basse 1080×680 (1720) ; 1803 verre (bord lumineux) ; 1842 focus et finitions (audit du 17/10) ; 1871 et suivantes : lien Discord, `Splash` (1890), ondes `Pulse` (1924).
+- 1966 : **1.3.0**, fenêtre Premium avec les prix.
+- Les lignes `.setting` et l'ancienne page Analyse du PC (`.analysis`, `.an-*`) sont retirées le 23/11 (PR #128 : 119 lignes de `app.css`, et 29 de `v5.css` avec la carte d'analyse de l'ancien tableau de bord `.dash-an*`) : [[Analysis.tsx]] suit le CSS des maquettes (`s5/pages/analysis.css`, [[Maquettes v5 dans l'app (s5)]]).
+- Les anciennes fenêtres de confirmation et d'exécution (`.modal.confirm`, `.confirm-*`, case `.check`, `.run`, `.run-*`), les faits de résiliation (`.cancel-facts`) et la fenêtre de déconnexion (`.modal.signout`) sont retirés le 23/11 (PR #130 : 349 lignes d'`app.css`, 222 de `v5.css`) : [[ConfirmDialog.tsx]], [[RunOverlay.tsx]], [[SubscriptionCard.tsx]] et [[Settings.tsx]] suivent le CSS des maquettes (`s5/pages/win.css`, [[Maquettes v5 dans l'app (s5)]]). La règle `.run` de l'ancien écran d'exécution touchait aussi les boutons « run » des modules et des outils (`z-index: 30`, flou), sans effet visible.
 - La grille et les blocs de l'ancienne page Paramètres (`.settings-grid`, « À propos », licences) sont retirés le 23/11 (PR #126) : [[Settings.tsx]] suit le CSS de la maquette (`s5/pages/pages.css`).
 - Les anciennes sections des réglages (`.tweak-*`), de la barre « Appliquer » (`.applybar*`), des modules, de l'historique et du dossier Minecraft sont retirées le 23/11 : les pages des modules suivent le CSS des maquettes ([[Maquettes v5 dans l'app (s5)]]).
 
@@ -140,8 +142,8 @@ Ajoutée par la PR #108 du 22/11, vers `staging`, jamais testée sur Windows. El
 - **titres de page** : taille `--title-size` (56 à 112 px, réglée par [[App.tsx]]), écho en contour (`::before` avec `attr(data-t)`), pinceau rouge (`::after`, `assets/fx/brush.svg`) ;
 - **rubans** : `.section-title > span:first-child`, `.tape`, `.modal-title`, `h2.section-title.rg-overline`, `.gate-card h1` sur `tape-red.svg` avec le masque `tape-mask.svg` ;
 - composants : `.section-chip`, cartes, boutons penchés par `::before` (primaire rouge), champs, interrupteur penché, `segmented`, badges, puces, `.carbon` ;
-- tableau de bord (`.dash-top`, `.dash-free`, `.dash-an`, presets en liste) ;
-- bandeau de licence, erreur de page, fenêtres, confirmation, exécution (compteur de 170 px sur pinceau), palette de recherche, toasts ;
+- tableau de bord (`.dash-top`, `.dash-free`, presets en liste) ;
+- bandeau de licence, erreur de page, anciennes fenêtres (`.modal`), palette de recherche, toasts ;
 - connexion (`.gate-*`), Premium (grille 260 px + 1fr, panneau rouge `.upsell-side`), titres de carte et de ligne en condensé capitales ;
 - écran de démarrage (`.splash-*`, voir [[Splash.tsx]]).
 - Les règles des anciens onglets de Réseau (`.hub-tab`) et de l'état du Packet Optimizer (`.no-hero-title`) sont retirées le 23/11 (PR #123).

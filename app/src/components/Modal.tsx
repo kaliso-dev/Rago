@@ -1,11 +1,16 @@
 import { AnimatePresence, motion } from "motion/react";
 import { useEffect, useRef, useState, type ReactNode } from "react";
+import { createPortal } from "react-dom";
 
 /** Fenêtres ouvertes, de la plus ancienne à celle du dessus, par rang d'affichage (toujours plus haut que celles déjà
  * ouvertes) : Échap ne ferme que celle du dessus. */
 const stack: number[] = [];
 
-export function Modal({ open, onClose, children, className }: { open: boolean; onClose: () => void; children: ReactNode; className?: string }) {
+/** `v5` : fenêtre des maquettes v5 (win.css) : `.w5` couvre toute la fenêtre de l'app, `.dim2` assombrit et floute la
+ * page dessous, `.mdl` est la fenêtre (`v5` donne ses classes en plus : « sm », « sm cxm »…). Elle est rendue dans `body` :
+ * une fenêtre ouverte depuis une page (Paramètres) couvre aussi la barre latérale et le haut, comme les maquettes (la
+ * page, animée, garderait sinon la fenêtre dans son cadre). Sans `v5` : l'ancien style. */
+export function Modal({ open, onClose, children, className, v5 }: { open: boolean; onClose: () => void; children: ReactNode; className?: string; v5?: string }) {
   // dernier onClose reçu : la fenêtre n'est pas réinscrite à chaque rendu (elle repasserait au-dessus de celle
   // ouverte après elle)
   const closeRef = useRef(onClose);
@@ -30,6 +35,29 @@ export function Modal({ open, onClose, children, className }: { open: boolean; o
       if (i >= 0) stack.splice(i, 1);
     };
   }, [open]);
+  if (v5 !== undefined)
+    return createPortal(
+      <AnimatePresence>
+        {open && (
+          <motion.div className="w5" style={rank ? { zIndex: 50 + rank } : undefined} initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} transition={{ duration: 0.16 }} onMouseDown={onClose}>
+            <div className="dim2" />
+            <motion.div
+              role="dialog"
+              aria-modal="true"
+              className={`mdl${v5 ? ` ${v5}` : ""}${className ? ` ${className}` : ""}`}
+              initial={{ opacity: 0, y: 12, scale: 0.98 }}
+              animate={{ opacity: 1, y: 0, scale: 1 }}
+              exit={{ opacity: 0, y: 8, scale: 0.98 }}
+              transition={{ duration: 0.24, ease: [0.16, 1, 0.3, 1] }}
+              onMouseDown={(e) => e.stopPropagation()}
+            >
+              {children}
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>,
+      document.body,
+    );
   return (
     <AnimatePresence>
       {open && (

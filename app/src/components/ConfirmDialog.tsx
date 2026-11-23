@@ -1,10 +1,53 @@
-import { RotateCcw, ShieldCheck, TriangleAlert } from "./ri";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState, type KeyboardEvent, type ReactNode } from "react";
 import { availability, needsReboot, retired, tweaks } from "../lib/catalog";
 import { formatTime } from "../lib/i18n";
 import { RESTORE_FRESH_MS, SESSION_TOGGLES, itemName, undoVariant, useStore } from "../lib/store";
 import { Modal } from "./Modal";
-import { Button, Badge } from "./ui";
+import { I } from "../s5/I";
+
+/** Liste de la fenêtre ; au-delà de 6 lignes, elle défile dans `.clw` (fondu en bas, petite barre à droite), comme la
+ * maquette app-confirm-undoall. */
+function List({ children, n }: { children: ReactNode; n: number }) {
+  const [bar, setBar] = useState<{ top: number; h: number; end: boolean }>({ top: 0, h: 84, end: false });
+  if (n <= 6) return <ul className="cl">{children}</ul>;
+  const track = (el: HTMLUListElement | null) => {
+    if (!el) return;
+    const h = Math.max(28, (el.clientHeight / el.scrollHeight) * el.clientHeight);
+    const top = el.scrollHeight > el.clientHeight ? (el.scrollTop / (el.scrollHeight - el.clientHeight)) * (el.clientHeight - h) : 0;
+    const end = el.scrollTop + el.clientHeight >= el.scrollHeight - 2;
+    if (Math.abs(top - bar.top) > 0.5 || Math.abs(h - bar.h) > 0.5 || end !== bar.end) setBar({ top, h, end });
+  };
+  return (
+    <div className={`clw${bar.end ? " end" : ""}`}>
+      <ul className="cl" ref={track} onScroll={(e) => track(e.currentTarget)}>
+        {children}
+      </ul>
+      <i className="sbar2" style={{ top: bar.top, height: bar.h }} />
+    </div>
+  );
+}
+
+/** Case de la fenêtre (`.opt`, `.cbx`) : un point de restauration, WMIC. */
+function Opt({ on, set, title, hint, icon }: { on: boolean; set: (v: boolean) => void; title: string; hint: string; icon?: string }) {
+  const key = (e: KeyboardEvent) => {
+    if (e.key === " " || e.key === "Enter") {
+      e.preventDefault();
+      set(!on);
+    }
+  };
+  return (
+    <div className={`opt${on ? " on" : ""}`} role="checkbox" aria-checked={on} tabIndex={0} onClick={() => set(!on)} onKeyDown={key}>
+      <i className={`cbx${on ? " on" : ""}`} />
+      <div>
+        <b>
+          {icon && <I n={icon} />}
+          {title}
+        </b>
+        <small>{hint}</small>
+      </div>
+    </div>
+  );
+}
 
 export function ConfirmDialog() {
   const { t, lang, confirm, setConfirm, sys, startRun, variantOf, mcDir, applied, lastRestore } = useStore();
@@ -37,14 +80,14 @@ export function ConfirmDialog() {
   const recent = lastRestore != null && Date.now() - lastRestore < RESTORE_FRESH_MS;
   const [restorePoint, setRestorePoint] = useState(false);
   const [wmic, setWmic] = useState(true);
-  const footRef = useRef<HTMLElement>(null);
+  const footRef = useRef<HTMLDivElement>(null);
   useEffect(() => {
     // un mode qu'on allume et éteint à chaque session (mode jeu, RBW Mod) ne demande jamais de point
     const session = list.length > 0 && list.every((tw) => SESSION_TOGGLES.has(tw.id));
     setRestorePoint(askRestore && needed.length > 0 && !recent && !session);
     setWmic(true);
     // le bouton principal prend le focus sans faire défiler la fenêtre : le titre reste visible
-    if (confirm) requestAnimationFrame(() => footRef.current?.querySelector<HTMLButtonElement>(".btn-primary")?.focus({ preventScroll: true }));
+    if (confirm) requestAnimationFrame(() => footRef.current?.querySelector<HTMLButtonElement>(".btn.red")?.focus({ preventScroll: true }));
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [confirm]);
 
@@ -86,57 +129,59 @@ export function ConfirmDialog() {
         ? t("confirm.restoreOptional")
         : t("confirm.restoreOptionalAction", { n: list.length });
   // run : variante que le moteur lance vraiment (une annulation du RBW Mod lance « Activé »), pour l'icône de redémarrage
-  const row = (tw: (typeof list)[number], v: string | null, run: string | null = v) => {
+  const row = (tw: (typeof list)[number], v: string | null, run: string | null = v, undo = false) => {
     const vLabel = tw.variants?.find((x) => x.id === v)?.label[lang];
     return (
-      <li key={tw.id}>
-        <span>{itemName(tw.id, lang)}</span>
-        {vLabel && <span className="confirm-variant">{vLabel}</span>}
-        {needsReboot(tw, run) && <RotateCcw size={12} className="muted" />}
-        {tw.risk === "advanced" && <Badge tone="warn">{t("badge.advanced")}</Badge>}
+      <li key={tw.id} className={undo ? "u" : undefined}>
+        <i className="tk" />
+        <b>{itemName(tw.id, lang)}</b>
+        {vLabel && <span className="vr">{vLabel}</span>}
+        <i className="sp" />
+        {needsReboot(tw, run) && <I n="rotate" className="rb" />}
+        {tw.risk === "advanced" && <span className="adv">{t("badge.advanced")}</span>}
       </li>
     );
   };
+  const gone = (id: string, name: string, reboot = false) => (
+    <li key={id} className="u">
+      <i className="tk" />
+      <b>{name}</b>
+      <i className="sp" />
+      {reboot && <I n="rotate" className="rb" />}
+      <span className="adv">{t("badge.retired")}</span>
+    </li>
+  );
+  // une seule action, sans liste (« Remove ghost devices ») : la petite fenêtre de la maquette app-confirm-single
+  const alone = !!confirm?.single && list.length === 1 && !play && !confirm.title;
 
   return (
-    <Modal open={!!confirm} onClose={close} className="confirm">
-      <h2 className="modal-title">{title}</h2>
-      <p className="modal-lead">{lead}</p>
+    <Modal open={!!confirm} onClose={close} v5={alone ? "sm" : ""}>
+      <h2 className="h2 tape mt">{title}</h2>
+      <p className="ml">{lead}</p>
 
-      {!(confirm?.single && list.length === 1 && !play && !confirm.title) && list.length > 0 && (
+      {!alone && list.length > 0 && (
         <>
-          {undoList.length > 0 && <div className="rg-overline confirm-group">{t("confirm.applyList")}</div>}
-          <ul className="confirm-list">{list.map((tw) => row(tw, variantOf(tw)))}</ul>
+          {undoList.length > 0 && <p className="grp">{t("confirm.applyList")}</p>}
+          <List n={list.length}>{list.map((tw) => row(tw, variantOf(tw)))}</List>
         </>
       )}
       {undoCount > 0 && (
         <>
-          {list.length > 0 && <div className="rg-overline confirm-group">{t("confirm.undoList")}</div>}
-          <ul className="confirm-list undo">
-            {undoList.map((tw) => row(tw, applied.get(tw.id)?.variant ?? null, undoVariant(tw.id, applied.get(tw.id))))}
-            {undoRetired.map((r) => (
-              <li key={r.id}>
-                <span>{r.name[lang]}</span>
-                {r.reboot && <RotateCcw size={12} className="muted" />}
-                <Badge tone="warn">{t("badge.retired")}</Badge>
-              </li>
-            ))}
-            {undoUnknown.map((id) => (
-              <li key={id}>
-                <span>{itemName(id, lang)}</span>
-                <Badge tone="warn">{t("badge.retired")}</Badge>
-              </li>
-            ))}
-          </ul>
+          {list.length > 0 && <p className="grp">{t("confirm.undoList")}</p>}
+          <List n={undoCount}>
+            {undoList.map((tw) => row(tw, applied.get(tw.id)?.variant ?? null, undoVariant(tw.id, applied.get(tw.id)), true))}
+            {undoRetired.map((r) => gone(r.id, r.name[lang], r.reboot))}
+            {undoUnknown.map((id) => gone(id, itemName(id, lang)))}
+          </List>
         </>
       )}
 
       {warnings.length > 0 && (
-        <div className="confirm-warn">
-          <div className="rg-overline">{t("confirm.warnings")}</div>
+        <div className="wrn">
+          <p className="grp">{t("confirm.warnings")}</p>
           {warnings.map((tw) => (
             <p key={tw.id}>
-              <TriangleAlert size={13} />
+              <I n="alert" />
               <span>
                 <b>{itemName(tw.id, lang)}.</b> {tw.confirm![lang]}
               </span>
@@ -144,38 +189,32 @@ export function ConfirmDialog() {
           ))}
         </div>
       )}
+      {mcBlocked && (
+        <div className="wrn">
+          <p>
+            <I n="alert" />
+            <span>{t("confirm.mcMissing")}</span>
+          </p>
+        </div>
+      )}
 
-      <div className="confirm-options">
-        {askRestore && (
-          <label className="check">
-            <input type="checkbox" checked={restorePoint} onChange={(e) => setRestorePoint(e.target.checked)} />
-            <span>
-              <ShieldCheck size={14} /> {t("confirm.restore")}
-              <small>{restoreHint}</small>
-            </span>
-          </label>
-        )}
-        {needsWmic > 0 && (
-          <label className="check">
-            <input type="checkbox" checked={wmic} onChange={(e) => setWmic(e.target.checked)} />
-            <span>
-              {t("confirm.wmic")}
-              <small>{t("confirm.wmicHint", { n: needsWmic })}</small>
-            </span>
-          </label>
-        )}
-        {reboot && <p className="muted small">{t("run.rebootNeeded")}</p>}
-        {mcBlocked && <p className="tweak-note block">{t("confirm.mcMissing")}</p>}
-      </div>
+      {askRestore && <Opt on={restorePoint} set={setRestorePoint} icon="shield" title={t("confirm.restore")} hint={restoreHint} />}
+      {needsWmic > 0 && <Opt on={wmic} set={setWmic} title={t("confirm.wmic")} hint={t("confirm.wmicHint", { n: needsWmic })} />}
+      {reboot && (
+        <p className="rbn">
+          <I n="power" />
+          {t("run.rebootNeeded")}
+        </p>
+      )}
 
-      <footer className="modal-actions" ref={footRef}>
-        <Button variant="ghost" onClick={close}>
+      <div className="mf" ref={footRef}>
+        <button type="button" className="btn gh2" onClick={close}>
           {t("confirm.cancel")}
-        </Button>
-        <Button variant="primary" onClick={go} disabled={mcBlocked}>
+        </button>
+        <button type="button" className="btn red" onClick={go} disabled={mcBlocked}>
           {play ? t("play.go") : confirm?.title ? t("confirm.go") : confirm?.single ? t("confirm.goOne") : confirm?.all ? t("dash.undoAll") : onlyUndo ? t("confirm.undoGo") : t("confirm.go")}
-        </Button>
-      </footer>
+        </button>
+      </div>
     </Modal>
   );
 }

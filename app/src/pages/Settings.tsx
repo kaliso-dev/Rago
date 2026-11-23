@@ -1,7 +1,8 @@
 // Paramètres, à l'identique des maquettes v5 app-settings.html (Premium), app-settings-free.html (gratuit) et
 // app-settings-canceled.html (abonnement résilié) : l'offre dans l'étiquette rouge de l'en-tête, puis deux colonnes
 // de blocs en lignes .sr (compte, profil, app, à propos ; barre en jeu, pendant la partie, mémoire, dossiers).
-// Styles : s5/pages/module.css (socle) et s5/pages/pages.css, retouches dans s5/app.css.
+// Styles : s5/pages/module.css (socle) et s5/pages/pages.css, retouches dans s5/app.css. La fenêtre « sign out? »
+// reprend la maquette app-signout (win.css, `.mdl.cxm`).
 import { useEffect, useState, type CSSProperties, type KeyboardEvent } from "react";
 import { formatPrice } from "../lib/accountApi";
 import { api, isTauri } from "../lib/api";
@@ -13,7 +14,6 @@ import { ProfileSection } from "../components/ProfileCard";
 import { SubscriptionRow, useSubscription } from "../components/SubscriptionCard";
 import { BackgroundSection } from "../components/BackgroundCard";
 import { SessionSection } from "../components/SessionCard";
-import { Button } from "../components/ui";
 import { I, LogoR } from "../s5/I";
 import { Sw } from "../s5/ui";
 import { dayMonth } from "../s5/text";
@@ -324,24 +324,30 @@ export function Settings() {
         </div>
       </div>
 
-      <Modal open={confirmOut} onClose={() => setConfirmOut(false)} className="confirm signout">
-        <h2>{t("signout.title")}</h2>
-        {outPlan > 0 && <p>{t("signout.undoLead", { n: outPlan })}</p>}
-        <p className="muted">{t("signout.lead", { device })}</p>
-        <div className="modal-actions">
-          <Button variant="ghost" className="push-left" onClick={() => void api.openUrl(`${ACCOUNT_URL}/account`)}>
+      <Modal open={confirmOut} onClose={() => setConfirmOut(false)} v5="cxm">
+        <h2 className="h2 tape mt">{t("signout.title")}</h2>
+        {outPlan > 0 && <p className="ml hi">{t("signout.undoLead", { n: outPlan })}</p>}
+        <p className="ml">{t("signout.lead", { device })}</p>
+        <div className="mf">
+          <button type="button" className="btn gh2 pl" onClick={() => void api.openUrl(`${ACCOUNT_URL}/account`)}>
+            <I n="user" />
             {t("account.manage")}
-          </Button>
-          <Button onClick={() => setConfirmOut(false)}>{t("signout.cancel")}</Button>
-          <Button
-            variant="primary"
+          </button>
+          <button type="button" className="btn gh2" onClick={() => setConfirmOut(false)}>
+            {t("signout.cancel")}
+          </button>
+          <button
+            type="button"
+            className="btn red"
+            autoFocus
             onClick={() => {
               setConfirmOut(false);
               void signOut();
             }}
           >
+            <I n="logout" />
             {outPlan > 0 ? t("signout.go") : t("account.signOut")}
-          </Button>
+          </button>
         </div>
       </Modal>
     </div>

@@ -14,7 +14,7 @@ Tout ce qui suit est CONFIRMÉ (code de `staging`, 10/11, commit `ee77d4f`).
 | Fichier | Lignes | Contenu |
 |---|---|---|
 | `components/ui.tsx` | 112 | `Switch`, `Segmented`, `Badge`, `Button`, `Card`, `Kbd` |
-| `components/Modal.tsx` | 53 | `Modal` (fenêtre par-dessus la page, avec pile d'Échap) |
+| `components/Modal.tsx` | 81 | `Modal` (fenêtre par-dessus la page, avec pile d'Échap ; style v5 en option) |
 | `components/Logo.tsx` | 53 | `Mark`, `AppIcon`, `Wordmark`, `Pulse` |
 | `components/logoPaths.ts` | 3 | tracé SVG du R |
 | `components/icons.ts` | 23 | `MODULE_ICONS`, `DiscordIcon` |
@@ -25,7 +25,7 @@ Tout ce qui suit est CONFIRMÉ (code de `staging`, 10/11, commit `ee77d4f`).
 | `vite-env.d.ts` | 9 | types des variables `VITE_*` et de `__APP_VERSION__` |
 
 ## `ui.tsx` : les briques de base
-Utilisé par 24 fichiers (23/11 ; les pages refaites sur les maquettes se servent de `s5/ui.tsx`).
+Utilisé par 13 fichiers (23/11, après la PR #128 : surtout les fenêtres, la barre en jeu et Paramètres ; les pages refaites sur les maquettes se servent de `s5/ui.tsx`).
 - **`Button({ variant, size, icon, ...})`** :
   - `variant` : `primary` (rouge), `secondary` (par défaut) ou `ghost` ;
   - `size` : `sm`, `md` (par défaut) ou `lg` ;
@@ -39,11 +39,12 @@ Utilisé par 24 fichiers (23/11 ; les pages refaites sur les maquettes se serven
 - `Segments` et `HeadNumber` (jauge et bloc chiffré rouge de la PR #108) sont retirés le 23/11 : plus aucune page ne s'en servait (le bloc en tête des pages suit maintenant les maquettes, [[Maquettes v5 dans l'app (s5)]]).
 
 ## `Modal.tsx` : les fenêtres
-- `Modal({ open, onClose, className, children })` : un fond sombre (`scrim`) et la fenêtre (`role="dialog"`, `aria-modal`), avec une animation d'entrée et de sortie.
+- `Modal({ open, onClose, className, children, v5 })` : un fond sombre et la fenêtre (`role="dialog"`, `aria-modal`), avec une animation d'entrée et de sortie.
+- **`v5`** (dans `staging` par la PR #130, fusionnée le 23/11) : la fenêtre des maquettes v5 (`s5/pages/win.css`, [[Maquettes v5 dans l'app (s5)]]) : `div.w5` couvre toute la fenêtre de l'app, `div.dim2` assombrit et floute la page dessous, `div.mdl` est la fenêtre ; `v5` donne ses classes en plus (`"sm"`, `"sm cxm"`, `"cxm"`, ou `""`). Elle est rendue dans `body` (portail), pour couvrir aussi la barre latérale et le haut. Sans `v5` : l'ancien style (`.scrim` et `.modal`), encore utilisé par [[Upsell.tsx]], [[SearchPalette.tsx]], [[ReviewDialog.tsx]] et [[PresetEditor.tsx]].
 - Un clic sur le fond ferme la fenêtre ; un clic dans la fenêtre ne la ferme pas.
 - **Pile des fenêtres** : chaque fenêtre ouverte prend un rang plus haut que les autres (`z-index` 50 + rang). **Échap ne ferme que celle du dessus**. Exemple : la recherche Ctrl+K ouverte par-dessus la fenêtre Premium.
 - La dernière fonction `onClose` reçue est gardée dans une référence. Ainsi, la fenêtre n'est pas réinscrite dans la pile à chaque rendu.
-- Utilisée par [[ConfirmDialog.tsx]], [[SearchPalette.tsx]], [[Upsell.tsx]], [[SubscriptionCard.tsx]], [[PresetEditor.tsx]], [[ReviewDialog.tsx]].
+- Utilisée par [[ConfirmDialog.tsx]], [[SubscriptionCard.tsx]] et [[Settings.tsx]] (style v5), [[SearchPalette.tsx]], [[Upsell.tsx]], [[PresetEditor.tsx]], [[ReviewDialog.tsx]].
 
 ## `Logo.tsx` et `logoPaths.ts` : le logo
 Charte v5 (PR #108 du 22/11, vers `staging`, jamais testée sur Windows) : **R rouge plein partout** (décision de Sofiene du 22/11) ; le R est noir seulement sur la transition rouge plein écran du démarrage.
