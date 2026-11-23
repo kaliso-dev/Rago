@@ -9,7 +9,7 @@ maj: 2026-11-23
 
 Les **outils du moteur réseau** et l'affichage de leur résultat : test de stabilité, test de bufferbloat, mesure du MTU, état actuel. Depuis le 23/11 (PR #123), ils ne sont plus que dans la rangée « tools » du Packet Optimizer ([[NetOpt.tsx]]), qui lance l'outil ; ce fichier rend le résultat. Fiche parente : [[Code de l'app (interface)]]. Fonctionnalités : [[Packet Optimizer]], [[Test réseau]]. Côté Rust : [[netopt.rs]].
 
-Tout ce qui suit est CONFIRMÉ (code de la PR #123 du 23/11, commit `c0d27dd`, vers `staging`). Jamais testé sur Windows.
+Tout ce qui suit est CONFIRMÉ (code de `staging` après la PR #123, fusionnée le 23/11). Jamais testé sur Windows.
 
 ## Ce que le fichier expose
 - `ToolId` = `"quality" | "loaded" | "mtu" | "status"` (ce sont aussi des `NetAction` de [[netopt.ts]]).

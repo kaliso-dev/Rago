@@ -9,7 +9,7 @@ maj: 2026-11-23
 
 L'onglet **« Tweaks »** (« Optimisations ») de la page Réseau : les réglages réseau du catalogue, à l'identique de la maquette v5 `app-network-pi.html`. Créé le 23/11 (PR #123) ; avant, cet onglet affichait [[ModulePage.tsx]] en mode `embedded`. Fiche parente : [[Code de l'app (interface)]]. Page : [[Network.tsx]]. Réglages : [[Tweaks Réseau]].
 
-Tout ce qui suit est CONFIRMÉ (code de la PR #123 du 23/11, commit `c0d27dd`, vers `staging`). Jamais testé sur Windows.
+Tout ce qui suit est CONFIRMÉ (code de `staging` après la PR #123, fusionnée le 23/11). Jamais testé sur Windows.
 
 ## Ce que le fichier expose
 - `NetTweaks()` : l'onglet. Composant interne : `Profile` (un profil).

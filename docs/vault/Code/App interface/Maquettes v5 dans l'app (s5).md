@@ -52,7 +52,7 @@ Pour que le CSS des maquettes ne touche pas les pages pas encore refaites : `.bt
 | Choix du preset (covers verticales) | `app-preset-picker.html` (nouvelle, 23/11) | refait, dans `staging` (PR #120), maquette à valider par Sofiene |
 | Display (aperçu avant / après, ligne « vs » à glisser, photos des pros) | `app-display-pi.html` | refait, dans `staging` (PR #121) |
 | Pages des modules (Latence, Carte graphique, Windows, Hitreg, Minecraft, RBW Mod, Mode jeu, Mode expert, Restauration), barre « apply » | `app-module-*.html` (10 maquettes, dont Restauration vide) | refait, dans `staging` (PR #122) |
-| Réseau : réglages, Packet Optimizer, test réseau (et hors ligne), Rago Route | `app-network-pi.html`, `app-network-packet-pi.html`, `app-network-test-pi.html`, `app-network-offline.html`, `app-network-route-pi.html` | refait (PR #123 du 23/11, vers `staging`) |
+| Réseau : réglages, Packet Optimizer, test réseau (et hors ligne), Rago Route | `app-network-pi.html`, `app-network-packet-pi.html`, `app-network-test-pi.html`, `app-network-offline.html`, `app-network-route-pi.html` | refait, dans `staging` (PR #123) |
 | Le reste (outils, souris, paramètres, partage, analyse, fenêtres, barre en jeu, démarrage) | voir l'inventaire des maquettes | à faire, ancienne interface en attendant ; la liste « Tous les outils » montre déjà les nouveaux carreaux |
 
 Captures app contre maquette de chaque étape : `rago-redesign/app-strict/` (dossier du projet), de `1-…` à `25-…` (8 à 18 : les modules, le survol et la vue gratuite ; 19 à 25 : Réseau, dont les états du Packet Optimizer et Rago Route éteint).

@@ -9,7 +9,7 @@ maj: 2026-11-23
 
 La **page Réseau** : son en-tête avec le ping en direct, ses **quatre onglets**, et le bouton « relancer la carte réseau ». Refaite le 23/11 à l'identique des maquettes v5 `app-network-*-pi.html` (PR #123). Fiche parente : [[Code de l'app (interface)]]. Fonctionnalités : [[Packet Optimizer]], [[Test réseau]], [[Proxy|Rago Route]].
 
-Tout ce qui suit est CONFIRMÉ (code de la PR #123 du 23/11, commit `c0d27dd`, vers `staging`). Jamais testé sur Windows.
+Tout ce qui suit est CONFIRMÉ (code de `staging` après la PR #123, fusionnée le 23/11). Jamais testé sur Windows.
 
 ## Ce que le fichier expose
 - `NETWORK_TABS = ["network", "netopt", "nettest", "route"]` et le type `NetworkTab`.

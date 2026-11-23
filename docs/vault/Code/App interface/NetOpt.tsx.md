@@ -16,7 +16,7 @@ L'onglet **« Packet Optimizer »** de la page Réseau, refait le 23/11 à l'ide
 
 Fiche parente : [[Code de l'app (interface)]]. Fonctionnalité : [[Packet Optimizer]]. Logique partagée : [[netopt.ts]]. Côté Rust : [[netopt.rs]].
 
-Tout ce qui suit est CONFIRMÉ (code de la PR #123 du 23/11, commit `c0d27dd`, vers `staging`). Jamais testé sur Windows.
+Tout ce qui suit est CONFIRMÉ (code de `staging` après la PR #123, fusionnée le 23/11). Jamais testé sur Windows.
 
 ## Rôle et place dans l'ensemble
 - Affiché par [[Network.tsx]] quand l'onglet est `netopt`. On y arrive aussi par le conseil de [[NetTest.tsx]].

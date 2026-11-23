@@ -9,7 +9,7 @@ maj: 2026-11-23
 
 L'onglet **« Network test »** (« Test réseau ») de la page Réseau : la note de ta connexion, la courbe de chaque essai, la liste des serveurs et **un serveur au choix**. Refait le 23/11 à l'identique des maquettes v5 `app-network-test-pi.html` et `app-network-offline.html` (PR #123). Fiche parente : [[Code de l'app (interface)]]. Fonctionnalité : [[Test réseau]]. Côté Rust : [[nettest.rs]], [[netshare.rs]].
 
-Tout ce qui suit est CONFIRMÉ (code de la PR #123 du 23/11, commit `c0d27dd`, vers `staging`). Jamais testé sur Windows.
+Tout ce qui suit est CONFIRMÉ (code de `staging` après la PR #123, fusionnée le 23/11). Jamais testé sur Windows.
 
 ## Rôle et place dans l'ensemble
 - Affiché par [[Network.tsx]] quand l'onglet est `nettest`. La page lui passe `offline` (le ping en direct ne revient plus, `useLivePing`).

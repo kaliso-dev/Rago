@@ -9,7 +9,7 @@ maj: 2026-11-23
 
 L'onglet **« Rago Route »** de la page Réseau, refait le 23/11 à l'identique de la maquette v5 `app-network-route-pi.html` (PR #123). Il sert à allumer ou éteindre le tunnel anti-lag vers les serveurs Rago, montre les trajets sur un schéma et quatre chiffres, et propose les trajets de secours (4G du téléphone, 2e connexion), avec un diagnostic du téléphone. Fiche parente : [[Code de l'app (interface)]]. Fonctionnalité : [[Proxy|Rago Route]]. Côté Rust : [[route.rs]] (et le jeton dans [[license.rs]]).
 
-Tout ce qui suit est CONFIRMÉ (code de la PR #123 du 23/11, commit `c0d27dd`, vers `staging`). Jamais testé sur Windows.
+Tout ce qui suit est CONFIRMÉ (code de `staging` après la PR #123, fusionnée le 23/11). Jamais testé sur Windows.
 
 ## Rôle et place dans l'ensemble
 - Affiché par [[Network.tsx]] quand l'onglet est `route`.
