@@ -18,8 +18,9 @@ La **barre latérale**, reprise de la maquette v5 (`shell5.js`, `printicons.js`)
 ## Compteurs (à droite de l'entrée, comme la maquette)
 - Latence, Carte graphique, Windows, Hitreg, Mode expert : réglages allumés sur le total du module (« 6/82 »).
 - Jeux : nombre de jeux trouvés sur le PC.
+- Display : jeux qui ont des couleurs ou une résolution réglées sur le nombre de jeux (« 2/9 », `api.displayProfiles()`, relu en ouvrant Jeux ou Display) ; rien sans jeu.
 - Mode jeu (`game_mode`) et RBW Mod (`rbw_mode`) : « on » ou « off ».
-- Réseau, Minecraft, Display, Souris, Outils, Analyse, Restaurer : rien.
+- Réseau, Minecraft, Souris, Outils, Analyse, Restaurer : rien.
 Plus de cadenas, de badge « Nouveau » ni de bouton Discord dans la barre (absents de la maquette).
 
 ## Pied

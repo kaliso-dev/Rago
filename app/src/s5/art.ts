@@ -47,3 +47,14 @@ export function coverOf(g: Pick<Game, "id" | "name" | "kind">, kind: ArtKind): s
 export function artByKey(key: string, kind: ArtKind): string | null {
   return ART[key]?.[kind] ?? null;
 }
+
+// Photos des joueurs pros (Display) : assets/s5/pros/<id de data/pros.json>.webp, 280 × 430.
+const pros = import.meta.glob("../assets/s5/pros/*.webp", { eager: true, query: "?url", import: "default" }) as Record<string, string>;
+const PROS: Record<string, string> = {};
+for (const [path, url] of Object.entries(pros)) {
+  const m = path.match(/pros\/([\w-]+)\.webp$/);
+  if (m) PROS[m[1]] = url;
+}
+
+/** Photo d'un pro, ou null (ses initiales sur fond rayé). */
+export const proPhoto = (id: string): string | null => PROS[id] ?? null;

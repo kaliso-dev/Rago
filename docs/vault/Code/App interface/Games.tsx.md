@@ -2,7 +2,7 @@
 type: code
 tags: [code, app, react, page, jeux]
 fichier: app/src/pages/Games.tsx
-lignes: 611
+lignes: 610
 maj: 2026-11-23
 ---
 # Games.tsx
@@ -21,7 +21,7 @@ La page **« Games » / « Jeux »** (bibliothèque) : le jeu en tête avec sa g
 
 ## Ce que le fichier expose
 - `Games()` : la page.
-- Interne : `useGraphics(jeu, titre, enCours)` (état, choix d'un niveau et retour à la copie d'avant des [[Graphismes des jeux]]) ; `defaultPreset`, `real`, `launcherId`, `displayName`, `kindOf`.
+- Interne : `useGraphics(jeu, titre, enCours)` (état, choix d'un niveau et retour à la copie d'avant des [[Graphismes des jeux]]) ; `defaultPreset`, `real`, `launcherId`, `kindOf` ; le nom court d'un jeu vient de `displayName` (`s5/text.ts`, partagé avec [[Display.tsx]] depuis le 23/11).
 - Constantes : `DEFAULT_PRESET`, `MC_JAVA` (`"mc:java"`), `LAUNCHERS` (noms affichés : Steam, Epic Games, Riot Client, Battle.net, Ubisoft Connect, Xbox, EA app, Roblox), `LAUNCHER_ORDER` (ordre du tri « by launcher » : riot, steam, epic, minecraft, battlenet, ubisoft, ea, xbox, roblox, manual).
 
 ## Fonctionnement détaillé

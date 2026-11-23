@@ -14,6 +14,8 @@ import "./s5/pages/pg-dash.css";
 import "./s5/pages/pg-games.css";
 import "./s5/pages/empty.css";
 import "./s5/pages/picker.css";
+import "./s5/pages/pg-display.css";
+import "./s5/pages/vs.css";
 
 document.documentElement.classList.add("round", "poster");
 import { App } from "./App";

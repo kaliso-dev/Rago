@@ -41,7 +41,7 @@ Tout ce qui suit est CONFIRMÉ (code de `staging`, 10/11, commit `ee77d4f`), sau
   - `NetOpt.tsx` (1090 lignes) ;
   - `tips.json` (971 lignes) ;
   - `Tools.tsx` (760 lignes) ;
-  - `Display.tsx` (745 lignes).
+  - `Display.tsx` (906 lignes, refaite sur la maquette v5 le 23/11).
 
 ## Arbre des composants (fenêtre principale)
 ```

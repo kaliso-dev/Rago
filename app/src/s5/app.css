@@ -89,3 +89,43 @@ svg.spin{animation:spin 1s linear infinite}
 .vc .i.big{position:absolute;z-index:1;left:50%;top:38%;width:64px;height:64px;transform:translate(-50%,-50%)}
 .pk .mf .now .th.plain{display:grid;place-items:center;background:var(--bg-3)}
 .pk .mf .now .th .i{width:20px;height:20px}
+
+/* interrupteur cliquable (s5/ui.tsx Sw) */
+button.sw{border:0;padding:0;cursor:pointer}
+button.sw:disabled{cursor:default;opacity:.45}
+
+/* Display : ce que la maquette ne montre pas (glisser la ligne, curseurs, couleurs ou résolution éteintes, autre résolution,
+   pro sans photo) ; le fond des moitiés est noir pour les bandes noires (le rouge du face à face reste dans la déchirure) */
+.pg-display .vs{cursor:ew-resize;touch-action:none;user-select:none}
+.pg-display .half{background:#000}
+.pg-display .badge{cursor:grab}
+.pg-display .vs svg.fx{position:absolute;width:0;height:0}
+.pg-display .side-r b.long{font-size:46px}
+.pg-display .bar{gap:16px}
+.pg-display .bar .tabs{flex-wrap:wrap;row-gap:6px;min-width:0}
+.pg-display .bar .chip{flex:none;white-space:nowrap}
+.pg-display .chip.err{color:var(--red);box-shadow:inset 0 0 0 1px rgba(255,59,48,.5)}
+.pg-display .chip.err .lk{margin-left:4px;color:var(--ink-2)}
+.pg-display .satbar .rng{inset:-9px 0}
+.pg-display .mini .seg{position:relative}
+.pg-display .rng{position:absolute;inset:-14px 0;width:100%;height:auto;margin:0;opacity:0;cursor:pointer}
+.pg-display .rng:disabled{cursor:default}
+.pg-display .satbar.dis{opacity:.35}
+.pg-display .satbar:has(.rng:focus-visible) .seg,.pg-display .mini .seg:has(.rng:focus-visible){outline:2px solid var(--red);outline-offset:5px}
+.pg-display .col.off .big,.pg-display .col.off .satbar,.pg-display .col.off .ends,.pg-display .col.off .mini{opacity:.5}
+.pg-display .hd-r{display:flex;align-items:center;gap:16px}
+.pg-display select.other{appearance:none;height:24px;padding:0 4px;background:none;border:0;color:var(--ink-2);font-family:var(--cond);font-weight:800;font-size:13px;letter-spacing:.08em;text-transform:uppercase;cursor:pointer}
+.pg-display select.other:hover{color:var(--ink)}
+.pg-display select.other option{background:var(--bg-2);color:var(--ink);text-transform:none}
+button.tile{border:0;padding:0;cursor:pointer;line-height:inherit;font-style:normal}
+.pg-display .tile:not(.on):hover{color:var(--ink)}
+.pg-display .tiles .tile.on::after{content:attr(data-on)}
+.pg-display .tile.absent{opacity:.55}
+.pg-display .res .warn{display:flex;gap:8px;align-items:flex-start;margin-top:12px;font-size:13px;line-height:1.45;color:var(--ink-2)}
+.pg-display .res .warn svg{flex:none;color:var(--red);margin-top:2px}
+.pg-display .pros .gh-r{display:flex;align-items:center;gap:14px}
+.pg-display .pros .btn svg.up{transform:rotate(180deg)}
+.pg-display button.nm{align-self:flex-start;padding:0;border:0;background:none;color:inherit;text-align:left;cursor:pointer}
+.pg-display button.nm:hover{color:var(--red)}
+.pg-display .pcard .ph.none{display:grid;place-items:center;background:repeating-linear-gradient(-45deg,var(--bg-3) 0 10px,var(--bg-2) 10px 20px)}
+.pg-display .pcard .ph .ini{font-family:var(--cond);font-weight:900;font-style:italic;font-size:54px;color:var(--ink-3)}

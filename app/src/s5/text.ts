@@ -20,3 +20,6 @@ export function ago(lang: Lang, ts: number, short = false): string {
 export function shortDate(lang: Lang, ts: number): string {
   return new Date(ts).toLocaleDateString(lang === "fr" ? "fr-FR" : "en-US", { month: "short", day: "numeric" });
 }
+
+/** Nom court d'un jeu à l'écran : sans « Tom Clancy's » ni ™ ®. */
+export const displayName = (name: string) => name.replace(/^Tom Clancy's\s+/i, "").replace(/[™®]/g, "").trim();

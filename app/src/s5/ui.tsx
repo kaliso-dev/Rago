@@ -1,4 +1,4 @@
-// Petites briques des maquettes v5 qui réagissent au clic : onglets (.tabs).
+// Petites briques des maquettes v5 qui réagissent au clic : onglets (.tabs), interrupteur (.sw).
 import type { ReactNode } from "react";
 
 export type TabItem<T extends string> = { id: T; label: ReactNode; n?: number; title?: string; disabled?: boolean };
@@ -43,5 +43,21 @@ export function Tabs<T extends string>({
         );
       })}
     </div>
+  );
+}
+
+/** Interrupteur des maquettes (.sw, .on quand allumé). */
+export function Sw({ on, onChange, label, disabled, title }: { on: boolean; onChange: (on: boolean) => void; label: string; disabled?: boolean; title?: string }) {
+  return (
+    <button
+      type="button"
+      role="switch"
+      aria-checked={on}
+      aria-label={label}
+      title={title}
+      disabled={disabled}
+      className={`sw${on ? " on" : ""}`}
+      onClick={() => onChange(!on)}
+    />
   );
 }

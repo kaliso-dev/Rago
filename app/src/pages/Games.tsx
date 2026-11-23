@@ -8,7 +8,7 @@ import { useStore } from "../lib/store";
 import { GFX_DETAILS, GFX_LEVELS, graphicsForGame } from "../lib/graphics";
 import { BigIcon, I, Rich } from "../s5/I";
 import { Tabs } from "../s5/ui";
-import { ago } from "../s5/text";
+import { ago, displayName } from "../s5/text";
 import { coverOf } from "../s5/art";
 import { PresetPicker, presetCount } from "../components/PresetPicker";
 
@@ -45,7 +45,6 @@ const LAUNCHERS: Record<string, string> = {
 /** Ordre du tri « par launcher » (celui de la maquette). */
 const LAUNCHER_ORDER = ["riot", "steam", "epic", "minecraft", "battlenet", "ubisoft", "ea", "xbox", "roblox", "manual"];
 /** Nom affiché : sans « Tom Clancy's » ni ™ ® (« Rainbow Six Siege »). */
-const displayName = (name: string) => name.replace(/^Tom Clancy's\s+/i, "").replace(/[™®]/g, "").trim();
 const kindOf = (g: Game): Exclude<Filter, "all"> => (g.kind === "shooter" || g.kind === "minecraft" ? g.kind : "other");
 
 let lastSort: Sort = "launcher";

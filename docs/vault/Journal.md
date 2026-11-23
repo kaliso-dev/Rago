@@ -10,6 +10,7 @@ Une ligne par événement marquant, la plus récente en haut. Voir [[Historique 
 ## Novembre 2026
 | Date | Événement | Liens |
 |---|---|---|
+| 23/11 | Soir : page Display refaite sur la maquette v5 : aperçu avant / après sur une capture du jeu, ligne « vs » rouge déchirée à glisser, filtres de l'aperçu calculés comme le moteur (saturation et rampe gamma), tuiles de résolution, photos de 7 pros ; PR #120 (Jeux et choix du preset) fusionnée dans `staging` | [[Display.tsx]], [[Couleurs et résolution]] |
 | 23/11 | Soir : page Jeux refaite sur la maquette v5 (grande illustration déchirée, vignettes, aucun jeu) et nouvelle fenêtre de choix du preset à covers verticales (maquette `app-preset-picker` faite le jour même, à valider) ; 16 jeux avec leurs images embarquées | [[Games.tsx]], [[PresetPicker.tsx]] |
 | 23/11 | Cadre de l'app et tableau de bord refaits à l'identique des maquettes v5 : PR #119 fusionnée dans `staging`. Le build Windows de GitHub Actions n'a pas démarré (paiement refusé ou limite de dépenses du compte GitHub) ; compilation Rust vérifiée à la main pour Windows | [[Maquettes v5 dans l'app (s5)]], [[CI GitHub Actions]] |
 | 23/11 | Sofiene refuse l'app de la PR #108 (« pas conforme au design ») : app à refaire au pixel près sur les maquettes v5 | [[Décisions]] |
