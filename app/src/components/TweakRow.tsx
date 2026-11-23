@@ -29,7 +29,20 @@ function Glyph({ id, label }: { id: string; label: string }) {
 /** Notes sous le nom des réglages à options (maquettes) : une phrase sur ce que veut dire le choix. */
 const VNOTE = new Set(["pri_game", "in_frames", "in_queue", "hitreg_suite", "mc_optifine"]);
 
-export function TweakRow({ tweak, mod, adv = false }: { tweak: Tweak; /** module de la page : « Also in … » pour un réglage d'un autre module */ mod?: string; /** dans les avancés dépliés */ adv?: boolean }) {
+export function TweakRow({
+  tweak,
+  mod,
+  adv = false,
+  label,
+}: {
+  tweak: Tweak;
+  /** module de la page : « Also in … » pour un réglage d'un autre module */
+  mod?: string;
+  /** dans les avancés dépliés */
+  adv?: boolean;
+  /** nom court du carreau à la place du nom du catalogue (onglet des réglages de Réseau, comme la maquette) */
+  label?: string;
+}) {
   const { t, lang, sys, selected, toggle, variantOf, setVariant, lastRun, requestApply, focusTweak, setFocusTweak, focusSeq, isLocked, variantLocked, setUpsell, isOn: isOnFn, applied, pendingUndo, reapply } = useStore();
   const ref = useRef<HTMLDivElement>(null);
   const [up, setUp] = useState(false);
@@ -279,7 +292,7 @@ export function TweakRow({ tweak, mod, adv = false }: { tweak: Tweak; /** module
     >
       <span className="tx">
         <span className="nr">
-          <span className="nm">{tweak.name[lang]}</span>
+          <span className="nm">{label ?? tweak.name[lang]}</span>
           {zap && <I n="zap" />}
         </span>
         {note && <span className="note">{note}</span>}

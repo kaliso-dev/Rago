@@ -3,7 +3,7 @@ type: code
 tags: [code, app, powershell, réseau, packet-optimizer]
 fichier: app/src-tauri/netopt/common.ps1
 lignes: 620
-maj: 2026-11-10
+maj: 2026-11-23
 ---
 # common.ps1
 
@@ -86,7 +86,7 @@ Marche avec ou sans sauvegarde.
 - Plan : **seulement** si Performances élevées est actif → Utilisation normale. Un plan personnalisé (Rago Low Latency) choisi par le joueur reste actif.
 - Redémarre `DoSvc`, vide le cache DNS. Code 0. La sauvegarde n'est pas archivée.
 
-### Tests (rien n'est changé dans Windows ; outils de `NetTools.tsx`, dont « Diagnostic avancé » de [[NetTest.tsx]] : `quality`, `loaded`, `mtu`)
+### Tests (rien n'est changé dans Windows ; outils de la rangée « tools » du Packet Optimizer, [[NetOpt.tsx]] et [[NetTools.tsx]] : `quality`, `loaded`, `mtu`)
 - `Do-Quality` (« Test de stabilité ») : **100 pings** espacés de 100 ms vers la cible. Adresse introuvable → `X`, code 1. Aucune réponse → résultat `noAnswer: true` (« this server blocks ping »), code 1. Résultat `{kind: "quality", ip, min, avg, p95, max, jitter, loss, spikes, stable}` ; `stable` = pertes ≤ 1 %, gigue ≤ 5 ms et `p95 − min` ≤ 25 ms.
 - `Do-Loaded` (« Test de bufferbloat », latence sous charge ; la page demande confirmation) : 30 pings au repos, puis 2 téléchargements `curl.exe` de 100 Mo en parallèle depuis `speed.cloudflare.com` (12 s au plus chacun, 200 Mo au plus), 1,5 s d'attente, puis jusqu'à 100 pings tant qu'un téléchargement tourne. `curl.exe` absent (Windows 10 avant 1803) → `X`. Note selon `delta` = médiane chargée − médiane au repos : **A+** < 5 ms, **A** < 30, **B** < 60, **C** < 200, **D** < 400, sinon **F**. Résultat `{kind: "loaded", ip, idleMed, idleJitter, busyMed, busyJitter, busyLoss, delta, grade}`.
 - `Do-Mtu` (« Mesurer le MTU ») : `Find-Mtu` vers la cible, puis vers `1.1.1.1` si rien. Résultat `{kind: "mtu", ip, mtu, current, alias}` (MTU actuel de l'interface principale). Ping bloqué → `!`.
@@ -109,7 +109,7 @@ Marche avec ou sans sauvegarde.
 ## Liens avec le reste
 
 - Assemblé et lancé par [[netopt.rs]] ; complété par [[apply.ps1]] (Premium) ; point d'entrée [[main.ps1]].
-- Interface : [[NetOpt.tsx]] (bouton « Restaurer » et outils), [[NetTest.tsx]] (« Diagnostic avancé »). Fonctionnalités : [[Packet Optimizer]], [[Test réseau]].
+- Interface : [[NetOpt.tsx]] (bouton « restore » et rangée « tools », gratuits) et [[NetTools.tsx]] (résultats des outils). Fonctionnalités : [[Packet Optimizer]], [[Test réseau]].
 
 ## Tests
 

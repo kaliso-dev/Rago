@@ -2,179 +2,146 @@
 type: code
 tags: [code, app, react, page, reseau]
 fichier: app/src/pages/NetOpt.tsx
-lignes: 1090
-maj: 2026-11-10
+lignes: 1109
+maj: 2026-11-23
 ---
 # NetOpt.tsx
 
-L'onglet **« Packet Optimizer »** de la page Réseau. Il propose :
-- 6 profils ;
-- des curseurs et des interrupteurs ;
-- un bloc « Avancé » et un bloc « Réglages experts » ;
-- le tableau « Ce qui change » (valeurs de Windows avant et après) ;
-- « Analyser mon PC » ;
-- Appliquer et Restaurer, avec le journal du moteur.
+L'onglet **« Packet Optimizer »** de la page Réseau, refait le 23/11 à l'identique de la maquette v5 `app-network-packet-pi.html` (PR #123). Il propose :
+- 6 profils (« presets ») et « find my preset » (l'analyse du PC) ;
+- une console de trois curseurs avec le tableau avant/après ;
+- des interrupteurs, le type de connexion, les blocs « advanced » et « expert » ;
+- les 4 outils du moteur (stabilité, bufferbloat, MTU, état actuel) ;
+- sa propre barre « apply » en bas de la fenêtre, avec « restore » et le journal.
 
 Fiche parente : [[Code de l'app (interface)]]. Fonctionnalité : [[Packet Optimizer]]. Logique partagée : [[netopt.ts]]. Côté Rust : [[netopt.rs]].
 
-Tout ce qui suit est CONFIRMÉ (code de `staging`, 10/11, commit `ee77d4f`).
+Tout ce qui suit est CONFIRMÉ (code de `staging` après la PR #123, fusionnée le 23/11). Jamais testé sur Windows.
 
 ## Rôle et place dans l'ensemble
-- Affiché par [[Network.tsx]] quand l'onglet est `netopt`. On y arrive aussi depuis le conseil et la « ligne instable » de [[NetTest.tsx]]. La recherche ([[SearchPalette.tsx]]) ne mène qu'aux réglages du catalogue, pas à cet onglet, même si le commentaire de [[Network.tsx]] dit le contraire (OBSERVÉ).
-- **Entièrement Premium depuis la 1.3.0** (décision de Sofiene du 10/11, PR #76, commentaire dans le code). Sans licence, l'onglet montre seulement une **vue fermée** (voir plus bas). Le moteur refuse aussi `apply` sans licence active (`premium_required:netopt`, [[lib.rs]]) et a besoin des scripts Premium (`premium_scripts_unavailable`).
+- Affiché par [[Network.tsx]] quand l'onglet est `netopt`. On y arrive aussi par le conseil de [[NetTest.tsx]].
+- **Appliquer est Premium** (décision de Sofiene du 10/11 pour la 1.3.0, PR #76). Sans licence, l'onglet montre depuis le 23/11 **le vrai écran, verrouillé** (voir « Sans licence » plus bas), au lieu de l'ancienne vue fermée. Le moteur refuse aussi `apply` sans licence active (`premium_required:netopt`, [[lib.rs]]).
 - Toutes les actions passent par `api.netOptRun(action, options)` (commande `netopt_run`). Le moteur reçoit **les choix** (`NetOptions`), jamais les valeurs calculées : le calcul de [[netopt.ts]] (`computeNet`) ne sert qu'à l'affichage.
 
 ## Ce que le fichier expose
 - `NetOpt()` : l'onglet.
-- Composants internes :
-  - `Fold` : bloc repliable ;
-  - `Changes` : tableau avant/après ;
-  - `ScanPanel` : « Analyser mon PC » ;
-  - `Summary` : résultat d'une action ;
-  - `Log` : journal du moteur ;
-  - `Slider`, `Select`, `Toggle` ;
-  - `Expert` et `Stepper` : réglages experts.
-- Constantes internes : `PRESET_ICONS`, `FOLDS` (`rago.netoptFolds`), `LINE_SAMPLES` (40), `NUM_ROWS`, `GROUPS`.
+- Composants internes : `Fader` (curseur), `Diff` (avant/après), `Toggle`, `LineTile` (type de connexion), `FoldHead`, `VarRow`, `Opt`, `Advanced`, `Expert`, `Stepper`, `ScanPanel` (analyse), `Bar` (barre du bas), `Log` (journal).
+- Constantes internes : `PRESET_ICONS`, `FOLDS` (`rago.netoptFolds`), `LINE_SAMPLES` (40), `PRIOS` (6 niveaux de priorité), `NUM_ROWS`, `EXPERT_ROWS`.
 
 ## Fonctionnement détaillé
 
-### Vue fermée (sans licence)
-- Cadenas, titre « Le Packet Optimizer fait partie de Premium », phrase d'accroche (`no.lead`).
-- Trois points :
-  - l'analyse de la carte et de la ligne, puis le bon profil ;
-  - 6 profils et chaque réglage à la main ;
-  - Restaurer remet la connexion comme avant.
-- Bouton **« Passer Premium »** : `setUpsell("plan")`, voir [[Upsell.tsx]].
-- Bouton **« Restaurer »**, seulement si quelque chose a été appliqué ou sauvegardé. Il lance `restore` s'il existe une sauvegarde, sinon `defaults`. C'est ce qui permet à un ancien abonné de **remettre sa connexion comme avant sans licence**, et le moteur l'accepte.
-
-### Chargement (Premium)
-- Réglages affichés :
-  - le brouillon s'il existe (`loadDraft()`, `rago.netoptDraft`) ;
-  - sinon les réglages de la dernière application (`netOptState().applied.options`) ;
-  - sinon `NET_DEFAULTS`.
-- `netOptRun("detect")` lit la carte réseau utilisée (nom, description, vitesse, Wi-Fi ou câble), affichée en « Connexion détectée : … ».
-- À la toute première visite (ni brouillon ni application), une carte Wi-Fi règle le type de ligne sur Wi-Fi (`line` 5, `wifi` vrai).
+### Chargement
+- Réglages affichés : le brouillon s'il existe (`loadDraft()`, `rago.netoptDraft`), sinon ceux de la dernière application (`netOptState().applied.options`), sinon `NET_DEFAULTS`.
+- `netOptRun("detect")` lit la carte réseau utilisée. Elle s'affiche en puce **« ethernet detected »** ou **« wi-fi detected »** (le nom complet de la carte au survol). La fibre ne se voit pas : la carte ne dit que câble ou Wi-Fi.
+- À la toute première visite (ni brouillon ni application), une carte Wi-Fi règle le type de connexion sur Wi-Fi (`line` 5, `wifi` vrai).
 - Événements écoutés :
-  - **`netopt:line`** : lignes du moteur (`progress` pour la barre, le reste pour le journal) ;
-  - **`nettest:sample`** : avancement des 40 pings de l'analyse, serveur `internet`.
+  - **`netopt:line`** : `progress` pour l'avancement ; les lignes d'`apply`, `restore` et `defaults` pour le journal ; le titre de l'étape en cours d'un outil ;
+  - **`nettest:sample`** : avancement des 40 pings de l'analyse (serveur `internet`).
 
-### Carte du haut
-- **État** :
-  - « Pas encore appliqué. Tes réglages actuels sont gardés à la première application. » ;
-  - ou « Appliqué {date} · {profil} » ;
-  - plus « Changements pas encore appliqués » si les réglages affichés diffèrent de ceux appliqués (`same`, qui ne tient pas compte du nom du profil).
-- **Boutons** :
-  - « Analyser mon PC » ;
-  - « Restaurer », un menu de deux choix :
-    - « Mes réglages d'origine » (`restore`, gardés avant la première application ; grisé sans sauvegarde) ;
-    - « Valeurs de Windows » (`defaults`) ;
-  - **« Appliquer »** (`apply`).
-- Note fixe : « Ta connexion se coupe quelques secondes pendant que la carte réseau redémarre. ».
-- **Pendant une action** :
-  - barre de progression (lignes `progress`) ;
-  - titre de l'étape en cours, traduit par `engineText` de [[netopt.ts]] ;
-  - à la fin, `Summary` : « {ok} réglages posés » / « Réglages d'origine remis » / « Valeurs de Windows remises », avec les avertissements et les erreurs.
-- Après une réussite :
-  - « Redémarre le PC pour finir », avec un bouton qui appelle `api.restartPc()` ;
-  - le brouillon est effacé.
-- Lien « Journal » : le détail des lignes du moteur. Il reste en anglais, sauf les titres.
-- **Erreurs** :
-  - `busy` (un lot ou une remise à zéro tourne) → texte `no.busy` ;
-  - `premium_scripts_unavailable` → texte `err.premium_scripts_unavailable` ;
-  - `premium_required` → fenêtre Premium ;
-  - autre → message brut.
+### « presets » (6 cartes)
+- Hitreg, Knockback, Balanced, Wi-Fi, Packet loss, Old-school, chacune avec son icône, une coche quand elle est choisie et une phrase (`s5.no.pd.*`).
+- Un clic appelle `applyPreset` de [[netopt.ts]]. Toucher un réglage à la main fait passer le profil à **« custom »** (puce à côté de « tune », et nom dans la barre).
+- Bouton **« find my preset »** (l'analyse, voir plus bas).
 
-### Profils (`PRESETS`)
-- 6 boutons radio : Hitreg, Knockback, Équilibré, Wi-Fi, Pertes de paquets, Old-school.
-- Un clic appelle `applyPreset` de [[netopt.ts]] (valeurs de chaque profil dans cette fiche).
-- Le profil conseillé par l'analyse porte une étiquette (`an.tag`).
-- Toucher un réglage à la main fait passer le profil à « Personnalisé » (`preset: "custom"`).
+### « tune » : la console
+- Trois curseurs (`Fader`, 24 segments, glisser, cliquer, flèches ±5, Page ±20, Début et Fin) :
 
-### « Réglages » (toujours visibles)
-- **Curseur « Latence »** (`latency`) : le texte du milieu dit combien de tampons de la carte sont coupés (`buffersOff`, sur 6).
-- **Curseur « Réactivité »** (`responsiveness`) :
-  - trois raccourcis : 0 « retardé », 50 « équilibré », 100 « réactif » ;
-  - la ligne d'info donne le RTO initial et `SystemResponsiveness` calculés.
-- **Listes** :
-  - « Fenêtre TCP » (`tuning` 0 à 6 ; Auto affiche la valeur choisie pour la ligne) ;
-  - « Type de connexion » (`line` 1 à 7 ; choisir Wi-Fi coche l'option Wi-Fi, quitter Wi-Fi la décoche).
-- **Interrupteurs** :
-  - « intelligent » (`smart`) ;
-  - « tolérance aux pertes » (l'inverse de `stable`) ;
-  - « compétitif » (`competitive`).
+| Curseur | Option | Texte affiché |
+|---|---|---|
+| buffering | `latency` | « {n} off » (tampons coupés sur 6) ou « windows » |
+| re-send | `responsiveness` | windows (0), cautious, balanced, fast |
+| batching | `delay` | none (0), light, heavy, windows (100) |
 
-### Bloc « Avancé » (replié, résumé sur une ligne)
-- **MTU** :
-  - automatique (interrupteur, `mtuMode` 1, avec le champ **serveur** de mesure vérifié par `validTarget` de [[NetTools.tsx]]) ;
-  - ou une valeur à la main (`mtuMode` 2, de 576 à 1500) ;
-  - champ vide → « laisser » (`mtuMode` 0).
-- **Curseur « Délai »** (`delay`) : la ligne d'info donne la fréquence et le délai des ACK, et Nagle coupé ou non.
-- **Curseur « Priorité »** (`priority`) : affiche le DSCP et son nom. Un avertissement apparaît si « intelligent » est coupé (le marquage n'est alors pas posé).
-- **Liste « Contrôle de congestion »** (`congestion`, 0 à 5). **BBR2 (5) n'est proposé que sous Windows 11** (`sys.isWin11`), sauf s'il est déjà choisi.
-- **Interrupteurs** : mode priorité, économie d'énergie de la carte, Wi-Fi, protection contre l'arrière-plan.
+- **Tableau avant/après** (`Diff`), valeur de Windows puis la nouvelle, la ligne pâlie si rien ne change :
+  - Nagle : on → off ou on ;
+  - accusés de réception : fréquence · délai en ms ;
+  - premier renvoi : `minRto` en ms ;
+  - tampons : « {n} on » (6 moins les tampons coupés) ;
+  - priorité : aucune ou « {DSCP} {nom} ».
+- Les valeurs sont **les vraies valeurs calculées** par `computeNet`, pas celles, illustratives, de la maquette.
 
-### Bloc « Réglages experts » (replié)
-- Chaque valeur que les curseurs calculent peut rester **Auto** ou être **forcée** (`NetExpert`, `null` = Auto).
-- Valeurs numériques, réglées avec un `Stepper` :
+### Tuiles d'options
+- Interrupteurs : **game traffic first** (`smart`), **loss tolerance** (l'inverse de `stable`), **windows game boost** (`competitive`).
+- **connection** (`LineTile`) : menu des 7 types de ligne, qui s'ouvre vers le haut. Choisir Wi-Fi coche l'option Wi-Fi, quitter Wi-Fi la décoche.
+- **advanced 9** et **expert 9** : déplient leur bloc (état gardé dans `rago.netoptFolds`). « {n} manual » sur la tuile expert quand des valeurs sont forcées.
 
-  | Réglage | Plage | Pas | Avertissement si forcé |
-  |---|---|---|---|
-  | `minRto` | 20 à 300 ms | 10 | sous 60 ms |
-  | `initialRto` | 300 à 3000 ms | 100 | — |
-  | `icw` (fenêtre initiale) | 2 à 64 paquets | 1 | au-dessus de 32 |
-  | `ackFrequency` | 1 à 255 | 1 | au-dessus de 2 |
-  | `ackTimeout` | 10 à 600 ms | 10 | au-dessus de 200 ms |
-  | `dscp` | 0 à 63 | 1 | si « intelligent » est coupé |
+### Bloc « advanced »
+- Interrupteurs : mode priorité (`priorityMode`), économie d'énergie de la carte (`powerSaving`), Wi-Fi (`wifi`), garde du trafic de fond (`bgGuard`).
+- Champ **serveur de test** (`target`, sur deux colonnes), vérifié par `validTarget` de [[NetTools.tsx]]. Il sert aux outils et à la mesure du MTU.
+- Lignes à options :
+  - **priorité** : 6 niveaux (`PRIOS`, DSCP 0, 32, 34, 40, 46, 48) ; avertissement si « game traffic first » est coupé (le marquage n'est alors pas posé) ;
+  - **MTU** : keep (`mtuMode` 0), auto (1), set (2, champ de 576 à 1500) ;
+  - **fenêtre de réception** (`tuning`, 0 à 6) ;
+  - **contrôle de congestion** (`congestion`, 0 à 5). **BBR2 (5) n'est proposé que sous Windows 11**, sauf s'il est déjà choisi.
 
-- Valeurs oui/non (Auto / Activé / Désactivé) : `timestamps`, `ecn` (avertissement s'il est forcé à Activé), `interruptModeration`.
-- Chaque ligne rappelle la plage, la valeur de Windows et la valeur Auto.
-- Groupes affichés : renvoi, ACK, envoi, carte.
-- En bas : « {n} réglages forcés » et un bouton qui remet tout en Auto.
+### Bloc « expert »
+- Chaque valeur que les curseurs calculent peut rester **Auto** ou être **forcée** (`NetExpert`, `null` = Auto). Neuf tuiles :
 
-### Colonne de droite
-- **« Ce qui change »** (`Changes`) : 11 lignes, la valeur de Windows (`WINDOWS_VALUES`) barrée puis la nouvelle :
-  - tampons coupés ;
-  - modération des interruptions ;
-  - min RTO ;
-  - RTO initial ;
-  - ACK ;
-  - Nagle ;
-  - DSCP ;
-  - fenêtre TCP ;
-  - `SystemResponsiveness` ;
-  - horodatage TCP ;
-  - MTU.
-- **État actuel** : l'outil `status` de [[NetTools.tsx]] (lecture des valeurs réelles de Windows, sans rien changer).
-- **« Ce qu'aucun optimiseur ne fait »** : le ping dépend de la distance et de l'opérateur. Le texte donne ce qui aide le plus : câble, personne d'autre qui télécharge, FPS stables, serveur plus proche.
+  | Réglage | Plage | Pas |
+  |---|---|---|
+  | `minRto` | 20 à 300 ms | 10 |
+  | `initialRto` | 300 à 3000 ms | 100 |
+  | `ackFrequency` | 1 à 255 | 1 |
+  | `ackTimeout` | 10 à 600 ms | 10 |
+  | `icw` (fenêtre initiale) | 2 à 64 paquets | 1 |
+  | `dscp` | 0 à 63 | 1 |
+  | `timestamps`, `ecn`, `interruptModeration` | auto · {valeur} / on / off | — |
 
-### « Analyser mon PC » (`analyse` et `ScanPanel`)
+- Les nombres se règlent avec un `Stepper` (−, champ, +, bouton de retour en Auto). Un avertissement (`no.x.warn.*`) s'affiche quand une valeur forcée est risquée.
+- En-tête : bouton « all auto ». Note de bas de bloc.
+
+### « tools » (les outils du moteur)
+- Quatre boutons : **stability test** (`quality`), **bufferbloat test** (`loaded`), **measure mtu** (`mtu`), **current state** (`status`). Voir [[NetTools.tsx]] pour leurs résultats.
+- Le résultat s'affiche dans un panneau sous la rangée : titre, description, croix. Pendant l'outil : segments d'avancement et étape en cours (traduite par `engineText`).
+- Le bufferbloat télécharge : le panneau **demande d'abord** (texte `no.tool.loaded.confirm`, bouton « run »).
+- « Turn on packet loss tolerance », sous un résultat instable, coche « loss tolerance » (Premium seulement).
+- **Gratuits** : les outils marchent sans licence (le moteur ne la demande que pour `apply`).
+- Note honnête en bas (`no.honest.*`) : ce qu'aucun optimiseur ne fait.
+
+### « find my preset » (`analyse` et `ScanPanel`)
 1. Carte réseau (`detect`).
-2. Processeur et Windows : lus dans `sys` du store, sans appel au moteur.
-3. Ligne : `api.netTest(["internet"])`, 40 pings vers Cloudflare, avec une barre d'avancement.
-4. `recommend(avant, { wifi, threads }, mesure)` de [[netopt.ts]] choisit le profil et donne les raisons (clés `an.why.*`).
-5. Les réglages conseillés sont **posés tout de suite dans la page** (et dans le brouillon). Ils ne sont **pas appliqués**.
-6. Boutons :
-   - **« Appliquer ces réglages »** : ferme le panneau et lance `apply` ;
-   - **« Garder les miens »** : remet les réglages d'avant l'analyse. Le brouillon est effacé s'ils sont égaux à ceux appliqués.
-   - La croix du panneau fait comme « Garder les miens ». Elle n'est active qu'à la fin de l'analyse.
-- Si la carte n'est pas trouvée, c'est le type de connexion choisi dans la page qui décide du Wi-Fi.
+2. Processeur et Windows : lus dans `sys` du store.
+3. Ligne : `api.netTest(["internet"])`, 40 pings vers Cloudflare, avec 40 segments d'avancement.
+4. `recommend(avant, { wifi, threads }, mesure)` de [[netopt.ts]] choisit le profil et ses raisons.
+5. Le panneau du haut montre les étapes (faite, en cours, à venir) à gauche, et à droite le profil conseillé en grand, les raisons et une note.
+6. Les réglages conseillés sont **posés tout de suite dans la page** (et dans le brouillon), **pas appliqués**. Boutons « Apply these settings » (lance `apply`) et « Keep mine » (remet les réglages d'avant ; la croix fait pareil, active seulement à la fin).
+
+### La barre du bas (`Bar`)
+- Posée dans la fenêtre (`createPortal` dans `.win`), à la place de la barre des réglages ([[ApplyBar.tsx]], cachée sur cet onglet). Contenu : le nom du profil, l'état, « log » (s'il y a un journal), « restore » et le bouton principal.
+- États :
+  - « not applied yet » ou « changes not applied », avec « drops for a few seconds » (la connexion coupe à l'application) ;
+  - « applied » et la date ;
+  - « applying » / « restoring », avec l'étape en cours et une barre de progression ;
+  - après une action : « applied » ou « restored » et « {n} settings · {n} warning » ; « failed » en cas d'erreur ;
+  - sans licence : « part of premium » et « restore stays free ».
+- Bouton principal : « apply » ; « restart » (`api.restartPc()`) juste après une application réussie ; « Get Premium » sans licence.
+- « restore » ouvre un menu : « mes réglages d'origine » (`restore`, grisé sans sauvegarde) ou « valeurs de Windows » (`defaults`). Grisé s'il n'y a ni application ni sauvegarde.
+- Erreurs : `busy` → `no.busy` ; `premium_scripts_unavailable` → `err.premium_scripts_unavailable` ; `premium_required` (le serveur refuse d'appliquer, licence perdue entre-temps) → la fenêtre Premium d'un réglage (`setUpsell("tweak")`, comme avant la v5 ; la garder est la question q112) ; autre → message brut.
+- Après une réussite, le brouillon est effacé.
+
+### Sans licence (nouveau le 23/11)
+- Le vrai écran s'affiche, verrouillé (classe `lkd`) : les profils, curseurs, interrupteurs, « find my preset » et les blocs ouvrent l'offre Premium générale (`setUpsell("plan")`, [[Upsell.tsx]]) ; « advanced » et « expert » ne se déplient pas.
+- **À VÉRIFIER** : choix fait pour la refonte (la maquette n'a pas d'écran gratuit), question q117 posée à Sofiene le 23/11 ([[Questions ouvertes]]).
+- **Les outils restent gratuits.**
+- **« restore » reste gratuit** : sans menu, il lance `restore` s'il existe une sauvegarde, sinon `defaults`. C'est ce qui permet à un ancien abonné de remettre sa connexion comme avant.
 
 ## Données touchées
-- `localStorage` : `rago.netoptDraft` (brouillon, via [[netopt.ts]]) et `rago.netoptFolds` (blocs ouverts ou repliés).
-- Windows : réglages réseau, alimentation et priorités, posés par [[netopt.rs]]. La sauvegarde d'origine et l'état appliqué sont gardés par le moteur.
-- La mesure de l'analyse passe par `net_test` : elle est donc aussi envoyée au serveur Rago ([[netshare.rs]]), comme celle de [[NetTest.tsx]].
+- `localStorage` : `rago.netoptDraft` (brouillon, via [[netopt.ts]]) et `rago.netoptFolds` (blocs ouverts).
+- Windows : réglages réseau, alimentation et priorités, posés par [[netopt.rs]].
+- La mesure de l'analyse passe par `net_test` : elle est aussi envoyée au serveur Rago ([[netshare.rs]]).
 
 ## Erreurs et cas limites
-- Une seule action à la fois (`busy`). Pendant l'analyse, Appliquer est grisé.
+- Une seule action ou un seul outil à la fois (`busy`). Pendant l'analyse, « apply » est grisé.
 - Les réponses arrivées après la fermeture de l'onglet sont ignorées (`live`).
 - `same()` compare les réglages en JSON : un ordre de clés différent dans `expert` compterait comme un changement (OBSERVÉ dans le code, sans effet connu).
 
 ## Liens avec le reste
 - Fonctionnalité : [[Packet Optimizer]]. Formules, profils, conseil : [[netopt.ts]]. Moteur : [[netopt.rs]].
-- Composants : [[NetTools.tsx]] (`Tool` « État actuel », `validTarget`), `Button`, `Segmented`, `Switch` ([[Petits composants de l'interface]]).
-- Textes : clés `no.*` (page) et `an.*` (analyse) de [[i18n.ts]]. Styles : sections « Packet Optimizer », « Avancé / Réglages experts » et « Analyser mon PC » de `features.css` ([[Styles de l'app (CSS)]]).
+- Composants : [[NetTools.tsx]], `I` et `Seg` de `s5/I` ([[Maquettes v5 dans l'app (s5)]]).
+- Textes : `s5.no.*` (écran) et `no.*`, `an.*` (descriptions, avertissements, analyse) de [[i18n.ts]]. Styles : bloc « Packet Optimizer » de `s5/app.css` et `s5/pages/net.css` ([[Styles de l'app (CSS)]]).
 
 ## À savoir avant de modifier
 - Une nouvelle option : l'ajouter d'abord dans `Options` de [[netopt.rs]] (avec ses tests), puis dans `NetOptions` et `NET_DEFAULTS` de [[netopt.ts]], puis ici.
-- Le moteur ne lit pas les valeurs affichées : changer une formule seulement dans [[netopt.ts]] ferait mentir le tableau « Ce qui change ».
-- La vue fermée doit garder « Restaurer » : sans lui, un joueur dont l'abonnement a pris fin ne peut plus remettre sa connexion d'origine depuis l'app.
+- Le moteur ne lit pas les valeurs affichées : changer une formule seulement dans [[netopt.ts]] ferait mentir le tableau avant/après.
+- L'écran sans licence doit garder « restore » : sans lui, un joueur dont l'abonnement a pris fin ne peut plus remettre sa connexion d'origine depuis l'app.
+- Les classes de cette page croisent celles de `module.css` (`.run`, `.ck`, `.pop`) : le panneau d'outil en cours s'appelle `busy` et le menu du type de connexion `lmenu` pour cette raison.

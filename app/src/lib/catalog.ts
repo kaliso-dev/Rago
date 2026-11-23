@@ -126,6 +126,9 @@ for (const m of catalog.modules) {
     }
   }
 }
+// Le profil réseau par jeu n'est montré que sur la page Minecraft (renvoi `ref`) : l'onglet des réglages de Réseau ne
+// l'affiche pas (maquette v5), la recherche et « Also in » mènent donc à Minecraft.
+tweakModule.set("net_profile", "minecraft");
 
 export function sectionTweaks(s: Section): Tweak[] {
   return s.tweaks.map((t) => ("ref" in t ? tweaks.get(t.ref)! : t)).filter(Boolean);

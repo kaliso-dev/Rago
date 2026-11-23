@@ -2,14 +2,14 @@
 type: code
 tags: [code, app, react, composant, avis]
 fichier: app/src/components/ReviewPrompt.tsx
-lignes: 49
-maj: 2026-11-10
+lignes: 51
+maj: 2026-11-23
 ---
 # ReviewPrompt.tsx
 
 L'**invitation discrète à laisser un avis**, en bas à droite de la fenêtre : « Rago Optimizer te plaît ? ». Fiche parente : [[Code de l'app (interface)]]. Fonctionnalités : [[Paramètres de l'app]], [[Site]] (les avis s'affichent sur le site).
 
-Tout ce qui suit est CONFIRMÉ (code de `staging`, 10/11, commit `ee77d4f`).
+Tout ce qui suit est CONFIRMÉ (code de `staging`, 10/11, commit `ee77d4f`), avec le placement revu par la PR #123 du 23/11.
 
 ## Rôle et place dans l'ensemble
 - Montée une seule fois par [[App.tsx]], juste avant [[ReviewDialog.tsx]].
@@ -27,7 +27,7 @@ Tout ce qui suit est CONFIRMÉ (code de `staging`, 10/11, commit `ee77d4f`).
 - Carte animée (`motion.aside`) : cinq étoiles, titre « Rago Optimizer te plaît ? », texte « Laisse un avis rapide. Il s'affiche sur le site avec ton nom public. ».
 - **« Donner mon avis »** : `openReview(true)` ouvre [[ReviewDialog.tsx]]. Si la fenêtre est fermée sans envoi, cela compte comme un refus.
 - **« Plus tard »** et la croix : `dismissPrompt()`, un refus.
-- **Placement** : la carte monte au-dessus de la barre « Appliquer » quand celle-ci est visible (classe `above-bar`). C'est la même règle que [[ApplyBar.tsx]] : pas de lot en cours, et au moins un réglage coché ou un retour arrière en attente sur un réglage appliqué.
+- **Placement** : la carte monte au-dessus de la barre « Appliquer » quand celle-ci est visible (classe `above-bar`). C'est la même règle que [[ApplyBar.tsx]] : pas de lot en cours, page hors de `NO_APPLY_BAR`, et au moins un réglage coché ou un retour arrière en attente sur un réglage appliqué. Sur l'onglet Packet Optimizer (`netopt`), la carte monte toujours : sa propre barre est toujours là ([[NetOpt.tsx]]).
 
 ## Données touchées
 - Aucune directement. La mémoire de l'invitation (`rago.reviewPrompt2`) est tenue par [[account.tsx]].

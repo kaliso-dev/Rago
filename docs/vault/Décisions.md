@@ -114,6 +114,7 @@ Registre daté des décisions de Sofiene. **La plus récente prime.** Citations 
 Une ligne par projet ou fonctionnalité arrêtés, pour qu'aucun Claude ne les relance. Le reste du vault n'en parle plus.
 | Date | Quoi | Raison |
 |---|---|---|
+| 23/11 | « Diagnostic avancé » du test réseau (champ serveur + outils stabilité, bufferbloat, MTU) et écran gratuit « part of Premium » du Packet Optimizer | absents des maquettes v5, que Sofiene veut à l'identique (23/11) : outils déplacés dans la rangée « tools » du Packet Optimizer, serveur au choix dans la liste du test réseau, écran gratuit remplacé par l'écran verrouillé (à confirmer, q117) ; PR #123 |
 | 22/11 | Polices Geist sur le site, charte HTML v1.2 (`brand/charte.html`) et générateur d'images `brand/tools/export-logo.js` | remplacés par la charte v5 « Match day » : Barlow servie par le site, charte en images, kit produit par les scripts de la maquette (PR #109) |
 | 13/11 | Clips de gameplay Minecraft sur la page Rago Route (haut de page, cartes, onglet ; protocole du 11/11, question q106) | page refaite le 13/11 avec des « illustrations animées simples et épurées » (Sofiene) |
 | 11/11 | Refonte de la page Rago Route en 12 sections (sélecteur de symptômes, carte « Two paths to Paris », simulateur « Three ways back », frise des coupures), sauf sa scène du haut | « L'ancienne version était beaucoup mieux et claire » : la page repart de la version du matin ([[Page de vente Rago Route]]) |

@@ -1,7 +1,7 @@
 ---
 type: pilotage
 tags: [pilotage, à-décider, à-vérifier]
-maj: 2026-11-14
+maj: 2026-11-23
 ---
 # Questions ouvertes
 
@@ -22,6 +22,14 @@ Posées le 13/11 (option Rago Route à 3 $/mois, [[Offres et prix]]) :
 Posées le 14/11 ([[Paiements Stripe]]) :
 - q110 : ce que Stripe fait d'un abonnement après le dernier essai de paiement raté.
 - q111 : couper le changement de quantité dans le portail client live.
+
+Posées le 23/11, pendant la refonte de l'app sur les maquettes v5 (fil « refonte stricte ») :
+- q112 : garder la fenêtre Premium « This tweak is part of Premium » quand le serveur refuse d'appliquer le Packet Optimizer ([[NetOpt.tsx]]).
+- q113 : « Affiliate reward » ou « Discord reward » pour une licence gagnée sur Discord (page compte).
+- q114 : badge « Ended » dans la carte Formule d'un abonnement terminé (page compte).
+- q115 : texte propre à l'achat de test au lieu de « This license was revoked. » (page compte).
+- q116 : échec du nettoyage de la RAM écrit en vert dans la barre en jeu ([[Overlay.tsx]]).
+- q117 : le Packet Optimizer en gratuit montre l'écran verrouillé avec les 4 outils gratuits, au lieu de l'écran « part of Premium » ([[Packet Optimizer]], [[NetOpt.tsx]]).
 
 Au 10/11, après les réponses de Sofiene du jour (q36 à q68 traitées, q46 le 10/11 à 15 h, voir [[Décisions]]) :
 - q65 : réglages Railway de prod (Wait for CI, Watch Paths, Healthcheck, moniteur) ; Sofiene demande à Claude de vérifier et de le lui rappeler ([[Railway]]).

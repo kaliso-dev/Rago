@@ -5,8 +5,12 @@ import { needsReboot, retired, tweaks } from "../lib/catalog";
 import { undoVariant, useStore } from "../lib/store";
 import { I } from "../s5/I";
 
+/** Onglets de Réseau sans cette barre (maquettes v5) : le Packet Optimizer a la sienne, le test réseau et Rago Route
+ * n'en montrent pas. Les réglages cochés restent cochés ; la barre revient sur les autres pages. */
+export const NO_APPLY_BAR = new Set(["netopt", "nettest", "route"]);
+
 export function ApplyBar() {
-  const { t, selection, pendingUndo, unselectMany, requestApply, run, variantOf, applied } = useStore();
+  const { t, page, selection, pendingUndo, unselectMany, requestApply, run, variantOf, applied } = useStore();
   const undo = pendingUndo.filter((id) => applied.has(id));
   const n = selection.length + undo.length;
   const reboot =
@@ -21,7 +25,7 @@ export function ApplyBar() {
   return (
     <div className="apply">
       <AnimatePresence>
-        {n > 0 && !run && (
+        {n > 0 && !run && !NO_APPLY_BAR.has(page) && (
           <motion.div
             className="ap"
             role="region"

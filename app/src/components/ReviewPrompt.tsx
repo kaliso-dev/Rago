@@ -4,14 +4,16 @@ import { useAccount } from "../lib/account";
 import { useAccountText } from "../lib/accountText";
 import { useStore } from "../lib/store";
 import { Button } from "./ui";
+import { NO_APPLY_BAR } from "./ApplyBar";
 
 /** Invitation discrète à laisser un avis, en bas à droite (voir lib/account.tsx pour quand elle apparaît). */
 export function ReviewPrompt() {
   const { showPrompt, dismissPrompt, openReview } = useAccount();
   const { at } = useAccountText();
-  // même règle que la barre « Appliquer » (ApplyBar) : elle est visible, l'invitation se place au-dessus
-  const { selection, pendingUndo, applied, run } = useStore();
-  const barUp = !run && selection.length + pendingUndo.filter((id) => applied.has(id)).length > 0;
+  // même règle que la barre « Appliquer » (ApplyBar) : elle est visible, l'invitation se place au-dessus ; le Packet
+  // Optimizer a toujours la sienne
+  const { page, selection, pendingUndo, applied, run } = useStore();
+  const barUp = !run && (page === "netopt" || (!NO_APPLY_BAR.has(page) && selection.length + pendingUndo.filter((id) => applied.has(id)).length > 0));
   return (
     <AnimatePresence>
       {showPrompt && (

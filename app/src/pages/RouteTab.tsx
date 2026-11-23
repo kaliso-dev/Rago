@@ -1,16 +1,14 @@
+// Onglet « rago route » de Réseau, à l'identique de la maquette v5 app-network-route-pi.html : l'état (on / off, adresse à
+// rejoindre, bouton), le schéma des trajets jusqu'au serveur, quatre chiffres, et les trajets de secours (4G du téléphone,
+// 2e connexion). Le tunnel anti-lag vers la sortie de Paris (route.rs), dans tous les exe depuis la 1.3.0, réservé au
+// Premium avec l'option Rago Route (3 $ par mois en plus, 13/11) : la sortie refuse toute partie sans jeton signé par le
+// serveur de licences, qui n'en donne qu'avec l'option.
 import { useEffect, useState } from "react";
-import { motion } from "motion/react";
-import { Check, Copy, LoaderCircle, Lock, Power, Route, X } from "../components/ri";
 import { api, type RouteCheck, type RouteLinks, type RoutePath, type RouteStatus } from "../lib/api";
 import type { Key } from "../lib/i18n";
 import { useStore } from "../lib/store";
-import { Button, Switch } from "../components/ui";
+import { I } from "../s5/I";
 import { ACCOUNT_URL } from "../components/LicenseGate";
-
-const stagger = { animate: { transition: { staggerChildren: 0.05 } } };
-const rise = { initial: { opacity: 0, y: 10 }, animate: { opacity: 1, y: 0, transition: { duration: 0.42, ease: [0.16, 1, 0.3, 1] as const } } };
-
-const ms = (v: number | null | undefined) => (v == null ? "—" : String(Math.round(v)));
 
 /** Message affiché quand Rago Route ne démarre pas : erreurs de route.rs (« port:25565 », « listen:… », « udp:… »)
  *  et du jeton demandé au serveur de licences (« premium:no_license », « premium:route_closed »…, lib.rs). */
@@ -30,15 +28,17 @@ function errorKey(e: string): Key {
 // Exe de test (serveur staging) : le bouton qui copie le jeton pour le script du Mac
 const STAGING = import.meta.env.VITE_RAGO_SERVER === "staging";
 
-/** Rago Route dans Réseau : le tunnel anti-lag vers la sortie de Paris (route.rs). Dans tous les exe depuis la 1.3.0.
- *  Réservé au Premium avec l'option Rago Route (3 $ par mois en plus, 13/11) : la sortie de Paris refuse toute partie
- *  sans jeton signé par le serveur de licences, qui n'en donne qu'avec l'option. */
+/** Les trois places du schéma (maquette, repère de 822 x 350) : en haut, au milieu, en bas. */
+const SLOTS = [72, 175, 278];
+const LINES = ["M146 175 C 230 175, 225 72, 318 72 S 405 175, 478 175", "M146 175 L 478 175", "M146 175 C 230 175, 225 278, 318 278 S 405 175, 478 175"];
+const PACKETS = [0.16, 0.3, 0.72, 0.86];
+
 export function RouteTab() {
-  const { t, license, premium, setUpsell } = useStore();
+  const { t, lang, license, premium, setUpsell } = useStore();
   const [st, setSt] = useState<RouteStatus | null>(null);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [copied, setCopied] = useState(false);
+  const [copied, setCopied] = useState<"addr" | "token" | null>(null);
   // 2e connexion (téléphone en USB ou en Wi-Fi, 2e box…) : proposée seulement quand Windows la voit. Un téléphone
   // est pris tout seul tant que le joueur n'a rien choisi ; son choix (nom de la carte, "" = aucune) est retenu sur ce PC
   const [found, setFound] = useState<RouteLinks | null>(null);
@@ -115,118 +115,208 @@ export function RouteTab() {
     }
   }
 
-  /** Exe de test seulement. Essais sur le Mac : le jeton du compte, à coller après --jeton dans le script (il dure 6 h). */
-  async function copyToken() {
-    setError(null);
+  async function copy(text: string, what: "addr" | "token") {
     try {
-      await api.copyText(await api.routeToken());
-      setCopied(true);
-      setTimeout(() => setCopied(false), 2000);
+      await api.copyText(text);
+      setCopied(what);
+      setTimeout(() => setCopied(null), 2000);
     } catch (e) {
       setError(String(e));
     }
   }
 
-  const orb = playing ? "great" : running ? "good" : "";
-  const verdict: Key = playing ? "route.playing" : running ? "route.ready" : "route.off";
+  // mouvement réduit (Windows) : les paquets restent à leur place
+  const still = typeof window !== "undefined" && window.matchMedia?.("(prefers-reduced-motion: reduce)").matches;
+  const fmt = (v: number) => v.toLocaleString(lang === "fr" ? "fr-FR" : "en-US");
   const lag = st ? Math.max(st.lagHereMs, st.lagExitMs) : null;
 
+  // le schéma : direct en haut, le relais au milieu, le secours (téléphone, 2e connexion) en bas
+  const paths = st?.paths ?? [];
+  const direct = paths.find((p) => p.kind === "direct");
+  const relay = paths.find((p) => p.kind === "relay");
+  const backup = paths.find((p) => p.kind === "phone" || p.kind === "second");
+  const lead = running ? paths.filter((p) => p.alive).reduce<RoutePath | null>((a, p) => (!a || p.firstPct > a.firstPct ? p : a), null) : null;
+  const label = (p: RoutePath) => (p.kind === "direct" ? t("s5.rt.direct", { city: p.via }) : p.kind === "relay" ? t("s5.rt.via", { city: p.via }) : t(p.kind === "phone" ? "s5.rt.phone" : "s5.rt.second"));
+  const line = (p: RoutePath | undefined) => (!running || !p || !p.alive ? "off" : p === lead ? "live" : "live2");
+  const phoneLink = links.find((l) => l.phone);
+  const secondLink = links.find((l) => !l.phone);
+
   return (
-    <motion.div className="nettest" variants={stagger} initial="initial" animate="animate">
-      <motion.section variants={rise} className="card nt-hero">
-        <header className="card-head">
-          <h3 className="rg-overline">Rago Route</h3>
-          <span className="badge">{t("route.badge")}</span>
-        </header>
-        <div className="nt-head">
-          <div className={`net-orb nt-orb${orb ? ` ${orb}` : ""}${busy ? " busy" : ""}`}>
-            <Route size={26} strokeWidth={1.5} />
-          </div>
-          <div className="nt-head-text">
-            <div className="net-verdict">{t(verdict)}</div>
-            <div className="net-sub muted small">{running ? t("route.howto") : t("route.lead")}</div>
-          </div>
-        </div>
-
-        {running && (
-          <div className="rt-servers">
-            <code className="rt-addr">localhost</code>
-            <span className="muted small">Hypixel</span>
-            <code className="rt-addr">localhost:25566</code>
-            <span className="muted small">Minemen</span>
-          </div>
-        )}
-
-        {locked && <p className="muted small rt-note">{t("route.premium")}</p>}
-        {!locked &&
-          !running &&
-          links.map((l) => {
-            const on = chosen === l.name;
-            const title = l.phone ? t("route.phone") : t("route.second", { name: l.name });
-            return (
-              <div key={l.name} className="no-toggle rt-phone" onClick={() => chooseLink(on ? null : l.name)}>
-                <div className="no-toggle-text">
-                  <div className="no-toggle-title">{title}</div>
-                  <div className="no-toggle-desc">{l.phone ? t("route.phone.desc") : t("route.second.desc")}</div>
-                </div>
-                <Switch checked={on} onChange={(v) => chooseLink(v ? l.name : null)} label={title} />
+    <>
+      <section className="route panel">
+        <div className="state">
+          <span className="chip ghost" style={{ alignSelf: "flex-start" }}>
+            {t("s5.rt.beta")}
+          </span>
+          <div className={`st-on${running ? "" : " off"}`}>{t(running ? "s5.rt.on" : "s5.rt.off")}</div>
+          <span className="sub">{t(playing ? "s5.rt.subPlaying" : running ? "s5.rt.subReady" : "s5.rt.subOff")}</span>
+          {shown && <p className="err">{shown === "token" ? t("route.err.token") : t(errorKey(shown), { e: shown.replace(/^\w+:/, "") })}</p>}
+          {running && (
+            <div className="ad">
+              <span className="lbl">{t("s5.rt.join")}</span>
+              <div className="code">
+                localhost
+                <button type="button" title={t("s5.rt.copy")} aria-label={t("s5.rt.copy")} onClick={() => void copy("localhost", "addr")}>
+                  <I n={copied === "addr" ? "check" : "copy"} />
+                </button>
               </div>
-            );
-          })}
-        {!locked && !running && found?.check && <PhoneCheckBox c={found.check} t={t} />}
-        {shown && (
-          <p className="rt-error small">{shown === "token" ? t("route.err.token") : t(errorKey(shown), { e: shown.replace(/^\w+:/, "") })}</p>
-        )}
-        {shown === "premium:route_option" && (
-          <Button variant="primary" onClick={() => api.openUrl(`${ACCOUNT_URL}/buy/route`).catch(() => {})}>
-            {t("route.option.buy")}
-          </Button>
-        )}
-
-        <div className="nt-actions">
-          {locked ? (
-            <Button variant="primary" icon={<Lock size={16} />} onClick={() => setUpsell("plan")}>
-              {t("free.upgrade")}
-            </Button>
-          ) : (
-            <Button
-              variant={running ? "secondary" : "primary"}
-              icon={busy ? <LoaderCircle size={16} className="spin" /> : <Power size={16} />}
-              disabled={busy || license === null}
-              onClick={toggle}
-            >
-              {running ? t("route.stop") : t("route.start")}
-            </Button>
+              <span className="mm">{t("s5.rt.minemen")}</span>
+            </div>
           )}
-          {premium && STAGING && (
-            <Button variant="ghost" icon={copied ? <Check size={16} /> : <Copy size={16} />} onClick={copyToken}>
-              {copied ? t("route.copied") : t("route.copyToken")}
-            </Button>
-          )}
+          <div className={`acts${running ? "" : " up"}`}>
+            {locked ? (
+              <button type="button" className="btn red" onClick={() => setUpsell("plan")}>
+                <I n="lock" />
+                {t("free.lock")}
+              </button>
+            ) : shown === "premium:route_option" ? (
+              <button type="button" className="btn red" onClick={() => void api.openUrl(`${ACCOUNT_URL}/buy/route`).catch(() => {})}>
+                <I n="plus" />
+                {t("route.option.buy")}
+              </button>
+            ) : (
+              <button type="button" className={`btn${running ? "" : " red"}`} disabled={busy || license === null} onClick={() => void toggle()}>
+                <I n={busy ? "loader" : "power"} className={busy ? "spin" : undefined} />
+                {t(running ? "s5.rt.turnOff" : "s5.rt.turnOn")}
+              </button>
+            )}
+            {premium && STAGING && (
+              <button type="button" className="btn sm" onClick={() => void api.routeToken().then((tk) => copy(tk, "token"), (e) => setError(String(e)))}>
+                <I n={copied === "token" ? "check" : "copy"} />
+                {copied === "token" ? t("route.copied") : t("route.copyToken")}
+              </button>
+            )}
+          </div>
         </div>
-      </motion.section>
+        <div className={`dg${running ? "" : " idle"}`} role="img" aria-label={t("s5.rt.paths")}>
+          <svg className="ln" viewBox="0 0 822 350" preserveAspectRatio="none">
+            <path className={line(direct)} d={LINES[0]} />
+            <path className={line(relay)} d={LINES[1]} />
+            <path className={line(backup)} d={LINES[2]} />
+            <path className={playing ? "live" : "off"} d="M628 175 L 690 175" />
+            {/* petits paquets le long des trajets actifs (maquette : à 16, 30, 72 et 86 % du chemin), qui avancent pendant
+                la partie */}
+            {playing &&
+              [direct, relay, backup].map((p, i) =>
+                p && p.alive
+                  ? PACKETS.map((k) => (
+                      <rect key={`${i}-${k}`} x="-4" y="-4" width="8" height="8" rx="2">
+                        {still ? (
+                          <animateMotion path={LINES[i]} keyPoints={`${k};${k}`} keyTimes="0;1" calcMode="linear" dur="1s" fill="freeze" />
+                        ) : (
+                          <animateMotion path={LINES[i]} dur="2.4s" begin={`${-k * 2.4}s`} repeatCount="indefinite" />
+                        )}
+                      </rect>
+                    ))
+                  : null,
+              )}
+          </svg>
+          <div className="nd pc" style={{ left: 88, top: 175 }}>
+            <I n="monitor" />
+            <b>{t("s5.rt.pc")}</b>
+          </div>
+          {[direct, relay, backup].map((p, i) =>
+            p ? (
+              <div key={i} className={`pl${p.alive ? "" : " down"}`} style={{ left: 318, top: SLOTS[i] }} title={p.rttMs != null ? `${Math.round(p.rttMs)} ms` : undefined}>
+                <b>{label(p)}</b>
+                <span>{!p.alive ? t("s5.rt.down") : t("s5.rt.first", { n: Math.round(p.firstPct) })}</span>
+              </div>
+            ) : (
+              <div key={i} className="pl add" style={{ left: 318, top: SLOTS[i] }}>
+                {i === 2 && <I n="plus" />}
+                <b>{i === 0 ? t("s5.rt.direct", { city: "paris" }) : i === 1 ? t("s5.rt.via", { city: "frankfurt" }) : t(secondLink && !phoneLink ? "s5.rt.second" : "s5.rt.phone")}</b>
+              </div>
+            ),
+          )}
+          <div className="nd ex" style={{ left: 556, top: 175 }}>
+            <b>rago</b>
+            <small>{t("s5.rt.exit")}</small>
+          </div>
+          {running && st?.exitPingMs != null && (
+            <div className="ms" style={{ left: 662, top: 160 }}>
+              {Math.round(st.exitPingMs)}
+              <small>ms</small>
+            </div>
+          )}
+          <div className="nd sv2" style={{ left: 752, top: 175 }}>
+            <b>hypixel</b>
+            <small>{t("s5.rt.server")}</small>
+          </div>
+        </div>
+      </section>
 
-      {running && (
-        <motion.section variants={rise} className="card nt-hero">
-          <header className="card-head">
-            <h3 className="rg-overline">{t("route.paths")}</h3>
-          </header>
-          <div className="rt-paths">
-            {(st?.paths ?? []).map((p, i) => (
-              <PathRow key={i} p={p} t={t} />
-            ))}
-          </div>
-          <div className="nt-stats rt-stats">
-            <Stat label={t("route.exitPing")} value={ms(st?.exitPingMs)} unit="ms" />
-            <Stat label={t("route.saved")} value={String(st?.saved ?? 0)} />
-            <Stat label={t("route.repaired")} value={String(st?.repaired ?? 0)} />
-            <Stat label={t("route.resends")} value={String((st?.resendsHere ?? 0) + (st?.resendsExit ?? 0))} />
-            <Stat label={t("route.lag")} value={ms(lag)} unit="ms" warn={lag != null && lag > 50} />
-          </div>
-          {!playing && <p className="muted small rt-note">{t("route.waiting")}</p>}
-        </motion.section>
-      )}
-    </motion.div>
+      <div className={`nums${running ? "" : " idle"}`}>
+        <div className="num2">
+          <b>{running ? fmt(st?.saved ?? 0) : "–"}</b>
+          <span className="lbl">{t("s5.rt.saved")}</span>
+        </div>
+        <div className="num2">
+          <b>{running ? fmt(st?.repaired ?? 0) : "–"}</b>
+          <span className="lbl">{t("s5.rt.repaired")}</span>
+        </div>
+        <div className="num2">
+          <b>{running ? fmt((st?.resendsHere ?? 0) + (st?.resendsExit ?? 0)) : "–"}</b>
+          <span className="lbl">{t("s5.rt.resends")}</span>
+        </div>
+        <div className="num2">
+          <b>
+            {running && lag != null ? (Math.round(lag * 10) / 10).toLocaleString(lang === "fr" ? "fr-FR" : "en-US") : "–"}
+            {running && lag != null && <small>ms</small>}
+          </b>
+          <span className="lbl">{t("s5.rt.lag")}</span>
+        </div>
+      </div>
+      {running && !playing && <p className="note">{t("route.waiting")}</p>}
+
+      <section className="backup">
+        <div className="sh">
+          <h2 className="h2 tape">{t("s5.rt.backup")}</h2>
+        </div>
+        <div className="bk">
+          <Backup
+            title={t("s5.rt.phone")}
+            hint={phoneLink ? t("s5.rt.phoneD") : t("s5.rt.noPhone")}
+            link={phoneLink?.name}
+            chosen={!!phoneLink && chosen === phoneLink.name}
+            locked={running}
+            lockedWhy={t("s5.rt.whileOn")}
+            onPick={(on) => chooseLink(on ? phoneLink!.name : null)}
+            added={t("s5.rt.added")}
+          />
+          <Backup
+            title={t("s5.rt.second")}
+            hint={secondLink ? t("s5.rt.secondD") : t("s5.rt.noSecond")}
+            link={secondLink?.name}
+            chosen={!!secondLink && chosen === secondLink.name}
+            locked={running}
+            lockedWhy={t("s5.rt.whileOn")}
+            onPick={(on) => chooseLink(on ? secondLink!.name : null)}
+            added={t("s5.rt.added")}
+          />
+        </div>
+        {!running && found?.check && <PhoneCheck c={found.check} />}
+      </section>
+    </>
+  );
+}
+
+/** Un trajet de secours (carreau .tw.add de la maquette) : pâli tant que Windows ne voit pas la connexion ; un clic
+ * l'ajoute ou le retire au prochain démarrage. */
+function Backup({ title, hint, link, chosen, locked, lockedWhy, onPick, added }: { title: string; hint: string; link?: string; chosen: boolean; locked: boolean; lockedWhy: string; onPick: (on: boolean) => void; added: string }) {
+  const off = !link;
+  return (
+    <button
+      type="button"
+      className={`tw add${off ? " dim" : ""}${chosen ? " on" : ""}`}
+      disabled={off || locked}
+      aria-pressed={chosen}
+      title={locked && link ? lockedWhy : link}
+      onClick={() => onPick(!chosen)}
+    >
+      <I n={chosen ? "check" : "plus"} />
+      <span className="nm">{title}</span>
+      <small>{chosen ? added : hint}</small>
+    </button>
   );
 }
 
@@ -234,7 +324,8 @@ export function RouteTab() {
 const ITUNES = "https://www.apple.com/itunes/download/win64";
 
 /** Diagnostic du partage de connexion USB : chaque étape vérifiée, la première ratée explique quoi faire. */
-function PhoneCheckBox({ c, t }: { c: RouteCheck; t: (k: Key, v?: Record<string, string | number>) => string }) {
+function PhoneCheck({ c }: { c: RouteCheck }) {
+  const { t } = useStore();
   const [copied, setCopied] = useState(false);
   async function copy() {
     try {
@@ -246,65 +337,29 @@ function PhoneCheckBox({ c, t }: { c: RouteCheck; t: (k: Key, v?: Record<string,
     }
   }
   return (
-    <div className="rt-check small">
-      <div className="rt-check-title">{t(c.phone === "iphone" ? "route.check.iphone" : c.phone === "android" ? "route.check.android" : "route.check.none")}</div>
-      <ul className="rt-check-steps">
+    <div className="rchk panel">
+      <h3>{t(c.phone === "iphone" ? "route.check.iphone" : c.phone === "android" ? "route.check.android" : "route.check.none")}</h3>
+      <ul>
         {c.steps.map((s) => (
           <li key={s.code} className={s.ok ? "ok" : "ko"}>
-            {s.ok ? <Check size={14} aria-hidden /> : <X size={14} aria-hidden />}
-            <span>{t(`route.step.${s.code}`)}</span>
+            <I n={s.ok ? "check" : "x"} />
+            {t(`route.step.${s.code}`)}
           </li>
         ))}
       </ul>
-      <p className="rt-check-why">{t(`route.why.${c.why}`)}</p>
-      <div className="rt-check-actions">
+      <p>{t(`route.why.${c.why}`)}</p>
+      <div className="acts">
         {(c.why === "apple_usb" || c.why === "apple_net") && (
-          <button type="button" className="rt-help-link" onClick={() => api.openUrl(ITUNES).catch(() => {})}>
+          <button type="button" className="btn sm" onClick={() => void api.openUrl(ITUNES).catch(() => {})}>
+            <I n="external" />
             {t("route.check.itunes")}
           </button>
         )}
-        <button type="button" className="rt-help-link muted" onClick={copy}>
+        <button type="button" className="btn sm" onClick={() => void copy()}>
+          <I n={copied ? "check" : "copy"} />
           {copied ? t("route.check.copied") : t("route.check.copy")}
         </button>
       </div>
-    </div>
-  );
-}
-
-function PathRow({ p, t }: { p: RoutePath; t: (k: Key, v?: Record<string, string | number>) => string }) {
-  const name =
-    p.kind === "direct"
-      ? t("route.path.direct", { city: p.via })
-      : p.kind === "phone"
-        ? t("route.path.phone", { city: p.via })
-        : p.kind === "second"
-          ? t("route.path.second", { city: p.via })
-          : t("route.path.relay", { city: p.via });
-  return (
-    <div className={`rt-path${p.alive ? "" : " down"}`}>
-      <span className="rt-dot" aria-hidden />
-      <div className="rt-path-name">
-        <div>{name}</div>
-        <div className="muted small">
-          {t("route.first", { n: Math.round(p.firstPct) })} · {t("route.loss", { n: p.lossPct.toFixed(1) })} · {t("route.mb", { n: p.mb.toFixed(1) })}
-        </div>
-      </div>
-      <div className="rt-path-rtt rg-metric">
-        {p.alive ? ms(p.rttMs) : t("route.down")}
-        {p.alive && <span>ms</span>}
-      </div>
-    </div>
-  );
-}
-
-function Stat({ label, value, unit, warn }: { label: string; value: string; unit?: string; warn?: boolean }) {
-  return (
-    <div className="net-stat">
-      <div className={`net-stat-value rg-metric${warn ? " warn" : ""}`}>
-        {value}
-        {unit && <span>{unit}</span>}
-      </div>
-      <div className="net-stat-label">{label}</div>
     </div>
   );
 }

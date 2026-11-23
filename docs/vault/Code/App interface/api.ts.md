@@ -2,7 +2,7 @@
 type: code
 tags: [code, app, typescript, interface]
 fichier: app/src/lib/api.ts
-lignes: 1713
+lignes: 1729
 maj: 2026-11-23
 ---
 # api.ts
@@ -65,7 +65,7 @@ Chaque ligne : nom dans `api` → commande Rust (paramètres) → ce que fait le
 | `undoAllPlan()` | `undo_all_plan` | réglages appliqués, du plus récent au plus ancien (puis par id) |
 | `signOutPlan()` | `sign_out_plan` | même liste |
 | `takeRepairNotice()` | `take_repair_notice` | `true` si `localStorage` `rago.demoRepair` = `1` |
-| `liveStats()` | `live_stats` | `ready: false` la première seconde, puis RAM 38–64 %, CPU 3–60 %, GPU 0–75 % qui dérivent au hasard ; GPU `null` si `rago.demoNoGpu` = `1` ; RAM totale 32 Gio |
+| `liveStats()` | `live_stats` | `ready: false` la première seconde, puis RAM 38–64 %, CPU 3–60 %, GPU 0–75 % qui dérivent au hasard ; GPU `null` si `rago.demoNoGpu` = `1` ; RAM totale 32 Gio ; ping 17–20 ms, `null` si `rago.demoOffline` = `1` (23/11) |
 | `openTaskManager()` | `open_task_manager` | message console |
 | `cleanRam(trim)` | `clean_ram { trim }` | 900 ms, 1,2 à 2,8 Gio de cache vidé ; avec `trim`, 0,4 Gio et 7 applis |
 | `minecraftStatus(dir?)` | `minecraft_status { dir }` | le dossier demandé (sinon `C:\Users\Player\AppData\Roaming\.minecraft`), présent, fichier OptiFine présent, 2 sauvegardes |
@@ -108,7 +108,7 @@ Chaque ligne : nom dans `api` → commande Rust (paramètres) → ce que fait le
 **Réseau**
 | Fonction | Commande | Simulateur |
 |---|---|---|
-| `netTest(ids)` | `net_test { ids }` | par serveur : 40 essais (8 pour `hypixel` et `minemen`), un toutes les 250 ms (1,4 s pour Minecraft, 8 ms avec `?fastnet`) ; ping de base Hypixel 92, Minemen 21, Paris 9, Frankfurt 17, London 14, Stockholm 33, Madrid 28, Virginia 86, Internet 7 ; un pic tous les 13 essais ; Virginia perd l'essai 17 ; calcule moyenne, médiane, meilleur, pire, gigue, pertes, pics (au-dessus de médiane + max(15, médiane/2)) ; émet `nettest:sample` et `nettest:measure` |
+| `netTest(ids)` | `net_test { ids }` | par serveur : 40 essais (8 pour `hypixel` et `minemen`), un toutes les 250 ms (1,4 s pour Minecraft, 8 ms avec `?fastnet`) ; depuis le 23/11, les valeurs de la maquette v5 : ping de base Hypixel 96, Minemen 22, Paris 16,5, Frankfurt 24, London 20, Stockholm 39, Madrid 32, Virginia 90, Internet 7,5 ; un pic au 24e essai ; Paris perd l'essai 32 ; serveur au choix `host:…` : ping de Minecraft (31 ms) si son nom contient hypixel, minemen, mc ou play, sinon écho (12 ms) ; `rago.demoOffline` = `1` : tous les serveurs en erreur `dns` après 600 ms ; calcule moyenne, médiane, meilleur, pire, gigue, pertes, pics (au-dessus de médiane + max(15, médiane/2)) ; émet `nettest:sample` et `nettest:measure` |
 | `onNetMeasure(cb)` / `onNetSample(cb)` | événements `nettest:measure` / `nettest:sample` | bus local |
 | `netOptState()` | `netopt_state` | `{ applied, backup, busy }` en mémoire |
 | `netOptRun(action, options?)` | `netopt_run { action, options }` | `apply` : 11 titres de sections avec lignes `ok`/`warn`/`info` (préfixes `!` et `..`) et une ligne `progress` par section ; `restore`/`defaults` : 4 titres ; `detect` : Ethernet Intel I225-V 1 Gbps ; `quality`, `loaded`, `mtu`, `status` : barre de progression puis résultat type (note `A` pour `loaded`) |
@@ -179,7 +179,7 @@ Les **12 événements** écoutés par l'interface sont donc : `run:item`, `run:l
   2. une variante marquée `revert` dans le catalogue sur un réglage déjà appliqué est notée comme une annulation, **sauf** pour `rbw_mode` (son « Désactivé » lance un script complet) ;
   3. `rbw_mode` appliqué est noté `windowsValues: true` et `backup: false`.
   Le lot se termine par `run:done` avec un faux chemin de journal.
-- **Persistance de la démo** dans le `localStorage` du navigateur : `rago.demoApplied` (réglages appliqués), `rago.demoLicense` (adresse Premium), `rago.demoDisplay` (couleurs et résolution par jeu). Les autres réglages de démo sont des interrupteurs à poser à la main dans la console : `rago.demoRestoreFail`, `rago.demoRepair`, `rago.demoNoGpu`, `rago.demoSim` = `revoked`.
+- **Persistance de la démo** dans le `localStorage` du navigateur : `rago.demoApplied` (réglages appliqués), `rago.demoLicense` (adresse Premium), `rago.demoDisplay` (couleurs et résolution par jeu). Les autres réglages de démo sont des interrupteurs à poser à la main dans la console : `rago.demoRestoreFail`, `rago.demoRepair`, `rago.demoNoGpu`, `rago.demoSim` = `revoked`, `rago.demoOffline` = `1` (PC sans réseau : ping en direct et test réseau, 23/11).
 - **Paramètres d'adresse de démo** : `?why=<étape>` (diagnostic Rago Route), `?playing` (partie en cours), `?fastnet` (test réseau rapide), `?update` (mise à jour prête), `?pill`, `?passive`, `?estimate` (barre en jeu, avec `overlay.html`), `?amd`, `?intel` (page Couleurs et résolution : carte AMD, écran sans saturation).
 - **Remise à zéro simulée** (`mockReset`) : 1,5 s après une déconnexion ou un abonnement révoqué, vide les réglages appliqués et émet `reset:done`.
 
