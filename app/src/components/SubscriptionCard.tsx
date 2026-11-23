@@ -3,13 +3,15 @@
 // puis deux boutons de même taille. Pas de remise, pas de second écran, pas de frais.
 // Écran v5 (maquettes app-settings*.html) : une ligne .sr du bloc « account » ; résilié, la ligne .sr.cxl et le
 // bouton rouge « resume subscription ». L'en-tête de la page lit le même abonnement (useSubscription).
+// La fenêtre de résiliation reprend les maquettes app-cancel-before et app-cancel-done (win.css, `.mdl.sm.cxm`) :
+// une ligne `.cf` par fait avec son icône, les dates et les nombres en gras (`**…**` lus par Rich).
 import { useEffect, useState } from "react";
 import { api } from "../lib/api";
 import { accountApi, asAccountError, formatPrice, type Subscription } from "../lib/accountApi";
 import { useStore } from "../lib/store";
 import { lastGain } from "../lib/analysis";
 import { Modal } from "./Modal";
-import { Button } from "./ui";
+import { I, Rich } from "../s5/I";
 import type { Key } from "../lib/i18n";
 
 export const longDate = (lang: string, iso: string) =>
@@ -89,34 +91,61 @@ export function SubscriptionRow({ sub, onChange }: { sub: Subscription; onChange
           </button>
         )}
       </div>
-      <Modal open={ask} onClose={() => !busy && setAsk(false)} className="confirm cancel-sub">
+      <Modal open={ask} onClose={() => !busy && setAsk(false)} v5="sm cxm">
         {done ? (
           <>
-            <h2>{sub.trial ? t("sub.doneTrialTitle") : t("sub.doneTitle")}</h2>
-            <p>{t("sub.doneLead", { date: sub.endsAt ? longDate(lang, sub.endsAt) : "" })}</p>
-            <div className="modal-actions">
-              <Button variant="primary" onClick={() => setAsk(false)}>
+            <h2 className="h2 tape mt">{sub.trial ? t("sub.doneTrialTitle") : t("sub.doneTitle")}</h2>
+            <p className="ml">{t("sub.doneLead", { date: sub.endsAt ? longDate(lang, sub.endsAt) : "" })}</p>
+            <div className="mf">
+              <button type="button" className="btn red" autoFocus onClick={() => setAsk(false)}>
                 {t("sub.close")}
-              </Button>
+              </button>
             </div>
           </>
         ) : (
           <>
-            <h2>{t("sub.beforeTitle")}</h2>
-            <ul className="cancel-facts">
-              <li>{sub.trial ? t("sub.factTrial", { date: date ? longDate(lang, date) : "" }) : t("sub.factEnd", { date: date ? longDate(lang, date) : "" })}</li>
-              {undo > 0 && <li>{t("sub.factUndo", { n: undo })}</li>}
-              {gain && <li>{t("sub.factGain", { what: gain })}</li>}
-              <li>{t("sub.factUndoFree")}</li>
+            <h2 className="h2 tape mt">{t("sub.beforeTitle")}</h2>
+            <ul className="cf">
+              <li>
+                <I n="clock" />
+                <span>
+                  <Rich text={t(sub.trial ? "sub.factTrial" : "sub.factEnd", { date: date ? `**${longDate(lang, date)}**` : "" })} />
+                </span>
+              </li>
+              {undo > 0 && (
+                <li>
+                  <I n="undo" />
+                  <span>
+                    <Rich text={t("sub.factUndo", { n: undo })} />
+                  </span>
+                </li>
+              )}
+              {gain && (
+                <li>
+                  <I n="activity" />
+                  <span>
+                    <Rich text={t("sub.factGain", { what: `**${gain}**` })} />
+                  </span>
+                </li>
+              )}
+              <li>
+                <I n="shield" />
+                <span>{t("sub.factUndoFree")}</span>
+              </li>
             </ul>
-            {err && <p className="small error-text">{err}</p>}
-            <div className="modal-actions even">
-              <Button disabled={busy} onClick={() => setAsk(false)}>
+            {err && (
+              <p className="err2">
+                <I n="alert" />
+                <span>{err}</span>
+              </p>
+            )}
+            <div className="mf even">
+              <button type="button" className="btn" autoFocus disabled={busy} onClick={() => setAsk(false)}>
                 {t("sub.keep")}
-              </Button>
-              <Button disabled={busy} onClick={() => void act(true)}>
+              </button>
+              <button type="button" className="btn" disabled={busy} onClick={() => void act(true)}>
                 {sub.trial ? t("sub.cancelTrial") : t("sub.cancel")}
-              </Button>
+              </button>
             </div>
           </>
         )}

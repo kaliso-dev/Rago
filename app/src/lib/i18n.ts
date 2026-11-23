@@ -183,7 +183,6 @@ const fr = {
 
   "demo.banner": "Démo web : les réglages sont simulés",
   "staging.banner": "Serveur de test (staging)",
-  "run.applied": "Appliqué.",
 
   "free.lock": "Premium",
   "free.plan": "Plan gratuit",
@@ -369,7 +368,7 @@ const fr = {
   "sub.beforeTitle": "Avant de résilier",
   "sub.factEnd": "Premium reste actif jusqu'au {date}. Rien d'autre n'est débité.",
   "sub.factTrial": "Ton essai s'arrête le {date} et tu ne seras pas débité.",
-  "sub.factUndo": "Ce jour-là, Rago remet comme avant le réglage Windows de ton tweak appliqué.|Ce jour-là, Rago remet comme avant les réglages Windows de tes {n} tweaks appliqués.",
+  "sub.factUndo": "Ce jour-là, Rago remet comme avant le réglage Windows de ton **tweak appliqué**.|Ce jour-là, Rago remet comme avant les réglages Windows de tes **{n} tweaks appliqués**.",
   "sub.factGain": "Mesuré sur ce PC avec tes réglages : {what}.",
   "sub.factUndoFree": "Annuler un tweak reste gratuit, toujours.",
   "sub.doneTitle": "Abonnement résilié",
@@ -1551,7 +1550,6 @@ const en: Record<Key, string> = {
   "run.reboot": "Restart now",
   "run.close": "Close",
   "run.openLog": "Open log",
-  "run.applied": "Applied.",
   "dash.overline": "Dashboard",
   "dash.title": "Dashboard",
   "dash.kick": "{n} tweaks",
@@ -1847,7 +1845,7 @@ const en: Record<Key, string> = {
   "sub.beforeTitle": "Before you cancel",
   "sub.factEnd": "Premium stays active until {date}. Nothing more is charged.",
   "sub.factTrial": "Your trial ends on {date} and you won't be charged.",
-  "sub.factUndo": "That day, Rago puts back the Windows setting of your applied tweak.|That day, Rago puts back the Windows settings of your {n} applied tweaks.",
+  "sub.factUndo": "That day, Rago puts back the Windows setting of your **applied tweak**.|That day, Rago puts back the Windows settings of your **{n} applied tweaks**.",
   "sub.factGain": "Measured on this PC with your tweaks: {what}.",
   "sub.factUndoFree": "Undoing a tweak stays free, always.",
   "sub.doneTitle": "Subscription canceled",
