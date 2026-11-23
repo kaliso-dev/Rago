@@ -19,7 +19,7 @@ Tout ce qui suit est CONFIRMÉ (code de `staging`, 10/11, commit `ee77d4f`), ave
 | `fonts.css` | 79 | les deux fenêtres | `@font-face` de Barlow (400, 500, 600, 700) et Barlow Condensed (600 à 900 droit, 700 à 900 italique), `font-display: block` |
 | `app.css` | 2922 | fenêtre principale | polices, cadre, barre de titre, navigation, pages, cartes, boutons, réglages, barre « Appliquer », fenêtres, exécution, tableau de bord, Minecraft, paramètres, licence, plan gratuit, verre, finitions, 1.3.0 |
 | `account.css` | 257 | fenêtre principale | avatar, invitation à laisser un avis, formulaire d'avis, carte Profil |
-| `features.css` | 4208 | fenêtre principale | fonctionnalités de la 1.2.0 et après (liste plus bas) |
+| `features.css` | 3850 | fenêtre principale | fonctionnalités de la 1.2.0 et après (liste plus bas) |
 | `overlay.css` | 747 | barre en jeu | toute la barre en jeu (RAG-82) ; la fin du fichier (section « Charte v5 ») la réhabille |
 | `v5.css` | 3004 | fenêtre principale, **chargée en dernier** | la charte v5 « Match day » posée sur les classes existantes (voir plus bas) |
 | `tips.css` | 214 | fenêtre principale et barre en jeu (importé par [[GameTips.tsx]]) | bloc des réglages conseillés (`.game-tips*`, `.game-tip*`), place sous le jeu en avant de la bibliothèque (`.games-hero-tips`), bloc des conseils de la barre en jeu qui défile à part (`.ov-advice`, 258 px au plus, fondu en bas ; `.ov-tips`), pastille élargie du rappel (`.ov-nudge*`). Voir [[Conseils au lancement du jeu]] |
@@ -110,8 +110,8 @@ Ce qui suit décrit `app.css` et `features.css`, toujours chargés. Sur `staging
   - 2976 et 3023 : Avancé et Réglages experts ;
   - 3289 : Analyser mon PC ;
   - 3556 : modifier un preset ;
-  - 3718 : Rago Route ;
-  - 3852 : couleurs et résolution par jeu (`.display-*`, page [[Display.tsx]] ; elle réutilise les curseurs `.no-slider` du Packet Optimizer et les puces `.chip-btn`).
+  - 3718 : Rago Route (fin du fichier).
+  - La section « couleurs et résolution par jeu » (`.display-*`) est retirée depuis le 23/11 : [[Display.tsx]] est refaite sur la maquette v5 ([[Maquettes v5 dans l'app (s5)]]).
 - Le titre de la section Rago Route dit encore « exe de test » : en retard, l'onglet est dans tous les exe depuis le 10/11 (voir [[RouteTab.tsx]]).
 
 ## `account.css` et `overlay.css`

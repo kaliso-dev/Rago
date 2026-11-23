@@ -949,8 +949,12 @@ const mockDisplay: Record<string, DisplayProfile> = (() => {
   try {
     const saved = localStorage.getItem("rago.demoDisplay");
     if (saved) return JSON.parse(saved) as Record<string, DisplayProfile>;
-    // comme la maquette : Valorant en 1280×960 étiré, saturation à 100 %
-    return { "riot:valorant": { colors: { vibrance: 100, brightness: 0, contrast: 0, gamma: 100 }, resolution: { width: 1280, height: 960, stretch: true, gameFile: true }, pro: null } };
+    // comme la maquette : Valorant en 1280×960 étiré, saturation à 100 %, luminosité +6, contraste +4, TenZ importé ;
+    // CS2 en 1280×960 étiré (2 jeux réglés sur 9)
+    return {
+      "riot:valorant": { colors: { vibrance: 100, brightness: 6, contrast: 4, gamma: 100 }, resolution: { width: 1280, height: 960, stretch: true, gameFile: false }, pro: "tenz" },
+      "steam:730": { colors: null, resolution: { width: 1280, height: 960, stretch: true, gameFile: true }, pro: null },
+    };
   } catch {
     return {};
   }
@@ -1551,10 +1555,11 @@ const mockApi: Api = {
     await sleep(200);
     // ?amd / ?intel : la démo montre une carte AMD, ou un écran sans saturation
     const q = new URLSearchParams(location.search);
-    const modes: [number, number][] = [[1920, 1080], [1680, 1050], [1600, 900], [1440, 1080], [1366, 768], [1280, 1024], [1280, 960], [1280, 720], [1024, 768], [800, 600]];
+    // écran de la maquette : 2560×1440 à 240 Hz
+    const modes: [number, number][] = [[2560, 1440], [1920, 1080], [1680, 1050], [1600, 900], [1440, 1080], [1366, 768], [1280, 1024], [1280, 960], [1280, 720], [1024, 768], [800, 600]];
     return {
       vibrance: q.has("intel") ? null : q.has("amd") ? "amd" : "nvidia",
-      monitor: { device: "\\\\.\\DISPLAY1", name: "ZOWIE XL LCD", width: 1920, height: 1080, hz: 240, modes },
+      monitor: { device: "\\\\.\\DISPLAY1", name: "ZOWIE XL LCD", width: 2560, height: 1440, hz: 240, modes },
     };
   },
   displayProfiles: async () => ({ ...mockDisplay }),

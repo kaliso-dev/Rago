@@ -12,15 +12,16 @@ Depuis le 23/11/2026, l'app reprend **le HTML et le CSS des maquettes v5 tels qu
 | Fichier | Rôle |
 |---|---|
 | `s5/base.css` | **généré** : `rago5.css` + `round.css` + `poster.css` + `frame.css` des maquettes, les effets des boutons d'`anim.css` et le CSS injecté par `printicons.js` et `icons.js`. Ne pas éditer à la main. |
-| `s5/pages/<page>.css` | **généré** : le `<style>` d'une maquette, chaque sélecteur rattaché à la racine de la page (`.pg-dash` pour le tableau de bord, `.pg-games` pour les jeux). Le `.main` de la maquette devient la racine de la page. |
+| `s5/pages/<page>.css` | **généré** : le `<style>` d'une maquette, chaque sélecteur rattaché à la racine de la page (`.pg-dash` pour le tableau de bord, `.pg-games` pour les jeux, `.pg-display` pour Display ; dans `pg-display.css`, l'image de fond de l'aperçu est retirée à la main, la page pose la capture du jeu choisi). Le `.main` de la maquette devient la racine de la page. |
 | `s5/pages/empty.css` | `empty.css` des maquettes (écrans vides et fenêtre d'erreur), `.empty` devenu `.empty.panel` pour ne pas toucher l'ancienne classe `.tools-row.empty`. |
 | `s5/pages/picker.css` | fenêtre du choix de preset ([[PresetPicker.tsx]]) : le `<style>` de `app-preset-picker.html` et les règles de fenêtre de `win.css` (`.dim2`, `.mdl`, `.ml`, `.mf`), limitées à `.ovl` en attendant le portage de toutes les fenêtres (`win.css` a un `.grp` qui toucherait la barre latérale). |
+| `s5/pages/vs.css` | ligne déchirée du face à face de Display qu'on glisse : les règles `.half.before` / `.half.after` d'`anim.css` (bande déchirée de 150 px posée à `--xl`), sans `html.anim`. |
 | `s5/app.css` | écrit à la main : seulement ce que la fenêtre change (barre latérale et barre du haut fixes, page qui défile dessous, boutons `<button>` à la place des `<span>` des maquettes, états que les maquettes ne montrent pas). |
 | `s5/iconData.ts` | **généré** depuis `icons.js` et `bigicons.js` : icônes au trait, icônes imprimées, alias des noms (`grid` → `dashboard`…), filtres, tracé du R, grandes icônes des écrans vides (`BIG_ICONS` : games, offline, alert, library). |
 | `s5/I.tsx` | `<I n="…"/>` remplace `<i data-i="…">` des maquettes, avec les couleurs que `icons.js` choisit selon le fond ; `IconDefs`, `LogoR`, `Seg` (barre à segments `.seg`), `BigIcon` (`data-big` des maquettes), `Rich` (texte avec des mots en gras écrits `**mot**`). |
-| `s5/ui.tsx` | `Tabs` : les onglets `.tabs` des maquettes, cliquables au clavier et à la souris, avec leur compte (`<em>`) et leur étiquette (`.k`). |
-| `s5/art.ts` | images des jeux embarquées (`assets/s5/games/<sorte>/<jeu>.webp`), clé d'un jeu d'après son id ou son nom (`gameKey`), `coverOf(jeu, sorte)`, `artByKey(clé, sorte)`. |
-| `s5/text.ts` | « 2 days ago », « last week » (`ago` ; « 2 h ago » avec `short`) et date courte (`shortDate`). |
+| `s5/ui.tsx` | `Tabs` : les onglets `.tabs` des maquettes, cliquables au clavier et à la souris, avec leur compte (`<em>`) et leur étiquette (`.k`) ; `Sw` : l'interrupteur `.sw` (un `<button role="switch">`). |
+| `s5/art.ts` | images des jeux embarquées (`assets/s5/games/<sorte>/<jeu>.webp`), clé d'un jeu d'après son id ou son nom (`gameKey`), `coverOf(jeu, sorte)`, `artByKey(clé, sorte)` ; photos des pros (`assets/s5/pros/<id>.webp`, 280 × 430) par `proPhoto(id)`. |
+| `s5/text.ts` | « 2 days ago », « last week » (`ago` ; « 2 h ago » avec `short`) et date courte (`shortDate`) ; `displayName` : nom court d'un jeu (sans « Tom Clancy's » ni ™ ®), pour Jeux et Display. |
 
 Les fichiers générés viennent de `rendus-v5/outils/port_s5.py` (dossier du projet, pas dans le dépôt) : `icons`, `base`, `page <maquette> <classe>`. Les images citées par le CSS des maquettes sont copiées dans `app/src/assets/s5/img/`.
 
@@ -29,7 +30,9 @@ Pour les 16 jeux qui ont un preset (clés `valorant`, `cs2`, `fortnite`, `apex`,
 - `cover/` : cover verticale 400 × 600 ([[PresetPicker.tsx]]) ;
 - `hero/` : grande illustration recadrée sur le personnage, 760 × 750 (jeu en tête de [[Games.tsx]]) ; pour CS2, la cover (son illustration large n'est qu'un fond orange) ;
 - `wide/` : vignette paysage 760 × 355 (vignettes de [[Games.tsx]], jeux du [[Dashboard.tsx]]) ; CS2 garde l'image de la maquette (`cs2.jpg`) ;
-- `play/` : capture en jeu 1600 × 900 (aperçu de la page Display, pas encore refaite).
+- `play/` : capture en jeu 1600 × 900 (aperçu avant / après de [[Display.tsx]]) ; pour Valorant, la capture d'Ascent de la maquette (`img/scenes/valorant-ascent.jpg`).
+Photos des pros (23/11) : `app/src/assets/s5/pros/` (WebP 280 × 430, 7 joueurs : tenz, kaajak et demon1 de la maquette ; device, donk, m0nesy et niko de `rago-redesign/images/pros/`), recadrées en haut au centre. Les autres pros de [[pros.json]] ont leurs initiales.
+
 Elles viennent du dossier du projet `rago-redesign/images/` (sources dans son `sources.md`), converties par `rendus-v5/outils/prep_art.py`. **Droits d'utilisation à vérifier avant la prod** (dit à Sofiene le 23/11).
 
 ## Fenêtre
@@ -43,8 +46,9 @@ Pour que le CSS des maquettes ne touche pas les pages pas encore refaites : `.bt
 |---|---|---|
 | Cadre : barre latérale, barre du haut, carte de mise à jour, bandeau de licence | `shell5.js`, `frame.css` | refait |
 | Tableau de bord | `app-dashboard-v2-pi.html` | refait, dans `staging` (PR #119) |
-| Jeux (lanceur, aucun jeu) | `app-games-pi.html`, `app-games-empty.html` | refait (branche `claude/app-v5-games`) |
-| Choix du preset (covers verticales) | `app-preset-picker.html` (nouvelle, 23/11) | refait, maquette à valider par Sofiene |
-| Le reste (display, modules, réseau, outils, souris, paramètres, partage, analyse, fenêtres, barre en jeu, démarrage) | voir l'inventaire des maquettes | à faire, ancienne interface en attendant |
+| Jeux (lanceur, aucun jeu) | `app-games-pi.html`, `app-games-empty.html` | refait, dans `staging` (PR #120) |
+| Choix du preset (covers verticales) | `app-preset-picker.html` (nouvelle, 23/11) | refait, dans `staging` (PR #120), maquette à valider par Sofiene |
+| Display (aperçu avant / après, ligne « vs » à glisser, photos des pros) | `app-display-pi.html` | refait (branche `claude/app-v5-display`) |
+| Le reste (modules, réseau, outils, souris, paramètres, partage, analyse, fenêtres, barre en jeu, démarrage) | voir l'inventaire des maquettes | à faire, ancienne interface en attendant |
 
 Rien de tout cela n'a été testé sur un vrai Windows.

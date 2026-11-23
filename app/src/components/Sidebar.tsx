@@ -27,17 +27,21 @@ export function Sidebar() {
   const { t, lang, page, goTo, isOn, applied } = useStore();
   const modules = new Map(catalog.modules.map((m) => [m.id, m]));
   const [games, setGames] = useState<number | null>(null);
+  // jeux réglés dans Display (couleurs ou résolution), comme « 2/9 » sur la maquette
+  const [shown, setShown] = useState<number | null>(null);
   useEffect(() => {
     let live = true;
     void api.gamesList(false).then((g) => live && setGames(g.length), () => {});
+    void api.displayProfiles().then((p) => live && setShown(Object.values(p).filter((x) => x.colors || x.resolution).length), () => {});
     return () => {
       live = false;
     };
-  }, [page === "games"]);
+  }, [page === "games", page === "display"]);
 
   const count = (id: string): string => {
     if (id in SWITCH) return isOn(SWITCH[id]) ? "on" : "off";
     if (id === "games") return games == null ? "" : String(games);
+    if (id === "display") return !games || shown == null ? "" : `${Math.min(shown, games)}/${games}`;
     if (!COUNTED.has(id)) return "";
     const m = modules.get(id);
     if (!m) return "";

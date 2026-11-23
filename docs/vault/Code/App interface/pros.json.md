@@ -3,7 +3,7 @@ type: code
 tags: [code, app, json, donnees, couleurs, résolution]
 fichier: app/src/data/pros.json
 lignes: 30
-maj: 2026-11-11
+maj: 2026-11-23
 ---
 # pros.json
 
@@ -24,7 +24,7 @@ Un objet JSON : `_doc` (explication en français), `updated` (`2026-11-11`, date
 | `stretch` | étirée (sinon bandes noires) |
 | `source`, `url` | site et page d'où vient le relevé |
 | `checked` | date de mise à jour de la page source (`AAAA-MM-JJ`, ou `AAAA-MM` quand le site ne donne que le mois) |
-| `monitor`, `ingame` | réglages de son écran et dans le jeu, **affichés seulement**, jamais appliqués |
+| `monitor`, `ingame` | réglages de son écran et dans le jeu, **affichés seulement** (le modèle d'écran, avant « : », sur la carte ; le reste en infobulle), jamais appliqués |
 
 ## Contenu (relevé du 11/11/2026)
 | Jeu | Pros (saturation · résolution) |
@@ -36,7 +36,7 @@ Un objet JSON : `_doc` (explication en français), `updated` (`2026-11-11`, date
 Sources : prosettings.net pour tous, sauf TenZ (specs.gg). Les dates des pages vont de septembre 2025 (Bugha) à novembre 2026.
 
 ## Qui le lit
-- Seulement [[Display.tsx]] (`import prosData from "../data/pros.json"`). Le moteur ([[display.rs]]) ne le lit pas : il reçoit le profil déjà rempli, et ne garde que l'id du pro pour savoir si un import est nouveau (Premium, voir [[lib.rs]]).
+- Seulement [[Display.tsx]] (`import prosData from "../data/pros.json"`). Photos des joueurs à part : `app/src/assets/s5/pros/<id>.webp` (7 sur 22 le 23/11, voir [[Maquettes v5 dans l'app (s5)]]) ; un pro sans photo a ses initiales. Le moteur ([[display.rs]]) ne le lit pas : il reçoit le profil déjà rempli, et ne garde que l'id du pro pour savoir si un import est nouveau (Premium, voir [[lib.rs]]).
 
 ## À savoir avant de modifier
 - **Revérifier avant chaque sortie** : les pros changent souvent de réglages. Mettre à jour `checked` de chaque pro touché et `updated`.

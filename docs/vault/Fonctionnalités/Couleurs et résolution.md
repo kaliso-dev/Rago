@@ -2,7 +2,7 @@
 type: fonctionnalité
 tags: [fonctionnalité, app, jeux, couleurs, résolution, premium]
 version_app: 1.3.0 (dans `staging`, pas encore publiée)
-maj: 2026-11-11
+maj: 2026-11-23
 ---
 # Couleurs et résolution
 
@@ -11,11 +11,13 @@ Page « Couleurs et résolution » de l'app (groupe « En jeu », sous Jeux) : l
 **Statut (11/11)** : **dans `staging`** depuis le 11/11 : PR #93, fusionnée avec les 5 autres nouveautés du 11/11 par la PR #92, sur « Push toutes les modification vers stagging pour que je puisse test la version test » de Sofiene, pour la version test (exe « Rago Optimizer Staging »). Part avec la [[Version 1.3.0]] (Sofiene, 11/11 à 09:20 UTC : « version fianle »). **Jamais testé sur Windows** ([[Règles de travail]]). CONFIRMÉ (GitHub, 11/11).
 
 ## Ce que voit le joueur
-- Choix du jeu parmi ceux de la [[Bibliothèque de jeux]] (Minecraft Java : une seule entrée pour tous ses launchers, comme dans Jeux). Depuis Jeux, une puce sur la fiche du jeu (« Saturation 55 % · 1440×1080 », ou « Couleurs et résolution » quand rien n'est réglé) ouvre la page sur ce jeu.
-- **Couleurs** (interrupteur) : saturation de 50 à 100 % (l'échelle du Digital Vibrance du panneau NVIDIA ; 50 % = Windows ; sur une carte AMD la valeur AMD est affichée à côté, par exemple « saturation AMD 140 ») ; en dépliant « Luminosité, contraste, gamma » : luminosité et contraste de −30 à +30, gamma de 0,70 à 1,50. Boutons « Aperçu 5 s » (sur l'écran principal, prolongé tant qu'on bouge un curseur) et « Valeurs de Windows ». Allumées pour la première fois à 70 % (50 % si l'écran n'a pas de saturation).
-- **Résolution** (interrupteur) : 1440×1080, 1280×960, 1024×768 (4:3), 1280×1024 (5:4), 1680×1050 (16:10), 1650×1080, 1720×1080 et 1750×1080 (étirées de Fortnite), ou toute autre résolution de l'écran ; « Étirée » ou « Bandes noires ». Une résolution que l'écran ne propose pas est marquée « À créer », avec la marche à suivre (panneau NVIDIA ou AMD Software). Pour Valorant, CS2 et Fortnite : « Écrire aussi dans les réglages du jeu » (activé d'office). Allumée pour la première fois sur la plus jouée par les pros du jeu : 1440×1080 (Valorant), 1280×960 (CS2), 1650×1080 (Fortnite), 1440×1080 pour les autres jeux.
-- **Réglages des pros** : 22 joueurs (5 Valorant, 13 CS2, 4 Fortnite) avec leur saturation, leur résolution, ce qu'ils règlent sur leur écran ou dans le jeu (affiché seulement, jamais appliqué), la source et sa date. « Importer » met leurs couleurs et leur résolution sur le jeu choisi, en un clic. Un pro qui joue à 50 % garde les couleurs de Windows ; un pro dont la saturation n'est pas publiée laisse les couleurs du joueur.
-- Bandeau d'état en haut : ce qui est posé en ce moment, et la dernière erreur (pilote qui refuse la saturation, Windows qui refuse la rampe, écran qui refuse la résolution, fichier du jeu en lecture seule, introuvable ou impossible à écrire). Une erreur disparaît dès que l'essai suivant du même genre marche.
+Page refaite le 23/11 à l'identique de la maquette v5 `app-display-pi.html` (branche `claude/app-v5-display`, PR vers `staging`), voir [[Display.tsx]] pour le détail.
+- Choix du jeu par des onglets (les 5 premiers, puis « +N ») parmi ceux de la [[Bibliothèque de jeux]] (Minecraft Java : une seule entrée pour tous ses launchers). Depuis Jeux, les cases « resolution » et « saturation » du jeu en tête ouvrent la page sur ce jeu.
+- **Aperçu avant / après** (demande de Sofiene du 23/11) : une capture du jeu, Windows à gauche, le jeu avec ses réglages à droite, séparés par la **ligne déchirée rouge « vs » qu'on glisse** (souris, doigt ou flèches du clavier). Les filtres de l'aperçu sont ceux que le moteur pose : saturation, puis la même rampe gamma (luminosité, contraste, gamma) ; la résolution est simulée (étirée : l'image s'élargit ; bandes noires : du noir sur les côtés).
+- **Couleurs** (interrupteur) : saturation de 50 à 100 % (l'échelle du Digital Vibrance du panneau NVIDIA ; 50 % = Windows ; sur une carte AMD, la valeur AMD est donnée, par exemple 140) sur une barre de 20 cases « gray / windows / max » (le pilote ne descend pas sous Windows) ; luminosité et contraste de −30 à +30, gamma de 0,70 à 1,50 (affiché en écart, « +20 »). Bouton « preview 5 s » (sur l'écran principal, prolongé tant qu'on bouge un réglage) et « windows defaults » (retire les réglages du jeu). Allumées pour la première fois à 70 % (50 % si l'écran n'a pas de saturation).
+- **Résolution** (interrupteur) : tuiles native, 1440×1080, 1280×960, 1024×768 (4:3), 1280×1024 (5:4), 1680×1050 (16:10) ; pour Fortnite 1650×1080, 1720×1080, 1750×1080, 1440×1080 et 1680×1050 ; « other… » pour toute autre résolution de l'écran ; « stretched » ou « black bars ». Une résolution que l'écran ne propose pas est pâlie, avec la marche à suivre pour la créer (panneau NVIDIA ou AMD Software). Pour Valorant, CS2 et Fortnite : « also write it into {jeu}'s settings ». Allumée pour la première fois sur la plus jouée par les pros du jeu : 1440×1080 (Valorant), 1280×960 (CS2), 1650×1080 (Fortnite), 1440×1080 pour les autres jeux.
+- **Réglages des pros** : 22 joueurs (5 Valorant, 13 CS2, 4 Fortnite), 3 cartes puis « all N … pros ». Chaque carte : **photo du joueur** (7 pour l'instant : TenZ, kaajak, Demon1, device, donk, m0NESY, NiKo ; les autres ont leurs initiales), écran, saturation, résolution, et « import ». Le nom ouvre la source ; les réglages de son écran et dans le jeu sont en infobulle (jamais appliqués). « Importer » met leurs couleurs et leur résolution sur le jeu choisi. Un pro qui joue à 50 % garde les couleurs de Windows ; un pro dont la saturation n'est pas publiée laisse les couleurs du joueur.
+- Puce en haut : « applies when {jeu} starts », « on now », « previewing on your screen », ou la dernière erreur (pilote qui refuse la saturation, Windows qui refuse la rampe, écran qui refuse la résolution, fichier du jeu en lecture seule, introuvable ou impossible à écrire). Une erreur disparaît dès que l'essai suivant du même genre marche.
 
 ## Gratuit ou Premium
 **Décision de Sofiene (11/11)**, carte « Saturation, résolution et presets des pros : gratuits ou Premium ? », choix « Presets des pros en Premium » : les réglages à la main sont gratuits ; l'import en un clic d'un pro est Premium (cadenas et fenêtre Premium dans la page, et refus `premium:no_license` par le moteur, comme pour les autres réglages Premium). Un pro importé reste appliqué si Premium s'arrête.
@@ -30,6 +32,7 @@ Page « Couleurs et résolution » de l'app (groupe « En jeu », sous Jeux) : l
 
 ## Limites connues
 - Pas de saturation sur une carte Intel ni sur un écran de portable branché à la puce Intel (luminosité, contraste et gamma marchent ; la page le dit).
+- Photos des pros et captures des jeux : droits d'utilisation à vérifier avant la prod (sources dans `rago-redesign/images/sources.md`, dossier du projet).
 - HDR : la rampe gamma et la saturation peuvent être ignorées par Windows (À VÉRIFIER sur Windows, [[Questions ouvertes]]).
 - Étirée : encore des bandes noires si le panneau NVIDIA ou AMD ne met pas l'échelle « Plein écran » par le GPU (aide dans la page).
 
@@ -43,4 +46,4 @@ Page « Couleurs et résolution » de l'app (groupe « En jeu », sous Jeux) : l
 
 ## Code
 - Moteur : nouveau module [[display.rs]] ; commandes `display_info`, `display_profiles`, `display_state`, `display_set_profile`, `display_preview` et événement `display:state` dans [[lib.rs]] ; la résolution est posée par `game_launch` ; jeux en cours lus dans [[games.rs]] ; remise à la désinstallation par [[reset.rs]]. Voir [[Architecture de l'app]].
-- Interface : nouvelle page [[Display.tsx]], réglages des pros dans [[pros.json]], cases « resolution » et « saturation » du jeu en tête dans [[Games.tsx]], entrée de [[Sidebar.tsx]], démo dans [[api.ts]] (`?amd` et `?intel` pour voir une carte AMD ou un écran sans saturation).
+- Interface : page [[Display.tsx]] (refaite le 23/11 selon la maquette v5), réglages des pros dans [[pros.json]], photos des pros dans `app/src/assets/s5/pros/`, cases « resolution » et « saturation » du jeu en tête dans [[Games.tsx]], entrée de [[Sidebar.tsx]] (compte « jeux réglés / jeux »), démo dans [[api.ts]] (`?amd` et `?intel` pour voir une carte AMD ou un écran sans saturation).
