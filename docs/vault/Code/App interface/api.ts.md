@@ -2,7 +2,7 @@
 type: code
 tags: [code, app, typescript, interface]
 fichier: app/src/lib/api.ts
-lignes: 1729
+lignes: 1730
 maj: 2026-11-23
 ---
 # api.ts
@@ -86,9 +86,9 @@ Chaque ligne : nom dans `api` → commande Rust (paramètres) → ce que fait le
 | `toolsClean(areas)` | `tools_clean { areas }` | 1,4 s ; vide les zones choisies, garde 8 % de `browsers` (navigateur ouvert) et compte 37 fichiers laissés |
 | `toolsApps()` | `tools_apps` | 700 ms, 12 applis (Actualités, Météo, Teams, Candy Crush, TikTok…) |
 | `toolsRemoveApps(ids)` | `tools_remove_apps { ids }` → applis encore installées | 1,6 s, retire les ids. Gratuit (le commentaire « Premium » de l'interface, périmé, a été corrigé dans la PR #90) |
-| `toolsDrivers()` | `tools_drivers` | 1,1 s, 3 pilotes (carte graphique 08/2024, réseau 10/2023, audio 09/2021) et une carte mère ASUS |
+| `toolsDrivers()` | `tools_drivers` | 1,1 s, 3 pilotes (carte graphique NVIDIA 32.0.15.6614 datée d'il y a 38 jours, comme la maquette ; réseau 10/2023 ; audio 09/2021) et une carte mère « ASUSTeK COMPUTER INC. » « ROG Strix B650-A Gaming WiFi » |
 | `toolsWindowsUpdate()` | `tools_windows_update` | rien |
-| `toolsStartup()` | `tools_startup` | 800 ms, 9 programmes : Discord, EpicGamesLauncher, Microsoft Edge, OneDrive, Steam (allumés), Spotify (coupé), Riot Vanguard, RtkAudUService, SecurityHealth (gardés) (PR #90) |
+| `toolsStartup()` | `tools_startup` | 800 ms, 9 programmes : Discord, EpicGamesLauncher, Microsoft Edge, OneDrive (allumés), Spotify et Steam (coupés, comme la maquette depuis le 23/11), Riot Vanguard, RtkAudUService, SecurityHealth (gardés) (PR #90) |
 | `toolsSetStartup(id, enabled)` | `tools_set_startup { id, enabled }` → liste à jour | 350 ms ; refuse un id inconnu et la coupure d'un programme gardé, comme le moteur (PR #90) |
 | `toolsPowerPlans()` | `tools_power_plans` | 500 ms, 3 modes : Balanced (actif), High performance, Ultimate Performance (PR #90) |
 | `toolsSetPowerPlan(guid)` | `tools_set_power_plan { guid }` → liste à jour | 400 ms ; refuse un GUID inconnu (PR #90) |

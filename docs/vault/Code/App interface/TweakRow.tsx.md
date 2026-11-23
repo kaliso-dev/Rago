@@ -16,7 +16,7 @@ Statut : dans `staging` (PR #122, fusionnée le 23/11). Jamais testé sur Window
   - `mod` : le module de la page ; un réglage qui vient d'un autre module (renvoi `ref`) affiche « Also in {module} » ;
   - `adv` : carreau d'un réglage avancé déplié (classe `advx`) ;
   - `label` : nom court du carreau à la place du nom du catalogue (ajouté le 23/11, PR #123, pour l'onglet des réglages de Réseau comme la maquette).
-- Rendu par [[ModulePage.tsx]] (pages des modules), par [[NetTweaks.tsx]] (onglet des réglages de [[Network.tsx]], depuis le 23/11) et par [[Tools.tsx]] (liste « Tous les outils de l'app », dans un `div.pg-mod.embed > .tgrid` en attendant que la page Outils soit refaite).
+- Rendu par [[ModulePage.tsx]] (pages des modules), par [[NetTweaks.tsx]] (onglet des réglages de [[Network.tsx]], depuis le 23/11) et par [[Tools.tsx]] (« all of the app's tools », dans la `.tgrid` de chaque groupe, avec `adv` pour les réglages à risque, depuis la refonte v5 de la page Outils, PR #124).
 - Interne : `Glyph` (pastille d'un jeu dans le menu des jeux : « V » sur rouge #FF4655 pour Valorant, bloc d'herbe pour Minecraft, sinon la première lettre sur #3A3A42) et `VNOTE` (réglages à options qui ont leur phrase propre).
 
 ## Les formes du carreau
