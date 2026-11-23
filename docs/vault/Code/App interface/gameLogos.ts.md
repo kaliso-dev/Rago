@@ -3,7 +3,7 @@ type: code
 tags: [code, app, typescript, interface]
 fichier: app/src/lib/gameLogos.ts
 lignes: 21
-maj: 2026-11-10
+maj: 2026-11-23
 ---
 # gameLogos.ts
 
@@ -18,9 +18,8 @@ Tout ce qui suit est CONFIRMÉ (code de `staging`, 10/11, commit `ee77d4f`).
 Presets de jeu **sans glyphe** : `apex`, `r6`, `overwatch`, `rivals`, `tarkov`, `rl` (ils s'affichent avec l'icône du jeu installé, sinon leur sigle, voir plus bas).
 
 ## Liens avec le reste
-- [[Petits composants de l'interface]] (`GameLogo.tsx`) choisit quoi dessiner. Ordre réel dans le code : **icône de l'exe du jeu installé** (`presetIcons`, [[api.ts]]) d'abord, puis le glyphe d'ici, puis le sigle `tag` du preset ([[catalog.json]]).
-- [[Dashboard.tsx]] (presets par jeu) utilise `presetGameKey` ; [[Games.tsx]] passe par `GameLogo`.
+- Depuis le 23/11, **`GAME_GLYPHS` n'est plus utilisé** : son seul lecteur, `GameLogo.tsx` (menu des presets de l'ancienne page Jeux), a été supprimé avec la page refaite sur la maquette v5 ; le choix du preset montre maintenant les covers des jeux ([[PresetPicker.tsx]]). `api.presetIcons()` ([[api.ts]], commande `preset_icons`) n'a plus d'appelant non plus. Gardés pour l'instant (la page Display, pas encore refaite, pourrait s'en servir).
+- [[tips.ts]] utilise `presetGameKey` pour trouver la liste de réglages conseillés d'un jeu.
 
 ## À savoir avant de modifier
-- Le commentaire de ce fichier dit « Sans glyphe ici, l'icône de l'exe du jeu installé, sinon les lettres du preset », ce qui laisse croire que le glyphe passe avant l'icône. `GameLogo.tsx` (code et commentaire) fait l'inverse : icône du jeu installé d'abord. C'est le composant qui décide ; seul ce commentaire est en retard.
 - Ajouter un logo : vérifier la licence de l'icône (CC0 ou équivalent) et la noter dans le commentaire ; la clé doit être celle de `presetGameKey`.

@@ -1,13 +1,14 @@
 ---
 type: technique
 tags: [technique, ci, github]
-maj: 2026-11-10
+maj: 2026-11-23
 ---
 # CI GitHub Actions
 
 Les trois workflows de `.github/workflows/`. Secrets et variables : [[Variables d'environnement]], [[Clés et secrets]].
 
 ## Minutes GitHub Actions (étude du 10/11)
+- **23/11 : `kaliso-dev/rago` est privé** (API GitHub) et les builds ne démarrent plus : « The job was not started because recent account payments have failed or your spending limit needs to be increased » (PR #119). À régler par Sofiene dans GitHub, Settings, Billing and plans (ou repasser le dépôt en public pendant les builds). Voir [[Bugs et incidents]]. Vérifier la compilation Rust sans la CI : `rustup target add x86_64-pc-windows-gnu`, paquets `gcc-mingw-w64-x86-64` et `binutils-mingw-w64-x86-64`, puis `cargo check --manifest-path app/src-tauri/Cargo.toml --target x86_64-pc-windows-gnu`.
 - **Le dépôt `kaliso-dev/rago` est public** (constaté le 10/11 par l'API GitHub ; Sofiene, q60 : « on build en public »). Sur un dépôt public, les machines standard de GitHub (Ubuntu, Windows) sont **gratuites et illimitées** : les trois workflows ci-dessous **ne consomment aucune des 3 000 minutes**.
 - Les 3 000 minutes du compte `kaliso-dev` (offre Pro) ne servent qu'aux **dépôts privés**. Le 10/11, **100 % des minutes de novembre étaient utilisées** (e-mail GitHub). Responsable : la CI du dépôt privé **`kaliso-dev/network-server-rago`** (serveur Minecraft Rago : moteur de combat, lobby, practice, Bed Wars), workflow `ci.yml`, fil Claude de la branche `claude/project-thread-nukjdk`. Chaque push sur sa PR lance **9 jobs** (build, 2 tests KB, 2 tests lobby, 4 lancements du serveur de test dont 2 sous Windows, comptés double) : ≈ **27 minutes facturées** pour un run de 5 minutes. **151 runs du 08/11 au 10/11** (dont 25 annulés) : de quoi vider le quota en deux jours. Depuis le 10/11 vers 00:25, ses jobs échouent en 2 secondes (quota vide).
 - Pistes comparées le 10/11 :

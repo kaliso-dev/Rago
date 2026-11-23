@@ -3,7 +3,7 @@ type: code
 tags: [code, app, typescript, react, jeux, conseils]
 fichier: app/src/components/GameTips.tsx
 lignes: 116
-maj: 2026-11-11
+maj: 2026-11-23
 ---
 # GameTips.tsx
 
@@ -29,7 +29,7 @@ Le bloc **« Réglages conseillés pour <jeu> »** des [[Conseils au lancement d
 - Les noms des réglages et leurs valeurs viennent du jeu en anglais (comme dans ses menus) ; la valeur et la raison sont traduites (`value.fr`, `why.fr`).
 
 ## Liens avec le reste
-- Monté par [[Overlay.tsx]] (`compact`, ouvert s'il reste des réglages, dans le bloc `.ov-advice` qui défile) et [[Games.tsx]] (sous le jeu en avant, ouvert si le jeu tourne, `key` = jeu + en cours, pour se rouvrir au lancement).
+- Monté par [[Overlay.tsx]] (`compact`, ouvert s'il reste des réglages, dans le bloc `.ov-advice` qui défile). Plus monté par [[Games.tsx]] depuis le 23/11 (page refaite sur la maquette v5, qui n'a pas ce bloc).
 - Textes : clés `tips.*` de [[i18n.ts]]. Styles : `tips.css` ([[Styles de l'app (CSS)]]). Données : [[tips.json]] par [[tips.ts]].
 
 ## À savoir avant de modifier

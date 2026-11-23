@@ -3,7 +3,7 @@ type: code
 tags: [code, app, react, carte]
 fichier: app/src/
 lignes: 33402
-maj: 2026-11-22
+maj: 2026-11-23
 ---
 # Code de l'app (interface)
 
@@ -17,7 +17,7 @@ La **carte du code de l'interface React** de l'app Windows (`app/src/`). Elle pr
 
 Côté moteur : [[Code de l'app (Rust)]]. Vue produit : [[App Windows]]. Architecture d'ensemble : [[Architecture de l'app]]. Reprendre le travail : [[Reprendre le développement]].
 
-Tout ce qui suit est CONFIRMÉ (code de `staging`, 10/11, commit `ee77d4f`), sauf mention contraire. Charte v5 « Match day » (polices Barlow, icônes imprimées, cadre, tuiles, fenêtres, démarrage, barre en jeu) : PR #108 du 22/11, vers `staging`, jamais testée sur Windows, voir [[Charte graphique]] et [[Styles de l'app (CSS)]]. Ajouts du 11/11 pour [[Couleurs et résolution]] ([[Display.tsx]], [[pros.json]], puce de [[Games.tsx]]) : PR #93 ; aussi [[GameGraphics.tsx]] (PR #94), [[GameTips.tsx]] (PR #91) et la page Outils refaite (PR #90), tous dans `staging` depuis le 11/11 (PR #92), jamais testés sur Windows.
+Tout ce qui suit est CONFIRMÉ (code de `staging`, 10/11, commit `ee77d4f`), sauf mention contraire. Charte v5 « Match day » (polices Barlow, icônes imprimées, cadre, tuiles, fenêtres, démarrage, barre en jeu) : PR #108 du 22/11, vers `staging`, jamais testée sur Windows, voir [[Charte graphique]] et [[Styles de l'app (CSS)]]. Ajouts du 11/11 pour [[Couleurs et résolution]] ([[Display.tsx]], [[pros.json]], puce de [[Games.tsx]]) : PR #93 ; aussi la carte des graphismes des jeux (PR #94, devenue une case de [[Games.tsx]] le 23/11), [[GameTips.tsx]] (PR #91) et la page Outils refaite (PR #90), tous dans `staging` depuis le 11/11 (PR #92), jamais testés sur Windows.
 
 ## En bref
 - **Pile** :
@@ -96,7 +96,7 @@ main.tsx
   - la [[Sidebar.tsx]] ;
   - les cartes de l'accueil ;
   - la recherche ([[SearchPalette.tsx]], vers le module du réglage, avec le réglage en avant) ;
-  - la puce « Couleurs et résolution » de [[Games.tsx]] (`goTo("display", id du jeu)` : `focusTweak` porte alors l'id du jeu, lu par [[Display.tsx]]) ;
+  - les cases « resolution » et « saturation » du jeu en tête de [[Games.tsx]] (`goTo("display", id du jeu)` : `focusTweak` porte alors l'id du jeu, lu par [[Display.tsx]]) ;
   - les liens entre pages (Paramètres → Partage et support, Test réseau → Packet Optimizer…) ;
   - l'événement **`app:goto`** : la barre en jeu (« Ouvrir Rago Optimizer », `premium` ouvre l'offre ; forme `page#réglage` acceptée).
 - Pages « nouvelles » : une puce dans la barre latérale tant que la page n'a pas été vue ([[seen.ts]], `rago.seenPages`).
@@ -146,7 +146,7 @@ Les 15 événements Tauri que l'interface écoute, tous déclarés dans [[api.ts
 | `nettest:sample` | [[lib.rs]] (`net_test`, [[nettest.rs]]) | [[NetTest.tsx]], [[NetOpt.tsx]] (analyse) | un essai de ping |
 | `nettest:measure` | [[lib.rs]] (`net_test`) | [[NetTest.tsx]] | résultat d'un serveur |
 | `games:running` | [[lib.rs]] ([[games.rs]]) | [[Games.tsx]], [[Display.tsx]] | jeux lancés en ce moment |
-| `games:session` | [[lib.rs]] ([[session.rs]]) | [[SessionCard.tsx]] (et `useSession` dans [[Games.tsx]]) | état de la partie en cours |
+| `games:session` | [[lib.rs]] ([[session.rs]]) | [[SessionCard.tsx]] (dans la [[Barre en jeu]] ; plus dans [[Games.tsx]] depuis le 23/11) | état de la partie en cours |
 | `update:ready` | [[update.rs]] | [[UpdateCard.tsx]] | mise à jour téléchargée, prête |
 | `overlay:mode` | [[overlay.rs]] | [[Overlay.tsx]] | barre ouverte ou pastille |
 | `display:state` | [[lib.rs]] ([[display.rs]]) | [[Display.tsx]] | couleurs et résolution posées en ce moment, dernière erreur |
@@ -203,8 +203,8 @@ Les 15 événements Tauri que l'interface écoute, tous déclarés dans [[api.ts
 - Compte et avis : [[ProfileCard.tsx]], [[ReviewDialog.tsx]], [[ReviewPrompt.tsx]].
 - Cartes : [[UpdateCard.tsx]], [[BackgroundCard.tsx]], [[SessionCard.tsx]], [[LiveStatsCard.tsx]], [[RbwStatus.tsx]].
 - Réseau et presets : [[NetTools.tsx]], [[PresetEditor.tsx]].
-- Jeux : [[GameGraphics.tsx]] (graphismes des jeux), [[GameTips.tsx]] (réglages conseillés, [[Conseils au lancement du jeu]]).
-- Petites briques (`ui.tsx`, `Modal`, `Logo`, `icons.ts`, `ri.tsx`, `printed.ts`, `Avatar`, `GameLogo`, `PageBoundary`, `vite-env.d.ts`) : [[Petits composants de l'interface]].
+- Jeux : [[PresetPicker.tsx]] (choix du preset d'un jeu, covers verticales), [[GameTips.tsx]] (réglages conseillés de la [[Barre en jeu]], [[Conseils au lancement du jeu]]).
+- Petites briques (`ui.tsx`, `Modal`, `Logo`, `icons.ts`, `ri.tsx`, `printed.ts`, `Avatar`, `PageBoundary`, `vite-env.d.ts`) : [[Petits composants de l'interface]].
 
 ### Logique (`app/src/lib/`)
 [[api.ts]], [[store.tsx]], [[catalog.ts]], [[i18n.ts]], [[account.tsx]], [[accountApi.ts]], [[accountText.ts]], [[analysis.ts]], [[netopt.ts]], [[share.ts]], [[art.ts]], [[gameLogos.ts]], [[graphics.ts]], [[seen.ts]], [[tips.ts]].

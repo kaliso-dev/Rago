@@ -94,7 +94,7 @@ Ce qui suit décrit `app.css` et `features.css`, toujours chargés. Sur `staging
   - 342 : puces ;
   - 368 : bibliothèque de jeux (RAG-57) ;
   - 454 : launcher de Minecraft Java ;
-  - 588 : graphismes du jeu (`.games-gfx*`, carte [[GameGraphics.tsx]] de [[Graphismes des jeux]]) ;
+  - 588 : graphismes du jeu (`.games-gfx*`, plus utilisé depuis le 23/11 : la page Jeux suit le CSS des maquettes, [[Maquettes v5 dans l'app (s5)]]) ;
   - 826 : onglets de Réseau ;
   - 904 : test réseau ;
   - 1301 : mise à jour prête (RAG-24) ;
@@ -136,7 +136,7 @@ Ce qui suit décrit `app.css` et `features.css`, toujours chargés. Sur `staging
   - `rt-` : Rago Route ;
   - `tools-` et `driver-` : outils ;
   - `share-` : partage ;
-  - `games-`, `game-` et `launcher-` : bibliothèque ; `games-gfx` : graphismes des jeux ([[GameGraphics.tsx]]) ;
+  - `games-`, `game-` et `launcher-` : bibliothèque ; `games-gfx` : ancienne carte des graphismes ; ces classes de la bibliothèque ne servent plus depuis le 23/11 ([[Games.tsx]] suit la maquette v5) ;
   - `pe-` : modifier un preset ;
   - `profile-` et `review-` : compte.
 

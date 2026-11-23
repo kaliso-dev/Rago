@@ -7,7 +7,7 @@ maj: 2026-11-11
 ---
 # gamecfg.rs
 
-**Graphismes des jeux** : écrit Performance, Équilibré ou Qualité dans les fichiers de réglages des jeux, comme le préréglage OptiFine ([[minecraft.rs]]) pour Minecraft. Fiche parente : [[Code de l'app (Rust)]]. Fonctionnalité : [[Graphismes des jeux]]. Interface : [[GameGraphics.tsx]], textes [[graphics.ts]].
+**Graphismes des jeux** : écrit Performance, Équilibré ou Qualité dans les fichiers de réglages des jeux, comme le préréglage OptiFine ([[minecraft.rs]]) pour Minecraft. Fiche parente : [[Code de l'app (Rust)]]. Fonctionnalité : [[Graphismes des jeux]]. Interface : `useGraphics` dans [[Games.tsx]], textes [[graphics.ts]].
 
 Statut : PR #94 (11/11), fusionnée dans `staging` le 11/11 par la PR #92. Jamais testé sur Windows. Ticket RAG-92.
 
@@ -47,7 +47,7 @@ Exes surveillés : `valorant-win64-shipping.exe`, `valorant.exe` ; `fortniteclie
 Les fichiers de réglages des six jeux ci-dessus et leurs copies `.rago-original` dans les mêmes dossiers. Rien dans le dossier de données de Rago, rien dans le registre.
 
 ## Erreurs et cas limites
-- Codes d'erreur lus par [[GameGraphics.tsx]] : `running`, `not_found`, `locked`, `unknown_format`, `no_backup`, `unknown_game`, `unknown_level` ; sinon le message du système avec le chemin.
+- Codes d'erreur lus par `useGraphics` ([[Games.tsx]]) : `running`, `not_found`, `locked`, `unknown_format`, `no_backup`, `unknown_game`, `unknown_level` ; sinon le message du système avec le chemin.
 - Plusieurs comptes du jeu sur le PC : le niveau est écrit dans tous.
 - Écriture directe du fichier (pas de fichier temporaire), comme [[minecraft.rs]] : la copie d'origine permet de revenir en arrière.
 

@@ -37,7 +37,7 @@ export function Sidebar() {
 
   const count = (id: string): string => {
     if (id in SWITCH) return isOn(SWITCH[id]) ? "on" : "off";
-    if (id === "games") return games ? String(games) : "";
+    if (id === "games") return games == null ? "" : String(games);
     if (!COUNTED.has(id)) return "";
     const m = modules.get(id);
     if (!m) return "";

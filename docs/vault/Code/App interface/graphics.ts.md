@@ -7,7 +7,7 @@ maj: 2026-11-11
 ---
 # graphics.ts
 
-Textes des [[Graphismes des jeux]] : quels jeux ont la carte et ce que chaque niveau change, en anglais et en français. Les clés et valeurs écrites sont dans [[gamecfg.rs]] (seul à écrire). Fiche parente : [[Code de l'app (interface)]]. Utilisé par [[GameGraphics.tsx]] et [[Games.tsx]].
+Textes des [[Graphismes des jeux]] : quels jeux ont la carte et ce que chaque niveau change, en anglais et en français. Les clés et valeurs écrites sont dans [[gamecfg.rs]] (seul à écrire). Fiche parente : [[Code de l'app (interface)]]. Utilisé par [[Games.tsx]] (`graphicsForGame`, `GFX_LEVELS`, `GFX_DETAILS` en infobulle des onglets).
 
 Statut : PR #94 (11/11), fusionnée dans `staging` le 11/11 par la PR #92.
 

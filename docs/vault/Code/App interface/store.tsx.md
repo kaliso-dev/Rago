@@ -3,7 +3,7 @@ type: code
 tags: [code, app, typescript, react, interface]
 fichier: app/src/lib/store.tsx
 lignes: 731
-maj: 2026-11-10
+maj: 2026-11-23
 ---
 # store.tsx
 
@@ -123,7 +123,7 @@ Ce qui **n'est pas** gardé : `page` (toujours `dashboard` au lancement), `sys`,
 - `requestApply(ids?)` : sans argument, prend la sélection (moins le verrouillé) et `pendingUndo` (encore appliqués) ; ouvre la confirmation (`single: false`). Avec `ids` (bouton « Lancer » d'une action), pas d'annulations et `single: true`. Si tout est verrouillé, ouvre l'offre.
 - `toApply(entries, again)` : mêmes filtres que `selectMany`, sans toucher à la sélection ; `again` relance aussi ce qui est déjà appliqué.
 - `requestApplyEntries(entries, text?, again?)` : lot préparé par un bouton (« optimisations gratuites », [[RbwStatus.tsx]] « Fix », outils) avec titre et texte propres ; renvoie 0 si tout est déjà fait.
-- `optimizeAndPlay(game, entries)` : « Optimiser et jouer » de [[Games.tsx]] ; si rien n'est à appliquer, lance le jeu tout de suite ; sinon mémorise le jeu dans `launchAfter` et ouvre la confirmation avec `play`.
+- `optimizeAndPlay(game, entries)` : « Optimize and play » de [[Games.tsx]] (bouton du jeu en tête, ou bouton lecture d'une vignette avec une licence) ; si rien n'est à appliquer, lance le jeu tout de suite ; sinon mémorise le jeu dans `launchAfter` et ouvre la confirmation avec `play`.
 - `requestUndo(ids)` : confirmation d'annulation (réglages retirés du catalogue encore appliqués, `retiredApplied`).
 - `requestUndoAll()` : « Tout annuler » ; liste et ordre donnés par `api.undoAllPlan()` (repli : les clés de `applied`) ; confirmation avec `all: true`.
 - `startRun(ids, { restorePoint, wmic, clearSelection, undo })` appelé par [[ConfirmDialog.tsx]] :

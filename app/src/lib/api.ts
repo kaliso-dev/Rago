@@ -933,24 +933,30 @@ let mockLaunchers: Launcher[] = [
   { id: "xbox", name: "Xbox", minecraft: false, running: false },
 ];
 let mockGames: Game[] = [
-  { id: "mc:lunar", name: "Minecraft", launcher: "minecraft", client: "Lunar Client", kind: "minecraft", installDir: null, lastPlayed: Date.now() - 2 * hour, running: false },
-  { id: "mc:badlion", name: "Minecraft", launcher: "minecraft", client: "Badlion Client", kind: "minecraft", installDir: null, lastPlayed: Date.now() - 50 * hour, running: false },
-  { id: "mc:official", name: "Minecraft", launcher: "minecraft", client: "Minecraft Launcher", kind: "minecraft", installDir: null, lastPlayed: null, running: false },
-  { id: "riot:valorant", name: "VALORANT", launcher: "riot", client: null, kind: "shooter", installDir: null, lastPlayed: Date.now() - 26 * hour, running: false },
-  { id: "steam:730", name: "Counter-Strike 2", launcher: "steam", client: null, kind: "shooter", installDir: null, lastPlayed: null, running: false },
-  { id: "epic:Fortnite", name: "Fortnite", launcher: "epic", client: null, kind: "shooter", installDir: null, lastPlayed: null, running: false },
-  { id: "epic:Sugar", name: "Rocket League", launcher: "epic", client: null, kind: "other", installDir: null, lastPlayed: null, running: false },
+  // la bibliothèque de la maquette v5 (app-games-pi) : 9 jeux sur 6 launchers
+  { id: "riot:valorant", name: "VALORANT", launcher: "riot", client: null, kind: "shooter", installDir: null, lastPlayed: Date.now() - 2 * hour, running: false },
+  { id: "riot:league_of_legends", name: "League of Legends", launcher: "riot", client: null, kind: "other", installDir: null, lastPlayed: Date.now() - 26 * hour, running: false },
+  { id: "steam:730", name: "Counter-Strike 2", launcher: "steam", client: null, kind: "shooter", installDir: null, lastPlayed: Date.now() - 72 * hour, running: false },
+  { id: "steam:1172470", name: "Apex Legends", launcher: "steam", client: null, kind: "shooter", installDir: null, lastPlayed: Date.now() - 8 * 24 * hour, running: false },
+  { id: "steam:252950", name: "Rocket League", launcher: "steam", client: null, kind: "other", installDir: null, lastPlayed: Date.now() - 9 * 24 * hour, running: false },
+  { id: "epic:Fortnite", name: "Fortnite", launcher: "epic", client: null, kind: "shooter", installDir: null, lastPlayed: Date.now() - 48 * hour, running: false },
+  { id: "mc:lunar", name: "Minecraft", launcher: "minecraft", client: "Lunar Client", kind: "minecraft", installDir: null, lastPlayed: Date.now() - 5 * hour, running: false },
+  { id: "battlenet:Pro", name: "Overwatch 2", launcher: "battlenet", client: null, kind: "shooter", installDir: null, lastPlayed: Date.now() - 35 * 24 * hour, running: false },
+  { id: "ubisoft:635", name: "Tom Clancy's Rainbow Six Siege", launcher: "ubisoft", client: null, kind: "shooter", installDir: null, lastPlayed: null, running: false },
 ];
 // démo des couleurs et de la résolution par jeu : les profils survivent au rechargement, comme display.json
 const mockDisplay: Record<string, DisplayProfile> = (() => {
   try {
-    return JSON.parse(localStorage.getItem("rago.demoDisplay") ?? "{}") as Record<string, DisplayProfile>;
+    const saved = localStorage.getItem("rago.demoDisplay");
+    if (saved) return JSON.parse(saved) as Record<string, DisplayProfile>;
+    // comme la maquette : Valorant en 1280×960 étiré, saturation à 100 %
+    return { "riot:valorant": { colors: { vibrance: 100, brightness: 0, contrast: 0, gamma: 100 }, resolution: { width: 1280, height: 960, stretch: true, gameFile: true }, pro: null } };
   } catch {
     return {};
   }
 })();
 let mockDisplayState: DisplayState = { colors: null, resolution: null, error: null };
-const mockGraphics = new Map<string, { level: GraphicsLevel | null; saved: boolean }>();
+const mockGraphics = new Map<string, { level: GraphicsLevel | null; saved: boolean }>([["valorant", { level: "balanced", saved: true }]]);
 let mockStatsStart = 0;
 const mockLoad = { ram: 47, cpu: 14, gpu: 9 };
 // démo : les réglages appliqués survivent au rechargement de la page, comme applied.json dans l'app
@@ -1435,6 +1441,8 @@ const mockApi: Api = {
     await sleep(400);
     // ?playing : le dernier jeu joué est en cours (démo de la partie en cours)
     const playing = new URLSearchParams(location.search).has("playing");
+    // ?nogames : bibliothèque vide (maquette app-games-empty)
+    if (new URLSearchParams(location.search).has("nogames")) return [];
     return [...mockGames]
       .sort((a, b) => (b.lastPlayed ?? 0) - (a.lastPlayed ?? 0) || a.name.localeCompare(b.name))
       .map((g, i) => (playing && i === 0 ? { ...g, running: true } : g));

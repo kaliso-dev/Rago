@@ -1,7 +1,7 @@
 ---
 type: code
 tags: [code, app, react, composant]
-fichier: app/src/components/ (ui.tsx, Modal.tsx, Logo.tsx, logoPaths.ts, icons.ts, ri.tsx, printed.ts, Avatar.tsx, GameLogo.tsx, PageBoundary.tsx) et app/src/vite-env.d.ts
+fichier: app/src/components/ (ui.tsx, Modal.tsx, Logo.tsx, logoPaths.ts, icons.ts, ri.tsx, printed.ts, Avatar.tsx, PageBoundary.tsx) et app/src/vite-env.d.ts
 lignes: 492
 maj: 2026-11-22
 ---
@@ -21,7 +21,6 @@ Tout ce qui suit est CONFIRMÉ (code de `staging`, 10/11, commit `ee77d4f`).
 | `components/ri.tsx` | 125 | icônes de l'app (imprimées ou lucide), `PrintIcon`, `PrintDefs` |
 | `components/printed.ts` | 7 | formes des icônes imprimées et leurs filtres (généré) |
 | `components/Avatar.tsx` | 9 | `Avatar` |
-| `components/GameLogo.tsx` | 37 | `usePresetIcons`, `GameLogo` |
 | `components/PageBoundary.tsx` | 34 | `PageBoundary` |
 | `vite-env.d.ts` | 9 | types des variables `VITE_*` et de `__APP_VERSION__` |
 
@@ -67,14 +66,6 @@ Charte v5 (PR #108 du 22/11, vers `staging`, jamais testée sur Windows) : **R r
 
 ## `Avatar.tsx`
 `Avatar({ photo, name, size })` : la photo du compte, ou la première lettre du nom (ou de l'e-mail) sur un rond sombre. La taille du texte suit celle du rond (42 %). Utilisé par [[ProfileCard.tsx]] et [[ReviewDialog.tsx]].
-
-## `GameLogo.tsx`
-- **`usePresetIcons()`** : les icônes des jeux installés (`api.presetIcons()`, lues par le moteur dans les dossiers des jeux, voir [[games.rs]]). Il n'y a **qu'une demande pour toute l'app**, partagée entre les composants. Elle est refaite si elle a échoué.
-- **`GameLogo({ presetId, tag, icons })`** : le logo du jeu d'un preset.
-  - D'abord l'**icône du jeu installé**.
-  - Sinon son **glyphe** SVG (`GAME_GLYPHS` de [[gameLogos.ts]], par la clé `presetGameKey`).
-  - Sinon les lettres du preset (`tag`).
-- Utilisé par [[Dashboard.tsx]] (presets par jeu) et [[Games.tsx]] (menu des presets).
 
 ## `PageBoundary.tsx`
 - Garde-fou d'erreur React autour de la page courante dans [[App.tsx]]. Si une page plante, elle affiche une carte au lieu de vider toute la fenêtre :

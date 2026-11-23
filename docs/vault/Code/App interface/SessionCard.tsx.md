@@ -3,7 +3,7 @@ type: code
 tags: [code, app, typescript, react]
 fichier: app/src/components/SessionCard.tsx
 lignes: 113
-maj: 2026-11-11
+maj: 2026-11-23
 ---
 # SessionCard.tsx
 
@@ -28,7 +28,7 @@ Tout ce qui suit est CONFIRMÉ (code de `staging`, 10/11, commit `ee77d4f`).
   4. **« Conseils au lancement d'un jeu »** (`gameChecks`, nom du 11/11, PR #91 ; avant : « Vérifications au lancement d'un jeu ») : « Réglages du jeu conseillés par les pros, applis gourmandes, fréquence de l'écran, batterie, téléchargements et synchronisation en fond : un rappel en haut à gauche au lancement, puis le détail dans la barre en jeu et la bibliothèque. Rien n'est changé ni fermé. » ([[Conseils au lancement du jeu]]).
 
 ## Liens avec le reste
-- Monté par [[Settings.tsx]] ; `SessionChecks` et `useSession` utilisés par [[Overlay.tsx]] et [[Games.tsx]].
+- Monté par [[Settings.tsx]] ; `SessionChecks` et `useSession` utilisés par [[Overlay.tsx]] (plus par [[Games.tsx]] depuis le 23/11).
 - [[api.ts]] (`sessionState`, `sessionSetPrefs`, `onSession`, `backgroundGet`) ; [[session.rs]], [[background.rs]].
 - Fonctionnalités : [[Barre en jeu]], [[Bibliothèque de jeux]].
 

@@ -43,4 +43,4 @@ Page « Couleurs et résolution » de l'app (groupe « En jeu », sous Jeux) : l
 
 ## Code
 - Moteur : nouveau module [[display.rs]] ; commandes `display_info`, `display_profiles`, `display_state`, `display_set_profile`, `display_preview` et événement `display:state` dans [[lib.rs]] ; la résolution est posée par `game_launch` ; jeux en cours lus dans [[games.rs]] ; remise à la désinstallation par [[reset.rs]]. Voir [[Architecture de l'app]].
-- Interface : nouvelle page [[Display.tsx]], réglages des pros dans [[pros.json]], puce dans [[Games.tsx]], entrée de [[Sidebar.tsx]], démo dans [[api.ts]] (`?amd` et `?intel` pour voir une carte AMD ou un écran sans saturation).
+- Interface : nouvelle page [[Display.tsx]], réglages des pros dans [[pros.json]], cases « resolution » et « saturation » du jeu en tête dans [[Games.tsx]], entrée de [[Sidebar.tsx]], démo dans [[api.ts]] (`?amd` et `?intel` pour voir une carte AMD ou un écran sans saturation).
