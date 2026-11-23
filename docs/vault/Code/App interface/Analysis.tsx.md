@@ -9,7 +9,7 @@ maj: 2026-11-23
 
 La page **Analyse du PC** (« Analyze my PC », 1.3.0) : lance la mesure, montre les 6 étapes en direct, puis les points trouvés groupés, ce qui les règle et l'avant/après. Depuis la PR #128 (23/11), elle reprend à l'identique les maquettes v5 `app-analysis-start`, `-running`, `-results`, `-allfine` et `-after` ([[Maquettes v5 dans l'app (s5)]]). Toute la logique (mesures, normes, mémoire) est dans [[analysis.ts]]. Fiche parente : [[Code de l'app (interface)]]. Fonctionnalité : [[Analyse du PC]].
 
-Tout ce qui suit est CONFIRMÉ (code de la PR #128, 23/11).
+Tout ce qui suit est CONFIRMÉ (code de `staging`, PR #128 fusionnée le 23/11).
 
 ## Ce que le fichier expose
 - `Analysis()` : la page, rendue par [[App.tsx]] quand `page === "analysis"`. On y arrive par la barre latérale (groupe du haut, sous le tableau de bord), par la carte du [[Dashboard.tsx]] ou par la recherche.

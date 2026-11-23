@@ -9,7 +9,7 @@ maj: 2026-11-23
 
 La logique d'**« Analyze my PC »** (1.3.0) : mesurer ce qui ralentit le PC en jeu, comparer chaque valeur à une norme (personnalisée pour le réseau), dire ce qui la règle (plan gratuit, Premium ou le joueur lui-même), et garder un **avant/après** sur ce PC. Aucun affichage ici : la page est [[Analysis.tsx]]. Fiche parente : [[Code de l'app (interface)]]. Fonctionnalité : [[Analyse du PC]].
 
-Tout ce qui suit est CONFIRMÉ (code de la PR #128, 23/11).
+Tout ce qui suit est CONFIRMÉ (code de `staging`, PR #128 fusionnée le 23/11).
 
 ## Rôle et place dans l'ensemble
 - Appelle [[api.ts]] (`analysisFacts`, `toolsDrivers`, `netTest`, `liveStats`), donc côté Rust [[analysis.rs]], [[tools.rs]], [[nettest.rs]], [[stats.rs]].
