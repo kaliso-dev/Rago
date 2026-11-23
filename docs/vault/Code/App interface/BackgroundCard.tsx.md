@@ -9,7 +9,7 @@ maj: 2026-11-23
 
 La carte **« Barre en jeu et arrière-plan »** des paramètres : activer la barre en jeu, choisir son raccourci, garder FPS et ping à l'écran, rester près de l'horloge, lancer avec Windows. Fiche parente : [[Code de l'app (interface)]]. Fonctionnalités : [[Barre en jeu]], [[Arrière-plan et démarrage]]. Ticket : RAG-82.
 
-**Écran v5 (23/11, dans `staging` par la PR #126, jamais testé sur Windows)** : le composant s'appelle `BackgroundSection` et suit le bloc « in-game bar » des maquettes `app-settings*.html` : lignes `.sr` avec l'interrupteur `Sw` ; le raccourci en touches `.kb` avec le lien « Changer » (« Annuler » pendant l'enregistrement, « Par défaut » en lien gris si le raccourci n'est pas `Alt+X`) ; les avertissements (raccourci pris, FPS non mesurés, erreur) en petites lignes `.sr.nt`.
+**Écran v5 (23/11, dans `staging` par la PR #126, fusionnée le 23/11, jamais testé sur Windows)** : le composant s'appelle `BackgroundSection` et suit le bloc « in-game bar » des maquettes `app-settings*.html` : lignes `.sr` avec l'interrupteur `Sw` ; le raccourci en touches `.kb` avec le lien « Changer » (« Annuler » pendant l'enregistrement, « Par défaut » en lien gris si le raccourci n'est pas `Alt+X`) ; les avertissements (raccourci pris, FPS non mesurés, erreur) en petites lignes `.sr.nt`.
 
 Tout ce qui suit est CONFIRMÉ (code de `staging`, 10/11, commit `ee77d4f`).
 

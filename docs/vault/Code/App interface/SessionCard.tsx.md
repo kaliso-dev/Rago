@@ -9,7 +9,7 @@ maj: 2026-11-23
 
 Ce que l'app fait **pendant une partie** : la carte des paramètres (carte graphique performante, mode Performances élevées, jeu en priorité haute, vérifications), le crochet qui suit la partie en cours, et le bloc « À vérifier » réutilisé par la barre en jeu et la bibliothèque. Fiche parente : [[Code de l'app (interface)]]. Fonctionnalité : [[Pendant la partie]]. Côté Rust : [[session.rs]].
 
-**Écran v5 (23/11, dans `staging` par la PR #126, jamais testé sur Windows)** : la carte devient `SessionSection`, bloc « while you play » des maquettes `app-settings*.html` : titre, phrase `.lead3` hors du cadre, quatre lignes `.sr` avec l'interrupteur `Sw` ; une ligne qui ne s'applique pas à ce PC (une seule carte graphique, Ryzen X3D) est grisée (`.sr.dis`, interrupteur en contour).
+**Écran v5 (23/11, dans `staging` par la PR #126, fusionnée le 23/11, jamais testé sur Windows)** : la carte devient `SessionSection`, bloc « while you play » des maquettes `app-settings*.html` : titre, phrase `.lead3` hors du cadre, quatre lignes `.sr` avec l'interrupteur `Sw` ; une ligne qui ne s'applique pas à ce PC (une seule carte graphique, Ryzen X3D) est grisée (`.sr.dis`, interrupteur en contour).
 
 Tout ce qui suit est CONFIRMÉ (code de `staging`, 10/11, commit `ee77d4f`).
 

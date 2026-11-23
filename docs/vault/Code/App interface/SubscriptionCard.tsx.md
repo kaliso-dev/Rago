@@ -9,7 +9,7 @@ maj: 2026-11-23
 
 Les **lignes d'abonnement des Paramètres** (1.3.0) : l'offre, le prochain paiement ou la date de fin, la résiliation en un seul écran « Avant de résilier », et la reprise. Fiche parente : [[Code de l'app (interface)]]. Fonctionnalité : [[Abonnement dans l'app]].
 
-**Écran v5 (23/11, dans `staging` par la PR #126, jamais testé sur Windows)** : une ligne `.sr` du bloc compte (maquette `app-settings.html`), « Résilier l'abonnement » en lien ; résilié, la ligne `.sr.cxl` et le bouton rouge « Reprendre l'abonnement » (maquette `app-settings-canceled.html`). Les fenêtres « Avant de résilier » et « Abonnement résilié » gardent l'ancien style en attendant les maquettes `app-cancel-before.html` et `app-cancel-done.html`.
+**Écran v5 (23/11, dans `staging` par la PR #126, fusionnée le 23/11, jamais testé sur Windows)** : une ligne `.sr` du bloc compte (maquette `app-settings.html`), « Résilier l'abonnement » en lien ; résilié, la ligne `.sr.cxl` et le bouton rouge « Reprendre l'abonnement » (maquette `app-settings-canceled.html`). Les fenêtres « Avant de résilier » et « Abonnement résilié » gardent l'ancien style en attendant les maquettes `app-cancel-before.html` et `app-cancel-done.html`.
 
 Tout ce qui suit est CONFIRMÉ (code de `staging`, 10/11, commit `ee77d4f`).
 
