@@ -1,7 +1,7 @@
 ---
 type: fonctionnalité
 tags: [fonctionnalité, app]
-maj: 2026-11-10
+maj: 2026-11-23
 ---
 # Mode jeu
 
@@ -10,7 +10,7 @@ Réglage « Mode jeu Rago » (« Rago game mode », `game_mode`, module « Mode 
 - Renforcé en [[Version 1.2.0]] (22/10) : « Activé » met en pause l'indexation de la recherche et la télémétrie jusqu'au redémarrage, coupe l'enregistrement en fond de la Xbox Game Bar, active le Mode jeu de Windows, coupe les animations tout de suite. Description du catalogue au 10/11 (`staging`) : vide aussi les fichiers temporaires et coupe l'impression (« la recherche de fichiers est plus lente et l'impression ne marche plus tant que le mode est activé »).
 - « Désactivé » et l'annulation relancent tout. Les services gardent leur type de démarrage.
 - La description du mode jeu sur le [[Site]] parlait encore de l'ancienne version au 22/10 (À VÉRIFIER après la PR #66).
-- Icône éclair (`Zap`) contraire à la [[Charte graphique]] (écart à arbitrer).
+- **Page « Mode jeu »** (refaite le 23/11 à l'identique de la maquette v5 `app-module-gamemode.html`, dans `staging` (PR #122, fusionnée le 23/11), jamais testée sur Windows) : bloc « ON / OFF since {heure} » en tête ; « game mode is on / off » avec sa phrase, le nombre de changements actifs (7 quand il est activé) et de ceux en pause jusqu'au redémarrage (2), un seul bouton « Turn on » / « Turn off », et à droite la liste des 7 changements de « Activé ». L'état vient du dernier passage du réglage, comme dans la barre latérale ([[ModulePage.tsx]], [[Sidebar.tsx]]). Icône de la barre latérale : celle de la maquette, conforme à la [[Charte graphique]].
 
 Liens : [[Catalogue des tweaks]], [[Offres et prix]].
 

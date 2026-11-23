@@ -3,7 +3,7 @@ type: code
 tags: [code, app, typescript, react, reseau]
 fichier: app/src/pages/Network.tsx
 lignes: 75
-maj: 2026-11-10
+maj: 2026-11-23
 ---
 # Network.tsx
 
@@ -24,7 +24,7 @@ Chaque onglet est **une page à part** du store (`goTo("netopt")`…) : la reche
 
 | Onglet | Libellé | Icône | Contenu |
 |---|---|---|---|
-| `network` | Optimisations | `SlidersHorizontal` | [[ModulePage.tsx]] du module `network`, en mode `embedded` (sans son propre en-tête) ; pastille du nombre de réglages réseau cochés ou à annuler |
+| `network` | Optimisations | `SlidersHorizontal` | [[ModulePage.tsx]] du module `network`, en mode `embedded` (sans son propre en-tête ; depuis le 23/11, les carreaux v5 des modules) ; pastille du nombre de réglages réseau cochés ou à annuler |
 | `netopt` | Packet Optimizer | `Activity` | [[NetOpt.tsx]] |
 | `nettest` | Test réseau | `Gauge` | [[NetTest.tsx]] |
 | `route` | Rago Route | `Route` | [[RouteTab.tsx]] |

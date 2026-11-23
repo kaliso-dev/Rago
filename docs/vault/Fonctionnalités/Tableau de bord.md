@@ -2,7 +2,7 @@
 type: fonctionnalité
 tags: [fonctionnalité, app]
 version_app: 1.3.0
-maj: 2026-11-11
+maj: 2026-11-23
 ---
 # Tableau de bord
 
@@ -14,7 +14,7 @@ Première page de l'app (`Dashboard.tsx`). Titre : « Chaque milliseconde compte
 - **Ta machine** : système, processeur, carte graphique, mémoire, réseau (bouton Actualiser).
 - **Utilisation en direct** : RAM, GPU (moteur le plus chargé), CPU (tous les cœurs), mesurés par Windows chaque seconde, seulement quand la page est visible ; « Indisponible » si Windows ne fournit pas la mesure (jamais un faux 0 %). Bouton Gestionnaire des tâches.
 - **Nettoyer (Clean RAM, RAG-48)** : vide la liste « standby » de Windows (cache des fichiers lus récemment). Aucune appli fermée. L'app annonce le **cache vidé**, jamais de la « RAM libérée » ; seulement au clic (jamais en boucle). Option dans les [[Paramètres de l'app]] : réduire aussi les applis en arrière-plan (jamais la fenêtre au premier plan, les jeux, les anti-cheat ni Windows). Gratuit. Le même nettoyage est aussi une tuile « Vider le cache de la RAM » de la [[Page Outils]] (PR #90 du 11/11, dans `staging` par la PR #92).
-- **Presets** (5 généraux : `fps`, `latency`, `mc_pvp`, `laptop`, `privacy`, « ready-made ») et « Mes presets » (« mine ») : un clic les ajoute à la sélection, sans rien appliquer. **Premium** : sans licence, l'offre Premium. Depuis la maquette v5 (23/11, `staging`), les presets par jeu ne sont plus sur le tableau de bord : ils se choisiront sur la page Jeux, une cover verticale par jeu (maquette à faire). Voir [[Presets]].
+- **Presets** (5 généraux : `fps`, `latency`, `mc_pvp`, `laptop`, `privacy`, « ready-made ») et « Mes presets » (« mine ») : un clic les ajoute à la sélection, sans rien appliquer. **Premium** : sans licence, l'offre Premium. Depuis la maquette v5 (23/11, `staging`), les presets par jeu ne sont plus sur le tableau de bord : ils se choisissent depuis la page Jeux, dans la fenêtre du choix de preset à covers verticales (une par jeu ; PR #120, dans `staging`, maquette `app-preset-picker` à valider par Sofiene, voir [[PresetPicker.tsx]]). Voir [[Presets]].
 - **Mes presets** : enregistrer la sélection allumée sous un nom, copier son code, modifier (nom, tweaks, variantes), supprimer. **Ouvert en gratuit** : seuls les réglages du plan du joueur sont cochés. Voir [[Partage et support]].
 - **État** : droits administrateur, NVIDIA Profile Inspector, point de restauration (bouton Créer), nombre de tweaks appliqués (« X / 203 »). La ligne WMIC n'est affichée que si un réglage en a encore besoin : aucun en 1.3.0, elle est donc cachée.
 - **Réglages retirés encore appliqués** : si le PC garde un tweak retiré du catalogue, bouton « Remettre comme avant ». Voir [[Tweaks retirés]].

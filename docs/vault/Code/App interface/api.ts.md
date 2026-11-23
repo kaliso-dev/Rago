@@ -2,7 +2,7 @@
 type: code
 tags: [code, app, typescript, interface]
 fichier: app/src/lib/api.ts
-lignes: 1695
+lignes: 1713
 maj: 2026-11-23
 ---
 # api.ts
@@ -45,7 +45,7 @@ Tout ce qui suit est CONFIRMÉ (code de `staging`, 10/11, commit `ee77d4f`).
 | `RbwCheck` | une ligne du vérificateur Ranked Bedwars : `name`, `kind` service/setting, `ok`, `state`, `start` | [[rbw.rs]] |
 | `CleanAreaId`, `CleanArea`, `CleanResult`, `BloatApp`, `StartupApp`, `PowerPlan`, `WindowsPanel`, `Driver`, `DriversInfo` | page Outils : zones `temp`, `windows_temp`, `update`, `crash`, `browsers`, `discord`, `launchers` (PR #90), `shaders`, `recycle` ; applis préinstallées (nom en/fr) ; programmes au démarrage (`id` « source\|nom », `name`, `publisher`, `command`, `scope` `user`/`machine`, `enabled`, `keep`) et modes d'alimentation (`guid`, `name`, `active`) (PR #90) ; réglages de Windows ouvrables `graphics`, `display`, `gamemode`, `sound`, `mouse`, `network`, `power`, `devices`, `visual`, `taskmgr` (PR #90) ; pilotes `gpu`/`network`/`audio` avec date `AAAA-MM-JJ` ; fabricant et modèle de la carte mère | [[tools.rs]] |
 | `MatchSummary`, `AnalysisFacts` | « Analyze my PC » : écran (`refresh`, `refreshMax`), `processes`, mémoire (`memSpeed`, `memRated`), `wired`, `gameDvr`, `notifications`, `powerScheme` (GUID), applis de fond, dernière partie suivie (`minutes`, `fps`, `low1`, `stuttersPerMin`) | [[analysis.rs]] |
-| `MinecraftStatus` | `dirExists`, `optifineFile`, `backups` | [[minecraft.rs]] |
+| `MinecraftStatus` | `dir` (dossier lu : celui choisi, sinon `%APPDATA%\.minecraft` ; 23/11), `dirExists`, `optifineFile`, `backups` | [[minecraft.rs]] |
 | `RunItem` | un élément d'un lot : `id`, `variant?`, `params?`, `undo?` | [[runner.rs]] |
 | `LicenseState`, `LicenseStatus`, `LoginResult`, `LicenseError` | état `active`/`none`/`expired`/`unconfigured`, e-mail, offre, indice de clé, échéance, `needsRefresh`, `deviceName` ; connexion `activationRequired` ou `active` | [[license.rs]] |
 | `ItemStatus`, `ItemEvent`, `LogEvent`, `DoneEvent`, `ResetDone` | événements d'un lot (statut par élément, ligne de journal, fin avec `ok`, `failed`, `skipped`, `restoreFailed`, `cancelled`, `logFile`) ; remise à zéro en arrière-plan (`ok`, `failed`) | [[runner.rs]], [[reset.rs]] |
@@ -56,11 +56,11 @@ Chaque ligne : nom dans `api` → commande Rust (paramètres) → ce que fait le
 **Système et moteur des tweaks**
 | Fonction | Commande | Simulateur |
 |---|---|---|
-| `systemInfo(refresh?)` | `get_system_info { refresh }` | 500 ms puis un PC type : Windows 11 Pro 24H2 build 26100, Ryzen 7 7800X3D 8 cœurs/16 threads, 32 Go, RTX 4070, Ethernet Realtek 2.5GbE à 1 Gbps, admin, **pas de WMIC**, dossier `.minecraft`, outils NVIDIA livrés |
+| `systemInfo(refresh?)` | `get_system_info { refresh }` | 500 ms puis un PC type : Windows 11 Pro 24H2 build 26100, Ryzen 7 7800X3D 8 cœurs/16 threads, 32 Go, RTX 4070, Ethernet Realtek 2.5GbE à 1 Gbps, admin, **pas de WMIC**, dossier `C:\Users\Player\AppData\Roaming\.minecraft`, ressources livrées : outils NVIDIA et le plan d'alimentation `LowLatency.pow` |
 | `runTweaks(items)` | `run_tweaks { items }` → renvoie un `runId` | joue le lot (voir plus bas), émet `run:item`, `run:log`, `run:done` |
 | `cancelRun()` | `cancel_run` | lève un drapeau qui arrête la boucle |
 | `isRunning()` | `is_running` | drapeau `mockRunning` |
-| `history()` / `clearHistory()` | `get_history` / `clear_history` | tableau en mémoire (perdu au rechargement) |
+| `history()` / `clearHistory()` | `get_history` / `clear_history` | tableau gardé dans le stockage du navigateur (`rago.demoHistory`, 200 derniers passages) : il survit au rechargement, comme `history.json` dans l'app |
 | `applied()` | `get_applied` | carte `mockApplied`, gardée dans `localStorage` `rago.demoApplied` |
 | `undoAllPlan()` | `undo_all_plan` | réglages appliqués, du plus récent au plus ancien (puis par id) |
 | `signOutPlan()` | `sign_out_plan` | même liste |
@@ -68,12 +68,12 @@ Chaque ligne : nom dans `api` → commande Rust (paramètres) → ce que fait le
 | `liveStats()` | `live_stats` | `ready: false` la première seconde, puis RAM 38–64 %, CPU 3–60 %, GPU 0–75 % qui dérivent au hasard ; GPU `null` si `rago.demoNoGpu` = `1` ; RAM totale 32 Gio |
 | `openTaskManager()` | `open_task_manager` | message console |
 | `cleanRam(trim)` | `clean_ram { trim }` | 900 ms, 1,2 à 2,8 Gio de cache vidé ; avec `trim`, 0,4 Gio et 7 applis |
-| `minecraftStatus(dir?)` | `minecraft_status { dir }` | dossier présent, fichier OptiFine présent, 1 sauvegarde |
+| `minecraftStatus(dir?)` | `minecraft_status { dir }` | le dossier demandé (sinon `C:\Users\Player\AppData\Roaming\.minecraft`), présent, fichier OptiFine présent, 2 sauvegardes |
 | `minecraftRestore(dir?)` | `minecraft_restore { dir }` | texte fixe |
 | `graphicsStatus(game)` | `graphics_status { game }` | Valorant : 2 fichiers, déjà en « balanced » avec une copie (comme la maquette v5) ; Apex : aucun fichier ; niveau et copie gardés en mémoire (`mockGraphics`) |
 | `graphicsApply(game, level)` | `graphics_apply { game, level }` | 600 ms ; Apex → `not_found` ; 0 changement si déjà à ce niveau |
 | `graphicsRestore(game)` | `graphics_restore { game }` | `no_backup` sans copie, sinon remet « tes propres réglages » |
-| `rbwStatus()` | `rbw_status` | 12 services et 6 réglages ; `SysMain`, `PcaSvc` et `Prefetch` sont KO tant que `rbw_mode` n'est pas appliqué en variante `on` |
+| `rbwStatus()` | `rbw_status` | 12 services et 6 réglages ; `SysMain` et `Prefetch` sont KO tant que `rbw_mode` n'est pas appliqué en variante `on` (comme la maquette `app-module-rbw.html` : 2 en rouge) |
 | `restartPc()` | `restart_pc` | rien |
 | `openFolder(kind)` | `open_folder { kind }` (`logs`, `resources`, `data`) | rien |
 | `pickFolder(title)` | plugin `@tauri-apps/plugin-dialog` `open({ directory: true })` (pas de commande maison) | renvoie un chemin `.minecraft` factice |
@@ -194,7 +194,7 @@ Les **12 événements** écoutés par l'interface sont donc : `run:item`, `run:l
 - `asLicenseError` ne lève jamais : un rejet inconnu devient `server_error`.
 
 ## Liens avec le reste
-- Appelé par : [[store.tsx]] (lots, licence, historique, événements), toutes les pages ([[Dashboard.tsx]], [[Games.tsx]], [[Display.tsx]], [[Tools.tsx]], [[NetOpt.tsx]], [[NetTest.tsx]], [[RouteTab.tsx]], [[Settings.tsx]], [[Share.tsx]], [[Analysis.tsx]]), les composants ([[LicenseGate.tsx]], [[LiveStatsCard.tsx]], [[BackgroundCard.tsx]], [[SessionCard.tsx]], [[RbwStatus.tsx]], [[UpdateCard.tsx]], [[TitleBar.tsx]], [[ResetToast.tsx]]) et la barre en jeu [[Overlay.tsx]].
+- Appelé par : [[store.tsx]] (lots, licence, historique, événements), toutes les pages ([[Dashboard.tsx]], [[Games.tsx]], [[Display.tsx]], [[Tools.tsx]], [[NetOpt.tsx]], [[NetTest.tsx]], [[RouteTab.tsx]], [[Settings.tsx]], [[Share.tsx]], [[Analysis.tsx]]), les composants ([[LicenseGate.tsx]], [[LiveStatsCard.tsx]], [[BackgroundCard.tsx]], [[SessionCard.tsx]], [[ModulePage.tsx]] (Minecraft, RBW Mod, historique), [[UpdateCard.tsx]], [[TitleBar.tsx]], [[ResetToast.tsx]]) et la barre en jeu [[Overlay.tsx]].
 - Côté Rust : commandes déclarées dans [[lib.rs]], qui délègue aux modules cités dans le tableau des types.
 - Fonctionnalités : [[Moteur des tweaks]], [[Licence dans l'app]], [[Barre en jeu]], [[Couleurs et résolution]], [[Proxy|Rago Route]], [[Test réseau]], [[Packet Optimizer]], [[Page Outils]].
 

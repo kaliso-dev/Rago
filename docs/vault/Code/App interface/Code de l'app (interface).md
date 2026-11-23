@@ -2,7 +2,7 @@
 type: code
 tags: [code, app, react, carte]
 fichier: app/src/
-lignes: 33402
+lignes: 38335
 maj: 2026-11-23
 ---
 # Code de l'app (interface)
@@ -32,16 +32,18 @@ Tout ce qui suit est CONFIRMÉ (code de `staging`, 10/11, commit `ee77d4f`), sau
   - [[api.ts]] et [[accountApi.ts]] sont les deux seules portes vers le moteur.
 - **Pas de routeur** : la page affichée est une simple valeur `page` dans le store. Pas de Redux non plus : un seul contexte React, [[store.tsx]], plus le contexte du compte, [[account.tsx]].
 - **Mode démo** : hors de Tauri (`isTauri` faux), les mêmes fonctions sont simulées dans le navigateur. Cela sert au simulateur `npm run window`, aux captures et aux tests de l'interface.
-- Taille : 33 402 lignes dans `app/src/` (fichiers `.ts`, `.tsx`, `.css` et `.json`). Les plus gros fichiers sont :
+- Taille : 38 335 lignes dans `app/src/` (fichiers `.ts`, `.tsx`, `.css` et `.json`, compte du 23/11). Les plus gros fichiers sont :
   - `catalog.json` (8050 lignes) ;
-  - `features.css` (4208 lignes) ;
-  - `app.css` (2935 lignes) ;
-  - `i18n.ts` (2478 lignes) ;
-  - `api.ts` (1665 lignes) ;
+  - `features.css` (3724 lignes) ;
+  - `i18n.ts` (2742 lignes) ;
+  - `app.css` (2537 lignes) ;
+  - `v5.css` (2378 lignes) ;
+  - `api.ts` (1713 lignes) ;
   - `NetOpt.tsx` (1090 lignes) ;
   - `tips.json` (971 lignes) ;
-  - `Tools.tsx` (760 lignes) ;
-  - `Display.tsx` (906 lignes, refaite sur la maquette v5 le 23/11).
+  - `Display.tsx` (906 lignes, refaite sur la maquette v5 le 23/11) ;
+  - `Tools.tsx` (762 lignes) ;
+  - `ModulePage.tsx` (703 lignes, refaite sur les maquettes v5 le 23/11).
 
 ## Arbre des composants (fenêtre principale)
 ```
@@ -59,7 +61,7 @@ main.tsx
                   │  ├─ LicenseNotice       bandeau de licence (fin, appareil, réparation)
                   │  └─ PageBoundary        garde-fou d'erreur
                   │     └─ la page courante (voir « Navigation »)
-                  ├─ ApplyBar               barre « Appliquer » en bas
+                  ├─ ApplyBar               barre « apply » en bas (div.apply > .ap)
                   ├─ div.stage > RunOverlay panneau d'exécution d'un lot
                   ├─ ConfirmDialog          confirmation avant un lot
                   ├─ SearchPalette          recherche Ctrl+K
@@ -129,7 +131,7 @@ main.tsx
    - lance le jeu si c'était « Optimiser et jouer » ;
    - remet la sélection si le point de restauration a échoué ;
    - relit l'historique (`history`) et les réglages appliqués (`applied`).
-   - [[RbwStatus.tsx]] et la barre en jeu relisent aussi leur état sur `run:done`.
+   - le vérificateur de la page RBW Mod ([[ModulePage.tsx]]) et la barre en jeu relisent aussi leur état sur `run:done`.
 - **Autres actions** : elles suivent le même chemin, clic → `api.*` → `invoke` → commande Rust, avec une réponse directe et parfois des événements. C'est le cas du Packet Optimizer (`netopt_run` + `netopt:line`), du test réseau (`net_test` + `nettest:*`), des outils, du compte, de la licence, des jeux.
 - **Remise à zéro en arrière-plan** (fin de Premium, déconnexion) : le moteur la lance seul, sans fenêtre, puis envoie **`reset:done`**. Le store relit les réglages appliqués et affiche [[ResetToast.tsx]].
 
@@ -140,7 +142,7 @@ Les 15 événements Tauri que l'interface écoute, tous déclarés dans [[api.ts
 |---|---|---|---|
 | `run:item` | [[runner.rs]] | [[store.tsx]] | état d'une ligne du lot |
 | `run:log` | [[runner.rs]] | [[store.tsx]] | ligne du journal |
-| `run:done` | [[runner.rs]] | [[store.tsx]], [[RbwStatus.tsx]], [[Overlay.tsx]] | bilan du lot |
+| `run:done` | [[runner.rs]] | [[store.tsx]], [[ModulePage.tsx]] (RBW Mod), [[Overlay.tsx]] | bilan du lot |
 | `reset:done` | [[lib.rs]] (remise à zéro, [[reset.rs]]) | [[store.tsx]] | bilan de la remise à zéro |
 | `netopt:line` | [[lib.rs]] (`netopt_run`, [[netopt.rs]]) | [[NetOpt.tsx]], [[NetTest.tsx]] (diagnostic) | ligne du moteur réseau, ou avancement |
 | `nettest:sample` | [[lib.rs]] (`net_test`, [[nettest.rs]]) | [[NetTest.tsx]], [[NetOpt.tsx]] (analyse) | un essai de ping |
@@ -201,7 +203,7 @@ Les 15 événements Tauri que l'interface écoute, tous déclarés dans [[api.ts
 - Réglages et lots : [[TweakRow.tsx]], [[ApplyBar.tsx]], [[ConfirmDialog.tsx]], [[RunOverlay.tsx]], [[ResetToast.tsx]].
 - Licence et Premium : [[LicenseGate.tsx]], [[LicenseNotice.tsx]], [[Upsell.tsx]], [[SubscriptionCard.tsx]].
 - Compte et avis : [[ProfileCard.tsx]], [[ReviewDialog.tsx]], [[ReviewPrompt.tsx]].
-- Cartes : [[UpdateCard.tsx]], [[BackgroundCard.tsx]], [[SessionCard.tsx]], [[LiveStatsCard.tsx]], [[RbwStatus.tsx]].
+- Cartes : [[UpdateCard.tsx]], [[BackgroundCard.tsx]], [[SessionCard.tsx]], [[LiveStatsCard.tsx]]. (`RbwStatus.tsx` est retiré le 23/11 : son contenu est dans [[ModulePage.tsx]].)
 - Réseau et presets : [[NetTools.tsx]], [[PresetEditor.tsx]].
 - Jeux : [[PresetPicker.tsx]] (choix du preset d'un jeu, covers verticales), [[GameTips.tsx]] (réglages conseillés de la [[Barre en jeu]], [[Conseils au lancement du jeu]]).
 - Petites briques (`ui.tsx`, `Modal`, `Logo`, `icons.ts`, `ri.tsx`, `printed.ts`, `Avatar`, `PageBoundary`, `vite-env.d.ts`) : [[Petits composants de l'interface]].

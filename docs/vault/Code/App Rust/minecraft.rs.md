@@ -2,8 +2,8 @@
 type: code
 tags: [code, app, rust, minecraft, optifine]
 fichier: app/src-tauri/src/minecraft.rs
-lignes: 185
-maj: 2026-11-10
+lignes: 188
+maj: 2026-11-23
 ---
 # minecraft.rs
 
@@ -21,7 +21,7 @@ Tout ce qui suit est CONFIRMÉ (code de `staging`, 10/11).
 ## Ce que le fichier expose
 
 - Constantes : `FILE = "optionsof.txt"`, préfixe des copies `optionsof.txt.rago-`, **5 copies gardées**, suffixe `.none` (copie d'un dossier qui n'avait pas de fichier).
-- `Status { dirExists, optifineFile, backups }`, `status(dir)`.
+- `Status { dir, dirExists, optifineFile, backups }`, `status(dir)` ; `dir` (ajouté le 23/11) est le dossier lu, écrit en entier, que la page Minecraft affiche ([[ModulePage.tsx]]).
 - `apply(dir, values, stamp, keep) -> Result<String>` (message pour le journal).
 - `restore_latest(dir) -> Result<String>`.
 

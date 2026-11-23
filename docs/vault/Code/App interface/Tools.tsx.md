@@ -2,8 +2,8 @@
 type: code
 tags: [code, app, react, page, outils]
 fichier: app/src/pages/Tools.tsx
-lignes: 760
-maj: 2026-11-11
+lignes: 762
+maj: 2026-11-23
 ---
 # Tools.tsx
 
@@ -76,7 +76,7 @@ Quatre tuiles (`Tile` : icône, titre, phrase, zone de résultat `aria-live`, bo
 - Titre, nombre total et « Les actions à lancer des autres onglets, réunies ici. Elles restent aussi à leur place. »
 - Parcourt les modules du catalogue ([[catalog.ts]]) dans l'ordre et garde les réglages `kind: "action"` (bouton « Lancer ») de chaque section (`sectionTweaks`). Deux jumeaux (même script sous deux noms, `distinctKey`) ne comptent qu'une fois : le premier rencontré. Au catalogue du 11/11 : **17 actions, 15 lignes** (Réseau 1, Latence 3, Carte graphique 1, Windows 6, Restaurer 4).
 - Un groupe par module : nom de l'onglet, nombre, lien « Voir dans {nom} » (`goTo(module)`).
-- Chaque ligne est un [[TweakRow.tsx]], exactement comme dans l'onglet : même verrou Premium, même `requestApply` (fenêtre de confirmation et de lancement), même historique. Les actions restent dans leur onglet.
+- Chaque ligne est un carreau [[TweakRow.tsx]], exactement comme dans l'onglet : même verrou Premium, même `requestApply` (fenêtre de confirmation et de lancement), même historique. Les actions restent dans leur onglet. Depuis le 23/11, les carreaux sont posés dans un `div.pg-mod.embed > div.tgrid` pour prendre le style des modules v5 (`s5/pages/module.css`), en attendant que la page Outils soit refaite sur sa maquette `app-tools.html`.
 
 ## Données touchées
 - Aucune donnée gardée par la page, sauf la clé « vue » `tools.v2` ([[seen.ts]]). Le nettoyage supprime des fichiers et la désinstallation retire des applis : les deux sont faits par [[tools.rs]], **sans sauvegarde** (rien n'est inscrit dans l'historique ni dans la remise à zéro). Couper un programme au démarrage, changer de mode d'alimentation ou vider le cache DNS ne passe pas non plus par l'historique : ces changements se défont depuis la page elle-même (ou le Gestionnaire des tâches, ou Windows). Les actions de « Tous les outils de l'app » passent par le moteur des réglages, comme dans leur onglet.

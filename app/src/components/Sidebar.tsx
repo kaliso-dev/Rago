@@ -24,7 +24,7 @@ const COUNTED = new Set(["latency", "gpu", "windows", "hitreg", "expert"]);
 const SWITCH: Record<string, string> = { gamemode: "game_mode", rbw: "rbw_mode" };
 
 export function Sidebar() {
-  const { t, lang, page, goTo, isOn, applied } = useStore();
+  const { t, lang, page, goTo, applied, pendingUndo, lastRun } = useStore();
   const modules = new Map(catalog.modules.map((m) => [m.id, m]));
   const [games, setGames] = useState<number | null>(null);
   // jeux réglés dans Display (couleurs ou résolution), comme « 2/9 » sur la maquette
@@ -39,7 +39,11 @@ export function Sidebar() {
   }, [page === "games", page === "display"]);
 
   const count = (id: string): string => {
-    if (id in SWITCH) return isOn(SWITCH[id]) ? "on" : "off";
+    // Mode jeu, RBW Mod : l'état de leur dernier passage, comme leur page
+    if (id in SWITCH) {
+      const last = lastRun.get(SWITCH[id]);
+      return last?.ok && last.variant === "on" ? "on" : "off";
+    }
     if (id === "games") return games == null ? "" : String(games);
     if (id === "display") return !games || shown == null ? "" : `${Math.min(shown, games)}/${games}`;
     if (!COUNTED.has(id)) return "";
@@ -51,7 +55,8 @@ export function Sidebar() {
       for (const tw of s.tweaks)
         if (!("ref" in tw) && tw.kind !== "action") {
           total++;
-          if (isOn(tw.id)) n++;
+          // allumés sur le PC (appliqués, pas en cours d'annulation), comme le bloc en tête de la page du module
+          if (applied.has(tw.id) && !pendingUndo.includes(tw.id)) n++;
         }
     return `${n}/${total}`;
   };

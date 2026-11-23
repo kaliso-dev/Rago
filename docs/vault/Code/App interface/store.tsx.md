@@ -122,7 +122,7 @@ Ce qui **n'est pas** gardé : `page` (toujours `dashboard` au lancement), `sys`,
 ### Préparer et lancer un lot
 - `requestApply(ids?)` : sans argument, prend la sélection (moins le verrouillé) et `pendingUndo` (encore appliqués) ; ouvre la confirmation (`single: false`). Avec `ids` (bouton « Lancer » d'une action), pas d'annulations et `single: true`. Si tout est verrouillé, ouvre l'offre.
 - `toApply(entries, again)` : mêmes filtres que `selectMany`, sans toucher à la sélection ; `again` relance aussi ce qui est déjà appliqué.
-- `requestApplyEntries(entries, text?, again?)` : lot préparé par un bouton (« optimisations gratuites », [[RbwStatus.tsx]] « Fix », outils) avec titre et texte propres ; renvoie 0 si tout est déjà fait.
+- `requestApplyEntries(entries, text?, again?)` : lot préparé par un bouton (« optimisations gratuites », « turn on rbw mod » de la page RBW Mod ([[ModulePage.tsx]]), outils) avec titre et texte propres ; renvoie 0 si tout est déjà fait.
 - `optimizeAndPlay(game, entries)` : « Optimize and play » de [[Games.tsx]] (bouton du jeu en tête, ou bouton lecture d'une vignette avec une licence) ; si rien n'est à appliquer, lance le jeu tout de suite ; sinon mémorise le jeu dans `launchAfter` et ouvre la confirmation avec `play`.
 - `requestUndo(ids)` : confirmation d'annulation (réglages retirés du catalogue encore appliqués, `retiredApplied`).
 - `requestUndoAll()` : « Tout annuler » ; liste et ordre donnés par `api.undoAllPlan()` (repli : les clés de `applied`) ; confirmation avec `all: true`.

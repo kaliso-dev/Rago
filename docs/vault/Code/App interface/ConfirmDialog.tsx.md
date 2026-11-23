@@ -3,7 +3,7 @@ type: code
 tags: [code, app, typescript, react]
 fichier: app/src/components/ConfirmDialog.tsx
 lignes: 181
-maj: 2026-11-10
+maj: 2026-11-23
 ---
 # ConfirmDialog.tsx
 
@@ -12,7 +12,7 @@ La **fenêtre de confirmation** avant chaque lot : ce qui sera appliqué et annu
 Tout ce qui suit est CONFIRMÉ (code de `staging`, 10/11, commit `ee77d4f`).
 
 ## Rôle et place dans l'ensemble
-- Ouverte quand `confirm` du store n'est pas nul. Toutes les demandes y passent : barre « Appliquer » ([[ApplyBar.tsx]]), bouton « Lancer » d'une action et modes de session ([[TweakRow.tsx]]), optimisations gratuites et « Tout annuler » ([[Dashboard.tsx]]), tweaks gratuits de l'[[Analysis.tsx|analyse]], « Fix » du [[RbwStatus.tsx|vérificateur RBW]], « Optimiser et jouer » ([[Games.tsx]]).
+- Ouverte quand `confirm` du store n'est pas nul. Toutes les demandes y passent : barre « Appliquer » ([[ApplyBar.tsx]]), bouton « Lancer » d'une action et modes de session ([[TweakRow.tsx]]), optimisations gratuites et « Tout annuler » ([[Dashboard.tsx]]), tweaks gratuits de l'[[Analysis.tsx|analyse]], « turn on rbw mod » du vérificateur RBW ([[ModulePage.tsx]]), boutons du [[Mode jeu]] (même page), « Optimiser et jouer » ([[Games.tsx]]).
 - Le bouton principal appelle `startRun` de [[store.tsx]], qui crée le lot affiché par [[RunOverlay.tsx]].
 - Construite sur `Modal` ([[Petits composants de l'interface]]).
 

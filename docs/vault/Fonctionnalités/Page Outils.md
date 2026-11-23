@@ -2,7 +2,7 @@
 type: fonctionnalité
 tags: [fonctionnalité, app, 1.2, outils]
 version_app: 1.3.0
-maj: 2026-11-11
+maj: 2026-11-23
 ---
 # Page Outils
 
@@ -21,7 +21,7 @@ Page « Outils » du groupe « Optimiser » (« Entretien »). Code natif, hors 
 4. **Applis préinstallées** (inchangé, gratuit) : une quarantaine d'applis que Windows installe tout seul (Candy Crush, TikTok, Clipchamp, Météo, Teams…), désinstallées pour le compte Windows du joueur. **Jamais le Store, Xbox ni la Game Bar.** Chacune se réinstalle depuis le Microsoft Store.
 5. **Réglages Windows utiles** (nouveau) : 10 raccourcis, liste fermée côté Rust : paramètres graphiques (carte graphique par jeu, planification GPU), affichage avancé (fréquence de l'écran en Hz), mode Jeu de Windows, son, souris, connexions réseau, options d'alimentation, Gestionnaire de périphériques, effets visuels (et mémoire virtuelle), Gestionnaire des tâches.
 6. **Pilotes** (inchangé, gratuit) : carte graphique, réseau, audio : version, date, âge (point orange si plus de 6 mois pour le GPU, 2 ans pour le reste). Boutons : site officiel, site du fabricant (carte mère / portable), mises à jour facultatives de Windows. **Rago n'installe jamais de pilote.**
-7. **Tous les outils de l'app** (nouveau) : les **17 actions à bouton « Lancer »** du [[Catalogue des tweaks]], rangées par onglet (Réseau, Latence, Carte graphique, Windows, Restaurer) avec un lien « Voir dans… ». Deux paires de jumelles (même script sous deux noms : « Optimiser le disque » / « TRIM du disque système », « Supprimer les applis préinstallées » / « Supprimer les applis inutiles ») ne comptent qu'une fois : **15 lignes**. Même ligne que dans l'onglet (`TweakRow`) : même verrou Premium (3 sont Premium : redémarrer la carte réseau, fréquence d'origine du processeur, priorité des contrôleurs SATA), même fenêtre de lancement, même historique. Elles restent dans leur onglet.
+7. **Tous les outils de l'app** (nouveau) : les **17 actions à bouton « Lancer »** du [[Catalogue des tweaks]], rangées par onglet (Réseau, Latence, Carte graphique, Windows, Restaurer) avec un lien « Voir dans… ». Deux paires de jumelles (même script sous deux noms : « Optimiser le disque » / « TRIM du disque système », « Supprimer les applis préinstallées » / « Supprimer les applis inutiles ») ne comptent qu'une fois : **15 lignes**. Même carreau que dans l'onglet (`TweakRow`, au style des modules v5 depuis le 23/11) : même verrou Premium (3 sont Premium : redémarrer la carte réseau, fréquence d'origine du processeur, priorité des contrôleurs SATA), même fenêtre de lancement, même historique. Elles restent dans leur onglet.
 
 La barre latérale remet le badge « Nouveau » sur Outils jusqu'à la prochaine ouverture de la page (`tools.v2`, [[seen.ts]]).
 

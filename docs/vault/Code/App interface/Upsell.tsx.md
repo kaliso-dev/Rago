@@ -3,7 +3,7 @@ type: code
 tags: [code, app, typescript, react, abonnement]
 fichier: app/src/components/Upsell.tsx
 lignes: 195
-maj: 2026-11-22
+maj: 2026-11-23
 ---
 # Upsell.tsx
 
@@ -15,7 +15,7 @@ Tout ce qui suit est CONFIRMÉ (code de `staging`, 10/11, commit `ee77d4f`).
 - Rendue une fois par [[App.tsx]] ; s'ouvre selon `upsell` du store ([[store.tsx]]) :
   - `tweak` (réglage verrouillé, avec `upsellTweak`), `preset`, `plan`, `slots`, `analysis` → fenêtre d'offre ;
   - `signin` → fenêtre de connexion avec [[LicenseGate.tsx]] (`embedded`), fermée par « Commencer ».
-- Qui l'ouvre : [[TweakRow.tsx]] et [[SearchPalette.tsx]] (`tweak`), [[Dashboard.tsx]] (`preset`), [[Sidebar.tsx]], [[ModulePage.tsx]], [[RunOverlay.tsx]] et la barre en jeu (`plan`), `toggle`/`selectMany` du store (`slots`), [[Analysis.tsx]] et [[RunOverlay.tsx]] (`analysis`), [[TitleBar.tsx]] et [[LicenseNotice.tsx]] (`signin`).
+- Qui l'ouvre : [[TweakRow.tsx]] et [[SearchPalette.tsx]] (`tweak`), [[Dashboard.tsx]] (`preset`), [[Sidebar.tsx]], [[ModulePage.tsx]], [[RunOverlay.tsx]] et la barre en jeu (`plan`), [[ModulePage.tsx]] aussi pour le Mode jeu et RBW Mod (`tweak`), `toggle`/`selectMany` du store (`slots`), [[Analysis.tsx]] et [[RunOverlay.tsx]] (`analysis`), [[TitleBar.tsx]] et [[LicenseNotice.tsx]] (`signin`).
 
 ## Fonctionnement détaillé
 
