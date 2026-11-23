@@ -11,7 +11,7 @@ La **fenêtre de confirmation** avant chaque lot : ce qui sera appliqué et annu
 
 Depuis la PR #130 (23/11), elle reprend à l'identique les maquettes v5 `app-confirm-apply`, `-single`, `-undo`, `-undoall` et `-warn` ([[Maquettes v5 dans l'app (s5)]]).
 
-Tout ce qui suit est CONFIRMÉ (code de la branche `claude/app-v5-windows`, PR #130 vers `staging`, 23/11).
+Tout ce qui suit est CONFIRMÉ (code de `staging`, PR #130 fusionnée le 23/11).
 
 ## Rôle et place dans l'ensemble
 - Ouverte quand `confirm` du store n'est pas nul. Toutes les demandes y passent : barre « Appliquer » ([[ApplyBar.tsx]]), bouton « Lancer » d'une action et modes de session ([[TweakRow.tsx]]), optimisations gratuites et « Tout annuler » ([[Dashboard.tsx]]), tweaks gratuits de l'[[Analysis.tsx|analyse]], « turn on rbw mod » du vérificateur RBW ([[ModulePage.tsx]]), boutons du [[Mode jeu]] (même page), « Optimiser et jouer » ([[Games.tsx]]).

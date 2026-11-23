@@ -11,7 +11,7 @@ La **fenêtre du lot en cours** : compteur, barre de progression, élément en c
 
 Depuis la PR #130 (23/11), elle reprend à l'identique les maquettes v5 `app-run-running`, `-done`, `-failed` et `-reboot` ([[Maquettes v5 dans l'app (s5)]]).
 
-Tout ce qui suit est CONFIRMÉ (code de la branche `claude/app-v5-windows`, PR #130 vers `staging`, 23/11).
+Tout ce qui suit est CONFIRMÉ (code de `staging`, PR #130 fusionnée le 23/11).
 
 ## Rôle et place dans l'ensemble
 - Affichée tant que `run` du store n'est pas nul ; `run` est créé par `startRun` ([[store.tsx]]) et mis à jour par les événements `run:item`, `run:log`, `run:done` du moteur ([[runner.rs]]).

@@ -9,7 +9,7 @@ maj: 2026-11-23
 
 Le **cadre de la fenêtre principale** : barre de titre, barre latérale, zone de page, barre « Appliquer », fenêtre du lot, et toutes les fenêtres qui flottent au-dessus. C'est aussi lui qui choisit **quelle page afficher** d'après `page` du store. Fiche parente : [[Code de l'app (interface)]]. Vue produit : [[App Windows]].
 
-Tout ce qui suit est CONFIRMÉ (code de `staging` après la PR #128, et de la branche `claude/app-v5-windows`, PR #130 vers `staging`, 23/11).
+Tout ce qui suit est CONFIRMÉ (code de `staging` après la PR #130, fusionnée le 23/11).
 
 ## Ce que le fichier expose
 - `App()` : composant racine, monté par [[main.tsx (app)]] sous `StoreProvider` et `AccountProvider`.

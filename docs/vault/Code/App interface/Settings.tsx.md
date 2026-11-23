@@ -67,7 +67,7 @@ Interrupteur « « Nettoyer » réduit aussi les applis en arrière-plan » (`cl
 - si le moteur a des réglages à remettre (`api.signOutPlan()`) : « Tes {n} réglages appliqués vont être annulés : Rago Optimizer remet ces réglages de Windows comme avant, en arrière-plan… » ;
 - « Se déconnecter ne libère pas ce PC : ta licence reste liée à {PC}. Pour la passer sur un autre PC, va sur la page de ton compte. » ;
 - boutons « Gérer mon compte », « Annuler », et « Annuler et me déconnecter » (ou « Se déconnecter » s'il n'y a rien à remettre) → `signOut()` du store ; le moteur remet tout en arrière-plan puis [[ResetToast.tsx]] le dit.
-Fenêtre v5 (maquette `app-signout`, PR #130 vers `staging`, 23/11) : `Modal` avec `v5="cxm"`, titre en ruban, le texte des réglages à remettre en clair (`p.ml.hi`), l'autre en gris (`p.ml`), puis « manage account » à gauche (`btn gh2 pl`, icône `user`), « cancel » (`btn gh2`) et le bouton rouge (icône `logout`, focus à l'ouverture).
+Fenêtre v5 (maquette `app-signout`, dans `staging` par la PR #130, fusionnée le 23/11) : `Modal` avec `v5="cxm"`, titre en ruban, le texte des réglages à remettre en clair (`p.ml.hi`), l'autre en gris (`p.ml`), puis « manage account » à gauche (`btn gh2 pl`, icône `user`), « cancel » (`btn gh2`) et le bouton rouge (icône `logout`, focus à l'ouverture).
 
 ## Liens avec le reste
 - Store : `lang`, `setLang`, `motion`, `setMotion`, `license`, `signOut`, `setUpsell`, `activatedAt`, `sys`, `cleanTrim`, `setCleanTrim`, `goTo`.
