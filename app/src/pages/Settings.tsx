@@ -1,17 +1,22 @@
-import { useEffect, useState } from "react";
-import { ChevronRight, ExternalLink, FolderOpen, LifeBuoy, LogOut, Share2, UserRound } from "../components/ri";
-import { formatDate } from "../lib/i18n";
+// Paramètres, à l'identique des maquettes v5 app-settings.html (Premium), app-settings-free.html (gratuit) et
+// app-settings-canceled.html (abonnement résilié) : l'offre dans l'étiquette rouge de l'en-tête, puis deux colonnes
+// de blocs en lignes .sr (compte, profil, app, à propos ; barre en jeu, pendant la partie, mémoire, dossiers).
+// Styles : s5/pages/module.css (socle) et s5/pages/pages.css, retouches dans s5/app.css.
+import { useEffect, useState, type CSSProperties, type KeyboardEvent } from "react";
+import { formatPrice } from "../lib/accountApi";
 import { api, isTauri } from "../lib/api";
 import { totalTweaks } from "../lib/catalog";
 import { FREE, useStore } from "../lib/store";
 import { ACCOUNT_URL, SITE_URL, SUPPORT_URL } from "../components/LicenseGate";
 import { Modal } from "../components/Modal";
-import { ProfileCard } from "../components/ProfileCard";
-import { SubscriptionRows } from "../components/SubscriptionCard";
-import { BackgroundCard } from "../components/BackgroundCard";
-import { SessionCard } from "../components/SessionCard";
-import { Button, Card, Segmented, Switch } from "../components/ui";
-import { Wordmark } from "../components/Logo";
+import { ProfileSection } from "../components/ProfileCard";
+import { SubscriptionRow, useSubscription } from "../components/SubscriptionCard";
+import { BackgroundSection } from "../components/BackgroundCard";
+import { SessionSection } from "../components/SessionCard";
+import { Button } from "../components/ui";
+import { I, LogoR } from "../s5/I";
+import { Sw } from "../s5/ui";
+import { dayMonth } from "../s5/text";
 
 /** Exe de test (serveur staging) : Paramètres montre la dernière recherche de mise à jour, et son erreur. */
 const STAGING = import.meta.env.VITE_RAGO_SERVER === "staging";
@@ -26,11 +31,41 @@ const LICENCES = [
   { name: "Lucide", licence: "ISC", url: "https://lucide.dev" },
 ];
 
+const titleSize = (name: string) => (name.length <= 8 ? 150 : Math.floor((150 * 8.4) / name.length));
+
+/** Choix à deux ou trois cases (.seg2 de la maquette), au clavier avec les flèches. */
+function Seg2<T extends string>({ value, options, onChange, label }: { value: T; options: { id: T; label: string }[]; onChange: (v: T) => void; label: string }) {
+  const key = (e: KeyboardEvent, i: number) => {
+    const next = e.key === "ArrowRight" ? i + 1 : e.key === "ArrowLeft" ? i - 1 : -1;
+    if (next < 0 || next >= options.length) return;
+    e.preventDefault();
+    onChange(options[next].id);
+  };
+  return (
+    <span className="seg2" role="radiogroup" aria-label={label}>
+      {options.map((o, i) => (
+        <span
+          key={o.id}
+          role="radio"
+          aria-checked={o.id === value}
+          tabIndex={o.id === value ? 0 : -1}
+          className={o.id === value ? "on" : undefined}
+          onClick={() => onChange(o.id)}
+          onKeyDown={(e) => key(e, i)}
+        >
+          {o.label}
+        </span>
+      ))}
+    </span>
+  );
+}
+
 export function Settings() {
   const { t, lang, setLang, motion, setMotion, license, signOut, setUpsell, activatedAt, sys, cleanTrim, setCleanTrim, goTo } = useStore();
   const [confirmOut, setConfirmOut] = useState(false);
   /** Réglages que la déconnexion remettra comme avant (liste du moteur), lue à l'ouverture de la confirmation. */
   const [outPlan, setOutPlan] = useState(0);
+  const [sub, setSub] = useSubscription();
   const askSignOut = () => {
     setOutPlan(0);
     setConfirmOut(true);
@@ -40,153 +75,255 @@ export function Settings() {
     );
   };
   const device = license?.deviceName ?? sys?.hostname ?? "";
+  const licensed = license?.state === "active" || license?.state === "expired";
+  const title = t("settings.title").toLowerCase();
+  const short = (ts: number) => dayMonth(lang, ts).toLowerCase();
+  const subDate = sub ? (sub.renewsAt ?? sub.endsAt) : null;
+  const help = SUPPORT_URL && (
+    <button type="button" className="lnk" onClick={() => void api.openUrl(SUPPORT_URL)}>
+      <I n="info" />
+      {t("account.help")}
+    </button>
+  );
+
+  // en-tête : l'offre, et le prochain paiement ou la fin (gratuit : réglages ouverts)
+  let planName = t("s5.st.free");
+  let planLines: [string, string] = [t("s5.st.freeCnt", { n: FREE.size, total: totalTweaks }), t("s5.st.freeRest")];
+  if (licensed) {
+    planName = license.plan === "premium" || !license.plan ? "premium" : license.plan;
+    if (license.state === "expired") planLines = [t("s5.st.pending"), t("account.pending")];
+    else if (sub)
+      planLines = [
+        sub.canceled ? t("s5.st.canceled") : sub.trial ? t("s5.st.trial") : sub.interval === "year" ? t("s5.st.yearly") : t("s5.st.monthly"),
+        subDate
+          ? sub.canceled
+            ? t("s5.st.until", { date: short(Date.parse(subDate)) })
+            : t("s5.st.next", { price: sub.price ? formatPrice(sub.price, lang) : "", date: short(Date.parse(subDate)) })
+          : "",
+      ];
+    else planLines = [t("s5.st.active"), license.expiresAt ? t("s5.st.verified", { date: short(license.expiresAt) }) : ""];
+  }
+
   return (
-    <div className="page settings">
-      <header className="page-head">
-        <div className="rg-overline">{t("settings.title")}</div>
-        <h1>{t("settings.title")}</h1>
-      </header>
-      <div className="settings-grid">
-        <Card title={t("account.title")}>
-          {license?.state === "active" || license?.state === "expired" ? (
-            <>
-              <div className="setting">
-                <div>
-                  <div>{license.email}</div>
-                  <div className="muted small">
-                    {/* « 14 oct. » finit déjà par un point : la phrase n'en prend pas un second */}
-                    {license.state === "expired"
-                      ? t("account.pending")
-                      : activatedAt
-                        ? `${t("account.device")} ${t("account.activated", { date: formatDate(lang, activatedAt) }).replace(/\.?$/, ".")}`
-                        : t("account.device")}
+    <div className="pg-mod pg-pages pg-settings is-page">
+      <section className="head">
+        <div>
+          <p className="kick">
+            {title} <b>//</b> {t("s5.st.kick")}
+          </p>
+          <h1 className="title" data-t={title} style={{ fontSize: titleSize(title) }}>
+            {title}
+          </h1>
+        </div>
+        <div className={`ping sig plan${licensed ? "" : " free"}`}>
+          <div className="pv">
+            <b>{planName}</b>
+          </div>
+          <div className="pl">
+            <span>{planLines[0]}</span>
+            {planLines[1] && <span>{planLines[1]}</span>}
+          </div>
+        </div>
+      </section>
+      <div className="nobar" />
+
+      <div className="setgrid">
+        <div className="col">
+          <section>
+            <div className="sh">
+              <h2 className="h2 tape">{t("account.title")}</h2>
+              {licensed && (
+                <button type="button" className="fold" onClick={askSignOut}>
+                  {t("account.signOut")}
+                  <I n="external" />
+                </button>
+              )}
+            </div>
+            {licensed ? (
+              <div className="panel sp">
+                <div className="who">
+                  <span className="av" aria-hidden="true">
+                    {[...(license.email ?? "?")][0]}
+                  </span>
+                  <div className="l">
+                    <b>{license.email}</b>
+                    <span>{license.state === "expired" ? t("account.pending") : activatedAt ? t("s5.st.activated", { date: dayMonth(lang, activatedAt) }) : t("account.device")}</span>
                   </div>
                 </div>
-                <Button size="sm" variant="ghost" icon={<LogOut size={13} />} onClick={askSignOut}>
-                  {t("account.signOut")}
-                </Button>
-              </div>
-              <div className="setting">
-                <span>{t("account.plan")}</span>
-                <span className="rg-metric">
-                  Rago Optimizer {license.plan === "premium" ? "Premium" : license.plan}
-                  {license.expiresAt && <span className="muted"> · {t("account.renews", { date: formatDate(lang, license.expiresAt) })}</span>}
-                </span>
-              </div>
-              <SubscriptionRows />
-              {license.keyHint && (
-                <div className="setting">
-                  <span>{t("account.key")}</span>
-                  <span className="rg-metric muted">{license.keyHint}</span>
+                <div className="sr">
+                  <div className="l">
+                    <b>{t("account.plan")}</b>
+                  </div>
+                  <span className="vv">
+                    rago optimizer {license.plan ?? "premium"}
+                    {license.expiresAt && <small>{t("s5.st.verified", { date: short(license.expiresAt) })}</small>}
+                  </span>
                 </div>
-              )}
-              <div className="setting">
-                <span>{t("account.machine")}</span>
-                <span className="rg-metric muted">{license.deviceName}</span>
-              </div>
-              <div className="setting-actions">
-                <Button size="sm" icon={<UserRound size={13} />} onClick={() => void api.openUrl(`${ACCOUNT_URL}/account`)}>
-                  {t("account.manage")}
-                </Button>
-                {SUPPORT_URL && (
-                  <Button size="sm" variant="ghost" icon={<LifeBuoy size={13} />} onClick={() => void api.openUrl(SUPPORT_URL)}>
-                    {t("account.help")}
-                  </Button>
+                {sub && <SubscriptionRow sub={sub} onChange={setSub} />}
+                {license.keyHint && (
+                  <div className="sr">
+                    <div className="l">
+                      <b>{t("account.key")}</b>
+                    </div>
+                    <span className="vv m">{license.keyHint}</span>
+                  </div>
                 )}
+                <div className="sr">
+                  <div className="l">
+                    <b>{t("account.machine")}</b>
+                  </div>
+                  <span className="vv m">{license.deviceName}</span>
+                </div>
+                <div className="sa">
+                  <button type="button" className="btn sm" onClick={() => void api.openUrl(`${ACCOUNT_URL}/account`)}>
+                    <I n="external" />
+                    {t("account.manage")}
+                  </button>
+                  {help}
+                </div>
               </div>
-            </>
-          ) : (
-            <>
-              <p className="muted small">{t("account.free", { n: FREE.size, total: totalTweaks })}</p>
-              <div className="setting-actions">
-                <Button size="sm" variant="primary" onClick={() => void api.openUrl(`${SITE_URL}/#pricing`)}>
-                  {t("free.upgrade")}
-                </Button>
-                <Button size="sm" variant="ghost" onClick={() => setUpsell("signin")}>
-                  {t("free.signIn")}
-                </Button>
-                {SUPPORT_URL && (
-                  <Button size="sm" variant="ghost" icon={<LifeBuoy size={13} />} onClick={() => void api.openUrl(SUPPORT_URL)}>
-                    {t("account.help")}
-                  </Button>
-                )}
+            ) : (
+              <div className="panel sp">
+                <div className="frp">
+                  <b>
+                    {FREE.size}
+                    <small>/ {totalTweaks}</small>
+                  </b>
+                  <div className="l">
+                    <p>{t("account.free", { n: FREE.size, total: totalTweaks })}</p>
+                    <div className="fm">
+                      <i style={{ "--w": `${((FREE.size / totalTweaks) * 100).toFixed(1)}%` } as CSSProperties} />
+                    </div>
+                  </div>
+                </div>
+                <div className="sa">
+                  <button type="button" className="btn sm red" onClick={() => void api.openUrl(`${SITE_URL}/#pricing`)}>
+                    {t("free.upgrade")}
+                  </button>
+                  <button type="button" className="btn sm" onClick={() => setUpsell("signin")}>
+                    {t("free.signIn")}
+                  </button>
+                  {help}
+                </div>
               </div>
-            </>
-          )}
-        </Card>
-        <ProfileCard />
-        <Card>
-          <div className="setting">
-            <span>{t("settings.lang")}</span>
-            <Segmented layoutId="set-lang" value={lang} onChange={setLang} options={[{ id: "fr", label: "Français" }, { id: "en", label: "English" }]} />
-          </div>
-          <div className="setting">
-            <span>{t("settings.motion")}</span>
-            <Segmented
-              layoutId="set-motion"
-              value={motion}
-              onChange={setMotion}
-              options={[
-                { id: "full", label: t("settings.motion.full") },
-                { id: "reduced", label: t("settings.motion.reduced") },
-              ]}
-            />
-          </div>
-        </Card>
-        <Card>
-          <button type="button" className="setting setting-link" onClick={() => goTo("share")}>
-            <Share2 size={16} className="setting-link-icon" />
-            <div>
-              <div>{t("settings.share")}</div>
-              <div className="muted small">{t("settings.shareHint")}</div>
+            )}
+          </section>
+
+          <ProfileSection />
+
+          <section>
+            <div className="sh">
+              <h2 className="h2 tape">{t("s5.st.app")}</h2>
             </div>
-            <ChevronRight size={16} className="setting-link-chevron" />
-          </button>
-        </Card>
-        <BackgroundCard />
-        <SessionCard />
-        <Card title={t("settings.memory")}>
-          <div className="setting">
-            <div>
-              <div>{t("settings.cleanTrim")}</div>
-              <div className="muted small">{t("settings.cleanTrimHint")}</div>
+            <div className="panel sp">
+              <div className="sr">
+                <div className="l">
+                  <b>{t("settings.lang")}</b>
+                </div>
+                <Seg2
+                  label={t("settings.lang")}
+                  value={lang}
+                  onChange={setLang}
+                  options={[
+                    { id: "fr", label: "français" },
+                    { id: "en", label: "english" },
+                  ]}
+                />
+              </div>
+              <div className="sr">
+                <div className="l">
+                  <b>{t("settings.motion")}</b>
+                </div>
+                <Seg2
+                  label={t("settings.motion")}
+                  value={motion}
+                  onChange={setMotion}
+                  options={[
+                    { id: "full", label: t("settings.motion.full") },
+                    { id: "reduced", label: t("settings.motion.reduced") },
+                  ]}
+                />
+              </div>
+              <button type="button" className="sr lk2" onClick={() => goTo("share")}>
+                <span className="ic2">
+                  <I n="external" />
+                </span>
+                <span className="l">
+                  <b>{t("settings.share")}</b>
+                  <span>{t("settings.shareHint")}</span>
+                </span>
+                <I n="right" />
+              </button>
             </div>
-            <Switch checked={cleanTrim} onChange={setCleanTrim} label={t("settings.cleanTrim")} />
-          </div>
-        </Card>
-        <Card title={t("settings.folders")}>
-          {(["logs", "resources", "data"] as const).map((k) => (
-            <div className="setting" key={k}>
-              <span>{t(`settings.${k}`)}</span>
-              <Button size="sm" icon={<FolderOpen size={13} />} onClick={() => api.openFolder(k)}>
-                {t("settings.open")}
-              </Button>
+          </section>
+
+          <section>
+            <div className="sh">
+              <h2 className="h2 tape">{t("settings.about")}</h2>
             </div>
-          ))}
-        </Card>
-        <Card title={t("settings.about")} className="about">
-          <Wordmark height={20} />
-          <p className="rg-metric muted">
-            {t("settings.version", { v: __APP_VERSION__ })} · {totalTweaks} {lang === "fr" ? "réglages" : "tweaks"}
-          </p>
-          <p className="muted small">{t("settings.madeBy")}</p>
-          {!isTauri && <p className="muted small">{t("settings.demo")}</p>}
-          {STAGING && <UpdateCheck />}
-          <div className="rg-overline" style={{ marginTop: 16 }}>
-            {t("settings.licences")}
-          </div>
-          <ul className="licences">
-            {LICENCES.map((l) => (
-              <li key={l.name}>
-                <button type="button" className="link" onClick={() => api.openUrl(l.url)}>
-                  {l.name} <ExternalLink size={11} />
-                </button>
-                <span className="rg-metric muted">{l.licence}</span>
-              </li>
-            ))}
-          </ul>
-        </Card>
+            <div className="panel sp about2">
+              <div className="lock">
+                <LogoR />
+                <b>ago</b>
+                <span>optimizer</span>
+              </div>
+              <p className="ver">
+                {t("settings.version", { v: __APP_VERSION__ })} <b>//</b> {t("s5.st.tweaks", { n: totalTweaks })}
+              </p>
+              <p className="mb">{t("settings.madeBy")}</p>
+              {!isTauri && <p className="mb nt">{t("settings.demo")}</p>}
+              {STAGING && <UpdateCheck />}
+              <span className="lbl">{t("settings.licences")}</span>
+              <div className="lics">
+                {LICENCES.map((l) => (
+                  <button type="button" key={l.name} className="lcn" onClick={() => void api.openUrl(l.url)}>
+                    <b>{l.name}</b>
+                    {l.licence}
+                  </button>
+                ))}
+              </div>
+            </div>
+          </section>
+        </div>
+
+        <div className="col">
+          <BackgroundSection />
+          <SessionSection />
+          <section>
+            <div className="sh">
+              <h2 className="h2 tape">{t("settings.memory")}</h2>
+            </div>
+            <div className="panel sp">
+              <div className="sr">
+                <div className="l">
+                  <b>{t("settings.cleanTrim")}</b>
+                  <span>{t("settings.cleanTrimHint")}</span>
+                </div>
+                <Sw on={cleanTrim} onChange={setCleanTrim} label={t("settings.cleanTrim")} />
+              </div>
+            </div>
+          </section>
+          <section>
+            <div className="sh">
+              <h2 className="h2 tape">{t("settings.folders")}</h2>
+            </div>
+            <div className="panel sp">
+              {(["logs", "resources", "data"] as const).map((k) => (
+                <div className="sr" key={k}>
+                  <div className="l">
+                    <b>{t(`settings.${k}`)}</b>
+                  </div>
+                  <button type="button" className="btn sm" onClick={() => api.openFolder(k)}>
+                    <I n="file" />
+                    {t("settings.open")}
+                  </button>
+                </div>
+              ))}
+            </div>
+          </section>
+        </div>
       </div>
+
       <Modal open={confirmOut} onClose={() => setConfirmOut(false)} className="confirm signout">
         <h2>{t("signout.title")}</h2>
         {outPlan > 0 && <p>{t("signout.undoLead", { n: outPlan })}</p>}
@@ -198,7 +335,6 @@ export function Settings() {
           <Button onClick={() => setConfirmOut(false)}>{t("signout.cancel")}</Button>
           <Button
             variant="primary"
-            icon={<LogOut size={14} />}
             onClick={() => {
               setConfirmOut(false);
               void signOut();
@@ -222,5 +358,5 @@ function UpdateCheck() {
     const id = window.setInterval(read, 3000);
     return () => window.clearInterval(id);
   }, []);
-  return <p className="rg-metric muted small">{t("settings.updateCheck", { s: status ?? t("settings.updateCheckWaiting") })}</p>;
+  return <p className="mb nt">{t("settings.updateCheck", { s: status ?? t("settings.updateCheckWaiting") })}</p>;
 }

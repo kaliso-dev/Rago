@@ -1409,12 +1409,6 @@ kbd {
 
 /* ------------------------------------------------------------ paramètres */
 
-.settings-grid {
-  display: grid;
-  grid-template-columns: minmax(0, 1fr);
-  gap: 12px;
-  max-width: 680px;
-}
 .setting {
   display: flex;
   align-items: center;
@@ -1430,33 +1424,6 @@ kbd {
   font-family: var(--rg-font-sans);
   letter-spacing: normal;
   font-variant-numeric: normal;
-}
-.settings .setting .segmented {
-  min-width: 176px;
-}
-.settings .setting .segmented button {
-  flex: 1;
-}
-.page.settings > .page-head {
-  padding-top: 25px;
-}
-.about > svg {
-  display: block;
-}
-.about p {
-  margin-top: 8px;
-  font-size: 12px;
-}
-.licences {
-  list-style: none;
-  margin: 8px 0 0;
-  padding: 0;
-}
-.licences li {
-  display: flex;
-  justify-content: space-between;
-  padding: 5px 0;
-  font-size: 12.5px;
 }
 
 @media (width >= 1024px) {

@@ -1,4 +1,4 @@
-/* Compte : photo de profil, invitation à laisser un avis, formulaire d'avis, carte Profil des réglages. */
+/* Compte : photo de profil, invitation à laisser un avis, formulaire d'avis. Le bloc Profil des réglages suit la maquette v5 (s5/pages/pages.css). */
 
 .avatar {
   display: inline-grid;
@@ -146,106 +146,6 @@
 }
 .review-dialog .modal-actions {
   align-items: center;
-}
-
-/* ------------------------------------------------------------- carte Profil */
-
-.profile-head {
-  display: flex;
-  align-items: center;
-  gap: 14px;
-}
-.profile-who {
-  flex: 1;
-  min-width: 0;
-}
-.profile-who > div {
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-.profile-photo-actions {
-  display: flex;
-  gap: 6px;
-}
-.profile-hint {
-  margin: 10px 0 4px;
-}
-.profile-hint + .setting {
-  border-top: 1px solid var(--rg-line-1);
-}
-.profile-name label {
-  white-space: nowrap;
-}
-.profile-name-edit {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  min-width: 0;
-}
-.profile-name-edit .input {
-  width: 200px;
-  min-width: 0;
-  flex: 0 1 200px;
-  font-family: var(--rg-font-sans);
-}
-.profile-name-edit .obtn {
-  height: 34px;
-  padding: 0 14px;
-  font-size: 13.5px;
-  border-radius: var(--rg-radius-md);
-}
-.profile-error {
-  margin: 4px 0;
-  color: var(--rg-red-300);
-}
-.profile-review {
-  align-items: flex-start;
-  padding-top: 10px;
-}
-.profile-review-actions {
-  display: flex;
-  flex: none;
-  gap: 6px;
-}
-.profile-delete {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 12px;
-  margin: 8px 0 4px;
-  padding: 10px 10px 10px 14px;
-  border-radius: var(--rg-radius-md);
-  background: var(--rg-glass-2);
-  border: 1px solid var(--rg-line-2);
-}
-.profile-delete-actions {
-  display: flex;
-  flex: none;
-  gap: 6px;
-}
-.profile-stars {
-  display: inline-flex;
-  gap: 2px;
-  margin-top: 4px;
-  color: var(--rg-text-3);
-}
-.profile-stars svg {
-  fill: currentColor;
-}
-.profile-stars .on {
-  color: var(--rg-red-500);
-}
-.profile-comment {
-  margin-top: 4px;
-  max-width: 380px;
-  color: var(--rg-text-2);
-  white-space: pre-line;
-  overflow-wrap: anywhere;
-  display: -webkit-box;
-  -webkit-line-clamp: 3;
-  -webkit-box-orient: vertical;
-  overflow: hidden;
 }
 
 /* l'invitation à laisser un avis couvre la colonne des interrupteurs : la page garde de quoi défiler dessous */

@@ -1,13 +1,12 @@
-import { Camera, LogOut, Pencil, Star, Trash2 } from "./ri";
 import { useRef, useState } from "react";
 import { shrinkPhoto, useAccount } from "../lib/account";
 import { asAccountError, NAME_MAX, type AccountError } from "../lib/accountApi";
 import { useAccountText } from "../lib/accountText";
-import { Avatar } from "./Avatar";
-import { Button, Card } from "./ui";
+import { I } from "../s5/I";
 
-/** Réglages → Profil : la photo et le nom public affichés avec l'avis, et l'avis lui-même. */
-export function ProfileCard() {
+/** Réglages → Profil : la photo et le nom public affichés avec l'avis, et l'avis lui-même.
+ * Écran v5 (maquettes app-settings*.html) : bloc « profile » en lignes .sr ; déconnecté, l'avatar éteint .av.off. */
+export function ProfileSection() {
   const { via, profile, review, status, setPhoto, removePhoto, setName, deleteReview, openReview, openSignIn, signOut } = useAccount();
   const { at, errorText } = useAccountText();
   const file = useRef<HTMLInputElement>(null);
@@ -36,28 +35,53 @@ export function ProfileCard() {
     }
   };
 
+  const head = (
+    <div className="sh">
+      <h2 className="h2 tape">{at("profile.title")}</h2>
+      {via === "account" && profile && (
+        <button type="button" className="fold" onClick={() => void signOut()}>
+          {at("profile.signOut")}
+          <I n="external" />
+        </button>
+      )}
+    </div>
+  );
+
   if (!via || !profile) {
     return (
-      <Card title={at("profile.title")}>
-        <p className="muted small">{status === "offline" ? errorText({ code: "network", message: null }) : at("profile.signedOut")}</p>
-        <div className="setting-actions">
-          <Button size="sm" onClick={openSignIn}>
-            {at("profile.signIn")}
-          </Button>
+      <section>
+        {head}
+        <div className="panel sp">
+          <div className="who">
+            <span className="av big2 off">
+              <I n="user" />
+            </span>
+            <div className="l">
+              <span>{status === "offline" ? errorText({ code: "network", message: null }) : at("profile.signedOut")}</span>
+            </div>
+            <button type="button" className="btn sm" onClick={openSignIn}>
+              {at("profile.signIn")}
+            </button>
+          </div>
         </div>
-      </Card>
+      </section>
     );
   }
 
+  const initial = [...(profile.name || profile.email).trim()][0] ?? "?";
+  const changed = name !== null && name.trim() !== (profile.name ?? "");
   return (
-    <Card title={at("profile.title")} className="profile-card">
-      <div className="profile-head">
-        <Avatar photo={profile.photo} name={profile.name || profile.email} size={56} />
-        <div className="profile-who">
-          <div>{profile.name || <span className="muted">{at("profile.noName")}</span>}</div>
-          <div className="muted small">{profile.email}</div>
-        </div>
-        <div className="profile-photo-actions">
+    <section>
+      {head}
+      <div className="panel sp">
+        <div className="who">
+          <span className="av big2" aria-hidden="true">
+            {profile.photo ? <img src={profile.photo} alt="" draggable={false} /> : initial}
+          </span>
+          <div className="l">
+            <b>{profile.name || at("profile.noName")}</b>
+            <span>{at("profile.photoHint")}</span>
+          </div>
           <input
             ref={file}
             type="file"
@@ -69,98 +93,101 @@ export function ProfileCard() {
               if (f) void run("photo", async () => setPhoto(await shrinkPhoto(f)));
             }}
           />
-          <Button size="sm" icon={<Camera size={13} />} disabled={busy !== null} onClick={() => file.current?.click()}>
-            {busy === "photo" ? at("profile.uploading") : profile.photo ? at("profile.changePhoto") : at("profile.addPhoto")}
-          </Button>
-          {profile.photo && (
-            <Button size="sm" variant="ghost" icon={<Trash2 size={13} />} disabled={busy !== null} aria-label={at("profile.removePhoto")} title={at("profile.removePhoto")} onClick={() => void run("photo", removePhoto)} />
-          )}
+          <span className="acts">
+            {profile.photo && (
+              <button type="button" className="ic" disabled={busy !== null} aria-label={at("profile.removePhoto")} title={at("profile.removePhoto")} onClick={() => void run("photo", removePhoto)}>
+                <I n="trash" />
+              </button>
+            )}
+            <button type="button" className="btn sm" disabled={busy !== null} onClick={() => file.current?.click()}>
+              {busy === "photo" ? at("profile.uploading") : profile.photo ? at("profile.changePhoto") : at("profile.addPhoto")}
+            </button>
+          </span>
         </div>
-      </div>
-      <p className="muted small profile-hint">{at("profile.photoHint")}</p>
 
-      <form
-        className="setting profile-name"
-        onSubmit={(e) => {
-          e.preventDefault();
-          void run("name", () => setName(shownName));
-        }}
-      >
-        <label htmlFor="profile-name">{at("profile.name")}</label>
-        <div className="profile-name-edit">
-          <input
-            id="profile-name"
-            className="input"
-            maxLength={NAME_MAX}
-            autoComplete="nickname"
-            spellCheck={false}
-            value={shownName}
-            onChange={(e) => {
-              setNameDraft(e.target.value);
-              setSaved(false);
-            }}
-          />
-          <Button size="sm" type="submit" disabled={busy !== null || name === null || name.trim() === (profile.name ?? "")}>
-            {saved ? at("profile.saved") : at("profile.save")}
-          </Button>
-        </div>
-      </form>
-
-      {error && (
-        <p className="profile-error small" role="alert">
-          {errorText(error)}
-        </p>
-      )}
-
-      <div className="setting profile-review">
-        <div>
-          <div>{at("profile.review")}</div>
-          {review ? (
-            <>
-              <span className="profile-stars" role="img" aria-label={at("review.stars", { n: review.rating })}>
-                {[1, 2, 3, 4, 5].map((n) => (
-                  <Star key={n} size={12} className={n <= review.rating ? "on" : undefined} />
-                ))}
-              </span>
-              <p className="profile-comment small">{review.comment}</p>
-              {review.hidden && <p className="muted small">{at("profile.hidden")}</p>}
-            </>
-          ) : (
-            <div className="muted small">{at("profile.noReview")}</div>
-          )}
-        </div>
-        <div className="profile-review-actions">
-          <Button size="sm" variant={review ? "secondary" : "primary"} icon={review ? <Pencil size={13} /> : <Star size={13} />} disabled={busy === "review"} onClick={() => openReview(false)}>
-            {review ? at("profile.editReview") : at("profile.leaveReview")}
-          </Button>
-          {review && !asking && (
-            <Button size="sm" variant="ghost" icon={<Trash2 size={13} />} disabled={busy !== null} onClick={() => setAsking(true)}>
-              {at("profile.deleteReview")}
-            </Button>
-          )}
-        </div>
-      </div>
-      {review && asking && (
-        <div className="profile-delete" role="group" aria-label={at("profile.deleteReview")}>
-          <span className="small">{at("profile.deleteAsk")}</span>
-          <div className="profile-delete-actions">
-            <Button size="sm" variant="ghost" disabled={busy === "review"} onClick={() => setAsking(false)} autoFocus>
-              {at("profile.deleteNo")}
-            </Button>
-            <Button size="sm" variant="primary" disabled={busy === "review"} onClick={() => void run("review", deleteReview)}>
-              {busy === "review" ? at("profile.deleting") : at("profile.deleteYes")}
-            </Button>
+        <form
+          className="sr"
+          onSubmit={(e) => {
+            e.preventDefault();
+            if (changed) void run("name", () => setName(shownName));
+          }}
+        >
+          <div className="l">
+            <b>
+              <label htmlFor="profile-name">{at("profile.name")}</label>
+            </b>
           </div>
-        </div>
-      )}
+          <span className="in2">
+            <input
+              id="profile-name"
+              maxLength={NAME_MAX}
+              autoComplete="nickname"
+              spellCheck={false}
+              value={shownName}
+              placeholder={at("profile.noName")}
+              onChange={(e) => {
+                setNameDraft(e.target.value);
+                setSaved(false);
+              }}
+            />
+            <button type="submit" className={`sv${changed ? " on" : ""}`} disabled={busy !== null || !changed}>
+              {saved ? at("profile.saved").replace(/\.$/, "") : at("profile.save")}
+            </button>
+          </span>
+        </form>
 
-      {via === "account" && (
-        <div className="setting-actions">
-          <Button size="sm" variant="ghost" icon={<LogOut size={13} />} onClick={() => void signOut()}>
-            {at("profile.signOut")}
-          </Button>
+        {error && (
+          <div className="sr">
+            <div className="l">
+              <span className="bad" role="alert">
+                {errorText(error)}
+              </span>
+            </div>
+          </div>
+        )}
+
+        <div className="sr rv">
+          <div className="l">
+            <b>{at("profile.review")}</b>
+            {review ? (
+              <>
+                <span className="stars" role="img" aria-label={at("review.stars", { n: review.rating })}>
+                  {"★".repeat(review.rating)}
+                  {review.rating < 5 && <i>{"★".repeat(5 - review.rating)}</i>}
+                </span>
+                {review.comment && <span className="cm">"{review.comment}"</span>}
+                {review.hidden && <span>{at("profile.hidden")}</span>}
+              </>
+            ) : (
+              <span>{at("profile.noReview")}</span>
+            )}
+          </div>
+          <button type="button" className="lnk" disabled={busy === "review"} onClick={() => openReview(false)}>
+            {review ? at("profile.editReview") : at("profile.leaveReview")}
+          </button>
+          {/* hors de la maquette : supprimer l'avis, une icône dans le coin qui ne prend pas de place à la ligne */}
+          {review && !asking && (
+            <button type="button" className="ic del" disabled={busy !== null} aria-label={at("profile.deleteReview")} title={at("profile.deleteReview")} onClick={() => setAsking(true)}>
+              <I n="trash" />
+            </button>
+          )}
         </div>
-      )}
-    </Card>
+        {review && asking && (
+          <div className="sr" role="group" aria-label={at("profile.deleteReview")}>
+            <div className="l">
+              <span>{at("profile.deleteAsk")}</span>
+            </div>
+            <span className="acts">
+              <button type="button" className="btn sm" disabled={busy === "review"} onClick={() => setAsking(false)} autoFocus>
+                {at("profile.deleteNo")}
+              </button>
+              <button type="button" className="btn sm red" disabled={busy === "review"} onClick={() => void run("review", deleteReview)}>
+                {busy === "review" ? at("profile.deleting") : at("profile.deleteYes")}
+              </button>
+            </span>
+          </div>
+        )}
+      </div>
+    </section>
   );
 }

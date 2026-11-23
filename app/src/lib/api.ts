@@ -1044,7 +1044,7 @@ function mockLicense(): LicenseStatus {
     email: demoEmail,
     plan: demoEmail ? "premium" : null,
     keyHint: demoEmail ? "RAGO-9EGJN-•••••-•••••-VKXDS" : null,
-    expiresAt: demoEmail ? Date.now() + 30 * 86_400_000 : null,
+    expiresAt: demoEmail ? Date.now() + 21 * 86_400_000 : null,
     needsRefresh: false,
     deviceName: "PC-DEMO",
   };
@@ -1057,7 +1057,7 @@ let mockBackground: BackgroundPrefs = {
   autostart: true,
   overlay: true,
   shortcut: "Alt+X",
-  pin: false,
+  pin: true,
   lang: "fr",
   gameGpu: true,
   gamePower: true,
@@ -1087,7 +1087,7 @@ const mockSession = (): SessionState => {
             { id: "cpu", apps: ["Google Chrome"] },
           ]
         : [],
-    multiGpu: true,
+    multiGpu: false,
     x3d: false,
     game: ids.length ? game : null,
     tipsLeft: ids.filter((id) => !mockTipsDone.includes(id)).length,
