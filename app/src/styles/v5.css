@@ -1368,12 +1368,6 @@ svg.pi use.pf {
   border-top: 1px solid var(--rg-line-1);
 }
 
-/* écran d'exécution : grand compteur sur un coup de pinceau, segments, journal à droite */
-.run {
-  background: rgba(7, 7, 8, 0.92);
-  backdrop-filter: blur(28px) saturate(1.3);
-}
-
 /* palette de recherche */
 .palette {
   border-radius: 22px;
