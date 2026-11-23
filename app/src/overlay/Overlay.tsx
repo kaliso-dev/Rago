@@ -1,14 +1,14 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { motion } from "motion/react";
-import { AppWindow, BrushCleaning, Lightbulb, Lock, LoaderCircle, Pin, PinOff, PrintDefs, X } from "../components/ri";
 import { api, type AppliedView, type LiveStats, type OverlayInfo, type OverlayLive, type OverlayMode, type SystemInfo } from "../lib/api";
 import { availability, tweaks, type Lang } from "../lib/catalog";
 import { translate, type Key } from "../lib/i18n";
 import { tipsFor } from "../lib/tips";
 import { GameTips } from "../components/GameTips";
-import { AppIcon } from "../components/Logo";
 import { SessionChecks, useSession } from "../components/SessionCard";
-import { Switch } from "../components/ui";
+import { I } from "../s5/I";
+import appIcon from "../assets/s5/img/rago-app-dark-64.svg";
+import cap from "../assets/s5/img/rago-cap.svg";
 
 /** Réglages qui s'appliquent en pleine partie : sans redémarrage, sans couper la carte réseau ni relancer l'Explorateur,
  * sans point de restauration conseillé. Le mode jeu, Hitreg, OptiFine et RBW Mod restent dans l'app. */
@@ -52,7 +52,7 @@ export function Overlay() {
   const [busy, setBusy] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [cleaning, setCleaning] = useState(false);
-  const [cleaned, setCleaned] = useState<string | null>(null);
+  const [cleaned, setCleaned] = useState<{ text: string; bad?: boolean } | null>(null);
   // rappel des conseils au lancement du jeu (pastille élargie quelques secondes)
   const [nudge, setNudge] = useState(false);
   const session = useSession();
@@ -142,9 +142,9 @@ export function Overlay() {
     setCleaning(true);
     try {
       const c = await api.cleanRam(readTrim());
-      setCleaned(c.standby >= 50 * 1024 ** 2 ? t("live.cleaned", { n: (c.standby / 1024 ** 3).toFixed(1).replace(".", lang === "fr" ? "," : ".") }) : t("live.cleanedEmpty"));
+      setCleaned({ text: c.standby >= 50 * 1024 ** 2 ? t("live.cleaned", { n: (c.standby / 1024 ** 3).toFixed(1).replace(".", lang === "fr" ? "," : ".") }) : t("live.cleanedEmpty") });
     } catch {
-      setCleaned(t("live.cleanFailed"));
+      setCleaned({ text: t("live.cleanFailed"), bad: true });
     } finally {
       setCleaning(false);
     }
@@ -157,31 +157,30 @@ export function Overlay() {
         ? t("tips.nudge", { n: session.tipsLeft + session.checks.length, game: def.name })
         : t("tips.nudgeChecks", { n: session.checks.length });
     return (
-      <div className="ov-pill ov-nudge" aria-live="polite">
-        <PrintDefs />
-        <AppIcon size={26} />
-        <Lightbulb size={13} className="ov-nudge-icon" />
-        <span className="ov-nudge-text">{label}</span>
-        <span className="ov-pill-sep" />
-        <span className="ov-nudge-key">{t("tips.nudgeKey", { key: info?.shortcut ?? "Alt+X" })}</span>
+      <div className="igpill nd igglass" aria-live="polite">
+        <img src={cap} alt="" />
+        <I n="bulb" />
+        <span className="tx">{label}</span>
+        <i className="sp" />
+        <span className="ky">{t("tips.nudgeKey", { key: info?.shortcut ?? "Alt+X" })}</span>
       </div>
     );
   }
   if (mode === "pill") {
     return (
-      <div className="ov-pill" aria-live="off">
-        <AppIcon size={26} />
-        <span className="ov-pill-m">
-          <span className="ov-pill-v rg-metric">{info?.fpsAvailable === false ? "—" : value(live.fps)}</span>
-          <span className="ov-pill-u">FPS</span>
+      <div className="igpill igglass" aria-live="off">
+        <img src={cap} alt="" />
+        <span className="m">
+          <b>{info?.fpsAvailable === false ? "—" : value(live.fps)}</b>
+          <small>fps</small>
         </span>
-        <span className="ov-pill-sep" />
-        <span className="ov-pill-m">
-          <span className="ov-pill-v rg-metric">
+        <i className="sp" />
+        <span className="m">
+          <b>
             {live.ping != null && live.pingEstimate ? "≈" : ""}
             {value(live.ping)}
-          </span>
-          <span className="ov-pill-u">ms</span>
+          </b>
+          <small>ms</small>
         </span>
       </div>
     );
@@ -189,7 +188,7 @@ export function Overlay() {
   if (mode !== "panel") return null;
 
   const tiles: { key: string; label: string; v: string; unit: string; hint?: string }[] = [
-    { key: "fps", label: "FPS", v: info?.fpsAvailable === false ? "—" : value(live.fps), unit: "", hint: info?.fpsAvailable === false ? t("overlay.fpsOff") : undefined },
+    { key: "fps", label: "fps", v: info?.fpsAvailable === false ? "—" : value(live.fps), unit: "", hint: info?.fpsAvailable === false ? t("overlay.fpsOff") : undefined },
     {
       key: "ping",
       label: t("overlay.ping"),
@@ -198,114 +197,148 @@ export function Overlay() {
       unit: "ms",
       hint: live.ping == null ? t("overlay.pingUdp") : live.pingEstimate ? t("overlay.pingEstimate") : undefined,
     },
-    { key: "cpu", label: "CPU", v: value(stats?.cpu), unit: "%" },
-    { key: "gpu", label: "GPU", v: value(stats?.gpu), unit: "%" },
-    { key: "ram", label: "RAM", v: value(stats?.ram), unit: "%" },
+    { key: "cpu", label: "cpu", v: value(stats?.cpu), unit: "%" },
+    { key: "gpu", label: "gpu", v: value(stats?.gpu), unit: "%" },
+    { key: "ram", label: "ram", v: value(stats?.ram), unit: "%" },
   ];
 
   const advice = !!session && (session.playing || !!session.game);
+  const shortcut = info?.shortcut ?? "Alt+X";
 
   return (
     // clic hors de la barre : retour au jeu
-    <div className="ov-stage" onMouseDown={(e) => e.target === e.currentTarget && void api.overlayClose()}>
-      <motion.section className="ov-panel" initial={{ opacity: 0, y: -10, scale: 0.98 }} animate={{ opacity: 1, y: 0, scale: 1 }} transition={{ duration: 0.22, ease: [0.16, 1, 0.3, 1] }}>
-        <PrintDefs />
-        <header className="ov-head">
-          <AppIcon size={40} />
-          <div className="ov-title">
-            <span className="ov-overline">{t("overlay.title")}</span>
-            <span className="ov-game">{info?.game ?? t("overlay.noGame")}</span>
+    <div className="ovw" onMouseDown={(e) => e.target === e.currentTarget && void api.overlayClose()}>
+      <motion.section
+        className="igp igglass"
+        initial={{ opacity: 0, y: -10, scale: 0.98 }}
+        animate={{ opacity: 1, y: 0, scale: 1 }}
+        transition={{ duration: 0.22, ease: [0.16, 1, 0.3, 1] }}
+      >
+        <header className="igh">
+          <img className="igm" src={appIcon} alt="" />
+          <div className="igt">
+            <span className="igo">{t("overlay.title")}</span>
+            <b>{info?.game ?? t("overlay.noGame")}</b>
           </div>
-          <div className="ov-actions">
+          <div className="iga">
             <button
               type="button"
-              className={`ov-icon${info?.pin ? " on" : ""}`}
+              className={`igi${info?.pin ? " on" : ""}`}
               title={info?.pin ? t("overlay.unpin") : t("overlay.pin")}
+              aria-label={info?.pin ? t("overlay.unpin") : t("overlay.pin")}
               onClick={() => {
                 const pin = !info?.pin;
                 setInfo((i) => (i ? { ...i, pin } : i));
                 void api.overlaySetPin(pin);
               }}
             >
-              {info?.pin ? <PinOff size={15} /> : <Pin size={15} />}
+              <I n={info?.pin ? "pinoff" : "pin"} />
             </button>
-            <button type="button" className="ov-icon" title={t("overlay.openApp")} onClick={() => void api.overlayOpenApp()}>
-              <AppWindow size={15} />
+            <button type="button" className="igi" title={t("overlay.openApp")} aria-label={t("overlay.openApp")} onClick={() => void api.overlayOpenApp()}>
+              <I n="appwin" />
             </button>
-            <button type="button" className="ov-icon" title={t("overlay.close")} onClick={() => void api.overlayClose()}>
-              <X size={16} />
+            <button type="button" className="igi" title={t("overlay.close")} aria-label={t("overlay.close")} onClick={() => void api.overlayClose()}>
+              <I n="x" />
             </button>
           </div>
         </header>
 
-        <div className="ov-tiles">
+        <div className="igtl">
           {tiles.map((x) => (
-            <div key={x.key} className={`ov-tile${x.key === "fps" ? " hi" : ""}${x.v === "—" ? " na" : ""}`} title={x.hint}>
-              <span className="ov-overline">{x.label}</span>
-              <span className="ov-tile-v rg-metric">
+            <div key={x.key} className={`igtile${x.key === "fps" ? " hi" : ""}${x.v === "—" ? " na" : ""}`} title={x.hint}>
+              <span className="igo">{x.label}</span>
+              <b>
                 {x.v}
                 {x.v !== "—" && x.unit && <small>{x.unit}</small>}
-              </span>
+              </b>
             </div>
           ))}
-          <button type="button" className="ov-clean" disabled={cleaning} title={t("live.cleanHint")} onClick={() => void clean()}>
-            {cleaning ? <LoaderCircle size={15} className="spin" /> : <BrushCleaning size={15} />}
-            <span>{cleaning ? t("live.cleaning") : t("live.clean")}</span>
+          <button type="button" className={`igcl${cleaning ? " busy" : ""}`} disabled={cleaning} title={t("live.cleanHint")} onClick={() => void clean()}>
+            {cleaning ? <I n="loader" className="spin" /> : <I n="brush" />}
+            {cleaning ? t("live.cleaning") : t("live.clean")}
           </button>
         </div>
-        {cleaned && <p className="ov-note ov-cleaned">{cleaned}</p>}
-        {/* conseils de la partie à gauche (défilent à part), réglages en direct à droite */}
-        <div className={`ov-main${advice ? " two" : ""}`}>
-        {advice && (
-          <div className="ov-side">
-          <span className="ov-overline ov-col-head">{t("overlay.thisGame")}</span>
-          <div className="ov-advice">
-            <SessionChecks session={session!} t={t} />
-            {session!.game && <GameTips game={session!.game} t={t} lang={lang} open={session!.tipsLeft > 0} compact className="ov-tips" />}
-          </div>
-          </div>
+        {cleaned && (
+          <p className={`ignote${cleaned.bad ? " bad" : ""}`}>
+            <I n={cleaned.bad ? "alert" : "check"} />
+            {cleaned.text}
+          </p>
         )}
-        <div className="ov-live">
-        <div className="ov-section-head">
-          <span className="ov-overline">{t("overlay.live")}</span>
-          {!premium && (
-            <button type="button" className="ov-premium" onClick={() => void api.overlayOpenApp("premium")}>
-              <Lock size={11} />
-              {t("overlay.premium")}
-            </button>
-          )}
-        </div>
-        <div className={`ov-list${premium ? "" : " locked"}`}>
-          <div className="ov-cols">
-            {groups.map((g) => (
-              <div key={g.group} className="ov-group">
-                <span className="ov-group-label">{t(g.group)}</span>
-                {g.items.map((tw) => {
-                  const on = applied.has(tw!.id);
-                  return (
-                    <div key={tw!.id} className="ov-row" onClick={() => void toggle(tw!.id)}>
-                      <span className="ov-row-name">{tw!.name[lang]}</span>
-                      {busy === tw!.id ? (
-                        <LoaderCircle size={15} className="spin ov-row-busy" />
-                      ) : (
-                        <Switch checked={on} disabled={!premium || !!busy} onChange={() => void toggle(tw!.id)} label={tw!.name[lang]} />
-                      )}
-                    </div>
-                  );
-                })}
+        {/* conseils de la partie à gauche (défilent à part), réglages en direct à droite */}
+        <div className={`igb${advice ? "" : " one"}`}>
+          {advice && (
+            <div className="igcol">
+              <div className="igsh">
+                <span className="igo">{t("overlay.thisGame")}</span>
               </div>
-            ))}
+              <div className="igsc">
+                <SessionChecks session={session!} t={t} />
+                {session!.game && <GameTips game={session!.game} t={t} lang={lang} open={session!.tipsLeft > 0} />}
+              </div>
+            </div>
+          )}
+          <div className="igcol">
+            <div className="igsh">
+              <span className="igo">{t("overlay.live")}</span>
+              {!premium && (
+                <button type="button" className="igpr" onClick={() => void api.overlayOpenApp("premium")}>
+                  <I n="lock" />
+                  {t("overlay.premium")}
+                </button>
+              )}
+            </div>
+            <div className="igsc">
+              <div className={`igl${premium ? "" : " locked"}${advice ? "" : " cols2"}`}>
+                {groups.map((g) => (
+                  <div key={g.group} className="iggr">
+                    <span className="igo">{t(g.group)}</span>
+                    {g.items.map((tw) => {
+                      const on = applied.has(tw!.id);
+                      const wait = busy === tw!.id;
+                      return (
+                        <button
+                          key={tw!.id}
+                          type="button"
+                          role="switch"
+                          aria-checked={on}
+                          disabled={!premium || !!busy}
+                          className={`igr${on || wait ? " on" : ""}${busy ? " wait" : ""}`}
+                          onClick={() => void toggle(tw!.id)}
+                        >
+                          <b>{tw!.name[lang]}</b>
+                          {wait ? <I n="loader" className="ld spin" /> : <i className={`sw${on ? " on" : ""}${busy ? " dis" : ""}`} />}
+                        </button>
+                      );
+                    })}
+                  </div>
+                ))}
+              </div>
+            </div>
           </div>
         </div>
-        </div>
-        </div>
-        {error && <p className="ov-note ov-error">{error}</p>}
-        <footer className="ov-foot">
-          <span>{t(info?.passive ? "overlay.hintPassive" : "overlay.hint", { key: info?.shortcut ?? "Alt+X" })}</span>
-          <span className="ov-foot-sep" />
+        {error && (
+          <p className="ignote bad">
+            <I n="alert" />
+            {error}
+          </p>
+        )}
+        <footer className="igf">
+          <span>
+            <Keys text={t(info?.passive ? "overlay.hintPassive" : "overlay.hint", { key: "\u0001" })} shortcut={shortcut} />
+          </span>
+          <i className="dt" />
           <span>{t("overlay.pingNote")}</span>
         </footer>
       </motion.section>
     </div>
+  );
+}
+
+/** Raccourcis du pied de la barre en touches (<kbd>) : le raccourci de la barre et Échap. */
+function Keys({ text, shortcut }: { text: string; shortcut: string }) {
+  return (
+    <>
+      {text.split(/(\u0001|Échap|Esc)/).map((part, i) => (i % 2 ? <kbd key={i}>{part === "\u0001" ? shortcut : part}</kbd> : part))}
+    </>
   );
 }

@@ -2,23 +2,23 @@
 type: code
 tags: [code, app, react, composant]
 fichier: app/src/components/ (ui.tsx, Modal.tsx, Logo.tsx, logoPaths.ts, icons.ts, ri.tsx, printed.ts, PageBoundary.tsx) et app/src/vite-env.d.ts
-lignes: 428
-maj: 2026-11-23
+lignes: 332
+maj: 2026-11-24
 ---
 # Petits composants de l'interface
 
-Les briques réutilisées partout dans l'app : boutons, interrupteurs, cartes, fenêtres, logo, icônes, logo des jeux, garde-fou d'erreur de page. Ce sont de petits fichiers sans logique métier, regroupés ici. Fiche parente : [[Code de l'app (interface)]]. Design : [[Charte graphique]] (v5 depuis la PR #108 du 22/11, vers `staging`, jamais testée sur Windows).
+Les briques réutilisées partout dans l'app : boutons, cartes, fenêtres, logo, icônes, logo des jeux, garde-fou d'erreur de page. Ce sont de petits fichiers sans logique métier, regroupés ici. Fiche parente : [[Code de l'app (interface)]]. Design : [[Charte graphique]] (v5 depuis la PR #108 du 22/11, vers `staging`, jamais testée sur Windows).
 
 Tout ce qui suit est CONFIRMÉ (code de `staging`, 10/11, commit `ee77d4f`).
 
 | Fichier | Lignes | Contenu |
 |---|---|---|
-| `components/ui.tsx` | 107 | `Switch`, `Segmented`, `Badge`, `Button`, `Card` |
+| `components/ui.tsx` | 78 | `Segmented`, `Badge`, `Button`, `Card` |
 | `components/Modal.tsx` | 96 | `Modal` (fenêtre par-dessus la page, avec pile d'Échap ; style v5 en option) |
-| `components/Logo.tsx` | 24 | `Mark`, `AppIcon` |
+| `components/Logo.tsx` | 14 | `Mark` |
 | `components/logoPaths.ts` | 3 | tracé SVG du R |
 | `components/icons.ts` | 23 | `MODULE_ICONS`, `DiscordIcon` |
-| `components/ri.tsx` | 125 | icônes de l'app (imprimées ou lucide), `PrintIcon`, `PrintDefs` |
+| `components/ri.tsx` | 68 | icônes de l'app (imprimées ou lucide), `PrintIcon`, `PrintDefs` |
 | `components/printed.ts` | 7 | formes des icônes imprimées et leurs filtres (généré) |
 | `components/PageBoundary.tsx` | 34 | `PageBoundary` |
 | `vite-env.d.ts` | 9 | types des variables `VITE_*` et de `__APP_VERSION__` |
@@ -30,11 +30,11 @@ Utilisé par 13 fichiers (23/11, après la PR #128 : surtout les fenêtres, la b
   - `size` : `sm`, `md` (par défaut) ou `lg` ;
   - l'icône est placée avant le texte ; classes `btn btn-<variant> btn-<size>` ;
   - `type="button"` par défaut, sauf si l'appelant passe `type="submit"`.
-- **`Switch({ checked, onChange, disabled, label })`** : interrupteur accessible (`role="switch"`, `aria-label`). Le rond glisse avec une animation à ressort (`motion`). Le clic ne remonte pas au parent (`stopPropagation`), ce qui permet de rendre toute une ligne cliquable sans double bascule (voir [[NetOpt.tsx]] ; les carreaux de réglage de [[TweakRow.tsx]] ont leur propre interrupteur `.sw` depuis le 23/11).
 - **`Segmented({ value, options, onChange, layoutId, disabled })`** : choix entre plusieurs boutons (`role="radiogroup"`). La pastille du choix actif glisse d'un bouton à l'autre (`layoutId`, qui doit être unique dans la page). Une option peut porter un cadenas (`locked`, variante Premium) et une petite indication (`hint`).
 - **`Badge({ tone, children })`** : étiquette, `tone` parmi `neutral`, `warn`, `red`, `ok`, `info`.
 - **`Card({ title, action, className, children })`** : la carte (classe `card`), avec un en-tête en petites capitales (`rg-overline`) si un titre ou une action est donné.
 - `Kbd` est retiré le 24/11 : la recherche suit la maquette (`kbd` dans `.pin`, [[SearchPalette.tsx]]).
+- `Switch` est retiré le 24/11 (PR #PRX) : la barre en jeu, sa dernière utilisatrice, suit la maquette (ligne `.igr` avec l'interrupteur `.sw`, [[Overlay.tsx]]) ; les autres pages ont l'interrupteur `Sw` des maquettes (`s5/ui.tsx`).
 - `Segments` et `HeadNumber` (jauge et bloc chiffré rouge de la PR #108) sont retirés le 23/11 : plus aucune page ne s'en servait (le bloc en tête des pages suit maintenant les maquettes, [[Maquettes v5 dans l'app (s5)]]).
 
 ## `Modal.tsx` : les fenêtres
@@ -49,7 +49,7 @@ Utilisé par 13 fichiers (23/11, après la PR #128 : surtout les fenêtres, la b
 Charte v5 (PR #108 du 22/11, vers `staging`, jamais testée sur Windows) : **R rouge plein partout** (décision de Sofiene du 22/11) ; le R est noir seulement sur la transition rouge plein écran du démarrage.
 - `logoPaths.ts` : le tracé du R (`MARK`, boîte 164 × 180). L'ancien tracé du texte « Rago Optimizer » (`WORDMARK_TEXT`) est retiré.
 - **`Mark({ size, ink })`** : le R seul, centré dans un carré ; rouge (`--rg-red-500`), ou noir avec `ink` ([[Sidebar.tsx]], [[Splash.tsx]]).
-- **`AppIcon({ size })`** : l'icône de l'app, R rouge sur une tuile blanche arrondie (`rx` 56 sur 256), comme `marque/logo/rago-app-icon.svg` ([[Overlay.tsx]]). Les fenêtres v5 prennent l'image `assets/s5/img/rago-app-dark-*.svg` des maquettes.
+- `AppIcon` (R rouge sur tuile blanche) est retiré le 24/11 (PR #PRX) : la barre en jeu prend les images des maquettes (`assets/s5/img/rago-app-dark-64.svg`, pastille `rago-cap.svg`), comme les fenêtres v5.
 - `Wordmark` et `Pulse` (logo écrit, logo animé) sont retirés le 24/11 : plus aucun écran ne s'en servait.
 
 ## `icons.ts`
@@ -57,9 +57,9 @@ Charte v5 (PR #108 du 22/11, vers `staging`, jamais testée sur Windows) : **R r
 - **`DiscordIcon({ size })`** : le logo de Discord (Simple Icons, licence CC0), pour les liens vers le Discord de Rago ([[Sidebar.tsx]], [[Settings.tsx]], [[Tools.tsx]] pour le cache de Discord).
 
 ## `ri.tsx` et `printed.ts` : les icônes imprimées
-- Toute l'app importe ses icônes depuis `components/ri` au lieu de `lucide-react` (chemins relatifs). `ri.tsx` réexporte tout lucide (`export * from "lucide-react"`), puis **remplace** les noms qui ont un équivalent dans la charte par une icône imprimée : `Zap` → `apply`, `Check`, `Lock`, `Cpu`, `Gpu` → `graphics`, `Search`, `Play`, `Plus`, `Power`, `RefreshCw`, `RotateCcw` → `rotate`, `Trash2`, `Pencil`, `ScanSearch` → `analysis`, `TriangleAlert` → `alert`, etc. (65 noms). Flèches, chevrons, croix, `Minus`, `Square` et `LoaderCircle` restent au trait.
+- Les composants pas encore refaits sur les maquettes importent leurs icônes depuis `components/ri` au lieu de `lucide-react` (chemins relatifs) ; les écrans refaits prennent `I` de `s5/I.tsx` ([[Maquettes v5 dans l'app (s5)]]). `ri.tsx` réexporte tout lucide (`export * from "lucide-react"`), puis **remplace** les noms qui ont un équivalent dans la charte par une icône imprimée. Depuis le 24/11 (PR #PRX), seuls restent les noms encore importés quelque part (10) : `BrushCleaning` → `brush`, `Cpu`, `Gpu` → `graphics`, `ListPlus` et `ListTree` → `list`, `Lock`, `MemoryStick` → `ram`, `Plus`, `RefreshCw` → `refresh`, `Search` ; les 57 autres sont retirés. Flèches, chevrons, croix, `Minus`, `Square` et `LoaderCircle` restent au trait (lucide).
 - **`PrintIcon({ name, size, color, ... })`** : SVG 24 × 24 ; la forme pleine (masquée par ses découpes) est dessinée deux fois, un dos rouge décalé de (1,3 ; 1,5) puis la face, le tout penché (`skewX(-12)`). Couleurs par CSS : `--pf` (face) et `--pb` (dos), changées selon le fond dans `v5.css` ([[Styles de l'app (CSS)]]).
-- **`PrintDefs()`** : pose une fois les filtres de grain (`rgh-face-s`, `rgh-back-s`) ; monté en haut de [[App.tsx]] et de [[Overlay.tsx]].
+- **`PrintDefs()`** : pose une fois les filtres de grain (`rgh-face-s`, `rgh-back-s`) ; monté en haut de [[App.tsx]] (la barre en jeu monte `IconDefs` de `s5/I.tsx` à la place depuis le 24/11).
 - `printed.ts` est **généré** depuis les maquettes : `PRINTED` (nom → [formes, découpes], environ 85 icônes) et `PRINT_FILTERS`. Ne pas l'éditer à la main.
 
 `Avatar.tsx` est retiré le 24/11 : la fenêtre d'avis fait sa photo ou son initiale elle-même (`.av` des maquettes, [[ReviewDialog.tsx]]).

@@ -3,7 +3,7 @@ type: code
 tags: [code, app, config, vite, npm]
 fichier: app/package.json, app/vite.config.ts, app/tsconfig.json, app/index.html, app/overlay.html, app/public/, app/ci/
 lignes: 181
-maj: 2026-11-22
+maj: 2026-11-24
 ---
 # Configuration du front (Vite, npm)
 
@@ -66,7 +66,7 @@ Tout ce qui suit est CONFIRMÉ (code de `staging`, 10/11, commit `ee77d4f`).
 
 ## Les deux pages HTML
 - `index.html` (13 lignes) : `<div id="root">`, script `/src/main.tsx` (voir [[main.tsx (app)]]), icône `/favicon.svg`, titre « Rago Optimizer », `lang="en"`.
-- `overlay.html` (12 lignes) : `<body class="overlay-body">`, script `/src/overlay/main.tsx` (voir [[main.tsx (barre en jeu)]]), même titre. Pas d'icône.
+- `overlay.html` (12 lignes) : `<body>` sans classe (depuis le 24/11, PR #PRX ; avant `overlay-body`), script `/src/overlay/main.tsx` (voir [[main.tsx (barre en jeu)]]), même titre. Pas d'icône.
 - `public/` ne contient que `favicon.svg` : le logo, une image de 256 × 256 avec des métadonnées d'origine (C2PA) dans le fichier.
 
 ## Variables lues au build

@@ -2,7 +2,7 @@
 type: design
 tags: [design, app, 1.2]
 version_app: 1.3.0
-maj: 2026-11-22
+maj: 2026-11-24
 ---
 # Refonte glass
 
@@ -18,5 +18,5 @@ Demandée le 16/10 : rester dans la [[Charte graphique]], s'inspirer d'Apple, be
 Liens : [[App Windows]], [[Barre en jeu]].
 
 ## Code
-- Jetons et règles du verre, plan des feuilles de style : [[Styles de l'app (CSS)]] (`tokens.css`, `app.css` section « verre : bord lumineux », `features.css`, `overlay.css`). Jetons de la marque : [[tokens.css (marque)]].
+- Jetons et règles du verre, plan des feuilles de style : [[Styles de l'app (CSS)]] (`tokens.css`, `app.css` section « verre : bord lumineux », `features.css` ; `overlay.css`, le verre de l'ancienne barre en jeu, est supprimée le 24/11). Jetons de la marque : [[tokens.css (marque)]].
 - Briques visuelles (boutons, cartes, interrupteurs, fenêtres, logo) : [[Petits composants de l'interface]]. Carte d'ensemble : [[Code de l'app (interface)]].

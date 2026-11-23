@@ -2,35 +2,6 @@ import { Lock } from "./ri";
 import { motion } from "motion/react";
 import type { ButtonHTMLAttributes, ReactNode } from "react";
 
-export function Switch({
-  checked,
-  onChange,
-  disabled,
-  label,
-}: {
-  checked: boolean;
-  onChange: (v: boolean) => void;
-  disabled?: boolean;
-  label: string;
-}) {
-  return (
-    <button
-      type="button"
-      role="switch"
-      aria-checked={checked}
-      aria-label={label}
-      disabled={disabled}
-      className={`switch${checked ? " on" : ""}`}
-      onClick={(e) => {
-        e.stopPropagation();
-        onChange(!checked);
-      }}
-    >
-      <motion.span className="switch-thumb" layout transition={{ type: "spring", stiffness: 700, damping: 38 }} />
-    </button>
-  );
-}
-
 export function Segmented<T extends string>({
   value,
   options,

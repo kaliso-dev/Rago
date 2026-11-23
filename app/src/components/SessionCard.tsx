@@ -1,13 +1,13 @@
 import { useEffect, useState } from "react";
-import { AlertTriangle, Gauge, Zap } from "./ri";
 import { api, type BackgroundPrefs, type SessionCheck, type SessionState } from "../lib/api";
 import type { Key } from "../lib/i18n";
 import { useStore } from "../lib/store";
+import { I } from "../s5/I";
 import { Sw } from "../s5/ui";
 
 type T = (key: Key, vars?: Record<string, string | number>) => string;
 
-/** Ce que Rago a fait pour la partie en cours et ce qu'il conseille (barre en jeu, bibliothèque). */
+/** Ce que Rago a fait pour la partie en cours et ce qu'il conseille (barre en jeu, maquette app-ingame, bloc .igck). */
 export function SessionChecks({ session, t }: { session: SessionState; t: T }) {
   if (!session.playing || (!session.power && !session.priority && !session.checks.length)) return null;
   const line = (c: SessionCheck) => {
@@ -16,24 +16,27 @@ export function SessionChecks({ session, t }: { session: SessionState; t: T }) {
     return t(`session.check.${c.id}` as Key, { apps: c.apps.join(", "), cur: c.apps[0] ?? "", max: c.apps[1] ?? "" });
   };
   return (
-    <div className="session-checks">
+    <div className="igck">
       {session.power && (
-        <div className="session-line ok">
-          <Zap size={13} /> {t("session.power")}
-        </div>
+        <p className="ok">
+          <I n="zap" />
+          {t("session.power")}
+        </p>
       )}
       {session.priority > 0 && (
-        <div className="session-line ok">
-          <Gauge size={13} /> {t("session.priority")}
-        </div>
+        <p className="ok">
+          <I n="gauge" />
+          {t("session.priority")}
+        </p>
       )}
       {session.checks.length > 0 && (
         <>
-          <div className="rg-overline session-head">{t("session.checks")}</div>
+          <span className="igo">{t("session.checks")}</span>
           {session.checks.map((c) => (
-            <div key={c.id} className="session-line warn">
-              <AlertTriangle size={13} /> <span>{line(c)}</span>
-            </div>
+            <p key={c.id} className="wr">
+              <I n="alert" />
+              {line(c)}
+            </p>
           ))}
         </>
       )}

@@ -2,8 +2,8 @@
 type: code
 tags: [code, app, typescript, interface]
 fichier: app/src/lib/api.ts
-lignes: 1762
-maj: 2026-11-23
+lignes: 1763
+maj: 2026-11-24
 ---
 # api.ts
 
@@ -141,7 +141,7 @@ Chaque ligne : nom dans `api` → commande Rust (paramètres) → ce que fait le
 | `sessionState()` / `sessionSetPrefs(gpu, power, checks, priority)` / `onSession(cb)` | `session_state` / `session_set_prefs` / événement `games:session` | partie en cours avec `?playing` ou dans `overlay.html` ; vérifications OneDrive et OBS ; 2 jeux sur la carte performante ; `multiGpu: false` (PC à une seule carte, comme la maquette `app-settings.html`, depuis le 23/11) |
 | `displayInfo()` / `displayProfiles()` / `displayState()` | `display_info` / `display_profiles` / `display_state` | carte NVIDIA (`?amd` : AMD, `?intel` : pas de saturation), écran « ZOWIE XL LCD » 2560×1440 à 240 Hz avec 11 résolutions (celui de la maquette v5 de Display) ; profils gardés dans `localStorage` `rago.demoDisplay` ; rien de posé ; sans profil gardé, comme la maquette : Valorant à 100 % de saturation, luminosité +6, contraste +4, 1280×960 étiré, TenZ importé, et CS2 en 1280×960 étiré (2 jeux réglés sur 9) |
 | `displaySetProfile(id, profile)` / `displayPreview(colors)` / `onDisplayState(cb)` | `display_set_profile { id, profile }` / `display_preview { colors }` / événement `display:state` | enregistre (clé `mc:java` pour Minecraft Java) ; refuse `premium:no_license` pour un pro nouveau sans licence de démo, comme le vrai moteur ; l'aperçu émet `display:state` avec `colors: "preview"` |
-| `overlayInfo()` | `overlay_info` | mode `panel` (`pill` avec `?pill`), jeu « Minecraft », `passive` avec `?passive` |
+| `overlayInfo()` | `overlay_info` | mode `panel` (`pill` avec `?pill`), jeu de la partie de démo (« VALORANT », ou celui de `?game=`, depuis le 24/11 ; avant « Minecraft »), `passive` avec `?passive`, rappel avec `?nudge` |
 | `overlayLive()` | `overlay_live` | FPS 238–252, ping 21–25, `pingEstimate` avec `?estimate` |
 | `overlayClose()` / `overlaySetPin(pin)` / `overlayOpenApp(page?)` | `overlay_close` / `overlay_set_pin` / `overlay_open_app { page }` | rien / note l'épingle / rien |
 | `onOverlayMode(cb)` / `onGoto(cb)` | événements `overlay:mode` / `app:goto` | bus local |

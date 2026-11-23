@@ -12,13 +12,3 @@ export function Mark({ size = 20, ink = false }: { size?: number; ink?: boolean 
     </svg>
   );
 }
-
-/** Icône de l'app : le R rouge sur une tuile blanche (marque/logo/rago-app-icon.svg). */
-export function AppIcon({ size = 40 }: { size?: number }) {
-  return (
-    <svg width={size} height={size} viewBox="0 0 256 256" aria-hidden="true" className="app-icon">
-      <rect width="256" height="256" rx="56" fill="#FFFFFF" />
-      <path d={MARK} fill="#FF3B30" transform="translate(62.40 56.00) scale(0.8)" />
-    </svg>
-  );
-}

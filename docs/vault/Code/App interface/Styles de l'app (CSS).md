@@ -1,31 +1,28 @@
 ---
 type: code
 tags: [code, app, css, design]
-fichier: app/src/styles/ (tokens.css, fonts.css, app.css, features.css, v5.css, overlay.css, tips.css)
-lignes: 5638
-maj: 2026-11-23
+fichier: app/src/styles/ (tokens.css, fonts.css, app.css, features.css, v5.css)
+lignes: 4585
+maj: 2026-11-24
 ---
 # Styles de l'app (CSS)
 
-Les **feuilles de style** de l'app Windows : les jetons de design (couleurs, tailles, mouvement), les polices, le cadre et les composants, les fonctionnalités ajoutées depuis la 1.2.0, le compte et les avis, la charte v5 posée par-dessus, et la barre en jeu. Il n'y a ni Tailwind, ni CSS Modules, ni CSS dans le JavaScript : des classes simples, écrites à la main. Fiche parente : [[Code de l'app (interface)]]. Design : [[Charte graphique]] (v5 « Match day » depuis la PR #108 du 22/11, vers `staging`, jamais testée sur Windows) ; l'ancien verre : [[Refonte glass]].
+Les **feuilles de style** de l'app Windows : les jetons de design (couleurs, tailles, mouvement), les polices, le cadre et les composants, les fonctionnalités ajoutées depuis la 1.2.0, le compte et les avis, et la charte v5 posée par-dessus. La barre en jeu n'en charge plus aucune depuis le 24/11 (PR #PRX) : elle suit le CSS de sa maquette ([[Maquettes v5 dans l'app (s5)]]). Il n'y a ni Tailwind, ni CSS Modules, ni CSS dans le JavaScript : des classes simples, écrites à la main. Fiche parente : [[Code de l'app (interface)]]. Design : [[Charte graphique]] (v5 « Match day » depuis la PR #108 du 22/11, vers `staging`, jamais testée sur Windows) ; l'ancien verre : [[Refonte glass]].
 
-Tout ce qui suit est CONFIRMÉ (code de `staging`, 10/11, commit `ee77d4f`), avec les 238 lignes de la page Outils refaite par la **PR #90** (11/11, fusionnée dans `staging` par la PR #92), et les nettoyages des PR #119 à #130 (23/11) et de la PR #131 (24/11) : les sections des pages et des fenêtres refaites sur les maquettes v5 sont retirées. Les chiffres de lignes sont ceux du 24/11 (PR #131).
+Tout ce qui suit est CONFIRMÉ (code de `staging`, 10/11, commit `ee77d4f`), avec les 238 lignes de la page Outils refaite par la **PR #90** (11/11, fusionnée dans `staging` par la PR #92), et les nettoyages des PR #119 à #130 (23/11), #131 et #PRX (24/11) : les sections des pages, des fenêtres et de la barre en jeu refaites sur les maquettes v5 sont retirées. Les chiffres de lignes sont ceux du 24/11 (PR #PRX).
 
 ## Les fichiers et qui les charge
 
 | Fichier | Lignes | Chargé par | Contenu |
 |---|---|---|---|
-| `tokens.css` | 219 | les deux fenêtres | jetons `--rg-*` du kit v5 (`marque/tokens/tokens.css` des maquettes), classes `.rg-metric` et `.rg-overline`, animations `rg-pulse` et `rg-pixel-blink` |
-| `fonts.css` | 79 | les deux fenêtres | `@font-face` de Barlow (400, 500, 600, 700) et Barlow Condensed (600 à 900 droit, 700 à 900 italique), `font-display: block` |
-| `app.css` | 1509 | fenêtre principale | polices, cadre, barre de titre, navigation, pages, cartes, boutons, interrupteur, anciennes fenêtres, tableau de bord, plan gratuit, verre, finitions, écran de démarrage |
-| `features.css` | 1224 | fenêtre principale | fonctionnalités de la 1.2.0 et après (liste plus bas) |
-| `overlay.css` | 747 | barre en jeu | toute la barre en jeu (RAG-82) ; la fin du fichier (section « Charte v5 ») la réhabille |
-| `v5.css` | 1646 | fenêtre principale, chargée après les anciennes feuilles | la charte v5 « Match day » posée sur les classes existantes (voir plus bas) |
-| `tips.css` | 214 | fenêtre principale et barre en jeu (importé par [[GameTips.tsx]]) | bloc des réglages conseillés (`.game-tips*`, `.game-tip*`), place sous le jeu en avant de la bibliothèque (`.games-hero-tips`), bloc des conseils de la barre en jeu qui défile à part (`.ov-advice`, 258 px au plus, fondu en bas ; `.ov-tips`), pastille élargie du rappel (`.ov-nudge*`). Voir [[Conseils au lancement du jeu]] |
+| `tokens.css` | 219 | fenêtre principale | jetons `--rg-*` du kit v5 (`marque/tokens/tokens.css` des maquettes), classes `.rg-metric` et `.rg-overline`, animations `rg-pulse` et `rg-pixel-blink` |
+| `fonts.css` | 79 | les deux fenêtres (app et barre en jeu) | `@font-face` de Barlow (400, 500, 600, 700) et Barlow Condensed (600 à 900 droit, 700 à 900 italique), `font-display: block` |
+| `app.css` | 1475 | fenêtre principale | polices, cadre, barre de titre, navigation, pages, cartes, boutons, anciennes fenêtres, tableau de bord, plan gratuit, verre, finitions, écran de démarrage |
+| `features.css` | 1194 | fenêtre principale | fonctionnalités de la 1.2.0 et après (liste plus bas) |
+| `v5.css` | 1618 | fenêtre principale, chargée après les anciennes feuilles | la charte v5 « Match day » posée sur les classes existantes (voir plus bas) |
 
 - Ordre d'import dans [[main.tsx (app)]] : `fonts.css`, `tokens.css`, `app.css`, `features.css`, `v5.css`, puis les feuilles des maquettes v5 de `app/src/s5/` (`base.css`, `app.css`, puis une par page refaite, dont `module.css`, `net.css`, `tools.css`, `pages.css`, `analysis.css` et `win.css`), décrites dans [[Maquettes v5 dans l'app (s5)]]. L'ordre compte : une règle plus bas l'emporte à égalité, c'est ce qui permet à `v5.css` de réhabiller les pages pas encore refaites sans réécrire les autres feuilles.
-- La barre en jeu ([[main.tsx (barre en jeu)]]) charge seulement `fonts.css`, `tokens.css` et `overlay.css`.
-- Exception : `tips.css` est importée par le composant [[GameTips.tsx]], pas par les `main.tsx`, parce que ce bloc sert dans les deux fenêtres (la barre en jeu ne charge pas `features.css`).
+- La barre en jeu ([[main.tsx (barre en jeu)]]) charge seulement `fonts.css` et les feuilles de sa maquette (`s5/base.css`, `s5/pages/ingame.css`, `s5/overlay.css`). `overlay.css` et `tips.css` (ancienne barre en jeu, bloc des réglages conseillés) sont supprimées le 24/11 (PR #PRX), avec les règles de l'interrupteur `Switch` (`.switch*`), du bloc « À vérifier » (`.session-checks`, `.session-line`, `.session-head`) et du logo `.app-icon`.
 - **Polices** (depuis la PR #108 du 22/11, vers `staging`, jamais testée sur Windows) : Barlow et Barlow Condensed, fichiers `woff2` dans `app/src/assets/fonts/` avec leur licence `Barlow-OFL.txt`, déclarées une seule fois dans `fonts.css`. Geist est retiré de l'app. Rien n'est chargé depuis Internet : la CSP de la fenêtre l'interdirait (voir [[Configuration Tauri]]).
 
 ## `tokens.css` : les jetons de design
@@ -109,15 +106,12 @@ Ce qui suit décrit `app.css` et `features.css`, toujours chargés. Sur `staging
   - La section du vérificateur RBW Mod (`.rbw-*`) est retirée depuis le 23/11 : le panneau est dans [[ModulePage.tsx]] avec le CSS de la maquette.
   - La section « couleurs et résolution par jeu » (`.display-*`) est retirée depuis le 23/11 : [[Display.tsx]] est refaite sur la maquette v5 ([[Maquettes v5 dans l'app (s5)]]).
 
-## `overlay.css`
-- `overlay.css` : fenêtre transparente où seule la barre ou la pastille est peinte (1), verre sombre (56), barre ouverte (66), défilement des deux colonnes (213), interrupteur au même dessin que dans l'app (277), pastille qui ne prend ni le focus ni les clics (327), Pendant la partie (361). Voir [[Overlay.tsx]].
-
 ## Classes clés à connaître
 - `.rg-overline` : petites capitales en condensé (v5), titres de carte.
 - `.rg-metric` : chiffres en condensé 700, `tabular-nums` (v5).
 - `.card`, `.card-head` : cartes.
 - `.btn`, `.btn-primary`, `.btn-secondary`, `.btn-ghost`, `.btn-sm`, `.btn-md`, `.btn-lg` : boutons (`Button`).
-- `.switch`, `.segmented`, `.badge` : contrôles de `ui.tsx` ([[Petits composants de l'interface]]).
+- `.segmented`, `.badge` : contrôles de `ui.tsx` ([[Petits composants de l'interface]]).
 - `.scrim`, `.modal` : fenêtres.
 - `.muted`, `.small` : texte secondaire.
 - `.spin` : icône qui tourne.
@@ -146,7 +140,7 @@ Ajoutée par la PR #108 du 22/11, vers `staging`, jamais testée sur Windows. El
 - Textures dans `app/src/assets/fx/` : `brush.svg`, `tape-red.svg`, `torn-a.svg`, `torn-b.svg`, `grain.svg` (copiés des maquettes) et `tape-mask.svg` (tiré de la maquette `module.css`). `num-left.svg` et `num-mask.svg` (ancien bloc chiffré `.head-num`) sont retirés le 23/11.
 
 ## À savoir avant de modifier
-- Un changement de look va dans `v5.css` (ou la section « Charte v5 » d'`overlay.css`), pas dans les anciennes feuilles.
+- Un changement de look va dans `v5.css` (ou, pour une page ou une fenêtre refaite, dans les feuilles `s5/` : [[Maquettes v5 dans l'app (s5)]]), pas dans les anciennes feuilles.
 - Utiliser les jetons `--rg-*` plutôt que des couleurs écrites en dur, pour rester d'accord avec le site et la marque.
 - Ne pas ajouter de flou sur les cartes : le défilement deviendrait lourd sur les petits PC (règle de la refonte).
 - Une nouvelle fonctionnalité va dans `features.css`, dans une section avec un titre ; `app.css` garde le socle.

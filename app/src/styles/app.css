@@ -580,37 +580,6 @@ kbd {
 
 /* --------------------------------------------------------- switch, segmented */
 
-.switch {
-  position: relative;
-  width: 38px;
-  height: 22px;
-  flex: none;
-  display: flex;
-  align-items: center;
-  padding: 3px;
-  border-radius: var(--rg-radius-full);
-  background: rgba(255, 255, 255, 0.12);
-  box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.35);
-  transition: background var(--rg-dur-fast) var(--rg-ease-out);
-}
-.switch.on {
-  background: var(--rg-red-500);
-  justify-content: flex-end;
-}
-.switch-thumb {
-  width: 16px;
-  height: 16px;
-  border-radius: 50%;
-  background: var(--rg-text-1);
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.4), 0 0 0 0.5px rgba(0, 0, 0, 0.2);
-}
-.switch.on .switch-thumb {
-  background: var(--rg-text-inverse);
-}
-.switch:disabled {
-  opacity: 0.35;
-}
-
 /* sur le choix de variante ou « Détails », le clic ne bascule pas : l'interrupteur ne s'allume pas */
 
 .segmented {
@@ -1387,9 +1356,6 @@ svg {
 
 /* ------------------------------------------------- focus, finitions (audit du 17/10) */
 
-.switch:focus-visible {
-  box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.35), var(--rg-focus);
-}
 .preset:focus-visible,
 .nav-upgrade:focus-visible {
   box-shadow: var(--rg-glass-edge), var(--rg-focus);

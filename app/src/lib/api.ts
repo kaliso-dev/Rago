@@ -1665,7 +1665,8 @@ const mockApi: Api = {
   // démo de la barre : overlay.html?pill pour la pastille, ?pill&nudge pour le rappel des conseils
   overlayInfo: async () => ({
     mode: new URLSearchParams(location.search).has("pill") ? "pill" : "panel",
-    game: "Minecraft",
+    // le jeu de la partie de démo (VALORANT, ou ?game=fortnite…)
+    game: tipsData.games[(new URLSearchParams(location.search).get("game") ?? "valorant") as keyof typeof tipsData.games]?.name ?? "Minecraft",
     shortcut: mockBackground.shortcut,
     pin: mockBackground.pin,
     fpsAvailable: true,

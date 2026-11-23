@@ -38,10 +38,13 @@ use crate::session::Session;
 
 pub const LABEL: &str = "overlay";
 /// Tailles en points (multipliées par l'échelle de l'écran du jeu).
-const PANEL: (f64, f64) = (780.0, 600.0);
+/// Barre de 780 × 600 (maquette app-ingame), plus 28 points de chaque côté et 56 dessous pour son ombre
+/// (s5/overlay.css) : coupée au bord de la fenêtre, elle dessinerait un rectangle sur le jeu.
+const PANEL: (f64, f64) = (836.0, 656.0);
 const PILL: (f64, f64) = (236.0, 44.0);
-/// Pastille élargie pour le rappel des conseils.
-const NUDGE_SIZE: (f64, f64) = (380.0, 44.0);
+/// Pastille élargie pour le rappel des conseils (largeur au texte : « 10 conseils pour League of Legends » fait 411
+/// points ; le reste de la fenêtre est transparent et laisse passer les clics).
+const NUDGE_SIZE: (f64, f64) = (440.0, 44.0);
 /// Durée du rappel des conseils, et délai après l'arrivée du jeu au premier plan au-delà duquel il ne s'affiche plus
 /// (pas en pleine partie).
 const NUDGE: Duration = Duration::from_secs(12);

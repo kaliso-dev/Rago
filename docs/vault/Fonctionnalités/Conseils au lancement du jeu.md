@@ -2,7 +2,7 @@
 type: fonctionnalité
 tags: [fonctionnalité, app, gratuit, jeux]
 version_app: 1.3.0 (dans `staging`, pas encore publiée)
-maj: 2026-11-11
+maj: 2026-11-24
 ---
 # Conseils au lancement du jeu
 
@@ -71,5 +71,5 @@ Ces deux dernières applis apparaissent aussi dans le point « Applis en arrièr
 
 ## Code
 - Moteur : [[tips.rs]] (jeu en cours, réglages cochés, applis gourmandes, écran, Game DVR), [[session.rs]] (état de la partie : `game`, `tipsLeft`, points à vérifier), [[overlay.rs]] (rappel dans la pastille), [[lib.rs]] (commandes `tips_done` et `tips_mark`, mesure dans la boucle des jeux), [[stats.rs]] (compteurs Windows sans plafond à 100 %), [[games.rs]] (`preset_key`), [[analysis.rs]] (`refresh`).
-- Interface : [[GameTips.tsx]] (le bloc), [[tips.ts]] (lecture de la liste, réglages cochés), [[tips.json]] (la liste), [[Overlay.tsx]] (rappel et barre), [[SessionCard.tsx]] (textes des points à vérifier), styles `tips.css` ([[Styles de l'app (CSS)]]).
+- Interface : [[GameTips.tsx]] (le bloc), [[tips.ts]] (lecture de la liste, réglages cochés), [[tips.json]] (la liste), [[Overlay.tsx]] (rappel et barre), [[SessionCard.tsx]] (textes des points à vérifier), styles de la maquette `app-ingame` (`s5/pages/ingame.css`, [[Maquettes v5 dans l'app (s5)]]).
 - Démo : `overlay.html?pill&nudge` (rappel), `?game=fortnite` (autre jeu), `/?playing` (bibliothèque avec une partie en cours), voir [[api.ts]].
