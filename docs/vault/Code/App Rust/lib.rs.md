@@ -2,8 +2,8 @@
 type: code
 tags: [code, app, rust]
 fichier: app/src-tauri/src/lib.rs
-lignes: 1767
-maj: 2026-11-11
+lignes: 1531
+maj: 2026-11-23
 ---
 # lib.rs
 
@@ -12,6 +12,8 @@ Point d'entrée de toute l'app côté Rust : il déclare les 40 modules, constru
 Tout ce qui suit est CONFIRMÉ (code de `staging`, 10/11, commit `ee77d4f`). Fichier créé le 07/10 (1.1.5), 37 commits depuis : c'est le fichier le plus modifié du cœur.
 
 Ajouts du 11/11 pour [[Couleurs et résolution]] (module `display`, 5 commandes `display_*`, résolution posée par `game_launch`, fil des jeux, `RunEvent::Exit`) : PR #93. Aussi le 11/11 : `gamecfg` et 3 commandes `graphics_*` (PR #94), `tips` et `tips_done`, `tips_mark` (PR #91), 6 commandes `tools_*` (PR #90), la priorité haute du jeu dans le fil des jeux (PR #89). Tout est dans `staging` depuis la PR #92, **jamais testé sur Windows**.
+
+Ajouts du 23/11 (charte v5, dans `staging`, jamais testés sur Windows) : `fit_main_window` (PR #119) et le serveur au choix du test réseau dans `net_test` (PR #123).
 
 ## Rôle et place dans l'ensemble
 - `main.rs` ([[main.rs]]) n'appelle que `rago_hub_lib::run()`, défini ici.
@@ -50,6 +52,7 @@ Méthodes : `AppState::system(refresh)` (sonde mise en cache par `probe_cached`)
 - `reset_after_license(app, bundle)` : remise de fin de licence en arrière-plan (détail plus bas).
 - `keep_route_token(lic)` : renouvelle le jeton de Rago Route (détail plus bas).
 - `quit(app)` : action « Quitter » du menu de l'icône près de l'horloge.
+- `fit_main_window(fenêtre)` (23/11, PR #119) : la fenêtre s'ouvre à la taille des maquettes v5, 1440 × 900 (`tauri.conf.json`) ; sur un écran plus petit, elle est réduite à la zone de travail moins 32 px (au moins 1080 × 680) puis centrée. Appelée dans `setup`.
 - `server_name()` : `"staging"` si `RAGO_IDENTIFIER` (posé par [[build.rs]]) finit par `.staging`, sinon `"production"`. Sert au rapport de support.
 - `now_ms()`, `minecraft_dir(dir)` (par défaut `%APPDATA%\.minecraft`, erreur `"Minecraft folder not set"`), `preset_path(path)`.
 - `pub fn run()` : le démarrage.
@@ -195,7 +198,7 @@ Lancée dans un fil à chaque démarrage (`bundle = None`), après `license_refr
 - `license_sign_out` : `keep_undo`, puis dans `noting` : `Pending::new("signed_out").save` puis `lic.sign_out()` ; enfin `reset_after_license(bundle)`. L'interface repasse en gratuit tout de suite.
 
 ### `net_test`
-Garde seulement les id connus de `nettest::TARGETS`, 16 au plus. Un fil par serveur (`std::thread::scope`), chaque essai émis en `nettest:sample`, chaque serveur fini en `nettest:measure`. Le résultat part ensuite par `netshare::send(machine_guid ou nom du PC, version, résultats)` l'envoie au serveur ([[netshare.rs]]).
+Garde les id connus de `nettest::TARGETS` et **au plus un serveur du joueur** (`host:…`, validé par `nettest::custom`, depuis le 23/11, PR #123), 16 au plus. Un fil par serveur (`std::thread::scope`), chaque essai émis en `nettest:sample`, chaque serveur fini en `nettest:measure`. Les résultats des serveurs connus partent ensuite au serveur Rago par `netshare::send(machine_guid ou nom du PC, version, résultats)` ([[netshare.rs]]) ; le serveur du joueur reste sur le PC.
 
 ### `netopt_run`
 `Action::parse(action)` sinon `"unknown action"`. Une action qui change Windows (`changes()`) pendant un lot ou une remise → `"busy"`. `Apply` exige Premium (`premium_required:netopt`) et le paquet ouvert (`premium_scripts_unavailable`). Les options passent par `sanitized()`. `x3d = session::dual_ccd_x3d(cpu_name)` : jamais « Performances élevées » sur un Ryzen X3D à deux CCD. Chaque ligne du moteur est émise en `netopt:line`.
@@ -229,6 +232,7 @@ Si `reset.hold_exit()` (remise en cours) : cache la fenêtre et ne quitte pas. S
    - `License::new()`, `Updates::default()`, `update::watch(app, updates, machine_guid ou nom du PC)` ;
    - `manage(AppState)` ;
    - `instance::on_show_request` : quand un 2e lancement demande la fenêtre, `reset.keep_open()` puis `show`, `unminimize`, `set_focus` ;
+   - `fit_main_window` sur la fenêtre `main` ;
    - `reset_after_license(None)`.
 5. `on_window_event` :
    - fenêtre `overlay` : `CloseRequested` est empêché puis `overlay.close` (Alt+F4 ne la détruit jamais) ; `Focused(false)` → `on_blur` ;

@@ -2,7 +2,7 @@
 type: code
 tags: [code, app, typescript, react, catalogue, v5]
 fichier: app/src/components/TweakRow.tsx
-lignes: 331
+lignes: 344
 maj: 2026-11-23
 ---
 # TweakRow.tsx
@@ -12,10 +12,11 @@ maj: 2026-11-23
 Statut : dans `staging` (PR #122, fusionnée le 23/11). Jamais testé sur Windows ([[Règles de travail]]).
 
 ## Ce que le fichier expose
-- `TweakRow({ tweak, mod?, adv? })` :
+- `TweakRow({ tweak, mod?, adv?, label? })` :
   - `mod` : le module de la page ; un réglage qui vient d'un autre module (renvoi `ref`) affiche « Also in {module} » ;
-  - `adv` : carreau d'un réglage avancé déplié (classe `advx`).
-- Rendu par [[ModulePage.tsx]] (pages des modules et onglet des réglages de [[Network.tsx]]) et par [[Tools.tsx]] (liste « Tous les outils de l'app », dans un `div.pg-mod.embed > .tgrid` en attendant que la page Outils soit refaite).
+  - `adv` : carreau d'un réglage avancé déplié (classe `advx`) ;
+  - `label` : nom court du carreau à la place du nom du catalogue (ajouté le 23/11, PR #123, pour l'onglet des réglages de Réseau comme la maquette).
+- Rendu par [[ModulePage.tsx]] (pages des modules), par [[NetTweaks.tsx]] (onglet des réglages de [[Network.tsx]], depuis le 23/11) et par [[Tools.tsx]] (liste « Tous les outils de l'app », dans un `div.pg-mod.embed > .tgrid` en attendant que la page Outils soit refaite).
 - Interne : `Glyph` (pastille d'un jeu dans le menu des jeux : « V » sur rouge #FF4655 pour Valorant, bloc d'herbe pour Minecraft, sinon la première lettre sur #3A3A42) et `VNOTE` (réglages à options qui ont leur phrase propre).
 
 ## Les formes du carreau

@@ -32,6 +32,10 @@ Registre des bugs de l'app et des incidents. Les retours de joueurs au cas par c
 - [[Remise à zéro]] déclenchée sur un doute de licence (RAG-72) ; 4 tweaks protégés non remis à la désinstallation.
 Voir [[Version 1.1.14]].
 
+## Corrigés pendant la refonte v5 (23/11, jamais sortis)
+- **Fenêtres de l'app invisibles** (offre Premium, confirmation d'un lot, choix d'un preset…) : la règle `.scrim{display:none}` de la maquette (voile du rail replié) était reprise dans `s5/base.css` par la PR #119, alors que dans l'app `.scrim` est le fond de toutes les fenêtres ; la fenêtre s'ouvrait avec une largeur nulle. Présent dans `staging` du 23/11 (PR #119) à la PR #123, qui le corrige dans `base.css` et dans son générateur `port_s5.py` ([[Maquettes v5 dans l'app (s5)]]). Jamais sorti dans un exe joueur.
+- **Icône de chargement invisible dans les boutons** (test réseau, Rago Route, Packet Optimizer) : la règle `.btn .spin{display:none}` des effets de bouton de la maquette la cachait ; corrigé par la PR #123 (`.btn svg.spin` dans `s5/app.css`).
+
 ## Incidents historiques
 - **GitHub Pages** a publié le dépôt privé du 04/10 au 07/10 00:48 (`.bat` Premium, scripts, code serveur). Coupé ; `_config.yml` neutralise une partie du dépôt. **Toujours actif le 10/11** (OBSERVÉ) : Pages publie à chaque push de la branche de prod, et comme `docs/` n'est pas exclu, le vault y est lisible en pages web. À couper dans les réglages de GitHub (q80, [[Fichiers de la racine du dépôt]]).
 - Secrets collés dans le chat le 04/10 : régénération demandée ([[Clés et secrets]]).

@@ -819,27 +819,6 @@
   }
 }
 
-/* ---------- Réseau : les réglages, le Packet Optimizer et le test réseau en trois onglets ---------- */
-.hub .page-head {
-  margin-bottom: 16px;
-}
-/* reste sous la barre de titre en défilant : du verre, comme tout ce qui flotte au-dessus du contenu */
-
-/* ---------- test réseau : moyenne, courbe de chaque essai, pertes et pics ---------- */
-
-.nettest > * + * {
-  margin-top: 12px;
-}
-@keyframes net-pulse {
-  50% {
-    box-shadow: 0 0 56px -6px rgba(var(--c), 0.55), inset 0 1px 0 rgba(255, 255, 255, 0.06);
-    transform: scale(1.04);
-  }
-}
-/* la moyenne, sur la même échelle que les barres */
-
-/* filet entre deux lignes, effacé autour de la ligne choisie */
-
 /* ---------- mise à jour prête (RAG-24) : une ligne compacte au-dessus de l'offre, qui reste visible ---------- */
 .nav-update {
   order: 2;
@@ -1860,27 +1839,6 @@
   margin: -4px 0 6px;
 }
 
-/* ---------- Packet Optimizer (netopt) : profils, réglages, et ce qu'ils changent dans Windows à côté ---------- */
-.netopt > * + * {
-  margin-top: 12px;
-}
-/* nom de carte long (« Intel(R) Ethernet Controller I225-V ») : une ligne, coupée en fin */
-
-/* gratuit (1.3.0) : ce que le Packet Optimizer Premium apporte */
-
-/* Avancé et Réglages experts : repliés, leur résumé sur la ligne du titre */
-
-/* Réglages experts : une intro, puis une ligne par valeur, en Auto (calculée par les curseurs) ou en Manuel */
-
-/* point rouge : la valeur de Windows change */
-
-/* Analyser mon PC */
-
-@media (max-width: 1100px) {
-  /* les boutons passent sous le titre : il garde sa largeur */
-  
-}
-
 /* ---------------------------------------------------------------- modifier un preset (Mes presets) */
 
 .modal.preset-editor {
@@ -2042,6 +2000,3 @@
 .pe-found button:hover > svg {
   color: var(--rg-red-400);
 }
-
-/* ---------- Rago Route (onglet de Réseau, exe de test) ---------- */
-

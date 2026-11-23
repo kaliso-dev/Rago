@@ -2,7 +2,7 @@
 type: code
 tags: [code, app, react, carte]
 fichier: app/src/
-lignes: 38335
+lignes: 37416
 maj: 2026-11-23
 ---
 # Code de l'app (interface)
@@ -32,14 +32,14 @@ Tout ce qui suit est CONFIRMÉ (code de `staging`, 10/11, commit `ee77d4f`), sau
   - [[api.ts]] et [[accountApi.ts]] sont les deux seules portes vers le moteur.
 - **Pas de routeur** : la page affichée est une simple valeur `page` dans le store. Pas de Redux non plus : un seul contexte React, [[store.tsx]], plus le contexte du compte, [[account.tsx]].
 - **Mode démo** : hors de Tauri (`isTauri` faux), les mêmes fonctions sont simulées dans le navigateur. Cela sert au simulateur `npm run window`, aux captures et aux tests de l'interface.
-- Taille : 38 335 lignes dans `app/src/` (fichiers `.ts`, `.tsx`, `.css` et `.json`, compte du 23/11). Les plus gros fichiers sont :
+- Taille : 37 416 lignes dans `app/src/` (fichiers `.ts`, `.tsx`, `.css` et `.json`, compte du 23/11 après la PR #123). Les plus gros fichiers sont :
   - `catalog.json` (8050 lignes) ;
-  - `features.css` (3724 lignes) ;
-  - `i18n.ts` (2742 lignes) ;
+  - `i18n.ts` (2852 lignes) ;
   - `app.css` (2537 lignes) ;
-  - `v5.css` (2378 lignes) ;
-  - `api.ts` (1713 lignes) ;
-  - `NetOpt.tsx` (1090 lignes) ;
+  - `v5.css` (2291 lignes) ;
+  - `features.css` (2002 lignes) ;
+  - `api.ts` (1729 lignes) ;
+  - `NetOpt.tsx` (1109 lignes, refaite sur la maquette v5 le 23/11) ;
   - `tips.json` (971 lignes) ;
   - `Display.tsx` (906 lignes, refaite sur la maquette v5 le 23/11) ;
   - `Tools.tsx` (762 lignes) ;
@@ -84,7 +84,7 @@ main.tsx
 | `share` | `Share` | [[Share.tsx]] |
 | `games` | `Games` | [[Games.tsx]] |
 | `display` | `Display` | [[Display.tsx]] |
-| `network`, `netopt`, `nettest`, `route` | `Network` (onglet = page) | [[Network.tsx]] → [[ModulePage.tsx]], [[NetOpt.tsx]], [[NetTest.tsx]], [[RouteTab.tsx]] |
+| `network`, `netopt`, `nettest`, `route` | `Network` (onglet = page) | [[Network.tsx]] → [[NetTweaks.tsx]], [[NetOpt.tsx]], [[NetTest.tsx]], [[RouteTab.tsx]] |
 | `tools` | `Tools` | [[Tools.tsx]] |
 | `mouse` | `Mouse` | [[Mouse.tsx]] |
 | `analysis` | `Analysis` | [[Analysis.tsx]] |
@@ -144,7 +144,7 @@ Les 15 événements Tauri que l'interface écoute, tous déclarés dans [[api.ts
 | `run:log` | [[runner.rs]] | [[store.tsx]] | ligne du journal |
 | `run:done` | [[runner.rs]] | [[store.tsx]], [[ModulePage.tsx]] (RBW Mod), [[Overlay.tsx]] | bilan du lot |
 | `reset:done` | [[lib.rs]] (remise à zéro, [[reset.rs]]) | [[store.tsx]] | bilan de la remise à zéro |
-| `netopt:line` | [[lib.rs]] (`netopt_run`, [[netopt.rs]]) | [[NetOpt.tsx]], [[NetTest.tsx]] (diagnostic) | ligne du moteur réseau, ou avancement |
+| `netopt:line` | [[lib.rs]] (`netopt_run`, [[netopt.rs]]) | [[NetOpt.tsx]] | ligne du moteur réseau, ou avancement |
 | `nettest:sample` | [[lib.rs]] (`net_test`, [[nettest.rs]]) | [[NetTest.tsx]], [[NetOpt.tsx]] (analyse) | un essai de ping |
 | `nettest:measure` | [[lib.rs]] (`net_test`) | [[NetTest.tsx]] | résultat d'un serveur |
 | `games:running` | [[lib.rs]] ([[games.rs]]) | [[Games.tsx]], [[Display.tsx]] | jeux lancés en ce moment |
@@ -162,7 +162,7 @@ Les 15 événements Tauri que l'interface écoute, tous déclarés dans [[api.ts
 ## Le mode démo et le simulateur `npm run window`
 - `isTauri = "__TAURI_INTERNALS__" in window`. Ensuite `api = isTauri ? tauriApi : mockApi` dans [[api.ts]], et le même choix est fait dans [[accountApi.ts]].
 - **`mockApi`** répond à chaque fonction avec des données plausibles, après un petit délai (`sleep`). Les événements de démo passent par un **bus `EventTarget`** interne (`emit` / `on`), avec les mêmes noms que les vrais événements. L'interface ne voit donc pas la différence.
-- **État de la démo gardé dans `localStorage`** : `rago.demoApplied`, `rago.demoLicense`, `rago.demoDisplay`, `rago.demoRestoreFail`, `rago.demoRepair`, `rago.demoNoGpu`, `rago.demoSim`, et le compte `rago.demoAccount` ([[accountApi.ts]]).
+- **État de la démo gardé dans `localStorage`** : `rago.demoApplied`, `rago.demoLicense`, `rago.demoDisplay`, `rago.demoRestoreFail`, `rago.demoRepair`, `rago.demoNoGpu`, `rago.demoSim`, `rago.demoOffline` (PC sans réseau, 23/11), et le compte `rago.demoAccount` ([[accountApi.ts]]).
 - **Paramètres d'URL de la démo** :
   - `?why=…` : diagnostic du téléphone de Rago Route ;
   - `?playing` : une partie en cours ;
@@ -184,7 +184,7 @@ Les 15 événements Tauri que l'interface écoute, tous déclarés dans [[api.ts
   - `rago.seenPages` ([[seen.ts]]) ;
   - `rago.analysis` ([[analysis.ts]]) ;
   - `rago.netoptDraft` ([[netopt.ts]]) et `rago.netoptFolds` ([[NetOpt.tsx]]) ;
-  - `rago.netLast`, `rago.netPick` et `rago.netTarget` ([[NetTest.tsx]]) ;
+  - `rago.netLast`, `rago.netPick` et `rago.netCustom` ([[NetTest.tsx]]) ;
   - `rago.route.link` ([[RouteTab.tsx]]) ;
   - `rago.displayGame` ([[Display.tsx]]) ;
   - `rago.reviewPrompt2` ([[account.tsx]]).
@@ -196,7 +196,7 @@ Les 15 événements Tauri que l'interface écoute, tous déclarés dans [[api.ts
 [[main.tsx (app)]], [[main.tsx (barre en jeu)]], [[App.tsx]], [[Overlay.tsx]], [[Configuration du front (Vite, npm)]], [[Styles de l'app (CSS)]].
 
 ### Pages (`app/src/pages/`)
-[[Dashboard.tsx]], [[ModulePage.tsx]], [[Network.tsx]], [[NetOpt.tsx]], [[NetTest.tsx]], [[RouteTab.tsx]], [[Games.tsx]], [[Display.tsx]], [[Tools.tsx]], [[Analysis.tsx]], [[Settings.tsx]], [[Share.tsx]].
+[[Dashboard.tsx]], [[ModulePage.tsx]], [[Network.tsx]], [[NetTweaks.tsx]], [[NetOpt.tsx]], [[NetTest.tsx]], [[RouteTab.tsx]], [[Games.tsx]], [[Display.tsx]], [[Tools.tsx]], [[Analysis.tsx]], [[Settings.tsx]], [[Share.tsx]].
 
 ### Composants (`app/src/components/`)
 - Cadre et navigation : [[TitleBar.tsx]], [[Sidebar.tsx]], [[SearchPalette.tsx]], [[Splash.tsx]].

@@ -2,7 +2,7 @@
 type: fonctionnalité
 tags: [fonctionnalité, app, réseau, premium, 1.2]
 version_app: 1.2.1
-maj: 2026-11-10
+maj: 2026-11-23
 ---
 # Packet Optimizer
 
@@ -31,7 +31,9 @@ Trois étapes : carte réseau (câble/Wi-Fi), processeur et Windows (threads), q
 
 ## Appliquer, restaurer
 - Dans la 1.2.1 (en ligne) : **Appliquer = Premium** ; l'analyse, les presets, **Restaurer** et les 4 outils (stabilité, bufferbloat, MTU, état actuel) sont gratuits.
-- **Dans la [[Version 1.3.0]] (PR #76, sur `staging`, pas sortie)** : **entièrement Premium** (Sofiene, 10/11, q41 : « mets le en premium dans la prochaine version de prod »). En gratuit, l'onglet montre seulement « The Packet Optimizer is part of Premium », ce qu'il fait (3 lignes) et « Get Premium » ; **Restaurer reste gratuit** quand une application faite en Premium est encore là, pour remettre la connexion comme avant (`NetOpt.tsx`). Le moteur refusait déjà Appliquer sans Premium (`premium_required:netopt`, `lib.rs`). Les outils stabilité, bufferbloat et MTU restent gratuits dans le « Diagnostic avancé » du [[Test réseau]] ; « État actuel » n'est que dans la vue Premium de l'onglet (le moteur le ferait sans licence, mais l'écran gratuit ne le montre pas). Jamais testé sur Windows.
+- **Dans la [[Version 1.3.0]] (PR #76, sur `staging`, pas sortie)** : **entièrement Premium** (Sofiene, 10/11, q41 : « mets le en premium dans la prochaine version de prod »). En gratuit, l'onglet montrait jusqu'au 23/11 seulement « The Packet Optimizer is part of Premium », ce qu'il fait (3 lignes) et « Get Premium » (remplacé par l'écran verrouillé de la refonte v5, plus bas) ; **Restaurer reste gratuit** quand une application faite en Premium est encore là, pour remettre la connexion comme avant (`NetOpt.tsx`). Le moteur refusait déjà Appliquer sans Premium (`premium_required:netopt`, `lib.rs`). Les outils restent gratuits (voir la refonte v5 plus bas). Jamais testé sur Windows.
+- **Refonte v5 (23/11, PR #123, vers `staging`, jamais testée sur Windows)** : l'onglet suit la maquette `app-network-packet-pi.html` : 6 cartes de presets, « find my preset » (l'analyse), une console de trois curseurs (buffering, re-send, batching) avec le tableau avant/après des vraies valeurs calculées, les interrupteurs, le type de connexion, les blocs « advanced » et « expert », la rangée **« tools »** (stabilité, bufferbloat, MTU, état actuel) et une barre « apply » à elle en bas de la fenêtre (restore, journal, restart). Détail : [[NetOpt.tsx]].
+  - **Gratuit, depuis cette refonte** : le vrai écran s'affiche, verrouillé (un clic ouvre l'offre Premium) au lieu de l'écran « part of Premium » ; **les 4 outils et « restore » restent gratuits**. Les outils viennent de l'ancien « Diagnostic avancé » du [[Test réseau]], retiré de la maquette ; « État actuel » devient donc gratuit aussi. **À VÉRIFIER** : choix fait pour la refonte, question q117 posée à Sofiene le 23/11 ([[Questions ouvertes]]).
 - La connexion coupe quelques secondes à l'application.
 - Valeurs d'avant gardées à la première application (`snapshot.json`) ; **Restaurer** propose cette sauvegarde ou les valeurs de Windows. Désinstallation et fin de Premium remettent la sauvegarde, ou à défaut les valeurs de Windows (`put_back`, sans licence). Pas dans « Tout annuler » (bouton à part).
 - Pas repris du .bat : la « Wi-Fi game session » (Windows ne se reconnecterait plus seul).

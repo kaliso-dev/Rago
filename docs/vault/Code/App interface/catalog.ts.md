@@ -2,8 +2,8 @@
 type: code
 tags: [code, app, typescript, catalogue]
 fichier: app/src/lib/catalog.ts
-lignes: 188
-maj: 2026-11-11
+lignes: 191
+maj: 2026-11-23
 ---
 # catalog.ts
 
@@ -33,7 +33,7 @@ Tout ce qui suit est CONFIRMÉ (code de `staging`, 10/11, commit `ee77d4f`).
 | `catalog` | le JSON tel quel, typé `Catalog { version, modules, presets, retired }` |
 | `retired` | `Map` id → `Retired` (17 entrées en 1.3.0) |
 | `tweaks` | `Map` id → `Tweak` (231 entrées ; les `ref` sont ignorés à la construction) |
-| `tweakModule` | `Map` id → id du module où le réglage est **déclaré** |
+| `tweakModule` | `Map` id → id du module où le réglage est **déclaré**. Une exception depuis le 23/11 (PR #123) : `net_profile` (profil réseau par jeu), déclaré dans Réseau, est rattaché à `minecraft`, car l'onglet des réglages de Réseau ne l'affiche plus ([[NetTweaks.tsx]]) ; la recherche et « Also in » mènent donc à la page Minecraft |
 | `totalTweaks` | nombre de réglages annoncé (app et site) : ids distincts après fusion des jumeaux (`twin`) → **218** |
 
 ### Fonctions

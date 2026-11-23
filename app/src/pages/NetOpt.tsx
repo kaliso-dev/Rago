@@ -167,7 +167,9 @@ export function NetOpt() {
       await refresh();
     } catch (e) {
       if (!live.current) return;
-      if (String(e).startsWith("premium_required")) setUpsell("plan");
+      // le serveur refuse d'appliquer (licence perdue entre-temps) : la fenêtre Premium du réglage, comme avant la v5
+      // (q112 : la garder ou non est à décider par Sofiene)
+      if (String(e).startsWith("premium_required")) setUpsell("tweak");
       else setError(errorText(e));
     } finally {
       if (live.current) {
