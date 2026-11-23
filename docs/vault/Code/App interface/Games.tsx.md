@@ -2,118 +2,86 @@
 type: code
 tags: [code, app, react, page, jeux]
 fichier: app/src/pages/Games.tsx
-lignes: 583
-maj: 2026-11-11
+lignes: 611
+maj: 2026-11-23
 ---
 # Games.tsx
 
-La page **« Jeux »** (bibliothèque) : jeux trouvés sur le PC, un preset par jeu, « Optimiser et jouer », launchers installés. Fiche parente : [[Code de l'app (interface)]]. Fonctionnalité : [[Bibliothèque de jeux]] (RAG-57). Côté Rust : [[games.rs]].
+La page **« Games » / « Jeux »** (bibliothèque) : le jeu en tête avec sa grande illustration au bord déchiré, son preset, ses graphismes, sa résolution et sa saturation, puis tous les jeux en vignettes. Fiche parente : [[Code de l'app (interface)]]. Fonctionnalité : [[Bibliothèque de jeux]] (RAG-57). Côté Rust : [[games.rs]].
 
-Tout ce qui suit est CONFIRMÉ (code de `staging`, 10/11, commit `ee77d4f`). Ajout du 11/11 (puce « Couleurs et résolution », [[Couleurs et résolution]]) : PR #93, dans `staging` depuis le 11/11 (PR #92).
+**Refaite le 23/11/2026 à l'identique de la maquette v5** (`rendus-v5/src/app-games-pi.html`, et `app-games-empty.html` sans jeu), demande de Sofiene : l'app doit être « strictement conforme » au design, avec la « cover du jeu en gros avec l'effet déchiré ». Voir [[Maquettes v5 dans l'app (s5)]]. Branche `claude/app-v5-games`, PR vers `staging` (voir [[État actuel]]). Pas encore essayée sur un vrai Windows.
 
 ## Rôle et place dans l'ensemble
-- Depuis le 11/11 (PR #94) : sous la carte du jeu, la carte [[GameGraphics.tsx]] quand `graphicsForGame(hero.name)` ([[graphics.ts]]) reconnaît le jeu ([[Graphismes des jeux]]).
-- Affichée par [[App.tsx]] quand `page === "games"`. Entrée « Jeux » de la [[Sidebar.tsx]], avec une puce « Nouveau » tant que la page n'a pas été vue ([[seen.ts]]).
-- Lit et écrit dans [[store.tsx]] :
-  - `gamePresets` : preset choisi pour chaque jeu ;
-  - `mcLauncher` : launcher choisi pour Minecraft Java ;
-  - `playing` : suivi du lancement ;
-  - les fonctions `launchGame`, `optimizeAndPlay`, `requestUndo` et `toApply`.
-- Appelle [[api.ts]] pour la liste des jeux et des launchers, les images, l'ajout et le retrait d'un jeu.
-- **Gratuit / Premium** : la bibliothèque, « Jouer » et l'ouverture des launchers sont gratuits. **« Optimiser et jouer » est Premium**, même avec un preset de « Mes presets » : sans licence, le bouton porte un cadenas et ouvre la fenêtre Premium (`setUpsell("plan")`, voir [[Upsell.tsx]]).
+- Affichée par [[App.tsx]] quand `page === "games"`. Entrée « Games » de la [[Sidebar.tsx]], avec le nombre de jeux (0 compris).
+- Racine `div.pg-games` : le CSS de la maquette est dans `s5/pages/pg-games.css` (généré, chaque sélecteur rattaché à `.pg-games`), l'état vide dans `s5/pages/empty.css`, et ce que la maquette ne montre pas dans `s5/app.css` (section « lanceur de jeux »).
+- Lit et écrit dans [[store.tsx]] : `gamePresets` (preset de chaque jeu), `mcLauncher` (launcher de Minecraft Java), `playing` (suivi du lancement), `launchGame`, `optimizeAndPlay`, `requestUndo`, `toApply`, `goTo`, `premium`, `setUpsell`, `applied`, `myPresets`, `run`.
+- Appelle [[api.ts]] : `gamesList`, `onGamesRunning`, `gameArt`, `gameAdd`, `gameRemove`, `launcherLaunch`, `displayProfiles`, `displayInfo`, `graphicsStatus`, `graphicsApply`, `graphicsRestore`.
+- Ouvre [[PresetPicker.tsx]] pour choisir le preset d'un jeu.
+- **Gratuit / Premium** : la bibliothèque, « Play », « Play without tweaks » et l'ouverture des launchers sont gratuits. **« Optimize and play » est Premium**, même avec un preset de « Mes presets » : sans licence, le bouton ouvre la fenêtre Premium (`setUpsell("plan")`, voir [[Upsell.tsx]]) et la phrase dessous dit « Premium: 21 tweaks applied before the game starts. ».
 
 ## Ce que le fichier expose
 - `Games()` : la page.
-- Composants internes :
-  - `Art` : image du jeu, ou ses initiales sur un fond coloré ;
-  - `Launchers` : rangée des launchers ;
-  - `PresetMenu` : menu de choix du preset.
-- Fonction interne : `useLauncherIcons(ids)`.
-- Constantes internes : `DEFAULT_PRESET`, `MC_JAVA` (`"mc:java"`), `LAUNCHERS` (noms affichés de `steam`, `epic`, `riot`, `battlenet`, `ubisoft`, `xbox`, `roblox`).
+- Interne : `useGraphics(jeu, titre, enCours)` (état, choix d'un niveau et retour à la copie d'avant des [[Graphismes des jeux]]) ; `defaultPreset`, `real`, `launcherId`, `displayName`, `kindOf`.
+- Constantes : `DEFAULT_PRESET`, `MC_JAVA` (`"mc:java"`), `LAUNCHERS` (noms affichés : Steam, Epic Games, Riot Client, Battle.net, Ubisoft Connect, Xbox, EA app, Roblox), `LAUNCHER_ORDER` (ordre du tri « by launcher » : riot, steam, epic, minecraft, battlenet, ubisoft, ea, xbox, roblox, manual).
 
 ## Fonctionnement détaillé
 
+### En-tête
+« LIBRARY // 9 GAMES ON 6 LAUNCHERS » (`s5.games.kick` ; « 0 GAMES » sans jeu), le titre « GAMES » en affiche, et à droite « Rescan » (`gamesList(true)`, nouvelle recherche sur le PC) et « Add a game » (rouge). Le nombre de launchers compte chaque launcher Minecraft à part.
+
 ### Chargement
-- Au montage : `api.gamesList(false)` et `api.launchersList(false)` (commandes `games_list` et `launchers_list`). Le bouton rond « Chercher à nouveau les jeux » relance avec `refresh = true`, c'est-à-dire une nouvelle recherche sur le PC.
-- La page écoute l'événement **`games:running`** (`api.onGamesRunning`) : la liste des jeux lancés en ce moment. Un jeu qui démarre ou s'arrête met à jour son état « En cours » et sa date de dernière partie.
-- Un jeu lancé depuis Rago (`playing.status === "started"`) passe aussi en tête.
-- **Images officielles** : `api.gameArt(id)` (commande `game_art`), trois demandes en même temps. Chaque id n'est demandé qu'une fois par visite. L'image est montrée entière, sur un fond fait de la même image floutée.
+- Au montage : `api.gamesList(false)`, `api.displayProfiles()`, `api.displayInfo()`.
+- L'événement **`games:running`** (`api.onGamesRunning`) met à jour « Playing » et la date de dernière partie. Un jeu lancé depuis Rago (`playing.status === "started"`) passe aussi en tête.
+- **Images** (`coverOf` de `s5/art.ts`) : les 16 jeux qui ont un preset (Valorant, CS2, Fortnite, Apex, PUBG, Rainbow Six Siege, Overwatch 2, Marvel Rivals, The Finals, Tarkov, Rocket League, League of Legends, Roblox, GTA V, Minecraft, Minecraft Bedrock) ont des images embarquées dans l'app : illustration du jeu en tête (`hero`, déjà recadrée sur le personnage, 760 × 750), vignette paysage (`wide`, 760 × 355). Les autres jeux demandent l'image officielle au moteur (`api.gameArt`, trois à la fois, une fois par visite) et la montrent entière sur la même image floutée (classe `fit`) ; sans image, leurs initiales.
 
-### Minecraft Java : une seule tuile
-Les jeux dont `launcher === "minecraft"` sont les launchers et clients Minecraft (officiel, Lunar Client, Badlion…). Ils sont regroupés en **une tuile `mc:java`** :
-- Le launcher utilisé est celui choisi (`mcLauncher`), sinon le dernier utilisé.
-- Sur la grande carte, une rangée « Lancer avec » montre chaque launcher avec son icône (`api.launcherIcon`). Un clic change `mcLauncher`.
-- C'est le jeu réellement lancé (`via`) qui part.
-- Un preset choisi avant le regroupement, sur la tuile d'un launcher, reste valable.
+### Minecraft Java : une seule vignette
+Les jeux dont `launcher === "minecraft"` (officiel, Lunar Client, Badlion…) sont regroupés en **une vignette `mc:java`** nommée « Minecraft ». Le launcher lancé est celui choisi (`mcLauncher`), sinon le dernier utilisé. S'il y en a plusieurs, la puce du launcher sur l'illustration du jeu en tête est un bouton : chaque clic passe au launcher suivant. Un preset choisi avant le regroupement, sur la vignette d'un launcher, reste valable.
 
-### Ordre et filtres
-- Tri : les jeux en cours d'abord, puis la dernière partie, puis le nom.
-- Filtre segmenté : « Tous ({n}) », « Minecraft », « Jeux de tir », « Autres ». Un filtre sans jeu est caché.
-- À côté du filtre : « Trouvés sur ce PC : Steam, Epic Games… » (sans Minecraft ni les jeux ajoutés à la main).
+### Jeu en tête (le jeu cliqué, sinon le plus récent)
+- **Illustration** à gauche (380 px), bord droit déchiré en rouge (`html.poster .hero::before` et le masque de `.hero .art`, `poster.css` des maquettes), puce du launcher en haut à gauche.
+- **Rangée du haut** : puce rouge « Ready to play » (ou « Playing », « Starting… », « Didn't start »), puce « Last played 2 h ago » / « Not played yet », et la corbeille « Remove from library » : premier clic, elle devient rouge avec « Click again to remove, the game stays installed » ; deuxième clic, `api.gameRemove` (pour chaque launcher de la vignette Minecraft). Elle se remet à zéro si elle perd le focus.
+- **Nom** en affiche (92 px ; 70 px au-delà de 13 lettres). « Tom Clancy's » et ™ ® sont retirés des noms.
+- **Quatre cases** (`.score`) :
+  - **preset** : nom du preset et « 21 tweaks » (réglages utilisables, `presetCount`), ou « No preset » / « the game as is ». Un clic ouvre [[PresetPicker.tsx]].
+  - **in-game graphics** : onglets Performance, Balanced, Quality pour les jeux de [[graphics.ts]] (`graphicsForGame`) ; l'onglet rouge est le niveau lu dans les fichiers du jeu. Un clic écrit le niveau (`graphicsApply`). Onglets grisés si l'état n'est pas lu, pendant une écriture, si le jeu tourne, si aucun fichier n'est trouvé ou si tous sont en lecture seule ; l'infobulle dit alors pourquoi, sinon ce que le niveau change pour ce jeu (`GFX_DETAILS`). Autres jeux : « – », « not for this game ».
+  - **resolution** : celle réglée pour ce jeu dans [[Couleurs et résolution]] (« 1280×960 », « stretched » ou « black bars »), sinon « native » et la taille de l'écran. Un clic ouvre [[Display.tsx]] sur ce jeu (`goTo("display", id)`).
+  - **saturation** : la saturation réglée pour ce jeu, sinon celle de Windows (« 100 % », « windows is 50% » ; 100 % pour une carte AMD) ; « – », « not on this screen » sans saturation possible. Un clic ouvre aussi [[Display.tsx]].
+- **Boutons** : avec un preset qui a encore des réglages à appliquer (ou sans licence) : **« Optimize and play »** (rouge, `optimizeAndPlay` : fenêtre de confirmation [[ConfirmDialog.tsx]], lot, puis lancement) et « Play without tweaks » (`launchGame`). Preset déjà tout appliqué avec une licence, ou sans preset : un seul bouton rouge « Play ». Tout est grisé pendant un lot (`run`).
+- **Phrase à côté des boutons**, dans cet ordre : échec du lancement ; résultat d'un changement de graphismes (avec « Restore my settings » juste après une écriture) ; « {n} tweaks from the preset stay on after you play. » avec « Remove them » (`requestUndo`) quand tout est appliqué ; « {n} tweaks from the preset are applied before the game starts. » ; sans licence « Premium: … » ; sans preset « The game starts as is, with no tweaks. ».
+
+### Tous les jeux
+- Barre : « ALL GAMES », onglets **all / shooters / minecraft / others** avec leur nombre (un filtre sans jeu est caché), et à droite **sort : by launcher / recent / a-z** (« by launcher » d'office ; le choix tient tant que l'app est ouverte).
+- **Vignette** (3 par ligne) : image paysage, puce du launcher (un clic **ouvre le launcher**, `launcherLaunch`, sans droits d'administrateur), puce rouge « Playing » si le jeu tourne, nom, « valorant preset / 2 h ago » (en minuscules ; « {nom} preset » pour un preset de jeu, le nom seul pour un preset tout fait), bouton réglages (ouvre [[PresetPicker.tsx]] pour ce jeu) et bouton lecture (avec une licence et un preset : comme « Optimize and play » ; sinon lance le jeu tel quel). Un clic sur la vignette la met en tête ; la vignette en tête a un contour rouge et son bouton lecture rouge.
+
+### Aucun jeu
+Panneau de `app-games-empty.html` : grand « 0 » en contour, grande manette imprimée (`BigIcon`), « NO GAMES FOUND », la liste des launchers cherchés en gras (Steam, Epic Games, Riot, Battle.net, Ubisoft Connect, l'app Xbox, les launchers Minecraft), « Add a game » et « Scan again », et « Installed somewhere else? Add the game's .exe and Rago sets up its preset. ». Aussi affiché si la liste des jeux échoue. Pendant le premier chargement : une carte vide à la place du jeu en tête.
 
 ### Preset de chaque jeu
-- Le choix est gardé dans `gamePresets` (`rago.gamePresets`). La valeur est `"builtin:<id>"`, `"mine:<id>"` ou `"none"`.
-- **Preset d'office** (`defaultPreset`) :
-  - le preset du jeu s'il en a un (`presetForGame` de [[catalog.ts]], qui compare le nom du jeu aux `match` des presets, la plus longue correspondance gagne) ;
-  - sinon `mc_pvp` pour Minecraft ;
-  - sinon `latency` pour les jeux de tir ;
-  - sinon `fps`.
-- Un preset perso supprimé, ou un preset du catalogue qui n'existe plus, revient au preset d'office.
-- **`PresetMenu`** (puce « Preset : {nom} · {n} réglages ») propose, dans l'ordre :
-  - les presets généraux du catalogue ;
-  - « Par jeu » : les presets `game:true`, avec le logo du jeu (`GameLogo` et `usePresetIcons`, voir [[Petits composants de l'interface]]) ;
-  - « Mes presets » ;
-  - « Sans preset ».
-  - Le menu se ferme par Échap ou par un clic à côté.
-
-### Grande carte (le jeu choisi, sinon le premier)
-- Image, état (« En cours », « Dernière partie · il y a 2 h », « Pas encore lancé »), nom (« Minecraft · Lunar Client » pour un client).
-- Puces :
-  - le preset ;
-  - **« Couleurs et résolution »** : ce qui est réglé pour ce jeu (« Saturation 55 % · 1440×1080 » ; une saturation de 50 % n'est pas montrée), sinon le nom de la page. Un clic ouvre [[Display.tsx]] sur ce jeu (`goTo("display", id)`). Les profils sont lus une fois au montage (`api.displayProfiles()`, commande `display_profiles`) ;
-  - le launcher (ou « Ajouté par toi ») ;
-  - la corbeille « Retirer de la bibliothèque ». Elle demande deux clics, et le texte précise que le jeu reste installé. Elle appelle `api.gameRemove` pour le jeu, ou pour chaque client de la tuile Minecraft.
-- Pendant une partie, les vérifications de la session sont affichées (`SessionChecks` et `useSession` de [[SessionCard.tsx]]).
-- **PR #91** (11/11) : en bas de la grande carte, le bloc « Réglages conseillés pour {jeu} » ([[GameTips.tsx]]) si le jeu a une liste (`tipsKeyForGame` de [[tips.ts]], d'après son nom ; jamais pour Minecraft) ; ouvert si le jeu tourne, replié sinon (`key` = jeu + en cours : il se rouvre au lancement). Voir [[Conseils au lancement du jeu]].
-- **Boutons** :
-  - Preset choisi, avec des réglages à appliquer, ou joueur sans licence : **« Optimiser et jouer »**. Avec une licence, cela appelle `optimizeAndPlay(jeu, entrées)` : fenêtre de confirmation ([[ConfirmDialog.tsx]]) avec les réglages du preset encore à appliquer (`toApply`), lot, puis lancement du jeu à la fin du lot. Si tout est déjà appliqué, le jeu démarre tout de suite.
-  - À côté : « Jouer sans optimiser » (`launchGame`).
-  - Avec une licence, si tout le preset est déjà appliqué : un seul bouton **« Jouer »**.
-  - Sans preset : « Jouer ».
-  - Tous les boutons sont grisés pendant un lot (`run`).
-- **Ligne d'info sous les boutons** :
-  - « Lancement… », ou en cas d'échec « Le jeu n'a pas pu démarrer. Ouvre son launcher une fois, puis réessaie. » ;
-  - sinon, si des réglages du preset sont encore appliqués : « {n} réglages du preset restent allumés après la partie. », avec le lien **« Les retirer »** (`requestUndo`, la fenêtre de confirmation en mode retour arrière) ;
-  - sinon, avec une licence : « {n} réglages du preset seront appliqués avant le lancement. ».
-
-### Grille des jeux
-Une carte par jeu : image, pastille « En cours », nom, launcher, puce du preset, bouton « Jouer » (lance sans optimiser). Un clic sur la carte la met en grande carte.
-
-### Launchers (`Launchers`)
-- Rangée affichée si au moins un launcher est installé : icône de l'exe (`api.launcherIcon`, commande `launcher_icon`), nom, état « Ouvrir » / « Ouvert » / « Introuvable ».
-- Un clic appelle `api.launcherLaunch(id)` : le launcher s'ouvre sans droits d'administrateur.
+- Gardé dans `gamePresets` (`rago.gamePresets`) : `"builtin:<id>"`, `"mine:<id>"` ou `"none"`.
+- **Preset d'office** (`defaultPreset`) : le preset du jeu s'il en a un (`presetForGame` de [[catalog.ts]], la plus longue correspondance gagne), sinon `mc_pvp` pour Minecraft, `latency` pour les jeux de tir, `fps` pour le reste. Un preset perso supprimé ou un preset du catalogue disparu revient au preset d'office.
 
 ### Ajouter un jeu
-« Ajouter un jeu » : `api.gameAdd(titre)` ouvre une boîte de choix d'un `.exe` (« Choisir le programme du jeu »), puis la liste est rechargée et le nouveau jeu devient la grande carte. Un fichier qui n'est pas un programme n'ajoute rien, sans message.
+`api.gameAdd(titre)` ouvre le choix d'un `.exe` (« Choisir le programme du jeu ») ; la liste est rechargée et le nouveau jeu passe en tête. Un fichier qui n'est pas un programme n'ajoute rien, sans message.
+
+## Retiré le 23/11 (la maquette ne le montre pas)
+- La rangée des launchers en haut de page : un launcher s'ouvre maintenant par la puce d'une vignette ; un launcher sans jeu trouvé ne s'ouvre plus depuis la page.
+- La carte « Graphismes du jeu » (`GameGraphics.tsx`, supprimé) : devenue la case « in-game graphics ».
+- Les réglages conseillés sous le jeu ([[GameTips.tsx]]) et les vérifications pendant la partie (`SessionChecks`) : ils restent dans la [[Barre en jeu]] ([[Overlay.tsx]]).
+- Le menu déroulant des presets (`PresetMenu`, avec `GameLogo.tsx`, supprimé) : remplacé par [[PresetPicker.tsx]].
 
 ## Données touchées
 - `localStorage` via [[store.tsx]] : `rago.gamePresets`, `rago.mcLauncher`.
-- Jeux ajoutés ou retirés : gardés par le moteur ([[games.rs]], listes `manual` et `hidden`). Un jeu trouvé puis retiré passe dans `hidden`.
-- `api.gamesUnhide()` (commande `games_unhide`, qui vide la liste `hidden`) existe dans [[api.ts]] mais **aucun écran ne l'appelle** (OBSERVÉ par recherche dans `app/src/`, y compris [[Settings.tsx]]). Un jeu trouvé par un launcher puis retiré ne revient donc pas depuis l'interface. « Ajouter un jeu » sur son `.exe` crée une autre entrée, `manual:<empreinte>`, sans réafficher l'ancienne. À VÉRIFIER : bouton prévu puis oublié, ou retiré exprès ?
-
-## Erreurs et cas limites
-- Si la liste des jeux échoue, la page affiche l'état vide : « Aucun jeu trouvé sur ce PC », avec la liste des launchers cherchés et deux boutons (chercher à nouveau, ajouter).
-- Pendant le premier chargement, une carte squelette est affichée.
-- « Optimiser et jouer » avec un preset dont aucun réglage n'est à appliquer lance le jeu directement, sans fenêtre.
+- Jeux ajoutés ou retirés : gardés par le moteur ([[games.rs]], listes `manual` et `hidden`). `api.gamesUnhide()` (commande `games_unhide`) existe mais **aucun écran ne l'appelle** : un jeu trouvé par un launcher puis retiré ne revient pas depuis l'interface. À VÉRIFIER : bouton prévu puis oublié, ou retiré exprès ?
 
 ## Simulateur
-Avec `npm run window` : une liste de jeux de démo, sans images (`gameArt` renvoie `null`). Avec `?playing`, le dernier jeu joué est « En cours » (démo de [[SessionCard.tsx]]). Les icônes des launchers peuvent être fournies par les captures (`window.__launcherIcons`).
+Avec `npm run window` : la bibliothèque de la maquette (9 jeux : Valorant, League of Legends, Counter-Strike 2, Apex Legends, Rocket League, Fortnite, Minecraft par Lunar Client, Overwatch 2, Rainbow Six Siege), Valorant réglé en 1280×960 étiré à 100 % de saturation et en graphismes « balanced ». `?nogames` : bibliothèque vide. `?playing` : le dernier jeu joué est « Playing ». Voir [[api.ts]].
 
 ## Liens avec le reste
-- Fonctionnalités : [[Bibliothèque de jeux]], [[Presets]], [[Pendant la partie]].
-- Moteur : [[games.rs]] (recherche des jeux, launchers, images, lancement sans droits d'administrateur), [[session.rs]] (vérifications pendant la partie).
-- Textes : clés `games.*` de [[i18n.ts]]. Styles : sections « bibliothèque », « launchers » et « presets par jeu » de `features.css` ([[Styles de l'app (CSS)]]).
+- Fonctionnalités : [[Bibliothèque de jeux]], [[Presets]], [[Graphismes des jeux]], [[Couleurs et résolution]].
+- Moteur : [[games.rs]] (recherche des jeux, launchers, images, lancement sans droits d'administrateur), [[gamecfg.rs]] (graphismes).
+- Textes : clés `games.*`, `gfx.*` et `s5.games.*` de [[i18n.ts]].
 
 ## À savoir avant de modifier
 - Le format `builtin:` / `mine:` / `none` de `gamePresets` est gardé chez les joueurs : ne pas le changer sans migration.
-- Un nouveau launcher : son nom dans `LAUNCHERS` ici, sa détection dans [[games.rs]], et l'ajouter dans le texte `games.emptyLead`.
+- Un nouveau launcher : son nom dans `LAUNCHERS` et sa place dans `LAUNCHER_ORDER`, sa détection dans [[games.rs]], et l'ajouter dans le texte `s5.games.noneLead`.
+- Le CSS de la page vient de la maquette : régénérer `pg-games.css` avec `port_s5.py page app-games-pi pg-games` plutôt que de l'éditer.

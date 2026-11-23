@@ -1,7 +1,7 @@
 ---
 type: registre
 tags: [bug, suivi]
-maj: 2026-11-10
+maj: 2026-11-23
 ---
 # Bugs et incidents
 
@@ -10,6 +10,7 @@ Registre des bugs de l'app et des incidents. Les retours de joueurs au cas par c
 ## Ouverts ou à surveiller (10/11)
 | Bug | Version | État |
 |---|---|---|
+| **Builds GitHub Actions bloqués (23/11)** : le job `windows` de la PR #119 n'a pas démarré, GitHub répond « recent account payments have failed or your spending limit needs to be increased ». Le dépôt `kaliso-dev/rago` est **privé** (constaté le 23/11 par l'API), donc ses builds prennent des minutes payantes du compte. Aucun installateur ne peut être construit tant que ce n'est pas réglé (Sofiene : facturation GitHub, ou dépôt public pendant les builds, voir [[CI GitHub Actions]]) | CI | ouvert, dit à Sofiene le 23/11 ; en attendant, compilation Rust vérifiée à la main (`cargo check --target x86_64-pc-windows-gnu`) |
 | **Débit bridé par le profil hitreg** : « Better hitreg » (variante par défaut de `ping_hitreg`) met l'auto-tuning TCP en `HighlyRestricted` ; avec « Packet optimization » Hitreg, Steam tombe à 15 Mbit/s | 1.2.1 et 1.3.0 | vu le 10/11 ([[Problèmes joueurs]]) ; « Best hitreg » par défaut dans `staging` depuis le 11/11 (PR #86, fusionnée par la PR #92, version test) ; les joueurs qui ont déjà « Better hitreg » le gardent |
 | **Tweaks d'une autre marque appliqués** : `availability()` (`app/src/lib/catalog.ts`) dit « ok » tant que les infos du PC ne sont pas chargées (`if (!sys) return { ok: true }`), et le moteur Rust ne revérifie pas. Un preset choisi trop tôt applique `cpu_amd`/`gpu_amd` sur un PC Intel/NVIDIA et la variante par défaut (`sys_ram:16` sur 8 Go) | 1.2.1, toujours sur `staging` le 10/11 | vu le 02/11 dans les logs d'un joueur RBW (crashs et ping, [[Historique des problèmes]]) ; pas de ticket ni de correctif |
 | Curseur perdu en plein écran / borderless après « Optimize and play » (suspect : `win_fullscreen` dans le preset Minecraft PvP) | 1.2.1 | contournement donné le 29/10 ; `win_fullscreen` retiré du preset dans la PR #70 (1.2.2 fondue dans la [[Version 1.3.0]], `staging`, pas en prod) (RAG-87) ; cause pas confirmée sur Windows ([[Presets]]) |

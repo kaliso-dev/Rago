@@ -6,7 +6,7 @@ maj: 2026-11-11
 ---
 # Graphismes des jeux
 
-Carte **« Graphismes du jeu »** de la page « Jeux », sous la carte du jeu choisi : comme le préréglage OptiFine de Minecraft, **trois niveaux en un clic**, écrits dans les réglages du jeu lui-même. Demandée par Sofiene le 11/11/2026 (feature 3 de son message : « Tu vois l'optimization Optifine dans Minecraft […] Il faut la meme pour tout les jeux valorant fortnite csgo etc etc, avec un choix qualité max, un choix le plus utiliser et optimiser entre performance et agreabilité et enfin le settings avec tout au plus bas »). Code : [[gamecfg.rs]] (moteur), [[GameGraphics.tsx]] (carte), [[graphics.ts]] (textes). Page : [[Bibliothèque de jeux]].
+Case **« in-game graphics »** du jeu en tête de la page « Jeux » (depuis le 23/11, maquette v5 : trois onglets Performance, Balanced, Quality dans la rangée preset / graphismes / résolution / saturation ; avant, une carte sous le jeu) : comme le préréglage OptiFine de Minecraft, **trois niveaux en un clic**, écrits dans les réglages du jeu lui-même. Demandée par Sofiene le 11/11/2026 (feature 3 de son message : « Tu vois l'optimization Optifine dans Minecraft […] Il faut la meme pour tout les jeux valorant fortnite csgo etc etc, avec un choix qualité max, un choix le plus utiliser et optimiser entre performance et agreabilité et enfin le settings avec tout au plus bas »). Code : [[gamecfg.rs]] (moteur), `useGraphics` et la case « in-game graphics » de [[Games.tsx]] (interface, depuis le 23/11), [[graphics.ts]] (textes). Page : [[Bibliothèque de jeux]].
 
 **Statut (11/11)** : **dans `staging`** depuis le 11/11 (PR #94, fusionnée avec les autres nouveautés du 11/11 par la PR #92, sur « Push toutes les modification vers stagging pour que je puisse test la version test » de Sofiene), pour la version test ; part avec la [[Version 1.3.0]] (Sofiene, 11/11 à 09:20 UTC : « version fianle »). **Jamais testée sur Windows** ([[Règles de travail]]) : les clés de Valorant, Fortnite et Apex viennent de fichiers publiés par des joueurs, pas d'une documentation des éditeurs. **Gratuit ou Premium : À DÉCIDER** par Sofiene (q94 sur la page « Questions du vault Rago », 11/11 ; pour l'instant le code la laisse gratuite, sans verrou). Ticket [[Linear]] : RAG-92 (« In Review »).
 
@@ -17,7 +17,7 @@ Carte **« Graphismes du jeu »** de la page « Jeux », sous la carte du jeu ch
 | **Équilibré** (Balanced) | « What most competitive players use » | le réglage des joueurs compétitifs : image lisible, FPS hauts |
 | **Qualité** (Quality) | « Everything at its highest, best looks » | tout au plus haut |
 
-Chaque niveau affiche aussi ce qu'il change pour ce jeu (une phrase par jeu et par niveau, [[graphics.ts]]). Le niveau actuel est reconnu en relisant les fichiers (puce « Actuel : … ») ; si les réglages ne correspondent à aucun niveau : « Tes propres réglages ».
+Chaque niveau affiche aussi ce qu'il change pour ce jeu (une phrase par jeu et par niveau, [[graphics.ts]]). Le niveau actuel est reconnu en relisant les fichiers (onglet rouge ; depuis le 23/11 la phrase de chaque niveau est l'infobulle de son onglet, et le résultat s'écrit sous les boutons de lancement, avec « Restore my settings » juste après une écriture) ; si les réglages ne correspondent à aucun niveau : « Tes propres réglages ».
 
 ## Les jeux (6)
 Reconnus par le preset du jeu dans la bibliothèque ([[Presets]]) : `game_valorant`, `game_fortnite`, `game_cs2`, `game_apex`, `game_rivals`, `game_finals`. Les autres jeux n'ont pas la carte. Minecraft Java garde son préréglage OptiFine (Performance / Qualité) dans la page Minecraft ([[minecraft.rs]]).
@@ -35,7 +35,7 @@ Valeurs exactes de chaque niveau : [[gamecfg.rs]]. Pas touché : les options du 
 
 ## Règles de sûreté (code)
 - **Seulement les clés que le jeu a déjà écrites** : Rago n'ajoute jamais une clé inconnue, sauf le mode de rendu de Fortnite (section standard d'Unreal Engine que le jeu n'écrit pas toujours). Un fichier sans aucune clé connue n'est pas touché (« doesn't look as expected »).
-- **Jeu fermé seulement** : il réécrit ses réglages en quittant. Exes surveillés par jeu ([[gamecfg.rs]]) ; la carte est grisée pendant la partie.
+- **Jeu fermé seulement** : il réécrit ses réglages en quittant. Exes surveillés par jeu ([[gamecfg.rs]]) ; les onglets sont grisés pendant la partie (l'infobulle dit pourquoi).
 - **Copie d'origine** `<fichier>.rago-original` gardée à côté avant la première écriture, jamais remplacée par un deuxième niveau ; **« Restore my settings »** la remet et la supprime.
 - **Lecture seule respectée** : un fichier verrouillé par le joueur (souvent pour une résolution étirée) n'est pas touché ; l'app le dit.
 - **Aucune clé de résolution ni d'affichage** : elles sont au fil « saturation et résolution des pros » (module `display.rs`, [[Couleurs et résolution]]) ; un test du code le garantit.

@@ -1,7 +1,7 @@
 ---
 type: pilotage
 tags: [journal, chronologie]
-maj: 2026-11-22
+maj: 2026-11-23
 ---
 # Journal
 
@@ -10,6 +10,9 @@ Une ligne par événement marquant, la plus récente en haut. Voir [[Historique 
 ## Novembre 2026
 | Date | Événement | Liens |
 |---|---|---|
+| 23/11 | Soir : page Jeux refaite sur la maquette v5 (grande illustration déchirée, vignettes, aucun jeu) et nouvelle fenêtre de choix du preset à covers verticales (maquette `app-preset-picker` faite le jour même, à valider) ; 16 jeux avec leurs images embarquées | [[Games.tsx]], [[PresetPicker.tsx]] |
+| 23/11 | Cadre de l'app et tableau de bord refaits à l'identique des maquettes v5 : PR #119 fusionnée dans `staging`. Le build Windows de GitHub Actions n'a pas démarré (paiement refusé ou limite de dépenses du compte GitHub) ; compilation Rust vérifiée à la main pour Windows | [[Maquettes v5 dans l'app (s5)]], [[CI GitHub Actions]] |
+| 23/11 | Sofiene refuse l'app de la PR #108 (« pas conforme au design ») : app à refaire au pixel près sur les maquettes v5 | [[Décisions]] |
 | 22/11 | Nuit (0 h 05) : icônes « imprimées » Rago dans l'admin, en prod (PR #117) puis dans staging, oubliées dans la PR #114 (Sofiene) | [[Tableau de bord admin]], [[admin-views.js]] |
 | 22/11 | Nuit (23 h 40) : admin, cadre du Cerveau et e-mails en v5 **en prod** (PR #114 vers la branche de prod, demande de Sofiene). En prod, l'admin et le Cerveau lisent `tokens-v5.css` (copie des jetons v5) pour que les pages compte de la prod gardent `tokens.css` v1.2 | [[Tableau de bord admin]], [[mailer.js]], [[Charte graphique]] |
 | 22/11 | 23 h, 3e retour de Sofiene sur le site v5 : pastille « Try Premium free for 3 days » retirée du héros ; sections collées, sans les grands vides laissés par la hauteur d'écran (accueil et Rago Route) ; vidéo de la barre en jeu entière dans le carrousel ; puis les autres cartes du carrousel remplissent leur hauteur (illustration agrandie) au lieu de laisser un trou | [[v5.css]], [[page.html]], [[route.html]] |

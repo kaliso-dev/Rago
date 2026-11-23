@@ -24,5 +24,5 @@ Désinstallation : le mode d'alimentation est rendu et les choix de carte graphi
 
 ## Ce qui n'est pas fait (carte graphique « performance maximale »)
 - Sur un PC à **une seule** carte, Windows n'a rien à choisir : l'option carte graphique ne sert pas. La gestion d'énergie NVIDIA au maximum existe en réglage manuel (« PowerMizer en performance », `nv_powermizer`, [[Tweaks Carte graphique]]), pas réglée automatiquement par jeu : il faudrait passer par le profil du pilote NVIDIA (NVAPI), pas fait (11/11).
-- Interface : `SessionCard.tsx` (carte des paramètres, vérifications dans [[Games.tsx]] et [[Overlay.tsx]]).
+- Interface : `SessionCard.tsx` (carte des paramètres, vérifications dans [[Overlay.tsx]] ; plus sur la page « Jeux » depuis le 23/11).
 - [[tips.rs]] (PR #91) : moteur des [[Conseils au lancement du jeu]].

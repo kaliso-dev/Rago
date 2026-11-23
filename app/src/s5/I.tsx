@@ -2,7 +2,7 @@
 // <I n="search" /> remplace <i data-i="search"></i> des maquettes : icône imprimée (formes pleines, couche décalée,
 // penchée) ou au trait pour les signes d'interface, avec les couleurs que icons.js choisit selon le fond.
 import { useId, useLayoutEffect, useRef, type CSSProperties } from "react";
-import { ICON_ALIAS, ICON_FILTERS, LINE_ICONS, LINE_ONLY, LOGO_R, PRINT_ICONS } from "./iconData";
+import { BIG_ICONS, ICON_ALIAS, ICON_FILTERS, LINE_ICONS, LINE_ONLY, LOGO_R, PRINT_ICONS } from "./iconData";
 
 // couleur calculée : « rgb(161, 161, 170) », ou « color(srgb 0.63 0.63 0.67) » quand elle vient d'un color-mix()
 const rgb = (c: string) => {
@@ -80,6 +80,20 @@ export function I({ n, className, style, line, title }: IProps) {
 /** Filtres des icônes imprimées, posés une fois en haut de l'app. */
 export function IconDefs() {
   return <svg width="0" height="0" style={{ position: "absolute" }} aria-hidden="true" dangerouslySetInnerHTML={{ __html: `<defs>${ICON_FILTERS}</defs>` }} />;
+}
+
+/** Grande icône imprimée des écrans vides et des erreurs (data-big des maquettes : games, offline, alert, library). */
+export function BigIcon({ n, className }: { n: string; className?: string }) {
+  return <span className={className ?? "ico"} aria-hidden="true" dangerouslySetInnerHTML={{ __html: BIG_ICONS[n] ?? "" }} />;
+}
+
+/** Texte des maquettes avec des mots en gras : « **Steam** » devient <b>Steam</b>. */
+export function Rich({ text }: { text: string }) {
+  return (
+    <>
+      {text.split(/\*\*(.+?)\*\*/g).map((part, i) => (i % 2 ? <b key={i}>{part}</b> : part))}
+    </>
+  );
 }
 
 /** Le R de Rago (data-logo des maquettes). */

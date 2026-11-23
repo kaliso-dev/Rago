@@ -3,7 +3,7 @@ type: code
 tags: [code, app, typescript, interface, conseils]
 fichier: app/src/lib/tips.ts
 lignes: 59
-maj: 2026-11-11
+maj: 2026-11-23
 ---
 # tips.ts
 
@@ -18,5 +18,5 @@ Lecture de la liste des **réglages en jeu conseillés** ([[tips.json]]) et suiv
 - `useTipsDone()` : crochet React qui renvoie `[ensemble des ids cochés, mark(id, fait)]`. Il lit la liste au montage (`api.tipsDone`), suit l'événement `tips:done` (l'app et la barre en jeu restent d'accord), et `mark` change l'affichage tout de suite puis appelle `api.tipsMark` ; la réponse du moteur remplace la liste (un id inconnu n'y entre pas).
 
 ## Liens avec le reste
-- Utilisé par [[GameTips.tsx]] (`tipsFor`, `useTipsDone`), [[Overlay.tsx]] (`tipsFor` pour le nom du jeu du rappel) et [[Games.tsx]] (`tipsKeyForGame`).
+- Utilisé par [[GameTips.tsx]] (`tipsFor`, `useTipsDone`), [[Overlay.tsx]] (`tipsFor` pour le nom du jeu du rappel). `tipsKeyForGame` n'a plus d'appelant depuis le 23/11 (il servait au bloc de la page Jeux).
 - Commandes et événement : `tips_done`, `tips_mark`, `tips:done` ([[api.ts]], [[lib.rs]], [[tips.rs]]).

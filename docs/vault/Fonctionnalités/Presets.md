@@ -18,6 +18,6 @@ Ensembles de tweaks sélectionnés en un clic, puis appliqués avec la barre du 
 Liens : [[Tableau de bord]], [[Offres et prix]].
 
 ## Code
-- Affichage et sélection : [[Dashboard.tsx]] (presets, presets par jeu, « Mes presets »), [[Games.tsx]] (preset de chaque jeu, « Optimiser et jouer »). Modifier un preset : [[PresetEditor.tsx]].
+- Affichage et sélection : [[Dashboard.tsx]] (presets, presets par jeu, « Mes presets »), [[Games.tsx]] (preset de chaque jeu, « Optimiser et jouer ») et [[PresetPicker.tsx]] (choix du preset : une cover verticale par jeu, depuis le 23/11). Modifier un preset : [[PresetEditor.tsx]].
 - Logique : `selectMany`, `savePreset`, `updatePreset`, `currentSetup` et `toApply` de [[store.tsx]] ; `presetForGame` de [[catalog.ts]] ; codes de partage : [[share.ts]] et [[Share.tsx]]. Logos des jeux : [[gameLogos.ts]].
 - Données : `presets` de [[catalog.json]], fabriqué par [[build_catalog_v6.py]]. Carte d'ensemble : [[Code de l'app (interface)]].

@@ -1,0 +1,44 @@
+/* Fenêtre du choix de preset (maquette rendus-v5/src/app-preset-picker.html, 23/11/2026).
+   Les règles de fenêtre (.dim2, .mdl, .ml, .mf) viennent de win.css, limitées à .ovl en attendant le portage des fenêtres. */
+.ovl{position:fixed;inset:0;z-index:40}
+.ovl .dim2{backdrop-filter:blur(2.5px) saturate(.85)}
+.ovl .dim2{position:absolute;inset:0;background:rgba(6,6,7,.64)}
+.ovl .mdl{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);width:600px;padding:30px 32px 22px;background:var(--bg-2);border:1px solid var(--line-2);box-shadow:0 40px 100px -24px rgba(0,0,0,.95),0 0 0 1px rgba(0,0,0,.5)}
+.ovl .mdl .mt{display:inline-block;font-size:34px;margin:0 0 16px}
+.ovl .ml{font-size:14px;line-height:1.5;color:var(--ink-2);margin-bottom:20px;max-width:500px}
+html.round .ovl .mdl{border-radius:24px}
+.ovl .mf{display:flex;justify-content:flex-end;gap:10px;margin-top:22px;padding-top:18px;border-top:1px solid var(--line)}
+/* Choix du preset d'un jeu (23/11/2026, demande de Sofiene) : une cover verticale par jeu, comme une affiche de match.
+   Ouvert depuis le lanceur de jeux (case « preset » du jeu en tête, bouton réglages d'une vignette). */
+.mdl.pk{width:1184px;padding:30px 32px 22px}
+.pk .hd{display:flex;align-items:flex-end;justify-content:space-between;gap:24px}
+.pk .kick{margin-bottom:12px}
+.pk .mt{margin:0}
+.pk .ml{margin-top:14px;max-width:560px;color:var(--ink-2);font-size:14px;line-height:1.45}
+.pk .hd .tabs{margin-bottom:4px}
+.vgrid{display:grid;grid-template-columns:repeat(8,1fr);gap:12px;margin-top:24px}
+.vc{position:relative;aspect-ratio:2/3;overflow:hidden;isolation:isolate;background:var(--bg-3) center/cover no-repeat;box-shadow:inset 0 0 0 1px var(--line-2)}
+.vc::after{content:"";position:absolute;inset:0;z-index:0;background:linear-gradient(180deg,rgba(10,10,11,0) 34%,rgba(10,10,11,.7) 60%,rgba(10,10,11,.97) 84%)}
+.vc .ft{position:absolute;z-index:2;left:10px;right:8px;bottom:10px;display:flex;flex-direction:column;align-items:flex-start}
+.vc .ab{position:relative;display:inline-block;padding:4px 10px 0 6px;margin-left:-2px;font-family:var(--cond);font-weight:900;font-style:italic;font-size:50px;line-height:.82;letter-spacing:-.01em;text-transform:uppercase;color:var(--ink);isolation:isolate}
+.vc .ab.l4{font-size:40px}
+.vc .ab::before{content:"";position:absolute;z-index:-1;left:0;right:0;bottom:6px;height:44%;background:var(--red);transform:skewX(var(--skew)) rotate(-3deg)}
+.vc .n{margin-top:7px;font-family:var(--cond);font-weight:800;font-size:12.5px;letter-spacing:.12em;text-transform:uppercase;color:var(--ink-2)}
+.vc .pc{position:absolute;z-index:2;left:8px;top:8px;display:inline-flex;align-items:center;gap:5px;height:20px;padding:0 7px;background:rgba(10,10,11,.72);font-family:var(--cond);font-weight:800;font-size:10.5px;letter-spacing:.12em;text-transform:uppercase;color:var(--ink)}
+.vc .pc i.dot{width:6px;height:6px;border-radius:50%;background:var(--ok);box-shadow:0 0 8px var(--ok)}
+.vc .ck{position:absolute;z-index:2;right:8px;top:8px;width:26px;height:26px;display:grid;place-items:center;background:var(--red);color:var(--red-ink)}
+.vc .ck svg{width:15px;height:15px;stroke-width:3}
+.vc.on{box-shadow:0 0 0 3px var(--red),0 0 30px rgba(255,59,48,.35)}
+.vc.on .n{color:var(--ink)}
+.pk .mf{align-items:center}
+.pk .mf .now{margin-right:auto;display:flex;align-items:center;gap:14px}
+.pk .mf .now .th{width:38px;height:57px;flex:none;background:center/cover no-repeat}
+.pk .mf .now b{display:block;font-family:var(--cond);font-weight:900;font-style:italic;font-size:22px;line-height:1;text-transform:uppercase}
+.pk .mf .now .sub{display:block;margin-top:4px;max-width:520px}
+html.round .vc{border-radius:16px}
+html.round .vc .ab::before{border-radius:4px}
+html.round .vc .pc{border-radius:7px}
+html.round .vc .ck{border-radius:8px}
+html.round .pk .mf .now .th{border-radius:7px}
+/* app : le haut de la fenêtre ne bouge pas quand un onglet a moins de cartes */
+.ovl .mdl.pk{top:max(16px,calc(50% - 362px));transform:translateX(-50%)}

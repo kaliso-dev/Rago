@@ -12,14 +12,25 @@ Depuis le 23/11/2026, l'app reprend **le HTML et le CSS des maquettes v5 tels qu
 | Fichier | Rôle |
 |---|---|
 | `s5/base.css` | **généré** : `rago5.css` + `round.css` + `poster.css` + `frame.css` des maquettes, les effets des boutons d'`anim.css` et le CSS injecté par `printicons.js` et `icons.js`. Ne pas éditer à la main. |
-| `s5/pages/<page>.css` | **généré** : le `<style>` d'une maquette, chaque sélecteur rattaché à la racine de la page (`.pg-dash` pour le tableau de bord). Le `.main` de la maquette devient la racine de la page. |
+| `s5/pages/<page>.css` | **généré** : le `<style>` d'une maquette, chaque sélecteur rattaché à la racine de la page (`.pg-dash` pour le tableau de bord, `.pg-games` pour les jeux). Le `.main` de la maquette devient la racine de la page. |
+| `s5/pages/empty.css` | `empty.css` des maquettes (écrans vides et fenêtre d'erreur), `.empty` devenu `.empty.panel` pour ne pas toucher l'ancienne classe `.tools-row.empty`. |
+| `s5/pages/picker.css` | fenêtre du choix de preset ([[PresetPicker.tsx]]) : le `<style>` de `app-preset-picker.html` et les règles de fenêtre de `win.css` (`.dim2`, `.mdl`, `.ml`, `.mf`), limitées à `.ovl` en attendant le portage de toutes les fenêtres (`win.css` a un `.grp` qui toucherait la barre latérale). |
 | `s5/app.css` | écrit à la main : seulement ce que la fenêtre change (barre latérale et barre du haut fixes, page qui défile dessous, boutons `<button>` à la place des `<span>` des maquettes, états que les maquettes ne montrent pas). |
-| `s5/iconData.ts` | **généré** depuis `icons.js` : icônes au trait, icônes imprimées, alias des noms (`grid` → `dashboard`…), filtres, tracé du R. |
-| `s5/I.tsx` | `<I n="…"/>` remplace `<i data-i="…">` des maquettes, avec les couleurs que `icons.js` choisit selon le fond ; `IconDefs`, `LogoR`, `Seg` (barre à segments `.seg`). |
-| `s5/art.ts` | images des jeux embarquées (`assets/s5/games/<sorte>/<jeu>.jpg` : `wide`, `cover`, `hero`, `play`), clé d'un jeu d'après son id ou son nom. |
-| `s5/text.ts` | « 2 days ago » (`ago`) et date courte (`shortDate`). |
+| `s5/iconData.ts` | **généré** depuis `icons.js` et `bigicons.js` : icônes au trait, icônes imprimées, alias des noms (`grid` → `dashboard`…), filtres, tracé du R, grandes icônes des écrans vides (`BIG_ICONS` : games, offline, alert, library). |
+| `s5/I.tsx` | `<I n="…"/>` remplace `<i data-i="…">` des maquettes, avec les couleurs que `icons.js` choisit selon le fond ; `IconDefs`, `LogoR`, `Seg` (barre à segments `.seg`), `BigIcon` (`data-big` des maquettes), `Rich` (texte avec des mots en gras écrits `**mot**`). |
+| `s5/ui.tsx` | `Tabs` : les onglets `.tabs` des maquettes, cliquables au clavier et à la souris, avec leur compte (`<em>`) et leur étiquette (`.k`). |
+| `s5/art.ts` | images des jeux embarquées (`assets/s5/games/<sorte>/<jeu>.webp`), clé d'un jeu d'après son id ou son nom (`gameKey`), `coverOf(jeu, sorte)`, `artByKey(clé, sorte)`. |
+| `s5/text.ts` | « 2 days ago », « last week » (`ago` ; « 2 h ago » avec `short`) et date courte (`shortDate`). |
 
 Les fichiers générés viennent de `rendus-v5/outils/port_s5.py` (dossier du projet, pas dans le dépôt) : `icons`, `base`, `page <maquette> <classe>`. Les images citées par le CSS des maquettes sont copiées dans `app/src/assets/s5/img/`.
+
+## Images des jeux (23/11)
+Pour les 16 jeux qui ont un preset (clés `valorant`, `cs2`, `fortnite`, `apex`, `pubg`, `r6`, `overwatch`, `rivals`, `finals`, `tarkov`, `rl`, `lol`, `roblox`, `gta`, `minecraft`, `bedrock`), `app/src/assets/s5/games/` contient, en WebP (5 Mo en tout) :
+- `cover/` : cover verticale 400 × 600 ([[PresetPicker.tsx]]) ;
+- `hero/` : grande illustration recadrée sur le personnage, 760 × 750 (jeu en tête de [[Games.tsx]]) ; pour CS2, la cover (son illustration large n'est qu'un fond orange) ;
+- `wide/` : vignette paysage 760 × 355 (vignettes de [[Games.tsx]], jeux du [[Dashboard.tsx]]) ; CS2 garde l'image de la maquette (`cs2.jpg`) ;
+- `play/` : capture en jeu 1600 × 900 (aperçu de la page Display, pas encore refaite).
+Elles viennent du dossier du projet `rago-redesign/images/` (sources dans son `sources.md`), converties par `rendus-v5/outils/prep_art.py`. **Droits d'utilisation à vérifier avant la prod** (dit à Sofiene le 23/11).
 
 ## Fenêtre
 La maquette est une image de 1440 × 900 : la fenêtre s'ouvre à cette taille (`tauri.conf.json`), et sur un écran plus petit `fit_main_window` (`lib.rs`) la réduit à la zone de travail (minimum 1080 × 680). À 1440 × 900, en haut de page, l'app et la maquette se superposent. La barre de défilement (10 px) prend sa place sur la marge droite de la page.
@@ -31,7 +42,9 @@ Pour que le CSS des maquettes ne touche pas les pages pas encore refaites : `.bt
 | Partie | Maquette | État |
 |---|---|---|
 | Cadre : barre latérale, barre du haut, carte de mise à jour, bandeau de licence | `shell5.js`, `frame.css` | refait |
-| Tableau de bord | `app-dashboard-v2-pi.html` | refait |
-| Le reste (jeux, display, modules, réseau, outils, souris, paramètres, partage, analyse, fenêtres, barre en jeu, démarrage) | voir l'inventaire des maquettes | à faire, ancienne interface en attendant |
+| Tableau de bord | `app-dashboard-v2-pi.html` | refait, dans `staging` (PR #119) |
+| Jeux (lanceur, aucun jeu) | `app-games-pi.html`, `app-games-empty.html` | refait (branche `claude/app-v5-games`) |
+| Choix du preset (covers verticales) | `app-preset-picker.html` (nouvelle, 23/11) | refait, maquette à valider par Sofiene |
+| Le reste (display, modules, réseau, outils, souris, paramètres, partage, analyse, fenêtres, barre en jeu, démarrage) | voir l'inventaire des maquettes | à faire, ancienne interface en attendant |
 
 Rien de tout cela n'a été testé sur un vrai Windows.

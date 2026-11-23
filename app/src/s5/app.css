@@ -51,3 +51,41 @@ button.btn:not(:disabled):active{transform:translateY(1px)}
 .pg-dash .plist .save.naming input{flex:1;min-width:0;height:34px;padding:0 12px;background:var(--bg-3);border:1px solid var(--line-2);border-radius:9px;color:var(--ink);font:500 14px var(--body);outline:none}
 .pg-dash .plist .save.naming input:focus{border-color:var(--red)}
 .pg-dash .dash-retired{margin:28px 0 0}
+
+/* onglets cliquables (s5/ui.tsx) */
+.tabs span[role="tab"]{cursor:pointer;user-select:none}
+.tabs span[role="tab"]:not(.on):not(.dis):hover{color:var(--ink)}
+.tabs span.dis{opacity:.45;cursor:default}
+button.chip,button.pl,button.del,button.lk{border:0;cursor:pointer}
+button.del,button.lk{font:inherit;line-height:inherit}
+button.lk{padding:0;background:none;color:var(--ink);text-decoration:underline;text-underline-offset:2px}
+button.lk:disabled{opacity:.5;cursor:default}
+svg.spin{animation:spin 1s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+
+/* lanceur de jeux : ce que la maquette ne montre pas (image officielle entière, jeu sans image, retrait, chargement) */
+.pg-games .hero .cell,.pg-games .gcard{cursor:pointer}
+.pg-games .hero .cell:hover b,.pg-games .gcard:hover .info b{color:var(--red)}
+.pg-games .hero .r1 .del{display:inline-flex;align-items:center;gap:8px;height:24px;padding:0 4px;background:none;font-size:12.5px}
+.pg-games .hero .r1 .del:hover,.pg-games .hero .r1 .del.ask{color:var(--red)}
+.pg-games .gname.long{font-size:70px}
+.pg-games .go .sub.bad{color:var(--red)}
+.pg-games .hero .art.fit::before,.pg-games .cv.fit::before{content:"";position:absolute;inset:-20px;background:inherit;background-size:cover;filter:blur(18px) saturate(1.2);opacity:.85}
+.pg-games .hero .art.fit img{position:absolute;z-index:0;left:50%;top:50%;max-width:100%;max-height:100%;transform:translate(-50%,-50%);box-shadow:0 0 30px rgba(0,0,0,.5)}
+.pg-games .hero .art.none,.pg-games .cv.none{display:grid;place-items:center;background:repeating-linear-gradient(-60deg,var(--bg-3) 0 10px,var(--bg-2) 10px 20px)}
+.pg-games .art .ini,.pg-games .cv .ini{font-family:var(--cond);font-weight:900;font-style:italic;font-size:110px;line-height:1;text-transform:uppercase;color:var(--ink-3)}
+.pg-games .cv .ini{font-size:64px}
+.pg-games .cv button.lc:hover,.pg-games .hero button.lc:hover{background:var(--red);color:var(--red-ink)}
+.pg-games .hero button.lc .i{width:12px;height:12px}
+.pg-games .hero.loading .art{min-height:375px;background:var(--bg-3)}
+.pg-games .gcard .tag{top:10px}
+.pg-games .gcard button.pl:disabled{opacity:.45;cursor:default}
+
+/* choix du preset : la fenêtre tient dans une petite fenêtre, cartes sans cover (tout faits, les miens) */
+.ovl .mdl.pk{width:min(1184px,calc(100vw - 48px));max-height:calc(100vh - 32px);overflow-y:auto}
+.vc{cursor:pointer}
+.vc:not(.on):hover{box-shadow:inset 0 0 0 1px var(--ink-3)}
+.vc.plain{background:repeating-linear-gradient(-60deg,rgba(255,255,255,.035) 0 8px,transparent 8px 16px),var(--bg-3)}
+.vc .i.big{position:absolute;z-index:1;left:50%;top:38%;width:64px;height:64px;transform:translate(-50%,-50%)}
+.pk .mf .now .th.plain{display:grid;place-items:center;background:var(--bg-3)}
+.pk .mf .now .th .i{width:20px;height:20px}

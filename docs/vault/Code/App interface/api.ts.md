@@ -3,7 +3,7 @@ type: code
 tags: [code, app, typescript, interface]
 fichier: app/src/lib/api.ts
 lignes: 1665
-maj: 2026-11-11
+maj: 2026-11-23
 ---
 # api.ts
 
@@ -70,7 +70,7 @@ Chaque ligne : nom dans `api` → commande Rust (paramètres) → ce que fait le
 | `cleanRam(trim)` | `clean_ram { trim }` | 900 ms, 1,2 à 2,8 Gio de cache vidé ; avec `trim`, 0,4 Gio et 7 applis |
 | `minecraftStatus(dir?)` | `minecraft_status { dir }` | dossier présent, fichier OptiFine présent, 1 sauvegarde |
 | `minecraftRestore(dir?)` | `minecraft_restore { dir }` | texte fixe |
-| `graphicsStatus(game)` | `graphics_status { game }` | Valorant : 2 fichiers ; Apex : aucun fichier ; niveau et copie gardés en mémoire (`mockGraphics`) |
+| `graphicsStatus(game)` | `graphics_status { game }` | Valorant : 2 fichiers, déjà en « balanced » avec une copie (comme la maquette v5) ; Apex : aucun fichier ; niveau et copie gardés en mémoire (`mockGraphics`) |
 | `graphicsApply(game, level)` | `graphics_apply { game, level }` | 600 ms ; Apex → `not_found` ; 0 changement si déjà à ce niveau |
 | `graphicsRestore(game)` | `graphics_restore { game }` | `no_backup` sans copie, sinon remet « tes propres réglages » |
 | `rbwStatus()` | `rbw_status` | 12 services et 6 réglages ; `SysMain`, `PcaSvc` et `Prefetch` sont KO tant que `rbw_mode` n'est pas appliqué en variante `on` |
@@ -121,7 +121,7 @@ Chaque ligne : nom dans `api` → commande Rust (paramètres) → ce que fait le
 **Bibliothèque de jeux**
 | Fonction | Commande | Simulateur |
 |---|---|---|
-| `gamesList(refresh)` | `games_list { refresh }` | 7 jeux (3 Minecraft : Lunar, Badlion, launcher officiel ; VALORANT, CS2, Fortnite, Rocket League), triés par dernière partie ; avec `?playing`, le premier est « en cours » |
+| `gamesList(refresh)` | `games_list { refresh }` | la bibliothèque de la maquette v5 (23/11) : 9 jeux (VALORANT, League of Legends, Counter-Strike 2, Apex Legends, Rocket League, Fortnite, Minecraft par Lunar Client, Overwatch 2, Tom Clancy's Rainbow Six Siege), triés par dernière partie ; avec `?playing`, le premier est « en cours » ; avec `?nogames`, aucun jeu |
 | `gameArt(id)` | `game_art { id }` → `data:` URL | `null` (tuiles au nom du jeu) |
 | `gameLaunch(id)` | `game_launch { id }` | 500 ms, met à jour `lastPlayed` |
 | `gameAdd(title)` | dialogue `open` (filtre « Program », `.exe`) puis `game_add { path }` → id | `null` |
@@ -139,7 +139,7 @@ Chaque ligne : nom dans `api` → commande Rust (paramètres) → ce que fait le
 | `updateInstall()` | `update_install` (l'app se ferme) | 1,2 s puis recharge la page |
 | `backgroundGet()` / `backgroundSet(prefs)` | `background_get` / `background_set { prefs }` ; erreurs `shortcut` et `autostart:…` | préférences par défaut : zone de notification oui, lancement avec Windows oui, barre oui, `Alt+X`, pas épinglée, langue `fr`, les 3 options de partie oui ; `backgroundSet` vérifie le raccourci par l'expression `^((Ctrl|Alt|Shift|Super)\+)*(F\d{1,2}|[A-Z0-9]|[A-Za-z]+)$` et ne change pas les 3 options de partie (comme le vrai `background_set`) |
 | `sessionState()` / `sessionSetPrefs(gpu, power, checks, priority)` / `onSession(cb)` | `session_state` / `session_set_prefs` / événement `games:session` | partie en cours avec `?playing` ou dans `overlay.html` ; vérifications OneDrive et OBS ; 2 jeux sur la carte performante ; `multiGpu: true` |
-| `displayInfo()` / `displayProfiles()` / `displayState()` | `display_info` / `display_profiles` / `display_state` | carte NVIDIA (`?amd` : AMD, `?intel` : pas de saturation), écran « ZOWIE XL LCD » 1920×1080 à 240 Hz avec 10 résolutions ; profils gardés dans `localStorage` `rago.demoDisplay` ; rien de posé |
+| `displayInfo()` / `displayProfiles()` / `displayState()` | `display_info` / `display_profiles` / `display_state` | carte NVIDIA (`?amd` : AMD, `?intel` : pas de saturation), écran « ZOWIE XL LCD » 1920×1080 à 240 Hz avec 10 résolutions ; profils gardés dans `localStorage` `rago.demoDisplay` ; rien de posé  ; sans profil gardé : Valorant en 1280×960 étiré à 100 % de saturation (maquette v5) |
 | `displaySetProfile(id, profile)` / `displayPreview(colors)` / `onDisplayState(cb)` | `display_set_profile { id, profile }` / `display_preview { colors }` / événement `display:state` | enregistre (clé `mc:java` pour Minecraft Java) ; refuse `premium:no_license` pour un pro nouveau sans licence de démo, comme le vrai moteur ; l'aperçu émet `display:state` avec `colors: "preview"` |
 | `overlayInfo()` | `overlay_info` | mode `panel` (`pill` avec `?pill`), jeu « Minecraft », `passive` avec `?passive` |
 | `overlayLive()` | `overlay_live` | FPS 238–252, ping 21–25, `pingEstimate` avec `?estimate` |
