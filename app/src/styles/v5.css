@@ -122,13 +122,13 @@ svg.pi use.pf {
   gap: 2px;
   height: 38px;
 }
-.titlebar-controls .wc {
+.titlebar-controls .owc {
   width: 38px;
   height: 38px;
   border-radius: 10px;
   color: var(--rg-text-2);
 }
-.titlebar-controls .wc:hover {
+.titlebar-controls .owc:hover {
   background: var(--rg-ink-3);
 }
 .titlebar-controls .close:hover {
@@ -504,7 +504,7 @@ svg.pi use.pf {
 }
 
 /* ------------------------------------------------------------------ pages */
-.main {
+.omain {
   background: transparent;
   border: 0;
   border-radius: 0;
@@ -702,7 +702,7 @@ svg.pi use.pf {
 }
 
 /* boutons : fond penché à coins arrondis, libellé droit en capitales */
-.btn {
+.obtn {
   position: relative;
   isolation: isolate;
   gap: 9px;
@@ -716,7 +716,7 @@ svg.pi use.pf {
   text-transform: uppercase;
   color: var(--rg-text-1);
 }
-.btn::before {
+.obtn::before {
   content: "";
   position: absolute;
   inset: 0;
@@ -727,7 +727,7 @@ svg.pi use.pf {
   box-shadow: inset 0 0 0 1px var(--rg-line-2);
   transition: background var(--rg-dur-instant), box-shadow var(--rg-dur-instant);
 }
-.btn:active:not(:disabled) {
+.obtn:active:not(:disabled) {
   transform: translateY(1px);
 }
 .btn-sm {
@@ -790,7 +790,7 @@ svg.pi use.pf {
 .btn-ghost:hover:not(:disabled)::before {
   background: var(--rg-ink-3);
 }
-.btn:disabled {
+.obtn:disabled {
   opacity: 0.5;
 }
 .link {
@@ -1032,7 +1032,7 @@ svg.pi use.pf {
   background: var(--rg-ink-1);
 }
 
-.chip {
+.ochip {
   display: inline-flex;
   align-items: center;
   gap: 6px;
@@ -1047,7 +1047,7 @@ svg.pi use.pf {
   color: var(--rg-text-2);
   box-shadow: inset 0 0 0 1px var(--rg-line-2);
 }
-.chip.red {
+.ochip.red {
   background: var(--rg-red-500);
   color: var(--rg-ink-1);
   box-shadow: none;
@@ -1112,7 +1112,7 @@ svg.pi use.pf {
   justify-content: space-between;
   gap: 16px;
 }
-.dash-free-head .chip {
+.dash-free-head .ochip {
   margin-bottom: 14px;
 }
 .dash-free-left {
@@ -1169,7 +1169,7 @@ svg.pi use.pf {
   border-radius: 12px;
   background: var(--rg-ink-3);
 }
-.dash-an .btn {
+.dash-an .obtn {
   align-self: flex-start;
   margin-top: auto;
 }
@@ -1898,19 +1898,19 @@ svg.pi use.pf {
   margin-left: auto;
   gap: 6px;
 }
-.applybar-actions .btn {
+.applybar-actions .obtn {
   border-radius: 0;
   height: 48px;
   font-size: 17px;
 }
-.applybar-actions .btn::before {
+.applybar-actions .obtn::before {
   border-radius: 13px;
 }
-.applybar-clear.btn::before {
+.applybar-clear.obtn::before {
   background: transparent;
   box-shadow: none;
 }
-.applybar-clear.btn {
+.applybar-clear.obtn {
   color: var(--rg-text-2);
   font-size: 14px !important;
   letter-spacing: 0.1em;
@@ -2422,7 +2422,7 @@ svg.pi use.pf {
   text-transform: uppercase;
   color: var(--rg-text-3);
 }
-.gate-oauth .btn,
+.gate-oauth .obtn,
 .gate-submit {
   height: 44px;
 }

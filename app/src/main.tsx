@@ -7,6 +7,12 @@ import "./styles/account.css";
 import "./styles/features.css";
 import "./styles/mouse.css";
 import "./styles/v5.css";
+// maquettes v5 reprises telles quelles (23/11/2026) : après l'ancien style, qui ne sert plus qu'aux pages pas encore refaites
+import "./s5/base.css";
+import "./s5/app.css";
+import "./s5/pages/pg-dash.css";
+
+document.documentElement.classList.add("round", "poster");
 import { App } from "./App";
 import { StoreProvider } from "./lib/store";
 import { AccountProvider } from "./lib/account";

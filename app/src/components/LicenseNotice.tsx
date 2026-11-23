@@ -1,10 +1,9 @@
-import { ArrowRight, LifeBuoy, RefreshCw, TriangleAlert, X } from "./ri";
 import { useState } from "react";
 import { api } from "../lib/api";
 import { type Key } from "../lib/i18n";
 import { useStore } from "../lib/store";
 import { SITE_URL, SUPPORT_URL } from "./LicenseGate";
-import { Button } from "./ui";
+import { I } from "../s5/I";
 
 /**
  * Licence perdue au rafraîchissement (abonnement terminé, remboursement, autre PC) ou plus vérifiable
@@ -34,35 +33,39 @@ export function LicenseNotice() {
     }
   };
 
+  // bandeau de la maquette (frame.css, .lnt) : sous la barre du haut, au-dessus de la page
   return (
-    <div className={`license-notice${expired ? " warn" : ""}`} role="status">
-      <TriangleAlert size={15} />
-      <span className="license-notice-text">{text}</span>
+    <div className="lnt" role="status">
+      <I n="alert" />
+      <span className="tx">{text}</span>
       {expired ? (
-        <Button size="sm" icon={<RefreshCw size={12} />} disabled={busy} onClick={() => void retry()}>
+        <button type="button" className="btn" disabled={busy} onClick={() => void retry()}>
+          <I n="refresh" />
           {t("notice.retry")}
-        </Button>
+        </button>
       ) : n.buyUrl ? (
-        <Button size="sm" variant="primary" onClick={() => void api.openUrl(n.buyUrl!)}>
-          {t("notice.renew")} <ArrowRight size={12} />
-        </Button>
+        <button type="button" className="btn red" onClick={() => void api.openUrl(n.buyUrl!)}>
+          {t("notice.renew")}
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M5 12h14" /><path d="m12 5 7 7-7 7" /></svg>
+        </button>
       ) : n.code === "invalid_token" || n.code === "bound_to_other_device" ? (
-        <Button size="sm" variant="primary" onClick={() => setUpsell("signin")}>
+        <button type="button" className="btn red" onClick={() => setUpsell("signin")}>
           {t("free.signIn")}
-        </Button>
+        </button>
       ) : (
-        <Button size="sm" variant="primary" onClick={() => void api.openUrl(`${SITE_URL}/#pricing`)}>
+        <button type="button" className="btn red" onClick={() => void api.openUrl(`${SITE_URL}/#pricing`)}>
           {t("free.upgrade")}
-        </Button>
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M5 12h14" /><path d="m12 5 7 7-7 7" /></svg>
+        </button>
       )}
       {/* remboursement, révocation, autre PC : le message renvoie vers le support, le bouton aussi */}
       {SUPPORT_URL && ((n.code === "revoked" && !n.buyUrl) || n.code === "bound_to_other_device" || n.code === "invalid_request") && (
-        <Button size="sm" icon={<LifeBuoy size={12} />} onClick={() => void api.openUrl(SUPPORT_URL)}>
+        <button type="button" className="btn" onClick={() => void api.openUrl(SUPPORT_URL)}>
           {t("account.help")}
-        </Button>
+        </button>
       )}
-      <button type="button" className="icon-btn" aria-label={t("notice.dismiss")} onClick={() => setLicenseNotice(null)}>
-        <X size={14} />
+      <button type="button" className="x" aria-label={t("notice.dismiss")} onClick={() => setLicenseNotice(null)}>
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M18 6 6 18M6 6l12 12" /></svg>
       </button>
     </div>
   );

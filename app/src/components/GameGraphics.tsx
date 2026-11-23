@@ -91,9 +91,9 @@ export function GameGraphics({ game, title, running }: { game: string; title: st
         </div>
         <div className="games-gfx-state small">
           {status?.level ? (
-            <span className="chip">{t("gfx.now", { level: t(`gfx.level.${status.level}`) })}</span>
+            <span className="ochip">{t("gfx.now", { level: t(`gfx.level.${status.level}`) })}</span>
           ) : status && status.files > 0 ? (
-            <span className="chip">{t("gfx.custom")}</span>
+            <span className="ochip">{t("gfx.custom")}</span>
           ) : null}
           {status?.saved && (
             <button type="button" className="link small" disabled={blocked} onClick={() => void restore()}>

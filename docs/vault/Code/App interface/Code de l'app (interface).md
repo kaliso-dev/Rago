@@ -51,17 +51,16 @@ main.tsx
       └─ AccountProvider            (lib/account.tsx : compte Rago, avis, invitation)
          └─ App                     (App.tsx)
             └─ MotionConfig         (mouvement réduit ou non)
-               └─ div.app
-                  ├─ PrintDefs              filtres des icônes imprimées
-                  ├─ Sidebar                logo, navigation, plan gratuit ou « This PC », Discord
-                  ├─ div.body
-                  │  ├─ TitleBar            recherche Ctrl+K, bandeau, Premium, boutons de fenêtre
-                  │  ├─ main
-                  │  │  ├─ LicenseNotice    message de licence (fin, appareil, réparation)
-                  │  │  └─ PageBoundary     garde-fou d'erreur
-                  │  │     └─ la page courante (voir « Navigation »)
-                  │  ├─ ApplyBar            barre « Appliquer » en bas
-                  │  └─ RunOverlay          panneau d'exécution d'un lot
+               └─ div.win                  (cadre de la maquette v5, voir [[Maquettes v5 dans l'app (s5)]])
+                  ├─ IconDefs, PrintDefs    filtres des icônes imprimées
+                  ├─ Sidebar (aside.side)   logo, navigation, mise à jour, « This PC », Paramètres
+                  ├─ TitleBar (.topbar)     recherche Ctrl+K, boutons de fenêtre
+                  ├─ main.main              la page, qui défile
+                  │  ├─ LicenseNotice       bandeau de licence (fin, appareil, réparation)
+                  │  └─ PageBoundary        garde-fou d'erreur
+                  │     └─ la page courante (voir « Navigation »)
+                  ├─ ApplyBar               barre « Appliquer » en bas
+                  ├─ div.stage > RunOverlay panneau d'exécution d'un lot
                   ├─ ConfirmDialog          confirmation avant un lot
                   ├─ SearchPalette          recherche Ctrl+K
                   ├─ Upsell                 fenêtre Premium (offre, prix, connexion)

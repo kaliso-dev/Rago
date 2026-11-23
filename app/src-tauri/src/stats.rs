@@ -1,4 +1,5 @@
-//! Usage du PC en direct pour le tableau de bord : mémoire vive, processeur et carte graphique, en %.
+//! Usage du PC en direct pour le tableau de bord : mémoire vive, processeur et carte graphique, en %, et le ping
+//! vers Internet (écho ICMP vers Cloudflare, toutes les 3 secondes) pour la colonne « Network » de la maquette v5.
 //!
 //! Un fil mesure toutes les secondes tant que l'interface demande des valeurs, et s'arrête seul
 //! quelques secondes après la dernière demande (fenêtre réduite, autre page) : rien ne tourne quand
@@ -25,6 +26,8 @@ pub struct LiveStats {
     /// mémoire vive utilisée et totale, en octets (None si indisponible)
     pub ram_used: Option<u64>,
     pub ram_total: Option<u64>,
+    /// aller-retour vers Internet (1.1.1.1), en ms ; None sans réponse ou hors Windows
+    pub ping: Option<f32>,
 }
 
 #[derive(Default)]
@@ -82,6 +85,9 @@ struct Probe {
     cpu: Option<pdh::Counter>,
     #[cfg(windows)]
     gpu: Option<pdh::Counter>,
+    pinger: Option<crate::icmp::Pinger>,
+    ping: Option<f32>,
+    tick: u32,
 }
 
 impl Probe {
@@ -98,6 +104,9 @@ impl Probe {
                 .or_else(|| pdh::Counter::open(r"\Processor(_Total)\% Processor Time")),
             #[cfg(windows)]
             gpu: pdh::Counter::open(r"\GPU Engine(*)\Utilization Percentage"),
+            pinger: crate::icmp::Pinger::new(),
+            ping: None,
+            tick: 0,
         }
     }
 
@@ -124,7 +133,16 @@ impl Probe {
             (cpu, None)
         };
 
-        LiveStats { ready: true, ram, cpu, gpu, ram_used, ram_total }
+        // un écho toutes les 3 mesures : assez pour suivre le réseau, sans charger la boucle d'une seconde
+        if self.tick % 3 == 0 {
+            self.ping = self.pinger.as_ref().and_then(|p| match p.send(std::net::Ipv4Addr::new(1, 1, 1, 1), None, Duration::from_millis(800)) {
+                crate::icmp::Reply::Echo(ms) => Some(((ms * 10.0).round() / 10.0) as f32),
+                _ => None,
+            });
+        }
+        self.tick = self.tick.wrapping_add(1);
+
+        LiveStats { ready: true, ram, cpu, gpu, ram_used, ram_total, ping: self.ping }
     }
 }
 

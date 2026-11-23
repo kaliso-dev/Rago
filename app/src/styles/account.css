@@ -189,7 +189,7 @@
   flex: 0 1 200px;
   font-family: var(--rg-font-sans);
 }
-.profile-name-edit .btn {
+.profile-name-edit .obtn {
   height: 34px;
   padding: 0 14px;
   font-size: 13.5px;

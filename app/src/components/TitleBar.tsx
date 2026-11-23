@@ -1,42 +1,28 @@
-import { Minus, Search, Square, X } from "./ri";
-import { api, isTauri } from "../lib/api";
+import { api } from "../lib/api";
 import { useStore } from "../lib/store";
-import { Kbd } from "./ui";
+import { I } from "../s5/I";
 
-/** Barre du haut (charte v5) : posée au-dessus des pages, à droite de la barre latérale. On y déplace la fenêtre. */
+/** Barre du haut de la maquette v5 : la recherche et les boutons de la fenêtre. On y déplace la fenêtre. */
 export function TitleBar() {
-  const { t, setPaletteOpen, license, premium, setUpsell } = useStore();
+  const { t, setPaletteOpen } = useStore();
   return (
-    <header className="titlebar" data-tauri-drag-region>
-      <button type="button" className="titlebar-search" onClick={() => setPaletteOpen(true)}>
-        <Search size={15} />
-        <span>{t("app.search")}</span>
-        <Kbd>Ctrl K</Kbd>
-      </button>
-      {!isTauri ? (
-        <span className="titlebar-demo" data-tauri-drag-region>{t("demo.banner")}</span>
-      ) : (
-        import.meta.env.VITE_RAGO_SERVER === "staging" && <span className="titlebar-demo" data-tauri-drag-region>{t("staging.banner")}</span>
-      )}
-      <div className="titlebar-controls" data-tauri-drag-region>
-        {license &&
-          (premium ? (
-            <span className="titlebar-plan">Premium</span>
-          ) : (
-            <button type="button" className="titlebar-signin" onClick={() => setUpsell("signin")}>
-              {t("free.signIn")}
-            </button>
-          ))}
-        <button type="button" className="wc" aria-label={t("window.minimize")} onClick={() => api.window.minimize()}>
-          <Minus size={14} />
-        </button>
-        <button type="button" className="wc" aria-label={t("window.maximize")} onClick={() => api.window.toggleMaximize()}>
-          <Square size={11} />
-        </button>
-        <button type="button" aria-label={t("window.close")} className="wc close" onClick={() => api.window.close()}>
-          <X size={15} />
-        </button>
+    <div className="topbar" data-tauri-drag-region onDoubleClick={(e) => e.target === e.currentTarget && api.window.toggleMaximize()}>
+      <div className="search" role="button" tabIndex={0} onClick={() => setPaletteOpen(true)} onKeyDown={(e) => e.key === "Enter" && setPaletteOpen(true)}>
+        <I n="search" />
+        {t("app.search")}
+        <kbd>ctrl k</kbd>
       </div>
-    </header>
+      <span className="wc">
+        <span role="button" aria-label={t("window.minimize")} onClick={() => api.window.minimize()}>
+          <svg viewBox="0 0 14 14" fill="none" stroke="currentColor" strokeWidth="1.6"><path d="M2 7h10" /></svg>
+        </span>
+        <span role="button" aria-label={t("window.maximize")} onClick={() => api.window.toggleMaximize()}>
+          <svg viewBox="0 0 14 14" fill="none" stroke="currentColor" strokeWidth="1.6"><rect x="2.5" y="2.5" width="9" height="9" /></svg>
+        </span>
+        <span role="button" className="x" aria-label={t("window.close")} onClick={() => api.window.close()}>
+          <svg viewBox="0 0 14 14" fill="none" stroke="currentColor" strokeWidth="1.6"><path d="M3 3l8 8M11 3l-8 8" /></svg>
+        </span>
+      </span>
+    </div>
   );
 }

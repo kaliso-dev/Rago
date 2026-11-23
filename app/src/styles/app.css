@@ -141,7 +141,7 @@ kbd {
   grid-template-columns: 216px 1fr;
   min-height: 0;
 }
-.main {
+.omain {
   position: relative;
   overflow-y: auto;
   scroll-behavior: smooth;
@@ -523,7 +523,7 @@ kbd {
 
 /* ------------------------------------------------------------------ boutons */
 
-.btn {
+.obtn {
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -533,10 +533,10 @@ kbd {
   font-weight: 540;
   transition: background var(--rg-dur-instant), border-color var(--rg-dur-instant), color var(--rg-dur-instant), transform var(--rg-dur-instant);
 }
-.btn:active:not(:disabled) {
+.obtn:active:not(:disabled) {
   transform: scale(0.975);
 }
-.btn:disabled {
+.obtn:disabled {
   opacity: 0.45;
 }
 .btn-sm {
@@ -971,7 +971,7 @@ kbd {
   align-items: center;
   gap: 8px;
 }
-.applybar-actions .btn {
+.applybar-actions .obtn {
   border-radius: var(--rg-radius-full);
 }
 
@@ -1462,7 +1462,7 @@ kbd {
   }
 }
 
-.live {
+.olive {
   display: flex;
   flex-direction: column;
 }
@@ -1535,11 +1535,11 @@ kbd {
     opacity: 0.35;
   }
 }
-.live .card-head {
+.olive .card-head {
   flex-wrap: wrap;
   row-gap: 6px;
 }
-.live .card-head h3 {
+.olive .card-head h3 {
   display: flex;
   align-items: center;
   gap: 8px;
@@ -1593,7 +1593,7 @@ kbd {
 }
 /* des mots, pas des chiffres : Geist, comme le veut la charte */
 .health li:nth-last-child(n + 3) .health-value,
-.health li:not(:last-child):has(> .btn) .health-value,
+.health li:not(:last-child):has(> .obtn) .health-value,
 .nav-upgrade-sub {
   font-family: var(--rg-font-sans);
   letter-spacing: normal;
@@ -1815,7 +1815,7 @@ kbd {
 svg {
   flex: none;
 }
-.btn > span {
+.obtn > span {
   display: inline-flex;
   align-items: center;
   gap: 7px;
@@ -1905,7 +1905,7 @@ svg {
   gap: 8px;
   margin-bottom: 4px;
 }
-.gate-oauth .btn {
+.gate-oauth .obtn {
   width: 100%;
   justify-content: center;
 }
@@ -2917,6 +2917,6 @@ svg {
   padding-left: 18px;
   color: var(--rg-text-2);
 }
-.modal-actions.even > .btn {
+.modal-actions.even > .obtn {
   flex: 1;
 }

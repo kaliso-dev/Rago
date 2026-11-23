@@ -1,6 +1,4 @@
 import { useEffect, useState } from "react";
-import { motion } from "motion/react";
-import { ArrowDown, LoaderCircle } from "./ri";
 import { api, type UpdateReady } from "../lib/api";
 import { useStore } from "../lib/store";
 
@@ -36,21 +34,27 @@ export function UpdateCard() {
     }
   };
 
+  // carte de la maquette (frame.css) : « Update / 1.3.1 ready / Restart »
   return (
     <>
-      <motion.div className="nav-update" initial={{ opacity: 0, y: 6 }} animate={{ opacity: 1, y: 0 }} title={[ready.notes, t("update.sub", { version: ready.version })].filter(Boolean).join("\n\n")}>
-        <span className="nav-update-text">
-          <span className="nav-update-title">{t("update.ready")}</span>
-          <span className="nav-update-sub">
-            <ArrowDown size={11} strokeWidth={2.4} />
-            <span>{t("update.version", { version: ready.version })}</span>
+      <div className={`upd${busy ? " dis" : ""}`} title={[ready.notes, t("update.sub", { version: ready.version })].filter(Boolean).join("\n\n")}>
+        <div className="ut">
+          <b>{t("update.ready")}</b>
+          <span>
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 5v14" /><path d="m19 12-7 7-7-7" /></svg>
+            {t("update.version", { version: ready.version })}
           </span>
-        </span>
-        <button type="button" className="nav-update-cta" disabled={busy || installing} title={busy ? t("update.busy") : undefined} onClick={() => void install()}>
-          {installing ? <LoaderCircle size={13} className="spin" /> : t("update.restart")}
+        </div>
+        <button type="button" className="ub" disabled={busy || installing} onClick={() => void install()}>
+          {installing ? (
+            <svg className="spin" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 12a9 9 0 1 1-6.219-8.56" /></svg>
+          ) : (
+            t("update.restart")
+          )}
         </button>
-      </motion.div>
-      {failed && <p className="nav-update-error">{t("update.failed")}</p>}
+      </div>
+      {busy && <p className="uh">{t("update.busy")}</p>}
+      {failed && <p className="uh bad">{t("update.failed")}</p>}
     </>
   );
 }

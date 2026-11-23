@@ -1,64 +1,106 @@
-import { motion } from "motion/react";
-import { Check, Copy, Cpu, Gpu, HardDrive, MemoryStick, Network, Pencil, Plus, RefreshCw, Lock, RotateCcw, Trash2, TriangleAlert, Zap, ScanSearch } from "../components/ri";
+// Tableau de bord : la maquette v5 app-dashboard-v2-pi.html reprise telle quelle (styles : s5/pages/pg-dash.css).
+// Le score de la machine en tête, une seule action principale (les tweaks gratuits), l'analyse, le PC et son usage en
+// direct, les jeux en vignettes, les presets sans description.
+import { useEffect, useMemo, useState } from "react";
 import { availability, catalog, distinctKey, retired, totalTweaks, tweakModule, tweaks } from "../lib/catalog";
-import { api } from "../lib/api";
-import { formatDate } from "../lib/i18n";
-import { hue } from "../lib/art";
-import { presetGameKey } from "../lib/gameLogos";
-import { encodePreset, MAX_NAME } from "../lib/share";
-import { FREE, FREE_SLOTS, useStore, type MyPreset } from "../lib/store";
-import { GameLogo, usePresetIcons } from "../components/GameLogo";
-import { LiveStatsCard } from "../components/LiveStatsCard";
+import { api, type Game } from "../lib/api";
+import { findings, saved } from "../lib/analysis";
+import { FREE, FREE_SLOTS, useStore } from "../lib/store";
+import { MAX_NAME } from "../lib/share";
+import { useLiveStats } from "../components/LiveStatsCard";
 import { PresetEditor } from "../components/PresetEditor";
-import { Button, Card, HeadNumber, Segments } from "../components/ui";
-import { useState, type ReactNode } from "react";
+import { I, Seg } from "../s5/I";
+import { ago, shortDate } from "../s5/text";
+import { coverOf } from "../s5/art";
 
 /** Interrupteurs du catalogue (les actions ponctuelles ne restent jamais « appliquées »), jumeaux comptés une fois. */
 const totalSwitches = new Set([...tweaks.values()].filter((tw) => tw.kind === "tweak").map((tw) => distinctKey(tw.id))).size;
-/** Plus aucun réglage ne se sert de WMIC (retiré de Windows 11 24H2) : sans lui, la ligne n'a rien à signaler. */
-const wmicUsed = [...tweaks.values()].some((tw) => tw.requires.includes("wmic"));
 
-/** « Optimisations gratuites » : les interrupteurs du plan gratuit, chacun avec sa variante par défaut (mode jeu
- * Windows « Activé »). Les outils ponctuels du plan gratuit (point de restauration, réinitialisations) n'en font pas
- * partie. */
+/** Tweaks gratuits : les interrupteurs du module Windows du plan gratuit, chacun avec sa variante par défaut. */
 const FREE_ENTRIES = [...FREE].flatMap((id) => {
   const tw = tweaks.get(id);
-  // 1.3.0 : les réglages du module Windows seulement, les plus sûrs ; le plan gratuit en garde 30 actifs à la fois
   if (!tw || tw.kind !== "tweak" || tweakModule.get(id) !== "windows") return [];
   return [tw.variants?.length ? `${id}:${tw.defaultVariant ?? tw.variants[0].id}` : id];
 });
 
-const stagger = { animate: { transition: { staggerChildren: 0.04 } } };
-const rise = { initial: { opacity: 0, y: 10 }, animate: { opacity: 1, y: 0, transition: { duration: 0.42, ease: [0.16, 1, 0.3, 1] as const } } };
-
-function Spec({ icon, label, value, sub }: { icon: ReactNode; label: string; value: string; sub?: string | null }) {
-  return (
-    <div className="spec">
-      <span className="spec-icon">{icon}</span>
-      <div>
-        <div className="spec-label">{label}</div>
-        <div className="spec-value">{value}</div>
-        {sub && <div className="spec-sub rg-metric">{sub}</div>}
-      </div>
-    </div>
-  );
+/** « AMD Ryzen 7 7800X3D 8-Core Processor » → « Ryzen 7 7800X3D » ; « NVIDIA GeForce RTX 4070 SUPER » → « RTX 4070 SUPER ». */
+export function shortCpu(name: string) {
+  return name
+    .replace(/\((R|TM|tm)\)/g, "")
+    .replace(/^(AMD|Intel)\s+/i, "")
+    .replace(/\s+\d+-Core Processor.*$/i, "")
+    .replace(/\s+(CPU|Processor)\b.*$/i, "")
+    .replace(/^Core\s+/i, "Core ")
+    .replace(/\s+with Radeon.*$/i, "")
+    .replace(/\s{2,}/g, " ")
+    .trim();
 }
+export function shortGpu(name: string) {
+  return name.replace(/^(NVIDIA|AMD|Intel\(R\)|Intel)\s+/i, "").replace(/^(GeForce|Radeon\(TM\)|Radeon)\s+/i, "").replace(/\(TM\)|\(R\)/g, "").replace(/\s{2,}/g, " ").trim();
+}
+/** « 2.5 Gbps », « 1 Gbit/s » → « 2.5 GbE » ; Wi-Fi tel quel. */
+function shortNet(adapter: string | null, speed: string | null) {
+  if (adapter && /wi-?fi|wireless|802\.11/i.test(adapter)) return "Wi-Fi";
+  const m = speed?.match(/([\d.]+)\s*G/i);
+  if (m) return `${m[1]} GbE`;
+  const k = speed?.match(/([\d.]+)\s*M/i);
+  if (k) return `${k[1]} Mb/s`;
+  return adapter ?? "—";
+}
+/** colonne « chaude » de la maquette : valeur en rouge et barre rouge */
+const HOT = 60;
 
 export function Dashboard() {
-  const { t, lang, sys, sysLoading, refreshSys, isOn, selected, variantOf, selectMany, lastRestore, requestApply, premium, setUpsell, applied: appliedMap, retiredApplied, requestUndo, requestUndoAll, run, myPresets, currentSetup, savePreset, toApply, requestApplyEntries, slotsUsed, goTo } = useStore();
-  const presetIcons = usePresetIcons();
-  // optimisations gratuites encore à appliquer sur ce PC
-  // plan gratuit : pas plus que les emplacements libres (le moteur refuserait tout le lot au-delà de 30)
+  const { t, lang, sys, isOn, selected, variantOf, selectMany, lastRestore, requestApply, premium, setUpsell, applied: appliedMap, retiredApplied, requestUndo, requestUndoAll, run, myPresets, currentSetup, savePreset, toApply, requestApplyEntries, slotsUsed, goTo, cleanTrim } = useStore();
+  const stats = useLiveStats();
+  const [naming, setNaming] = useState<string | null>(null);
+  const [editing, setEditing] = useState<string | null>(null);
+  const [games, setGames] = useState<Game[] | null>(null);
+  const [art, setArt] = useState<Record<string, string | null>>({});
+  const [cleaning, setCleaning] = useState<"busy" | "done" | null>(null);
+
+  // tweaks gratuits encore à appliquer ; plan gratuit : pas plus que les emplacements libres
   const room = premium || !FREE_SLOTS ? Infinity : Math.max(0, FREE_SLOTS - slotsUsed);
   const boost = sys ? FREE_ENTRIES.filter((e) => toApply([e]).ids.length > 0).slice(0, room) : [];
   const freeLeft = boost.length;
-  const [naming, setNaming] = useState<string | null>(null);
-  const [editing, setEditing] = useState<string | null>(null);
-  // réglages appliqués en ce moment (ceux qu'on a décochés depuis ne comptent plus), jumeaux comptés une fois
+  const freeOn = FREE_ENTRIES.filter((e) => isOn(e.split(":")[0])).length;
+  const freeTotal = premium ? FREE_ENTRIES.length : Math.min(FREE_ENTRIES.length, FREE_SLOTS || FREE_ENTRIES.length);
   const applied = new Set([...appliedMap.values()].filter((a) => a.ok && tweaks.get(a.id)?.kind === "tweak").map((a) => distinctKey(a.id))).size;
 
-  /** Réglages d'un preset utilisables sur ce PC (comme selectMany : pas les pilotes d'une autre marque de carte graphique
-   * ou de processeur), et preset complet : chacun allumé, avec la variante du preset. */
+  // dernière analyse : points au-dessus de la normale, et qui les règle
+  const last = saved();
+  const lastV = last.after ?? last.before;
+  const list = useMemo(() => (lastV ? findings(lastV) : []), [lastV]);
+  const issues = list.filter((f) => f.issue);
+  const by = (k: string) => issues.filter((f) => f.fix.kind === k).length;
+
+  // jeux du PC, les derniers joués d'abord
+  useEffect(() => {
+    let live = true;
+    void api.gamesList(false).then(
+      (g) => live && setGames([...g].sort((a, b) => Number(b.running) - Number(a.running) || (b.lastPlayed ?? 0) - (a.lastPlayed ?? 0))),
+      () => live && setGames([]),
+    );
+    return () => {
+      live = false;
+    };
+  }, []);
+  const shown = (games ?? []).slice(0, 5);
+  useEffect(() => {
+    let live = true;
+    for (const g of shown)
+      if (!(g.id in art) && !coverOf(g, "wide"))
+        void api.gameArt(g.id).then(
+          (src) => live && setArt((a) => ({ ...a, [g.id]: src })),
+          () => {},
+        );
+    return () => {
+      live = false;
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [games]);
+
+  /** Réglages d'un preset utilisables sur ce PC, et preset complet (chacun allumé, avec la variante du preset). */
   const presetState = (entries: string[]) => {
     const usable = entries.flatMap((e) => {
       const [id, v] = e.split(":");
@@ -69,353 +111,332 @@ export function Dashboard() {
     const on = usable.length > 0 && usable.every(({ tw, v }) => isOn(tw.id) && (!v || variantNow(tw.id) === v));
     return { n: usable.length, on };
   };
+  const ready = catalog.presets
+    .filter((p) => !p.game)
+    .map((p) => ({ p, ...presetState(p.tweaks) }))
+    .sort((a, b) => b.n - a.n);
 
-  const health: { label: string; ok: boolean; value: string; action?: ReactNode }[] = sys
-    ? [
-        { label: t("dash.health.admin"), ok: sys.isAdmin, value: sys.isAdmin ? t("dash.yes") : t("dash.no") },
-        ...(wmicUsed ? [{ label: t("dash.health.wmic"), ok: sys.hasWmic, value: sys.hasWmic ? t("dash.yes") : t("dash.no") }] : []),
-        {
-          label: t("dash.health.npi"),
-          ok: sys.resources.includes("nvidiaProfileInspector.exe"),
-          value: sys.resources.includes("nvidiaProfileInspector.exe") ? t("dash.yes") : t("dash.no"),
-        },
-        // dernier point réussi : une tentative ratée depuis ne le fait pas oublier
-        {
-          label: t("dash.health.restore"),
-          ok: lastRestore != null,
-          value: lastRestore != null ? new Date(lastRestore).toLocaleString(lang === "fr" ? "fr-FR" : "en-US", { dateStyle: "short", timeStyle: "short" }) : t("dash.health.restoreNone"),
-          action: lastRestore == null ? (
-            <Button size="sm" onClick={() => requestApply(["rst_point"])}>
-              {t("dash.createRestore")}
-            </Button>
-          ) : undefined,
-        },
-        {
-          label: t("dash.health.applied"),
-          ok: applied > 0,
-          value: `${applied} / ${totalSwitches}`,
-          // tout ce que Rago Optimizer a appliqué sur ce PC, remis comme avant après confirmation (RAG-43)
-          action:
-            appliedMap.size > 0 ? (
-              <Button size="sm" icon={<RotateCcw size={12} />} disabled={!!run} onClick={() => void requestUndoAll()}>
-                {t("dash.undoAll")}
-              </Button>
-            ) : undefined,
-        },
-      ]
-    : [];
+  const clean = async () => {
+    setCleaning("busy");
+    try {
+      await api.cleanRam(cleanTrim);
+    } catch {
+      /* la valeur en direct dit ce qu'il en est */
+    }
+    setCleaning("done");
+    window.setTimeout(() => setCleaning(null), 2400);
+  };
 
-  // réglages gratuits déjà actifs sur ce PC (pour la jauge de la carte « Free tweaks »)
-  const freeOn = FREE_ENTRIES.filter((e) => isOn(e.split(":")[0])).length;
-  const freeTotal = premium ? FREE_ENTRIES.length : Math.min(FREE_ENTRIES.length, FREE_SLOTS || FREE_ENTRIES.length);
+  const pct = (v: number | null | undefined) => (v == null ? null : Math.round(v));
+  const hw: { key: string; icon: string; label: string; model: string; value: number | null; unit: string; max: number; action?: React.ReactNode }[] = [
+    { key: "cpu", icon: "cpu", label: t("dash.cpu"), model: sys ? shortCpu(sys.cpuName) : "…", value: pct(stats?.cpu), unit: "%", max: 100 },
+    { key: "gpu", icon: "gpu", label: t("dash.gpu"), model: sys ? (sys.gpus.map((g) => shortGpu(g.name))[0] ?? "—") : "…", value: pct(stats?.gpu), unit: "%", max: 100 },
+    {
+      key: "ram",
+      icon: "ram",
+      label: t("dash.ram"),
+      model: sys ? `${sys.ramGb} GB` : "…",
+      value: pct(stats?.ram),
+      unit: "%",
+      max: 100,
+      action: (
+        <button type="button" className="btn sm" title={t("live.cleanHint")} disabled={cleaning === "busy"} onClick={() => void clean()}>
+          {cleaning === "busy" ? t("live.cleaning") : cleaning === "done" ? t("s5.dash.cleaned") : t("live.clean")}
+        </button>
+      ),
+    },
+    { key: "net", icon: "net", label: t("dash.net"), model: sys ? shortNet(sys.adapterDesc ?? sys.adapter, sys.linkSpeed) : "…", value: stats?.ping == null ? null : Math.round(stats.ping), unit: "ms", max: 100 },
+  ];
+  const npi = !!sys?.resources.includes("nvidiaProfileInspector.exe");
+  const freeTitle = t("s5.dash.freeTitle").split("\n");
 
   return (
-    <motion.div className="page dashboard" variants={stagger} initial="initial" animate="animate">
-      <motion.header className="page-head with-side" variants={rise}>
+    <div className="pg-dash">
+      <section className="head">
         <div>
-          <div className="rg-overline">
+          <p className="kick">
             {t("dash.overline")} <b>//</b> {t("dash.kick", { n: totalTweaks })}
-          </div>
-          <h1>{t("dash.title")}</h1>
+          </p>
+          <h1 className="title" data-t={t("dash.title")}>
+            {t("dash.title")}
+          </h1>
         </div>
-        <HeadNumber value={applied} label={t("dash.on")} sub={t("dash.of", { n: totalSwitches })} n={applied} total={totalSwitches} />
-      </motion.header>
+        <div className="score">
+          <div className="pv">
+            <b>{applied}</b>
+            <span>
+              {t("dash.on")}
+              <small>{t("dash.of", { n: totalSwitches })}</small>
+            </span>
+          </div>
+          <Seg value={applied} total={totalSwitches} count={24} />
+        </div>
+      </section>
 
-      <div className="dash-top">
-        <motion.section variants={rise} className={`card dash-free${sys && freeLeft === 0 ? " done" : ""}`}>
-          <div className="dash-free-head">
-            <div>
-              {!premium && <span className="chip">{t("free.plan")}</span>}
-              <h2 className="dash-card-title">{t("dash.free.title")}</h2>
-            </div>
-            <div className="dash-free-left">
+      <div className="row">
+        <section className="free panel">
+          {!premium && <span className="chip ghost">{t("free.plan")}</span>}
+          <div className="t">
+            <h2>
+              {freeTitle[0]}
+              {freeTitle[1] && <br />}
+              {freeTitle[1]}
+            </h2>
+            <div className="left">
               <b>{sys ? freeLeft : "–"}</b>
-              <span>{t("dash.free.left")}</span>
+              <span className="lbl">{t("dash.free.left")}</span>
             </div>
           </div>
-          <Segments n={freeOn} total={Math.max(freeTotal, 1)} count={30} className="lg" />
-          <p className="muted small dash-free-lead">{t("dash.free.lead", { n: freeTotal })}</p>
-          <div className="dash-free-go">
-            <Button
-              size="lg"
-              variant={sys && freeLeft === 0 ? "secondary" : "primary"}
-              icon={sys && freeLeft === 0 ? <Check size={17} /> : <Zap size={17} />}
+          <Seg value={freeOn} total={Math.max(freeTotal, 1)} count={30} />
+          <div className="go">
+            <button
+              type="button"
+              className="btn red lg"
               disabled={!sys || freeLeft === 0 || !!run}
               onClick={() => requestApplyEntries(boost, { title: t("dash.free.confirmTitle"), lead: t("dash.free.confirmLead") })}
             >
-              {sys && freeLeft === 0 ? t("dash.free.done") : t("dash.free.go")}
-            </Button>
-            <span className="small muted">{t("dash.free.already", { n: freeOn, total: freeTotal })}</span>
+              <I n={sys && freeLeft === 0 ? "check" : "zap"} />
+              {sys && freeLeft === 0 ? t("dash.free.done") : t("s5.dash.freeGo", { n: freeLeft })}
+            </button>
+            <span className="sub">{t("dash.free.already", { n: freeOn, total: freeTotal })}</span>
           </div>
-        </motion.section>
+        </section>
 
-        <motion.section variants={rise} className="card dash-an">
-          <div className="dash-an-head">
-            <span className="dash-an-icon">
-              <ScanSearch size={24} />
+        <section className="ana panel">
+          <div className="top">
+            <span className="ic">
+              <I n="activity" />
             </span>
-            <h2 className="dash-card-title">{t("pa.title")}</h2>
+            <h3>
+              {t("nav.analysis")}
+              <small>{lastV ? t("s5.dash.lastRun", { ago: ago(lang, lastV.at) }) : t("s5.dash.neverRun")}</small>
+            </h3>
           </div>
-          <p className="muted small">{t("pa.dashLead")}</p>
-          <Button icon={<ScanSearch size={15} />} onClick={() => goTo("analysis")}>
-            {t("pa.start")}
-          </Button>
-        </motion.section>
-      </div>
-
-      <motion.div variants={rise} className="section-title dash-pc-title">
-        <span>{t("dash.system")}</span>
-        <span className="dash-live-tag">
-          <i className="dot dot-ok" />
-          {t("dash.live")}
-        </span>
-      </motion.div>
-      <div className="dash-grid">
-        <motion.div variants={rise} className="dash-system">
-          <Card
-            title={t("dash.system")}
-            action={
-              <button type="button" className="icon-btn" aria-label={t("dash.refresh")} onClick={() => refreshSys(true)}>
-                <RefreshCw size={13} className={sysLoading ? "spin" : undefined} />
-              </button>
-            }
-          >
-            {sys ? (
-              <div className="specs">
-                <Spec icon={<HardDrive size={15} />} label={t("dash.os")} value={sys.osName} sub={`build ${sys.osBuild}`} />
-                <Spec icon={<Cpu size={15} />} label={t("dash.cpu")} value={sys.cpuName} sub={lang === "fr" ? `${sys.cpuCores} cœurs · ${sys.cpuThreads} threads` : `${sys.cpuCores} cores · ${sys.cpuThreads} threads`} />
-                <Spec icon={<Gpu size={15} />} label={t("dash.gpu")} value={sys.gpus.map((g) => g.name).join(" + ") || "—"} />
-                <Spec icon={<MemoryStick size={15} />} label={t("dash.ram")} value={`${sys.ramGb} ${lang === "fr" ? "Go" : "GB"}`} />
-                <Spec icon={<Network size={15} />} label={t("dash.net")} value={sys.adapterDesc ?? sys.adapter ?? "—"} sub={sys.linkSpeed} />
-              </div>
+          <div className="res">
+            <b>{lastV ? issues.length : "–"}</b>
+            <span>
+              {t("s5.dash.above")}
+              <small>{lastV ? t("s5.dash.measured", { n: list.length }) : t("s5.dash.notMeasured")}</small>
+            </span>
+          </div>
+          <Seg value={issues.length} total={Math.max(list.length, 1)} count={list.length || 17} />
+          <div className="split">
+            <div>
+              <b>{lastV ? by("free") : "–"}</b>
+              <span className="lbl">{t("s5.dash.freeFix")}</span>
+            </div>
+            <div className="p">
+              <b>{lastV ? by("premium") : "–"}</b>
+              <span className="lbl">{t("s5.dash.premium")}</span>
+            </div>
+            <div>
+              <b>{lastV ? by("diy") : "–"}</b>
+              <span className="lbl">{t("s5.dash.byYou")}</span>
+            </div>
+          </div>
+          <div className="acts">
+            {lastV ? (
+              <>
+                <button type="button" className="btn" onClick={() => goTo("analysis")}>
+                  <I n="eye" />
+                  {t("s5.dash.seeResults")}
+                </button>
+                <button
+                  type="button"
+                  className="btn"
+                  onClick={() => {
+                    sessionStorage.setItem("rago.analysis.run", "1");
+                    goTo("analysis");
+                  }}
+                >
+                  <I n="refresh" />
+                  {t("s5.dash.runAgain")}
+                </button>
+              </>
             ) : (
-              <div className="specs skeleton">{[0, 1, 2, 3, 4].map((i) => <div key={i} className="skeleton-line" />)}</div>
+              <button type="button" className="btn red" onClick={() => goTo("analysis")}>
+                <I n="activity" />
+                {t("pa.start")}
+              </button>
             )}
-          </Card>
-        </motion.div>
-
-        <motion.div variants={rise} className="dash-live">
-          <LiveStatsCard />
-        </motion.div>
-
-        <motion.div variants={rise} className="dash-health">
-          <Card title={t("dash.health")}>
-            <ul className="health">
-              {health.map((h) => (
-                <li key={h.label}>
-                  <span className={`dot ${h.ok ? "dot-ok" : "dot-warn"}`} />
-                  <span className="health-label">{h.label}</span>
-                  <span className="health-value rg-metric">{h.value}</span>
-                  {h.action}
-                </li>
-              ))}
-            </ul>
-          </Card>
-        </motion.div>
+          </div>
+        </section>
       </div>
 
       {retiredApplied.length > 0 && (
-        <motion.div variants={rise} className="dash-retired">
-          <Card title={t("dash.retired.title")}>
-            <p className="muted small">{t("dash.retired.lead")}</p>
-            <ul className="retired-list">
-              {retiredApplied.map((id) => {
-                const r = retired.get(id)!;
-                return (
-                  <li key={id}>
-                    <TriangleAlert size={13} />
-                    <span>
-                      <b>{r.name[lang]}.</b> {r.reason[lang]}
-                    </span>
-                  </li>
-                );
-              })}
-            </ul>
-            <Button size="sm" icon={<RotateCcw size={12} />} disabled={!!run} onClick={() => requestUndo(retiredApplied)}>
-              {t("dash.retired.go")}
-            </Button>
-          </Card>
-        </motion.div>
+        <section className="lnt dash-retired">
+          <I n="alert" />
+          <span className="tx">
+            <b>{t("dash.retired.title")}.</b> {retiredApplied.map((id) => retired.get(id)?.name[lang]).filter(Boolean).join(", ")}
+          </span>
+          <button type="button" className="btn" disabled={!!run} onClick={() => requestUndo(retiredApplied)}>
+            <I n="undo" />
+            {t("dash.retired.go")}
+          </button>
+        </section>
       )}
 
-      <motion.section variants={rise}>
-        <h2 className="section-title"><span>{t("dash.presets")}</span></h2>
-        <div className="presets">
-          {catalog.presets.filter((p) => !p.game).map((p, i) => {
-            const { n, on: all } = presetState(p.tweaks);
-            return (
-              <motion.button
-                key={p.id}
-                type="button"
-                className={`preset${all ? " on" : ""}${premium ? "" : " locked"}`}
-                whileHover={{ y: -2 }}
-                whileTap={{ scale: 0.985 }}
-                onClick={() => (premium ? selectMany(p.tweaks) : setUpsell("preset"))}
-              >
-                <span className="preset-index rg-metric">{String(i + 1).padStart(2, "0")}</span>
-                <span className="preset-name">{p.name[lang]}</span>
-                <span className="preset-desc">{p.desc[lang]}</span>
-                <span className="preset-foot">
-                  <span className="rg-metric">{t("dash.preset.count", { n })}</span>
-                  <span className="preset-cta">
-                    {!premium ? <Lock size={12} /> : all ? <Check size={13} /> : <Plus size={13} />}
-                    {!premium ? t("free.lock") : all ? t("dash.preset.added") : t("dash.preset.add")}
+      <section>
+        <div className="sh">
+          <h2 className="h2 tape">{t("dash.system")}</h2>
+          <div className="r">
+            <span className="live">
+              <i />
+              {t("dash.live")}
+            </span>
+          </div>
+        </div>
+        <div className="rig panel">
+          <div className="hw">
+            {hw.map((h) => {
+              const hot = h.unit === "%" && h.value != null && h.value >= HOT;
+              return (
+                <div key={h.key} className={hot ? "hot" : undefined}>
+                  <span className="k lbl">
+                    <I n={h.icon} />
+                    {h.label}
                   </span>
-                </span>
-              </motion.button>
-            );
-          })}
+                  <span className="md">{h.model}</span>
+                  <div className="v">
+                    <b>
+                      {h.value ?? "–"}
+                      <small>{h.unit}</small>
+                    </b>
+                    {h.action}
+                  </div>
+                  <Seg value={h.value ?? 0} total={h.max} count={20} kind={hot ? "f" : "m"} />
+                </div>
+              );
+            })}
+          </div>
+          <div className="chk">
+            <span>
+              <I n="windows" />
+              <b>{sys?.osName ?? "Windows"}</b>
+            </span>
+            <span className={sys && !sys.isAdmin ? "no" : undefined}>
+              <I n={sys && !sys.isAdmin ? "x" : "check"} />
+              {t("s5.dash.admin")}
+            </span>
+            {sys?.gpus.some((g) => g.vendor === "nvidia") && (
+              <span className={npi ? undefined : "no"}>
+                <I n={npi ? "check" : "x"} />
+                Profile Inspector
+              </span>
+            )}
+            <span className={lastRestore == null ? "no" : undefined}>
+              <I n={lastRestore == null ? "x" : "check"} />
+              {t("dash.health.restore")} <b>{lastRestore != null ? shortDate(lang, lastRestore) : t("dash.health.restoreNone")}</b>
+            </span>
+            {lastRestore == null && (
+              <button type="button" className="btn sm" disabled={!!run} onClick={() => requestApply(["rst_point"])}>
+                <I n="plus" />
+                {t("dash.createRestore")}
+              </button>
+            )}
+            <button type="button" className="btn sm" disabled={!!run || appliedMap.size === 0} onClick={() => void requestUndoAll()}>
+              <I n="undo" />
+              {t("dash.undoAll")}
+            </button>
+          </div>
         </div>
-      </motion.section>
+      </section>
 
-      {/* un preset par jeu : la priorité du jeu (pri_game) et son socle ; Minecraft reprend le preset PvP */}
-      <motion.section variants={rise} className="game-presets">
-        <div className="section-head">
-          <h2 className="section-title"><span>{t("dash.gamePresets")}</span></h2>
-          <span className="muted small">{t("dash.gamePresets.lead")}</span>
+      <section>
+        <div className="sh">
+          <h2 className="h2 tape">{t("nav.games")}</h2>
         </div>
-        <div className="game-presets-grid">
-          {catalog.presets.filter((p) => p.game || p.id === "mc_pvp").map((p) => {
-            const { n, on } = presetState(p.tweaks);
+        <div className="games">
+          {shown.map((g) => {
+            const src = coverOf(g, "wide") ?? art[g.id] ?? null;
             return (
-              <motion.button
-                key={p.id}
-                type="button"
-                className={`game-preset${on ? " on" : ""}${premium ? "" : " locked"}`}
-                whileHover={{ y: -2 }}
-                whileTap={{ scale: 0.985 }}
-                onClick={() => (premium ? selectMany(p.tweaks) : setUpsell("preset"))}
-              >
-                <span
-                  className={`game-preset-badge${presetIcons[presetGameKey(p.id) ?? ""] ? " icon" : ""}`}
-                  style={{ "--h": hue(p.match?.[0] ?? p.id) } as React.CSSProperties}
-                >
-                  <GameLogo presetId={p.id} tag={p.tag} icons={presetIcons} />
-                </span>
-                <span className="game-preset-text">
-                  <span className="game-preset-name">{p.id === "mc_pvp" ? "Minecraft" : p.name[lang]}</span>
-                  <span className="game-preset-count rg-metric">{t("dash.preset.count", { n })}</span>
-                </span>
-                <span className="game-preset-cta" aria-label={!premium ? t("free.lock") : on ? t("dash.preset.added") : t("dash.preset.add")}>
-                  {!premium ? <Lock size={12} /> : on ? <Check size={14} /> : <Plus size={14} />}
-                </span>
-              </motion.button>
+              <div key={g.id} className={`gc${g.running ? " on" : ""}`} role="button" tabIndex={0} onClick={() => goTo("games")}>
+                <div className="cv" style={src ? { backgroundImage: `url("${src}")` } : undefined}>
+                  {g.running && (
+                    <span className="ck">
+                      <I n="check" line />
+                    </span>
+                  )}
+                </div>
+                <b>{g.name}</b>
+              </div>
             );
           })}
+          <div className="gc more" role="button" tabIndex={0} onClick={() => goTo("games")}>
+            <div className="cv">
+              <b>{games && games.length > shown.length ? `+${games.length - shown.length}` : "+"}</b>
+            </div>
+            <b>{t("s5.dash.allGames")}</b>
+          </div>
         </div>
-      </motion.section>
+      </section>
 
-      {/* presets enregistrés par le joueur, ouverts en gratuit (seuls les réglages de son plan sont ajoutés) */}
-      <motion.section variants={rise} className="mine">
-        <h2 className="section-title"><span>{t("dash.mine")}</span></h2>
-        <div className="presets">
-          {myPresets.map((p) => (
-            <MyPresetCard key={p.id} preset={p} state={presetState(p.t)} onEdit={() => setEditing(p.id)} />
-          ))}
-          {naming == null ? (
-            <motion.button
-              type="button"
-              className="preset mine-new"
-              whileHover={{ y: -2 }}
-              whileTap={{ scale: 0.985 }}
-              disabled={!currentSetup.length}
-              onClick={() => setNaming("")}
-            >
-              <span className="mine-plus">
-                <Plus size={16} />
-              </span>
-              <span className="preset-name">{t("dash.mine.save")}</span>
-              <span className="preset-desc">{currentSetup.length ? t("dash.mine.saveHint") : t("dash.mine.empty")}</span>
-              <span className="preset-foot">
-                <span className="rg-metric">{t("dash.preset.count", { n: currentSetup.length })}</span>
-              </span>
-            </motion.button>
-          ) : (
-            <form
-              className="preset mine-new naming"
-              onSubmit={(e) => {
-                e.preventDefault();
-                if (!naming.trim() || !currentSetup.length) return;
-                savePreset(naming, currentSetup);
-                setNaming(null);
-              }}
-            >
-              <label htmlFor="mine-name" className="preset-index rg-metric">
-                {t("dash.mine.name")}
-              </label>
-              <input
-                id="mine-name"
-                className="input text"
-                autoFocus
-                maxLength={MAX_NAME}
-                value={naming}
-                placeholder={t("dash.mine.namePh")}
-                onChange={(e) => setNaming(e.target.value)}
-                onKeyDown={(e) => e.key === "Escape" && setNaming(null)}
-              />
-              <span className="preset-desc">{t("dash.mine.saveHint")}</span>
-              <span className="preset-foot">
-                <button type="button" className="link" onClick={() => setNaming(null)}>
-                  {t("dash.mine.cancel")}
+      <section>
+        <div className="sh">
+          <h2 className="h2 tape">{t("dash.presets")}</h2>
+        </div>
+        <div className="pgrid">
+          <div className="plist panel">
+            <div className="ph lbl">{t("dash.readyMade")}</div>
+            {ready.map(({ p, n, on }) => (
+              <div key={p.id} className={`pr${on ? " on" : ""}`}>
+                <span className="c">{n}</span>
+                <b>{p.name[lang]}</b>
+                <button type="button" className="btn sm" onClick={() => (premium ? selectMany(p.tweaks) : setUpsell("preset"))}>
+                  {on ? t("dash.preset.added") : t("dash.preset.add")}
                 </button>
-                <Button size="sm" variant="primary" type="submit" disabled={!naming.trim()}>
+              </div>
+            ))}
+          </div>
+          <div className="plist panel">
+            <div className="ph lbl">{t("s5.dash.mine")}</div>
+            {myPresets.map((p) => {
+              const st = presetState(p.t);
+              return (
+                <div key={p.id} className={`pr mine${st.on ? " on" : ""}`} role="button" tabIndex={0} title={t("dash.preset.add")} onClick={() => selectMany(p.t)}>
+                  <span className="c">{st.n}</span>
+                  <b>{p.name}</b>
+                  <button
+                    type="button"
+                    className="dots"
+                    aria-label={t("dash.mine.edit")}
+                    title={t("dash.mine.edit")}
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      setEditing(p.id);
+                    }}
+                  >
+                    <I n="sliders" />
+                  </button>
+                </div>
+              );
+            })}
+            {naming == null ? (
+              <button type="button" className="save" disabled={!currentSetup.length} title={currentSetup.length ? t("dash.mine.saveHint") : t("dash.mine.empty")} onClick={() => setNaming("")}>
+                <I n="plus" line />
+                {t("dash.mine.save")}
+              </button>
+            ) : (
+              <form
+                className="save naming"
+                onSubmit={(e) => {
+                  e.preventDefault();
+                  if (!naming.trim() || !currentSetup.length) return;
+                  savePreset(naming, currentSetup);
+                  setNaming(null);
+                }}
+              >
+                <I n="plus" line />
+                <input autoFocus maxLength={MAX_NAME} value={naming} placeholder={t("dash.mine.namePh")} aria-label={t("dash.mine.name")} onChange={(e) => setNaming(e.target.value)} onKeyDown={(e) => e.key === "Escape" && setNaming(null)} />
+                <button type="submit" className="btn sm red" disabled={!naming.trim()}>
                   {t("dash.mine.ok")}
-                </Button>
-              </span>
-            </form>
-          )}
+                </button>
+              </form>
+            )}
+          </div>
         </div>
-      </motion.section>
+      </section>
       <PresetEditor id={editing} onClose={() => setEditing(null)} />
-    </motion.div>
-  );
-}
-
-function MyPresetCard({ preset, state, onEdit }: { preset: MyPreset; state: { n: number; on: boolean }; onEdit: () => void }) {
-  const { t, lang, selectMany, deletePreset } = useStore();
-  const [copied, setCopied] = useState(false);
-  const [asking, setAsking] = useState(false);
-  const copy = async () => {
-    try {
-      await api.copyText(await encodePreset({ n: preset.name, t: preset.t }));
-      setCopied(true);
-      setTimeout(() => setCopied(false), 2200);
-    } catch {
-      /* presse-papiers indisponible : la page Partage et support reste là */
-    }
-  };
-  return (
-    <motion.div className={`preset mine-card${state.on ? " on" : ""}`} whileHover={{ y: -2 }}>
-      <button type="button" className="preset-hit" aria-label={preset.name} onClick={() => selectMany(preset.t)} />
-      <span className="preset-index rg-metric">{formatDate(lang, preset.at)}</span>
-      <span className="preset-name">{preset.name}</span>
-      <span className="preset-desc mine-tools">
-        <button type="button" className="icon-btn" title={t("dash.mine.edit")} aria-label={t("dash.mine.edit")} onClick={onEdit}>
-          <Pencil size={13} />
-        </button>
-        <button type="button" className="icon-btn" title={copied ? t("dash.mine.copied") : t("dash.mine.copy")} aria-label={t("dash.mine.copy")} onClick={() => void copy()}>
-          {copied ? <Check size={13} /> : <Copy size={13} />}
-        </button>
-        <button
-          type="button"
-          className={`icon-btn${asking ? " danger" : ""}`}
-          title={asking ? t("dash.mine.deleteAsk", { name: preset.name }) : t("dash.mine.delete")}
-          aria-label={t("dash.mine.delete")}
-          onBlur={() => setAsking(false)}
-          onClick={() => (asking ? deletePreset(preset.id) : setAsking(true))}
-        >
-          <Trash2 size={13} />
-        </button>
-        {asking && <span className="mine-ask small">{t("dash.mine.deleteAsk", { name: preset.name })}</span>}
-        {copied && !asking && <span className="mine-ask ok small">{t("dash.mine.copied")}</span>}
-      </span>
-      <span className="preset-foot">
-        <span className="rg-metric">{t("dash.preset.count", { n: state.n })}</span>
-        <span className="preset-cta">
-          {state.on ? <Check size={13} /> : <Plus size={13} />}
-          {state.on ? t("dash.preset.added") : t("dash.preset.add")}
-        </span>
-      </span>
-    </motion.div>
+    </div>
   );
 }
