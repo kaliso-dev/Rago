@@ -1372,18 +1372,49 @@ const mockApi: Api = {
   },
   supportReport: async (parts) => {
     await sleep(700);
-    const d = new Date();
-    const pad = (n: number) => String(n).padStart(2, "0");
-    const stamp = `${d.getUTCFullYear()}-${pad(d.getUTCMonth() + 1)}-${pad(d.getUTCDate())}-${pad(d.getUTCHours())}${pad(d.getUTCMinutes())}`;
-    const sections = [
-      "Rago Optimizer support report (demo)",
-      parts.pc ? "\n== PC ==\nWindows: Windows 11 Pro 24H2 (build 26100, Windows 11)" : "",
-      parts.network ? "\n== Network adapter ==\nModel: Realtek PCIe 2.5GbE Family Controller" : "",
-      parts.tweaks ? `\n== Tweaks applied (${mockApplied.size}) ==\n${[...mockApplied.keys()].join("\n")}` : "",
-      parts.history ? `\n== Last 50 changes ==\n${mockHistory.length} in this demo` : "",
-      parts.logs ? "\n== Last 3 optimization logs ==\nNo optimization yet" : "",
-    ].filter(Boolean);
-    const text = sections.join("\n");
+    // même texte que report.rs : en-tête, ce qui est masqué, puis les parties choisies
+    const now = Date.now();
+    const utc = (ms: number) => new Date(ms).toISOString().slice(0, 16).replace("T", " ");
+    const stamp = utc(now).replace(" ", "-").replace(":", "");
+    const lines = [
+      "Rago Optimizer support report",
+      `Created: ${utc(now)} UTC`,
+      "App: 1.3.0 (demo)",
+      "License: Premium",
+      `Update check: ${utc(now - 12 * 60_000)} UTC: no update`,
+      "Hidden in this file: your Windows user name, PC name, emails, license key, IP and MAC addresses.",
+    ];
+    if (parts.pc)
+      lines.push(
+        "",
+        "== PC ==",
+        "Windows: Windows 11 Pro 24H2 (build 26100, Windows 11)",
+        "Processor: AMD Ryzen 7 7800X3D 8-Core Processor (8 cores, 16 threads)",
+        "Graphics: NVIDIA GeForce RTX 4070",
+        "Memory: 32 GB",
+        "Administrator: yes",
+        "WMIC: no",
+        "Optional files: nvidiaProfileInspector.exe, extremelatencylow.nip, LowLatency.pow",
+        "Minecraft folder found: yes",
+      );
+    if (parts.network) lines.push("", "== Network adapter ==", "Name: Ethernet", "Model: Realtek PCIe 2.5GbE Family Controller", "Link speed: 1 Gbps");
+    if (parts.tweaks) {
+      const applied = [...mockApplied.values()].sort((a, b) => b.ts - a.ts || a.id.localeCompare(b.id));
+      lines.push("", `== Tweaks applied (${applied.length}) ==`, ...applied.map((a) => `${utc(a.ts)}  ${a.id}${a.variant ? `:${a.variant}` : ""}${a.ok ? "" : "  [failed]"}`));
+    }
+    if (parts.history) {
+      const history = [...mockHistory].sort((a, b) => b.ts - a.ts).slice(0, 50);
+      lines.push(
+        "",
+        "== Last 50 changes ==",
+        ...history.map(
+          (e) =>
+            `${utc(e.ts)}  ${(e.ok ? "OK" : "ERROR").padEnd(5)} ${(e.undo ? "undo" : "apply").padEnd(5)} ${e.id}${e.variant ? `:${e.variant}` : ""}  ${(e.durationMs / 1000).toFixed(1)} s${e.code != null ? ` code ${e.code}` : ""}`,
+        ),
+      );
+    }
+    if (parts.logs) lines.push("", "== Last 3 optimization logs ==", "No optimization log yet");
+    const text = lines.join("\n") + "\n";
     return { path: `C:\\Users\\<user>\\AppData\\Roaming\\gg.rago.optimizer\\reports\\rago-report-${stamp}.txt`, name: `rago-report-${stamp}.txt`, size: text.length + 9_000, text };
   },
   showReport: async (name) => {

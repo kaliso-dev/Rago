@@ -2,7 +2,7 @@
 type: code
 tags: [code, app, typescript, interface]
 fichier: app/src/lib/api.ts
-lignes: 1730
+lignes: 1761
 maj: 2026-11-23
 ---
 # api.ts
@@ -99,7 +99,7 @@ Chaque ligne : nom dans `api` → commande Rust (paramètres) → ce que fait le
 **Partage et support**
 | Fonction | Commande | Simulateur |
 |---|---|---|
-| `supportReport(parts)` | `support_report { parts }` | 700 ms ; texte de démo par parties, nom `rago-report-AAAA-MM-JJ-HHMM.txt` (UTC) |
+| `supportReport(parts)` | `support_report { parts }` | 700 ms ; texte écrit comme celui de [[report.rs]] (en-tête, ligne de ce qui est masqué, PC de démo, réglages appliqués et historique de la démo, 23/11, PR #127), nom `rago-report-AAAA-MM-JJ-HHMM.txt` (UTC) |
 | `showReport(name)` | `show_report { name }` | console |
 | `savePresetFile(code, fileName, title)` | dialogue `save` (filtre « Rago preset », `.rago`), ajoute `.rago` si absent, puis `save_preset_file { path, code }` ; `false` si fermé | téléchargement d'un fichier par un lien `blob:` |
 | `openPresetFile(title)` | dialogue `open` (`.rago`) puis `read_preset_file { path }` ; `null` si fermé | champ `<input type="file" accept=".rago">` |

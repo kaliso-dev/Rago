@@ -2,11 +2,13 @@
 type: fonctionnalité
 tags: [fonctionnalité, app, support, 1.2]
 version_app: 1.3.0
-maj: 2026-11-10
+maj: 2026-11-23
 ---
 # Partage et support
 
 Page « Partage et support », ouverte depuis la ligne « Partage et support » des [[Paramètres de l'app]] (pas d'entrée dans la barre latérale ; un lien « ‹ Paramètres » ramène en arrière). Gratuit. RAG-44 et RAG-70. Code : voir la section « Code ».
+
+**Écran v5 (23/11, dans `staging` par la PR #127, fusionnée le 23/11, jamais testé sur Windows)** : la page est refaite à l'identique des maquettes `app-share.html` et `app-share-states.html` (demande de Sofiene du 23/11 : l'app doit être « strictement conforme au design »), détail dans [[Share.tsx]]. Le fond ne change pas ; ce qui se voit : le nombre de réglages du code dans l'étiquette rouge de l'en-tête ; le code dans un ticket avec son nom et le bouton rouge « Copy » ; l'aperçu d'un import en barre à segments (nouveaux, déjà allumés, Premium, indisponibles) avec sa légende ; le rapport à droite, avec son texte qui défile dans un cadre sombre. « Rien à ajouter : tout est déjà allumé » ne s'affiche plus quand le reste du preset est réservé à Premium.
 
 ## Partager un preset
 - Les tweaks allumés et leurs variantes deviennent un **code `RAGO2_…`** (aucune info du PC dedans) ou un **fichier `.rago`**. Nom facultatif, que l'ami voit.
