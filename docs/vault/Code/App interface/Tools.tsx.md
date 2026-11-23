@@ -7,9 +7,9 @@ maj: 2026-11-23
 ---
 # Tools.tsx
 
-La **page Outils**, refaite le 23/11 à l'identique de la maquette v5 `app-tools.html` (PR #124 vers `staging`, branche `claude/app-v5-tools`). En-tête avec la place à libérer, quatre cartes « en un clic », quatre panneaux d'entretien sur deux colonnes (nettoyage, applis au démarrage, applis préinstallées, réglages de Windows), les pilotes sur toute la largeur, puis toutes les actions à bouton « run » des autres onglets. Fiche parente : [[Code de l'app (interface)]]. Fonctionnalité : [[Page Outils]]. Côté Rust : [[tools.rs]] (et les commandes de [[lib.rs]]). Socle v5 : [[Maquettes v5 dans l'app (s5)]].
+La **page Outils**, refaite le 23/11 à l'identique de la maquette v5 `app-tools.html` (dans `staging` : PR #124, fusionnée le 23/11). En-tête avec la place à libérer, quatre cartes « en un clic », quatre panneaux d'entretien sur deux colonnes (nettoyage, applis au démarrage, applis préinstallées, réglages de Windows), les pilotes sur toute la largeur, puis toutes les actions à bouton « run » des autres onglets. Fiche parente : [[Code de l'app (interface)]]. Fonctionnalité : [[Page Outils]]. Côté Rust : [[tools.rs]] (et les commandes de [[lib.rs]]). Socle v5 : [[Maquettes v5 dans l'app (s5)]].
 
-Statut : CONFIRMÉ dans le code de la branche et dans la démo du navigateur (captures `26-…` à `29-…` de `rago-redesign/app-strict/`, positions des blocs identiques à la maquette au pixel près). **Jamais testé sur Windows.** Les commandes Rust n'ont pas changé : celles des cartes Nettoyage, Applis préinstallées et Pilotes datent de `ee77d4f` (10/11), les autres de la PR #90 (11/11).
+Statut : CONFIRMÉ dans le code de `staging` et dans la démo du navigateur (captures `26-…` à `29-…` de `rago-redesign/app-strict/`, positions des blocs identiques à la maquette au pixel près). **Jamais testé sur Windows.** Les commandes Rust n'ont pas changé : celles des cartes Nettoyage, Applis préinstallées et Pilotes datent de `ee77d4f` (10/11), les autres de la PR #90 (11/11).
 
 ## Rôle et place dans l'ensemble
 - Affichée par [[App.tsx]] quand `page === "tools"`. Entrée « Outils » dans le groupe « Optimiser » de la [[Sidebar.tsx]], avec une puce « Nouveau » tant que la page n'a pas été vue : clés `tools` et `tools.v2` de [[seen.ts]]. La page pose `tools.v2` (`TOOLS_SEEN`, exporté pour la barre latérale) à chaque ouverture.

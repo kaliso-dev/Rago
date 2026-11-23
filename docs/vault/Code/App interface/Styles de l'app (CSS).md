@@ -9,7 +9,7 @@ maj: 2026-11-23
 
 Les **feuilles de style** de l'app Windows : les jetons de design (couleurs, tailles, mouvement), les polices, le cadre et les composants, les fonctionnalités ajoutées depuis la 1.2.0, le compte et les avis, la charte v5 posée par-dessus, et la barre en jeu. Il n'y a ni Tailwind, ni CSS Modules, ni CSS dans le JavaScript : des classes simples, écrites à la main. Fiche parente : [[Code de l'app (interface)]]. Design : [[Charte graphique]] (v5 « Match day » depuis la PR #108 du 22/11, vers `staging`, jamais testée sur Windows) ; l'ancien verre : [[Refonte glass]].
 
-Tout ce qui suit est CONFIRMÉ (code de `staging`, 10/11, commit `ee77d4f`), avec les 238 lignes de la page Outils refaite par la **PR #90** (11/11, fusionnée dans `staging` par la PR #92), et les nettoyages des PR #119 à #123 et de la page Outils (23/11) : les sections des pages refaites sur les maquettes v5 sont retirées. Les chiffres de lignes sont ceux du 23/11 (branche de la page Outils).
+Tout ce qui suit est CONFIRMÉ (code de `staging`, 10/11, commit `ee77d4f`), avec les 238 lignes de la page Outils refaite par la **PR #90** (11/11, fusionnée dans `staging` par la PR #92), et les nettoyages des PR #119 à #123 et de la page Outils (23/11) : les sections des pages refaites sur les maquettes v5 sont retirées. Les chiffres de lignes sont ceux du 23/11 (PR #124).
 
 ## Les fichiers et qui les charge
 
