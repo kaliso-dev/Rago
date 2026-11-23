@@ -2,14 +2,14 @@
 type: code
 tags: [code, app, typescript, analyse]
 fichier: app/src/lib/analysis.ts
-lignes: 276
-maj: 2026-11-10
+lignes: 306
+maj: 2026-11-23
 ---
 # analysis.ts
 
 La logique d'**« Analyze my PC »** (1.3.0) : mesurer ce qui ralentit le PC en jeu, comparer chaque valeur à une norme (personnalisée pour le réseau), dire ce qui la règle (plan gratuit, Premium ou le joueur lui-même), et garder un **avant/après** sur ce PC. Aucun affichage ici : la page est [[Analysis.tsx]]. Fiche parente : [[Code de l'app (interface)]]. Fonctionnalité : [[Analyse du PC]].
 
-Tout ce qui suit est CONFIRMÉ (code de `staging`, 10/11, commit `ee77d4f`).
+Tout ce qui suit est CONFIRMÉ (code de la PR #128, 23/11).
 
 ## Rôle et place dans l'ensemble
 - Appelle [[api.ts]] (`analysisFacts`, `toolsDrivers`, `netTest`, `liveStats`), donc côté Rust [[analysis.rs]], [[tools.rs]], [[nettest.rs]], [[stats.rs]].
@@ -24,9 +24,10 @@ Tout ce qui suit est CONFIRMÉ (code de `staging`, 10/11, commit `ee77d4f`).
 | `Fix` | `{ kind: "free", tweaks }`, `{ kind: "premium", module: "netopt" \| "latency" }`, `{ kind: "diy", how }` (clé de texte), `{ kind: "none" }` |
 | `Finding` | un point trouvé : `id`, `group`, `value` (texte ou clé `pa.v.*`), `norm` (clé `pa.norm.*`), `vars`, `issue`, `fix` |
 | `STEPS` / `Step` | les **6 étapes** : `hardware`, `windows`, `drivers`, `network`, `system`, `match` |
-| `analyze(onStep)` | lance l'analyse (une vingtaine de secondes) |
+| `analyze(onStep, { signal?, onProgress? })` | lance l'analyse (une vingtaine de secondes) ; `onProgress(done, n)` compte les pings de la connexion (40) puis les secondes du processeur (10) ; `signal` l'arrête |
+| `Stopped` | erreur rendue par `analyze` quand le joueur l'arrête (bouton « stop ») : rien n'est gardé |
 | `Past`, `netNorms(v, past?)` | habitude réseau et seuils personnalisés |
-| `findings(v)` | liste des points, dans l'ordre des groupes |
+| `findings(v)` | liste des points, groupe par groupe (le pilote graphique, du groupe `system`, vient en dernier ; la page range les points par groupe) |
 | `saved()`, `history()`, `record(v)`, `markChanged()`, `resetBaseline()` | mémoire avant/après |
 | `Delta`, `deltas(before, after)` | comparaison valeur par valeur |
 | `lastGain(label)` | meilleur gain mesuré, en une ligne |
@@ -37,11 +38,13 @@ Tout ce qui suit est CONFIRMÉ (code de `staging`, 10/11, commit `ee77d4f`).
 1. `hardware` : `api.analysisFacts()` (écran, processus, mémoire, câble ou Wi-Fi, Game DVR, notifications, plan d'alimentation, applis de fond, dernière partie suivie par la barre en jeu).
 2. `windows` : pause de 300 ms (étape d'affichage seulement).
 3. `drivers` : `api.toolsDrivers()`.
-4. `network` : `api.netTest(["hypixel", "internet"])` (test réseau vers Hypixel et vers Internet).
-5. `system` : 10 lectures de `api.liveStats()` à 1 s d'intervalle ; moyenne du processeur **sans jeu ouvert** (`cpuIdle`).
+4. `network` : `api.netTest(["hypixel", "internet"])` (test réseau vers Hypixel et vers Internet) ; pendant ce temps, `api.onNetSample` suit les pings de la mesure `internet` et appelle `onProgress(i + 1, n)` (« 23 / 40 pings » sur la page).
+5. `system` : 10 lectures de `api.liveStats()` à 1 s d'intervalle, `onProgress(i + 1, 10)` après chacune ; moyenne du processeur **sans jeu ouvert** (`cpuIdle`).
 6. `match` : assemble les valeurs.
 
 Règles d'assemblage : `ping` = ping vers Hypixel arrondi à l'unité (`server = "Hypixel"`) ; gigue, perte et pics viennent de la mesure `internet` (ou d'Hypixel à défaut) ; `powerSaving` = plan Équilibré (`381b4222-…`) ou Économie d'énergie (`a1841308-…`) ; `background` = applis de fond sauf la catégorie `battery` ; `driverDays` = âge du pilote graphique en jours. Chaque appel qui échoue donne `null` sans arrêter l'analyse.
+
+**Arrêt** : chaque attente passe par `stoppable()`, une course entre l'appel et le signal d'arrêt ; à l'arrêt, `analyze` rejette avec `Stopped` (le test réseau du moteur, lui, ne s'arrête pas : son résultat est simplement laissé de côté). La page attrape `Stopped` et revient au départ sans rien enregistrer.
 
 ### Normes réseau personnalisées (`netNorms`)
 - Habitude = médiane des **10 dernières** analyses faites avant celle-ci, seulement s'il y en a **au moins 2**.
@@ -49,7 +52,7 @@ Règles d'assemblage : `ping` = ping vers Hypixel arrondi à l'unité (`server =
 - **Gigue** max = le plus grand de : 5 ms, 10 % du ping (130 ms → 13 ms), 1,5 × gigue habituelle.
 - **Perte** max (%) = le plus grand de : 0 (0,5 si loin), perte habituelle + 0,5.
 - **Pics** max = le plus grand de : 1 (2 si loin), pics habituels + 1.
-- Les seuils ne descendent jamais sous ceux d'un joueur proche des serveurs. Le texte de la norme dit d'où vient le seuil : `pa.norm.usual` (habitude de ce PC), `pa.norm.atPing` (à partir de 50 ms de ping), sinon rien.
+- Les seuils ne descendent jamais sous ceux d'un joueur proche des serveurs. Le texte de la norme dit d'où vient le seuil : `pa.norm.usual` (habitude de ce PC) ; sinon `pa.norm.atPing` (« (at 96 ms ping) ») **seulement si le ping a relevé le seuil** : gigue quand 10 % du ping arrondi dépasse 5 ms, perte et pics quand le ping atteint 100 ms ; sinon rien (comme la maquette : « None is normal », « Up to 1 is normal »).
 
 ### Points trouvés (`findings`)
 | Point | Groupe | Problème si… | Ce qui règle |
@@ -70,14 +73,14 @@ Règles d'assemblage : `ping` = ping vers Hypixel arrondi à l'unité (`server =
 | `powerSaving` | windows | plan Équilibré ou Économie | Premium, Latence |
 | `notifications` | windows | activées | gratuit : `win_notifications` |
 | `background` | windows | au moins une appli de fond | le joueur (`pa.diy.background`) ; toujours listé |
-| `driverDays` | windows | pilote graphique de plus de **180 jours** | le joueur (`pa.diy.driver`) |
+| `driverDays` | system | pilote graphique de plus de **180 jours** | le joueur (`pa.diy.driver`) |
 
 ### Avant / après (`localStorage` `rago.analysis`)
 Contenu : `{ before, after, history, changed }`.
 - `record(v)` : ajoute les mesures réseau à `history` (10 au plus) ; s'il n'y a pas d'« avant », `v` le devient ; si des tweaks ont été appliqués depuis (`changed`) ou s'il y a déjà un « après », `v` devient l'« après » ; sinon `v` **remplace l'avant** (rien n'a changé entre deux mesures).
 - `markChanged()` : appelé par [[store.tsx]] à la fin d'un lot réussi ; ne fait rien tant qu'il n'y a pas d'« avant ».
 - `resetBaseline()` (« Start over ») : efface avant et après, **garde l'habitude** (`history`).
-- `deltas(before, after)` : compare `jitter`, `spikes`, `loss` (en %), `processes`, `cpuIdle`, `fps`, `low1`, `stutters` ; ignore une valeur absente ou inchangée ; les trois valeurs de partie sont ignorées si elles sont identiques (même partie, rien de neuf) ; `better` selon le sens (plus bas = mieux, sauf FPS et 1 % bas).
+- `deltas(before, after)` : compare, dans l'ordre de la maquette `app-analysis-after`, `jitter`, `processes`, `cpuIdle`, `spikes`, `loss` (en %), `fps`, `low1`, `stutters` ; ignore une valeur absente ou inchangée ; les trois valeurs de partie sont ignorées si elles sont identiques (même partie, rien de neuf) ; `better` selon le sens (plus bas = mieux, sauf FPS et 1 % bas).
 - `lastGain(label)` : les deux premiers gains, par exemple « Gigue 9 ms → 3 ms, Pics 4 → 1 » ; `null` sans avant/après.
 
 ## Données touchées
