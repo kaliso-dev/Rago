@@ -1,95 +1,75 @@
 import { useState } from "react";
-import { Check, ChevronDown, Lightbulb } from "./ri";
 import { api } from "../lib/api";
 import type { Lang } from "../lib/catalog";
 import type { Key } from "../lib/i18n";
 import { tipsFor, useTipsDone } from "../lib/tips";
-import "../styles/tips.css";
+import { I } from "../s5/I";
 
 type T = (key: Key, vars?: Record<string, string | number>) => string;
 
-/** Dans la barre en jeu (`compact`), les premiers réglages seulement, le reste au clic : la place reste aux réglages
- * en direct. */
-const COMPACT = 3;
+/** Les premiers réglages seulement, le reste au clic : la place reste aux réglages en direct. */
+const FIRST = 3;
 
-/** Réglages en jeu conseillés pour un jeu (barre en jeu, bibliothèque) : le joueur coche ce qu'il a réglé, Rago ne
- * le lui redemande plus. Rien n'est changé dans le jeu. */
-export function GameTips({
-  game,
-  t,
-  lang,
-  open: startOpen = true,
-  compact = false,
-  className = "",
-}: {
-  game: string;
-  t: T;
-  lang: Lang;
-  open?: boolean;
-  compact?: boolean;
-  className?: string;
-}) {
+/** Liens du pied (« show 1 more setting ») en minuscule, comme la maquette. */
+const lower = (s: string) => s.charAt(0).toLocaleLowerCase() + s.slice(1);
+
+/** Réglages en jeu conseillés pour un jeu, dans la barre en jeu (maquette app-ingame, bloc .igtp) : le joueur coche ce
+ * qu'il a réglé, Rago ne le lui redemande plus. Rien n'est changé dans le jeu. */
+export function GameTips({ game, t, lang, open: startOpen = true }: { game: string; t: T; lang: Lang; open?: boolean }) {
   const def = tipsFor(game);
   const [done, mark] = useTipsDone();
   const [open, setOpen] = useState(startOpen);
   const [showDone, setShowDone] = useState(false);
-  const [all, setAll] = useState(!compact);
+  const [all, setAll] = useState(false);
   if (!def) return null;
 
   const left = def.tips.filter((x) => !done.has(x.id));
   const doneCount = def.tips.length - left.length;
   const list = showDone ? def.tips : left;
-  const shown = all ? list : list.slice(0, COMPACT);
+  const shown = all ? list : list.slice(0, FIRST);
   const hidden = list.length - shown.length;
 
   return (
-    <div className={`game-tips ${className}`}>
-      <button type="button" className="game-tips-head" aria-expanded={open} onClick={() => setOpen((o) => !o)}>
-        <Lightbulb size={13} />
-        <span className="rg-overline">{t("tips.title", { game: def.name })}</span>
-        <span className={`game-tips-count${left.length ? "" : " ok"}`}>{left.length ? t("tips.left", { n: left.length }) : t("tips.allDone")}</span>
-        <ChevronDown size={14} className={`game-tips-chevron${open ? " open" : ""}`} />
+    <div className={`igtp${open ? "" : " shut"}`}>
+      <button type="button" className="igth" aria-expanded={open} onClick={() => setOpen((o) => !o)}>
+        <I n="bulb" />
+        <span className="igo">{t("tips.title", { game: def.name })}</span>
+        <em className={left.length ? undefined : "ok"}>{left.length ? t("tips.left", { n: left.length }) : t("tips.allDone")}</em>
+        <I n="chev" className="chv" />
       </button>
       {open && (
         <>
-          {left.length > 0 && !compact && <p className="game-tips-lead">{t("tips.lead")}</p>}
-          {shown.length > 0 && (
-            <ul className="game-tips-list">
-              {shown.map((tip) => {
-                const isDone = done.has(tip.id);
-                return (
-                  <li key={tip.id} className={`game-tip${isDone ? " done" : ""}`}>
-                    <button
-                      type="button"
-                      role="checkbox"
-                      aria-checked={isDone}
-                      className="game-tip-check"
-                      title={isDone ? t("tips.markUndone") : t("tips.markDone")}
-                      aria-label={`${tip.setting} : ${isDone ? t("tips.markUndone") : t("tips.markDone")}`}
-                      onClick={() => mark(tip.id, !isDone)}
-                    >
-                      {isDone && <Check size={11} />}
-                    </button>
-                    <div className="game-tip-body">
-                      <div className="game-tip-line">
-                        <span className="game-tip-setting">{tip.setting}</span>
-                        <span className="game-tip-arrow" aria-hidden>
-                          →
-                        </span>
-                        <span className="game-tip-value">{tip.value[lang]}</span>
-                        <span className={`game-tip-tag tag-${tip.tag}`}>{t(`tips.tag.${tip.tag}` as Key)}</span>
-                      </div>
-                      <div className="game-tip-why">{tip.why[lang]}</div>
-                    </div>
-                  </li>
-                );
-              })}
-            </ul>
-          )}
-          <div className="game-tips-foot">
+          {shown.map((tip) => {
+            const isDone = done.has(tip.id);
+            return (
+              <div key={tip.id} className={`igtr${isDone ? " done" : ""}`}>
+                <button
+                  type="button"
+                  role="checkbox"
+                  aria-checked={isDone}
+                  className={`igcb${isDone ? " on" : ""}`}
+                  title={isDone ? t("tips.markUndone") : t("tips.markDone")}
+                  aria-label={`${tip.setting} : ${isDone ? t("tips.markUndone") : t("tips.markDone")}`}
+                  onClick={() => mark(tip.id, !isDone)}
+                >
+                  {isDone && <I n="check" line />}
+                </button>
+                <div>
+                  <div className="l1">
+                    <b>{tip.setting}</b>
+                    <i aria-hidden>→</i>
+                    <span>{tip.value[lang]}</span>
+                    <em className="igtg">{t(`tips.tag.${tip.tag}` as Key)}</em>
+                  </div>
+                  <p className="why">{tip.why[lang]}</p>
+                </div>
+              </div>
+            );
+          })}
+          <div className="igtf">
             {hidden > 0 && (
-              <button type="button" className="link" onClick={() => setAll(true)}>
-                {t("tips.more", { n: hidden })}
+              <button type="button" onClick={() => setAll(true)}>
+                <u>{lower(t("tips.more", { n: hidden }))}</u>
               </button>
             )}
             <span>
@@ -97,15 +77,15 @@ export function GameTips({
               {def.sources.map((s, i) => (
                 <span key={s.url}>
                   {i > 0 && ", "}
-                  <button type="button" className="link" onClick={() => void api.openUrl(s.url)}>
-                    {s.name}
+                  <button type="button" onClick={() => void api.openUrl(s.url)}>
+                    <u>{s.name}</u>
                   </button>
                 </span>
               ))}
             </span>
             {doneCount > 0 && (
-              <button type="button" className="link" onClick={() => setShowDone((v) => !v)}>
-                {showDone ? t("tips.hideDone") : t("tips.showDone", { n: doneCount })}
+              <button type="button" onClick={() => setShowDone((v) => !v)}>
+                <u>{lower(showDone ? t("tips.hideDone") : t("tips.showDone", { n: doneCount }))}</u>
               </button>
             )}
           </div>

@@ -2,12 +2,12 @@
 type: code
 tags: [code, app, typescript, react]
 fichier: app/src/components/SessionCard.tsx
-lignes: 116
-maj: 2026-11-23
+lignes: 119
+maj: 2026-11-24
 ---
 # SessionCard.tsx
 
-Ce que l'app fait **pendant une partie** : la carte des paramètres (carte graphique performante, mode Performances élevées, jeu en priorité haute, vérifications), le crochet qui suit la partie en cours, et le bloc « À vérifier » réutilisé par la barre en jeu et la bibliothèque. Fiche parente : [[Code de l'app (interface)]]. Fonctionnalité : [[Pendant la partie]]. Côté Rust : [[session.rs]].
+Ce que l'app fait **pendant une partie** : la carte des paramètres (carte graphique performante, mode Performances élevées, jeu en priorité haute, vérifications), le crochet qui suit la partie en cours, et le bloc « À vérifier » de la barre en jeu. Fiche parente : [[Code de l'app (interface)]]. Fonctionnalité : [[Pendant la partie]]. Côté Rust : [[session.rs]].
 
 **Écran v5 (23/11, dans `staging` par la PR #126, fusionnée le 23/11, jamais testé sur Windows)** : la carte devient `SessionSection`, bloc « while you play » des maquettes `app-settings*.html` : titre, phrase `.lead3` hors du cadre, quatre lignes `.sr` avec l'interrupteur `Sw` ; une ligne qui ne s'applique pas à ce PC (une seule carte graphique, Ryzen X3D) est grisée (`.sr.dis`, interrupteur en contour).
 
@@ -16,7 +16,7 @@ Tout ce qui suit est CONFIRMÉ (code de `staging`, 10/11, commit `ee77d4f`).
 ## Ce que le fichier expose
 | Nom | Rôle |
 |---|---|
-| `SessionChecks({ session, t })` | bloc « ce que Rago a fait et conseille » ; rien si pas de partie, ou ni mode Performances ni vérification. Ligne verte « Performances élevées pendant la partie » si `power`, ligne verte « Jeu en priorité haute » si `priority > 0` (11/11) ; puis « À vérifier » et une ligne orange par vérification : batterie (« Ton PC est sur batterie : branche-le… »), téléchargement (« Téléchargement en fond ({applis})… »), synchronisation (« Synchronisation en fond ({applis})… »), enregistrement (« Logiciel d'enregistrement ouvert ({applis})… »). `t` est passé en paramètre pour servir aussi dans la barre en jeu, qui n'a pas de store. |
+| `SessionChecks({ session, t })` | bloc « ce que Rago a fait et conseille » ; rien si pas de partie, ou ni mode Performances ni vérification. Bloc `.igck` de la maquette `app-ingame` (depuis le 24/11, PR #132) : ligne « Performances élevées pendant la partie » (éclair vert) si `power`, ligne « Jeu en priorité haute » (jauge verte) si `priority > 0` (11/11) ; puis « À vérifier » et une ligne par vérification (triangle rouge, texte clair) : batterie (« Ton PC est sur batterie : branche-le… »), téléchargement (« Téléchargement en fond ({applis})… »), synchronisation (« Synchronisation en fond ({applis})… »), enregistrement (« Logiciel d'enregistrement ouvert ({applis})… »). `t` est passé en paramètre pour servir aussi dans la barre en jeu, qui n'a pas de store. |
 | `useSession()` | `api.sessionState()` puis abonnement à l'événement `games:session` ; renvoie l'état ou `null` |
 | `SessionSection()` | bloc « Pendant la partie » des paramètres |
 

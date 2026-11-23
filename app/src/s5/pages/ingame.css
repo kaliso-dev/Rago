@@ -1,0 +1,114 @@
+/* Généré par port_ig.py depuis rendus-v5/src/ingame.css : ne pas éditer à la main, retoucher dans s5/overlay.css. */
+/* Barre en jeu v5 (lot 2, 22/11/2026) : verre sombre posé sur le jeu, sans flou dessous. Classes en ig- (pas de collision). */
+.igglass{background:linear-gradient(180deg,rgba(255,255,255,.055),rgba(255,255,255,0) 38%),rgba(10,10,11,.94);border:1px solid rgba(255,255,255,.12);box-shadow:inset 0 1px 0 rgba(255,255,255,.07)}
+.igo{font-family:var(--cond);font-weight:700;font-size:11.5px;letter-spacing:.16em;text-transform:uppercase;color:var(--ink-3)}
+
+/* barre ouverte */
+.igp{position:absolute;z-index:2;left:50%;top:18px;width:780px;height:600px;transform:translateX(-50%);display:flex;flex-direction:column;padding:16px 18px 12px;box-shadow:inset 0 1px 0 rgba(255,255,255,.07),0 26px 50px -22px rgba(0,0,0,.9)}
+.igp::before{content:"";position:absolute;left:-1px;top:30px;width:4px;height:26px;background:var(--red);transform:skewY(-20deg)}
+.igh{display:flex;align-items:center;gap:12px;padding:0 2px 14px}
+.igm{width:36px;height:36px;flex:none;display:block}
+.igt{flex:1;min-width:0;display:flex;flex-direction:column;gap:4px}
+.igt b{font-family:var(--cond);font-weight:900;font-style:italic;font-size:31px;line-height:.82;text-transform:uppercase;white-space:nowrap}
+.iga{display:flex;gap:6px}
+.igi{width:34px;height:34px;display:grid;place-items:center;background:var(--bg-3);border:1px solid var(--line);color:var(--ink-2)}
+.igi svg{width:15px;height:15px}
+.igi.on{color:var(--red);border-color:rgba(255,59,48,.45);background:rgba(255,59,48,.1)}
+
+.igtl{display:grid;grid-template-columns:repeat(5,minmax(0,1fr)) 92px;gap:6px}
+.igtile{display:flex;flex-direction:column;gap:6px;padding:10px 12px 9px;background:rgba(255,255,255,.035);border:1px solid var(--line)}
+.igtile b{font-family:var(--cond);font-weight:900;font-style:italic;font-size:31px;line-height:.86;white-space:nowrap}
+.igtile b small{font-size:14px;font-weight:800;color:var(--ink-2);margin-left:2px}
+.igtile.hi b{color:var(--red)}
+.igtile.na b{color:var(--ink-3)}
+.igcl{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:7px;font-family:var(--cond);font-weight:800;font-size:13px;letter-spacing:.1em;text-transform:uppercase;color:var(--ink);background:var(--bg-3);border:1px solid var(--line-2)}
+.igcl svg{width:16px;height:16px}
+.igcl.busy{color:var(--ink-2)}
+.ignote{margin:8px 2px 0;font-size:12.5px;color:var(--ink-2);display:flex;align-items:center;gap:7px}
+.ignote svg{width:13px;height:13px;color:var(--ok)}
+.ignote.bad{color:#FF6B61}
+.ignote.bad svg{color:var(--red)}
+
+.igb{flex:1;min-height:0;display:grid;grid-template-columns:296px minmax(0,1fr);gap:14px;margin-top:14px}
+.igb.one{grid-template-columns:minmax(0,1fr)}
+.igcol{min-height:0;display:flex;flex-direction:column}
+.igsh{display:flex;align-items:center;justify-content:space-between;height:24px;margin:0 2px 8px}
+.igsc{flex:1;min-height:0;overflow:hidden;-webkit-mask:linear-gradient(180deg,#000 calc(100% - 26px),transparent)}
+.igpr{display:inline-flex;align-items:center;gap:6px;height:24px;padding:0 10px;font-family:var(--cond);font-weight:800;font-size:12.5px;letter-spacing:.1em;text-transform:uppercase;color:var(--red-ink);background:var(--red)}
+.igpr svg{width:11px;height:11px;stroke-width:2.6}
+
+/* partie en cours : mode d'alimentation, priorité, points à vérifier */
+.igck{display:grid;gap:7px;padding:11px 12px;background:rgba(255,255,255,.035);border:1px solid var(--line)}
+.igck p{display:flex;align-items:flex-start;gap:8px;font-size:12.5px;line-height:1.4;color:var(--ink-2)}
+.igck p svg{width:13px;height:13px;flex:none;margin-top:2px}
+.igck p.ok svg{color:var(--ok)}
+.igck p.wr svg{color:var(--red)}
+.igck p.wr{color:var(--ink)}
+.igck .igo{margin-top:3px;font-size:10.5px}
+
+/* réglages conseillés du jeu */
+.igtp{margin-top:10px;padding:10px 12px 10px;background:rgba(255,255,255,.035);border:1px solid var(--line)}
+.igth{display:flex;align-items:center;gap:8px;padding-bottom:8px}
+.igth > svg{width:14px;height:14px;color:var(--red);flex:none}
+.igth .igo{flex:1;font-size:10.5px;letter-spacing:.12em;color:var(--ink-2)}
+.igth em{font-style:normal;font-family:var(--cond);font-weight:800;font-size:12px;letter-spacing:.08em;text-transform:uppercase;color:var(--red);white-space:nowrap}
+.igth em.ok{color:var(--ok)}
+.igth .chv{width:14px;height:14px;color:var(--ink-3);flex:none}
+.igtr{display:flex;gap:10px;padding:8px 0 8px;border-top:1px solid var(--line)}
+.igcb{width:15px;height:15px;flex:none;margin-top:1px;box-shadow:inset 0 0 0 1.5px var(--ink-3);transform:skewX(var(--skew))}
+.igtr .l1{display:flex;align-items:center;flex-wrap:wrap;gap:4px 6px;font-size:12.5px;line-height:1.3}
+.igtr .l1 b{font-weight:600;color:var(--ink)}
+.igtr .l1 i{font-style:normal;color:var(--ink-3)}
+.igtr .l1 span{color:var(--ink);font-weight:500}
+.igtg{font-style:normal;height:17px;display:inline-flex;align-items:center;padding:0 6px;font-family:var(--cond);font-weight:800;font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:var(--ink-2);box-shadow:inset 0 0 0 1px var(--line-2)}
+.igtr .why{margin-top:3px;font-size:11.5px;line-height:1.35;color:var(--ink-3)}
+.igtf{display:flex;flex-wrap:wrap;gap:4px 12px;padding-top:8px;border-top:1px solid var(--line);font-size:11.5px;color:var(--ink-3)}
+.igtf u{text-decoration:none;color:var(--ink-2);border-bottom:1px solid rgba(255,59,48,.6)}
+
+/* réglages en pleine partie */
+.iggr{margin-bottom:10px;background:rgba(255,255,255,.03);border:1px solid var(--line)}
+.iggr > span{display:block;padding:9px 12px 5px}
+.igr{display:flex;align-items:center;justify-content:space-between;gap:12px;height:34px;padding:0 10px 0 12px;border-top:1px solid var(--line)}
+.igr b{font-family:var(--cond);font-weight:800;font-size:15px;letter-spacing:.03em;text-transform:uppercase;color:var(--ink-2);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.igr.on b{color:var(--ink)}
+.igr.hov{background:rgba(255,255,255,.05)}
+.igr .sw{width:38px;height:20px}
+.igr .sw::after{top:3px;left:3px;width:14px;height:14px}
+.igr .sw.on::after{left:21px}
+.igr .ld{width:15px;height:15px;color:var(--red);margin-right:11px}
+.igl.locked .igr b{color:var(--ink-3)}
+.igl.locked .sw,.igr .sw.dis{opacity:.35}
+.igl.cols2{columns:2;column-gap:10px}
+.igl.cols2 .iggr{break-inside:avoid}
+
+.igf{display:flex;align-items:center;gap:10px;margin-top:10px;padding:10px 2px 0;border-top:1px solid var(--line);font-size:11.5px;color:var(--ink-3)}
+.igf kbd{display:inline-grid;place-items:center;height:18px;padding:0 6px;margin:0 2px;font-family:var(--cond);font-weight:800;font-size:11.5px;letter-spacing:.06em;color:var(--ink);background:var(--bg-4);box-shadow:inset 0 -1px 0 rgba(0,0,0,.4)}
+.igf .dt{width:3px;height:3px;background:var(--ink-3);flex:none}
+
+/* pastille gardée à l'écran, et rappel des conseils */
+.igpill{position:absolute;z-index:2;left:18px;top:18px;width:236px;height:44px;display:flex;align-items:center;justify-content:center;gap:7px;padding:0 14px;background:linear-gradient(180deg,rgba(255,255,255,.07),rgba(255,255,255,.02)),rgba(10,10,11,.72);border:1px solid rgba(255,255,255,.12)}
+.igpill img{width:20px;height:20px;flex:none}
+/* 22/11 : le logo devient un rond calé dans le bout arrondi de la pastille (même marge tout autour), les chiffres se partagent le reste */
+.igpill{justify-content:flex-start;gap:0;padding:0 12px 0 5px}
+.igpill > img{width:32px;height:32px;margin-right:6px}
+.igpill .m{flex:1;display:flex;align-items:baseline;justify-content:center;gap:5px}
+.igpill .sp{margin:0}
+.igpill.nd{width:auto;gap:9px;padding:0 20px 0 5px}
+.igpill.nd > img{margin-right:2px}
+.igpill.nd .sp{margin:0 4px}
+.igpill b{font-family:var(--cond);font-weight:900;font-style:italic;font-size:22px;line-height:1}
+.igpill small{font-family:var(--cond);font-weight:800;font-size:11.5px;letter-spacing:.1em;text-transform:uppercase;color:var(--ink-2)}
+.igpill .sp{width:1px;height:16px;margin:0 5px;background:rgba(255,255,255,.18)}
+.igpill.nd{width:auto;justify-content:flex-start;gap:9px;padding:0 20px 0 5px;background:linear-gradient(180deg,rgba(255,255,255,.07),rgba(255,255,255,.02)),rgba(10,10,11,.88);border-color:rgba(255,59,48,.45)}
+.igpill.nd > svg{width:14px;height:14px;color:var(--red);flex:none}
+.igpill.nd .tx{font-size:13px;font-weight:500;color:var(--ink);white-space:nowrap}
+.igpill.nd .ky{font-family:var(--cond);font-weight:800;font-size:12px;letter-spacing:.08em;text-transform:uppercase;color:var(--ink-2);white-space:nowrap}
+
+
+html.round .igp{border-radius:22px}
+html.round .igi{border-radius:10px}
+html.round .igtile,html.round .igcl,html.round .igck,html.round .igtp,html.round .iggr{border-radius:14px}
+html.round .igpr{border-radius:7px}
+html.round .igcb{border-radius:4px}
+html.round .igtg,html.round .igf kbd{border-radius:5px}
+html.round .igpill{border-radius:999px}

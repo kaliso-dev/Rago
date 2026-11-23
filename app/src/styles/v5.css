@@ -772,28 +772,6 @@ svg.pi use.pf {
 }
 
 /* interrupteur : piste penchée arrondie, curseur carré */
-.switch {
-  width: 46px;
-  height: 24px;
-  padding: 4px;
-  border-radius: 8px;
-  background: var(--rg-ink-4);
-  box-shadow: none;
-  transform: skewX(var(--rg-skew));
-}
-.switch.on {
-  background: var(--rg-red-500);
-}
-.switch-thumb {
-  width: 16px;
-  height: 16px;
-  border-radius: 5px;
-  background: var(--rg-text-2);
-  box-shadow: none;
-}
-.switch.on .switch-thumb {
-  background: var(--rg-ink-1);
-}
 
 /* choix : options penchées, l'option prise en rouge plein */
 .segmented {
@@ -1369,12 +1347,6 @@ svg.pi use.pf {
 }
 
 /* ------------------------------------------------------------ logo */
-
-.app-icon {
-  display: block;
-  flex: none;
-  filter: drop-shadow(0 10px 18px rgba(0, 0, 0, 0.35));
-}
 
 @media (max-height: 879px) {
   .nav-item {

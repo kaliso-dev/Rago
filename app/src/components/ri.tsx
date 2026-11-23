@@ -42,7 +42,7 @@ export const PrintIcon = forwardRef<SVGSVGElement, Props & { name: string }>(fun
   );
 });
 
-/** Filtres partagés des icônes imprimées, posés une fois en haut de l'app (et de la barre en jeu). */
+/** Filtres partagés des icônes imprimées, posés une fois en haut de l'app. */
 export function PrintDefs() {
   return <svg width="0" height="0" style={{ position: "absolute" }} aria-hidden="true" dangerouslySetInnerHTML={{ __html: `<defs>${PRINT_FILTERS}</defs>` }} />;
 }
@@ -56,70 +56,13 @@ const p = (name: string) => {
 };
 
 // lucide → icône imprimée de la charte
-export const Activity = p("pulse");
-export const AlertTriangle = p("alert");
-export const TriangleAlert = p("alert");
-export const AppWindow = p("appwin");
-export const Box = p("minecraft");
 export const BrushCleaning = p("brush");
-export const Check = p("check");
-export const Copy = p("copy");
-export const CornerDownLeft = p("enter");
 export const Cpu = p("cpu");
-export const Crosshair = p("hitreg");
-export const Download = p("download");
-export const ExternalLink = p("external");
-export const Eye = p("eye");
-export const EyeOff = p("eyeoff");
-export const FileText = p("filetext");
-export const FlaskConical = p("expert");
-export const FolderOpen = p("folder");
-export const Gamepad2 = p("games");
-export const Gauge = p("latency");
-export const Gift = p("gift");
-export const Globe = p("globe");
 export const Gpu = p("graphics");
-export const HardDrive = p("drive");
-export const Info = p("info");
-export const LayoutDashboard = p("dashboard");
-export const Lightbulb = p("bulb");
 export const ListPlus = p("list");
 export const ListTree = p("list");
 export const Lock = p("lock");
-export const LogOut = p("logout");
 export const MemoryStick = p("ram");
-export const MessagesSquare = p("chat");
-export const Monitor = p("monitor");
-export const MonitorCog = p("monitor");
-export const Mouse = p("mouse");
-export const MousePointer2 = p("mouse");
-export const MousePointerClick = p("mouse");
-export const Network = p("network");
-export const Palette = p("display");
-export const Pencil = p("pencil");
-export const Pin = p("pin");
-export const PinOff = p("pinoff");
-export const Play = p("play");
 export const Plus = p("plus");
-export const Power = p("power");
-export const PowerOff = p("power");
 export const RefreshCw = p("refresh");
-export const RotateCcw = p("rotate");
-export const Route = p("route");
-export const Router = p("network");
-export const ScanSearch = p("analysis");
 export const Search = p("search");
-export const Settings = p("settings");
-export const Share2 = p("share");
-export const Shield = p("rbw");
-export const ShieldAlert = p("shieldx");
-export const ShieldCheck = p("rbw");
-export const SlidersHorizontal = p("settings");
-export const Sparkles = p("sparkles");
-export const Star = p("star");
-export const Trash2 = p("trash");
-export const Undo2 = p("restore");
-export const Upload = p("upload");
-export const UserRound = p("user");
-export const Wrench = p("tools");
-export const Zap = p("apply");
