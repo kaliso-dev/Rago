@@ -9,7 +9,7 @@ maj: 2026-11-24
 
 L'interface de la **barre en jeu** : la pastille FPS/ping gardée à l'écran, et la barre ouverte par le raccourci (mesures, bouton « Nettoyer » la RAM, vérifications de la partie, réglages applicables en pleine partie). Fiche parente : [[Code de l'app (interface)]]. Fonctionnalité : [[Barre en jeu]]. Côté Rust : [[overlay.rs]], [[fps.rs]].
 
-Tout ce qui suit est CONFIRMÉ (code de `staging` après la PR #PRX, 24/11). Ticket d'origine : RAG-82.
+Tout ce qui suit est CONFIRMÉ (code de `staging` après la PR #132, 24/11). Ticket d'origine : RAG-82.
 
 ## Rôle et place dans l'ensemble
 - Rendu par [[main.tsx (barre en jeu)]] dans la fenêtre Tauri « overlay » (page `overlay.html`), **sans store** : la langue (`rago.lang`) et l'option de nettoyage (`rago.cleanTrim`) sont lues directement dans `localStorage`, partagé avec la fenêtre principale (même origine).
@@ -71,7 +71,7 @@ Logo rond (`rago-cap.svg`) + FPS + ping, rien d'autre (`aria-live="off"`, `.igpi
 - Démo navigateur : ouvrir `overlay.html` (avec `?pill`, `?passive`, `?estimate`) ; la session y est toujours « en cours », sur VALORANT (`&game=cs2` pour un autre jeu, voir [[api.ts]]).
 - Un réglage appliqué depuis la barre reste appliqué après la partie : on le retire dans l'app ou dans la barre.
 
-## Maquette v5 (PR #PRX, 24/11, jamais testée sur Windows)
+## Maquette v5 (PR #132, 24/11, jamais testée sur Windows)
 Refaite sur les maquettes `app-ingame.html` (barre ouverte) et `app-ingame-states.html` (pastille, rappel, gratuit, réglage qui change, nettoyage, infobulles) : même HTML (classes `ig*`), même CSS (`s5/pages/ingame.css`, [[Maquettes v5 dans l'app (s5)]]). À 100 %, la barre fait **780 × 600** et la pastille **236 × 44**, comme la maquette.
 - La fenêtre est plus grande que la barre (836 × 656, [[overlay.rs]]) : 28 points de chaque côté et 56 dessous pour l'ombre de la maquette ; un clic dans cette marge ramène au jeu.
 - Icônes : `I` de `s5/I.tsx` (imprimées : pinoff, appwin, brush, bulb, zap, gauge, alert, lock, check ; au trait : x, chev, loader), filtres posés par `IconDefs` ([[main.tsx (barre en jeu)]]).

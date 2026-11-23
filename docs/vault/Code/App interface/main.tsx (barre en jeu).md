@@ -9,7 +9,7 @@ maj: 2026-11-24
 
 Point d'entrée de la **fenêtre de la barre en jeu** (fenêtre Tauri « overlay », page `app/overlay.html`). Fiche parente : [[Code de l'app (interface)]]. Fonctionnalité : [[Barre en jeu]]. Fenêtre principale : [[main.tsx (app)]].
 
-Tout ce qui suit est CONFIRMÉ (code de `staging` après la PR #PRX, 24/11).
+Tout ce qui suit est CONFIRMÉ (code de `staging` après la PR #132, 24/11).
 
 ## Fonctionnement détaillé
 - Importe `fonts.css` (Barlow), puis les styles de la maquette v5 : `s5/base.css`, `s5/pages/ingame.css` et `s5/overlay.css` (fenêtre transparente : seule la barre ou la pastille est peinte), voir [[Maquettes v5 dans l'app (s5)]]. Pas les autres styles de l'app.

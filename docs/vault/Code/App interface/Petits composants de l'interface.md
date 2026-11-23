@@ -34,7 +34,7 @@ Utilisé par 13 fichiers (23/11, après la PR #128 : surtout les fenêtres, la b
 - **`Badge({ tone, children })`** : étiquette, `tone` parmi `neutral`, `warn`, `red`, `ok`, `info`.
 - **`Card({ title, action, className, children })`** : la carte (classe `card`), avec un en-tête en petites capitales (`rg-overline`) si un titre ou une action est donné.
 - `Kbd` est retiré le 24/11 : la recherche suit la maquette (`kbd` dans `.pin`, [[SearchPalette.tsx]]).
-- `Switch` est retiré le 24/11 (PR #PRX) : la barre en jeu, sa dernière utilisatrice, suit la maquette (ligne `.igr` avec l'interrupteur `.sw`, [[Overlay.tsx]]) ; les autres pages ont l'interrupteur `Sw` des maquettes (`s5/ui.tsx`).
+- `Switch` est retiré le 24/11 (PR #132) : la barre en jeu, sa dernière utilisatrice, suit la maquette (ligne `.igr` avec l'interrupteur `.sw`, [[Overlay.tsx]]) ; les autres pages ont l'interrupteur `Sw` des maquettes (`s5/ui.tsx`).
 - `Segments` et `HeadNumber` (jauge et bloc chiffré rouge de la PR #108) sont retirés le 23/11 : plus aucune page ne s'en servait (le bloc en tête des pages suit maintenant les maquettes, [[Maquettes v5 dans l'app (s5)]]).
 
 ## `Modal.tsx` : les fenêtres
@@ -49,7 +49,7 @@ Utilisé par 13 fichiers (23/11, après la PR #128 : surtout les fenêtres, la b
 Charte v5 (PR #108 du 22/11, vers `staging`, jamais testée sur Windows) : **R rouge plein partout** (décision de Sofiene du 22/11) ; le R est noir seulement sur la transition rouge plein écran du démarrage.
 - `logoPaths.ts` : le tracé du R (`MARK`, boîte 164 × 180). L'ancien tracé du texte « Rago Optimizer » (`WORDMARK_TEXT`) est retiré.
 - **`Mark({ size, ink })`** : le R seul, centré dans un carré ; rouge (`--rg-red-500`), ou noir avec `ink` ([[Sidebar.tsx]], [[Splash.tsx]]).
-- `AppIcon` (R rouge sur tuile blanche) est retiré le 24/11 (PR #PRX) : la barre en jeu prend les images des maquettes (`assets/s5/img/rago-app-dark-64.svg`, pastille `rago-cap.svg`), comme les fenêtres v5.
+- `AppIcon` (R rouge sur tuile blanche) est retiré le 24/11 (PR #132) : la barre en jeu prend les images des maquettes (`assets/s5/img/rago-app-dark-64.svg`, pastille `rago-cap.svg`), comme les fenêtres v5.
 - `Wordmark` et `Pulse` (logo écrit, logo animé) sont retirés le 24/11 : plus aucun écran ne s'en servait.
 
 ## `icons.ts`
@@ -57,7 +57,7 @@ Charte v5 (PR #108 du 22/11, vers `staging`, jamais testée sur Windows) : **R r
 - **`DiscordIcon({ size })`** : le logo de Discord (Simple Icons, licence CC0), pour les liens vers le Discord de Rago ([[Sidebar.tsx]], [[Settings.tsx]], [[Tools.tsx]] pour le cache de Discord).
 
 ## `ri.tsx` et `printed.ts` : les icônes imprimées
-- Les composants pas encore refaits sur les maquettes importent leurs icônes depuis `components/ri` au lieu de `lucide-react` (chemins relatifs) ; les écrans refaits prennent `I` de `s5/I.tsx` ([[Maquettes v5 dans l'app (s5)]]). `ri.tsx` réexporte tout lucide (`export * from "lucide-react"`), puis **remplace** les noms qui ont un équivalent dans la charte par une icône imprimée. Depuis le 24/11 (PR #PRX), seuls restent les noms encore importés quelque part (10) : `BrushCleaning` → `brush`, `Cpu`, `Gpu` → `graphics`, `ListPlus` et `ListTree` → `list`, `Lock`, `MemoryStick` → `ram`, `Plus`, `RefreshCw` → `refresh`, `Search` ; les 57 autres sont retirés. Flèches, chevrons, croix, `Minus`, `Square` et `LoaderCircle` restent au trait (lucide).
+- Les composants pas encore refaits sur les maquettes importent leurs icônes depuis `components/ri` au lieu de `lucide-react` (chemins relatifs) ; les écrans refaits prennent `I` de `s5/I.tsx` ([[Maquettes v5 dans l'app (s5)]]). `ri.tsx` réexporte tout lucide (`export * from "lucide-react"`), puis **remplace** les noms qui ont un équivalent dans la charte par une icône imprimée. Depuis le 24/11 (PR #132), seuls restent les noms encore importés quelque part (10) : `BrushCleaning` → `brush`, `Cpu`, `Gpu` → `graphics`, `ListPlus` et `ListTree` → `list`, `Lock`, `MemoryStick` → `ram`, `Plus`, `RefreshCw` → `refresh`, `Search` ; les 57 autres sont retirés. Flèches, chevrons, croix, `Minus`, `Square` et `LoaderCircle` restent au trait (lucide).
 - **`PrintIcon({ name, size, color, ... })`** : SVG 24 × 24 ; la forme pleine (masquée par ses découpes) est dessinée deux fois, un dos rouge décalé de (1,3 ; 1,5) puis la face, le tout penché (`skewX(-12)`). Couleurs par CSS : `--pf` (face) et `--pb` (dos), changées selon le fond dans `v5.css` ([[Styles de l'app (CSS)]]).
 - **`PrintDefs()`** : pose une fois les filtres de grain (`rgh-face-s`, `rgh-back-s`) ; monté en haut de [[App.tsx]] (la barre en jeu monte `IconDefs` de `s5/I.tsx` à la place depuis le 24/11).
 - `printed.ts` est **généré** depuis les maquettes : `PRINTED` (nom → [formes, découpes], environ 85 icônes) et `PRINT_FILTERS`. Ne pas l'éditer à la main.
