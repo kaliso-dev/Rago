@@ -1000,19 +1000,6 @@ svg.pi use.pf {
   gap: 20px;
   margin-top: auto;
 }
-.dash-an {
-  display: flex;
-  flex-direction: column;
-  gap: 14px;
-  padding: 24px;
-}
-.dash-an .dash-card-title {
-  font-size: 32px;
-}
-.dash-an .obtn {
-  align-self: flex-start;
-  margin-top: auto;
-}
 .dash-pc-title {
   margin-top: 44px;
 }
