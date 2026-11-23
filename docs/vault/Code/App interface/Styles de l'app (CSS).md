@@ -2,7 +2,7 @@
 type: code
 tags: [code, app, css, design]
 fichier: app/src/styles/ (tokens.css, fonts.css, app.css, features.css, account.css, v5.css, overlay.css, tips.css)
-lignes: 8386
+lignes: 7421
 maj: 2026-11-23
 ---
 # Styles de l'app (CSS)
@@ -19,9 +19,9 @@ Tout ce qui suit est CONFIRMÉ (code de `staging`, 10/11, commit `ee77d4f`), ave
 | `fonts.css` | 79 | les deux fenêtres | `@font-face` de Barlow (400, 500, 600, 700) et Barlow Condensed (600 à 900 droit, 700 à 900 italique), `font-display: block` |
 | `app.css` | 2504 | fenêtre principale | polices, cadre, barre de titre, navigation, pages, cartes, boutons, interrupteur, fenêtres, exécution, tableau de bord, paramètres, licence, plan gratuit, verre, finitions, 1.3.0 |
 | `account.css` | 157 | fenêtre principale | avatar, invitation à laisser un avis, formulaire d'avis |
-| `features.css` | 1418 | fenêtre principale | fonctionnalités de la 1.2.0 et après (liste plus bas) |
+| `features.css` | 1224 | fenêtre principale | fonctionnalités de la 1.2.0 et après (liste plus bas) |
 | `overlay.css` | 747 | barre en jeu | toute la barre en jeu (RAG-82) ; la fin du fichier (section « Charte v5 ») la réhabille |
-| `v5.css` | 2278 | fenêtre principale, chargée après les anciennes feuilles | la charte v5 « Match day » posée sur les classes existantes (voir plus bas) |
+| `v5.css` | 2277 | fenêtre principale, chargée après les anciennes feuilles | la charte v5 « Match day » posée sur les classes existantes (voir plus bas) |
 | `tips.css` | 214 | fenêtre principale et barre en jeu (importé par [[GameTips.tsx]]) | bloc des réglages conseillés (`.game-tips*`, `.game-tip*`), place sous le jeu en avant de la bibliothèque (`.games-hero-tips`), bloc des conseils de la barre en jeu qui défile à part (`.ov-advice`, 258 px au plus, fondu en bas ; `.ov-tips`), pastille élargie du rappel (`.ov-nudge*`). Voir [[Conseils au lancement du jeu]] |
 
 - Ordre d'import dans [[main.tsx (app)]] : `fonts.css`, `tokens.css`, `app.css`, `account.css`, `features.css`, `v5.css`, puis les feuilles des maquettes v5 de `app/src/s5/` (`base.css`, `app.css`, puis une par page refaite, dont `module.css`, `net.css`, `tools.css` et `pages.css`), décrites dans [[Maquettes v5 dans l'app (s5)]]. L'ordre compte : une règle plus bas l'emporte à égalité, c'est ce qui permet à `v5.css` de réhabiller les pages pas encore refaites sans réécrire les autres feuilles.
@@ -89,19 +89,19 @@ Ce qui suit décrit `app.css` et `features.css`, toujours chargés. Sur `staging
 - En-tête : « Nouvelles fonctionnalités de la 1.2.0 (17/10/2026)… Les règles de app.css ne sont pas modifiées ici. ».
 - Sections, dans l'ordre :
   - 1 : Nettoyer la RAM (RAG-48) ;
-  - 12 : Partage et support (RAG-44, RAG-70) ;
-  - 217 : Mes presets ;
-  - 291 : pages nouvelles dans la barre latérale ;
-  - 314 : puces ;
-  - 340 : bibliothèque de jeux (RAG-57) ;
-  - 426 : launcher de Minecraft Java ;
-  - 560 : graphismes du jeu (`.games-gfx*`, plus utilisé depuis le 23/11 : la page Jeux suit le CSS des maquettes, [[Maquettes v5 dans l'app (s5)]]) ;
-  - 798 : mise à jour prête (RAG-24) ;
-  - 877 : optimisations gratuites du tableau de bord ;
-  - 933 : launchers ;
-  - 1060 : presets par jeu ;
-  - 1226 : Pendant la partie ;
-  - 1258 : modifier un preset (fin du fichier).
+  - 12 : Partage et support (RAG-44, RAG-70) : seulement la rangée de boutons `.share-actions` de l'écran d'erreur (`PageBoundary.tsx`, [[Petits composants de l'interface]]) ; le reste de la section est retiré le 23/11 (PR #127, 194 lignes) : [[Share.tsx]] suit le CSS des maquettes (`s5/pages/pages.css`) ;
+  - 23 : Mes presets ;
+  - 97 : pages nouvelles dans la barre latérale ;
+  - 120 : puces ;
+  - 146 : bibliothèque de jeux (RAG-57) ;
+  - 232 : launcher de Minecraft Java ;
+  - 366 : graphismes du jeu (`.games-gfx*`, plus utilisé depuis le 23/11 : la page Jeux suit le CSS des maquettes, [[Maquettes v5 dans l'app (s5)]]) ;
+  - 604 : mise à jour prête (RAG-24) ;
+  - 683 : optimisations gratuites du tableau de bord ;
+  - 739 : launchers ;
+  - 866 : presets par jeu ;
+  - 1032 : Pendant la partie ;
+  - 1064 : modifier un preset (fin du fichier).
   - Les sections des Paramètres (barre en jeu et arrière-plan `.bg-*`, phrase d'intro de « Pendant la partie » `.session-lead`, lien `.setting-link`) sont retirées le 23/11 (PR #126) : les blocs suivent la maquette v5 ([[BackgroundCard.tsx]], [[SessionCard.tsx]]).
   - Les cartes de l'ancienne page Outils (`.tools-tile*`) sont retirées le 23/11 (PR #125, 53 lignes), avec l'ancienne feuille `mouse.css` : la page Souris suit le CSS de la maquette (`s5/pages/pages.css`, [[Maquettes v5 dans l'app (s5)]]).
   - Les autres règles de l'ancienne page Outils (nettoyage, applis, pilotes, « en un clic », réglages Windows, tous les outils) sont retirées le 23/11 (462 lignes) : [[Tools.tsx]] suit le CSS de la maquette (`s5/pages/tools.css`, [[Maquettes v5 dans l'app (s5)]]).
