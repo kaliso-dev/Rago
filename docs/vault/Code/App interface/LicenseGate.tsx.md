@@ -9,7 +9,7 @@ maj: 2026-11-23
 
 Le **formulaire de connexion Premium** dans l'app : Google, Discord ou e-mail et mot de passe, confirmation de l'appareil, activation, écran de succès. Le fichier définit aussi les **adresses** utilisées partout dans l'interface (compte, site, Discord, support). Fiche parente : [[Code de l'app (interface)]]. Fonctionnalités : [[Licence dans l'app]], [[Connexion Google et Discord]].
 
-Tout ce qui suit est CONFIRMÉ (PR #N vers `staging`, 24/11 : carte refaite sur les maquettes v5 `app-gate-*`).
+Tout ce qui suit est CONFIRMÉ (code de `staging`, PR #131 fusionnée le 24/11 : carte refaite sur les maquettes v5 `app-gate-*`).
 
 ## Ce que le fichier expose
 

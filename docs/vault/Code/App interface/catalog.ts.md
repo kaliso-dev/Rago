@@ -63,7 +63,7 @@ Les valeurs `block`/`warn` sont des **clés i18n** (préfixe ajouté par l'appel
 1. Normalise la requête : décomposition Unicode (`NFD`), accents retirés, minuscules ; découpe en mots.
 2. Pour chaque réglage, texte cherché = nom dans la langue + description dans la langue + nom anglais + id, normalisé pareil.
 3. Garde les réglages qui contiennent **tous** les mots.
-4. Met d'abord ceux dont le **nom** (dans la langue ou en anglais) contient tous les mots, puis ceux trouvés par leur description ou leur id, chacun dans l'ordre du catalogue (PR #N vers `staging`, 24/11, comme la maquette `app-search`) ; coupe à 40.
+4. Met d'abord ceux dont le **nom** (dans la langue ou en anglais) contient tous les mots, puis ceux trouvés par leur description ou leur id, chacun dans l'ordre du catalogue (dans `staging` (PR #131, fusionnée le 24/11), comme la maquette `app-search`) ; coupe à 40.
 Utilisée par la palette Ctrl+K ([[SearchPalette.tsx]]) et la recherche de « Modifier un preset » ([[PresetEditor.tsx]]).
 
 ## Erreurs et cas limites

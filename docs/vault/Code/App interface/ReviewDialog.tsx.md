@@ -9,7 +9,7 @@ maj: 2026-11-23
 
 La fenêtre **« Ton avis »**. Elle connecte d'abord au compte Rago si besoin, puis demande une note de 1 à 5 étoiles, un commentaire et un nom public. Elle finit par un écran « Merci ». L'avis s'affiche ensuite sur le site. Fiche parente : [[Code de l'app (interface)]]. Fonctionnalités : [[Paramètres de l'app]], [[Site]].
 
-Tout ce qui suit est CONFIRMÉ (PR #N vers `staging`, 24/11 : les trois écrans refaits sur les maquettes v5 `app-review-signin`, `app-review-write` et `app-review-thanks`).
+Tout ce qui suit est CONFIRMÉ (code de `staging`, PR #131 fusionnée le 24/11 : les trois écrans refaits sur les maquettes v5 `app-review-signin`, `app-review-write` et `app-review-thanks`).
 
 ## Rôle et place dans l'ensemble
 - Montée une seule fois par [[App.tsx]], à côté de [[ReviewPrompt.tsx]].

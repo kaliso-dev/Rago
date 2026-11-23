@@ -9,7 +9,7 @@ maj: 2026-11-23
 
 La **fenêtre « Passer Premium »** (offres avec les prix de Stripe, essai, achat dans le navigateur) et la **fenêtre de connexion** qui l'accompagne. Fiche parente : [[Code de l'app (interface)]]. Fonctionnalités : [[Abonnement dans l'app]], [[Offres et prix]].
 
-Tout ce qui suit est CONFIRMÉ (PR #N vers `staging`, 24/11 : fenêtre refaite sur les maquettes v5 `app-upsell-*`).
+Tout ce qui suit est CONFIRMÉ (code de `staging`, PR #131 fusionnée le 24/11 : fenêtre refaite sur les maquettes v5 `app-upsell-*`).
 
 ## Rôle et place dans l'ensemble
 - Rendue une fois par [[App.tsx]] ; s'ouvre selon `upsell` du store ([[store.tsx]]) :

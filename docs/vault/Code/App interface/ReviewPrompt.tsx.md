@@ -9,7 +9,7 @@ maj: 2026-11-23
 
 L'**invitation discrète à laisser un avis**, en bas à droite de la fenêtre : « Rago Optimizer te plaît ? ». Fiche parente : [[Code de l'app (interface)]]. Fonctionnalités : [[Paramètres de l'app]], [[Site]] (les avis s'affichent sur le site).
 
-Tout ce qui suit est CONFIRMÉ (PR #N vers `staging`, 24/11 : carte refaite sur la maquette v5 `app-review-prompt`).
+Tout ce qui suit est CONFIRMÉ (code de `staging`, PR #131 fusionnée le 24/11 : carte refaite sur la maquette v5 `app-review-prompt`).
 
 ## Rôle et place dans l'ensemble
 - Montée une seule fois par [[App.tsx]], juste avant [[ReviewDialog.tsx]].

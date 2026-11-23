@@ -12,7 +12,7 @@ Point d'entrée de la **fenêtre principale** de l'app : charge les feuilles de 
 Tout ce qui suit est CONFIRMÉ (code de `staging`, 10/11, commit `ee77d4f`).
 
 ## Fonctionnement détaillé
-1. Importe les styles **dans cet ordre** : `fonts.css` (Barlow), `tokens.css` (jetons de couleur, verre, typo), `app.css` (cadre et composants), `features.css` (fonctionnalités 1.2.0 et après), `v5.css` (charte v5 sur les anciennes classes), puis les feuilles des maquettes v5 de `s5/` ([[Maquettes v5 dans l'app (s5)]]). `account.css` est retirée le 24/11 (PR #N). L'ordre compte : une règle plus bas l'emporte à spécificité égale. Détails : [[Styles de l'app (CSS)]].
+1. Importe les styles **dans cet ordre** : `fonts.css` (Barlow), `tokens.css` (jetons de couleur, verre, typo), `app.css` (cadre et composants), `features.css` (fonctionnalités 1.2.0 et après), `v5.css` (charte v5 sur les anciennes classes), puis les feuilles des maquettes v5 de `s5/` ([[Maquettes v5 dans l'app (s5)]]). `account.css` est retirée le 24/11 (PR #131). L'ordre compte : une règle plus bas l'emporte à spécificité égale. Détails : [[Styles de l'app (CSS)]].
 2. `createRoot(document.getElementById("root")!)` puis rend :
 ```
 <StrictMode>

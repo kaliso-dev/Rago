@@ -9,7 +9,7 @@ maj: 2026-11-23
 
 La **recherche Ctrl+K** : une fenêtre qui cherche parmi tous les réglages, mène au réglage dans sa page, ou le coche directement. Fiche parente : [[Code de l'app (interface)]]. Fonctionnalité : [[Catalogue des tweaks]].
 
-Tout ce qui suit est CONFIRMÉ (PR #N vers `staging`, 24/11 : fenêtre refaite sur la maquette v5 `app-search`).
+Tout ce qui suit est CONFIRMÉ (code de `staging`, PR #131 fusionnée le 24/11 : fenêtre refaite sur la maquette v5 `app-search`).
 
 ## Fonctionnement détaillé
 - **Ouverture** : `Ctrl+K` (ou `Cmd+K` sur Mac en démo) n'importe où dans l'app, ou le bouton « Rechercher un réglage » de [[TitleBar.tsx]]. État `paletteOpen` du store. À chaque ouverture, le champ et la ligne active sont remis à zéro. Fermeture : Échap ou clic hors de la fenêtre (`Modal`).
