@@ -1,17 +1,14 @@
-// Page Souris : vraie fréquence, doubles clics d'un bouton usé, logiciels entre la souris et le jeu, calcul de la
-// sensibilité. Rien ne touche au jeu : la fréquence et les clics sont lus dans la fenêtre de Rago (pointerrawupdate et
-// getCoalescedEvents de Chromium, comme les sites de test de souris), les logiciels sont seulement listés (mouse.rs),
-// la sensibilité n'est qu'un calcul. Le réglage « Souris 1:1 » reste celui de Latence (`kbm_1to1`).
-import { useCallback, useEffect, useRef, useState } from "react";
+// Page Souris, à l'identique de la maquette v5 app-mouse.html : vraie fréquence, doubles clics d'un bouton usé,
+// logiciels entre la souris et le jeu, calcul de la sensibilité. Rien ne touche au jeu : la fréquence et les clics sont
+// lus dans la fenêtre de Rago (pointerrawupdate et getCoalescedEvents de Chromium, comme les sites de test de souris),
+// les logiciels sont seulement listés (mouse.rs), la sensibilité n'est qu'un calcul. Le réglage « Souris 1:1 » reste
+// celui de Latence (`kbm_1to1`). Styles : s5/pages/module.css (socle) et s5/pages/pages.css (porté de
+// rendus-v5/src/pages.css, commun à Souris, Paramètres et Partage), retouches dans s5/app.css.
+import { useCallback, useEffect, useRef, useState, type CSSProperties } from "react";
 import type { PointerEvent as ReactPointerEvent } from "react";
-import { motion } from "motion/react";
-import { Activity, ArrowRight, Calculator, Check, MousePointer2, MousePointerClick, RotateCcw, ShieldAlert, TriangleAlert } from "../components/ri";
 import { api, type MouseApp } from "../lib/api";
 import { useStore } from "../lib/store";
-import { Badge, Button } from "../components/ui";
-
-const stagger = { animate: { transition: { staggerChildren: 0.05 } } };
-const rise = { initial: { opacity: 0, y: 10 }, animate: { opacity: 1, y: 0, transition: { duration: 0.42, ease: [0.16, 1, 0.3, 1] as const } } };
+import { I } from "../s5/I";
 
 type Tr = (en: string, fr: string) => string;
 
@@ -32,31 +29,57 @@ const PAUSE_MS = 12;
 /** Deux appuis plus proches que ça, pendant des clics lents, viennent d'un bouton qui rebondit. */
 const BOUNCE_MS = 40;
 const CLICKS = 20;
+/** Barres de la zone de mesure et coches de l'en-tête, comme la maquette. */
+const BARS = 64;
+const TICKS = 40;
+
+const titleSize = (name: string) => (name.length <= 8 ? 150 : Math.floor((150 * 8.4) / name.length));
 
 export function Mouse() {
   const { lang } = useStore();
   const L: Tr = (en, fr) => (lang === "fr" ? fr : en);
+  const [rate, setRate] = useState<Rate | null>(null);
+  const v = rate ? verdictOf(rate, L) : null;
+  const title = L("mouse", "souris");
+
+  // en-tête : les 40 derniers écarts, hauts quand l'écart sort du rythme (maquette : 42 % au rythme, 100 % au pic)
+  const ticks = rate ? rate.last.slice(-TICKS).map((g) => Math.max(20, Math.min(100, Math.round((g / rate.median) * 42)))) : null;
   return (
-    <motion.div className="page tools mouse" variants={stagger} initial="initial" animate="animate">
-      <motion.header className="page-head" variants={rise}>
-        <div className="rg-overline">{L("Check your mouse", "Vérifie ta souris")}</div>
-        <h1>{L("Mouse", "Souris")}</h1>
-        <p className="lead">
-          {L(
-            "Real polling rate, worn clicks and software that gets between your mouse and the game. Measured in this window only: nothing touches your game.",
-            "Vraie fréquence, clics usés et logiciels qui se glissent entre ta souris et le jeu. Mesuré dans cette fenêtre seulement : rien ne touche à ton jeu.",
-          )}
-        </p>
-      </motion.header>
-      <div className="mouse-grid">
-        <PollingTest L={L} />
+    <div className="pg-mod pg-pages pg-mouse is-page">
+      <section className="head">
+        <div>
+          <p className="kick">
+            {L("check your mouse", "vérifie ta souris")} <b>//</b> {L("measured in this window only, nothing touches your game", "mesuré dans cette fenêtre seulement, rien ne touche à ton jeu")}
+          </p>
+          <h1 className="title" data-t={title} style={{ fontSize: titleSize(title) }}>
+            {title}
+          </h1>
+        </div>
+        <div className="ping sig">
+          <div className="pv">
+            <b>{rate ? rate.hz : "–"}</b>
+            <span>
+              hz<small>{v ? `${L("polling rate", "fréquence")}, ${v.tag}` : L("polling rate", "fréquence")}</small>
+            </span>
+          </div>
+          <div className="ticks">
+            <span className="g" style={{ "--n": TICKS } as CSSProperties}>
+              {(ticks ?? Array<number>(TICKS).fill(0)).map((h, i) => (
+                <i key={i} className={ticks ? "on" : undefined} style={ticks ? { height: `${h}%` } : undefined} />
+              ))}
+            </span>
+          </div>
+        </div>
+      </section>
+      <div className="nobar" />
+
+      <div className="mgrid">
+        <PollingTest L={L} rate={rate} onRate={setRate} />
         <ClickTest L={L} />
-      </div>
-      <div className="mouse-grid">
         <Apps L={L} />
         <Sensitivity L={L} />
       </div>
-    </motion.div>
+    </div>
   );
 }
 
@@ -68,7 +91,8 @@ interface Rate {
   steady: number;
   /** plus long écart hors pauses, en ms */
   worst: number;
-  /** derniers écarts, pour la courbe */
+  median: number;
+  /** derniers écarts, pour les barres */
   last: number[];
 }
 
@@ -80,13 +104,54 @@ function rateOf(gaps: number[]): Rate | null {
   const median = sorted[Math.floor(sorted.length / 2)];
   const avg = g.reduce((a, b) => a + b, 0) / g.length;
   const steady = Math.round((g.filter((x) => Math.abs(x - median) <= median * 0.25).length / g.length) * 100);
-  return { hz: Math.round(1000 / avg), steady, worst: sorted[sorted.length - 1], last: g.slice(-80) };
+  return { hz: Math.round(1000 / avg), steady, worst: sorted[sorted.length - 1], median, last: g.slice(-BARS) };
 }
 
-function PollingTest({ L }: { L: Tr }) {
+/** Verdict de la fréquence : étiquette (« good »), mauvais ou non, et le conseil. */
+function verdictOf(rate: Rate, L: Tr) {
+  if (rate.hz < 200)
+    return {
+      bad: true,
+      tag: L("low", "basse"),
+      text: L(
+        `Only ${rate.hz} Hz: your mouse reports 8 times less often than a gaming mouse. Set 1000 Hz in its software, plug it straight into the PC (not a hub or the screen), and put the wireless dongle close to the mouse.`,
+        `Seulement ${rate.hz} Hz : ta souris envoie 8 fois moins de rapports qu'une souris gaming. Règle 1000 Hz dans son logiciel, branche-la directement sur le PC (pas un hub ni l'écran), et rapproche le dongle sans fil.`,
+      ),
+    };
+  if (rate.hz < 700)
+    return {
+      bad: false,
+      tag: L("fine", "correcte"),
+      text: L(
+        `About ${rate.hz} Hz. Fine to play; 1000 Hz in your mouse software makes each move reach the PC a little sooner.`,
+        `Environ ${rate.hz} Hz. Ça suffit pour jouer ; 1000 Hz dans le logiciel de ta souris font arriver chaque mouvement un peu plus tôt.`,
+      ),
+    };
+  if (rate.hz < 1600)
+    return {
+      bad: false,
+      tag: L("good", "bonne"),
+      text: L(
+        `About ${rate.hz} Hz: the sweet spot. 4000 or 8000 Hz cost CPU time and can cause stutters in some games.`,
+        `Environ ${rate.hz} Hz : le bon réglage. 4000 ou 8000 Hz prennent du processeur et font saccader certains jeux.`,
+      ),
+    };
+  return {
+    bad: false,
+    tag: L("very high", "très haute"),
+    text: L(
+      `About ${rate.hz} Hz. If your game stutters or your FPS drops, try 1000 Hz in your mouse software.`,
+      `Environ ${rate.hz} Hz. Si ton jeu saccade ou perd des FPS, essaie 1000 Hz dans le logiciel de ta souris.`,
+    ),
+  };
+}
+
+function PollingTest({ L, rate, onRate }: { L: Tr; rate: Rate | null; onRate: (r: Rate) => void }) {
+  const { lang } = useStore();
   const zone = useRef<HTMLDivElement>(null);
-  const [rate, setRate] = useState<Rate | null>(null);
   const [count, setCount] = useState(0);
+  const set = useRef(onRate);
+  set.current = onRate;
   useEffect(() => {
     const el = zone.current;
     if (!el) return;
@@ -107,7 +172,7 @@ function PollingTest({ L }: { L: Tr }) {
           frame = 0;
           setCount(gaps.filter((x) => x > 0 && x < PAUSE_MS).length);
           const r = rateOf(gaps);
-          if (r) setRate(r);
+          if (r) set.current(r);
         });
     };
     const leave = () => (last = 0);
@@ -122,95 +187,50 @@ function PollingTest({ L }: { L: Tr }) {
     };
   }, []);
 
-  const verdict = !rate
-    ? null
-    : rate.hz < 200
-      ? {
-          tone: "warn" as const,
-          tag: L("Low", "Basse"),
-          text: L(
-            `Only ${rate.hz} Hz: your mouse reports 8 times less often than a gaming mouse. Set 1000 Hz in its software, plug it straight into the PC (not a hub or the screen), and put the wireless dongle close to the mouse.`,
-            `Seulement ${rate.hz} Hz : ta souris envoie 8 fois moins de rapports qu'une souris gaming. Règle 1000 Hz dans son logiciel, branche-la directement sur le PC (pas un hub ni l'écran), et rapproche le dongle sans fil.`,
-          ),
-        }
-      : rate.hz < 700
-        ? {
-            tone: "info" as const,
-            tag: L("Fine", "Correcte"),
-            text: L(
-              `About ${rate.hz} Hz. Fine to play; 1000 Hz in your mouse software makes each move reach the PC a little sooner.`,
-              `Environ ${rate.hz} Hz. Ça suffit pour jouer ; 1000 Hz dans le logiciel de ta souris font arriver chaque mouvement un peu plus tôt.`,
-            ),
-          }
-        : rate.hz < 1600
-          ? {
-              tone: "ok" as const,
-              tag: L("Good", "Bonne"),
-              text: L(
-                `About ${rate.hz} Hz: the sweet spot. 4000 or 8000 Hz cost CPU time and can cause stutters in some games.`,
-                `Environ ${rate.hz} Hz : le bon réglage. 4000 ou 8000 Hz prennent du processeur et font saccader certains jeux.`,
-              ),
-            }
-          : {
-              tone: "info" as const,
-              tag: L("Very high", "Très haute"),
-              text: L(
-                `About ${rate.hz} Hz. If your game stutters or your FPS drops, try 1000 Hz in your mouse software.`,
-                `Environ ${rate.hz} Hz. Si ton jeu saccade ou perd des FPS, essaie 1000 Hz dans le logiciel de ta souris.`,
-              ),
-            };
-  const max = rate ? Math.max(...rate.last) : 1;
+  const v = rate ? verdictOf(rate, L) : null;
+  const num = (n: number, d: number) => n.toLocaleString(lang === "fr" ? "fr-FR" : "en-US", { minimumFractionDigits: d, maximumFractionDigits: d });
+  // avant le résultat, les barres se remplissent avec la mesure
+  const filled = Math.round(Math.min(1, count / MIN_SAMPLES) * BARS);
+  const bars = rate
+    ? rate.last.map((g) => ({ h: Math.min(1, (g / rate.median) * 0.7), pk: g > rate.median * 1.15 }))
+    : Array.from({ length: BARS }, (_, i) => ({ h: i < filled ? 0.7 : 0.12, pk: false }));
 
   return (
-    <motion.section variants={rise} className="card tools-tile">
-      <header className="tools-tile-head">
-        <span className="tools-tile-icon">
-          <Activity size={16} />
-        </span>
-        <h3>{L("Polling rate", "Fréquence de la souris")}</h3>
-        {verdict && <Badge tone={verdict.tone}>{verdict.tag}</Badge>}
-      </header>
-      <div ref={zone} className="mouse-zone">
-        {rate ? (
-          <>
-            <div className="mouse-metrics">
-              <div>
-                <div className="rg-metric mouse-big">
-                  {rate.hz}
-                  <small> Hz</small>
-                </div>
-                <div className="muted small">{L("average", "en moyenne")}</div>
-              </div>
-              <div>
-                <div className="rg-metric mouse-mid">{rate.steady} %</div>
-                <div className="muted small">{L("regularity", "régularité")}</div>
-              </div>
-              <div>
-                <div className="rg-metric mouse-mid">{rate.worst.toFixed(2)} ms</div>
-                <div className="muted small">{L("longest gap", "plus long écart")}</div>
-              </div>
-            </div>
-            <svg className="mouse-spark" viewBox="0 0 320 48" preserveAspectRatio="none" aria-hidden>
-              <polyline
-                fill="none"
-                strokeWidth="1.5"
-                points={rate.last.map((v, i) => `${(i / Math.max(1, rate.last.length - 1)) * 320},${46 - (v / max) * 42}`).join(" ")}
-              />
-            </svg>
-          </>
-        ) : (
-          <div className="mouse-wait">
-            <div className="mouse-progress">
-              <span style={{ width: `${Math.min(100, (count / MIN_SAMPLES) * 100)}%` }} />
-            </div>
+    <section>
+      <div className="sh">
+        <h2 className="h2 tape">{L("polling rate", "fréquence")}</h2>
+        {v && <span className={`vt2 ${v.bad ? "bad" : "ok"}`}>{v.tag}</span>}
+      </div>
+      <div ref={zone} className="panel zone">
+        <div className="zm">
+          <div className="big">
+            {rate ? rate.hz : "–"}
+            <small>hz</small>
+            <span>{L("average", "en moyenne")}</span>
           </div>
-        )}
-        <p className="mouse-hint small">
-          <MousePointer2 size={13} /> {L("Move your mouse in fast circles here", "Fais des cercles rapides avec ta souris ici")}
+          <div className="mid">
+            {rate ? rate.steady : "–"}
+            <small>%</small>
+            <span>{L("regularity", "régularité")}</span>
+          </div>
+          <div className="mid">
+            {rate ? num(rate.worst, 2) : "–"}
+            <small>ms</small>
+            <span>{L("longest gap", "plus long écart")}</span>
+          </div>
+        </div>
+        <div className="zs">
+          {bars.map((b, i) => (
+            <i key={i} className={b.pk ? "pk" : undefined} style={{ "--h": b.h.toFixed(2) } as CSSProperties} />
+          ))}
+        </div>
+        <p className="zh">
+          <I n="mouse" />
+          {L("Move your mouse in fast circles here", "Fais des cercles rapides avec ta souris ici")}
         </p>
       </div>
-      {verdict && <p className="small mouse-verdict">{verdict.text}</p>}
-    </motion.section>
+      {v && <p className="verdict2">{v.text}</p>}
+    </section>
   );
 }
 
@@ -238,67 +258,72 @@ function ClickTest({ L }: { L: Tr }) {
     setGaps([]);
     lastDown.current = 0;
   };
-  // une case par clic voulu ; elle passe en jaune si ce clic a rebondi
+  // une case par clic voulu (« c ») ; elle passe en rouge (« b ») si ce clic a rebondi
   const dots: string[] = [];
   presses.forEach((bounce) => {
-    if (!bounce) dots.push("on");
-    else if (dots.length) dots[dots.length - 1] = "bad";
+    if (!bounce) dots.push("c");
+    else if (dots.length) dots[dots.length - 1] = "b";
   });
   while (dots.length < CLICKS) dots.push("");
+  const again = (
+    <button type="button" className="btn" onClick={reset}>
+      <I n="rotate" />
+      {L("start again", "recommencer")}
+    </button>
+  );
 
   return (
-    <motion.section variants={rise} className="card tools-tile">
-      <header className="tools-tile-head">
-        <span className="tools-tile-icon">
-          <MousePointerClick size={16} />
-        </span>
-        <h3>{L("Double-click check", "Test de double clic")}</h3>
+    <section>
+      <div className="sh">
+        <h2 className="h2 tape">{L("double-click check", "test de double clic")}</h2>
         {done && (
-          <Badge tone={bounces ? "warn" : "ok"}>
+          <span className={`vt2 ${bounces ? "bad" : "ok"}`}>
             {bounces
               ? L(`${bounces} double click${bounces > 1 ? "s" : ""}`, `${bounces} double${bounces > 1 ? "s" : ""} clic${bounces > 1 ? "s" : ""}`)
-              : L("No double click", "Aucun double clic")}
-          </Badge>
+              : L("no double click", "aucun double clic")}
+          </span>
         )}
-      </header>
-      <p className="muted small tools-tile-desc">
-        {L(`Click ${CLICKS} times, slowly, with the left button.`, `Clique ${CLICKS} fois, lentement, avec le bouton gauche.`)}
-      </p>
-      <button type="button" className="mouse-pad" onPointerDown={down} onContextMenu={(e) => e.preventDefault()}>
-        <span className="rg-metric mouse-big">
-          {Math.min(clicks, CLICKS)}
+        {!done && presses.length > 0 && (
+          <button type="button" className="lnk" onClick={reset}>
+            {L("start again", "recommencer")}
+            <I n="rotate" />
+          </button>
+        )}
+      </div>
+      <button type="button" className="panel pad" onPointerDown={down} onContextMenu={(e) => e.preventDefault()}>
+        <span className="pc2">
+          <b>{Math.min(clicks, CLICKS)}</b>
           <small>/{CLICKS}</small>
         </span>
-        <span className="mouse-dots">
+        <span className="dots">
           {dots.slice(0, CLICKS).map((c, i) => (
-            <i key={i} className={c} />
+            <i key={i} className={c || undefined} />
           ))}
         </span>
+        <span className="zh">{L(`Click ${CLICKS} times, slowly, with the left button.`, `Clique ${CLICKS} fois, lentement, avec le bouton gauche.`)}</span>
       </button>
       {done && bounces > 0 && (
-        <div className="mouse-alert">
-          <TriangleAlert size={15} />
-          <div className="small">
+        <div className="alert2">
+          <I n="alert" />
+          <p>
             <b>{L(`${bounces} click${bounces > 1 ? "s were" : " was"} counted twice`, `${bounces} clic${bounces > 1 ? "s comptés" : " compté"} deux fois`)}</b> (
             {gaps.join(", ")} ms).{" "}
             {L(
               "Your left switch is starting to wear out. Raise the debounce time a little in your mouse software (Logitech G HUB, Razer Synapse…), or change the switch.",
               "Le bouton gauche commence à s'user. Monte un peu le « debounce » dans le logiciel de ta souris (Logitech G HUB, Razer Synapse…), ou change le switch.",
             )}
-          </div>
+          </p>
+          {again}
         </div>
       )}
       {done && bounces === 0 && (
-        <p className="small tools-tile-status ok">
-          <Check size={13} /> {L("Every click counted once: your left button is fine.", "Chaque clic compté une fois : ton bouton gauche va bien.")}
-        </p>
+        <div className="alert2 ok">
+          <I n="check" />
+          <p>{L("Every click counted once: your left button is fine.", "Chaque clic compté une fois : ton bouton gauche va bien.")}</p>
+          {again}
+        </div>
       )}
-      {presses.length > 0 && (
-        <Button variant="ghost" size="sm" icon={<RotateCcw size={13} />} onClick={reset} className="mouse-again">
-          {L("Start again", "Recommencer")}
-        </Button>
-      )}
-    </motion.section>
+    </section>
   );
 }
 
@@ -307,11 +332,14 @@ function ClickTest({ L }: { L: Tr }) {
 function Apps({ L }: { L: Tr }) {
   const { goTo, isOn } = useStore();
   const [apps, setApps] = useState<MouseApp[] | null>(null);
+  const [busy, setBusy] = useState(false);
   const load = useCallback(() => {
+    setBusy(true);
     api
       .mouseApps()
       .then(setApps)
-      .catch(() => setApps([]));
+      .catch(() => setApps([]))
+      .finally(() => setBusy(false));
   }, []);
   useEffect(load, [load]);
   const oneToOne = ["kbm_1to1", "kbm_accel", "kbm_panel", "in_mouse"].some(isOn);
@@ -332,55 +360,73 @@ function Apps({ L }: { L: Tr }) {
             );
 
   return (
-    <motion.section variants={rise} className="card tools-tile">
-      <header className="tools-tile-head">
-        <span className="tools-tile-icon">
-          <ShieldAlert size={16} />
-        </span>
-        <h3>{L("Between your mouse and the game", "Entre ta souris et le jeu")}</h3>
-        <Button variant="ghost" size="sm" icon={<RotateCcw size={13} />} onClick={load} aria-label={L("Check again", "Revérifier")} className="mouse-refresh" />
-      </header>
-      {apps && apps.length === 0 && (
-        <p className="small tools-tile-status ok">
-          <Check size={13} /> {L("No remapping, macro or auto-click software running.", "Aucun logiciel de remappage, de macro ou de clic automatique lancé.")}
-        </p>
-      )}
-      {apps && apps.length > 0 && (
-        <ul className="mouse-list">
-          {apps.map((a) => (
-            <li key={a.name}>
-              <div className="mouse-list-head">
-                <b>{a.name}</b>
-                <Badge tone={a.kind === "vendor" ? "ok" : "warn"}>{a.kind === "vendor" ? L("Fine", "OK") : L("Risky in ranked", "Risqué en classé")}</Badge>
-              </div>
-              <p className="muted small">{about(a)}</p>
-            </li>
-          ))}
-        </ul>
-      )}
-      <div className="mouse-row">
-        <div>
-          <b className="small">{L("1:1 mouse", "Souris 1:1")}</b>
-          <p className="muted small">
-            {L(
-              "Windows acceleration off, pointer speed 6/11: the same hand move always gives the same distance. Matters in games without raw input, like Minecraft.",
-              "Accélération de Windows coupée, vitesse 6/11 : le même geste donne toujours la même distance. Compte dans les jeux sans raw input, comme Minecraft.",
-            )}
-          </p>
-        </div>
-        {oneToOne ? (
-          <Badge tone="ok">{L("On", "Activé")}</Badge>
-        ) : (
-          <Button variant="secondary" size="sm" onClick={() => goTo("latency", "kbm_1to1")}>
-            {L("Open", "Ouvrir")}
-          </Button>
-        )}
+    <section>
+      <div className="sh">
+        <h2 className="h2 tape">{L("mouse software", "logiciels de la souris")}</h2>
+        <button type="button" className="btn" disabled={busy} onClick={load}>
+          <I n={busy ? "loader" : "refresh"} className={busy ? "spin" : undefined} />
+          {L("check again", "revérifier")}
+        </button>
       </div>
-    </motion.section>
+      <div className="panel lst2">
+        {apps && apps.length === 0 && (
+          <div className="li2">
+            <div className="l">
+              <b>{L("all clear", "rien à signaler")}</b>
+              <span>{L("No remapping, macro or auto-click software running.", "Aucun logiciel de remappage, de macro ou de clic automatique lancé.")}</span>
+            </div>
+            <span className="vt2 ok">{L("fine", "ok")}</span>
+          </div>
+        )}
+        {(apps ?? []).map((a) => (
+          <div key={a.name} className={`li2${a.kind === "vendor" ? "" : " risk"}`}>
+            <div className="l">
+              <b>{a.name}</b>
+              <span>{about(a)}</span>
+            </div>
+            <span className={`vt2 ${a.kind === "vendor" ? "ok" : "bad"}`}>{a.kind === "vendor" ? L("fine", "ok") : L("risky in ranked", "risqué en classé")}</span>
+          </div>
+        ))}
+        <div className="li2 one">
+          <div className="l">
+            <b>{L("1:1 mouse", "souris 1:1")}</b>
+            <span>
+              {L(
+                "Windows acceleration off, pointer speed 6/11: the same hand move always gives the same distance. Matters in games without raw input, like Minecraft.",
+                "Accélération de Windows coupée, vitesse 6/11 : le même geste donne toujours la même distance. Compte dans les jeux sans raw input, comme Minecraft.",
+              )}
+            </span>
+          </div>
+          <span className={`sst${oneToOne ? " is-on" : ""}`}>
+            <i />
+            {oneToOne ? L("on", "activée") : L("off", "coupée")}
+          </span>
+          <button type="button" className="lnk" onClick={() => goTo("latency", "kbm_1to1")}>
+            {L("latency", "latence")}
+            <I n="right" />
+          </button>
+        </div>
+      </div>
+    </section>
   );
 }
 
 // ---------------------------------------------------------------------------------------------------- sensibilité
+
+function GameSelect({ value, onChange, label }: { value: string; onChange: (v: string) => void; label: string }) {
+  return (
+    <span className="in sel">
+      <select value={value} aria-label={label} onChange={(e) => onChange(e.target.value)}>
+        {Object.entries(YAW).map(([k, v]) => (
+          <option key={k} value={k}>
+            {v.label}
+          </option>
+        ))}
+      </select>
+      <I n="chev" />
+    </span>
+  );
+}
 
 function Sensitivity({ L }: { L: Tr }) {
   const { lang } = useStore();
@@ -392,59 +438,49 @@ function Sensitivity({ L }: { L: Tr }) {
   const num = (v: number, d: number) => v.toLocaleString(lang === "fr" ? "fr-FR" : "en-US", { maximumFractionDigits: d, minimumFractionDigits: d });
   const cm = ok ? (360 / (dpi * sens * YAW[from].yaw)) * 2.54 : 0;
   const converted = (sens * YAW[from].yaw) / YAW[to].yaw;
-  const games = Object.entries(YAW);
 
   return (
-    <motion.section variants={rise} className="card tools-tile">
-      <header className="tools-tile-head">
-        <span className="tools-tile-icon">
-          <Calculator size={16} />
-        </span>
-        <h3>{L("Sensitivity", "Sensibilité")}</h3>
-      </header>
-      <div className="mouse-form">
-        <label>
-          <span className="muted small">DPI</span>
-          <input className="input" type="number" min={1} value={dpi || ""} onChange={(e) => setDpi(+e.target.value || 0)} />
-        </label>
-        <label>
-          <span className="muted small">{L("In-game sens", "Sensi en jeu")}</span>
-          <input className="input" type="number" min={0} step="0.01" value={sens || ""} onChange={(e) => setSens(+e.target.value || 0)} />
-        </label>
-        <label>
-          <span className="muted small">{L("Game", "Jeu")}</span>
-          <select className="input" value={from} onChange={(e) => setFrom(e.target.value)}>
-            {games.map(([k, v]) => (
-              <option key={k} value={k}>
-                {v.label}
-              </option>
-            ))}
-          </select>
-        </label>
+    <section>
+      <div className="sh">
+        <h2 className="h2 tape">{L("sensitivity", "sensibilité")}</h2>
       </div>
-      <div className="mouse-metrics">
-        <div>
-          <div className="rg-metric mouse-mid">{ok ? num(dpi * sens, 0) : "–"}</div>
-          <div className="muted small">eDPI</div>
+      <div className="panel sens">
+        <div className="inp">
+          <label>
+            dpi
+            <span className="in">
+              <input type="number" min={1} value={dpi || ""} onChange={(e) => setDpi(+e.target.value || 0)} />
+            </span>
+          </label>
+          <label>
+            {L("in-game sens", "sensi en jeu")}
+            <span className="in">
+              <input type="number" min={0} step="0.01" value={sens || ""} onChange={(e) => setSens(+e.target.value || 0)} />
+            </span>
+          </label>
+          <label>
+            {L("game", "jeu")}
+            <GameSelect value={from} onChange={setFrom} label={L("game", "jeu")} />
+          </label>
         </div>
-        <div>
-          <div className="rg-metric mouse-mid">{ok ? `${num(cm, 1)} cm` : "–"}</div>
-          <div className="muted small">{L("for a 360° turn", "pour un tour complet")}</div>
+        <div className="out">
+          <div className="big">
+            {ok ? num(dpi * sens, 0) : "–"}
+            <span>edpi</span>
+          </div>
+          <div className="big">
+            {ok ? num(cm, 1) : "–"}
+            <small>cm</small>
+            <span>{L("for a 360° turn", "pour un tour complet")}</span>
+          </div>
+        </div>
+        <div className="conv">
+          <span>{L("same feel in", "même sensation dans")}</span>
+          <GameSelect value={to} onChange={setTo} label={L("same feel in", "même sensation dans")} />
+          <b>{ok ? num(converted, 3) : "–"}</b>
         </div>
       </div>
-      <div className="mouse-row">
-        <span className="small">
-          {L("Same feel in", "Même sensation dans")} <ArrowRight size={12} />
-          <select className="input input-inline" value={to} onChange={(e) => setTo(e.target.value)}>
-            {games.map(([k, v]) => (
-              <option key={k} value={k}>
-                {v.label}
-              </option>
-            ))}
-          </select>
-        </span>
-        <span className="rg-metric mouse-mid">{ok ? num(converted, 3) : "–"}</span>
-      </div>
-    </motion.section>
+      <p className="verdict2">{L("Just a calculation: nothing is changed in your games.", "Un simple calcul : rien n'est changé dans tes jeux.")}</p>
+    </section>
   );
 }

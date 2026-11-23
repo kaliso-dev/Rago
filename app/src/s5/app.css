@@ -12,6 +12,8 @@ html.poster body::after{position:fixed}
 .side .foot{flex:none}
 .side a,.side .logo{cursor:default;user-select:none}
 .side a{cursor:pointer}
+/* « Carte graphique » (français) tient sur une ligne avant le compte ; sans ça, le libellé passe à la ligne et touche « Windows » */
+.side a .t{white-space:nowrap}
 .topbar{position:absolute;z-index:4;left:236px;right:0;top:0;height:86px;margin:0;padding:22px 40px 26px;background:var(--bg)}
 .topbar .search{cursor:pointer;user-select:none}
 .topbar .wc span{cursor:pointer}
@@ -417,3 +419,24 @@ html.round .win .ap.net .pg{border-radius:2px}
 .pg-tools button.go2:hover{color:var(--ink)}
 .pg-tools .btn:disabled,.pg-tools .lnk2:disabled{opacity:.5;cursor:default}
 .pg-tools .li:has(.keep) button.sw:disabled{opacity:1}
+/* Souris (s5/pages/pages.css, sur le socle des pages module) : même marge du bas que les Outils. Les colonnes ne
+   s'élargissent pas avec les champs (un <input> a une largeur propre, pas le <span> de la maquette). */
+.pg-mod.pg-pages.is-page{padding-bottom:16px}
+.pg-mouse .mgrid{grid-template-columns:minmax(0,1fr) minmax(0,1fr)}
+.pg-mouse button.pad{width:100%;font:inherit;color:inherit;text-align:left;cursor:pointer;user-select:none;-webkit-tap-highlight-color:transparent}
+.pg-mouse button.pad .pc2{display:block}
+.pg-mouse button.pad:hover{border-color:var(--line-2)}
+.pg-mouse button.pad:focus-visible{outline:2px solid var(--red);outline-offset:2px}
+.pg-mouse .in input,.pg-mouse .in select{flex:1;min-width:0;width:100%;padding:0;border:0;outline:0;box-shadow:none;background:none;color:inherit;font:inherit;letter-spacing:inherit;text-transform:inherit;-moz-appearance:textfield;appearance:none}
+.pg-mouse .in input::-webkit-outer-spin-button,.pg-mouse .in input::-webkit-inner-spin-button{-webkit-appearance:none;margin:0}
+.pg-mouse .in.sel{position:relative}
+.pg-mouse .in.sel select{height:100%;cursor:pointer;padding-right:24px}
+.pg-mouse .in.sel svg{position:absolute;right:14px;pointer-events:none}
+.pg-mouse .in select option{background:var(--bg-3);color:var(--ink);font-family:var(--body);font-style:normal;font-weight:600;font-size:14px;text-transform:none}
+.pg-mouse .in:focus-within{border-color:var(--red)}
+.pg-mouse .alert2.ok{background:var(--bg-2);border-color:var(--line-2)}
+.pg-mouse .alert2.ok > svg{color:var(--ink)}
+.pg-mouse .sh .lnk{margin-left:auto}
+.pg-mouse button.lnk{line-height:inherit}
+.pg-mouse button.lnk:hover{color:var(--ink)}
+.pg-mouse .btn:disabled{opacity:.5;cursor:default}
