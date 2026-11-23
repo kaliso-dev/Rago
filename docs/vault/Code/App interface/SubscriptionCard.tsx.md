@@ -2,14 +2,14 @@
 type: code
 tags: [code, app, typescript, react, abonnement]
 fichier: app/src/components/SubscriptionCard.tsx
-lignes: 126
+lignes: 155
 maj: 2026-11-23
 ---
 # SubscriptionCard.tsx
 
 Les **lignes d'abonnement des Paramètres** (1.3.0) : l'offre, le prochain paiement ou la date de fin, la résiliation en un seul écran « Avant de résilier », et la reprise. Fiche parente : [[Code de l'app (interface)]]. Fonctionnalité : [[Abonnement dans l'app]].
 
-**Écran v5 (23/11, dans `staging` par la PR #126, fusionnée le 23/11, jamais testé sur Windows)** : une ligne `.sr` du bloc compte (maquette `app-settings.html`), « Résilier l'abonnement » en lien ; résilié, la ligne `.sr.cxl` et le bouton rouge « Reprendre l'abonnement » (maquette `app-settings-canceled.html`). Les fenêtres « Avant de résilier » et « Abonnement résilié » gardent l'ancien style en attendant les maquettes `app-cancel-before.html` et `app-cancel-done.html`.
+**Écran v5 (23/11, dans `staging` par la PR #126, fusionnée le 23/11, jamais testé sur Windows)** : une ligne `.sr` du bloc compte (maquette `app-settings.html`), « Résilier l'abonnement » en lien ; résilié, la ligne `.sr.cxl` et le bouton rouge « Reprendre l'abonnement » (maquette `app-settings-canceled.html`). Les fenêtres « Avant de résilier » et « Abonnement résilié » reprennent les maquettes `app-cancel-before.html` et `app-cancel-done.html` depuis la PR #130 (vers `staging`, 23/11) : `Modal` avec `v5="sm cxm"`, titre en ruban, une ligne `ul.cf > li` par fait avec son icône (`clock`, `undo`, `activity`, `shield`), la date, le nombre de tweaks et le gain mesuré en gras (marques `**…**` dans les textes, lues par `Rich`), deux boutons de même largeur (`div.mf.even`) ; l'écran « résilié » a un seul bouton rouge « close ». Une erreur s'affiche dans un cadre `p.err2`.
 
 Tout ce qui suit est CONFIRMÉ (code de `staging`, 10/11, commit `ee77d4f`).
 
@@ -33,7 +33,7 @@ Tout ce qui suit est CONFIRMÉ (code de `staging`, 10/11, commit `ee77d4f`).
 - Erreur : message du serveur, sinon « Impossible de joindre le serveur. Réessaie dans une minute. ». La fenêtre ne se ferme pas pendant un appel.
 
 ## Liens avec le reste
-- [[accountApi.ts]] (abonnement), [[api.ts]] (`signOutPlan`, `licenseRefresh`), [[analysis.ts]] (`lastGain`), `Modal`/`Button` ([[Petits composants de l'interface]]).
+- [[accountApi.ts]] (abonnement), [[api.ts]] (`signOutPlan`, `licenseRefresh`), [[analysis.ts]] (`lastGain`), `Modal` ([[Petits composants de l'interface]]), `I` et `Rich` (`s5/I.tsx`, [[Maquettes v5 dans l'app (s5)]]).
 - Serveur : résiliation et reprise Stripe ([[Paiements Stripe]], [[API du serveur]]) ; la fin de Premium déclenche la remise à zéro du moteur ([[Remise à zéro]]).
 
 ## À savoir avant de modifier

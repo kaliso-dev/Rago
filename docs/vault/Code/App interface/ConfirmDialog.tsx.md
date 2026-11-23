@@ -2,19 +2,21 @@
 type: code
 tags: [code, app, typescript, react]
 fichier: app/src/components/ConfirmDialog.tsx
-lignes: 181
+lignes: 220
 maj: 2026-11-23
 ---
 # ConfirmDialog.tsx
 
 La **fenêtre de confirmation** avant chaque lot : ce qui sera appliqué et annulé, avertissements, case « point de restauration », case WMIC, redémarrage, puis lancement. Fiche parente : [[Code de l'app (interface)]]. Fonctionnalités : [[Moteur des tweaks]], [[Remise à zéro]].
 
-Tout ce qui suit est CONFIRMÉ (code de `staging`, 10/11, commit `ee77d4f`).
+Depuis la PR #130 (23/11), elle reprend à l'identique les maquettes v5 `app-confirm-apply`, `-single`, `-undo`, `-undoall` et `-warn` ([[Maquettes v5 dans l'app (s5)]]).
+
+Tout ce qui suit est CONFIRMÉ (code de la branche `claude/app-v5-windows`, PR #130 vers `staging`, 23/11).
 
 ## Rôle et place dans l'ensemble
 - Ouverte quand `confirm` du store n'est pas nul. Toutes les demandes y passent : barre « Appliquer » ([[ApplyBar.tsx]]), bouton « Lancer » d'une action et modes de session ([[TweakRow.tsx]]), optimisations gratuites et « Tout annuler » ([[Dashboard.tsx]]), tweaks gratuits de l'[[Analysis.tsx|analyse]], « turn on rbw mod » du vérificateur RBW ([[ModulePage.tsx]]), boutons du [[Mode jeu]] (même page), « Optimiser et jouer » ([[Games.tsx]]).
 - Le bouton principal appelle `startRun` de [[store.tsx]], qui crée le lot affiché par [[RunOverlay.tsx]].
-- Construite sur `Modal` ([[Petits composants de l'interface]]).
+- Construite sur `Modal` avec l'option `v5` ([[Petits composants de l'interface]]) : `.w5 > .dim2 + .mdl` ; `.mdl.sm` pour une action seule.
 
 ## Fonctionnement détaillé
 
@@ -49,6 +51,16 @@ Tout ce qui suit est CONFIRMÉ (code de `staging`, 10/11, commit `ee77d4f`).
 - **WMIC** : case « Installer WMIC d'abord » (cochée) si au moins un réglage demande WMIC absent du PC ; aucun en 1.3.0.
 - **Redémarrage** : « Redémarre ton PC pour que tout prenne effet. » si un élément en demande un.
 - **Minecraft** : si un réglage OptiFine est dans la liste et qu'aucun dossier Minecraft n'est connu : « Choisis ton dossier Minecraft dans le module Minecraft… » et le bouton principal est désactivé.
+
+### Écran (maquettes v5, PR #130)
+Styles : `s5/pages/win.css` (généré par `port_win.py` depuis les maquettes) et le bloc « fenêtres » de `s5/app.css` ([[Styles de l'app (CSS)]]).
+- Titre `h2.h2.tape.mt` (ruban rouge), texte `p.ml`.
+- Liste `ul.cl` : une ligne `li` par réglage (`li.u` pour une annulation) : trait `i.tk`, nom en gras, variante `span.vr`, icône de redémarrage `rotate` (`.rb`), badge `span.adv` (« advanced », ou « retired » pour un réglage retiré ou inconnu). Au-delà de 6 lignes, la liste est dans `div.clw` : elle défile (318 px au plus) avec sa barre `i.sbar2`, et le dégradé du bas s'efface en fin de liste (`.clw.end`).
+- Groupes `p.grp` (« to apply », « to undo… ») quand il y a les deux ; avertissements dans `div.wrn` (`p.grp` puis une ligne par réglage : icône `alert`, nom en gras, texte `confirm` du catalogue) ; dossier Minecraft manquant dans un `div.wrn` aussi.
+- Point de restauration et WMIC : case `div.opt` (`role="checkbox"`, Espace ou Entrée la cochent, `i.cbx`, titre avec icône `shield` pour le point de restauration, explication en petit).
+- Redémarrage : `p.rbn` avec l'icône `power`.
+- Pied `div.mf` : « cancel » (`btn gh2`) et le bouton rouge (`btn red`), qui prend le focus.
+- Une action seule (`single`, un réglage, sans jeu ni titre propre) : petite fenêtre `.mdl.sm`, sans liste (maquette `app-confirm-single`).
 
 ### Lancement
 `startRun(ids, { restorePoint: case proposée et cochée, wmic: case cochée et utile, clearSelection: !single, undo })`. Une demande `single` ne touche pas à la sélection du joueur.
