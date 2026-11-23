@@ -17,12 +17,21 @@ for m in cat['modules']:
             if 'ref' not in t: T[t['id']] = t
 def count(mid):  # the app counts kind 'tweak' only
     return sum(1 for sec in MOD[mid]['sections'] for t in sec['tweaks'] if 'ref' not in t and t['kind'] == 'tweak')
-# the ten sections of the "Inside the app" card: name and tagline of each module, in the app's order, with its icon of the v5 set
+# the ten sections of the app ("Inside the app"): name and tagline of each module, in the app's order, with its icon of the v5 set
 ICON = {'network': 'network', 'latency': 'latency', 'gpu': 'graphics', 'windows': 'windows', 'hitreg': 'hitreg', 'minecraft': 'minecraft',
         'rbw': 'rbw', 'gamemode': 'games', 'expert': 'expert', 'restore': 'restore'}
 esc = lambda t: t.replace('&', '&amp;').replace('<', '&lt;').replace('>', '&gt;')
-rows = ''.join(f'<div class="s-m{" on" if m["id"] == "latency" else ""}"><svg class="i" aria-hidden="true"><use href="#i-{ICON.get(m["id"], "settings")}"/></svg>'
-               f'<div><b>{esc(m["name"]["en"])}</b><span>{esc(m["tagline"]["en"])}</span></div></div>\n' for m in cat['modules'])
+def sec_name(sec):
+    n = sec.get('name', '')
+    return n.get('en', '') if isinstance(n, dict) else n
+def tally(mid):  # the count shown on the card: its tweaks, or what the section is for when it has none (Restore)
+    n = count(mid)
+    return f'<b>{n}</b>tweak{"" if n == 1 else "s"}' if n else '<b>Undo</b>every tweak'
+# site v6 (23/11/2026): one card per section of the app, stacked while you scroll (number, name, tagline, its parts, count, icon)
+rows = ''.join(f'<article class="x-cap"><span class="x-cap-n" aria-hidden="true">{i:02d}</span><h3>{esc(m["name"]["en"])}</h3>'
+               f'<p>{esc(m["tagline"]["en"])}</p><ul>{"".join(f"<li>{esc(sec_name(sec))}</li>" for sec in m["sections"] if sec_name(sec))}</ul>'
+               f'<span class="x-cap-i" aria-hidden="true"><svg class="i"><use href="#i-{ICON.get(m["id"], "settings")}"/></svg></span>'
+               f'<span class="x-cap-c">{tally(m["id"])}</span></article>\n' for i, m in enumerate(cat['modules'], 1))
 a, b = s.index('<!-- mods -->') + len('<!-- mods -->'), s.index('<!-- /mods -->')
 s = s[:a] + '\n' + rows + s[b:]
 # total tweak count, like the app (catalog.ts totalTweaks): tweaks and one-time actions, twins (same script

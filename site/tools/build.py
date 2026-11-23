@@ -74,7 +74,9 @@ try:
     dlink = lambda h: re.sub(r'\bDiscord\b', f'<a href="{DISCORD}" rel="noopener">Discord</a>', h) if DISCORD else h
     # without JavaScript, Lifetime can't be bought from this page: its questions (marked "life") stay out
     static = ''.join(f'<details class="s-q"><summary class="qh"><span>{esc(q)}</span><span class="pm" aria-hidden="true"></span></summary><p>{dlink(esc(x))}</p></details>' for q, x, *only in faq if not only)
-    s = s.replace('<div class="faq rv" id="faqs"></div>', '<div class="faq rv" id="faqs"></div>\n    <noscript><div class="faq">' + static + '</div></noscript>', 1)
+    FAQ = '<div class="faq" id="faqs"></div>'  # site v6 (23/11/2026): the questions of the home page's FAQ
+    assert s.count(FAQ) == 1, 'FAQ container (faqs) not found in page.html'
+    s = s.replace(FAQ, FAQ + '\n    <noscript><div class="faq">' + static + '</div></noscript>', 1)
     s = re.sub(r'(<span id="faq-n">)\d+', lambda m: m.group(1) + str(sum(1 for f in faq if len(f) < 3)), s)
 except (OSError, subprocess.CalledProcessError) as e:
     print('warning: static FAQ skipped (node not available):', e)

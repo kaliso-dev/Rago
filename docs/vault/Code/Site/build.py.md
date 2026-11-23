@@ -2,8 +2,8 @@
 type: code
 tags: [code, site, python]
 fichier: site/tools/build.py
-lignes: 188
-maj: 2026-11-22
+lignes: 190
+maj: 2026-11-23
 ---
 # build.py
 
@@ -41,7 +41,7 @@ Un script sans fonction publique. Repères :
 2. Liens sans JavaScript : `href="/login"`, `/signup`, `/affiliate`, `/download`, `/buy?interval=year`, `/buy/route` deviennent absolus vers `BASE`.
 3. Prix sans JavaScript (formule annuelle par défaut) : `<b id="p-amt">` ← 2,50 $ ; `<p class="bil" id="p-note">` ← « Billed $29.99 yearly. 6 months free. » ; `<em id="save">` ← « 6 months free » (`hidden` si `FREE` < 1) ; `<b id="l-amt">` ← prix Lifetime. Chaque remplacement a son `assert`.
 4. Contrôles de prix : `priceLifetime` = `LIFETIME_PRICE` de `licensing/src/billing.js`, `priceRoute` = `ROUTE_PRICE` et `priceRouteYear` = `ROUTE_PRICE_YEARLY` de `licensing/src/route-addon.js` (arrêt avec « … differ: change both »).
-5. FAQ sans JavaScript : le tableau `  const F = [` … `\n  ];` est exécuté par `node -e`, puis écrit dans un `<noscript>` sous `<div class="faq rv" id="faqs"></div>`, au format v5 (`<details class="s-q"><summary class="qh"><span>Question</span><span class="pm"></span></summary><p>Réponse</p></details>`) ; les questions Lifetime (`life`) sont laissées de côté ; le nombre de questions est écrit dans `<span id="faq-n">`.
+5. FAQ sans JavaScript : le tableau `  const F = [` … `\n  ];` est exécuté par `node -e`, puis écrit dans un `<noscript>` sous `<div class="faq" id="faqs"></div>` (Site v6, 23/11 ; ce conteneur doit apparaître une seule fois, `assert`), au format v5 (`<details class="s-q"><summary class="qh"><span>Question</span><span class="pm"></span></summary><p>Réponse</p></details>`) ; les questions Lifetime (`life`) sont laissées de côté ; le nombre de questions est écrit dans `<span id="faq-n">`.
 6. Discord : `href="#discord"` devient l'invitation (nouvel onglet) et les éléments `js-discord … hidden` sont rendus visibles.
 7. `<head>` : tout ce qui précède la fin du `<style>` qui commence par `/* Layout` est mis dans un `<head>` complet (canonical, Open Graph, Twitter, icônes, JSON-LD). La description de partage reprend « Nearly 220 tweaks » du titre `#feat-h`.
 8. Pré-rendu : `node tools/prerender.js site/index.html` ([[prerender.js]]) rend le tableau `#cmp`, gravé ensuite dans la page. Sans `node` ou Playwright : `warning: no-JS sections not baked`.

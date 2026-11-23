@@ -10,6 +10,7 @@
      screen with the header (titles, hero and illustrations follow it; v5.css) */
   const fitK = () => doc.style.setProperty("--k", Math.max(.78, Math.min(1.45, innerWidth / 1440, innerHeight / 1000)).toFixed(3));
   fitK(); addEventListener("resize", fitK, { passive: true });
+  if (document.querySelector("main.x")) return; // site v6: its own motion, below
   if (matchMedia("(prefers-reduced-motion: reduce)").matches || !("IntersectionObserver" in window)) return;
   doc.classList.add("mo");
   const $$ = (q, r = document) => Array.from(r.querySelectorAll(q));
@@ -137,4 +138,377 @@
       b.addEventListener("pointerleave", () => { b.style.translate = ""; });
     });
   }
+})();
+
+/* Site v6 (23/11/2026), pages whose <main> has the class "x": the motion of the new design, written for Rago from the
+   structure of the reference site Sofiene chose (loader with a counter, titles that appear letter by letter, header that hides
+   while scrolling down, round menu button with the reading progress, smooth wheel scrolling, banners that scroll forever,
+   a bubble that follows the mouse over some cards, grain over the whole page). The page itself (src/page.html) adds its
+   pinned sections on top, with X.pin and X.split.
+   With "reduce motion" on: no loader, no smooth scrolling, everything shows as it is; the menu and the header still work. */
+(() => {
+  "use strict";
+  const main = document.querySelector("main.x");
+  if (!main) return;
+  const doc = document.documentElement, $ = (q, r = document) => r.querySelector(q), $$ = (q, r = document) => Array.from(r.querySelectorAll(q));
+  const reduce = matchMedia("(prefers-reduced-motion: reduce)").matches;
+  const fine = matchMedia("(hover: hover) and (pointer: fine)").matches;
+  const clamp = (v, a = 0, b = 1) => Math.min(b, Math.max(a, v));
+  const X = window.X = { reduce, fine, clamp, $, $$ };
+  doc.classList.add("x-on");
+  if (reduce) doc.classList.add("x-still");
+
+  /* ---------- 1. Letters: split a text into words and letters, read once by screen readers ---------- */
+  X.split = (el, cls = "x-ch") => {
+    if (!el || el.dataset.split) return el ? $$("." + cls, el) : [];
+    el.dataset.split = "1";
+    const label = el.textContent.replace(/\s+/g, " ").trim();
+    const vis = document.createElement("span"); vis.className = "x-vis"; vis.setAttribute("aria-hidden", "true");
+    const walk = (node, into) => {
+      Array.from(node.childNodes).forEach(n => {
+        if (n.nodeType === 3) {
+          n.textContent.split(/(\s+)/).forEach(part => {
+            if (!part) return;
+            if (/^\s+$/.test(part)) { into.appendChild(document.createTextNode(" ")); return; }
+            const w = document.createElement("span"); w.className = "x-w";
+            Array.from(part).forEach(c => { const s = document.createElement("span"); s.className = cls; s.textContent = c; w.appendChild(s); });
+            into.appendChild(w);
+          });
+        } else if (n.nodeType === 1) {
+          if (n.nodeName === "BR" || n.matches("img, svg, .x-keep")) { into.appendChild(n.cloneNode(true)); return; }
+          const c = n.cloneNode(false); c.removeAttribute("id"); into.appendChild(c); walk(n, c);
+        }
+      });
+    };
+    walk(el, vis);
+    const sr = document.createElement("span"); sr.className = "sr-only"; sr.textContent = label;
+    el.textContent = ""; el.append(sr, vis);
+    return $$("." + cls, el);
+  };
+  /* the spread of a letter reveal: 15 ms a letter, at most 1.2 s for the whole text */
+  X.spread = n => Math.min(.015 * n, 1.2);
+  X.stagger = (els, prop = "--d") => { const n = els.length, a = X.spread(n); els.forEach((e, i) => e.style.setProperty(prop, (n > 1 ? i / (n - 1) * a : 0).toFixed(3) + "s")); };
+  /* run fn once el is above `at` (0..1 of the screen height) */
+  X.when = (el, fn, at = .85) => {
+    if (!el) return;
+    if (!("IntersectionObserver" in window)) return fn();
+    const o = new IntersectionObserver(es => { if (es.some(e => e.isIntersecting)) { o.disconnect(); fn(); } }, { rootMargin: `0px 0px -${Math.round((1 - at) * 100)}% 0px` });
+    o.observe(el);
+  };
+
+  /* ---------- 2. Reveals on scroll ---------- */
+  const reveal = () => {
+    if (reduce) return;
+    // titles and texts marked data-x="chars": their letters fade in one after the other
+    $$('[data-x="chars"]').forEach(el => {
+      if (el.closest("[data-x-own]")) return;
+      const ch = X.split(el); X.stagger(ch); el.classList.add("x-pre");
+      X.when(el, () => el.classList.add("x-go"), el.dataset.at ? +el.dataset.at : .85);
+    });
+    // blocks marked data-x="up": rise and fade in, one after the other when several arrive together
+    let batch = [], t = 0;
+    const flush = () => { batch.sort((a, b) => a.getBoundingClientRect().top - b.getBoundingClientRect().top || a.getBoundingClientRect().left - b.getBoundingClientRect().left); batch.forEach((el, i) => { el.style.setProperty("--d", (Math.min(i, 6) * .09).toFixed(2) + "s"); el.classList.add("x-go"); }); batch = []; };
+    $$('[data-x="up"], [data-x="pop"], .x-btn[data-x="btn"]').forEach(el => {
+      if (el.closest("[data-x-own]")) return;
+      el.classList.add("x-pre");
+      X.when(el, () => { batch.push(el); clearTimeout(t); t = setTimeout(flush, 16); }, el.matches(".x-btn") ? .78 : .9);
+    });
+    // lists: their items rise one after the other
+    $$('[data-x="list"]').forEach(el => {
+      const li = $$(":scope > *", el); li.forEach((e, i) => e.style.setProperty("--d", (i * .06).toFixed(2) + "s")); el.classList.add("x-pre");
+      X.when(el, () => el.classList.add("x-go"), .95);
+    });
+  };
+
+  /* ---------- 3. Buttons: the label rolls up, the fill rises from the bottom ---------- */
+  $$(".x-btn, .x-hd-cta").forEach(b => {
+    const l = b.querySelector(".x-bl");
+    if (l && !l.querySelector(".x-bt")) { const t = l.innerHTML; l.innerHTML = `<span class="x-bt">${t}</span><span class="x-bt" aria-hidden="true">${t}</span>`; }
+  });
+
+  /* ---------- 4. Header: hides while scrolling down, comes back up ---------- */
+  const hd = $(".x-hd");
+  let lastY = scrollY;
+  const header = () => {
+    if (!hd) return;
+    const y = scrollY, d = y - lastY;
+    if (y <= 40) { hd.classList.add("x-top"); hd.classList.remove("x-hide"); }
+    else { hd.classList.remove("x-top"); if (!reduce && d > 4 && !doc.classList.contains("x-nav-open")) hd.classList.add("x-hide"); else if (d < -4) hd.classList.remove("x-hide"); }
+    // over a light section (data-light), the header turns dark
+    const light = $$("[data-light]").some(s => { const r = s.getBoundingClientRect(); return r.top < 60 && r.bottom > 20; });
+    hd.classList.toggle("x-on-light", light);
+    lastY = y;
+  };
+
+  /* ---------- 5. Menu: round button at the bottom left, its ring shows how far the page is read ---------- */
+  const nav = $(".x-nav"), navBtn = nav && $(".x-nav-b", nav), panel = nav && $(".x-nav-p", nav), ring = nav && $(".x-nav-pr", nav);
+  const RING = 2 * Math.PI * 25;
+  let links = [];
+  if (nav) {
+    links = $$("a[href^='#']", panel).map(a => ({ a, el: document.querySelector(a.getAttribute("href")) })).filter(l => l.el);
+    ring.style.strokeDasharray = RING; ring.style.strokeDashoffset = RING;
+    let back = null;
+    const set = open => {
+      nav.classList.toggle("x-open", open); doc.classList.toggle("x-nav-open", open);
+      panel.hidden = false; panel.setAttribute("aria-hidden", !open); panel.inert = !open;
+      navBtn.setAttribute("aria-expanded", open); navBtn.setAttribute("aria-label", open ? "Close menu" : "Open menu");
+      if (open) {
+        back = document.activeElement;
+        if (!reduce) $$(".x-nav-l > li", panel).forEach((li, i) => li.animate([{ transform: "translateY(12px)", opacity: 0 }, { transform: "none", opacity: 1 }], { duration: 420, delay: 260 + i * 40, easing: "cubic-bezier(.25,.46,.45,.94)", fill: "backwards" }));
+      } else if (nav.contains(document.activeElement)) back && back.focus && back.focus({ preventScroll: true });
+    };
+    X.navOpen = () => nav.classList.contains("x-open");
+    X.navSet = set;
+    panel.inert = true;
+    navBtn.addEventListener("click", () => set(!nav.classList.contains("x-open")));
+    $$("a", panel).forEach(a => a.addEventListener("click", () => set(false)));
+    addEventListener("keydown", e => { if (e.key === "Escape" && nav.classList.contains("x-open")) { set(false); navBtn.focus(); } });
+    document.addEventListener("pointerdown", e => { if (nav.classList.contains("x-open") && !nav.contains(e.target)) set(false); });
+  }
+  const navTrack = () => {
+    if (!nav) return;
+    const max = doc.scrollHeight - innerHeight, p = max > 0 ? clamp(scrollY / max) : 0;
+    ring.style.strokeDashoffset = (RING * (1 - p)).toFixed(2);
+    let cur = links[0];
+    links.forEach(l => { if (!l.el.hidden && l.el.getBoundingClientRect().top <= innerHeight * .35) cur = l; });
+    links.forEach(l => l.a.classList.toggle("x-act", l === cur));
+  };
+
+  /* ---------- 6. Smooth wheel scrolling (the page glides to where the wheel sends it) ---------- */
+  let sTarget = scrollY, sCur = scrollY, sRun = false, sAnim = null;
+  const maxY = () => doc.scrollHeight - innerHeight;
+  const scrollable = el => {
+    for (let n = el; n && n !== document.body && n !== doc; n = n.parentElement) {
+      if (n.matches && n.matches(".dlg, [data-native-scroll]")) return true;
+      const s = getComputedStyle(n); if (/(auto|scroll)/.test(s.overflowY) && n.scrollHeight > n.clientHeight + 1) return true;
+    }
+    return false;
+  };
+  if (!reduce && fine) {
+    doc.classList.add("x-smooth");
+    addEventListener("wheel", e => {
+      if (e.ctrlKey || e.defaultPrevented || Math.abs(e.deltaX) > Math.abs(e.deltaY) || doc.classList.contains("x-lock") || scrollable(e.target)) return;
+      e.preventDefault();
+      if (!sRun) sTarget = sCur = scrollY;
+      sAnim = null;
+      sTarget = clamp(sTarget + e.deltaY * (e.deltaMode === 1 ? 40 : e.deltaMode === 2 ? innerHeight : 1), 0, maxY());
+      sRun = true;
+    }, { passive: false });
+    addEventListener("scroll", () => { if (!sRun) sTarget = sCur = scrollY; }, { passive: true });
+    addEventListener("keydown", () => { sRun = false; sAnim = null; });
+  }
+  const ease3 = t => t < .5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2;
+  X.scrollTo = (y, dur = 1.4) => {
+    y = clamp(y, 0, maxY());
+    if (reduce) { scrollTo(0, y); return; }
+    doc.classList.add("x-smooth");
+    sAnim = { from: scrollY, to: y, t0: performance.now(), dur: dur * 1000 }; sRun = true; sCur = scrollY;
+  };
+  /* links to a section of the page glide there */
+  document.addEventListener("click", e => {
+    const a = e.target.closest && e.target.closest('a[href^="#"]');
+    if (!a || e.defaultPrevented) return;
+    const id = a.getAttribute("href"); if (id.length < 2) return;
+    const el = document.querySelector(id); if (!el) return;
+    e.preventDefault();
+    const top = id === "#home" || id === "#top" ? 0 : el.getBoundingClientRect().top + scrollY - (+a.dataset.offset || 0);
+    X.scrollTo(top, Math.min(2.2, .9 + Math.abs(top - scrollY) / 6000));
+    history.replaceState(null, "", id === "#home" ? location.pathname + location.search : id);
+  });
+  const smooth = (now, dt) => {
+    if (!sRun) return;
+    if (sAnim) {
+      const k = clamp((now - sAnim.t0) / sAnim.dur); sCur = sAnim.from + (sAnim.to - sAnim.from) * ease3(k);
+      if (k >= 1) { sRun = false; sAnim = null; sTarget = sCur; }
+    } else {
+      sCur += (sTarget - sCur) * (1 - Math.exp(-dt / 105));
+      if (Math.abs(sTarget - sCur) < .5) { sCur = sTarget; sRun = false; }
+    }
+    scrollTo(0, sCur);
+  };
+
+  /* ---------- 7. Banners that scroll forever: .x-mq > .x-mq-in, data-speed (px/s), data-boost (with the scroll) ---------- */
+  const mqs = [];
+  X.marquee = el => {
+    if (el.dataset.mq || reduce) return;
+    const inner = $(".x-mq-in", el); if (!inner) return;
+    el.dataset.mq = "1";
+    // enough copies to cover the strip twice over, however few items it has
+    const parts = [inner], n = Math.max(1, Math.ceil((el.clientWidth || innerWidth) / Math.max(1, inner.scrollWidth)));
+    for (let k = 0; k < n; k++) { const copy = inner.cloneNode(true); copy.setAttribute("aria-hidden", "true"); $$("a, button", copy).forEach(a => a.tabIndex = -1); $$("[id]", copy).forEach(a => a.removeAttribute("id")); el.appendChild(copy); parts.push(copy); }
+    const m = { el, parts, speed: +el.dataset.speed || 60, dir: el.dataset.dir === "right" ? 1 : -1, boost: +el.dataset.boost || 0, x: 0, v: 0, on: false, hold: false };
+    if (m.dir === 1) m.x = -inner.scrollWidth;
+    if (el.dataset.hover !== undefined && fine) { el.addEventListener("mouseenter", () => m.hold = true); el.addEventListener("mouseleave", () => m.hold = false); }
+    new IntersectionObserver(([e]) => m.on = e.isIntersecting).observe(el);
+    mqs.push(m);
+  };
+  let vScroll = 0, prevY = scrollY;
+  const marquees = dt => {
+    const s = dt / 1000, vy = clamp((scrollY - prevY) / Math.max(s, .001), -4000, 4000); prevY = scrollY;
+    vScroll += (vy - vScroll) * (1 - Math.exp(-s / .38));
+    mqs.forEach(m => {
+      if (!m.on || m.hold) return;
+      const w = m.parts[0].scrollWidth; if (!w) return;
+      const extra = m.boost ? clamp(Math.abs(vScroll) * m.boost, 0, 3600) : 0;
+      m.x += (m.speed + extra) * m.dir * Math.min(s, .05);
+      m.x = ((m.x % w) + w) % w - w;
+      m.parts.forEach(p => p.style.transform = `translate3d(${m.x.toFixed(2)}px,0,0)`);
+    });
+  };
+
+  /* ---------- 8. A bubble that follows the mouse over cards marked data-cur="text" ---------- */
+  let cur = null, curEl = null, cx = 0, cy = 0, bx = 0, by = 0, curOn = false;
+  if (fine && $$("[data-cur]").length) {
+    cur = document.createElement("span"); cur.className = "x-cur"; cur.setAttribute("aria-hidden", "true"); document.body.appendChild(cur);
+    const show = (el, x, y) => {
+      if (!curOn) { bx = x; by = y; }
+      curEl = el; curOn = true; cur.textContent = el.dataset.cur; cur.dataset.face = el.dataset.face || ""; cur.classList.add("x-in");
+    };
+    const hide = () => { curEl = null; curOn = false; cur.classList.remove("x-in"); };
+    addEventListener("pointermove", e => { cx = e.clientX; cy = e.clientY; const el = e.target.closest && e.target.closest("[data-cur]"); if (el && el !== curEl) show(el, cx, cy); else if (!el && curEl) hide(); }, { passive: true });
+    document.addEventListener("pointerleave", hide);
+    addEventListener("scroll", () => { if (!curOn) return; const el = document.elementFromPoint(cx, cy); const c = el && el.closest("[data-cur]"); if (!c) hide(); else if (c !== curEl) show(c, cx, cy); }, { passive: true });
+    $$("[data-cur]").forEach(el => el.addEventListener("click", e => { if (e.target.closest("a, button, label, input")) return; const a = el.querySelector("[data-cur-go]"); a && a.click(); }));
+  }
+  const cursor = dt => { if (!cur || !curOn) return; const k = 1 - Math.exp(-dt / 90); bx += (cx - bx) * k; by += (cy - by) * k; cur.style.transform = `translate3d(${bx.toFixed(1)}px,${by.toFixed(1)}px,0) translate(-50%,-50%)`; };
+
+  /* ---------- 9. Scroll rail on the right edge, shown while the page moves, can be dragged ---------- */
+  let rail = null, thumb = null, railT = 0, thumbH = 48;
+  if (fine) {
+    rail = document.createElement("div"); rail.className = "x-rail"; rail.setAttribute("aria-hidden", "true");
+    rail.innerHTML = '<i class="x-rail-t"></i><i class="x-rail-h"></i>'; document.body.appendChild(rail); thumb = rail.lastChild;
+    let drag = false, off = 0;
+    const toY = y => { const r = rail.getBoundingClientRect(); return clamp((y - r.top - off) / (r.height - thumbH)) * maxY(); };
+    rail.addEventListener("pointerdown", e => { const tr = thumb.getBoundingClientRect(); off = e.clientY >= tr.top && e.clientY <= tr.bottom ? e.clientY - tr.top : thumbH / 2; drag = true; rail.setPointerCapture(e.pointerId); rail.classList.add("x-drag", "x-live"); sRun = false; scrollTo(0, toY(e.clientY)); e.preventDefault(); });
+    rail.addEventListener("pointermove", e => drag && scrollTo(0, toY(e.clientY)));
+    const up = () => { drag = false; rail.classList.remove("x-drag"); };
+    rail.addEventListener("pointerup", up); rail.addEventListener("pointercancel", up);
+    addEventListener("scroll", () => { rail.classList.add("x-live"); clearTimeout(railT); railT = setTimeout(() => rail.classList.remove("x-live"), 1100); }, { passive: true });
+  }
+  const railDraw = () => {
+    if (!rail) return;
+    const h = rail.clientHeight; thumbH = Math.max(48, Math.round(h * innerHeight / doc.scrollHeight));
+    thumb.style.height = thumbH + "px"; thumb.style.transform = `translateY(${((h - thumbH) * clamp(scrollY / Math.max(1, maxY()))).toFixed(1)}px)`;
+  };
+
+  /* ---------- 10. Grain over the whole page, moving a little with the scroll ---------- */
+  let grain = null;
+  if (!reduce) {
+    const cv = document.createElement("canvas"); cv.className = "x-grain"; cv.setAttribute("aria-hidden", "true"); document.body.appendChild(cv);
+    const ctx = cv.getContext("2d"), tile = document.createElement("canvas"); tile.width = tile.height = 220;
+    const tc = tile.getContext("2d"), img = tc.createImageData(220, 220), px = img.data;
+    let seed = (Math.random() * 4294967296) >>> 0, w = 0, h = 0, last = 0, drift = scrollY;
+    const fill = () => { for (let i = 0; i < px.length; i += 4) { seed = (1664525 * seed + 1013904223) >>> 0; const v = (seed / 4294967296 * 255) | 0; px[i] = px[i + 1] = px[i + 2] = v; px[i + 3] = (v * .35) | 0; } tc.putImageData(img, 0, 0); };
+    const size = () => { const r = Math.min(devicePixelRatio || 1, 2); w = innerWidth; h = innerHeight; cv.width = w * r; cv.height = h * r; ctx.setTransform(r, 0, 0, r, 0, 0); };
+    size(); fill(); addEventListener("resize", size, { passive: true });
+    grain = now => {
+      drift += (scrollY - drift) * .028;
+      if (now - last > 70) { fill(); last = now; }
+      const ox = (drift * .008 + now * .0019) % 220, oy = (drift * .007 + now * .0016) % 220;
+      ctx.clearRect(0, 0, w, h); ctx.globalAlpha = .2;
+      for (let y = -220; y < h + 220; y += 220) for (let x = -220; x < w + 220; x += 220) ctx.drawImage(tile, x - ox, y - oy, 220, 220);
+      ctx.globalAlpha = 1;
+    };
+  }
+
+  /* ---------- 11. Pinned sections: the section stays on screen while the page scrolls `len` pixels, fn(progress 0..1) ---------- */
+  const pins = [];
+  X.pin = (sec, { len, scrub = .5, update, when = () => true }) => {
+    const p = { sec, len, scrub, update, when, raw: 0, cur: 0, on: false, d: 0 };
+    const setup = () => {
+      p.on = !reduce && when();
+      sec.classList.toggle("x-pinned", p.on);
+      if (!p.on) { sec.style.height = ""; p.d = 0; update(1, p); return; }
+      p.d = Math.max(1, len()); sec.style.height = (innerHeight + p.d) + "px";
+      p.raw = p.cur = clamp(-sec.getBoundingClientRect().top / p.d); update(p.cur, p);
+    };
+    p.setup = setup; pins.push(p); setup();
+    return p;
+  };
+  let rw = innerWidth, rh = innerHeight, rT = 0;
+  addEventListener("resize", () => { clearTimeout(rT); rT = setTimeout(() => { if (innerWidth === rw && Math.abs(innerHeight - rh) < 120 && !fine) return; rw = innerWidth; rh = innerHeight; pins.forEach(p => p.setup()); }, 150); });
+  addEventListener("load", () => pins.forEach(p => p.setup()));
+  const pinTick = dt => pins.forEach(p => {
+    if (!p.on) return;
+    const r = p.sec.getBoundingClientRect();
+    if (r.bottom < -innerHeight * .5 || r.top > innerHeight * 1.5) { if (p.cur !== (r.top > 0 ? 0 : 1)) { p.cur = p.raw = r.top > 0 ? 0 : 1; p.update(p.cur, p); } return; }
+    p.raw = clamp(-r.top / p.d);
+    const k = p.scrub ? 1 - Math.exp(-dt / (p.scrub * 1000 / 3)) : 1;
+    const n = p.cur + (p.raw - p.cur) * k;
+    if (Math.abs(n - p.cur) > 1e-5 || p.first !== true) { p.cur = Math.abs(p.raw - n) < 1e-4 ? p.raw : n; p.first = true; p.update(p.cur, p); }
+  });
+  /* scrubbed effects without a pin: fn(progress) while el crosses the screen from `a` to `b` (fractions of the screen height for its top) */
+  const scrubs = [];
+  X.scrub = (el, a, b, fn, scrub = .3) => { const s = { el, a, b, fn, scrub, cur: -1 }; scrubs.push(s); return s; };
+  const scrubTick = dt => scrubs.forEach(s => {
+    const r = s.el.getBoundingClientRect(); if (r.bottom < -200 || r.top > innerHeight + 200) { const v = r.top > 0 ? 0 : 1; if (s.cur !== v) { s.cur = v; s.fn(v); } return; }
+    const raw = clamp((innerHeight * s.a - r.top) / (innerHeight * (s.a - s.b)));
+    const n = s.cur < 0 ? raw : s.cur + (raw - s.cur) * (1 - Math.exp(-dt / (s.scrub * 1000 / 3)));
+    if (Math.abs(n - s.cur) > 1e-5) { s.cur = n; s.fn(n); }
+  });
+  /* other per-frame work of the page */
+  const ticks = [];
+  X.tick = fn => ticks.push(fn);
+
+  /* ---------- 12. The loader, then the hero comes in ---------- */
+  const ld = $(".x-ld");
+  const done = () => { doc.classList.remove("has-ld", "x-ld-ready", "x-ld-fill", "x-ld-out"); ld && ld.remove(); document.dispatchEvent(new CustomEvent("x:loaded")); };
+  const loader = () => {
+    if (!ld || reduce || !doc.classList.contains("has-ld")) { done(); return; }
+    clearTimeout(window.__xLdSafe);
+    const gap = $(".x-ld-g", ld), cnt = $(".x-ld-n b", ld), shots = $$(".x-ld-sh", ld), cssMs = (n, d) => { const v = getComputedStyle(ld).getPropertyValue(n).trim(); return v.endsWith("ms") ? parseFloat(v) : v.endsWith("s") ? parseFloat(v) * 1000 : d; };
+    const out3 = t => 1 - Math.pow(1 - t, 3);
+    let val = 0, loaded = false, ending = false, finished = false, t0 = 0;
+    const set = v => { val = v; cnt.textContent = Math.round(v); gap.style.setProperty("--gap", (v / 100 * Math.max(92, Math.min(innerWidth * .3, 420))).toFixed(1) + "px"); };
+    const finish = () => {
+      if (ending || finished) return; ending = true;
+      const from = val, s0 = performance.now();
+      const step = now => {
+        const k = Math.min(1, (now - s0) / 420); set(from + (100 - from) * out3(k));
+        if (k < 1) return requestAnimationFrame(step);
+        finished = true;
+        const r = gap.getBoundingClientRect(), sx = (innerWidth + innerHeight * .22) / Math.max(r.width, 1) * 1.06, sy = innerHeight / Math.max(r.height, 1) * 1.06; // the gap is skewed: wide enough to cover the corners
+        doc.classList.add("x-ld-fill");
+        setTimeout(() => { gap.style.transform = `scale(${sx.toFixed(3)},${sy.toFixed(3)})`; setTimeout(() => { doc.classList.add("x-ld-out"); document.dispatchEvent(new CustomEvent("x:lift")); setTimeout(done, cssMs("--lift", 620)); }, cssMs("--fill", 520)); }, cssMs("--hide", 180));
+      };
+      requestAnimationFrame(step);
+    };
+    const count = now => { if (ending) return; const k = Math.min(1, (now - t0) / 1100); set(Math.max(val, 92 * out3(k))); if (k >= 1 && loaded) finish(); else requestAnimationFrame(count); };
+    set(0);
+    const word = () => { requestAnimationFrame(() => requestAnimationFrame(() => doc.classList.add("x-ld-ready"))); setTimeout(() => { t0 = performance.now(); requestAnimationFrame(count); }, 420); };
+    if (shots.length) {
+      shots.forEach((s, i) => {
+        const a = (i % 2 ? 1 : -1);
+        s.style.setProperty("--x", (a * (6 + Math.random() * 14)).toFixed(0) + "px"); s.style.setProperty("--y", ((Math.random() * 2 - 1) * 14).toFixed(0) + "px");
+        s.style.setProperty("--r", ((Math.random() * 2 - 1) * 7).toFixed(1) + "deg"); s.style.setProperty("--or", (a * (8 + Math.random() * 6)).toFixed(1) + "deg");
+        s.style.zIndex = i + 1; setTimeout(() => s.classList.add("x-in"), 150 * i);
+      });
+      setTimeout(() => {
+        shots.slice().reverse().forEach((s, i) => setTimeout(() => s.classList.add("x-out"), 52 * i));
+        setTimeout(word, 52 * (shots.length - 1) + 720 * .7);
+      }, 150 * (shots.length - 1) + 170);
+    } else word();
+    if (document.readyState === "complete") loaded = true; else addEventListener("load", () => loaded = true, { once: true });
+    setTimeout(() => { loaded = true; finish(); }, 9000);
+  };
+
+  /* ---------- the one loop ---------- */
+  let lt = performance.now();
+  const frame = now => {
+    const dt = Math.min(64, now - lt); lt = now;
+    smooth(now, dt); header(); navTrack(); railDraw(); marquees(dt); cursor(dt); pinTick(dt); scrubTick(dt);
+    ticks.forEach(f => f(now, dt));
+    if (grain && !document.hidden) grain(now);
+    requestAnimationFrame(frame);
+  };
+
+  X.start = () => {
+    $$(".x-mq").forEach(X.marquee);
+    reveal();
+    requestAnimationFrame(frame);
+    loader();
+  };
+  // the page sets up its own sections first (it runs before this file: it's inline), then calls X.start through x:ready
+  if (window.__xPage) window.__xPage(X);
+  X.start();
 })();
