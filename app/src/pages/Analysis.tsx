@@ -41,7 +41,10 @@ export function Analysis() {
   };
   // ouverte après une application : la nouvelle mesure part toute seule
   useEffect(() => {
-    if (store.changed && !step) void run();
+    // « Run again » du tableau de bord : la mesure part aussi toute seule
+    const asked = sessionStorage.getItem("rago.analysis.run") === "1";
+    sessionStorage.removeItem("rago.analysis.run");
+    if ((store.changed || asked) && !step) void run();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 

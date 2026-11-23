@@ -1,7 +1,7 @@
 import type { Lang } from "./catalog";
 
 const fr = {
-  "app.search": "Rechercher un réglage",
+  "app.search": "rechercher jeux, tweaks, réglages",
   "nav.dashboard": "Tableau de bord",
   "nav.optimize": "Optimiser",
   "nav.play": "Jouer",
@@ -1246,12 +1246,32 @@ const fr = {
   "tips.nudge": "1 conseil pour {game}|{n} conseils pour {game}",
   "tips.nudgeChecks": "1 point à vérifier|{n} points à vérifier",
   "tips.nudgeKey": "{key} pour voir",
+  "s5.nav.tweaks": "1 réglage|{n} réglages",
+  "s5.nav.nothingYet": "rien d'appliqué pour l'instant",
+  "s5.nav.lastCheck": "dernière analyse {ago}",
+  "s5.nav.noCheck": "pas encore analysé",
+  "s5.dash.freeTitle": "Tweaks\ngratuits",
+  "s5.dash.freeGo": "Appliquer 1 tweak gratuit|Appliquer {n} tweaks gratuits",
+  "s5.dash.lastRun": "Dernière analyse {ago}",
+  "s5.dash.neverRun": "Pas encore lancée",
+  "s5.dash.above": "au-dessus de la normale",
+  "s5.dash.measured": "sur {n} mesurés",
+  "s5.dash.notMeasured": "environ une minute",
+  "s5.dash.freeFix": "réglé gratuit",
+  "s5.dash.premium": "premium",
+  "s5.dash.byYou": "par toi",
+  "s5.dash.seeResults": "voir les résultats",
+  "s5.dash.runAgain": "relancer",
+  "s5.dash.cleaned": "nettoyée",
+  "s5.dash.admin": "Admin",
+  "s5.dash.allGames": "tous les jeux",
+  "s5.dash.mine": "les miens",
 };
 
 export type Key = keyof typeof fr;
 
 const en: Record<Key, string> = {
-  "app.search": "Search tweaks",
+  "app.search": "search games, tweaks, settings",
   "nav.dashboard": "Dashboard",
   "nav.optimize": "Optimize",
   "nav.play": "Play",
@@ -2482,6 +2502,26 @@ const en: Record<Key, string> = {
   "tips.nudge": "1 tip for {game}|{n} tips for {game}",
   "tips.nudgeChecks": "1 thing to check|{n} things to check",
   "tips.nudgeKey": "{key} to see",
+  "s5.nav.tweaks": "1 tweak|{n} tweaks",
+  "s5.nav.nothingYet": "nothing applied yet",
+  "s5.nav.lastCheck": "last check {ago}",
+  "s5.nav.noCheck": "no check yet",
+  "s5.dash.freeTitle": "Free\ntweaks",
+  "s5.dash.freeGo": "Apply 1 free tweak|Apply {n} free tweaks",
+  "s5.dash.lastRun": "Last run {ago}",
+  "s5.dash.neverRun": "Not run yet",
+  "s5.dash.above": "above normal",
+  "s5.dash.measured": "of {n} measured",
+  "s5.dash.notMeasured": "takes about a minute",
+  "s5.dash.freeFix": "free fix",
+  "s5.dash.premium": "premium",
+  "s5.dash.byYou": "by you",
+  "s5.dash.seeResults": "see results",
+  "s5.dash.runAgain": "run again",
+  "s5.dash.cleaned": "cleaned",
+  "s5.dash.admin": "Admin",
+  "s5.dash.allGames": "all games",
+  "s5.dash.mine": "mine",
 };
 
 const dicts: Record<Lang, Record<Key, string>> = { fr, en };

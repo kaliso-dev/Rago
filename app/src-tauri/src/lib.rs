@@ -1177,6 +1177,20 @@ fn overlay_open_app(app: AppHandle, overlay: State<'_, Arc<overlay::Overlay>>, p
 }
 
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
+/// Fenêtre de la maquette v5 (1440 x 900) : sur un écran plus petit, elle prend la zone de travail (barre des tâches
+/// exclue) moins une marge, sans descendre sous la taille minimale, et reste centrée.
+fn fit_main_window(w: &tauri::WebviewWindow) {
+    let Some(m) = w.current_monitor().ok().flatten().or_else(|| w.primary_monitor().ok().flatten()) else {
+        return;
+    };
+    let area = m.work_area().size.to_logical::<f64>(m.scale_factor());
+    let (width, height) = ((area.width - 32.0).min(1440.0).max(1080.0), (area.height - 32.0).min(900.0).max(680.0));
+    if width < 1440.0 || height < 900.0 {
+        let _ = w.set_size(tauri::LogicalSize::new(width, height));
+        let _ = w.center();
+    }
+}
+
 pub fn run() {
     // une seule Rago Optimizer à la fois (instance.rs) : le verrou est gardé jusqu'à la fin du processus
     let uninstall = std::env::args_os().skip(1).any(|a| a == reset::UNINSTALL_ARG);
@@ -1342,6 +1356,9 @@ pub fn run() {
                     let _ = w.set_focus();
                 }
             });
+            if let Some(w) = app.get_webview_window("main") {
+                fit_main_window(&w);
+            }
             // fin de licence depuis le dernier lancement, ou remise coupée en cours de route : elle reprend ici
             reset_after_license(app.handle(), None);
             Ok(())

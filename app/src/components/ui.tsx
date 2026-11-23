@@ -85,7 +85,7 @@ type BtnProps = ButtonHTMLAttributes<HTMLButtonElement> & {
 
 export function Button({ variant = "secondary", size = "md", icon, children, className, ...rest }: BtnProps) {
   return (
-    <button type="button" className={`btn btn-${variant} btn-${size}${className ? ` ${className}` : ""}`} {...rest}>
+    <button type="button" className={`obtn btn-${variant} btn-${size}${className ? ` ${className}` : ""}`} {...rest}>
       {icon}
       {children && <span>{children}</span>}
     </button>

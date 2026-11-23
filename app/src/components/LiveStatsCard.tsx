@@ -9,7 +9,7 @@ import { Button, Card } from "./ui";
 const PERIOD = 1000;
 const UNAVAILABLE: LiveStats = { ready: true, ram: null, cpu: null, gpu: null, ramUsed: null, ramTotal: null };
 
-function useLiveStats(): LiveStats | null {
+export function useLiveStats(): LiveStats | null {
   const [stats, setStats] = useState<LiveStats | null>(null);
   useEffect(() => {
     let alive = true;
@@ -148,7 +148,7 @@ export function LiveStatsCard() {
           {t("live.taskmgr")}
         </Button>
       }
-      className="live"
+      className="olive"
     >
       <div className="meters">
         <Meter icon={<MemoryStick size={15} />} label={t("live.ram")} detail={ramDetail} value={stats?.ram ?? null} ready={ready} action={cleanBtn} />

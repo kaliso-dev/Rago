@@ -74,6 +74,8 @@ export interface LiveStats {
   /** mémoire vive utilisée et totale, en octets */
   ramUsed: number | null;
   ramTotal: number | null;
+  /** aller-retour vers Internet (1.1.1.1), en ms ; null sans réponse */
+  ping?: number | null;
 }
 
 /** « Nettoyer » sous la RAM (memory.rs) : cache de Windows vidé et, avec l'option, mémoire rendue par les applis en
@@ -1175,7 +1177,7 @@ const mockApi: Api = {
   liveStats: async () => {
     // démo : valeurs simulées ; localStorage « rago.demoNoGpu » = 1 simule un PC sans compteur de carte graphique
     mockStatsStart ||= Date.now();
-    if (Date.now() - mockStatsStart < 1000) return { ready: false, ram: null, cpu: null, gpu: null, ramUsed: null, ramTotal: null };
+    if (Date.now() - mockStatsStart < 1000) return { ready: false, ram: null, cpu: null, gpu: null, ramUsed: null, ramTotal: null, ping: null };
     const drift = (v: number, step: number, min: number, max: number) => Math.min(max, Math.max(min, v + (Math.random() - 0.5) * step));
     mockLoad.ram = drift(mockLoad.ram, 1.5, 38, 64);
     mockLoad.cpu = drift(mockLoad.cpu, 10, 3, 60);
@@ -1187,7 +1189,7 @@ const mockApi: Api = {
       /* rien */
     }
     const ramTotal = 32 * 1024 ** 3;
-    return { ready: true, ram: mockLoad.ram, cpu: mockLoad.cpu, gpu: noGpu ? null : mockLoad.gpu, ramUsed: (mockLoad.ram / 100) * ramTotal, ramTotal };
+    return { ready: true, ram: mockLoad.ram, cpu: mockLoad.cpu, gpu: noGpu ? null : mockLoad.gpu, ramUsed: (mockLoad.ram / 100) * ramTotal, ramTotal, ping: Math.round(17 + Math.random() * 3) };
   },
   openTaskManager: async () => {
     console.info("[démo] Gestionnaire des tâches");

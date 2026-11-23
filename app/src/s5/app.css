@@ -1,0 +1,53 @@
+/* Les maquettes v5 dans la fenêtre de l'app (23/11/2026). base.css et pages/*.css sont repris des maquettes sans
+   retouche ; ici seulement ce que la fenêtre change : la maquette est une image de 1440 x 900, l'app une fenêtre qui
+   défile. À 1440 x 900, défilement en haut, l'app et la maquette se superposent au pixel. */
+html,body,#root{height:100%;overflow:hidden}
+html.poster body::after{position:fixed}
+
+/* la fenêtre : barre latérale fixe, barre du haut fixe, la page défile dessous */
+.win{position:fixed;inset:0;width:auto;min-height:0}
+.side{overflow:hidden}
+.side .nav{flex:1 1 auto;min-height:0;display:flex;flex-direction:column;overflow-y:auto;overflow-x:hidden;scrollbar-width:none}
+.side .nav::-webkit-scrollbar{display:none}
+.side .foot{flex:none}
+.side a,.side .logo{cursor:default;user-select:none}
+.side a{cursor:pointer}
+.topbar{position:absolute;z-index:4;left:236px;right:0;top:0;height:86px;margin:0;padding:22px 40px 26px;background:var(--bg)}
+.topbar .search{cursor:pointer;user-select:none}
+.topbar .wc span{cursor:pointer}
+.topbar .wc span:hover{background:var(--bg-3);color:var(--ink)}
+.topbar .wc span.x:hover{background:var(--red);color:var(--red-ink)}
+/* la barre de défilement (10 px) prend sa place sur la marge droite : la page garde la largeur de la maquette */
+.main{position:absolute;left:236px;right:0;top:86px;bottom:0;margin:0;padding:0 30px 44px 40px;overflow-x:hidden;overflow-y:auto;scrollbar-gutter:stable}
+.main::-webkit-scrollbar{width:10px}
+.main::-webkit-scrollbar-track{background:transparent}
+.main::-webkit-scrollbar-thumb{background:var(--bg-4);border:3px solid var(--bg);border-radius:6px}
+.main::-webkit-scrollbar-thumb:hover{background:#2A2A30}
+
+/* éléments cliquables des maquettes (des <span> dans les maquettes, des <button> ici) */
+button.btn,button.chip,button.x,button.ub,button.save,button.dots,button.k{border:0;cursor:pointer;line-height:inherit;text-align:inherit;font-style:inherit}
+button.btn,button.x,button.ub,button.dots{background:none}
+button.x,button.dots{padding:0}
+button.btn:disabled,button.ub:disabled{cursor:default;opacity:.45}
+button.btn:not(:disabled):hover::before{border-color:rgba(255,255,255,.24)}
+button.btn.red:not(:disabled):hover::before{background:#FF5248}
+button.btn:not(:disabled):active{transform:translateY(1px)}
+:focus-visible{outline:2px solid var(--red);outline-offset:3px}
+
+/* barre « Apply » et exécution : à droite de la barre latérale (à refaire avec leurs maquettes) */
+.applybar-wrap{left:236px}
+.stage{position:absolute;z-index:30;left:236px;right:0;top:0;bottom:0;pointer-events:none}
+.stage > *{pointer-events:auto}
+
+/* tableau de bord : ce que la maquette ne montre pas (droits manquants, nom du preset, tweaks retirés) */
+.pg-dash .chk span.no svg{color:var(--red)}
+.pg-dash .chk .btn + .btn{margin-left:0}
+.pg-dash .gc{cursor:pointer}
+.pg-dash .gc .cv{background-size:cover;background-position:center}
+.pg-dash .pr.mine{cursor:pointer}
+.pg-dash .pr.mine:hover,.pg-dash .gc:hover b{color:var(--ink)}
+.pg-dash .plist .save{width:100%;background:none;text-align:left}
+.pg-dash .plist button.save:disabled{color:var(--ink-3);cursor:default}
+.pg-dash .plist .save.naming input{flex:1;min-width:0;height:34px;padding:0 12px;background:var(--bg-3);border:1px solid var(--line-2);border-radius:9px;color:var(--ink);font:500 14px var(--body);outline:none}
+.pg-dash .plist .save.naming input:focus{border-color:var(--red)}
+.pg-dash .dash-retired{margin:28px 0 0}
