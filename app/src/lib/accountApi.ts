@@ -255,8 +255,9 @@ const mockAccount: AccountApi = {
 
 let demoCanceled = false;
 function demoSub(): Subscription {
-  const end = new Date(Date.now() + 3 * 86400000).toISOString();
-  return { interval: "year", trial: true, canceled: demoCanceled, renewsAt: demoCanceled ? null : end, endsAt: demoCanceled ? end : null, price: { amount: 2999, currency: "usd" } };
+  // comme la maquette app-settings.html : Premium mensuel à 5,99 $, prochain paiement dans 3 semaines
+  const end = new Date(Date.now() + 21 * 86400000).toISOString();
+  return { interval: "month", trial: false, canceled: demoCanceled, renewsAt: demoCanceled ? null : end, endsAt: demoCanceled ? end : null, price: { amount: 599, currency: "usd" } };
 }
 
 export const accountApi: AccountApi = isTauri ? tauriAccount : mockAccount;

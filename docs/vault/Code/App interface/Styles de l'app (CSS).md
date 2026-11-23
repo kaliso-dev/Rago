@@ -17,11 +17,11 @@ Tout ce qui suit est CONFIRMÉ (code de `staging`, 10/11, commit `ee77d4f`), ave
 |---|---|---|---|
 | `tokens.css` | 219 | les deux fenêtres | jetons `--rg-*` du kit v5 (`marque/tokens/tokens.css` des maquettes), classes `.rg-metric` et `.rg-overline`, animations `rg-pulse` et `rg-pixel-blink` |
 | `fonts.css` | 79 | les deux fenêtres | `@font-face` de Barlow (400, 500, 600, 700) et Barlow Condensed (600 à 900 droit, 700 à 900 italique), `font-display: block` |
-| `app.css` | 2537 | fenêtre principale | polices, cadre, barre de titre, navigation, pages, cartes, boutons, interrupteur, fenêtres, exécution, tableau de bord, paramètres, licence, plan gratuit, verre, finitions, 1.3.0 |
-| `account.css` | 257 | fenêtre principale | avatar, invitation à laisser un avis, formulaire d'avis, carte Profil |
-| `features.css` | 1487 | fenêtre principale | fonctionnalités de la 1.2.0 et après (liste plus bas) |
+| `app.css` | 2504 | fenêtre principale | polices, cadre, barre de titre, navigation, pages, cartes, boutons, interrupteur, fenêtres, exécution, tableau de bord, paramètres, licence, plan gratuit, verre, finitions, 1.3.0 |
+| `account.css` | 157 | fenêtre principale | avatar, invitation à laisser un avis, formulaire d'avis |
+| `features.css` | 1418 | fenêtre principale | fonctionnalités de la 1.2.0 et après (liste plus bas) |
 | `overlay.css` | 747 | barre en jeu | toute la barre en jeu (RAG-82) ; la fin du fichier (section « Charte v5 ») la réhabille |
-| `v5.css` | 2284 | fenêtre principale, chargée après les anciennes feuilles | la charte v5 « Match day » posée sur les classes existantes (voir plus bas) |
+| `v5.css` | 2278 | fenêtre principale, chargée après les anciennes feuilles | la charte v5 « Match day » posée sur les classes existantes (voir plus bas) |
 | `tips.css` | 214 | fenêtre principale et barre en jeu (importé par [[GameTips.tsx]]) | bloc des réglages conseillés (`.game-tips*`, `.game-tip*`), place sous le jeu en avant de la bibliothèque (`.games-hero-tips`), bloc des conseils de la barre en jeu qui défile à part (`.ov-advice`, 258 px au plus, fondu en bas ; `.ov-tips`), pastille élargie du rappel (`.ov-nudge*`). Voir [[Conseils au lancement du jeu]] |
 
 - Ordre d'import dans [[main.tsx (app)]] : `fonts.css`, `tokens.css`, `app.css`, `account.css`, `features.css`, `v5.css`, puis les feuilles des maquettes v5 de `app/src/s5/` (`base.css`, `app.css`, puis une par page refaite, dont `module.css`, `net.css`, `tools.css` et `pages.css`), décrites dans [[Maquettes v5 dans l'app (s5)]]. L'ordre compte : une règle plus bas l'emporte à égalité, c'est ce qui permet à `v5.css` de réhabiller les pages pas encore refaites sans réécrire les autres feuilles.
@@ -78,10 +78,11 @@ Ce qui suit décrit `app.css` et `features.css`, toujours chargés. Sur `staging
 ## Plan de `app.css`
 - Lignes 1 à 147 : polices, base, `.spin`, `.pixel-blink`, mouvement réduit (91), verre de la fenêtre et cadre `.app` (128).
 - 148 barre de titre ; 254 navigation (barre latérale) ; 385 pages et cartes (`.card` vers la ligne 457) ; 492 boutons (`.btn-*`) ; 590 interrupteur et `segmented`.
-- 717 fenêtres (`.scrim`, `.modal`) et palette ; 968 exécution (`RunOverlay`) ; 1138 tableau de bord ; 1410 paramètres ; 1500 licence (dont Google et Discord, 1575).
-- 1647 : **démo à largeur de téléphone** (`max-width: 760px`). L'app de bureau a une largeur minimale de 1080 px ; ce bloc sert à la démo web.
-- 1802 plan gratuit ; 1967 fenêtre de connexion centrée, toasts (1981), bandeau de licence (2031), fenêtre basse 1080×680 (2108) ; 2200 verre (bord lumineux) ; 2240 focus et finitions (audit du 17/10) ; 2270 et suivantes : lien Discord, `Splash`, `Pulse`.
-- 2365 : **1.3.0**, analyse du PC, fenêtre Premium avec les prix, résiliation.
+- 717 fenêtres (`.scrim`, `.modal`) et palette ; 968 exécution (`RunOverlay`) ; 1138 tableau de bord ; 1410 lignes `.setting` (encore utilisées par [[Analysis.tsx]]) ; 1467 licence (dont Google et Discord, 1542).
+- 1614 : **démo à largeur de téléphone** (`max-width: 760px`). L'app de bureau a une largeur minimale de 1080 px ; ce bloc sert à la démo web.
+- 1769 plan gratuit ; 1934 fenêtre de connexion centrée, toasts (1948), bandeau de licence (1998), fenêtre basse 1080×680 (2075) ; 2167 verre (bord lumineux) ; 2207 focus et finitions (audit du 17/10) ; 2237 et suivantes : lien Discord, `Splash`, `Pulse`.
+- 2332 : **1.3.0**, analyse du PC, fenêtre Premium avec les prix, résiliation.
+- La grille et les blocs de l'ancienne page Paramètres (`.settings-grid`, « À propos », licences) sont retirés le 23/11 (PR #126) : [[Settings.tsx]] suit le CSS de la maquette (`s5/pages/pages.css`).
 - Les anciennes sections des réglages (`.tweak-*`), de la barre « Appliquer » (`.applybar*`), des modules, de l'historique et du dossier Minecraft sont retirées le 23/11 : les pages des modules suivent le CSS des maquettes ([[Maquettes v5 dans l'app (s5)]]).
 
 ## Plan de `features.css`
@@ -89,19 +90,19 @@ Ce qui suit décrit `app.css` et `features.css`, toujours chargés. Sur `staging
 - Sections, dans l'ordre :
   - 1 : Nettoyer la RAM (RAG-48) ;
   - 12 : Partage et support (RAG-44, RAG-70) ;
-  - 241 : Mes presets ;
-  - 315 : pages nouvelles dans la barre latérale ;
-  - 338 : puces ;
-  - 364 : bibliothèque de jeux (RAG-57) ;
-  - 450 : launcher de Minecraft Java ;
-  - 584 : graphismes du jeu (`.games-gfx*`, plus utilisé depuis le 23/11 : la page Jeux suit le CSS des maquettes, [[Maquettes v5 dans l'app (s5)]]) ;
-  - 822 : mise à jour prête (RAG-24) ;
-  - 901 : paramètres de la barre en jeu et de l'arrière-plan (RAG-82) ;
-  - 943 : optimisations gratuites du tableau de bord ;
-  - 999 : launchers ;
-  - 1126 : presets par jeu ;
-  - 1292 : Pendant la partie ;
-  - 1327 : modifier un preset (fin du fichier).
+  - 217 : Mes presets ;
+  - 291 : pages nouvelles dans la barre latérale ;
+  - 314 : puces ;
+  - 340 : bibliothèque de jeux (RAG-57) ;
+  - 426 : launcher de Minecraft Java ;
+  - 560 : graphismes du jeu (`.games-gfx*`, plus utilisé depuis le 23/11 : la page Jeux suit le CSS des maquettes, [[Maquettes v5 dans l'app (s5)]]) ;
+  - 798 : mise à jour prête (RAG-24) ;
+  - 877 : optimisations gratuites du tableau de bord ;
+  - 933 : launchers ;
+  - 1060 : presets par jeu ;
+  - 1226 : Pendant la partie ;
+  - 1258 : modifier un preset (fin du fichier).
+  - Les sections des Paramètres (barre en jeu et arrière-plan `.bg-*`, phrase d'intro de « Pendant la partie » `.session-lead`, lien `.setting-link`) sont retirées le 23/11 (PR #126) : les blocs suivent la maquette v5 ([[BackgroundCard.tsx]], [[SessionCard.tsx]]).
   - Les cartes de l'ancienne page Outils (`.tools-tile*`) sont retirées le 23/11 (PR #125, 53 lignes), avec l'ancienne feuille `mouse.css` : la page Souris suit le CSS de la maquette (`s5/pages/pages.css`, [[Maquettes v5 dans l'app (s5)]]).
   - Les autres règles de l'ancienne page Outils (nettoyage, applis, pilotes, « en un clic », réglages Windows, tous les outils) sont retirées le 23/11 (462 lignes) : [[Tools.tsx]] suit le CSS de la maquette (`s5/pages/tools.css`, [[Maquettes v5 dans l'app (s5)]]).
   - Les sections de Réseau (onglets, test réseau, Packet Optimizer et sa vue gratuite, Avancé, Réglages experts, Analyser mon PC, Rago Route) sont retirées le 23/11 (PR #123, 1 722 lignes) : la page Réseau suit le CSS des maquettes (`s5/pages/net.css`, [[Maquettes v5 dans l'app (s5)]]).
@@ -109,7 +110,7 @@ Ce qui suit décrit `app.css` et `features.css`, toujours chargés. Sur `staging
   - La section « couleurs et résolution par jeu » (`.display-*`) est retirée depuis le 23/11 : [[Display.tsx]] est refaite sur la maquette v5 ([[Maquettes v5 dans l'app (s5)]]).
 
 ## `account.css` et `overlay.css`
-- `account.css` : `.avatar` (ligne 1), invitation en bas à droite (22), formulaire d'avis (89), carte Profil (151). Voir [[ProfileCard.tsx]], [[ReviewDialog.tsx]], [[ReviewPrompt.tsx]].
+- `account.css` : `.avatar` (ligne 1), invitation en bas à droite (22), formulaire d'avis (89). La carte Profil des Paramètres est retirée le 23/11 (PR #126, 100 lignes) : le bloc Profil suit la maquette v5. Voir [[ProfileCard.tsx]], [[ReviewDialog.tsx]], [[ReviewPrompt.tsx]].
 - `overlay.css` : fenêtre transparente où seule la barre ou la pastille est peinte (1), verre sombre (56), barre ouverte (66), défilement des deux colonnes (213), interrupteur au même dessin que dans l'app (277), pastille qui ne prend ni le focus ni les clics (327), Pendant la partie (361). Voir [[Overlay.tsx]].
 
 ## Classes clés à connaître

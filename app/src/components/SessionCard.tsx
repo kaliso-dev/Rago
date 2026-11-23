@@ -3,7 +3,7 @@ import { AlertTriangle, Gauge, Zap } from "./ri";
 import { api, type BackgroundPrefs, type SessionCheck, type SessionState } from "../lib/api";
 import type { Key } from "../lib/i18n";
 import { useStore } from "../lib/store";
-import { Card, Switch } from "./ui";
+import { Sw } from "../s5/ui";
 
 type T = (key: Key, vars?: Record<string, string | number>) => string;
 
@@ -52,8 +52,10 @@ export function useSession(): SessionState | null {
   return session;
 }
 
-/** Paramètres : ce que l'app fait pendant une partie (session.rs). */
-export function SessionCard() {
+/** Paramètres : ce que l'app fait pendant une partie (session.rs).
+ * Écran v5 (maquettes app-settings*.html) : bloc « while you play », une ligne grisée (.dis) quand le réglage ne
+ * s'applique pas à ce PC (une seule carte graphique, Ryzen X3D). */
+export function SessionSection() {
   const { t } = useStore();
   const [prefs, setPrefs] = useState<BackgroundPrefs | null>(null);
   const session = useSession();
@@ -62,7 +64,15 @@ export function SessionCard() {
     void api.backgroundGet().then((s) => setPrefs(s.prefs), () => {});
   }, []);
 
-  if (!prefs) return null;
+  const head = (
+    <>
+      <div className="sh">
+        <h2 className="h2 tape">{t("settings.session")}</h2>
+      </div>
+      <p className="lead3">{t("settings.session.lead")}</p>
+    </>
+  );
+  if (!prefs) return <section>{head}</section>;
   const save = async (patch: Partial<Pick<BackgroundPrefs, "gameGpu" | "gamePower" | "gameChecks" | "gamePriority">>) => {
     const next = { ...prefs, ...patch };
     setPrefs(next);
@@ -73,41 +83,34 @@ export function SessionCard() {
     }
   };
   const single = session?.multiGpu === false;
+  const x3d = !!session?.x3d;
+  const row = (title: string, hint: string, on: boolean, set: (v: boolean) => void, dis = false) => (
+    <div className={`sr${dis ? " dis" : ""}`}>
+      <div className="l">
+        <b>{title}</b>
+        <span>{hint}</span>
+      </div>
+      <Sw on={on && !dis} disabled={dis} onChange={set} label={title} />
+    </div>
+  );
 
   return (
-    <Card title={t("settings.session")}>
-      <p className="muted small session-lead">{t("settings.session.lead")}</p>
-      <div className="setting">
-        <div>
-          <div>{t("settings.session.gpu")}</div>
-          <div className="muted small">
-            {single ? t("settings.session.gpuSingle") : t("settings.session.gpuHint")}
-            {!single && prefs.gameGpu && session && session.gpuGames > 0 && ` ${t("settings.session.gpuCount", { n: session.gpuGames })}`}
-          </div>
-        </div>
-        <Switch checked={prefs.gameGpu && !single} disabled={single} onChange={(v) => void save({ gameGpu: v })} label={t("settings.session.gpu")} />
+    <section>
+      {head}
+      <div className="panel sp">
+        {row(
+          t("settings.session.gpu"),
+          single
+            ? t("settings.session.gpuSingle")
+            : t("settings.session.gpuHint") + (prefs.gameGpu && session && session.gpuGames > 0 ? ` ${t("settings.session.gpuCount", { n: session.gpuGames })}` : ""),
+          prefs.gameGpu,
+          (v) => void save({ gameGpu: v }),
+          single,
+        )}
+        {row(t("settings.session.power"), x3d ? t("settings.session.x3d") : t("settings.session.powerHint"), prefs.gamePower, (v) => void save({ gamePower: v }), x3d)}
+        {row(t("settings.session.priority"), t("settings.session.priorityHint"), prefs.gamePriority, (v) => void save({ gamePriority: v }))}
+        {row(t("settings.session.checks"), t("settings.session.checksHint"), prefs.gameChecks, (v) => void save({ gameChecks: v }))}
       </div>
-      <div className="setting">
-        <div>
-          <div>{t("settings.session.power")}</div>
-          <div className="muted small">{session?.x3d ? t("settings.session.x3d") : t("settings.session.powerHint")}</div>
-        </div>
-        <Switch checked={prefs.gamePower && !session?.x3d} disabled={session?.x3d} onChange={(v) => void save({ gamePower: v })} label={t("settings.session.power")} />
-      </div>
-      <div className="setting">
-        <div>
-          <div>{t("settings.session.priority")}</div>
-          <div className="muted small">{t("settings.session.priorityHint")}</div>
-        </div>
-        <Switch checked={prefs.gamePriority} onChange={(v) => void save({ gamePriority: v })} label={t("settings.session.priority")} />
-      </div>
-      <div className="setting">
-        <div>
-          <div>{t("settings.session.checks")}</div>
-          <div className="muted small">{t("settings.session.checksHint")}</div>
-        </div>
-        <Switch checked={prefs.gameChecks} onChange={(v) => void save({ gameChecks: v })} label={t("settings.session.checks")} />
-      </div>
-    </Card>
+    </section>
   );
 }

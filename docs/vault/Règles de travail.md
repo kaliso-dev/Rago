@@ -17,7 +17,7 @@ Règles décidées par Sofiene, toujours en vigueur au 31/10. Détail daté dans
 8. **Claude ne peut pas tester sur un vrai Windows** : chaque nouveauté Windows est marquée « jamais testé sur Windows » jusqu'au test de Sofiene.
 9. **Numéro de version toujours supérieur** à tout exe déjà distribué (sinon l'installateur ne met pas à jour). Voir [[Publier une version]].
 10. **Catalogue** : ne jamais éditer les JSON générés à la main ; régénérer (voir [[Catalogue des tweaks]]).
-11. **Communication** : répondre en français simple ; questions auxquelles on répond d'un mot, avec une recommandation ; dire ce qui est vérifié et ce qui est déduit. Le public (site, app, Discord) est en anglais US ([[Voix et ton]]).
+11. **Communication** : répondre en français simple ; questions auxquelles on répond d'un mot, avec une recommandation ; dire ce qui est vérifié et ce qui est déduit. Le public (site, app, Discord) est en anglais US ([[Voix et ton]]). Pendant la refonte de l'app, pas de captures de comparaison dans les réponses : vérifier soi-même, puis construire l'app de test à la fin pour que Sofiene la teste (23/11 : « pas besoin de me rendre les comparaison tu consommeras moins de token quand t'as finis compile l'app direct »).
 12. **Règle n°1 (31/10) : le vault correspond en tout point à l'état actuel du projet.** Le lire avant, détecter tout changement ou abandon pendant, le mettre à jour (ou supprimer ce qui n'est plus vrai) à la fin de chaque tâche, et en cas de doute poser la question **automatiquement** sur la page « Questions du vault Rago » (01/11) : [[Mettre à jour le vault]], [[Questions ouvertes]].
 
 ## PR et commits

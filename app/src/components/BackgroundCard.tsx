@@ -1,8 +1,7 @@
 import { useEffect, useState } from "react";
-import { Keyboard, RotateCcw } from "./ri";
 import { api, type BackgroundPrefs, type BackgroundState } from "../lib/api";
 import { useStore } from "../lib/store";
-import { Button, Card, Switch } from "./ui";
+import { Sw } from "../s5/ui";
 
 const DEFAULT_SHORTCUT = "Alt+X";
 const MODIFIERS = new Set(["Control", "Shift", "Alt", "Meta", "AltGraph"]);
@@ -26,8 +25,9 @@ export function shortcutOf(e: Pick<KeyboardEvent, "ctrlKey" | "altKey" | "shiftK
   return [...mods, key].join("+");
 }
 
-/** Paramètres : barre en jeu (raccourci, pastille) et mode arrière-plan (icône, lancement avec Windows). */
-export function BackgroundCard() {
+/** Paramètres : barre en jeu (raccourci, pastille) et mode arrière-plan (icône, lancement avec Windows).
+ * Écran v5 (maquettes app-settings*.html) : bloc « in-game bar » en lignes .sr avec l'interrupteur .sw. */
+export function BackgroundSection() {
   const { t, lang } = useStore();
   const [state, setState] = useState<BackgroundState | null>(null);
   const [saving, setSaving] = useState(false);
@@ -74,66 +74,63 @@ export function BackgroundCard() {
     return () => window.removeEventListener("keydown", onKey, true);
   }, [recording, state]);
 
-  if (!state) return null;
+  const head = (
+    <div className="sh">
+      <h2 className="h2 tape">{t("settings.bg.overlay")}</h2>
+    </div>
+  );
+  if (!state) return <section>{head}</section>;
   const p = state.prefs;
-  const keys = (recording ? t("settings.bg.record") : p.shortcut).split("+");
+  const row = (title: string, hint: string, on: boolean, set: (v: boolean) => void) => (
+    <div className="sr">
+      <div className="l">
+        <b>{title}</b>
+        <span>{hint}</span>
+      </div>
+      <Sw on={on} disabled={saving} onChange={set} label={title} />
+    </div>
+  );
+  const note = (text: string, bad = false) => (
+    <div className="sr nt">
+      <div className="l">
+        <span className={bad ? "bad" : undefined}>{text}</span>
+      </div>
+    </div>
+  );
 
   return (
-    <Card title={t("settings.bg")} className="bg-card">
-      <div className="setting">
-        <div>
-          <div>{t("settings.bg.overlay")}</div>
-          <div className="muted small">{t("settings.bg.overlayHint")}</div>
-        </div>
-        <Switch checked={p.overlay} disabled={saving} onChange={(v) => void save({ overlay: v })} label={t("settings.bg.overlay")} />
-      </div>
-      {p.overlay && (
-        <>
-          <div className="setting">
-            <div>
-              <div>{t("settings.bg.shortcut")}</div>
-              <div className="muted small">{t("settings.bg.shortcutHint")}</div>
-            </div>
-            <div className="bg-shortcut">
-              <span className={`bg-keys${recording ? " recording" : ""}`}>
-                {recording ? <span className="muted small">{keys[0]}</span> : keys.map((k) => <kbd key={k}>{k === "Shift" && lang === "fr" ? "Maj" : k}</kbd>)}
+    <section>
+      {head}
+      <div className="panel sp">
+        {row(t("settings.bg.overlay"), t("settings.bg.overlayHint"), p.overlay, (v) => void save({ overlay: v }))}
+        {p.overlay && (
+          <>
+            <div className="sr">
+              <div className="l">
+                <b>{t("settings.bg.shortcut")}</b>
+                <span>{t("settings.bg.shortcutHint")}</span>
+              </div>
+              <span className={`kb${recording ? " rec" : ""}`}>
+                {recording ? <span>{t("settings.bg.record")}</span> : p.shortcut.split("+").map((k) => <kbd key={k}>{k === "Shift" && lang === "fr" ? "Maj" : k}</kbd>)}
               </span>
-              <Button size="sm" icon={<Keyboard size={13} />} disabled={saving} onClick={() => setRecording((r) => !r)}>
-                {t("settings.bg.change")}
-              </Button>
-              {p.shortcut !== DEFAULT_SHORTCUT && (
-                <Button size="sm" variant="ghost" icon={<RotateCcw size={13} />} disabled={saving} onClick={() => void save({ shortcut: DEFAULT_SHORTCUT })}>
+              {p.shortcut !== DEFAULT_SHORTCUT && !recording && (
+                <button type="button" className="lnk dim" disabled={saving} onClick={() => void save({ shortcut: DEFAULT_SHORTCUT })}>
                   {t("settings.bg.reset")}
-                </Button>
+                </button>
               )}
+              <button type="button" className="lnk" disabled={saving} onClick={() => setRecording((r) => !r)}>
+                {recording ? t("signout.cancel") : t("settings.bg.change")}
+              </button>
             </div>
-          </div>
-          {state.shortcutTaken && <p className="bg-warn small">{t("settings.bg.taken")}</p>}
-          <div className="setting">
-            <div>
-              <div>{t("settings.bg.pin")}</div>
-              <div className="muted small">{t("settings.bg.pinHint")}</div>
-            </div>
-            <Switch checked={p.pin} disabled={saving} onChange={(v) => void save({ pin: v })} label={t("settings.bg.pin")} />
-          </div>
-          {!state.fpsAvailable && <p className="muted small bg-note">{t("settings.bg.noFps")}</p>}
-        </>
-      )}
-      <div className="setting">
-        <div>
-          <div>{t("settings.bg.tray")}</div>
-          <div className="muted small">{t("settings.bg.trayHint")}</div>
-        </div>
-        <Switch checked={p.tray} disabled={saving} onChange={(v) => void save({ tray: v })} label={t("settings.bg.tray")} />
+            {state.shortcutTaken && note(t("settings.bg.taken"), true)}
+            {row(t("settings.bg.pin"), t("settings.bg.pinHint"), p.pin, (v) => void save({ pin: v }))}
+            {!state.fpsAvailable && note(t("settings.bg.noFps"))}
+          </>
+        )}
+        {row(t("settings.bg.tray"), t("settings.bg.trayHint"), p.tray, (v) => void save({ tray: v }))}
+        {row(t("settings.bg.autostart"), t("settings.bg.autostartHint"), p.autostart && state.autostart, (v) => void save({ autostart: v }))}
+        {error && note(error, true)}
       </div>
-      <div className="setting">
-        <div>
-          <div>{t("settings.bg.autostart")}</div>
-          <div className="muted small">{t("settings.bg.autostartHint")}</div>
-        </div>
-        <Switch checked={p.autostart && state.autostart} disabled={saving} onChange={(v) => void save({ autostart: v })} label={t("settings.bg.autostart")} />
-      </div>
-      {error && <p className="bg-warn small">{error}</p>}
-    </Card>
+    </section>
   );
 }

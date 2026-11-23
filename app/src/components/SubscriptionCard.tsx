@@ -1,6 +1,8 @@
 // Abonnement dans les Paramètres (1.3.0) : l'offre, le prochain paiement ou la date de fin, et la résiliation en un
 // écran (« Before you cancel ») : date de fin, ce qui reviendra comme avant ce jour-là, le gain mesuré sur ce PC,
 // puis deux boutons de même taille. Pas de remise, pas de second écran, pas de frais.
+// Écran v5 (maquettes app-settings*.html) : une ligne .sr du bloc « account » ; résilié, la ligne .sr.cxl et le
+// bouton rouge « resume subscription ». L'en-tête de la page lit le même abonnement (useSubscription).
 import { useEffect, useState } from "react";
 import { api } from "../lib/api";
 import { accountApi, asAccountError, formatPrice, type Subscription } from "../lib/accountApi";
@@ -10,18 +12,12 @@ import { Modal } from "./Modal";
 import { Button } from "./ui";
 import type { Key } from "../lib/i18n";
 
-const longDate = (lang: string, iso: string) =>
+export const longDate = (lang: string, iso: string) =>
   new Date(iso).toLocaleDateString(lang === "fr" ? "fr-FR" : "en-US", { day: "numeric", month: "long", year: "numeric" });
 
-export function SubscriptionRows() {
-  const { t, lang } = useStore();
+/** Abonnement du compte (null : pas d'abonnement, licence à vie, ou pas encore lu). */
+export function useSubscription(): [Subscription | null, (s: Subscription) => void] {
   const [sub, setSub] = useState<Subscription | null>(null);
-  const [ask, setAsk] = useState(false);
-  const [busy, setBusy] = useState(false);
-  const [err, setErr] = useState<string | null>(null);
-  const [done, setDone] = useState(false);
-  const [undo, setUndo] = useState(0);
-
   useEffect(() => {
     let live = true;
     accountApi.subscription().then(
@@ -32,8 +28,17 @@ export function SubscriptionRows() {
       live = false;
     };
   }, []);
+  return [sub, setSub];
+}
 
-  if (!sub) return null;
+export function SubscriptionRow({ sub, onChange }: { sub: Subscription; onChange: (s: Subscription) => void }) {
+  const { t, lang } = useStore();
+  const [ask, setAsk] = useState(false);
+  const [busy, setBusy] = useState(false);
+  const [err, setErr] = useState<string | null>(null);
+  const [done, setDone] = useState(false);
+  const [undo, setUndo] = useState(0);
+
   const date = sub.renewsAt ?? sub.endsAt;
   const plan = sub.trial ? t("sub.trial") : sub.interval === "year" ? t("sub.yearly") : t("sub.monthly");
   const line = sub.canceled
@@ -56,7 +61,7 @@ export function SubscriptionRows() {
     setErr(null);
     try {
       const s = cancel ? await accountApi.cancelSubscription() : await accountApi.resumeSubscription();
-      setSub(s);
+      if (s) onChange(s);
       if (cancel) setDone(true);
       void api.licenseRefresh().catch(() => {});
     } catch (e) {
@@ -68,22 +73,22 @@ export function SubscriptionRows() {
 
   return (
     <>
-      <div className="setting">
-        <div>
-          <div>{plan}</div>
-          <div className="muted small">{line}</div>
+      <div className={`sr${sub.canceled ? " cxl" : ""}`}>
+        <div className="l">
+          <b>{plan}</b>
+          <span>{line}</span>
+          {err && !ask && <span className="bad">{err}</span>}
         </div>
         {sub.canceled ? (
-          <Button size="sm" disabled={busy} onClick={() => void act(false)}>
+          <button type="button" className="btn sm red" disabled={busy} onClick={() => void act(false)}>
             {t("sub.resume")}
-          </Button>
+          </button>
         ) : (
-          <Button size="sm" variant="ghost" onClick={open}>
+          <button type="button" className="lnk" onClick={open}>
             {sub.trial ? t("sub.cancelTrial") : t("sub.cancel")}
-          </Button>
+          </button>
         )}
       </div>
-      {err && !ask && <p className="small error-text">{err}</p>}
       <Modal open={ask} onClose={() => !busy && setAsk(false)} className="confirm cancel-sub">
         {done ? (
           <>

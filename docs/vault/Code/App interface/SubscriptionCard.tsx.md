@@ -2,20 +2,24 @@
 type: code
 tags: [code, app, typescript, react, abonnement]
 fichier: app/src/components/SubscriptionCard.tsx
-lignes: 121
-maj: 2026-11-10
+lignes: 126
+maj: 2026-11-23
 ---
 # SubscriptionCard.tsx
 
 Les **lignes d'abonnement des Paramètres** (1.3.0) : l'offre, le prochain paiement ou la date de fin, la résiliation en un seul écran « Avant de résilier », et la reprise. Fiche parente : [[Code de l'app (interface)]]. Fonctionnalité : [[Abonnement dans l'app]].
 
+**Écran v5 (23/11, dans `staging` par la PR #126, fusionnée le 23/11, jamais testé sur Windows)** : une ligne `.sr` du bloc compte (maquette `app-settings.html`), « Résilier l'abonnement » en lien ; résilié, la ligne `.sr.cxl` et le bouton rouge « Reprendre l'abonnement » (maquette `app-settings-canceled.html`). Les fenêtres « Avant de résilier » et « Abonnement résilié » gardent l'ancien style en attendant les maquettes `app-cancel-before.html` et `app-cancel-done.html`.
+
 Tout ce qui suit est CONFIRMÉ (code de `staging`, 10/11, commit `ee77d4f`).
 
 ## Ce que le fichier expose
-- `SubscriptionRows()` : malgré le nom du fichier, le composant exporté s'appelle `SubscriptionRows`. Il est monté par [[Settings.tsx]] dans la carte Compte, sous les lignes de la licence.
+- `useSubscription()` : lit l'abonnement au montage, renvoie `[abonnement, setAbonnement]` ; [[Settings.tsx]] s'en sert pour la ligne et pour l'en-tête.
+- `SubscriptionRow({ sub, onChange })` : la ligne et ses fenêtres, montée par [[Settings.tsx]] dans le bloc compte, sous l'offre.
+- `longDate(lang, iso)` : date longue (« December 14, 2026 »).
 
 ## Fonctionnement détaillé
-- Au montage : `accountApi.subscription()` ([[accountApi.ts]], commande `account_subscription`). `null` (pas d'abonnement : gratuit, À vie, offert) ou erreur → **rien n'est affiché**.
+- `useSubscription` : `accountApi.subscription()` ([[accountApi.ts]], commande `account_subscription`). `null` (pas d'abonnement : gratuit, À vie, offert) ou erreur → **pas de ligne** (l'en-tête dit alors « active » et « verified until {date} »).
 - **Ligne** : « Premium, essai gratuit » / « Premium annuel » / « Premium mensuel » ; dessous « Prochain paiement : {prix} le {date} » ou, si résilié, « Résilié. Premium reste actif jusqu'au {date}, plus aucun débit. » (date longue, ex. « 13 novembre 2026 »).
 - Bouton : « Résilier l'abonnement » (ou « Résilier l'essai ») ; si déjà résilié : « Reprendre l'abonnement » → `resumeSubscription()`.
 - **Écran « Avant de résilier »** (règle écrite en tête du fichier : un seul écran, pas de remise, pas de second écran, pas de frais) :

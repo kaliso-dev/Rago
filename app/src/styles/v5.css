@@ -2067,7 +2067,6 @@ svg.pi use.pf {
 .share-file-name,
 .page .card h3:not(.rg-overline),
 .page .card h4,
-.setting-label,
 .setting > div > b,
 .setting > span:first-child {
   font-family: var(--rg-font-display);
@@ -2079,7 +2078,6 @@ svg.pi use.pf {
 }
 /* grands titres de bloc : condensé 900 italique */
 .games-hero-title,
-.profile-name-edit,
 .review-name {
   font-family: var(--rg-font-display);
   font-weight: 900;
@@ -2138,10 +2136,6 @@ select,
   background-color: var(--rg-ink-2);
   border: 1px solid var(--rg-line-2);
   color: var(--rg-text-1);
-}
-.settings .settings-grid,
-.page.settings {
-  max-width: 1180px;
 }
 
 /* ---------------------------------------------------- écran de démarrage */

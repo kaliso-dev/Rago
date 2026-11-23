@@ -214,30 +214,6 @@
   }
 }
 
-/* lien des paramètres vers Partage et support */
-.setting-link {
-  width: 100%;
-  justify-content: flex-start;
-  text-align: left;
-  border-radius: var(--rg-radius-sm);
-}
-.setting-link > div {
-  flex: 1;
-}
-.setting-link-icon {
-  color: var(--rg-text-2);
-  flex: none;
-}
-.setting-link-chevron {
-  color: var(--rg-text-3);
-  flex: none;
-  transition: transform var(--rg-dur-fast), color var(--rg-dur-fast);
-}
-.setting-link:hover .setting-link-chevron {
-  color: var(--rg-text-1);
-  transform: translateX(2px);
-}
-
 /* ---------- Mes presets (tableau de bord) ---------- */
 .mine {
   margin-top: 28px;
@@ -898,48 +874,6 @@
   }
 }
 
-/* ---------- paramètres : barre en jeu et arrière-plan (RAG-82) ---------- */
-.bg-shortcut {
-  flex: none;
-  display: flex;
-  align-items: center;
-  gap: 8px;
-}
-.bg-keys {
-  display: inline-flex;
-  align-items: center;
-  gap: 4px;
-  min-height: 28px;
-  padding: 0 4px;
-}
-.bg-keys kbd {
-  display: inline-grid;
-  place-items: center;
-  min-width: 26px;
-  height: 26px;
-  padding: 0 8px;
-  border-radius: var(--rg-radius-xs);
-  background: var(--rg-ink-4);
-  border: 1px solid var(--rg-line-2);
-  box-shadow: inset 0 -1px 0 rgba(0, 0, 0, 0.35);
-  font-family: var(--rg-font-mono);
-  font-size: 12px;
-  color: var(--rg-text-1);
-}
-.bg-keys.recording {
-  padding: 0 12px;
-  border-radius: var(--rg-radius-full);
-  border: 1px dashed var(--rg-red-500);
-  background: var(--rg-red-a12);
-}
-.bg-warn {
-  margin: -2px 0 6px;
-  color: var(--rg-warning);
-}
-.bg-note {
-  margin: -2px 0 6px;
-}
-
 /* Tableau de bord : optimisations gratuites en un clic */
 .free-boost {
   display: grid;
@@ -1319,9 +1253,6 @@
 }
 .session-head {
   margin-top: 2px;
-}
-.session-lead {
-  margin: -4px 0 6px;
 }
 
 /* ---------------------------------------------------------------- modifier un preset (Mes presets) */
