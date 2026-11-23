@@ -1,12 +1,11 @@
 import { AnimatePresence, motion } from "motion/react";
-import { ArrowRight, Check, Lock, Monitor, TriangleAlert } from "./ri";
 import { useEffect, useState } from "react";
 import { api, asLicenseError, type LicenseError } from "../lib/api";
 import { totalTweaks } from "../lib/catalog";
 import { formatDate, translate, type Key } from "../lib/i18n";
 import { useStore } from "../lib/store";
-import { Pulse, Wordmark } from "./Logo";
-import { Button } from "./ui";
+import { I } from "../s5/I";
+import appIcon from "../assets/s5/img/rago-app-dark-64.svg";
 
 // Une variable de CI non renseignée arrive vide, d'où || plutôt que ??.
 const trim = (u: string | undefined) => (u ?? "").trim().replace(/\/+$/, "");
@@ -46,8 +45,11 @@ const DISCORD = (
 
 const ease = [0.16, 1, 0.3, 1] as const;
 
-export function LicenseGate({ embedded = false, onDone }: { embedded?: boolean; onDone?: () => void }) {
-  const { t, license, activated, activatedAt, lang, setLang, sys } = useStore();
+/** Connexion à Premium, dans la fenêtre `.mdl.gate2` d'Upsell (maquettes app-gate-signin, -browser, -confirm, -error,
+ * -other, -success) : e-mail et mot de passe, ou Google et Discord dans le navigateur ; confirmation de l'appareil
+ * quand la licence n'y est pas encore liée ; écran de succès gardé jusqu'au clic. */
+export function LicenseGate({ onDone }: { onDone?: () => void }) {
+  const { t, license, activated, activatedAt, lang, sys } = useStore();
   const [email, setEmail] = useState(license?.email ?? "");
   const [password, setPassword] = useState("");
   const [busy, setBusy] = useState(false);
@@ -132,179 +134,194 @@ export function LicenseGate({ embedded = false, onDone }: { embedded?: boolean; 
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [linkId, pollToken]);
 
-  const errorBox = (
-    <AnimatePresence>
-      {error && (
-        <motion.div className="gate-error" role="alert" initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: "auto" }} exit={{ opacity: 0, height: 0 }}>
-          <TriangleAlert size={14} />
-          <span>
-            {errorText(error)}
+  const device = sys?.hostname ?? license?.deviceName ?? "";
+  const errorBox = error && (
+    <div className="err2" role="alert">
+      <I n="alert" />
+      <span>
+        {errorText(error)}
+        {(error.buyUrl || error.code === "bound_to_other_device" || (SUPPORT_URL && (error.code === "revoked" || error.code === "invalid_request"))) && (
+          <span className="gl2">
             {error.buyUrl && (
-              <button type="button" className="link gate-buy" onClick={() => api.openUrl(error.buyUrl!)}>
-                {t("license.buy")} <ArrowRight size={12} />
+              <button type="button" className="lnk" onClick={() => api.openUrl(error.buyUrl!)}>
+                {t("license.buy")}
+                <I n="arrow" />
               </button>
             )}
             {error.code === "bound_to_other_device" && (
-              <button type="button" className="link gate-buy" onClick={() => api.openUrl(`${ACCOUNT_URL}/account`)}>
-                {t("account.manage")} <ArrowRight size={12} />
+              <button type="button" className="lnk" onClick={() => api.openUrl(`${ACCOUNT_URL}/account`)}>
+                {t("account.manage")}
+                <I n="arrow" />
               </button>
             )}
             {SUPPORT_URL && (error.code === "revoked" || error.code === "invalid_request" || error.code === "bound_to_other_device") && (
-              <button type="button" className="link gate-buy" onClick={() => api.openUrl(SUPPORT_URL)}>
-                {t("account.help")} <ArrowRight size={12} />
+              <button type="button" className="lnk" onClick={() => api.openUrl(SUPPORT_URL)}>
+                {t("account.help")}
+                <I n="arrow" />
               </button>
             )}
           </span>
-        </motion.div>
-      )}
-    </AnimatePresence>
+        )}
+      </span>
+    </div>
   );
-
-  const card = (
-      <motion.div className="gate-card" initial={{ opacity: 0, y: 14 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.42, ease }}>
-        <div className="gate-brand">
-          <Pulse size={40} active={busy || step.kind === "success"} />
-          <Wordmark height={26} mark={false} />
-          <span className="gate-premium rg-overline">Premium</span>
-        </div>
-
-        <AnimatePresence mode="wait" initial={false}>
-          {step.kind === "success" && (
-            <motion.div key="ok" className="gate-success" initial={{ opacity: 0, y: 6 }} animate={{ opacity: 1, y: 0 }}>
-              <motion.span
-                className="gate-check"
-                initial={{ scale: 0.6, opacity: 0 }}
-                animate={{ scale: 1, opacity: 1 }}
-                transition={{ type: "spring", stiffness: 420, damping: 22, delay: 0.08 }}
-              >
-                <Check size={26} strokeWidth={2.5} />
-              </motion.span>
-              <h1>{t("license.success")}</h1>
-              <p className="gate-lead">{t("license.successLead", { total: totalTweaks })}</p>
-              <div className="gate-device">
-                <Monitor size={16} />
-                <div>
-                  <div>{t("license.successDevice", { device: sys?.hostname ?? license?.deviceName ?? "", date: formatDate(lang, activatedAt ?? Date.now()) })}</div>
-                  {license?.keyHint && <div className="muted small rg-metric">{license.keyHint}</div>}
-                </div>
-              </div>
-              <Button variant="primary" size="lg" className="gate-submit" autoFocus onClick={() => onDone?.()}>
-                {t("license.continue")} <ArrowRight size={16} />
-              </Button>
-            </motion.div>
-          )}
-
-          {step.kind === "confirm" && (
-            <motion.div key="confirm" initial={{ opacity: 0, x: 12 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -12 }} transition={{ duration: 0.24, ease }}>
-              <h1>{t("license.confirmTitle")}</h1>
-              <p className="gate-lead">{t("license.confirmLead", { device: sys?.hostname ?? license?.deviceName ?? "" })}</p>
-              <div className="gate-device">
-                <Monitor size={16} />
-                <div>
-                  <div>{sys?.hostname ?? license?.deviceName}</div>
-                  <div className="muted small">{sys?.osName}</div>
-                </div>
-              </div>
-              <dl className="gate-facts rg-metric">
-                <div>
-                  <dt>{t("license.email")}</dt>
-                  <dd>{step.email}</dd>
-                </div>
-                {step.keyHint && (
-                  <div>
-                    <dt>{t("account.key")}</dt>
-                    <dd>{step.keyHint}</dd>
-                  </div>
-                )}
-              </dl>
-              {errorBox}
-              <Button variant="primary" size="lg" className="gate-submit" disabled={busy} onClick={() => void activate()}>
-                {busy ? t("license.activating") : t("license.activate")}
-                {!busy && <Lock size={15} />}
-              </Button>
-              <div className="gate-links">
-                <button type="button" className="link" onClick={() => setStep({ kind: "signin" })}>
-                  {t("license.back")}
-                </button>
-              </div>
-            </motion.div>
-          )}
-
-          {step.kind === "browser" && (
-            <motion.div key="browser" initial={{ opacity: 0, x: 12 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -12 }} transition={{ duration: 0.24, ease }}>
-              <h1>{t("license.browserTitle")}</h1>
-              <p className="gate-lead">{t("license.browserLead")}</p>
-              <p className="gate-code rg-metric" aria-label={t("license.browserCode")}>
-                {step.code}
-              </p>
-              <p className="muted small">{t("license.browserWait")}</p>
-              <div className="gate-links">
-                <button type="button" className="link" onClick={() => setStep({ kind: "signin" })}>
-                  {t("license.back")}
-                </button>
-              </div>
-            </motion.div>
-          )}
-
-          {step.kind === "signin" && (
-            <motion.form
-              key="form"
-              initial={{ opacity: 0, x: -12 }}
-              animate={{ opacity: 1, x: 0 }}
-              exit={{ opacity: 0, x: 12 }}
-              transition={{ duration: 0.24, ease }}
-              onSubmit={(e) => {
-                e.preventDefault();
-                void signIn();
-              }}
-            >
-              <h1>{t("license.title")}</h1>
-              <p className="gate-lead">{t("license.lead")}</p>
-              <div className="gate-oauth">
-                <Button type="button" variant="secondary" size="lg" disabled={busy} onClick={() => void browserSignIn("google")}>
-                  {GOOGLE} {t("license.google")}
-                </Button>
-                <Button type="button" variant="secondary" size="lg" disabled={busy} onClick={() => void browserSignIn("discord")}>
-                  {DISCORD} {t("license.discord")}
-                </Button>
-              </div>
-              <p className="gate-or muted small">{t("license.orEmail")}</p>
-              <label className="field">
-                <span>{t("license.email")}</span>
-                <input id="gate-email" className="input" type="email" autoComplete="email" autoFocus value={email} onChange={(e) => setEmail(e.target.value)} required />
-              </label>
-              <label className="field">
-                <span>{t("license.password")}</span>
-                <input id="gate-password" className="input" type="password" autoComplete="current-password" value={password} onChange={(e) => setPassword(e.target.value)} required />
-              </label>
-              {errorBox}
-              <Button type="submit" variant="primary" size="lg" className="gate-submit" disabled={busy || !email || !password}>
-                {busy ? t("license.signingIn") : t("license.signIn")}
-                {!busy && <ArrowRight size={16} />}
-              </Button>
-              <p className="gate-lock">
-                <Lock size={12} /> {t("license.lock")}
-              </p>
-              <div className="gate-links">
-                <button type="button" className="link" onClick={() => api.openUrl(`${SITE_URL}/#pricing`)}>
-                  {t("license.create")}
-                </button>
-                <button type="button" className="link" onClick={() => api.openUrl(`${ACCOUNT_URL}/forgot`)}>
-                  {t("license.forgot")}
-                </button>
-              </div>
-            </motion.form>
-          )}
-        </AnimatePresence>
-      </motion.div>
-  );
-  if (embedded) return card;
-  return (
-    <div className="gate" data-tauri-drag-region>
-      {card}
-      <button type="button" className="gate-lang link" onClick={() => setLang(lang === "en" ? "fr" : "en")}>
-        {lang === "en" ? "Français" : "English"}
+  const back = (
+    <div className="uln">
+      <button type="button" className="lnk" onClick={() => setStep({ kind: "signin" })}>
+        <I n="left" />
+        {t("license.back")}
       </button>
     </div>
+  );
+  // chaque étape apparaît en fondu (les maquettes app-gate-* sont fixes)
+  const fade = { initial: { opacity: 0, y: 6 }, animate: { opacity: 1, y: 0 }, exit: { opacity: 0, y: -6 }, transition: { duration: 0.2, ease } };
+
+  return (
+    <>
+      <div className="gb">
+        <img src={appIcon} alt="" draggable={false} />
+        <b>
+          rago <span>optimizer</span>
+        </b>
+        <em>premium</em>
+      </div>
+
+      <AnimatePresence mode="wait" initial={false}>
+        {step.kind === "success" && (
+          <motion.div key="ok" {...fade}>
+            <div className="okh">
+              {/* la boîte garde l'inclinaison de win.css : l'animation (un transform) ne touche que la coche */}
+              <motion.div className="ok4" initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: 0.2, delay: 0.08 }}>
+                <motion.span style={{ display: "grid" }} initial={{ scale: 0.6 }} animate={{ scale: 1 }} transition={{ type: "spring", stiffness: 420, damping: 22, delay: 0.08 }}>
+                  <I n="check" />
+                </motion.span>
+              </motion.div>
+              <h2 className="h2 tape mt">{t("license.success")}</h2>
+            </div>
+            <p className="ml">{t("license.successLead", { total: totalTweaks })}</p>
+            <div className="dv">
+              <span className="ic2">
+                <I n="monitor" />
+              </span>
+              <div>
+                <b>{t("license.successDevice", { device, date: formatDate(lang, activatedAt ?? Date.now()) })}</b>
+                {license?.keyHint && <span>{license.keyHint}</span>}
+              </div>
+            </div>
+            <button type="button" className="btn red lg cta" autoFocus onClick={() => onDone?.()}>
+              {t("license.continue")}
+              <I n="arrow" />
+            </button>
+          </motion.div>
+        )}
+
+        {step.kind === "confirm" && (
+          <motion.div key="confirm" {...fade}>
+            <h2 className="h2 tape mt">{t("license.confirmTitle")}</h2>
+            <p className="ml">{t("license.confirmLead", { device })}</p>
+            <div className="dv">
+              <span className="ic2">
+                <I n="monitor" />
+              </span>
+              <div>
+                <b>{device}</b>
+                {sys?.osName && <span>{sys.osName}</span>}
+              </div>
+            </div>
+            <dl className="fx">
+              <div>
+                <dt>{t("license.email")}</dt>
+                <dd>{step.email}</dd>
+              </div>
+              {step.keyHint && (
+                <div>
+                  <dt>{t("account.key")}</dt>
+                  <dd>{step.keyHint}</dd>
+                </div>
+              )}
+            </dl>
+            {errorBox}
+            <button type="button" className="btn red lg cta" disabled={busy} onClick={() => void activate()}>
+              {busy ? t("license.activating") : t("license.activate")}
+              <I n={busy ? "loader" : "lock"} className={busy ? "spin" : undefined} />
+            </button>
+            {back}
+          </motion.div>
+        )}
+
+        {step.kind === "browser" && (
+          <motion.div key="browser" {...fade}>
+            <h2 className="h2 tape mt">{t("license.browserTitle")}</h2>
+            <p className="ml">{t("license.browserLead")}</p>
+            <div className="cd2" role="img" aria-label={`${t("license.browserCode")} ${step.code}`}>
+              {[...step.code].map((c, i) => (
+                <span key={i}>{c}</span>
+              ))}
+            </div>
+            <p className="wt">
+              <I n="loader" className="spin" />
+              {t("license.browserWait")}
+            </p>
+            {back}
+          </motion.div>
+        )}
+
+        {step.kind === "signin" && (
+          <motion.form
+            key="form"
+            {...fade}
+            noValidate
+            onSubmit={(e) => {
+              e.preventDefault();
+              // le bouton reste rouge comme la maquette : un champ vide prend le focus au lieu de la bulle du navigateur
+              const empty = !email.trim() ? "gate-email" : !password ? "gate-password" : null;
+              if (empty) return document.getElementById(empty)?.focus();
+              void signIn();
+            }}
+          >
+            <h2 className="h2 tape mt">{t("license.title")}</h2>
+            <p className="ml">{t("license.lead")}</p>
+            <div className="oa">
+              <button type="button" className="btn lg" disabled={busy} onClick={() => void browserSignIn("google")}>
+                {GOOGLE}
+                {t("license.google")}
+              </button>
+              <button type="button" className="btn lg" disabled={busy} onClick={() => void browserSignIn("discord")}>
+                {DISCORD}
+                {t("license.discord")}
+              </button>
+            </div>
+            <p className="or2">
+              <span>{t("license.orEmail")}</span>
+            </p>
+            <label className="fl2">
+              <span>{t("license.email")}</span>
+              <input id="gate-email" className="in3" type="email" autoComplete="email" autoFocus value={email} onChange={(e) => setEmail(e.target.value)} required />
+            </label>
+            <label className="fl2">
+              <span>{t("license.password")}</span>
+              <input id="gate-password" className="in3" type="password" autoComplete="current-password" value={password} onChange={(e) => setPassword(e.target.value)} required />
+            </label>
+            {errorBox}
+            <button type="submit" className="btn red lg cta" disabled={busy}>
+              {busy ? t("license.signingIn") : t("license.signIn")}
+              <I n={busy ? "loader" : "arrow"} className={busy ? "spin" : undefined} />
+            </button>
+            <p className="lk3">
+              <I n="lock" />
+              {t("license.lock")}
+            </p>
+            <div className="uln">
+              <button type="button" className="lnk" onClick={() => api.openUrl(`${SITE_URL}/#pricing`)}>
+                {t("license.create")}
+              </button>
+              <button type="button" className="lnk" onClick={() => api.openUrl(`${ACCOUNT_URL}/forgot`)}>
+                {t("license.forgot")}
+              </button>
+            </div>
+          </motion.form>
+        )}
+      </AnimatePresence>
+    </>
   );
 }

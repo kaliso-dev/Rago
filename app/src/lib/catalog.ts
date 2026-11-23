@@ -182,10 +182,15 @@ export function searchTweaks(q: string, lang: Lang): Tweak[] {
   const norm = (s: string) => s.normalize("NFD").replace(/\p{Diacritic}/gu, "").toLowerCase();
   const terms = norm(q).split(/\s+/).filter(Boolean);
   if (!terms.length) return [];
-  const out: Tweak[] = [];
+  // le nom d'abord (maquette app-search) : les réglages dont le nom contient la recherche, puis ceux trouvés par leur
+  // description, chacun dans l'ordre du catalogue
+  const byName: Tweak[] = [];
+  const byDesc: Tweak[] = [];
   for (const t of tweaks.values()) {
     const hay = norm(`${t.name[lang]} ${t.desc[lang]} ${t.name.en} ${t.id}`);
-    if (terms.every((w) => hay.includes(w))) out.push(t);
+    if (!terms.every((w) => hay.includes(w))) continue;
+    const name = norm(`${t.name[lang]} ${t.name.en}`);
+    (terms.every((w) => name.includes(w)) ? byName : byDesc).push(t);
   }
-  return out.slice(0, 40);
+  return [...byName, ...byDesc].slice(0, 40);
 }

@@ -10,7 +10,22 @@ const stack: number[] = [];
  * page dessous, `.mdl` est la fenêtre (`v5` donne ses classes en plus : « sm », « sm cxm »…). Elle est rendue dans `body` :
  * une fenêtre ouverte depuis une page (Paramètres) couvre aussi la barre latérale et le haut, comme les maquettes (la
  * page, animée, garderait sinon la fenêtre dans son cadre). Sans `v5` : l'ancien style. */
-export function Modal({ open, onClose, children, className, v5 }: { open: boolean; onClose: () => void; children: ReactNode; className?: string; v5?: string }) {
+export function Modal({
+  open,
+  onClose,
+  children,
+  className,
+  v5,
+  box = "mdl",
+}: {
+  open: boolean;
+  onClose: () => void;
+  children: ReactNode;
+  className?: string;
+  v5?: string;
+  /** classe de la boîte v5 : `mdl` (fenêtre), ou `pal` pour la recherche (maquette app-search) */
+  box?: string;
+}) {
   // dernier onClose reçu : la fenêtre n'est pas réinscrite à chaque rendu (elle repasserait au-dessus de celle
   // ouverte après elle)
   const closeRef = useRef(onClose);
@@ -44,7 +59,7 @@ export function Modal({ open, onClose, children, className, v5 }: { open: boolea
             <motion.div
               role="dialog"
               aria-modal="true"
-              className={`mdl${v5 ? ` ${v5}` : ""}${className ? ` ${className}` : ""}`}
+              className={`${box}${v5 ? ` ${v5}` : ""}${className ? ` ${className}` : ""}`}
               initial={{ opacity: 0, y: 12, scale: 0.98 }}
               animate={{ opacity: 1, y: 0, scale: 1 }}
               exit={{ opacity: 0, y: 8, scale: 0.98 }}

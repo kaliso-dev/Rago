@@ -105,8 +105,3 @@ export function Card({ children, className, title, action }: { children: ReactNo
     </section>
   );
 }
-
-export function Kbd({ children }: { children: ReactNode }) {
-  return <kbd className="kbd">{children}</kbd>;
-}
-

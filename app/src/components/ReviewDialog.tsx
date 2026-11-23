@@ -1,16 +1,16 @@
 import { AnimatePresence, motion } from "motion/react";
-import { ArrowRight, Check, Star, TriangleAlert } from "./ri";
 import { useEffect, useState, type KeyboardEvent } from "react";
 import { api } from "../lib/api";
 import { useAccount } from "../lib/account";
 import { COMMENT_MAX, NAME_MAX, type AccountError } from "../lib/accountApi";
 import { useAccountText } from "../lib/accountText";
+import { I } from "../s5/I";
 import { ACCOUNT_URL } from "./LicenseGate";
-import { Avatar } from "./Avatar";
 import { Modal } from "./Modal";
-import { Button } from "./ui";
+import { STAR } from "./ReviewPrompt";
 
-/** Connexion au compte (si besoin), puis l'avis : une note de 1 à 5 étoiles et un commentaire, tous deux obligatoires. */
+/** Connexion au compte (si besoin), puis l'avis : une note de 1 à 5 étoiles et un commentaire, tous deux obligatoires.
+ * Maquettes app-review-signin, app-review-write et app-review-thanks. */
 export function ReviewDialog() {
   const { dialog, closeDialog, via } = useAccount();
   const [thanks, setThanks] = useState(false);
@@ -26,7 +26,7 @@ export function ReviewDialog() {
     if (open && step === null) closeDialog();
   }, [open, step, closeDialog]);
   return (
-    <Modal open={open} onClose={() => close(thanks)} className="review-dialog">
+    <Modal open={open} onClose={() => close(thanks)} v5={step === "form" ? "rv2" : "gate2"}>
       {step === "signin" && <SignIn />}
       {step === "form" && <ReviewForm onCancel={() => close(false)} onSaved={() => setThanks(true)} />}
       {step === "thanks" && <Thanks onClose={() => close(true)} />}
@@ -39,13 +39,18 @@ function ErrorBox({ error }: { error: AccountError | null }) {
   return (
     <AnimatePresence>
       {error && (
-        <motion.div className="gate-error" role="alert" initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: "auto" }} exit={{ opacity: 0, height: 0 }}>
-          <TriangleAlert size={14} />
+        <motion.div className="err2" role="alert" initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: "auto" }} exit={{ opacity: 0, height: 0 }}>
+          <I n="alert" />
           <span>{errorText(error)}</span>
         </motion.div>
       )}
     </AnimatePresence>
   );
+}
+
+/** Photo du compte, ou la première lettre du nom (`.av` des maquettes). */
+function Av({ photo, name }: { photo: string | null | undefined; name: string | null | undefined }) {
+  return <span className="av" aria-hidden="true">{photo ? <img src={photo} alt="" draggable={false} /> : ([...(name ?? "").trim()][0] ?? "?")}</span>;
 }
 
 function SignIn() {
@@ -57,8 +62,12 @@ function SignIn() {
   const [error, setError] = useState<AccountError | null>(null);
   return (
     <form
+      noValidate
       onSubmit={async (e) => {
         e.preventDefault();
+        // le bouton reste rouge comme la maquette : un champ vide prend le focus
+        const empty = !email.trim() ? "rv-email" : !password ? "rv-password" : null;
+        if (empty) return document.getElementById(empty)?.focus();
         setBusy(true);
         setError(null);
         const err = await signIn(email, password);
@@ -67,33 +76,38 @@ function SignIn() {
         else setPassword("");
       }}
     >
-      <h2 className="modal-title">{at("review.signInTitle")}</h2>
-      <p className="modal-lead">{at("review.signInLead")}</p>
-      <div className="review-fields">
-        <label className="field">
-          <span>{at("review.email")}</span>
-          <input className="input" type="email" autoComplete="email" autoFocus required value={email} onChange={(e) => setEmail(e.target.value)} />
-        </label>
-        <label className="field">
-          <span>{at("review.password")}</span>
-          <input className="input" type="password" autoComplete="current-password" required value={password} onChange={(e) => setPassword(e.target.value)} />
-        </label>
-      </div>
+      <h2 className="h2 tape mt">{at("review.signInTitle")}</h2>
+      <p className="ml">{at("review.signInLead")}</p>
+      <label className="fl2">
+        <span>{at("review.email")}</span>
+        <input id="rv-email" className="in3" type="email" autoComplete="email" autoFocus value={email} onChange={(e) => setEmail(e.target.value)} />
+      </label>
+      <label className="fl2">
+        <span>{at("review.password")}</span>
+        <input id="rv-password" className="in3" type="password" autoComplete="current-password" value={password} onChange={(e) => setPassword(e.target.value)} />
+      </label>
       <ErrorBox error={error} />
-      <div className="modal-actions">
-        <button type="button" className="link push-left" onClick={() => void api.openUrl(`${ACCOUNT_URL}/signup`)}>
-          {at("review.create")} <ArrowRight size={12} />
+      <button type="submit" className="btn red lg cta" disabled={busy}>
+        {busy ? at("review.signingIn") : at("review.signIn")}
+        <I n={busy ? "loader" : "arrow"} className={busy ? "spin" : undefined} />
+      </button>
+      <div className="uln">
+        <button type="button" className="lnk" onClick={() => void api.openUrl(`${ACCOUNT_URL}/signup`)}>
+          {at("review.create")}
         </button>
-        <button type="button" className="link" onClick={() => void api.openUrl(`${ACCOUNT_URL}/forgot`)}>
+        <button type="button" className="lnk" onClick={() => void api.openUrl(`${ACCOUNT_URL}/forgot`)}>
           {at("review.forgot")}
         </button>
-        <Button type="submit" variant="primary" disabled={busy}>
-          {busy ? at("review.signingIn") : at("review.signIn")}
-        </Button>
       </div>
     </form>
   );
 }
+
+const star = (
+  <svg viewBox="0 0 24 24">
+    <path d={STAR} />
+  </svg>
+);
 
 function Stars({ value, onChange }: { value: number; onChange: (n: number) => void }) {
   const { at } = useAccountText();
@@ -106,7 +120,7 @@ function Stars({ value, onChange }: { value: number; onChange: (n: number) => vo
     e.preventDefault();
   };
   return (
-    <div className="review-stars" role="radiogroup" aria-label={at("review.rating")} onMouseLeave={() => setHover(0)} onKeyDown={key}>
+    <span className="st4 big" role="radiogroup" aria-label={at("review.rating")} onMouseLeave={() => setHover(0)} onKeyDown={key}>
       {[1, 2, 3, 4, 5].map((n) => (
         <button
           key={n}
@@ -120,10 +134,10 @@ function Stars({ value, onChange }: { value: number; onChange: (n: number) => vo
           onMouseEnter={() => setHover(n)}
           onClick={() => onChange(n)}
         >
-          <Star size={26} />
+          {star}
         </button>
       ))}
-    </div>
+    </span>
   );
 }
 
@@ -153,64 +167,83 @@ function ReviewForm({ onCancel, onSaved }: { onCancel: () => void; onSaved: () =
         else onSaved();
       }}
     >
-      <h2 className="modal-title">{review ? at("review.editTitle") : at("review.title")}</h2>
-      <p className="modal-lead">{at("review.lead")}</p>
-      <div className="review-fields">
-        <Stars value={rating} onChange={setRating} />
-        <label className="field">
-          <span className="review-label">
-            {at("review.comment")}
-            <span className={`rg-metric${comment.length > COMMENT_MAX ? " over" : ""}`}>
-              {comment.length}/{COMMENT_MAX}
-            </span>
-          </span>
+      <h2 className="h2 tape mt">{review ? at("review.editTitle") : at("review.title")}</h2>
+      <p className="ml">{at("review.lead")}</p>
+      <p className="grp">{at("review.rating")}</p>
+      <Stars value={rating} onChange={setRating} />
+      <div className="fl2">
+        <span id="rv-comment">{at("review.comment")}</span>
+        <div className="in3 ta">
           <textarea
-            className="input review-text"
-            rows={4}
+            aria-labelledby="rv-comment"
             maxLength={COMMENT_MAX}
             placeholder={at("review.placeholder")}
             value={comment}
             onChange={(e) => setComment(e.target.value)}
             autoFocus={!!review}
           />
-        </label>
-        <label className="field">
-          <span>{at("review.name")}</span>
-          <div className="review-name">
-            <Avatar photo={profile?.photo} name={name || profile?.email} size={34} />
-            <input className="input" maxLength={NAME_MAX} autoComplete="nickname" spellCheck={false} value={name} onChange={(e) => setName(e.target.value)} />
-          </div>
-          <span className="muted small">{at("review.nameHint")}</span>
-        </label>
+          <small>
+            {comment.length} / {COMMENT_MAX}
+          </small>
+        </div>
+      </div>
+      <div className="fl2">
+        <span id="rv-name">{at("review.name")}</span>
+        <div className="pnm">
+          <Av photo={profile?.photo} name={name || profile?.email} />
+          <input className="in3" aria-labelledby="rv-name" maxLength={NAME_MAX} autoComplete="nickname" spellCheck={false} value={name} onChange={(e) => setName(e.target.value)} />
+        </div>
+        <p className="hint2">{at("review.nameHint")}</p>
       </div>
       <ErrorBox error={error} />
-      <div className="modal-actions">
-        <Button variant="ghost" onClick={onCancel}>
+      <div className="mf">
+        <button type="button" className="btn gh2" onClick={onCancel}>
           {at("review.cancel")}
-        </Button>
-        <Button type="submit" variant="primary" disabled={busy}>
+        </button>
+        <button type="submit" className="btn red" disabled={busy}>
           {busy ? at("review.posting") : review ? at("review.update") : at("review.post")}
-        </Button>
+        </button>
       </div>
     </form>
   );
 }
 
 function Thanks({ onClose }: { onClose: () => void }) {
-  const { at } = useAccountText();
-  const { review } = useAccount();
+  const { at, lang } = useAccountText();
+  const { review, profile } = useAccount();
   return (
-    <div className="review-thanks">
-      <motion.span className="gate-check" initial={{ scale: 0.6, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} transition={{ type: "spring", stiffness: 420, damping: 22 }}>
-        <Check size={24} strokeWidth={2.5} />
-      </motion.span>
-      <h2 className="modal-title">{at("review.thanks")}</h2>
-      <p className="modal-lead">{review?.hidden ? at("profile.hidden") : at("review.thanksLead")}</p>
-      <div className="modal-actions">
-        <Button variant="primary" autoFocus onClick={onClose}>
-          {at("review.close")}
-        </Button>
+    <>
+      <div className="okh">
+        {/* la boîte garde l'inclinaison de win.css : l'animation (un transform) ne touche que la coche */}
+        <motion.div className="ok4" initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: 0.2, delay: 0.08 }}>
+          <motion.span style={{ display: "grid" }} initial={{ scale: 0.6 }} animate={{ scale: 1 }} transition={{ type: "spring", stiffness: 420, damping: 22, delay: 0.08 }}>
+            <I n="check" />
+          </motion.span>
+        </motion.div>
+        <h2 className="h2 tape mt">{at("review.thanks")}</h2>
       </div>
-    </div>
+      <p className="ml">{review?.hidden ? at("profile.hidden") : at("review.thanksLead")}</p>
+      {review && (
+        <div className="rvq">
+          <Av photo={profile?.photo} name={profile?.name || profile?.email} />
+          <div>
+            <b>{profile?.name || profile?.email}</b>
+            <span className="st4" aria-label={at("review.stars", { n: review.rating })}>
+              {[1, 2, 3, 4, 5].map((n) => (
+                <i key={n} className={n <= review.rating ? "on" : undefined}>
+                  {star}
+                </i>
+              ))}
+            </span>
+            <p>{lang === "fr" ? `« ${review.comment} »` : `"${review.comment}"`}</p>
+          </div>
+        </div>
+      )}
+      <div className="mf">
+        <button type="button" className="btn" autoFocus onClick={onClose}>
+          {at("review.close")}
+        </button>
+      </div>
+    </>
   );
 }

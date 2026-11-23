@@ -3,7 +3,6 @@ import { createRoot } from "react-dom/client";
 import "./styles/fonts.css";
 import "./styles/tokens.css";
 import "./styles/app.css";
-import "./styles/account.css";
 import "./styles/features.css";
 import "./styles/v5.css";
 // maquettes v5 reprises telles quelles (23/11/2026) : après l'ancien style, qui ne sert plus qu'aux pages pas encore refaites
