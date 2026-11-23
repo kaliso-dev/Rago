@@ -2061,12 +2061,6 @@ svg.pi use.pf {
 /* onglets en biais (Réseau, Paramètres…) : l'onglet ouvert en rouge plein */
 
 /* titres de carte, de ligne et de tuile : condensé capitales, comme les tuiles de réglage */
-.tools-tile-head h3,
-.tools-tile-head > span,
-.tools-row-name,
-.tools-plan-name,
-.tools-app-name,
-.driver-name,
 .launcher-name,
 .games-gfx-name,
 .pe-item-name,
@@ -2130,7 +2124,6 @@ h2.section-title.rg-overline::before,
 }
 /* gros chiffres de mesure : condensé 900 italique */
 .metric-big,
-.mouse-big,
 .meter-value,
 .live-value {
   font-family: var(--rg-font-display);

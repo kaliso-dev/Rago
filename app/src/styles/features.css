@@ -1289,59 +1289,6 @@
   height: 18px;
 }
 
-/* cartes de l'ancienne page Outils (tools-tile) : encore utilisées par la page Souris (Mouse.tsx), qui n'est pas encore
-   refaite sur les maquettes v5 */
-.tools-tile {
-  display: flex;
-  flex-direction: column;
-  min-width: 0;
-}
-.tools-tile-head {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  margin-bottom: 8px;
-}
-.tools-tile-head h3 {
-  margin: 0;
-  font-size: 14px;
-  font-weight: 600;
-  letter-spacing: var(--rg-ls-h3);
-}
-.tools-tile-icon {
-  flex: none;
-  display: grid;
-  place-items: center;
-  width: 32px;
-  height: 32px;
-  border-radius: 10px;
-  color: var(--rg-red-500);
-  background: var(--rg-red-a12);
-  box-shadow: inset 0 0 0 1px rgba(255, 59, 48, 0.25);
-}
-.tools-tile-desc {
-  margin: 0 0 10px;
-  line-height: 1.5;
-  text-wrap: pretty;
-}
-.tools-tile-status {
-  margin: 0;
-  min-width: 0;
-  line-height: 1.4;
-  color: var(--rg-text-3);
-}
-.tools-tile-status.ok {
-  color: var(--rg-text-1);
-}
-.tools-tile-status.ok svg {
-  vertical-align: -2px;
-  margin-right: 4px;
-  color: var(--rg-success);
-}
-.tools-tile-status.bad {
-  color: var(--rg-red-500);
-}
-
 /* Pendant la partie (session.rs) : ce que Rago a fait et ce qu'il conseille, dans la bibliothèque */
 .session-checks {
   display: grid;
