@@ -48,7 +48,7 @@ Pour que le CSS des maquettes ne touche pas les pages pas encore refaites : `.bt
 | Tableau de bord | `app-dashboard-v2-pi.html` | refait, dans `staging` (PR #119) |
 | Jeux (lanceur, aucun jeu) | `app-games-pi.html`, `app-games-empty.html` | refait, dans `staging` (PR #120) |
 | Choix du preset (covers verticales) | `app-preset-picker.html` (nouvelle, 23/11) | refait, dans `staging` (PR #120), maquette à valider par Sofiene |
-| Display (aperçu avant / après, ligne « vs » à glisser, photos des pros) | `app-display-pi.html` | refait (branche `claude/app-v5-display`) |
+| Display (aperçu avant / après, ligne « vs » à glisser, photos des pros) | `app-display-pi.html` | refait, dans `staging` (PR #121) |
 | Le reste (modules, réseau, outils, souris, paramètres, partage, analyse, fenêtres, barre en jeu, démarrage) | voir l'inventaire des maquettes | à faire, ancienne interface en attendant |
 
 Rien de tout cela n'a été testé sur un vrai Windows.
