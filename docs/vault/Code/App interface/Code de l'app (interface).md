@@ -32,17 +32,17 @@ Tout ce qui suit est CONFIRMÉ (code de `staging`, 10/11, commit `ee77d4f`), sau
   - [[api.ts]] et [[accountApi.ts]] sont les deux seules portes vers le moteur.
 - **Pas de routeur** : la page affichée est une simple valeur `page` dans le store. Pas de Redux non plus : un seul contexte React, [[store.tsx]], plus le contexte du compte, [[account.tsx]].
 - **Mode démo** : hors de Tauri (`isTauri` faux), les mêmes fonctions sont simulées dans le navigateur. Cela sert au simulateur `npm run window`, aux captures et aux tests de l'interface.
-- Taille : 37 416 lignes dans `app/src/` (fichiers `.ts`, `.tsx`, `.css` et `.json`, compte du 23/11 après la PR #123). Les plus gros fichiers sont :
+- Taille : 37 099 lignes dans `app/src/` (fichiers `.ts`, `.tsx`, `.css` et `.json`, compte du 23/11 après la PR #124). Les plus gros fichiers sont :
   - `catalog.json` (8050 lignes) ;
-  - `i18n.ts` (2852 lignes) ;
+  - `i18n.ts` (2858 lignes) ;
   - `app.css` (2537 lignes) ;
   - `v5.css` (2291 lignes) ;
-  - `features.css` (2002 lignes) ;
-  - `api.ts` (1729 lignes) ;
+  - `api.ts` (1730 lignes) ;
+  - `features.css` (1540 lignes) ;
   - `NetOpt.tsx` (1109 lignes, refaite sur la maquette v5 le 23/11) ;
   - `tips.json` (971 lignes) ;
   - `Display.tsx` (906 lignes, refaite sur la maquette v5 le 23/11) ;
-  - `Tools.tsx` (762 lignes) ;
+  - `Tools.tsx` (792 lignes, refaite sur la maquette v5 le 23/11) ;
   - `ModulePage.tsx` (703 lignes, refaite sur les maquettes v5 le 23/11).
 
 ## Arbre des composants (fenêtre principale)

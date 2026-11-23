@@ -913,7 +913,7 @@ let mockStartup: StartupApp[] = [
   { id: "hklm32|RtkAudUService", name: "RtkAudUService", publisher: "Realtek Semiconductor", command: "C:\\Windows\\System32\\DriverStore\\FileRepository\\RtkAudUService64.exe -background", scope: "machine", enabled: true, keep: true },
   { id: "hklm|SecurityHealth", name: "SecurityHealth", publisher: "Microsoft Corporation", command: "C:\\Windows\\system32\\SecurityHealthSystray.exe", scope: "machine", enabled: true, keep: true },
   { id: "startup|Spotify.lnk", name: "Spotify", publisher: "Spotify Ltd", command: "C:\\Users\\demo\\AppData\\Roaming\\Spotify\\Spotify.exe", scope: "user", enabled: false, keep: false },
-  { id: "hkcu|Steam", name: "Steam", publisher: "Valve Corporation", command: "C:\\Program Files (x86)\\Steam\\steam.exe -silent", scope: "user", enabled: true, keep: false },
+  { id: "hkcu|Steam", name: "Steam", publisher: "Valve Corporation", command: "C:\\Program Files (x86)\\Steam\\steam.exe -silent", scope: "user", enabled: false, keep: false },
 ];
 let mockPlans: PowerPlan[] = [
   { guid: "381b4222-f694-41f0-9685-ff5bb260df2e", name: "Balanced", active: true },
@@ -1325,12 +1325,13 @@ const mockApi: Api = {
     await sleep(1100);
     return {
       drivers: [
-        { kind: "gpu", name: "NVIDIA GeForce RTX 4070", version: "32.0.15.6094", date: "2024-08-14", provider: "NVIDIA" },
+        // démo : comme la maquette, un pilote de carte graphique de 38 jours
+        { kind: "gpu", name: "NVIDIA GeForce RTX 4070", version: "32.0.15.6614", date: new Date(Date.now() - 38 * 86_400_000).toISOString().slice(0, 10), provider: "NVIDIA" },
         { kind: "network", name: "Realtek PCIe 2.5GbE Family Controller", version: "10.68.1003.2023", date: "2023-10-03", provider: "Realtek" },
         { kind: "audio", name: "Realtek High Definition Audio", version: "6.0.9235.1", date: "2021-09-10", provider: "Realtek Semiconductor Corp." },
       ],
       maker: "ASUSTeK COMPUTER INC.",
-      model: "ROG STRIX B650-A GAMING WIFI",
+      model: "ROG Strix B650-A Gaming WiFi",
     };
   },
   toolsWindowsUpdate: async () => {},
