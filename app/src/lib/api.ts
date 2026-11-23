@@ -1308,17 +1308,18 @@ const mockApi: Api = {
   analysisFacts: async () => {
     await sleep(1500);
     return {
-      refresh: 60,
-      refreshMax: 144,
-      processes: 212,
+      // démo : les valeurs de la maquette app-analysis-results
+      refresh: 165,
+      refreshMax: 165,
+      processes: 214,
       memSpeed: 4800,
       memRated: 6000,
-      wired: false,
+      wired: true,
       gameDvr: true,
-      notifications: true,
+      notifications: false,
       powerScheme: "381b4222-f694-41f0-9685-ff5bb260df2e",
-      background: [{ id: "sync", apps: ["OneDrive"] }],
-      lastMatch: { at: Date.now() - 3600000, minutes: 24, fps: 312, low1: 128, stuttersPerMin: 3.4 },
+      background: [{ id: "launchers", apps: ["Steam"] }, { id: "sync", apps: ["OneDrive"] }],
+      lastMatch: { at: Date.now() - 3600000, minutes: 24, fps: 312, low1: 141, stuttersPerMin: 1.4 },
     };
   },
   toolsDrivers: async () => {

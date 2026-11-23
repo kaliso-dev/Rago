@@ -504,4 +504,14 @@ html.round .pg-settings .kb.rec span{border-radius:7px}
 /* la ligne de ce qui est masqué déborde à gauche (liseré rouge) : la zone qui défile lui laisse la place */
 .pg-share pre.txt2 .tx{margin-left:-12px;padding-left:12px}
 /* Outils, Souris, Paramètres, Partage : 16 px en bas comme la maquette, mais la place de la barre « apply » quand elle est là */
-.win:has(.apply .ap) .pg-mod.pg-pages.is-page,.win:has(.apply .ap) .pg-mod.pg-tools.is-page{padding-bottom:106px}
+.win:has(.apply .ap) .pg-mod.pg-pages.is-page,.win:has(.apply .ap) .pg-mod.pg-tools.is-page,.win:has(.apply .ap) .pg-mod.pg-an.is-page{padding-bottom:106px}
+/* Analyze my PC (23/11, PR #128) : app-analysis-{start,running,results,allfine,after}.html. La .main de la maquette a
+   60 px en bas, celle de l'app 44 px. */
+.pg-mod.pg-an.is-page{padding-bottom:16px}
+.pg-an .mfoot button{border:0;background:none;padding:0;font:inherit;color:inherit;cursor:pointer}
+.pg-an .mfoot button:hover u{color:var(--red)}
+.pg-an .mfoot u{display:block;text-transform:lowercase}
+.pg-an .lead{margin:0}
+.pg-an button.lnk:hover{color:var(--ink)}
+.pg-an .bc.worse .d{color:var(--ink-3)}
+.pg-an .steps li.now .st svg.spin{width:14px;height:14px}

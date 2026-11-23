@@ -1006,22 +1006,8 @@ svg.pi use.pf {
   gap: 14px;
   padding: 24px;
 }
-.dash-an-head {
-  display: flex;
-  align-items: center;
-  gap: 14px;
-}
 .dash-an .dash-card-title {
   font-size: 32px;
-}
-.dash-an-icon {
-  width: 48px;
-  height: 48px;
-  flex: none;
-  display: grid;
-  place-items: center;
-  border-radius: 12px;
-  background: var(--rg-ink-3);
 }
 .dash-an .obtn {
   align-self: flex-start;
@@ -2065,9 +2051,7 @@ svg.pi use.pf {
 .games-gfx-name,
 .pe-item-name,
 .page .card h3:not(.rg-overline),
-.page .card h4,
-.setting > div > b,
-.setting > span:first-child {
+.page .card h4 {
   font-family: var(--rg-font-display);
   font-weight: 800;
   font-size: 16.5px;
