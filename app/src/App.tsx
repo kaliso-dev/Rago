@@ -43,7 +43,7 @@ export function App() {
   // le clic droit natif n'a rien à faire dans une app de bureau
   useEffect(() => {
     const h = (e: MouseEvent) => {
-      if (!(e.target as HTMLElement).closest("input, textarea, .run-console")) e.preventDefault();
+      if (!(e.target as HTMLElement).closest("input, textarea, .w5 .cs")) e.preventDefault();
     };
     window.addEventListener("contextmenu", h);
     return () => window.removeEventListener("contextmenu", h);
@@ -76,9 +76,7 @@ export function App() {
           </AnimatePresence>
         </main>
         <ApplyBar />
-        <div className="stage">
-          <RunOverlay />
-        </div>
+        <RunOverlay />
         <ConfirmDialog />
         <SearchPalette />
         <Upsell />

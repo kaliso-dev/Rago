@@ -1,16 +1,20 @@
 import { AnimatePresence, motion } from "motion/react";
-import { ArrowRight, Check, FolderOpen, LoaderCircle, Minus, Power, Sparkles, Square, X } from "./ri";
 import { useEffect, useRef } from "react";
 import { api } from "../lib/api";
 import { formatNumber } from "../lib/i18n";
 import { totalTweaks } from "../lib/catalog";
 import { FREE, itemName, useStore } from "../lib/store";
 import { findings, saved } from "../lib/analysis";
-import { Pulse } from "./Logo";
-import { Button } from "./ui";
+import { I } from "../s5/I";
+import logo from "../assets/s5/img/rago-app-dark-128.svg";
+
+/** Une case de la barre `.pg2` par réglage (22 cases dans la maquette) ; au-delà de 40, chaque case couvre plusieurs
+ * réglages : rouge si l'un a échoué, pleine si tous sont finis, hachurée si l'un tourne. */
+const SEGMENTS = 40;
 
 export function RunOverlay() {
   const { t, lang, run, setRun, premium, license, setUpsell, playing, goTo } = useStore();
+  // écran d'exécution des maquettes app-run-running, -done, -failed et -reboot (win.css) : toute la fenêtre
   // une analyse du PC existe : l'avant/après, et en gratuit ce que Premium règlerait encore parmi ce qu'elle a trouvé
   const an = saved();
   const anBase = an.after ?? an.before;
@@ -28,6 +32,17 @@ export function RunOverlay() {
     if (runningIndex < 0) return;
     listRef.current?.children[runningIndex]?.scrollIntoView({ block: "nearest", behavior: "smooth" });
   }, [runningIndex]);
+
+  // fin du lot : la liste revient en haut (comme les maquettes de fin), sur le premier échec s'il y en a un
+  const ended = !!run && (!!run.done || !!run.error);
+  useEffect(() => {
+    const el = listRef.current;
+    if (!ended || !el) return;
+    el.scrollTop = 0;
+    const i = run?.rows.findIndex((r) => r.status === "error") ?? -1;
+    if (i >= 0) el.children[i]?.scrollIntoView({ block: "nearest" });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [ended]);
 
   const total = run?.rows.length ?? 0;
   const finished = run?.rows.filter((r) => r.status === "ok" || r.status === "error" || r.status === "skipped").length ?? 0;
@@ -53,126 +68,178 @@ export function RunOverlay() {
   // le point de restauration raté a son propre message : les autres échecs restent comptés
   const otherFailed = failed - (restoreFailed ? 1 : 0);
   const seconds = run ? ((run.endedAt ?? Date.now()) - run.startedAt) / 1000 : 0;
-  const pct = total ? (finished / total) * 100 : 0;
+  const segs = Math.min(total, SEGMENTS);
+  const seg = (k: number) => {
+    const rows = run!.rows.slice(Math.floor((k * total) / segs), Math.floor(((k + 1) * total) / segs));
+    if (rows.some((r) => r.status === "error")) return "x";
+    // réglages sautés (point de restauration raté) : rien n'a été fait, la case reste vide
+    if (rows.every((r) => r.status === "skipped")) return "";
+    if (rows.every((r) => r.status === "ok" || r.status === "skipped")) return "d";
+    if (rows.some((r) => r.status === "running" || r.status === "ok")) return "r";
+    return "";
+  };
+  const name = (r: { id: string; undo?: boolean }) => (r.undo ? t("run.undoName", { name: itemName(r.id, lang) }) : itemName(r.id, lang));
 
   const close = () => setRun(null);
 
   return (
     <AnimatePresence>
       {run && (
-        <motion.div className="run" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} transition={{ duration: 0.24 }}>
-          <div className="run-hero">
-            <Pulse size={132} active={!isDone} />
-            <div className="rg-overline run-state">{isDone ? (cancelled ? t("run.cancelled") : t("run.done")) : t("run.title")}</div>
-            <div className="run-counter rg-metric">
-              <motion.span key={finished} initial={{ y: 10, opacity: 0 }} animate={{ y: 0, opacity: 1 }}>
-                {String(finished).padStart(2, "0")}
-              </motion.span>
-              <span className="run-counter-total">/{String(total).padStart(2, "0")}</span>
-            </div>
-            <div className="run-progress">
-              <motion.div className="run-progress-fill" animate={{ width: `${pct}%` }} transition={{ ease: [0.16, 1, 0.3, 1], duration: 0.42 }} />
-            </div>
-            <div className="run-current">
-              {isDone ? (
-                run.error ? (
-                  <span className="error-text">{run.error}</span>
-                ) : (
-                  <>
-                    {t("run.summary", { ok: finished - failed - skipped, total, s: formatNumber(lang, seconds) })}
-                    {restoreFailed && <div className="error-text run-restore-failed">{t(restoreKey, { n: skipped })}</div>}
-                    {otherFailed > 0 && <div className="error-text">{t("run.failed", { n: otherFailed })}</div>}
-                    {reboot && <div className="muted">{t("run.rebootNeeded")}</div>}
-                    {/* « Optimiser et jouer » : le jeu démarre à la fin du lot */}
-                    {playing && !cancelled && (
-                      <div className={playing.status === "failed" ? "error-text" : "run-play"}>
-                        {t(playing.status === "failed" ? "play.failed" : playing.status === "started" ? "play.started" : "play.starting", { game: playing.name })}
-                      </div>
-                    )}
-                    {!cancelled && (run.done?.ok ?? 0) > 0 && anBase && (
-                      <button
-                        type="button"
-                        className="run-upsell"
-                        onClick={() => {
-                          close();
-                          goTo("analysis");
-                        }}
-                      >
-                        <Check size={13} />
-                        <span>{t("pa.measureDiff")}</span>
-                        <ArrowRight size={13} />
-                      </button>
-                    )}
-                    {license && !premium && !cancelled && (
-                      <button
-                        type="button"
-                        className="run-upsell"
-                        onClick={() => {
-                          close();
-                          setUpsell(premiumLeft > 0 ? "analysis" : "plan");
-                        }}
-                      >
-                        <Sparkles size={13} />
-                        <span>{premiumLeft > 0 ? t("pa.premiumLeft", { n: premiumLeft }) : t("done.upsell", { n: totalTweaks - FREE.size })}</span>
-                        <ArrowRight size={13} />
-                      </button>
-                    )}
-                  </>
-                )
-              ) : (
-                current && (current.undo ? t("run.undoName", { name: itemName(current.id, lang) }) : itemName(current.id, lang))
-              )}
-            </div>
-            <div className="run-actions">
-              {!isDone ? (
-                <Button icon={<Square size={12} />} onClick={() => api.cancelRun()}>
-                  {t("run.cancel")}
-                </Button>
-              ) : (
-                <>
-                  {reboot && (
-                    <Button variant="primary" icon={<Power size={14} />} onClick={() => api.restartPc()}>
-                      {t("run.reboot")}
-                    </Button>
-                  )}
-                  <Button variant={reboot ? "ghost" : "secondary"} onClick={close}>
-                    {t("run.close")}
-                  </Button>
-                </>
-              )}
-            </div>
-          </div>
-
-          <div className="run-side">
-            <ol className="run-list" ref={listRef}>
-              {run.rows.map((r, i) => (
-                <li key={`${r.id}-${i}`} className={`run-row ${r.status}`}>
-                  <span className="run-icon">
-                    {r.status === "running" && <LoaderCircle size={14} className="spin" />}
-                    {r.status === "ok" && <Check size={14} />}
-                    {r.status === "error" && <X size={14} />}
-                    {r.status === "pending" && <span className="run-dot" />}
-                    {r.status === "skipped" && <Minus size={14} />}
-                  </span>
-                  <span className="run-name">{r.undo ? t("run.undoName", { name: itemName(r.id, lang) }) : itemName(r.id, lang)}</span>
-                  {r.durationMs != null && <span className="rg-metric run-ms">{formatNumber(lang, r.durationMs / 1000)} s</span>}
-                </li>
-              ))}
-            </ol>
-            <div className="run-console-head">
-              <span className="rg-overline">{t("run.console")}</span>
-              {isDone && run.done?.logFile && (
-                <button type="button" className="link" onClick={() => api.openFolder("logs")}>
-                  <FolderOpen size={12} /> {t("run.openLog")}
-                </button>
-              )}
-            </div>
-            <div className="run-console" ref={consoleRef}>
-              {run.logs.map((l, i) => (
-                <div key={i} className={l.line.startsWith("!") ? "err" : undefined}>
-                  <span className="run-console-id">{l.id}</span> {l.line}
+        <motion.div className="w5" style={{ zIndex: 40 }} initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} transition={{ duration: 0.24 }}>
+          <div className={`runw${isDone ? " fin" : ""}`}>
+            <div className="run2" data-tauri-drag-region>
+              <span className="wc2">
+                <span role="button" aria-label={t("window.minimize")} onClick={() => api.window.minimize()}>
+                  <svg viewBox="0 0 14 14" fill="none" stroke="currentColor" strokeWidth="1.6"><path d="M2 7h10" /></svg>
+                </span>
+                <span role="button" aria-label={t("window.maximize")} onClick={() => api.window.toggleMaximize()}>
+                  <svg viewBox="0 0 14 14" fill="none" stroke="currentColor" strokeWidth="1.6"><rect x="2.5" y="2.5" width="9" height="9" /></svg>
+                </span>
+                <span role="button" className="x" aria-label={t("window.close")} onClick={() => api.window.close()}>
+                  <svg viewBox="0 0 14 14" fill="none" stroke="currentColor" strokeWidth="1.6"><path d="M3 3l8 8M11 3l-8 8" /></svg>
+                </span>
+              </span>
+              <div className="hero2" data-tauri-drag-region>
+                <img className="rlogo" src={logo} alt="" draggable={false} />
+                <p className="rst">
+                  {!isDone && <i className="lv" />}
+                  {isDone ? (cancelled ? t("run.cancelled") : t("run.done")) : t("run.title")}
+                </p>
+                <div className="ctr">
+                  <motion.b key={finished} initial={{ y: 10, opacity: 0 }} animate={{ y: 0, opacity: 1 }}>
+                    {String(finished).padStart(2, "0")}
+                  </motion.b>
+                  <span>/{String(total).padStart(2, "0")}</span>
                 </div>
-              ))}
+                <div className="pg2">
+                  {Array.from({ length: segs }, (_, k) => (
+                    <i key={k} className={seg(k) || undefined} />
+                  ))}
+                </div>
+                <div className="cur">
+                  {isDone ? (
+                    run.error ? (
+                      <p className="er3">
+                        <I n="alert" />
+                        {run.error}
+                      </p>
+                    ) : (
+                      <>
+                        <p className="sum">{t("run.summary", { ok: finished - failed - skipped, total, s: formatNumber(lang, seconds) })}</p>
+                        {restoreFailed && (
+                          <p className="er3">
+                            <I n="alert" />
+                            {t(restoreKey, { n: skipped })}
+                          </p>
+                        )}
+                        {otherFailed > 0 && (
+                          <p className="er3">
+                            <I n="alert" />
+                            {t("run.failed", { n: otherFailed })}
+                          </p>
+                        )}
+                        {reboot && (
+                          <p className="rb3">
+                            <I n="power" />
+                            {t("run.rebootNeeded")}
+                          </p>
+                        )}
+                        {/* « Optimiser et jouer » : le jeu démarre à la fin du lot */}
+                        {playing && !cancelled && (
+                          <p className={playing.status === "failed" ? "er3" : "rb3"}>
+                            <I n={playing.status === "failed" ? "alert" : "play"} />
+                            {t(playing.status === "failed" ? "play.failed" : playing.status === "started" ? "play.started" : "play.starting", { game: playing.name })}
+                          </p>
+                        )}
+                        {!cancelled && (run.done?.ok ?? 0) > 0 && anBase && (
+                          <button
+                            type="button"
+                            className="up2"
+                            onClick={() => {
+                              close();
+                              goTo("analysis");
+                            }}
+                          >
+                            <I n="check" />
+                            {t("pa.measureDiff")}
+                            <I n="right" />
+                          </button>
+                        )}
+                        {license && !premium && !cancelled && (
+                          <button
+                            type="button"
+                            className="up2 prem"
+                            onClick={() => {
+                              close();
+                              setUpsell(premiumLeft > 0 ? "analysis" : "plan");
+                            }}
+                          >
+                            <I n="sparkles" />
+                            {premiumLeft > 0 ? t("pa.premiumLeft", { n: premiumLeft }) : t("done.upsell", { n: totalTweaks - FREE.size })}
+                            <I n="right" />
+                          </button>
+                        )}
+                      </>
+                    )
+                  ) : (
+                    current && <span className="nm3">{name(current)}</span>
+                  )}
+                </div>
+                <div className="ra">
+                  {!isDone ? (
+                    <button type="button" className="btn" onClick={() => api.cancelRun()}>
+                      <I n="stop" />
+                      {t("run.cancel")}
+                    </button>
+                  ) : (
+                    <>
+                      {reboot && (
+                        <button type="button" className="btn red lg" onClick={() => api.restartPc()}>
+                          <I n="power" />
+                          {t("run.reboot")}
+                        </button>
+                      )}
+                      <button type="button" className={`btn${reboot ? " gh2" : ""}`} onClick={close}>
+                        {t("run.close")}
+                      </button>
+                    </>
+                  )}
+                </div>
+              </div>
+
+              <div className="side2" data-tauri-drag-region>
+                <ol className="rl" ref={listRef}>
+                  {run.rows.map((r, i) => (
+                    <li key={`${r.id}-${i}`} className={r.status}>
+                      <span className="si">
+                        {r.status === "running" && <I n="loader" className="spin" />}
+                        {r.status === "ok" && <I n="check" />}
+                        {r.status === "error" && <I n="x" />}
+                        {r.status === "pending" && <i className="pd" />}
+                        {r.status === "skipped" && <I n="minus" line />}
+                      </span>
+                      <span className="nm2">{name(r)}</span>
+                      {r.durationMs != null && <span className="ms">{formatNumber(lang, r.durationMs / 1000)} s</span>}
+                    </li>
+                  ))}
+                </ol>
+                <div className="ch">
+                  <span className="lbl">{t("run.console")}</span>
+                  {isDone && run.done?.logFile && (
+                    <button type="button" className="lnk" onClick={() => api.openFolder("logs")}>
+                      <I n="folder" />
+                      {t("run.openLog")}
+                    </button>
+                  )}
+                </div>
+                <div className="cs" ref={consoleRef}>
+                  {run.logs.map((l, i) => (
+                    <div key={i} className={l.line.startsWith("!") ? "err" : undefined}>
+                      <span className="cid">{l.id}</span> {l.line}
+                    </div>
+                  ))}
+                </div>
+              </div>
             </div>
           </div>
         </motion.div>
