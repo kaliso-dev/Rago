@@ -9,7 +9,7 @@ maj: 2026-11-23
 
 Le **cadre de la fenêtre principale** : barre de titre, barre latérale, zone de page, barre « Appliquer », fenêtre du lot, et toutes les fenêtres qui flottent au-dessus. C'est aussi lui qui choisit **quelle page afficher** d'après `page` du store. Fiche parente : [[Code de l'app (interface)]]. Vue produit : [[App Windows]].
 
-Tout ce qui suit est CONFIRMÉ (code de `staging` après la PR #130, fusionnée le 23/11).
+Tout ce qui suit est CONFIRMÉ (code de `staging` après la PR #130, fusionnée le 23/11, et la PR #N vers `staging`).
 
 ## Ce que le fichier expose
 - `App()` : composant racine, monté par [[main.tsx (app)]] sous `StoreProvider` et `AccountProvider`.
@@ -35,9 +35,9 @@ MotionConfig (reducedMotion)
   ├ ConfirmDialog
   ├ SearchPalette
   ├ Upsell
-  ├ ReviewPrompt
+  ├ ReviewPrompt (div.w5.flt : couvre la fenêtre sans prendre les clics)
   ├ ReviewDialog
-  ├ ResetToast
+  ├ ResetToast (div.w5.flt.tz : au-dessus de tout, même des fenêtres)
   └ Splash (au lancement seulement)
 ```
 ### Choix de la page (il n'y a pas de routeur)
@@ -68,7 +68,7 @@ MotionConfig (reducedMotion)
 
 ## Cadre v5 (PR #119, dans `staging`)
 - Le cadre reprend la maquette v5 : `div.win` contient directement la barre latérale, la barre du haut et `main` (plus de `div.app` ni de `div.body`). Les pages posent elles-mêmes leur grand titre (plus d'effet qui mesure le titre).
-- Les fenêtres v5 (`Modal` avec `v5`, [[Petits composants de l'interface]]) sont rendues dans `body` : la page, animée par `motion.div.page-wrap`, garderait sinon une fenêtre ouverte depuis elle dans son cadre (PR #130).
+- Les fenêtres v5 (`Modal` avec `v5`, [[Petits composants de l'interface]]) sont rendues dans `body` : la page, animée par `motion.div.page-wrap`, garderait sinon une fenêtre ouverte depuis elle dans son cadre (PR #130). Depuis la PR #N (vers `staging`), toutes les fenêtres montées ici suivent les maquettes v5 : recherche, Premium et connexion, avis ; l'invitation à laisser un avis et les petits messages aussi (`.w5.flt`).
 
 ## Liens avec le reste
 - Composants du cadre : [[TitleBar.tsx]], [[Sidebar.tsx]], [[LicenseNotice.tsx]], [[ApplyBar.tsx]], [[RunOverlay.tsx]], [[ConfirmDialog.tsx]], [[SearchPalette.tsx]], [[Upsell.tsx]], [[ReviewPrompt.tsx]], [[ReviewDialog.tsx]], [[ResetToast.tsx]], [[Splash.tsx]] ; filet d'erreur `PageBoundary` (voir [[Petits composants de l'interface]]).

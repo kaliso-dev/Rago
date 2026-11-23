@@ -18,5 +18,5 @@ Demandée le 16/10 : rester dans la [[Charte graphique]], s'inspirer d'Apple, be
 Liens : [[App Windows]], [[Barre en jeu]].
 
 ## Code
-- Jetons et règles du verre, plan des cinq feuilles de style : [[Styles de l'app (CSS)]] (`tokens.css`, `app.css` section « verre : bord lumineux », `features.css`, `overlay.css`). Jetons de la marque : [[tokens.css (marque)]].
-- Briques visuelles (boutons, cartes, interrupteurs, fenêtres, logo « Pulse ») : [[Petits composants de l'interface]]. Carte d'ensemble : [[Code de l'app (interface)]].
+- Jetons et règles du verre, plan des feuilles de style : [[Styles de l'app (CSS)]] (`tokens.css`, `app.css` section « verre : bord lumineux », `features.css`, `overlay.css`). Jetons de la marque : [[tokens.css (marque)]].
+- Briques visuelles (boutons, cartes, interrupteurs, fenêtres, logo) : [[Petits composants de l'interface]]. Carte d'ensemble : [[Code de l'app (interface)]].

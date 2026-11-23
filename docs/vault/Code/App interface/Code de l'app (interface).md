@@ -2,7 +2,7 @@
 type: code
 tags: [code, app, react, carte]
 fichier: app/src/
-lignes: 37678
+lignes: 36779
 maj: 2026-11-23
 ---
 # Code de l'app (interface)
@@ -32,12 +32,12 @@ Tout ce qui suit est CONFIRMÉ (code de `staging`, 10/11, commit `ee77d4f`), sau
   - [[api.ts]] et [[accountApi.ts]] sont les deux seules portes vers le moteur.
 - **Pas de routeur** : la page affichée est une simple valeur `page` dans le store. Pas de Redux non plus : un seul contexte React, [[store.tsx]], plus le contexte du compte, [[account.tsx]].
 - **Mode démo** : hors de Tauri (`isTauri` faux), les mêmes fonctions sont simulées dans le navigateur. Cela sert au simulateur `npm run window`, aux captures et aux tests de l'interface.
-- Taille : 37 678 lignes dans `app/src/` (fichiers `.ts`, `.tsx`, `.css` et `.json`, compte du 23/11 avec la PR #130). Les plus gros fichiers sont :
+- Taille : 36 779 lignes dans `app/src/` (fichiers `.ts`, `.tsx`, `.css` et `.json`, compte du 24/11 avec la PR #N). Les plus gros fichiers sont :
   - `catalog.json` (8050 lignes) ;
-  - `i18n.ts` (2998 lignes) ;
-  - `app.css` (2036 lignes) ;
-  - `v5.css` (2026 lignes) ;
+  - `i18n.ts` (3002 lignes) ;
   - `api.ts` (1762 lignes) ;
+  - `v5.css` (1646 lignes) ;
+  - `app.css` (1509 lignes) ;
   - `features.css` (1224 lignes) ;
   - `NetOpt.tsx` (1109 lignes, refaite sur la maquette v5 le 23/11) ;
   - `tips.json` (971 lignes) ;
@@ -206,7 +206,7 @@ Les 15 événements Tauri que l'interface écoute, tous déclarés dans [[api.ts
 - Cartes : [[UpdateCard.tsx]], [[BackgroundCard.tsx]], [[SessionCard.tsx]], [[LiveStatsCard.tsx]]. (`RbwStatus.tsx` est retiré le 23/11 : son contenu est dans [[ModulePage.tsx]].)
 - Réseau et presets : [[NetTools.tsx]], [[PresetEditor.tsx]].
 - Jeux : [[PresetPicker.tsx]] (choix du preset d'un jeu, covers verticales), [[GameTips.tsx]] (réglages conseillés de la [[Barre en jeu]], [[Conseils au lancement du jeu]]).
-- Petites briques (`ui.tsx`, `Modal`, `Logo`, `icons.ts`, `ri.tsx`, `printed.ts`, `Avatar`, `PageBoundary`, `vite-env.d.ts`) : [[Petits composants de l'interface]].
+- Petites briques (`ui.tsx`, `Modal`, `Logo`, `icons.ts`, `ri.tsx`, `printed.ts`, `PageBoundary`, `vite-env.d.ts`) : [[Petits composants de l'interface]].
 
 ### Logique (`app/src/lib/`)
 [[api.ts]], [[store.tsx]], [[catalog.ts]], [[i18n.ts]], [[account.tsx]], [[accountApi.ts]], [[accountText.ts]], [[analysis.ts]], [[netopt.ts]], [[share.ts]], [[art.ts]], [[gameLogos.ts]], [[graphics.ts]], [[seen.ts]], [[tips.ts]].

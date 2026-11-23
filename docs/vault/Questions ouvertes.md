@@ -44,7 +44,7 @@ Posées le 10/11 au soir (q70 à q93), après la relecture complète du code pou
 - q79 : retirer la protection d'avant lancement ([[launch-gate.js]]).
 - q80 : GitHub Pages publie le vault ([[Fichiers de la racine du dépôt]]).
 - q81 : supprimer les branches `claude/project-thread-tzbch5` et `trailer-4k-footage` ([[Branches du dépôt]]).
-- q82 : supprimer les fichiers qui ne servent plus ([[recherche-conversion (site)]], [[fix_free_bat.py]], [[LicenseGate.tsx]]…).
+- q82 : supprimer les fichiers qui ne servent plus ([[recherche-conversion (site)]], [[fix_free_bat.py]]…). Pour [[LicenseGate.tsx]], le mode plein écran jamais monté est retiré le 24/11 avec la refonte des fenêtres sur les maquettes v5 (PR #N).
 - q83 : textes en retard dans le code (README, `FREE_TWEAKS`, commentaires).
 - q84 : l'e-mail d'achat renvoie vers un ticket Discord même avec le bot ([[mailer.js]]).
 - q85 : un jeu retiré de la bibliothèque ne peut plus être réaffiché ([[Games.tsx]]).

@@ -550,3 +550,61 @@ html.round .pg-settings .kb.rec span{border-radius:7px}
 .w5 .rl li.skipped .si{color:var(--ink-3)}
 .w5 .cur p.er3{max-width:560px;align-items:flex-start;text-align:left;line-height:1.45}
 .w5 .cur p.er3 svg{margin-top:3px}
+/* fenêtre Premium : les plans sont des <button role="radio"> (des <div> dans les maquettes) ; trois colonnes avec
+ * l'offre à vie */
+.w5 button.pl3{width:100%;font:inherit;color:inherit;text-align:left;cursor:pointer}
+.w5 button.pl3:hover:not(.on){border-color:var(--ink-3)}
+.w5 button.pl3:focus-visible{outline:2px solid var(--red);outline-offset:2px}
+.w5 .mdl.ups[role]{grid-template-columns:280px minmax(0,1fr)}
+.w5 .pls.three{grid-template-columns:repeat(3,minmax(0,1fr))}
+.w5 .pls.three .pl3{grid-template-columns:auto 1fr}
+.w5 .pls.three .pl3 .pr,.w5 .pls.three .pl3 small{grid-column:2}
+/* connexion : les champs des maquettes (`div.in3`) sont des <input>, bordure rouge au focus comme `.in3.fo` */
+.w5 input.in3{width:100%;outline:0;color:var(--ink)}
+.w5 input.in3:focus{border-color:var(--red);box-shadow:0 0 0 3px rgba(255,59,48,.18)}
+.w5 .err2 .gl2 button.lnk{display:inline-flex}
+/* recherche (maquette app-search) : la boîte en haut, centrée par ses marges (l'animation d'ouverture remplacerait le
+ * translate de la maquette) ; la saisie a la police de `.q`, son curseur rouge ; la liste montre 8 réglages et défile */
+.w5 > .pal[role]{position:absolute;left:0;right:0;top:110px;margin:0 auto}
+.w5 .pin input.q{min-width:0;height:100%;padding:0;border:0;outline:0;background:none;color:var(--ink);caret-color:var(--red);letter-spacing:inherit;box-shadow:none}
+.w5 .pin input.q::placeholder{color:var(--ink-3);opacity:1}
+.w5 > .pal[role] .pls2{max-height:min(432px,calc(100vh - 230px));overflow-y:auto;scrollbar-width:none}
+.w5 > .pal[role] .pls2::-webkit-scrollbar{display:none}
+.w5 .pls2 li{cursor:pointer}
+.w5 .pls2 li.emp{cursor:default;font-size:13px;color:var(--ink-3)}
+.w5 .pls2 .l b{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;min-width:0}
+.w5 .pls2 .l span{white-space:nowrap}
+.w5 button.tg2{flex:none;padding:0;border:0;background:none;font:inherit;cursor:pointer}
+.w5 button.tg2.on{background:var(--red)}
+.w5 button.tg2:not(.on):hover{color:var(--ink);box-shadow:inset 0 0 0 1.5px var(--ink-3)}
+.w5 button.tg2:focus-visible{outline:2px solid var(--red);outline-offset:2px}
+.w5 .tg2.lk{color:var(--ink-3)}
+/* invitation à laisser un avis et petits messages (maquettes app-review-prompt, app-toasts) : `.w5.flt` couvre la
+ * fenêtre sans prendre les clics. L'invitation reste sous les fenêtres ; les messages passent au-dessus de tout, et
+ * au-dessus de l'invitation (`--rvp-h`, sa hauteur, mesurée par ReviewPrompt). La barre « Appliquer » visible : les
+ * deux montent de 72 px ; la page garde de quoi défiler sous l'invitation. */
+.w5.flt{display:block;z-index:30;pointer-events:none}
+.w5.flt.tz{z-index:60}
+.w5.flt .rvp{pointer-events:auto;transition:bottom .32s cubic-bezier(.16,1,.3,1)}
+.w5.flt.up .rvp{bottom:100px}
+.w5 .rvp .cx{padding:0;border:0;background:none;cursor:pointer}
+.w5 .rvp .cx:hover{color:var(--ink)}
+.w5 .tst{transition:bottom .32s cubic-bezier(.16,1,.3,1)}
+html:has(.w5.flt .rvp) .w5 .tst{bottom:calc(40px + var(--rvp-h,190px))}
+html:has(.w5.flt.up .rvp) .w5 .tst{bottom:calc(112px + var(--rvp-h,190px))}
+.win:has(.flt .rvp) .main{padding-bottom:calc(60px + var(--rvp-h,190px))}
+.win:has(.flt.up .rvp) .main{padding-bottom:calc(132px + var(--rvp-h,190px))}
+.reduced .w5.flt .rvp,.reduced .w5 .tst{transition:none}
+@media (prefers-reduced-motion:reduce){.w5.flt .rvp,.w5 .tst{transition:none}}
+/* fenêtre d'avis (maquettes app-review-*) : les étoiles de la note sont des boutons ; le commentaire est un <textarea>
+ * dans `.in3.ta` (rouge quand il a le focus, comme `.fo`) qui grandit jusqu'à 8 lignes ; la photo du compte remplit `.av` */
+.w5 .st4 button{display:block;padding:0;border:0;background:none;color:var(--bg-4);cursor:pointer}
+.w5 .st4.big button{width:34px;height:34px}
+.w5 .st4 button.on{color:var(--red)}
+.w5 .st4 button:focus-visible{outline:2px solid var(--red);outline-offset:2px;box-shadow:none}
+.w5 .in3.ta:focus-within,.w5 .pnm input.in3:focus{border-color:var(--red);box-shadow:0 0 0 3px rgba(255,59,48,.18)}
+.w5 .in3.ta textarea{display:block;width:100%;min-height:63px;max-height:168px;padding:0;border:0;outline:0;background:none;box-shadow:none;color:var(--ink);font:inherit;line-height:inherit;letter-spacing:inherit;resize:none;field-sizing:content;scrollbar-width:thin}
+.w5 .in3.ta textarea::placeholder,.w5 input.in3::placeholder{color:var(--ink-3);opacity:1}
+.w5 .av{overflow:hidden}
+.w5 .av img{width:100%;height:100%;object-fit:cover}
+.w5 .rv2 .err2{margin:4px 0 14px}

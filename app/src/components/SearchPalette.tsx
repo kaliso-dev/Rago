@@ -1,14 +1,17 @@
-import { CornerDownLeft, Lock, Search } from "./ri";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { catalog, searchTweaks, totalTweaks, tweakModule } from "../lib/catalog";
 import { useStore } from "../lib/store";
+import { I } from "../s5/I";
 import { Modal } from "./Modal";
-import { Kbd } from "./ui";
 
+/** Recherche (Ctrl+K), maquette app-search : la boîte `.pal` en haut de la fenêtre, la page assombrie dessous. Entrée
+ * ouvre le module du réglage choisi ; « + » l'ajoute à la sélection, « ✓ » l'en retire (jamais d'annulation d'un
+ * réglage déjà appliqué) ; un réglage Premium en gratuit ouvre la fenêtre Premium. */
 export function SearchPalette() {
   const { t, lang, paletteOpen, setPaletteOpen, goTo, selected, toggle, unselectMany, isLocked, setUpsell } = useStore();
   const [q, setQ] = useState("");
   const [idx, setIdx] = useState(0);
+  const listRef = useRef<HTMLUListElement>(null);
   const results = useMemo(() => searchTweaks(q, lang), [q, lang]);
   const moduleName = (id: string) => catalog.modules.find((m) => m.id === tweakModule.get(id))?.name[lang] ?? "";
 
@@ -30,6 +33,10 @@ export function SearchPalette() {
     }
   }, [paletteOpen]);
   useEffect(() => setIdx(0), [q]);
+  // flèches : la ligne choisie reste visible quand la liste défile
+  useEffect(() => {
+    listRef.current?.children[idx]?.scrollIntoView({ block: "nearest" });
+  }, [idx]);
 
   const open = (id: string) => {
     setPaletteOpen(false);
@@ -37,13 +44,16 @@ export function SearchPalette() {
   };
 
   return (
-    <Modal open={paletteOpen} onClose={() => setPaletteOpen(false)} className="palette">
-      <div className="palette-input">
-        <Search size={16} />
+    <Modal open={paletteOpen} onClose={() => setPaletteOpen(false)} v5="" box="pal">
+      <div className="pin">
+        <I n="search" />
         <input
+          className="q"
           autoFocus
+          spellCheck={false}
           value={q}
           placeholder={t("palette.placeholder", { n: totalTweaks })}
+          aria-label={t("palette.placeholder", { n: totalTweaks })}
           onChange={(e) => setQ(e.target.value)}
           onKeyDown={(e) => {
             if (e.key === "ArrowDown") {
@@ -57,53 +67,54 @@ export function SearchPalette() {
             }
           }}
         />
-        <Kbd>Esc</Kbd>
+        <kbd>esc</kbd>
       </div>
       {q && (
-        <ul className="palette-list">
-          {results.length === 0 && <li className="palette-empty">{t("palette.empty")}</li>}
-          {results.map((tw, i) => (
-            <li
-              key={tw.id}
-              className={i === idx ? "active" : undefined}
-              onMouseEnter={() => setIdx(i)}
-              onClick={() => open(tw.id)}
-            >
-              <div className="palette-item">
-                <span className="palette-name">{tw.name[lang]}</span>
-                <span className="palette-module">{moduleName(tw.id)}</span>
-              </div>
-              {tw.kind === "tweak" && isLocked(tw.id) && (
-                <button
-                  type="button"
-                  className="palette-toggle locked"
-                  aria-label={t("free.lock")}
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    setPaletteOpen(false);
-                    setUpsell("tweak", tw.id);
-                  }}
-                >
-                  <Lock size={11} />
-                </button>
-              )}
-              {tw.kind === "tweak" && !isLocked(tw.id) && (
-                <button
-                  type="button"
-                  className={`palette-toggle${selected.has(tw.id) ? " on" : ""}`}
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    // « + » allume, « ✓ » retire de la sélection : jamais d'annulation d'un réglage déjà appliqué
-                    if (selected.has(tw.id)) unselectMany([tw.id]);
-                    else toggle(tw.id, true);
-                  }}
-                >
-                  {selected.has(tw.id) ? "✓" : "+"}
-                </button>
-              )}
-              {i === idx && <CornerDownLeft size={13} className="muted" />}
-            </li>
-          ))}
+        <ul className="pls2" ref={listRef}>
+          {results.length === 0 && <li className="emp">{t("palette.empty")}</li>}
+          {results.map((tw, i) => {
+            const on = selected.has(tw.id);
+            return (
+              <li key={tw.id} className={i === idx ? "act" : undefined} onMouseMove={() => i !== idx && setIdx(i)} onClick={() => open(tw.id)}>
+                <div className="l">
+                  <b>{tw.name[lang]}</b>
+                  <span>{moduleName(tw.id)}</span>
+                </div>
+                {tw.kind === "tweak" &&
+                  (isLocked(tw.id) ? (
+                    <button
+                      type="button"
+                      className="tg2 lk"
+                      aria-label={t("free.lock")}
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setPaletteOpen(false);
+                        setUpsell("tweak", tw.id);
+                      }}
+                    >
+                      <I n="lock" />
+                    </button>
+                  ) : (
+                    <button
+                      type="button"
+                      className={`tg2${on ? " on" : ""}`}
+                      // la saisie garde le focus : Entrée ouvre toujours le réglage choisi
+                      onMouseDown={(e) => e.preventDefault()}
+                      aria-label={t(on ? "palette.remove" : "palette.add")}
+                      aria-pressed={on}
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        if (on) unselectMany([tw.id]);
+                        else toggle(tw.id, true);
+                      }}
+                    >
+                      <I n={on ? "check" : "plus"} />
+                    </button>
+                  ))}
+                {i === idx ? <I n="enter" className="ent" /> : <i className="ent" />}
+              </li>
+            );
+          })}
         </ul>
       )}
     </Modal>

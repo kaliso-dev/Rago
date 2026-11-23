@@ -30,7 +30,7 @@ Si `via` ou `profile` manque, la carte montre :
 - Un bouton « Se connecter » appelle `openSignIn()`, qui ouvre la fenêtre de connexion de [[ReviewDialog.tsx]].
 
 ### Connecté
-- **En-tête** : avatar de 56 px (`Avatar`, voir [[Petits composants de l'interface]]), nom public (ou « Pas encore de nom public ») et e-mail du compte.
+- **En-tête** : la photo ou l'initiale (`.av.big2`), nom public (ou « Pas encore de nom public ») et e-mail du compte.
 - **Photo** :
   - « Ajouter une photo » / « Changer la photo » ouvre un sélecteur de fichier (JPEG, PNG, WebP, GIF) ;
   - `shrinkPhoto` ([[account.tsx]]) recadre l'image au carré, la réduit à 512 px au plus et l'encode en WebP ; un fichier de plus de 25 Mo est refusé ;

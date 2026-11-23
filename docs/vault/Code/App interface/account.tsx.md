@@ -14,7 +14,7 @@ Tout ce qui suit est CONFIRMÉ (code de `staging`, 10/11, commit `ee77d4f`).
 ## Rôle et place dans l'ensemble
 - `AccountProvider` est monté dans [[main.tsx (app)]], **à l'intérieur** de `StoreProvider` : il lit la licence et l'état des fenêtres dans [[store.tsx]].
 - Il appelle le serveur par [[accountApi.ts]] ; les textes sont dans [[accountText.ts]].
-- Consommé par [[ProfileCard.tsx]] (carte Profil des paramètres), [[ReviewPrompt.tsx]] (invitation en bas à droite), [[ReviewDialog.tsx]] (formulaire d'avis et connexion au compte) et `Avatar` (voir [[Petits composants de l'interface]]).
+- Consommé par [[ProfileCard.tsx]] (carte Profil des paramètres), [[ReviewPrompt.tsx]] (invitation en bas à droite), [[ReviewDialog.tsx]] (formulaire d'avis et connexion au compte).
 
 ## Ce que le fichier expose
 | Nom | Rôle |
