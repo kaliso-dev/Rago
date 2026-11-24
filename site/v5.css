@@ -43,6 +43,8 @@ svg.i{width:16px;height:16px;flex:none;overflow:visible;fill:none;stroke:none;co
 
 .btn.red svg.i,.s-tag.red svg.i,.s-final .btn.gh svg.i{--pf:#0A0A0B;--pb:#C9221A}
 .s-final .btn:not(.gh) svg.i{--pf:#ECE9E2;--pb:#FF3B30}
+/* fond papier : face sombre (visible sur l'ivoire), dos rouge profond */
+.x-chip.paper svg.i,.x-fchip + .x-fchip svg.i,.x-fchip:nth-of-type(2) svg.i,.x-wc:not(.x-act) > svg.big,.x-sk:not(:nth-child(2n)) > svg.big{--pf:#0A0A0B;--pb:#C9221A}
 
 svg.i{width:16px;height:16px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;flex:none}
 .btn{position:relative;display:inline-flex;align-items:center;justify-content:center;gap:9px;height:40px;padding:0 22px;font-family:var(--cond);font-weight:800;font-size:15px;letter-spacing:.06em;text-transform:uppercase;color:var(--ink);isolation:isolate;white-space:nowrap}
