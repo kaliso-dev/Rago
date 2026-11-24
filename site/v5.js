@@ -362,7 +362,11 @@
     cur = document.createElement("span"); cur.className = "x-cur"; cur.setAttribute("aria-hidden", "true"); document.body.appendChild(cur);
     const show = (el, x, y) => {
       if (!curOn) { bx = x; by = y; }
-      curEl = el; curOn = true; cur.textContent = el.dataset.cur; cur.dataset.face = el.dataset.face || ""; cur.classList.add("x-in");
+      curEl = el; curOn = true; cur.dataset.face = el.dataset.face || "";
+      const ic = el.dataset.curI; cur.textContent = "";
+      if (ic) { const NS = "http://www.w3.org/2000/svg", s = document.createElementNS(NS, "svg"), u = document.createElementNS(NS, "use"); s.setAttribute("class", "i"); s.setAttribute("aria-hidden", "true"); u.setAttribute("href", "#" + ic); s.appendChild(u); cur.appendChild(s); }
+      else cur.textContent = el.dataset.cur;
+      cur.toggleAttribute("data-icon", !!ic); cur.classList.add("x-in");
     };
     const hide = () => { curEl = null; curOn = false; cur.classList.remove("x-in"); };
     addEventListener("pointermove", e => { cx = e.clientX; cy = e.clientY; const el = e.target.closest && e.target.closest("[data-cur]"); if (el && el !== curEl) show(el, cx, cy); else if (!el && curEl) hide(); }, { passive: true });

@@ -140,7 +140,6 @@ main.x{position:relative;overflow-x:clip}
 .x-work-disc .lb{opacity:var(--lb,1);transform:translateY(calc((1 - var(--lb,1)) * 14px))}
 .x-work-disc svg{width:26px;height:26px;opacity:var(--lb,1)}
 @media (hover:hover){.x-work-disc:hover{background:var(--red);color:var(--bg)}}
-.x-trail{position:fixed;left:0;top:0;z-index:5;width:clamp(140px,12vw,210px);aspect-ratio:16/10;object-fit:cover;border-radius:10px;pointer-events:none;box-shadow:0 18px 40px rgba(0,0,0,.4)}
 .x-work-pin:not(.x-pinned) .x-work-st{display:flex;flex-direction:column;gap:18px;padding:50px var(--x-gut) 0}
 .x-work-pin:not(.x-pinned) .x-work-bg{display:none}
 .x-work-pin:not(.x-pinned) .x-work-cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:14px;height:auto}
@@ -197,6 +196,10 @@ main.x{position:relative;overflow-x:clip}
 .x-pc-cta .fine a{text-decoration:underline;text-underline-offset:2px}
 .x-pc.red .x-btn.ink{color:var(--ink)}
 .x-pc .js-lifetime[aria-disabled="true"]{cursor:default;opacity:.7}
+/* Premium sits on red: ink at 55-75 % washes out, so its secondary text stays near full strength */
+.x-pc.red .x-pc-pr span,.x-pc.red .bil,.x-pc.red .x-pc-cta .fine{opacity:.95}
+.x-pc.red .x-pc-f li.lk,.x-pc.red .x-pc-f li.dim{opacity:.8}
+.x-pc.red .x-pc-f li::before{opacity:.35}
 /* the cards build themselves: background from the top, label, title, text, dots from the centre, lines, buttons */
 html.x-on .x-pc{--lw:0%}
 html.x-on .x-pc .x-pc-bg{clip-path:inset(0 0 100% 0 round var(--x-r))}
@@ -224,7 +227,9 @@ html.x-on .x-pc.x-go .x-pc-cta{opacity:1;transform:none;transition:opacity .6s e
 .x-cmp-d .pm::before,.x-cmp-d .pm::after{content:"";position:absolute;left:50%;top:50%;width:18px;height:2px;margin:-1px 0 0 -9px;background:var(--bg);transition:transform .4s var(--x-circ)}
 .x-cmp-d .pm::after{transform:rotate(90deg)}
 .x-cmp-d[open] .pm::after{transform:rotate(0)}
+.x-cmp-d.x-closing .pm::after{transform:rotate(90deg)}
 .x-cmp-d .s-cmp{margin:0 0 26px;border-radius:var(--x-r)}
+.x-cmp-d .x-cmp-w{overflow:hidden}
 
 /* 7. inside the app: ten cards that stack while you scroll */
 .x-caps{position:relative;padding-top:clamp(110px,11vw,200px)}
@@ -232,16 +237,22 @@ html.x-on .x-pc.x-go .x-pc-cta{opacity:1;transform:none;transition:opacity .6s e
 .x-caps #feat-h{font-family:var(--cond);font-weight:900;font-style:italic;text-transform:uppercase;font-size:clamp(50px,6.4vw,124px);line-height:.88;letter-spacing:-.005em;color:var(--ink)}
 .x-caps-in{display:flex;flex-direction:column;align-items:flex-start;gap:22px}
 .x-caps-st{position:relative;margin-top:clamp(40px,5vw,80px)}
-.x-cap{--top:calc(var(--x-hd) + clamp(40px,5vh,70px));position:sticky;top:var(--top);display:grid;grid-template-columns:auto minmax(0,1fr) auto;grid-template-areas:"n t i" "n p i" "n g c";gap:14px clamp(20px,3vw,60px);min-height:min(58vh,480px);margin-bottom:clamp(18px,3vh,36px);padding:clamp(24px,2.6vw,44px);border-radius:var(--x-r);background:var(--card-2);color:var(--ink);transform-origin:50% 0;box-shadow:0 -20px 50px rgba(0,0,0,.35),inset 0 0 0 1px var(--line);will-change:transform}
+.x-cap{--top:calc(var(--x-hd) + clamp(40px,5vh,70px));position:sticky;top:var(--top);display:grid;grid-template-columns:auto minmax(0,1fr) auto;grid-template-areas:"n t i" "n p i" "n x i" "n g c";grid-template-rows:auto auto 1fr auto;gap:14px clamp(20px,3vw,60px);min-height:min(54vh,440px);margin-bottom:clamp(18px,3vh,36px);padding:clamp(24px,2.6vw,44px);border-radius:var(--x-r);background:var(--card-2);color:var(--ink);transform-origin:50% 0;box-shadow:0 -20px 50px rgba(0,0,0,.35),inset 0 0 0 1px var(--line);will-change:transform}
 .x-cap:nth-child(3n+1){background:var(--paper);color:var(--bg);box-shadow:0 -20px 50px rgba(0,0,0,.35)}
 .x-cap:nth-child(3n+2){background:var(--red);color:var(--bg);box-shadow:0 -20px 50px rgba(0,0,0,.35)}
 .x-cap-n{grid-area:n;font-family:var(--cond);font-weight:900;font-style:italic;font-size:clamp(70px,9vw,170px);line-height:.8;opacity:.18}
 .x-cap h3{grid-area:t;align-self:end;font-family:var(--cond);font-weight:900;font-style:italic;font-size:clamp(46px,6vw,116px);line-height:.86;text-transform:uppercase}
 .x-cap p{grid-area:p;max-width:40ch;font-size:clamp(16px,1.25vw,20px);line-height:1.45;opacity:.82}
+.x-cap .x-cap-x{grid-area:x;align-self:start;margin-top:6px}
+.x-cap .x-cap-x p{grid-area:auto;max-width:none;margin:0 0 14px;font-size:clamp(14.5px,1.05vw,17px);line-height:1.5;opacity:.68}
+.x-cap .x-cap-x b{font-weight:800;opacity:1}
+.x-cap .x-cap-x ul{grid-area:auto;display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:7px clamp(18px,2.5vw,48px);align-self:start;max-width:980px}
+.x-cap .x-cap-x li{display:flex;gap:9px;padding:0;border-radius:0;box-shadow:none;font-family:var(--body);font-weight:400;font-size:clamp(14px,1vw,16.5px);line-height:1.4;letter-spacing:0;text-transform:none;opacity:.8}
+.x-cap .x-cap-x li::before{content:"";flex:none;width:6px;height:6px;margin-top:.52em;border-radius:50%;background:currentColor;opacity:.55}
 .x-cap ul{grid-area:g;display:flex;flex-wrap:wrap;gap:8px;align-self:end}
 .x-cap li{padding:7px 12px;border-radius:8px;box-shadow:inset 0 0 0 1.5px currentColor;font-family:var(--cond);font-weight:800;font-size:13.5px;letter-spacing:.1em;text-transform:uppercase;opacity:.8}
-.x-cap-i{grid-area:i;align-self:start;display:grid;place-items:center;width:clamp(64px,6vw,104px);aspect-ratio:1;border-radius:50%;background:var(--bg);color:var(--red)}
-.x-cap-i svg{width:44%;height:44%}
+.x-cap-i{grid-area:i;align-self:start;display:grid;place-items:center;width:clamp(64px,6vw,104px);height:clamp(64px,6vw,104px);border-radius:50%;background:var(--bg);color:var(--red)}
+.x-cap-i svg{width:clamp(28px,2.65vw,46px);height:clamp(28px,2.65vw,46px)}
 .x-cap-c{grid-area:c;align-self:end;text-align:right;font-family:var(--cond);font-weight:800;font-size:14px;letter-spacing:.14em;text-transform:uppercase;white-space:nowrap}
 .x-cap-c b{display:block;font-weight:900;font-style:italic;font-size:clamp(44px,4vw,76px);line-height:.85;letter-spacing:0}
 .x-split{margin-top:clamp(30px,3vw,50px)}
@@ -792,7 +803,7 @@ if (!matchMedia("(prefers-reduced-motion: reduce)").matches) { document.document
   <div class="x-wrap">
     <div class="x-plans-hd" id="pricing">
       <h2 class="x-h x-sh" data-x="chars">Start free. <span class="r">Unlock everything</span> with Premium.</h2>
-      <div class="s-bill" id="billing" role="group" aria-label="Billing" data-x="up"><button type="button" data-v="month">Monthly</button><button type="button" data-v="year" class="on">Yearly <em id="save">6 months free</em></button></div>
+      <div class="s-bill" id="billing" role="group" aria-label="Billing" data-x="up"><button type="button" data-v="month">Monthly</button><button type="button" data-v="year" class="on">Yearly</button></div>
     </div>
     <div class="x-plans-c" data-x-own>
       <article class="x-pc paper" data-cur="Download free" data-face="ink">
@@ -834,7 +845,7 @@ if (!matchMedia("(prefers-reduced-motion: reduce)").matches) { document.document
   <div class="x-wrap">
     <div class="s-ronly" id="route-only" data-x="up"><span class="ic"><svg class="i big" aria-hidden="true"><use href="#i-route"/></svg></span><p><b>Already Premium?</b> Add only Rago Route, the anti-lag tunnel for Minecraft (beta): $3 a month or $17.99 a year on top of your Premium, its own subscription, cancel anytime.</p><a class="s-link" href="route.html">See what it does</a><a class="x-btn red sm js-route-only" href="/buy/route"><span class="x-fl"></span><span class="x-bl">Add Rago Route</span></a></div>
     <details class="x-cmp-d" data-x="up"><summary><span class="x-h">Compare Free and Premium</span><span class="pm" aria-hidden="true"></span></summary>
-      <div class="s-card s-cmp"><table><thead><tr><th scope="col">What you get</th><th scope="col" class="c">Free</th><th scope="col" class="c p">Premium</th></tr></thead><tbody id="cmp"></tbody></table></div>
+      <div class="x-cmp-w"><div class="s-card s-cmp"><table><thead><tr><th scope="col">What you get</th><th scope="col" class="c">Free</th><th scope="col" class="c p">Premium</th></tr></thead><tbody id="cmp"></tbody></table></div></div>
     </details>
   </div>
 </section>
@@ -849,15 +860,15 @@ if (!matchMedia("(prefers-reduced-motion: reduce)").matches) { document.document
     </div>
     <div class="x-caps-st" id="mods">
 <!-- mods -->
-<article class="x-cap"><span class="x-cap-n" aria-hidden="true">01</span><h3>Network</h3><p>Ping, stability and hit registration.</p><ul><li>Hit registration</li><li>Ping</li><li>Game profile</li><li>Full presets</li><li>Individual settings</li><li>Tools</li></ul><span class="x-cap-i" aria-hidden="true"><svg class="i"><use href="#i-network"/></svg></span><span class="x-cap-c"><b>23</b>tweaks</span></article>
-<article class="x-cap"><span class="x-cap-n" aria-hidden="true">02</span><h3>Latency</h3><p>Timers, priorities, CPU, memory and power.</p><ul><li>General</li><li>Priorities</li><li>Mouse and keyboard</li><li>CPU</li><li>Memory</li><li>Power</li><li>Storage</li><li>USB</li></ul><span class="x-cap-i" aria-hidden="true"><svg class="i"><use href="#i-latency"/></svg></span><span class="x-cap-c"><b>82</b>tweaks</span></article>
-<article class="x-cap"><span class="x-cap-n" aria-hidden="true">03</span><h3>Graphics card</h3><p>NVIDIA, AMD and Intel, each with its own settings.</p><ul><li>Your card</li><li>Any card</li><li>NVIDIA</li><li>AMD</li><li>Intel</li></ul><span class="x-cap-i" aria-hidden="true"><svg class="i"><use href="#i-graphics"/></svg></span><span class="x-cap-c"><b>29</b>tweaks</span></article>
-<article class="x-cap"><span class="x-cap-n" aria-hidden="true">04</span><h3>Windows</h3><p>What runs for nothing in the background.</p><ul><li>Gaming</li><li>System</li><li>Interface and comfort</li><li>Debloat</li><li>Apps</li><li>Clean up</li></ul><span class="x-cap-i" aria-hidden="true"><svg class="i"><use href="#i-windows"/></svg></span><span class="x-cap-c"><b>50</b>tweaks</span></article>
-<article class="x-cap"><span class="x-cap-n" aria-hidden="true">05</span><h3>Hitreg</h3><p>The advanced suite so your hits land.</p><ul><li>Input latency</li><li>Mouse &amp; keyboard</li><li>Hitreg suite</li></ul><span class="x-cap-i" aria-hidden="true"><svg class="i"><use href="#i-hitreg"/></svg></span><span class="x-cap-c"><b>9</b>tweaks</span></article>
-<article class="x-cap"><span class="x-cap-n" aria-hidden="true">06</span><h3>Minecraft</h3><p>OptiFine, javaw priority and game traffic.</p><ul><li>Game</li></ul><span class="x-cap-i" aria-hidden="true"><svg class="i"><use href="#i-minecraft"/></svg></span><span class="x-cap-c"><b>1</b>tweak</span></article>
-<article class="x-cap"><span class="x-cap-n" aria-hidden="true">07</span><h3>RBW Mod</h3><p>Ready for a Ranked BedWars screenshare.</p><ul><li>Services</li></ul><span class="x-cap-i" aria-hidden="true"><svg class="i"><use href="#i-rbw"/></svg></span><span class="x-cap-c"><b>1</b>tweak</span></article>
-<article class="x-cap"><span class="x-cap-n" aria-hidden="true">08</span><h3>Game mode</h3><p>Turn on before playing, off after.</p><ul><li>Rago game mode</li></ul><span class="x-cap-i" aria-hidden="true"><svg class="i"><use href="#i-games"/></svg></span><span class="x-cap-c"><b>1</b>tweak</span></article>
-<article class="x-cap"><span class="x-cap-n" aria-hidden="true">09</span><h3>Expert mode</h3><p>Kernel, boot and security settings. Powerful, use knowingly.</p><ul><li>Kernel and timers</li><li>System</li><li>Security and boot</li></ul><span class="x-cap-i" aria-hidden="true"><svg class="i"><use href="#i-expert"/></svg></span><span class="x-cap-c"><b>18</b>tweaks</span></article>
+<article class="x-cap"><span class="x-cap-n" aria-hidden="true">01</span><h3>Network</h3><p>Ping, stability and hit registration.</p><div class="x-cap-x"><p>All of them with Premium.</p><ul><li>Hitreg profile</li><li>Packet optimization</li><li>Ping optimization</li><li>Advanced network config</li><li>Network profile</li><li>Full network preset</li><li>Disable Nagle's algorithm</li><li>Remove network throttling</li></ul></div><ul><li>Hit registration</li><li>Ping</li><li>Game profile</li><li>Full presets</li><li>Individual settings</li><li>Tools</li></ul><span class="x-cap-i" aria-hidden="true"><svg class="i"><use href="#i-network"/></svg></span><span class="x-cap-c"><b>23</b>tweaks</span></article>
+<article class="x-cap"><span class="x-cap-n" aria-hidden="true">02</span><h3>Latency</h3><p>Timers, priorities, CPU, memory and power.</p><div class="x-cap-x"><p><b>7</b> of them open in Free, the rest with Premium.</p><ul><li>General latency optimizations</li><li>DirectX settings</li><li>Priority optimization</li><li>CSRSS priority (high)</li><li>Per-game advanced priority</li><li>Multimedia scheduler (MMCSS)</li><li>Win32 priority separation</li><li>System responsiveness 0%</li></ul></div><ul><li>General</li><li>Priorities</li><li>Mouse and keyboard</li><li>CPU</li><li>Memory</li><li>Power</li><li>Storage</li><li>USB</li></ul><span class="x-cap-i" aria-hidden="true"><svg class="i"><use href="#i-latency"/></svg></span><span class="x-cap-c"><b>82</b>tweaks</span></article>
+<article class="x-cap"><span class="x-cap-n" aria-hidden="true">03</span><h3>Graphics card</h3><p>NVIDIA, AMD and Intel, each with its own settings.</p><div class="x-cap-x"><p><b>2</b> of them open in Free, the rest with Premium.</p><ul><li>NVIDIA optimization</li><li>AMD optimization</li><li>Intel graphics</li><li>General GPU</li><li>DirectX</li><li>Full NVIDIA optimization</li><li>Rago driver profile (Profile Inspector)</li><li>Remove NVIDIA telemetry</li></ul></div><ul><li>Your card</li><li>Any card</li><li>NVIDIA</li><li>AMD</li><li>Intel</li></ul><span class="x-cap-i" aria-hidden="true"><svg class="i"><use href="#i-graphics"/></svg></span><span class="x-cap-c"><b>29</b>tweaks</span></article>
+<article class="x-cap"><span class="x-cap-n" aria-hidden="true">04</span><h3>Windows</h3><p>What runs for nothing in the background.</p><div class="x-cap-x"><p><b>50</b> of them open in Free, the rest with Premium.</p><ul><li>Fullscreen optimization</li><li>Windows Game Mode</li><li>Disable Game DVR</li><li>Optimize visuals</li><li>Disable Bluetooth</li><li>Disable background apps</li><li>Disable transparency</li><li>Disable notifications</li></ul></div><ul><li>Gaming</li><li>System</li><li>Interface and comfort</li><li>Debloat</li><li>Apps</li><li>Clean up</li></ul><span class="x-cap-i" aria-hidden="true"><svg class="i"><use href="#i-windows"/></svg></span><span class="x-cap-c"><b>50</b>tweaks</span></article>
+<article class="x-cap"><span class="x-cap-n" aria-hidden="true">05</span><h3>Hitreg</h3><p>The advanced suite so your hits land.</p><div class="x-cap-x"><p>All of them with Premium.</p><ul><li>Driver latency</li><li>Adapter latency</li><li>Windows latency</li><li>Frame latency</li><li>Advanced latency</li><li>Mouse optimization</li><li>Keyboard optimization</li><li>Input queue size</li></ul></div><ul><li>Input latency</li><li>Mouse &amp; keyboard</li><li>Hitreg suite</li></ul><span class="x-cap-i" aria-hidden="true"><svg class="i"><use href="#i-hitreg"/></svg></span><span class="x-cap-c"><b>9</b>tweaks</span></article>
+<article class="x-cap"><span class="x-cap-n" aria-hidden="true">06</span><h3>Minecraft</h3><p>OptiFine, javaw priority and game traffic.</p><div class="x-cap-x"><p>All of them with Premium.</p><ul><li>OptiFine preset</li></ul></div><ul><li>Game</li></ul><span class="x-cap-i" aria-hidden="true"><svg class="i"><use href="#i-minecraft"/></svg></span><span class="x-cap-c"><b>1</b>tweak</span></article>
+<article class="x-cap"><span class="x-cap-n" aria-hidden="true">07</span><h3>RBW Mod</h3><p>Ready for a Ranked BedWars screenshare.</p><div class="x-cap-x"><p>All of them with Premium.</p><ul><li>RBW Mod</li></ul></div><ul><li>Services</li></ul><span class="x-cap-i" aria-hidden="true"><svg class="i"><use href="#i-rbw"/></svg></span><span class="x-cap-c"><b>1</b>tweak</span></article>
+<article class="x-cap"><span class="x-cap-n" aria-hidden="true">08</span><h3>Game mode</h3><p>Turn on before playing, off after.</p><div class="x-cap-x"><p>All of them with Premium.</p><ul><li>Rago game mode</li></ul></div><ul><li>Rago game mode</li></ul><span class="x-cap-i" aria-hidden="true"><svg class="i"><use href="#i-games"/></svg></span><span class="x-cap-c"><b>1</b>tweak</span></article>
+<article class="x-cap"><span class="x-cap-n" aria-hidden="true">09</span><h3>Expert mode</h3><p>Kernel, boot and security settings. Powerful, use knowingly.</p><div class="x-cap-x"><p>All of them with Premium.</p><ul><li>I/O priority</li><li>Remove disk latency cap</li><li>Kernel settings</li><li>Additional settings</li><li>Disable MMCSS lazy mode</li><li>GPU latency tolerance</li><li>Monitor latency tolerance</li><li>Force monitor refresh rate</li></ul></div><ul><li>Kernel and timers</li><li>System</li><li>Security and boot</li></ul><span class="x-cap-i" aria-hidden="true"><svg class="i"><use href="#i-expert"/></svg></span><span class="x-cap-c"><b>18</b>tweaks</span></article>
 <article class="x-cap"><span class="x-cap-n" aria-hidden="true">10</span><h3>Restore</h3><p>Always a way back.</p><ul><li>Undo</li></ul><span class="x-cap-i" aria-hidden="true"><svg class="i"><use href="#i-restore"/></svg></span><span class="x-cap-c"><b>Undo</b>every tweak</span></article>
 <!-- /mods -->
     </div>
@@ -1475,7 +1486,6 @@ const REF = (() => {
 (() => {
   const c = CONFIG.currency, fmt = n => c + (Math.round(n * 100) / 100).toFixed(2);
   const free = MONTHS_FREE, freeTxt = `${free} month${free === 1 ? "" : "s"} free`;
-  $("#save").textContent = freeTxt; $("#save").hidden = free < 1;
   $("#l-amt").textContent = fmt(CONFIG.priceLifetime);
   /* Lifetime shows "Coming soon" until the account server says it's sold, at the price shown here (its Stripe price
      is set, one-time, active, same amount and currency). Then its button opens checkout, with the same codes as Premium. */
@@ -1722,9 +1732,12 @@ window.__xPage = X => {
   /* ---------- 5. How it works: the steps slide past a turning ring, the ring fills and closes into the final button ---------- */
   const wpin = $(".x-work-pin"), wcs = $$(".x-wc"), wbg = $(".x-work-bg"), disc = $(".x-work-disc"), lns = $$(".x-work-fin .ln");
   const WU = wcs.length - 1, WC = WU + 2.6;
+  // once the ring has closed, the pointer becomes the round Rago badge over the whole stage
+  const wst = $(".x-work-st");
   let trailOn = false;
+  const setCur = on => { if (on === trailOn || !wst) return; trailOn = on; if (on) { wst.dataset.cur = ""; wst.dataset.curI = "i-crosshair"; } else { delete wst.dataset.cur; delete wst.dataset.curI; } };
   if (wpin) X.pin(wpin, { len: () => WC * .85 * innerHeight, when: desk, update: p => {
-    if (!wpin.classList.contains("x-pinned")) { wcs.forEach(c => { clear(c, ["--xp", "--ty", "--s", "--o", "--z", "--sy", "--sb"]); c.classList.remove("x-act"); }); clear(wbg, ["--ring", "--pg", "--fl"]); clear(disc, ["--ds", "--lb"]); lns.forEach(l => clear(l, ["--lx", "--lo"])); trailOn = false; return; }
+    if (!wpin.classList.contains("x-pinned")) { wcs.forEach(c => { clear(c, ["--xp", "--ty", "--s", "--o", "--z", "--sy", "--sb"]); c.classList.remove("x-act"); }); clear(wbg, ["--ring", "--pg", "--fl"]); clear(disc, ["--ds", "--lb"]); lns.forEach(l => clear(l, ["--lx", "--lo"])); setCur(false); return; }
     const o = Math.max(0, p * (WC + .9) - .9), f = clamp((o - WU) / 2.6), M = clamp(f / .26), P = clamp(M / .88); // lead-in so step 01 is seen before the deck moves
     const hero = Math.min(WU, Math.ceil(o)); // the card at the center is the red one, never the one leaving
     wcs.forEach((c, r) => {
@@ -1745,22 +1758,8 @@ window.__xPage = X => {
     disc.classList.toggle("x-hot", f > .45 && f < .999);
     const D = io3(seg(f, .32, .6));
     lns.forEach(l => css(l, { "--lx": (120 * (+l.dataset.line || 1) * (1 - D)).toFixed(2), "--lo": D.toFixed(3) }));
-    trailOn = f >= .6;
+    setCur(f >= .6);
   } });
-  // past 60 % of the closing, pictures follow the mouse over the section
-  if (wpin && fine && !reduce) {
-    const pool = $$(".x-pool img").map(i => i.getAttribute("src"));
-    let lx = 0, ly = 0, k = 0;
-    wpin.addEventListener("pointermove", e => {
-      if (!trailOn || Math.hypot(e.clientX - lx, e.clientY - ly) < 90) return;
-      lx = e.clientX; ly = e.clientY;
-      const im = document.createElement("img"); im.className = "x-trail"; im.alt = ""; im.src = pool[k++ % pool.length];
-      im.style.transform = `translate3d(${lx}px,${ly}px,0) translate(-50%,-50%)`;
-      document.body.appendChild(im);
-      const r = (Math.random() * 2 - 1) * 10;
-      im.animate([{ scale: .2, rotate: r + "deg", opacity: 1 }, { scale: 1, rotate: r + "deg", opacity: 1, offset: .25 }, { scale: .9, rotate: r * 1.5 + "deg", opacity: 0 }], { duration: 1000, easing: "cubic-bezier(.16,1,.3,1)" }).onfinish = () => im.remove();
-    }, { passive: true });
-  }
 
   /* ---------- 6. Pricing: the cards build themselves (background from the top, label, title, text, dots, lines, buttons) ---------- */
   const pcs = $$(".x-pc");
@@ -1769,6 +1768,22 @@ window.__xPage = X => {
   if (reduce) pcs.forEach(c => c.classList.add("x-go"));
   else if (wide) X.when($(".x-plans-c"), () => pcs.forEach(c => c.classList.add("x-go")), .8);
   else pcs.forEach(c => X.when(c, () => c.classList.add("x-go"), .85));
+
+  /* ---------- 6b. Compare Free and Premium: the table slides open and shut instead of popping ---------- */
+  const cmpD = $(".x-cmp-d"), cmpW = cmpD && $(".x-cmp-w", cmpD);
+  if (cmpD && cmpW && !reduce) {
+    let cmpA = null;
+    $("summary", cmpD).addEventListener("click", e => {
+      e.preventDefault();
+      const shut = cmpD.open;
+      if (cmpA) cmpA.cancel();
+      if (!shut) cmpD.open = true;
+      cmpD.classList.toggle("x-closing", shut);
+      const h = cmpW.scrollHeight + "px";
+      cmpA = cmpW.animate(shut ? [{ height: h }, { height: "0px" }] : [{ height: "0px" }, { height: h }], { duration: 520, easing: "cubic-bezier(.16,1,.3,1)" });
+      cmpA.onfinish = () => { cmpA = null; cmpD.classList.remove("x-closing"); if (shut) cmpD.open = false; };
+    });
+  }
 
   /* ---------- 7. Inside the app: the ten cards stack; each one tilts a little and steps back while the next covers it ---------- */
   const caps = $$(".x-cap");

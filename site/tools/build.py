@@ -40,8 +40,6 @@ free_txt = f"{FREE} month{'' if FREE == 1 else 's'} free"
 s = re.sub(r'<b id="p-amt">[^<]*</b>', f'<b id="p-amt">{CUR}{jsround(PY / 12):.2f}</b>', s)
 s, n = re.subn(r'<p class="bil" id="p-note">[^<]*</p>', f'<p class="bil" id="p-note">Billed {CUR}{jsround(PY):.2f} yearly.{" " + free_txt + "." if FREE >= 1 else ""}</p>', s)
 assert n == 1, 'price note (p-note) not found in page.html'
-s, n = re.subn(r'<em id="save"( hidden)?>[^<]*</em>', f'<em id="save"{"" if FREE >= 1 else " hidden"}>{free_txt}</em>', s)
-assert n == 1, 'yearly saving (save) not found in page.html'
 
 s, n = re.subn(r'<b id="l-amt">[^<]*</b>', f'<b id="l-amt">{CUR}{PL:.2f}</b>', s)  # Lifetime: its button stays "Coming soon" without JavaScript
 assert n == 1, 'Lifetime price (l-amt) not found in page.html'

@@ -970,6 +970,9 @@ html.x-on body{background:var(--bg)}
 .x-cur.x-in{opacity:1;scale:1}
 .x-cur[data-face="paper"]{background:var(--paper)}
 .x-cur[data-face="ink"]{background:var(--bg);color:var(--ink);box-shadow:inset 0 0 0 1.5px rgba(255,255,255,.2)}
+.x-cur[data-icon]{width:104px;height:104px;padding:0}
+.x-cur[data-icon] svg.i{--pf:#0A0A0B;--pb:#C9221A;width:42%;height:42%}
+.x-cur[data-icon][data-face="ink"] svg.i{--pf:#ECE9E2;--pb:#FF3B30}
 
 /* rail de défilement, grain */
 .x-rail{--w:4px;position:fixed;top:12px;bottom:12px;right:0;z-index:300;width:18px;opacity:0;transition:opacity .4s ease;touch-action:none;cursor:grab}
