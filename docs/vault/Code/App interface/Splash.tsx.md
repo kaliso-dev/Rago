@@ -9,7 +9,7 @@ maj: 2026-11-24
 
 L'**écran de démarrage** de la charte v5 : le R tombe comme un tampon, « AGO » glisse, la bande « optimizer » se déroule, puis le statut et la jauge à segments vont jusqu'à « Ready » ; un aplat rouge penché avec le R noir passe ensuite et découvre l'app. Fiche parente : [[Code de l'app (interface)]]. Design : [[Charte graphique]].
 
-Refait le 24/11 sur la maquette v5 `rendus-v5/perso/src/splash.html` (image `perso/demarrage.jpg`, vidéo `videos/anim-demarrage.mp4`) par la PR #PRX, jamais testé sur Windows. Avant : version de la PR #108 (22/11), 1,45 s.
+Refait le 24/11 sur la maquette v5 `rendus-v5/perso/src/splash.html` (image `perso/demarrage.jpg`, vidéo `videos/anim-demarrage.mp4`) par la PR #133 (fusionnée dans `staging` le 24/11), jamais testé sur Windows. Avant : version de la PR #108 (22/11), 1,45 s.
 
 ## Durée fixe (décision du 23/11)
 Sofiene, 23/11 à 22 h 40 : « pour l'écran de démarrage je veux une animation d'au moins 1,5 à 2 sec fixe pas dépendante de la vitesse à laquelle s'ouvre l'app ». Les durées sont comptées depuis la première image de l'animation, pas depuis le chargement : l'app se charge dessous pendant ce temps.

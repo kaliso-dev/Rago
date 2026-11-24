@@ -46,7 +46,7 @@ Utilisé par 13 fichiers (23/11, après la PR #128 : surtout les fenêtres, la b
 ## Le logo
 Charte v5 (PR #108 du 22/11, vers `staging`, jamais testée sur Windows) : **R rouge plein partout** (décision de Sofiene du 22/11) ; le R est noir seulement sur la transition rouge plein écran du démarrage.
 - Le R vient de `LogoR` de `s5/I.tsx` (tracé `LOGO_R` de `s5/iconData.ts`, [[Maquettes v5 dans l'app (s5)]]), partout depuis les maquettes v5 : barre latérale, écran de démarrage et son aplat rouge ([[Splash.tsx]]).
-- `Logo.tsx` (`Mark`) et `logoPaths.ts` (tracé du R) sont retirés le 24/11 (PR #PRX) : l'écran de démarrage refait sur la maquette était leur dernier lecteur. `AppIcon` (PR #132), `Wordmark` et `Pulse` étaient déjà retirés le même jour.
+- `Logo.tsx` (`Mark`) et `logoPaths.ts` (tracé du R) sont retirés le 24/11 (PR #133) : l'écran de démarrage refait sur la maquette était leur dernier lecteur. `AppIcon` (PR #132), `Wordmark` et `Pulse` étaient déjà retirés le même jour.
 
 ## `icons.ts`
 - **`MODULE_ICONS`** : l'icône **imprimée** de chaque module ou page, construite depuis la table `NAMES` (nom du catalogue ou id de page → nom de l'icône de la charte, rendue par `PrintIcon`). Exemples : `games` → `library`, `bolt` → `games`, `gauge` → `latency`, `display`, `nettest`, `tools`, `analysis`. Utilisé par [[Sidebar.tsx]].
