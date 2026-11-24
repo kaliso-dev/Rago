@@ -3,7 +3,7 @@ type: code
 tags: [code, site, netlify, fichiers]
 fichier: site/
 lignes: 3381
-maj: 2026-11-23
+maj: 2026-11-24
 ---
 # Fichiers publiés du site
 
@@ -40,6 +40,7 @@ Ce que [[build.py]] change entre une source et sa page : empreinte `?v=` sur `v5
 | `fonts/Barlow-*.woff2` (400, 500, 600, 700), `fonts/BarlowCondensed-*.woff2` (600 à 900, dont 700, 800 et 900 italiques), `fonts/OFL-Barlow.txt` (licence) | polices v5 auto-hébergées (276 Ko en tout, aucune IP envoyée à Google), déclarées dans [[v5.css]] | ajoutées le 22/11 (PR #109) ; les polices Geist sont retirées |
 | `img/v5/` : `rago-icon.svg` (tuile blanche au R rouge, en-têtes), `rago-cap.svg`, `brush.svg` (coup de pinceau des titres), `grain.svg` (grain du fond), `shot-dashboard.webp` (capture de l'app du héros) | images du design v5 | copiées des maquettes le 22/11 |
 | `img/games/{minecraft,valorant,cs2,fortnite}.webp` | vignettes de la section bibliothèque de jeux de l'accueil (Lunar Client, VALORANT, Counter-Strike 2, Fortnite) | ajoutées le 20/10 (`4e0914e`) ; voir [[Bibliothèque de jeux]] |
+| `img/wide/{minecraft,cs2,valorant,fortnite,gta,lol,apex,overwatch,rl,pubg}.webp` | dix captures en jeu paysage 760 × 400 avec les personnages du jeu (réduites depuis `app/src/assets/s5/games/wide/`) : les losanges entre les mots du titre de l'accueil v6 et la traînée d'images sur la section « What delays your hit » ; droits d'utilisation à vérifier avant la prod | ajoutées le 24/11 (Sofiene : « mets les covers mais adapté à la forme, il faut les autres ») |
 | `img/covers/{fortnite,valorant,gta,cs2,lol,roblox,apex,rl,overwatch,minecraft}.webp` | dix jaquettes verticales 320 × 480 avec le logo du jeu (réduites depuis `app/src/assets/s5/games/cover/`) : les cartes qui s'empilent au chargement de l'accueil v6, Minecraft en dernier ; droits d'utilisation à vérifier avant la prod, comme dans l'app | ajoutées le 24/11 (demande de Sofiene : « mets plutôt les covers de jeux les plus connus ») |
 | `img/x/{dash-title,dash-on,dash-free,dash-analyze,dash-pc,ingame}.webp` | six découpes 640 × 400 de la capture de l'app (`img/v5/shot-dashboard.webp`) et de la barre en jeu (`media/in-game-bar.webp`) : images du titre et traînée d'images de l'accueil v6 (plus le chargement depuis le 24/11) | ajoutées le 23/11 (Site v6, [[page.html]]) |
 | `img/partners/*.webp` (7 fichiers) | logos des partenaires | listés dans [[partners.json]] |

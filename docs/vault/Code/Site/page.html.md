@@ -3,7 +3,7 @@ type: code
 tags: [code, site, html, javascript]
 fichier: site/src/page.html
 lignes: 1873
-maj: 2026-11-23
+maj: 2026-11-24
 ---
 # page.html
 
@@ -19,7 +19,7 @@ CONFIRMÉ d'après la branche `claude/project-thread-7emsbt` (23/11/2026, PR « 
 - `<main id="home" class="x">` : la classe `x` déclenche le moteur v6 de [[v5.js]] (et coupe les anciennes animations v5 sur cette page).
 - Le sprite d'icônes (entre `<!-- icons -->` et `<!-- /icons -->`) est écrit par [[sync_icons.py]].
 - Outils qui réécrivent des morceaux de la source (commiter le résultat) : [[sync_app.py]] (les dix cartes `article.x-cap` entre `<!-- mods -->` et `<!-- /mods -->`, compteurs « Nearly 220 tweaks », `n-all`, `n-free`, « 73 of 218 », barre `#free-bar`) et [[sync_partners.py]] (bandeau des partenaires entre `<!-- partners:home -->` et `<!-- /partners:home -->`, logos de la carte Partners entre `<!-- partners:homecard -->` et `<!-- /partners:homecard -->`).
-- Images ajoutées pour la v6 : `site/img/x/` (six découpes 640 × 400 de la capture de l'app et de la barre en jeu), utilisées par les images du titre et la traînée d'images ([[Fichiers publiés du site]]).
+- Images ajoutées pour la v6 : `site/img/x/` (six découpes 640 × 400 de la capture de l'app et de la barre en jeu), utilisées par les images du titre (mais depuis le 24/11 les losanges tirent de `img/wide/`, dix captures en jeu paysage) et la traînée d'images ([[Fichiers publiés du site]]).
 
 ## Sections, dans l'ordre (et leur animation)
 - **Chargement** `.x-ld` (avant tout, fond papier) : dix jaquettes verticales de jeux connus avec leur logo (`img/covers/`, Fortnite, Valorant, GTA V, CS2, League of Legends, Roblox, Apex, Rocket League, Overwatch 2, puis Minecraft au-dessus ; depuis le 24/11, à la place des captures de l'app) s'empilent puis s'envolent, « RAGO [compteur %] OPTIMIZER. » ; la case rouge du compteur grandit jusqu'à remplir l'écran, puis le tout monte. Un petit script en tête du corps l'affiche dès la première image et le retire au bout de 9 s au plus si le moteur ne tourne pas. Absent avec « réduire les animations ».
