@@ -3,7 +3,7 @@ type: code
 tags: [code, app, react, carte]
 fichier: app/src/
 lignes: 36779
-maj: 2026-11-23
+maj: 2026-11-24
 ---
 # Code de l'app (interface)
 
@@ -206,7 +206,7 @@ Les 15 événements Tauri que l'interface écoute, tous déclarés dans [[api.ts
 - Cartes : [[UpdateCard.tsx]], [[BackgroundCard.tsx]], [[SessionCard.tsx]], [[LiveStatsCard.tsx]]. (`RbwStatus.tsx` est retiré le 23/11 : son contenu est dans [[ModulePage.tsx]].)
 - Réseau et presets : [[NetTools.tsx]], [[PresetEditor.tsx]].
 - Jeux : [[PresetPicker.tsx]] (choix du preset d'un jeu, covers verticales), [[GameTips.tsx]] (réglages conseillés de la [[Barre en jeu]], [[Conseils au lancement du jeu]]).
-- Petites briques (`ui.tsx`, `Modal`, `Logo`, `icons.ts`, `ri.tsx`, `printed.ts`, `PageBoundary`, `vite-env.d.ts`) : [[Petits composants de l'interface]].
+- Petites briques (`ui.tsx`, `Modal`, `icons.ts`, `ri.tsx`, `printed.ts`, `PageBoundary`, `vite-env.d.ts`) : [[Petits composants de l'interface]].
 
 ### Logique (`app/src/lib/`)
 [[api.ts]], [[store.tsx]], [[catalog.ts]], [[i18n.ts]], [[account.tsx]], [[accountApi.ts]], [[accountText.ts]], [[analysis.ts]], [[netopt.ts]], [[share.ts]], [[art.ts]], [[gameLogos.ts]], [[graphics.ts]], [[seen.ts]], [[tips.ts]].
