@@ -24,8 +24,8 @@ LAT0, LON0 = -10.0, 8.0     # the point of the globe at the centre of the disc: 
 K = 0.5                     # height of the drawing, in radius (the page never shows more than .46 R of cap)
 U = 10000                   # a radius, in SVG units: everything is rounded to whole units
 VMAX = 0.56                 # nothing is drawn below that depth: the page cuts the band well above it
-STEP = 2.0                  # the grid of dots, in degrees
-DOT = 46                    # the side of a dot seen from straight on, in SVG units
+STEP = 1.25                 # the grid of dots, in degrees
+DOT = 32                    # the side of a dot seen from straight on, in SVG units
 
 p0, l0 = math.radians(LAT0), math.radians(LON0)
 D = (math.cos(p0) * math.cos(l0), math.cos(p0) * math.sin(l0), math.sin(p0))
@@ -121,7 +121,7 @@ def simplify(pts, tol):
     if dm <= tol: return [a, b]
     return simplify(pts[:im + 1], tol)[:-1] + simplify(pts[im:], tol)
 
-def d_of(segs, tol=.0012, small=0):
+def d_of(segs, tol=.0006, small=0):
     out = []
     for s in segs:
         if small:
@@ -143,7 +143,7 @@ def coast():
                     lats = [c[1] for c in ring]
                     if max(lats) < 0: continue                      # nothing of the southern half is in the band
                     segs += line([vec(lat, lon) for lon, lat in ring[::step]], close=True)
-    return d_of(segs, .0012, .005)
+    return d_of(segs, .0006, .002)
 
 def graticule():
     segs = []
@@ -151,7 +151,7 @@ def graticule():
         segs += line([vec(lat / 2.0, lon) for lat in range(-176, 180)])
     for lat in range(-75, 90, 15):
         segs += line([vec(lat, lon / 2.0) for lon in range(-360, 361)], close=True)
-    return d_of(segs, .0009)
+    return d_of(segs, .0007)
 
 def main():
     dd, n = dots()
