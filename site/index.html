@@ -1761,13 +1761,13 @@ window.__xPage = X => {
     wcs.forEach((c, r) => {
       const d = r - o;
       if (d >= 0) {
-        // card at center (d=0) or stacked behind (d>0) — arrives from the back, one by one
+        // card at center (d=0) or stacked behind (d>0) — arrives from the back, one by one, always full opacity
         const dc = Math.min(d, 3);
-        css(c, { "--xp": "-50", "--ty": (dc * 34).toFixed(1) + "px", "--s": (1 - dc * .11).toFixed(4), "--o": clamp(1 - dc * .45).toFixed(3), "--z": (30 - Math.round(dc * 5)).toString(), "--sy": (12 + dc * 14).toFixed(0), "--sb": (38 + dc * 24).toFixed(0) });
+        css(c, { "--xp": "-50", "--ty": (dc * 34).toFixed(1) + "px", "--s": (1 - dc * .11).toFixed(4), "--o": dc > 2.6 ? "0" : "1", "--z": (30 - Math.round(dc * 5)).toString(), "--sy": (12 + dc * 14).toFixed(0), "--sb": (38 + dc * 24).toFixed(0) });
       } else {
-        // past card leaves to the left, fades out fast
+        // past card leaves to the left, fades out fast once off-screen
         const da = Math.min(-d, 1.2);
-        css(c, { "--xp": (-50 - da * 70).toFixed(2), "--ty": (da * -42).toFixed(1) + "px", "--s": (1 - da * .06).toFixed(4), "--o": clamp(1 - da * 2.4).toFixed(3), "--z": "4", "--sy": "6", "--sb": "20" });
+        css(c, { "--xp": (-50 - da * 90).toFixed(2), "--ty": (da * -52).toFixed(1) + "px", "--s": (1 - da * .06).toFixed(4), "--o": da > .9 ? "0" : "1", "--z": "4", "--sy": "6", "--sb": "20" });
       }
       c.classList.toggle("x-act", d > -.4 && d < .4);
     });
