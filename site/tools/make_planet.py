@@ -24,8 +24,12 @@ LAT0, LON0 = -10.0, 8.0     # the point of the globe at the centre of the disc: 
 K = 0.5                     # height of the drawing, in radius (the page never shows more than .46 R of cap)
 U = 10000                   # a radius, in SVG units: everything is rounded to whole units
 VMAX = 0.56                 # nothing is drawn below that depth: the page cuts the band well above it
-STEP = 1.25                 # the grid of dots, in degrees
-DOT = 32                    # the side of a dot seen from straight on, in SVG units
+STEP = 0.75                 # the grid of dots, in degrees
+DOT = 22                    # the side of a dot seen from straight on, in SVG units
+LIFT = 0.30                 # how far a flow rises off the globe, per radian of its length
+LIFT_MAX = 0.072            # ... and never more than that, in radii
+VTOP = 0.022                # a flow never climbs above that, so it stays off the cards
+RUN = 4.6                   # the pulse takes that many seconds to travel a flow
 
 p0, l0 = math.radians(LAT0), math.radians(LON0)
 D = (math.cos(p0) * math.cos(l0), math.cos(p0) * math.sin(l0), math.sin(p0))
@@ -67,7 +71,7 @@ def land_mask(w=2880, h=1440):
 def dots():
     """one square per cell of the grid that holds land: smaller as it turns away from us"""
     px, w, h = land_mask()
-    out, n = [], 0
+    out, n, px0, py0 = [], 0, 0, 0
     lat = -88.0
     while lat <= 88.0:
         lon = -180.0
@@ -76,12 +80,14 @@ def dots():
             x, v, z = proj(P)
             if z > .02 and -1.02 <= x <= 1.02 and -.02 <= v <= VMAX:
                 if px[int((lon + 180) / 360 * w) % w, min(h - 1, int((90 - lat) / 180 * h))]:
-                    s = max(10, int(round(DOT * (.32 + .68 * math.sqrt(z)))))
-                    out.append('M%d %dh%dv%dh-%dz' % (round(x * U) - s // 2, round(v * U) - s // 2, s, s, s))
+                    s = max(6, int(round(DOT * (.32 + .68 * math.sqrt(z)))))
+                    cx, cy = round(x * U) - s // 2, round(v * U) - s // 2
+                    out.append('m%d %dh%dv%dh-%dz' % (cx - px0, cy - py0, s, s, s))   # from the last dot, not the origin
+                    px0, py0 = cx, cy
                     n += 1
             lon += STEP
         lat += STEP
-    return ''.join(out), n
+    return 'M0 0' + ''.join(out), n
 
 def line(pts, close=False):
     """a list of 3D points -> the pieces of path that are on the half turned towards us and inside the band"""
@@ -153,6 +159,61 @@ def graticule():
         segs += line([vec(lat, lon / 2.0) for lon in range(-360, 361)], close=True)
     return d_of(segs, .0007)
 
+# ---- the players, the relay and the exit: everything the Rago Route flows join ----
+# Only what the band shows can be drawn: the view is a cap around (80 N, 8 E), so Asia is reachable
+# through the high latitudes (Siberia, the steppe), never through Tokyo or Beijing, too far south.
+CITIES = {'frankfurt': (50.11, 8.68), 'paris': (48.85, 2.35), 'milan': (45.46, 9.19),
+          'dublin': (53.35, -6.26), 'stockholm': (59.33, 18.07), 'kyiv': (50.45, 30.52),
+          'bucharest': (44.43, 26.10), 'novosibirsk': (55.03, 82.92), 'yakutsk': (62.03, 129.73),
+          'astana': (51.13, 71.43), 'moscow': (55.75, 37.62)}
+FLOWS = [('milan', 'paris'), ('milan', 'frankfurt'), ('kyiv', 'frankfurt'), ('stockholm', 'frankfurt'),
+         ('dublin', 'paris'), ('bucharest', 'frankfurt'), ('novosibirsk', 'frankfurt'),
+         ('yakutsk', 'frankfurt'), ('astana', 'paris'), ('moscow', 'frankfurt'),
+         ('frankfurt', 'paris')]
+PINS = [('frankfurt', 'Frankfurt', 'relay', ''), ('paris', 'Paris', 'exit', ' lf')]
+
+def pct(name):
+    """a city -> its place in the drawing, in percent of the box the page gives the globe"""
+    x, v, z = proj(vec(*CITIES[name]))
+    return (x + 1) / 2 * 100, v / K * 100, v
+
+def arc(a, b, steps=26):
+    """great circle from a to b, lifted off the globe so the flow reads as a road above the map"""
+    A, B = vec(*CITIES[a]), vec(*CITIES[b])
+    d = math.acos(max(-1.0, min(1.0, dot3(A, B))))
+    lift = min(LIFT_MAX, LIFT * d)
+    for _ in range(40):
+        pts, top = [], 1.0
+        for i in range(steps + 1):
+            t = i / steps
+            k = (1 + lift * math.sin(math.pi * t)) / (math.sin(d) or 1)
+            P = [k * (math.sin((1 - t) * d) * A[j] + math.sin(t * d) * B[j]) for j in range(3)]
+            x, v, _z = proj(P)
+            pts.append((x, v)); top = min(top, v)
+        if top >= VTOP or lift < .004: break
+        lift -= .004                                    # too high: it would reach the cards
+    return 'M' + 'L'.join('%d %d' % (round(x * U), round(v * U)) for x, v in pts)
+
+def flows():
+    paths = [arc(a, b) for a, b in FLOWS]
+    dl = ['' if i == 0 else ' style="animation-delay:-%.2fs"' % (RUN * i / len(paths))
+          for i in range(len(paths))]
+    order = [0, 5, 2, 8, 4, 1, 9, 3, 10, 6, 7]          # so neighbours never pulse together
+    g = lambda c: '<g>' + ''.join('<path class="%s" pathLength="100"%s d="%s"/>' % (c, dl[order[i]], paths[i])
+                                  for i in range(len(paths))) + '</g>'
+    out = ['          <svg class="x-orb-fx" viewBox="-%d 0 %d %d" preserveAspectRatio="xMidYMid meet">' % (U, 2 * U, round(K * U))]
+    out += ['            ' + g(c) for c in ('ln', 'pg', 'pz')]
+    out.append('          </svg>')
+    for name, label, role, cls in PINS:
+        px, py, _ = pct(name)
+        out.append('          <span class="x-opin%s" style="--px:%.2f%%;--py:%.2f%%"><i></i><b>%s<em>%s</em></b></span>'
+                   % (cls, px, py, label, role))
+    for name in CITIES:
+        if name in ('frankfurt', 'paris'): continue
+        px, py, _ = pct(name)
+        out.append('          <span class="x-opin sm" style="--px:%.2f%%;--py:%.2f%%"><i></i></span><!-- %s -->' % (px, py, name))
+    return '\n'.join(out) + '\n'
+
 def main():
     dd, n = dots()
     xl = round(math.sqrt(U * U - (U - VMAX * U) ** 2))      # where the limb leaves the bottom of the drawing
@@ -162,10 +223,15 @@ def main():
            '            <path class="dt" d="%s"/>\n'
            '            <path class="cs" d="%s"/>\n'
            '          </svg>\n') % (U, 2 * U, round(K * U), xl, round(VMAX * U), U, U, xl, round(VMAX * U), graticule(), dd, coast())
+    fx = flows()
     s = open(PAGE).read()
-    a, b = s.index('<!-- globe -->') + len('<!-- globe -->'), s.index('<!-- /globe -->')
-    open(PAGE, 'w').write(s[:a] + '\n' + svg + '        ' + s[b:])
-    print('globe:', n, 'dots,', len(svg) // 1024, 'KB of SVG')
+    for tag, blk in (('globe', svg), ('flows', fx)):
+        a, b = s.index('<!-- %s -->' % tag) + len('<!-- %s -->' % tag), s.index('<!-- /%s -->' % tag)
+        s = s[:a] + '\n' + blk + '        ' + s[b:]
+    open(PAGE, 'w').write(s)
+    deep = max(pct(c)[1] for c in CITIES)
+    print('globe:', n, 'dots,', len(svg) // 1024, 'KB of SVG;', len(FLOWS), 'flows,',
+          len(CITIES), 'pins, the deepest at %.1f%% of the drawing' % deep)
 
 if __name__ == '__main__':
     main()
