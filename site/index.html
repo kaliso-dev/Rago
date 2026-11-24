@@ -156,7 +156,7 @@ main.x{position:relative;overflow-x:clip}
 .x-work-bg .fl{fill:var(--red);stroke:none;transform-origin:200px 200px;transform:scale(var(--fl,0))}
 .x-work-bg .tk path{stroke:var(--ink-3);stroke-width:2}
 .x-work-cards{position:relative;z-index:1;width:100%;height:100%}
-.x-wc{position:absolute;left:50%;top:50%;width:clamp(260px,24vw,400px);min-height:clamp(300px,40vh,420px);display:flex;flex-direction:column;padding:clamp(22px,2vw,32px);border-radius:var(--x-r);background:var(--paper);color:var(--bg);transform:translate3d(calc(var(--xp,-50) * 1%),calc(-50% + var(--ty,0px)),0) scale(var(--s,1));opacity:var(--o,1);z-index:calc(var(--z,1));box-shadow:0 calc(var(--sy,10) * 1px) calc(var(--sb,30) * 1px) rgba(0,0,0,.35);will-change:transform,opacity;transition:background-color .4s,color .4s}
+.x-wc{position:absolute;left:50%;top:50%;width:clamp(260px,24vw,400px);min-height:clamp(300px,40vh,420px);display:flex;flex-direction:column;padding:clamp(22px,2vw,32px) clamp(22px,2vw,32px) clamp(70px,8vh,84px);border-radius:var(--x-r);background:var(--paper);color:var(--bg);transform:translate3d(calc(var(--xp,-50) * 1%),calc(-50% + var(--ty,0px)),0) scale(var(--s,1));opacity:var(--o,1);z-index:calc(var(--z,1));box-shadow:0 calc(var(--sy,10) * 1px) calc(var(--sb,30) * 1px) rgba(0,0,0,.35);will-change:transform,opacity;transition:background-color .4s,color .4s}
 .x-wc.x-act{background:var(--red)}
 .x-wc .n{font-family:var(--cond);font-weight:800;font-size:16px;letter-spacing:.14em}
 .x-wc svg.big{width:44px;height:44px;margin:auto 0 18px}
@@ -173,7 +173,7 @@ main.x{position:relative;overflow-x:clip}
 .x-work-pin:not(.x-pinned) .x-work-st{display:flex;flex-direction:column;gap:18px;padding:50px var(--x-gut) 0}
 .x-work-pin:not(.x-pinned) .x-work-bg{display:none}
 .x-work-pin:not(.x-pinned) .x-work-cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:14px;height:auto}
-.x-work-pin:not(.x-pinned) .x-wc{position:relative;left:auto;top:auto;width:auto;min-height:260px;transform:none;opacity:1}
+.x-work-pin:not(.x-pinned) .x-wc{position:relative;left:auto;top:auto;width:auto;min-height:260px;padding-bottom:clamp(22px,2vw,32px);transform:none;opacity:1}
 .x-work-pin:not(.x-pinned) .x-work-fin{position:relative;padding:40px 0 0}
 .x-work-pin:not(.x-pinned) .x-work-fin .ln{transform:none;opacity:1;font-size:clamp(44px,12vw,90px)}
 
@@ -1757,19 +1757,20 @@ window.__xPage = X => {
   let trailOn = false;
   if (wpin) X.pin(wpin, { len: () => WC * .85 * innerHeight, when: desk, update: p => {
     if (!wpin.classList.contains("x-pinned")) { wcs.forEach(c => { clear(c, ["--xp", "--ty", "--s", "--o", "--z", "--sy", "--sb"]); c.classList.remove("x-act"); }); clear(wbg, ["--ring", "--pg", "--fl"]); clear(disc, ["--ds", "--lb"]); lns.forEach(l => clear(l, ["--lx", "--lo"])); trailOn = false; return; }
-    const o = p * WC, f = clamp((o - WU) / 2.6), M = clamp(f / .26), P = clamp(M / .88);
+    const o = Math.max(0, p * (WC + .9) - .9), f = clamp((o - WU) / 2.6), M = clamp(f / .26), P = clamp(M / .88); // lead-in so step 01 is seen before the deck moves
+    const hero = Math.min(WU, Math.ceil(o)); // the card at the center is the red one, never the one leaving
     wcs.forEach((c, r) => {
       const d = r - o;
       if (d >= 0) {
-        // card at center (d=0) or stacked behind (d>0) — arrives from the back, one by one, always full opacity
+        // card at center (d=0) or stacked behind (d>0): the nearer the center, the higher the z-index, so the front card is never covered
         const dc = Math.min(d, 3);
-        css(c, { "--xp": "-50", "--ty": (dc * 34).toFixed(1) + "px", "--s": (1 - dc * .11).toFixed(4), "--o": dc > 2.6 ? "0" : "1", "--z": (30 - Math.round(dc * 5)).toString(), "--sy": (12 + dc * 14).toFixed(0), "--sb": (38 + dc * 24).toFixed(0) });
+        css(c, { "--xp": "-50", "--ty": (dc * 42).toFixed(1) + "px", "--s": (1 - dc * .075).toFixed(4), "--o": dc > 2.6 ? "0" : "1", "--z": (40 - Math.round(dc * 6)).toString(), "--sy": (14 + dc * 12).toFixed(0), "--sb": (40 + dc * 20).toFixed(0) });
       } else {
-        // past card leaves to the left, fades out fast once off-screen
-        const da = Math.min(-d, 1.2);
-        css(c, { "--xp": (-50 - da * 90).toFixed(2), "--ty": (da * -52).toFixed(1) + "px", "--s": (1 - da * .06).toFixed(4), "--o": da > .9 ? "0" : "1", "--z": "4", "--sy": "6", "--sb": "20" });
+        // past card: clears the center fast (eased), passes over the stack only while it is still centered, then goes out
+        const da = Math.min(-d, 1), e = Math.min(1, da / .55), k = 1 - Math.pow(1 - e, 2.2);
+        css(c, { "--xp": (-50 - k * 330).toFixed(2), "--ty": (k * -24).toFixed(1) + "px", "--s": (1 - k * .05).toFixed(4), "--o": e >= 1 ? "0" : "1", "--z": da < .06 ? "44" : "12", "--sy": "8", "--sb": "24" });
       }
-      c.classList.toggle("x-act", d > -.4 && d < .4);
+      c.classList.toggle("x-act", r === hero);
     });
     css(wbg, { "--ring": (60 * o).toFixed(2) + "deg", "--pg": clamp(o / WU).toFixed(4), "--fl": out3(P).toFixed(4) });
     css(disc, { "--ds": out3(seg(f, .26, .52)).toFixed(4), "--lb": seg(f, .42, .53).toFixed(3) });
