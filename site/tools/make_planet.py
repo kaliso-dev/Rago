@@ -1,149 +1,171 @@
-"""Draw the night planet of the "Three ways in" section (img/x/planet.webp): the top cap of the Earth,
-seen from a point in the South Atlantic, so Europe and the east of North America sit near the limb.
+"""Draw the globe of the Rago Route section, straight into src/page.html, between <!-- globe --> and <!-- /globe -->.
 
-Sources, both free to use: the city lights of NASA's Black Marble (4096x2048 equirectangular, as shipped
-with three-globe) and the coastlines of Natural Earth 50m (public domain). They are downloaded once into
-a cache outside the repo. The projection constants below are repeated in page.html (orbGeo) so that the
-Frankfurt and Paris pins and the Rago Route flows land on the right spot of the image.
+Not a picture: the top of the Earth drawn with lines and dots, like the reference Sofiene gave on 24/11.
+One dot per cell of a 2 deg x 2 deg grid wherever there is land, the coastlines at the stroke, and a graticule
+every 15 deg; everything in orthographic projection, only the half of the globe turned towards us, cut to the
+top band that the page shows. Coordinates are whole numbers in ten-thousandths of a radius, so the SVG stays small.
 
-    python3 site/tools/make_planet.py            # writes site/img/x/planet.webp
+Coastlines: Natural Earth 50m (public domain), downloaded once into a cache outside the repo.
 
-The image is the top band of the globe: width 2R, height K*R, its top edge tangent to the top of the disc.
-Everything outside the disc is transparent, so the page shows black space above the limb."""
-import json, math, os, sys, tempfile, urllib.request
-import numpy as np
-from PIL import Image, ImageDraw, ImageFilter
+    python3 site/tools/make_planet.py          # rewrites the <!-- globe --> block of site/src/page.html
+
+The projection below is also used by hand to place the Frankfurt and Paris pins and the Rago Route flows
+(percentages of the same band), so changing it means redoing those too."""
+import json, math, os, tempfile, urllib.request
+from PIL import Image, ImageDraw
 
 HERE = os.path.dirname(os.path.abspath(__file__))
-OUT = os.path.join(HERE, '..', 'img', 'x', 'planet.webp')
+PAGE = os.path.join(HERE, '..', 'src', 'page.html')
 CACHE = os.path.join(tempfile.gettempdir(), 'rago-planet')
-SRC = {
-    'earth-night.jpg': 'https://raw.githubusercontent.com/vasturiano/three-globe/master/example/img/earth-night.jpg',
-    'ne_50m_land.geojson': 'https://raw.githubusercontent.com/nvkelso/natural-earth-vector/master/geojson/ne_50m_land.geojson',
-    'ne_50m_lakes.geojson': 'https://raw.githubusercontent.com/nvkelso/natural-earth-vector/master/geojson/ne_50m_lakes.geojson',
-}
-# ---- the same numbers in page.html (orbGeo) ----
-LAT0, LON0 = -10.0, 8.0   # the point of the globe at the center of the disc: Europe then sits in the middle of the visible cap
-K = 0.50                    # height of the image, in radius: the page never shows more than .46 R of cap
-W = 5120                    # width of the image = 2 R, so R = 2560 px
-SS = 3                      # samples per pixel on each axis
-MW, MH = 12288, 6144        # the coastlines, drawn equirectangular before being projected
+SRC = {'ne_50m_land.geojson': 'https://raw.githubusercontent.com/nvkelso/natural-earth-vector/master/geojson/ne_50m_land.geojson',
+       'ne_50m_lakes.geojson': 'https://raw.githubusercontent.com/nvkelso/natural-earth-vector/master/geojson/ne_50m_lakes.geojson'}
+# ---- the view: the same numbers in page.html (the pins and the flows) ----
+LAT0, LON0 = -10.0, 8.0     # the point of the globe at the centre of the disc: Europe then sits in the visible cap
+K = 0.5                     # height of the drawing, in radius (the page never shows more than .46 R of cap)
+U = 10000                   # a radius, in SVG units: everything is rounded to whole units
+VMAX = 0.56                 # nothing is drawn below that depth: the page cuts the band well above it
+STEP = 2.0                  # the grid of dots, in degrees
+DOT = 46                    # the side of a dot seen from straight on, in SVG units
+
+p0, l0 = math.radians(LAT0), math.radians(LON0)
+D = (math.cos(p0) * math.cos(l0), math.cos(p0) * math.sin(l0), math.sin(p0))
+E = (-math.sin(l0), math.cos(l0), 0.0)
+N = (-math.sin(p0) * math.cos(l0), -math.sin(p0) * math.sin(l0), math.cos(p0))
 
 def grab(name):
     os.makedirs(CACHE, exist_ok=True)
     p = os.path.join(CACHE, name)
     if not os.path.isfile(p):
-        print('download', name)
-        req = urllib.request.Request(SRC[name], headers={'User-Agent': 'rago-site-build'})
-        with urllib.request.urlopen(req, timeout=180) as r, open(p, 'wb') as f:
+        with urllib.request.urlopen(urllib.request.Request(SRC[name], headers={'User-Agent': 'rago-site-build'}), timeout=180) as r, open(p, 'wb') as f:
             f.write(r.read())
-    return p
+    return json.load(open(p))
 
-def land_mask():
-    """land in white, lakes back in black, equirectangular MW x MH"""
-    im = Image.new('L', (MW, MH), 0)
+def vec(lat, lon):
+    a, b = math.radians(lat), math.radians(lon)
+    return (math.cos(a) * math.cos(b), math.cos(a) * math.sin(b), math.sin(a))
+
+def dot3(A, B): return A[0] * B[0] + A[1] * B[1] + A[2] * B[2]
+
+def proj(P):
+    """-> x (to the right), v (down from the top of the disc), z (> 0 on the half turned towards us), in radii"""
+    return dot3(P, E), 1 - dot3(P, N), dot3(P, D)
+
+def land_mask(w=2880, h=1440):
+    im = Image.new('L', (w, h), 0)
     d = ImageDraw.Draw(im)
     def rings(geo, v):
         for ft in geo['features']:
             g = ft['geometry']
-            polys = [g['coordinates']] if g['type'] == 'Polygon' else g['coordinates']
-            for poly in polys:
+            for poly in ([g['coordinates']] if g['type'] == 'Polygon' else g['coordinates']):
                 for i, ring in enumerate(poly):
-                    pts = [((lon + 180) / 360 * MW, (90 - lat) / 180 * MH) for lon, lat in ring]
+                    pts = [((lon + 180) / 360 * w, (90 - lat) / 180 * h) for lon, lat in ring]
                     if len(pts) > 2: d.polygon(pts, fill=v if i == 0 else (0 if v else 255))
-    rings(json.load(open(grab('ne_50m_land.geojson'))), 255)
-    rings(json.load(open(grab('ne_50m_lakes.geojson'))), 0)
-    return np.asarray(im)
+    rings(grab('ne_50m_land.geojson'), 255)
+    rings(grab('ne_50m_lakes.geojson'), 0)
+    return im.load(), w, h
+
+def dots():
+    """one square per cell of the grid that holds land: smaller as it turns away from us"""
+    px, w, h = land_mask()
+    out, n = [], 0
+    lat = -88.0
+    while lat <= 88.0:
+        lon = -180.0
+        while lon < 180.0:
+            P = vec(lat, lon)
+            x, v, z = proj(P)
+            if z > .02 and -1.02 <= x <= 1.02 and -.02 <= v <= VMAX:
+                if px[int((lon + 180) / 360 * w) % w, min(h - 1, int((90 - lat) / 180 * h))]:
+                    s = max(10, int(round(DOT * (.32 + .68 * math.sqrt(z)))))
+                    out.append('M%d %dh%dv%dh-%dz' % (round(x * U) - s // 2, round(v * U) - s // 2, s, s, s))
+                    n += 1
+            lon += STEP
+        lat += STEP
+    return ''.join(out), n
+
+def line(pts, close=False):
+    """a list of 3D points -> the pieces of path that are on the half turned towards us and inside the band"""
+    if close and pts[0] != pts[-1]: pts = pts + [pts[0]]
+    segs, cur = [], []
+    prev = None
+    for P in pts:
+        x, v, z = proj(P)
+        if z > 0 and v <= VMAX:
+            if prev is not None and prev[2] <= 0:          # coming back into view: start at the limb
+                cur.append(cross(prev, (x, v, z), P))
+            cur.append((x, v))
+        else:
+            if cur:
+                if prev is not None and z <= 0: cur.append(cross((x, v, z), prev, None))
+                segs.append(cur); cur = []
+        prev = (x, v, z)
+    if cur: segs.append(cur)
+    return segs
+
+def cross(out, inn, P):
+    """point of the limb between a point behind (z<=0) and a point in front: straight interpolation on z"""
+    t = out[2] / (out[2] - inn[2]) if out[2] != inn[2] else 0
+    return (out[0] + (inn[0] - out[0]) * t, out[1] + (inn[1] - out[1]) * t)
+
+def simplify(pts, tol):
+    """Douglas-Peucker, in the plane of the drawing"""
+    if len(pts) < 3: return pts
+    a, b = pts[0], pts[-1]
+    dx, dy = b[0] - a[0], b[1] - a[1]
+    n = math.hypot(dx, dy)
+    im, dm = 0, -1
+    for i in range(1, len(pts) - 1):
+        p = pts[i]
+        d = abs(dx * (a[1] - p[1]) - dy * (a[0] - p[0])) / n if n else math.hypot(p[0] - a[0], p[1] - a[1])
+        if d > dm: im, dm = i, d
+    if dm <= tol: return [a, b]
+    return simplify(pts[:im + 1], tol)[:-1] + simplify(pts[im:], tol)
+
+def d_of(segs, tol=.0012, small=0):
+    out = []
+    for s in segs:
+        if small:
+            xs = [q[0] for q in s]; vs = [q[1] for q in s]
+            if max(xs) - min(xs) < small and max(vs) - min(vs) < small: continue   # an island too small to be seen
+        s = simplify(s, tol)
+        if len(s) < 2: continue
+        out.append('M' + 'L'.join('%d %d' % (round(x * U), round(v * U)) for x, v in s))
+    return ''.join(out)
+
+def coast():
+    segs = []
+    for geo, step in ((grab('ne_50m_land.geojson'), 1), (grab('ne_50m_lakes.geojson'), 1)):
+        for ft in geo['features']:
+            g = ft['geometry']
+            for poly in ([g['coordinates']] if g['type'] == 'Polygon' else g['coordinates']):
+                for ring in poly:
+                    if len(ring) < 3: continue
+                    lats = [c[1] for c in ring]
+                    if max(lats) < 0: continue                      # nothing of the southern half is in the band
+                    segs += line([vec(lat, lon) for lon, lat in ring[::step]], close=True)
+    return d_of(segs, .0012, .005)
+
+def graticule():
+    segs = []
+    for lon in range(-180, 180, 15):
+        segs += line([vec(lat / 2.0, lon) for lat in range(-176, 180)])
+    for lat in range(-75, 90, 15):
+        segs += line([vec(lat, lon / 2.0) for lon in range(-360, 361)], close=True)
+    return d_of(segs, .0009)
 
 def main():
-    H = int(round(W * K / 2))
-    R = W / 2
-    print('image', W, 'x', H, 'R', R)
-    mask = land_mask()
-    night = np.asarray(Image.open(grab('earth-night.jpg')).convert('L')).astype(np.float32) / 255.0
-    NH, NW = night.shape
-    p0, l0 = math.radians(LAT0), math.radians(LON0)
-    d = np.array([math.cos(p0) * math.cos(l0), math.cos(p0) * math.sin(l0), math.sin(p0)])
-    e = np.array([-math.sin(l0), math.cos(l0), 0.0])
-    n = np.array([-math.sin(p0) * math.cos(l0), -math.sin(p0) * math.sin(l0), math.cos(p0)])
-    LAND = np.zeros((H, W), np.float32)
-    LIGHT = np.zeros((H, W), np.float32)
-    RHO = np.zeros((H, W), np.float32)
-    IN = np.zeros((H, W), np.float32)
-    cols = (np.arange(W, dtype=np.float64)[None, :] + 0.0)
-    STEP = 64
-    for r0 in range(0, H, STEP):
-        r1 = min(H, r0 + STEP)
-        rows = np.arange(r0, r1, dtype=np.float64)[:, None]
-        land = np.zeros((r1 - r0, W), np.float32)
-        light = np.zeros((r1 - r0, W), np.float32)
-        rho = np.zeros((r1 - r0, W), np.float32)
-        ins = np.zeros((r1 - r0, W), np.float32)
-        for sy in range(SS):
-            y = 1.0 - (rows + (sy + 0.5) / SS) * 2.0 / W
-            for sx in range(SS):
-                x = (cols + (sx + 0.5) / SS) * 2.0 / W - 1.0
-                r2 = x * x + y * y
-                ok = r2 <= 1.0
-                rho += np.sqrt(np.minimum(r2, 4.0)).astype(np.float32)
-                ins += ok.astype(np.float32)
-                z = np.sqrt(np.clip(1.0 - r2, 0, None))
-                px = x * e[0] + y * n[0] + z * d[0]
-                py = x * e[1] + y * n[1] + z * d[1]
-                pz = x * e[2] + y * n[2] + z * d[2]
-                lat = np.arcsin(np.clip(pz, -1, 1))
-                lon = np.arctan2(py, px)
-                mu = np.clip(((lon + math.pi) / (2 * math.pi) * MW).astype(np.int32), 0, MW - 1)
-                mv = np.clip(((math.pi / 2 - lat) / math.pi * MH).astype(np.int32), 0, MH - 1)
-                land += np.where(ok, mask[mv, mu] / 255.0, 0).astype(np.float32)
-                fu = (lon + math.pi) / (2 * math.pi) * NW - 0.5
-                fv = (math.pi / 2 - lat) / math.pi * NH - 0.5
-                u0 = np.floor(fu).astype(np.int32); v0 = np.floor(fv).astype(np.int32)
-                tu = (fu - u0).astype(np.float32); tv = (fv - v0).astype(np.float32)
-                ua = np.mod(u0, NW); ub = np.mod(u0 + 1, NW)
-                va = np.clip(v0, 0, NH - 1); vb = np.clip(v0 + 1, 0, NH - 1)
-                bl = (night[va, ua] * (1 - tu) + night[va, ub] * tu) * (1 - tv) + \
-                     (night[vb, ua] * (1 - tu) + night[vb, ub] * tu) * tv
-                light += np.where(ok, bl, 0).astype(np.float32)
-        q = SS * SS
-        LAND[r0:r1] = land / q; LIGHT[r0:r1] = light / q
-        RHO[r0:r1] = rho / q;   IN[r0:r1] = ins / q
-    print('projected')
-    # the ground and the lights, read in the same texture: the land itself stays cool and dim, only the cities are warm
-    lim = np.clip((RHO - 0.90) / 0.10, 0, 1)
-    ld = np.clip(LAND * 1.6, 0, 1)
-    dim = 1 - 0.55 * lim ** 1.4                      # near the limb everything is seen through more air
-    ter = np.clip(LIGHT / 0.26, 0, 1) ** 1.1 * ld
-    cit = np.clip((LIGHT - 0.21) / 0.42, 0, 1) ** 0.72 * ld * dim
-    blur = lambda a, r: np.asarray(Image.fromarray((np.clip(a, 0, 1) * 255).astype(np.uint8)).filter(ImageFilter.GaussianBlur(r))).astype(np.float32) / 255
-    glow, halo = blur(cit, 7), blur(cit, 26)
-    # the coasts, read in the drawn land: a thin line, the same width everywhere on the image
-    b = blur(LAND, 1.7)
-    coast = np.clip(4 * b * (1 - b), 0, 1) ** 1.25
-    col = np.stack([np.full_like(RHO, 7.0), np.full_like(RHO, 10.0), np.full_like(RHO, 19.0)], -1)   # the sea at night
-    col += (ld * dim)[..., None] * np.array([5.0, 5.0, 6.0])
-    col += (ter * dim)[..., None] * np.array([25.0, 32.0, 43.0])
-    air = np.clip((RHO - 0.74) / 0.26, 0, 1) ** 2.6
-    col += air[..., None] * np.array([26.0, 58.0, 104.0])
-    col += (coast * 0.3 * (1 - 0.6 * lim))[..., None] * np.array([86.0, 96.0, 112.0])
-    col += cit[..., None] * np.array([255.0, 206.0, 134.0]) * 1.35
-    col += glow[..., None] * np.array([175.0, 124.0, 66.0]) * 0.62
-    col += halo[..., None] * np.array([126.0, 90.0, 50.0]) * 0.55
-    # the air above the ground: a bright thin rim on the limb, and a halo that fades into the black of the page
-    rim = np.clip(1 - np.abs(RHO - 0.9985) / 0.0062, 0, 1) ** 1.6
-    col += rim[..., None] * np.array([90.0, 142.0, 206.0]) * 0.86
-    out = np.clip(col, 0, 255)
-    a = np.clip(IN, 0, 1)
-    off = np.clip((RHO - 1.0) / 0.055, 0, 1)
-    outer = (1 - a) * (1 - off) ** 2.2
-    out += outer[..., None] * np.array([60.0, 104.0, 170.0]) * 1.5
-    a = np.clip(a + outer * 0.9, 0, 1)
-    rgba = np.concatenate([np.clip(out, 0, 255), (a * 255)[..., None]], -1).astype(np.uint8)
-    im = Image.fromarray(rgba, 'RGBA')
-    os.makedirs(os.path.dirname(OUT), exist_ok=True)
-    q = int(sys.argv[1]) if len(sys.argv) > 1 else 80
-    im.save(OUT, 'WEBP', quality=q, method=6)
-    print('written', os.path.relpath(OUT, os.path.join(HERE, '..', '..')), os.path.getsize(OUT) // 1024, 'KB', im.size)
+    dd, n = dots()
+    xl = round(math.sqrt(U * U - (U - VMAX * U) ** 2))      # where the limb leaves the bottom of the drawing
+    svg = ('          <svg class="x-orb-gl" viewBox="-%d 0 %d %d" preserveAspectRatio="xMidYMid meet">\n'
+           '            <path class="lm" d="M-%d %dA%d %d 0 0 1 %d %d"/>\n'
+           '            <path class="gr" d="%s"/>\n'
+           '            <path class="dt" d="%s"/>\n'
+           '            <path class="cs" d="%s"/>\n'
+           '          </svg>\n') % (U, 2 * U, round(K * U), xl, round(VMAX * U), U, U, xl, round(VMAX * U), graticule(), dd, coast())
+    s = open(PAGE).read()
+    a, b = s.index('<!-- globe -->') + len('<!-- globe -->'), s.index('<!-- /globe -->')
+    open(PAGE, 'w').write(s[:a] + '\n' + svg + '        ' + s[b:])
+    print('globe:', n, 'dots,', len(svg) // 1024, 'KB of SVG')
 
 if __name__ == '__main__':
     main()

@@ -1,7 +1,7 @@
 ---
 type: pilotage
 tags: [pilotage, à-décider, à-vérifier]
-maj: 2026-11-23
+maj: 2026-11-24
 ---
 # Questions ouvertes
 
@@ -30,6 +30,9 @@ Posées le 23/11, pendant la refonte de l'app sur les maquettes v5 (fil « refon
 - q115 : texte propre à l'achat de test au lieu de « This license was revoked. » (page compte).
 - q116 : échec du nettoyage de la RAM écrit en vert dans la barre en jeu ([[Overlay.tsx]]).
 - q117 : le Packet Optimizer en gratuit montre l'écran verrouillé avec les 4 outils gratuits, au lieu de l'écran « part of Premium » ([[Packet Optimizer]], [[NetOpt.tsx]]).
+
+Posée le 24/11, après la réunion de Rago Route en une seule section de l'accueil :
+- q118 : ce que devient la section « Three ways in », qui garde ses trois démos mais plus de globe ([[page.html]]).
 
 Au 10/11, après les réponses de Sofiene du jour (q36 à q68 traitées, q46 le 10/11 à 15 h, voir [[Décisions]]) :
 - q65 : réglages Railway de prod (Wait for CI, Watch Paths, Healthcheck, moniteur) ; Sofiene demande à Claude de vérifier et de le lui rappeler ([[Railway]]).
