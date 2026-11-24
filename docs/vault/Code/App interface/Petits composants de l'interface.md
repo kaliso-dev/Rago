@@ -1,8 +1,8 @@
 ---
 type: code
 tags: [code, app, react, composant]
-fichier: app/src/components/ (ui.tsx, Modal.tsx, Logo.tsx, logoPaths.ts, icons.ts, ri.tsx, printed.ts, PageBoundary.tsx) et app/src/vite-env.d.ts
-lignes: 332
+fichier: app/src/components/ (ui.tsx, Modal.tsx, icons.ts, ri.tsx, printed.ts, PageBoundary.tsx) et app/src/vite-env.d.ts
+lignes: 315
 maj: 2026-11-24
 ---
 # Petits composants de l'interface
@@ -15,8 +15,6 @@ Tout ce qui suit est CONFIRMÉ (code de `staging`, 10/11, commit `ee77d4f`).
 |---|---|---|
 | `components/ui.tsx` | 78 | `Segmented`, `Badge`, `Button`, `Card` |
 | `components/Modal.tsx` | 96 | `Modal` (fenêtre par-dessus la page, avec pile d'Échap ; style v5 en option) |
-| `components/Logo.tsx` | 14 | `Mark` |
-| `components/logoPaths.ts` | 3 | tracé SVG du R |
 | `components/icons.ts` | 23 | `MODULE_ICONS`, `DiscordIcon` |
 | `components/ri.tsx` | 68 | icônes de l'app (imprimées ou lucide), `PrintIcon`, `PrintDefs` |
 | `components/printed.ts` | 7 | formes des icônes imprimées et leurs filtres (généré) |
@@ -45,12 +43,10 @@ Utilisé par 13 fichiers (23/11, après la PR #128 : surtout les fenêtres, la b
 - La dernière fonction `onClose` reçue est gardée dans une référence. Ainsi, la fenêtre n'est pas réinscrite dans la pile à chaque rendu.
 - Utilisée par [[ConfirmDialog.tsx]], [[SubscriptionCard.tsx]], [[Settings.tsx]], [[SearchPalette.tsx]], [[Upsell.tsx]] et [[ReviewDialog.tsx]] (style v5), et [[PresetEditor.tsx]] (ancien style).
 
-## `Logo.tsx` et `logoPaths.ts` : le logo
+## Le logo
 Charte v5 (PR #108 du 22/11, vers `staging`, jamais testée sur Windows) : **R rouge plein partout** (décision de Sofiene du 22/11) ; le R est noir seulement sur la transition rouge plein écran du démarrage.
-- `logoPaths.ts` : le tracé du R (`MARK`, boîte 164 × 180). L'ancien tracé du texte « Rago Optimizer » (`WORDMARK_TEXT`) est retiré.
-- **`Mark({ size, ink })`** : le R seul, centré dans un carré ; rouge (`--rg-red-500`), ou noir avec `ink` ([[Sidebar.tsx]], [[Splash.tsx]]).
-- `AppIcon` (R rouge sur tuile blanche) est retiré le 24/11 (PR #132) : la barre en jeu prend les images des maquettes (`assets/s5/img/rago-app-dark-64.svg`, pastille `rago-cap.svg`), comme les fenêtres v5.
-- `Wordmark` et `Pulse` (logo écrit, logo animé) sont retirés le 24/11 : plus aucun écran ne s'en servait.
+- Le R vient de `LogoR` de `s5/I.tsx` (tracé `LOGO_R` de `s5/iconData.ts`, [[Maquettes v5 dans l'app (s5)]]), partout depuis les maquettes v5 : barre latérale, écran de démarrage et son aplat rouge ([[Splash.tsx]]).
+- `Logo.tsx` (`Mark`) et `logoPaths.ts` (tracé du R) sont retirés le 24/11 (PR #133) : l'écran de démarrage refait sur la maquette était leur dernier lecteur. `AppIcon` (PR #132), `Wordmark` et `Pulse` étaient déjà retirés le même jour.
 
 ## `icons.ts`
 - **`MODULE_ICONS`** : l'icône **imprimée** de chaque module ou page, construite depuis la table `NAMES` (nom du catalogue ou id de page → nom de l'icône de la charte, rendue par `PrintIcon`). Exemples : `games` → `library`, `bolt` → `games`, `gauge` → `latency`, `display`, `nettest`, `tools`, `analysis`. Utilisé par [[Sidebar.tsx]].

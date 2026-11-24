@@ -2,14 +2,14 @@
 type: code
 tags: [code, app, css, design]
 fichier: app/src/styles/ (tokens.css, fonts.css, app.css, features.css, v5.css)
-lignes: 4585
+lignes: 4355
 maj: 2026-11-24
 ---
 # Styles de l'app (CSS)
 
 Les **feuilles de style** de l'app Windows : les jetons de design (couleurs, tailles, mouvement), les polices, le cadre et les composants, les fonctionnalités ajoutées depuis la 1.2.0, le compte et les avis, et la charte v5 posée par-dessus. La barre en jeu n'en charge plus aucune depuis le 24/11 (PR #132) : elle suit le CSS de sa maquette ([[Maquettes v5 dans l'app (s5)]]). Il n'y a ni Tailwind, ni CSS Modules, ni CSS dans le JavaScript : des classes simples, écrites à la main. Fiche parente : [[Code de l'app (interface)]]. Design : [[Charte graphique]] (v5 « Match day » depuis la PR #108 du 22/11, vers `staging`, jamais testée sur Windows) ; l'ancien verre : [[Refonte glass]].
 
-Tout ce qui suit est CONFIRMÉ (code de `staging`, 10/11, commit `ee77d4f`), avec les 238 lignes de la page Outils refaite par la **PR #90** (11/11, fusionnée dans `staging` par la PR #92), et les nettoyages des PR #119 à #130 (23/11), #131 et #132 (24/11) : les sections des pages, des fenêtres et de la barre en jeu refaites sur les maquettes v5 sont retirées. Les chiffres de lignes sont ceux du 24/11 (PR #132).
+Tout ce qui suit est CONFIRMÉ (code de `staging`, 10/11, commit `ee77d4f`), avec les 238 lignes de la page Outils refaite par la **PR #90** (11/11, fusionnée dans `staging` par la PR #92), et les nettoyages des PR #119 à #130 (23/11), #131, #132 et #133 (24/11) : les sections des pages, des fenêtres, de la barre en jeu et de l'écran de démarrage refaites sur les maquettes v5 sont retirées. Les chiffres de lignes sont ceux du 24/11 (PR #133).
 
 ## Les fichiers et qui les charge
 
@@ -17,9 +17,9 @@ Tout ce qui suit est CONFIRMÉ (code de `staging`, 10/11, commit `ee77d4f`), ave
 |---|---|---|---|
 | `tokens.css` | 219 | fenêtre principale | jetons `--rg-*` du kit v5 (`marque/tokens/tokens.css` des maquettes), classes `.rg-metric` et `.rg-overline`, animations `rg-pulse` et `rg-pixel-blink` |
 | `fonts.css` | 79 | les deux fenêtres (app et barre en jeu) | `@font-face` de Barlow (400, 500, 600, 700) et Barlow Condensed (600 à 900 droit, 700 à 900 italique), `font-display: block` |
-| `app.css` | 1475 | fenêtre principale | polices, cadre, barre de titre, navigation, pages, cartes, boutons, anciennes fenêtres, tableau de bord, plan gratuit, verre, finitions, écran de démarrage |
+| `app.css` | 1384 | fenêtre principale | polices, cadre, barre de titre, navigation, pages, cartes, boutons, anciennes fenêtres, tableau de bord, plan gratuit, verre, finitions |
 | `features.css` | 1194 | fenêtre principale | fonctionnalités de la 1.2.0 et après (liste plus bas) |
-| `v5.css` | 1618 | fenêtre principale, chargée après les anciennes feuilles | la charte v5 « Match day » posée sur les classes existantes (voir plus bas) |
+| `v5.css` | 1479 | fenêtre principale, chargée après les anciennes feuilles | la charte v5 « Match day » posée sur les classes existantes (voir plus bas) |
 
 - Ordre d'import dans [[main.tsx (app)]] : `fonts.css`, `tokens.css`, `app.css`, `features.css`, `v5.css`, puis les feuilles des maquettes v5 de `app/src/s5/` (`base.css`, `app.css`, puis une par page refaite, dont `module.css`, `net.css`, `tools.css`, `pages.css`, `analysis.css` et `win.css`), décrites dans [[Maquettes v5 dans l'app (s5)]]. L'ordre compte : une règle plus bas l'emporte à égalité, c'est ce qui permet à `v5.css` de réhabiller les pages pas encore refaites sans réécrire les autres feuilles.
 - La barre en jeu ([[main.tsx (barre en jeu)]]) charge seulement `fonts.css` et les feuilles de sa maquette (`s5/base.css`, `s5/pages/ingame.css`, `s5/overlay.css`). `overlay.css` et `tips.css` (ancienne barre en jeu, bloc des réglages conseillés) sont supprimées le 24/11 (PR #132), avec les règles de l'interrupteur `Switch` (`.switch*`), du bloc « À vérifier » (`.session-checks`, `.session-line`, `.session-head`) et du logo `.app-icon`.
@@ -67,15 +67,16 @@ Ce qui suit décrit `app.css` et `features.css`, toujours chargés. Sur `staging
 - Deux façons de l'activer :
   - le réglage de l'app (`motion` = `reduced` dans [[store.tsx]]) : [[App.tsx]] pose la classe `.reduced` sur `.win` et passe `MotionConfig reducedMotion="always"` à `motion/react` ;
   - le réglage de Windows (`prefers-reduced-motion`), que le tweak `win_visual` active, d'après le commentaire de `app.css`.
-- Dans les deux cas, les fondus et les animations courtes sont gardés. Seul le mouvement est retiré : les ondes de l'écran de démarrage ne font plus que s'allumer et s'éteindre, et le bouton Premium de la barre latérale ne bouge plus au survol.
+- Dans les deux cas, les fondus et les animations courtes sont gardés. Seul le mouvement est retiré : l'écran de démarrage remplace son tampon et son aplat par des fondus ([[Splash.tsx]]), et le bouton Premium de la barre latérale ne bouge plus au survol.
 - `tokens.css` met les durées à 0 sous `prefers-reduced-motion`, mais `app.css`, chargé après, les remet à 90, 120, 160 et 200 ms.
 
 ## Plan de `app.css`
-- Lignes 1 à 138 : polices, base, `.spin`, `.pixel-blink`, mouvement réduit (88), verre de la fenêtre et cadre `.app` (119).
-- 139 barre de titre ; 245 navigation (barre latérale) ; 376 pages et cartes (`.card` vers la ligne 448) ; 483 boutons (`.btn-*`) ; 581 interrupteur et `segmented`.
-- 708 anciennes fenêtres (`.scrim`, `.modal`, encore utilisées par modifier un preset) ; 748 tableau de bord.
-- 1059 : **démo à largeur de téléphone** (`max-width: 760px`). L'app de bureau a une largeur minimale de 1080 px ; ce bloc sert à la démo web.
-- 1140 plan gratuit ; 1238 bandeau de licence ; 1272 fenêtre basse 1080×680 ; 1355 verre (bord lumineux) ; 1388 focus et finitions (audit du 17/10) ; 1415 et suivantes : lien Discord, `Splash` (1434) et ses ondes (1468).
+- Lignes 1 à 124 : polices, base, `.spin` (77), `.pixel-blink` (85), mouvement réduit (88), verre de la fenêtre et cadre `.app` (105).
+- 125 barre de titre ; 231 navigation (barre latérale) ; 362 pages et cartes (`.card` ligne 435) ; 469 boutons (`.btn-*`) ; 567 `segmented`.
+- 663 anciennes fenêtres (`.scrim`, `.modal`, encore utilisées par modifier un preset) ; 703 tableau de bord.
+- 1014 : **démo à largeur de téléphone** (`max-width: 760px`). L'app de bureau a une largeur minimale de 1080 px ; ce bloc sert à la démo web.
+- 1095 plan gratuit ; 1193 bandeau de licence ; 1228 fenêtre basse (hauteur de 760 px et moins) ; 1310 verre (bord lumineux) ; 1343 focus et finitions (audit du 17/10) ; 1368 et suivantes : lien Discord (jusqu'à la fin, ligne 1384).
+- L'ancien écran de démarrage (`.splash-*`, ses ondes `.splash-wave` et l'animation `rg-pulse-fade`) est retiré le 24/11 (PR #133 : 91 lignes d'`app.css`, 139 de `v5.css`) : [[Splash.tsx]] suit le CSS de sa maquette (`s5/pages/splash.css`, [[Maquettes v5 dans l'app (s5)]]).
 - Les anciennes fenêtres Premium (`.upsell*`), de connexion (`.gate*`, `.modal-gate`, champs `.field`, logo animé `.pulse*`), de recherche (`.palette*`), l'invitation et le formulaire d'avis (`.review-*`) et les toasts (`.toasts`, `.reset-toast`) sont retirés le 24/11 (PR #131 : 527 lignes d'`app.css`, 380 de `v5.css`, et toute la feuille `account.css` avec `.avatar`) : [[Upsell.tsx]], [[LicenseGate.tsx]], [[SearchPalette.tsx]], [[ReviewPrompt.tsx]], [[ReviewDialog.tsx]] et [[ResetToast.tsx]] suivent le CSS des maquettes (`s5/pages/win.css`, [[Maquettes v5 dans l'app (s5)]]).
 - Les lignes `.setting` et l'ancienne page Analyse du PC (`.analysis`, `.an-*`) sont retirées le 23/11 (PR #128 : 119 lignes de `app.css`, et 29 de `v5.css` avec la carte d'analyse de l'ancien tableau de bord `.dash-an*`) : [[Analysis.tsx]] suit le CSS des maquettes (`s5/pages/analysis.css`, [[Maquettes v5 dans l'app (s5)]]).
 - Les anciennes fenêtres de confirmation et d'exécution (`.modal.confirm`, `.confirm-*`, case `.check`, `.run`, `.run-*`), les faits de résiliation (`.cancel-facts`) et la fenêtre de déconnexion (`.modal.signout`) sont retirés le 23/11 (PR #130 : 349 lignes d'`app.css`, 222 de `v5.css`) : [[ConfirmDialog.tsx]], [[RunOverlay.tsx]], [[SubscriptionCard.tsx]] et [[Settings.tsx]] suivent le CSS des maquettes (`s5/pages/win.css`, [[Maquettes v5 dans l'app (s5)]]). La règle `.run` de l'ancien écran d'exécution touchait aussi les boutons « run » des modules et des outils (`z-index: 30`, flou), sans effet visible.
@@ -135,7 +136,6 @@ Ajoutée par la PR #108 du 22/11, vers `staging`, jamais testée sur Windows. El
 - tableau de bord (`.dash-top`, `.dash-free`, presets en liste) ;
 - bandeau de licence, erreur de page, anciennes fenêtres (`.modal`) ;
 - titres de carte et de ligne en condensé capitales ;
-- écran de démarrage (`.splash-*`, voir [[Splash.tsx]]).
 - Les règles des anciens onglets de Réseau (`.hub-tab`) et de l'état du Packet Optimizer (`.no-hero-title`) sont retirées le 23/11 (PR #123).
 - Textures dans `app/src/assets/fx/` : `brush.svg`, `tape-red.svg`, `torn-a.svg`, `torn-b.svg`, `grain.svg` (copiés des maquettes) et `tape-mask.svg` (tiré de la maquette `module.css`). `num-left.svg` et `num-mask.svg` (ancien bloc chiffré `.head-num`) sont retirés le 23/11.
 

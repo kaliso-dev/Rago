@@ -2,7 +2,7 @@
 type: design
 tags: [design, marque]
 version_app: 1.4.0
-maj: 2026-11-23
+maj: 2026-11-24
 ---
 # Charte graphique
 
@@ -20,7 +20,7 @@ Source : dossier partagé `rago-redesign/rendus-v5/` (maquettes, sources HTML `s
 ## Où la v5 est appliquée (22/11)
 - **Serveur de comptes** (`licensing/`) : pages compte, e-mails, admin, Cerveau (cadre seulement) et messages du [[Bot communauté Discord]], sur `staging` par la PR #107 du 22/11 ([[Styles du serveur (CSS)]], [[mailer.js]], [[community.js]]). Jetons : `licensing/public/tokens.css` = `tokens.css` v2.0 du kit, avec les `@font-face` Barlow en tête.
 - **Site** (`site/`, `netlify/`) et kit dans `brand/` : PR #109 vers `staging` (22/11) : les 8 pages et le compte à rebours d'après les maquettes 78 à 98, feuille [[v5.css]], polices Barlow servies par le site (Geist retirée), icônes imprimées ([[sync_icons.py]]), favicons et images de partage du kit v5 ; `brand/` reçoit le kit v5 (logo, jetons v2.0, charte en images) et perd la charte HTML v1.2 et `export-logo.js`. Illustrations de Rago Route fixes en attendant leur refonte.
-- **App Windows** (`app/`) : sur `staging` par la PR #108 du 22/11, version 1.4.0, jamais testée sur Windows. Polices Barlow embarquées, jetons du kit (`app/src/styles/tokens.css`), charte posée par `v5.css` ; icônes imprimées ; cadre (barre latérale Optimize / Play / Pro, barre du haut) ; réglages en carreaux sur 3 colonnes avec le détail au survol (depuis le 23/11, HTML et CSS exacts des maquettes `app-module-*`, comme le tableau de bord, Jeux et Display : [[Maquettes v5 dans l'app (s5)]]) ; fenêtres ; écran de démarrage (transition rouge avec le R noir) ; barre en jeu ; icône R rouge sur tuile blanche dans l'exe, la zone de notification et l'installeur ([[App Windows]], [[Styles de l'app (CSS)]], [[Petits composants de l'interface]], [[Splash.tsx]], [[Overlay.tsx]]).
+- **App Windows** (`app/`) : sur `staging` par la PR #108 du 22/11, version 1.4.0, jamais testée sur Windows. Polices Barlow embarquées, jetons du kit (`app/src/styles/tokens.css`), charte posée par `v5.css` ; icônes imprimées ; cadre (barre latérale Optimize / Play / Pro, barre du haut) ; réglages en carreaux sur 3 colonnes avec le détail au survol (depuis le 23/11, HTML et CSS exacts des maquettes `app-module-*`, comme le tableau de bord, Jeux et Display : [[Maquettes v5 dans l'app (s5)]]) ; fenêtres ; écran de démarrage (depuis le 24/11, PR #133, celui de la maquette `perso/src/splash.html` : R en tampon, « AGO », bande « optimizer », jauge jusqu'à « Ready », puis transition rouge avec le R noir ; 2,3 s fixes) ; barre en jeu ; icône R rouge sur tuile blanche dans l'exe, la zone de notification et l'installeur ([[App Windows]], [[Styles de l'app (CSS)]], [[Petits composants de l'interface]], [[Splash.tsx]], [[Overlay.tsx]]).
 - **En prod (22/11, PR #114)** : admin, cadre du Cerveau et e-mails seulement. Sur la branche de prod, l'admin et le Cerveau lisent `public/tokens-v5.css` (copie des jetons v5) ; `tokens.css` y reste en v1.2 pour les pages compte. À la prochaine sortie de staging vers la prod, `tokens-v5.css` pourra être supprimé.
 
 ## Code

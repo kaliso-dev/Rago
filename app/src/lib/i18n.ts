@@ -1488,6 +1488,10 @@ const fr = {
   "upsell.sideSlots": "places gratuites",
   "upsell.sideSlotsSub": "Toutes prises sur ce PC",
   "upsell.waiting": "en attente du paiement",
+  "splash.windows": "Vérification de Windows",
+  "splash.games": "Lecture des pilotes et des jeux",
+  "splash.network": "Test de ta connexion",
+  "splash.ready": "Prêt",
 };
 
 export type Key = keyof typeof fr;
@@ -2966,6 +2970,10 @@ const en: Record<Key, string> = {
   "upsell.sideSlots": "free slots",
   "upsell.sideSlotsSub": "All in use on this PC",
   "upsell.waiting": "waiting for payment",
+  "splash.windows": "Checking Windows",
+  "splash.games": "Reading drivers and games",
+  "splash.network": "Testing your connection",
+  "splash.ready": "Ready",
 };
 
 const dicts: Record<Lang, Record<Key, string>> = { fr, en };
