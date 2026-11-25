@@ -14,10 +14,10 @@ Le 25/11/2026, Sofiene passe sur un **abonnement Claude Team**, sur un nouveau c
 
 ## Ce qui ne suit pas : à emporter avant de quitter l'ancien compte
 1. **Le dossier partagé du projet « Rago optimizer (suite) »** (`/mnt/project-files/`, liste et rôle de chaque dossier dans [[Sources]]). À télécharger, surtout :
-   - `refonte-design/` (3,6 Go) : captures de chaque page et état avant la refonte, inventaires, `constats-design.md` ;
    - `stream-discord/` : `stream-discord-correctif-complet.patch`, le correctif **jamais poussé** des saccades du stream Discord ([[Bugs et incidents]]) ;
    - `sortie-1.3.0/` : exe et `.sig` de la 1.3.0 (aussi dans Supabase), annonces Discord, GIF Rago Route ;
    - `marketing/` (vidéos et leurs sources), `etude-marche-2026-11/`, `support-clients/`, `souris/`, `conseils-jeu/`, `couleurs-resolution/`, `presets-graphiques/`, `cerveau/`, `synapse/`, `admin-refonte/` : captures et documents cités par les notes ;
+   - **Pas emporté** : `refonte-design/` (3,6 Go, captures de l'ancien design avant la refonte). Sofiene, 25/11 : « je ne récupère pas refonte design parce que new brand rago c'est le dernier nouveau design que j'ai fait ». Il reste seulement sur l'ancien compte.
    - `vault-patches/`, `vault-patchs/`, `vault/` : déjà appliqués au vault (vérifié pour les patchs du 13 au 14/11 : leurs commits sont dans `staging`), à garder seulement comme archive.
 2. **Le dossier partagé du projet « New Brand Rago »**, `rago-redesign/` : les 135 maquettes v5, le kit de marque et surtout **les scripts qui génèrent le CSS de l'app** (`rendus-v5/outils/`). Sans eux, les fichiers générés de `app/src/s5/` ne peuvent plus être refaits ([[New Brand Rago]], [[Maquettes v5 dans l'app (s5)]]). Le mettre dans le dépôt ou le télécharger : question q128 ([[Questions ouvertes]]).
 3. **Les artefacts claude.ai** de l'ancien compte, qu'un autre compte ne pourra peut-être plus ouvrir :
