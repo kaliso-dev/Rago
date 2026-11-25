@@ -19,6 +19,18 @@ html.poster body::after{position:fixed}
 .topbar .wc span{cursor:pointer}
 .topbar .wc span:hover{background:var(--bg-3);color:var(--ink)}
 .topbar .wc span.x:hover{background:var(--red);color:var(--red-ink)}
+/* compte (25/11) : « Sign in » ou « Premium » juste avant les boutons de la fenêtre ; serveur de test ou démo en gris */
+.topbar .tb-env{font-family:var(--cond);font-weight:800;font-size:12px;letter-spacing:.1em;text-transform:uppercase;color:var(--ink-3);white-space:nowrap}
+.topbar .tb-env.warn{display:inline-flex;align-items:center;gap:7px;color:var(--red);cursor:help}
+.topbar .tb-env.warn svg{width:14px;height:14px}
+.topbar .tb-acc{margin-left:auto;display:flex;align-items:center}
+.topbar .tb-acc + .wc{margin-left:14px}
+.topbar .tb-acc .btn svg{width:13px;height:13px}
+.topbar .tb-plan{position:relative;isolation:isolate;display:inline-flex;align-items:center;gap:7px;height:32px;padding:0 15px;color:var(--ink);font-family:var(--cond);font-weight:800;font-size:13px;letter-spacing:.1em;text-transform:uppercase;cursor:pointer}
+.topbar .tb-plan::before{content:"";position:absolute;inset:0;z-index:-1;transform:skewX(var(--skew));border:1px solid rgba(255,59,48,.5);background:rgba(255,59,48,.1)}
+.topbar .tb-plan:hover::before{background:rgba(255,59,48,.2)}
+.topbar .tb-plan svg{width:12px;height:12px;color:var(--red);stroke-width:3}
+html.round .topbar .tb-plan::before{border-radius:9px}
 /* la barre de défilement (10 px) prend sa place sur la marge droite : la page garde la largeur de la maquette */
 .main{position:absolute;left:236px;right:0;top:86px;bottom:0;margin:0;padding:0 30px 44px 40px;overflow-x:hidden;overflow-y:auto;scrollbar-gutter:stable}
 .main::-webkit-scrollbar{width:10px}
@@ -534,6 +546,8 @@ html.round .pg-settings .kb.rec span{border-radius:7px}
 .w5 .clw.end::after{opacity:0}
 .w5 .clw::after{transition:opacity .2s}
 /* écran d'exécution : toute la fenêtre, page dessous très floutée ; on y déplace la fenêtre */
+/* refus Premium : bouton « Sign in » sous le message (25/11) */
+.w5 .cur .er3 + .btn{margin-top:14px}
 /* les maquettes des fenêtres ne chargent pas printicons.js : icônes imprimées des boutons à 15 px (rago5.css) */
 .w5 .btn svg.pi{width:15px;height:15px}
 .w5 > .runw{position:absolute;inset:0}

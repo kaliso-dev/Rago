@@ -10,6 +10,31 @@ import { I } from "../s5/I";
 import { clock, dayMonth } from "../s5/text";
 
 const GROUPS: Group[] = ["network", "fps", "system", "windows"];
+/** Range les groupes (leur nombre de lignes, dans l'ordre) en deux colonnes au nombre de lignes le plus proche, l'ordre
+ * gardé dans chaque colonne ; null quand la plus courte aurait moins des trois quarts des lignes de l'autre (ses lignes
+ * s'étireraient trop) ou qu'il n'y a qu'un groupe. */
+function splitGroups(sizes: number[]): [number[], number[]] | null {
+  if (sizes.length < 2) return null;
+  let best: [number[], number[]] | null = null;
+  let bestDiff = Infinity;
+  // le premier groupe reste à gauche : chaque répartition n'est essayée qu'une fois
+  for (let mask = 0; mask < 1 << (sizes.length - 1); mask++) {
+    const left: number[] = [0];
+    const right: number[] = [];
+    for (let i = 1; i < sizes.length; i++) (mask & (1 << (i - 1)) ? right : left).push(i);
+    if (!right.length) continue;
+    // une ligne de plus par groupe : son titre
+    const h = (c: number[]) => c.reduce((a, i) => a + sizes[i] + 1, 0);
+    const diff = Math.abs(h(left) - h(right));
+    if (diff < bestDiff) {
+      bestDiff = diff;
+      best = [left, right];
+    }
+  }
+  if (!best) return null;
+  const [a, b] = best.map((c) => c.reduce((x, i) => x + sizes[i] + 1, 0));
+  return Math.min(a, b) / Math.max(a, b) >= 0.75 ? best : null;
+}
 const UNITS: Partial<Record<keyof Values, string>> = { jitter: "ms", loss: "%", cpuIdle: "%", fps: "fps", low1: "fps", stutters: "/min" };
 const sameDay = (a: number, b: number) => new Date(a).toDateString() === new Date(b).toDateString();
 /** Texte sur deux lignes (« what slows your pc\ndown in game »). */
@@ -413,12 +438,11 @@ export function Analysis() {
             </div>
           )}
 
-          <div className="groups">
-            {GROUPS.map((g) => {
-              const rows = list.filter((f) => f.group === g);
-              if (!rows.length) return null;
-              return (
-                <section key={g} className="grp">
+          {(() => {
+            const shown = GROUPS.map((g) => ({ g, rows: list.filter((f) => f.group === g) })).filter((x) => x.rows.length);
+            const cols = splitGroups(shown.map((x) => x.rows.length));
+            const group = ({ g, rows }: (typeof shown)[number]) => (
+                <section key={g} className="grp" style={{ "--n": rows.length } as CSSProperties}>
                   <div className="sh">
                     <h2 className="h2 tape">{t(`pa.group.${g}` as Key)}</h2>
                     <span className="cnt">
@@ -445,9 +469,21 @@ export function Analysis() {
                     ))}
                   </div>
                 </section>
-              );
-            })}
-          </div>
+            );
+            // deux colonnes équilibrées (même nombre de lignes à peu près), qui finissent à la même hauteur : le reste
+            // se répartit sur les lignes ; trop déséquilibrées, une seule colonne (Sofiene, 25/11 : pas de vide)
+            return cols ? (
+              <div className="groups cols2">
+                {cols.map((c, i) => (
+                  <div key={i} className="gcol">
+                    {c.map((n) => group(shown[n]))}
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <div className="groups one">{shown.map(group)}</div>
+            );
+          })()}
           <p className="mfoot">
             {measured(current.at)}
             {!againInRow && issues.length > 0 && !store.changed && (

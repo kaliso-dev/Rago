@@ -672,6 +672,8 @@ export interface Api {
   overlaySetPin(pin: boolean): Promise<void>;
   /** Ferme la barre et ouvre l'app (page : id de page, ou "premium" pour l'offre). */
   overlayOpenApp(page?: string): Promise<void>;
+  /** Exe de test : le vrai Rago Optimizer tourne aussi (barres en jeu et Alt+X en double). */
+  otherRagoRunning(): Promise<boolean>;
   onOverlayMode(cb: (mode: OverlayMode) => void): Promise<UnlistenFn>;
   /** La pastille commence ou finit le rappel des conseils. */
   onOverlayNudge(cb: (on: boolean) => void): Promise<UnlistenFn>;
@@ -803,6 +805,7 @@ const tauriApi: Api = {
   overlayClose: () => invoke("overlay_close"),
   overlaySetPin: (pin) => invoke("overlay_set_pin", { pin }),
   overlayOpenApp: (page) => invoke("overlay_open_app", { page: page ?? null }),
+  otherRagoRunning: () => invoke("other_rago_running"),
   onOverlayMode: (cb) => listen<OverlayMode>("overlay:mode", (e) => cb(e.payload)),
   onOverlayNudge: (cb) => listen<boolean>("overlay:nudge", (e) => cb(e.payload)),
   onGoto: (cb) => listen<string>("app:goto", (e) => cb(e.payload)),
@@ -1680,6 +1683,7 @@ const mockApi: Api = {
     mockBackground = { ...mockBackground, pin };
   },
   overlayOpenApp: async () => {},
+  otherRagoRunning: async () => false,
   onOverlayMode: (cb) => on("overlay:mode", cb),
   onOverlayNudge: (cb) => on("overlay:nudge", cb),
   onGoto: (cb) => on("app:goto", cb),

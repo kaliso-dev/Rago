@@ -360,7 +360,8 @@ function QuickTools() {
                     onKeyDown={keyToggle(go)}
                   >
                     {planBusy === p.guid ? <I n="loader" className="spin" /> : <i />}
-                    {p.name}
+                    {/* mode sans nom dans Windows : le moteur renvoie son GUID, montré en court (25/11) */}
+                    {p.name.toLowerCase() === p.guid.toLowerCase() ? t("s5.tl.planUnnamed", { id: p.guid.slice(0, 8).toUpperCase() }) : p.name}
                   </span>
                 );
               })}
@@ -438,7 +439,8 @@ function Startup() {
   };
 
   return (
-    <section>
+    // « fit » (25/11) : à la hauteur de « nettoyage » à côté, la liste défile dedans (pas de vide sous le nettoyage)
+    <section className="fit">
       <div className="sh">
         <h2 className="h2 tape">{t("tools.startup.title")}</h2>
         {apps && apps.length > 0 && (
@@ -523,7 +525,7 @@ function Apps() {
   };
 
   return (
-    <section>
+    <section className="wide">
       <div className="sh">
         <h2 className="h2 tape">{t("tools.apps.title")}</h2>
         {apps && apps.length > 0 && (
@@ -612,8 +614,8 @@ const PANELS: { id: WindowsPanel; icon: string }[] = [
 function Panels() {
   const { t } = useStore();
   return (
-    // « fit » : prend la hauteur de la carte d'à côté et défile à l'intérieur (pas de vide sous la plus courte)
-    <section className="fit">
+    // toute la largeur (25/11) : les dix raccourcis sur une ou deux lignes, sans voisine à attendre
+    <section className="wide">
       <div className="sh">
         <h2 className="h2 tape">{t("s5.tl.panels")}</h2>
         <span className="cnt">{PANELS.length}</span>

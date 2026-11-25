@@ -627,6 +627,8 @@ function useStoreValue() {
         if (opts.clearSelection) unselectMany([...ids, ...(opts.undo ?? [])]);
       } catch (err) {
         const msg = String(err);
+        // le moteur n'a pas (ou plus) de licence active : l'interface le rattrape (bouton « Sign in » en haut)
+        if (msg.startsWith("premium_required") || msg.startsWith("premium_scripts_unavailable")) void api.licenseStatus().then(setLicense, () => {});
         const error = msg.startsWith("premium_required")
           ? translate(lang, "err.premium_required")
           : msg.startsWith("free_slots")
