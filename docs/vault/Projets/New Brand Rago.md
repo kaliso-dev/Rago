@@ -17,7 +17,7 @@ Statut : EN COURS. Rien n'est sorti pour les joueurs, sauf l'admin et les e-mail
   - `rago-redesign/app-strict/` : captures app contre maquette de chaque étape (`1-…` à `32-…`) ;
   - `rago-redesign/images/` et son `sources.md` : images des 16 jeux et photos des 7 pros, avec leur provenance.
   Ce dossier n'est pas visible depuis le projet « Rago optimizer (suite) » : son contenu exact n'a pas été relu par ce fil (À VÉRIFIER). **Il ne passe pas tout seul sur un nouveau compte Claude** : voir [[Reprendre sur un nouveau compte Claude]].
-- **Avant le projet** : le fil « Capturer toutes les pages pour la refonte » de « Rago optimizer (suite) » (14 au 21/11) a capturé chaque page et chaque état (site, compte, e-mails, admin, Cerveau, app) sur `staging` au commit `907c95e`, avec les inventaires et `constats-design.md` (381 défauts). Tout est dans `refonte-design/` du dossier de « Rago optimizer (suite) » ([[Sources]]). Le conseil donné le 21/11 : partir du code et du vault plutôt que de Figma (Sofiene : « je n'ai pas vraiment besoin de figma »).
+- **Avant le projet** : le fil « Capturer toutes les pages pour la refonte » de « Rago optimizer (suite) » (14 au 21/11) a capturé chaque page et chaque état (site, compte, e-mails, admin, Cerveau, app) sur `staging` au commit `907c95e`, avec les inventaires et `constats-design.md` (381 défauts). Tout est dans `refonte-design/` du dossier de « Rago optimizer (suite) » ([[Sources]]), qui reste sur l'ancien compte : Sofiene ne l'emporte pas, la référence du design est désormais New Brand Rago (25/11). Le conseil donné le 21/11 : partir du code et du vault plutôt que de Figma (Sofiene : « je n'ai pas vraiment besoin de figma »).
 
 ## Les étapes
 | Date | Étape | Statut |
