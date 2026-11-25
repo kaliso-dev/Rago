@@ -210,7 +210,12 @@ test('brains: one archive per repository, each brain built apart, an empty one s
     return new Response(os ? tarball(osFiles, osSha) : tarball(ragoFiles, sha));
   };
   const brain = createBrain(loadConfig({ CERVEAU_SOURCE: 'github' }), { fetchImpl, log: quiet });
-  assert.deepEqual(brain.brains, [{ id: 'rago', name: 'Rago Optimizer', repo: 'kaliso-dev/rago' }, { id: 'rago-os', name: 'RAGO-OS', repo: 'kaliso-dev/RAGO-OS-' }]);
+  assert.deepEqual(brain.brains, [
+    { id: 'rago', name: 'Rago Optimizer', repo: 'kaliso-dev/rago' },
+    { id: 'rago-os', name: 'RAGO-OS', repo: 'kaliso-dev/RAGO-OS-' },
+    { id: 'rago-client', name: 'Rago Client', repo: 'kaliso-dev/Rago-Client' },
+    { id: 'rago-minecraft', name: 'Serveur Minecraft Rago', repo: 'kaliso-dev/network-server-rago' },
+  ]);
   const a = await brain.read();
   assert.deepEqual(a.data.notes.map((n) => n.id), ['Journal', 'Projet']);
   const b = await brain.read({ id: 'rago-os' });
@@ -227,6 +232,22 @@ test('brains: one archive per repository, each brain built apart, an empty one s
   assert.equal((await brain.file('kernel/build.sh', 'rago-os')).text, 'echo build\n');
   assert.equal(await brain.file('kernel/build.sh', 'rago'), null);
   assert.equal(brain.pick('nope').id, 'rago');
+
+  // A repository without a branch is read from its default branch (HEAD, named by the symref capability).
+  const mcSha = '6'.repeat(40);
+  const mcFetch = async (url) => {
+    if (url.endsWith('/info/refs?service=git-upload-pack')) {
+      return new Response(`001e# service=git-upload-pack\n0000${'00ab'}${mcSha} HEAD\0multi_ack symref=HEAD:refs/heads/master agent=git/github\n003f${mcSha} refs/heads/master\n0000`);
+    }
+    return new Response(tarball({ 'docs/vault/Projet.md': '# Serveur\n\n[[Lobby]]', 'docs/vault/Lobby.md': '# Lobby' }, mcSha));
+  };
+  const mc = await createBrain(loadConfig({ CERVEAU_SOURCE: 'github' }), { fetchImpl: mcFetch, log: quiet }).read({ id: 'rago-minecraft' });
+  assert.equal(mc.data.repo, 'kaliso-dev/network-server-rago');
+  assert.equal(mc.data.branch, 'master');
+  assert.deepEqual(mc.data.notes.map((n) => n.id), ['Lobby', 'Projet']);
+  // An empty repository (no branch yet) says so.
+  const none = createBrain(loadConfig({ CERVEAU_SOURCE: 'github' }), { fetchImpl: async () => new Response('001e# service=git-upload-pack\n0000'), log: quiet });
+  await assert.rejects(none.read({ id: 'rago-client' }), (err) => err instanceof BrainError && /aucune branche/.test(err.message));
 
   // CERVEAUX: own list; a brain with no notes says so.
   const custom = createBrain(loadConfig({ CERVEAU_SOURCE: 'github', CERVEAUX: 'rago|Rago|docs/vault;vide|Vide|docs/rien' }), { fetchImpl, log: quiet });
@@ -313,7 +334,7 @@ test('/admin/cerveau: behind the admin key, page without inline code, data reval
   assert.match(remembered, /^rago_cerveau=rago-os$/);
   const osData = await (await get('/admin/cerveau/donnees.json?c=rago-os')).json();
   assert.equal(osData.brain, 'rago-os');
-  assert.deepEqual(osData.brains.map((b) => b.id), ['rago', 'rago-os']);
+  assert.deepEqual(osData.brains.map((b) => b.id), ['rago', 'rago-os', 'rago-client', 'rago-minecraft']);
   assert.equal(osData.repo, 'kaliso-dev/RAGO-OS-');
   assert.deepEqual(osData.notes.map((n) => n.id), ['Architecture', 'Projet']);
   assert.ok(!osData.notes.some((n) => n.id === 'État actuel'));

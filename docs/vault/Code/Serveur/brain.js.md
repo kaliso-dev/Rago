@@ -3,7 +3,7 @@ type: code
 tags: [code, serveur, javascript, admin, vault]
 fichier: licensing/src/brain.js
 lignes: 765
-maj: 2026-11-12
+maj: 2026-11-25
 ---
 # brain.js
 
@@ -30,7 +30,7 @@ Le côté serveur du [[Cerveau du vault]] : lit le dépôt (sur GitHub, ou sur l
 | `renderMarkdown(src, ctx)` | Markdown → HTML (voir plus bas). |
 | `inline(src, ctx)` | La mise en forme dans une ligne. |
 | `buildVault(notes, files, meta)` | Toutes les données de la page (voir plus bas). `meta.vault` = dossier du cerveau (`docs/vault/` par défaut), `meta.brain`, `meta.brains`. |
-| `DEFAULT_BRAINS` | Les cerveaux par défaut : `rago` (« Rago Optimizer », `docs/vault/` du dépôt `CERVEAU_REPO`, branche `CERVEAU_BRANCH`) et `rago-os` (« RAGO-OS », `docs/vault/` de `kaliso-dev/RAGO-OS-`, branche `main`). |
+| `DEFAULT_BRAINS` | Les cerveaux par défaut : `rago` (« Rago Optimizer », `docs/vault/` du dépôt `CERVEAU_REPO`, branche `CERVEAU_BRANCH`) `rago-os` (« RAGO-OS », `docs/vault/` de `kaliso-dev/RAGO-OS-`, branche `main`), `rago-client` (« Rago Client », `docs/vault/` de `kaliso-dev/Rago-Client`) et `rago-minecraft` (« Serveur Minecraft Rago », `docs/vault/` de `kaliso-dev/network-server-rago`), ces deux derniers sur la branche par défaut de leur dépôt (25/11). |
 | `parseBrains(texte)` | Lit `CERVEAUX` (`id|Nom|dossier|dépôt|branche;…`) ; id en minuscules, chiffres et tirets, dossier sans `..` ; liste vide ou invalide → `DEFAULT_BRAINS`. |
 | `createBrain(cfg, { fetchImpl, log })` | `{ source, repo, branch, brains, pick(id), read({ fresh, id }), error(id), file(chemin, id) }`. Un id inconnu donne le premier cerveau. |
 
@@ -49,7 +49,7 @@ Constantes : `VAULT = 'docs/vault/'` (vault Rago), `CHECK_EVERY = 60 s` (au plus
 Avec un jeton, la liste des branches est demandée avec `Authorization: Basic` (`x-access-token:<jeton>`), comme le fait git.
 
 ### Lire le dépôt sur le disque (local et tests)
-Choisi quand `CERVEAU_SOURCE` n'est pas `github` et que `localRepo()` trouve un dossier, **seulement pour le dépôt principal** (`CERVEAU_REPO` à sa branche) : un cerveau d'un autre dépôt (RAGO-OS) est toujours lu sur GitHub. Liste des fichiers : `git ls-files -z --cached --others --exclude-standard` (fichiers suivis et nouveaux, pas ceux ignorés) ; sans git, parcours du dossier sans `.git`, `node_modules`, `target`, `dist`, `.obsidian`, `.trash`. **Un `.env` n'est jamais listé**, même s'il n'est pas ignoré (`.env.example` oui). Les notes sont relues à chaque appel si leur date ou leur taille a changé (empreinte `sig`), donc une note enregistrée apparaît au rechargement suivant. Un fichier est lu au moment où on l'ouvre ; s'il contient un octet nul, il est traité comme binaire.
+Choisi quand `CERVEAU_SOURCE` n'est pas `github` et que `localRepo()` trouve un dossier, **seulement pour le dépôt principal** (`CERVEAU_REPO` à sa branche) : un cerveau d'un autre dépôt (RAGO-OS, Rago Client, Serveur Minecraft Rago) est toujours lu sur GitHub. Sans branche donnée, `headSha()` prend la ligne `HEAD` de `info/refs` et le nom de la branche dans la capacité `symref=HEAD:refs/heads/…` ; un dépôt sans aucune branche donne « n'a encore aucune branche ». Liste des fichiers : `git ls-files -z --cached --others --exclude-standard` (fichiers suivis et nouveaux, pas ceux ignorés) ; sans git, parcours du dossier sans `.git`, `node_modules`, `target`, `dist`, `.obsidian`, `.trash`. **Un `.env` n'est jamais listé**, même s'il n'est pas ignoré (`.env.example` oui). Les notes sont relues à chaque appel si leur date ou leur taille a changé (empreinte `sig`), donc une note enregistrée apparaît au rechargement suivant. Un fichier est lu au moment où on l'ouvre ; s'il contient un octet nul, il est traité comme binaire.
 
 ### Markdown (`renderMarkdown`, `inline`)
 Le sous-ensemble utilisé par le vault, façon Obsidian. **Tout le texte est échappé** : le seul HTML produit est celui écrit dans ce fichier.
