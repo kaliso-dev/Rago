@@ -1,7 +1,7 @@
 ---
 type: historique
 tags: [historique]
-maj: 2026-11-11
+maj: 2026-11-25
 ---
 # Fils du projet
 
@@ -212,5 +212,20 @@ Fils cités ailleurs mais absents de la liste : un fil « Créer le profil Linke
 Le 11/11 à 00:17 UTC (01:17 à Paris), Sofiene annonce la sortie « demain voir apres demain MAX » et demande six nouvelles fonctions : « 1 - custom saturation », « 2 - Custom resolution », « 3 - Custom Settings », « 4 - Tips », « 5 - Priority optimization », « 6 - Tools new et centralisé ». Le coordinateur ouvre cinq fils (saturation et résolution ensemble), chacun sur sa branche, sans bloquer la sortie.
 - **34. Centraliser et enrichir la page Tools** (`cmsg_01Mb4hMYwRFctv5wE2NGiASiGq3HxXmaX67pc1Wu5yaG7a`, point 6) : « il faut que tu les recupere tous et en plus de les laisser dans les onglet ou ils sont ajoute les dans la page tools pour tout centraliser », puis de nouveaux outils « safe et utile » après une analyse de Hone et des autres optimiseurs. Fait : [[Page Outils]] refaite (PR #90 vers `staging`, ticket RAG-93), jamais testée sur Windows.
 - Les fils 30 à 33 ne sont pas encore résumés ici (voir leurs PR dans [[Pull requests]]).
+
+## 35 et suivants. Fils du 11 au 25/11
+Résumés courts, écrits le 25/11 à partir de la fin de chaque fil et du vault (OBSERVÉ).
+- **Analyser X-Mouse Button Control pour Rago** (`cmsg_01Mb4hMYwRFctv5wE2NGiASiLbS6bBHPkgR3foyQajV9on`, 11/11) : a mené à la [[Page Souris]] (PR #96, logiciels entre la souris et le jeu, X-Mouse classé « risqué en classé »), exe de test du run 264. q96 en attente.
+- **Créer la page de lancement Rago Route** (`cmsg_01Mb4hMYwRFctv5wE2NGiASiF1ZGcXwk5kz3XBNz7gsfsS`, 04 au 11/11) : [[Page de vente Rago Route]] et [[route.html]].
+- **Supprimer Rago OS et ses traces** (`cmsg_01Mb4hMYwRFctv5wE2NGiASi3jg4zPcEoa2GEHab3TN9ex`, 06 au 12/11) : PR #99, Rago OS retiré de l'app et du vault ([[Décisions]], « Abandonné »).
+- **Ajouter le choix du cerveau dans l'admin** (`cmsg_01Mb4hMYwRFctv5wE2NGiASiWihSvKZSwEsGwv8577kUJ9`, 12/11) : menu Rago Optimizer / RAGO-OS du [[Cerveau du vault]], PR #100 à #104.
+- **Faire le point sur la dernière version** (`cmsg_01Mb4hMYwRFctv5wE2NGiASiYCPg1YTmY57pND9EhdAdsz`, 11 au 14/11) : option Rago Route à 3 $ par mois et 17,99 $ par an, page Rago Route refaite, prix en mode test sur Railway staging, plus de Geist Mono, illustrations corrigées ([[Paiements Stripe]], [[Offres et prix]]).
+- **Corriger les saccades du stream Discord** (`cmsg_01Mb4hMYwRFctv5wE2NGiASi2fndTZaqkq7srkYtdAbLW7`, 13/11) : Sofiene : « leur stream discord bug et sacade et leur pc bug », puis « Ne push rien trouve juste le probleme ». Cause probable : jeu en priorité Haute ; correctif « Supérieure à la normale » prêt en local, **jamais poussé**, gardé en patch dans `stream-discord/` ([[Bugs et incidents]], q109).
+- **Capturer toutes les pages pour la refonte** (`cmsg_01Mb4hMYwRFctv5wE2NGiASi3dQBwWUff7xzuWRwopmZQe`, 14 au 21/11) : captures de chaque page et état sur `staging` (commit `907c95e`), inventaires, `constats-design.md` (381 défauts), plugin Figma ; Sofiene renonce à Figma (« je n'ai pas vraiment besoin de figma »). Point de départ de [[New Brand Rago]]. Fichiers dans `refonte-design/` ([[Sources]]).
+- **Retrouver la version pas encore publiée** (`cmsg_01Mb4hMYwRFctv5wE2NGiASi7bzXCtHb6veMKQ9NR6TZ3H`, 22/11, nuit) : **sortie de la [[Version 1.3.0]]** (PR #105, tables Supabase prod, exe du run 270 dans `sortie-1.3.0/`) ; sa PR de vault #106 est restée ouverte, reprise le 25/11.
+- **Détailler le contenu du Premium** (`cmsg_01Mb4hMYwRFctv5wE2NGiASi3hnjWrNm7hbiLhbpm2XBq1`, 22/11) : réponse en anglais à un client Bedrock, vérifiée dans le code de la 1.3.0 (Rago Route ne marche qu'avec Minecraft Java), dans `support-clients/premium-detail-bedrock.md` ([[Offres et prix]], [[Problèmes joueurs]]).
+- **Installer Caveman sur Claude Desktop** (`cmsg_01Mb4hMYwRFctv5wE2NGiASiTUjNfD1b44yfYQUtkofBZL`, 23/11) : réglage de Claude chez Sofiene (règles d'économie de tokens 6 à 11 des instructions du projet), pas de code Rago.
+- **Les fils de la refonte v5 et v6** (22 au 25/11) ne sont pas dans ce projet : ils sont dans le projet Claude « [[New Brand Rago]] » (PR #107 à #141).
+- **25/11, passage sur Claude Team** : « Compléter le vault Rago optimizer » (ce travail, [[Reprendre sur un nouveau compte Claude]]), « Créer le vault de Rago client », « Créer le vault de Rago Minecraft server » ([[Client Minecraft Rago]]) et « Afficher les cerveaux dans le dashboard » ([[Cerveau du vault]]).
 
 Liens : [[Chronologie du projet]] · [[Pull requests]] · [[Journal]] · [[Décisions]] · [[Personnes et services]]

@@ -2,7 +2,7 @@
 type: fonctionnalité
 tags: [fonctionnalité, app, 1.2]
 version_app: 1.2.1
-maj: 2026-11-11
+maj: 2026-11-25
 ---
 # Bibliothèque de jeux
 
@@ -18,7 +18,7 @@ Page « Jeux » (groupe « En jeu »). RAG-57. Code : [[games.rs]], [[icon.rs]],
 - « En cours » / « Dernière partie » : processus lancés depuis le dossier du jeu, regardés toutes les 4 s.
 - **Réglages conseillés** (PR #91 du 11/11) : dans la [[Barre en jeu]] seulement depuis le 23/11 (plus sous le jeu en avant) : les réglages à changer dans le jeu que conseillent les pros (VALORANT, Fortnite, Counter-Strike 2, Apex Legends, PUBG, League of Legends, Marvel Rivals, THE FINALS), à cocher « fait ». Voir [[Conseils au lancement du jeu]].
 - « Retirer de la bibliothèque » (deux clics) ne désinstalle rien.
-- **Couleurs et résolution** (codée le 11/11, dans `staging`, part avec la 1.3.0) : les cases « resolution » (« 1280×960 », « stretched ») et « saturation » (« 100 % », « windows is 50% ») du jeu en tête ouvrent la page [[Couleurs et résolution]] sur ce jeu ; lancé depuis Jeux, le jeu démarre déjà dans sa résolution.
+- **Couleurs et résolution** (codée le 11/11, en prod avec la 1.3.0 depuis le 22/11) : les cases « resolution » (« 1280×960 », « stretched ») et « saturation » (« 100 % », « windows is 50% ») du jeu en tête ouvrent la page [[Couleurs et résolution]] sur ce jeu ; lancé depuis Jeux, le jeu démarre déjà dans sa résolution.
 
 Liens : [[Barre en jeu]], [[Pendant la partie]], [[Problèmes joueurs]] (curseur perdu après Optimiser et jouer).
 

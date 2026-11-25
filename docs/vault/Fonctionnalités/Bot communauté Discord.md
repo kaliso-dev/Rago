@@ -1,11 +1,11 @@
 ---
 type: fonctionnalité
 tags: [fonctionnalité, serveur, discord, en-cours]
-maj: 2026-11-22
+maj: 2026-11-25
 ---
 # Bot communauté Discord
 
-PR #40, **fusionnée dans `staging` le 15/10, absente de la prod** (vérifié dans git le 31/10 : `DISCORD_COMMUNITY` n'existe que sur `staging`). Code dans le [[Serveur de licences]] : `licensing/src/community.js` (comptage, commandes) et `gateway.js` (connexion au Gateway Discord), réglages dans `config.js` (bot éteint sans `DISCORD_COMMUNITY=1` et les 5 variables du rôle Pro). **PR #71 ouverte vers la branche de prod** (à ne fusionner qu'avec « fusionne » de Sofiene).
+PR #40, fusionnée dans `staging` le 15/10 ; **le code est en prod depuis la sortie 1.3.0** (PR #105 du 22/11, `DISCORD_COMMUNITY` présent dans `licensing/src/config.js` de la branche de prod, vérifié dans git le 25/11) ; tables `discord_*` créées dans Supabase prod le 22/11. Allumé en prod (`DISCORD_COMMUNITY=1` sur Railway prod) ou non : À VÉRIFIER. Messages du bot en charte v5 dans `staging` (PR #107). Code dans le [[Serveur de licences]] : `licensing/src/community.js` (comptage, commandes) et `gateway.js` (connexion au Gateway Discord), réglages dans `config.js` (bot éteint sans `DISCORD_COMMUNITY=1` et les 5 variables du rôle Pro). La PR #71 (même code vers la prod, ouverte depuis le 01/11) n'a plus d'objet depuis la #105 : à fermer avec l'accord de Sofiene.
 
 - Comptage interne des invitations : une invitation compte après 7 jours de présence ; jamais pour un retour, un compte Discord de moins de 7 jours, son propre lien ou un lien partenaire. Doit remplacer Invite Tracker pour les récompenses VIP/MVP ([[Promotions et affiliation]]).
 - Message d'accueil en salon ; commandes `/invites`, `/top-invites`, `/partner-link`, `/growth`, `/invites-adjust`.

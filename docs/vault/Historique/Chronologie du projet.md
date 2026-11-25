@@ -1,7 +1,7 @@
 ---
 type: historique
 tags: [historique]
-maj: 2026-11-11
+maj: 2026-11-25
 ---
 # Chronologie du projet
 
@@ -60,13 +60,22 @@ Sources : l'historique Git et les PR de `kaliso-dev/rago` ([[Pull requests]]), l
 - **07/11** : Rago Route : page `route.html` du site sur staging, essais au câble et avec la 4G de l'iPhone, **moteur Windows et onglet dans l'exe de test** poussés sur `staging`, premier essai sur PC Windows le soir (13 ms vers Paris, 0 perte).
 - **08/11** : Rago Route **réservé au Premium** (« Oui, tout de suite » : jeton signé 6 h), poussé sur `staging` ; l'ancien proxy simple est abandonné (voir [[Décisions]]) ; **protocole 2** (chiffrement, paquets de secours, 4G sur Windows, choix de la sortie) poussé le soir.
 
-## Semaine du 09/11 au 11/11 (en cours)
+## Semaine du 09/11 au 15/11
 - **09/11** : Rago Route : serveurs réinstallés en protocole 2 ; tests de Sofiene avec pertes simulées : à 5 %, « je vois pas grande différence » ; à 25 %, « la différence ce fait vraiment ressentir » ; l'iPhone branché en USB n'est pas vu par Windows. Le site-check échoue (Ubuntu 26.04).
 - **10/11, matin et midi** : le coordinateur ouvre « Faire le point » et « Compléter le vault technique » (13:06) ; Sofiene répond à 23 questions (13:59) ; décisions : **une seule grosse sortie** avec Rago Route, **plus de remboursement**, Packet Optimizer entièrement Premium, mensuel après l'essai, normes de l'analyse par joueur, Straight retiré ([[Décisions]]). L'e-mail de Supabase est relu : dépassement du quota gratuit de bande passante, restrictions possibles après le 05/12, pas une suppression ; Sofiene passera en Pro ou migrera avant le 05/12 ([[Supabase]]). Aucune clé n'est sauvegardée ([[Clés et secrets]]).
 - **10/11, après-midi** : PR #75 (vault technique, site-check fixé) et **#76 (1.3.0 avec Rago Route)** fusionnées à 14:33 ; #78 (CI) à 14:35 ; #77 (**tableau de bord `/admin`**) à 14:41 ([[Fil - Créer le tableau de bord admin complet]]) ; `network-server-rago` à rendre public, `rago` public en novembre puis privé dès le 01/12 ([[CI GitHub Actions]]) ; archive [[Historique des problèmes]] (#79, #80) ; le trailer de la 1.2 est abandonné le 10/11 (voir [[Décisions]]) ; Rago Route : diagnostic du partage de connexion USB en 5 étapes, exe de test à 15:29 ; **PR #81** : seul le correctif CI va en prod, car `staging` a environ 160 commits de plus et **le code de l'app en prod est encore la 1.1.14** ; nouvelle interface admin (#82, 15:32), admin sans trous (#83, 16:06), ventes dans une seule devise (#84, ouverte à 16:25).
 - **10/11, soir** : le [[Cerveau du vault]] (#85) fusionné dans `staging` à 17:16 ; #84 fusionnée à 18:40 ; à 18:32, Sofiene demande l'admin en prod (« il faut le push sur la prod maintenant […] j'ai ajouté une page cerveau il faut push avec ») : **PR #87** fusionnée dans la branche de prod à 18:49, avec seulement l'admin et le Cerveau, sans rien de la 1.3.0 ([[Fil - Créer le tableau de bord admin complet]]). PR #86 (« Best hitreg » par défaut) ouverte à 17:51.
 - **11/11, nuit** : à 00:17 UTC, Sofiene annonce la sortie de la 1.3.0 « demain voir apres demain MAX » et demande six nouvelles fonctions (saturation et résolution des pros, presets graphiques par jeu, conseils au lancement du jeu, jeu en priorité haute, page Outils centralisée) ; cinq fils ouverts ; PR #89 (jeu en priorité haute), #90 ([[Page Outils]] refaite) et #91 (conseils au lancement du jeu) ouvertes vers `staging` avant 01:00 UTC ([[Fils du projet]]).
 - **11/11, matin et après-midi** : PR #92 (les six nouveautés réunies pour la version test) fusionnée dans `staging` à 08:46 ; à 09:20 UTC, Sofiene les fait toutes partir avec la [[Version 1.3.0]] (q95) ; [[Page Souris]] dans `staging` (PR #96) ; page de vente Rago Route demandée à 08:30, poussée sur `staging` à 09:40 ; à 10:01, Sofiene en demande une refonte complète « comme un Product Designer senior », faite l'après-midi et poussée sur `staging` à 13:41 sur son accord ; à 14:20, Sofiene préfère la version du matin et demande du gameplay Minecraft à la place des visuels de résultat : version du matin reprise, avec la scène du haut de la refonte et des emplacements de clips, poussée sur `staging` à 15:30 sur son accord ([[Page de vente Rago Route]]).
+
+## Du 12/11 au 25/11 : sortie 1.3.0 et New Brand Rago
+- **12/11** : Rago OS retiré (PR #99) ; menu des cerveaux dans le [[Cerveau du vault]], en prod (PR #100 à #104).
+- **13 et 14/11** : Rago Route devient une option à 3 $ par mois (17,99 $ par an), page Rago Route refaite ; saccades du stream Discord : correctif prêt, pas poussé ([[Bugs et incidents]]).
+- **14 au 21/11** : captures de toutes les pages pour la refonte ([[Fils du projet]]).
+- **22/11, nuit** : **sortie de la [[Version 1.3.0]]** (PR #105), servie à 100 % vers 02:20 (Paris).
+- **22/11, journée et soir** : revue des 135 maquettes, **charte v5 « Match day » validée** ; serveur de comptes, site et app passent en v5 dans `staging` (PR #107 à #118) ; admin et e-mails v5 en prod (PR #114, #117). Début de [[New Brand Rago]].
+- **23 et 24/11** : l'app refaite à l'identique des maquettes ([[Version 1.4.1]], PR #119 à #133) ; site v6 sur la structure de partner.clleancode.com (PR #129, #135, #136 ouverte).
+- **25/11** : premier test Windows de la 1.4.1 par Sofiene, retours corrigés (PR #137, #139) ; Sofiene passe sur Claude Team, le vault est complété pour la reprise ([[Reprendre sur un nouveau compte Claude]]).
 
 ## Où en était le projet le 10/11 au soir
 - **En prod** : l'exe 1.2.1 (depuis le 31/10), le site et le serveur de la 1.2.1, plus le [[Tableau de bord admin]] complet et le [[Cerveau du vault]] (PR #87, 18:49). Sur la branche de prod, le code de l'app est resté celui de la 1.1.14.
