@@ -77,7 +77,7 @@ Posées le 11/11 (q78 traitée le même jour : Sofiene a demandé la page de ven
 - q94 : [[Graphismes des jeux]] gratuits pour tous ou Premium ? (le code les laisse gratuits)
 - q96 : [[Page Souris]] gratuite pour tous ? (codée gratuite ; le réglage « Souris 1:1 » reste Premium)
 - q97 : d'autres sorties que Paris, pour que la page Rago Route les annonce ? ([[Page de vente Rago Route]], [[Infrastructure Rago Route]]).
-- q98 : `CERVEAU_GITHUB_TOKEN` mis dans Railway, et dans quels environnements ? ([[Cerveau du vault]], [[Variables d'environnement]]).
+- q98 : `CERVEAU_GITHUB_TOKEN` mis dans Railway, et dans quels environnements ? (réponse partielle du 25/11 : jeton créé pour `rago`, pas encore pour Rago-Client ; environnements Railway toujours à confirmer) ([[Cerveau du vault]], [[Variables d'environnement]]).
 - q99 : avant d'annoncer Rago Route, test P0-9 (3 à 5 comptes de l'équipe par Paris en même temps, puis une semaine normale), message à Hypixel, ou les deux ? La réponse de la FAQ sur les blocages reste cachée en attendant ([[Page de vente Rago Route]], [[Proxy]]).
 - q100 : à la sortie de la 1.3.0, le bouton « Get notified on Discord » de l'encart Rago Route de l'accueil devient « Try 3 days free », disparaît ou reste ? ([[page.html]])
 - q101 : Lifetime inclut-il Rago Route ? Le serveur le donne aujourd'hui à toute licence active ; la page cache « Lifetime includes Rago Route too » en attendant ([[route.html]], [[Paiements Stripe]]).
