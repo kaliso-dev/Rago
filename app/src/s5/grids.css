@@ -1,0 +1,18 @@
+/* Grilles sans vide (demande de Sofiene du 25/11) : dans une grille, les cartes d'une même rangée finissent à la même
+   hauteur, sans espace vide dessous. Une carte « fit » prend la hauteur de sa voisine et fait défiler son contenu.
+   Écrit à la main et chargé après les feuilles générées des maquettes (s5/pages/*.css), qu'il complète. */
+.pg-tools .cols,.pg-pages .mgrid,.pg-pages .setgrid,.pg-display .grid2,.pg-an .start{align-items:stretch}
+.pg-tools .cols > section,.pg-pages .mgrid > section{display:flex;flex-direction:column;min-width:0}
+.pg-tools .cols > section > .panel,.pg-pages .mgrid > section > .panel{flex:1 1 auto}
+/* Outils : « réglages windows » à la hauteur de « applis préinstallées », la liste défile dedans */
+.pg-tools .cols > section.fit{contain:size}
+.pg-tools .cols > section.fit > .panel{min-height:0;overflow-y:auto}
+/* Paramètres : le dernier bloc de chaque colonne s'étire jusqu'au bas de la plus haute */
+.pg-pages .setgrid .col > section:last-child{flex:1 1 auto;display:flex;flex-direction:column}
+.pg-pages .setgrid .col > section:last-child > .panel{flex:1 1 auto}
+/* Écran : l'aperçu prend la hauteur de la carte voisine (421 px au moins, comme la maquette) */
+.pg-display .grid2 > .vs{height:auto;min-height:421px}
+/* Souris : le conseil sous la mesure et la note du calcul de sensibilité sont dans leur carte */
+.pg-pages .sens{display:flex;flex-direction:column}
+.pg-pages .sens > .verdict2.inner{margin-top:auto;padding-top:14px}
+.pg-pages .zone > .verdict2.inner{margin-top:14px}

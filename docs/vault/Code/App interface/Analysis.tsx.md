@@ -3,7 +3,7 @@ type: code
 tags: [code, app, typescript, react, analyse]
 fichier: app/src/pages/Analysis.tsx
 lignes: 466
-maj: 2026-11-23
+maj: 2026-11-25
 ---
 # Analysis.tsx
 
@@ -26,6 +26,7 @@ Racine `div.pg-mod.pg-an.is-page` (socle des pages de module, `s5/pages/module.c
   - résultats : nombre de points au-dessus de la normale, « above normal » sur deux lignes, en petit « of 17 measured » (`s5.pa.ofMeasured`) ou, avec un avant/après, « was 8 on 20 nov » (`s5.pa.was`) ; un groupe de traits par groupe de points, allumés pour les points en défaut.
 
 ### Départ et analyse en cours (`.start`)
+- Les deux cartes finissent à la même hauteur (`align-items:stretch` dans `s5/grids.css`, 25/11, PR #137) : pendant la mesure, la carte `.go` n'est plus plus courte que la liste des étapes.
 - Carte `.panel.go` : étiquette (« 6 checks, about 20 seconds », ou « analysis running »), grand titre sur deux lignes (« what slows your pc down in game », ou l'étape en cours `s5.pa.run.*`), texte (`s5.pa.startLead` ; pendant l'analyse `s5.pa.runLead`, ou `s5.pa.runLeadNet` pendant l'étape réseau).
 - Bloc `.gb` : bouton rouge « analyze my pc » (icône `activity`) avec « Nothing is changed. The network test sends its numbers to Rago's server, like the usual network test. » ; pendant l'analyse, bouton « stop » (icône `x`) avec « Nothing has been changed on your PC. ». « stop » appelle `abort()` sur l'`AbortController` de la mesure : `analyze` rejette avec `Stopped`, rien n'est gardé, la page revient au départ.
 - Liste `ol.panel.steps` des 6 étapes : numéro, nom (`s5.pa.sn.*`), détail (`s5.pa.sd.*`), puis à droite « done » (coche), « next », une roue, ou le compte en direct « 23 / 40 pings » (`s5.pa.pings`) et « 4 / 10 s » (`s5.pa.secs`) avec une barre de progression `.pg`. Classes `done` et `now` sur la ligne.

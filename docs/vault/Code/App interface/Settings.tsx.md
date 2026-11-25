@@ -2,8 +2,8 @@
 type: code
 tags: [code, app, typescript, react]
 fichier: app/src/pages/Settings.tsx
-lignes: 368
-maj: 2026-11-23
+lignes: 369
+maj: 2026-11-25
 ---
 # Settings.tsx
 
@@ -11,7 +11,7 @@ La page **Paramètres** : compte et abonnement, profil, langue et animations, li
 
 **Écran v5 (23/11, dans `staging` par la PR #126, fusionnée le 23/11, jamais testé sur Windows)** : la page est refaite à l'identique des maquettes `app-settings.html` (Premium), `app-settings-free.html` (gratuit) et `app-settings-canceled.html` (abonnement résilié) ; demande de Sofiene du 23/11 : l'app doit être « strictement conforme au design ». Styles : `s5/pages/module.css` et `s5/pages/pages.css`, retouches dans `s5/app.css` ([[Maquettes v5 dans l'app (s5)]]). Ce qui se voit :
 - l'offre dans l'étiquette rouge de l'en-tête (« premium », « monthly », « next payment $5.99 on 14 dec » ; résilié : « canceled », « active until 14 dec, no more charges » ; gratuit : « free », « 73 / 218 tweaks », « premium unlocks the rest ») ;
-- deux colonnes de blocs en lignes : compte, profil, app (langue, animations, lien Partage et support), à propos ; barre en jeu, pendant la partie, mémoire, dossiers ;
+- deux colonnes de blocs en lignes : compte, profil, app (langue, animations, lien Partage et support), mémoire, à propos ; barre en jeu, pendant la partie, dossiers. Depuis le 25/11 (PR #137), « mémoire » est à gauche, avant « à propos », pour que les deux colonnes finissent à la même hauteur ; le dernier bloc de chaque colonne s'étire jusqu'en bas (`s5/grids.css`, demande de Sofiene : pas de vide entre les cartes) ;
 - « Se déconnecter » est en haut à droite du bloc compte ; le gratuit montre ses réglages ouverts en barre rouge, « Passer Premium » en rouge ;
 - les licences sont des pastilles cliquables.
 Le fonctionnement ne change pas. Écarts voulus avec la maquette : la ligne « Mode démo » (démo seulement) et les textes des réglages « Jeu en priorité haute » et « Conseils au lancement d'un jeu », plus longs que dans la maquette.

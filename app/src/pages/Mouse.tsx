@@ -219,6 +219,8 @@ function PollingTest({ L, rate, onRate }: { L: Tr; rate: Rate | null; onRate: (r
             <span>{L("longest gap", "plus long écart")}</span>
           </div>
         </div>
+        {/* le verdict reste dans la carte : les deux cartes de la rangée gardent la même hauteur (25/11) */}
+        {v && <p className="verdict2 inner">{v.text}</p>}
         <div className="zs">
           {bars.map((b, i) => (
             <i key={i} className={b.pk ? "pk" : undefined} style={{ "--h": b.h.toFixed(2) } as CSSProperties} />
@@ -229,7 +231,6 @@ function PollingTest({ L, rate, onRate }: { L: Tr; rate: Rate | null; onRate: (r
           {L("Move your mouse in fast circles here", "Fais des cercles rapides avec ta souris ici")}
         </p>
       </div>
-      {v && <p className="verdict2">{v.text}</p>}
     </section>
   );
 }
@@ -479,8 +480,8 @@ function Sensitivity({ L }: { L: Tr }) {
           <GameSelect value={to} onChange={setTo} label={L("same feel in", "même sensation dans")} />
           <b>{ok ? num(converted, 3) : "–"}</b>
         </div>
+        <p className="verdict2 inner">{L("Just a calculation: nothing is changed in your games.", "Un simple calcul : rien n'est changé dans tes jeux.")}</p>
       </div>
-      <p className="verdict2">{L("Just a calculation: nothing is changed in your games.", "Un simple calcul : rien n'est changé dans tes jeux.")}</p>
     </section>
   );
 }

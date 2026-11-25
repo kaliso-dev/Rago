@@ -2,8 +2,8 @@
 type: code
 tags: [code, app, typescript, react]
 fichier: app/src/main.tsx
-lignes: 37
-maj: 2026-11-23
+lignes: 38
+maj: 2026-11-25
 ---
 # main.tsx (app)
 
@@ -23,7 +23,7 @@ Tout ce qui suit est CONFIRMÉ (code de `staging`, 10/11, commit `ee77d4f`).
 
 ## Charte v5 (PR #108 du 22/11, puis PR #119 à #125 du 23/11, dans `staging`, jamais testée sur Windows)
 - Imports de style : `fonts.css` avant `tokens.css`, puis `v5.css` après `features.css` ([[Styles de l'app (CSS)]]). L'ancienne feuille `mouse.css` de la page Souris est retirée par la PR #125 (23/11).
-- Puis les feuilles des **maquettes v5 reprises telles quelles** ([[Maquettes v5 dans l'app (s5)]]), après l'ancien style qui ne sert plus qu'aux pages pas encore refaites : `s5/base.css`, `s5/app.css`, puis une feuille par page refaite : `pg-dash.css`, `pg-games.css`, `empty.css`, `picker.css`, `pg-display.css`, `vs.css`, `module.css`, `net.css` (page Réseau, ajoutée par la PR #123 du 23/11), `tools.css` (page Outils, PR #124 du 23/11), `pages.css` (Souris, Paramètres et Partage, PR #125 à #127 du 23/11) `analysis.css` (page Analyse du PC, PR #128 du 23/11) et `win.css` (fenêtres : confirmation, exécution, résiliation, déconnexion ; PR #130 du 23/11).
+- Puis les feuilles des **maquettes v5 reprises telles quelles** ([[Maquettes v5 dans l'app (s5)]]), après l'ancien style qui ne sert plus qu'aux pages pas encore refaites : `s5/base.css`, `s5/app.css`, puis une feuille par page refaite : `pg-dash.css`, `pg-games.css`, `empty.css`, `picker.css`, `pg-display.css`, `vs.css`, `module.css`, `net.css` (page Réseau, ajoutée par la PR #123 du 23/11), `tools.css` (page Outils, PR #124 du 23/11), `pages.css` (Souris, Paramètres et Partage, PR #125 à #127 du 23/11) `analysis.css` (page Analyse du PC, PR #128 du 23/11) `win.css` (fenêtres : confirmation, exécution, résiliation, déconnexion ; PR #130 du 23/11) et `splash.css` (écran de démarrage, PR #133). En dernier, `s5/grids.css` (25/11, PR #137), écrit à la main : les cartes d'une même rangée alignées sans vide.
 - Ajoute les classes `round` et `poster` à `<html>` (coins arrondis et effets « affiche » des maquettes).
 
 ## Liens avec le reste

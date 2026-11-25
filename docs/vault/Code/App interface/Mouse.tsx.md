@@ -2,8 +2,8 @@
 type: code
 tags: [code, app, react, page, souris]
 fichier: app/src/pages/Mouse.tsx
-lignes: 486
-maj: 2026-11-23
+lignes: 487
+maj: 2026-11-25
 ---
 # Mouse.tsx
 
@@ -25,7 +25,7 @@ La [[Page Souris]] (page `mouse` de [[App.tsx]], entrée « Souris » de [[Sideb
   - Affichage :
     - chiffres `.big` / `.mid` ;
     - 64 barres `.zs`, de hauteur 0,7 × écart / médiane, en rouge (`pk`) au-delà de 1,15 × la médiane ; avant le résultat, elles se remplissent avec la mesure ;
-    - étiquette `vt2` du verdict (`verdictOf` : moins de 200 Hz « low », en rouge ; puis « fine », « good », « very high ») et conseil `p.verdict2`.
+    - étiquette `vt2` du verdict (`verdictOf` : moins de 200 Hz « low », en rouge ; puis « fine », « good », « very high ») et conseil `p.verdict2.inner`, dans la carte `.panel.zone` (entre les barres et la légende) depuis le 25/11 (PR #137).
 - `ClickTest` (section « double-click check ») :
   - `onPointerDown` du bouton gauche sur la zone `button.panel.pad`.
   - Un appui à moins de 40 ms (`BOUNCE_MS`) du précédent est un rebond. Il faut 20 clics (`CLICKS`) ; les appuis suivants sont ignorés.
@@ -38,7 +38,7 @@ La [[Page Souris]] (page `mouse` de [[App.tsx]], entrée « Souris » de [[Sideb
   - `api.mouseApps()` ([[api.ts]], [[mouse.rs]]) au chargement et sur « check again » (icône qui tourne pendant la lecture).
   - Lignes `.li2` : liseré rouge (`risk`) et « risky in ranked » sauf `vendor` (« fine »). « all clear » si rien n'est lancé.
   - Dernière ligne « 1:1 mouse » (`.li2.one`) : état `.sst` « on » / « off » (`isOn` de [[store.tsx]] sur `kbm_1to1`, `kbm_accel`, `kbm_panel`, `in_mouse`) et lien « latency → » (`goTo("latency", "kbm_1to1")`), toujours affiché.
-- `Sensitivity` (section « sensitivity ») :
+- `Sensitivity` (section « sensitivity ») : la note « Just a calculation: nothing is changed in your games. » est en bas de la carte `.sens` (`p.verdict2.inner`) depuis le 25/11 (PR #137). La classe `in` des maquettes est réservée aux champs : un `<p>` qui la porte prendrait le style des champs.
   - Saisie : DPI et sensibilité dans des `<input type="number">`, jeu dans un `<select>` (`GameSelect`), tous dans les cases `.in` de la maquette, transparents.
   - Calcul :
     - `YAW` donne les degrés par point à la sensi 1, pour Valorant, CS2, Apex Legends, Overwatch 2 et Rainbow Six Siege ;

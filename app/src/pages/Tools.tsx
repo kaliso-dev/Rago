@@ -612,7 +612,8 @@ const PANELS: { id: WindowsPanel; icon: string }[] = [
 function Panels() {
   const { t } = useStore();
   return (
-    <section>
+    // « fit » : prend la hauteur de la carte d'à côté et défile à l'intérieur (pas de vide sous la plus courte)
+    <section className="fit">
       <div className="sh">
         <h2 className="h2 tape">{t("s5.tl.panels")}</h2>
         <span className="cnt">{PANELS.length}</span>

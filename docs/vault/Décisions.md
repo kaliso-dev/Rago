@@ -1,7 +1,7 @@
 ---
 type: registre
 tags: [décision]
-maj: 2026-11-24
+maj: 2026-11-25
 ---
 # Décisions
 
@@ -10,6 +10,7 @@ Registre daté des décisions de Sofiene. **La plus récente prime.** Citations 
 ## App et versions
 | Date | Décision | Statut |
 |---|---|---|
+| 25/11 | **Détail des réglages au clic sur une icône info, et grilles sans vide** : « plutot que la pop up quand je passe sur chaque optimisation je préfère une petite incone info sur chaque tweaks et la pop up spwan uniquement si je clique dessus » ; « je ne veux pas que dans la grid il y a des espace vide entre les div je veux que tout soit aligné si le contenu est trop long alors on doit pouvoir scroller dans la div » | PR #137 vers `staging`, jamais testé sur Windows ([[TweakRow.tsx]], [[Maquettes v5 dans l'app (s5)]]) |
 | 23/11 | **Site refait entièrement sur la structure et les animations de https://partner.clleancode.com**, avec les polices, couleurs, textes et le style texturé de Rago : « je n'aime pas du tout le design actuel […] je veux récupérer sa structure, toutes ses animations, absolument tout et l'adapter pour Rago Optimizer avec nos couleurs, nos textes, nos polices […] il faut surtout avoir toutes les animations pareil, du chargement du site au reste » (22 h 52) | accueil fait (Site v6, PR vers `staging`, [[page.html]]) ; autres pages ensuite |
 | 23/11 | **Écran de démarrage : animation de 1,5 à 2 secondes fixes**, sans dépendre de la vitesse d'ouverture de l'app : « pour l'écran de démarrage je veux une animation d'au moins 1,5 à 2 sec fixe pas dépendante de la vitesse à laquelle s'ouvre l'app » (22 h 40) ; l'animation de la maquette v5 dure 2,3 s fixes (« Ready » à 1,8 s, puis l'aplat rouge), l'app se charge dessous ([[Splash.tsx]]) | fait (PR #133, 24/11), jamais testé sur Windows |
 | 23/11 | **L'app refaite strictement à l'identique des maquettes v5**, au pixel près, quitte à changer le back-end : « ça ne vas pas l'app n'est pas conforme au design […] refais l'app et cette fois ci acroche toi strictement au design qu'on a fait ». Dans le même message : **choix du preset d'un jeu avec une cover verticale par jeu** (« les vrais cover des jeux […] chaque jeu est une cover vertical ») et le lanceur « avec la cover du jeu en gros avec l'effet déchiré » ; puis la page Display avec **un aperçu du jeu** (capture de gameplay par jeu, ligne « VS » rouge déchirée à déplacer pour l'avant / après, filtres fidèles à ce qui est appliqué) et **les photos des joueurs pro**. Images : Sofiene a choisi « J'ouvre le réseau » (23/11) | en cours : cadre et tableau de bord (PR #119), jeux et choix du preset (PR #120) et Display (PR #121) dans `staging` ([[Maquettes v5 dans l'app (s5)]]) |
