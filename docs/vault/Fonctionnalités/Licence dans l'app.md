@@ -2,7 +2,7 @@
 type: fonctionnalité
 tags: [fonctionnalité, app, licence]
 version_app: 1.3.0
-maj: 2026-11-10
+maj: 2026-11-25
 ---
 # Licence dans l'app
 
@@ -16,7 +16,8 @@ Comment Premium s'active et se perd côté app (`license.rs`, `LicenseGate.tsx`,
 - **Erreurs expliquées** : identifiants faux, pas de licence, licence sur un autre PC (« la page de ton compte indique comment y passer ta licence »), révoquée, trop de tentatives, réseau, version non reliée au serveur.
 - **Fin de Premium** (abonnement fini, révoquée, passée sur un autre PC, jeton invalide) : bandeau d'explication + [[Remise à zéro]] automatique.
 - **Se déconnecter** ne libère pas le PC ; tous les tweaks appliqués sont annulés en arrière-plan (« Annuler et me déconnecter »), sans bouton Stop.
-- Exe de test : bandeau « Serveur de test (staging) ». À VÉRIFIER : l'exe de test et le vrai gardent leur jeton au même endroit (`%LOCALAPPDATA%\Rago\`), donc l'un peut écraser celui de l'autre sur un même PC (voir [[license.rs]]).
+- Exe de test : « Test server (staging) » en haut, à côté de la recherche. Il garde ses jetons dans son propre dossier (25/11, PR #139) : avec le dossier commun, le vrai Rago lancé à côté effaçait sa connexion et les tweaks Premium étaient refusés (voir [[license.rs]]). Tant que le vrai Rago tourne aussi, l'exe de test affiche en rouge « Rago Optimizer is also running: quit it ».
+- **Bouton du compte en haut à droite** (remis le 25/11, demande de Sofiene) : « Sign in » sans licence active, « Premium » avec une licence active (ouvre les Paramètres). Après un refus Premium du moteur, l'app relit la licence et l'écran du lot propose « Sign in ». Jamais testé sur Windows.
 
 ## Code
 - Empreinte, connexion, activation, jeton, rafraîchissement, clé des scripts, coffre DPAPI : [[license.rs]] ; compte et abonnement : [[account.rs]].

@@ -3,7 +3,7 @@ type: code
 tags: [code, app, rust, compte]
 fichier: app/src-tauri/src/account.rs
 lignes: 326
-maj: 2026-11-10
+maj: 2026-11-25
 ---
 # account.rs
 
@@ -24,7 +24,7 @@ Tout est CONFIRMÉ (code de `staging`, 10/11). Créé le 09/10. Contrat : `licen
 | `struct AccountState {via, profile, review}` | `via` ∈ `license`, `account`, absent (pas connecté) |
 | `plans() -> Value` | GET `/plans` sans jeton : `{month, year, lifetime, trial_days}` tels que Stripe les a ([[Paiements Stripe]], [[Offres et prix]]) |
 | `pub(crate) agent()` | client `ureq` : délai global **20 s**, statut HTTP lu sans erreur, TLS de Windows |
-| `Account::new()` | fichier `%LOCALAPPDATA%\Rago\account.bin` |
+| `Account::new()` | fichier `account.bin` du dossier des jetons de [[license.rs]] (`secrets_dir()` : `%LOCALAPPDATA%\Rago\` pour le vrai Rago Optimizer, `%LOCALAPPDATA%\Rago (gg.rago.optimizer.staging)\` pour l'exe de test, depuis le 25/11) |
 | `me(lic)` | GET `/account/me` ; jeton refusé (`invalid_token`) → déconnecté (et `account.bin` effacé si `via = account`) |
 | `login(email, mot de passe)` | POST `/account/login` → garde `account_token` |
 | `sign_out()` | POST `/account/logout` avec le jeton de compte, puis l'efface ; **le jeton de licence reste** (il se retire depuis la licence) |
@@ -45,7 +45,7 @@ Tout est CONFIRMÉ (code de `staging`, 10/11). Créé le 09/10. Contrat : `licen
 - Un `invalid_token` sur une action faite avec le jeton de compte efface `account.bin` (session expirée).
 
 ## Données touchées
-- `%LOCALAPPDATA%\Rago\account.bin` (jeton de compte, DPAPI).
+- `account.bin` (jeton de compte, DPAPI), dans `%LOCALAPPDATA%\Rago\` pour le vrai Rago Optimizer, `%LOCALAPPDATA%\Rago (gg.rago.optimizer.staging)\` pour l'exe de test.
 - Réseau : `<API_BASE>/plans`, `/account/me`, `/account/login`, `/account/logout`, `/account/subscription[/cancel|/resume]`, `/account/review`, `/account/name`, `/account/avatar`, et `<origine>/avatars/<fichier>.webp`.
 
 ## Tests

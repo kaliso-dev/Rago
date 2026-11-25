@@ -2,8 +2,8 @@
 type: code
 tags: [code, app, rust, barre-en-jeu, fps]
 fichier: app/src-tauri/src/fps.rs
-lignes: 286
-maj: 2026-11-10
+lignes: 294
+maj: 2026-11-25
 ---
 # fps.rs
 
@@ -29,7 +29,7 @@ Tout ce qui suit est CONFIRMÉ (code de `staging`, 10/11).
 
 ### Lancement de PresentMon (`start`)
 
-Commande cachée (`shell::hidden`) : `PresentMon.exe --process_id <pid> --output_stdout --stop_existing_session --terminate_on_proc_exit --session_name RagoOptimizerFps`. La session ETW porte le nom `RagoOptimizerFps` : une session laissée par un arrêt brutal est reprise au lancement suivant (`--stop_existing_session`). La sortie standard est lue ligne par ligne par un fil `rago-fps` : la première ligne donne la colonne, chaque ligne suivante un temps d'image (> 0). Les temps sont gardés avec leur heure de réception (au-delà de 4 096, on n'en garde que 2 048).
+Commande cachée (`shell::hidden`) : `PresentMon.exe --process_id <pid> --output_stdout --stop_existing_session --terminate_on_proc_exit --session_name RagoOptimizerFps`. La session ETW porte le nom `RagoOptimizerFps` (exe de test : `RagoOptimizerFpsTest`, fonction `session_name()`, depuis le 25/11 : `--stop_existing_session` arrêtait la session du vrai Rago lancé à côté, et inversement) : une session laissée par un arrêt brutal est reprise au lancement suivant (`--stop_existing_session`). La sortie standard est lue ligne par ligne par un fil `rago-fps` : la première ligne donne la colonne, chaque ligne suivante un temps d'image (> 0). Les temps sont gardés avec leur heure de réception (au-delà de 4 096, on n'en garde que 2 048).
 
 ### Valeur affichée (`value`)
 
@@ -50,7 +50,7 @@ Commande cachée (`shell::hidden`) : `PresentMon.exe --process_id <pid> --output
 
 ## Données touchées
 
-- Lance le processus `PresentMon.exe` (session ETW `RagoOptimizerFps`).
+- Lance le processus `PresentMon.exe` (session ETW `RagoOptimizerFps`, ou `RagoOptimizerFpsTest` pour l'exe de test).
 - Écrit `last-match.json` (dossier de données de l'app) à la fin de chaque partie suivie d'au moins une minute.
 
 ## Erreurs et cas limites
@@ -73,5 +73,5 @@ Commande cachée (`shell::hidden`) : `PresentMon.exe --process_id <pid> --output
 ## À savoir avant de modifier
 
 - Ne jamais injecter quoi que ce soit dans le jeu : la mesure doit rester extérieure (ETW).
-- Garder le nom de session `RagoOptimizerFps` : il permet de reprendre une session orpheline.
+- Garder les noms de session `RagoOptimizerFps` et `RagoOptimizerFpsTest` : ils permettent de reprendre une session orpheline sans arrêter celle de l'autre exe.
 - La règle des saccades (2,5 × médiane, 20 ms au moins) est aussi celle affichée dans l'analyse ; la changer change les chiffres comparés dans l'avant/après.

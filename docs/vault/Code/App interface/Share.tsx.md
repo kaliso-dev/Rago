@@ -3,7 +3,7 @@ type: code
 tags: [code, app, react, page, presets, support]
 fichier: app/src/pages/Share.tsx
 lignes: 541
-maj: 2026-11-23
+maj: 2026-11-25
 ---
 # Share.tsx
 
@@ -59,6 +59,7 @@ Tout ce qui suit est CONFIRMÉ (code de `staging`, 10/11, commit `ee77d4f`), ave
   - `history` : 50 derniers changements ;
   - `logs` : 3 derniers journaux ;
   - `network` : détails de la carte réseau, **décochée d'office**.
+- La carte du rapport finit à la hauteur de la colonne de gauche (25/11, PR #139, après le test de Sofiene : un grand vide restait sous le bouton) : la liste des cases s'étire et les lignes se partagent la place (`s5/grids.css`). Jamais testé sur Windows.
 - **« Créer le rapport »** (rouge ; grisé si aucune case n'est cochée ; une icône tourne pendant la création) : `api.supportReport(parts)`, commande `support_report`. Le fichier est écrit dans le dossier `reports\` des données de l'app (voir [[report.rs]]).
 - Ensuite, la carte montre :
   - le nom du fichier et sa taille en Ko ;

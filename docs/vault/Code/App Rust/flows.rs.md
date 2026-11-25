@@ -2,8 +2,8 @@
 type: code
 tags: [code, app, rust, barre-en-jeu, réseau, etw]
 fichier: app/src-tauri/src/flows.rs
-lignes: 382
-maj: 2026-11-10
+lignes: 390
+maj: 2026-11-25
 ---
 # flows.rs
 
@@ -37,7 +37,7 @@ Tout ce qui suit est CONFIRMÉ (code de `staging`, 10/11).
 
 ### Session ETW (Windows)
 
-- Session temps réel nommée **`Rago-GamePing`**, fournisseur `Microsoft-Windows-Kernel-Network` (GUID `7dd42a49-5329-4832-8dfd-43d979153a88`), niveau information, tous les mots-clés, horloge QPC, tampons de 64 Ko, vidage toutes les secondes.
+- Session temps réel nommée **`Rago-GamePing`** (exe de test : `Rago-GamePing-Test`, fonction `session_name()`, depuis le 25/11 : avec le même nom, l'exe de test et le vrai Rago arrêtaient chacun la session de l'autre et aucun n'avait de ping), fournisseur `Microsoft-Windows-Kernel-Network` (GUID `7dd42a49-5329-4832-8dfd-43d979153a88`), niveau information, tous les mots-clés, horloge QPC, tampons de 64 Ko, vidage toutes les secondes.
 - Démarrée au premier `follow` ; si une session du même nom existe déjà (erreur `183`, app fermée de force), elle est arrêtée puis recréée. Un fil `rago-flows` traite les événements (`ProcessTrace`) jusqu'à l'arrêt de la session.
 - Le rappel `on_event` lit le PID suivi sans verrou (`AtomicU32`) pour chaque paquet de la machine, et ne prend le verrou que pour le processus suivi.
 - Un fil `rago-flows-idle` vérifie toutes les **5 s** ; si personne n'a demandé depuis **30 s** (`IDLE`), la session s'arrête.
@@ -45,7 +45,7 @@ Tout ce qui suit est CONFIRMÉ (code de `staging`, 10/11).
 
 ## Données touchées
 
-- Une session ETW du noyau (`Rago-GamePing`), en mémoire seulement. Aucun fichier, aucun envoi réseau.
+- Une session ETW du noyau (`Rago-GamePing`, ou `Rago-GamePing-Test` pour l'exe de test), en mémoire seulement. Aucun fichier, aucun envoi réseau.
 
 ## Erreurs et cas limites
 
@@ -65,5 +65,5 @@ Tout ce qui suit est CONFIRMÉ (code de `staging`, 10/11).
 
 ## À savoir avant de modifier
 
-- Garder le nom `Rago-GamePing` : il permet d'arrêter une session restée d'un lancement précédent.
+- Garder les noms `Rago-GamePing` et `Rago-GamePing-Test` : ils permettent d'arrêter une session restée d'un lancement précédent, sans toucher à celle de l'autre exe.
 - Le rappel ETW est appelé pour **chaque paquet de la machine** : il doit rester très léger (pas de verrou avant le filtre sur le PID).

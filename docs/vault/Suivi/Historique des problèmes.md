@@ -1,7 +1,7 @@
 ---
 type: archive
 tags: [suivi, bug, support, archive]
-maj: 2026-11-10
+maj: 2026-11-25
 ---
 # Historique des problèmes
 
@@ -15,6 +15,12 @@ L'état actuel des bugs reste dans [[Bugs et incidents]], et les retours de joue
 - Le reste des commandes support : [[Serveur de licences]].
 
 ## Novembre 2026
+
+### 25/11 : exe de test et vraie 1.2.1 lancés ensemble (Premium perdu, pas de ping, deux barres)
+- **Symptôme** (test de Sofiene sur Windows, exe de test de `staging`) : écran du lot « DONE 00/03 This tweak is part of Premium » pour `cpu_pstates`, `cpu_throttle`, `cpu_turbo` alors qu'il est Premium ; pas de ping dans la pastille de la barre en jeu ; « l'ancienne » barre (1.2.1) toujours présente et en conflit.
+- **Cause** : la 1.2.1 installée tournait en même temps. Les deux apps partageaient le dossier des jetons `%LOCALAPPDATA%\Rago` : chacune efface un jeton signé par l'autre serveur (`status()` → `clear()` quand la signature ne passe pas), donc la connexion de l'une effaçait celle de l'autre et le moteur refusait les tweaks Premium (`premium_required`). Elles partageaient aussi les noms des sessions ETW du ping (« Rago-GamePing ») et de PresentMon (« RagoOptimizerFps », lancé avec `--stop_existing_session`) : chacune arrêtait la mesure de l'autre. Et les deux prennent Alt+X.
+- **Solution** (PR #139) : dossier à part pour l'exe de test (`Rago (gg.rago.optimizer.staging)`, [[license.rs]]), sessions « Rago-GamePing-Test » et « RagoOptimizerFpsTest » ([[flows.rs]], [[fps.rs]]), avertissement rouge en haut de l'exe de test quand le vrai Rago tourne ([[TitleBar.tsx]]), et après un refus Premium l'interface relit la licence et propose « Sign in ». Pendant un test : quitter le vrai Rago (icône près de l'horloge, clic droit, Quitter). Réglé dans le code, jamais testé sur Windows.
+
 
 ### 10/11 : téléchargements Steam bridés à 15 Mbit/s
 - **Symptôme** : après la mise à jour, un joueur passe de 200+ à 15 Mbit/s sur Steam. Captures : « Hitreg profile » en **Better hitreg** appliqué le 10/11, « Packet optimization » en Hitreg (26/10), « Ping optimization » Config 1, « Network profile » Hitreg.

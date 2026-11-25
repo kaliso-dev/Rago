@@ -1,7 +1,7 @@
 ---
 type: registre
 tags: [bug, suivi]
-maj: 2026-11-24
+maj: 2026-11-25
 ---
 # Bugs et incidents
 
@@ -34,6 +34,11 @@ Voir [[Version 1.1.14]].
 ## Corrigés pendant la refonte v5 (23/11, jamais sortis)
 - **Fenêtres de l'app invisibles** (offre Premium, confirmation d'un lot, choix d'un preset…) : la règle `.scrim{display:none}` de la maquette (voile du rail replié) était reprise dans `s5/base.css` par la PR #119, alors que dans l'app `.scrim` est le fond de toutes les fenêtres ; la fenêtre s'ouvrait avec une largeur nulle. Présent dans `staging` du 23/11 (PR #119) à la PR #123, qui le corrige dans `base.css` et dans son générateur `port_s5.py` ([[Maquettes v5 dans l'app (s5)]]). Jamais sorti dans un exe joueur.
 - **Icône de chargement invisible dans les boutons** (test réseau, Rago Route, Packet Optimizer) : la règle `.btn .spin{display:none}` des effets de bouton de la maquette la cachait ; corrigé par la PR #123 (`.btn svg.spin` dans `s5/app.css`).
+
+## Trouvés au test Windows du 25/11 (exe de test, corrigés par la PR #139, jamais testés sur Windows)
+- **Tweaks Premium refusés alors que le joueur est Premium** (« This tweak is part of Premium » sur `cpu_pstates`, `cpu_throttle`, `cpu_turbo`) : l'exe de test et la vraie 1.2.1 installée gardaient leur connexion dans le même dossier `%LOCALAPPDATA%\Rago` (`license.bin`, `scripts.bin`, `account.bin`). Chacun vérifie le jeton avec la clé de son propre serveur (staging ou prod) et efface un jeton qu'il ne reconnaît pas : chaque app effaçait la connexion de l'autre. L'exe de test garde maintenant ses fichiers dans `%LOCALAPPDATA%\Rago (gg.rago.optimizer.staging)` ([[license.rs]]) ; il faut s'y reconnecter une fois. La vraie app ne change pas de dossier.
+- **Pas de ping dans la pastille, « l'ancienne barre » toujours là** : la 1.2.1 tournait en même temps ; les deux apps prenaient Alt+X et utilisaient les mêmes sessions de mesure Windows (ping, FPS), que chacune arrêtait chez l'autre. Sessions à part pour l'exe de test et avertissement quand le vrai Rago tourne aussi ([[Barre en jeu]]).
+- **Noms des modes d'alimentation abîmés** (« RECOMMAND� PAR�HP ») : la sortie de `powercfg` était lue en UTF-8 au lieu de la page de code de la console ([[shell.rs]], [[tools.rs]]). Un mode sans nom affiché par son identifiant devient « Unnamed plan (F31FECF6) ».
 
 ## Incidents historiques
 - **GitHub Pages** a publié le dépôt privé du 04/10 au 07/10 00:48 (`.bat` Premium, scripts, code serveur). Coupé ; `_config.yml` neutralise une partie du dépôt. **Toujours actif le 10/11** (OBSERVÉ) : Pages publie à chaque push de la branche de prod, et comme `docs/` n'est pas exclu, le vault y est lisible en pages web. À couper dans les réglages de GitHub (q80, [[Fichiers de la racine du dépôt]]).

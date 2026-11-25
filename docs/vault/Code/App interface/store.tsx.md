@@ -2,8 +2,8 @@
 type: code
 tags: [code, app, typescript, react, interface]
 fichier: app/src/lib/store.tsx
-lignes: 731
-maj: 2026-11-23
+lignes: 732
+maj: 2026-11-25
 ---
 # store.tsx
 
@@ -132,7 +132,7 @@ Ce qui **n'est pas** gardé : `page` (toujours `dashboard` au lancement), `sys`,
   3. marque les lignes qui demandent un redémarrage (`needsReboot` sur la variante lancée, ou `undoVariant` pour une annulation) ;
   4. ferme la confirmation, efface `playing`, crée un `RunState` avec toutes les lignes en `pending` ;
   5. `api.runTweaks(items)` ; si `clearSelection`, retire de la sélection ce qui part dans le lot ;
-  6. en cas de refus du moteur, traduit l'erreur : `premium_required` → `err.premium_required`, `free_slots` → `err.free_slots` (avec `n` = `FREE_SLOTS`), `premium_scripts_unavailable` → `err.premium_scripts_unavailable`, `reset_running` → `err.reset_running`, sinon le texte brut ; le lot affiche l'erreur.
+  6. en cas de refus du moteur, traduit l'erreur : `premium_required` → `err.premium_required`, `free_slots` → `err.free_slots` (avec `n` = `FREE_SLOTS`), `premium_scripts_unavailable` → `err.premium_scripts_unavailable`, `reset_running` → `err.reset_running`, sinon le texte brut ; le lot affiche l'erreur. Depuis le 25/11 (PR #139), un refus `premium_required` ou `premium_scripts_unavailable` relit aussi la licence (`api.licenseStatus()` → `setLicense`) : l'interface ne se croit plus Premium quand le moteur ne l'est plus, et le bouton « Sign in » revient en haut ([[TitleBar.tsx]]). Jamais testé sur Windows.
 - Écoute des événements du lot (une seule fois) :
   - `run:item` : met à jour la ligne `index` ; une erreur avec message ajoute une ligne de journal `! <message>` ;
   - `run:log` : ajoute la ligne ; au-delà de **600 lignes**, ne garde que les **500** dernières ;

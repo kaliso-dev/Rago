@@ -2,12 +2,12 @@
 type: code
 tags: [code, app, rust]
 fichier: app/src-tauri/src/lib.rs
-lignes: 1531
-maj: 2026-11-23
+lignes: 1546
+maj: 2026-11-25
 ---
 # lib.rs
 
-Point d'entrée de toute l'app côté Rust : il déclare les 40 modules, construit l'état partagé `AppState`, enregistre les **93 commandes Tauri** que l'interface React appelle, lance les fils permanents au démarrage (`run()`). Fiche parente : [[Code de l'app (Rust)]]. Fonctionnement d'ensemble : [[Architecture de l'app]], [[App Windows]].
+Point d'entrée de toute l'app côté Rust : il déclare les 40 modules, construit l'état partagé `AppState`, enregistre les **94 commandes Tauri** que l'interface React appelle, lance les fils permanents au démarrage (`run()`). Fiche parente : [[Code de l'app (Rust)]]. Fonctionnement d'ensemble : [[Architecture de l'app]], [[App Windows]].
 
 Tout ce qui suit est CONFIRMÉ (code de `staging`, 10/11, commit `ee77d4f`). Fichier créé le 07/10 (1.1.5), 37 commits depuis : c'est le fichier le plus modifié du cœur.
 
@@ -57,7 +57,7 @@ Méthodes : `AppState::system(refresh)` (sonde mise en cache par `probe_cached`)
 - `now_ms()`, `minecraft_dir(dir)` (par défaut `%APPDATA%\.minecraft`, erreur `"Minecraft folder not set"`), `preset_path(path)`.
 - `pub fn run()` : le démarrage.
 
-### Les 93 commandes Tauri
+### Les 94 commandes Tauri
 Ordre de `generate_handler!`. Côté interface, chaque commande est appelée par `invoke("<nom>")` depuis `app/src/lib/api.ts`. Les erreurs sont des `String`, sauf les commandes de licence et de compte qui renvoient un `license::ApiError {code, message, buy_url}`.
 
 **Système, RBW, Outils** ([[Page Outils]], [[RBW Mod]])
@@ -123,6 +123,7 @@ Ordre de `generate_handler!`. Côté interface, chaque commande est appelée par
 | `overlay_close` | → `()` | ferme la barre |
 | `overlay_set_pin` | `pin: bool` | garde la barre épinglée (champ `pin` des préférences) |
 | `overlay_open_app` | `page?` | ferme la barre, `show_main`, puis émet `app:goto` vers la fenêtre `main` (`premium` : l'offre Premium) |
+| `other_rago_running` | → `bool` | exe de test seulement (`false` dans le vrai Rago) : `true` si un processus « Rago Optimizer.exe » (le vrai Rago, ex. 1.2.1 installée) tourne aussi, cherché dans `games::process_paths()` dans un fil à part ; l'interface affiche alors un avertissement rouge dans la barre du haut ([[TitleBar.tsx]]). Ajoutée le 25/11 (PR #139), jamais testé sur Windows |
 | `open_task_manager` | → `()` | lance `taskmgr.exe` (Rago ne ferme aucun processus) |
 
 **Couleurs et résolution** ([[Couleurs et résolution]], [[display.rs]])
