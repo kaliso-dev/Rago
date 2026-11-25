@@ -43,7 +43,7 @@ Les joueurs ont la [[Version 1.2.1]] (en ligne depuis le 31/10). La [[Version 1.
 | Vault Obsidian | créé le 31/10 ; règle n°1 : il doit correspondre en tout point à l'état du projet. **Détaillé le 10/11** (demande de Sofiene) : 341 notes, dont une fiche par fichier de code (230 notes dans `Code/`, 7 cartes), l'histoire du projet (`Historique/`, 11 notes) et l'étude de marché ; 24 nouvelles questions (q70 à q93) | DÉCIDÉ |
 
 ## PR (25/11)
-- Ouverte le 25/11 vers `staging` : #137 (branche `claude/project-thread-2btl2s`), détail des réglages au clic sur une icône info et cartes des grilles alignées sans vide (demande de Sofiene du 25/11). Fusion prévue dès que le build Windows passe. Jamais testé sur Windows.
+- Fusionnée le 25/11 dans `staging` : #137 (branche `claude/project-thread-2btl2s`), détail des réglages au clic sur une icône info et cartes des grilles alignées sans vide (demande de Sofiene du 25/11), après le build Windows réussi. Jamais testé sur Windows.
 
 ## PR (22/11)
 - Fusionnée le 22/11 dans `staging` : #108 (app en charte v5, version 1.4.0, branche `claude/project-thread-2btl2s`), après le build Windows et les tests Rust réussis (run `app-windows` 272), sur la demande de Sofiene du 22/11 ([[Charte graphique]]).
