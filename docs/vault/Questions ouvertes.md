@@ -1,7 +1,7 @@
 ---
 type: pilotage
 tags: [pilotage, à-décider, à-vérifier]
-maj: 2026-11-24
+maj: 2026-11-25
 ---
 # Questions ouvertes
 
@@ -34,6 +34,9 @@ Posées le 23/11, pendant la refonte de l'app sur les maquettes v5 (fil « refon
 Posée le 24/11, après la réunion de Rago Route en une seule section de l'accueil :
 - q118 : ce que devient la section « Three ways in », qui garde ses trois démos mais plus de globe ([[page.html]]).
 - q119 : les flux d'Asie s'arrêtent à la Sibérie ; l'Extrême-Orient demanderait de pivoter ou de rapetisser le globe ([[make_planet.py]]).
+
+Posée le 25/11, en mettant l'aperçu du dashboard dans le héros de l'accueil :
+- q120 : la seule capture du dashboard qu'on a date d'une version plus ancienne (212 tweaks au lieu de 218) ; demander une capture à jour ([[page.html]], [[Fichiers publiés du site]]).
 
 Au 10/11, après les réponses de Sofiene du jour (q36 à q68 traitées, q46 le 10/11 à 15 h, voir [[Décisions]]) :
 - q65 : réglages Railway de prod (Wait for CI, Watch Paths, Healthcheck, moniteur) ; Sofiene demande à Claude de vérifier et de le lui rappeler ([[Railway]]).

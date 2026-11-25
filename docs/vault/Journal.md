@@ -1,7 +1,7 @@
 ---
 type: pilotage
 tags: [journal, chronologie]
-maj: 2026-11-24
+maj: 2026-11-25
 ---
 # Journal
 
@@ -10,6 +10,7 @@ Une ligne par événement marquant, la plus récente en haut. Voir [[Historique 
 ## Novembre 2026
 | Date | Événement | Liens |
 |---|---|---|
+| 25/11 | Héros de l'accueil : **aperçu du dashboard de l'app**, en fenêtre aux bords arrondis à droite de l'accroche (demande de Sofiene). Sous le titre, la grille passe en deux colonnes (texte, boutons et puces à gauche ; la fenêtre à droite, large au plus 38 % de l'écran, 58 % de sa hauteur et 720 px, donc entière sur tous les écrans courants) ; sur tablette debout et téléphone elle passe dessous. Capture réduite en `img/x/dashboard.webp` (1 600 × 1 000, 70 Ko contre 274) ; `img/v5/shot-dashboard.webp` et les cinq découpes `img/x/dash-*.webp`, plus utilisées, sont supprimées | [[page.html]], [[Fichiers publiés du site]], [[Questions ouvertes]] |
 | 25/11 | Chargement de l'accueil : jaquettes agrandies (jusqu'à 440 px de large contre 230, soit les deux tiers de la hauteur de l'écran) et jamais rognées (`object-fit:contain`, demande de Sofiene) ; les dix images repassées en 400 × 600, leur pleine résolution, pour rester nettes | [[page.html]], [[v5.css]], [[Fichiers publiés du site]] |
 | 24/11 | Nuit : globe de Rago Route **rouge** et bien plus dense (« encore plus de points et de détails … des milliers de points et qu'il soit rouge », Sofiene) : grille de 0,75° (7 738 points, écrits en déplacements relatifs, donc toujours 34 Ko compressés), points, côtes et graticule en rouge, flux et pins passés en blanc papier pour rester lisibles par-dessus. Quatre villes de plus et onze flux, dont **l'Asie** (Novossibirsk, Iakoutsk à 130° est, Astana) et Moscou ; `make_planet.py` calcule maintenant aussi les flux et les pins, avec la même projection que le globe | [[page.html]], [[make_planet.py]], [[Questions ouvertes]] |
 | 24/11 | Nuit : globe de Rago Route redessiné plus fin (« plus de point plus de détails », Sofiene) : grille de 1,25° au lieu de 2° (2 780 points au lieu de 1 071), côtes simplifiées deux fois moins (95 Ko de SVG, 34 Ko compressés) ; flux épaissis (trait 2 → 3,4, halo 7 → 11) et impulsion ralentie de 3 s à 4,6 s | [[page.html]], [[make_planet.py]] |

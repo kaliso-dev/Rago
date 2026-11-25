@@ -17,7 +17,8 @@ main.x{position:relative;overflow-x:clip}
 /* 1. hero: the title letter by letter, pictures open between its words, the letters near the mouse warm up */
 .x-hero{position:relative;min-height:100vh;min-height:100svh;display:flex;flex-direction:column;padding-top:calc(var(--x-hd) + clamp(40px,5vw,80px))}
 .x-hero::before{content:"";position:absolute;inset:0;z-index:-1;background:radial-gradient(60% 55% at 78% 30%,rgba(255,59,48,.13),transparent 70%);pointer-events:none}
-.x-hero-in{flex:1;display:grid;grid-template-columns:minmax(0,1fr) auto;grid-template-areas:"k k" "h h" "p b" "t b";column-gap:40px;align-content:center;padding-bottom:clamp(36px,4vw,64px)}
+.x-hero-in{flex:1;display:grid;grid-template-columns:minmax(0,1fr) auto;grid-template-areas:"k k" "h h" "x s";column-gap:clamp(30px,3.4vw,64px);align-content:center;padding-bottom:clamp(36px,4vw,64px)}
+.x-hero-l{grid-area:x;display:flex;flex-direction:column;align-items:flex-start;min-width:0}
 .x-hero-k{grid-area:k;margin-bottom:clamp(20px,2.2vw,34px)}
 .x-hero-h{grid-area:h;font-size:clamp(64px,10.4vw,230px);line-height:.84;letter-spacing:-.012em}
 .x-hero-h .x-ch{color:color-mix(in srgb,var(--red) calc(var(--h,0) * 100%),var(--ink))}
@@ -28,11 +29,16 @@ main.x{position:relative;overflow-x:clip}
 .x-slot img.x-on{clip-path:inset(0)}
 .x-slot img.x-off{clip-path:inset(0 0 100% 0)}
 .x-pool{display:none}
-.x-hero-p{grid-area:p;max-width:52ch;margin-top:clamp(22px,2.4vw,40px);font-size:clamp(16px,1.25vw,20px);line-height:1.5;color:var(--ink-2)}
-.x-hero-b{grid-area:b;display:flex;flex-wrap:wrap;gap:14px;align-self:end;justify-content:flex-end}
-.x-hero-t{grid-area:t;display:flex;flex-wrap:wrap;gap:8px 22px;margin-top:22px;font-family:var(--cond);font-weight:800;font-size:14px;letter-spacing:.12em;text-transform:uppercase;color:var(--ink-2)}
+.x-hero-p{max-width:52ch;margin-top:clamp(22px,2.4vw,40px);font-size:clamp(16px,1.25vw,20px);line-height:1.5;color:var(--ink-2)}
+.x-hero-b{display:flex;flex-wrap:wrap;gap:14px;margin-top:clamp(22px,2.4vw,34px)}
+.x-hero-t{display:flex;flex-wrap:wrap;gap:8px 22px;margin-top:clamp(20px,2vw,26px);font-family:var(--cond);font-weight:800;font-size:14px;letter-spacing:.12em;text-transform:uppercase;color:var(--ink-2)}
 .x-hero-t li{display:flex;align-items:center;gap:8px}
 .x-hero-t svg{width:16px;height:16px;color:var(--red)}
+/* le dashboard de l'app, en fenêtre aux bords arrondis à côté du texte (Sofiene, 25/11) : jamais plus large que la
+   place laissée par le texte, ni plus haute que ce que l'écran laisse sous le titre, donc toujours entière */
+.x-hero-sh{grid-area:s;position:relative;align-self:end;justify-self:end;width:min(38vw,58vh,720px);margin-top:clamp(22px,2.4vw,40px)}
+.x-hero-sh::before{content:"";position:absolute;inset:8% 12%;z-index:-1;background:radial-gradient(60% 60% at 50% 50%,rgba(255,59,48,.55),transparent 72%);filter:blur(46px)}
+.x-hero-sh img{display:block;width:100%;height:auto;border:1px solid var(--line-2);border-radius:clamp(10px,1.1vw,18px);box-shadow:0 40px 90px -30px rgba(0,0,0,.95)}
 /* the intro after the loader: the letters come in one by one, the rest comes out of a blur */
 .x-iw{opacity:0;filter:blur(14px);transform:translateY(26px)}
 .x-iw.x-iw-go{opacity:1;filter:blur(0);transform:none;transition:opacity 1s cubic-bezier(.16,1,.3,1) var(--d,0s),filter 1s cubic-bezier(.16,1,.3,1) var(--d,0s),transform 1.1s cubic-bezier(.16,1,.3,1) var(--d,0s)}
@@ -581,9 +587,16 @@ details.s-q p{padding:0 0 24px;font-size:15.5px;line-height:1.6}
   .x-faq .faq{columns:1}
   .hit-rows .chk{left:80%;top:-10px}.s-track .saved b{display:none}.s-track .res.ok{left:auto;right:calc(27% + 8px);font-size:11px;padding:4px 8px}.s-track .res.late{font-size:11px;padding:4px 8px}
 }
+/* tablette debout : le texte n'a plus la largeur de porter la fenêtre de l'app à côté, elle passe dessous et en grand */
+@media (max-width:1080px) and (orientation:portrait){
+  .x-hero-in{grid-template-columns:1fr;grid-template-areas:"k" "h" "x" "s"}
+  .x-hero-sh{width:min(100%,620px);justify-self:start;margin-top:clamp(26px,3.4vw,40px)}
+}
 @media (max-width:760px){
-  .x-hero-in{grid-template-columns:1fr;grid-template-areas:"k" "h" "p" "b" "t"}
+  .x-hero-in{grid-template-columns:1fr;grid-template-areas:"k" "h" "x" "s"}
+  .x-hero-l{align-items:stretch}
   .x-hero-b{justify-content:stretch;margin-top:26px}
+  .x-hero-sh{width:100%;justify-self:stretch;margin-top:30px}
   .x-hero-b .x-btn{flex:1 1 100%}
   .x-hero-h{font-size:clamp(56px,17.5vw,110px)}
   .x-about{padding:18vh 12px}
@@ -730,12 +743,16 @@ if (!matchMedia("(prefers-reduced-motion: reduce)").matches) { document.document
     <p class="x-hero-k x-intro"><span class="x-tape">Minecraft PvP optimizer <b>//</b> for Windows</span></p>
     <h1 class="x-h x-hero-h x-intro" id="hero-h">Every <span class="x-slot x-keep" aria-hidden="true"></span>millisecond <span class="x-brush">counts.</span></h1>
     <div class="x-pool" aria-hidden="true"><img src="img/wide/valorant.webp" alt="" width="760" height="363"><img src="img/wide/cs2.webp" alt="" width="760" height="363"><img src="img/wide/fortnite.webp" alt="" width="760" height="363"><img src="img/wide/gta.webp" alt="" width="760" height="363"></div>
-    <p class="x-hero-p x-intro">Steadier ping, smoother frames, less input lag. Rago tunes Windows, your network and Minecraft, and puts your settings back when you turn a tweak off.</p>
-    <div class="x-hero-b">
-      <a class="x-btn red x-intro" href="#pricing"><span class="x-fl"></span><svg class="i" aria-hidden="true"><use href="#i-zap"/></svg><span class="x-bl">Try Premium free</span></a>
-      <a class="x-btn x-intro js-free-app" href="#pricing"><span class="x-fl"></span><svg class="i" aria-hidden="true"><use href="#i-download"/></svg><span class="x-bl">Download free</span></a>
+    <div class="x-hero-l">
+      <p class="x-hero-p x-intro">Steadier ping, smoother frames, less input lag. Rago tunes Windows, your network and Minecraft, and puts your settings back when you turn a tweak off.</p>
+      <div class="x-hero-b">
+        <a class="x-btn red x-intro" href="#pricing"><span class="x-fl"></span><svg class="i" aria-hidden="true"><use href="#i-zap"/></svg><span class="x-bl">Try Premium free</span></a>
+        <a class="x-btn x-intro js-free-app" href="#pricing"><span class="x-fl"></span><svg class="i" aria-hidden="true"><use href="#i-download"/></svg><span class="x-bl">Download free</span></a>
+      </div>
+      <ul class="x-hero-t x-intro"><li><svg class="i" aria-hidden="true"><use href="#i-check"/></svg>Free to start</li><li><svg class="i" aria-hidden="true"><use href="#i-check"/></svg>Restore point offered</li><li><svg class="i" aria-hidden="true"><use href="#i-check"/></svg>Windows 10 and 11</li></ul>
     </div>
-    <ul class="x-hero-t x-intro"><li><svg class="i" aria-hidden="true"><use href="#i-check"/></svg>Free to start</li><li><svg class="i" aria-hidden="true"><use href="#i-check"/></svg>Restore point offered</li><li><svg class="i" aria-hidden="true"><use href="#i-check"/></svg>Windows 10 and 11</li></ul>
+    <!-- the app's dashboard, the same capture the v5 home page showed -->
+    <div class="x-hero-sh x-intro"><img src="img/x/dashboard.webp" alt="The Rago Optimizer dashboard: the tweaks that are on, the free ones left to apply and your PC's readings." width="1600" height="1000" fetchpriority="high"></div>
   </div>
   <!-- Partners: the servers marked "home" in src/partners.json (written by tools/sync_partners.py, which build.py runs). All: partners.html -->
   <div class="x-pt" aria-label="Our partner servers">
