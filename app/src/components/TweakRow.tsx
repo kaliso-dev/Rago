@@ -1,6 +1,6 @@
 // Carreau d'un réglage (.tw des maquettes v5 app-module-*.html, styles s5/pages/module.css) : tout le carreau est
 // l'interrupteur ; réglage à options sur toute la largeur ; action : bouton « run » ; réglage de session : deux
-// boutons ; détail au survol (.pop). Le carreau vit dans une page .pg-mod (modules, Outils, onglet Tweaks de Réseau).
+// boutons ; détail ouvert par l'icône info (.inf → .pop, demande de Sofiene du 25/11 : plus de bulle au survol). Le carreau vit dans une page .pg-mod (modules, Outils, onglet Tweaks de Réseau).
 import { useEffect, useRef, useState, type ReactNode } from "react";
 import { autoVariant, availability, catalog, tweakModule, type Tweak } from "../lib/catalog";
 import type { Key } from "../lib/i18n";
@@ -47,6 +47,7 @@ export function TweakRow({
   const ref = useRef<HTMLDivElement>(null);
   const [up, setUp] = useState(false);
   const [menu, setMenu] = useState(false);
+  const [info, setInfo] = useState(false);
   const av = availability(tweak, sys);
   const id = tweak.id;
   const isOn = isOnFn(id);
@@ -87,6 +88,31 @@ export function TweakRow({
       window.removeEventListener("keydown", key);
     };
   }, [menu]);
+
+  // bulle d'info : se ferme au clic ailleurs (une autre icône info comprise) et à Échap
+  useEffect(() => {
+    if (!info) return;
+    const close = (e: MouseEvent) => {
+      const el = e.target as Node;
+      if (!ref.current?.querySelector(".pop")?.contains(el) && !ref.current?.querySelector(".inf")?.contains(el)) setInfo(false);
+    };
+    const key = (e: KeyboardEvent) => e.key === "Escape" && setInfo(false);
+    window.addEventListener("mousedown", close);
+    window.addEventListener("keydown", key);
+    return () => {
+      window.removeEventListener("mousedown", close);
+      window.removeEventListener("keydown", key);
+    };
+  }, [info]);
+
+  const openInfo = () => {
+    if (!info) {
+      const r = ref.current?.getBoundingClientRect();
+      const box = ref.current?.closest(".main")?.getBoundingClientRect();
+      setUp(!!r && !!box && r.bottom + 230 > box.bottom && r.top - 230 > box.top);
+    }
+    setInfo((o) => !o);
+  };
 
   const onTile = () => {
     if (locked) return setUpsell("tweak", id);
@@ -284,22 +310,30 @@ export function TweakRow({
       ref={ref}
       className={cls.join(" ")}
       onClick={onTile}
-      onMouseEnter={() => {
-        const r = ref.current?.getBoundingClientRect();
-        const box = ref.current?.closest(".main")?.getBoundingClientRect();
-        setUp(!!r && !!box && r.bottom + 230 > box.bottom && r.top - 230 > box.top);
-      }}
     >
       <span className="tx">
         <span className="nr">
           <span className="nm">{label ?? tweak.name[lang]}</span>
           {zap && <I n="zap" />}
+          <button
+            type="button"
+            className={`inf${info ? " open" : ""}`}
+            aria-label={t("s5.mod.info")}
+            aria-expanded={info}
+            title={t("s5.mod.info")}
+            onClick={(e) => {
+              e.stopPropagation();
+              openInfo();
+            }}
+          >
+            <I n="info" />
+          </button>
         </span>
         {note && <span className="note">{note}</span>}
       </span>
       {mid}
       {right}
-      <div className={`pop${up ? " up" : ""}`} aria-hidden="true">
+      <div className={`pop${up ? " up" : ""}${info ? " show" : ""}`} aria-hidden={!info} onClick={(e) => e.stopPropagation()}>
         <p>{tweak.desc[lang]}</p>
         {tweak.gain && (
           <div className="ft">

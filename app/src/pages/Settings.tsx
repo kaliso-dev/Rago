@@ -257,6 +257,21 @@ export function Settings() {
             </div>
           </section>
 
+          {/* Mémoire à gauche : les deux colonnes finissent à la même hauteur (25/11) */}
+          <section>
+            <div className="sh">
+              <h2 className="h2 tape">{t("settings.memory")}</h2>
+            </div>
+            <div className="panel sp">
+              <div className="sr">
+                <div className="l">
+                  <b>{t("settings.cleanTrim")}</b>
+                  <span>{t("settings.cleanTrimHint")}</span>
+                </div>
+                <Sw on={cleanTrim} onChange={setCleanTrim} label={t("settings.cleanTrim")} />
+              </div>
+            </div>
+          </section>
           <section>
             <div className="sh">
               <h2 className="h2 tape">{t("settings.about")}</h2>
@@ -289,20 +304,6 @@ export function Settings() {
         <div className="col">
           <BackgroundSection />
           <SessionSection />
-          <section>
-            <div className="sh">
-              <h2 className="h2 tape">{t("settings.memory")}</h2>
-            </div>
-            <div className="panel sp">
-              <div className="sr">
-                <div className="l">
-                  <b>{t("settings.cleanTrim")}</b>
-                  <span>{t("settings.cleanTrimHint")}</span>
-                </div>
-                <Sw on={cleanTrim} onChange={setCleanTrim} label={t("settings.cleanTrim")} />
-              </div>
-            </div>
-          </section>
           <section>
             <div className="sh">
               <h2 className="h2 tape">{t("settings.folders")}</h2>

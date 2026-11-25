@@ -21,6 +21,7 @@ import "./s5/pages/pages.css";
 import "./s5/pages/analysis.css";
 import "./s5/pages/win.css";
 import "./s5/pages/splash.css";
+import "./s5/grids.css";
 
 document.documentElement.classList.add("round", "poster");
 import { App } from "./App";
