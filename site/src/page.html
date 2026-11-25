@@ -18,7 +18,8 @@ main.x{position:relative;overflow-x:clip}
 .x-hero{position:relative;min-height:100vh;min-height:100svh;display:flex;flex-direction:column;padding-top:calc(var(--x-hd) + clamp(40px,5vw,80px))}
 .x-hero::before{content:"";position:absolute;inset:0;z-index:-1;background:radial-gradient(60% 55% at 78% 30%,rgba(255,59,48,.13),transparent 70%);pointer-events:none}
 .x-hero-in{flex:1;display:grid;grid-template-columns:minmax(0,1fr) auto;grid-template-areas:"k k" "h h" "x s";column-gap:clamp(30px,3.4vw,64px);align-content:center;padding-bottom:clamp(36px,4vw,64px)}
-.x-hero-l{grid-area:x;display:flex;flex-direction:column;align-items:flex-start;min-width:0}
+/* le texte est centré en face de la fenêtre de l'app, et laisse le coin en bas à gauche au bouton rond du menu */
+.x-hero-l{grid-area:x;display:flex;flex-direction:column;align-items:flex-start;justify-content:center;padding-bottom:100px;min-width:0}
 .x-hero-k{grid-area:k;margin-bottom:clamp(20px,2.2vw,34px)}
 .x-hero-h{grid-area:h;font-size:clamp(64px,10.4vw,230px);line-height:.84;letter-spacing:-.012em}
 .x-hero-h .x-ch{color:color-mix(in srgb,var(--red) calc(var(--h,0) * 100%),var(--ink))}
@@ -29,14 +30,14 @@ main.x{position:relative;overflow-x:clip}
 .x-slot img.x-on{clip-path:inset(0)}
 .x-slot img.x-off{clip-path:inset(0 0 100% 0)}
 .x-pool{display:none}
-.x-hero-p{max-width:52ch;margin-top:clamp(22px,2.4vw,40px);font-size:clamp(16px,1.25vw,20px);line-height:1.5;color:var(--ink-2)}
+.x-hero-p{max-width:52ch;margin-top:clamp(22px,2.4vw,40px);font-size:clamp(16px,1.4vw,24px);line-height:1.5;color:var(--ink-2)}
 .x-hero-b{display:flex;flex-wrap:wrap;gap:14px;margin-top:clamp(22px,2.4vw,34px)}
 .x-hero-t{display:flex;flex-wrap:wrap;gap:8px 22px;margin-top:clamp(20px,2vw,26px);font-family:var(--cond);font-weight:800;font-size:14px;letter-spacing:.12em;text-transform:uppercase;color:var(--ink-2)}
 .x-hero-t li{display:flex;align-items:center;gap:8px}
 .x-hero-t svg{width:16px;height:16px;color:var(--red)}
 /* le dashboard de l'app, en fenêtre aux bords arrondis à côté du texte (Sofiene, 25/11) : jamais plus large que la
    place laissée par le texte, ni plus haute que ce que l'écran laisse sous le titre, donc toujours entière */
-.x-hero-sh{grid-area:s;position:relative;align-self:end;justify-self:end;width:min(38vw,58vh,720px);margin-top:clamp(22px,2.4vw,40px)}
+.x-hero-sh{grid-area:s;position:relative;align-self:start;justify-self:end;width:min(44vw,70vh,860px);margin-top:clamp(10px,1.2vw,22px)}
 .x-hero-sh::before{content:"";position:absolute;inset:8% 12%;z-index:-1;background:radial-gradient(60% 60% at 50% 50%,rgba(255,59,48,.55),transparent 72%);filter:blur(46px)}
 .x-hero-sh img{display:block;width:100%;height:auto;border:1px solid var(--line-2);border-radius:clamp(10px,1.1vw,18px);box-shadow:0 40px 90px -30px rgba(0,0,0,.95)}
 /* the intro after the loader: the letters come in one by one, the rest comes out of a blur */
@@ -578,6 +579,10 @@ details.s-q p{padding:0 0 24px;font-size:15.5px;line-height:1.6}
 .s-b .vis{overflow:hidden}
 #affvis{pointer-events:none;user-select:none}
 
+/* écrans peu hauts (ordinateurs portables) : le héros remonte pour que le texte et la fenêtre de l'app tiennent */
+@media (max-height:820px){
+  .x-hero{padding-top:calc(var(--x-hd) + clamp(18px,2.4vw,38px))}
+}
 /* smaller screens */
 @media (max-width:1080px){
   .x-plans-c{grid-template-columns:1fr;max-width:620px;margin-inline:auto}
@@ -590,11 +595,12 @@ details.s-q p{padding:0 0 24px;font-size:15.5px;line-height:1.6}
 /* tablette debout : le texte n'a plus la largeur de porter la fenêtre de l'app à côté, elle passe dessous et en grand */
 @media (max-width:1080px) and (orientation:portrait){
   .x-hero-in{grid-template-columns:1fr;grid-template-areas:"k" "h" "x" "s"}
+  .x-hero-l{padding-bottom:0}
   .x-hero-sh{width:min(100%,620px);justify-self:start;margin-top:clamp(26px,3.4vw,40px)}
 }
 @media (max-width:760px){
   .x-hero-in{grid-template-columns:1fr;grid-template-areas:"k" "h" "x" "s"}
-  .x-hero-l{align-items:stretch}
+  .x-hero-l{align-items:stretch;padding-bottom:0}
   .x-hero-b{justify-content:stretch;margin-top:26px}
   .x-hero-sh{width:100%;justify-self:stretch;margin-top:30px}
   .x-hero-b .x-btn{flex:1 1 100%}
@@ -1782,6 +1788,20 @@ window.__xPage = X => {
     }));
   };
   document.addEventListener("x:lift", go); document.addEventListener("x:loaded", go);
+  /* la fenêtre du dashboard prend toute la place que le titre lui laisse, sans jamais passer sous le bas de
+     l'écran : la largeur du CSS d'abord, rognée ici si la hauteur manque (le titre change de hauteur quand la
+     case des images s'ouvre, d'où l'observateur) */
+  const shot = $(".x-hero-sh"), hleft = $(".x-hero-l");
+  if (shot && hleft) {
+    const fitShot = () => {
+      shot.style.removeProperty("width");
+      const room = innerHeight - (hleft.getBoundingClientRect().top + (scrollY || 0))
+        - (parseFloat(getComputedStyle(shot).marginTop) || 0) - 20;
+      shot.style.width = Math.round(Math.min(shot.offsetWidth, Math.max(260, room * 1.6))) + "px";
+    };
+    fitShot(); addEventListener("resize", fitShot);
+    if ("ResizeObserver" in window) new ResizeObserver(fitShot).observe(h1);
+  }
   if (fine && !reduce) {
     let rects = null, mx = -1e4, my = -1e4, live = false;
     const heat = chars.map(() => 0);
