@@ -2,8 +2,8 @@
 type: code
 tags: [code, app, react, page, outils]
 fichier: app/src/pages/Tools.tsx
-lignes: 792
-maj: 2026-11-23
+lignes: 793
+maj: 2026-11-25
 ---
 # Tools.tsx
 
@@ -61,6 +61,7 @@ Quatre cartes `.panel.qt` (icône, titre, phrase, pied `.qf` avec le résultat �
 - Pied par défaut : chaque appli se réinstalle depuis le Microsoft Store. Liste vide : « Aucune appli préinstallée à retirer : ton Windows est déjà propre. » (ou « Tout est retiré » juste après une désinstallation).
 
 ### « Réglages windows » (colonne droite, `Panels`)
+- Section `.fit` (25/11, PR #137, demande de Sofiene : pas de vide entre les cartes) : elle prend la hauteur de la carte « applis préinstallées » à côté et fait défiler ses boutons à l'intérieur (`s5/grids.css`). Jamais testé sur Windows.
 - Titre « réglages windows » (`s5.tl.panels`), compte 10, « Les réglages de Windows qu'on cherche toujours, ouverts en un clic. ».
 - Dix boutons `.pn` sur deux colonnes (icône, nom, aide, flèche en coin) : Paramètres graphiques (`gpu`), Affichage avancé (`monitor`), Mode Jeu de Windows (`pad`), Son (`volume`), Souris (`mouse`), Connexions réseau (`wifi`), Options d'alimentation (`power`), Gestionnaire de périphériques (`board`), Effets visuels (`sparkles`), Gestionnaire des tâches (`list`).
 - Un clic : `api.toolsOpen(id)` (commande `tools_open`) ; une erreur est ignorée. Le programme lancé est choisi côté Rust, dans une liste fermée ([[tools.rs]]).

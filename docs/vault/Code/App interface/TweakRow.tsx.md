@@ -2,8 +2,8 @@
 type: code
 tags: [code, app, typescript, react, catalogue, v5]
 fichier: app/src/components/TweakRow.tsx
-lignes: 344
-maj: 2026-11-23
+lignes: 378
+maj: 2026-11-25
 ---
 # TweakRow.tsx
 
@@ -47,10 +47,10 @@ Mode de session : le bouton choisit la variante opposée à l'état connu, puis 
 7. « Also in {module} » pour un renvoi.
 8. Réglage à options : sa phrase (`s5.mod.note.pri_game`, `in_frames`, `in_queue`, `hitreg_suite`, `mc_optifine`), sinon « Size of your RAM, in GB » (variantes en Go), « Your screen's exact rate, in Hz » (en Hz) ou « Picked for this PC » (variante auto).
 
-À côté du nom, l'icône éclair (`zap`) quand l'interrupteur n'a pas besoin de redémarrage.
+À côté du nom, l'icône éclair (`zap`) quand l'interrupteur n'a pas besoin de redémarrage, puis le bouton **info** (`.inf`, icône `info`, libellé `s5.mod.info` : « See what this tweak does ») qui ouvre et ferme le détail.
 
-## Le détail au survol (`.pop`)
-Apparaît après **0,35 s** de survol (styles `s5/app.css`). Contenu : description ; « + » bénéfice (`gain`) ; « − » inconvénients (`cons`) ; avertissement (`warn.*`) et « Windows a changé… » (`tweak.drift`) en orange (`.ft.cf`) ; ligne `.meta` : « restart needed » ou « no restart », « {n} commands » (lignes de la variante choisie, sauf réglage natif), « asks first » si le réglage a un texte de confirmation. S'ouvre vers le haut (`up`) quand le carreau est près du bas de `.main` et qu'il y a la place au-dessus (230 px).
+## Le détail au clic sur l'icône info (`.pop`)
+Depuis le 25/11 (demande de Sofiene : « une petite icône info sur chaque tweak et la pop-up spawn uniquement si je clique dessus »), le détail ne s'ouvre plus au survol. Un clic sur `.inf` l'ouvre (classe `show` sur `.pop`, `open` sur `.inf`, `aria-expanded`) sans basculer l'interrupteur ; un second clic, un clic hors du détail ou Échap le ferment. Le carreau ouvert passe au-dessus des autres (`z-index:6`, styles `s5/app.css`). Contenu : description ; « + » bénéfice (`gain`) ; « − » inconvénients (`cons`) ; avertissement (`warn.*`) et « Windows a changé… » (`tweak.drift`) en orange (`.ft.cf`) ; ligne `.meta` : « restart needed » ou « no restart », « {n} commands » (lignes de la variante choisie, sauf réglage natif), « asks first » si le réglage a un texte de confirmation. S'ouvre vers le haut (`up`, calculé au clic) quand le carreau est près du bas de `.main` et qu'il y a la place au-dessus (230 px). Un clic dans le détail ne bascule pas l'interrupteur. Jamais testé sur Windows.
 
 ## Classes du carreau
 `on` (appliqué et pas en cours d'annulation), `pend` (coché), `undo`, `drift`, `blk`, `advx`, `var`, `sess`, `lock`, `focused`. L'interrupteur reprend `on`, `pend`, `undo`.
@@ -65,5 +65,5 @@ Quand `focusTweak` vise ce carreau : défilement doux jusqu'à lui (centré), cl
 - Styles : `s5/pages/module.css` et le bloc « modules » de `s5/app.css` ([[Styles de l'app (CSS)]]). Image : `assets/s5/img/game/grass-block.svg`.
 
 ## À savoir avant de modifier
-- Le clic sur tout le carreau bascule l'interrupteur : chaque bouton ou zone intérieure (options, menu, run, session, lien « apply again ») arrête la propagation du clic.
+- Le clic sur tout le carreau bascule l'interrupteur : chaque bouton ou zone intérieure (options, menu, run, session, lien « apply again », icône info, détail) arrête la propagation du clic.
 - La règle « appliqué = jamais verrouillé » est une promesse aux joueurs : un ancien Premium doit toujours pouvoir annuler.
