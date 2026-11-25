@@ -133,7 +133,15 @@ mod etw {
 
     /// Microsoft-Windows-Kernel-Network
     const PROVIDER: GUID = GUID::from_u128(0x7dd42a49_5329_4832_8dfd_43d979153a88);
-    const NAME: &str = "Rago-GamePing";
+    /// Nom de la session ETW. L'exe de test a la sienne : avec le même nom, l'exe de test et le vrai Rago (souvent lancés
+    /// ensemble) arrêtaient chacun la session de l'autre au démarrage, et aucun des deux n'avait de ping (25/11).
+    fn session_name() -> &'static str {
+        if crate::reset::IDENTIFIER == "gg.rago.optimizer" {
+            "Rago-GamePing"
+        } else {
+            "Rago-GamePing-Test"
+        }
+    }
     /// Plus personne ne demande depuis tout ce temps : la session s'arrête.
     const IDLE: Duration = Duration::from_secs(30);
 
@@ -173,7 +181,7 @@ mod etw {
 
     /// Propriétés d'une session temps réel à ce nom (le nom est copié derrière la structure).
     fn properties() -> Vec<u64> {
-        let name = wide(NAME);
+        let name = wide(session_name());
         let size = std::mem::size_of::<EVENT_TRACE_PROPERTIES>() + name.len() * 2;
         let mut buf = vec![0u64; size.div_ceil(8)];
         let p = buf.as_mut_ptr().cast::<EVENT_TRACE_PROPERTIES>();
@@ -191,7 +199,7 @@ mod etw {
     }
 
     fn stop_named() {
-        let name = wide(NAME);
+        let name = wide(session_name());
         let mut props = properties();
         unsafe {
             ControlTraceW(CONTROLTRACE_HANDLE { Value: 0 }, name.as_ptr(), props.as_mut_ptr().cast(), EVENT_TRACE_CONTROL_STOP);
@@ -199,7 +207,7 @@ mod etw {
     }
 
     fn start() -> bool {
-        let name = wide(NAME);
+        let name = wide(session_name());
         let mut handle = CONTROLTRACE_HANDLE { Value: 0 };
         let mut props = properties();
         let mut rc = unsafe { StartTraceW(&mut handle, name.as_ptr(), props.as_mut_ptr().cast()) };
@@ -222,7 +230,7 @@ mod etw {
         std::thread::Builder::new()
             .name("rago-flows".into())
             .spawn(|| {
-                let mut name = wide(NAME);
+                let mut name = wide(session_name());
                 let mut log: EVENT_TRACE_LOGFILEW = unsafe { std::mem::zeroed() };
                 log.LoggerName = name.as_mut_ptr();
                 log.Anonymous1.ProcessTraceMode = PROCESS_TRACE_MODE_REAL_TIME | PROCESS_TRACE_MODE_EVENT_RECORD;

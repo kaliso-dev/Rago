@@ -1191,6 +1191,20 @@ fn overlay_open_app(app: AppHandle, overlay: State<'_, Arc<overlay::Overlay>>, p
     }
 }
 
+/// Exe de test seulement : le vrai Rago Optimizer (« Rago Optimizer.exe ») tourne aussi sur ce PC. Les deux prennent
+/// Alt+X et affichent chacun leur barre en jeu : l'interface demande de quitter l'autre pendant le test (25/11).
+#[tauri::command]
+async fn other_rago_running() -> bool {
+    if reset::IDENTIFIER == "gg.rago.optimizer" {
+        return false;
+    }
+    tauri::async_runtime::spawn_blocking(|| {
+        games::process_paths().iter().any(|p| p.file_name().is_some_and(|f| f.to_string_lossy().eq_ignore_ascii_case("Rago Optimizer.exe")))
+    })
+    .await
+    .unwrap_or(false)
+}
+
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 /// Fenêtre de la maquette v5 (1440 x 900) : sur un écran plus petit, elle prend la zone de travail (barre des tâches
 /// exclue) moins une marge, sans descendre sous la taille minimale, et reste centrée.
@@ -1479,6 +1493,7 @@ pub fn run() {
             overlay_close,
             overlay_set_pin,
             overlay_open_app,
+            other_rago_running,
             open_task_manager,
             minecraft_status,
             minecraft_restore,

@@ -130,8 +130,8 @@ pub struct Account {
 
 impl Account {
     pub fn new() -> Self {
-        let dir = std::env::var("LOCALAPPDATA").map(PathBuf::from).unwrap_or_else(|_| std::env::temp_dir()).join("Rago");
-        Account { path: dir.join("account.bin"), photo: Mutex::new(None) }
+        // à côté de la licence, dans le dossier de cette version (l'exe de test a le sien)
+        Account { path: crate::license::secrets_dir().join("account.bin"), photo: Mutex::new(None) }
     }
 
     fn token(&self) -> Option<String> {

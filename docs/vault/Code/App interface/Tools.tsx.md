@@ -2,12 +2,12 @@
 type: code
 tags: [code, app, react, page, outils]
 fichier: app/src/pages/Tools.tsx
-lignes: 793
+lignes: 795
 maj: 2026-11-25
 ---
 # Tools.tsx
 
-La **page Outils**, refaite le 23/11 à l'identique de la maquette v5 `app-tools.html` (dans `staging` : PR #124, fusionnée le 23/11). En-tête avec la place à libérer, quatre cartes « en un clic », quatre panneaux d'entretien sur deux colonnes (nettoyage, applis au démarrage, applis préinstallées, réglages de Windows), les pilotes sur toute la largeur, puis toutes les actions à bouton « run » des autres onglets. Fiche parente : [[Code de l'app (interface)]]. Fonctionnalité : [[Page Outils]]. Côté Rust : [[tools.rs]] (et les commandes de [[lib.rs]]). Socle v5 : [[Maquettes v5 dans l'app (s5)]].
+La **page Outils**, refaite le 23/11 à l'identique de la maquette v5 `app-tools.html` (dans `staging` : PR #124, fusionnée le 23/11). En-tête avec la place à libérer, quatre cartes « en un clic », quatre panneaux d'entretien (nettoyage et applis au démarrage côte à côte ; depuis le 25/11, applis préinstallées et réglages de Windows chacun sur toute la largeur), les pilotes sur toute la largeur, puis toutes les actions à bouton « run » des autres onglets. Fiche parente : [[Code de l'app (interface)]]. Fonctionnalité : [[Page Outils]]. Côté Rust : [[tools.rs]] (et les commandes de [[lib.rs]]). Socle v5 : [[Maquettes v5 dans l'app (s5)]].
 
 Statut : CONFIRMÉ dans le code de `staging` et dans la démo du navigateur (captures `26-…` à `29-…` de `rago-redesign/app-strict/`, positions des blocs identiques à la maquette au pixel près). **Jamais testé sur Windows.** Les commandes Rust n'ont pas changé : celles des cartes Nettoyage, Applis préinstallées et Pilotes datent de `ee77d4f` (10/11), les autres de la PR #90 (11/11).
 
@@ -34,7 +34,7 @@ Statut : CONFIRMÉ dans le code de `staging` et dans la démo du navigateur (cap
 Quatre cartes `.panel.qt` (icône, titre, phrase, pied `.qf` avec le résultat à gauche et le bouton `.run` à droite). Une carte dont l'action a réussi prend un liseré rouge (`.done`).
 - **Vider le cache de la RAM** (icône `ram`) : `api.cleanRam(cleanTrim)`, le même moteur que « Nettoyer » du [[Tableau de bord]] ([[memory.rs]]). Résultat : « {n} Go libérés » (`s5.tl.freed` : cache vidé, compté à partir de 50 Mo, plus la mémoire rendue par les applis réduites), sinon « Cache déjà vide » (gris), « Nettoyage impossible, réessaie » (rouge) en cas d'échec.
 - **Vider le cache DNS** (icône `globe`) : `api.toolsFlushDns()` ; « Cache DNS vidé. » ou « Windows n'a pas pu vider le cache DNS. Réessaie dans un instant. » (rouge).
-- **Mode d'alimentation** (icône `battery`) : `api.toolsPowerPlans()` au montage ; les modes en lignes `.plans` (rond rouge sur le mode actif, noms donnés par Windows dans sa langue), cliquables et utilisables au clavier (`role="radio"`). Un clic sur un autre mode : `api.toolsSetPowerPlan(guid)`, qui renvoie la liste à jour. Pied fixe : « Le plus performant pour jouer, un mode économe sur batterie. » ; refus : « Windows a refusé le changement. Ce mode est peut-être imposé par une entreprise ou une école. » (rouge), puis la liste est relue. Pendant la lecture : « Lecture des modes… » ; liste vide : « Windows ne donne pas ses modes d'alimentation sur ce PC. ».
+- **Mode d'alimentation** (icône `battery`) : `api.toolsPowerPlans()` au montage ; les modes en lignes `.plans` (rond rouge sur le mode actif, noms donnés par Windows dans sa langue ; un mode sans nom, que Windows rend sous son identifiant, s'affiche « Unnamed plan (F31FECF6) » avec les 8 premiers caractères, `s5.tl.planUnnamed`, depuis le 25/11), cliquables et utilisables au clavier (`role="radio"`). Un clic sur un autre mode : `api.toolsSetPowerPlan(guid)`, qui renvoie la liste à jour. Pied fixe : « Le plus performant pour jouer, un mode économe sur batterie. » ; refus : « Windows a refusé le changement. Ce mode est peut-être imposé par une entreprise ou une école. » (rouge), puis la liste est relue. Pendant la lecture : « Lecture des modes… » ; liste vide : « Windows ne donne pas ses modes d'alimentation sur ce PC. ».
 - **Tester ma connexion** (icône `activity`) : bouton « Ouvrir » (flèche en coin), `goTo("nettest")` : onglet Test de la page Réseau ([[Network.tsx]], [[Test réseau]]).
 
 ### « Nettoyage » (colonne gauche)
@@ -46,6 +46,7 @@ Quatre cartes `.panel.qt` (icône, titre, phrase, pied `.qf` avec le résultat �
 - Le texte de la zone `browsers` promet : le cache seulement, jamais l'historique, les mots de passe ni les cookies. C'est [[tools.rs]] qui tient cette promesse.
 
 ### « Applis au démarrage » (colonne droite)
+- Section `.fit` (25/11, PR #139, après le test de Sofiene : la carte « nettoyage » à côté gardait un grand vide en bas) : elle prend la hauteur du nettoyage, dont le contenu est fixe, et fait défiler sa liste à l'intérieur (`s5/grids.css`). Jamais testé sur Windows.
 - Au montage, `api.toolsStartup()` (commande `tools_startup`). Compte à côté du titre : « 7 / 9 démarrent avec windows » (`s5.tl.startCnt`). Phrase d'accroche : « Tout ce qui démarre avec Windows rallonge le démarrage et tourne pendant tes parties. Steam, Epic, Discord, Spotify ou Edge n'en ont pas besoin : tu les ouvres quand tu veux. »
 - Une ligne par programme, **dans l'ordre alphabétique de [[tools.rs]]** comme la maquette (avant le 23/11, les programmes gardés allaient à la fin) : nom, éditeur et « Tous les comptes » si l'entrée vaut pour tout le PC ; la commande complète en info-bulle ; un interrupteur (`Sw` de `s5/ui.tsx`). Une ligne coupée est grisée (`.off`).
 - Programme gardé (`keep`) : étiquette « gardé » avec un cadenas (info-bulle « Gardé : Windows ou ton matériel en a besoin. »), interrupteur bloqué tant qu'il est allumé et affiché à pleine couleur (s'il était déjà coupé, on peut le rallumer).
@@ -53,15 +54,16 @@ Quatre cartes `.panel.qt` (icône, titre, phrase, pied `.qf` avec le résultat �
 - Pied : « Couper un programme ne le désinstalle pas. Effet au prochain démarrage du PC. » (`s5.tl.startNote`, texte de la maquette).
 - Pendant la lecture : « Lecture des programmes au démarrage… » ; liste vide : « Rien ne démarre avec Windows : ton démarrage est déjà propre. ».
 
-### « Applis préinstallées » (colonne gauche)
+### « Applis préinstallées » (toute la largeur depuis le 25/11)
+- Section `.wide` (PR #139) : elle n'a plus de voisine, sa hauteur suit le nombre d'applis trouvées sur le PC ; les cases s'étalent sur autant de colonnes que la largeur le permet (210 px au moins chacune).
 - Au montage, `api.toolsApps()` (commande `tools_apps`) liste les applis préinstallées ou sponsorisées présentes ; un échec donne une liste vide. Le Store, Xbox et la Game Bar ne sont jamais proposés (texte `tools.apps.lead`, liste tenue par [[tools.rs]]). Compte : « 12 trouvées » (`s5.tl.found`).
 - **Décochées d'office** (`APP_KEEP`, applis qu'on peut vraiment utiliser) : `MSTeams`, `MicrosoftTeams`, `Microsoft.OutlookForWindows`, `microsoft.windowscommunicationsapps`, `Microsoft.MicrosoftOfficeHub`, `Microsoft.YourPhone`, `SpotifyAB.SpotifyMusic`, `Microsoft.Todos`. Toutes les autres sont cochées.
 - Cases `.bl` sur trois colonnes, cliquables et utilisables au clavier ; le nom vient de l'appli elle-même (`a.name[lang]`).
 - Désinstallation en **deux clics** : « Désinstaller {n} applis », puis « Annuler » ou le bouton rouge « Oui, désinstaller ({n}) ». Appel `api.toolsRemoveApps(ids)` (commande `tools_remove_apps`), qui renvoie les applis encore là ; le pied affiche « {n} applis désinstallées. ».
 - Pied par défaut : chaque appli se réinstalle depuis le Microsoft Store. Liste vide : « Aucune appli préinstallée à retirer : ton Windows est déjà propre. » (ou « Tout est retiré » juste après une désinstallation).
 
-### « Réglages windows » (colonne droite, `Panels`)
-- Section `.fit` (25/11, PR #137, demande de Sofiene : pas de vide entre les cartes) : elle prend la hauteur de la carte « applis préinstallées » à côté et fait défiler ses boutons à l'intérieur (`s5/grids.css`). Jamais testé sur Windows.
+### « Réglages windows » (toute la largeur depuis le 25/11, `Panels`)
+- Section `.wide` (PR #139). Du 25/11 (PR #137) au test de Sofiene le même jour, elle était `.fit` à côté des applis préinstallées : sur un PC avec peu d'applis, elle se retrouvait écrasée dans une petite zone qui défile. Jamais testé sur Windows.
 - Titre « réglages windows » (`s5.tl.panels`), compte 10, « Les réglages de Windows qu'on cherche toujours, ouverts en un clic. ».
 - Dix boutons `.pn` sur deux colonnes (icône, nom, aide, flèche en coin) : Paramètres graphiques (`gpu`), Affichage avancé (`monitor`), Mode Jeu de Windows (`pad`), Son (`volume`), Souris (`mouse`), Connexions réseau (`wifi`), Options d'alimentation (`power`), Gestionnaire de périphériques (`board`), Effets visuels (`sparkles`), Gestionnaire des tâches (`list`).
 - Un clic : `api.toolsOpen(id)` (commande `tools_open`) ; une erreur est ignorée. Le programme lancé est choisi côté Rust, dans une liste fermée ([[tools.rs]]).

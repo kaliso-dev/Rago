@@ -2,7 +2,7 @@
 type: code
 tags: [code, app, typescript, react, analyse]
 fichier: app/src/pages/Analysis.tsx
-lignes: 466
+lignes: 502
 maj: 2026-11-25
 ---
 # Analysis.tsx
@@ -39,10 +39,11 @@ Racine `div.pg-mod.pg-an.is-page` (socle des pages de module, `s5/pages/module.c
   - bouton rouge, dans cet ordre de priorité : « Measure again » si des tweaks ont été appliqués depuis (`changed`) ; « Apply the N free tweaks that fix it » (icône `zap`) s'il reste des tweaks gratuits utiles, présents dans `FREE` et pas encore appliqués → `requestApplyEntries(freeTweaks)` ([[store.tsx]], ouvre [[ConfirmDialog.tsx]]) ; « Open Latency » (icône `gauge`) en Premium avec des points Premium → `goTo("latency")` ;
   - en gratuit avec des points Premium : « See what Premium adds » (icône `lock`) → offre `analysis` ([[Upsell.tsx]]) ; ce bouton devient rouge s'il n'y a pas d'autre bouton rouge ;
   - lien « analyze again » dans la rangée quand il y a un avant/après (et pas de `changed`).
-- **Quatre groupes** (`.groups` > `section.grp`, ordre network, FPS, system, windows) : titre en ruban et « 1 / 5 above normal » (`s5.pa.cnt`), puis une ligne `.r` par point (classe `iss` si en défaut) :
+- **Quatre groupes** (`section.grp`, ordre network, FPS, system, windows) : titre en ruban et « 1 / 5 above normal » (`s5.pa.cnt`), puis une ligne `.r` par point (classe `iss` si en défaut) :
   - nom (`pa.<id>`), norme (`pa.norm.*` avec ses variables : fréquence max de l'écran, vitesse nominale de la mémoire, moitié des FPS, seuil réseau et son origine `pa.norm.usual` ou `pa.norm.atPing`), et pour un point « à faire soi-même » en défaut, la marche à suivre (`pa.diy.*`, première lettre en majuscule) ;
   - valeur : nombre et unité (« 14 ms », « 4800 MT/s », « 38 d » affiché « 38 j » en français), ou texte (« Cable », « Off », « High performance ») ; pour les applis de fond, les deux premières puis « +N », la liste entière en info-bulle ;
   - badge `.vt` : « fine », « free » (`zap`), « premium » (`lock` seulement en gratuit), « do it yourself » (`wrench`).
+- **Placement des groupes** (25/11, PR #139, après le test de Sofiene : la carte FPS, seule à côté de « network », s'étirait avec un grand vide) : la fonction privée `splitGroups` essaie toutes les répartitions des groupes affichés en deux colonnes (le premier reste à gauche, le titre d'un groupe compte pour une ligne) et garde la plus équilibrée. Si la colonne la plus courte fait au moins 75 % de l'autre : `div.groups.cols2` avec deux `div.gcol` empilées, chaque groupe grandissant selon son nombre de lignes (`--n`) ; sinon `div.groups.one`, une seule colonne pleine largeur. Styles dans `s5/grids.css`. Jamais testé sur Windows.
 - **Pied** (`p.mfoot`) : « Measured today at 21:20. » ou « Measured on 20 Nov 2026 at 22:30. », lien « analyze again » (quand il n'est pas déjà dans la rangée, qu'il y a des points en défaut et pas de `changed`), lien « start over » (`resetBaseline` : l'analyse suivante redevient l'« avant », l'habitude réseau est gardée). Liens en minuscules comme la maquette.
 
 ### Lancement automatique et mise à jour

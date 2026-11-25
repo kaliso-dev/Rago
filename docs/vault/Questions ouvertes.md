@@ -1,7 +1,7 @@
 ---
 type: pilotage
 tags: [pilotage, à-décider, à-vérifier]
-maj: 2026-11-23
+maj: 2026-11-25
 ---
 # Questions ouvertes
 
@@ -31,11 +31,13 @@ Posées le 23/11, pendant la refonte de l'app sur les maquettes v5 (fil « refon
 - q116 : échec du nettoyage de la RAM écrit en vert dans la barre en jeu ([[Overlay.tsx]]).
 - q117 : le Packet Optimizer en gratuit montre l'écran verrouillé avec les 4 outils gratuits, au lieu de l'écran « part of Premium » ([[Packet Optimizer]], [[NetOpt.tsx]]).
 
+Posée le 25/11, après le test Windows de Sofiene (PR #139) :
+- q121 : la barre en jeu sort-elle encore du jeu (autre page, jeu réduit) une fois la 1.2.1 quittée ? ([[Barre en jeu]])
+
 Au 10/11, après les réponses de Sofiene du jour (q36 à q68 traitées, q46 le 10/11 à 15 h, voir [[Décisions]]) :
 - q65 : réglages Railway de prod (Wait for CI, Watch Paths, Healthcheck, moniteur) ; Sofiene demande à Claude de vérifier et de le lui rappeler ([[Railway]]).
 
 Posées le 10/11 au soir (q70 à q93), après la relecture complète du code pour le vault détaillé (dossier `Code/`) :
-- q70 : l'exe de test et le vrai exe partagent la même licence sur un PC ([[license.rs]]).
 - q73 : 4 réglages de carte graphique jamais grisés ([[meta.py]]).
 - q74 : provenance et licence de NVIDIA Profile Inspector ([[Configuration Tauri]]).
 - q75 : 73 ou 68 réglages gratuits affichés ; `FREE_TWEAKS` sur Railway ([[sync_tweaks.py]], [[config.js]]).

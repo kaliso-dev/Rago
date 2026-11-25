@@ -9,8 +9,16 @@ use std::sync::{Arc, Mutex};
 use std::time::{Duration, Instant};
 
 pub const EXE: &str = "PresentMon.exe";
-/// Session ETW à notre nom : une session laissée par un arrêt brutal est reprise au lancement suivant.
-const SESSION: &str = "RagoOptimizerFps";
+/// Session ETW à notre nom : une session laissée par un arrêt brutal est reprise au lancement suivant. L'exe de test a la
+/// sienne : avec le même nom, il arrêtait celle du vrai Rago lancé en même temps (`--stop_existing_session`), et
+/// inversement (25/11).
+fn session_name() -> &'static str {
+    if crate::reset::IDENTIFIER == "gg.rago.optimizer" {
+        "RagoOptimizerFps"
+    } else {
+        "RagoOptimizerFpsTest"
+    }
+}
 /// Fenêtre de calcul : les FPS sur la dernière seconde.
 const WINDOW: Duration = Duration::from_secs(1);
 /// Sans image depuis ce délai (jeu en pause, réduit) : plus de valeur.
@@ -206,7 +214,7 @@ fn start(exe: &PathBuf, pid: u32) -> Option<Tracker> {
     }
     let mut child = crate::shell::hidden(&exe.to_string_lossy())
         .args(["--process_id", &pid.to_string(), "--output_stdout", "--stop_existing_session", "--terminate_on_proc_exit"])
-        .args(["--session_name", SESSION])
+        .args(["--session_name", session_name()])
         .stdout(Stdio::piped())
         .stderr(Stdio::null())
         .spawn()

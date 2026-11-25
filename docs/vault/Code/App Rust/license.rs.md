@@ -2,8 +2,8 @@
 type: code
 tags: [code, app, rust, licence]
 fichier: app/src-tauri/src/license.rs
-lignes: 691
-maj: 2026-11-10
+lignes: 719
+maj: 2026-11-25
 ---
 # license.rs
 
@@ -51,7 +51,8 @@ Sans `RAGO_API_BASE` ou sans clé publique, l'état est `unconfigured` (build ho
 | `struct Status {state, email, plan, key_hint, expires_at, needs_refresh, device_name}` | `state` ∈ `active`, `none`, `expired`, `unconfigured` ; `expires_at` en ms |
 | `enum LoginResult` | `ActivationRequired {email, key_hint}` ou `Active {status}` (JSON `{"kind": …}`) |
 | `struct Link {link_id, poll_token, code, url}` | connexion par le navigateur (1.3.0) |
-| `License::new()` | fichier `%LOCALAPPDATA%\Rago\license.bin` (repli `%TEMP%\Rago`) |
+| `License::new()` | fichier `license.bin` de `secrets_dir()` (repli `%TEMP%`) |
+| `secrets_folder(identifiant)`, `secrets_dir()` | dossier des jetons : `%LOCALAPPDATA%\Rago\` pour le vrai Rago Optimizer, `%LOCALAPPDATA%\Rago (gg.rago.optimizer.staging)\` pour l'exe de test (25/11, PR #139). Aussi utilisé par [[account.rs]] |
 | `device()` | empreinte calculée au premier besoin (`OnceLock`) |
 | `status()` | vérification hors ligne |
 | `login(email, mot de passe)` | POST `/auth/login` |
@@ -87,7 +88,7 @@ L'interface (`store.tsx`) appelle `license_refresh` au démarrage puis toutes le
 `sign_out` prend le même verrou `write` : un rafraîchissement en vol ne peut pas remettre un jeton effacé.
 
 ## Données touchées
-- `%LOCALAPPDATA%\Rago\license.bin` (jeton, DPAPI) et `%LOCALAPPDATA%\Rago\scripts.bin` (clé des scripts en base64, DPAPI). Ce dossier est partagé par l'exe de test et le vrai : À VÉRIFIER (le chemin ne dépend pas de l'identifiant ; un jeton staging et un jeton prod s'écraseraient sur un même PC).
+- `license.bin` (jeton, DPAPI) et `scripts.bin` (clé des scripts en base64, DPAPI), dans `%LOCALAPPDATA%\Rago\` pour le vrai Rago Optimizer, `%LOCALAPPDATA%\Rago (gg.rago.optimizer.staging)\` pour l'exe de test. Jusqu'au 25/11, les deux partageaient `%LOCALAPPDATA%\Rago\` : chacun refusait la signature du jeton de l'autre et l'effaçait (`status()` appelle `clear()`). Sofiene, connecté en Premium dans l'exe de test avec la 1.2.1 lancée à côté, avait des tweaks refusés « This tweak is part of Premium » (PR #139, jamais testé sur Windows). Test `test_exe_keeps_its_own_tokens`.
 - Réseau : `<API_BASE>/auth/login`, `/auth/app-link/start`, `/auth/app-link/poll`, `/licenses/activate`, `/licenses/refresh`, `/route/token`.
 - Lit le registre (MachineGuid) et WMI.
 

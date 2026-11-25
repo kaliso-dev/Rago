@@ -3,7 +3,7 @@ type: code
 tags: [code, app, rust, build]
 fichier: app/src-tauri/Cargo.toml
 lignes: 45
-maj: 2026-11-11
+maj: 2026-11-25
 ---
 # Cargo.toml
 
@@ -61,6 +61,7 @@ Liaisons brutes vers l'API Windows. Une feature par partie de l'API :
 | `Win32_System_Power` | [[session.rs]] |
 | `Win32_System_Services` | [[rbw.rs]] |
 | `Win32_System_Diagnostics_Etw` | [[flows.rs]] (journal réseau du ping des jeux) |
+| `Win32_Globalization` | [[shell.rs]] (`MultiByteToWideChar` : sortie de `powercfg` en page de code de la console) ; ajoutée le 25/11 (PR #139) |
 | `Win32_Storage_FileSystem` | [[display.rs]] (fichier du jeu en lecture seule) |
 | `Win32_Graphics_Gdi` | [[icon.rs]], [[analysis.rs]], [[overlay.rs]], [[display.rs]] (écrans, résolution) |
 | `Win32_UI_ColorSystem`, `Win32_System_Memory` | [[display.rs]] : rampe gamma (`GetDeviceGammaRamp`, `SetDeviceGammaRamp`) et mémoire demandée par le pilote AMD (`HeapAlloc`) ; ajoutées le 11/11 (PR #93) |

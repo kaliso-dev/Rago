@@ -184,6 +184,8 @@ const fr = {
 
   "demo.banner": "Démo web : les réglages sont simulés",
   "staging.banner": "Serveur de test (staging)",
+  "staging.other": "Rago Optimizer est aussi lancé : quitte-le",
+  "staging.otherLong": "Le vrai Rago Optimizer tourne en même temps que l'exe de test : deux barres en jeu s'ouvrent sur Alt+X. Quitte-le depuis son icône près de l'horloge (clic droit, Quitter) pendant le test.",
 
   "free.lock": "Premium",
   "free.plan": "Plan gratuit",
@@ -1396,6 +1398,7 @@ const fr = {
   "s5.tl.toFree": "à libérer, {all} trouvés",
   "s5.tl.freed": "{n} Go libérés",
   "s5.tl.powerNote": "Le plus performant pour jouer, un mode économe sur batterie.",
+  "s5.tl.planUnnamed": "Mode sans nom ({id})",
   "s5.tl.startCnt": " / {n} démarrent avec windows",
   "s5.tl.kept": "gardé",
   "s5.tl.startNote": "Couper un programme ne le désinstalle pas. Effet au prochain démarrage du PC.",
@@ -1668,6 +1671,8 @@ const en: Record<Key, string> = {
   "palette.remove": "Remove from my selection",
   "demo.banner": "Web demo, tweaks are simulated",
   "staging.banner": "Test server (staging)",
+  "staging.other": "Rago Optimizer is also running: quit it",
+  "staging.otherLong": "The real Rago Optimizer runs alongside the test exe: two in-game bars open on Alt+X. Quit it from its icon near the clock (right-click, Quit) while testing.",
   "free.lock": "Premium",
   "free.plan": "Free plan",
   "free.upgrade": "Get Premium",
@@ -2879,6 +2884,7 @@ const en: Record<Key, string> = {
   "s5.tl.toFree": "to free, {all} found",
   "s5.tl.freed": "{n} GB freed",
   "s5.tl.powerNote": "The fastest one to play, a saving one on battery.",
+  "s5.tl.planUnnamed": "Unnamed plan ({id})",
   "s5.tl.startCnt": " / {n} start with windows",
   "s5.tl.kept": "kept",
   "s5.tl.startNote": "Turning a program off doesn't uninstall it. Takes effect at your next restart.",

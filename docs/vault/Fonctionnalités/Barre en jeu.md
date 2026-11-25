@@ -2,13 +2,18 @@
 type: fonctionnalité
 tags: [fonctionnalité, app, 1.2]
 version_app: 1.2.1
-maj: 2026-11-24
+maj: 2026-11-25
 ---
 # Barre en jeu
 
 Linear RAG-82. Arrivée en [[Version 1.2.0]]. Code : [[overlay.rs]], [[fps.rs]], [[gameping.rs]], [[mcping.rs]], [[flows.rs]], [[icmp.rs]], interface [[Overlay.tsx]] (détail dans « Code » plus bas). Nécessite que Rago tourne ([[Arrière-plan et démarrage]]).
 
 **Look v5** (PR #108 du 22/11, puis refaite au pixel sur les maquettes `app-ingame` et `app-ingame-states` par la PR #132 du 24/11, sur `staging`, jamais testé sur Windows) : charte « Match day » ([[Charte graphique]]) ; barre de 780 × 600 en verre sombre, chiffres en condensé penché (FPS en rouge), conseils de la partie à gauche (« This game ») et réglages en direct à droite, pastille de 236 × 44 avec le logo rond R rouge sur blanc. Code : [[Overlay.tsx]], styles [[Maquettes v5 dans l'app (s5)]].
+
+**Retours du test Windows du 25/11** (PR #139 vers `staging`, jamais testé sur Windows) :
+- **Opacité** : Sofiene ne voyait rien à travers la barre (« il faut que la game bar soit beaucoup plus opaque ») : le verre de la barre est maintenant opaque et celui de la pastille l'est à 96 % (`s5/overlay.css`).
+- **« L'ancienne barre » qui entre en conflit** : c'est la vraie 1.2.1 installée, qui tournait en même temps que l'exe de test ; les deux prennent Alt+X et ouvrent chacune leur barre. Les deux apps utilisaient aussi les mêmes sessions de mesure Windows (ping : « Rago-GamePing » de [[flows.rs]] ; FPS : « RagoOptimizerFps » de [[fps.rs]], lancée avec `--stop_existing_session`) : chacune arrêtait celle de l'autre, d'où **pas de ping** dans la pastille. L'exe de test a maintenant ses propres sessions (« Rago-GamePing-Test », « RagoOptimizerFpsTest ») et affiche un avertissement rouge en haut quand le vrai Rago tourne aussi ([[TitleBar.tsx]]). Pendant un test, quitter le vrai Rago depuis son icône près de l'horloge.
+- **La barre « envoie sur une autre page » et le jeu se ferme ou se réduit** : rien n'a été changé dans la façon dont la barre prend le premier plan. Le plus probable est que c'était la barre de la 1.2.1 ouverte en même temps. À VÉRIFIER : Sofiene doit refaire le test sans la 1.2.1 lancée et dire sur quel jeu ça arrive encore (question q121 sur la page « Questions du vault Rago »).
 
 ## Ouvrir et fermer
 - **Alt+X** (par défaut, modifiable dans les [[Paramètres de l'app]] ; c'était Ctrl+Maj+R avant le 22/10). Le raccourci n'est pris à Windows **que quand un jeu est au premier plan** (ou la barre ouverte) : ailleurs il reste à l'app active (ex. Ctrl+Maj+R recharge toujours Chrome).

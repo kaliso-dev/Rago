@@ -2,8 +2,8 @@
 type: code
 tags: [code, app, typescript, react]
 fichier: app/src/components/RunOverlay.tsx
-lignes: 249
-maj: 2026-11-23
+lignes: 265
+maj: 2026-11-25
 ---
 # RunOverlay.tsx
 
@@ -27,7 +27,7 @@ Tout ce qui suit est CONFIRMÉ (code de `staging`, PR #130 fusionnée le 23/11).
 - Barre `div.pg2` en cases : une case par élément, 40 cases au plus (au-delà, chaque case couvre plusieurs éléments) : hachurée rouge (`.x`) si l'un a échoué, pleine (`.d`) si tous sont finis, en cours (`.r`) si l'un tourne ou est fini ; une case dont tous les éléments sont sautés reste vide.
 - Pendant le lot : nom de l'élément en cours (`span.nm3`, « Annuler · Nom » pour une annulation) et bouton « stop » → `api.cancelRun()`.
 - **Bilan** à la fin (`div.cur`) : `p.sum` pour le compte, `p.er3` (icône `alert`, rouge) pour les erreurs, `p.rb3` pour le redémarrage et le jeu ; un message long (point de restauration) se lit à gauche, l'icône sur la première ligne :
-  - erreur de lancement (refus du moteur, texte déjà traduit par le store) en rouge ;
+  - erreur de lancement (refus du moteur, texte déjà traduit par le store) en rouge ; si c'est le refus Premium (`err.premium_required`) et que l'app ne se croit pas Premium, un bouton « Sign in » dessous ferme l'écran et ouvre la connexion (ajouté le 25/11, PR #139, jamais testé sur Windows) ;
   - sinon « {ok} sur {total} terminés en {s} s » ;
   - point de restauration raté (`restoreFailed`) : un des quatre textes selon ce qui s'est passé —
     `run.restoreFailed` (rien n'a été changé, conseil d'activer la protection du système),

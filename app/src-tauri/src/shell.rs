@@ -34,6 +34,35 @@ pub fn powershell(script: &str) -> Option<String> {
     }
 }
 
+/// Sortie d'un programme de Windows : UTF-8 quand c'en est, sinon la page de code OEM de la console. powercfg écrit
+/// dans cette page de code (CP850 sur un Windows français) : lue en UTF-8, « Recommandé par HP » devenait
+/// « Recommand? par?HP » (retour de Sofiene du 25/11).
+pub fn decode_output(bytes: &[u8]) -> String {
+    if let Ok(s) = std::str::from_utf8(bytes) {
+        return s.to_string();
+    }
+    #[cfg(windows)]
+    if let Some(s) = oem_to_string(bytes) {
+        return s;
+    }
+    String::from_utf8_lossy(bytes).into_owned()
+}
+
+#[cfg(windows)]
+fn oem_to_string(bytes: &[u8]) -> Option<String> {
+    use windows_sys::Win32::Globalization::{MultiByteToWideChar, CP_OEMCP};
+    let len = i32::try_from(bytes.len()).ok().filter(|n| *n > 0)?;
+    unsafe {
+        let n = MultiByteToWideChar(CP_OEMCP, 0, bytes.as_ptr(), len, std::ptr::null_mut(), 0);
+        if n <= 0 {
+            return None;
+        }
+        let mut buf = vec![0u16; n as usize];
+        let m = MultiByteToWideChar(CP_OEMCP, 0, bytes.as_ptr(), len, buf.as_mut_ptr(), n);
+        (m > 0).then(|| String::from_utf16_lossy(&buf[..m as usize]))
+    }
+}
+
 /// Vrai si le processus courant tourne avec un jeton administrateur élevé.
 #[cfg(windows)]
 pub fn is_elevated() -> bool {

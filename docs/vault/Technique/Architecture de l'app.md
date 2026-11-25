@@ -2,7 +2,7 @@
 type: technique
 tags: [technique, app, architecture]
 version_app: 1.3.0
-maj: 2026-11-22
+maj: 2026-11-25
 ---
 # Architecture de l'app
 
@@ -83,7 +83,7 @@ Fermeture de la fenêtre principale : cachée si une remise est en cours ou si l
 **Chiffrement des scripts** (`seal.rs`, `embed_scripts.rs`) : aucune commande n'est en clair dans l'exe. Deux paquets : gratuit + retours arrière (clé reconstruite dans le binaire, `seal::offline_key(version)`) et Premium (clé `scripts_key` envoyée par le serveur à une licence active, gardée DPAPI dans `scripts.bin`). Flux HMAC-SHA256 en mode compteur + étiquette HMAC. La version de l'app fait partie de la clé : `app_version` envoyé au serveur doit être exactement celui de `Cargo.toml`.
 
 ## 6. Fichiers sur le PC du joueur
-- `%LOCALAPPDATA%\Rago\` : `license.bin` (jeton), `scripts.bin` (clé des scripts Premium), `account.bin` (jeton de compte), tous chiffrés DPAPI.
+- `%LOCALAPPDATA%\Rago\` (exe de test : `%LOCALAPPDATA%\Rago (gg.rago.optimizer.staging)\`, depuis le 25/11) : `license.bin` (jeton), `scripts.bin` (clé des scripts Premium), `account.bin` (jeton de compte), tous chiffrés DPAPI.
 - `%APPDATA%\gg.rago.optimizer\` (staging : `gg.rago.optimizer.staging`) : `applied.json` et `history.json` (chiffrés), `background.json`, `session.json`, `tips-done.json`, `display.json`, `display-restore.json`, `reset-pending.json`, `games.json`, `overlay-games.json`, `last-match.json`, `netopt\` (dernière application du [[Packet Optimizer]]), `backup\*.reg`, `logs\` (`run-<ms>.log` des lots, `reset-<ms>.log`, `repairs.log` : à demander au joueur), `run\` (scripts temporaires, vidé), `art\` (images des jeux), `reports\`. Liste complète avec le module qui écrit chaque fichier : [[Code de l'app (Rust)]].
 - Installé : `Program Files\Rago Optimizer\` avec `resources\` (`nvidiaProfileInspector.exe`, `PresentMon.exe` ajouté par la CI).
 

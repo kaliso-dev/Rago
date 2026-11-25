@@ -377,10 +377,32 @@ fn field(v: &Value, path: &[&str]) -> Option<String> {
     cur.as_str().map(str::to_string)
 }
 
+/// Identifiant du vrai Rago Optimizer (tauri.conf.json).
+const PROD_IDENTIFIER: &str = "gg.rago.optimizer";
+
+/// Nom du dossier des jetons dans %LOCALAPPDATA% : « Rago » pour le vrai Rago Optimizer, un dossier à part pour l'exe
+/// de test. Les deux tournent souvent sur le même PC ; leurs jetons sont signés par deux serveurs différents, et chacun
+/// effaçait celui de l'autre (signature refusée) : connecté en Premium dans l'exe de test, le joueur se retrouvait
+/// sans licence dès que la 1.2.1 installée relisait le fichier (retour de Sofiene du 25/11).
+pub fn secrets_folder(identifier: &str) -> String {
+    if identifier == PROD_IDENTIFIER {
+        "Rago".into()
+    } else {
+        format!("Rago ({identifier})")
+    }
+}
+
+/// Dossier des jetons de cette version (licence, clé des scripts Premium, compte), chiffrés DPAPI.
+pub fn secrets_dir() -> PathBuf {
+    std::env::var("LOCALAPPDATA")
+        .map(PathBuf::from)
+        .unwrap_or_else(|_| std::env::temp_dir())
+        .join(secrets_folder(crate::reset::IDENTIFIER))
+}
+
 impl License {
     pub fn new() -> Self {
-        let dir = std::env::var("LOCALAPPDATA").map(PathBuf::from).unwrap_or_else(|_| std::env::temp_dir()).join("Rago");
-        Self::with(dir.join("license.bin"), probe_device)
+        Self::with(secrets_dir().join("license.bin"), probe_device)
     }
 
     pub fn with(path: PathBuf, probe: fn() -> Device) -> Self {
@@ -614,6 +636,12 @@ mod tests {
             assert_eq!(fp_hash("board_serial", junk), None, "{junk:?}");
         }
         assert!(fp_hash("board_serial", "PF2ABCD").is_some());
+    }
+
+    #[test]
+    fn test_exe_keeps_its_own_tokens() {
+        assert_eq!(secrets_folder("gg.rago.optimizer"), "Rago");
+        assert_eq!(secrets_folder("gg.rago.optimizer.staging"), "Rago (gg.rago.optimizer.staging)");
     }
 
     #[test]
