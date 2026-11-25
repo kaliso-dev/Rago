@@ -28,6 +28,10 @@ const VAULT = 'docs/vault/'; // the Rago vault; other brains have their own fold
 export const DEFAULT_BRAINS = [
   { id: 'rago', name: 'Rago Optimizer', dir: 'docs/vault/' },
   { id: 'rago-os', name: 'RAGO-OS', dir: 'docs/vault/', repo: 'kaliso-dev/RAGO-OS-', branch: 'main' },
+  // Sofiene, 25/11 : « dans mon cerveau du dashboard […] je puisse voir les cerveaux » : the vaults of the two other
+  // Rago projects, each in its own repository, read from its default branch (no branch given).
+  { id: 'rago-client', name: 'Rago Client', dir: 'docs/vault/', repo: 'kaliso-dev/Rago-Client' },
+  { id: 'rago-minecraft', name: 'Serveur Minecraft Rago', dir: 'docs/vault/', repo: 'kaliso-dev/network-server-rago' },
 ];
 export function parseBrains(text) {
   const out = [];
@@ -564,8 +568,9 @@ export function createBrain(cfg, { fetchImpl = fetch, log = console } = {}) {
   const root = cfg.brainSource === 'github' ? null : localRepo(cfg.brainDir);
   const brains = (cfg.brains?.length ? cfg.brains : DEFAULT_BRAINS).map((b) => {
     const repo = b.repo || mainRepo;
-    const branch = b.branch || (b.repo ? 'main' : mainBranch);
-    return { ...b, repo, branch, key: `${repo.toLowerCase()}@${branch}`, local: !b.repo || repo.toLowerCase() === mainRepo.toLowerCase() };
+    // Another repository without a branch is read from its default branch ('' until GitHub names it).
+    const branch = b.branch || (b.repo && b.repo.toLowerCase() !== mainRepo.toLowerCase() ? '' : mainBranch);
+    return { ...b, repo, branch, key: `${repo.toLowerCase()}@${branch || 'HEAD'}`, local: !b.repo || repo.toLowerCase() === mainRepo.toLowerCase() };
   });
   const list = brains.map(({ id, name, repo }) => ({ id, name, repo }));
   const pick = (id) => brains.find((b) => b.id === id) || brains[0];
@@ -610,6 +615,12 @@ export function createBrain(cfg, { fetchImpl = fetch, log = console } = {}) {
       }
       if (!res.ok) throw new BrainError(`GitHub a répondu ${res.status} en lisant les branches de ${repo}.`);
       const text = await res.text();
+      if (!branch) { // the default branch: the HEAD line, and its name from the symref capability
+        const head = /([0-9a-f]{40}) HEAD\0([^\n]*)/.exec(text);
+        if (!head) throw new BrainError(`Le dépôt ${repo} n’a encore aucune branche.`);
+        src.branch = /symref=HEAD:refs\/heads\/(\S+)/.exec(head[2])?.[1] || 'HEAD';
+        return head[1];
+      }
       const ref = `refs/heads/${branch}`;
       const m = new RegExp(`([0-9a-f]{40}) ${ref.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}(?:\\n|\\0)`).exec(text);
       if (!m) throw new BrainError(`La branche ${branch} n’existe pas dans ${repo}.`);
@@ -641,8 +652,8 @@ export function createBrain(cfg, { fetchImpl = fetch, log = console } = {}) {
         if (kind === 'txt') contents.set(p, e.data.toString('utf8'));
         if (anyNote(p)) notes.set(p, e.data.toString('utf8'));
       }
-      src.snap = { sha, branch, source: 'github', files, contents, notes, checkedAt: Date.now(), sig: sha, at: Date.now() };
-      log.info?.(`[cerveau] ${repo} ${branch}@${sha.slice(0, 7)} : ${notes.size} notes, ${files.size} fichiers.`);
+      src.snap = { sha, branch: src.branch, source: 'github', files, contents, notes, checkedAt: Date.now(), sig: sha, at: Date.now() };
+      log.info?.(`[cerveau] ${repo} ${src.branch}@${sha.slice(0, 7)} : ${notes.size} notes, ${files.size} fichiers.`);
       return src.snap;
     }
     async function refresh(force) {
