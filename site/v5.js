@@ -481,9 +481,10 @@
     set(0);
     const word = () => { requestAnimationFrame(() => requestAnimationFrame(() => doc.classList.add("x-ld-ready"))); setTimeout(() => { t0 = performance.now(); requestAnimationFrame(count); }, 420); };
     if (shots.length) {
+      const k = (shots[0].getBoundingClientRect().width || 230) / 230;   // the deck leans the same way whatever the cover's size
       shots.forEach((s, i) => {
         const a = (i % 2 ? 1 : -1);
-        s.style.setProperty("--x", (a * (6 + Math.random() * 14)).toFixed(0) + "px"); s.style.setProperty("--y", ((Math.random() * 2 - 1) * 14).toFixed(0) + "px");
+        s.style.setProperty("--x", (a * k * (6 + Math.random() * 14)).toFixed(0) + "px"); s.style.setProperty("--y", (k * (Math.random() * 2 - 1) * 14).toFixed(0) + "px");
         s.style.setProperty("--r", ((Math.random() * 2 - 1) * 7).toFixed(1) + "deg"); s.style.setProperty("--or", (a * (8 + Math.random() * 6)).toFixed(1) + "deg");
         s.style.zIndex = i + 1; setTimeout(() => s.classList.add("x-in"), 150 * i);
       });

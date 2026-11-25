@@ -898,7 +898,7 @@ html.x-on body{background:var(--bg)}
 .has-ld.x-ld-out .x-ld{transform:translateY(-100%)}
 .has-ld body{overflow:hidden}
 .x-ld-st{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;pointer-events:none}
-.x-ld-sh{position:absolute;width:clamp(128px,15vw,230px);aspect-ratio:2/3;height:auto;object-fit:cover;border-radius:8px;box-shadow:0 18px 40px rgba(10,10,11,.25);visibility:hidden;transform:translate3d(var(--x,0),var(--y,0),0) rotate(var(--r,0deg))}
+.x-ld-sh{position:absolute;width:min(clamp(240px,29vw,440px),45vh);height:auto;object-fit:contain;border-radius:14px;box-shadow:0 26px 60px rgba(10,10,11,.32);visibility:hidden;transform:translate3d(var(--x,0),var(--y,0),0) rotate(var(--r,0deg))}
 .x-ld-sh.x-in{visibility:visible;transition:transform .72s cubic-bezier(.5,0,.78,.46)}
 .x-ld-sh.x-out{transform:translate3d(var(--x,0),-125vh,0) rotate(var(--or,-10deg)) scale(.82)}
 .x-ld-w{display:flex;align-items:center;justify-content:center;max-width:100%;font-family:var(--cond);font-weight:900;font-style:italic;font-size:clamp(34px,8.6vw,132px);line-height:1;letter-spacing:-.01em;text-transform:uppercase;color:var(--bg);white-space:nowrap;opacity:0;transition:opacity .6s ease}
