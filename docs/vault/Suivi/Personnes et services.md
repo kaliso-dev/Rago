@@ -1,7 +1,7 @@
 ---
 type: référence
 tags: [personnes, services]
-maj: 2026-11-10
+maj: 2026-11-25
 ---
 # Personnes et services
 
@@ -27,6 +27,8 @@ Retour à [[Projet]]. Aucun identifiant ni secret ici ([[Clés et secrets]]).
 | Discord | communauté, rôle Pro, connexion ([[Discord]]) |
 | Linear | tickets et documents ([[Linear]]) |
 | Claude (projet « Rago optimizer (suite) ») | fils de travail, dossier partagé ([[Sources]]) ; liste et résumé des fils : [[Fils du projet]] |
+| Claude (projet « New Brand Rago ») | refonte v5 et v6 de l'app, du site et du compte (depuis le 22/11), même dépôt ; dossier partagé `rago-redesign/` ([[New Brand Rago]]) |
+| Claude Team | nouvel abonnement de Sofiene (25/11), sur un nouveau compte où les projets ne se transfèrent pas : [[Reprendre sur un nouveau compte Claude]] |
 | Vultr | serveurs de [[Proxy\|Rago Route]] : sortie à Paris et relais à Frankfurt (environ 5 $ par mois chacun, depuis le 06/11) ; serveurs de test du 05/11 (Frankfurt, Mumbai, New York, Chicago) qui ne servent plus. OVHcloud a été écarté le 05/11 ([[Infrastructure Rago Route]]) |
 | Cloudflare | pas un service de Rago : Hypixel passe par Cloudflare, dont l'entrée la plus proche de la France est à Paris ; c'est pour cela que Rago Route sort à Paris ([[Fil - Développer les proxys Minecraft]]) |
 | GitHub `network-server-rago` | dépôt séparé du serveur Minecraft (combat, lobby, practice, Bed Wars) ; privé, sa CI a vidé les minutes de novembre ; Sofiene doit le rendre public (décision du 10/11, [[CI GitHub Actions]]) ; lien avec le [[Client Minecraft Rago]] : À VÉRIFIER |
