@@ -34,6 +34,20 @@ Posées le 23/11, pendant la refonte de l'app sur les maquettes v5 (fil « refon
 Posée le 25/11, après le test Windows de Sofiene (PR #139) :
 - q121 : la barre en jeu sort-elle encore du jeu (autre page, jeu réduit) une fois la 1.2.1 quittée ? ([[Barre en jeu]])
 
+Posée le 13/11 (fil « Corriger les saccades du stream Discord ») :
+- q109 : les joueurs dont le stream Discord saccade ont-ils la version publique ou l'exe de test ? Le correctif (jeu en « Supérieure à la normale ») attend aussi la décision de Sofiene ([[Bugs et incidents]]).
+
+Posées le 24/11 sur l'accueil v6 (PR #136, [[New Brand Rago]]) :
+- q118 : que devient la section « Three ways in » une fois les cartes Rago Route passées au-dessus du globe ?
+- q119 : les flux d'Asie s'arrêtent à la Sibérie (Tokyo, Pékin et Séoul sont de l'autre côté du globe) : on garde ?
+- q120 : la capture du dashboard sur l'accueil date du site v5 (« 212 tweaks ») : capture à jour à envoyer.
+
+Posées le 25/11 par les fils des autres projets (serveur Minecraft, voir leur vault) : q122 à q127.
+
+Posées le 25/11, passage sur le nouveau compte Claude ([[Reprendre sur un nouveau compte Claude]]) :
+- q128 : le dossier `rago-redesign/` du projet [[New Brand Rago]] (maquettes, kit, scripts qui génèrent le CSS de l'app) : dans le dépôt, téléchargé, ou les deux ?
+- q129 : la page « Questions du vault Rago » appartient à l'ancien compte : la partager, la recréer, ou s'en passer ?
+
 Au 10/11, après les réponses de Sofiene du jour (q36 à q68 traitées, q46 le 10/11 à 15 h, voir [[Décisions]]) :
 - q65 : réglages Railway de prod (Wait for CI, Watch Paths, Healthcheck, moniteur) ; Sofiene demande à Claude de vérifier et de le lui rappeler ([[Railway]]).
 
@@ -79,7 +93,7 @@ Posées le 11/11 (q78 traitée le même jour : Sofiene a demandé la page de ven
 - Valorant en 4:3 étiré (1440×1080) : les sources lues le 11/11 ne confirment pas que le jeu remplit l'écran sans réglage de plus ; à vérifier en jeu ([[Couleurs et résolution]]).
 - CS2 : valeurs de `setting.aspectratiomode` dans `cs2_video.txt` (0 = 4:3 ou 5:4, 1 = 16:9, 2 = 16:10, d'après la doc de la communauté) à confirmer dans un vrai fichier ([[Couleurs et résolution]]).
 - `app/src/data/pros.json` : quelques saturations de pros CS2 viennent de pages lues en résumé (prosettings.net coupé) ; à relire page par page avant la sortie ([[Couleurs et résolution]]).
-- Les 1.2.0 installées reçoivent-elles bien la 1.2.1 ? Le serveur la propose à 100 % (vérifié le 11/11 sur `/api/v1/update/status`) ; reste à le voir sur un PC en 1.2.0 ([[Mise à jour automatique]])
+- Les PC en 1.2.x reçoivent-ils bien la 1.3.0 ? Le serveur la propose à 100 % (vérifié le 25/11 sur `/api/v1/update/status`) ; reste à le voir sur un PC en 1.2.1 ([[Mise à jour automatique]])
 - Railway prod a-t-il chargé les bases DB-IP (`/admin/reseau`) ? ([[Proxy]])
 - La clé de mise à jour Tauri est-elle sauvegardée hors du PC ? ([[Clés et secrets]])
 - Remise du profil NVIDIA sur un vrai PC NVIDIA ([[Remise à zéro]]).

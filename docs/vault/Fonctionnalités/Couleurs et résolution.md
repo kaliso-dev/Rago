@@ -1,8 +1,8 @@
 ---
 type: fonctionnalité
 tags: [fonctionnalité, app, jeux, couleurs, résolution, premium]
-version_app: 1.3.0 (dans `staging`, pas encore publiée)
-maj: 2026-11-23
+version_app: 1.3.0 (en prod depuis le 22/11)
+maj: 2026-11-25
 ---
 # Couleurs et résolution
 
