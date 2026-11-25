@@ -43,7 +43,7 @@ Les joueurs ont la [[Version 1.2.1]] (en ligne depuis le 31/10). La [[Version 1.
 | Vault Obsidian | créé le 31/10 ; règle n°1 : il doit correspondre en tout point à l'état du projet. **Détaillé le 10/11** (demande de Sofiene) : 341 notes, dont une fiche par fichier de code (230 notes dans `Code/`, 7 cartes), l'histoire du projet (`Historique/`, 11 notes) et l'étude de marché ; 24 nouvelles questions (q70 à q93) | DÉCIDÉ |
 
 ## PR (24/11)
-- Ouverte : **#136** (branche `claude/project-thread-7emsbt`, vers `staging`) : accueil v6 du 24/11, soit les losanges et la traînée d'images en captures de jeu paysage, les jaquettes du chargement, la section « Three ways in », et toute la démonstration de Rago Route réunie dans la section `#route` (globe dessiné rouge, cinq cartes au-dessus, flux vers Frankfurt, Paris et l'Asie) ; depuis le 25/11, les jaquettes du chargement agrandies et jamais rognées, et l'**aperçu du dashboard de l'app** dans le héros. En attente de la validation de Sofiene.
+- Ouverte : **#136** (branche `claude/project-thread-7emsbt`, vers `staging`) : accueil v6 du 24/11, soit la traînée d'images, les jaquettes du chargement, la section « Three ways in », et toute la démonstration de Rago Route réunie dans la section `#route` (globe dessiné rouge, cinq cartes au-dessus, flux vers Frankfurt, Paris et l'Asie) ; depuis le 25/11, les jaquettes du chargement agrandies et jamais rognées, et l'**aperçu du dashboard de l'app** dans le héros. En attente de la validation de Sofiene.
 
 ## PR (22/11)
 - Fusionnée le 22/11 dans `staging` : #108 (app en charte v5, version 1.4.0, branche `claude/project-thread-2btl2s`), après le build Windows et les tests Rust réussis (run `app-windows` 272), sur la demande de Sofiene du 22/11 ([[Charte graphique]]).

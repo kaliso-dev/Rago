@@ -53,12 +53,6 @@ main.x{position:relative;overflow-x:clip}
 .x-hero-h{grid-area:h;font-size:clamp(64px,10.4vw,230px);line-height:.84;letter-spacing:-.012em}
 .x-hero-h .x-ch{color:color-mix(in srgb,var(--red) calc(var(--h,0) * 100%),var(--ink))}
 .x-hero-h .x-brush .x-ch{color:var(--ink)}
-.x-slot{position:relative;display:inline-block;width:0;height:.74em;margin:0 .05em;vertical-align:-.02em;border-radius:.1em;overflow:hidden;background:var(--card);transform:skewX(var(--skew));transition:width 1s var(--x-expo),margin .8s var(--x-expo)}
-.x-slot.x-open{width:1.55em;margin:0 .14em 0 .08em}
-.x-slot img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;clip-path:inset(100% 0 0 0);transition:clip-path .7s var(--x-circ)}
-.x-slot img.x-on{clip-path:inset(0)}
-.x-slot img.x-off{clip-path:inset(0 0 100% 0)}
-.x-pool{display:none}
 .x-hero-p{max-width:52ch;margin-top:clamp(22px,2.4vw,40px);font-size:clamp(16px,1.4vw,24px);line-height:1.5;color:var(--ink-2)}
 .x-hero-b{display:flex;flex-wrap:wrap;gap:14px;margin-top:clamp(22px,2.4vw,34px)}
 .x-hero-t{display:flex;flex-wrap:wrap;gap:8px 22px;margin-top:clamp(20px,2vw,26px);font-family:var(--cond);font-weight:800;font-size:14px;letter-spacing:.12em;text-transform:uppercase;color:var(--ink-2)}
@@ -677,8 +671,6 @@ details.s-q p{padding:0 0 24px;font-size:15.5px;line-height:1.6}
   .rev-row > [aria-hidden="true"],.rev-pause{display:none}
   .x-iw{opacity:1;filter:none;transform:none}
   .x-fchip{width:1.3em;margin:0 .08em;transform:skewX(var(--skew));opacity:1}
-  .x-slot{width:1.55em;margin:0 .14em 0 .08em}
-  .x-slot img:first-child{clip-path:inset(0)}
   .x-al{transform:none!important;opacity:1!important}
 }/* additions */
 .x-hero-h.x-pre .x-ch{transform:translateY(.35em) rotate(6deg)}
@@ -778,8 +770,7 @@ if (!matchMedia("(prefers-reduced-motion: reduce)").matches) { document.document
 <section class="x-hero">
   <div class="x-wrap x-hero-in">
     <p class="x-hero-k x-intro"><span class="x-tape">Minecraft PvP optimizer <b>//</b> for Windows</span></p>
-    <h1 class="x-h x-hero-h x-intro" id="hero-h">Every <span class="x-slot x-keep" aria-hidden="true"></span>millisecond <span class="x-brush">counts.</span></h1>
-    <div class="x-pool" aria-hidden="true"><img src="img/wide/valorant.webp" alt="" width="760" height="363"><img src="img/wide/cs2.webp" alt="" width="760" height="363"><img src="img/wide/fortnite.webp" alt="" width="760" height="363"><img src="img/wide/gta.webp" alt="" width="760" height="363"></div>
+    <h1 class="x-h x-hero-h x-intro" id="hero-h">Every millisecond <span class="x-brush">counts.</span></h1>
     <div class="x-hero-l">
       <p class="x-hero-p x-intro">Steadier ping, smoother frames, less input lag. Rago tunes Windows, your network and Minecraft, and puts your settings back when you turn a tweak off.</p>
       <div class="x-hero-b">
@@ -1782,28 +1773,11 @@ window.__xPage = X => {
   const clear = (el, ks) => ks.forEach(k => el.style.removeProperty(k));
   const onScreen = el => { const s = { on: false }; if ("IntersectionObserver" in window) new IntersectionObserver(([e]) => s.on = e.isIntersecting, { rootMargin: "25% 0px" }).observe(el); else s.on = true; return s; };
 
-  /* ---------- 1. Hero: after the loader the title comes in letter by letter, the rest out of a blur, then pictures open
-     between its words; the letters near the mouse warm up to red ---------- */
+  /* ---------- 1. Hero: after the loader the title comes in letter by letter, the rest out of a blur; the letters near
+     the mouse warm up to red ---------- */
   const hero = $(".x-hero"), h1 = $("#hero-h");
   const chars = X.split(h1);
   chars.forEach((c, i) => c.style.setProperty("--d", (i * .032).toFixed(3) + "s"));
-  const slot = $(".x-slot", h1);
-  const shots = [];
-  if (slot) $$(".x-pool img").forEach(i => { const c = i.cloneNode(); c.loading = "lazy"; slot.appendChild(c); shots.push(c); });
-  let slotOn = false;
-  const openSlot = () => {
-    if (!slot || slotOn || !shots.length) return; slotOn = true;
-    slot.classList.add("x-open"); shots[0].classList.add("x-on");
-    if (reduce) return;
-    let i = 0;
-    const vis = onScreen(hero);
-    setInterval(() => {
-      if (!vis.on || document.hidden) return;
-      const a = shots[i], b = shots[(i + 1) % shots.length]; i = (i + 1) % shots.length;
-      b.style.zIndex = 2; a.style.zIndex = 1; b.classList.remove("x-off"); b.classList.add("x-on");
-      setTimeout(() => { a.style.transition = "none"; a.classList.remove("x-on", "x-off"); void a.offsetWidth; a.style.transition = ""; }, 750);
-    }, 1500);
-  };
   const intro = $$(".x-intro").filter(e => e !== h1);
   const loading = doc.classList.contains("has-ld") && !reduce;
   if (loading) { h1.classList.add("x-pre"); intro.forEach(e => e.classList.add("x-iw")); }
@@ -1811,12 +1785,11 @@ window.__xPage = X => {
   const go = () => {
     if (went) return; went = true;
     doc.classList.remove("x-pre-intro");
-    if (!loading) { openSlot(); return; }
+    if (!loading) return;
     requestAnimationFrame(() => requestAnimationFrame(() => {
       h1.classList.add("x-go");
       intro.filter(e => e.closest(".x-hd")).forEach((e, i) => { e.style.setProperty("--d", (.15 + i * .08).toFixed(2) + "s"); e.classList.add("x-iw-go"); });
       intro.filter(e => !e.closest(".x-hd")).forEach((e, i) => { e.style.setProperty("--d", (.3 + i * .1).toFixed(2) + "s"); e.classList.add("x-iw-go"); });
-      setTimeout(openSlot, 1100);
     }));
   };
   document.addEventListener("x:lift", go); document.addEventListener("x:loaded", go);
