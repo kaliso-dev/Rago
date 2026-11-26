@@ -49,7 +49,6 @@ Posées le 25/11, passage sur le nouveau compte Claude ([[Reprendre sur un nouve
 - q129 : la page « Questions du vault Rago » appartient à l'ancien compte : la partager, la recréer, ou s'en passer ?
 
 Au 10/11, après les réponses de Sofiene du jour (q36 à q68 traitées, q46 le 10/11 à 15 h, voir [[Décisions]]) :
-- q65 : réglages Railway de prod (Wait for CI, Watch Paths, Healthcheck, moniteur) ; Sofiene demande à Claude de vérifier et de le lui rappeler ([[Railway]]).
 
 Posées le 10/11 au soir (q70 à q93), après la relecture complète du code pour le vault détaillé (dossier `Code/`) :
 - q73 : 4 réglages de carte graphique jamais grisés ([[meta.py]]).
@@ -95,7 +94,6 @@ Posées le 11/11 (q78 traitée le même jour : Sofiene a demandé la page de ven
 - `app/src/data/pros.json` : quelques saturations de pros CS2 viennent de pages lues en résumé (prosettings.net coupé) ; à relire page par page avant la sortie ([[Couleurs et résolution]]).
 - Les PC en 1.2.x reçoivent-ils bien la 1.3.0 ? Le serveur la propose à 100 % (vérifié le 25/11 sur `/api/v1/update/status`) ; reste à le voir sur un PC en 1.2.1 ([[Mise à jour automatique]])
 - Railway prod a-t-il chargé les bases DB-IP (`/admin/reseau`) ? ([[Proxy]])
-- La clé de mise à jour Tauri est-elle sauvegardée hors du PC ? ([[Clés et secrets]])
 - Remise du profil NVIDIA sur un vrai PC NVIDIA ([[Remise à zéro]]).
 - Identité du vendeur absente des conditions de vente ; TVA (RAG-20 annulée sans raison) : voir [[Conformité juridique]].
 - Barre en jeu pendant une partie par Rago Route : pas de ping affiché, le jeu étant connecté à `127.0.0.1` (déduit du code, [[gameping.rs]]) ; à voir sur Windows.

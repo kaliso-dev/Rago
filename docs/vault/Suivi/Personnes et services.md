@@ -17,12 +17,16 @@ Retour à [[Projet]]. Aucun identifiant ni secret ici ([[Clés et secrets]]).
 | Service | Usage |
 |---|---|
 | GitHub `kaliso-dev/rago` | code, CI (3 workflows), artefacts exe ([[Branches et environnements]]) |
-| Netlify | [[Site]] (prod, staging, aperçus) |
-| Railway | [[Serveur de licences]] prod et staging |
+| Netlify | [[Site]] (prod, staging, aperçus) ([[Netlify]]) |
+| Railway | [[Serveur de licences]] prod et staging ([[Railway]]) |
 | Supabase | Postgres + buckets privés `downloads` (exe) et `avatars` ; projet séparé `rago-staging` |
 | Stripe | abonnements, Lifetime, codes promo, portail client (live depuis le 10/10) ; accessible à Claude en lecture depuis le 04/11 ([[Ventes Stripe]]) |
-| Resend | emails `noreply@rago-optimizer.com` |
-| OVH | domaine `rago-optimizer.com`, DNS, boîte Zimbra `support@rago-optimizer.com` |
+| Resend | emails `noreply@rago-optimizer.com` ([[Domaine et e-mails]]) |
+| OVH | domaine `rago-optimizer.com`, DNS, boîte Zimbra `support@rago-optimizer.com` ([[Domaine et e-mails]]) |
+| Google Cloud | connexion « Continue with Google » (clés OAuth) ([[Connexion Google et Discord]]) |
+| Discord Developer Portal | application du bot et connexion Discord ([[Connexion Google et Discord]], [[Discord]]) |
+| UptimeRobot | moniteur de `/healthz`, alertes par e-mail à Sofiene, depuis le 11/11 ([[Surveillance]]) |
+| Gestionnaire de mots de passe | toutes les clés et identifiants (11/11, [[Clés et secrets]]) |
 | DB-IP | ville et fournisseur des tests réseau ([[Proxy]]) |
 | Discord | communauté, rôle Pro, connexion ([[Discord]]) |
 | Linear | tickets et documents ([[Linear]]) |
