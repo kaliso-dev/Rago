@@ -1,8 +1,9 @@
 #!/usr/bin/env python3
-"""Hook Claude Code pour Rago Hub (v2).
+"""Hook Claude Code pour Rago Hub (v3).
 
 - PostToolUse : envoie au Hub une ligne d'activité (« lit tel fichier », « lance les tests »…)
   et, si Claude vient d'écrire une image, l'image elle-même.
+  Envoie aussi le texte déjà écrit par Claude pendant le tour (affiché « en cours » dans le Hub).
 - Stop : envoie la réponse finale du tour et les tokens utilisés.
 
 Ne fait rien si RAGO_HUB_URL / RAGO_HUB_TOKEN ne sont pas définis (sessions normales),
@@ -111,10 +112,60 @@ def describe_tool(name, inp):
     return short(name, 60)
 
 
+def turn_texts(path):
+    """Textes écrits par Claude depuis le dernier vrai message humain."""
+    current = []
+    with open(path, encoding="utf-8", errors="replace") as f:
+        for line in f:
+            try:
+                entry = json.loads(line)
+            except Exception:
+                continue
+            kind = entry.get("type")
+            texts, is_tool_result = texts_of(entry)
+            if kind == "user" and texts and not is_tool_result and not entry.get("isMeta"):
+                current = []
+            elif kind == "assistant" and texts and not entry.get("isSidechain"):
+                current.extend(texts)
+    return "\n\n".join(t.strip() for t in current if t.strip())
+
+
+def send_partial(url, token, data, key):
+    path = data.get("transcript_path")
+    if not path or not os.path.exists(path):
+        return
+    text = turn_texts(path)
+    if not text:
+        return
+    sid = re.sub(r"[^\w-]", "", str(data.get("session_id") or "x"))
+    cache = os.path.join(tempfile.gettempdir(), f"rago-hub-{sid}.partial")
+    sig = str(len(text)) + ":" + text[-200:]
+    try:
+        with open(cache) as f:
+            if f.read() == sig:
+                return
+    except Exception:
+        pass
+    try:
+        with open(cache, "w") as f:
+            f.write(sig)
+    except Exception:
+        pass
+    post(url, token, "/api/hook/partial", {"key": key, "text": text[-20000:]}, timeout=6)
+
+
 def on_tool(url, token, data, key):
     name = data.get("tool_name") or ""
     inp = data.get("tool_input") or {}
+    try:
+        send_partial(url, token, data, key)
+    except Exception:
+        pass
     if name in ("TodoWrite", "TaskCreate", "TaskUpdate"):
+        resp = data.get("tool_response")
+        if not isinstance(resp, dict):
+            resp = None
+        post(url, token, "/api/hook/todos", {"key": key, "tool": name, "input": inp, "response": resp}, timeout=4)
         return
     post(url, token, "/api/hook/event", {"key": key, "tool": name, "summary": describe_tool(name, inp)}, timeout=4)
     p = inp.get("file_path") or ""
@@ -162,7 +213,7 @@ def on_stop(url, token, data, key):
 def main():
     url = os.environ.get("RAGO_HUB_URL", "").rstrip("/")
     token = os.environ.get("RAGO_HUB_TOKEN", "")
-    if not url or not token:
+    if not url or not token or os.environ.get("HUB_DIRECT"):
         return
     try:
         data = json.load(sys.stdin)
