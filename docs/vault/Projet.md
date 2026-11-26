@@ -33,7 +33,7 @@ Vue d'ensemble technique : [[Architecture]]. **Pour coder ou dépanner : commenc
 - **Technique** : [[Reprendre le développement]] · [[Architecture]] · [[Développer et tester]] · [[Branches et environnements]] · [[Publier une version]]
   - App : [[App Windows]] · [[Architecture de l'app]]
   - Serveur : [[Serveur de licences]] · [[Tableau de bord admin]] · [[Architecture du serveur]] · [[API du serveur]] · [[Paiements Stripe]] · [[Connexion Google et Discord]]
-  - Hébergement et CI : [[Supabase]] · [[Railway]] · [[Netlify]] · [[CI GitHub Actions]] · [[Variables d'environnement]] · [[Clés et secrets]]
+  - Hébergement et CI : [[Supabase]] · [[Railway]] · [[Netlify]] · [[CI GitHub Actions]] · [[Variables d'environnement]] · [[Clés et secrets]] · [[Domaine et e-mails]] · [[Surveillance]]
   - Site : [[Site]] · Rago Route : [[Infrastructure Rago Route]]
   - Outil : [[Cerveau du vault]] (ce vault en graphe dans l'admin, avec un lecteur pour chaque fichier)
 - **Code, une note par fichier** (dossier `Code/`) : [[Code de l'app (Rust)]] · [[Code de l'app (interface)]] · [[Code du générateur de catalogue]] · [[Code du serveur]] (et ses tables) · [[Code du site]] · [[Code de Rago Route]] · [[Code de la CI et du dépôt]] (avec [[Branches du dépôt]])
