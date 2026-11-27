@@ -6,7 +6,7 @@ maj: 2026-11-27
 ---
 # dunning.js
 
-Les **paiements refusés** des abonnements Premium (27/11, q110, Sofiene : « il faut absolument que si le paiement est refusé après un essai gratuit, directement l'abonnement soit révoqué et il passe en gratuit ; pour les abonnements mensuel, annuel etc. déjà payés une ou plusieurs fois, on réessaie pendant 3 jours avant de révoquer l'abonnement ; et il faudrait aussi envoyer des mails pour les prévenir que leur abonnement va prendre fin ; il faut que ça le fasse pour tous les users actuels, il y en a plein que je n'ai pas eu le temps de révoquer ou que j'ai loupés »). PR #160 vers `staging` (fil HUB-d1451f), non fusionnée. Fiche parente : [[Code du serveur]]. Règles : [[Paiements Stripe]], section « Paiements refusés ».
+Les **paiements refusés** des abonnements Premium (27/11, q110, Sofiene : « il faut absolument que si le paiement est refusé après un essai gratuit, directement l'abonnement soit révoqué et il passe en gratuit ; pour les abonnements mensuel, annuel etc. déjà payés une ou plusieurs fois, on réessaie pendant 3 jours avant de révoquer l'abonnement ; et il faudrait aussi envoyer des mails pour les prévenir que leur abonnement va prendre fin ; il faut que ça le fasse pour tous les users actuels, il y en a plein que je n'ai pas eu le temps de révoquer ou que j'ai loupés »). PR #160 (`staging`) et #161 (prod), fusionnées le 27/11. Fiche parente : [[Code du serveur]]. Règles : [[Paiements Stripe]], section « Paiements refusés ».
 
 ## Ce qu'il expose
 - `GRACE_DAYS` = 3, `REMINDER_DAYS` = 2, `UNPAID_STATUSES` = `past_due`, `unpaid`, `incomplete_expired`, `canceled`.
