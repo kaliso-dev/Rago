@@ -1,0 +1,53 @@
+<!doctype html>
+<html lang="fr"><head><meta charset="utf-8">
+<link href="https://fonts.googleapis.com/css2?family=Unbounded:wght@500;600;700;800;900&family=Instrument+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="rago2.css">
+<style>
+.hero{position:relative;height:366px;display:flex;flex-direction:column;justify-content:flex-end;padding-bottom:6px}
+.hero .shards{left:-48px;right:-48px;top:-64px;bottom:-10px;-webkit-mask:linear-gradient(90deg,transparent 20%,#000 70%);mask:linear-gradient(90deg,transparent 20%,#000 70%)}
+.hero .mega{position:relative;width:690px}
+.hero .acts{position:relative;display:flex;gap:10px;margin-top:30px}
+.lbl{display:flex;align-items:center;gap:16px;margin:34px 0 14px}
+.lbl::after{content:"";flex:1;height:1px;background:var(--line)}
+.presets{display:grid;grid-template-columns:repeat(5,1fr);gap:10px}
+.pr{height:78px;border-radius:18px;display:flex;align-items:center;justify-content:space-between;padding:0 20px;font-family:var(--display);font-weight:700;font-size:15px;letter-spacing:-.02em;box-shadow:inset 0 0 0 1.5px var(--line);color:var(--gris-2)}
+.pr.on{background:var(--rouge);color:#fff;box-shadow:0 16px 40px -16px rgba(255,59,48,.9)}
+.pr.on svg{width:18px;height:18px;stroke-width:2.6}
+.games{display:grid;grid-template-columns:repeat(6,1fr);gap:10px}
+.games .poster{height:196px}
+.games .stripe{top:70px}
+.bar{position:absolute;z-index:6;left:50%;bottom:22px;transform:translateX(calc(-50% + 118px));display:flex;align-items:center;gap:26px;padding:8px 8px 8px 28px;border-radius:999px;background:rgba(21,20,22,.86);backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);box-shadow:inset 0 0 0 1px rgba(216,213,208,.12),0 30px 60px -20px #000}
+.bar b{font-family:var(--display);font-weight:800;font-size:22px;letter-spacing:-.04em}
+.bar span{font-size:14px;color:var(--gris-2);margin-left:-16px}
+</style></head>
+<body data-page="dashboard">
+<div class="win">
+  <main class="main">
+    <section class="hero">
+      <div class="shards" data-shards="46" data-ox="1.02" data-oy=".55" data-dir="190" data-fan="34" data-len=".62" data-w="13" data-seed="11"></div>
+      <h1 class="mega"><div data-fit="140">Chaque</div><div data-fit="140">milliseconde</div><div data-fit="140">compte.</div></h1>
+      <div class="acts"><span class="btn btn-red"><i data-i="activity"></i>Analyser mon PC</span><span class="btn">Optimisations gratuites</span></div>
+    </section>
+
+    <div class="lbl"><h2 class="h">Presets</h2></div>
+    <section class="presets">
+      <div class="pr on">FPS max<i data-i="check"></i></div><div class="pr">Latence minimale</div><div class="pr">Minecraft PvP</div><div class="pr">PC portable</div><div class="pr">Vie privée</div>
+    </section>
+
+    <div class="lbl"><h2 class="h">Jeux</h2></div>
+    <section class="games">
+      <div class="poster p-red"><span class="gn">Valorant</span><span class="ck"><i data-i="check"></i></span><div class="stripe"></div><div class="tag"><div class="name" data-fit="130">VAL</div></div></div>
+      <div class="poster p-os"><span class="gn">Fortnite</span><div class="stripe"></div><div class="tag"><div class="name" data-fit="130">FN</div></div></div>
+      <div class="poster p-ink"><span class="gn">Counter-Strike 2</span><div class="stripe"></div><div class="tag"><div class="name" data-fit="130">CS2</div></div></div>
+      <div class="poster p-red"><span class="gn">Apex Legends</span><div class="stripe"></div><div class="tag"><div class="name" data-fit="130">APEX</div></div></div>
+      <div class="poster p-os"><span class="gn">Rainbow Six Siege</span><div class="stripe"></div><div class="tag"><div class="name" data-fit="130">R6</div></div></div>
+      <div class="poster p-ink"><span class="gn">League of Legends</span><div class="stripe"></div><div class="tag"><div class="name" data-fit="130">LoL</div></div></div>
+    </section>
+  </main>
+  <div class="bar"><b>46</b><span>réglages</span><span class="btn btn-red">Appliquer</span></div>
+</div>
+<script src="shell2.js"></script>
+<script src="icons.js"></script>
+<script src="shards.js"></script>
+<script src="fit.js"></script>
+</body></html>

@@ -1,0 +1,117 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8">
+<link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:ital,wght@0,600;0,700;0,800;0,900;1,700;1,800;1,900&family=Barlow:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="rago5.css">
+<link rel="stylesheet" href="poster.css">
+<link rel="stylesheet" href="round.css">
+<script>for (const c of ['round','poster']) if (location.hash.includes(c)) document.documentElement.classList.add(c);</script>
+<style>
+/* Icône près de l'horloge (lot 2, 22/11/2026). Le coin de la barre des tâches est dessiné à 1x puis agrandi ×2 ; le menu et l'infobulle sont ceux de Windows, Rago n'en choisit que le texte. */
+.win{height:900px;min-height:0}
+.tp{position:relative;z-index:1;isolation:isolate;padding:44px 56px 0}
+.tp .bgdots{position:absolute;right:0;top:0;width:620px;height:420px;pointer-events:none;background:linear-gradient(transparent,transparent);-webkit-mask:linear-gradient(240deg,#000 0,transparent 60%)}
+.tph{display:flex;align-items:flex-end;justify-content:space-between;gap:40px}
+.tph .title{font-size:132px;margin-top:16px}
+.tph .lead{max-width:430px;padding-bottom:12px;font-size:15px;line-height:1.5;color:var(--ink-2)}
+.tph .lead b{color:var(--ink);font-weight:600}
+.tpr{display:grid;grid-template-columns:1fr 1fr;gap:22px;margin-top:40px}
+.cap{display:flex;align-items:baseline;gap:12px;margin-top:14px}
+.cap b{font-family:var(--cond);font-weight:800;font-size:13px;letter-spacing:.14em;text-transform:uppercase;color:var(--ink-3);white-space:nowrap}
+.cap b em{font-style:normal;color:var(--red)}
+.cap span{font-size:13px;line-height:1.4;color:var(--ink-2)}
+
+/* le coin de bureau, à l'échelle 1 */
+.desk{position:relative;overflow:hidden;border:1px solid var(--line);background:var(--bg-2)}
+.dz{zoom:1.75;position:relative;width:372px;height:261px;font-family:Inter,"Segoe UI",sans-serif;
+  background:radial-gradient(120% 90% at 85% 0%,#3a1e22 0,#1a1418 45%,#0f0f13 100%)}
+.dz::before{content:"";position:absolute;left:-40px;top:20px;width:260px;height:120px;border-radius:50%;background:radial-gradient(closest-side,rgba(255,59,48,.10),transparent);filter:blur(6px)}
+.tb{position:absolute;left:0;right:0;bottom:0;height:48px;display:flex;align-items:center;justify-content:flex-end;gap:2px;padding-right:6px;background:rgba(30,30,32,.94);border-top:1px solid rgba(255,255,255,.07)}
+.tb .ti{width:32px;height:40px;display:grid;place-items:center;border-radius:4px;color:#e9e9ea}
+.tb .ti svg{width:14px;height:14px}
+.tb .ti img{width:16px;height:16px;display:block}
+.tb .ti.hv{background:rgba(255,255,255,.08)}
+.tb .grp{height:40px;display:flex;align-items:center;gap:9px;padding:0 9px;border-radius:4px;color:#e9e9ea}
+.tb .grp svg{width:14px;height:14px}
+.tb .clk{height:40px;display:flex;flex-direction:column;align-items:flex-end;justify-content:center;gap:1px;padding:0 8px;font-size:11.5px;line-height:1.25;color:#f2f2f2}
+.tb .bell{width:20px;height:40px;display:grid;place-items:center;color:#e9e9ea}
+.tb .bell svg{width:13px;height:13px}
+.tip{position:absolute;bottom:56px;padding:5px 8px 6px;font-size:11.5px;color:#f2f2f2;background:#2b2b2d;border:1px solid rgba(255,255,255,.09);border-radius:5px;box-shadow:0 6px 16px rgba(0,0,0,.45);white-space:nowrap}
+.menu{position:absolute;z-index:2;bottom:53px;white-space:nowrap;padding:4px;background:#2c2c2e;border:1px solid rgba(255,255,255,.09);border-radius:8px;box-shadow:0 10px 28px rgba(0,0,0,.55)}
+.menu .it{height:30px;display:flex;align-items:center;padding:0 28px 0 12px;font-size:12.5px;color:#f2f2f2;border-radius:4px}
+.menu .it.hv{background:rgba(255,255,255,.075)}
+.menu .sep{height:1px;margin:4px 6px;background:rgba(255,255,255,.1)}
+.cur{position:absolute;width:13px;height:19px}
+
+/* tailles de l'icône */
+.szs{display:grid;grid-template-columns:1fr 1fr;gap:22px;margin-top:28px}
+.sz2{display:flex;align-items:center;gap:0;height:74px;padding:0 22px;border:1px solid var(--line)}
+.sz2.dk{background:rgba(30,30,32,.94)}
+.sz2.lt{background:#eeeef0;border-color:transparent}
+.sz2 .k3{font-family:var(--cond);font-weight:800;font-size:13px;letter-spacing:.14em;text-transform:uppercase;color:var(--ink-3);margin-right:auto}
+.sz2.lt .k3{color:#77777c}
+.sz2 .ic{display:flex;flex-direction:column;align-items:center;gap:6px;width:92px}
+.sz2 .ic img{display:block}
+.sz2 .ic small{font-family:var(--cond);font-weight:700;font-size:12px;letter-spacing:.08em;text-transform:uppercase;color:var(--ink-3)}
+.sz2.lt .ic small{color:#77777c}
+html.round .desk,html.round .sz2{border-radius:20px}
+</style></head>
+<body>
+<div class="win">
+  <div class="tp">
+    <span class="bgdots"></span>
+    <section class="tph">
+      <div><p class="kick">app frame <b>//</b> next to the clock</p><h1 class="title" data-t="tray">tray</h1></div>
+      <p class="lead">Closing the window keeps Rago next to the clock, and it starts there with Windows. <b>Left click</b> opens the app. <b>Right click</b> shows the menu.</p>
+    </section>
+
+    <div class="tpr">
+      <div>
+        <div class="desk"><div class="dz">
+          <div class="tip" style="right:136px">Rago Optimizer</div>
+          <div class="tb">
+            <span class="ti"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m18 15-6-6-6 6"/></svg></span>
+            <span class="ti hv"><img src="img/rago-app-dark-16.svg" alt=""></span>
+            <span class="grp"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h.01"/><path d="M2 8.82a15 15 0 0 1 20 0"/><path d="M5 12.86a10 10 0 0 1 14 0"/><path d="M8.5 16.43a5 5 0 0 1 7 0"/></svg><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4.7a.7.7 0 0 0-1.2-.5L6.4 7.6A1.4 1.4 0 0 1 5.4 8H3a1 1 0 0 0-1 1v6a1 1 0 0 0 1 1h2.4a1.4 1.4 0 0 1 1 .4l3.4 3.4a.7.7 0 0 0 1.2-.5Z"/><path d="M16 9a5 5 0 0 1 0 6"/><path d="M19.4 18.4a9 9 0 0 0 0-12.7"/></svg></span>
+            <span class="clk"><span>21:42</span><span>22/11/2026</span></span>
+            <span class="bell"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10.27 21a2 2 0 0 0 3.46 0"/><path d="M3.26 15.33A1 1 0 0 0 4 17h16a1 1 0 0 0 .74-1.67C19.41 13.96 18 12.5 18 8A6 6 0 0 0 6 8c0 4.5-1.41 5.96-2.74 7.33"/></svg></span>
+          </div>
+          <svg class="cur" style="right:150px;bottom:12px" viewBox="0 0 13 19"><path d="M1 1v15l3.6-3.4 2.4 5.4 2.4-1-2.4-5.3H12Z" fill="#fff" stroke="#000" stroke-width="1" stroke-linejoin="round"/></svg>
+        </div></div>
+        <p class="cap"><b>hover <em>//</em> name</b><span>Just the app's name. A left click opens the window.</span></p>
+      </div>
+
+      <div>
+        <div class="desk"><div class="dz">
+          <div class="menu" style="right:163px">
+            <div class="it hv">Open Rago Optimizer</div>
+            <div class="sep"></div>
+            <div class="it">Quit</div>
+          </div>
+          <div class="tb">
+            <span class="ti"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m18 15-6-6-6 6"/></svg></span>
+            <span class="ti hv"><img src="img/rago-app-dark-16.svg" alt=""></span>
+            <span class="grp"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h.01"/><path d="M2 8.82a15 15 0 0 1 20 0"/><path d="M5 12.86a10 10 0 0 1 14 0"/><path d="M8.5 16.43a5 5 0 0 1 7 0"/></svg><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4.7a.7.7 0 0 0-1.2-.5L6.4 7.6A1.4 1.4 0 0 1 5.4 8H3a1 1 0 0 0-1 1v6a1 1 0 0 0 1 1h2.4a1.4 1.4 0 0 1 1 .4l3.4 3.4a.7.7 0 0 0 1.2-.5Z"/><path d="M16 9a5 5 0 0 1 0 6"/><path d="M19.4 18.4a9 9 0 0 0 0-12.7"/></svg></span>
+            <span class="clk"><span>21:42</span><span>22/11/2026</span></span>
+            <span class="bell"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10.27 21a2 2 0 0 0 3.46 0"/><path d="M3.26 15.33A1 1 0 0 0 4 17h16a1 1 0 0 0 .74-1.67C19.41 13.96 18 12.5 18 8A6 6 0 0 0 6 8c0 4.5-1.41 5.96-2.74 7.33"/></svg></span>
+          </div>
+          <svg class="cur" style="right:150px;bottom:12px" viewBox="0 0 13 19"><path d="M1 1v15l3.6-3.4 2.4 5.4 2.4-1-2.4-5.3H12Z" fill="#fff" stroke="#000" stroke-width="1" stroke-linejoin="round"/></svg>
+        </div></div>
+        <p class="cap"><b>right click <em>//</em> menu</b><span>Windows draws this menu. Quit closes Rago completely, in-game bar included.</span></p>
+      </div>
+    </div>
+
+    <div class="szs">
+      <div class="sz2 dk"><span class="k3">dark taskbar</span>
+        <span class="ic"><img src="img/rago-app-dark-16.svg" width="16" height="16" alt=""><small>16 px</small></span>
+        <span class="ic"><img src="img/rago-app-dark-24.svg" width="24" height="24" alt=""><small>24 px</small></span>
+        <span class="ic"><img src="img/rago-app-dark-32.svg" width="32" height="32" alt=""><small>32 px</small></span>
+      </div>
+      <div class="sz2 lt"><span class="k3">light taskbar</span>
+        <span class="ic"><img src="img/rago-app-dark-16.svg" width="16" height="16" alt=""><small>16 px</small></span>
+        <span class="ic"><img src="img/rago-app-dark-24.svg" width="24" height="24" alt=""><small>24 px</small></span>
+        <span class="ic"><img src="img/rago-app-dark-32.svg" width="32" height="32" alt=""><small>32 px</small></span>
+      </div>
+    </div>
+  </div>
+</div>
+</body></html>

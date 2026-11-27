@@ -1,0 +1,60 @@
+<!doctype html>
+<html lang="fr"><head><meta charset="utf-8">
+<link href="https://fonts.googleapis.com/css2?family=Unbounded:wght@500;600;700;800;900&family=Instrument+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="rago3.css">
+<style>
+.win .field{z-index:0}
+.win .grid{z-index:1;left:236px;right:0;top:0;height:520px;-webkit-mask:radial-gradient(60% 90% at 78% 30%,#000 20%,transparent 80%);mask:radial-gradient(60% 90% at 78% 30%,#000 20%,transparent 80%)}
+.gclip{position:absolute;z-index:1;left:236px;right:0;top:0;height:456px;overflow:hidden;-webkit-mask:linear-gradient(180deg,#000 78%,transparent);mask:linear-gradient(180deg,#000 78%,transparent)}
+.globe{position:absolute;left:1018px;top:262px;transform:translate(-50%,-50%)}
+.hero{position:relative;height:366px;display:flex;flex-direction:column;justify-content:flex-end;padding-bottom:6px}
+.hero .mega{position:relative;width:612px}
+.hero .acts{position:relative;display:flex;gap:10px;margin-top:30px}
+.lbl{display:flex;align-items:center;gap:16px;margin:34px 0 14px}
+.lbl::after{content:"";flex:1;height:1px;background:var(--line)}
+.presets{display:grid;grid-template-columns:repeat(5,1fr);gap:10px}
+.pr{height:78px;display:flex;align-items:center;justify-content:space-between;padding:0 20px;font-family:var(--display);font-weight:700;font-size:15px;letter-spacing:-.02em;color:var(--gris-2);
+  --c:14px;--edge:var(--line);--fill:color-mix(in srgb,var(--bg-2) 80%,transparent)}
+.pr.on{--fill:var(--rouge);color:#fff;filter:drop-shadow(0 14px 26px rgba(255,59,48,.45))}
+.pr.on svg{width:18px;height:18px;stroke-width:2.6}
+.games{display:grid;grid-template-columns:repeat(6,1fr);gap:10px}
+.games .poster{height:196px}
+.games .stripe{top:70px}
+.bar{position:absolute;z-index:6;left:50%;bottom:22px;transform:translateX(calc(-50% + 118px));display:flex;align-items:center;gap:26px;padding:8px 8px 8px 28px;
+  --c:16px;--edge:color-mix(in srgb,var(--gris) 16%,transparent);--fill:color-mix(in srgb,var(--bg-2) 94%,transparent);filter:drop-shadow(0 26px 40px rgba(0,0,0,.7))}
+.bar b{font-family:var(--display);font-weight:800;font-size:22px;letter-spacing:-.04em}
+.bar span{font-size:14px;color:var(--gris-2);margin-left:-16px}
+</style></head>
+<body data-page="dashboard">
+<div class="win">
+  <div class="field"></div>
+  <div class="grid"></div>
+  <div class="gclip"><div class="globe" data-globe data-r="222" data-lon="-34" data-tilt="30" data-label="18 ms"></div></div>
+  <main class="main">
+    <section class="hero">
+      <h1 class="mega"><div data-fit="140">Chaque</div><div data-fit="140">milliseconde</div><div data-fit="140">compte.</div></h1>
+      <div class="acts"><span class="btn btn-red cut"><i data-i="activity"></i>Analyser mon PC</span><span class="btn cut ol">Optimisations gratuites</span></div>
+    </section>
+
+    <div class="lbl"><h2 class="h">Presets</h2></div>
+    <section class="presets">
+      <div class="pr cut on">FPS max<i data-i="check"></i></div><div class="pr cut ol">Latence minimale</div><div class="pr cut ol">Minecraft PvP</div><div class="pr cut ol">PC portable</div><div class="pr cut ol">Vie privée</div>
+    </section>
+
+    <div class="lbl"><h2 class="h">Jeux</h2></div>
+    <section class="games">
+      <div class="poster p-red"><span class="gn">Valorant</span><span class="ck"><i data-i="check"></i></span><div class="stripe"></div><div class="tag"><div class="name" data-fit="130">VAL</div></div></div>
+      <div class="poster p-tech"><span class="gn">Fortnite</span><div class="stripe"></div><div class="tag"><div class="name" data-fit="130">FN</div></div></div>
+      <div class="poster p-ink"><span class="gn">Counter-Strike 2</span><div class="stripe"></div><div class="tag"><div class="name" data-fit="130">CS2</div></div></div>
+      <div class="poster p-red"><span class="gn">Apex Legends</span><div class="stripe"></div><div class="tag"><div class="name" data-fit="130">APEX</div></div></div>
+      <div class="poster p-tech"><span class="gn">Rainbow Six Siege</span><div class="stripe"></div><div class="tag"><div class="name" data-fit="130">R6</div></div></div>
+      <div class="poster p-ink"><span class="gn">League of Legends</span><div class="stripe"></div><div class="tag"><div class="name" data-fit="130">LoL</div></div></div>
+    </section>
+  </main>
+  <div class="bar cut ol"><b>46</b><span>réglages</span><span class="btn btn-red sm cut" style="height:44px;padding:0 24px;font-size:13px">Appliquer</span></div>
+</div>
+<script src="shell3.js"></script>
+<script src="icons.js"></script>
+<script src="globe.js"></script>
+<script src="fit.js"></script>
+</body></html>

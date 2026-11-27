@@ -10,6 +10,7 @@ Registre daté des décisions de Sofiene. **La plus récente prime.** Citations 
 ## App et versions
 | Date | Décision | Statut |
 |---|---|---|
+| 27/11 | **Tout `rago-redesign/` sauvegardé dans le dépôt** (q128) : « oui bien sur sauvegarde tout sur le github » ; dossier `design/rago-redesign/` (maquettes v5, kit de marque, scripts `rendus-v5/outils/` qui génèrent le CSS de `app/src/s5/`), branche partie de `staging`, poussée seulement après le « go » de Sofiene ([[New Brand Rago]]) | « go » de Sofiene le 27/11 : PR #156 vers `staging`, fusion seulement sur son accord |
 | 27/11 | **Hook du [[Rago Hub]] aussi dans `staging`** (q130) : « tu peux également mettre le petit réglage claude dans staging » ; `.claude/` recopié de la prod (`ac4107a`) sans changement | fait le 27/11 ([[Branches et environnements]]) |
 | 27/11 | **Rago Route : avant l'annonce, test P0-9 et message à Hypixel** (q99) : Sofiene choisit les deux, le test P0-9 (3 à 5 comptes de l'équipe en même temps par Paris, puis une semaine normale) **et** un message à Hypixel pour déclarer l'adresse de sortie de Paris ; à suivre comme une tâche du Rago Hub ; la réponse de la FAQ sur les blocages reste cachée jusqu'à la fin du test | DÉCIDÉ, pas fait ([[Page de vente Rago Route]], [[Proxy]]) |
 | 27/11 | **Supabase passe en Pro** (25 $/mois) : « je vais passer en pro dès que j'ai ma paye donc le 01/12 ou le 02/12 » (avant les restrictions possibles du 05/12) | DÉCIDÉ, pas encore fait ([[Supabase]]) |

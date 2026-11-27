@@ -1,0 +1,56 @@
+/* Rago v2, direction "Affiche" (planche 3 : MSI25, VCT Paris, LCS 2026)
+   Noir grainé, gris os pour la typo, rouge Rago en éclats. Unbounded partout où ça compte, très peu de mots. */
+:root{
+  --noir:#0B0B0C; --char:#151416; --gris:#D8D5D0; --gris-2:rgba(216,213,208,.55); --gris-3:rgba(216,213,208,.3);
+  --rouge:#FF3B30; --sang:#5E0810; --os:#EFE7DA; --line:rgba(216,213,208,.1);
+  --display:"Unbounded",system-ui,sans-serif; --ui:"Instrument Sans",system-ui,sans-serif;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{background:var(--noir);color:var(--gris);font-family:var(--ui);font-size:14.5px;line-height:1.4;-webkit-font-smoothing:antialiased}
+svg.i{width:18px;height:18px;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round;flex:none}
+.grain{position:absolute;inset:0;z-index:20;pointer-events:none;opacity:.13;mix-blend-mode:overlay;
+  background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='220' height='220'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='3' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 1 0 0 0 0 1 0 0 0 0 1 0 0 0 .9 0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E")}
+.shards{position:absolute;pointer-events:none;overflow:hidden}
+.mega{font-family:var(--display);font-weight:900;text-transform:uppercase;letter-spacing:-.045em;line-height:.86;color:var(--gris)}
+.h{font-family:var(--display);font-weight:700;font-size:15px;letter-spacing:-.01em;color:var(--gris)}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:10px;height:50px;padding:0 26px;border-radius:999px;
+  font-family:var(--display);font-weight:700;font-size:13px;letter-spacing:.005em;white-space:nowrap;color:var(--gris);box-shadow:inset 0 0 0 1.5px rgba(216,213,208,.28)}
+.btn-red{color:#fff;background:var(--rouge);box-shadow:0 14px 40px -12px rgba(255,59,48,.9)}
+.btn.sm{height:38px;padding:0 18px;font-size:11.5px}
+.tg{position:relative;width:46px;height:26px;border-radius:999px;flex:none;background:#2a2829}
+.tg::after{content:"";position:absolute;top:3px;left:3px;width:20px;height:20px;border-radius:50%;background:#8d8a86}
+.tg.on{background:var(--rouge)}
+.tg.on::after{left:23px;background:#fff}
+
+/* fenêtre de l'app */
+.win{position:relative;width:1440px;height:900px;overflow:hidden;background:var(--noir)}
+.side{position:absolute;z-index:4;left:0;top:0;bottom:0;width:236px;padding:26px 14px;display:flex;flex-direction:column;border-right:1px solid var(--line)}
+.side .logo{padding:0 12px 34px}
+.side .logo svg{width:30px;fill:var(--rouge)}
+.side a{display:flex;align-items:center;gap:12px;height:38px;padding:0 12px;border-radius:12px;color:var(--gris-2);font-size:14px;font-weight:500}
+.side a svg{width:17px;height:17px}
+.side a.on{color:var(--gris);background:rgba(216,213,208,.06)}
+.side a.on svg{color:var(--rouge)}
+.side .gap{height:18px}
+.side .foot{margin-top:auto}
+.top{position:absolute;z-index:4;top:0;left:236px;right:0;height:64px;display:flex;align-items:center;gap:14px;padding:0 20px 0 48px}
+.top .search{display:flex;align-items:center;gap:10px;color:var(--gris-3);font-size:14px}
+.top .r{margin-left:auto;display:flex;align-items:center;gap:6px;color:var(--gris-3)}
+.top .r .av{width:30px;height:30px;border-radius:50%;background:linear-gradient(135deg,#FF8A6A,#5E0810);margin-right:14px}
+.top .r span.w{width:32px;height:30px;display:grid;place-items:center}
+.top .r svg{width:14px;height:14px;stroke:currentColor;stroke-width:1.6;fill:none}
+.main{position:absolute;z-index:2;left:236px;right:0;top:64px;bottom:0;padding:0 48px}
+
+/* affiches de jeu */
+.poster{position:relative;border-radius:18px;overflow:hidden;padding:14px;display:flex;flex-direction:column;isolation:isolate}
+.poster .gn{font-size:12.5px;font-weight:700}
+.poster .stripe{position:absolute;left:-30px;right:-30px;height:16px;transform:rotate(-9deg)}
+.poster .tag{margin-top:auto}
+.poster .name{font-family:var(--display);font-weight:900;letter-spacing:-.055em;line-height:.78;margin-left:-2px}
+.poster .ck{position:absolute;right:12px;top:12px;width:28px;height:28px;border-radius:50%;display:grid;place-items:center}
+.poster .ck svg{width:14px;height:14px;stroke-width:2.6}
+.p-red{background:var(--rouge);color:#170304}.p-red .stripe{background:#170304}
+.p-os{background:var(--os);color:#d3201c}.p-os .stripe{background:#d3201c}
+.p-ink{background:#161415;color:var(--gris);box-shadow:inset 0 0 0 1px var(--line)}.p-ink .stripe{background:var(--rouge)}
+.p-ink .name{color:transparent;-webkit-text-stroke:1.5px var(--rouge)}
+.p-red .ck{background:#170304;color:#fff}

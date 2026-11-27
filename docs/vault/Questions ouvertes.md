@@ -43,9 +43,6 @@ Posées le 24/11 sur l'accueil v6 (PR #136, [[New Brand Rago]]) :
 
 Posées le 25/11 par les fils des autres projets (serveur Minecraft, voir leur vault) : q122 à q127.
 
-Posées le 25/11, passage sur le nouveau compte Claude ([[Reprendre sur un nouveau compte Claude]]) :
-- q128 : le dossier `rago-redesign/` du projet [[New Brand Rago]] (maquettes, kit, scripts qui génèrent le CSS de l'app) est téléchargé avec le reste dans `/Users/kaliso/Desktop/Rago data ` (27/11) : faut-il aussi le mettre dans le dépôt ?
-
 Au 10/11, après les réponses de Sofiene du jour (q36 à q68 traitées, q46 le 10/11 à 15 h, voir [[Décisions]]) :
 
 Posées le 10/11 au soir (q70 à q93), après la relecture complète du code pour le vault détaillé (dossier `Code/`) :

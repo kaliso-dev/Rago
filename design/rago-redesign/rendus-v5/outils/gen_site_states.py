@@ -1,0 +1,303 @@
+# Lot 4 : états du site public (pop-up de bienvenue, fenêtre de téléchargement, site sur téléphone).
+# Textes repris de site/src/page.html (#promo, #dlg, #send, #menu). Écrit src/site-states.html.
+S = '/mnt/project-files/rago-redesign/rendus-v5/src/'
+
+CSS = r'''
+.win{min-height:0}
+.tp{position:relative;z-index:1;isolation:isolate;padding:44px 56px 64px}
+.tp .bgdots{position:absolute;right:0;top:0;width:620px;height:420px;pointer-events:none;background:radial-gradient(circle,rgba(255,255,255,.07) 1.1px,transparent 1.5px) 0 0/9px 9px;-webkit-mask:linear-gradient(240deg,#000 0,transparent 60%)}
+.tph{display:flex;align-items:flex-end;justify-content:space-between;gap:40px}
+.tph .title{font-size:132px;margin-top:16px}
+.tph .lead{max-width:460px;padding-bottom:12px;font-size:15px;line-height:1.5;color:var(--ink-2)}
+.tph .lead b{color:var(--ink);font-weight:600}
+.sh5{display:flex;align-items:baseline;gap:14px;margin:56px 0 18px}
+.sh5 b{font-family:var(--cond);font-weight:900;font-style:italic;font-size:30px;text-transform:uppercase;white-space:nowrap}
+.sh5 span{font-size:13.5px;color:var(--ink-2)}
+.k5{font-family:var(--cond);font-weight:800;font-size:13px;letter-spacing:.14em;text-transform:uppercase;color:var(--ink-3);line-height:1.5}
+.k5 em{font-style:normal;color:var(--red)}
+.k5 small{display:block;margin-top:2px;font-family:Barlow,sans-serif;font-weight:500;font-size:12.5px;letter-spacing:0;text-transform:none;color:var(--ink-3)}
+
+/* scène : le site assombri derrière la fenêtre */
+.st5{display:grid;grid-template-columns:880px 1fr;gap:14px;align-items:stretch}
+.stg{position:relative;min-height:700px;background-color:var(--bg);overflow:hidden;background-image:url(img/site/home-hero.jpg);background-position:left top;background-size:cover;background-repeat:no-repeat;border:1px solid var(--line)}
+.stg::before{content:"";position:absolute;inset:0;background:rgba(5,5,6,.74);backdrop-filter:blur(3px)}
+.stg .dlg5{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%)}
+html.round .stg{border-radius:24px}
+
+.dlg5{width:468px;padding:34px 34px 30px;background:var(--bg-2);border:1px solid var(--line-2);box-shadow:0 40px 90px -20px rgba(0,0,0,.9);isolation:isolate}
+.dlg5 .dots{position:absolute;right:0;top:0;width:260px;height:200px;z-index:-1;background:radial-gradient(circle,rgba(255,255,255,.08) 1.1px,transparent 1.5px) 0 0/9px 9px;-webkit-mask:linear-gradient(225deg,#000 0,transparent 70%)}
+html.round .dlg5{border-radius:26px}
+.x5{position:absolute;right:16px;top:16px;width:38px;height:38px;display:grid;place-items:center;background:rgba(255,255,255,.05);color:var(--ink-2)}
+.x5 svg{width:17px;height:17px}
+html.round .x5{border-radius:50%}
+
+/* pop-up de bienvenue */
+.pm5{text-align:left}
+.pm5 h3{margin-top:22px;font-family:var(--cond);font-weight:900;font-style:italic;text-transform:uppercase;line-height:.8}
+.pm5 h3 .a{display:block;font-size:46px}
+.pm5 h3 .b{position:relative;display:inline-block;margin:6px 0 2px;font-size:156px;letter-spacing:-.02em;isolation:isolate}
+.pm5 h3 .b::after{content:"";position:absolute;z-index:-1;left:-26px;right:-40px;top:26%;height:70%;background:url(img/fx/brush.svg) center/100% 100% no-repeat;transform:rotate(-3deg)}
+.pm5 h3 .b small{font-size:96px}
+.pm5 p{margin-top:16px;font-size:15px;line-height:1.5;color:var(--ink-2)}
+.cd5{display:flex;align-items:center;justify-content:space-between;margin-top:20px;height:62px;padding:0 10px 0 22px;background:rgba(255,59,48,.09);border:1.5px dashed var(--red)}
+.cd5 b{font-family:var(--cond);font-weight:900;font-size:30px;letter-spacing:.16em}
+.cd5 span{display:inline-flex;align-items:center;gap:7px;height:40px;padding:0 14px;font-family:var(--cond);font-weight:800;font-size:14px;letter-spacing:.1em;text-transform:uppercase;color:var(--ink);background:rgba(255,255,255,.06)}
+.cd5 span svg{width:14px;height:14px}
+.cd5 span.ok{color:var(--ok);background:rgba(52,199,89,.1)}
+html.round .cd5{border-radius:16px}
+html.round .cd5 span{border-radius:10px}
+.acts5{display:flex;gap:10px;margin-top:24px}
+.acts5 .btn{flex:1;height:50px;font-size:17px}
+
+/* colonne de côté */
+.sd5{display:flex;flex-direction:column;gap:14px}
+.sd5 > div{padding:20px 22px 22px;background:var(--bg-2);border:1px solid var(--line)}
+html.round .sd5 > div{border-radius:20px}
+.sd5 .rule{flex:1}
+.sd5 .rule p{margin-top:10px;font-size:14px;line-height:1.55;color:var(--ink-2)}
+.sd5 .rule p b{color:var(--ink);font-weight:600}
+.lim5{margin-top:14px}
+.lim5 .bar{display:flex;gap:3px;height:10px}
+.lim5 .bar i{flex:1;background:var(--red);transform:skewX(var(--skew))}
+.lim5 .bar i.off{background:var(--bg-4)}
+.lim5 p{display:flex;justify-content:space-between;margin-top:10px;font-size:13.5px;color:var(--ink-2)}
+.lim5 p b{color:var(--ink);font-weight:600}
+.sd5 .cd5{height:54px;margin-top:14px}
+.sd5 .cd5 b{font-size:24px}
+.tst5{display:flex;align-items:center;gap:12px;margin-top:14px;padding:14px 16px;background:var(--bg-3);border:1px solid var(--line-2);box-shadow:inset 3px 0 0 var(--ok);font-size:14px;color:var(--ink)}
+.tst5 svg{width:16px;height:16px;color:var(--ok);flex:none}
+html.round .tst5{border-radius:12px}
+
+/* fenêtre de téléchargement */
+.dl5{width:560px;padding:32px 34px 26px}
+.dl5 .hd{display:flex;align-items:center;gap:12px}
+.dl5 .hd .ok{width:30px;height:30px;display:grid;place-items:center;background:rgba(52,199,89,.14);color:var(--ok)}
+.dl5 .hd .ok svg{width:16px;height:16px}
+html.round .dl5 .hd .ok{border-radius:50%}
+.dl5 .hd .s-eb{color:var(--ok)}
+.dl5 h3{margin-top:16px;font-family:var(--cond);font-weight:900;font-style:italic;font-size:50px;line-height:.86;text-transform:uppercase}
+.dl5 ol{display:grid;gap:4px;margin-top:22px}
+.dl5 li{display:grid;grid-template-columns:34px 1fr;gap:16px;padding:14px 16px 14px 14px;background:var(--bg-3)}
+html.round .dl5 li{border-radius:14px}
+.dl5 li > i{width:34px;height:34px;display:grid;place-items:center;font-family:var(--cond);font-weight:900;font-style:italic;font-size:20px;color:var(--red-ink);background:var(--red);transform:skewX(var(--skew))}
+.dl5 li b{display:block;font-size:15px;font-weight:600;line-height:1.35}
+.dl5 li span{display:block;margin-top:4px;font-size:13.5px;line-height:1.5;color:var(--ink-2)}
+.dl5 li code{font-family:Barlow,sans-serif;font-weight:600;color:var(--ink)}
+.dl5 .micro{margin-top:16px;text-align:center;font-size:13px;color:var(--ink-3)}
+.dl5 .micro a{color:var(--ink);border-bottom:1.5px solid var(--red)}
+
+/* SmartScreen (fenêtre de Windows, dessinée telle quelle) */
+.ss5{margin-top:14px;padding:26px 24px 20px;background:#0a5fa8;color:#fff;font-family:"Segoe UI",Inter,sans-serif;position:relative}
+.ss5 h4{font-weight:300;font-size:25px;line-height:1.15}
+.ss5 p{margin-top:12px;font-size:12.5px;line-height:1.5;color:rgba(255,255,255,.92)}
+.ss5 dl{display:grid;grid-template-columns:auto 1fr;gap:4px 12px;margin-top:14px;font-size:12.5px}
+.ss5 dt{color:rgba(255,255,255,.8)}
+.ss5 .bt{display:flex;justify-content:flex-end;gap:8px;margin-top:22px}
+.ss5 .bt span{min-width:96px;height:30px;display:grid;place-items:center;padding:0 12px;font-size:12.5px;border:2px solid rgba(255,255,255,.75)}
+.ss5 .bt span.hl{outline:3px solid var(--red);outline-offset:4px}
+.ss5 .ml{display:inline-block;margin-top:8px;font-size:12.5px;text-decoration:underline;outline:3px solid var(--red);outline-offset:4px}
+
+/* contrôle de compte d'utilisateur (Windows 11, mode sombre) */
+.uac5{margin-top:14px;padding:16px 20px 18px;background:#202020;border:1px solid #3a3a3a;color:#fff;font-family:"Segoe UI",Inter,sans-serif;border-top:4px solid #f7c948}
+.uac5 .t{font-size:11.5px;color:rgba(255,255,255,.75)}
+.uac5 h4{margin-top:8px;font-weight:600;font-size:15px;line-height:1.35}
+.uac5 .f{margin-top:10px;font-size:13px;font-weight:600}
+.uac5 dl{display:grid;grid-template-columns:auto 1fr;gap:2px 10px;margin-top:6px;font-size:12px;color:rgba(255,255,255,.8)}
+.uac5 .bt{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:16px}
+.uac5 .bt span{height:30px;display:grid;place-items:center;font-size:12.5px;background:#2d2d2d;border:1px solid #444;border-radius:4px}
+.uac5 .bt span.hl{background:#4cc2ff;border-color:#4cc2ff;color:#000;outline:3px solid var(--red);outline-offset:4px}
+.ss5{padding:20px 22px 18px}
+.ss5 h4{font-size:22px}
+.ss5 .bt{margin-top:16px}
+
+/* téléphones */
+.phs{display:flex;justify-content:space-between;align-items:flex-start}
+.phw .k5{margin-top:16px;padding-left:6px}
+.ph5{position:relative;width:410px;height:864px;padding:10px;background:#1b1b1e;border-radius:58px;box-shadow:inset 0 0 0 1.5px rgba(255,255,255,.08),0 30px 60px -20px rgba(0,0,0,.8)}
+.scr{position:relative;width:390px;height:844px;overflow:hidden;border-radius:48px;background:var(--bg)}
+.scr::after{content:"";position:absolute;left:50%;bottom:9px;width:134px;height:5px;margin-left:-67px;border-radius:3px;background:rgba(255,255,255,.85);z-index:30}
+.scr .isl{position:absolute;left:50%;top:11px;width:120px;height:34px;margin-left:-60px;border-radius:20px;background:#000;z-index:9}
+.sb{position:relative;z-index:8;display:flex;justify-content:space-between;align-items:center;height:54px;padding:6px 34px 0 40px;font-family:Inter,"Segoe UI",sans-serif;font-weight:600;font-size:15px}
+.sb .ic{display:flex;align-items:center;gap:6px}
+.sb .ic svg{width:17px;height:17px}
+.sb .sig{display:flex;align-items:flex-end;gap:2px;height:12px}
+.sb .sig i{width:3px;background:#fff;border-radius:1px}
+.mnav{position:relative;z-index:7;display:flex;align-items:center;gap:10px;height:58px;padding:0 18px;border-bottom:1px solid var(--line)}
+.mnav .s-logo img{width:30px;height:30px}
+.mnav .s-logo b{font-size:24px}
+.mnav .btn{margin-left:auto;height:36px;padding:0 16px;font-size:14px}
+.mnav .bg{width:42px;height:42px;display:grid;place-items:center;background:var(--bg-3);border:1px solid var(--line-2)}
+.mnav .bg svg{width:20px;height:20px}
+html.round .mnav .bg{border-radius:12px}
+.mh{position:relative;padding:24px 20px 0}
+.mh .s-dots{right:0;top:0;width:300px;height:300px;-webkit-mask:linear-gradient(230deg,#000 0,transparent 65%)}
+.mh .s-chip{font-size:13px}
+.mh .s-eb{margin-top:22px;font-size:12px;letter-spacing:.16em}
+.mh h1{position:relative;margin-top:14px;font-family:var(--cond);font-weight:900;font-style:italic;font-size:68px;line-height:.82;text-transform:uppercase;letter-spacing:-.012em}
+.mh h1 span{display:block}
+.mh h1 .br{position:relative;display:inline-block;isolation:isolate}
+.mh h1 .br::after{content:"";position:absolute;z-index:-1;left:-18px;right:-34px;top:30%;height:74%;background:url(img/fx/brush.svg) center/100% 100% no-repeat;transform:rotate(-2.5deg)}
+.mh .s-lead{margin-top:18px;font-size:15.5px;line-height:1.55}
+.mh .ma{display:grid;gap:10px;margin-top:22px}
+.mh .ma .btn{height:54px;font-size:18px}
+.mh .tr{display:flex;flex-wrap:wrap;gap:6px 16px;margin-top:16px}
+.mh .tr li{font-size:13px}
+.mh .shot{margin:26px -20px 0 20px;border:1px solid var(--line-2);border-right:0;overflow:hidden;height:220px}
+.mh .shot img{width:640px;display:block}
+html.round .mh .shot{border-radius:16px 0 0 16px}
+
+/* menu ouvert */
+.mm{padding:10px 20px 0}
+.mm a{display:flex;align-items:center;justify-content:space-between;height:54px;border-bottom:1px solid var(--line);font-family:var(--cond);font-weight:900;font-style:italic;font-size:30px;text-transform:uppercase;color:var(--ink)}
+.mm a svg{width:18px;height:18px;color:var(--ink-3)}
+.mm a.on{color:var(--red)}
+.mm a.on svg{color:var(--red)}
+.mcta{display:grid;grid-template-columns:1fr 1fr;gap:10px;padding:22px 20px 0}
+.mcta .btn{height:48px;font-size:16px}
+.mcta .btn.full{grid-column:1/-1}
+
+/* feuille « envoyer sur le PC » */
+.dim{position:absolute;inset:0;z-index:20;background:rgba(5,5,6,.72);backdrop-filter:blur(2px)}
+.sheet{position:absolute;left:0;right:0;bottom:0;z-index:21;padding:14px 22px 40px;background:var(--bg-2);border-top:1px solid var(--line-2)}
+html.round .sheet{border-radius:30px 30px 0 0}
+.sheet .hdl{width:44px;height:5px;margin:0 auto 22px;border-radius:3px;background:var(--line-2)}
+.sheet .s-eb{font-size:12px;letter-spacing:.16em}
+.sheet h3{margin-top:12px;font-family:var(--cond);font-weight:900;font-style:italic;font-size:42px;line-height:.86;text-transform:uppercase}
+.sheet p{margin-top:12px;font-size:15px;line-height:1.5;color:var(--ink-2)}
+.sheet .url{display:flex;align-items:center;gap:10px;margin-top:18px;height:50px;padding:0 16px;background:var(--bg-3);border:1px solid var(--line-2);font-size:15px}
+.sheet .url svg{width:16px;height:16px;color:var(--red)}
+html.round .sheet .url{border-radius:14px}
+.sheet .sa{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:14px}
+.sheet .sa .btn{height:50px;font-size:16px}
+.sheet .sa .btn.full{grid-column:1/-1}
+'''
+
+
+def chip_tag(t):
+    return f'<span class="s-tag red">{t}</span>'
+
+
+def promo():
+    return f'''<div class="dlg5 pm5"><span class="dots"></span><span class="x5"><i data-i="x"></i></span>
+  {chip_tag('welcome offer')}
+  <h3><span class="a">get</span><span class="b">15<small>%</small></span><span class="a">off now!</span></h3>
+  <p>Use this code on your first Premium payment, monthly or yearly.</p>
+  <div class="cd5"><b>RAGO15</b><span><i data-i="copy"></i>copy</span></div>
+  <div class="acts5"><span class="btn">no thanks</span><span class="btn red">claim my discount</span></div>
+</div>'''
+
+
+def promo_side():
+    bar = ''.join(f'<i{"" if i < 17 else " class=off"}></i>' for i in range(20))
+    return f'''<div class="sd5">
+  <div><p class="k5">limited offer <em>//</em><small>When the code has a cap, under the code.</small></p>
+    <div class="lim5"><div class="bar">{bar}</div><p><span>Limited to the first 500 players</span><b>74 left</b></p></div></div>
+  <div><p class="k5">code copied <em>//</em><small>Copy turns green for a moment.</small></p>
+    <div class="cd5"><b>RAGO15</b><span class="ok"><i data-i="check"></i>copied</span></div></div>
+  <div><p class="k5">after claim my discount <em>//</em><small>The pop-up closes, the prices update, and this note shows.</small></p>
+    <div class="tst5"><i data-i="check"></i>15% off applied at checkout with RAGO15.</div></div>
+  <div class="rule"><p class="k5">when it shows <em>//</em></p>
+    <p><b>12 seconds</b> after the page opens, or as soon as you scroll past the top. <b>Once every 30 days</b> for the same code.</p>
+    <p>Never over the phone menu or another window, and never for a visitor who came with a friend's code.</p></div>
+</div>'''
+
+
+def download():
+    return '''<div class="dlg5 dl5"><span class="dots"></span><span class="x5"><i data-i="x"></i></span>
+  <div class="hd"><span class="ok"><i data-i="check"></i></span><p class="s-eb">download started</p></div>
+  <h3>three steps to<br>your first tweaks.</h3>
+  <ol>
+    <li><i>1</i><div><b>Open <code>RagoOptimizer-Setup.exe</code></b><span>From your Downloads folder.</span></div></li>
+    <li><i>2</i><div><b>If Windows says “Windows protected your PC”</b><span>Click More info, then Run anyway. Windows shows this because Rago doesn't have a paid code-signing certificate yet. Then accept the administrator prompt: Rago needs it to change system settings.</span></div></li>
+    <li><i>3</i><div><b>Rago opens in free mode</b><span>No account needed. 73 tweaks are open, up to 30 on at once, and the rest show a lock until you go Premium.</span></div></li>
+  </ol>
+  <div class="acts5"><span class="btn">got it</span><span class="btn red">see premium</span></div>
+  <p class="micro">Nothing downloaded? <a>Try again</a></p>
+</div>'''
+
+
+def download_side():
+    return '''<div class="sd5">
+  <div><p class="k5">step 2, first screen <em>//</em></p>
+    <div class="ss5"><h4>Windows protected your PC</h4><p>Microsoft Defender SmartScreen prevented an unrecognized app from starting. Running this app might put your PC at risk.</p><span class="ml">More info</span>
+      <div class="bt"><span>Don't run</span></div></div></div>
+  <div><p class="k5">step 2, after more info <em>//</em></p>
+    <div class="ss5"><h4>Windows protected your PC</h4><dl><dt>App:</dt><dd>RagoOptimizer-Setup.exe</dd><dt>Publisher:</dt><dd>Unknown publisher</dd></dl>
+      <div class="bt"><span class="hl">Run anyway</span><span>Don't run</span></div></div></div>
+  <div><p class="k5">then, the administrator prompt <em>//</em></p>
+    <div class="uac5"><p class="t">User Account Control</p><h4>Do you want to allow this app from an unknown publisher to make changes to your device?</h4>
+      <p class="f">RagoOptimizer-Setup.exe</p><dl><dt>Publisher:</dt><dd>Unknown</dd><dt>File origin:</dt><dd>Hard drive on this computer</dd></dl>
+      <div class="bt"><span class="hl">Yes</span><span>No</span></div></div></div>
+</div>'''
+
+
+def statusbar():
+    sig = ''.join(f'<i style="height:{h}px"></i>' for h in (4, 6, 9, 12))
+    return f'<div class="isl"></div><div class="sb"><span>21:42</span><span class="ic"><span class="sig">{sig}</span><i data-i="wifi"></i><i data-i="battery"></i></span></div>'
+
+
+def mnav(open_=False):
+    btn = '' if open_ else '<span class="btn red">try free</span>'
+    ic = 'x' if open_ else 'menu'
+    ml = 'margin-left:auto' if open_ else ''
+    return f'<div class="mnav"><a class="s-logo"><img src="img/rago-app-dark-64.svg" alt=""><b>rago</b></a>{btn}<span class="bg" style="{ml}"><i data-i="{ic}"></i></span></div>'
+
+
+def mhero():
+    return '''<div class="mh"><span class="s-dots"></span>
+  <span class="s-chip"><span class="s-tag red">new</span>Try Premium free for 3 days</span>
+  <p class="s-eb">Minecraft PvP optimizer <b>//</b> for Windows</p>
+  <h1><span>every</span><span>millisecond</span><span class="br">counts.</span></h1>
+  <p class="s-lead">Steadier ping, smoother frames, less input lag. Rago tunes Windows, your network and Minecraft, and puts your settings back when you turn a tweak off.</p>
+  <div class="ma"><span class="btn red"><i data-i="zap"></i>try premium free</span><span class="btn"><i data-i="download"></i>download free</span></div>
+  <ul class="tr"><li class="s-ck"><i data-i="check"></i>Free to start</li><li class="s-ck"><i data-i="check"></i>Restore point offered</li><li class="s-ck"><i data-i="check"></i>Windows 10 and 11</li></ul>
+  <div class="shot"><img src="img/site/shot-dashboard.png" alt=""></div>
+</div>'''
+
+
+def phone(inner, cap, sub):
+    return f'<div class="phw"><div class="ph5"><div class="scr">{statusbar()}{inner}</div></div><p class="k5">{cap} <em>//</em><small>{sub}</small></p></div>'
+
+
+def phones():
+    items = ['Why Rago', 'Features', "What's new", 'Rago Route', 'Tweaks', 'Reviews', 'Pricing', 'FAQ', 'Partners', 'Affiliate program']
+    menu = ''.join(f'<a>{t}<i data-i="right"></i></a>' for t in items)
+    p1 = phone(mnav() + mhero(), 'home', 'The two buttons stack; the app shows below them.')
+    p2 = phone(mnav(True) + f'<div class="mm">{menu}</div><div class="mcta"><span class="btn">sign in</span><span class="btn">create account</span><span class="btn red full"><i data-i="chat"></i>join our discord</span></div>',
+               'menu', 'Every link of the top bar, plus Partners and the affiliate program.')
+    sheet = '''<div class="dim"></div><div class="sheet"><div class="hdl"></div><p class="s-eb">Windows 10 and 11</p><h3>rago runs<br>on your pc.<br>send it there.</h3>
+  <p>Open this link on your Windows PC to download Rago Optimizer for free.</p>
+  <div class="url"><i data-i="globe"></i>rago-optimizer.com</div>
+  <div class="sa"><span class="btn red full"><i data-i="share"></i>share</span><span class="btn"><i data-i="copy"></i>copy link</span><span class="btn">close</span></div></div>'''
+    p3 = phone(mnav() + mhero() + sheet, 'download on a phone', 'Rago is for Windows, so the button sends the link to your PC.')
+    return f'<div class="phs">{p1}{p2}{p3}</div>'
+
+
+def page():
+    return f'''<!doctype html>
+<html lang="en"><head><meta charset="utf-8">
+<link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:ital,wght@0,600;0,700;0,800;0,900;1,700;1,800;1,900&family=Barlow:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="rago5.css">
+<link rel="stylesheet" href="poster.css">
+<link rel="stylesheet" href="round.css">
+<link rel="stylesheet" href="site5.css">
+<script>for (const c of ['round','poster']) if (location.hash.includes(c)) document.documentElement.classList.add(c);</script>
+<style>{CSS}</style>
+<title>Rago Optimizer, site states</title>
+</head><body><div class="win site">
+<div class="tp"><span class="bgdots"></span>
+  <section class="tph"><div><p class="kick">website <b>//</b> every state</p><h1 class="title" data-t="states">states</h1></div>
+  <p class="lead">What opens over the site: the <b>welcome offer</b>, the <b>download steps</b>, and the site <b>on a phone</b>, where Rago can't be installed.</p></section>
+  <div class="sh5"><b>welcome offer</b><span>The code and its text come from the server, so the same pop-up serves every offer.</span></div>
+  <div class="st5"><div class="stg">{promo()}</div>{promo_side()}</div>
+  <div class="sh5"><b>download started</b><span>Opens with the download. Each step matches what Windows shows next.</span></div>
+  <div class="st5"><div class="stg">{download()}</div>{download_side()}</div>
+  <div class="sh5"><b>on a phone</b><span>Same page, one column.</span></div>
+  {phones()}
+</div></div>
+<script src="icons.js"></script>
+</body></html>'''
+
+
+open(S + 'site-states.html', 'w').write(page())
+print('wrote site-states.html')
