@@ -375,8 +375,11 @@ function ago(ms, now = Date.now()) {
 }
 
 const PLAN = { month: 'Monthly', year: 'Yearly', lifetime: 'Lifetime', reward: 'Affiliate reward' };
-// Months given by the team (admin grant-months) are a 'reward' license too, but not earned as an affiliate.
-const planName = (license) => (license.plan === 'reward' && license.source === 'grant' ? 'Gift' : PLAN[license.plan] || 'Lifetime');
+// A 'reward' license says where it comes from (licenses.source, set when it's created, 2026-11-27, q113): months given by
+// the team (admin grant-months) are a Gift, Premium earned on Discord (community bot: invites, boosts) a Discord reward,
+// the affiliate program's free months an Affiliate reward.
+const REWARD = { grant: 'Gift', discord: 'Discord reward', affiliate: 'Affiliate reward' };
+const planName = (license) => (license.plan === 'reward' ? REWARD[license.source] || PLAN.reward : PLAN[license.plan] || 'Lifetime');
 const pricingUrl = (cfg) => (cfg.subscriptions ? `${cfg.siteUrl}/#pricing` : '/buy');
 
 /**
@@ -419,7 +422,8 @@ function affiliateLine(a) {
 export function dashboardPage(cfg, { user, license, device, notice, error, canReset, nextResetAt, affiliate, discordLink, discordRewards = [], inviteRewards = [], review = null, lifetime = false, noPassword = false, trial = false, routeOption = null, routeOnSale = false, routeYearly = false }) {
   const active = license?.status === 'active';
   const reason = license?.status_reason;
-  const ended = !active && reason === 'subscription_ended';
+  // Premium that stopped by itself: the period ended (canceled, reward over) or a renewal was never paid (2026-11-27).
+  const ended = !active && (reason === 'subscription_ended' || reason === 'payment_failed');
   const subscription = license && (license.plan === 'month' || license.plan === 'year');
   const canceling = active && subscription && license.cancel_at_period_end;
   // The 4 steps only make sense for a working license; a free or ended account gets no stepper.
@@ -563,7 +567,7 @@ export function dashboardPage(cfg, { user, license, device, notice, error, canRe
         <a class="btn btn-ghost btn-lg" href="/account/download" data-download>${ICON.download}<span>Download the free version</span></a></div>
       <p class="muted small">${cfg.subscriptions ? (lifetime ? 'Monthly or yearly, cancel anytime, or Lifetime in one payment. Secure checkout with Stripe.' : 'Monthly or yearly. Secure checkout with Stripe. Cancel anytime.') : 'Secure checkout with Stripe.'} Already paid? Sign in with the email you paid with${cfg.mailEnabled ? ', or open the link in your purchase email' : ''}. Still not here? ${supportLink(cfg, 'Ask on Discord')} with your payment email and we'll add it to this account.</p>`, howto);
 
-  const OFF = { subscription_ended: 'Ended', refunded: 'Refunded', disputed: 'Disputed', test_mode: 'Test purchase' };
+  const OFF = { subscription_ended: 'Ended', payment_failed: 'Payment failed', refunded: 'Refunded', disputed: 'Disputed', test_mode: 'Test purchase' };
   const offBadge = () => OFF[reason] || 'Revoked';
   const licenseSect = () => sect('sect-license', html`<p class="overline">License key</p>
       ${active ? html`<span class="badge badge-ok"><i></i>Active</span>` : html`<span class="badge badge-off"><i></i>${offBadge()}</span>`}`,
@@ -605,23 +609,30 @@ export function dashboardPage(cfg, { user, license, device, notice, error, canRe
   const planSect = () => {
     const end = license.current_period_end;
     const row = (...items) => (items.some(Boolean) ? html`<div class="row">${items}</div>` : '');
+    // Premium over by itself (subscription canceled or unpaid, reward or gift over): the plan is simply Free again,
+    // no "Ended" badge (2026-11-27, q114: « tu laisses juste formule gratuite »).
+    if (ended) {
+      return sect('sect-plan', html`<p class="overline">Plan</p><span class="badge badge-off"><i></i>Free</span>`,
+        html`<div class="plan-line"><span class="plan-icon">${ICON.pc}</span><div><strong>Rago Optimizer · Free</strong>
+          <p class="muted small">${cfg.freeTweaks} tweaks unlocked. ${unlocks.split('. ')[0]}.</p></div></div>`,
+        row(html`<a class="btn btn-primary btn-sm" href="${buyUrl}">Get Premium</a>`, portalButton('Invoices and billing')));
+    }
     if (license.plan === 'reward' && license.source === 'grant') {
       return sect('sect-plan', html`<p class="overline">Plan</p>${active ? html`<span class="badge badge-red"><i></i>Until ${fmtDate(end)}</span>` : html`<span class="badge badge-off"><i></i>${offBadge()}</span>`}`,
         html`<div class="plan-line"><span class="plan-icon">${ICON.clock}</span><div><strong>Rago Optimizer Premium · Gift</strong>
           <p class="muted small">${active
             ? `Offered by the Rago team. Premium until ${fmtDate(end)}, nothing to pay.`
-            : ended ? `Your free Premium ended on ${fmtDate(end)}. Get Premium to keep every tweak unlocked.` : 'This license was revoked.'}</p></div></div>`,
-        active ? row(html`<a class="btn btn-ghost btn-sm" href="${buyUrl}">Subscribe now, first payment on ${fmtDate(end)}</a>`)
-          : ended ? row(html`<a class="btn btn-primary btn-sm" href="${buyUrl}">Get Premium</a>`) : '');
+            : 'This license was revoked.'}</p></div></div>`,
+        active ? row(html`<a class="btn btn-ghost btn-sm" href="${buyUrl}">Subscribe now, first payment on ${fmtDate(end)}</a>`) : '');
     }
     if (license.plan === 'reward') {
       const fromDiscord = license.source === 'discord';
       return sect('sect-plan', html`<p class="overline">Plan</p>${active ? html`<span class="badge badge-red"><i></i>Until ${fmtDate(end)}</span>` : html`<span class="badge badge-off"><i></i>${offBadge()}</span>`}`,
-        html`<div class="plan-line"><span class="plan-icon">${ICON.users}</span><div><strong>Rago Optimizer Premium · ${fromDiscord ? 'Discord reward' : 'Affiliate reward'}</strong>
+        html`<div class="plan-line"><span class="plan-icon">${ICON.users}</span><div><strong>Rago Optimizer Premium · ${planName(license)}</strong>
           <p class="muted small">${active
-            ? fromDiscord ? `Earned by inviting players to the Rago Discord. Premium until ${fmtDate(end)}, nothing to pay.`
+            ? fromDiscord ? `Earned on the Rago Discord. Premium until ${fmtDate(end)}, nothing to pay.`
               : `Earned with the affiliate program. Premium until ${fmtDate(end)}, nothing to pay.${cfg.affiliateRewardMax === 1 ? '' : ` Bring ${cfg.affiliateGoal} more players to add ${cfg.affiliateRewardMonths} months.`}`
-            : ended ? `Your ${fromDiscord ? 'Discord' : 'affiliate'} reward ended on ${fmtDate(end)}. Get Premium to keep every tweak unlocked.` : 'This license was revoked.'}</p></div></div>`,
+            : 'This license was revoked.'}</p></div></div>`,
         row(active ? html`<a class="btn btn-ghost btn-sm" href="${buyUrl}">Subscribe now, first payment on ${fmtDate(end)}</a>` : '', html`<a class="link-arrow" href="/affiliate">Open affiliate program ${ICON.arrow}</a>`));
     }
     if (license.plan === 'lifetime' || !subscription) {
@@ -636,10 +647,7 @@ export function dashboardPage(cfg, { user, license, device, notice, error, canRe
     let badge = html`<span class="chip mono">${PLAN[license.plan]}</span>`;
     const until = end ? fmtDate(end) : 'the end of the period';
     let actions = html`${changeButton('/account/subscription/cancel', 'Cancel subscription', 'btn-ghost', `Cancel your subscription? Premium keeps working until ${until}, then Rago Optimizer goes back to the free version and puts back its tweaks. Nothing more is charged. You can keep Premium until that date.`)}${portalButton('Invoices and billing')}`;
-    if (ended) {
-      line = html`Your subscription ended${end ? ` on ${fmtDate(end)}` : ''}. Renew it to unlock Premium again.`;
-      actions = html`<a class="btn btn-primary btn-sm" href="${buyUrl}">Renew Premium</a>${portalButton('Invoices and billing')}`;
-    } else if (!active) {
+    if (!active) {
       line = reason === 'refunded' ? 'Refunded. This subscription is stopped and won’t renew.'
         : reason === 'disputed' ? 'The payment was disputed. This subscription is stopped and won’t renew.'
           : 'This license was revoked. The subscription won’t renew.';
