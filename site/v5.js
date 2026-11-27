@@ -54,7 +54,7 @@
     clearTimeout(flushT); flushT = setTimeout(flush, 16);
   }), { rootMargin: "0px 0px -7% 0px" });
   const prep = el => {
-    if (seen.has(el) || el.closest("[hidden], .dlg, .menu, .sheet, #toast, .s-toast, .toast, dialog")) return;
+    if (seen.has(el) || el.closest("[hidden], .dlg, .menu, .sheet, #toast, .toast, dialog")) return;
     if (el.parentElement && el.parentElement.closest(".s-card, .pt-c, .sm-rv, .pc, .r5-f, .r5-t, .r5-g")) return; // the card moves, not its parts
     seen.add(el);
     if (el.matches(".rv")) { el.classList.remove("pre"); if (el.querySelector(ITEMS + "," + HEADS)) return; } // its parts move instead
@@ -362,7 +362,11 @@
     cur = document.createElement("span"); cur.className = "x-cur"; cur.setAttribute("aria-hidden", "true"); document.body.appendChild(cur);
     const show = (el, x, y) => {
       if (!curOn) { bx = x; by = y; }
-      curEl = el; curOn = true; cur.textContent = el.dataset.cur; cur.dataset.face = el.dataset.face || ""; cur.classList.add("x-in");
+      curEl = el; curOn = true; cur.dataset.face = el.dataset.face || "";
+      const ic = el.dataset.curI; cur.textContent = "";
+      if (ic) { const NS = "http://www.w3.org/2000/svg", s = document.createElementNS(NS, "svg"), u = document.createElementNS(NS, "use"); s.setAttribute("class", "i"); s.setAttribute("aria-hidden", "true"); u.setAttribute("href", "#" + ic); s.appendChild(u); cur.appendChild(s); }
+      else cur.textContent = el.dataset.cur;
+      cur.toggleAttribute("data-icon", !!ic); cur.classList.add("x-in");
     };
     const hide = () => { curEl = null; curOn = false; cur.classList.remove("x-in"); };
     addEventListener("pointermove", e => { cx = e.clientX; cy = e.clientY; const el = e.target.closest && e.target.closest("[data-cur]"); if (el && el !== curEl) show(el, cx, cy); else if (!el && curEl) hide(); }, { passive: true });
@@ -477,9 +481,10 @@
     set(0);
     const word = () => { requestAnimationFrame(() => requestAnimationFrame(() => doc.classList.add("x-ld-ready"))); setTimeout(() => { t0 = performance.now(); requestAnimationFrame(count); }, 420); };
     if (shots.length) {
+      const k = (shots[0].getBoundingClientRect().width || 230) / 230;   // the deck leans the same way whatever the cover's size
       shots.forEach((s, i) => {
         const a = (i % 2 ? 1 : -1);
-        s.style.setProperty("--x", (a * (6 + Math.random() * 14)).toFixed(0) + "px"); s.style.setProperty("--y", ((Math.random() * 2 - 1) * 14).toFixed(0) + "px");
+        s.style.setProperty("--x", (a * k * (6 + Math.random() * 14)).toFixed(0) + "px"); s.style.setProperty("--y", (k * (Math.random() * 2 - 1) * 14).toFixed(0) + "px");
         s.style.setProperty("--r", ((Math.random() * 2 - 1) * 7).toFixed(1) + "deg"); s.style.setProperty("--or", (a * (8 + Math.random() * 6)).toFixed(1) + "deg");
         s.style.zIndex = i + 1; setTimeout(() => s.classList.add("x-in"), 150 * i);
       });

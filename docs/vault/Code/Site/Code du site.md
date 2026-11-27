@@ -1,7 +1,7 @@
 ---
 type: carte
 tags: [code, site, netlify, marque, carte]
-maj: 2026-11-23
+maj: 2026-11-24
 ---
 # Code du site
 
@@ -33,6 +33,7 @@ Tout est CONFIRMÉ d'après le code de `staging` (10/11, commit `ee77d4f`), mis 
 | [[sync_partners.py]] | écrit les cartes partenaires dans `page.html` et `partners.html` |
 | [[sync_app.py]] | recopie les textes et compteurs de l'app dans `page.html`, puis lance `sync_tweaks.py` |
 | [[sync_tweaks.py]] | écrit la liste des tweaks de `tweaks.html` depuis le catalogue de l'app |
+| [[make_planet.py]] | dessine le globe filaire de la section Rago Route en SVG, dans `src/page.html` (lancé à la main) |
 | [[make_legal.py]] | génère `terms.html`, `privacy.html`, `404.html` au design v5 (texte lu dans `src/legal/`) |
 
 ### Publication (Netlify)
