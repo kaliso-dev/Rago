@@ -1,2 +1,0 @@
-document.querySelector('.main .topbar').insertAdjacentHTML('afterend', "<div class=\"lnt\"><i data-i=\"alert\"></i><span class=\"tx\">Couldn't verify your license. Connect to the internet to keep Premium.</span><span class=\"btn\"><i data-i=\"refresh\"></i>retry</span><span class=\"x\"><svg viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><path d=\"M18 6 6 18M6 6l12 12\"/></svg></span></div>");
-window.ragoIcons && ragoIcons(document.querySelector('.lnt'));

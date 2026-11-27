@@ -1,7 +1,7 @@
 ---
 type: historique
 tags: [historique]
-maj: 2026-11-27
+maj: 2026-11-28
 ---
 # Pull requests
 
@@ -179,6 +179,7 @@ Liste de **toutes les pull requests** du dépôt `kaliso-dev/rago`, de la #1 (08
 | 159 | Page compte : résilier sur place ; un Premium par e-mail ; essai à la carte, un par réseau | `claude/rago-account-cancel-wpg03a` → `staging` | 27/11 | 27/11 | fusionnée (`d2391b1`) | q102 à q105 du 27/11 ([[Paiements Stripe]], [[Table trial_ips]]) | fil HUB-d1451f |
 | 160 | Paiements refusés : fin immédiate après l'essai, 3 jours de grâce sinon, rattrapage (q110, q111) | `claude/rago-failed-payments-wpg03a` → `staging` | 27/11 | 27/11 | fusionnée (`f5d0782`) | [[dunning.js]], [[Table payment_failures]], [[Paiements Stripe]] | fil HUB-d1451f |
 | 161 | Paiements refusés (q110, q111) (prod) | `claude/rago-failed-payments-prod-wpg03a` → prod | 27/11 | 27/11 | fusionnée (`c4e0d31`) | Commit serveur de la #160 seul (cherry-pick de `364a961` sur `ac4107a`), sans #157 ni #159 ni la refonte ([[dunning.js]]) | fil HUB-d1451f |
+| 166 | Sortir design/rago-redesign vers le dépôt privé rago-design (réparer le Cerveau) | `claude/move-rago-redesign` → `staging` | 28/11 | 28/11 | fusionnée | Panne du [[Cerveau du vault]] causée par la #156 (archive de 239 Mo, limite 120 Mo) : maquettes, kit et scripts déplacés dans le dépôt privé `kaliso-dev/rago-design`, `design/` retiré, vault à jour ; aucun code touché ([[New Brand Rago]]) | fil HUB-f17370 (Mac) |
 
 ## Ce qui est arrivé sur `staging` sans PR
 Certains fils ont poussé leurs commits directement sur `staging`, après un accord de Sofiene dans le fil (CONFIRMÉ par `git branch -r --contains`) :

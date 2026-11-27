@@ -1,7 +1,7 @@
 ---
 type: référence
 tags: [sources]
-maj: 2026-11-27
+maj: 2026-11-28
 ---
 # Sources
 
@@ -49,7 +49,7 @@ Supprimés le 10/11 à la demande de Sofiene (q58) :
 - les anciens patchs `vault/maj-*`, sauf `maj-2026-11-10-point/`, qui est encore là.
 
 ## Ailleurs
-- Dossier du projet Claude « [[New Brand Rago]] » : `rago-redesign/` (maquettes v5 `rendus-v5/`, kit `marque/`, scripts `outils/`, captures `app-strict/`, `images/` et `sources.md`), dans le dépôt depuis le 27/11 : `design/rago-redesign/`.
+- Dossier du projet Claude « [[New Brand Rago]] » : `rago-redesign/` (maquettes v5 `rendus-v5/`, kit `marque/`, scripts `outils/`, captures `app-strict/`, `images/` et `sources.md`), sur GitHub dans le dépôt privé [`kaliso-dev/rago-design`](https://github.com/kaliso-dev/rago-design) depuis le 28/11 (dans `design/rago-redesign/` de `rago` du 27 au 28/11, retiré car l'archive de `staging` dépassait la limite de 120 Mo du [[Cerveau du vault]]).
 - Passage sur un nouveau compte Claude (25/11) : ce qu'il faut emporter, [[Reprendre sur un nouveau compte Claude]].
 - Artefacts GitHub Actions (exe) : expirent après 90 jours ; ceux de la 1.1.10 le 08/01/2027.
 - Docs Claude : script YouTube « What's new » ([[Vidéos YouTube]]).

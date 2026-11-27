@@ -1,2 +1,0 @@
-const W=document.querySelector(".win");W.style.height="900px";W.style.minHeight="0";
-document.querySelector('.side .foot .pc').insertAdjacentHTML('beforebegin', "<div class=\"upd\"><div class=\"ut\"><b>update</b><span><svg viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><path d=\"M12 5v14\"/><path d=\"m19 12-7 7-7-7\"/></svg>1.3.1 ready</span></div><span class=\"ub\">restart</span></div><p class=\"uh bad\">Couldn't start the install. It will run when you close the app.</p>");

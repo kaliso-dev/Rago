@@ -1,7 +1,7 @@
 ---
 type: projet
 tags: [projet, design, marque, en-cours]
-maj: 2026-11-27
+maj: 2026-11-28
 version_app: 1.4.1
 ---
 # New Brand Rago
@@ -12,11 +12,11 @@ Statut : EN COURS. Rien n'est sorti pour les joueurs, sauf l'admin et les e-mail
 
 ## Où vit le projet
 - **Un projet Claude à part**, nommé « New Brand Rago », dans le compte de Sofiene, à côté du projet « Rago optimizer (suite) ». Ses fils travaillent dans **le même dépôt** `kaliso-dev/rago` et suivent ce vault ([[Règles de travail]]). Ce n'est ni un autre dépôt ni une branche à part : tout arrive dans `staging` par des PR, comme le reste ([[Branches et environnements]]).
-- **Son dossier `rago-redesign/`**, sauvegardé en entier dans le dépôt, dans **`design/rago-redesign/`** (27/11, branche `design/rago-redesign-archive` vers `staging` ; Sofiene : « oui bien sur sauvegarde tout sur le github »). Les chemins `rago-redesign/…` cités dans le vault se lisent donc `design/rago-redesign/…`. Le vault y renvoie souvent :
+- **Son dossier `rago-redesign/`**, sauvegardé en entier sur GitHub dans le **dépôt privé [`kaliso-dev/rago-design`](https://github.com/kaliso-dev/rago-design)** (racine du dépôt = ancien dossier `rago-redesign/`, même arborescence, plus un `README.md` qui dit comment relancer les scripts). Historique : copié le 27/11 dans `design/rago-redesign/` du dépôt `rago` (PR #156, Sofiene : « oui bien sur sauvegarde tout sur le github »), puis sorti de `rago` le 28/11 vers ce dépôt privé, car l'archive de `staging` dépassait la limite de 120 Mo du [[Cerveau du vault]] (décision du 27/11, [[Décisions]]). Les chemins `rago-redesign/…` cités dans le vault se lisent donc comme des chemins du dépôt `kaliso-dev/rago-design`. Le vault y renvoie souvent :
   - `rago-redesign/rendus-v5/` : les 135 maquettes v5 (HTML dans `src/`), le kit de marque `marque/` (logo, `tokens/tokens.css` et `tokens.json` v2.0, charte en 10 chapitres `charte-1…5.jpg`, bannières Discord), et les **scripts qui génèrent le CSS de l'app** (`outils/port_mod.py`, `port_tools.py`, `port_pages.py`, `prep_art.py`, `shot-mouse.js`, `outils/marque/`, `gen_tokens.py`) ;
   - `rago-redesign/app-strict/` : captures app contre maquette de chaque étape (`1-…` à `32-…`) ;
   - `rago-redesign/images/` et son `sources.md` : images des 16 jeux et photos des 7 pros, avec leur provenance.
-  Contenu relu le 27/11 : 1 154 fichiers, 238 Mo (`rendus-v5/` 143 Mo, `images/` 27 Mo, `app-strict/` 13 Mo, `rendus-v1` à `v4`, `inspirations/`, `charte/`, `logo-actuel/`, planches 1 à 10), aucun fichier de plus de 50 Mo, aucun secret ; `.DS_Store` et `__pycache__` exclus. `rendus-v5/src/` contient 142 fichiers HTML. Une copie reste sur le Mac de Sofiene (« Rago data », sur le Bureau). **Droits** : `images/` (visuels des jeux et photos de pros) et `inspirations/` (planches d'autres studios) appartiennent à leurs auteurs, voir leurs `sources.md`. Voir aussi [[Reprendre sur un nouveau compte Claude]].
+  Contenu vérifié le 28/11 dans `kaliso-dev/rago-design` (identique, fichier par fichier, à `design/rago-redesign/` de `staging` au commit `05a8be9`) : 1 154 fichiers, 246 923 143 octets (238 Mo) (`rendus-v5/` 143 Mo, `images/` 27 Mo, `app-strict/` 13 Mo, `rendus-v1` à `v4`, `inspirations/`, `charte/`, `logo-actuel/`, planches 1 à 10), aucun fichier de plus de 50 Mo, aucun secret ; `.DS_Store` et `__pycache__` exclus. `rendus-v5/src/` contient 142 fichiers HTML. Une copie reste sur le Mac de Sofiene (« Rago data », sur le Bureau). **Droits** : `images/` (visuels des jeux et photos de pros) et `inspirations/` (planches d'autres studios) appartiennent à leurs auteurs, voir leurs `sources.md`. Voir aussi [[Reprendre sur un nouveau compte Claude]].
 - **Avant le projet** : le fil « Capturer toutes les pages pour la refonte » de « Rago optimizer (suite) » (14 au 21/11) a capturé chaque page et chaque état (site, compte, e-mails, admin, Cerveau, app) sur `staging` au commit `907c95e`, avec les inventaires et `constats-design.md` (381 défauts). Tout est dans `refonte-design/` du dossier de « Rago optimizer (suite) » ([[Sources]]), qui reste sur l'ancien compte : Sofiene ne l'emporte pas, la référence du design est désormais New Brand Rago (25/11). Le conseil donné le 21/11 : partir du code et du vault plutôt que de Figma (Sofiene : « je n'ai pas vraiment besoin de figma »).
 
 ## Les étapes

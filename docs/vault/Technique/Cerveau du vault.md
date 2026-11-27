@@ -1,7 +1,7 @@
 ---
 type: technique
 tags: [technique, serveur, admin, vault]
-maj: 2026-11-25
+maj: 2026-11-28
 ---
 # Cerveau du vault (`/admin/cerveau`)
 
@@ -31,6 +31,7 @@ Le serveur de Railway ne contient que `licensing/` ([[Railway]], Root Directory 
 - le serveur regarde le dernier commit de la branche par la liste des branches de git (`https://github.com/kaliso-dev/rago.git/info/refs?service=git-upload-pack`), qui ne compte pas dans le quota de l'API GitHub ;
 - il ne télécharge l'archive du dépôt (`codeload.github.com/…/tar.gz/<commit>`) que quand le commit change, **au plus une fois par minute** et seulement quand quelqu'un regarde la page ;
 - la page se recharge toute seule toutes les 2 minutes si le vault a changé (message « Vault mis à jour : N notes (+x) »), et le bouton ↻ en bas à gauche force la lecture (60 fois par heure au plus par adresse IP).
+- **Taille** : l'archive est refusée au-delà de 120 Mo (`MAX_TARBALL`, [[brain.js]]) avec le message « Le dépôt est trop gros pour être lu ici. ». C'est arrivé le 27/11 avec `design/rago-redesign/` (PR #156, archive de 239 Mo) : ces maquettes ont été sorties le 28/11 dans le dépôt privé [`kaliso-dev/rago-design`](https://github.com/kaliso-dev/rago-design) (archive de `staging` revenue à environ 18 Mo). Les images et autres gros fichiers ne vont donc pas dans `rago` ([[Sources]]). Si le jeton `CERVEAU_GITHUB_TOKEN` doit un jour lire `rago-design`, lui ajouter ce dépôt.
 - Si GitHub ne répond pas, la dernière version lue reste affichée avec la raison en rouge sous l'heure de lecture.
 
 **Dépôt privé** : `rago` passe parfois en privé en novembre et pour de bon le 1er décembre ([[CI GitHub Actions]]). Le 12/11 au soir, GitHub le donnait **privé** (OBSERVÉ par la recherche de dépôts) : sans jeton, le cerveau Rago ne se charge donc pas en ce moment sur Railway. `kaliso-dev/RAGO-OS-` est public (12/11) ; s'il passe en privé, le même jeton doit aussi avoir le droit « Contents : Read-only » sur ce dépôt. Sans jeton, le Cerveau affiche alors « Le dépôt kaliso-dev/rago n'est pas lisible sans jeton ». Il faut mettre dans Railway la variable `CERVEAU_GITHUB_TOKEN` : un jeton GitHub « fine-grained », limité au dépôt `kaliso-dev/rago`, droit **Contents : Read-only** seulement (mode d'emploi dans `licensing/docs/MISE-EN-LIGNE.md`, partie « Le Cerveau »). Avec le jeton, l'archive passe par `api.github.com/repos/…/tarball/<commit>`. À faire par Sofiene ([[Prochaines étapes]]). Voir [[Variables d'environnement]].

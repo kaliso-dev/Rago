@@ -20,4 +20,4 @@ Remplace le kit v1.2 du 7 octobre (Geist, verre, R transparent). La charte compl
 Le site, les pages compte et l'app sont en anglais US : référence **`voice-en.md`**. Tagline : *Every millisecond counts.*
 
 ## Régénérer
-Les fichiers du kit sont produits par les scripts de la maquette (`/mnt/project-files/rago-redesign/rendus-v5/outils/marque/` : `gen_brand.py`, `gen_tokens.py`, `gen_charte.py`), Python 3 avec fontTools, brotli et uharfbuzz, Playwright, ImageMagick pour les .ico. Ils écrivent dans le dossier du projet, puis on copie ici.
+Les fichiers du kit sont produits par les scripts de la maquette (dépôt privé `kaliso-dev/rago-design`, dossier `rendus-v5/outils/marque/` ; chemin d'origine `/mnt/project-files/rago-redesign/`, voir le README de ce dépôt : `gen_brand.py`, `gen_tokens.py`, `gen_charte.py`), Python 3 avec fontTools, brotli et uharfbuzz, Playwright, ImageMagick pour les .ico. Ils écrivent dans le dossier du projet, puis on copie ici.

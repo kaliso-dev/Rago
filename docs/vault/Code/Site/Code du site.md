@@ -1,7 +1,7 @@
 ---
 type: carte
 tags: [code, site, netlify, marque, carte]
-maj: 2026-11-23
+maj: 2026-11-28
 ---
 # Code du site
 
@@ -98,7 +98,7 @@ Voir [[netlify.toml]], [[preview.sh]], [[launch-gate.js]] et [[Branches et envir
 Les pages appellent seulement les routes publiques du serveur de comptes ([[API du serveur]]) : `GET /api/v1/plans` (prix et essai), `/api/v1/promo` (pop-up), `/api/v1/reviews` (avis ; `?all=1` sur la page des avis), `/api/v1/installer` (version affichée). Le choix du serveur est le même dans toutes les pages : `localhost` et réseau local → `http://<hôte>:8787` (serveur local, `npm run local` dans `licensing/`) ; `*.netlify.app` → `previewAccountBase` ou rien ; sinon `https://account.rago-optimizer.com`. Les boutons d'achat, de compte et de téléchargement mènent aux pages du [[Serveur de licences]] (`/buy`, `/login`, `/signup`, `/affiliate`, `/download`, `/account/review`).
 
 ### 6. La marque
-Le kit v5 est produit hors du dépôt par les scripts de la maquette (`rago-redesign/rendus-v5/outils/marque/` dans le dossier partagé), copié dans `brand/logo/`, puis `brand/logo/web/` est copié à la main dans `site/` (favicons, `apple-touch-icon`, `og-image`, `og-launch`, `media/og-route.png`) ; l'app reprend ses icônes avec `app/tools/sync_icons.sh`. Les jetons de [[tokens.css (marque)]] sont recopiés à la main dans l'app et le serveur ; le site redéclare ses propres alias avec les mêmes valeurs.
+Le kit v5 est produit hors du dépôt par les scripts de la maquette (`rendus-v5/outils/marque/` du dépôt privé `kaliso-dev/rago-design`), copié dans `brand/logo/`, puis `brand/logo/web/` est copié à la main dans `site/` (favicons, `apple-touch-icon`, `og-image`, `og-launch`, `media/og-route.png`) ; l'app reprend ses icônes avec `app/tools/sync_icons.sh`. Les jetons de [[tokens.css (marque)]] sont recopiés à la main dans l'app et le serveur ; le site redéclare ses propres alias avec les mêmes valeurs.
 
 ## Points d'attention (relevés le 10/11, revus le 22/11)
 - Deux chiffres du plan gratuit coexistent : **73** sur l'accueil (taille brute de `free.json`) et **68** sur la page Tweaks (tweaks distincts). À VÉRIFIER.
