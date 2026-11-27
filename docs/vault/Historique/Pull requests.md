@@ -5,7 +5,7 @@ maj: 2026-11-27
 ---
 # Pull requests
 
-Liste de **toutes les pull requests** du dépôt `kaliso-dev/rago`, de la #1 (08/10) à la #153 (26/11). Source : l'API GitHub, lue le 10/11 vers 16:30 UTC puis vers 18:49 pour les #84 à #87, et le 11/11 vers 00:50 pour les #88 à #91, le 27/11 pour les #142 à #153 et la fermeture des #71, #106 et #143, et les fils du projet Claude ([[Fils du projet]]). Statut : CONFIRMÉ (API GitHub et fils), sauf mention contraire. Voir aussi [[Chronologie du projet]], [[Branches et environnements]], [[Historique des versions]] et [[CI GitHub Actions]].
+Liste de **toutes les pull requests** du dépôt `kaliso-dev/rago`, de la #1 (08/10) à la #153 (26/11), plus les #154 et #158 (27/11) ; les #155 à #157 sont suivies par d'autres fils. Source : l'API GitHub, lue le 10/11 vers 16:30 UTC puis vers 18:49 pour les #84 à #87, et le 11/11 vers 00:50 pour les #88 à #91, le 27/11 pour les #142 à #153 et la fermeture des #71, #106 et #143, et les fils du projet Claude ([[Fils du projet]]). Statut : CONFIRMÉ (API GitHub et fils), sauf mention contraire. Voir aussi [[Chronologie du projet]], [[Branches et environnements]], [[Historique des versions]] et [[CI GitHub Actions]].
 
 ## Comment lire ce tableau
 - **Heures en UTC**, comme GitHub. Paris avait 2 heures d'avance jusqu'au 24/10, puis 1 heure à partir du 25/10.
@@ -173,6 +173,8 @@ Liste de **toutes les pull requests** du dépôt `kaliso-dev/rago`, de la #1 (08
 | 151 | Rago Hub : hook v2 (activité en direct, images, tokens) | `rago-hub-hook` → prod | 26/11 10:30 | 26/11 10:30 | fusionnée | [[Rago Hub]] ; recopiée dans `staging` le 27/11 | Rago Hub (À VÉRIFIER) |
 | 152 | Rago Hub : hook v3 (tâches en direct, texte en cours, outils hub.py) | `rago-hub-hook` → prod | 26/11 11:22 | 26/11 11:24 | fusionnée | [[Rago Hub]] ; recopiée dans `staging` le 27/11 ; dernier commit de la prod au 27/11 (`ac4107a`) | Rago Hub (À VÉRIFIER) |
 | 153 | Vault : version finale regroupée sur staging | `vault-final` → `staging` | 26/11 18:56 | 26/11 19:00 | fusionnée | Vault regroupé avant le passage au nouveau compte ; reprend les #71 et #106 | Rago Hub (chef) |
+| 154 | Vault : PR #143 fermée, PR #71/#106 fermées, Rago Hub en prod | `claude/pr143-vault-update-8po627` → `staging` | 27/11 | 27/11 | fusionnée | Vault seulement (et point 4 de `CLAUDE.md`) | Rago Hub (fil HUB-767f02) |
+| 158 | Hook Rago Hub dans staging (q130) + vault : q130 et q99 traitées | `claude/pr143-vault-update-8po627` → `staging` | 27/11 | 27/11 | fusionnée | `.claude/` recopié de la prod (`ac4107a`) ; vault | Rago Hub (fil HUB-767f02) |
 
 ## Ce qui est arrivé sur `staging` sans PR
 Certains fils ont poussé leurs commits directement sur `staging`, après un accord de Sofiene dans le fil (CONFIRMÉ par `git branch -r --contains`) :
