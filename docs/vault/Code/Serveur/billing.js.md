@@ -23,7 +23,8 @@ Tout ce qui parle à Stripe : création du paiement Checkout (abonnement, essai 
 | `stripeMode(cfg)` | `'live'` (clé `sk_live_`/`rk_live_`), `'test'` ou `null`. Prix, codes et clients n'existent que dans un mode. |
 | `priceFor(cfg, interval)` | `{price, interval, plan?}` : `lifetime` → `STRIPE_PRICE_LIFETIME` ; sinon `year`/`month` ; sans choix, **annuel** (le plan mis en avant par le site). `null` si rien n'est vendable. |
 | `createCheckout(stripe, cfg, user, opts, log)` | Crée la session Checkout avec 3 replis (voir plus bas). |
-| `settleTrial(db, stripe, session, sub, license, log)` | Applique la règle « un essai par personne ». Renvoie `'trial'`, `'charged_now'` ou `null`. |
+| `settleTrial(db, stripe, session, sub, license, log)` | Applique la règle « un essai par personne » (e-mail, carte, et depuis le 27/11 le réseau : métadonnée `trial_ip`, [[Table trial_ips]]). Renvoie `'trial'`, `'charged_now'` ou `null`. |
+| `trialIpHash(cfg, ip)`, `trialIpUsed(db, hash)`, `TRIAL_IP_DAYS` (27/11, q104) | Empreinte HMAC-SHA256 de l'IP avec `TRIAL_IP_SALT` (null sans sel ou sans IP) ; réseau déjà utilisé pour un essai dans les 183 derniers jours. |
 | `withTrial(license, session, sub, result)` | Ajoute `trial: {days, amount, currency}` à la licence pour l'e-mail d'achat. |
 | `ensureCoupon(stripe, id, percent, duration, name)` | Crée le coupon `id` une seule fois par mode. |
 | `findPromotionCode(stripe, code)` | Code promo actif (regex `^[A-Za-z0-9-]{2,40}$`), `null` s'il est épuisé ou inconnu. |
@@ -46,6 +47,7 @@ Tout ce qui parle à Stripe : création du paiement Checkout (abonnement, essai 
 ## Fonctionnement détaillé
 
 ### Création du paiement (`createCheckout` → `buildCheckout`)
+Depuis le 27/11 : options `email` (e-mail vérifié par `/buy` sans compte connecté, mis en `customer_email`, q103) et `trialIp` (métadonnée `trial_ip`) ; le Checkout d'un essai a `payment_method_types: ['card']` (q104). Au webhook, `flagChangedEmail` signale un paiement fait avec un autre e-mail qui a déjà Premium (journal `purchase.email_changed_has_premium`, aucun remboursement).
 Paramètres : `interval` (`month`, `year`, `lifetime`), `customerId` (client Stripe d'une licence précédente), `ref` (code d'affilié), `promotionCode`, `trialEnd` (récompense encore en cours), `replaces` (abonné qui passe à Lifetime), `trial`, `withRoute` (case Rago Route, 13/11, sur `staging` depuis le 13/11 au soir : abonnements seulement et avec `STRIPE_PRICE_ROUTE`, métadonnée `route: '1'` et une phrase sur l'option dans le texte au-dessus du bouton, `routeText(fin d'essai, rythme)` : « … then $3 a month… » pendant l'essai, sinon « $3 a month… every month » ou « $17.99 a year… every year »).
 
 - **Commun** : `line_items` = 1 prix ; `success_url` = `<PUBLIC_URL>/checkout/success?session_id={CHECKOUT_SESSION_ID}` ; `cancel_url` = `CHECKOUT_CANCEL_URL` ; `customer` (client connu) sinon `customer_email` ; `client_reference_id` = id du compte connecté ; `discounts: [{promotion_code}]` si un code est appliqué, sinon `allow_promotion_codes: true` (le joueur peut taper un code) ; `metadata` = `{product: 'rago-hub-premium', interval?, plan?, ref?, trial?}` ; case des CGV obligatoire (`consent_collection.terms_of_service: 'required'`) avec le texte `termsText` : accès immédiat, perte du droit de rétractation de 14 jours, « payments aren't refunded » (droit européen).

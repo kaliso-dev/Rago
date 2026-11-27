@@ -12,7 +12,7 @@ import { createHash, createHmac, randomBytes, timingSafeEqual } from 'node:crypt
 import { DUMMY_HASH, maskLicenseKey, randomToken, signValue, unsignValue, verifyPassword } from './crypto.js';
 import { DeviceError, parseDevice, sameDevice } from './fingerprint.js';
 import { signToken, verifyToken } from './tokens.js';
-import { billingPortal, createCheckout, settleTrial, withTrial, ensureAffiliatePromo, findPromotionCode, handleStripeEvent, isRagoCheckout, lifetimePrice, stopReplacedSubscriptions, stripeMode, syncPromoActive } from './billing.js';
+import { billingPortal, createCheckout, settleTrial, trialIpHash, trialIpUsed, withTrial, ensureAffiliatePromo, findPromotionCode, handleStripeEvent, isRagoCheckout, lifetimePrice, stopReplacedSubscriptions, stripeMode, syncPromoActive } from './billing.js';
 import * as A from './affiliates.js';
 import { createInstaller } from './installer.js';
 import { createGeo } from './geo.js';
@@ -438,16 +438,24 @@ export function createApp({ cfg, db, keys, stripe, mailer, log = console, fetchI
   // /buy?interval=month|year: a subscription. /buy/lifetime (2026-10-16): Premium for life in one payment, which a
   // subscriber can switch to (the subscription stops once Lifetime is paid). Its own path: a server without Lifetime
   // answers 404 there instead of opening the yearly checkout.
+  // Signed out (2026-11-27, q103: « Le serveur bloque l'achat si l'e-mail a déjà un Premium actif »): /buy first asks
+  // the email, posted back to the same path with the link's options; an email that already has Premium is sent to sign
+  // in instead of paying twice. The email is then pre-filled in Checkout.
   app.get('/buy', (c) => buy(c, false));
   app.get('/buy/lifetime', (c) => buy(c, true));
+  app.post('/buy', (c) => buy(c, false));
+  app.post('/buy/lifetime', (c) => buy(c, true));
+  const BUY_KEYS = ['interval', 'trial', 'route', 'ref', 'promo', 'notrial'];
   async function buy(c, lifetime) {
     const user = await currentUser(c);
+    const form = c.req.method === 'POST' ? await c.req.parseBody() : null;
+    const q = (k) => (form ? (typeof form[k] === 'string' ? form[k] : undefined) : c.req.query(k));
     const owned = user && await L.current(db, await L.licenseForUser(db, user.id));
     const active = owned?.status === 'active' ? owned : null;
     // An affiliate reward (6 months) can turn into a subscription: no payment until the reward ends.
     const reward = active?.plan === 'reward' ? active : null;
     // « + Rago Route » ticked on the site (2026-11-13). An account that already has Premium only adds the option.
-    const routeAsked = !lifetime && c.req.query('route') === '1';
+    const routeAsked = !lifetime && q('route') === '1';
     if (routeAsked && active && !reward) return c.redirect('/buy/route', 303);
     if (L.blocksPurchase(active, lifetime ? { plan: 'lifetime', source: 'stripe' } : null)) return c.redirect('/account?n=owned', 303);
     if (lifetime && !(await lifetimeOffer())) {
@@ -458,12 +466,31 @@ export function createApp({ cfg, db, keys, stripe, mailer, log = console, fetchI
     if (!lifetime && (!stripe || !cfg.subscriptions)) {
       return c.html(V.messagePage(cfg, { user, overline: 'Checkout', title: 'Checkout opens soon.', text: 'Payments are being set up. Meanwhile, the free version of Rago Optimizer is ready to download.', action: { href: user ? '/account/download' : '/download', label: 'Download the free version' } }), 503);
     }
+    // Signed out: the email first, then Checkout only if it has no Premium yet (q103).
+    let email = null;
+    if (!user) {
+      const keep = Object.fromEntries(BUY_KEYS.map((k) => [k, q(k)]).filter(([, v]) => typeof v === 'string' && v.length <= 64));
+      const action = lifetime ? '/buy/lifetime' : '/buy';
+      const asked = typeof q('email') === 'string' ? q('email').trim().toLowerCase() : '';
+      if (!form) return c.html(V.buyEmailPage(cfg, { action, keep, lifetime, trial: q('trial') === '1' }));
+      if (!/^[^\s@]{1,64}@[^\s@]{1,190}\.[^\s@]{2,}$/.test(asked)) return c.html(V.buyEmailPage(cfg, { action, keep, lifetime, trial: q('trial') === '1', email: asked, error: 'Enter a valid email.' }), 400);
+      const owner = await L.findUserByEmail(db, asked);
+      const held = owner ? await L.current(db, await L.licenseForUser(db, owner.id))
+        : await L.current(db, await db.get("SELECT * FROM licenses WHERE email = ? AND status = 'active' ORDER BY created_at DESC LIMIT 1", [asked]));
+      if (held?.status === 'active' && L.blocksPurchase(held, lifetime ? { plan: 'lifetime', source: 'stripe' } : null)) {
+        await audit(db, 'purchase.blocked_has_premium', { licenseId: held.id, userId: owner?.id || null, detail: { lifetime } });
+        return c.html(V.messagePage(cfg, { overline: 'Checkout', title: 'You already have Premium, log in.',
+          text: `${asked} already has Rago Optimizer Premium, so there's nothing to buy twice. Sign in to see it, add Rago Route${held.plan === 'lifetime' ? '' : ' or switch to Lifetime'}.`,
+          action: { href: '/login', label: 'Sign in' } }), 409);
+      }
+      email = asked;
+    }
     // A full code (3 players, or reward given) is dropped: no discount, nothing pre-filled after paying.
-    let ref = await openCode(A.normalizeCode(c.req.query('ref')) || refCode(c));
+    let ref = await openCode(A.normalizeCode(q('ref')) || refCode(c));
     if (ref) setCookie(c, 'rg_ref', ref, { ...cookieBase, maxAge: 30 * 86400 });
     else deleteCookie(c, 'rg_ref', { path: '/' });
     // Discount already applied at checkout: a site code (?promo=RAGO15), else the affiliate's code (5 %).
-    let promotionCode = (await findPromotionCode(stripe, c.req.query('promo')))?.id || null;
+    let promotionCode = (await findPromotionCode(stripe, q('promo')))?.id || null;
     const affiliate = ref && await A.affiliateByCode(db, ref);
     if (affiliate && affiliate.user_id === user?.id) ref = null;
     if (!promotionCode && affiliate && ref) promotionCode = await ensureAffiliatePromo(db, stripe, cfg, affiliate, log);
@@ -472,18 +499,27 @@ export function createApp({ cfg, db, keys, stripe, mailer, log = console, fetchI
     if (lifetime) {
       // Lifetime replaces the reward or the subscription once paid: no trial, the checkout says the subscription stops.
       const replaces = !!active && active.plan !== 'reward';
-      const session = await createCheckout(stripe, cfg, user, { interval: 'lifetime', customerId: previous?.stripe_customer_id, ref, promotionCode, replaces }, log);
+      const session = await createCheckout(stripe, cfg, user, { interval: 'lifetime', customerId: previous?.stripe_customer_id, ref, promotionCode, replaces, email }, log);
       return c.redirect(session.url, 303);
     }
-    const interval = c.req.query('interval') === 'year' ? 'year' : c.req.query('interval') === 'month' ? 'month' : undefined;
+    const interval = q('interval') === 'year' ? 'year' : q('interval') === 'month' ? 'month' : undefined;
     const trialEnd = reward ? Math.floor(Number(reward.current_period_end) / 1000) : null;
     // Free trial (?trial=1, 2026-11-04): for a first Premium only. A signed-in account that already had a license or a
     // trial pays from the start; one that isn't signed in is checked by card and email once the checkout is done.
     const hadPremium = user && (await db.get('SELECT 1 FROM licenses WHERE user_id = ? LIMIT 1', [user.id])
       || await db.get('SELECT 1 FROM trials WHERE email = ? LIMIT 1', [user.email]));
-    const trial = c.req.query('trial') === '1' && !reward && !hadPremium;
+    let trial = q('trial') === '1' && !reward && !hadPremium;
+    // One free trial per network (2026-11-27, q104): a network that started one in the last 6 months gets none here;
+    // the page offers to pay without it. Never blocks a purchase without a trial.
+    const trialIp = trial ? trialIpHash(cfg, ip(c)) : null;
+    if (trial && q('notrial') !== '1' && await trialIpUsed(db, trialIp)) {
+      const keep = Object.fromEntries(BUY_KEYS.filter((k) => k !== 'trial').map((k) => [k, q(k)]).filter(([, v]) => typeof v === 'string' && v.length <= 64));
+      if (email) keep.email = email;
+      return c.html(V.trialUsedPage(cfg, { user, keep: { ...keep, interval: keep.interval || 'month', notrial: '1' } }), 409);
+    }
+    if (q('notrial') === '1') trial = false;
     const withRoute = routeAsked && !!cfg.stripePriceRoute && !(user && await RO.routeOption(db, user.id));
-    const session = await createCheckout(stripe, cfg, user, { interval, customerId: previous?.stripe_customer_id, ref, promotionCode, trialEnd, trial, withRoute }, log);
+    const session = await createCheckout(stripe, cfg, user, { interval, customerId: previous?.stripe_customer_id, ref, promotionCode, trialEnd, trial, withRoute, email, trialIp: trial ? trialIp : null }, log);
     return c.redirect(session.url, 303);
   }
 
@@ -887,6 +923,13 @@ export function createApp({ cfg, db, keys, stripe, mailer, log = console, fetchI
     password: ['notice', 'Password changed. Other browsers were signed out.'],
     passwordset: ['notice', 'Password saved. Use it with your email to sign in to Rago Optimizer for Windows.'],
     nofile: ['error', V.html`The Windows app can't be downloaded right now. Try again a bit later, or ${V.supportLink(cfg, 'ask on Discord')} and we'll tell you when it's back.`],
+    canceled: ['notice', 'Subscription canceled. Premium keeps working until the end of the period, and nothing more is charged. Changed your mind? Keep Premium below.'],
+    resumed: ['notice', 'Premium goes on. It renews as before.'],
+    nosub: ['error', 'There is no subscription to cancel or resume on this account.'],
+    routecanceled: ['notice', 'Rago Route canceled. It keeps working until the end of the period, and nothing more is charged for it.'],
+    routeresumed: ['notice', 'Rago Route goes on. It renews as before.'],
+    routenosub: ['error', 'There is no Rago Route subscription to cancel or resume on this account.'],
+    routepremiumfirst: ['error', 'Your Premium is set to end, and Rago Route stops with it. Keep Premium first, then keep Rago Route.'],
     nobilling: ['error', V.html`Billing isn't available right now. Try again in a moment, or ${V.supportLink(cfg, 'contact support on Discord')}.`],
     discord: ['notice', 'Discord linked.'],
     discordoff: ['notice', 'Discord unlinked. The Premium role was removed from that Discord account.'],
@@ -1127,6 +1170,43 @@ export function createApp({ cfg, db, keys, stripe, mailer, log = console, fetchI
   });
 
   // "Sync role": gives the role again right away (left the server and came back, role removed by hand).
+  // ---------- Cancel from the account page (2026-11-27, q102) ----------
+  // Premium (trial included) and the Rago Route option, Lifetime's included: stop at the end of the period, never now,
+  // and undo while the period runs. The buttons ask for confirmation first (data-confirm). Other changes (card,
+  // invoices, plan) stay in the Stripe portal.
+  app.post('/account/subscription/cancel', requireUser, async (c) => {
+    const out = await setPremiumCancel(c.get('user'), true, 'site');
+    return c.redirect(dashWith(out.error === 'no_subscription' ? 'nosub' : out.error ? 'nobilling' : 'canceled'), 303);
+  });
+  app.post('/account/subscription/resume', requireUser, async (c) => {
+    const out = await setPremiumCancel(c.get('user'), false, 'site');
+    return c.redirect(dashWith(out.error === 'no_subscription' ? 'nosub' : out.error ? 'nobilling' : 'resumed'), 303);
+  });
+  const setRouteCancel = (cancel) => async (c) => {
+    const user = c.get('user');
+    const option = await RO.routeOption(db, user.id);
+    if (!option) return c.redirect(dashWith('routenosub'), 303);
+    if (!cancel) {
+      // Premium set to stop: Rago Route would stop with it anyway, so Premium is resumed first. Lifetime: no such limit.
+      const premium = await L.current(db, await L.licenseForUser(db, user.id));
+      if (premium?.cancel_at_period_end && premium.plan !== 'lifetime') return c.redirect(dashWith('routepremiumfirst'), 303);
+    }
+    if (!stripe) return c.redirect(dashWith('nobilling'), 303);
+    try {
+      const sub = await stripe.subscriptions.update(option.stripe_subscription_id, { cancel_at_period_end: cancel });
+      // A choice of the player: no longer « stopped with Premium », so resuming Premium doesn't undo it.
+      await db.run('UPDATE route_subscriptions SET stopped_with_premium = FALSE WHERE stripe_subscription_id = ?', [option.stripe_subscription_id]);
+      await RO.syncRouteSubscription(db, sub, option.user_id || user.id);
+    } catch (err) {
+      log.error('[stripe] Rago Route option update from the site', err.message);
+      return c.redirect(dashWith('nobilling'), 303);
+    }
+    await audit(db, cancel ? 'route.canceled_in_site' : 'route.resumed_in_site', { userId: user.id, detail: { subscription: option.stripe_subscription_id } });
+    return c.redirect(dashWith(cancel ? 'routecanceled' : 'routeresumed'), 303);
+  };
+  app.post('/account/route/cancel', requireUser, setRouteCancel(true));
+  app.post('/account/route/resume', requireUser, setRouteCancel(false));
+
   app.post('/account/discord/sync', requireUser, async (c) => {
     const user = c.get('user');
     if (discord && allow(`discord-sync:${user.id}`, 10, 60 * 60 * 1000)) await discord.syncUser(user.id, { force: true });
@@ -1527,28 +1607,36 @@ export function createApp({ cfg, db, keys, stripe, mailer, log = console, fetchI
     const lic = await subscriptionOf(c.get('user'));
     return c.json(lic ? await subscriptionReply(lic) : { subscription: null });
   });
-  const setCancel = (cancel) => async (c) => {
-    const user = c.get('user');
+  /**
+   * Stops (cancel = true) or resumes the renewal of the account's Premium subscription, trial included: never a cut
+   * now, Premium stays until the end of the period (cancel_at_period_end). Shared by the app (1.3.0) and the account
+   * page of the site (2026-11-27, q102: « il faut qu'il puisse résilier directement depuis leur page account sur le
+   * site »). Returns { reply } or { error: 'no_subscription' | 'billing_unavailable' }.
+   */
+  async function setPremiumCancel(user, cancel, where) {
     const lic = await subscriptionOf(user);
-    if (!lic) return fail(c, 'no_subscription');
-    if (!stripe) return fail(c, 'billing_unavailable');
+    if (!lic) return { error: 'no_subscription' };
+    if (!stripe) return { error: 'billing_unavailable' };
     let sub;
     try {
       sub = await stripe.subscriptions.update(lic.stripe_subscription_id, { cancel_at_period_end: cancel });
     } catch (err) {
-      log.error('[stripe] subscription update from the app', err.message);
-      return fail(c, 'billing_unavailable');
+      log.error(`[stripe] subscription update from the ${where}`, err.message);
+      return { error: 'billing_unavailable' };
     }
     await L.syncSubscription(db, sub);
     await RO.followPremium(db, stripe, sub, log); // the Rago Route option stops (or goes on) with Premium
     await db.run('INSERT INTO audit (at, license_id, user_id, type, detail) VALUES (?, ?, ?, ?, ?)',
-      [Date.now(), lic.id, user.id, cancel ? 'subscription.canceled_in_app' : 'subscription.resumed_in_app', null]);
-    const fresh = await L.getLicense(db, lic.id);
-    const reply = await subscriptionReply(fresh);
+      [Date.now(), lic.id, user.id, `subscription.${cancel ? 'canceled' : 'resumed'}_in_${where}`, null]);
+    const reply = await subscriptionReply(await L.getLicense(db, lic.id));
     if (cancel) {
       try { await mailer.subscriptionCanceled(user.email, reply.subscription); } catch (err) { log.error('[mail] cancel confirmation', err.message); }
     }
-    return c.json(reply);
+    return { reply };
+  }
+  const setCancel = (cancel) => async (c) => {
+    const out = await setPremiumCancel(c.get('user'), cancel, 'app');
+    return out.error ? fail(c, out.error) : c.json(out.reply);
   };
   api.post('/account/subscription/cancel', setCancel(true));
   api.post('/account/subscription/resume', setCancel(false));

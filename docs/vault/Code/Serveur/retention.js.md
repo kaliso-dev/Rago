@@ -3,7 +3,7 @@ type: code
 tags: [code, serveur, javascript]
 fichier: licensing/src/retention.js
 lignes: 19
-maj: 2026-11-10
+maj: 2026-11-27
 ---
 # retention.js
 
@@ -30,7 +30,7 @@ Ajouté avec l'essai gratuit (04/11/2026). La politique de confidentialité du s
 1. `DELETE FROM audit WHERE at < now − 365 j AND type NOT IN ('license.subscription_stopped', 'license.subscription_replaced')` : ces deux marqueurs restent **pour toujours**, car [[billing.js]] les relit pour savoir qu'un abonnement remplacé par Lifetime a déjà été arrêté ;
 2. `DELETE FROM discord_joins WHERE left_at IS NOT NULL AND left_at > 0 AND left_at < now − 365 j` (les membres encore présents et les lignes `left_at = 0` restent) ;
 3. `DELETE FROM signup_codes WHERE expires_at < now − 1 j` : une inscription en attente contient le hash du mot de passe d'un compte pas encore créé ;
-4. `DELETE FROM trials WHERE started_at < now − 730 j`.
+4. `DELETE FROM trials WHERE started_at < now − 730 j`, puis `DELETE FROM trial_ips WHERE started_at < now − 183 j` (empreintes d'IP des essais, 6 mois, `TRIAL_IP_DAYS` importé de [[billing.js]], 27/11).
 
 ## Liens avec le reste
 

@@ -41,6 +41,7 @@ Les joueurs ont la **[[Version 1.3.0]]** depuis le 22/11 vers 02:20 (heure de Pa
 ## PR ouvertes (27/11)
 - #136 (site v6, accueil du 24/11 : globe dessiné, Rago Route en une section) vers `staging` : seule PR de code ouverte, attend la relecture de Sofiene ([[New Brand Rago]]) (CONFIRMÉ, API GitHub, 27/11).
 - Fermées sans fusion : #71 (bot communauté vers la prod, code déjà en prod par la #105) et #106 (vault de la 1.3.0) le 26/11, leur contenu repris par la PR #153 (vault regroupé, fusionnée dans `staging` le 26/11) ; #143 (`claude/project-thread-tyht7t` → prod, 540 fichiers, ouverte par erreur) le 27/11 sur « ferme là alors si elle ne sert à rien » : la fusionner aurait envoyé tout `staging` en prod sans validation ; son seul contenu propre est dans `staging` par la PR #149. Branches gardées.
+- #159 (27/11) vers `staging` : résiliation directe sur la page compte (q102), un Premium par e-mail (q103), essai à la carte seule et un par réseau (q104) ; attend Sofiene ([[Paiements Stripe]]).
 - #157 (Rago Route, abonnement à part aussi pour le Lifetime, 27/11) vers `staging` : attend Sofiene ([[Paiements Stripe]]).
 Ne rien fusionner ni fermer sans le mot de Sofiene. Toutes les PR, une par ligne : [[Pull requests]].
 
@@ -52,6 +53,7 @@ Ne rien fusionner ni fermer sans le mot de Sofiene. Toutes les PR, une par ligne
 - 22/11 dans la prod : #105 (sortie 1.3.0), #114 et #117 (admin et e-mails v5). Dans `staging` : #107 à #113, #115, #116, #118 (v5 du serveur de comptes, de l'app et du site).
 
 ## Ce qui attend Sofiene
+0. **PR #159 (27/11)** : la relire ; avant sa mise en ligne, créer `TRIAL_IP_SALT` dans Railway `staging` puis `production` (longue valeur au hasard, jamais changée ensuite) ([[Variables d'environnement]]).
 1. **Passage sur le nouveau compte Claude (25/11)** : dossiers de l'ancien compte téléchargés sur le Mac de Sofiene (`/Users/kaliso/Desktop/Rago data `, tout sauf `refonte-design/`) ; les questions se posent désormais dans le chat du Rago Hub (q129, 27/11) ; `rago-redesign/` sauvegardé aussi dans le dépôt, `design/rago-redesign/` (q128, PR #156 vers `staging`, en attente de Sofiene) ; marche à suivre : [[Reprendre sur un nouveau compte Claude]].
 2. **URGENT, avant le 05/12** : l'organisation Supabase (offre gratuite) a dépassé son quota de bande passante (e-mail du 04/11) ; restrictions possibles à partir du 05/12. **Décidé le 27/11 : passage en Pro (25 $/mois) le 01/12 ou le 02/12**, dès la paye de Sofiene (« je vais passer en pro dès que j'ai ma paye donc le 01/12 ou le 02/12 ») ; à confirmer une fois fait. Les clés sont sauvegardées (10-11/11, [[Clés et secrets]]) ([[Supabase]]).
 3. **Clés** : toutes sauvegardées dans le gestionnaire de mots de passe de Sofiene (11/11 : clé des licences, variables Railway, clé Tauri et son mot de passe, codes de secours, identifiants `/admin`) ; surveillance en place (UptimeRobot sur `/healthz`, 11/11, [[Surveillance]]).

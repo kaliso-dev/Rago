@@ -2,7 +2,7 @@
 type: fonctionnalité
 tags: [fonctionnalité, app, premium, 1.3]
 version_app: 1.3.0
-maj: 2026-11-10
+maj: 2026-11-27
 ---
 # Abonnement dans l'app
 
@@ -19,6 +19,9 @@ Ajouté en 1.3.0 (PR #70, pas sortie), demandé par Sofiene le 04/11 avec la maq
 - Un seul écran « Before you cancel » : la date de fin, le nombre de tweaks Premium qui reviendront comme avant ce jour-là, le gain mesuré sur ce PC (dernier avant/après de l'[[Analyse du PC]]), « Undo stays free ». Deux boutons de même taille, « Keep Premium » et « Cancel subscription ». Pas de remise, pas de second écran.
 - Puis un message de confirmation, et un email « Your subscription is canceled » / « Your free trial is canceled ». Premium reste jusqu'à la fin de la période payée.
 - Serveur : `GET /api/v1/account/subscription`, `POST /api/v1/account/subscription/cancel` et `/resume` (fin de période dans Stripe, `cancel_at_period_end`), traces `subscription.canceled_in_app` / `resumed_in_app` (`licensing/src/app.js`, `mailer.js`). App : voir la section « Code » plus bas.
+
+## Résiliation depuis la page compte du site (27/11, q102)
+Sofiene : « il faut qu'il puisse résilier directement depuis leur page account sur le site ». Mêmes règles que dans l'app, avec le même code serveur : boutons « Cancel subscription » / « Cancel free trial » avec confirmation (date de fin), « Keep Premium » tant que la période court, et pour l'option Rago Route (Lifetime compris) « Cancel Rago Route » / « Keep Rago Route ». Détail : [[Paiements Stripe]], section « Résiliation ». PR #159 vers `staging` (fil HUB-d1451f), non fusionnée. Les textes du site disent maintenant « Cancel from the app or from your account page » ([[page.html]], [[route.html]]).
 
 ## Code
 - Fenêtre Premium et ses variantes (`tweak`, `preset`, `plan`, `slots`, `analysis`), essai, achat dans le navigateur : [[Upsell.tsx]]. Connexion qui l'accompagne : [[LicenseGate.tsx]].
