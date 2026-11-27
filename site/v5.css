@@ -222,22 +222,11 @@ svg.i{width:16px;height:16px;fill:none;stroke:currentColor;stroke-width:2;stroke
 .s-fcol{display:grid;gap:14px}
 .s-fc{padding:24px 26px}
 .s-fc p{margin-top:8px;font-size:14.5px;line-height:1.5;color:var(--ink-2)}
-.s-srch{margin-top:16px;background:var(--bg-3);border:1px solid var(--line-2)}
-.s-srch .in{display:flex;align-items:center;gap:10px;height:46px;padding:0 14px;border-bottom:1px solid var(--line);font-size:15px}
-.s-srch .in svg{width:16px;height:16px;color:var(--ink-3)}
-.s-srch .in kbd{margin-left:auto;height:22px;padding:0 7px;display:grid;place-items:center;font-family:var(--cond);font-weight:800;font-size:12px;letter-spacing:.06em;color:var(--ink-2);box-shadow:inset 0 0 0 1px var(--line-2)}
-.s-srch .r{display:flex;align-items:center;justify-content:space-between;height:40px;padding:0 14px;font-size:14px}
-.s-srch .r.on{background:rgba(255,59,48,.1)}
-.s-srch .r em{font-style:normal;font-family:var(--cond);font-weight:800;font-size:12.5px;letter-spacing:.1em;text-transform:uppercase;color:var(--ink-3)}
 .s-chips{display:flex;flex-wrap:wrap;gap:6px;margin-top:16px}
 .s-chips span{position:relative;height:34px;padding:0 14px;display:inline-grid;place-items:center;font-family:var(--cond);font-weight:800;font-size:14.5px;letter-spacing:.06em;text-transform:uppercase;color:var(--ink-2);isolation:isolate}
 .s-chips span::before{content:"";position:absolute;inset:0;z-index:-1;background:var(--bg-3);border:1px solid var(--line-2);transform:skewX(var(--skew))}
 .s-chips span.on{color:var(--red-ink)}
 .s-chips span.on::before{background:var(--red);border-color:var(--red)}
-.s-toast{display:flex;align-items:center;gap:12px;margin-top:16px;padding:12px 14px;background:var(--bg-3);border:1px solid var(--line-2);box-shadow:inset 3px 0 0 var(--ok)}
-.s-toast svg{width:16px;height:16px;color:var(--ok)}
-.s-toast b{font-size:14px}
-.s-toast span{display:block;font-size:12.5px;color:var(--ink-3)}
 .s-more{margin-top:26px}
 .s-bento{display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:14px;margin-top:56px}
 .s-b{padding:26px 26px 24px;display:flex;flex-direction:column}
@@ -383,7 +372,7 @@ svg.i{width:16px;height:16px;fill:none;stroke:currentColor;stroke-width:2;stroke
 .s-foot .legal{margin-top:50px;padding:24px 300px 0 0;border-top:1px solid var(--line);font-size:12.5px;line-height:1.6;color:var(--ink-3)}
 .s-foot .motto{margin-top:16px;font-family:var(--cond);font-weight:800;font-style:italic;font-size:15px;letter-spacing:.06em;text-transform:uppercase;color:var(--ink-3)}
 .s-card,.s-chip,.s-bill,.s-ronly{border-radius:22px}
-.s-m,.s-srch,.s-toast,.s-addon{border-radius:12px}
+.s-m,.s-addon{border-radius:12px}
 .s-tag{border-radius:7px}
 .s-shot img.sc{border-radius:18px}
 .s-shot::before{border-radius:22px}
@@ -395,7 +384,7 @@ svg.i{width:16px;height:16px;fill:none;stroke:currentColor;stroke-width:2;stroke
 .s-chip .s-tag{border-radius:999px}
 .s-shot::before{border-radius:18px}
 .s-shot .pill img{border-radius:50%}
-.s-srch .in kbd,.s-b.ig kbd{border-radius:5px}
+.s-b.ig kbd{border-radius:5px}
 .s-chips span::before{border-radius:9px}
 .s-bill span.on::before{border-radius:17px;transform:none}
 .s-track i{border-radius:7px}
@@ -404,10 +393,9 @@ svg.i{width:16px;height:16px;fill:none;stroke:currentColor;stroke-width:2;stroke
 .s-leg i,.s-addon .cb{border-radius:4px}
 .s-af ol li b{border-radius:9px}
 .s-pt img{border-radius:4px}
-.s-m,.s-toast{position:relative}
-.s-m.on,.s-toast{box-shadow:none}
-.s-m.on::before,.s-toast::before{content:"";position:absolute;left:5px;top:12px;bottom:12px;width:3px;border-radius:3px;background:var(--red)}
-.s-toast::before{background:var(--ok)}
+.s-m{position:relative}
+.s-m.on{box-shadow:none}
+.s-m.on::before{content:"";position:absolute;left:5px;top:12px;bottom:12px;width:3px;border-radius:3px;background:var(--red)}
 .s-b:not(.ig){padding:12px 12px 24px}
 .s-b:not(.ig) > h3,.s-b:not(.ig) > p,.s-b:not(.ig) > .tags{margin-left:14px;margin-right:14px}
 .s-b:not(.ig) > .tags{margin-top:auto;padding-top:16px}

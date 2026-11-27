@@ -54,7 +54,7 @@
     clearTimeout(flushT); flushT = setTimeout(flush, 16);
   }), { rootMargin: "0px 0px -7% 0px" });
   const prep = el => {
-    if (seen.has(el) || el.closest("[hidden], .dlg, .menu, .sheet, #toast, .s-toast, .toast, dialog")) return;
+    if (seen.has(el) || el.closest("[hidden], .dlg, .menu, .sheet, #toast, .toast, dialog")) return;
     if (el.parentElement && el.parentElement.closest(".s-card, .pt-c, .sm-rv, .pc, .r5-f, .r5-t, .r5-g")) return; // the card moves, not its parts
     seen.add(el);
     if (el.matches(".rv")) { el.classList.remove("pre"); if (el.querySelector(ITEMS + "," + HEADS)) return; } // its parts move instead
