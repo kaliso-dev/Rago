@@ -3,7 +3,7 @@ type: code
 tags: [code, serveur, javascript, stripe]
 fichier: licensing/src/billing.js
 lignes: 586
-maj: 2026-11-14
+maj: 2026-11-27
 ---
 # billing.js
 
@@ -74,7 +74,7 @@ Appelé par le webhook et par la page de succès (les deux peuvent arriver ensem
 1. Événement déjà dans [[Table stripe_events]] → `duplicate`.
 2. `checkout.session.completed` / `checkout.session.async_payment_succeeded` : ignoré si ce n'est pas une session Rago (`not_rago` : autres produits ou liens de paiement du compte) ; relit l'abonnement ; `fulfillCheckoutSession` ; `settleTrial` ; `addRouteWithPremium` (case Rago Route cochée, [[route-addon.js]]) ; si la licence vient d'être créée, `onLicense(licence avec essai, claimToken)` (e-mail d'achat, dans [[app.js]]) ; Lifetime actif rattaché → `stopReplacedSubscriptions`. Libellés `license_created`, `license_exists`, `unpaid`.
 3. `customer.subscription.created|updated|deleted|paused|resumed` et `invoice.paid` : l'abonnement est **relu chez Stripe** (des événements dans le désordre ne ramènent pas un vieil état), puis `syncSubscription` et `followPremium` (l'option Rago Route suit l'arrêt ou la reprise du Premium). Libellé `subscription:<ended|resumed|updated|lifetime|unknown>`. Un abonnement de l'option (métadonnée `product: rago-route`) va dans `syncRouteSubscription` (libellé `route:<statut>`), de même qu'un Checkout de l'option (13/11).
-4. `charge.refunded` (seulement si **totalement** remboursé) et `charge.dispute.created` : client retrouvé (via la charge pour un litige), `revokeForCharge` (raison `refunded`/`disputed`), `voidReferrals`, annulation des abonnements. Libellé `revoked:<n>`.
+4. `charge.refunded` (seulement si **totalement** remboursé) et `charge.dispute.created` : d'abord `routeOfCharge` (27/11) : si la charge payait une option Rago Route, seule l'option est annulée (`stopRouteForCharge`, libellé `route:canceled`) et rien d'autre ; sinon client retrouvé (via la charge pour un litige), `revokeForCharge` (raison `refunded`/`disputed`), `voidReferrals`, annulation des abonnements, puis `stopOrphanRoutes` si une licence a été révoquée (option Rago Route d'un Lifetime remboursé arrêtée tout de suite). Libellé `revoked:<n>`.
 5. L'événement est inscrit **après** le traitement avec `livemode` : si le traitement plante, Stripe réessaie et on retraite.
 
 `WEBHOOK_EVENTS` : `checkout.session.completed`, `checkout.session.async_payment_succeeded`, `customer.subscription.created`, `customer.subscription.updated`, `customer.subscription.deleted`, `customer.subscription.paused`, `customer.subscription.resumed`, `invoice.paid`, `charge.refunded`, `charge.dispute.created`.
