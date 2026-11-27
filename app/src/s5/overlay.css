@@ -47,3 +47,7 @@ button.igth{width:100%}
 .igcb.on{background:var(--red);box-shadow:none}
 .igtr.done .l1,.igtr.done .why{opacity:.5}
 .igtf button:hover u{color:var(--ink)}
+
+/* échec du nettoyage de la RAM (q116, 27/11) : en rouge d'erreur de la charte (jeton --red), texte et icône ; le succès
+   reste vert (.ignote svg = --ok). Les autres .ignote.bad gardent le #FF6B61 de la maquette. */
+.ignote.bad.igcf,.ignote.bad.igcf svg{color:var(--red)}

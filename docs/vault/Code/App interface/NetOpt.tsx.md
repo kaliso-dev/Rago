@@ -3,7 +3,7 @@ type: code
 tags: [code, app, react, page, reseau]
 fichier: app/src/pages/NetOpt.tsx
 lignes: 1109
-maj: 2026-11-23
+maj: 2026-11-27
 ---
 # NetOpt.tsx
 
@@ -121,7 +121,7 @@ Tout ce qui suit est CONFIRMÉ (code de `staging` après la PR #123, fusionnée 
 
 ### Sans licence (nouveau le 23/11)
 - Le vrai écran s'affiche, verrouillé (classe `lkd`) : les profils, curseurs, interrupteurs, « find my preset » et les blocs ouvrent l'offre Premium générale (`setUpsell("plan")`, [[Upsell.tsx]]) ; « advanced » et « expert » ne se déplient pas.
-- **À VÉRIFIER** : choix fait pour la refonte (la maquette n'a pas d'écran gratuit), question q117 posée à Sofiene le 23/11 ([[Questions ouvertes]]).
+- **DÉCIDÉ** (Sofiene, 27/11, q117 : « je suis d'accord va pour A ») : on garde ce choix de la refonte (la maquette n'a pas d'écran gratuit) ; aucun changement de code ([[Décisions]]).
 - **Les outils restent gratuits.**
 - **« restore » reste gratuit** : sans menu, il lance `restore` s'il existe une sauvegarde, sinon `defaults`. C'est ce qui permet à un ancien abonné de remettre sa connexion comme avant.
 

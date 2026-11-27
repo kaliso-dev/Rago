@@ -21,8 +21,6 @@ Posées le 23/11, pendant la refonte de l'app sur les maquettes v5 (fil « refon
 - q113 : « Affiliate reward » ou « Discord reward » pour une licence gagnée sur Discord (page compte).
 - q114 : badge « Ended » dans la carte Formule d'un abonnement terminé (page compte).
 - q115 : texte propre à l'achat de test au lieu de « This license was revoked. » (page compte).
-- q116 : échec du nettoyage de la RAM écrit en vert dans la barre en jeu ([[Overlay.tsx]]).
-- q117 : le Packet Optimizer en gratuit montre l'écran verrouillé avec les 4 outils gratuits, au lieu de l'écran « part of Premium » ([[Packet Optimizer]], [[NetOpt.tsx]]).
 
 Posée le 25/11, après le test Windows de Sofiene (PR #139) :
 - q121 : la barre en jeu sort-elle encore du jeu (autre page, jeu réduit) une fois la 1.2.1 quittée ? ([[Barre en jeu]])
