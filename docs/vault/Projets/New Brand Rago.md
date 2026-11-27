@@ -1,7 +1,7 @@
 ---
 type: projet
 tags: [projet, design, marque, en-cours]
-maj: 2026-11-25
+maj: 2026-11-27
 version_app: 1.4.1
 ---
 # New Brand Rago
@@ -40,7 +40,7 @@ Statut : EN COURS. Rien n'est sorti pour les joueurs, sauf l'admin et les e-mail
 
 ## Ce qui reste
 1. Sofiene teste l'exe de test sur Windows et répond à q121 (barre en jeu) ([[Questions ouvertes]]).
-2. Relire puis fusionner la PR #136 (accueil v6), et répondre à q118 à q120.
+2. Relire puis fusionner la PR #136 (accueil v6). q118 à q120 sont traitées le 27/11 dans la PR : « Three ways in » supprimée, flux d'Asie du globe gardés, capture du dashboard remplacée par la vraie app 1.4.1.
 3. Les illustrations sont encore celles d'avant (« en cours de refonte », [[Charte graphique]]).
 4. Droits d'utilisation des images des 16 jeux et des photos des 7 pros à vérifier avant la prod ([[Couleurs et résolution]]).
 5. La sortie : quand Sofiene valide, `staging` part en prod en une fois (app 1.4.x, site, pages compte, bot), comme la 1.3.0 ([[Publier une version]]). Rien n'est daté.

@@ -3,7 +3,7 @@ type: code
 tags: [code, site, python, svg, rago-route]
 fichier: site/tools/make_planet.py
 lignes: 237
-maj: 2026-11-24
+maj: 2026-11-27
 ---
 # make_planet.py
 
@@ -26,7 +26,7 @@ Les côtes : **Natural Earth 50 m** (domaine public), `ne_50m_land` et `ne_50m_l
 ## Les villes
 `CITIES` : Frankfurt (le relais) et Paris (la sortie), nommés sur la page ; les joueurs en petits points, Milan, Dublin, Stockholm, Kyiv, Bucarest, **Novossibirsk, Iakoutsk, Astana** (l'Asie, demandée le 24/11) et Moscou. `FLOWS` : onze trajets vers Frankfurt ou Paris, plus Frankfurt → Paris.
 
-Le cadrage n'autorise que ça : la vue est une calotte autour de (80 N, 8 E), donc l'Asie n'est atteignable que par les hautes latitudes (Sibérie, steppe). Iakoutsk est à 130° E, aussi loin à l'est que le Japon, mais Tokyo, Pékin ou Séoul sont trop au sud pour entrer dans la bande que la page montre. **À VÉRIFIER** avec Sofiene s'il veut vraiment l'Extrême-Orient : il faudrait soit pivoter le globe, soit le rapetisser pour montrer une bande plus profonde (question q119).
+Le cadrage n'autorise que ça : la vue est une calotte autour de (80 N, 8 E), donc l'Asie n'est atteignable que par les hautes latitudes (Sibérie, steppe). Iakoutsk est à 130° E, aussi loin à l'est que le Japon, mais Tokyo, Pékin ou Séoul sont trop au sud pour entrer dans la bande que la page montre. **Décidé le 27/11 (q119)** : Sofiene garde les flux d'Asie comme ils sont (Sibérie et steppe, pas de Tokyo, Pékin ou Séoul) ; le globe ne bouge pas ([[Décisions]]).
 
 ## Les constantes, recopiées dans page.html
 `LAT0 = -10`, `LON0 = 8` (le point du globe au centre du disque, l'Europe dans la calotte visible), `K = 0,5` (hauteur du dessin en rayons), `U = 10000` (un rayon en unités SVG), `VMAX = 0,56` (rien n'est dessiné plus bas), `STEP = 0,75` (la grille de points), `DOT = 22` (le côté d'un point vu de face), `LIFT = 0,30` / `LIFT_MAX = 0,072` / `VTOP = 0,022` (la hauteur des flux), `RUN = 4,6 s` (le temps qu'une impulsion met à parcourir un flux, à garder égal à l'animation `orb-run` de [[page.html]]).

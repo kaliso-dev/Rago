@@ -38,7 +38,7 @@ Les joueurs ont la **[[Version 1.3.0]]** depuis le 22/11 vers 02:20 (heure de Pa
 | Vault Obsidian | créé le 31/10 ; règle n°1 : il doit correspondre en tout point à l'état du projet ; détaillé le 10/11 (une note par fichier de code) ; **complété le 25/11** pour le passage sur un nouveau compte Claude : sortie 1.3.0, [[New Brand Rago]], [[Version 1.4.1]], PR #95 à #141, fils du 11 au 25/11, [[Reprendre sur un nouveau compte Claude]] | DÉCIDÉ (Sofiene, 25/11) |
 
 ## PR ouvertes (27/11)
-- #136 (site v6, accueil du 24/11 : globe dessiné, Rago Route en une section) vers `staging` : seule PR de code ouverte, attend la relecture de Sofiene ([[New Brand Rago]]) (CONFIRMÉ, API GitHub, 27/11).
+- #136 (site v6, accueil du 24/11 : globe dessiné, Rago Route en une section) vers `staging` : attend la relecture de Sofiene ([[New Brand Rago]]) ; q118 à q120 y sont traitées le 27/11 (« Three ways in » supprimée, capture du dashboard de la vraie app 1.4.1, flux d'Asie gardés).
 - Fermées sans fusion : #71 (bot communauté vers la prod, code déjà en prod par la #105) et #106 (vault de la 1.3.0) le 26/11, leur contenu repris par la PR #153 (vault regroupé, fusionnée dans `staging` le 26/11) ; #143 (`claude/project-thread-tyht7t` → prod, 540 fichiers, ouverte par erreur) le 27/11 sur « ferme là alors si elle ne sert à rien » : la fusionner aurait envoyé tout `staging` en prod sans validation ; son seul contenu propre est dans `staging` par la PR #149. Branches gardées.
 Ne rien fusionner ni fermer sans le mot de Sofiene. Toutes les PR, une par ligne : [[Pull requests]].
 
@@ -56,7 +56,7 @@ Ne rien fusionner ni fermer sans le mot de Sofiene. Toutes les PR, une par ligne
 4. **Tester l'app 1.4.1** : exe `rago-optimizer-setup-STAGING` du run `app-windows` 45641885291 (25/11, 16 h 17). Avant, quitter l'app installée (icône près de l'horloge, clic droit, Quitter) et se reconnecter une fois dans l'exe de test. Répondre à q121 ([[Version 1.4.1]]).
 5. **Après la sortie 1.3.0** : vérifier que les prix live de Rago Route (`STRIPE_PRICE_ROUTE`, `STRIPE_PRICE_ROUTE_YEARLY`, créés le 14/11, identifiants dans [[Paiements Stripe]]) sont sur Railway `production`, sinon Rago Route reste fermé hors essai (À VÉRIFIER) ; voir sur un PC en 1.2.1 que la mise à jour arrive ([[Mise à jour automatique]]).
 6. **Stream Discord qui saccade** : dire si le correctif « Supérieure à la normale » doit partir (q109, [[Bugs et incidents]]).
-7. **[[New Brand Rago]]** : relire la PR #136 (aperçu `deploy-preview-136--rago-optimiser.netlify.app`), répondre à q118 à q120.
+7. **[[New Brand Rago]]** : relire la PR #136 (aperçu `deploy-preview-136--rago-optimiser.netlify.app`) avec les changements du 27/11 (q118 à q120), puis dire si elle peut être fusionnée.
 8. GitHub : `rago` doit rester public pendant les builds en novembre, privé pour de bon le 1er décembre ; `CERVEAU_GITHUB_TOKEN` est dans Railway : vérifier qu'il est en staging **et** en prod, et donner au jeton l'accès à `kaliso-dev/Rago-Client` (q98, [[Cerveau du vault]], [[CI GitHub Actions]]).
 9. [[Conformité juridique]] : inscrire sa mère comme vendeuse, régler l'adresse (domiciliation quand le budget le permet, q46).
 10. Rago Route : 4G du téléphone gardée avec le Wi-Fi (sur `staging` depuis le 13/11, dans la 1.3.0), à tester sur Windows ; tests P0-1 à P0-9 avant d'annoncer (P0-9 d'abord) ; avant l'annonce, P0-9 **et** message à Hypixel (q99, 27/11) ; q97, q100 à q105, q108 ([[Proxy]], [[Page de vente Rago Route]]).

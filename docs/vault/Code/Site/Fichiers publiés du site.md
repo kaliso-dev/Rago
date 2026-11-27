@@ -3,7 +3,7 @@ type: code
 tags: [code, site, netlify, fichiers]
 fichier: site/
 lignes: 3381
-maj: 2026-11-24
+maj: 2026-11-27
 ---
 # Fichiers publiés du site
 
@@ -41,7 +41,7 @@ Ce que [[build.py]] change entre une source et sa page : empreinte `?v=` sur `v5
 | `img/v5/` : `rago-icon.svg` (tuile blanche au R rouge, en-têtes), `rago-cap.svg`, `brush.svg` (coup de pinceau des titres), `grain.svg` (grain du fond) | images du design v5 | copiées des maquettes le 22/11 ; `shot-dashboard.webp` (2 880 × 1 800, 274 Ko) retirée le 25/11, remplacée par `img/x/dashboard.webp` |
 | `img/games/{minecraft,valorant,cs2,fortnite}.webp` | vignettes de la section bibliothèque de jeux de l'accueil (Lunar Client, VALORANT, Counter-Strike 2, Fortnite) | ajoutées le 20/10 (`4e0914e`) ; voir [[Bibliothèque de jeux]] |
 | `img/covers/{fortnite,valorant,gta,cs2,lol,roblox,apex,rl,overwatch,minecraft}.webp` | dix jaquettes verticales **400 × 600** avec le logo du jeu (la pleine résolution de `app/src/assets/s5/games/cover/`, WebP qualité 76, 336 Ko les dix) : les cartes qui s'empilent au chargement de l'accueil v6, Minecraft en dernier, et les vignettes du picker de presets ; droits d'utilisation à vérifier avant la prod, comme dans l'app | ajoutées le 24/11 (demande de Sofiene : « mets plutôt les covers de jeux les plus connus »), repassées en pleine taille le 25/11 pour le chargement agrandi |
-| `img/x/dashboard.webp` | capture du dashboard de l'app, **1 600 × 1 000** (70 Ko, WebP qualité 82, réduite de la capture v5 2 880 × 1 800) : l'aperçu de l'app dans le héros de l'accueil v6 | ajoutée le 25/11 (Sofiene : « sur la première page du site je veux un aperçu du dashboard de notre app avec les bords arrondis ») |
+| `img/x/dashboard.webp` | capture du dashboard de l'app, **1 600 × 1 000** (74 Ko, WebP qualité 82) : l'aperçu de l'app dans le héros de l'accueil v6 ; depuis le 27/11, la vraie interface 1.4.1 (démo navigateur de `staging`, 218 tweaks), réduite d'une capture Retina 2 880 × 1 800 | ajoutée le 25/11 (Sofiene : « sur la première page du site je veux un aperçu du dashboard de notre app avec les bords arrondis ») ; remplacée le 27/11 (q120) |
 | `img/x/ingame.webp` | découpe 640 × 400 de la barre en jeu (`media/in-game-bar.webp`) : traînée d'images de « What delays your hit » | ajoutée le 23/11 (Site v6, [[page.html]]) ; les cinq découpes `dash-*.webp` de l'app, devenues inutilisées, sont retirées le 25/11 |
 | `img/partners/*.webp` (7 fichiers) | logos des partenaires | listés dans [[partners.json]] |
 | `media/in-game-bar.mp4` (865 Ko), `.webm` (601 Ko), `.webp` (86 Ko, image d'attente) | vidéo derrière la démonstration de la barre en jeu sur l'accueil (`<video id="ig-v" preload="none">`) | ajoutées le 20/10 ; voir [[Barre en jeu]] |

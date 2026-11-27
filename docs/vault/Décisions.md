@@ -10,6 +10,7 @@ Registre daté des décisions de Sofiene. **La plus récente prime.** Citations 
 ## App et versions
 | Date | Décision | Statut |
 |---|---|---|
+| 27/11 | **Accueil v6 (PR #136), réponses à q118 à q120** (transmises par le chef du [[Rago Hub]]) : la section « Three ways in » est « à supprimer » (q118, avec ses trois démos) ; les flux d'Asie du globe « restent comme ils sont » (q119) ; la capture du dashboard du héros est remplacée par la vraie interface 1.4.1 à 218 tweaks (q120) ([[page.html]], [[Site]]) | fait dans la PR #136 le 27/11, non fusionnée |
 | 27/11 | **Hook du [[Rago Hub]] aussi dans `staging`** (q130) : « tu peux également mettre le petit réglage claude dans staging » ; `.claude/` recopié de la prod (`ac4107a`) sans changement | fait le 27/11 ([[Branches et environnements]]) |
 | 27/11 | **Rago Route : avant l'annonce, test P0-9 et message à Hypixel** (q99) : Sofiene choisit les deux, le test P0-9 (3 à 5 comptes de l'équipe en même temps par Paris, puis une semaine normale) **et** un message à Hypixel pour déclarer l'adresse de sortie de Paris ; à suivre comme une tâche du Rago Hub ; la réponse de la FAQ sur les blocages reste cachée jusqu'à la fin du test | DÉCIDÉ, pas fait ([[Page de vente Rago Route]], [[Proxy]]) |
 | 27/11 | **Supabase passe en Pro** (25 $/mois) : « je vais passer en pro dès que j'ai ma paye donc le 01/12 ou le 02/12 » (avant les restrictions possibles du 05/12) | DÉCIDÉ, pas encore fait ([[Supabase]]) |

@@ -36,11 +36,6 @@ Posée le 25/11, après le test Windows de Sofiene (PR #139) :
 Posée le 13/11 (fil « Corriger les saccades du stream Discord ») :
 - q109 : les joueurs dont le stream Discord saccade ont-ils la version publique ou l'exe de test ? Le correctif (jeu en « Supérieure à la normale ») attend aussi la décision de Sofiene ([[Bugs et incidents]]).
 
-Posées le 24/11 sur l'accueil v6 (PR #136, [[New Brand Rago]]) :
-- q118 : que devient la section « Three ways in » une fois les cartes Rago Route passées au-dessus du globe ?
-- q119 : les flux d'Asie s'arrêtent à la Sibérie (Tokyo, Pékin et Séoul sont de l'autre côté du globe) : on garde ?
-- q120 : la capture du dashboard sur l'accueil date du site v5 (« 212 tweaks ») : capture à jour à envoyer.
-
 Posées le 25/11 par les fils des autres projets (serveur Minecraft, voir leur vault) : q122 à q127.
 
 Posées le 25/11, passage sur le nouveau compte Claude ([[Reprendre sur un nouveau compte Claude]]) :
