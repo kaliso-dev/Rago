@@ -311,6 +311,16 @@ CREATE TABLE IF NOT EXISTS trials (
 CREATE INDEX IF NOT EXISTS trials_email ON trials (email);
 CREATE INDEX IF NOT EXISTS trials_card ON trials (card_fingerprint);
 
+-- One free trial per network too (2026-11-27, q104, Sofiene : « carte requise pour essai gratuit pas paypal et faudrait
+-- même que ça reconnaisse l'ip »). Only an HMAC-SHA256 of the IP (TRIAL_IP_SALT), never the IP; kept 6 months
+-- (retention.js). Written when a trial really starts (billing.js, settleTrial).
+CREATE TABLE IF NOT EXISTS trial_ips (
+  subscription_id TEXT PRIMARY KEY,
+  ip_hash TEXT NOT NULL,                          -- 64 hex characters
+  started_at BIGINT NOT NULL
+);
+CREATE INDEX IF NOT EXISTS trial_ips_hash ON trial_ips (ip_hash, started_at);
+
 -- Banned accounts (2026-11-10, /admin): can't sign in anywhere (site, app), their licenses are revoked ('banned').
 ALTER TABLE users ADD COLUMN IF NOT EXISTS banned_at BIGINT;
 ALTER TABLE users ADD COLUMN IF NOT EXISTS banned_reason TEXT;
@@ -340,6 +350,7 @@ ALTER TABLE oauth_identities ENABLE ROW LEVEL SECURITY;
 ALTER TABLE network_reports ENABLE ROW LEVEL SECURITY;
 ALTER TABLE network_results ENABLE ROW LEVEL SECURITY;
 ALTER TABLE trials ENABLE ROW LEVEL SECURITY;
+ALTER TABLE trial_ips ENABLE ROW LEVEL SECURITY;
 
 -- Rago Route option (2026-11-13, Sofiene : « il faut payer 3$ en plus de l'abonnement premium, il faut que ça soit une
 -- option ») : its own monthly Stripe subscription, on top of an active Premium. One row per Stripe subscription.

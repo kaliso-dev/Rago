@@ -1,5 +1,7 @@
 // What the privacy policy promises about how long data is kept (site/tools/make_legal.py, « How long we keep it »),
 // applied by the server's hourly sweep. Network tests have their own purge (network.js).
+import { TRIAL_IP_DAYS } from './billing.js';
+
 const DAY = 86400000;
 /** Security log: 12 months. The two subscription markers stay: billing.js reads them to know a subscription
  *  replaced by Lifetime was already stopped. */
@@ -16,4 +18,6 @@ export async function purgeOldRecords(db, now = Date.now()) {
   // Sign-up codes (with the password hash of an account not created yet): a day after they expired.
   await db.run('DELETE FROM signup_codes WHERE expires_at < ?', [now - DAY]);
   await db.run('DELETE FROM trials WHERE started_at < ?', [now - TRIAL_DAYS_KEPT * DAY]);
+  // Network fingerprints of free trials (q104): 6 months.
+  await db.run('DELETE FROM trial_ips WHERE started_at < ?', [now - TRIAL_IP_DAYS * DAY]);
 }

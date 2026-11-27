@@ -101,8 +101,8 @@ async function setup(env = {}, extra = {}) {
 
   // Minimal browser: keeps cookies, sends same-origin form posts.
   const jar = new Map();
-  async function browse(path, { form, method } = {}) {
-    const headers = { cookie: [...jar].map(([k, v]) => `${k}=${v}`).join('; ') };
+  async function browse(path, { form, method, headers: extraHeaders = {} } = {}) {
+    const headers = { cookie: [...jar].map(([k, v]) => `${k}=${v}`).join('; '), ...extraHeaders };
     let body;
     if (form) {
       headers['content-type'] = 'application/x-www-form-urlencoded';
@@ -116,6 +116,15 @@ async function setup(env = {}, extra = {}) {
       if (/Max-Age=0/i.test(c) || v === '') jar.delete(k); else jar.set(k, v);
     }
     return res;
+  }
+  /** Opens a purchase link like a buyer: signed out, the email page comes first (2026-11-27, q103), then the checkout. */
+  async function buy(path, email = 'buyer@rago.gg', opts = {}) {
+    const r = await browse(path, opts);
+    if (r.status !== 200) return r;
+    const html = await r.clone().text();
+    if (!/<form method="post" action="\/buy(\/lifetime)?"/.test(html) || !/name="email"/.test(html)) return r;
+    const u = new URL(path, 'http://localhost');
+    return browse(u.pathname, { ...opts, form: { ...Object.fromEntries(u.searchParams), email } });
   }
   const api = (path, json, headers = {}) => app.request(`/api/v1${path}`, {
     method: 'POST', headers: { 'content-type': 'application/json', ...headers }, body: JSON.stringify(json),
@@ -140,7 +149,7 @@ async function setup(env = {}, extra = {}) {
     const sub = subscription(`sub_${id}`, interval);
     return paidSession(id, email, { mode: 'subscription', payment_intent: null, subscription: sub, metadata: { interval }, ...extra });
   };
-  return { cfg, db, keys, app, browse, api, webhook, paidSession, paidSubscription, subscription, subs, stripeCalls, created, mails, jar, sessions, promos, coupons, stripe, charges, balance, invoices };
+  return { cfg, db, keys, app, browse, buy, api, webhook, paidSession, paidSubscription, subscription, subs, stripeCalls, created, mails, jar, sessions, promos, coupons, stripe, charges, balance, invoices };
 }
 
 const h = (name, v) => createHash('sha256').update(`rago-fp-v1|${name}|${v}`).digest('hex');
@@ -209,7 +218,7 @@ test('claim link from the email works after the tab was closed, and only once', 
 test('signed-in buyer gets the license directly; second purchase is flagged', async () => {
   const t = await setup(SUBS);
   await t.browse('/signup', { form: { email: 'me@x.io', password: 'password123' } });
-  const buy = await t.browse('/buy');
+  const buy = await t.buy('/buy');
   assert.equal(buy.status, 303);
   assert.match(buy.headers.get('location'), /checkout\.stripe\.com/);
   const user = await L.findUserByEmail(t.db, 'me@x.io');
@@ -218,7 +227,7 @@ test('signed-in buyer gets the license directly; second purchase is flagged', as
   assert.equal(r.headers.get('location'), '/account?n=claimed');
   // A receipt still goes out (order and withdrawal waiver), without a claim link.
   assert.deepEqual(t.mails, [{ to: 'me@x.io', url: null }]);
-  assert.equal((await t.browse('/buy')).headers.get('location'), '/account?n=owned');
+  assert.equal((await t.buy('/buy')).headers.get('location'), '/account?n=owned');
 
   // Paid again from a signed-out tab with another email, then claimed into the same account.
   t.paidSession('cs_test_5', 'other@x.io');
@@ -467,18 +476,18 @@ test('Rago Route ticked at checkout: Premium and the option together, the trial 
   t.stripe.paymentMethods = { retrieve: async (id) => ({ id, card: { fingerprint: 'fp_route' } }), list: async () => ({ data: [{ id: 'pm_listed' }] }) };
 
   // The site's « + Rago Route » box: the trial checkout says the option is included, then $3 a month.
-  await t.browse('/buy?interval=month&trial=1&route=1');
+  await t.buy('/buy?interval=month&trial=1&route=1');
   let params = t.created.at(-1);
   assert.equal(params.metadata.route, '1');
   assert.deepEqual(params.line_items, [{ price: 'price_m', quantity: 1 }]);
   assert.match(params.custom_text.submit.message, /Rago Route is included in the free trial, then \$3 a month on top of Premium/);
   // Paid from the start (yearly): charged today, its own yearly subscription ($17.99, 6 months free like Premium).
-  await t.browse('/buy?interval=year&route=1');
+  await t.buy('/buy?interval=year&route=1');
   assert.match(t.created.at(-1).custom_text.submit.message, /\$17\.99 a year on top of Premium, as its own subscription on this card, charged today and every year/);
-  await t.browse('/buy?interval=month&route=1');
+  await t.buy('/buy?interval=month&route=1');
   assert.match(t.created.at(-1).custom_text.submit.message, /\$3 a month on top of Premium, as its own subscription on this card, charged today and every month/);
   // No box ticked: nothing about it. Lifetime: never (added from the account).
-  await t.browse('/buy?interval=month');
+  await t.buy('/buy?interval=month');
   assert.equal(t.created.at(-1).metadata.route, undefined);
 
   // Trial checkout done (not signed in): Premium trialing, the option starts with the same trial end, on the same card.
@@ -543,7 +552,7 @@ test('Rago Route ticked at checkout: Premium and the option together, the trial 
   // An account that already has Premium, on the site's « Premium + Rago Route »: only the option.
   await t.browse('/signup', { form: { email: 'has@rago.gg', password: 'password123' } });
   await L.grantLicense(t.db, 'has@rago.gg', 'test');
-  assert.equal((await t.browse('/buy?interval=month&trial=1&route=1')).headers.get('location'), '/buy/route');
+  assert.equal((await t.buy('/buy?interval=month&trial=1&route=1')).headers.get('location'), '/buy/route');
   // The account page offers both, and each button buys its own price.
   assert.match(await (await t.browse('/account')).text(), /\/buy\/route\?interval=year[\s\S]*\$17\.99\/year[\s\S]*\/buy\/route\?interval=month/);
   await t.browse('/buy/route?interval=year');
@@ -775,7 +784,8 @@ test('config accepts a bare host for PUBLIC_URL and flags example values', () =>
   assert.equal(cfg.siteUrl, 'https://rago.netlify.app');
   assert.equal(cfg.cancelUrl, 'https://rago.netlify.app/#pricing');
   assert.equal(cfg.resendApiKey, '');
-  assert.equal(cfg.warnings.length, 5);
+  assert.equal(cfg.warnings.length, 6);
+  assert.match(cfg.warnings.join(" "), /TRIAL_IP_SALT is not set/);
   assert.match(cfg.warnings.join(' '), /SCRIPTS_SECRET is not set/);
   assert.match(cfg.warnings.join(' '), /SUPABASE_SERVICE_ROLE_KEY is not set: profile photos/);
   assert.equal(cfg.subscriptions, true);
@@ -804,12 +814,12 @@ test('emails go out from MAIL_FROM, with replies to MAIL_REPLY_TO when set', asy
 
 test('no Stripe price yet: /buy says checkout is not open', async () => {
   const t = await setup({ STRIPE_PRICE_ID: '' });
-  const r = await t.browse('/buy?interval=year');
+  const r = await t.buy('/buy?interval=year');
   assert.equal(r.status, 503);
   assert.match(await r.text(), /Checkout opens soon/);
   // Only the old one-time price: not sold any more (the site sells a subscription).
   const old = await setup();
-  assert.equal((await old.browse('/buy?interval=month')).status, 503);
+  assert.equal((await old.buy('/buy?interval=month')).status, 503);
   assert.equal(old.created.length, 0);
 });
 
@@ -830,8 +840,8 @@ const DAY_MS = 86400000;
 test('subscription: monthly or yearly checkout, renewal date, cancel, lapse and resume', async () => {
   const t = await setup(SUBS);
   // /buy picks the price from ?interval, yearly by default (the plan the site highlights).
-  await t.browse('/buy?interval=month');
-  await t.browse('/buy');
+  await t.buy('/buy?interval=month');
+  await t.buy('/buy');
   assert.equal(t.created[0].mode, 'subscription');
   assert.deepEqual(t.created[0].line_items, [{ price: 'price_month', quantity: 1 }]);
   assert.equal(t.created[1].line_items[0].price, 'price_year');
@@ -843,7 +853,7 @@ test('subscription: monthly or yearly checkout, renewal date, cancel, lapse and 
   let dash = await (await t.browse('/account')).text();
   assert.match(dash, /Rago Optimizer Premium · Yearly/);
   assert.match(dash, /Renews on/);
-  assert.match(dash, /Cancel or manage subscription/);
+  assert.match(dash, /Cancel subscription/);
   const portal = await t.browse('/account/billing', { form: {} });
   assert.equal(portal.headers.get('location'), 'https://billing.stripe.com/p/session/x');
   assert.deepEqual(t.stripeCalls.at(-1), ['portal', 'cus_cs_sub']);
@@ -894,7 +904,7 @@ test('subscription: monthly or yearly checkout, renewal date, cancel, lapse and 
   assert.equal((await r.json()).error.reason, 'subscription_ended');
 
   // Renewing: a new checkout with the same Stripe customer.
-  await t.browse('/buy?interval=month');
+  await t.buy('/buy?interval=month');
   assert.equal(t.created.at(-1).customer, 'cus_cs_sub');
   assert.equal(t.created.at(-1).customer_email, undefined);
 });
@@ -958,7 +968,7 @@ test('affiliate: 5 % code in Stripe, 3 players per code, a player counts when th
   assert.doesNotMatch(await (await t.browse('/signup')).text(), /Referral code/);
 
   // The share link opens a checkout with the 5 % already applied.
-  await t.browse(`/buy?interval=month&ref=${code.toLowerCase()}`);
+  await t.buy(`/buy?interval=month&ref=${code.toLowerCase()}`);
   assert.deepEqual(t.created.at(-1).discounts, [{ promotion_code: 'promo_1' }]);
   assert.equal(t.created.at(-1).allow_promotion_codes, undefined);
   assert.equal(t.created.at(-1).metadata.ref, code);
@@ -966,7 +976,7 @@ test('affiliate: 5 % code in Stripe, 3 players per code, a player counts when th
   assert.match(await (await t.browse('/checkout/success?session_id=cs_link')).text(), new RegExp(`value="${code}"`));
   // Without a link, the buyer can type a code at checkout.
   t.jar.clear();
-  await t.browse('/buy?interval=year');
+  await t.buy('/buy?interval=year');
   assert.equal(t.created.at(-1).allow_promotion_codes, true);
   assert.equal(t.created.at(-1).discounts, undefined);
 
@@ -1039,7 +1049,7 @@ test('affiliate: 5 % code in Stripe, 3 players per code, a player counts when th
   assert.deepEqual(t.stripeCalls.filter((c) => c[0] === 'promo').at(-1), ['promo', 'promo_1', { active: false }]);
   assert.equal(t.promos[0].active, false); // typed at checkout, Stripe now refuses it
   t.jar.clear();
-  await t.browse(`/buy?interval=month&ref=${code}`);
+  await t.buy(`/buy?interval=month&ref=${code}`);
   assert.equal(t.created.at(-1).discounts, undefined); // no 5 % from the link either
   assert.equal(t.created.at(-1).metadata.ref, undefined); // and not carried to the account form
   t.paidSubscription('cs_fullref', 'late@x.io');
@@ -1154,7 +1164,7 @@ test('an affiliate on their 6 free months can subscribe: first payment when the 
   assert.match(await (await t.browse('/account')).text(), /Subscribe now, first payment on/);
 
   // Checkout opens (no "you already have Premium"), with the subscription starting at the reward's end.
-  const res = await t.browse('/buy?interval=month');
+  const res = await t.buy('/buy?interval=month');
   assert.equal(res.headers.get('location'), 'https://checkout.stripe.com/c/pay/cs_new');
   assert.equal(t.created.at(-1).subscription_data.trial_end, Math.floor(Number(reward.current_period_end) / 1000));
   t.paidSubscription('cs_rew', 'rew@x.io', 'month', { client_reference_id: aff.id, payment_status: 'no_payment_required' });
@@ -1176,7 +1186,7 @@ test('an affiliate on their 6 free months can subscribe: first payment when the 
   const { aff: a2 } = await affiliateWithThree(t2, 'late@x.io');
   await t2.api('/auth/login', { email: 'late@x.io', password: 'password123', device: pc('L') });
   await t2.db.run("UPDATE licenses SET current_period_end = ? WHERE user_id = ? AND plan = 'reward'", [Date.now() - 1000, a2.id]);
-  assert.equal((await t2.browse('/buy?interval=year')).headers.get('location'), 'https://checkout.stripe.com/c/pay/cs_new');
+  assert.equal((await t2.buy('/buy?interval=year')).headers.get('location'), 'https://checkout.stripe.com/c/pay/cs_new');
   assert.equal(t2.created.at(-1).subscription_data.trial_end, undefined);
 });
 
@@ -1321,13 +1331,13 @@ test('days given by the team (admin grant-days): Premium for a week, as a gift, 
 test('site discount code: /buy?promo=RAGO15 opens the checkout with it, an unknown code is ignored', async () => {
   const t = await setup(SUBS);
   t.promos.push({ id: 'promo_site', object: 'promotion_code', active: true, code: 'RAGO15', promotion: { type: 'coupon', coupon: 'rago-promo-15-once' } });
-  await t.browse('/buy?interval=year&promo=RAGO15');
+  await t.buy('/buy?interval=year&promo=RAGO15');
   assert.deepEqual(t.created.at(-1).discounts, [{ promotion_code: 'promo_site' }]);
   assert.equal(t.created.at(-1).allow_promotion_codes, undefined);
-  await t.browse('/buy?interval=year&promo=NOPE');
+  await t.buy('/buy?interval=year&promo=NOPE');
   assert.equal(t.created.at(-1).discounts, undefined);
   assert.equal(t.created.at(-1).allow_promotion_codes, true);
-  await t.browse('/buy?promo=%3Cx%3E');
+  await t.buy('/buy?promo=%3Cx%3E');
   assert.equal(t.created.at(-1).allow_promotion_codes, true);
 });
 
@@ -1339,7 +1349,7 @@ test('a discount Stripe refuses for this buyer: the checkout still opens, with t
     if (p.discounts) throw new Error('This promotion code cannot be redeemed because the associated customer has prior transactions.');
     return create(p);
   };
-  const res = await t.browse('/buy?promo=RAGO15');
+  const res = await t.buy('/buy?promo=RAGO15');
   assert.equal(res.status, 303);
   assert.equal(t.created.at(-1).allow_promotion_codes, true);
 });
@@ -1402,13 +1412,13 @@ test('site pop-up: set from /admin with ADMIN_KEY, code created in Stripe for th
   made.times_redeemed = 14;
   await t.webhook('checkout.session.completed', t.paidSubscription('cs_pop', 'pop@example.com', 'year'));
   assert.equal((await promo()).left, 1);
-  await t.browse('/buy?interval=year&promo=RAGO50');
+  await t.buy('/buy?interval=year&promo=RAGO50');
   assert.deepEqual(t.created.at(-1).discounts, [{ promotion_code: made.id }]);
   made.times_redeemed = 15;
   await t.webhook('checkout.session.completed', t.paidSubscription('cs_pop2', 'pop2@example.com', 'year'));
   assert.equal(await promo(), null);
   assert.match(await (await t.browse('/admin/site')).text(), /Les 15 utilisations de RAGO50 sont prises/);
-  await t.browse('/buy?interval=year&promo=RAGO50');
+  await t.buy('/buy?interval=year&promo=RAGO50');
   assert.equal(t.created.at(-1).discounts, undefined);
   assert.equal(t.created.at(-1).allow_promotion_codes, true);
 
@@ -1521,7 +1531,7 @@ test('going live: /admin checks prices, webhook and portal in the live mode, tes
     if (p.customer) throw Object.assign(new Error(`No such customer: '${p.customer}'; a similar object exists in test mode, but a live mode key was used to make this request.`), { statusCode: 400, code: 'resource_missing', param: 'customer' });
     return create(p);
   };
-  res = await t.browse('/buy?interval=month');
+  res = await t.buy('/buy?interval=month');
   assert.equal(res.status, 303);
   assert.equal(t.created.at(-1).customer, undefined);
   assert.equal(t.created.at(-1).customer_email, 'tester@example.com');
@@ -1584,7 +1594,7 @@ test('account pages: change password, foreign checkouts ignored, code typed at s
 
 test('checkout asks to accept the terms, and still opens if Stripe has no Terms URL yet', async () => {
   const t = await setup(SUBS);
-  await t.browse('/buy');
+  await t.buy('/buy');
   const p = t.created.at(-1);
   assert.equal(p.consent_collection.terms_of_service, 'required');
   assert.match(p.custom_text.terms_of_service_acceptance.message, /terms\.html.*14-day right of withdrawal/);
@@ -1613,7 +1623,7 @@ test('purchase link opened while signed in attaches the license; the code from t
   t.jar.clear();
 
   // Buyer pays from the affiliate link on a phone, without creating the account there.
-  await t.browse(`/buy?interval=month&ref=${code}`);
+  await t.buy(`/buy?interval=month&ref=${code}`);
   assert.equal(t.created.at(-1).metadata.ref, code);
   const s = t.paidSession('cs_ref', 'buyer@x.io', { metadata: { product: 'rago-hub-premium', ref: code } });
   await t.webhook('checkout.session.completed', s);
@@ -2657,7 +2667,7 @@ test('lifetime: one payment at its own price, codes like Premium, Premium for li
   assert.match(await (await t.browse('/account')).text(), /or Lifetime in one payment/);
   await t.browse('/logout', { form: {} });
 
-  assert.equal((await t.browse('/buy/lifetime')).headers.get('location'), 'https://checkout.stripe.com/c/pay/cs_new');
+  assert.equal((await t.buy('/buy/lifetime')).headers.get('location'), 'https://checkout.stripe.com/c/pay/cs_new');
   const p = t.created.at(-1);
   assert.equal(p.mode, 'payment');
   assert.deepEqual(p.line_items, [{ price: 'price_life', quantity: 1 }]);
@@ -2669,7 +2679,7 @@ test('lifetime: one payment at its own price, codes like Premium, Premium for li
   assert.equal(p.custom_text.submit.message, 'One payment: Rago Optimizer Premium for life on one Windows PC. No subscription, nothing renews. You create your account right after paying.');
   // The site's discount code applies to Lifetime too (decision of Oct 16, 2026).
   t.promos.push({ id: 'promo_site', object: 'promotion_code', code: 'RAGO15', active: true });
-  await t.browse('/buy/lifetime?promo=RAGO15');
+  await t.buy('/buy/lifetime?promo=RAGO15');
   assert.deepEqual(t.created.at(-1).discounts, [{ promotion_code: 'promo_site' }]);
 
   paidLifetime(t, 'cs_life', 'life@rago.gg');
@@ -2691,8 +2701,8 @@ test('lifetime: one payment at its own price, codes like Premium, Premium for li
   assert.deepEqual(j.license.billing, { interval: 'lifetime', renews_at: null, ends_at: null });
   assert.equal(verifyToken(j.license_token, t.keys, { typ: 'license' }).plan, 'premium');
   // Nothing more to buy.
-  assert.equal((await t.browse('/buy/lifetime')).headers.get('location'), '/account?n=owned');
-  assert.equal((await t.browse('/buy?interval=year')).headers.get('location'), '/account?n=owned');
+  assert.equal((await t.buy('/buy/lifetime')).headers.get('location'), '/account?n=owned');
+  assert.equal((await t.buy('/buy?interval=year')).headers.get('location'), '/account?n=owned');
 
   // Full refund: matched on the payment intent, Premium stops at the app's next check.
   await t.webhook('charge.refunded', { id: 'ch_life', object: 'charge', refunded: true, payment_intent: 'pi_cs_life', customer: 'cus_cs_life' });
@@ -2714,8 +2724,8 @@ test('lifetime: a subscriber switches in one payment, same PC, and the subscript
   assert.match(await (await t.browse('/account')).text(), /href="\/buy\/lifetime">Switch to Lifetime/);
 
   // Lifetime opens for a subscriber (another subscription doesn't), with their Stripe customer.
-  assert.equal((await t.browse('/buy?interval=month')).headers.get('location'), '/account?n=owned');
-  assert.equal((await t.browse('/buy/lifetime')).headers.get('location'), 'https://checkout.stripe.com/c/pay/cs_new');
+  assert.equal((await t.buy('/buy?interval=month')).headers.get('location'), '/account?n=owned');
+  assert.equal((await t.buy('/buy/lifetime')).headers.get('location'), 'https://checkout.stripe.com/c/pay/cs_new');
   const p = t.created.at(-1);
   assert.equal(p.customer, 'cus_cs_sub');
   assert.equal(p.customer_creation, undefined);
@@ -2748,7 +2758,7 @@ test('lifetime: a subscriber switches in one payment, same PC, and the subscript
   await t.webhook('customer.subscription.deleted', { id: 'sub_cs_sub', object: 'subscription' });
   assert.equal((await L.getLicense(t.db, subLic.id)).status_reason, 'replaced');
   assert.equal(await stopAllReplacedSubscriptions(t.db, t.stripe), 0);
-  assert.equal((await t.browse('/buy/lifetime')).headers.get('location'), '/account?n=owned');
+  assert.equal((await t.buy('/buy/lifetime')).headers.get('location'), '/account?n=owned');
 });
 
 test('lifetime: bought signed out by a subscriber, claimed from the email; a refused cancel is retried every hour', async () => {
@@ -2807,7 +2817,7 @@ test('lifetime: a pending referral follows the player who switches, an affiliate
   await r.browse('/affiliate'); // the reward is given
   const reward = await L.licenseForUser(r.db, aff.id);
   assert.equal(reward.plan, 'reward');
-  assert.equal((await r.browse('/buy/lifetime')).headers.get('location'), 'https://checkout.stripe.com/c/pay/cs_new');
+  assert.equal((await r.buy('/buy/lifetime')).headers.get('location'), 'https://checkout.stripe.com/c/pay/cs_new');
   assert.doesNotMatch(r.created.at(-1).custom_text.submit.message, /subscription stops/);
   paidLifetime(r, 'cs_rew_life', 'rew@x.io', { client_reference_id: aff.id });
   assert.equal((await r.browse('/checkout/success?session_id=cs_rew_life')).headers.get('location'), '/account?n=claimed');
@@ -2922,7 +2932,7 @@ test('lifetime: not for sale until its own one-time price works in Stripe; a sec
   // Not set up: the site's card says "Coming soon", the checkout link says so too, nothing opens at Stripe.
   const t = await setup(SUBS);
   assert.equal((await (await t.app.request('/api/v1/plans')).json()).lifetime, null);
-  const res = await t.browse('/buy/lifetime');
+  const res = await t.buy('/buy/lifetime');
   assert.equal(res.status, 503);
   const page = await res.text();
   assert.match(page, /Lifetime opens soon/);
@@ -2949,7 +2959,7 @@ test('lifetime: not for sale until its own one-time price works in Stripe; a sec
     const v = await setup(LIFE, { log: quiet });
     v.stripe.prices.retrieve = retrieve;
     assert.equal((await (await v.app.request('/api/v1/plans')).json()).lifetime, null);
-    assert.equal((await v.browse('/buy/lifetime')).status, 503);
+    assert.equal((await v.buy('/buy/lifetime')).status, 503);
     assert.equal(v.created.length, 0);
   }
   // Nor does an account page: no "Switch to Lifetime" for a subscriber, no mention for a free account.
@@ -3397,7 +3407,7 @@ test('free trial: 3 days with the card asked, first Premium only, a second trial
   assert.equal(t.cfg.trialDays, 3);
 
   // /buy?trial=1: a trial checkout that always asks for the card
-  assert.match((await t.browse('/buy?interval=month&trial=1')).headers.get('location'), /checkout\.stripe\.com/);
+  assert.match((await t.buy('/buy?interval=month&trial=1')).headers.get('location'), /checkout\.stripe\.com/);
   const params = t.created.at(-1);
   assert.equal(params.mode, 'subscription');
   assert.equal(params.payment_method_collection, 'always');
@@ -3406,14 +3416,14 @@ test('free trial: 3 days with the card asked, first Premium only, a second trial
   assert.equal(params.metadata.trial, '3');
   assert.match(params.custom_text.submit.message, /3 days free, then your card is charged on .+ Cancel anytime before/);
   // After the trial, monthly only (2026-11-10): a trial asked on the yearly plan opens on the monthly price.
-  await t.browse('/buy?interval=year&trial=1');
+  await t.buy('/buy?interval=year&trial=1');
   assert.deepEqual(t.created.at(-1).line_items, [{ price: 'price_month', quantity: 1 }]);
   assert.equal(t.created.at(-1).subscription_data.trial_period_days, 3);
   assert.equal(t.created.at(-1).metadata.interval, 'month');
   // without ?trial=1: paid from the start, on the plan picked
-  await t.browse('/buy?interval=year');
+  await t.buy('/buy?interval=year');
   assert.deepEqual(t.created.at(-1).line_items, [{ price: 'price_year', quantity: 1 }]);
-  await t.browse('/buy?interval=month');
+  await t.buy('/buy?interval=month');
   assert.equal(t.created.at(-1).subscription_data.trial_period_days, undefined);
 
   // The trial checkout is done: nothing paid, license active, the email says when the first payment comes.
@@ -3443,12 +3453,12 @@ test('free trial: 3 days with the card asked, first Premium only, a second trial
   // A signed-in account that had Premium (or a trial) gets no trial at checkout.
   await t.browse('/signup', { form: { email: 'old@trial.io', password: 'password123' } });
   await t.db.run("INSERT INTO trials (subscription_id, email, started_at) VALUES ('sub_old', 'old@trial.io', 1)");
-  await t.browse('/buy?interval=year&trial=1');
+  await t.buy('/buy?interval=year&trial=1');
   assert.equal(t.created.at(-1).subscription_data.trial_period_days, undefined);
 
   // TRIAL_DAYS=0: no trial anywhere
   const off = await setup({ ...SUBS, TRIAL_DAYS: '0' });
-  await off.browse('/buy?interval=month&trial=1');
+  await off.buy('/buy?interval=month&trial=1');
   assert.equal(off.created.at(-1).subscription_data.trial_period_days, undefined);
 });
 
@@ -3462,7 +3472,7 @@ test('free trial: the account page says when the first payment comes', async () 
   await t.browse('/signup', { form: { email: 'dash@trial.io', password: 'password123' } });
   const page = await (await t.browse('/account')).text();
   assert.match(page, /Free trial\. Your card is charged on .+, unless you cancel before/);
-  assert.match(page, /Cancel trial or manage/);
+  assert.match(page, /Cancel free trial/);
 });
 
 test('retention: security log and Discord leavers after 12 months, free trials after 2 years, subscription markers kept', async () => {
@@ -3624,4 +3634,178 @@ test('/admin dashboard: players, Premium time, revoke, ban, gifts, sales, journa
   r = await act(free, 'supprimer', { confirmation: 'free@example.com' });
   assert.equal(r.headers.get('location'), '/admin/utilisateurs?n=supprime');
   assert.equal(await L.findUserByEmail(t.db, 'free@example.com'), null);
+});
+
+
+// ---------- 2026-11-27: cancel from the account page (q102), one Premium per email (q103), one trial per network (q104) ----------
+test('account page: cancel and keep Premium, trial included, and the Rago Route option, Lifetime included (q102)', async () => {
+  const t = await setup({ ...SUBS, STRIPE_PRICE_ROUTE: 'price_route' });
+  // No subscription: nothing to cancel.
+  await t.browse('/signup', { form: { email: 'free@rago.gg', password: 'password123' } });
+  assert.equal((await t.browse('/account/subscription/cancel', { form: {} })).headers.get('location'), '/account?n=nosub');
+  assert.equal((await t.browse('/account/route/cancel', { form: {} })).headers.get('location'), '/account?n=routenosub');
+  await t.browse('/logout', { form: {} });
+
+  t.paidSubscription('cs_c', 'cancel@rago.gg', 'month');
+  await t.browse('/checkout/success?session_id=cs_c');
+  await t.browse('/signup', { form: { email: 'cancel@rago.gg', password: 'password123' } });
+  let dash = await (await t.browse('/account')).text();
+  assert.match(dash, /action="\/account\/subscription\/cancel"[^>]*data-confirm="Cancel your subscription\? Premium keeps working until/);
+  // Canceled at the end of the period, never now; the page says until when, and offers to keep it.
+  assert.equal((await t.browse('/account/subscription/cancel', { form: {} })).headers.get('location'), '/account?n=canceled');
+  assert.deepEqual(t.stripeCalls.at(-1), ['update', 'sub_cs_c', { cancel_at_period_end: true }]);
+  const lic = await t.db.get("SELECT * FROM licenses WHERE stripe_session_id = 'cs_c'");
+  assert.equal(lic.status, 'active');
+  assert.equal(lic.cancel_at_period_end, true);
+  dash = await (await t.browse('/account?n=canceled')).text();
+  assert.match(dash, /Subscription canceled\. Premium keeps working until the end of the period/);
+  assert.match(dash, /Ends [A-Z][a-z]{2} \d/);
+  assert.match(dash, /action="\/account\/subscription\/resume"[\s\S]*Keep Premium/);
+  assert.equal(t.mails.at(-1).to, 'cancel@rago.gg');
+  assert.ok(await t.db.get("SELECT 1 FROM audit WHERE type = 'subscription.canceled_in_site'"));
+  // Rago Route can't be kept while Premium ends.
+  const uid = lic.user_id;
+  t.subscription('sub_rc', 'month', { metadata: { product: 'rago-route', user_id: uid }, customer: 'cus_cs_c', cancel_at_period_end: true });
+  await t.webhook('customer.subscription.created', t.subs.sub_rc);
+  assert.equal((await t.browse('/account/route/resume', { form: {} })).headers.get('location'), '/account?n=routepremiumfirst');
+  // Keep Premium.
+  assert.equal((await t.browse('/account/subscription/resume', { form: {} })).headers.get('location'), '/account?n=resumed');
+  assert.equal((await t.db.get("SELECT cancel_at_period_end FROM licenses WHERE id = ?", [lic.id])).cancel_at_period_end, false);
+  // Stripe refuses: nothing changes, the page says billing isn't available.
+  const update = t.stripe.subscriptions.update;
+  t.stripe.subscriptions.update = async () => { throw new Error('Stripe down'); };
+  assert.equal((await t.browse('/account/subscription/cancel', { form: {} })).headers.get('location'), '/account?n=nobilling');
+  assert.equal((await t.browse('/account/route/resume', { form: {} })).headers.get('location'), '/account?n=nobilling');
+  t.stripe.subscriptions.update = update;
+  assert.equal((await t.db.get("SELECT cancel_at_period_end FROM licenses WHERE id = ?", [lic.id])).cancel_at_period_end, false);
+  // Rago Route alone: keep it, then cancel it; Premium doesn't change.
+  assert.equal((await t.browse('/account/route/resume', { form: {} })).headers.get('location'), '/account?n=routeresumed');
+  assert.match(await (await t.browse('/account')).text(), /action="\/account\/route\/cancel"[^>]*data-confirm="Cancel Rago Route\?/);
+  assert.equal((await t.browse('/account/route/cancel', { form: {} })).headers.get('location'), '/account?n=routecanceled');
+  assert.equal(t.subs.sub_rc.cancel_at_period_end, true);
+  assert.equal((await RO.routeOption(t.db, uid)).cancel_at_period_end, true);
+  assert.equal((await t.db.get("SELECT cancel_at_period_end FROM licenses WHERE id = ?", [lic.id])).cancel_at_period_end, false);
+  assert.match(await (await t.browse('/account')).text(), /action="\/account\/route\/resume"[\s\S]*Keep Rago Route/);
+
+  // Lifetime (no subscription): no Premium to cancel, its Rago Route can be canceled and kept.
+  await t.browse('/logout', { form: {} });
+  await t.browse('/signup', { form: { email: 'life@rago.gg', password: 'password123' } });
+  const { license: life } = await L.grantLicense(t.db, 'life@rago.gg', 'test');
+  assert.doesNotMatch(await (await t.browse('/account')).text(), /\/account\/subscription\/cancel/);
+  assert.equal((await t.browse('/account/subscription/cancel', { form: {} })).headers.get('location'), '/account?n=nosub');
+  t.subscription('sub_rl', 'month', { metadata: { product: 'rago-route', user_id: life.user_id }, customer: 'cus_rl' });
+  await t.webhook('customer.subscription.created', t.subs.sub_rl);
+  assert.equal((await t.browse('/account/route/cancel', { form: {} })).headers.get('location'), '/account?n=routecanceled');
+  assert.equal((await t.browse('/account/route/resume', { form: {} })).headers.get('location'), '/account?n=routeresumed');
+  assert.equal(t.subs.sub_rl.cancel_at_period_end, false);
+
+  // A free trial: « Cancel free trial », the card never charged.
+  const tr = await setup({ STRIPE_PRICE_MONTHLY: 'price_month' });
+  tr.stripe.paymentMethods = { retrieve: async (id) => ({ id, card: { fingerprint: 'fp_c' } }) };
+  const sub = tr.subscription('sub_tc', 'month', { status: 'trialing', periodDays: 3, default_payment_method: 'pm_x' });
+  const s = tr.paidSession('cs_tc', 'trial@rago.gg', { mode: 'subscription', payment_status: 'no_payment_required', amount_total: 0, payment_intent: null, subscription: sub, metadata: { interval: 'month', trial: '3' } });
+  await tr.webhook('checkout.session.completed', s);
+  await tr.browse('/checkout/success?session_id=cs_tc');
+  await tr.browse('/signup', { form: { email: 'trial@rago.gg', password: 'password123' } });
+  assert.match(await (await tr.browse('/account')).text(), /data-confirm="Cancel your free trial\? Premium keeps working until [^"]*your card is never charged/);
+  assert.equal((await tr.browse('/account/subscription/cancel', { form: {} })).headers.get('location'), '/account?n=canceled');
+  assert.equal(tr.subs.sub_tc.cancel_at_period_end, true);
+});
+
+test('checkout signed out: the email first, one that already has Premium is sent to sign in (q103)', async () => {
+  const t = await setup({ ...LIFE });
+  lifetimeInStripe(t);
+  // The email page keeps the link's options.
+  let r = await t.browse('/buy?interval=year&ref=ABC&route=1');
+  assert.equal(r.status, 200);
+  let page = await r.text();
+  assert.match(page, /<form method="post" action="\/buy"/);
+  assert.match(page, /name="interval" value="year"/);
+  assert.equal(t.created.length, 0);
+  // A new email: Checkout, with that email pre-filled.
+  r = await t.browse('/buy', { form: { email: '  New@Rago.gg ', interval: 'year' } });
+  assert.equal(r.headers.get('location'), 'https://checkout.stripe.com/c/pay/cs_new');
+  assert.equal(t.created.at(-1).customer_email, 'new@rago.gg');
+  assert.equal((await t.browse('/buy', { form: { email: 'nope', interval: 'year' } })).status, 400);
+
+  // An email with Premium (bought signed out, then the account): refused, before Stripe.
+  t.paidSubscription('cs_has', 'has@rago.gg', 'month');
+  await t.webhook('checkout.session.completed', t.sessions.cs_has);
+  const before = t.created.length;
+  r = await t.browse('/buy', { form: { email: 'HAS@rago.gg', interval: 'month', trial: '1' } });
+  assert.equal(r.status, 409);
+  page = await r.text();
+  assert.match(page, /You already have Premium, log in\./);
+  assert.match(page, /href="\/login"/);
+  assert.equal(t.created.length, before);
+  // The same for an account that claimed it.
+  await t.browse('/checkout/success?session_id=cs_has');
+  await t.browse('/signup', { form: { email: 'has@rago.gg', password: 'password123' } });
+  await t.browse('/logout', { form: {} });
+  assert.equal((await t.browse('/buy', { form: { email: 'has@rago.gg', interval: 'year' } })).status, 409);
+  // A subscriber may still switch to Lifetime; a Lifetime can't buy it twice.
+  assert.equal((await t.browse('/buy/lifetime', { form: { email: 'has@rago.gg' } })).headers.get('location'), 'https://checkout.stripe.com/c/pay/cs_new');
+  await L.grantLicense(t.db, 'gift@rago.gg', 'test');
+  assert.equal((await t.browse('/buy/lifetime', { form: { email: 'gift@rago.gg' } })).status, 409);
+
+  // Another email typed in Checkout, which already has Premium: flagged, never refunded automatically.
+  const s = t.paidSubscription('cs_swap', 'has@rago.gg', 'month', { customer_email: 'other@rago.gg' });
+  await t.webhook('checkout.session.completed', s);
+  assert.ok(await t.db.get("SELECT 1 FROM audit WHERE type = 'purchase.email_changed_has_premium'"));
+  assert.equal(t.stripeCalls.filter(([k]) => k === 'refund').length, 0);
+});
+
+test('free trial: a card only, and one per network for 6 months, never blocking a purchase without it (q104)', async () => {
+  const t = await setup({ STRIPE_PRICE_MONTHLY: 'price_month', STRIPE_PRICE_YEARLY: 'price_year', TRIAL_IP_SALT: 'salt-for-tests', TRUST_PROXY: '1' });
+  const net = { 'x-real-ip': '203.0.113.7' };
+  const trialPage = await t.browse('/buy?interval=month&trial=1', { headers: net });
+  assert.match(await trialPage.text(), /name="trial" value="1"/);
+  await t.browse('/buy', { form: { email: 'one@rago.gg', interval: 'month', trial: '1' }, headers: net });
+  let p = t.created.at(-1);
+  assert.deepEqual(p.payment_method_types, ['card']);
+  assert.match(p.metadata.trial_ip, /^[0-9a-f]{64}$/);
+  assert.doesNotMatch(p.metadata.trial_ip, /203/);
+  // Without a trial, every payment method of the account stays (PayPal…), and no fingerprint.
+  await t.browse('/buy', { form: { email: 'two@rago.gg', interval: 'year' }, headers: net });
+  assert.equal(t.created.at(-1).payment_method_types, undefined);
+  assert.equal(t.created.at(-1).metadata.trial_ip, undefined);
+
+  // The trial starts: the network is noted (hash and date only).
+  t.stripe.paymentMethods = { retrieve: async (id) => ({ id, card: { fingerprint: 'fp_one' } }) };
+  const sub = t.subscription('sub_ip1', 'month', { status: 'trialing', periodDays: 3, default_payment_method: 'pm_1' });
+  await t.webhook('checkout.session.completed', t.paidSession('cs_ip1', 'one@rago.gg', { mode: 'subscription', payment_status: 'no_payment_required', amount_total: 0, payment_intent: null, subscription: sub, metadata: { interval: 'month', trial: '3', trial_ip: p.metadata.trial_ip } }));
+  const row = await t.db.get('SELECT * FROM trial_ips');
+  assert.equal(row.ip_hash, p.metadata.trial_ip);
+  assert.deepEqual(Object.keys(row).sort(), ['ip_hash', 'started_at', 'subscription_id']);
+
+  // Same network, another person: no trial, the page offers to pay now.
+  const n = t.created.length;
+  let r = await t.browse('/buy', { form: { email: 'three@rago.gg', interval: 'month', trial: '1' }, headers: net });
+  assert.equal(r.status, 409);
+  const page = await r.text();
+  assert.match(page, /Free trial already used on this network/);
+  assert.match(page, /name="notrial" value="1"/);
+  assert.match(page, /name="email" value="three@rago.gg"/);
+  assert.equal(t.created.length, n);
+  r = await t.browse('/buy', { form: { email: 'three@rago.gg', interval: 'month', notrial: '1' }, headers: net });
+  assert.equal(r.headers.get('location'), 'https://checkout.stripe.com/c/pay/cs_new');
+  p = t.created.at(-1);
+  assert.equal(p.subscription_data.trial_period_days, undefined);
+  // Another network: the trial is there.
+  await t.browse('/buy', { form: { email: 'four@rago.gg', interval: 'month', trial: '1' }, headers: { 'x-real-ip': '198.51.100.2' } });
+  assert.equal(t.created.at(-1).subscription_data.trial_period_days, 3);
+  // Two checkouts opened at the same time on one network: the second trial is charged right away.
+  const sub2 = t.subscription('sub_ip2', 'month', { status: 'trialing', periodDays: 3, default_payment_method: 'pm_2' });
+  t.stripe.paymentMethods = { retrieve: async (id) => ({ id, card: { fingerprint: 'fp_two' } }) };
+  await t.webhook('checkout.session.completed', t.paidSession('cs_ip2', 'five@rago.gg', { mode: 'subscription', payment_status: 'no_payment_required', amount_total: 0, payment_intent: null, subscription: sub2, metadata: { interval: 'month', trial: '3', trial_ip: row.ip_hash } }));
+  assert.equal((await t.db.get("SELECT charged_now FROM trials WHERE subscription_id = 'sub_ip2'")).charged_now, true);
+  // Kept 6 months.
+  await purgeOldRecords(t.db, Date.now() + 184 * 86400 * 1000);
+  assert.equal(await t.db.get('SELECT 1 FROM trial_ips'), null);
+
+  // No salt: the network isn't checked (a warning in production), the trial goes on as before.
+  const u = await setup({ STRIPE_PRICE_MONTHLY: 'price_month', TRUST_PROXY: '1' });
+  await u.browse('/buy', { form: { email: 'x@rago.gg', interval: 'month', trial: '1' }, headers: net });
+  assert.equal(u.created.at(-1).metadata.trial_ip, undefined);
+  assert.equal(u.created.at(-1).subscription_data.trial_period_days, 3);
 });

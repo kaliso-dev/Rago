@@ -66,6 +66,9 @@ export function loadConfig(env = process.env) {
     // Free trial (Sofiene, 2026-11-04): days free before the first payment, card asked at checkout, charged at the end
     // unless canceled. One per person (card or email). 0 = no trial anywhere.
     trialDays: (() => { const n = Number(String(env.TRIAL_DAYS ?? '3').trim() || '3'); return Number.isInteger(n) && n >= 0 && n <= 30 ? n : 3; })(),
+    // One free trial per network (2026-11-27, q104): the secret salt of the IP fingerprint (HMAC-SHA256). Empty: the
+    // network isn't checked, only the email and the card (a warning at startup in production).
+    trialIpSalt: (env.TRIAL_IP_SALT || '').trim(),
     stripePriceYearly: (env.STRIPE_PRICE_YEARLY || '').trim(),
     stripePriceId: (env.STRIPE_PRICE_ID || '').trim(),
     // Lifetime (2026-10-16): its own one-time price, Premium for life in one payment. Never one of the prices above.
@@ -214,6 +217,7 @@ export function loadConfig(env = process.env) {
   cfg.warnings = [];
   const placeholder = (v) => /\.\.\.|abcd|a_remplir|xxxx/i.test(v || '');
   if (prod && !cfg.scriptsSecret) cfg.warnings.push('SCRIPTS_SECRET is not set: Rago Optimizer 1.1.6 and later can\'t unlock the Premium tweaks ("Premium scripts unavailable"). Use the same value as the GitHub secret RAGO_SCRIPTS_SECRET.');
+  if (prod && cfg.trialDays > 0 && !cfg.trialIpSalt) cfg.warnings.push('TRIAL_IP_SALT is not set: one free trial per network is not checked, only the email and the card. Set a long random value (never change it afterwards, or every network gets a new trial).');
   if (!env.SITE_URL) cfg.warnings.push('SITE_URL is not set: links to the site (pricing, terms) point to this server and open a 404. Set it to the Netlify address.');
   else if (/ragohub\.com|example\.com/i.test(cfg.siteUrl)) cfg.warnings.push(`SITE_URL is still the example (${cfg.siteUrl}): use the real site address.`);
   if (prod && (!cfg.supabaseUrl || !cfg.supabaseServiceKey)) cfg.warnings.push('SUPABASE_URL or SUPABASE_SERVICE_ROLE_KEY is not set: profile photos are kept in memory and lost at each restart.');

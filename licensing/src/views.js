@@ -249,6 +249,41 @@ export function loginPage(cfg, { email = '', error, notice, purchased = false, n
   return page({ title: 'Sign in', cfg, buy: !purchased, bodyClass: purchased ? 'is-purchase' : '', cta: { href: `/signup${qs(next)}`, label: 'Create account' }, body: split({ step: purchased ? 1 : null, aside, form }) });
 }
 
+/**
+ * Before Checkout, signed out (2026-11-27, q103): the buyer's email, so an email that already has Premium is sent to
+ * sign in instead of paying twice. The link's options (interval, trial, Rago Route, codes) ride along in hidden fields.
+ */
+export function buyEmailPage(cfg, { action, keep = {}, lifetime = false, trial = false, email = '', error } = {}) {
+  const aside = html`<p class="overline rise">Checkout</p>
+    <h1 class="display rise d1">${lifetime ? 'Premium for life.' : trial ? 'Start your free trial.' : 'Get Premium.'}</h1>
+    <p class="lede rise d2">Your email first: we check it doesn't have Premium already, then you pay on Stripe and create your account right after.</p>`;
+  const form = html`
+    <h2 class="h2">Your email</h2>
+    ${alertBox(error)}
+    <form method="post" action="${action}" class="form" data-busy="Opening checkout…">
+      ${field({ label: 'Email', name: 'email', type: 'email', value: email, autocomplete: 'email' })}
+      ${Object.entries(keep).map(([k, v]) => hidden(k, v))}
+      <button class="btn btn-primary btn-block" type="submit">Continue to payment</button>
+    </form>
+    <p class="muted small">Already have an account? <a href="/login">Sign in</a></p>`;
+  return page({ title: 'Checkout', cfg, body: split({ aside, form }) });
+}
+
+/** One free trial per network (2026-11-27, q104): this network had one in the last 6 months. Pay without it, or not. */
+export function trialUsedPage(cfg, { user, keep = {} } = {}) {
+  const aside = html`<p class="overline rise">Checkout</p>
+    <h1 class="display rise d1">Free trial already used on this network.</h1>
+    <p class="lede rise d2">There's one free trial per person, card and network. You can still get Premium now, without the trial: cancel anytime from your account or the app.</p>`;
+  const form = html`
+    <h2 class="h2">Get Premium now</h2>
+    <form method="post" action="/buy" class="form" data-busy="Opening checkout…">
+      ${Object.entries(keep).map(([k, v]) => hidden(k, v))}
+      <button class="btn btn-primary btn-block" type="submit">Pay without the trial</button>
+    </form>
+    <p class="muted small"><a href="${cfg.siteUrl}/#pricing">See the plans</a></p>`;
+  return page({ title: 'Free trial already used', cfg, user, body: split({ aside, form }) });
+}
+
 export function forgotPage(cfg, { sent = false, email = '' } = {}) {
   const noMail = html`<p class="muted">Emails aren't switched on yet. ${supportLink(cfg, 'Ask on Discord')} and we'll reset it for you.</p>`;
   const form = sent && cfg.mailEnabled
@@ -395,6 +430,8 @@ export function dashboardPage(cfg, { user, license, device, notice, error, canRe
 
   const portalButton = (label, cls = 'btn-ghost') => (license?.stripe_customer_id && license.stripe_subscription_id
     ? html`<form method="post" action="/account/billing" class="inline" data-busy="Opening…"><button class="btn ${cls} btn-sm" type="submit">${ICON.card}<span>${label}</span></button></form>` : '');
+  // Cancel or resume right here (2026-11-27, q102): a confirmation first, then the end of the period, never now.
+  const changeButton = (action, label, cls = 'btn-ghost', confirm = null) => html`<form method="post" action="${action}" class="inline" data-busy="Saving…"${confirm ? html` data-confirm="${confirm}"` : ''}><button class="btn ${cls} btn-sm" type="submit"><span>${label}</span></button></form>`;
 
   const howto = html`<ol class="howto">
         <li><span class="howto-n mono">1</span><span>Run the installer. Windows SmartScreen may ask you to confirm: click <strong>More info</strong>, then <strong>Run anyway</strong>.</span></li>
@@ -593,11 +630,12 @@ export function dashboardPage(cfg, { user, license, device, notice, error, canRe
           <p class="muted small">${active
             ? `${license.source === 'affiliate' ? 'Earned with the affiliate program. ' : ''}No renewals, nothing to pay.`
             : reason === 'refunded' ? 'Refunded. This license no longer works.' : reason === 'disputed' ? 'The payment was disputed. This license no longer works.' : 'This license was revoked.'}</p></div></div>`,
-        row(portalButton(active ? 'Cancel or manage subscription' : 'Invoices and billing')));
+        row(portalButton('Invoices and billing')));
     }
     let line;
     let badge = html`<span class="chip mono">${PLAN[license.plan]}</span>`;
-    let actions = portalButton('Cancel or manage subscription');
+    const until = end ? fmtDate(end) : 'the end of the period';
+    let actions = html`${changeButton('/account/subscription/cancel', 'Cancel subscription', 'btn-ghost', `Cancel your subscription? Premium keeps working until ${until}, then Rago Optimizer goes back to the free version and puts back its tweaks. Nothing more is charged. You can keep Premium until that date.`)}${portalButton('Invoices and billing')}`;
     if (ended) {
       line = html`Your subscription ended${end ? ` on ${fmtDate(end)}` : ''}. Renew it to unlock Premium again.`;
       actions = html`<a class="btn btn-primary btn-sm" href="${buyUrl}">Renew Premium</a>${portalButton('Invoices and billing')}`;
@@ -610,12 +648,12 @@ export function dashboardPage(cfg, { user, license, device, notice, error, canRe
     } else if (canceling) {
       line = `Canceled. Premium keeps working until ${end ? fmtDate(end) : 'the end of the period'}, then Rago Optimizer goes back to the free version and puts back its tweaks.`;
       badge = html`<span class="badge badge-wait"><i></i>Ends ${end ? fmtDate(end) : 'soon'}</span>`;
-      actions = html`${portalButton('Keep Premium', 'btn-primary')}`;
+      actions = html`${changeButton('/account/subscription/resume', 'Keep Premium', 'btn-primary')}${portalButton('Invoices and billing')}`;
     } else if (trial) {
       // Free trial (2026-11-04): the first payment and how to avoid it, in plain words
       line = `Free trial. Your card is charged on ${end ? fmtDate(end) : 'the last day'}, unless you cancel before. Cancel anytime: you pay nothing.`;
       badge = html`<span class="badge badge-wait"><i></i>Trial until ${end ? fmtDate(end) : 'soon'}</span>`;
-      actions = portalButton('Cancel trial or manage');
+      actions = html`${changeButton('/account/subscription/cancel', 'Cancel free trial', 'btn-ghost', `Cancel your free trial? Premium keeps working until ${until}, and your card is never charged.${routeOption ? ' Rago Route stops with it.' : ''} You can keep Premium until that date.`)}${portalButton('Billing details')}`;
     } else {
       line = end ? `Renews on ${fmtDate(end)}. Cancel anytime.` : 'Renews automatically. Cancel anytime.';
     }
@@ -637,7 +675,9 @@ export function dashboardPage(cfg, { user, license, device, notice, error, canRe
       const stops = routeOption.cancel_at_period_end;
       return sect('sect-route', html`<p class="overline">Rago Route</p><span class="badge ${stops ? 'badge-off' : 'badge-ok'}"><i></i>${stops ? `Stops ${end ? fmtDate(end) : 'soon'}` : 'Active'}</span>`,
         html`<p class="muted small">The anti-lag tunnel for Minecraft, ${routeOption.billing_interval === 'year' ? '$17.99 a year' : '$3 a month'} on top of your ${lifetimePlan ? 'Lifetime' : 'Premium'}.${end ? ` ${stops ? 'It stops on' : 'Next payment on'} ${fmtDate(end)}.` : ''}${lifetimePlan ? ' Cancel anytime: your Lifetime stays.' : ' It stops with your Premium.'}</p>`,
-        html`<form method="post" action="/account/billing" class="inline" data-busy="Opening…"><button class="btn btn-ghost btn-sm" type="submit">${ICON.card}<span>Manage or cancel</span></button></form>`);
+        html`${stops
+          ? changeButton('/account/route/resume', 'Keep Rago Route', 'btn-primary')
+          : changeButton('/account/route/cancel', 'Cancel Rago Route', 'btn-ghost', `Cancel Rago Route? It keeps working until ${end ? fmtDate(end) : 'the end of the period'}, then nothing more is charged for it. Your Premium doesn't change.`)}<form method="post" action="/account/billing" class="inline" data-busy="Opening…"><button class="btn btn-ghost btn-sm" type="submit">${ICON.card}<span>Billing details</span></button></form>`);
     }
     return sect('sect-route', html`<p class="overline">Rago Route</p><span class="badge badge-off"><i></i>Option</span>`,
       html`<p class="muted small">The anti-lag tunnel for Minecraft (beta): your game goes through the Rago servers by several paths at once, and lost packets are sent again right away. ${lifetimePlan ? 'Rago Route is a separate subscription, also for Lifetime: ' : ''}${routeYearly ? '$3 a month or $17.99 a year (6 months free)' : '$3 a month'} on top of your ${lifetimePlan ? 'Lifetime' : 'Premium'}, cancel anytime.</p>`,
