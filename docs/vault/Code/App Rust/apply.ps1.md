@@ -2,8 +2,8 @@
 type: code
 tags: [code, app, powershell, réseau, packet-optimizer, premium]
 fichier: app/src-tauri/netopt/apply.ps1
-lignes: 295
-maj: 2026-11-10
+lignes: 297
+maj: 2026-11-27
 ---
 # apply.ps1
 
@@ -55,7 +55,7 @@ Si l'écriture échoue : `X` « Could not write the backup, nothing will be chan
    - `Tcpip\QoS\Do not use NLA = "1"` (pour que les marques s'appliquent hors domaine) ;
    - liaison `ms_pacer` (Planificateur de paquets QoS) réactivée sur les cartes où elle était coupée.
    Sans `O_SMART` : `Do not use NLA` remis.
-9. **Priorité processeur Haute pour Minecraft** : `O_PMODE` → `IFEO\<exe>\PerfOptions\CpuPriorityClass = 3` pour les 3 exes, et les processus `javaw`, `java`, `Minecraft.Windows` déjà lancés passent en priorité Haute tout de suite. Sinon valeur d'avant et clés vides nettoyées.
+9. **Priorité processeur Supérieure à la normale pour Minecraft** (titre « Above normal CPU priority for Minecraft ») : `O_PMODE` → `IFEO\<exe>\PerfOptions\CpuPriorityClass = 6` pour les 3 exes, et les processus `javaw`, `java`, `Minecraft.Windows` déjà lancés passent en `AboveNormal` tout de suite (« Running … set to Above normal now »). Sinon valeur d'avant et clés vides nettoyées. Jusqu'au 13/11 : 3 (Haute) et « High », ce qui prenait le processeur à Discord et au stream ; changé sur le choix de Sofiene du 13/11, confirmé le 27/11 (dans `staging` par la PR #PRNUM du 27/11, pas encore en prod, jamais testé sur Windows) ; les PC déjà en Haute sont ramenés au lancement par [[repair.rs]] ([[Historique des problèmes]]).
 10. **Performances de Windows pour le jeu** (`O_COMP`, mode Compétitif) :
     - `Win32PrioritySeparation` = **38** ; `GameDVR_Enabled` = **0** ; `AppCaptureEnabled` = **0** ; `AutoGameModeEnabled` = **1** ; tâche Games : `GPU Priority` **8**, `Priority` **6**, `Scheduling Category` **High**, `SFIO Priority` **High** ;
     - plan **Performances élevées**, sauf : Ryzen X3D à deux CCD (`RN_X3D`, AMD demande Utilisation normale pour garder le jeu sur le cache 3D) ; plan personnalisé actif (Rago Low Latency ou autre), gardé ; pas de plan Performances élevées (portable « Modern Standby ») → `!` ;

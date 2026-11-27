@@ -3,7 +3,7 @@ type: code
 tags: [code, app, rust]
 fichier: app/src-tauri/src/lib.rs
 lignes: 1546
-maj: 2026-11-25
+maj: 2026-11-27
 ---
 # lib.rs
 
@@ -224,7 +224,7 @@ Si `reset.hold_exit()` (remise en cours) : cache la fenêtre et ne quitte pas. S
    - `resource_dir = resource_dir()\resources` ; `data_dir = app_data_dir()` (repli `%TEMP%\RagoOptimizer`) ;
    - supprime `data_dir\run\` (scripts en clair laissés par un arrêt brutal) et le dossier de repli `%SystemRoot%\Temp\<identifiant>` ([[assets.rs]]) ;
    - `History::load(history.json)` ; `Ledger::load(applied.json)`. S'il n'existait pas : `import_history` puis `save` ; s'il est encore en clair (`needs_migration`) : `save` le réécrit chiffré ;
-   - `repair::at_startup` (RAG-67) ; le résultat remplit `repaired` ;
+   - `repair::at_startup(sys, ledger, data_dir)` (RAG-67, et depuis la PR #PRNUM du 27/11, la priorité « Haute » des jeux ramenée à « Supérieure à la normale ») ; le résultat (valeurs à 0 supprimées) remplit `repaired` ;
    - `games::Library::new` ; `started_hidden` = argument `--background` ; `Background::load` ; `Session::new` ; `Display::new` (remet ce qu'un plantage a laissé) et `display.spawn` (fil qui regarde le jeu au premier plan, émet `display:state`) ;
    - **fil des jeux** (toutes les 4 s) : `library.list(false)` une fois, puis en boucle `games::process_paths()`, `library.poll` → `games:running` si changement, exes des jeux + `javaw` de Minecraft (`session::minecraft_exe`), `session.tick(playing, exes, procs, prefs, hogs)` → `games:session` si changement (`hogs` : pendant une partie, option `game_checks` active, `tips::Hogs::tick(exes)` mesure les applis gourmandes, [[tips.rs]], gardé dans ce fil car les compteurs de Windows ne changent pas de fil ; sinon `reset` et liste vide), `display.tick(library.running_dirs(), minecraft)` → `display:state` si changement ;
    - `sync_tray` ; si `prefs.autostart` et pas en debug, crée la tâche de démarrage dans un fil si elle manque ;

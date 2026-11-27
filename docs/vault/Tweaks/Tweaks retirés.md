@@ -2,8 +2,8 @@
 type: catalogue
 tags: [tweaks, retirés, généré]
 généré: docs/tools/catalogue_vault.py
-version_app: 1.3.0
-maj: 2026-11-10
+version_app: 1.4.1
+maj: 2026-11-27
 ---
 
 # Tweaks retirés

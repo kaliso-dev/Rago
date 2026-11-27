@@ -3,7 +3,7 @@ type: code
 tags: [code, site, json, catalogue]
 fichier: site/src/tweaks-copy.json
 lignes: 1582
-maj: 2026-11-10
+maj: 2026-11-27
 ---
 # tweaks-copy.json
 
@@ -31,7 +31,7 @@ Exemple de forme (sans contenu réel) : `"cle_du_tweak": {"summary": "…", "abo
 - Objectifs utilisés : Smoothness 66, Background 49, Input lag 38, Privacy 33, Connection 32, Cleanup 14, FPS 11, Recovery 8, Hitreg 3, Screenshare 1 (`rbw_mode`). « Screenshare » n'est pas dans la liste `GOALS` de [[sync_tweaks.py]] : il s'affiche comme badge sur la fiche RBW Mod mais n'a pas de bouton de filtre.
 
 ## Historique
-Créé le 12/10 avec la page Tweaks (`1e28ec9`, PR #39, alors 199 tweaks), mis à jour le 16/10 pour l'app 1.1.14 (`995b238`) et le 29/10 pour l'app 1.2.1 (`57ea47f`). Les tweaks de la 1.3.0 sont couverts (218 entrées).
+Créé le 12/10 avec la page Tweaks (`1e28ec9`, PR #39, alors 199 tweaks), mis à jour le 16/10 pour l'app 1.1.14 (`995b238`) et le 29/10 pour l'app 1.2.1 (`57ea47f`). Les tweaks de la 1.3.0 sont couverts (218 entrées). Depuis la PR #PRNUM du 27/11 (dans `staging` ; rago-optimizer.com, publié depuis la prod, garde l'ancien texte jusqu'à la mise en prod) : `pri_game` dit « above normal priority » au lieu de « high priority » ([[Historique des problèmes]], stream Discord qui saccade), et « 16 supported games » au lieu de « six » (la fiche en liste 16).
 
 ## Liens avec le reste
 - Lu par [[sync_tweaks.py]] ; rendu dans [[tweaks.html]].

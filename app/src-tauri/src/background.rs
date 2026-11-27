@@ -42,7 +42,7 @@ pub struct Prefs {
     pub game_power: bool,
     /// vérifications au lancement d'un jeu (conseils, rien n'est fermé)
     pub game_checks: bool,
-    /// processus du jeu en priorité haute le temps de jouer
+    /// processus du jeu en priorité supérieure à la normale le temps de jouer (jamais « Haute », 2026-11-13)
     pub game_priority: bool,
 }
 

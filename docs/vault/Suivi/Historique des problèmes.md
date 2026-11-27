@@ -1,7 +1,7 @@
 ---
 type: archive
 tags: [suivi, bug, support, archive]
-maj: 2026-11-25
+maj: 2026-11-27
 ---
 # Historique des problèmes
 
@@ -15,6 +15,11 @@ L'état actuel des bugs reste dans [[Bugs et incidents]], et les retours de joue
 - Le reste des commandes support : [[Serveur de licences]].
 
 ## Novembre 2026
+
+### 13/11 au 27/11 : stream Discord qui saccade chez des joueurs
+- **Symptôme** : stream Discord qui saccade et PC qui rame quand l'optimiseur tourne (Sofiene, 13/11). Joueurs avec l'exe public de prod (q109, 27/11).
+- **Cause probable** : le jeu mis en priorité processeur « Haute » (`CpuPriorityClass` = 3 dans les PerfOptions IFEO par `pri_game` et 16 presets sur 20, option de priorité du [[Packet Optimizer]], « Jeu en priorité haute » de [[Pendant la partie]]) : dès que le processeur est plein, le jeu passe avant Discord (capture et encodage du stream). Deuxième suspect, pas changé : la préemption GPU coupée par les packs GPU.
+- **Solution** : « Supérieure à la normale » (6) partout, et au lancement l'app ramène à 6 les 3 qu'elle avait écrites (un 3 d'avant Rago n'est pas touché, chaque changement noté dans `logs\repairs.log`). Écrit le 13/11 sans être poussé (« Ne push rien trouve juste le probleme »), mis dans `staging` par la PR #PRNUM le 27/11. Jamais testé sur Windows.
 
 ### 25/11 : exe de test et vraie 1.2.1 lancés ensemble (Premium perdu, pas de ping, deux barres)
 - **Symptôme** (test de Sofiene sur Windows, exe de test de `staging`) : écran du lot « DONE 00/03 This tweak is part of Premium » pour `cpu_pstates`, `cpu_throttle`, `cpu_turbo` alors qu'il est Premium ; pas de ping dans la pastille de la barre en jeu ; « l'ancienne » barre (1.2.1) toujours présente et en conflit.

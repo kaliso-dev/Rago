@@ -2,13 +2,13 @@
 type: catalogue
 tags: [tweaks, catalogue, généré]
 généré: docs/tools/catalogue_vault.py
-version_app: 1.3.0
-maj: 2026-11-10
+version_app: 1.4.1
+maj: 2026-11-27
 ---
 
 # Tweaks Carte graphique
 
-Module **Carte graphique** (`gpu`) de l'app 1.3.0 : NVIDIA, AMD et Intel, chacun ses réglages.
+Module **Carte graphique** (`gpu`) de l'app 1.4.1 : NVIDIA, AMD et Intel, chacun ses réglages.
 Note **générée** depuis `app/src/data/catalog.json` : ne pas l'éditer à la main, voir [[Catalogue des tweaks]].
 
 Légende : 🆓 gratuit · 🔒 Premium (voir [[Offres et prix]]) · ↩️ seul le retour arrière est gratuit · ⚠️ avancé · 🔁 redémarrage nécessaire · ⚙️ action ponctuelle. Comment un tweak est appliqué : [[Moteur des tweaks]].

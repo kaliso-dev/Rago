@@ -7,10 +7,12 @@
 //!   stratégie d'entreprise, et jamais sur un Ryzen X3D à deux CCD (AMD y veut Équilibré, qui garde le jeu sur le cache
 //!   3D). Le mode d'avant est noté sur le disque avant le changement, puis rendu à la fin de la partie, ou au lancement
 //!   suivant de l'app si elle a été fermée entre-temps ; pas si le joueur a lui-même changé de mode pendant la partie.
-//! - Jeu en priorité haute : chaque processus du jeu passe en priorité « Haute » (jamais « Temps réel ») et Windows
-//!   ne le bride plus (EcoQoS) même quand la fenêtre n'est pas au premier plan. Seulement depuis la priorité normale
-//!   (ou supérieure à la normale) : un choix du joueur n'est pas touché. Ça ne vit que le temps du processus, rien
-//!   n'est écrit sur le disque ; couper l'option rend la priorité d'avant aux processus encore lancés.
+//! - Jeu en priorité supérieure à la normale : chaque processus du jeu passe en priorité « Supérieure à la normale »
+//!   et Windows ne le bride plus (EcoQoS) même quand la fenêtre n'est pas au premier plan. Jamais « Haute » ni « Temps
+//!   réel » : en « Haute », le jeu prenait le processeur à Discord (capture et encodage du stream) et aux autres
+//!   programmes dès qu'il était plein (streams qui saccadent, choix de Sofiene du 2026-11-13). Seulement depuis la
+//!   priorité normale (ou déjà supérieure à la normale) : un choix du joueur n'est pas touché. Ça ne vit que le temps du
+//!   processus, rien n'est écrit sur le disque ; couper l'option rend la priorité d'avant aux processus encore lancés.
 //! - Conseils au lancement d'un jeu (option « Vérifications ») : batterie, téléchargements, synchronisation,
 //!   enregistrement et fond d'écran animé en fond ; écran sous sa meilleure fréquence, Game DVR, applis qui prennent
 //!   du processeur ou de la mémoire (tips.rs) ; et les réglages en jeu conseillés pour le jeu lancé (tips.json).
@@ -58,7 +60,7 @@ pub struct State {
     pub playing: bool,
     /// mode Performances élevées mis pour la partie
     pub power: bool,
-    /// processus du jeu passés en priorité haute par Rago pour la partie en cours
+    /// processus du jeu passés en priorité supérieure à la normale par Rago pour la partie en cours
     pub priority: usize,
     /// jeux qui ont reçu la carte graphique performante (depuis toujours)
     pub gpu_games: usize,
@@ -82,7 +84,7 @@ struct Inner {
     seen: HashSet<String>,
     /// exes du jeu déjà passés par la priorité, tant qu'ils tournent
     prio_seen: HashSet<String>,
-    /// processus mis en priorité haute par Rago : pid -> (chemin, priorité d'avant)
+    /// processus mis en priorité supérieure à la normale par Rago : pid -> (chemin, priorité d'avant)
     raised: HashMap<u32, (String, u32)>,
     /// écran et Game DVR, relus tous les PC_EVERY tours pendant la partie
     pc: Vec<Check>,
@@ -164,8 +166,8 @@ pub fn wants_gpu(p: &Path) -> bool {
     file.ends_with(".exe") && !["unins", "crash", "report", "setup", "redist", "vc_redist", "dxsetup"].iter().any(|w| file.contains(w))
 }
 
-/// Priorité : les exes du jeu pas encore vus (à passer en priorité haute), et ceux à retenir, c'est-à-dire ceux qui
-/// tournent encore. Un exe fermé puis relancé est donc revu.
+/// Priorité : les exes du jeu pas encore vus (à passer en priorité supérieure à la normale), et ceux à retenir,
+/// c'est-à-dire ceux qui tournent encore. Un exe fermé puis relancé est donc revu.
 pub fn prio_fresh(seen: &HashSet<String>, exes: &[PathBuf]) -> (Vec<String>, HashSet<String>) {
     let now: HashSet<String> = exes.iter().filter(|p| wants_gpu(p)).map(|p| p.to_string_lossy().to_lowercase()).collect();
     let mut fresh: Vec<String> = now.difference(seen).cloned().collect();
@@ -281,7 +283,8 @@ impl Session {
         }
         g.state.gpu_games = g.saved.gpu.len();
 
-        // priorité haute : chaque processus du jeu, une fois par lancement ; rien à défaire quand il se ferme
+        // priorité supérieure à la normale : chaque processus du jeu, une fois par lancement ; rien à défaire quand il
+        // se ferme
         if prefs.game_priority && playing {
             let (fresh, now) = prio_fresh(&g.prio_seen, exes);
             if !fresh.is_empty() {
@@ -447,7 +450,7 @@ mod win {
     use windows_sys::Win32::Foundation::{CloseHandle, HANDLE, INVALID_HANDLE_VALUE};
     use windows_sys::Win32::System::Threading::{
         GetPriorityClass, OpenProcess, ProcessPowerThrottling, QueryFullProcessImageNameW, SetPriorityClass, SetProcessInformation,
-        ABOVE_NORMAL_PRIORITY_CLASS, HIGH_PRIORITY_CLASS, NORMAL_PRIORITY_CLASS, PROCESS_POWER_THROTTLING_CURRENT_VERSION,
+        ABOVE_NORMAL_PRIORITY_CLASS, NORMAL_PRIORITY_CLASS, PROCESS_POWER_THROTTLING_CURRENT_VERSION,
         PROCESS_POWER_THROTTLING_EXECUTION_SPEED, PROCESS_POWER_THROTTLING_STATE, PROCESS_QUERY_LIMITED_INFORMATION, PROCESS_SET_INFORMATION,
     };
 
@@ -499,8 +502,10 @@ mod win {
         out
     }
 
-    /// Passe en priorité haute les processus de ces exes (chemins en minuscules), s'ils sont en priorité normale ou
-    /// supérieure à la normale. Renvoie ceux changés : (pid, chemin, priorité d'avant).
+    /// Passe en priorité supérieure à la normale les processus de ces exes (chemins en minuscules), s'ils sont en
+    /// priorité normale ou déjà supérieure à la normale (priorité par jeu, Packet Optimizer) ; Windows ne les bride plus.
+    /// Jamais « Haute » : le jeu y passait avant Discord et le stream dès que le processeur était plein (2026-11-13).
+    /// Renvoie ceux changés : (pid, chemin, priorité d'avant).
     pub fn raise(paths: &[String]) -> Vec<(u32, String, u32)> {
         let mut out = Vec::new();
         for pid in pids() {
@@ -508,7 +513,7 @@ mod win {
                 let Some((h, path)) = open(pid) else { continue };
                 if paths.contains(&path) {
                     let before = GetPriorityClass(h);
-                    if (before == NORMAL_PRIORITY_CLASS || before == ABOVE_NORMAL_PRIORITY_CLASS) && SetPriorityClass(h, HIGH_PRIORITY_CLASS) != 0 {
+                    if (before == NORMAL_PRIORITY_CLASS || before == ABOVE_NORMAL_PRIORITY_CLASS) && SetPriorityClass(h, ABOVE_NORMAL_PRIORITY_CLASS) != 0 {
                         throttling(h, false);
                         out.push((pid, path, before));
                     }
@@ -519,12 +524,13 @@ mod win {
         out
     }
 
-    /// Rend la priorité d'avant aux processus encore lancés, s'ils sont toujours en priorité haute.
+    /// Rend la priorité d'avant (et le bridage de Windows) aux processus encore lancés, s'ils sont toujours en priorité
+    /// supérieure à la normale.
     pub fn restore(raised: &std::collections::HashMap<u32, (String, u32)>) {
         for (&pid, (path, before)) in raised {
             unsafe {
                 let Some((h, now)) = open(pid) else { continue };
-                if &now == path && GetPriorityClass(h) == HIGH_PRIORITY_CLASS {
+                if &now == path && GetPriorityClass(h) == ABOVE_NORMAL_PRIORITY_CLASS {
                     SetPriorityClass(h, *before);
                     throttling(h, true);
                 }

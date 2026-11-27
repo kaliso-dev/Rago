@@ -2,8 +2,8 @@
 type: code
 tags: [code, app, powershell, réseau, packet-optimizer]
 fichier: app/src-tauri/netopt/common.ps1
-lignes: 620
-maj: 2026-11-23
+lignes: 621
+maj: 2026-11-27
 ---
 # common.ps1
 
@@ -91,7 +91,7 @@ Marche avec ou sans sauvegarde.
 - `Do-Loaded` (« Test de bufferbloat », latence sous charge ; la page demande confirmation) : 30 pings au repos, puis 2 téléchargements `curl.exe` de 100 Mo en parallèle depuis `speed.cloudflare.com` (12 s au plus chacun, 200 Mo au plus), 1,5 s d'attente, puis jusqu'à 100 pings tant qu'un téléchargement tourne. `curl.exe` absent (Windows 10 avant 1803) → `X`. Note selon `delta` = médiane chargée − médiane au repos : **A+** < 5 ms, **A** < 30, **B** < 60, **C** < 200, **D** < 400, sinon **F**. Résultat `{kind: "loaded", ip, idleMed, idleJitter, busyMed, busyJitter, busyLoss, delta, grade}`.
 - `Do-Mtu` (« Mesurer le MTU ») : `Find-Mtu` vers la cible, puis vers `1.1.1.1` si rien. Résultat `{kind: "mtu", ip, mtu, current, alias}` (MTU actuel de l'interface principale). Ping bloqué → `!`.
 - `Do-Detect` : `{kind: "detect", connected, wifi, alias, desc, speed, backup}` (`backup` = date de `snapshot.json`).
-- `Do-Status` (« État actuel ») : tableau de lignes `{s, k, v}` par section : `tcp` (fenêtre de réception, congestion, RTO initial et minimal, délai et fréquence d'ACK, horodatages, ECN, résilience RTT, RSS, RSC, filtre de regroupement), `main` (interface principale, MTU, `TcpAckFrequency`, `TcpDelAckTicks`), `nic` (chaque carte connectée et ses réglages suivis), `qos` (stratégies `Rago_Net_*` et leur DSCP), `power` (plan actif, `NetworkThrottlingIndex`, `SystemResponsiveness`, priorité processeur de Minecraft : `high` si `CpuPriorityClass` de `javaw.exe` vaut 3). Une valeur absente s'affiche « Windows default ».
+- `Do-Status` (« État actuel ») : tableau de lignes `{s, k, v}` par section : `tcp` (fenêtre de réception, congestion, RTO initial et minimal, délai et fréquence d'ACK, horodatages, ECN, résilience RTT, RSS, RSC, filtre de regroupement), `main` (interface principale, MTU, `TcpAckFrequency`, `TcpDelAckTicks`), `nic` (chaque carte connectée et ses réglages suivis), `qos` (stratégies `Rago_Net_*` et leur DSCP), `power` (plan actif, `NetworkThrottlingIndex`, `SystemResponsiveness`, priorité processeur de Minecraft : `high` si `CpuPriorityClass` de `javaw.exe` vaut 3, `above normal` s'il vaut 6, depuis la PR #PRNUM du 27/11). Une valeur absente s'affiche « Windows default ».
 
 ## Données touchées
 
