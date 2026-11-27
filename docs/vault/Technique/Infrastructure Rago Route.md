@@ -1,11 +1,11 @@
 ---
 type: technique
 tags: [technique, rago-route, proxy, serveurs]
-maj: 2026-11-10
+maj: 2026-11-27
 ---
 # Infrastructure Rago Route
 
-Partie technique de Rago Route (tunnel anti-lag pour Minecraft Java), état de `staging` au 10/11. Historique, mesures et décisions : [[Proxy]]. Rago Route est **en bêta**, réservé au Premium : sur `staging`, l'onglet est dans **tous les exe** depuis la PR #76 (sortie 1.3.0) ; pas encore en prod (l'app 1.3.0 n'est pas sortie et le serveur de prod n'a pas encore la route du jeton).
+Partie technique de Rago Route (tunnel anti-lag pour Minecraft Java), état de `staging` au 10/11. Historique, mesures et décisions : [[Proxy]]. Rago Route est **en bêta**, réservé au Premium : l'onglet est dans **tous les exe** depuis la PR #76 ; **en prod depuis le 22/11** (app et serveur de la 1.3.0), sorti et annoncé sur Discord ce jour-là.
 
 ## Les pièces
 | Pièce | Où | Rôle |
