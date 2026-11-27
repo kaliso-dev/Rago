@@ -1,7 +1,7 @@
 ---
 type: index
 tags: [index]
-maj: 2026-11-25
+maj: 2026-11-27
 ---
 # Rago Optimizer : le projet
 
@@ -36,6 +36,7 @@ Vue d'ensemble technique : [[Architecture]]. **Pour coder ou dépanner : commenc
   - Hébergement et CI : [[Supabase]] · [[Railway]] · [[Netlify]] · [[CI GitHub Actions]] · [[Variables d'environnement]] · [[Clés et secrets]] · [[Domaine et e-mails]] · [[Surveillance]]
   - Site : [[Site]] · Rago Route : [[Infrastructure Rago Route]]
   - Outil : [[Cerveau du vault]] (ce vault en graphe dans l'admin, avec un lecteur pour chaque fichier)
+  - Outil : [[Rago Hub]] (lance et coordonne les fils Claude du projet ; hook dans `.claude/`)
 - **Code, une note par fichier** (dossier `Code/`) : [[Code de l'app (Rust)]] · [[Code de l'app (interface)]] · [[Code du générateur de catalogue]] · [[Code du serveur]] (et ses tables) · [[Code du site]] · [[Code de Rago Route]] · [[Code de la CI et du dépôt]] (avec [[Branches du dépôt]])
 - **Design** : [[Charte graphique]] (v5 « Match day ») · [[Voix et ton]] · [[Refonte glass]] (look encore en prod)
 - **Marketing** : [[Marketing]] · [[Discord]] · [[Partenaires et créateurs]] · [[Promotions et affiliation]] · [[Vidéos YouTube]] · [[Étude de marché de novembre 2026]] · [[Logo création d'Adam]]

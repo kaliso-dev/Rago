@@ -1,9 +1,9 @@
 ---
 type: pilotage
 tags: [état, pilotage]
-maj: 2026-11-25
+maj: 2026-11-27
 ---
-# État actuel (25/11/2026)
+# État actuel (27/11/2026)
 
 Voir aussi [[Prochaines étapes]], [[Questions ouvertes]], [[Journal]]. Retour à [[Projet]]. Passage sur un nouveau compte Claude (Claude Team, 25/11) : [[Reprendre sur un nouveau compte Claude]].
 
@@ -14,7 +14,7 @@ Les joueurs ont la **[[Version 1.3.0]]** depuis le 22/11 vers 02:20 (heure de Pa
 | Sujet | État | Statut |
 |---|---|---|
 | Version servie aux joueurs | **1.3.0** depuis le 22/11 : téléchargement `Rago Optimizer_1.3.0_x64-setup.exe` (exe de prod signé du run 270 de [[app-windows.yml]], déposé par Sofiene dans Supabase, `INSTALLER_VERSION=1.3.0`), mise à jour automatique à 100 %, sans pause | CONFIRMÉ (HTTP, 25/11 : `/api/v1/update/status` → `version: 1.3.0`, `rollout: 100`, `paused: false` ; `/download/status` → fichier 1.3.0 dans Supabase) |
-| Code sur la branche de prod | 1.3.0 depuis la PR #105 (22/11), plus l'admin, le cadre du Cerveau et les e-mails v5 (PR #114, #117) ; dernier commit `03aa4fd` (22/11, 23:07 UTC) | CONFIRMÉ (git) |
+| Code sur la branche de prod | 1.3.0 depuis la PR #105 (22/11), plus l'admin, le cadre du Cerveau et les e-mails v5 (PR #114, #117), les cerveaux Rago Client et Serveur Minecraft (PR #145, 25/11) et le hook [[Rago Hub]] (PR #150 à #152, 26/11) ; dernier commit `ac4107a` (PR #152, 26/11, 11:24 UTC) | CONFIRMÉ (git, 27/11) |
 | Serveur de prod | code de la 1.3.0 : essai 3 jours, connexion de l'app par Google ou Discord, option Rago Route (`/api/v1/route/token`), code du bot communauté ; tables `route_subscriptions` et `discord_*` créées dans Supabase prod le 22/11 par Claude (« tu as ma permission pour les nouvelles tables et tu peux fusionner ») ; `/healthz` répond | CONFIRMÉ (HTTP, 22/11 et 25/11) |
 | Site de prod | celui de la 1.3.0 (police Geist, page Rago Route `route.html`, prix avec l'option, pages légales de l'essai) ; pas encore la v5 ni la v6 | CONFIRMÉ (HTTP, 25/11) |
 | Dernier code de l'app | **[[Version 1.4.1]]** dans `staging` (`app/package.json`) : toute l'app refaite sur les maquettes v5 ([[Maquettes v5 dans l'app (s5)]]) ; exe de test `rago-optimizer-setup-STAGING` du run `app-windows` 45641885291 (25/11, 16 h 17 à Paris) ; un seul test Windows, par Sofiene le 25/11, retours corrigés par la PR #139 | CONFIRMÉ (git, CI) ; à tester |
@@ -27,29 +27,31 @@ Les joueurs ont la **[[Version 1.3.0]]** depuis le 22/11 vers 02:20 (heure de Pa
 | Saccades du stream Discord (13/11) | des joueurs ont un stream Discord qui saccade avec l'optimiseur ; cause probable : le jeu mis en priorité « Haute ». Correctif prêt (le jeu en « Supérieure à la normale » partout, PC déjà réglés ramenés) mais **jamais poussé** (Sofiene : « Ne push rien trouve juste le probleme ») : il n'existe que dans `stream-discord/` du dossier partagé ; la 1.3.0 en prod met toujours le jeu en Haute ; q109 ([[Bugs et incidents]]) | OBSERVÉ (fil du 13/11) ; À DÉCIDER |
 | Marketing | pas de plan : des vidéos sur TikTok, YouTube et Instagram, faites par Abel ; annonces Discord 1.2 postées, en anglais | Sofiene, 01/11 ([[Marketing]]) |
 | [[Client Minecraft Rago]] | deux projets à part, chacun son dépôt et son vault (créés le 25/11) : `kaliso-dev/Rago-Client` (client et launcher) et `kaliso-dev/network-server-rago` (serveur Minecraft) | Sofiene, 25/11 |
-| [[Bot communauté Discord]] | code en prod depuis la sortie 1.3.0 (PR #105) ; allumé seulement si `DISCORD_COMMUNITY=1` sur Railway prod : À VÉRIFIER. La PR #71 (même code, ouverte depuis le 01/11) n'a plus d'objet | CONFIRMÉ (git) ; allumage À VÉRIFIER |
+| [[Bot communauté Discord]] | code en prod depuis la sortie 1.3.0 (PR #105) ; allumé seulement si `DISCORD_COMMUNITY=1` sur Railway prod : À VÉRIFIER. La PR #71 (même code) a été fermée sans fusion le 26/11 | CONFIRMÉ (git) ; allumage À VÉRIFIER |
 | [[Conformité juridique]] | pages légales à jour pour l'essai et la connexion (04/11) ; **manquent l'identité et l'adresse du vendeur** : Sofiene n'est pas encore inscrit comme vendeur et a 17 ans (q44, q46, q49) | À RÉGLER par Sofiene |
 | [[Tableau de bord admin]] | `/admin` complet (joueurs, accès, bannissement, ventes Stripe en une devise, services, site et promos, tests réseau, journal), en prod depuis le 10/11 (PR #87) ; en v5 avec les icônes imprimées depuis le 22/11 (PR #114, #117) | CONFIRMÉ (git) |
 | [[Cerveau du vault]] | `/admin/cerveau` : le vault en graphe animé façon Obsidian, lecteur de notes et de n'importe quel fichier du dépôt, derrière la clé admin (Abel s'en sert avec la même clé, choix de Sofiene du 10/11). dans `staging` et en prod depuis le 10/11 (PR #85, #87), cadre en v5 depuis le 22/11 ; afficher les cerveaux des autres projets (Rago Client, serveur Minecraft) : demandé par Sofiene le 25/11, traité dans un autre fil ; lit le vault de `staging` sur GitHub ; `CERVEAU_GITHUB_TOKEN` à mettre dans Railway (staging et prod) avant que le dépôt passe en privé | CONFIRMÉ (git) |
 | Choix du cerveau (12/11) | sélecteur **Rago Optimizer / RAGO-OS** dans le [[Cerveau du vault]] ; RAGO-OS = vault du nouveau dépôt `kaliso-dev/RAGO-OS-` (branche `main`) ; menu déroulant (« je veux un menu dépliant ») ; **en prod et sur staging** (PR #100, #101, #103 ; servi depuis le 13/11 vers 0 h 05). Sofiene a repassé le dépôt `rago` en **public** le 12/11 à 23 h 41 (il était privé dans la soirée et la CI ne démarrait plus) ; `CERVEAU_GITHUB_TOKEN` présent dans Railway (Sofiene, 25/11 ; production et staging : À VÉRIFIER) ; à étendre à `Rago-Client` (q98) | CONFIRMÉ (git, serveurs) |
 | Cerveaux Rago Client et Serveur Minecraft Rago (25/11) | le menu du [[Cerveau du vault]] propose aussi les vaults `docs/vault/` de `kaliso-dev/Rago-Client` (privé : il faut `CERVEAU_GITHUB_TOKEN` avec ce dépôt) et `kaliso-dev/network-server-rago`, lus sur leur branche par défaut ; vides tant que leur vault n'y est pas fusionné ; PR #142 (staging) puis portage de `licensing/` vers la prod, sur « envoie en prod » de Sofiene (25/11) | CONFIRMÉ (git, tests) |
+| [[Rago Hub]] (26/11) | outil de Sofiene qui lance et coordonne des fils Claude (un chef, plusieurs fils) ; dans ce dépôt, il ajoute `.claude/settings.json` et `.claude/hooks/` (`rago-hub-report.py` renvoie l'activité et les réponses des fils au Hub, `hub.py` donne les commandes des fils). PR #150, #151 et #152 fusionnées **directement dans la branche de prod** le 26/11, sans passer par `staging` : ces fichiers ne sont pas dans `staging`. À VÉRIFIER : voulu ou oubli ? (q130) | CONFIRMÉ (git, API GitHub) ; voulu À VÉRIFIER |
 | [[Linear]] | remis à jour le 01/11 à partir du vault | CONFIRMÉ |
 | Vault Obsidian | créé le 31/10 ; règle n°1 : il doit correspondre en tout point à l'état du projet ; détaillé le 10/11 (une note par fichier de code) ; **complété le 25/11** pour le passage sur un nouveau compte Claude : sortie 1.3.0, [[New Brand Rago]], [[Version 1.4.1]], PR #95 à #141, fils du 11 au 25/11, [[Reprendre sur un nouveau compte Claude]] | DÉCIDÉ (Sofiene, 25/11) |
 
-## PR ouvertes (25/11)
-- #136 (site v6, accueil du 24/11 : globe dessiné, Rago Route en une section) vers `staging` : attend la relecture de Sofiene ([[New Brand Rago]]).
-- #106 (vault de la sortie 1.3.0) vers `staging` : son contenu est repris par la PR de vault du 25/11 ; peut être fermée.
-- #71 (bot communauté vers la prod, 01/11) : le code est déjà en prod par la #105 ; peut être fermée.
+## PR ouvertes (27/11)
+- #136 (site v6, accueil du 24/11 : globe dessiné, Rago Route en une section) vers `staging` : seule PR de code ouverte, attend la relecture de Sofiene ([[New Brand Rago]]) (CONFIRMÉ, API GitHub, 27/11).
+- Fermées sans fusion : #71 (bot communauté vers la prod, code déjà en prod par la #105) et #106 (vault de la 1.3.0) le 26/11, leur contenu repris par la PR #153 (vault regroupé, fusionnée dans `staging` le 26/11) ; #143 (`claude/project-thread-tyht7t` → prod, 540 fichiers, ouverte par erreur) le 27/11 sur « ferme là alors si elle ne sert à rien » : la fusionner aurait envoyé tout `staging` en prod sans validation ; son seul contenu propre est dans `staging` par la PR #149. Branches gardées.
 Ne rien fusionner ni fermer sans le mot de Sofiene. Toutes les PR, une par ligne : [[Pull requests]].
 
 ## Dernières PR fusionnées
+- 26/11 dans `staging` : #153 (vault regroupé en une version finale). Dans la prod, sans passer par `staging` : #150, #151, #152 (hook [[Rago Hub]]).
+- 25/11 dans la prod : #145 (cerveaux Rago Client et Serveur Minecraft, portage de la #142). Dans `staging` : #142, #144, #146 à #149 (Cerveau et vault).
 - 25/11 dans `staging` : #137 (détail des réglages au clic sur une icône info, grilles sans vide) et #139 (retours du test Windows de Sofiene : bouton du compte, connexion de l'exe de test séparée de la 1.2.1, barre en jeu opaque, plans d'alimentation, cartes), avec les PR de vault #138, #140 et #141.
 - 23 et 24/11 dans `staging` : #119 à #133 (app à l'identique des maquettes v5, [[Version 1.4.1]]), #129 et #135 (accueil v6).
 - 22/11 dans la prod : #105 (sortie 1.3.0), #114 et #117 (admin et e-mails v5). Dans `staging` : #107 à #113, #115, #116, #118 (v5 du serveur de comptes, de l'app et du site).
 
 ## Ce qui attend Sofiene
-1. **Passage sur le nouveau compte Claude (25/11)** : avant de quitter l'ancien compte, télécharger le dossier partagé du projet et celui de « New Brand Rago » (`rago-redesign/`), et décider où vit la page des questions (q128, q129) ; marche à suivre : [[Reprendre sur un nouveau compte Claude]].
-2. **URGENT, avant le 05/12** : l'organisation Supabase (offre gratuite) a dépassé son quota de bande passante (e-mail du 04/11) ; restrictions possibles à partir du 05/12. Les clés sont sauvegardées (10-11/11, [[Clés et secrets]]) ; reste à passer en Pro (25 $/mois) ou migrer, et le dire avant le 05/12 ([[Supabase]]).
+1. **Passage sur le nouveau compte Claude (25/11)** : dossiers de l'ancien compte téléchargés sur le Mac de Sofiene (`/Users/kaliso/Desktop/Rago data `, tout sauf `refonte-design/`) ; les questions se posent désormais dans le chat du Rago Hub (q129, 27/11) ; reste q128 (mettre aussi `rago-redesign/` dans le dépôt ?) ; marche à suivre : [[Reprendre sur un nouveau compte Claude]].
+2. **URGENT, avant le 05/12** : l'organisation Supabase (offre gratuite) a dépassé son quota de bande passante (e-mail du 04/11) ; restrictions possibles à partir du 05/12. **Décidé le 27/11 : passage en Pro (25 $/mois) le 01/12 ou le 02/12**, dès la paye de Sofiene (« je vais passer en pro dès que j'ai ma paye donc le 01/12 ou le 02/12 ») ; à confirmer une fois fait. Les clés sont sauvegardées (10-11/11, [[Clés et secrets]]) ([[Supabase]]).
 3. **Clés** : toutes sauvegardées dans le gestionnaire de mots de passe de Sofiene (11/11 : clé des licences, variables Railway, clé Tauri et son mot de passe, codes de secours, identifiants `/admin`) ; surveillance en place (UptimeRobot sur `/healthz`, 11/11, [[Surveillance]]).
 4. **Tester l'app 1.4.1** : exe `rago-optimizer-setup-STAGING` du run `app-windows` 45641885291 (25/11, 16 h 17). Avant, quitter l'app installée (icône près de l'horloge, clic droit, Quitter) et se reconnecter une fois dans l'exe de test. Répondre à q121 ([[Version 1.4.1]]).
 5. **Après la sortie 1.3.0** : vérifier que les prix live de Rago Route (`STRIPE_PRICE_ROUTE`, `STRIPE_PRICE_ROUTE_YEARLY`, créés le 14/11, identifiants dans [[Paiements Stripe]]) sont sur Railway `production`, sinon Rago Route reste fermé hors essai (À VÉRIFIER) ; voir sur un PC en 1.2.1 que la mise à jour arrive ([[Mise à jour automatique]]).
@@ -59,4 +61,4 @@ Ne rien fusionner ni fermer sans le mot de Sofiene. Toutes les PR, une par ligne
 9. [[Conformité juridique]] : inscrire sa mère comme vendeuse, régler l'adresse (domiciliation quand le budget le permet, q46).
 10. Rago Route : 4G du téléphone gardée avec le Wi-Fi (sur `staging` depuis le 13/11, dans la 1.3.0), à tester sur Windows ; tests P0-1 à P0-9 avant d'annoncer (P0-9 d'abord) ; q97, q99 à q105, q108 ([[Proxy]], [[Page de vente Rago Route]]).
 11. Valider l'e-mail sur la collecte des tests réseau une fois rédigé ([[Prochaines étapes]]).
-12. Répondre aux questions ouvertes sur la page « Questions du vault Rago » (q73 à q129, [[Questions ouvertes]] ; q122 à q127 concernent le serveur Minecraft).
+12. Répondre aux questions ouvertes (q73 à q130, [[Questions ouvertes]], posées dans le chat du Rago Hub ; q122 à q127 concernent le serveur Minecraft).

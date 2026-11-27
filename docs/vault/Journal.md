@@ -1,7 +1,7 @@
 ---
 type: pilotage
 tags: [journal, chronologie]
-maj: 2026-11-26
+maj: 2026-11-27
 ---
 # Journal
 
@@ -10,6 +10,8 @@ Une ligne par événement marquant, la plus récente en haut. Voir [[Historique 
 ## Novembre 2026
 | Date | Événement | Liens |
 |---|---|---|
+| 27/11 | **PR #143 fermée sans fusion** (Sofiene : « ferme là alors si elle ne sert à rien ») : ouverte par erreur vers la prod, elle aurait envoyé tout `staging` (app 1.4.1, site v5/v6) en prod sans validation ; son contenu utile était déjà dans `staging` (#149). Seule PR encore ouverte : #136. Vault remis à jour : #71 et #106 fermées le 26/11 ; #150 à #152 ([[Rago Hub]]) fusionnées le 26/11 directement en prod, sans `staging` (À VÉRIFIER, q130) ; dernier commit de prod `ac4107a`. **Supabase en Pro le 01 ou 02/12** (décision). **Questions posées dans le chat du Rago Hub** ; la page artefact des questions est abandonnée (q129). Dossiers de l'ancien compte téléchargés dans `/Users/kaliso/Desktop/Rago data ` (sauf `refonte-design/`) | [[Pull requests]], [[État actuel]], [[Supabase]], [[Questions ouvertes]], [[Décisions]] |
+| 26/11 | PR #150, #151 et #152 : hook du [[Rago Hub]] fusionné directement dans la branche de prod (pas dans `staging`) ; PR #71 et #106 fermées sans fusion, contenu repris par la PR #153 | [[Pull requests]], [[Rago Hub]] |
 | 26/11 | Vault regroupé en une version finale sur `staging` (demande de Sofiene avant le passage au nouveau compte) : les 23 branches qui avaient des notes du vault hors de `staging` relues ; seules celles du fil « Sauvegarder les clés » (10-11/11) manquaient vraiment : clés toutes sauvegardées, UptimeRobot et Watch Paths en place, fiches [[Domaine et e-mails]] et [[Surveillance]]. Les notes de l'accueil v6 restent dans la PR #136, qui les apporte à sa fusion | [[Clés et secrets]], [[Railway]] |
 | 25/11 | **[[Cerveau du vault]] : cerveaux Rago Client et Serveur Minecraft Rago** (Sofiene : « dans mon cerveau du dashboard […] je puisse voir les cerveaux ») : deux cerveaux de plus dans le menu, lus sur la branche par défaut de `kaliso-dev/Rago-Client` et `kaliso-dev/network-server-rago` ; PR #142 vers `staging`, puis portage de `licensing/` vers la prod sur « envoie en prod » | [[Cerveau du vault]], [[brain.js]] |
 | 25/11 | Sofiene passe sur un abonnement Claude Team, sur un nouveau compte où les projets ne se transfèrent pas : le vault sert de passerelle. Vault complété : sortie 1.3.0 (reprise de la PR #106 restée ouverte), [[New Brand Rago]], [[Version 1.4.1]], PR #95 à #141, fils du 11 au 25/11, saccades du stream Discord, [[Reprendre sur un nouveau compte Claude]] ; vaults de Rago Client et du serveur Minecraft créés dans leurs dépôts par d'autres fils | [[État actuel]], [[Pull requests]] |
