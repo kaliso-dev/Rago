@@ -37,6 +37,7 @@ La carte du code du **serveur de comptes et licences** (`licensing/`, Node ≥ 2
 | Fichier | Lignes | Rôle |
 |---|---|---|
 | [[licensing.js]] | 584 | Comptes, sessions, inscription par code, Google/Discord, licences, PC, bannissement, temps offert. |
+| [[dunning.js]] | 190 | Paiements refusés (27/11, q110) : fin immédiate après un essai, 3 jours de grâce sinon, rappel, rattrapage des comptes actuels, [[Table payment_failures]]. |
 | [[route-addon.js]] | 199 | Option Rago Route (13/11) : Checkout de l'abonnement à 3 $/mois ou 17,99 $/an, option prise au paiement du Premium, arrêt avec le Premium, [[Table route_subscriptions]]. |
 | [[billing.js]] | 560 | Stripe : Checkout, webhooks, abonnements, essai, Lifetime, codes promo, contrôles de mise en ligne. |
 | [[affiliates.js]] | 237 | Programme d'affiliation : filleuls, comptage, récompenses. |
@@ -124,7 +125,7 @@ Caches en mémoire : ventes 5 min, services 1 min, avis 30 s, pop-up 30 s, prix 
 
 26 tables, définies dans [[schema.sql]] (une note par table) :
 - **Comptes** : [[Table users]], [[Table web_sessions]], [[Table api_sessions]], [[Table password_resets]], [[Table signup_codes]], [[Table oauth_identities]].
-- **Licences et paiements** : [[Table licenses]], [[Table devices]], [[Table stripe_events]], [[Table trials]], [[Table trial_ips]], [[Table route_subscriptions]].
+- **Licences et paiements** : [[Table licenses]], [[Table devices]], [[Table stripe_events]], [[Table trials]], [[Table trial_ips]], [[Table payment_failures]], [[Table route_subscriptions]].
 - **Affiliation** : [[Table affiliates]], [[Table referrals]], [[Table account_devices]].
 - **Profil et site** : [[Table reviews]], [[Table site_settings]].
 - **Discord** : [[Table discord_links]], [[Table discord_rewards]], [[Table discord_joins]], [[Table discord_invite_links]], [[Table discord_invite_bonus]], [[Table discord_invite_roles]].

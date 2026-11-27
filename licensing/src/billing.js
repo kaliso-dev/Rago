@@ -4,6 +4,7 @@ import { createHmac } from 'node:crypto';
 import { audit } from './db.js';
 import { fulfillCheckoutSession, revokeForCharge, setLicenseStatus, syncSubscription } from './licensing.js';
 import { codeFull, getAffiliate, voidReferrals } from './affiliates.js';
+import { onInvoicePaid, onPaymentFailed } from './dunning.js';
 import { addRouteWithPremium, followPremium, isRouteCheckout, isRouteSubscription, routeOfCharge, routePriceText, stopOrphanRoutes, stopRouteForCharge, syncRouteSubscription } from './route-addon.js';
 
 export function createStripe(cfg) {
@@ -401,7 +402,7 @@ async function flagChangedEmail(db, session, log) {
  * Subscription events re-read the subscription from Stripe, so events arriving out of order can't
  * bring back an old state.
  */
-export async function handleStripeEvent(db, event, { stripe, cfg = {}, onLicense, log } = {}) {
+export async function handleStripeEvent(db, event, { stripe, cfg = {}, onLicense, log, mailer = null } = {}) {
   const seen = await db.get('SELECT 1 FROM stripe_events WHERE id = ?', [event.id]);
   if (seen) return 'duplicate';
   let label = 'ignored';
@@ -443,6 +444,8 @@ export async function handleStripeEvent(db, event, { stripe, cfg = {}, onLicense
         ? idOf(obj.subscription ?? obj.parent?.subscription_details?.subscription) : obj.id;
       if (!subId) break;
       const sub = stripe ? await stripe.subscriptions.retrieve(subId) : obj;
+      // A payment arrived: an open failure (q110) is over, nothing is revoked.
+      if (event.type === 'invoice.paid') await onInvoicePaid(db, obj);
       if (isRouteSubscription(sub)) {
         label = `route:${await syncRouteSubscription(db, sub)}`;
       } else {
@@ -450,6 +453,12 @@ export async function handleStripeEvent(db, event, { stripe, cfg = {}, onLicense
         // Premium canceled (or resumed): the Rago Route option follows it.
         await followPremium(db, stripe, sub, log);
       }
+      break;
+    }
+    // A subscription payment refused (2026-11-27, q110): after a free trial, Premium ends now; a subscriber who paid
+    // before gets 3 days (emails, then the hourly sweep ends it). Lifetime has no subscription: never here.
+    case 'invoice.payment_failed': {
+      label = await onPaymentFailed(db, stripe, obj, { mailer, log });
       break;
     }
     case 'charge.refunded':
@@ -483,7 +492,7 @@ export async function handleStripeEvent(db, event, { stripe, cfg = {}, onLicense
 /** The events the webhook destination sends (docs/MISE-EN-LIGNE.md, step 6). */
 export const WEBHOOK_EVENTS = Object.freeze(['checkout.session.completed', 'checkout.session.async_payment_succeeded',
   'customer.subscription.created', 'customer.subscription.updated', 'customer.subscription.deleted',
-  'customer.subscription.paused', 'customer.subscription.resumed', 'invoice.paid', 'charge.refunded', 'charge.dispute.created']);
+  'customer.subscription.paused', 'customer.subscription.resumed', 'invoice.paid', 'invoice.payment_failed', 'charge.refunded', 'charge.dispute.created']);
 
 /** Licenses bought with the test keys (Checkout Session id cs_test_…) that still give Premium. */
 export const activeTestLicenses = (db) =>
@@ -622,6 +631,9 @@ export async function stripeChecks(stripe, cfg, { db = null, webhook = {} } = {}
     const gaps = [];
     if (!conf.features?.subscription_cancel?.enabled) gaps.push('la résiliation n’est pas proposée');
     if (!conf.business_profile?.terms_of_service_url || !conf.business_profile?.privacy_policy_url) gaps.push('il manque les liens Conditions et Confidentialité');
+    // q111 (2026-11-27, « on coupe cette option ») : one license per subscription, so the quantity must not change.
+    const update = conf.features?.subscription_update;
+    if (update?.enabled && (update.products || []).some((p) => p.adjustable_quantity?.enabled)) gaps.push('« Changer de formule » laisse changer la quantité : décoche-la (Paramètres → Facturation → Portail client → Abonnements)');
     add('Portail client', gaps.length ? 'warn' : 'ok', gaps.length ? `${gaps.join(', ')}.` : 'Enregistré, résiliation proposée.');
   }
 

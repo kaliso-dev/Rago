@@ -53,6 +53,8 @@ const { affiliatesToEvaluate, settleAffiliate } = await import('./affiliates.js'
 const { expireRewards } = await import('./licensing.js');
 const { stopAllReplacedSubscriptions, syncAffiliatePromos } = await import('./billing.js');
 const { stopOrphanRoutes } = await import('./route-addon.js');
+const { settleFailedPayments } = await import('./dunning.js');
+const sweepMailer = createMailer(cfg);
 const sweep = async () => {
   try {
     for (const id of await affiliatesToEvaluate(db, cfg)) await settleAffiliate(db, cfg, stripe, console, id);
@@ -63,6 +65,8 @@ const sweep = async () => {
   try { await stopAllReplacedSubscriptions(db, stripe, console); } catch (err) { console.error('[stripe] Lifetime sweep failed', err); }
   // A Rago Route option left without Premium: canceled, so it isn't charged for nothing.
   try { await stopOrphanRoutes(db, stripe, console); } catch (err) { console.error('[stripe] Rago Route sweep failed', err); }
+  // Failed payments (q110): reminder at day 2, Premium ends at day 3 if still unpaid.
+  try { await settleFailedPayments(db, stripe, { mailer: sweepMailer, log: console }); } catch (err) { console.error('[stripe] failed payments sweep failed', err); }
   // Network tests older than 12 months (privacy policy).
   try { await purgeNetworkReports(db); } catch (err) { console.error('[network] purge failed', err); }
   // Security log after 12 months, free trials after 2 years (privacy policy).
