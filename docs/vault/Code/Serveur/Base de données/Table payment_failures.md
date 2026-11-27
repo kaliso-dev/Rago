@@ -6,7 +6,7 @@ maj: 2026-11-27
 ---
 # Table payment_failures
 
-Les paiements refusés d'abonnés qui ont déjà payé (27/11, q110) : une ligne par épisode d'échec d'un abonnement, avec son échéance de 3 jours. Définie dans [[schema.sql]], créée au démarrage du serveur (rien à créer à la main dans Supabase). Écrite et lue par [[dunning.js]]. Fiche parente : [[Code du serveur]]. PR « Paiements refusés » vers `staging` (fil HUB-d1451f), non fusionnée.
+Les paiements refusés d'abonnés qui ont déjà payé (27/11, q110) : une ligne par épisode d'échec d'un abonnement, avec son échéance de 3 jours. Définie dans [[schema.sql]], créée au démarrage du serveur (rien à créer à la main dans Supabase). Écrite et lue par [[dunning.js]]. Fiche parente : [[Code du serveur]]. PR #160 vers `staging` (fil HUB-d1451f), non fusionnée.
 
 | Colonne | Type | Sens |
 |---|---|---|
