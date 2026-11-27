@@ -26,12 +26,13 @@ La carte du code du **serveur de comptes et licences** (`licensing/`, Node ≥ 2
 ### Routes et pages
 | Fichier | Lignes | Rôle |
 |---|---|---|
-| [[app.js]] | 1686 | Toutes les routes : site de compte, webhook Stripe, API `/api/v1` ; middlewares de sécurité. |
+| [[app.js]] | 1845 | Toutes les routes : site de compte, webhook Stripe, API `/api/v1` ; middlewares de sécurité. |
 | [[views.js]] | 888 | Pages HTML du site de compte. |
-| [[admin.js (serveur)]] | 723 | Routes et actions de `/admin` (dont celles du Cerveau). |
+| [[admin.js (serveur)]] | 788 | Routes et actions de `/admin` (dont celles du Cerveau). |
 | [[admin-views.js]] | 914 | Pages HTML de `/admin`. |
-| [[brain.js]] | 698 | [[Cerveau du vault]] : lecture du dépôt (GitHub ou disque), markdown du vault, graphe. |
-| [[brain-views.js]] | 101 | Page HTML du Cerveau (`/admin/cerveau`). |
+| [[brain.js]] | 790 | [[Cerveau du vault]] : lecture du dépôt (GitHub ou disque), markdown du vault, graphe. |
+| [[brain-views.js]] | 174 | Pages HTML du Cerveau (`/admin/cerveau`) : graphe, et explorateur de fichiers (27/11). |
+| [[brain-files.js]] | 187 | Explorateur de fichiers du Cerveau (Rago Design, 27/11) : arborescence par l'API GitHub, fichiers à la demande en flux, cache borné. |
 
 ### Logique métier
 | Fichier | Lignes | Rôle |
@@ -61,7 +62,7 @@ La carte du code du **serveur de comptes et licences** (`licensing/`, Node ≥ 2
 | [[network.js]] | 123 | Rapports des tests réseau de l'app. |
 
 ### Autres fichiers
-- Navigateur : [[account.js]], [[admin.js (page admin)]], [[cerveau.js]] (graphe et lecteur du Cerveau) ; styles : [[Styles du serveur (CSS)]], [[cerveau.css]].
+- Navigateur : [[account.js]], [[admin.js (page admin)]], [[cerveau.js]] (graphe et lecteur du Cerveau), [[cerveau-fichiers.js]] (explorateur Rago Design) ; styles : [[Styles du serveur (CSS)]], [[cerveau.css]].
 - Scripts : [[admin.js (script serveur)]] (`npm run admin`), [[local.js]] (`npm run local`), [[keys.js]] (à ne jamais lancer).
 - Base : [[schema.sql]] ; tests : [[Tests du serveur]] ; documentation, `.env.example`, Docker, npm : [[Documentation et configuration du serveur]].
 

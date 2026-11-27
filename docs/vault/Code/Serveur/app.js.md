@@ -2,7 +2,7 @@
 type: code
 tags: [code, serveur, javascript, api, hono]
 fichier: licensing/src/app.js
-lignes: 1748
+lignes: 1845
 maj: 2026-11-27
 ---
 # app.js
@@ -150,3 +150,6 @@ Presque tout `flow.test.js` passe par ces routes avec un mini navigateur ([[Test
 - Une nouvelle route d'API doit garder la forme `{error:{code, message}}` : l'app affiche `message` tel quel ([[Voix et ton]]).
 - `/app/link/…` n'est pas dans `OWN` : avec `SITE_DIR` (seulement en local avec `npm run local`, voir [[local.js]] ; « non utilisée » en ligne d'après [[Variables d'environnement]]), cette page n'a pas la CSP stricte. Sans `SITE_DIR`, la CSP stricte s'applique partout. À ajouter à `OWN` si `SITE_DIR` sert un jour en ligne.
 - Les liens de connexion de l'app, les limites de débit et les caches sont en mémoire : un seul réplica ([[Railway]]).
+
+## En-têtes de l'explorateur du Cerveau (27/11)
+`/admin/cerveau/brut` (fichiers de l'explorateur Rago Design, [[brain-files.js]]) a ses propres en-têtes de sécurité (`rawHeaders`) au lieu de la CSP stricte des pages : `Content-Security-Policy: default-src 'none'; img-src 'self' data:; style-src 'unsafe-inline'; sandbox`, plus `nosniff` et les autres en-têtes de `secureHeaders` : un SVG ouvert seul dans un onglet n'exécute aucun script.

@@ -2,7 +2,7 @@
 // /admin/cerveau/donnees.json. Same strict CSP as the rest of /admin: no inline style or script in this HTML.
 import { html } from './views.js';
 
-const ASSETS = '20261122a'; // bumped when cerveau.css / cerveau.js change, so browsers don't keep the old ones
+const ASSETS = '20261127a'; // bumped when cerveau.css / cerveau.js change, so browsers don't keep the old ones
 const MARK = html`<svg viewBox="0 0 256 256" aria-hidden="true"><rect width="256" height="256" rx="56" fill="#FFFFFF"/><path d="M0 0H160V46L93.83 101.42L164 180H114L65.17 125.42L0 180V132L112.24 38H39V78.34L0 111Z" fill="#FF3B30" transform="translate(62.4 56) scale(.8)"/></svg>`;
 const ic = (d) => html`<svg class="ic" viewBox="0 0 16 16" aria-hidden="true"><path d="${d}" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>`;
 const I = {
@@ -19,6 +19,9 @@ const I = {
   sliders: ic('M3 4.5h6M12 4.5h1M3 11.5h1M7 11.5h6M10.5 3v3M5.5 10v3'),
   chevron: ic('M4.5 6.5L8 10l3.5-3.5'),
   check: ic('M3.5 8.5l3 3 6-7'),
+  grid: ic('M2.5 2.5h4.5v4.5H2.5zM9 2.5h4.5v4.5H9zM2.5 9h4.5v4.5H2.5zM9 9h4.5v4.5H9z'),
+  list: ic('M5.5 4h8M5.5 8h8M5.5 12h8M2.5 4h.5M2.5 8h.5M2.5 12h.5'),
+  ext: ic('M9 2.5h4.5V7M13.5 2.5L7.5 8.5M12 9.5v3a1 1 0 0 1-1 1H3.5a1 1 0 0 1-1-1V5a1 1 0 0 1 1-1h3'),
 };
 
 /** The brain switcher: a drop-down menu (<details>, works without script) with one link per brain; following one
@@ -110,6 +113,62 @@ ${html`<div class="cv-app" id="cv" data-src="/admin/cerveau/donnees.json${q}" da
   </div>
 </div>
 <noscript><p class="cv-noscript">Le Cerveau a besoin de JavaScript pour dessiner le graphe.</p></noscript>`}
+</body>
+</html>`;
+}
+
+/** A file explorer brain (Rago Design, 27/11, brain-files.js): the tree of the repository on the left, a gallery of
+ * the open folder (thumbnails = the images themselves, lazy-loaded) and a viewer for one file. Filled by
+ * public/cerveau-fichiers.js from /admin/cerveau/arbre.json; each file comes from /admin/cerveau/brut only when shown. */
+export function explorerPage(cfg, { brains = [], current } = {}) {
+  const q = `?c=${encodeURIComponent(current.id)}`;
+  return `<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#070708">
+<meta name="robots" content="noindex, nofollow">
+<title>Cerveau ${html`${current.name}`} · Rago Admin</title>
+<link rel="icon" href="/assets/favicon.svg?v=5" type="image/svg+xml">
+<link rel="icon" href="/assets/favicon-32.png?v=5" type="image/png" sizes="32x32">
+<link rel="preload" href="/assets/fonts/Geist-Variable.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="stylesheet" href="/assets/tokens.css?v=5">
+<link rel="stylesheet" href="/assets/cerveau.css?v=${ASSETS}">
+<script src="/assets/cerveau-fichiers.js?v=${ASSETS}" defer></script>
+</head>
+<body class="cv">
+${html`<div class="cv-app dx" id="dx" data-tree="/admin/cerveau/arbre.json${q}" data-raw="/admin/cerveau/brut${q}" data-brain="${current.id}" data-repo="${current.repo || ''}" data-branch="${current.branch || ''}" data-name="${current.name}">
+  <input type="checkbox" id="cv-nav" class="cv-nav-t" tabindex="-1" aria-hidden="true">
+  <aside class="cv-side" aria-label="Explorateur">
+    <div class="cv-brand">
+      <a class="cv-logo" href="/admin" title="Retour à l’admin">${MARK}<span><b>Cerveau</b><small>${current.name}</small></span></a>
+      <a class="cv-ibtn cv-back" href="/admin" aria-label="Retour à l’admin" title="Retour à l’admin">${I.left}</a>
+      <label class="cv-ibtn cv-side-close" for="cv-nav" aria-label="Fermer le panneau">${I.x}</label>
+    </div>
+    ${switcher(brains, current)}
+    <label class="cv-filter">${I.search}<input id="dx-filter" type="search" placeholder="Filtrer les fichiers" autocomplete="off" spellcheck="false" aria-label="Filtrer les fichiers"></label>
+    <div class="cv-panels"><section class="cv-panel" id="dx-tree" aria-label="Fichiers du dépôt"></section></div>
+    <footer class="cv-foot"><div class="cv-sync" id="dx-sync" aria-live="polite">Lecture de l’arborescence…</div>
+      <button class="cv-ibtn" type="button" id="dx-refresh" aria-label="Relire l’arborescence sur GitHub" title="Relire l’arborescence sur GitHub">${I.refresh}</button></footer>
+  </aside>
+  <label class="cv-scrim" for="cv-nav" aria-hidden="true"></label>
+  <main class="dx-main">
+    <header class="dx-bar">
+      <label class="cv-ibtn cv-menu" for="cv-nav" aria-label="Ouvrir l’explorateur" role="button" tabindex="0">${I.menu}</label>
+      <nav class="dx-crumbs" id="dx-crumbs" aria-label="Dossier"></nav>
+      <div class="dx-tools" id="dx-tools">
+        <div class="dx-seg" role="group" aria-label="Affichage">
+          <button type="button" class="cv-ibtn" data-mode="grid" aria-pressed="true" title="Vignettes">${I.grid}</button>
+          <button type="button" class="cv-ibtn" data-mode="list" aria-pressed="false" title="Liste">${I.list}</button>
+        </div>
+        <a class="cv-ibtn" id="dx-gh" href="#" target="_blank" rel="noopener noreferrer" title="Ouvrir sur GitHub">${I.ext}<span>GitHub</span></a>
+      </div>
+    </header>
+    <div class="dx-body" id="dx-body"><div class="cv-loading" role="status"><div class="cv-pulse">${MARK}</div><p>Lecture de l’arborescence…</p></div></div>
+  </main>
+</div>
+<noscript><p class="cv-noscript">L’explorateur a besoin de JavaScript.</p></noscript>`}
 </body>
 </html>`;
 }

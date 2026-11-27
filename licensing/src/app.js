@@ -137,10 +137,16 @@ export function createApp({ cfg, db, keys, stripe, mailer, log = console, fetchI
     // Not no-referrer: with it, browsers send `Origin: null` on form posts and the check below fails.
     referrerPolicy: 'same-origin',
   });
+  // Files of the brain's explorer (/admin/cerveau/brut, brain-files.js): an SVG opened on its own runs nothing.
+  const rawHeaders = secureHeaders({
+    contentSecurityPolicy: { defaultSrc: ["'none'"], imgSrc: ["'self'", 'data:'], styleSrc: ["'unsafe-inline'"], sandbox: [''] },
+    crossOriginEmbedderPolicy: false,
+    referrerPolicy: 'same-origin',
+  });
   const siteHeaders = secureHeaders({ crossOriginEmbedderPolicy: false, referrerPolicy: 'strict-origin-when-cross-origin' });
   // Images shown in emails load from the mail client, not from our pages; profile photos load on the site too.
   const emailAssetHeaders = secureHeaders({ crossOriginResourcePolicy: 'cross-origin' });
-  app.use('*', (c, next) => (c.req.path.startsWith('/assets/email-') || c.req.path.startsWith('/avatars/') ? emailAssetHeaders(c, next)
+  app.use('*', (c, next) => (c.req.path === '/admin/cerveau/brut' ? rawHeaders(c, next) : c.req.path.startsWith('/assets/email-') || c.req.path.startsWith('/avatars/') ? emailAssetHeaders(c, next)
     : OWN.test(c.req.path) || !cfg.siteDir ? strictHeaders(c, next) : siteHeaders(c, next)));
 
   // Same-origin check for browser form posts (the API and the webhook are exempt).
