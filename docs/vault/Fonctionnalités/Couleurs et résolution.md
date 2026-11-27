@@ -2,7 +2,7 @@
 type: fonctionnalité
 tags: [fonctionnalité, app, jeux, couleurs, résolution, premium]
 version_app: 1.3.0 (en prod depuis le 22/11)
-maj: 2026-11-25
+maj: 2026-11-28
 ---
 # Couleurs et résolution
 
@@ -32,7 +32,7 @@ Page refaite le 23/11 à l'identique de la maquette v5 `app-display-pi.html` (da
 
 ## Limites connues
 - Pas de saturation sur une carte Intel ni sur un écran de portable branché à la puce Intel (luminosité, contraste et gamma marchent ; la page le dit).
-- Photos des pros et captures des jeux : droits d'utilisation à vérifier avant la prod (sources dans `rago-redesign/images/sources.md`, dossier du projet).
+- Photos des pros et captures des jeux : droits d'utilisation à vérifier avant la prod (sources dans `images/sources.md` du dépôt privé `kaliso-dev/rago-design`).
 - HDR : la rampe gamma et la saturation peuvent être ignorées par Windows (À VÉRIFIER sur Windows, [[Questions ouvertes]]).
 - Étirée : encore des bandes noires si le panneau NVIDIA ou AMD ne met pas l'échelle « Plein écran » par le GPU (aide dans la page).
 

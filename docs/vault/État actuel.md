@@ -1,7 +1,7 @@
 ---
 type: pilotage
 tags: [état, pilotage]
-maj: 2026-11-27
+maj: 2026-11-28
 ---
 # État actuel (27/11/2026)
 
@@ -55,7 +55,7 @@ Ne rien fusionner ni fermer sans le mot de Sofiene. Toutes les PR, une par ligne
 ## Ce qui attend Sofiene
 0. **Paiements refusés, en prod depuis le 27/11 (PR #161)** : cocher **`invoice.payment_failed`** dans la destination du webhook Stripe live (sans lui rien ne part) et en test ; régler les relances Stripe sur 3 jours puis annulation ; vérifier `/healthz` ; lancer le rattrapage **en simulation** (`cd licensing && DATABASE_URL=… STRIPE_SECRET_KEY=… PUBLIC_URL=https://account.rago-optimizer.com SITE_URL=https://rago-optimizer.com npm run admin -- failed-payments`, variables de Railway production), transmettre la liste et valider les 4 textes d'e-mail ; `… failed-payments apply` seulement après son « go ».
 0. **#159 dans `staging` (27/11)** : avant sa mise en prod, créer `TRIAL_IP_SALT` dans Railway `staging` puis `production` (longue valeur au hasard, jamais changée ensuite) ([[Variables d'environnement]]).
-1. **Passage sur le nouveau compte Claude (25/11)** : dossiers de l'ancien compte téléchargés sur le Mac de Sofiene (`/Users/kaliso/Desktop/Rago data `, tout sauf `refonte-design/`) ; les questions se posent désormais dans le chat du Rago Hub (q129, 27/11) ; `rago-redesign/` sauvegardé aussi dans le dépôt, `design/rago-redesign/` (q128, PR #156 vers `staging`, en attente de Sofiene) ; marche à suivre : [[Reprendre sur un nouveau compte Claude]].
+1. **Passage sur le nouveau compte Claude (25/11)** : dossiers de l'ancien compte téléchargés sur le Mac de Sofiene (`/Users/kaliso/Desktop/Rago data `, tout sauf `refonte-design/`) ; les questions se posent désormais dans le chat du Rago Hub (q129, 27/11) ; `rago-redesign/` sauvegardé dans le dépôt privé [`kaliso-dev/rago-design`](https://github.com/kaliso-dev/rago-design) (q128 ; d'abord `design/rago-redesign/` par la PR #156, sorti de `rago` le 28/11 car l'archive de `staging` dépassait la limite de 120 Mo du [[Cerveau du vault]]) ; marche à suivre : [[Reprendre sur un nouveau compte Claude]].
 2. **URGENT, avant le 05/12** : l'organisation Supabase (offre gratuite) a dépassé son quota de bande passante (e-mail du 04/11) ; restrictions possibles à partir du 05/12. **Décidé le 27/11 : passage en Pro (25 $/mois) le 01/12 ou le 02/12**, dès la paye de Sofiene (« je vais passer en pro dès que j'ai ma paye donc le 01/12 ou le 02/12 ») ; à confirmer une fois fait. Les clés sont sauvegardées (10-11/11, [[Clés et secrets]]) ([[Supabase]]).
 3. **Clés** : toutes sauvegardées dans le gestionnaire de mots de passe de Sofiene (11/11 : clé des licences, variables Railway, clé Tauri et son mot de passe, codes de secours, identifiants `/admin`) ; surveillance en place (UptimeRobot sur `/healthz`, 11/11, [[Surveillance]]).
 4. **Tester l'app 1.4.1** : exe `rago-optimizer-setup-STAGING` du run `app-windows` 45641885291 (25/11, 16 h 17). Avant, quitter l'app installée (icône près de l'horloge, clic droit, Quitter) et se reconnecter une fois dans l'exe de test. Répondre à q121 ([[Version 1.4.1]]).
