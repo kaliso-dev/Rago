@@ -2,7 +2,7 @@
 type: marketing
 tags: [marketing, rago-route, concurrence, site, conversion]
 source: https://claude.ai/artifact/NyWmDzuXV8iHKP7dmRbhYG
-maj: 2026-11-14
+maj: 2026-11-27
 ---
 # Page de vente Rago Route
 
@@ -17,7 +17,7 @@ Page de vente de [[Proxy|Rago Route]] ([[route.html]]), faite le 11/11 à la dem
 - La plainte qui revient le plus : le ping affiché ne bouge pas pendant que le jeu gèle, puis saute. Sur 71 fils Reddit et Hypixel lus, les joueurs disent *lag spikes*, *rubberbanding*, *timed out*, *freezing* ; « jitter » et « bufferbloat » n'apparaissent jamais. La page vend donc la régularité (moins d'attente quand des paquets se perdent), **pas un ping plus bas**.
 - Test réseau de Rago ([[Test réseau]], 29/10 au 04/11) : **34 des 88 tests** vers Hypixel ont au moins un signe (gigue de 10 ms ou plus dans 32, pics dans 11, pertes dans 6). Ce sont des tests, pas des joueurs ni des connexions : la page ne l'affiche plus ; le test P0-8 doit recompter par PC et par pays.
 - Ce que Rago Route ne règle pas, et la page le dit : la distance (Hypixel est en Amérique du Nord, à 94 ms environ de Paris), un serveur qui lague, les FPS, une connexion de la maison pleine.
-- **Objection n°1 : la peur du blocage de compte.** Hypixel bloque un compte dont l'activité paraît anormale, et des joueurs racontent ces blocages avec ExitLag. Avec Rago Route, Hypixel voit l'adresse de Paris, la même pour tous les joueurs, et il coupe déjà les connexions venant de Frankfurt (09/11, [[Proxy]]). Test P0-9 avant l'annonce (question q99, [[Questions ouvertes]]).
+- **Objection n°1 : la peur du blocage de compte.** Hypixel bloque un compte dont l'activité paraît anormale, et des joueurs racontent ces blocages avec ExitLag. Avec Rago Route, Hypixel voit l'adresse de Paris, la même pour tous les joueurs, et il coupe déjà les connexions venant de Frankfurt (09/11, [[Proxy]]). Avant l'annonce (décision du 27/11, q99, [[Décisions]]) : le test P0-9 (3 à 5 comptes de l'équipe en même temps par Paris, puis une semaine normale) **et** un message à Hypixel pour déclarer l'adresse de sortie de Paris. La réponse de la FAQ sur les blocages reste cachée (porte de test) jusqu'à la fin du test.
 
 ## Concurrents (pages lues le 11/11)
 Lu avec WebFetch : citations à revoir dans un navigateur avant de les reprendre. Détail, pages et dates : analyses 4 et 5.
@@ -85,7 +85,7 @@ La page n'affiche que des mesures, chacune avec ses conditions et sa date ; les 
 
 ## Avant l'annonce
 - **Tests P0-1 à P0-9** (protocoles dans le dossier, partie 6) : ping sur Windows avec et sans (P0-1), pertes simulées avec et sans (P0-2), ressenti à l'aveugle (P0-3), vraies coupures (P0-4), téléphone sur Windows (P0-5), Minemen (P0-6), cinq soirées de jeu normal et une vraie capture de l'onglet (P0-7), nouvel export du test réseau par PC et par pays (P0-8), blocage de compte avec 3 à 5 comptes de l'équipe (P0-9, en premier).
-- **Questions ouvertes** ([[Questions ouvertes]]) : q97 (autres régions), q99 (P0-9 et message à Hypixel), q100 (bouton « Get notified on Discord » de l'accueil), q101 (Lifetime et Rago Route), q102 (annuler depuis le site en 2 clics), q103 (abonné non connecté qui paie un 2e abonnement), q104 (« Card required » alors que PayPal passe aussi), q105 (titre de la page).
+- **Questions ouvertes** ([[Questions ouvertes]]) : q97 (autres régions), q100 (bouton « Get notified on Discord » de l'accueil), q101 (Lifetime et Rago Route), q102 (annuler depuis le site en 2 clics), q103 (abonné non connecté qui paie un 2e abonnement), q104 (« Card required » alors que PayPal passe aussi), q105 (titre de la page).
 - **En prod avant la sortie** : la [[Version 1.3.0]] sur `/download` et la route `/route/token` du [[Serveur de licences]].
 - **Ailleurs sur le site** : `privacy.html` ne parle pas encore de Rago Route ; la carte Lifetime de l'accueil ne le cite pas (la carte Premium a la case « Add Rago Route » depuis le 13/11) ; la phrase d'essai de l'accueil dit encore « charged automatically on day 3 » et « Cancel in two clicks from your account » ([[page.html]]).
 - **En publiant en prod** : retirer du HTML les blocs en attente (cachés à l'écran, leur texte reste lisible dans le code source).

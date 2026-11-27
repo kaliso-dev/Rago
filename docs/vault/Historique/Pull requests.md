@@ -5,7 +5,7 @@ maj: 2026-11-27
 ---
 # Pull requests
 
-Liste de **toutes les pull requests** du dépôt `kaliso-dev/rago`, de la #1 (08/10) à la #153 (26/11). Source : l'API GitHub, lue le 10/11 vers 16:30 UTC puis vers 18:49 pour les #84 à #87, et le 11/11 vers 00:50 pour les #88 à #91, le 27/11 pour les #142 à #153 et la fermeture des #71, #106 et #143, et les fils du projet Claude ([[Fils du projet]]). Statut : CONFIRMÉ (API GitHub et fils), sauf mention contraire. Voir aussi [[Chronologie du projet]], [[Branches et environnements]], [[Historique des versions]] et [[CI GitHub Actions]].
+Liste de **toutes les pull requests** du dépôt `kaliso-dev/rago`, de la #1 (08/10) à la #153 (26/11), plus les #154 et #158 (27/11) ; les #155 à #157 sont suivies par d'autres fils. Source : l'API GitHub, lue le 10/11 vers 16:30 UTC puis vers 18:49 pour les #84 à #87, et le 11/11 vers 00:50 pour les #88 à #91, le 27/11 pour les #142 à #153 et la fermeture des #71, #106 et #143, et les fils du projet Claude ([[Fils du projet]]). Statut : CONFIRMÉ (API GitHub et fils), sauf mention contraire. Voir aussi [[Chronologie du projet]], [[Branches et environnements]], [[Historique des versions]] et [[CI GitHub Actions]].
 
 ## Comment lire ce tableau
 - **Heures en UTC**, comme GitHub. Paris avait 2 heures d'avance jusqu'au 24/10, puis 1 heure à partir du 25/10.
@@ -15,7 +15,7 @@ Liste de **toutes les pull requests** du dépôt `kaliso-dev/rago`, de la #1 (08
 
 ## Chiffres au 27/11
 - **153 PR** : 137 fusionnées, 15 fermées sans fusion, 1 ouverte (#136 accueil du site v6). Fermées sans fusion le 26/11 : #71 (bot communauté vers la prod, code déjà en prod par la #105) et #106 (vault de la 1.3.0, repris par la #153) ; le 27/11 : #143 (ouverte par erreur vers la prod).
-- Cible des #95 à #153 : 10 vers la prod (#101, #103, #105, #114, #117, #143, #145, #150, #151, #152), 49 vers `staging`. Les #150 à #152 ([[Rago Hub]]) sont allées **directement en prod sans passer par `staging`** (voulu ou non : À VÉRIFIER, q130). Pour les #1 à #94, compté le 11/11 : 47 vers la prod, 43 vers `staging`, 1 vers une autre branche.
+- Cible des #95 à #153 : 10 vers la prod (#101, #103, #105, #114, #117, #143, #145, #150, #151, #152), 49 vers `staging`. Les #150 à #152 ([[Rago Hub]]) sont allées directement en prod ; leur `.claude/` a été recopié dans `staging` le 27/11 (q130). Pour les #1 à #94, compté le 11/11 : 47 vers la prod, 43 vers `staging`, 1 vers une autre branche.
 - PR #107 à #141 : la refonte v5 et v6 du [[New Brand Rago]]. PR #142 à #149 : cerveaux des autres projets dans le [[Cerveau du vault]] et vault du passage au nouveau compte ; #150 à #152 : [[Rago Hub]] ; #153 : vault regroupé.
 - Fermées sans fusion, entre autres : #16, #21, #24, #26, #28, #46, #47, #50, #51, #69. Les branches de ces PR sont gardées (décision du 01/11, [[Branches et environnements]]).
 - Jusqu'au 12/10, une PR vers `staging` était souvent suivie d'une PR « port en prod » qui reprenait le même travail (#25 → #27, #29 → #30, #31 + #32 → #33, #34 à #37 → #38, #39 + #41 + #42 → #43, #44 → #45). Depuis la 1.2, la prod n'a plus reçu que des PR ciblées (#59, #61, #63, #66 à #68, #72, #81, #87) : le 10/11, `staging` avait environ 160 commits de plus que la prod, et **le code de l'app sur la branche de prod était encore la 1.1.14** (les exe sont construits depuis `staging`).
@@ -169,10 +169,12 @@ Liste de **toutes les pull requests** du dépôt `kaliso-dev/rago`, de la #1 (08
 | 147 | Vault : jeton du Cerveau pas encore créé (q98, correction) | `claude/project-thread-bmc1pg` → `staging` | 25/11 17:09 | 25/11 17:09 | fusionnée | Vault seulement | projet Rago optimizer (suite) |
 | 148 | Vault : CERVEAU_GITHUB_TOKEN déjà dans Railway (q98) | `claude/project-thread-bmc1pg` → `staging` | 25/11 17:10 | 25/11 17:10 | fusionnée | Vault seulement | projet Rago optimizer (suite) |
 | 149 | Vault : refonte-design/ n'est pas emporté sur le nouveau compte | `claude/project-thread-tyht7t` → `staging` | 25/11 18:25 | 25/11 18:25 | fusionnée | Vault seulement | projet Rago optimizer (suite) |
-| 150 | Rago Hub : hook de retour des fils | `rago-hub-hook` → prod | 26/11 09:14 | 26/11 09:22 | fusionnée | Hook `Stop` qui renvoie les réponses des fils au [[Rago Hub]] ; pas passée par `staging` | Rago Hub (À VÉRIFIER) |
-| 151 | Rago Hub : hook v2 (activité en direct, images, tokens) | `rago-hub-hook` → prod | 26/11 10:30 | 26/11 10:30 | fusionnée | [[Rago Hub]] ; pas passée par `staging` | Rago Hub (À VÉRIFIER) |
-| 152 | Rago Hub : hook v3 (tâches en direct, texte en cours, outils hub.py) | `rago-hub-hook` → prod | 26/11 11:22 | 26/11 11:24 | fusionnée | [[Rago Hub]] ; pas passée par `staging` ; dernier commit de la prod au 27/11 (`ac4107a`) | Rago Hub (À VÉRIFIER) |
+| 150 | Rago Hub : hook de retour des fils | `rago-hub-hook` → prod | 26/11 09:14 | 26/11 09:22 | fusionnée | Hook `Stop` qui renvoie les réponses des fils au [[Rago Hub]] ; recopiée dans `staging` le 27/11 | Rago Hub (À VÉRIFIER) |
+| 151 | Rago Hub : hook v2 (activité en direct, images, tokens) | `rago-hub-hook` → prod | 26/11 10:30 | 26/11 10:30 | fusionnée | [[Rago Hub]] ; recopiée dans `staging` le 27/11 | Rago Hub (À VÉRIFIER) |
+| 152 | Rago Hub : hook v3 (tâches en direct, texte en cours, outils hub.py) | `rago-hub-hook` → prod | 26/11 11:22 | 26/11 11:24 | fusionnée | [[Rago Hub]] ; recopiée dans `staging` le 27/11 ; dernier commit de la prod au 27/11 (`ac4107a`) | Rago Hub (À VÉRIFIER) |
 | 153 | Vault : version finale regroupée sur staging | `vault-final` → `staging` | 26/11 18:56 | 26/11 19:00 | fusionnée | Vault regroupé avant le passage au nouveau compte ; reprend les #71 et #106 | Rago Hub (chef) |
+| 154 | Vault : PR #143 fermée, PR #71/#106 fermées, Rago Hub en prod | `claude/pr143-vault-update-8po627` → `staging` | 27/11 | 27/11 | fusionnée | Vault seulement (et point 4 de `CLAUDE.md`) | Rago Hub (fil HUB-767f02) |
+| 158 | Hook Rago Hub dans staging (q130) + vault : q130 et q99 traitées | `claude/pr143-vault-update-8po627` → `staging` | 27/11 | 27/11 | fusionnée | `.claude/` recopié de la prod (`ac4107a`) ; vault | Rago Hub (fil HUB-767f02) |
 
 ## Ce qui est arrivé sur `staging` sans PR
 Certains fils ont poussé leurs commits directement sur `staging`, après un accord de Sofiene dans le fil (CONFIRMÉ par `git branch -r --contains`) :
