@@ -1,7 +1,7 @@
 ---
 type: carte
 tags: [technique]
-maj: 2026-11-12
+maj: 2026-11-27
 ---
 # Architecture
 
@@ -45,7 +45,7 @@ Monorepo GitHub `kaliso-dev/rago`, **public** (constaté le 10/11 ; Sofiene : «
 4. **Mise à jour de l'app** : CI → artefact `.exe` + `.exe.sig` → Sofiene les dépose dans le bucket `downloads` de Supabase → `INSTALLER_VERSION` sur Railway → l'app interroge `/api/v1/update/windows/x86_64/<version>` au lancement et toutes les 4 h. Détail : [[Mise à jour automatique]], [[Publier une version]].
 5. **Téléchargement** : `/download` → lien signé Supabase de 5 min vers le `.exe` le plus récent du bucket. Le site affiche la version par `/api/v1/installer`.
 6. **Test réseau** : l'app mesure, puis `POST /api/v1/network/report` ; le serveur ajoute ville et fournisseur (bases DB-IP) et oublie l'IP ; `/admin/reseau` résume. Détail : [[Test réseau]], [[Proxy]].
-7. **Rago Route** (staging) : l'app demande `POST /api/v1/route/token` (jeton `typ: route`, 6 h, licence Premium active) → l'envoie chiffré à la sortie Vultr, qui le vérifie avec la clé publique du serveur. Détail : [[Infrastructure Rago Route]].
+7. **Rago Route** (en prod depuis la 1.3.0, 22/11) : l'app demande `POST /api/v1/route/token` (jeton `typ: route`, 6 h, licence Premium active) → l'envoie chiffré à la sortie Vultr, qui le vérifie avec la clé publique du serveur. Détail : [[Infrastructure Rago Route]].
 8. **Rôle Discord** : liaison depuis `/account/discord` (OAuth2) → le bot donne ou retire le rôle Pro selon la licence, toutes les 5 min et après chaque webhook. Détail : [[Bot communauté Discord]], [[Architecture du serveur]].
 
 ## Environnements

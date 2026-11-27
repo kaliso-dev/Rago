@@ -3,7 +3,7 @@ type: code
 tags: [code, site, netlify, fichiers]
 fichier: site/
 lignes: 3381
-maj: 2026-11-23
+maj: 2026-11-27
 ---
 # Fichiers publiés du site
 
@@ -18,7 +18,7 @@ Tout ce qui suit est CONFIRMÉ (fichiers de `staging` le 10/11, revus le 22/11 s
 | `tweaks.html` | [[build.py]] | [[tweaks.html]] (liste écrite par [[sync_tweaks.py]]) | 879 lignes, 585 Ko | la plus lourde (218 fiches dépliables) |
 | `reviews.html` | [[build.py]] | [[reviews.html]] | 282 lignes | avis lus en direct sur le serveur |
 | `partners.html` | [[build.py]] | [[partners.html]] (cartes de [[sync_partners.py]]) | 111 lignes | statique |
-| `route.html` | [[build.py]] | [[route.html]] | 466 lignes, 59 Ko | page de vente de Rago Route ; sur `staging` seulement tant que la 1.3.0 n'est pas en prod |
+| `route.html` | [[build.py]] | [[route.html]] | 466 lignes, 59 Ko | page de vente de Rago Route ; en prod depuis le 22/11 (1.3.0) |
 | `terms.html` | [[make_legal.py]] | `src/legal/terms.html` ([[Textes juridiques (src-legal)]]) | 246 lignes | conditions de vente ; ancres `#cancel`, `#route` |
 | `privacy.html` | [[make_legal.py]] | `src/legal/privacy.html` | 224 lignes | confidentialité |
 | `404.html` | [[make_legal.py]] | dans le script | 156 lignes | servie par Netlify pour toute adresse inconnue ; liens absolus ; `noindex` |

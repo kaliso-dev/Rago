@@ -1,7 +1,7 @@
 ---
 type: technique
 tags: [technique, netlify, site, déploiement]
-maj: 2026-11-22
+maj: 2026-11-27
 ---
 # Netlify
 
@@ -18,7 +18,7 @@ Le nom du site Netlify s'écrit `rago-optimiser` (avec un s), le domaine `rago-o
 
 ## `netlify.toml` (racine)
 - **Build** : `publish = "site"` ; la commande supprime `site/src`, `site/tools` et `site/*.md` avant publication (sources et notes jamais publiées). **Netlify ne lance pas `build.py`** : les pages générées sont commitées.
-- **Aperçus et staging** : `sh netlify/preview.sh` remplace l'adresse du serveur de comptes dans `index.html`, `reviews.html` et `tweaks.html` par `STAGING_ACCOUNT_URL` (refuse l'adresse de prod), ou coupe les liens si la variable manque. Un aperçu n'envoie donc jamais vers le vrai serveur ni le vrai Stripe. `partners.html` et les pages légales n'ont aucun lien de compte et ne sont pas touchées. `route.html` l'est aussi depuis la page de vente du 11/11 ([[route.html]]), qui a des liens d'essai et d'achat : sur `staging` depuis le 11/11, pas en prod. Une `STAGING_ACCOUNT_URL` mal formée (chemin, pas de `https://`) ou égale à la prod fait **échouer** l'aperçu. Détail : [[preview.sh]].
+- **Aperçus et staging** : `sh netlify/preview.sh` remplace l'adresse du serveur de comptes dans `index.html`, `reviews.html` et `tweaks.html` par `STAGING_ACCOUNT_URL` (refuse l'adresse de prod), ou coupe les liens si la variable manque. Un aperçu n'envoie donc jamais vers le vrai serveur ni le vrai Stripe. `partners.html` et les pages légales n'ont aucun lien de compte et ne sont pas touchées. `route.html` l'est aussi depuis la page de vente du 11/11 ([[route.html]]), qui a des liens d'essai et d'achat : en prod depuis le 22/11 (1.3.0). Une `STAGING_ACCOUNT_URL` mal formée (chemin, pas de `https://`) ou égale à la prod fait **échouer** l'aperçu. Détail : [[preview.sh]].
 - **Fonction edge `launch-gate`** (`netlify/edge-functions/launch-gate/`, sur `/*`) : compte à rebours avant `LAUNCH_AT` (10/10/2026 15 h Paris), accès de l'équipe par `/acces/<PREVIEW_KEY>`. **Inactive depuis le lancement** (laisse tout passer) ; peut être retirée avec son bloc `[[edge_functions]]` et le verrou de `licensing/src/app.js`. Test : `node --test netlify/launch-gate.test.mjs` (lancé par aucune CI ; le 10/11, 7 tests sur 8 passent : celui de la date par défaut échoue parce que la date est passée). Détail : [[launch-gate.js]].
 - **En-têtes** : `X-Frame-Options: DENY`, `nosniff`, `Referrer-Policy`, `Permissions-Policy`.
 - **Redirections** : 301 forcée de l'ancienne adresse `rago-optimiser.netlify.app/*` vers le domaine ; 301 forcée de `/refunds.html` vers `/terms.html#cancel` (depuis le 10/11, sur `staging`) ; **302** de `/buy`, `/login`, `/signup`, `/affiliate`, `/download`, `/account`, `/account/*` vers `account.rago-optimizer.com` (navigateurs sans JavaScript, anciens liens) ; `/downloads/*` (ancien `.bat`) vers l'accueil. Ces 302 visent le serveur de prod **dans tous les contextes**, y compris `staging` et les aperçus (seuls les liens des pages sont réécrits par `preview.sh`). Détail : [[netlify.toml]].
