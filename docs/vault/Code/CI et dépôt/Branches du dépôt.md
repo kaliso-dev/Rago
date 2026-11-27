@@ -1,7 +1,7 @@
 ---
 type: carte
 tags: [code, git, branches, dépôt]
-maj: 2026-11-11
+maj: 2026-11-27
 ---
 # Branches du dépôt
 
@@ -35,7 +35,7 @@ Source : `git ls-remote` (liste et têtes des branches, lecture seule), `git log
 | `claude/ci-prod-moins-de-builds` | 10/11 | CI : push construit seulement staging (et prod pour les tests), les autres branches pas… | #81 fusionnée → prod (10/11) | 1 / 0 | Prod : moins de builds en double dans la CI (port de la #78) |
 | `claude/project-thread-v7otam` | 04/11 | Vault : PR #72 fusionnée (04/11) | #72 fusionnée → prod (04/11) | 0 / 0 | Vault : état des lieux Stripe du 04/11 |
 | `claude/project-thread-s0m3ex` | 04/11 | Vault : la 1.3.0 est sur staging | #70 fusionnée → staging (04/11) | 1 / 79 | App 1.3.0 : 73 réglages gratuits (30 actifs), connexion Google/Discord, essai 3 jours, analyse du PC, résiliation dan… |
-| `claude/project-thread-rulzwj` | 01/11 | Vault : numéro de la PR prod du bot communauté (#71) | #71 ouverte → prod | 3 / 3 | Bot communauté Discord (prod) : invitations après 7 jours, accueil, liens partenaires, /growth |
+| `claude/project-thread-rulzwj` | 01/11 | Vault : numéro de la PR prod du bot communauté (#71) | #71 → prod, fermée sans fusion le 26/11 | 3 / 3 | Bot communauté Discord (prod) : invitations après 7 jours, accueil, liens partenaires, /growth |
 | `claude/project-thread-i5pq4g` | 01/11 | Vault : PR #68 fusionnée (01/11) | #67 fusionnée → prod (31/10)<br>#68 fusionnée → prod (01/11) | 0 / 0 | Vault Obsidian du projet (docs/vault) et CLAUDE.md |
 | `claude/project-thread-8teqin` | 01/11 | Site : charte graphique 2.2 appliquée à la page d'accueil (aperçu) | #69 fermée → prod (04/11) | 1 / 1 | Site : charte graphique 2.2 appliquée à la page d'accueil (aperçu) |
 | `trailer-4k-footage` | 29/10 | Trailer 1.2: 4K footage clips (temporary transfer) 4/4 | aucune | 4 / 4 | Trailer 1.2: 4K footage clips (temporary transfer) 4/4 |
@@ -81,7 +81,7 @@ Les branches des PR #86, #89, #90, #91, #93 et #94 (hitreg, priorité haute, pag
 
 | Branche | Ce qui n'est nulle part ailleurs | À décider |
 |---|---|---|
-| `claude/project-thread-rulzwj` | portage en prod du bot communauté Discord (`25ba75e`) et 2 commits du vault | PR #71 ouverte vers la prod depuis le 01/11 ([[Bot communauté Discord]]) |
+| `claude/project-thread-rulzwj` | portage en prod du bot communauté Discord (`25ba75e`) et 2 commits du vault | PR #71 fermée sans fusion le 26/11 (code déjà en prod par la #105) ([[Bot communauté Discord]]) |
 | `claude/project-thread-tzbch5` | 2 commits du vault sur Supabase (`8246bd4`, `803b9d6` : e-mail de dépassement de quota relu, décision « Pro ou migration avant le 05/12 ») | jamais proposés en PR ; leur contenu est repris dans le vault par la PR #85 du [[Cerveau du vault]] (10/11) : la branche n'a plus rien à garder (suppression : q81) |
 | `claude/project-thread-s0m3ex` | 1 commit du vault (`edfc795`, « la 1.3.0 est sur staging », 04/11) | sans doute dépassé par les notes suivantes (À VÉRIFIER) |
 | `claude/project-thread-8oenwk`, `claude/project-thread-uy8yf3`, `claude/reset-on-signout-uninstall`, `claude/auto-reset-tweaks-3ti5yy` | travail des versions 1.1.10 à 1.1.13 (74, 55, 2 et 1 commits) ; PR #51, #50, #16 fermées le 01/11 | à garder ([[Versions 1.1.11 à 1.1.13]], [[Version 1.1.10]]) |

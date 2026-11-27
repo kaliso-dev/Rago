@@ -1,7 +1,7 @@
 ---
 type: règle
 tags: [règle, vault, reprise]
-maj: 2026-11-25
+maj: 2026-11-27
 ---
 # Reprendre sur un nouveau compte Claude
 
@@ -12,16 +12,18 @@ Le 25/11/2026, Sofiene passe sur un **abonnement Claude Team**, sur un nouveau c
 - Les autres dépôts de Sofiene : `kaliso-dev/Rago-Client` (client et launcher Minecraft, privé) et `kaliso-dev/network-server-rago` (serveur Minecraft), chacun avec son propre vault dans `docs/vault/` (créés le 25/11 par d'autres fils, voir [[Client Minecraft Rago]]) ; `kaliso-dev/RAGO-OS-` (vault lu par le [[Cerveau du vault]]) ; `kaliso-dev/Synapse` (version publique du Cerveau).
 - Ce qui tourne en ligne ne dépend pas de Claude : Railway, Netlify, Supabase, Stripe, Resend, Vultr, Discord ([[Personnes et services]]).
 
-## Ce qui ne suit pas : à emporter avant de quitter l'ancien compte
-1. **Le dossier partagé du projet « Rago optimizer (suite) »** (`/mnt/project-files/`, liste et rôle de chaque dossier dans [[Sources]]). À télécharger, surtout :
+## Ce qui ne suit pas : emporté à la main
+**Fait (27/11)** : les dossiers de l'ancien compte sont téléchargés sur le Mac de Sofiene, dans `/Users/kaliso/Desktop/Rago data ` (le nom finit par une espace). Tout y est, sauf `refonte-design/`, laissé volontairement. Un fil Claude du cloud n'y a pas accès : il faut un fil « Sur le PC » du Rago Hub.
+
+1. **Le dossier partagé du projet « Rago optimizer (suite) »** (`/mnt/project-files/`, liste et rôle de chaque dossier dans [[Sources]]), téléchargé dans `Rago data `, en particulier :
    - `stream-discord/` : `stream-discord-correctif-complet.patch`, le correctif **jamais poussé** des saccades du stream Discord ([[Bugs et incidents]]) ;
    - `sortie-1.3.0/` : exe et `.sig` de la 1.3.0 (aussi dans Supabase), annonces Discord, GIF Rago Route ;
    - `marketing/` (vidéos et leurs sources), `etude-marche-2026-11/`, `support-clients/`, `souris/`, `conseils-jeu/`, `couleurs-resolution/`, `presets-graphiques/`, `cerveau/`, `synapse/`, `admin-refonte/` : captures et documents cités par les notes ;
    - **Pas emporté** : `refonte-design/` (3,6 Go, captures de l'ancien design avant la refonte). Sofiene, 25/11 : « je ne récupère pas refonte design parce que new brand rago c'est le dernier nouveau design que j'ai fait ». Il reste seulement sur l'ancien compte.
    - `vault-patches/`, `vault-patchs/`, `vault/` : déjà appliqués au vault (vérifié pour les patchs du 13 au 14/11 : leurs commits sont dans `staging`), à garder seulement comme archive.
-2. **Le dossier partagé du projet « New Brand Rago »**, `rago-redesign/` : les 135 maquettes v5, le kit de marque et surtout **les scripts qui génèrent le CSS de l'app** (`rendus-v5/outils/`). Sans eux, les fichiers générés de `app/src/s5/` ne peuvent plus être refaits ([[New Brand Rago]], [[Maquettes v5 dans l'app (s5)]]). Le mettre dans le dépôt ou le télécharger : question q128 ([[Questions ouvertes]]).
+2. **Le dossier partagé du projet « New Brand Rago »**, `rago-redesign/` : les 135 maquettes v5, le kit de marque et surtout **les scripts qui génèrent le CSS de l'app** (`rendus-v5/outils/`). Sans eux, les fichiers générés de `app/src/s5/` ne peuvent plus être refaits ([[New Brand Rago]], [[Maquettes v5 dans l'app (s5)]]). Téléchargé dans `Rago data ` ; le mettre aussi dans le dépôt : question q128 ([[Questions ouvertes]]).
 3. **Les artefacts claude.ai** de l'ancien compte, qu'un autre compte ne pourra peut-être plus ouvrir :
-   - la page **« Questions du vault Rago »** (https://claude.ai/artifact/1mqjZuFNVqGT5JhBmG6HPk), où Sofiene répond aux questions : la liste des questions ouvertes est recopiée dans [[Questions ouvertes]], et le texte complet des 61 questions ouvertes au 25/11 est exporté dans `docs/questions/questions-ouvertes-2026-11-25.md` (et `.json`, pour recréer la page) ; la recréer ou la partager avec le nouveau compte : question q129 ;
+   - l'ancienne page des questions n'est **pas** emportée (Sofiene, 27/11, q129 : « ok continuons comme ça ») : les questions se posent dans le chat du Rago Hub et vivent dans [[Questions ouvertes]] ; le texte des 61 questions ouvertes au 25/11 reste archivé dans `docs/questions/questions-ouvertes-2026-11-25.md` (et `.json`) ;
    - l'artefact « Charte Rago », l'artefact « revue des maquettes » (version 16) et ceux de l'étude de marché ([[Sources]]).
 4. **Les fils Claude** : leur contenu utile est résumé dans [[Fils du projet]], [[Journal]] et [[Décisions]] ; les fils eux-mêmes restent sur l'ancien compte.
 5. **La mémoire de Claude** est désactivée chez Sofiene : rien à transférer, tout est dans ce vault.
@@ -30,7 +32,7 @@ Le 25/11/2026, Sofiene passe sur un **abonnement Claude Team**, sur un nouveau c
 1. Créer le projet et y relier le dépôt `kaliso-dev/rago` (et les autres dépôts si besoin) ; reconnecter GitHub au compte `kaliso-dev` et installer l'app GitHub de Claude sur les dépôts.
 2. Coller les **instructions du projet** (texte de Sofiene, recopié ci-dessous).
 3. Reconnecter les connecteurs qui servent au projet : GitHub, Railway, Netlify, Stripe (lecture des ventes), Supabase, Linear, Resend, Firecrawl (lecture de sites), Kling (vidéos). Aucun secret n'est dans ce vault : les clés restent dans Railway, Netlify et GitHub ([[Clés et secrets]], [[Variables d'environnement]]).
-4. Déposer dans le dossier du nouveau projet ce qui a été emporté (étape précédente), sous les mêmes noms de dossiers, pour que les chemins cités par les notes restent justes.
+4. Si besoin, déposer dans le dossier du nouveau projet ce qui a été emporté (copie dans `/Users/kaliso/Desktop/Rago data `), sous les mêmes noms de dossiers, pour que les chemins cités par les notes restent justes.
 5. Premier fil : demander au nouveau Claude de lire le vault (ci-dessous) et de dire ce qui ne correspond plus.
 
 ## Instructions du projet (à recopier)

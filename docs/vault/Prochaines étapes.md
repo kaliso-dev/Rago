@@ -1,15 +1,15 @@
 ---
 type: pilotage
 tags: [pilotage]
-maj: 2026-11-25
+maj: 2026-11-27
 ---
 # Prochaines étapes
 
-Liste priorisée au 01/11, mise à jour le 25/11. Rien ne se lance sans la demande de Sofiene ([[Règles de travail]]). Voir [[État actuel]] et [[Questions ouvertes]]. Chaque tâche a son ticket [[Linear]].
+Liste priorisée au 01/11, mise à jour le 27/11. Rien ne se lance sans la demande de Sofiene ([[Règles de travail]]). Voir [[État actuel]] et [[Questions ouvertes]]. Chaque tâche a son ticket [[Linear]].
 
 ## Maintenant
 1. **Passer sur le nouveau compte Claude** (Claude Team, 25/11) sans rien perdre : [[Reprendre sur un nouveau compte Claude]] (dossiers partagés à télécharger, page des questions, instructions du projet).
-2. **Urgent, avant le 05/12** : clés sauvegardées par Sofiene (10-11/11) ; reste à régler le dépassement de quota Supabase (passer en Pro ou migrer, et le dire avant le 05/12) ([[Supabase]], [[Clés et secrets]]).
+2. **Urgent, avant le 05/12** : clés sauvegardées par Sofiene (10-11/11) ; dépassement de quota Supabase : **Sofiene passe l'organisation en Pro (25 $/mois) le 01/12 ou le 02/12**, dès sa paye (décision du 27/11) ; vérifier ensuite que l'offre a bien changé ([[Supabase]], [[Clés et secrets]]).
 3. **[[New Brand Rago]]** : Sofiene teste l'app [[Version 1.4.1]] (exe de test du 25/11), relit la PR #136 (accueil v6) ; puis les autres pages du site et les illustrations ; enfin la sortie de `staging` en prod en une fois, après sa validation.
 4. **Suites de la sortie 1.3.0** (22/11) : prix live de Rago Route sur Railway `production` (À VÉRIFIER), mise à jour automatique vue sur un PC en 1.2.1, retours des joueurs ([[Version 1.3.0]], [[Problèmes joueurs]]).
 5. **Stream Discord qui saccade** (13/11) : correctif prêt mais pas poussé, attend la décision de Sofiene (q109, [[Bugs et incidents]]).
@@ -19,7 +19,7 @@ Liste priorisée au 01/11, mise à jour le 25/11. Rien ne se lance sans la deman
 
 ## Ensuite
 - Choisir gratuit ou Premium pour les [[Graphismes des jeux]] (q94, gratuits dans la 1.3.0) et la [[Page Souris]] (q96, gratuite).
-- [[Bot communauté Discord]] : le code est en prod depuis la 1.3.0 ; l'allumer (`DISCORD_COMMUNITY=1` sur Railway prod) quand Abel l'a testé (À VÉRIFIER) ; fermer la PR #71.
+- [[Bot communauté Discord]] : le code est en prod depuis la 1.3.0 ; l'allumer (`DISCORD_COMMUNITY=1` sur Railway prod) quand Abel l'a testé (À VÉRIFIER).
 - [[Client Minecraft Rago]] : deux projets à part (`Rago-Client`, `network-server-rago`), chacun avec son vault ; rien à faire ici sans demande.
 - **Synapse** (version publique du Cerveau, 10/11) : dépôt `kaliso-dev/Synapse` créé et kit poussé ; Sofiene active Pages (Settings → Pages → Source : GitHub Actions) pour mettre la démo en ligne ([[Cerveau du vault]]).
 

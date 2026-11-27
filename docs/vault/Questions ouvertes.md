@@ -1,21 +1,23 @@
 ---
 type: pilotage
 tags: [pilotage, à-décider, à-vérifier]
-maj: 2026-11-25
+maj: 2026-11-27
 ---
 # Questions ouvertes
 
 Ce que le vault ne sait pas encore. **Retirer chaque question dès que Sofiene y répond**, et mettre à jour les notes concernées ([[Mettre à jour le vault]]). Voir [[Décisions]] et [[État actuel]].
 
-**Où Sofiene répond** : la page « Questions du vault Rago » (https://claude.ai/artifact/1mqjZuFNVqGT5JhBmG6HPk). Règle du 01/11 : **dès qu'un Claude a une question, il l'ajoute lui-même sur cette page, sans attendre ni demander dans le fil** (« désormais tu devras le faire automatiquement »).
+**Où Sofiene répond** (décision du 27/11, réponse à q129 : « ok continuons comme ça ») : dans le **chat du Rago Hub**. La page artefact « Questions du vault Rago » de l'ancien compte est abandonnée ([[Décisions]]). Règle du 01/11, toujours valable : **dès qu'un Claude a une question, il la pose lui-même, sans attendre** (« désormais tu devras le faire automatiquement »).
 
-Mode d'emploi (outil ArtifactData, collection `questions`) :
-- **Poser** : créer un document `qNN` (numéro suivant) avec `num`, `titre`, `question`, `contexte` (ce qu'on sait, en une phrase), `choix` (2 à 4 réponses courtes ; « Je ne sais pas » est ajouté par la page), `precision` (facultatif, texte d'aide du champ libre), `statut: "ouverte"`, `reponse: {choix: null, texte: ""}`. Une question = un sujet, en mots simples.
-- **Lire** : au début de chaque tâche, lister les questions `ouverte` qui ont une réponse (`reponse.choix` ou `reponse.texte`).
-- **Traiter** : mettre le vault à jour selon la réponse, puis passer la question en `statut: "traitée"` avec `traitement` (ce qui a été fait, en une phrase). Si la réponse demande une précision, réécrire `question` et `contexte`, vider `reponse` et laisser `ouverte`.
-- Dire à Sofiene dans le fil, en une ligne, quand de nouvelles questions l'attendent.
+Mode d'emploi :
+- **Poser** : ajouter la question ici, avec le numéro suivant (`qNN`), une ligne : la question en mots simples et la note concernée ; écrire « À VÉRIFIER » dans la note en attendant ; puis la transmettre à Sofiene par le chef de projet du Rago Hub (commande `chef` de `.claude/hooks/hub.py`), en une ligne.
+- **Traiter** : dès que Sofiene répond, mettre le vault à jour selon la réponse ([[Décisions]] si c'est une décision) et **retirer** la question de cette note.
+- Les 61 questions ouvertes au 25/11 sont aussi exportées en entier dans `docs/questions/questions-ouvertes-2026-11-25.md` (archive de l'ancienne page).
 
-## En attente de réponse sur la page
+## En attente de réponse
+Posée le 27/11 ([[Rago Hub]], [[Branches et environnements]]) :
+- q130 : le hook du Rago Hub (`.claude/`, PR #150 à #152) a été fusionné seulement dans la branche de prod, pas dans `staging`. Voulu, ou faut-il aussi le mettre dans `staging` (les fils partis de `staging` n'ont pas le hook) ?
+
 Posées le 13/11 (option Rago Route à 3 $/mois, [[Offres et prix]]) :
 - q108 : le Lifetime paie-t-il aussi l'option ?
 
@@ -45,8 +47,7 @@ Posées le 24/11 sur l'accueil v6 (PR #136, [[New Brand Rago]]) :
 Posées le 25/11 par les fils des autres projets (serveur Minecraft, voir leur vault) : q122 à q127.
 
 Posées le 25/11, passage sur le nouveau compte Claude ([[Reprendre sur un nouveau compte Claude]]) :
-- q128 : le dossier `rago-redesign/` du projet [[New Brand Rago]] (maquettes, kit, scripts qui génèrent le CSS de l'app) : dans le dépôt, téléchargé, ou les deux ?
-- q129 : la page « Questions du vault Rago » appartient à l'ancien compte : la partager, la recréer, ou s'en passer ?
+- q128 : le dossier `rago-redesign/` du projet [[New Brand Rago]] (maquettes, kit, scripts qui génèrent le CSS de l'app) est téléchargé avec le reste dans `/Users/kaliso/Desktop/Rago data ` (27/11) : faut-il aussi le mettre dans le dépôt ?
 
 Au 10/11, après les réponses de Sofiene du jour (q36 à q68 traitées, q46 le 10/11 à 15 h, voir [[Décisions]]) :
 
@@ -63,7 +64,6 @@ Posées le 10/11 au soir (q70 à q93), après la relecture complète du code pou
 - q83 : textes en retard dans le code (README, `FREE_TWEAKS`, commentaires).
 - q84 : l'e-mail d'achat renvoie vers un ticket Discord même avec le bot ([[mailer.js]]).
 - q85 : un jeu retiré de la bibliothèque ne peut plus être réaffiché ([[Games.tsx]]).
-- q86 : PR #71 (bot communauté en prod) ouverte depuis le 01/11 ([[Bot communauté Discord]]).
 - q87 : code de la pop-up promo recréé en live ? ([[Promotions et affiliation]]).
 - q88 : à quoi sert la vidéo [[Logo création d'Adam]].
 - q89 : copie des exe 1.1.10 avant le 08/01/2027 ([[Synthèse de reprise du 15-10]]).

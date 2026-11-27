@@ -1,7 +1,7 @@
 ---
 type: registre
 tags: [décision]
-maj: 2026-11-25
+maj: 2026-11-27
 ---
 # Décisions
 
@@ -10,6 +10,9 @@ Registre daté des décisions de Sofiene. **La plus récente prime.** Citations 
 ## App et versions
 | Date | Décision | Statut |
 |---|---|---|
+| 27/11 | **Supabase passe en Pro** (25 $/mois) : « je vais passer en pro dès que j'ai ma paye donc le 01/12 ou le 02/12 » (avant les restrictions possibles du 05/12) | DÉCIDÉ, pas encore fait ([[Supabase]]) |
+| 27/11 | **Questions posées dans le chat du Rago Hub**, plus sur la page artefact « Questions du vault Rago » de l'ancien compte : réponse à q129, « ok continuons comme ça ». Le chef de projet du Hub pose les questions à Sofiene ; elles sont écrites dans [[Questions ouvertes]] et retirées dès qu'il répond | DÉCIDÉ ([[Questions ouvertes]], [[Mettre à jour le vault]]) |
+| 27/11 | **PR #143 fermée sans fusion** : « ferme là alors si elle ne sert à rien » (PR ouverte par erreur vers la prod ; son contenu utile est dans `staging` par la PR #149) | exécuté le 27/11, branche gardée ([[Pull requests]]) |
 | 25/11 | **Passage sur Claude Team, le vault comme passerelle** : « je vais passer sur un abonnement claude team et je ne peux pas transférer la totalité des projets sur le nouveau compte donc notre vault va nous permettre de passer sur le nouveau compte » ; le vault doit refléter l'état réel, [[New Brand Rago]] compris (« c'est le plus récent on est en train de refaire le site dessus et l'app avec le nouveau design ») ; Rago Client et Rago Minecraft server ont chacun leur vault dans leur dépôt | vault complété le 25/11 ([[Reprendre sur un nouveau compte Claude]]) ; vaults des deux autres projets dans d'autres fils |
 | 25/11 | **Bouton du compte en haut à droite, et barre en jeu bien plus opaque** : « le plus gros d'entre eux c'est que tu m'as enlever le bouton en haut à droite pout me connecter à mon compte premium » ; « il faut que la game bar soit beacoup plus opaque car on ne voit rien » ; la barre « doit s'ouvrir sur mon jeu sans qu'il se ferme ». La barre du haut garde le bouton « Sign in » / « Premium » même si la maquette ne l'a pas ; le verre de la barre en jeu est opaque. PR #139 fusionnée dans `staging` le 25/11 ([[TitleBar.tsx]], [[Barre en jeu]]) | DÉCIDÉ (Sofiene, 25/11) ; jamais testé sur Windows |
 | 25/11 | **Détail des réglages au clic sur une icône info, et grilles sans vide** : « plutot que la pop up quand je passe sur chaque optimisation je préfère une petite incone info sur chaque tweaks et la pop up spwan uniquement si je clique dessus » ; « je ne veux pas que dans la grid il y a des espace vide entre les div je veux que tout soit aligné si le contenu est trop long alors on doit pouvoir scroller dans la div » | fait : PR #137 fusionnée dans `staging` le 25/11, jamais testé sur Windows ([[TweakRow.tsx]], [[Maquettes v5 dans l'app (s5)]]) |
@@ -62,10 +65,10 @@ Registre daté des décisions de Sofiene. **La plus récente prime.** Citations 
 | 04/11 | Connexion à l'app avec Discord ou Google (« Il faut aussi rajouter le login sur l'app avec discord ou google ») | fait dans la PR #70 (`staging`, 04/11) ([[Connexion Google et Discord]]) |
 | 04/11 | Essai Premium : « une possibilité d'essai gratuit de 3jours mais il faut renseigner sa carte et au bout de trois 3 jours ça débite directement il doit résilier pendant la période des 3 jours » ; le site doit l'orienter vers cet essai et être vérifié pour le RGPD | fait dans la PR #70 (`staging`, 04/11) ; après l'essai, le mensuel (10/11, q48) ; site pas en règle pour vendre tant que l'adresse et le vendeur manquent ([[Offres et prix]], [[Conformité juridique]]) |
 | 01/11 | Version 1.2.2 : correctif du preset Minecraft PvP + désinstallation des applis préinstallées gratuite, envoyée par la mise à jour automatique (« il faut lancer la correction avec le passage de la désinstallation des app préinstallées en gratuit et mettre à jour grâce à l'auto update ») | REMPLACÉE : entrée dans la PR #70 (devenue 1.3.0, fusionnée dans `staging` le 04/11), puis « une seule grosse sortie » le 10/11 (q47) ; pas de 1.2.2 seule ([[Version 1.3.0]]) |
-| 01/11 | Bot communauté Discord : « Il faut le tester et le passer en prod » | EN COURS : PR #71 ouverte vers la prod depuis le 01/11 ; test d'Abel et `DISCORD_COMMUNITY=1` sur Railway prod pas faits au 10/11 ([[Bot communauté Discord]]) |
+| 01/11 | Bot communauté Discord : « Il faut le tester et le passer en prod » | code en prod depuis la 1.3.0 (PR #105, 22/11) ; PR #71 fermée sans fusion le 26/11 ; test d'Abel et `DISCORD_COMMUNITY=1` sur Railway prod : À VÉRIFIER ([[Bot communauté Discord]]) |
 | 01/11 | Anciennes PR #16, #50 et #51 fermées (« si toutes les fonctionnalités sont déjà présentes sur la version actuelle tu peux les fermer ») ; vérifié, branches gardées | exécuté ([[Branches et environnements]]) |
 | 01/11 | Linear remis à jour à partir du vault (« Oui, fais-le »), et à tenir à jour pour continuer à l'utiliser | exécuté ([[Linear]]) |
-| 01/11 | Les questions à Sofiene se posent **automatiquement** sur la page « Questions du vault Rago » dès qu'un Claude en a, pour tenir le vault à jour (« désormais tu devras le faire automatiquement ») | DÉCIDÉ ([[Mettre à jour le vault]], [[Questions ouvertes]]) |
+| 01/11 | Les questions à Sofiene se posent **automatiquement** dès qu'un Claude en a, pour tenir le vault à jour (« désormais tu devras le faire automatiquement ») | DÉCIDÉ ; depuis le 27/11 dans le chat du Rago Hub ([[Mettre à jour le vault]], [[Questions ouvertes]]) |
 | 01/11 | Connexion à l'app avec Google ou Discord (« c'est important en effet ») | fait dans la PR #70 (`staging`, 04/11) ([[Connexion Google et Discord]]) |
 | 01/11 | Les outils restent gratuits (« c'est des outils indispensables »), y compris la désinstallation des applis préinstallées (« Oui, tout gratuit ») | DÉCIDÉ ([[Page Outils]]) |
 | 01/11 | Signature de code de l'exe : prévue, pas avant d'avoir le budget | PRÉVU ([[App Windows]]) |
@@ -119,6 +122,7 @@ Registre daté des décisions de Sofiene. **La plus récente prime.** Citations 
 Une ligne par projet ou fonctionnalité arrêtés, pour qu'aucun Claude ne les relance. Le reste du vault n'en parle plus.
 | Date | Quoi | Raison |
 |---|---|---|
+| 27/11 | Page artefact « Questions du vault Rago » (ancien compte Claude) | Sofiene ne l'emporte pas sur le nouveau compte (q129, « ok continuons comme ça ») : questions posées dans le chat du Rago Hub et écrites dans [[Questions ouvertes]] |
 | 23/11 | « Diagnostic avancé » du test réseau (champ serveur + outils stabilité, bufferbloat, MTU) et écran gratuit « part of Premium » du Packet Optimizer | absents des maquettes v5, que Sofiene veut à l'identique (23/11) : outils déplacés dans la rangée « tools » du Packet Optimizer, serveur au choix dans la liste du test réseau, écran gratuit remplacé par l'écran verrouillé (à confirmer, q117) ; PR #123 |
 | 22/11 | Polices Geist sur le site, charte HTML v1.2 (`brand/charte.html`) et générateur d'images `brand/tools/export-logo.js` | remplacés par la charte v5 « Match day » : Barlow servie par le site, charte en images, kit produit par les scripts de la maquette (PR #109) |
 | 13/11 | Clips de gameplay Minecraft sur la page Rago Route (haut de page, cartes, onglet ; protocole du 11/11, question q106) | page refaite le 13/11 avec des « illustrations animées simples et épurées » (Sofiene) |
