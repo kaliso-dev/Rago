@@ -12,6 +12,7 @@ import pg from 'pg';
 import { loadKeys, verifyToken } from '../src/tokens.js';
 import { createApp } from '../src/app.js';
 import { purgeOldRecords } from '../src/retention.js';
+import { settleFailedPayments, catchUpUnpaid } from '../src/dunning.js';
 import { createMailer } from '../src/mailer.js';
 import * as L from '../src/licensing.js';
 import * as RO from '../src/route-addon.js';
@@ -59,7 +60,11 @@ async function setup(env = {}, extra = {}) {
   // Subscriptions live here; tests change them and send the matching event.
   const subs = {};
   const stripeCalls = [];
-  stripe.subscriptions.retrieve = async (id) => { if (!subs[id]) throw new Error('No such subscription'); return subs[id]; };
+  stripe.subscriptions.retrieve = async (id) => { if (!subs[id]) throw Object.assign(new Error('No such subscription'), { statusCode: 404, code: 'resource_missing' }); return subs[id]; };
+  // Paid invoices by subscription (failed payments, 2026-11-27): a trial's $0 invoice doesn't count as a payment.
+  const paidInvoices = {};
+  stripe.invoices.list = async ({ subscription }) => ({ data: paidInvoices[subscription] || [], has_more: false });
+  stripe.invoices.retrieve = async (id) => ({ id, object: 'invoice', created: Number(id.split('_').pop()) || Math.floor(Date.now() / 1000) });
   stripe.subscriptions.cancel = async (id) => { stripeCalls.push(['cancel', id]); subs[id] = { ...subs[id], status: 'canceled' }; return subs[id]; };
   stripe.subscriptions.update = async (id, p) => {
     stripeCalls.push(['update', id, p]);
@@ -92,7 +97,8 @@ async function setup(env = {}, extra = {}) {
   stripe.subscriptions.list = async () => ({ data: Object.values(subs), has_more: false });
   stripe.billingPortal.sessions.create = async (p) => { stripeCalls.push(['portal', p.customer]); return { url: 'https://billing.stripe.com/p/session/x' }; };
   const mails = [];
-  const mailer = { purchase: async (to, url) => mails.push({ to, url }), passwordReset: async (to, url) => mails.push({ to, url }), signupCode: async (to, code) => mails.push({ to, code }), subscriptionCanceled: async (to, sub) => mails.push({ to, sub }) };
+  const mailer = { purchase: async (to, url) => mails.push({ to, url }), passwordReset: async (to, url) => mails.push({ to, url }), signupCode: async (to, code) => mails.push({ to, code }), subscriptionCanceled: async (to, sub) => mails.push({ to, sub }),
+    paymentFailed: async (to, o) => mails.push({ to, kind: o.reminder ? 'reminder' : 'failed', deadline: o.deadline }), trialPaymentFailed: async (to) => mails.push({ to, kind: 'trial_failed' }), premiumEndedUnpaid: async (to) => mails.push({ to, kind: 'ended_unpaid' }) };
   const app = createApp({ cfg, db, keys, stripe, mailer, log: { info() {}, error: console.error }, ...extra });
 
   // Minimal browser: keeps cookies, sends same-origin form posts.
@@ -136,7 +142,7 @@ async function setup(env = {}, extra = {}) {
     const sub = subscription(`sub_${id}`, interval);
     return paidSession(id, email, { mode: 'subscription', payment_intent: null, subscription: sub, metadata: { interval }, ...extra });
   };
-  return { cfg, db, keys, app, browse, api, webhook, paidSession, paidSubscription, subscription, subs, stripeCalls, created, mails, jar, sessions, promos, coupons, stripe, charges, balance };
+  return { mailer, paidInvoices, cfg, db, keys, app, browse, api, webhook, paidSession, paidSubscription, subscription, subs, stripeCalls, created, mails, jar, sessions, promos, coupons, stripe, charges, balance };
 }
 
 const h = (name, v) => createHash('sha256').update(`rago-fp-v1|${name}|${v}`).digest('hex');
@@ -1458,7 +1464,7 @@ test('going live: /admin checks prices, webhook and portal in the live mode, tes
   assert.match(page, /Paiements activés\. Libellé sur le relevé bancaire : RAGO OPTIMIZER/);
   assert.match(page, /price_month n’existe pas en mode live : c’est un prix du mode test\. Mets dans STRIPE_PRICE_MONTHLY le price_ créé en mode live/);
   assert.match(page, /Rago Optimizer Premium · 29,99 USD par an/);
-  assert.match(page, /Il manque 9 événements à la destination vers localhost : checkout\.session\.async_payment_succeeded, /);
+  assert.match(page, /Il manque 10 événements à la destination vers localhost : checkout\.session\.async_payment_succeeded, /);
   assert.match(page, /Pas encore enregistré en mode live/);
   assert.match(page, /STRIPE_PORTAL_LOGIN_URL est le lien du mode test/);
   assert.match(page, /Aucun événement live reçu pour l’instant/);
@@ -1469,8 +1475,13 @@ test('going live: /admin checks prices, webhook and portal in the live mode, tes
   hook.enabled_events = ['*'];
   portals.push({ active: true, features: { subscription_cancel: { enabled: true } }, business_profile: { terms_of_service_url: 'https://rago.test/terms.html', privacy_policy_url: 'https://rago.test/privacy.html' } });
   page = await (await t.browse('/admin/services?frais=1')).text();
-  assert.match(page, /Destination vers localhost, avec les 10 événements/);
+  assert.match(page, /Destination vers localhost, avec les 11 événements/);
   assert.match(page, /Enregistré, résiliation proposée/);
+  // q111 (2026-11-27): the portal must not let a subscriber change the quantity.
+  portals[0].features.subscription_update = { enabled: true, products: [{ product: 'prod_x', prices: ['price_m'], adjustable_quantity: { enabled: true } }] };
+  assert.match(await (await t.browse('/admin/services?frais=1')).text(), /laisse changer la quantité : décoche-la \(Paramètres → Facturation → Portail client → Abonnements\)/);
+  portals[0].features.subscription_update.products[0].adjustable_quantity.enabled = false;
+  assert.match(await (await t.browse('/admin/services?frais=1')).text(), /Enregistré, résiliation proposée/);
 
   // A test event signed with the secret in Railway: STRIPE_WEBHOOK_SECRET is still the test one. Never applied.
   const send = (event) => {
@@ -3515,4 +3526,149 @@ test('/admin dashboard: players, Premium time, revoke, ban, gifts, sales, journa
   r = await act(free, 'supprimer', { confirmation: 'free@example.com' });
   assert.equal(r.headers.get('location'), '/admin/utilisateurs?n=supprime');
   assert.equal(await L.findUserByEmail(t.db, 'free@example.com'), null);
+});
+
+
+// ---------- Failed payments (2026-11-27, q110) ----------
+const failedInvoice = (sub, id = `in_${sub}`) => ({ id, object: 'invoice', billing_reason: 'subscription_cycle', amount_paid: 0, parent: { subscription_details: { subscription: sub } } });
+const H = 3600 * 1000, D = 24 * H;
+
+test('failed payment after the free trial: canceled now, back to free, its Rago Route stops, one email', async () => {
+  const t = await setup({ STRIPE_PRICE_MONTHLY: 'price_month', STRIPE_PRICE_ROUTE: 'price_route' });
+  t.stripe.paymentMethods = { retrieve: async (id) => ({ id, card: { fingerprint: 'fp_tf' } }) };
+  const sub = t.subscription('sub_tf', 'month', { status: 'trialing', periodDays: 3, default_payment_method: 'pm_x' });
+  await t.webhook('checkout.session.completed', t.paidSession('cs_tf', 'tf@rago.gg', { mode: 'subscription', payment_status: 'no_payment_required', amount_total: 0, payment_intent: null, subscription: sub, metadata: { interval: 'month', trial: '3' } }));
+  await t.browse('/checkout/success?session_id=cs_tf');
+  await t.browse('/signup', { form: { email: 'tf@rago.gg', password: 'password123' } });
+  const lic = await t.db.get("SELECT * FROM licenses WHERE stripe_session_id = 'cs_tf'");
+  t.subscription('sub_tf_route', 'month', { metadata: { product: 'rago-route', user_id: lic.user_id }, customer: 'cus_cs_tf' });
+  await t.webhook('customer.subscription.created', t.subs.sub_tf_route);
+  // The trial's $0 invoice was paid; the first real one is refused.
+  t.paidInvoices.sub_tf = [{ id: 'in_zero', amount_paid: 0, created: 1 }];
+  t.subs.sub_tf = { ...t.subs.sub_tf, status: 'past_due' };
+  const ev = 'evt_tf_failed';
+  await t.webhook('invoice.payment_failed', failedInvoice('sub_tf'), ev);
+  const after = await L.getLicense(t.db, lic.id);
+  assert.equal(after.status, 'revoked');
+  assert.equal(after.status_reason, 'payment_failed');
+  assert.ok(cancels(t).some(([, id]) => id === 'sub_tf'));
+  assert.ok(cancels(t).some(([, id]) => id === 'sub_tf_route'));
+  assert.deepEqual(t.mails.filter((m) => m.kind), [{ to: 'tf@rago.gg', kind: 'trial_failed' }]);
+  // The same event again, or Stripe's canceled event: nothing more.
+  await t.webhook('invoice.payment_failed', failedInvoice('sub_tf'), ev);
+  await t.webhook('invoice.payment_failed', failedInvoice('sub_tf'), 'evt_tf_failed_2');
+  await t.webhook('customer.subscription.deleted', t.subs.sub_tf);
+  assert.equal(t.mails.filter((m) => m.kind).length, 1);
+  assert.equal((await L.getLicense(t.db, lic.id)).status_reason, 'payment_failed');
+});
+
+test('failed payment of a subscriber: 3 days, a reminder at day 2, paid in time keeps Premium, unpaid ends it', async () => {
+  const t = await setup(SUBS);
+  t.paidSubscription('cs_pf', 'pf@rago.gg', 'month');
+  await t.webhook('checkout.session.completed', t.sessions.cs_pf);
+  const lic = await t.db.get("SELECT * FROM licenses WHERE stripe_session_id = 'cs_pf'");
+  t.paidInvoices.sub_cs_pf = [{ id: 'in_paid', amount_paid: 599, created: Math.floor(Date.now() / 1000) - 30 * 86400 }];
+  t.subs.sub_cs_pf = { ...t.subs.sub_cs_pf, status: 'past_due' };
+  const t0 = Date.now();
+  await t.webhook('invoice.payment_failed', failedInvoice('sub_cs_pf'));
+  // Stripe retries: more failed events, one countdown and one email.
+  await t.webhook('invoice.payment_failed', failedInvoice('sub_cs_pf'));
+  const f = await t.db.get("SELECT * FROM payment_failures WHERE subscription_id = 'sub_cs_pf'");
+  assert.ok(Math.abs(Number(f.deadline_at) - Number(f.first_failed_at) - 3 * D) < 1000);
+  assert.deepEqual(t.mails.filter((m) => m.kind).map((m) => m.kind), ['failed']);
+  assert.equal(t.mails.at(-1).deadline, Number(f.deadline_at));
+  assert.equal((await L.getLicense(t.db, lic.id)).status, 'active');
+  // Day 1: nothing. Day 2: the reminder, once.
+  await settleFailedPayments(t.db, t.stripe, { mailer: t.mailer, now: t0 + D });
+  assert.equal(t.mails.filter((m) => m.kind).length, 1);
+  await settleFailedPayments(t.db, t.stripe, { mailer: t.mailer, now: t0 + 2 * D + H });
+  await settleFailedPayments(t.db, t.stripe, { mailer: t.mailer, now: t0 + 2 * D + 2 * H });
+  assert.deepEqual(t.mails.filter((m) => m.kind).map((m) => m.kind), ['failed', 'reminder']);
+  // Paid at day 2 (new card): nothing is revoked at day 3.
+  t.subs.sub_cs_pf = { ...t.subs.sub_cs_pf, status: 'active' };
+  await t.webhook('invoice.paid', { id: 'in_retry', object: 'invoice', amount_paid: 599, parent: { subscription_details: { subscription: 'sub_cs_pf' } } });
+  assert.ok((await t.db.get("SELECT resolved_at FROM payment_failures WHERE subscription_id = 'sub_cs_pf'")).resolved_at);
+  await settleFailedPayments(t.db, t.stripe, { mailer: t.mailer, now: t0 + 4 * D });
+  assert.equal((await L.getLicense(t.db, lic.id)).status, 'active');
+  assert.equal(cancels(t).length, 0);
+
+  // A month later it fails again and nobody pays: Premium ends at day 3, with the end email.
+  t.subs.sub_cs_pf = { ...t.subs.sub_cs_pf, status: 'past_due' };
+  await t.webhook('invoice.payment_failed', failedInvoice('sub_cs_pf', 'in_next'));
+  const open = await t.db.get("SELECT * FROM payment_failures WHERE subscription_id = 'sub_cs_pf' AND resolved_at IS NULL");
+  await settleFailedPayments(t.db, t.stripe, { mailer: t.mailer, now: Number(open.first_failed_at) + 3 * D + H });
+  assert.equal((await L.getLicense(t.db, lic.id)).status, 'revoked');
+  assert.equal((await L.getLicense(t.db, lic.id)).status_reason, 'payment_failed');
+  assert.ok(cancels(t).some(([, id]) => id === 'sub_cs_pf'));
+  assert.equal(t.mails.filter((m) => m.kind).at(-1).kind, 'ended_unpaid');
+  await settleFailedPayments(t.db, t.stripe, { mailer: t.mailer, now: Number(open.first_failed_at) + 5 * D });
+  assert.equal(t.mails.filter((m) => m.kind === 'ended_unpaid').length, 1);
+});
+
+test('failed payments: the sweep closes a failure paid without its webhook; Lifetime and the Rago Route option alone are left', async () => {
+  const t = await setup(SUBS);
+  t.paidSubscription('cs_lost', 'lost@rago.gg', 'year');
+  await t.webhook('checkout.session.completed', t.sessions.cs_lost);
+  t.paidInvoices.sub_cs_lost = [{ id: 'in_y', amount_paid: 2999, created: 1 }];
+  t.subs.sub_cs_lost = { ...t.subs.sub_cs_lost, status: 'past_due' };
+  await t.webhook('invoice.payment_failed', failedInvoice('sub_cs_lost'));
+  t.subs.sub_cs_lost = { ...t.subs.sub_cs_lost, status: 'active' };
+  assert.deepEqual(await settleFailedPayments(t.db, t.stripe, { mailer: t.mailer, now: Date.now() + 4 * D }), { reminded: 0, ended: 0, resolved: 1 });
+  assert.equal((await t.db.get("SELECT status FROM licenses WHERE stripe_session_id = 'cs_lost'")).status, 'active');
+  // Lifetime: no subscription, never touched. The option alone: Stripe's retries end it.
+  const { license: life } = await L.grantLicense(t.db, 'life@rago.gg', 'test');
+  t.subscription('sub_opt_only', 'month', { metadata: { product: 'rago-route', user_id: life.user_id } });
+  const r = await t.webhook('invoice.payment_failed', failedInvoice('sub_opt_only'));
+  assert.equal(r.status, 200);
+  assert.equal((await L.getLicense(t.db, life.id)).status, 'active');
+  assert.equal(await t.db.get("SELECT 1 FROM payment_failures WHERE subscription_id = 'sub_opt_only'"), null);
+});
+
+test('catch-up of unpaid subscriptions: dry-run lists and changes nothing, apply revokes with an email; Lifetime never listed', async () => {
+  const t = await setup(SUBS);
+  const now = Date.now();
+  const make = async (name, status, { paid = true, invoiceAgeDays = 10, exists = true } = {}) => {
+    t.paidSubscription(`cs_${name}`, `${name}@rago.gg`, 'month');
+    await t.webhook('checkout.session.completed', t.sessions[`cs_${name}`]);
+    const id = `sub_cs_${name}`;
+    if (paid) t.paidInvoices[id] = [{ id: `in_${name}`, amount_paid: 599, created: Math.floor(now / 1000) - 40 * 86400 }];
+    t.subs[id] = { ...t.subs[id], status, latest_invoice: `in_open_${Math.floor(now / 1000) - invoiceAgeDays * 86400}` };
+    if (!exists) delete t.subs[id];
+    return id;
+  };
+  await make('due', 'past_due');
+  await make('young', 'past_due', { invoiceAgeDays: 1 });
+  await make('unpaid', 'unpaid');
+  await make('gone', 'canceled');
+  await make('missing', 'active', { exists: false });
+  await make('trialfail', 'past_due', { paid: false });
+  await make('fine', 'active');
+  await L.grantLicense(t.db, 'lifetime@rago.gg', 'test');
+  // Stripe already says canceled for « gone »: the license is still active here (the case Sofiene missed by hand).
+  await t.db.run("UPDATE licenses SET status = 'active', status_reason = NULL WHERE stripe_subscription_id = 'sub_cs_gone'");
+
+  const dry = await catchUpUnpaid(t.db, t.stripe);
+  const byEmail = Object.fromEntries(dry.map((r) => [r.email, r]));
+  assert.deepEqual(Object.keys(byEmail).sort(), ['due@rago.gg', 'gone@rago.gg', 'missing@rago.gg', 'trialfail@rago.gg', 'unpaid@rago.gg', 'young@rago.gg']);
+  assert.equal(byEmail['missing@rago.gg'].status, 'not_found');
+  assert.equal(byEmail['trialfail@rago.gg'].last_payment, 'never');
+  assert.match(byEmail['young@rago.gg'].action, /3-day countdown/);
+  assert.match(byEmail['due@rago.gg'].action, /cancel in Stripe \+ revoke/);
+  // Dry-run: nothing changed, nothing sent.
+  assert.equal((await t.db.get("SELECT COUNT(*)::int AS n FROM licenses WHERE status = 'active'")).n, 8);
+  assert.equal(cancels(t).length, 0);
+  assert.equal(t.mails.filter((m) => m.kind).length, 0);
+
+  await catchUpUnpaid(t.db, t.stripe, { apply: true, mailer: t.mailer });
+  const st = async (n) => (await t.db.get('SELECT status FROM licenses WHERE stripe_subscription_id = ?', [`sub_cs_${n}`])).status;
+  for (const n of ['due', 'unpaid', 'gone', 'missing', 'trialfail']) assert.equal(await st(n), 'revoked', n);
+  assert.equal(await st('young'), 'active');
+  assert.equal(await st('fine'), 'active');
+  assert.equal((await t.db.get("SELECT status FROM licenses WHERE email = 'lifetime@rago.gg'")).status, 'active');
+  assert.ok(await t.db.get("SELECT 1 FROM payment_failures WHERE subscription_id = 'sub_cs_young' AND resolved_at IS NULL AND ended_at IS NULL"));
+  const kinds = Object.fromEntries(t.mails.filter((m) => m.kind).map((m) => [m.to, m.kind]));
+  assert.deepEqual(kinds, { 'due@rago.gg': 'ended_unpaid', 'young@rago.gg': 'failed', 'unpaid@rago.gg': 'ended_unpaid', 'gone@rago.gg': 'ended_unpaid', 'missing@rago.gg': 'ended_unpaid', 'trialfail@rago.gg': 'trial_failed' });
+  assert.deepEqual(cancels(t).map(([, id]) => id).sort(), ['sub_cs_due', 'sub_cs_trialfail', 'sub_cs_unpaid']);
+  // Run again: nothing left to do.
+  assert.deepEqual((await catchUpUnpaid(t.db, t.stripe)).map((r) => r.email), ['young@rago.gg']);
 });

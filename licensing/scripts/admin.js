@@ -38,6 +38,12 @@
 //                                and its VIP / MVP invite rewards (given now if the role is there)
 //   discord                      the same for every linked account (the server does it every 5 minutes)
 //   discord-unlink <email>       take the Pro role back and unlink their Discord account
+//   failed-payments [apply]      catch-up of failed payments (2026-11-27, q110): every active monthly or yearly
+//                                license whose Stripe subscription is past_due, unpaid, incomplete_expired, canceled
+//                                or gone, with its last real payment and what would be done. Nothing changes without
+//                                the word apply: then revoke + email (past due for less than 3 days: the 3-day
+//                                countdown starts instead). Lifetime and rewards are never listed. Needs
+//                                STRIPE_SECRET_KEY (live for production) and RESEND_API_KEY for the emails
 //   growth [days]                Discord joins of the last 30 days (or [days]) by source: who left within 24 h,
 //                                who stayed 7 days, who linked a Rago account or bought (as /growth on Discord)
 import { loadConfig } from '../src/config.js';
@@ -80,6 +86,16 @@ const discordLine = (d) => (d ? `@${d.discord_name} (${d.discord_id}), Pro role 
 const unclaimedLine = (l) => `${l.id}  ${l.email}  ${l.status}  ${l.plan}  ${l.source}  paid ${fmt(l.created_at)}${l.referral_code ? `  code ${l.referral_code}` : ''}`;
 
 switch (cmd) {
+  case 'failed-payments': {
+    if (!cfg.stripeSecretKey) { console.error('Set STRIPE_SECRET_KEY (the same as Railway) first.'); process.exit(1); }
+    const apply = email === 'apply';
+    const { catchUpUnpaid } = await import('../src/dunning.js');
+    const { createMailer } = await import('../src/mailer.js');
+    const list = await catchUpUnpaid(db, new Stripe(cfg.stripeSecretKey), { apply, mailer: apply ? createMailer(cfg) : null });
+    console.log(`${list.length} active Premium subscription(s) that don't pay anymore${apply ? ' (done)' : ' (dry-run: nothing changed; add apply to do it)'}:`);
+    for (const r of list) console.log(`  ${r.email}  ${r.plan}  stripe ${r.status}  last payment ${r.last_payment}  ->  ${r.action}  (${r.license}, ${r.subscription})`);
+    break;
+  }
   case 'show': {
     const { user, lic } = await licenseOf(email);
     const dev = await L.getDevice(db, lic.id);
