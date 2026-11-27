@@ -6,7 +6,7 @@ maj: 2026-11-27
 ---
 # Table trial_ips
 
-**Un essai gratuit par réseau** (27/11, q104, Sofiene : « carte requise pour essai gratuit pas paypal et faudrait même que ça reconnaisse l'ip »). Une ligne par essai vraiment commencé, avec l'empreinte de l'IP qui a ouvert le paiement. Définie dans [[schema.sql]] (juste après [[Table trials]]), créée au démarrage du serveur comme les autres tables (rien à créer à la main dans Supabase). Fiche parente : [[Code du serveur]]. PR « Résiliation sur la page compte, un Premium par e-mail, un essai par réseau » vers `staging` (fil HUB-d1451f), non fusionnée.
+**Un essai gratuit par réseau** (27/11, q104, Sofiene : « carte requise pour essai gratuit pas paypal et faudrait même que ça reconnaisse l'ip »). Une ligne par essai vraiment commencé, avec l'empreinte de l'IP qui a ouvert le paiement. Définie dans [[schema.sql]] (juste après [[Table trials]]), créée au démarrage du serveur comme les autres tables (rien à créer à la main dans Supabase). Fiche parente : [[Code du serveur]]. PR #159 vers `staging` (fil HUB-d1451f), non fusionnée.
 
 ## Colonnes
 
