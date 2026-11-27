@@ -41,7 +41,8 @@ Les joueurs ont la **[[Version 1.3.0]]** depuis le 22/11 vers 02:20 (heure de Pa
 | Vault Obsidian | créé le 31/10 ; règle n°1 : il doit correspondre en tout point à l'état du projet ; détaillé le 10/11 (une note par fichier de code) ; **complété le 25/11** pour le passage sur un nouveau compte Claude : sortie 1.3.0, [[New Brand Rago]], [[Version 1.4.1]], PR #95 à #141, fils du 11 au 25/11, [[Reprendre sur un nouveau compte Claude]] | DÉCIDÉ (Sofiene, 25/11) |
 
 ## PR ouvertes (27/11)
-- #136 (site v6, accueil du 24/11 : globe dessiné, Rago Route en une section) vers `staging` : seule PR de code ouverte, attend la relecture de Sofiene ([[New Brand Rago]]) (CONFIRMÉ, API GitHub, 27/11).
+- #167 (Cerveau : explorateur « Rago Design », `licensing/` seul) vers `staging` : ouverte le 27/11, pas fusionnée ; il faut aussi ajouter `rago-design` au jeton `CERVEAU_GITHUB_TOKEN` ([[Cerveau du vault]]).
+- #136 (site v6, accueil du 24/11 : globe dessiné, Rago Route en une section) vers `staging` : attend la relecture de Sofiene ([[New Brand Rago]]) (CONFIRMÉ, API GitHub, 27/11).
 - Fermées sans fusion : #71 (bot communauté vers la prod, code déjà en prod par la #105) et #106 (vault de la 1.3.0) le 26/11, leur contenu repris par la PR #153 (vault regroupé, fusionnée dans `staging` le 26/11) ; #143 (`claude/project-thread-tyht7t` → prod, 540 fichiers, ouverte par erreur) le 27/11 sur « ferme là alors si elle ne sert à rien » : la fusionner aurait envoyé tout `staging` en prod sans validation ; son seul contenu propre est dans `staging` par la PR #149. Branches gardées.
 Ne rien fusionner ni fermer sans le mot de Sofiene. Toutes les PR, une par ligne : [[Pull requests]].
 
