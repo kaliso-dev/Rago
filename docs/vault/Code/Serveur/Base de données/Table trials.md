@@ -3,11 +3,11 @@ type: code
 tags: [code, serveur, base-de-données]
 fichier: licensing/supabase/schema.sql
 lignes: 303-312
-maj: 2026-11-10
+maj: 2026-11-27
 ---
 # Table trials
 
-Les essais gratuits (04/11/2026) : 3 jours avec carte, payés à la fin sauf résiliation. Un par personne : un deuxième essai avec la même carte ou le même e-mail est payé tout de suite. Définie dans [[schema.sql]] (lignes 303-312). Fiche parente : [[Code du serveur]].
+Les essais gratuits (04/11/2026) : 3 jours avec carte, payés à la fin sauf résiliation. Un par personne : un deuxième essai avec la même carte ou le même e-mail est payé tout de suite. Définie dans [[schema.sql]] (lignes 303-312). Fiche parente : [[Code du serveur]]. Un essai par réseau en plus (27/11, q104) : [[Table trial_ips]].
 
 (code de `staging`, 10/11)
 

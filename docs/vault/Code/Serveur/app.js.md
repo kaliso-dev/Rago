@@ -3,7 +3,7 @@ type: code
 tags: [code, serveur, javascript, api, hono]
 fichier: licensing/src/app.js
 lignes: 1748
-maj: 2026-11-14
+maj: 2026-11-27
 ---
 # app.js
 
@@ -70,7 +70,7 @@ Toutes les routes du serveur de comptes et licences : pages du site de compte (i
 |---|---|---|
 | GET `/healthz` | public | `SELECT 1` → `{ok:true}` ou 503 `database unreachable`. |
 | GET `/acces/:key` | public | Bonne clé `PREVIEW_KEY` → cookie `rago_preview` et `/signup` ; `sortir` l'efface ; sinon 404. |
-| GET `/buy`, `/buy/lifetime` | public | Crée la session Stripe Checkout (voir plus bas) et redirige. `route=1` : Premium avec l'option Rago Route ; un compte connecté qui a déjà Premium est envoyé sur `/buy/route` (13/11, sur `staging` depuis le 13/11 au soir). |
+| GET et POST `/buy`, `/buy/lifetime` | public | Déconnecté (27/11, q103) : GET affiche la page « Your email » (`buyEmailPage`), le POST vérifie l'e-mail (Premium actif → « You already have Premium, log in. », 409). Essai : un par réseau (q104, `trialIpUsed`, sinon `trialUsedPage` et `notrial=1`). Crée la session Stripe Checkout (voir plus bas) et redirige. `route=1` : Premium avec l'option Rago Route ; un compte connecté qui a déjà Premium est envoyé sur `/buy/route` (13/11, sur `staging` depuis le 13/11 au soir). |
 | GET `/buy/route`, `/checkout/route` | session | Déconnecté : `/login?next=/buy/route?interval=…`, le choix au mois ou à l'année est gardé après la connexion (`withInterval`, `ROUTE_NEXT` dans `nextPath`, 14/11). Option Rago Route seule pour un compte avec Premium actif (`?n=routenopremium`, `routeowned`, `routesoon` sinon), au mois ou à l'année (`?interval=month|year` ; sans, comme le Premium du compte, `licenses.plan`, 14/11), puis page de retour qui l'enregistre ([[route-addon.js]]). |
 | GET `/checkout/success` | public | `session_id` `cs_…` : `fulfillCheckoutSession`, `settleTrial`, `addRouteWithPremium` (case Rago Route), e-mail, puis compte ou page de connexion/inscription. |
 | GET `/claim/:token` | public | Lien de l'e-mail d'achat ; expiré → 410 « This link doesn't work anymore. ». |
@@ -87,6 +87,8 @@ Toutes les routes du serveur de comptes et licences : pages du site de compte (i
 | GET/POST `/account/review`, POST `/account/review/delete` | session, Premium | Avis ([[reviews.js]]) ; 403 sans Premium. |
 | GET `/avatars/:file` | public | Photo WebP, cache `immutable` d'un an. |
 | POST `/account/billing` | session | Portail client Stripe, sinon `nobilling`. |
+| POST `/account/subscription/cancel`, `/account/subscription/resume` | session | Résiliation (fin de période) ou reprise du Premium depuis la page compte (27/11, q102), même code que l'app (`setPremiumCancel`) ; avis `canceled`, `resumed`, `nosub`, `nobilling`. |
+| POST `/account/route/cancel`, `/account/route/resume` | session | La même chose pour l'option Rago Route, Lifetime compris ; reprise refusée si le Premium s'arrête (`routepremiumfirst`) ; avis `routecanceled`, `routeresumed`, `routenosub`. |
 | GET `/account/discord`, `/callback`, POST `/sync`, `/unlink` | session | Liaison du Discord ([[discord.js]]). |
 | GET `/affiliate`, POST `/affiliate/join` | public / session | Programme d'affiliation ([[affiliates.js]]). |
 | GET `/download`, `/account/download`, `/download/status` | public / session | Installateur ([[installer.js]]) ; audit `download`. |

@@ -3,7 +3,7 @@ type: code
 tags: [code, serveur, javascript, html]
 fichier: licensing/src/views.js
 lignes: 936
-maj: 2026-11-22
+maj: 2026-11-27
 ---
 # views.js
 
@@ -29,7 +29,8 @@ Seul [[app.js]] l'appelle (`V.<page>(cfg, {...})`). Les pages chargent `/assets/
 | `signupPage`, `verifyPage`, `loginPage`, `forgotPage`, `resetPage`, `passwordPage` | Pages d'accès, avec boutons « Continue with Google/Discord » et le champ code de parrainage. `loginPage` vers `/buy/route` : « Sign in with your Premium account to add Rago Route… » (14/11). |
 | `appLinkPage` | « Sign in to the app? » avec le code à 4 caractères à comparer avec l'app, et « Use another account ». |
 | `messagePage` | Page de message (erreurs, liens expirés, 404), avec Back / Ask on Discord. |
-| `dashboardPage` | Page `/account` (avec le bloc « Rago Route » : option en cours, son prix au mois ou à l'année et « Manage or cancel » ; sinon « Add Rago Route · $17.99/year » et « $3/month », ou le mensuel seul sans prix annuel, 14/11). |
+| `buyEmailPage`, `trialUsedPage` (27/11) | Avant Stripe, sans compte connecté : « Your email » (q103) ; « Free trial already used on this network » avec « Pay without the trial » (q104). |
+| `dashboardPage` | Page `/account` (avec le bloc « Rago Route » : option en cours, son prix au mois ou à l'année et « Cancel Rago Route » / « Keep Rago Route » et « Billing details » (27/11) ; sinon « Add Rago Route · $17.99/year » et « $3/month », ou le mensuel seul sans prix annuel, 14/11). |
 | `profilePage`, `reviewPage` | Profil public et avis. |
 | `affiliatePage` | Programme d'affiliation. |
 
@@ -37,7 +38,7 @@ Seul [[app.js]] l'appelle (`V.<page>(cfg, {...})`). Les pages chargent `/assets/
 
 **Étapes d'achat** (`STEPS`) : Pay → Your account → Download → Activate, affichées tant que la licence est une licence Stripe active (étape 2 sans PC, 4 avec).
 
-**`dashboardPage`** : état de la licence (active, en résiliation, terminée `subscription_ended`, révoquée), offre (`PLAN` : Monthly, Yearly, Lifetime, Affiliate reward), clé masquée, PC lié et bouton de libération (avec la prochaine date possible), téléchargement avec la version `INSTALLER_VERSION` et le mode d'emploi SmartScreen, bouton du portail Stripe, offre Lifetime, essai en cours, avis, résumé d'affiliation (anneau), et :
+**`dashboardPage`** : état de la licence (active, en résiliation, terminée `subscription_ended`, révoquée), offre (`PLAN` : Monthly, Yearly, Lifetime, Affiliate reward), clé masquée, PC lié et bouton de libération (avec la prochaine date possible), téléchargement avec la version `INSTALLER_VERSION` et le mode d'emploi SmartScreen, boutons de résiliation et de reprise sur place (27/11, q102 : `changeButton`, formulaire avec `data-confirm` qui donne la date de fin : « Cancel subscription », « Cancel free trial », « Keep Premium », et pour Rago Route « Cancel Rago Route », « Keep Rago Route »), bouton du portail Stripe (« Invoices and billing », « Billing details » ; plus de « Cancel or manage subscription »), offre Lifetime, essai en cours, avis, résumé d'affiliation (anneau), et :
 - **bloc Discord** : sans bot → « open a ticket » avec l'e-mail du compte ; sans liaison → bouton de liaison ; lié → badge « Role given », « Not on the server » ou « Pending » avec « Sync it » / « Try again » / « Unlink » ([[discord.js]]) ;
 - **récompenses Discord** (VIP, MVP, boosts) montrées à tous les comptes, Premium ou pas ;
 - texte « Premium unlocks all `PREMIUM_TWEAKS` tweaks… The free version opens `FREE_TWEAKS`. » (voir À savoir).

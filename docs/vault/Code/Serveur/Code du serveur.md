@@ -3,7 +3,7 @@ type: code
 tags: [code, serveur, carte]
 fichier: licensing/
 lignes: 8534 (src) + 755 (scripts et JS du navigateur) + 1085 (CSS) + 342 (schema)
-maj: 2026-11-14
+maj: 2026-11-27
 ---
 # Code du serveur
 
@@ -124,7 +124,7 @@ Caches en mémoire : ventes 5 min, services 1 min, avis 30 s, pop-up 30 s, prix 
 
 26 tables, définies dans [[schema.sql]] (une note par table) :
 - **Comptes** : [[Table users]], [[Table web_sessions]], [[Table api_sessions]], [[Table password_resets]], [[Table signup_codes]], [[Table oauth_identities]].
-- **Licences et paiements** : [[Table licenses]], [[Table devices]], [[Table stripe_events]], [[Table trials]], [[Table route_subscriptions]].
+- **Licences et paiements** : [[Table licenses]], [[Table devices]], [[Table stripe_events]], [[Table trials]], [[Table trial_ips]], [[Table route_subscriptions]].
 - **Affiliation** : [[Table affiliates]], [[Table referrals]], [[Table account_devices]].
 - **Profil et site** : [[Table reviews]], [[Table site_settings]].
 - **Discord** : [[Table discord_links]], [[Table discord_rewards]], [[Table discord_joins]], [[Table discord_invite_links]], [[Table discord_invite_bonus]], [[Table discord_invite_roles]].

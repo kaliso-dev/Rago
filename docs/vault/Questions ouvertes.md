@@ -70,10 +70,6 @@ Posées le 11/11 (q78 traitée le même jour : Sofiene a demandé la page de ven
 - q97 : d'autres sorties que Paris, pour que la page Rago Route les annonce ? ([[Page de vente Rago Route]], [[Infrastructure Rago Route]]).
 - q98 : `CERVEAU_GITHUB_TOKEN` mis dans Railway, et dans quels environnements ? (25/11 : la variable existe dans Railway ; reste à confirmer production et staging, et l'accès du jeton à Rago-Client) ([[Cerveau du vault]], [[Variables d'environnement]]).
 - q100 : à la sortie de la 1.3.0, le bouton « Get notified on Discord » de l'encart Rago Route de l'accueil devient « Try 3 days free », disparaît ou reste ? ([[page.html]])
-- q102 : résilier l'essai depuis le site en 2 clics (lien direct vers la résiliation du portail Stripe, en fin de période), ou écrire « two clicks in the app, or anytime from your account » sur les deux pages ? ([[route.html]], [[page.html]], [[Abonnement dans l'app]])
-- q103 : un abonné Premium non connecté au site peut payer un 2e abonnement, essai compris : le bloquer côté serveur (même e-mail ou même carte), ou la ligne « Already Premium? » de la page suffit ? (lu dans le code, pas vérifié sur staging ; [[Paiements Stripe]])
-- q104 : « Card required » ou « Card or PayPal required » sous les boutons d'essai ? PayPal sur le paiement de l'essai pas encore vu ; avec PayPal, « un essai par personne » ne compare que l'e-mail ([[Paiements Stripe]], [[route.html]]).
-- q105 : garder le titre « Lose packets, not fights. » de la page Rago Route (il frôle la règle « jamais de hitreg promis »), ou prendre « Lost packets shouldn't freeze your game. » ? ([[route.html]], [[Page de vente Rago Route]])
 
 Posée le 27/11 (fil HUB-d1451f, Rago Route pour les Lifetime, [[Paiements Stripe]]) :
 - q131 : la consigne disait que les 5 Lifetime vendus ont Rago Route gratuit en prod et le perdront à la mise en prod ; or le code de prod (1.3.0) demande déjà l'option à tout Lifetime. Un Lifetime a-t-il eu Rago Route sans payer ? Veux-tu les prévenir que l'option existe pour eux ? (À VÉRIFIER)
