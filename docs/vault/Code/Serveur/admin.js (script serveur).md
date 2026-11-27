@@ -3,7 +3,7 @@ type: code
 tags: [code, serveur, javascript, support]
 fichier: licensing/scripts/admin.js
 lignes: 337
-maj: 2026-11-10
+maj: 2026-11-27
 ---
 # admin.js (script serveur)
 
@@ -40,6 +40,7 @@ Se lance depuis `licensing/` avec les variables du serveur visé (en pratique, d
 | `set-name <email> <nom>` | Change le nom public. |
 | `discord [email]` | Avec e-mail : `checkRewards` (sans délai), `syncUser(force)` et liste des récompenses. Sans e-mail : `syncAll({all:true})` et statistiques (le serveur le fait toutes les 5 min). |
 | `discord-unlink <email>` | Retire le rôle Pro et délie le Discord. |
+| `failed-payments [apply]` (27/11, q110) | Rattrapage des abonnements qui ne paient plus (`past_due`, `unpaid`, `incomplete_expired`, `canceled`, introuvable) : liste sans rien changer ; `apply` révoque et envoie l'e-mail de fin (moins de 3 jours de retard : compte à rebours). Lifetime jamais listé. [[dunning.js]] |
 | `growth [jours]` | Arrivées Discord des 30 derniers jours (ou `[jours]`) par source, comme `/growth` sur Discord, sans la mise en forme ([[community.js]]). |
 
 Commande inconnue : la liste des commandes s'affiche.

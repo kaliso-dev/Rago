@@ -39,7 +39,7 @@ Tout ce qui parle à Stripe : création du paiement Checkout (abonnement, essai 
 | `stopReplacedSubscriptions(db, stripe, userId, log, lifetimeId)` | Annule chez Stripe les abonnements remplacés par un Lifetime. |
 | `stopAllReplacedSubscriptions(db, stripe, log)` | Même chose pour tous les comptes (balayage horaire). |
 | `handleStripeEvent(db, event, {stripe, onLicense, log})` | Traite un événement webhook vérifié ; renvoie un libellé pour les logs. |
-| `WEBHOOK_EVENTS` | Les 10 événements attendus (liste ci-dessous). |
+| `WEBHOOK_EVENTS` | Les 11 événements attendus (liste ci-dessous ; `invoice.payment_failed` ajouté le 27/11, q110, traité par [[dunning.js]]). |
 | `activeTestLicenses(db)` | Licences actives dont la session commence par `cs_test_`. |
 | `endTestLicenses(db, cfg)` | En mode live seulement : révoque ces licences (raison `test_mode`) et annule leurs parrainages. |
 | `stripeChecks(stripe, cfg, {db, webhook})` | Liste de contrôles `{label, level: ok|warn|error, text}` en français. |
@@ -87,7 +87,7 @@ Messages en français (seul Sofiene les lit). Libellés et règles :
 - **Compte** (live) : `charges_enabled`, libellé du relevé bancaire.
 - **Prix mensuel / Prix annuel** : existe dans ce mode (sinon « c'est un prix du mode test/live »), actif, récurrent avec le bon intervalle et `interval_count` 1 ; **Devise** : les deux dans la même devise.
 - **Prix Lifetime** : vide (attention, « Coming soon »), sinon actif, paiement unique, USD, 59,99 $.
-- **Webhook** : une destination activée vers `/webhooks/stripe` avec les 10 événements ; plusieurs destinations = attention (Railway n'a qu'un secret).
+- **Webhook** : une destination activée vers `/webhooks/stripe` avec les 11 événements ; **Portail client** : avertit aussi si « Changer de formule » laisse changer la quantité (`adjustable_quantity`, q111, 27/11) ; plusieurs destinations = attention (Railway n'a qu'un secret).
 - **Secret du webhook** : déduit de ce que le serveur a reçu (`webhook.refusedAt`, `webhook.otherModeAt` fournis par [[app.js]], dernier événement du mode dans `stripe_events`).
 - **Portail client** : configuration par défaut active, résiliation proposée, liens CGV et confidentialité.
 - **Lien « Cancel subscription »** : `STRIPE_PORTAL_LOGIN_URL` présent et pas le lien `/login/test_` en live.

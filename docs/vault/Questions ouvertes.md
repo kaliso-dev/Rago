@@ -16,10 +16,6 @@ Mode d'emploi :
 
 ## En attente de réponse
 
-Posées le 14/11 ([[Paiements Stripe]]) :
-- q110 : ce que Stripe fait d'un abonnement après le dernier essai de paiement raté.
-- q111 : couper le changement de quantité dans le portail client live.
-
 Posées le 23/11, pendant la refonte de l'app sur les maquettes v5 (fil « refonte stricte ») :
 - q112 : garder la fenêtre Premium « This tweak is part of Premium » quand le serveur refuse d'appliquer le Packet Optimizer ([[NetOpt.tsx]]).
 - q113 : « Affiliate reward » ou « Discord reward » pour une licence gagnée sur Discord (page compte).
