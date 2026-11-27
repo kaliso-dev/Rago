@@ -1,0 +1,101 @@
+<!doctype html>
+<html lang="fr"><head><meta charset="utf-8">
+<link href="https://fonts.googleapis.com/css2?family=Unbounded:wght@500;600;700;800;900&family=Instrument+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="rago3.css">
+<style>
+/* scène de jeu inventée, floue, pour montrer le verre par-dessus */
+.scene{position:absolute;inset:0;overflow:hidden;background:linear-gradient(180deg,#0f2236 0%,#2b3f63 30%,#a2606a 50%,#f0a06a 60%,#3a2a2a 61%,#1b1716 100%)}
+.scene .sun{position:absolute;left:73%;top:36%;width:340px;height:340px;border-radius:50%;background:radial-gradient(circle,#ffd7a0 0%,rgba(255,170,110,.55) 30%,transparent 70%)}
+.scene .bld{position:absolute;bottom:39%;background:#1a1520}
+.scene .b1{left:-2%;width:22%;height:34%;clip-path:polygon(0 18%,40% 18%,40% 0,72% 0,72% 30%,100% 30%,100% 100%,0 100%)}
+.scene .b2{left:24%;width:14%;height:22%;background:#241c26;clip-path:polygon(0 40%,50% 0,100% 40%,100% 100%,0 100%)}
+.scene .b3{right:-3%;width:30%;height:46%;background:#120f16;clip-path:polygon(0 30%,30% 30%,30% 10%,62% 10%,62% 0,100% 0,100% 100%,0 100%)}
+.scene .b4{left:44%;width:9%;height:12%;background:#2b2128}
+.scene .floor{position:absolute;left:0;right:0;bottom:0;height:39%;background:linear-gradient(180deg,#3b2c27,#16110f);clip-path:polygon(0 0,100% 0,100% 100%,0 100%)}
+.scene .lane{position:absolute;bottom:0;left:30%;width:40%;height:39%;background:linear-gradient(180deg,rgba(255,200,150,.12),transparent);clip-path:polygon(46% 0,54% 0,100% 100%,0 100%)}
+.scene .box{position:absolute;bottom:14%;left:8%;width:180px;height:150px;background:#2c211d;box-shadow:inset 0 0 0 6px #241a17}
+.scene .box.b{left:auto;right:12%;bottom:20%;width:120px;height:110px}
+.scene .blur{position:absolute;inset:0;backdrop-filter:blur(4px);-webkit-backdrop-filter:blur(4px);background:rgba(5,4,5,.18)}
+.ghud{position:absolute;color:#fff;font-family:var(--ui);font-weight:700;text-shadow:0 1px 3px rgba(0,0,0,.6);opacity:.85}
+.ghud.hp{left:34px;bottom:28px;font-size:34px}
+.ghud.hp small{font-size:13px;opacity:.7;margin-left:6px}
+.ghud.ammo{right:34px;bottom:28px;font-size:34px}
+.ghud.ammo small{font-size:16px;opacity:.7}
+.cross{position:absolute;left:50%;top:50%;width:18px;height:18px;margin:-9px 0 0 -9px}
+.cross::before,.cross::after{content:"";position:absolute;background:#7dffb0;box-shadow:0 0 0 1px rgba(0,0,0,.5)}
+.cross::before{left:8px;top:0;width:2px;height:18px}.cross::after{top:8px;left:0;height:2px;width:18px}
+
+
+.ov{position:absolute;z-index:3;left:50%;top:60px;transform:translateX(-50%);width:820px;padding:22px 26px 18px;--c:22px;
+  clip-path:polygon(var(--c) 0,100% 0,100% calc(100% - var(--c)),calc(100% - var(--c)) 100%,0 100%,0 var(--c));
+  background:linear-gradient(160deg,color-mix(in srgb,var(--tech) 16%,color-mix(in srgb,var(--bg) 82%,transparent)),color-mix(in srgb,var(--bg) 80%,transparent) 55%);
+  -webkit-backdrop-filter:blur(28px) saturate(150%);backdrop-filter:blur(28px) saturate(150%)}
+.ovf{position:absolute;z-index:4;left:50%;top:60px;transform:translateX(-50%);width:820px;pointer-events:none}
+.ovf .hud{inset:-9px}
+.ovf .hud i{width:22px;height:22px;border-color:var(--tech)}
+.ovf .hud i:nth-child(1),.ovf .hud i:nth-child(4){display:none}
+.hd{display:flex;align-items:center;gap:14px}
+.hd .mk{width:30px}
+.hd .mk svg{width:22px;fill:var(--rouge)}
+.hd b{font-family:var(--display);font-weight:800;font-size:20px;letter-spacing:-.03em;text-transform:uppercase}
+.hd .act{margin-left:auto;display:flex;gap:6px}
+.ib{width:38px;height:34px;display:grid;place-items:center;color:var(--gris-2);--c:8px;--edge:var(--line);--fill:color-mix(in srgb,var(--bg) 70%,transparent)}
+.ib svg{width:16px;height:16px}
+.ib.on{color:#fff;--fill:var(--rouge)}
+.nums{display:flex;align-items:flex-end;gap:34px;margin:22px 2px 24px;padding-bottom:22px;border-bottom:1px solid var(--line)}
+.n{font-family:var(--display);font-weight:900;letter-spacing:-.06em;line-height:.8;font-variant-numeric:tabular-nums}
+.n small{display:block;font-size:11px;font-weight:700;letter-spacing:.02em;color:var(--gris-3);margin-top:10px}
+.n.xl{font-size:92px}
+.n.xl.red{color:var(--rouge);text-shadow:0 0 40px rgba(255,59,48,.45)}
+.nums .sp{flex:1}
+.m{width:92px}
+.m .n{font-size:34px;color:var(--gris)}
+.m .seg{display:flex;gap:3px;margin-top:10px}
+.m .seg i{flex:1;height:6px;background:color-mix(in srgb,var(--gris) 14%,transparent);transform:skewX(-20deg)}
+.m .seg i.on{background:var(--tech);box-shadow:0 0 8px color-mix(in srgb,var(--tech) 60%,transparent)}
+.m .seg i.hot{background:var(--rouge);box-shadow:0 0 8px rgba(255,59,48,.6)}
+.m small{display:block;font-family:var(--display);font-size:10.5px;font-weight:700;color:var(--gris-3);margin-top:8px}
+.cols{display:grid;grid-template-columns:repeat(4,1fr);gap:22px}
+.cols h5{font-family:var(--display);font-weight:600;font-size:11.5px;color:var(--tech);margin-bottom:8px}
+.r{display:flex;align-items:center;justify-content:space-between;gap:10px;height:40px;font-size:13.5px;font-weight:600}
+.r .tg{width:38px;height:20px}
+.r .tg::after{top:3px;left:3px;width:14px;height:14px}
+.r .tg.on::after{left:21px}
+.ft{display:flex;align-items:center;gap:10px;margin-top:16px;font-size:12.5px;color:var(--gris-3)}
+.k{font-family:var(--display);font-weight:700;font-size:10.5px;color:var(--gris);padding:6px 10px;--c:6px;--edge:color-mix(in srgb,var(--gris) 30%,transparent);--fill:var(--bg)}
+.pill{position:absolute;z-index:3;right:22px;top:22px;display:flex;align-items:center;gap:16px;padding:10px 20px 10px 14px;--c:12px;
+  clip-path:polygon(var(--c) 0,100% 0,100% calc(100% - var(--c)),calc(100% - var(--c)) 100%,0 100%,0 var(--c));
+  background:color-mix(in srgb,var(--bg) 80%,transparent);-webkit-backdrop-filter:blur(20px);backdrop-filter:blur(20px);box-shadow:inset 3px 0 0 var(--tech)}
+.pill svg{width:16px;fill:var(--rouge)}
+.pill b{font-family:var(--display);font-size:17px;font-weight:900;letter-spacing:-.04em}
+.pill b.red{color:var(--rouge)}
+.pill small{font-family:var(--display);font-size:9.5px;font-weight:700;color:var(--gris-3);margin-left:4px}
+</style></head>
+<body data-shell="none">
+<div class="win">
+  <div class="scene"><div class="sun"></div><div class="bld b1"></div><div class="bld b2"></div><div class="bld b4"></div><div class="bld b3"></div><div class="floor"></div><div class="lane"></div><div class="box"></div><div class="box b"></div><div class="blur"></div>
+    <div class="ghud hp">100<small>PV</small></div><div class="ghud ammo">25<small> / 75</small></div><div class="cross"></div></div>
+  <div class="pill"><i data-logo></i><span><b class="red">237</b><small>FPS</small></span><span><b>18</b><small>MS</small></span></div>
+  <section class="ov">
+    <div class="hd"><span class="mk"><i data-logo></i></span><b>Valorant</b><div class="act"><span class="ib on cut"><i data-i="pin"></i></span><span class="ib cut ol"><i data-i="x"></i></span></div></div>
+    <div class="nums">
+      <div class="n xl red">237<small>FPS</small></div>
+      <div class="n xl">18<small>PING MS</small></div>
+      <span class="sp"></span>
+      <div class="m"><div class="n">41</div><div class="seg"><i class="on"></i><i class="on"></i><i class="on"></i><i class="on"></i><i class=""></i><i class=""></i><i class=""></i><i class=""></i><i class=""></i><i class=""></i></div><small>CPU %</small></div><div class="m"><div class="n">87</div><div class="seg"><i class="hot"></i><i class="hot"></i><i class="hot"></i><i class="hot"></i><i class="hot"></i><i class="hot"></i><i class="hot"></i><i class="hot"></i><i class="hot"></i><i class=""></i></div><small>GPU %</small></div><div class="m"><div class="n">58</div><div class="seg"><i class="on"></i><i class="on"></i><i class="on"></i><i class="on"></i><i class="on"></i><i class="on"></i><i class=""></i><i class=""></i><i class=""></i><i class=""></i></div><small>RAM %</small></div>
+    </div>
+    <div class="cols">
+      <div><h5>Processeur</h5><div class="r">Parking des cœurs<i class="tg on"></i></div><div class="r">Boost sans bride<i class="tg on"></i></div><div class="r">Turbo Boost<i class="tg"></i></div></div>
+      <div><h5>Alimentation</h5><div class="r">Plan Rago<i class="tg on"></i></div><div class="r">P-states matériels<i class="tg"></i></div></div>
+      <div><h5>Mémoire</h5><div class="r">Compression<i class="tg on"></i></div><div class="r">Fusion de pages<i class="tg"></i></div></div>
+      <div><h5>Système</h5><div class="r">Effets visuels<i class="tg on"></i></div><div class="r">Transparence<i class="tg on"></i></div><div class="r">Profil NVIDIA<i class="tg"></i></div></div>
+    </div>
+    <div class="ft"><span class="k cut ol">ÉCHAP</span>Revenir au jeu</div>
+  </section>
+  <div class="ovf"><div class="hud"><i></i><i></i><i></i><i></i></div></div>
+  <div class="grain"></div>
+</div>
+<script src="shell3.js"></script>
+<script>const PAST=/pastille/.test(location.hash);(PAST?[".ov",".ovf"]:[".pill"]).forEach(q=>document.querySelector(q).remove());if(!PAST)document.fonts.ready.then(()=>{const o=document.querySelector(".ov"),f=document.querySelector(".ovf");f.style.height=o.offsetHeight+"px"})</script>
+<script src="icons.js"></script>
+</body></html>

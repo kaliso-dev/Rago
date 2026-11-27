@@ -1,0 +1,230 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8">
+<link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:ital,wght@0,600;0,700;0,800;0,900;1,700;1,800;1,900&family=Barlow:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="rago5.css">
+<style>
+.head{display:flex;align-items:flex-end;justify-content:space-between}
+.head .acts{display:flex;gap:14px;padding-bottom:10px}
+.row{display:grid;grid-template-columns:1fr 392px;gap:16px;margin-top:16px}
+.row.first{margin-top:34px}
+.ph{display:flex;align-items:center;gap:12px;margin-bottom:16px}
+.ph .h2{font-size:26px}
+.ph .r{margin-left:auto;display:flex;align-items:center;gap:10px}
+.btn.sm{height:30px;padding:0 14px;font-size:13px;gap:7px}
+.btn.sm svg{width:13px;height:13px}
+
+/* optimisations gratuites : l'affiche */
+.free{display:flex;overflow:hidden;min-height:318px;isolation:isolate}
+.free .txt{position:relative;flex:1;padding:26px 0 26px 32px;display:flex;flex-direction:column}
+.free .ttl{font-family:var(--cond);font-weight:900;font-style:italic;font-size:70px;line-height:.84;text-transform:uppercase;letter-spacing:-.005em;margin-top:16px}
+.free p{max-width:420px;margin-top:14px;color:var(--ink-2);font-size:13.5px;line-height:1.45}
+.free .tw{display:flex;flex-wrap:wrap;gap:6px;margin-top:14px;max-width:440px}
+.free .tw span{position:relative;display:inline-flex;align-items:center;height:24px;padding:0 10px;font-family:var(--cond);font-weight:700;font-size:12.5px;letter-spacing:.08em;text-transform:uppercase;color:var(--ink-2);isolation:isolate}
+.free .tw span::before{content:"";position:absolute;inset:0;z-index:-1;transform:skewX(var(--skew));box-shadow:inset 0 0 0 1px var(--line-2)}
+.free .go{display:flex;align-items:center;gap:18px;margin-top:auto;padding-top:20px}
+.free .num{position:relative;width:286px;flex:none;margin-right:-34px;display:flex;flex-direction:column;justify-content:flex-end;padding:0 0 26px 58px;color:var(--red-ink);isolation:isolate}
+.free .num::before{content:"";position:absolute;inset:0 0 0 0;z-index:-1;background:var(--red);transform:skewX(var(--skew));transform-origin:bottom left}
+.free .num::after{content:"";position:absolute;inset:0;z-index:-1;background:linear-gradient(transparent,transparent);-webkit-mask:linear-gradient(200deg,#000 0,transparent 65%);mask:linear-gradient(200deg,#000 0,transparent 65%);transform:skewX(var(--skew));transform-origin:bottom left}
+.free .num b{font-family:var(--cond);font-weight:900;font-style:italic;font-size:208px;line-height:.74;letter-spacing:-.03em}
+.free .num span{font-family:var(--cond);font-weight:800;font-style:italic;font-size:22px;line-height:1;text-transform:uppercase;letter-spacing:.02em;margin-top:14px}
+.free .num small{font-size:12.5px;font-weight:600;margin-top:5px;max-width:170px;line-height:1.3;opacity:.78}
+
+/* en direct */
+.live{padding:22px 24px 20px;display:flex;flex-direction:column}
+.live .ph{margin-bottom:8px}
+.meter{padding:18px 0 19px;border-bottom:1px solid var(--line)}
+.meter .t{display:flex;align-items:flex-end;gap:10px;margin-bottom:10px}
+.meter .t svg{width:16px;height:16px;color:var(--ink-3);margin-bottom:3px}
+.meter .t > div b{display:block;font-family:var(--cond);font-weight:800;font-size:15px;letter-spacing:.06em;text-transform:uppercase}
+.meter .t > div .sub{display:block;margin-top:1px;font-size:12px}
+.meter .v{margin-left:auto;font-family:var(--cond);font-weight:900;font-style:italic;font-size:46px;line-height:.8}
+.meter .v small{font-size:22px;color:var(--ink-2);margin-left:2px}
+.meter .seg{height:12px}
+.meter.hot .v{color:var(--red)}
+.meter .btn{margin-bottom:2px}
+.live .ft{display:flex;align-items:center;margin-top:auto;padding-top:14px}
+.live .ft .sub{font-size:12px}
+.live .ft a{margin-left:auto;display:inline-flex;align-items:center;gap:6px;font-family:var(--cond);font-weight:800;font-size:13px;letter-spacing:.06em;text-transform:uppercase;color:var(--ink)}
+.live .ft a svg{width:13px;height:13px;color:var(--red)}
+
+/* ta machine */
+.pc{padding:22px 26px 24px}
+.specs{display:grid;grid-template-columns:repeat(6,1fr);border-top:1px solid var(--line)}
+.specs > div{position:relative;padding:16px 18px 16px 20px;border-bottom:1px solid var(--line)}
+.specs > div:nth-child(1),.specs > div:nth-child(2){grid-column:span 3}
+.specs > div:nth-child(n+3){grid-column:span 2;border-bottom:0}
+.specs > div:nth-child(1),.specs > div:nth-child(3){padding-left:0}
+.specs > div:nth-child(2)::before,.specs > div:nth-child(4)::before,.specs > div:nth-child(5)::before{content:"";position:absolute;left:0;top:16px;bottom:16px;width:1px;background:var(--line-2);transform:skewX(var(--skew))}
+.specs .k{display:flex;align-items:center;gap:8px}
+.specs .k svg{width:15px;height:15px;color:var(--red)}
+.specs b{display:block;font-family:var(--cond);font-weight:800;font-style:italic;font-size:24px;line-height:1;text-transform:uppercase;margin-top:9px;white-space:nowrap}
+.specs > div:nth-child(-n+2) b{font-size:32px}
+.specs .sub{display:block;margin-top:5px}
+
+/* état */
+.status{padding:22px 24px 18px}
+.st{display:flex;align-items:center;gap:12px;height:52px;border-top:1px solid var(--line)}
+.st .ic{width:26px;height:26px;display:grid;place-items:center;flex:none;position:relative;isolation:isolate;color:var(--red-ink)}
+.st .ic::before{content:"";position:absolute;inset:0;z-index:-1;background:var(--red);transform:skewX(var(--skew))}
+.st .ic svg{width:13px;height:13px;stroke-width:2.6}
+.st .ic.n{color:var(--ink-2)}.st .ic.n::before{background:none;box-shadow:inset 0 0 0 1px var(--line-2)}
+.st > span:nth-child(2){font-weight:600;font-size:13.5px}
+.st .val{margin-left:auto;font-family:var(--cond);font-weight:800;font-size:16px;letter-spacing:.04em;text-transform:uppercase;text-align:right}
+.st .val small{display:block;font-family:var(--body);font-weight:500;font-size:11.5px;letter-spacing:0;text-transform:none;color:var(--ink-3);margin-top:1px}
+.st .btn{margin-left:4px}
+
+/* presets par jeu */
+.bar{display:flex;align-items:flex-end;justify-content:space-between;margin:40px 0 18px}
+.bar .h2{margin-bottom:6px}
+.games{display:grid;grid-template-columns:repeat(4,1fr);gap:16px}
+.gp{position:relative;background:var(--bg-2);border:1px solid var(--line)}
+.gp .cv{position:relative;aspect-ratio:2.14;overflow:hidden;background:#000 center/cover no-repeat}
+.gp .cv::after{content:"";position:absolute;inset:0;background:linear-gradient(180deg,rgba(10,10,11,.4) 0,transparent 35%,transparent 64%,rgba(10,10,11,.55))}
+.gp .cv .n{position:absolute;z-index:1;left:10px;top:10px;height:22px;font-size:11px;background:rgba(10,10,11,.78);color:#fff}
+.gp .info{display:flex;align-items:center;gap:10px;padding:11px 12px 12px 14px}
+.gp .info > div{min-width:0}
+.gp .info b{display:block;font-family:var(--cond);font-weight:800;font-size:19px;line-height:1.05;text-transform:uppercase;letter-spacing:.01em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.gp .info .sub{display:block;margin-top:2px;font-size:12px;white-space:nowrap}
+.gp .sel{margin-left:auto;flex:none;position:relative;display:inline-flex;align-items:center;gap:6px;height:30px;padding:0 13px;font-family:var(--cond);font-weight:800;font-size:13px;letter-spacing:.06em;text-transform:uppercase;color:var(--ink);isolation:isolate}
+.gp .sel::before{content:"";position:absolute;inset:0;z-index:-1;transform:skewX(var(--skew));background:var(--bg-4)}
+.gp .sel svg{width:12px;height:12px}
+.gp.on{border-color:var(--red);box-shadow:0 0 0 1px var(--red),0 0 34px rgba(255,59,48,.16)}
+.gp.on .cv{box-shadow:inset 0 -3px 0 var(--red)}
+.gp.on .sel{color:var(--red-ink);width:38px;padding:0;justify-content:center}.gp.on .sel svg{width:15px;height:15px;stroke-width:2.6}.gp.on .sel::before{background:var(--red)}
+.more{display:flex;align-items:center;gap:8px;margin-top:16px;padding:14px 18px;background:var(--bg-2);border:1px solid var(--line)}
+.more .sub{margin-right:8px}
+.more .chip{height:26px;padding:0 11px}
+
+/* presets + mes presets */
+.row.last{margin-top:40px}
+.presets{padding:22px 26px 10px}
+.pr{display:grid;grid-template-columns:96px 1fr auto;align-items:center;gap:6px 20px;padding:16px 0;border-top:1px solid var(--line)}
+.pr .c{font-family:var(--cond);font-weight:900;font-style:italic;font-size:54px;line-height:.8;color:var(--ink);display:flex;align-items:baseline;gap:6px}
+.pr .c small{font-size:13px;font-style:normal;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:var(--ink-3)}
+.pr b{display:block;font-family:var(--cond);font-weight:800;font-style:italic;font-size:24px;line-height:1;text-transform:uppercase}
+.pr .sub{display:block;margin-top:4px}
+.pr .mods{display:flex;gap:5px;margin-top:9px}
+.pr .mods span{font-family:var(--cond);font-weight:700;font-size:11px;letter-spacing:.12em;text-transform:uppercase;color:var(--ink-3);padding:2px 7px;box-shadow:inset 0 0 0 1px var(--line)}
+.mine{padding:22px 24px 22px;display:flex;flex-direction:column}
+.my{display:flex;align-items:center;gap:12px;padding:14px 0;border-top:1px solid var(--line)}
+.my b{display:block;font-family:var(--cond);font-weight:800;font-style:italic;font-size:22px;line-height:1;text-transform:uppercase}
+.my .sub{display:block;margin-top:4px;font-size:12px}
+.my .ia{margin-left:auto;display:flex;gap:6px}
+.my .ia span{width:32px;height:32px;display:grid;place-items:center;position:relative;isolation:isolate;color:var(--ink-2)}
+.my .ia span::before{content:"";position:absolute;inset:0;z-index:-1;transform:skewX(var(--skew));box-shadow:inset 0 0 0 1px var(--line-2)}
+.my .ia svg{width:14px;height:14px}
+.save{margin-top:auto;padding:18px;border:1px dashed var(--line-2);display:flex;flex-direction:column;gap:12px;align-items:flex-start}
+.save .sub{line-height:1.4}
+</style>
+<link rel="stylesheet" href="round.css">
+<link rel="stylesheet" href="poster.css">
+<link rel="stylesheet" href="rail.css">
+<link rel="stylesheet" href="anim.css"></head>
+<body data-page="dashboard">
+<div class="win">
+  <main class="main">
+    <div class="topbar"><div class="search"><i data-i="search"></i>search games, tweaks, settings<kbd>ctrl k</kbd></div><span class="wc"></span></div>
+
+    <section class="head">
+      <div><p class="kick">dashboard <b>//</b> 212 tweaks for ping, hitreg, fps, windows and minecraft</p><h1 class="title" data-t="dashboard">dashboard</h1></div>
+      <div class="acts"><span class="btn"><i data-i="undo"></i>undo all</span><span class="btn red"><i data-i="activity"></i>analyze my pc</span></div>
+    </section>
+
+    <!-- 1. optimisations gratuites + en direct -->
+    <div class="row first">
+      <section class="free panel">
+        <div class="txt">
+          <div><span class="chip ghost">free plan</span></div>
+          <h2 class="ttl">free<br>optimizations</h2>
+          <p>Windows tweaks of the free plan in one click. Each one keeps its previous state and can be undone from its page.</p>
+          <div class="tw"><span>game mode</span><span>game dvr</span><span>visual effects</span><span>notifications</span><span>suggestions</span><span>copilot</span><span>recall</span></div>
+          <div class="go"><span class="btn red lg"><i data-i="zap"></i>apply free optimizations</span></div>
+        </div>
+        <div class="num"><b>30</b><span>windows tweaks</span><small>9 already on, 21 left to apply</small></div>
+      </section>
+
+      <section class="live panel">
+        <div class="ph"><h2 class="h2">live usage</h2><div class="r"><span class="chip ghost"><i class="dot" style="color:var(--ok)"></i>every second</span></div></div>
+        <div class="meter"><div class="t"><i data-i="cpu"></i><div><b>processor</b><span class="sub">all cores</span></div><span class="v">14<small>%</small></span></div><div class="seg" data-n="28" data-f="4"></div></div>
+        <div class="meter hot"><div class="t"><i data-i="gpu"></i><div><b>graphics card</b><span class="sub">busiest engine</span></div><span class="v">71<small>%</small></span></div><div class="seg" data-n="28" data-f="20"></div></div>
+        <div class="meter"><div class="t"><i data-i="ram"></i><div><b>memory</b><span class="sub">13.1 of 32 GB</span></div><span class="btn sm">clean</span><span class="v">41<small>%</small></span></div><div class="seg" data-n="28" data-f="11"></div></div>
+        <div class="ft"><span class="sub">Measured by Windows every second.</span><a>task manager<i data-i="external"></i></a></div>
+      </section>
+    </div>
+
+    <!-- 2. ta machine + état -->
+    <div class="row">
+      <section class="pc panel">
+        <div class="ph"><h2 class="h2">your pc</h2><div class="r"><span class="btn sm"><i data-i="refresh"></i>refresh</span></div></div>
+        <div class="specs">
+          <div><span class="k lbl"><i data-i="cpu"></i>processor</span><b>ryzen 7 7800x3d</b><span class="sub">8 cores, 16 threads</span></div>
+          <div><span class="k lbl"><i data-i="gpu"></i>graphics card</span><b>rtx 4070 super</b><span class="sub">NVIDIA, 12 GB, driver 566.36</span></div>
+          <div><span class="k lbl"><i data-i="windows"></i>system</span><b>windows 11 pro</b><span class="sub">24H2, build 26100</span></div>
+          <div><span class="k lbl"><i data-i="ram"></i>memory</span><b>32 gb</b><span class="sub">DDR5 at 6000 MT/s</span></div>
+          <div><span class="k lbl"><i data-i="net"></i>network</span><b>2.5 gbe</b><span class="sub">Realtek, linked at 1 Gbps</span></div>
+        </div>
+      </section>
+
+      <section class="status panel">
+        <div class="ph"><h2 class="h2">status</h2></div>
+        <div class="st"><span class="ic"><i data-i="check"></i></span><span>Administrator rights</span><span class="val">yes</span></div>
+        <div class="st"><span class="ic"><i data-i="check"></i></span><span>NVIDIA Profile Inspector</span><span class="val">ready</span></div>
+        <div class="st"><span class="ic"><i data-i="check"></i></span><span>Restore point</span><span class="val">nov 19<small>2 days ago</small></span><span class="btn sm">create</span></div>
+        <div class="st"><span class="ic n"><i data-i="zap"></i></span><span>Tweaks applied</span><span class="val">21 <span style="color:var(--ink-3)">/ 212</span></span></div>
+      </section>
+    </div>
+
+    <!-- 3. presets par jeu -->
+    <div class="bar">
+      <div><h2 class="h2">game presets</h2><span class="sub">The game at high priority, with the settings that matter for it.</span></div>
+      <div class="tabs"><span class="on">on this pc <em>8</em></span><span>all <em>15</em></span></div>
+    </div>
+    <section class="games">
+      <div class="gp on"><div class="cv" style="background-image:url(img/covers/valorant.jpg)"><span class="chip n">21 tweaks</span></div>
+        <div class="info"><div><b>valorant</b><span class="sub">riot client</span></div><span class="sel"><i data-i="check"></i></span></div></div>
+      <div class="gp"><div class="cv" style="background-image:url(img/covers/cs2.jpg)"><span class="chip n">21 tweaks</span></div>
+        <div class="info"><div><b>counter-strike 2</b><span class="sub">steam</span></div><span class="sel">select</span></div></div>
+      <div class="gp"><div class="cv" style="background-image:url(img/covers/fortnite.jpg)"><span class="chip n">21 tweaks</span></div>
+        <div class="info"><div><b>fortnite</b><span class="sub">epic games</span></div><span class="sel">select</span></div></div>
+      <div class="gp"><div class="cv" style="background-image:url(img/covers/apex.jpg)"><span class="chip n">21 tweaks</span></div>
+        <div class="info"><div><b>apex legends</b><span class="sub">steam</span></div><span class="sel">select</span></div></div>
+      <div class="gp"><div class="cv" style="background-image:url(img/covers/lol.jpg)"><span class="chip n">21 tweaks</span></div>
+        <div class="info"><div><b>league of legends</b><span class="sub">riot client</span></div><span class="sel">select</span></div></div>
+      <div class="gp"><div class="cv" style="background-image:url(img/covers/rl.jpg)"><span class="chip n">21 tweaks</span></div>
+        <div class="info"><div><b>rocket league</b><span class="sub">steam</span></div><span class="sel">select</span></div></div>
+      <div class="gp"><div class="cv" style="background-image:url(img/covers/ow2.jpg)"><span class="chip n">21 tweaks</span></div>
+        <div class="info"><div><b>overwatch 2</b><span class="sub">battle.net</span></div><span class="sel">select</span></div></div>
+      <div class="gp"><div class="cv" style="background-image:url(img/covers/r6.jpg)"><span class="chip n">21 tweaks</span></div>
+        <div class="info"><div><b>rainbow six siege</b><span class="sub">ubisoft connect</span></div><span class="sel">select</span></div></div>
+    </section>
+    <div class="more"><span class="sub">7 more, for games not found on this pc</span><span class="chip ghost">pubg</span><span class="chip ghost">marvel rivals</span><span class="chip ghost">the finals</span><span class="chip ghost">escape from tarkov</span><span class="chip ghost">roblox</span><span class="chip ghost">gta v</span><span class="chip ghost">minecraft bedrock</span></div>
+
+    <!-- 4. presets + mes presets -->
+    <div class="row last">
+      <section class="presets panel">
+        <div class="ph"><h2 class="h2">presets</h2><span class="sub">Ready-made lists. Select one, then apply from the bar.</span></div>
+        <div class="pr"><span class="c">25<small>tweaks</small></span><div><b>max fps</b><span class="sub">Graphics card, CPU and power tuned for frames.</span></div><span class="btn sm">select</span></div>
+        <div class="pr"><span class="c">23<small>tweaks</small></span><div><b>low latency</b><span class="sub">Input lag first: drivers, timers and input queues.</span></div><span class="btn sm">select</span></div>
+        <div class="pr"><span class="c">20<small>tweaks</small></span><div><b>minecraft pvp</b><span class="sub">Hitreg, ping and raw input for Minecraft PvP.</span></div><span class="btn sm">select</span></div>
+        <div class="pr"><span class="c">19<small>tweaks</small></span><div><b>laptop</b><span class="sub">Gains without hurting battery or heat.</span></div><span class="btn sm">select</span></div>
+        <div class="pr"><span class="c">16<small>tweaks</small></span><div><b>privacy</b><span class="sub">Telemetry, tracking and diagnostics off.</span></div><span class="btn sm">select</span></div>
+      </section>
+
+      <section class="mine panel">
+        <div class="ph"><h2 class="h2">my presets</h2><div class="r"><span class="chip ghost">3 saved</span></div></div>
+        <div class="my"><div><b>ranked night</b><span class="sub">24 tweaks, saved nov 12</span></div><div class="ia"><span><i data-i="sliders"></i></span><span><i data-i="file"></i></span><span><i data-i="trash"></i></span></div></div>
+        <div class="my"><div><b>bedwars 1.8</b><span class="sub">20 tweaks, saved oct 30</span></div><div class="ia"><span><i data-i="sliders"></i></span><span><i data-i="file"></i></span><span><i data-i="trash"></i></span></div></div>
+        <div class="my"><div><b>scrims</b><span class="sub">18 tweaks, saved oct 21</span></div><div class="ia"><span><i data-i="sliders"></i></span><span><i data-i="file"></i></span><span><i data-i="trash"></i></span></div></div>
+        <div class="save"><span class="btn red"><i data-i="plus"></i>save my setup</span><span class="sub">The 21 tweaks on right now, with their variants.</span></div>
+      </section>
+    </div>
+  </main>
+</div>
+<script src="shell5.js"></script>
+<script>
+document.querySelectorAll('.seg[data-n]').forEach(s => { const n = +s.dataset.n, f = +s.dataset.f; s.innerHTML = Array.from({ length: n }, (_, i) => `<i class="${i < f ? 'f' : ''}"></i>`).join(''); });
+document.querySelectorAll('.meter:not(.hot) .seg i.f').forEach(i => i.className = 'm');
+</script>
+<script src="icons.js"></script>
+<script src="anim.js"></script>
+</body></html>

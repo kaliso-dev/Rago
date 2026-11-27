@@ -1,0 +1,145 @@
+<!doctype html>
+<html lang="fr"><head><meta charset="utf-8">
+<link href="https://fonts.googleapis.com/css2?family=Unbounded:wght@400;500;600;700;800;900&family=Instrument+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="rago.css">
+<style>
+.win{min-height:1180px}
+.light.top{top:-420px;right:-340px;width:1100px;height:900px;opacity:.9}
+.head{display:grid;grid-template-columns:1fr 360px;gap:28px;margin-top:30px;align-items:end}
+.head h1{font-size:104px;margin-left:-4px}
+.head .lead{font-size:16px;color:var(--txt-2);margin-top:18px}
+.head .acts{display:flex;gap:10px;margin-top:26px}
+.btn-ghost{background:none;color:var(--txt-2);box-shadow:none;padding:0 12px}
+
+.meter{padding:20px 22px;display:flex;align-items:center;gap:20px;border-radius:var(--r-panel)}
+.meter svg.ring{width:118px;height:118px;flex:none}
+.meter .big{font-family:var(--display);font-weight:700;font-size:44px;letter-spacing:-.04em;line-height:1}
+.meter .big small{font-size:18px;color:var(--txt-3);font-weight:600;letter-spacing:-.01em}
+.meter p{color:var(--txt-2);font-size:13px;margin-top:8px}
+.meter .split{display:flex;gap:16px;margin-top:14px;font-size:12px;color:var(--txt-3)}
+.meter .split b{display:block;font-family:var(--display);font-weight:600;font-size:15px;color:var(--txt)}
+
+.tabs{display:flex;gap:4px;padding:5px;border-radius:999px;margin-top:34px;width:max-content}
+.tabs a{display:flex;align-items:center;gap:8px;height:38px;padding:0 16px;border-radius:999px;font-size:13.5px;font-weight:600;color:var(--txt-2)}
+.tabs a span{font-size:11.5px;font-weight:500;color:var(--txt-3)}
+.tabs a.on{color:#fff;background:linear-gradient(180deg,rgba(255,255,255,.16),rgba(255,255,255,.06));box-shadow:inset 0 1px 0 rgba(255,255,255,.25),inset 0 0 0 1px rgba(255,255,255,.1),0 6px 18px -6px rgba(0,0,0,.8)}
+.tabs a.on span{color:var(--braise)}
+
+.sect{display:flex;align-items:baseline;gap:14px;margin:30px 4px 14px}
+.sect p{color:var(--txt-3);font-size:13px}
+.list{padding:8px}
+.tw{display:grid;grid-template-columns:48px 1fr auto;gap:18px;align-items:center;padding:16px 16px 16px 18px;border-radius:var(--r-row)}
+.tw + .tw{box-shadow:0 -1px 0 var(--line)}
+.tw .nm{font-weight:600;font-size:15px;display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+.tw .ds{color:var(--txt-2);font-size:13px;margin-top:3px;max-width:720px}
+.tw .end{display:flex;align-items:center;gap:6px;color:var(--txt-3);font-size:12.5px}
+.tw .end svg{width:16px;height:16px}
+.tag{display:inline-flex;align-items:center;gap:5px;height:22px;padding:0 9px;border-radius:999px;font-size:11.5px;font-weight:600;color:var(--txt-2);background:rgba(255,255,255,.06);box-shadow:inset 0 0 0 1px rgba(255,255,255,.1)}
+.tag svg{width:12px;height:12px}
+.tag.adv{color:#ffb3a6;background:rgba(255,59,48,.12);box-shadow:inset 0 0 0 1px rgba(255,59,48,.35)}
+.tag.ok{color:#d9f2e3;background:rgba(80,200,140,.1);box-shadow:inset 0 0 0 1px rgba(80,200,140,.3)}
+.tw.open{background:linear-gradient(180deg,rgba(255,255,255,.06),rgba(255,255,255,.02));box-shadow:inset 0 0 0 1px rgba(255,255,255,.09),inset 0 1px 0 rgba(255,255,255,.12)}
+.tw.open + .tw{box-shadow:none}
+.more{grid-column:2 / 4;display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:4px}
+.gc{padding:14px 16px;border-radius:14px;background:rgba(0,0,0,.25);box-shadow:inset 0 0 0 1px rgba(255,255,255,.07)}
+.gc h4{font-size:12px;font-weight:600;color:var(--txt-3);margin-bottom:5px;display:flex;align-items:center;gap:7px}
+.gc h4 i,.gc h4 svg{width:14px;height:14px}
+.gc.plus h4{color:var(--braise)}
+.gc p{font-size:13.5px}
+.foot-note{grid-column:2 / 4;display:flex;align-items:center;gap:16px;font-size:12.5px;color:var(--txt-3);margin-top:2px}
+.foot-note .btn{margin-left:auto}
+
+.bar{white-space:nowrap;position:absolute;z-index:5;left:50%;transform:translateX(calc(-50% + 130px));bottom:26px;display:flex;align-items:center;gap:22px;padding:10px 10px 10px 24px;border-radius:999px}
+.bar .n{font-family:var(--display);font-weight:600;font-size:14px}
+.bar .r{font-size:12.5px;color:var(--txt-3);display:flex;align-items:center;gap:6px}
+.bar .r svg{width:14px;height:14px}
+.bar .sep{width:1px;height:26px;background:var(--line)}
+</style></head>
+<body data-page="latency">
+<div class="win">
+  <div class="light top"><div class="blades"><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i></div></div>
+  <main class="main">
+    <section class="head">
+      <div>
+        <h1 class="h-page">Latence</h1>
+        <p class="lead">Timers, priorités, processeur, mémoire et alimentation.</p>
+        <div class="acts"><span class="btn btn-glass sm"><i data-i="check"></i>Sélectionner les réglages sûrs</span><span class="btn btn-ghost sm">Effacer les changements</span></div>
+      </div>
+      <div class="meter glass">
+        <svg class="ring" viewBox="0 0 118 118" fill="none">
+          <defs><linearGradient id="g" x1="0" y1="0" x2="118" y2="118"><stop stop-color="#FF8A6A"/><stop offset=".6" stop-color="#FF3B30"/></linearGradient></defs>
+          <circle cx="59" cy="59" r="50" stroke="rgba(255,255,255,.08)" stroke-width="12"/>
+          <circle cx="59" cy="59" r="50" stroke="rgba(255,138,106,.4)" stroke-width="12" stroke-dasharray="0 24 14 400" transform="rotate(-90 59 59)"/>
+          <circle cx="59" cy="59" r="50" stroke="url(#g)" stroke-width="12" stroke-linecap="round" stroke-dasharray="314.16" stroke-dashoffset="292" transform="rotate(-90 59 59)" style="filter:drop-shadow(0 0 6px rgba(255,59,48,.8))"/>
+          <circle cx="59" cy="59" r="36" stroke="rgba(255,255,255,.06)" stroke-dasharray="1.5 4.2"/>
+        </svg>
+        <div>
+          <div class="big">6<small> sur 86</small></div>
+          <p>réglages activés</p>
+          <div class="split"><span><b>3</b>à appliquer</span><span><b>1</b>à annuler</span></div>
+        </div>
+      </div>
+    </section>
+
+    <nav class="tabs glass soft">
+      <a>Général<span>2</span></a><a>Priorités<span>12</span></a><a class="on">Souris et clavier<span>7</span></a><a>Processeur<span>21</span></a><a>Mémoire<span>8</span></a><a>Alimentation<span>20</span></a><a>Stockage<span>9</span></a><a>USB<span>7</span></a>
+    </nav>
+
+    <div class="sect"><h2 class="h-sec">Souris et clavier</h2><p>7 réglages, 4 activés</p></div>
+    <section class="list glass">
+      <div class="tw open">
+        <span class="tg on"></span>
+        <div><div class="nm">Désactiver l'accélération de la souris<span class="tag ok"><i data-i="check"></i>Appliqué le 18/11</span></div>
+          <div class="ds">Coupe « Améliorer la précision du pointeur » : le curseur bouge de la même distance, quelle que soit la vitesse du geste.</div></div>
+        <span class="end"><i data-i="refresh"></i>Redémarrage<span style="width:10px"></span><i data-i="chev" style="transform:rotate(180deg)"></i></span>
+        <div class="more">
+          <div class="gc plus"><h4><i data-i="zap"></i>Bénéfice</h4><p>Visée plus régulière et prévisible en PvP ; ne réduit pas la latence.</p></div>
+          <div class="gc"><h4><i data-i="info"></i>Inconvénients</h4><p>Le curseur peut sembler plus lent sur le bureau, surtout sur grand écran.</p></div>
+        </div>
+        <div class="foot-note"><span>Pour l'annuler, décoche-le : Rago Optimizer remet les réglages comme avant.</span><span class="btn btn-glass sm">1 commande Windows</span></div>
+      </div>
+      <div class="tw">
+        <span class="tg on"></span>
+        <div><div class="nm">Mouvement 1:1 sans lissage</div><div class="ds">Coupe « Améliorer la précision du pointeur » et remet la vitesse du pointeur Windows au cran 6/11.</div></div>
+        <span class="end"><i data-i="refresh"></i>Redémarrage<span style="width:10px"></span><i data-i="chev"></i></span>
+      </div>
+      <div class="tw">
+        <span class="tg"></span>
+        <div><div class="nm">Priorité des pilotes souris et clavier</div><div class="ds">Demande la priorité maximale pour les pilotes Windows de la souris et du clavier.</div></div>
+        <span class="end"><i data-i="refresh"></i>Redémarrage<span style="width:10px"></span><i data-i="chev"></i></span>
+      </div>
+      <div class="tw">
+        <span class="tg"></span>
+        <div><div class="nm">CSRSS en temps réel<span class="tag adv">Avancé</span></div><div class="ds">Demande la priorité temps réel pour le processus Windows qui transmet le clavier et la souris aux applis.</div></div>
+        <span class="end"><i data-i="refresh"></i>Redémarrage<span style="width:10px"></span><i data-i="chev"></i></span>
+      </div>
+      <div class="tw">
+        <span class="tg on"></span>
+        <div><div class="nm">Répétition clavier instantanée<span class="tag ok"><i data-i="check"></i>Appliqué le 18/11</span></div><div class="ds">Règle la répétition des touches au plus rapide : délai le plus court et vitesse maximale quand tu restes appuyé.</div></div>
+        <span class="end"><i data-i="refresh"></i>Redémarrage<span style="width:10px"></span><i data-i="chev"></i></span>
+      </div>
+      <div class="tw">
+        <span class="tg"></span>
+        <div><div class="nm">Réglages souris du panneau de configuration<span class="tag">Sera annulé</span></div><div class="ds">Coupe l'accélération de la souris, remet la vitesse du pointeur au cran 6/11 et réduit le délai de survol.</div></div>
+        <span class="end"><i data-i="refresh"></i>Redémarrage<span style="width:10px"></span><i data-i="chev"></i></span>
+      </div>
+      <div class="tw">
+        <span class="tg on"></span>
+        <div><div class="nm">Désactiver les touches rémanentes et filtres</div><div class="ds">Coupe les raccourcis des touches rémanentes, filtres et bascules, comme Maj 5 fois de suite.</div></div>
+        <span class="end"><i data-i="refresh"></i>Redémarrage<span style="width:10px"></span><i data-i="chev"></i></span>
+      </div>
+    </section>
+    <div style="height:90px"></div>
+  </main>
+  <div class="bar glass">
+    <span class="n">4 changements</span>
+    <span class="r">3 à appliquer, 1 à annuler</span>
+    <span class="sep"></span>
+    <span class="r"><i data-i="refresh"></i>Redémarrage nécessaire</span>
+    <span class="btn btn-ghost sm">Vider</span>
+    <span class="btn btn-red">Appliquer 4 changements</span>
+  </div>
+</div>
+<script src="shell.js"></script>
+<script src="icons.js"></script>
+</body></html>

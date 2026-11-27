@@ -1,0 +1,284 @@
+<title>Rago : quatre directions</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@62..125,400..900&family=JetBrains+Mono:wght@400;600&family=Host+Grotesk:wght@400;500;700&family=Doto:wght@700;900&family=IBM+Plex+Mono:wght@400;500&family=Big+Shoulders+Display:wght@700;900&family=Instrument+Sans:wght@400;500;600&family=Instrument+Serif:ital@1&family=Silkscreen&family=Schibsted+Grotesk:wght@400;500;700&family=Martian+Mono:wght@400;600&family=Hanken+Grotesk:wght@400;500;700&display=swap">
+<style>
+/* Layout : une colonne de lecture, puis pour chaque direction une planche (palette, typo, maquette app, maquette site, références). */
+:root{
+  --bg:#F2F1EE; --fg:#17161A; --muted:#5D5B63; --line:#D9D7D1; --card:#FFFFFF; --rago:#FF3B30;
+  --font-ui:"Hanken Grotesk","Segoe UI",system-ui,sans-serif;
+  --font-mono:"JetBrains Mono",ui-monospace,monospace;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){--bg:#111113;--fg:#EDECEF;--muted:#A09DA8;--line:#2A2930;--card:#18181C;color-scheme:dark}}
+:root[data-theme="dark"]{--bg:#111113;--fg:#EDECEF;--muted:#A09DA8;--line:#2A2930;--card:#18181C;color-scheme:dark}
+*{box-sizing:border-box}
+body{background:var(--bg);color:var(--fg);font-family:var(--font-ui);font-size:16px;line-height:1.55}
+.wrap{max-width:1180px;margin:0 auto;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:40px 80px}
+header.top{display:grid;gap:14px;max-width:760px}
+.eyebrow{font-family:var(--font-mono);font-size:12px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted)}
+h1{font-size:clamp(30px,5vw,48px);line-height:1.05;margin:0;letter-spacing:-.02em;text-wrap:balance}
+h2{font-size:24px;margin:0;letter-spacing:-.01em;text-wrap:balance}
+p{margin:0;max-width:68ch}
+.muted{color:var(--muted)}
+.diag{margin-top:36px;display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:12px}
+.diag div{border:1px solid var(--line);border-radius:10px;padding:14px 16px;background:var(--card);min-width:0}
+.diag b{display:block;margin-bottom:4px}
+nav.jump{position:sticky;top:env(safe-area-inset-top,0px);z-index:5;margin:40px 0 0;padding:10px 0;background:var(--bg);border-bottom:1px solid var(--line);display:flex;gap:8px;flex-wrap:wrap}
+body::before{content:"";position:fixed;inset:0 0 auto;height:env(safe-area-inset-top,0px);z-index:10;background:var(--bg)}
+nav.jump a{font-size:14px;color:var(--fg);text-decoration:none;padding:6px 12px;border:1px solid var(--line);border-radius:6px}
+nav.jump a:hover,nav.jump a:focus-visible{border-color:var(--fg);outline:none}
+section.dir{margin-top:64px;display:grid;gap:22px;scroll-margin-top:70px}
+.dir-head{display:grid;gap:8px}
+.dir-head .num{font-family:var(--font-mono);font-size:13px;color:var(--rago)}
+.grid2{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:16px}
+@media (max-width:860px){.grid2{grid-template-columns:minmax(0,1fr)}}
+.panel{border:1px solid var(--line);border-radius:10px;background:var(--card);padding:18px;min-width:0;display:grid;gap:12px;align-content:start}
+.panel h3{margin:0;font-size:13px;font-family:var(--font-mono);font-weight:500;letter-spacing:.06em;text-transform:uppercase;color:var(--muted)}
+.swatches{display:grid;grid-template-columns:repeat(auto-fit,minmax(96px,1fr));gap:8px}
+.sw{border-radius:6px;overflow:hidden;border:1px solid var(--line);font-family:var(--font-mono);font-size:11px}
+.sw i{display:block;height:54px}
+.sw span{display:block;padding:6px 8px;line-height:1.35}
+.fontrow{display:grid;gap:2px;padding:10px 0;border-top:1px solid var(--line)}
+.fontrow:first-of-type{border-top:0;padding-top:0}
+.fontrow small{font-family:var(--font-mono);font-size:11px;color:var(--muted)}
+ul.refs{margin:0;padding-left:18px;display:grid;gap:6px;font-size:15px}
+ul.refs a{color:var(--fg)}
+.why{font-size:15px}
+.stage{border-radius:10px;overflow:hidden;border:1px solid var(--line)}
+.scroll-x{overflow-x:auto}
+
+/* ---------- Maquette commune ---------- */
+.m{--b:#000;--p:#111;--l:#333;--t:#fff;--t2:#aaa;--a:#FF3B30;--ok:#3DDC97;
+  background:var(--b);color:var(--t);display:grid;grid-template-columns:200px minmax(0,1fr);min-width:720px;font-size:13px;line-height:1.4}
+.m .side{border-right:1px solid var(--l);padding:16px 12px;display:grid;gap:4px;align-content:start}
+.m .brand{display:flex;align-items:center;gap:8px;margin-bottom:14px;font-weight:700}
+.m .brand svg{width:18px;height:20px}
+.m .grp{font-size:10px;letter-spacing:.1em;text-transform:uppercase;color:var(--t2);margin:10px 6px 4px}
+.m .it{padding:7px 8px;display:flex;justify-content:space-between;color:var(--t2)}
+.m .it.on{color:var(--t);background:var(--p)}
+.m .main{padding:20px 24px 0;display:grid;gap:14px;align-content:start;position:relative;min-height:440px}
+.m .crumb{font-size:11px;color:var(--t2);letter-spacing:.06em;text-transform:uppercase}
+.m .ttl{font-size:30px;font-weight:800;line-height:1}
+.m .stats{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+.m .stat{background:var(--p);padding:10px 12px;display:grid;gap:2px}
+.m .stat small{color:var(--t2);font-size:10px;text-transform:uppercase;letter-spacing:.08em}
+.m .stat b{font-size:22px;font-variant-numeric:tabular-nums}
+.m .stat em{font-style:normal;color:var(--ok);font-size:11px}
+.m .row{display:grid;grid-template-columns:minmax(0,1fr) auto auto;gap:12px;align-items:center;padding:10px 0;border-top:1px solid var(--l)}
+.m .row b{display:block;font-weight:600}
+.m .row span{color:var(--t2);font-size:12px}
+.m .tag{font-size:10px;padding:2px 6px;border:1px solid var(--l);color:var(--t2);text-transform:uppercase;letter-spacing:.06em}
+.m .tg{width:34px;height:18px;background:var(--l);position:relative}
+.m .tg::after{content:"";position:absolute;top:3px;left:3px;width:12px;height:12px;background:var(--t2)}
+.m .tg.on{background:var(--a)}
+.m .tg.on::after{left:19px;background:var(--b)}
+.m .bar{position:sticky;bottom:0;margin:6px -24px 0;padding:12px 24px;display:flex;justify-content:space-between;align-items:center;background:var(--p);border-top:1px solid var(--l)}
+.m .btn{background:var(--a);color:var(--b);padding:9px 16px;font-weight:700}
+
+.h{--b:#000;--t:#fff;--t2:#aaa;--a:#FF3B30;--l:#333;background:var(--b);color:var(--t);padding:28px 30px 34px;display:grid;gap:18px;min-width:720px;position:relative;overflow:hidden}
+.h .nav{display:flex;justify-content:space-between;align-items:center;font-size:13px;color:var(--t2)}
+.h .nav .l{display:flex;gap:18px}
+.h .nav b{color:var(--t);display:flex;gap:8px;align-items:center}
+.h .nav b svg{width:16px;height:18px}
+.h .big{font-size:64px;line-height:.92;margin:6px 0 0}
+.h .sub{color:var(--t2);max-width:44ch;font-size:15px}
+.h .ctas{display:flex;gap:10px}
+.h .c1{background:var(--a);color:var(--b);padding:11px 18px;font-weight:700;font-size:14px}
+.h .c2{border:1px solid var(--l);padding:11px 18px;font-size:14px}
+
+/* ---------- 1 · Télémétrie ---------- */
+#d1 .m,#d1 .h{--b:#0B0D10;--p:#13161B;--l:#252A33;--t:#E9EBEE;--t2:#8A919C;--a:#FF3B30;--ok:#4BE08F;font-family:"Archivo",sans-serif;font-stretch:100%}
+#d1 .m .ttl,#d1 .h .big{font-stretch:125%;font-weight:900;text-transform:uppercase;letter-spacing:-.01em}
+#d1 .m .stat b,#d1 .m .crumb,#d1 .m .tag,#d1 .m .grp,#d1 .h .tick{font-family:"JetBrains Mono",monospace}
+#d1 .m .main{background-image:linear-gradient(var(--l) 1px,transparent 1px);background-size:100% 28px;background-position:0 -1px;background-blend-mode:normal}
+#d1 .m .main>*{position:relative}
+#d1 .m .stat{border-left:2px solid var(--a)}
+#d1 .m .it.on{box-shadow:inset 2px 0 0 var(--a)}
+#d1 .h .scale{display:flex;justify-content:space-between;font-family:"JetBrains Mono",monospace;font-size:10px;color:var(--t2);border-top:1px solid var(--l);padding-top:6px}
+#d1 .h .trace{height:70px;width:100%}
+
+/* ---------- 2 · Atelier matériel ---------- */
+#d2 .m,#d2 .h{--b:#E4E2DC;--p:#F2F1ED;--l:#C9C6BE;--t:#141414;--t2:#6B6862;--a:#FF3B30;--ok:#1E9E5A;font-family:"Host Grotesk",sans-serif}
+#d2 .m .stat b,#d2 .h .big{font-family:"Doto",monospace;font-weight:900}
+#d2 .m .stat b{font-size:28px}
+#d2 .m .crumb,#d2 .m .tag,#d2 .m .grp,#d2 .h .nav .l{font-family:"IBM Plex Mono",monospace}
+#d2 .m .stat,#d2 .m .it.on{border-radius:8px}
+#d2 .m .stat{border:1px solid var(--l)}
+#d2 .m .tg{border-radius:4px;background:#BDB9B0}
+#d2 .m .tg::after{border-radius:2px;background:#fff}
+#d2 .m .tg.on{background:var(--a)}
+#d2 .m .tg.on::after{background:#fff}
+#d2 .m .btn{border-radius:8px;color:#fff;background:#141414}
+#d2 .m .btn::before{content:"";display:inline-block;width:8px;height:8px;border-radius:50%;background:var(--a);margin-right:8px;vertical-align:1px}
+#d2 .m .ttl{font-weight:500;letter-spacing:-.03em}
+#d2 .h .big{font-size:76px;letter-spacing:.02em}
+#d2 .h .c1{border-radius:8px;background:#141414;color:#fff}
+#d2 .h .c2{border-radius:8px}
+#d2 .h .dots{position:absolute;right:30px;top:80px;width:220px;height:220px;background-image:radial-gradient(circle,var(--t) 2.2px,transparent 2.6px);background-size:14px 14px;opacity:.12}
+
+/* ---------- 3 · Affiche ---------- */
+#d3 .m,#d3 .h{--b:#0F0E0D;--p:#1A1816;--l:#2E2B28;--t:#EFEBE3;--t2:#9C958B;--a:#FF3B30;--ok:#7FD99B;font-family:"Instrument Sans",sans-serif}
+#d3 .m .ttl,#d3 .h .big,#d3 .m .stat b{font-family:"Big Shoulders Display",sans-serif;font-weight:900;text-transform:uppercase}
+#d3 .m .ttl{font-size:56px;line-height:.85}
+#d3 .m .stat b{font-size:34px}
+#d3 .m .stat{background:transparent;border-top:3px solid var(--t)}
+#d3 .m .it.on{background:var(--a);color:var(--b);font-weight:600}
+#d3 .ital{font-family:"Instrument Serif",serif;font-style:italic;text-transform:none;font-weight:400}
+#d3 .h{background:var(--a);color:var(--b)}
+#d3 .h .nav,#d3 .h .sub{color:var(--b)}
+#d3 .h .nav b{color:var(--b)}
+#d3 .h .nav svg path{fill:var(--b)}
+#d3 .h .big{font-size:120px;line-height:.8;letter-spacing:-.01em}
+#d3 .h .c1{background:var(--b);color:var(--t)}
+#d3 .h .c2{border-color:var(--b)}
+
+/* ---------- 4 · Bloc ---------- */
+#d4 .m,#d4 .h{--b:#0F1117;--p:#181B24;--l:#2A2F3D;--t:#ECEEF4;--t2:#8C93A6;--a:#FF3B30;--ok:#5BE38A;font-family:"Schibsted Grotesk",sans-serif}
+#d4 .m .grp,#d4 .m .crumb,#d4 .m .tag,#d4 .h .tick{font-family:"Silkscreen",monospace;letter-spacing:.04em}
+#d4 .m .stat b{font-family:"Martian Mono",monospace;font-size:19px}
+#d4 .m .ttl,#d4 .h .big{font-weight:700;letter-spacing:-.03em}
+#d4 .step{clip-path:polygon(0 6px,6px 6px,6px 0,calc(100% - 6px) 0,calc(100% - 6px) 6px,100% 6px,100% calc(100% - 6px),calc(100% - 6px) calc(100% - 6px),calc(100% - 6px) 100%,6px 100%,6px calc(100% - 6px),0 calc(100% - 6px))}
+#d4 .m .main{background-image:linear-gradient(var(--p) 1px,transparent 1px),linear-gradient(90deg,var(--p) 1px,transparent 1px);background-size:16px 16px}
+#d4 .m .bar{background:var(--b);gap:6px}
+#d4 .slots{display:flex;gap:4px}
+#d4 .slots i{width:22px;height:22px;background:var(--p);border:2px solid var(--l)}
+#d4 .slots i.f{background:var(--a);border-color:#FF8A82}
+#d4 .h .big{font-size:68px;line-height:.95}
+#d4 .h .big span{color:var(--a)}
+#d4 .h .tick{font-size:11px;color:var(--a)}
+</style>
+
+<div class="wrap">
+  <header class="top">
+    <div class="eyebrow">Rago Optimizer · refonte · étape 1 sur 3</div>
+    <h1>Quatre directions pour sortir du look généré.</h1>
+    <p class="muted">Chaque planche montre la même chose dans un style différent : la page Latence de l'app et le haut du site. Le R de Sofiene et le rouge #FF3B30 restent dans toutes les directions. Choisis celle qui te parle, ou mélange : « la typo de la 3 avec les couleurs de la 2 », ça marche aussi.</p>
+  </header>
+
+  <div class="diag">
+    <div><b>Pourquoi ça fait « vibe-codé »</b><span class="muted">Fond quasi noir, un seul rouge qui claque, boutons en pilule partout, effet verre, police Geist : c'est le combo par défaut de tous les sites générés en 2025-2026.</span></div>
+    <div><b>Ce qui trahit le template</b><span class="muted">Badges « New », puces avec des coches, sections qui apparaissent floues au défilement, « 01 · The journey », même rayon et même ombre sur chaque carte.</span></div>
+    <div><b>Ce qu'on garde</b><span class="muted">Le logo R, le rouge Rago, le ton calme et honnête, les chiffres mesurés (ms, FPS). Tout le reste peut changer.</span></div>
+  </div>
+
+  <nav class="jump" aria-label="Directions">
+    <a href="#d1">1 · Télémétrie</a><a href="#d2">2 · Atelier matériel</a><a href="#d3">3 · Affiche</a><a href="#d4">4 · Bloc</a>
+  </nav>
+
+  <!-- 1 -->
+  <section class="dir" id="d1">
+    <div class="dir-head"><div class="num">Direction 1</div><h2>Télémétrie : le mur des stands</h2>
+      <p class="why muted">Rago vu comme l'écran d'un ingénieur de course : grilles fines, échelles graduées, traces de ping, chiffres en mono. Titres larges et serrés en capitales. Sérieux, technique, crédible pour un outil de précision. Risque : un peu froid.</p></div>
+    <div class="stage scroll-x"><div class="m" data-mock></div></div>
+    <div class="stage scroll-x"><div class="h" data-hero="1"></div></div>
+    <div class="grid2">
+      <div class="panel"><h3>Palette</h3><div class="swatches" data-sw="#0B0D10 Asphalte|#13161B Panneau|#252A33 Graduation|#E9EBEE Texte|#8A919C Secondaire|#FF3B30 Rouge Rago|#4BE08F Gain"></div></div>
+      <div class="panel"><h3>Typographie</h3>
+        <div class="fontrow"><span style="font-family:Archivo;font-stretch:125%;font-weight:900;font-size:26px;text-transform:uppercase">Every ms counts</span><small>Archivo Expanded 900 · titres</small></div>
+        <div class="fontrow"><span style="font-family:Archivo;font-size:16px">Turns off mouse acceleration so your aim stays consistent.</span><small>Archivo 400 · interface</small></div>
+        <div class="fontrow"><span style="font-family:'JetBrains Mono';font-size:16px">18 ms · −23 ms · 243 FPS</span><small>JetBrains Mono · mesures</small></div></div>
+    </div>
+    <div class="panel"><h3>Références</h3><ul class="refs">
+      <li><a href="https://contra.com/p/Rom3UbNO-stint-a-calm-race-strategy-dashboard-design" target="_blank" rel="noopener">Stint, tableau de stratégie de course calme (Bey Agency)</a></li>
+      <li><a href="https://contra.com/p/EcFMAAqQ-this-formula-1-live-racing" target="_blank" rel="noopener">Formula 1 Live Racing (Yeasin Arafat)</a></li>
+      <li><a href="https://dribbble.com/shots/21401682-Track-Dynamics" target="_blank" rel="noopener">Track Dynamics (Dribbble)</a></li>
+      <li><a href="https://dribbble.com/shots/25387694-Monitoring-EV-Performance-Dashboard" target="_blank" rel="noopener">Monitoring EV Performance Dashboard (Dribbble)</a></li>
+      <li><a href="https://www.pinterest.com/search/pins/?q=motorsport%20telemetry%20ui" target="_blank" rel="noopener">Pinterest : motorsport telemetry ui</a> · <a href="https://dribbble.com/search/telemetry-dashboard" target="_blank" rel="noopener">Dribbble : telemetry dashboard</a></li>
+    </ul></div>
+  </section>
+
+  <!-- 2 -->
+  <section class="dir" id="d2">
+    <div class="dir-head"><div class="num">Direction 2</div><h2>Atelier matériel : l'objet de précision</h2>
+      <p class="why muted">Rago comme un appareil bien fabriqué, dans l'esprit Teenage Engineering et Nothing : fond gris clair chaud, chiffres en matrice de points, étiquettes en mono, le rouge seulement en voyant lumineux. Personne ne fait ça dans le gaming, c'est la plus originale. Risque : un thème clair surprend des joueurs habitués au noir (on peut faire une version sombre).</p></div>
+    <div class="stage scroll-x"><div class="m" data-mock></div></div>
+    <div class="stage scroll-x"><div class="h" data-hero="2"></div></div>
+    <div class="grid2">
+      <div class="panel"><h3>Palette</h3><div class="swatches" data-sw="#E4E2DC Aluminium|#F2F1ED Façade|#C9C6BE Joint|#141414 Encre|#6B6862 Sérigraphie|#FF3B30 Voyant|#1E9E5A Gain"></div></div>
+      <div class="panel"><h3>Typographie</h3>
+        <div class="fontrow"><span style="font-family:Doto;font-weight:900;font-size:34px">243 FPS</span><small>Doto 900 · chiffres et titres courts</small></div>
+        <div class="fontrow"><span style="font-family:'Host Grotesk';font-size:16px">Turns off mouse acceleration so your aim stays consistent.</span><small>Host Grotesk · interface</small></div>
+        <div class="fontrow"><span style="font-family:'IBM Plex Mono';font-size:14px;text-transform:uppercase;letter-spacing:.06em">Latency · 4 tweaks selected</span><small>IBM Plex Mono · étiquettes</small></div></div>
+    </div>
+    <div class="panel"><h3>Références</h3><ul class="refs">
+      <li><a href="https://teenage.engineering" target="_blank" rel="noopener">teenage.engineering (site et produits)</a></li>
+      <li><a href="https://design-milk.com/the-nothing-phone-3s-glyph-matrix-turns-notifications-into-pixel-art/" target="_blank" rel="noopener">Nothing Phone (3) : la Glyph Matrix (Design Milk)</a></li>
+      <li><a href="https://www.yankodesign.com/2026/08/04/nothing-killed-the-glyph-interface-this-teenage-engineering-synth-concept-argues-that-was-a-mistake/" target="_blank" rel="noopener">Concept de synthé Teenage Engineering × Nothing (Yanko Design)</a></li>
+      <li><a href="https://www.dezeen.com/2024/02/20/nothing-tech-smartphone-design-adam-bates-interview/" target="_blank" rel="noopener">Interview du directeur design de Nothing (Dezeen)</a></li>
+      <li><a href="https://www.pinterest.com/search/pins/?q=teenage%20engineering%20ui" target="_blank" rel="noopener">Pinterest : teenage engineering ui</a> · <a href="https://dribbble.com/search/dot-matrix-ui" target="_blank" rel="noopener">Dribbble : dot matrix ui</a></li>
+    </ul></div>
+  </section>
+
+  <!-- 3 -->
+  <section class="dir" id="d3">
+    <div class="dir-head"><div class="num">Direction 3</div><h2>Affiche : l'esport en édition papier</h2>
+      <p class="why muted">Rago comme une affiche de tournoi : capitales condensées énormes, aplats rouges pleine largeur, noir chaud et blanc os, une touche d'italique serif pour la voix. Très marquant sur le site et les réseaux. Risque : dans l'app il faut le calmer, sinon c'est trop bruyant.</p></div>
+    <div class="stage scroll-x"><div class="m" data-mock></div></div>
+    <div class="stage scroll-x"><div class="h" data-hero="3"></div></div>
+    <div class="grid2">
+      <div class="panel"><h3>Palette</h3><div class="swatches" data-sw="#0F0E0D Noir chaud|#1A1816 Carton|#2E2B28 Trait|#EFEBE3 Blanc os|#9C958B Gris papier|#FF3B30 Rouge Rago|#7FD99B Gain"></div></div>
+      <div class="panel"><h3>Typographie</h3>
+        <div class="fontrow"><span style="font-family:'Big Shoulders Display';font-weight:900;font-size:40px;text-transform:uppercase;line-height:.9">Every ms counts</span><small>Big Shoulders Display 900 · titres</small></div>
+        <div class="fontrow"><span style="font-family:'Instrument Sans';font-size:16px">Turns off mouse acceleration so your aim stays consistent.</span><small>Instrument Sans · interface</small></div>
+        <div class="fontrow"><span style="font-family:'Instrument Serif';font-style:italic;font-size:22px">the server decides.</span><small>Instrument Serif italique · accents</small></div></div>
+    </div>
+    <div class="panel"><h3>Références</h3><ul class="refs">
+      <li><a href="https://trends.daisyui.com/trend/sports-brutalism/" target="_blank" rel="noopener">Tendance « sports brutalism » (daisyUI Trends)</a></li>
+      <li><a href="https://www.awwwards.com/inspiration/tim-grovers-brutalist-typographic-site" target="_blank" rel="noopener">Site typographique de Tim Grover (Awwwards)</a></li>
+      <li><a href="https://www.designbridge.com/work/esl-gaming-live-legendary" target="_blank" rel="noopener">ESL Gaming « Live Legendary » (Design Bridge)</a></li>
+      <li><a href="https://www.commarts.com/exhibit/esl-identity" target="_blank" rel="noopener">Identité ESL (Communication Arts)</a></li>
+      <li><a href="https://www.pinterest.com/search/pins/?q=esports%20poster%20typography" target="_blank" rel="noopener">Pinterest : esports poster typography</a> · <a href="https://www.behance.net/search/projects/esports%20identity%20typography" target="_blank" rel="noopener">Behance : esports identity typography</a></li>
+    </ul></div>
+  </section>
+
+  <!-- 4 -->
+  <section class="dir" id="d4">
+    <div class="dir-head"><div class="num">Direction 4</div><h2>Bloc : un clin d'œil au jeu, en version pro</h2>
+      <p class="why muted">Rago parle aux joueurs de Minecraft PvP sans copier Minecraft : coins en escalier, petites étiquettes pixel, grille de 16 px, barre d'application façon barre d'objets. Le reste reste net et lisible. La plus proche de ta communauté. Risque : vite enfantin si on en met trop, donc le pixel seulement en détail.</p></div>
+    <div class="stage scroll-x"><div class="m" data-mock></div></div>
+    <div class="stage scroll-x"><div class="h" data-hero="4"></div></div>
+    <div class="grid2">
+      <div class="panel"><h3>Palette</h3><div class="swatches" data-sw="#0F1117 Nuit|#181B24 Dalle|#2A2F3D Bordure|#ECEEF4 Texte|#8C93A6 Secondaire|#FF3B30 Rouge Rago|#5BE38A Gain"></div></div>
+      <div class="panel"><h3>Typographie</h3>
+        <div class="fontrow"><span style="font-family:Silkscreen;font-size:18px">Latency · Hotbar</span><small>Silkscreen · petites étiquettes seulement</small></div>
+        <div class="fontrow"><span style="font-family:'Schibsted Grotesk';font-size:16px">Turns off mouse acceleration so your aim stays consistent.</span><small>Schibsted Grotesk · titres et interface</small></div>
+        <div class="fontrow"><span style="font-family:'Martian Mono';font-size:15px">18 ms · −23 ms · 243 FPS</span><small>Martian Mono · mesures</small></div></div>
+    </div>
+    <div class="panel"><h3>Références</h3><ul class="refs">
+      <li><a href="https://dribbble.com/shots/19730095-Pexel-Grotesk" target="_blank" rel="noopener">Pexel Grotesk (Dribbble)</a></li>
+      <li><a href="https://thenorthernblock.co.uk/blog/discover-boxal" target="_blank" rel="noopener">Boxal, police modulaire (The Northern Block)</a></li>
+      <li><a href="https://speckyboy.com/free-pixel-fonts/" target="_blank" rel="noopener">Polices pixel gratuites (Speckyboy)</a></li>
+      <li><a href="https://www.pinterest.com/search/pins/?q=pixel%20ui%20minimal%20dark" target="_blank" rel="noopener">Pinterest : pixel ui minimal dark</a> · <a href="https://dribbble.com/search/pixel-ui" target="_blank" rel="noopener">Dribbble : pixel ui</a></li>
+    </ul></div>
+  </section>
+</div>
+
+<script>
+const R='<svg viewBox="0 0 164 180" aria-hidden="true"><path d="M0 0H160V46L93.83 101.42L164 180H114L65.17 125.42L0 180V132L112.24 38H39V78.34L0 111Z" fill="#FF3B30"/></svg>';
+const nav=[["Optimize",[["Network",""],["Latency","4",1],["Graphics card",""],["Windows",""],["Tools",""]]],["Play",[["Hitreg",""],["Minecraft",""],["Games",""],["Mouse",""]]],["Advanced",[["Expert mode",""],["Restore",""]]]];
+const rows=[["Disable mouse acceleration","Your aim stays the same at every speed.","Safe",1],["1:1 raw input","Windows stops smoothing your mouse.","Safe",1],["Disable USB power saving","Ports never sleep mid-fight.","Safe",1],["Timer resolution 0.5 ms","Frames start on time. Uses a bit more power.","Advanced",1],["Disable dynamic tick","Steadier timing on laptops.","Advanced",0]];
+function mock(dir){
+  const side='<div class="side"><div class="brand">'+R+'Rago</div>'+nav.map(([g,its])=>'<div class="grp">'+g+'</div>'+its.map(([n,c,on])=>'<div class="it'+(on?' on':'')+'"><span>'+n+'</span><span>'+c+'</span></div>').join('')).join('')+'</div>';
+  const ttl=dir==='d3'?'Latency <span class="ital">is a choice.</span>':'Latency';
+  const stats='<div class="stats"><div class="stat'+(dir==='d4'?' step':'')+'"><small>Input delay</small><b>4.1 ms</b><em>−1.9 ms</em></div><div class="stat'+(dir==='d4'?' step':'')+'"><small>Frame time</small><b>4.12 ms</b><em>243 FPS</em></div><div class="stat'+(dir==='d4'?' step':'')+'"><small>Hypixel ping</small><b>18 ms</b><em>±2 ms jitter</em></div></div>';
+  const list=rows.map(([t,d,k,on])=>'<div class="row"><div><b>'+t+'</b><span>'+d+'</span></div><span class="tag">'+k+'</span><span class="tg'+(on?' on':'')+'"></span></div>').join('');
+  const bar=dir==='d4'
+    ?'<div class="bar"><div class="slots"><i class="f"></i><i class="f"></i><i class="f"></i><i class="f"></i><i></i><i></i><i></i><i></i><i></i></div><span class="btn step">Apply 4 tweaks</span></div>'
+    :'<div class="bar"><span>4 tweaks selected · 1 needs a restart</span><span class="btn">Apply 4 tweaks</span></div>';
+  return side+'<div class="main"><div class="crumb">Optimize / Latency · 86 tweaks</div><div class="ttl">'+ttl+'</div>'+stats+'<div>'+list+'</div>'+bar+'</div>';
+}
+const heroes={
+ 1:'<div class="big">Every<br>millisecond<br>counts.</div><p class="sub">Rago Optimizer tunes Windows, your network and Minecraft, measures the result, and undoes any tweak in one click.</p><svg class="trace" viewBox="0 0 600 70" preserveAspectRatio="none" aria-hidden="true"><polyline fill="none" stroke="#8A919C" stroke-width="1.5" points="0,40 30,22 60,48 90,18 120,52 150,26 180,44 210,14 240,50 270,30 300,38"/><polyline fill="none" stroke="#FF3B30" stroke-width="2" points="300,38 330,36 360,37 390,35 420,36 450,35 480,36 510,35 540,36 570,35 600,35"/><line x1="300" y1="0" x2="300" y2="70" stroke="#252A33" stroke-dasharray="3 3"/></svg><div class="scale"><span>Before · 31 ms ±14</span><span>Apply</span><span>After · 18 ms ±2</span></div><div class="ctas"><span class="c1">Try Premium free</span><span class="c2">Download free</span></div>',
+ 2:'<div class="dots"></div><div class="big">18 MS</div><p class="sub">A precision tool for Minecraft PvP on Windows. 218 tweaks, each one measured, each one reversible.</p><div class="ctas"><span class="c1">Try Premium free</span><span class="c2">Download free</span></div>',
+ 3:'<div class="big">Every<br>ms<br>counts.</div><p class="sub" style="font-family:\'Instrument Serif\',serif;font-style:italic;font-size:22px">The server decides. Your timing decides what it sees.</p><div class="ctas"><span class="c1">Try Premium free</span><span class="c2">Download free</span></div>',
+ 4:'<span class="tick">Minecraft PvP · Windows</span><div class="big">Every <span>millisecond</span><br>counts.</div><p class="sub">Steadier ping, smoother frames, less input lag. Rago tunes Windows, your network and Minecraft, and puts it all back when you turn a tweak off.</p><div class="ctas"><span class="c1 step">Try Premium free</span><span class="c2">Download free</span></div>'
+};
+document.querySelectorAll('section.dir').forEach(s=>{
+  s.querySelector('[data-mock]').innerHTML=mock(s.id);
+  const h=s.querySelector('[data-hero]');
+  h.innerHTML='<div class="nav"><b>'+R+'Rago Optimizer</b><span class="l"><span>Features</span><span>Rago Route</span><span>Tweaks</span><span>Pricing</span></span></div>'+heroes[h.dataset.hero];
+  const sw=s.querySelector('[data-sw]');
+  sw.innerHTML=sw.dataset.sw.split('|').map(x=>{const [hex,...n]=x.split(' ');return '<div class="sw"><i style="background:'+hex+'"></i><span>'+n.join(' ')+'<br>'+hex+'</span></div>'}).join('');
+});
+</script>

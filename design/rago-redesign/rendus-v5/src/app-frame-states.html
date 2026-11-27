@@ -1,0 +1,45 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8">
+<link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:ital,wght@0,600;0,700;0,800;0,900;1,700;1,800;1,900&family=Barlow:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="rago5.css">
+<link rel="stylesheet" href="poster.css">
+<link rel="stylesheet" href="round.css">
+<script>for (const c of ['round','poster']) if (location.hash.includes(c)) document.documentElement.classList.add(c);</script>
+<style>
+/* Cadre de l'app, tous les états (lot 2, 22/11/2026) : bandeau de licence et carte de mise à jour, captures de render_inj.js. */
+.win{min-height:0}
+.tp{position:relative;z-index:1;isolation:isolate;padding:44px 56px 56px}
+.tp .bgdots{position:absolute;right:0;top:0;width:620px;height:420px;pointer-events:none;background:linear-gradient(transparent,transparent);-webkit-mask:linear-gradient(240deg,#000 0,transparent 60%)}
+.tph{display:flex;align-items:flex-end;justify-content:space-between;gap:40px}
+.tph .title{font-size:132px;margin-top:16px}
+.tph .lead{max-width:440px;padding-bottom:12px;font-size:15px;line-height:1.5;color:var(--ink-2)}
+.tph .lead b{color:var(--ink);font-weight:600}
+.sh4{display:flex;align-items:baseline;gap:14px;margin:52px 0 18px}
+.sh4 b{font-family:var(--cond);font-weight:900;font-style:italic;font-size:30px;text-transform:uppercase}
+.sh4 span{font-size:13.5px;color:var(--ink-2)}
+.bn{display:grid;grid-template-columns:190px 1124px;gap:14px;align-items:center;margin-bottom:14px}
+.bn img{width:1124px;display:block}
+.k4{font-family:var(--cond);font-weight:800;font-size:13px;letter-spacing:.14em;text-transform:uppercase;color:var(--ink-3);line-height:1.5}
+.k4 em{font-style:normal;color:var(--red)}
+.k4 small{display:block;font-family:var(--sans,inherit);font-weight:500;font-size:12px;letter-spacing:0;text-transform:none;color:var(--ink-3)}
+.uc{display:grid;grid-template-columns:repeat(4,1fr);gap:18px;align-items:stretch}
+.uc > div{padding:18px 0 6px;background:var(--bg-2);border:1px solid var(--line)}
+.uc .k4{padding:0 18px 12px}
+.uc img{width:234px;display:block;margin:0 auto}
+.uc > div{padding-bottom:16px}
+html.round .uc > div{border-radius:20px;overflow:hidden}
+</style></head><body>
+<div class="win">
+  <div class="tp">
+    <span class="bgdots"></span>
+    <section class="tph">
+      <div><p class="kick">app frame <b>//</b> every state</p><h1 class="title" data-t="frame">frame</h1></div>
+      <p class="lead">The <b>license banner</b> sits under the top bar on every page, until it's dismissed. The <b>update card</b> sits above This PC in the sidebar.</p>
+    </section>
+    <div class="sh4"><b>license banner</b><span>One message per case, with the one action that fixes it.</span></div>
+    <div class="bn"><p class="k4">offline too long <em>//</em><small>license check failed, retry</small></p><img src="img/frame/notice-expired.png" alt=""></div><div class="bn"><p class="k4">subscription ended <em>//</em><small>back on free, renew</small></p><img src="img/frame/notice-ended.png" alt=""></div><div class="bn"><p class="k4">used on another pc <em>//</em><small>sign in again or get help</small></p><img src="img/frame/notice-other.png" alt=""></div><div class="bn"><p class="k4">license turned off <em>//</em><small>back on free, get premium</small></p><img src="img/frame/notice-revoked.png" alt=""></div>
+    <div class="sh4"><b>update card</b><span>Version 1.3.1 downloaded in the background.</span></div>
+    <div class="uc"><div><p class="k4">ready <em>//</em><small>restart installs it</small></p><img src="img/frame/upd-ready.png" alt=""></div><div><p class="k4">run in progress <em>//</em><small>waits for the run to end</small></p><img src="img/frame/upd-busy.png" alt=""></div><div><p class="k4">installing <em>//</em><small>the app restarts by itself</small></p><img src="img/frame/upd-installing.png" alt=""></div><div><p class="k4">install failed <em>//</em><small>it runs when the app closes</small></p><img src="img/frame/upd-failed.png" alt=""></div></div>
+  </div>
+</div>
+</body></html>

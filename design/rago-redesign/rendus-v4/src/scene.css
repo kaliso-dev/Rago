@@ -1,0 +1,16 @@
+.half .vp{position:relative}
+.scene{position:absolute;inset:0;overflow:hidden;background:linear-gradient(180deg,#0f2236 0%,#2b3f63 30%,#a2606a 50%,#f0a06a 60%,#3a2a2a 61%,#1b1716 100%)}
+.scene .sun{position:absolute;left:73%;top:36%;width:340px;height:340px;border-radius:50%;background:radial-gradient(circle,#ffd7a0 0%,rgba(255,170,110,.55) 30%,transparent 70%)}
+.scene .bld{position:absolute;bottom:39%;background:#1a1520}
+.scene .b1{left:-2%;width:22%;height:34%;clip-path:polygon(0 18%,40% 18%,40% 0,72% 0,72% 30%,100% 30%,100% 100%,0 100%)}
+.scene .b2{left:24%;width:14%;height:22%;background:#241c26;clip-path:polygon(0 40%,50% 0,100% 40%,100% 100%,0 100%)}
+.scene .b3{right:-3%;width:30%;height:46%;background:#120f16;clip-path:polygon(0 30%,30% 30%,30% 10%,62% 10%,62% 0,100% 0,100% 100%,0 100%)}
+.scene .b4{left:44%;width:9%;height:12%;background:#2b2128}
+.scene .floor{position:absolute;left:0;right:0;bottom:0;height:39%;background:linear-gradient(180deg,#3b2c27,#16110f);clip-path:polygon(0 0,100% 0,100% 100%,0 100%)}
+.scene .lane{position:absolute;bottom:0;left:30%;width:40%;height:39%;background:linear-gradient(180deg,rgba(255,200,150,.12),transparent);clip-path:polygon(46% 0,54% 0,100% 100%,0 100%)}
+.scene .box{position:absolute;bottom:14%;left:8%;width:180px;height:150px;background:#2c211d;box-shadow:inset 0 0 0 6px #241a17}
+.scene .box.b{left:auto;right:12%;bottom:20%;width:120px;height:110px}
+.cross{position:absolute;left:50%;top:50%;width:18px;height:18px;margin:-9px 0 0 -9px}
+.cross::before,.cross::after{content:"";position:absolute;background:#7dffb0;box-shadow:0 0 0 1px rgba(0,0,0,.5)}
+.cross::before{left:8px;top:0;width:2px;height:18px}.cross::after{top:8px;left:0;height:2px;width:18px}
+

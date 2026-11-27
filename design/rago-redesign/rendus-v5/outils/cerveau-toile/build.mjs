@@ -1,0 +1,16 @@
+import { writeFileSync } from 'node:fs';
+import { createBrain } from '/home/claude/kaliso-dev/rago/licensing/src/brain.js';
+import { brainPage } from '/home/claude/kaliso-dev/rago/licensing/src/brain-views.js';
+const brain = createBrain({ brainDir: '/home/claude/kaliso-dev/rago' }, { log: { info() {}, warn() {}, error() {} } });
+const st = await brain.read({ id: 'rago' });
+writeFileSync('donnees.json', st.json);
+const d = st.data;
+console.log('notes', d.notes.length, 'stats', JSON.stringify(d.stats), 'source', d.source, d.branch);
+const groups = {};
+for (const n of d.notes) groups[n.g] = (groups[n.g] || 0) + 1;
+console.log(JSON.stringify(groups));
+const cv = d.notes.find((n) => n.t === 'Cerveau du vault');
+console.log('cerveau', cv && cv.id, cv && cv.g, cv && cv.out.length);
+let html = brainPage({ envName: 'staging' }, { brains: brain.brains, current: { id: 'rago', name: 'Rago Optimizer' } });
+html = html.replaceAll('/assets/', 'assets/').replace(/data-src="[^"]*"/, 'data-src="donnees.json"').replace(/data-file="[^"]*"/, 'data-file="fichier.json"');
+writeFileSync('index.html', html);
